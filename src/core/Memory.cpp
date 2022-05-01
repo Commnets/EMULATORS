@@ -1,4 +1,5 @@
 #include <core/Memory.hpp>
+#include <core/Stack.hpp>
 #include <fstream>
 
 // ---
@@ -8,7 +9,7 @@ MCHEmul::Memory::Memory (const MCHEmul::Address& iA, size_t s, bool r, const MCH
 	  _defaultValues (nullptr)
 { 
 	// The memory has to have either "some size" or having block behind!
-	assert (_size >= 0 || _size == 0 && !_blocks.empty ());
+	assert (_size >= 0 || (_size == 0 && !_blocks.empty ()));
 
 	if (_size > 0)
 	{
@@ -17,6 +18,16 @@ MCHEmul::Memory::Memory (const MCHEmul::Address& iA, size_t s, bool r, const MCH
 		for (size_t i = 0; i < _size; i++)
 			_values [i] = _defaultValues [i] = MCHEmul::UByte::_0;
 	}
+
+	// The stack has to be part of the blocks, if it has been defined...
+	if (_stack != nullptr)
+	{
+		bool f = false;
+		for (MCHEmul::Memories::const_iterator i = _blocks.begin (); i != _blocks.end () && !f; i++)
+			f = (*i).second == _stack;
+		assert (f);
+	}
+		
 }
 
 // ---
