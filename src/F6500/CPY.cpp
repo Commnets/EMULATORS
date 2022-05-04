@@ -13,7 +13,7 @@ bool F6500::CPY_General::executeWith (MCHEmul::UByte u)
 	MCHEmul::StatusRegister& st = cpu () -> statusRegister ();
 	st.setBitStatus ("N", r [0][7]);
 	st.setBitStatus ("Z", r [0] == MCHEmul::UByte::_0);
-	st.setBitStatus ("C", !r [0][7]);
+	st.setBitStatus ("C", !r [0][7]); // When the result is positive (a > u)
 
 	return (true);
 }

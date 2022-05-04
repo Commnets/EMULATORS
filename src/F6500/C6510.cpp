@@ -9,7 +9,8 @@ F6500::C6510::C6510 ()
 		F6500::C6510::createStatusRegister (),
 		F6500::C6510::createInstructions ())
 {
-	// Nothing else is needed...
+	// The reference to the memory has not set still here...
+	// It is linked to the CPU at computer (class) level!
 }
 
 // ---

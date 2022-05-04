@@ -33,9 +33,7 @@ namespace MCHEmul
 		Computer () = delete;
 
 		/** The computer owns the different elements. */
-		Computer (CPU* cpu, const Chips& c, Memory* m, Memory* s, const Attributes& attrs = { })
-			: _cpu (cpu), _chips (c), _memory (m), _stack (s), _attributes (attrs)
-							{ assert (_cpu != nullptr && _memory != nullptr && _stack != nullptr); }
+		Computer (CPU* cpu, const Chips& c, Memory* m, const Attributes& attrs = { });
 
 		Computer (const Computer&) = delete;
 
@@ -61,10 +59,6 @@ namespace MCHEmul
 							{ return (_memory); }
 		Memory* memory ()
 							{ return (_memory); }
-		constexpr const Memory* stack () const
-							{ return (_stack); }
-		Memory* stack ()
-							{ return (_stack); }
 
 		constexpr const Attributes& attributes () const
 							{ return (_attributes); }
@@ -96,7 +90,6 @@ namespace MCHEmul
 		CPU* _cpu;
 		Chips _chips; 
 		Memory* _memory;
-		Memory* _stack;
 		const Attributes _attributes = { }; // Maybe modified at construction level
 
 		/** It is useful to track how the program is working. */

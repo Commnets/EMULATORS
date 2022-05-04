@@ -25,6 +25,7 @@ namespace MCHEmul
 {
 	class CPU;
 	class Memory;
+	class Stack;
 
 	/** Represents a instruction executed by a CPU. */
 	class Instruction
@@ -58,7 +59,7 @@ namespace MCHEmul
 
 		/** To execute the instruction. It has to be redefined. 
 			It returns true if everything is ok, */
-		bool execute (const UBytes& p, CPU* c, Memory* m);
+		bool execute (const UBytes& p, CPU* c, Memory* m, Stack* stk);
 
 		friend std::ostream& operator << (std::ostream& o, const Instruction& i);
 
@@ -76,6 +77,10 @@ namespace MCHEmul
 							{ return (_memory); }
 		Memory* memory () 
 							{ return (_memory); }
+		const Stack* stack () const
+							{ return (_stack); }
+		Stack* stack ()
+							{ return (_stack); }
 
 		protected:
 		const unsigned int _code = 0; // Modified at construction level
@@ -88,6 +93,7 @@ namespace MCHEmul
 		MCHEmul::UBytes _lastParameters;
 		MCHEmul::CPU* _cpu;
 		MCHEmul::Memory* _memory;
+		MCHEmul::Stack* _stack;
 	};
 
 	using Instructions = std::map <unsigned int, Instruction*>;

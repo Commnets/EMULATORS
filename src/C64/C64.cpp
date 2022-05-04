@@ -8,14 +8,11 @@ C64::Commodore64::Commodore64 ()
 		(new F6500::C6510 (),
 		 C64::Commodore64::standardChips (),
 		 C64::Commodore64::standardMemory (),
-		 (MCHEmul::Memory*) (0x01) /* set back later. */, 
 		 { { "Name", "Commodore 64" },
 		   { "Manufacturer", "Commodore Business Machines CBM" },
 		   { "Year", "1980" }
 		 })
 {
-	_stack = memory () -> block (_STACK_MEMORY);
-
 	bool result = true;
 	result &= memory () -> block (_BASIC_MEMORY) -> loadInto ("./basic.901226-01.bin");
 	result &= memory () -> block (_IO_MEMORY) -> loadInto ("./characters.901225-01.bin");

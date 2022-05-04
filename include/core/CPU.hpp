@@ -28,8 +28,6 @@
 
 namespace MCHEmul
 {
-	class Computer;
-
 	/** The center of any Machine. */
 	class CPU
 	{
@@ -38,7 +36,7 @@ namespace MCHEmul
 
 		CPU (const CPUArchitecture& a, const Registers& r, const StatusRegister& sR, const Instructions& ins)
 			: _architecture (a), _registers (r), _statusRegister (sR), _instructions (ins),
-			  _programCounter (a.numberBytes ()),
+			  _programCounter (a.numberBytes ()), _memory (nullptr),
 			  _lastError (_NOERROR), _clockCycles (0) 
 							{ assert (_registers.size () > 0 && _instructions.size () > 0); }
 
@@ -72,6 +70,15 @@ namespace MCHEmul
 		StatusRegister& statusRegister ()
 							{ return (_statusRegister); }
 
+		/** The CPU is not the owner of the memory, but the computer (just to keep all in th same place)
+			A reference is here given to simplify the execution of transactions. */
+		void setMemoryRef (Memory* m)
+							{ _memory = m; }
+		const Memory* memoryRef () const
+							{ return (_memory); }
+		Memory* memoryRef () 
+							{ return (_memory); }
+
 		constexpr unsigned int clockCycles () const
 							{ return (_clockCycles); }
 
@@ -82,7 +89,7 @@ namespace MCHEmul
 
 		/** To execute the next transaction,
 			Return true if everything was ok and false in any other case. */
-		bool executeNextTransaction (Computer* m);
+		bool executeNextTransaction ();
 
 		/** To get the last error happend (after initialize or simulate methods). */
 		constexpr unsigned int lastError () const
@@ -99,6 +106,8 @@ namespace MCHEmul
 		const Instructions _instructions = { }; // Modified at construction level
 		ProgramCounter _programCounter;
 		StatusRegister _statusRegister;
+
+		Memory* _memory; // A reference...
 
 		// Implementation
 		unsigned int _lastError;

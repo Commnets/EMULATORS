@@ -6,8 +6,9 @@
 bool F6500::ASL_General::executeOn (const MCHEmul::Address& a)
 {
 	// Set the value...
+	// 1 byte long always...
 	MCHEmul::UBytes v = memory () -> values (a, 1);
-	bool c = v.shiftLeftC (1, false /** 0 is put into */); // Keeps the status of the last bit to actualize the carry
+	bool c = v.shiftLeftC (1, false /** 0 is put into */); // Keeps the status of the last bit to actualize later the carry
 	memory () -> set (a, v);
 
 	// Time of the status register...

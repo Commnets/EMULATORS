@@ -146,16 +146,6 @@ _INST_IMPL (F6500::BIT_ZeroPage)
 	return (true);
 }
 
-_INST_IMPL (F6500::BRK)
-{
-	assert (parameters ().size () == 1);
-
-	// The treatement of the interruption is managed at the main body...
-	cpu () -> statusRegister ().setBitStatus ("B", true);
-
-	return (true);
-}
-
 _INST_IMPL (F6500::NOP)
 {
 	assert (parameters ().size () == 1);

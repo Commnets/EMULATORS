@@ -50,7 +50,7 @@ std::string MCHEmul::Instruction::asString () const
 	return (toPrint);
 }
 
-bool MCHEmul::Instruction::execute (const MCHEmul::UBytes& p, MCHEmul::CPU* c, MCHEmul::Memory* m)
+bool MCHEmul::Instruction::execute (const MCHEmul::UBytes& p, MCHEmul::CPU* c, MCHEmul::Memory* m, MCHEmul::Stack* stk)
 {
 	assert (p.size () == _memoryPositions);
 	assert (c != nullptr && m != nullptr);
@@ -58,6 +58,8 @@ bool MCHEmul::Instruction::execute (const MCHEmul::UBytes& p, MCHEmul::CPU* c, M
 	_lastParameters = p;
 	_cpu = c;
 	_memory = m;
+	_stack = stk;
+
 	_additionalCycles = 0; // executeImpl could add additional cycles...
 
 	return (executeImpl ());

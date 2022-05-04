@@ -26,26 +26,25 @@ namespace MCHEmul
 	using Memories = std::map <int, Memory*>;
 
 	/** The memory just keep UBytes, from a specific address onwards. \n
-		It can be made of blocks. One of the block can be specificaly the stack. */
+		It can be made of blocks. 
+		A reference to the stack needs to be given. It can be either one of the blocks or not. */
 	class Memory 
 	{
 		public:
 		Memory (const Address& iA, size_t s, bool r = false, const Memories& blks = { }, Stack* stk = nullptr);
 
-		virtual ~Memory ()
-							{ delete [] _values; }
+		virtual ~Memory ();
 
-		constexpr const Address& initialAddress () const
+		const Address& initialAddress () const
 							{ return (_initialAddress); }
 		/** When using this method the whole size is taken (adding the size of the blocks behind). 
 			Only internally (private) the pure size of the memory (with no blocks) can be accesed, using the variable _size. */
 		size_t size () const;
 
-		constexpr bool rom () const
+		bool rom () const
 							{ return (_rom); }
 
-
-		constexpr const Memories& blocks () const
+		const Memories& blocks () const
 							{ return (_blocks); }
 		bool existsBlock (int nB) const
 							{ return (_blocks.find (nB) != _blocks.end ()); }
@@ -54,8 +53,6 @@ namespace MCHEmul
 		Memory* block (int nB)
 							{ return (existsBlock (nB) ? (*_blocks.find (nB)).second : nullptr); }
 
-		bool existsStack () const
-							{ return (_stack != nullptr); }
 		const Stack* stack () const
 							{ return (_stack); }
 		Stack* stack ()

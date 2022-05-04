@@ -1,6 +1,15 @@
 #include <core/Computer.hpp>
 
 // ---
+MCHEmul::Computer::Computer (MCHEmul::CPU* cpu, const MCHEmul::Chips& c, MCHEmul::Memory* m, const MCHEmul::Attributes& attrs)
+	: _cpu (cpu), _chips (c), _memory (m), _attributes (attrs)
+{ 
+	assert (_cpu != nullptr && _memory != nullptr && _memory -> stack () != nullptr);
+
+	_cpu -> setMemoryRef (_memory);
+}
+
+// ---
 MCHEmul::Computer::~Computer ()
 { 
 	delete _cpu; 
@@ -25,8 +34,6 @@ bool MCHEmul::Computer::initialize ()
 
 	_memory -> initialize ();
 
-	_stack -> initialize ();
-
 	return (result);
 }
 
@@ -40,7 +47,7 @@ bool MCHEmul::Computer::run ()
 	_lastError = MCHEmul::_NOERROR;
 	while (!_exit)
 	{
-		if (!_cpu -> executeNextTransaction (this))
+		if (!_cpu -> executeNextTransaction ())
 		{
 			_exit = true;
 
@@ -72,7 +79,6 @@ std::ostream& MCHEmul::operator << (std::ostream& o, const MCHEmul::Computer& c)
 	for (auto i : c.chips ())
 		o << *i.second << std::endl;
 	o << *c.memory () << std::endl;
-	o << *c.stack () << std::endl;
 	o << c.attributes ();
 
 	return (o);

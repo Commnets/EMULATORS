@@ -7,13 +7,13 @@ bool F6500::CMP_General::executeWith (MCHEmul::UByte u)
 {
 	MCHEmul::UInt r = 
 		MCHEmul::UInt (cpu () -> internalRegister (F6500::C6510::_ACCUMULATOR).values () /** 1 byte long */) - 
-		MCHEmul::UInt ({ u });  // Never longer that 1 byte...
+		MCHEmul::UInt ({ u });  // Never longer that 1 byte, but the result could be negative...
 
 	// Time of the status register...
 	MCHEmul::StatusRegister& st = cpu () -> statusRegister ();
 	st.setBitStatus ("N", r [0][7]);
 	st.setBitStatus ("Z", r [0] == MCHEmul::UByte::_0);
-	st.setBitStatus ("C", !r [0][7]);
+	st.setBitStatus ("C", !r [0][7]); // When the result is positive (a > u)
 
 	return (true);
 }

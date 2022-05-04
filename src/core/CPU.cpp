@@ -1,5 +1,4 @@
 #include <core/CPU.hpp>
-#include <core/Computer.hpp>
 #include <iostream>
 
 // ---
@@ -23,14 +22,12 @@ bool MCHEmul::CPU::initialize ()
 }
 
 // ---
-bool MCHEmul::CPU::executeNextTransaction (MCHEmul::Computer* c)
+bool MCHEmul::CPU::executeNextTransaction ()
 {
-	assert (c != nullptr);
-
 	MCHEmul::Instructions::const_iterator i = 
 		_instructions.find (
 			MCHEmul::UInt (
-				c -> memory () -> values (
+				_memory -> values (
 					programCounter ().asAddress (), architecture ().instructionLength ()), 
 				architecture ().bigEndian ()).asUnsignedInt ());
 
@@ -42,13 +39,13 @@ bool MCHEmul::CPU::executeNextTransaction (MCHEmul::Computer* c)
 	MCHEmul::Instruction* inst = (*i).second;
 
 	// Gets the data that the instruction occupies
-	MCHEmul::UBytes dt = c -> memory () -> values (programCounter ().asAddress (), inst -> memoryPositions ());
+	MCHEmul::UBytes dt = _memory -> values (programCounter ().asAddress (), inst -> memoryPositions ());
 	// Move the "Program Counter" to the next instruction...
 	// This is done before executing the instruction because the intruction itself could
 	// modify the value of the "Program Counter"
 	_programCounter += (size_t) inst -> memoryPositions ();
 	// Then executes the instruction
-	result = inst -> execute (dt, this, c -> memory ());
+	result = inst -> execute (dt, this, _memory, _memory -> stack ());
 
 	// And also, take into account what it costs in terms of cycles...
 	_clockCycles += inst -> clockCycles () + inst -> additionalClockCycles ();

@@ -18,16 +18,23 @@ MCHEmul::Memory::Memory (const MCHEmul::Address& iA, size_t s, bool r, const MCH
 		for (size_t i = 0; i < _size; i++)
 			_values [i] = _defaultValues [i] = MCHEmul::UByte::_0;
 	}
+}
 
-	// The stack has to be part of the blocks, if it has been defined...
-	if (_stack != nullptr)
+// ---
+MCHEmul::Memory::~Memory ()
+{ 
+	bool dS = false;
+	for (auto i : _blocks)
 	{
-		bool f = false;
-		for (MCHEmul::Memories::const_iterator i = _blocks.begin (); i != _blocks.end () && !f; i++)
-			f = (*i).second == _stack;
-		assert (f);
+		dS = (i.second == _stack);
+		delete i.second;
 	}
-		
+
+	if (!dS)
+		delete _stack;
+
+	delete [] _values; 
+	delete [] _defaultValues;
 }
 
 // ---

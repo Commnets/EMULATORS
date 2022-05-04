@@ -14,9 +14,10 @@ bool F6500::ADC_General::executeWith (MCHEmul::UByte u)
 	if (st.bitStatus ("C")) r += MCHEmul::UInt::_1;
 
 	// The result of the addition can be longer than 1 byte meaning carry generated
-	bool c = r.size () > 1; 
+	bool c = (r.size () > 1); 
 	if (c) r = MCHEmul::UInt ({ r [1] }); // [1] = Internally the number is stored in big-endian format always
 	a.set (r.bytes ());
+	// From here always 1 byte long!
 
 	// Time of the status register...
 	st.setBitStatus ("N", r [0][7]);
