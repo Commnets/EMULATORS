@@ -35,6 +35,23 @@ namespace MCHEmul
 
 	/** The max number of bytes managed in this emulator. */
 	const unsigned int _MAXBYTESMANAGED = 2;
+
+	/** General functions to manage strings */
+	std::string ltrim (const std::string& s);
+	std::string rtrim (const std::string& s);
+	std::string trim (const std::string& s);
+	std::string upper (const std::string& s);
+	std::string lower (const std::string& s);
+	std::string noSpaces (const std::string& s);
+	size_t isIn(const std::string& s1, const std::string& s2);
+
+	/** General functions to determine whether a string is or not valid
+		from a spcific perspective. */
+	bool validLabel (const std::string& s); 
+	bool validBytesOctal (const std::string& s); 
+	bool validBytesHexadecimal (const std::string& s); 
+	bool validBytesDecimal (const std::string& s); 
+	bool validBytes (const std::string& s); 
 }
 
 #endif

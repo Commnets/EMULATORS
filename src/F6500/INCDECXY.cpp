@@ -9,15 +9,15 @@ _INST_IMPL (F6500::DEX)
 
 	MCHEmul::Register& x = cpu () -> internalRegister (F6500::C6510::_XREGISTER);
 
-	// Set the value...
-	MCHEmul::UBytes b = MCHEmul::UInt (x.values ()).substract (MCHEmul::UInt::_1).bytes ();
-	if (b.size () > 1) b = MCHEmul::UBytes ({ b [1] });
-	x.set (b);
+	// Read the value, makes the operation and sets it back...
+	MCHEmul::UInt v = MCHEmul::UInt (x.values ()) - MCHEmul::UInt::_1;
+	// A carry could be generated, but it will be ignored...
+	x.set (v.bytes ()); // 1 byte long always
 
 	// Time of the status register
 	MCHEmul::StatusRegister& st = cpu () -> statusRegister ();
-	st.setBitStatus ("N", b [0][7]);
-	st.setBitStatus ("Z", b [0] == MCHEmul::UByte::_0);
+	st.setBitStatus ("N", v.negative ());
+	st.setBitStatus ("Z", v == MCHEmul::UInt::_0);
 
 	return (true);
 }
@@ -29,15 +29,15 @@ _INST_IMPL (F6500::DEY)
 
 	MCHEmul::Register& y = cpu () -> internalRegister (F6500::C6510::_YREGISTER);
 
-	// Set the value...
-	MCHEmul::UBytes b = MCHEmul::UInt (y.values ()).substract (MCHEmul::UInt::_1).bytes ();
-	if (b.size () > 1) b = MCHEmul::UBytes ({ b [1] });
-	y.set (b);
+	// Read the value, makes the operation and sets it back...
+	MCHEmul::UInt v = MCHEmul::UInt (y.values ()) - MCHEmul::UInt::_1;
+	// A carry could be generated, but it will be ignored...
+	y.set (v.bytes ()); // 1 byte long always
 
 	// Time of the status register
 	MCHEmul::StatusRegister& st = cpu () -> statusRegister ();
-	st.setBitStatus ("N", b [0][7]);
-	st.setBitStatus ("Z", b [0] == MCHEmul::UByte::_0);
+	st.setBitStatus ("N", v.negative ());
+	st.setBitStatus ("Z", v == MCHEmul::UInt::_0);
 
 	return (true);
 }
@@ -49,15 +49,15 @@ _INST_IMPL (F6500::INX)
 
 	MCHEmul::Register& x = cpu () -> internalRegister (F6500::C6510::_XREGISTER);
 
-	// Set the value...
-	MCHEmul::UBytes b = MCHEmul::UInt (x.values ()).add (MCHEmul::UInt::_1).bytes ();
-	if (b.size () > 1) b = MCHEmul::UBytes ({ b [1] });
-	x.set (b);
+	// Read the value, makes the operation and sets it back...
+	MCHEmul::UInt v = MCHEmul::UInt (x.values ()) + MCHEmul::UInt::_1;
+	// A carry could be generated, but it will be ignored...
+	x.set (v.bytes ()); // 1 byte long always
 
 	// Time of the status register
 	MCHEmul::StatusRegister& st = cpu () -> statusRegister ();
-	st.setBitStatus ("N", b [0][7]);
-	st.setBitStatus ("Z", b [0] == MCHEmul::UByte::_0);
+	st.setBitStatus ("N", v.negative ());
+	st.setBitStatus ("Z", v == MCHEmul::UInt::_0);
 
 	return (true);
 }
@@ -69,15 +69,15 @@ _INST_IMPL (F6500::INY)
 
 	MCHEmul::Register& y = cpu () -> internalRegister (F6500::C6510::_YREGISTER);
 
-	// Set the value...
-	MCHEmul::UBytes b = MCHEmul::UInt (y.values ()).add (MCHEmul::UInt::_1).bytes ();
-	if (b.size () > 1) b = MCHEmul::UBytes ({ b [1] });
-	y.set (b);
+	// Read the value, makes the operation and sets it back...
+	MCHEmul::UInt v = MCHEmul::UInt (y.values ()) - MCHEmul::UInt::_1;
+	// A carry could be generated, but it will be ignored...
+	y.set (v.bytes ()); // 1 byte long always
 
 	// Time of the status register
 	MCHEmul::StatusRegister& st = cpu () -> statusRegister ();
-	st.setBitStatus ("N", b [0][7]);
-	st.setBitStatus ("Z", b [0] == MCHEmul::UByte::_0);
+	st.setBitStatus ("N", v.negative ());
+	st.setBitStatus ("Z", v == MCHEmul::UInt::_0);
 
 	return (true);
 }

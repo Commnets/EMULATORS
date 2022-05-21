@@ -1,34 +1,38 @@
 #include <core/UInt.hpp>
 #include <algorithm>
+#include <sstream>
 
 // ---
-const MCHEmul::UInt MCHEmul::UInt::_0 = MCHEmul::UInt (MCHEmul::UBytes ({ MCHEmul::UByte::_0}));
-const MCHEmul::UInt MCHEmul::UInt::_1 = MCHEmul::UInt (MCHEmul::UBytes ({ MCHEmul::UByte::_1}));
+const MCHEmul::UInt MCHEmul::UInt::_0 = MCHEmul::UInt ({ MCHEmul::UByte::_0});
+const MCHEmul::UInt MCHEmul::UInt::_1 = MCHEmul::UInt ({ MCHEmul::UByte::_1});
 
 // ---
-MCHEmul::UInt MCHEmul::UInt::add (const MCHEmul::UInt& u) const
+MCHEmul::UInt MCHEmul::UInt::add (const MCHEmul::UInt& u, bool iC) const
 {
 	MCHEmul::UInt nU1 = *this;
 	MCHEmul::UInt nU2 = u;
 	size_t mL = std::max (nU1.size (), nU2.size ());
+	// The operation has to be done with uints of the same length...
 	nU1.setMinLength (mL); nU2.setMinLength (mL);
 
+	// Numbers are always stored in Big-endian format...
 	std::vector <MCHEmul::UByte> dt;
-	bool c = false;
+	bool c = iC;
 	for (int i = (int) (nU1.size () - 1); i >= 0; i--) 
 	{
 		unsigned int s = 
 			(unsigned int) (nU1._bytes [(size_t) i].value ()) + 
 			(unsigned int) (nU2._bytes [(size_t) i].value ()) + 
-			(unsigned int) ((c) ? 1 : 0); 
+			(unsigned int) ((c) ? MCHEmul::UByte::_1 : MCHEmul::UByte::_0); 
 		c = (s > (unsigned int) MCHEmul::UByte::_F);
 		dt.insert (dt.begin (), MCHEmul::UByte ((unsigned char) s)); // Cut
 	}
 
-	if (c)
-		dt.insert (dt.begin (), MCHEmul::UByte::_1);
+	MCHEmul::UInt result (dt);
+	result._carry = c;
+	result._overflow = (nU1.negative () ^ result.negative ()) & (nU2.negative () ^ result.negative ());
 
-	return (MCHEmul::UInt (MCHEmul::UBytes (dt)));
+	return (result);
 }
 
 // ---
@@ -38,53 +42,56 @@ MCHEmul::UInt MCHEmul::UInt::complement () const
 	for (size_t i = 0; i < size (); i++) 
 		dt.push_back (_bytes [(size_t) i].complement ());
 
-	return (MCHEmul::UInt (MCHEmul::UBytes (dt)));
+	MCHEmul::UInt result (dt);
+
+	return (result);
 }
 
 // ---
 MCHEmul::UInt MCHEmul::UInt::substract (const MCHEmul::UInt& u) const
 { 
-	MCHEmul::UInt nU = u; 
+	MCHEmul::UInt nU1 = *this;
+	MCHEmul::UInt nU2 = u;
+	size_t mL = std::max (nU1.size (), nU2.size ());
+	// The operation has to be done with uints of the same length...
+	nU1.setMinLength (mL); nU2.setMinLength (mL);
 
-	nU.setMinLength (size ()); /** for the addition with the complement to be done properly. */
-
-	MCHEmul::UInt result = add (nU.complement ());
-
-	if (result.size () > size ()) /** The result is positive meaning a carry has been generated. */
-		result = result.LSUInt (size ()).add (MCHEmul::UInt::_1); 
-
-	return (result); 
+	return (nU1.add (nU2.complement_2 ()));
 }
 
 // ---
 bool MCHEmul::UInt::operator > (const MCHEmul::UInt& u) const
 {
-	if (size () < u.size ())
+	if (positive () && u.negative ())
+		return (true);
+	if (negative () && u.positive ())
 		return (false);
 
-	if (size () > u.size ())
-		return (true);
-
+	// Both with the same sign...
+	// When there is two negative numbers represented in complement_2, the comparation is the same... 
 	bool result = false;
-	for (size_t i = 0; i < size () && !result; i++)
-		result = (_bytes [i].value () > u._bytes [i].value ());
-
+	bool cont = true;
+	for (size_t i = 0; i < size () && cont; i++)
+		cont = !(result = (_bytes [i].value () > u._bytes [i].value ())) && 
+			(_bytes [i].value () == u._bytes [i].value ());
 	return (result);
 }
 
 // ---
 bool MCHEmul::UInt::operator < (const MCHEmul::UInt& u) const
 {
-	if (size () > u.size ())
+	if (negative () && u.positive ())
+		return (true);
+	if (positive () && u.negative ())
 		return (false);
 
-	if (size () < u.size ())
-		return (true);
-
+	// Both with the same sign...
+	// When there is two negative numbers represented in complement_2, the comparation is the same... 
 	bool result = false;
-	for (size_t i = 0; i < size () && !result; i++)
-		result = (_bytes [i].value () < u._bytes [i].value ());
-
+	bool cont = true;
+	for (size_t i = 0; i < size () && cont; i++)
+		cont = !(result = (_bytes [i].value () < u._bytes [i].value ())) && 
+			(_bytes [i].value () == u._bytes [i].value ());
 	return (result);
 }
 
@@ -98,24 +105,6 @@ unsigned int MCHEmul::UInt::asUnsignedInt () const
 		result += _bytes [(size_t) i].value () << (c * MCHEmul::UByte::sizeBits ());
 
 	return (result);
-}
-
-// ---
-int MCHEmul::UInt::asInt () const
-{
-	int result = 0;
-
-	// The sign if in the first bit of the first byte (kept always in Big-endian format)
-	// Then the sign is removed from the bytes to convert int int (it will be used later)
-	bool n = _bytes [0][MCHEmul::UByte::sizeBits () - 1];
-	MCHEmul::UBytes bC = _bytes;
-	bC << 1 >> 1; // bC.shiftLeft (1).shiftRight (1); To eliminate the last bit
-
-	int c = 0;
-	for (int i = (int) (size () - 1); i >= 0; i--, c++)
-		result += (int) bC [(size_t) i].value () << (c * MCHEmul::UByte::sizeBits ());
-
-	return (n ? -result : result);
 }
 
 // ---
@@ -144,14 +133,12 @@ MCHEmul::UInt MCHEmul::UInt::fromInt (int n)
 {
 	std::vector <MCHEmul::UByte> dt;
 
-	// Calculate the number of bytes necessary to store the value...
-	size_t nB = 1;
-	while ((std::abs (n) / (MCHEmul::UByte::_1 << (nB * MCHEmul::UByte::sizeBits ()))) != 0) nB++;
-	if (std::abs (n) > (0x01 << (nB * MCHEmul::UByte::sizeBits () - 1))) nB++;
+	unsigned int r = (n > 0) ? n : -n;
 
-	// Then convert the number (the positive versión)
-	// The sign will be considered later...
-	unsigned int r = (unsigned int) n;
+	size_t nB = 1;
+	while ((r / (MCHEmul::UByte::_1 << (nB * MCHEmul::UByte::sizeBits ()))) != 0) nB++;
+	if (r > (unsigned int) (0x01 << (nB * MCHEmul::UByte::sizeBits () - 1))) nB++; // One bit more for the the sign...
+
 	for (size_t i = nB - 1; i > 0; i--)
 	{
 			unsigned int dv = MCHEmul::UByte::_1 << (i * MCHEmul::UByte::sizeBits ());
@@ -160,7 +147,50 @@ MCHEmul::UInt MCHEmul::UInt::fromInt (int n)
 	}
 
 	dt.push_back (r);
-	dt [0].setBit (MCHEmul::UByte::sizeBits () - 1, n < 0);
 
-	return (MCHEmul::UInt (MCHEmul::UBytes (dt)));
+	return ((n < 0) ? MCHEmul::UInt (dt).complement_2 () : MCHEmul::UInt (dt));
+}
+
+// ---
+MCHEmul::UInt MCHEmul::UInt::fromStr (const std::string& s)
+{
+	MCHEmul::UInt result ({ 0x00 });
+
+	if (!MCHEmul::validBytes (s))
+		return (result);
+
+	switch (s [0])
+	{
+		case '$':
+		{
+			unsigned int i;
+			std::istringstream ss (s.substr (1));
+			ss >> std::hex >> i;
+			result = MCHEmul::UInt::fromUnsignedInt (i); // Big - endian
+		}
+		
+		break;
+
+		case '0':
+		{
+			unsigned int i;
+			std::istringstream ss (s.substr (1));
+			ss >> std::oct >> i;
+			result = MCHEmul::UInt::fromUnsignedInt (i); // Big - endian
+		}
+		
+		break;
+
+		default:
+		{
+			unsigned int i;
+			std::istringstream ss (s);
+			ss >> std::dec >> i;
+			result = MCHEmul::UInt::fromUnsignedInt (i); // Big - endian
+		}
+			
+		break;
+	}
+
+	return (result);
 }

@@ -1,6 +1,18 @@
 #include <core/Stack.hpp>
 
 // ---
+bool MCHEmul::Stack::initialize ()
+{ 
+	bool result = MCHEmul::Memory::initialize ();
+	if (!result)
+		return (false); // _lastError variable has been already set at this point...
+
+	_position = 0; _stackOverflow = false;
+
+	return (true);
+}
+
+// ---
 void MCHEmul::Stack::push (const MCHEmul::UBytes& v)
 {
 	if (_stackOverflow)

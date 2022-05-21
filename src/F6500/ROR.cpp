@@ -8,14 +8,14 @@ bool F6500::ROR_General::executeOn (const MCHEmul::Address& a)
 	MCHEmul::StatusRegister& st = cpu () -> statusRegister ();
 	bool c = st.bitStatus ("C"); 
 
-	// Set the value...
-	MCHEmul::UBytes v = memory () -> values (a, 1);
-	c = v.rotateRightC (1, c);
-	memory () -> set (a, v);
+	// Read the value, makes the operation and set it back!
+	MCHEmul::UByte v = memory () -> values (a, 1)[0]; // 1 byte long always
+	c = v.rotateRightC (1, c /** The carry is put into. */); // Keeps the status of the last bit to actualize later the carry flag
+	memory () -> set (a, { v });
 
 	// Time of the status register...
-	st.setBitStatus ("N", v [0][7]);
-	st.setBitStatus ("Z", v [0] == MCHEmul::UByte::_0);
+	st.setBitStatus ("N", v [7]);
+	st.setBitStatus ("Z", v == MCHEmul::UByte::_0);
 	st.setBitStatus ("C", c);
 
 	return (true);

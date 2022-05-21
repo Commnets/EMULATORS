@@ -30,6 +30,12 @@
     <ClInclude Include="..\..\include\F6500\Instructions.hpp">
       <Filter>Archivos de encabezado\language</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\include\F6500\IRQInterrupt.hpp">
+      <Filter>Archivos de encabezado</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\F6500\C6500.hpp">
+      <Filter>Archivos de encabezado</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\F6500\C6510.cpp">
@@ -115,6 +121,15 @@
     </ClCompile>
     <ClCompile Include="..\..\src\F6500\INCDECXY.cpp">
       <Filter>Archivos de origen\language\instructions</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\F6500\IRQInterrupt.cpp">
+      <Filter>Archivos de origen</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\F6500\NMIInterrupt.cpp">
+      <Filter>Archivos de origen</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\F6500\C6500.cpp">
+      <Filter>Archivos de origen</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

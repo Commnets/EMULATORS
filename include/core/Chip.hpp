@@ -22,7 +22,7 @@
 
 namespace MCHEmul
 {
-	class Computer;
+	class CPU;
 
 	/** A chip is a specialized element within the computer different that the CPU. */
 	class Chip
@@ -30,8 +30,8 @@ namespace MCHEmul
 		public:
 		Chip () = delete;
 
-		Chip (int id, Memory* m = nullptr, const Attributes& attrs = { })
-			: _id (id), _memory (m), _attributes (attrs), 
+		Chip (int id, const Attributes& attrs = { })
+			: _id (id), _memory (nullptr), _attributes (attrs), 
 			  _lastError (_NOERROR) // Memory can be null, take care...
 							{ }
 
@@ -39,13 +39,21 @@ namespace MCHEmul
 
 		Chip& operator = (const Chip&) = delete;
 
+		/** The chip is not owner of the memory. */
 		virtual ~Chip ()
 							{ } 
 
-		constexpr int id () const
+		int id () const
 							{ return (_id); }
 
-		constexpr const Attributes& attributes () const
+		void setMemoryRef (Memory* m)
+							{ _memory = m; }
+		const Memory* memoryRef () const
+							{ return (_memory); }
+		Memory* memoryRef ()
+							{ return (_memory); }
+
+		const Attributes& attributes () const
 							{ return (_attributes); }
 		const std::string& attribute (const std::string& aN) const
 							{ Attributes::const_iterator i = _attributes.find (aN); 
@@ -60,17 +68,17 @@ namespace MCHEmul
 		/** To simulate th behaviour of the chip. It has to be defined per chip. \n
 			Returns true if everything was ok, and false in any other circunstance. \n 
 			The last error could be recovered from the variable error in that case. */
-		virtual bool simulate (Computer*) = 0;
+		virtual bool simulate (CPU*) = 0;
 
 		/** To get the last error happend (after initialize or simulate methods). */
-		constexpr unsigned int lastError () const
+		unsigned int lastError () const
 							{ return (_lastError); }
 		void resetErrors ()
 							{ _lastError = _NOERROR; }
 
 		friend std::ostream& operator << (std::ostream& o, const Chip& c);
 
-		private:
+		protected:
 		const int _id = -1; // Modified at construction level
 		Memory* _memory;
 		const Attributes _attributes = { }; // Maybe modified at construction level
@@ -89,7 +97,7 @@ namespace MCHEmul
 			: Chip (0)
 							{ }
 
-		virtual bool simulate (Computer*) override
+		virtual bool simulate (CPU*) override
 							{ return (true); }
 	};
 

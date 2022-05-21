@@ -22,6 +22,7 @@
 #include <core/Chip.hpp>
 #include <core/Memory.hpp>
 #include <core/Register.hpp>
+#include <core/CPUInterrupt.hpp>
 #include <core/ProgramCounter.hpp>
 #include <core/StatusRegister.hpp>
 #include <language/Instruction.hpp>
@@ -36,7 +37,7 @@ namespace MCHEmul
 
 		CPU (const CPUArchitecture& a, const Registers& r, const StatusRegister& sR, const Instructions& ins)
 			: _architecture (a), _registers (r), _statusRegister (sR), _instructions (ins),
-			  _programCounter (a.numberBytes ()), _memory (nullptr),
+			  _programCounter (a.numberBytes ()), _memory (nullptr), _interrupts (),
 			  _lastError (_NOERROR), _clockCycles (0) 
 							{ assert (_registers.size () > 0 && _instructions.size () > 0); }
 
@@ -46,29 +47,38 @@ namespace MCHEmul
 
 		virtual ~CPU ();
 
-		constexpr const CPUArchitecture& architecture () const
+		const CPUArchitecture& architecture () const
 							{ return (_architecture); }
 
-		constexpr const Registers& internalRegisters () const
+		const Registers& internalRegisters () const
 							{ return (_registers); }
 		bool existsInternalRegister (size_t nR) const
 							{ return (nR < _registers.size ()); }
-		constexpr const Register& internalRegister (size_t nR) const
+		const Register& internalRegister (size_t nR) const
 							{ return (existsInternalRegister (nR) ? _registers [nR] : NoRegister); }
 		Register& internalRegister (size_t nR)
 							{ return (existsInternalRegister (nR) ? _registers [nR] : TrashRegister); }
 		void setInternalRegister (size_t nR, UBytes v)
 							{ if (existsInternalRegister (nR) && internalRegister (nR).accept (v)) internalRegister (nR).set (v); }
 
-		constexpr const ProgramCounter& programCounter () const
+		const ProgramCounter& programCounter () const
 							{ return (_programCounter); }
 		ProgramCounter& programCounter ()
 							{ return (_programCounter); }
 
-		constexpr const StatusRegister& statusRegister () const
+		const StatusRegister& statusRegister () const
 							{ return (_statusRegister); }
 		StatusRegister& statusRegister ()
 							{ return (_statusRegister); }
+
+		bool existsInstruction (unsigned int i) const
+							{ return (_instructions.find (i) != _instructions.end ()); }
+		const Instructions& instructions () const
+							{ return (_instructions); }
+		const Instruction* instruction (unsigned int i) const
+							{ return ((*_instructions.find (i)).second); }
+		Instruction* instruction (unsigned int i)
+							{ return ((*_instructions.find (i)).second); }
 
 		/** The CPU is not the owner of the memory, but the computer (just to keep all in th same place)
 			A reference is here given to simplify the execution of transactions. */
@@ -79,7 +89,7 @@ namespace MCHEmul
 		Memory* memoryRef () 
 							{ return (_memory); }
 
-		constexpr unsigned int clockCycles () const
+		unsigned int clockCycles () const
 							{ return (_clockCycles); }
 
 		/** To initialize the CPU. It could be overloaded later. \n
@@ -87,12 +97,22 @@ namespace MCHEmul
 			Returns true if everything was ok and false in any other case. */
 		virtual bool initialize ();
 
+		/** To add and remove interrupts. */
+		bool existsInterrupt (int id) const
+							{ return (_interrupts.find (id) != _interrupts.end ()); }
+		const CPUInterrupt* interrupt (int id) const
+							{ return ((*_interrupts.find (id)).second); }
+		CPUInterrupt* interrupt (int id)
+							{ return ((*_interrupts.find (id)).second); }
+		void addInterrupt (CPUInterrupt* in);
+		void removeInterrrupt (int id);
+
 		/** To execute the next transaction,
 			Return true if everything was ok and false in any other case. */
 		bool executeNextTransaction ();
 
 		/** To get the last error happend (after initialize or simulate methods). */
-		constexpr unsigned int lastError () const
+		unsigned int lastError () const
 							{ return (_lastError); }
 		void resetErrors ()
 							{ _lastError = _NOERROR; }
@@ -108,6 +128,8 @@ namespace MCHEmul
 		StatusRegister _statusRegister;
 
 		Memory* _memory; // A reference...
+
+		CPUInterrups _interrupts;
 
 		// Implementation
 		unsigned int _lastError;

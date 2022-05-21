@@ -21,7 +21,11 @@ namespace C64
 	class Commodore64 : public MCHEmul::Computer
 	{
 		public:
-		Commodore64 ();
+		enum class VisualSystem { _NTSC, _PAL };
+
+		Commodore64 (VisualSystem vS = VisualSystem::_PAL);
+
+		virtual bool initialize () override;
 
 		static const int _DDR_MEMORY		= 0;
 		static const int _IOP_MEMORY		= 1;
@@ -30,12 +34,19 @@ namespace C64
 		static const int _RAM0_MEMORY		= 4;
 		static const int _BASIC_MEMORY		= 5;
 		static const int _RAM1_MEMORY		= 6;
-		static const int _IO_MEMORY			= 7;
-		static const int _ROM_MEMORY		= 8;
+		static const int _VICREGS_MEMORY	= 7;
+		static const int _SIDREGS_MEMORY	= 8;
+		static const int _COLOR_MEMORY		= 9;
+		static const int _CIA1_MEMORY		= 10;
+		static const int _CIA2_MEMORY		= 11;
+		static const int _IO1_MEMORY		= 12;
+		static const int _IO2_MEMORY		= 13;
+		static const int _CHAROM_MEMORY		= 14;
+		static const int _KERNELROM_MEMORY	= 15;
 
 		private:
 		// Implementation
-		static MCHEmul::Chips standardChips ();
+		static MCHEmul::Chips standardChips (VisualSystem vS);
 		static MCHEmul::Memory* standardMemory ();
 	};
 }

@@ -8,7 +8,7 @@
  *	Author: Ignacio Cea Forniés (EMULATORS library) \n
  *	Creation Date: 26/04/2021 \n
  *	Description: Definition of a set of UByte. \n
- *				 Useful to define Words and Long Words used in advanced architctures.
+ *				 Useful to define Words and Long Words used in advanced architectures.
  *	Versions: 1.0 Initial
  */
 

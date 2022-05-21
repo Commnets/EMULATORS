@@ -7,8 +7,17 @@ _INST_IMPL (F6500::BRK)
 {
 	assert (parameters ().size () == 1);
 
-	// The treatement of the interruption is managed at the main body...
-	cpu () -> statusRegister ().setBitStatus ("B", true);
+	MCHEmul::ProgramCounter& pc = cpu () -> programCounter ();
+	MCHEmul::StatusRegister& st = cpu () -> statusRegister ();
+
+	stack () -> push (pc.asAddress ().bytes ().reverse () /** To store in little - endian */);
+	stack () -> push (st.values ());
+
+	st.setBitStatus ("I", true); // No more interruptions so far...
+	st.setBitStatus ("B", true);
+
+	// Jump to the IRQ vector...
+	pc.setAddress (dynamic_cast <F6500::C6510*> (cpu ()) -> IRQVectorAddress ());
 
 	return (true);
 }
@@ -39,7 +48,7 @@ _INST_IMPL (F6500::JSR_Absolute)
 	// The address always is kept in Big-endian format, 
 	// but the architecture of this CPU is Little-endian.
 	// This is why bytes are reversed before being stored into the stack...
-	stack () -> push (pc.asAddress ().value ().bytes ().reverse ());
+	stack () -> push (pc.asAddress ().bytes ().reverse () /** To store it in little - endian */);
 
 	pc.setAddress (address_absolute ());
 
@@ -55,6 +64,8 @@ _INST_IMPL (F6500::RTI)
 	// so it has to be recovered just in the other way around...
 	cpu () -> programCounter ().setAddress (MCHEmul::Address (stack () -> pull (2), false));
 
+	// See the part of the logic where the interruptions are managed, 
+	// to see how status register is also saved!
 	cpu () -> statusRegister ().set (stack () -> pull (1)); 
 
 	return (true);

@@ -14,20 +14,22 @@
 #ifndef __MCHEMUL_CPUINTERRUPT__
 #define __MCHEMUL_CPUINTERRUPT__
 
-#include <vector>
+#include <map>
 
 #include <core/Address.hpp>
 
 namespace MCHEmul
 {
-	/** A CPU Interrup is something that is able to stop the normal progress of the cpu execution. */
+	class CPU;
+
+	/** A CPU Interrupt is something that is able to stop the normal progress of the cpu execution. */
 	class CPUInterrupt
 	{
 		public:
 		CPUInterrupt () = delete;
 
-		CPUInterrupt (const Address& a, unsigned int nc)
-			: _address (a), _everyClockCycles (nc), _active (false /** by default. */)
+		CPUInterrupt (int id)
+			: _id (id), _active (false /** by default. */)
 							{ }
 
 		CPUInterrupt (const CPUInterrupt&) = delete;
@@ -37,27 +39,36 @@ namespace MCHEmul
 
 		CPUInterrupt& operator = (const CPUInterrupt&) = delete;
 
-		constexpr const Address& address () const
-							{ return (_address); }
-		constexpr unsigned int everyClockCycles () const
-							{ return (_everyClockCycles); }
-		constexpr bool active () const
+		int id () const
+							{ return (_id); }
+
+		bool active () const
 							{ return (_active); }
 		void setActive (bool a)
 							{ _active = a; }
 
-		bool isTime (unsigned cc) const;
+		/** Receive the CPU the interrupts works for. \n
+			It receives also a erference to a variabl where to load the number of cycles it took the execution (when the return is ok). \n
+			It returns true if ok and false if not. */
+		bool executeOver (CPU* c, unsigned int& nC);
 
-		private:
-		Address _address;
-		unsigned int _everyClockCycles;
+		protected:
+		// These methods are invoked by xecuteOver (defined above);
+		/** To determine whether it is the time to execute the interruption. */
+		virtual bool isTime (CPU* c) const = 0;
+		/** To really execute the interrupt. 
+			Receives as parameter the CPU the Interrupt works for. */
+		virtual void executeOverImpl (CPU* c, unsigned int& nC) = 0;
+
+		protected:
+		int _id;
 		bool _active;
 
 		// Implementation
 		mutable unsigned int _lastClockCyclesExecuted;
 	};
 
-	using CPUInterrups = std::vector <CPUInterrupt*>;
+	using CPUInterrups = std::map <int, CPUInterrupt*>;
 }
 
 #endif

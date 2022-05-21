@@ -28,7 +28,7 @@ _INST_IMPL (F6500::PLA)
 {
 	assert (parameters ().size () == 1);
 
-	cpu () -> internalRegister (F6500::C6510::_ACCUMULATOR).set (stack () -> pull (1));
+	cpu () -> internalRegister (F6500::C6510::_ACCUMULATOR).set (stack () -> pull (1 /** 1 byte long. */));
 
 	return (true);
 }
@@ -38,7 +38,7 @@ _INST_IMPL (F6500::PLP)
 {
 	assert (parameters ().size () == 1);
 
-	cpu () -> statusRegister ().set (stack () -> pull (1));
+	cpu () -> statusRegister ().set (stack () -> pull (1 /** 1 byte long. */));
 
 	return (true);
 }
@@ -48,7 +48,7 @@ _INST_IMPL (F6500::TSX)
 {
 	assert (parameters ().size () == 1);
 
-	cpu () -> internalRegister (F6500::C6510::_XREGISTER).set (stack () -> pull (1));
+	cpu () -> internalRegister (F6500::C6510::_XREGISTER).set (stack () -> pull (1 /** 1 byte long. */));
 
 	return (true);
 }

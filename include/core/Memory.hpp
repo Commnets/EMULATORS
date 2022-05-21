@@ -63,12 +63,15 @@ namespace MCHEmul
 
 		bool isIn (const Address& a) const;
 
+		// These methods rely in setValue and readValue defined as virtual later
+		// So, the way a final value can be read or set can be overload...
 		const UByte value (const Address& a) const;
-		const UBytes values (const Address& a, size_t nB) const;
 		void set (const Address& a, const UByte v, bool f = false /** To force even when it is a rom. */);
+		const UBytes values (const Address& a, size_t nB) const;
 		void set (const Address& a, const UBytes& v, bool f = false);
 
-		void initialize ();
+		/** It can be overloaded latr, to set the specific content of specific zones. */
+		virtual bool initialize ();
 
 		/** First bytes with the address. */
 		bool load (const std::string& fN);
@@ -78,6 +81,7 @@ namespace MCHEmul
 		bool loadInto (const std::string& fN)
 							{ return (loadInto (fN, initialAddress ())); }
 
+		/** The memory can be active o not. */
 		bool active () const
 							{ return (_active); }
 		void setActive (bool e)
@@ -85,7 +89,15 @@ namespace MCHEmul
 
 		friend std::ostream& operator << (std::ostream& o, const Memory& m);
 
-		private:
+		protected:
+		/** Sometimes some specific memory addresses can behave different 
+			when read or written than the usual way of doing so. */
+		virtual void setValue (size_t p, const UByte& u)
+							{ _values [p] = u; }
+		virtual UByte readValue (size_t p) const
+							{ return (_values [p]); }
+
+		protected:
 		Address _initialAddress;
 		size_t _size;
 		UByte* _values;

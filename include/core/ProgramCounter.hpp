@@ -41,7 +41,7 @@ namespace MCHEmul
 		Address asAddress () const
 							{ return (Register::asAddress (true)); }
 		void setAddress (const Address& a)
-							{ set (a.value ().bytes ()); }
+							{ set (a.bytes ()); }
 
 		void increment (size_t n = 1)
 							{ setAddress (asAddress ().next (n)); }

@@ -1,4 +1,5 @@
 #include <core/Computer.hpp>
+#include <core/CPUInterrupt.hpp>
 
 // ---
 MCHEmul::Computer::Computer (MCHEmul::CPU* cpu, const MCHEmul::Chips& c, MCHEmul::Memory* m, const MCHEmul::Attributes& attrs)
@@ -7,6 +8,9 @@ MCHEmul::Computer::Computer (MCHEmul::CPU* cpu, const MCHEmul::Chips& c, MCHEmul
 	assert (_cpu != nullptr && _memory != nullptr && _memory -> stack () != nullptr);
 
 	_cpu -> setMemoryRef (_memory);
+
+	for (auto i : _chips)
+		i.second -> setMemoryRef (_memory);
 }
 
 // ---
@@ -23,18 +27,30 @@ MCHEmul::Computer::~Computer ()
 // ---
 bool MCHEmul::Computer::initialize ()
 {
-	bool result = true;
-
-	_cpu -> initialize ();
-
-	for (auto i : chips ())
-		result &= i.second -> initialize ();
-	if (!result)
+	bool resultCPU = true;
+	if (!(resultCPU = _cpu -> initialize ()))
+	{
 		_lastError = MCHEmul::_INIT_ERROR;
+		return (false);
+	}
 
-	_memory -> initialize ();
+	bool resultChips = true;
+	for (auto i : chips ())
+		resultChips &= i.second -> initialize ();
+	if (!resultChips)
+	{
+		_lastError = MCHEmul::_INIT_ERROR;
+		return (false);
+	}
 
-	return (result);
+	bool resultMemory = true;
+	if (!(resultMemory = _memory -> initialize ()))
+	{
+		_lastError = MCHEmul::_INIT_ERROR;
+		return (false);
+	}
+
+	return (true);
 }
 
 // ---
@@ -57,7 +73,7 @@ bool MCHEmul::Computer::run ()
 		{
 			for (auto i : _chips)
 			{
-				if (i.second -> simulate (this))
+				if (i.second -> simulate (_cpu))
 				{
 					_exit = true;
 

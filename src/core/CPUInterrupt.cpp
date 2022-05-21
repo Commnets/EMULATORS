@@ -1,17 +1,20 @@
 #include <core/CPUInterrupt.hpp>
+#include <core/CPU.hpp>
 
 // ---
-bool MCHEmul::CPUInterrupt::isTime (unsigned cc) const
+bool MCHEmul::CPUInterrupt::executeOver (MCHEmul::CPU* c, unsigned int& nC)
 {
-	if (!_active)
-		return (false);
+	assert (c != nullptr);
 
 	bool result = false;
-	if ((cc - _lastClockCyclesExecuted++) >= _everyClockCycles)
-	{
-		result = true;
 
-		_lastClockCyclesExecuted = cc;
+	if (active () && isTime (c))
+	{
+		_lastClockCyclesExecuted = c -> clockCycles ();
+
+		executeOverImpl (c, nC);
+
+		result = true;
 	}
 
 	return (result);

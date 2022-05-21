@@ -5,7 +5,10 @@
 MCHEmul::CPU::~CPU ()
 {
 	for (auto i : _instructions)
-		delete i.second;
+		delete (i.second);
+
+	for (auto i : _interrupts)
+		delete (i.second);
 }
 
 // ---
@@ -22,8 +25,36 @@ bool MCHEmul::CPU::initialize ()
 }
 
 // ---
+void MCHEmul::CPU::addInterrupt (MCHEmul::CPUInterrupt* in)
+{
+	assert (in != nullptr);
+
+	if (_interrupts.find (in -> id ()) != _interrupts.end ())
+		return; // Only one with the the same id...
+
+	_interrupts.insert (MCHEmul::CPUInterrups::value_type (in -> id (), in));
+}
+
+// ---
+void MCHEmul::CPU::removeInterrrupt (int id)
+{
+	MCHEmul::CPUInterrups::const_iterator i;
+	if ((i = _interrupts.find (id)) == _interrupts.end ())
+		return;
+
+	_interrupts.erase (i);
+}
+
+// ---
 bool MCHEmul::CPU::executeNextTransaction ()
 {
+	unsigned int nC = 0;
+	for (auto i : _interrupts)
+	{
+		i.second -> executeOver (this, nC);
+		_clockCycles += nC;
+	}
+
 	MCHEmul::Instructions::const_iterator i = 
 		_instructions.find (
 			MCHEmul::UInt (

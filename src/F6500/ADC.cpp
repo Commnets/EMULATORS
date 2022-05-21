@@ -9,21 +9,15 @@ bool F6500::ADC_General::executeWith (MCHEmul::UByte u)
 	MCHEmul::Register& a = cpu () -> internalRegister (F6500::C6510::_ACCUMULATOR);
 	MCHEmul::StatusRegister& st = cpu () -> statusRegister ();
 	
-	// The register and the value are 1 byte length under this architecture
-	MCHEmul::UInt r = MCHEmul::UInt (a.values ()) + MCHEmul::UInt ({ u });
-	if (st.bitStatus ("C")) r += MCHEmul::UInt::_1;
-
-	// The result of the addition can be longer than 1 byte meaning carry generated
-	bool c = (r.size () > 1); 
-	if (c) r = MCHEmul::UInt ({ r [1] }); // [1] = Internally the number is stored in big-endian format always
-	a.set (r.bytes ());
-	// From here always 1 byte long!
+	// Calculate the addition...
+	MCHEmul::UInt r = MCHEmul::UInt (a.values () /** 1 byte long. */).add (MCHEmul::UInt ({ u }), st.bitStatus ("C"));
+	a.set (r.bytes ()); // The carry register is taken into account in the addition...
 
 	// Time of the status register...
-	st.setBitStatus ("N", r [0][7]);
-	st.setBitStatus ("V", r [0][7]);
-	st.setBitStatus ("Z", r [0] == MCHEmul::UByte::_0);
-	st.setBitStatus ("C", c);
+	st.setBitStatus ("N", r.negative ());
+	st.setBitStatus ("V", r.overflow ());
+	st.setBitStatus ("Z", r == MCHEmul::UInt::_0);
+	st.setBitStatus ("C", r.carry ());
 
 	return (true);
 }

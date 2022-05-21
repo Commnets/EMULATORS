@@ -32,8 +32,7 @@ namespace MCHEmul
 		constexpr size_t position () const
 							{ return (_position); }
 
-		void initialize ()
-							{ Memory::initialize (); _position = 0; _stackOverflow = false; }
+		virtual bool initialize () override;
 
 		void push (const UBytes& v);
 		UBytes pull (size_t nV);

@@ -7,8 +7,10 @@ void F6500::BXX_General::executeBranch ()
 {
 	int jR = MCHEmul::UInt ({ value_relative () }).asInt (); // The value can be negative meaning back jump!
 
-	MCHEmul::ProgramCounter& pc = cpu () -> programCounter ();
+	if (jR == 0)
+		return; // No need to continue...
 
+	MCHEmul::ProgramCounter& pc = cpu () -> programCounter ();
 	if (jR > 0) pc.increment ((size_t) jR);
 	else pc.decrement ((size_t) -jR); // Parameter to "decrement" always positive...
 }

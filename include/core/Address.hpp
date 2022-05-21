@@ -31,32 +31,20 @@ namespace MCHEmul
 	{
 		public:
 		Address ()
-			: _value (UInt ()), _limit (UInt ())
+			: _value (UInt ())
 							{ }
 
 		/** Set at the length of the limit. */
-		Address (const UInt& a, const UInt& l)
-			: _value (a), _limit (l)
-							{ _value.setMinLength (_limit.size ()); }
-
 		Address (const UInt& a)
-			: _value (a), _limit (UInt (std::vector <UByte> (a.size (), UByte::_F)))
-							{ _value.setMinLength (_limit.size ()); }
-
-		Address (const MCHEmul::UBytes& a, const MCHEmul::UBytes& l, bool bE = true)
-			: _value (a, bE), _limit (l, bE)
+			: _value (a)
 							{ }
 
 		Address (const MCHEmul::UBytes& a, bool bE = true)
-			: _value (a, bE), _limit (std::vector <UByte> (a.size (), UByte::_F), bE)
+			: _value (a, bE)
 							{ }
 
-		Address (const std::vector <UByte>& a, const std::vector <UByte>& l, bool bE = true)
-			: _value (a, bE), _limit (l, bE)
-							{ _value.setMinLength (_limit.size ()); }
-
 		Address (const std::vector <UByte>& a, bool bE = true)
-			: _value (a, bE), _limit (std::vector <UByte> (a.size (), UByte::_F), bE)
+			: _value (a, bE)
 							{ }
 
 		Address (const Address&) = default;
@@ -67,16 +55,18 @@ namespace MCHEmul
 
 		const UInt& value () const
 							{ return (_value);}
-		const UInt& limit () const
-							{ return (_limit); }
+		const UBytes& bytes () const
+							{ return (_value.bytes ()); }
 
-		/** Always positive. */
+		/** Could be negative. */
 		int distanceWith (const Address& a) const
 							{ return ((int) a.value ().asUnsignedInt () - (int) value ().asUnsignedInt ()); }
 
 		/** When reach the limit start back in th other side. */
-		Address next (size_t n) const;
-		Address previous (size_t n) const;
+		Address next (size_t n) const
+							{ return (Address (_value + UInt::fromUnsignedInt ((unsigned int) n))); }		
+		Address previous (size_t n) const
+							{ return (Address (_value - UInt::fromUnsignedInt ((unsigned int) n))); }
 
 		bool operator == (const Address& a) const
 							{ return (_value == a._value); }
@@ -114,9 +104,14 @@ namespace MCHEmul
 
 		friend std::ostream& operator << (std::ostream& o, const Address& a);
 
+		/** To create an Address from an strint.\n
+			The string should start with $ if written in hexadecimal, with 0 if it is in octal and with no 0 number in decimal: \n
+			e.g $D400 (hexa), 07600 (octal), 53248 (decimal). \n
+			If the str is not valid, then an empty address will be given. */
+		static Address fromStr (const std::string& str);
+
 		private:
 		UInt _value;
-		UInt _limit;
 	};
 }
 

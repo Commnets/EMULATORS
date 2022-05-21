@@ -80,7 +80,7 @@ const MCHEmul::UByte MCHEmul::Memory::value (const MCHEmul::Address& a) const
 
 	size_t p = 0;
 	if (_size > 0 && a >= initialAddress () && (p = _initialAddress.distanceWith (a)) < (int) _size)
-		result = _values [p];
+		result = readValue (p);
 	else
 	{
 		bool t = false;
@@ -98,6 +98,32 @@ const MCHEmul::UByte MCHEmul::Memory::value (const MCHEmul::Address& a) const
 }
 
 // ---
+void MCHEmul::Memory::set (const MCHEmul::Address& a, const MCHEmul::UByte v, bool f)
+{
+	if (!_active)
+		return;
+
+	if (_rom && !f)
+		return;
+
+	size_t p = 0;
+	if (_size > 0 && a >= initialAddress () && (p = _initialAddress.distanceWith (a)) < (int) _size)
+		setValue (p, v);
+	else
+	{
+		bool t = false;
+		for (MCHEmul::Memories::iterator i = _blocks.begin (); i != _blocks.end () && !t; i++)
+		{
+			if ((*i).second -> isIn (a))
+			{
+				(*i).second -> set (a, v);
+				t = true;
+			}
+		}
+	}
+}
+
+// ---
 const MCHEmul::UBytes MCHEmul::Memory::values (const MCHEmul::Address& a, size_t nB) const
 {
 	if (!_active)
@@ -109,7 +135,7 @@ const MCHEmul::UBytes MCHEmul::Memory::values (const MCHEmul::Address& a, size_t
 	if (_size > 0 && a >= initialAddress () && ((p = _initialAddress.distanceWith (a)) + nB - 1) < (int) _size)
 	{
 		for (size_t i = 0; i < nB; i++)
-			dt.push_back (_values [p + i]);
+			dt.push_back (readValue (p + i));
 	}
 	else
 	{
@@ -128,32 +154,6 @@ const MCHEmul::UBytes MCHEmul::Memory::values (const MCHEmul::Address& a, size_t
 }
 
 // ---
-void MCHEmul::Memory::set (const MCHEmul::Address& a, const MCHEmul::UByte v, bool f)
-{
-	if (!_active)
-		return;
-
-	if (_rom && !f)
-		return;
-
-	size_t p = 0;
-	if (_size > 0 && a >= initialAddress () && (p = _initialAddress.distanceWith (a)) < (int) _size)
-		_values [p] = v;
-	else
-	{
-		bool t = false;
-		for (MCHEmul::Memories::iterator i = _blocks.begin (); i != _blocks.end () && !t; i++)
-		{
-			if ((*i).second -> isIn (a))
-			{
-				(*i).second -> set (a, v);
-				t = true;
-			}
-		}
-	}
-}
-
-// ---
 void MCHEmul::Memory::set (const MCHEmul::Address& a, const MCHEmul::UBytes& v, bool f)
 {
 	if (!_active)
@@ -166,7 +166,7 @@ void MCHEmul::Memory::set (const MCHEmul::Address& a, const MCHEmul::UBytes& v, 
 	if (_size > 0 && a >= initialAddress () && ((p = _initialAddress.distanceWith (a)) + v.size () - 1) < (int) _size)
 	{
 		for (size_t i = 0; i < v.size (); i++)
-			_values [p + i] = v [i];
+			setValue (p + i, v [i]);
 	}
 	else
 	{
@@ -183,12 +183,16 @@ void MCHEmul::Memory::set (const MCHEmul::Address& a, const MCHEmul::UBytes& v, 
 }
 
 // ---
-void MCHEmul::Memory::initialize ()
+bool MCHEmul::Memory::initialize ()
 {
 	for (size_t i = 0; i < _size; i++)
 		_values [i] = _defaultValues [i];
+	
+	bool result = true;
 	for (auto i : _blocks)
-		i.second -> initialize  ();
+		result &= i.second -> initialize  ();
+
+	return (result);
 }
 
 // ---

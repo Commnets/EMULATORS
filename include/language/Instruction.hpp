@@ -15,6 +15,7 @@
 #define __MCHEMUL_INSTRUCTION__
 
 #include <assert.h>
+#include <vector>
 #include <map>
 #include <ostream>
 
@@ -31,31 +32,95 @@ namespace MCHEmul
 	class Instruction
 	{
 		public:
+		/** Represents the internal structure of a instruction.
+			It is quite useful to be managed later by the parsers! */
+		struct Structure
+		{
+			struct Parameter
+			{
+				enum class Type { _DATA, _DIR, _JUMP };
+
+				Parameter () 
+					: _type (Type::_DATA), _numberBytes (1)
+							{ }
+
+				Parameter (Type tp, size_t nB)
+					: _type (tp), _numberBytes (nB)
+							{ }
+
+				Parameter (const Parameter&) = default;
+
+				Parameter& operator = (const Parameter&) = default;
+
+				Type _type;
+				size_t _numberBytes;
+			};
+
+			Structure ()
+				: _error (false), _templateWithNoParameters (""), _parameters ()
+							{ }
+
+			Structure (const std::string& t, const std::vector <Parameter>& prms)
+				: _error (false), _templateWithNoParameters (t), _parameters (prms)
+							{ }
+
+			Structure (const Structure&) = default;
+
+			Structure& operator = (const Structure&) = default;
+
+			/**
+			  * To indicate whether there was or not a mistake after the analysis of the instruction...
+			  * In that case the _templateWithNoParameters will hold 
+			  * either "-" (instruction error) or "?" (parameterer error). */
+			bool _error; 
+			std::string _templateWithNoParameters;
+			std::vector <Parameter> _parameters;
+		};
+
 		Instruction () = delete;
 
+		/** 
+		  *	Constructor.
+		  * @param c	:	The internal code of the instruction.
+		  *	@param mp	:	The number of memory positions (in number of ubytes) occupied by the instruction (and params).
+		  * @param cc	:	The number of clock cyles the instruction uses to be executed (usually). \n
+		  *					Some ocassions, some instructions in certain circunstances can take longer than expected. \n
+		  *					@see for so: _additionalClockCycles (method and variable).
+		  *	@param t	:	The template of the instruction. \n
+		  *					The way it is defined is key for them to be read by the parsers. \n
+		  *					The parameters should be within [] with two additional data: \n
+		  *					The type of the parameter, and the number of bytes that parameter occupies. \n
+		  *					Regarding the type: # means number, $ means address and & means relative jump.
+		  */
 		Instruction (unsigned int c, unsigned int mp, unsigned int cc, const std::string& t);
 
 		Instruction (const Instruction&) = default;
 
 		Instruction& operator = (const Instruction&) = default;
 
-		constexpr unsigned int code () const
+		unsigned int code () const
 							{ return (_code); }
-		constexpr unsigned int memoryPositions () const
+		unsigned int memoryPositions () const
 							{ return (_memoryPositions); }
-		constexpr unsigned int clockCycles () const
+		unsigned int clockCycles () const
 							{ return (_clockCycles); }
 		unsigned int additionalClockCycles () const
 							{ return (_additionalCycles); }
 		const std::string iTemplate () const
 							{ return (_iTemplate); }
+		const Structure& internalStructure () const
+							{ return (_iStructure); }
+
+		/** To know whether the instruction template matches of not with the example received. \n
+			Returns true when matches, and false when it doesn't. \n
+			When matches the parameter prms received is also filled. \n
+			When doesn't the parameter prms will have trash!. */
+		bool matchesWith (const std::string& i, std::vector <std::string>& prms);
 
 		const UBytes& parameters () const
 							{ return (_lastParameters); }
-		virtual std::string lastParameterAsString (size_t nP) const // The UBytes could grouped to get a parameter...
-							{ return (nP < _lastParameters.size () 
-								? _lastParameters [nP].asString (UByte::OutputFormat::_HEXA) : ""); }
-		virtual std::string asString () const;
+		std::string lastParametersAsString (size_t p, size_t nP) const; // The UBytes could grouped to get a parameter...
+		std::string asString () const;
 
 		/** To execute the instruction. It has to be redefined. 
 			It returns true if everything is ok, */
@@ -64,6 +129,9 @@ namespace MCHEmul
 		friend std::ostream& operator << (std::ostream& o, const Instruction& i);
 
 		protected:
+		/** To analyze the structure of the instruction. */
+		Structure analyzeInstruction () const;
+
 		/** The implementation of the execution.
 			It has to be redefined. */
 		virtual bool executeImpl () = 0;
@@ -83,11 +151,17 @@ namespace MCHEmul
 							{ return (_stack); }
 
 		protected:
-		const unsigned int _code = 0; // Modified at construction level
-		const unsigned int _memoryPositions = 0; // Modified at construction level
-		const unsigned int _clockCycles = 0; // Modified at construction level
-		const std::string _iTemplate = ""; // Modified at construction level
-		unsigned int _additionalCycles; // Sometimes a instruction could take more than expected...
+		// Once they assigned at constrruction level they couldn't be modified...
+		const unsigned int _code = 0; 
+		const unsigned int _memoryPositions = 0; 
+		const unsigned int _clockCycles = 0; 
+		std::string _iTemplate; // Can be modified during the construction...
+
+		// The internal structure helps us later to deal better with the instruction...
+		Structure _iStructure; 
+
+		unsigned int _additionalCycles; // Sometimes, when executed, 
+										// an instruction could take more than expected...
 
 		private:
 		MCHEmul::UBytes _lastParameters;

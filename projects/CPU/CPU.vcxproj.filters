@@ -75,6 +75,9 @@
     <ClInclude Include="..\..\include\core\UInt.hpp">
       <Filter>Archivos de encabezado\core</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\include\language\Parser.hpp">
+      <Filter>Archivos de encabezado\language</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\core\CPUArchitecture.cpp">
@@ -124,6 +127,9 @@
     </ClCompile>
     <ClCompile Include="..\..\src\core\UInt.cpp">
       <Filter>Archivos de origen\core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\language\Parser.cpp">
+      <Filter>Archivos de origen\language</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

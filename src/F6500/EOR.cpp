@@ -8,8 +8,7 @@ bool F6500::EOR_General::executeWith (MCHEmul::UByte u)
 	MCHEmul::Register& a = cpu () -> internalRegister (F6500::C6510::_ACCUMULATOR);
 	MCHEmul::StatusRegister& st = cpu () -> statusRegister ();
 	
-	// Set the value...
-	// The register is always 1 byte long...
+	// Read the value, makes the operation and sets it back...
 	MCHEmul::UByte r = a.values ()[0] ^ u;
 	a.set ({ r });
 

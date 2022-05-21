@@ -5,15 +5,16 @@
 // ---
 bool F6500::CPY_General::executeWith (MCHEmul::UByte u)
 {
+	// To compare is like to substract...
 	MCHEmul::UInt r = 
 		MCHEmul::UInt (cpu () -> internalRegister (F6500::C6510::_YREGISTER).values () /** 1 byte long */) - 
-		MCHEmul::UInt ({ u }); 
+		MCHEmul::UInt ({ u });  // Never longer that 1 byte, but the result could be negative...
 
 	// Time of the status register...
 	MCHEmul::StatusRegister& st = cpu () -> statusRegister ();
-	st.setBitStatus ("N", r [0][7]);
+	st.setBitStatus ("N", r.negative ());
 	st.setBitStatus ("Z", r [0] == MCHEmul::UByte::_0);
-	st.setBitStatus ("C", !r [0][7]); // When the result is positive (a > u)
+	st.setBitStatus ("C", r.carry ()); // When the result is positive (a >= u)
 
 	return (true);
 }

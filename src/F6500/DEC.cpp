@@ -5,16 +5,15 @@
 // ---
 bool F6500::DEC_General::executeOn (const MCHEmul::Address& a)
 {
-	// Sets the value...
-	MCHEmul::UInt v (memory () -> values (a, 1));
-	v -= MCHEmul::UInt::_1; /** carry could be generated. */
-	if (v.size () > 1) v = MCHEmul::UInt ({ v [1] }); // [1] = Number is stored in Big-endian format
-	memory () -> set (a, v.bytes ());
+	// Read the value, makes the operation and sets it back...
+	MCHEmul::UInt v = MCHEmul::UInt ((memory () -> values (a, 1))) - MCHEmul::UInt::_1;
+	// A carry could be generated, but it will be ignored...
+	memory () -> set (a, v.bytes ()); // 1 byte long always
 
 	// Time of the status register...
 	MCHEmul::StatusRegister& st = cpu () -> statusRegister ();
-	st.setBitStatus ("N", v [0][7]);
-	st.setBitStatus ("Z", v [0] == MCHEmul::UByte::_0);
+	st.setBitStatus ("N", v.negative ());
+	st.setBitStatus ("Z", v == MCHEmul::UInt::_0);
 
 	return (true);
 }
