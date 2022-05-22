@@ -21,8 +21,10 @@
   <ItemGroup>
     <ClInclude Include="..\..\include\F6500\C6500.hpp" />
     <ClInclude Include="..\..\include\F6500\C6510.hpp" />
+    <ClInclude Include="..\..\include\F6500\incs.hpp" />
     <ClInclude Include="..\..\include\F6500\Instructions.hpp" />
     <ClInclude Include="..\..\include\F6500\IRQInterrupt.hpp" />
+    <ClInclude Include="..\..\include\F6500\NMIInterrupt.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\F6500\C6500.cpp" />

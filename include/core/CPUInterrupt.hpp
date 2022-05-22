@@ -14,15 +14,13 @@
 #ifndef __MCHEMUL_CPUINTERRUPT__
 #define __MCHEMUL_CPUINTERRUPT__
 
-#include <map>
-
-#include <core/Address.hpp>
+#include <global.hpp>
 
 namespace MCHEmul
 {
 	class CPU;
 
-	/** A CPU Interrupt is something that is able to stop the normal progress of the cpu execution. */
+	/** A CPU Interrupt is something that is able to stop the normal progress of the CPU execution. */
 	class CPUInterrupt
 	{
 		public:
@@ -48,16 +46,17 @@ namespace MCHEmul
 							{ _active = a; }
 
 		/** Receive the CPU the interrupts works for. \n
-			It receives also a erference to a variabl where to load the number of cycles it took the execution (when the return is ok). \n
+			It receives also a reference to a variable where to load the number of cycles it 
+			took the execution (when the return was ok). \n
 			It returns true if ok and false if not. */
 		bool executeOver (CPU* c, unsigned int& nC);
 
 		protected:
-		// These methods are invoked by xecuteOver (defined above);
+		// These methods are invoked by executeOver (defined above);
 		/** To determine whether it is the time to execute the interruption. */
 		virtual bool isTime (CPU* c) const = 0;
-		/** To really execute the interrupt. 
-			Receives as parameter the CPU the Interrupt works for. */
+		/** To really execute the interrupt. \n 
+			This must be overloaded by the real interrupt. */
 		virtual void executeOverImpl (CPU* c, unsigned int& nC) = 0;
 
 		protected:
@@ -68,6 +67,7 @@ namespace MCHEmul
 		mutable unsigned int _lastClockCyclesExecuted;
 	};
 
+	/** A map of interrupts. */
 	using CPUInterrups = std::map <int, CPUInterrupt*>;
 }
 

@@ -1,7 +1,5 @@
 #include <F6500/Instructions.hpp>
 #include <F6500/C6510.hpp>
-#include <core/CPU.hpp>
-#include <core/Stack.hpp>
 
 // ---
 MCHEmul::Address F6500::Instruction::address_absolute ()

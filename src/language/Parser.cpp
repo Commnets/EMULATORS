@@ -1,5 +1,5 @@
 #include <language/Parser.hpp>
-#include <core/UByte.hpp>
+#include <core/Memory.hpp>
 #include <fstream>
 #include <sstream>
 #include <algorithm>
@@ -16,8 +16,6 @@ std::ostream& MCHEmul::operator << (std::ostream& o, const MCHEmul::Parser::Code
 		o << ((!f) ? "," : "") << i;
 		f = false;
 	}
-
-	o << '\t' << cL._originalLine;
 
 	return (o);
 }
@@ -44,12 +42,29 @@ MCHEmul::Parser::Code MCHEmul::Parser::parse (const std::string& fN) const
 		{
 			MCHEmul::Parser::Code cd = parseLine (cl, lbs, mcrs, cA, _parserError);
 			if (_parserError == MCHEmul::Parser::ParserError::_NOERROR)
-				for (auto j : cd)
-					result.push_back (j);
+				result.insert (result.end (), cd.begin (), cd.end ());
 		}
 	}
 
 	return (result);
+}
+
+// ---
+bool MCHEmul::Parser::loadInMemory (const std::string& fN, MCHEmul::Memory* m)
+{
+	assert (m != nullptr);
+
+	MCHEmul::Parser::Code code = parse (fN);
+	if (!*this)
+	{
+		// Copies the data...
+		for (auto i : code)
+			m -> set (i._address, i._code); // The memory is not forced!
+
+		return (true);
+	}
+
+	return (false);
 }
 
 // ---

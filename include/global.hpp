@@ -14,7 +14,9 @@
 #ifndef __MCHEMUL_GLOBAL__
 #define __MCHEMUL_GLOBAL__
 
+#include <assert.h>
 #include <string>
+#include <vector>
 #include <map>
 #include <ostream>
 

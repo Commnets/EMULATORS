@@ -14,8 +14,6 @@
 #ifndef __MCHEMUL_UINT__
 #define __MCHEMUL_UINT__
 
-#include <string>
-#include <ostream>
 #include <core/UBytes.hpp>
 
 namespace MCHEmul

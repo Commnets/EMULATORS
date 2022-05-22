@@ -1,7 +1,6 @@
-#include <C64/C64.hpp>
-#include <language/Parser.hpp>
-
 #include <iostream>
+
+#include <C64/C64.hpp>
 
 using namespace C64;
 
@@ -21,9 +20,9 @@ int main ()
 	else
 		std::cout << "error" << std::endl;
 
-	std::cout << myComputer << std::endl;
-
-	myComputer.run ();
+	if (myComputer.initialize () &&
+		parser.loadInMemory ("./test.asm", myComputer.cpu () -> memoryRef ()))
+			myComputer.runFrom (MCHEmul::Address ({ 0x00, 0xc0 }, false));
 
 	return (0);
 }

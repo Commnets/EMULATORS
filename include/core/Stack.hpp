@@ -7,14 +7,12 @@
  *	Framework: CPU Emulators library \n
  *	Author: Ignacio Cea Forniés (EMULATORS library) \n
  *	Creation Date: 11/04/2021 \n
- *	Description: Defines the bhviour of the stack.
+ *	Description: Defines the behviour of the stack, that it is a special type of memory.
  *	Versions: 1.0 Initial
  */
 
 #ifndef __MCHEMUL_STACK__
 #define __MCHEMUL_STACK__
-
-#include <ostream>
 
 #include <core/Memory.hpp>
 
@@ -23,11 +21,17 @@ namespace MCHEmul
 	class Stack : public Memory
 	{
 		public:
-		Stack (const Address& iA, size_t l)
+		/**
+		  * Constructor:
+		  * @param b	: From the end of the memory to the beggining or the other way around
+		  * @param e	: Poining always to the empty place or pointing to the last position kept.
+		  */
+		Stack (const Address& iA, size_t l, bool b = true, bool e = true)
 			: Memory (iA, l, { } /** no blocks inside */), 
-			  _position (0),
-			  _stackOverflow (false)
-							{ }
+			  _position (0), _fromBack (b), _pointToEmpty (e),
+			  _stackOverflow (false),
+			  _empty (true)
+							{ assert (size () > 0) /* It has to have size */; }
 
 		constexpr size_t position () const
 							{ return (_position); }
@@ -44,10 +48,13 @@ namespace MCHEmul
 		friend std::ostream& operator << (std::ostream& o, const Stack& s);
 
 		private:
-		size_t _position;
+		int _position;
+		const bool _fromBack = true; // Adapted at construction time
+		const bool _pointToEmpty = true; // Adàted at construction time
 
 		// Implementation
 		bool _stackOverflow;
+		bool _empty;
 	};
 }
 

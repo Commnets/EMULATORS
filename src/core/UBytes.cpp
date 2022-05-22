@@ -1,6 +1,4 @@
 #include <core/UBytes.hpp>
-#include <sstream>
-#include <algorithm>
 
 // ---
 const MCHEmul::UBytes MCHEmul::UBytes::_E = MCHEmul::UBytes ();

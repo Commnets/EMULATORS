@@ -30,6 +30,12 @@
     <ClInclude Include="..\..\include\C64\VICII.hpp">
       <Filter>Archivos de encabezado\Chips</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\include\C64\incs.hpp">
+      <Filter>Archivos de encabezado</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\C64\CIA.hpp">
+      <Filter>Archivos de encabezado\Chips</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\C64\C64.cpp">
@@ -39,6 +45,9 @@
       <Filter>Archivos de origen</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\C64\VICII.cpp">
+      <Filter>Archivos de origen\Chips</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\C64\CIA.cpp">
       <Filter>Archivos de origen\Chips</Filter>
     </ClCompile>
   </ItemGroup>

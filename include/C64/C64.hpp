@@ -14,7 +14,7 @@
 #ifndef __C64_C64__
 #define __C64_C64__
 
-#include <core/Computer.hpp>
+#include <core/incs.hpp>
 
 namespace C64
 {
@@ -23,7 +23,7 @@ namespace C64
 		public:
 		enum class VisualSystem { _NTSC, _PAL };
 
-		Commodore64 (VisualSystem vS = VisualSystem::_PAL);
+		Commodore64 (VisualSystem vS = VisualSystem::_PAL /** Europe initially */);
 
 		virtual bool initialize () override;
 

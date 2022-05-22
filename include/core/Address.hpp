@@ -14,9 +14,6 @@
 #ifndef __MCHEMUL_ADDRESS__
 #define __MCHEMUL_ADDRESS__
 
-#include <assert.h>
-#include <ostream>
-
 #include <global.hpp>
 #include <core/UInt.hpp>
 #include <core/UBytes.hpp>
@@ -104,7 +101,7 @@ namespace MCHEmul
 
 		friend std::ostream& operator << (std::ostream& o, const Address& a);
 
-		/** To create an Address from an strint.\n
+		/** To create an Address from an string.\n
 			The string should start with $ if written in hexadecimal, with 0 if it is in octal and with no 0 number in decimal: \n
 			e.g $D400 (hexa), 07600 (octal), 53248 (decimal). \n
 			If the str is not valid, then an empty address will be given. */

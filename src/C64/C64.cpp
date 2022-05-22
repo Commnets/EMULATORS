@@ -1,8 +1,8 @@
 #include <C64/C64.hpp>
 #include <C64/Memory.hpp>
 #include <C64/VICII.hpp>
+#include <C64/CIA.hpp>
 #include <F6500/C6510.hpp>
-#include <core/Stack.hpp>
 
 // ---
 C64::Commodore64::Commodore64 (C64::Commodore64::VisualSystem vS)
@@ -49,7 +49,9 @@ MCHEmul::Chips C64::Commodore64::standardChips (C64::Commodore64::VisualSystem v
 		(MCHEmul::Chip*) ((vS == C64::Commodore64::VisualSystem::_NTSC) 
 			? (C64::VICII*) new C64::VICII_NTSC : (C64::VICII*) new C64::VICII_PAL)));
 
-	// TODO
+	// The CIA1 & 2
+	result.insert (MCHEmul::Chips::value_type (C64::CIA1::_ID, (MCHEmul::Chip*) new C64::CIA1));
+	result.insert (MCHEmul::Chips::value_type (C64::CIA2::_ID, (MCHEmul::Chip*) new C64::CIA2));
 
 	return (result);
 }
@@ -62,7 +64,7 @@ MCHEmul::Memory* C64::Commodore64::standardMemory ()
 	MCHEmul::Memory* DDR			= new MCHEmul::Memory (MCHEmul::Address ({ 0x00, 0x00 }, false), 0x0001);
 	MCHEmul::Memory* IOP			= new MCHEmul::Memory (MCHEmul::Address ({ 0x01, 0x00 }, false), 0x0001);
 	MCHEmul::Memory* PageZero		= new MCHEmul::Memory (MCHEmul::Address ({ 0x02, 0x00 }, false), 0x00fd);
-	MCHEmul::Stack*  Stack			= new MCHEmul::Stack  (MCHEmul::Address ({ 0x00, 0x01 }, false), 0x0100);
+	MCHEmul::Stack*  Stack			= new MCHEmul::Stack  (MCHEmul::Address ({ 0x00, 0x01 }, false), 0x0100, true /** back */, true /** points empty */);
 	MCHEmul::Memory* RAMMemory0		= new MCHEmul::Memory (MCHEmul::Address ({ 0x00, 0x02 }, false), 0x9e00);		// 40k
 	MCHEmul::Memory* BasicRAM		= new MCHEmul::Memory (MCHEmul::Address ({ 0x00, 0xa0 }, false), 0x2000);		// When the BASIC is not used...
 	MCHEmul::Memory* BasicROM		= new MCHEmul::Memory (MCHEmul::Address ({ 0x00, 0xa0 }, false), 0x2000, true); // Where the basic is located 
@@ -74,7 +76,7 @@ MCHEmul::Memory* C64::Commodore64::standardMemory ()
 	MCHEmul::Memory* CIA2			= new MCHEmul::Memory (MCHEmul::Address ({ 0x00, 0xdd }, false), 0x0100); 
 	MCHEmul::Memory* IO1			= new MCHEmul::Memory (MCHEmul::Address ({ 0x00, 0xde }, false), 0x0100); 
 	MCHEmul::Memory* IO2			= new MCHEmul::Memory (MCHEmul::Address ({ 0x00, 0xdf }, false), 0x0100); 
-	MCHEmul::Memory* CHARROM		= new MCHEmul::Memory (MCHEmul::Address ({ 0x00, 0xd0 }, false), 0x1000, true); // ROM
+	MCHEmul::Memory* CHARROM		= new MCHEmul::Memory (MCHEmul::Address ({ 0x00, 0xd0 }, false), 0x1000, true); // ROM over VIC/SID/RAM/CIA/IO
 	MCHEmul::Memory* KernalROM		= new MCHEmul::Memory (MCHEmul::Address ({ 0x00, 0xe0 }, false), 0x2000, true); // ROM
 
 	MCHEmul::Memory* result = 

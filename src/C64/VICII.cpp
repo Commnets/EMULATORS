@@ -19,6 +19,8 @@ bool C64::VICII::initialize ()
 		return (false);
 	}
 
+	setMemoryRef (_VICMemory);
+
 	return (true);
 }
 
@@ -33,8 +35,9 @@ bool C64::VICII::simulate (MCHEmul::CPU*)
 // ---
 C64::VICII_NTSC::VICII_NTSC ()
 	: C64::VICII (
-		 { { "Name", "VICII for NTSC Systems" },
-		   { "Manufacturer", "Commodore Business Machines CBM" },
+		 { { "Name", "VIC-II (NTSC) Video Chip Interface II" },
+		   { "Code", "6567/8562/8564" },
+		   { "Manufacturer", "MOS Technology INC/Commodore Semiconductor Group (CBM)"},
 		   { "Year", "1980" } })
 {
 	// Nothing else to do...
@@ -43,8 +46,9 @@ C64::VICII_NTSC::VICII_NTSC ()
 // ---
 C64::VICII_PAL::VICII_PAL ()
 	: C64::VICII (
-		 { { "Name", "VICII for PAL Systems" },
-		   { "Manufacturer", "Commodore Business Machines CBM" },
+		 { { "Name", "VIC-II (PAL) Video Chip Interface II" },
+		   { "Code", "6569/8565/8566" },
+		   { "Manufacturer", "MOS Technology INC/Commodore Semiconductor Group (CBM)"},
 		   { "Year", "1980" } })
 {
 	// Nothing else to do...

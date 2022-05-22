@@ -14,7 +14,7 @@
 #ifndef __F6500_NMIINTERRUPT__
 #define __F6500_NMIINTERRUPT__
 
-#include <core/CPUInterrupt.hpp>
+#include <core/incs.hpp>
 
 namespace F6500
 {
@@ -22,8 +22,10 @@ namespace F6500
 	class NMIInterrupt : public MCHEmul::CPUInterrupt
 	{
 		public:
-		NMIInterrupt (int id)
-			: MCHEmul::CPUInterrupt (id)
+		static const int _ID = 1;
+
+		NMIInterrupt ()
+			: MCHEmul::CPUInterrupt (_ID)
 							{ }
 
 		protected:

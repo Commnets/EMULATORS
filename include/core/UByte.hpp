@@ -14,15 +14,13 @@
 #ifndef __MCHEMUL_UBYTE__
 #define __MCHEMUL_UBYTE__
 
-#include <string>
-#include <ostream>
 #include <global.hpp>
 
 namespace MCHEmul
 {
 	/** Representing the minimum piece of addressable info in a computer. 
 		MSB is the bit 7, LSB is the bit 0.
-		Read from left to right. */
+		Read bits from right to left. */
 	class UByte
 	{
 		public:
@@ -50,10 +48,11 @@ namespace MCHEmul
 		UByte (const UByte&) = default;
 		UByte& operator = (const UByte&) = default;
 
+		/** COmmon to every UByt. */
 		static size_t size () // (static) Alol the same...
 							{ return (sizeof (unsigned char)); }
 		static size_t sizeBits () // (static) All the same...
-							{ return (sizeof (unsigned char) * 8); }
+							{ return (sizeof (unsigned char) << 3); }
 
 		unsigned char value () const
 							{ return (_value); }

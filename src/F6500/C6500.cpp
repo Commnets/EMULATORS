@@ -14,8 +14,8 @@ F6500::C6500::C6500 (const MCHEmul::CPUArchitecture& a)
 	// It is linked to the CPU at computer (class) level!
 
 	//This type of CPU admites two types of interruptions...
-	addInterrupt (new F6500::IRQInterrupt (0));
-	addInterrupt (new F6500::NMIInterrupt (1));
+	addInterrupt (new F6500::IRQInterrupt);
+	addInterrupt (new F6500::NMIInterrupt);
 }
 
 // ---
@@ -47,7 +47,7 @@ MCHEmul::StatusRegister F6500::C6500::createStatusRegister ()
 			(
 				1 /** 1 byte long */,
 				{ { "C", 0 /** bit number */ },		// Carry flag
-				  { "Z", 1 },		// Zero floag
+				  { "Z", 1 },		// Zero flag
 				  { "I", 2 },		// Interrupt disable flag
 				  { "D", 3 },		// Decimal mode flag
 				  { "B", 4 },		// Break flag

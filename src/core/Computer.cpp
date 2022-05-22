@@ -1,5 +1,4 @@
 #include <core/Computer.hpp>
-#include <core/CPUInterrupt.hpp>
 
 // ---
 MCHEmul::Computer::Computer (MCHEmul::CPU* cpu, const MCHEmul::Chips& c, MCHEmul::Memory* m, const MCHEmul::Attributes& attrs)
@@ -59,31 +58,18 @@ bool MCHEmul::Computer::run ()
 	if (!initialize ())
 		return (false);
 
-	_exit = false;
-	_lastError = MCHEmul::_NOERROR;
-	while (!_exit)
-	{
-		if (!_cpu -> executeNextTransaction ())
-		{
-			_exit = true;
+	return (runImpl ());
+}
 
-			_lastError = MCHEmul::_CPU_ERROR;
-		}
-		else
-		{
-			for (auto i : _chips)
-			{
-				if (i.second -> simulate (_cpu))
-				{
-					_exit = true;
+// ---
+bool MCHEmul::Computer::runFrom (const MCHEmul::Address& a)
+{
+	// It must be initialized before!
 
-					_lastError = MCHEmul::_CHIP_ERROR;
-				}
-			}
-		}
-	}
+	// Sets the initial address to start from...
+	cpu () -> programCounter ().setAddress (a);
 
-	return (_lastError != MCHEmul::_NOERROR);
+	return (runImpl ());
 }
 
 // ---
@@ -98,4 +84,34 @@ std::ostream& MCHEmul::operator << (std::ostream& o, const MCHEmul::Computer& c)
 	o << c.attributes ();
 
 	return (o);
+}
+
+// ---
+bool MCHEmul::Computer::runImpl ()
+{
+	_exit = false;
+	_lastError = MCHEmul::_NOERROR;
+	while (!_exit)
+	{
+		if (!_cpu -> executeNextTransaction ())
+		{
+			_exit = true;
+
+			_lastError = MCHEmul::_CPU_ERROR;
+		}
+		else
+		{
+			for (auto i : _chips)
+			{
+				if (!i.second -> simulate (_cpu))
+				{
+					_exit = true;
+
+					_lastError = MCHEmul::_CHIP_ERROR;
+				}
+			}
+		}
+	}
+
+	return (_lastError != MCHEmul::_NOERROR);
 }

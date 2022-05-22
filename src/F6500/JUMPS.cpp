@@ -1,7 +1,5 @@
 #include <F6500/Instructions.hpp>
 #include <F6500/C6510.hpp>
-#include <core/CPU.hpp>
-#include <core/Stack.hpp>
 
 _INST_IMPL (F6500::BRK)
 {
@@ -10,7 +8,7 @@ _INST_IMPL (F6500::BRK)
 	MCHEmul::ProgramCounter& pc = cpu () -> programCounter ();
 	MCHEmul::StatusRegister& st = cpu () -> statusRegister ();
 
-	stack () -> push (pc.asAddress ().bytes ().reverse () /** To store in little - endian */);
+	stack () -> push (pc.asAddress ().bytes ());
 	stack () -> push (st.values ());
 
 	st.setBitStatus ("I", true); // No more interruptions so far...
@@ -62,7 +60,8 @@ _INST_IMPL (F6500::RTI)
 
 	// When a interruption is lunched, the status and the program counter is stored,
 	// so it has to be recovered just in the other way around...
-	cpu () -> programCounter ().setAddress (MCHEmul::Address (stack () -> pull (2), false));
+	cpu () -> programCounter ().setAddress 
+		(MCHEmul::Address (stack () -> pull (2), false /** Are recover in little - endian format */));
 
 	// See the part of the logic where the interruptions are managed, 
 	// to see how status register is also saved!

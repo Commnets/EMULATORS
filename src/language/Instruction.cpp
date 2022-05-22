@@ -1,5 +1,4 @@
 #include <language/Instruction.hpp>
-#include <core/UInt.hpp>
 
 // ---
 MCHEmul::Instruction::Instruction (unsigned int c, unsigned int mp, unsigned int cc, const std::string& t)

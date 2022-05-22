@@ -14,7 +14,6 @@
 #ifndef __C64_VICII__
 #define __C64_VICII__
 
-#include <core/Chip.hpp>
 #include <C64/Memory.hpp>
 
 namespace C64
@@ -26,7 +25,7 @@ namespace C64
 		static const unsigned int _ID = 1;
 
 		VICII (const MCHEmul::Attributes& attrs)
-			: MCHEmul::Chip (C64::VICII::_ID, attrs)
+			: MCHEmul::Chip (_ID, attrs)
 							{ }
 
 		virtual bool initialize () override;

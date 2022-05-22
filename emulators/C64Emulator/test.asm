@@ -9,9 +9,9 @@ BACKGROUND = $D021
 
 ; Now the code
 
-START:			LDA #$00
+START:			LDA #$00				; Load Accumulator
 				STA BACKGROUND
 				STA FOREGROUND
-				BNE START
+				BEQ START				; Infinite
 
 ; Very simple

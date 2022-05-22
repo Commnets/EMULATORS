@@ -14,10 +14,7 @@
 #ifndef __F6500_INSTRUCTIONS__
 #define __F6500_INSTRUCTIONS__
 
-#include <global.hpp>
-#include <core/Address.hpp>
-#include <core/Memory.hpp>
-#include <language/Instruction.hpp>
+#include <core/incs.hpp>
 
 namespace F6500
 {

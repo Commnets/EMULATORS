@@ -1,6 +1,5 @@
 #include <F6500/Instructions.hpp>
 #include <F6500/C6510.hpp>
-#include <core/CPU.hpp>
 
 // ---
 void F6500::BXX_General::executeBranch ()

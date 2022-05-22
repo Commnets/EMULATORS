@@ -78,6 +78,9 @@
     <ClInclude Include="..\..\include\language\Parser.hpp">
       <Filter>Archivos de encabezado\language</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\include\core\incs.hpp">
+      <Filter>Archivos de encabezado</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\core\CPUArchitecture.cpp">

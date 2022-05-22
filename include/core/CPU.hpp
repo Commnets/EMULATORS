@@ -14,9 +14,6 @@
 #ifndef __MCHEMUL_CPU__
 #define __MCHEMUL_CPU__
 
-#include <assert.h>
-#include <ostream>
-
 #include <global.hpp>
 #include <core/CPUArchitecture.hpp>
 #include <core/Chip.hpp>
@@ -80,7 +77,7 @@ namespace MCHEmul
 		Instruction* instruction (unsigned int i)
 							{ return ((*_instructions.find (i)).second); }
 
-		/** The CPU is not the owner of the memory, but the computer (just to keep all in th same place)
+		/** The CPU is not the owner of the memory, but the computer (just to keep all in the same place)
 			A reference is here given to simplify the execution of transactions. */
 		void setMemoryRef (Memory* m)
 							{ _memory = m; }
@@ -121,9 +118,9 @@ namespace MCHEmul
 
 		protected:
 		const CPUArchitecture _architecture = 
-			CPUArchitecture (2 /** 2 bytes arch. */, 1 /** 1 byte for instruction. */); // Modified at construction level
+			CPUArchitecture (2 /** 2 bytes arch. */, 1 /** 1 byte for instruction. */); // Adjusted at construction level
 		Registers _registers;
-		const Instructions _instructions = { }; // Modified at construction level
+		const Instructions _instructions = { }; // Adjusted at construction level
 		ProgramCounter _programCounter;
 		StatusRegister _statusRegister;
 

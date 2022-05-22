@@ -14,12 +14,7 @@
 #ifndef __MCHEMUL_PROGRAMCOUNTER__
 #define __MCHEMUL_PROGRAMCOUNTER__
 
-#include <ostream>
-
-#include <global.hpp>
 #include <core/Register.hpp>
-#include <core/Address.hpp>
-#include <core/UBytes.hpp>
 
 namespace MCHEmul
 {

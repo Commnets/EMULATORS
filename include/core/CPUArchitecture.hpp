@@ -14,9 +14,6 @@
 #ifndef __MCHEMUL_CPUARCHITECTURE__
 #define __MCHEMUL_CPUARCHITECTURE__
 
-#include <assert.h>
-#include <ostream>
-
 #include <global.hpp>
 #include <core/Register.hpp>
 
@@ -34,13 +31,13 @@ namespace MCHEmul
 
 		CPUArchitecture& operator = (const CPUArchitecture&) = default;
 
-		constexpr size_t numberBytes () const
+		size_t numberBytes () const
 							{ return (_numberBytes); }
-		constexpr size_t numberBits () const
+		size_t numberBits () const
 							{ return (_numberBits); }
-		constexpr size_t instructionLength () const
+		size_t instructionLength () const
 							{ return (_instructionLength); }
-		constexpr bool bigEndian () const
+		bool bigEndian () const
 							{ return (_bigEndian); }
 
 		/** To get a register of a specific length only if is possible. */
@@ -48,10 +45,10 @@ namespace MCHEmul
 							{ return ((nb > 0 && nb <= _numberBytes) 
 								? Register (id, UBytes (std::vector <UByte> (nb, UByte::_0))) : NoRegister); }
 		/** To get a exampla of the longest possible register. It is constant so it would have to be copied once it is got. */ 
-		constexpr const Register& longestRegisterPossible () const
+		const Register& longestRegisterPossible () const
 							{ return (_longestRegisterPossible); }
 
-		constexpr const Attributes& attributes () const
+		const Attributes& attributes () const
 							{ return (_attributes); }
 		const std::string& attribute (const std::string& aN) const
 							{ Attributes::const_iterator i = _attributes.find (aN); 
@@ -60,11 +57,11 @@ namespace MCHEmul
 		friend std::ostream& operator << (std::ostream& o, const CPUArchitecture& a);
 
 		private:
-		const size_t _numberBytes = 0; // Modified at construction level
+		const size_t _numberBytes = 0; // Adjusted at construction level
 		const size_t _numberBits = 0; // Calculated at construction level
-		const size_t _instructionLength = 0; // Modified at construction level
+		const size_t _instructionLength = 0; // Adjusted at construction level
 		const bool _bigEndian = true; // Are the most significant Ubyte (in an address) the first or the last in values?
-		const Attributes _attributes = { }; // Maybe modified at construction level
+		const Attributes _attributes = { }; // Optionaly adjusted at construction level
 		const Register _longestRegisterPossible = NoRegister; // Calculated at construction level
 	};
 }

@@ -25,6 +25,7 @@
     <ClInclude Include="..\..\include\core\CPUArchitecture.hpp" />
     <ClInclude Include="..\..\include\core\Computer.hpp" />
     <ClInclude Include="..\..\include\core\CPUInterrupt.hpp" />
+    <ClInclude Include="..\..\include\core\incs.hpp" />
     <ClInclude Include="..\..\include\core\Memory.hpp" />
     <ClInclude Include="..\..\include\core\ProgramCounter.hpp" />
     <ClInclude Include="..\..\include\core\Register.hpp" />

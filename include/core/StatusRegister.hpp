@@ -14,9 +14,6 @@
 #ifndef __MCHEMUL_STATUSREGISTER__
 #define __MCHEMUL_STATUSREGISTER__
 
-#include <map>
-#include <ostream>
-
 #include <core/Register.hpp>
 
 namespace MCHEmul

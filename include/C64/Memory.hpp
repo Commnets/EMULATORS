@@ -14,7 +14,7 @@
 #ifndef __C64_MEMORY__
 #define __C64_MEMORY__
 
-#include <core/Memory.hpp>
+#include <core/incs.hpp>
 
 namespace C64
 {

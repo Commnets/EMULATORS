@@ -1,5 +1,4 @@
 #include <core/CPU.hpp>
-#include <iostream>
 
 // ---
 MCHEmul::CPU::~CPU ()
@@ -80,10 +79,6 @@ bool MCHEmul::CPU::executeNextTransaction ()
 
 	// And also, take into account what it costs in terms of cycles...
 	_clockCycles += inst -> clockCycles () + inst -> additionalClockCycles ();
-
-#ifndef _NDEBUG
-	std::cout << *inst << std::endl;
-#endif
 
 	return (result);
 }

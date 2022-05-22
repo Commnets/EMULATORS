@@ -14,9 +14,6 @@
 #ifndef __MCHEMUL_REGISTER__
 #define __MCHEMUL_REGISTER__
 
-#include <assert.h>
-#include <ostream>
-
 #include <global.hpp>
 #include <core/Address.hpp>
 #include <core/UBytes.hpp>

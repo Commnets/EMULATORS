@@ -1,7 +1,5 @@
 #include <F6500/IRQInterrupt.hpp>
 #include <F6500/C6510.hpp>
-#include <core/Memory.hpp>
-#include <core/Stack.hpp>
 
 // ---
 bool F6500::IRQInterrupt::isTime (MCHEmul::CPU* c) const
@@ -18,14 +16,12 @@ void F6500::IRQInterrupt::executeOverImpl (MCHEmul::CPU* c, unsigned int& nC)
 
 	MCHEmul::StatusRegister& st = c -> statusRegister ();
 	MCHEmul::ProgramCounter& pc = c -> programCounter ();
-	c -> memoryRef () -> stack () -> push (pc.asAddress ().bytes ().reverse () /** Little - endian. */);
+	c -> memoryRef () -> stack () -> push (pc.asAddress ().bytes () /** First high, then low byte */);
 	c -> memoryRef () -> stack () -> push (st.valuesWithout ({ "B" })); // The break flag is not taken into account...
 	st.setBitStatus ("I", true); // No more interruptions so far...
 
 	pc.setAddress (MCHEmul::Address (c -> memoryRef () -> values 
 		(dynamic_cast <F6500::C6510*> (c) -> IRQVectorAddress (), 2), false /** Little - endian. */));
 
-	// TODO
-
-	nC = 0;
+	nC = 7; // 7 ticks has taken...
 }

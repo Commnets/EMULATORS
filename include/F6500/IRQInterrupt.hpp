@@ -14,7 +14,7 @@
 #ifndef __F6500_IRQINTERRUPT__
 #define __F6500_IRQINTERRUPT__
 
-#include <core/CPUInterrupt.hpp>
+#include <core/incs.hpp>
 
 namespace F6500
 {
@@ -22,8 +22,10 @@ namespace F6500
 	class IRQInterrupt : public MCHEmul::CPUInterrupt
 	{
 		public:
-		IRQInterrupt (int id)
-			: MCHEmul::CPUInterrupt (id)
+		static const unsigned int _ID = 0;
+
+		IRQInterrupt ()
+			: MCHEmul::CPUInterrupt (_ID)
 							{ }
 
 		protected:

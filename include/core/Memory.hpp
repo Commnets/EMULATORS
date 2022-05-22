@@ -17,6 +17,7 @@
 #include <global.hpp>
 #include <core/Address.hpp>
 #include <core/UByte.hpp>
+#include <core/UBytes.hpp>
 
 namespace MCHEmul
 {

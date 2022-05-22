@@ -62,7 +62,7 @@ bool MCHEmul::Memory::isIn (const MCHEmul::Address& a) const
 	if (!_active)
 		return (false);
 
-	bool result = (_size > 0 && a >= initialAddress () && _initialAddress.distanceWith (a) < (int) _size);
+	bool result = (_size > 0 && a >= _initialAddress && _initialAddress.distanceWith (a) < (int) _size);
 	if (!result)
 		for (MCHEmul::Memories::const_iterator i = _blocks.begin (); i != _blocks.end () && !result; i++)
 			result = (*i).second -> isIn (a);
@@ -79,7 +79,7 @@ const MCHEmul::UByte MCHEmul::Memory::value (const MCHEmul::Address& a) const
 	MCHEmul::UByte result = MCHEmul::UByte::_0;
 
 	size_t p = 0;
-	if (_size > 0 && a >= initialAddress () && (p = _initialAddress.distanceWith (a)) < (int) _size)
+	if (_size > 0 && a >= _initialAddress && (p = _initialAddress.distanceWith (a)) < (int) _size)
 		result = readValue (p);
 	else
 	{
@@ -107,7 +107,7 @@ void MCHEmul::Memory::set (const MCHEmul::Address& a, const MCHEmul::UByte v, bo
 		return;
 
 	size_t p = 0;
-	if (_size > 0 && a >= initialAddress () && (p = _initialAddress.distanceWith (a)) < (int) _size)
+	if (_size > 0 && a >= _initialAddress && (p = _initialAddress.distanceWith (a)) < (int) _size)
 		setValue (p, v);
 	else
 	{
@@ -132,7 +132,7 @@ const MCHEmul::UBytes MCHEmul::Memory::values (const MCHEmul::Address& a, size_t
 	std::vector <MCHEmul::UByte> dt = { };
 
 	size_t p = 0;
-	if (_size > 0 && a >= initialAddress () && ((p = _initialAddress.distanceWith (a)) + nB - 1) < (int) _size)
+	if (_size > 0 && a >= _initialAddress && ((p = _initialAddress.distanceWith (a)) + nB - 1) < (int) _size)
 	{
 		for (size_t i = 0; i < nB; i++)
 			dt.push_back (readValue (p + i));
@@ -163,7 +163,7 @@ void MCHEmul::Memory::set (const MCHEmul::Address& a, const MCHEmul::UBytes& v, 
 		return;
 
 	size_t p = 0;
-	if (_size > 0 && a >= initialAddress () && ((p = _initialAddress.distanceWith (a)) + v.size () - 1) < (int) _size)
+	if (_size > 0 && a >= _initialAddress && ((p = _initialAddress.distanceWith (a)) + v.size () - 1) < (int) _size)
 	{
 		for (size_t i = 0; i < v.size (); i++)
 			setValue (p + i, v [i]);
@@ -207,7 +207,7 @@ bool MCHEmul::Memory::load (const std::string& fN)
 
 	file.seekg (0, std::ios::end);
 	std::streamoff lF = file.tellg ();
-	size_t lA = initialAddress ().size () * MCHEmul::UByte::sizeBits ();
+	size_t lA = _initialAddress.size () * MCHEmul::UByte::sizeBits ();
 	if (lF > (std::streamoff) std::numeric_limits <size_t>::max () ||
 		lF < (std::streamoff) lA || (lF - (std::streamoff) lA) > (std::streamoff) size ())
 		return (false); // either bad format or too long for this memory...
@@ -286,11 +286,18 @@ std::ostream& MCHEmul::operator << (std::ostream& o, const MCHEmul::Memory& m)
 	o << "---" << std::endl;
 	o << "Memory Block Data" << std::endl;
 	o << m.initialAddress () << "," << m.size ();
+
 	for (auto i : m._blocks)
-		o << std::endl << *i.second;
+	{
+		if (dynamic_cast <MCHEmul::Stack*> (i.second) != nullptr)
+			o << std::endl << *((MCHEmul::Stack*) i.second); // Specific for the stack...
+		else
+			o << std::endl << *i.second;
+	}
+
 	if (m._size != 0)
 	{
-		size_t bS = 16;
+		size_t bS = 0x10;
 		for (size_t i = 0; i <= (size_t) (m._size / bS); i++)
 		{
 			if ((i * bS) < m._size)

@@ -14,11 +14,6 @@
 #ifndef __MCHEMUL_INSTRUCTION__
 #define __MCHEMUL_INSTRUCTION__
 
-#include <assert.h>
-#include <vector>
-#include <map>
-#include <ostream>
-
 #include <global.hpp>
 #include <core/UBytes.hpp>
 
@@ -38,7 +33,7 @@ namespace MCHEmul
 		{
 			struct Parameter
 			{
-				enum class Type { _DATA, _DIR, _JUMP };
+				enum class Type { _DATA, _DIR, _JUMP /** Usually relative */ };
 
 				Parameter () 
 					: _type (Type::_DATA), _numberBytes (1)
@@ -46,7 +41,7 @@ namespace MCHEmul
 
 				Parameter (Type tp, size_t nB)
 					: _type (tp), _numberBytes (nB)
-							{ }
+							{ assert (_numberBytes > 0); }
 
 				Parameter (const Parameter&) = default;
 
@@ -70,8 +65,8 @@ namespace MCHEmul
 
 			/**
 			  * To indicate whether there was or not a mistake after the analysis of the instruction...
-			  * In that case the _templateWithNoParameters will hold 
-			  * either "-" (instruction error) or "?" (parameterer error). */
+			  * In that error-case the _templateWithNoParameters will hold 
+			  * either "-" (instruction error) or "?" (parameter error). */
 			bool _error; 
 			std::string _templateWithNoParameters;
 			std::vector <Parameter> _parameters;
@@ -84,13 +79,13 @@ namespace MCHEmul
 		  * @param c	:	The internal code of the instruction.
 		  *	@param mp	:	The number of memory positions (in number of ubytes) occupied by the instruction (and params).
 		  * @param cc	:	The number of clock cyles the instruction uses to be executed (usually). \n
-		  *					Some ocassions, some instructions in certain circunstances can take longer than expected. \n
+		  *					Some ocassions, some instructions under certain circunstances can take longer than expected. \n
 		  *					@see for so: _additionalClockCycles (method and variable).
 		  *	@param t	:	The template of the instruction. \n
-		  *					The way it is defined is key for them to be read by the parsers. \n
+		  *					The way it is defined is key for it to be read and understood by the parsers. \n
 		  *					The parameters should be within [] with two additional data: \n
 		  *					The type of the parameter, and the number of bytes that parameter occupies. \n
-		  *					Regarding the type: # means number, $ means address and & means relative jump.
+		  *					Regarding the type: # means number, $ means address and & means relative jump (@see type of parameter).
 		  */
 		Instruction (unsigned int c, unsigned int mp, unsigned int cc, const std::string& t);
 
@@ -119,10 +114,10 @@ namespace MCHEmul
 
 		const UBytes& parameters () const
 							{ return (_lastParameters); }
-		std::string lastParametersAsString (size_t p, size_t nP) const; // The UBytes could grouped to get a parameter...
+		std::string lastParametersAsString (size_t p, size_t nP = 1) const; // The UBytes could grouped to get a parameter...
 		std::string asString () const;
 
-		/** To execute the instruction. It has to be redefined. 
+		/** To execute the instruction. It has to be redefined. \n
 			It returns true if everything is ok, */
 		bool execute (const UBytes& p, CPU* c, Memory* m, Stack* stk);
 
@@ -151,17 +146,18 @@ namespace MCHEmul
 							{ return (_stack); }
 
 		protected:
-		// Once they assigned at constrruction level they couldn't be modified...
+		// Once they assigned at construction level they couldn't be modified...
 		const unsigned int _code = 0; 
 		const unsigned int _memoryPositions = 0; 
 		const unsigned int _clockCycles = 0; 
-		std::string _iTemplate; // Can be modified during the construction...
+		std::string _iTemplate; // It is modified during the construction...
 
+		// Implementation
 		// The internal structure helps us later to deal better with the instruction...
 		Structure _iStructure; 
 
 		unsigned int _additionalCycles; // Sometimes, when executed, 
-										// an instruction could take more than expected...
+										// an instruction could take more than expected... (@see additionalClockCylces method)
 
 		private:
 		MCHEmul::UBytes _lastParameters;

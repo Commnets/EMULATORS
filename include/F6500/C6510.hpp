@@ -25,11 +25,11 @@ namespace F6500
 		C6510 ();
 
 		virtual MCHEmul::Address IRQVectorAddress () const override
-							{ return (MCHEmul::Address ({ 0xfe, 0xff }, false)); }
+							{ return (MCHEmul::Address ({ 0xfe, 0xff }, false /** Little - endian */)); }
 		virtual MCHEmul::Address NMIVectorAddress () const override
-							{ return (MCHEmul::Address ({ 0xfa, 0xff }, false)); }
+							{ return (MCHEmul::Address ({ 0xfa, 0xff }, false /** Little - endian */)); }
 		virtual MCHEmul::Address ResetVectorAddress () const override
-							{ return (MCHEmul::Address ({ 0xfc, 0xff }, false)); }
+							{ return (MCHEmul::Address ({ 0xfc, 0xff }, false /** Little - endian */)); }
 
 		private:
 		// Implementation
