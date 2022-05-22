@@ -1,17 +1,17 @@
-; Simple test that everything works
+; Set the color of the both background and foreground
 ; By Ignacio Cea
 
 ; MACROS
 FOREGROUND = $D020
 BACKGROUND = $D021
 
+; Where the code starts
 * = $C000
 
-; Now the code
-
-START:			LDA #$00				; Load Accumulator
+; Code
+START:			LDA #$00				; First color is black
 				STA BACKGROUND
 				STA FOREGROUND
 				BEQ START				; Infinite
 
-; Very simple
+; That's all
