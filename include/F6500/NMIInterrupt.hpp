@@ -14,7 +14,7 @@
 #ifndef __F6500_NMIINTERRUPT__
 #define __F6500_NMIINTERRUPT__
 
-#include <core/incs.hpp>
+#include <CPU/incs.hpp>
 
 namespace F6500
 {

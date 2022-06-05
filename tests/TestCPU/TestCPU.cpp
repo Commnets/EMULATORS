@@ -1,9 +1,9 @@
 #include <iostream>
-#include <global.hpp>
-#include <core/UByte.hpp>
-#include <core/UBytes.hpp>
-#include <core/UInt.hpp>
-#include <core/Address.hpp>
+#include <CPU/global.hpp>
+#include <CPU/UByte.hpp>
+#include <CPU/UBytes.hpp>
+#include <CPU/UInt.hpp>
+#include <CPU/Address.hpp>
 
 void testUByte ()
 {

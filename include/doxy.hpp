@@ -3,13 +3,13 @@
 
 // EMULATORS Library
 /**
- *	\defgroup	core Common classes
+ *	\defgroup	CPU Common classes
  *	Classes and macros defining the core of any CPU/Computer emulator.
  */
 
  /**
- *	\defgroup	language Classes representing the CPU language
- *	Classes and macros defining the language used by the CPU of any emulator.
+ *	\defgroup	PARSER Classes representing the a Parseer/Compiler emulator
+ *	Classes and macros defining the Parser and COmpiling processes for any essambler.
  */
 
  /**

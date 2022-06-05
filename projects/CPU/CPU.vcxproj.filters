@@ -13,126 +13,114 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
-    <Filter Include="Archivos de encabezado\core">
-      <UniqueIdentifier>{6062a78b-c319-4603-a9b2-3931aac8a0e6}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Archivos de origen\core">
-      <UniqueIdentifier>{a2c409e2-990c-40ae-8bce-3e12ed45af16}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Archivos de encabezado\language">
-      <UniqueIdentifier>{42e980ca-41e8-4dba-9c7c-306d5bef67b0}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Archivos de origen\language">
-      <UniqueIdentifier>{f523327f-f89c-47c3-9971-0f3f9e99eeb3}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\include\core\CPUArchitecture.hpp">
-      <Filter>Archivos de encabezado\core</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\include\core\CPU.hpp">
-      <Filter>Archivos de encabezado\core</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\include\core\Chip.hpp">
-      <Filter>Archivos de encabezado\core</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\include\core\Register.hpp">
-      <Filter>Archivos de encabezado\core</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\include\global.hpp">
-      <Filter>Archivos de encabezado</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\include\language\Instruction.hpp">
-      <Filter>Archivos de encabezado\language</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\include\core\ProgramCounter.hpp">
-      <Filter>Archivos de encabezado\core</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\include\core\Memory.hpp">
-      <Filter>Archivos de encabezado\core</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\include\core\Address.hpp">
-      <Filter>Archivos de encabezado\core</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\include\core\Computer.hpp">
-      <Filter>Archivos de encabezado\core</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\include\core\CPUInterrupt.hpp">
-      <Filter>Archivos de encabezado\core</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\include\core\Stack.hpp">
-      <Filter>Archivos de encabezado\core</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\include\core\StatusRegister.hpp">
-      <Filter>Archivos de encabezado\core</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\include\core\UByte.hpp">
-      <Filter>Archivos de encabezado\core</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\include\core\UBytes.hpp">
-      <Filter>Archivos de encabezado\core</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\include\core\UInt.hpp">
-      <Filter>Archivos de encabezado\core</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\include\language\Parser.hpp">
-      <Filter>Archivos de encabezado\language</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\include\core\incs.hpp">
-      <Filter>Archivos de encabezado</Filter>
-    </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="..\..\src\core\CPUArchitecture.cpp">
-      <Filter>Archivos de origen\core</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\global.cpp">
+    <ClCompile Include="..\..\src\CPU\Address.cpp">
       <Filter>Archivos de origen</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\core\CPU.cpp">
-      <Filter>Archivos de origen\core</Filter>
+    <ClCompile Include="..\..\src\CPU\Chip.cpp">
+      <Filter>Archivos de origen</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\core\Register.cpp">
-      <Filter>Archivos de origen\core</Filter>
+    <ClCompile Include="..\..\src\CPU\Computer.cpp">
+      <Filter>Archivos de origen</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\core\Chip.cpp">
-      <Filter>Archivos de origen\core</Filter>
+    <ClCompile Include="..\..\src\CPU\CPU.cpp">
+      <Filter>Archivos de origen</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\core\ProgramCounter.cpp">
-      <Filter>Archivos de origen\core</Filter>
+    <ClCompile Include="..\..\src\CPU\CPUArchitecture.cpp">
+      <Filter>Archivos de origen</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\core\Memory.cpp">
-      <Filter>Archivos de origen\core</Filter>
+    <ClCompile Include="..\..\src\CPU\CPUInterrupt.cpp">
+      <Filter>Archivos de origen</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\core\Address.cpp">
-      <Filter>Archivos de origen\core</Filter>
+    <ClCompile Include="..\..\src\CPU\global.cpp">
+      <Filter>Archivos de origen</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\core\Computer.cpp">
-      <Filter>Archivos de origen\core</Filter>
+    <ClCompile Include="..\..\src\CPU\Instruction.cpp">
+      <Filter>Archivos de origen</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\core\CPUInterrupt.cpp">
-      <Filter>Archivos de origen\core</Filter>
+    <ClCompile Include="..\..\src\CPU\Memory.cpp">
+      <Filter>Archivos de origen</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\core\Stack.cpp">
-      <Filter>Archivos de origen\core</Filter>
+    <ClCompile Include="..\..\src\CPU\Parser.cpp">
+      <Filter>Archivos de origen</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\language\Instruction.cpp">
-      <Filter>Archivos de origen\language</Filter>
+    <ClCompile Include="..\..\src\CPU\ProgramCounter.cpp">
+      <Filter>Archivos de origen</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\include\core\StatusRegister.cpp">
-      <Filter>Archivos de origen\core</Filter>
+    <ClCompile Include="..\..\src\CPU\Register.cpp">
+      <Filter>Archivos de origen</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\core\UByte.cpp">
-      <Filter>Archivos de origen\core</Filter>
+    <ClCompile Include="..\..\src\CPU\Stack.cpp">
+      <Filter>Archivos de origen</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\core\UBytes.cpp">
-      <Filter>Archivos de origen\core</Filter>
+    <ClCompile Include="..\..\src\CPU\UByte.cpp">
+      <Filter>Archivos de origen</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\core\UInt.cpp">
-      <Filter>Archivos de origen\core</Filter>
+    <ClCompile Include="..\..\src\CPU\UBytes.cpp">
+      <Filter>Archivos de origen</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\language\Parser.cpp">
-      <Filter>Archivos de origen\language</Filter>
+    <ClCompile Include="..\..\src\CPU\UInt.cpp">
+      <Filter>Archivos de origen</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\CPU\StatusRegister.cpp">
+      <Filter>Archivos de origen</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\include\CPU\Address.hpp">
+      <Filter>Archivos de encabezado</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\CPU\Chip.hpp">
+      <Filter>Archivos de encabezado</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\CPU\Computer.hpp">
+      <Filter>Archivos de encabezado</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\CPU\CPU.hpp">
+      <Filter>Archivos de encabezado</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\CPU\CPUArchitecture.hpp">
+      <Filter>Archivos de encabezado</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\CPU\CPUInterrupt.hpp">
+      <Filter>Archivos de encabezado</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\CPU\global.hpp">
+      <Filter>Archivos de encabezado</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\CPU\incs.hpp">
+      <Filter>Archivos de encabezado</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\CPU\Instruction.hpp">
+      <Filter>Archivos de encabezado</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\CPU\Memory.hpp">
+      <Filter>Archivos de encabezado</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\CPU\Parser.hpp">
+      <Filter>Archivos de encabezado</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\CPU\ProgramCounter.hpp">
+      <Filter>Archivos de encabezado</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\CPU\Register.hpp">
+      <Filter>Archivos de encabezado</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\CPU\Stack.hpp">
+      <Filter>Archivos de encabezado</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\CPU\StatusRegister.hpp">
+      <Filter>Archivos de encabezado</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\CPU\UByte.hpp">
+      <Filter>Archivos de encabezado</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\CPU\UBytes.hpp">
+      <Filter>Archivos de encabezado</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\CPU\UInt.hpp">
+      <Filter>Archivos de encabezado</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

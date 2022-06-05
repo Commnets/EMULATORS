@@ -14,7 +14,7 @@
 #ifndef __C64_C64__
 #define __C64_C64__
 
-#include <core/incs.hpp>
+#include <CPU/incs.hpp>
 
 namespace C64
 {
