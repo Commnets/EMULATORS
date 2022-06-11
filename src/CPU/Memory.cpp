@@ -26,12 +26,12 @@ MCHEmul::Memory::~Memory ()
 	bool dS = false;
 	for (auto i : _blocks)
 	{
-		dS = (i.second == _stack);
-		delete i.second;
+		dS |= (i.second == _stack);
+		delete (i.second);
 	}
 
 	if (!dS)
-		delete _stack;
+		delete (_stack);
 
 	delete [] _values; 
 	delete [] _defaultValues;

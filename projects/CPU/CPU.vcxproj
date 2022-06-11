@@ -28,7 +28,6 @@
     <ClCompile Include="..\..\src\CPU\global.cpp" />
     <ClCompile Include="..\..\src\CPU\Instruction.cpp" />
     <ClCompile Include="..\..\src\CPU\Memory.cpp" />
-    <ClCompile Include="..\..\src\CPU\Parser.cpp" />
     <ClCompile Include="..\..\src\CPU\ProgramCounter.cpp" />
     <ClCompile Include="..\..\src\CPU\Register.cpp" />
     <ClCompile Include="..\..\src\CPU\Stack.cpp" />
@@ -48,7 +47,6 @@
     <ClInclude Include="..\..\include\CPU\incs.hpp" />
     <ClInclude Include="..\..\include\CPU\Instruction.hpp" />
     <ClInclude Include="..\..\include\CPU\Memory.hpp" />
-    <ClInclude Include="..\..\include\CPU\Parser.hpp" />
     <ClInclude Include="..\..\include\CPU\ProgramCounter.hpp" />
     <ClInclude Include="..\..\include\CPU\Register.hpp" />
     <ClInclude Include="..\..\include\CPU\Stack.hpp" />

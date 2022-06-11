@@ -36,7 +36,7 @@ MCHEmul::Assembler::ByteCode MCHEmul::Assembler::Compiler::compile (const std::s
 
 	// First of all, parse...
 	MCHEmul::Assembler::Semantic* smt = _parser -> parse (fN);
-	if (!(*smt))
+	if (!(*_parser))
 	{
 		_errors = _parser -> errors ();
 		return (result);

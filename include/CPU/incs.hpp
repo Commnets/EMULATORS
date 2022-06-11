@@ -30,6 +30,5 @@
 #include <CPU/UBytes.hpp>
 #include <CPU/UInt.hpp>
 #include <CPU/Instruction.hpp>
-#include <CPU/Parser.hpp>
 
 #endif

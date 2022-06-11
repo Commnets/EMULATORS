@@ -43,8 +43,8 @@ std::vector <MCHEmul::UByte> MCHEmul::Assembler::Macro::calculateValue
 	}
 	else
 	{
-		MCHEmul::Assembler::Macro m1 ("" /** No name needed. */, e.substr (0, r)); m1.value (ms);
-		MCHEmul::Assembler::Macro m2 ("", e.substr (0, r + 1)); m2.value (ms);
+		MCHEmul::Assembler::Macro m1 ("" /** No name needed. */, MCHEmul::trim (e.substr (0, r))); m1.value (ms);
+		MCHEmul::Assembler::Macro m2 ("", MCHEmul::trim (e.substr (r + 1))); m2.value (ms);
 		if (!m1 || !m2)
 			_error = MCHEmul::Assembler::ErrorType::_MACROBADDEFINED;
 		else

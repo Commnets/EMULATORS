@@ -2,6 +2,8 @@
 ; By Ignacio Cea
 
 ; MACROS
+COLOR1	   = 2
+COLOR2	   = COLOR1 + 2
 FOREGROUND = $D020
 BACKGROUND = $D021
 
@@ -9,7 +11,7 @@ BACKGROUND = $D021
 * = $C000
 
 ; Code
-START:			LDA #$00				; First color is black
+START:			LDA #COLOR2				; First color is something
 				STA BACKGROUND
 				STA FOREGROUND
 				BEQ START				; Infinite

@@ -42,9 +42,6 @@
     <ClCompile Include="..\..\src\CPU\Memory.cpp">
       <Filter>Archivos de origen</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\CPU\Parser.cpp">
-      <Filter>Archivos de origen</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\CPU\ProgramCounter.cpp">
       <Filter>Archivos de origen</Filter>
     </ClCompile>
@@ -96,9 +93,6 @@
       <Filter>Archivos de encabezado</Filter>
     </ClInclude>
     <ClInclude Include="..\..\include\CPU\Memory.hpp">
-      <Filter>Archivos de encabezado</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\include\CPU\Parser.hpp">
       <Filter>Archivos de encabezado</Filter>
     </ClInclude>
     <ClInclude Include="..\..\include\CPU\ProgramCounter.hpp">
