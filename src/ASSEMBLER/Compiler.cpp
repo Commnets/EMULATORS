@@ -35,34 +35,29 @@ MCHEmul::Assembler::CodeLines MCHEmul::Assembler::Compiler::compile (const std::
 
 	// Then compile...
 	// First determines the value of the macros...
-	bool mE = false;
 	for (auto i : smt -> macros ())
 	{
 		i.second.value (smt -> macros ()); // Try to calculate the value (but it wold be used)...
 		if (!i.second)
-		{
-			mE = true;
 			_errors.push_back (MCHEmul::Assembler::Error (i.second.error (), fN, 0, 0));
-		}
 	}
 
 	// If there were any error calculating the value of the macros
 	// it would not be able to continue
-	if (mE)
+	if (!(*this))
 		return (result);
 
 	// Then, with the macros calculated, the lines could be calculated
 	// Errors could happen when managing the instructions...
 	for (auto i : smt -> startingPoints ())
 	{
-		std::vector <MCHEmul::UByte> spaB = i -> codeBytes (smt, cpu () -> architecture ());
+		MCHEmul::Address spa (i -> codeBytes (smt, cpu () -> architecture ().bigEndian ()));
 		if (!*i)
 			_errors.push_back (MCHEmul::Assembler::Error (i -> _error, fN, 0, 0));
 		else
 		{
 			std::string lL = "";
-			MCHEmul::Address spa (spaB);
-			for (MCHEmul::Assembler::GramaticalElement* sp = i -> _nextElement; 
+			for (MCHEmul::Assembler::GrammaticalElement* sp = i -> _nextElement; 
 				sp != nullptr; sp = sp -> _nextElement)
 			{
 				if (dynamic_cast <MCHEmul::Assembler::LabelElement*> (sp) != nullptr)
@@ -71,8 +66,12 @@ MCHEmul::Assembler::CodeLines MCHEmul::Assembler::Compiler::compile (const std::
 				{
 					MCHEmul::Assembler::InstructionElement* iE = 
 						dynamic_cast <MCHEmul::Assembler::InstructionElement*> (sp);
-					std::vector <MCHEmul::UByte> b = sp -> codeBytes (smt, cpu () -> architecture ());
-					result.push_back (MCHEmul::Assembler::CodeLine (spa, b, lL, iE ? iE -> _instruction : nullptr));
+					std::vector <MCHEmul::UByte> b = sp -> codeBytes (smt, cpu () -> architecture ().bigEndian ());
+					if (!*sp)
+						_errors.push_back (MCHEmul::Assembler::Error (sp -> _error, fN, 0, 0));
+					else
+						result.push_back (MCHEmul::Assembler::CodeLine (spa, b, lL, iE ? iE -> _selectedInstruction : nullptr));
+					
 					spa += b.size (); // To the next...
 
 					lL = "";

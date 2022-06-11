@@ -51,7 +51,7 @@ namespace MCHEmul
 			virtual void initialize ()
 							{ }
 
-			/** Determine whether a line can or not be parsed by this LineParser. */
+			/** Determine whether a line can or not be parsed by this Command Parser. */
 			virtual bool canParse (const std::string& l) const = 0;
 			/** Parse the line, obviously when it is able. \n
 				Wheen parsing the line being parsed and the code structure are modified. */

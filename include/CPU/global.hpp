@@ -47,7 +47,7 @@ namespace MCHEmul
 	std::string noSpaces (const std::string& s);
 	std::string onlyAlphanumeric (const std::string& s);
 	std::string noneOf (const std::string& s, const std::string& chrs);
-	size_t isIn (const std::string& s1, const std::string& s2);
+	std::string removeAllFrom (const std::string& s, std::vector <std::string>& strs);
 	std::vector <std::string> getElementsFrom (const std::string& txt, unsigned char ch, 
 		size_t nE = std::numeric_limits <size_t>::max ());
 

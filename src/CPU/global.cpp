@@ -94,21 +94,17 @@ std::string MCHEmul::noneOf (const std::string& s, const std::string& chrs)
 	return (r);
 }
 
-size_t MCHEmul::isIn (const std::string& s1, const std::string& s2)
-{ 
-	size_t counter = 0; size_t i = 0;
-	for(; i < s1.length (); i++)
-	{
-		if (counter == s2.length ()) break;
-		if (s2 [counter] == s1 [i]) counter++;
-		else
-		{
-			if (counter > 0) i -= counter;
-			counter = 0;
-		}
-	}
+// ---
+std::string MCHEmul::removeAllFrom (const std::string& s, std::vector <std::string>& strs)
+{
+	std::string result = s;
 
-	return (counter < s2.length () ? std::string::npos : (i - counter));
+	size_t pos;
+	for (auto i : strs)
+		if ((pos = result.find (i)) != std::string::npos)
+			result.erase (pos, i.length ());
+
+	return (result);
 }
 
 // ---

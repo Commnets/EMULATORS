@@ -24,7 +24,7 @@ int main ()
 
 	// The other type of parser...
 	MCHEmul::Assembler::Compiler compiler (new MCHEmul::Assembler::Parser (myComputer.cpu ()));
-	MCHEmul::Assembler::CodeLines cL = compiler.compile ("./test.asm");
+	MCHEmul::Assembler::CodeLines cL = compiler.compile ("./test2.asm");
 	if (!compiler)
 	{
 		for (auto i : compiler.errors ())

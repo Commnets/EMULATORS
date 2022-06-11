@@ -33,7 +33,7 @@ std::vector <MCHEmul::UByte> MCHEmul::Assembler::Macro::calculateValue
 				}
 			}
 			else
-				_error = MCHEmul::Assembler::ErrorType::_MACROBADDEFINED; 
+				_error = MCHEmul::Assembler::ErrorType::_MACRONOTDEFINED; 
 		}
 		else
 		if (MCHEmul::validBytes (e))
@@ -46,7 +46,7 @@ std::vector <MCHEmul::UByte> MCHEmul::Assembler::Macro::calculateValue
 		MCHEmul::Assembler::Macro m1 ("" /** No name needed. */, e.substr (0, r)); m1.value (ms);
 		MCHEmul::Assembler::Macro m2 ("", e.substr (0, r + 1)); m2.value (ms);
 		if (!m1 || !m2)
-			_error = MCHEmul::Assembler::ErrorType::_MACRONOEVALUATED;
+			_error = MCHEmul::Assembler::ErrorType::_MACROBADDEFINED;
 		else
 		{
 			MCHEmul::UInt u1 (m1.value (ms));
@@ -61,10 +61,32 @@ std::vector <MCHEmul::UByte> MCHEmul::Assembler::Macro::calculateValue
 }
 
 // ---
-std::vector <MCHEmul::UByte> MCHEmul::Assembler::GramaticalElement::bytesFromExpression 
-	(const std::string& e, const MCHEmul::Assembler::Macros& ms) const
+MCHEmul::Address MCHEmul::Assembler::GrammaticalElement::address (const MCHEmul::Assembler::Semantic* s) const
+{
+	assert (s != nullptr);
+
+	size_t b = 0;
+	const MCHEmul::Assembler::GrammaticalElement* gE = this -> _previousElement;
+	while (dynamic_cast <const MCHEmul::Assembler::StartingPointElement*> (gE) == nullptr)
+	{
+		b += gE -> codeBytes (s).size ();
+		gE = gE -> _previousElement;
+	}
+
+	const MCHEmul::Assembler::StartingPointElement* sP = 
+		dynamic_cast <const MCHEmul::Assembler::StartingPointElement*> (gE);
+	assert (sP != nullptr); // Just in case...
+
+	return (sP -> address (s) + b);
+}
+
+// ---
+std::vector <MCHEmul::UByte> MCHEmul::Assembler::GrammaticalElement::bytesFromExpression 
+	(const std::string& e, const MCHEmul::Assembler::Macros& ms, bool& er) const
 {
 	std::vector <MCHEmul::UByte> result;
+
+	er = false;
 
 	if (MCHEmul::validBytes (e))
 	{
@@ -77,7 +99,11 @@ std::vector <MCHEmul::UByte> MCHEmul::Assembler::GramaticalElement::bytesFromExp
 		MCHEmul::Assembler::Macro m ("" /** No name needed. */, e);
 		m.value (ms);
 		if (!m) // Error?...
+		{
+			er = true;
 			return (result);
+		}
+
 		result.insert (result.end (), m.value (ms).begin (), m.value (ms).end ());
 	}
 	
@@ -86,7 +112,7 @@ std::vector <MCHEmul::UByte> MCHEmul::Assembler::GramaticalElement::bytesFromExp
 
 // ---
 std::vector <MCHEmul::UByte> MCHEmul::Assembler::BytesInMemoryElement::calculateCodeBytes 
-	(const MCHEmul::Assembler::Semantic* s, const MCHEmul::CPUArchitecture& a) const
+	(const MCHEmul::Assembler::Semantic* s, bool bE) const
 {
 	assert (s != nullptr);
 
@@ -99,8 +125,7 @@ std::vector <MCHEmul::UByte> MCHEmul::Assembler::BytesInMemoryElement::calculate
 	for (std::vector <std::string>::const_iterator i = _elements.begin (); 
 			i != _elements.end () && !e; i++)
 	{
-		std::vector <MCHEmul::UByte> n = bytesFromExpression ((*i), s -> macros ());
-		e = n.empty (); // Empty when impossible to determine the value...
+		std::vector <MCHEmul::UByte> n = bytesFromExpression ((*i), s -> macros (), e);
 		result.insert (result.end (), n.begin (), n.end ());
 	}
 
@@ -141,41 +166,78 @@ std::vector <size_t> MCHEmul::Assembler::InstructionElement::labelParameters (co
 
 // ---
 std::vector <MCHEmul::UByte> MCHEmul::Assembler::InstructionElement::calculateCodeBytes 
-	(const MCHEmul::Assembler::Semantic* s, const MCHEmul::CPUArchitecture& a) const
+	(const MCHEmul::Assembler::Semantic* s, bool bE) const
 {
 	assert (s != nullptr);
 
 	if (!(*this))
 		return (std::vector <MCHEmul::UByte> ()); // Not possible with previous error...
 
-	std::vector <MCHEmul::UByte> result = 
-		MCHEmul::UInt::fromUnsignedInt (_instruction -> code ()).bytes ().values ();
-	for (size_t i = 0; i < _instruction -> internalStructure ()._parameters.size (); i++)
+	std::vector <MCHEmul::UByte> result;
+	for (size_t i = 0; i < _possibleInstructions.size (); i++)
 	{
+		_error = MCHEmul::Assembler::ErrorType::_NOERROR;
+		result = calculateCodeBytesForInstruction (_possibleInstructions [i], s, bE);
+		if (!(*this))
+			continue;
+		else
+		{
+			_selectedInstruction = _possibleInstructions [i];
+			break;
+		}
+	}
+
+	return (result);
+}
+
+// ---
+std::vector <MCHEmul::UByte> MCHEmul::Assembler::InstructionElement::calculateCodeBytesForInstruction 
+	(const MCHEmul::Instruction* inst, const MCHEmul::Assembler::Semantic* s, bool bE) const
+{
+	if (!(*this))
+		return (std::vector <MCHEmul::UByte> ()); // Nothing possible when prervious error...
+
+	std::vector <MCHEmul::UByte> result = 
+		MCHEmul::UInt::fromUnsignedInt (inst -> code ()).bytes ().values ();
+	for (size_t i = 0; i < inst -> internalStructure ()._parameters.size (); i++)
+	{
+		bool e = false;
 		std::vector <MCHEmul::UByte> bt;
-		switch (_instruction -> internalStructure ()._parameters [i]._type)
+		switch (inst -> internalStructure ()._parameters [i]._type)
 		{
 			case MCHEmul::Instruction::Structure::Parameter::Type::_DATA:
 			case MCHEmul::Instruction::Structure::Parameter::Type::_DIR:
-				bt = MCHEmul::UBytes (bytesFromExpression (_parameters [i], s -> macros ()), a.bigEndian ()).values ();
+				bt = MCHEmul::UBytes (bytesFromExpression (_parameters [i], s -> macros (), e), bE).values ();
 				break;
 
 			case MCHEmul::Instruction::Structure::Parameter::Type::_JUMP:
-				bt = std::vector <MCHEmul::UByte> 
-					(_instruction -> internalStructure ()._parameters [i]._numberBytes, { 0x00 }); // cann't be calculated here...
-				break;
+			{
+				std::map <std::string, MCHEmul::Address> lA = s -> labelAddresses ();
+				std::map <std::string, MCHEmul::Address>::const_iterator lAP = lA.find (_parameters [i]);
+				if (MCHEmul::validLabel (_parameters [i]) && lAP != lA.end ()) // First labels...
+				{
+					// Which is the address of this instruction?
+					MCHEmul::Address iA = address (s) + inst -> memoryPositions ();
+					bt = MCHEmul::UInt::fromInt (iA.distanceWith ((*lAP).second)).bytes ().values ();
+				}
+				else
+					bt = MCHEmul::UBytes (bytesFromExpression (_parameters [i], s -> macros (), e), bE).values ();
+			}
+				
+			break;
 
 			default:
 			assert (false); // Just in case...
 		}
 
-		result.insert (result.end (), bt.begin (), bt.end ());
+		if (!e)
+			result.insert (result.end (), bt.begin (), bt.end ());
 	}
 
 	// The number of bytes generated has to match with the size of the instruction...
 	// When an instruction has parameters with MACRO it is not possible to know its size
 	// before tha MACROS as calculated...
-	if (result.size () != _instruction -> memoryPositions ())
+	if (result.size () != inst -> memoryPositions ())
 	{
 		_error = MCHEmul::Assembler::ErrorType::_INSTRUCTIONNOTVALID;
 		result = { };
@@ -186,14 +248,15 @@ std::vector <MCHEmul::UByte> MCHEmul::Assembler::InstructionElement::calculateCo
 
 // ---
 std::vector <MCHEmul::UByte> MCHEmul::Assembler::StartingPointElement::calculateCodeBytes 
-	(const MCHEmul::Assembler::Semantic* s, const MCHEmul::CPUArchitecture& a) const
+	(const MCHEmul::Assembler::Semantic* s, bool bE) const
 {
 	assert (s != nullptr);
 
 	std::vector <MCHEmul::UByte> result;
 
-	std::vector <MCHEmul::UByte> n = bytesFromExpression (_value, s -> macros ());
-	if (n.empty ())
+	bool e = false;
+	std::vector <MCHEmul::UByte> n = bytesFromExpression (_value, s -> macros (), e);
+	if (e)
 		_error = MCHEmul::Assembler::ErrorType::_STARTINGPOINTNOTVALID;
 	else
 		result.insert (result.end (), n.begin (), n.end ());
@@ -216,13 +279,13 @@ MCHEmul::Assembler::StartingPointElement* MCHEmul::Assembler::Semantic::addNewSt
 	MCHEmul::Assembler::StartingPointElement* nS = new StartingPointElement;
 	_startingPoints.push_back (nS);
 
-	_lastGramaticalElementAdded = nS;
+	_lastGrammaticalElementAdded = nS;
 
 	return (nS);
 }
 
 // ---
-void MCHEmul::Assembler::Semantic::addGramaticalElement (MCHEmul::Assembler::GramaticalElement* g)
+void MCHEmul::Assembler::Semantic::addGrammaticalElement (MCHEmul::Assembler::GrammaticalElement* g)
 {
 	_error = MCHEmul::Assembler::ErrorType::_NOERROR;
 
@@ -249,12 +312,13 @@ void MCHEmul::Assembler::Semantic::addGramaticalElement (MCHEmul::Assembler::Gra
 
 	// Other wise is linked to the element linked to the last starting point
 	// That will be, BTW, the actual one...
-	MCHEmul::Assembler::GramaticalElement* lg = _startingPoints [_startingPoints.size () - 1];
+	MCHEmul::Assembler::GrammaticalElement* lg = _startingPoints [_startingPoints.size () - 1];
 	while (lg -> _nextElement != nullptr) lg = lg -> _nextElement;
 	lg -> _nextElement = g;
+	g -> _previousElement = lg;
 	// Now if the semantic is deleted this new elements will be also deleted as it is part of the chain
 
-	_lastGramaticalElementAdded = g;
+	_lastGrammaticalElementAdded = g;
 }
 
 // ---
@@ -272,4 +336,66 @@ void MCHEmul::Assembler::Semantic::addFrom (const MCHEmul::Assembler::Semantic* 
 
 	// The error status will be the same...
 	_error = s -> _error;
+}
+
+// ---
+bool MCHEmul::Assembler::Semantic::existsLabel (const std::string& l) const
+{
+	bool result = false;
+
+	for (size_t i = 0; i < _startingPoints.size () && !result; i++)
+	{
+		MCHEmul::Assembler::GrammaticalElement* gE = _startingPoints [i] -> _nextElement;
+		while (gE != nullptr && !result)
+		{
+			result = dynamic_cast <MCHEmul::Assembler::LabelElement*> (gE) != nullptr && 
+				static_cast <MCHEmul::Assembler::LabelElement*> (gE) -> _name == l;
+			gE = gE -> _nextElement;
+		}
+	}
+
+	return (result);
+}
+
+// ---
+MCHEmul::Address MCHEmul::Assembler::Semantic::addressForLabel (const std::string& l) const
+{
+	MCHEmul::Assembler::LabelElement* lE = nullptr;
+	for (size_t i = 0; i < _startingPoints.size () && lE == nullptr; i++)
+	{
+		for (MCHEmul::Assembler::GrammaticalElement* gE = _startingPoints [i] -> _nextElement;
+			gE != nullptr && lE == nullptr; gE = gE -> _nextElement)
+		{
+			MCHEmul::Assembler::LabelElement* t = dynamic_cast <MCHEmul::Assembler::LabelElement*> (gE);
+			if (t != nullptr && t -> _name == l)
+				lE = t;
+		}
+	}
+
+	return (lE == nullptr ? MCHEmul::Address () : lE -> address (this));
+}
+
+// ---
+std::vector <const MCHEmul::Assembler::LabelElement*> MCHEmul::Assembler::Semantic::labels () const
+{
+	std::vector <const MCHEmul::Assembler::LabelElement*> result;
+
+	for (auto i : _startingPoints)
+		for (MCHEmul::Assembler::GrammaticalElement* e = i -> _nextElement; e != nullptr; e = e -> _nextElement)
+			if (dynamic_cast <MCHEmul::Assembler::LabelElement*> (e) != nullptr)
+				result.push_back (static_cast <MCHEmul::Assembler::LabelElement*> (e));
+
+	return (result);
+}
+
+// ---
+std::map <std::string, MCHEmul::Address> MCHEmul::Assembler::Semantic::labelAddresses () const
+{
+	std::map <std::string, MCHEmul::Address> result;
+	std::vector <const MCHEmul::Assembler::LabelElement*> l = labels ();
+
+	for (auto i : l)
+		result [i -> _name] = i -> address (this);
+
+	return (result);
 }

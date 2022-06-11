@@ -98,27 +98,33 @@ namespace MCHEmul
 
 		/** The grammatical element is the base of any grammar elemnt. */
 		class Semantic;
-		struct GramaticalElement
+		struct GrammaticalElement
 		{
 			enum Type { _LABEL = 0, _BYTESINMEMORY, _INSTRUCTION, _STARTINGPOINT  };
 
-			GramaticalElement ()
-				: _type (_BYTESINMEMORY), _id (0), _nextElement (nullptr),
+			GrammaticalElement ()
+				: _type (_BYTESINMEMORY), _id (0), _nextElement (nullptr), _previousElement (nullptr),
 				  _error (ErrorType::_NOERROR), _codeBytes ()
 							{ }
 
-			GramaticalElement (const GramaticalElement&) = default;
+			GrammaticalElement (const GrammaticalElement&) = default;
 
-			GramaticalElement& operator = (const GramaticalElement&) = default;
+			GrammaticalElement& operator = (const GrammaticalElement&) = default;
 
-			virtual ~GramaticalElement ()
+			virtual ~GrammaticalElement ()
 							{ delete (_nextElement); /** Chained. */ }
 
 			/** To get the value of the grammatical element (if makes sense) as a set of executable bytes.
 				The value is get taking into account a semantic. \n
 				When using this method errors could be generated. */
-			std::vector <UByte> codeBytes (const Semantic* s, const CPUArchitecture& a) const
-							{ return (_codeBytes.empty () ? _codeBytes = calculateCodeBytes (s, a) : _codeBytes); }
+			std::vector <UByte> codeBytes (const Semantic* s, bool bE = true) const
+							{ return (_codeBytes.empty () ? _codeBytes = calculateCodeBytes (s, bE) : _codeBytes); }
+
+			/** To know the address of the grammatical element. */
+			virtual Address address (const MCHEmul::Assembler::Semantic* s) const;
+
+			ErrorType error () const
+							{ return (_error); }
 
 			/** To visually simplify the way the error system is managed. */
 			bool operator ! () const
@@ -127,27 +133,30 @@ namespace MCHEmul
 			Type _type;
 			unsigned int _id; // Sequential...
 			/** The next gramatical element linked. */
-			GramaticalElement* _nextElement; // Could be nullptr (in the last gramatical element of a semantic block)
-			
-			// Implementation
-			/** To define whether it has or not some mistake inside. */
+			GrammaticalElement* _nextElement; // Could be nullptr (in the last gramatical element of a semantic block)
+			/** The previous gramatical element linked. */
+			GrammaticalElement* _previousElement; // It could also be nullptr (in the first gramatical element of a semantic block)
+			/** To define whether it has or not some mistake inside, it could be modified even consulting data. */
 			mutable ErrorType _error;
+			
+			protected:
+			// Implementation
 			mutable std::vector <UByte> _codeBytes;
 
 			protected:
 			/** To calculat the codeBytes first time. */
-			virtual std::vector <UByte> calculateCodeBytes (const Semantic* s, const CPUArchitecture& a) const
+			virtual std::vector <UByte> calculateCodeBytes (const Semantic* s, bool bE = true) const
 							{ return (std::vector <UByte> ()); }
 
 			// Implementation
-			std::vector <UByte> bytesFromExpression (const std::string& e, const Macros& ms) const;
+			std::vector <UByte> bytesFromExpression (const std::string& e, const Macros& ms, bool& er) const;
 		};
 
 		/** @see explanation at the beggining of the file. */
-		struct LabelElement final : public GramaticalElement
+		struct LabelElement final : public GrammaticalElement
 		{
 			LabelElement ()
-				: GramaticalElement (), 
+				: GrammaticalElement (), 
 				  _name ()
 							{ _type = Type::_LABEL; }
 
@@ -159,10 +168,10 @@ namespace MCHEmul
 		};
 
 		/** @see explanation at the beggining of the file. */
-		struct BytesInMemoryElement : public GramaticalElement
+		struct BytesInMemoryElement : public GrammaticalElement
 		{
 			BytesInMemoryElement ()
-				: GramaticalElement (), _elements ()
+				: GrammaticalElement (), _elements ()
 							{ _type = Type::_BYTESINMEMORY; }
 
 			BytesInMemoryElement (const BytesInMemoryElement&) = default;
@@ -171,18 +180,19 @@ namespace MCHEmul
 
 			std::vector <std::string> _elements;
 
-			protected:
-			virtual std::vector <UByte> calculateCodeBytes (const Semantic* s, const CPUArchitecture& a) const override;
+			private:
+			virtual std::vector <UByte> calculateCodeBytes (const Semantic* s, bool bE = true) const override;
 		};
 
 		/** @see explanation at the beggining of the file. 
 			An instruction is just also a set of bytes in memory. */
-		struct InstructionElement final : public GramaticalElement
+		struct InstructionElement final : public GrammaticalElement
 		{
 			InstructionElement ()
-				: GramaticalElement (), 
-				  _instruction (nullptr),
-				  _parameters ()
+				: GrammaticalElement (), 
+				  _possibleInstructions (),
+				  _parameters (),
+				  _selectedInstruction (nullptr)
 							{ _type = Type::_INSTRUCTION; }
 
 			InstructionElement (const InstructionElement&) = default;
@@ -194,20 +204,25 @@ namespace MCHEmul
 			/** To know the list of the the parameters that could be a label. */
 			std::vector <size_t> labelParameters (const Semantic* s) const;
 
-			Instruction* _instruction;
+			std::vector <Instruction*> _possibleInstructions;
 			std::vector <std::string> _parameters;
+			mutable Instruction* _selectedInstruction;
 
 			private:
 			/** The bytes of the first possible instruction taking into account the size of the parameters,
 				once they have been calculated (they could includee also macros). */
-			virtual std::vector <UByte> calculateCodeBytes (const Semantic* s, const CPUArchitecture& a) const override;
+			virtual std::vector <UByte> calculateCodeBytes (const Semantic* s, bool bE = true) const override;
+
+			// Implementation
+			std::vector <UByte> calculateCodeBytesForInstruction 
+				(const Instruction* inst, const Semantic* s, bool bE = true) const;
 		};
 
 		/** @see explanation at the beggining of the file. */
-		struct StartingPointElement final : public GramaticalElement
+		struct StartingPointElement final : public GrammaticalElement
 		{
 			StartingPointElement ()
-				: GramaticalElement (), 
+				: GrammaticalElement (), 
 				  _value ()
 							{ _type = Type::_STARTINGPOINT; }
 
@@ -215,10 +230,13 @@ namespace MCHEmul
 
 			StartingPointElement& operator = (const StartingPointElement&) = default;
 
+			virtual Address address (const Semantic* s) const override
+							{ return (Address (codeBytes (s /**, big Endian implicit. */))); }
+
 			std::string _value;
 
 			private:
-			virtual std::vector <UByte> calculateCodeBytes (const Semantic* s, const CPUArchitecture& a) const override;
+			virtual std::vector <UByte> calculateCodeBytes (const Semantic* s, bool bE = true) const override;
 		};
 
 		/** Notice that it is a set of pointers. */
@@ -237,7 +255,7 @@ namespace MCHEmul
 
 			Semantic ()
 				: _macros (), _startingPoints (), 
-				  _error (ErrorType::_NOERROR), _lastGramaticalElementAdded (nullptr)
+				  _error (ErrorType::_NOERROR), _lastGrammaticalElementAdded (nullptr)
 							{ }
 
 			Semantic (const Semantic&) = delete;
@@ -254,11 +272,11 @@ namespace MCHEmul
 			const StartingPointElements& startingPoints () const
 							{ return (_startingPoints); }
 			StartingPointElement* addNewStartingPoint ();
-			void addGramaticalElement (GramaticalElement* g);
-			const GramaticalElement* lastGramaticalElementAdded () const
-							{ return (_lastGramaticalElementAdded); }
-			GramaticalElement* lastGramaticalElementAdded ()
-							{ return (_lastGramaticalElementAdded); }
+			void addGrammaticalElement (GrammaticalElement* g);
+			const GrammaticalElement* lastGrammaticalElementAdded () const
+							{ return (_lastGrammaticalElementAdded); }
+			GrammaticalElement* lastGrammaticalElementAdded ()
+							{ return (_lastGrammaticalElementAdded); }
 
 			ErrorType error () const
 							{ return (_error); }
@@ -270,13 +288,23 @@ namespace MCHEmul
 			/** The semantic can add elements from other (macros are also added). */
 			void addFrom (const Semantic* s);
 
+			/** To verify whether exists a label. */
+			bool existsLabel (const std::string& l) const;
+			/** To determine the distance of an Address with that label. 
+				If the label has't been defined in the semantic, 0 is returnd but it wouldn't mean anything. */
+			Address addressForLabel (const std::string& l) const;
+			/** To get the list of all labels. */
+			std::vector <const LabelElement*> labels () const;
+			/** to get the list of labels and addrresses associated. */
+			std::map <std::string, Address> labelAddresses () const;
+
 			private:
 			Macros _macros;
 			StartingPointElements _startingPoints;
 
 			// Implementation
 			mutable ErrorType _error;
-			mutable GramaticalElement* _lastGramaticalElementAdded;
+			mutable GrammaticalElement* _lastGrammaticalElementAdded;
 		};
 	}
 }

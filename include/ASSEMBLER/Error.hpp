@@ -26,11 +26,13 @@ namespace MCHEmul
 			_NOERROR = 0, 
 			// Related with Macros
 			_MACROBADDEFINED, 
-			_MACRONOEVALUATED, 
+			_MACRONOTDEFINED, 
 			// Related with Semantic Elements
 			_LABELNOTVALID,
+			_LABELNOTDEFINED,
 			_BYTESNOTVALID,
 			_INSTRUCTIONNOTVALID,
+			_INSTRUCTIONNOTDEFINED,
 			_STARTINGPOINTNOTVALID,
 			// Related with Semantic structure
 			_GRAMARELEMENTNOTVALID, 

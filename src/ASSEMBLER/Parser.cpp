@@ -75,7 +75,7 @@ void MCHEmul::Assembler::LabelCommandParser::parse (std::string& l, MCHEmul::Ass
 	// The line has not been read totally...
 	l = MCHEmul::trim (l.substr (eL + 1));
 
-	s -> addGramaticalElement (nE);
+	s -> addGrammaticalElement (nE);
 }
 
 // ---
@@ -100,7 +100,7 @@ void MCHEmul::Assembler::BytesCommandParser::parse (std::string& l, MCHEmul::Ass
 	// The line is completed...
 	l = "";
 
-	s -> addGramaticalElement (nE);
+	s -> addGrammaticalElement (nE);
 }
 
 // ---
@@ -131,34 +131,28 @@ void MCHEmul::Assembler::InstructionCommandParser::parse (std::string& l, MCHEmu
 	std::string cL = MCHEmul::trim 
 		(l.substr (0, l.find (parser () -> commentSymbol () /** Until a potential comment. */)));
 
-	bool cr = false;
 	MCHEmul::Assembler::InstructionElement* nE = new MCHEmul::Assembler::InstructionElement;
+	nE -> _id = _lastInstructionId; 
 	std::vector <std::string> prms;
 	for (MCHEmul::Instructions::const_iterator i = cpu () -> instructions ().begin ();
-			i != cpu () -> instructions ().end () && !cr; i++)
+			i != cpu () -> instructions ().end (); i++)
 	{
-		if ((*i).second -> matchesWith (cL, prms))
+		if ((*i).second -> matchesWith (cL, prms)) // One option minimum will match this (as it can be parsed)
 		{
-			nE -> _id = _lastInstructionId; 
-			nE -> _instruction = (*i).second;
+			nE -> _possibleInstructions.push_back ((*i).second);
 			nE -> _parameters = prms;
-			nE -> _error = MCHEmul::Assembler::ErrorType::_NOERROR; // To avoid previous errors...
-			nE -> codeBytes (s, cpu () -> architecture ()); // Just to see if it possible...
-			if (!(*nE))
-				continue; // If there is no more instructions, the last one will last, with the error...
-			else
-				cr = true;
 		}
 	}
 
 	_lastInstructionId++;
 
 	// More errors could happen later if e.g. the instruction is using labels...
+	// Or the macros used don't match the size of the instruction!
 
 	// The line is completed in any case...
 	l = "";
 
-	s -> addGramaticalElement (nE);
+	s -> addGrammaticalElement (nE);
 }
 
 // ---
@@ -228,7 +222,7 @@ MCHEmul::Assembler::Semantic* MCHEmul::Assembler::Parser::parse (const std::stri
 				(*j) -> parse (l, result);
 				if (!result)
 					_errors.push_back (MCHEmul::Assembler::Error 
-						(result -> lastGramaticalElementAdded () -> _error, fN, lC, col));
+						(result -> lastGrammaticalElementAdded () -> _error, fN, lC, col));
 			}
 			else
 			{

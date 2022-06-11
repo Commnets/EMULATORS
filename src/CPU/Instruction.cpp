@@ -75,7 +75,9 @@ bool MCHEmul::Instruction::matchesWith (const std::string& i, std::vector <std::
 	}
 
 	// The number of extracted parameters has to match the number of the ones defined...
-	return (prms.size () == _iStructure._parameters.size ());
+	// ...and also the watermark!
+	return (_iStructure._waterMark == MCHEmul::onlyAlphanumeric (MCHEmul::removeAllFrom (iL, prms)) &&
+			prms.size () == _iStructure._parameters.size ());
 }
 
 // ---
