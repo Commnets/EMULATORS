@@ -3,14 +3,16 @@
 #include <algorithm>
 
 // ---
-void MCHEmul::Assembler::IncludeCommandParser::parse (std::string& l, MCHEmul::Assembler::Semantic* c) const
+void MCHEmul::Assembler::IncludeCommandParser::parse 
+	(std::string& l, unsigned int lC, MCHEmul::Assembler::Semantic* c) const
 { 
 	c -> addFrom (parser () -> parse 
 		(MCHEmul::trim (l.substr (1, l.find (parser () -> commentSymbol () /** Until a potencial comment */) - 1)))); 
 }
 
 // ---
-void MCHEmul::Assembler::MacroCommandParser::parse (std::string& l, MCHEmul::Assembler::Semantic* s) const
+void MCHEmul::Assembler::MacroCommandParser::parse 
+	(std::string& l, unsigned int lC, MCHEmul::Assembler::Semantic* s) const
 {
 	assert (s != nullptr);
 
@@ -31,7 +33,8 @@ void MCHEmul::Assembler::MacroCommandParser::parse (std::string& l, MCHEmul::Ass
 }
 
 // ---
-void MCHEmul::Assembler::StartingPointCommandParser::parse (std::string& l, MCHEmul::Assembler::Semantic* s) const
+void MCHEmul::Assembler::StartingPointCommandParser::parse 
+	(std::string& l, unsigned int lC, MCHEmul::Assembler::Semantic* s) const
 {
 	assert (s != nullptr);
 
@@ -44,6 +47,7 @@ void MCHEmul::Assembler::StartingPointCommandParser::parse (std::string& l, MCHE
 	size_t mD = l.find (_symbol);
 	MCHEmul::Assembler::StartingPointElement* nE = s -> addNewStartingPoint (); // Starts a new entry point...
 	nE -> _id = _lastStartingPointId++; // Sequential...
+	nE -> _line = lC;
 	nE -> _value = 
 		MCHEmul::trim (l.substr (mD + 1, l.find (parser () -> commentSymbol () /** Until a potential comment. */) - (mD + 1)));
 
@@ -54,7 +58,8 @@ void MCHEmul::Assembler::StartingPointCommandParser::parse (std::string& l, MCHE
 }
 
 // ---
-void MCHEmul::Assembler::LabelCommandParser::parse (std::string& l, MCHEmul::Assembler::Semantic* s) const
+void MCHEmul::Assembler::LabelCommandParser::parse
+	(std::string& l, unsigned int lC, MCHEmul::Assembler::Semantic* s) const
 {
 	assert (s != nullptr);
 
@@ -67,6 +72,7 @@ void MCHEmul::Assembler::LabelCommandParser::parse (std::string& l, MCHEmul::Ass
 	size_t eL = l.find (_symbol);
 	MCHEmul::Assembler::LabelElement* nE = new MCHEmul::Assembler::LabelElement;
 	nE -> _id = _lastLabelId++; // Sequential...
+	nE -> _line = lC;
 	nE -> _name = MCHEmul::trim (MCHEmul::upper (l.substr (0, eL)));
 	// The label has to be valid...
 	if (!MCHEmul::validLabel (nE -> _name))
@@ -79,7 +85,8 @@ void MCHEmul::Assembler::LabelCommandParser::parse (std::string& l, MCHEmul::Ass
 }
 
 // ---
-void MCHEmul::Assembler::BytesCommandParser::parse (std::string& l, MCHEmul::Assembler::Semantic* s) const
+void MCHEmul::Assembler::BytesCommandParser::parse
+	(std::string& l, unsigned int lC, MCHEmul::Assembler::Semantic* s) const
 {
 	assert (s != nullptr);
 
@@ -92,6 +99,7 @@ void MCHEmul::Assembler::BytesCommandParser::parse (std::string& l, MCHEmul::Ass
 	size_t eL = l.find (' '); // The first space defines where the data starts...
 	MCHEmul::Assembler::BytesInMemoryElement* nE = new MCHEmul::Assembler::BytesInMemoryElement;
 	nE -> _id = _lastBytesId++; // Sequential...
+	nE -> _line = lC;
 	nE -> _elements = MCHEmul::getElementsFrom 
 		(l.substr (eL + 1, l.find (parser () -> commentSymbol () /** Until a potential comment. */) - (eL + 1)), ' ');
 	if (nE -> _elements.empty ())
@@ -118,7 +126,8 @@ bool MCHEmul::Assembler::InstructionCommandParser::canParse (const std::string& 
 }
 
 // ---
-void MCHEmul::Assembler::InstructionCommandParser::parse (std::string& l, MCHEmul::Assembler::Semantic* s) const
+void MCHEmul::Assembler::InstructionCommandParser::parse
+	(std::string& l, unsigned int lC, MCHEmul::Assembler::Semantic* s) const
 {
 	assert (s != nullptr);
 
@@ -133,6 +142,7 @@ void MCHEmul::Assembler::InstructionCommandParser::parse (std::string& l, MCHEmu
 
 	MCHEmul::Assembler::InstructionElement* nE = new MCHEmul::Assembler::InstructionElement;
 	nE -> _id = _lastInstructionId; 
+	nE -> _line = lC;
 	std::vector <std::string> prms;
 	for (MCHEmul::Instructions::const_iterator i = cpu () -> instructions ().begin ();
 			i != cpu () -> instructions ().end (); i++)
@@ -143,6 +153,10 @@ void MCHEmul::Assembler::InstructionCommandParser::parse (std::string& l, MCHEmu
 			nE -> _parameters = prms;
 		}
 	}
+
+	// Just in case...
+	if (nE -> _possibleInstructions.empty ())
+		nE -> _error = MCHEmul::Assembler::ErrorType::_INSTRUCTIONNOTDEFINED;
 
 	_lastInstructionId++;
 
@@ -219,7 +233,7 @@ MCHEmul::Assembler::Semantic* MCHEmul::Assembler::Parser::parse (const std::stri
 					[=](MCHEmul::Assembler::CommandParser* p) -> bool { return (p -> canParse (l)); });
 			if (j != _commandParsers.end ())
 			{
-				(*j) -> parse (l, result);
+				(*j) -> parse (l, lC, result);
 				if (!result)
 					_errors.push_back (MCHEmul::Assembler::Error 
 						(result -> lastGrammaticalElementAdded () -> _error, fN, lC, col));

@@ -55,7 +55,7 @@ namespace MCHEmul
 			virtual bool canParse (const std::string& l) const = 0;
 			/** Parse the line, obviously when it is able. \n
 				Wheen parsing the line being parsed and the code structure are modified. */
-			virtual void parse (std::string& l, Semantic* s) const = 0;
+			virtual void parse (std::string& l, unsigned int lC, Semantic* s) const = 0;
 
 			/** Invoked from the Parser's constructor. */
 			void setCPU (CPU* c)
@@ -86,7 +86,7 @@ namespace MCHEmul
 
 			virtual bool canParse (const std::string& l) const override
 							{ return (l [0] == _symbol); }
-			virtual void parse (std::string& l, Semantic* s) const override
+			virtual void parse (std::string& l, unsigned int, Semantic*) const override
 							{ l = ""; /** Nothing after the comment is important. */}
 
 			private:
@@ -105,7 +105,7 @@ namespace MCHEmul
 
 			virtual bool canParse (const std::string& l) const override
 							{ return (l [0] == _symbol); }
-			virtual void parse (std::string& l, Semantic* c) const override;
+			virtual void parse (std::string& l, unsigned int lC, Semantic* c) const override;
 
 			private:
 			const unsigned char _symbol = '#'; // Adjusted at construction level
@@ -124,7 +124,7 @@ namespace MCHEmul
 			virtual bool canParse (const std::string& l) const override
 							{ size_t eP = l.find (_symbol); 
 							  return (eP != std::string::npos && validLabel (trim (l.substr (0, eP)))); }
-			virtual void parse (std::string& l, Semantic* s) const override;
+			virtual void parse (std::string& l, unsigned int lC, Semantic* s) const override;
 
 			protected:
 			const unsigned char _symbol = '=';
@@ -148,7 +148,7 @@ namespace MCHEmul
 			virtual bool canParse (const std::string& l) const override
 							{ size_t eP = l.find (_symbol); 
 							  return (eP != std::string::npos && trim (l.substr (0, eP)) == "*"); }
-			virtual void parse (std::string& l, Semantic* s) const override;
+			virtual void parse (std::string& l, unsigned int lC, Semantic* s) const override;
 
 			private:
 			const unsigned char _symbol = '=';
@@ -173,7 +173,7 @@ namespace MCHEmul
 			virtual bool canParse (const std::string& l) const override
 							{ size_t eP = l.find (_symbol); 
 							  return (eP != std::string::npos && validLabel (trim (l.substr (0, eP)))); }
-			virtual void parse (std::string& l, Semantic* s) const override;
+			virtual void parse (std::string& l, unsigned int lC, Semantic* s) const override;
 
 			private:
 			const unsigned char _symbol = ':';
@@ -197,7 +197,7 @@ namespace MCHEmul
 			virtual bool canParse (const std::string& l) const override
 							{ size_t eP = l.find (' '); 
 							  return (eP != std::string::npos && upper (trim (l.substr (0, eP))) == "BYTES"); }
-			virtual void parse (std::string& l, Semantic* s) const override;
+			virtual void parse (std::string& l, unsigned int lC, Semantic* s) const override;
 
 			private:
 			// Implementation
@@ -217,7 +217,7 @@ namespace MCHEmul
 							{ _lastInstructionId = 0; }
 
 			virtual bool canParse (const std::string& l) const override;
-			virtual void parse (std::string& l, Semantic* s) const override;
+			virtual void parse (std::string& l, unsigned int lC, Semantic* s) const override;
 
 			private:
 			// Implementation

@@ -41,25 +41,25 @@ namespace MCHEmul
 		using Macros = std::map <std::string, std::vector <MCHEmul::UByte>>;
 
 		/** An structure to keep the info about a simple line of code. */
-		struct CodeLine
+		struct ByteCodeLine
 		{
 			public:
-			CodeLine ()
+			ByteCodeLine ()
 				: _address (), _code ()
 							{ }
 
-			CodeLine (const CodeLine&) = default;
+			ByteCodeLine (const ByteCodeLine&) = default;
 
-			CodeLine& operator = (const CodeLine&) = default;
+			ByteCodeLine& operator = (const ByteCodeLine&) = default;
 
-			friend std::ostream& operator << (std::ostream& o, const CodeLine& cL);
+			friend std::ostream& operator << (std::ostream& o, const ByteCodeLine& cL);
 
 			Address _address;
 			std::vector <UByte> _code;
 		};
 
 		/** The code is made up of many code lines. */
-		using Code = std::vector <CodeLine>;
+		using Code = std::vector <ByteCodeLine>;
 
 		Parser () = delete;
 

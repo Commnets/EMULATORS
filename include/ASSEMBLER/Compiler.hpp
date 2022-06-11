@@ -22,22 +22,22 @@ namespace MCHEmul
 {
 	namespace Assembler
 	{
-		/** The compiler reads the semantic and transform it into codelines bytes. */
-		struct CodeLine
+		/** The compiler reads the semantic and transform it into lines of bytes. */
+		struct ByteCodeLine
 		{
-			CodeLine ()
+			ByteCodeLine ()
 				: _address ({ 0x00 }), _bytes (), _label (""), _instruction (nullptr)
 							{ }
 
-			CodeLine (const Address& a, const std::vector <UByte>& b, const std::string& n, const Instruction* i)
+			ByteCodeLine (const Address& a, const std::vector <UByte>& b, const std::string& n, const Instruction* i)
 				: _address (a), _bytes (b), _label (n), _instruction (i)
 							{ }
 
-			CodeLine (const CodeLine&) = default;
+			ByteCodeLine (const ByteCodeLine&) = default;
 
-			CodeLine& operator = (const CodeLine&) = default;
+			ByteCodeLine& operator = (const ByteCodeLine&) = default;
 
-			friend std::ostream& operator << (std::ostream& o, const CodeLine& c);
+			friend std::ostream& operator << (std::ostream& o, const ByteCodeLine& c);
 
 			const Address _address;
 			const std::vector <UByte> _bytes;
@@ -45,8 +45,20 @@ namespace MCHEmul
 			const Instruction* _instruction;
 		};
 
-		/** The code will be just a set of code lines. */
-		using CodeLines = std::vector <CodeLine>;
+		/** To manage the set of bytecode lines. */
+		struct ByteCode
+		{
+			ByteCode () = default;
+
+			ByteCode (const ByteCode&) = default;
+
+			ByteCode& operator = (const ByteCode&) = default;
+
+			/** To load the info into the memory. */
+			void loadIntoMemory (Memory* m);
+
+			std::vector <ByteCodeLine> _lines;
+		};
 
 		/** The Compiler just to do the work. \n
 			The Compiler is defined for a CPU too (the same than the Parser). \n
@@ -61,7 +73,7 @@ namespace MCHEmul
 			~Compiler ()
 							{ delete (_parser); }
 
-			CodeLines compile (const std::string& fN) const;
+			ByteCode compile (const std::string& fN) const;
 
 			const CPU* cpu () const
 							{ return (_parser -> cpu ()); }

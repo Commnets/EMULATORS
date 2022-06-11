@@ -132,6 +132,7 @@ namespace MCHEmul
 
 			Type _type;
 			unsigned int _id; // Sequential...
+			unsigned int _line; // The line where the definition appears...
 			/** The next gramatical element linked. */
 			GrammaticalElement* _nextElement; // Could be nullptr (in the last gramatical element of a semantic block)
 			/** The previous gramatical element linked. */

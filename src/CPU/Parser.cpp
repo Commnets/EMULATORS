@@ -6,7 +6,7 @@
 #include <cctype>
 
 // ---
-std::ostream& MCHEmul::operator << (std::ostream& o, const MCHEmul::Parser::CodeLine& cL)
+std::ostream& MCHEmul::operator << (std::ostream& o, const MCHEmul::Parser::ByteCodeLine& cL)
 {
 	o << cL._address << ":";
 
@@ -341,7 +341,7 @@ MCHEmul::Parser::Code MCHEmul::Parser::parseOpcodeInst
 
 	cl ="";
 
-	MCHEmul::Parser::CodeLine cdL;
+	MCHEmul::Parser::ByteCodeLine cdL;
 	cdL._address = cA;
 	cdL._code = prmsB;
 	std::vector <MCHEmul::UByte> instC = 
