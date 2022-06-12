@@ -1,3 +1,5 @@
+#include "stdafx.h"
+
 #include <iostream>
 
 #include <C64/C64.hpp>
@@ -5,7 +7,20 @@
 
 using namespace C64;
 
-int main ()
+#ifndef _CONSOLE
+#include <SDL.h>
+#ifdef __cplusplus
+#define C_LINKAGE "C"
+#else
+#define C_LINKAGE
+#endif /* __cplusplus */
+#if _MSC_VER >= 1900
+extern C_LINKAGE FILE __iob_func[3] = { *stdin,*stdout,*stderr };
+#endif
+extern C_LINKAGE int main(int argc, char *argv[])
+#else
+int _tmain (int argc, char *argv [])
+#endif /* _CONSOLE */
 {
 	// PAL by default...
 	Commodore64 myComputer;

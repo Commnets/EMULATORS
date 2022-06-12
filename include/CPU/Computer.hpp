@@ -20,17 +20,19 @@
 #include <CPU/Memory.hpp>
 #include <CPU/Register.hpp>
 #include <CPU/Instruction.hpp>
+#include <CPU/IO.hpp>
 
 namespace MCHEmul
 {
-	/** The computer links many different elements. */
+	/** The computer links many different elements. \n 
+		The computer owns all the elements linked. */
 	class Computer
 	{
 		public:
 		Computer () = delete;
 
 		/** The computer owns the different elements. */
-		Computer (CPU* cpu, const Chips& c, Memory* m, const Attributes& attrs = { });
+		Computer (CPU* cpu, const Chips& c, Memory* m, const IODevices& d, const Attributes& attrs = { });
 
 		Computer (const Computer&) = delete;
 
@@ -56,6 +58,15 @@ namespace MCHEmul
 							{ return (_memory); }
 		Memory* memory ()
 							{ return (_memory); }
+
+		const IODevices& devices () const
+							{ return (_devices); }
+		bool existsDevice (int id) const
+							{ return (_devices.find (id) != _devices.end ()); }
+		const IODevice* device (int id) const
+							{ return (existsDevice (id) ? (*_devices.find (id)).second : nullptr); }
+		IODevice* device (int id)
+							{ return (existsDevice (id) ? (*_devices.find (id)).second : nullptr); }
 
 		const Attributes& attributes () const
 							{ return (_attributes); }
@@ -93,6 +104,7 @@ namespace MCHEmul
 		CPU* _cpu;
 		Chips _chips; 
 		Memory* _memory;
+		IODevices _devices;
 		const Attributes _attributes = { }; // Maybe modified at construction level
 
 		/** It is useful to track how the program is working. */

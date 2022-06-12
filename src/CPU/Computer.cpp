@@ -1,8 +1,9 @@
 #include <CPU/Computer.hpp>
 
 // ---
-MCHEmul::Computer::Computer (MCHEmul::CPU* cpu, const MCHEmul::Chips& c, MCHEmul::Memory* m, const MCHEmul::Attributes& attrs)
-	: _cpu (cpu), _chips (c), _memory (m), _attributes (attrs)
+MCHEmul::Computer::Computer (MCHEmul::CPU* cpu, const MCHEmul::Chips& c, 
+		MCHEmul::Memory* m, const MCHEmul::IODevices& d, const MCHEmul::Attributes& attrs)
+	: _cpu (cpu), _chips (c), _memory (m), _devices (d), _attributes (attrs)
 { 
 	assert (_cpu != nullptr && _memory != nullptr && _memory -> stack () != nullptr);
 
@@ -10,26 +11,32 @@ MCHEmul::Computer::Computer (MCHEmul::CPU* cpu, const MCHEmul::Chips& c, MCHEmul
 
 	for (auto i : _chips)
 		i.second -> setMemoryRef (_memory);
+
+	for (auto i : _devices)
+		i.second -> linkToChips (_chips);
 }
 
 // ---
 MCHEmul::Computer::~Computer ()
 { 
-	delete _cpu; 
+	delete (_cpu); 
 
-	delete _memory;
+	delete (_memory);
 
 	for (auto i : _chips)
-		delete i.second;
+		delete (i.second);
+
+	for (auto i : _devices)
+		delete (i.second);
 }
 
 // ---
 bool MCHEmul::Computer::initialize ()
 {
-	bool resultCPU = true;
-	if (!(resultCPU = _cpu -> initialize ()))
+	if (!_cpu -> initialize ())
 	{
 		_lastError = MCHEmul::_INIT_ERROR;
+
 		return (false);
 	}
 
@@ -39,13 +46,24 @@ bool MCHEmul::Computer::initialize ()
 	if (!resultChips)
 	{
 		_lastError = MCHEmul::_INIT_ERROR;
+
 		return (false);
 	}
 
-	bool resultMemory = true;
-	if (!(resultMemory = _memory -> initialize ()))
+	if (_memory -> initialize ())
 	{
 		_lastError = MCHEmul::_INIT_ERROR;
+
+		return (false);
+	}
+
+	bool resultIO = true;
+	for (auto i : devices ())
+		resultChips &= i.second -> initialize ();
+	if (!resultChips)
+	{
+		_lastError = MCHEmul::_INIT_ERROR;
+
 		return (false);
 	}
 
@@ -81,6 +99,8 @@ std::ostream& MCHEmul::operator << (std::ostream& o, const MCHEmul::Computer& c)
 	for (auto i : c.chips ())
 		o << *i.second << std::endl;
 	o << *c.memory () << std::endl;
+	for (auto i : c.devices ())
+		o << *i.second << std::endl;
 	o << c.attributes ();
 
 	return (o);

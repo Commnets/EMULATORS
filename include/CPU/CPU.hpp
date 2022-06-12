@@ -88,6 +88,8 @@ namespace MCHEmul
 
 		unsigned int clockCycles () const
 							{ return (_clockCycles); }
+		void addClockCycles (unsigned int cC)
+							{ _clockCycles += cC; }
 
 		/** To initialize the CPU. It could be overloaded later. \n
 			By default it just initialize registers and program counter to 0. \n

@@ -30,5 +30,8 @@
 #include <CPU/UBytes.hpp>
 #include <CPU/UInt.hpp>
 #include <CPU/Instruction.hpp>
+#include <CPU/IO.hpp>
+#include <CPU/Screen.hpp>
+#include <CPU/OSIO.hpp>
 
 #endif

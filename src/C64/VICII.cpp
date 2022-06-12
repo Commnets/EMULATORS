@@ -19,13 +19,11 @@ bool C64::VICII::initialize ()
 		return (false);
 	}
 
-	setMemoryRef (_VICMemory);
-
 	return (true);
 }
 
 // ---
-bool C64::VICII::simulate (MCHEmul::CPU*)
+bool C64::VICII::simulate (MCHEmul::CPU* cpu)
 {
 	// TODO
 

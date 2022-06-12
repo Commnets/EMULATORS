@@ -46,6 +46,34 @@ namespace C64
 		virtual MCHEmul::UByte readValue (size_t p) const override
 							{ return (_values [p] & 0x0f | (unsigned char) ((rand () % 0x10) << 4)); }
 	};
+
+	/** In the CIA1 Memory, there are a couple of records that behave different
+		when they are read that when they are written. */
+	class CIA1Memory : public MCHEmul::Memory
+	{
+		public:
+		CIA1Memory ()
+			: MCHEmul::Memory (MCHEmul::Address ({ 0x00, 0xdc }, false), 0x0100)
+							{ }
+
+		protected:
+		virtual void setValue (size_t p, const MCHEmul::UByte& v) override;
+		virtual MCHEmul::UByte readValue (size_t p) const override;
+	};
+
+	/** In the CIA2 Memory, there are a couple of records that behave different
+		when they are read that when they are written. */
+	class CIA2Memory : public MCHEmul::Memory
+	{
+		public:
+		CIA2Memory ()
+			: MCHEmul::Memory (MCHEmul::Address ({ 0x00, 0xdd }, false), 0x0100)
+							{ }
+
+		protected:
+		virtual void setValue (size_t p, const MCHEmul::UByte& v) override;
+		virtual MCHEmul::UByte readValue (size_t p) const override;
+	};
 }
 
 #endif

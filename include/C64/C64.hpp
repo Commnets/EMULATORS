@@ -15,10 +15,11 @@
 #define __C64_C64__
 
 #include <CPU/incs.hpp>
+#include <C64/Screen.hpp>
 
 namespace C64
 {
-	class Commodore64 : public MCHEmul::Computer
+	class Commodore64 final : public MCHEmul::Computer
 	{
 		public:
 		enum class VisualSystem { _NTSC, _PAL };
@@ -44,10 +45,13 @@ namespace C64
 		static const int _CHAROM_MEMORY		= 14;
 		static const int _KERNELROM_MEMORY	= 15;
 
-		private:
 		// Implementation
 		static MCHEmul::Chips standardChips (VisualSystem vS);
 		static MCHEmul::Memory* standardMemory ();
+		static MCHEmul::IODevices standardDevices (VisualSystem vS);
+
+		private:
+		VisualSystem _visualSystem;
 	};
 }
 

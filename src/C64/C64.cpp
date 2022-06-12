@@ -10,10 +10,12 @@ C64::Commodore64::Commodore64 (C64::Commodore64::VisualSystem vS)
 		(new F6500::C6510 (),
 		 C64::Commodore64::standardChips (vS),
 		 C64::Commodore64::standardMemory (),
+		 C64::Commodore64::standardDevices (vS),
 		 { { "Name", "Commodore 64" },
 		   { "Manufacturer", "Commodore Business Machines CBM" },
 		   { "Year", "1980" }
-		 })
+		 }),
+	  _visualSystem (vS)
 {
 	bool result = true;
 	result &= memory () -> block (_BASIC_MEMORY) -> loadInto ("./basic.901226-01.bin");
@@ -72,8 +74,8 @@ MCHEmul::Memory* C64::Commodore64::standardMemory ()
 	MCHEmul::Memory* VICRegisters	= new C64::VICMemory; 
 	MCHEmul::Memory* SIDRegisters	= new MCHEmul::Memory (MCHEmul::Address ({ 0x00, 0xd4 }, false), 0x0400); 
 	MCHEmul::Memory* ColorRAM		= new C64::ColorRAMMemory;	
-	MCHEmul::Memory* CIA1			= new MCHEmul::Memory (MCHEmul::Address ({ 0x00, 0xdc }, false), 0x0100); 
-	MCHEmul::Memory* CIA2			= new MCHEmul::Memory (MCHEmul::Address ({ 0x00, 0xdd }, false), 0x0100); 
+	MCHEmul::Memory* CIA1			= new C64::CIA1Memory; 
+	MCHEmul::Memory* CIA2			= new C64::CIA2Memory; 
 	MCHEmul::Memory* IO1			= new MCHEmul::Memory (MCHEmul::Address ({ 0x00, 0xde }, false), 0x0100); 
 	MCHEmul::Memory* IO2			= new MCHEmul::Memory (MCHEmul::Address ({ 0x00, 0xdf }, false), 0x0100); 
 	MCHEmul::Memory* CHARROM		= new MCHEmul::Memory (MCHEmul::Address ({ 0x00, 0xd0 }, false), 0x1000, true); // ROM over VIC/SID/RAM/CIA/IO
@@ -100,6 +102,18 @@ MCHEmul::Memory* C64::Commodore64::standardMemory ()
 				{ _CHAROM_MEMORY	, CHARROM },
 				{ _KERNELROM_MEMORY	, KernalROM }		
 			}, Stack);
+
+	return (result);
+}
+
+// ---
+MCHEmul::IODevices C64::Commodore64::standardDevices (C64::Commodore64::VisualSystem vS)
+{
+	MCHEmul::IODevices result;
+
+	result.insert (MCHEmul::IODevices::value_type (C64::Screen::_ID, 
+		(MCHEmul::IODevice*) ((vS == C64::Commodore64::VisualSystem::_NTSC) 
+			? (C64::Screen*) new C64::ScreenNTSC : (C64::Screen*) new C64::ScreenPAL)));
 
 	return (result);
 }

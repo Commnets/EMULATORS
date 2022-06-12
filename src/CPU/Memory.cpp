@@ -33,8 +33,8 @@ MCHEmul::Memory::~Memory ()
 	if (!dS)
 		delete (_stack);
 
-	delete [] _values; 
-	delete [] _defaultValues;
+	delete [] (_values); 
+	delete [] (_defaultValues);
 }
 
 // ---

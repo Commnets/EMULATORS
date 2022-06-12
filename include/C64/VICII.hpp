@@ -25,12 +25,13 @@ namespace C64
 		static const unsigned int _ID = 1;
 
 		VICII (const MCHEmul::Attributes& attrs)
-			: MCHEmul::Chip (_ID, attrs)
+			: MCHEmul::Chip (_ID, attrs),
+			  _VICMemory (nullptr)
 							{ }
 
 		virtual bool initialize () override;
 
-		virtual bool simulate (MCHEmul::CPU*) override;
+		virtual bool simulate (MCHEmul::CPU* cpu) override;
 
 		private:
 		C64::VICMemory* _VICMemory;

@@ -28,12 +28,16 @@ namespace C64
 			: MCHEmul::Chip (_ID, 
 				{ { "Name", "CIA1" },
 				  { "Manufacturer", "Commodore Business Machines CBM" },
-				  { "Year", "1980" } })
+				  { "Year", "1980" } }),
+			  _CIA1Memory (nullptr)
 							{ }
 
 		virtual bool initialize () override;
 
-		virtual bool simulate (MCHEmul::CPU*) override;
+		virtual bool simulate (MCHEmul::CPU* cpu) override;
+
+		private:
+		C64::CIA1Memory* _CIA1Memory;
 	};
 
 	/** The chip is to communicate the C64 with the environment. */
@@ -46,12 +50,16 @@ namespace C64
 			: MCHEmul::Chip (_ID, 
 				{ { "Name", "CIA1" },
 				  { "Manufacturer", "Commodore Business Machines CBM" },
-				  { "Year", "1980" } })
+				  { "Year", "1980" } }),
+			  _CIA2Memory (nullptr)
 							{ }
 
 		virtual bool initialize () override;
 
-		virtual bool simulate (MCHEmul::CPU*) override;
+		virtual bool simulate (MCHEmul::CPU* cpu) override;
+
+		private:
+		C64::CIA2Memory* _CIA2Memory;
 	};
 }
 

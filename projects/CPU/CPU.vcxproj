@@ -27,9 +27,12 @@
     <ClCompile Include="..\..\src\CPU\CPUInterrupt.cpp" />
     <ClCompile Include="..\..\src\CPU\global.cpp" />
     <ClCompile Include="..\..\src\CPU\Instruction.cpp" />
+    <ClCompile Include="..\..\src\CPU\IO.cpp" />
     <ClCompile Include="..\..\src\CPU\Memory.cpp" />
+    <ClCompile Include="..\..\src\CPU\OSIO.cpp" />
     <ClCompile Include="..\..\src\CPU\ProgramCounter.cpp" />
     <ClCompile Include="..\..\src\CPU\Register.cpp" />
+    <ClCompile Include="..\..\src\CPU\Screen.cpp" />
     <ClCompile Include="..\..\src\CPU\Stack.cpp" />
     <ClCompile Include="..\..\src\CPU\StatusRegister.cpp" />
     <ClCompile Include="..\..\src\CPU\UByte.cpp" />
@@ -46,9 +49,12 @@
     <ClInclude Include="..\..\include\CPU\global.hpp" />
     <ClInclude Include="..\..\include\CPU\incs.hpp" />
     <ClInclude Include="..\..\include\CPU\Instruction.hpp" />
+    <ClInclude Include="..\..\include\CPU\IO.hpp" />
     <ClInclude Include="..\..\include\CPU\Memory.hpp" />
+    <ClInclude Include="..\..\include\CPU\OSIO.hpp" />
     <ClInclude Include="..\..\include\CPU\ProgramCounter.hpp" />
     <ClInclude Include="..\..\include\CPU\Register.hpp" />
+    <ClInclude Include="..\..\include\CPU\Screen.hpp" />
     <ClInclude Include="..\..\include\CPU\Stack.hpp" />
     <ClInclude Include="..\..\include\CPU\StatusRegister.hpp" />
     <ClInclude Include="..\..\include\CPU\UByte.hpp" />
@@ -138,7 +144,7 @@
       <PreprocessorDefinitions>_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>..\..\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\include;$(SDL_HOME)\include;$(SDLIMAGE_HOME);$(SDLMIXER_HOME)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -154,7 +160,7 @@
       <PreprocessorDefinitions>WIN32;_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>..\..\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\include;$(SDL_HOME)\include;$(SDLIMAGE_HOME);$(SDLMIXER_HOME)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -172,7 +178,7 @@
       <PreprocessorDefinitions>WIN32;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>..\..\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\include;$(SDL_HOME)\include;$(SDLIMAGE_HOME);$(SDLMIXER_HOME)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -192,7 +198,7 @@
       <PreprocessorDefinitions>NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>..\..\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\include;$(SDL_HOME)\include;$(SDLIMAGE_HOME);$(SDLMIXER_HOME)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>

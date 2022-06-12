@@ -67,7 +67,8 @@ namespace MCHEmul
 
 		/** To simulate th behaviour of the chip. It has to be defined per chip. \n
 			Returns true if everything was ok, and false in any other circunstance. \n 
-			The last error could be recovered from the variable _lastError in that case. */
+			The last error could be recovered from the variable _lastError in that case. \n
+			The clock cyclees is added. */
 		virtual bool simulate (CPU*) = 0;
 
 		/** To get the last error happend (after initialize or simulate methods). */
