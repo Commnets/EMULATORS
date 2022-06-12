@@ -3,9 +3,12 @@
 // ---
 MCHEmul::Computer::Computer (MCHEmul::CPU* cpu, const MCHEmul::Chips& c, 
 		MCHEmul::Memory* m, const MCHEmul::IODevices& d, const MCHEmul::Attributes& attrs)
-	: _cpu (cpu), _chips (c), _memory (m), _devices (d), _attributes (attrs)
+	: _cpu (cpu), _chips (c), _memory (m), _devices (d), _attributes (attrs),
+	  _debugMode (false), _exit (false),
+	  _screen (nullptr), _inputOSSystem (nullptr)
 { 
-	assert (_cpu != nullptr && _memory != nullptr && _memory -> stack () != nullptr);
+	assert (_cpu != nullptr);
+	assert (_memory != nullptr && _memory -> stack () != nullptr);
 
 	_cpu -> setMemoryRef (_memory);
 
@@ -13,7 +16,17 @@ MCHEmul::Computer::Computer (MCHEmul::CPU* cpu, const MCHEmul::Chips& c,
 		i.second -> setMemoryRef (_memory);
 
 	for (auto i : _devices)
+	{
+		if (_screen == nullptr) 
+			_screen = dynamic_cast <MCHEmul::Screen*> (i.second);
+		if (_inputOSSystem == nullptr) 
+			_inputOSSystem = dynamic_cast <MCHEmul::InputOSSystem*> (i.second);
+
 		i.second -> linkToChips (_chips);
+	}
+
+	// These are mandatory...
+	assert (_screen != nullptr && _inputOSSystem != nullptr);
 }
 
 // ---
@@ -50,7 +63,14 @@ bool MCHEmul::Computer::initialize ()
 		return (false);
 	}
 
-	if (_memory -> initialize ())
+	if (!_memory -> initialize ())
+	{
+		_lastError = MCHEmul::_INIT_ERROR;
+
+		return (false);
+	}
+
+	if (_screen == nullptr || _inputOSSystem == nullptr)
 	{
 		_lastError = MCHEmul::_INIT_ERROR;
 
@@ -111,6 +131,7 @@ bool MCHEmul::Computer::runImpl ()
 {
 	_exit = false;
 	_lastError = MCHEmul::_NOERROR;
+
 	while (!_exit)
 	{
 		if (!_cpu -> executeNextTransaction ())
@@ -118,17 +139,31 @@ bool MCHEmul::Computer::runImpl ()
 			_exit = true;
 
 			_lastError = MCHEmul::_CPU_ERROR;
-		}
-		else
-		{
-			for (auto i : _chips)
-			{
-				if (!i.second -> simulate (_cpu))
-				{
-					_exit = true;
 
-					_lastError = MCHEmul::_CHIP_ERROR;
-				}
+			continue;
+		}
+
+		for (auto i : _chips)
+		{
+			if (!i.second -> simulate (_cpu))
+			{
+				_exit = true;
+
+				_lastError = MCHEmul::_CHIP_ERROR;
+
+				continue;
+			}
+		}
+
+		for (auto i : _devices)
+		{
+			if (!i.second -> refresh ())
+			{
+				_exit = true;
+
+				_lastError = MCHEmul::_DEVICE_ERROR;
+
+				continue;
 			}
 		}
 	}

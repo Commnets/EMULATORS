@@ -21,6 +21,8 @@
 #include <CPU/Register.hpp>
 #include <CPU/Instruction.hpp>
 #include <CPU/IO.hpp>
+#include <CPU/Screen.hpp>
+#include <CPU/OSIO.hpp>
 
 namespace MCHEmul
 {
@@ -31,7 +33,9 @@ namespace MCHEmul
 		public:
 		Computer () = delete;
 
-		/** The computer owns the different elements. */
+		/** The computer owns the different elements.
+			The devices mandatory are the screen and the InputOSDevice. 
+			This is verified at construction level. */
 		Computer (CPU* cpu, const Chips& c, Memory* m, const IODevices& d, const Attributes& attrs = { });
 
 		Computer (const Computer&) = delete;
@@ -67,6 +71,15 @@ namespace MCHEmul
 							{ return (existsDevice (id) ? (*_devices.find (id)).second : nullptr); }
 		IODevice* device (int id)
 							{ return (existsDevice (id) ? (*_devices.find (id)).second : nullptr); }
+
+		const Screen* screen () const
+							{ return (_screen); }
+		Screen* screen ()
+							{ return (_screen); }
+		const InputOSSystem* inputOSSystem () const
+							{ return (_inputOSSystem); }
+		InputOSSystem* inputOSSytem ()
+							{ return (_inputOSSystem); }
 
 		const Attributes& attributes () const
 							{ return (_attributes); }
@@ -114,6 +127,8 @@ namespace MCHEmul
 
 		// Implementation
 		unsigned int _lastError;
+		Screen* _screen;
+		InputOSSystem* _inputOSSystem;
 	};
 }
 

@@ -2,6 +2,8 @@
 #include <C64/Memory.hpp>
 #include <C64/VICII.hpp>
 #include <C64/CIA.hpp>
+#include <C64/Screen.hpp>
+#include <C64/OSIO.hpp>
 #include <F6500/C6510.hpp>
 
 // ---
@@ -32,9 +34,8 @@ C64::Commodore64::Commodore64 (C64::Commodore64::VisualSystem vS)
 // ---
 bool C64::Commodore64::initialize ()
 {
-	bool result = MCHEmul::Computer::initialize ();
-	if (!result)
-		return (false); // _lastError variable has already been set at this point...
+	if (!MCHEmul::Computer::initialize ())
+		return (false);
 
 	// TODO
 
@@ -114,6 +115,7 @@ MCHEmul::IODevices C64::Commodore64::standardDevices (C64::Commodore64::VisualSy
 	result.insert (MCHEmul::IODevices::value_type (C64::Screen::_ID, 
 		(MCHEmul::IODevice*) ((vS == C64::Commodore64::VisualSystem::_NTSC) 
 			? (C64::Screen*) new C64::ScreenNTSC : (C64::Screen*) new C64::ScreenPAL)));
+	result.insert (MCHEmul::IODevices::value_type (C64::InputOSSystem::_ID, new C64::InputOSSystem));
 
 	return (result);
 }

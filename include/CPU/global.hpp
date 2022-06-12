@@ -30,10 +30,11 @@ namespace MCHEmul
 	std::ostream& operator << (std::ostream& o, const Attributes& attrs);
 
 	/** Constants for errors. */
-	const unsigned int _NOERROR		= 0;
-	const unsigned int _INIT_ERROR	= 1;
-	const unsigned int _CPU_ERROR	= 2;
-	const unsigned int _CHIP_ERROR	= 3;
+	const unsigned int _NOERROR			= 0;
+	const unsigned int _INIT_ERROR		= 1;
+	const unsigned int _CPU_ERROR		= 2;
+	const unsigned int _CHIP_ERROR		= 3;
+	const unsigned int _DEVICE_ERROR	= 4;
 
 	/** The max number of bytes managed in this emulator. */
 	const unsigned int _MAXBYTESMANAGED = 2;

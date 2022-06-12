@@ -1,13 +1,6 @@
 #include <F6500/C6510.hpp>
 
 // ---
-F6500::C6510::C6510 ()
-	: F6500::C6500 (F6500::C6510::createArchitecture ())
-{
-	// Nothing else to do...
-}
-
-// ---
 MCHEmul::CPUArchitecture F6500::C6510::createArchitecture ()
 {
 	return (

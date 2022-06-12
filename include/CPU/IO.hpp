@@ -57,8 +57,9 @@ namespace MCHEmul
 
 		/** To initialize the device. */
 		virtual bool initialize () = 0;
-		/** To emulate the way it works. */
-		virtual void refresh () = 0;
+		/** To emulate the way it works. \n
+			Return true, if everything was ok. */
+		virtual bool refresh () = 0;
 
 		friend std::ostream& operator << (std::ostream& o, const IODevice& d);
 

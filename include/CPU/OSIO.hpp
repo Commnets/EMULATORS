@@ -32,9 +32,9 @@ namespace MCHEmul
 							{ return (_quitRequested); }
 
 		virtual bool initialize () override
-							{ _quitRequested = false; }
+							{ _quitRequested = false; return (true); }
 
-		virtual void refresh () override;
+		virtual bool refresh () override;
 
 		protected:
 		/** What to do when a key has been pressed. */

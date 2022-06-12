@@ -4,11 +4,10 @@
 // ---
 bool C64::CIA1::initialize ()
 {
-	setMemoryRef (nullptr);
+	assert (memoryRef () != nullptr);
 
-	bool result = MCHEmul::Chip::initialize ();
-	if (!result)
-		return (false); // _lastError variable has been already set at this point...
+	if (!MCHEmul::Chip::initialize ())
+		return (false); 
 
 	// Gets the memory block dedicated to the CIA1
 	if (!(_CIA1Memory = 
@@ -33,11 +32,10 @@ bool C64::CIA1::simulate (MCHEmul::CPU* cpu)
 // ---
 bool C64::CIA2::initialize ()
 {
-	setMemoryRef (nullptr);
+	assert (memoryRef () != nullptr);
 
-	bool result = MCHEmul::Chip::initialize ();
-	if (!result)
-		return (false); // _lastError variable has been already set at this point...
+	if (!MCHEmul::Chip::initialize ())
+		return (false); 
 
 	// Gets the memory block dedicated to the CIA2
 	if (!(_CIA2Memory = 

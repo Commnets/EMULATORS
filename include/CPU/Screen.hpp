@@ -65,7 +65,7 @@ namespace MCHEmul
 		virtual bool initialize () override;
 
 		/** Draws the screen using the info of the frame. */
-		void refresh () override;
+		virtual bool refresh () override;
 
 		protected:
 		/** Invoked from initialize.

@@ -21,14 +21,14 @@ F6500::C6500::C6500 (const MCHEmul::CPUArchitecture& a)
 // ---
 bool F6500::C6500::initialize ()
 {
-	bool result = MCHEmul::CPU::initialize ();
+	if (!MCHEmul::CPU::initialize ())
+		return (false);
 
-	// Sets thpoint where the execution starts!
-	if (result)
-		programCounter ().setAddress (MCHEmul::Address 
-			(memoryRef () -> values (ResetVectorAddress (), 2), false /** Little - endian */));
+	// Sets the point where the execution starts!
+	programCounter ().setAddress (MCHEmul::Address 
+		(memoryRef () -> values (ResetVectorAddress (), 2), false /** Little - endian */));
 
-	return (result);
+	return (true);
 }
 
 // ---

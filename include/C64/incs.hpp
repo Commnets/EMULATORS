@@ -18,5 +18,8 @@
 #include <C64/C64.hpp>
 #include <C64/Memory.hpp>
 #include <C64/VICII.hpp>
+#include <C64/CIA.hpp>
+#include <C64/Screen.hpp>
+#include <C64/OSIO.hpp>
 
 #endif

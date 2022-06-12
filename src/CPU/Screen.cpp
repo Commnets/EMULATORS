@@ -17,7 +17,7 @@ MCHEmul::Screen::Screen (const std::string& n, int id,
 
 	_colorPalette = new unsigned int [_numberColors];
 
-	SDL_Init(SDL_INIT_VIDEO);
+	SDL_Init (SDL_INIT_VIDEO);
 
 	_window = SDL_CreateWindow (
 		_screenName.c_str (),
@@ -62,10 +62,12 @@ bool MCHEmul::Screen::initialize ()
 }
 
 // ---
-void MCHEmul::Screen::refresh ()
+bool MCHEmul::Screen::refresh ()
 {
   SDL_UpdateTexture (_texture, nullptr, _frame, _screenCols * sizeof (uint32_t));
   SDL_RenderClear (_renderer);
   SDL_RenderCopy (_renderer, _texture, nullptr, nullptr);
   SDL_RenderPresent (_renderer);
+
+  return (true);
 }

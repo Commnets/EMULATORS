@@ -6,9 +6,8 @@ bool C64::VICII::initialize ()
 {
 	assert (memoryRef () != nullptr);
 
-	bool result = MCHEmul::Chip::initialize ();
-	if (!result)
-		return (false); // _lastError variable has been already set at this point...
+	if (!MCHEmul::Chip::initialize ())
+		return (false);
 
 	// Gets the memory block dedicated to the VICII
 	if (!(_VICMemory = 

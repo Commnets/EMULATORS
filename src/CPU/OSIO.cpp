@@ -1,7 +1,7 @@
 #include <CPU/OSIO.hpp>
 
 // ---
-void MCHEmul::InputOSSystem::refresh ()
+bool MCHEmul::InputOSSystem::refresh ()
 {
 	SDL_Event event;
 	while (SDL_PollEvent (&event))
@@ -24,4 +24,6 @@ void MCHEmul::InputOSSystem::refresh ()
 				break;
 		}
 	}
+
+	return (true);
 }
