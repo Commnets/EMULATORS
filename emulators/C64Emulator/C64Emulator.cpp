@@ -43,8 +43,10 @@ int _tmain (int argc, char *argv [])
 
 		if (myComputer.initialize ())
 		{
-			cL.loadIntoMemory (myComputer.cpu () -> memoryRef ());
-			myComputer.runFrom (MCHEmul::Address ({ 0x00, 0xc0 }, false));
+			MCHEmul::Address iA; 
+			std::vector <MCHEmul::UByte> bt = cL.asSetOfBytes (iA /** It is set. */);
+			myComputer.memory () -> set (iA, bt);
+			myComputer.startProgramAt (iA);
 		}
 	}
 

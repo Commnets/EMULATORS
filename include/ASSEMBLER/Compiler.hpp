@@ -14,7 +14,7 @@
 #ifndef __ASSEMBLER_COMPILER__
 #define __ASSEMBLER_COMPILER__
 
-#include <CPU/Incs.hpp>
+#include <CORE/Incs.hpp>
 #include <ASSEMBLER/Grammar.hpp>
 #include <ASSEMBLER/Parser.hpp>
 
@@ -39,9 +39,9 @@ namespace MCHEmul
 
 			friend std::ostream& operator << (std::ostream& o, const ByteCodeLine& c);
 
-			const Address _address;
-			const std::vector <UByte> _bytes;
-			const std::string _label;
+			Address _address;
+			std::vector <UByte> _bytes;
+			std::string _label;
 			const Instruction* _instruction;
 		};
 
@@ -54,8 +54,14 @@ namespace MCHEmul
 
 			ByteCode& operator = (const ByteCode&) = default;
 
+			/** Returns the initial address in the iA variable. 
+				The addresses with no info are filled with 0x00. */
+			std::vector <UByte> asSetOfBytes (Address& iA) const;
+
 			/** To load the info into the memory. */
 			void loadIntoMemory (Memory* m);
+
+			static ByteCode createFromMemory (const Address& a, unsigned int b, Memory* m, CPU* cpu);
 
 			std::vector <ByteCodeLine> _lines;
 		};

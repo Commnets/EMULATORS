@@ -19,47 +19,47 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\src\CPU\Address.cpp" />
-    <ClCompile Include="..\..\src\CPU\Chip.cpp" />
-    <ClCompile Include="..\..\src\CPU\Computer.cpp" />
-    <ClCompile Include="..\..\src\CPU\CPU.cpp" />
-    <ClCompile Include="..\..\src\CPU\CPUArchitecture.cpp" />
-    <ClCompile Include="..\..\src\CPU\CPUInterrupt.cpp" />
-    <ClCompile Include="..\..\src\CPU\global.cpp" />
-    <ClCompile Include="..\..\src\CPU\Instruction.cpp" />
-    <ClCompile Include="..\..\src\CPU\IO.cpp" />
-    <ClCompile Include="..\..\src\CPU\Memory.cpp" />
-    <ClCompile Include="..\..\src\CPU\OSIO.cpp" />
-    <ClCompile Include="..\..\src\CPU\ProgramCounter.cpp" />
-    <ClCompile Include="..\..\src\CPU\Register.cpp" />
-    <ClCompile Include="..\..\src\CPU\Screen.cpp" />
-    <ClCompile Include="..\..\src\CPU\Stack.cpp" />
-    <ClCompile Include="..\..\src\CPU\StatusRegister.cpp" />
-    <ClCompile Include="..\..\src\CPU\UByte.cpp" />
-    <ClCompile Include="..\..\src\CPU\UBytes.cpp" />
-    <ClCompile Include="..\..\src\CPU\UInt.cpp" />
+    <ClCompile Include="..\..\src\CORE\Address.cpp" />
+    <ClCompile Include="..\..\src\CORE\Chip.cpp" />
+    <ClCompile Include="..\..\src\CORE\Computer.cpp" />
+    <ClCompile Include="..\..\src\CORE\CPU.cpp" />
+    <ClCompile Include="..\..\src\CORE\CPUArchitecture.cpp" />
+    <ClCompile Include="..\..\src\CORE\CPUInterrupt.cpp" />
+    <ClCompile Include="..\..\src\CORE\global.cpp" />
+    <ClCompile Include="..\..\src\CORE\Instruction.cpp" />
+    <ClCompile Include="..\..\src\CORE\IO.cpp" />
+    <ClCompile Include="..\..\src\CORE\Memory.cpp" />
+    <ClCompile Include="..\..\src\CORE\OSIO.cpp" />
+    <ClCompile Include="..\..\src\CORE\ProgramCounter.cpp" />
+    <ClCompile Include="..\..\src\CORE\Register.cpp" />
+    <ClCompile Include="..\..\src\CORE\Screen.cpp" />
+    <ClCompile Include="..\..\src\CORE\Stack.cpp" />
+    <ClCompile Include="..\..\src\CORE\StatusRegister.cpp" />
+    <ClCompile Include="..\..\src\CORE\UByte.cpp" />
+    <ClCompile Include="..\..\src\CORE\UBytes.cpp" />
+    <ClCompile Include="..\..\src\CORE\UInt.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\include\CPU\Address.hpp" />
-    <ClInclude Include="..\..\include\CPU\Chip.hpp" />
-    <ClInclude Include="..\..\include\CPU\Computer.hpp" />
-    <ClInclude Include="..\..\include\CPU\CPU.hpp" />
-    <ClInclude Include="..\..\include\CPU\CPUArchitecture.hpp" />
-    <ClInclude Include="..\..\include\CPU\CPUInterrupt.hpp" />
-    <ClInclude Include="..\..\include\CPU\global.hpp" />
-    <ClInclude Include="..\..\include\CPU\incs.hpp" />
-    <ClInclude Include="..\..\include\CPU\Instruction.hpp" />
-    <ClInclude Include="..\..\include\CPU\IO.hpp" />
-    <ClInclude Include="..\..\include\CPU\Memory.hpp" />
-    <ClInclude Include="..\..\include\CPU\OSIO.hpp" />
-    <ClInclude Include="..\..\include\CPU\ProgramCounter.hpp" />
-    <ClInclude Include="..\..\include\CPU\Register.hpp" />
-    <ClInclude Include="..\..\include\CPU\Screen.hpp" />
-    <ClInclude Include="..\..\include\CPU\Stack.hpp" />
-    <ClInclude Include="..\..\include\CPU\StatusRegister.hpp" />
-    <ClInclude Include="..\..\include\CPU\UByte.hpp" />
-    <ClInclude Include="..\..\include\CPU\UBytes.hpp" />
-    <ClInclude Include="..\..\include\CPU\UInt.hpp" />
+    <ClInclude Include="..\..\include\CORE\Address.hpp" />
+    <ClInclude Include="..\..\include\CORE\Chip.hpp" />
+    <ClInclude Include="..\..\include\CORE\Computer.hpp" />
+    <ClInclude Include="..\..\include\CORE\CPU.hpp" />
+    <ClInclude Include="..\..\include\CORE\CPUArchitecture.hpp" />
+    <ClInclude Include="..\..\include\CORE\CPUInterrupt.hpp" />
+    <ClInclude Include="..\..\include\CORE\global.hpp" />
+    <ClInclude Include="..\..\include\CORE\incs.hpp" />
+    <ClInclude Include="..\..\include\CORE\Instruction.hpp" />
+    <ClInclude Include="..\..\include\CORE\IO.hpp" />
+    <ClInclude Include="..\..\include\CORE\Memory.hpp" />
+    <ClInclude Include="..\..\include\CORE\OSIO.hpp" />
+    <ClInclude Include="..\..\include\CORE\ProgramCounter.hpp" />
+    <ClInclude Include="..\..\include\CORE\Register.hpp" />
+    <ClInclude Include="..\..\include\CORE\Screen.hpp" />
+    <ClInclude Include="..\..\include\CORE\Stack.hpp" />
+    <ClInclude Include="..\..\include\CORE\StatusRegister.hpp" />
+    <ClInclude Include="..\..\include\CORE\UByte.hpp" />
+    <ClInclude Include="..\..\include\CORE\UBytes.hpp" />
+    <ClInclude Include="..\..\include\CORE\UInt.hpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>

@@ -15,7 +15,8 @@ _INST_IMPL (F6500::BRK)
 	st.setBitStatus ("B", true);
 
 	// Jump to the IRQ vector...
-	pc.setAddress (dynamic_cast <F6500::C6510*> (cpu ()) -> IRQVectorAddress ());
+	pc.setAddress (MCHEmul::Address (memory () -> values 
+		(dynamic_cast <F6500::C6510*> (cpu ()) -> IRQVectorAddress (), 2), false /** Little - endian. */));
 
 	return (true);
 }

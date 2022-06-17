@@ -14,7 +14,7 @@
 #ifndef __C64_SCREEN__
 #define __C64_SCREEN__
 
-#include <CPU/incs.hpp>
+#include <CORE/incs.hpp>
 
 namespace C64
 {

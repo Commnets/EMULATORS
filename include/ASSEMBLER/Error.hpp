@@ -14,7 +14,7 @@
 #ifndef __ASSEMBLER_ERROR__
 #define __ASSEMBLER_ERROR__
 
-#include <CPU/incs.hpp>
+#include <CORE/incs.hpp>
 
 namespace MCHEmul
 {

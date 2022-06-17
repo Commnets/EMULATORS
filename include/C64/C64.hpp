@@ -14,7 +14,7 @@
 #ifndef __C64_C64__
 #define __C64_C64__
 
-#include <CPU/incs.hpp>
+#include <CORE/incs.hpp>
 #include <C64/Screen.hpp>
 
 namespace C64

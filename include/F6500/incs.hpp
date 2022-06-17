@@ -14,7 +14,7 @@
 #ifndef __F6500_INCS__
 #define __F6500_INCS__
 
-#include <CPU/incs.hpp>
+#include <CORE/incs.hpp>
 #include <F6500/C6500.hpp>
 #include <F6500/C6510.hpp>
 #include <F6500/IRQInterrupt.hpp>

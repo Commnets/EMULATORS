@@ -1,4 +1,5 @@
 #include <ASSEMBLER/Compiler.hpp>
+#include <algorithm>
 
 // ---
 std::ostream& MCHEmul::Assembler::operator << (std::ostream& o, const MCHEmul::Assembler::ByteCodeLine& c)
@@ -19,12 +20,73 @@ std::ostream& MCHEmul::Assembler::operator << (std::ostream& o, const MCHEmul::A
 }
 
 // ---
+std::vector <MCHEmul::UByte> MCHEmul::Assembler::ByteCode::asSetOfBytes (MCHEmul::Address& iA) const
+{
+	if (_lines.empty ())
+		return (std::vector <MCHEmul::UByte> ());
+
+	auto sort = [](const MCHEmul::Assembler::ByteCodeLine& l1, 
+		const MCHEmul::Assembler::ByteCodeLine& l2) -> bool { return (l1._address < l2._address); };
+
+	MCHEmul::Assembler::ByteCode cp = *this;
+	std::sort (cp._lines.begin (), cp._lines.end (), sort);
+
+	std::vector <MCHEmul::UByte> result;
+	iA = cp._lines [0]._address;
+	MCHEmul::Address nA = iA; 
+	for (auto i : cp._lines)
+	{
+		if (i._address > nA)
+		{
+			while (nA != i._address)
+			{
+				result.push_back (MCHEmul::UByte::_0);
+				nA = nA + 1;
+			}
+		}
+
+		for (auto j : i._bytes)
+			result.push_back (j);
+
+		nA += i._bytes.size ();
+	}
+
+	return (result);
+}
+
+// ---
 void MCHEmul::Assembler::ByteCode::loadIntoMemory (MCHEmul::Memory* m)
 {
 	assert (m != nullptr);
 
 	for (auto i : _lines)
 		m -> set (i._address, i._bytes);
+}
+
+// ---
+MCHEmul::Assembler::ByteCode MCHEmul::Assembler::ByteCode::createFromMemory 
+	(const MCHEmul::Address& a, unsigned int b, MCHEmul::Memory* m, MCHEmul::CPU* cpu)
+{
+	assert (m != nullptr && cpu != nullptr);
+
+	MCHEmul::Assembler::ByteCode result;
+
+	unsigned int i = 0;
+	while (i < b)
+	{
+		MCHEmul::Instructions::const_iterator pi =
+			cpu -> instructions ().find (MCHEmul::UInt 
+				(m -> values (a, cpu -> architecture ().instructionLength ()).values ()).asUnsignedInt ());
+		if (pi == cpu -> instructions ().end ())
+			break; // No sense to continue...the instruction doesn't exist...
+
+		const MCHEmul::Instruction* inst = (*pi).second;
+		result._lines.push_back (MCHEmul::Assembler::ByteCodeLine 
+			(a, m -> values (a, inst -> memoryPositions ()).values (), "" /** no label ever. */, inst));
+		i += inst -> memoryPositions ();
+	}
+
+	return (result);
 }
 
 // ---

@@ -31,7 +31,7 @@
 #ifndef __ASSEMBLER_GRAMMAR__
 #define __ASSEMBLER_GRAMMAR__
 
-#include <CPU/incs.hpp>
+#include <CORE/incs.hpp>
 #include <ASSEMBLER/Error.hpp>
 
 namespace MCHEmul

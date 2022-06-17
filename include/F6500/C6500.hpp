@@ -14,7 +14,7 @@
 #ifndef __F6500_C6500__
 #define __F6500_C6500__
 
-#include <CPU/incs.hpp>
+#include <CORE/incs.hpp>
 
 namespace F6500
 {

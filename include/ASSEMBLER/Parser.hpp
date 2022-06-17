@@ -14,7 +14,7 @@
 #ifndef __ASSEMBLER_PARSER__
 #define __ASSEMBLER_PARSER__
 
-#include <CPU/Incs.hpp>
+#include <CORE/Incs.hpp>
 #include <ASSEMBLER/Grammar.hpp>
 
 namespace MCHEmul
