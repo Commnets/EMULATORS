@@ -12,7 +12,8 @@ const std::string Emuls::Emulator::_ADDRESS = "ADDRESS";
 // ---
 Emuls::Emulator::Emulator (const std::vector <std::string>& argv)
 	: _attributes (),
-	  _computer (nullptr)
+	  _computer (nullptr),
+	  _communicationSystem (nullptr)
 {
 	static std::map <unsigned char, std::string> _MATCH =
 		{ { _PARAMBYTEFILE, _BYTEFILE },
