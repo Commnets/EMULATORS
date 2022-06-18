@@ -170,7 +170,7 @@ void MCHEmul::Assembler::InstructionCommandParser::parse
 }
 
 // ---
-MCHEmul::Assembler::Parser::Parser (MCHEmul::CPU* c, const MCHEmul::Assembler::CommandParsers& lP)
+MCHEmul::Assembler::Parser::Parser (const MCHEmul::CPU* c, const MCHEmul::Assembler::CommandParsers& lP)
 	: _cpu (c), _commandParsers (lP),
 	  _errors (), _commentSymbol (' ')
 { 

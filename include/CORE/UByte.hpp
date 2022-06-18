@@ -21,7 +21,7 @@ namespace MCHEmul
 	/** Representing the minimum piece of addressable info in a computer. 
 		MSB is the bit 7, LSB is the bit 0.
 		Read bits from right to left. */
-	class UByte
+	class UByte final
 	{
 		public:
 		enum class OutputFormat

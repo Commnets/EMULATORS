@@ -28,6 +28,6 @@
  */
 
 /**
- *	\defgroup	C64Emul All classes defining a template for a C64 emulator.
- *	Classes and macros defining the common characteristics to any C64 Emulator.
+ *	\defgroup	EMULS All classes defining a template for any emulator.
+ *	Classes and macros defining the common characteristics to any Emulator.
  */

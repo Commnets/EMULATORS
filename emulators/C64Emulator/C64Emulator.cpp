@@ -2,10 +2,33 @@
 
 #include <iostream>
 
-#include <C64/C64.hpp>
-#include <ASSEMBLER/Compiler.hpp>
+#include <EMULATORS/incs.hpp>
 
-using namespace C64;
+#ifndef _CONSOLE
+std::vector <std::string> generateParamsFrom (int argc, char *argv [])
+{
+	std::vector <std::string> result;
+	for (int i = 0; i < argc; i++)
+		result.push_back (argv [i]);
+
+	return (result);
+}
+#else
+std::vector <std::string> generateParamsFrom (int argc, _TCHAR *argv [])
+{
+	std::vector <std::string> result;
+	for (int i = 0; i < argc; i++)
+	{
+		std::wstring wS = argv [i];
+		std::string s (wS.begin (), wS.end ());
+		result.push_back (s);
+	}
+
+	return (result);
+}
+#endif
+
+using namespace Emuls;
 
 #ifndef _CONSOLE
 #include <SDL.h>
@@ -19,36 +42,12 @@ extern C_LINKAGE FILE __iob_func[3] = { *stdin,*stdout,*stderr };
 #endif
 extern C_LINKAGE int main(int argc, char *argv[])
 #else
-int _tmain (int argc, char *argv [])
+int _tmain (int argc, _TCHAR *argv [])
 #endif /* _CONSOLE */
 {
-	// PAL by default...
-	Commodore64 myComputer;
-
-	if (myComputer.lastError () != MCHEmul::_NOERROR)
-		return (1);
-
-	// The other type of parser...
-	MCHEmul::Assembler::Compiler compiler (new MCHEmul::Assembler::Parser (myComputer.cpu ()));
-	MCHEmul::Assembler::ByteCode cL = compiler.compile ("./test.asm");
-	if (!compiler)
-	{
-		for (auto i : compiler.errors ())
-			std::cout << i << std::endl;
-	}
-	else
-	{
-		for (auto i : cL._lines)
-			std::cout << i << std::endl;
-
-		if (myComputer.initialize ())
-		{
-			MCHEmul::Address iA; 
-			std::vector <MCHEmul::UByte> bt = cL.asSetOfBytes (iA /** It is set. */);
-			myComputer.memory () -> set (iA, bt);
-			myComputer.startProgramAt (iA);
-		}
-	}
-
+	std::vector <std::string> prms = generateParamsFrom (argc, argv);
 	return (0);
+
+//	C64Emulator myEmulator (argc, argv);
+//	return (myEmulator.run ());
 }

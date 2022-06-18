@@ -23,7 +23,7 @@ namespace MCHEmul
 	namespace Assembler
 	{
 		/** The compiler reads the semantic and transform it into lines of bytes. */
-		struct ByteCodeLine
+		struct ByteCodeLine final
 		{
 			ByteCodeLine ()
 				: _address ({ 0x00 }), _bytes (), _label (""), _instruction (nullptr)
@@ -46,7 +46,7 @@ namespace MCHEmul
 		};
 
 		/** To manage the set of bytecode lines. */
-		struct ByteCode
+		struct ByteCode final
 		{
 			ByteCode () = default;
 
@@ -68,23 +68,19 @@ namespace MCHEmul
 
 		/** The Compiler just to do the work. \n
 			The Compiler is defined for a CPU too (the same than the Parser). \n
-			The Compiler own the Parser. */
-		class Compiler
+			The Compiler doesn't own the Parser. */
+		class Compiler final
 		{
 			public:
-			Compiler (Parser* p)
+			Compiler (const Parser& p)
 				: _parser (p)
-							{ assert (_parser != nullptr); }
+							{ }
 
-			~Compiler ()
-							{ delete (_parser); }
-
+			/** The key method. Generic the Byte Codes to by load and executed. */
 			ByteCode compile (const std::string& fN) const;
 
 			const CPU* cpu () const
-							{ return (_parser -> cpu ()); }
-			CPU* cpu ()
-							{ return (_parser -> cpu ()); }
+							{ return (_parser.cpu ()); }
 
 			Errors errors () const
 							{ return (_errors); }
@@ -94,7 +90,7 @@ namespace MCHEmul
 							{ return (!_errors.empty ()); }
 
 			private:
-			Parser* _parser;
+			const Parser& _parser;
 
 			// Implementation
 			mutable Errors _errors;

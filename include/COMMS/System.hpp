@@ -36,6 +36,8 @@ namespace MCHEmul
 		virtual ~CommunicationSystem ()
 							{ delete (_messageBuilder); }
 
+		virtual bool initialize ();
+
 		virtual bool processMessagesOn (Computer* c);
 
 		protected:

@@ -45,7 +45,7 @@ void MCHEmul::CPU::removeInterrrupt (int id)
 }
 
 // ---
-bool MCHEmul::CPU::executeNextTransaction ()
+bool MCHEmul::CPU::executeNextInstruction ()
 {
 	unsigned int nC = 0;
 	for (auto i : _interrupts)

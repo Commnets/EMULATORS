@@ -108,7 +108,7 @@ namespace MCHEmul
 
 		/** To execute the next transaction,
 			Return true if everything was ok and false in any other case. */
-		bool executeNextTransaction ();
+		bool executeNextInstruction ();
 
 		/** To get the last error happend (after initialize or simulate methods). */
 		unsigned int lastError () const

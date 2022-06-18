@@ -24,7 +24,7 @@ namespace MCHEmul
 	/** Representing and address that can vary from 0 to a limit.
 		An initial value and the limit is given at construction time. 
 		If no limit is given the maximum possible in the framework is taken. */
-	class Address
+	class Address final
 	{
 		public:
 		Address ()

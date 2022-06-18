@@ -97,10 +97,10 @@ MCHEmul::Assembler::ByteCode MCHEmul::Assembler::Compiler::compile (const std::s
 	_errors = { };
 
 	// First of all, parse...
-	MCHEmul::Assembler::Semantic* smt = _parser -> parse (fN);
-	if (!(*_parser))
+	MCHEmul::Assembler::Semantic* smt = _parser.parse (fN);
+	if (!_parser)
 	{
-		_errors = _parser -> errors ();
+		_errors = _parser.errors ();
 		return (result);
 	}
 

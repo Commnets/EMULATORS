@@ -4,7 +4,6 @@
 MCHEmul::Computer::Computer (MCHEmul::CPU* cpu, const MCHEmul::Chips& c, 
 		MCHEmul::Memory* m, const MCHEmul::IODevices& d, const MCHEmul::Attributes& attrs)
 	: _cpu (cpu), _chips (c), _memory (m), _devices (d), _attributes (attrs),
-	  _controlFromOutside (false), _exit (false),
 	  _screen (nullptr), _inputOSSystem (nullptr)
 { 
 	assert (_cpu != nullptr);
@@ -91,33 +90,68 @@ bool MCHEmul::Computer::initialize ()
 }
 
 // ---
-bool MCHEmul::Computer::run (bool cE)
+bool MCHEmul::Computer::run (unsigned int lL)
 {
-	if (!initialize ())
-		return (false);
+	// It has to be initialized before...
 
-	return (runImpl (cE));
+	_exit = false;
+	_lastError = MCHEmul::_NOERROR;
+
+	bool ok = true;
+	while (ok && !_exit)
+	{
+		ok &= runComputerCycle (lL);
+		ok &= runIOCycle (lL);
+	}
+
+	return (_lastError != MCHEmul::_NOERROR);
 }
 
 // ---
-bool MCHEmul::Computer::runFrom (const MCHEmul::Address& a, bool cE)
+bool MCHEmul::Computer::runComputerCycle (unsigned int lL)
 {
-	if (!initialize ())
-		return (false);
+	if (!_cpu -> executeNextInstruction ())
+	{
+		_exit = true;
 
-	// Sets the initial address to start from...
-	cpu () -> programCounter ().setAddress (a);
+		_lastError = MCHEmul::_CPU_ERROR;
 
-	return (runImpl (cE));
+		return (false); // Error...
+	}
+
+	for (auto i : _chips)
+	{
+		if (!i.second -> simulate (_cpu))
+		{
+			_exit = true;
+
+			_lastError = MCHEmul::_CHIP_ERROR;
+
+			return (false); // Error...
+		}
+	}
+
+	return (true);
 }
 
 // ---
-bool MCHEmul::Computer::startProgramAt (const MCHEmul::Address& a, bool cE)
+bool MCHEmul::Computer::runIOCycle (unsigned int lL)
 {
-	// Sets the initial address to start from...
-	cpu () -> programCounter ().setAddress (a);
+	for (auto i : _devices)
+	{
+		if (!i.second -> refresh ())
+		{
+			_exit = true;
 
-	return (runImpl (cE));
+			_lastError = MCHEmul::_DEVICE_ERROR;
+
+			return (false); // Error...
+		}
+	}
+
+	_exit = _inputOSSystem -> quitRequested ();
+
+	return (true);
 }
 
 // ---
@@ -134,49 +168,4 @@ std::ostream& MCHEmul::operator << (std::ostream& o, const MCHEmul::Computer& c)
 	o << c.attributes ();
 
 	return (o);
-}
-
-// ---
-bool MCHEmul::Computer::runImpl (bool cE)
-{
-	_exit = false;
-	_lastError = MCHEmul::_NOERROR;
-
-	while (!_exit)
-	{
-		if (!_cpu -> executeNextTransaction ())
-		{
-			_exit = true;
-
-			_lastError = MCHEmul::_CPU_ERROR;
-
-			continue;
-		}
-
-		for (auto i : _chips)
-		{
-			if (!i.second -> simulate (_cpu))
-			{
-				_exit = true;
-
-				_lastError = MCHEmul::_CHIP_ERROR;
-
-				continue;
-			}
-		}
-
-		for (auto i : _devices)
-		{
-			if (!i.second -> refresh ())
-			{
-				_exit = true;
-
-				_lastError = MCHEmul::_DEVICE_ERROR;
-
-				continue;
-			}
-		}
-	}
-
-	return (_lastError != MCHEmul::_NOERROR);
 }

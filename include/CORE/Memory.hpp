@@ -74,7 +74,7 @@ namespace MCHEmul
 		/** It can be overloaded latr, to set the specific content of specific zones. */
 		virtual bool initialize ();
 
-		/** First bytes with the address. */
+		/** First bytes of the file including with the address. */
 		bool load (const std::string& fN);
 		/** Everything into the right memory. */
 		bool loadInto (const std::string& fN, const Address& a);

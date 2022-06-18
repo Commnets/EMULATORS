@@ -20,7 +20,7 @@
 namespace MCHEmul
 {
 	/** Representing a set of UByte. */
-	class UBytes
+	class UBytes final
 	{
 		public:
 		static const UBytes _E;

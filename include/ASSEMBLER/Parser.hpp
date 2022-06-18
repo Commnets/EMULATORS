@@ -40,11 +40,7 @@ namespace MCHEmul
 
 			const CPU* cpu () const
 							{ return (_cpu); }
-			CPU* cpu ()
-							{ return (_cpu); }
 			const Parser* parser () const
-							{ return (_parser); }
-			Parser* parser ()
 							{ return (_parser); }
 
 			/** Maybe one of them could need it. */
@@ -58,14 +54,14 @@ namespace MCHEmul
 			virtual void parse (std::string& l, unsigned int lC, Semantic* s) const = 0;
 
 			/** Invoked from the Parser's constructor. */
-			void setCPU (CPU* c)
+			void setCPU (const CPU* c)
 							{ assert (c != nullptr); _cpu = c; }
-			void setParser (Parser* p)
+			void setParser (const Parser* p)
 							{ assert (p!= nullptr); _parser = p; }
 
 			protected:
-			CPU* _cpu;
-			Parser* _parser;
+			const CPU* _cpu;
+			const Parser* _parser;
 		};
 
 		/** To facilitate the use of a list of commands. */
@@ -229,10 +225,10 @@ namespace MCHEmul
 			The parser is a line parser. That is, it is only able to parser a line. \n
 			There can be added specific instruction parsers but always a comment command parser must exist. \n
 			It is used to determine whether a line finishes or not. */
-		class Parser
+		class Parser final
 		{
 			public:
-			Parser (CPU* c, const CommandParsers& lP = // With the standard line parsers...
+			Parser (const CPU* c, const CommandParsers& lP = // With the standard line parsers...
 					{ new CommentCommandParser, new IncludeCommandParser, 
 					  new MacroCommandParser, new StartingPointCommandParser, 
 					  new LabelCommandParser, new InstructionCommandParser });
@@ -242,12 +238,10 @@ namespace MCHEmul
 			Parser& operator = (const Parser&) = delete;
 
 			/** The parser doesn't own the instructions but the CPU, but the line parsers. */
-			virtual ~Parser ()
+			~Parser ()
 							{ for (auto i : _commandParsers) delete (i); }
 
 			const CPU* cpu () const
-							{ return (_cpu); }
-			CPU* cpu ()
 							{ return (_cpu); }
 			const CommandParsers& commandParsers () const
 							{ return (_commandParsers); }
@@ -293,7 +287,7 @@ namespace MCHEmul
 			std::vector <std::string> readLines (const std::string& fN) const;
 
 			private:
-			CPU* _cpu;
+			const CPU* _cpu;
 			CommandParsers _commandParsers;
 
 			// Implementation

@@ -87,6 +87,17 @@ namespace MCHEmul
 							{ Attributes::const_iterator i = _attributes.find (aN); 
 							  return ((i == _attributes.end ()) ? AttributedNotDefined : (*i).second); }
 
+		// To load data files...
+		/** Two types of files: \n
+		  * A file with the x initial bytes represeting an address (depending on the architecture of the cpu),
+		  * Or a simpl data file, but the address where to load rom has to be passed as parameter! */
+		bool load (const std::string& fN)
+							{ return (memory () -> load (fN)); }
+		bool loadInto (const std::string& fN, const Address& a)
+							{ return (memory () -> loadInto (fN, a)); }
+		bool loadInto (const std::string& fN)
+							{ return (memory () -> loadInto (fN)); }
+
 		/** To initialize the Computer, when the "power is set up". \n 
 			It could be defined per computer. By default it initializes the chips. \n
 			Returns true, when verything was ok, and false in any other circusntance. \n
@@ -94,12 +105,24 @@ namespace MCHEmul
 		virtual bool initialize ();
 
 		/** To simulate how the computer works. 
-			cE indicates whether the machine is or not controlled from outside. */
-		bool run (bool cE = false);
-		/** To simulate how the computer works from an speecific memory location. */
-		bool runFrom (const Address& a, bool cE = false);
-		/** Just to start a program from an address. No initialization is done. */
-		bool startProgramAt (const Address& a, bool cE = false);
+			Returns true when finalizing the run ok, and false with error. \n
+			The parameter is the log level. \n
+			This method used the other tow defined behind and it can be simulated from outside. */
+		bool run (unsigned lL);
+		
+		/** Execute one computer cycle (cpu + chips). 
+			Returns true when ok, and false when no ok. */
+		bool runComputerCycle (unsigned int lL);
+		/** Execute the IO Cycle.
+			Returns true when ok, and false when no ok. */
+		bool runIOCycle (unsigned int lL);
+
+		/** To know the value of the exit. */
+		bool exit () const
+							{ return (_exit); }
+		/** Set the exit variable from the outside. */
+		void setExit (bool e)
+							{ _exit = e; }
 
 		/** To get the last error happend (after initialize or simulate methods). */
 		unsigned int lastError () const
@@ -110,23 +133,14 @@ namespace MCHEmul
 		friend std::ostream& operator << (std::ostream& o, const Computer& c);
 
 		protected:
-		void setExit (bool e)
-							{ _exit = e; }
-
-		// Implementation (used from the several runs)
-		/** It can be overloaded later. */
-		virtual bool runImpl (bool cE);
-
-		protected:
 		CPU* _cpu;
 		Chips _chips; 
 		Memory* _memory;
 		IODevices _devices;
 		const Attributes _attributes = { }; // Maybe modified at construction level
 
-		/** It is useful to track how the program is working from an external location. */
-		bool _controlFromOutside;
-		/** Used to finish the main loop. */
+		/** Used to to indicate the execution must finishes.
+			There could have been an error or not. */
 		bool _exit;
 
 		// Implementation

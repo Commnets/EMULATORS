@@ -66,7 +66,7 @@ namespace MCHEmul
 		protected:
 		const Type _type; // Modified at constrution level
 		const int _id; // Idem
-		Chips _chips; // linked when computer is built!
+		Chips _chips; // linked when computer instance is built!
 		const Attributes _attributes = { }; // Maybe modified at construction level
 	};
 

@@ -20,7 +20,7 @@ namespace MCHEmul
 {
 	/** Representing a Integer (with and without sign). 
 		The negativ numbers are kept internally in the complement_2 way. */
-	class UInt
+	class UInt final
 	{
 		public:
 		static const UInt _0;
