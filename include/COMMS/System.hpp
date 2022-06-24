@@ -25,23 +25,38 @@ namespace MCHEmul
 	class CommunicationSystem
 	{
 		public:
-		CommunicationSystem (MessageBuilder* mB)
-			: _messageBuilder (mB)
-							{ assert (_messageBuilder != nullptr); }
+		CommunicationSystem (PeerCommunicationChannel* cC, MessageBuilder* mB)
+			: _communicationChannel (cC), _messageBuilder (mB),
+			  _error (false), _lastError (MCHEmul::_NOERROR)
+							{ assert (_communicationChannel != nullptr && _messageBuilder != nullptr); }
 
 		CommunicationSystem (const CommunicationSystem&) = delete;
 
 		CommunicationSystem& operator = (const CommunicationSystem&) = delete;
 
 		virtual ~CommunicationSystem ()
-							{ delete (_messageBuilder); }
+							{ delete (_communicationChannel); delete (_messageBuilder); }
 
-		virtual bool initialize ();
-
+		// Managing the system...
+		virtual bool initialize ()
+							{ return (_communicationChannel -> initialize ()); }
 		virtual bool processMessagesOn (Computer* c);
+		virtual bool finalize ()
+							{ return (_communicationChannel -> finalize ()); }
+
+		bool error () const
+							{ return (_communicationChannel -> lastError ()); }
+
+		bool operator ! () const
+							{ return (!_communicationChannel); }
 
 		protected:
 		MessageBuilder* _messageBuilder;
+		PeerCommunicationChannel* _communicationChannel;
+
+		// Implementation
+		bool _error;
+		unsigned int _lastError;
 	};
 }
 

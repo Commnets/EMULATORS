@@ -7,14 +7,14 @@ MCHEmul::CommunicationMessage* MCHEmul::StandardMessageBuilder::createMessage (c
 		return (nullptr); // No message possible...
 
 	MCHEmul::CommunicationMessage* result = nullptr;
-	MCHEmul::Attributes attrs = attributesFromStr (std::stoi (str.substr (1, 1)), str.substr (2)); 
+	MCHEmul::Attributes attrs = attributesFromStr (str.substr (1)); 
 	switch (str [0])
 	{
-		case 'A':
+		case MCHEmul::GetRegisterStatusMessage::_ID:
 			result = new MCHEmul::GetRegisterStatusMessage (attrs);
 			break;
 
-		case 'B':
+		case MCHEmul::GetMemoryDataMessage::_ID:
 			result = new MCHEmul::GetMemoryDataMessage (attrs);
 			break;
 
@@ -26,13 +26,13 @@ MCHEmul::CommunicationMessage* MCHEmul::StandardMessageBuilder::createMessage (c
 }
 
 // ---
-bool MCHEmul::GetRegisterStatusMessage::executeOn (MCHEmul::Computer*)
+bool MCHEmul::GetRegisterStatusMessage::executeOn (MCHEmul::Computer* c, MCHEmul::CommunicationMessage*& ans)
 {
 	return (true);
 }
 
 // ---
-bool MCHEmul::GetMemoryDataMessage::executeOn (MCHEmul::Computer*)
+bool MCHEmul::GetMemoryDataMessage::executeOn (MCHEmul::Computer*, MCHEmul::CommunicationMessage*& ans)
 {
 	return (true);
 }

@@ -13,7 +13,8 @@ const std::string Emuls::Emulator::_ADDRESS = "ADDRESS";
 Emuls::Emulator::Emulator (const std::vector <std::string>& argv)
 	: _attributes (),
 	  _computer (nullptr),
-	  _communicationSystem (nullptr)
+	  _communicationSystem (nullptr),
+	  _running (false)
 {
 	static std::map <unsigned char, std::string> _MATCH =
 		{ { _PARAMBYTEFILE, _BYTEFILE },
@@ -32,19 +33,30 @@ Emuls::Emulator::Emulator (const std::vector <std::string>& argv)
 }
 
 // ---
+void Emuls::Emulator::setCommunicationSystem (MCHEmul::CommunicationSystem* cS)
+{
+	if (_running)
+		return;
+
+	_communicationSystem = cS;
+}
+
+// ---
 Emuls::Emulator::~Emulator ()
 { 
-	delete (_computer); 
-	
 	delete (_communicationSystem);
+
+	delete (_computer); 
 }
 
 // ---
 bool Emuls::Emulator::run ()
 {
-	if (!computer () -> initialize () ||
-		!communicationSystem () -> initialize ())
+	if (!computer () -> initialize () || 
+		(_communicationSystem != nullptr && !_communicationSystem -> initialize ()))
 		return (false);
+
+	_running = true;
 
 	if (byteFileName () != "")
 		computer () -> load (byteFileName ());
@@ -61,14 +73,23 @@ bool Emuls::Emulator::run ()
 		// Parser and compiler are destroyed here...
 	}
 
+	if (startingAddress () != MCHEmul::Address ())
+		computer () -> cpu () -> programCounter ().setAddress (startingAddress ());
+
 	bool ok = true;
 	unsigned int lL = logLevel ();
 	while (ok && !computer () -> exit ())
 	{
-		ok &= communicationSystem () -> processMessagesOn (computer ());
+		if (_communicationSystem != nullptr)
+			ok &= _communicationSystem -> processMessagesOn (computer ());
 		ok &= computer () -> runComputerCycle (lL);
 		ok &= computer () -> runIOCycle (lL);
 	}
+
+	if (_communicationSystem != nullptr)
+		_communicationSystem -> finalize ();
+
+	_running = false;
 
 	return (computer () -> lastError () != MCHEmul::_NOERROR);
 }

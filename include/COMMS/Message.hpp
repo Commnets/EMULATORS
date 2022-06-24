@@ -26,8 +26,8 @@ namespace MCHEmul
 	class CommunicationMessage
 	{
 		public:
-		CommunicationMessage (const Attributes& a)
-			: _attributes (a)
+		CommunicationMessage (unsigned char t, const Attributes& a)
+			: _type (t), _attributes (a)
 							{ }
 
 		/** To avoid uncontrolable behaviours of any one inheriting from this. */
@@ -37,17 +37,29 @@ namespace MCHEmul
 
 		virtual ~CommunicationMessage ()
 							{ }
+
+		unsigned char type () const
+							{ return (_type); }
+
 		const Attributes attributes () const
 							{ return (_attributes); }
 
+		std::string toString () const;
+
 		/** The very important method. \n
 			This method execute what was required from the computer. \n
-			It must be overloaded per any specific behaviour. */
-		virtual bool executeOn (Computer*) = 0;
+			It must be overloaded per any specific behaviour. \n
+			The communication message can have an answer, and it is given in the second parameter. */
+		virtual bool executeOn (Computer*, CommunicationMessage*&) = 0;
 
 		protected:
+		/** The type of the message. */
+		unsigned int _type;
 		/** The attributes of the message. */
 		Attributes _attributes;
+
+		// Implementation
+		bool _error;
 	};
 
 	/** 
@@ -83,7 +95,7 @@ namespace MCHEmul
 		/** To verify the right structure of the message rerceived. */
 		bool verifyStructure (const std::string& str);
 		/** To create the list of the parameters any message will need from a string. */
-		Attributes attributesFromStr (unsigned int nM, const std::string& str) const;
+		Attributes attributesFromStr (const std::string& str) const;
 	};
 }
 

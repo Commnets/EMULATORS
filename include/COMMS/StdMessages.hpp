@@ -34,22 +34,26 @@ namespace MCHEmul
 	class GetRegisterStatusMessage : public CommunicationMessage
 	{
 		public:
+		static const unsigned char _ID = 'A';
+
 		GetRegisterStatusMessage (const Attributes& a)
-			: CommunicationMessage (a)
+			: CommunicationMessage (_ID, a)
 							{ }
 
-		virtual bool executeOn (Computer*) override;
+		virtual bool executeOn (Computer* c, CommunicationMessage*& ans) override;
 	};
 
 	/** A message to get the data of the memory. */
 	class GetMemoryDataMessage : public CommunicationMessage
 	{
 		public:
+		static const unsigned char _ID = 'B';
+
 		GetMemoryDataMessage (const Attributes& a)
-			: CommunicationMessage (a)
+			: CommunicationMessage (_ID, a)
 							{ }
 
-		virtual bool executeOn (Computer*) override;
+		virtual bool executeOn (Computer* c, CommunicationMessage*& ans) override;
 	};
 }
 

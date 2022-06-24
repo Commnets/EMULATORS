@@ -51,6 +51,9 @@ namespace Emuls
 		const MCHEmul::Attributes& attributes () const
 							{ return (_attributes); }
 
+		/** Not possible to change when running. */
+		void setCommunicationSystem (MCHEmul::CommunicationSystem* cS);
+
 		/** To know whether there is a byte file where data to be loaded. \n
 			"" when there is no byte file data. */
 		std::string byteFileName () const
@@ -86,28 +89,19 @@ namespace Emuls
 		MCHEmul::Computer* computer ()
 							{ return (_computer == nullptr) ? (_computer = createComputer ()) : _computer; }
 
-		const MCHEmul::CommunicationSystem* communicationSystem () const
-							{ return (_communicationSystem == nullptr) 
-								? (_communicationSystem = createCommunicationSystem ()) : _communicationSystem; }
-		MCHEmul::CommunicationSystem* communicationSystem ()
-							{ return (_communicationSystem == nullptr) 
-								? (_communicationSystem = createCommunicationSystem ()) : _communicationSystem; }
-
 		// Implementation
 		/** To create the right version of the computer, 
 			attending the parameters received by the constructor. */
 		virtual MCHEmul::Computer* createComputer () const = 0;
-		/** To create the communication system. */
-		virtual MCHEmul::CommunicationSystem* createCommunicationSystem () const
-							{ return (new MCHEmul::CommunicationSystem (new MCHEmul::StandardMessageBuilder ())); }
 
 		protected:
 		/** Defined in the constructor. */
 		MCHEmul::Attributes _attributes;
+		MCHEmul::CommunicationSystem* _communicationSystem; 
 
 		// Implementation
-		mutable MCHEmul::Computer* _computer; // Can be create in a const method...
-		mutable MCHEmul::CommunicationSystem* _communicationSystem; // Created when running!
+		mutable MCHEmul::Computer* _computer;
+		mutable bool _running;
 	};
 }
 

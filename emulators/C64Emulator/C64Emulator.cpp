@@ -39,5 +39,15 @@ extern C_LINKAGE int main(int argc, char *argv[])
 int _tmain (int argc, _TCHAR *argv [])
 #endif /* _CONSOLE */
 {
-	return (C64Emulator (generateParamsFrom (argc, argv)).run ());
+	C64Emulator myEmulator (generateParamsFrom (argc, argv));
+	
+	MCHEmul::CommunicationSystem* cS = new MCHEmul::CommunicationSystem 
+		(new MCHEmul::PeerCommunicationChannel (100, 2), new MCHEmul::StandardMessageBuilder ());
+	myEmulator.setCommunicationSystem (cS);
+
+	int result = myEmulator.run ();
+
+	delete (cS);
+
+	return (result);
 }

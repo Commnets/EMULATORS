@@ -21,51 +21,59 @@
 
 namespace MCHEmul
 {
-	/** The class CommunicationChannel allows the communication between e.g. emulator and any external tool. \n
+	/** The class PeerCommunicationChannel allows the communication between pieces of the emulator.
+		e.g. emulator and any external tool. \n
 		It could be useful e.g. to run in debug mode the emulator or to know 
 		which is the status of the computer. */
-	class CommunicationChannel
+	class PeerCommunicationChannel
 	{
 		public:
 		/** The id of the package having the specific meesages to control emulator. */
 		static const unsigned char _MESSAGEID = 
 			DefaultMessageIDTypes::ID_USER_PACKET_ENUM + 1;
 
-		/** To create the server version. */
-		CommunicationChannel (unsigned int p, unsigned int nC = 5);
+		/** 
+		  * To create the communication channel, but not to open it. \n
+		  *	@param p	: The communication channel needs to listen at a specific port.
+		  * @param nC	: The default number of communications supported. 1 default for a pure peer comm.
+		  * @param to	: The direction this peer is connected to, if any. It could be nothing!
+		  */
+		PeerCommunicationChannel (unsigned short p, unsigned int nC, const IPAddress& a = IPAddress ());
 
-		/** To create the client version. */
-		CommunicationChannel (const IPAddress& to);
+		PeerCommunicationChannel (const PeerCommunicationChannel&) = delete;
 
-		CommunicationChannel (const CommunicationChannel&) = delete;
+		PeerCommunicationChannel& operator = (const PeerCommunicationChannel&) = delete;
 
-		CommunicationChannel& operator = (const CommunicationChannel&) = delete;
+		virtual ~PeerCommunicationChannel ();
 
-		~CommunicationChannel ();
-
-		/** What are you? */
-		bool isServer () const
-							{ return (_server); }
-
-		/** In the cas of being a server. */
+		// Channel data...
 		unsigned short listenAtPort () const
-							{ return (_data._serverData._listenAtPort); }
+							{ return (_listenAtPort); }
 		unsigned short simulatenousConnections () const
-							{ return (_data._serverData._simultaneousConnections); }
+							{ return (_simultaneousConnections); }
+		const IPAddress& connectedTo () const // IPAddress () when none...
+							{ return (_connectedTo); }
 
-		/** In the case of being a client. */
-		const IPAddress& connectedTo () const
-							{ return (_data._connectedTo); }
+		// Mamanging the Status of the channel
+		bool initialize ();
+		bool isChannelInitiated ()
+							{ return (_channelInitialized); }
+		bool isChannelConnected ()
+							{ return (_channelConnected); }
+		bool finalize ();
 
-		bool openChannel ();
-		bool isChannelOpened ()
-								{ return (_channelOpened); }
-		bool closeChannel ();
-
-		bool receiveString (std::string& str);
-
-		/** Only makes sense if it is a client. */
-		bool sendString (const std::string& str);
+		// Managing the communication
+		/** Receiving a communication. \
+			@returns true when the communication has been well managed. 
+			In that case "str" will hold the string received and "from" the address of the machine sending it through. */
+		bool receive (std::string& str, IPAddress& from);
+		/** To send a communication to another machine. 
+			The parameters needed are tyhe string to send it accross and the address of the machine to ssend it to. 
+			@return true is everything went ok. */
+		bool send (const std::string& str, const IPAddress& to);
+		/** To send a communication to the connected machine if any. 
+			Otherwise an error is generated. */
+		bool send (const std::string& str);
 
 		unsigned int lastError () const
 							{ return (_lastError); }
@@ -74,52 +82,14 @@ namespace MCHEmul
 							{ return (_lastError != MCHEmul::_NOERROR); }
 
 		protected:
-		/** Data needed to represent a server version. */
-		struct ServerData
-		{
-			ServerData ()
-				: _listenAtPort (100), _simultaneousConnections (5)
-							{ }
-
-			ServerData (unsigned short lP, unsigned int sC)
-				: _listenAtPort (lP), _simultaneousConnections (sC)
-							{ }
-
-			ServerData (const ServerData&) = default;
-
-			ServerData& operator = (const ServerData&) = default;
-
-			unsigned short _listenAtPort; 
-			unsigned short _simultaneousConnections;
-		};
-
-		/** The data of a communication channel will be either
-			data to rerpresent the server either data to represent the client. */
-		union Data
-		{
-			Data (const ServerData& s)
-				: _serverData (s) 
-							{ }
-
-			Data (const IPAddress& a)
-				: _connectedTo (a)
-							{ }
-
-			Data (const Data&) = default;
-
-			Data& operator = (const Data&) = default;
-
-			ServerData _serverData;
-			IPAddress _connectedTo;
-		};
-
-		/** The data managed by the communication channel. */
-		const Data _data;
+		const unsigned short _listenAtPort; 
+		const unsigned short _simultaneousConnections;
+		const IPAddress _connectedTo;
 	
 		// Implementation
-		const bool _server;
 		RakNet::RakPeerInterface* _peer;
-		mutable bool _channelOpened;
+		mutable bool _channelInitialized;
+		mutable bool _channelConnected;
 		mutable unsigned int _lastError;
 	};
 }
