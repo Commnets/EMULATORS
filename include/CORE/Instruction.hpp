@@ -33,7 +33,7 @@ namespace MCHEmul
 		{
 			struct Parameter
 			{
-				enum class Type { _DATA, _DIR, _JUMP /** Usually relative */ };
+				enum class Type { _DATA, _DIR, _RELJUMP, _ABSJUMP };
 
 				Parameter () 
 					: _type (Type::_DATA), _numberBytes (1)

@@ -14,7 +14,7 @@
 #ifndef __MCHEMUL_IPADDRESS__
 #define __MCHEMUL_IPADDRESS__
 
-#include <CORE/incs.hpp>
+#include <CORE/global.hpp>
 
 namespace MCHEmul
 {

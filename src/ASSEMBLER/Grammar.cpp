@@ -207,18 +207,27 @@ std::vector <MCHEmul::UByte> MCHEmul::Assembler::InstructionElement::calculateCo
 		{
 			case MCHEmul::Instruction::Structure::Parameter::Type::_DATA:
 			case MCHEmul::Instruction::Structure::Parameter::Type::_DIR:
+			{
 				bt = MCHEmul::UBytes (bytesFromExpression (_parameters [i], s -> macros (), e), bE).values ();
-				break;
+			}
 
-			case MCHEmul::Instruction::Structure::Parameter::Type::_JUMP:
+			break;
+
+			case MCHEmul::Instruction::Structure::Parameter::Type::_RELJUMP:
+			case MCHEmul::Instruction::Structure::Parameter::Type::_ABSJUMP:
 			{
 				std::map <std::string, MCHEmul::Address> lA = s -> labelAddresses ();
 				std::map <std::string, MCHEmul::Address>::const_iterator lAP = lA.find (_parameters [i]);
-				if (MCHEmul::validLabel (_parameters [i]) && lAP != lA.end ()) // First labels...
+				if (MCHEmul::validLabel (_parameters [i]) && lAP != lA.end ()) // Jumps are over labels...
 				{
-					// Which is the address of this instruction?
-					MCHEmul::Address iA = address (s) + inst -> memoryPositions ();
-					bt = MCHEmul::UInt::fromInt (iA.distanceWith ((*lAP).second)).bytes ().values ();
+					if (inst -> internalStructure ()._parameters [i]._type == 
+							MCHEmul::Instruction::Structure::Parameter::Type::_RELJUMP)
+					{
+						MCHEmul::Address iA = address (s) + inst -> memoryPositions ();
+						bt = MCHEmul::UInt::fromInt (iA.distanceWith ((*lAP).second)).bytes ().values ();
+					}
+					else
+						bt = MCHEmul::UBytes ((*lAP).second.bytes ().values (), bE).values ();
 				}
 				else
 					bt = MCHEmul::UBytes (bytesFromExpression (_parameters [i], s -> macros (), e), bE).values ();
@@ -227,7 +236,7 @@ std::vector <MCHEmul::UByte> MCHEmul::Assembler::InstructionElement::calculateCo
 			break;
 
 			default:
-			assert (false); // Just in case...
+				assert (false); // Just in case...
 		}
 
 		if (!e)

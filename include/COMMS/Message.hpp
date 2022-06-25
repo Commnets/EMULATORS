@@ -14,7 +14,7 @@
 #ifndef __MCHEMUL_COMMMESSAGE__
 #define __MCHEMUL_COMMMESSAGE__
 
-#include <CORE/incs.hpp>
+#include <CORE/global.hpp>
 #include <COMMS/IPAddress.hpp>
 
 namespace MCHEmul

@@ -40,14 +40,10 @@ int _tmain (int argc, _TCHAR *argv [])
 #endif /* _CONSOLE */
 {
 	C64Emulator myEmulator (generateParamsFrom (argc, argv));
-	
-	MCHEmul::CommunicationSystem* cS = new MCHEmul::CommunicationSystem 
-		(new MCHEmul::PeerCommunicationChannel (100, 2), new MCHEmul::StandardMessageBuilder ());
-	myEmulator.setCommunicationSystem (cS);
+	myEmulator.setCommunicationSystem (new MCHEmul::CommunicationSystem 
+		(new MCHEmul::PeerCommunicationChannel (100, 2), new MCHEmul::StandardMessageBuilder ()));
 
 	int result = myEmulator.run ();
-
-	delete (cS);
 
 	return (result);
 }

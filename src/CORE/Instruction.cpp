@@ -161,7 +161,8 @@ MCHEmul::Instruction::Structure MCHEmul::Instruction::analyzeInstruction () cons
 		({ 
 			{'#', Structure::Parameter::Type::_DATA},
 			{'$', Structure::Parameter::Type::_DIR},
-			{'&', Structure::Parameter::Type::_JUMP} 
+			{'&', Structure::Parameter::Type::_RELJUMP}, 
+			{'%', Structure::Parameter::Type::_ABSJUMP} 
 		});
 
 	MCHEmul::Instruction::Structure result;

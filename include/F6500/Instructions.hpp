@@ -324,11 +324,11 @@ namespace F6500
 	_INST_FROM (0xc8, 1, 2, "INY",			INY, Instruction);
 
 	// JMP
-	_INST_FROM (0x4c, 3, 3, "JMP[$2]",		JMP_Absolute, Instruction);
-	_INST_FROM (0x6c, 3, 5, "JMP([$2])",	JMP_Indirect, Instruction);
+	_INST_FROM (0x4c, 3, 3, "JMP[%2]",		JMP_Absolute, Instruction);
+	_INST_FROM (0x6c, 3, 5, "JMP([%2])",	JMP_Indirect, Instruction);
 
 	// JSR
-	_INST_FROM (0x20, 3, 6, "JSR[$2]",		JSR_Absolute, Instruction);
+	_INST_FROM (0x20, 3, 6, "JSR[%2]",		JSR_Absolute, Instruction);
 
 	// LDA
 	/** LDA_General: To aggregate common steps in every LDA instruction. */

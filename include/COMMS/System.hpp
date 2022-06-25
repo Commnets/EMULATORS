@@ -14,7 +14,7 @@
 #ifndef __MCHEMUL_COMMSSYS__
 #define __MCHEMUL_COMMSSYS__
 
-#include <CORE/incs.hpp>
+#include <CORE/global.hpp>
 #include <COMMS/Channel.hpp>
 #include <COMMS/Message.hpp>
 
