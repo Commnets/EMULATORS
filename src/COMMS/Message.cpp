@@ -6,6 +6,9 @@ std::string MCHEmul::CommunicationMessage::toString () const
 {
 	std::string result;
 
+	result += MCHEmul::CommunicationMessage::_MESSAGEID;
+	result += _type;
+
 	bool f = true;
 	result += _type;
 	for (auto i : _attributes)

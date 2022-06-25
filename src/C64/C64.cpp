@@ -13,6 +13,7 @@ C64::Commodore64::Commodore64 (C64::Commodore64::VisualSystem vS)
 		 C64::Commodore64::standardChips (vS),
 		 C64::Commodore64::standardMemory (),
 		 C64::Commodore64::standardDevices (vS),
+		 vS == C64::Commodore64::VisualSystem::_PAL ? 985000 /* 0.986 MHz */: 1023000 /** 1.023 MHz */,
 		 { { "Name", "Commodore 64" },
 		   { "Manufacturer", "Commodore Business Machines CBM" },
 		   { "Year", "1980" }

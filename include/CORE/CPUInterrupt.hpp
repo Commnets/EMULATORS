@@ -27,7 +27,8 @@ namespace MCHEmul
 		CPUInterrupt () = delete;
 
 		CPUInterrupt (int id)
-			: _id (id), _active (false /** by default. */)
+			: _id (id), _active (false /** by default. */),
+			  _lastClockCyclesExecuted (0)
 							{ }
 
 		CPUInterrupt (const CPUInterrupt&) = delete;

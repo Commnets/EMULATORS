@@ -103,7 +103,8 @@ namespace MCHEmul
 			enum Type { _LABEL = 0, _BYTESINMEMORY, _INSTRUCTION, _STARTINGPOINT  };
 
 			GrammaticalElement ()
-				: _type (_BYTESINMEMORY), _id (0), _nextElement (nullptr), _previousElement (nullptr),
+				: _type (_BYTESINMEMORY), _id (0), _line (0), 
+				  _nextElement (nullptr), _previousElement (nullptr),
 				  _error (ErrorType::_NOERROR), _codeBytes ()
 							{ }
 

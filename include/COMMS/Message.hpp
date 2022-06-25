@@ -16,6 +16,7 @@
 
 #include <CORE/global.hpp>
 #include <COMMS/IPAddress.hpp>
+#include <MessageIdentifiers.h>
 
 namespace MCHEmul
 {
@@ -26,8 +27,13 @@ namespace MCHEmul
 	class CommunicationMessage
 	{
 		public:
+		/** The id of the package having the specific meesages to control emulator. */
+		static const unsigned char _MESSAGEID = 
+			DefaultMessageIDTypes::ID_USER_PACKET_ENUM + 1;
+
 		CommunicationMessage (unsigned char t, const Attributes& a)
-			: _type (t), _attributes (a)
+			: _type (t), _attributes (a),
+			  _error (false)
 							{ }
 
 		/** To avoid uncontrolable behaviours of any one inheriting from this. */

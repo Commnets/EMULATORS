@@ -1,13 +1,16 @@
 #include <CORE/Computer.hpp>
+#include <chrono>
+#include <thread>
 
 // ---
 MCHEmul::Computer::Computer (MCHEmul::CPU* cpu, const MCHEmul::Chips& c, 
-		MCHEmul::Memory* m, const MCHEmul::IODevices& d, const MCHEmul::Attributes& attrs)
-	: _cpu (cpu), _chips (c), _memory (m), _devices (d), _attributes (attrs),
+		MCHEmul::Memory* m, const MCHEmul::IODevices& d, unsigned int cs, const MCHEmul::Attributes& attrs)
+	: _cpu (cpu), _chips (c), _memory (m), _devices (d), _cyclesPerSecond (cs), _attributes (attrs),
 	  _screen (nullptr), _inputOSSystem (nullptr)
 { 
 	assert (_cpu != nullptr);
 	assert (_memory != nullptr && _memory -> stack () != nullptr);
+	assert (_cyclesPerSecond > 0);
 
 	_cpu -> setMemoryRef (_memory);
 
@@ -110,6 +113,11 @@ bool MCHEmul::Computer::run (unsigned int lL)
 // ---
 bool MCHEmul::Computer::runComputerCycle (unsigned int lL)
 {
+	static const long long nanosc = (long long) 1.0e9;
+	
+	unsigned int iC = _cpu -> clockCycles ();
+	std::chrono::time_point <std::chrono::steady_clock> iT = std::chrono::steady_clock ().now ();
+
 	if (!_cpu -> executeNextInstruction ())
 	{
 		_exit = true;
@@ -130,6 +138,12 @@ bool MCHEmul::Computer::runComputerCycle (unsigned int lL)
 			return (false); // Error...
 		}
 	}
+
+	long long el =
+		std::chrono::duration_cast <std::chrono::nanoseconds> (std::chrono::steady_clock::now () - iT).count ();
+	long long mel = (long long) ((double) (_cpu -> clockCycles () - iC) / (double) _cyclesPerSecond * (double) nanosc);
+	if (mel > el)
+		std::this_thread::sleep_for (std::chrono::nanoseconds (mel - el));
 
 	return (true);
 }

@@ -118,7 +118,8 @@ std::vector <std::string> MCHEmul::getElementsFrom (const std::string& txt, unsi
 	{
 		std::string prt = cpTxt;
 		size_t pC = cpTxt.find_first_of (ch);
-		prt = cpTxt.substr (0, pC); cpTxt= cpTxt.substr (pC + 1);
+		prt = cpTxt.substr (0, pC); 
+		cpTxt = (pC == std::numeric_limits <size_t>::max ()) ? "" : cpTxt.substr (pC + 1);
 		result.push_back (MCHEmul::trim (prt));
 	}
 

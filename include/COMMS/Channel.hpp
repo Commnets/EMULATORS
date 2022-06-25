@@ -18,7 +18,6 @@
 #include <COMMS/IPAddress.hpp>
 #include <COMMS/Message.hpp>
 #include <RakPeerInterface.h>
-#include <MessageIdentifiers.h>
 
 namespace MCHEmul
 {
@@ -29,10 +28,6 @@ namespace MCHEmul
 	class PeerCommunicationChannel
 	{
 		public:
-		/** The id of the package having the specific meesages to control emulator. */
-		static const unsigned char _MESSAGEID = 
-			DefaultMessageIDTypes::ID_USER_PACKET_ENUM + 1;
-
 		/** 
 		  * To create the communication channel, but not to open it. \n
 		  *	@param p	: The communication channel needs to listen at a specific port.

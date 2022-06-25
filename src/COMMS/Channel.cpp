@@ -1,4 +1,5 @@
 #include <COMMS/Channel.hpp>
+#include <MessageIdentifiers.h>
 #include <BitStream.h>
 
 // ---
@@ -104,7 +105,7 @@ bool MCHEmul::PeerCommunicationChannel::receive (std::string& str, MCHEmul::IPAd
 				break;
 
 			// Our important message...
-			case _MESSAGEID: 
+			case MCHEmul::CommunicationMessage::_MESSAGEID: 
 				{
 					RakNet::RakString rs;
 					RakNet::BitStream bsIn (packet -> data, packet -> length, false);
@@ -141,7 +142,7 @@ bool MCHEmul::PeerCommunicationChannel::send (const std::string& str, const MCHE
 	}
 
 	RakNet::BitStream bsOut;
-	bsOut.Write ((RakNet::MessageID) _MESSAGEID);
+	bsOut.Write ((RakNet::MessageID) MCHEmul::CommunicationMessage::_MESSAGEID);
 	bsOut.Write (str.c_str ());
 	RakNet::SystemAddress sA (to.ipAsString ().c_str (), to.port ());
 	if (_peer -> Send (&bsOut, IMMEDIATE_PRIORITY, RELIABLE_ORDERED, 0, sA, false) == 0)

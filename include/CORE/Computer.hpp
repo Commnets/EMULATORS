@@ -35,8 +35,9 @@ namespace MCHEmul
 
 		/** The computer owns the different elements.
 			The devices mandatory are the screen and the InputOSDevice. 
-			This is verified at construction level. */
-		Computer (CPU* cpu, const Chips& c, Memory* m, const IODevices& d, const Attributes& attrs = { });
+			This is verified at construction level. \n
+			@param	spd		the number of cycles per second of the clock. */
+		Computer (CPU* cpu, const Chips& c, Memory* m, const IODevices& d, unsigned int cs, const Attributes& attrs = { });
 
 		Computer (const Computer&) = delete;
 
@@ -80,6 +81,9 @@ namespace MCHEmul
 							{ return (_inputOSSystem); }
 		InputOSSystem* inputOSSytem ()
 							{ return (_inputOSSystem); }
+
+		unsigned int specyclesPerSecond () const
+							{ return (_cyclesPerSecond); }
 
 		const Attributes& attributes () const
 							{ return (_attributes); }
@@ -137,6 +141,7 @@ namespace MCHEmul
 		Chips _chips; 
 		Memory* _memory;
 		IODevices _devices;
+		unsigned int _cyclesPerSecond;
 		const Attributes _attributes = { }; // Maybe modified at construction level
 
 		/** Used to to indicate the execution must finishes.

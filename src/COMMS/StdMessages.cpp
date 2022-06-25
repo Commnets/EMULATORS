@@ -6,9 +6,10 @@ MCHEmul::CommunicationMessage* MCHEmul::StandardMessageBuilder::createMessage (c
 	if (!verifyStructure (str))
 		return (nullptr); // No message possible...
 
+	// The position 0 es the on indicating theer is a MCHEmul message
 	MCHEmul::CommunicationMessage* result = nullptr;
-	MCHEmul::Attributes attrs = attributesFromStr (str.substr (1)); 
-	switch (str [0])
+	MCHEmul::Attributes attrs = attributesFromStr (str.substr (2)); 
+	switch (str [1])
 	{
 		case MCHEmul::GetRegisterStatusMessage::_ID:
 			result = new MCHEmul::GetRegisterStatusMessage (attrs);
