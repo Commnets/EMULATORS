@@ -1,6 +1,7 @@
 #include <CORE/Computer.hpp>
 #include <chrono>
 #include <thread>
+#include <sstream>
 
 // ---
 MCHEmul::Computer::Computer (MCHEmul::CPU* cpu, const MCHEmul::Chips& c, 
@@ -134,12 +135,14 @@ bool MCHEmul::Computer::runComputerCycle ()
 
 	if (_debugLevel >= MCHEmul::_DEBUGALL)
 	{
-		std::cout << "->" 
-			<< *_cpu -> lastInstruction () << "\t" 
-			<< _cpu -> programCounter () << "\t" 
+		std::stringstream ss;
+		ss << "->" << *_cpu -> lastInstruction (); // To control the size printed out!
+		std::cout  
+			<< ss.str () << MCHEmul::_TABS.substr (0, 2 /** Max length to tab inst = 16 */ - (size_t) (ss.str ().length () / 8))
+			<< _cpu -> programCounter () << '\t' 
 			<< _cpu -> statusRegister ();
 		for (auto i : _cpu -> internalRegisters ())
-			std::cout << "\t" << i;
+			std::cout << '\t' << i;
 		std::cout << std::endl;
 	}
 
