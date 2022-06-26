@@ -83,10 +83,10 @@ bool MCHEmul::Instruction::matchesWith (const std::string& i, std::vector <std::
 // ---
 std::string MCHEmul::Instruction::lastParametersAsString (size_t p, size_t nP) const
 { 
-	if ((p + nP) >= _lastParameters.size ())
+	if ((p + nP - 1) >= _lastParameters.size ())
 		return ("");
 
-	std::string result = "";
+	std::string result = "$";
 	for (size_t i = 0; i < nP; i++)
 		result += _lastParameters [p + i].asString (MCHEmul::UByte::OutputFormat::_HEXA);
 
@@ -103,7 +103,7 @@ std::string MCHEmul::Instruction::asString () const
 
 	std::string toPrint = "";
 
-	size_t nPrm = 0;
+	size_t nPrm = 1;
 	size_t lP = 0;
 	bool end = false;
 	while (!end)
@@ -116,7 +116,7 @@ std::string MCHEmul::Instruction::asString () const
 			// No error is now possible!
 			size_t fPP = t.find (']', iPP + 1);
 			size_t bPrm = std::atoi (t.substr (iPP + 1, fPP - iPP).substr (1).c_str ());
-			toPrint += lastParametersAsString (nPrm, bPrm);
+			toPrint += t.substr (lP, iPP - lP) + lastParametersAsString (nPrm, bPrm);
 			nPrm += bPrm;
 
 			lP = fPP + 1;
@@ -145,12 +145,6 @@ bool MCHEmul::Instruction::execute (const MCHEmul::UBytes& p, MCHEmul::CPU* c, M
 	_additionalCycles = 0; // executeImpl could add additional cycles...
 
 	return (executeImpl ());
-}
-
-// ---
-std::ostream& MCHEmul::operator << (std::ostream& o, const MCHEmul::Instruction& i)
-{
-	return (o << i.asString ());
 }
 
 // ---

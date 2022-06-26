@@ -19,6 +19,7 @@
 #include <vector>
 #include <map>
 #include <ostream>
+#include <iostream>
 
 namespace MCHEmul
 {
@@ -42,7 +43,13 @@ namespace MCHEmul
 	const unsigned int _CHANNELWRITEERROR		= 9;
 
 	/** The max number of bytes managed in this emulator. */
-	const unsigned int _MAXBYTESMANAGED = 2;
+	const unsigned int _MAXBYTESMANAGED			= 2;
+
+	/** Levels of debugging */
+	const unsigned int _DEBUGONLYERRORS			= 1;
+	const unsigned int _DEBUGERRORANDWARNINGS	= 2;
+	const unsigned int _DEBUGALL				= 3;
+	const unsigned int _DEBUGTRACEINTERRNALS	= 4;
 
 	/** General functions to manage strings */
 	std::string ltrim (const std::string& s);

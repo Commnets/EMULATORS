@@ -122,7 +122,8 @@ namespace MCHEmul
 			It returns true if everything is ok, */
 		bool execute (const UBytes& p, CPU* c, Memory* m, Stack* stk);
 
-		friend std::ostream& operator << (std::ostream& o, const Instruction& i);
+		friend std::ostream& operator << (std::ostream& o, const Instruction& i)
+							{ return (o << i.asString ()); }
 
 		protected:
 		/** To analyze the structure of the instruction. */

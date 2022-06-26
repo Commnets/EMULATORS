@@ -16,7 +16,11 @@ bool MCHEmul::CPU::initialize ()
 	for (auto i : _registers)
 		i.initialize ();
 
+	_statusRegister.initialize ();
+
 	_programCounter.initialize (); 
+
+	_lastInstruction = nullptr;
 
 	_clockCycles = 0;
 
@@ -79,6 +83,8 @@ bool MCHEmul::CPU::executeNextInstruction ()
 
 	// And also, take into account what it costs in terms of cycles...
 	_clockCycles += inst -> clockCycles () + inst -> additionalClockCycles ();
+
+	_lastInstruction = inst;
 
 	return (result);
 }

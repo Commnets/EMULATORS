@@ -35,6 +35,7 @@ namespace MCHEmul
 		CPU (const CPUArchitecture& a, const Registers& r, const StatusRegister& sR, const Instructions& ins)
 			: _architecture (a), _registers (r), _statusRegister (sR), _instructions (ins),
 			  _programCounter (a.numberBytes ()), _memory (nullptr), _interrupts (),
+			  _lastInstruction (nullptr),
 			  _lastError (_NOERROR), _clockCycles (0) 
 							{ assert (_registers.size () > 0 && _instructions.size () > 0); }
 
@@ -76,6 +77,9 @@ namespace MCHEmul
 							{ return ((*_instructions.find (i)).second); }
 		Instruction* instruction (unsigned int i)
 							{ return ((*_instructions.find (i)).second); }
+
+		const Instruction* lastInstruction () const
+							{ return (_lastInstruction); }
 
 		/** The CPU is not the owner of the memory, but the computer (just to keep all in the same place)
 			A reference is here given to simplify the execution of transactions. */
@@ -125,10 +129,10 @@ namespace MCHEmul
 		const Instructions _instructions = { }; // Adjusted at construction level
 		ProgramCounter _programCounter;
 		StatusRegister _statusRegister;
-
 		Memory* _memory; // A reference...
-
 		CPUInterrups _interrupts;
+
+		Instruction* _lastInstruction;
 
 		// Implementation
 		unsigned int _lastError;

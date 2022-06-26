@@ -52,20 +52,53 @@ Emuls::Emulator::~Emulator ()
 // ---
 bool Emuls::Emulator::run ()
 {
+	unsigned int lL = logLevel ();
+
 	if (!computer () -> initialize () || 
 		(_communicationSystem != nullptr && !_communicationSystem -> initialize ()))
-		return (false);
+	{
+		if (lL >= MCHEmul::_DEBUGONLYERRORS)
+			std::cout << "Error initializing computer or comms" << std::endl;
 
-	_running = true;
+		return (false);
+	}
+
+	if (lL >= MCHEmul::_DEBUGTRACEINTERRNALS)
+		std::cout << computer () << std::endl;
 
 	if (byteFileName () != "")
-		computer () -> load (byteFileName ());
+	{
+		bool r = computer () -> load (byteFileName ());
+		if (!r)
+		{
+			if (lL >= MCHEmul::_DEBUGONLYERRORS)
+				std::cout << "Impossible to load file: " << byteFileName () << std::endl;
+
+			return (false);
+		}
+	}
 
 	if (asmFileName () != "")
 	{
 		MCHEmul::Assembler::Parser parser (computer () -> cpu ());
 		MCHEmul::Assembler::Compiler compiler (parser);
 		MCHEmul::Assembler::ByteCode cL = compiler.compile (asmFileName ());
+
+		if (!compiler)
+		{
+			if (lL >= MCHEmul::_DEBUGONLYERRORS)
+				for (auto i : compiler.errors ())
+					std::cout << i << std::endl;
+
+			return (false);
+		}
+		else
+		{
+			if (lL >= MCHEmul::_DEBUGALL)
+				for (auto i : cL._lines)
+					std::cout << i << std::endl;
+		}
+
 		MCHEmul::Address iA; 
 		std::vector <MCHEmul::UByte> bt = cL.asSetOfBytes (iA);
 		computer () -> memory () -> set (iA, bt);
@@ -76,8 +109,9 @@ bool Emuls::Emulator::run ()
 	if (startingAddress () != MCHEmul::Address ())
 		computer () -> cpu () -> programCounter ().setAddress (startingAddress ());
 
+	_running = true;
+
 	bool ok = true;
-	unsigned int lL = logLevel ();
 	while (ok && !computer () -> exit ())
 	{
 		if (_communicationSystem != nullptr)

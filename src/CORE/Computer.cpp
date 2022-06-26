@@ -124,7 +124,19 @@ bool MCHEmul::Computer::runComputerCycle (unsigned int lL)
 
 		_lastError = MCHEmul::_CPU_ERROR;
 
+		if (lL >= MCHEmul::_DEBUGONLYERRORS)
+			std::cout << "Error executing instruction" << std::endl;
+
 		return (false); // Error...
+	}
+
+	if (lL >= MCHEmul::_DEBUGALL)
+	{
+		std::cout << "->" << 
+			*_cpu -> lastInstruction () << "\t\t\t" << _cpu -> programCounter ();
+		for (auto i : _cpu -> internalRegisters ())
+			std::cout << "\t" << "REG" << i;
+		std::cout << std::endl;
 	}
 
 	for (auto i : _chips)
@@ -135,6 +147,9 @@ bool MCHEmul::Computer::runComputerCycle (unsigned int lL)
 
 			_lastError = MCHEmul::_CHIP_ERROR;
 
+			if (lL >= MCHEmul::_DEBUGONLYERRORS)
+				std::cout << "Error simulating chip: " << std::endl << i.second << std::endl;
+
 			return (false); // Error...
 		}
 	}
@@ -142,8 +157,8 @@ bool MCHEmul::Computer::runComputerCycle (unsigned int lL)
 	long long el =
 		std::chrono::duration_cast <std::chrono::nanoseconds> (std::chrono::steady_clock::now () - iT).count ();
 	long long mel = (long long) ((double) (_cpu -> clockCycles () - iC) / (double) _cyclesPerSecond * (double) nanosc);
-	if (mel > el)
-		std::this_thread::sleep_for (std::chrono::nanoseconds (mel - el));
+	if ((mel * 4500 /** i7 over 6510 */) > el)
+		std::this_thread::sleep_for (std::chrono::nanoseconds ((mel * 4500) - el));
 
 	return (true);
 }
@@ -158,6 +173,9 @@ bool MCHEmul::Computer::runIOCycle (unsigned int lL)
 			_exit = true;
 
 			_lastError = MCHEmul::_DEVICE_ERROR;
+
+			if (lL >= MCHEmul::_DEBUGONLYERRORS)
+				std::cout << "Error in IO device:" << std::endl << i.second << std::endl;
 
 			return (false); // Error...
 		}
