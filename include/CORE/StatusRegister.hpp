@@ -25,7 +25,7 @@ namespace MCHEmul
 		using BitNames = std::map <std::string, int>;
 
 		StatusRegister (size_t nB, const BitNames& bN)
-			: Register (-2 /** always */, UBytes (std::vector <UByte> (nB, UByte::_0))), 
+			: Register (-2 /** always */, "ST", UBytes (std::vector <UByte> (nB, UByte::_0))), 
 			  _bitNames (bN)
 							{}
 

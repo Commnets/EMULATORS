@@ -12,8 +12,9 @@ const std::string Emuls::Emulator::_ADDRESS = "ADDRESS";
 // ---
 Emuls::Emulator::Emulator (const std::vector <std::string>& argv)
 	: _attributes (),
-	  _computer (nullptr),
 	  _communicationSystem (nullptr),
+	  _debugLevel (MCHEmul::_DEBUGNOTHING),
+	  _computer (nullptr),
 	  _running (false)
 {
 	static std::map <unsigned char, std::string> _MATCH =
@@ -50,29 +51,36 @@ Emuls::Emulator::~Emulator ()
 }
 
 // ---
-bool Emuls::Emulator::run ()
+bool Emuls::Emulator::initialize ()
 {
-	unsigned int lL = logLevel ();
+	setDebugLevel (logLevel ());
 
-	if (!computer () -> initialize () || 
-		(_communicationSystem != nullptr && !_communicationSystem -> initialize ()))
+	if (!computer () -> initialize ()) 
 	{
-		if (lL >= MCHEmul::_DEBUGONLYERRORS)
-			std::cout << "Error initializing computer or comms" << std::endl;
+		if (_debugLevel >= MCHEmul::_DEBUGERRORS)
+			std::cout << "Error initializing computer" << std::endl;
 
 		return (false);
 	}
 
-	if (lL >= MCHEmul::_DEBUGTRACEINTERRNALS)
-		std::cout << computer () << std::endl;
+	if (_communicationSystem != nullptr && !_communicationSystem -> initialize ())
+	{
+		if (_debugLevel >= MCHEmul::_DEBUGERRORS)
+			std::cout << "Error initializing communications" << std::endl;
+
+		return (false);
+	}
+
+	if (_debugLevel >= MCHEmul::_DEBUGTRACEINTERNALS)
+		std::cout << *computer () << std::endl;
 
 	if (byteFileName () != "")
 	{
 		bool r = computer () -> load (byteFileName ());
 		if (!r)
 		{
-			if (lL >= MCHEmul::_DEBUGONLYERRORS)
-				std::cout << "Impossible to load file: " << byteFileName () << std::endl;
+			if (_debugLevel >= MCHEmul::_DEBUGERRORS)
+				std::cout << "Error loading file: " << byteFileName () << std::endl;
 
 			return (false);
 		}
@@ -86,7 +94,7 @@ bool Emuls::Emulator::run ()
 
 		if (!compiler)
 		{
-			if (lL >= MCHEmul::_DEBUGONLYERRORS)
+			if (_debugLevel >= MCHEmul::_DEBUGERRORS)
 				for (auto i : compiler.errors ())
 					std::cout << i << std::endl;
 
@@ -94,7 +102,7 @@ bool Emuls::Emulator::run ()
 		}
 		else
 		{
-			if (lL >= MCHEmul::_DEBUGALL)
+			if (_debugLevel >= MCHEmul::_DEBUGALL)
 				for (auto i : cL._lines)
 					std::cout << i << std::endl;
 		}
@@ -109,16 +117,15 @@ bool Emuls::Emulator::run ()
 	if (startingAddress () != MCHEmul::Address ())
 		computer () -> cpu () -> programCounter ().setAddress (startingAddress ());
 
+	return (true);
+}
+
+// ---
+bool Emuls::Emulator::run ()
+{
 	_running = true;
 
-	bool ok = true;
-	while (ok && !computer () -> exit ())
-	{
-		if (_communicationSystem != nullptr)
-			ok &= _communicationSystem -> processMessagesOn (computer ());
-		ok &= computer () -> runComputerCycle (lL);
-		ok &= computer () -> runIOCycle (lL);
-	}
+	while (runCycle () && !computer () -> exit ());
 
 	if (_communicationSystem != nullptr)
 		_communicationSystem -> finalize ();
@@ -126,4 +133,17 @@ bool Emuls::Emulator::run ()
 	_running = false;
 
 	return (computer () -> lastError () != MCHEmul::_NOERROR);
+}
+
+// ---
+bool Emuls::Emulator::runCycle ()
+{
+	bool result = true;
+
+	if (_communicationSystem != nullptr)
+		result &= _communicationSystem -> processMessagesOn (computer ());
+	result &= computer () -> runComputerCycle ();
+	result &= computer () -> runIOCycle ();
+
+	return (result);
 }

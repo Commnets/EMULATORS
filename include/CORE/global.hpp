@@ -46,10 +46,11 @@ namespace MCHEmul
 	const unsigned int _MAXBYTESMANAGED			= 2;
 
 	/** Levels of debugging */
-	const unsigned int _DEBUGONLYERRORS			= 1;
+	const unsigned int _DEBUGNOTHING			= 0;
+	const unsigned int _DEBUGERRORS				= 1;
 	const unsigned int _DEBUGERRORANDWARNINGS	= 2;
 	const unsigned int _DEBUGALL				= 3;
-	const unsigned int _DEBUGTRACEINTERRNALS	= 4;
+	const unsigned int _DEBUGTRACEINTERNALS		= 4;
 
 	/** General functions to manage strings */
 	std::string ltrim (const std::string& s);

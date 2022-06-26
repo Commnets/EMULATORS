@@ -6,6 +6,8 @@
 MCHEmul::Computer::Computer (MCHEmul::CPU* cpu, const MCHEmul::Chips& c, 
 		MCHEmul::Memory* m, const MCHEmul::IODevices& d, unsigned int cs, const MCHEmul::Attributes& attrs)
 	: _cpu (cpu), _chips (c), _memory (m), _devices (d), _cyclesPerSecond (cs), _attributes (attrs),
+	  _exit (false), _debugLevel (MCHEmul::_DEBUGNOTHING),
+	  _lastError (MCHEmul::_NOERROR),
 	  _screen (nullptr), _inputOSSystem (nullptr)
 { 
 	assert (_cpu != nullptr);
@@ -93,7 +95,7 @@ bool MCHEmul::Computer::initialize ()
 }
 
 // ---
-bool MCHEmul::Computer::run (unsigned int lL)
+bool MCHEmul::Computer::run ()
 {
 	// It has to be initialized before...
 
@@ -103,15 +105,15 @@ bool MCHEmul::Computer::run (unsigned int lL)
 	bool ok = true;
 	while (ok && !_exit)
 	{
-		ok &= runComputerCycle (lL);
-		ok &= runIOCycle (lL);
+		ok &= runComputerCycle ();
+		ok &= runIOCycle ();
 	}
 
 	return (_lastError != MCHEmul::_NOERROR);
 }
 
 // ---
-bool MCHEmul::Computer::runComputerCycle (unsigned int lL)
+bool MCHEmul::Computer::runComputerCycle ()
 {
 	static const long long nanosc = (long long) 1.0e9;
 	
@@ -124,18 +126,20 @@ bool MCHEmul::Computer::runComputerCycle (unsigned int lL)
 
 		_lastError = MCHEmul::_CPU_ERROR;
 
-		if (lL >= MCHEmul::_DEBUGONLYERRORS)
+		if (_debugLevel >= MCHEmul::_DEBUGERRORS)
 			std::cout << "Error executing instruction" << std::endl;
 
 		return (false); // Error...
 	}
 
-	if (lL >= MCHEmul::_DEBUGALL)
+	if (_debugLevel >= MCHEmul::_DEBUGALL)
 	{
-		std::cout << "->" << 
-			*_cpu -> lastInstruction () << "\t\t\t" << _cpu -> programCounter ();
+		std::cout << "->" 
+			<< *_cpu -> lastInstruction () << "\t" 
+			<< _cpu -> programCounter () << "\t" 
+			<< _cpu -> statusRegister ();
 		for (auto i : _cpu -> internalRegisters ())
-			std::cout << "\t" << "REG" << i;
+			std::cout << "\t" << i;
 		std::cout << std::endl;
 	}
 
@@ -147,7 +151,7 @@ bool MCHEmul::Computer::runComputerCycle (unsigned int lL)
 
 			_lastError = MCHEmul::_CHIP_ERROR;
 
-			if (lL >= MCHEmul::_DEBUGONLYERRORS)
+			if (_debugLevel >= MCHEmul::_DEBUGERRORS)
 				std::cout << "Error simulating chip: " << std::endl << i.second << std::endl;
 
 			return (false); // Error...
@@ -164,7 +168,7 @@ bool MCHEmul::Computer::runComputerCycle (unsigned int lL)
 }
 
 // ---
-bool MCHEmul::Computer::runIOCycle (unsigned int lL)
+bool MCHEmul::Computer::runIOCycle ()
 {
 	for (auto i : _devices)
 	{
@@ -174,7 +178,7 @@ bool MCHEmul::Computer::runIOCycle (unsigned int lL)
 
 			_lastError = MCHEmul::_DEVICE_ERROR;
 
-			if (lL >= MCHEmul::_DEBUGONLYERRORS)
+			if (_debugLevel >= MCHEmul::_DEBUGERRORS)
 				std::cout << "Error in IO device:" << std::endl << i.second << std::endl;
 
 			return (false); // Error...

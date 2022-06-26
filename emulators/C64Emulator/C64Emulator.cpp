@@ -43,7 +43,9 @@ int _tmain (int argc, _TCHAR *argv [])
 	myEmulator.setCommunicationSystem (new MCHEmul::CommunicationSystem 
 		(new MCHEmul::PeerCommunicationChannel (100, 2), new MCHEmul::StandardMessageBuilder ()));
 
-	int result = myEmulator.run ();
+	int result = 0;
+	if (myEmulator.initialize ())
+		result = myEmulator.run ();
 
 	return (result);
 }

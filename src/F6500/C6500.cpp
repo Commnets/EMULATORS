@@ -35,9 +35,9 @@ bool F6500::C6500::initialize ()
 MCHEmul::Registers F6500::C6500::createInternalRegisters ()
 {
 	return (MCHEmul::Registers
-			({ MCHEmul::Register ((int) _ACCUMULATOR,	{ MCHEmul::UByte::_0 } /** 1 byte long */),
-			   MCHEmul::Register ((int) _XREGISTER,		{ MCHEmul::UByte::_0 } /** 1 byte long */),
-			   MCHEmul::Register ((int) _YREGISTER,		{ MCHEmul::UByte::_0 } /** 1 byte long */) }));
+			({ MCHEmul::Register ((int) _ACCUMULATOR,	"A", { MCHEmul::UByte::_0 } /** 1 byte long */),
+			   MCHEmul::Register ((int) _XREGISTER,		"X", { MCHEmul::UByte::_0 } /** 1 byte long */),
+			   MCHEmul::Register ((int) _YREGISTER,		"Y", { MCHEmul::UByte::_0 } /** 1 byte long */) }));
 }
 
 // ---

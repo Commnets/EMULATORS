@@ -13,7 +13,7 @@ MCHEmul::UBytes MCHEmul::StatusRegister::valuesWithout (const std::vector <std::
 // ---
 std::string MCHEmul::StatusRegister::asString () const
 {
-	std::string result = "";
+	std::string result = _name + ":";
 	for (auto i : _bitNames)
 		result += i.first + "(" + (bitStatus (i.first) ? "1" : "0") + ")";
 

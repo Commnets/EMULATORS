@@ -27,12 +27,12 @@ namespace MCHEmul
 		public:
 		Register () = delete;
 
-		Register (int id, const UBytes& v /** variable */)
-			: _id (id), _values (v) 
+		Register (int id, const std::string& n, const UBytes& v /** variable */)
+			: _id (id), _name (n), _values (v) 
 							{ }
 
-		Register (int id, const std::vector <UByte>&v /** variable */)
-			: _id (id), _values (v) 
+		Register (int id, const std::string& n, const std::vector <UByte>&v /** variable */)
+			: _id (id), _name (n), _values (v) 
 							{ }
 
 		Register (const Register&) = default;
@@ -45,6 +45,8 @@ namespace MCHEmul
 
 		int id () const
 							{ return (_id); }
+		const std::string& name () const
+							{ return (_name); }
 		size_t size () const
 							{ return (_values.size ()); }
 		const UBytes& values () const
@@ -82,18 +84,19 @@ namespace MCHEmul
 		friend std::ostream& operator << (std::ostream& o, const Register& r);
 
 		protected:
-		int _id;
+		const int _id;
+		const std::string _name;
 		UBytes _values;
 	};
 
 	using Registers = std::vector <Register>;
 
 	/** It can not be modified. */
-	static const Register NoRegister = Register (0, UBytes ());
+	static const Register NoRegister = Register (0, "-", UBytes ());
 
 	// Implementation
 	/** Used in no const methods. It could be modified, but it is not as it is 0-length. */
-	static Register TrashRegister = Register (0, UBytes ());
+	static Register TrashRegister = Register (0, "-", UBytes ());
 }
 
 #endif

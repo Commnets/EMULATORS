@@ -112,21 +112,24 @@ namespace MCHEmul
 			Returns true when finalizing the run ok, and false with error. \n
 			The parameter is the log level. \n
 			This method used the other tow defined behind and it can be simulated from outside. */
-		bool run (unsigned lL);
+		bool run ();
 		
 		/** Execute one computer cycle (cpu + chips). 
 			Returns true when ok, and false when no ok. */
-		bool runComputerCycle (unsigned int lL);
+		bool runComputerCycle ();
 		/** Execute the IO Cycle.
 			Returns true when ok, and false when no ok. */
-		bool runIOCycle (unsigned int lL);
+		bool runIOCycle ();
 
-		/** To know the value of the exit. */
 		bool exit () const
 							{ return (_exit); }
-		/** Set the exit variable from the outside. */
 		void setExit (bool e)
 							{ _exit = e; }
+
+		unsigned int debugLevel () const
+							{ return (_debugLevel); }
+		void setDebugLevel (unsigned int dL)
+							{ _debugLevel = dL; }
 
 		/** To get the last error happend (after initialize or simulate methods). */
 		unsigned int lastError () const
@@ -147,6 +150,9 @@ namespace MCHEmul
 		/** Used to to indicate the execution must finishes.
 			There could have been an error or not. */
 		bool _exit;
+
+		/** The level of the debug info. */
+		unsigned int _debugLevel;
 
 		// Implementation
 		unsigned int _lastError;

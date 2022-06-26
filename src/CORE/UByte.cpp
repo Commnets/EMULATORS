@@ -90,7 +90,7 @@ MCHEmul::UByte& MCHEmul::UByte::rotateRight (size_t p)
 // ---
 std::string MCHEmul::UByte::asString (MCHEmul::UByte::OutputFormat oF, size_t l) const
 {
-	static const std::string _Spaces ("0", MCHEmul::UByte::sizeBits ());
+	static const std::string _SPACES ("0", MCHEmul::UByte::sizeBits ());
 
 	std::string result = "";
 
@@ -120,7 +120,7 @@ std::string MCHEmul::UByte::asString (MCHEmul::UByte::OutputFormat oF, size_t l)
 	}
 
 	if (result.length () < l)
-		result = _Spaces.substr (0, l - result.length ()) + result;
+		result = _SPACES.substr (0, l - result.length ()) + result;
 
 	return (result);
 }

@@ -1,4 +1,13 @@
 #include <CORE/Instruction.hpp>
+#include <CORE/CPU.hpp>
+
+static std::map <unsigned char, MCHEmul::Instruction::Structure::Parameter::Type> _TYPES
+	({ 
+		{'#', MCHEmul::Instruction::Structure::Parameter::Type::_DATA},
+		{'$', MCHEmul::Instruction::Structure::Parameter::Type::_DIR},
+		{'&', MCHEmul::Instruction::Structure::Parameter::Type::_RELJUMP}, 
+		{'%', MCHEmul::Instruction::Structure::Parameter::Type::_ABSJUMP} 
+	});
 
 // ---
 MCHEmul::Instruction::Instruction (unsigned int c, unsigned int mp, unsigned int cc, const std::string& t)
@@ -81,21 +90,33 @@ bool MCHEmul::Instruction::matchesWith (const std::string& i, std::vector <std::
 }
 
 // ---
-std::string MCHEmul::Instruction::lastParametersAsString (size_t p, size_t nP) const
-{ 
+const MCHEmul::UBytes MCHEmul::Instruction::parameters (size_t p, size_t nP, bool bE) const
+{
 	if ((p + nP - 1) >= _lastParameters.size ())
-		return ("");
+		return (MCHEmul::UBytes::_E);
 
-	std::string result = "$";
-	for (size_t i = 0; i < nP; i++)
-		result += _lastParameters [p + i].asString (MCHEmul::UByte::OutputFormat::_HEXA);
+	std::vector <MCHEmul::UByte> ub;
+	for (size_t i = 0; i < nP; ub.push_back (_lastParameters [p + i++]));
+	return (MCHEmul::UBytes (ub, bE));
+}
 
+// ---
+std::string MCHEmul::Instruction::parametersAsString (size_t p, size_t nP, bool bE) const
+{ 
+	MCHEmul::UBytes ub = parameters (p, nP, bE);
+
+	std::string result = "";
+	for (size_t i = 0; i < ub.size (); i++)
+		result += ((i == 0) ? "$" : "") + ub [i].asString (MCHEmul::UByte::OutputFormat::_HEXA, 2);
 	return (result);
 }
 
 // ---
 std::string MCHEmul::Instruction::asString () const
 {
+	if (_cpu == nullptr || _memory == nullptr || _stack == nullptr)
+		return (""); // If the transaction has not been executed...
+
 	if (internalStructure ()._error)
 		return (_iTemplate); // Nothing else is possible...
 
@@ -103,7 +124,7 @@ std::string MCHEmul::Instruction::asString () const
 
 	std::string toPrint = "";
 
-	size_t nPrm = 1;
+	size_t nPrm = _cpu -> architecture ().instructionLength ();
 	size_t lP = 0;
 	bool end = false;
 	while (!end)
@@ -115,10 +136,19 @@ std::string MCHEmul::Instruction::asString () const
 			// After "[" there will be always a "]"...
 			// No error is now possible!
 			size_t fPP = t.find (']', iPP + 1);
-			size_t bPrm = std::atoi (t.substr (iPP + 1, fPP - iPP).substr (1).c_str ());
-			toPrint += t.substr (lP, iPP - lP) + lastParametersAsString (nPrm, bPrm);
-			nPrm += bPrm;
 
+			std::string prm = t.substr (iPP + 1, fPP - iPP);
+			size_t bPrm = std::atoi (prm.substr (1).c_str ());
+			std::map <unsigned char, Structure::Parameter::Type>::const_iterator iPrm = _TYPES.find (prm [0]);
+			bool bE = (iPrm != _TYPES.end ()) 
+				? (((*iPrm).second == Structure::Parameter::Type::_DIR ||
+				    (*iPrm).second == Structure::Parameter::Type::_ABSJUMP) 
+						? _cpu -> architecture ().bigEndian () : true)
+				: true;
+
+			toPrint += t.substr (lP, iPP - lP) + parametersAsString (nPrm, bPrm, bE);
+
+			nPrm += bPrm;
 			lP = fPP + 1;
 		}
 		else
@@ -150,15 +180,6 @@ bool MCHEmul::Instruction::execute (const MCHEmul::UBytes& p, MCHEmul::CPU* c, M
 // ---
 MCHEmul::Instruction::Structure MCHEmul::Instruction::analyzeInstruction () const
 {
-	// Symbols allowed to describe the type of data...
-	static std::map <unsigned char, Structure::Parameter::Type> _TYPES
-		({ 
-			{'#', Structure::Parameter::Type::_DATA},
-			{'$', Structure::Parameter::Type::_DIR},
-			{'&', Structure::Parameter::Type::_RELJUMP}, 
-			{'%', Structure::Parameter::Type::_ABSJUMP} 
-		});
-
 	MCHEmul::Instruction::Structure result;
 
 	std::string inst = iTemplate ();

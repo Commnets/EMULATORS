@@ -24,7 +24,7 @@ namespace MCHEmul
 	{
 		public:
 		ProgramCounter (size_t sz)
-			: Register (-1 /** always */, UBytes (std::vector <UByte> (sz, UByte::_0))) 
+			: Register (-1 /** always */, "PC", UBytes (std::vector <UByte> (sz, UByte::_0))) 
 							{ }
 
 		ProgramCounter (const ProgramCounter&) = default;

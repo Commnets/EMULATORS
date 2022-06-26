@@ -3,5 +3,5 @@
 // ---
 std::ostream& MCHEmul::operator << (std::ostream& o, const MCHEmul::ProgramCounter& pc)
 {
-	return (o << "PC:$" << pc.asString (MCHEmul::UByte::OutputFormat::_HEXA));
+	return (o << pc._name << ":$" << pc.asString (MCHEmul::UByte::OutputFormat::_HEXA));
 }

@@ -41,9 +41,9 @@ namespace MCHEmul
 							{ return (_bigEndian); }
 
 		/** To get a register of a specific length only if is possible. */
-		Register registerLength (int id, size_t nb /** Bytes. */) const
+		Register registerLength (int id, const std::string& n, size_t nb /** Bytes. */) const
 							{ return ((nb > 0 && nb <= _numberBytes) 
-								? Register (id, UBytes (std::vector <UByte> (nb, UByte::_0))) : NoRegister); }
+								? Register (id, n, UBytes (std::vector <UByte> (nb, UByte::_0))) : NoRegister); }
 		/** To get a exampla of the longest possible register. It is constant so it would have to be copied once it is got. */ 
 		const Register& longestRegisterPossible () const
 							{ return (_longestRegisterPossible); }

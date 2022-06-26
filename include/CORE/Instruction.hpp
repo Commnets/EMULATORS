@@ -33,7 +33,11 @@ namespace MCHEmul
 		{
 			struct Parameter
 			{
-				enum class Type { _DATA, _DIR, _RELJUMP, _ABSJUMP };
+				enum class Type { _DATA = 0, _DIR, _RELJUMP, _ABSJUMP };
+
+				/** To link a char with the type. 
+					It used in many places into the code. */
+				static std::map <unsigned char, Type> _TYPES;
 
 				Parameter () 
 					: _type (Type::_DATA), _numberBytes (1)
@@ -115,7 +119,8 @@ namespace MCHEmul
 
 		const UBytes& parameters () const
 							{ return (_lastParameters); }
-		std::string lastParametersAsString (size_t p, size_t nP = 1) const; // The UBytes could grouped to get a parameter...
+		const UBytes parameters (size_t p, size_t nP = 1, bool bE = true) const;
+		std::string parametersAsString (size_t p, size_t nP = 1, bool bE = true) const; // The UBytes could grouped to get a parameter...
 		std::string asString () const;
 
 		/** To execute the instruction. It has to be redefined. \n

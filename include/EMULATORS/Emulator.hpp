@@ -80,8 +80,19 @@ namespace Emuls
 								return (MCHEmul::Address::fromStr (((i = _attributes.find (_ADDRESS)) != _attributes.end ()) 
 									? (*i).second : "")); }
 
+		unsigned int debugLevel () const
+							{ return (_debugLevel); }
+		void setDebugLevel (unsigned int dL)
+							{ _debugLevel = dL; computer () -> setDebugLevel (dL); }
+
+		/** To initialize the emulator. */
+		bool initialize ();
+
 		/** True when finishes ok, false when no ok. */
 		bool run ();
+
+		/** Execute just onee cycle. */
+		bool runCycle ();
 
 		protected:
 		const MCHEmul::Computer* computer () const
@@ -97,7 +108,8 @@ namespace Emuls
 		protected:
 		/** Defined in the constructor. */
 		MCHEmul::Attributes _attributes;
-		MCHEmul::CommunicationSystem* _communicationSystem; 
+		MCHEmul::CommunicationSystem* _communicationSystem;
+		unsigned int _debugLevel;
 
 		// Implementation
 		mutable MCHEmul::Computer* _computer;
