@@ -1,5 +1,6 @@
 #include <C64/VICII.hpp>
 #include <C64/C64.hpp>
+#include <F6500/incs.hpp>
 
 // ---
 bool C64::VICII::initialize ()
@@ -24,7 +25,43 @@ bool C64::VICII::initialize ()
 // ---
 bool C64::VICII::simulate (MCHEmul::CPU* cpu)
 {
-	// TODO
+	auto isBadRasterLine = [=]() -> bool
+		{ return (_VICMemory -> currentRasterPosition () >= 0x0030 &&
+				  _VICMemory -> currentRasterPosition () <= 0x007f &&
+				  (_VICMemory -> currentRasterPosition () & 0x0007) == 9); };
+
+	if (_VICMemory -> vicIItoGenerateIRQ ())
+		cpu -> interrupt (F6500::IRQInterrupt::_ID) -> setActive (true);
+
+	if (cpu -> clockCycles  () > _nextRasterCycle)
+	{
+		if (_VICMemory -> rasterIRQActive () && 
+			_VICMemory -> currentRasterPosition () == _VICMemory -> IRQRasterPositionAt ())
+		{
+
+			_VICMemory -> setRasterAtPosition (true);
+
+			cpu -> interrupt (F6500::IRQInterrupt::_ID) -> setActive (true);
+		}
+
+		if (_VICMemory -> currentRasterPosition () >= _FIRSTVISIBLELINE &&
+			_VICMemory -> currentRasterPosition () < _LASTVISIBLELINE)
+		{
+			// TODO: Draw the border among those two lines...
+			// TODO: Draw depenfing on the graphics system active...
+			// TODO: Draw the sprites
+		}
+
+		_nextRasterCycle = isBadRasterLine () ? _BADLINERASTERCYCLES : _USUALRASTERCYCLES;
+
+		_VICMemory -> setCurrentRasterPosition (_VICMemory -> currentRasterPosition () + 1);
+		if (_VICMemory -> currentRasterPosition () >= _SCREENLINES)
+		{
+			// TODO: Refresh the screen...
+
+			_VICMemory -> setCurrentRasterPosition (0);
+		}
+	}
 
 	return (true);
 }

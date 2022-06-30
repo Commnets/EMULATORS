@@ -26,7 +26,8 @@ namespace C64
 
 		VICII (const MCHEmul::Attributes& attrs)
 			: MCHEmul::Chip (_ID, attrs),
-			  _VICMemory (nullptr)
+			  _VICMemory (nullptr),
+			  _nextRasterCycle (0)
 							{ }
 
 		virtual bool initialize () override;
@@ -35,6 +36,18 @@ namespace C64
 
 		private:
 		C64::VICMemory* _VICMemory;
+		
+		/** Data about the raster lines of the screen */
+		static const unsigned short _SCREENLINES = 312;
+		static const unsigned short _FIRSTVISIBLELINE = 14;
+		static const unsigned short _LASTVISIBLELINE = 298;
+		static const unsigned short _VISIBLELINES = 284;
+		static const unsigned short _BADLINERASTERCYCLES = 23;
+		static const unsigned short _USUALRASTERCYCLES = 63;
+
+		// Implementation
+		/** Keeps the raster line cycle that is being processed. */
+		unsigned short _nextRasterCycle;
 	};
 
 	/** The version para NTSC systems. */

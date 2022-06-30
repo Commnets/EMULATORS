@@ -53,9 +53,9 @@ namespace MCHEmul
 	static const unsigned int _DEBUGTRACEINTERNALS		= 4;
 
 	/** Generic strings. */
-	static const std::string _SPACES ("                    ");
-	static const std::string _CEROS ("00000000000000000000");
-	static const std::string _TABS ("\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t");
+	static const std::string _SPACES (20, ' ');
+	static const std::string _CEROS (20, '0');
+	static const std::string _TABS (20, '\t');
 
 	/** General functions to manage strings */
 	std::string ltrim (const std::string& s);
