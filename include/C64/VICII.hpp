@@ -19,7 +19,7 @@
 
 namespace C64
 {
-	/** The chip that takes care of anything around the graphics in Commodore 64. */
+	/** The chip that takes care of anything around the graphics in Commodore 64. @see GraphicalChip. */
 	class VICII : public MCHEmul::GraphicalChip
 	{
 		public:
@@ -52,7 +52,8 @@ namespace C64
 		virtual bool simulate (MCHEmul::CPU* cpu) override;
 
 		private:
-		/** Invoked from initialize to create the right screen memory. */
+		/** Invoked from initialize to create the right screen memory. \n
+			It also creates the Palette used by CBM 64 (_format variable). */
 		virtual MCHEmul::ScreenMemory* createScreenMemory () override;
 
 		void drawRasterCharMode ();
@@ -92,15 +93,17 @@ namespace C64
 		C64::VICIIRegisters* _VICIIRegisters;
 
 		// Implementation
-		/** Keeps the raster line cycle that is being processed. */
+		/** Keeps the raster line that is being processed. 
+			This is important to determine what is the border and what is the content of the screen. */
 		unsigned short _nextRasterCycle;
-		/** The format to draw. */
+		/** The format used to draw. It has to be the same that is used by the Screen object. */
 		SDL_PixelFormat* _format;
 
 		// Private data regarding the behaviour of the VICII chip
 		/** Regarding the clock cycles. */
 		static const unsigned short _BADLINERASTERCYCLES = 23;
 		static const unsigned short _USUALRASTERCYCLES = 63;
+
 		/** Static address. The color memory cann't be changed. */
 		static const MCHEmul::Address _COLORMEMORY;
 	};

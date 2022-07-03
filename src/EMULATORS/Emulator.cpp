@@ -74,7 +74,7 @@ bool Emuls::Emulator::initialize ()
 	if (_debugLevel >= MCHEmul::_DEBUGTRACEINTERNALS)
 		std::cout << *computer () << std::endl;
 
-	if (byteFileName () != "")
+	if (byteFileName () != "" && asmFileName () == "")
 	{
 		bool r = computer () -> load (byteFileName ());
 		if (!r)
@@ -86,7 +86,7 @@ bool Emuls::Emulator::initialize ()
 		}
 	}
 
-	if (asmFileName () != "")
+	if (asmFileName () != "" && byteFileName () == "")
 	{
 		MCHEmul::Assembler::Parser parser (computer () -> cpu ());
 		MCHEmul::Assembler::Compiler compiler (parser);
@@ -140,10 +140,14 @@ bool Emuls::Emulator::runCycle ()
 {
 	bool result = true;
 
+	computer () -> startsCycle ();
+
 	if (_communicationSystem != nullptr)
 		result &= _communicationSystem -> processMessagesOn (computer ());
 	result &= computer () -> runComputerCycle ();
 	result &= computer () -> runIOCycle ();
+
+	computer () -> finishCycle ();
 
 	return (result);
 }

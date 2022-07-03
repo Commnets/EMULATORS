@@ -19,6 +19,14 @@
 
 namespace MCHEmul
 {
+	/**
+	  * GraphicalChip is very connected with a Screen. \n
+	  * The graphical chip uses the ScreenMemory to write. \n
+	  * The same object will be taken by th Screen to finaly put the graphics out to the display. \n
+	  * The instance of the ScreenMemory object used is created in the method "createScreenMemory ()" that has to be overload. \n
+	  * When a graphic is ready (complete) to be sent to the screen, the method "setGraphicsReady (true)" should be invoked. \n
+	  * The Screen, when output the raphics to the display invokes back the method "setGraphicsReady (false)".
+	  */
 	class GraphicalChip : public Chip
 	{
 		public:

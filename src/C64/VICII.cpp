@@ -82,7 +82,7 @@ bool C64::VICII::simulate (MCHEmul::CPU* cpu)
 				break;
 
 			default:
-				// The graphic system is not supported so far...
+				return (false);
 				break;
 		}
 
@@ -94,7 +94,7 @@ bool C64::VICII::simulate (MCHEmul::CPU* cpu)
 	_VICIIRegisters -> setCurrentRasterPosition (_VICIIRegisters -> currentRasterPosition () + 1);
 	if (_VICIIRegisters -> currentRasterPosition () >= _RASTERLINES)
 	{
-		setGraphicsReady (true);
+		setGraphicsReady (true); // The limit of the visible screen has been reached!
 
 		_VICIIRegisters -> setCurrentRasterPosition (0);
 	}

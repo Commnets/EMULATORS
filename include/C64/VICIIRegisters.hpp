@@ -18,7 +18,8 @@
 
 namespace C64
 {
-	/** In the VIC Memory, there are a couple of records that behave different
+	/** In the VICII Registers, 
+		there are a couple of records that behave different
 		when they are read that when they are written. */
 	class VICIIRegisters final : public MCHEmul::Memory
 	{
@@ -100,6 +101,7 @@ namespace C64
 							{ return (_bitmapMemory); }
 
 		// Managed from VICII Chip Emulator
+		// The VICII chip also uses this object as a temporary storage
 		unsigned short currentRasterPosition () const
 							{ return (_currentRasterPosition); }
 		void setCurrentRasterPosition (unsigned short rP)
@@ -142,13 +144,14 @@ namespace C64
 		virtual MCHEmul::UByte readValue (size_t p) const override;
 
 		private:
+		/** Depending on how bits ar set, a no valid mode could be set. */
 		void setGraphicModeActive ();
 
 		private:
+		// The VICII registers
 		/** Screen related variables. */
 		unsigned short _borderColor;
 		std::vector <unsigned short> _backgroundColor;
-
 		/** Sprite related variables. */
 		std::vector <unsigned short> _spriteXCoord; 
 		std::vector <unsigned short> _spriteYCoord;
@@ -158,35 +161,31 @@ namespace C64
 		std::vector <bool> _spriteEnabled;
 		std::vector <bool> _spriteDoubleWidth, _spriteDoubleHeight;
 		std::vector <bool> _spriteToForegroundPriority;
-
 		/** ScrollYRegister & ScrollXRegister. */
 		unsigned short _verticalScrollPosition, _horizontalScrollPosition;
-
-		/** ControlRegister. Very important to control graphics. */
-		// Visible screen control
+		/** Visible screen control. */
 		bool _textDisplay25RowsActive, _textDisplay40ColumnsActive;
 		bool _screenSameColorBorderActive;
 		bool _videoResetActive;
-		// Graphical modes
+		/** Graphical modes. */
 		bool _graphicBitModeActive;
 		bool _graphicExtendedColorTextModeActive;
 		bool _graphicMulticolorTextModeActive;
 		GraphicMode _graphicModeActive;
-		// IRQ Control
+		/** IRQ Control. */
 		bool _rasterIRQActive;
 		bool _spriteCollisionWithDataIRQActive;
 		bool _spriteCollisionsIRQActive;
 		bool _lightPenIRQActive;
-
 		/** Raster Control. */
 		unsigned short _IRQRasterPositionAt; // To define where to launch the IRQ. When reading therre is other variable...
-
 		/** Location of the Graphical Memory. */
 		MCHEmul::Address _charMemory; // Info about the characters
 		MCHEmul::Address _screenMemory; // Where the characters to draw are
 		MCHEmul::Address _bitmapMemory; // Where the bitmap to draw is
 
 		// Some of this variables are set by the emulation of the VICII
+		// The VICII chip also uses this object as a temporary storage
 		unsigned short _currentRasterPosition;
 		unsigned short _currentLightPenHorizontalPosition, _currentLightPenVerticalPosition;
 		bool _rasterAtIRQPosition;

@@ -24,6 +24,7 @@
 #include <CORE/IO.hpp>
 #include <CORE/Screen.hpp>
 #include <CORE/OSIO.hpp>
+#include <chrono>
 
 namespace MCHEmul
 {
@@ -83,8 +84,8 @@ namespace MCHEmul
 		InputOSSystem* inputOSSytem ()
 							{ return (_inputOSSystem); }
 
-		unsigned int specyclesPerSecond () const
-							{ return (_cyclesPerSecond); }
+		unsigned int cyclesPerSecond () const
+							{ return (_clock.cyclesPerSecond ()); }
 
 		const Attributes& attributes () const
 							{ return (_attributes); }
@@ -115,12 +116,18 @@ namespace MCHEmul
 			This method used the other tow defined behind and it can be simulated from outside. */
 		bool run ();
 		
+		/** To indicate that th loop starts. */
+		void startsCycle ()
+							{ _clock.start (_cpu -> clockCycles ()); }
 		/** Execute one computer cycle (cpu + chips). 
 			Returns true when ok, and false when no ok. */
 		bool runComputerCycle ();
 		/** Execute the IO Cycle.
 			Returns true when ok, and false when no ok. */
 		bool runIOCycle ();
+		/** To indicate that the cycle finishes. */
+		void finishCycle ()
+							{ _clock.waitFor (_cpu -> clockCycles ()); }
 
 		bool exit () const
 							{ return (_exit); }
@@ -141,11 +148,40 @@ namespace MCHEmul
 		friend std::ostream& operator << (std::ostream& o, const Computer& c);
 
 		protected:
+		/** Used internally to align the speed to the microprocessor 
+			to the speed of the code in this machine. */
+		class Clock final
+		{
+			public:
+			Clock () = delete;
+
+			Clock (unsigned int cS)
+				: _cyclesPerSecond (cS),
+				  _initialClockCycles (0), _iClock ()
+							{ assert (_cyclesPerSecond > 0); }
+
+			Clock (const Clock&) = default;
+
+			Clock& operator = (const Clock&) = default;
+
+			unsigned int cyclesPerSecond () const
+							{ return (_cyclesPerSecond); }
+
+			void start (unsigned int cC);
+			void waitFor (unsigned int cC);
+
+			private:
+			unsigned int _cyclesPerSecond;
+
+			// Implementation
+			unsigned int _initialClockCycles;
+			std::chrono::time_point <std::chrono::steady_clock> _iClock;
+		};
+			
 		CPU* _cpu;
 		Chips _chips; 
 		Memory* _memory;
 		IODevices _devices;
-		unsigned int _cyclesPerSecond;
 		const Attributes _attributes = { }; // Maybe modified at construction level
 
 		/** Used to to indicate the execution must finishes.
@@ -160,6 +196,7 @@ namespace MCHEmul
 		Screen* _screen;
 		InputOSSystem* _inputOSSystem;
 		GraphicalChip* _graphicalChip;
+		Clock _clock; // To maintain the sped of the compute...
 	};
 }
 
