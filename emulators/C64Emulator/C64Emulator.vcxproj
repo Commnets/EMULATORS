@@ -191,6 +191,13 @@
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
   </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="C64Emulator.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="C64Logo.ico" />
+    <Image Include="CBMLogo.ico" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

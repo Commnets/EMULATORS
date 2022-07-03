@@ -93,7 +93,11 @@ bool C64::VICII::simulate (MCHEmul::CPU* cpu)
 
 	_VICIIRegisters -> setCurrentRasterPosition (_VICIIRegisters -> currentRasterPosition () + 1);
 	if (_VICIIRegisters -> currentRasterPosition () >= _RASTERLINES)
+	{
+		setGraphicsReady (true);
+
 		_VICIIRegisters -> setCurrentRasterPosition (0);
+	}
 
 	return (true);
 }

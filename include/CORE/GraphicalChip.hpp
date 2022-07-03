@@ -24,7 +24,8 @@ namespace MCHEmul
 		public:
 		GraphicalChip (int id, const Attributes& attrs = { })
 			: Chip (id, attrs), 
-			  _screenMemory (nullptr)
+			  _screenMemory (nullptr), 
+			  _graphicsReady (false)
 							{ }
 
 		~GraphicalChip ()
@@ -35,6 +36,11 @@ namespace MCHEmul
 		ScreenMemory* screenMemory ()
 							{ return (_screenMemory); }
 
+		bool graphicsReady () const
+							{ return (_graphicsReady); }
+		void setGraphicsReady (bool gR) 
+							{ _graphicsReady = gR; }
+
 		virtual bool initialize () override;
 
 		protected:
@@ -43,6 +49,9 @@ namespace MCHEmul
 
 		protected:
 		ScreenMemory* _screenMemory;
+
+		// Implementation
+		bool _graphicsReady;
 	};
 }
 

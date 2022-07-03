@@ -45,12 +45,17 @@ MCHEmul::Screen::~Screen ()
 // ---
 bool MCHEmul::Screen::refresh ()
 {
-	SDL_UpdateTexture (_texture, nullptr, 
-		_graphicalChip -> screenMemory () -> frameData (), 
-		(int) _graphicalChip -> screenMemory () -> columns () * sizeof (unsigned int)); // The link with the chip...
-	SDL_RenderClear (_renderer);
-	SDL_RenderCopy (_renderer, _texture, nullptr, nullptr);
-	SDL_RenderPresent (_renderer);
+	if (_graphicalChip -> graphicsReady ())
+	{
+		SDL_UpdateTexture (_texture, nullptr, 
+			_graphicalChip -> screenMemory () -> frameData (), 
+			(int) _graphicalChip -> screenMemory () -> columns () * sizeof (unsigned int)); // The link with the chip...
+		SDL_RenderClear (_renderer);
+		SDL_RenderCopy (_renderer, _texture, nullptr, nullptr);
+		SDL_RenderPresent (_renderer);
+
+		_graphicalChip -> setGraphicsReady (false);
+	}
 
 	return (true);
 }

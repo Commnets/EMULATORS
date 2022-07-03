@@ -176,8 +176,8 @@ bool MCHEmul::Computer::runComputerCycle ()
 	long long el =
 		std::chrono::duration_cast <std::chrono::nanoseconds> (std::chrono::steady_clock::now () - iT).count ();
 	long long mel = (long long) ((double) (_cpu -> clockCycles () - iC) / (double) _cyclesPerSecond * (double) nanosc);
-	if ((mel * 4500 /** i7 over 6510 */) > el)
-		std::this_thread::sleep_for (std::chrono::nanoseconds ((mel * 4500) - el));
+	if (mel > el)
+		std::this_thread::sleep_for (std::chrono::nanoseconds (mel - el));
 
 	return (true);
 }
