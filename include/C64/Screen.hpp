@@ -24,18 +24,7 @@ namespace C64
 	{
 		public:
 		static const int _ID = 1;
-		Screen (double hz, const MCHEmul::Attributes& attrs = { })
-			: MCHEmul::Screen ("C64", _ID, 403, 284, 2, 16, hz, attrs),
-			  _vicII (nullptr)
-							{ }
-
-		virtual bool initialize () override;
-
-		protected:
-		virtual void initializeColorPalette () override;
-
-		protected:
-		VICII* _vicII;
+		Screen (double hz, const MCHEmul::Attributes& attrs = { });
 	};
 
 	class ScreenNTSC final : public Screen

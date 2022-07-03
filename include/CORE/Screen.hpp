@@ -15,6 +15,7 @@
 #define __MCHEMUL_SCREEN__
 
 #include <CORE/IO.hpp>
+#include <CORE/GraphicalChip.hpp>
 #include <SDL.h>
 
 namespace MCHEmul
@@ -27,7 +28,7 @@ namespace MCHEmul
 		  * Creates the instance of the window.
 		  * @param n	: The title of the windo to show.
 		  * @param id	: The id of the device.
-		  * @param c	: The list of the chipds related with this device.
+		  * @param c	: The list of the chips related with this device.
 		  * @param sc	: The number of columns of the screen.
 		  * @param sr	: The number of rows of the screen.
 		  * @param vF	: The visibility factor. That is hw many visible pixels represents a pixel in the computer.
@@ -35,7 +36,7 @@ namespace MCHEmul
 		  * @param hz	: The speed of the refresh in Hz.
 		  */
 		Screen (const std::string& n, int id,
-			unsigned int sc, unsigned int sr, unsigned int vF, unsigned int nC, double hz,
+			unsigned int sc, unsigned int sr, unsigned int vF, double hz,
 			const Attributes& attrs = { });
 
 		Screen (const Screen*) = delete;
@@ -44,52 +45,51 @@ namespace MCHEmul
 
 		virtual ~Screen () override;
 
+		/** The reference to the graphical chip. */
+		const GraphicalChip* graphicalChip () const
+							{ return (_graphicalChip); }
+		GraphicalChip* graphicalChip ()
+							{ return (_graphicalChip); }
+		void setGraphicalChip (GraphicalChip* c)
+							{ _graphicalChip = c; }
+
 		/** To get the value of all parameters. */
 		const std::string screenName () const
 							{ return (_screenName); }
-		const unsigned int screenCols () const
-							{ return (_screenCols); }
+		const unsigned int screenColumns () const
+							{ return (_screenColumns); }
 		const unsigned int screenRows () const
 							{ return (_screenRows); }
 		const unsigned int visibilityFactor () const
 							{ return (_visibilityFactor); }
-		const unsigned int numberColors () const
-							{ return (_numberColors); }
 		const double hertzs () const
 							{ return (_hertzs); }
 
-		/** It is usually invoked from video chips, to set the pixels. */
-		void setPixel (unsigned int x, unsigned int y, unsigned int color)
-							{ _frame [y * _screenCols + x] = _colorPalette [color]; }
-
-		virtual bool initialize () override;
+		virtual bool initialize () override
+							{ return (true); }
 
 		/** Draws the screen using the info of the frame. */
 		virtual bool refresh () override;
 
 		protected:
-		/** Invoked from initialize.
-			The palette of colors will depend on the computer. */
-		virtual void initializeColorPalette () = 0;
-
-		protected:
 		const std::string _screenName;
-		const unsigned int _screenCols;
+		const unsigned int _screenColumns;
 		const unsigned int _screenRows;
 		const unsigned int _visibilityFactor;
-		const unsigned int _numberColors;
-		unsigned int* _colorPalette; // values set when initialize...
 		const double _hertzs;
 
 		protected:
-		// Implementation
-		// Screen
-		SDL_Window *_window;
-		SDL_Renderer *_renderer;
-		SDL_Texture *_texture;
-		SDL_PixelFormat *_format;
-		uint32_t *_frame;
+		/** Set when initialize after assigning the chips.
+			The graphical chip managing the graphical memory. 
+			That the screen displays. */
+		GraphicalChip* _graphicalChip;
 
+		// Implementation
+		SDL_Window* _window;
+		SDL_Renderer* _renderer;
+		SDL_Texture* _texture;
+
+		/** At construction time, to speed up calculus. */
 		double _refreshRate;
 	};
 }

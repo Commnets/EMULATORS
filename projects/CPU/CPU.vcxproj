@@ -26,6 +26,7 @@
     <ClCompile Include="..\..\src\CORE\CPUArchitecture.cpp" />
     <ClCompile Include="..\..\src\CORE\CPUInterrupt.cpp" />
     <ClCompile Include="..\..\src\CORE\global.cpp" />
+    <ClCompile Include="..\..\src\CORE\GraphicalChip.cpp" />
     <ClCompile Include="..\..\src\CORE\Instruction.cpp" />
     <ClCompile Include="..\..\src\CORE\IO.cpp" />
     <ClCompile Include="..\..\src\CORE\Memory.cpp" />
@@ -33,6 +34,7 @@
     <ClCompile Include="..\..\src\CORE\ProgramCounter.cpp" />
     <ClCompile Include="..\..\src\CORE\Register.cpp" />
     <ClCompile Include="..\..\src\CORE\Screen.cpp" />
+    <ClCompile Include="..\..\src\CORE\ScreenMemory.cpp" />
     <ClCompile Include="..\..\src\CORE\Stack.cpp" />
     <ClCompile Include="..\..\src\CORE\StatusRegister.cpp" />
     <ClCompile Include="..\..\src\CORE\UByte.cpp" />
@@ -47,6 +49,7 @@
     <ClInclude Include="..\..\include\CORE\CPUArchitecture.hpp" />
     <ClInclude Include="..\..\include\CORE\CPUInterrupt.hpp" />
     <ClInclude Include="..\..\include\CORE\global.hpp" />
+    <ClInclude Include="..\..\include\CORE\GraphicalChip.hpp" />
     <ClInclude Include="..\..\include\CORE\incs.hpp" />
     <ClInclude Include="..\..\include\CORE\Instruction.hpp" />
     <ClInclude Include="..\..\include\CORE\IO.hpp" />
@@ -55,6 +58,7 @@
     <ClInclude Include="..\..\include\CORE\ProgramCounter.hpp" />
     <ClInclude Include="..\..\include\CORE\Register.hpp" />
     <ClInclude Include="..\..\include\CORE\Screen.hpp" />
+    <ClInclude Include="..\..\include\CORE\ScreenMemory.hpp" />
     <ClInclude Include="..\..\include\CORE\Stack.hpp" />
     <ClInclude Include="..\..\include\CORE\StatusRegister.hpp" />
     <ClInclude Include="..\..\include\CORE\UByte.hpp" />

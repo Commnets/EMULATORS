@@ -33,17 +33,6 @@ C64::Commodore64::Commodore64 (C64::Commodore64::VisualSystem vS)
 }
 
 // ---
-bool C64::Commodore64::initialize ()
-{
-	if (!MCHEmul::Computer::initialize ())
-		return (false);
-
-	// TODO
-
-	return (true);
-}
-
-// ---
 MCHEmul::Chips C64::Commodore64::standardChips (C64::Commodore64::VisualSystem vS)
 {
 	MCHEmul::Chips result;
@@ -73,11 +62,11 @@ MCHEmul::Memory* C64::Commodore64::standardMemory ()
 	MCHEmul::Memory* BasicRAM		= new MCHEmul::Memory (MCHEmul::Address ({ 0x00, 0xa0 }, false), 0x2000);		// When the BASIC is not used...
 	MCHEmul::Memory* BasicROM		= new MCHEmul::Memory (MCHEmul::Address ({ 0x00, 0xa0 }, false), 0x2000, true); // Where the basic is located 
 	MCHEmul::Memory* RAMMemory1		= new MCHEmul::Memory (MCHEmul::Address ({ 0x00, 0xc0 }, false), 0x1000);		// 4k
-	MCHEmul::Memory* VICRegisters	= new C64::VICMemory; 
+	MCHEmul::Memory* VICIIRegisters	= new C64::VICIIRegisters; 
 	MCHEmul::Memory* SIDRegisters	= new MCHEmul::Memory (MCHEmul::Address ({ 0x00, 0xd4 }, false), 0x0400); 
 	MCHEmul::Memory* ColorRAM		= new C64::ColorRAMMemory;	
-	MCHEmul::Memory* CIA1			= new C64::CIA1Memory; 
-	MCHEmul::Memory* CIA2			= new C64::CIA2Memory; 
+	MCHEmul::Memory* CIA1			= new C64::CIA1Registers; 
+	MCHEmul::Memory* CIA2			= new C64::CIA2Registers; 
 	MCHEmul::Memory* IO1			= new MCHEmul::Memory (MCHEmul::Address ({ 0x00, 0xde }, false), 0x0100); 
 	MCHEmul::Memory* IO2			= new MCHEmul::Memory (MCHEmul::Address ({ 0x00, 0xdf }, false), 0x0100); 
 	MCHEmul::Memory* CHARROM		= new MCHEmul::Memory (MCHEmul::Address ({ 0x00, 0xd0 }, false), 0x1000, true); // ROM over VIC/SID/RAM/CIA/IO
@@ -94,7 +83,7 @@ MCHEmul::Memory* C64::Commodore64::standardMemory ()
 				{ _BASIC_MEMORY		, BasicROM },
 				{ _BASIC_MEMORY		, BasicRAM },
 				{ _RAM1_MEMORY		, RAMMemory1 },
-				{ _VICREGS_MEMORY	, VICRegisters },
+				{ _VICREGS_MEMORY	, VICIIRegisters },
 				{ _SIDREGS_MEMORY	, SIDRegisters },
 				{ _COLOR_MEMORY		, ColorRAM },
 				{ _CIA1_MEMORY		, CIA1 },

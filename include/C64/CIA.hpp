@@ -14,7 +14,7 @@
 #ifndef __C64_CIA__
 #define __C64_CIA__
 
-#include <C64/Memory.hpp>
+#include <C64/CIARegisters.hpp>
 
 namespace C64
 {
@@ -29,7 +29,7 @@ namespace C64
 				{ { "Name", "CIA1" },
 				  { "Manufacturer", "Commodore Business Machines CBM" },
 				  { "Year", "1980" } }),
-			  _CIA1Memory (nullptr)
+			  _CIA1Registers (nullptr)
 							{ }
 
 		virtual bool initialize () override;
@@ -37,7 +37,7 @@ namespace C64
 		virtual bool simulate (MCHEmul::CPU* cpu) override;
 
 		private:
-		C64::CIA1Memory* _CIA1Memory;
+		C64::CIA1Registers* _CIA1Registers;
 	};
 
 	/** The chip is to communicate the C64 with the environment. */
@@ -51,7 +51,7 @@ namespace C64
 				{ { "Name", "CIA1" },
 				  { "Manufacturer", "Commodore Business Machines CBM" },
 				  { "Year", "1980" } }),
-			  _CIA2Memory (nullptr)
+			  _CIA2Registers (nullptr)
 							{ }
 
 		virtual bool initialize () override;
@@ -59,7 +59,7 @@ namespace C64
 		virtual bool simulate (MCHEmul::CPU* cpu) override;
 
 		private:
-		C64::CIA2Memory* _CIA2Memory;
+		C64::CIA2Registers* _CIA2Registers;
 	};
 }
 

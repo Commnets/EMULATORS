@@ -17,6 +17,7 @@
 #include <CORE/global.hpp>
 #include <CORE/CPU.hpp>
 #include <CORE/Chip.hpp>
+#include <CORE/GraphicalChip.hpp>
 #include <CORE/Memory.hpp>
 #include <CORE/Register.hpp>
 #include <CORE/Instruction.hpp>
@@ -158,6 +159,7 @@ namespace MCHEmul
 		unsigned int _lastError;
 		Screen* _screen;
 		InputOSSystem* _inputOSSystem;
+		GraphicalChip* _graphicalChip;
 	};
 }
 

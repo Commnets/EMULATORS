@@ -32,6 +32,7 @@
 #include <CORE/Instruction.hpp>
 #include <CORE/IO.hpp>
 #include <CORE/Screen.hpp>
+#include <CORE/ScreenMemory.hpp>
 #include <CORE/OSIO.hpp>
 
 #endif

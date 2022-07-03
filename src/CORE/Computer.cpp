@@ -9,7 +9,7 @@ MCHEmul::Computer::Computer (MCHEmul::CPU* cpu, const MCHEmul::Chips& c,
 	: _cpu (cpu), _chips (c), _memory (m), _devices (d), _cyclesPerSecond (cs), _attributes (attrs),
 	  _exit (false), _debugLevel (MCHEmul::_DEBUGNOTHING),
 	  _lastError (MCHEmul::_NOERROR),
-	  _screen (nullptr), _inputOSSystem (nullptr)
+	  _screen (nullptr), _inputOSSystem (nullptr), _graphicalChip (nullptr)
 { 
 	assert (_cpu != nullptr);
 	assert (_memory != nullptr && _memory -> stack () != nullptr);
@@ -18,7 +18,15 @@ MCHEmul::Computer::Computer (MCHEmul::CPU* cpu, const MCHEmul::Chips& c,
 	_cpu -> setMemoryRef (_memory);
 
 	for (auto i : _chips)
+	{
+		if (_graphicalChip == nullptr)
+			_graphicalChip = dynamic_cast <MCHEmul::GraphicalChip*> (i.second);
+
 		i.second -> setMemoryRef (_memory);
+	}
+
+	// To define a graphical chip is mandatory...
+	assert (_graphicalChip != nullptr);
 
 	for (auto i : _devices)
 	{
@@ -32,6 +40,9 @@ MCHEmul::Computer::Computer (MCHEmul::CPU* cpu, const MCHEmul::Chips& c,
 
 	// These are mandatory...
 	assert (_screen != nullptr && _inputOSSystem != nullptr);
+
+	// Link video chip and screen...
+	_screen -> setGraphicalChip (_graphicalChip);
 }
 
 // ---
@@ -51,6 +62,14 @@ MCHEmul::Computer::~Computer ()
 // ---
 bool MCHEmul::Computer::initialize ()
 {
+	if (_screen == nullptr || _inputOSSystem == nullptr ||
+		_graphicalChip == nullptr)
+	{
+		_lastError = MCHEmul::_INIT_ERROR;
+
+		return (false);
+	}
+
 	if (!_cpu -> initialize ())
 	{
 		_lastError = MCHEmul::_INIT_ERROR;
@@ -75,17 +94,10 @@ bool MCHEmul::Computer::initialize ()
 		return (false);
 	}
 
-	if (_screen == nullptr || _inputOSSystem == nullptr)
-	{
-		_lastError = MCHEmul::_INIT_ERROR;
-
-		return (false);
-	}
-
 	bool resultIO = true;
 	for (auto i : devices ())
-		resultChips &= i.second -> initialize ();
-	if (!resultChips)
+		resultIO &= i.second -> initialize ();
+	if (!resultIO)
 	{
 		_lastError = MCHEmul::_INIT_ERROR;
 

@@ -66,9 +66,9 @@ namespace MCHEmul
 
 		// These methods rely in setValue and readValue defined as virtual later
 		// So, the way a final value can be read or set can be overload...
-		const UByte value (const Address& a) const;
+		UByte value (const Address& a) const;
 		void set (const Address& a, const UByte v, bool f = false /** To force even when it is a rom. */);
-		const UBytes values (const Address& a, size_t nB) const;
+		UBytes values (const Address& a, size_t nB) const;
 		void set (const Address& a, const UBytes& v, bool f = false);
 
 		/** It can be overloaded latr, to set the specific content of specific zones. */

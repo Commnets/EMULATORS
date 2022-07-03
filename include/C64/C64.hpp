@@ -26,8 +26,6 @@ namespace C64
 
 		Commodore64 (VisualSystem vS = VisualSystem::_PAL /** Europe initially */);
 
-		virtual bool initialize () override;
-
 		static const int _DDR_MEMORY		= 0;
 		static const int _IOP_MEMORY		= 1;
 		static const int _PAGEZERO_MEMORY	= 2;

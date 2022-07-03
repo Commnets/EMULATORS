@@ -71,7 +71,7 @@ bool MCHEmul::Memory::isIn (const MCHEmul::Address& a) const
 }
 
 // ---
-const MCHEmul::UByte MCHEmul::Memory::value (const MCHEmul::Address& a) const
+MCHEmul::UByte MCHEmul::Memory::value (const MCHEmul::Address& a) const
 {
 	if (!_active)
 		return (MCHEmul::UByte::_0);
@@ -124,7 +124,7 @@ void MCHEmul::Memory::set (const MCHEmul::Address& a, const MCHEmul::UByte v, bo
 }
 
 // ---
-const MCHEmul::UBytes MCHEmul::Memory::values (const MCHEmul::Address& a, size_t nB) const
+MCHEmul::UBytes MCHEmul::Memory::values (const MCHEmul::Address& a, size_t nB) const
 {
 	if (!_active)
 		return (MCHEmul::UBytes::_E);

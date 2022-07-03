@@ -90,6 +90,12 @@
     <ClCompile Include="..\..\src\CORE\global.cpp">
       <Filter>Archivos de origen</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\CORE\ScreenMemory.cpp">
+      <Filter>Archivos de origen\Motherboard</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\CORE\GraphicalChip.cpp">
+      <Filter>Archivos de origen\Motherboard</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\include\CORE\IO.hpp">
@@ -151,6 +157,12 @@
     </ClInclude>
     <ClInclude Include="..\..\include\CORE\incs.hpp">
       <Filter>Archivos de encabezado</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\CORE\ScreenMemory.hpp">
+      <Filter>Archivos de encabezado\Motherboard</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\CORE\GraphicalChip.hpp">
+      <Filter>Archivos de encabezado\Motherboard</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
