@@ -90,8 +90,8 @@ namespace C64
 		bool lightPenIRQActive () const
 							{ return (_lightPenIRQActive); }
 
-		unsigned short IRQRasterPositionAt () const
-							{ return (_IRQRasterPositionAt);  }
+		unsigned short IRQRasterLineAt () const
+							{ return (_IRQRasterLineAt);  }
 
 		const MCHEmul::Address& charMemory () const
 							{ return (_charMemory); }
@@ -102,10 +102,10 @@ namespace C64
 
 		// Managed from VICII Chip Emulator
 		// The VICII chip also uses this object as a temporary storage
-		unsigned short currentRasterPosition () const
-							{ return (_currentRasterPosition); }
-		void setCurrentRasterPosition (unsigned short rP)
-							{ _currentRasterPosition = rP; }
+		unsigned short currentRasterLine () const
+							{ return (_currentRasterLine); }
+		void setCurrentRasterLine (unsigned short rL)
+							{ _currentRasterLine = rL; }
 
 		unsigned short currentLightPenHorizontalPosition () const
 							{ return (_currentLightPenHorizontalPosition); }
@@ -114,10 +114,10 @@ namespace C64
 		void setCurrentLightPenPosition (unsigned char x, unsigned char y)
 							{ _currentLightPenHorizontalPosition = x; _currentLightPenVerticalPosition = y; }
 
-		bool rasterAtIRQPosition () const
-							{ return (_rasterAtIRQPosition); }
-		void setRasterAtPosition (bool rP)
-							{ _rasterAtIRQPosition = rP; }
+		bool rasterAtIRQLine () const
+							{ return (_rasterAtIRQLine); }
+		void setRasterAtLine (bool rL)
+							{ _rasterAtIRQLine = rL; }
 		bool spriteCollisionWithDataHappened () const
 							{ return (_spriteCollisionWithDataHappened); }
 		void setSpriteCollisionWithData (bool c)
@@ -178,7 +178,7 @@ namespace C64
 		bool _spriteCollisionsIRQActive;
 		bool _lightPenIRQActive;
 		/** Raster Control. */
-		unsigned short _IRQRasterPositionAt; // To define where to launch the IRQ. When reading therre is other variable...
+		unsigned short _IRQRasterLineAt; // To define where to launch the IRQ. When reading therre is other variable...
 		/** Location of the Graphical Memory. */
 		MCHEmul::Address _charMemory; // Info about the characters
 		MCHEmul::Address _screenMemory; // Where the characters to draw are
@@ -186,9 +186,9 @@ namespace C64
 
 		// Some of this variables are set by the emulation of the VICII
 		// The VICII chip also uses this object as a temporary storage
-		unsigned short _currentRasterPosition;
+		unsigned short _currentRasterLine;
 		unsigned short _currentLightPenHorizontalPosition, _currentLightPenVerticalPosition;
-		bool _rasterAtIRQPosition;
+		bool _rasterAtIRQLine;
 		bool _spriteCollisionWithDataHappened;
 		bool _spritesCollisionHappened; /** In general. */
 		std::vector <bool> _spriteCollisionHappened;

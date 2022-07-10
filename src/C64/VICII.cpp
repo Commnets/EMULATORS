@@ -3,14 +3,62 @@
 #include <F6500/incs.hpp>
 
 const MCHEmul::Address C64::VICII::_COLORMEMORY ({ 0xd8, 0x00 });
+const C64::VICII::RasterData C64::VICII_NTSC::_VRASTERDATA (27, 41, 51, 250, 12, 26, 262, 8);
+const C64::VICII::RasterData C64::VICII_NTSC::_HRASTERDATA (412, 488, 22, 342, 388, 411, 511, 16);
+const C64::VICII::RasterData C64::VICII_PAL::_VRASTERDATA (0, 16, 51, 250, 299, 311, 312, 8);
+const C64::VICII::RasterData C64::VICII_PAL::_HRASTERDATA (404, 480, 19, 338, 380, 403, 502, 16);
 
 // ---
-C64::VICII::VICII (const MCHEmul::Attributes& attrs)
+void C64::VICII::RasterData::reduceDisplayZone (bool s)
+{
+	if (_displayZoneReducted == s)
+		return; // If nothing changes, nothing to do...
+
+	if (_displayZoneReducted = s)
+	{
+		_firstDisplayPosition	+= (_positionsToReduce >> 1);
+		_lastDisplayPosition	-= (_positionsToReduce >> 1);
+	}
+	else
+	{
+		_firstDisplayPosition	-= (_positionsToReduce >> 1);
+		_lastDisplayPosition	+= (_positionsToReduce >> 1);
+	}
+}
+
+// ---
+bool C64::VICII::RasterData::next ()
+{
+	bool result = false;
+
+	_currentPosition++;
+
+	if (_currentPosition >= _maxPositions)
+		_currentPosition = 0;
+
+	if (toBase0 (_currentPosition) == 0)
+	{
+		_currentPosition = _firstPosition;
+
+		result = true;
+	}
+
+	return (result);
+}
+
+// ---
+C64::VICII::VICII (const C64::VICII::RasterData& vd, const C64::VICII::RasterData& hd, 
+		const MCHEmul::Attributes& attrs)
 	: MCHEmul::GraphicalChip (_ID, attrs),
-	  _VICIIRegisters (nullptr),
-	  _nextRasterCycle (0),
-	  _format (nullptr)
-{ 
+	  _raster (vd, hd),
+	  _lastCPUCycles (0),
+	  _format (nullptr),
+	  _graphicsCharCodeData (MCHEmul::UBytes::_E), 
+	  _graphicsCharData (MCHEmul::UBytes::_E), 
+	  _graphicsBitmapData (MCHEmul::UBytes::_E),
+	  _graphicsColorData (MCHEmul::UBytes::_E),
+	  _lastVBlankEntered (false)
+{
 	_format = SDL_AllocFormat (SDL_PIXELFORMAT_ARGB8888);
 }
 
@@ -37,69 +85,145 @@ bool C64::VICII::initialize ()
 		return (false);
 	}
 
+	_VICIIRegisters -> initialize ();
+
+	_raster.initialize ();
+
+	_lastCPUCycles = 0;
+
+	_graphicsCharCodeData = MCHEmul::UBytes::_E; 
+	_graphicsCharData = MCHEmul::UBytes::_E;
+	_graphicsBitmapData = MCHEmul::UBytes::_E;
+	_graphicsColorData = MCHEmul::UBytes::_E;
+
+	_lastVBlankEntered = false;
+
 	return (true);
 }
 
 // ---
 bool C64::VICII::simulate (MCHEmul::CPU* cpu)
 {
+	// Notice that the bad line detection routine takes into account 
+	// the value of the YSCROLL register as the graphics information to be shown 
+	// is loaded at the beginning of every bad line...
+	auto isBadRasterLine = [=]() -> bool
+		{ return (!_VICIIRegisters -> videoResetActive () && _raster.isInPotentialBadLine () && 
+			(_raster.currentLine () & 0x07 /** The three last bits. */) == _VICIIRegisters -> verticalScrollPosition ()); };
+
 	if (_VICIIRegisters -> vicIItoGenerateIRQ ())
 		cpu -> interrupt (F6500::IRQInterrupt::_ID) -> setActive (true);
 
-	if (cpu -> clockCycles  () <= _nextRasterCycle)
-		return (true);
+	// Rduce the visible zone if any... The info is passed to the raster!
+	_raster.reduceDisplayZone
+		(!_VICIIRegisters -> textDisplay25RowsActive (), !_VICIIRegisters -> textDisplay40ColumnsActive ());
 
-	auto isBadRasterLine = [=]() -> bool
-		{ return (_VICIIRegisters -> currentRasterPosition () >= 0x0030 &&
-				  _VICIIRegisters -> currentRasterPosition () <= 0x007f &&
-				  (_VICIIRegisters -> currentRasterPosition () & 0x0007) == 9); };
-
-	if (_VICIIRegisters -> rasterIRQActive () && 
-		_VICIIRegisters -> currentRasterPosition () == _VICIIRegisters -> IRQRasterPositionAt ())
+	for (size_t i = (cpu -> clockCycles  () - _lastCPUCycles); i > 0 ; i--)
 	{
-		_VICIIRegisters -> setRasterAtPosition (true);
-
-		cpu -> interrupt (F6500::IRQInterrupt::_ID) -> setActive (true);
-	}
-
-	if (_VICIIRegisters -> currentRasterPosition () >= _RASTERFIRSTVISIBLELINE &&
-		_VICIIRegisters -> currentRasterPosition () < _RASTERLASTVISIBLELINE)
-	{
-		screenMemory () -> setHorizontalLine (0, 
-			(size_t) (_VICIIRegisters -> currentRasterPosition () - _RASTERFIRSTVISIBLELINE), 
-				(size_t) _SCREENVISIBLECOLUMNS, _VICIIRegisters -> borderColor ());
-
-		switch (_VICIIRegisters -> graphicModeActive ())
+		if (_raster.isAtBeginningLine ())
 		{
-			case C64::VICIIRegisters::GraphicMode::_CHARMODE:
-			case C64::VICIIRegisters::GraphicMode::_MULTICOLORCHARMODE:
-				drawRasterCharMode ();
-				break;
+			if (isBadRasterLine () /** @see definition above. */)
+			{
+				// This is not exactly what VICII does, but it could be a good aproximation...
+				// Not all graphic info is read actually at th beginning of a bad line, only video and color matrix...
+				// The rest of the info is read in further cycles depending on the type of graphic mode
+				readGraphicsInfo ();
 
-			case C64::VICIIRegisters::GraphicMode::_BITMAPMODE:
-			case C64::VICIIRegisters::GraphicMode::_MULTICOLORBITMAPMODE:
-				drawRasterBitmapMode ();
-				break;
+				cpu -> addClockCycles (_CPUCYCLESWHENEADGRAPHS); // The cost of reading in terms of cycles...
+																 // This will slow down for a while later the cpu, 
+																 // that is what actually should happen!
+			}
 
-			default:
-				return (false);
-				break;
+			if (_VICIIRegisters -> rasterIRQActive () && 
+				_raster.currentLine () == _VICIIRegisters -> IRQRasterLineAt ())
+			{
+				_VICIIRegisters -> setRasterAtLine (true);
+
+				cpu -> interrupt (F6500::IRQInterrupt::_ID) -> setActive (true);
+			}
 		}
 
-		drawRasterSprites ();
+		if (_raster.isInVisibleZone ())
+		{
+			unsigned short x,y;
+			_raster.currentVisiblePosition (x, y);
+			screenMemory () -> setPixel (x, y, _VICIIRegisters -> borderColor ());
+
+			if (_raster.isInDisplayZone () && 
+				!_VICIIRegisters -> videoResetActive ())
+			{
+				drawGraphics ();
+
+				drawSprites ();
+			}
+		}
+
+		_raster.next ();
+
+		if (_raster.isInLastVBlank ())
+		{
+			if (!_lastVBlankEntered)
+				setGraphicsReady (_lastVBlankEntered = true); // The limit of the visible screen has been reached!
+		}
+		else
+			_lastVBlankEntered = false;
 	}
 
-	_nextRasterCycle += isBadRasterLine () ? _BADLINERASTERCYCLES : _USUALRASTERCYCLES;
+	// It might have been incremented after reading graphics...
+	_lastCPUCycles = cpu -> clockCycles (); 
 
-	_VICIIRegisters -> setCurrentRasterPosition (_VICIIRegisters -> currentRasterPosition () + 1);
-	if (_VICIIRegisters -> currentRasterPosition () >= _RASTERLINES)
-	{
-		setGraphicsReady (true); // The limit of the visible screen has been reached!
-
-		_VICIIRegisters -> setCurrentRasterPosition (0);
-	}
+	// To store back th info in the VIC Registers...
+	_VICIIRegisters -> setCurrentRasterLine (_raster.currentLine ()); 
 
 	return (true);
+}
+
+// ---
+void C64::VICII::readGraphicsInfo ()
+{
+	unsigned short graphLine = _raster.currentLine () - _raster._FIRSTBADLINE;
+	unsigned short chrLine = graphLine >> 3;
+
+	_graphicsCharCodeData	= readCharCodeDataAt (chrLine);
+	_graphicsCharData		= readCharDataFor (_graphicsCharCodeData);
+	_graphicsBitmapData		= readBitmapDataAt (graphLine);
+	_graphicsColorData		= readColorDataAt (chrLine);
+}
+
+// ---
+void C64::VICII::drawGraphics ()
+{
+	switch (_VICIIRegisters -> graphicModeActive ())
+	{
+		case C64::VICIIRegisters::GraphicMode::_CHARMODE:
+		case C64::VICIIRegisters::GraphicMode::_MULTICOLORCHARMODE:
+			drawCharMode ();
+			break;
+	
+		case C64::VICIIRegisters::GraphicMode::_BITMAPMODE:
+		case C64::VICIIRegisters::GraphicMode::_MULTICOLORBITMAPMODE:
+			drawBitMapMode ();
+			break;
+	
+		default:
+			// Graphic mode not supported...yet
+			break;
+	}
+}
+
+// ---
+void C64::VICII::drawCharMode ()
+{
+}
+
+// ---
+void C64::VICII::drawBitMapMode ()
+{
+}
+
+// ---
+void C64::VICII::drawSprites ()
+{
 }
 
 // ---
@@ -123,131 +247,52 @@ MCHEmul::ScreenMemory* C64::VICII::createScreenMemory ()
 	cP [14] = SDL_MapRGB (_format, 0xaa, 0x9d, 0xef);
 	cP [15] = SDL_MapRGB (_format, 0xb8, 0xb8, 0xb8);
 
-	return (new MCHEmul::ScreenMemory (_SCREENCOLUMNS, _RASTERLINES, cP));
+	return (new MCHEmul::ScreenMemory (_raster.visibleColumns (), _raster.visibleLines (), cP));
 }
 
 // ---
-void C64::VICII::drawRasterCharMode ()
+MCHEmul::UBytes C64::VICII::readCharDataFor (const MCHEmul::UBytes& chrs) const
 {
-	// If the raster line is not in the screen zone dedicated to the graphics
-	// or it is activated the flag for not to draw anything in that zone,
-	// there is nothing else to do...
-	if (_VICIIRegisters -> currentRasterPosition () < _RASTERFIRSTGRAPHLINE ||
-		_VICIIRegisters -> currentRasterPosition () >= _RASTERLASTGRAPHLINE ||
-		_VICIIRegisters -> screenSameColorBorderActive ())
-		return;
+	std::vector <MCHEmul::UByte> dt;
 
-	unsigned short y = _VICIIRegisters -> currentRasterPosition () - _RASTERFIRSTVISIBLELINE;
-
-	// Draws the background by default...
-	screenMemory () -> setHorizontalLine 
-		(_SCREENFIRSTGRAPHCOLUMN, y, _GRAPHBITMAPCOLUMNS, _VICIIRegisters -> backgroundColor ());
-
-	// Then draws the information of the characters in the current raster line...
-	for (unsigned short c = 0; c < _GRAPHCHARCOLUMNS; c++)
+	for (auto i : chrs.values ())
 	{
-		if (!_VICIIRegisters -> textDisplay40ColumnsActive () &&
-			(c == 0 || c == (_GRAPHCHARCOLUMNS - 1)))
-				continue; // Nothing to do when the column is not visible...
-
-		unsigned short x = _SCREENFIRSTGRAPHCOLUMN + (c << 3);
-
-		// The info to draw...
-		unsigned short screenRow	= // Which screen memory row has the character to be drawn?
-			(_VICIIRegisters -> currentRasterPosition () - _RASTERFIRSTGRAPHLINE) >> 3; 
-		unsigned short charDefRow	= // Which offset memory location has the definition of the character to be drawn?
-			(_VICIIRegisters -> currentRasterPosition () - _RASTERFIRSTGRAPHLINE) % 8;
-		MCHEmul::UByte chr		= getScreenCharCode (c, screenRow); // The character to draw
-		MCHEmul::UByte clr		= getScreenCharColor (c, screenRow); // Its color
-		MCHEmul::UByte chrDt	= getCharData (chr.value (), charDefRow); // The byte defining the character at the raster line
-
-		// Finally draw it...
-		if (_VICIIRegisters -> graphicModeActive () == C64::VICIIRegisters::GraphicMode::_MULTICOLORCHARMODE && clr.bit (3))
-			drawMultiColorChar (x, y, chrDt, (clr.value () & 0x7));
-		else
-			drawChar (x, y, chrDt, clr.value ());
+		std::vector <MCHEmul::UByte> chrDt = memoryRef () -> values 
+			(_VICIIRegisters -> charMemory () /** The key. */ + (size_t) (i.value () << 3), 8).values ();
+		dt.insert (dt.end (), chrDt.begin (), chrDt.end ());
 	}
+
+	return (MCHEmul::UBytes (dt));
 }
 
 // ---
-void C64::VICII::drawRasterBitmapMode ()
+MCHEmul::UBytes C64::VICII::readBitmapDataAt (unsigned short l) const
 {
-}
+	std::vector <MCHEmul::UByte> dt;
 
-// ---
-void C64::VICII::drawRasterSprites ()
-{
-}
-
-// ---
-void C64::VICII::drawChar (unsigned short x, unsigned short y, MCHEmul::UByte dt, unsigned int c)
-{
-	for(unsigned int i = 0; i < 8; i++)
+	unsigned short cL = l * _GRAPHMAXCHARCOLUMNS;
+	for (unsigned short i = 0; i < _GRAPHMAXCHARCOLUMNS; i++)
 	{
-		unsigned short xoffs = x + 8 - i + _VICIIRegisters -> horizontalScrollPosition ();
-		if (xoffs < (_SCREENFIRSTGRAPHCOLUMN + _GRAPHBITMAPCOLUMNS) && dt.bit (i))
-			screenMemory () -> setPixel ((size_t) xoffs, (size_t) y, c);
+		std::vector <MCHEmul::UByte> btDt = 
+			memoryRef () -> values (_VICIIRegisters -> bitmapMemory () + (size_t) (cL + (i << 3)), 8).values ();
+		dt.insert (dt.end (), btDt.begin (), btDt.end ());
 	}
+
+	return (MCHEmul::UBytes (dt));
 }
 
 // ---
-void C64::VICII::drawMultiColorChar (unsigned short x, unsigned short y, MCHEmul::UByte dt, unsigned int c)
+MCHEmul::UBytes C64::VICII::readSpriteDataAt (unsigned short l) const
 {
-	for(unsigned int i = 0 ; i < 4; i++)
-	{
-		unsigned short fc;
-		unsigned char cs = ((dt.value () >> (i << 1)) & 0x03);
-		switch (cs)
-		{
-			case 0:
-				fc = _VICIIRegisters -> backgroundColor (0); 
-				break;
-		
-			case 1:
-				fc = _VICIIRegisters -> backgroundColor (1); 
-				break;
+	// TODO
 
-			case 2:
-				fc = _VICIIRegisters -> backgroundColor (2); 
-				break;
-
-			case 3:
-			default:
-				fc = c;
-				break;
-		}
-
-		unsigned short xoffs = x + 8 - (i << 1) + _VICIIRegisters -> horizontalScrollPosition ();
-		if (xoffs < (_SCREENFIRSTGRAPHCOLUMN + _GRAPHBITMAPCOLUMNS))
-			screenMemory () -> setPixel ((size_t) xoffs, (size_t) y, c);
-		if ((xoffs + 1) < (_SCREENFIRSTGRAPHCOLUMN + _GRAPHBITMAPCOLUMNS))
-			screenMemory () -> setPixel ((size_t) (xoffs + 1), (size_t) y, c);
-	}
-}
-
-// ---
-void C64::VICII::drawBitMap (unsigned short x, unsigned short y, MCHEmul::UByte dt, unsigned int c)
-{
-}
-
-// ---
-void C64::VICII::drawMultiColorBitMap (unsigned short x, unsigned short y, MCHEmul::UByte dt, unsigned int c)
-{
-}
-
-// ---
-void C64::VICII::drawSprite (unsigned short x, unsigned short y, size_t s, unsigned short row)
-{
-}
-
-// ---
-void C64::VICII::drawMultiColorSprite (unsigned short x, unsigned short y, size_t s, unsigned short row)
-{
+	return (MCHEmul::UBytes::_E);
 }
 
 // ---
 C64::VICII_NTSC::VICII_NTSC ()
 	: C64::VICII (
+		 _VRASTERDATA, _HRASTERDATA,
 		 { { "Name", "VIC-II (NTSC) Video Chip Interface II" },
 		   { "Code", "6567/8562/8564" },
 		   { "Manufacturer", "MOS Technology INC/Commodore Semiconductor Group (CBM)"},
@@ -259,6 +304,7 @@ C64::VICII_NTSC::VICII_NTSC ()
 // ---
 C64::VICII_PAL::VICII_PAL ()
 	: C64::VICII (
+		 _VRASTERDATA, _HRASTERDATA,
 		 { { "Name", "VIC-II (PAL) Video Chip Interface II" },
 		   { "Code", "6569/8565/8566" },
 		   { "Manufacturer", "MOS Technology INC/Commodore Semiconductor Group (CBM)"},

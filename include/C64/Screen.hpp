@@ -15,23 +15,23 @@
 #define __C64_SCREEN__
 
 #include <CORE/incs.hpp>
+#include <C64/VICII.hpp>
 
 namespace C64
 {
-	class VICII;
-
 	class Screen : public MCHEmul::Screen
 	{
 		public:
 		static const int _ID = 1;
-		Screen (double hz, const MCHEmul::Attributes& attrs = { });
+		Screen (double hz, int w, int h, const MCHEmul::Attributes& attrs = { });
 	};
 
 	class ScreenNTSC final : public Screen
 	{
 		public:
 		ScreenNTSC ()
-			: Screen (59.940f)
+			: Screen (59.940f, 
+				(int) VICII_NTSC::_HRASTERDATA.visiblePositions (), (int) VICII_NTSC::_VRASTERDATA.visiblePositions ())
 							{ }
 	};
 
@@ -39,7 +39,8 @@ namespace C64
 	{
 		public:
 		ScreenPAL ()
-			: Screen (50.125f)
+			: Screen (50.125f,
+				(int) VICII_PAL::_HRASTERDATA.visiblePositions (), (int) VICII_PAL::_VRASTERDATA.visiblePositions ())
 							{ }
 	};
 }

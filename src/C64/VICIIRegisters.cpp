@@ -28,15 +28,15 @@ C64::VICIIRegisters::VICIIRegisters ()
 	  _spriteCollisionWithDataIRQActive (false),
 	  _spriteCollisionsIRQActive (false),
 	  _lightPenIRQActive (false),
-	  _IRQRasterPositionAt (0x00),
+	  _IRQRasterLineAt (0x00),
 	  _charMemory (MCHEmul::Address ({ 0xd0, 0x00 })),
 	  _screenMemory (MCHEmul::Address ({ 0x10, 0x00 })),
 	  _bitmapMemory (MCHEmul::Address ({ 0xdd, 0x00 })),
 	  // Used when reading and for VICII to kep internal values...
-	  _currentRasterPosition (0x0000), 
+	  _currentRasterLine (0x0000), 
 	  _currentLightPenHorizontalPosition (0x0000), 
 	  _currentLightPenVerticalPosition (0x0000),
-	  _rasterAtIRQPosition (false), 
+	  _rasterAtIRQLine (false), 
 	  _spriteCollisionWithDataHappened (false), 
 	  _spritesCollisionHappened (false), 
 	  _spriteCollisionHappened (8, false), 
@@ -91,13 +91,13 @@ void C64::VICIIRegisters::setValue (size_t p, const MCHEmul::UByte& v)
 			_screenSameColorBorderActive = v.bit (4);
 			_graphicBitModeActive = v.bit (5);
 			_graphicExtendedColorTextModeActive = v.bit (6);
-			_IRQRasterPositionAt = (_IRQRasterPositionAt & 0x00ff) | (v.bit (7) ? 0x0100 : 0x0000); // The MSB of the raster position
+			_IRQRasterLineAt = (_IRQRasterLineAt & 0x00ff) | (v.bit (7) ? 0x0100 : 0x0000); // The MSB of the raster position
 			setGraphicModeActive ();
 			break;
 
 		// RASTER: Write to compare with raster IRQ
 		case 0x12:
-			_IRQRasterPositionAt = (unsigned short) v.value () | (_IRQRasterPositionAt & 0x0100);
+			_IRQRasterLineAt = (unsigned short) v.value () | (_IRQRasterLineAt & 0x0100);
 			break;
 
 		// LPENX/LPENY: Light Pen Horizontal/Vertical Positions (it must be multiplied by 2 after read)
@@ -259,7 +259,6 @@ MCHEmul::UByte C64::VICIIRegisters::readValue (size_t p) const
 		case 0xd:
 		case 0xf:
 		case 0x10:
-		case 0x12:
 		case 0x15:
 		case 0x17:
 		case 0x18:
@@ -289,7 +288,12 @@ MCHEmul::UByte C64::VICIIRegisters::readValue (size_t p) const
 		// Just to consider that when reading the raster MSB bit shows where the raster is now
 		case 0x11:
 			result = MCHEmul::UByte 
-				((MCHEmul::Memory::readValue (pp).value () & 0x7f) | ((_currentRasterPosition & 0xff00) != 0) ? 0x80 : 0x00);
+				((MCHEmul::Memory::readValue (pp).value () & 0x7f) | ((_currentRasterLine & 0xff00) != 0) ? 0x80 : 0x00);
+			break;
+
+		// RASTER: When reading get the current raster postion (except the MSB that is in the previous)
+		case 0x12:
+			result = MCHEmul::UByte ((unsigned char) _currentRasterLine & 0x00ff);
 			break;
 
 		// LPENX: Light Pen Horizontal Position
@@ -310,7 +314,7 @@ MCHEmul::UByte C64::VICIIRegisters::readValue (size_t p) const
 		// VICIRQ: VIC Interrrupt Flag Register
 		case 0x19:
 			result = MCHEmul::UByte::_0;
-			result.setBit (0, _rasterAtIRQPosition);
+			result.setBit (0, _rasterAtIRQLine);
 			result.setBit (1, _spriteCollisionWithDataHappened);
 			result.setBit (2, _spritesCollisionHappened);
 			result.setBit (3, _lightPenOnScreenHappened);
