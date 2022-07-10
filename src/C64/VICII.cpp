@@ -3,10 +3,41 @@
 #include <F6500/incs.hpp>
 
 const MCHEmul::Address C64::VICII::_COLORMEMORY ({ 0xd8, 0x00 });
-const C64::VICII::RasterData C64::VICII_NTSC::_VRASTERDATA (27, 41, 51, 250, 12, 26, 262, 8);
-const C64::VICII::RasterData C64::VICII_NTSC::_HRASTERDATA (412, 488, 22, 342, 388, 411, 511, 16);
-const C64::VICII::RasterData C64::VICII_PAL::_VRASTERDATA (0, 16, 51, 250, 299, 311, 312, 8);
-const C64::VICII::RasterData C64::VICII_PAL::_HRASTERDATA (404, 480, 19, 338, 380, 403, 502, 16);
+const C64::VICII::RasterData C64::VICII_NTSC::_VRASTERDATA (27, 41, 51, 250, 12, 26, 262, 4, 4);
+const C64::VICII::RasterData C64::VICII_NTSC::_HRASTERDATA (412, 488, 24, 343, 388, 411, 512, 7, 9);
+const C64::VICII::RasterData C64::VICII_PAL::_VRASTERDATA (0, 16, 51, 250, 299, 311, 312, 4, 4);
+const C64::VICII::RasterData C64::VICII_PAL::_HRASTERDATA (404, 480, 24, 343, 380, 403, 504, 7, 9);
+
+// ---
+C64::VICII::RasterData::RasterData (
+	unsigned short fp,
+	unsigned short fvp,
+	unsigned short fdp,
+	unsigned short ldp,
+	unsigned short lvp,
+	unsigned short lp,
+	unsigned short mp,
+	unsigned short pr1,
+	unsigned short pr2
+					  )
+				: _firstPosition (fp), _firstVisiblePosition (fvp), _firstDisplayPosition (fdp),
+				  _lastDisplayPosition (ldp), _lastVisiblePosition (lvp), _lastPosition (lp),
+				  _maxPositions (mp),
+				  _positionsToReduce1 (pr1), _positionsToReduce2 (pr2),
+				  _currentPosition (fp),
+				  _displayZoneReducted (false)
+{
+	_firstPosition_0		= toBase0 (_firstPosition);
+	_firstVisiblePosition_0 = toBase0 (_firstVisiblePosition);
+	_firstDisplayPosition_0 = toBase0 (_firstDisplayPosition);
+	_lastDisplayPosition_0	= toBase0 (_lastDisplayPosition);
+	_lastVisiblePosition_0	= toBase0 (_lastVisiblePosition);
+	_lastPosition_0			= toBase0 (_lastPosition);
+
+	_currentPosition_0		= toBase0 (_currentPosition_0);
+
+	assert (_lastPosition_0 == (_maxPositions - 1));
+}
 
 // ---
 void C64::VICII::RasterData::reduceDisplayZone (bool s)
@@ -16,32 +47,33 @@ void C64::VICII::RasterData::reduceDisplayZone (bool s)
 
 	if (_displayZoneReducted = s)
 	{
-		_firstDisplayPosition	+= (_positionsToReduce >> 1);
-		_lastDisplayPosition	-= (_positionsToReduce >> 1);
+		_firstDisplayPosition	+= _positionsToReduce1;
+		_lastDisplayPosition	-= _positionsToReduce2;
 	}
 	else
 	{
-		_firstDisplayPosition	-= (_positionsToReduce >> 1);
-		_lastDisplayPosition	+= (_positionsToReduce >> 1);
+		_firstDisplayPosition	-= _positionsToReduce1;
+		_lastDisplayPosition	+= _positionsToReduce2;
 	}
 }
 
 // ---
-bool C64::VICII::RasterData::next ()
+bool C64::VICII::RasterData::add (unsigned short i)
 {
 	bool result = false;
 
-	_currentPosition++;
+	int cP = (int) _currentPosition_0;
+	cP += i; // Can move to the next (o nexts) lines...
+	if (result = (cP >= (int) _maxPositions))
+		while (cP >= (int) _maxPositions)
+			cP -= (int) _maxPositions;
 
-	if (_currentPosition >= _maxPositions)
-		_currentPosition = 0;
+	cP += (int) _firstPosition;
+	if (cP >= (int) _maxPositions)
+		cP -= (int) _maxPositions;
 
-	if (toBase0 (_currentPosition) == 0)
-	{
-		_currentPosition = _firstPosition;
-
-		result = true;
-	}
+	_currentPosition = (unsigned short) cP;
+	_currentPosition_0 = toBase0 (_currentPosition);
 
 	return (result);
 }
@@ -57,6 +89,7 @@ C64::VICII::VICII (const C64::VICII::RasterData& vd, const C64::VICII::RasterDat
 	  _graphicsCharData (MCHEmul::UBytes::_E), 
 	  _graphicsBitmapData (MCHEmul::UBytes::_E),
 	  _graphicsColorData (MCHEmul::UBytes::_E),
+	  _isNewRasterLine (false),
 	  _lastVBlankEntered (false)
 {
 	_format = SDL_AllocFormat (SDL_PIXELFORMAT_ARGB8888);
@@ -96,6 +129,8 @@ bool C64::VICII::initialize ()
 	_graphicsBitmapData = MCHEmul::UBytes::_E;
 	_graphicsColorData = MCHEmul::UBytes::_E;
 
+	_isNewRasterLine = true; // The first...
+
 	_lastVBlankEntered = false;
 
 	return (true);
@@ -120,7 +155,7 @@ bool C64::VICII::simulate (MCHEmul::CPU* cpu)
 
 	for (size_t i = (cpu -> clockCycles  () - _lastCPUCycles); i > 0 ; i--)
 	{
-		if (_raster.isAtBeginningLine ())
+		if (_isNewRasterLine)
 		{
 			if (isBadRasterLine () /** @see definition above. */)
 			{
@@ -141,24 +176,30 @@ bool C64::VICII::simulate (MCHEmul::CPU* cpu)
 
 				cpu -> interrupt (F6500::IRQInterrupt::_ID) -> setActive (true);
 			}
+
+			_isNewRasterLine = false;
 		}
 
 		if (_raster.isInVisibleZone ())
 		{
-			unsigned short x,y;
-			_raster.currentVisiblePosition (x, y);
-			screenMemory () -> setPixel (x, y, _VICIIRegisters -> borderColor ());
+			unsigned short r, c;
+			_raster.currentVisiblePosition (c, r); c = (c >> 3) << 3; // To adjust the colum to a byte size...
+			screenMemory () -> setHorizontalLine ((size_t) c, (size_t) r, 
+				(c + 8) > _raster.visibleColumns () ? (_raster.visibleColumns () - c) : 8, _VICIIRegisters -> borderColor ());
 
 			if (_raster.isInDisplayZone () && 
 				!_VICIIRegisters -> videoResetActive ())
 			{
-				drawGraphics ();
+				screenMemory () -> setHorizontalLine ((size_t) c, (size_t) r, 
+					(c + 8) > _raster.visibleColumns () ? (_raster.visibleColumns () - c) : 8, _VICIIRegisters -> backgroundColor ());
 
-				drawSprites ();
+				drawGraphics (c, r);
+
+				drawSprites (c, r);
 			}
 		}
 
-		_raster.next ();
+		_isNewRasterLine = _raster.moveCycles (1); // 1 cyclw = 8 columns horizontal = 8 pixels...
 
 		if (_raster.isInLastVBlank ())
 		{
@@ -191,18 +232,18 @@ void C64::VICII::readGraphicsInfo ()
 }
 
 // ---
-void C64::VICII::drawGraphics ()
+void C64::VICII::drawGraphics (unsigned short r, unsigned short c)
 {
 	switch (_VICIIRegisters -> graphicModeActive ())
 	{
 		case C64::VICIIRegisters::GraphicMode::_CHARMODE:
 		case C64::VICIIRegisters::GraphicMode::_MULTICOLORCHARMODE:
-			drawCharMode ();
+			drawGraphicsCharMode (r, c);
 			break;
 	
 		case C64::VICIIRegisters::GraphicMode::_BITMAPMODE:
 		case C64::VICIIRegisters::GraphicMode::_MULTICOLORBITMAPMODE:
-			drawBitMapMode ();
+			drawGraphicsBitMapMode (r, c);
 			break;
 	
 		default:
@@ -212,17 +253,7 @@ void C64::VICII::drawGraphics ()
 }
 
 // ---
-void C64::VICII::drawCharMode ()
-{
-}
-
-// ---
-void C64::VICII::drawBitMapMode ()
-{
-}
-
-// ---
-void C64::VICII::drawSprites ()
+void C64::VICII::drawSprites (unsigned short r, unsigned short c)
 {
 }
 
@@ -287,6 +318,18 @@ MCHEmul::UBytes C64::VICII::readSpriteDataAt (unsigned short l) const
 	// TODO
 
 	return (MCHEmul::UBytes::_E);
+}
+
+// ---
+void C64::VICII::drawGraphicsCharMode (unsigned short r, unsigned short c)
+{
+	// TODO
+}
+
+// ---
+void C64::VICII::drawGraphicsBitMapMode (unsigned short r, unsigned short c)
+{
+	// TODO
 }
 
 // ---

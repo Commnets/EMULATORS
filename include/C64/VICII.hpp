@@ -37,15 +37,9 @@ namespace C64
 						unsigned short lvp,		// Last Visible position
 						unsigned short lp,		// Last position
 						unsigned short mp,		// Maximum positions
-						unsigned short pr		// Positions to reduce in the visible zone (if set)
-					  )
-				: _firstPosition (fp), _firstVisiblePosition (fvp), _firstDisplayPosition (fdp),
-				  _lastDisplayPosition (ldp), _lastVisiblePosition (lvp), _lastPosition (lp),
-				  _maxPositions (mp),
-				  _positionsToReduce (pr),
-				  _currentPosition (fp),
-				  _displayZoneReducted (false)
-							{ }
+						unsigned short pr1,		// Positions to reduce in the visible zone 1 & 2
+						unsigned short pr2
+					  );
 
 			RasterData (const RasterData&) = default;
 
@@ -54,37 +48,37 @@ namespace C64
 			unsigned short currentPosition () const
 							{ return (_currentPosition); }
 			unsigned short currentPositionAtBase0 () const
-							{ return (toBase0 (_currentPosition)); }
-
-			bool isAtInitialPosition () const
-							{ return (_currentPosition == _firstPosition); }
+							{ return (_currentPosition_0); }
 
 			bool isInBlankZone () const
-							{ unsigned short cP = toBase0 (_currentPosition); 
-								return ((cP >= toBase0 (_firstPosition) && cP < toBase0 (_firstVisiblePosition)) ||
-										(cP > toBase0 (_lastVisiblePosition) && cP < toBase0 (_maxPositions))); }
+							{ return ((_currentPosition_0 >= _firstPosition_0 && 
+											_currentPosition_0 < _firstVisiblePosition_0) ||
+									  (_currentPosition_0 > _lastVisiblePosition_0 && 
+											_currentPosition_0 <= _lastPosition_0)); }
 			bool isInLastBlankZone () const
-							{ unsigned short cP = toBase0 (_currentPosition); 
-								return (cP > toBase0 (_lastVisiblePosition) && cP < toBase0 (_maxPositions)); }
+							{ return (_currentPosition_0 > _lastVisiblePosition_0 && 
+									  _currentPosition_0 <= _lastPosition_0); }
 			bool isInVisibleZone () const
-							{ unsigned short cP = toBase0 (_currentPosition); 
-								return ((cP >= toBase0 (_firstVisiblePosition) && cP <= toBase0 (_lastVisiblePosition))); }
+							{ return ((_currentPosition_0 >= _firstVisiblePosition_0 && 
+									   _currentPosition_0 <= _lastVisiblePosition_0)); }
 			unsigned short currentVisiblePosition () const
-							{ return (toBase0 (_currentPosition) - toBase0 (_firstVisiblePosition)); }
+							{ return (_currentPosition_0 - _firstVisiblePosition_0); }
 			bool isInDisplayZone () const
-							{ unsigned short cP = toBase0 (_currentPosition); 
-								return (cP >= toBase0 (_firstDisplayPosition) && cP <= toBase0 (_lastDisplayPosition)); }
+							{ return (_currentPosition_0 >= _firstDisplayPosition_0 && 
+									  _currentPosition_0 <= _lastDisplayPosition_0); }
 			unsigned short currentDisplayPosition () const
 							{ return (toBase0 (_currentPosition) - toBase0 (_firstDisplayPosition)); }
 
 			unsigned short visiblePositions () const
-							{ return (toBase0 (_lastVisiblePosition) - toBase0 (_firstVisiblePosition) + 1); }
+							{ return (_lastVisiblePosition_0 - _firstVisiblePosition_0 + 1); }
 			unsigned short displayPositions () const
-							{ return (toBase0 (_lastDisplayPosition) - toBase0 (_firstDisplayPosition) + 1); }
+							{ return (_lastDisplayPosition_0 - _firstDisplayPosition_0 + 1); }
 
-			/** Returns true when the final value has been reached, 
-				and it starts to count back. */
-			bool next ();
+			/** Returns true when the limit of the raster is reached. 
+				The parameter is the number of positions to increment the rasterData. */
+			bool add (unsigned short i);
+			bool next ()
+							{ return (add (1)); }
 
 			/** The display zone will reduced in both sides by half of the _positionsToReduce value. */
 			void reduceDisplayZone (bool s);
@@ -92,7 +86,7 @@ namespace C64
 							{ return (_displayZoneReducted); }
 
 			void initialize ()
-							{ _currentPosition = _firstPosition; }
+							{ _currentPosition = _firstPosition; _currentPosition_0 = _firstPosition_0; }
 
 			protected:
 			/** Internal method used return a value considering the firrst position as 0. */
@@ -108,10 +102,21 @@ namespace C64
 			const unsigned short _lastVisiblePosition = 0;
 			const unsigned short _lastPosition = 0;
 			const unsigned short _maxPositions = 0;
-			const unsigned short _positionsToReduce = 0;
+			const unsigned short _positionsToReduce1 = 0;
+			const unsigned short _positionsToReduce2 = 0;
+
+			// Implementation
+			// To speeed up calculus...
+			unsigned short _firstPosition_0; 
+			unsigned short _firstVisiblePosition_0;
+			unsigned short _firstDisplayPosition_0; 
+			unsigned short _lastDisplayPosition_0;
+			unsigned short _lastVisiblePosition_0;
+			unsigned short _lastPosition_0;
 
 			// Implementation
 			unsigned short _currentPosition;
+			unsigned short _currentPosition_0;
 			bool _displayZoneReducted;
 		};
 
@@ -151,11 +156,6 @@ namespace C64
 			unsigned short currentColumnAtBase0 () const
 							{ return (_hRasterData.currentPositionAtBase0 ()); }
 
-			bool isAtBeginning () 
-							{ return (_hRasterData.isAtInitialPosition () && _vRasterData.isAtInitialPosition ()); }
-			bool isAtBeginningLine ()
-							{ return (_hRasterData.isAtInitialPosition ()); }
-
 			/** This method is not complete. It would have to consider 
 				the position of the vertical scroll and also whether the display is or not disconnected. */
 			bool isInPotentialBadLine () const
@@ -172,6 +172,7 @@ namespace C64
 							{ x = _hRasterData.currentVisiblePosition (); y = _vRasterData.currentVisiblePosition (); }
 			bool isInDisplayZone () const
 							{ return (_vRasterData.isInDisplayZone () && _hRasterData.isInDisplayZone ()); }
+
 			void currentDisplayPosition (unsigned short& x, unsigned short& y)
 							{ x = _hRasterData.currentDisplayPosition (); y = _vRasterData.currentDisplayPosition (); }
 
@@ -183,9 +184,12 @@ namespace C64
 			void reduceDisplayZone (bool v, bool h)
 							{ _vRasterData.reduceDisplayZone (v); _hRasterData.reduceDisplayZone (h); }
 			
-			/** Returns true when the raster goes to the next line. */
-			bool next ()
-							{ return (_hRasterData.next () ? _vRasterData.next () : false); }
+			/** Returns true when the raster goes to the next line. 
+				The Parameter is the number of cycles to move the raster. */
+			bool moveCycles (unsigned short nC)
+							{ bool result = _hRasterData.add (nC * 8 /** columuns = piexels per cycle. */);
+							  if (result) _vRasterData.next (); 
+							  return (result); }
 
 			void initialize ()
 							{ _vRasterData.initialize (); _hRasterData.initialize (); }
@@ -220,10 +224,11 @@ namespace C64
 		private:
 		/** To read the graphics info. */
 		void readGraphicsInfo ();
+
 		/** To draw the graphics. */
-		void drawGraphics ();
+		void drawGraphics (unsigned short r, unsigned short c);
 		/** To draw the sprites. */
-		void drawSprites ();
+		void drawSprites (unsigned short r, unsigned short c);
 
 		/** Invoked from initialize to create the right screen memory. \n
 			It also creates the Palette used by CBM 64 (_format variable). */
@@ -248,11 +253,11 @@ namespace C64
 		/** The value received is the number of sprite to be drawn. */
 		MCHEmul::UBytes readSpriteDataAt (unsigned short l) const;
 
-		// Draw
+		// Draw the graphics in detail...
 		/** Draw the char mode. */
-		void drawCharMode ();
+		void drawGraphicsCharMode (unsigned short r, unsigned short c);
 		/** Draw the bitmap mode. */
-		void drawBitMapMode ();
+		void drawGraphicsBitMapMode (unsigned short r, unsigned short c);
 
 		private:
 		/** The memory is used also as the set of registers of the chip. */
@@ -271,6 +276,8 @@ namespace C64
 		MCHEmul::UBytes _graphicsCharData;
 		MCHEmul::UBytes _graphicsBitmapData;
 		MCHEmul::UBytes _graphicsColorData;
+		/** Whenever a new rastr line is reached, this variable becomes true. */
+		bool _isNewRasterLine; 
 		/** Whether the vertical raster has entered the last VBlank zone already. */
 		bool _lastVBlankEntered;
 	};
