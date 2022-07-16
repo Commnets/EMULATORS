@@ -37,7 +37,7 @@ std::vector <MCHEmul::UByte> MCHEmul::Assembler::Macro::calculateValue
 		}
 		else
 		if (MCHEmul::validBytes (e))
-			result = MCHEmul::UInt::fromStr (_equivalent).bytes ().values ();
+			result = MCHEmul::UInt::fromStr (_equivalent).bytes ();
 		else
 			_error = MCHEmul::Assembler::ErrorType::_MACROBADDEFINED;
 	}
@@ -51,9 +51,9 @@ std::vector <MCHEmul::UByte> MCHEmul::Assembler::Macro::calculateValue
 		{
 			MCHEmul::UInt u1 (m1.value (ms));
 			MCHEmul::UInt u2 (m2.value (ms));
-			if (e [r] == '*') result = (u1 * u2).bytes ().values ();
-			else if (e [r] == '+') result = (u1 + u2).bytes ().values ();
-			else /** - */ result = (u1 - u2).bytes ().values ();
+			if (e [r] == '*') result = (u1 * u2).bytes ();
+			else if (e [r] == '+') result = (u1 + u2).bytes ();
+			else /** - */ result = (u1 - u2).bytes ();
 		}
 	}
 
@@ -91,8 +91,7 @@ std::vector <MCHEmul::UByte> MCHEmul::Assembler::GrammaticalElement::bytesFromEx
 	if (MCHEmul::validBytes (e))
 	{
 		MCHEmul::UInt n = MCHEmul::UInt::fromStr (e);
-		result.insert (result.end (), 
-			n.bytes ().values ().begin (), n.bytes ().values ().end ());
+		result.insert (result.end (), n.bytes ().begin (), n.bytes ().end ());
 	}
 	else
 	{
@@ -198,7 +197,7 @@ std::vector <MCHEmul::UByte> MCHEmul::Assembler::InstructionElement::calculateCo
 		return (std::vector <MCHEmul::UByte> ()); // Nothing possible when prervious error...
 
 	std::vector <MCHEmul::UByte> result = 
-		MCHEmul::UInt::fromUnsignedInt (inst -> code ()).bytes ().values ();
+		MCHEmul::UInt::fromUnsignedInt (inst -> code ()).bytes ();
 	for (size_t i = 0; i < inst -> internalStructure ()._parameters.size (); i++)
 	{
 		bool e = false;
@@ -208,7 +207,7 @@ std::vector <MCHEmul::UByte> MCHEmul::Assembler::InstructionElement::calculateCo
 			case MCHEmul::Instruction::Structure::Parameter::Type::_DATA:
 			case MCHEmul::Instruction::Structure::Parameter::Type::_DIR:
 			{
-				bt = MCHEmul::UBytes (bytesFromExpression (_parameters [i], s -> macros (), e), bE).values ();
+				bt = MCHEmul::UBytes (bytesFromExpression (_parameters [i], s -> macros (), e), bE).bytes ();
 			}
 
 			break;
@@ -224,13 +223,13 @@ std::vector <MCHEmul::UByte> MCHEmul::Assembler::InstructionElement::calculateCo
 							MCHEmul::Instruction::Structure::Parameter::Type::_RELJUMP)
 					{
 						MCHEmul::Address iA = address (s) + inst -> memoryPositions ();
-						bt = MCHEmul::UInt::fromInt (iA.distanceWith ((*lAP).second)).bytes ().values ();
+						bt = MCHEmul::UInt::fromInt (iA.distanceWith ((*lAP).second)).bytes ();
 					}
 					else
-						bt = MCHEmul::UBytes ((*lAP).second.bytes ().values (), bE).values ();
+						bt = MCHEmul::UBytes ((*lAP).second.bytes (), bE).bytes ();
 				}
 				else
-					bt = MCHEmul::UBytes (bytesFromExpression (_parameters [i], s -> macros (), e), bE).values ();
+					bt = MCHEmul::UBytes (bytesFromExpression (_parameters [i], s -> macros (), e), bE).bytes ();
 			}
 				
 			break;

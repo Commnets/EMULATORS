@@ -21,8 +21,8 @@ MCHEmul::UInt MCHEmul::UInt::add (const MCHEmul::UInt& u, bool iC) const
 	for (int i = (int) (nU1.size () - 1); i >= 0; i--) 
 	{
 		unsigned int s = 
-			(unsigned int) (nU1._bytes [(size_t) i].value ()) + 
-			(unsigned int) (nU2._bytes [(size_t) i].value ()) + 
+			(unsigned int) (nU1._values [(size_t) i].value ()) + 
+			(unsigned int) (nU2._values [(size_t) i].value ()) + 
 			(unsigned int) ((c) ? MCHEmul::UByte::_1 : MCHEmul::UByte::_0); 
 		c = (s > (unsigned int) MCHEmul::UByte::_F);
 		dt.insert (dt.begin (), MCHEmul::UByte ((unsigned char) s)); // Cut
@@ -40,7 +40,7 @@ MCHEmul::UInt MCHEmul::UInt::complement () const
 {
 	std::vector <MCHEmul::UByte> dt;
 	for (size_t i = 0; i < size (); i++) 
-		dt.push_back (_bytes [(size_t) i].complement ());
+		dt.push_back (_values [(size_t) i].complement ());
 
 	MCHEmul::UInt result (dt);
 
@@ -89,8 +89,8 @@ bool MCHEmul::UInt::operator > (const MCHEmul::UInt& u) const
 	bool result = false;
 	bool cont = true;
 	for (size_t i = 0; i < size () && cont; i++)
-		cont = !(result = (_bytes [i].value () > u._bytes [i].value ())) && 
-			(_bytes [i].value () == u._bytes [i].value ());
+		cont = !(result = (_values [i].value () > u._values [i].value ())) && 
+			(_values [i].value () == u._values [i].value ());
 	return (result);
 }
 
@@ -107,8 +107,8 @@ bool MCHEmul::UInt::operator < (const MCHEmul::UInt& u) const
 	bool result = false;
 	bool cont = true;
 	for (size_t i = 0; i < size () && cont; i++)
-		cont = !(result = (_bytes [i].value () < u._bytes [i].value ())) && 
-			(_bytes [i].value () == u._bytes [i].value ());
+		cont = !(result = (_values [i].value () < u._values [i].value ())) && 
+			(_values [i].value () == u._values [i].value ());
 	return (result);
 }
 
@@ -119,7 +119,7 @@ unsigned int MCHEmul::UInt::asUnsignedInt () const
 
 	int c = 0;
 	for (int i = (int) (size () - 1); i >= 0; i--, c++)
-		result += _bytes [(size_t) i].value () << (c * MCHEmul::UByte::sizeBits ());
+		result += _values [(size_t) i].value () << (c * MCHEmul::UByte::sizeBits ());
 
 	return (result);
 }

@@ -27,19 +27,19 @@ namespace MCHEmul
 		static const UInt _1;
 
 		UInt ()
-			: _bytes (),
+			: _values (),
 			  _carry (false), _overflow (false)
 							{ }
 
 		/** Always kept in Big-endian format. 
 			Negative numbers are complement_2. */
 		UInt (const UBytes& u, bool bE = true)
-			: _bytes (bE ? u : u.reverse ()),
+			: _values (bE ? u : u.reverse ()),
 			  _carry (false), _overflow (false)
 							{ }
 
 		UInt (const std::vector <UByte>& u, bool bE = true)
-			: _bytes (u, bE),
+			: _values (u, bE),
 			  _carry (false), _overflow (false)
 							{ }
 
@@ -47,14 +47,14 @@ namespace MCHEmul
 		UInt& operator = (const UInt&) = default;
 
 		size_t size () const
-							{ return (_bytes.size ()); }
+							{ return (_values.size ()); }
 		size_t sizeBits () const
-							{ return (_bytes.sizeBits ()); }
+							{ return (_values.sizeBits ()); }
 
 		bool negative () const
-							{ return (_bytes [0][UByte::sizeBits () - 1]); }
+							{ return (_values [0][UByte::sizeBits () - 1]); }
 		bool positive () const
-							{ return (!_bytes [0][UByte::sizeBits () - 1]); }
+							{ return (!_values [0][UByte::sizeBits () - 1]); }
 
 		/** These 2 flags are set after operations. */
 		bool carry () const
@@ -67,15 +67,17 @@ namespace MCHEmul
 							{ _overflow = false; }
 
 		void setMinLength (size_t l)
-							{ return (_bytes.setMinLength (l, false /** _0 at the left. */)); }
+							{ return (_values.setMinLength (l, false /** _0 at the left. */)); }
 
-		const UBytes& bytes () const
-							{ return (_bytes); }
+		const UBytes& values () const
+							{ return (_values); }
+		const std::vector <UByte>& bytes () const
+							{ return (_values.bytes ()); }
 
 		UInt LSUInt (size_t p) const
-							{ return (UInt (_bytes.LSUBytes (p))); }
+							{ return (UInt (_values.LSUBytes (p))); }
 		UInt MSUInt (size_t p) const
-							{ return (UInt (_bytes.MSUBytes (p))); }
+							{ return (UInt (_values.MSUBytes (p))); }
 
 		UInt add (const UInt& u, bool iC = false) const;
 		UInt complement () const;
@@ -85,9 +87,9 @@ namespace MCHEmul
 		UInt multiply (const UInt& u) const;
 
 		bool operator == (const UInt& u) const
-							{ return (_bytes == u._bytes); }
+							{ return (_values == u._values); }
 		bool operator != (const UInt& u) const
-							{ return (_bytes != u._bytes); }
+							{ return (_values != u._values); }
 
 		/** Takes into account the sign. */
 		bool operator > (const UInt& u) const;
@@ -113,10 +115,10 @@ namespace MCHEmul
 							{ *this = *this * u; return (*this); }
 
 		UByte operator [] (size_t p) const
-							{ return (_bytes [p]); }
+							{ return (_values [p]); }
 		
 		std::string asString (UByte::OutputFormat oF, char s /** separator */, size_t l = 0 /** Minimum length per UByte */) const
-							{ return (_bytes.asString (oF, s, l)); }
+							{ return (_values.asString (oF, s, l)); }
 
 		unsigned int asUnsignedInt () const;
 		int asInt () const
@@ -130,7 +132,7 @@ namespace MCHEmul
 							{ return (o << u.asString (UByte::OutputFormat::_HEXA, ' ', 2)); }
 
 		private:
-		UBytes _bytes;
+		UBytes _values;
 
 		// Implementation
 		mutable bool _carry;

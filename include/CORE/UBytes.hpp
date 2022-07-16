@@ -31,7 +31,7 @@ namespace MCHEmul
 
 		UBytes (const std::vector <UByte>& v, bool bE = true)
 			: _values (v)
-							{ if (!bE) _values = reverse ().values (); }
+							{ if (!bE) _values = reverse ().bytes (); }
 
 		UBytes (const UBytes&) = default;
 		UBytes& operator = (const UBytes&) = default;
@@ -43,19 +43,20 @@ namespace MCHEmul
 
 		void setMinLength (size_t l, bool r = true /** right or not? where to introduce the additional byte. */);
 
-		const std::vector <UByte>& values () const
-							{ return (_values); }
 		const UByte& value (size_t p) const
 							{ return (_values [p]); }
 		UByte& value (size_t p)
 							{ return (_values [p]); }
 
+		const std::vector <UByte>& bytes () const
+							{ return (_values); }
+
 		UBytes LSUBytes (size_t p) const
-							{ return (UBytes ((p >= size ()) ? values ()
-								: std::vector <UByte> (values ().begin () + (values ().size () - p), values ().end ()))); }
+							{ return (UBytes ((p >= size ()) ? bytes ()
+								: std::vector <UByte> (bytes ().begin () + (bytes ().size () - p), bytes ().end ()))); }
 		UBytes MSUBytes (size_t p) const
-							{ return (UBytes (((p >= size ()) ? values () 
-								: std::vector <UByte> (values ().begin (), values ().begin () + p - 1)))); }
+							{ return (UBytes (((p >= size ()) ? bytes () 
+								: std::vector <UByte> (bytes ().begin (), bytes ().begin () + p - 1)))); }
 
 		bool bit (size_t p) const 
 							{ return ((p < sizeBits ())

@@ -76,13 +76,13 @@ MCHEmul::Assembler::ByteCode MCHEmul::Assembler::ByteCode::createFromMemory
 	{
 		MCHEmul::Instructions::const_iterator pi =
 			cpu -> instructions ().find (MCHEmul::UInt 
-				(m -> values (a, cpu -> architecture ().instructionLength ()).values ()).asUnsignedInt ());
+				(m -> values (a, cpu -> architecture ().instructionLength ()).bytes ()).asUnsignedInt ());
 		if (pi == cpu -> instructions ().end ())
 			break; // No sense to continue...the instruction doesn't exist...
 
 		const MCHEmul::Instruction* inst = (*pi).second;
 		result._lines.push_back (MCHEmul::Assembler::ByteCodeLine 
-			(a, m -> values (a, inst -> memoryPositions ()).values (), "" /** no label ever. */, inst));
+			(a, m -> values (a, inst -> memoryPositions ()).bytes (), "" /** no label ever. */, inst));
 		i += inst -> memoryPositions ();
 	}
 

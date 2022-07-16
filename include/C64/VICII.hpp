@@ -58,21 +58,28 @@ namespace C64
 			bool isInLastBlankZone () const
 							{ return (_currentPosition_0 > _lastVisiblePosition_0 && 
 									  _currentPosition_0 <= _lastPosition_0); }
-			bool isInVisibleZone () const
+
+			bool isInVisibleZone () const 
 							{ return ((_currentPosition_0 >= _firstVisiblePosition_0 && 
 									   _currentPosition_0 <= _lastVisiblePosition_0)); }
-			unsigned short currentVisiblePosition () const
+			unsigned short currentVisiblePosition () const // The 
 							{ return (_currentPosition_0 - _firstVisiblePosition_0); }
+			unsigned short visiblePositions () const
+							{ return (_lastVisiblePosition_0 - _firstVisiblePosition_0 + 1); }
+
+			/** Takes into account potential reductions in the size. */
 			bool isInDisplayZone () const
 							{ return (_currentPosition_0 >= _firstDisplayPosition_0 && 
 									  _currentPosition_0 <= _lastDisplayPosition_0); }
-			unsigned short currentDisplayPosition () const
-							{ return (toBase0 (_currentPosition) - toBase0 (_firstDisplayPosition)); }
-
-			unsigned short visiblePositions () const
-							{ return (_lastVisiblePosition_0 - _firstVisiblePosition_0 + 1); }
 			unsigned short displayPositions () const
 							{ return (_lastDisplayPosition_0 - _firstDisplayPosition_0 + 1); }
+
+			unsigned short firstScreenPosition () const
+							{ return (_firstDisplayPosition_0 - _firstVisiblePosition_0); }
+			unsigned short lastScreenPosition () const
+							{ return (_lastDisplayPosition_0 - _firstVisiblePosition_0); }
+			unsigned short currentScreenPosition () const
+							{ return (_currentPosition_0 - _firstVisiblePosition_0); }
 
 			/** Returns true when the limit of the raster is reached. 
 				The parameter is the number of positions to increment the rasterData. */
@@ -98,7 +105,9 @@ namespace C64
 			const unsigned short _firstPosition = 0; // Adjusted at construction time.
 			const unsigned short _firstVisiblePosition = 0;
 			unsigned short _firstDisplayPosition; // Both can be changed by the method reduceDisplayZone...
+			const unsigned short _originalFirstDisplayPosition; // Before reducing or extending the area...
 			unsigned short _lastDisplayPosition;
+			const unsigned short _originalLastDisplayPosition; // Before reduucing or extending the area...
 			const unsigned short _lastVisiblePosition = 0;
 			const unsigned short _lastPosition = 0;
 			const unsigned short _maxPositions = 0;
@@ -110,7 +119,9 @@ namespace C64
 			unsigned short _firstPosition_0; 
 			unsigned short _firstVisiblePosition_0;
 			unsigned short _firstDisplayPosition_0; 
+			unsigned short _originalFirstDisplayPosition_0; 
 			unsigned short _lastDisplayPosition_0;
+			unsigned short _originalLastDisplayPosition_0; 
 			unsigned short _lastVisiblePosition_0;
 			unsigned short _lastPosition_0;
 
@@ -166,15 +177,22 @@ namespace C64
 							{ return (_vRasterData.isInBlankZone ()); }
 			bool isInLastVBlank () const
 							{ return (_vRasterData.isInLastBlankZone ()); }
+
 			bool isInVisibleZone () const
 							{ return (_vRasterData.isInVisibleZone () && _hRasterData.isInVisibleZone ()); }
-			void currentVisiblePosition (unsigned short& x, unsigned short& y)
+			void currentVisiblePosition (unsigned short& x, unsigned short& y) const
 							{ x = _hRasterData.currentVisiblePosition (); y = _vRasterData.currentVisiblePosition (); }
+
 			bool isInDisplayZone () const
 							{ return (_vRasterData.isInDisplayZone () && _hRasterData.isInDisplayZone ()); }
 
-			void currentDisplayPosition (unsigned short& x, unsigned short& y)
-							{ x = _hRasterData.currentDisplayPosition (); y = _vRasterData.currentDisplayPosition (); }
+			void firstScreenPosition (unsigned short& x, unsigned short& y) const
+							{ x = _hRasterData.firstScreenPosition (); y = _vRasterData.firstScreenPosition (); }
+			void currentScreenPosition (unsigned short& x, unsigned short& y) const
+							{ x = _hRasterData.currentScreenPosition (); y = _vRasterData.currentScreenPosition (); }
+			void screenPositions (unsigned short& x1, unsigned short& y1, unsigned short& x2, unsigned short& y2)
+							{ x1 = _hRasterData.firstScreenPosition (); y1 = _vRasterData.firstScreenPosition ();
+							  x2 = _hRasterData.lastScreenPosition (); y2 = _vRasterData.lastScreenPosition (); }
 
 			unsigned short visibleLines () const
 							{ return (_vRasterData.visiblePositions ()); }

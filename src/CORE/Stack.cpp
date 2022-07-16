@@ -22,8 +22,8 @@ void MCHEmul::Stack::push (const MCHEmul::UBytes& v)
 
 	_stackOverflow = false;
 
-	for (std::vector <MCHEmul::UByte>::const_iterator i = v.values ().begin (); 
-			i != v.values ().end () && !_stackOverflow; i++)
+	for (std::vector <MCHEmul::UByte>::const_iterator i = v.bytes ().begin (); 
+			i != v.bytes ().end () && !_stackOverflow; i++)
 	{
 		// When the stack is filled from the highest address down to 0...
 		if (_fromBack)

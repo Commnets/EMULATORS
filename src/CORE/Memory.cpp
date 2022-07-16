@@ -124,12 +124,12 @@ void MCHEmul::Memory::set (const MCHEmul::Address& a, const MCHEmul::UByte v, bo
 }
 
 // ---
-MCHEmul::UBytes MCHEmul::Memory::values (const MCHEmul::Address& a, size_t nB) const
+std::vector <MCHEmul::UByte> MCHEmul::Memory::bytes (const MCHEmul::Address& a, size_t nB) const
 {
-	if (!_active)
-		return (MCHEmul::UBytes::_E);
-
 	std::vector <MCHEmul::UByte> dt = { };
+
+	if (!_active)
+		return (dt);
 
 	size_t p = 0;
 	if (_size > 0 && a >= _initialAddress && ((p = _initialAddress.distanceWith (a)) + nB - 1) < (int) _size)
@@ -144,17 +144,17 @@ MCHEmul::UBytes MCHEmul::Memory::values (const MCHEmul::Address& a, size_t nB) c
 		{
 			if ((*i).second -> isIn (a))
 			{
-				dt = (*i).second -> values (a, nB).values ();
+				dt = (*i).second -> values (a, nB).bytes ();
 				t = true;
 			}
 		}
 	}
 
-	return (MCHEmul::UBytes (dt));
+	return (dt);
 }
 
 // ---
-void MCHEmul::Memory::set (const MCHEmul::Address& a, const MCHEmul::UBytes& v, bool f)
+void MCHEmul::Memory::set (const MCHEmul::Address& a, const std::vector <MCHEmul::UByte>& v, bool f)
 {
 	if (!_active)
 		return;

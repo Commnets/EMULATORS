@@ -46,6 +46,8 @@ namespace MCHEmul
 							{ _frameData [y * _columns + x] = _colorPalette [color]; }
 		void setHorizontalLine (size_t x, size_t y, size_t nP, unsigned int color)
 							{ for (unsigned int i = 0; i < nP; setPixel (x + i++, y, color)); }
+		void setVerticalLine (size_t x, size_t y, size_t nP, unsigned int color)
+							{ for (unsigned int i = 0; i < nP; setPixel (x, y + i++, color)); }
 
 		private:
 		unsigned int* _frameData;

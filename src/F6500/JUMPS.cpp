@@ -47,7 +47,7 @@ _INST_IMPL (F6500::JSR_Absolute)
 	// The address always is kept in Big-endian format, 
 	// but the architecture of this CPU is Little-endian.
 	// This is why bytes are reversed before being stored into the stack...
-	stack () -> push (pc.asAddress ().bytes ().reverse () /** To store it in little - endian */);
+	stack () -> push (pc.asAddress ().values ().reverse () /** To store it in little - endian */);
 
 	pc.setAddress (address_absolute ());
 

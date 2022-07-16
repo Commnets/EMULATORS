@@ -20,21 +20,24 @@ C64::VICII::RasterData::RasterData (
 	unsigned short pr1,
 	unsigned short pr2
 					  )
-				: _firstPosition (fp), _firstVisiblePosition (fvp), _firstDisplayPosition (fdp),
+				: _firstPosition (fp), _firstVisiblePosition (fvp), _firstDisplayPosition (fdp), 
 				  _lastDisplayPosition (ldp), _lastVisiblePosition (lvp), _lastPosition (lp),
+				  _originalFirstDisplayPosition (fdp), _originalLastDisplayPosition (ldp),
 				  _maxPositions (mp),
 				  _positionsToReduce1 (pr1), _positionsToReduce2 (pr2),
 				  _currentPosition (fp),
 				  _displayZoneReducted (false)
 {
-	_firstPosition_0		= toBase0 (_firstPosition);
-	_firstVisiblePosition_0 = toBase0 (_firstVisiblePosition);
-	_firstDisplayPosition_0 = toBase0 (_firstDisplayPosition);
-	_lastDisplayPosition_0	= toBase0 (_lastDisplayPosition);
-	_lastVisiblePosition_0	= toBase0 (_lastVisiblePosition);
-	_lastPosition_0			= toBase0 (_lastPosition);
+	_firstPosition_0				= toBase0 (_firstPosition);
+	_firstVisiblePosition_0			= toBase0 (_firstVisiblePosition);
+	_firstDisplayPosition_0			= toBase0 (_firstDisplayPosition);
+	_originalFirstDisplayPosition_0 = toBase0 (_firstDisplayPosition);
+	_lastDisplayPosition_0			= toBase0 (_lastDisplayPosition);
+	_originalLastDisplayPosition_0	= toBase0 (_lastDisplayPosition);
+	_lastVisiblePosition_0			= toBase0 (_lastVisiblePosition);
+	_lastPosition_0					= toBase0 (_lastPosition);
 
-	_currentPosition_0		= toBase0 (_currentPosition_0);
+	_currentPosition_0				= toBase0 (_currentPosition_0);
 
 	assert (_lastPosition_0 == (_maxPositions - 1));
 }
@@ -48,12 +51,16 @@ void C64::VICII::RasterData::reduceDisplayZone (bool s)
 	if (_displayZoneReducted = s)
 	{
 		_firstDisplayPosition	+= _positionsToReduce1;
+		_firstDisplayPosition_0	+= _positionsToReduce1;
 		_lastDisplayPosition	-= _positionsToReduce2;
+		_lastDisplayPosition_0	-= _positionsToReduce2;
 	}
 	else
 	{
 		_firstDisplayPosition	-= _positionsToReduce1;
+		_firstDisplayPosition_0	-= _positionsToReduce1;
 		_lastDisplayPosition	+= _positionsToReduce2;
+		_lastDisplayPosition_0	+= _positionsToReduce2;
 	}
 }
 
@@ -149,6 +156,15 @@ bool C64::VICII::simulate (MCHEmul::CPU* cpu)
 	if (_VICIIRegisters -> vicIItoGenerateIRQ ())
 		cpu -> interrupt (F6500::IRQInterrupt::_ID) -> setActive (true);
 
+#ifndef _NDEBUG
+	unsigned short x1, y1, x2, y2;
+	_raster.screenPositions (x1, y1, x2, y2);
+	screenMemory () -> setHorizontalLine (x1, y1, x2 - x1 + 1, 0);
+	screenMemory () -> setHorizontalLine (x1, y2, x2 - x1 + 1, 0);
+	screenMemory () -> setVerticalLine (x1, y1, y2 - y1 + 1, 0);
+	screenMemory () -> setVerticalLine (x2, y1, y2 - y1 + 1, 0);
+#endif
+
 	// Rduce the visible zone if any... The info is passed to the raster!
 	_raster.reduceDisplayZone
 		(!_VICIIRegisters -> textDisplay25RowsActive (), !_VICIIRegisters -> textDisplay40ColumnsActive ());
@@ -182,24 +198,29 @@ bool C64::VICII::simulate (MCHEmul::CPU* cpu)
 
 		if (_raster.isInVisibleZone ())
 		{
-			unsigned short r, c;
-			_raster.currentVisiblePosition (c, r); c = (c >> 3) << 3; // To adjust the colum to a byte size...
-			screenMemory () -> setHorizontalLine ((size_t) c, (size_t) r, 
-				(c + 8) > _raster.visibleColumns () ? (_raster.visibleColumns () - c) : 8, _VICIIRegisters -> borderColor ());
+			unsigned short rv, cv, cav;
+			_raster.currentVisiblePosition (cv, rv); cav = (cv >> 3) << 3;
+			screenMemory () -> setHorizontalLine ((size_t) cav, (size_t) rv, 
+				(cav + 8) > _raster.visibleColumns () ? (_raster.visibleColumns () - cav) : 8, _VICIIRegisters -> borderColor ());
 
 			if (_raster.isInDisplayZone () && 
 				!_VICIIRegisters -> videoResetActive ())
 			{
-				screenMemory () -> setHorizontalLine ((size_t) c, (size_t) r, 
-					(c + 8) > _raster.visibleColumns () ? (_raster.visibleColumns () - c) : 8, _VICIIRegisters -> backgroundColor ());
+				unsigned short lfs = cav - _raster.hData ().firstScreenPosition ();
+				if (lfs > 0 && lfs < 8) // Is there something to paint before?
+					screenMemory () -> setHorizontalLine ((size_t) _raster.hData ().firstScreenPosition (), (size_t) rv, 
+						(size_t) lfs, _VICIIRegisters -> backgroundColor ());
+				screenMemory () -> setHorizontalLine ((size_t) cav, (size_t) rv, 
+					(lfs + 8) > _raster.hData ().displayPositions () ? _raster.hData ().displayPositions () - lfs : 8, 
+						_VICIIRegisters -> backgroundColor ());
 
-				drawGraphics (c, r);
+				drawGraphics (cv, rv);
 
-				drawSprites (c, r);
+				drawSprites (cv, rv);
 			}
 		}
 
-		_isNewRasterLine = _raster.moveCycles (1); // 1 cyclw = 8 columns horizontal = 8 pixels...
+		_isNewRasterLine = _raster.moveCycles (1); // 1 cycle = 8 horizontal columns = 8 pixels...
 
 		if (_raster.isInLastVBlank ())
 		{
@@ -286,10 +307,10 @@ MCHEmul::UBytes C64::VICII::readCharDataFor (const MCHEmul::UBytes& chrs) const
 {
 	std::vector <MCHEmul::UByte> dt;
 
-	for (auto i : chrs.values ())
+	for (auto i : chrs.bytes ())
 	{
-		std::vector <MCHEmul::UByte> chrDt = memoryRef () -> values 
-			(_VICIIRegisters -> charMemory () /** The key. */ + (size_t) (i.value () << 3), 8).values ();
+		std::vector <MCHEmul::UByte> chrDt = memoryRef () -> bytes 
+			(_VICIIRegisters -> charMemory () /** The key. */ + (size_t) (i.value () << 3), 8);
 		dt.insert (dt.end (), chrDt.begin (), chrDt.end ());
 	}
 
@@ -305,7 +326,7 @@ MCHEmul::UBytes C64::VICII::readBitmapDataAt (unsigned short l) const
 	for (unsigned short i = 0; i < _GRAPHMAXCHARCOLUMNS; i++)
 	{
 		std::vector <MCHEmul::UByte> btDt = 
-			memoryRef () -> values (_VICIIRegisters -> bitmapMemory () + (size_t) (cL + (i << 3)), 8).values ();
+			memoryRef () -> bytes (_VICIIRegisters -> bitmapMemory () + (size_t) (cL + (i << 3)), 8);
 		dt.insert (dt.end (), btDt.begin (), btDt.end ());
 	}
 

@@ -68,8 +68,12 @@ namespace MCHEmul
 		// So, the way a final value can be read or set can be overload...
 		UByte value (const Address& a) const;
 		void set (const Address& a, const UByte v, bool f = false /** To force even when it is a rom. */);
-		UBytes values (const Address& a, size_t nB) const;
-		void set (const Address& a, const UBytes& v, bool f = false);
+		UBytes values (const Address& a, size_t nB) const
+								{ return (UBytes (bytes (a, nB))); }
+		void set (const Address& a, const UBytes& v, bool f = false)
+								{ set (a, v.bytes (), f); }
+		std::vector <UByte> bytes (const Address& a, size_t nB) const;
+		void set (const Address& a, const std::vector <UByte>& v, bool f = false);
 
 		/** It can be overloaded latr, to set the specific content of specific zones. */
 		virtual bool initialize ();

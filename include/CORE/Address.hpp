@@ -52,7 +52,9 @@ namespace MCHEmul
 
 		const UInt& value () const
 							{ return (_value);}
-		const UBytes& bytes () const
+		const UBytes& values () const
+							{ return (_value.values ()); }
+		const std::vector <UByte>& bytes () const
 							{ return (_value.bytes ()); }
 
 		/** Could be negative. */

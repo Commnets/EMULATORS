@@ -49,8 +49,11 @@ namespace MCHEmul
 							{ return (_name); }
 		size_t size () const
 							{ return (_values.size ()); }
+
 		const UBytes& values () const
 							{ return (_values); }
+		const std::vector <UByte>& bytes () const
+							{ return (_values.bytes ()); }
 
 		UInt asUInt (bool bE) const
 							{ return (UInt (_values, bE)); }
