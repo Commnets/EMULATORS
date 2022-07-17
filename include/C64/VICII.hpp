@@ -9,6 +9,7 @@
  *	Creation Date: 15/05/2021 \n
  *	Description: The VICII Chip.
  *	Versions: 1.0 Initial
+ *	Based on https://www.cebix.net/VIC-Article.txt.
  */
 
 #ifndef __C64_VICII__
@@ -74,10 +75,11 @@ namespace C64
 			unsigned short displayPositions () const
 							{ return (_lastDisplayPosition_0 - _firstDisplayPosition_0 + 1); }
 
-			unsigned short firstScreenPosition () const
-							{ return (_firstDisplayPosition_0 - _firstVisiblePosition_0); }
-			unsigned short lastScreenPosition () const
-							{ return (_lastDisplayPosition_0 - _firstVisiblePosition_0); }
+			/** o == true when the original display position has to be taken into account. false by default. */
+			unsigned short firstScreenPosition (bool o = false) const
+							{ return ((o ? _originalFirstDisplayPosition_0 : _firstDisplayPosition_0) - _firstVisiblePosition_0); }
+			unsigned short lastScreenPosition (bool o = false) const
+							{ return ((o ? _originalLastDisplayPosition_0 : _lastDisplayPosition_0) - _firstVisiblePosition_0); }
 			unsigned short currentScreenPosition () const
 							{ return (_currentPosition_0 - _firstVisiblePosition_0); }
 
@@ -186,8 +188,8 @@ namespace C64
 			bool isInDisplayZone () const
 							{ return (_vRasterData.isInDisplayZone () && _hRasterData.isInDisplayZone ()); }
 
-			void firstScreenPosition (unsigned short& x, unsigned short& y) const
-							{ x = _hRasterData.firstScreenPosition (); y = _vRasterData.firstScreenPosition (); }
+			void firstScreenPosition (unsigned short& x, unsigned short& y, bool o = false) const
+							{ x = _hRasterData.firstScreenPosition (o); y = _vRasterData.firstScreenPosition (o); }
 			void currentScreenPosition (unsigned short& x, unsigned short& y) const
 							{ x = _hRasterData.currentScreenPosition (); y = _vRasterData.currentScreenPosition (); }
 			void screenPositions (unsigned short& x1, unsigned short& y1, unsigned short& x2, unsigned short& y2)
@@ -244,9 +246,9 @@ namespace C64
 		void readGraphicsInfo ();
 
 		/** To draw the graphics. */
-		void drawGraphics (unsigned short r, unsigned short c);
+		void drawGraphics (unsigned short c, unsigned short r);
 		/** To draw the sprites. */
-		void drawSprites (unsigned short r, unsigned short c);
+		void drawSprites (unsigned short c, unsigned short r);
 
 		/** Invoked from initialize to create the right screen memory. \n
 			It also creates the Palette used by CBM 64 (_format variable). */
@@ -273,9 +275,9 @@ namespace C64
 
 		// Draw the graphics in detail...
 		/** Draw the char mode. */
-		void drawGraphicsCharMode (unsigned short r, unsigned short c);
+		void drawGraphicsCharMode (unsigned short c, unsigned short r);
 		/** Draw the bitmap mode. */
-		void drawGraphicsBitMapMode (unsigned short r, unsigned short c);
+		void drawGraphicsBitMapMode (unsigned short c, unsigned short r);
 
 		private:
 		/** The memory is used also as the set of registers of the chip. */

@@ -69,7 +69,7 @@ _INST_IMPL (F6500::INY)
 	MCHEmul::Register& y = cpu () -> internalRegister (F6500::C6510::_YREGISTER);
 
 	// Read the value, makes the operation and sets it back...
-	MCHEmul::UInt v = MCHEmul::UInt (y.values ()) - MCHEmul::UInt::_1;
+	MCHEmul::UInt v = MCHEmul::UInt (y.values ()) + MCHEmul::UInt::_1;
 	// A carry could be generated, but it will be ignored...
 	y.set (v.bytes ()); // 1 byte long always
 

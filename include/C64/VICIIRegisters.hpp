@@ -9,6 +9,7 @@
  *	Creation Date: 15/05/2021 \n
  *	Description: VICII Registers Emulation
  *	Versions: 1.0 Initial
+ *	Based on https://www.cebix.net/VIC-Article.txt.
  */
 
 #ifndef __C64_VICIIREGISTERS__
@@ -118,10 +119,14 @@ namespace C64
 							{ return (_rasterAtIRQLine); }
 		void setRasterAtLine (bool rL)
 							{ _rasterAtIRQLine = rL; }
-		bool spriteCollisionWithDataHappened () const
-							{ return (_spriteCollisionWithDataHappened); }
-		void setSpriteCollisionWithData (bool c)
-							{ _spriteCollisionWithDataHappened = c; }
+		bool spritesCollisionWithDataHappened () const
+							{ return (_spritesCollisionWithDataHappened); }
+		void setSpritesCollisionWithData (bool c)
+							{ _spritesCollisionWithDataHappened = c; }
+		bool spriteCollisionWithDataHappened (size_t p) const
+							{ return (_spriteCollisionWithDataHappened [p]); }
+		void setSpriteCollisionWithDataHappened (size_t p, bool c)
+							{ _spriteCollisionWithDataHappened [p] = c; }
 		bool spritesCollisionHappened () const
 							{ return (_spritesCollisionHappened); }
 		void setSpritesCollision (bool c)
@@ -189,9 +194,10 @@ namespace C64
 		unsigned short _currentRasterLine;
 		unsigned short _currentLightPenHorizontalPosition, _currentLightPenVerticalPosition;
 		bool _rasterAtIRQLine;
-		bool _spriteCollisionWithDataHappened;
+		bool _spritesCollisionWithDataHappened; /** In general. */
+		mutable std::vector <bool> _spriteCollisionWithDataHappened; // Are modified when reading...
 		bool _spritesCollisionHappened; /** In general. */
-		std::vector <bool> _spriteCollisionHappened;
+		mutable std::vector <bool> _spriteCollisionHappened;
 		bool _lightPenOnScreenHappened;
 		bool _vicIItoGenerateIRQ;
 	};

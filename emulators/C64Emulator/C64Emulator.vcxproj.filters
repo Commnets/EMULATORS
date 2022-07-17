@@ -32,6 +32,9 @@
     <None Include="test2.asm">
       <Filter>ASM Programs</Filter>
     </None>
+    <None Include="test3.asm">
+      <Filter>ASM Programs</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">

@@ -37,7 +37,8 @@ C64::VICIIRegisters::VICIIRegisters ()
 	  _currentLightPenHorizontalPosition (0x0000), 
 	  _currentLightPenVerticalPosition (0x0000),
 	  _rasterAtIRQLine (false), 
-	  _spriteCollisionWithDataHappened (false), 
+	  _spritesCollisionWithDataHappened (false), 
+	  _spriteCollisionWithDataHappened (8, false), 
 	  _spritesCollisionHappened (false), 
 	  _spriteCollisionHappened (8, false), 
 	  _lightPenOnScreenHappened (false),
@@ -61,6 +62,7 @@ void C64::VICIIRegisters::setValue (size_t p, const MCHEmul::UByte& v)
 		case 0x4:
 		case 0x6:
 		case 0x8:
+		case 0xa:
 		case 0xc:
 		case 0xe:
 			_spriteXCoord [pp >> 1] = ((unsigned short) v.value ()) | (_spriteXCoord [pp >> 1] & 0x0100);
@@ -211,6 +213,7 @@ void C64::VICIIRegisters::setValue (size_t p, const MCHEmul::UByte& v)
 			break;
 	
 		// Not connected
+		// Ignored when writing...
 		case 0x2f:
 		case 0x30:
 		case 0x31:
@@ -244,43 +247,28 @@ MCHEmul::UByte C64::VICIIRegisters::readValue (size_t p) const
 	{
 		// The value is read as it is...
 		case 0x0:
-		case 0x2:
-		case 0x4:
-		case 0x6:
-		case 0x8:
-		case 0xc:
-		case 0xe:
 		case 0x1:
+		case 0x2:
 		case 0x3:
+		case 0x4:
 		case 0x5:
+		case 0x6:
 		case 0x7:
+		case 0x8:
 		case 0x9:
+		case 0xa:
 		case 0xb:
+		case 0xc:
 		case 0xd:
+		case 0xe:
 		case 0xf:
 		case 0x10:
 		case 0x15:
 		case 0x17:
 		case 0x18:
-		case 0x1a:
 		case 0x1b:
 		case 0x1c:
 		case 0x1d:
-		case 0x20:
-		case 0x21:
-		case 0x22:
-		case 0x23:
-		case 0x24:
-		case 0x25:
-		case 0x26:
-		case 0x27:
-		case 0x28:
-		case 0x29:
-		case 0x2a:
-		case 0x2b:
-		case 0x2c:
-		case 0x2d:
-		case 0x2e:
 			result = MCHEmul::Memory::readValue (pp);
 			break;
 
@@ -313,21 +301,58 @@ MCHEmul::UByte C64::VICIIRegisters::readValue (size_t p) const
 
 		// VICIRQ: VIC Interrrupt Flag Register
 		case 0x19:
-			result = MCHEmul::UByte::_0;
+			result = MCHEmul::UByte::_1; 
 			result.setBit (0, _rasterAtIRQLine);
-			result.setBit (1, _spriteCollisionWithDataHappened);
+			result.setBit (1, _spritesCollisionWithDataHappened);
 			result.setBit (2, _spritesCollisionHappened);
 			result.setBit (3, _lightPenOnScreenHappened);
-			/** bits 4 to 6 are not used. */
+			/** bits 4, 5, and 6 are not used, and always to 1. */
 			result.setBit (7, _vicIItoGenerateIRQ);
-			/** The rest of the bits are not used. */
 			break;
 	
-		// SPSPCL: Sprite to Sprite Collision Register
+		// IRQMSK: IRQ Mask Register
+		case 0x1a:
+			result = MCHEmul::UByte::_1; 
+			result.setBit (0, _rasterIRQActive);
+			result.setBit (1, _spriteCollisionWithDataIRQActive);
+			result.setBit (2, _spriteCollisionsIRQActive);
+			result.setBit (3, _lightPenIRQActive);
+			/** bites 4 - 7 are not used, and always to 1. */
+			break;
+	
+		// SPSPCL: Sprite - Sprite Collision Register
 		case 0x1e:
 			result = MCHEmul::UByte::_0;
 			for (size_t i = 0; i < 8; i++)
 				result.setBit (i, _spriteCollisionHappened [i]);
+			_spriteCollisionHappened = std::vector <bool> (8, false); // false back when reading...
+			break;
+
+		// SPBGCL: Sprite - Data Collision Register
+		case 0x1f:
+			result = MCHEmul::UByte::_0;
+			for (size_t i = 0; i < 8; i++)
+				result.setBit (i, _spriteCollisionWithDataHappened [i]);
+			_spriteCollisionWithDataHappened = std::vector <bool> (8, false); // false back when reading...
+			break;
+
+		case 0x20:
+		case 0x21:
+		case 0x22:
+		case 0x23:
+		case 0x24:
+		case 0x25:
+		case 0x26:
+		case 0x27:
+		case 0x28:
+		case 0x29:
+		case 0x2a:
+		case 0x2b:
+		case 0x2c:
+		case 0x2d:
+		case 0x2e:
+			/** The MSB to 1 always. */
+			result = MCHEmul::UByte (MCHEmul::Memory::readValue (pp).value () & 0x0f | 0xf0);
 			break;
 	
 		// Not connected
@@ -349,7 +374,7 @@ MCHEmul::UByte C64::VICIIRegisters::readValue (size_t p) const
 		case 0x3e:
 		case 0x3f:
 		default:
-			result = MCHEmul::UByte (rand () % 0xff);
+			result = MCHEmul::UByte::_F;
 			break;
 	}
 

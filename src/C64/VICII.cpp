@@ -166,8 +166,9 @@ bool C64::VICII::simulate (MCHEmul::CPU* cpu)
 #endif
 
 	// Rduce the visible zone if any... The info is passed to the raster!
-	_raster.reduceDisplayZone
-		(!_VICIIRegisters -> textDisplay25RowsActive (), !_VICIIRegisters -> textDisplay40ColumnsActive ());
+//	_raster.reduceDisplayZone
+//		(!_VICIIRegisters -> textDisplay25RowsActive (), !_VICIIRegisters -> textDisplay40ColumnsActive ());
+	_raster.reduceDisplayZone (false, false);
 
 	for (size_t i = (cpu -> clockCycles  () - _lastCPUCycles); i > 0 ; i--)
 	{
@@ -198,25 +199,30 @@ bool C64::VICII::simulate (MCHEmul::CPU* cpu)
 
 		if (_raster.isInVisibleZone ())
 		{
-			unsigned short rv, cv, cav;
+			// Where the raster is (hoizontal one moves 8 pixels each cycle)
+			unsigned short rv, cv, cav; 
 			_raster.currentVisiblePosition (cv, rv); cav = (cv >> 3) << 3;
-			screenMemory () -> setHorizontalLine ((size_t) cav, (size_t) rv, 
+			screenMemory () -> setHorizontalLine ((size_t) cav, (size_t) rv,
 				(cav + 8) > _raster.visibleColumns () ? (_raster.visibleColumns () - cav) : 8, _VICIIRegisters -> borderColor ());
 
 			if (_raster.isInDisplayZone () && 
 				!_VICIIRegisters -> videoResetActive ())
 			{
-				unsigned short lfs = cav - _raster.hData ().firstScreenPosition ();
+				unsigned short lfs = cav - _raster.hData ().firstScreenPosition (/** false = real position */);
 				if (lfs > 0 && lfs < 8) // Is there something to paint before?
-					screenMemory () -> setHorizontalLine ((size_t) _raster.hData ().firstScreenPosition (), (size_t) rv, 
-						(size_t) lfs, _VICIIRegisters -> backgroundColor ());
+					screenMemory () -> setHorizontalLine ((size_t) _raster.hData ().firstScreenPosition (/** false = real position */), 
+						(size_t) rv, (size_t) lfs, _VICIIRegisters -> backgroundColor ());
 				screenMemory () -> setHorizontalLine ((size_t) cav, (size_t) rv, 
 					(lfs + 8) > _raster.hData ().displayPositions () ? _raster.hData ().displayPositions () - lfs : 8, 
 						_VICIIRegisters -> backgroundColor ());
 
-				drawGraphics (cv, rv);
-
-				drawSprites (cv, rv);
+				// Draw the graphics and (on top of) the sprites...
+				// Draw sprites also detect the collisions, among them and among backgropund data and them...
+				unsigned short fspc, fspv;
+				_raster.currentScreenPosition (fspc, fspv);
+				fspc -= _raster.hData ().firstScreenPosition (true);
+				fspv -= _raster.vData ().firstScreenPosition (true);
+				drawGraphics (fspc, fspv); drawSprites (fspc, fspv);
 			}
 		}
 
@@ -253,18 +259,18 @@ void C64::VICII::readGraphicsInfo ()
 }
 
 // ---
-void C64::VICII::drawGraphics (unsigned short r, unsigned short c)
+void C64::VICII::drawGraphics (unsigned short c, unsigned short r)
 {
 	switch (_VICIIRegisters -> graphicModeActive ())
 	{
 		case C64::VICIIRegisters::GraphicMode::_CHARMODE:
 		case C64::VICIIRegisters::GraphicMode::_MULTICOLORCHARMODE:
-			drawGraphicsCharMode (r, c);
+			drawGraphicsCharMode (c, r);
 			break;
 	
 		case C64::VICIIRegisters::GraphicMode::_BITMAPMODE:
 		case C64::VICIIRegisters::GraphicMode::_MULTICOLORBITMAPMODE:
-			drawGraphicsBitMapMode (r, c);
+			drawGraphicsBitMapMode (c, r);
 			break;
 	
 		default:
@@ -274,8 +280,9 @@ void C64::VICII::drawGraphics (unsigned short r, unsigned short c)
 }
 
 // ---
-void C64::VICII::drawSprites (unsigned short r, unsigned short c)
+void C64::VICII::drawSprites (unsigned short c, unsigned short r)
 {
+	// TODO
 }
 
 // ---
