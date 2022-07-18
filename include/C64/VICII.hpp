@@ -68,12 +68,10 @@ namespace C64
 			unsigned short visiblePositions () const
 							{ return (_lastVisiblePosition_0 - _firstVisiblePosition_0 + 1); }
 
-			/** Takes into account potential reductions in the size. */
+			/** Doesn't take into account potential reductions in the size. */
 			bool isInDisplayZone () const
-							{ return (_currentPosition_0 >= _firstDisplayPosition_0 && 
-									  _currentPosition_0 <= _lastDisplayPosition_0); }
-			unsigned short displayPositions () const
-							{ return (_lastDisplayPosition_0 - _firstDisplayPosition_0 + 1); }
+							{ return (_currentPosition_0 >= _originalFirstDisplayPosition_0 && 
+									  _currentPosition_0 <= _originalLastDisplayPosition_0); }
 
 			/** o == true when the original display position has to be taken into account. false by default. */
 			unsigned short firstScreenPosition (bool o = false) const
@@ -82,6 +80,8 @@ namespace C64
 							{ return ((o ? _originalLastDisplayPosition_0 : _lastDisplayPosition_0) - _firstVisiblePosition_0); }
 			unsigned short currentScreenPosition () const
 							{ return (_currentPosition_0 - _firstVisiblePosition_0); }
+			unsigned short screenPositions () const
+							{ return (_lastDisplayPosition_0 - _firstDisplayPosition_0 + 1); }
 
 			/** Returns true when the limit of the raster is reached. 
 				The parameter is the number of positions to increment the rasterData. */
@@ -242,13 +242,30 @@ namespace C64
 		virtual bool simulate (MCHEmul::CPU* cpu) override;
 
 		private:
+		/** To simplify the use of the routines dedicated to draw. */
+		struct DrawContext
+		{
+			unsigned short _ICD;	// Initial Column of the Display (Not taken into account reductions in size).
+			unsigned short _ICS;	// Initial Column Screen (Screen = Display with reductions in the size considered).
+			unsigned short _LCD;	// Last Column of the Display 
+			unsigned short _LCS;	// Last Column of the Screen
+			unsigned short _SC;		// Scroll X
+			unsigned short _RC;		// Raster X (from the beginning of the visible zone)
+			unsigned short _RCA;	// Raster X adjusted (Moves 8 by 8, so = Raster X >> 3 << 3)
+			unsigned short _IRD;	// Initial Row Display
+			unsigned short _IRS;	// Initial Row Screen
+			unsigned short _LRD;	// Last Row of the Display 
+			unsigned short _LRS;	// Last Row of the Screen
+			unsigned short _SR;		// Scroll Y
+			unsigned short _RR;		// Raster Y (Moves 1 by 1. No adjusted neadd)
+		};
+
 		/** To read the graphics info. */
 		void readGraphicsInfo ();
 
-		/** To draw the graphics. */
-		void drawGraphics (unsigned short c, unsigned short r);
-		/** To draw the sprites. */
-		void drawSprites (unsigned short c, unsigned short r);
+		/** @see DrawContext structure. */
+		void drawGraphics (const DrawContext& dC);
+		void drawSprites (const DrawContext& dC);
 
 		/** Invoked from initialize to create the right screen memory. \n
 			It also creates the Palette used by CBM 64 (_format variable). */
@@ -274,10 +291,16 @@ namespace C64
 		MCHEmul::UBytes readSpriteDataAt (unsigned short l) const;
 
 		// Draw the graphics in detail...
-		/** Draw the char mode. */
-		void drawGraphicsCharMode (unsigned short c, unsigned short r);
-		/** Draw the bitmap mode. */
-		void drawGraphicsBitMapMode (unsigned short c, unsigned short r);
+		/** Draws the char mode. */
+		void drawGraphicsCharMode (const DrawContext& dC);
+		/** Draws the bitmap mode. */
+		void drawGraphicsBitMapMode (const DrawContext& dC);
+		/** Draws a monocolor byte. */
+		void drawMonoColorBytes (const std::vector <MCHEmul::UByte>& bt, 
+			const std::vector <MCHEmul::UByte>& clr, const DrawContext& dC);
+		/** Drawws a multicolor byte. */
+		void drawMultiColorBytes (const std::vector <MCHEmul::UByte>& bt, 
+			const std::vector <MCHEmul::UByte>& clr, const DrawContext& dC);
 
 		private:
 		/** The memory is used also as the set of registers of the chip. */

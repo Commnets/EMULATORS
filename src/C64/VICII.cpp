@@ -156,19 +156,9 @@ bool C64::VICII::simulate (MCHEmul::CPU* cpu)
 	if (_VICIIRegisters -> vicIItoGenerateIRQ ())
 		cpu -> interrupt (F6500::IRQInterrupt::_ID) -> setActive (true);
 
-#ifndef _NDEBUG
-	unsigned short x1, y1, x2, y2;
-	_raster.screenPositions (x1, y1, x2, y2);
-	screenMemory () -> setHorizontalLine (x1, y1, x2 - x1 + 1, 0);
-	screenMemory () -> setHorizontalLine (x1, y2, x2 - x1 + 1, 0);
-	screenMemory () -> setVerticalLine (x1, y1, y2 - y1 + 1, 0);
-	screenMemory () -> setVerticalLine (x2, y1, y2 - y1 + 1, 0);
-#endif
-
 	// Rduce the visible zone if any... The info is passed to the raster!
-//	_raster.reduceDisplayZone
-//		(!_VICIIRegisters -> textDisplay25RowsActive (), !_VICIIRegisters -> textDisplay40ColumnsActive ());
-	_raster.reduceDisplayZone (false, false);
+	_raster.reduceDisplayZone
+		(!_VICIIRegisters -> textDisplay25RowsActive (), !_VICIIRegisters -> textDisplay40ColumnsActive ());
 
 	for (size_t i = (cpu -> clockCycles  () - _lastCPUCycles); i > 0 ; i--)
 	{
@@ -199,39 +189,66 @@ bool C64::VICII::simulate (MCHEmul::CPU* cpu)
 
 		if (_raster.isInVisibleZone ())
 		{
-			// Where the raster is (hoizontal one moves 8 pixels each cycle)
-			unsigned short rv, cv, cav; 
-			_raster.currentVisiblePosition (cv, rv); cav = (cv >> 3) << 3;
+			// READ: Important variables
+			// Where is the raster in the visible part of the screen? (starting from 0)
+			unsigned short rv, cv; _raster.currentVisiblePosition (cv, rv);
+			// Which is the horizontal closest block of 8 pixels (from left to the right)?
+			// Take into account that the step - size of the raster is always 8 pixels per cycle..
+			unsigned short cav = (cv >> 3) << 3;
+
+			// Draws the border...
 			screenMemory () -> setHorizontalLine ((size_t) cav, (size_t) rv,
 				(cav + 8) > _raster.visibleColumns () ? (_raster.visibleColumns () - cav) : 8, _VICIIRegisters -> borderColor ());
 
-			if (_raster.isInDisplayZone () && 
-				!_VICIIRegisters -> videoResetActive ())
+			if (_raster.isInDisplayZone () && // In the display...
+				rv >= _raster.vData ().firstScreenPosition (/** false = real. */) && // It has to be within the visible lines...
+				rv <= _raster.vData ().lastScreenPosition ( /** false = real. */) &&
+				!_VICIIRegisters -> videoResetActive ()) // ...and obviously with the video not reset!
 			{
-				unsigned short lfs = cav - _raster.hData ().firstScreenPosition (/** false = real position */);
-				if (lfs > 0 && lfs < 8) // Is there something to paint before?
-					screenMemory () -> setHorizontalLine ((size_t) _raster.hData ().firstScreenPosition (/** false = real position */), 
-						(size_t) rv, (size_t) lfs, _VICIIRegisters -> backgroundColor ());
-				screenMemory () -> setHorizontalLine ((size_t) cav, (size_t) rv, 
-					(lfs + 8) > _raster.hData ().displayPositions () ? _raster.hData ().displayPositions () - lfs : 8, 
-						_VICIIRegisters -> backgroundColor ());
+				// Draws the back ground, taken ito account 
+				// The additional border that could exist...
+				unsigned short fpxl = 0; // First pixels from the cav to be drawn...
+				unsigned short lbk = 8;  // Number of pixels to be drawn...
+				// With the screen? 
+				if (cav <= _raster.hData ().lastScreenPosition ())
+				{
+					if (_raster.hData ().firstScreenPosition (/** false = real. */) > cav)
+						{ fpxl += (_raster.hData ().firstScreenPosition () - cav); lbk = 8 - fpxl; }
+					if ((cav + 8) > _raster.hData ().lastScreenPosition (/** false = real. */))
+						{ lbk = _raster.hData ().lastScreenPosition () - cav; }
+					screenMemory () -> setHorizontalLine ((size_t) (cav + fpxl), (size_t) rv, lbk, _VICIIRegisters -> backgroundColor ());
+				}
 
-				// Draw the graphics and (on top of) the sprites...
-				// Draw sprites also detect the collisions, among them and among backgropund data and them...
-				unsigned short fspc, fspv;
-				_raster.currentScreenPosition (fspc, fspv);
-				fspc -= _raster.hData ().firstScreenPosition (true);
-				fspv -= _raster.vData ().firstScreenPosition (true);
-				drawGraphics (fspc, fspv); drawSprites (fspc, fspv);
+				// Draw the graphics, and the sprites...
+				C64::VICII::DrawContext dC
+					= { 
+						_raster.hData ().firstScreenPosition (true), // The original...
+						_raster.hData ().firstScreenPosition (), // And the real one
+						_raster.hData ().lastScreenPosition (true), // The original...
+						_raster.hData ().lastScreenPosition (), // And the real one
+						_VICIIRegisters -> horizontalScrollPosition (), // From 0 - 7 
+						cv, cav, // Where the horizontal raster is
+						_raster.vData ().firstScreenPosition (true), // The original...
+						_raster.vData ().firstScreenPosition (), // And the real one
+						_raster.vData ().lastScreenPosition (true), // The original...
+						_raster.vData ().lastScreenPosition (), // And the real one
+						_VICIIRegisters -> verticalScrollPosition (), // From 0 - 7 (taken into account in bad lines)
+						rv  // Where the vertical raster is...
+					  };
+
+				drawGraphics (dC);
+				drawSprites (dC);
 			}
 		}
 
-		_isNewRasterLine = _raster.moveCycles (1); // 1 cycle = 8 horizontal columns = 8 pixels...
+		// 1 cycle = 8 horizontal columns = 8 pixels...
+		_isNewRasterLine = _raster.moveCycles (1); 
 
 		if (_raster.isInLastVBlank ())
 		{
 			if (!_lastVBlankEntered)
 				setGraphicsReady (_lastVBlankEntered = true); // The limit of the visible screen has been reached!
+															  // so it is time to actualize the graphics...
 		}
 		else
 			_lastVBlankEntered = false;
@@ -242,6 +259,13 @@ bool C64::VICII::simulate (MCHEmul::CPU* cpu)
 
 	// To store back th info in the VIC Registers...
 	_VICIIRegisters -> setCurrentRasterLine (_raster.currentLine ()); 
+
+	unsigned short x1, y1, x2, y2;
+	_raster.screenPositions (x1, y1, x2, y2);
+	screenMemory () -> setHorizontalLine (x1, y1, x2 - x1 + 1, 1);
+	screenMemory () -> setHorizontalLine (x1, y2, x2 - x1 + 1, 1);
+	screenMemory () -> setVerticalLine (x1, y1, y2 - y1 + 1, 1);
+	screenMemory () -> setVerticalLine (x2, y1, y2 - y1 + 1, 1);
 
 	return (true);
 }
@@ -259,18 +283,18 @@ void C64::VICII::readGraphicsInfo ()
 }
 
 // ---
-void C64::VICII::drawGraphics (unsigned short c, unsigned short r)
+void C64::VICII::drawGraphics (const C64::VICII::DrawContext& dC)
 {
 	switch (_VICIIRegisters -> graphicModeActive ())
 	{
 		case C64::VICIIRegisters::GraphicMode::_CHARMODE:
 		case C64::VICIIRegisters::GraphicMode::_MULTICOLORCHARMODE:
-			drawGraphicsCharMode (c, r);
+			drawGraphicsCharMode (dC);
 			break;
 	
 		case C64::VICIIRegisters::GraphicMode::_BITMAPMODE:
 		case C64::VICIIRegisters::GraphicMode::_MULTICOLORBITMAPMODE:
-			drawGraphicsBitMapMode (c, r);
+			drawGraphicsBitMapMode (dC);
 			break;
 	
 		default:
@@ -280,7 +304,7 @@ void C64::VICII::drawGraphics (unsigned short c, unsigned short r)
 }
 
 // ---
-void C64::VICII::drawSprites (unsigned short c, unsigned short r)
+void C64::VICII::drawSprites (const C64::VICII::DrawContext& dC)
 {
 	// TODO
 }
@@ -349,15 +373,73 @@ MCHEmul::UBytes C64::VICII::readSpriteDataAt (unsigned short l) const
 }
 
 // ---
-void C64::VICII::drawGraphicsCharMode (unsigned short r, unsigned short c)
+void C64::VICII::drawGraphicsCharMode (const C64::VICII::DrawContext& dC)
+{
+	// To determine the bytes of the line to be drawn...
+	size_t iB = (((dC._RCA - dC._ICD) + ((dC._SC != 0) ? 8 : 0) + 8) >> 3) - 1;
+	size_t fB = (dC._SC != 0) ? (iB - 1) : iB;
+
+	// To get the data to draw and the basic color to be used...
+	std::vector <MCHEmul::UByte> bt;
+	std::vector <MCHEmul::UByte> clr;
+	for (size_t i = iB; i <= fB; i++)
+	{
+		bt.push_back (_graphicsCharData [(i << 3) + dC._SR /** The line to get depends on the SCROLLY. */]);
+		clr.push_back (_graphicsColorData [i] /** The color is the same whatteve the SCROLLY is. */);
+	}
+
+	// To draw depending on the multi graphics mode...
+	switch (_VICIIRegisters -> graphicModeActive ())
+	{
+		case C64::VICIIRegisters::GraphicMode::_CHARMODE:
+			drawMonoColorBytes (bt, clr /** The color. */, dC);
+			break;
+
+		case C64::VICIIRegisters::GraphicMode::_MULTICOLORCHARMODE:
+			drawMultiColorBytes (bt, clr, dC);
+			break;
+
+		default:
+			// It should be here, but just in case...
+			break;
+	}
+}
+
+// ---
+void C64::VICII::drawGraphicsBitMapMode (const C64::VICII::DrawContext& dC)
 {
 	// TODO
 }
 
 // ---
-void C64::VICII::drawGraphicsBitMapMode (unsigned short r, unsigned short c)
+void C64::VICII::drawMonoColorBytes (const std::vector <MCHEmul::UByte>& bt, 
+		const std::vector <MCHEmul::UByte>& clr, const C64::VICII::DrawContext& dC)
 {
-	// TODO
+	for (unsigned short i = 0; i < 8; i++)
+	{
+		unsigned short by = (i + dC._SC) >> 3;
+		unsigned short bi  = (unsigned short) ((bt.size () * 8 - 1)) - ((i + dC._SC) % 8);
+		if ((dC._RCA + i) >= dC._ICS && (dC._RCA + i) <= dC._LCS && bt [by].bit (bi))
+			screenMemory () -> setPixel ((size_t) (dC._RCA + i), (size_t) dC._RR, (unsigned int) (clr [by].value () & 0x0f));
+	}
+}
+
+// ---
+void C64::VICII::drawMultiColorBytes (const std::vector <MCHEmul::UByte>& bt, 
+		const std::vector <MCHEmul::UByte>& clr, const C64::VICII::DrawContext& dC)
+{
+	for (unsigned short i = 0 ; i < 4; i++)
+	{
+		unsigned short by = ((i << 1) + dC._SC) >> 3;
+		unsigned short bi  = (unsigned short) ((bt.size () * 8 - 1)) - (((i << 1) + dC._SC) % 8);
+		unsigned char cs = ((bt [by].value () >> (i << 1)) & 0x03); // 0, 1, 2 or 3...
+		unsigned int fc = (unsigned int) ((cs == 3) ? clr [by].value () : _VICIIRegisters -> backgroundColor (cs)) & 0x0f;
+		// Two pixels together...
+		if ((dC._RCA + i) >= dC._ICS && (dC._RCA + i) <= dC._LCS)
+			screenMemory () -> setPixel ((size_t) (dC._RCA + i), (size_t) dC._RR, fc);
+		if ((dC._RCA + i + 1) >= dC._ICS && (dC._RCA + i + 1) <= dC._LCS)
+			screenMemory () -> setPixel ((size_t) (dC._RCA + i + 1), (size_t) dC._RR, fc);
+	}
 }
 
 // ---
