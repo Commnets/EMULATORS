@@ -376,7 +376,7 @@ MCHEmul::UBytes C64::VICII::readSpriteDataAt (unsigned short l) const
 void C64::VICII::drawGraphicsCharMode (const C64::VICII::DrawContext& dC)
 {
 	// To determine the bytes of the line to be drawn...
-	size_t iB = (((dC._RCA - dC._ICD) + ((dC._SC != 0) ? 8 : 0) + 8) >> 3) - 1;
+	size_t iB = (((dC._RCA - dC._ICD) + ((dC._SR != 0) ? 8 : 0) + 8) >> 3) - 1;
 	size_t fB = (dC._SC != 0) ? (iB - 1) : iB;
 
 	// To get the data to draw and the basic color to be used...
