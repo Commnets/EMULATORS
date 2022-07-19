@@ -194,6 +194,7 @@ bool C64::VICII::simulate (MCHEmul::CPU* cpu)
 			unsigned short rv, cv; _raster.currentVisiblePosition (cv, rv);
 			// Which is the horizontal closest block of 8 pixels (from left to the right)?
 			// Take into account that the step - size of the raster is always 8 pixels per cycle..
+			// It always starts at 0...
 			unsigned short cav = (cv >> 3) << 3;
 
 			// Draws the border...
@@ -222,18 +223,18 @@ bool C64::VICII::simulate (MCHEmul::CPU* cpu)
 				// Draw the graphics, and the sprites...
 				C64::VICII::DrawContext dC
 					= { 
-						_raster.hData ().firstScreenPosition (true), // The original...
-						_raster.hData ().firstScreenPosition (), // And the real one
-						_raster.hData ().lastScreenPosition (true), // The original...
-						_raster.hData ().lastScreenPosition (), // And the real one
-						_VICIIRegisters -> horizontalScrollPosition (), // From 0 - 7 
-						cv, cav, // Where the horizontal raster is
-						_raster.vData ().firstScreenPosition (true), // The original...
-						_raster.vData ().firstScreenPosition (), // And the real one
-						_raster.vData ().lastScreenPosition (true), // The original...
-						_raster.vData ().lastScreenPosition (), // And the real one
-						_VICIIRegisters -> verticalScrollPosition (), // From 0 - 7 (taken into account in bad lines)
-						rv  // Where the vertical raster is...
+						_raster.hData ().firstScreenPosition (true),		// The original...
+						_raster.hData ().firstScreenPosition (),			// And the real one
+						_raster.hData ().lastScreenPosition (true),			// The original...
+						_raster.hData ().lastScreenPosition (),				// And the real one
+						_VICIIRegisters -> horizontalScrollPosition (),		// From 0 - 7 
+						cv, cav,											// Where the horizontal raster is (also adjusted)
+						_raster.vData ().firstScreenPosition (true),		// The original...
+						_raster.vData ().firstScreenPosition (),			// And the real one
+						_raster.vData ().lastScreenPosition (true),			// The original...
+						_raster.vData ().lastScreenPosition (),				// And the real one
+						_VICIIRegisters -> verticalScrollPosition (),		// From 0 - 7 (taken into account in bad lines)
+						rv													// Where the vertical raster is...
 					  };
 
 				drawGraphics (dC);
@@ -257,7 +258,7 @@ bool C64::VICII::simulate (MCHEmul::CPU* cpu)
 	// It might have been incremented after reading graphics...
 	_lastCPUCycles = cpu -> clockCycles (); 
 
-	// To store back th info in the VIC Registers...
+	// To store back the info in the VIC Registers...
 	_VICIIRegisters -> setCurrentRasterLine (_raster.currentLine ()); 
 
 	unsigned short x1, y1, x2, y2;
@@ -285,6 +286,10 @@ void C64::VICII::readGraphicsInfo ()
 // ---
 void C64::VICII::drawGraphics (const C64::VICII::DrawContext& dC)
 {
+	// If no graphic has been loaded, it is not needed to continue...
+	if (_graphicsColorData.size () == 0)
+		return; // It could happen at the first lines of the screen when the vertical SCROLL is active...
+
 	switch (_VICIIRegisters -> graphicModeActive ())
 	{
 		case C64::VICIIRegisters::GraphicMode::_CHARMODE:
@@ -296,9 +301,9 @@ void C64::VICII::drawGraphics (const C64::VICII::DrawContext& dC)
 		case C64::VICIIRegisters::GraphicMode::_MULTICOLORBITMAPMODE:
 			drawGraphicsBitMapMode (dC);
 			break;
-	
+
 		default:
-			// Graphic mode not supported...yet
+			assert (0); // Not graphic mode supported...
 			break;
 	}
 }
@@ -375,34 +380,28 @@ MCHEmul::UBytes C64::VICII::readSpriteDataAt (unsigned short l) const
 // ---
 void C64::VICII::drawGraphicsCharMode (const C64::VICII::DrawContext& dC)
 {
-	// To determine the bytes of the line to be drawn...
-	size_t iB = (((dC._RCA - dC._ICD) + ((dC._SR != 0) ? 8 : 0) + 8) >> 3) - 1;
-	size_t fB = (dC._SC != 0) ? (iB - 1) : iB;
+	// The graphical column being involved...
+	// Still pending to be applied the SCROLLX!
+	// It will also be a multiple of 8 (the RCA is also always adjusted to multiples of 8)
+	size_t i = (dC._RCA - dC._ICD) >> 3; // Never bigger than _GRAPHMAXCHARCOLUMNS 
 
-	// To get the data to draw and the basic color to be used...
-	std::vector <MCHEmul::UByte> bt;
-	std::vector <MCHEmul::UByte> clr;
-	for (size_t i = iB; i <= fB; i++)
-	{
-		bt.push_back (_graphicsCharData [(i << 3) + dC._SR /** The line to get depends on the SCROLLY. */]);
-		clr.push_back (_graphicsColorData [i] /** The color is the same whatteve the SCROLLY is. */);
-	}
+	// The graphical line being involved...
+	// The SCROLLY is included in the calculus!
+	// The gaphical data is loaded only in a bad line but "aligned" with the value of the SCROLLY
+	// So, at this point, the line being rastered could still hava graphical datta from the previous block of 8 raste lines...
+	size_t j = ((dC._RR - dC._IRS) % 8); 
+	j = (j >= dC._SR) ? (j - dC._SR) : (8 + j - dC._RC);
 
-	// To draw depending on the multi graphics mode...
-	switch (_VICIIRegisters -> graphicModeActive ())
-	{
-		case C64::VICIIRegisters::GraphicMode::_CHARMODE:
-			drawMonoColorBytes (bt, clr /** The color. */, dC);
-			break;
+	// Get the chars data and the color involved only...
+	// Always the one where the raster is in and also the previous one (if exists)
+	std::vector <MCHEmul::UByte> bt; std::vector <MCHEmul::UByte> clr; 
+	for (size_t n = (i == 0) ? 0 : (i - 1); n <= i /** takes 2 chars always, if possible. */; n++)
+		{ bt.push_back (_graphicsCharData [(n << 3) /** 8 bytes each. */ + j]); clr.push_back (_graphicsColorData [n]); }
 
-		case C64::VICIIRegisters::GraphicMode::_MULTICOLORCHARMODE:
-			drawMultiColorBytes (bt, clr, dC);
-			break;
-
-		default:
-			// It should be here, but just in case...
-			break;
-	}
+	// ...and finaly goes to paint them!
+	if (_VICIIRegisters -> graphicModeActive () == 
+		C64::VICIIRegisters::GraphicMode::_CHARMODE) drawMonoColorBytes (bt, clr, dC);
+	else drawMultiColorBytes (bt, clr, dC);
 }
 
 // ---
@@ -413,32 +412,49 @@ void C64::VICII::drawGraphicsBitMapMode (const C64::VICII::DrawContext& dC)
 
 // ---
 void C64::VICII::drawMonoColorBytes (const std::vector <MCHEmul::UByte>& bt, 
-		const std::vector <MCHEmul::UByte>& clr, const C64::VICII::DrawContext& dC)
+	const std::vector <MCHEmul::UByte>& clr, const C64::VICII::DrawContext& dC)
 {
-	for (unsigned short i = 0; i < 8; i++)
+	for (unsigned short i = 0; i < 8 /** To paint always 8 pixels */; i++)
 	{
-		unsigned short by = (i + dC._SC) >> 3;
-		unsigned short bi  = (unsigned short) ((bt.size () * 8 - 1)) - ((i + dC._SC) % 8);
-		if ((dC._RCA + i) >= dC._ICS && (dC._RCA + i) <= dC._LCS && bt [by].bit (bi))
-			screenMemory () -> setPixel ((size_t) (dC._RCA + i), (size_t) dC._RR, (unsigned int) (clr [by].value () & 0x0f));
+		size_t by = (dC._SC == 0) ? 1 : ((i <= dC._SC) ? 0 : 1);
+		size_t bi = (by == 0) ? (8 + dC._SC - i) : (i - dC._SC);
+
+		if (by == 1 && bt.size () == 1)
+		{
+			if (i < dC._SC)	continue; // Not to paint anything...
+			else by = 0; // The affected one will be th first...
+		}
+
+		unsigned short pos = dC._RCA + i;
+		if (pos <= dC._LCS && bt [by].bit (bi))
+			screenMemory () -> setPixel ((size_t) pos, (size_t) dC._RR, 
+				(unsigned int) (clr [by].value () & 0x0f /** Useful nybble. */));
 	}
 }
 
 // ---
 void C64::VICII::drawMultiColorBytes (const std::vector <MCHEmul::UByte>& bt, 
-		const std::vector <MCHEmul::UByte>& clr, const C64::VICII::DrawContext& dC)
+	const std::vector <MCHEmul::UByte>& clr, const C64::VICII::DrawContext& dC)
 {
-	for (unsigned short i = 0 ; i < 4; i++)
+	for (unsigned short i = 0 ; i < 8; i += 2)
 	{
-		unsigned short by = ((i << 1) + dC._SC) >> 3;
-		unsigned short bi  = (unsigned short) ((bt.size () * 8 - 1)) - (((i << 1) + dC._SC) % 8);
-		unsigned char cs = ((bt [by].value () >> (i << 1)) & 0x03); // 0, 1, 2 or 3...
-		unsigned int fc = (unsigned int) ((cs == 3) ? clr [by].value () : _VICIIRegisters -> backgroundColor (cs)) & 0x0f;
-		// Two pixels together...
-		if ((dC._RCA + i) >= dC._ICS && (dC._RCA + i) <= dC._LCS)
-			screenMemory () -> setPixel ((size_t) (dC._RCA + i), (size_t) dC._RR, fc);
-		if ((dC._RCA + i + 1) >= dC._ICS && (dC._RCA + i + 1) <= dC._LCS)
-			screenMemory () -> setPixel ((size_t) (dC._RCA + i + 1), (size_t) dC._RR, fc);
+		size_t by = (dC._SC == 0) ? 1 : ((i <= dC._SC) ? 0 : 1);
+		size_t bi = (by == 0) ? (8 + dC._SC - i) : (i - dC._SC);
+
+		if (by == 1 && bt.size () == 1)
+		{
+			if (i < dC._SC)	continue; // Not to paint anything...
+			else by = 0; // The affected one will be th first...
+		}
+
+		unsigned char cs = (bt [by].value () >> i) & 0x03; // 0, 1, 2 or 3...
+		unsigned int fc = (unsigned int) ((cs == 3) 
+			? clr [by].value () : _VICIIRegisters -> backgroundColor (cs)) & 0x0f /** Useful nybble. */;
+		unsigned short pos = dC._RCA + i;
+		if (pos <= dC._LCS)
+			screenMemory () -> setPixel ((size_t) pos, (size_t) dC._RR, fc);
+		if ((pos + 1) <= dC._LCS)
+			screenMemory () -> setPixel ((size_t) (pos + 1), (size_t) dC._RR, fc);
 	}
 }
 
