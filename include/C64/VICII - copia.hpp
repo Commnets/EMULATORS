@@ -237,12 +237,6 @@ namespace C64
 
 		~VICII ();
 
-		/** To change and get the bank. */
-		unsigned short bank () const
-							{ return (_bank); }
-		void setBank (unsigned short bk)
-							{ if (bk == 0 || bk == 1 || bk == 2 || bk == 3) _bank = bk; }
-
 		virtual bool initialize () override;
 
 		virtual bool simulate (MCHEmul::CPU* cpu) override;
@@ -297,20 +291,20 @@ namespace C64
 		MCHEmul::UBytes readSpriteDataAt (unsigned short l) const;
 
 		// Draw the graphics in detail...
+		/** Draws the char mode. */
+		void drawGraphicsCharMode (const DrawContext& dC);
+		/** Draws the bitmap mode. */
+		void drawGraphicsBitMapMode (const DrawContext& dC);
 		/** Draws a monocolor byte. */
-		void drawMonoColorBytes (int cb, size_t r, 
-			const MCHEmul::UBytes& bt, const MCHEmul::UBytes& clr, const DrawContext& dC);
+		void drawMonoColorBytes (const std::vector <MCHEmul::UByte>& bt, 
+			const std::vector <MCHEmul::UByte>& clr, const DrawContext& dC);
 		/** Drawws a multicolor byte. */
-		void drawMultiColorBytes (int cb, size_t r, 
-			const MCHEmul::UBytes& bt, const MCHEmul::UBytes& clr, const DrawContext& dC);
+		void drawMultiColorBytes (const std::vector <MCHEmul::UByte>& bt, 
+			const std::vector <MCHEmul::UByte>& clr, const DrawContext& dC);
 
 		private:
 		/** The memory is used also as the set of registers of the chip. */
 		C64::VICIIRegisters* _VICIIRegisters;
-		/** A very important variable comming from other chip. \n
-			Can be 0, 1, 2, 3...and it affects to the determination of any memory address. 
-			By default the bank is 0. */
-		unsigned short _bank; 
 		/** The ROM is used to locate in many circunstances the info about the charrs. */
 		MCHEmul::Memory* _charROM;
 		/** The raster. */

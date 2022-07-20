@@ -301,38 +301,20 @@ void C64::VICII::drawGraphics (const C64::VICII::DrawContext& dC)
 	if (_graphicsColorData.size () == 0)
 		return; // It could happen at the first lines of the screen when the vertical SCROLL is active...
 
-	// The graphical column being involved...
-	// The SCROLLX has been applied to the calculus, so it can be negative!
-	// -7 - _GRAPHMAXBITMAPCOLUMNS
-	int cb = (dC._RCA - dC._ICD) - dC._SC; 
-
-	// The graphical line being involved...
-	// The SCROLLY is included in the calculus!
-	// The graphical data is loaded only in a bad line but "aligned" with the value of the SCROLLY
-	// So, at this point, the line being rastered could still have graphical data from the previous block of 8 rastered lines...
-	// 0 - _GRAPHMAXBITMAPROWS
-	size_t r = ((dC._RR - dC._IRS) % 8); 
-	r = (r >= dC._SR) ? (r - dC._SR) : (8 + r - dC._SR);
-
 	switch (_VICIIRegisters -> graphicModeActive ())
 	{
 		case C64::VICIIRegisters::GraphicMode::_CHARMODE:
-			drawMonoColorBytes (cb, r, _graphicsCharData /** The char definition */, _graphicsColorData, dC);
-			break;
-
 		case C64::VICIIRegisters::GraphicMode::_MULTICOLORCHARMODE:
-			drawMonoColorBytes (cb, r, _graphicsCharData, _graphicsColorData, dC);
+			drawGraphicsCharMode (dC);
 			break;
 	
 		case C64::VICIIRegisters::GraphicMode::_BITMAPMODE:
-			drawMonoColorBytes (cb, r, _graphicsBitmapData /** The bimap definition. */, _graphicsColorData, dC);
-
 		case C64::VICIIRegisters::GraphicMode::_MULTICOLORBITMAPMODE:
-			drawMonoColorBytes (cb, r, _graphicsBitmapData, _graphicsColorData, dC);
+			drawGraphicsBitMapMode (dC);
 			break;
 
 		default:
-			// Not graphic mode supported, yet...
+			assert (0); // Not graphic mode supported...
 			break;
 	}
 }
@@ -370,14 +352,12 @@ MCHEmul::ScreenMemory* C64::VICII::createScreenMemory ()
 // ---
 MCHEmul::UBytes C64::VICII::readCharDataFor (const MCHEmul::UBytes& chrs) const
 {
-	MCHEmul::Memory* m = ((_bank == 0 || _bank == 2) ? _charROM : _memory);
-
 	std::vector <MCHEmul::UByte> dt;
 
 	for (auto i : chrs.bytes ())
 	{
 		std::vector <MCHEmul::UByte> chrDt = memoryRef () -> bytes 
-			(_VICIIRegisters -> charDataMemory () /** The key. */ + (size_t) (i.value () << 3), 8);
+			(_VICIIRegisters -> charMemory () /** The key. */ + (size_t) (i.value () << 3), 8);
 		dt.insert (dt.end (), chrDt.begin (), chrDt.end ());
 	}
 
@@ -409,37 +389,83 @@ MCHEmul::UBytes C64::VICII::readSpriteDataAt (unsigned short l) const
 }
 
 // ---
-void C64::VICII::drawMonoColorBytes (int cb, size_t r, 
-	const MCHEmul::UBytes& bt, const MCHEmul::UBytes& clr, const C64::VICII::DrawContext& dC)
+void C64::VICII::drawGraphicsCharMode (const C64::VICII::DrawContext& dC)
 {
-	for (int i = 0; i < 8 /** To paint always 8 pixels */; i++)
-	{
-		if ((cb + i) < 0)
-			continue;
+	// The graphical column being involved...
+	// Still pending to be applied the SCROLLX!
+	// It will also be a multiple of 8 (the RCA is also always adjusted to multiples of 8)
+	size_t i = (dC._RCA - dC._ICD) >> 3; // Never bigger than _GRAPHMAXCHARCOLUMNS 
 
-		size_t iBy = (size_t) ((cb + i) >> 3 /** To determine the byte. */) << 3 /** 8 bytes per char data. */;
-		size_t iBt = 7 - (size_t) ((cb + i) % 8); /** From MSB to LSB. */
+	// The graphical line being involved...
+	// The SCROLLY is included in the calculus!
+	// The gaphical data is loaded only in a bad line but "aligned" with the value of the SCROLLY
+	// So, at this point, the line being rastered could still hava graphical datta from the previous block of 8 raste lines...
+	size_t j = ((dC._RR - dC._IRS) % 8); 
+	j = (j >= dC._SR) ? (j - dC._SR) : (8 + j - dC._SR);
+
+	// Get the chars data and the color involved only...
+	// Always the one where the raster is in and also the previous one (if exists)
+	std::vector <MCHEmul::UByte> bt; std::vector <MCHEmul::UByte> clr; 
+	for (size_t n = (i == 0) ? 0 : (i - 1); n <= i /** takes 2 chars always, if possible. */; n++)
+		{ bt.push_back (_graphicsCharData [(n << 3) /** 8 bytes each. */ + j]); clr.push_back (_graphicsColorData [n]); }
+
+	// ...and finaly goes to paint them!
+	if (_VICIIRegisters -> graphicModeActive () == 
+		C64::VICIIRegisters::GraphicMode::_CHARMODE) drawMonoColorBytes (bt, clr, dC);
+	else drawMultiColorBytes (bt, clr, dC);
+}
+
+// ---
+void C64::VICII::drawGraphicsBitMapMode (const C64::VICII::DrawContext& dC)
+{
+	// TODO
+}
+
+// ---
+void C64::VICII::drawMonoColorBytes (const std::vector <MCHEmul::UByte>& bt, 
+	const std::vector <MCHEmul::UByte>& clr, const C64::VICII::DrawContext& dC)
+{
+	for (unsigned short i = 0; i < 8 /** To paint always 8 pixels */; i++)
+	{
+		// The SCROLLX has to be taken into account...
+		size_t by = (dC._SC == 0) ? 1 : ((i < dC._SC) ? 0 : 1);
+		size_t bi = (by == 0) ? (8 + i - dC._SC) : (i - dC._SC);
+
+		// When the byte selected to be drawn is the number 2 in the list
+		// but there is only one in it...nothing has to be drawn, 
+		// unless the bit selected matches the SCROLLX value.
+		if (by == 1 && bt.size () == 1) 
+		{
+			if (i < dC._SC)	continue; // Not to paint anything...
+			else by = 0; // The affected one will be th first...
+		}
+
+		// The bytes selected to be drawn at this point take into account the SCROLLY
 		unsigned short pos = dC._RCA + i;
-		if (pos <= dC._LCS && bt [iBy + r].bit (iBt))
+		if (pos <= dC._LCS && bt [by].bit (bi))
 			screenMemory () -> setPixel ((size_t) pos, (size_t) dC._RR, 
-				(unsigned int) (clr [iBy].value () & 0x0f /** Useful nybble. */));
+				(unsigned int) (clr [by].value () & 0x0f /** Useful nybble. */));
 	}
 }
 
 // ---
-void C64::VICII::drawMultiColorBytes (int cb, size_t r, 
-	const MCHEmul::UBytes& bt, const MCHEmul::UBytes& clr, const C64::VICII::DrawContext& dC)
+void C64::VICII::drawMultiColorBytes (const std::vector <MCHEmul::UByte>& bt, 
+	const std::vector <MCHEmul::UByte>& clr, const C64::VICII::DrawContext& dC)
 {
 	for (unsigned short i = 0 ; i < 8; i += 2)
 	{
-		if ((cb + i) < 0)
-			continue;
+		size_t by = (dC._SC == 0) ? 1 : ((i < dC._SC) ? 0 : 1);
+		size_t bi = (by == 0) ? (8 + dC._SC - i) : (i - dC._SC);
 
-		size_t iBy = (size_t) ((cb + i) >> 3) << 3; 
-		size_t iBt = 7 - (size_t) ((cb + i) % 8);
-		unsigned char cs = (bt [iBy + r].value () >> i) & 0x03; // 0, 1, 2 or 3...
+		if (by == 1 && bt.size () == 1)
+		{
+			if (i < dC._SC)	continue;
+			else by = 0; 
+		}
+
+		unsigned char cs = (bt [by].value () >> i) & 0x03; // 0, 1, 2 or 3...
 		unsigned int fc = (unsigned int) ((cs == 3) 
-			? clr [iBy].value () : _VICIIRegisters -> backgroundColor (cs)) & 0x0f /** Useful nybble. */;
+			? clr [by].value () : _VICIIRegisters -> backgroundColor (cs)) & 0x0f /** Useful nybble. */;
 		unsigned short pos = dC._RCA + i;
 		if (pos <= dC._LCS)	screenMemory () -> setPixel ((size_t) pos, (size_t) dC._RR, fc);
 		if ((pos + 1) <= dC._LCS) screenMemory () -> setPixel ((size_t) (pos + 1), (size_t) dC._RR, fc);

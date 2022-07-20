@@ -2,49 +2,20 @@
 
 // ---
 C64::VICIIRegisters::VICIIRegisters ()
-	: MCHEmul::Memory (MCHEmul::Address ({ 0x00, 0xd0 }, false), 0x0400),
-	  _borderColor (0x0000),
-	  _backgroundColor (4, 0x0000),
-	  _spriteXCoord (8, 0x0000),
-	  _spriteYCoord (8, 0x0000),
-	  _spriteColor (8, 0x0000),
-	  _spriteSharedColor (2, 0x0000),
-	  _spriteMulticolor (8, false),
-	  _spriteEnabled (8, false),
-	  _spriteDoubleWidth (8, false),
-	  _spriteDoubleHeight (8, false),
-	  _spriteToForegroundPriority (8, false),
-	  _verticalScrollPosition (0x0000),
-	  _horizontalScrollPosition (0x0000),
-	  _textDisplay25RowsActive (true),
-	  _textDisplay40ColumnsActive (true),
-	  _screenSameColorBorderActive (false),
-	  _videoResetActive (false),
-	  _graphicBitModeActive (false),
-	  _graphicExtendedColorTextModeActive (false),
-	  _graphicMulticolorTextModeActive (false),
-	  _graphicModeActive (C64::VICIIRegisters::GraphicMode::_CHARMODE),
-	  _rasterIRQActive (false),
-	  _spriteCollisionWithDataIRQActive (false),
-	  _spriteCollisionsIRQActive (false),
-	  _lightPenIRQActive (false),
-	  _IRQRasterLineAt (0x00),
-	  _charMemory (MCHEmul::Address ({ 0xd0, 0x00 })),
-	  _screenMemory (MCHEmul::Address ({ 0x10, 0x00 })),
-	  _bitmapMemory (MCHEmul::Address ({ 0xdd, 0x00 })),
-	  // Used when reading and for VICII to kep internal values...
-	  _currentRasterLine (0x0000), 
-	  _currentLightPenHorizontalPosition (0x0000), 
-	  _currentLightPenVerticalPosition (0x0000),
-	  _rasterAtIRQLine (false), 
-	  _spritesCollisionWithDataHappened (false), 
-	  _spriteCollisionWithDataHappened (8, false), 
-	  _spritesCollisionHappened (false), 
-	  _spriteCollisionHappened (8, false), 
-	  _lightPenOnScreenHappened (false),
-	  _vicIItoGenerateIRQ (false)
+	: MCHEmul::Memory (MCHEmul::Address ({ 0x00, 0xd0 }, false), 0x0400)
 {
-	// Nothing else to do apart of the initialization...
+	initializeInternalValues ();
+}
+
+// ---
+bool C64::VICIIRegisters::initialize ()
+{
+	if (!MCHEmul::Memory::initialize ())
+		return (false);
+
+	initializeInternalValues ();
+
+	return (true);
 }
 
 // ---
@@ -133,7 +104,7 @@ void C64::VICIIRegisters::setValue (size_t p, const MCHEmul::UByte& v)
 		// VMCSB: VICII Chip Memory Control Register
 		case 0x18:
 			/* bits ----xxx- */
-			_charMemory = MCHEmul::Address (MCHEmul::UInt::fromUnsignedInt 
+			_charDataMemory = MCHEmul::Address (MCHEmul::UInt::fromUnsignedInt 
 				(((unsigned int) (v.value () & 0x0e)) << 10 /** multiply 1024 */));
 			/* bits xxxx---- */
 			_screenMemory = MCHEmul::Address (MCHEmul::UInt::fromUnsignedInt 
@@ -379,6 +350,50 @@ MCHEmul::UByte C64::VICIIRegisters::readValue (size_t p) const
 	}
 
 	return (result);
+}
+
+// ---
+void C64::VICIIRegisters::initializeInternalValues ()
+{
+	_borderColor = 0x0000;
+	_backgroundColor = std::vector <unsigned short> (4, 0x0000);
+	_spriteXCoord = std::vector <unsigned short> (8, 0x0000);
+	_spriteYCoord = std::vector <unsigned short> (8, 0x0000);
+	_spriteColor = std::vector <unsigned short> (8, 0x0000);
+	_spriteSharedColor = std::vector <unsigned short> (2, 0x0000);
+	_spriteMulticolor = std::vector <bool> (8, false);
+	_spriteEnabled = std::vector <bool> (8, false);
+	_spriteDoubleWidth = std::vector <bool> (8, false);
+	_spriteDoubleHeight = std::vector <bool> (8, false);
+	_spriteToForegroundPriority = std::vector <bool> (8, false);
+	_verticalScrollPosition = 0x0000;
+	_horizontalScrollPosition = 0x0000;
+	_textDisplay25RowsActive = true;
+	_textDisplay40ColumnsActive = true;
+	_screenSameColorBorderActive = false;
+	_videoResetActive = false;
+	_graphicBitModeActive = false;
+	_graphicExtendedColorTextModeActive = false;
+	_graphicMulticolorTextModeActive = false;
+	_graphicModeActive = C64::VICIIRegisters::GraphicMode::_CHARMODE;
+	_rasterIRQActive = false;
+	_spriteCollisionWithDataIRQActive = false;
+	_spriteCollisionsIRQActive = false;
+	_lightPenIRQActive = false;
+	_IRQRasterLineAt = 0x00;
+	_charDataMemory = MCHEmul::Address ({ 0xd0, 0x00 }); 
+	_screenMemory = MCHEmul::Address ({ 0x10, 0x00 }); 
+	_bitmapMemory = MCHEmul::Address ({ 0xdd, 0x00 }); 
+	_currentRasterLine = 0x0000;
+	_currentLightPenHorizontalPosition = 0x0000;
+	_currentLightPenVerticalPosition = 0x0000;
+	_rasterAtIRQLine = false;
+	_spritesCollisionWithDataHappened = false;
+	_spriteCollisionWithDataHappened = std::vector <bool> (8, false), 
+	_spritesCollisionHappened = false;
+	_spriteCollisionHappened = std::vector <bool> (8, false);
+	_lightPenOnScreenHappened = false;
+	_vicIItoGenerateIRQ = false;
 }
 
 // ---

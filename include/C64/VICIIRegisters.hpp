@@ -94,8 +94,8 @@ namespace C64
 		unsigned short IRQRasterLineAt () const
 							{ return (_IRQRasterLineAt);  }
 
-		const MCHEmul::Address& charMemory () const
-							{ return (_charMemory); }
+		const MCHEmul::Address& charDataMemory () const
+							{ return (_charDataMemory); }
 		const MCHEmul::Address& screenMemory () const 
 							{ return (_screenMemory); }
 		const MCHEmul::Address& bitmapMemory () const 
@@ -144,11 +144,15 @@ namespace C64
 		void setVicIItoGenerateIRQ (bool v)
 							{ _vicIItoGenerateIRQ = v; }
 
+		virtual bool initialize () override;
+
 		protected:
 		virtual void setValue (size_t p, const MCHEmul::UByte& v) override;
 		virtual MCHEmul::UByte readValue (size_t p) const override;
 
 		private:
+		/** Just to initialize the internal values. */
+		void initializeInternalValues ();
 		/** Depending on how bits ar set, a no valid mode could be set. */
 		void setGraphicModeActive ();
 
@@ -185,7 +189,7 @@ namespace C64
 		/** Raster Control. */
 		unsigned short _IRQRasterLineAt; // To define where to launch the IRQ. When reading therre is other variable...
 		/** Location of the Graphical Memory. */
-		MCHEmul::Address _charMemory; // Info about the characters
+		MCHEmul::Address _charDataMemory; // Info about the characters
 		MCHEmul::Address _screenMemory; // Where the characters to draw are
 		MCHEmul::Address _bitmapMemory; // Where the bitmap to draw is
 
