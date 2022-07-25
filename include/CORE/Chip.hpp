@@ -62,8 +62,7 @@ namespace MCHEmul
 		/** To initialize the chip, when "the power is set up". \n 
 			It could be defined per chip. By default it does nothing. \n
 			Returns true, when verything was ok, and false in any other circusntance. */
-		virtual bool initialize ()
-							{ return (true); }
+		virtual bool initialize () = 0;
 
 		/** To simulate th behaviour of the chip. It has to be defined per chip. \n
 			Returns true if everything was ok, and false in any other circunstance. \n 
@@ -97,6 +96,9 @@ namespace MCHEmul
 		NoChip ()
 			: Chip (0)
 							{ }
+
+		virtual bool initialize () override
+							{ return (true); }
 
 		virtual bool simulate (CPU*) override
 							{ return (true); }

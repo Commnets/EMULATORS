@@ -18,7 +18,7 @@
 
 namespace MCHEmul
 {
-	class Stack : public Memory
+	class Stack : public PhisicalStorageSubset
 	{
 		public:
 		/**
@@ -26,17 +26,17 @@ namespace MCHEmul
 		  * @param b	: From the end of the memory to the beggining or the other way around
 		  * @param e	: Poining always to the empty place or pointing to the last position kept.
 		  */
-		Stack (const Address& iA, size_t l, bool b = true, bool e = true)
-			: Memory (iA, l, { } /** no blocks inside */), 
+		Stack (int id, PhisicalStorage* ps, size_t pp, const Address& iA, size_t s, bool b = true, bool e = true)
+			: PhisicalStorageSubset (id, ps, pp, iA, s), 
 			  _position (0), _fromBack (b), _pointToEmpty (e),
 			  _stackOverflow (false),
 			  _empty (true)
-							{ assert (size () > 0) /* It has to have size */; }
+							{ }
 
 		constexpr size_t position () const
 							{ return (_position); }
 
-		virtual bool initialize () override;
+		virtual void initialize () override;
 
 		void push (const UBytes& v);
 		UBytes pull (size_t nV);

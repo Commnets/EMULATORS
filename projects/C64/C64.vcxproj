@@ -22,10 +22,12 @@
     <ClInclude Include="..\..\include\C64\C64.hpp" />
     <ClInclude Include="..\..\include\C64\CIA.hpp" />
     <ClInclude Include="..\..\include\C64\CIARegisters.hpp" />
+    <ClInclude Include="..\..\include\C64\ColorMemory.hpp" />
     <ClInclude Include="..\..\include\C64\incs.hpp" />
     <ClInclude Include="..\..\include\C64\Memory.hpp" />
     <ClInclude Include="..\..\include\C64\OSIO.hpp" />
     <ClInclude Include="..\..\include\C64\Screen.hpp" />
+    <ClInclude Include="..\..\include\C64\SFChip.hpp" />
     <ClInclude Include="..\..\include\C64\VICII.hpp" />
     <ClInclude Include="..\..\include\C64\VICIIRegisters.hpp" />
   </ItemGroup>
@@ -33,8 +35,10 @@
     <ClCompile Include="..\..\src\C64\C64.cpp" />
     <ClCompile Include="..\..\src\C64\CIA.cpp" />
     <ClCompile Include="..\..\src\C64\CIARegisters.cpp" />
+    <ClCompile Include="..\..\src\C64\Memory.cpp" />
     <ClCompile Include="..\..\src\C64\OSIO.cpp" />
     <ClCompile Include="..\..\src\C64\Screen.cpp" />
+    <ClCompile Include="..\..\src\C64\SFChip.cpp" />
     <ClCompile Include="..\..\src\C64\VICII.cpp" />
     <ClCompile Include="..\..\src\C64\VICIIRegisters.cpp" />
   </ItemGroup>

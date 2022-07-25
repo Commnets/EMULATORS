@@ -68,6 +68,13 @@ bool MCHEmul::Computer::initialize ()
 		return (false);
 	}
 
+	if (!_memory -> initialize ())
+	{
+		_lastError = MCHEmul::_INIT_ERROR;
+
+		return (false);
+	}
+
 	if (!_cpu -> initialize ())
 	{
 		_lastError = MCHEmul::_INIT_ERROR;
@@ -79,13 +86,6 @@ bool MCHEmul::Computer::initialize ()
 	for (auto i : chips ())
 		resultChips &= i.second -> initialize ();
 	if (!resultChips)
-	{
-		_lastError = MCHEmul::_INIT_ERROR;
-
-		return (false);
-	}
-
-	if (!_memory -> initialize ())
 	{
 		_lastError = MCHEmul::_INIT_ERROR;
 

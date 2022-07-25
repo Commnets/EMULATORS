@@ -1,238 +1,74 @@
 #include <CORE/Memory.hpp>
-#include <CORE/Stack.hpp>
 #include <fstream>
 
-// ---
-MCHEmul::Memory::Memory (const MCHEmul::Address& iA, size_t s, bool r, const MCHEmul::Memories& blks, MCHEmul::Stack* stk)
-	: _initialAddress (iA), _size (s), _values (nullptr), _rom (r), _blocks (blks), _stack (stk),
-	  _active (true),
-	  _defaultValues (nullptr)
-{ 
-	// The memory has to have either "some size" or having block behind!
-	assert (_size >= 0 || (_size == 0 && !_blocks.empty ()));
-
-	if (_size > 0)
-	{
-		_values = new MCHEmul::UByte [_size];
-		_defaultValues = new MCHEmul::UByte [_size];
-		for (size_t i = 0; i < _size; i++)
-			_values [i] = _defaultValues [i] = MCHEmul::UByte::_0;
-	}
-}
+MCHEmul::UByte MCHEmul::PhisicalStorage::_DEFAULTVALUE (MCHEmul::UByte::_0);
 
 // ---
-MCHEmul::Memory::~Memory ()
-{ 
-	bool dS = false;
-	for (auto i : _blocks)
-	{
-		dS |= (i.second == _stack);
-		delete (i.second);
-	}
-
-	if (!dS)
-		delete (_stack);
-
-	delete [] (_values); 
-	delete [] (_defaultValues);
-}
-
-// ---
-size_t MCHEmul::Memory::size () const
-{ 
-	size_t result = _size;
-	for (auto i : _blocks)
-		result += i.second -> size ();
-	
-	return (result); 
-}
-
-// ---
-void MCHEmul::Memory::fixDefaultValues ()
+std::vector <MCHEmul::UByte> MCHEmul::PhisicalStorage::bytes (size_t pB, size_t nB) const
 {
-	for (size_t i = 0; i < _size; i++)
-		_defaultValues [i] = _values [i];
-	for (auto i : _blocks)
-		i.second -> fixDefaultValues ();
-}
-
-// ---
-bool MCHEmul::Memory::isIn (const MCHEmul::Address& a) const
-{ 
-	if (!_active)
-		return (false);
-
-	bool result = (_size > 0 && a >= _initialAddress && _initialAddress.distanceWith (a) < (int) _size);
-	if (!result)
-		for (MCHEmul::Memories::const_iterator i = _blocks.begin (); i != _blocks.end () && !result; i++)
-			result = (*i).second -> isIn (a);
-
-	return (result); 
-}
-
-// ---
-MCHEmul::UByte MCHEmul::Memory::value (const MCHEmul::Address& a) const
-{
-	if (!_active)
-		return (MCHEmul::UByte::_0);
-
-	MCHEmul::UByte result = MCHEmul::UByte::_0;
-
-	size_t p = 0;
-	if (_size > 0 && a >= _initialAddress && (p = _initialAddress.distanceWith (a)) < (int) _size)
-		result = readValue (p);
-	else
-	{
-		bool t = false;
-		for (MCHEmul::Memories::const_iterator i = _blocks.begin (); i != _blocks.end () && !t; i++)
-		{
-			if ((*i).second -> isIn (a))
-			{
-				result = (*i).second -> value (a);
-				t = true;
-			}
-		}
-	}
-
+	std::vector <MCHEmul::UByte> result;
+	for (size_t i = 0; i < nB; i++)
+		result.push_back (value (pB + i));
 	return (result);
 }
 
 // ---
-void MCHEmul::Memory::set (const MCHEmul::Address& a, const MCHEmul::UByte v, bool f)
-{
-	if (!_active)
-		return;
+MCHEmul::PhisicalStorageSubset::PhisicalStorageSubset 
+		(int id, MCHEmul::PhisicalStorage* pS, size_t pp, const MCHEmul::Address& a, size_t s)
+	: _id (id), _phisicalStorage (pS), _initialPhisicalPosition (pp), _initialAddress (a), _size (s),
+	  _active (true), // By default all are active
+	  _activeForReading (true), // It can be switched off
+	  _defaultData (_size, MCHEmul::UByte::_0) // The default data is initially = _0;
+{ 
+	assert (_phisicalStorage != nullptr);
+	assert (_size > 0);
 
-	if (_rom && !f)
-		return;
-
-	size_t p = 0;
-	if (_size > 0 && a >= _initialAddress && (p = _initialAddress.distanceWith (a)) < (int) _size)
-		setValue (p, v);
-	else
+	// The size defined for a phisical storage subset can not exceed the boundaries of the full phisical storage behind.
+	// If it happens then the whole phisical storage behind is considered!
+	if (_phisicalStorage -> size () < (_initialPhisicalPosition + _size))
 	{
-		bool t = false;
-		for (MCHEmul::Memories::iterator i = _blocks.begin (); i != _blocks.end () && !t; i++)
-		{
-			if ((*i).second -> isIn (a))
-			{
-				(*i).second -> set (a, v);
-				t = true;
-			}
-		}
+		_initialPhisicalPosition = 0;
+		_size = _phisicalStorage -> size ();
+
+		_defaultData = std::vector <MCHEmul::UByte> (_size, MCHEmul::UByte::_0);
 	}
 }
 
 // ---
-std::vector <MCHEmul::UByte> MCHEmul::Memory::bytes (const MCHEmul::Address& a, size_t nB) const
+bool MCHEmul::PhisicalStorageSubset::load (const std::string& fN, size_t sA, bool bE)
 {
-	std::vector <MCHEmul::UByte> dt = { };
-
-	if (!_active)
-		return (dt);
-
-	size_t p = 0;
-	if (_size > 0 && a >= _initialAddress && ((p = _initialAddress.distanceWith (a)) + nB - 1) < (int) _size)
-	{
-		for (size_t i = 0; i < nB; i++)
-			dt.push_back (readValue (p + i));
-	}
-	else
-	{
-		bool t = false;
-		for (MCHEmul::Memories::const_iterator i = _blocks.begin (); i != _blocks.end () && !t; i++)
-		{
-			if ((*i).second -> isIn (a))
-			{
-				dt = (*i).second -> values (a, nB).bytes ();
-				t = true;
-			}
-		}
-	}
-
-	return (dt);
-}
-
-// ---
-void MCHEmul::Memory::set (const MCHEmul::Address& a, const std::vector <MCHEmul::UByte>& v, bool f)
-{
-	if (!_active)
-		return;
-
-	if (_rom && !f)
-		return;
-
-	size_t p = 0;
-	if (_size > 0 && a >= _initialAddress && ((p = _initialAddress.distanceWith (a)) + v.size () - 1) < (int) _size)
-	{
-		for (size_t i = 0; i < v.size (); i++)
-			setValue (p + i, v [i]);
-	}
-	else
-	{
-		bool t = false;
-		for (MCHEmul::Memories::iterator i = _blocks.begin (); i != _blocks.end () && !t; i++)
-		{
-			if ((*i).second -> isIn (a))
-			{
-				(*i).second -> set (a, v);
-				t = true;
-			}
-		}
-	}
-}
-
-// ---
-bool MCHEmul::Memory::initialize ()
-{
-	for (size_t i = 0; i < _size; i++)
-		_values [i] = _defaultValues [i];
-	
-	bool result = true;
-	for (auto i : _blocks)
-		result &= i.second -> initialize  ();
-
-	return (result);
-}
-
-// ---
-bool MCHEmul::Memory::load (const std::string& fN)
-{
-	if (!_active)
-		return (false);
-
 	std::ifstream file (fN, std::ios::binary);
 	if (!file)
 		return (false);
 
 	file.seekg (0, std::ios::end);
 	std::streamoff lF = file.tellg ();
-	size_t lA = _initialAddress.size () * MCHEmul::UByte::sizeBits ();
 	if (lF > (std::streamoff) std::numeric_limits <size_t>::max () ||
-		lF < (std::streamoff) lA || (lF - (std::streamoff) lA) > (std::streamoff) size ())
+		lF < (std::streamoff) sA || (lF - (std::streamoff) sA) > (std::streamoff) size ())
 		return (false); // either bad format or too long for this memory...
 
 	size_t lFA = (size_t) lF;
-	char* aDT = new char [lA];
+	char* aDT = new char [sA];
 	file.seekg (0, std::ios::beg);
-	file.read (aDT, (std::streamsize) lA); // Reads the address where to load the info
-	char* fDT = new char [lFA - lA];
-	file.read (fDT, (std::streamsize) (lFA - lA)); // Reads the info itself
+	file.read (aDT, (std::streamsize) sA); // Reads the address where to load the info
+	char* fDT = new char [lFA - sA];
+	file.read (fDT, (std::streamsize) (lFA - sA)); // Reads the info itself
 
 	file.close ();
 
 	std::vector <MCHEmul::UByte> aV;
-	for (size_t i = 0; i < (size_t) (lA / MCHEmul::UByte::size  ()); i += MCHEmul::UByte::size ())
+	for (size_t i = 0; i < (size_t) (sA / MCHEmul::UByte::size  ()); i += MCHEmul::UByte::size ())
 		aV.push_back ((MCHEmul::UByte) (*(aDT + i)));
 	std::vector <MCHEmul::UByte> fV;
-	for (size_t i = 0; i < (size_t) ((lFA - lA) / MCHEmul::UByte::size ()); i += MCHEmul::UByte::size ())
+	for (size_t i = 0; i < (size_t) ((lFA - sA) / MCHEmul::UByte::size ()); i += MCHEmul::UByte::size ())
 		fV.push_back ((MCHEmul::UByte) (*(fDT + i)));
 
 	delete [] aDT;
 	delete [] fDT;
 
-	MCHEmul::Address adr (aV);
-	if (!isIn (adr))
+	int dt;
+	MCHEmul::Address adr (aV, bE);
+	if (!isIn (adr, dt))
 		return (false);
 	
 	set (adr, fV, true);
@@ -241,22 +77,41 @@ bool MCHEmul::Memory::load (const std::string& fN)
 }
 
 // ---
-bool MCHEmul::Memory::loadInto (const std::string& fN, const MCHEmul::Address& a)
+std::vector <MCHEmul::UByte> MCHEmul::PhisicalStorageSubset::bytes (const MCHEmul::Address& a, size_t nB) const
 {
-	if (!_active)
-		return (false);
+	std::vector <MCHEmul::UByte> result;
+	
+	int dt;
+	if (_active && _activeForReading &&
+		nB < _size && (a >= _initialAddress && (dt = _initialAddress.distanceWith (a)) <= (int) (_size - nB))) 
+		for (size_t i = 0; i < nB; i++)
+			result.push_back (readValue (dt + i)); 
+	
+	return (result);
+}
 
-	if (!isIn (a))
-		return (false);
+// ---
+void MCHEmul::PhisicalStorageSubset::set (const MCHEmul::Address& a, const std::vector <MCHEmul::UByte>& v, bool f)
+{
+	std::vector <MCHEmul::UByte> result;
+	
+	int dt; 
+	if (_active && _phisicalStorage -> canBeWriten (f) &&
+		v.size () < _size && (a >= _initialAddress && (dt = _initialAddress.distanceWith (a)) <= (int) (_size - v.size ())))
+		for (size_t i = 0; i < v.size (); i++)
+			setValue (dt + i, v [i]);
+}
 
+// ---
+bool MCHEmul::PhisicalStorage::loadInto (const std::string& fN, size_t pB)
+{
 	std::ifstream file (fN, std::ios::binary);
 	if (!file)
 		return (false);
 
 	file.seekg (0, std::ios::end);
 	std::streamoff lF = file.tellg ();
-	if (lF > (std::streamoff) std::numeric_limits <size_t>::max () ||
-		lF > (std::streamoff) size ())
+	if (pB > size () || lF > (std::streamoff) (size () - pB))
 		return (false); // too long for this memory...
 
 	size_t lFA = (size_t) lF;
@@ -272,41 +127,207 @@ bool MCHEmul::Memory::loadInto (const std::string& fN, const MCHEmul::Address& a
 
 	delete [] fDT;
 	
-	set (a, MCHEmul::UBytes (fV), true);
+	set (pB, fV);
 
 	return (true);
 }
 
 // ---
-std::ostream& MCHEmul::operator << (std::ostream& o, const MCHEmul::Memory& m)
+std::ostream& MCHEmul::operator << (std::ostream& o, const MCHEmul::PhisicalStorageSubset& ps)
 {
-	if (!m._active)
+	if (!ps.active ())
 		return (o);
 
 	o << "---" << std::endl;
-	o << "Memory Block Data" << std::endl;
-	o << m.initialAddress () << "," << m.size ();
+	o << "Memory Subset Data" << std::endl;
+	o << "(" << ps.id () << ")," << ps.initialAddress () << "," << ps.size ();
+	o << "Read " << (ps.activeForReading () ? "allowed" : "not allowed");
 
-	for (auto i : m._blocks)
-	{
-		if (dynamic_cast <MCHEmul::Stack*> (i.second) != nullptr)
-			o << std::endl << *((MCHEmul::Stack*) i.second); // Specific for the stack...
-		else
-			o << std::endl << *i.second;
-	}
-
-	if (m._size != 0)
+	if (ps.size () != 0)
 	{
 		size_t bS = 0x10;
-		for (size_t i = 0; i <= (size_t) (m._size / bS); i++)
+		for (size_t i = 0; i <= (size_t) (ps.size () / bS); i++)
 		{
-			if ((i * bS) < m._size)
+			if ((i * bS) < ps.size ())
 				o << std::endl;
 			
-			for (size_t j = 0; j < bS && ((i * bS) + j) < m._size ; j++)
-				o << ((j != 0) ? " " : "") << m._values [(i * bS) + j];
+			for (size_t j = 0; j < bS && ((i * bS) + j) < ps.size (); j++)
+				o << ((j != 0) ? " " : "") << ps.value (ps.initialAddress () + (i * bS) + j);
 		}
 	}
+		
+	return (o);
+}
+
+// ---
+bool MCHEmul::MemoryView::isIn (const MCHEmul::Address& a, int& dt) const
+{ 
+	bool result = false;
+	for (MCHEmul::PhisicalStorageSubsets::const_iterator i = _subsets.begin ();
+			i != _subsets.end () && !result; i++)
+		result = (*i).second -> isIn (a, dt); // Only one is enought...
+
+	return (result);
+}
+
+// ---
+void MCHEmul::MemoryView::set (const MCHEmul::Address& a, const MCHEmul::UByte& d, bool f)
+{
+	int dt = 0;
+	bool w = false;
+	for (MCHEmul::PhisicalStorageSubsets::const_iterator i = _subsets.begin (); 
+			i != _subsets.end () && !w; i++)
+		if (w = ((*i).second -> canBeWriten (f) && (*i).second -> isIn (a, dt))) // The first one when it is possible...
+			(*i).second -> setValue (dt, d); // Access directly to the low level method to speed up access...
+											 // and to avoid "isIn" to be executed twice
+}
+
+// ---
+const MCHEmul::UByte& MCHEmul::MemoryView::value (const MCHEmul::Address& a) const
+{
+	int dt = 0;
+	for (auto i : _subsets)
+		if (i.second -> activeForReading () && i.second -> isIn (a, dt))
+			return (i.second -> readValue (dt)); // Access directly to the low level method to speed up the access...
+												 // and to avoid "isIn" to be executed twice!
+
+	return (MCHEmul::PhisicalStorage::_DEFAULTVALUE);
+}
+
+// ---
+std::vector <MCHEmul::UByte> MCHEmul::MemoryView::bytes (const MCHEmul::Address& a, size_t nB) const
+{
+	std::vector <MCHEmul::UByte> result;
+	
+	int dt = 0;
+	bool r = false;
+	for (MCHEmul::PhisicalStorageSubsets::const_iterator i = _subsets.begin ();
+			i != _subsets.end () && !r; i++)
+	{
+		if (r = ((*i).second -> active () && (*i).second -> activeForReading () && 
+			(a >= (*i).second -> initialAddress () && 
+			(dt = (*i).second -> initialAddress ().distanceWith (a)) <= (int) ((*i).second -> size () - nB))))
+			for (size_t j = 0; j < nB; j++)
+				result.push_back ((*i).second -> readValue (dt + j));
+	}
+
+	return (result);
+}
+
+// ---
+void MCHEmul::MemoryView::set (const MCHEmul::Address& a, const std::vector <MCHEmul::UByte>& v, bool f)
+{ 
+	int dt = 0;
+	bool w = false;
+	for (MCHEmul::PhisicalStorageSubsets::const_iterator i = _subsets.begin ();
+			i != _subsets.end () && !w; i++)
+	{
+		if (w = ((*i).second -> active () && (*i).second -> canBeWriten (f) && 
+			(a >= (*i).second -> initialAddress () && 
+				(dt = (*i).second -> initialAddress ().distanceWith (a)) <= (int) ((*i).second -> size () - v.size ()))))
+			for (size_t j = 0; j < v.size (); j++)
+				(*i).second -> setValue (dt + j, v [j]);
+	}
+}
+
+// ---
+bool MCHEmul::MemoryView::loadInto (const std::string& fN, const MCHEmul::Address& a)
+{
+	int dt = 0;
+	MCHEmul::PhisicalStorageSubset* ss = nullptr;
+	for (MCHEmul::PhisicalStorageSubsets::const_iterator i = _subsets.begin (); 
+			i != _subsets.end () && ss == nullptr; i++)
+		ss = (*i).second -> isIn (a, dt) ? (*i).second : nullptr;
+
+	return ((ss == nullptr) ? ss -> loadInto (fN, a) : false);
+}
+
+// ---
+std::ostream& MCHEmul::operator << (std::ostream& o, const MCHEmul::MemoryView& mv)
+{
+	o << "---" << std::endl;
+	o << "Memory View Data";
+
+	for (auto i : mv.subsets ())
+		o << std::endl << i.second; 
+		
+	return (o);
+}
+
+// ---
+bool MCHEmul::Memory::Content::verifyCoherence () const
+{
+	_error = _phisicalStorages.empty () || _subsets.empty () || _views.empty ();
+
+	for (auto i :_subsets)
+		_error |= _phisicalStorages.find (i.second -> phisicalStorage () -> id ()) == _phisicalStorages.end ();
+	
+	for (auto i : _views)
+	{
+		for (auto j : i.second -> subsets ())
+		{
+			_error |= _subsets.find (j.second -> id ()) == _subsets.end ();
+			_error |= _phisicalStorages.find (j.second -> phisicalStorage () -> id ()) == _phisicalStorages.end ();
+		}
+	}
+
+	return (_error);
+}
+
+// ---
+bool MCHEmul::Memory::Content::initialize ()
+{ 
+	if (_error) 
+		return (false); 
+
+	for (auto i : _subsets)
+		i.second -> initialize ();
+
+	return (true); 
+}
+
+// ---
+MCHEmul::Memory::Memory (const Content& cnt)
+	: _content (), 
+	  _activeView (nullptr),
+	  _stack (nullptr), 
+	  _cpuView (nullptr), 
+	  _lastError (MCHEmul::_NOERROR)
+{
+	// It has to be verified...
+	cnt.verifyCoherence ();
+
+	if (cnt.error ())
+		_lastError = MCHEmul::_INIT_ERROR;
+	else
+	{
+		_content = cnt;
+
+		// Just to have one by default...
+		_activeView = _content.firstView ();
+	}
+}
+
+// ---
+MCHEmul::Memory::~Memory ()
+{ 
+	for (auto i : _content._phisicalStorages) 
+		delete (i.second); 
+
+	for (auto i : _content._subsets) 
+		delete (i.second); 
+
+	for (auto i : _content._views) 
+		delete (i.second); 
+}
+
+// ---
+std::ostream& MCHEmul::operator << (std::ostream& o, const MCHEmul::Memory& m)
+{
+	o << "---" << std::endl;
+	o << "Memory Data" << std::endl;
+	if (m.lastError () != MCHEmul::_NOERROR) o << "Error";
+	else *m.activeView (); // Only the active view is prited out is there is no errors...
 		
 	return (o);
 }

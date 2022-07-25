@@ -1,5 +1,6 @@
 #include <C64/VICII.hpp>
 #include <C64/C64.hpp>
+#include <C64/Memory.hpp>
 #include <F6500/incs.hpp>
 
 const MCHEmul::Address C64::VICII::_COLORMEMORY ({ 0xd8, 0x00 });
@@ -89,7 +90,7 @@ bool C64::VICII::RasterData::add (unsigned short i)
 C64::VICII::VICII (const C64::VICII::RasterData& vd, const C64::VICII::RasterData& hd, 
 		const MCHEmul::Attributes& attrs)
 	: MCHEmul::GraphicalChip (_ID, attrs),
-	  _VICIIRegisters (nullptr), _charROM (nullptr),
+	  _VICIIRegisters (nullptr), 
 	  _raster (vd, hd),
 	  _lastCPUCycles (0),
 	  _format (nullptr),
@@ -119,7 +120,7 @@ bool C64::VICII::initialize ()
 
 	// Gets the memory block dedicated to the VICII
 	if (!(_VICIIRegisters = 
-		dynamic_cast <C64::VICIIRegisters*> (memoryRef () -> block (C64::Commodore64::_VICREGS_MEMORY))))
+		dynamic_cast <C64::VICIIRegisters*> (memoryRef () -> subset (C64::Memory::_VICREGS_SUBSET))))
 	{
 		_lastError = MCHEmul::_INIT_ERROR;
 
@@ -127,16 +128,6 @@ bool C64::VICII::initialize ()
 	}
 
 	_VICIIRegisters -> initialize ();
-
-	// Gets tthe memory block dedicated to the ROM
-	if (!(_charROM = memoryRef () -> block (C64::Commodore64::_CHAROM_MEMORY)))
-	{
-		_lastError = MCHEmul::_INIT_ERROR;
-
-		return (false);
-	}
-
-	_charROM -> initialize ();
 
 	_raster.initialize ();
 
@@ -288,10 +279,14 @@ void C64::VICII::readGraphicsInfo ()
 	unsigned short graphLine = _raster.currentLine () - _raster._FIRSTBADLINE;
 	unsigned short chrLine = graphLine >> 3;
 
+	dynamic_cast <C64::Memory*> (memoryRef ()) -> setVICIIView ();
+
 	_graphicsCharCodeData	= readCharCodeDataAt (chrLine);
 	_graphicsCharData		= readCharDataFor (_graphicsCharCodeData);
 	_graphicsBitmapData		= readBitmapDataAt (graphLine);
 	_graphicsColorData		= readColorDataAt (chrLine);
+
+	dynamic_cast <C64::Memory*> (memoryRef ()) -> setCPUView ();
 }
 
 // ---
@@ -370,8 +365,6 @@ MCHEmul::ScreenMemory* C64::VICII::createScreenMemory ()
 // ---
 MCHEmul::UBytes C64::VICII::readCharDataFor (const MCHEmul::UBytes& chrs) const
 {
-	MCHEmul::Memory* m = ((_bank == 0 || _bank == 2) ? _charROM : _memory);
-
 	std::vector <MCHEmul::UByte> dt;
 
 	for (auto i : chrs.bytes ())

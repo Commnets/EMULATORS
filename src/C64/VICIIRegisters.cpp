@@ -1,27 +1,18 @@
 #include <C64/VICIIRegisters.hpp>
+#include <C64/C64.hpp>
 
 // ---
-C64::VICIIRegisters::VICIIRegisters ()
-	: MCHEmul::Memory (MCHEmul::Address ({ 0x00, 0xd0 }, false), 0x0400)
+void C64::VICIIRegisters::initialize ()
 {
-	initializeInternalValues ();
-}
-
-// ---
-bool C64::VICIIRegisters::initialize ()
-{
-	if (!MCHEmul::Memory::initialize ())
-		return (false);
+	MCHEmul::PhisicalStorageSubset::initialize ();
 
 	initializeInternalValues ();
-
-	return (true);
 }
 
 // ---
 void C64::VICIIRegisters::setValue (size_t p, const MCHEmul::UByte& v)
 {
-	MCHEmul::Memory::setValue (p, v);
+	MCHEmul::PhisicalStorageSubset::setValue (p, v);
 
 	size_t pp = p % 0x40;
 
@@ -108,10 +99,10 @@ void C64::VICIIRegisters::setValue (size_t p, const MCHEmul::UByte& v)
 				(((unsigned int) (v.value () & 0x0e)) << 10 /** multiply 1024 */));
 			/* bits xxxx---- */
 			_screenMemory = MCHEmul::Address (MCHEmul::UInt::fromUnsignedInt 
-				(((unsigned int) (v.value () & 0xf0)) << 6 /** multiply by 64. */));
+				(((unsigned int) (v.value () & 0xf0)) << 6 /** multiply by 64 = /16*1024 */));
 			/* bit ----x--- (also used above) */
 			_bitmapMemory = MCHEmul::Address (MCHEmul::UInt::fromUnsignedInt 
-				(((unsigned int) (v.value () & 0x80)) << 10 /** multiple by 1024. */));
+				(((unsigned int) (v.value () & 0x08)) << 10 /** multiple by 1024. */));
 			/** bit 0 is not used. */
 			break;
 
@@ -162,13 +153,13 @@ void C64::VICIIRegisters::setValue (size_t p, const MCHEmul::UByte& v)
 		case 0x22:
 		case 0x23:
 		case 0x24:
-			_backgroundColor [p - 0x21] = (unsigned short) v.value ();
+			_backgroundColor [pp - 0x21] = (unsigned short) v.value ();
 			break;
 
 		// SPMCOL0, SPMCOL1: Sprite Multicolor Registers
 		case 0x25:
 		case 0x26:
-			_spriteSharedColor [p - 0x25] = (unsigned short) v.value ();
+			_spriteSharedColor [pp - 0x25] = (unsigned short) v.value ();
 			break;
 
 		// SPnCOL: Sprite Color Registers
@@ -180,7 +171,7 @@ void C64::VICIIRegisters::setValue (size_t p, const MCHEmul::UByte& v)
 		case 0x2c:
 		case 0x2d:
 		case 0x2e:
-			_spriteColor [p - 0x27] = (unsigned short) v.value ();
+			_spriteColor [pp - 0x27] = (unsigned short) v.value ();
 			break;
 	
 		// Not connected
@@ -208,9 +199,9 @@ void C64::VICIIRegisters::setValue (size_t p, const MCHEmul::UByte& v)
 }       
 
 // ---
-MCHEmul::UByte C64::VICIIRegisters::readValue (size_t p) const
+const MCHEmul::UByte& C64::VICIIRegisters::readValue (size_t p) const
 {
-	MCHEmul::UByte result;
+	MCHEmul::UByte result = MCHEmul::PhisicalStorage::_DEFAULTVALUE;
 
 	size_t pp = p % 0x40;
 
@@ -240,14 +231,15 @@ MCHEmul::UByte C64::VICIIRegisters::readValue (size_t p) const
 		case 0x1b:
 		case 0x1c:
 		case 0x1d:
-			result = MCHEmul::Memory::readValue (pp);
+			result = MCHEmul::PhisicalStorageSubset::readValue (pp);
 			break;
 
 		// SCROLY: Vertical Fine Scrolling and Control Register
 		// Just to consider that when reading the raster MSB bit shows where the raster is now
 		case 0x11:
 			result = MCHEmul::UByte 
-				((MCHEmul::Memory::readValue (pp).value () & 0x7f) | ((_currentRasterLine & 0xff00) != 0) ? 0x80 : 0x00);
+				((MCHEmul::PhisicalStorageSubset::readValue (pp).value () & 0x7f) | 
+				 ((_currentRasterLine & 0xff00) != 0) ? 0x80 : 0x00);
 			break;
 
 		// RASTER: When reading get the current raster postion (except the MSB that is in the previous)
@@ -267,7 +259,7 @@ MCHEmul::UByte C64::VICIIRegisters::readValue (size_t p) const
 		
 		// SCROLX: Horizontal Fine Scrolling and Control Register
 		case 0x16:
-			result = MCHEmul::UByte (MCHEmul::Memory::readValue (pp).value () & 0x3f | 0xd0); /** bit 6 & 7 always on. */
+			result = MCHEmul::UByte (MCHEmul::PhisicalStorageSubset::readValue (pp).value () & 0x3f | 0xd0); /** bit 6 & 7 always on. */
 			break;
 
 		// VICIRQ: VIC Interrrupt Flag Register
@@ -323,7 +315,7 @@ MCHEmul::UByte C64::VICIIRegisters::readValue (size_t p) const
 		case 0x2d:
 		case 0x2e:
 			/** The MSB to 1 always. */
-			result = MCHEmul::UByte (MCHEmul::Memory::readValue (pp).value () & 0x0f | 0xf0);
+			result = MCHEmul::UByte (MCHEmul::PhisicalStorageSubset::readValue (pp).value () & 0x0f | 0xf0);
 			break;
 	
 		// Not connected
@@ -349,41 +341,103 @@ MCHEmul::UByte C64::VICIIRegisters::readValue (size_t p) const
 			break;
 	}
 
-	return (result);
+	return (_lastValueRead = result);
 }
 
 // ---
 void C64::VICIIRegisters::initializeInternalValues ()
 {
-	_borderColor = 0x0000;
-	_backgroundColor = std::vector <unsigned short> (4, 0x0000);
-	_spriteXCoord = std::vector <unsigned short> (8, 0x0000);
-	_spriteYCoord = std::vector <unsigned short> (8, 0x0000);
-	_spriteColor = std::vector <unsigned short> (8, 0x0000);
-	_spriteSharedColor = std::vector <unsigned short> (2, 0x0000);
-	_spriteMulticolor = std::vector <bool> (8, false);
-	_spriteEnabled = std::vector <bool> (8, false);
-	_spriteDoubleWidth = std::vector <bool> (8, false);
-	_spriteDoubleHeight = std::vector <bool> (8, false);
-	_spriteToForegroundPriority = std::vector <bool> (8, false);
-	_verticalScrollPosition = 0x0000;
-	_horizontalScrollPosition = 0x0000;
-	_textDisplay25RowsActive = true;
-	_textDisplay40ColumnsActive = true;
-	_screenSameColorBorderActive = false;
-	_videoResetActive = false;
-	_graphicBitModeActive = false;
-	_graphicExtendedColorTextModeActive = false;
-	_graphicMulticolorTextModeActive = false;
-	_graphicModeActive = C64::VICIIRegisters::GraphicMode::_CHARMODE;
-	_rasterIRQActive = false;
-	_spriteCollisionWithDataIRQActive = false;
-	_spriteCollisionsIRQActive = false;
-	_lightPenIRQActive = false;
-	_IRQRasterLineAt = 0x00;
-	_charDataMemory = MCHEmul::Address ({ 0xd0, 0x00 }); 
-	_screenMemory = MCHEmul::Address ({ 0x10, 0x00 }); 
-	_bitmapMemory = MCHEmul::Address ({ 0xdd, 0x00 }); 
+	// The internal variables are initialized direcly throught the data in the register...
+
+	// _spriteXCoord = std::vector <unsigned short> (8, 0x0000);
+	setValue (0x00, MCHEmul::UByte (0x00));
+	setValue (0x02, MCHEmul::UByte (0x00));
+	setValue (0x04, MCHEmul::UByte (0x00));
+	setValue (0x06, MCHEmul::UByte (0x00));
+	setValue (0x08, MCHEmul::UByte (0x00));
+	setValue (0x0a, MCHEmul::UByte (0x00));
+	setValue (0x0c, MCHEmul::UByte (0x00));
+	setValue (0x0e, MCHEmul::UByte (0x00));
+	// _spriteYCoord = std::vector <unsigned short> (8, 0x0000);
+	setValue (0x01, MCHEmul::UByte (0x00));
+	setValue (0x03, MCHEmul::UByte (0x00));
+	setValue (0x05, MCHEmul::UByte (0x00));
+	setValue (0x07, MCHEmul::UByte (0x00));
+	setValue (0x09, MCHEmul::UByte (0x00));
+	setValue (0x0b, MCHEmul::UByte (0x00));
+	setValue (0x0d, MCHEmul::UByte (0x00));
+	setValue (0x0f, MCHEmul::UByte (0x00));
+	
+	// MSIGX: Most significant bits of sprites Horizontal Positions
+	setValue (0x10, MCHEmul::UByte (0x00));
+
+	// _verticalScrollPosition = 0x0000;
+	// _textDisplay25RowsActive = true;
+	// _screenSameColorBorderActive = false;
+	// _graphicBitModeActive = false;
+	// _graphicExtendedColorTextModeActive = false;
+	// _IRQRasterLineAt = 0x00;
+	setValue (0x11, MCHEmul::UByte (0x08));
+
+	// _IRQRasterLineAt = 0x00;
+	setValue (0x12, MCHEmul::UByte (0x00));
+
+	// _spriteEnabled = std::vector <bool> (8, false);
+	setValue (0x15, MCHEmul::UByte (0x00));
+		
+	// _horizontalScrollPosition = 0x0000;
+	// _textDisplay40ColumnsActive = true;
+	// _graphicMulticolorTextModeActive = false;
+	// _videoResetActive = false;
+	setValue (0x16, MCHEmul::UByte (0x08));
+
+	// _spriteDoubleHeight = std::vector <bool> (8, false);
+	setValue (0x17, MCHEmul::UByte (0x00));
+	
+	// _charDataMemory	= MCHEmul::Address ({ 0x10, 0x00 });
+	// _screenMemory	= MCHEmul::Address ({ 0x04, 0x00 }); 
+	// _bitmapMemory	= MCHEmul::Address ({ 0x00, 0x00 });
+	setValue (0x18, MCHEmul::UByte (0x14));
+
+	// _rasterIRQActive = false;
+	// _spriteCollisionWithDataIRQActive = false;
+	// _spriteCollisionsIRQActive = false;
+	// _lightPenIRQActive = false;
+	setValue (0x1a, MCHEmul::UByte (0x00));
+	
+	// _spriteToForegroundPriority = std::vector <bool> (8, false);
+	setValue (0x1b, MCHEmul::UByte (0x00));
+
+	//_spriteMulticolor = std::vector <bool> (8, false);
+	setValue (0x1c, MCHEmul::UByte (0x00));
+	
+	// _spriteDoubleWidth = std::vector <bool> (8, false);
+	setValue (0x1c, MCHEmul::UByte (0x00));
+		
+	// _borderColor = 0x0000;
+	setValue (0x20, MCHEmul::UByte (0x00));
+	
+	// _backgroundColor = std::vector <unsigned short> (4, 0x0000);
+	setValue (0x21, MCHEmul::UByte (0x00));
+	setValue (0x22, MCHEmul::UByte (0x00));
+	setValue (0x23, MCHEmul::UByte (0x00));
+	setValue (0x24, MCHEmul::UByte (0x00));
+
+	// _spriteSharedColor = std::vector <unsigned short> (2, 0x0000);
+	setValue (0x25, MCHEmul::UByte (0x00));
+	setValue (0x26, MCHEmul::UByte (0x00));
+
+	// _spriteColor = std::vector <unsigned short> (8, 0x0000);
+	setValue (0x27, MCHEmul::UByte (0x00));
+	setValue (0x28, MCHEmul::UByte (0x00));
+	setValue (0x29, MCHEmul::UByte (0x00));
+	setValue (0x2a, MCHEmul::UByte (0x00));
+	setValue (0x2b, MCHEmul::UByte (0x00));
+	setValue (0x2c, MCHEmul::UByte (0x00));
+	setValue (0x2d, MCHEmul::UByte (0x00));
+	setValue (0x2e, MCHEmul::UByte (0x00));
+
+	// Managed direclty by the VICII Chip...
 	_currentRasterLine = 0x0000;
 	_currentLightPenHorizontalPosition = 0x0000;
 	_currentLightPenVerticalPosition = 0x0000;
@@ -394,6 +448,9 @@ void C64::VICIIRegisters::initializeInternalValues ()
 	_spriteCollisionHappened = std::vector <bool> (8, false);
 	_lightPenOnScreenHappened = false;
 	_vicIItoGenerateIRQ = false;
+
+	// This variable will be set from CIAII simulation method...
+	_bank = 0;
 }
 
 // ---

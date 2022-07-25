@@ -94,15 +94,8 @@ namespace MCHEmul
 							  return ((i == _attributes.end ()) ? AttributedNotDefined : (*i).second); }
 
 		// To load data files...
-		/** Two types of files: \n
-		  * A file with the x initial bytes represeting an address (depending on the architecture of the cpu),
-		  * Or a simpl data file, but the address where to load rom has to be passed as parameter! */
-		bool load (const std::string& fN)
-							{ return (memory () -> load (fN)); }
 		bool loadInto (const std::string& fN, const Address& a)
 							{ return (memory () -> loadInto (fN, a)); }
-		bool loadInto (const std::string& fN)
-							{ return (memory () -> loadInto (fN)); }
 
 		/** To initialize the Computer, when the "power is set up". \n 
 			It could be defined per computer. By default it initializes the chips. \n
@@ -192,7 +185,8 @@ namespace MCHEmul
 		unsigned int _debugLevel;
 
 		// Implementation
-		unsigned int _lastError;
+		mutable unsigned int _lastError;
+
 		Screen* _screen;
 		InputOSSystem* _inputOSSystem;
 		GraphicalChip* _graphicalChip;

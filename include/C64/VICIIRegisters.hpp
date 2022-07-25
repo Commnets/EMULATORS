@@ -22,7 +22,7 @@ namespace C64
 	/** In the VICII Registers, 
 		there are a couple of records that behave different
 		when they are read that when they are written. */
-	class VICIIRegisters final : public MCHEmul::Memory
+	class VICIIRegisters final : public MCHEmul::PhisicalStorageSubset
 	{
 		public:
 		enum class GraphicMode
@@ -35,7 +35,19 @@ namespace C64
 			_ILLEGALMODE
 		};
 
-		VICIIRegisters ();
+		VICIIRegisters (int id, MCHEmul::PhisicalStorage* ps)
+			: MCHEmul::PhisicalStorageSubset (id, ps, 0xd000, MCHEmul::Address ({ 0x00, 0xd0 }, false), 0x0400),
+			  _lastValueRead (MCHEmul::PhisicalStorage::_DEFAULTVALUE),
+			  _backgroundColor (4, 0x00),
+			  _spriteXCoord (8, 0x0000), _spriteYCoord (8, 0x0000),
+			  _spriteColor (8, 0x0000),
+			  _spriteSharedColor (2, 0x0000), _spriteMulticolor (8, false),
+			  _spriteEnabled (8, false), 
+			  _spriteDoubleWidth (8, false), _spriteDoubleHeight (8, false),
+			  _spriteToForegroundPriority (8, false)
+			  // At this point the rest internal variables will have random values...
+			  // The vector are initialized just to given them a default size!
+							{ initializeInternalValues (); }
 
 		unsigned short borderColor () const
 							{ return (_borderColor); }
@@ -94,12 +106,12 @@ namespace C64
 		unsigned short IRQRasterLineAt () const
 							{ return (_IRQRasterLineAt);  }
 
-		const MCHEmul::Address& charDataMemory () const
-							{ return (_charDataMemory); }
-		const MCHEmul::Address& screenMemory () const 
-							{ return (_screenMemory); }
-		const MCHEmul::Address& bitmapMemory () const 
-							{ return (_bitmapMemory); }
+		const MCHEmul::Address charDataMemory () const
+							{ return (_charDataMemory + (0x4000 /* 16284 = 16k */ * _bank) /** VICII Only addresses 16k. */); }
+		const MCHEmul::Address screenMemory () const 
+							{ return (_screenMemory + (0x4000 * _bank)); }
+		const MCHEmul::Address bitmapMemory () const 
+							{ return (_bitmapMemory + (0x400 * _bank)); }
 
 		// Managed from VICII Chip Emulator
 		// The VICII chip also uses this object as a temporary storage
@@ -144,13 +156,18 @@ namespace C64
 		void setVicIItoGenerateIRQ (bool v)
 							{ _vicIItoGenerateIRQ = v; }
 
-		virtual bool initialize () override;
-
-		protected:
-		virtual void setValue (size_t p, const MCHEmul::UByte& v) override;
-		virtual MCHEmul::UByte readValue (size_t p) const override;
+		unsigned short bank () const
+							{ return (_bank); }
+		void setBank (unsigned short bk)
+							{ if (bk == 0 || bk == 1 || bk == 2 || bk == 3) _bank = bk; }
+		
+		virtual void initialize () override;
 
 		private:
+		virtual void setValue (size_t p, const MCHEmul::UByte& v) override;
+		virtual const MCHEmul::UByte& readValue (size_t p) const override;
+
+		// Implementation
 		/** Just to initialize the internal values. */
 		void initializeInternalValues ();
 		/** Depending on how bits ar set, a no valid mode could be set. */
@@ -189,9 +206,9 @@ namespace C64
 		/** Raster Control. */
 		unsigned short _IRQRasterLineAt; // To define where to launch the IRQ. When reading therre is other variable...
 		/** Location of the Graphical Memory. */
-		MCHEmul::Address _charDataMemory; // Info about the characters
-		MCHEmul::Address _screenMemory; // Where the characters to draw are
-		MCHEmul::Address _bitmapMemory; // Where the bitmap to draw is
+		MCHEmul::Address _charDataMemory; // Info about the characters (the address with in the first 16k)
+		MCHEmul::Address _screenMemory; // Where the characters to draw are (The address within the first 16k)
+		MCHEmul::Address _bitmapMemory; // Where the bitmap to draw is (The address within the first 16k)
 
 		// Some of this variables are set by the emulation of the VICII
 		// The VICII chip also uses this object as a temporary storage
@@ -204,6 +221,14 @@ namespace C64
 		mutable std::vector <bool> _spriteCollisionHappened;
 		bool _lightPenOnScreenHappened;
 		bool _vicIItoGenerateIRQ;
+
+		/** A very important variable comming from other chip. \n
+			Can be 0, 1, 2 or 3 and it affects to the determination of any memory address. 
+			By default the bank is 0. */
+		unsigned short _bank; 
+
+		// Implementation
+		mutable MCHEmul::UByte _lastValueRead;
 	};
 }
 

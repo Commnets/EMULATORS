@@ -218,7 +218,7 @@ namespace C64
 			RasterData _vRasterData, _hRasterData;
 		};
 
-		static const unsigned int _ID = 1;
+		static const unsigned int _ID = 4;
 
 		/** Data about the size of the screen */
 		static const unsigned short _GRAPHMAXCHARLINES		= 25; // Not taking into account reductions in the size
@@ -239,9 +239,9 @@ namespace C64
 
 		/** To change and get the bank. */
 		unsigned short bank () const
-							{ return (_bank); }
+							{ return (_VICIIRegisters -> bank ()); }
 		void setBank (unsigned short bk)
-							{ if (bk == 0 || bk == 1 || bk == 2 || bk == 3) _bank = bk; }
+							{ _VICIIRegisters -> setBank (bk); }
 
 		virtual bool initialize () override;
 
@@ -307,12 +307,6 @@ namespace C64
 		private:
 		/** The memory is used also as the set of registers of the chip. */
 		C64::VICIIRegisters* _VICIIRegisters;
-		/** A very important variable comming from other chip. \n
-			Can be 0, 1, 2, 3...and it affects to the determination of any memory address. 
-			By default the bank is 0. */
-		unsigned short _bank; 
-		/** The ROM is used to locate in many circunstances the info about the charrs. */
-		MCHEmul::Memory* _charROM;
 		/** The raster. */
 		Raster _raster;
 

@@ -1,17 +1,13 @@
 #include <CORE/Stack.hpp>
 
 // ---
-bool MCHEmul::Stack::initialize ()
+void MCHEmul::Stack::initialize ()
 { 
-	bool result = MCHEmul::Memory::initialize ();
-	if (!result)
-		return (false); // _lastError variable has been already set at this point...
+	MCHEmul::PhisicalStorageSubset::initialize ();
 
 	_position = _fromBack ? (int) (size () - 1) : 0; 
 	_stackOverflow = false; 
 	_empty = true; // No elements so far at the beginning...
-
-	return (true);
 }
 
 // ---
@@ -151,7 +147,7 @@ MCHEmul::UBytes MCHEmul::Stack::pull (size_t nV)
 // ---
 std::ostream& MCHEmul::operator << (std::ostream& o, const MCHEmul::Stack& s)
 {
-	o << (*(static_cast <const MCHEmul::Memory*> (&s))) << std::endl;
+	o << (*(static_cast <const MCHEmul::PhisicalStorageSubset*> (&s))) << std::endl;
 	o << (s._fromBack ? "Back" : "Front") << "," << (s._pointToEmpty ? "Pointing empty" : "Pointing last") << std::endl;
 	o << (s._stackOverflow ? "Overflow" : "No Overflow") << std::endl;
 	o << (s._empty ? "Empty" : "With data") << std::endl;

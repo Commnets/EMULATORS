@@ -51,6 +51,8 @@ void MCHEmul::CPU::removeInterrrupt (int id)
 // ---
 bool MCHEmul::CPU::executeNextInstruction ()
 {
+	memoryRef () -> setCPUView (); // Always...
+
 	unsigned int nC = 0;
 	for (auto i : _interrupts)
 	{

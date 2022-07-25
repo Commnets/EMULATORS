@@ -1,4 +1,4 @@
-/** \ingroup CIA */
+/** \ingroup C64 */
 /*@{*/
 
 /**	
@@ -14,6 +14,7 @@
 #ifndef __C64_CIA__
 #define __C64_CIA__
 
+#include <CORE/incs.hpp>
 #include <C64/CIARegisters.hpp>
 
 namespace C64
@@ -40,6 +41,8 @@ namespace C64
 		C64::CIA1Registers* _CIA1Registers;
 	};
 
+	class VICII;
+
 	/** The chip is to communicate the C64 with the environment. */
 	class CIA2 : public MCHEmul::Chip
 	{
@@ -51,8 +54,12 @@ namespace C64
 				{ { "Name", "CIA1" },
 				  { "Manufacturer", "Commodore Business Machines CBM" },
 				  { "Year", "1980" } }),
-			  _CIA2Registers (nullptr)
+			  _CIA2Registers (nullptr),
+			  _VICIIRef (nullptr)
 							{ }
+
+		void setVICIIRef (VICII* v)
+							{ _VICIIRef = v; }
 
 		virtual bool initialize () override;
 
@@ -60,6 +67,7 @@ namespace C64
 
 		private:
 		C64::CIA2Registers* _CIA2Registers;
+		VICII* _VICIIRef;
 	};
 }
 

@@ -10,7 +10,7 @@ MCHEmul::PeerCommunicationChannel::PeerCommunicationChannel (unsigned short p, u
 	  _lastError (MCHEmul::_NOERROR)
 {
 	if ((_peer = RakNet::RakPeerInterface::GetInstance ()) == nullptr)
-		_lastError = MCHEmul::_COMMSINTNOTCREATED;
+		_lastError = MCHEmul::_COMMSINTNOTCREATED_ERROR;
 }
 
 // ---
@@ -30,7 +30,7 @@ bool MCHEmul::PeerCommunicationChannel::initialize ()
 		RakNet::SocketDescriptor sd (_listenAtPort, 0);
 		if (_peer -> Startup (_simultaneousConnections, &sd, 1) != RakNet::StartupResult::RAKNET_STARTED)
 		{
-			_lastError = MCHEmul::_COMMSNOTOPENED;
+			_lastError = MCHEmul::_COMMSNOTOPENED_ERROR;
 
 			return (false);
 		}
@@ -43,7 +43,7 @@ bool MCHEmul::PeerCommunicationChannel::initialize ()
 		if (_peer -> Connect (_connectedTo.ipAsString ().c_str (), _connectedTo.port (), nullptr, 0) 
 				!= RakNet::ConnectionAttemptResult::CONNECTION_ATTEMPT_STARTED)
 		{
-			_lastError = MCHEmul::_COMMSNOTOPENED;
+			_lastError = MCHEmul::_COMMSNOTOPENED_ERROR;
 
 			return (false);
 		}
@@ -111,7 +111,7 @@ bool MCHEmul::PeerCommunicationChannel::receive (std::string& str, MCHEmul::IPAd
 					RakNet::BitStream bsIn (packet -> data, packet -> length, false);
 					bsIn.IgnoreBytes (sizeof (RakNet::MessageID));
 					if (!(result = bsIn.Read (rs)))
-						_lastError = MCHEmul::_CHANNELREADERROR;
+						_lastError = MCHEmul::_CHANNELREADERROR_ERROR;
 					else
 						str += rs.C_String (); // The string to be returned is then set...
 											   // The string can be splitted in many!
@@ -136,7 +136,7 @@ bool MCHEmul::PeerCommunicationChannel::send (const std::string& str, const MCHE
 
 	if (!_channelInitialized)
 	{
-		_lastError = MCHEmul::_COMMSNOTOPENED;
+		_lastError = MCHEmul::_COMMSNOTOPENED_ERROR;
 
 		return (false);
 	}
@@ -147,7 +147,7 @@ bool MCHEmul::PeerCommunicationChannel::send (const std::string& str, const MCHE
 	RakNet::SystemAddress sA (to.ipAsString ().c_str (), to.port ());
 	if (_peer -> Send (&bsOut, IMMEDIATE_PRIORITY, RELIABLE_ORDERED, 0, sA, false) == 0)
 	{
-		_lastError = MCHEmul::_CHANNELWRITEERROR;
+		_lastError = MCHEmul::_CHANNELWRITEERROR_ERROR;
 
 		return (false);
 	}

@@ -76,7 +76,7 @@ bool Emuls::Emulator::initialize ()
 
 	if (byteFileName () != "" && asmFileName () == "")
 	{
-		bool r = computer () -> load (byteFileName ());
+		bool r = computer () -> loadInto (byteFileName (), MCHEmul::Address ({ 0x00, 0x00 }));
 		if (!r)
 		{
 			if (_debugLevel >= MCHEmul::_DEBUGERRORS)

@@ -3,31 +3,55 @@
 // ---
 void C64::CIA1Registers::setValue (size_t p, const MCHEmul::UByte& v)
 {
-	MCHEmul::Memory::setValue (p, v);
+	MCHEmul::PhisicalStorageSubset::setValue (p, v);
 
 	// TODO
 }
 
 // ---
-MCHEmul::UByte C64::CIA1Registers::readValue (size_t p) const
+const MCHEmul::UByte& C64::CIA1Registers::readValue (size_t p) const
 {
-	return (MCHEmul::Memory::readValue  (p));
+	return (MCHEmul::PhisicalStorageSubset::readValue  (p));
 
 	// TODO
+}
+
+// ---
+void C64::CIA2Registers::initialize ()
+{
+	MCHEmul::PhisicalStorageSubset::initialize ();
+
+	initializeInternalValues ();
 }
 
 // ---
 void C64::CIA2Registers::setValue (size_t p, const MCHEmul::UByte& v)
 {
-	MCHEmul::Memory::setValue (p, v);
+	MCHEmul::PhisicalStorageSubset::setValue (p, v);
 
-	// TODO
+	switch (p)
+	{
+		case 0x00:
+			_VICBank = 3 - (v.value () & 0x03); // From 0 to 3...
+			break;
+
+		default:
+			break;
+	}
 }
 
 // ---
-MCHEmul::UByte C64::CIA2Registers::readValue (size_t p) const
+void C64::CIA2Registers::initializeInternalValues ()
 {
-	return (MCHEmul::Memory::readValue  (p));
+	// The internal variables are initialized through the data in memory...
+
+	setValue (0, 0x03); // To set the bank 0...
+}
+
+// ---
+const MCHEmul::UByte& C64::CIA2Registers::readValue (size_t p) const
+{
+	return (MCHEmul::PhisicalStorageSubset::readValue  (p));
 
 	// TODO
 }
