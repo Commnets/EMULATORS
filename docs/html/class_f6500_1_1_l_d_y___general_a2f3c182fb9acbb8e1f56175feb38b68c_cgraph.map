@@ -1,8 +1,0 @@
-<map id="F6500::LDY_General::executeWith" name="F6500::LDY_General::executeWith">
-<area shape="rect" id="node1" title=" " alt="" coords="5,27,148,69"/>
-<area shape="rect" id="node2" href="$class_m_c_h_emul_1_1_instruction.html#a616982c1b43cf2f740e109fb0512a312" title=" " alt="" coords="196,5,375,32"/>
-<area shape="rect" id="node3" href="$class_m_c_h_emul_1_1_status_register.html#a8ddec9ec56dba64dc1180dad06185d9e" title=" " alt="" coords="198,57,373,98"/>
-<area shape="rect" id="node4" href="$class_m_c_h_emul_1_1_u_bytes.html#a407367e314e9c6f743b508c7f5290a35" title=" " alt="" coords="423,64,597,91"/>
-<area shape="rect" id="node5" href="$class_m_c_h_emul_1_1_u_bytes.html#a0a0201f78ada888f8475c2782ba8cd1e" title=" " alt="" coords="653,39,817,65"/>
-<area shape="rect" id="node6" href="$class_m_c_h_emul_1_1_u_byte.html#a256a022714d442b93208eff11967e44c" title=" " alt="" coords="645,89,825,116"/>
-</map>

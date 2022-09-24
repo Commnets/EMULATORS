@@ -1,5 +1,0 @@
-<map id="MCHEmul::CommunicationMessage" name="MCHEmul::CommunicationMessage">
-<area shape="rect" id="node1" title=" " alt="" coords="128,5,360,32"/>
-<area shape="rect" id="node2" href="$class_m_c_h_emul_1_1_get_memory_data_message.html" title=" " alt="" coords="5,87,243,114"/>
-<area shape="rect" id="node3" href="$class_m_c_h_emul_1_1_get_register_status_message.html" title=" " alt="" coords="267,80,463,121"/>
-</map>

@@ -1,7 +1,0 @@
-<map id="C64::ColorRAMMemory" name="C64::ColorRAMMemory">
-<area shape="rect" id="node1" title=" " alt="" coords="132,275,291,301"/>
-<area shape="rect" id="node2" href="$class_m_c_h_emul_1_1_phisical_storage_subset.html" title=" " alt="" coords="121,184,301,225"/>
-<area shape="rect" id="node3" href="$class_m_c_h_emul_1_1_phisical_storage.html" title=" " alt="" coords="5,95,185,121"/>
-<area shape="rect" id="node4" href="$class_m_c_h_emul_1_1_u_byte.html" title=" " alt="" coords="33,5,158,32"/>
-<area shape="rect" id="node5" href="$class_m_c_h_emul_1_1_address.html" title=" " alt="" coords="209,95,347,121"/>
-</map>

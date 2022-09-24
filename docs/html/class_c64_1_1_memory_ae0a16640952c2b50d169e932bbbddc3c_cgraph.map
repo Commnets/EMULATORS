@@ -1,7 +1,0 @@
-<map id="C64::Memory::Memory" name="C64::Memory::Memory">
-<area shape="rect" id="node1" title=" " alt="" coords="5,80,160,107"/>
-<area shape="rect" id="node2" href="$class_m_c_h_emul_1_1_memory.html#ac1aaad333ce6410b4a5d0d42ac9728e8" title=" " alt="" coords="208,5,401,32"/>
-<area shape="rect" id="node3" href="$class_m_c_h_emul_1_1_memory.html#aaf28a195f180da4795746ab51c135070" title=" " alt="" coords="210,80,399,107"/>
-<area shape="rect" id="node4" href="$class_m_c_h_emul_1_1_memory.html#a223ed1aacea29bf69f3c1780b83bb30e" title=" " alt="" coords="213,131,396,157"/>
-<area shape="rect" id="node5" href="$class_m_c_h_emul_1_1_memory_1_1_content.html#ad146d8b25735bb142bba8dd7eaf7567c" title=" " alt="" coords="449,123,639,165"/>
-</map>

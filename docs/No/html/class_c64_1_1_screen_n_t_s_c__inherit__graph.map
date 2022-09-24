@@ -1,6 +1,0 @@
-<map id="C64::ScreenNTSC" name="C64::ScreenNTSC">
-<area shape="rect" id="node1" title=" " alt="" coords="11,229,139,256"/>
-<area shape="rect" id="node2" href="$class_c64_1_1_screen.html" title=" " alt="" coords="28,155,123,181"/>
-<area shape="rect" id="node3" href="$class_m_c_h_emul_1_1_screen.html" title=" " alt="" coords="10,80,141,107"/>
-<area shape="rect" id="node4" href="$class_m_c_h_emul_1_1_i_o_device.html" title=" " alt="" coords="5,5,145,32"/>
-</map>

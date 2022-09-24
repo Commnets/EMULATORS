@@ -1,7 +1,0 @@
-<map id="MCHEmul::Screen" name="MCHEmul::Screen">
-<area shape="rect" id="node1" title=" " alt="" coords="77,80,208,107"/>
-<area shape="rect" id="node3" href="$class_c64_1_1_screen.html" title=" " alt="" coords="95,155,190,181"/>
-<area shape="rect" id="node2" href="$class_m_c_h_emul_1_1_i_o_device.html" title=" " alt="" coords="73,5,213,32"/>
-<area shape="rect" id="node4" href="$class_c64_1_1_screen_n_t_s_c.html" title=" " alt="" coords="5,229,133,256"/>
-<area shape="rect" id="node5" href="$class_c64_1_1_screen_p_a_l.html" title=" " alt="" coords="158,229,277,256"/>
-</map>
