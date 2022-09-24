@@ -1,9 +1,0 @@
-#include <COMMS/System.hpp>
-#include <CPU/Computer.hpp>
-
-// ---
-bool MCHEmul::CommunicationSystem::processMessagesOn (MCHEmul::Computer* c)
-{
-	// TODO
-	return (true);
-}
