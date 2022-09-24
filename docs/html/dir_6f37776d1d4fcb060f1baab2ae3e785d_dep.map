@@ -1,0 +1,12 @@
+<map id="C:/WorkspacesII/EMULATORS/include/EMULATORS" name="C:/WorkspacesII/EMULATORS/include/EMULATORS">
+<area shape="rect" id="node1" href="dir_235a3302aac12b217b6390653588fb9a.html" title="C64" alt="" coords="27,148,99,196"/>
+<area shape="rect" id="node2" href="dir_4581fb84a8bf7da1ab9e0691301abbd4.html" title="CORE" alt="" coords="123,148,195,196"/>
+<area shape="rect" id="node3" href="dir_49209918626551d42fff88a62600df35.html" title="COMMS" alt="" coords="219,148,291,196"/>
+<area shape="rect" id="node4" href="dir_6b118c8c45dba0ac59f9d793c3bb1d4c.html" title="ASSEMBLER" alt="" coords="315,148,418,196"/>
+<area shape="rect" id="node5" href="dir_6f37776d1d4fcb060f1baab2ae3e785d.html" title="EMULATORS" alt="" coords="155,52,258,100"/>
+<area shape="rect" id="edge1-headlabel" href="dir_000010_000002.html" title="4" alt="" coords="114,138,122,152"/>
+<area shape="rect" id="edge2-headlabel" href="dir_000010_000008.html" title="1" alt="" coords="182,128,190,143"/>
+<area shape="rect" id="edge3-headlabel" href="dir_000010_000004.html" title="2" alt="" coords="238,121,246,135"/>
+<area shape="rect" id="edge4-headlabel" href="dir_000010_000000.html" title="1" alt="" coords="312,124,320,139"/>
+<area shape="rect" id="clust1" href="dir_d44c64559bbebec7f509842c48db8b23.html" title="include" alt="" coords="16,16,429,207"/>
+</map>

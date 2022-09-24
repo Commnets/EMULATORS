@@ -1,0 +1,93 @@
+#include <CORE/CommandBuilder.hpp>
+
+// ---
+MCHEmul::Command* MCHEmul::CommandBuilder::createCommand (const std::string& cmd) const
+{
+	std::string CMD = MCHEmul::upper (MCHEmul::trim (cmd));
+
+	MCHEmul::Command* result = nullptr;
+	if ((result = createEmptyCommand (readCommandName (CMD))) != nullptr)
+		result -> setParameters (readCommandParameters (CMD)); // if there is instruction set the prms!
+	return (result);
+}
+
+// ---
+std::string MCHEmul::CommandBuilder::readCommandName (const std::string& cmd) const
+{
+	std::string result = cmd;
+
+	std::size_t p;
+	if ((p = cmd.find_first_of (' ')) != std::string::npos)
+		result = result.substr (0, p);
+
+	return (result);
+}
+
+// ---
+MCHEmul::Attributes MCHEmul::CommandBuilder::readCommandParameters (const std::string& cmd) const
+{
+	MCHEmul::Attributes result;
+
+#define ENDLOOP { prms =""; break; }
+
+	std::string prms = cmd;
+	size_t iP = prms.find_first_of (' '); // Take off the first word!
+	if (iP == std::string::npos || iP >= (cmd.length () - 1)) // Are there other things after?...they could be parameters
+		return (result); // There is nothing...so no parameters!
+	else
+		if ((prms = MCHEmul::trim (prms.substr (iP))) == "")
+			return (result); // But what is after are only spaces...
+
+	// Now it is time to investigate what is left!
+	while (prms != "")
+	{
+		// The equal symbol defines (almost always) a parameter...
+		iP = prms.find_first_of ('=');
+		// but when there is none, it could be considerered as a simple parameter with the value YES
+		if (iP == std::string::npos)
+		{
+			// The name of that parameter lasts until the following space!
+			iP = prms.find_first_of (' ');
+			std::string fName = MCHEmul::upper (prms.substr (0, iP));
+			prms = MCHEmul::trim (prms.substr (iP + 1));
+			result.insert (MCHEmul::Attributes::value_type (fName, "YES"));
+
+			break;
+		}
+
+		// There is and equal symbol, but there is nothing else after...
+		// so there is an error, and the anaylisis has to end!
+		if (iP == (prms.length () - 1))
+			ENDLOOP;
+
+		// There is an equal symbol, and there is something after...
+		// What is before that is the name of the field...
+		std::string fName = MCHEmul::upper (MCHEmul::trim (prms.substr (0, iP)));
+		// What is after the equal symbol contains (potentially) the value of that field...
+		prms = MCHEmul::trim (prms.substr (iP + 1));
+		// If that starts with quotes, the content has to be taken as it is up to the following quote!
+		if (prms [0] = '"')
+		{
+			iP = prms.find_first_of ('"');
+			if (iP == std::string::npos) // There must be a quote at the end, otherwise it will be an error!
+				ENDLOOP;
+
+			result.insert (MCHEmul::Attributes::value_type (fName, prms.substr (1, iP - 1)));
+			prms = prms.substr (iP + 1);
+		}
+		else
+		{
+			iP = prms.find_first_of (' ');
+			result.insert (MCHEmul::Attributes::value_type (fName, prms.substr (1, iP)));
+			prms = prms.substr (iP + 1);
+		}
+	}
+
+	return (result);
+}
+
+// ---
+MCHEmul::Command* MCHEmul::StandardCommandBuilder::createEmptyCommand (const std::string& cmdName) const
+{
+	return (nullptr);
+}

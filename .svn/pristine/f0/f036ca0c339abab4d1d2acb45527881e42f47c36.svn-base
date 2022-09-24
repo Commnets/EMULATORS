@@ -1,0 +1,79 @@
+#include <CONSOLE/Console.hpp>
+
+// ---
+Console::Console::Console (Emuls::Emulator* e, MCHEmul::CommandBuilder* cB)
+	: _emulator (e), 
+	  _commandBuilder (cB),
+	  _command ("")
+{ 
+	assert (_emulator != nullptr && _commandBuilder != nullptr); 
+}
+
+// ----
+bool Console::Console::run ()
+{
+	bool error = false;
+
+	bool exit = false;
+	while (!exit)
+	{
+		// Any command ready?
+		if (readCommand ())
+		{
+			_command = MCHEmul::upper (MCHEmul::trim (_command));
+			if (exit = (_command == "QUIT")) break; // The very common command to any interpreter...
+			else
+			{
+				MCHEmul::Attributes prms;
+				MCHEmul::Command* cmd = _commandBuilder -> createCommand (_command);
+				if (cmd != nullptr /** good? */ && cmd -> canBeExecuted () /** possible? */)
+				{
+					MCHEmul::Attributes rst; // The results...
+					if (!cmd -> execute (_emulator -> computer (), rst)) // error?
+					{
+					}
+					else
+					{
+					}
+				}
+				else
+				{
+				}
+
+				delete (cmd);
+			}
+
+			_command = "";
+		}
+
+		// Do the main cycle...
+	}
+
+	return (error);
+}
+
+// ---
+bool Console::Console::readCommand ()
+{
+	bool result = false;
+
+	char chr;
+	if (readChar (chr))
+	{
+		if (chr == '\n') result = true; // A instruction end with the enter...
+		else _command += chr;
+	}
+
+	return (result);
+}
+
+#ifdef _WIN32
+// ---
+bool Console::Win32Console::readChar (char& chr) const 
+{ 
+	int chrI = std::getchar (); 
+	bool result = (chrI != EOF); 
+	if (result) chr = static_cast <char> (chrI); 
+	return (result); 
+}
+#endif

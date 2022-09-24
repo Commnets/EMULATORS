@@ -1,0 +1,34 @@
+/** \ingroup C64Emul */
+/*@{*/
+
+/**	
+ *	@file	
+ *	File: Address.hpp \n
+ *	Framework: CPU Emulators library \n
+ *	Author: Ignacio Cea Forniés (EMULATORS library) \n
+ *	Creation Date: 17/04/2021 \n
+ *	Description: Define the structure of an address in the emulation.
+ *	Versions: 1.0 Initial
+ */
+
+#ifndef __MCHEMUL_C64EMULATOR__
+#define __MCHEMUL_C64EMULATOR__
+
+namespace MCHEmul
+{
+	class C64Emulator
+	{
+		public:
+		C64Emulator ();
+
+
+
+		bool run ();
+	};
+}
+
+#endif
+  
+// End of the file
+/*@}*/
+#pragma once

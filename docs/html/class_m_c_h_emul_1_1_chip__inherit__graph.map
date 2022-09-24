@@ -1,0 +1,11 @@
+<map id="MCHEmul::Chip" name="MCHEmul::Chip">
+<area shape="rect" id="node1" title=" " alt="" coords="249,5,363,32"/>
+<area shape="rect" id="node2" href="$class_c64_1_1_c_i_a1.html" title=" " alt="" coords="5,80,87,107"/>
+<area shape="rect" id="node3" href="$class_c64_1_1_c_i_a2.html" title=" " alt="" coords="111,80,192,107"/>
+<area shape="rect" id="node4" href="$class_c64_1_1_special_functions_chip.html" title=" " alt="" coords="217,80,395,107"/>
+<area shape="rect" id="node5" href="$class_m_c_h_emul_1_1_graphical_chip.html" title=" " alt="" coords="419,80,590,107"/>
+<area shape="rect" id="node9" href="$class_m_c_h_emul_1_1_no_chip.html" title=" " alt="" coords="614,80,745,107"/>
+<area shape="rect" id="node6" href="$class_c64_1_1_v_i_c_i_i.html" title=" " alt="" coords="465,155,545,181"/>
+<area shape="rect" id="node7" href="$class_c64_1_1_v_i_c_i_i___n_t_s_c.html" title=" " alt="" coords="373,229,495,256"/>
+<area shape="rect" id="node8" href="$class_c64_1_1_v_i_c_i_i___p_a_l.html" title=" " alt="" coords="519,229,631,256"/>
+</map>

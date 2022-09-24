@@ -1,0 +1,6 @@
+<map id="MCHEmul::CommunicationSystem" name="MCHEmul::CommunicationSystem">
+<area shape="rect" id="node1" title=" " alt="" coords="73,199,297,225"/>
+<area shape="rect" id="node2" href="$class_m_c_h_emul_1_1_message_builder.html" title=" " alt="" coords="5,102,188,129"/>
+<area shape="rect" id="node3" href="$class_m_c_h_emul_1_1_peer_communication_channel.html" title=" " alt="" coords="212,95,419,136"/>
+<area shape="rect" id="node4" href="$class_m_c_h_emul_1_1_i_p_address.html" title=" " alt="" coords="241,5,390,32"/>
+</map>

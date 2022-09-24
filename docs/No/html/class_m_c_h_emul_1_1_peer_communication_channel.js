@@ -1,0 +1,28 @@
+var class_m_c_h_emul_1_1_peer_communication_channel =
+[
+    [ "PeerCommunicationChannel", "class_m_c_h_emul_1_1_peer_communication_channel.html#aa53b3d31c6cb69f3c13e8176b9c31142", null ],
+    [ "PeerCommunicationChannel", "class_m_c_h_emul_1_1_peer_communication_channel.html#af90564e24061d6fdf6b32a2f6d73d318", null ],
+    [ "~PeerCommunicationChannel", "class_m_c_h_emul_1_1_peer_communication_channel.html#ae52fabcecaaf241773acf18bcf602c4e", null ],
+    [ "connectedTo", "class_m_c_h_emul_1_1_peer_communication_channel.html#a0da89c9292a6a8b7d2d563f823960ee1", null ],
+    [ "finalize", "class_m_c_h_emul_1_1_peer_communication_channel.html#aa46e4da0e62eb53aa6d2119170b5ee5c", null ],
+    [ "initialize", "class_m_c_h_emul_1_1_peer_communication_channel.html#af6ac5a8fd852e4a3bb1ec68f1004e951", null ],
+    [ "isChannelConnected", "class_m_c_h_emul_1_1_peer_communication_channel.html#aae2453550596b2f96d11184215e9fd3c", null ],
+    [ "isChannelInitiated", "class_m_c_h_emul_1_1_peer_communication_channel.html#abfca28bdff9ba8e2d502e40394a769a7", null ],
+    [ "lastError", "class_m_c_h_emul_1_1_peer_communication_channel.html#a421a11103a635bd708576f555006b321", null ],
+    [ "listenAtPort", "class_m_c_h_emul_1_1_peer_communication_channel.html#abb9678fe25338858d8ed15ef04052a2a", null ],
+    [ "operator!", "class_m_c_h_emul_1_1_peer_communication_channel.html#a851712603c9f06fc236ac8b3ad62ca9b", null ],
+    [ "operator=", "class_m_c_h_emul_1_1_peer_communication_channel.html#a364defd1c4db1521c450bf2dc08ea715", null ],
+    [ "receive", "class_m_c_h_emul_1_1_peer_communication_channel.html#a860103df6a6445ff3eee5a88eb025c41", null ],
+    [ "send", "class_m_c_h_emul_1_1_peer_communication_channel.html#a74da350ef516bac9f35251de065301b6", null ],
+    [ "send", "class_m_c_h_emul_1_1_peer_communication_channel.html#a2e68bb7ea211abfcaa9abc320a988795", null ],
+    [ "send", "class_m_c_h_emul_1_1_peer_communication_channel.html#ae52999bb409bd0075fe7aa3826e7d7d0", null ],
+    [ "send", "class_m_c_h_emul_1_1_peer_communication_channel.html#a92aa0323f108365115aac97107395e11", null ],
+    [ "simulatenousConnections", "class_m_c_h_emul_1_1_peer_communication_channel.html#a07921f0729914c9b04c334ab4dfa2c36", null ],
+    [ "_channelConnected", "class_m_c_h_emul_1_1_peer_communication_channel.html#a8b97d65e417b384a6f01a87e6cb474ac", null ],
+    [ "_channelInitialized", "class_m_c_h_emul_1_1_peer_communication_channel.html#aaa0bebdd59fdc97ddee705cebccdb37b", null ],
+    [ "_connectedTo", "class_m_c_h_emul_1_1_peer_communication_channel.html#af1311b169339d7f27bb38dcd9a5508c8", null ],
+    [ "_lastError", "class_m_c_h_emul_1_1_peer_communication_channel.html#a4f686c41535a029cd42bd1c3e1daf00f", null ],
+    [ "_listenAtPort", "class_m_c_h_emul_1_1_peer_communication_channel.html#a299b6e03f01dd41aa26c75dd7be20c97", null ],
+    [ "_peer", "class_m_c_h_emul_1_1_peer_communication_channel.html#acc231548ace1d9680f8a6690f0ce0fa4", null ],
+    [ "_simultaneousConnections", "class_m_c_h_emul_1_1_peer_communication_channel.html#a2195af7f966212bcf6b30f1792a50255", null ]
+];

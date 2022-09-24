@@ -1,0 +1,24 @@
+<map id="MCHEmul::Register::accept" name="MCHEmul::Register::accept">
+<area shape="rect" id="node1" title=" " alt="" coords="927,286,1072,327"/>
+<area shape="rect" id="node2" href="$class_m_c_h_emul_1_1_register.html#a391d4d4664456f5c02495686d1863ce4" title=" " alt="" coords="716,293,879,320"/>
+<area shape="rect" id="node3" href="$_a_s_l_8cpp.html#a61aca3e6e68f660718e75af1f022c9ae" title=" " alt="" coords="520,5,615,32"/>
+<area shape="rect" id="node4" href="$class_f6500_1_1_a_d_c___general.html#a244bd0da24899dc9ee634866e4162797" title=" " alt="" coords="495,57,640,98"/>
+<area shape="rect" id="node5" href="$class_f6500_1_1_a_n_d___general.html#a133077685b538d78075eae70d3a45899" title=" " alt="" coords="495,122,640,163"/>
+<area shape="rect" id="node6" href="$class_f6500_1_1_e_o_r___general.html#a7b91db5db3b2999707039825edc6230a" title=" " alt="" coords="494,187,641,229"/>
+<area shape="rect" id="node7" href="$class_f6500_1_1_o_r_a___general.html#ab48b0f2b7489561a722785517d824633" title=" " alt="" coords="494,253,641,294"/>
+<area shape="rect" id="node8" href="$class_f6500_1_1_s_b_c___general.html#a102c8651d5e025b59ff291af2adbcfb5" title=" " alt="" coords="495,318,640,359"/>
+<area shape="rect" id="node9" href="$class_m_c_h_emul_1_1_register.html#aef98a70b6004a92fcf9d11d84dd16912" title=" " alt="" coords="486,384,649,411"/>
+<area shape="rect" id="node10" href="$class_m_c_h_emul_1_1_status_register.html#a6ba184706ff7a78294dae0c3b481a242" title=" " alt="" coords="467,435,668,461"/>
+<area shape="rect" id="node11" href="$class_m_c_h_emul_1_1_program_counter.html#a2ed19e71f6a49c25fde7b13bb29d2126" title=" " alt="" coords="476,486,659,527"/>
+<area shape="rect" id="node22" href="$class_m_c_h_emul_1_1_c_p_u.html#ab61dbdbe572f9f75b50ce9a11648d769" title=" " alt="" coords="475,551,659,593"/>
+<area shape="rect" id="node12" href="$_j_u_m_p_s_8cpp.html#a51db7645c84e2f42f42b67c1fcc046eb" title=" " alt="" coords="280,369,375,396"/>
+<area shape="rect" id="node13" href="$class_m_c_h_emul_1_1_program_counter.html#a300dddf55abc81115157f449e1dcad76" title=" " alt="" coords="236,421,419,462"/>
+<area shape="rect" id="node17" href="$class_f6500_1_1_i_r_q_interrupt.html#a753403a67d40373dba534787903e265b" title=" " alt="" coords="260,486,395,527"/>
+<area shape="rect" id="node18" href="$class_f6500_1_1_n_m_i_interrupt.html#a258a0bd2096a38121864009d07708720" title=" " alt="" coords="259,551,395,593"/>
+<area shape="rect" id="node19" href="$class_m_c_h_emul_1_1_program_counter.html#aa0a210c1950d4ec3a0f4dadf14b599aa" title=" " alt="" coords="236,617,419,658"/>
+<area shape="rect" id="node14" href="$class_f6500_1_1_b_x_x___general.html#ad53597e70feb7e84f7822f2051bdf5c2" title=" " alt="" coords="26,502,167,543"/>
+<area shape="rect" id="node15" href="$class_m_c_h_emul_1_1_program_counter.html#a6e4f87a22062e9839c22c81c23341455" title=" " alt="" coords="5,363,188,405"/>
+<area shape="rect" id="node16" href="$class_m_c_h_emul_1_1_program_counter.html#a83319dd60a1d4abdef9b784c098d71bd" title=" " alt="" coords="5,429,188,470"/>
+<area shape="rect" id="node20" href="$class_m_c_h_emul_1_1_program_counter.html#a3da67432f3dc05ea54ae28b4db0e8936" title=" " alt="" coords="5,583,188,625"/>
+<area shape="rect" id="node21" href="$class_m_c_h_emul_1_1_program_counter.html#a6f48b74c791c3920bd6e008dd1225aa8" title=" " alt="" coords="5,649,188,690"/>
+</map>

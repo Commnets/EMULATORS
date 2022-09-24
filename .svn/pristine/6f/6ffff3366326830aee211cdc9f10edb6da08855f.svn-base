@@ -1,0 +1,210 @@
+#include <EMULATORS/Emulator.hpp>
+#include <SDL.h>
+
+const unsigned char Emuls::Emulator::_PARAMBYTEFILE = 'f';
+const std::string Emuls::Emulator::_BYTEFILE = "BYTEFILE";
+const unsigned char Emuls::Emulator::_PARAMASMFILE = 'c';
+const std::string Emuls::Emulator::_ASMFILE = "ASMFILE";
+const unsigned char Emuls::Emulator::_PARAMLOGLEVEL = 'l';
+const std::string Emuls::Emulator::_LOGLEVEL = "LOGLEVEL";
+const unsigned char Emuls::Emulator::_PARAMADDRESS = 'a';
+const std::string Emuls::Emulator::_ADDRESS = "ADDRESS";
+
+// ---
+Emuls::Emulator::Emulator (const std::vector <std::string>& argv)
+	: _attributes (),
+	  _communicationSystem (nullptr),
+	  _debugLevel (MCHEmul::_DEBUGNOTHING),
+	  _computer (nullptr),
+	  _peripheralBuilder (nullptr),
+	  _running (false),
+	  _lastError (MCHEmul::_NOERROR),
+	  _lastAction (0)
+{
+	static std::map <unsigned char, std::string> _MATCH =
+		{ { _PARAMBYTEFILE, _BYTEFILE },
+		  { _PARAMASMFILE, _ASMFILE },
+		  { _PARAMLOGLEVEL, _LOGLEVEL },
+		  { _PARAMADDRESS, _ADDRESS } };
+
+	for (unsigned int i = 1 /** param 0 = name of the executable */; i < argv.size (); i++)
+	{
+		std::map <unsigned char, std::string>::const_iterator p;
+		if (argv [i].length () < 2 || argv [i][0] != '/' || 
+			(p = _MATCH.find (argv [i][1])) == _MATCH.end ())
+			continue; // Not valid argument...
+		_attributes [(*p).second] = argv [i].substr (2);
+	}
+
+	// The graphical and IO system used is based on SDL...
+	int sdlE = 0;
+	sdlE += SDL_Init (SDL_INIT_VIDEO);
+	sdlE += SDL_InitSubSystem (SDL_INIT_JOYSTICK);
+	if (sdlE != 0)
+		_lastError = MCHEmul::_INIT_ERROR;
+	else
+		SDL_JoystickEventState (SDL_ENABLE);
+}
+
+// ---
+void Emuls::Emulator::setCommunicationSystem (MCHEmul::CommunicationSystem* cS)
+{
+	if (_running)
+		return;
+
+	_communicationSystem = cS;
+}
+
+// ---
+Emuls::Emulator::~Emulator ()
+{ 
+	delete (_communicationSystem);
+
+	delete (_computer); 
+
+	delete (_peripheralBuilder);
+
+	SDL_Quit ();
+}
+
+// ---
+void Emuls::Emulator::addAction (const MCHEmul::Address& at, unsigned int a)
+{
+	Emuls::Emulator::MapOfActions::iterator i = _actionsAt.find (at);
+	if (i == _actionsAt.end ()) _actionsAt.insert (Emuls::Emulator::MapOfActions::value_type (at, a));
+	else (*i).second = a;
+}
+
+// ---
+void Emuls::Emulator::removeAction (const MCHEmul::Address& at)
+{
+	Emuls::Emulator::MapOfActions::iterator i = _actionsAt.find (at);
+	if (i != _actionsAt.end ()) 
+		_actionsAt.erase (i);
+}
+
+// ---
+bool Emuls::Emulator::initialize ()
+{
+	if (_lastError != MCHEmul::_NOERROR)
+	{
+		std::cout << "The emulator was not well created" << std::endl;
+
+		return (false);
+	}
+
+	setDebugLevel (logLevel ());
+
+	if (!computer () -> initialize ()) 
+	{
+		if (_debugLevel >= MCHEmul::_DEBUGERRORS)
+			std::cout << "Error initializing computer" << std::endl;
+
+		return (false);
+	}
+
+	if (_communicationSystem != nullptr && !_communicationSystem -> initialize ())
+	{
+		if (_debugLevel >= MCHEmul::_DEBUGERRORS)
+			std::cout << "Error initializing communications" << std::endl;
+
+		return (false);
+	}
+
+	if (_debugLevel >= MCHEmul::_DEBUGTRACEINTERNALS)
+		std::cout << *computer () << std::endl;
+
+	if (byteFileName () != "" && asmFileName () == "")
+	{
+		bool r = computer () -> loadInto (byteFileName (), MCHEmul::Address ({ 0x00, 0x00 }));
+		if (!r)
+		{
+			if (_debugLevel >= MCHEmul::_DEBUGERRORS)
+				std::cout << "Error loading file: " << byteFileName () << std::endl;
+
+			return (false);
+		}
+	}
+
+	if (asmFileName () != "" && byteFileName () == "")
+	{
+		MCHEmul::Assembler::Parser parser (computer () -> cpu ());
+		MCHEmul::Assembler::Compiler compiler (parser);
+		MCHEmul::Assembler::ByteCode cL = compiler.compile (asmFileName ());
+
+		if (!compiler)
+		{
+			if (_debugLevel >= MCHEmul::_DEBUGERRORS)
+				for (auto i : compiler.errors ())
+					std::cout << i << std::endl;
+
+			return (false);
+		}
+		else
+		{
+			if (_debugLevel >= MCHEmul::_DEBUGALL)
+				for (auto i : cL._lines)
+					std::cout << i << std::endl;
+		}
+
+		MCHEmul::Address iA; 
+		std::vector <MCHEmul::UByte> bt = cL.asSetOfBytes (iA);
+		computer () -> memory () -> set (iA, bt);
+		setActions (cL.listOfActions ());
+
+		// Parser and compiler are destroyed here...
+	}
+
+	if (startingAddress () != MCHEmul::Address ())
+		computer () -> cpu () -> programCounter ().setAddress (startingAddress ());
+
+	return (true);
+}
+
+// ---
+bool Emuls::Emulator::run ()
+{
+	_running = true;
+
+	while (runCycle (/** no action. */) && 
+		   !computer () -> exit ());
+
+	if (_communicationSystem != nullptr)
+		_communicationSystem -> finalize ();
+
+	_running = false;
+
+	return (computer () -> lastError () != MCHEmul::_NOERROR);
+}
+
+// ---
+bool Emuls::Emulator::runCycle (unsigned int a)
+{
+	bool result = true;
+
+	computer () -> startsCycle ();
+
+	if (_communicationSystem != nullptr)
+		result &= _communicationSystem -> processMessagesOn (computer ());
+
+	Emuls::Emulator::MapOfActions::const_iterator at = 
+		_actionsAt.find (computer () -> cpu () -> programCounter ().asAddress ());
+	if (executeAction (_lastAction /* modified. */, (at == _actionsAt.end ()) ? 0 : (*at).second, a))
+		result &= computer () -> runComputerCycle ();
+
+	result &= computer () -> runIOCycle ();
+	result &= additionalRunCycle ();
+
+	computer () -> finishCycle ();
+
+	return (result);
+}
+
+// ---
+bool Emuls::Emulator::executeAction (unsigned int& lA, unsigned int at, unsigned int a)
+{
+	// TODO
+
+	return (true);
+}
+

@@ -1,0 +1,13 @@
+#include <C64/UserPeripherals.hpp>
+
+// ---
+bool C64::UserIONoPeripheral::initialize ()
+{ 
+			return (true); 
+}
+
+// ---
+bool C64::UserIONoPeripheral::simulate ()
+{ 
+	return (true); 
+}
