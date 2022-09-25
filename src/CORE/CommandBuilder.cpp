@@ -28,7 +28,7 @@ MCHEmul::Attributes MCHEmul::CommandBuilder::readCommandParameters (const std::s
 {
 	MCHEmul::Attributes result;
 
-#define ENDLOOP { prms =""; break; }
+#define ENDLOOP { prms = ""; break; }
 
 	std::string prms = cmd;
 	size_t iP = prms.find_first_of (' '); // Take off the first word!
@@ -84,10 +84,4 @@ MCHEmul::Attributes MCHEmul::CommandBuilder::readCommandParameters (const std::s
 	}
 
 	return (result);
-}
-
-// ---
-MCHEmul::Command* MCHEmul::StandardCommandBuilder::createEmptyCommand (const std::string& cmdName) const
-{
-	return (nullptr);
 }

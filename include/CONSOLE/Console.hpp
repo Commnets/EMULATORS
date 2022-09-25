@@ -35,12 +35,26 @@ namespace Console
 		void run ();
 
 		protected:
-		/** Returns true when a instruction is ready and false in other case. */
+		// Managing commands...
+		/** Read and execute the commands if any. \n
+			This method uses readCommand one. \n
+			Returns true when the command execute is QUIT, and false in other circusntance. */
+		bool readAndExecuteCommand ();
+		/** Returns true when a instruction is ready to be executed and false in other case. */
 		bool readCommand ();
+
+		/** Standard characters managed by the system.
+			The console is always inserting characters. */
+		static const char _RIGHTKEY = 0;
+		static const char _LEFTKEY = 1;
+		static const char _ENTERKEY = 3;
+		static const char _DELETEKEY = 4;
+		static const char _BACKKEY = 5;
 
 		/** The way a character is read from the console is different depending on the OS. \n
 			The method returns true when a char is read and false in other case. \n
-			The internal variable chr holds the char code read if any!. */
+			The internal variable chr holds the char code read if any!. \n
+			This method has to manage also the special characters. */
 		virtual bool readChar (char& chr) const = 0;
 
 		protected:
@@ -49,6 +63,7 @@ namespace Console
 
 		// Implementation
 		std::string _command;
+		size_t _cursorPosition;
 	};
 
 #ifdef _WIN32

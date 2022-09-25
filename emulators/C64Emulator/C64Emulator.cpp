@@ -32,7 +32,7 @@ int _tmain (int argc, _TCHAR *argv [])
 		return (1);
 
 	// Emulation thought out a console...
-	Console::Win32Console myConsole (&myEmulator, new MCHEmul::StandardCommandBuilder);
+	Console::Win32Console myConsole (&myEmulator, new MCHEmul::StandardCommandBuilder ());
 	myConsole.run ();
 
 	return (myEmulator.lastError ());

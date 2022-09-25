@@ -38,5 +38,7 @@
 #include <CORE/IOPBuilder.hpp>
 #include <CORE/Command.hpp>
 #include <CORE/CommandBuilder.hpp>
+#include <CORE/StdCommands.hpp>
+#include <CORE/StdCommandBld.hpp>
 
 #endif

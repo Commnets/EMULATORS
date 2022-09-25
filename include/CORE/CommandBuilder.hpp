@@ -7,12 +7,12 @@
  *	Framework: CPU Emulators library \n
  *	Author: Ignacio Cea Forniés (EMULATORS library) \n
  *	Creation Date: 17/09/2022 \n
- *	Description: To build the commands that the console uses.
+ *	Description: To build the command to execute instruction over a computer.
  *	Versions: 1.0 Initial
  */
 
-#ifndef __CONSOLE_COMMANDBUILDER__
-#define __CONSOLE_COMMANDBUILDER__
+#ifndef __MCHEMUL_COMMANDBUILDER__
+#define __MCHEMUL_COMMANDBUILDER__
 
 #include <CORE/Command.hpp>
 
@@ -33,13 +33,6 @@ namespace MCHEmul
 		// Implementation
 		std::string readCommandName (const std::string& cmd) const;
 		Attributes readCommandParameters (const std::string& cmd) const;
-	};
-
-	/** The very basic command builer creates the basic commands. */
-	class StandardCommandBuilder : public CommandBuilder
-	{
-		protected:
-		virtual Command* createEmptyCommand (const std::string& cmdName) const override;
 	};
 }
 

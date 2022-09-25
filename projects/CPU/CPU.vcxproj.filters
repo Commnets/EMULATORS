@@ -111,6 +111,15 @@
     <ClCompile Include="..\..\src\CORE\CommandBuilder.cpp">
       <Filter>Archivos de origen\Commands</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\CORE\StdCommands.cpp">
+      <Filter>Archivos de origen\Commands</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\CORE\StdCommandBld.cpp">
+      <Filter>Archivos de origen\Commands</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\CORE\Command.cpp">
+      <Filter>Archivos de origen\Commands</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\include\CORE\IO.hpp">
@@ -189,6 +198,12 @@
       <Filter>Archivos de encabezado\Commands</Filter>
     </ClInclude>
     <ClInclude Include="..\..\include\CORE\CommandBuilder.hpp">
+      <Filter>Archivos de encabezado\Commands</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\CORE\StdCommands.hpp">
+      <Filter>Archivos de encabezado\Commands</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\CORE\StdCommandBld.hpp">
       <Filter>Archivos de encabezado\Commands</Filter>
     </ClInclude>
   </ItemGroup>

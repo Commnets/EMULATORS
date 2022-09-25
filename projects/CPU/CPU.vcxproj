@@ -21,6 +21,7 @@
   <ItemGroup>
     <ClCompile Include="..\..\src\CORE\Address.cpp" />
     <ClCompile Include="..\..\src\CORE\Chip.cpp" />
+    <ClCompile Include="..\..\src\CORE\Command.cpp" />
     <ClCompile Include="..\..\src\CORE\CommandBuilder.cpp" />
     <ClCompile Include="..\..\src\CORE\Computer.cpp" />
     <ClCompile Include="..\..\src\CORE\CPU.cpp" />
@@ -40,6 +41,8 @@
     <ClCompile Include="..\..\src\CORE\ScreenMemory.cpp" />
     <ClCompile Include="..\..\src\CORE\Stack.cpp" />
     <ClCompile Include="..\..\src\CORE\StatusRegister.cpp" />
+    <ClCompile Include="..\..\src\CORE\StdCommandBld.cpp" />
+    <ClCompile Include="..\..\src\CORE\StdCommands.cpp" />
     <ClCompile Include="..\..\src\CORE\UByte.cpp" />
     <ClCompile Include="..\..\src\CORE\UBytes.cpp" />
     <ClCompile Include="..\..\src\CORE\UInt.cpp" />
@@ -68,6 +71,8 @@
     <ClInclude Include="..\..\include\CORE\ScreenMemory.hpp" />
     <ClInclude Include="..\..\include\CORE\Stack.hpp" />
     <ClInclude Include="..\..\include\CORE\StatusRegister.hpp" />
+    <ClInclude Include="..\..\include\CORE\StdCommandBld.hpp" />
+    <ClInclude Include="..\..\include\CORE\StdCommands.hpp" />
     <ClInclude Include="..\..\include\CORE\UByte.hpp" />
     <ClInclude Include="..\..\include\CORE\UBytes.hpp" />
     <ClInclude Include="..\..\include\CORE\UInt.hpp" />
