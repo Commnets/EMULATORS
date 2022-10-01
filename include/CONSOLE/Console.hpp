@@ -23,7 +23,8 @@ namespace Console
 		public:
 		Console () = delete;
 
-		Console (Emuls::Emulator* e, MCHEmul::CommandBuilder* cB);
+		Console (Emuls::Emulator* e, MCHEmul::CommandBuilder* cB, 
+			const std::string& cF = "./console.def", std::ostream& oS = std::cout);
 
 		Console (const Console&) = delete;
 
@@ -60,10 +61,16 @@ namespace Console
 		protected:
 		Emuls::Emulator* _emulator;
 		MCHEmul::CommandBuilder* _commandBuilder;
+		std::ostream& _outputStream;
 
 		// Implementation
 		std::string _command;
 		size_t _cursorPosition;
+
+		std::string _commandErrorTxt;
+		std::string _commandDoesnExitTxt;
+		std::string _welcomeTxt;
+		std::string _commandPrompt;
 	};
 
 #ifdef _WIN32

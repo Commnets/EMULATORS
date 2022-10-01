@@ -288,7 +288,7 @@ namespace MCHEmul
 
 			private:
 			/** To read a file and convert it into Lines to be treaten later. */
-			std::vector <std::string> readLines (const std::string& fN) const;
+			Strings readLines (const std::string& fN) const;
 
 			private:
 			const CPU* _cpu;

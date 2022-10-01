@@ -46,7 +46,7 @@ namespace Emuls
 		  * /lLEVEL			: To print out logs.
 		  * /aADDRESS		: The address where to start the execution of the emulator.
 		  */
-		Emulator (const std::vector <std::string>& argv);
+		Emulator (const MCHEmul::Strings& argv);
 
 		virtual ~Emulator ();
 

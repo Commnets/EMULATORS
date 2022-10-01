@@ -1,7 +1,7 @@
 #include <CORE/StatusRegister.hpp>
 
 // ---
-MCHEmul::UBytes MCHEmul::StatusRegister::valuesWithout (const std::vector <std::string>& bN)
+MCHEmul::UBytes MCHEmul::StatusRegister::valuesWithout (const MCHEmul::Strings& bN)
 {
 	MCHEmul::UBytes result = values ();
 	for (auto i : _bitNames)

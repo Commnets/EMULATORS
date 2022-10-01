@@ -28,7 +28,7 @@ MCHEmul::Instruction::Instruction (unsigned int c, unsigned int mp, unsigned int
 }
 
 // ---
-bool MCHEmul::Instruction::matchesWith (const std::string& i, std::vector <std::string>& prms)
+bool MCHEmul::Instruction::matchesWith (const std::string& i, MCHEmul::Strings& prms)
 {
 	if (_iStructure._error)
 		return (false);

@@ -117,7 +117,7 @@ bool MCHEmul::Assembler::InstructionCommandParser::canParse (const std::string& 
 	std::string cL = MCHEmul::trim 
 		(l.substr (0, l.find (parser () -> commentSymbol () /** Until a potential comment. */)));
 
-	std::vector <std::string> prms;
+	MCHEmul::Strings prms;
 	for (auto i : cpu () -> instructions ())
 		if (i.second -> matchesWith (cL, prms /** not used here. */))
 			return (true); /** At least 1 matching. */
@@ -143,7 +143,7 @@ void MCHEmul::Assembler::InstructionCommandParser::parse
 	MCHEmul::Assembler::InstructionElement* nE = new MCHEmul::Assembler::InstructionElement;
 	nE -> _id = _lastInstructionId; 
 	nE -> _line = lC;
-	std::vector <std::string> prms;
+	MCHEmul::Strings prms;
 	for (MCHEmul::Instructions::const_iterator i = cpu () -> instructions ().begin ();
 			i != cpu () -> instructions ().end (); i++)
 	{
@@ -215,9 +215,9 @@ MCHEmul::Assembler::Semantic* MCHEmul::Assembler::Parser::parse (const std::stri
 
 	// If there were any error reeading the file, 
 	// "lines" would be equal to "", and nothing else will happen!
-	std::vector <std::string> lines = readLines (fN);
+	MCHEmul::Strings lines = readLines (fN);
 	// The file of possible actions is also read, but it might be empty!
-	std::vector <std::string> actions = readLines (fA);
+	MCHEmul::Strings actions = readLines (fA);
 	if (lines.empty ())
 		_errors.push_back (MCHEmul::Assembler::Error 
 			(MCHEmul::Assembler::ErrorType::_FILEEMPTY, fN, 0, 0));
@@ -262,9 +262,9 @@ MCHEmul::Assembler::Semantic* MCHEmul::Assembler::Parser::parse (const std::stri
 }
 
 // ---
-std::vector <std::string> MCHEmul::Assembler::Parser::readLines (const std::string& fN) const
+MCHEmul::Strings MCHEmul::Assembler::Parser::readLines (const std::string& fN) const
 {
-	std::vector <std::string> result;
+	MCHEmul::Strings result;
 
 	std::ifstream f;
 	f.open (fN.c_str (), std::ios::in);

@@ -186,7 +186,7 @@ namespace MCHEmul
 
 			BytesInMemoryElement& operator = (const BytesInMemoryElement&) = default;
 
-			std::vector <std::string> _elements;
+			Strings _elements;
 
 			private:
 			virtual std::vector <UByte> calculateCodeBytes (const Semantic* s, bool bE = true) const override;
@@ -215,7 +215,7 @@ namespace MCHEmul
 			std::vector <size_t> labelParameters (const Semantic* s) const;
 
 			std::vector <Instruction*> _possibleInstructions;
-			std::vector <std::string> _parameters;
+			Strings _parameters;
 			mutable Instruction* _selectedInstruction;
 
 			private:

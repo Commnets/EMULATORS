@@ -12,7 +12,7 @@ const unsigned char Emuls::Emulator::_PARAMADDRESS = 'a';
 const std::string Emuls::Emulator::_ADDRESS = "ADDRESS";
 
 // ---
-Emuls::Emulator::Emulator (const std::vector <std::string>& argv)
+Emuls::Emulator::Emulator (const MCHEmul::Strings& argv)
 	: _attributes (),
 	  _communicationSystem (nullptr),
 	  _debugLevel (MCHEmul::_DEBUGNOTHING),

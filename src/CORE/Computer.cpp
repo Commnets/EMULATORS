@@ -1,4 +1,5 @@
 #include <CORE/Computer.hpp>
+#include <CORE/StdCommands.hpp>
 #include <thread>
 #include <sstream>
 
@@ -142,15 +143,9 @@ bool MCHEmul::Computer::runComputerCycle ()
 
 	if (_debugLevel >= MCHEmul::_DEBUGALL)
 	{
-		std::stringstream ss;
-		ss << "->" << *_cpu -> lastInstruction (); // To control the size printed out!
-		std::cout  
-			<< ss.str () << MCHEmul::_TABS.substr (0, 2 /** Max length to tab inst = 16 */ - (size_t) (ss.str ().length () / 8))
-			<< _cpu -> programCounter () << '\t' 
-			<< _cpu -> statusRegister ();
-		for (auto i : _cpu -> internalRegisters ())
-			std::cout << '\t' << i;
-		std::cout << std::endl;
+		std::cout << "->" << *_cpu -> lastInstruction () << std::endl;
+		MCHEmul::CPUStatusCommand stCmd; MCHEmul::Attributes rst; stCmd.execute (this, rst);
+		std::cout << (*rst.begin ()).second << std::endl;
 	}
 
 	for (auto i : _chips)

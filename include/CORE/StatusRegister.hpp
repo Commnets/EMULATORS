@@ -51,7 +51,7 @@ namespace MCHEmul
 		const std::vector <UByte>& bytes () const
 							{ return (Register::bytes ()); }
 
-		UBytes valuesWithout (const std::vector <std::string>& bN);
+		UBytes valuesWithout (const Strings& bN);
 		void set (const std::vector <UByte>& v)
 							{ Register::set (v); }
 		void set (const UBytes& v)

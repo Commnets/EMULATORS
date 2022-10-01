@@ -18,14 +18,20 @@
 
 namespace MCHEmul
 {
-	/** To create commands from an string that represents it. */
+	/** To create commands from an string that represents it. 
+		The command builder keeps a list with the different types of commands created.
+		The commands are reused changing the parameters if any. */
 	class CommandBuilder
 	{
 		public:
-		virtual ~CommandBuilder ()
+		CommandBuilder ()
+			: _commands ()
 							{ }
 
-		Command* createCommand (const std::string& cmd) const;
+		virtual ~CommandBuilder ()
+							{ for (auto i : _commands) delete (i.second); }
+
+		Command* command (const std::string& cmd) const;
 
 		protected:
 		virtual Command* createEmptyCommand (const std::string& cmdName) const = 0;
@@ -33,6 +39,8 @@ namespace MCHEmul
 		// Implementation
 		std::string readCommandName (const std::string& cmd) const;
 		Attributes readCommandParameters (const std::string& cmd) const;
+
+		mutable std::map <std::string, Command*> _commands;
 	};
 }
 

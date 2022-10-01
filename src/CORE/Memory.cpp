@@ -139,10 +139,9 @@ std::ostream& MCHEmul::operator << (std::ostream& o, const MCHEmul::PhisicalStor
 	if (!ps.active ())
 		return (o);
 
-	o << "---" << std::endl;
 	o << "Memory Subset Data" << std::endl;
-	o << "(" << ps.id () << ")," << ps.initialAddress () << "," << ps.size ();
-	o << "Read " << (ps.activeForReading () ? "allowed" : "not allowed");
+	o << "(Id:" << ps.id () << "), Initial Address:" << ps.initialAddress () << ", Size:" << ps.size ();
+	o << ", Read " << (ps.activeForReading () ? "allowed" : "not allowed");
 
 	if (ps.size () != 0)
 	{

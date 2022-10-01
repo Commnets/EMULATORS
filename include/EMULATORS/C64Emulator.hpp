@@ -35,7 +35,7 @@ namespace Emuls
 		  *	The basic parameters for any C64 emulator are (apart of the ones defined by the parent: \n
 		  *	/n				: To indicate if the visualization system is NTSC. PAL by default.
 		  */
-		C64Emulator (const std::vector <std::string>& argv);
+		C64Emulator (const MCHEmul::Strings& argv);
 
 		/** To know whether the visualizacion system is or not NTSC. */
 		bool NTSCSystem () const

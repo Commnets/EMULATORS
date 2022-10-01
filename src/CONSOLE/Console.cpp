@@ -1,12 +1,41 @@
 #include <CONSOLE/Console.hpp>
+#include <fstream>
 
 // ---
-Console::Console::Console (Emuls::Emulator* e, MCHEmul::CommandBuilder* cB)
+Console::Console::Console (Emuls::Emulator* e, 
+		MCHEmul::CommandBuilder* cB, const std::string& cF, std::ostream& oS)
 	: _emulator (e), 
 	  _commandBuilder (cB),
-	  _command (""), _cursorPosition (0)
+	  _outputStream (oS),
+	  _command (""), _cursorPosition (0),
+	  _commandErrorTxt (""), _commandDoesnExitTxt (""), _welcomeTxt (""), _commandPrompt ("")
 { 
 	assert (_emulator != nullptr && _commandBuilder != nullptr); 
+
+	_commandErrorTxt = "Command can't be executed";
+	_commandDoesnExitTxt = "Command doesn't exist";
+	_welcomeTxt = "";
+	_commandPrompt = "?:";
+
+	MCHEmul::Strings ls;
+	std::ifstream cFile (cF, std::ios_base::in);
+	if (cFile.is_open ())
+	{
+		char nl [255];
+		while (!cFile.eof ())
+		{
+			cFile.getline (nl, 255);
+			std::string l = MCHEmul::trim (std::string (nl));
+			if (l [0] != '#') ls.push_back (l);
+		}
+
+		cFile.close ();
+	}
+
+	if (ls.size () > 0) _commandErrorTxt = ls [0];
+	if (ls.size () > 1) _commandDoesnExitTxt = ls [1];
+	if (ls.size () > 2) _commandPrompt = ls  [2];
+	if (ls.size () > 3) for (size_t i = 3; i < ls.size (); _welcomeTxt += ls [i++] + '\n');
 }
 
 // ----
@@ -14,11 +43,8 @@ void Console::Console::run ()
 {
 	bool exit = false;
 
-	// Introduction
-	std::cout << "Console" << std::endl;
-	std::cout << "(C) By Ignacio Cea Forniés" << std::endl;
-	std::cout << "Introduce command (QUIT to exit)" << std::endl;
-	std::cout << "?:";
+	std::cout << _welcomeTxt;
+	std::cout << _commandPrompt;
 
 	while (!exit)
 	{
@@ -36,27 +62,27 @@ bool Console::Console::readAndExecuteCommand ()
 
 	std::cout << std::endl;
 	_command = MCHEmul::upper (MCHEmul::trim (_command));
-	if (_command == "QUIT")
+	if (_command == "QUIT" || _command == "Q")
 		return (true);
 
-	MCHEmul::Command* cmd = _commandBuilder -> createCommand (_command);
+	MCHEmul::Command* cmd = _commandBuilder -> command (_command);
 	if (cmd == nullptr)
-		std::cout << "Command:" << _command << ", is not allowed" << std::endl;
+		std::cout << _command << ":" << _commandDoesnExitTxt << std::endl;
 	else
 	{
 		MCHEmul::Attributes rst; // The results...
 		if (cmd -> execute (_emulator -> computer (), rst))
-		{
-			for (auto i : rst)
-				std::cout << i.first << "=" << i.second << std::endl;
-		}
+			for (const auto i : rst)
+				std::cout << i.second << std::endl;
 		else
-			std::cout << "The command:" << _command << ", can't be executed" << std::endl;
-
-		delete (cmd);
-		_command = ""; _cursorPosition = 0;
-		std::cout << "?:";
+			std::cout << _command << ":" << _commandErrorTxt << std::endl;
 	}
+
+	// The comand has not to be destroyed
+	// The command builder own all off them...
+
+	_command = ""; _cursorPosition = 0;
+	std::cout << _commandPrompt;
 
 	return (false);
 }
@@ -105,7 +131,7 @@ bool Console::Console::readCommand ()
 				break;
 
 			default:
-				if (std::isalnum ((int) chr))
+				if (chr >= 0 && (std::isalnum ((int) chr) || chr == ' '))
 				{
 					if (_cursorPosition == _command.length ()) _command += chr;
 					else if (_cursorPosition == 0) _command = chr + _command;

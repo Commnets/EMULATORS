@@ -116,7 +116,7 @@ namespace MCHEmul
 			Returns true when matches, and false when it doesn't. \n
 			When matches the parameter prms received is also filled. \n
 			When doesn't the parameter prms will have trash!. */
-		bool matchesWith (const std::string& i, std::vector <std::string>& prms);
+		bool matchesWith (const std::string& i, Strings& prms);
 
 		const UBytes& parameters () const
 							{ return (_lastParameters); }

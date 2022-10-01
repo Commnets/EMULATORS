@@ -18,7 +18,7 @@ bool Emuls::C64Emulator::initialize ()
 }
 
 // ---
-Emuls::C64Emulator::C64Emulator (const std::vector <std::string>& argv)
+Emuls::C64Emulator::C64Emulator (const MCHEmul::Strings& argv)
 	: Emuls::Emulator (argv)
 {
 	static std::map <unsigned char, std::string> _MATCH =

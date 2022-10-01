@@ -23,6 +23,8 @@
 
 namespace MCHEmul
 {
+	/** A vector of strings. */
+	using Strings = std::vector <std::string>;
 	/** Attributes ar used in many places. */
 	using Attributes = std::map <std::string, std::string>;
 	/** When a no defined attributes is requested, this is the value returned. */
@@ -66,8 +68,8 @@ namespace MCHEmul
 	std::string noSpaces (const std::string& s);
 	std::string onlyAlphanumeric (const std::string& s);
 	std::string noneOf (const std::string& s, const std::string& chrs);
-	std::string removeAllFrom (const std::string& s, std::vector <std::string>& strs);
-	std::vector <std::string> getElementsFrom (const std::string& txt, unsigned char ch, 
+	std::string removeAllFrom (const std::string& s, const Strings& strs);
+	Strings getElementsFrom (const std::string& txt, unsigned char ch, 
 		size_t nE = std::numeric_limits <size_t>::max ());
 
 	/** General functions to determine whether a string is or not valid

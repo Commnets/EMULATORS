@@ -1,13 +1,24 @@
 #include <CORE/CommandBuilder.hpp>
 
 // ---
-MCHEmul::Command* MCHEmul::CommandBuilder::createCommand (const std::string& cmd) const
+MCHEmul::Command* MCHEmul::CommandBuilder::command (const std::string& cmd) const
 {
-	std::string CMD = MCHEmul::upper (MCHEmul::trim (cmd));
-
 	MCHEmul::Command* result = nullptr;
-	if ((result = createEmptyCommand (readCommandName (CMD))) != nullptr)
-		result -> setParameters (readCommandParameters (CMD)); // if there is instruction set the prms!
+
+	std::string CMD = MCHEmul::trim (cmd);
+	std::string CName = readCommandName (CMD);
+	std::map <std::string, MCHEmul::Command*>::const_iterator i;
+	if ((i = _commands.find (CName)) != _commands.end ())
+		(result = (*i).second) -> setParameters (readCommandParameters (CMD));
+	else
+	{
+		if ((result = createEmptyCommand (CName)) != nullptr)
+		{
+			result -> setParameters (readCommandParameters (CMD)); // If there is instruction set the prms!
+			_commands.insert (std::pair <std::string, MCHEmul::Command*> (CName, result)); // ...and keep it for later!
+		}
+	}
+
 	return (result);
 }
 
@@ -48,8 +59,8 @@ MCHEmul::Attributes MCHEmul::CommandBuilder::readCommandParameters (const std::s
 		{
 			// The name of that parameter lasts until the following space!
 			iP = prms.find_first_of (' ');
-			std::string fName = MCHEmul::upper (prms.substr (0, iP));
-			prms = MCHEmul::trim (prms.substr (iP + 1));
+			std::string fName = (iP == std::string::npos) ? prms : MCHEmul::upper (prms.substr (0, iP));
+			prms = (iP == std::string::npos) ? "" : MCHEmul::trim (prms.substr (iP + 1));
 			result.insert (MCHEmul::Attributes::value_type (fName, "YES"));
 
 			break;
@@ -78,8 +89,8 @@ MCHEmul::Attributes MCHEmul::CommandBuilder::readCommandParameters (const std::s
 		else
 		{
 			iP = prms.find_first_of (' ');
-			result.insert (MCHEmul::Attributes::value_type (fName, prms.substr (1, iP)));
-			prms = prms.substr (iP + 1);
+			result.insert (MCHEmul::Attributes::value_type (fName, (iP == std::string::npos) ? prms : prms.substr (1, iP)));
+			prms = (iP == std::string::npos) ? "" : prms.substr (iP + 1);
 		}
 	}
 

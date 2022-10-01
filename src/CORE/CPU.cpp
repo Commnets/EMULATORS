@@ -94,8 +94,6 @@ bool MCHEmul::CPU::executeNextInstruction ()
 // ---
 std::ostream& MCHEmul::operator << (std::ostream& o, const MCHEmul::CPU& c)
 {
-	o << "---" << std::endl;
-	o << "CPU Info" << std::endl;
 	o << c.architecture () << std::endl;
 	for (auto i : c.internalRegisters ())
 		o << i << std::endl;

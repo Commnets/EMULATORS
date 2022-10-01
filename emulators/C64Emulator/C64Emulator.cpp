@@ -10,10 +10,10 @@
 using namespace Emuls;
 
 // To get the parameters from the input line...
-std::vector <std::string> generateParamsFrom (int argc, _TCHAR *argv [])
+MCHEmul::Strings generateParamsFrom (int argc, _TCHAR *argv [])
 {
 	std::wstring_convert <std::codecvt_utf8 <wchar_t>, wchar_t> converter;
-	std::vector <std::string> result;
+	MCHEmul::Strings result;
 	for (int i = 0; i < argc; i++)
 		result.push_back (converter.to_bytes (argv[i]));
 
@@ -26,14 +26,16 @@ int _tmain (int argc, _TCHAR *argv [])
 	if (!myEmulator)
 		return (1); // No creation possible...
 
+	// The communication system is optional...
 	myEmulator.setCommunicationSystem (new MCHEmul::CommunicationSystem 
 		(new MCHEmul::PeerCommunicationChannel (100, 2), new MCHEmul::StandardMessageBuilder ()));
-	if (!myEmulator.initialize ())
-		return (1);
 
-	// Emulation thought out a console...
+	// If the emulator can not be initialized, no need to continue..
+	if (!myEmulator.initialize ()) 
+		return (1); // Exist with an error...
+
+	// Optional also: Emulation thought out a console...
 	Console::Win32Console myConsole (&myEmulator, new MCHEmul::StandardCommandBuilder ());
 	myConsole.run ();
-
 	return (myEmulator.lastError ());
 }

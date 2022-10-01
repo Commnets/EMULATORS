@@ -59,10 +59,31 @@ namespace MCHEmul
 			This is ther eal one to be overloaded. */
 		virtual void executeImpl (Computer* c, Attributes& rst) = 0;
 
-
 		protected:
 		int _id;
 		Attributes _parameters;
+	};
+
+	using Commands = std::vector <Command*>;
+
+	/** A command made up of others. */
+	class ComplexCommand : public Command
+	{
+		public:
+		ComplexCommand (int id, const Commands& cmds)
+			: Command (id), _commands (cmds)
+							{ }
+
+		~ComplexCommand ()
+							{ for (auto i : _commands) delete (i); }
+
+		/** By default a complex command could be executed just when all commans it is made up of can also be executed. */
+		virtual bool canBeExecuted () const override;
+		/** By default execute all commands inside and returns true if all also returns true, and false in other case. */
+		virtual bool execute (Computer* c, Attributes& rst) override;
+
+		private:
+		Commands _commands;
 	};
 }
 

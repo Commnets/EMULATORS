@@ -95,7 +95,7 @@ std::string MCHEmul::noneOf (const std::string& s, const std::string& chrs)
 }
 
 // ---
-std::string MCHEmul::removeAllFrom (const std::string& s, std::vector <std::string>& strs)
+std::string MCHEmul::removeAllFrom (const std::string& s, const MCHEmul::Strings& strs)
 {
 	std::string result = s;
 
@@ -108,7 +108,7 @@ std::string MCHEmul::removeAllFrom (const std::string& s, std::vector <std::stri
 }
 
 // ---
-std::vector <std::string> MCHEmul::getElementsFrom (const std::string& txt, unsigned char ch, size_t nE)
+MCHEmul::Strings MCHEmul::getElementsFrom (const std::string& txt, unsigned char ch, size_t nE)
 {
 	std::vector <std::string> result;
 

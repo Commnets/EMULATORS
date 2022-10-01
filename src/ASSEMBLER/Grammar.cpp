@@ -121,7 +121,7 @@ std::vector <MCHEmul::UByte> MCHEmul::Assembler::BytesInMemoryElement::calculate
 		return (result); // Not possible when previous error...
 
 	bool e = false;
-	for (std::vector <std::string>::const_iterator i = _elements.begin (); 
+	for (MCHEmul::Strings::const_iterator i = _elements.begin (); 
 			i != _elements.end () && !e; i++)
 	{
 		std::vector <MCHEmul::UByte> n = bytesFromExpression ((*i), s -> macros (), e);

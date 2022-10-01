@@ -4,7 +4,7 @@
 MCHEmul::IPAddress::IPAddress (const std::string& ip)
 	: _a (0x00), _b (0x00), _c (0x00), _d (0x00), _port (0x0000), _error (false)
 {
-	std::vector <std::string> t = MCHEmul::getElementsFrom (ip, '.');
+	MCHEmul::Strings t = MCHEmul::getElementsFrom (ip, '.');
 	if (t.size () == 4)
 	{
 		_a = (unsigned char) std::stoi (MCHEmul::trim (t [0]));

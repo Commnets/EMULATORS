@@ -148,10 +148,10 @@ MCHEmul::UBytes MCHEmul::Stack::pull (size_t nV)
 std::ostream& MCHEmul::operator << (std::ostream& o, const MCHEmul::Stack& s)
 {
 	o << (*(static_cast <const MCHEmul::PhisicalStorageSubset*> (&s))) << std::endl;
-	o << (s._fromBack ? "Back" : "Front") << "," << (s._pointToEmpty ? "Pointing empty" : "Pointing last") << std::endl;
+	o << (s._fromBack ? "Back" : "Front") << ", " << (s._pointToEmpty ? "Pointing empty" : "Pointing last") << std::endl;
 	o << (s._stackOverflow ? "Overflow" : "No Overflow") << std::endl;
 	o << (s._empty ? "Empty" : "With data") << std::endl;
-	o << "->" << s.position ();
+	o << "Position:" << s.position ();
 
 	return (o);
 }

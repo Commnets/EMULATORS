@@ -1,0 +1,22 @@
+#The info file
+;STATUS
+Get the status of the Status Register.
+No parameters needed.
+;REGISTERS
+Get the status of every register defined in the CPU.
+No parameters needed.
+;PC
+Get the status of the Program Counter.
+No parameters needed.
+;STACK (ALL)
+Get the status of the stack.
+Can be invoked with or without the parameter ALL.
+ALL will get you info also about the content of the stack.
+;CPUSTATUS
+To get the current status of the CPU.
+Including: Status Register (STATUS), Registers (REGISTERS), 
+Program Counter (PC) and Stack (STACK).
+No parameters needed.
+;CPUINFO
+To get info about the CPU.
+Very complex info returned. No parameters needed.
