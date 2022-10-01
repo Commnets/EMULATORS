@@ -87,7 +87,7 @@ namespace MCHEmul
 		Address& operator += (size_t n)
 							{ *this = *this + n; return (*this); }
 		size_t operator - (const Address& a) const
-							{ return (this -> distanceWith (a)); }
+							{ return (a.distanceWith (*this)); }
 		Address operator - (size_t n) const
 							{ return (Address (*this).previous (n)); }
 		friend Address operator - (size_t n, const Address& a)

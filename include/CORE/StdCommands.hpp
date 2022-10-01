@@ -161,6 +161,26 @@ namespace MCHEmul
 		protected:
 		virtual void executeImpl (Computer* c, Attributes& rst) override;
 	};
+
+	/** To get the content of the memory. \n
+		The command must have 1 parameter at least with the direction which value is requested. \n
+		A second parameter might be provided, and the the content between those two memory locations is got. \n
+		The address can be in octal, hexadecimal or decimal. */
+	class MemoryStatusCommand final : public Command
+	{
+		public:
+		static const int _ID = 6;
+
+		MemoryStatusCommand ()
+			: Command (_ID)
+							{ }
+
+		virtual bool canBeExecuted () const override
+							{ return (_parameters.size () == 1 || _parameters.size () == 2); }
+
+		protected:
+		virtual void executeImpl (Computer* c, Attributes& rst) override;
+	};
 }
 
 #endif

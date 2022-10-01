@@ -131,7 +131,8 @@ bool Console::Console::readCommand ()
 				break;
 
 			default:
-				if (chr >= 0 && (std::isalnum ((int) chr) || chr == ' '))
+				if (chr >= 0 && 
+					(std::isalnum ((int) chr) || chr == ' ' || chr == '$'))
 				{
 					if (_cursorPosition == _command.length ()) _command += chr;
 					else if (_cursorPosition == 0) _command = chr + _command;

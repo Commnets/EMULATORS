@@ -20,6 +20,8 @@ MCHEmul::Command* MCHEmul::StandardCommandBuilder::createEmptyCommand (const std
 		result = new MCHEmul::CPUStatusCommand;
 	else if (cmdName == "CPUINFO")
 		result = new MCHEmul::CPUInfoCommand;
+	else if (cmdName == "MEMORY")
+		result = new MCHEmul::MemoryStatusCommand;
 
 	return (result);
 }

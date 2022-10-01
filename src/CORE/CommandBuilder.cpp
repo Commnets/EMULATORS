@@ -63,7 +63,7 @@ MCHEmul::Attributes MCHEmul::CommandBuilder::readCommandParameters (const std::s
 			prms = (iP == std::string::npos) ? "" : MCHEmul::trim (prms.substr (iP + 1));
 			result.insert (MCHEmul::Attributes::value_type (fName, "YES"));
 
-			break;
+			continue; // next...
 		}
 
 		// There is and equal symbol, but there is nothing else after...

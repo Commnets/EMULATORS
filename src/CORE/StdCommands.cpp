@@ -134,3 +134,31 @@ void MCHEmul::CPUInfoCommand::executeImpl (MCHEmul::Computer* c, MCHEmul::Attrib
 	ss << *c -> cpu ();
 	rst.insert (std::pair <std::string, std::string>  ("1", ss.str ()));
 }
+
+// ---
+void MCHEmul::MemoryStatusCommand::executeImpl (MCHEmul::Computer* c, MCHEmul::Attributes& rst)
+{
+	std::stringstream ss;
+
+	MCHEmul::Address a1 = MCHEmul::Address::fromStr ((*_parameters.begin ()).first);
+	if (_parameters.size () == 2)
+	{
+		MCHEmul::Address a2 = MCHEmul::Address::fromStr ((*++_parameters.begin ()).first);
+		MCHEmul::Address iA = ((a1 <= a2) ? a1 : a2);
+
+		bool fB = true;
+		size_t d = (((a2 >= a1) ? a2 : a1) - iA) + 1;
+		for (size_t i = 0; i < d; i += 0x10, fB = false) // Blocks of 16 elements...
+		{
+			if (!fB) ss << std::endl;
+
+			bool fE = true;
+			for (size_t j = i; j < (i + 0x10) && j < d; j++, fE = false) // Every element in the block is seperated by an space...
+				ss << (fE ? "" : " ") << c -> cpu () -> memoryRef () -> value (iA + j);
+		}
+	}
+	else
+		ss << c -> cpu () -> memoryRef () -> value (a1);
+
+	rst.insert (std::pair <std::string, std::string>  ("1", ss.str ()));
+}

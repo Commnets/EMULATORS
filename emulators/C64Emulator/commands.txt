@@ -20,3 +20,7 @@ No parameters needed.
 ;CPUINFO
 To get info about the CPU.
 Very complex info returned. No parameters needed.
+;MEMORY INITIAL (FINAL)
+To get the content of a memory position.
+One parameter minimum is required that is the position of the memory.
+If a second parameter is given then te content between the two location is returned.
