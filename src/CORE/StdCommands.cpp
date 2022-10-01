@@ -120,8 +120,8 @@ void MCHEmul::StackStatusCommand::executeImpl (MCHEmul::Computer* c, Attributes&
 	else
 	{
 		MCHEmul::Stack* stk = c -> memory () -> stack ();
-		ss << "Stack Initial: " << stk -> initialAddress () << 
-			"(Size:" << stk -> size () << ", Position:" << stk -> position () << ")";
+		ss << "Stack Initial:" << stk -> initialAddress () << 
+			" (Size:" << stk -> size () << ", Position:" << stk -> position () << ")";
 	}
 
 	rst.insert (std::pair <std::string, std::string>  ("1", ss.str ()));

@@ -79,7 +79,7 @@ MCHEmul::Memory::Content C64::Memory::standardMemoryContent ()
 		(_PAGEZERO_SUBSET, RAM, 0x0000, MCHEmul::Address ({ 0x00, 0x00 }, false), 0x0100);
 	// Stack
 	MCHEmul::Stack*  Stack = new MCHEmul::Stack 
-		(_STACK_SUBSET, RAM, 0x0100, MCHEmul::Address ({ 0x01, 0x01 }, false), 0x0100);
+		(_STACK_SUBSET, RAM, 0x0100, MCHEmul::Address ({ 0x00, 0x01 }, false), 0x0100);
 	// Pure RAM. A piece used by BASIC (40k)
 	MCHEmul::PhisicalStorageSubset* RAM0 = new MCHEmul::PhisicalStorageSubset 
 		(_RAM0_SUBSET, RAM, 0x0200, MCHEmul::Address ({ 0x00, 0x02 }, false), 0x9e00); 					// 40k pure (a bit used by BASIC)
