@@ -28,17 +28,23 @@
 
 namespace MCHEmul
 {
-	/** 
-	  * The computer links many different elements. \n 
-	  *	The computer owns all the elements linked. \n
-	  * The critical methods of the class are all related with "run", and "runComputerCycle". \n
-	  * This one can receive an external parameter that, added to the internal status of the computer, can end up or not
-	  * in executing the next instruction of the cpu. With this many effects (like debugging) could be reached.
-	  */
+	/** The computer links many different elements: \n
+		CPU, Memory, Specialized Chips and IODevices. */
 	class Computer
 	{
 		public:
+		/** Types of actions than can be executed on a compter. 
+			They can be overloaded in extensions of the computer. */
+		static const unsigned int _ACTIONNOTHING = 0; // Meaning working normally...
+		static const unsigned int _ACTIONSTOP = 1; // Meaning to stop the execution of the program...
+		static const unsigned int _ACTIONCONTINUE = 2; // Menaing to continue the execution until any other stop action is found...
+		static const unsigned int _ACTIONNEXT = 3; // Meaning to execute just only the next instruction...
+
 		using MapOfActions = std::map <MCHEmul::Address, unsigned int>;
+
+		/** The types of status that a computer can have. */
+		static const unsigned int _STATUSRUNNING = 0;
+		static const unsigned int _STATUSSTOPPED = 1;
 
 		Computer () = delete;
 
@@ -154,6 +160,11 @@ namespace MCHEmul
 		void resetErrors ()
 							{ _lastError = _NOERROR; }
 
+		/** To know whether the computer is running. 
+			It can be overloaded later, but the default implementation asks by the status RUNNING. */
+		virtual bool isRunning () const
+							{ return (_status == _STATUSRUNNING); }
+
 		// To manage actions at address level...
 		/** Set a couple of them. */
 		void setActions (const MapOfActions& at)
@@ -161,6 +172,9 @@ namespace MCHEmul
 		/** To manage them individually. */
 		void addAction (const MCHEmul::Address& at, unsigned int a);
 		void removeAction (const MCHEmul::Address& at);
+		/** Action pending to be executed in the next cycle. */
+		void setActionForNextCycle (unsigned int a)
+							{ _actionForNextCycle = a; }
 
 		friend std::ostream& operator << (std::ostream& o, const Computer& c);
 
@@ -215,6 +229,8 @@ namespace MCHEmul
 		IODevices _devices;
 		const Attributes _attributes = { }; // Maybe modified at construction level
 		MapOfActions _actionsAt;
+		unsigned int _status;
+		unsigned int _actionForNextCycle; // The action to be executed in the next cycle...
 
 		/** Used to to indicate the execution must finishes.
 			There could have been an error or not. */

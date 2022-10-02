@@ -46,6 +46,8 @@ namespace C64
 
 		virtual bool simulate (MCHEmul::CPU* cpu) override;
 
+		friend std::ostream& operator << (std::ostream& o, const CIA1& c);
+
 		private:
 		// These methods are invoked from InputOSSystem...	
 		// To manage the joystick

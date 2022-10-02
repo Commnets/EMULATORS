@@ -104,6 +104,8 @@ namespace C64
 			It invokes also some private methods. */
 		void simulate (MCHEmul::CPU* cpu, CIATimer* t = nullptr);
 
+		friend std::ostream& operator << (std::ostream& o, const CIATimer& ct);
+
 		private:
 		// Managing the timer...
 		/** 

@@ -10,6 +10,10 @@ const unsigned char Emuls::Emulator::_PARAMLOGLEVEL = 'l';
 const std::string Emuls::Emulator::_LOGLEVEL = "LOGLEVEL";
 const unsigned char Emuls::Emulator::_PARAMADDRESS = 'a';
 const std::string Emuls::Emulator::_ADDRESS = "ADDRESS";
+const unsigned char Emuls::Emulator::_PARAMADDRESSSTOP = 'd';
+const std::string Emuls::Emulator::_ADDRESSSTOP = "ADDRESSSTOP";
+const unsigned char Emuls::Emulator::_PARAMSTOP = 's';
+const std::string Emuls::Emulator::_STOP = "STOP";
 
 // ---
 Emuls::Emulator::Emulator (const MCHEmul::Strings& argv)
@@ -25,7 +29,10 @@ Emuls::Emulator::Emulator (const MCHEmul::Strings& argv)
 		{ { _PARAMBYTEFILE, _BYTEFILE },
 		  { _PARAMASMFILE, _ASMFILE },
 		  { _PARAMLOGLEVEL, _LOGLEVEL },
-		  { _PARAMADDRESS, _ADDRESS } };
+		  { _PARAMADDRESS, _ADDRESS },
+		  { _PARAMADDRESSSTOP, _ADDRESSSTOP },
+		  { _PARAMSTOP , _STOP }
+		};
 
 	for (unsigned int i = 1 /** param 0 = name of the executable */; i < argv.size (); i++)
 	{
@@ -65,6 +72,18 @@ Emuls::Emulator::~Emulator ()
 	delete (_peripheralBuilder);
 
 	SDL_Quit ();
+}
+
+// ---
+MCHEmul::Addresses Emuls::Emulator::stopAddresses () const
+{
+	MCHEmul::Addresses result;
+	MCHEmul::Attributes::const_iterator i;
+	MCHEmul::Strings strs = MCHEmul::getElementsFrom 
+		(((i = _attributes.find (_ADDRESSSTOP)) != _attributes.end ()) ? (*i).second : "", ',');
+	for (const auto i : strs)
+		result.push_back (MCHEmul::Address::fromStr (i));
+	return (result);
 }
 
 // ---
@@ -141,6 +160,17 @@ bool Emuls::Emulator::initialize ()
 
 	if (startingAddress () != MCHEmul::Address ())
 		computer () -> cpu () -> programCounter ().setAddress (startingAddress ());
+
+	MCHEmul::Addresses adrs;
+	if (!(adrs = stopAddresses ()).empty ())
+	{
+		MCHEmul::Computer::MapOfActions acts;
+		for (const auto i : adrs)
+			acts.insert (MCHEmul::Computer::MapOfActions::value_type (i, MCHEmul::Computer::_ACTIONSTOP));
+		computer () -> setActions (acts);
+	}
+
+	computer () -> cpu () -> setStop (stoppedAtStarting ());
 
 	return (true);
 }

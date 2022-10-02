@@ -114,6 +114,9 @@ namespace MCHEmul
 		private:
 		UInt _value;
 	};
+
+	// To simplify the management of a list of addresses...
+	using Addresses = std::vector <Address>;
 }
 
 #endif

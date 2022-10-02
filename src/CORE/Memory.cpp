@@ -324,7 +324,7 @@ MCHEmul::Memory::~Memory ()
 std::ostream& MCHEmul::operator << (std::ostream& o, const MCHEmul::Memory& m)
 {
 	if (m.lastError () != MCHEmul::_NOERROR) o << "Error";
-	else *m.activeView (); // Only the active view is prited out is there is no errors...
+	else o << *m.activeView (); // Only the active view is prited out is there is no errors...
 		
 	return (o);
 }

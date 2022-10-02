@@ -16,13 +16,14 @@
 #define __C64_VICIIREGISTERS__
 
 #include <CORE/incs.hpp>
+#include <C64/ChipRegisters.hpp>
 
 namespace C64
 {
 	/** In the VICII Registers, 
 		there are a couple of records that behave different
 		when they are read that when they are written. */
-	class VICIIRegisters final : public MCHEmul::PhisicalStorageSubset
+	class VICIIRegisters final : public ChipRegisters
 	{
 		public:
 		enum class GraphicMode
@@ -36,7 +37,7 @@ namespace C64
 		};
 
 		VICIIRegisters (int id, MCHEmul::PhisicalStorage* ps)
-			: MCHEmul::PhisicalStorageSubset (id, ps, 0xd000, MCHEmul::Address ({ 0x00, 0xd0 }, false), 0x0400),
+			: ChipRegisters (id, ps, 0xd000, MCHEmul::Address ({ 0x00, 0xd0 }, false), 0x0400),
 			  _lastValueRead (MCHEmul::PhisicalStorage::_DEFAULTVALUE),
 			  _backgroundColor (4, 0x00),
 			  _spriteXCoord (8, 0x0000), _spriteYCoord (8, 0x0000),
@@ -48,6 +49,9 @@ namespace C64
 			  // At this point the rest internal variables will have random values...
 			  // The vector are initialized just to given them a default size!
 							{ initializeInternalValues (); }
+
+		virtual size_t numberRegisters () const override
+							{ return (0x40); }
 
 		unsigned char borderColor () const
 							{ return (_borderColor); }

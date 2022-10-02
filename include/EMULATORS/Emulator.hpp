@@ -33,6 +33,10 @@ namespace Emuls
 		static const std::string _LOGLEVEL;
 		static const unsigned char _PARAMADDRESS;
 		static const std::string _ADDRESS;
+		static const unsigned char _PARAMADDRESSSTOP;
+		static const std::string _ADDRESSSTOP;
+		static const unsigned char _PARAMSTOP;
+		static const std::string _STOP;
 
 		using MapOfActions = std::map <MCHEmul::Address, unsigned int>;
 
@@ -45,6 +49,8 @@ namespace Emuls
 		  * /cFILENAME		: ASM file (with path) to be parsed, compiled and loadd into the memory.
 		  * /lLEVEL			: To print out logs.
 		  * /aADDRESS		: The address where to start the execution of the emulator.
+		  * /d[ADDRESS]		: Line off addresses separeted by comman where the emjulator has to stop.
+		  * /s				: When the execution must start stopped.
 		  */
 		Emulator (const MCHEmul::Strings& argv);
 
@@ -87,6 +93,15 @@ namespace Emuls
 								return (MCHEmul::Address::fromStr (((i = _attributes.find (_ADDRESS)) != _attributes.end ()) 
 									? (*i).second : "")); }
 
+		/** To know the list of the addresses where the computer has to stop. 
+			After any only the action 1 (continue) or 2 (next) is admitted. */
+		MCHEmul::Addresses stopAddresses () const;
+
+		/** To know whether the computer hast to start stopped or not. */
+		bool stoppedAtStarting () const
+							{ return ((_attributes.find (_STOP) != _attributes.end ()) ? true : false); }
+
+		/** To change the debug level. */
 		unsigned int debugLevel () const
 							{ return (_debugLevel); }
 		void setDebugLevel (unsigned int dL)

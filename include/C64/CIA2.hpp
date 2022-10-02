@@ -39,12 +39,17 @@ namespace C64
 				  { "Manufacturer", "Commodore Business Machines CBM" },
 				  { "Year", "1980" } }),
 			  _CIA2Registers (nullptr),
-			  _timerA (0), _timerB (1), _clock (0)
+			  _VICIIRef (nullptr),
+			  _timerA (0), _timerB (1), 
+			  _clock (0),
+			  _lastClockCycles (0)
 							{ }
 
 		virtual bool initialize () override;
 
 		virtual bool simulate (MCHEmul::CPU* cpu) override;
+
+		friend std::ostream& operator << (std::ostream& o, const CIA2& c);
 
 		private:
 		C64::CIA2Registers* _CIA2Registers;

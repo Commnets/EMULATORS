@@ -50,6 +50,7 @@ void Console::Console::run ()
 	{
 		if ((exit = readAndExecuteCommand ()))
 			continue;
+
 		exit = !_emulator -> runCycle ();
 	}
 }
@@ -181,7 +182,7 @@ bool Console::Win32Console::readChar (char& chr) const
 				chr = _BACKKEY;
 				break;
 
-			case 83: // The one in the key pad...
+			case 48: // The one in the key pad...
 			case 307: // The normal one...
 				chr = _DELETEKEY;
 				break;

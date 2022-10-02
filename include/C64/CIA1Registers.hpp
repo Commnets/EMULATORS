@@ -15,6 +15,7 @@
 #define __C64_CIA1REGISTERS__
 
 #include <CORE/incs.hpp>
+#include <C64/ChipRegisters.hpp>
 
 namespace C64
 {
@@ -24,14 +25,19 @@ namespace C64
 
 	/** In the CIA1 Memory, there are a couple of records that behave different
 		when they are read that when they are written. */
-	class CIA1Registers final : public MCHEmul::PhisicalStorageSubset
+	class CIA1Registers final : public ChipRegisters
 	{
 		public:
 		friend CIA1;
 
 		CIA1Registers (int id, MCHEmul::PhisicalStorage* pS);
 
+		virtual size_t numberRegisters () const override
+							{ return (0x10); }
+
 		virtual void initialize () override;
+
+		friend std::ostream& operator << (std::ostream& o, const CIA1Registers& c);
 
 		private:
 		virtual void setValue (size_t p, const MCHEmul::UByte& v) override;

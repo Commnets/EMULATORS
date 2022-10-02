@@ -18,6 +18,7 @@
 #include <C64/global.hpp>
 #include <C64/C64.hpp>
 #include <C64/Memory.hpp>
+#include <C64/ChipRegisters.hpp>
 #include <C64/VICII.hpp>
 #include <C64/VICIIRegisters.hpp>
 #include <C64/CIATimer.hpp>

@@ -82,6 +82,8 @@ namespace C64
 			It becomes back to false when it is read. */
 		void simulate (MCHEmul::CPU* cpu);
 
+		friend std::ostream& operator << (std::ostream& o, const CIAClock& cc);
+
 		private:
 		// Managing the timer...
 		/** To actualize the time. */

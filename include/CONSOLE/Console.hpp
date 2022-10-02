@@ -46,11 +46,11 @@ namespace Console
 
 		/** Standard characters managed by the system.
 			The console is always inserting characters. */
-		static const char _RIGHTKEY = 0;
-		static const char _LEFTKEY = 1;
-		static const char _ENTERKEY = 3;
-		static const char _DELETEKEY = 4;
-		static const char _BACKKEY = 5;
+		static const char _RIGHTKEY = -1;
+		static const char _LEFTKEY = -2;
+		static const char _ENTERKEY = -3;
+		static const char _DELETEKEY = -4;
+		static const char _BACKKEY = -5;
 
 		/** The way a character is read from the console is different depending on the OS. \n
 			The method returns true when a char is read and false in other case. \n

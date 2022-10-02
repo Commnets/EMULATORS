@@ -4,7 +4,7 @@
 
 // ---
 C64::CIA2Registers::CIA2Registers (int id, MCHEmul::PhisicalStorage* pS)
-	: MCHEmul::PhisicalStorageSubset (id, pS, 0xdc00, MCHEmul::Address ({ 0x00, 0xdc }, false), 0x0100),
+	: C64::ChipRegisters (id, pS, 0xdc00, MCHEmul::Address ({ 0x00, 0xdc }, false), 0x0100),
 	  _timerA (nullptr), _timerB (nullptr),
 	  _lastValueRead (MCHEmul::PhisicalStorage::_DEFAULTVALUE)
 	  // At this point all internal variables will have random values...
@@ -18,6 +18,12 @@ void C64::CIA2Registers::initialize ()
 	MCHEmul::PhisicalStorageSubset::initialize ();
 
 	initializeInternalValues ();
+}
+
+// ---
+std::ostream& C64::operator << (std::ostream& o, const C64::CIA2Registers& c)
+{
+	return (o << *((C64::ChipRegisters*) &c));
 }
 
 // ---

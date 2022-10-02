@@ -47,6 +47,16 @@ void C64::CIAClock::simulate (MCHEmul::CPU* cpu)
 }
 
 // ---
+std::ostream& C64::operator << (std::ostream& o, const C64::CIAClock& cc)
+{
+	o << "IRQ:" << (cc._IRQEnabled ? "On" : "Off") << std::endl;
+	o << "Value:" << cc._hours << "," << cc._minutes << "," << cc._seconds << "," << cc._tenthsSecond 
+	  << "(" << cc._alarmHours << "," << cc._alarmMinutes << "," << cc._alarmSeconds << "," << cc._alarmTenthsSecond << ")" << std::endl;
+
+	return (o);
+}
+
+// ---
 void C64::CIAClock::actualizeTime () 
 {
 	_time += C64::_TENTHSSECONDPAST; // Actualize the timer...

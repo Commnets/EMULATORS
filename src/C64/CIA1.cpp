@@ -33,3 +33,13 @@ bool C64::CIA1::simulate (MCHEmul::CPU* cpu)
 
 	return (true);
 }
+
+// ---
+std::ostream& C64::operator << (std::ostream& o, const C64::CIA1& c)
+{
+	o << *c._CIA1Registers << std::endl;
+	o << c._timerA << std::endl;
+	o << c._timerB;
+
+	return (o);
+}

@@ -34,6 +34,40 @@ namespace C64
 		private:
 		virtual void executeImpl (MCHEmul::Computer* c, MCHEmul::Attributes& rst) override;
 	};
+
+	/** To get the status of the CIA2 chip. */
+	class CIA1StatusCommand final : public MCHEmul::Command
+	{
+		public:
+		static const int _ID = 101;
+	
+		CIA1StatusCommand ()
+			: MCHEmul::Command (_ID)
+							{ }
+
+		virtual bool canBeExecuted () const override
+							{ return (_parameters.size () == 0); }
+
+		private:
+		virtual void executeImpl (MCHEmul::Computer* c, MCHEmul::Attributes& rst) override;
+	};
+
+	/** To get the status of the CIA2 chip. */
+	class CIA2StatusCommand final : public MCHEmul::Command
+	{
+		public:
+		static const int _ID = 102;
+	
+		CIA2StatusCommand ()
+			: MCHEmul::Command (_ID)
+							{ }
+
+		virtual bool canBeExecuted () const override
+							{ return (_parameters.size () == 0); }
+
+		private:
+		virtual void executeImpl (MCHEmul::Computer* c, MCHEmul::Attributes& rst) override;
+	};
 }
 
 #endif

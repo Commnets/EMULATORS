@@ -10,7 +10,6 @@ std::ostream& MCHEmul::operator << (std::ostream& o, const MCHEmul::Attributes& 
 	{
 		if (!f)	o << std::endl;
 		o << i.first << ":" << i.second;
-
 		f = false;
 	}
 
