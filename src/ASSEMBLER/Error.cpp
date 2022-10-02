@@ -22,5 +22,5 @@ std::ostream& MCHEmul::Assembler::operator << (std::ostream& o, const MCHEmul::A
 			{ MCHEmul::Assembler::ErrorType::_PARSERNOTFOUND, "Intruction Parser not defined" }
 		};
 
-	return (o << "Error: " << _ERRORTEXT [e._type] << " at line " << e._line << " in file " << e._file);
+	return (o << "Error:" << _ERRORTEXT [e._type] << " at line " << e._line << " in file " << e._file);
 }

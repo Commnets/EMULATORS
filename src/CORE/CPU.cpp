@@ -101,7 +101,7 @@ std::ostream& MCHEmul::operator << (std::ostream& o, const MCHEmul::CPU& c)
 	for (auto i : c.internalRegisters ())
 		o << i << std::endl;
 	o << c.programCounter () << std::endl;
-	o << c.statusRegister () << std::endl;
+	o << c.statusRegister ();
 
 	return (o);
 }

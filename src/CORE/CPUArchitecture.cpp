@@ -14,11 +14,11 @@ MCHEmul::CPUArchitecture::CPUArchitecture (size_t nb, size_t iL, bool bE, const 
 // ---
 std::ostream& MCHEmul::operator << (std::ostream& o, const MCHEmul::CPUArchitecture& a)
 {
+	o << a.attributes () << std::endl;
 	o << a.numberBytes () << " bytes" << std::endl;
 	o << a.numberBits () << " bits" << std::endl;
 	o << a.instructionLength () << " bytes per instruction" << std::endl;
-	o << (a.bigEndian () ? "big endian" : "little endian") << std::endl;
-	o << a.attributes ();
+	o << (a.bigEndian () ? "big endian" : "little endian");
 
 	return (o);
 }

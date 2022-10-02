@@ -215,13 +215,21 @@ void MCHEmul::Computer::removeAction (const MCHEmul::Address& at)
 // ---
 std::ostream& MCHEmul::operator << (std::ostream& o, const MCHEmul::Computer& c)
 {
+	o << c.attributes () << std::endl;
 	o << *c.cpu () << std::endl;
 	for (auto i : c.chips ())
 		o << *i.second << std::endl;
 	o << *c.memory () << std::endl;
+
+	// Not usual...
+	bool fD = true;
 	for (auto i : c.devices ())
-		o << *i.second << std::endl;
-	o << c.attributes ();
+	{
+		if (!fD) o << std::endl;
+		o << *i.second;
+		fD = false;
+	}
+
 	return (o);
 }
 

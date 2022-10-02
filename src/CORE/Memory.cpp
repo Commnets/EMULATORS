@@ -139,17 +139,15 @@ std::ostream& MCHEmul::operator << (std::ostream& o, const MCHEmul::PhisicalStor
 	if (!ps.active ())
 		return (o);
 
-	o << "(Id:" << ps.id () << "), Address:" << ps.initialAddress () << ", Size:" << ps.size ();
-	o << ", Read " << (ps.activeForReading () ? "allowed" : "not allowed");
+	o << "(Id:" << ps.id () << "), Address:" << ps.initialAddress () << ", Size:" << ps.size ()
+	  << ", Read " << (ps.activeForReading () ? "allowed" : "not allowed");
 
 	if (ps.size () != 0)
 	{
 		size_t bS = 0x10;
 		for (size_t i = 0; i <= (size_t) (ps.size () / bS); i++)
 		{
-			if ((i * bS) < ps.size ())
-				o << std::endl;
-			
+			if ((i * bS) < ps.size ()) o << std::endl;
 			for (size_t j = 0; j < bS && ((i * bS) + j) < ps.size (); j++)
 				o << ((j != 0) ? " " : "") << ps.value (ps.initialAddress () + (i * bS) + j);
 		}
@@ -244,8 +242,13 @@ bool MCHEmul::MemoryView::loadInto (const std::string& fN, const MCHEmul::Addres
 // ---
 std::ostream& MCHEmul::operator << (std::ostream& o, const MCHEmul::MemoryView& mv)
 {
+	bool fS = true;
 	for (auto i : mv.subsets ())
-		o << std::endl << i.second; 
+	{
+		if (!fS) o << std::endl;
+		o << i.second;
+		fS = false;
+	}
 		
 	return (o);
 }

@@ -90,8 +90,8 @@ void C64::VICII::RasterData::reduceDisplayZone (bool s)
 // ---
 std::ostream& C64::operator << (std::ostream& o, const C64::VICII::RasterData& r)
 {
-	o << r._currentPosition 
-	  << " (" << r._currentPosition_0 << ":" << r._firstPosition_0 << "," << r._lastPosition_0 << ")";
+	o << "Pos:" << r._currentPosition << "(" << r._currentPosition_0 
+	  << "), F:" << r._firstPosition_0 << " ,L:" << r._lastPosition_0;
 
 	return (o);
 }
@@ -99,8 +99,8 @@ std::ostream& C64::operator << (std::ostream& o, const C64::VICII::RasterData& r
 // ---
 std::ostream& C64::operator << (std::ostream & o, const C64::VICII::Raster & r)
 {
-	o << r._vRasterData << std::endl;
-	o << r._hRasterData;
+	o << "V:" << r._vRasterData << std::endl;
+	o << "H:" << r._hRasterData;
 
 	return (o);
 }

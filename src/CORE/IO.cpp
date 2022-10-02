@@ -77,7 +77,6 @@ std::ostream& MCHEmul::operator << (std::ostream& o, const MCHEmul::IODevice& d)
 	{
 		if (f) o << std::endl;
 		o << i.second;
-
 		f = false;
 	}
 
