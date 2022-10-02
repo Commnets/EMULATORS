@@ -32,6 +32,10 @@ No parameters needed.
 ;RUN
 To keep CPU running.
 No parameters needed.
+;NEXT
+To execute the next instruction after being stopped.
+N can also be used instead.
+No parameters needed.
 ;INST
 To know the last instruction executed by the CPU.
 No parameters needed.

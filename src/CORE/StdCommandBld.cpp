@@ -26,6 +26,8 @@ MCHEmul::Command* MCHEmul::StandardCommandBuilder::createEmptyCommand (const std
 		result = new MCHEmul::StopCPUCommand;
 	else if (cmdName == "RUN")
 		result = new MCHEmul::RunCPUCommand;
+	else if (cmdName == "NEXT" || cmdName == "N")
+		result = new MCHEmul::NextInstructionCommand;
 	else if (cmdName == "INST")
 		result = new MCHEmul::LastIntructionCPUCommand;
 

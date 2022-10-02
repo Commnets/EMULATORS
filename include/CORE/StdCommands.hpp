@@ -217,11 +217,28 @@ namespace MCHEmul
 		virtual void executeImpl (Computer* c, Attributes& rst) override;
 	};
 
+	/** To run just the next instruction of the CPU. */
+	class NextInstructionCommand final : public Command
+	{
+		public:
+		static const int _ID = 9;
+
+		NextInstructionCommand ()
+			: Command (_ID)
+							{ }
+
+		virtual bool canBeExecuted () const override
+							{ return (_parameters.size () == 0); }
+
+		private:
+		virtual void executeImpl (Computer* c, Attributes& rst) override;
+	};
+
 	/** To get info about the last instruction executed. */
 	class LastIntructionCPUCommand final : public Command
 	{
 		public:
-		static const int _ID = 9;
+		static const int _ID = 10;
 
 		LastIntructionCPUCommand ()
 			: Command (_ID)

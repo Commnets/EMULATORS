@@ -65,7 +65,7 @@ void MCHEmul::HelpCommand::executeImpl (MCHEmul::Computer* c, MCHEmul::Attribute
 		bool fH = true;
 		for (const auto i : _helpInfo)
 		{
-			if (!fH) ss << std::endl;
+			if (!fH) ss << std::endl << std::endl;
 			helpInfoCommand (i.first);
 			fH = false;
 		}
@@ -173,6 +173,12 @@ void MCHEmul::StopCPUCommand::executeImpl (MCHEmul::Computer* c, MCHEmul::Attrib
 void MCHEmul::RunCPUCommand::executeImpl (MCHEmul::Computer* c, MCHEmul::Attributes& rst)
 {
 	c -> setActionForNextCycle (MCHEmul::Computer::_ACTIONCONTINUE);
+}
+
+// ---
+void MCHEmul::NextInstructionCommand::executeImpl (MCHEmul::Computer* c, MCHEmul::Attributes& rst)
+{
+	c -> setActionForNextCycle (MCHEmul::Computer::_ACTIONNEXT);
 }
 
 // ---
