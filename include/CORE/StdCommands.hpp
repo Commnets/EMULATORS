@@ -41,7 +41,7 @@ namespace MCHEmul
 		virtual bool canBeExecuted () const override
 							{ return (_parameters.size () == 0 || _parameters.size () == 1); }
 
-		protected:
+		private:
 		virtual void executeImpl (Computer* c, Attributes& rst) override;
 
 		private:
@@ -62,7 +62,7 @@ namespace MCHEmul
 		virtual bool canBeExecuted () const override
 							{ return (true); }
 
-		protected:
+		private:
 		virtual void executeImpl (Computer* c, Attributes& rst) override;
 	};
 
@@ -79,7 +79,7 @@ namespace MCHEmul
 		virtual bool canBeExecuted () const override
 							{ return (_parameters.size () == 0); }
 
-		protected:
+		private:
 		virtual void executeImpl (Computer* c, Attributes& rst) override;
 	};
 
@@ -96,7 +96,7 @@ namespace MCHEmul
 		virtual bool canBeExecuted () const override
 							{ return (_parameters.size () == 0); }
 
-		protected:
+		private:
 		virtual void executeImpl (Computer* c, Attributes& rst) override;
 
 	};
@@ -118,7 +118,7 @@ namespace MCHEmul
 							{ return (_parameters.size () == 0 || 
 								(_parameters.size () == 1 && _parameters.find ("ALL") != _parameters.end ())); }
 
-		protected:
+		private:
 		virtual void executeImpl (Computer* c, Attributes& rst) override;
 	};
 
@@ -140,7 +140,7 @@ namespace MCHEmul
 					}))
 							{ }
 
-		protected:
+		private:
 		virtual void executeImpl (Computer* c, Attributes& rst) override
 							{ /** Nothing special to do. */ }
 	};
@@ -158,7 +158,7 @@ namespace MCHEmul
 		virtual bool canBeExecuted () const override
 							{ return (_parameters.size () == 0); }
 
-		protected:
+		private:
 		virtual void executeImpl (Computer* c, Attributes& rst) override;
 	};
 
@@ -178,7 +178,59 @@ namespace MCHEmul
 		virtual bool canBeExecuted () const override
 							{ return (_parameters.size () == 1 || _parameters.size () == 2); }
 
-		protected:
+		private:
+		virtual void executeImpl (Computer* c, Attributes& rst) override;
+	};
+
+	/** To stop the cpu.
+		The IO will continue working. */
+	class StopCPUCommand final : public Command
+	{
+		public:
+		static const int _ID = 7;
+
+		StopCPUCommand ()
+			: Command (_ID)
+							{ }
+
+		virtual bool canBeExecuted () const override
+							{ return (_parameters.size () == 0); }
+
+		private:
+		virtual void executeImpl (Computer* c, Attributes& rst) override;
+	};
+
+	/** To run the cpu, usually after a stop command has been executed. */
+	class RunCPUCommand final : public Command
+	{
+		public:
+		static const int _ID = 8;
+
+		RunCPUCommand ()
+			: Command (_ID)
+							{ }
+
+		virtual bool canBeExecuted () const override
+							{ return (_parameters.size () == 0); }
+
+		private:
+		virtual void executeImpl (Computer* c, Attributes& rst) override;
+	};
+
+	/** To get info about the last instruction executed. */
+	class LastIntructionCPUCommand final : public Command
+	{
+		public:
+		static const int _ID = 9;
+
+		LastIntructionCPUCommand ()
+			: Command (_ID)
+							{ }
+
+		virtual bool canBeExecuted () const override
+							{ return (_parameters.size () == 0); }
+
+		private:
 		virtual void executeImpl (Computer* c, Attributes& rst) override;
 	};
 }

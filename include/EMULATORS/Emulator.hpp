@@ -92,14 +92,6 @@ namespace Emuls
 		void setDebugLevel (unsigned int dL)
 							{ _debugLevel = dL; computer () -> setDebugLevel (dL); }
 
-		// To manage actions at address level...
-		/** Set a couple of them. */
-		void setActions (const MapOfActions& at)
-							{ _actionsAt = at; }
-		/** To manage them individually. */
-		void addAction (const MCHEmul::Address& at, unsigned int a);
-		void removeAction (const MCHEmul::Address& at);
-
 		bool connectPeripheral (int id, const MCHEmul::Attributes& prms, MCHEmul::IODevice* d)
 							{ return (computer () -> connect (peripherialBuilder () -> peripheral (id, prms), d)); }
 
@@ -125,19 +117,6 @@ namespace Emuls
 		MCHEmul::IOPeripheralBuilder* peripherialBuilder ()
 							{ return ((MCHEmul::IOPeripheralBuilder*) (((const Emulator*) this) -> peripherialBuilder ())); }
 
-		// To be used when e.g debugging...
-		/** In the method runCycle, before executing the cycle related to the computer (cpu + chips), this method is invoked. \n
-			The parameters passed through are: "lA" is the last action executed (if any), 
-			"at" is the action associated to the point where the program counter is now at, 
-			and "a" is the action parameter received by the method itself. \n
-			A potential "like a" parameter received through the communication system (if active and if any) is 
-			also taken into account. However the parameter "a" received by the method has priority.
-			With these three/four variables this method should do whatever is requires and decide whether execute the 
-			cycle of the computer (true) or not (return false). \n
-			It can be overloaded for specific pruposes. \n
-			During the execution of the method the firt parameter (lastAction) can be modified. */
-		virtual bool executeAction (unsigned int& lA, unsigned int at, unsigned int a);
-
 		/** An exit method that can hold specific code needed per cycle and per type of emulator. 
 			By default it does nothing. */
 		virtual bool additionalRunCycle ()
@@ -156,14 +135,12 @@ namespace Emuls
 		MCHEmul::Attributes _attributes;
 		MCHEmul::CommunicationSystem* _communicationSystem;
 		unsigned int _debugLevel;
-		std::map <MCHEmul::Address, unsigned int> _actionsAt;
 
 		// Implementation
 		mutable MCHEmul::Computer* _computer;
 		mutable MCHEmul::IOPeripheralBuilder* _peripheralBuilder;
 		mutable bool _running;
 		unsigned int _lastError;
-		unsigned int _lastAction;
 	};
 }
 

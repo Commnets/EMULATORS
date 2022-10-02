@@ -31,5 +31,7 @@
 #include <C64/UserPort.hpp>
 #include <C64/UserPeripherals.hpp>
 #include <C64/IOPBuilder.hpp>
+#include <C64/Commands.hpp>
+#include <C64/CommandBuilder.hpp>
 
 #endif

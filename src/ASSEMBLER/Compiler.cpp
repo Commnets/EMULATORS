@@ -170,7 +170,7 @@ MCHEmul::Assembler::ByteCode MCHEmul::Assembler::Compiler::compile (const std::s
 						result._lines.push_back (MCHEmul::Assembler::ByteCodeLine (spa, b, lL, 
 							(gE -> _type == MCHEmul::Assembler::GrammaticalElement::_INSTRUCTION) 
 								? (static_cast <MCHEmul::Assembler::InstructionElement*> (gE)) -> _selectedInstruction : nullptr, 
-							gE -> _actionOn /** Action affection the code bytes. */));
+							gE -> _actionOn /** Action affecting the code bytes. */));
 
 					spa += b.size (); // To the next...
 				}

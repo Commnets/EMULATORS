@@ -27,6 +27,8 @@
     <ClInclude Include="..\..\include\C64\CIAClock.hpp" />
     <ClInclude Include="..\..\include\C64\CIATimer.hpp" />
     <ClInclude Include="..\..\include\C64\ColorMemory.hpp" />
+    <ClInclude Include="..\..\include\C64\CommandBuilder.hpp" />
+    <ClInclude Include="..\..\include\C64\Commands.hpp" />
     <ClInclude Include="..\..\include\C64\global.hpp" />
     <ClInclude Include="..\..\include\C64\incs.hpp" />
     <ClInclude Include="..\..\include\C64\IOPBuilder.hpp" />
@@ -47,6 +49,8 @@
     <ClCompile Include="..\..\src\C64\CIA2Registers.cpp" />
     <ClCompile Include="..\..\src\C64\CIAClock.cpp" />
     <ClCompile Include="..\..\src\C64\CIATimer.cpp" />
+    <ClCompile Include="..\..\src\C64\CommandBuilder.cpp" />
+    <ClCompile Include="..\..\src\C64\Commands.cpp" />
     <ClCompile Include="..\..\src\C64\global.cpp" />
     <ClCompile Include="..\..\src\C64\IOPBuilder.cpp" />
     <ClCompile Include="..\..\src\C64\Memory.cpp" />

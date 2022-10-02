@@ -53,6 +53,9 @@ bool MCHEmul::CPU::executeNextInstruction ()
 {
 	memoryRef () -> setCPUView (); // Always...
 
+	if (_stopped)
+		return (true);
+
 	unsigned int nC = 0;
 	for (auto i : _interrupts)
 	{
@@ -99,7 +102,6 @@ std::ostream& MCHEmul::operator << (std::ostream& o, const MCHEmul::CPU& c)
 		o << i << std::endl;
 	o << c.programCounter () << std::endl;
 	o << c.statusRegister () << std::endl;
-	o << c.clockCycles () << " clock cycles";
 
 	return (o);
 }

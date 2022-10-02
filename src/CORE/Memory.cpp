@@ -244,9 +244,6 @@ bool MCHEmul::MemoryView::loadInto (const std::string& fN, const MCHEmul::Addres
 // ---
 std::ostream& MCHEmul::operator << (std::ostream& o, const MCHEmul::MemoryView& mv)
 {
-	o << "---" << std::endl;
-	o << "Memory View Data";
-
 	for (auto i : mv.subsets ())
 		o << std::endl << i.second; 
 		
@@ -323,8 +320,6 @@ MCHEmul::Memory::~Memory ()
 // ---
 std::ostream& MCHEmul::operator << (std::ostream& o, const MCHEmul::Memory& m)
 {
-	o << "---" << std::endl;
-	o << "Memory Data" << std::endl;
 	if (m.lastError () != MCHEmul::_NOERROR) o << "Error";
 	else *m.activeView (); // Only the active view is prited out is there is no errors...
 		

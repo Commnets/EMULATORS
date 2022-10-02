@@ -31,6 +31,12 @@
     <Filter Include="Archivos de encabezado\Motherboard\Chips">
       <UniqueIdentifier>{61503d3f-b542-47ff-b84c-bb0be2546585}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Archivos de origen\Commands">
+      <UniqueIdentifier>{0ba8a678-d37f-4b6e-829a-63be35cb1e48}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Archivos de encabezado\Commands">
+      <UniqueIdentifier>{9d9d0e08-dfbf-43bc-aff1-f5c9c2aa34af}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\include\C64\VICII.hpp">
@@ -90,6 +96,12 @@
     <ClInclude Include="..\..\include\C64\IOPBuilder.hpp">
       <Filter>Archivos de encabezado\IO</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\include\C64\Commands.hpp">
+      <Filter>Archivos de encabezado\Commands</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\C64\CommandBuilder.hpp">
+      <Filter>Archivos de encabezado\Commands</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\C64\VICII.cpp">
@@ -142,6 +154,12 @@
     </ClCompile>
     <ClCompile Include="..\..\src\C64\IOPBuilder.cpp">
       <Filter>Archivos de origen\IO</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\C64\Commands.cpp">
+      <Filter>Archivos de origen\Commands</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\C64\CommandBuilder.cpp">
+      <Filter>Archivos de origen\Commands</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

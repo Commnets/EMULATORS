@@ -22,6 +22,12 @@ MCHEmul::Command* MCHEmul::StandardCommandBuilder::createEmptyCommand (const std
 		result = new MCHEmul::CPUInfoCommand;
 	else if (cmdName == "MEMORY")
 		result = new MCHEmul::MemoryStatusCommand;
+	else if (cmdName == "STOP")
+		result = new MCHEmul::StopCPUCommand;
+	else if (cmdName == "RUN")
+		result = new MCHEmul::RunCPUCommand;
+	else if (cmdName == "INST")
+		result = new MCHEmul::LastIntructionCPUCommand;
 
 	return (result);
 }

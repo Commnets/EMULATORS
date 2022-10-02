@@ -162,3 +162,23 @@ void MCHEmul::MemoryStatusCommand::executeImpl (MCHEmul::Computer* c, MCHEmul::A
 
 	rst.insert (std::pair <std::string, std::string>  ("1", ss.str ()));
 }
+
+// ---
+void MCHEmul::StopCPUCommand::executeImpl (MCHEmul::Computer* c, MCHEmul::Attributes& rst)
+{
+	c -> cpu () -> setStop (true);
+}
+
+// ---
+void MCHEmul::RunCPUCommand::executeImpl (MCHEmul::Computer* c, MCHEmul::Attributes& rst)
+{
+	c -> cpu () ->  setStop (false);
+}
+
+// ---
+void MCHEmul::LastIntructionCPUCommand::executeImpl (MCHEmul::Computer* c, MCHEmul::Attributes& rst)
+{
+	std::stringstream ss;
+	ss << *c -> cpu () -> lastInstruction ();
+	rst.insert (std::pair <std::string, std::string>  ("1", ss.str ()));
+}

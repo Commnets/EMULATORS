@@ -28,14 +28,14 @@ int _tmain (int argc, _TCHAR *argv [])
 
 	// The communication system is optional...
 	myEmulator.setCommunicationSystem (new MCHEmul::CommunicationSystem 
-		(new MCHEmul::PeerCommunicationChannel (100, 2), new MCHEmul::StandardMessageBuilder ()));
+		(new MCHEmul::PeerCommunicationChannel (100, 2), new MCHEmul::StandardMessageBuilder));
 
 	// If the emulator can not be initialized, no need to continue..
 	if (!myEmulator.initialize ()) 
-		return (1); // Exist with an error...
+		return (1); // Exit with an error...
 
 	// Optional also: Emulation thought out a console...
-	Console::Win32Console myConsole (&myEmulator, new MCHEmul::StandardCommandBuilder ());
+	Console::Win32Console myConsole (&myEmulator, new C64::CommandBuilder);
 	myConsole.run ();
 	return (myEmulator.lastError ());
 }

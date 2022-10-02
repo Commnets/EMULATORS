@@ -97,6 +97,8 @@ namespace C64
 			void initialize ()
 							{ _currentPosition = _firstPosition; _currentPosition_0 = _firstPosition_0; }
 
+			friend std::ostream& operator << (std::ostream& o, const RasterData& r);
+
 			protected:
 			/** Internal method used return a value considering the firrst position as 0. */
 			unsigned short toBase0 (unsigned short m) const
@@ -214,6 +216,8 @@ namespace C64
 			void initialize ()
 							{ _vRasterData.initialize (); _hRasterData.initialize (); }
 
+			friend std::ostream& operator << (std::ostream& o, const Raster& r);
+
 			private:
 			RasterData _vRasterData, _hRasterData;
 		};
@@ -246,6 +250,8 @@ namespace C64
 		virtual bool initialize () override;
 
 		virtual bool simulate (MCHEmul::CPU* cpu) override;
+
+		friend std::ostream& operator << (std::ostream& o, const VICII& c);
 
 		private:
 		/** To simplify the use of the routines dedicated to draw. */

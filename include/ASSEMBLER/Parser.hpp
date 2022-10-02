@@ -275,7 +275,8 @@ namespace MCHEmul
 			  * * = xxxx will identify the address from which the code after will be inserted!
 			  * 
 			  * The method can receive also another file with "actions" to execute over any line. \n
-			  * This action must be simply number. How to interpret them should be determine later. 
+			  * This action must be simply number. How to interpret them should be determine later. \n
+			  * In the default implementation the number 0 will mean nothing, and the number 1 to stop.
 			  */
 			Semantic* parse (const std::string& fN, const std::string& fA = "") const;
 

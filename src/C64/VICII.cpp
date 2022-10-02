@@ -45,6 +45,27 @@ C64::VICII::RasterData::RasterData (
 }
 
 // ---
+bool C64::VICII::RasterData::add (unsigned short i)
+{
+	bool result = false;
+
+	int cP = (int)_currentPosition_0;
+	cP += i; // Can move to the next (o nexts) lines...
+	if (result = (cP >= (int)_maxPositions))
+		while (cP >= (int)_maxPositions)
+			cP -= (int)_maxPositions;
+
+	cP += (int)_firstPosition;
+	if (cP >= (int)_maxPositions)
+		cP -= (int)_maxPositions;
+
+	_currentPosition = (unsigned short)cP;
+	_currentPosition_0 = toBase0 (_currentPosition);
+
+	return (result);
+}
+
+// ---
 void C64::VICII::RasterData::reduceDisplayZone (bool s)
 {
 	if (_displayZoneReducted == s)
@@ -67,24 +88,21 @@ void C64::VICII::RasterData::reduceDisplayZone (bool s)
 }
 
 // ---
-bool C64::VICII::RasterData::add (unsigned short i)
+std::ostream& C64::operator << (std::ostream& o, const C64::VICII::RasterData& r)
 {
-	bool result = false;
+	o << r._currentPosition 
+	  << " (" << r._currentPosition_0 << ":" << r._firstPosition_0 << "," << r._lastPosition_0 << ")";
 
-	int cP = (int) _currentPosition_0;
-	cP += i; // Can move to the next (o nexts) lines...
-	if (result = (cP >= (int) _maxPositions))
-		while (cP >= (int) _maxPositions)
-			cP -= (int) _maxPositions;
+	return (o);
+}
 
-	cP += (int) _firstPosition;
-	if (cP >= (int) _maxPositions)
-		cP -= (int) _maxPositions;
+// ---
+std::ostream& C64::operator << (std::ostream & o, const C64::VICII::Raster & r)
+{
+	o << r._vRasterData << std::endl;
+	o << r._hRasterData;
 
-	_currentPosition = (unsigned short) cP;
-	_currentPosition_0 = toBase0 (_currentPosition);
-
-	return (result);
+	return (o);
 }
 
 // ---
@@ -270,6 +288,15 @@ bool C64::VICII::simulate (MCHEmul::CPU* cpu)
 	screenMemory () -> setVerticalLine (x2 + 1, y1 - 1, y2 - y1 + 3, 1);
 
 	return (true);
+}
+
+// ---
+std::ostream& C64::operator << (std::ostream& o, const C64::VICII& c)
+{
+	o << *c._VICIIRegisters << std::endl;
+	o << c._raster;
+
+	return (o);
 }
 
 // ---

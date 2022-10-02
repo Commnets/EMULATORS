@@ -28,11 +28,18 @@
 
 namespace MCHEmul
 {
-	/** The computer links many different elements. \n 
-		The computer owns all the elements linked. */
+	/** 
+	  * The computer links many different elements. \n 
+	  *	The computer owns all the elements linked. \n
+	  * The critical methods of the class are all related with "run", and "runComputerCycle". \n
+	  * This one can receive an external parameter that, added to the internal status of the computer, can end up or not
+	  * in executing the next instruction of the cpu. With this many effects (like debugging) could be reached.
+	  */
 	class Computer
 	{
 		public:
+		using MapOfActions = std::map <MCHEmul::Address, unsigned int>;
+
 		Computer () = delete;
 
 		/** The computer owns the different elements.
@@ -123,7 +130,7 @@ namespace MCHEmul
 		void startsCycle ()
 							{ _clock.start (_cpu -> clockCycles ()); }
 		/** Execute one computer cycle (cpu + chips). */
-		bool runComputerCycle ();
+		bool runComputerCycle (unsigned int a = 0 /** Meaning no action. */);
 		/** Execute the IO Cycle.
 			Returns true when ok, and false when no ok. */
 		bool runIOCycle ();
@@ -147,7 +154,29 @@ namespace MCHEmul
 		void resetErrors ()
 							{ _lastError = _NOERROR; }
 
+		// To manage actions at address level...
+		/** Set a couple of them. */
+		void setActions (const MapOfActions& at)
+							{ _actionsAt = at; }
+		/** To manage them individually. */
+		void addAction (const MCHEmul::Address& at, unsigned int a);
+		void removeAction (const MCHEmul::Address& at);
+
 		friend std::ostream& operator << (std::ostream& o, const Computer& c);
+
+		protected:
+		// To be used when e.g debugging...
+		/** In the method runComputerCycle, before executing the cycle related to the computer (cpu + chips), this method is invoked. \n
+			The parameters passed through are: "lA" is the last action executed (if any), 
+			"at" is the action associated to the point where the program counter is now at, 
+			and "a" is the action parameter received by the method itself. \n
+			A potential "like a" parameter received through the communication system (if active and if any) is 
+			also taken into account. However the parameter "a" received by the method has priority.
+			With these three/four variables this method should do whatever is requires and decide whether execute the 
+			cycle of the computer (true) or not (return false). \n
+			It can be overloaded for specific pruposes. \n
+			During the execution of the method the firt parameter (lastAction) can be modified. */
+		virtual bool executeAction (unsigned int& lA, unsigned int at, unsigned int a);
 
 		protected:
 		/** Used internally to align the speed to the microprocessor 
@@ -185,6 +214,7 @@ namespace MCHEmul
 		Memory* _memory;
 		IODevices _devices;
 		const Attributes _attributes = { }; // Maybe modified at construction level
+		MapOfActions _actionsAt;
 
 		/** Used to to indicate the execution must finishes.
 			There could have been an error or not. */
@@ -199,6 +229,7 @@ namespace MCHEmul
 		InputOSSystem* _inputOSSystem;
 		GraphicalChip* _graphicalChip;
 		Clock _clock; // To maintain the sped of the compute...
+		unsigned int _lastAction;
 	};
 }
 

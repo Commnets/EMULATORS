@@ -19,8 +19,7 @@ Emuls::Emulator::Emulator (const MCHEmul::Strings& argv)
 	  _computer (nullptr),
 	  _peripheralBuilder (nullptr),
 	  _running (false),
-	  _lastError (MCHEmul::_NOERROR),
-	  _lastAction (0)
+	  _lastError (MCHEmul::_NOERROR)
 {
 	static std::map <unsigned char, std::string> _MATCH =
 		{ { _PARAMBYTEFILE, _BYTEFILE },
@@ -66,22 +65,6 @@ Emuls::Emulator::~Emulator ()
 	delete (_peripheralBuilder);
 
 	SDL_Quit ();
-}
-
-// ---
-void Emuls::Emulator::addAction (const MCHEmul::Address& at, unsigned int a)
-{
-	Emuls::Emulator::MapOfActions::iterator i = _actionsAt.find (at);
-	if (i == _actionsAt.end ()) _actionsAt.insert (Emuls::Emulator::MapOfActions::value_type (at, a));
-	else (*i).second = a;
-}
-
-// ---
-void Emuls::Emulator::removeAction (const MCHEmul::Address& at)
-{
-	Emuls::Emulator::MapOfActions::iterator i = _actionsAt.find (at);
-	if (i != _actionsAt.end ()) 
-		_actionsAt.erase (i);
 }
 
 // ---
@@ -151,7 +134,7 @@ bool Emuls::Emulator::initialize ()
 		MCHEmul::Address iA; 
 		std::vector <MCHEmul::UByte> bt = cL.asSetOfBytes (iA);
 		computer () -> memory () -> set (iA, bt);
-		setActions (cL.listOfActions ());
+		computer () -> setActions (cL.listOfActions ());
 
 		// Parser and compiler are destroyed here...
 	}
@@ -186,21 +169,16 @@ bool Emuls::Emulator::runCycle (unsigned int a)
 	computer () -> startsCycle ();
 
 	// Is there any external action to take into account...
-	unsigned int fA = a; // By default..only the one passedf to this method will be taken into account!
+	unsigned int fA = a; // By default..only the one passedef to this method will be taken into account!
 	if (_communicationSystem != nullptr)
 	{
 		unsigned int eA = _communicationSystem -> processMessagesOn (computer ());
-		if (a == 0 /** Priority. */ && eA != 0 /** something? */) 
+		if (a == 0 /** Priority to the action given as parameter if any */ && eA != 0 /** something? */) 
 			fA = eA; // If there is no emulator action passed to this method and
 					 // there is one external, then the external is taken into account...
 	}
 
-	Emuls::Emulator::MapOfActions::const_iterator at = 
-		_actionsAt.find (computer () -> cpu () -> programCounter ().asAddress ());
-	if (executeAction (_lastAction /* can be modified within the method. */, 
-			(at == _actionsAt.end ()) ? 0 : (*at).second, fA))
-		result &= computer () -> runComputerCycle ();
-
+	result &= computer () -> runComputerCycle (fA);
 	result &= computer () -> runIOCycle ();
 	result &= additionalRunCycle ();
 
@@ -208,12 +186,3 @@ bool Emuls::Emulator::runCycle (unsigned int a)
 
 	return (result);
 }
-
-// ---
-bool Emuls::Emulator::executeAction (unsigned int& lA, unsigned int at, unsigned int a)
-{
-	// TODO
-
-	return (true);
-}
-

@@ -36,7 +36,8 @@ namespace MCHEmul
 			: _architecture (a), _registers (r), _statusRegister (sR), _instructions (ins),
 			  _programCounter (a.numberBytes ()), _memory (nullptr), _interrupts (),
 			  _lastInstruction (nullptr),
-			  _lastError (_NOERROR), _clockCycles (0)
+			  _lastError (_NOERROR), _clockCycles (0),
+			  _stopped (false)
 							{ assert (_registers.size () > 0 && _instructions.size () > 0); }
 
 		CPU (const CPU&) = delete;
@@ -44,6 +45,11 @@ namespace MCHEmul
 		CPU& operator = (const CPU&) = delete; 
 
 		virtual ~CPU ();
+
+		bool stopped () const
+							{ return (_stopped); }
+		void setStop (bool s)
+							{ _stopped = s; }
 
 		const CPUArchitecture& architecture () const
 							{ return (_architecture); }
@@ -136,6 +142,7 @@ namespace MCHEmul
 		// Implementation
 		unsigned int _lastError;
 		unsigned int _clockCycles;
+		bool _stopped; // When the CPU is stopped and no runCycle is executed...
 	};
 }
 

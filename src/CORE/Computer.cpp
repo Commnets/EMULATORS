@@ -6,10 +6,12 @@
 // ---
 MCHEmul::Computer::Computer (MCHEmul::CPU* cpu, const MCHEmul::Chips& c, 
 		MCHEmul::Memory* m, const MCHEmul::IODevices& d, unsigned int cs, const MCHEmul::Attributes& attrs)
-	: _cpu (cpu), _chips (c), _memory (m), _devices (d), _clock (cs), _attributes (attrs),
+	: _cpu (cpu), _chips (c), _memory (m), _devices (d), _attributes (attrs), _actionsAt (),
 	  _exit (false), _debugLevel (MCHEmul::_DEBUGNOTHING),
 	  _lastError (MCHEmul::_NOERROR),
-	  _screen (nullptr), _inputOSSystem (nullptr), _graphicalChip (nullptr)
+	  _screen (nullptr), _inputOSSystem (nullptr), _graphicalChip (nullptr),
+	  _clock (cs), 
+	  _lastAction (0) // Meaning no action...
 { 
 	assert (_cpu != nullptr);
 	assert (_memory != nullptr && _memory -> stack () != nullptr);
@@ -117,7 +119,7 @@ bool MCHEmul::Computer::run ()
 	{
 		startsCycle ();
 
-		ok &= runComputerCycle ();
+		ok &= runComputerCycle (/** no action. */);
 		ok &= runIOCycle ();
 		
 		finishCycle ();
@@ -127,8 +129,13 @@ bool MCHEmul::Computer::run ()
 }
 
 // ---
-bool MCHEmul::Computer::runComputerCycle ()
+bool MCHEmul::Computer::runComputerCycle (unsigned int a)
 {
+	MCHEmul::Computer::MapOfActions::const_iterator at =
+		_actionsAt.find (cpu () -> programCounter ().asAddress ());
+	if (!executeAction (_lastAction /* can be modified within the method. */, (at == _actionsAt.end ()) ? 0 : (*at).second, a))
+		return (true); // It has decided not to execute the cycle...
+
 	if (!_cpu -> executeNextInstruction ())
 	{
 		_exit = true;
@@ -190,10 +197,24 @@ bool MCHEmul::Computer::runIOCycle ()
 }
 
 // ---
+void MCHEmul::Computer::addAction (const MCHEmul::Address& at, unsigned int a)
+{
+	MCHEmul::Computer::MapOfActions::iterator i = _actionsAt.find (at);
+	if (i == _actionsAt.end ()) _actionsAt.insert (MCHEmul::Computer::MapOfActions::value_type (at, a));
+	else (*i).second = a;
+}
+
+// ---
+void MCHEmul::Computer::removeAction (const MCHEmul::Address& at)
+{
+	MCHEmul::Computer::MapOfActions::iterator i = _actionsAt.find (at);
+	if (i != _actionsAt.end ()) 
+		_actionsAt.erase (i);
+}
+
+// ---
 std::ostream& MCHEmul::operator << (std::ostream& o, const MCHEmul::Computer& c)
 {
-	o << "---" << std::endl;
-	o << "Computer Info" << std::endl;
 	o << *c.cpu () << std::endl;
 	for (auto i : c.chips ())
 		o << *i.second << std::endl;
@@ -202,6 +223,36 @@ std::ostream& MCHEmul::operator << (std::ostream& o, const MCHEmul::Computer& c)
 		o << *i.second << std::endl;
 	o << c.attributes ();
 	return (o);
+}
+
+// ---
+bool MCHEmul::Computer::executeAction (unsigned int& lA, unsigned int at, unsigned int a)
+{
+	// The action defined at the program counter point has priority, if any...
+	// Otherwise the external action point, if any is taking into consideracion!
+	unsigned int act = (at == 0) ? a : at;
+
+	// Meaning nothing...
+	if (act == 0)
+		return (true); // The last action doesn't change at all...
+
+	// Meaning to stop, when no previously stopped...
+	if (act == 1 && lA != 1)
+	{
+		cpu () -> setStop (true);
+
+		lA = 1;
+	}
+
+	// Meaning to run, when previously stopped...
+	if (act == 2 && lA == 1)
+	{
+		cpu () -> setStop (false);
+
+		lA = 0;
+	}
+
+	return (true);
 }
 
 // ---

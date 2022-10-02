@@ -10,6 +10,22 @@ void C64::VICIIRegisters::initialize ()
 }
 
 // ---
+std::ostream& C64::operator << (std::ostream& o, const C64::VICIIRegisters& vr)
+{
+	bool fB = true;
+	for (size_t i = 0; i < 0x040; i += 0x10, fB = false)
+	{
+		if (!fB) o << std::endl;
+
+		bool fV = true;
+		for (size_t j = i; j < (i + 0x010) && j < 0x040; j++, fV = false)
+			o << (fV ? "" : " ") << MCHEmul::UByte ((unsigned char)j) << ":" << vr.readValue (j);
+	}
+
+	return (o);
+}
+
+// ---
 void C64::VICIIRegisters::setValue (size_t p, const MCHEmul::UByte& v)
 {
 	MCHEmul::PhisicalStorageSubset::setValue (p, v);
