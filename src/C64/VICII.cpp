@@ -236,7 +236,7 @@ bool C64::VICII::simulate (MCHEmul::CPU* cpu)
 						{ fpxl += (_raster.hData ().firstScreenPosition () - cav); lbk = 8 - fpxl; }
 					if ((cav + 8) > _raster.hData ().lastScreenPosition (/** false = real. */))
 						{ lbk = _raster.hData ().lastScreenPosition () - cav + 1; }
-					screenMemory () -> setHorizontalLine ((size_t) (cav + fpxl), (size_t) rv, lbk, _VICIIRegisters -> backgroundColor ());
+					screenMemory () -> setHorizontalLine (((size_t) cav + fpxl), (size_t) rv, lbk, _VICIIRegisters -> backgroundColor ());
 				}
 
 				// Draw the graphics, and the sprites...
@@ -282,10 +282,10 @@ bool C64::VICII::simulate (MCHEmul::CPU* cpu)
 
 	unsigned short x1, y1, x2, y2;
 	_raster.screenPositions (x1, y1, x2, y2);
-	screenMemory () -> setHorizontalLine (x1 - 1, y1 - 1, x2 - x1 + 3, 1);
-	screenMemory () -> setHorizontalLine (x1 - 1, y2 + 1, x2 - x1 + 3, 1);
-	screenMemory () -> setVerticalLine (x1 - 1, y1 - 1, y2 - y1 + 3, 1);
-	screenMemory () -> setVerticalLine (x2 + 1, y1 - 1, y2 - y1 + 3, 1);
+	screenMemory () -> setHorizontalLine ((size_t) x1 - 1, (size_t) y1 - 1, (size_t) x2 - x1 + 3, 1);
+	screenMemory () -> setHorizontalLine ((size_t) x1 - 1, (size_t) y2 + 1, (size_t) x2 - x1 + 3, 1);
+	screenMemory () -> setVerticalLine ((size_t) x1 - 1, (size_t) y1 - 1, (size_t) y2 - y1 + 3, 1);
+	screenMemory () -> setVerticalLine ((size_t) x2 + 1, (size_t) y1 - 1, (size_t) y2 - y1 + 3, 1);
 
 	return (true);
 }
@@ -396,7 +396,7 @@ MCHEmul::UBytes C64::VICII::readCharDataFor (const MCHEmul::UBytes& chrs) const
 	for (auto i : chrs.bytes ())
 	{
 		std::vector <MCHEmul::UByte> chrDt = memoryRef () -> bytes 
-			(_VICIIRegisters -> charDataMemory () /** The key. */ + (size_t) (i.value () << 3), 8);
+			(_VICIIRegisters -> charDataMemory () /** The key. */ + ((size_t) i.value () << 3), 8);
 		dt.insert (dt.end (), chrDt.begin (), chrDt.end ());
 	}
 
@@ -412,7 +412,7 @@ MCHEmul::UBytes C64::VICII::readBitmapDataAt (unsigned short l) const
 	for (unsigned short i = 0; i < _GRAPHMAXCHARCOLUMNS; i++)
 	{
 		std::vector <MCHEmul::UByte> btDt = 
-			memoryRef () -> bytes (_VICIIRegisters -> bitmapMemory () + (size_t) (cL + (i << 3)), 8);
+			memoryRef () -> bytes (_VICIIRegisters -> bitmapMemory () + (cL + ((size_t) i << 3)), 8);
 		dt.insert (dt.end (), btDt.begin (), btDt.end ());
 	}
 
@@ -461,7 +461,7 @@ void C64::VICII::drawMultiColorBytes (int cb, size_t r,
 			? clr [iBy].value () : _VICIIRegisters -> backgroundColor (cs)) & 0x0f /** Useful nibble. */;
 		unsigned short pos = dC._RCA + i;
 		if (pos <= dC._LCS)	screenMemory () -> setPixel ((size_t) pos, (size_t) dC._RR, fc);
-		if ((pos + 1) <= dC._LCS) screenMemory () -> setPixel ((size_t) (pos + 1), (size_t) dC._RR, fc);
+		if ((pos + 1) <= dC._LCS) screenMemory () -> setPixel (((size_t) pos + 1), (size_t) dC._RR, fc);
 	}
 }
 

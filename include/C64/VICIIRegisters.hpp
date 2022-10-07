@@ -112,11 +112,11 @@ namespace C64
 
 		const MCHEmul::Address charDataMemory () const
 							{ return (_charDataMemory + 
-								(size_t) (0x4000 /* 16284 = 16k */ * _bank) /** VICII Only addresses 16k. */); }
+								((size_t) 0x4000 /* 16284 = 16k */ * _bank) /** VICII Only addresses 16k. */); }
 		const MCHEmul::Address screenMemory () const 
-							{ return (_screenMemory + (size_t) (0x4000 * _bank)); }
+							{ return (_screenMemory + ((size_t) 0x4000 * _bank)); }
 		const MCHEmul::Address bitmapMemory () const 
-							{ return (_bitmapMemory + (size_t) (0x4000 * _bank)); }
+							{ return (_bitmapMemory + ((size_t) 0x4000 * _bank)); }
 
 		// Managed from VICII Chip Emulator
 		// The VICII chip also uses this object as a temporary storage

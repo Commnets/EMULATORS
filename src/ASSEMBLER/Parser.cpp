@@ -202,8 +202,7 @@ unsigned char MCHEmul::Assembler::Parser::commentSymbol () const
 		cP = dynamic_cast <MCHEmul::Assembler::CommentCommandParser*> ((*i));
 
 	assert (cP != nullptr); // It shouldn't...but just in case!
-
-	return (_commentSymbol = cP -> symbol ());
+	return (_commentSymbol = ((cP == nullptr) ? '#' /** the default one. */ : cP -> symbol ()));
 }
 
 // ---

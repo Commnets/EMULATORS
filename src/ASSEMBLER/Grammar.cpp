@@ -67,17 +67,16 @@ MCHEmul::Address MCHEmul::Assembler::GrammaticalElement::address (const MCHEmul:
 
 	size_t b = 0;
 	const MCHEmul::Assembler::GrammaticalElement* gE = this -> _previousElement;
-	while (dynamic_cast <const MCHEmul::Assembler::StartingPointElement*> (gE) == nullptr)
+	const MCHEmul::Assembler::StartingPointElement* sP = nullptr;
+	while (gE != nullptr &&
+		   (sP = dynamic_cast <const MCHEmul::Assembler::StartingPointElement*> (gE)) == nullptr)
 	{
 		b += gE -> size (s);
 		gE = gE -> _previousElement;
 	}
 
-	const MCHEmul::Assembler::StartingPointElement* sP = 
-		dynamic_cast <const MCHEmul::Assembler::StartingPointElement*> (gE);
-	assert (sP != nullptr); // Just in case...
-
-	return (sP -> address (s) + b);
+	return ((sP == nullptr) 
+		? MCHEmul::Address () /** Bad address. */ : sP ->  address (s) + b);
 }
 
 // ---
@@ -451,10 +450,11 @@ MCHEmul::Address MCHEmul::Assembler::Semantic::addressForLabel (const std::strin
 	MCHEmul::Assembler::LabelElement* lE = nullptr;
 	for (size_t i = 0; i < _startingPoints.size () && lE == nullptr; i++)
 	{
+		MCHEmul::Assembler::LabelElement* t = nullptr;
 		for (MCHEmul::Assembler::GrammaticalElement* gE = _startingPoints [i] -> _nextElement;
-			gE != nullptr && lE == nullptr; gE = gE -> _nextElement)
+			 gE != nullptr && lE == nullptr; gE = gE -> _nextElement)
 		{
-			MCHEmul::Assembler::LabelElement* t = dynamic_cast <MCHEmul::Assembler::LabelElement*> (gE);
+			t = dynamic_cast <MCHEmul::Assembler::LabelElement*> (gE);
 			if (t != nullptr && t -> _name == l)
 				lE = t;
 		}

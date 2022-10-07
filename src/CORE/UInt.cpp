@@ -175,9 +175,9 @@ MCHEmul::UInt MCHEmul::UInt::PackagedBCDFormatManager::fromUnsignedInt (unsigned
 	for (int i = ((int) nS.length () - 1); i >= 0; i -= 2) // It can be negative..
 	{
 		if (i == 0) // odd number of digits...
-			dt.insert (dt.begin (), nS [i] - '0');
+			dt.insert (dt.begin (), nS [(size_t) i] - '0');
 		else 
-			dt.insert (dt.begin (), ((nS [i - 1] - '0') << 4 /** MSNibble. */) | (nS [i] - '0' /** LSNibble. */));
+			dt.insert (dt.begin (), ((nS [(size_t) i - 1] - '0') << 4 /** MSNibble. */) | (nS [(size_t) i] - '0' /** LSNibble. */));
 	}
 
 	return (MCHEmul::UInt (MCHEmul::UBytes (dt), true, MCHEmul::UInt::_PACKAGEDBCD));
@@ -195,9 +195,9 @@ MCHEmul::UInt MCHEmul::UInt::PackagedBCDFormatManager::fromInt (int n)
 	for (int i = ((int) nS.length () - 1); i >= 0; i -= 2) // It might be negative..
 	{
 		if (i == 0) // odd number of digits...
-			dt.insert (dt.begin (), nS [i] - '0');
+			dt.insert (dt.begin (), nS [(size_t) i] - '0');
 		else 
-			dt.insert (dt.begin (), ((nS [i - 1] - '0') << 4 /** MSNibble. */) | (nS [i] - '0' /** LSNibble. */));
+			dt.insert (dt.begin (), ((nS [(size_t) i - 1] - '0') << 4 /** MSNibble. */) | (nS [(size_t) i] - '0' /** LSNibble. */));
 	}
 
 	// In case the number (abs) is bigger than the maximum allowed at the saize already calculated...
@@ -257,7 +257,7 @@ MCHEmul::UInt MCHEmul::UInt::multiply (const MCHEmul::UInt& u) const
 	MCHEmul::UInt u2 = u;
 
 	// Is the final outcome going to be negative?
-	bool neg = (result.negative () && u.positive ()) | 
+	bool neg = (result.negative () && u.positive ()) || 
 		(result.positive () && u.negative ());
 
 	// All positive just for calculus...

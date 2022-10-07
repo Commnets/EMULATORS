@@ -287,7 +287,7 @@ namespace C64
 		/** Read the chars present in the video matrix. The vale received goes fom 0 to 24. */
 		MCHEmul::UBytes readCharCodeDataAt (unsigned short l) const
 							{ return (memoryRef () -> values (_VICIIRegisters -> screenMemory () + 
-								(size_t) (l * _GRAPHMAXCHARCOLUMNS), _GRAPHMAXCHARCOLUMNS)); }
+								((size_t) l * _GRAPHMAXCHARCOLUMNS), (size_t) _GRAPHMAXCHARCOLUMNS)); }
 		/** Read the info for the chars received as parameter. */
 		MCHEmul::UBytes readCharDataFor (const MCHEmul::UBytes& chrs) const;
 		/** Read th info of the bitmap. 
@@ -298,7 +298,7 @@ namespace C64
 			Th value ecived goes from 0 to 24. */
 		MCHEmul::UBytes readColorDataAt (unsigned short l) const
 							{ return (memoryRef () -> values (_COLORMEMORY + 
-								(size_t) (l * _GRAPHMAXCHARCOLUMNS), _GRAPHMAXCHARCOLUMNS)); }
+								((size_t) l * _GRAPHMAXCHARCOLUMNS), (size_t) _GRAPHMAXCHARCOLUMNS)); }
 		/** The value received is the number of sprite to be drawn. */
 		MCHEmul::UBytes readSpriteDataAt (unsigned short l) const;
 

@@ -77,7 +77,7 @@ MCHEmul::Attributes MCHEmul::CommandBuilder::readCommandParameters (const std::s
 		// What is after the equal symbol contains (potentially) the value of that field...
 		prms = MCHEmul::trim (prms.substr (iP + 1));
 		// If that starts with quotes, the content has to be taken as it is up to the following quote!
-		if (prms [0] = '"')
+		if (prms [0] == '"')
 		{
 			iP = prms.find_first_of ('"');
 			if (iP == std::string::npos) // There must be a quote at the end, otherwise it will be an error!

@@ -245,7 +245,7 @@ const MCHEmul::UByte& C64::VICIIRegisters::readValue (size_t p) const
 		case 0x11:
 			result = MCHEmul::UByte 
 				((MCHEmul::PhisicalStorageSubset::readValue (pp).value () & 0x7f) | 
-				 ((_currentRasterLine & 0xff00) != 0) ? 0x80 : 0x00);
+				 (((_currentRasterLine & 0xff00) != 0) ? 0x80 : 0x00));
 			break;
 
 		// RASTER: When reading get the current raster postion (except the MSB that is in the previous)
