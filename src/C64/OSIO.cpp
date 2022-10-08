@@ -72,7 +72,7 @@ const std::map <SDL_Scancode, C64::InputOSSystem::KeyMPos> C64::InputOSSystem::_
 // ---
 void C64::InputOSSystem::linkToChips (const MCHEmul::Chips& c)
 {
-	for (auto i : c)
+	for (const auto& i : c)
 		if ((_cia1 = dynamic_cast <C64::CIA1*> (i.second)) != nullptr)
 			break;
 
@@ -100,7 +100,7 @@ void C64::InputOSSystem::whenKeyReleased (SDL_Scancode k)
 void C64::InputOSSystem::whenJoystickMoved (const MCHEmul::InputOSSystem::SDL_JoyAxisEvents& js)
 {
 	unsigned char dr [2] = { 0, 0 }; 
-	for (auto i : js)
+	for (const auto& i : js)
 	{
 		// Only events for two joysticks (1 & 2) are allowed...
 		if (i.which != 0 && i.which != 1)

@@ -27,6 +27,7 @@
     <ClCompile Include="..\..\src\CORE\CPU.cpp" />
     <ClCompile Include="..\..\src\CORE\CPUArchitecture.cpp" />
     <ClCompile Include="..\..\src\CORE\CPUInterrupt.cpp" />
+    <ClCompile Include="..\..\src\CORE\Formatter.cpp" />
     <ClCompile Include="..\..\src\CORE\global.cpp" />
     <ClCompile Include="..\..\src\CORE\GraphicalChip.cpp" />
     <ClCompile Include="..\..\src\CORE\Instruction.cpp" />
@@ -46,6 +47,7 @@
     <ClCompile Include="..\..\src\CORE\UByte.cpp" />
     <ClCompile Include="..\..\src\CORE\UBytes.cpp" />
     <ClCompile Include="..\..\src\CORE\UInt.cpp" />
+    <ClCompile Include="..\..\src\FmterBuilder.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\include\CORE\Address.hpp" />
@@ -56,6 +58,8 @@
     <ClInclude Include="..\..\include\CORE\CPU.hpp" />
     <ClInclude Include="..\..\include\CORE\CPUArchitecture.hpp" />
     <ClInclude Include="..\..\include\CORE\CPUInterrupt.hpp" />
+    <ClInclude Include="..\..\include\CORE\FmterBuilder.hpp" />
+    <ClInclude Include="..\..\include\CORE\Formatter.hpp" />
     <ClInclude Include="..\..\include\CORE\global.hpp" />
     <ClInclude Include="..\..\include\CORE\GraphicalChip.hpp" />
     <ClInclude Include="..\..\include\CORE\incs.hpp" />

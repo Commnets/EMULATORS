@@ -20,7 +20,7 @@ MCHEmul::Computer::Computer (MCHEmul::CPU* cpu, const MCHEmul::Chips& c,
 
 	_cpu -> setMemoryRef (_memory);
 
-	for (auto i : _chips)
+	for (const auto& i : _chips)
 	{
 		if (_graphicalChip == nullptr)
 			_graphicalChip = dynamic_cast <MCHEmul::GraphicalChip*> (i.second);
@@ -31,7 +31,7 @@ MCHEmul::Computer::Computer (MCHEmul::CPU* cpu, const MCHEmul::Chips& c,
 	// To define a graphical chip is mandatory...
 	assert (_graphicalChip != nullptr);
 
-	for (auto i : _devices)
+	for (const auto& i : _devices)
 	{
 		if (_screen == nullptr) 
 			_screen = dynamic_cast <MCHEmul::Screen*> (i.second);
@@ -53,10 +53,10 @@ MCHEmul::Computer::~Computer ()
 
 	delete (_memory);
 
-	for (auto i : _chips)
+	for (const auto& i : _chips)
 		delete (i.second);
 
-	for (auto i : _devices)
+	for (const auto& i : _devices)
 		delete (i.second);
 }
 
@@ -81,7 +81,7 @@ bool MCHEmul::Computer::initialize ()
 	}
 
 	bool resultChips = true;
-	for (auto i : chips ())
+	for (const auto& i : chips ())
 		resultChips &= i.second -> initialize ();
 	if (!resultChips)
 	{
@@ -91,7 +91,7 @@ bool MCHEmul::Computer::initialize ()
 	}
 
 	bool resultIO = true;
-	for (auto i : devices ())
+	for (const auto& i : devices ())
 		resultIO &= i.second -> initialize ();
 	if (!resultIO)
 	{
@@ -166,12 +166,13 @@ bool MCHEmul::Computer::runComputerCycle (unsigned int a)
 
 	if (_debugLevel >= MCHEmul::_DEBUGALL)
 	{
-		std::cout << "->" << *_cpu -> lastInstruction () << std::endl;
+		if (_cpu -> lastInstruction () != nullptr)
+			std::cout << "->" << *_cpu -> lastInstruction () << std::endl;
 		MCHEmul::CPUStatusCommand stCmd; MCHEmul::Attributes rst; stCmd.execute (this, rst);
-		std::cout << (*rst.begin ()).second << std::endl;
+		std::cout << rst << std::endl;
 	}
 
-	for (auto i : _chips)
+	for (const auto& i : _chips)
 	{
 		if (!i.second -> simulate (_cpu))
 		{
@@ -192,7 +193,7 @@ bool MCHEmul::Computer::runComputerCycle (unsigned int a)
 // ---
 bool MCHEmul::Computer::runIOCycle ()
 {
-	for (auto i : _devices)
+	for (const auto& i : _devices)
 	{
 		if (!i.second -> simulate ())
 		{
@@ -233,13 +234,13 @@ std::ostream& MCHEmul::operator << (std::ostream& o, const MCHEmul::Computer& c)
 {
 	o << c.attributes () << std::endl;
 	o << *c.cpu () << std::endl;
-	for (auto i : c.chips ())
+	for (const auto& i : c.chips ())
 		o << *i.second << std::endl;
 	o << *c.memory () << std::endl;
 
 	// Not usual...
 	bool fD = true;
-	for (auto i : c.devices ())
+	for (const auto& i : c.devices ())
 	{
 		if (!fD) o << std::endl;
 		o << *i.second;

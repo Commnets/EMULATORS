@@ -393,7 +393,7 @@ MCHEmul::UBytes C64::VICII::readCharDataFor (const MCHEmul::UBytes& chrs) const
 {
 	std::vector <MCHEmul::UByte> dt;
 
-	for (auto i : chrs.bytes ())
+	for (const auto& i : chrs.bytes ())
 	{
 		std::vector <MCHEmul::UByte> chrDt = memoryRef () -> bytes 
 			(_VICIIRegisters -> charDataMemory () /** The key. */ + ((size_t) i.value () << 3), 8);

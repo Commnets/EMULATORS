@@ -24,7 +24,7 @@ namespace Console
 		Console () = delete;
 
 		Console (Emuls::Emulator* e, MCHEmul::CommandBuilder* cB, 
-			const std::string& cF = "./console.def", std::ostream& oS = std::cout);
+			const std::string& cF = "./console.txt", std::ostream& oS = std::cout);
 
 		Console (const Console&) = delete;
 

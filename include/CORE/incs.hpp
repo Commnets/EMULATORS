@@ -15,6 +15,8 @@
 #define __MCHEMUL_INCS__
 
 #include <CORE/global.hpp>
+#include <CORE/Formatter.hpp>
+#include <CORE/FmterBuilder.hpp>
 #include <CORE/Address.hpp>
 #include <CORE/Chip.hpp>
 #include <CORE/Computer.hpp>

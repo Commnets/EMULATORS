@@ -41,7 +41,7 @@ MCHEmul::Screen::~Screen ()
 // ---
 void MCHEmul::Screen::linkToChips (const MCHEmul::Chips& c)
 {
-	for (auto i : c)
+	for (const auto& i : c)
 		if ((_graphicalChip = dynamic_cast <MCHEmul::GraphicalChip*> (i.second)) != nullptr)
 			break;
 

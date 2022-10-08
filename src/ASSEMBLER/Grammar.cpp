@@ -415,7 +415,7 @@ void MCHEmul::Assembler::Semantic::addFrom (const MCHEmul::Assembler::Semantic* 
 
 	// Add the macros 
 	// If repeated an error will be generated
-	for (auto i : s -> _macros)
+	for (const auto& i : s -> _macros)
 		addMacro (i.second);
 
 	// Add the starting points at the end...

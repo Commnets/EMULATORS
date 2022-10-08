@@ -26,7 +26,8 @@ Console::Console::Console (Emuls::Emulator* e,
 		{
 			cFile.getline (nl, 255);
 			std::string l = MCHEmul::trim (std::string (nl));
-			if (l [0] != '#') ls.push_back (l);
+			if (l != "" && l [0] == '#') continue; // Comments are not taken into account...
+			ls.push_back (l);
 		}
 
 		cFile.close ();

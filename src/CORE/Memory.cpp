@@ -183,7 +183,7 @@ void MCHEmul::MemoryView::set (const MCHEmul::Address& a, const MCHEmul::UByte& 
 const MCHEmul::UByte& MCHEmul::MemoryView::value (const MCHEmul::Address& a) const
 {
 	int dt = 0;
-	for (auto i : _subsets)
+	for (const auto& i : _subsets)
 		if (i.second -> activeForReading () && i.second -> isIn (a, dt))
 			return (i.second -> readValue (dt)); // Access directly to the low level method to speed up the access...
 												 // and to avoid "isIn" to be executed twice!
@@ -243,7 +243,7 @@ bool MCHEmul::MemoryView::loadInto (const std::string& fN, const MCHEmul::Addres
 std::ostream& MCHEmul::operator << (std::ostream& o, const MCHEmul::MemoryView& mv)
 {
 	bool fS = true;
-	for (auto i : mv.subsets ())
+	for (const auto& i : mv.subsets ())
 	{
 		if (!fS) o << std::endl;
 		o << i.second;
@@ -258,12 +258,12 @@ bool MCHEmul::Memory::Content::verifyCoherence () const
 {
 	_error = _phisicalStorages.empty () || _subsets.empty () || _views.empty ();
 
-	for (auto i :_subsets)
+	for (const auto& i :_subsets)
 		_error |= _phisicalStorages.find (i.second -> phisicalStorage () -> id ()) == _phisicalStorages.end ();
 	
-	for (auto i : _views)
+	for (const auto& i : _views)
 	{
-		for (auto j : i.second -> subsets ())
+		for (const auto& j : i.second -> subsets ())
 		{
 			_error |= _subsets.find (j.second -> id ()) == _subsets.end ();
 			_error |= _phisicalStorages.find (j.second -> phisicalStorage () -> id ()) == _phisicalStorages.end ();
@@ -279,7 +279,7 @@ bool MCHEmul::Memory::Content::initialize ()
 	if (_error) 
 		return (false); 
 
-	for (auto i : _subsets)
+	for (const auto& i : _subsets)
 		i.second -> initialize ();
 
 	return (true); 
@@ -310,13 +310,13 @@ MCHEmul::Memory::Memory (const Content& cnt)
 // ---
 MCHEmul::Memory::~Memory ()
 { 
-	for (auto i : _content._phisicalStorages) 
+	for (const auto& i : _content._phisicalStorages) 
 		delete (i.second); 
 
-	for (auto i : _content._subsets) 
+	for (const auto& i : _content._subsets) 
 		delete (i.second); 
 
-	for (auto i : _content._views) 
+	for (const auto& i : _content._views) 
 		delete (i.second); 
 }
 

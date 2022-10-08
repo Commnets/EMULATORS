@@ -11,7 +11,7 @@ std::string MCHEmul::CommunicationMessage::toString () const
 
 	bool f = true;
 	result += _type;
-	for (auto i : _attributes)
+	for (const auto& i : _attributes)
 	{
 		result += ((f) ? "" : ",") + i.first + "=" + i.second;
 
@@ -28,7 +28,7 @@ MCHEmul::Attributes MCHEmul::MessageBuilder::attributesFromStr (const std::strin
 
 	MCHEmul::Strings attrs =
 		MCHEmul::getElementsFrom (str.substr (1) /** First char defined the type. */, ',');
-	for (auto i : attrs)
+	for (const auto& i : attrs)
 	{
 		MCHEmul::Strings attr = MCHEmul::getElementsFrom (i, '=');
 		std::string n, v;

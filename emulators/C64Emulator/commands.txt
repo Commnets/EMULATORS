@@ -1,3 +1,4 @@
+#C64 Console
 #Commands to know the status of the CPU
 ;STATUS
 Get the status of the Status Register.

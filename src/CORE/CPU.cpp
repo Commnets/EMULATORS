@@ -3,17 +3,17 @@
 // ---
 MCHEmul::CPU::~CPU ()
 {
-	for (auto i : _instructions)
+	for (const auto& i : _instructions)
 		delete (i.second);
 
-	for (auto i : _interrupts)
+	for (const auto& i : _interrupts)
 		delete (i.second);
 }
 
 // ---
 bool MCHEmul::CPU::initialize ()
 {
-	for (auto i : _registers)
+	for (auto& i : _registers)
 		i.initialize ();
 
 	_statusRegister.initialize ();
@@ -57,7 +57,7 @@ bool MCHEmul::CPU::executeNextInstruction ()
 		return (true);
 
 	unsigned int nC = 0;
-	for (auto i : _interrupts)
+	for (const auto& i : _interrupts)
 	{
 		i.second -> executeOver (this, nC);
 		_clockCycles += nC;
@@ -98,7 +98,7 @@ bool MCHEmul::CPU::executeNextInstruction ()
 std::ostream& MCHEmul::operator << (std::ostream& o, const MCHEmul::CPU& c)
 {
 	o << c.architecture () << std::endl;
-	for (auto i : c.internalRegisters ())
+	for (const auto& i : c.internalRegisters ())
 		o << i << std::endl;
 	o << c.programCounter () << std::endl;
 	o << c.statusRegister ();

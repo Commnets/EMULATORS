@@ -155,7 +155,7 @@ std::string MCHEmul::UBytes::asString (MCHEmul::UByte::OutputFormat oF, char s, 
 	std::string result = "";
 
 	size_t c = 0;
-	for (auto i : _values)
+	for (const auto& i : _values)
 		result += ((c++ != 0) ? std::string (1, s) : "") + i.asString (oF, l);
 	return (result);
 }

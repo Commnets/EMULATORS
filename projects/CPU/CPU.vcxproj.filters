@@ -120,6 +120,12 @@
     <ClCompile Include="..\..\src\CORE\Command.cpp">
       <Filter>Archivos de origen\Commands</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\CORE\Formatter.cpp">
+      <Filter>Archivos de origen\Foundation</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\FmterBuilder.cpp">
+      <Filter>Archivos de origen\Foundation</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\include\CORE\IO.hpp">
@@ -205,6 +211,12 @@
     </ClInclude>
     <ClInclude Include="..\..\include\CORE\StdCommandBld.hpp">
       <Filter>Archivos de encabezado\Commands</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\CORE\Formatter.hpp">
+      <Filter>Archivos de encabezado\Foundation</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\CORE\FmterBuilder.hpp">
+      <Filter>Archivos de encabezado\Foundation</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

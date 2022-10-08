@@ -118,7 +118,7 @@ bool MCHEmul::Assembler::InstructionCommandParser::canParse (const std::string& 
 		(l.substr (0, l.find (parser () -> commentSymbol () /** Until a potential comment. */)));
 
 	MCHEmul::Strings prms;
-	for (auto i : cpu () -> instructions ())
+	for (const auto& i : cpu () -> instructions ())
 		if (i.second -> matchesWith (cL, prms /** not used here. */))
 			return (true); /** At least 1 matching. */
 
@@ -223,7 +223,7 @@ MCHEmul::Assembler::Semantic* MCHEmul::Assembler::Parser::parse (const std::stri
 	actions.resize (lines.size ()); // Both must have the same size...
 
 	int lC = 0;
-	for (auto i : lines)
+	for (const auto& i : lines)
 	{
 		std::string l = MCHEmul::trim (i);
 		std::string aLS = MCHEmul::trim (actions [lC]);

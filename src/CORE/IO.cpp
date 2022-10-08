@@ -44,7 +44,7 @@ void MCHEmul::IODevice::removePeripheral (int id)
 bool MCHEmul::IODevice::initialize ()
 {
 	bool result = true;
-	for (auto i : _peripherals)
+	for (const auto& i : _peripherals)
 		result &= i.second -> initialize ();
 
 	if (!result)
@@ -57,7 +57,7 @@ bool MCHEmul::IODevice::initialize ()
 bool MCHEmul::IODevice::simulate ()
 {
 	bool result = true;
-	for (auto i : _peripherals)
+	for (const auto& i : _peripherals)
 		result &= i.second -> simulate ();
 
 	if (!result)
@@ -73,7 +73,7 @@ std::ostream& MCHEmul::operator << (std::ostream& o, const MCHEmul::IODevice& d)
 	o << d._attributes;
 
 	bool f = true;
-	for (auto i : d._peripherals)
+	for (const auto& i : d._peripherals)
 	{
 		if (f) o << std::endl;
 		o << i.second;

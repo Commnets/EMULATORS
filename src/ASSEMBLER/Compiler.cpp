@@ -7,7 +7,7 @@ std::ostream& MCHEmul::Assembler::operator << (std::ostream& o, const MCHEmul::A
 	o << c._address << ":";
 
 	bool f = true;
-	for (auto i : c._bytes)
+	for (const auto& i : c._bytes)
 	{
 		o << ((!f) ? " " : "") << i; 
 		f = false;
@@ -34,7 +34,7 @@ std::vector <MCHEmul::UByte> MCHEmul::Assembler::ByteCode::asSetOfBytes (MCHEmul
 	std::vector <MCHEmul::UByte> result;
 	iA = cp._lines [0]._address;
 	MCHEmul::Address nA = iA; 
-	for (auto i : cp._lines)
+	for (const auto& i : cp._lines)
 	{
 		if (i._address > nA)
 		{
@@ -45,7 +45,7 @@ std::vector <MCHEmul::UByte> MCHEmul::Assembler::ByteCode::asSetOfBytes (MCHEmul
 			}
 		}
 
-		for (auto j : i._bytes)
+		for (const auto& j : i._bytes)
 			result.push_back (j);
 
 		nA += i._bytes.size ();
@@ -59,7 +59,7 @@ std::map <MCHEmul::Address, unsigned int> MCHEmul::Assembler::ByteCode::listOfAc
 {
 	std::map <MCHEmul::Address, unsigned int> result;
 
-	for (auto i : _lines)
+	for (const auto& i : _lines)
 		if (i._actionOn != 0)
 			result.insert (std::map <MCHEmul::Address, unsigned int>::value_type (i._address, i._actionOn));
 
@@ -71,7 +71,7 @@ void MCHEmul::Assembler::ByteCode::loadIntoMemory (MCHEmul::Memory* m)
 {
 	assert (m != nullptr);
 
-	for (auto i : _lines)
+	for (const auto& i : _lines)
 		m -> set (i._address, i._bytes);
 }
 

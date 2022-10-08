@@ -18,9 +18,11 @@ MCHEmul::HelpCommand::HelpCommand (const std::string& hF)
 		{
 			hFile.getline (l, 255);
 			std::string ls = MCHEmul::trim (l);
-			if (ls [0] != '#')
-				hls.push_back (ls);
+			if (ls != "" && ls [0] == '#') continue; // Comments are not taken into account...
+			hls.push_back (ls);
 		}
+
+		hFile.close ();
 	}
 
 	MCHEmul::Strings::const_iterator i = hls.begin ();
@@ -51,7 +53,7 @@ void MCHEmul::HelpCommand::executeImpl (MCHEmul::Computer* c, MCHEmul::Attribute
 			if ((i = _helpInfo.find (cmd)) != _helpInfo.end ())
 			{
 				ss << "->" << (*i).first << std::endl;
-				for (auto j : (*i).second)
+				for (const auto& j : (*i).second)
 				{
 					if (!fL) ss << std::endl;
 					ss << j;
@@ -63,7 +65,7 @@ void MCHEmul::HelpCommand::executeImpl (MCHEmul::Computer* c, MCHEmul::Attribute
 	if (_parameters.size () == 0)
 	{
 		bool fH = true;
-		for (const auto i : _helpInfo)
+		for (const auto& i : _helpInfo)
 		{
 			if (!fH) ss << std::endl << std::endl;
 			helpInfoCommand (i.first);
@@ -90,7 +92,7 @@ void MCHEmul::RegistersStatusCommand::executeImpl (MCHEmul::Computer* c, MCHEmul
 	std::stringstream ss;
 
 	bool fR = true;
-	for (const auto i : c -> cpu () -> internalRegisters ())
+	for (const auto& i : c -> cpu () -> internalRegisters ())
 	{
 		if (!fR) ss << std::endl;
 		ss << i;
@@ -184,6 +186,9 @@ void MCHEmul::NextInstructionCommand::executeImpl (MCHEmul::Computer* c, MCHEmul
 // ---
 void MCHEmul::LastIntructionCPUCommand::executeImpl (MCHEmul::Computer* c, MCHEmul::Attributes& rst)
 {
+	if (c -> cpu () -> lastInstruction () == nullptr)
+		return; // It could happen when nothing has been executed yet...
+
 	std::stringstream ss;
 	ss << *c -> cpu () -> lastInstruction () << "(" << c -> cpu () -> programCounter () << ")";
 	rst.insert (std::pair <std::string, std::string>  ("1", ss.str ()));

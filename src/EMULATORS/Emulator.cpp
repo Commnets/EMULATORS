@@ -81,7 +81,7 @@ MCHEmul::Addresses Emuls::Emulator::stopAddresses () const
 	MCHEmul::Attributes::const_iterator i;
 	MCHEmul::Strings strs = MCHEmul::getElementsFrom 
 		(((i = _attributes.find (_ADDRESSSTOP)) != _attributes.end ()) ? (*i).second : "", ',');
-	for (const auto i : strs)
+	for (const auto& i : strs)
 		result.push_back (MCHEmul::Address::fromStr (i));
 	return (result);
 }
@@ -138,7 +138,7 @@ bool Emuls::Emulator::initialize ()
 		if (!compiler)
 		{
 			if (_debugLevel >= MCHEmul::_DEBUGERRORS)
-				for (auto i : compiler.errors ())
+				for (const auto& i : compiler.errors ())
 					std::cout << i << std::endl;
 
 			return (false);
@@ -146,7 +146,7 @@ bool Emuls::Emulator::initialize ()
 		else
 		{
 			if (_debugLevel >= MCHEmul::_DEBUGALL)
-				for (auto i : cL._lines)
+				for (const auto& i : cL._lines)
 					std::cout << i << std::endl;
 		}
 
@@ -165,12 +165,13 @@ bool Emuls::Emulator::initialize ()
 	if (!(adrs = stopAddresses ()).empty ())
 	{
 		MCHEmul::Computer::MapOfActions acts;
-		for (const auto i : adrs)
+		for (const auto& i : adrs)
 			acts.insert (MCHEmul::Computer::MapOfActions::value_type (i, MCHEmul::Computer::_ACTIONSTOP));
 		computer () -> setActions (acts);
 	}
 
-	computer () -> cpu () -> setStop (stoppedAtStarting ());
+	if (stoppedAtStarting ())
+		computer () -> setActionForNextCycle (MCHEmul::Computer::_ACTIONSTOP);
 
 	return (true);
 }
