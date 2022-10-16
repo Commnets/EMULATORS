@@ -1,4 +1,4 @@
-/** \ingroup CPU */
+/** \ingroup CORE */
 /*@{*/
 
 /**	
@@ -7,7 +7,7 @@
  *	Framework: CPU Emulators library \n
  *	Author: Ignacio Cea Forniés (EMULATORS library) \n
  *	Creation Date: 04/08/2022 \n
- *	Description: Representing any command that can be sent to the emultation of a computer.
+ *	Description: Representing any command that can be sent to the emulation of a computer.
  *	Versions: 1.0 Initial
  */
 
@@ -15,6 +15,7 @@
 #define __MCHEMUL_COMMAND__
 
 #include <CORE/global.hpp>
+#include <CORE/InfoStructure.hpp>
 
 namespace MCHEmul
 {
@@ -51,13 +52,13 @@ namespace MCHEmul
 		virtual bool canBeExecuted () const = 0;
 		/** To execute the command. \n
 			It returns true when the command has been executed properly and false when not. */
-		virtual bool execute (Computer* c, Attributes& rst);
+		virtual bool execute (Computer* c, InfoStructure& rst);
 
 		protected:
 		/** This method executes the command over the computer received. \n
 			This methid is inoked from "execute" after verified that it is possible. 
 			This is ther eal one to be overloaded. */
-		virtual void executeImpl (Computer* c, Attributes& rst) = 0;
+		virtual void executeImpl (Computer* c, InfoStructure& rst) = 0;
 
 		protected:
 		int _id;
@@ -80,7 +81,7 @@ namespace MCHEmul
 		/** By default a complex command could be executed just when all commans it is made up of can also be executed. */
 		virtual bool canBeExecuted () const override;
 		/** By default execute all commands inside and returns true if all also returns true, and false in other case. */
-		virtual bool execute (Computer* c, Attributes& rst) override;
+		virtual bool execute (Computer* c, InfoStructure& rst) override;
 
 		private:
 		Commands _commands;

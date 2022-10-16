@@ -1,4 +1,4 @@
-/** \ingroup CPU */
+/** \ingroup CORE */
 /*@{*/
 
 /**	
@@ -27,13 +27,14 @@
 namespace MCHEmul
 {
 	/** The center of any Machine. */
-	class CPU
+	class CPU : public InfoClass
 	{
 		public:
 		CPU () = delete;
 
 		CPU (const CPUArchitecture& a, const Registers& r, const StatusRegister& sR, const Instructions& ins)
-			: _architecture (a), _registers (r), _statusRegister (sR), _instructions (ins),
+			: InfoClass ("CPU"),
+			  _architecture (a), _registers (r), _statusRegister (sR), _instructions (ins),
 			  _programCounter (a.numberBytes ()), _memory (nullptr), _interrupts (),
 			  _lastInstruction (nullptr),
 			  _lastError (_NOERROR), _clockCycles (0),
@@ -125,7 +126,14 @@ namespace MCHEmul
 		void resetErrors ()
 							{ _lastError = _NOERROR; }
 
-		friend std::ostream& operator << (std::ostream& o, const CPU& c);
+		/**
+		  *	The name of the fields are: \n
+		  * ARCHITECURE = InfoStructure: Architecture info. \n
+		  *	REGS		= InfoStructure: Registers info. \n
+		  * PC			= Attribute: Value of the program counter. \n
+		  *	SR			= Attribute: Value of the status register.
+		  */
+		virtual InfoStructure getInfoStructure () const override;
 
 		protected:
 		const CPUArchitecture _architecture = 

@@ -23,23 +23,23 @@ class MemoryTest final : public MCHEmul::Memory
 
 MCHEmul::Memory::Content MemoryTest::basicContent ()
 {
-	MCHEmul::PhisicalStorage* RAM = 
-		new MCHEmul::PhisicalStorage (0, MCHEmul::PhisicalStorage::Type::_RAM, 0x400); // 1 KByte
-	MCHEmul::PhisicalStorages storages ({ { 0, RAM } });
+	MCHEmul::PhysicalStorage* RAM = 
+		new MCHEmul::PhysicalStorage (0, MCHEmul::PhysicalStorage::Type::_RAM, 0x400); // 1 KByte
+	MCHEmul::PhysicalStorages storages ({ { 0, RAM } });
 
 	MCHEmul::Stack*  Stack = new MCHEmul::Stack 
 		(0, RAM, 0x0000, MCHEmul::Address ({ 0x00, 0x00 }, false), 0x0100);
-	MCHEmul::PhisicalStorageSubset* Data = new MCHEmul::PhisicalStorageSubset 
+	MCHEmul::PhysicalStorageSubset* Data = new MCHEmul::PhysicalStorageSubset 
 		(1, RAM, 0x0100, MCHEmul::Address ({ 0x00, 0x01 }, false), 0x0300);
 
-	MCHEmul::PhisicalStorageSubsets AllSubsets 
+	MCHEmul::PhysicalStorageSubsets AllSubsets 
 		({ { 0, Stack }, { 1, Data } });
 
 	MCHEmul::MemoryView* CPUView = new MCHEmul::MemoryView (0, AllSubsets);
 
 	// ...and finally the memory that is the result...
 	MCHEmul::Memory::Content result;
-	result._phisicalStorages = storages;
+	result._physicalStorages = storages;
 	result._subsets = AllSubsets;
 	result._views = MCHEmul::MemoryViews ({ { 0, CPUView } });
 

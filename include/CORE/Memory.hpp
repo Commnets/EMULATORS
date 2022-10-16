@@ -1,4 +1,4 @@
-/** \ingroup CPU */
+/** \ingroup CORE */
 /*@{*/
 
 /**	
@@ -17,13 +17,14 @@
 #define __MCHEMUL_MEMORY__
 
 #include <CORE/global.hpp>
+#include <CORE/InfoClass.hpp>
 #include <CORE/Address.hpp>
 #include <CORE/UByte.hpp>
 #include <CORE/UBytes.hpp>
 
 namespace MCHEmul
 {
-	class PhisicalStorageSubset;
+	class PhysicalStorageSubset;
 	class MemoryView;
 	class Stack;
 
@@ -31,26 +32,26 @@ namespace MCHEmul
 		Just a place to keep info. \n
 		It can be either RAM or ROM depending whether is possible to modify data. \n
 		The phisical storage can only be accesed through a subset, controlling the boundaries of the phisical storage. */
-	class PhisicalStorage final
+	class PhysicalStorage final
 	{
 		public:
 		/** The default value which is used to initialize the memory, can be changed. */
 		static UByte _DEFAULTVALUE;
 
-		friend PhisicalStorageSubset;
+		friend PhysicalStorageSubset;
 
 		enum class Type { _ROM, _RAM };
 
-		PhisicalStorage () = delete;
+		PhysicalStorage () = delete;
 
-		PhisicalStorage (int id, Type t, size_t s)
+		PhysicalStorage (int id, Type t, size_t s)
 			: _id (id), _type (t), 
 			  _data (s, UByte::_0)
 							{ }
 
-		PhisicalStorage (const PhisicalStorage&) = default;
+		PhysicalStorage (const PhysicalStorage&) = default;
 
-		PhisicalStorage& operator = (const PhisicalStorage&) = default;
+		PhysicalStorage& operator = (const PhysicalStorage&) = default;
 
 		int id () const
 							{ return (_id); }
@@ -93,40 +94,40 @@ namespace MCHEmul
 	};
 
 	/** To simplify the way a map of elements is managed. */
-	using PhisicalStorages = std::map <int, PhisicalStorage*>;
+	using PhysicalStorages = std::map <int, PhysicalStorage*>;
 
 	/** Represents a subset of the physical storage. \n
 		Many subsets can be created over the same physical location. */
-	class PhisicalStorageSubset
+	class PhysicalStorageSubset : public InfoClass
 	{
 		public:
 		friend MemoryView;
 
-		PhisicalStorageSubset () = delete;
+		PhysicalStorageSubset () = delete;
 
 		/** It is guarantteed that it must a subset within the boundaries of the phisical storage behind. \n
 			Otherwise the view will be have the same size than that. \n
 			The reference to the phisical storage can't be null at all. \n 
 			The subset is not the owner of the phisical storage. \n
 			THe phisical storage can be either active or inactive. */
-		PhisicalStorageSubset (int id, PhisicalStorage* pS, size_t pp /** link a phisical */, const Address& a, size_t s);
+		PhysicalStorageSubset (int id, PhysicalStorage* pS, size_t pp /** link a phisical */, const Address& a, size_t s);
 
-		PhisicalStorageSubset (const PhisicalStorageSubset&) = default;
+		PhysicalStorageSubset (const PhysicalStorageSubset&) = default;
 
-		virtual ~PhisicalStorageSubset () 
+		virtual ~PhysicalStorageSubset () 
 							{ /** Nothing to do by default. */ }
 
-		PhisicalStorageSubset& operator = (const PhisicalStorageSubset&) = default;
+		PhysicalStorageSubset& operator = (const PhysicalStorageSubset&) = default;
 
 		/** Id for the view. It is diiferent than the id of the phisical storage behind. */
 		int id () const
 							{ return (_id); }
-		const PhisicalStorage* phisicalStorage () const
-							{ return (_phisicalStorage); }
-		PhisicalStorage* phisicalStorage ()
-							{ return (_phisicalStorage); }
-		PhisicalStorage::Type type () const
-							{ return (_phisicalStorage -> type ()); }
+		const PhysicalStorage* physicalStorage () const
+							{ return (_physicalStorage); }
+		PhysicalStorage* physicalStorage ()
+							{ return (_physicalStorage); }
+		PhysicalStorage::Type type () const
+							{ return (_physicalStorage -> type ()); }
 		const Address& initialAddress () const
 							{ return (_initialAddress); }
 		size_t size () const
@@ -142,7 +143,7 @@ namespace MCHEmul
 							{ _activeForReading = aR; }
 
 		bool canBeWriten (bool f) const
-							{ return (_active && _phisicalStorage -> canBeWriten (f)); }
+							{ return (_active && _physicalStorage -> canBeWriten (f)); }
 
 		/** The address may only be "in" when the subset is active. */
 		bool isIn (const Address& a, int& dt) const
@@ -151,18 +152,20 @@ namespace MCHEmul
 		/** The internal method "setValue" is invoked when possible. 
 			When the address requested is not "in" the subset, nothing happens. */
 		void set (const Address& a, const UByte& d, bool f = false)
-							{ int dt = 0; if (_phisicalStorage -> canBeWriten (f) && isIn (a, dt)) setValue (dt, d); }
+							{ int dt = 0; if (_physicalStorage -> canBeWriten (f) && isIn (a, dt)) setValue (dt, d); }
 		/** The internal method "readValue" is invoked when possible. 
 			When the address requested is not "in" the subset, -0 is returned. */
 		const UByte& value (const Address& a) const
 							{ int dt = 0; return (_activeForReading && (isIn (a, dt)) 
-								? readValue (dt) : PhisicalStorage::_DEFAULTVALUE); }
+								? readValue (dt) : PhysicalStorage::_DEFAULTVALUE); }
 		UBytes values (const Address& a, size_t nB) const
 							{ return (UBytes (bytes (a, nB))); }
 		void set (const Address& a, const UBytes& v, bool f = false)
 							{ set (a, v.bytes (), f); }
 		/** When some of the requested position is out the boundaries, an empty map is returned. */
 		std::vector <UByte> bytes (const Address& a, size_t nB) const;
+		std::vector <UByte> bytes () const
+							{ return (bytes (initialAddress (), size ())); }
 		void set (const Address& a, const std::vector <UByte>& v, bool f = false);
 
 		/** To init the memory. It might be overloaded. By default the "defaultData" value is assigned. 
@@ -176,16 +179,25 @@ namespace MCHEmul
 		/** Everything from the memory position received. */
 		bool loadInto (const std::string& fN, const Address& a)
 							{ return ((a >= _initialAddress) 
-								? _phisicalStorage -> loadInto (fN, _initialAddress.distanceWith (a)) : false); }
+								? _physicalStorage -> loadInto (fN, _initialAddress.distanceWith (a)) : false); }
 		/** The address where to load things into is always the initial address of the memory. */
 		bool loadInto (const std::string& fN)
 							{ return (loadInto (fN, initialAddress ())); }
 
 		/** To keep the values for fither initialization. */
 		void fixDefaultValues ()
-							{ _defaultData = _phisicalStorage -> values (_initialPhisicalPosition, _size).bytes (); }
+							{ _defaultData = _physicalStorage -> values (_initialPhisicalPosition, _size).bytes (); }
 
-		friend std::ostream& operator << (std::ostream& o, const PhisicalStorageSubset& ps);
+		/**
+		  *	The name of the fields are: \n
+		  *	ID			= Attribute: Id of the memory. \n
+		  *	ADDRESS		= Attribute: Address where the storage starts. \n
+		  *	SIZE		= Attribute: Size in bytes. \n
+		  * ACTIVE		= Attribute: YES when access operations are possible and NO in other case. \n
+		  * READ		= Attribute: YES when read operations are possible and NO in other case. \n
+		  * BYTES		= Attribute: Info of the memory.
+		  */
+		virtual InfoStructure getInfoStructure () const override;
 
 		protected:
 		/** They could be overeloaded for specific subsets: Chips registers,... 
@@ -193,13 +205,13 @@ namespace MCHEmul
 			At this point there is guaranteed that the byte requested exist in the phisical storage. 
 			The number of register (relative) with in the phisical storage is received. */
 		virtual void setValue (size_t nB, const UByte& d)
-							{ _phisicalStorage -> set (nB + _initialPhisicalPosition, d); }
+							{ _physicalStorage -> set (nB + _initialPhisicalPosition, d); }
 		virtual const UByte& readValue (size_t nB) const
-							{ return (_phisicalStorage -> value (nB + _initialPhisicalPosition)); }
+							{ return (_physicalStorage -> value (nB + _initialPhisicalPosition)); }
 
 		protected:
 		const int _id = -1; 
-		PhisicalStorage* _phisicalStorage;
+		PhysicalStorage* _physicalStorage;
 		/** The position on the phisical storage, this subset is connected to. */
 		size_t _initialPhisicalPosition;
 		/** Which address does the initial position defined above represent ? */
@@ -214,19 +226,20 @@ namespace MCHEmul
 	};
 
 	/** To simplify the way a map of elements is managed. */
-	using PhisicalStorageSubsets = std::map <int, PhisicalStorageSubset*>;
-	using PhisicalStorageSubsetsList = std::vector <PhisicalStorageSubset*>;
+	using PhysicalStorageSubsets = std::map <int, PhysicalStorageSubset*>;
+	using PhysicalStorageSubsetsList = std::vector <PhysicalStorageSubset*>;
 
 	/** A memory view represents a set of subsets over phisical storage (one or many). \n
 		The subsets can combine either RAM or ROM access and can also overlap each other. */
-	class MemoryView
+	class MemoryView : public InfoClass
 	{
 		public:
 		MemoryView () = delete;
 
 		/** The memory view is not the owner of the subsets. */
-		MemoryView (int id, PhisicalStorageSubsets ss)
-			: _id (id), _subsets (ss)
+		MemoryView (int id, PhysicalStorageSubsets ss)
+			: InfoClass ("MemoryView"),
+			  _id (id), _subsets (ss)
 							{ }
 
 		MemoryView (const MemoryView&) = default;
@@ -240,14 +253,14 @@ namespace MCHEmul
 							{ return (_id); }
 
 		// To manage the subsets...
-		const PhisicalStorageSubsets& subsets () const
+		const PhysicalStorageSubsets& subsets () const
 							{ return (_subsets); }
 		bool existsSubset (int id) const
 							{ return (_subsets.find (id) != _subsets.end ()); }
-		const PhisicalStorageSubset* subset (int id) const
-							{ return ((const PhisicalStorageSubset*) (((MemoryView*) (this)) -> subset (id))); }
-		PhisicalStorageSubset* subset (int id)
-							{ PhisicalStorageSubsets::const_iterator i = _subsets.find (id); 
+		const PhysicalStorageSubset* subset (int id) const
+							{ return ((const PhysicalStorageSubset*) (((MemoryView*) (this)) -> subset (id))); }
+		PhysicalStorageSubset* subset (int id)
+							{ PhysicalStorageSubsets::const_iterator i = _subsets.find (id); 
 								return ((i != _subsets.end ()) ? (*i).second : nullptr); }
 		
 		bool isIn (const Address& a, int & dt) const;
@@ -268,16 +281,20 @@ namespace MCHEmul
 		/** To init the memory view. 
 			It might be overloaded. By default the "defaultData" value is assigned. */
 		virtual void initialize () 
-							{ for (auto i : _subsets) i.second -> initialize (); }
+							{ for (const auto& i : _subsets) i.second -> initialize (); }
 
 		/** Loaded into the first subset holding the address parameter. */
 		bool loadInto (const std::string& fN, const Address& a);
 
-		friend std::ostream& operator << (std::ostream& o, const MemoryView& mv);
+		/**
+		  *	The name of the fields are: \n
+		  *	STORAGES	= InfoStructure: Every storage belonging to the view (@see PhysicalStorageSubset).
+		  */
+		virtual InfoStructure getInfoStructure () const override;
 
 		protected:
 		int _id;
-		PhisicalStorageSubsets _subsets;
+		PhysicalStorageSubsets _subsets;
 	};
 
 	/** To simplify the way a map of elements is managed. */
@@ -290,7 +307,7 @@ namespace MCHEmul
 	  *	This gives the user the possible to have different "views" of the memory in different
 	  *	moments of the execution of the main cycle from, e.g. different elements in the CPU. \n
 	  */
-	class Memory
+	class Memory : public InfoClass
 	{
 		public:
 		/** To content all together the elements a memory is made up of. */
@@ -298,7 +315,7 @@ namespace MCHEmul
 		{
 			public:
 			Content ()
-				: _phisicalStorages (), _subsets (), _views (),
+				: _physicalStorages (), _subsets (), _views (),
 				  _error (true)
 							{ }
 
@@ -311,24 +328,24 @@ namespace MCHEmul
 			/** Unless this method is executed, the class is always in error (_error = true). */
 			bool verifyCoherence () const;
 
-			const PhisicalStorages& phisicalStorages () const
-							{ return (_phisicalStorages); }
-			bool existsPhisicalStorage (int id) const
-							{ return (_phisicalStorages.find (id) != _phisicalStorages.end ()); }
-			const PhisicalStorage* phisicalStorage (int id) const
-							{ return ((const PhisicalStorage*) (((Content*) (this)) -> phisicalStorage (id))); }
-			PhisicalStorage* phisicalStorage (int id)
-							{ PhisicalStorages::const_iterator i = _phisicalStorages.find (id); 
-								return ((i != _phisicalStorages.end ()) ? (*i).second : nullptr); }
+			const PhysicalStorages& physicalStorages () const
+							{ return (_physicalStorages); }
+			bool existsPhysicalStorage (int id) const
+							{ return (_physicalStorages.find (id) != _physicalStorages.end ()); }
+			const PhysicalStorage* physicalStorage (int id) const
+							{ return ((const PhysicalStorage*) (((Content*) (this)) -> physicalStorage (id))); }
+			PhysicalStorage* physicalStorage (int id)
+							{ PhysicalStorages::const_iterator i = _physicalStorages.find (id); 
+								return ((i != _physicalStorages.end ()) ? (*i).second : nullptr); }
 
-			const PhisicalStorageSubsets& Subsets ( ) const
+			const PhysicalStorageSubsets& subsets ( ) const
 							{ return (_subsets); }
 			bool existsSubset (int id) const
 							{ return (_subsets.find (id) != _subsets.end ()); }
-			const PhisicalStorageSubset* subset (int id) const
-							{ return ((const PhisicalStorageSubset*) (((Content*) (this)) -> subset (id))); }
-			PhisicalStorageSubset* subset (int id)
-							{ PhisicalStorageSubsets::const_iterator i = _subsets.find (id); 
+			const PhysicalStorageSubset* subset (int id) const
+							{ return ((const PhysicalStorageSubset*) (((Content*) (this)) -> subset (id))); }
+			PhysicalStorageSubset* subset (int id)
+							{ PhysicalStorageSubsets::const_iterator i = _subsets.find (id); 
 								return ((i != _subsets.end ()) ? (*i).second : nullptr); }
 
 			const MemoryViews& views () const
@@ -349,8 +366,8 @@ namespace MCHEmul
 							{ return (_error); }
 
 			/** Can be accesses directly to set them up. */
-			PhisicalStorages _phisicalStorages;
-			PhisicalStorageSubsets _subsets;
+			PhysicalStorages _physicalStorages;
+			PhysicalStorageSubsets _subsets;
 			MemoryViews _views;
 
 			private:
@@ -368,22 +385,22 @@ namespace MCHEmul
 
 		~Memory ();
 
-		const PhisicalStorages& phisicalStorages () const
-							{ return (_content.phisicalStorages ()); }
-		bool existsPhisicalStorage (int id) const
-							{ return (_content.existsPhisicalStorage (id)); } 
-		const PhisicalStorage* phisicalStorage (int id) const
-							{ return (_content.phisicalStorage (id)); }
-		PhisicalStorage* phisicalStorage (int id)
-							{ return (_content.phisicalStorage (id)); }
+		const PhysicalStorages& physicalStorages () const
+							{ return (_content.physicalStorages ()); }
+		bool existsPhysicalStorage (int id) const
+							{ return (_content.existsPhysicalStorage (id)); } 
+		const PhysicalStorage* physicalStorage (int id) const
+							{ return (_content.physicalStorage (id)); }
+		PhysicalStorage* physicalStorage (int id)
+							{ return (_content.physicalStorage (id)); }
 
-		const PhisicalStorageSubsets& Subsets () const
-							{ return (_content.Subsets ()); }
+		const PhysicalStorageSubsets& subsets () const
+							{ return (_content.subsets ()); }
 		bool existsSubset (int id) const
 							{ return (_content.existsSubset (id)); }
-		const PhisicalStorageSubset* subset (int id) const
+		const PhysicalStorageSubset* subset (int id) const
 							{ return (_content.subset (id)); }
-		PhisicalStorageSubset* subset (int id)
+		PhysicalStorageSubset* subset (int id)
 							{ return (_content.subset (id)); }
 
 		const MemoryViews& views () const
@@ -445,7 +462,9 @@ namespace MCHEmul
 		void resetErrors ()
 							{ _lastError = _NOERROR; }
 
-		friend std::ostream& operator << (std::ostream& o, const Memory& m);
+		/** The info is the same than in the case of the active view (@see MemoryView). */
+		virtual InfoStructure getInfoStructure () const override
+							{ return (_activeView -> getInfoStructure ()); }
 
 		protected:
 		virtual Stack* lookForStack () = 0;

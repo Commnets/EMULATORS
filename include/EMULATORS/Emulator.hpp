@@ -19,7 +19,7 @@
 #include <COMMS/System.hpp>
 #include <COMMS/StdMessages.hpp>
 
-namespace Emuls
+namespace MCHEmul
 {
 	class Emulator 
 	{

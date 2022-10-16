@@ -1,4 +1,4 @@
-/** \ingroup CPU */
+/** \ingroup CORE */
 /*@{*/
 
 /**	
@@ -66,9 +66,9 @@ namespace MCHEmul
 							{ _values [size () - (p / UByte::sizeBits ()) - 1].setBit (p % UByte::sizeBits (), s); }
 		
 		void to0 ()
-							{ for (auto i : _values) i = UByte::_0; }
+							{ for (auto& i : _values) i = UByte::_0; }
 		void toFF ()
-							{ for (auto i : _values) i = UByte::_FF; }
+							{ for (auto& i : _values) i = UByte::_FF; }
 
 		UBytes complement () const;
 
@@ -109,10 +109,11 @@ namespace MCHEmul
 		UBytes& operator >> (size_t p)
 							{ return (shiftRight (p)); }
 
-		std::string asString (UByte::OutputFormat oF, char s /** separator */, size_t l = 0 /** Minimum length per UByte */) const;
+		std::string asString (UByte::OutputFormat oF, char s /** separator */, 
+			size_t l = 0 /** Minimum length per UByte */, size_t sb = 0xffff /** size of the block, then end of line. */) const;
 
 		friend std::ostream& operator << (std::ostream& o, const UBytes& u)
-							{ return (o << u.asString (UByte::OutputFormat::_HEXA, ' ', 2)); }
+							{ return (o << u.asString (UByte::OutputFormat::_HEXA, '\0', 2 /** sizeof (unsigned char) * 2 */)); }
 
 		private:
 		/** Most significant bit in the first elemnt. */

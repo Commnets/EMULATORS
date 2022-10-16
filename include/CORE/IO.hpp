@@ -1,4 +1,4 @@
-/** \ingroup CPU */
+/** \ingroup CORE */
 /*@{*/
 
 /**	
@@ -27,7 +27,7 @@ namespace MCHEmul
 	  * For some specific devices (like screen or keyboard) the peripheral connected is "implicit" and
 	  * there is no other way to add other different, but it has to be opened to other possibilities!
 	  */
-	class IODevice
+	class IODevice : public InfoClass
 	{
 		public:
 		enum class Type { _INPUT = 0, _OUTPUT, _INPUTOUTPUT };
@@ -89,7 +89,16 @@ namespace MCHEmul
 		unsigned int lastError () const
 							{ return (_lastError); }
 
-		friend std::ostream& operator << (std::ostream& o, const IODevice& d);
+		/**
+		  *	The name of the fields are: \n
+		  *	ID			= Attribute with the Id of the Device. \n
+		  *	ATTRS		= InfoStructure with the attributes defining the Device. \n
+		  *	PERIPHERALS	= InfoStructure with the info of the peripherals connected.
+		  */
+		virtual InfoStructure getInfoStructure () const override;
+
+		friend std::ostream& operator << (std::ostream& o, const IODevice& d)
+							{ return (o << (*(dynamic_cast <const InfoClass*> (&d)))); }
 
 		protected:
 		const Type _type; // Modified at constrution level

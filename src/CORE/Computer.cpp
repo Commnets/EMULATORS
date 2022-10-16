@@ -1,12 +1,15 @@
 #include <CORE/Computer.hpp>
 #include <CORE/StdCommands.hpp>
+#include <CORE/FmterBuilder.hpp>
+#include <CORE/Formatter.hpp>
 #include <thread>
 #include <sstream>
 
 // ---
 MCHEmul::Computer::Computer (MCHEmul::CPU* cpu, const MCHEmul::Chips& c, 
 		MCHEmul::Memory* m, const MCHEmul::IODevices& d, unsigned int cs, const MCHEmul::Attributes& attrs)
-	: _cpu (cpu), _chips (c), _memory (m), _devices (d), _attributes (attrs), 
+	: MCHEmul::InfoClass ("Computer"),
+	  _cpu (cpu), _chips (c), _memory (m), _devices (d), _attributes (attrs), 
 	  _actionsAt (), _status (_STATUSRUNNING), _actionForNextCycle (_ACTIONNOTHING),
 	  _exit (false), 
 	  _debugLevel (MCHEmul::_DEBUGNOTHING),
@@ -168,7 +171,7 @@ bool MCHEmul::Computer::runComputerCycle (unsigned int a)
 	{
 		if (_cpu -> lastInstruction () != nullptr)
 			std::cout << "->" << *_cpu -> lastInstruction () << std::endl;
-		MCHEmul::CPUStatusCommand stCmd; MCHEmul::Attributes rst; stCmd.execute (this, rst);
+		MCHEmul::CPUStatusCommand stCmd; MCHEmul::InfoStructure rst; stCmd.execute (this, rst);
 		std::cout << rst << std::endl;
 	}
 
@@ -230,24 +233,24 @@ void MCHEmul::Computer::removeAction (const MCHEmul::Address& at)
 }
 
 // ---
-std::ostream& MCHEmul::operator << (std::ostream& o, const MCHEmul::Computer& c)
+MCHEmul::InfoStructure MCHEmul::Computer::getInfoStructure () const
 {
-	o << c.attributes () << std::endl;
-	o << *c.cpu () << std::endl;
-	for (const auto& i : c.chips ())
-		o << *i.second << std::endl;
-	o << *c.memory () << std::endl;
+	MCHEmul::InfoStructure result;
 
-	// Not usual...
-	bool fD = true;
-	for (const auto& i : c.devices ())
-	{
-		if (!fD) o << std::endl;
-		o << *i.second;
-		fD = false;
-	}
+	result.add ("ATTRS", _attributes);
+	result.add ("CPU", _cpu -> getInfoStructure ());
 
-	return (o);
+	MCHEmul::InfoStructure chps;
+	for (const auto& i : _chips)
+		chps.add (std::to_string (i.first), i.second -> getInfoStructure ());
+	result.add ("CHIPS", chps);
+
+	MCHEmul::InfoStructure dvcs;
+	for (const auto& i : _devices)
+		dvcs.add (std::to_string (i.first), i.second -> getInfoStructure ());
+	result.add ("DEVICES", dvcs);
+
+	return (result);
 }
 
 // ---

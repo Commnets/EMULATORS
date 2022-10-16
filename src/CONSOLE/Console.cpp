@@ -2,7 +2,7 @@
 #include <fstream>
 
 // ---
-Console::Console::Console (Emuls::Emulator* e, 
+MCHEmul::Console::Console (MCHEmul::Emulator* e,
 		MCHEmul::CommandBuilder* cB, const std::string& cF, std::ostream& oS)
 	: _emulator (e), 
 	  _commandBuilder (cB),
@@ -40,9 +40,14 @@ Console::Console::Console (Emuls::Emulator* e,
 }
 
 // ----
-void Console::Console::run ()
+void MCHEmul::Console::run ()
 {
 	bool exit = false;
+
+	// The formatter is stablished at the beginning of the running...
+	MCHEmul::FormatterBuilder::instance ({ "./defformatters.fmt", "./conformatters.fmt" /** The specific one for consoles. */});
+	MCHEmul::FormatterBuilder::instance () -> setDefaultFormatFile ("./conformatters.fmt");
+	MCHEmul::FormatterBuilder::instance () -> setDefaultFormatter (MCHEmul::FormatterBuilder::_noFormatter.get ());
 
 	std::cout << _welcomeTxt;
 	std::cout << _commandPrompt;
@@ -57,7 +62,7 @@ void Console::Console::run ()
 }
 
 // ---
-bool Console::Console::readAndExecuteCommand () 
+bool MCHEmul::Console::readAndExecuteCommand ()
 {
 	if (!readCommand ())
 		return (false); // No command ready...
@@ -72,10 +77,9 @@ bool Console::Console::readAndExecuteCommand ()
 		std::cout << _command << ":" << _commandDoesnExitTxt << std::endl;
 	else
 	{
-		MCHEmul::Attributes rst; // The results...
+		MCHEmul::InfoStructure rst; // The results...
 		if (cmd -> execute (_emulator -> computer (), rst))
-			for (const auto i : rst)
-				std::cout << i.second << std::endl;
+			std::cout << rst << std::endl;
 		else
 			std::cout << _command << ":" << _commandErrorTxt << std::endl;
 	}
@@ -90,7 +94,7 @@ bool Console::Console::readAndExecuteCommand ()
 }
 
 // ---
-bool Console::Console::readCommand ()
+bool MCHEmul::Console::readCommand ()
 {
 	static const std::string bk (200, '\b');
 
@@ -156,7 +160,7 @@ bool Console::Console::readCommand ()
 #ifdef _WIN32
 #include <conio.h>
 // ---
-bool Console::Win32Console::readChar (char& chr) const 
+bool MCHEmul::Win32Console::readChar (char& chr) const
 { 
 	bool result = false;
 	if (result = (_kbhit () != 0))

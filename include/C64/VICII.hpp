@@ -25,7 +25,7 @@ namespace C64
 	{
 		public:
 		/** The RasterData describes the infomation the raster need to move across the screen. */
-		class RasterData
+		class RasterData final : public MCHEmul::InfoClass
 		{
 			public:
 			RasterData () = delete;
@@ -97,7 +97,17 @@ namespace C64
 			void initialize ()
 							{ _currentPosition = _firstPosition; _currentPosition_0 = _firstPosition_0; }
 
-			friend std::ostream& operator << (std::ostream& o, const RasterData& r);
+			/**
+			  *	The name of the fields are: \n
+			  * POSITION	= Attribute: Position of the raster.
+			  * POSITION_0	= Attribute: Position of the raster in base 0.
+			  * FIRST		= Attribute: Initial position of the raster.
+			  * LAST		= Attribute: Last position of the raster.
+			  */
+			virtual MCHEmul::InfoStructure getInfoStructure () const override;
+
+			friend std::ostream& operator << (std::ostream& o, const RasterData& r)
+							{ return (o << *((MCHEmul::InfoClass*) &r)); }
 
 			protected:
 			/** Internal method used return a value considering the firrst position as 0. */
@@ -137,7 +147,7 @@ namespace C64
 
 		/** The Raster simulates the set of sequential horizontal lines that, 
 			in a CRT monitor, draws an image in the screen. */
-		class Raster final
+		class Raster final : public MCHEmul::InfoClass
 		{
 			public:
 			static const unsigned short _FIRSTBADLINE	= 0x33;
@@ -150,7 +160,8 @@ namespace C64
 			Raster& operator = (const Raster&) = default;
 
 			Raster (const RasterData& vD, const RasterData& hD)
-				: _vRasterData (vD), _hRasterData (hD)
+				: MCHEmul::InfoClass ("Raster"),
+				  _vRasterData (vD), _hRasterData (hD)
 							{ }
 
 			const RasterData& vData () const
@@ -216,7 +227,15 @@ namespace C64
 			void initialize ()
 							{ _vRasterData.initialize (); _hRasterData.initialize (); }
 
-			friend std::ostream& operator << (std::ostream& o, const Raster& r);
+			/**
+			  *	The name of the fields are: \n
+			  * RASTERX		= InfoStructure: Horizontal raster info.
+			  * RASTERY		= InfoStructure: Vertical raster info.
+			  */
+			virtual MCHEmul::InfoStructure getInfoStructure () const override;
+
+			friend std::ostream& operator << (std::ostream& o, const Raster& r)
+							{ return (o << *((MCHEmul::InfoClass*) &r)); }
 
 			private:
 			RasterData _vRasterData, _hRasterData;
@@ -251,7 +270,12 @@ namespace C64
 
 		virtual bool simulate (MCHEmul::CPU* cpu) override;
 
-		friend std::ostream& operator << (std::ostream& o, const VICII& c);
+		/**
+		  *	The name of the fields are: \n
+		  * REGS		= InfoStructure: Info about the registers.
+		  * RASTER		= InfoStructure: Info about the raster.
+		  */
+		virtual MCHEmul::InfoStructure getInfoStructure () const override;
 
 		private:
 		/** To simplify the use of the routines dedicated to draw. */

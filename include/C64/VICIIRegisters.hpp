@@ -36,19 +36,7 @@ namespace C64
 			_ILLEGALMODE
 		};
 
-		VICIIRegisters (int id, MCHEmul::PhisicalStorage* ps)
-			: ChipRegisters (id, ps, 0xd000, MCHEmul::Address ({ 0x00, 0xd0 }, false), 0x0400),
-			  _lastValueRead (MCHEmul::PhisicalStorage::_DEFAULTVALUE),
-			  _backgroundColor (4, 0x00),
-			  _spriteXCoord (8, 0x0000), _spriteYCoord (8, 0x0000),
-			  _spriteColor (8, 0x0000),
-			  _spriteSharedColor (2, 0x0000), _spriteMulticolor (8, false),
-			  _spriteEnabled (8, false), 
-			  _spriteDoubleWidth (8, false), _spriteDoubleHeight (8, false),
-			  _spriteToForegroundPriority (8, false)
-			  // At this point the rest internal variables will have random values...
-			  // The vector are initialized just to given them a default size!
-							{ initializeInternalValues (); }
+		VICIIRegisters (int id, MCHEmul::PhysicalStorage* ps);
 
 		virtual size_t numberRegisters () const override
 							{ return (0x40); }
@@ -167,8 +155,6 @@ namespace C64
 							{ if (bk == 0 || bk == 1 || bk == 2 || bk == 3) _bank = bk; }
 		
 		virtual void initialize () override;
-
-		friend std::ostream& operator << (std::ostream& o, const VICIIRegisters& vr);
 
 		private:
 		virtual void setValue (size_t p, const MCHEmul::UByte& v) override;

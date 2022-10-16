@@ -1,4 +1,4 @@
-/** \ingroup CPU */
+/** \ingroup CORE */
 /*@{*/
 
 /**
@@ -19,48 +19,87 @@
 
 namespace MCHEmul
 {
-	/** To create formatter, and implimenets the singleton design pattern. */
+	/** To create formatters. \
+		Implimenets the singleton design pattern. */
 	class FormatterBuilder
 	{
 		public:
-		static const std::unique_ptr <FormatterBuilder>& instance (const std::string& ff = "./formats.txt")
-							{ return (_instance == nullptr 
-								? (_instance = std::unique_ptr <FormatterBuilder> (new FormatterBuilder (ff))) : _instance); }
+		static const std::shared_ptr <Formatter> _noFormatter;
 
-		~FormatterBuilder ()
-							{ _instance = nullptr; }
+		/** The constructor receives and read a set of files where formats are defined. \n
+			The formatters are created later, once the element is initialized. */
+		FormatterBuilder (const Strings& nF);
+
+		~FormatterBuilder ();
+
+		/** Create the formatters from the lines read at constructions time. */
+		bool initialize ();
 
 		// Managing formatters...
-		/** To get a formatter. 
-			null formatter if the requested one doesn't exist. */
-		const Formatter& formatter (const std::string& n) const;
-		/** To get the default formatter. */
-		const Formatter& defaultFormatter () const
+		/** To change the file of formaters taken into account. */
+		const std::string& defaultFormatFile () const
+							{ return (_defaultFormatFile); }
+		void setDefaultFormatFile (const std::string& ff)
+							{ _defaultFormatFile = ff; }
+		
+		/** To get a formatter. \n
+			defaultFormatter if the requested one doesn't exist. */
+		bool existsFormatter (const std::string& n) const;
+		const Formatter* formatter (const std::string& n) const;
+		Formatter* formatter (const std::string& n)
+							{ return ((Formatter*) (((const FormatterBuilder*) this) -> formatter (n))); }
+
+		/** To get & set the default formatter. */
+		const Formatter* defaultFormatter () const
 							{ return (_defaultFormatter); }
-		void setDefaultFormatter (const Formatter& fmter) const
-							{ _defaultFormatter = fmter; }
-		void setDefaultFormatter (const std::string& s) const
-							{ _defaultFormatter = formatter (s); }
+		Formatter* defaultFormatter ()
+							{ return (_defaultFormatter); }
+		void setDefaultFormatter (Formatter* fmter) const
+							{ if (fmter != nullptr) _defaultFormatter = fmter; }
 
-		private:
-		// The constructor and equal operators can not be invoked directly...
-		FormatterBuilder (const std::string& ff);
+		/** Gets the last error. */
+		unsigned int lastEror () const
+							{ return (_lastError); }
 
-		FormatterBuilder (const FormatterBuilder&) = delete;
+		bool operator ! () const
+							{ return (_lastError == _NOERROR); }
 
-		FormatterBuilder& operator = (const FormatterBuilder&) = delete;
+		/** To get the unique instance of the formatter builder. 
+			If ih has been everinvoked before, a default instance is created using the parameters received and initialized too. */
+		static std::shared_ptr <FormatterBuilder> instance (const Strings& nF = { "./defformatters.fmt" });
 
 		protected:
+		/** To create the right formatter. \n
+			The method receives the name of the file, the name of the formatter under definition 
+			and the lines being read now that will form up the formatter. \n
+			By default the basic formatter is created. */
+		virtual Formatter* createFormatter (const std::string& f, const std::string& nF, const Strings& l)
+							{ return (new StdFormatter (l)); }
+
+		private:
+		/** The copy constructor is not allowed. */
+		FormatterBuilder (const FormatterBuilder&) = delete;
+		/** And the same with the operator = */
+		FormatterBuilder& operator = (const FormatterBuilder&) = delete;
+
+		/** To read the lines from a format file. */
+		Strings readLinesFrom (const std::string& nF);
+
+		protected:
+		/** The default file of format being used. */
+		std::string _defaultFormatFile;
 		/** All formatters. */
-		Formatters _formatters;
+		std::map <std::string, Formatters> _formatters;
 		/** The one that will be choosen by default. 
 			It can be either fixed from a const invocation! */
-		mutable Formatter _defaultFormatter;
+		mutable Formatter* _defaultFormatter;
+		mutable unsigned int _lastError;
 
 		// Implementation
-		/** Singleton design patter. 
-			unique_ptr used. */
-		static std::unique_ptr <FormatterBuilder> _instance;
+		/** The lines read from the different files. */
+		std::map <std::string, Strings> _linesPerFile;
+		/** Singleton design patter. */
+		static std::shared_ptr <FormatterBuilder> _instance;
 	};
 }
 

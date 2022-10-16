@@ -95,14 +95,31 @@ std::string MCHEmul::noneOf (const std::string& s, const std::string& chrs)
 // ---
 std::string MCHEmul::removeAllFrom (const std::string& s, const MCHEmul::Strings& strs)
 {
-	std::string result = s;
+	std::string r = s;
 
 	size_t pos;
 	for (const auto& i : strs)
-		if ((pos = result.find (i)) != std::string::npos)
-			result.erase (pos, i.length ());
+		if ((pos = r.find (i)) != std::string::npos)
+			r.erase (pos, i.length ());
 
-	return (result);
+	return (r);
+}
+
+// ---
+std::string MCHEmul::replaceAll (const std::string& s, const std::string& o, const std::string& d)
+{
+	std::string r = s;
+
+	size_t p = 0;
+	while (p != std::string::npos)
+	{
+		if ((p = r.find (o, p)) == std::string::npos)
+			continue;
+
+		r.replace (p, o.length (), d);
+	}
+
+	return (r);
 }
 
 // ---
@@ -126,6 +143,25 @@ MCHEmul::Strings MCHEmul::getElementsFrom (const std::string& txt, unsigned char
 		for (size_t i = result.size (); i < nE; result.push_back (std::string ("")), i++);
 	if (result.size () > nE && nE != std::numeric_limits <size_t>::max ())
 		for (size_t i = result.size (); i > nE; result.pop_back (), i++);
+
+	return (result);
+}
+
+// ---
+std::string MCHEmul::tableFormat (const MCHEmul::Strings& s, const std::string& sp, size_t l, size_t sb)
+{
+	std::string result;
+
+	for (size_t i = 0; i < s.size (); i += sb)
+	{
+		if (i != 0) result += '\n';
+		for (size_t j = i; j < (i + sb) && j < s.size (); j++)
+		{
+			if (j != i) result += sp;
+			result += s [i] + 
+				((s [i].length () < l) ? MCHEmul::_SPACES.substr (0, l - s [i].length ()) : "");
+		}
+	}
 
 	return (result);
 }

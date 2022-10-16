@@ -1,4 +1,6 @@
 #include <CORE/CPU.hpp>
+#include <CORE/FmterBuilder.hpp>
+#include <CORE/Formatter.hpp>
 
 // ---
 MCHEmul::CPU::~CPU ()
@@ -95,13 +97,19 @@ bool MCHEmul::CPU::executeNextInstruction ()
 }
 
 // ---
-std::ostream& MCHEmul::operator << (std::ostream& o, const MCHEmul::CPU& c)
+MCHEmul::InfoStructure MCHEmul::CPU::getInfoStructure () const
 {
-	o << c.architecture () << std::endl;
-	for (const auto& i : c.internalRegisters ())
-		o << i << std::endl;
-	o << c.programCounter () << std::endl;
-	o << c.statusRegister ();
+	MCHEmul::InfoStructure result;
 
-	return (o);
+	result.add ("Architecture", _architecture.getInfoStructure ());
+
+	MCHEmul::InfoStructure regs;
+	for (const auto& i : internalRegisters ())
+		regs.add (i.name (), i.asString ());
+	result.add ("REGS", regs);
+
+	result.add ("PC", programCounter ().asString ());
+	result.add ("SR", statusRegister ().asString ());
+
+	return (result);
 }

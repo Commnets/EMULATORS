@@ -37,6 +37,12 @@
     <Filter Include="Archivos de encabezado\Commands">
       <UniqueIdentifier>{9d9d0e08-dfbf-43bc-aff1-f5c9c2aa34af}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Archivos de origen\Emulators">
+      <UniqueIdentifier>{9d8ca4c5-e6ad-4c83-bf68-7148bf4c8ff5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Archivos de encabezado\Emulators">
+      <UniqueIdentifier>{05209754-6518-4b21-b8bf-1b7b742d8a5d}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\include\C64\VICII.hpp">
@@ -105,6 +111,9 @@
     <ClInclude Include="..\..\include\C64\ChipRegisters.hpp">
       <Filter>Archivos de encabezado\Motherboard\Chips</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\include\C64\C64Emulator.hpp">
+      <Filter>Archivos de encabezado\Emulators</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\C64\VICII.cpp">
@@ -166,6 +175,9 @@
     </ClCompile>
     <ClCompile Include="..\..\src\C64\ChipRegisters.cpp">
       <Filter>Archivos de origen\Motherboard\Chips</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\C64\C64Emulator.cpp">
+      <Filter>Archivos de origen\Emulators</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

@@ -38,18 +38,18 @@ namespace C64
 		virtual bool simulate (MCHEmul::CPU* cpu) override;
 
 		private:
-		MCHEmul::PhisicalStorageSubset* _BasicROM;
-		MCHEmul::PhisicalStorageSubset* _BasicRAM;
-		MCHEmul::PhisicalStorageSubset* _KernelROM;
-		MCHEmul::PhisicalStorageSubset* _KernelRAM;
-		MCHEmul::PhisicalStorageSubset* _CharROM;
-		MCHEmul::PhisicalStorageSubset* _VICIIRegisters;
-		MCHEmul::PhisicalStorageSubset* _SIDRegisters;
-		MCHEmul::PhisicalStorageSubset* _ColorRAM;
-		MCHEmul::PhisicalStorageSubset* _CIA1Registers;
-		MCHEmul::PhisicalStorageSubset* _CIA2registers;
-		MCHEmul::PhisicalStorageSubset* _IO1Registers;
-		MCHEmul::PhisicalStorageSubset* _IO2registers;
+		MCHEmul::PhysicalStorageSubset* _BasicROM;
+		MCHEmul::PhysicalStorageSubset* _BasicRAM;
+		MCHEmul::PhysicalStorageSubset* _KernelROM;
+		MCHEmul::PhysicalStorageSubset* _KernelRAM;
+		MCHEmul::PhysicalStorageSubset* _CharROM;
+		MCHEmul::PhysicalStorageSubset* _VICIIRegisters;
+		MCHEmul::PhysicalStorageSubset* _SIDRegisters;
+		MCHEmul::PhysicalStorageSubset* _ColorRAM;
+		MCHEmul::PhysicalStorageSubset* _CIA1Registers;
+		MCHEmul::PhysicalStorageSubset* _CIA2registers;
+		MCHEmul::PhysicalStorageSubset* _IO1Registers;
+		MCHEmul::PhysicalStorageSubset* _IO2registers;
 	};
 }
 

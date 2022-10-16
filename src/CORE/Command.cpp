@@ -2,7 +2,7 @@
 #include <CORE/Computer.hpp>
 
 // ---
-bool MCHEmul::Command::execute (MCHEmul::Computer* c, MCHEmul::Attributes& rst)
+bool MCHEmul::Command::execute (MCHEmul::Computer* c, MCHEmul::InfoStructure& rst)
 {
 	if (c == nullptr || !canBeExecuted ())
 		return (false);
@@ -25,19 +25,15 @@ bool MCHEmul::ComplexCommand::canBeExecuted () const
 }
 
 // ---
-bool MCHEmul::ComplexCommand::execute (MCHEmul::Computer* c, MCHEmul::Attributes& rst)
+bool MCHEmul::ComplexCommand::execute (MCHEmul::Computer* c, MCHEmul::InfoStructure& rst)
 {
 	bool result = true;
 
 	int ct = 1;
 	// All of them are executed, but the result is false if just one of them couldn't be executed...
+	MCHEmul::InfoStructure rstP;
 	for (MCHEmul::Commands::const_iterator i = _commands.begin (); i != _commands.end (); i++)
-	{
-		MCHEmul::Attributes rstP;
 		result &= (*i) -> execute (c, rstP);
-		for (const auto j : rstP)
-			rst.insert (std::pair <std::string, std::string> (std::to_string (ct++), j.second));
-	}
 
 	return (result);
 }

@@ -1,10 +1,14 @@
 #include <CORE/IOPeripheral.hpp>
+#include <CORE/FmterBuilder.hpp>
+#include <CORE/Formatter.hpp>
 
 // ---
-std::ostream& MCHEmul::operator << (std::ostream& o, const MCHEmul::IOPeripheral& d)
+MCHEmul::InfoStructure MCHEmul::IOPeripheral::getInfoStructure () const
 {
-	o << d._id << std::endl;
-	o << d._attributes;
+	MCHEmul::InfoStructure result;
 
-	return (o);
+	result.add ("ID", _id);
+	result.add ("ATTRS", _attributes);
+
+	return (result);
 }

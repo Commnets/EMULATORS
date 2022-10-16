@@ -1,4 +1,4 @@
-/** \ingroup CPU */
+/** \ingroup CORE */
 /*@{*/
 
 /**	
@@ -23,6 +23,10 @@
 
 namespace MCHEmul
 {
+	// Important macros used many times
+	static const std::string _YES = "YES";
+	static const std::string _NO = "NO";
+
 	/** A vector of strings. */
 	using Strings = std::vector <std::string>;
 	/** Attributes ar used in many places. */
@@ -43,6 +47,7 @@ namespace MCHEmul
 	static const unsigned int _COMMSINTNOTCREATED_ERROR		= 7;
 	static const unsigned int _CHANNELREADERROR_ERROR		= 8;
 	static const unsigned int _CHANNELWRITEERROR_ERROR		= 9;
+	static const unsigned int _FORMATTERNOTVALID_ERROR		= 10;
 
 	/** The max number of bytes managed in this emulator. */
 	static const unsigned int _MAXBYTESMANAGED				= 2;
@@ -69,8 +74,13 @@ namespace MCHEmul
 	std::string onlyAlphanumeric (const std::string& s);
 	std::string noneOf (const std::string& s, const std::string& chrs);
 	std::string removeAllFrom (const std::string& s, const Strings& strs);
+	std::string replaceAll (const std::string& s, const std::string& o, const std::string& d);
+	/** Every element got is trim-ed. */
 	Strings getElementsFrom (const std::string& txt, unsigned char ch, 
 		size_t nE = std::numeric_limits <size_t>::max ());
+	/** To setup the list of strings like a table. */
+	std::string tableFormat (const Strings& s, const std::string& sp, size_t l /** minimun length per element. */,
+		size_t sb = std::numeric_limits <size_t>::max () /** size per line. */);
 
 	/** General functions to determine whether a string is or not valid
 		from a spcific perspective. */
@@ -78,7 +88,12 @@ namespace MCHEmul
 	bool validBytesOctal (const std::string& s); 
 	bool validBytesHexadecimal (const std::string& s); 
 	bool validBytesDecimal (const std::string& s); 
-	bool validBytes (const std::string& s); 
+	bool validBytes (const std::string& s);
+
+	/** To determine whether a class is or not a subclass of other. */
+	template <typename Base, typename Type>
+	bool instanceOf (const Type* ptr)
+							{ return (dynamic_cast <const Base*> (ptr) != nullptr); }
 }
 
 #endif

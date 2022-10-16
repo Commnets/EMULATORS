@@ -1,4 +1,4 @@
-/** \ingroup CPU */
+/** \ingroup CORE */
 /*@{*/
 
 /**	
@@ -15,12 +15,13 @@
 #define __MCHEMUL_CPUARCHITECTURE__
 
 #include <CORE/global.hpp>
+#include <CORE/InfoClass.hpp>
 #include <CORE/Register.hpp>
 
 namespace MCHEmul
 {
 	/** The architecture of CPU is related usually with the maximum size of its registers in number of bytes. */
-	class CPUArchitecture final
+	class CPUArchitecture final : public InfoClass
 	{
 		public:
 		CPUArchitecture () = delete;
@@ -54,7 +55,15 @@ namespace MCHEmul
 							{ Attributes::const_iterator i = _attributes.find (aN); 
 							  return ((i == _attributes.end ()) ? AttributedNotDefined : (*i).second); }
 
-		friend std::ostream& operator << (std::ostream& o, const CPUArchitecture& a);
+		/**
+		  *	The name of the fields are: \n
+		  *	ATTRS			= InfoStructure: Attributes. \n
+		  *	NBYTES			= Attribute: The number of bytes of the architecture. \n
+		  *	NBITS			= Attribute: The number of bits of the architecture. \n
+		  *	NBYTESPERINST	= Attribute: The number of bytes per instruction. \n
+		  *	ENDIAN			= Attribute: YES if the architecture is defined as big endian or NO in otehr case.
+		  */
+		virtual InfoStructure getInfoStructure () const override;
 
 		private:
 		const size_t _numberBytes = 0; // Adjusted at construction level

@@ -150,12 +150,21 @@ bool MCHEmul::UBytes::operator == (const MCHEmul::UBytes& u) const
 }
 
 // ---
-std::string MCHEmul::UBytes::asString (MCHEmul::UByte::OutputFormat oF, char s, size_t l) const
+std::string MCHEmul::UBytes::asString (MCHEmul::UByte::OutputFormat oF, char s, size_t l, size_t sb) const
 {
-	std::string result = "";
+	if (size () == 0)
+		return ("");
 
-	size_t c = 0;
-	for (const auto& i : _values)
-		result += ((c++ != 0) ? std::string (1, s) : "") + i.asString (oF, l);
+	std::string result = "";
+	for (size_t i = 0; i < size (); i += sb)
+	{
+		if (i != 0) result += '\n';
+		for (size_t j = i; j < (i + sb) && j < size (); j++)
+		{
+			if (j != i) result += s;
+			result += _values [j].asString (oF, l);
+		}
+	}
+
 	return (result);
 }

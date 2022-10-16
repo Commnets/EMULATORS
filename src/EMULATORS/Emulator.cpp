@@ -2,21 +2,21 @@
 #include <SDL.h>
 
 // ---
-const unsigned char Emuls::Emulator::_PARAMBYTEFILE = 'f';
-const std::string Emuls::Emulator::_BYTEFILE = "BYTEFILE";
-const unsigned char Emuls::Emulator::_PARAMASMFILE = 'c';
-const std::string Emuls::Emulator::_ASMFILE = "ASMFILE";
-const unsigned char Emuls::Emulator::_PARAMLOGLEVEL = 'l';
-const std::string Emuls::Emulator::_LOGLEVEL = "LOGLEVEL";
-const unsigned char Emuls::Emulator::_PARAMADDRESS = 'a';
-const std::string Emuls::Emulator::_ADDRESS = "ADDRESS";
-const unsigned char Emuls::Emulator::_PARAMADDRESSSTOP = 'd';
-const std::string Emuls::Emulator::_ADDRESSSTOP = "ADDRESSSTOP";
-const unsigned char Emuls::Emulator::_PARAMSTOP = 's';
-const std::string Emuls::Emulator::_STOP = "STOP";
+const unsigned char MCHEmul::Emulator::_PARAMBYTEFILE = 'f';
+const std::string MCHEmul::Emulator::_BYTEFILE = "BYTEFILE";
+const unsigned char MCHEmul::Emulator::_PARAMASMFILE = 'c';
+const std::string MCHEmul::Emulator::_ASMFILE = "ASMFILE";
+const unsigned char MCHEmul::Emulator::_PARAMLOGLEVEL = 'l';
+const std::string MCHEmul::Emulator::_LOGLEVEL = "LOGLEVEL";
+const unsigned char MCHEmul::Emulator::_PARAMADDRESS = 'a';
+const std::string MCHEmul::Emulator::_ADDRESS = "ADDRESS";
+const unsigned char MCHEmul::Emulator::_PARAMADDRESSSTOP = 'd';
+const std::string MCHEmul::Emulator::_ADDRESSSTOP = "ADDRESSSTOP";
+const unsigned char MCHEmul::Emulator::_PARAMSTOP = 's';
+const std::string MCHEmul::Emulator::_STOP = "STOP";
 
 // ---
-Emuls::Emulator::Emulator (const MCHEmul::Strings& argv)
+MCHEmul::Emulator::Emulator (const MCHEmul::Strings& argv)
 	: _attributes (),
 	  _communicationSystem (nullptr),
 	  _debugLevel (MCHEmul::_DEBUGNOTHING),
@@ -54,7 +54,7 @@ Emuls::Emulator::Emulator (const MCHEmul::Strings& argv)
 }
 
 // ---
-void Emuls::Emulator::setCommunicationSystem (MCHEmul::CommunicationSystem* cS)
+void MCHEmul::Emulator::setCommunicationSystem (MCHEmul::CommunicationSystem* cS)
 {
 	if (_running)
 		return;
@@ -63,7 +63,7 @@ void Emuls::Emulator::setCommunicationSystem (MCHEmul::CommunicationSystem* cS)
 }
 
 // ---
-Emuls::Emulator::~Emulator ()
+MCHEmul::Emulator::~Emulator ()
 { 
 	delete (_communicationSystem);
 
@@ -75,7 +75,7 @@ Emuls::Emulator::~Emulator ()
 }
 
 // ---
-MCHEmul::Addresses Emuls::Emulator::stopAddresses () const
+MCHEmul::Addresses MCHEmul::Emulator::stopAddresses () const
 {
 	MCHEmul::Addresses result;
 	MCHEmul::Attributes::const_iterator i;
@@ -87,7 +87,7 @@ MCHEmul::Addresses Emuls::Emulator::stopAddresses () const
 }
 
 // ---
-bool Emuls::Emulator::initialize ()
+bool MCHEmul::Emulator::initialize ()
 {
 	if (_lastError != MCHEmul::_NOERROR)
 	{
@@ -177,7 +177,7 @@ bool Emuls::Emulator::initialize ()
 }
 
 // ---
-bool Emuls::Emulator::run ()
+bool MCHEmul::Emulator::run ()
 {
 	_running = true;
 
@@ -193,7 +193,7 @@ bool Emuls::Emulator::run ()
 }
 
 // ---
-bool Emuls::Emulator::runCycle (unsigned int a)
+bool MCHEmul::Emulator::runCycle (unsigned int a)
 {
 	bool result = true;
 

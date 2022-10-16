@@ -1,4 +1,4 @@
-/** \ingroup CPU */
+/** \ingroup CORE */
 /*@{*/
 
 /**	
@@ -24,13 +24,14 @@ namespace MCHEmul
 	/** A chip is a specialized element within the computer (different that the CPU). \n
 		All chips are set with the full memory accesibl when the computer is initialized,
 		unless something specific is said initializing the chip itself!. */
-	class Chip
+	class Chip : public InfoClass
 	{
 		public:
 		Chip () = delete;
 
 		Chip (int id, const Attributes& attrs = { })
-			: _id (id), _memory (nullptr), _attributes (attrs), 
+			: InfoClass ("Chip"),
+			  _id (id), _memory (nullptr), _attributes (attrs), 
 			  _lastError (_NOERROR) // Memory accessed can be null, take care...
 							{ }
 
@@ -76,7 +77,13 @@ namespace MCHEmul
 		void resetErrors ()
 							{ _lastError = _NOERROR; }
 
-		friend std::ostream& operator << (std::ostream& o, const Chip& c);
+		/**
+		  *	The name of the fields are: \n
+		  *	ID		= Attribute: Id of the Chip. \n
+		  *	ATTRS	= InfoStructure: Attributes defining the Chip. \n
+		  * MEMORY	= InfoStructure: Memory info addrressed by the Chip.
+		  */
+		virtual InfoStructure getInfoStructure () const override;
 
 		protected:
 		const int _id = -1; // Modified at construction level

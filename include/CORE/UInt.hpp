@@ -1,4 +1,4 @@
-/** \ingroup CPU */
+/** \ingroup CORE */
 /*@{*/
 
 /**	
@@ -95,7 +95,7 @@ namespace MCHEmul
 							{ if (_instance != nullptr) exit (0); }
 
 			~FormatManagers ()
-							{ _instance = nullptr; for (auto i : _formatManagers) delete (i.second);}
+							{ _instance = nullptr; for (const auto& i : _formatManagers) delete (i.second);}
 
 			public:
 			/** It can be accessed from anyplace. \n
@@ -220,7 +220,7 @@ namespace MCHEmul
 							{ return (_values [p]); }
 		
 		std::string asString (UByte::OutputFormat oF, char s /** separator */, size_t l = 0 /** Minimum length per UByte */) const
-							{ return (_values.asString (oF, s, l)); }
+							{ return (_values.asString (oF, s, l /** No more than 16 bytes per line. */)); }
 
 		unsigned int asUnsignedInt () const
 							{ return (_formaters._formatManagers [_format] -> asUnsignedInt (*this)); }
@@ -234,7 +234,7 @@ namespace MCHEmul
 		static UInt fromStr (const std::string& s, unsigned char f = _BINARY);
 
 		friend std::ostream& operator << (std::ostream& o, const UInt& u)
-							{ return (o << u.asString (UByte::OutputFormat::_HEXA, ' ', 2)); }
+							{ return (o << u.asString (UByte::OutputFormat::_HEXA, '\0', 2 /** sizeof (unsigned char) * 2 */)); }
 
 		private:
 		UBytes _values;

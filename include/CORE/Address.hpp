@@ -1,4 +1,4 @@
-/** \ingroup CPU */
+/** \ingroup CORE */
 /*@{*/
 
 /**	
@@ -100,16 +100,19 @@ namespace MCHEmul
 		UByte operator [] (size_t p) const
 							{ return (_value [p]); }
 
-		std::string asString (UByte::OutputFormat oF) const
-							{ return (_value.asString (oF, ' ', 2)); }
+		/** Like an UInt. */
+		std::string asString (UByte::OutputFormat oF, char s /** separator */, size_t l = 0 /** Minimum length per UByte */) const
+							{ return (_value.asString (oF, s, l)); }
 
-		friend std::ostream& operator << (std::ostream& o, const Address& a);
+		friend std::ostream& operator << (std::ostream& o, const Address& a)
+							{ return (o << a.asString (UByte::OutputFormat::_HEXA, '\0', 2 /** sizeof (unsigned char) * 2 */)); }
 
 		/** To create an Address from an string.\n
 			The string should start with $ if written in hexadecimal, with 0 if it is in octal and with no 0 number in decimal: \n
 			e.g $D400 (hexa), 07600 (octal), 53248 (decimal). \n
 			If the str is not valid, then an empty address will be given. */
-		static Address fromStr (const std::string& str);
+		static Address fromStr (const std::string& str)
+							{ return (MCHEmul::Address (MCHEmul::UInt::fromStr (str))); }
 
 		private:
 		UInt _value;

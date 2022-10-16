@@ -3,12 +3,12 @@
 
 // MCHEmul Library
 /**
- *	\defgroup	CPU Classes representing any CPU
+ *	\defgroup	CORE Classes representing any CPU
  *	Classes and macros defining the core of any CPU emulator.
  */
 
 /**
- *	\defgroup	ASSEMBLER Classes representing a Parseer/Compiler emulator
+ *	\defgroup	ASSEMBLER Classes representing a Parser/Compiler emulator
  *	Classes and macros defining the Parser and Compiling processes for any type assambler.
  */
 
@@ -18,8 +18,8 @@
  */
 
 /**
- *	\defgroup	CONSOLE Classes needed to excute an emultor from a console.
- *	Classes and macros defining the way an emulator can be similated from a console.
+ *	\defgroup	CONSOLE Classes needed to execute an emulator from a console.
+ *	Classes and macros defining the way an emulator can be simulated from a console.
  */
 
 /**
@@ -28,11 +28,11 @@
  */
 
 /**
- *	\defgroup	C64 All classes defining the C64 Computer
+ *	\defgroup	C64 Classes defining the C64 Computer
  *	Classes and macros defining the characteristics of any Commodore64 Computer.
  */
 
 /**
- *	\defgroup	EMULS All classes defining a template for any emulator.
+ *	\defgroup	EMULS Classes defining a template for any emulator.
  *	Classes and macros defining the common characteristics to any Emulator.
  */

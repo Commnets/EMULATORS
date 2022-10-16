@@ -1,4 +1,4 @@
-/** \ingroup CPU */
+/** \ingroup CORE */
 /*@{*/
 
 /**	
@@ -18,20 +18,21 @@
 
 namespace MCHEmul
 {
-	class Stack : public PhisicalStorageSubset
+	class Stack final : public PhysicalStorageSubset
 	{
 		public:
 		/**
 		  * Constructor:
+		  * The ones needed by the parent class.
 		  * @param b	: From the end of the memory to the beggining or the other way around
 		  * @param e	: Poining always to the empty place or pointing to the last position kept.
 		  */
-		Stack (int id, PhisicalStorage* ps, size_t pp, const Address& iA, size_t s, bool b = true, bool e = true)
-			: PhisicalStorageSubset (id, ps, pp, iA, s), 
+		Stack (int id, PhysicalStorage* ps, size_t pp, const Address& iA, size_t s, bool b = true, bool e = true)
+			: PhysicalStorageSubset (id, ps, pp, iA, s), 
 			  _position (0), _fromBack (b), _pointToEmpty (e),
 			  _stackOverflow (false),
 			  _empty (true)
-							{ }
+							{ setClassName ("Stack"); }
 
 		size_t position () const
 							{ return (_position); }
@@ -49,12 +50,21 @@ namespace MCHEmul
 		bool stackOverflow () const
 							{ return (_stackOverflow); }
 
-		friend std::ostream& operator << (std::ostream& o, const Stack& s);
+		/**
+		  *	The name of the fields are: \n
+		  * MEMORY		= InfoStructure: Information about the memory itself. \n
+		  *	BACK		= Attribute: YES when moves from back to the top and NO in the other circunstance. \n
+		  *	LAST		= Attribute: YES when the empty space is pointing to the last data. \n
+		  *	OVERFLOW	= Attribute: YES when no more elements are admitted. \n
+		  *	EMPTY		= Attribute: YES when there is no elements inside. \n
+		  *	POSITION	= Attribute: Current position in the stack.
+		  */
+		virtual InfoStructure getInfoStructure () const override;
 
 		private:
 		int _position;
 		const bool _fromBack = true; // Adapted at construction time
-		const bool _pointToEmpty = true; // Adàted at construction time
+		const bool _pointToEmpty = true; // Adapted at construction time
 
 		// Implementation
 		bool _stackOverflow;

@@ -1,4 +1,4 @@
-/** \ingroup CPU */
+/** \ingroup CORE */
 /*@{*/
 
 /**	
@@ -65,10 +65,12 @@ namespace MCHEmul
 		ProgramCounter& operator -= (size_t n)
 							{ decrement (n); return (*this); }
 
-		std::string asString (UByte::OutputFormat oF) const
-							{ return (asAddress ().asString (oF)); }
+		/** Like an address. */
+		std::string asString () const
+							{ return (_name + ":$" + asAddress ().asString (UByte::OutputFormat::_HEXA, '\0', 2)); }
 
-		friend std::ostream& operator << (std::ostream& o, const ProgramCounter& pc);
+		friend std::ostream& operator << (std::ostream& o, const ProgramCounter& pc)
+							{ return (o << pc.asString ()); }
 	};
 }
 

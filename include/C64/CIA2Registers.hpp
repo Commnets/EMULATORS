@@ -30,7 +30,7 @@ namespace C64
 		public:
 		friend CIA2;
 
-		CIA2Registers (int id, MCHEmul::PhisicalStorage* pS);
+		CIA2Registers (int id, MCHEmul::PhysicalStorage* pS);
 
 		virtual size_t numberRegisters () const override
 							{ return (0x10); }
@@ -39,8 +39,6 @@ namespace C64
 							{ return (_VICBank); }
 
 		virtual void initialize () override;
-
-		friend std::ostream& operator << (std::ostream& o, const CIA2Registers& c);
 
 		private:
 		virtual void setValue (size_t p, const MCHEmul::UByte& v) override;

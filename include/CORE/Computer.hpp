@@ -1,4 +1,4 @@
-/** \ingroup CPU */
+/** \ingroup CORE */
 /*@{*/
 
 /**	
@@ -30,7 +30,7 @@ namespace MCHEmul
 {
 	/** The computer links many different elements: \n
 		CPU, Memory, Specialized Chips and IODevices. */
-	class Computer
+	class Computer : public InfoClass
 	{
 		public:
 		/** Types of actions than can be executed on a compter. 
@@ -176,7 +176,14 @@ namespace MCHEmul
 		void setActionForNextCycle (unsigned int a)
 							{ _actionForNextCycle = a; }
 
-		friend std::ostream& operator << (std::ostream& o, const Computer& c);
+		/**
+		  *	The name of the fields are: \n
+		  *	ATTRS		= InfoStructure: attributes defining the computer.
+		  * CPU			= InfoStructure: Info about the CPU.
+		  * CHIPS		= InfoStructure: Info about the Chips.
+		  * DEVICES		= InfoStructure: Info about the Devices connected.
+		  */
+		virtual InfoStructure getInfoStructure () const override;
 
 		protected:
 		// To be used when e.g debugging...

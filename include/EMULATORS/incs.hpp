@@ -1,4 +1,4 @@
-/** \ingroup Emulator */
+/** \ingroup EMULS */
 /*@{*/
 
 /**	
@@ -11,11 +11,9 @@
  *	Versions: 1.0 Initial
  */
 
-#ifndef __C64EMULATOR_INCS__
-#define __C64EMULATOR_INCS__
+#ifndef __EMULATORS_INCS__
+#define __EMULATORS_INCS__
 
-#include <C64/incs.hpp>
 #include <EMULATORS/Emulator.hpp>
-#include <EMULATORS/C64Emulator.hpp>
 
 #endif

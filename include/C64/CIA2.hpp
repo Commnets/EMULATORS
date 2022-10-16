@@ -43,13 +43,21 @@ namespace C64
 			  _timerA (0), _timerB (1), 
 			  _clock (0),
 			  _lastClockCycles (0)
-							{ }
+							{ setClassName ("CIA2"); }
 
 		virtual bool initialize () override;
 
 		virtual bool simulate (MCHEmul::CPU* cpu) override;
 
-		friend std::ostream& operator << (std::ostream& o, const CIA2& c);
+		/**
+		  *	The name of the fields are: \n
+		  * The ones comming from the parent class. \n
+		  * REGS	= InfoStructure: Value of the registers. \n
+		  *	TIMER1	= InfoStructure: Info about the timer 1. \n
+		  *	TIMER2	= InfoStructure: Info about the timer 2. \n
+		  *	CLOCK	= InfoStructure: Info about the clock. \n
+		  */
+		virtual MCHEmul::InfoStructure getInfoStructure () const override;
 
 		private:
 		C64::CIA2Registers* _CIA2Registers;

@@ -1,8 +1,11 @@
 #include <CORE/CPUArchitecture.hpp>
+#include <CORE/FmterBuilder.hpp>
+#include <CORE/Formatter.hpp>
 
 // ---
 MCHEmul::CPUArchitecture::CPUArchitecture (size_t nb, size_t iL, bool bE, const Attributes& attrs)
-	: _numberBytes (nb), _instructionLength (iL), _numberBits ((size_t) (nb << 3)), _bigEndian (bE), _attributes (attrs), 
+	: MCHEmul::InfoClass ("CPUArchitecture"),
+	  _numberBytes (nb), _instructionLength (iL), _numberBits ((size_t) (nb << 3)), _bigEndian (bE), _attributes (attrs), 
 	  _longestRegisterPossible (0, "-", MCHEmul::UBytes (std::vector <MCHEmul::UByte> (nb, MCHEmul::UByte::_0))) // The id is an imagination...
 { 
 	assert (_numberBytes > 0 && 
@@ -12,13 +15,15 @@ MCHEmul::CPUArchitecture::CPUArchitecture (size_t nb, size_t iL, bool bE, const 
 }
 
 // ---
-std::ostream& MCHEmul::operator << (std::ostream& o, const MCHEmul::CPUArchitecture& a)
+MCHEmul::InfoStructure MCHEmul::CPUArchitecture::getInfoStructure () const
 {
-	o << a.attributes () << std::endl;
-	o << a.numberBytes () << " bytes" << std::endl;
-	o << a.numberBits () << " bits" << std::endl;
-	o << a.instructionLength () << " bytes per instruction" << std::endl;
-	o << (a.bigEndian () ? "big endian" : "little endian");
+	MCHEmul::InfoStructure result;
 
-	return (o);
+	result.add ("ATTRS",			_attributes);
+	result.add ("NBYTES",			_numberBytes);
+	result.add ("NBITS",			_numberBits);
+	result.add ("NBYTESPERINST",	_instructionLength);
+	result.add ("ENDIAN",			_bigEndian);
+
+	return (result);
 }

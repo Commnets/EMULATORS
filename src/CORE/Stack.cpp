@@ -1,9 +1,11 @@
 #include <CORE/Stack.hpp>
+#include <CORE/FmterBuilder.hpp>
+#include <CORE/Formatter.hpp>
 
 // ---
 void MCHEmul::Stack::initialize ()
 { 
-	MCHEmul::PhisicalStorageSubset::initialize ();
+	MCHEmul::PhysicalStorageSubset::initialize ();
 
 	_position = _fromBack ? (int) (size () - 1) : 0; 
 	_stackOverflow = false; 
@@ -145,13 +147,16 @@ MCHEmul::UBytes MCHEmul::Stack::pull (size_t nV)
 }
 
 // ---
-std::ostream& MCHEmul::operator << (std::ostream& o, const MCHEmul::Stack& s)
+MCHEmul::InfoStructure MCHEmul::Stack::getInfoStructure () const
 {
-	o << (*(static_cast <const MCHEmul::PhisicalStorageSubset*> (&s))) << std::endl;
-	o << (s._fromBack ? "Back" : "Front") << ", " << (s._pointToEmpty ? "Pointing empty" : "Pointing last") << std::endl;
-	o << (s._stackOverflow ? "Overflow" : "No Overflow") << std::endl;
-	o << (s._empty ? "Empty" : "With data") << std::endl;
-	o << "Pos:" << s.position ();
+	MCHEmul::InfoStructure result;
 
-	return (o);
+	result.add ("PhysicalStorageSubset",	MCHEmul::PhysicalStorageSubset::getInfoStructure ());
+	result.add ("BACK",						_fromBack );
+	result.add ("LAST",						_pointToEmpty );
+	result.add ("OVERFLOW",					_stackOverflow );
+	result.add ("EMPTY",					_empty );
+	result.add ("POSITION",					_position);
+
+	return (result);
 }

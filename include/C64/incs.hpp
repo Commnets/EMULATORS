@@ -15,6 +15,7 @@
 #define __C64_INCS__
 
 #include <F6500/incs.hpp>
+#include <EMULATORS/incs.hpp>
 #include <C64/global.hpp>
 #include <C64/C64.hpp>
 #include <C64/Memory.hpp>
@@ -34,5 +35,6 @@
 #include <C64/IOPBuilder.hpp>
 #include <C64/Commands.hpp>
 #include <C64/CommandBuilder.hpp>
+#include <C64/C64Emulator.hpp>
 
 #endif

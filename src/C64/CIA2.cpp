@@ -41,11 +41,14 @@ bool C64::CIA2::simulate (MCHEmul::CPU* cpu)
 }
 
 // ---
-std::ostream& C64::operator << (std::ostream& o, const C64::CIA2& c)
+MCHEmul::InfoStructure C64::CIA2::getInfoStructure () const
 {
-	o << *c._CIA2Registers << std::endl;
-	o << c._timerA << std::endl;
-	o << c._timerB;
+	MCHEmul::InfoStructure result = MCHEmul::Chip::getInfoStructure ();
 
-	return (o);
+	result.add ("REGS",		_CIA2Registers -> getInfoStructure ());
+	result.add ("TIMERA",	_timerA.getInfoStructure ());
+	result.add ("TIMERB",	_timerB.getInfoStructure ());
+	result.add ("CLOCK",	_clock.getInfoStructure ());
+
+	return (result);
 }

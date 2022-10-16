@@ -22,7 +22,8 @@ C64::VICII::RasterData::RasterData (
 	unsigned short pr1,
 	unsigned short pr2
 					  )
-				: _firstPosition (fp), _firstVisiblePosition (fvp), _firstDisplayPosition (fdp), 
+				: MCHEmul::InfoClass ("RasterData"),
+				  _firstPosition (fp), _firstVisiblePosition (fvp), _firstDisplayPosition (fdp), 
 				  _lastDisplayPosition (ldp), _lastVisiblePosition (lvp), _lastPosition (lp),
 				  _originalFirstDisplayPosition (fdp), _originalLastDisplayPosition (ldp),
 				  _maxPositions (mp),
@@ -88,21 +89,27 @@ void C64::VICII::RasterData::reduceDisplayZone (bool s)
 }
 
 // ---
-std::ostream& C64::operator << (std::ostream& o, const C64::VICII::RasterData& r)
+MCHEmul::InfoStructure C64::VICII::RasterData::getInfoStructure () const
 {
-	o << "Pos:" << r._currentPosition << "(" << r._currentPosition_0 
-	  << "),F:" << r._firstPosition_0 << ",L:" << r._lastPosition_0;
+	MCHEmul::InfoStructure result;
 
-	return (o);
+	result.add ("POSITION",		_currentPosition);
+	result.add ("POSITION0",	_currentPosition_0);
+	result.add ("FIRT",			_firstPosition_0);
+	result.add ("FIRT",			_lastPosition_0);
+
+	return (result);
 }
 
 // ---
-std::ostream& C64::operator << (std::ostream & o, const C64::VICII::Raster & r)
+MCHEmul::InfoStructure C64::VICII::Raster::getInfoStructure () const
 {
-	o << r._vRasterData << std::endl;
-	o << r._hRasterData;
+	MCHEmul::InfoStructure result;
 
-	return (o);
+	result.add ("RASTERX", _hRasterData.getInfoStructure ());
+	result.add ("RASTERY", _vRasterData.getInfoStructure ());
+
+	return (result);
 }
 
 // ---
@@ -291,12 +298,14 @@ bool C64::VICII::simulate (MCHEmul::CPU* cpu)
 }
 
 // ---
-std::ostream& C64::operator << (std::ostream& o, const C64::VICII& c)
+MCHEmul::InfoStructure C64::VICII::getInfoStructure () const
 {
-	o << *c._VICIIRegisters << std::endl;
-	o << c._raster;
+	MCHEmul::InfoStructure result;
 
-	return (o);
+	result.add ("REGS",		_VICIIRegisters -> getInfoStructure ());
+	result.add ("RASTER",	_raster.getInfoStructure ());
+
+	return (result);
 }
 
 // ---

@@ -47,13 +47,21 @@ void C64::CIAClock::simulate (MCHEmul::CPU* cpu)
 }
 
 // ---
-std::ostream& C64::operator << (std::ostream& o, const C64::CIAClock& cc)
+MCHEmul::InfoStructure C64::CIAClock::getInfoStructure () const
 {
-	o << "IRQ:" << (cc._IRQEnabled ? "On" : "Off") << std::endl;
-	o << "Value:" << cc._hours << "h," << cc._minutes << "m," << cc._seconds << "s," << cc._tenthsSecond << "ms"
-	  << "(" << cc._alarmHours << "h," << cc._alarmMinutes << "m," << cc._alarmSeconds << "s," << cc._alarmTenthsSecond << "ms)" << std::endl;
+	MCHEmul::InfoStructure result;
 
-	return (o);
+	result.add ("IRQ",			_IRQEnabled);
+	result.add ("HOURS",		_hours);
+	result.add ("MINUTES",		_minutes);
+	result.add ("SECONDS",		_seconds);
+	result.add ("DECSECONDS",	_tenthsSecond);
+	result.add ("AHOURS",		_alarmHours);
+	result.add ("AMINUTES",		_alarmMinutes);
+	result.add ("ASECONDS",		_alarmSeconds);
+	result.add ("ADECSECONDS",	_alarmTenthsSecond);
+
+	return (result);
 }
 
 // ---

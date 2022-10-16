@@ -1,4 +1,4 @@
-/** \ingroup CPU */
+/** \ingroup CORE */
 /*@{*/
 
 /**	
@@ -145,7 +145,7 @@ namespace MCHEmul
 		std::string asString (OutputFormat oF, size_t l = 0 /** Minimum length. */) const;
 
 		friend std::ostream& operator << (std::ostream& o, const UByte& u)
-							{ return (o << u.asString (UByte::OutputFormat::_HEXA, 2)); }
+							{ return (o << u.asString (UByte::OutputFormat::_HEXA, 2 /** sizeof (unsigned char) * 2 */)); }
 
 		private:
 		unsigned char _value; // 8 bits - length (@see static method size)
@@ -162,7 +162,7 @@ namespace MCHEmul
 		// The carry is generated if the result is bigger than a unsigned char long!
 		cout = (r & 0xff00 /** unsigned short = 2 bytes long. */) != 0x000; 
 		// The overflow is generated when both are negative and the outcome positive...or the other way around!
-		o = (bit (7) && u.bit (7) && ((r & 0x0080) == 0x0000)) |  
+		o = (bit (7) && u.bit (7) && ((r & 0x0080) == 0x0000)) ||  
 				(!bit (7) && !u.bit (7) && ((r & 0x0080) != 0x0000)); 
 
 		return (MCHEmul::UByte ((unsigned char) /** cut it. */ r));

@@ -3,27 +3,23 @@
 #include <C64/CIAClock.hpp>
 
 // ---
-C64::CIA2Registers::CIA2Registers (int id, MCHEmul::PhisicalStorage* pS)
+C64::CIA2Registers::CIA2Registers (int id, MCHEmul::PhysicalStorage* pS)
 	: C64::ChipRegisters (id, pS, 0xdc00, MCHEmul::Address ({ 0x00, 0xdc }, false), 0x0100),
 	  _timerA (nullptr), _timerB (nullptr),
-	  _lastValueRead (MCHEmul::PhisicalStorage::_DEFAULTVALUE)
+	  _lastValueRead (MCHEmul::PhysicalStorage::_DEFAULTVALUE)
 	  // At this point all internal variables will have random values...
 { 
+	setClassName ("CIA2Registers");
+
 	initializeInternalValues (); 
 }
 
 // ---
 void C64::CIA2Registers::initialize ()
 {
-	MCHEmul::PhisicalStorageSubset::initialize ();
+	MCHEmul::PhysicalStorageSubset::initialize ();
 
 	initializeInternalValues ();
-}
-
-// ---
-std::ostream& C64::operator << (std::ostream& o, const C64::CIA2Registers& c)
-{
-	return (o << *((C64::ChipRegisters*) &c));
 }
 
 // ---
@@ -31,7 +27,7 @@ void C64::CIA2Registers::setValue (size_t p, const MCHEmul::UByte& v)
 {
 	assert (_timerA != nullptr && _timerB != nullptr && _clock != nullptr);
 
-	MCHEmul::PhisicalStorageSubset::setValue (p, v);
+	MCHEmul::PhysicalStorageSubset::setValue (p, v);
 
 	size_t pp = p % 0x10;
 
@@ -80,9 +76,9 @@ void C64::CIA2Registers::setValue (size_t p, const MCHEmul::UByte& v)
 		// Bits 0-3: BCD Digits. Bits 4-7: Unused.
 		case 0x08:
 			{
-				int ts = MCHEmul::UInt ({ MCHEmul::PhisicalStorageSubset::readValue (0x08) }, 
+				int ts = MCHEmul::UInt ({ MCHEmul::PhysicalStorageSubset::readValue (0x08) }, 
 					true /** 1 byte...doesn't matter. */, true /** BCD */).asInt (); // A BCD value to int...
-				if (MCHEmul::PhisicalStorageSubset::readValue (0x0f).bit (7)) _clock -> setAlarmTenthSeconds ((unsigned char) ts); 
+				if (MCHEmul::PhysicalStorageSubset::readValue (0x0f).bit (7)) _clock -> setAlarmTenthSeconds ((unsigned char) ts); 
 				else _clock -> setTenthSeconds ((unsigned char) ts);
 			}
 
@@ -92,9 +88,9 @@ void C64::CIA2Registers::setValue (size_t p, const MCHEmul::UByte& v)
 		// Bits 0-3: Second BCD Digit. Bits 4-6: First BCD Digit. Bit 7: Unused.
 		case 0x09:
 			{
-				int s = MCHEmul::UInt ({ MCHEmul::PhisicalStorageSubset::readValue (0x08) }, 
+				int s = MCHEmul::UInt ({ MCHEmul::PhysicalStorageSubset::readValue (0x08) }, 
 					true /** 1 byte...doesn't matter. */, true /** BCD */).asInt (); // A BCD value to int...
-				if (MCHEmul::PhisicalStorageSubset::readValue (0x0f).bit (7)) _clock -> setSeconds ((unsigned char) s); 
+				if (MCHEmul::PhysicalStorageSubset::readValue (0x0f).bit (7)) _clock -> setSeconds ((unsigned char) s); 
 				else _clock -> setSeconds ((unsigned char) s);
 			}
 
@@ -104,9 +100,9 @@ void C64::CIA2Registers::setValue (size_t p, const MCHEmul::UByte& v)
 		// Bits 0-3: Second BCD Digit. Bits 4-6: First BCD Digit. Bit 7: Unused.
 		case 0x0b:
 			{
-				int m = MCHEmul::UInt ({ MCHEmul::PhisicalStorageSubset::readValue (0x08) }, 
+				int m = MCHEmul::UInt ({ MCHEmul::PhysicalStorageSubset::readValue (0x08) }, 
 					true /** 1 byte...doesn't matter. */, true /** BCD */).asInt (); // A BCD value to int...
-				if (MCHEmul::PhisicalStorageSubset::readValue (0x0f).bit (7)) _clock -> setAlarmMinutes ((unsigned char) m); 
+				if (MCHEmul::PhysicalStorageSubset::readValue (0x0f).bit (7)) _clock -> setAlarmMinutes ((unsigned char) m); 
 				else _clock -> setMinutes ((unsigned char) m);
 			}
 
@@ -116,9 +112,9 @@ void C64::CIA2Registers::setValue (size_t p, const MCHEmul::UByte& v)
 		// Bits 0-3: Second BCD Digit. Bit 4: First BCD Digit. Bits 5-6: Unused. Bit 7: AM/PM Flag (PM = 1)
 		case 0x0a:
 			{
-				int h = MCHEmul::UInt ({ MCHEmul::PhisicalStorageSubset::readValue (0x08) }, 
+				int h = MCHEmul::UInt ({ MCHEmul::PhysicalStorageSubset::readValue (0x08) }, 
 					true /** 1 byte...doesn't matter. */, true /** BCD */).asInt (); // A BCD value to int...
-				if (MCHEmul::PhisicalStorageSubset::readValue (0x0f).bit (7)) _clock -> setAlarmHours ((unsigned char) h); 
+				if (MCHEmul::PhysicalStorageSubset::readValue (0x0f).bit (7)) _clock -> setAlarmHours ((unsigned char) h); 
 				else _clock -> setHours ((unsigned char) h);
 			}
 
@@ -169,7 +165,7 @@ const MCHEmul::UByte& C64::CIA2Registers::readValue (size_t p) const
 {
 	assert (_timerA != nullptr && _timerB != nullptr && _clock != nullptr);
 
-	MCHEmul::UByte result = MCHEmul::PhisicalStorage::_DEFAULTVALUE;
+	MCHEmul::UByte result = MCHEmul::PhysicalStorage::_DEFAULTVALUE;
 
 	size_t pp = p % 0x10;
 
@@ -180,7 +176,7 @@ const MCHEmul::UByte& C64::CIA2Registers::readValue (size_t p) const
 		case 0x01:
 		case 0x02:
 		case 0x03:
-			result = MCHEmul::PhisicalStorageSubset::readValue (p);
+			result = MCHEmul::PhysicalStorageSubset::readValue (p);
 			break;
 
 		case 0x04:
@@ -251,7 +247,7 @@ const MCHEmul::UByte& C64::CIA2Registers::readValue (size_t p) const
 
 		case 0x0e:
 		case 0x0f:
-			result = MCHEmul::PhisicalStorageSubset::readValue (p);
+			result = MCHEmul::PhysicalStorageSubset::readValue (p);
 			break;
 			
 		default:

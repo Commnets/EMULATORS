@@ -2,23 +2,37 @@
 #include <C64/C64.hpp>
 
 // ---
+C64::VICIIRegisters::VICIIRegisters (int id, MCHEmul::PhysicalStorage* ps)
+	: ChipRegisters (id, ps, 0xd000, MCHEmul::Address ({ 0x00, 0xd0 }, false), 0x0400),
+	  _lastValueRead (MCHEmul::PhysicalStorage::_DEFAULTVALUE),
+	  _backgroundColor (4, 0x00),
+	  _spriteXCoord (8, 0x0000), _spriteYCoord (8, 0x0000),
+	  _spriteColor (8, 0x0000),
+	  _spriteSharedColor (2, 0x0000), _spriteMulticolor (8, false),
+	  _spriteEnabled (8, false),
+	  _spriteDoubleWidth (8, false), _spriteDoubleHeight (8, false),
+	  _spriteToForegroundPriority (8, false)
+	  // At this point the rest internal variables will have random values...
+	  // The vector are initialized just to given them a default size!
+{
+	setClassName ("VICIIRegisters");
+
+	initializeInternalValues ();
+}
+
+
+// ---
 void C64::VICIIRegisters::initialize ()
 {
-	MCHEmul::PhisicalStorageSubset::initialize ();
+	MCHEmul::PhysicalStorageSubset::initialize ();
 
 	initializeInternalValues ();
 }
 
 // ---
-std::ostream& C64::operator << (std::ostream& o, const C64::VICIIRegisters& vr)
-{
-	return (o << *((C64::ChipRegisters*) &vr));
-}
-
-// ---
 void C64::VICIIRegisters::setValue (size_t p, const MCHEmul::UByte& v)
 {
-	MCHEmul::PhisicalStorageSubset::setValue (p, v);
+	MCHEmul::PhysicalStorageSubset::setValue (p, v);
 
 	size_t pp = p % 0x40;
 
@@ -207,7 +221,7 @@ void C64::VICIIRegisters::setValue (size_t p, const MCHEmul::UByte& v)
 // ---
 const MCHEmul::UByte& C64::VICIIRegisters::readValue (size_t p) const
 {
-	MCHEmul::UByte result = MCHEmul::PhisicalStorage::_DEFAULTVALUE;
+	MCHEmul::UByte result = MCHEmul::PhysicalStorage::_DEFAULTVALUE;
 
 	size_t pp = p % 0x40;
 
@@ -237,14 +251,14 @@ const MCHEmul::UByte& C64::VICIIRegisters::readValue (size_t p) const
 		case 0x1b:
 		case 0x1c:
 		case 0x1d:
-			result = MCHEmul::PhisicalStorageSubset::readValue (pp);
+			result = MCHEmul::PhysicalStorageSubset::readValue (pp);
 			break;
 
 		// SCROLY: Vertical Fine Scrolling and Control Register
 		// Just to consider that when reading the raster MSB bit shows where the raster is now
 		case 0x11:
 			result = MCHEmul::UByte 
-				((MCHEmul::PhisicalStorageSubset::readValue (pp).value () & 0x7f) | 
+				((MCHEmul::PhysicalStorageSubset::readValue (pp).value () & 0x7f) | 
 				 (((_currentRasterLine & 0xff00) != 0) ? 0x80 : 0x00));
 			break;
 
@@ -265,7 +279,7 @@ const MCHEmul::UByte& C64::VICIIRegisters::readValue (size_t p) const
 		
 		// SCROLX: Horizontal Fine Scrolling and Control Register
 		case 0x16:
-			result = MCHEmul::UByte (MCHEmul::PhisicalStorageSubset::readValue (pp).value () & 0x3f | 0xd0); /** bit 6 & 7 always on. */
+			result = MCHEmul::UByte (MCHEmul::PhysicalStorageSubset::readValue (pp).value () & 0x3f | 0xd0); /** bit 6 & 7 always on. */
 			break;
 
 		// VICIRQ: VIC Interrrupt Flag Register
@@ -321,7 +335,7 @@ const MCHEmul::UByte& C64::VICIIRegisters::readValue (size_t p) const
 		case 0x2d:
 		case 0x2e:
 			/** The MSB to 1 always. */
-			result = MCHEmul::UByte (MCHEmul::PhisicalStorageSubset::readValue (pp).value () & 0x0f | 0xf0);
+			result = MCHEmul::UByte (MCHEmul::PhysicalStorageSubset::readValue (pp).value () & 0x0f | 0xf0);
 			break;
 	
 		// Not connected

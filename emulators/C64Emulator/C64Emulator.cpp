@@ -4,10 +4,10 @@
 #include <locale>
 #include <codecvt>
 
-#include <EMULATORS/incs.hpp>
-#include <CONSOLE/Console.hpp>
+#include <C64/incs.hpp>
+#include <CONSOLE/incs.hpp>
 
-using namespace Emuls;
+using namespace C64;
 
 // To get the parameters from the input line...
 MCHEmul::Strings generateParamsFrom (int argc, _TCHAR *argv [])
@@ -33,8 +33,13 @@ int _tmain (int argc, _TCHAR *argv [])
 	if (!myEmulator.initialize ()) 
 		return (1); // Exit with an error...
 
+	std::shared_ptr <MCHEmul::FormatterBuilder> fmtBld = 
+		MCHEmul::FormatterBuilder::instance ({ "./defformatters.fmt", "./conformatters.fmt"});
+	std::cout << "---- CPU ---" << std::endl << *myEmulator.computer () -> cpu () << std::endl;
+	std::cout << "---- STACK -" << *myEmulator.computer () -> memory () -> stack () << std::endl;
+
 	// The emulation is done using a console...
-	Console::Win32Console myConsole (&myEmulator, new C64::CommandBuilder);
+	MCHEmul::Win32Console myConsole (&myEmulator, new C64::CommandBuilder);
 	myConsole.run ();
 	return (myEmulator.lastError ());
 }

@@ -55,15 +55,18 @@ void C64::CIATimer::simulate (MCHEmul::CPU* cpu, C64::CIATimer* t)
 }
 
 // ---
-std::ostream& C64::operator << (std::ostream& o, const C64::CIATimer& ct)
+MCHEmul::InfoStructure C64::CIATimer::getInfoStructure () const
 {
-	o << "Run Mode:" << (unsigned int) ct._runMode << std::endl;
-	o << "Count Mode:" << (unsigned int) ct._countMode << std::endl;
-	o << "Status:" << (ct._enabled ? "On" : "Off") << std::endl;
-	o << "IRQ:" << (ct._IRQEnabled ? "On" : "Off") << std::endl;
-	o << "Value:" << ct._currentValue << "(" << ct._initialValue << ")";
+	MCHEmul::InfoStructure result;
 
-	return (o);
+	result.add ("RUN",			(unsigned int)_runMode);
+	result.add ("COUNT",		(unsigned int) _countMode);
+	result.add ("STATUS",		_enabled);
+	result.add ("IRQ",			_IRQEnabled);
+	result.add ("VALUE",		_currentValue);
+	result.add ("INITIALVALUE", _initialValue);
+
+	return (result);
 }
 
 // ---

@@ -1,17 +1,19 @@
 #include <C64/ChipRegisters.hpp>
 
 // ---
-std::ostream& C64::operator << (std::ostream& o, const C64::ChipRegisters& vr)
+std::vector <MCHEmul::UByte> C64::ChipRegisters::valueRegisters () const
 {
-	bool fB = true;
-	for (size_t i = 0; i < vr.numberRegisters (); i += 0x10, fB = false)
-	{
-		if (!fB) o << std::endl;
+	std::vector <MCHEmul::UByte> result; 
+	for (size_t i = 0; i < numberRegisters (); result.push_back (readValue (i++))); 
+	return (result);
+}
 
-		bool fV = true;
-		for (size_t j = i; j < (i + 0x010) && j < 0x040; j++, fV = false)
-			o << (fV ? "" : " ") << MCHEmul::UByte ((unsigned char) j) << ":" << vr.readValue (j);
-	}
+// ---
+MCHEmul::InfoStructure C64::ChipRegisters::getInfoStructure () const
+{
+	MCHEmul::InfoStructure result;
 
-	return (o);
+	result.add ("BYTES", valueRegisters ());
+
+	return (result);
 }

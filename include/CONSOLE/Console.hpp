@@ -11,20 +11,20 @@
  *	Versions: 1.0 Initial
  */
 
-#ifndef __CONSOLE_CONSOLE__
-#define __CONSOLE_CONSOLE__
+#ifndef __MCHEMUL_CONSOLE__
+#define __MCHEMUL_CONSOLE__
 
 #include <EMULATORS/incs.hpp>
 
-namespace Console
+namespace MCHEmul
 {
 	class Console 
 	{
 		public:
 		Console () = delete;
 
-		Console (Emuls::Emulator* e, MCHEmul::CommandBuilder* cB, 
-			const std::string& cF = "./console.txt", std::ostream& oS = std::cout);
+		Console (Emulator* e, CommandBuilder* cB, 
+			const std::string& cF = "./console.def", std::ostream& oS = std::cout);
 
 		Console (const Console&) = delete;
 
@@ -59,8 +59,8 @@ namespace Console
 		virtual bool readChar (char& chr) const = 0;
 
 		protected:
-		Emuls::Emulator* _emulator;
-		MCHEmul::CommandBuilder* _commandBuilder;
+		Emulator* _emulator;
+		CommandBuilder* _commandBuilder;
 		std::ostream& _outputStream;
 
 		// Implementation
@@ -78,7 +78,7 @@ namespace Console
 	class Win32Console final : public Console
 	{
 		public:
-		Win32Console (Emuls::Emulator* e, MCHEmul::CommandBuilder* cB)
+		Win32Console (Emulator* e, CommandBuilder* cB)
 			: Console (e, cB)
 							{ }
 

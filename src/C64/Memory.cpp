@@ -54,17 +54,17 @@ MCHEmul::Memory::Content C64::Memory::standardMemoryContent ()
 	/** All dirs in Little - endian format. */
 
 	// Phisical storages
-	MCHEmul::PhisicalStorage* RAM = 
-		new MCHEmul::PhisicalStorage (_RAM, MCHEmul::PhisicalStorage::Type::_RAM, 0x10000);				// 64k
-	MCHEmul::PhisicalStorage* BASICROM = 
-		new MCHEmul::PhisicalStorage (_BASICROM, MCHEmul::PhisicalStorage::Type::_ROM, 0x2000);			// 8k
-	MCHEmul::PhisicalStorage* CHARROM = 
-		new MCHEmul::PhisicalStorage (_CHARROM, MCHEmul::PhisicalStorage::Type::_ROM, 0x1000);			// 4k
-	MCHEmul::PhisicalStorage* KERNELROM	= 
-		new MCHEmul::PhisicalStorage (_KERNELROM, MCHEmul::PhisicalStorage::Type::_ROM, 0x2000);		// 8k
+	MCHEmul::PhysicalStorage* RAM = 
+		new MCHEmul::PhysicalStorage (_RAM, MCHEmul::PhysicalStorage::Type::_RAM, 0x10000);				// 64k
+	MCHEmul::PhysicalStorage* BASICROM = 
+		new MCHEmul::PhysicalStorage (_BASICROM, MCHEmul::PhysicalStorage::Type::_ROM, 0x2000);			// 8k
+	MCHEmul::PhysicalStorage* CHARROM = 
+		new MCHEmul::PhysicalStorage (_CHARROM, MCHEmul::PhysicalStorage::Type::_ROM, 0x1000);			// 4k
+	MCHEmul::PhysicalStorage* KERNELROM	= 
+		new MCHEmul::PhysicalStorage (_KERNELROM, MCHEmul::PhysicalStorage::Type::_ROM, 0x2000);		// 8k
 
 	// The map of phisical storages, used later...
-	MCHEmul::PhisicalStorages storages (
+	MCHEmul::PhysicalStorages storages (
 		{
 			{ _RAM, RAM },
 			{ _BASICROM, BASICROM },
@@ -75,43 +75,43 @@ MCHEmul::Memory::Content C64::Memory::standardMemoryContent ()
 	// Subsets
 	// ...Over the RAM and ROM as the CPU sees it
 	// Page 0
-	MCHEmul::PhisicalStorageSubset* PageZero = new MCHEmul::PhisicalStorageSubset 
+	MCHEmul::PhysicalStorageSubset* PageZero = new MCHEmul::PhysicalStorageSubset 
 		(_PAGEZERO_SUBSET, RAM, 0x0000, MCHEmul::Address ({ 0x00, 0x00 }, false), 0x0100);
 	// Stack
 	MCHEmul::Stack*  Stack = new MCHEmul::Stack 
 		(_STACK_SUBSET, RAM, 0x0100, MCHEmul::Address ({ 0x00, 0x01 }, false), 0x0100);
 	// Pure RAM. A piece used by BASIC (40k)
-	MCHEmul::PhisicalStorageSubset* RAM0 = new MCHEmul::PhisicalStorageSubset 
+	MCHEmul::PhysicalStorageSubset* RAM0 = new MCHEmul::PhysicalStorageSubset 
 		(_RAM0_SUBSET, RAM, 0x0200, MCHEmul::Address ({ 0x00, 0x02 }, false), 0x9e00); 					// 40k pure (a bit used by BASIC)
 	// Where the basic is can be either ROM o RAM (depends on bits in position 1 of the page 0)	
-	MCHEmul::PhisicalStorageSubset* BasicROM = new MCHEmul::PhisicalStorageSubset
+	MCHEmul::PhysicalStorageSubset* BasicROM = new MCHEmul::PhysicalStorageSubset
 		(_BASICROM_SUBSET, BASICROM, 0x0000, MCHEmul::Address ({ 0x00, 0xa0 }, false), 0x2000);	
-	MCHEmul::PhisicalStorageSubset* BasicRAM = new MCHEmul::PhisicalStorageSubset
+	MCHEmul::PhysicalStorageSubset* BasicRAM = new MCHEmul::PhysicalStorageSubset
 		(_BASICRAM_SUBSET, RAM, 0x0a000, MCHEmul::Address ({ 0x00, 0xa0 }, false), 0x2000);				// 8k (over BasicROM)
 	// 	Pure RAM (4k)
-	MCHEmul::PhisicalStorageSubset* RAM1 = new MCHEmul::PhisicalStorageSubset
+	MCHEmul::PhysicalStorageSubset* RAM1 = new MCHEmul::PhysicalStorageSubset
 		(_RAM1_SUBSET, RAM, 0x0c000, MCHEmul::Address ({ 0x00, 0xc0 }, false), 0x1000);					// 4k
 	// Where the CharROM is defined we have also the access to the chips (VIC, SID,...)
-	MCHEmul::PhisicalStorageSubset* CharROM = new MCHEmul::PhisicalStorageSubset
+	MCHEmul::PhysicalStorageSubset* CharROM = new MCHEmul::PhysicalStorageSubset
 		(_CHARROM_SUBSET, CHARROM, 0x0000, MCHEmul::Address ({ 0x00, 0xd0 }, false), 0x1000);
-	MCHEmul::PhisicalStorageSubset* VICIIRegisters = new C64::VICIIRegisters (_VICREGS_SUBSET, RAM);
-	MCHEmul::PhisicalStorageSubset* SIDRegisters = new MCHEmul::PhisicalStorageSubset
+	MCHEmul::PhysicalStorageSubset* VICIIRegisters = new C64::VICIIRegisters (_VICREGS_SUBSET, RAM);
+	MCHEmul::PhysicalStorageSubset* SIDRegisters = new MCHEmul::PhysicalStorageSubset
 		(_SIDREGS_SUBSET, RAM, 0xd400, MCHEmul::Address ({ 0x00, 0xd4 }, false), 0x0400);
-	MCHEmul::PhisicalStorageSubset* ColorRAM = new C64::ColorRAMMemory (_COLOR_SUBSET, RAM);
-	MCHEmul::PhisicalStorageSubset* CIA1 = new C64::CIA1Registers (_CIA1_SUBSET, RAM);
-	MCHEmul::PhisicalStorageSubset* CIA2 = new C64::CIA2Registers (_CIA2_SUBSET, RAM);
-	MCHEmul::PhisicalStorageSubset* IO1 = new MCHEmul::PhisicalStorageSubset 
+	MCHEmul::PhysicalStorageSubset* ColorRAM = new C64::ColorRAMMemory (_COLOR_SUBSET, RAM);
+	MCHEmul::PhysicalStorageSubset* CIA1 = new C64::CIA1Registers (_CIA1_SUBSET, RAM);
+	MCHEmul::PhysicalStorageSubset* CIA2 = new C64::CIA2Registers (_CIA2_SUBSET, RAM);
+	MCHEmul::PhysicalStorageSubset* IO1 = new MCHEmul::PhysicalStorageSubset 
 		(_IO1_SUBSET, RAM, 0xde00, MCHEmul::Address ({ 0x00, 0xde }, false), 0x0100); 
-	MCHEmul::PhisicalStorageSubset* IO2 = new MCHEmul::PhisicalStorageSubset 
+	MCHEmul::PhysicalStorageSubset* IO2 = new MCHEmul::PhysicalStorageSubset 
 		(_IO2_SUBSET, RAM, 0xdf00, MCHEmul::Address ({ 0x00, 0xdf }, false), 0x0100); 
 	// Where the kernel is defined can be eiher RAM or ROM (
-	MCHEmul::PhisicalStorageSubset* KernelROM = new MCHEmul::PhisicalStorageSubset 
+	MCHEmul::PhysicalStorageSubset* KernelROM = new MCHEmul::PhysicalStorageSubset 
 		(_KERNELROM_SUBSET, KERNELROM, 0x0000, MCHEmul::Address ({ 0x00, 0xe0 }, false), 0x2000);
-	MCHEmul::PhisicalStorageSubset* KernelRAM = new MCHEmul::PhisicalStorageSubset 
+	MCHEmul::PhysicalStorageSubset* KernelRAM = new MCHEmul::PhysicalStorageSubset 
 		(_KERNELRAM_SUBSET, RAM, 0xe000, MCHEmul::Address ({ 0x00, 0xe0 }, false), 0x2000);				// 8k (over KernelROM)
 
 	// A map with the subsets swwn from the CPU perspective
-	MCHEmul::PhisicalStorageSubsets cpusubsets (
+	MCHEmul::PhysicalStorageSubsets cpusubsets (
 		{
 			{ _PAGEZERO_SUBSET,		PageZero }, 
 			{ _STACK_SUBSET,		Stack }, 
@@ -133,28 +133,28 @@ MCHEmul::Memory::Content C64::Memory::standardMemoryContent ()
 
 	// And same like the VICII chips sees it...
 	// Bank 0
-	MCHEmul::PhisicalStorageSubset* Bank0RAM0 = new MCHEmul::PhisicalStorageSubset 
+	MCHEmul::PhysicalStorageSubset* Bank0RAM0 = new MCHEmul::PhysicalStorageSubset 
 		(_BANK0RAM0_SUBSET, RAM, 0x0000, MCHEmul::Address ({ 0x00, 0x00 }, false), 0x1000);
-	MCHEmul::PhisicalStorageSubset* Bank0CharROM = new MCHEmul::PhisicalStorageSubset 
+	MCHEmul::PhysicalStorageSubset* Bank0CharROM = new MCHEmul::PhysicalStorageSubset 
 		(_BANK0CHARROM_SUBSET, CHARROM, 0x0000, MCHEmul::Address ({ 0x00, 0x10 }, false), 0x1000);
-	MCHEmul::PhisicalStorageSubset* Bank0RAM1 = new MCHEmul::PhisicalStorageSubset 
+	MCHEmul::PhysicalStorageSubset* Bank0RAM1 = new MCHEmul::PhysicalStorageSubset 
 		(_BANK0RAM1_SUBSET, RAM, 0x2000, MCHEmul::Address ({ 0x00, 0x20 }, false), 0x2000);
 	// Bank 1
-	MCHEmul::PhisicalStorageSubset* Bank1RAM = new MCHEmul::PhisicalStorageSubset 
+	MCHEmul::PhysicalStorageSubset* Bank1RAM = new MCHEmul::PhysicalStorageSubset 
 		(_BANK1RAM_SUBSET, RAM, 0x4000, MCHEmul::Address ({ 0x00, 0x40 }, false), 0x4000);
 	// Bank 2
-	MCHEmul::PhisicalStorageSubset* Bank2RAM0 = new MCHEmul::PhisicalStorageSubset 
+	MCHEmul::PhysicalStorageSubset* Bank2RAM0 = new MCHEmul::PhysicalStorageSubset 
 		(_BANK2RAM0_SUBSET, RAM, 0x8000, MCHEmul::Address ({ 0x00, 0x80 }, false), 0x1000);
-	MCHEmul::PhisicalStorageSubset* Bank2CharROM = new MCHEmul::PhisicalStorageSubset 
+	MCHEmul::PhysicalStorageSubset* Bank2CharROM = new MCHEmul::PhysicalStorageSubset 
 		(_BANK2CHARROM_SUBSET, CHARROM, 0x0000, MCHEmul::Address ({ 0x00, 0x90 }, false), 0x1000);
-	MCHEmul::PhisicalStorageSubset* Bank2RAM1 = new MCHEmul::PhisicalStorageSubset 
+	MCHEmul::PhysicalStorageSubset* Bank2RAM1 = new MCHEmul::PhysicalStorageSubset 
 		(_BANK2RAM1_SUBSET, RAM, 0xa000, MCHEmul::Address ({ 0x00, 0xa0 }, false), 0x2000);
 	// Bank 3
-	MCHEmul::PhisicalStorageSubset* Bank3RAM = new MCHEmul::PhisicalStorageSubset 
+	MCHEmul::PhysicalStorageSubset* Bank3RAM = new MCHEmul::PhysicalStorageSubset 
 		(_BANK3RAM_SUBSET, RAM, 0xc000, MCHEmul::Address ({ 0x00, 0xc0 }, false), 0x4000);
 
 	// The map with the subsets from the VICII perspective
-	MCHEmul::PhisicalStorageSubsets vicIIsubsets (
+	MCHEmul::PhysicalStorageSubsets vicIIsubsets (
 		{
 			{ _BANK0RAM0_SUBSET,	Bank0RAM0 },
 			{ _BANK0CHARROM_SUBSET,	Bank0CharROM},
@@ -167,7 +167,7 @@ MCHEmul::Memory::Content C64::Memory::standardMemoryContent ()
 		});
 
 	// A map with all the subsets possible...
-	MCHEmul::PhisicalStorageSubsets allsubsets (
+	MCHEmul::PhysicalStorageSubsets allsubsets (
 		{
 			{ _PAGEZERO_SUBSET,		PageZero }, 
 			{ _STACK_SUBSET,		Stack }, 
@@ -203,7 +203,7 @@ MCHEmul::Memory::Content C64::Memory::standardMemoryContent ()
 
 	// ...and finally the memory that is the result...
 	MCHEmul::Memory::Content result;
-	result._phisicalStorages = storages;
+	result._physicalStorages = storages;
 	result._subsets = allsubsets;
 	result._views = MCHEmul::MemoryViews (
 		{

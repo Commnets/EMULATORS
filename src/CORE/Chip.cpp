@@ -1,12 +1,15 @@
 #include <CORE/Chip.hpp>
+#include <CORE/FmterBuilder.hpp>
+#include <CORE/Formatter.hpp>
 
 // ---
-std::ostream& MCHEmul::operator << (std::ostream& o, const MCHEmul::Chip& c)
+MCHEmul::InfoStructure MCHEmul::Chip::getInfoStructure () const
 {
-	o << c._id << std::endl;
-	o << c._attributes;
-	if (c.memoryRef () != nullptr)
-		o << std::endl << (*c._memory);
+	MCHEmul::InfoStructure result;
 
-	return (o);
+	result.add ("ID",		_id);
+	result.add ("ATTRS",	_attributes);
+	result.add ("Memory",	_memory -> getInfoStructure ());
+
+	return (result);
 }

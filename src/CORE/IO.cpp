@@ -1,9 +1,12 @@
 #include <CORE/IO.hpp>
 #include <CORE/global.hpp>
+#include <CORE/FmterBuilder.hpp>
+#include <CORE/Formatter.hpp>
 
 // ---
 MCHEmul::IODevice::IODevice (MCHEmul::IODevice::Type t, int id, const MCHEmul::Attributes& attrs)
-	: _type (t), 
+	: MCHEmul::InfoClass ("IODevice"),
+	  _type (t), 
 	  _id (id), 
 	  _chips (), 
 	  _attributes (),
@@ -67,18 +70,17 @@ bool MCHEmul::IODevice::simulate ()
 }
 
 // ---
-std::ostream& MCHEmul::operator << (std::ostream& o, const MCHEmul::IODevice& d)
+MCHEmul::InfoStructure MCHEmul::IODevice::getInfoStructure () const
 {
-	o << d._id << std::endl;
-	o << d._attributes;
+	MCHEmul::InfoStructure result;
 
-	bool f = true;
-	for (const auto& i : d._peripherals)
-	{
-		if (f) o << std::endl;
-		o << i.second;
-		f = false;
-	}
+	result.add ("ID", _id);
+	result.add ("ATTRS", _attributes);
 
-	return (o);
+	MCHEmul::InfoStructure pers;
+	for (const auto& i : _peripherals)
+		pers.add (std::to_string (i.first), i.second -> getInfoStructure ());
+	result.add ("IOPERIPHERALS", pers);
+
+	return (result);
 }

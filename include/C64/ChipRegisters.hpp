@@ -19,17 +19,23 @@
 namespace C64
 {
 	/** Just to print basically any register. */
-	class ChipRegisters : public MCHEmul::PhisicalStorageSubset
+	class ChipRegisters : public MCHEmul::PhysicalStorageSubset
 	{
 		public:
-		ChipRegisters (int id, MCHEmul::PhisicalStorage* ps, size_t pp, const MCHEmul::Address& a, size_t s)
-			: MCHEmul::PhisicalStorageSubset (id, ps, pp, a, s)
+		ChipRegisters (int id, MCHEmul::PhysicalStorage* ps, size_t pp, const MCHEmul::Address& a, size_t s)
+			: MCHEmul::PhysicalStorageSubset (id, ps, pp, a, s)
 							{ }
 
 		/** To be redefined later to return the specific number of registers of the chip. */
 		virtual size_t numberRegisters () const = 0;
+		/** To get the value of the registers. */
+		virtual std::vector <MCHEmul::UByte> valueRegisters () const;
 
-		friend std::ostream& operator << (std::ostream& o, const ChipRegisters& vr);
+		/**
+		  *	The name of the fields are: \n
+		  * BYTES = Attribute: Bytes controlled by this register.
+		  */
+		virtual MCHEmul::InfoStructure getInfoStructure () const override;
 	};
 }
 

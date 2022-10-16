@@ -1,4 +1,4 @@
-/** \ingroup CPU */
+/** \ingroup CORE */
 /*@{*/
 
 /**	
@@ -57,6 +57,7 @@ namespace MCHEmul
 		void set (const UBytes& v)
 							{ Register::set (v); }
 
+		/** The status of every bit is show next to its name. */
 		std::string asString () const;
 
 		friend std::ostream& operator << (std::ostream& o, const StatusRegister& r)

@@ -1,4 +1,4 @@
-/** \ingroup CPU */
+/** \ingroup CORE */
 /*@{*/
 
 /**	
@@ -81,10 +81,12 @@ namespace MCHEmul
 		UByte operator [] (size_t p) const
 							{ return (_values [p]); }
 
-		std::string asString (UByte::OutputFormat oF, char s /** separator */, size_t l = 0 /** Minimum length per UByte */) const
-							{ return (_values.asString (oF, s, l)); }
+		std::string asString () const
+							{ return (_name + "(" + std::to_string (_id) + "):$" + 
+								_values.asString (UByte::OutputFormat::_HEXA, '\0', 2)); }
 			
-		friend std::ostream& operator << (std::ostream& o, const Register& r);
+		friend std::ostream& operator << (std::ostream& o, const Register& r)
+							{ return (o << r.asString ()); }
 
 		protected:
 		const int _id;

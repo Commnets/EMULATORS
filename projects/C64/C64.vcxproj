@@ -20,6 +20,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\include\C64\C64.hpp" />
+    <ClInclude Include="..\..\include\C64\C64Emulator.hpp" />
     <ClInclude Include="..\..\include\C64\ChipRegisters.hpp" />
     <ClInclude Include="..\..\include\C64\CIA1.hpp" />
     <ClInclude Include="..\..\include\C64\CIA2.hpp" />
@@ -44,6 +45,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\C64\C64.cpp" />
+    <ClCompile Include="..\..\src\C64\C64Emulator.cpp" />
     <ClCompile Include="..\..\src\C64\ChipRegisters.cpp" />
     <ClCompile Include="..\..\src\C64\CIA1.cpp" />
     <ClCompile Include="..\..\src\C64\CIA1Registers.cpp" />
@@ -121,26 +123,26 @@
     <OutDir>..\..\lib\$(PlatformShortName)\</OutDir>
     <IntDir>..\..\obj\$(ProjectName)\$(PlatformShortName)\$(Configuration)\</IntDir>
     <TargetName>$(ProjectName)D</TargetName>
-    <RunCodeAnalysis>true</RunCodeAnalysis>
+    <RunCodeAnalysis>false</RunCodeAnalysis>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
     <OutDir>..\..\lib\$(PlatformShortName)\</OutDir>
     <IntDir>..\..\obj\$(ProjectName)\$(PlatformShortName)\$(Configuration)\</IntDir>
     <TargetName>$(ProjectName)D</TargetName>
-    <RunCodeAnalysis>true</RunCodeAnalysis>
+    <RunCodeAnalysis>false</RunCodeAnalysis>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
     <OutDir>..\..\lib\$(PlatformShortName)\</OutDir>
     <IntDir>..\..\obj\$(ProjectName)\$(PlatformShortName)\$(Configuration)\</IntDir>
-    <RunCodeAnalysis>true</RunCodeAnalysis>
+    <RunCodeAnalysis>false</RunCodeAnalysis>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
     <OutDir>..\..\lib\$(PlatformShortName)\</OutDir>
     <IntDir>..\..\obj\$(ProjectName)\$(PlatformShortName)\$(Configuration)\</IntDir>
-    <RunCodeAnalysis>true</RunCodeAnalysis>
+    <RunCodeAnalysis>false</RunCodeAnalysis>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -151,7 +153,7 @@
       <PreprocessorDefinitions>WIN32;_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>..\..\include;$(SDL_HOME)\include;$(SDLIMAGE_HOME);$(SDLMIXER_HOME)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\include;$(SDL_HOME)\include;$(SDLIMAGE_HOME);$(SDLMIXER_HOME);$(RAKNET_HOME)\Source</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -167,7 +169,7 @@
       <PreprocessorDefinitions>_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>..\..\include;$(SDL_HOME)\include;$(SDLIMAGE_HOME);$(SDLMIXER_HOME)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\include;$(SDL_HOME)\include;$(SDLIMAGE_HOME);$(SDLMIXER_HOME);$(RAKNET_HOME)\Source</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -185,7 +187,7 @@
       <PreprocessorDefinitions>WIN32;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>..\..\include;$(SDL_HOME)\include;$(SDLIMAGE_HOME);$(SDLMIXER_HOME)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\include;$(SDL_HOME)\include;$(SDLIMAGE_HOME);$(SDLMIXER_HOME);$(RAKNET_HOME)\Source</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -205,7 +207,7 @@
       <PreprocessorDefinitions>NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>..\..\include;$(SDL_HOME)\include;$(SDLIMAGE_HOME);$(SDLMIXER_HOME)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\include;$(SDL_HOME)\include;$(SDLIMAGE_HOME);$(SDLMIXER_HOME);$(RAKNET_HOME)\Source</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>

@@ -19,7 +19,7 @@
 
 namespace C64
 {
-	class CIATimer
+	class CIATimer : public MCHEmul::InfoClass
 	{
 		public:
 		/** To determine the behaviour of the Timer onces it reaches the 0. */
@@ -50,7 +50,8 @@ namespace C64
 		  * TIME = 0 (in thenth of second)
 		  */
 		CIATimer (int id /** unique in the CIA chip. */)
-			: _id (id) 
+			: MCHEmul::InfoClass ("Clock"),
+			  _id (id)
 							{ initialize (); }
 
 		/** To initialize the timer. By default it is not enabled. */
@@ -104,7 +105,16 @@ namespace C64
 			It invokes also some private methods. */
 		void simulate (MCHEmul::CPU* cpu, CIATimer* t = nullptr);
 
-		friend std::ostream& operator << (std::ostream& o, const CIATimer& ct);
+		/**
+		  *	The name of the fields are: \n
+		  * RUN				= Attribute with the run mode of the timer. \n
+		  *	COUNT			= Attribute with the count mode of the timer. \n
+		  * STATUS			= Attribute with YES if active and NO if other case. \n
+		  *	IRQ				= Attribute with YES when IRQ are enabled and NO in other cas.
+		  *	VALUE			= Attribute with the current value of the timer.
+		  *	INITIALVALUE	= Attribute with the initial value of the timer.
+		  */
+		virtual MCHEmul::InfoStructure getInfoStructure () const override;
 
 		private:
 		// Managing the timer...

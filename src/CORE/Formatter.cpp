@@ -2,26 +2,14 @@
 #include <CORE/FmterBuilder.hpp>
 #include <sstream>
 
-const MCHEmul::Formatter MCHEmul::Formatter::_nullFormatter = MCHEmul::Formatter ({ });
-
 // ---
-std::ostream& MCHEmul::operator << (std::ostream& o, const MCHEmul::Formatter::Set& s)
-{
-	MCHEmul::FormatterBuilder::instance () -> setDefaultFormatter (s._format);
-
-	return (o);
-}
-
-// ---
-MCHEmul::Formatter::Formatter (const MCHEmul::Strings& l)
-	: _pieces ()
+void MCHEmul::StdFormatter::initialize ()
 {
 	bool fL = true;
-	for (const auto& i : l)
+	for (const auto& i : _lines)
 	{
-		if (!fL) 
-			_pieces.push_back (MCHEmul::Formatter::Piece 
-				(MCHEmul::Formatter::Piece::Type::_TEXT, "\n"));
+		if (!fL)
+			_pieces.push_back (new MCHEmul::StdFormatter::FixTextPiece ("\n"));
 
 		fL = false;
 
@@ -33,8 +21,8 @@ MCHEmul::Formatter::Formatter (const MCHEmul::Strings& l)
 			// There is no any...
 			if (oi == std::string::npos)
 			{
-				_pieces.push_back (MCHEmul::Formatter::Piece
-					(MCHEmul::Formatter::Piece::Type::_TEXT, l));
+				_pieces.push_back (new MCHEmul::StdFormatter::FixTextPiece (l));
+
 				l = "";
 
 				continue;
@@ -46,96 +34,194 @@ MCHEmul::Formatter::Formatter (const MCHEmul::Strings& l)
 			// So if it the situation, then no data definition at all..
 			if (of == std::string::npos || of == (oi + 1)) 
 			{
-				_pieces.push_back (MCHEmul::Formatter::Piece
-					(MCHEmul::Formatter::Piece::Type::_TEXT, l.substr (oi) + '@'));
+				_pieces.push_back (new MCHEmul::StdFormatter::FixTextPiece (l.substr (oi) + '@'));
+				
 				l = l.substr (of + 1);
 
 				continue;
 			}
 
-			// It seems there is a data definition...
-			// It could be either a _DATA or an _ARRAY...
-			// Initially it is supposed that it is _DATA!
-			MCHEmul::Formatter::Piece::Type tp = MCHEmul::Formatter::Piece::Type::_DATA;
-			// The name of the field is everything...
+			// It seems that a data definition has been found
+			// The type of the field
+			MCHEmul::StdFormatter::Piece::Type tp = MCHEmul::StdFormatter::Piece::Type::_DATA;
+			// The name of the field is, initially, everything...
 			std::string fName = MCHEmul::trim (l.substr (oi + 1, of - oi - 1));
-			// ...and there is nothing to print after ever!
+			// ...the piece can have parameters
+			MCHEmul::Strings prms;
+			// ...and can be also and array, defined by what is needed to separate the elements...
 			std::string pt = "";
-			// If would be an array just when the character "?" is included in the name
-			// What is after that symbol will be inserting after formtting it!
+
+			// Looks for the parameters first...
+			size_t pPI = fName.find ('{');
+			if (pPI != std::string::npos)
+			{
+				size_t pPF = fName.find ('}');
+				if (pPF != std::string::npos && pPF > pPI)
+				{
+					std::string prmsS = fName.substr (pPI + 1, pPF - pPI - 1);
+					// A comma in the parameter can be got wrong by "getElementsFrom"...
+					prmsS = MCHEmul::replaceAll (prmsS, "\\,", "\\&2C");
+					// The spaces are eliminated in getElementsFrom, so...
+					prmsS = MCHEmul::replaceAll (prmsS, "\\ ", "\\&20");
+					prms = MCHEmul::getElementsFrom (prmsS, ',');
+
+					fName = fName.substr (0, pPI) + fName.substr (pPF + 1);
+				}
+			}
+
+			// Then analyze whether is a structure...
 			size_t oK = fName.find ('?');
+			if (oK != std::string::npos)
+				tp = MCHEmul::StdFormatter::Piece::Type::_ARRAY;
+			else
+			{
+				// ...or an invocation to another formatter...
+				oK = fName.find ('>');
+				if (oK != std::string::npos)
+					tp = MCHEmul::StdFormatter::Piece::Type::_INVOKE;
+			}
+
+			// If found, rebuilt up the name and the post...
 			if (oK != std::string::npos)
 			{
 				if (oK != (fName.length () - 1))
 					pt = fName.substr (oK + 1);
 				fName = fName.substr (0, oK);
-				tp = MCHEmul::Formatter::Piece::Type::_ARRAY;
 			}
 
 			// Just in case, convert the \\n and \\t into a proper control code!
-			if (pt == "\\n") pt = "\n";
-			else if (pt == "\\t") pt = "\t";
+			pt = MCHEmul::replaceAll (pt, "\\n", "\n");
+			pt = MCHEmul::replaceAll (pt, "\\t", "\t");
 
-			// Insert the data definition...
-			_pieces.push_back (MCHEmul::Formatter::Piece
-				(MCHEmul::Formatter::Piece::Type::_TEXT, l.substr (0, oi)));
-			_pieces.push_back (MCHEmul::Formatter::Piece (tp, fName, pt));
+			// There will be a fix text before the definition of the data...
+			if (oi != 0)
+				_pieces.push_back (new MCHEmul::StdFormatter::FixTextPiece (l.substr (0, oi)));
+			// ...and a maybe a piece if there is a name...
+			if (fName != "")
+				_pieces.push_back (createPiece (tp, fName, prms, pt));
+
 			l = l.substr (of + 1);
 		}
 	}
 }
 
 // ---
-std::string MCHEmul::Formatter::format (const MCHEmul::Attributes& a) const
+std::string MCHEmul::StdFormatter::format (const MCHEmul::InfoStructure& iS) const
 {
 	std::string result = "";
 
-	// If nothing has been defined...
+	// If no piece has been defined...
 	if (_pieces.empty ())
-	{
-		std::stringstream ss;
-		ss << a; // A very basic output is choosen...
-		result = ss.str ();
-	}
-	// Otherwise it has to be treaten...
+		result = iS.asString (_defSeparator, _defEqual, "", "", _printFirst); // a very basic conversion is defined...
+	// Otherwise it has to be treaten piece by piece...
 	else
-	{
 		for (const auto& i : _pieces)
-		{
-			switch (i._type)
-			{
-				case MCHEmul::Formatter::Piece::Type::_DATA:
-				{
-					MCHEmul::Attributes::const_iterator j = a.find (i._data);
-					if (j != a.end ())
-						result += (*j).second;
-				}
+			result += i -> format (iS);
 
-				break;
+	return (result);
+}
 
-				case MCHEmul::Formatter::Piece::Type::_ARRAY:
-				{
-					bool f = true; // First element in the array?
-					size_t ct = 0; // Element counter!
-					bool fd = true; // To indicate whether the array element is or not found...
-					while (fd)
-					{
-						MCHEmul::Attributes::const_iterator j = a.find (i._data + std::to_string (ct++));
-						if (fd = (j != a.end ()))
-						{
-							if (!f) result += i._post;
-							f = false;
-							result += (*j).second;
-						}
-					}
-				}
+// ---
+MCHEmul::Attributes MCHEmul::StdFormatter::Piece::attrsFromStrings (const MCHEmul::Strings& strs)
+{
+	MCHEmul::Attributes result;
 
-				break;
+	for (const auto& i : strs)
+	{
+		size_t p = i.find ('=');
+		if (p == std::string::npos)
+			continue;
 
-				default:
-					result += i._data;
-			}
-		}
+		std::string aV = i.substr (p + 1);
+		aV = MCHEmul::replaceAll (aV, "\\&2C", ","); // The comma is put back...
+		aV = MCHEmul::replaceAll (aV, "\\&20", " "); // ...and the same with the space...
+		result.insert (MCHEmul::Attributes::value_type (MCHEmul::trim (i.substr (0, p)), aV));
+	}
+
+	return (result);
+}
+
+// ---
+std::string MCHEmul::StdFormatter::TablePiece::format (const MCHEmul::InfoStructure& iS) const
+{
+	std::string by = iS.attribute (_name);
+
+	size_t sb = std::numeric_limits <size_t>::max ();
+	std::string sbs = attribute ("blocksize");
+	if (sbs != "") sb = (size_t)std::atoi (sbs.c_str ());
+
+	char sp = ',';
+	std::string sps = attribute ("listsep");
+	if (sps != "") sp = sps[0];
+
+	std::string tsp = attribute ("tablesep");
+
+	size_t es = 0;
+	std::string ess = attribute ("minsize");
+	if (ess != "") es = (size_t)std::atoi (ess.c_str ());
+
+	return (MCHEmul::tableFormat (MCHEmul::getElementsFrom (by, sp), tsp, es, sb));
+}
+
+// ---
+std::string MCHEmul::StdFormatter::ArrayPiece::format (const MCHEmul::InfoStructure& iS) const
+{
+	if (!iS.existsInfoStructure (_name))
+		return ("");
+
+	MCHEmul::InfoStructure sIS = iS.infoStructure (_name);
+	MCHEmul::Formatter* dF = MCHEmul::FormatterBuilder::instance () -> defaultFormatter ();
+	if (!MCHEmul::instanceOf <MCHEmul::StdFormatter> (dF))
+		return (""); // Not valid...
+
+	MCHEmul::StdFormatter* sDF = static_cast <MCHEmul::StdFormatter*> (dF);
+	sDF -> setDefFormatElements (_post, attribute ("equal"), attribute ("key") == MCHEmul::_YES);
+	return (sDF -> format (sIS));
+}
+
+// ---
+std::string MCHEmul::StdFormatter::InvokePiece::format (const MCHEmul::InfoStructure& iS) const
+{
+	if (!iS.existsInfoStructure (_name))
+		return ("");
+
+	MCHEmul::InfoStructure sIS = iS.infoStructure (_name);
+	MCHEmul::Formatter* fmter = MCHEmul::FormatterBuilder::instance () -> formatter (_name); // It could be the default one...
+	if (!MCHEmul::instanceOf <MCHEmul::StdFormatter> (fmter))
+		return (""); // Not valid...
+
+	MCHEmul::StdFormatter* sFmter = static_cast <MCHEmul::StdFormatter*> (fmter);
+	return (sFmter -> format (sIS) + _post);
+}
+
+// ---
+MCHEmul::StdFormatter::Piece* MCHEmul::StdFormatter::createPiece
+	(MCHEmul::StdFormatter::Piece::Type tp, const std::string& n, const MCHEmul::Strings& prms, const std::string& pt) const
+{
+	MCHEmul::StdFormatter::Piece* result = nullptr;
+
+	switch (tp)
+	{
+		case MCHEmul::StdFormatter::Piece::Type::_TEXT:
+			result = new MCHEmul::StdFormatter::FixTextPiece (n);
+			break;
+
+		case MCHEmul::StdFormatter::Piece::Type::_DATA:
+			result = (n == "BYTES") 
+				? (MCHEmul::StdFormatter::Piece*) new MCHEmul::StdFormatter::TablePiece (n, prms, pt) 
+				: (MCHEmul::StdFormatter::Piece*) new MCHEmul::StdFormatter::AttributePiece (n, prms, pt);
+			break;
+
+		case MCHEmul::StdFormatter::Piece::Type::_ARRAY:
+			result = new MCHEmul::StdFormatter::ArrayPiece (n, prms, pt);
+			break;
+
+		case MCHEmul::StdFormatter::Piece::Type::_INVOKE:
+			result = new MCHEmul::StdFormatter::InvokePiece (n, prms, pt);
+			break;
+
+		default:
+			break;
 	}
 
 	return (result);

@@ -1,4 +1,4 @@
-/** \ingroup CPU */
+/** \ingroup CORE */
 /*@{*/
 
 /**	
@@ -15,6 +15,7 @@
 #define __MCHEMUL_IOPERIPHERAL__
 
 #include <CORE/global.hpp>
+#include <CORE/InfoClass.hpp>
 
 namespace MCHEmul
 {
@@ -24,7 +25,7 @@ namespace MCHEmul
 		For some IODevices the number and type (and manufacturers) of elements that can be connected might be wide and different. \n
 		And the simulation of each can even be very different. \n
 		This is the reason to represent them in a separate class. */
-	class IOPeripheral
+	class IOPeripheral : public InfoClass
 	{
 		public:
 		friend IODevice;
@@ -32,7 +33,8 @@ namespace MCHEmul
 		IOPeripheral () = delete;
 
 		IOPeripheral (int id, const Attributes& attrs = { })
-			: _id (id), _attributes (), _device (nullptr) /** Set when attached. */
+			: InfoClass ("IOPeripheral"),
+			  _id (id), _attributes (), _device (nullptr) /** Set when attached. */
 							{ }
 
 		IOPeripheral (const IOPeripheral&) = delete;
@@ -64,7 +66,15 @@ namespace MCHEmul
 			Should return true if everything was ok. */
 		virtual bool simulate () = 0;
 
-		friend std::ostream& operator << (std::ostream& o, const IOPeripheral& d);
+		/**
+		  *	The name of the fields are: \n
+		  *	ID		= Attribute: Id of the Peripheral. \n
+		  *	ATTRS	= InfoStructure: Attributes defining the Peripheral. \n
+		  */
+		virtual InfoStructure getInfoStructure () const override;
+
+		friend std::ostream& operator << (std::ostream& o, const IOPeripheral& d)
+							{ return (o << (*(dynamic_cast <const InfoClass*> (&d)))); }
 
 		protected:
 		const int _id; // Adjusted at construction level

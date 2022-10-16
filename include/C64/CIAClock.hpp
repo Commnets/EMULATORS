@@ -19,11 +19,12 @@
 
 namespace C64
 {
-	class CIAClock
+	class CIAClock final : public MCHEmul::InfoClass
 	{
 		public:
 		CIAClock (int id /** unique in the CIA chip. */)
-			: _id (id) 
+			: MCHEmul::InfoClass ("Clock"),
+			  _id (id) 
 							{ initialize (); }
 
 		/** To initialize the timer. By default it is not enabled. */
@@ -82,7 +83,19 @@ namespace C64
 			It becomes back to false when it is read. */
 		void simulate (MCHEmul::CPU* cpu);
 
-		friend std::ostream& operator << (std::ostream& o, const CIAClock& cc);
+		/**
+		  *	The name of the fields are: \n
+		  *	IRQ				= Attribute with YES when IRQ are enabled and NO in other case.
+		  *	HOURS			= Attribute with the current value of the hours.
+		  *	MINUTES			= Attribute with the current value of the minutes.
+		  *	SECONDS			= Attribute with the current value of the seconds.
+		  *	DECSECONDS		= Attribute with the current value of the tenth of seconds.
+		  *	AHOURS			= Attribute with the current value of the alarm for hours.
+		  *	AMINUTES		= Attribute with the current value of the alarm for minutes.
+		  *	ASECONDS		= Attribute with the current value of the alarm for seconds.
+		  *	ADECSECONDS		= Attribute with the current value of the alarm for tenth of seconds.
+		  */
+		virtual MCHEmul::InfoStructure getInfoStructure () const override;
 
 		private:
 		// Managing the timer...
