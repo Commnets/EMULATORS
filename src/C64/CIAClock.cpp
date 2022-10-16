@@ -51,15 +51,15 @@ MCHEmul::InfoStructure C64::CIAClock::getInfoStructure () const
 {
 	MCHEmul::InfoStructure result;
 
-	result.add ("IRQ",			_IRQEnabled);
-	result.add ("HOURS",		_hours);
-	result.add ("MINUTES",		_minutes);
-	result.add ("SECONDS",		_seconds);
-	result.add ("DECSECONDS",	_tenthsSecond);
-	result.add ("AHOURS",		_alarmHours);
-	result.add ("AMINUTES",		_alarmMinutes);
-	result.add ("ASECONDS",		_alarmSeconds);
-	result.add ("ADECSECONDS",	_alarmTenthsSecond);
+	result.add ("IRQ",				_IRQEnabled);
+	result.add ("HOURS",			_hours);
+	result.add ("MINUTES",			_minutes);
+	result.add ("SECONDS",			_seconds);
+	result.add ("TENTHSECONDS",		_tenthsSecond);
+	result.add ("AHOURS",			_alarmHours);
+	result.add ("AMINUTES",			_alarmMinutes);
+	result.add ("ASECONDS",			_alarmSeconds);
+	result.add ("ATENTHSECONDS",	_alarmTenthsSecond);
 
 	return (result);
 }

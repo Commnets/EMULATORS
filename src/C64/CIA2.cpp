@@ -45,10 +45,10 @@ MCHEmul::InfoStructure C64::CIA2::getInfoStructure () const
 {
 	MCHEmul::InfoStructure result = MCHEmul::Chip::getInfoStructure ();
 
-	result.add ("REGS",		_CIA2Registers -> getInfoStructure ());
-	result.add ("TIMERA",	_timerA.getInfoStructure ());
-	result.add ("TIMERB",	_timerB.getInfoStructure ());
-	result.add ("CLOCK",	_clock.getInfoStructure ());
+	result.add ("Registers",	_CIA2Registers -> getInfoStructure ());
+	result.add ("TimerA",		_timerA.getInfoStructure ());
+	result.add ("TimerB",		_timerB.getInfoStructure ());
+	result.add ("Clock",		_clock.getInfoStructure ());
 
 	return (result);
 }

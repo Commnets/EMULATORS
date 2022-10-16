@@ -95,8 +95,8 @@ MCHEmul::InfoStructure C64::VICII::RasterData::getInfoStructure () const
 
 	result.add ("POSITION",		_currentPosition);
 	result.add ("POSITION0",	_currentPosition_0);
-	result.add ("FIRT",			_firstPosition_0);
-	result.add ("FIRT",			_lastPosition_0);
+	result.add ("FIRST",		_firstPosition_0);
+	result.add ("LAST",			_lastPosition_0);
 
 	return (result);
 }
@@ -106,8 +106,8 @@ MCHEmul::InfoStructure C64::VICII::Raster::getInfoStructure () const
 {
 	MCHEmul::InfoStructure result;
 
-	result.add ("RASTERX", _hRasterData.getInfoStructure ());
-	result.add ("RASTERY", _vRasterData.getInfoStructure ());
+	result.add ("RasterX", _hRasterData.getInfoStructure ());
+	result.add ("RasterY", _vRasterData.getInfoStructure ());
 
 	return (result);
 }
@@ -127,6 +127,8 @@ C64::VICII::VICII (const C64::VICII::RasterData& vd, const C64::VICII::RasterDat
 	  _isNewRasterLine (false),
 	  _lastVBlankEntered (false)
 {
+	setClassName ("VICII");
+
 	_format = SDL_AllocFormat (SDL_PIXELFORMAT_ARGB8888);
 }
 
@@ -300,10 +302,10 @@ bool C64::VICII::simulate (MCHEmul::CPU* cpu)
 // ---
 MCHEmul::InfoStructure C64::VICII::getInfoStructure () const
 {
-	MCHEmul::InfoStructure result;
+	MCHEmul::InfoStructure result = MCHEmul::GraphicalChip::getInfoStructure ();
 
-	result.add ("REGS",		_VICIIRegisters -> getInfoStructure ());
-	result.add ("RASTER",	_raster.getInfoStructure ());
+	result.add ("Registers",	_VICIIRegisters -> getInfoStructure ());
+	result.add ("Raster",		_raster.getInfoStructure ());
 
 	return (result);
 }

@@ -33,10 +33,12 @@ int _tmain (int argc, _TCHAR *argv [])
 	if (!myEmulator.initialize ()) 
 		return (1); // Exit with an error...
 
-	std::shared_ptr <MCHEmul::FormatterBuilder> fmtBld = 
-		MCHEmul::FormatterBuilder::instance ({ "./defformatters.fmt", "./conformatters.fmt"});
+	std::shared_ptr <MCHEmul::FormatterBuilder> fmtBld = MCHEmul::FormatterBuilder::instance ({ "C64formatters.fmt" });
 	std::cout << "---- CPU ---" << std::endl << *myEmulator.computer () -> cpu () << std::endl;
-	std::cout << "---- STACK -" << *myEmulator.computer () -> memory () -> stack () << std::endl;
+	std::cout << "---- STACK -" << std::endl << *myEmulator.computer () -> memory () -> stack () << std::endl;
+	std::cout << "---- VICII -" << std::endl << *dynamic_cast <C64::Commodore64*> (myEmulator.computer ()) -> vicII () << std::endl;
+	std::cout << "---- CIA1 --" << std::endl << *dynamic_cast <C64::Commodore64*> (myEmulator.computer ()) -> cia1 () << std::endl;
+	std::cout << "---- CIA2 --" << std::endl << *dynamic_cast <C64::Commodore64*> (myEmulator.computer ()) -> cia2 () << std::endl;
 
 	// The emulation is done using a console...
 	MCHEmul::Win32Console myConsole (&myEmulator, new C64::CommandBuilder);

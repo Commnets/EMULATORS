@@ -36,7 +36,7 @@ void MCHEmul::StdFormatter::initialize ()
 			{
 				_pieces.push_back (new MCHEmul::StdFormatter::FixTextPiece (l.substr (oi) + '@'));
 				
-				l = l.substr (of + 1);
+				l = (of == std::string::npos) ? "" : l.substr (of + 1);
 
 				continue;
 			}

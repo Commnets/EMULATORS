@@ -1,0 +1,51 @@
+#Console
+#Formats
+?defformatters.fmt
+#---
+;Architecture
+@ATTRS?{key=YES,equal==}\n@
+@NBYTES@ bytes, @NBITS@ bits, @NBYTESPERINST@ bytes per instruction
+Big Endian=@ENDIAN@
+#---
+#---
+;CPU
+#The info about the Architecture here
+@Architecture>@
+@REGS?{key=NO,equal=:},@
+@PC@
+@SR@
+#---
+#---
+;PhysicalStorageSubset
+Id:@ID@, Address:$@ADDRESS@, Size:@SIZE@
+ACTIVE=@ACTIVE@, READ=@READ@
+@BYTES{blocksize=16,listsep=\,,tablesep=\ ,minsize=2}@
+#---
+#---
+;MemoryView
+@STORAGES?{key=NO,equal==}\n@
+#---
+#---
+;Memory
+@STORAGES?{key=NO,equal==}\n@
+#---
+#---
+;Stack
+@PhysicalStorageSubset>@
+BACK=@BACK@, POINT LAST=@LAST@
+OVERFLOW=@OVERFLOW@
+EMPTY=@EMPTY@
+POSITION=@POSITION@
+#---
+#---
+;Chip
+Id:@ID@
+@ATTRS?\n@
+@Memory>@
+#---
+;Computer
+@ATTRS?\n@
+@CPU>@
+@CHIPS?{key=NO,equal==}\n@
+@DEVICES?{key=NO,equal==}\n@
+#---

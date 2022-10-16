@@ -44,10 +44,7 @@ void MCHEmul::Console::run ()
 {
 	bool exit = false;
 
-	// The formatter is stablished at the beginning of the running...
-	MCHEmul::FormatterBuilder::instance ({ "./defformatters.fmt", "./conformatters.fmt" /** The specific one for consoles. */});
-	MCHEmul::FormatterBuilder::instance () -> setDefaultFormatFile ("./conformatters.fmt");
-	MCHEmul::FormatterBuilder::instance () -> setDefaultFormatter (MCHEmul::FormatterBuilder::_noFormatter.get ());
+	MCHEmul::FormatterBuilder::instance ({ "./conformatters.fmt" /** The specific one for consoles. */ });
 
 	std::cout << _welcomeTxt;
 	std::cout << _commandPrompt;

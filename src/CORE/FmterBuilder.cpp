@@ -155,7 +155,8 @@ MCHEmul::Strings MCHEmul::FormatterBuilder::readLinesFrom (const std::string& nF
 
 				result.insert (result.end (), ils.begin (), ils.end ());
 			}
-			else result.push_back (lS); 
+			else 
+				result.push_back (lS); 
 		}
 
 		fFile.close ();

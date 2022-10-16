@@ -229,8 +229,8 @@ namespace C64
 
 			/**
 			  *	The name of the fields are: \n
-			  * RASTERX		= InfoStructure: Horizontal raster info.
-			  * RASTERY		= InfoStructure: Vertical raster info.
+			  * RasterX		= InfoStructure: Horizontal raster info.
+			  * RasterY		= InfoStructure: Vertical raster info.
 			  */
 			virtual MCHEmul::InfoStructure getInfoStructure () const override;
 
@@ -272,8 +272,8 @@ namespace C64
 
 		/**
 		  *	The name of the fields are: \n
-		  * REGS		= InfoStructure: Info about the registers.
-		  * RASTER		= InfoStructure: Info about the raster.
+		  * Registers	= InfoStructure: Info about the registers.
+		  * Raster		= InfoStructure: Info about the raster.
 		  */
 		virtual MCHEmul::InfoStructure getInfoStructure () const override;
 

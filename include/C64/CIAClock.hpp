@@ -89,11 +89,11 @@ namespace C64
 		  *	HOURS			= Attribute with the current value of the hours.
 		  *	MINUTES			= Attribute with the current value of the minutes.
 		  *	SECONDS			= Attribute with the current value of the seconds.
-		  *	DECSECONDS		= Attribute with the current value of the tenth of seconds.
+		  *	TENTHSECONDS	= Attribute with the current value of the tenth of seconds.
 		  *	AHOURS			= Attribute with the current value of the alarm for hours.
 		  *	AMINUTES		= Attribute with the current value of the alarm for minutes.
 		  *	ASECONDS		= Attribute with the current value of the alarm for seconds.
-		  *	ADECSECONDS		= Attribute with the current value of the alarm for tenth of seconds.
+		  *	ATENTHSECONDS	= Attribute with the current value of the alarm for tenth of seconds.
 		  */
 		virtual MCHEmul::InfoStructure getInfoStructure () const override;
 

@@ -52,10 +52,10 @@ namespace C64
 		/**
 		  *	The name of the fields are: \n
 		  * The ones comming from the parent class. \n
-		  * REGS	= InfoStructure: Value of the registers. \n
-		  *	TIMER1	= InfoStructure: Info about the timer 1. \n
-		  *	TIMER2	= InfoStructure: Info about the timer 2. \n
-		  *	CLOCK	= InfoStructure: Info about the clock. \n
+		  * Registers	= InfoStructure: Value of the registers. \n
+		  *	TimerA		= InfoStructure: Info about the timer A. \n
+		  *	TimerB		= InfoStructure: Info about the timer B. \n
+		  *	Clock		= InfoStructure: Info about the clock. \n
 		  */
 		virtual MCHEmul::InfoStructure getInfoStructure () const override;
 

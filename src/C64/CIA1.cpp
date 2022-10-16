@@ -39,10 +39,10 @@ MCHEmul::InfoStructure C64::CIA1::getInfoStructure () const
 {
 	MCHEmul::InfoStructure result = MCHEmul::Chip::getInfoStructure ();
 
-	result.add ("REGS",		_CIA1Registers -> getInfoStructure ());
-	result.add ("TIMERA",	_timerA.getInfoStructure ());
-	result.add ("TIMERB",	_timerB.getInfoStructure ());
-	result.add ("CLOCK",	_clock.getInfoStructure ());
+	result.add ("Registers",	_CIA1Registers -> getInfoStructure ());
+	result.add ("TimerA",		_timerA.getInfoStructure ());
+	result.add ("TimerB",		_timerB.getInfoStructure ());
+	result.add ("Clock",		_clock.getInfoStructure ());
 
 	return (result);
 }
