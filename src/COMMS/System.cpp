@@ -24,7 +24,7 @@ unsigned int MCHEmul::CommunicationSystem::processMessagesOn (MCHEmul::Computer*
 	if (cmd == nullptr)
 		return (MCHEmul::Computer::_ACTIONNOTHING);
 
-	unsigned int result = 0;
+	unsigned int result = MCHEmul::Computer::_ACTIONNOTHING;
 	MCHEmul::InfoStructure rst;
 	if (cmd -> execute (c, rst))
 		if (!rst.empty ())
