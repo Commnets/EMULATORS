@@ -13,17 +13,8 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
-    <Filter Include="Archivos de encabezado\Messages">
-      <UniqueIdentifier>{bfb0af92-754a-41f1-bdbe-aec3f4a6ff02}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Archivos de origen\Messages">
-      <UniqueIdentifier>{95094f7c-0bad-4dba-8dfb-4fda62cc8e57}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\include\COMMS\Message.hpp">
-      <Filter>Archivos de encabezado</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\include\COMMS\System.hpp">
       <Filter>Archivos de encabezado</Filter>
     </ClInclude>
@@ -33,17 +24,11 @@
     <ClInclude Include="..\..\include\COMMS\IPAddress.hpp">
       <Filter>Archivos de encabezado</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\include\COMMS\StdMessages.hpp">
-      <Filter>Archivos de encabezado\Messages</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\include\COMMS\incs.hpp">
       <Filter>Archivos de encabezado</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\src\COMMS\Message.cpp">
-      <Filter>Archivos de origen</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\COMMS\Channel.cpp">
       <Filter>Archivos de origen</Filter>
     </ClCompile>
@@ -52,9 +37,6 @@
     </ClCompile>
     <ClCompile Include="..\..\src\COMMS\IPAddress.cpp">
       <Filter>Archivos de origen</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\COMMS\StdMessages.cpp">
-      <Filter>Archivos de origen\Messages</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

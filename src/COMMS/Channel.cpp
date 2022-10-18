@@ -105,7 +105,7 @@ bool MCHEmul::PeerCommunicationChannel::receive (std::string& str, MCHEmul::IPAd
 				break;
 
 			// Our important message...
-			case MCHEmul::CommunicationMessage::_MESSAGEID: 
+			case (DefaultMessageIDTypes::ID_USER_PACKET_ENUM + 1):
 				{
 					RakNet::RakString rs;
 					RakNet::BitStream bsIn (packet -> data, packet -> length, false);
@@ -142,7 +142,7 @@ bool MCHEmul::PeerCommunicationChannel::send (const std::string& str, const MCHE
 	}
 
 	RakNet::BitStream bsOut;
-	bsOut.Write ((RakNet::MessageID) MCHEmul::CommunicationMessage::_MESSAGEID);
+	bsOut.Write ((RakNet::MessageID)DefaultMessageIDTypes::ID_USER_PACKET_ENUM + 1);
 	bsOut.Write (str.c_str ());
 	RakNet::SystemAddress sA (to.ipAsString ().c_str (), to.port ());
 	if (_peer -> Send (&bsOut, IMMEDIATE_PRIORITY, RELIABLE_ORDERED, 0, sA, false) == 0)

@@ -39,6 +39,10 @@ namespace MCHEmul
 
 		InfoStructure& operator = (const InfoStructure&) = default;
 
+		/** Returns true when there is no information. */
+		bool empty () const
+							{ return (_attributes.empty () && _infoStructures.empty ()); }
+
 		// Managing the attributes
 		bool existsAttribute (const std::string& n) const;
 		/** To get an attribute from the structure. \n

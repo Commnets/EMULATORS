@@ -14,9 +14,8 @@
 #ifndef __MCHEMUL_COMMCHANNEL__
 #define __MCHEMUL_COMMCHANNEL__
 
-#include <CORE/global.hpp>
+#include <CORE/incs.hpp>
 #include <COMMS/IPAddress.hpp>
-#include <COMMS/Message.hpp>
 #include <RakPeerInterface.h>
 
 namespace MCHEmul
@@ -67,14 +66,10 @@ namespace MCHEmul
 			The parameters needed are tyhe string to send it accross and the address of the machine to ssend it to. 
 			@return true is everything went ok. */
 		bool send (const std::string& str, const IPAddress& to);
-		bool send (const CommunicationMessage& msg, const IPAddress& to)
-							{ return (send (msg.toString (), to)); }
 		/** To send a communication to the connected machine if any. 
 			Otherwise an error is generated. */
 		bool send (const std::string& str)
 							{ return (send (str, _connectedTo)); }
-		bool send (const CommunicationMessage& msg)
-							{ return (send (msg.toString ())); }
 
 		unsigned int lastError () const
 							{ return (_lastError); }

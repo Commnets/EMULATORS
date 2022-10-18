@@ -17,7 +17,6 @@
 #include <CORE/incs.hpp>
 #include <ASSEMBLER/incs.hpp>
 #include <COMMS/System.hpp>
-#include <COMMS/StdMessages.hpp>
 
 namespace MCHEmul
 {

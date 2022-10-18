@@ -8,29 +8,30 @@ unsigned int MCHEmul::CommunicationSystem::processMessagesOn (MCHEmul::Computer*
 	assert (c != nullptr);
 
 	if (!*this)
-		return (0);
+		return (MCHEmul::Computer::_ACTIONNOTHING);
 
 	std::string str;
 	MCHEmul::IPAddress addr;
 	bool rS;
 	
 	if (!(rS = _communicationChannel -> receive (str, addr)))
-		return (0);
+		return (MCHEmul::Computer::_ACTIONNOTHING);
 
 	if (str == "")
-		return (0);
+		return (MCHEmul::Computer::_ACTIONNOTHING);
 
-	MCHEmul::CommunicationMessage* msg = _messageBuilder -> createMessage (str);
-	if (msg == nullptr)
-		return (0);
+	MCHEmul::Command* cmd = _commandBuilder -> command (str);
+	if (cmd == nullptr)
+		return (MCHEmul::Computer::_ACTIONNOTHING);
 
 	unsigned int result = 0;
-	MCHEmul::CommunicationMessage* answ = nullptr;
-	if ((result = msg -> executeOn (c, answ)) == 0 /** Meaning continue. */ && answ != nullptr)
-		result = _communicationChannel -> send (answ -> toString (), addr);
+	MCHEmul::InfoStructure rst;
+	if (cmd -> execute (c, rst))
+		if (!rst.empty ())
+			result = _communicationChannel -> 
+				send (MCHEmul::FormatterBuilder::instance () -> formatter (_messageFormatter) -> format (rst), addr);
 
-	delete (answ);
-	delete (msg);
+	delete (cmd);
 
 	return (result);
 }

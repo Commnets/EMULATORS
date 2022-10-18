@@ -22,16 +22,12 @@
     <ClInclude Include="..\..\include\COMMS\incs.hpp" />
     <ClInclude Include="..\..\include\COMMS\IPAddress.hpp" />
     <ClInclude Include="..\..\include\COMMS\Channel.hpp" />
-    <ClInclude Include="..\..\include\COMMS\StdMessages.hpp" />
     <ClInclude Include="..\..\include\COMMS\System.hpp" />
-    <ClInclude Include="..\..\include\COMMS\Message.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\COMMS\IPAddress.cpp" />
     <ClCompile Include="..\..\src\COMMS\Channel.cpp" />
-    <ClCompile Include="..\..\src\COMMS\StdMessages.cpp" />
     <ClCompile Include="..\..\src\COMMS\System.cpp" />
-    <ClCompile Include="..\..\src\COMMS\Message.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>

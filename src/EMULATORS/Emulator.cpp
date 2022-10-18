@@ -195,7 +195,8 @@ bool MCHEmul::Emulator::runCycle (unsigned int a)
 	if (_communicationSystem != nullptr)
 	{
 		unsigned int eA = _communicationSystem -> processMessagesOn (computer ());
-		if (a == 0 /** Priority to the action given as parameter if any */ && eA != 0 /** something? */) 
+		if (a == MCHEmul::Computer::_ACTIONNOTHING /** Priority to the action given as parameter if any */ && 
+			eA != MCHEmul::Computer::_ACTIONNOTHING /** something? */)
 			fA = eA; // If there is no emulator action passed to this method and
 					 // there is one external, then the external is taken into account...
 	}

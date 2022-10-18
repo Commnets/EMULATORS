@@ -15,9 +15,7 @@
 #define __COMMS_INCS__
 
 #include <COMMS/IPAddress.hpp>
-#include <COMMS/Message.hpp>
 #include <COMMS/Channel.hpp>
 #include <COMMS/System.hpp>
-#include <COMMS/StdMessages.hpp>
 
 #endif
