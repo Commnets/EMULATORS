@@ -23,7 +23,7 @@ namespace MCHEmul
 		public:
 		Console () = delete;
 
-		Console (Emulator* e, CommandBuilder* cB, 
+		Console (Emulator* e, CommandBuilder* cB,
 			const std::string& cF = "./console.def", std::ostream& oS = std::cout);
 
 		Console (const Console&) = delete;

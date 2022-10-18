@@ -7,8 +7,6 @@ bool MCHEmul::Command::execute (MCHEmul::Computer* c, MCHEmul::InfoStructure& rs
 	if (c == nullptr || !canBeExecuted ())
 		return (false);
 
-	rst = { };
-
 	executeImpl (c, rst);
 
 	return (true);
@@ -29,11 +27,10 @@ bool MCHEmul::ComplexCommand::execute (MCHEmul::Computer* c, MCHEmul::InfoStruct
 {
 	bool result = true;
 
-	int ct = 1;
-	// All of them are executed, but the result is false if just one of them couldn't be executed...
-	MCHEmul::InfoStructure rstP;
-	for (MCHEmul::Commands::const_iterator i = _commands.begin (); i != _commands.end (); i++)
-		result &= (*i) -> execute (c, rstP);
+	// All of them are executed, 
+	// but the result is false if just one of them couldn't be executed...
+	for (const auto i : _commands)
+		result &= i -> execute (c, rst);
 
 	return (result);
 }

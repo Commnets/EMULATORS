@@ -16,6 +16,7 @@ unsigned int MCHEmul::CommunicationSystem::processMessagesOn (MCHEmul::Computer*
 	
 	if (!(rS = _communicationChannel -> receive (str, addr)))
 		return (0);
+
 	if (str == "")
 		return (0);
 

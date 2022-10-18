@@ -1,6 +1,8 @@
 #include <CORE/global.hpp>
 #include <algorithm>
 #include <cctype>
+#include <locale>
+#include <codecvt>
 
 // ---
 std::ostream& MCHEmul::operator << (std::ostream& o, const MCHEmul::Attributes& attrs)
@@ -158,11 +160,28 @@ std::string MCHEmul::tableFormat (const MCHEmul::Strings& s, const std::string& 
 		for (size_t j = i; j < (i + sb) && j < s.size (); j++)
 		{
 			if (j != i) result += sp;
-			result += s [i] + 
-				((s [i].length () < l) ? MCHEmul::_SPACES.substr (0, l - s [i].length ()) : "");
+			result += s [j] + 
+				((s [j].length () < l) ? MCHEmul::_SPACES.substr (0, l - s [j].length ()) : "");
 		}
 	}
 
+	return (result);
+}
+
+// ---
+MCHEmul::Strings MCHEmul::convertIntoStrings (int n, char** dt)
+{
+	MCHEmul::Strings result;
+	for (int i = 0; i < n; result.push_back (dt [i++]));
+	return (result);
+}
+
+// ---
+MCHEmul::Strings MCHEmul::convertIntoStrings (int n, wchar_t** dt)
+{
+	MCHEmul::Strings result;
+	std::wstring_convert <std::codecvt_utf8 <wchar_t>> converter;
+	for (int i = 0; i < n; result.push_back (converter.to_bytes (dt [i++])));
 	return (result);
 }
 

@@ -43,6 +43,9 @@
     <Filter Include="Archivos de encabezado\Emulators">
       <UniqueIdentifier>{05209754-6518-4b21-b8bf-1b7b742d8a5d}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Configuration">
+      <UniqueIdentifier>{04e82ca4-8a93-4930-bd39-60c7c0b83cfb}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\include\C64\VICII.hpp">
@@ -179,5 +182,10 @@
     <ClCompile Include="..\..\src\C64\C64Emulator.cpp">
       <Filter>Archivos de origen\Emulators</Filter>
     </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="C64formatters.fmt">
+      <Filter>Configuration</Filter>
+    </None>
   </ItemGroup>
 </Project>

@@ -3,11 +3,24 @@
 #include <CORE/Stack.hpp>
 #include <CORE/Instruction.hpp>
 #include <fstream>
-#include <sstream>
+
+// ---
+const std::string MCHEmul::HelpCommand::_NAME = "CHELP";
+const std::string MCHEmul::StatusRegisterStatusCommand::_NAME =  "CSTATUS";
+const std::string MCHEmul::RegistersStatusCommand::_NAME = "CREGISTERS";
+const std::string MCHEmul::ProgramCounterStatusCommand::_NAME = "CPC";
+const std::string MCHEmul::StackStatusCommand::_NAME = "CSTACK";
+const std::string MCHEmul::CPUStatusCommand::_NAME = "CCPUSTATUS";
+const std::string MCHEmul::CPUInfoCommand::_NAME = "CCPUINFO";
+const std::string MCHEmul::MemoryStatusCommand::_NAME = "CMEMORY";
+const std::string MCHEmul::StopCPUCommand::_NAME = "CSTOP";
+const std::string MCHEmul::RunCPUCommand::_NAME = "CRUN";
+const std::string MCHEmul::NextInstructionCommand::_NAME = "CNEXT";
+const std::string MCHEmul::LastIntructionCPUCommand::_NAME = "CINST";
 
 // ---
 MCHEmul::HelpCommand::HelpCommand (const std::string& hF)
-	: Command (_ID), 
+	: Command (_ID, _NAME), 
 	  _helpInfo ()
 {
 	MCHEmul::Strings hls;
@@ -45,6 +58,8 @@ MCHEmul::HelpCommand::HelpCommand (const std::string& hF)
 // ---
 void MCHEmul::HelpCommand::executeImpl (MCHEmul::Computer* c, MCHEmul::InfoStructure& rst)
 {
+	MCHEmul::InfoStructure iS;
+
 	auto helpInfoCommand = [&](const std::string& cmd) -> void
 		{
 			bool fL = true;
@@ -54,7 +69,7 @@ void MCHEmul::HelpCommand::executeImpl (MCHEmul::Computer* c, MCHEmul::InfoStruc
 				std::string h = "";
 				for (size_t j = 0; j < (*i).second.size (); j++)
 					h += ((j == 0) ? '\0' : '\n') + (*i).second [j];
-				rst.add (cmd, h);
+				iS.add (cmd, h);
 			}
 		};
 
@@ -65,37 +80,41 @@ void MCHEmul::HelpCommand::executeImpl (MCHEmul::Computer* c, MCHEmul::InfoStruc
 	}
 	else
 		helpInfoCommand ((*_parameters.begin ()).first);
+
+	rst.add ("HELP", iS);
 }
 
 // ---
 void MCHEmul::StatusRegisterStatusCommand::executeImpl (MCHEmul::Computer* c,  MCHEmul::InfoStructure& rst)
 {
-	rst = { }; rst.add ("SR", c -> cpu () -> statusRegister ().asString ());
+	rst.add ("SR", c -> cpu () -> statusRegister ().asString ());
 }
 
 // ---
 void MCHEmul::RegistersStatusCommand::executeImpl (MCHEmul::Computer* c, MCHEmul::InfoStructure& rst)
 {
-	rst = c -> cpu () -> getInfoStructure ().infoStructure ("REGS");
+	rst.add ("REGS", c -> cpu () -> getInfoStructure ().infoStructure ("REGS"));
 }
 
 // ---
 void MCHEmul::ProgramCounterStatusCommand::executeImpl (MCHEmul::Computer* c, MCHEmul::InfoStructure& rst)
 {
-	rst = { }; rst.add ("PC", c -> cpu () -> programCounter ().asString ());
+	rst.add ("PC", c -> cpu () -> programCounter ().asString ());
 }
 
 // ---
 void MCHEmul::StackStatusCommand::executeImpl (MCHEmul::Computer* c, InfoStructure& rst)
 {
-	rst = c -> memory () -> stack () -> getInfoStructure ();
+	MCHEmul::InfoStructure iS = c -> memory () -> stack () -> getInfoStructure ();
 	if (_parameters.size () == 0 || (_parameters.size () == 1 && (*_parameters.find ("ALL")).second != "YES"))
-		rst.remove ("MEMORY"); // Reduce the size...
+		iS.remove ("Memory"); // Reduce the size...
+
+	rst.add ("Stack", iS);
 }
 
 // ---
 MCHEmul::CPUStatusCommand::CPUStatusCommand ()
-	: MCHEmul::ComplexCommand (_ID,
+	: MCHEmul::ComplexCommand (_ID, _NAME,
 			MCHEmul::Commands (
 				{ new StatusRegisterStatusCommand,
 				  new RegistersStatusCommand,
@@ -110,14 +129,12 @@ MCHEmul::CPUStatusCommand::CPUStatusCommand ()
 // ---
 void MCHEmul::CPUInfoCommand::executeImpl (MCHEmul::Computer* c, MCHEmul::InfoStructure& rst)
 {
-	rst = c -> cpu () -> getInfoStructure ();
+	rst.add ("CPU", c -> cpu () -> getInfoStructure ());
 }
 
 // ---
 void MCHEmul::MemoryStatusCommand::executeImpl (MCHEmul::Computer* c, MCHEmul::InfoStructure& rst)
 {
-	rst = { };
-
 	MCHEmul::Address a1 = MCHEmul::Address::fromStr ((*_parameters.begin ()).first);
 	if (_parameters.size () == 2)
 	{

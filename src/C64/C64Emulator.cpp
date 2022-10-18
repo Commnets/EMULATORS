@@ -18,8 +18,8 @@ bool C64::C64Emulator::initialize ()
 }
 
 // ---
-C64::C64Emulator::C64Emulator (const MCHEmul::Strings& argv)
-	: MCHEmul::Emulator (argv)
+C64::C64Emulator::C64Emulator (const MCHEmul::Strings& argv, MCHEmul::CommunicationSystem* cS)
+	: MCHEmul::Emulator (argv, cS)
 {
 	static std::map <unsigned char, std::string> _MATCH =
 		{ { _PARAMNTSC, _NTSC } };

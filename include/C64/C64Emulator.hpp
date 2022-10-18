@@ -30,12 +30,12 @@ namespace C64
 
 		/**
 		  * Constructor:
-		  * @param argc		: Número de parámetros.
-		  * @param argv		: The parameters.\n
+		  * @param argv		: The parameters in the form of Strings.\n
 		  *	The basic parameters for any C64 emulator are (apart of the ones defined by the parent: \n
 		  *	/n				: To indicate if the visualization system is NTSC. PAL by default.
+		  * @param cS		: A reference to the communication syste. It can be nullptr.
 		  */
-		C64Emulator (const MCHEmul::Strings& argv);
+		C64Emulator (const MCHEmul::Strings& argv, MCHEmul::CommunicationSystem* cS = nullptr);
 
 		/** To know whether the visualizacion system is or not NTSC. */
 		bool NTSCSystem () const

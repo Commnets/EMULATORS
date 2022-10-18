@@ -15,6 +15,7 @@ MCHEmul::Command* MCHEmul::CommandBuilder::command (const std::string& cmd) cons
 		if ((result = createEmptyCommand (CName)) != nullptr)
 		{
 			result -> setParameters (readCommandParameters (CMD)); // If there is instruction set the prms!
+
 			_commands.insert (std::pair <std::string, MCHEmul::Command*> (CName, result)); // ...and keep it for later!
 		}
 	}

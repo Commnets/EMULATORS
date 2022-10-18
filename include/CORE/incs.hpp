@@ -18,7 +18,9 @@
 #include <CORE/InfoStructure.hpp>
 #include <CORE/InfoClass.hpp>
 #include <CORE/Formatter.hpp>
+#include <CORE/StdFormatter.hpp>
 #include <CORE/FmterBuilder.hpp>
+#include <CORE/StdFmterBuilder.hpp>
 #include <CORE/Address.hpp>
 #include <CORE/Chip.hpp>
 #include <CORE/Computer.hpp>

@@ -14,7 +14,7 @@
 #ifndef __ASSEMBLER_COMPILER__
 #define __ASSEMBLER_COMPILER__
 
-#include <CORE/Incs.hpp>
+#include <CORE/incs.hpp>
 #include <ASSEMBLER/Grammar.hpp>
 #include <ASSEMBLER/Parser.hpp>
 

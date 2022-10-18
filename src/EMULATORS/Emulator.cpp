@@ -16,9 +16,9 @@ const unsigned char MCHEmul::Emulator::_PARAMSTOP = 's';
 const std::string MCHEmul::Emulator::_STOP = "STOP";
 
 // ---
-MCHEmul::Emulator::Emulator (const MCHEmul::Strings& argv)
+MCHEmul::Emulator::Emulator (const MCHEmul::Strings& argv, MCHEmul::CommunicationSystem* cS)
 	: _attributes (),
-	  _communicationSystem (nullptr),
+	  _communicationSystem (cS),
 	  _debugLevel (MCHEmul::_DEBUGNOTHING),
 	  _computer (nullptr),
 	  _peripheralBuilder (nullptr),
@@ -51,15 +51,6 @@ MCHEmul::Emulator::Emulator (const MCHEmul::Strings& argv)
 		_lastError = MCHEmul::_INIT_ERROR;
 	else
 		SDL_JoystickEventState (SDL_ENABLE);
-}
-
-// ---
-void MCHEmul::Emulator::setCommunicationSystem (MCHEmul::CommunicationSystem* cS)
-{
-	if (_running)
-		return;
-
-	_communicationSystem = cS;
 }
 
 // ---

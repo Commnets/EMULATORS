@@ -7,7 +7,10 @@
  *	Framework: CPU Emulators library \n
  *	Author: Ignacio Cea Forniés (EMULATORS library) \n
  *	Creation Date: 07/10/2022 \n
- *	Description: A builder to create formatters.
+ *	Description: A builder to create formatters. \n
+ *				 The builder has been designed as a singleton in the framework. \n
+ *				 All formatters are kept inside the builder as unique instances of those in the application. \n
+ *				 So it is not needed to delete them, as the builder destroys them when finishes.
  *	Versions: 1.0 Initial
  */
 
@@ -19,8 +22,12 @@
 
 namespace MCHEmul
 {
-	/** To create formatters. \
-		Implimenets the singleton design pattern. */
+	/** The map of formatters is based on a shared pointers, 
+	to simplify the way that the builder manages them. */
+	using Formatters = std::map <std::string, std::shared_ptr <Formatter>>;
+
+	/** To create formatters. \n
+		Implements the singleton design pattern. */
 	class FormatterBuilder
 	{
 		public:
@@ -30,9 +37,8 @@ namespace MCHEmul
 			The formatters are created later, once the element is initialized. */
 		FormatterBuilder (const Strings& nF);
 
-		~FormatterBuilder ();
-
-		/** Create the formatters from the lines read at constructions time. */
+		/** Create the formatters from the lines read at constructions time.
+			If something is wrong during this process, the _lastError avriable will be different than _NOERROR. */
 		bool initialize ();
 
 		// Managing formatters...
@@ -45,16 +51,16 @@ namespace MCHEmul
 		/** To get a formatter. \n
 			defaultFormatter if the requested one doesn't exist. */
 		bool existsFormatter (const std::string& n) const;
-		const Formatter* formatter (const std::string& n) const;
-		Formatter* formatter (const std::string& n)
-							{ return ((Formatter*) (((const FormatterBuilder*) this) -> formatter (n))); }
+		const std::shared_ptr <Formatter>& formatter (const std::string& n) const;
+		std::shared_ptr <Formatter>& formatter (const std::string& n)
+							{ return ((std::shared_ptr <Formatter>&) (((const FormatterBuilder*) this) -> formatter (n))); }
 
 		/** To get & set the default formatter. */
-		const Formatter* defaultFormatter () const
+		const std::shared_ptr <Formatter>& defaultFormatter () const
 							{ return (_defaultFormatter); }
-		Formatter* defaultFormatter ()
+		std::shared_ptr <Formatter>& defaultFormatter ()
 							{ return (_defaultFormatter); }
-		void setDefaultFormatter (Formatter* fmter) const
+		void setDefaultFormatter (const std::shared_ptr <Formatter>& fmter) const
 							{ if (fmter != nullptr) _defaultFormatter = fmter; }
 
 		/** Gets the last error. */
@@ -65,16 +71,15 @@ namespace MCHEmul
 							{ return (_lastError == _NOERROR); }
 
 		/** To get the unique instance of the formatter builder. 
-			If ih has been everinvoked before, a default instance is created using the parameters received and initialized too. */
+			If it has never been invoked before, a default instance is created using the parameters received.
+			That new instance is also initialized too. */
 		static std::shared_ptr <FormatterBuilder> instance (const Strings& nF = { "./defformatters.fmt" });
 
 		protected:
 		/** To create the right formatter. \n
 			The method receives the name of the file, the name of the formatter under definition 
-			and the lines being read now that will form up the formatter. \n
-			By default the basic formatter is created. */
-		virtual Formatter* createFormatter (const std::string& f, const std::string& nF, const Strings& l)
-							{ return (new StdFormatter (l)); }
+			and the lines being read now that will form up the formatter. */
+		virtual Formatter* createFormatter (const std::string& f, const std::string& nF, const Strings& l) = 0;
 
 		private:
 		/** The copy constructor is not allowed. */
@@ -92,7 +97,7 @@ namespace MCHEmul
 		std::map <std::string, Formatters> _formatters;
 		/** The one that will be choosen by default. 
 			It can be either fixed from a const invocation! */
-		mutable Formatter* _defaultFormatter;
+		mutable std::shared_ptr <Formatter> _defaultFormatter;
 		mutable unsigned int _lastError;
 
 		// Implementation
@@ -106,4 +111,4 @@ namespace MCHEmul
 #endif
 
 // End of the file
-/*@}*/#pragma once
+/*@}*/

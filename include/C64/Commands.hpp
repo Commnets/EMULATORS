@@ -23,9 +23,10 @@ namespace C64
 	{
 		public:
 		static const int _ID = 100;
+		static const std::string _NAME;
 	
 		VICStatusCommand ()
-			: MCHEmul::Command (_ID)
+			: MCHEmul::Command (_ID, _NAME)
 							{ }
 
 		virtual bool canBeExecuted () const override
@@ -40,9 +41,10 @@ namespace C64
 	{
 		public:
 		static const int _ID = 101;
-	
+		static const std::string _NAME;
+
 		CIA1StatusCommand ()
-			: MCHEmul::Command (_ID)
+			: MCHEmul::Command (_ID, _NAME)
 							{ }
 
 		virtual bool canBeExecuted () const override
@@ -57,9 +59,10 @@ namespace C64
 	{
 		public:
 		static const int _ID = 102;
-	
+		static const std::string _NAME;
+
 		CIA2StatusCommand ()
-			: MCHEmul::Command (_ID)
+			: MCHEmul::Command (_ID, _NAME)
 							{ }
 
 		virtual bool canBeExecuted () const override

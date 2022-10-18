@@ -42,17 +42,17 @@ namespace MCHEmul
 
 		/**
 		  * Constructor:
-		  * @param argc		: Número de parámetros.
-		  * @param argv		: The parameters.
+		  * @param argv		: The parameters as a list of Strings. \n
 		  * The basic parameters for any emulator are: \n
-		  * /fFILENAME		: bytes file (with path) to be loaded into the memory.
-		  * /cFILENAME		: ASM file (with path) to be parsed, compiled and loadd into the memory.
-		  * /lLEVEL			: To print out logs.
-		  * /aADDRESS		: The address where to start the execution of the emulator.
-		  * /d[ADDRESS]		: Line off addresses separeted by comman where the emjulator has to stop.
-		  * /s				: When the execution must start stopped.
+		  * /fFILENAME		: bytes file (with path) to be loaded into the memory. \n
+		  * /cFILENAME		: ASM file (with path) to be parsed, compiled and loadd into the memory. \n
+		  * /lLEVEL			: To print out logs. \n
+		  * /aADDRESS		: The address where to start the execution of the emulator. \n
+		  * /d[ADDRESS]		: Line off addresses separeted by comman where the emjulator has to stop. \n
+		  * /s				: When the execution must start stopped. \n
+		  * @param cs		: The communication system. It can be nullptr.
 		  */
-		Emulator (const MCHEmul::Strings& argv);
+		Emulator (const MCHEmul::Strings& argv, CommunicationSystem* cS = nullptr);
 
 		virtual ~Emulator ();
 
@@ -63,9 +63,6 @@ namespace MCHEmul
 							{ return (_computer == nullptr) ? (_computer = createComputer ()) : _computer; }
 		MCHEmul::Computer* computer ()
 							{ return ((MCHEmul::Computer*) (((const Emulator*) this) -> computer ())); }
-
-		/** Not possible to change when running. */
-		void setCommunicationSystem (MCHEmul::CommunicationSystem* cS);
 
 		/** To know whether there is a byte file where data to be loaded. \n
 			"" when there is no byte file data. */

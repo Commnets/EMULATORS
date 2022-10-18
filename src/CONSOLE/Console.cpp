@@ -44,8 +44,13 @@ void MCHEmul::Console::run ()
 {
 	bool exit = false;
 
-	MCHEmul::FormatterBuilder::instance ({ "./conformatters.fmt" /** The specific one for consoles. */ });
+	/** Print cout basic info about the computer managed. */
+	std::cout << "---- CPU ---" << std::endl 
+			  << *_emulator -> computer () -> cpu () << std::endl;
+	std::cout << "---- STACK -" << std::endl 
+			  << *_emulator -> computer () -> memory () -> stack () << std::endl << std::endl;
 
+	/** Start to introduce data!. */
 	std::cout << _welcomeTxt;
 	std::cout << _commandPrompt;
 
@@ -76,7 +81,8 @@ bool MCHEmul::Console::readAndExecuteCommand ()
 	{
 		MCHEmul::InfoStructure rst; // The results...
 		if (cmd -> execute (_emulator -> computer (), rst))
-			std::cout << rst << std::endl;
+			std::cout << MCHEmul::FormatterBuilder::instance () -> 
+				formatter (cmd -> name ()) -> format (rst) << std::endl; // It is used the formatter with the name of the command!
 		else
 			std::cout << _command << ":" << _commandErrorTxt << std::endl;
 	}
@@ -85,7 +91,7 @@ bool MCHEmul::Console::readAndExecuteCommand ()
 	// The command builder own all off them...
 
 	_command = ""; _cursorPosition = 0;
-	std::cout << _commandPrompt;
+	std::cout << std::endl << _commandPrompt;
 
 	return (false);
 }
@@ -184,8 +190,7 @@ bool MCHEmul::Win32Console::readChar (char& chr) const
 				chr = _BACKKEY;
 				break;
 
-			case 48: // The one in the key pad...
-			case 307: // The normal one...
+			case 307:
 				chr = _DELETEKEY;
 				break;
 

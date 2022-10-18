@@ -66,6 +66,14 @@
     <ClCompile Include="..\..\src\C64\VICII.cpp" />
     <ClCompile Include="..\..\src\C64\VICIIRegisters.cpp" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="C64formatters.fmt">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </None>
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>
     <ProjectGuid>{232573A6-2559-4F0D-8726-7100F1D3F240}</ProjectGuid>

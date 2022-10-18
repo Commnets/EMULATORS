@@ -1,4 +1,6 @@
 #include <CORE/FmterBuilder.hpp>
+#include <CORE/StdFmterBuilder.hpp>
+#include <CORE/StdFormatter.hpp>
 #include <fstream>
 
 // ---
@@ -16,14 +18,6 @@ MCHEmul::FormatterBuilder::FormatterBuilder (const MCHEmul::Strings& nF)
 
 	for (const auto& i : nF)
 		_linesPerFile.insert (std::map <std::string, MCHEmul::Strings>::value_type (i, readLinesFrom (i)));
-}
-
-// ---
-MCHEmul::FormatterBuilder::~FormatterBuilder ()
-{
-	for (const auto& i : _formatters)
-		for (const auto& j : i.second)
-			delete (j.second);
 }
 
 // ---
@@ -51,7 +45,7 @@ bool MCHEmul::FormatterBuilder::initialize ()
 			{
 				fmt -> initialize ();
 
-				fmts.insert (std::pair <std::string, MCHEmul::Formatter*> (fmtsN, fmt));
+				fmts.insert (std::pair <std::string, std::shared_ptr <MCHEmul::Formatter>> (fmtsN, fmt));
 			}
 			else
 			_lastError = MCHEmul::_FORMATTERNOTVALID_ERROR;
@@ -98,10 +92,10 @@ std::shared_ptr <MCHEmul::FormatterBuilder> MCHEmul::FormatterBuilder::instance 
 	if (_instance != nullptr)
 		return (_instance);
 
-	_instance = std::unique_ptr <FormatterBuilder> (new FormatterBuilder (nF));
+	_instance = std::shared_ptr <MCHEmul::FormatterBuilder> (new MCHEmul::StdFormatterBuilder (nF));
 	_instance -> initialize ();
-	if (nF.size () > 0) _instance -> _defaultFormatFile = nF[0];
-	_instance -> setDefaultFormatter (_noFormatter.get ());
+	if (nF.size () > 0) _instance -> _defaultFormatFile = nF [0];
+	_instance -> setDefaultFormatter (_noFormatter);
 
 	return (_instance);
 }
@@ -119,20 +113,18 @@ bool MCHEmul::FormatterBuilder::existsFormatter (const std::string& n) const
 }
 
 // ---
-const MCHEmul::Formatter* MCHEmul::FormatterBuilder::formatter (const std::string& n) const
+const std::shared_ptr <MCHEmul::Formatter>& MCHEmul::FormatterBuilder::formatter (const std::string& n) const
 {
-	const MCHEmul::Formatter* result = defaultFormatter (); // It can be nullptr...
-
 	std::map <std::string, MCHEmul::Formatters>::const_iterator i = _formatters.find (_defaultFormatFile);
 	if (i != _formatters.end ())
 	{
 		const MCHEmul::Formatters& fmts = i -> second;
 		MCHEmul::Formatters::const_iterator j = fmts.find (n);
 		if (j != fmts.end ())
-			result = j -> second;
+			return (j -> second);
 	}
 
-	return (result);
+	return (defaultFormatter ());
 }
 
 // ---

@@ -33,6 +33,7 @@ namespace MCHEmul
 	{
 		public:
 		static const int _ID = -1;
+		static const std::string _NAME;
 	
 		HelpCommand (const std::string& hF = "./commands.hlp");
 
@@ -54,9 +55,10 @@ namespace MCHEmul
 	{
 		public:
 		static const int _ID = 0;
-	
+		static const std::string _NAME;
+
 		StatusRegisterStatusCommand ()
-			: Command (_ID)
+			: Command (_ID, _NAME)
 							{ }
 
 		virtual bool canBeExecuted () const override
@@ -72,10 +74,11 @@ namespace MCHEmul
 	class RegistersStatusCommand final : public Command
 	{
 		public:
-			static const int _ID = 1;
+		static const int _ID = 1;
+		static const std::string _NAME;
 	
-			RegistersStatusCommand ()
-			: Command (_ID)
+		RegistersStatusCommand ()
+			: Command (_ID, _NAME)
 							{ }
 
 		virtual bool canBeExecuted () const override
@@ -92,9 +95,10 @@ namespace MCHEmul
 	{
 		public:
 		static const int _ID = 2;
+		static const std::string _NAME;
 
 		ProgramCounterStatusCommand ()
-			: Command (_ID)
+			: Command (_ID, _NAME)
 							{ }
 
 		virtual bool canBeExecuted () const override
@@ -114,9 +118,10 @@ namespace MCHEmul
 	{
 		public:
 		static const int _ID = 3;
+		static const std::string _NAME;
 
 		StackStatusCommand ()
-			: Command (_ID)
+			: Command (_ID, _NAME)
 							{ }
 
 		virtual bool canBeExecuted () const override
@@ -137,6 +142,7 @@ namespace MCHEmul
 	{
 		public:
 		static const int _ID = 4;
+		static const std::string _NAME;
 
 		CPUStatusCommand ();
 
@@ -150,9 +156,10 @@ namespace MCHEmul
 	{
 		public:
 		static const int _ID = 5;
+		static const std::string _NAME;
 
 		CPUInfoCommand ()
-			: Command (_ID)
+			: Command (_ID, _NAME)
 							{ }
 
 		virtual bool canBeExecuted () const override
@@ -172,9 +179,10 @@ namespace MCHEmul
 	{
 		public:
 		static const int _ID = 6;
+		static const std::string _NAME;
 
 		MemoryStatusCommand ()
-			: Command (_ID)
+			: Command (_ID, _NAME)
 							{ }
 
 		virtual bool canBeExecuted () const override
@@ -192,9 +200,10 @@ namespace MCHEmul
 	{
 		public:
 		static const int _ID = 7;
+		static const std::string _NAME;
 
 		StopCPUCommand ()
-			: Command (_ID)
+			: Command (_ID, _NAME)
 							{ }
 
 		virtual bool canBeExecuted () const override
@@ -209,9 +218,10 @@ namespace MCHEmul
 	{
 		public:
 		static const int _ID = 8;
+		static const std::string _NAME;
 
 		RunCPUCommand ()
-			: Command (_ID)
+			: Command (_ID, _NAME)
 							{ }
 
 		virtual bool canBeExecuted () const override
@@ -226,9 +236,10 @@ namespace MCHEmul
 	{
 		public:
 		static const int _ID = 9;
+		static const std::string _NAME;
 
 		NextInstructionCommand ()
-			: Command (_ID)
+			: Command (_ID, _NAME)
 							{ }
 
 		virtual bool canBeExecuted () const override
@@ -243,9 +254,10 @@ namespace MCHEmul
 	{
 		public:
 		static const int _ID = 10;
+		static const std::string _NAME;
 
 		LastIntructionCPUCommand ()
-			: Command (_ID)
+			: Command (_ID, _NAME)
 							{ }
 
 		virtual bool canBeExecuted () const override

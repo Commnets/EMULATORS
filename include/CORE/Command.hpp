@@ -28,8 +28,8 @@ namespace MCHEmul
 		public:
 		Command () = delete;
 
-		Command (int id, const Attributes& prms = { })
-			: _id (id), _parameters (prms)
+		Command (int id, const std::string& n, const Attributes& prms = { })
+			: _id (id), _name (n), _parameters (prms)
 							{ }
 
 		Command (const Command&) = default;
@@ -41,6 +41,8 @@ namespace MCHEmul
 
 		int id () const
 							{ return (_id); }
+		const std::string& name () const 
+							{ return (_name); }
 		const Attributes& parameters () const
 							{ return (_parameters); }
 		void setParameters (const Attributes& prms)
@@ -62,6 +64,7 @@ namespace MCHEmul
 
 		protected:
 		int _id;
+		std::string _name;
 		Attributes _parameters;
 	};
 
@@ -71,8 +74,8 @@ namespace MCHEmul
 	class ComplexCommand : public Command
 	{
 		public:
-		ComplexCommand (int id, const Commands& cmds)
-			: Command (id), _commands (cmds)
+		ComplexCommand (int id, const std::string& n, const Commands& cmds)
+			: Command (id, n), _commands (cmds)
 							{ }
 
 		~ComplexCommand ()
