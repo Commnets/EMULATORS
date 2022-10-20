@@ -1,33 +1,36 @@
 #include <COMMS/System.hpp>
 #include <COMMS/IPAddress.hpp>
-#include <CORE/Computer.hpp>
 
 // ---
-unsigned int MCHEmul::CommunicationSystem::processMessagesOn (MCHEmul::Computer* c)
+bool MCHEmul::CommunicationSystem::processMessagesOn (MCHEmul::Computer* c)
 {
 	assert (c != nullptr);
 
+	// The system hasn't been initialized well!
 	if (!*this)
-		return (MCHEmul::Computer::_ACTIONNOTHING);
+		return (false);
 
 	std::string str;
 	MCHEmul::IPAddress addr;
-	bool rS;
-	
-	if (!(rS = _communicationChannel -> receive (str, addr)))
-		return (MCHEmul::Computer::_ACTIONNOTHING);
 
+	// Error receiving?
+	if (!_communicationChannel -> receive (str, addr))
+		return (false); 
+
+	// Nothing in the content received
 	if (str == "")
-		return (MCHEmul::Computer::_ACTIONNOTHING);
+		return (true); 
 
+	// The received command can't be interpreted, 
+	// so an error will be generated...
 	MCHEmul::Command* cmd = _commandBuilder -> command (str);
 	if (cmd == nullptr)
-		return (MCHEmul::Computer::_ACTIONNOTHING);
+		return (false); 
 
-	unsigned int result = MCHEmul::Computer::_ACTIONNOTHING;
+	bool result = true;
 	MCHEmul::InfoStructure rst;
 	if (cmd -> execute (c, rst))
-		if (!rst.empty ())
+		if (!rst.empty ()) // Is there is something to sent back?
 			result = _communicationChannel -> 
 				send (MCHEmul::FormatterBuilder::instance () -> formatter (_messageFormatter) -> format (rst), addr);
 

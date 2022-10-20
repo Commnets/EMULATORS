@@ -47,9 +47,8 @@ namespace MCHEmul
 		// If something happens the variable _lastError sets to something different than _NOERROR...
 		virtual bool initialize ()
 							{ return (_communicationChannel -> initialize ()); }
-		/** Through this method the computer return additional actions to guide the one invoking it.
-			@see Computer for further details. Computer::_ACTIONNOTHING means to continue the cycles. */
-		virtual unsigned int processMessagesOn (Computer* c);
+		/** The method returns true when everything was ok and false in other case. */
+		virtual bool processMessagesOn (Computer* c);
 		virtual bool finalize ()
 							{ return (_communicationChannel -> finalize ()); }
 

@@ -190,18 +190,14 @@ bool MCHEmul::Emulator::runCycle (unsigned int a)
 
 	computer () -> startsCycle ();
 
-	// Is there any external action to take into account...
-	unsigned int fA = a; // By default..only the one passedef to this method will be taken into account!
 	if (_communicationSystem != nullptr)
 	{
-		unsigned int eA = _communicationSystem -> processMessagesOn (computer ());
-		if (a == MCHEmul::Computer::_ACTIONNOTHING /** Priority to the action given as parameter if any */ && 
-			eA != MCHEmul::Computer::_ACTIONNOTHING /** something? */)
-			fA = eA; // If there is no emulator action passed to this method and
-					 // there is one external, then the external is taken into account...
+		if (!_communicationSystem -> processMessagesOn (computer ()) &&
+			_debugLevel >= MCHEmul::_DEBUGERRORS)
+				std::cout << "Error Processing Messages" << std::endl;
 	}
 
-	result &= computer () -> runComputerCycle (fA);
+	result &= computer () -> runComputerCycle (a);
 	result &= computer () -> runIOCycle ();
 	result &= additionalRunCycle ();
 
