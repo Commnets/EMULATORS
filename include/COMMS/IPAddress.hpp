@@ -49,7 +49,10 @@ namespace MCHEmul
 						{ return (_port); }
 
 		std::string ipAsString () const
-						{ return (std::to_string (_a) + "." + std::to_string (_b) + "." + std::to_string (_c)); }
+						{ return (std::to_string (_a) + "." + 
+								  std::to_string (_b) + "." + 
+								  std::to_string (_c) + "." +
+								  std::to_string (_d)); }
 		std::string asString () const
 						{ return (ipAsString () + ":" + std::to_string (_port)); }
 

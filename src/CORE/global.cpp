@@ -108,6 +108,22 @@ std::string MCHEmul::removeAllFrom (const std::string& s, const MCHEmul::Strings
 }
 
 // ---
+std::string MCHEmul::removeAll0 (const std::string& s)
+{
+	std::string result = s;
+
+	size_t i = 0;
+	while (i < result.length ())
+	{
+		if (result [i] == 0)
+			result = result.substr (0, i) + result.substr (i + 1);
+		i++;
+	}
+
+	return (result);
+}
+
+// ---
 std::string MCHEmul::replaceAll (const std::string& s, const std::string& o, const std::string& d)
 {
 	std::string r = s;

@@ -74,6 +74,7 @@ namespace MCHEmul
 	std::string onlyAlphanumeric (const std::string& s);
 	std::string noneOf (const std::string& s, const std::string& chrs);
 	std::string removeAllFrom (const std::string& s, const Strings& strs);
+	std::string removeAll0 (const std::string& s);
 	std::string replaceAll (const std::string& s, const std::string& o, const std::string& d);
 	/** Every element got is trim-ed. */
 	Strings getElementsFrom (const std::string& txt, unsigned char ch, 

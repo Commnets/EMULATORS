@@ -12,13 +12,13 @@
 #include <queue>
 
 #define MAX_CLIENTS 2
-#define SERVER_PORT 60001
 #define EMULATOR_IP "127.0.0.1"
-#define EMULATOR_PORT 60000
 
+unsigned int _SERVER_PORT;
 std::string _COMMAND = "";
 bool _connectedToEmulator = false;
-RakNet::SystemAddress _EMULATOR_ADDRESS (EMULATOR_IP, EMULATOR_PORT);
+RakNet::SystemAddress _EMULATOR_ADDRESS;
+unsigned int _EMULATOR_PORT;
 struct MsgTo
 {
 	MsgTo (const std::string& msg, const RakNet::SystemAddress& sA)
@@ -46,7 +46,7 @@ void sendPendingMesssages (RakNet::RakPeerInterface* peer)
 		RakNet::BitStream bsOut;
 		bsOut.Write ((RakNet::MessageID)ID_GAME_MESSAGE_1);
 		bsOut.Write (msg._message.c_str ());
-		std::cout << "sending:" << msg._message << std::endl;
+		std::cout << "Sending:" << msg._message << std::endl;
 		peer -> Send (&bsOut, HIGH_PRIORITY, RELIABLE_ORDERED, 0, msg._address, false);
 	}
 }
@@ -55,7 +55,7 @@ void sendMessage (RakNet::RakPeerInterface* peer, const std::string& msg, const 
 {
 	if (!_connectedToEmulator)
 	{
-		peer -> Connect (EMULATOR_IP, EMULATOR_PORT, nullptr, 0);
+		peer -> Connect (EMULATOR_IP, _EMULATOR_PORT, nullptr, 0);
 
 		_PENDINGMESSAGES.push (MsgTo (msg, address));
 	}
@@ -100,7 +100,7 @@ bool readCommand ()
 		if (chr == 13)
 			result = true;
 
-		std::cout << bk.substr (0, _COMMAND.length ()) << _COMMAND;
+		std::cout << bk.substr (0, _COMMAND.length () - 1) << _COMMAND;
 	}
 
 	return (result);
@@ -108,19 +108,35 @@ bool readCommand ()
 
 int main (void)
 {
+	std::string sPort;
+	std::cout << "This Server Port:";
+	std::cin >> sPort;
+	_SERVER_PORT = (unsigned int) std::atoi (sPort.c_str ());
+
+	std::string ePort;
+	std::cout << "Emulator Port:";
+	std::cin >> ePort;
+	_EMULATOR_PORT = (unsigned int)  std::atoi (ePort.c_str ());
+
+	_EMULATOR_ADDRESS = RakNet::SystemAddress (EMULATOR_IP, _EMULATOR_PORT);
+
 	RakNet::RakPeerInterface* peer = RakNet::RakPeerInterface::GetInstance ();
 	RakNet::Packet* packet;
-	RakNet::SocketDescriptor sd (SERVER_PORT, 0);
+	RakNet::SocketDescriptor sd (_SERVER_PORT, 0);
 	peer -> Startup (MAX_CLIENTS, &sd, 1);
 	std::cout << "Starting the communications" << std::endl;
 	peer -> SetMaximumIncomingConnections (MAX_CLIENTS);
 
+	std::cout << "Introduce Command:";
 	while (1)
 	{
+//		sendPendingMesssages (peer);
 		if (readCommand ())
 		{
 			sendMessage (peer, _COMMAND, _EMULATOR_ADDRESS);
 			_COMMAND = "";
+			std::cout << std::endl;
+			std::cout << "Introduce Command:";
 		}
 
 		for (packet = peer -> Receive (); packet; 

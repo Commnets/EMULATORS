@@ -14,9 +14,6 @@ bool MCHEmul::CommunicationSystem::processMessagesOn (MCHEmul::Computer* c)
 
 	std::string str;
 
-	// Error sending the pending messages?
-	if (_communicationChannel -> sendPendingMessages ())
-		return (false);
 	// Error receiving new messages?
 	if (!_communicationChannel -> receive (str, _lastSender /** To store ho send the message. */))
 		return (false); 
