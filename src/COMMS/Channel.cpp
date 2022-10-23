@@ -35,6 +35,8 @@ bool MCHEmul::PeerCommunicationChannel::initialize ()
 			return (false);
 		}
 
+		_peer -> SetMaximumIncomingConnections (_simultaneousConnections);
+
 		_channelInitialized = true;
 	}
 
@@ -79,29 +81,26 @@ bool MCHEmul::PeerCommunicationChannel::receive (std::string& str, MCHEmul::IPAd
 		// The first char has the id of the mesaage...
 		switch (packet -> data [0]) 
 		{
-			// Usually client messages:
-			case ID_DISCONNECTION_NOTIFICATION: 						// Connection lost normally.
+			case ID_REMOTE_DISCONNECTION_NOTIFICATION:					// Client has disconnected.
+			case ID_REMOTE_CONNECTION_LOST:								// Client has lost the communication.
+			case ID_REMOTE_NEW_INCOMING_CONNECTION:						// Another client connection has been done.
+			case ID_NEW_INCOMING_CONNECTION:							// Client is requesting connection.
+			case ID_NO_FREE_INCOMING_CONNECTIONS:						// Server is full. 
+			case ID_DISCONNECTION_NOTIFICATION: 						// Client / Server disconnected.
+			case ID_CONNECTION_LOST:									// Client / Server connection lost.
+			case ID_CONNECTED_PING:										// A Client is trying to ping.
+			case ID_UNCONNECTED_PING:									// A non client is trying to ping.
 			case ID_ALREADY_CONNECTED:									// Connection not posible because the system is already in.
 			case ID_INCOMPATIBLE_PROTOCOL_VERSION:						// The communication protocol is different than the one the server expects.
-			case ID_REMOTE_DISCONNECTION_NOTIFICATION:					// Other client has been disconnected.
-			case ID_REMOTE_CONNECTION_LOST:								// Clients of another client disconnecting forcefully.
-			case ID_REMOTE_NEW_INCOMING_CONNECTION:						// Clients of another client connecting
 			case ID_CONNECTION_BANNED:									// Banned from this server
 			case ID_CONNECTION_ATTEMPT_FAILED:							// Not posssible to reach the server. IP is right?
-			case ID_NO_FREE_INCOMING_CONNECTIONS:						// Server is full. 
 			case ID_INVALID_PASSWORD:								
-			case ID_CONNECTION_LOST:									// Couldn't deliver a reliable packet (Server was terminated)
 				_channelConnected = false;
 				break;
 
+			// When the server accept the connection...
 			case DefaultMessageIDTypes::ID_CONNECTION_REQUEST_ACCEPTED:	// The server has accepted the connection
 				_channelConnected = true; // Noww the communication is possible...
-				break;
-
-			// Usually server messages:
-			case ID_NEW_INCOMING_CONNECTION:							// Client is requested connection
-			case ID_CONNECTED_PING:										// A Client is trying to ping
-			case ID_UNCONNECTED_PING:									// A non client is trying to ping
 				break;
 
 			// Our important message...
@@ -142,7 +141,7 @@ bool MCHEmul::PeerCommunicationChannel::send (const std::string& str, const MCHE
 	}
 
 	RakNet::BitStream bsOut;
-	bsOut.Write ((RakNet::MessageID)DefaultMessageIDTypes::ID_USER_PACKET_ENUM + 1);
+	bsOut.Write ((RakNet::MessageID) DefaultMessageIDTypes::ID_USER_PACKET_ENUM + 1);
 	bsOut.Write (str.c_str ());
 	RakNet::SystemAddress sA (to.ipAsString ().c_str (), to.port ());
 	if (_peer -> Send (&bsOut, IMMEDIATE_PRIORITY, RELIABLE_ORDERED, 0, sA, false) == 0)

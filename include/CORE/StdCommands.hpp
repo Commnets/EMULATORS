@@ -43,7 +43,7 @@ namespace MCHEmul
 							{ return (_parameters.size () == 0 || _parameters.size () == 1); }
 
 		private:
-		virtual void executeImpl (Computer* c, InfoStructure& rst) override;
+		virtual void executeImpl (CommandExecuter* cE, Computer* c, InfoStructure& rst) override;
 
 		private:
 		using HelpInfo = std::map <std::string, Strings>;
@@ -67,7 +67,7 @@ namespace MCHEmul
 		private:
 		/** The fields returned are: \n
 			SR	= Attribute: Status register info. */
-		virtual void executeImpl (Computer* c, InfoStructure& rst) override;
+		virtual void executeImpl (CommandExecuter* cE, Computer* c, InfoStructure& rst) override;
 	};
 
 	/** To get the status of every register defined in the cpu of any computer. */ 
@@ -87,7 +87,7 @@ namespace MCHEmul
 		private:
 		/** The fields returned are: \n
 			REGS	= InfoStructure: Info about the registers. */
-		virtual void executeImpl (Computer* c, InfoStructure& rst) override;
+		virtual void executeImpl (CommandExecuter* cE, Computer* c, InfoStructure& rst) override;
 	};
 
 	/** To get the status of the program counter. */
@@ -107,7 +107,7 @@ namespace MCHEmul
 		private:
 		/** The fields returned are: \n
 			PC	= Attribute: Prohramm Counter info. */
-		virtual void executeImpl (Computer* c, InfoStructure& rst) override;
+		virtual void executeImpl (CommandExecuter* cE, Computer* c, InfoStructure& rst) override;
 	};
 
 	/** To get the status of the stack.
@@ -132,7 +132,7 @@ namespace MCHEmul
 		/** The fields returned are: \n
 			@see Stack::getInfoStructure method. \n
 			The InfoStructure MEMORY is not included when "ALL" parameter is not provided. */
-		virtual void executeImpl (Computer* c, InfoStructure& rst) override;
+		virtual void executeImpl (CommandExecuter* cE, Computer* c, InfoStructure& rst) override;
 	};
 
 	/** To get the status of the CPU inside any computer. \n
@@ -147,7 +147,7 @@ namespace MCHEmul
 		CPUStatusCommand ();
 
 		private:
-		virtual void executeImpl (Computer* c, InfoStructure& rst) override
+		virtual void executeImpl (CommandExecuter* cE, Computer* c, InfoStructure& rst) override
 							{ /** Nothing special to do. */ }
 	};
 
@@ -168,7 +168,7 @@ namespace MCHEmul
 		private:
 		/** The fields returned are: \n
 			@see CPU::getInfoStructure method. */
-		virtual void executeImpl (Computer* c, InfoStructure& rst) override;
+		virtual void executeImpl (CommandExecuter* cE, Computer* c, InfoStructure& rst) override;
 	};
 
 	/** To get the content of the memory. \n
@@ -191,7 +191,7 @@ namespace MCHEmul
 		private:
 		/** The fields returned are: \n
 			BYTES = Attributes: The bytes in the locations requested. */
-		virtual void executeImpl (Computer* c, InfoStructure& rst) override;
+		virtual void executeImpl (CommandExecuter* cE, Computer* c, InfoStructure& rst) override;
 	};
 
 	/** To stop the cpu.
@@ -210,7 +210,7 @@ namespace MCHEmul
 							{ return (_parameters.size () == 0); }
 
 		private:
-		virtual void executeImpl (Computer* c, InfoStructure& rst) override;
+		virtual void executeImpl (CommandExecuter* cE, Computer* c, InfoStructure& rst) override;
 	};
 
 	/** To run the cpu, usually after a stop command has been executed. */
@@ -228,7 +228,7 @@ namespace MCHEmul
 							{ return (_parameters.size () == 0); }
 
 		private:
-		virtual void executeImpl (Computer* c, InfoStructure& rst) override;
+		virtual void executeImpl (CommandExecuter* cE, Computer* c, InfoStructure& rst) override;
 	};
 
 	/** To run just the next instruction of the CPU. */
@@ -246,7 +246,7 @@ namespace MCHEmul
 							{ return (_parameters.size () == 0); }
 
 		private:
-		virtual void executeImpl (Computer* c, InfoStructure& rst) override;
+		virtual void executeImpl (CommandExecuter* cE, Computer* c, InfoStructure& rst) override;
 	};
 
 	/** To get info about the last instruction executed. */
@@ -266,7 +266,7 @@ namespace MCHEmul
 		private:
 		/** The fields returned are: \n
 			INST = Attribute: String with the last instruction executed. */
-		virtual void executeImpl (Computer* c, InfoStructure& rst) override;
+		virtual void executeImpl (CommandExecuter* cE, Computer* c, InfoStructure& rst) override;
 	};
 }
 

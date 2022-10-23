@@ -2,6 +2,7 @@
 #include <CORE/Computer.hpp>
 #include <CORE/Stack.hpp>
 #include <CORE/Instruction.hpp>
+#include <CORE/CmdExecuter.hpp>
 #include <fstream>
 
 // ---
@@ -56,7 +57,7 @@ MCHEmul::HelpCommand::HelpCommand (const std::string& hF)
 }
 
 // ---
-void MCHEmul::HelpCommand::executeImpl (MCHEmul::Computer* c, MCHEmul::InfoStructure& rst)
+void MCHEmul::HelpCommand::executeImpl (MCHEmul::CommandExecuter* cE, MCHEmul::Computer* c, MCHEmul::InfoStructure& rst)
 {
 	MCHEmul::InfoStructure iS;
 
@@ -85,25 +86,25 @@ void MCHEmul::HelpCommand::executeImpl (MCHEmul::Computer* c, MCHEmul::InfoStruc
 }
 
 // ---
-void MCHEmul::StatusRegisterStatusCommand::executeImpl (MCHEmul::Computer* c,  MCHEmul::InfoStructure& rst)
+void MCHEmul::StatusRegisterStatusCommand::executeImpl (MCHEmul::CommandExecuter* cE, MCHEmul::Computer* c,  MCHEmul::InfoStructure& rst)
 {
 	rst.add ("SR", c -> cpu () -> statusRegister ().asString ());
 }
 
 // ---
-void MCHEmul::RegistersStatusCommand::executeImpl (MCHEmul::Computer* c, MCHEmul::InfoStructure& rst)
+void MCHEmul::RegistersStatusCommand::executeImpl (MCHEmul::CommandExecuter* cE, MCHEmul::Computer* c, MCHEmul::InfoStructure& rst)
 {
 	rst.add ("REGS", c -> cpu () -> getInfoStructure ().infoStructure ("REGS"));
 }
 
 // ---
-void MCHEmul::ProgramCounterStatusCommand::executeImpl (MCHEmul::Computer* c, MCHEmul::InfoStructure& rst)
+void MCHEmul::ProgramCounterStatusCommand::executeImpl (MCHEmul::CommandExecuter* cE, MCHEmul::Computer* c, MCHEmul::InfoStructure& rst)
 {
 	rst.add ("PC", c -> cpu () -> programCounter ().asString ());
 }
 
 // ---
-void MCHEmul::StackStatusCommand::executeImpl (MCHEmul::Computer* c, InfoStructure& rst)
+void MCHEmul::StackStatusCommand::executeImpl (MCHEmul::CommandExecuter* cE, MCHEmul::Computer* c, InfoStructure& rst)
 {
 	MCHEmul::InfoStructure iS = c -> memory () -> stack () -> getInfoStructure ();
 	if (_parameters.size () == 0 || (_parameters.size () == 1 && (*_parameters.find ("ALL")).second != "YES"))
@@ -127,13 +128,13 @@ MCHEmul::CPUStatusCommand::CPUStatusCommand ()
 }
 
 // ---
-void MCHEmul::CPUInfoCommand::executeImpl (MCHEmul::Computer* c, MCHEmul::InfoStructure& rst)
+void MCHEmul::CPUInfoCommand::executeImpl (MCHEmul::CommandExecuter* cE, MCHEmul::Computer* c, MCHEmul::InfoStructure& rst)
 {
 	rst.add ("CPU", c -> cpu () -> getInfoStructure ());
 }
 
 // ---
-void MCHEmul::MemoryStatusCommand::executeImpl (MCHEmul::Computer* c, MCHEmul::InfoStructure& rst)
+void MCHEmul::MemoryStatusCommand::executeImpl (MCHEmul::CommandExecuter* cE, MCHEmul::Computer* c, MCHEmul::InfoStructure& rst)
 {
 	MCHEmul::Address a1 = MCHEmul::Address::fromStr ((*_parameters.begin ()).first);
 	if (_parameters.size () == 2)
@@ -148,31 +149,31 @@ void MCHEmul::MemoryStatusCommand::executeImpl (MCHEmul::Computer* c, MCHEmul::I
 }
 
 // ---
-void MCHEmul::StopCPUCommand::executeImpl (MCHEmul::Computer* c, MCHEmul::InfoStructure& rst)
+void MCHEmul::StopCPUCommand::executeImpl (MCHEmul::CommandExecuter* cE, MCHEmul::Computer* c, MCHEmul::InfoStructure& rst)
 {
 	c -> setActionForNextCycle (MCHEmul::Computer::_ACTIONSTOP);
 
-	MCHEmul::CPUStatusCommand ().execute (c, rst);
+	MCHEmul::CPUStatusCommand ().execute (cE, c, rst);
 }
 
 // ---
-void MCHEmul::RunCPUCommand::executeImpl (MCHEmul::Computer* c, MCHEmul::InfoStructure& rst)
+void MCHEmul::RunCPUCommand::executeImpl (MCHEmul::CommandExecuter* cE, MCHEmul::Computer* c, MCHEmul::InfoStructure& rst)
 {
 	c -> setActionForNextCycle (MCHEmul::Computer::_ACTIONCONTINUE);
 
-	MCHEmul::CPUStatusCommand ().execute (c, rst);
+	cE -> executeCommand (cE -> commandBuilder () -> command ("CPUSTATUS"), c);
 }
 
 // ---
-void MCHEmul::NextInstructionCommand::executeImpl (MCHEmul::Computer* c, MCHEmul::InfoStructure& rst)
+void MCHEmul::NextInstructionCommand::executeImpl (MCHEmul::CommandExecuter* cE, MCHEmul::Computer* c, MCHEmul::InfoStructure& rst)
 {
 	c -> setActionForNextCycle (MCHEmul::Computer::_ACTIONNEXT);
 
-	MCHEmul::CPUStatusCommand ().execute (c, rst);
+	cE -> executeCommand (cE -> commandBuilder () -> command ("CPUSTATUS"), c);
 }
 
 // ---
-void MCHEmul::LastIntructionCPUCommand::executeImpl (MCHEmul::Computer* c, MCHEmul::InfoStructure& rst)
+void MCHEmul::LastIntructionCPUCommand::executeImpl (MCHEmul::CommandExecuter* cE, MCHEmul::Computer* c, MCHEmul::InfoStructure& rst)
 {
 	if (c -> cpu () -> lastInstruction () == nullptr)
 		return; // It could happen when nothing has been executed yet...

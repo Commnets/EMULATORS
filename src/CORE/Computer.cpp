@@ -171,7 +171,7 @@ bool MCHEmul::Computer::runComputerCycle (unsigned int a)
 	{
 		if (_cpu -> lastInstruction () != nullptr)
 			std::cout << "->" << *_cpu -> lastInstruction () << std::endl;
-		MCHEmul::CPUStatusCommand stCmd; MCHEmul::InfoStructure rst; stCmd.execute (this, rst);
+		MCHEmul::CPUStatusCommand stCmd; MCHEmul::InfoStructure rst; stCmd.execute (nullptr, this, rst);
 		std::cout << rst << std::endl;
 	}
 

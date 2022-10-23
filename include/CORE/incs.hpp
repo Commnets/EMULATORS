@@ -46,5 +46,6 @@
 #include <CORE/CommandBuilder.hpp>
 #include <CORE/StdCommands.hpp>
 #include <CORE/StdCommandBld.hpp>
+#include <CORE/CmdExecuter.hpp>
 
 #endif

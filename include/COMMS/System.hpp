@@ -22,17 +22,22 @@ namespace MCHEmul
 	class Computer;
 
 	/** The communication system is what makes messages to flow from a computer to another. */
-	class CommunicationSystem
+	class CommunicationSystem : public CommandExecuter
 	{
 		public:
+		static const int _ID = -2;
+
+		CommunicationSystem () = delete;
+
 		/** To create a communication system it is needed a channel and
 			a CommandBuilder to build the messages received as text,
 			and the name of the formatter used to format the messages before sending them back through the line. */
 		CommunicationSystem (PeerCommunicationChannel* cC, CommandBuilder* cB, 
 				const std::string& msgFmter = "COMMS")
-			: _communicationChannel (cC), _commandBuilder (cB),
+			: CommandExecuter (_ID, cB),
+			  _communicationChannel (cC),
 			  _messageFormatter (msgFmter),
-			  _error (false), _lastError (MCHEmul::_NOERROR)
+			  _error (false), _lastError (MCHEmul::_NOERROR), _lastSender ()
 							{ assert (_communicationChannel != nullptr && 
 									  _commandBuilder != nullptr); }
 
@@ -41,7 +46,7 @@ namespace MCHEmul
 		CommunicationSystem& operator = (const CommunicationSystem&) = delete;
 
 		virtual ~CommunicationSystem ()
-							{ delete (_communicationChannel); delete (_commandBuilder); }
+							{ delete (_communicationChannel); }
 
 		// Managing the life cycle of the communication system...
 		// If something happens the variable _lastError sets to something different than _NOERROR...
@@ -59,13 +64,18 @@ namespace MCHEmul
 							{ return (!_communicationChannel); }
 
 		protected:
-		CommandBuilder* _commandBuilder;
+		virtual void manageAnswer (Command *c, const InfoStructure& rst) override;
+		virtual void manageErrorInExecution (Command* c, const InfoStructure& rst) override
+							{ }
+
+		protected:
 		PeerCommunicationChannel* _communicationChannel;
 		const std::string _messageFormatter;
 
 		// Implementation
 		bool _error;
 		unsigned int _lastError;
+		MCHEmul::IPAddress _lastSender;
 	};
 }
 

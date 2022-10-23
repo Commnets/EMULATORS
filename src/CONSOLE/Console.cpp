@@ -4,13 +4,13 @@
 // ---
 MCHEmul::Console::Console (MCHEmul::Emulator* e,
 		MCHEmul::CommandBuilder* cB, const std::string& cF, std::ostream& oS)
-	: _emulator (e), 
-	  _commandBuilder (cB),
+	: MCHEmul::CommandExecuter (_ID, cB), 
+	  _emulator (e), 
 	  _outputStream (oS),
 	  _command (""), _cursorPosition (0),
 	  _commandErrorTxt (""), _commandDoesnExitTxt (""), _welcomeTxt (""), _commandPrompt ("")
 { 
-	assert (_emulator != nullptr && _commandBuilder != nullptr); 
+	assert (_emulator != nullptr); 
 
 	_commandErrorTxt = "Command can't be executed";
 	_commandDoesnExitTxt = "Command doesn't exist";
@@ -44,11 +44,11 @@ void MCHEmul::Console::run ()
 {
 	bool exit = false;
 
-	/** Print cout basic info about the computer managed. */
-	std::cout << "---- CPU ---" << std::endl 
-			  << *_emulator -> computer () -> cpu () << std::endl;
-	std::cout << "---- STACK -" << std::endl 
-			  << *_emulator -> computer () -> memory () -> stack () << std::endl << std::endl;
+	/** Print out basic info about the computer managed. */
+	_outputStream << "---- CPU ---" << std::endl
+				  << *_emulator -> computer () -> cpu () << std::endl;
+	_outputStream << "---- STACK -" << std::endl
+				  << *_emulator -> computer () -> memory () -> stack () << std::endl << std::endl;
 
 	/** Start to introduce data!. */
 	std::cout << _welcomeTxt;
@@ -56,6 +56,16 @@ void MCHEmul::Console::run ()
 
 	while (!exit)
 	{
+		if (isPendingCommands ())
+		{
+			_outputStream << std::endl;
+			if (!MCHEmul::CommandExecuter::executePendingCommands ())
+				_outputStream << _commandErrorTxt << std::endl;
+			_outputStream << std::endl;
+
+			std::cout << _commandPrompt;
+		}
+
 		if ((exit = readAndExecuteCommand ()))
 			continue;
 
@@ -67,32 +77,27 @@ void MCHEmul::Console::run ()
 bool MCHEmul::Console::readAndExecuteCommand ()
 {
 	if (!readCommand ())
-		return (false); // No command ready...
+		return (false); // No command ready, no quit...
 
-	std::cout << std::endl;
+	_outputStream << std::endl;
 	_command = MCHEmul::upper (MCHEmul::trim (_command));
 	if (_command == "QUIT" || _command == "Q")
 		return (true);
 
-	MCHEmul::Command* cmd = _commandBuilder -> command (_command);
-	if (cmd == nullptr)
-		std::cout << _command << ":" << _commandDoesnExitTxt << std::endl;
-	else
-	{
-		MCHEmul::InfoStructure rst; // The results...
-		if (cmd -> execute (_emulator -> computer (), rst))
-			std::cout << MCHEmul::FormatterBuilder::instance () -> 
-				formatter (cmd -> name ()) -> format (rst) << std::endl; // It is used the formatter with the name of the command!
-		else
-			std::cout << _command << ":" << _commandErrorTxt << std::endl;
-	}
+	MCHEmul::Command* cmd = commandBuilder () -> command (_command);
+	if (cmd == nullptr) _outputStream << _command << ":" << _commandDoesnExitTxt << std::endl;
+	else executeCommandNow (cmd, _emulator -> computer ());
 
 	// The comand has not to be destroyed
 	// The command builder own all off them...
+	// The same command is reused many times for performance reasons
 
 	_command = ""; _cursorPosition = 0;
-	std::cout << std::endl << _commandPrompt;
+	_outputStream << std::endl;
 
+	std::cout << _commandPrompt;
+
+	// The command was executed, no quit...
 	return (false);
 }
 
@@ -158,6 +163,19 @@ bool MCHEmul::Console::readCommand ()
 	}
 
 	return (result);
+}
+
+// ---
+void MCHEmul::Console::manageAnswer (MCHEmul::Command* c, const MCHEmul::InfoStructure& rst)
+{
+	_outputStream << MCHEmul::FormatterBuilder::instance () ->
+		formatter (c -> name ()) -> format (rst) << std::endl; // It is used the formatter with the name of the command!
+}
+
+// ---
+void MCHEmul::Console::manageErrorInExecution (MCHEmul::Command* c, const MCHEmul::InfoStructure& rst)
+{
+	_outputStream << _command << ":" << _commandErrorTxt << std::endl;
 }
 
 #ifdef _WIN32

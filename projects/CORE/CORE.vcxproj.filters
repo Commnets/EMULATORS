@@ -123,6 +123,9 @@
     <ClCompile Include="..\..\src\CORE\StdFormatter.cpp">
       <Filter>Archivos de origen\Foundation</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\CORE\CmdExecuter.cpp">
+      <Filter>Archivos de origen\Commands</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\include\CORE\IO.hpp">
@@ -226,6 +229,9 @@
     </ClInclude>
     <ClInclude Include="..\..\include\CORE\StdFormatter.hpp">
       <Filter>Archivos de encabezado\Foundation</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\CORE\CmdExecuter.hpp">
+      <Filter>Archivos de encabezado\Commands</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

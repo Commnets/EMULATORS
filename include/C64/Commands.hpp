@@ -33,7 +33,8 @@ namespace C64
 							{ return (_parameters.size () == 0); }
 
 		private:
-		virtual void executeImpl (MCHEmul::Computer* c, MCHEmul::InfoStructure& rst) override;
+		virtual void executeImpl (MCHEmul::CommandExecuter* cE, 
+			MCHEmul::Computer* c, MCHEmul::InfoStructure& rst) override;
 	};
 
 	/** To get the status of the CIA2 chip. */
@@ -51,7 +52,8 @@ namespace C64
 							{ return (_parameters.size () == 0); }
 
 		private:
-		virtual void executeImpl (MCHEmul::Computer* c, MCHEmul::InfoStructure& rst) override;
+		virtual void executeImpl (MCHEmul::CommandExecuter* cE, 
+			MCHEmul::Computer* c, MCHEmul::InfoStructure& rst) override;
 	};
 
 	/** To get the status of the CIA2 chip. */
@@ -69,7 +71,8 @@ namespace C64
 							{ return (_parameters.size () == 0); }
 
 		private:
-		virtual void executeImpl (MCHEmul::Computer* c, MCHEmul::InfoStructure& rst) override;
+		virtual void executeImpl (MCHEmul::CommandExecuter* cE, 
+			MCHEmul::Computer* c, MCHEmul::InfoStructure& rst) override;
 	};
 }
 

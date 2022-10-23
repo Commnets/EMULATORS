@@ -4,6 +4,8 @@
 // ---
 bool MCHEmul::CommunicationSystem::processMessagesOn (MCHEmul::Computer* c)
 {
+	MCHEmul::CommandExecuter::executePendingCommands ();
+
 	assert (c != nullptr);
 
 	// The system hasn't been initialized well!
@@ -11,30 +13,29 @@ bool MCHEmul::CommunicationSystem::processMessagesOn (MCHEmul::Computer* c)
 		return (false);
 
 	std::string str;
-	MCHEmul::IPAddress addr;
 
 	// Error receiving?
-	if (!_communicationChannel -> receive (str, addr))
+	if (!_communicationChannel -> receive (str, _lastSender /** To store ho send the message. */))
 		return (false); 
 
 	// Nothing in the content received
 	if (str == "")
-		return (true); 
+		return (true); // Nothing received, but executed...
 
 	// The received command can't be interpreted, 
 	// so an error will be generated...
-	MCHEmul::Command* cmd = _commandBuilder -> command (str);
+	str = MCHEmul::upper (MCHEmul::trim (str));
+	MCHEmul::Command* cmd = commandBuilder () -> command (str);
 	if (cmd == nullptr)
 		return (false); 
 
-	bool result = true;
-	MCHEmul::InfoStructure rst;
-	if (cmd -> execute (c, rst))
-		if (!rst.empty ()) // Is there is something to sent back?
-			result = _communicationChannel -> 
-				send (MCHEmul::FormatterBuilder::instance () -> formatter (_messageFormatter) -> format (rst), addr);
+	return (executeCommandNow (cmd, c));
+}
 
-	delete (cmd);
-
-	return (result);
+// ---
+void MCHEmul::CommunicationSystem::manageAnswer (MCHEmul::Command* c, const MCHEmul::InfoStructure& rst)
+{
+	if (!rst.empty ())
+		_communicationChannel ->
+			send (MCHEmul::FormatterBuilder::instance () -> formatter (_messageFormatter) -> format (rst), _lastSender);
 }

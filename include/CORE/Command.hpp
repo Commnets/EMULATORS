@@ -20,6 +20,7 @@
 namespace MCHEmul
 {
 	class Computer;
+	class CommandExecuter;
 
 	/** A command is and instruction to be executed over the computer.
 		Any command is made of an id and a set of attributes. */
@@ -53,14 +54,21 @@ namespace MCHEmul
 			execute the command. The method return true if they are, and false in other case. */ 
 		virtual bool canBeExecuted () const = 0;
 		/** To execute the command. \n
-			It returns true when the command has been executed properly and false when not. */
-		virtual bool execute (Computer* c, InfoStructure& rst);
+			The method receives:
+			@param cE		The chanel invoking the command. \n
+			@param c		The computer where to execute the command over. \n
+			@param rst		A reference to hold the answer of the command.
+			It returns true when the command has been executed properly and false when not. \n
+			The method can be redefine later if needed but it is not actuallt neccessary. \n
+			The method invokes executeImpl that must be redefined for every command. (@see later)
+		  */
+		virtual bool execute (CommandExecuter* cE, Computer* c, InfoStructure& rst);
 
 		protected:
 		/** This method executes the command over the computer received. \n
 			This methid is inoked from "execute" after verified that it is possible. 
 			This is ther eal one to be overloaded. */
-		virtual void executeImpl (Computer* c, InfoStructure& rst) = 0;
+		virtual void executeImpl (CommandExecuter* cE, Computer* c, InfoStructure& rst) = 0;
 
 		protected:
 		int _id;
@@ -84,7 +92,7 @@ namespace MCHEmul
 		/** By default a complex command could be executed just when all commans it is made up of can also be executed. */
 		virtual bool canBeExecuted () const override;
 		/** By default execute all commands inside and returns true if all also returns true, and false in other case. */
-		virtual bool execute (Computer* c, InfoStructure& rst) override;
+		virtual bool execute (CommandExecuter* cE, Computer* c, InfoStructure& rst) override;
 
 		private:
 		Commands _commands;

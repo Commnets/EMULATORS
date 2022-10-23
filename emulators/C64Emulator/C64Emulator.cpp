@@ -16,7 +16,7 @@ int _tmain (int argc, _TCHAR *argv [])
 	C64Emulator myEmulator (
 		MCHEmul::convertIntoStrings (argc, argv),
 		new MCHEmul::CommunicationSystem (
-			new MCHEmul::PeerCommunicationChannel (100 /** port. */, 2 /** simultaneous comms. */), new C64::CommandBuilder));
+			new MCHEmul::PeerCommunicationChannel (60000 /** port. */, 10 /** simultaneous comms. */), new C64::CommandBuilder));
 	if (!myEmulator || !myEmulator.initialize ())
 		return (1); // Not possible to run the emulation. Exit with error...
 

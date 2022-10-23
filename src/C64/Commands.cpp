@@ -8,19 +8,19 @@ const std::string C64::CIA2StatusCommand::_NAME = "CCIA2";
 
 
 // ---
-void C64::VICStatusCommand::executeImpl (MCHEmul::Computer* c, MCHEmul::InfoStructure& rst)
+void C64::VICStatusCommand::executeImpl (MCHEmul::CommandExecuter* cE, MCHEmul::Computer* c, MCHEmul::InfoStructure& rst)
 {
 	rst.add ("VICII", dynamic_cast <C64::Commodore64*> (c) -> vicII () -> getInfoStructure ());
 }
 
 // ---
-void C64::CIA1StatusCommand::executeImpl (MCHEmul::Computer* c, MCHEmul::InfoStructure& rst)
+void C64::CIA1StatusCommand::executeImpl (MCHEmul::CommandExecuter* cE, MCHEmul::Computer* c, MCHEmul::InfoStructure& rst)
 {
 	rst.add ("CIA1", dynamic_cast <C64::Commodore64*> (c) -> cia1 () -> getInfoStructure ());
 }
 
 // ---
-void C64::CIA2StatusCommand::executeImpl (MCHEmul::Computer* c, MCHEmul::InfoStructure& rst)
+void C64::CIA2StatusCommand::executeImpl (MCHEmul::CommandExecuter* cE, MCHEmul::Computer* c, MCHEmul::InfoStructure& rst)
 {
 	rst.add ("CIA2", dynamic_cast <C64::Commodore64*> (c) -> cia2 () -> getInfoStructure ());
 }
