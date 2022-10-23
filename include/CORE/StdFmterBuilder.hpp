@@ -19,6 +19,8 @@
 
 namespace MCHEmul
 {
+	/** The standard formatter builder, creates the nasic formatter.
+		All of them will the Standard except when the requested formatter if type JSON. */
 	class StdFormatterBuilder : public FormatterBuilder
 	{
 		public:
@@ -28,7 +30,8 @@ namespace MCHEmul
 
 		protected:
 		virtual Formatter* createFormatter (const std::string& f, const std::string& nF, const Strings& l) override
-							{ return (new StdFormatter (l)); }
+							{ return ((nF == "JSON" // JSON is taking different...
+								? (Formatter*) new JSONFormatter (l) : (Formatter*) new StdFormatter (l))); }
 	};
 }
 

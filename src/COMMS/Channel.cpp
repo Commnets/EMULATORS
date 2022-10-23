@@ -3,10 +3,11 @@
 #include <BitStream.h>
 
 // ---
-MCHEmul::PeerCommunicationChannel::PeerCommunicationChannel (unsigned short p, unsigned int nC, const MCHEmul::IPAddress& to)
-	: _listenAtPort (p), _simultaneousConnections (nC), _connectedTo (to),
+MCHEmul::PeerCommunicationChannel::PeerCommunicationChannel (unsigned short p, unsigned int nC)
+	: _listenAtPort (p), _simultaneousConnections (nC),
 	  _peer (nullptr),
-	  _channelInitialized (false), _channelConnected (false),
+	  _channelInitialized (false), 
+	  _channelsConnected (),
 	  _lastError (MCHEmul::_NOERROR)
 {
 	if ((_peer = RakNet::RakPeerInterface::GetInstance ()) == nullptr)
@@ -17,6 +18,8 @@ MCHEmul::PeerCommunicationChannel::PeerCommunicationChannel (unsigned short p, u
 MCHEmul::PeerCommunicationChannel::~PeerCommunicationChannel ()
 {
 	RakNet::RakPeerInterface::DestroyInstance (_peer);
+
+	// And all communications will be closed if any...
 }
 	
 // ---
@@ -40,17 +43,6 @@ bool MCHEmul::PeerCommunicationChannel::initialize ()
 		_channelInitialized = true;
 	}
 
-	if (!_channelConnected && _connectedTo != MCHEmul::IPAddress ())
-	{
-		if (_peer -> Connect (_connectedTo.ipAsString ().c_str (), _connectedTo.port (), nullptr, 0) 
-				!= RakNet::ConnectionAttemptResult::CONNECTION_ATTEMPT_STARTED)
-		{
-			_lastError = MCHEmul::_COMMSNOTOPENED_ERROR;
-
-			return (false);
-		}
-	}
-
 	return (true);
 }
 
@@ -59,7 +51,7 @@ bool MCHEmul::PeerCommunicationChannel::finalize ()
 {
 	_peer -> CloseConnection (_peer -> GetMyGUID (), true); // Informing about the disconnection...
 
-	_channelConnected = false;
+	_channelsConnected = { };
 	_channelInitialized = false;
 
 	return (true);
@@ -81,29 +73,28 @@ bool MCHEmul::PeerCommunicationChannel::receive (std::string& str, MCHEmul::IPAd
 		// The first char has the id of the mesaage...
 		switch (packet -> data [0]) 
 		{
-			case ID_REMOTE_DISCONNECTION_NOTIFICATION:					// Client has disconnected.
-			case ID_REMOTE_CONNECTION_LOST:								// Client has lost the communication.
-			case ID_REMOTE_NEW_INCOMING_CONNECTION:						// Another client connection has been done.
-			case ID_NEW_INCOMING_CONNECTION:							// Client is requesting connection.
-			case ID_NO_FREE_INCOMING_CONNECTIONS:						// Server is full. 
-			case ID_DISCONNECTION_NOTIFICATION: 						// Client / Server disconnected.
-			case ID_CONNECTION_LOST:									// Client / Server connection lost.
-			case ID_CONNECTED_PING:										// A Client is trying to ping.
-			case ID_UNCONNECTED_PING:									// A non client is trying to ping.
+			case ID_REMOTE_DISCONNECTION_NOTIFICATION:					// Element has disconnected.
+			case ID_REMOTE_CONNECTION_LOST:								// Element has lost the communication.
+			case ID_REMOTE_NEW_INCOMING_CONNECTION:						// Another element connection has been done.
+			case ID_NEW_INCOMING_CONNECTION:							// Element is requesting connection.
+			case ID_NO_FREE_INCOMING_CONNECTIONS:						// This element is full. 
+			case ID_DISCONNECTION_NOTIFICATION: 						// Element disconnected.
+			case ID_CONNECTION_LOST:									// Element connection lost.
+			case ID_CONNECTED_PING:										// An element is trying to ping.
+			case ID_UNCONNECTED_PING:									// A element is trying to ping.
 			case ID_ALREADY_CONNECTED:									// Connection not posible because the system is already in.
 			case ID_INCOMPATIBLE_PROTOCOL_VERSION:						// The communication protocol is different than the one the server expects.
-			case ID_CONNECTION_BANNED:									// Banned from this server
-			case ID_CONNECTION_ATTEMPT_FAILED:							// Not posssible to reach the server. IP is right?
+			case ID_CONNECTION_BANNED:									// Banned from this element.
+			case ID_CONNECTION_ATTEMPT_FAILED:							// Not posssible to reach the element. IP is right?
 			case ID_INVALID_PASSWORD:								
-				_channelConnected = false;
 				break;
 
 			// When the server accept the connection...
-			case DefaultMessageIDTypes::ID_CONNECTION_REQUEST_ACCEPTED:	// The server has accepted the connection
-				_channelConnected = true; // Noww the communication is possible...
+			case DefaultMessageIDTypes::ID_CONNECTION_REQUEST_ACCEPTED:	// The connection has been accepted
+				_channelsConnected [from] = true;
 				break;
 
-			// Our important message...
+			// A message has been received...
 			case (DefaultMessageIDTypes::ID_USER_PACKET_ENUM + 1):
 				{
 					RakNet::RakString rs;
@@ -133,6 +124,8 @@ bool MCHEmul::PeerCommunicationChannel::send (const std::string& str, const MCHE
 	if (!*this)
 		return (false);
 
+	bool result = true;
+
 	if (!_channelInitialized)
 	{
 		_lastError = MCHEmul::_COMMSNOTOPENED_ERROR;
@@ -140,13 +133,65 @@ bool MCHEmul::PeerCommunicationChannel::send (const std::string& str, const MCHE
 		return (false);
 	}
 
-	RakNet::BitStream bsOut;
-	bsOut.Write ((RakNet::MessageID) DefaultMessageIDTypes::ID_USER_PACKET_ENUM + 1);
-	bsOut.Write (str.c_str ());
-	RakNet::SystemAddress sA (to.ipAsString ().c_str (), to.port ());
-	if (_peer -> Send (&bsOut, IMMEDIATE_PRIORITY, RELIABLE_ORDERED, 0, sA, false) == 0)
+	// If the destination is already connected...
+	if (connectedTo (to))
 	{
-		_lastError = MCHEmul::_CHANNELWRITEERROR_ERROR;
+		// Adds the message...
+		_messagesToSend.push (MCHEmul::PeerCommunicationChannel::MsgToSend (str, to));
+		// ...and then send all pending messages...
+		result = sendPendingMessages ();
+	}
+	// Otherwise...
+	else
+	{
+		// First send the connection try...
+		if ((result = connectTo (to)))
+			// ...but keeps the message to be sent when possible...
+			_messagesToSend.push (MCHEmul::PeerCommunicationChannel::MsgToSend (str, to));
+	}
+
+	return (result);
+}
+
+// ---
+bool MCHEmul::PeerCommunicationChannel::sendPendingMessages ()
+{
+	bool result = true;
+
+	while (!_messagesToSend.empty ())
+	{ 
+		MCHEmul::PeerCommunicationChannel::MsgToSend msg = _messagesToSend.front ();
+		_messagesToSend.pop ();
+
+		// Just in case...
+		if (!connectedTo (msg._address))
+			continue;
+
+		RakNet::BitStream bsOut;
+		bsOut.Write ((RakNet::MessageID)DefaultMessageIDTypes::ID_USER_PACKET_ENUM + 1);
+		bsOut.Write (msg._message.c_str ());
+		RakNet::SystemAddress sA (msg._address.ipAsString ().c_str (), msg._address.port ());
+		if (_peer -> Send (&bsOut, IMMEDIATE_PRIORITY, RELIABLE_ORDERED, 0, sA, false) == 0)
+		{
+			_lastError = MCHEmul::_CHANNELWRITEERROR_ERROR;
+
+			result = false;
+		}
+	}
+
+	return (result);
+}
+
+// ---
+bool MCHEmul::PeerCommunicationChannel::connectTo (const MCHEmul::IPAddress& a)
+{
+	if (connectedTo (a))
+		return (true);
+
+	if (_peer -> Connect (a.ipAsString ().c_str (), a.port (), nullptr, 0)
+		!= RakNet::ConnectionAttemptResult::CONNECTION_ATTEMPT_STARTED)
+	{
+		_lastError = MCHEmul::_COMMSNOTOPENED_ERROR;
 
 		return (false);
 	}

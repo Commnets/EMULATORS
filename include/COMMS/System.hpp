@@ -31,9 +31,10 @@ namespace MCHEmul
 
 		/** To create a communication system it is needed a channel and
 			a CommandBuilder to build the messages received as text,
-			and the name of the formatter used to format the messages before sending them back through the line. */
+			and the name of the formatter used to format the messages before sending them back through the line.
+			By default it is JSON. */
 		CommunicationSystem (PeerCommunicationChannel* cC, CommandBuilder* cB, 
-				const std::string& msgFmter = "COMMS")
+				const std::string& msgFmter = "JSON" /** @see JSONFormatter. */)
 			: CommandExecuter (_ID, cB),
 			  _communicationChannel (cC),
 			  _messageFormatter (msgFmter),

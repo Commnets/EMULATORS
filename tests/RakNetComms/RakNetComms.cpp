@@ -64,6 +64,8 @@ bool readCommand ()
 
 		if (chr == 13)
 			result = true;
+
+		std::cout << bk.substr (0, _COMMAND.length ()) << _COMMAND;
 	}
 
 	return (result);

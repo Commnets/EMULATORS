@@ -64,6 +64,18 @@ namespace MCHEmul
 						{ return (_a == a._a && _b == a._b && _c == a._c && _d == a._d && _port == a._port); }
 		bool operator != (const IPAddress& a) const
 						{ return (_a != a._a || _b != a._b || _c != a._c || _d != a._d || _port != a._port); }
+		/** This is used in maps. */
+		bool operator < (const IPAddress& a) const
+						{ return ((_a < a._a) || 
+								  ((_a == a._a) && (_b < a._b)) ||
+								  ((_a == a._a) && (_b == a._b) && (_c < a._c)) ||
+								  ((_a == a._a) && (_b == a._b) && (_c == a._c) && (_d < a._d))); }
+		bool operator <= (const IPAddress& a) const
+						{ return (*this < a || *this == a); }
+		bool operator > (const IPAddress& a) const
+						{ return (!(*this <= a)); }
+		bool operator >= (const IPAddress& a) const
+						{ return (!(*this < a)); }
 
 		friend std::ostream& operator << (std::ostream& o, const IPAddress& a)
 						{ return (o << ((a._error) ? "Error" : a.asString ())); }
