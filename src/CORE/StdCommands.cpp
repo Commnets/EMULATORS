@@ -7,17 +7,23 @@
 
 // ---
 const std::string MCHEmul::HelpCommand::_NAME = "CHELP";
+const std::string MCHEmul::AuthorInfoCommand::_NAME = "CAUTHOR";
 const std::string MCHEmul::StatusRegisterStatusCommand::_NAME =  "CSTATUS";
 const std::string MCHEmul::RegistersStatusCommand::_NAME = "CREGISTERS";
 const std::string MCHEmul::ProgramCounterStatusCommand::_NAME = "CPC";
 const std::string MCHEmul::StackStatusCommand::_NAME = "CSTACK";
 const std::string MCHEmul::CPUStatusCommand::_NAME = "CCPUSTATUS";
+const std::string MCHEmul::CPUSimpleStatusCommand::_NAME = "CCPUSSTATUS";
 const std::string MCHEmul::CPUInfoCommand::_NAME = "CCPUINFO";
 const std::string MCHEmul::MemoryStatusCommand::_NAME = "CMEMORY";
 const std::string MCHEmul::StopCPUCommand::_NAME = "CSTOP";
 const std::string MCHEmul::RunCPUCommand::_NAME = "CRUN";
 const std::string MCHEmul::NextInstructionCommand::_NAME = "CNEXT";
 const std::string MCHEmul::LastIntructionCPUCommand::_NAME = "CINST";
+const std::string MCHEmul::ListOfBreakPointsCommand::_NAME = "CBREAKS";
+const std::string MCHEmul::SetBreakPointCommand::_NAME = "CSETBREAK";
+const std::string MCHEmul::RemoveBreakPointCommand::_NAME = "CREMOVEBREAK";
+const std::string MCHEmul::RemoveAllBreakPointsCommand::_NAME = "CREMOVEBREAKS";
 
 // ---
 MCHEmul::HelpCommand::HelpCommand (const std::string& hF)
@@ -70,7 +76,7 @@ void MCHEmul::HelpCommand::executeImpl (MCHEmul::CommandExecuter* cE, MCHEmul::C
 				std::string h = "";
 				for (size_t j = 0; j < (*i).second.size (); j++)
 					h += ((j == 0) ? '\0' : '\n') + (*i).second [j];
-				iS.add (cmd, h);
+				iS.add ("->" + cmd, h);
 			}
 		};
 
@@ -83,6 +89,20 @@ void MCHEmul::HelpCommand::executeImpl (MCHEmul::CommandExecuter* cE, MCHEmul::C
 		helpInfoCommand ((*_parameters.begin ()).first);
 
 	rst.add ("HELP", iS);
+}
+
+// ---
+void MCHEmul::AuthorInfoCommand::executeImpl (MCHEmul::CommandExecuter* cE, MCHEmul::Computer* c, MCHEmul::InfoStructure& rst)
+{
+	MCHEmul::InfoStructure dt;
+	dt.add ("NAME", std::string ("Ignacio Cea Fornies"));
+	dt.add ("COUNTRY", std::string ("Spain"));
+	dt.add ("CITY", std::string ("Madrid"));
+	dt.add ("DATE", std::string ("October 2022"));
+	dt.add ("EMAIL", std::string ("ignacio.cea.fornies@telefonica.net"));
+	dt.add ("LOVE", std::string ("my wife, my daugthers, my family and my friends"));
+
+	rst.add ("Author", dt);
 }
 
 // ---
@@ -128,6 +148,19 @@ MCHEmul::CPUStatusCommand::CPUStatusCommand ()
 }
 
 // ---
+MCHEmul::CPUSimpleStatusCommand::CPUSimpleStatusCommand ()
+	: MCHEmul::ComplexCommand (_ID, _NAME,
+			MCHEmul::Commands (
+				{ new StatusRegisterStatusCommand,
+				  new RegistersStatusCommand,
+				  new ProgramCounterStatusCommand,
+				  new LastIntructionCPUCommand,
+				}))
+{
+	// Nothing else...
+}
+
+// ---
 void MCHEmul::CPUInfoCommand::executeImpl (MCHEmul::CommandExecuter* cE, MCHEmul::Computer* c, MCHEmul::InfoStructure& rst)
 {
 	rst.add ("CPU", c -> cpu () -> getInfoStructure ());
@@ -161,7 +194,7 @@ void MCHEmul::RunCPUCommand::executeImpl (MCHEmul::CommandExecuter* cE, MCHEmul:
 {
 	c -> setActionForNextCycle (MCHEmul::Computer::_ACTIONCONTINUE);
 
-	cE -> executeCommand (cE -> commandBuilder () -> command ("CPUSTATUS"), c);
+	MCHEmul::CPUStatusCommand ().execute (cE, c, rst);
 }
 
 // ---
@@ -169,7 +202,8 @@ void MCHEmul::NextInstructionCommand::executeImpl (MCHEmul::CommandExecuter* cE,
 {
 	c -> setActionForNextCycle (MCHEmul::Computer::_ACTIONNEXT);
 
-	cE -> executeCommand (cE -> commandBuilder () -> command ("CPUSTATUS"), c);
+	// To show status after execution
+	cE -> executeCommand (cE -> commandBuilder () -> command ("CPUSSTATUS"), c);
 }
 
 // ---
@@ -179,4 +213,40 @@ void MCHEmul::LastIntructionCPUCommand::executeImpl (MCHEmul::CommandExecuter* c
 		return; // It could happen when nothing has been executed yet...
 
 	rst.add ("INST", c -> cpu () -> lastInstruction () -> asString ());
+}
+
+// ---
+void MCHEmul::ListOfBreakPointsCommand::executeImpl (MCHEmul::CommandExecuter* cE, MCHEmul::Computer* c, MCHEmul::InfoStructure& rst)
+{
+	int ct = 0;
+	std::string lst;
+	for (const auto& i : c -> actions ())
+		if (i.second == MCHEmul::Computer::_ACTIONSTOP) // Only if stopped...
+			lst += ((ct++ != 0) ? "," : "\0") + i.first.asString (MCHEmul::UByte::OutputFormat::_HEXA, '\0', 2);
+
+	rst.add ("BREAKPOINTS", lst);
+}
+
+// ---
+void MCHEmul::SetBreakPointCommand::executeImpl (MCHEmul::CommandExecuter* cE, MCHEmul::Computer* c, MCHEmul::InfoStructure& rst)
+{
+	for (const auto& i : _parameters)
+		c -> addAction (MCHEmul::Address::fromStr (i.first), MCHEmul::Computer::_ACTIONSTOP);
+}
+
+// ---
+void MCHEmul::RemoveBreakPointCommand::executeImpl (MCHEmul::CommandExecuter* cE, MCHEmul::Computer* c, MCHEmul::InfoStructure& rst)
+{
+	for (const auto& i : _parameters)
+	{
+		MCHEmul::Address bP = MCHEmul::Address::fromStr (i.first);
+		if (c -> action (bP) == MCHEmul::Computer::_ACTIONSTOP) // Only if stopped...
+			c -> addAction (bP, MCHEmul::Computer::_ACTIONNOTHING);
+	}
+}
+
+// ---
+void MCHEmul::RemoveAllBreakPointsCommand::executeImpl (MCHEmul::CommandExecuter* cE, MCHEmul::Computer* c, MCHEmul::InfoStructure& rst)
+{
+	c -> removeAllActions (MCHEmul::Computer::_ACTIONSTOP);
 }

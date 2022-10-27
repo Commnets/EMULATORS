@@ -144,7 +144,7 @@ bool MCHEmul::Emulator::initialize ()
 		MCHEmul::Address iA; 
 		std::vector <MCHEmul::UByte> bt = cL.asSetOfBytes (iA);
 		computer () -> memory () -> set (iA, bt);
-		computer () -> setActions (cL.listOfActions ());
+		computer () -> addActions (cL.listOfActions ());
 
 		// Parser and compiler are destroyed here...
 	}
@@ -158,7 +158,7 @@ bool MCHEmul::Emulator::initialize ()
 		MCHEmul::Computer::MapOfActions acts;
 		for (const auto& i : adrs)
 			acts.insert (MCHEmul::Computer::MapOfActions::value_type (i, MCHEmul::Computer::_ACTIONSTOP));
-		computer () -> setActions (acts);
+		computer () -> addActions (acts);
 	}
 
 	if (stoppedAtStarting ())

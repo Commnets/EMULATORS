@@ -233,6 +233,18 @@ void MCHEmul::Computer::removeAction (const MCHEmul::Address& at)
 }
 
 // ---
+void MCHEmul::Computer::removeAllActions (unsigned int a)
+{
+	for (MCHEmul::Computer::MapOfActions::iterator i = _actionsAt.begin (); i != _actionsAt.end ();)
+	{
+		if ((*i).second == a)
+			_actionsAt.erase (i++);
+		else
+			++i;
+	}
+}
+
+// ---
 MCHEmul::InfoStructure MCHEmul::Computer::getInfoStructure () const
 {
 	MCHEmul::InfoStructure result;

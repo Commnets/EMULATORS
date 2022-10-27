@@ -1,13 +1,15 @@
 #include <CONSOLE/Console.hpp>
+#include <CORE/CommandBuilder.hpp>
 #include <fstream>
 
 // ---
 MCHEmul::Console::Console (MCHEmul::Emulator* e,
-		MCHEmul::CommandBuilder* cB, const std::string& cF, std::ostream& oS)
+		MCHEmul::CommandBuilder* cB, const std::string& cF, std::ostream& oS, size_t cK)
 	: MCHEmul::CommandExecuter (_ID, cB), 
 	  _emulator (e), 
 	  _outputStream (oS),
-	  _command (""), _cursorPosition (0),
+	  _command (""), _lastCommands (), 
+	  _lastCommandPosition (0), _cursorPosition (0),
 	  _commandErrorTxt (""), _commandDoesnExitTxt (""), _welcomeTxt (""), _commandPrompt ("")
 { 
 	assert (_emulator != nullptr); 
@@ -16,7 +18,7 @@ MCHEmul::Console::Console (MCHEmul::Emulator* e,
 	_commandDoesnExitTxt = "Command doesn't exist";
 	_welcomeTxt = "";
 	_commandPrompt = "?:";
-
+		
 	MCHEmul::Strings ls;
 	std::ifstream cFile (cF, std::ios_base::in);
 	if (cFile.is_open ())
@@ -58,7 +60,6 @@ void MCHEmul::Console::run ()
 	{
 		if (isPendingCommands ())
 		{
-			_outputStream << std::endl;
 			if (!MCHEmul::CommandExecuter::executePendingCommands ())
 				_outputStream << _commandErrorTxt << std::endl;
 			_outputStream << std::endl;
@@ -80,9 +81,21 @@ bool MCHEmul::Console::readAndExecuteCommand ()
 		return (false); // No command ready, no quit...
 
 	_outputStream << std::endl;
+
 	_command = MCHEmul::upper (MCHEmul::trim (_command));
 	if (_command == "QUIT" || _command == "Q")
 		return (true);
+
+	// Saves the last command...
+	// Only it is not the same than just the one before!
+	if (_lastCommands.empty () || 
+		(!_lastCommands.empty () && _lastCommands [_lastCommands.size () - 1] != _command))
+	{
+		_lastCommands.push_back (_command);
+		if (_lastCommands.size () >= _maxCommandsKept) // No more than the max commands allowed to kept!
+			_lastCommands = std::vector <std::string> (_lastCommands.begin ()++, _lastCommands.end ());
+		_lastCommandPosition = _lastCommands.size (); // One the enters is pressed...it will be the last new element...
+	}
 
 	MCHEmul::Command* cmd = commandBuilder () -> command (_command);
 	if (cmd == nullptr) _outputStream << _command << ":" << _commandDoesnExitTxt << std::endl;
@@ -93,9 +106,10 @@ bool MCHEmul::Console::readAndExecuteCommand ()
 	// The same command is reused many times for performance reasons
 
 	_command = ""; _cursorPosition = 0;
-	_outputStream << std::endl;
 
-	std::cout << _commandPrompt;
+	_outputStream << std::endl;
+	if (!isPendingCommands ())
+		std::cout << _commandPrompt;
 
 	// The command was executed, no quit...
 	return (false);
@@ -113,6 +127,11 @@ bool MCHEmul::Console::readCommand ()
 	{
 		size_t oPos = _cursorPosition;
 
+		auto delCurrentCommand = [&]() -> void
+			{	std::cout << bk.substr (0, _cursorPosition) // From the current position...
+						  << MCHEmul::_SPACES.substr (0, _command.length ()) << bk.substr (0, _command.length ());
+				oPos = 0; };
+
 		switch (chr)
 		{
 			case _LEFTKEY:
@@ -123,6 +142,26 @@ bool MCHEmul::Console::readCommand ()
 			case _RIGHTKEY:
 				if (_cursorPosition < _command.length ()) 
 					_cursorPosition++;
+				break;
+
+			case _UPKEY:
+				if (_lastCommandPosition > 0)
+				{ 
+					delCurrentCommand ();
+					_command = _lastCommands [--_lastCommandPosition];
+					_cursorPosition = _command.length ();
+				}
+
+				break;
+
+			case _DOWNKEY:
+				if (_lastCommandPosition < (_lastCommands.size () - 1))
+				{
+					delCurrentCommand ();
+					_command = _lastCommands [++_lastCommandPosition];
+					_cursorPosition = _command.length ();
+				}
+
 				break;
 
 			case _BACKKEY:
@@ -158,7 +197,7 @@ bool MCHEmul::Console::readCommand ()
 				break;
 		}
 
-		std::cout << bk.substr (0, oPos) << _command 
+		std::cout << bk.substr (0, oPos) << _command
 			<< ' ' /** to support the deletion. */ << bk.substr (0, _command.length () - _cursorPosition + 1);
 	}
 
@@ -198,6 +237,14 @@ bool MCHEmul::Win32Console::readChar (char& chr) const
 
 			case 301:
 				chr = _RIGHTKEY;
+				break;
+
+			case 296:
+				chr = _UPKEY;
+				break;
+
+			case 304:
+				chr = _DOWNKEY;
 				break;
 
 			case 13:

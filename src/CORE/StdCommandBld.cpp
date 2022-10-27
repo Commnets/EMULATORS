@@ -8,6 +8,8 @@ MCHEmul::Command* MCHEmul::StandardCommandBuilder::createEmptyCommand (const std
 
 	if (cmdName == "HELP")
 		result = new MCHEmul::HelpCommand;
+	else if (cmdName == "AUTHOR")
+		result = new MCHEmul::AuthorInfoCommand;
 	else if (cmdName == "STATUS")
 		result = new MCHEmul::StatusRegisterStatusCommand;
 	else if (cmdName == "PC")
@@ -18,6 +20,8 @@ MCHEmul::Command* MCHEmul::StandardCommandBuilder::createEmptyCommand (const std
 		result = new MCHEmul::StackStatusCommand;
 	else if (cmdName == "CPUSTATUS")
 		result = new MCHEmul::CPUStatusCommand;
+	else if (cmdName == "CPUSSTATUS")
+		result = new MCHEmul::CPUSimpleStatusCommand;
 	else if (cmdName == "CPUINFO")
 		result = new MCHEmul::CPUInfoCommand;
 	else if (cmdName == "MEMORY")
@@ -30,6 +34,14 @@ MCHEmul::Command* MCHEmul::StandardCommandBuilder::createEmptyCommand (const std
 		result = new MCHEmul::NextInstructionCommand;
 	else if (cmdName == "INST")
 		result = new MCHEmul::LastIntructionCPUCommand;
+	else if (cmdName == "BREAKS")
+		result = new MCHEmul::ListOfBreakPointsCommand;
+	else if (cmdName == "SETBREAK")
+		result = new MCHEmul::SetBreakPointCommand;
+	else if (cmdName == "REMOVEBREAK")
+		result = new MCHEmul::RemoveBreakPointCommand;
+	else if (cmdName == "REMOVEBREAKS")
+		result = new MCHEmul::RemoveAllBreakPointsCommand;
 
 	return (result);
 }

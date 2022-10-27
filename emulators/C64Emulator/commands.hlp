@@ -1,4 +1,8 @@
 #C64 Console
+#My info
+;AUTHOR
+To know info about the author.
+No parameters needed.
 #Commands to know the status of the CPU
 ;STATUS
 Get the status of the Status Register.
@@ -13,6 +17,9 @@ No parameters needed.
 To get the current status of the CPU.
 Including: Status Register (STATUS), Registers (REGISTERS), 
 Program Counter (PC) and Stack (STACK).
+No parameters needed.
+;CPUSSTATUS
+Similar to CPUSTATUS but not including info about the stack.
 No parameters needed.
 #Commands to know think about the Computer
 ;STACK (ALL)
@@ -40,6 +47,20 @@ No parameters needed.
 ;INST
 To know the last instruction executed by the CPU.
 No parameters needed.
+;BREAKS
+To know the list of break points defined in the computer.
+No parameters are needed.
+;SETBREAK
+To set a new break point.
+It is needed at leat one address, but many other can be also provided separated by space.
+The address can be passed in any format possible: HEX($), OCT(0), DECIMAL
+;REMOVEBREAK
+To remove a break point.
+It is needed at leat one address, but many other can be also provided separated by space.
+The address can be passed in any format possible: HEX($), OCT(0), DECIMAL
+;REMOVEBREAKS
+To remove all break points.
+No parameters are needed.
 #Specific commands for C64
 ;VICII
 To know the status of the VICII chip, including raster and others.

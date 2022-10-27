@@ -50,6 +50,26 @@ namespace MCHEmul
 		HelpInfo _helpInfo;
 	};
 
+	/** Just to know the name of the author. */
+	class AuthorInfoCommand final : public Command
+	{
+		public:
+		static const int _ID = -2;
+		static const std::string _NAME;
+
+		AuthorInfoCommand ()
+			: Command (_ID, _NAME)
+							{ }
+
+		virtual bool canBeExecuted () const override
+							{ return (_parameters.size () == 0); }
+
+		private:
+		/** The fields returned are: \n
+			AUTHOR	= InfoStructure: Information about the author. */
+		virtual void executeImpl (CommandExecuter* cE, Computer* c, InfoStructure& rst) override;
+	};
+
 	/** To get the status of the status register inside any computer. */
 	class StatusRegisterStatusCommand final : public Command
 	{
@@ -151,11 +171,26 @@ namespace MCHEmul
 							{ /** Nothing special to do. */ }
 	};
 
+	/** Similar to the previous one but without info about the stack. \n
+		it is also used by the command NEXT. */
+	class CPUSimpleStatusCommand final : public ComplexCommand
+	{
+		public:
+		static const int _ID = 5;
+		static const std::string _NAME;
+
+		CPUSimpleStatusCommand ();
+
+		private:
+		virtual void executeImpl (CommandExecuter* cE, Computer* c, InfoStructure& rst) override
+							{ /** Nothing special to do. */ }
+	};
+
 	/** To get info about the cpu. */
 	class CPUInfoCommand final : public Command
 	{
 		public:
-		static const int _ID = 5;
+		static const int _ID = 6;
 		static const std::string _NAME;
 
 		CPUInfoCommand ()
@@ -178,7 +213,7 @@ namespace MCHEmul
 	class MemoryStatusCommand final : public Command
 	{
 		public:
-		static const int _ID = 6;
+		static const int _ID = 7;
 		static const std::string _NAME;
 
 		MemoryStatusCommand ()
@@ -199,7 +234,7 @@ namespace MCHEmul
 	class StopCPUCommand final : public Command
 	{
 		public:
-		static const int _ID = 7;
+		static const int _ID = 8;
 		static const std::string _NAME;
 
 		StopCPUCommand ()
@@ -217,7 +252,7 @@ namespace MCHEmul
 	class RunCPUCommand final : public Command
 	{
 		public:
-		static const int _ID = 8;
+		static const int _ID = 9;
 		static const std::string _NAME;
 
 		RunCPUCommand ()
@@ -235,7 +270,7 @@ namespace MCHEmul
 	class NextInstructionCommand final : public Command
 	{
 		public:
-		static const int _ID = 9;
+		static const int _ID = 10;
 		static const std::string _NAME;
 
 		NextInstructionCommand ()
@@ -253,7 +288,7 @@ namespace MCHEmul
 	class LastIntructionCPUCommand final : public Command
 	{
 		public:
-		static const int _ID = 10;
+		static const int _ID = 11;
 		static const std::string _NAME;
 
 		LastIntructionCPUCommand ()
@@ -266,6 +301,80 @@ namespace MCHEmul
 		private:
 		/** The fields returned are: \n
 			INST = Attribute: String with the last instruction executed. */
+		virtual void executeImpl (CommandExecuter* cE, Computer* c, InfoStructure& rst) override;
+	};
+
+	/** To get a list with all break points. */
+	class ListOfBreakPointsCommand final : public Command
+	{
+		public:
+		static const int _ID = 12;
+		static const std::string _NAME;
+
+		ListOfBreakPointsCommand ()
+			: Command (_ID, _NAME)
+							{ }
+
+		virtual bool canBeExecuted () const override
+							{ return (_parameters.size () == 0); }
+
+		private:
+		/** The fields returned are: \n
+			BREAKPOINTS	= Attribute: A list (separated by comma) of all break points. */
+		virtual void executeImpl (CommandExecuter* cE, Computer* c, InfoStructure& rst) override;
+	};
+
+	/** To set a break point (or a set of them) in the code. */
+	class SetBreakPointCommand final : public Command
+	{
+		public:
+		static const int _ID = 13;
+		static const std::string _NAME;
+
+		SetBreakPointCommand ()
+			: Command (_ID, _NAME)
+							{ }
+
+		virtual bool canBeExecuted () const override
+							{ return (_parameters.size () > 0); }
+
+		private:
+		virtual void executeImpl (CommandExecuter* cE, Computer* c, InfoStructure& rst) override;
+	};
+
+	/** To remove a break point (or a set of them) in the code. */
+	class RemoveBreakPointCommand final : public Command
+	{
+		public:
+		static const int _ID = 14;
+		static const std::string _NAME;
+
+		RemoveBreakPointCommand ()
+			: Command (_ID, _NAME)
+							{ }
+
+		virtual bool canBeExecuted () const override
+							{ return (_parameters.size () > 0); }
+
+		private:
+		virtual void executeImpl (CommandExecuter* cE, Computer* c, InfoStructure& rst) override;
+	};
+
+	/** To remove all break points. */
+	class RemoveAllBreakPointsCommand final : public Command
+	{
+		public:
+		static const int _ID = 15;
+		static const std::string _NAME;
+
+		RemoveAllBreakPointsCommand ()
+			: Command (_ID, _NAME)
+							{ }
+
+		virtual bool canBeExecuted () const override
+							{ return (_parameters.size () == 0); }
+
+		private:
 		virtual void executeImpl (CommandExecuter* cE, Computer* c, InfoStructure& rst) override;
 	};
 }

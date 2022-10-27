@@ -39,14 +39,21 @@ namespace MCHEmul
 		  *				Third valid line, with the prompt! \n
 		  *				Rest of the lines, with the welcome mesage. \n
 		  *				Blank lines are taking into account.
-		  * @param oS	A reference to the ostream where to send any message.
+		  * @param oS	A reference to the ostream where to send any message. \n
+		  * @param cK	Number of commands kept. It can be greater than 255.
 		  */
 		Console (Emulator* e, CommandBuilder* cB,
-			const std::string& cF = "./console.def", std::ostream& oS = std::cout);
+			const std::string& cF = "./console.def", std::ostream& oS = std::cout, size_t cK = 100);
 
 		Console (const Console&) = delete;
 
 		Console& operator = (const Console&) = delete;
+
+		/** To change the number of commands kept. */
+		size_t maxCommandsKept () const
+							{ return (_maxCommandsKept); }
+		void setMaxCommandsKept (size_t mC)
+							{ if (mC <= 255) _maxCommandsKept = mC; }
 
 		void run ();
 
@@ -68,9 +75,11 @@ namespace MCHEmul
 			The console is always inserting characters. */
 		static const char _RIGHTKEY = -1;
 		static const char _LEFTKEY = -2;
-		static const char _ENTERKEY = -3;
-		static const char _DELETEKEY = -4;
-		static const char _BACKKEY = -5;
+		static const char _UPKEY = -3;
+		static const char _DOWNKEY = -4;
+		static const char _ENTERKEY = -5;
+		static const char _DELETEKEY = -6;
+		static const char _BACKKEY = -7;
 
 		/** The way a character is read from the console is different depending on the OS. \n
 			The method returns true when a char is read and false in other case. \n
@@ -81,9 +90,13 @@ namespace MCHEmul
 		protected:
 		Emulator* _emulator;
 		std::ostream& _outputStream;
+		size_t _maxCommandsKept;
 
 		// Implementation
 		std::string _command;
+		/** It is even possible to get back the last command introduced. */
+		std::vector <std::string> _lastCommands;
+		size_t _lastCommandPosition;
 		size_t _cursorPosition;
 
 		std::string _commandErrorTxt;

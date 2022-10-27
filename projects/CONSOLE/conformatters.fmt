@@ -2,6 +2,14 @@
 #Formats
 ?defformatters.fmt
 #---
+;Author
+@NAME@
+From @CITY@ (@COUNTRY@) At @DATE@
+email: @EMAIL@
+I hope you like this emulator!
+What I really love is @LOVE@
+#---
+#---
 ;Architecture
 @ATTRS?{key=YES,equal==}\n@
 @NBYTES@ bytes, @NBITS@ bits, @NBYTESPERINST@ bytes per instruction
@@ -54,6 +62,10 @@ Id:@ID@
 @DEVICES?{key=NO,equal==}\n@
 #---
 #---
+;CAUTHOR
+@Author>@
+#---
+#---
 ;CHELP
 @HELP?{key=YES,equal=:\n}\n@
 #---
@@ -83,6 +95,13 @@ Id:@ID@
 @Stack>@
 #---
 #---
+;CCPUSSTATUS
+@PC@
+@INST@
+@REGS?{key=NO,equal=:},@
+@SR@
+#---
+#---
 ;CCPUINFO
 @CPU>@
 #---
@@ -106,12 +125,22 @@ Id:@ID@
 #---
 #---
 ;CNEXT
-@PC@
-@INST@
-@REGS?{key=NO,equal=:},@
-@SR@
+#What it is show is the next instruction executed
 #---
 #---
 ;CINST
 @INST@
+#---
+#---
+;CBREAKS
+@BREAKPOINTS@
+#---
+#---
+;CSETBREAK
+#---
+#---
+;CREMOVEBREAK
+#---
+#---
+;CREMOVEBREAKS
 #---

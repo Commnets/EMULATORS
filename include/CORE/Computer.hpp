@@ -166,15 +166,32 @@ namespace MCHEmul
 							{ return (_status == _STATUSRUNNING); }
 
 		// To manage actions at address level...
-		/** Set a couple of them. */
-		void setActions (const MapOfActions& at)
-							{ _actionsAt = at; }
+		/** To know the list of all actions defined. */
+		const MapOfActions& actions () const
+							{ return (_actionsAt); }
+		/** To know the action at an specific address. */
+		unsigned int action (const Address& a) const
+							{ MapOfActions::const_iterator i = _actionsAt.find (a); 
+							  return ((i == _actionsAt.end ()) ? _ACTIONNOTHING : (*i).second); }
 		/** To manage them individually. */
-		void addAction (const MCHEmul::Address& at, unsigned int a);
-		void removeAction (const MCHEmul::Address& at);
+		void addAction (const Address& at, unsigned int a);
+		/** Adds a couple of them. */
+		void addActions (const MapOfActions& at)
+							{ for (const auto& i : at) _actionsAt [i.first] = i.second; }
+		void removeAction (const Address& at);
+		/** Remove a set of them. */
+		void removeActions (const MapOfActions& at)
+							{ for (const auto i : at) removeAction (i.first); }
+		/** All of them at the same time. */
+		void removeAllActions () 
+							{ _actionsAt = { }; }
+		/** To remove just the ones blonging to a specific type.*/
+		void removeAllActions (unsigned int a);
 		/** Action pending to be executed in the next cycle. */
 		void setActionForNextCycle (unsigned int a)
 							{ _actionForNextCycle = a; }
+		unsigned int lastAction () const
+							{ return (_lastAction); }
 
 		/**
 		  *	The name of the fields are: \n
