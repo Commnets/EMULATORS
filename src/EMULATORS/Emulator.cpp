@@ -172,6 +172,8 @@ bool MCHEmul::Emulator::run ()
 {
 	_running = true;
 
+	computer () -> startsComputerClock ();
+
 	while (runCycle (/** no action. */) && 
 		   !computer () -> exit ());
 
@@ -187,8 +189,6 @@ bool MCHEmul::Emulator::run ()
 bool MCHEmul::Emulator::runCycle (unsigned int a)
 {
 	bool result = true;
-
-	computer () -> startsCycle ();
 
 	if (_communicationSystem != nullptr)
 	{

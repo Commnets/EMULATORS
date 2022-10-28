@@ -124,11 +124,11 @@ bool MCHEmul::Computer::run ()
 	_exit = false;
 	_lastError = MCHEmul::_NOERROR;
 
+	startsComputerClock ();
+
 	bool ok = true;
 	while (ok && !_exit)
 	{
-		startsCycle ();
-
 		ok &= runComputerCycle (/** no action. */);
 		ok &= runIOCycle ();
 		
@@ -355,6 +355,9 @@ bool MCHEmul::Computer::executeAction (unsigned int& lA, unsigned int at, unsign
 void MCHEmul::Computer::Clock::start (unsigned int cC)
 {
 	_initialClockCycles = cC;
+
+	_realCyclesPerSecond = 0;
+
 	_iClock = std::chrono::steady_clock ().now ();
 }
 
@@ -363,8 +366,21 @@ void MCHEmul::Computer::Clock::waitFor (unsigned int cC)
 {
 	static const long long nanosc = (long long) 1.0e9;
 
-	long long elapsed = std::chrono::duration_cast <std::chrono::nanoseconds> (std::chrono::steady_clock::now () - _iClock).count ();
-	long long tElapsed = (long long) ((double) (cC - _initialClockCycles) / (double) _cyclesPerSecond * (double) nanosc);
-	if (tElapsed > elapsed)
-		std::this_thread::sleep_for (std::chrono::nanoseconds (tElapsed - elapsed));
+	long long elapsed = (std::chrono::steady_clock::now () - _iClock).count ();
+
+	// If after 1 second or more...
+	if (elapsed > nanosc)
+	{
+		// The number of clock cycles executed was bigger 
+		// than the max number of cycles allowed for this CPU
+		// It would be needed to wait for a while...
+		_realCyclesPerSecond = cC - _initialClockCycles;
+		if (_realCyclesPerSecond > _cyclesPerSecond)
+			std::this_thread::sleep_for (std::chrono::nanoseconds ((long long) 
+				(_realCyclesPerSecond - _cyclesPerSecond) * (elapsed - nanosc) / _realCyclesPerSecond));
+
+		// ...and then starts back to count...
+		_iClock = std::chrono::steady_clock::now ();
+		_initialClockCycles = cC;
+	}
 }

@@ -61,6 +61,9 @@ The address can be passed in any format possible: HEX($), OCT(0), DECIMAL
 ;REMOVEBREAKS
 To remove all break points.
 No parameters are needed.
+;SPEED
+To know the real speed of the processor.
+No parameters are needed.
 #Specific commands for C64
 ;VICII
 To know the status of the VICII chip, including raster and others.

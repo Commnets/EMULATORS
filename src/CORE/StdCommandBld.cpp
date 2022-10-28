@@ -42,6 +42,8 @@ MCHEmul::Command* MCHEmul::StandardCommandBuilder::createEmptyCommand (const std
 		result = new MCHEmul::RemoveBreakPointCommand;
 	else if (cmdName == "REMOVEBREAKS")
 		result = new MCHEmul::RemoveAllBreakPointsCommand;
+	else if (cmdName == "SPEED")
+		result = new MCHEmul::CPUSpeedCommand;
 
 	return (result);
 }

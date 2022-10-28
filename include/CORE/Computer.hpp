@@ -109,6 +109,8 @@ namespace MCHEmul
 
 		unsigned int cyclesPerSecond () const
 							{ return (_clock.cyclesPerSecond ()); }
+		unsigned int realCyclesPerSecond () const
+							{ return (_clock.realCyclesPerSecond ()); }
 
 		const Attributes& attributes () const
 							{ return (_attributes); }
@@ -132,8 +134,8 @@ namespace MCHEmul
 			This method used the other tow defined behind and it can be simulated from outside. */
 		bool run ();
 		
-		/** To indicate that th loop starts. */
-		void startsCycle ()
+		/** To indicate that the cpu clock status. */
+		void startsComputerClock ()
 							{ _clock.start (_cpu -> clockCycles ()); }
 		/** Execute one computer cycle (cpu + chips). */
 		bool runComputerCycle (unsigned int a = 0 /** Meaning no action. */);
@@ -226,6 +228,7 @@ namespace MCHEmul
 
 			Clock (unsigned int cS)
 				: _cyclesPerSecond (cS),
+				  _realCyclesPerSecond (0),
 				  _initialClockCycles (0), _iClock ()
 							{ assert (_cyclesPerSecond > 0); }
 
@@ -235,12 +238,15 @@ namespace MCHEmul
 
 			unsigned int cyclesPerSecond () const
 							{ return (_cyclesPerSecond); }
+			unsigned int realCyclesPerSecond () const
+							{ return (_realCyclesPerSecond); }
 
 			void start (unsigned int cC);
 			void waitFor (unsigned int cC);
 
 			private:
 			unsigned int _cyclesPerSecond;
+			unsigned _realCyclesPerSecond;
 
 			// Implementation
 			unsigned int _initialClockCycles;

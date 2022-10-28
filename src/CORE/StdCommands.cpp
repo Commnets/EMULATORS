@@ -24,6 +24,7 @@ const std::string MCHEmul::ListOfBreakPointsCommand::_NAME = "CBREAKS";
 const std::string MCHEmul::SetBreakPointCommand::_NAME = "CSETBREAK";
 const std::string MCHEmul::RemoveBreakPointCommand::_NAME = "CREMOVEBREAK";
 const std::string MCHEmul::RemoveAllBreakPointsCommand::_NAME = "CREMOVEBREAKS";
+const std::string MCHEmul::CPUSpeedCommand::_NAME = "CSPEED";
 
 // ---
 MCHEmul::HelpCommand::HelpCommand (const std::string& hF)
@@ -249,4 +250,10 @@ void MCHEmul::RemoveBreakPointCommand::executeImpl (MCHEmul::CommandExecuter* cE
 void MCHEmul::RemoveAllBreakPointsCommand::executeImpl (MCHEmul::CommandExecuter* cE, MCHEmul::Computer* c, MCHEmul::InfoStructure& rst)
 {
 	c -> removeAllActions (MCHEmul::Computer::_ACTIONSTOP);
+}
+
+// ---
+void MCHEmul::CPUSpeedCommand::executeImpl (MCHEmul::CommandExecuter* cE, MCHEmul::Computer* c, MCHEmul::InfoStructure& rst)
+{
+	rst.add ("SPEED", c -> realCyclesPerSecond ());
 }

@@ -377,6 +377,24 @@ namespace MCHEmul
 		private:
 		virtual void executeImpl (CommandExecuter* cE, Computer* c, InfoStructure& rst) override;
 	};
+
+	/** To know the speed of the processor. */
+	class CPUSpeedCommand final : public Command
+	{
+		public:
+		static const int _ID = 16;
+		static const std::string _NAME;
+
+		CPUSpeedCommand ()
+			: Command (_ID, _NAME)
+							{ }
+
+		virtual bool canBeExecuted () const override
+							{ return (_parameters.size () == 0); }
+
+		private:
+		virtual void executeImpl (CommandExecuter* cE, Computer* c, InfoStructure& rst) override;
+	};
 }
 
 #endif

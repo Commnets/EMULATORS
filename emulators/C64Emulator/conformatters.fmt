@@ -144,3 +144,7 @@ Id:@ID@
 #---
 ;CREMOVEBREAKS
 #---
+#---
+;CSPEED
+@SPEED@ cycles/second
+#---
