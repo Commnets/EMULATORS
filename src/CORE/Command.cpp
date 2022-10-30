@@ -4,7 +4,9 @@
 // ---
 bool MCHEmul::Command::execute (MCHEmul::CommandExecuter* cE, MCHEmul::Computer* c, MCHEmul::InfoStructure& rst)
 {
-	if (cE == nullptr || c == nullptr || !canBeExecuted ())
+	// "cE" can be null, 
+	// but take take when a instruction inject an answer into the executer...
+	if (c == nullptr || !canBeExecuted ())
 		return (false);
 
 	executeImpl (cE, c, rst);

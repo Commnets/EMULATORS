@@ -203,8 +203,9 @@ void MCHEmul::NextInstructionCommand::executeImpl (MCHEmul::CommandExecuter* cE,
 {
 	c -> setActionForNextCycle (MCHEmul::Computer::_ACTIONNEXT);
 
-	// To show status after execution
-	cE -> executeCommand (cE -> commandBuilder () -> command ("CPUSSTATUS"), c);
+	// To show status after execution...
+	if (cE != nullptr)
+		cE -> executeCommand (cE -> commandBuilder () -> command ("CPUSSTATUS"), c);
 }
 
 // ---

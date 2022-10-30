@@ -152,12 +152,106 @@ MCHEmul::InfoStructure MCHEmul::PhysicalStorageSubset::getInfoStructure () const
 }
 
 // ---
+MCHEmul::MemoryView::MemoryView (int id, MCHEmul::PhysicalStorageSubsets ss)
+	: MCHEmul::InfoClass ("MemoryView"),
+	  _id (id), _subsets (ss),
+	  // They all will be set in the constructor body!
+	  _minAddress (), _maxAddress (), _numPositions (0), _memPositions ()
+{
+	// Try to create a linear vision of the memory...
+	// Identifying first which the min and max address in the memory!
+	bool fL = true;
+	for (const auto& i : _subsets)
+	{
+		if (fL)
+		{
+			_minAddress = i.second -> initialAddress ();
+			_maxAddress = i.second -> lastAddress ();
+		}
+		else
+		{
+			if (i.second -> initialAddress () < _minAddress) 
+				_minAddress = i.second -> initialAddress ();
+			if (i.second -> lastAddress () > _maxAddress) 
+				_maxAddress = i.second -> lastAddress ();
+		}
+
+		fL = false;
+	}
+
+	// And then identifying how many physical storages are attached to every memory location...
+	_numPositions = (_maxAddress - _minAddress) + 1;
+	_memPositions = MCHEmul::MemoryView::MemoryPositions (_numPositions, MCHEmul::MemoryView::MemoryPosition ());
+	for (const auto& i : _subsets)
+	{
+		size_t mA = i.second -> initialAddress () - _minAddress;
+		for (size_t j = 0; j < i.second -> size (); j++)
+		{
+			_memPositions [mA + j]._number++;
+			_memPositions [mA + j]._storages.push_back (i.second);
+		}
+	}
+}
+
+// ---
 bool MCHEmul::MemoryView::isIn (const MCHEmul::Address& a, int& dt) const
 { 
-	bool result = false;
-	for (MCHEmul::PhysicalStorageSubsets::const_iterator i = _subsets.begin ();
-			i != _subsets.end () && !result; i++)
-		result = (*i).second -> isIn (a, dt); // Only one is enought...
+	int dtT = a.distanceWith (_minAddress);
+	if (dtT < 0 || (size_t) dtT > _numPositions)
+		return (false);
+
+	if (_memPositions [dtT]._number == 1 && 
+		(*_memPositions [dtT]._storages.begin ()) -> active ())
+	{
+		dt = dtT;
+		return (true);
+	}
+
+	MCHEmul::PhysicalStorageSubset* f = nullptr;
+	const MCHEmul::PhysicalStorageSubsetsList& pL = _memPositions [dtT]._storages;
+	for (MCHEmul::PhysicalStorageSubsetsList::const_iterator i = pL.begin (); i != pL.end () && f == nullptr; i++)
+		if ((*i) -> active ()) f = (*i); // The first one active...
+
+	if (f != nullptr) dt = dtT;
+	return (f != nullptr);
+}
+
+// ---
+const MCHEmul::UByte& MCHEmul::MemoryView::value (const MCHEmul::Address& a) const
+{
+	int dtT = _minAddress.distanceWith (a);
+	if (dtT < 0 || (size_t) dtT > _numPositions)
+		return (MCHEmul::PhysicalStorage::_DEFAULTVALUE);
+
+	MCHEmul::PhysicalStorageSubset* fS = nullptr;
+	const MCHEmul::PhysicalStorageSubsetsList& pL = _memPositions [dtT]._storages;
+	for (size_t i = 0; i < pL.size () && fS == nullptr; i++)
+		if (pL [i] -> active () && pL [i] -> activeForReading ()) fS = pL [i];
+
+	if (fS == nullptr)
+		return (MCHEmul::PhysicalStorage::_DEFAULTVALUE);
+	
+	return (fS -> readValue (a - fS -> initialAddress ()));
+}
+
+// ---
+std::vector <MCHEmul::UByte> MCHEmul::MemoryView::bytes (const MCHEmul::Address& a, size_t nB) const
+{
+	int dtT = _minAddress.distanceWith (a);
+	if (dtT < 0 || (size_t) dtT > (_numPositions - nB))
+		return (std::vector <MCHEmul::UByte> { });
+
+	std::vector <MCHEmul::UByte> result;
+	for (size_t i = 0; i < nB;i++)
+	{ 
+		MCHEmul::PhysicalStorageSubset* fS = nullptr;
+		const MCHEmul::PhysicalStorageSubsetsList& pL = _memPositions [dtT + i]._storages;
+		for (size_t j = 0; j < pL.size () && fS == nullptr; j++)
+			if (pL [j] -> active () && pL [j] -> activeForReading ()) fS = pL [j];
+
+		result.push_back ((fS != nullptr) 
+			? fS -> readValue (a - fS -> initialAddress () + i) : MCHEmul::PhysicalStorage::_DEFAULTVALUE);
+	}
 
 	return (result);
 }
@@ -165,60 +259,35 @@ bool MCHEmul::MemoryView::isIn (const MCHEmul::Address& a, int& dt) const
 // ---
 void MCHEmul::MemoryView::set (const MCHEmul::Address& a, const MCHEmul::UByte& d, bool f)
 {
-	int dt = 0;
-	bool w = false;
-	for (MCHEmul::PhysicalStorageSubsets::const_iterator i = _subsets.begin (); 
-			i != _subsets.end () && !w; i++)
-		if (w = ((*i).second -> canBeWriten (f) && (*i).second -> isIn (a, dt))) // The first one when it is possible...
-			(*i).second -> setValue (dt, d); // Access directly to the low level method to speed up access...
-											 // and to avoid "isIn" to be executed twice
-}
+	int dtT = _minAddress.distanceWith (a);
+	if (dtT < 0 || (size_t) dtT > _numPositions)
+		return;
 
-// ---
-const MCHEmul::UByte& MCHEmul::MemoryView::value (const MCHEmul::Address& a) const
-{
-	int dt = 0;
-	for (const auto& i : _subsets)
-		if (i.second -> activeForReading () && i.second -> isIn (a, dt))
-			return (i.second -> readValue (dt)); // Access directly to the low level method to speed up the access...
-												 // and to avoid "isIn" to be executed twice!
+	MCHEmul::PhysicalStorageSubset* fS = nullptr;
+	const MCHEmul::PhysicalStorageSubsetsList& pL = _memPositions[dtT]._storages;
+	for (size_t i = 0; i < pL.size () && fS == nullptr; i++)
+		if (pL[i] -> active () && pL[i] -> canBeWriten (f)) fS = pL[i];
 
-	return (MCHEmul::PhysicalStorage::_DEFAULTVALUE);
-}
-
-// ---
-std::vector <MCHEmul::UByte> MCHEmul::MemoryView::bytes (const MCHEmul::Address& a, size_t nB) const
-{
-	std::vector <MCHEmul::UByte> result;
-	
-	int dt = 0;
-	bool r = false;
-	for (MCHEmul::PhysicalStorageSubsets::const_iterator i = _subsets.begin ();
-			i != _subsets.end () && !r; i++)
-	{
-		if (r = ((*i).second -> active () && (*i).second -> activeForReading () && 
-			(a >= (*i).second -> initialAddress () && 
-			(dt = (*i).second -> initialAddress ().distanceWith (a)) <= (int) ((*i).second -> size () - nB))))
-			for (size_t j = 0; j < nB; j++)
-				result.push_back ((*i).second -> readValue (dt + j));
-	}
-
-	return (result);
+	if (fS != nullptr)
+		fS -> setValue (a - fS -> initialAddress (), d);
 }
 
 // ---
 void MCHEmul::MemoryView::set (const MCHEmul::Address& a, const std::vector <MCHEmul::UByte>& v, bool f)
 { 
-	int dt = 0;
-	bool w = false;
-	for (MCHEmul::PhysicalStorageSubsets::const_iterator i = _subsets.begin ();
-			i != _subsets.end () && !w; i++)
+	int dtT = _minAddress.distanceWith (a);
+	if (dtT < 0 || (size_t) dtT > _numPositions)
+		return;
+
+	for (size_t i = 0; i < v.size (); i++)
 	{
-		if (w = ((*i).second -> active () && (*i).second -> canBeWriten (f) && 
-			(a >= (*i).second -> initialAddress () && 
-				(dt = (*i).second -> initialAddress ().distanceWith (a)) <= (int) ((*i).second -> size () - v.size ()))))
-			for (size_t j = 0; j < v.size (); j++)
-				(*i).second -> setValue (dt + j, v [j]);
+		MCHEmul::PhysicalStorageSubset* fS = nullptr;
+		const MCHEmul::PhysicalStorageSubsetsList& pL = _memPositions [dtT]._storages;
+		for (size_t j = 0; j < pL.size () && fS == nullptr; j++)
+			if (pL [j] -> active () && pL [j] -> canBeWriten (f)) fS = pL [j];
+	
+		if (fS != nullptr)
+			fS -> setValue (a - fS -> initialAddress () + i, v [i]);
 	}
 }
 

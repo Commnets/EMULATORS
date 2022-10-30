@@ -14,7 +14,7 @@ MCHEmul::UInt::FormatManagers MCHEmul::UInt::_formaters
 MCHEmul::UInt MCHEmul::UInt::BinaryFormatManager::add 
 	(const MCHEmul::UInt& u1, const MCHEmul::UInt& u2, bool cIn) const
 { 
-	bool c,o; 
+	bool c = false, o = false; 
 	MCHEmul::UInt result (u1._values.bitAdding (u2._values, cIn, c, o)); 
 	result._carry = c; result._overflow = o; 
 	return (result);
@@ -24,7 +24,7 @@ MCHEmul::UInt MCHEmul::UInt::BinaryFormatManager::add
 MCHEmul::UInt MCHEmul::UInt::BinaryFormatManager::substract 
 	(const MCHEmul::UInt& u1, const MCHEmul::UInt& u2, bool cIn) const
 { 
-	bool c,o; 
+	bool c = false, o = false; 
 	MCHEmul::UInt result (u1._values.bitAdding (u2.complement ()._values, cIn, c, o)); 
 	result._carry = c; result._overflow = o; 
 	return (result);
@@ -35,9 +35,31 @@ unsigned int MCHEmul::UInt::BinaryFormatManager::asUnsignedInt (const MCHEmul::U
 {
 	unsigned int result = 0;
 
-	int c = 0;
-	for (int i = (int) (u.size () - 1); i >= 0; i--, c++)
-		result += u._values [(size_t) i].value () << (c * MCHEmul::UByte::sizeBits ());
+	// Just to speed up the most common situations...
+	// Let's say when the number of bytes are 0, 1, or 2...
+	switch (u.size ())
+	{
+		case 0:
+			break;
+
+		case 1:
+			result = (unsigned int) u [0].value ();
+			break;
+
+		case 2:
+			result = (unsigned int) ((u [0].value () << MCHEmul::UByte::sizeBits ()) + u [1].value ());
+			break;
+
+		default:
+			{
+			// This is like the previous situation but with a generic number of bytes...
+			// The algorithm is done thinking in reducing the number of multiplications and change them into additions,
+			// and also for not to use signed numbers!
+			size_t c = (u.size () - 1) * MCHEmul::UByte::sizeBits (); // The only multiplication...
+				for (size_t i = 0; i < u.size (); i++, c -= MCHEmul::UByte::sizeBits ())
+					result += (unsigned int) (u._values [i].value () << c);
+			}
+	}
 
 	return (result);
 }
@@ -45,20 +67,29 @@ unsigned int MCHEmul::UInt::BinaryFormatManager::asUnsignedInt (const MCHEmul::U
 // ---
 MCHEmul::UInt MCHEmul::UInt::BinaryFormatManager::fromUnsignedInt (unsigned int n)
 {
+	static constexpr unsigned int _1BYTELIMIT = MCHEmul::UByte::_1 << MCHEmul::UByte::sizeBits ();
+	static constexpr unsigned int _2BYTELIMIT = _1BYTELIMIT << MCHEmul::UByte::sizeBits ();
+
 	std::vector <MCHEmul::UByte> dt;
 
-	size_t nB = 1;
-	while ((n / (MCHEmul::UByte::_1 << (nB * MCHEmul::UByte::sizeBits ()))) != 0) nB++; 
-	
-	unsigned int r = n;
-	for (size_t i = nB - 1; i > 0; i--)
+	if (n < _1BYTELIMIT)
+		dt.push_back (MCHEmul::UByte ((unsigned char) n));
+	else if (n >= _1BYTELIMIT && n < _2BYTELIMIT)
 	{
-		unsigned int dv = MCHEmul::UByte::_1 << (i * MCHEmul::UByte::sizeBits ());
-		dt.push_back (r / dv);
-		r = r % dv;
+		dt.push_back (MCHEmul::UByte ((unsigned char) (n >> MCHEmul::UByte::sizeBits ())));
+		dt.push_back (MCHEmul::UByte ((unsigned char) (n & MCHEmul::UByte::_FF)));
 	}
-
-	dt.push_back (r);
+	else
+	{
+		// This is like the previous situation but with a generic number of bytes...
+		// The algorithm is done thinking in reducing the number of multiplications and change them into additions,
+		// and also for not to use signed numbers!
+		size_t nB = 1; unsigned int r = n; while ((r = (r >> MCHEmul::UByte::sizeBits ())) != 0) nB++;
+		size_t sft = (nB - 1) * MCHEmul::UByte::sizeBits (); // The only multiplication...
+		for (size_t i = nB - 1; i > 0; i--, sft -= MCHEmul::UByte::sizeBits ())
+			dt.push_back (MCHEmul::UByte ((unsigned char) (n >> sft)));
+		dt.push_back (MCHEmul::UByte ((unsigned char) (n & MCHEmul::UByte::_FF))); // The last ubyte...
+	}
 
 	return (MCHEmul::UInt (MCHEmul::UBytes (dt), true, MCHEmul::UInt::_BINARY));
 }
@@ -66,23 +97,30 @@ MCHEmul::UInt MCHEmul::UInt::BinaryFormatManager::fromUnsignedInt (unsigned int 
 // ---
 MCHEmul::UInt MCHEmul::UInt::BinaryFormatManager::fromInt (int n)
 {
+	static constexpr unsigned int _1BYTELIMIT = MCHEmul::UByte::_1 << (MCHEmul::UByte::sizeBits () - 1 /** Because the sign. */);
+	static constexpr unsigned int _2BYTELIMIT = _1BYTELIMIT << MCHEmul::UByte::sizeBits ();
+
 	std::vector <MCHEmul::UByte> dt;
+	unsigned int r = (n >= 0) ? n : -n;
 
-	// Negative?
-	unsigned int r = (n > 0) ? n : -n;
-
-	size_t nB = 1;
-	while ((r / (MCHEmul::UByte::_1 << (nB * MCHEmul::UByte::sizeBits ()))) != 0) nB++;
-	if (r > (unsigned int) (0x01 << (nB * MCHEmul::UByte::sizeBits () - 1))) nB++; // One bit more for the the sign...
-
-	for (size_t i = nB - 1; i > 0; i--)
+	if (r < _1BYTELIMIT)
+		dt.push_back (MCHEmul::UByte ((unsigned char) r));
+	else if (r >= _1BYTELIMIT && r < _2BYTELIMIT)
 	{
-		unsigned int dv = MCHEmul::UByte::_1 << (i * MCHEmul::UByte::sizeBits ());
-		dt.push_back (r / dv);
-		r = r % dv;
+		dt.push_back (MCHEmul::UByte ((unsigned char) (r >> MCHEmul::UByte::sizeBits ())));
+		dt.push_back (MCHEmul::UByte ((unsigned char) (r & MCHEmul::UByte::_FF)));
 	}
-
-	dt.push_back (r);
+	else
+	{
+		// This is like the previous situation but with a generic number of bytes...
+		// The algorithm is done thinking in reducing the number of multiplications and change them into additions,
+		// and also for not to use signed numbers!
+		size_t nB = 2; unsigned r1 = r;  while ((r1 = (r1 >> MCHEmul::UByte::sizeBits ())) != 0) nB++;
+		size_t sft = (nB - 1) * MCHEmul::UByte::sizeBits (); // The only multiplication...
+		for (size_t i = nB - 1; i > 0; i--, sft -= MCHEmul::UByte::sizeBits ())
+			dt.push_back (MCHEmul::UByte ((unsigned char) (r >> sft)));
+		dt.push_back (MCHEmul::UByte ((unsigned char) (r & MCHEmul::UByte::_FF))); // The last ubyte...
+	}
 
 	return ((n < 0) 
 		? MCHEmul::UInt (dt, true, MCHEmul::UInt::_BINARY).complement_2 () 
@@ -100,23 +138,20 @@ MCHEmul::UInt MCHEmul::UInt::PackagedBCDFormatManager::add
 	MCHEmul::UInt result = u1;
 	for (int i = (int) (u2.bytes ().size () - 1); i >= 0; i--) 
 	{
-		r  = (unsigned short) (result [i].value () & 0x0f) + 
-			 (unsigned short) (u2 [i].value () & 0x0f) + (c ? 0x0001 : 0x0000);
-		if (r > (unsigned short) MCHEmul::UByte::_09) 
-			r += (unsigned short) MCHEmul::UByte::_06;
-		r += (unsigned short) (result [i].value () & 0xf0) +
-			 (unsigned short) (u2 [i].value () & 0xf0);
-		if ((r & 0x01f0) > (unsigned short) MCHEmul::UByte::_90)
-			r += (unsigned short) MCHEmul::UByte::_60;
+		r  = (unsigned short) (result [i].value () & MCHEmul::UByte::_0F) + 
+			 (unsigned short) (u2 [i].value () & MCHEmul::UByte::_0F) + (c ? MCHEmul::UByte::_1 : MCHEmul::UByte::_0);
+		if (r > MCHEmul::UByte::_09) r += MCHEmul::UByte::_06;
+		r += (unsigned short) (result [i].value () & MCHEmul::UByte::_F0) + (unsigned short) (u2 [i].value () & MCHEmul::UByte::_F0);
+		if ((r & 0x01f0) > MCHEmul::UByte::_90) r += MCHEmul::UByte::_60;
 
-		c = r > 0x00ff;
+		c = r > MCHEmul::UByte::_FF;
 		
 		result [i] = (unsigned char) r;
 	}
 
 	result._carry = c;
-	result._overflow = !((u1 [0].value () ^ u2 [0].value ()) & 0x80) && 
-		((u1 [0].value () ^ result [0].value ()) & 0x80);
+	result._overflow = !((u1 [0].value () ^ u2 [0].value ()) & MCHEmul::UByte::_80) &&
+		((u1 [0].value () ^ result [0].value ()) & MCHEmul::UByte::_80);
 
 	return (result);
 }
@@ -132,15 +167,15 @@ MCHEmul::UInt MCHEmul::UInt::PackagedBCDFormatManager::substract
 	MCHEmul::UInt result = u1;
 	for (int i = (int) (u2.bytes ().size () - 1); i >= 0; i--) 
 	{
-		r  = (unsigned short) (result [i].value () & 0x0f) -
-			 (unsigned short) (u2 [i].value () & 0x0f) - (c ? 0x0000 : 0x0001);
-		r = ((r & 0x0010) != 0x0000) 
-				? ((r - (unsigned short) MCHEmul::UByte::_06) & 0x000f) | 
-				  ((unsigned short) (result [i].value () & 0xf0) - (unsigned short) (u2 [i].value () & 0xf0) - (unsigned short) 0x10)
-				: (r & 0x000f) | 
-				  ((unsigned short) (result [i].value () & 0xf0) - (unsigned short) (u2 [i].value () & 0xf0));
-		if ((r & 0x0100) != 0x0000)
-			r -= (unsigned short) MCHEmul::UByte::_60;
+		r  = (unsigned short) (result [i].value () & MCHEmul::UByte::_0F) - 
+			 (unsigned short) (u2 [i].value () & MCHEmul::UByte::_0F) - (c ? MCHEmul::UByte::_0 : MCHEmul::UByte::_1);
+		r = ((r & MCHEmul::UByte::_10) != MCHEmul::UByte::_0)
+				? (unsigned short) ((r - MCHEmul::UByte::_06) & MCHEmul::UByte::_0F) |
+				  (unsigned short) ((result [i].value () & MCHEmul::UByte::_F0) - (u2 [i].value () & MCHEmul::UByte::_F0) - MCHEmul::UByte::_10)
+				: (unsigned short) (r & MCHEmul::UByte::_0F) |
+				  (unsigned short) ((result [i].value () & MCHEmul::UByte::_F0) - (u2 [i].value () & MCHEmul::UByte::_F0));
+		if ((r & 0x0100) != MCHEmul::UByte::_0)
+			r -= MCHEmul::UByte::_60;
 
 		c = r < 0x0100;
 		
@@ -148,8 +183,8 @@ MCHEmul::UInt MCHEmul::UInt::PackagedBCDFormatManager::substract
 	}
 
 	result._carry = c;
-	result._overflow = ((u1 [0].value () ^ u2 [0].value ()) & 0x80) && 
-		((u1 [0].value () ^ result [0].value ()) & 0x80);
+	result._overflow = ((u1 [0].value () ^ u2 [0].value ()) & MCHEmul::UByte::_80) &&
+		((u1 [0].value () ^ result [0].value ()) & MCHEmul::UByte::_80);
 
 	return (result);
 }
@@ -161,7 +196,8 @@ unsigned int MCHEmul::UInt::PackagedBCDFormatManager::asUnsignedInt (const UInt&
 
 	int c = 1;
 	for (int i = (int) (u.size () - 1); i >= 0; i -= 2, c *= 100)
-		result += ((((u._values [(size_t) i].value () & 0xf0) >> 4) * 10) + (u._values [(size_t) i].value () & 0x0f)) * c;
+		result += ((((u._values [(size_t) i].value () & 0xf0) >> 4) * 10) + 
+			(u._values [(size_t) i].value () & (unsigned int) MCHEmul::UByte::_0F)) * c;
 
 	return (result);
 }

@@ -169,10 +169,9 @@ bool MCHEmul::Computer::runComputerCycle (unsigned int a)
 
 	if (_debugLevel >= MCHEmul::_DEBUGALL)
 	{
-		if (_cpu -> lastInstruction () != nullptr)
-			std::cout << "->" << *_cpu -> lastInstruction () << std::endl;
-		MCHEmul::CPUStatusCommand stCmd; MCHEmul::InfoStructure rst; stCmd.execute (nullptr, this, rst);
-		std::cout << rst << std::endl;
+		MCHEmul::InfoStructure rst;
+		MCHEmul::CPUSimpleStatusCommand stCmd; stCmd.execute (nullptr, this, rst);
+		std::cout << MCHEmul::FormatterBuilder::instance () -> formatter ("DEBUGCPUINFO") -> format (rst) << std::endl;
 	}
 
 	for (const auto& i : _chips)

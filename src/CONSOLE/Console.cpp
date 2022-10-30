@@ -77,6 +77,15 @@ void MCHEmul::Console::run ()
 // ---
 bool MCHEmul::Console::readAndExecuteCommand ()
 {
+	/** 
+		When testing the speed, just to show that information periodically:
+		static unsigned int _CC = 0;
+		if (_CC++ < 300000)
+			return (false);
+		_CC = 0;
+		_command = "SPEED";
+	  */
+
 	if (!readCommand ())
 		return (false); // No command ready, no quit...
 

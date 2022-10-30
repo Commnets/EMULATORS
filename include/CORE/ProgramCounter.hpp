@@ -14,34 +14,33 @@
 #ifndef __MCHEMUL_PROGRAMCOUNTER__
 #define __MCHEMUL_PROGRAMCOUNTER__
 
-#include <CORE/Register.hpp>
-
 namespace MCHEmul
 {
-	/** The program counter is an special register within any CPU, 
-		keeping an address inside that is incremented or decremented as the program is executed. */
-	class ProgramCounter final : protected Register
+	/** The program counter is a special register within any CPU, 
+		keeping an address inside that is incremented or decremented as the program is executed. 
+		The maximum size is the size of an unsigned int = 4GBytes of addresable memory.  */
+	class ProgramCounter final
 	{
 		public:
 		ProgramCounter (size_t sz)
-			: Register (-1 /** always */, "PC", UBytes (std::vector <UByte> (sz, UByte::_0))) 
-							{ }
+			: _internalRepresentation (0)
+							{ assert (sz <= sizeof (unsigned int)); }
 
 		ProgramCounter (const ProgramCounter&) = default;
 		ProgramCounter& operator = (const ProgramCounter&) = default;
 
 		void initialize ()
-							{ Register::initialize (); }
+							{ _internalRepresentation = 0; }
 
 		Address asAddress () const
-							{ return (Register::asAddress (true)); }
+							{ return (Address (UInt::fromUnsignedInt (_internalRepresentation))); }
 		void setAddress (const Address& a)
-							{ set (a.bytes ()); }
+							{ _internalRepresentation = UInt (a.bytes ()).asUnsignedInt (); }
 
-		void increment (size_t n = 1)
-							{ setAddress (asAddress ().next (n)); }
-		void decrement (size_t n = 1)
-							{ setAddress (asAddress ().previous (n)); }
+		void increment (unsigned int n = 1)
+							{ _internalRepresentation += n; }
+		void decrement (unsigned int n = 1)
+							{ _internalRepresentation -= n; }
 
 		bool operator == (const Address& a) const
 							{ return (asAddress () == a); }
@@ -56,21 +55,25 @@ namespace MCHEmul
 		bool operator <= (const Address& a) const
 							{ return (asAddress () != a); }
 
-		ProgramCounter operator + (size_t n) const
+		ProgramCounter operator + (unsigned int n) const
 							{ ProgramCounter r = *this; r.increment (n); return (r); }
-		ProgramCounter& operator += (size_t n)
+		ProgramCounter& operator += (unsigned int n)
 							{ increment (n); return (*this); }
-		ProgramCounter operator - (size_t n) const
+		ProgramCounter operator - (unsigned int n) const
 							{ ProgramCounter r = *this; r.decrement (n); return (r); }
-		ProgramCounter& operator -= (size_t n)
+		ProgramCounter& operator -= (unsigned int n)
 							{ decrement (n); return (*this); }
 
 		/** Like an address. */
 		std::string asString () const
-							{ return (_name + ":$" + asAddress ().asString (UByte::OutputFormat::_HEXA, '\0', 2)); }
+							{ return ("PC:$" + asAddress ().asString (UByte::OutputFormat::_HEXA, '\0', 2)); }
 
 		friend std::ostream& operator << (std::ostream& o, const ProgramCounter& pc)
 							{ return (o << pc.asString ()); }
+
+		private:
+		// Implementation
+		unsigned int _internalRepresentation;
 	};
 }
 

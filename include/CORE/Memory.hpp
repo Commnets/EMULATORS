@@ -132,6 +132,8 @@ namespace MCHEmul
 							{ return (_initialAddress); }
 		size_t size () const
 							{ return (_size); }
+		Address lastAddress () const
+							{ return (initialAddress () + size () - 1); }
 		
 		bool active () const
 							{ return (_active); }
@@ -237,10 +239,7 @@ namespace MCHEmul
 		MemoryView () = delete;
 
 		/** The memory view is not the owner of the subsets. */
-		MemoryView (int id, PhysicalStorageSubsets ss)
-			: InfoClass ("MemoryView"),
-			  _id (id), _subsets (ss)
-							{ }
+		MemoryView (int id, PhysicalStorageSubsets ss);
 
 		MemoryView (const MemoryView&) = default;
 
@@ -273,9 +272,9 @@ namespace MCHEmul
 		const UByte& value (const Address& a) const;
 		UBytes values (const Address& a, size_t nB) const
 							{ return (UBytes (bytes (a, nB))); }
+		std::vector <UByte> bytes (const Address& a, size_t nB) const;
 		void set (const Address& a, const UBytes& v, bool f = false)
 							{ set (a, v.bytes (), f); }
-		std::vector <UByte> bytes (const Address& a, size_t nB) const;
 		void set (const Address& a, const std::vector <UByte>& v, bool f = false);
 
 		/** To init the memory view. 
@@ -295,6 +294,24 @@ namespace MCHEmul
 		protected:
 		int _id;
 		PhysicalStorageSubsets _subsets;
+
+		// Implementation
+		/** Structure just o speed up the access to a memory view. */
+		struct MemoryPosition
+		{
+			MemoryPosition ()
+				: _number (0), _storages ()
+							{ }
+
+			size_t _number; // The elements in the array...
+			PhysicalStorageSubsetsList _storages; // The array with all memory subsets addressing that position...
+		};
+
+		using MemoryPositions = std::vector <MemoryPosition>;
+
+		Address _minAddress, _maxAddress;
+		size_t _numPositions;
+		MemoryPositions _memPositions;
 	};
 
 	/** To simplify the way a map of elements is managed. */

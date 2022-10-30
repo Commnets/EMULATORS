@@ -112,11 +112,13 @@ void testUInt ()
 	MCHEmul::UInt c ({ 0xff, 0x0f });
 	MCHEmul::UInt r = MCHEmul::UInt::fromUnsignedInt (4215);
 	MCHEmul::UInt t = MCHEmul::UInt::fromInt (-4215);
+	MCHEmul::UInt t1 = MCHEmul::UInt::fromInt (-64215);
 	prt (std::cout, "a", a);
 	prt (std::cout, "b", b);
 	prt (std::cout, "c", c);
 	prt (std::cout, "r", r);
 	prt (std::cout, "t", t);
+	prt (std::cout, "t1", t1);
 
 	std::string n1S = "", n2S = "", op = "";
 	while (n1S != "exit")
