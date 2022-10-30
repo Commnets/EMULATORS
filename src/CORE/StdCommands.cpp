@@ -77,7 +77,7 @@ void MCHEmul::HelpCommand::executeImpl (MCHEmul::CommandExecuter* cE, MCHEmul::C
 				std::string h = "";
 				for (size_t j = 0; j < (*i).second.size (); j++)
 					h += ((j == 0) ? '\0' : '\n') + (*i).second [j];
-				iS.add ("->" + cmd, h);
+				iS.add ("->" + cmd, MCHEmul::removeAll0 (h));
 			}
 		};
 

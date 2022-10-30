@@ -1,16 +1,28 @@
 #include "stdafx.h"
 
 #include <C64/incs.hpp>
-#include <CONSOLE/incs.hpp>
 
 using namespace C64;
 
-int _tmain (int argc, _TCHAR *argv [])
+#ifndef _CONSOLE
+#include <SDL.h>
+#ifdef __cplusplus
+#define C_LINKAGE "C"
+#else
+#define C_LINKAGE
+#endif /* __cplusplus */
+#if _MSC_VER >= 1900
+extern C_LINKAGE FILE __iob_func[3] = { *stdin,*stdout,*stderr };
+#endif
+extern C_LINKAGE int main(int argc, char* argv[])
+#else
+int _tmain (int argc, _TCHAR* argv[])
+#endif /* _CONSOLE */
 {
 	// Sets the formatter for << outputs for this emulation...
 	// This line of code has to be at the beginning of every emulation 
 	// as it fixes the way the internal ino of the important classes will be formatted
-	MCHEmul::FormatterBuilder::instance ({ "C64formatters.fmt" });
+	MCHEmul::FormatterBuilder::instance ({ "defformatters.fmt" });
 
 	// Set up the emulator...
 	C64Emulator myEmulator (
@@ -20,8 +32,5 @@ int _tmain (int argc, _TCHAR *argv [])
 	if (!myEmulator || !myEmulator.initialize ())
 		return (1); // Not possible to run the emulation. Exit with error...
 
-	// Set up the console that will run the emulation...
-	MCHEmul::Win32Console myConsole (&myEmulator, new C64::CommandBuilder);
-	myConsole.run ();
-	return (myEmulator.lastError ());
+	return (myEmulator.run () ? 0 /** no error. */ : 1);
 }

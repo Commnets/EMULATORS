@@ -1,0 +1,76 @@
+#C64 Console
+#My info
+;AUTHOR
+To know info about the author.
+No parameters needed.
+#Commands to know the status of the CPU
+;STATUS
+Get the status of the Status Register.
+No parameters needed.
+;REGISTERS
+Get the status of every register defined in the CPU.
+No parameters needed.
+;PC
+Get the status of the Program Counter.
+No parameters needed.
+;CPUSTATUS
+To get the current status of the CPU.
+Including: Status Register (STATUS), Registers (REGISTERS), 
+Program Counter (PC) and Stack (STACK).
+No parameters needed.
+;CPUSSTATUS
+Similar to CPUSTATUS but not including info about the stack.
+No parameters needed.
+#Commands to know think about the Computer
+;STACK (ALL)
+Get the status of the stack.
+Can be invoked with or without the parameter ALL.
+ALL will get you info also about the content of the stack.
+;CPUINFO
+To get info about the CPU.
+Very complex info returned. No parameters needed.
+;MEMORY INITIAL (FINAL)
+To get the content of a memory position.
+One parameter minimum is required that is the position of the memory.
+If a second parameter is given then te content between the two location is returned.
+#Commnands to control the execution of the CPU
+;STOP
+To stop the cpu.
+No parameters needed.
+;RUN
+To keep CPU running.
+No parameters needed.
+;NEXT
+To execute the next instruction after being stopped.
+N can also be used instead.
+No parameters needed.
+;INST
+To know the last instruction executed by the CPU.
+No parameters needed.
+;BREAKS
+To know the list of break points defined in the computer.
+No parameters are needed.
+;SETBREAK
+To set a new break point.
+It is needed at leat one address, but many other can be also provided separated by space.
+The address can be passed in any format possible: HEX($), OCT(0), DECIMAL
+;REMOVEBREAK
+To remove a break point.
+It is needed at leat one address, but many other can be also provided separated by space.
+The address can be passed in any format possible: HEX($), OCT(0), DECIMAL
+;REMOVEBREAKS
+To remove all break points.
+No parameters are needed.
+;SPEED
+To know the real speed of the processor.
+No parameters are needed.
+#Specific commands for C64
+;VICII
+To know the status of the VICII chip, including raster and others.
+No parameters needed.
+;CIA1
+To know the status of the CIA1 chip.
+No parameters needed.
+;CIA2
+To know the status of the CIA2 chip.
+No parameters needed.
