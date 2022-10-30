@@ -13,9 +13,6 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
-    <Filter Include="ASM Programs">
-      <UniqueIdentifier>{e958dc8f-ec20-4eef-bc87-b5d6f0335838}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="C64Emulator.cpp">
@@ -24,26 +21,6 @@
     <ClCompile Include="stdafx.cpp">
       <Filter>Archivos de origen</Filter>
     </ClCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="test.asm">
-      <Filter>ASM Programs</Filter>
-    </None>
-    <None Include="test2.asm">
-      <Filter>ASM Programs</Filter>
-    </None>
-    <None Include="test3.asm">
-      <Filter>ASM Programs</Filter>
-    </None>
-    <None Include="test4.asm">
-      <Filter>ASM Programs</Filter>
-    </None>
-    <None Include="testloop.asm">
-      <Filter>ASM Programs</Filter>
-    </None>
-    <None Include="test5.asm">
-      <Filter>ASM Programs</Filter>
-    </None>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
