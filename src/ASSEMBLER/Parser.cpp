@@ -227,7 +227,7 @@ MCHEmul::Assembler::Semantic* MCHEmul::Assembler::Parser::parse (const std::stri
 	{
 		std::string l = MCHEmul::trim (i);
 		std::string aLS = MCHEmul::trim (actions [lC]);
-		unsigned int aL = (aLS == "") ? 0 /** no action defined. */ : (unsigned int)std::stoi (aLS);
+		unsigned int aL = (aLS == "") ? 0 /** no action defined. */ : (unsigned int) std::stoi (aLS);
 		while (l != "")
 		{
 			unsigned int col = (unsigned int) i.find (l);

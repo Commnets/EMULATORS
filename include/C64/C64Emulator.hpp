@@ -27,6 +27,8 @@ namespace C64
 		/** The possible additional parameters of the C64 Emulator. */
 		static const unsigned char _PARAMNTSC;
 		static const std::string _NTSC;
+		static const unsigned char _PARAMBORDER;
+		static const std::string _BORDER;
 
 		/**
 		  * Constructor:
@@ -40,6 +42,9 @@ namespace C64
 		/** To know whether the visualizacion system is or not NTSC. */
 		bool NTSCSystem () const
 							{ return ((_attributes.find (_NTSC) != _attributes.end ()) ? true : false); }
+		/** To know whether the border has or not to be drawn. */
+		bool drawBorder () const
+							{ return ((_attributes.find (_BORDER) != _attributes.end ()) ? true : false); }
 
 		/** To add the peripherals linked to the computer, according to the parameters. */
 		virtual bool initialize () override;

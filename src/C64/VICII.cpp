@@ -118,6 +118,7 @@ C64::VICII::VICII (const C64::VICII::RasterData& vd, const C64::VICII::RasterDat
 	: MCHEmul::GraphicalChip (_ID, attrs),
 	  _VICIIRegisters (nullptr), 
 	  _raster (vd, hd),
+	  _drawBorder (false),
 	  _lastCPUCycles (0),
 	  _format (nullptr),
 	  _graphicsCharCodeData (MCHEmul::UBytes::_E), 
@@ -289,12 +290,15 @@ bool C64::VICII::simulate (MCHEmul::CPU* cpu)
 	// To store back the info in the VIC Registers...
 	_VICIIRegisters -> setCurrentRasterLine (_raster.currentLine ()); 
 
-	unsigned short x1, y1, x2, y2;
-	_raster.screenPositions (x1, y1, x2, y2);
-	screenMemory () -> setHorizontalLine ((size_t) x1 - 1, (size_t) y1 - 1, (size_t) x2 - x1 + 3, 1);
-	screenMemory () -> setHorizontalLine ((size_t) x1 - 1, (size_t) y2 + 1, (size_t) x2 - x1 + 3, 1);
-	screenMemory () -> setVerticalLine ((size_t) x1 - 1, (size_t) y1 - 1, (size_t) y2 - y1 + 3, 1);
-	screenMemory () -> setVerticalLine ((size_t) x2 + 1, (size_t) y1 - 1, (size_t) y2 - y1 + 3, 1);
+	if (_drawBorder)
+	{
+		unsigned short x1, y1, x2, y2;
+		_raster.screenPositions (x1, y1, x2, y2);
+		screenMemory () -> setHorizontalLine ((size_t) x1 - 1, (size_t) y1 - 1, (size_t) x2 - x1 + 3, 1);
+		screenMemory () -> setHorizontalLine ((size_t) x1 - 1, (size_t) y2 + 1, (size_t) x2 - x1 + 3, 1);
+		screenMemory () -> setVerticalLine ((size_t) x1 - 1, (size_t) y1 - 1, (size_t) y2 - y1 + 3, 1);
+		screenMemory () -> setVerticalLine ((size_t) x2 + 1, (size_t) y1 - 1, (size_t) y2 - y1 + 3, 1);
+	}
 
 	return (true);
 }

@@ -277,6 +277,9 @@ namespace C64
 		  */
 		virtual MCHEmul::InfoStructure getInfoStructure () const override;
 
+		void setDrawBorder (bool dB)
+							{ _drawBorder = dB; }
+
 		private:
 		/** To simplify the use of the routines dedicated to draw. */
 		struct DrawContext
@@ -339,6 +342,8 @@ namespace C64
 		C64::VICIIRegisters* _VICIIRegisters;
 		/** The raster. */
 		Raster _raster;
+		/** To draw or nor the border between the background and the foreground. */
+		bool _drawBorder;
 
 		// Implementation
 		/** The number of bytes drawn should be the same than the number of CPU cycles happened

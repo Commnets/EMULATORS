@@ -4,12 +4,17 @@
 // ---
 const unsigned char C64::C64Emulator::_PARAMNTSC = 'n';
 const std::string C64::C64Emulator::_NTSC = "NTSC";
+const unsigned char C64::C64Emulator::_PARAMBORDER = 'b';
+const std::string C64::C64Emulator::_BORDER = "BORDER";
 
 // ---
 bool C64::C64Emulator::initialize ()
 {
 	if (!MCHEmul::Emulator::initialize ())
 		return (false);
+
+	if (drawBorder ())
+		dynamic_cast <C64::Commodore64*> (computer ()) -> vicII () -> setDrawBorder (true);
 
 	// TODO
 	// To link the peripherals...
@@ -22,7 +27,9 @@ C64::C64Emulator::C64Emulator (const MCHEmul::Strings& argv, MCHEmul::Communicat
 	: MCHEmul::Emulator (argv, cS)
 {
 	static std::map <unsigned char, std::string> _MATCH =
-		{ { _PARAMNTSC, _NTSC } };
+		{ { _PARAMNTSC, _NTSC },
+		  { _PARAMBORDER, _BORDER } 
+		};
 
 	for (unsigned int i = 1 /** param 0 = name of the executable */; i < argv.size (); i++)
 	{
