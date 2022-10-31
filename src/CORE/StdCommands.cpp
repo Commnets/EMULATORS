@@ -211,10 +211,8 @@ void MCHEmul::NextInstructionCommand::executeImpl (MCHEmul::CommandExecuter* cE,
 // ---
 void MCHEmul::LastIntructionCPUCommand::executeImpl (MCHEmul::CommandExecuter* cE, MCHEmul::Computer* c, MCHEmul::InfoStructure& rst)
 {
-	if (c -> cpu () -> lastInstruction () == nullptr)
-		return; // It could happen when nothing has been executed yet...
-
-	rst.add ("INST", c -> cpu () -> lastInstruction () -> asString ());
+	rst.add ("INST", c -> cpu () -> lastInstruction () == nullptr 
+		? "-" : c -> cpu () -> lastInstruction () -> asString ());
 }
 
 // ---
@@ -225,6 +223,7 @@ void MCHEmul::ListOfBreakPointsCommand::executeImpl (MCHEmul::CommandExecuter* c
 	for (const auto& i : c -> actions ())
 		if (i.second == MCHEmul::Computer::_ACTIONSTOP) // Only if stopped...
 			lst += ((ct++ != 0) ? "," : "\0") + i.first.asString (MCHEmul::UByte::OutputFormat::_HEXA, '\0', 2);
+	lst = MCHEmul::removeAll0 (lst);
 
 	rst.add ("BREAKPOINTS", lst);
 }

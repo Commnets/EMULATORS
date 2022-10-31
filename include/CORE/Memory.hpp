@@ -59,6 +59,9 @@ namespace MCHEmul
 							{ return (_type); }
 		size_t size () const
 							{ return (_data.size ()); }
+
+		const std::vector <MCHEmul::UByte>& data () const
+							{ return (_data); }
 		
 		bool canBeWriten (bool f = false /** force the writting. */) const
 							{ return (_type == Type::_RAM || (_type == Type::_ROM && f)); }

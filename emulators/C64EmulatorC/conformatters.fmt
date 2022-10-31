@@ -96,8 +96,8 @@ Id:@ID@
 #---
 #---
 ;CCPUSSTATUS
-@PC@
 @INST@
+@PC@
 @REGS?{key=NO,equal=:},@
 @SR@
 #---

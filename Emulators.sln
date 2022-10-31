@@ -102,6 +102,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "C64Programs", "C64Programs"
 		emulators\C64Programs\test3.asm = emulators\C64Programs\test3.asm
 		emulators\C64Programs\test4.asm = emulators\C64Programs\test4.asm
 		emulators\C64Programs\test5.asm = emulators\C64Programs\test5.asm
+		emulators\C64Programs\test6.asm = emulators\C64Programs\test6.asm
 		emulators\C64Programs\testloop.asm = emulators\C64Programs\testloop.asm
 	EndProjectSection
 EndProject

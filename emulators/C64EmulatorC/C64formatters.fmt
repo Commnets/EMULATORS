@@ -23,11 +23,18 @@ FIRST=@FIRST@, LAST=@LAST@
 @RasterY>@
 #---
 #---
+;VICIIRegisters
+@BYTES{blocksize=16,listsep=\,,tablesep=\ ,minsize=2}@
+GRAPHICS=@MODE@
+40COL=@40C@
+25ROW=@25R@
+#---
+#---
 ;VICII
 ID=@ID@
 @ATTRS?{key=YES,equal==}\n@
-->Registers:
-@Registers>@
+->VICIIRegisters:
+@VICIIRegisters>@
 @Raster>@
 #---
 #---

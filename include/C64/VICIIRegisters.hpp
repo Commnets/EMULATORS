@@ -156,6 +156,15 @@ namespace C64
 		
 		virtual void initialize () override;
 
+		/**
+		  *	The name of the fields are: \n
+		  * The structure of Chipregisters plus:
+		  * MODE  = Attribute: The mode working in the VICII.
+		  *	40C   = Attribute: Whether there is 40 columns or not.
+		  * 25R   = Attribute: Whether there is 25 rows or not.
+		  */
+		virtual MCHEmul::InfoStructure getInfoStructure () const override;
+
 		private:
 		virtual void setValue (size_t p, const MCHEmul::UByte& v) override;
 		virtual const MCHEmul::UByte& readValue (size_t p) const override;

@@ -25,7 +25,8 @@ void C64::CIA2Registers::initialize ()
 // ---
 void C64::CIA2Registers::setValue (size_t p, const MCHEmul::UByte& v)
 {
-	assert (_timerA != nullptr && _timerB != nullptr && _clock != nullptr);
+	if (_timerA == nullptr || _timerB == nullptr || _clock == nullptr)
+		return;
 
 	MCHEmul::PhysicalStorageSubset::setValue (p, v);
 
@@ -36,7 +37,10 @@ void C64::CIA2Registers::setValue (size_t p, const MCHEmul::UByte& v)
 		// Data Port Register A: CI2PRA
 		// The three first bites control VICIIB active bank
 		case 0x00:
-			_VICBank = 0x03 - (v.value () & 0x03); // From 0 to 3...
+			{
+				_VICBank = 0x03 - (v.value () & 0x03); // From 0 to 3...
+			}
+
 			break;
 
 		// Data Port Register B: CIAPRB
@@ -54,22 +58,34 @@ void C64::CIA2Registers::setValue (size_t p, const MCHEmul::UByte& v)
 
 		// LSB of the Latch A: TIMALO
 		case 0x04:
-			_timerA -> setInitialValue (_timerA -> initialValue () & 0x00ff | (unsigned short) v.value ());
+			{
+				_timerA -> setInitialValue (_timerA -> initialValue () & 0x00ff | (unsigned short) v.value ());
+			}
+
 			break;
 
 		// MSB of the Latch A: TIMAHI
 		case 0x05:
-			_timerA -> setInitialValue (_timerA -> initialValue () & 0xff00 | (unsigned short) (v.value () << 8));
+			{
+				_timerA -> setInitialValue (_timerA -> initialValue () & 0xff00 | (unsigned short) (v.value () << 8));
+			}
+
 			break;
 
 		// LSB of the Latch B: TIMBLO
 		case 0x06:
-			_timerB -> setInitialValue (_timerB -> initialValue () & 0x00ff | (unsigned short) v.value ());
+			{
+				_timerB -> setInitialValue (_timerB -> initialValue () & 0x00ff | (unsigned short) v.value ());
+			}
+
 			break;
 
 		// MSB of the Latch B: TIMBHI
 		case 0x07:
-			_timerB -> setInitialValue (_timerB -> initialValue () & 0xff00 | (unsigned short) (v.value () << 8));
+			{
+				_timerB -> setInitialValue (_timerB -> initialValue () & 0xff00 | (unsigned short) (v.value () << 8));
+			}
+
 			break;
 
 		// Time of Day Clock Tenths of Seconds: TO2TEN
@@ -127,32 +143,41 @@ void C64::CIA2Registers::setValue (size_t p, const MCHEmul::UByte& v)
 		// Interrupt Control Register: CI2ICR
 		// Depending on the bit 7 the behaviour is different: 1 = bits with 1 are set, 0 = bits with 1 are cleared... 
 		case 0x0d:
-			if (v.bit (0)) _timerA -> setIRQEnabled (v.bit (7));
-			if (v.bit (1)) _timerB -> setIRQEnabled (v.bit (7));
-			if (v.bit (2)) _clock -> setIRQEnabled (v.bit (7));
-			// TODO: To manage the serial port...
+			{
+				if (v.bit (0)) _timerA -> setIRQEnabled (v.bit (7));
+				if (v.bit (1)) _timerB -> setIRQEnabled (v.bit (7));
+				if (v.bit (2)) _clock -> setIRQEnabled (v.bit (7));
+				// TODO: To manage the serial port...
+			}
+
 			break;
 
 		// Control Register A: CI2CRA
 		case 0x0e:
-			_timerA -> setEnabled (v.bit (0));
-			// TODO: Sending signals to serial port...(bits 1, 2 & 6)
-			_timerA -> setRunMode (v.bit (3) ? CIATimer::RunMode::_ONETIME : CIATimer::RunMode::_RESTART);
-			if (v.bit (4)) _timerA -> reset ();
-			_timerA -> setCountMode (v.bit (5)
-				? C64::CIATimer::CountMode::_PROCESSORCYCLES: C64::CIATimer::CountMode::_SIGNALSONCNTLINE);
-			// TODO: Pending to control based on 60Hz or 50 Hz...(bit 7)
+			{
+				_timerA -> setEnabled (v.bit (0));
+				// TODO: Sending signals to serial port...(bits 1, 2 & 6)
+				_timerA -> setRunMode (v.bit (3) ? CIATimer::RunMode::_ONETIME : CIATimer::RunMode::_RESTART);
+				if (v.bit (4)) _timerA -> reset ();
+				_timerA -> setCountMode (v.bit (5)
+					? C64::CIATimer::CountMode::_PROCESSORCYCLES: C64::CIATimer::CountMode::_SIGNALSONCNTLINE);
+				// TODO: Pending to control based on 60Hz or 50 Hz...(bit 7)
+			}
+
 			break;
 
 		// Control Register B: CI2CRB
 		case 0x0f:
-			_timerB -> setEnabled (v.bit (0));
-			// TODO: Sending signals to serial port B...(bits 1, 2 & 6)
-			_timerB -> setRunMode (v.bit (3) ? CIATimer::RunMode::_ONETIME : CIATimer::RunMode::_RESTART);
-			if (v.bit (4)) _timerB -> reset ();
-			// bits 5 & 6 indicates the mode...
-			_timerB -> setCountMode ((C64::CIATimer::CountMode) ((v.value () >> 4) & 0x03));
-			// _PROCESSORCYCLES = 0, _SIGNALSONCNTLINE = 1,...
+			{
+				_timerB -> setEnabled (v.bit (0));
+				// TODO: Sending signals to serial port B...(bits 1, 2 & 6)
+				_timerB -> setRunMode (v.bit (3) ? CIATimer::RunMode::_ONETIME : CIATimer::RunMode::_RESTART);
+				if (v.bit (4)) _timerB -> reset ();
+				// bits 5 & 6 indicates the mode...
+				_timerB -> setCountMode ((C64::CIATimer::CountMode) ((v.value () >> 4) & 0x03));
+				// _PROCESSORCYCLES = 0, _SIGNALSONCNTLINE = 1,...
+			}
+
 			break;
 			
 		default:
@@ -163,7 +188,8 @@ void C64::CIA2Registers::setValue (size_t p, const MCHEmul::UByte& v)
 // ---
 const MCHEmul::UByte& C64::CIA2Registers::readValue (size_t p) const
 {
-	assert (_timerA != nullptr && _timerB != nullptr && _clock != nullptr);
+	if (_timerA == nullptr || _timerB == nullptr || _clock == nullptr)
+		return (MCHEmul::PhysicalStorage::_DEFAULTVALUE);
 
 	MCHEmul::UByte result = MCHEmul::PhysicalStorage::_DEFAULTVALUE;
 
@@ -176,38 +202,62 @@ const MCHEmul::UByte& C64::CIA2Registers::readValue (size_t p) const
 		case 0x01:
 		case 0x02:
 		case 0x03:
-			result = MCHEmul::PhysicalStorageSubset::readValue (p);
+			{
+				result = MCHEmul::PhysicalStorageSubset::readValue (p);
+			}
+
 			break;
 
 		case 0x04:
-			result = MCHEmul::UByte ((unsigned char) (_timerA -> currentValue () & 0x00ff));
+			{
+				result = MCHEmul::UByte ((unsigned char) (_timerA -> currentValue () & 0x00ff));
+			}
+
 			break;
 
 		case 0x05:
-			result = MCHEmul::UByte ((unsigned char) ((_timerA -> currentValue () & 0xff00) >> 8));
+			{
+				result = MCHEmul::UByte ((unsigned char) ((_timerA -> currentValue () & 0xff00) >> 8));
+			}
+
 			break;
 
 		case 0x06:
-			result = MCHEmul::UByte ((unsigned char) (_timerB -> currentValue () & 0x00ff));
+			{
+				result = MCHEmul::UByte ((unsigned char) (_timerB -> currentValue () & 0x00ff));
+			}
+
 			break;
 
 		case 0x07:
-			result = MCHEmul::UByte ((unsigned char) ((_timerB -> currentValue () & 0xff00) >> 8));
+			{
+				result = MCHEmul::UByte ((unsigned char) ((_timerB -> currentValue () & 0xff00) >> 8));
+			}
+
 			break;
 
 		case 0x08:
-			// Only 1 digit from 0 to 9 (4 bits). Rest unused.
-			result = MCHEmul::UInt::fromUnsignedInt (_clock -> tenthsSecond (), MCHEmul::UInt::_PACKAGEDBCD).bytes ()[0];
+			{
+				// Only 1 digit from 0 to 9 (4 bits). Rest unused.
+				result = MCHEmul::UInt::fromUnsignedInt (_clock -> tenthsSecond (), MCHEmul::UInt::_PACKAGEDBCD).bytes ()[0];
+			}
+
 			break;
 
 		case 0x09:
-			// 2 digits. 1º: from 0 to 9 (4 bits), 2º: from 0 to 6 (3 bits). Bit 7 unused
-			result = MCHEmul::UInt::fromUnsignedInt (_clock -> seconds (), MCHEmul::UInt::_PACKAGEDBCD).bytes ()[0];
+			{
+				// 2 digits. 1º: from 0 to 9 (4 bits), 2º: from 0 to 6 (3 bits). Bit 7 unused
+				result = MCHEmul::UInt::fromUnsignedInt (_clock -> seconds (), MCHEmul::UInt::_PACKAGEDBCD).bytes ()[0];
+			}
+
 			break;
 
 		case 0x0a:
-			// 2 digits. 1º: from 0 to 9 (4 bits), 2º: from 0 to 6 (3 bits). Bit 7 unused
-			result = MCHEmul::UInt::fromUnsignedInt (_clock -> minutes (), MCHEmul::UInt::_PACKAGEDBCD).bytes ()[0];
+			{
+				// 2 digits. 1º: from 0 to 9 (4 bits), 2º: from 0 to 6 (3 bits). Bit 7 unused
+				result = MCHEmul::UInt::fromUnsignedInt (_clock -> minutes (), MCHEmul::UInt::_PACKAGEDBCD).bytes ()[0];
+			}
+
 			break;
 
 		case 0x0b:
@@ -247,7 +297,10 @@ const MCHEmul::UByte& C64::CIA2Registers::readValue (size_t p) const
 
 		case 0x0e:
 		case 0x0f:
-			result = MCHEmul::PhysicalStorageSubset::readValue (p);
+			{
+				result = MCHEmul::PhysicalStorageSubset::readValue (p);
+			}
+
 			break;
 			
 		default:

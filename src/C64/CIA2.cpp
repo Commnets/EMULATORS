@@ -17,9 +17,17 @@ bool C64::CIA2::initialize ()
 		return (false);
 	}
 
+	_timerA.initialize ();
+
+	_timerB.initialize ();
+
+	_clock.initialize ();
+
 	_CIA2Registers -> lookAtTimers (&_timerA, &_timerB);
 
 	_CIA2Registers -> lookAtClock (&_clock);
+
+	_CIA2Registers -> initialize ();
 
 	return (true);
 }

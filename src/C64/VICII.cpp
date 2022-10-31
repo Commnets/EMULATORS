@@ -158,6 +158,8 @@ bool C64::VICII::initialize ()
 
 	_raster.initialize ();
 
+	_VICIIRegisters -> initialize ();
+
 	_lastCPUCycles = 0;
 
 	_graphicsCharCodeData = MCHEmul::UBytes::_E; 
@@ -308,8 +310,8 @@ MCHEmul::InfoStructure C64::VICII::getInfoStructure () const
 {
 	MCHEmul::InfoStructure result = MCHEmul::GraphicalChip::getInfoStructure ();
 
-	result.add ("Registers",	_VICIIRegisters -> getInfoStructure ());
-	result.add ("Raster",		_raster.getInfoStructure ());
+	result.add ("VICIIRegisters",	_VICIIRegisters -> getInfoStructure ());
+	result.add ("Raster",			_raster.getInfoStructure ());
 
 	return (result);
 }
