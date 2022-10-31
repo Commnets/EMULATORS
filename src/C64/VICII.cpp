@@ -342,7 +342,7 @@ void C64::VICII::drawGraphics (const C64::VICII::DrawContext& dC)
 	// The graphical column being involved...
 	// The SCROLLX has been applied to the calculus, so it can be negative!
 	// -7 - _GRAPHMAXBITMAPCOLUMNS
-	int cb = (dC._RCA - dC._ICD) - dC._SC; 
+	int cb = (dC._RCA - dC._ICD) - dC._SC;
 
 	// The graphical line being involved...
 	// The SCROLLY is included in the calculus!
@@ -450,13 +450,14 @@ void C64::VICII::drawMonoColorBytes (int cb, size_t r,
 {
 	for (int i = 0; i < 8 /** To paint always 8 pixels */; i++)
 	{
-		if ((cb + i) < 0)
+		int pp = cb + i;
+		if (pp < 0)
 			continue;
 
-		size_t iBy = (size_t) ((cb + i) >> 3 /** To determine the byte. */);
-		size_t iBt = 7 - (size_t) ((cb + i) % 8); /** From MSB to LSB. */
+		size_t iBy = ((size_t) pp) >> 3 /** To determine the byte. */;
+		size_t iBt = 7 - (((size_t) pp) % 8); /** From MSB to LSB. */
 		unsigned short pos = dC._RCA + i;
-		if (pos <= dC._LCS && bt [(iBy << 3) + r].bit (iBt))
+		if (pos >= dC._ICS && pos <= dC._LCS && bt [(iBy << 3) + r].bit (iBt))
 			screenMemory () -> setPixel ((size_t) pos, (size_t) dC._RR, 
 				(unsigned int) (clr [iBy].value () & 0x0f /** Useful nibble. */));
 	}
@@ -468,16 +469,17 @@ void C64::VICII::drawMultiColorBytes (int cb, size_t r,
 {
 	for (unsigned short i = 0 ; i < 8; i += 2)
 	{
-		if ((cb + i) < 0)
+		int pp = cb + i;
+		if (pp < 0)
 			continue;
 
-		size_t iBy = (size_t) ((cb + i) >> 3); 
-		size_t iBt = 7 - (size_t) ((cb + i) % 8);
+		size_t iBy = ((size_t) pp) >> 3; 
+		size_t iBt = 7 - (((size_t) pp) % 8);
 		unsigned char cs = (bt [(iBy << 3) + r].value () >> i) & 0x03; // 0, 1, 2 or 3...
 		unsigned int fc = (unsigned int) ((cs == 3) 
 			? clr [iBy].value () : _VICIIRegisters -> backgroundColor (cs)) & 0x0f /** Useful nibble. */;
 		unsigned short pos = dC._RCA + i;
-		if (pos <= dC._LCS)	screenMemory () -> setPixel ((size_t) pos, (size_t) dC._RR, fc);
+		if (pos >= dC._ICS && pos <= dC._LCS)	screenMemory () -> setPixel ((size_t) pos, (size_t) dC._RR, fc);
 		if ((pos + 1) <= dC._LCS) screenMemory () -> setPixel (((size_t) pos + 1), (size_t) dC._RR, fc);
 	}
 }

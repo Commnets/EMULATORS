@@ -1,4 +1,4 @@
-; Iterates the color in the foreground while writes down a set of letters
+; Smooth horizontal scroll (test ti) for a set of letters...
 ; By Ignacio Cea
 
 ; MACROS
@@ -8,7 +8,8 @@ SCREEN1			= $0500
 SCREEN2			= $0600
 SCREEN3			= $0700
 COLORRAM		= $D800					; Where the ram color starts
-INICOLOR		= $03					; The initial color to iterate foregound and the color the background will have
+BKCOLOR			= $01					; The initial color of the background
+FGCOLOR			= $03					; The initial color of the foregound
 FOREGROUND		= $D020					; The address in VICII for the foreground
 BACKGROUND		= $D021					; The address in VICII for the background
 SCROLLX			= $D016					; The address of the VIC II dedeicated to the scroll
@@ -67,9 +68,14 @@ LOOPCHARS:		LDA CHARCODES,X
 				CPX #NUMCHARS
 				BNE LOOPCHARS
 
-SCREENCOLOR:	LDA #INICOLOR			; To set the color of the screen (background & foreground)
+SCREENCOLOR:	LDA #BKCOLOR			; To set the color of the screen
 				STA BACKGROUND
+				LDA #FGCOLOR
 				STA FOREGROUND
+
+SCREENSIZE:		LDA SCROLLX
+				AND #$F7
+				STA SCROLLX
 		
 MOVE:			LDA #$00
 				STA SCROLLXPOS
