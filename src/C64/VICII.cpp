@@ -487,16 +487,16 @@ void C64::VICII::drawMonoColorBytes (int cb, size_t r,
 void C64::VICII::drawMultiColorBytes (int cb, size_t r, 
 	const MCHEmul::UBytes& bt, const MCHEmul::UBytes& clr, const C64::VICII::DrawContext& dC)
 {
-	for (unsigned short i = 0 ; i < 8; i += 2)
+	for (unsigned short i = 0 ; i < 8 /** To paint always 8 pixels but in block of 2. */; i += 2)
 	{
 		int pp = cb + i;
 		if (pp < 0)
 			continue;
 
 		size_t iBy = ((size_t) pp) >> 3; 
-		size_t iBt = 7 - (((size_t) pp) % 8);
-		unsigned char cs = (bt [(iBy << 3) + r].value () >> i) & 0x03; // 0, 1, 2 or 3...
-		unsigned int fc = (unsigned int) ((cs == 3) 
+		size_t iBt = 3 - ((((size_t) pp) % 8) >> 1);
+		unsigned char cs = (bt [(iBy << 3) + r].value () >> (iBt << 1)) & 0x03; // 0, 1, 2 or 3...
+		unsigned int fc = (unsigned int) ((cs == 0x03) 
 			? clr [iBy].value () : _VICIIRegisters -> backgroundColor (cs)) & 0x0f /** Useful nibble. */;
 		unsigned short pos = dC._RCA + i;
 		if (pos >= dC._ICS && pos <= dC._LCS) screenMemory () -> setPixel ((size_t) pos, (size_t) dC._RR, fc);
@@ -522,7 +522,8 @@ void C64::VICII::drawMonoColorSprite (size_t c, size_t r, size_t spr, const Draw
 	if ((c + 8 /** pixels */) < (size_t) x || c >= (size_t) (x + wX))
 		return; // Not visible in the horizontal zone...
 
-	for (unsigned int i = 0; i < 8 /** pixels. */; i += dW)
+	for (unsigned int i = 0; 
+			i < 8 /** always to draw 8 pixels */; i += dW /** the size of the pixels block. */)
 	{
 		size_t pp = (c + i);
 		if (pp < (size_t) x)
@@ -539,16 +540,55 @@ void C64::VICII::drawMonoColorSprite (size_t c, size_t r, size_t spr, const Draw
 			continue; // The point is not visible...
 
 		unsigned short pos = dC._RCA + i;
-		for (size_t j = 0; j < dW; j++)
+		for (size_t j = 0; j < (size_t) dW; j++)
 			if ((pos + j) >= dC._ICS && (pos + j) <= dC._LCS)
-				screenMemory () -> setPixel ((size_t) (pos + j), (size_t) dC._RR, _VICIIRegisters -> spriteColor (spr));
+				screenMemory () -> setPixel ((size_t) (pos + j), (size_t) dC._RR, 
+					_VICIIRegisters -> spriteColor (spr) & 0x0f /** useful nibble. */);
 	}
 }
 
 // ---
 void C64::VICII::drawMultiColorSprite (size_t c, size_t r, size_t spr, const DrawContext& dC)
 {
-	// TODO
+	// Horizontal info about the sprite
+	unsigned short dW	= _VICIIRegisters -> spriteDoubleWidth (spr) ? 2 : 1;
+	unsigned short x	= _VICIIRegisters -> spriteXCoord (spr);
+	unsigned short wX	= 24 /** normal width in pixels. */ * dW;
+	unsigned short dW8	= 8 * dW; // 8 or 16
+	// Vertical info about the sprite
+	unsigned short dH	= _VICIIRegisters -> spriteDoubleHeight (spr) ? 2 : 1;
+	unsigned short y	= _VICIIRegisters -> spriteYCoord (spr);
+	unsigned short wY	= 21 /** normal height in pixels. */ * dH;
+
+	if (r < (size_t) y || r >= (size_t) (y + wY))
+		return; // Not visible in the vertical zone...
+	if ((c + 8 /** pixels */) < (size_t) x || c >= (size_t) (x + wX))
+		return; // Not visible in the horizontal zone...
+
+	for (unsigned int i = 0; i < 8 /** pixels. */; i += (2 * dW))
+	{
+		size_t pp = (c + i);
+		if (pp < (size_t) x)
+			continue; // Not visible...
+		if (pp >= (size_t) (x + wX))
+			break; // No more draws...
+
+		// To determine the initial byte (iBy) and bit (iBt) with the info about the sprite...
+		// The bit to select moves from 0 to 3, represeting the pair of bits (0,1), (2,3), (4,5), (6,7)
+		size_t iBy = ((r - y) / dH) * 3 /** 3 bytes per sprite row info. */ + ((pp - x) / dW8);
+		size_t iBt = 3 - (((pp - x) % dW8) / (2 * dW));
+		unsigned char cs = (_graphicsSprites[spr][iBy].value () >> (iBt << 1)) & 0x03;
+		if (cs == 0)
+			continue; // The point has no color...
+
+		unsigned int fc = (unsigned int) ((cs == 0x01) 
+			? _VICIIRegisters -> spriteSharedColor (0) 
+			: ((cs == 0x02) ? _VICIIRegisters -> spriteColor (spr) : _VICIIRegisters -> spriteSharedColor (1)));
+		unsigned short pos = dC._RCA + i;
+		for (size_t j = 0; j < (size_t) (2 * dW); j++)
+			if ((pos + j) >= dC._ICS && (pos + j) <= dC._LCS)
+				screenMemory () -> setPixel ((size_t) (pos + j), (size_t) dC._RR, fc);
+	}
 }
 
 // ---

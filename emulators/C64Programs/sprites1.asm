@@ -20,8 +20,10 @@ SPRITEMSB		= $D010					; The most significatn bit of the X position for sprites
 SPRITEDWIDTH	= $D01D					; Location to set double width for sprites
 SPRITEDHEIGHT	= $D017					; Location to set double height for sprites
 SPRITECOLOR		= $D027					; The color of the sprite 1
-SPRITELOC		= $07F8					; Location where to find the 64 block where the sprite 1 data is
 SPRITEPRIORITY	= $D01B					; To manage the priority of the sprites over the foreground
+SPRITEMCOLOR	= $D01C					; To manage the multicolor
+
+SPRITELOC		= $07F8					; Location where to find the 64 block where the sprite 1 data is
 
 * 				= $0800
 ; The data for the sprite 1: A cross.

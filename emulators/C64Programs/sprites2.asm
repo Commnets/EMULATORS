@@ -20,6 +20,7 @@ SPRITEMSB		= $D010					; The most significatn bit of the X position for sprites
 SPRITEDWIDTH	= $D01D					; Location to set double width for sprites
 SPRITEDHEIGHT	= $D017					; Location to set double height for sprites
 SPRITECOLOR		= $D027					; The color of the sprite 1
+SPRITEPRIORITY	= $D01B					; To manage the priority of the sprites over the foreground
 SPRITEMCOLOR	= $D01C					; To manage the multicolor
 SPRITESCOLOR1	= $D025					; Sprite Shared Color 1
 SPRITESCOLOR2	= $D026					; Sprite Shared Color 2
@@ -28,6 +29,31 @@ SPRITELOC		= $07F8					; Location where to find the 64 block where the sprite 1 
 
 * 				= $0800
 ; The data for the sprite 1: A cross.
+BYTES			$00 $00 $00
+BYTES			$00 $00 $00
+BYTES			$00 $7F $00
+BYTES			$00 $7F $00
+BYTES			$00 $7F $00
+BYTES			$00 $7F $00
+BYTES			$00 $7F $00
+BYTES			$00 $7F $00
+BYTES			$00 $7F $00
+BYTES			$1F $FF $F8
+BYTES			$1F $FF $F8
+BYTES			$1F $FF $F8
+BYTES			$00 $7F $00
+BYTES			$00 $7F $00
+BYTES			$00 $7F $00
+BYTES			$00 $7F $00
+BYTES			$00 $7F $00
+BYTES			$00 $7F $00
+BYTES			$00 $7F $00
+BYTES			$00 $00 $00
+BYTES			$00 $00 $00
+
+* 				= $0840
+; Other data for the sprite 1: A block.
+; It has been created to play multicolor
 BYTES			$78 $78 $78
 BYTES			$78 $78 $78
 BYTES			$78 $78 $78
@@ -49,6 +75,27 @@ BYTES			$78 $78 $78
 BYTES			$78 $78 $78
 BYTES			$78 $78 $78
 BYTES			$78 $78 $78
+
+; Just a delay
+*				= $0900
+DELAY:			PHA
+				TXA
+				PHA
+				TYA
+				PHA
+				LDY #$04
+LOOPYNOP:		LDX #$FF
+LOOPXNOP:		NOP
+				DEX
+				BNE LOOPXNOP
+				DEY
+				BNE LOOPYNOP
+				PLA
+				TAY
+				PLA
+				TAX
+				PLA
+				RTS
 
 ; To clear the screen
 *				= $0A00
@@ -69,7 +116,7 @@ MAIN:			LDA #BKCOLOR
 				STA BACKGROUND
 				LDA #FGCOLOR
 				STA FOREGROUND
-SETSPRITE:		LDA #$20
+SETSPRITE:		LDA #$21
 				STA SPRITELOC
 				LDA #$07
 				STA SPRITEXPOS
@@ -90,9 +137,17 @@ SETSPRITE:		LDA #$20
 				LDA SPRITEMCOLOR
 				ORA #$01
 				STA SPRITEMCOLOR
+				LDA SPRITEPRIORITY
+				ORA #$00
+				STA SPRITEPRIORITY
 				LDA SPRITEENABLE
 				ORA #$01
 				STA SPRITEENABLE
-ETER:			JMP ETER
+MOVE:			LDX #$00
+LOOPMOVE:		STX SPRITEXPOS
+				JSR DELAY
+				INX
+				BNE LOOPMOVE
+				JMP MOVE				
 
 ; That's all

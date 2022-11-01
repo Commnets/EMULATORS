@@ -98,6 +98,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "C64Programs", "C64Programs", "{BC7BFE65-0F19-4EB9-914F-67B7BC21FBC4}"
 	ProjectSection(SolutionItems) = preProject
 		emulators\C64Programs\sprites1.asm = emulators\C64Programs\sprites1.asm
+		emulators\C64Programs\sprites2.asm = emulators\C64Programs\sprites2.asm
 		emulators\C64Programs\test1.asm = emulators\C64Programs\test1.asm
 		emulators\C64Programs\test2.asm = emulators\C64Programs\test2.asm
 		emulators\C64Programs\test3.asm = emulators\C64Programs\test3.asm
