@@ -56,6 +56,8 @@ namespace C64
 							{ return (_spriteSharedColor [p]); }
 		bool spriteEnable (size_t p) const
 							{ return (_spriteEnabled [p]); }
+		bool spriteMulticolorMode (size_t p) const
+							{ return (_spriteMulticolor [p]); }
 		bool spriteDoubleWidth (size_t p) const
 							{ return (_spriteDoubleWidth [p]); }
 		bool spriteDoubleHeight (size_t p) const
@@ -98,13 +100,17 @@ namespace C64
 		unsigned short IRQRasterLineAt () const
 							{ return (_IRQRasterLineAt);  }
 
-		const MCHEmul::Address charDataMemory () const
-							{ return (_charDataMemory + 
+		const MCHEmul::Address initAddressBank () const
+							{ return (MCHEmul::Address ({ 0x00, 0x00 }) + 
 								((size_t) 0x4000 /* 16284 = 16k */ * _bank) /** VICII Only addresses 16k. */); }
+		const MCHEmul::Address charDataMemory () const
+							{ return (_charDataMemory + ((size_t) 0x4000 * _bank)); }
 		const MCHEmul::Address screenMemory () const 
 							{ return (_screenMemory + ((size_t) 0x4000 * _bank)); }
 		const MCHEmul::Address bitmapMemory () const 
 							{ return (_bitmapMemory + ((size_t) 0x4000 * _bank)); }
+		const MCHEmul::Address spritePointersMemory () const
+							{ return (screenMemory () + (size_t) 0x03f8); /** The last 8 bytes of the screen memory. */ }
 
 		// Managed from VICII Chip Emulator
 		// The VICII chip also uses this object as a temporary storage

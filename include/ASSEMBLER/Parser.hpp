@@ -191,8 +191,8 @@ namespace MCHEmul
 							{ _lastBytesId = 0; }
 
 			virtual bool canParse (const std::string& l) const override
-							{ size_t eP = l.find (' '); 
-							  return (eP != std::string::npos && upper (trim (l.substr (0, eP))) == "BYTES"); }
+							{ auto i = std::find_if (l.begin (), l.end (), std::isspace); // Stop at the first space...
+							  return ((i != l.end ()) ? upper (trim (l.substr (0, l.find (*i)))) == "BYTES" : false); }
 			virtual void parse (std::string& l, unsigned int lC, Semantic* s) const override;
 
 			private:

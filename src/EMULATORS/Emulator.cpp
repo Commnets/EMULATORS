@@ -89,7 +89,7 @@ bool MCHEmul::Emulator::initialize ()
 
 	setDebugLevel (logLevel ());
 
-	if (!computer () -> initialize ()) 
+	if (!_computer -> initialize ()) 
 	{
 		if (_debugLevel >= MCHEmul::_DEBUGERRORS)
 			std::cout << "Error initializing computer" << std::endl;
@@ -141,16 +141,14 @@ bool MCHEmul::Emulator::initialize ()
 					std::cout << i << std::endl;
 		}
 
-		MCHEmul::Address iA; 
-		std::vector <MCHEmul::UByte> bt = cL.asSetOfBytes (iA);
-		computer () -> memory () -> set (iA, bt);
-		computer () -> addActions (cL.listOfActions ());
+		_computer -> memory () -> set (cL.asDataMemoryBlocks ());
+		_computer -> addActions (cL.listOfActions ());
 
 		// Parser and compiler are destroyed here...
 	}
 
 	if (startingAddress () != MCHEmul::Address ())
-		computer () -> cpu () -> programCounter ().setAddress (startingAddress ());
+		_computer -> cpu () -> programCounter ().setAddress (startingAddress ());
 
 	MCHEmul::Addresses adrs;
 	if (!(adrs = stopAddresses ()).empty ())
@@ -158,11 +156,11 @@ bool MCHEmul::Emulator::initialize ()
 		MCHEmul::Computer::MapOfActions acts;
 		for (const auto& i : adrs)
 			acts.insert (MCHEmul::Computer::MapOfActions::value_type (i, MCHEmul::Computer::_ACTIONSTOP));
-		computer () -> addActions (acts);
+		_computer -> addActions (acts);
 	}
 
 	if (stoppedAtStarting ())
-		computer () -> setActionForNextCycle (MCHEmul::Computer::_ACTIONSTOP);
+		_computer -> setActionForNextCycle (MCHEmul::Computer::_ACTIONSTOP);
 
 	return (true);
 }

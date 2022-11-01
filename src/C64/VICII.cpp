@@ -125,6 +125,7 @@ C64::VICII::VICII (const C64::VICII::RasterData& vd, const C64::VICII::RasterDat
 	  _graphicsCharData (MCHEmul::UBytes::_E), 
 	  _graphicsBitmapData (MCHEmul::UBytes::_E),
 	  _graphicsColorData (MCHEmul::UBytes::_E),
+	  _graphicsSprites (8, MCHEmul::UBytes::_E),
 	  _isNewRasterLine (false),
 	  _lastVBlankEntered (false)
 {
@@ -166,6 +167,7 @@ bool C64::VICII::initialize ()
 	_graphicsCharData = MCHEmul::UBytes::_E;
 	_graphicsBitmapData = MCHEmul::UBytes::_E;
 	_graphicsColorData = MCHEmul::UBytes::_E;
+	for (size_t i = 0; i < 8; _graphicsSprites [i++] = MCHEmul::UBytes::_E);
 
 	_isNewRasterLine = true; // The first...
 
@@ -248,28 +250,29 @@ bool C64::VICII::simulate (MCHEmul::CPU* cpu)
 						{ fpxl += (_raster.hData ().firstScreenPosition () - cav); lbk = 8 - fpxl; }
 					if ((cav + 8) > _raster.hData ().lastScreenPosition (/** false = real. */))
 						{ lbk = _raster.hData ().lastScreenPosition () - cav + 1; }
-					screenMemory () -> setHorizontalLine (((size_t) cav + fpxl), (size_t) rv, lbk, _VICIIRegisters -> backgroundColor ());
+					screenMemory () -> setHorizontalLine (((size_t) cav + fpxl), (size_t) rv, lbk, 
+						_VICIIRegisters -> backgroundColor ());
 				}
 
 				// Draw the graphics, and the sprites...
 				C64::VICII::DrawContext dC
 					= { 
-						_raster.hData ().firstScreenPosition (true),		// The original...
-						_raster.hData ().firstScreenPosition (),			// And the real one
-						_raster.hData ().lastScreenPosition (true),			// The original...
-						_raster.hData ().lastScreenPosition (),				// And the real one
-						_VICIIRegisters -> horizontalScrollPosition (),		// From 0 - 7 
-						cv, cav,											// Where the horizontal raster is (also adjusted)
-						_raster.vData ().firstScreenPosition (true),		// The original...
-						_raster.vData ().firstScreenPosition (),			// And the real one
-						_raster.vData ().lastScreenPosition (true),			// The original...
-						_raster.vData ().lastScreenPosition (),				// And the real one
-						_VICIIRegisters -> verticalScrollPosition (),		// From 0 - 7 (taken into account in bad lines)
-						rv													// Where the vertical raster is...
+						/** _ICD */ _raster.hData ().firstScreenPosition (true),	// The original...
+						/** _ICS */ _raster.hData ().firstScreenPosition (),		// And the real one (after reduction size)
+						/** _LCD */ _raster.hData ().lastScreenPosition (true),		// The original...
+						/** _LCS */ _raster.hData ().lastScreenPosition (),			// And the real one (after reduction size)
+						/** _SC	 */ _VICIIRegisters -> horizontalScrollPosition (),	// From 0 - 7 
+						/** _RC	 */ cv,
+						/** _RCA */ cav,											// Where the horizontal raster is (also adjusted)
+						/** _IRD */ _raster.vData ().firstScreenPosition (true),	// The original... 
+						/** _IRS */ _raster.vData ().firstScreenPosition (),		// And the real one (after reduction size)
+						/** _LRD */ _raster.vData ().lastScreenPosition (true),		// The original...
+						/** _LRS */ _raster.vData ().lastScreenPosition (),			// And the real one (after reduction size)
+						/** _SR	 */ _VICIIRegisters -> verticalScrollPosition (),	// From 0 - 7 (taken into account in bad lines)
+						/** _RR	 */ rv												// Where the vertical raster is...
 					  };
 
 				drawGraphics (dC);
-				drawSprites (dC);
 			}
 		}
 
@@ -324,10 +327,11 @@ void C64::VICII::readGraphicsInfo ()
 
 	dynamic_cast <C64::Memory*> (memoryRef ()) -> setVICIIView ();
 
-	_graphicsCharCodeData	= readCharCodeDataAt (chrLine);
-	_graphicsCharData		= readCharDataFor (_graphicsCharCodeData);
-	_graphicsBitmapData		= readBitmapDataAt (graphLine);
-	_graphicsColorData		= readColorDataAt (chrLine);
+	readCharCodeDataAt (chrLine);
+	readCharDataFor (_graphicsCharCodeData);
+	readBitmapDataAt (graphLine);
+	readColorDataAt (chrLine);
+	readSpriteDataAt (graphLine);
 
 	dynamic_cast <C64::Memory*> (memoryRef ()) -> setCPUView ();
 }
@@ -340,45 +344,59 @@ void C64::VICII::drawGraphics (const C64::VICII::DrawContext& dC)
 		return; // It could happen at the first lines of the screen when the vertical SCROLL is active...
 
 	// The graphical column being involved...
-	// The SCROLLX has been applied to the calculus, so it can be negative!
-	// -7 - _GRAPHMAXBITMAPCOLUMNS
-	int cb = (dC._RCA - dC._ICD) - dC._SC;
+	int c = dC._RCA - dC._ICD;
+	// In cb., the SCROLLX is involved, so it could be negative! moving from -7 to _GRAPHMAXBITMAPCOLUMNS...
+	int cb = c - dC._SC;
 
 	// The graphical line being involved...
-	// The SCROLLY is included in the calculus!
+	size_t r = dC._RR - dC._IRS;  
+	// for rc, the SCROLLY is included in the calculus!
 	// The graphical data is loaded only in a bad line but "aligned" with the value of the SCROLLY
 	// So, at this point, the line being rastered could still have graphical data from the previous block of 8 rastered lines...
 	// 0 - _GRAPHMAXBITMAPROWS
-	size_t r = ((dC._RR - dC._IRS) % 8); 
-	r = (r >= dC._SR) ? (r - dC._SR) : (8 + r - dC._SR);
+	size_t rc = r % 8;
+	rc = (rc >= dC._SR) ? (rc - dC._SR) : (8 + rc - dC._SR);
+
+	// The interim function to draw the sprites...
+	auto drawSprites = [&](bool f /** false if they don have priorit against the background. */) -> void
+	{
+		for (size_t i = 0; i < 8 /** 8 sprites. */; i++)
+		{
+			if (_VICIIRegisters -> spriteEnable (i) && 
+				((f && !_VICIIRegisters -> spriteToForegroundPriority (i)) ||
+				 (!f && _VICIIRegisters -> spriteToForegroundPriority (i))))
+			{
+				if (_VICIIRegisters -> spriteMulticolorMode (i)) drawMultiColorSprite (c, r, i, dC);
+				else drawMonoColorSprite (c, r, i, dC);
+			}
+		}
+	};
+
+	drawSprites (false);
 
 	switch (_VICIIRegisters -> graphicModeActive ())
 	{
 		case C64::VICIIRegisters::GraphicMode::_CHARMODE:
-			drawMonoColorBytes (cb, r, _graphicsCharData /** The char definition */, _graphicsColorData, dC);
+			drawMonoColorBytes (cb, rc, _graphicsCharData /** The char definition */, _graphicsColorData, dC);
 			break;
 
 		case C64::VICIIRegisters::GraphicMode::_MULTICOLORCHARMODE:
-			drawMonoColorBytes (cb, r, _graphicsCharData, _graphicsColorData, dC);
+			drawMultiColorBytes (cb, rc, _graphicsCharData, _graphicsColorData, dC);
 			break;
 	
 		case C64::VICIIRegisters::GraphicMode::_BITMAPMODE:
-			drawMonoColorBytes (cb, r, _graphicsBitmapData /** The bimap definition. */, _graphicsColorData, dC);
+			drawMonoColorBytes (cb, rc, _graphicsBitmapData /** The bimap definition. */, _graphicsColorData, dC);
 
 		case C64::VICIIRegisters::GraphicMode::_MULTICOLORBITMAPMODE:
-			drawMonoColorBytes (cb, r, _graphicsBitmapData, _graphicsColorData, dC);
+			drawMultiColorBytes (cb, rc, _graphicsBitmapData, _graphicsColorData, dC);
 			break;
 
 		default:
 			// Not graphic mode supported, yet...
 			break;
 	}
-}
 
-// ---
-void C64::VICII::drawSprites (const C64::VICII::DrawContext& dC)
-{
-	// TODO
+	drawSprites (true);
 }
 
 // ---
@@ -406,10 +424,9 @@ MCHEmul::ScreenMemory* C64::VICII::createScreenMemory ()
 }
 
 // ---
-MCHEmul::UBytes C64::VICII::readCharDataFor (const MCHEmul::UBytes& chrs) const
+const MCHEmul::UBytes& C64::VICII::readCharDataFor (const MCHEmul::UBytes& chrs) const
 {
 	std::vector <MCHEmul::UByte> dt;
-
 	for (const auto& i : chrs.bytes ())
 	{
 		std::vector <MCHEmul::UByte> chrDt = memoryRef () -> bytes 
@@ -417,14 +434,13 @@ MCHEmul::UBytes C64::VICII::readCharDataFor (const MCHEmul::UBytes& chrs) const
 		dt.insert (dt.end (), chrDt.begin (), chrDt.end ());
 	}
 
-	return (MCHEmul::UBytes (dt));
+	return (_graphicsCharData = MCHEmul::UBytes (dt));
 }
 
 // ---
-MCHEmul::UBytes C64::VICII::readBitmapDataAt (unsigned short l) const
+const MCHEmul::UBytes& C64::VICII::readBitmapDataAt (unsigned short l) const
 {
 	std::vector <MCHEmul::UByte> dt;
-
 	unsigned short cL = l * _GRAPHMAXCHARCOLUMNS;
 	for (unsigned short i = 0; i < _GRAPHMAXCHARCOLUMNS; i++)
 	{
@@ -433,15 +449,19 @@ MCHEmul::UBytes C64::VICII::readBitmapDataAt (unsigned short l) const
 		dt.insert (dt.end (), btDt.begin (), btDt.end ());
 	}
 
-	return (MCHEmul::UBytes (dt));
+	return (_graphicsBitmapData = MCHEmul::UBytes (dt));
 }
 
 // ---
-MCHEmul::UBytes C64::VICII::readSpriteDataAt (unsigned short l) const
+const std::vector <MCHEmul::UBytes>& C64::VICII::readSpriteDataAt (unsigned short l) const
 {
-	// TODO
+	MCHEmul::Address sP = _VICIIRegisters -> spritePointersMemory ();
+	for (size_t i = 0; i < 8; i++)
+		_graphicsSprites [i] = MCHEmul::UBytes (memoryRef () -> bytes 
+			(_VICIIRegisters -> initAddressBank () + 
+				((size_t) memoryRef () -> value (sP + i).value () << 6 /** 64 block. */), 63 /** sprite size in bytes. */));
 
-	return (MCHEmul::UBytes::_E);
+	return (_graphicsSprites);
 }
 
 // ---
@@ -479,9 +499,56 @@ void C64::VICII::drawMultiColorBytes (int cb, size_t r,
 		unsigned int fc = (unsigned int) ((cs == 3) 
 			? clr [iBy].value () : _VICIIRegisters -> backgroundColor (cs)) & 0x0f /** Useful nibble. */;
 		unsigned short pos = dC._RCA + i;
-		if (pos >= dC._ICS && pos <= dC._LCS)	screenMemory () -> setPixel ((size_t) pos, (size_t) dC._RR, fc);
+		if (pos >= dC._ICS && pos <= dC._LCS) screenMemory () -> setPixel ((size_t) pos, (size_t) dC._RR, fc);
 		if ((pos + 1) <= dC._LCS) screenMemory () -> setPixel (((size_t) pos + 1), (size_t) dC._RR, fc);
 	}
+}
+
+// ---
+void C64::VICII::drawMonoColorSprite (size_t c, size_t r, size_t spr, const DrawContext& dC)
+{
+	// Horizontal info about the sprite
+	unsigned short dW	= _VICIIRegisters -> spriteDoubleWidth (spr) ? 2 : 1;
+	unsigned short x	= _VICIIRegisters -> spriteXCoord (spr);
+	unsigned short wX	= 24 /** normal width in pixels. */ * dW;
+	unsigned short dW8	= 8 * dW; // 8 or 16
+	// Vertical info about the sprite
+	unsigned short dH	= _VICIIRegisters -> spriteDoubleHeight (spr) ? 2 : 1;
+	unsigned short y	= _VICIIRegisters -> spriteYCoord (spr);
+	unsigned short wY	= 21 /** normal height in pixels. */ * dH;
+
+	if (r < (size_t) y || r >= (size_t) (y + wY))
+		return; // Not visible in the vertical zone...
+	if ((c + 8 /** pixels */) < (size_t) x || c >= (size_t) (x + wX))
+		return; // Not visible in the horizontal zone...
+
+	for (unsigned int i = 0; i < 8 /** pixels. */; i += dW)
+	{
+		size_t pp = (c + i);
+		if (pp < (size_t) x)
+			continue; // Not visible...
+		if (pp > (size_t) (x + wX))
+			break; // No more draws...
+
+		// To determine the initial byte (iBy) and bit (iBt) with the info about the sprite...
+		// The bit moves from 7 to 0, and the byte increases...
+		size_t iBy = ((r - y) / dH) * 3 /** 3 bytes per sprite row info. */ + ((pp - x) / dW8);
+		size_t iBt = 7 - (((pp - x) % dW8) / dW);
+		bool dP = _graphicsSprites [spr][iBy].bit (iBt);
+		if (!dP)
+			continue; // The point is not visible...
+
+		unsigned short pos = dC._RCA + i;
+		for (size_t j = 0; j < dW; j++)
+			if ((pos + j) >= dC._ICS && (pos + j) <= dC._LCS)
+				screenMemory () -> setPixel ((size_t) (pos + j), (size_t) dC._RR, _VICIIRegisters -> spriteColor (spr));
+	}
+}
+
+// ---
+void C64::VICII::drawMultiColorSprite (size_t c, size_t r, size_t spr, const DrawContext& dC)
+{
+	// TODO
 }
 
 // ---

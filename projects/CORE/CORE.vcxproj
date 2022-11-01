@@ -52,6 +52,7 @@
     <ClInclude Include="..\..\include\CORE\Address.hpp" />
     <ClInclude Include="..\..\include\CORE\Chip.hpp" />
     <ClInclude Include="..\..\include\CORE\CmdExecuter.hpp" />
+    <ClInclude Include="..\..\include\CORE\DtMemoryBlock.hpp" />
     <ClInclude Include="..\..\include\CORE\Command.hpp" />
     <ClInclude Include="..\..\include\CORE\CommandBuilder.hpp" />
     <ClInclude Include="..\..\include\CORE\Computer.hpp" />

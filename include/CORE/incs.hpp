@@ -34,6 +34,7 @@
 #include <CORE/StatusRegister.hpp>
 #include <CORE/UByte.hpp>
 #include <CORE/UBytes.hpp>
+#include <CORE/DtMemoryBlock.hpp>
 #include <CORE/UInt.hpp>
 #include <CORE/Instruction.hpp>
 #include <CORE/IO.hpp>

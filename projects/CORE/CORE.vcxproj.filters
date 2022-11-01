@@ -233,6 +233,9 @@
     <ClInclude Include="..\..\include\CORE\CmdExecuter.hpp">
       <Filter>Archivos de encabezado\Commands</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\include\CORE\DtMemoryBlock.hpp">
+      <Filter>Archivos de encabezado\Foundation</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="defformats.fmt">

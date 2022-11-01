@@ -250,7 +250,7 @@ namespace C64
 		static const unsigned short _GRAPHMAXBITMAPROWS		= 200;
 
 		/** CPU Cycles when the graphics are read. */
-		static const unsigned int _CPUCYCLESWHENREADGRAPHS	= 40;
+		static const unsigned int _CPUCYCLESWHENREADGRAPHS	= 43;  // 40 for reading plus 3 blocking the end of 6510 access
 
 		/** Static address. The color memory cann't be changed. */
 		static const MCHEmul::Address _COLORMEMORY;
@@ -291,8 +291,8 @@ namespace C64
 			unsigned short _SC;		// Scroll X
 			unsigned short _RC;		// Raster X (from the beginning of the visible zone)
 			unsigned short _RCA;	// Raster X adjusted (Moves 8 by 8, so = Raster X >> 3 << 3)
-			unsigned short _IRD;	// Initial Row Display
-			unsigned short _IRS;	// Initial Row Screen
+			unsigned short _IRD;	// Initial Row Display (Not taken into account reductions of the size)
+			unsigned short _IRS;	// Initial Row Screen (Screen = Display with reductions of size taken into account).
 			unsigned short _LRD;	// Last Row of the Display 
 			unsigned short _LRS;	// Last Row of the Screen
 			unsigned short _SR;		// Scroll Y
@@ -304,7 +304,6 @@ namespace C64
 
 		/** @see DrawContext structure. */
 		void drawGraphics (const DrawContext& dC);
-		void drawSprites (const DrawContext& dC);
 
 		/** Invoked from initialize to create the right screen memory. \n
 			It also creates the Palette used by CBM 64 (_format variable). */
@@ -312,30 +311,35 @@ namespace C64
 
 		// Read screen data
 		/** Read the chars present in the video matrix. The vale received goes fom 0 to 24. */
-		MCHEmul::UBytes readCharCodeDataAt (unsigned short l) const
-							{ return (memoryRef () -> values (_VICIIRegisters -> screenMemory () + 
-								((size_t) l * _GRAPHMAXCHARCOLUMNS), (size_t) _GRAPHMAXCHARCOLUMNS)); }
+		const MCHEmul::UBytes& readCharCodeDataAt (unsigned short l) const
+							{ return (_graphicsCharCodeData = 
+								memoryRef () -> values (_VICIIRegisters -> screenMemory () +
+									((size_t) l * _GRAPHMAXCHARCOLUMNS), (size_t) _GRAPHMAXCHARCOLUMNS)); }
 		/** Read the info for the chars received as parameter. */
-		MCHEmul::UBytes readCharDataFor (const MCHEmul::UBytes& chrs) const;
+		const MCHEmul::UBytes& readCharDataFor (const MCHEmul::UBytes& chrs) const;
 		/** Read th info of the bitmap. 
 			The info is read as they were char data. That is, the 8 x 8 block are sequential. 
 			The value receive gos from 0 to 199. */
-		MCHEmul::UBytes readBitmapDataAt (unsigned short l) const;
+		const MCHEmul::UBytes& readBitmapDataAt (unsigned short l) const;
 		/** Reads the color of the chars. The _COLORMEMORY is fixed and cann't be changed using VICRegisters. 
 			Th value ecived goes from 0 to 24. */
-		MCHEmul::UBytes readColorDataAt (unsigned short l) const
-							{ return (memoryRef () -> values (_COLORMEMORY + 
+		const MCHEmul::UBytes& readColorDataAt (unsigned short l) const
+							{ return (_graphicsColorData = memoryRef () -> values (_COLORMEMORY +
 								((size_t) l * _GRAPHMAXCHARCOLUMNS), (size_t) _GRAPHMAXCHARCOLUMNS)); }
 		/** The value received is the number of sprite to be drawn. */
-		MCHEmul::UBytes readSpriteDataAt (unsigned short l) const;
+		const std::vector <MCHEmul::UBytes>& readSpriteDataAt (unsigned short l) const;
 
 		// Draw the graphics in detail...
-		/** Draws a monocolor byte. */
+		/** Draws a monocolor set of bytes. */
 		void drawMonoColorBytes (int cb, size_t r, 
 			const MCHEmul::UBytes& bt, const MCHEmul::UBytes& clr, const DrawContext& dC);
-		/** Drawws a multicolor byte. */
+		/** Draws a multicolor set of bytes. */
 		void drawMultiColorBytes (int cb, size_t r, 
 			const MCHEmul::UBytes& bt, const MCHEmul::UBytes& clr, const DrawContext& dC);
+		/** Draws a monocolor sprite line. */
+		void drawMonoColorSprite (size_t c, size_t r, size_t spr, const DrawContext& dC);
+		/** Draws a multocolor sprite line. */
+		void drawMultiColorSprite (size_t c, size_t r, size_t spr, const DrawContext& dC);
 
 		private:
 		/** The memory is used also as the set of registers of the chip. */
@@ -351,11 +355,13 @@ namespace C64
 		unsigned int _lastCPUCycles;
 		/** The format used to draw. It has to be the same that is used by the Screen object. */
 		SDL_PixelFormat* _format;
-		/** The bytes read describing a line of graphics. */
-		MCHEmul::UBytes _graphicsCharCodeData;
-		MCHEmul::UBytes _graphicsCharData;
-		MCHEmul::UBytes _graphicsBitmapData;
-		MCHEmul::UBytes _graphicsColorData;
+		/** The bytes read describing a line of graphics. 
+			They are all actualized at the methods readXXXX. */
+		mutable MCHEmul::UBytes _graphicsCharCodeData;
+		mutable MCHEmul::UBytes _graphicsCharData;
+		mutable MCHEmul::UBytes _graphicsBitmapData;
+		mutable MCHEmul::UBytes _graphicsColorData;
+		mutable std::vector <MCHEmul::UBytes> _graphicsSprites; // Eight sprites...
 		/** Whenever a new rastr line is reached, this variable becomes true. */
 		bool _isNewRasterLine; 
 		/** Whether the vertical raster has entered the last VBlank zone already. */

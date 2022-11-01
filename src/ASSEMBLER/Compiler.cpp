@@ -45,11 +45,47 @@ std::vector <MCHEmul::UByte> MCHEmul::Assembler::ByteCode::asSetOfBytes (MCHEmul
 			}
 		}
 
-		for (const auto& j : i._bytes)
-			result.push_back (j);
+		result.insert (result.end (), i._bytes.begin (), i._bytes.end ());
 
 		nA += i._bytes.size ();
 	}
+
+	return (result);
+}
+
+// ---
+MCHEmul::DataMemoryBlocks MCHEmul::Assembler::ByteCode::asDataMemoryBlocks () const
+{
+	if (_lines.empty ())
+		return (MCHEmul::DataMemoryBlocks ());
+
+	auto sort = [](const MCHEmul::Assembler::ByteCodeLine& l1, 
+		const MCHEmul::Assembler::ByteCodeLine& l2) -> bool { return (l1._address < l2._address); };
+
+	MCHEmul::Assembler::ByteCode cp = *this;
+	std::sort (cp._lines.begin (), cp._lines.end (), sort);
+
+	MCHEmul::DataMemoryBlocks result;
+	std::vector <MCHEmul::UByte> bytes;
+	MCHEmul::Address iA = cp._lines [0]._address;
+	MCHEmul::Address nA = iA; 
+	for (const auto& i : cp._lines)
+	{
+		if (i._address > nA)
+		{
+			result.push_back (MCHEmul::DataMemoryBlock (iA, bytes));
+
+			bytes = { };
+			iA = i._address;
+			nA = iA;
+		}
+
+		bytes.insert (bytes.end (), i._bytes.begin (), i._bytes.end ());
+
+		nA += i._bytes.size ();
+	}
+
+	result.push_back (MCHEmul::DataMemoryBlock (iA, bytes));
 
 	return (result);
 }

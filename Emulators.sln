@@ -97,13 +97,16 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "C64EmulatorC", "emulators\C
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "C64Programs", "C64Programs", "{BC7BFE65-0F19-4EB9-914F-67B7BC21FBC4}"
 	ProjectSection(SolutionItems) = preProject
-		emulators\C64Programs\test.asm = emulators\C64Programs\test.asm
+		emulators\C64Programs\sprites1.asm = emulators\C64Programs\sprites1.asm
+		emulators\C64Programs\test1.asm = emulators\C64Programs\test1.asm
 		emulators\C64Programs\test2.asm = emulators\C64Programs\test2.asm
 		emulators\C64Programs\test3.asm = emulators\C64Programs\test3.asm
 		emulators\C64Programs\test4.asm = emulators\C64Programs\test4.asm
 		emulators\C64Programs\test5.asm = emulators\C64Programs\test5.asm
 		emulators\C64Programs\test6.asm = emulators\C64Programs\test6.asm
+		emulators\C64Programs\test7.asm = emulators\C64Programs\test7.asm
 		emulators\C64Programs\testloop.asm = emulators\C64Programs\testloop.asm
+		emulators\C64Programs\testsprites.asm = emulators\C64Programs\testsprites.asm
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "C64", "C64", "{CB7D0793-14E8-492E-8620-DBE966D6AA14}"
