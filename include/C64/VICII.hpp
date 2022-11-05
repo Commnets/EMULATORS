@@ -311,8 +311,8 @@ namespace C64
 
 		// Read screen data
 		/** Read the chars present in the video matrix. The vale received goes fom 0 to 24. */
-		const MCHEmul::UBytes& readCharCodeDataAt (unsigned short l) const
-							{ return (_graphicsCharCodeData = 
+		const MCHEmul::UBytes& readScreenCodeDataAt (unsigned short l) const
+							{ return (_graphicsScreenCodeData = 
 								memoryRef () -> values (_VICIIRegisters -> screenMemory () +
 									((size_t) l * _GRAPHMAXCHARCOLUMNS), (size_t) _GRAPHMAXCHARCOLUMNS)); }
 		/** Read the info for the chars received as parameter. */
@@ -326,8 +326,9 @@ namespace C64
 		const MCHEmul::UBytes& readColorDataAt (unsigned short l) const
 							{ return (_graphicsColorData = memoryRef () -> values (_COLORMEMORY +
 								((size_t) l * _GRAPHMAXCHARCOLUMNS), (size_t) _GRAPHMAXCHARCOLUMNS)); }
-		/** The value received is the number of sprite to be drawn. */
-		const std::vector <MCHEmul::UBytes>& readSpriteDataAt (unsigned short l) const;
+		/** Read the sprites data (only for the active ones. 
+			The list of the sprites active (internal variable) is also actualized (not returned) = _spritesEnabled. */
+		const std::vector <MCHEmul::UBytes>& readSpriteData () const;
 
 		// Draw the graphics in detail...
 		/** Draws a monocolor set of bytes. */
@@ -357,11 +358,12 @@ namespace C64
 		SDL_PixelFormat* _format;
 		/** The bytes read describing a line of graphics. 
 			They are all actualized at the methods readXXXX. */
-		mutable MCHEmul::UBytes _graphicsCharCodeData;
+		mutable MCHEmul::UBytes _graphicsScreenCodeData;
 		mutable MCHEmul::UBytes _graphicsCharData;
 		mutable MCHEmul::UBytes _graphicsBitmapData;
 		mutable MCHEmul::UBytes _graphicsColorData;
 		mutable std::vector <MCHEmul::UBytes> _graphicsSprites; // Eight sprites...
+		mutable std::vector <size_t> _spritesEnabled; // With the list of sprites number actived
 		/** Whenever a new rastr line is reached, this variable becomes true. */
 		bool _isNewRasterLine; 
 		/** Whether the vertical raster has entered the last VBlank zone already. */

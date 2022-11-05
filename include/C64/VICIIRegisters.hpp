@@ -87,6 +87,8 @@ namespace C64
 							{ return (_graphicMulticolorTextModeActive); }
 		GraphicMode graphicModeActive () const
 							{ return (_graphicModeActive); }
+		bool textMode () const
+							{ return (_textMode); }
 
 		bool rasterIRQActive () const
 							{ return (_rasterIRQActive); }
@@ -206,6 +208,7 @@ namespace C64
 		bool _graphicExtendedColorTextModeActive;
 		bool _graphicMulticolorTextModeActive;
 		GraphicMode _graphicModeActive;
+		bool _textMode; // True when a text mode is active
 		/** IRQ Control. */
 		bool _rasterIRQActive;
 		bool _spriteCollisionWithDataIRQActive;

@@ -52,15 +52,15 @@ bool C64::VICII::RasterData::add (unsigned short i)
 
 	int cP = (int)_currentPosition_0;
 	cP += i; // Can move to the next (o nexts) lines...
-	if (result = (cP >= (int)_maxPositions))
-		while (cP >= (int)_maxPositions)
-			cP -= (int)_maxPositions;
+	if (result = (cP >= (int) _maxPositions))
+		while (cP >= (int) _maxPositions)
+			cP -= (int) _maxPositions;
 
-	cP += (int)_firstPosition;
-	if (cP >= (int)_maxPositions)
-		cP -= (int)_maxPositions;
+	cP += (int) _firstPosition;
+	if (cP >= (int) _maxPositions)
+		cP -= (int) _maxPositions;
 
-	_currentPosition = (unsigned short)cP;
+	_currentPosition = (unsigned short) cP;
 	_currentPosition_0 = toBase0 (_currentPosition);
 
 	return (result);
@@ -121,11 +121,12 @@ C64::VICII::VICII (const C64::VICII::RasterData& vd, const C64::VICII::RasterDat
 	  _drawBorder (false),
 	  _lastCPUCycles (0),
 	  _format (nullptr),
-	  _graphicsCharCodeData (MCHEmul::UBytes::_E), 
+	  _graphicsScreenCodeData (MCHEmul::UBytes::_E), 
 	  _graphicsCharData (MCHEmul::UBytes::_E), 
 	  _graphicsBitmapData (MCHEmul::UBytes::_E),
 	  _graphicsColorData (MCHEmul::UBytes::_E),
 	  _graphicsSprites (8, MCHEmul::UBytes::_E),
+	  _spritesEnabled (),
 	  _isNewRasterLine (false),
 	  _lastVBlankEntered (false)
 {
@@ -163,7 +164,7 @@ bool C64::VICII::initialize ()
 
 	_lastCPUCycles = 0;
 
-	_graphicsCharCodeData = MCHEmul::UBytes::_E; 
+	_graphicsScreenCodeData = MCHEmul::UBytes::_E; 
 	_graphicsCharData = MCHEmul::UBytes::_E;
 	_graphicsBitmapData = MCHEmul::UBytes::_E;
 	_graphicsColorData = MCHEmul::UBytes::_E;
@@ -204,9 +205,10 @@ bool C64::VICII::simulate (MCHEmul::CPU* cpu)
 				// The rest of the info is read in further cycles depending on the type of graphic mode
 				readGraphicsInfo ();
 
-				cpu -> addClockCycles (_CPUCYCLESWHENREADGRAPHS); // The cost of reading in terms of cycles...
-																  // This will slow down for a while later the cpu, 
-																  // that is what actually should happen!
+				cpu -> addClockCycles (_CPUCYCLESWHENREADGRAPHS + 
+					2 * (unsigned int) _spritesEnabled.size ()); // The cost of reading in terms of cycles...
+																 // This will slow down for a while later the cpu, 
+																 // that is what actually should happen!
 			}
 
 			if (_VICIIRegisters -> rasterIRQActive () && 
@@ -327,11 +329,14 @@ void C64::VICII::readGraphicsInfo ()
 
 	dynamic_cast <C64::Memory*> (memoryRef ()) -> setVICIIView ();
 
-	readCharCodeDataAt (chrLine);
-	readCharDataFor (_graphicsCharCodeData);
-	readBitmapDataAt (graphLine);
+	// At VICII this two things are read at the same time (in a bus with 12 bits: 8 for data and 4 for color)
+	readScreenCodeDataAt (chrLine);
 	readColorDataAt (chrLine);
-	readSpriteDataAt (graphLine);
+	// Depending on the graphics mode either char data or bit data is loaded
+	if (_VICIIRegisters -> textMode ()) readCharDataFor (_graphicsScreenCodeData);
+	else readBitmapDataAt (graphLine);
+	// Only eenabled sprites are read
+	readSpriteData ();
 
 	dynamic_cast <C64::Memory*> (memoryRef ()) -> setCPUView ();
 }
@@ -360,11 +365,11 @@ void C64::VICII::drawGraphics (const C64::VICII::DrawContext& dC)
 	// The interim function to draw the sprites...
 	auto drawSprites = [&](bool f /** false if they don have priorit against the background. */) -> void
 	{
-		for (size_t i = 0; i < 8 /** 8 sprites. */; i++)
+		// The sprite 0 has the highest priority...
+		for (const auto& i : _spritesEnabled)
 		{
-			if (_VICIIRegisters -> spriteEnable (i) && 
-				((f && !_VICIIRegisters -> spriteToForegroundPriority (i)) ||
-				 (!f && _VICIIRegisters -> spriteToForegroundPriority (i))))
+			if ((f && !_VICIIRegisters -> spriteToForegroundPriority (i)) ||
+				(!f && _VICIIRegisters -> spriteToForegroundPriority (i)))
 			{
 				if (_VICIIRegisters -> spriteMulticolorMode (i)) drawMultiColorSprite (c, r, i, dC);
 				else drawMonoColorSprite (c, r, i, dC);
@@ -453,13 +458,24 @@ const MCHEmul::UBytes& C64::VICII::readBitmapDataAt (unsigned short l) const
 }
 
 // ---
-const std::vector <MCHEmul::UBytes>& C64::VICII::readSpriteDataAt (unsigned short l) const
+const std::vector <MCHEmul::UBytes>& C64::VICII::readSpriteData () const
 {
+	// The list of sprites enabled is used later to draw them
+	// Only the sprite numbers in the list are then draw, and they are drwan in the order they are in this list
+	// So the last one must be the one with the highest priority, and this is the number 0
+	_spritesEnabled = { }; // The list of the sprites enabled...
+
 	MCHEmul::Address sP = _VICIIRegisters -> spritePointersMemory ();
-	for (size_t i = 0; i < 8; i++)
-		_graphicsSprites [i] = MCHEmul::UBytes (memoryRef () -> bytes 
-			(_VICIIRegisters -> initAddressBank () + 
-				((size_t) memoryRef () -> value (sP + i).value () << 6 /** 64 block. */), 63 /** sprite size in bytes. */));
+	for (int /** can be negative. */ i = 7; i >= 0; i--)
+	{ 
+		if (_VICIIRegisters -> spriteEnable ((size_t) i)) // Read data only if the sprite is active...
+		{ 
+			_spritesEnabled.push_back ((size_t) i);
+			_graphicsSprites [(size_t) i] = MCHEmul::UBytes (memoryRef () -> bytes
+				(_VICIIRegisters -> initAddressBank () + 
+					((size_t) memoryRef () -> value (sP + (size_t) i).value () << 6 /** 64 block. */), 63 /** sprite size in bytes. */));
+		}
+	}
 
 	return (_graphicsSprites);
 }

@@ -148,3 +148,10 @@ Id:@ID@
 ;CSPEED
 @SPEED@ cycles/second
 #---
+#---
+;CLOADPRG
+->Code:
+@CODE@
+->Errors:
+@ERRORS@
+#---

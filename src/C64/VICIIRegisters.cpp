@@ -586,4 +586,8 @@ void C64::VICIIRegisters::setGraphicModeActive ()
 		_graphicModeActive = C64::VICIIRegisters::GraphicMode::_MULTICOLORBITMAPMODE;
 	else if (graphicExtendedColorTextModeActive () && !graphicBitModeActive () && !graphicMulticolorTextModeActive ())
 		_graphicModeActive = C64::VICIIRegisters::GraphicMode::_EXTENDEDBACKGROUNDMODE;
+
+	_textMode = (_graphicModeActive == C64::VICIIRegisters::GraphicMode::_CHARMODE ||
+				 _graphicModeActive == C64::VICIIRegisters::GraphicMode::_MULTICOLORCHARMODE ||
+				 _graphicModeActive == C64::VICIIRegisters::GraphicMode::_EXTENDEDBACKGROUNDMODE);
 }

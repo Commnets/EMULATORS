@@ -26,6 +26,8 @@ MCHEmul::Command* MCHEmul::StandardCommandBuilder::createEmptyCommand (const std
 		result = new MCHEmul::CPUInfoCommand;
 	else if (cmdName == "MEMORY")
 		result = new MCHEmul::MemoryStatusCommand;
+	else if (cmdName == "SETMEMORY")
+		result = new MCHEmul::SetMemoryValueCommand;
 	else if (cmdName == "STOP")
 		result = new MCHEmul::StopCPUCommand;
 	else if (cmdName == "RUN")
@@ -44,6 +46,8 @@ MCHEmul::Command* MCHEmul::StandardCommandBuilder::createEmptyCommand (const std
 		result = new MCHEmul::RemoveAllBreakPointsCommand;
 	else if (cmdName == "SPEED")
 		result = new MCHEmul::CPUSpeedCommand;
+	else if (cmdName == "LOADPRG")
+		result = new MCHEmul::LoadProgramCommand;
 
 	return (result);
 }

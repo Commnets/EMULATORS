@@ -24,6 +24,7 @@ namespace MCHEmul
 {
 	/** Just to get info about all commands that can be executed. \n
 		That info is extracted from a file. \n
+		Command line: HELP (COMMAND) \n
 		The structure of the file should be as follows: \n
 		# Line of comments. Ignored. \n
 		; Line to define that the info for a command starts. 
@@ -50,7 +51,8 @@ namespace MCHEmul
 		HelpInfo _helpInfo;
 	};
 
-	/** Just to know the name of the author. */
+	/** Just to know the name of the author. 
+		AUTHOR */
 	class AuthorInfoCommand final : public Command
 	{
 		public:
@@ -70,7 +72,8 @@ namespace MCHEmul
 		virtual void executeImpl (CommandExecuter* cE, Computer* c, InfoStructure& rst) override;
 	};
 
-	/** To get the status of the status register inside any computer. */
+	/** To get the status of the status register inside any computer. \n
+		Command line: STATUS */
 	class StatusRegisterStatusCommand final : public Command
 	{
 		public:
@@ -90,7 +93,8 @@ namespace MCHEmul
 		virtual void executeImpl (CommandExecuter* cE, Computer* c, InfoStructure& rst) override;
 	};
 
-	/** To get the status of every register defined in the cpu of any computer. */ 
+	/** To get the status of every register defined in the cpu of any computer. \n
+		Command line: STATUS */ 
 	class RegistersStatusCommand final : public Command
 	{
 		public:
@@ -110,7 +114,8 @@ namespace MCHEmul
 		virtual void executeImpl (CommandExecuter* cE, Computer* c, InfoStructure& rst) override;
 	};
 
-	/** To get the status of the program counter. */
+	/** To get the status of the program counter. \n
+		Command line: PC */
 	class ProgramCounterStatusCommand final : public Command
 	{
 		public:
@@ -133,7 +138,8 @@ namespace MCHEmul
 	/** To get the status of the stack.
 		The command can be invoked in two different ways:
 		One very simple way with no parameters to get just basic information about the stack,
-		and other with the paremeter "ALL" to get even the content of the stack itself. */
+		and other with the paremeter "ALL" to get even the content of the stack itself. 
+		Command line: STACK */
 	class StackStatusCommand final : public Command
 	{
 		public:
@@ -157,7 +163,8 @@ namespace MCHEmul
 
 	/** To get the status of the CPU inside any computer. \n
 		It is a complex command made up of others: StatusRegisterStatusCommand,... \n
-		The information about the stack is the simpliest one. */
+		The information about the stack is the simpliest one. \n
+		Command line: CPUSTATUS */
 	class CPUStatusCommand final : public ComplexCommand
 	{
 		public:
@@ -172,7 +179,8 @@ namespace MCHEmul
 	};
 
 	/** Similar to the previous one but without info about the stack. \n
-		it is also used by the command NEXT. */
+		it is also used by the command NEXT. \n
+		Command line: CPUSSTATUS */
 	class CPUSimpleStatusCommand final : public ComplexCommand
 	{
 		public:
@@ -186,7 +194,8 @@ namespace MCHEmul
 							{ /** Nothing special to do. */ }
 	};
 
-	/** To get info about the cpu. */
+	/** To get info about the cpu. \n
+		Command line: CPUINFO */
 	class CPUInfoCommand final : public Command
 	{
 		public:
@@ -209,7 +218,8 @@ namespace MCHEmul
 	/** To get the content of the memory. \n
 		The command must have 1 parameter at least with the direction which value is requested. \n
 		A second parameter might be provided, and the the content between those two memory locations is got. \n
-		The address can be in octal, hexadecimal or decimal. */
+		The address can be in octal, hexadecimal or decimal. \n
+		Command line: MEMORY ADDRESS (OTHER ADDRESS) */
 	class MemoryStatusCommand final : public Command
 	{
 		public:
@@ -229,12 +239,35 @@ namespace MCHEmul
 		virtual void executeImpl (CommandExecuter* cE, Computer* c, InfoStructure& rst) override;
 	};
 
-	/** To stop the cpu.
-		The IO will continue working. */
-	class StopCPUCommand final : public Command
+	/** To change the value of a memory location. 
+		The command is usefull to set only one location of a set of them with the same value. \n
+		So 3 parameters could be provided. \n
+		Command line: SETMEMORY ADDRESS (FINAL ADDRESS) VALUE */
+	class SetMemoryValueCommand final : public Command
 	{
 		public:
 		static const int _ID = 8;
+		static const std::string _NAME;
+
+		SetMemoryValueCommand ()
+			: Command (_ID, _NAME)
+							{ }
+
+		virtual bool canBeExecuted () const override
+							{ return (_parameters.size () == 2 /** One location. */ ||
+									  _parameters.size () == 3 /** a range. */); }
+
+		private:
+		virtual void executeImpl (CommandExecuter* cE, Computer* c, InfoStructure& rst) override;
+	};
+
+	/** To stop the cpu. \n
+		The IO will continue working, so the graphics are still in the screen but stopeed. \n
+		Command line: STOP */
+	class StopCPUCommand final : public Command
+	{
+		public:
+		static const int _ID = 9;
 		static const std::string _NAME;
 
 		StopCPUCommand ()
@@ -248,11 +281,13 @@ namespace MCHEmul
 		virtual void executeImpl (CommandExecuter* cE, Computer* c, InfoStructure& rst) override;
 	};
 
-	/** To run the cpu, usually after a stop command has been executed. */
+	/** To run the cpu, usually after a stop command has been executed. \n
+		The run can start from another location passed optionally as parameter. \n
+		Command line: RUN (ADDRESS) */
 	class RunCPUCommand final : public Command
 	{
 		public:
-		static const int _ID = 9;
+		static const int _ID = 10;
 		static const std::string _NAME;
 
 		RunCPUCommand ()
@@ -260,17 +295,18 @@ namespace MCHEmul
 							{ }
 
 		virtual bool canBeExecuted () const override
-							{ return (_parameters.size () == 0); }
+							{ return (_parameters.size () == 0 || _parameters.size () == 1); }
 
 		private:
 		virtual void executeImpl (CommandExecuter* cE, Computer* c, InfoStructure& rst) override;
 	};
 
-	/** To run just the next instruction of the CPU. */
+	/** To run just the next instruction of the CPU. \n
+		Command line: NEXT */
 	class NextInstructionCommand final : public Command
 	{
 		public:
-		static const int _ID = 10;
+		static const int _ID = 11;
 		static const std::string _NAME;
 
 		NextInstructionCommand ()
@@ -284,11 +320,12 @@ namespace MCHEmul
 		virtual void executeImpl (CommandExecuter* cE, Computer* c, InfoStructure& rst) override;
 	};
 
-	/** To get info about the last instruction executed. */
+	/** To get info about the last instruction executed. \n
+		Command line: INST */
 	class LastIntructionCPUCommand final : public Command
 	{
 		public:
-		static const int _ID = 11;
+		static const int _ID = 12;
 		static const std::string _NAME;
 
 		LastIntructionCPUCommand ()
@@ -304,11 +341,12 @@ namespace MCHEmul
 		virtual void executeImpl (CommandExecuter* cE, Computer* c, InfoStructure& rst) override;
 	};
 
-	/** To get a list with all break points. */
+	/** To get a list with all break points. \n
+		Command line: BREAKS */
 	class ListOfBreakPointsCommand final : public Command
 	{
 		public:
-		static const int _ID = 12;
+		static const int _ID = 13;
 		static const std::string _NAME;
 
 		ListOfBreakPointsCommand ()
@@ -324,11 +362,12 @@ namespace MCHEmul
 		virtual void executeImpl (CommandExecuter* cE, Computer* c, InfoStructure& rst) override;
 	};
 
-	/** To set a break point (or a set of them) in the code. */
+	/** To set a break point (or a set of them) in the code. \n
+		Command line: SETBREAK ADDRESS1 (ADDRESS2 ...) */
 	class SetBreakPointCommand final : public Command
 	{
 		public:
-		static const int _ID = 13;
+		static const int _ID = 14;
 		static const std::string _NAME;
 
 		SetBreakPointCommand ()
@@ -342,11 +381,13 @@ namespace MCHEmul
 		virtual void executeImpl (CommandExecuter* cE, Computer* c, InfoStructure& rst) override;
 	};
 
-	/** To remove a break point (or a set of them) in the code. */
+	/** To remove a break point (or a set of them) in the code. \n
+		If the solicited address hadn't have any break point defined, nothing will happen. \n
+		Command line: REMOVEBREAK ADDRESS1 (ADDRESS2 ...) */
 	class RemoveBreakPointCommand final : public Command
 	{
 		public:
-		static const int _ID = 14;
+		static const int _ID = 15;
 		static const std::string _NAME;
 
 		RemoveBreakPointCommand ()
@@ -360,11 +401,12 @@ namespace MCHEmul
 		virtual void executeImpl (CommandExecuter* cE, Computer* c, InfoStructure& rst) override;
 	};
 
-	/** To remove all break points. */
+	/** To remove all break points. \n
+		Command line: REMOVEBREAKS */
 	class RemoveAllBreakPointsCommand final : public Command
 	{
 		public:
-		static const int _ID = 15;
+		static const int _ID = 16;
 		static const std::string _NAME;
 
 		RemoveAllBreakPointsCommand ()
@@ -378,11 +420,12 @@ namespace MCHEmul
 		virtual void executeImpl (CommandExecuter* cE, Computer* c, InfoStructure& rst) override;
 	};
 
-	/** To know the speed of the processor. */
+	/** To know the speed of the processor. \n
+		Command line: SPEED */
 	class CPUSpeedCommand final : public Command
 	{
 		public:
-		static const int _ID = 16;
+		static const int _ID = 17;
 		static const std::string _NAME;
 
 		CPUSpeedCommand ()
@@ -391,6 +434,28 @@ namespace MCHEmul
 
 		virtual bool canBeExecuted () const override
 							{ return (_parameters.size () == 0); }
+
+		private:
+		virtual void executeImpl (CommandExecuter* cE, Computer* c, InfoStructure& rst) override;
+	};
+
+	/** To load a program. \n
+		The execution is stopped. \n
+		A crash could be generated. \n
+		Either the program loaded or the errros is returned. ºn
+		Command line: LOADPRG PRGFILE */
+	class LoadProgramCommand final : public Command
+	{
+		public:
+		static const int _ID = 18;
+		static const std::string _NAME;
+
+		LoadProgramCommand ()
+			: Command (_ID, _NAME)
+							{ }
+
+		virtual bool canBeExecuted () const override
+							{ return (_parameters.size () == 1); }
 
 		private:
 		virtual void executeImpl (CommandExecuter* cE, Computer* c, InfoStructure& rst) override;

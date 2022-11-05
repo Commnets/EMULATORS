@@ -128,6 +128,7 @@ bool MCHEmul::Console::readAndExecuteCommand ()
 bool MCHEmul::Console::readCommand ()
 {
 	static const std::string bk (200, '\b');
+	static const std::string alKey (" ./$");
 
 	bool result = false;
 
@@ -192,9 +193,17 @@ bool MCHEmul::Console::readCommand ()
 				result = true;
 				break;
 
+			case _BEGINKEY:
+				_cursorPosition = 0;
+				break;
+
+			case _ENDKEY:
+				_cursorPosition = _command.length ();
+				break;
+
 			default:
 				if (chr >= 0 && 
-					(std::isalnum ((int) chr) || chr == ' ' || chr == '$'))
+					(std::isalnum ((int)chr) || alKey.find (chr) != std::string::npos))
 				{
 					if (_cursorPosition == _command.length ()) _command += chr;
 					else if (_cursorPosition == 0) _command = chr + _command;
@@ -266,6 +275,14 @@ bool MCHEmul::Win32Console::readChar (char& chr) const
 
 			case 307:
 				chr = _DELETEKEY;
+				break;
+
+			case 295:
+				chr = _BEGINKEY;
+				break;
+
+			case 303:
+				chr = _ENDKEY;
 				break;
 
 			default:

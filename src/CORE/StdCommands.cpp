@@ -3,7 +3,9 @@
 #include <CORE/Stack.hpp>
 #include <CORE/Instruction.hpp>
 #include <CORE/CmdExecuter.hpp>
+#include <ASSEMBLER/incs.hpp>
 #include <fstream>
+#include <sstream>
 
 // ---
 const std::string MCHEmul::HelpCommand::_NAME = "CHELP";
@@ -16,6 +18,7 @@ const std::string MCHEmul::CPUStatusCommand::_NAME = "CCPUSTATUS";
 const std::string MCHEmul::CPUSimpleStatusCommand::_NAME = "CCPUSSTATUS";
 const std::string MCHEmul::CPUInfoCommand::_NAME = "CCPUINFO";
 const std::string MCHEmul::MemoryStatusCommand::_NAME = "CMEMORY";
+const std::string MCHEmul::SetMemoryValueCommand::_NAME = "CSETMEMORY";
 const std::string MCHEmul::StopCPUCommand::_NAME = "CSTOP";
 const std::string MCHEmul::RunCPUCommand::_NAME = "CRUN";
 const std::string MCHEmul::NextInstructionCommand::_NAME = "CNEXT";
@@ -25,6 +28,7 @@ const std::string MCHEmul::SetBreakPointCommand::_NAME = "CSETBREAK";
 const std::string MCHEmul::RemoveBreakPointCommand::_NAME = "CREMOVEBREAK";
 const std::string MCHEmul::RemoveAllBreakPointsCommand::_NAME = "CREMOVEBREAKS";
 const std::string MCHEmul::CPUSpeedCommand::_NAME = "CSPEED";
+const std::string MCHEmul::LoadProgramCommand::_NAME = "CLOADPRG";
 
 // ---
 MCHEmul::HelpCommand::HelpCommand (const std::string& hF)
@@ -183,6 +187,27 @@ void MCHEmul::MemoryStatusCommand::executeImpl (MCHEmul::CommandExecuter* cE, MC
 }
 
 // ---
+void MCHEmul::SetMemoryValueCommand::executeImpl (MCHEmul::CommandExecuter* cE, MCHEmul::Computer* c, MCHEmul::InfoStructure& rst)
+{
+	MCHEmul::Address a1 = MCHEmul::Address::fromStr ((*_parameters.begin ()).first);
+	MCHEmul::Address a2 = a1;
+	std::vector <MCHEmul::UByte> v;
+	if (_parameters.size () == 3)
+	{
+		a2 = MCHEmul::Address::fromStr ((*++_parameters.begin ()).first);
+
+		v = MCHEmul::UInt::fromStr ((*++++_parameters.begin ()).first).bytes ();
+	}
+	else
+		v = MCHEmul::UInt::fromStr ((*++_parameters.begin ()).first).bytes ();
+
+	MCHEmul::Address iA = (a1 <= a2) ? a1 : a2;
+	MCHEmul::Address fA = (a2 >= a1) ? a2 : a1;
+	for (size_t i = 0; i < fA - iA; i += v.size ())
+		c -> cpu () -> memoryRef () -> set (iA + i, v); // Without force it!
+}
+
+// ---
 void MCHEmul::StopCPUCommand::executeImpl (MCHEmul::CommandExecuter* cE, MCHEmul::Computer* c, MCHEmul::InfoStructure& rst)
 {
 	c -> setActionForNextCycle (MCHEmul::Computer::_ACTIONSTOP);
@@ -193,6 +218,9 @@ void MCHEmul::StopCPUCommand::executeImpl (MCHEmul::CommandExecuter* cE, MCHEmul
 // ---
 void MCHEmul::RunCPUCommand::executeImpl (MCHEmul::CommandExecuter* cE, MCHEmul::Computer* c, MCHEmul::InfoStructure& rst)
 {
+	if (_parameters.size () == 1)
+		c -> cpu () -> programCounter ().setAddress (MCHEmul::Address::fromStr ((*_parameters.begin ()).first));
+
 	c -> setActionForNextCycle (MCHEmul::Computer::_ACTIONCONTINUE);
 
 	MCHEmul::CPUStatusCommand ().execute (cE, c, rst);
@@ -256,4 +284,47 @@ void MCHEmul::RemoveAllBreakPointsCommand::executeImpl (MCHEmul::CommandExecuter
 void MCHEmul::CPUSpeedCommand::executeImpl (MCHEmul::CommandExecuter* cE, MCHEmul::Computer* c, MCHEmul::InfoStructure& rst)
 {
 	rst.add ("SPEED", c -> realCyclesPerSecond ());
+}
+
+// ---
+void MCHEmul::LoadProgramCommand::executeImpl (MCHEmul::CommandExecuter* cE, MCHEmul::Computer* c, MCHEmul::InfoStructure& rst)
+{
+	// It is necessary to stop the code...
+	c -> setActionForNextCycle (MCHEmul::Computer::_ACTIONSTOP);
+
+	MCHEmul::Assembler::Parser parser (c -> cpu ());
+	MCHEmul::Assembler::Compiler compiler (parser);
+	MCHEmul::Assembler::ByteCode cL = compiler.compile ((*_parameters.begin ()).first);
+
+	bool fL = true;
+	std::string ln;
+	if (!compiler) // With errors...
+	{
+		for (const auto& i : compiler.errors ())
+		{
+			std::stringstream ss; ss << i;
+			ln += (fL ? "" : "\n") + ss.str ();
+
+			fL = false;
+		}
+
+		rst.add ("CODE", std::string ("No code loaded"));
+		rst.add ("ERRORS", ln);
+	}
+	else // With no errors...
+	{
+		c -> memory () -> set (cL.asDataMemoryBlocks ());
+		c -> addActions (cL.listOfActions ());
+
+		for (const auto& i : cL._lines)
+		{
+			std::stringstream ss; ss << i;
+			ln += (fL ? "" : "\n") + ss.str ();
+
+			fL = false;
+		}
+
+		rst.add ("CODE", ln);
+		rst.add ("ERRORS", std::string ("No errors"));
+	}
 }
