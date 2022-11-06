@@ -226,7 +226,7 @@ bool C64::VICII::simulate (MCHEmul::CPU* cpu)
 		{
 			// READ: Important variables
 			// Where is the raster in the visible part of the screen? (starting from 0)
-			unsigned short rv, cv; _raster.currentVisiblePosition (cv, rv);
+			unsigned short cv, rv; _raster.currentVisiblePosition (cv, rv);
 			// Which is the horizontal closest block of 8 pixels (from left to the right)?
 			// Take into account that the step - size of the raster is always 8 pixels per cycle..
 			// It always starts at 0...
@@ -236,25 +236,27 @@ bool C64::VICII::simulate (MCHEmul::CPU* cpu)
 			screenMemory () -> setHorizontalLine ((size_t) cav, (size_t) rv,
 				(cav + 8) > _raster.visibleColumns () ? (_raster.visibleColumns () - cav) : 8, _VICIIRegisters -> borderColor ());
 
-			if (_raster.isInDisplayZone ())
+			if (_raster.isInDisplayZone () && 
+				!_VICIIRegisters -> videoResetActive ())
 			{ 
-				// If the raster is already in the screen (including the reductions) and the VICII is active...
-				// It would be possible to draw...
-				if (_raster.isInScreenZone () &&
-					!_VICIIRegisters -> videoResetActive ())
+				if (rv >= _raster.vData ().firstScreenPosition () &&
+					rv <= _raster.vData ().lastScreenPosition ())
 				{
-					// Draws the background, taken into account 
-					// The additional borders that could exist...
-					unsigned short fpxl = 0; // First pixels from the cav to be drawn...
-					unsigned short lbk = 8;  // Number of pixels to be drawn...
-					// With the screen? 
-					if ((cav > _raster.hData ().firstScreenPosition ()) && 
-						(cav - _raster.hData ().firstScreenPosition ()) < 8 /** next raster. */)
-						{ fpxl = cav - _raster.hData ().firstScreenPosition (); lbk = 8 + fpxl; }
-					if ((cav + 8) > _raster.hData ().lastScreenPosition ())
-						{ lbk = _raster.hData ().lastScreenPosition () - cav + 1; }
-					screenMemory () -> setHorizontalLine (((size_t) cav - fpxl), (size_t) rv, lbk, 
-						_VICIIRegisters -> backgroundColor ());
+					// Draws the background,
+					// taking into account that the screen can be reduced in the X axis...
+					if (cav < _raster.hData ().firstScreenPosition () &&
+						(cav + 8) > _raster.hData ().firstScreenPosition ())
+						screenMemory () -> setHorizontalLine ((size_t) _raster.hData ().firstScreenPosition (), (size_t) rv,
+							cav + 8 - _raster.hData ().firstScreenPosition (), _VICIIRegisters -> backgroundColor ());
+					else 
+					if (cav < _raster.hData ().lastScreenPosition ())
+					{
+						unsigned short lbk = 8;  // Number of pixels to be drawn...
+						if ((cav + 8) > _raster.hData ().lastScreenPosition ())
+							lbk = _raster.hData ().lastScreenPosition ()  - cav + 1;
+						screenMemory () -> setHorizontalLine ((size_t) cav, (size_t) rv, lbk, 
+							_VICIIRegisters -> backgroundColor ());
+					}
 				}
 
 				// Draw the graphics, including the sprites...
