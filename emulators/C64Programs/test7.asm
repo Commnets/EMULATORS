@@ -120,7 +120,7 @@ DELAY:			PHA
 				PHA
 				TYA
 				PHA
-				LDY #$04
+				LDY #$03
 LOOPYNOP:		LDX #$FF
 LOOPXNOP:		NOP
 				DEX

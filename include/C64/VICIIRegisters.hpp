@@ -139,7 +139,7 @@ namespace C64
 		bool spriteCollisionWithDataHappened (size_t p) const
 							{ return (_spriteCollisionWithDataHappened [p]); }
 		void setSpriteCollisionWithDataHappened (size_t p, bool c)
-							{ _spriteCollisionWithDataHappened [p] = c; }
+						{ _spriteCollisionWithDataHappened [p] = c; }
 		bool spritesCollisionHappened () const
 							{ return (_spritesCollisionHappened); }
 		void setSpritesCollision (bool c)

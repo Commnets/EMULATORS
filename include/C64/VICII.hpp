@@ -335,7 +335,7 @@ namespace C64
 		void readGraphicsInfoAt (unsigned short gl /** screen line, including the effect of the scroll y. */);
 
 		/** @see DrawContext structure. */
-		void drawGraphics (const DrawContext& dC);
+		void drawGraphicsAndDetectCollisions (const DrawContext& dC);
 
 		/** Invoked from initialize to create the right screen memory. \n
 			It also creates the Palette used by CBM 64 (_format variable). */
@@ -364,15 +364,15 @@ namespace C64
 
 		// Draw the graphics in detail...
 		/** Draws a monocolor set of bytes. */
-		void drawMonoColorBytes (int cb, int r, 
+		MCHEmul::UByte drawMonoColorBytes (int cb, int r, 
 			const MCHEmul::UBytes& bt, const MCHEmul::UBytes& clr, const DrawContext& dC);
 		/** Draws a multicolor set of bytes. */
-		void drawMultiColorBytes (int cb, int r, 
+		MCHEmul::UByte drawMultiColorBytes (int cb, int r,
 			const MCHEmul::UBytes& bt, const MCHEmul::UBytes& clr, const DrawContext& dC);
 		/** Draws a monocolor sprite line. */
-		void drawMonoColorSprite (int c, int r, size_t spr, const DrawContext& dC);
+		MCHEmul::UByte drawMonoColorSprite (int c, int r, size_t spr, const DrawContext& dC);
 		/** Draws a multocolor sprite line. */
-		void drawMultiColorSprite (int c, int r, size_t spr, const DrawContext& dC);
+		MCHEmul::UByte drawMultiColorSprite (int c, int r, size_t spr, const DrawContext& dC);
 
 		private:
 		/** The memory is used also as the set of registers of the chip. */
