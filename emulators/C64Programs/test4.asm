@@ -9,7 +9,7 @@ CHARCODES		= $C000					; Where the chars for the screen are defined
 NUMCHARS		= $0C					; Number of chars defined
 COLORCHARS		= $03					; The color of the chars shown
 
-INICOLOR		= $00					; The initial color to iterate foregound and the color the background will have
+INICOLOR		= $01					; The initial color to iterate foregound and the color the background will have
 FOREGROUND		= $D020					; The address in VICII for the foreground
 BACKGROUND		= $D021					; The address in VICII for the background
 

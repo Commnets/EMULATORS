@@ -51,6 +51,7 @@ namespace C64
 			unsigned short currentPositionAtBase0 () const
 							{ return (_currentPosition_0); }
 
+			// Managing the blank zone...
 			bool isInBlankZone () const
 							{ return ((_currentPosition_0 >= _firstPosition_0 && 
 											_currentPosition_0 < _firstVisiblePosition_0) ||
@@ -60,6 +61,7 @@ namespace C64
 							{ return (_currentPosition_0 > _lastVisiblePosition_0 && 
 									  _currentPosition_0 <= _lastPosition_0); }
 
+			// Managin the visible zone...
 			bool isInVisibleZone () const 
 							{ return ((_currentPosition_0 >= _firstVisiblePosition_0 && 
 									   _currentPosition_0 <= _lastVisiblePosition_0)); }
@@ -67,19 +69,32 @@ namespace C64
 							{ return (_currentPosition_0 - _firstVisiblePosition_0); }
 			unsigned short visiblePositions () const
 							{ return (_lastVisiblePosition_0 - _firstVisiblePosition_0 + 1); }
+			unsigned short currentInVisiblePosition () const
+							{ return (_currentPosition_0 - _firstVisiblePosition_0); }
 
-			/** Doesn't take into account potential reductions in the size. */
+			// Managing the display
+			/** The DISPLAY is the zone where the drawing can happen but not taking 
+				into account potential reductions neither in the columns nor in the rows. */
 			bool isInDisplayZone () const
 							{ return (_currentPosition_0 >= _originalFirstDisplayPosition_0 && 
 									  _currentPosition_0 <= _originalLastDisplayPosition_0); }
+			unsigned short firstDisplayPosition () const
+							{ return (_originalFirstDisplayPosition_0 - _firstVisiblePosition_0); }
+			unsigned short lastDisplayPosition () const
+							{ return (_originalLastDisplayPosition_0 - _firstVisiblePosition_0); }
+			unsigned short displayPositions () const
+							{ return (_originalLastDisplayPosition_0 - _originalFirstDisplayPosition_0 + 1); }
 
-			/** o == true when the original display position has to be taken into account. false by default. */
-			unsigned short firstScreenPosition (bool o = false) const
-							{ return ((o ? _originalFirstDisplayPosition_0 : _firstDisplayPosition_0) - _firstVisiblePosition_0); }
-			unsigned short lastScreenPosition (bool o = false) const
-							{ return ((o ? _originalLastDisplayPosition_0 : _lastDisplayPosition_0) - _firstVisiblePosition_0); }
-			unsigned short currentScreenPosition () const
-							{ return (_currentPosition_0 - _firstVisiblePosition_0); }
+			// Managing the screen
+			/** The SCREEN is the zone where the drawing can happen but taking
+				into account potential reductions either in the columns on in the rows. */
+			bool isInScreenZone () const
+							{ return (_currentPosition_0 >= _firstDisplayPosition_0 &&
+									  _currentPosition_0 <= _lastDisplayPosition_0); }
+			unsigned short firstScreenPosition () const
+							{ return (_firstDisplayPosition_0 - _firstVisiblePosition_0); }
+			unsigned short lastScreenPosition () const
+							{ return (_lastDisplayPosition_0 - _firstVisiblePosition_0); }
 			unsigned short screenPositions () const
 							{ return (_lastDisplayPosition_0 - _firstDisplayPosition_0 + 1); }
 
@@ -188,37 +203,54 @@ namespace C64
 							{ return (_vRasterData.currentPosition () >= _FIRSTBADLINE && 
 									  _vRasterData.currentPosition () <= _LASTBADLINE); }
 
+			// Managing the blan zone
 			bool isInVBlank () const
 							{ return (_vRasterData.isInBlankZone ()); }
 			bool isInLastVBlank () const
 							{ return (_vRasterData.isInLastBlankZone ()); }
 
+			// Managing the visible zone
+			/** The visible zone is the complete c64 sreen. 
+				The size will be different in PAL and in NTSC. */
 			bool isInVisibleZone () const
 							{ return (_vRasterData.isInVisibleZone () && _hRasterData.isInVisibleZone ()); }
-			void currentVisiblePosition (unsigned short& x, unsigned short& y) const
-							{ x = _hRasterData.currentVisiblePosition (); y = _vRasterData.currentVisiblePosition (); }
-
-			bool isInDisplayZone () const
-							{ return (_vRasterData.isInDisplayZone () && _hRasterData.isInDisplayZone ()); }
-
-			void firstScreenPosition (unsigned short& x, unsigned short& y, bool o = false) const
-							{ x = _hRasterData.firstScreenPosition (o); y = _vRasterData.firstScreenPosition (o); }
-			void currentScreenPosition (unsigned short& x, unsigned short& y) const
-							{ x = _hRasterData.currentScreenPosition (); y = _vRasterData.currentScreenPosition (); }
-			void screenPositions (unsigned short& x1, unsigned short& y1, unsigned short& x2, unsigned short& y2)
-							{ x1 = _hRasterData.firstScreenPosition (); y1 = _vRasterData.firstScreenPosition ();
-							  x2 = _hRasterData.lastScreenPosition (); y2 = _vRasterData.lastScreenPosition (); }
-
 			unsigned short visibleLines () const
 							{ return (_vRasterData.visiblePositions ()); }
 			unsigned short visibleColumns () const
 							{ return (_hRasterData.visiblePositions ()); }
+			void currentVisiblePosition (unsigned short& x, unsigned short& y) const
+							{ x = _hRasterData.currentVisiblePosition (); y = _vRasterData.currentVisiblePosition (); }
+			void currentInVisiblePosition (unsigned short& x, unsigned short& y) const
+							{ x = _hRasterData.currentInVisiblePosition (); y = _vRasterData.currentInVisiblePosition (); }
 
+			// Managing the display zone
+			/** The display is where drawing is possible. The reduced zones if any are not considered. */
+			bool isInDisplayZone () const
+							{ return (_vRasterData.isInDisplayZone () && _hRasterData.isInDisplayZone ()); }
+			void firstDisplayPosition (unsigned short& x, unsigned short& y) const
+							{ x = _hRasterData.firstDisplayPosition (); y = _vRasterData.firstDisplayPosition (); }
+			void displayPositions (unsigned short& x1, unsigned short& y1, unsigned short& x2, unsigned short& y2)
+							{ x1 = _hRasterData.firstDisplayPosition (); y1 = _vRasterData.firstDisplayPosition ();
+							  x2 = _hRasterData.lastDisplayPosition (); y2 = _vRasterData.lastDisplayPosition (); }
+
+			/** To go from the display zone to the screen one. */
 			void reduceDisplayZone (bool v, bool h)
 							{ _vRasterData.reduceDisplayZone (v); _hRasterData.reduceDisplayZone (h); }
+
+			// Managing the screen
+			/** The screen is where the drawing is possible, considering the reduced zones if any.
+				If there hadn't reduced zones the screen and the display would be equivalent. */
+			bool isInScreenZone () const
+							{ return (_vRasterData.isInScreenZone () && _hRasterData.isInScreenZone ()); }
+			void firstScreenPosition (unsigned short& x, unsigned short& y, bool o = false) const
+							{ x = _hRasterData.firstScreenPosition (); y = _vRasterData.firstScreenPosition (); }
+			void screenPositions (unsigned short& x1, unsigned short& y1, unsigned short& x2, unsigned short& y2)
+							{ x1 = _hRasterData.firstScreenPosition (); y1 = _vRasterData.firstScreenPosition ();
+							  x2 = _hRasterData.lastScreenPosition (); y2 = _vRasterData.lastScreenPosition (); }
 			
-			/** Returns true when the raster goes to the next line. 
-				The Parameter is the number of cycles to move the raster. */
+			/** Returns true when the raster goes to the next line. \n
+				The Parameter is the number of cycles to move the raster. \n
+				The raster moves 8 pixels per cycle. */
 			bool moveCycles (unsigned short nC)
 							{ bool result = _hRasterData.add (nC * 8 /** columuns = piexels per cycle. */);
 							  if (result) _vRasterData.next (); 
@@ -300,7 +332,7 @@ namespace C64
 		};
 
 		/** To read the graphics info. */
-		void readGraphicsInfo ();
+		void readGraphicsInfoAt (unsigned short gl /** screen line, including the effect of the scroll y. */);
 
 		/** @see DrawContext structure. */
 		void drawGraphics (const DrawContext& dC);
@@ -332,15 +364,15 @@ namespace C64
 
 		// Draw the graphics in detail...
 		/** Draws a monocolor set of bytes. */
-		void drawMonoColorBytes (int cb, size_t r, 
+		void drawMonoColorBytes (int cb, int r, 
 			const MCHEmul::UBytes& bt, const MCHEmul::UBytes& clr, const DrawContext& dC);
 		/** Draws a multicolor set of bytes. */
-		void drawMultiColorBytes (int cb, size_t r, 
+		void drawMultiColorBytes (int cb, int r, 
 			const MCHEmul::UBytes& bt, const MCHEmul::UBytes& clr, const DrawContext& dC);
 		/** Draws a monocolor sprite line. */
-		void drawMonoColorSprite (size_t c, size_t r, size_t spr, const DrawContext& dC);
+		void drawMonoColorSprite (int c, int r, size_t spr, const DrawContext& dC);
 		/** Draws a multocolor sprite line. */
-		void drawMultiColorSprite (size_t c, size_t r, size_t spr, const DrawContext& dC);
+		void drawMultiColorSprite (int c, int r, size_t spr, const DrawContext& dC);
 
 		private:
 		/** The memory is used also as the set of registers of the chip. */
