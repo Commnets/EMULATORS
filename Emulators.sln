@@ -97,6 +97,9 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "C64EmulatorC", "emulators\C
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "C64Programs", "C64Programs", "{BC7BFE65-0F19-4EB9-914F-67B7BC21FBC4}"
 	ProjectSection(SolutionItems) = preProject
+		emulators\C64Programs\RGENERAL.asm = emulators\C64Programs\RGENERAL.asm
+		emulators\C64Programs\RGRAPHICS.asm = emulators\C64Programs\RGRAPHICS.asm
+		emulators\C64Programs\RSPRITES.asm = emulators\C64Programs\RSPRITES.asm
 		emulators\C64Programs\sprites1.asm = emulators\C64Programs\sprites1.asm
 		emulators\C64Programs\sprites2.asm = emulators\C64Programs\sprites2.asm
 		emulators\C64Programs\test1.asm = emulators\C64Programs\test1.asm
@@ -113,6 +116,13 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "C64Programs", "C64Programs"
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "C64", "C64", "{CB7D0793-14E8-492E-8620-DBE966D6AA14}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ROUTINES", "ROUTINES", "{9BA3F5B4-641B-49B4-ACD0-8581C9757445}"
+	ProjectSection(SolutionItems) = preProject
+		emulators\C64Programs\RGENERAL.asm = emulators\C64Programs\RGENERAL.asm
+		emulators\C64Programs\RGRAPHICS.asm = emulators\C64Programs\RGRAPHICS.asm
+		emulators\C64Programs\RSPRITES.asm = emulators\C64Programs\RSPRITES.asm
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -233,6 +243,7 @@ Global
 		{AF53DEDC-F49D-447A-8B2F-F5DBE93F6EB7} = {CB7D0793-14E8-492E-8620-DBE966D6AA14}
 		{BC7BFE65-0F19-4EB9-914F-67B7BC21FBC4} = {CB7D0793-14E8-492E-8620-DBE966D6AA14}
 		{CB7D0793-14E8-492E-8620-DBE966D6AA14} = {33618513-AA35-4A8C-BB0B-98DD4013748D}
+		{9BA3F5B4-641B-49B4-ACD0-8581C9757445} = {BC7BFE65-0F19-4EB9-914F-67B7BC21FBC4}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {07C45180-3599-4E00-9578-FBB4B9BDDC3E}

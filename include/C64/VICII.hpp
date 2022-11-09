@@ -396,8 +396,12 @@ namespace C64
 		mutable MCHEmul::UBytes _graphicsColorData;
 		mutable std::vector <MCHEmul::UBytes> _graphicsSprites; // Eight sprites...
 		mutable std::vector <size_t> _spritesEnabled; // With the list of sprites number actived
-		/** Whenever a new rastr line is reached, this variable becomes true. */
+		/** Whenever a new raster line is reached, this variable becomes true. */
 		bool _isNewRasterLine; 
+		/** When the raster is in the first bad line this variable is set taking into account what 
+			is kept in the VICII register about whether the video ir or not active. \n
+			In any other circunstance is kept its value. */
+		bool _videoActive;
 		/** Whether the vertical raster has entered the last VBlank zone already. */
 		bool _lastVBlankEntered;
 	};

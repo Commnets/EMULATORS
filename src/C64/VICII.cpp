@@ -128,6 +128,7 @@ C64::VICII::VICII (const C64::VICII::RasterData& vd, const C64::VICII::RasterDat
 	  _graphicsSprites (8, MCHEmul::UBytes::_E),
 	  _spritesEnabled (),
 	  _isNewRasterLine (false),
+	  _videoActive (true),
 	  _lastVBlankEntered (false)
 {
 	setClassName ("VICII");
@@ -171,6 +172,7 @@ bool C64::VICII::initialize ()
 	for (size_t i = 0; i < 8; _graphicsSprites [i++] = MCHEmul::UBytes::_E);
 
 	_isNewRasterLine = true; // The first...
+	_videoActive = true;
 
 	_lastVBlankEntered = false;
 
@@ -184,7 +186,7 @@ bool C64::VICII::simulate (MCHEmul::CPU* cpu)
 	// the value of the YSCROLL register as the graphics information to be shown 
 	// is loaded at the beginning of every bad line...
 	auto isBadRasterLine = [=]() -> bool
-		{ return (!_VICIIRegisters -> videoResetActive () && _raster.isInPotentialBadLine () && 
+		{ return (_videoActive && _raster.isInPotentialBadLine () && 
 			((_raster.currentLine () - 0x03) & 0x07 /** The three last bits. */) == _VICIIRegisters -> verticalScrollPosition ()); };
 
 	if (_VICIIRegisters -> vicIItoGenerateIRQ ())
@@ -196,6 +198,9 @@ bool C64::VICII::simulate (MCHEmul::CPU* cpu)
 
 	for (size_t i = (cpu -> clockCycles  () - _lastCPUCycles); i > 0 ; i--)
 	{
+		_videoActive = (_raster.currentLine () == _raster._FIRSTBADLINE) 
+			? !_VICIIRegisters -> videoResetActive () : _videoActive; // Only at first bad line it can change its value...
+
 		if (_isNewRasterLine)
 		{
 			if (isBadRasterLine () /** @see definition above. */)
@@ -236,46 +241,44 @@ bool C64::VICII::simulate (MCHEmul::CPU* cpu)
 			screenMemory () -> setHorizontalLine ((size_t) cav, (size_t) rv,
 				(cav + 8) > _raster.visibleColumns () ? (_raster.visibleColumns () - cav) : 8, _VICIIRegisters -> borderColor ());
 
+			// When the raster is in the display zone but in the screen vertical zone too
+			// and for sure the vide is active, then evrything has to happen!
 			if (_raster.isInDisplayZone () && 
-				!_VICIIRegisters -> videoResetActive ())
+				_raster.vData ().isInScreenZone () &&
+				_videoActive)
 			{ 
-				if (rv >= _raster.vData ().firstScreenPosition () &&
-					rv <= _raster.vData ().lastScreenPosition ())
+				// Draws the background,
+				// taking into account that the screen can be reduced in the X axis...
+				if (cav < _raster.hData ().firstScreenPosition () &&
+					(cav + 8) > _raster.hData ().firstScreenPosition ())
+					screenMemory () -> setHorizontalLine ((size_t) _raster.hData ().firstScreenPosition (), (size_t) rv,
+						cav + 8 - _raster.hData ().firstScreenPosition (), _VICIIRegisters -> backgroundColor ());
+				else 
+				if (cav < _raster.hData ().lastScreenPosition ())
 				{
-					// Draws the background,
-					// taking into account that the screen can be reduced in the X axis...
-					if (cav < _raster.hData ().firstScreenPosition () &&
-						(cav + 8) > _raster.hData ().firstScreenPosition ())
-						screenMemory () -> setHorizontalLine ((size_t) _raster.hData ().firstScreenPosition (), (size_t) rv,
-							cav + 8 - _raster.hData ().firstScreenPosition (), _VICIIRegisters -> backgroundColor ());
-					else 
-					if (cav < _raster.hData ().lastScreenPosition ())
-					{
-						unsigned short lbk = 8;  // Number of pixels to be drawn...
-						if ((cav + 8) > _raster.hData ().lastScreenPosition ())
-							lbk = _raster.hData ().lastScreenPosition ()  - cav + 1;
-						screenMemory () -> setHorizontalLine ((size_t) cav, (size_t) rv, lbk, 
-							_VICIIRegisters -> backgroundColor ());
-					}
+					unsigned short lbk = 8;  // Number of pixels to be drawn...
+					if ((cav + 8) > _raster.hData ().lastScreenPosition ())
+						lbk = _raster.hData ().lastScreenPosition ()  - cav + 1;
+					screenMemory () -> setHorizontalLine ((size_t) cav, (size_t) rv, lbk, 
+						_VICIIRegisters -> backgroundColor ());
 				}
 
 				// Draw the graphics, including the sprites...
-				if (_raster.vData ().isInScreenZone ())
-					drawGraphicsAndDetectCollisions ({
-						/** _ICD */ _raster.hData ().firstDisplayPosition (),		// DISLAY: The original...
-						/** _ICS */ _raster.hData ().firstScreenPosition (),		// SCREEN: And the real one (after reduction size)
-						/** _LCD */ _raster.hData ().lastDisplayPosition (),		// DISPLAY: The original...
-						/** _LCS */ _raster.hData ().lastScreenPosition (),			// SCREEN: And the real one (after reduction size)
-						/** _SC	 */ _VICIIRegisters -> horizontalScrollPosition (),	// From 0 - 7 
-						/** _RC	 */ cv,												// Where the horizontal raster is (not adjusted to 8)
-						/** _RCA */ cav,											// Where the horizontal raster is (adjusted to 8)
-						/** _IRD */ _raster.vData ().firstDisplayPosition (),		// DISPLAY: The original... 
-						/** _IRS */ _raster.vData ().firstScreenPosition (),		// SCREEN:  And the real one (after reduction size)
-						/** _LRD */ _raster.vData ().lastDisplayPosition (),		// DISPLAY: The original...
-						/** _LRS */ _raster.vData ().lastScreenPosition (),			// SCREEN: And the real one (after reduction size)
-						/** _SR	 */ _VICIIRegisters -> verticalScrollPosition (),	// From 0 - 7 (taken into account in bad lines)
-						/** _RR	 */ rv												// Where the vertical raster is...
-						});
+				drawGraphicsAndDetectCollisions ({
+					/** _ICD */ _raster.hData ().firstDisplayPosition (),		// DISLAY: The original...
+					/** _ICS */ _raster.hData ().firstScreenPosition (),		// SCREEN: And the real one (after reduction size)
+					/** _LCD */ _raster.hData ().lastDisplayPosition (),		// DISPLAY: The original...
+					/** _LCS */ _raster.hData ().lastScreenPosition (),			// SCREEN: And the real one (after reduction size)
+					/** _SC	 */ _VICIIRegisters -> horizontalScrollPosition (),	// From 0 - 7 
+					/** _RC	 */ cv,												// Where the horizontal raster is (not adjusted to 8)
+					/** _RCA */ cav,											// Where the horizontal raster is (adjusted to 8)
+					/** _IRD */ _raster.vData ().firstDisplayPosition (),		// DISPLAY: The original... 
+					/** _IRS */ _raster.vData ().firstScreenPosition (),		// SCREEN:  And the real one (after reduction size)
+					/** _LRD */ _raster.vData ().lastDisplayPosition (),		// DISPLAY: The original...
+					/** _LRS */ _raster.vData ().lastScreenPosition (),			// SCREEN: And the real one (after reduction size)
+					/** _SR	 */ _VICIIRegisters -> verticalScrollPosition (),	// From 0 - 7 (taken into account in bad lines)
+					/** _RR	 */ rv												// Where the vertical raster is...
+					});
 			}
 		}
 
@@ -325,16 +328,35 @@ MCHEmul::InfoStructure C64::VICII::getInfoStructure () const
 // ---
 void C64::VICII::readGraphicsInfoAt (unsigned short gl)
 {
+	// If there is no a valid graphic mode active, then everything is "blank"...
+	if (_VICIIRegisters -> graphicModeActive() == C64::VICIIRegisters::GraphicMode::_ILLEGALMODE)
+	{
+		_graphicsColorData = MCHEmul::UBytes 
+			(std::vector <MCHEmul::UByte> (40 /** Columns visible max */, MCHEmul::UByte::_0));
+		_graphicsCharData = MCHEmul::UBytes 
+			(std::vector <MCHEmul::UByte> (320 /** 40 * 8 (bytes per char) */, MCHEmul::UByte::_FF));
+		_graphicsBitmapData = MCHEmul::UBytes 
+			(std::vector <MCHEmul::UByte> (320 /** 40 * 8 (bytes per char) */, MCHEmul::UByte::_FF));
+		
+		return; // Nothing else to do...
+	}
+
 	unsigned short chrLine = gl >> 3;
+	dynamic_cast <C64::Memory*> (memoryRef()) -> setVICIIView();
 
-	dynamic_cast <C64::Memory*> (memoryRef ()) -> setVICIIView ();
-
-	// At VICII this two things are read at the same time (in a bus with 12 bits: 8 for data and 4 for color)
-	readScreenCodeDataAt (chrLine);
+	// In real VIC II color is read at the same time than the graphics data
+	// The color memory is always at the same location (only visible from VICII)
 	readColorDataAt (chrLine);
+
 	// Depending on the graphics mode either char data or bit data is loaded
-	if (_VICIIRegisters -> textMode ()) readCharDataFor (_graphicsScreenCodeData);
-	else readBitmapDataAt (gl);
+	if (_VICIIRegisters -> textMode ()) 
+	{
+		readScreenCodeDataAt (chrLine); // load _graphicsScreenCodeData...
+		readCharDataFor (_graphicsScreenCodeData);
+	}
+	else 
+		readBitmapDataAt (gl);
+
 	// Only data for active sprites is read
 	readSpriteData ();
 
