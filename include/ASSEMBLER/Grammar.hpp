@@ -44,7 +44,7 @@ namespace MCHEmul
 			The macro can be defined making operations (very simpl so farr) among others. */
 		class Macro;
 		using Macros = std::map <std::string, Macro>;
-		class Macro
+		class Macro final
 		{
 			public:
 			Macro ()
@@ -96,7 +96,60 @@ namespace MCHEmul
 			mutable ErrorType _error;
 		};
 
-		/** The grammatical element is the base of any grammar elemnt. */
+		/** A template is a block of code usually with parameters 
+			that can be invoked from many other places. \n
+			It is used just to simplify the code itself. 
+			The lines of code are not evaluated until it is used.
+			At this moment only the right structure is taking into account. */
+		class CodeTemplate;
+		using CodeTemplates = std::map <std::string, CodeTemplate>;
+		class CodeTemplate final
+		{
+			public:
+			CodeTemplate  ()
+				: _name (""),
+				  _parameters (),
+				  _lines (), // The initial lines this templae is made up of...
+				  _value (),
+				  _error (ErrorType::_TEMPLATENOTVALID)
+							{ }
+
+			/** When building up, the code block receives an "id" 
+				represeting the name and the pareneters used by the code block, and the list of info to replace when needed. */
+			CodeTemplate (const std::string& id, Strings& l);
+
+			CodeTemplate (const CodeTemplate&) = default;
+
+			CodeTemplate& operator = (const CodeTemplate&) = default;
+
+			const std::string& name () const
+							{ return (_name); }
+
+			/** To get the code template updated for the specific value of the parameters. */
+			Strings valueFor (const Strings& prmsVal) const;
+			/** Just to get the last value calculated, if any. \n
+				The same macro can be used once and another. If errors, they are not taken into account. */
+			const Strings& lastValue () const
+							{ return (_value); }
+
+			ErrorType error () const
+							{ return (_error); }
+
+			/** To visually simplify the way the error system is managed. */
+			bool operator ! () const
+							{ return (_error != ErrorType::_NOERROR); }
+
+			private:
+			std::string _name;
+			Strings _parameters;
+			Strings _lines;
+
+			// Implementation
+			mutable Strings _value;
+			mutable ErrorType _error;
+		};
+
+		/** The grammatical element is the base of any grammar element. */
 		class Semantic;
 		struct GrammaticalElement
 		{
@@ -176,7 +229,7 @@ namespace MCHEmul
 		};
 
 		/** @see explanation at the beggining of the file. */
-		struct BytesInMemoryElement : public GrammaticalElement
+		struct BytesInMemoryElement final : public GrammaticalElement
 		{
 			BytesInMemoryElement ()
 				: GrammaticalElement (), _elements ()
@@ -264,29 +317,44 @@ namespace MCHEmul
 			friend CommandParser;
 
 			Semantic ()
-				: _macros (), _startingPoints (), 
-				  _error (ErrorType::_NOERROR), _lastGrammaticalElementAdded (nullptr)
+				: _macros (), _codeTemplates (),
+				  _startingPoints (), 
+				  _error (ErrorType::_NOERROR), 
+				  _lastGrammaticalElementAdded (nullptr), _gramaticalElementAdded (false)
 							{ }
 
 			Semantic (const Semantic&) = delete;
 
-			~Semantic ()
+			virtual ~Semantic ()
 							{ for (auto i : _startingPoints) delete (i); }
 
 			Semantic& operator = (const Semantic&) = delete;
 
 			// Managing the semantic...
+			// The macros...
 			const Macros& macros () const
 							{ return (_macros); }
 			void addMacro (const Macro& m);
+
+			// The code templates...
+			const CodeTemplates& codeTemplates () const
+							{ return (_codeTemplates); }
+			void addCodeTemplate (const CodeTemplate& cT);
+
+			// The starting points...
 			const StartingPointElements& startingPoints () const
 							{ return (_startingPoints); }
 			StartingPointElement* addNewStartingPoint ();
+
+			// ...and maybe the most important ones: The gramatical elements!
 			void addGrammaticalElement (GrammaticalElement* g);
 			const GrammaticalElement* lastGrammaticalElementAdded () const
 							{ return (_lastGrammaticalElementAdded); }
 			GrammaticalElement* lastGrammaticalElementAdded ()
 							{ return (_lastGrammaticalElementAdded); }
+			bool gramaticalElementAdded() const
+							{ bool result = _gramaticalElementAdded; 
+							  _gramaticalElementAdded = false; return (result); }
 
 			ErrorType error () const
 							{ return (_error); }
@@ -310,11 +378,13 @@ namespace MCHEmul
 
 			private:
 			Macros _macros;
+			CodeTemplates _codeTemplates;
 			StartingPointElements _startingPoints;
 
 			// Implementation
 			mutable ErrorType _error;
 			mutable GrammaticalElement* _lastGrammaticalElementAdded;
+			mutable bool _gramaticalElementAdded; // Works like a latch. It is back to false when read!
 		};
 	}
 }

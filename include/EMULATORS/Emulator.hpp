@@ -55,13 +55,23 @@ namespace MCHEmul
 
 		virtual ~Emulator ();
 
-		const MCHEmul::Attributes& attributes () const
+		const Attributes& attributes () const
 							{ return (_attributes); }
 
-		const MCHEmul::Computer* computer () const
+		const Computer* computer () const
 							{ return (_computer == nullptr) ? (_computer = createComputer ()) : _computer; }
-		MCHEmul::Computer* computer ()
-							{ return ((MCHEmul::Computer*) (((const Emulator*) this) -> computer ())); }
+		Computer* computer ()
+							{ return ((Computer*) (((const Emulator*) this) -> computer ())); }
+
+		const Assembler::Parser* parser () const
+							{ return (_parser == nullptr) ? (_parser = createParser ()) : _parser; }
+		Assembler::Parser* parser ()
+							{ return ((Assembler::Parser*) (((const Emulator*) this) -> parser ())); }
+
+		const Assembler::Compiler* compiler () const
+							{ return (_compiler == nullptr) ? (_compiler = createCompiler ()) : _compiler; }
+		Assembler::Compiler* compiler ()
+							{ return ((Assembler::Compiler*) (((const Emulator*) this) -> compiler ())); }
 
 		/** To know whether there is a byte file where data to be loaded. \n
 			"" when there is no byte file data. */
@@ -84,14 +94,14 @@ namespace MCHEmul
 
 		/** To know the address where to start the execution from. \n
 			0x00 when no address has been defined. */
-		MCHEmul::Address startingAddress () const
-							{ MCHEmul::Attributes::const_iterator i; 
-								return (MCHEmul::Address::fromStr (((i = _attributes.find (_ADDRESS)) != _attributes.end ()) 
+		Address startingAddress () const
+							{ Attributes::const_iterator i; 
+								return (Address::fromStr (((i = _attributes.find (_ADDRESS)) != _attributes.end ()) 
 									? (*i).second : "")); }
 
 		/** To know the list of the addresses where the computer has to stop. 
 			After any only the action 1 (continue) or 2 (next) is admitted. */
-		MCHEmul::Addresses stopAddresses () const;
+		Addresses stopAddresses () const;
 
 		/** To know whether the computer hast to start stopped or not. */
 		bool stoppedAtStarting () const
@@ -103,8 +113,13 @@ namespace MCHEmul
 		void setDebugLevel (unsigned int dL)
 							{ _debugLevel = dL; computer () -> setDebugLevel (dL); }
 
-		bool connectPeripheral (int id, const MCHEmul::Attributes& prms, MCHEmul::IODevice* d)
+		bool connectPeripheral (int id, const Attributes& prms, MCHEmul::IODevice* d)
 							{ return (computer () -> connect (peripherialBuilder () -> peripheral (id, prms), d)); }
+
+		/** To load a program into de memory of the computer,
+			using the aseembler and compiler declared for the emulator. \n
+			Errors are loaded back into "e" variable and the byte code produced and returned. */
+		Assembler::ByteCode loadProgram (const std::string& fN, Assembler::Errors& e);
 
 		/** To initialize the emulator. */
 		virtual bool initialize ();
@@ -122,11 +137,11 @@ namespace MCHEmul
 							{ return (_lastError != MCHEmul::_NOERROR); }
 
 		protected:
-		const MCHEmul::IOPeripheralBuilder* peripherialBuilder () const
+		const IOPeripheralBuilder* peripherialBuilder () const
 							{ return (_peripheralBuilder == nullptr) ? 
 								(_peripheralBuilder = createPeripheralBuilder ()) : _peripheralBuilder; }
-		MCHEmul::IOPeripheralBuilder* peripherialBuilder ()
-							{ return ((MCHEmul::IOPeripheralBuilder*) (((const Emulator*) this) -> peripherialBuilder ())); }
+		IOPeripheralBuilder* peripherialBuilder ()
+							{ return ((IOPeripheralBuilder*) (((const Emulator*) this) -> peripherialBuilder ())); }
 
 		/** An exit method that can hold specific code needed per cycle and per type of emulator. 
 			By default it does nothing. */
@@ -134,22 +149,29 @@ namespace MCHEmul
 							{ return (true); }
 
 		// Implementation
+		/** To create the right version of the parser. */
+		virtual Assembler::Parser* createParser () const 
+							{ return (new Assembler::Parser (_computer -> cpu ())); }
+		/** To create the right version of the compiler. */
+		virtual Assembler::Compiler* createCompiler () const
+							{ return (new Assembler::Compiler ((Assembler::Parser*) parser ())); }
 		/** To create the right version of the computer, 
 			attending the parameters received by the constructor. */
-		virtual MCHEmul::Computer* createComputer () const = 0;
-
+		virtual Computer* createComputer () const = 0;
 		/** To create the right version of the Peripheral Builder. */
-		virtual MCHEmul::IOPeripheralBuilder* createPeripheralBuilder () const = 0;
+		virtual IOPeripheralBuilder* createPeripheralBuilder () const = 0;
 
 		protected:
 		/** Defined in the constructor. */
-		MCHEmul::Attributes _attributes;
-		MCHEmul::CommunicationSystem* _communicationSystem;
+		Attributes _attributes;
+		CommunicationSystem* _communicationSystem;
 		unsigned int _debugLevel;
 
 		// Implementation
-		mutable MCHEmul::Computer* _computer;
-		mutable MCHEmul::IOPeripheralBuilder* _peripheralBuilder;
+		mutable Assembler::Parser* _parser;
+		mutable Assembler::Compiler* _compiler;
+		mutable Computer* _computer;
+		mutable IOPeripheralBuilder* _peripheralBuilder;
 		mutable bool _running;
 		unsigned int _lastError;
 	};

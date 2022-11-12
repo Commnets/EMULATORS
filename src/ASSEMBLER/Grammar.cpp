@@ -61,6 +61,69 @@ std::vector <MCHEmul::UByte> MCHEmul::Assembler::Macro::calculateValue
 }
 
 // ---
+MCHEmul::Assembler::CodeTemplate::CodeTemplate (const std::string& id, MCHEmul::Strings& l)
+	: _name (""), 
+	  _parameters (),
+	  _lines (l),
+	  _value (),
+	  _error (MCHEmul::Assembler::ErrorType::_NOERROR)
+{
+	size_t pB = MCHEmul::firstSpaceIn (id);
+	_name = MCHEmul::upper (MCHEmul::trim (id.substr (0, (pB == std::string::npos) ? id.length () : pB)));
+	if (pB != std::string::npos) // Is there parameters?
+		_parameters = MCHEmul::getElementsFrom (id.substr (pB + 1), ',');
+
+	// There must be always a name and it has to be a valid label...
+	if (!MCHEmul::validLabel (_name))
+	{
+		_error = MCHEmul::Assembler::ErrorType::_TEMPLATENOTVALID;
+
+		_parameters = { }; // Just in case, but they might be at this point null!
+		return;
+	}
+
+	// The parameters mut be always in the form of #[number]
+	// There can not be more than 10 parameters...
+	for (const auto& i : _parameters)
+		if (i.length () != 2 ||
+			i [0] != '#' ||
+			(i [0] == '#' && !std::isdigit (i [1])))
+			_error = MCHEmul::Assembler::ErrorType::_TEMPLATENOTVALID;
+	if (_error == MCHEmul::Assembler::ErrorType::_TEMPLATENOTVALID)
+		_parameters = { };
+}
+
+// ---
+MCHEmul::Strings MCHEmul::Assembler::CodeTemplate::valueFor (const MCHEmul::Strings& prmsVal) const
+{
+	// Any time this method is onvoked, the errors are set back to null...
+	_error = MCHEmul::Assembler::ErrorType::_NOERROR;
+
+	// If there is no match between the parameters defined and the ones received, 
+	// no calculation will be possible at all...
+	if (prmsVal.size () != _parameters.size ())
+	{
+		_error = MCHEmul::Assembler::ErrorType::_TEMPLATENOTCALCULATED;
+
+		return (_value = { });
+	}
+
+	// Assign the parameters received to every equivalent
+	// and in the same order...
+	// After the replacement symbols could be not replaced, so the normal parser will fail...
+	size_t nP = 0;
+	MCHEmul::Strings cLines = _lines;
+	for (const auto& i : prmsVal)
+	{
+		for (const auto& j : cLines)
+			MCHEmul::replaceAll (j, _parameters [nP], i);
+		nP++;
+	}
+
+	return (_value = cLines);
+}
+
+// ---
 MCHEmul::Address MCHEmul::Assembler::GrammaticalElement::address (const MCHEmul::Assembler::Semantic* s) const
 {
 	assert (s != nullptr);
@@ -352,12 +415,25 @@ std::vector <MCHEmul::UByte> MCHEmul::Assembler::StartingPointElement::calculate
 }
 
 // ---
-void MCHEmul::Assembler::Semantic::addMacro (const Macro& m)
+void MCHEmul::Assembler::Semantic::addMacro (const MCHEmul::Assembler::Macro& m)
 { 
 	if (_macros.find (m.name ()) == _macros.end ()) 
 		_macros.insert (MCHEmul::Assembler::Macros::value_type (m.name (), m));
 	else
 		_error = MCHEmul::Assembler::ErrorType::_DUPLICATEMACRO;
+}
+
+// ---
+void MCHEmul::Assembler::Semantic::addCodeTemplate (const MCHEmul::Assembler::CodeTemplate& cT)
+{
+	if (_codeTemplates.find (cT.name ()) == _codeTemplates.end ()) 
+	{ 
+		_codeTemplates.insert (MCHEmul::Assembler::CodeTemplates::value_type (cT.name (), cT));
+		if (!cT) 
+			_error = cT.error (); // It could be created with error...
+	}
+	else
+		_error = MCHEmul::Assembler::ErrorType::_DUPLICATECODETEMPLATE;
 }
 
 // ---
@@ -405,23 +481,29 @@ void MCHEmul::Assembler::Semantic::addGrammaticalElement (MCHEmul::Assembler::Gr
 	g -> _previousElement = lg;
 	// Now if the semantic is deleted this new elements will be also deleted as it is part of the chain
 
+	_gramaticalElementAdded = true;
 	_lastGrammaticalElementAdded = g;
 }
 
 // ---
 void MCHEmul::Assembler::Semantic::addFrom (const MCHEmul::Assembler::Semantic* s)
 {
-	assert (s != nullptr);
+	if (s == nullptr)
+		return;
 
 	// Add the macros 
 	// If repeated an error will be generated
 	for (const auto& i : s -> _macros)
 		addMacro (i.second);
 
+	// The same with the code termplates
+	for (const auto& i : s -> codeTemplates ())
+		addCodeTemplate (i.second);
+
 	// Add the starting points at the end...
 	_startingPoints.insert (_startingPoints.end (), s -> _startingPoints.begin (), s -> _startingPoints.end ());
 
-	// The error status will be the same...
+	// drag the error...
 	_error = s -> _error;
 }
 

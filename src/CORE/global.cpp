@@ -19,6 +19,14 @@ std::ostream& MCHEmul::operator << (std::ostream& o, const MCHEmul::Attributes& 
 }
 
 // ---
+size_t MCHEmul::firstSpaceIn (const std::string& s)
+{
+	std::string::const_iterator i = 
+		std::find_if (s.begin (), s.end (), [](unsigned char c) -> bool { return (std::isspace (c)); });
+	return (i == s.end () ? std::string::npos : s.find (*i));
+}
+
+// ---
 std::string MCHEmul::ltrim (const std::string& s)
 {
 	std::string r = s; 
@@ -206,7 +214,7 @@ bool MCHEmul::validLabel (const std::string& s)
 {
 	return (s.length () >= 1 && 
 			std::find_if (s.begin (), s.end (), 
-				[](unsigned ch) -> bool { return (!std::isalnum (ch)); }) == s.end () &&
+				[](unsigned ch) -> bool { return (!std::isalnum (ch) && ch != '_'); }) == s.end() &&
 			!std::isdigit (s [0]));
 }
 

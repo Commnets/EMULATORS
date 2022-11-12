@@ -20,6 +20,7 @@ MCHEmul::Emulator::Emulator (const MCHEmul::Strings& argv, MCHEmul::Communicatio
 	: _attributes (),
 	  _communicationSystem (cS),
 	  _debugLevel (MCHEmul::_DEBUGNOTHING),
+	  _parser (nullptr), _compiler (nullptr),
 	  _computer (nullptr),
 	  _peripheralBuilder (nullptr),
 	  _running (false),
@@ -56,6 +57,10 @@ MCHEmul::Emulator::Emulator (const MCHEmul::Strings& argv, MCHEmul::Communicatio
 // ---
 MCHEmul::Emulator::~Emulator ()
 { 
+	delete (_compiler);
+
+	delete (_parser);
+
 	delete (_communicationSystem);
 
 	delete (_computer); 
@@ -75,6 +80,24 @@ MCHEmul::Addresses MCHEmul::Emulator::stopAddresses () const
 	for (const auto& i : strs)
 		result.push_back (MCHEmul::Address::fromStr (i));
 	return (result);
+}
+
+// ---
+MCHEmul::Assembler::ByteCode MCHEmul::Emulator::loadProgram (const std::string& fN, MCHEmul::Assembler::Errors& e)
+{
+	MCHEmul::Assembler::Compiler* c = compiler ();
+	MCHEmul::Assembler::ByteCode cL = c -> compile (fN);
+	if (!*c)
+		e = c -> errors ();
+	else
+	{
+		e = { };
+
+		_computer -> memory () -> set (cL.asDataMemoryBlocks ());
+		_computer -> addActions (cL.listOfActions ());
+	}
+
+	return (cL);
 }
 
 // ---
@@ -122,14 +145,12 @@ bool MCHEmul::Emulator::initialize ()
 
 	if (asmFileName () != "" && byteFileName () == "")
 	{
-		MCHEmul::Assembler::Parser parser (computer () -> cpu ());
-		MCHEmul::Assembler::Compiler compiler (parser);
-		MCHEmul::Assembler::ByteCode cL = compiler.compile (asmFileName ());
-
-		if (!compiler)
+		MCHEmul::Assembler::Errors e;
+		MCHEmul::Assembler::ByteCode cL = loadProgram (asmFileName (), e);
+		if (!e.empty ())
 		{
 			if (_debugLevel >= MCHEmul::_DEBUGERRORS)
-				for (const auto& i : compiler.errors ())
+				for (const auto& i : e)
 					std::cout << i << std::endl;
 
 			return (false);
@@ -140,11 +161,6 @@ bool MCHEmul::Emulator::initialize ()
 				for (const auto& i : cL._lines)
 					std::cout << i << std::endl;
 		}
-
-		_computer -> memory () -> set (cL.asDataMemoryBlocks ());
-		_computer -> addActions (cL.listOfActions ());
-
-		// Parser and compiler are destroyed here...
 	}
 
 	if (startingAddress () != MCHEmul::Address ())

@@ -81,9 +81,9 @@ namespace MCHEmul
 		class Compiler final
 		{
 			public:
-			Compiler (const Parser& p)
+			Compiler (Parser* p)
 				: _parser (p)
-							{ }
+							{ assert (p != nullptr); }
 
 			/** The key method. Generic the Byte Codes to by load and executed.
 				It receives the file with the instructions as parameter.
@@ -92,7 +92,7 @@ namespace MCHEmul
 			ByteCode compile (const std::string& fN) const;
 
 			const CPU* cpu () const
-							{ return (_parser.cpu ()); }
+							{ return (_parser -> cpu ()); }
 
 			Errors errors () const
 							{ return (_errors); }
@@ -102,7 +102,7 @@ namespace MCHEmul
 							{ return (!_errors.empty ()); }
 
 			private:
-			const Parser& _parser;
+			Parser* _parser;
 
 			// Implementation
 			mutable Errors _errors;

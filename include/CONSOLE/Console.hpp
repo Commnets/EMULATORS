@@ -89,6 +89,10 @@ namespace MCHEmul
 			This method has to manage also the special characters. */
 		virtual bool readChar (char& chr) const = 0;
 
+		/** To load a program.
+			This is avery special command, using the one defined inthe emulator behind. */
+		InfoStructure loadProgram (const std::string& nP) const;
+
 		protected:
 		Emulator* _emulator;
 		std::ostream& _outputStream;

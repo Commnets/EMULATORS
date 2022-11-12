@@ -438,28 +438,6 @@ namespace MCHEmul
 		private:
 		virtual void executeImpl (CommandExecuter* cE, Computer* c, InfoStructure& rst) override;
 	};
-
-	/** To load a program. \n
-		The execution is stopped. \n
-		A crash could be generated. \n
-		Either the program loaded or the errros is returned. ºn
-		Command line: LOADPRG PRGFILE */
-	class LoadProgramCommand final : public Command
-	{
-		public:
-		static const int _ID = 18;
-		static const std::string _NAME;
-
-		LoadProgramCommand ()
-			: Command (_ID, _NAME)
-							{ }
-
-		virtual bool canBeExecuted () const override
-							{ return (_parameters.size () == 1); }
-
-		private:
-		virtual void executeImpl (CommandExecuter* cE, Computer* c, InfoStructure& rst) override;
-	};
 }
 
 #endif

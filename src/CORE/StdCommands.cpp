@@ -3,9 +3,7 @@
 #include <CORE/Stack.hpp>
 #include <CORE/Instruction.hpp>
 #include <CORE/CmdExecuter.hpp>
-#include <ASSEMBLER/incs.hpp>
 #include <fstream>
-#include <sstream>
 
 // ---
 const std::string MCHEmul::HelpCommand::_NAME = "CHELP";
@@ -28,7 +26,6 @@ const std::string MCHEmul::SetBreakPointCommand::_NAME = "CSETBREAK";
 const std::string MCHEmul::RemoveBreakPointCommand::_NAME = "CREMOVEBREAK";
 const std::string MCHEmul::RemoveAllBreakPointsCommand::_NAME = "CREMOVEBREAKS";
 const std::string MCHEmul::CPUSpeedCommand::_NAME = "CSPEED";
-const std::string MCHEmul::LoadProgramCommand::_NAME = "CLOADPRG";
 
 // ---
 MCHEmul::HelpCommand::HelpCommand (const std::string& hF)
@@ -59,6 +56,8 @@ MCHEmul::HelpCommand::HelpCommand (const std::string& hF)
 		else
 		{
 			std::string cN = MCHEmul::upper (MCHEmul::trim ((*i++).substr (1)));
+			auto ecN = std::find_if (cN.begin (), cN.end (), std::isspace);
+			cN = (ecN == cN.end ()) ? cN : cN.substr (0, cN.find (*ecN)); // Only the main word is inserted as key...
 			MCHEmul::Strings hI;
 			while (i != hls.end () && (*i)[0] != ';')
 				hI.push_back ((*i++));
@@ -76,6 +75,7 @@ void MCHEmul::HelpCommand::executeImpl (MCHEmul::CommandExecuter* cE, MCHEmul::C
 		{
 			bool fL = true;
 			MCHEmul::HelpCommand::HelpInfo::const_iterator i;
+			auto eCmd = std::find_if (cmd.begin (), cmd.end (), std::isspace);
 			if ((i = _helpInfo.find (cmd)) != _helpInfo.end ())
 			{
 				std::string h = "";
@@ -284,47 +284,4 @@ void MCHEmul::RemoveAllBreakPointsCommand::executeImpl (MCHEmul::CommandExecuter
 void MCHEmul::CPUSpeedCommand::executeImpl (MCHEmul::CommandExecuter* cE, MCHEmul::Computer* c, MCHEmul::InfoStructure& rst)
 {
 	rst.add ("SPEED", c -> realCyclesPerSecond ());
-}
-
-// ---
-void MCHEmul::LoadProgramCommand::executeImpl (MCHEmul::CommandExecuter* cE, MCHEmul::Computer* c, MCHEmul::InfoStructure& rst)
-{
-	// It is necessary to stop the code...
-	c -> setActionForNextCycle (MCHEmul::Computer::_ACTIONSTOP);
-
-	MCHEmul::Assembler::Parser parser (c -> cpu ());
-	MCHEmul::Assembler::Compiler compiler (parser);
-	MCHEmul::Assembler::ByteCode cL = compiler.compile ((*_parameters.begin ()).first);
-
-	bool fL = true;
-	std::string ln;
-	if (!compiler) // With errors...
-	{
-		for (const auto& i : compiler.errors ())
-		{
-			std::stringstream ss; ss << i;
-			ln += (fL ? "" : "\n") + ss.str ();
-
-			fL = false;
-		}
-
-		rst.add ("CODE", std::string ("No code loaded"));
-		rst.add ("ERRORS", ln);
-	}
-	else // With no errors...
-	{
-		c -> memory () -> set (cL.asDataMemoryBlocks ());
-		c -> addActions (cL.listOfActions ());
-
-		for (const auto& i : cL._lines)
-		{
-			std::stringstream ss; ss << i;
-			ln += (fL ? "" : "\n") + ss.str ();
-
-			fL = false;
-		}
-
-		rst.add ("CODE", ln);
-		rst.add ("ERRORS", std::string ("No errors"));
-	}
 }

@@ -142,13 +142,19 @@ MCHEmul::Assembler::ByteCode MCHEmul::Assembler::Compiler::compile (const std::s
 {
 	MCHEmul::Assembler::ByteCode result;
 
+	if (_parser == nullptr)
+		return (result);
+
 	_errors = { };
 
 	// First of all, parse...
-	MCHEmul::Assembler::Semantic* smt = _parser.parse (fN, fN + ".act");
-	if (!_parser)
+	MCHEmul::Assembler::Semantic* smt = _parser -> parse (fN, fN + ".act");
+	if (!*_parser)
 	{
-		_errors = _parser.errors ();
+		_errors = _parser -> errors ();
+
+		delete (smt);
+
 		return (result);
 	}
 
@@ -160,13 +166,17 @@ MCHEmul::Assembler::ByteCode MCHEmul::Assembler::Compiler::compile (const std::s
 	{
 		(*i).second.value (smt -> macros ()); // Try to calculate the value (but it wold be used)...
 		if (!(*i).second)
-			_errors.push_back (MCHEmul::Assembler::Error ((*i).second.error (), fN, 0, 0));
+			_errors.push_back (MCHEmul::Assembler::Error ((*i).second.error (), fN, 0, 0, (*i).second.name ()));
 	}
 
 	// If there were any error calculating the value of the macros
 	// it would not be able to continue
 	if (!(*this))
+	{
+		delete (smt);
+
 		return (result);
+	}
 
 	// Then, with the macros calculated, the lines could be calculated
 	// Errors could happen when managing the instructions...
@@ -178,6 +188,7 @@ MCHEmul::Assembler::ByteCode MCHEmul::Assembler::Compiler::compile (const std::s
 		if (!*i)
 		{
 			_errors.push_back (MCHEmul::Assembler::Error (i -> _error, fN, i -> _line, 0));
+
 			continue;
 		}
 
@@ -201,12 +212,12 @@ MCHEmul::Assembler::ByteCode MCHEmul::Assembler::Compiler::compile (const std::s
 					std::vector <MCHEmul::UByte> b = 
 						gE -> codeBytes (smt, cpu () -> architecture ().bigEndian ());
 					if (!*gE)
-						_errors.push_back (MCHEmul::Assembler::Error (gE -> _error, fN, gE -> _line, 0));
+						_errors.push_back(MCHEmul::Assembler::Error(gE -> _error, fN, gE -> _line, 0));
 					else
 						result._lines.push_back (MCHEmul::Assembler::ByteCodeLine (spa, b, lL, 
 							(gE -> _type == MCHEmul::Assembler::GrammaticalElement::_INSTRUCTION) 
 								? (static_cast <MCHEmul::Assembler::InstructionElement*> (gE)) -> _selectedInstruction : nullptr, 
-							gE -> _actionOn /** Action affecting the code bytes. */));
+							 gE -> _actionOn /** Action affecting the code bytes. */));
 
 					spa += b.size (); // To the next...
 				}
@@ -214,6 +225,7 @@ MCHEmul::Assembler::ByteCode MCHEmul::Assembler::Compiler::compile (const std::s
 				break;
 
 				default:
+					// It should be here...
 					assert (false);
 			}
 		}

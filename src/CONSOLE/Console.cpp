@@ -1,6 +1,7 @@
 #include <CONSOLE/Console.hpp>
 #include <CORE/CommandBuilder.hpp>
 #include <fstream>
+#include <sstream>
 
 // ---
 MCHEmul::Console::Console (MCHEmul::Emulator* e,
@@ -92,9 +93,12 @@ bool MCHEmul::Console::readAndExecuteCommand ()
 	_outputStream << std::endl;
 
 	_command = MCHEmul::upper (MCHEmul::trim (_command));
+
+	// The very standard commands...
 	if (_command == "QUIT" || _command == "Q")
 		return (true);
 
+	// Then the rest of the commandas that can be extended...
 	// Saves the last command...
 	// Only it is not the same than just the one before!
 	if (_lastCommands.empty () || 
@@ -106,9 +110,18 @@ bool MCHEmul::Console::readAndExecuteCommand ()
 		_lastCommandPosition = _lastCommands.size (); // One the enters is pressed...it will be the last new element...
 	}
 
-	MCHEmul::Command* cmd = commandBuilder () -> command (_command);
-	if (cmd == nullptr) _outputStream << _command << ":" << _commandDoesnExitTxt << std::endl;
-	else executeCommandNow (cmd, _emulator -> computer ());
+	// LoadPrg is special, as it is related with the emulation and not with the computer...
+	std::string cmdLoad ("LOADPRG");
+	if (_command.find (cmdLoad) != std::string::npos)
+		_outputStream << MCHEmul::FormatterBuilder::instance () ->
+			formatter("CLOADPRG") -> format (loadProgram (_command.substr 
+				(_command.find (cmdLoad) + std::string (cmdLoad).length ()))) << std::endl;
+	else
+	{
+		MCHEmul::Command* cmd = commandBuilder () -> command (_command);
+		if (cmd == nullptr) _outputStream << _command << ":" << _commandDoesnExitTxt << std::endl;
+		else executeCommandNow (cmd, _emulator -> computer ());
+	}
 
 	// The comand has not to be destroyed
 	// The command builder own all off them...
@@ -293,3 +306,46 @@ bool MCHEmul::Win32Console::readChar (char& chr) const
 	return (result); 
 }
 #endif
+
+// ---
+MCHEmul::InfoStructure MCHEmul::Console::loadProgram (const std::string& nP) const
+{
+	MCHEmul::Assembler::Errors e;
+	MCHEmul::Assembler::ByteCode cL = _emulator -> loadProgram (nP, e);
+
+	MCHEmul::InfoStructure result;
+
+	bool fL = true;
+	std::string ln;
+	std::stringstream ss; 
+	if (!e.empty ())
+	{
+		for (const auto& i : e)
+		{
+			std::stringstream ss; ss << i;
+			ln += (fL ? "" : "\n") + ss.str();
+
+			fL = false;
+		}
+
+		result.add ("CODE", std::string ("No code loaded"));
+		result.add ("ERRORS", ln);
+	}
+	else
+	{
+		_emulator -> computer () -> setActionForNextCycle(MCHEmul::Computer::_ACTIONSTOP);
+
+		for (const auto& i : cL._lines)
+		{
+			ss << i;
+			ln += (fL ? "" : "\n") + ss.str();
+
+			fL = false;
+		}
+
+		result.add ("CODE", ln);
+		result.add ("ERRORS", std::string ("No errors"));
+	}
+
+	return (result);
+}

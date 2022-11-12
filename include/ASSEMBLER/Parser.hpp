@@ -21,6 +21,65 @@ namespace MCHEmul
 {
 	namespace Assembler
 	{
+		/** Keeps the context while parsing. */
+		class ParserContext
+		{
+			public:
+			ParserContext () = default; // used by queue...
+
+			ParserContext (Semantic* smt)
+				: _semantic (smt), 
+				  _currentLine (""),
+				  _lines (), _actionLines (), 
+				  _file (""), _currentLineNumber (0), _templateLinesNumber (0),
+				  _errors (),
+				  _linesPointer (), _actionLinesPointer (),
+				  _filesAlreadyParsed (),
+				  _lastStartingPointId (0), _lastLabelId (0), _lastBytesId (0), _lastInstructionId (0)
+							{ }
+
+			ParserContext (const ParserContext&) = default;
+
+			// The prser context doesn't own anything...
+
+			ParserContext& operator = (const ParserContext&) = default;
+
+			// The data can be actualized directly...
+			/** Where the parsing results are stored. \n
+				This is the real outcome of the process. */ 
+			Semantic* _semantic;
+			/** The current line breing treated. */
+			std::string _currentLine;
+			/** The lines to be parserd. \n
+				They can grow as parsing progress. */
+			Strings _lines;
+			/** The action lines associated */
+			Strings _actionLines;
+			/** Current file being parsed. */
+			std::string _file;
+			/** Current line being parsed. */
+			unsigned int _currentLineNumber;
+			/** The number of the template code lines added,
+				pending to be processed. */
+			unsigned int _templateLinesNumber;
+			/** The list of errors, being generated. */
+			Errors _errors;
+
+			// Implementation
+			/** A pointer to the list of lines and same for action lines. */
+			Strings::const_iterator _linesPointer, _actionLinesPointer;
+			/** The list of the files already used. */
+			Strings _filesAlreadyParsed;
+			/** The last starting point identification number used. */
+			unsigned int _lastStartingPointId;
+			/** The last label identification number used. */
+			unsigned int _lastLabelId;
+			/** The last bytes identification number used. */
+			unsigned int _lastBytesId;
+			/** The last instruction identification number used. */
+			unsigned int _lastInstructionId;
+		};
+
 		/** The parser reads the file using specific pieces 
 			aimed to understand specific parts of the code. \n
 			The parser (or the command parsers) works for a specific CPU (and it set of instructions). \n
@@ -29,8 +88,6 @@ namespace MCHEmul
 		class CommandParser
 		{
 			public:
-			friend Parser;
-
 			CommandParser ()
 				: _cpu (nullptr), _parser (nullptr)
 							{ }
@@ -47,11 +104,11 @@ namespace MCHEmul
 			virtual void initialize ()
 							{ }
 
-			/** Determine whether a line can or not be parsed by this Command Parser. */
-			virtual bool canParse (const std::string& l) const = 0;
-			/** Parse the line, obviously when it is able. \n
-				Wheen parsing the line being parsed and the code structure are modified. */
-			virtual void parse (std::string& l, unsigned int lC, Semantic* s) const = 0;
+			/** Determine whether the current context situation can or not be parsed by this Command Parser. */
+			virtual bool canParse (ParserContext* pC) const = 0;
+			/** Parse the current context, obviously when it is able to do so. \n
+				When parsing the context (more like Semantic) are modified. */
+			virtual void parse (ParserContext* pC) const = 0;
 
 			/** Invoked from the Parser's constructor. */
 			void setCPU (const CPU* c)
@@ -80,10 +137,10 @@ namespace MCHEmul
 			unsigned char symbol () const
 							{ return (_symbol); }
 
-			virtual bool canParse (const std::string& l) const override
-							{ return (l [0] == _symbol); }
-			virtual void parse (std::string& l, unsigned int, Semantic*) const override
-							{ l = ""; /** Nothing after the comment is important. */}
+			virtual bool canParse (ParserContext* pC) const override
+							{ return (pC -> _currentLine [0] == _symbol); }
+			virtual void parse (ParserContext* pC) const override
+							{ pC -> _currentLine = ""; /** Nothing after the comment is important. */}
 
 			private:
 			const unsigned char _symbol = ';'; // Adjusted at construction level
@@ -99,9 +156,9 @@ namespace MCHEmul
 				  _symbol (s)
 							{ }
 
-			virtual bool canParse (const std::string& l) const override
-							{ return (l [0] == _symbol); }
-			virtual void parse (std::string& l, unsigned int lC, Semantic* c) const override;
+			virtual bool canParse (ParserContext* pC) const override
+							{ return (pC -> _currentLine [0] == _symbol); }
+			virtual void parse (ParserContext* pC) const override;
 
 			private:
 			const unsigned char _symbol = '#'; // Adjusted at construction level
@@ -117,13 +174,49 @@ namespace MCHEmul
 				  _symbol (s)
 							{ }
 
-			virtual bool canParse (const std::string& l) const override
-							{ size_t eP = l.find (_symbol); 
-							  return (eP != std::string::npos && validLabel (trim (l.substr (0, eP)))); }
-			virtual void parse (std::string& l, unsigned int lC, Semantic* s) const override;
+			virtual bool canParse (ParserContext* pC) const override
+							{ size_t eP = pC -> _currentLine.find (_symbol);
+							  return (eP != std::string::npos && validLabel (trim (pC -> _currentLine.substr (0, eP)))); }
+			virtual void parse (ParserContext* pC) const override;
 
 			protected:
 			const unsigned char _symbol = '=';
+		};
+
+		/** To parser a template of code. \n 
+			The template of code starts always with a symbold and finish wih other. \n
+			Both can be redefined. */
+		class CodeTemplateDefinitionCommandParser final : public CommandParser
+		{
+			public:
+			CodeTemplateDefinitionCommandParser (unsigned char iS = '{', unsigned char fS = '}')
+			: CommandParser (),
+				_initialSymbol (iS), _finalSymbol (fS)
+						{ }
+
+			virtual bool canParse (ParserContext* pC) const override;
+			virtual void parse (ParserContext* pC) const override;
+
+			protected:
+			const unsigned char _initialSymbol = '{';
+			const unsigned char _finalSymbol = '}';
+		};
+
+		/** When that template is about to be used. */
+		class CodeTemplateUseCommandParser final : public CommandParser
+		{
+			public:
+			CodeTemplateUseCommandParser (unsigned char s = '.')
+				: CommandParser (),
+				  _symbol (s)
+						{ }
+
+			virtual bool canParse (ParserContext* pC) const override
+						{ return (pC -> _currentLine [0] == _symbol && pC -> _currentLine.length () > 1); }
+			virtual void parse (ParserContext* pC) const override;
+
+			protected:
+			const unsigned char _symbol = '.';
 		};
 
 		/** To parser an address macro.
@@ -134,23 +227,16 @@ namespace MCHEmul
 			public:
 			StartingPointCommandParser (unsigned char s = '=')
 				: CommandParser (),
-				  _symbol (s),
-				  _lastStartingPointId (0)
+				  _symbol (s)
 							{ }
 
-			virtual void initialize () override
-							{ _lastStartingPointId = 0; }
-
-			virtual bool canParse (const std::string& l) const override
-							{ size_t eP = l.find (_symbol); 
-							  return (eP != std::string::npos && trim (l.substr (0, eP)) == "*"); }
-			virtual void parse (std::string& l, unsigned int lC, Semantic* s) const override;
+			virtual bool canParse (ParserContext* pC) const override
+							{ size_t eP = pC -> _currentLine.find (_symbol);
+							  return (eP != std::string::npos && trim (pC -> _currentLine.substr (0, eP)) == "*"); }
+			virtual void parse (ParserContext* pC) const override;
 
 			private:
 			const unsigned char _symbol = '=';
-
-			// Implementation
-			mutable unsigned int _lastStartingPointId;
 		};
 
 		/** To parser a label. */
@@ -159,23 +245,16 @@ namespace MCHEmul
 			public:
 			LabelCommandParser (unsigned char s = ':')
 				: CommandParser (),
-				  _symbol (s),
-				  _lastLabelId (0)
+				  _symbol (s)
 							{ }
 
-			virtual void initialize () override
-							{ _lastLabelId = 0; }
-
-			virtual bool canParse (const std::string& l) const override
-							{ size_t eP = l.find (_symbol); 
-							  return (eP != std::string::npos && validLabel (trim (l.substr (0, eP)))); }
-			virtual void parse (std::string& l, unsigned int lC, Semantic* s) const override;
+			virtual bool canParse (ParserContext* pC) const override
+							{ size_t eP = pC -> _currentLine.find (_symbol);
+							  return (eP != std::string::npos && validLabel (trim (pC -> _currentLine.substr (0, eP)))); }
+			virtual void parse (ParserContext* pC) const override;
 
 			private:
 			const unsigned char _symbol = ':';
-
-			// Implementation
-			mutable unsigned int _lastLabelId;
 		};
 
 		/** To parser a set of bytes. */
@@ -183,41 +262,28 @@ namespace MCHEmul
 		{
 			public:
 			BytesCommandParser ()
-				: CommandParser (),
-				  _lastBytesId (0)
+				: CommandParser ()
 							{ }
 
-			virtual void initialize () override
-							{ _lastBytesId = 0; }
-
-			virtual bool canParse (const std::string& l) const override
-							{ auto i = std::find_if (l.begin (), l.end (), std::isspace); // Stop at the first space...
-							  return ((i != l.end ()) ? upper (trim (l.substr (0, l.find (*i)))) == "BYTES" : false); }
-			virtual void parse (std::string& l, unsigned int lC, Semantic* s) const override;
-
-			private:
-			// Implementation
-			mutable unsigned int _lastBytesId;
+			virtual bool canParse (ParserContext* pC) const override
+							{ size_t p = firstSpaceIn (pC -> _currentLine);
+							  return ((p == std::string::npos) 
+								  ? false : upper (trim (pC -> _currentLine.substr (0, p))) == "BYTES"); }
+			virtual void parse (ParserContext* pC) const override;
 		};
+
+		/** To parser a definition of pixels. */
 
 		/** To parser an instruction. */
 		class InstructionCommandParser final : public CommandParser
 		{
 			public:
 			InstructionCommandParser ()
-				: CommandParser (),
-				  _lastInstructionId (0)
+				: CommandParser ()
 							{ }
 
-			virtual void initialize () override
-							{ _lastInstructionId = 0; }
-
-			virtual bool canParse (const std::string& l) const override;
-			virtual void parse (std::string& l, unsigned int lC, Semantic* s) const override;
-
-			private:
-			// Implementation
-			mutable unsigned char _lastInstructionId;
+			virtual bool canParse (ParserContext* pC) const override;
+			virtual void parse (ParserContext* pC) const override;
 		};
 
 		/** Now it is time to define the parser itself. \n
@@ -225,12 +291,13 @@ namespace MCHEmul
 			The parser is a line parser. That is, it is only able to parser a line. \n
 			There can be added specific instruction parsers but always a comment command parser must exist. \n
 			It is used to determine whether a line finishes or not. */
-		class Parser final
+		class Parser
 		{
 			public:
 			Parser (const CPU* c, const CommandParsers& lP = // With the standard line parsers...
 					{ new CommentCommandParser, new IncludeCommandParser, 
-					  new MacroCommandParser, new StartingPointCommandParser, 
+					  new MacroCommandParser, new CodeTemplateDefinitionCommandParser, new CodeTemplateUseCommandParser,
+					  new StartingPointCommandParser, 
 					  new LabelCommandParser, new BytesCommandParser,
 					  new InstructionCommandParser });
 
@@ -248,6 +315,9 @@ namespace MCHEmul
 							{ return (_commandParsers); }
 			unsigned char commentSymbol () const;
 
+			void initialize ()
+							{ for (const auto& i : _commandParsers) i -> initialize (); }
+
 			/**
 			  * Type of code that is is accepted:
 			  * The example has been written using the machine languaje of the Commodore 64
@@ -257,6 +327,11 @@ namespace MCHEmul
 			  *	; MACROS \n
 			  *	FOREGROUND = $D020 \n
 			  *	BACKGROUND = $D021 \n
+			  * ... \n
+			  * ; TEMPLATES \n
+			  * { TEMPLATENAME #1,#2,#3...  \n
+			  * ...
+			  * }
 			  * \n
 			  *	* = $C000 \n
 			  * \n
@@ -266,19 +341,28 @@ namespace MCHEmul
 			  *					STA BACKGROUND \n
 			  *					STA FOREGROUND \n
 			  *					BNE START \n
+			  * ...
+			  *					.TEMPLATENAME VAR1,VAR2,VAR3,...
 			  * \n
 			  *	; Very simple
 			  * Rules:
 			  *	; Means comment. After that, nothing will be taken into account. \n
 			  * MACROS & LABELS are represented using characteres (upper and lower case) and numbers, but never starting with number. \n
 			  * NUMBERS AND DIRECTIONS can be represented using decimal, octal (starting with 0) and hexadecimal (with $) numbers. \n
-			  * * = xxxx will identify the address from which the code after will be inserted!
-			  * 
+			  * * = xxxx will identify the address from which the code after will be inserted! \n
+			  * Templates can be used. A template is a piece of "repitable" code. \n
+			  * When the instruction "." is found then, the piece of code which name is just behind 
+			  * is "virtualy" inserting just behind replacing the #1,#2... references for the values VAR1,VAR2,... \n
+			  * If an error parsing those new line were found the line pointed would be the one of the template definition. \n
+			  * \n
 			  * The method can receive also another file with "actions" to execute over any line. \n
 			  * This action must be simply number. How to interpret them should be determine later. \n
-			  * In the default implementation the number 0 will mean nothing, and the number 1 to stop.
+			  * In the default implementation the number 0 will mean nothing, and the number 1 to stop. \n
+			  * The method can also recive as parameter an external ParameterContext reference.
 			  */
-			Semantic* parse (const std::string& fN, const std::string& fA = "") const;
+			Semantic* parse (const std::string& fN, const std::string& fA = "") const; // A context is created...
+			Semantic* parse (const std::string& fN, const std::string& fA, 
+				ParserContext* pC /** When the context is outside. */) const;
 
 			Errors errors () const
 							{ return (_errors); }
@@ -287,9 +371,18 @@ namespace MCHEmul
 			bool operator ! () const
 							{ return (!_errors.empty ()); }
 
-			private:
+			protected:
+			/** To create the right semantic for this parser. */
+			virtual Semantic* createSemantic () const
+							{ return (new Semantic); }
+			/** To create the right context to manage suring the parsing. */
+			virtual ParserContext* createParserContext () const
+							{ return (new ParserContext (createSemantic ())); }
+
 			/** To read a file and convert it into Lines to be treaten later. */
 			Strings readLines (const std::string& fN) const;
+			/** To parse in detail. This part of the code can be invoked recursevly. */
+			void parseLines (ParserContext* pC) const;
 
 			private:
 			const CPU* _cpu;

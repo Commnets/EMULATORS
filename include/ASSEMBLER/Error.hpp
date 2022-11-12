@@ -26,7 +26,13 @@ namespace MCHEmul
 			_NOERROR = 0, 
 			// Related with Macros
 			_MACROBADDEFINED, 
-			_MACRONOTDEFINED, 
+			_MACRONOTDEFINED,
+			_DUPLICATEMACRO,
+			// Related with the templates
+			_TEMPLATENOTVALID,
+			_TEMPLATENOTEFINED,
+			_TEMPLATENOTCALCULATED,
+			_DUPLICATECODETEMPLATE,
 			// Related with Semantic Elements
 			_LABELNOTVALID,
 			_LABELNOTDEFINED,
@@ -37,7 +43,6 @@ namespace MCHEmul
 			// Related with Semantic structure
 			_GRAMARELEMENTNOTVALID, 
 			_STARTINGPOINTNOTDEFINED,
-			_DUPLICATEMACRO,
 			_SEMANTICERROR,
 			// Related with Parser errors
 			_FILEEMPTY, 
@@ -50,11 +55,13 @@ namespace MCHEmul
 			Error ()
 				: _type (ErrorType::_NOERROR), 
 				  _file (""),
-				  _line (0), _column (0)
+				  _line (0), _column (0),
+				  _detail ("")
 							{ }
 
-			Error (ErrorType eT, const std::string& f, unsigned int l, unsigned int c)
-				: _type (eT), _file (f), _line (l), _column (c)
+			Error (ErrorType eT, const std::string& f, unsigned int l, unsigned int c, 
+						const std::string& d = "" /** not mandatory. */)
+				: _type (eT), _file (f), _line (l), _column (c), _detail (d)
 							{ }
 
 			Error (const Error&) = default;
@@ -67,6 +74,7 @@ namespace MCHEmul
 			std::string _file;
 			unsigned int _line;
 			unsigned int _column;
+			std::string _detail;
 		};
 
 		using Errors = std::vector <Error>;

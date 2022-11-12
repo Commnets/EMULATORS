@@ -65,6 +65,7 @@ namespace MCHEmul
 	static const std::string _TABS (20, '\t');
 
 	/** General functions to manage strings */
+	size_t firstSpaceIn (const std::string& s);
 	std::string ltrim (const std::string& s);
 	std::string rtrim (const std::string& s);
 	std::string trim (const std::string& s);
