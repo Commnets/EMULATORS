@@ -239,6 +239,8 @@ namespace MCHEmul
 
 			BytesInMemoryElement& operator = (const BytesInMemoryElement&) = default;
 
+			virtual size_t size (const Semantic* s) const override;
+
 			Strings _elements;
 
 			private:

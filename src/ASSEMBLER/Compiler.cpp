@@ -208,7 +208,6 @@ MCHEmul::Assembler::ByteCode MCHEmul::Assembler::Compiler::compile (const std::s
 				case MCHEmul::Assembler::GrammaticalElement::_BYTESINMEMORY:
 				case MCHEmul::Assembler::GrammaticalElement::_INSTRUCTION:
 				{
-					lL = "";
 					std::vector <MCHEmul::UByte> b = 
 						gE -> codeBytes (smt, cpu () -> architecture ().bigEndian ());
 					if (!*gE)
@@ -220,6 +219,7 @@ MCHEmul::Assembler::ByteCode MCHEmul::Assembler::Compiler::compile (const std::s
 							 gE -> _actionOn /** Action affecting the code bytes. */));
 
 					spa += b.size (); // To the next...
+					lL = "";
 				}
 
 				break;

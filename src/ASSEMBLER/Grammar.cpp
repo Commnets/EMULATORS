@@ -172,6 +172,18 @@ std::vector <MCHEmul::UByte> MCHEmul::Assembler::GrammaticalElement::bytesFromEx
 }
 
 // ---
+size_t MCHEmul::Assembler::BytesInMemoryElement::size (const MCHEmul::Assembler::Semantic* s) const
+{
+	size_t result = 0;
+
+	if (!(*this))
+		return (0); // With error, no size...
+
+	return ((_codeBytes.size () != 0) 
+		? _codeBytes.size () : calculateCodeBytes (s).size () /** Callculus is not kept because architecture is not known here. */);
+}
+
+// ---
 std::vector <MCHEmul::UByte> MCHEmul::Assembler::BytesInMemoryElement::calculateCodeBytes 
 	(const MCHEmul::Assembler::Semantic* s, bool bE) const
 {
