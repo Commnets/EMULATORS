@@ -90,7 +90,7 @@ namespace MCHEmul
 		unsigned int logLevel () const
 							{ MCHEmul::Attributes::const_iterator i; 
 								return ((unsigned int) std::stoi (((i = _attributes.find (_LOGLEVEL)) != _attributes.end ()) 
-									? (*i).second : "")); }
+									? (*i).second : "1")); }
 
 		/** To know the address where to start the execution from. \n
 			0x00 when no address has been defined. */

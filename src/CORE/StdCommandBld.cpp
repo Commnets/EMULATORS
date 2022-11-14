@@ -46,6 +46,8 @@ MCHEmul::Command* MCHEmul::StandardCommandBuilder::createEmptyCommand (const std
 		result = new MCHEmul::RemoveAllBreakPointsCommand;
 	else if (cmdName == "SPEED")
 		result = new MCHEmul::CPUSpeedCommand;
+	else if (cmdName == "LOADBIN")
+		result = new MCHEmul::LoadBinCommand;
 
 	return (result);
 }

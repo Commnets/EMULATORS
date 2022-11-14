@@ -4,6 +4,11 @@
 To know info about the author.
 No parameters needed.
 #Commands to know the status of the CPU
+;LOADPRG PRG
+Load into memory a program given by the parameter.
+The execution, if any is stopped.
+Take care using this command. A crash can be generated.
+Start the execution back usng RUN ADDRESS. 
 ;STATUS
 Get the status of the Status Register.
 No parameters needed.
@@ -35,7 +40,7 @@ One parameter minimum is required that is the position of the memory.
 If a second parameter is given then te content between the two location is returned.
 ;SETMEMORY INITIAL (FINAL) VALUE
 To set the value of the memory with a value
-Two parameters minimum are requires that are tha memory position to set and the value
+Two parameters minimum are required that are tha memory position to set and the value
 A optional second memory position can be given meaning that the value
 will be set among those two positions.
 Be really careful using this method. It can destroy the memory.
@@ -73,11 +78,10 @@ No parameters are needed.
 ;SPEED
 To know the real speed of the processor.
 No parameters are needed.
-;LOADPRG PRG
-Load into memory a program given by the parameter.
-The execution, if any is stopped.
-Take care using this command. A crash can be generated.
-Start the execution back usng RUN ADDRESS. 
+;LOADBIN PRG ADDRESS
+To load a binary set of data from a file into an address.
+Two parameters are needed. The first is the file to load, 
+and the other is the address where to load that info.
 #Specific commands for C64
 ;VICII
 To know the status of the VICII chip, including raster and others.

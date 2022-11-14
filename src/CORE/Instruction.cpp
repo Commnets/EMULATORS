@@ -66,10 +66,14 @@ bool MCHEmul::Instruction::matchesWith (const std::string& i, MCHEmul::Strings& 
 			while (iL [ctIL] != inst [ctInst] && ctIL < iL.length ()) ctIL++;
 			if (result = (ctIL != iL.length ()))
 			{
-				prms.push_back (iL.substr (iPP, ctIL - iPP));
+				std::string lP = iL.substr (iPP, ctIL - iPP);
+				if (result = MCHEmul::validFunction (lP)) // The parameter to add has to be valid...
+				{ 
+					prms.push_back (lP);
 
-				pW += '?';
-				pW += iL [ctIL];
+					pW += '?';
+					pW += iL [ctIL];
+				}
 			}
 		}
 		else
@@ -87,9 +91,10 @@ bool MCHEmul::Instruction::matchesWith (const std::string& i, MCHEmul::Strings& 
 	if (ctIL != iL.length ())
 	{
 		std::string lP = iL.substr (ctIL);
-		if (MCHEmul::validLabel (lP) || MCHEmul::validBytes (lP))
+		if (MCHEmul::validFunction (lP))
 		{
 			prms.push_back (lP);
+
 			pW += '?';
 		}
 		else // In other case, it is not something that matches!

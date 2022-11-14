@@ -26,6 +26,7 @@ const std::string MCHEmul::SetBreakPointCommand::_NAME = "CSETBREAK";
 const std::string MCHEmul::RemoveBreakPointCommand::_NAME = "CREMOVEBREAK";
 const std::string MCHEmul::RemoveAllBreakPointsCommand::_NAME = "CREMOVEBREAKS";
 const std::string MCHEmul::CPUSpeedCommand::_NAME = "CSPEED";
+const std::string MCHEmul::LoadBinCommand::_NAME = "CLOADBIN";
 
 // ---
 MCHEmul::HelpCommand::HelpCommand (const std::string& hF)
@@ -284,4 +285,11 @@ void MCHEmul::RemoveAllBreakPointsCommand::executeImpl (MCHEmul::CommandExecuter
 void MCHEmul::CPUSpeedCommand::executeImpl (MCHEmul::CommandExecuter* cE, MCHEmul::Computer* c, MCHEmul::InfoStructure& rst)
 {
 	rst.add ("SPEED", c -> realCyclesPerSecond ());
+}
+
+// ---
+void MCHEmul::LoadBinCommand::executeImpl (MCHEmul::CommandExecuter* cE, MCHEmul::Computer* c, MCHEmul::InfoStructure& rst)
+{
+	rst.add	("RESULT", c -> loadInto 
+		((*_parameters.begin ()).first, MCHEmul::Address::fromStr ((*++_parameters.begin ()).first)));
 }

@@ -94,6 +94,7 @@ namespace MCHEmul
 	bool validBytesHexadecimal (const std::string& s); 
 	bool validBytesDecimal (const std::string& s); 
 	bool validBytes (const std::string& s);
+	bool validFunction (const std::string& s);
 
 	/** To determine whether a class is or not a subclass of other. */
 	template <typename Base, typename Type>

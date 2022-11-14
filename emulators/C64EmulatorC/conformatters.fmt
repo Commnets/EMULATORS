@@ -149,6 +149,10 @@ Id:@ID@
 @SPEED@ cycles/second
 #---
 #---
+;CLOADBIN
+Program loaded=@RESULT@
+#---
+#---
 ;CLOADPRG
 ->Code:
 @CODE@

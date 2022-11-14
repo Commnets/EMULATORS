@@ -3,13 +3,17 @@
 ; Copyright Community Networks 2022 - 2023
 
 ; The base has to be defined before doing anything...
-BASE = $C000
+BASE = $c000
 
 #../C64Programs/Code/RGRAPHICS.asm
 
 ; A very simple program to test everything works...
-* = $C100
-MAIN:						JSR CLEARSCREEN
-MAINLOOP:					JMP MAINLOOP					; For ever...
+* = $ca00
+MAIN:						lda #$01
+							sta VICIIBACKGROUND
+							lda #$02
+							sta VICIIFOREGROUND
+							jsr CLEARSCREEN
+MAIN_LOOP:					jmp MAIN_LOOP					; For ever...
 
 ; End

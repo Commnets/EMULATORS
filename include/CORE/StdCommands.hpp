@@ -438,6 +438,25 @@ namespace MCHEmul
 		private:
 		virtual void executeImpl (CommandExecuter* cE, Computer* c, InfoStructure& rst) override;
 	};
+
+	/** To load a binary file. \n
+		Command line: LOADBIN PRG ADDRESS*/
+	class LoadBinCommand final : public Command
+	{
+		public:
+		static const int _ID = 18;
+		static const std::string _NAME;
+
+		LoadBinCommand()
+			: Command (_ID, _NAME)
+							{ }
+
+		virtual bool canBeExecuted () const override
+							{ return (_parameters.size () == 2); }
+
+		private:
+		virtual void executeImpl (CommandExecuter* cE, Computer* c, InfoStructure& rst) override;
+	};
 }
 
 #endif

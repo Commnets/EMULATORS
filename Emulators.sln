@@ -106,22 +106,23 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "C64Programs", "C64Programs"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "C64", "C64", "{CB7D0793-14E8-492E-8620-DBE966D6AA14}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Ejemplos_1", "Ejemplos_1", "{C6BB96CB-83B8-4F1E-B49D-A57EC2DC439F}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Examples_1", "Examples_1", "{C6BB96CB-83B8-4F1E-B49D-A57EC2DC439F}"
 	ProjectSection(SolutionItems) = preProject
-		emulators\C64Programs\Ejemplos_1\Characters1.asm = emulators\C64Programs\Ejemplos_1\Characters1.asm
-		emulators\C64Programs\Ejemplos_1\screencolors1.asm = emulators\C64Programs\Ejemplos_1\screencolors1.asm
-		emulators\C64Programs\Ejemplos_1\screencolors2.asm = emulators\C64Programs\Ejemplos_1\screencolors2.asm
-		emulators\C64Programs\Ejemplos_1\screencolors3.asm = emulators\C64Programs\Ejemplos_1\screencolors3.asm
-		emulators\C64Programs\Ejemplos_1\sprite1.asm = emulators\C64Programs\Ejemplos_1\sprite1.asm
-		emulators\C64Programs\Ejemplos_1\sprite2.asm = emulators\C64Programs\Ejemplos_1\sprite2.asm
-		emulators\C64Programs\Ejemplos_1\text1.asm = emulators\C64Programs\Ejemplos_1\text1.asm
-		emulators\C64Programs\Ejemplos_1\text2.asm = emulators\C64Programs\Ejemplos_1\text2.asm
-		emulators\C64Programs\Ejemplos_1\text3.asm = emulators\C64Programs\Ejemplos_1\text3.asm
-		emulators\C64Programs\Ejemplos_1\text4.asm = emulators\C64Programs\Ejemplos_1\text4.asm
-		emulators\C64Programs\Ejemplos_1\text5.asm = emulators\C64Programs\Ejemplos_1\text5.asm
+		emulators\C64Programs\Examples_1\Characters1.asm = emulators\C64Programs\Examples_1\Characters1.asm
+		emulators\C64Programs\Examples_1\inst.asm = emulators\C64Programs\Examples_1\inst.asm
+		emulators\C64Programs\Examples_1\screencolors1.asm = emulators\C64Programs\Examples_1\screencolors1.asm
+		emulators\C64Programs\Examples_1\screencolors2.asm = emulators\C64Programs\Examples_1\screencolors2.asm
+		emulators\C64Programs\Examples_1\screencolors3.asm = emulators\C64Programs\Examples_1\screencolors3.asm
+		emulators\C64Programs\Examples_1\sprite1.asm = emulators\C64Programs\Examples_1\sprite1.asm
+		emulators\C64Programs\Examples_1\sprite2.asm = emulators\C64Programs\Examples_1\sprite2.asm
+		emulators\C64Programs\Examples_1\text1.asm = emulators\C64Programs\Examples_1\text1.asm
+		emulators\C64Programs\Examples_1\text2.asm = emulators\C64Programs\Examples_1\text2.asm
+		emulators\C64Programs\Examples_1\text3.asm = emulators\C64Programs\Examples_1\text3.asm
+		emulators\C64Programs\Examples_1\text4.asm = emulators\C64Programs\Examples_1\text4.asm
+		emulators\C64Programs\Examples_1\text5.asm = emulators\C64Programs\Examples_1\text5.asm
 	EndProjectSection
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Ejemplos_2", "Ejemplos_2", "{3F4F526E-7410-4F41-8B41-63F7058A371E}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Examples_2", "Examples_2", "{3F4F526E-7410-4F41-8B41-63F7058A371E}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Test", "Test", "{B77308BD-D77E-42AE-9A76-F99FD0641DBA}"
 EndProject

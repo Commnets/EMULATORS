@@ -18,6 +18,8 @@ std::vector <MCHEmul::UByte> MCHEmul::Assembler::Macro::calculateValue
 	size_t r = e.find_first_of ('*'); // To multiply values...
 	if (r == std::string::npos) r = e.find_first_of ('+'); // To add values...
 	if (r == std::string::npos) r = e.find_first_of ('-'); // To subtract values...
+	if (r == std::string::npos) r = e.find_first_of ('>'); // To get the lowest significant byt of and address
+	if (r == std::string::npos) r = e.find_first_of ('z'); // To get the highest significant byt of and address
 	if (r == std::string::npos)
 	{
 		if (MCHEmul::validLabel (e))
@@ -43,17 +45,34 @@ std::vector <MCHEmul::UByte> MCHEmul::Assembler::Macro::calculateValue
 	}
 	else
 	{
-		MCHEmul::Assembler::Macro m1 ("" /** No name needed. */, MCHEmul::trim (e.substr (0, r))); m1.value (ms);
-		MCHEmul::Assembler::Macro m2 ("", MCHEmul::trim (e.substr (r + 1))); m2.value (ms);
-		if (!m1 || !m2)
-			_error = MCHEmul::Assembler::ErrorType::_MACROBADDEFINED;
+		// Unary operators...
+		if (r == 0)
+		{
+			MCHEmul::Assembler::Macro m1 ("" /** no name needed. */, MCHEmul::trim(e.substr(1))); m1.value(ms);
+			if (!m1)
+				_error = MCHEmul::Assembler::ErrorType::_MACROBADDEFINED;
+			else
+			{
+				std::vector <MCHEmul::UByte> m1val = m1.value (ms);
+				if (e [r] == '>') result = std::vector <MCHEmul::UByte> ({ m1val [m1val.size () - 1] });
+				else if (e [r] == '<') result = std::vector <MCHEmul::UByte> ({ m1val [0] });
+			}
+		}
+		// Binary operators...
 		else
 		{
-			MCHEmul::UInt u1 (m1.value (ms));
-			MCHEmul::UInt u2 (m2.value (ms));
-			if (e [r] == '*') result = (u1 * u2).bytes ();
-			else if (e [r] == '+') result = (u1 + u2).bytes ();
-			else /** - */ result = (u1 - u2).bytes ();
+			MCHEmul::Assembler::Macro m1 ("" /** No name needed. */, MCHEmul::trim (e.substr (0, r))); m1.value (ms);
+			MCHEmul::Assembler::Macro m2 ("", MCHEmul::trim (e.substr (r + 1))); m2.value (ms);
+			if (!m1 || !m2)
+				_error = MCHEmul::Assembler::ErrorType::_MACROBADDEFINED;
+			else
+			{
+				MCHEmul::UInt u1 (m1.value (ms));
+				MCHEmul::UInt u2 (m2.value (ms));
+				if (e [r] == '*') result = (u1 * u2).bytes ();
+				else if (e [r] == '+') result = (u1 + u2).bytes ();
+				else /** - */ result = (u1 - u2).bytes ();
+			}
 		}
 	}
 
