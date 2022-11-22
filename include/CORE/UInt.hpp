@@ -182,6 +182,7 @@ namespace MCHEmul
 							  UInt r = complement (); r._format = _BINARY; r += _1; r._format = f; return (r); }
 		UInt substract (const UInt& u, bool iC = true) const;
 		UInt multiply (const UInt& u) const;
+		UInt divide (const UInt& u) const;
 
 		bool operator == (const UInt& u) const
 							{ return (_values == u._values); }
@@ -213,6 +214,10 @@ namespace MCHEmul
 							{ return (multiply (u)); }
 		UInt& operator *= (const UInt& u)
 							{ *this = *this * u; return (*this); }
+		UInt operator / (const UInt& u) const
+							{ return (divide (u)); }
+		UInt& operator /= (const UInt & u)
+							{ *this = *this / u; return (*this); }
 
 		UByte operator [] (size_t p) const
 							{ return (_values [p]); }

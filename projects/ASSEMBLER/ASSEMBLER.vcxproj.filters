@@ -30,6 +30,12 @@
     <ClInclude Include="..\..\include\ASSEMBLER\incs.hpp">
       <Filter>Archivos de encabezado</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\include\ASSEMBLER\Operation.hpp">
+      <Filter>Archivos de encabezado</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\ASSEMBLER\OperationParser.hpp">
+      <Filter>Archivos de encabezado</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\ASSEMBLER\Compiler.cpp">
@@ -42,6 +48,12 @@
       <Filter>Archivos de origen</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\ASSEMBLER\Parser.cpp">
+      <Filter>Archivos de origen</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\ASSEMBLER\Operation.cpp">
+      <Filter>Archivos de origen</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\ASSEMBLER\OperationParser.cpp">
       <Filter>Archivos de origen</Filter>
     </ClCompile>
   </ItemGroup>

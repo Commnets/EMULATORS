@@ -311,6 +311,34 @@ MCHEmul::UInt MCHEmul::UInt::multiply (const MCHEmul::UInt& u) const
 }
 
 // ---
+MCHEmul::UInt MCHEmul::UInt::divide (const MCHEmul::UInt& u) const
+{
+	MCHEmul::UInt result = *this;
+	MCHEmul::UInt u2 = u;
+
+	// If the second is 0, the division is not possible and -0 is returned...
+	if (u2 == MCHEmul::UInt::_0)
+		return (MCHEmul::UInt::_0);
+
+	// Is the final outcome going to be negative?
+	bool neg = (result.negative () && u.positive ()) || 
+		(result.positive () && u.negative ());
+
+	// All positive just for calculus...
+	if (result.negative ()) result = result.complement_2 ();
+	if (u2.negative ()) u2 = u2.complement_2 ();
+
+	// Do the calculus...
+	for (unsigned int i = (unsigned int) u2.asInt () /** always positive here. */; 
+			i > 0 && result != MCHEmul::UInt::_0; i--, result -= (result > u2) ? u2 : result);
+
+	// The sign is assigned at the end!
+	if (neg) result = result.complement_2 ();
+
+	return (result);
+}
+
+// ---
 MCHEmul::UInt MCHEmul::UInt::fromStr (const std::string& s, unsigned char f)
 {
 	MCHEmul::UInt result;

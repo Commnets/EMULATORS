@@ -27,6 +27,20 @@ size_t MCHEmul::firstSpaceIn (const std::string& s)
 }
 
 // ---
+size_t MCHEmul::firstOf (const std::string& s, const std::string& c)
+{
+	size_t r = std::string::npos; 
+	for (size_t i = 0; i < c.length () && r == std::string::npos; r = s.find (c [i++]));
+	return (r);
+}
+
+// ---
+size_t MCHEmul::firstOf (const std::string& s, const MCHEmul::Strings& strs)
+{
+
+}
+
+// ---
 std::string MCHEmul::ltrim (const std::string& s)
 {
 	std::string r = s; 
@@ -257,24 +271,4 @@ bool MCHEmul::validBytes (const std::string& s)
 	return (MCHEmul::validBytesOctal (s) || 
 			MCHEmul::validBytesHexadecimal (s) ||
 			MCHEmul::validBytesDecimal (s));
-}
-
-// ---
-bool MCHEmul::validFunction (const std::string& s)
-{
-	static const std::string vF ("><+-*/");
-
-	if (s == "")
-		return (true);
-
-	bool result = false;
-	std::string::const_iterator i = std::find_if (s.begin (), s.end (),
-		[](unsigned char ch) -> bool { return (vF.find (ch) != std::string::npos); });
-	if (i == s.end ())
-		return (MCHEmul::validLabel (s) || MCHEmul::validBytes (s));
-
-	size_t fP = s.find (*i);
-	std::string sL = MCHEmul::trim (s.substr (0, fP));
-	std::string sR = MCHEmul::trim (s.substr (fP + 1));
-	return (validFunction (sL) && validFunction (sR));
 }

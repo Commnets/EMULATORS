@@ -18,5 +18,7 @@
 #include <ASSEMBLER/Grammar.hpp>
 #include <ASSEMBLER/Parser.hpp>
 #include <ASSEMBLER/Compiler.hpp>
+#include <ASSEMBLER/Operation.hpp>
+#include <ASSEMBLER/OperationParser.hpp>
 
 #endif

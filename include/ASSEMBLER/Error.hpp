@@ -28,6 +28,9 @@ namespace MCHEmul
 			_MACROBADDEFINED, 
 			_MACRONOTDEFINED,
 			_DUPLICATEMACRO,
+			// Related with Operations
+			_BADARGUMENTFUNCTION,
+			_DIVISIONBYCERO,
 			// Related with the templates
 			_TEMPLATENOTVALID,
 			_TEMPLATENOTEFINED,

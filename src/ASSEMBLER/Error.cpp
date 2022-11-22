@@ -9,6 +9,8 @@ std::ostream& MCHEmul::Assembler::operator << (std::ostream& o, const MCHEmul::A
 			{ MCHEmul::Assembler::ErrorType::_MACROBADDEFINED, "Not valid Macro" },
 			{ MCHEmul::Assembler::ErrorType::_MACRONOTDEFINED, "Macro not defined" },
 			{ MCHEmul::Assembler::ErrorType::_DUPLICATEMACRO, "Duplicated Macro" },
+			{ MCHEmul::Assembler::ErrorType::_BADARGUMENTFUNCTION, "Operation argument invalid" },
+			{ MCHEmul::Assembler::ErrorType::_DIVISIONBYCERO, "Operation division by 0" },
 			{ MCHEmul::Assembler::ErrorType::_TEMPLATENOTVALID, "Code Template not valid" },
 			{ MCHEmul::Assembler::ErrorType::_TEMPLATENOTEFINED, "Code Template not defined" },
 			{ MCHEmul::Assembler::ErrorType::_TEMPLATENOTCALCULATED, "Code Template not calculated" },

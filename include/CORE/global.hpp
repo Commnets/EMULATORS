@@ -66,6 +66,8 @@ namespace MCHEmul
 
 	/** General functions to manage strings */
 	size_t firstSpaceIn (const std::string& s);
+	size_t firstOf (const std::string& s, const std::string& c);
+	size_t firstOf (const std::string& s, const Strings& strs);
 	std::string ltrim (const std::string& s);
 	std::string rtrim (const std::string& s);
 	std::string trim (const std::string& s);
@@ -94,7 +96,6 @@ namespace MCHEmul
 	bool validBytesHexadecimal (const std::string& s); 
 	bool validBytesDecimal (const std::string& s); 
 	bool validBytes (const std::string& s);
-	bool validFunction (const std::string& s);
 
 	/** To determine whether a class is or not a subclass of other. */
 	template <typename Base, typename Type>
