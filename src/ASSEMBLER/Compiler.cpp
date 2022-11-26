@@ -166,7 +166,8 @@ MCHEmul::Assembler::ByteCode MCHEmul::Assembler::Compiler::compile (const std::s
 	{
 		(*i).second.value (smt -> macros ()); // Try to calculate the value (but it wold be used)...
 		if (!(*i).second)
-			_errors.push_back (MCHEmul::Assembler::Error ((*i).second.error (), fN, 0, 0, (*i).second.name ()));
+			_errors.push_back(MCHEmul::Assembler::Error((*i).second.error(), 
+				(*i).second.definitionFile (), (*i).second.definitionLine (), 0, (*i).second.name()));
 	}
 
 	// If there were any error calculating the value of the macros

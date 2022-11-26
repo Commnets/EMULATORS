@@ -35,9 +35,12 @@ size_t MCHEmul::firstOf (const std::string& s, const std::string& c)
 }
 
 // ---
-size_t MCHEmul::firstOf (const std::string& s, const MCHEmul::Strings& strs)
+size_t MCHEmul::firstOf (const std::string& s, const MCHEmul::Strings& strs, size_t& r)
 {
-
+	size_t pos = std::string::npos;
+	for (r = 0; r < strs.size () && pos == std::string::npos; pos = strs [r++].find (s));
+	if (pos != std::string::npos) r--; // If something was found the selected string is the previous one...
+	return (pos);
 }
 
 // ---
@@ -132,17 +135,11 @@ std::string MCHEmul::removeAllFrom (const std::string& s, const MCHEmul::Strings
 // ---
 std::string MCHEmul::removeAll0 (const std::string& s)
 {
-	std::string result = s;
-
-	size_t i = 0;
-	while (i < result.length ())
-	{
-		if (result [i] == 0)
-			result = result.substr (0, i) + result.substr (i + 1);
-		i++;
-	}
-
-	return (result);
+	std::string r = s; 
+	r.erase (std::remove_if (r.begin (), r.end (), 
+		[](unsigned char ch) -> bool { return (ch == '\0'); }), r.end());
+	
+	return (r);
 }
 
 // ---
@@ -271,4 +268,53 @@ bool MCHEmul::validBytes (const std::string& s)
 	return (MCHEmul::validBytesOctal (s) || 
 			MCHEmul::validBytesHexadecimal (s) ||
 			MCHEmul::validBytesDecimal (s));
+}
+
+// ---
+bool MCHEmul::validOperation (const std::string& s)
+{
+	// If it is a valid label or a valid bytes it would also be a valid operation...
+	if (validLabel (s) || validBytes (s)) 
+		return (true);
+
+	// Otherwise....could it be an operation?
+	// There is no way at that point to try to "create" an operation
+	// (the symbols e.g. will depend on the parser, etc...)
+	// So it just a matter to try to determine if is potentially one...
+	// How?
+
+	static char _SYMBOL = '@';
+
+	// A lambda method to extract the deeper (or rightest) parenthesis within a formula...
+	// and to replace than context with a symbol (received as parameter)
+	auto extractAndReplaceDeeperParenthesis = [&](std::string& s) -> std::string
+	{
+		size_t pO = s.find_last_of ("("); if (pO == std::string::npos) return ("");
+		size_t pC = s.find_first_of (")", pO); if (pC == std::string::npos) return ("");
+		std::string inner = s.substr (pO + 1, pC - pO - 1);
+		s = s.substr (0, pO) + _SYMBOL + s.substr (pC + 1);
+		return (inner);
+	};
+
+	// Replace the content of the parenthesis...
+	// Every parenthesis content is stored to be analysed later!
+	MCHEmul::Strings pL;
+	std::string cS = s; std::string p = "";
+	while ((p = extractAndReplaceDeeperParenthesis (cS)) != "") pL.push_back (p);
+	// ..if there is still one at least, it is not a valis operation...
+	if (cS.find ("(") != std::string::npos || cS.find (")") != std::string::npos)
+		return (false);
+	
+	// In the final string, there couldn't be two o more _SYMBOL together...
+	// Because It is suppossed that the parenthesis should be each other separated with a operation!
+	int ct = 0;
+	for (size_t i = 0; i < cS.length () && ct <= 1; 
+			ct += (cS [i++] == _SYMBOL) ? 1 : -ct /** The counter back to 0 */);
+	if (ct > 1)
+		return (false);
+
+	// Reaching this point it could be potentially a valid operation...
+	// That is true that nothing regarding the structure of the parameters will have been analyzed!
+
+	return (true);
 }

@@ -1,6 +1,15 @@
 #include <ASSEMBLER/OperationParser.hpp>
 
 // ---
+bool MCHEmul::Assembler::OperationParser::valid (const std::string& o) const
+{
+	MCHEmul::Assembler::OperationElement* oE = parser (o);
+	bool result = (oE != nullptr);
+	delete (oE);
+	return (result);
+}
+
+// ---
 MCHEmul::Assembler::OperationElement* MCHEmul::Assembler::OperationParser::parser (const std::string& o) const
 {
 	std::string oC = MCHEmul::noSpaces (o);
@@ -28,6 +37,59 @@ MCHEmul::Assembler::OperationElement* MCHEmul::Assembler::OperationParser::parse
 	// so there is nothing else to do that parsing the remaining string...
 	MCHEmul::Assembler::OperationElements result = parserPiece (oC, tmpOpElmnts, ct, e);
 	// Here there should be only one element in the list...
+	return (result [0]);
+}
+
+// ---
+MCHEmul::Assembler::OperationElement* MCHEmul::Assembler::OperationParser::createBinaryOperationElement
+	(unsigned char s, MCHEmul::Assembler::OperationElement* l, MCHEmul::Assembler::OperationElement* r) const
+{
+	MCHEmul::Assembler::OperationElement* result = nullptr;
+	switch (s)
+	{
+		case '+':
+			result = new MCHEmul::Assembler::AddFunctionOperationElement (l, r);
+			break;
+
+		case '-':
+			result = new MCHEmul::Assembler::SubtractFunctionOperationElement (l, r);
+			break;
+
+		case '*':
+			result = new MCHEmul::Assembler::MultiplyFunctionOperationElement (l, r);
+			break;
+
+		case '/':
+			result = new MCHEmul::Assembler::DivideFunctionOperationElement (l, r);
+			break;
+
+		default:
+			break;
+	}
+
+	return (result);
+}
+
+// ---
+MCHEmul::Assembler::OperationElement* MCHEmul::Assembler::OperationParser::createUnaryOperationElement
+	(unsigned char s, MCHEmul::Assembler::OperationElement* o) const
+{
+	MCHEmul::Assembler::OperationElement* result = nullptr;
+	switch (s)
+	{
+		case '>':
+			result = new MCHEmul::Assembler::LSBFunctionOperationElement (o);
+			break;
+
+		case '<':
+			result = new MCHEmul::Assembler::MSBFunctionOperationElement (o);
+			break;
+
+		default:
+			break;
+	}
+
+	return (result);
 }
 
 // ---
@@ -68,18 +130,19 @@ MCHEmul::Assembler::OperationElements MCHEmul::Assembler::OperationParser::parse
 	MCHEmul::Assembler::OperationElements result;
 
 	size_t pos = std::string::npos;
+	size_t rubbish = 0; // Info not used...
 
+	if ((pos = o.find (',')) != std::string::npos)
+		result = parserListPiece (o, r, ct, e);
+	else
 	if ((pos = MCHEmul::firstOf (o, validBinarySymbols ())) != std::string::npos)
 		result = parserBinaryPiece (o, r, ct, e);
 	else
 	if ((pos = MCHEmul::firstOf (o, validUnarySymbols ())) != std::string::npos)
 		result = parserBinaryPiece (o, r, ct, e);
 	else
-	if ((pos = MCHEmul::firstOf (o, validFunctionNames ())) != std::string::npos)
+	if ((pos = MCHEmul::firstOf (o, validFunctionNames (), rubbish)) != std::string::npos)
 		result = parserFunctionPiece (o, r, ct, e);
-	else
-	if ((pos = o.find (',')) != std::string::npos)
-		result = parserListPiece (o, r, ct, e);
 	else
 	if ((pos = o.find_first_of ("##")) != std::string::npos)
 	{
@@ -184,6 +247,10 @@ MCHEmul::Assembler::OperationElements MCHEmul::Assembler::OperationParser::parse
 MCHEmul::Assembler::OperationElements MCHEmul::Assembler::OperationParser::parserFunctionPiece 
 	(const std::string& o, MCHEmul::Assembler::OperationParser::tOpElements& r, unsigned int& ct, bool& e) const
 {
+	MCHEmul::Strings vF = validFunctionNames ();
+	size_t fPos = 0; size_t pos = MCHEmul::firstOf (o, vF, fPos);
+	return (MCHEmul::Assembler::OperationElements 
+		({ createFunctionOperationElement (parserPiece (o.substr (pos + vF [fPos].length ()), r, ct, e)) }));
 }
 
 // ---

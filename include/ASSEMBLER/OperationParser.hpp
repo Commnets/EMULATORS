@@ -33,6 +33,8 @@ namespace MCHEmul
 
 			OperationParser& operator = (const OperationParser&) = default;
 
+			/** To verify whether a string is or not valid. */
+			bool valid (const std::string& o) const;
 			/** nullptr is returned when error. */
 			OperationElement* parser (const std::string& o) const;
 
@@ -43,8 +45,9 @@ namespace MCHEmul
 				OperationElement* l, OperationElement* r) const;
 			/** To create the right MonoFunctionOperationElement. */
 			virtual OperationElement* createUnaryOperationElement (unsigned char s, OperationElement* o) const;
-			/** To create the right function. */
-			virtual OperationElement* createFunctionOperationElement (const OperationElements& oE) const;
+			/** To create the right function. By default there is nothing to create. */
+			virtual OperationElement* createFunctionOperationElement (const OperationElements& oE) const
+							{ return (nullptr); }
 
 			/** To get the different possibilities of the different type of elements
 				managed by this parser. They can be overloaded for specific purposes. */
@@ -52,7 +55,7 @@ namespace MCHEmul
 							{ return ("+-*/"); }
 			virtual std::string validUnarySymbols () const // The order marks the priority...
 							{ return ("><!"); }
-			virtual std::vector <std::string> validFunctionNames () const // The order marks the priority
+			virtual std::vector <std::string> validFunctionNames () const // The order marks the priority. There is none by default!
 							{ return (std::vector <std::string> ()); }
 
 			private:
@@ -60,6 +63,8 @@ namespace MCHEmul
 				this intermediate structure is generated. */
 			struct tOpElement
 			{
+				tOpElement () = default;
+
 				tOpElement (const std::string& c, const OperationElements& elmnts)
 					: _code (c), _elements (elmnts)
 							{ }

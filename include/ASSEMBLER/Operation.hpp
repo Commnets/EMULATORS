@@ -122,11 +122,14 @@ namespace MCHEmul
 			/** To get the function symbol.
 				It will be likely used in the method "asString". */
 			virtual std::string functionSymbol () const = 0;
+			/** Number parameters. -1 will mean not defined. */
+			virtual int numberParameters () const = 0;
 		
 			// Implementation
 			/** This method is invoked when there is no errors in any of the other 
 				operation elements involved in the function when calling "value". 
-				and it is the real one executing the operation among them. */
+				and it is the real one executing the operation among them. \n
+				When this function is invoked the number of parameters is right!. (dont need to check it back) */
 			virtual UInt doFunction (const std::vector <UInt>& v) const = 0;
 		
 			protected:
@@ -144,20 +147,28 @@ namespace MCHEmul
 			virtual std::string asString () const
 							{ return (_operationElements [0] -> asString () + functionSymbol () + 
 								_operationElements [1] -> asString ()); }
+
+			protected:
+			virtual int numberParameters () const override
+							{ return (2); }
 		};
 		
 		/** Represents a "mono" argument function 
 			taking just the element at its right as parameter*/
-		class MonoFunctionOperationElement : public FunctionOperationElement
+		class UnaryFunctionOperationElement : public FunctionOperationElement
 		{
 			public:
-			MonoFunctionOperationElement (OperationElement* o)
+			UnaryFunctionOperationElement (OperationElement* o)
 				: FunctionOperationElement ({ o })
 							{ }
 		
 			virtual std::string asString () const
 							{ return (functionSymbol () + 
 								_operationElements [0] -> asString ()); }
+
+			protected:
+			virtual int numberParameters () const override
+							{ return (1); }
 		};
 		
 		/** A binary function to add two OperationElement. */
@@ -169,6 +180,9 @@ namespace MCHEmul
 							{ }
 		
 			private:
+			virtual std::string functionSymbol () const
+							{ return ("+"); }
+
 			virtual UInt doFunction (const std::vector <UInt>& v) const override
 							{ return (v [0] + v [1]); }
 		};
@@ -182,6 +196,9 @@ namespace MCHEmul
 							{ }
 		
 			private:
+			virtual std::string functionSymbol () const
+							{ return ("-"); }
+
 			virtual UInt doFunction (const std::vector <UInt>& v) const override
 							{ return (v [0] - v [1]); }
 		};
@@ -195,6 +212,9 @@ namespace MCHEmul
 							{ }
 		
 			private:
+			virtual std::string functionSymbol () const
+							{ return ("*"); }
+
 			virtual UInt doFunction (const std::vector <UInt>& v) const override
 							{ return (v [0] * v [1]); }
 		};
@@ -208,6 +228,39 @@ namespace MCHEmul
 							{ }
 		
 			private:
+			virtual std::string functionSymbol () const
+							{ return ("/"); }
+
+			virtual UInt doFunction (const std::vector <UInt>& v) const override;
+		};    
+
+		/** A unary function to get the LSB of an UInt. */
+		class LSBFunctionOperationElement final : public UnaryFunctionOperationElement
+		{
+			public:
+			LSBFunctionOperationElement (OperationElement* o)
+				: UnaryFunctionOperationElement (o)
+							{ }
+
+			private:
+			virtual std::string functionSymbol () const
+							{ return (">"); }
+
+			virtual UInt doFunction (const std::vector <UInt>& v) const override;
+		};    
+
+		/** A unary function to get the LSB of an UInt. */
+		class MSBFunctionOperationElement final : public UnaryFunctionOperationElement
+		{
+			public:
+			MSBFunctionOperationElement (OperationElement* o)
+				: UnaryFunctionOperationElement (o)
+							{ }
+
+			private:
+			virtual std::string functionSymbol () const
+							{ return (">"); }
+
 			virtual UInt doFunction (const std::vector <UInt>& v) const override;
 		};    
 	}

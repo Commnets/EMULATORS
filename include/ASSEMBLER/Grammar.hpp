@@ -49,13 +49,16 @@ namespace MCHEmul
 			public:
 			Macro ()
 				: _name (""), _equivalent (""),
-				  _value ({ }), 
-				  _error (ErrorType::_NOERROR) 
+				  _value ({ }),
+				  _file (""), _line (0), // The place (optional) where the macro is defined
+				  _error (ErrorType::_NOERROR)
 								{ }
 
-			Macro (const std::string& n, const std::string& e)
+			Macro (const std::string& n, const std::string& e, 
+				   const std::string& f = "", unsigned int l = 0)
 				: _name (n), _equivalent (e),
 				  _value ({ }),
+				  _file (f), _line (l),
 				  _error (ErrorType::_NOERROR)
 							{ }
 
@@ -80,6 +83,13 @@ namespace MCHEmul
 			bool operator ! () const
 							{ value ({ }) /** Calculated already? */; return (_error != ErrorType::_NOERROR); }
 
+			const std::string& definitionFile () const
+							{ return (_file); }
+			unsigned int definitionLine () const
+							{ return (_line); }
+			void setDefintionAt (const std::string& f, unsigned int l)
+							{ _file = f; _line = l; }
+
 			private:
 			/** To calculate the value first time. 
 				It is able to take into account simple operations in the definition: *,+,- */
@@ -93,6 +103,8 @@ namespace MCHEmul
 
 			// Implementation
 			mutable std::vector <UByte> _value;
+			mutable std::string _file;
+			mutable unsigned int _line;
 			mutable ErrorType _error;
 		};
 
@@ -254,7 +266,7 @@ namespace MCHEmul
 			InstructionElement ()
 				: GrammaticalElement (), 
 				  _possibleInstructions (),
-				  _parameters (),
+				  _possibleParameters (),
 				  _selectedInstruction (nullptr)
 							{ _type = Type::_INSTRUCTION; }
 
@@ -264,13 +276,8 @@ namespace MCHEmul
 
 			virtual size_t size (const Semantic* s) const; 
 
-			/** To know whether any of the parameters could be or not a label. */
-			bool hasAnyLabelAsParameter (const Semantic* s) const;
-			/** To know the list of the the parameters that could be a label. */
-			std::vector <size_t> labelParameters (const Semantic* s) const;
-
 			std::vector <Instruction*> _possibleInstructions;
-			Strings _parameters;
+			std::vector <Strings> _possibleParameters;
 			mutable Instruction* _selectedInstruction;
 
 			private:
@@ -280,7 +287,7 @@ namespace MCHEmul
 
 			// Implementation
 			std::vector <UByte> calculateCodeBytesForInstruction 
-				(const Instruction* inst, const Semantic* s, bool bE = true) const;
+				(const Instruction* inst, const Strings& prms, const Semantic* s, bool bE = true) const;
 		};
 
 		/** @see explanation at the beggining of the file. */

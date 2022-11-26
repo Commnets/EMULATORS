@@ -18,8 +18,8 @@ std::vector <MCHEmul::UByte> MCHEmul::Assembler::Macro::calculateValue
 	size_t r = e.find_first_of ('*'); // To multiply values...
 	if (r == std::string::npos) r = e.find_first_of ('+'); // To add values...
 	if (r == std::string::npos) r = e.find_first_of ('-'); // To subtract values...
-	if (r == std::string::npos) r = e.find_first_of ('>'); // To get the lowest significant byt of and address
-	if (r == std::string::npos) r = e.find_first_of ('z'); // To get the highest significant byt of and address
+	if (r == std::string::npos) r = e.find_first_of ('>'); // To get the lowest significant byte of and address
+	if (r == std::string::npos) r = e.find_first_of ('<'); // To get the highest significant byte of and address
 	if (r == std::string::npos)
 	{
 		if (MCHEmul::validLabel (e))
@@ -48,7 +48,7 @@ std::vector <MCHEmul::UByte> MCHEmul::Assembler::Macro::calculateValue
 		// Unary operators...
 		if (r == 0)
 		{
-			MCHEmul::Assembler::Macro m1 ("" /** no name needed. */, MCHEmul::trim(e.substr(1))); m1.value(ms);
+			MCHEmul::Assembler::Macro m1 ("" /** no name needed. */, MCHEmul::trim (e.substr (1))); m1.value (ms);
 			if (!m1)
 				_error = MCHEmul::Assembler::ErrorType::_MACROBADDEFINED;
 			else
@@ -61,17 +61,24 @@ std::vector <MCHEmul::UByte> MCHEmul::Assembler::Macro::calculateValue
 		// Binary operators...
 		else
 		{
-			MCHEmul::Assembler::Macro m1 ("" /** No name needed. */, MCHEmul::trim (e.substr (0, r))); m1.value (ms);
-			MCHEmul::Assembler::Macro m2 ("", MCHEmul::trim (e.substr (r + 1))); m2.value (ms);
-			if (!m1 || !m2)
+			// ...but not this for sure...
+			// It would mean there is a "symbol" before the unary operator, and can not possible!
+			if (e [r] == '<' || e [r] == '>')
 				_error = MCHEmul::Assembler::ErrorType::_MACROBADDEFINED;
 			else
 			{
-				MCHEmul::UInt u1 (m1.value (ms));
-				MCHEmul::UInt u2 (m2.value (ms));
-				if (e [r] == '*') result = (u1 * u2).bytes ();
-				else if (e [r] == '+') result = (u1 + u2).bytes ();
-				else /** - */ result = (u1 - u2).bytes ();
+				MCHEmul::Assembler::Macro m1 ("" /** No name needed. */, MCHEmul::trim (e.substr (0, r))); m1.value (ms);
+				MCHEmul::Assembler::Macro m2 ("", MCHEmul::trim (e.substr (r + 1))); m2.value (ms);
+				if (!m1 || !m2)
+					_error = MCHEmul::Assembler::ErrorType::_MACROBADDEFINED;
+				else
+				{
+					MCHEmul::UInt u1 (m1.value (ms));
+					MCHEmul::UInt u2 (m2.value (ms));
+					if (e [r] == '*') result = (u1 * u2).bytes ();
+					else if (e [r] == '+') result = (u1 + u2).bytes ();
+					else /** - */ result = (u1 - u2).bytes ();
+				}
 			}
 		}
 	}
@@ -289,44 +296,19 @@ size_t MCHEmul::Assembler::InstructionElement::size (const Semantic* s) const
 			}
 			else
 			{
-				for (auto i : _possibleInstructions)
+				for (size_t i = 0; i < _possibleInstructions.size (); i++)
 				{
 					// The instruction "calculateCodeBytesForInstruction" sets the variable _error when it is wrong!
 					// So it has to be deleted before calling it...
 					_error = MCHEmul::Assembler::ErrorType::_NOERROR;
 					if ((result = calculateCodeBytesForInstruction 
-						(i, s /** true or false is the same at this point. */).size ()) == i -> memoryPositions ())
+						(_possibleInstructions [i], _possibleParameters [i], 
+						 s /** true or false is the same at this point. */).size()) == _possibleInstructions [i] -> memoryPositions ())
 						break; // Stops when the first right size is found...
 				}
 			}
 		}
 	}
-
-	return (result);
-}
-
-// ---
-bool MCHEmul::Assembler::InstructionElement::hasAnyLabelAsParameter (const MCHEmul::Assembler::Semantic* s) const
-{
-	assert (s != nullptr);
-
-	bool result = false;
-	for (size_t i = 0; i < _parameters.size () && !result; i++)
-		result = MCHEmul::validLabel (_parameters [i]) && 
-					(s -> macros ().find (_parameters [i]) == s -> macros ().end ());
-
-	return (result);
-}
-
-// ---
-std::vector <size_t> MCHEmul::Assembler::InstructionElement::labelParameters (const MCHEmul::Assembler::Semantic* s) const
-{
-	std::vector <size_t> result;
-
-	for (size_t i = 0; i < _parameters.size (); i++)
-		if (MCHEmul::validLabel (_parameters [i]) && 
-			(s -> macros ().find (_parameters [i]) == s -> macros ().end ()))
-			result.push_back (i);
 
 	return (result);
 }
@@ -344,7 +326,7 @@ std::vector <MCHEmul::UByte> MCHEmul::Assembler::InstructionElement::calculateCo
 	for (size_t i = 0; i < _possibleInstructions.size (); i++)
 	{
 		_error = MCHEmul::Assembler::ErrorType::_NOERROR;
-		result = calculateCodeBytesForInstruction (_possibleInstructions [i], s, bE);
+		result = calculateCodeBytesForInstruction (_possibleInstructions [i], _possibleParameters [i], s, bE);
 		if (!(*this))
 			continue;
 		else
@@ -359,7 +341,7 @@ std::vector <MCHEmul::UByte> MCHEmul::Assembler::InstructionElement::calculateCo
 
 // ---
 std::vector <MCHEmul::UByte> MCHEmul::Assembler::InstructionElement::calculateCodeBytesForInstruction 
-	(const MCHEmul::Instruction* inst, const MCHEmul::Assembler::Semantic* s, bool bE) const
+	(const MCHEmul::Instruction* inst, const MCHEmul::Strings& prms, const MCHEmul::Assembler::Semantic* s, bool bE) const
 {
 	if (!(*this))
 		return (std::vector <MCHEmul::UByte> ()); // Nothing possible when prervious error...
@@ -375,7 +357,7 @@ std::vector <MCHEmul::UByte> MCHEmul::Assembler::InstructionElement::calculateCo
 			case MCHEmul::Instruction::Structure::Parameter::Type::_DATA:
 			case MCHEmul::Instruction::Structure::Parameter::Type::_DIR:
 			{
-				bt = MCHEmul::UBytes (bytesFromExpression (_parameters [i], s -> macros (), e), bE).bytes ();
+				bt = MCHEmul::UBytes (bytesFromExpression (prms [i], s -> macros (), e), bE).bytes ();
 			}
 
 			break;
@@ -383,12 +365,12 @@ std::vector <MCHEmul::UByte> MCHEmul::Assembler::InstructionElement::calculateCo
 			case MCHEmul::Instruction::Structure::Parameter::Type::_RELJUMP:
 			case MCHEmul::Instruction::Structure::Parameter::Type::_ABSJUMP:
 			{
-				if (MCHEmul::validLabel (_parameters [i]))
+				if (MCHEmul::validLabel (prms [i]))
 				{
 					std::vector <const MCHEmul::Assembler::LabelElement*> lbs = s -> labels ();
 					std::vector <const MCHEmul::Assembler::LabelElement*>::const_iterator lbsP = 
 						std::find_if (lbs.begin (), lbs.end (), 
-							[=](const MCHEmul::Assembler::LabelElement* lb) -> bool { return (lb -> _name == _parameters [i]); });
+							[=](const MCHEmul::Assembler::LabelElement* lb) -> bool { return (lb -> _name == prms [i]); });
 					if (lbsP != lbs.end ())
 					{
 						if (inst -> internalStructure ()._parameters [i]._type == 
@@ -402,7 +384,7 @@ std::vector <MCHEmul::UByte> MCHEmul::Assembler::InstructionElement::calculateCo
 					}
 				}
 				else
-					bt = MCHEmul::UBytes (bytesFromExpression (_parameters [i], s -> macros (), e), bE).bytes ();
+					bt = MCHEmul::UBytes (bytesFromExpression (prms [i], s -> macros (), e), bE).bytes ();
 			}
 
 			break;

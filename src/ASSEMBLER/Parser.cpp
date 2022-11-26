@@ -49,7 +49,8 @@ void MCHEmul::Assembler::MacroCommandParser::parse (MCHEmul::Assembler::ParserCo
 	pC -> _semantic -> addMacro (MCHEmul::Assembler::Macro
 		(MCHEmul::trim (pC -> _currentLine.substr (0, mD)),
 		 MCHEmul::trim (pC -> _currentLine.substr (mD + 1,
-			 pC -> _currentLine.find (parser () -> commentSymbol () /** Until a potential comment. */) - (mD + 1)))));
+			 pC -> _currentLine.find (parser () -> commentSymbol () /** Until a potential comment. */) - (mD + 1))), 
+		 pC ->_file, pC -> _currentLineNumber)); // Including where the macro has been defined...
 	// The macro is added just if there is no other with the same value...
 	// Otherwise the instruction above will generate an error that will be kept under semantic object...
 
@@ -244,7 +245,7 @@ void MCHEmul::Assembler::InstructionCommandParser::parse (MCHEmul::Assembler::Pa
 		if ((*i).second -> matchesWith (cL, prms)) // One option minimum will match this (as it can be parsed)
 		{
 			nE -> _possibleInstructions.push_back ((*i).second);
-			nE -> _parameters = prms;
+			nE -> _possibleParameters.push_back (prms);
 		}
 	}
 

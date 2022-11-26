@@ -67,7 +67,7 @@ bool MCHEmul::Instruction::matchesWith (const std::string& i, MCHEmul::Strings& 
 			if (result = (ctIL != iL.length ()))
 			{
 				std::string lP = iL.substr (iPP, ctIL - iPP);
-				if (result = MCHEmul::validFunction (lP)) // The parameter to add has to be valid...
+				if (result = MCHEmul::validOperation (lP)) // A very generic validation...deeper at compilation time! (if any)
 				{ 
 					prms.push_back (lP);
 
@@ -91,7 +91,7 @@ bool MCHEmul::Instruction::matchesWith (const std::string& i, MCHEmul::Strings& 
 	if (ctIL != iL.length ())
 	{
 		std::string lP = iL.substr (ctIL);
-		if (MCHEmul::validFunction (lP))
+		if (MCHEmul::validOperation (lP)) // A very generic validation...deeper at compiltion time (if any)
 		{
 			prms.push_back (lP);
 
