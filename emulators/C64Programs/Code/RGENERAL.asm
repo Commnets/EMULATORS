@@ -37,7 +37,7 @@ VARIABLES_DATAZONE			= $12
 ; So there is 16 positions for defining outcome for rotuines
 OUTCOME_DATAZONE			= $22
 
-; THE VARIABLE BASE has to be defined before this file is loaded
+; The variable BASE has to be defined before this file is loaded
 ; The pograms always should start from where this variable is defined onwards
 * = BASE
 

@@ -4,6 +4,17 @@
 #include <functional>
 
 // ---
+void MCHEmul::Assembler::ParserContext::actualizeGlobalParametersFrom (const MCHEmul::Assembler::ParserContext& pC)
+{
+	_errors = pC._errors;
+	_filesAlreadyParsed = pC._filesAlreadyParsed;
+	_lastStartingPointId = pC._lastStartingPointId;
+	_lastLabelId = pC._lastLabelId;
+	_lastBytesId = pC._lastBytesId;
+	_lastInstructionId = pC._lastInstructionId;
+}
+
+// ---
 void MCHEmul::Assembler::IncludeCommandParser::parse (MCHEmul::Assembler::ParserContext* pC) const
 { 
 	if (!canParse (pC))
@@ -24,10 +35,16 @@ void MCHEmul::Assembler::IncludeCommandParser::parse (MCHEmul::Assembler::Parser
 		pC -> _filesAlreadyParsed.push_back (fN); // To avoid analyze twice...
 
 		// Create a new parser context that inituially will be the same...
+		// The semantic is minatined, and the rest of the variables are copied...
+		// Many of them has a meaning within the file to be parser
+		// and others are general and they will have to be get back after parsing...
 		MCHEmul::Assembler::ParserContext* nPC = new MCHEmul::Assembler::ParserContext (*pC);
 		// These instructions will keep most of the variables related with the previous context
 		parser () -> parse (fN, fN + ".act", nPC /**  no semantic not context is created. */);
-		// No longer needed
+		// After parsing the variable nPC is no longer needed
+		// But the global parameters actualized during the inner parsing have to be actualized here
+		// before destroying it.
+		pC -> actualizeGlobalParametersFrom (*nPC);
 		delete (nPC);
 	}
 
@@ -91,8 +108,6 @@ void MCHEmul::Assembler::CodeTemplateDefinitionCommandParser::parse (MCHEmul::As
 
 	if (cP)
 		pC -> _semantic -> addCodeTemplate (MCHEmul::Assembler::CodeTemplate (id, ctLns));
-
-	return;
 }
 
 // ---

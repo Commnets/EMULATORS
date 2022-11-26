@@ -28,26 +28,32 @@ namespace MCHEmul
 			ParserContext () = default; // used by queue...
 
 			ParserContext (Semantic* smt)
-				: _semantic (smt), 
+				: _semantic (smt),
 				  _currentLine (""),
 				  _lines (), _actionLines (), 
 				  _file (""), _currentLineNumber (0), _templateLinesNumber (0),
-				  _errors (),
 				  _linesPointer (), _actionLinesPointer (),
+				  _errors (),
 				  _filesAlreadyParsed (),
 				  _lastStartingPointId (0), _lastLabelId (0), _lastBytesId (0), _lastInstructionId (0)
 							{ }
 
 			ParserContext (const ParserContext&) = default;
 
-			// The prser context doesn't own anything...
+			// The parser context doesn't own anything...
 
 			ParserContext& operator = (const ParserContext&) = default;
 
+			/** Actualize the global parameters from another. */
+			void actualizeGlobalParametersFrom (const ParserContext& pC);
+
 			// The data can be actualized directly...
+			// The most important variable = The outcoume of the parsing
 			/** Where the parsing results are stored. \n
 				This is the real outcome of the process. */ 
 			Semantic* _semantic;
+
+			// Variables with a meaning within the file being parsed
 			/** The current line breing treated. */
 			std::string _currentLine;
 			/** The lines to be parserd. \n
@@ -62,12 +68,14 @@ namespace MCHEmul
 			/** The number of the template code lines added,
 				pending to be processed. */
 			unsigned int _templateLinesNumber;
-			/** The list of errors, being generated. */
-			Errors _errors;
-
 			// Implementation
 			/** A pointer to the list of lines and same for action lines. */
 			Strings::const_iterator _linesPointer, _actionLinesPointer;
+
+			// Variables with a meaning in the parsing process...
+			/** The list of errors, being generated. */
+			Errors _errors;
+			// Implementation
 			/** The list of the files already used. */
 			Strings _filesAlreadyParsed;
 			/** The last starting point identification number used. */

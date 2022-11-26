@@ -89,7 +89,7 @@ FILLMX_YLENVAR				= VARIABLES_DATAZONE + 9
 FILLMX_BYTEVAR				= VARIABLES_DATAZONE + 10
 FILLMX_LOCSLOWVAR			= VARIABLES_DATAZONE + 11
 FILLMX_LOCSHIGHVAR			= VARIABLES_DATAZONE + 12
-; Firs calculate the address where to start to fill up...
+; First calculate the address where to start to fill up...
 FILLMATRIX:					lda FILLMX_LOCSLOWVAR
 							sta MATRIXADDR_LOCLOWVAR
 							lda FILLMX_LOCSHIGHVAR
@@ -137,9 +137,9 @@ FILLSCR_YLENVAR				= VARIABLES_DATAZONE + 9
 FILLSCR_BYTEVAR				= VARIABLES_DATAZONE + 10
 FILLSCR_COLORVAR			= VARIABLES_DATAZONE + 13
 ; First draws the character...
-FILLBOXSCREEN:				lda #>SCREEBASE
+FILLBOXSCREEN:				lda #>SCREENBASE
 							sta FILLMX_LOCSLOWVAR
-							lda #<SCREEBASE
+							lda #<SCREENBASE
 							sta FILLMX_LOCSHIGHVAR
 							lda #$28								; Max number of text columns in the screen
 							sta FILLMX_MAXXVAR

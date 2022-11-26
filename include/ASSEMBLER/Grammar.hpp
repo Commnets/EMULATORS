@@ -49,16 +49,16 @@ namespace MCHEmul
 			public:
 			Macro ()
 				: _name (""), _equivalent (""),
-				  _value ({ }),
 				  _file (""), _line (0), // The place (optional) where the macro is defined
+				  _value ({ }),
 				  _error (ErrorType::_NOERROR)
-								{ }
+							{ }
 
 			Macro (const std::string& n, const std::string& e, 
 				   const std::string& f = "", unsigned int l = 0)
 				: _name (n), _equivalent (e),
-				  _value ({ }),
 				  _file (f), _line (l),
+				  _value ({ }),
 				  _error (ErrorType::_NOERROR)
 							{ }
 
@@ -68,20 +68,9 @@ namespace MCHEmul
 
 			const std::string& name () const
 							{ return (_name); }
+
 			const std::string& equivalent () const
 							{ return (_equivalent); }
-			ErrorType error () const
-							{ return (_error); }
-
-			/** Gets the value of the macro taking into account potential relations with other macros. \n
-				The first time it is invoked the very real value is calculated if possible. \n
-				The variable _error will point whether there was and error in the calculus. */
-			const std::vector <UByte>& value (const Macros& ms) const
-							{ return (_value.empty () ? _value = calculateValue (_equivalent, ms) : _value ); }
-
-			/** To make more visual the analysis of the status of macro. */
-			bool operator ! () const
-							{ value ({ }) /** Calculated already? */; return (_error != ErrorType::_NOERROR); }
 
 			const std::string& definitionFile () const
 							{ return (_file); }
@@ -89,6 +78,19 @@ namespace MCHEmul
 							{ return (_line); }
 			void setDefintionAt (const std::string& f, unsigned int l)
 							{ _file = f; _line = l; }
+
+			/** Gets the value of the macro taking into account potential relations with other macros. \n
+				The first time it is invoked the very real value is calculated if possible. \n
+				The variable _error will point whether there was and error in the calculus. */
+			const std::vector <UByte>& value (const Macros& ms) const
+							{ return (_value.empty () ? _value = calculateValue (_equivalent, ms) : _value ); }
+
+			ErrorType error () const
+							{ return (_error); }
+
+			/** To make more visual the analysis of the status of macro. */
+			bool operator ! () const
+							{ value ({ }) /** Calculated already? */; return (_error != ErrorType::_NOERROR); }
 
 			private:
 			/** To calculate the value first time. 
@@ -100,11 +102,13 @@ namespace MCHEmul
 			const std::string _name;
 			/** The initial value of the macro (pure = not calculated). */
 			const std::string _equivalent; 
+			/** The file (is any) where the macro is defined. */
+			std::string _file;
+			/** The line within the file where the macro is defined. */
+			unsigned int _line;
 
 			// Implementation
 			mutable std::vector <UByte> _value;
-			mutable std::string _file;
-			mutable unsigned int _line;
 			mutable ErrorType _error;
 		};
 

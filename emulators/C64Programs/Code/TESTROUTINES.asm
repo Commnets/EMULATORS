@@ -6,6 +6,7 @@
 BASE = $c000
 
 #../C64Programs/Code/RGRAPHICS.asm
+#../C64Programs/Code/RSPRITES.asm
 
 ; A very simple program to test everything works...
 * = $ca00
