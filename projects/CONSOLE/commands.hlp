@@ -53,6 +53,7 @@ No parameters needed.
 To keep CPU running.
 An optional parameter allows to start the execution from another position.
 Take care using this command only Program Counter is changed before starting to run.
+R can also be used.
 No parameters needed.
 ;NEXT
 To execute the next instruction after being stopped.

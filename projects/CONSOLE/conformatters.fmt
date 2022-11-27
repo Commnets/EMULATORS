@@ -87,8 +87,8 @@ Id:@ID@
 #---
 #---
 ;CCPUSTATUS
+Last: @INST@
 @PC@
-@INST@
 @REGS?{key=NO,equal=:},@
 @SR@
 ->Stack:
@@ -96,7 +96,7 @@ Id:@ID@
 #---
 #---
 ;CCPUSSTATUS
-@INST@
+Last: @INST@
 @PC@
 @REGS?{key=NO,equal=:},@
 @SR@

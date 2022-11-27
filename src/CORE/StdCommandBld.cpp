@@ -30,7 +30,7 @@ MCHEmul::Command* MCHEmul::StandardCommandBuilder::createEmptyCommand (const std
 		result = new MCHEmul::SetMemoryValueCommand;
 	else if (cmdName == "STOP")
 		result = new MCHEmul::StopCPUCommand;
-	else if (cmdName == "RUN")
+	else if (cmdName == "RUN" || cmdName == "R")
 		result = new MCHEmul::RunCPUCommand;
 	else if (cmdName == "NEXT" || cmdName == "N")
 		result = new MCHEmul::NextInstructionCommand;
