@@ -96,13 +96,6 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "C64EmulatorC", "emulators\C
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "C64Programs", "C64Programs", "{BC7BFE65-0F19-4EB9-914F-67B7BC21FBC4}"
-	ProjectSection(SolutionItems) = preProject
-		emulators\C64Programs\Code\RGENERAL.asm = emulators\C64Programs\Code\RGENERAL.asm
-		emulators\C64Programs\Code\RGRAPHICS.asm = emulators\C64Programs\Code\RGRAPHICS.asm
-		emulators\C64Programs\Code\RSPRITES.asm = emulators\C64Programs\Code\RSPRITES.asm
-		emulators\C64Programs\Code\TEMPLATES.asm = emulators\C64Programs\Code\TEMPLATES.asm
-		emulators\C64Programs\Code\TESTROUTINES.asm = emulators\C64Programs\Code\TESTROUTINES.asm
-	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "C64", "C64", "{CB7D0793-14E8-492E-8620-DBE966D6AA14}"
 EndProject
@@ -125,6 +118,16 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Examples_2", "Examples_2", "{3F4F526E-7410-4F41-8B41-63F7058A371E}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Test", "Test", "{B77308BD-D77E-42AE-9A76-F99FD0641DBA}"
+	ProjectSection(SolutionItems) = preProject
+		emulators\C64Programs\Code\RGENERAL.asm = emulators\C64Programs\Code\RGENERAL.asm
+		emulators\C64Programs\Code\RGRAPHICS.asm = emulators\C64Programs\Code\RGRAPHICS.asm
+		emulators\C64Programs\Code\RSCREENBOX.asm = emulators\C64Programs\Code\RSCREENBOX.asm
+		emulators\C64Programs\Code\RSCREENCLEAR.asm = emulators\C64Programs\Code\RSCREENCLEAR.asm
+		emulators\C64Programs\Code\RSCREENRECT.asm = emulators\C64Programs\Code\RSCREENRECT.asm
+		emulators\C64Programs\Code\RSCREENTEXT.asm = emulators\C64Programs\Code\RSCREENTEXT.asm
+		emulators\C64Programs\Code\RSPRITES.asm = emulators\C64Programs\Code\RSPRITES.asm
+		emulators\C64Programs\Code\TESTROUTINES.asm = emulators\C64Programs\Code\TESTROUTINES.asm
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
