@@ -87,7 +87,7 @@ Id:@ID@
 #---
 #---
 ;CCPUSTATUS
-Last: @INST@
+Last:@INST@
 @PC@
 @REGS?{key=NO,equal=:},@
 @SR@
@@ -96,7 +96,7 @@ Last: @INST@
 #---
 #---
 ;CCPUSSTATUS
-Last: @INST@
+Last:@INST@
 @PC@
 @REGS?{key=NO,equal=:},@
 @SR@
@@ -112,14 +112,14 @@ Last: @INST@
 #---
 ;CSTOP
 @PC@
-@INST@
+Last:@INST@
 @REGS?{key=NO,equal=:},@
 @SR@
 #---
 #---
 ;CRUN
 @PC@
-@INST@
+Current:@INST@
 @REGS?{key=NO,equal=:},@
 @SR@
 #---

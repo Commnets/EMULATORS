@@ -56,6 +56,7 @@ void MCHEmul::Console::run ()
 		{
 			if (!MCHEmul::CommandExecuter::executePendingCommands ())
 				_outputStream << _commandErrorTxt << std::endl;
+
 			_outputStream << std::endl;
 
 			std::cout << _commandPrompt;
@@ -100,8 +101,10 @@ bool MCHEmul::Console::readAndExecuteCommand ()
 		_lastCommands.push_back (_command);
 		if (_lastCommands.size () >= _maxCommandsKept) // No more than the max commands allowed to kept!
 			_lastCommands = std::vector <std::string> (_lastCommands.begin ()++, _lastCommands.end ());
-		_lastCommandPosition = _lastCommands.size (); // One the enters is pressed...it will be the last new element...
 	}
+
+	// One the enters is pressed...it will be the last new element...
+	_lastCommandPosition = _lastCommands.size (); 
 
 	createAndExecuteCommand ();
 
@@ -111,9 +114,12 @@ bool MCHEmul::Console::readAndExecuteCommand ()
 
 	_command = ""; _cursorPosition = 0;
 
-	_outputStream << std::endl;
 	if (!isPendingCommands ())
+	{ 
+		_outputStream << std::endl;
+
 		std::cout << _commandPrompt;
+	}
 
 	// The command was executed, no quit...
 	return (false);
