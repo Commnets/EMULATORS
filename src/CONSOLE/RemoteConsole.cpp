@@ -9,10 +9,22 @@ void MCHEmul::RemoteConsole::run ()
 
 		return; // No possible to run the remote console...
 	}
-	
+
+	// The communication system is liked to this one...
+	_communicationSystem -> deriveAnswerCommandTo (this);
+
 	// Then, after initializing communciations, 
 	// the remote console can start to work!
 	MCHEmul::Console::run ();
+}
+
+// ---
+bool MCHEmul::RemoteConsole::runPerCycle ()
+{
+	if (!_communicationSystem -> processMessagesOn (nullptr))
+		_outputStream << "Error processing messages" << std::endl;
+
+	return (false); // The main loop doesn't finish even if there is processing errors...
 }
 
 // ---

@@ -74,15 +74,15 @@ namespace MCHEmul
 			It must be overloaded depending omn the type of Console. */
 		virtual void createAndExecuteCommand () = 0;
 
-		/** Run things per cycle. \n
-			It is and "exit" door for simulations. 
-			It returns true if after the execution, the run loop has to finish. */
-		virtual bool runPerCycle () = 0;
-
 		/** Just print out the answer (method comming from the CommandExecuter class). */
 		virtual void manageAnswer (Command* c, const InfoStructure& rst) override;
 		/** Just print out the error. */
 		virtual void manageErrorInExecution (Command* c, const InfoStructure& rst) override;
+
+		/** Run things per cycle. \n
+			It is and "exit" door for simulations. 
+			It returns true if after the execution, the run loop has to finish. */
+		virtual bool runPerCycle () = 0;
 
 		protected:
 		ConsoleKeys* _consoleKeys;

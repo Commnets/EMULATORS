@@ -173,7 +173,7 @@ bool MCHEmul::PeerCommunicationChannel::send (const std::string& str, const MCHE
 	else
 	{ 
 		if ((result = _peer -> Connect 
-				(to.asString ().c_str (), to.port (), nullptr, 0) != RakNet::CONNECTION_ATTEMPT_STARTED))
+				(to.asString ().c_str (), to.port (), nullptr, 0) == RakNet::CONNECTION_ATTEMPT_STARTED))
 			_pendingMessages.push_back (MCHEmul::PeerCommunicationChannel::PendingMessage (str, to));
 		else
 			_lastError = MCHEmul::_CHANNELWRITEERROR_ERROR;
@@ -188,16 +188,18 @@ bool MCHEmul::PeerCommunicationChannel::sendPendingMessages ()
 	bool result = true;
 
 	for (MCHEmul::PeerCommunicationChannel::PendingMessages::iterator i = _pendingMessages.begin ();
-			i != _pendingMessages.end (); i++)
+			i != _pendingMessages.end ();)
 	{
 		MCHEmul::PeerCommunicationChannel::StatusLinks::const_iterator j = _statusLinks.find ((*i)._to.asString ());
 		if (j == _statusLinks.end () || !(*j).second) // Open?
-			continue; // ..no, so it cann't be sent...
-
-		// It might be sent as the communication link is open already...
-		// But the result variable will keep the real result!
-		result &= sendRightNow ((*i)._message, (*i)._to);
-		i = _pendingMessages.erase (i); // The iterator is actualized...
+			i++; // ..no, so it cann't be sent...
+		else
+		{
+			// It might be sent as the communication link is open already...
+			// But the result variable will keep the real result!
+			result &= sendRightNow ((*i)._message, (*i)._to);
+			i = _pendingMessages.erase (i); // The iterator is actualized...
+		}
 	}
 
 	return (result);

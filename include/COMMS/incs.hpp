@@ -17,5 +17,7 @@
 #include <COMMS/IPAddress.hpp>
 #include <COMMS/Channel.hpp>
 #include <COMMS/System.hpp>
+#include <COMMS/AnsSysCommand.hpp>
+#include <COMMS/AnsSysCmdBld.hpp>
 
 #endif

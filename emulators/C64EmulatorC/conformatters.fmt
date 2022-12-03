@@ -159,3 +159,7 @@ Program loaded=@RESULT@
 ->Errors:
 @ERRORS@
 #---
+#---
+;CANSWER
+@RESULT@
+#---

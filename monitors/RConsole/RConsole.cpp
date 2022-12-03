@@ -12,7 +12,7 @@ int _tmain (int argc, _TCHAR *argv [])
 	MCHEmul::RemoteConsole myConsole (new MCHEmul::StandardCommandBuilder, new MCHEmul::Win32ConsoleKeys,
 		new MCHEmul::CommunicationSystem (
 			new MCHEmul::PeerCommunicationChannel (60001 /** port. */, 10 /** simultaneous comms. */), 
-				new MCHEmul::StandardCommandBuilder),
+				new MCHEmul::CommsSystemAnswerCommandBuilder),
 		MCHEmul::IPAddress (127, 0, 0, 1, 60000 /** Where the simulations is baeing executed. */));
 	myConsole.run ();
 

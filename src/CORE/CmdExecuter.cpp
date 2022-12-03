@@ -4,9 +4,10 @@
 // ---
 void MCHEmul::CommandExecuter::executeCommand (MCHEmul::Command* cmd, MCHEmul::Computer* c)
 {
-	if (cmd == nullptr || c == nullptr)
+	if (cmd == nullptr)
 		return; // No possible to execute ever...
 
+	// The computer can be null, but take a lot of care, checking that before the execution...
 	_commands.push (MCHEmul::CommandExecuter::ComputerPlusCommand (c, cmd));
 }
 

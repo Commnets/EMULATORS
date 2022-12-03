@@ -40,8 +40,7 @@ namespace MCHEmul
 		virtual void run () override;
 
 		protected:
-		virtual bool runPerCycle () override
-							{ return (false); }
+		virtual bool runPerCycle () override;
 
 		/** Send the command to the remote emulator. */
 		virtual void createAndExecuteCommand () override;

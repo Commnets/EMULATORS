@@ -66,11 +66,11 @@ namespace MCHEmul
 		bool executePendingCommands ();
 
 		/** This method has to be redefined to determine what to do with the answer of a command. \n
-			It will depend on the type of CommandExecuter. E.g. in a console, the answer should be printed out to the screen
-			whilst in a remote communication it has to be sent back to the invoker. */
+		It will depend on the type of CommandExecuter. E.g. in a console, the answer should be printed out to the screen
+		whilst in a remote communication it has to be sent back to the invoker. */
 		virtual void manageAnswer (Command *c, const InfoStructure& rst) = 0;
 		/** This method has also to be redefined to determine ehat to don with an error in 
-			the execution of a command. */
+		the execution of a command. */
 		virtual void manageErrorInExecution (Command* c, const InfoStructure& rst) = 0;
 
 		protected:

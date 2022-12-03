@@ -457,6 +457,25 @@ namespace MCHEmul
 		private:
 		virtual void executeImpl (CommandExecuter* cE, Computer* c, InfoStructure& rst) override;
 	};
+
+	/** A very simple command to move the parameters into the answer 
+		without doing anything else. */
+	class MoveParametersToAnswerCommand final : public Command
+	{
+		public:
+		static const int _ID = 20;
+		static const std::string _NAME;
+
+		MoveParametersToAnswerCommand ()
+			: Command (_ID, _NAME)
+							{ }
+
+		virtual bool canBeExecuted () const override
+							{ return (true); }
+
+		private:
+		virtual void executeImpl (CommandExecuter* cE, Computer* c, InfoStructure& rst) override;
+	};
 }
 
 #endif

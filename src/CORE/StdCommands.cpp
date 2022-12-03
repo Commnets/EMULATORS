@@ -27,6 +27,7 @@ const std::string MCHEmul::RemoveBreakPointCommand::_NAME = "CREMOVEBREAK";
 const std::string MCHEmul::RemoveAllBreakPointsCommand::_NAME = "CREMOVEBREAKS";
 const std::string MCHEmul::CPUSpeedCommand::_NAME = "CSPEED";
 const std::string MCHEmul::LoadBinCommand::_NAME = "CLOADBIN";
+const std::string MCHEmul::MoveParametersToAnswerCommand::_NAME = "CMOVEPARAMS";
 
 // ---
 MCHEmul::HelpCommand::HelpCommand (const std::string& hF)
@@ -70,6 +71,8 @@ MCHEmul::HelpCommand::HelpCommand (const std::string& hF)
 // ---
 void MCHEmul::HelpCommand::executeImpl (MCHEmul::CommandExecuter* cE, MCHEmul::Computer* c, MCHEmul::InfoStructure& rst)
 {
+	// No computer is needed...
+
 	MCHEmul::InfoStructure iS;
 
 	auto helpInfoCommand = [&](const std::string& cmd) -> void
@@ -100,6 +103,8 @@ void MCHEmul::HelpCommand::executeImpl (MCHEmul::CommandExecuter* cE, MCHEmul::C
 // ---
 void MCHEmul::AuthorInfoCommand::executeImpl (MCHEmul::CommandExecuter* cE, MCHEmul::Computer* c, MCHEmul::InfoStructure& rst)
 {
+	// No computer is needed...
+
 	MCHEmul::InfoStructure dt;
 	dt.add ("NAME", std::string ("Ignacio Cea Fornies"));
 	dt.add ("COUNTRY", std::string ("Spain"));
@@ -343,4 +348,12 @@ void MCHEmul::LoadBinCommand::executeImpl (MCHEmul::CommandExecuter* cE, MCHEmul
 
 	rst.add	("RESULT", c -> loadInto 
 		((*_parameters.begin ()).first, MCHEmul::Address::fromStr ((*++_parameters.begin ()).first)));
+}
+
+// ---
+void MCHEmul::MoveParametersToAnswerCommand::executeImpl 
+	(MCHEmul::CommandExecuter* cE, MCHEmul::Computer* c, MCHEmul::InfoStructure& rst)
+{
+	for (const auto& i : _parameters)
+		rst.add (i.first, i.second);
 }

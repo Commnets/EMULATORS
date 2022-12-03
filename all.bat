@@ -4,6 +4,8 @@ COPY .\exe\x86\C64Emulator.exe .\emulators\C64Emulator\ /Y
 COPY .\exe\x86\C64EmulatorD.exe .\emulators\C64Emulator\ /Y
 COPY .\exe\x86\C64EmulatorC.exe .\emulators\C64EmulatorC\ /Y
 COPY .\exe\x86\C64EmulatorCD.exe .\emulators\C64EmulatorC\ /Y
+COPY .\exe\x86\RConsole.exe .\monitors\RConsole\ /Y
+COPY .\exe\x86\RConsoleD.exe .\monitors\RConsole\ /Y
 COPY .\exe\x86\TestCPU.exe .\tests\TestCPU\ /Y
 COPY .\exe\x86\TestCPUD.exe .\tests\TestCPU\ /Y
 COPY .\exe\x86\Test6500.exe .\tests\Test6500\ /Y

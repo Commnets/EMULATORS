@@ -13,6 +13,12 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Archivos de origen\Commands">
+      <UniqueIdentifier>{1b754287-8baa-4628-b15f-e1ec5b8d0a19}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Archivos de encabezado\Commands">
+      <UniqueIdentifier>{eed27aa0-ab07-42ae-bcb7-4537e3fbde61}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\include\COMMS\System.hpp">
@@ -27,6 +33,12 @@
     <ClInclude Include="..\..\include\COMMS\incs.hpp">
       <Filter>Archivos de encabezado</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\include\COMMS\AnsSysCommand.hpp">
+      <Filter>Archivos de encabezado\Commands</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\COMMS\AnsSysCmdBld.hpp">
+      <Filter>Archivos de encabezado\Commands</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\COMMS\Channel.cpp">
@@ -37,6 +49,12 @@
     </ClCompile>
     <ClCompile Include="..\..\src\COMMS\IPAddress.cpp">
       <Filter>Archivos de origen</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\COMMS\AnsSysCommand.cpp">
+      <Filter>Archivos de origen\Commands</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\COMMS\AnsSysCmdBld.cpp">
+      <Filter>Archivos de origen\Commands</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

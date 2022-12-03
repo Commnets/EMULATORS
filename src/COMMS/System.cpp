@@ -1,5 +1,6 @@
 #include <COMMS/System.hpp>
 #include <COMMS/IPAddress.hpp>
+#include <COMMS/AnsSysCommand.hpp>
 
 // ---
 bool MCHEmul::CommunicationSystem::processMessagesOn (MCHEmul::Computer* c)
@@ -9,8 +10,6 @@ bool MCHEmul::CommunicationSystem::processMessagesOn (MCHEmul::Computer* c)
 	/** Before processing new messages, the old ones have to be sent. */
 	if (!_communicationChannel -> sendPendingMessages ())
 		return (false);
-
-	assert (c != nullptr);
 
 	// The system hasn't been initialized well!
 	if (!*this)
@@ -39,7 +38,33 @@ bool MCHEmul::CommunicationSystem::processMessagesOn (MCHEmul::Computer* c)
 // ---
 void MCHEmul::CommunicationSystem::manageAnswer (MCHEmul::Command* c, const MCHEmul::InfoStructure& rst)
 {
-	if (!rst.empty ())
-		_communicationChannel ->
-			send (MCHEmul::FormatterBuilder::instance () -> formatter (_messageFormatter) -> format (rst), _lastSender);
+	// If the command being managed is the answer 
+	// to a command that has initially been sent through the line
+	// then it could be moved up...other wise it is deleted...
+	if (dynamic_cast <MCHEmul::CommsSystemAnswerCommand*> (c) != nullptr)
+	{
+		if (_commandExecuterForAnswers != nullptr)
+		{
+			MCHEmul::MoveParametersToAnswerCommand* mCmd = dynamic_cast <MCHEmul::MoveParametersToAnswerCommand*>
+				(_commandExecuterForAnswers -> commandBuilder () -> command (MoveParametersToAnswerCommand::_NAME));
+			if (mCmd != nullptr)
+			{
+				mCmd -> setParameters (MCHEmul::Attributes ({ { "RESULT", rst.attribute ("RESULT") } }));
+
+				_commandExecuterForAnswers -> executeCommand (mCmd, nullptr);
+			}
+		}
+		else
+			std::cout << rst << std::endl; // A very last type of exit...
+	}
+	else
+	{
+		if (!rst.empty ())
+		{
+			if (!_communicationChannel -> send (MCHEmul::CommsSystemAnswerCommand::_NAME + " " + 
+				MCHEmul::CommsSystemAnswerCommand::replaceCharsForComms 
+					(FormatterBuilder::instance () -> formatter (_messageFormatter) -> format (rst)), _lastSender))
+				_lastError = MCHEmul::_CHANNELWRITEERROR_ERROR;
+		}
+	}
 }

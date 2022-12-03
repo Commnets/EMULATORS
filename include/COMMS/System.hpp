@@ -29,15 +29,20 @@ namespace MCHEmul
 
 		CommunicationSystem () = delete;
 
-		/** To create a communication system it is needed a channel and
-			a CommandBuilder to build the messages received as text,
-			and the name of the formatter used to format the messages before sending them back through the line.
-			By default it is JSON. */
+		/** 
+		  *	To create a communication system it is needed:
+		  * @param cC	a Channel to communicate.
+		  * @param cB	A Command Builder to execute the commands received. \n
+		  *				After the execution of a command, its answer is sent back encapsulated 
+		  *				in the command "CommandExecuteAnswerCommand". \n
+		  * msgFmter	The formatter used to send back the answer of a command. By default is JSON. 
+		  */
 		CommunicationSystem (PeerCommunicationChannel* cC, CommandBuilder* cB, 
-				const std::string& msgFmter = "JSON" /** @see JSONFormatter. */)
+				const std::string& msgFmter = "JSON" /** @see JSONFormatter to send back the answers */)
 			: CommandExecuter (_ID, cB),
 			  _communicationChannel (cC),
 			  _messageFormatter (msgFmter),
+			  _commandExecuterForAnswers (nullptr), // No derivation possible...
 			  _error (false), _lastError (MCHEmul::_NOERROR), _lastSender ()
 							{ assert (_communicationChannel != nullptr && 
 									  _commandBuilder != nullptr); }
@@ -48,6 +53,10 @@ namespace MCHEmul
 
 		virtual ~CommunicationSystem ()
 							{ delete (_communicationChannel); }
+
+		/** To derive the answers received, to another CommandExecuter. */
+		void deriveAnswerCommandTo (CommandExecuter* cE)
+							{ _commandExecuterForAnswers = cE; }
 
 		/** Just to send a message. */
 		bool send (const std::string& str, const IPAddress& to)
@@ -76,6 +85,7 @@ namespace MCHEmul
 		protected:
 		PeerCommunicationChannel* _communicationChannel;
 		const std::string _messageFormatter;
+		CommandExecuter* _commandExecuterForAnswers;
 
 		// Implementation
 		bool _error;

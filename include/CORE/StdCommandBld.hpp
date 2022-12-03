@@ -29,4 +29,3 @@ namespace MCHEmul
 
 // End of the file
 /*@}*/
-#pragma once

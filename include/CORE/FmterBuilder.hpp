@@ -64,7 +64,7 @@ namespace MCHEmul
 							{ if (fmter != nullptr) _defaultFormatter = fmter; }
 
 		/** Gets the last error. */
-		unsigned int lastEror () const
+		unsigned int lastError () const
 							{ return (_lastError); }
 
 		bool operator ! () const
