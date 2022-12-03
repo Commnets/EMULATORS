@@ -114,24 +114,36 @@ void MCHEmul::AuthorInfoCommand::executeImpl (MCHEmul::CommandExecuter* cE, MCHE
 // ---
 void MCHEmul::StatusRegisterStatusCommand::executeImpl (MCHEmul::CommandExecuter* cE, MCHEmul::Computer* c,  MCHEmul::InfoStructure& rst)
 {
+	if (c == nullptr)
+		return;
+
 	rst.add ("SR", c -> cpu () -> statusRegister ().asString ());
 }
 
 // ---
 void MCHEmul::RegistersStatusCommand::executeImpl (MCHEmul::CommandExecuter* cE, MCHEmul::Computer* c, MCHEmul::InfoStructure& rst)
 {
+	if (c == nullptr)
+		return;
+
 	rst.add ("REGS", c -> cpu () -> getInfoStructure ().infoStructure ("REGS"));
 }
 
 // ---
 void MCHEmul::ProgramCounterStatusCommand::executeImpl (MCHEmul::CommandExecuter* cE, MCHEmul::Computer* c, MCHEmul::InfoStructure& rst)
 {
+	if (c == nullptr)
+		return;
+
 	rst.add ("PC", c -> cpu () -> programCounter ().asString ());
 }
 
 // ---
 void MCHEmul::StackStatusCommand::executeImpl (MCHEmul::CommandExecuter* cE, MCHEmul::Computer* c, InfoStructure& rst)
 {
+	if (c == nullptr)
+		return;
+
 	MCHEmul::InfoStructure iS = c -> memory () -> stack () -> getInfoStructure ();
 	if (_parameters.size () == 0 || (_parameters.size () == 1 && (*_parameters.find ("ALL")).second != "YES"))
 		iS.remove ("Memory"); // Reduce the size...
@@ -169,12 +181,18 @@ MCHEmul::CPUSimpleStatusCommand::CPUSimpleStatusCommand ()
 // ---
 void MCHEmul::CPUInfoCommand::executeImpl (MCHEmul::CommandExecuter* cE, MCHEmul::Computer* c, MCHEmul::InfoStructure& rst)
 {
+	if (c == nullptr)
+		return;
+
 	rst.add ("CPU", c -> cpu () -> getInfoStructure ());
 }
 
 // ---
 void MCHEmul::MemoryStatusCommand::executeImpl (MCHEmul::CommandExecuter* cE, MCHEmul::Computer* c, MCHEmul::InfoStructure& rst)
 {
+	if (c == nullptr)
+		return;
+
 	MCHEmul::Address a1 = MCHEmul::Address::fromStr ((*_parameters.begin ()).first);
 	if (_parameters.size () == 2)
 	{
@@ -190,6 +208,9 @@ void MCHEmul::MemoryStatusCommand::executeImpl (MCHEmul::CommandExecuter* cE, MC
 // ---
 void MCHEmul::SetMemoryValueCommand::executeImpl (MCHEmul::CommandExecuter* cE, MCHEmul::Computer* c, MCHEmul::InfoStructure& rst)
 {
+	if (c == nullptr)
+		return;
+
 	MCHEmul::Address a1 = MCHEmul::Address::fromStr ((*_parameters.begin ()).first);
 	MCHEmul::Address a2 = a1;
 	std::vector <MCHEmul::UByte> v;
@@ -211,6 +232,9 @@ void MCHEmul::SetMemoryValueCommand::executeImpl (MCHEmul::CommandExecuter* cE, 
 // ---
 void MCHEmul::StopCPUCommand::executeImpl (MCHEmul::CommandExecuter* cE, MCHEmul::Computer* c, MCHEmul::InfoStructure& rst)
 {
+	if (c == nullptr)
+		return;
+
 	c -> setActionForNextCycle (MCHEmul::Computer::_ACTIONSTOP);
 
 	MCHEmul::CPUStatusCommand ().execute (cE, c, rst);
@@ -219,6 +243,9 @@ void MCHEmul::StopCPUCommand::executeImpl (MCHEmul::CommandExecuter* cE, MCHEmul
 // ---
 void MCHEmul::RunCPUCommand::executeImpl (MCHEmul::CommandExecuter* cE, MCHEmul::Computer* c, MCHEmul::InfoStructure& rst)
 {
+	if (c == nullptr)
+		return;
+
 	if (_parameters.size () == 1)
 		c -> cpu () -> programCounter ().setAddress (MCHEmul::Address::fromStr ((*_parameters.begin ()).first));
 
@@ -230,6 +257,9 @@ void MCHEmul::RunCPUCommand::executeImpl (MCHEmul::CommandExecuter* cE, MCHEmul:
 // ---
 void MCHEmul::NextInstructionCommand::executeImpl (MCHEmul::CommandExecuter* cE, MCHEmul::Computer* c, MCHEmul::InfoStructure& rst)
 {
+	if (c == nullptr)
+		return;
+
 	c -> setActionForNextCycle (MCHEmul::Computer::_ACTIONNEXT);
 
 	// To show status after execution...
@@ -240,6 +270,9 @@ void MCHEmul::NextInstructionCommand::executeImpl (MCHEmul::CommandExecuter* cE,
 // ---
 void MCHEmul::LastIntructionCPUCommand::executeImpl (MCHEmul::CommandExecuter* cE, MCHEmul::Computer* c, MCHEmul::InfoStructure& rst)
 {
+	if (c == nullptr)
+		return;
+
 	rst.add ("INST", c -> cpu () -> lastInstruction () == nullptr 
 		? "-" : c -> cpu () -> lastInstruction () -> asString ());
 }
@@ -247,6 +280,9 @@ void MCHEmul::LastIntructionCPUCommand::executeImpl (MCHEmul::CommandExecuter* c
 // ---
 void MCHEmul::ListOfBreakPointsCommand::executeImpl (MCHEmul::CommandExecuter* cE, MCHEmul::Computer* c, MCHEmul::InfoStructure& rst)
 {
+	if (c == nullptr)
+		return;
+
 	int ct = 0;
 	std::string lst;
 	for (const auto& i : c -> actions ())
@@ -260,6 +296,9 @@ void MCHEmul::ListOfBreakPointsCommand::executeImpl (MCHEmul::CommandExecuter* c
 // ---
 void MCHEmul::SetBreakPointCommand::executeImpl (MCHEmul::CommandExecuter* cE, MCHEmul::Computer* c, MCHEmul::InfoStructure& rst)
 {
+	if (c == nullptr)
+		return;
+
 	for (const auto& i : _parameters)
 		c -> addAction (MCHEmul::Address::fromStr (i.first), MCHEmul::Computer::_ACTIONSTOP);
 }
@@ -267,6 +306,9 @@ void MCHEmul::SetBreakPointCommand::executeImpl (MCHEmul::CommandExecuter* cE, M
 // ---
 void MCHEmul::RemoveBreakPointCommand::executeImpl (MCHEmul::CommandExecuter* cE, MCHEmul::Computer* c, MCHEmul::InfoStructure& rst)
 {
+	if (c == nullptr)
+		return;
+
 	for (const auto& i : _parameters)
 	{
 		MCHEmul::Address bP = MCHEmul::Address::fromStr (i.first);
@@ -278,18 +320,27 @@ void MCHEmul::RemoveBreakPointCommand::executeImpl (MCHEmul::CommandExecuter* cE
 // ---
 void MCHEmul::RemoveAllBreakPointsCommand::executeImpl (MCHEmul::CommandExecuter* cE, MCHEmul::Computer* c, MCHEmul::InfoStructure& rst)
 {
+	if (c == nullptr)
+		return;
+
 	c -> removeAllActions (MCHEmul::Computer::_ACTIONSTOP);
 }
 
 // ---
 void MCHEmul::CPUSpeedCommand::executeImpl (MCHEmul::CommandExecuter* cE, MCHEmul::Computer* c, MCHEmul::InfoStructure& rst)
 {
+	if (c == nullptr)
+		return;
+
 	rst.add ("SPEED", c -> realCyclesPerSecond ());
 }
 
 // ---
 void MCHEmul::LoadBinCommand::executeImpl (MCHEmul::CommandExecuter* cE, MCHEmul::Computer* c, MCHEmul::InfoStructure& rst)
 {
+	if (c == nullptr)
+		return;
+
 	rst.add	("RESULT", c -> loadInto 
 		((*_parameters.begin ()).first, MCHEmul::Address::fromStr ((*++_parameters.begin ()).first)));
 }

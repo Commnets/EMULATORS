@@ -1,19 +1,18 @@
 #include <CONSOLE/Console.hpp>
 #include <CORE/CommandBuilder.hpp>
 #include <fstream>
-#include <sstream>
 
 // ---
-MCHEmul::Console::Console (MCHEmul::Emulator* e,
-		MCHEmul::CommandBuilder* cB, const std::string& cF, std::ostream& oS, size_t cK)
-	: MCHEmul::CommandExecuter (_ID, cB), 
-	  _emulator (e), 
+MCHEmul::Console::Console (MCHEmul::CommandBuilder* cB, 
+		MCHEmul::ConsoleKeys* k, const std::string& cF, std::ostream& oS, size_t cK)
+	: MCHEmul::CommandExecuter (_ID, cB),
+	  _consoleKeys (k),
 	  _outputStream (oS),
 	  _command (""), _lastCommands (), 
 	  _lastCommandPosition (0), _cursorPosition (0),
 	  _commandErrorTxt (""), _commandDoesnExitTxt (""), _welcomeTxt (""), _commandPrompt ("")
 { 
-	assert (_emulator != nullptr); 
+	assert (_consoleKeys != nullptr);
 
 	_commandErrorTxt = "Command can't be executed";
 	_commandDoesnExitTxt = "Command doesn't exist";
@@ -47,12 +46,6 @@ void MCHEmul::Console::run ()
 {
 	bool exit = false;
 
-	/** Print out basic info about the computer managed. */
-	_outputStream << "---- CPU ---" << std::endl
-				  << *_emulator -> computer () -> cpu () << std::endl;
-	_outputStream << "---- STACK -" << std::endl
-				  << *_emulator -> computer () -> memory () -> stack () << std::endl << std::endl;
-
 	/** Start to introduce data!. */
 	std::cout << _welcomeTxt;
 	std::cout << _commandPrompt;
@@ -71,7 +64,7 @@ void MCHEmul::Console::run ()
 		if ((exit = readAndExecuteCommand ()))
 			continue;
 
-		exit = !_emulator -> runCycle ();
+		exit = runPerCycle ();
 	}
 }
 
@@ -110,18 +103,7 @@ bool MCHEmul::Console::readAndExecuteCommand ()
 		_lastCommandPosition = _lastCommands.size (); // One the enters is pressed...it will be the last new element...
 	}
 
-	// LoadPrg is special, as it is related with the emulation and not with the computer...
-	std::string cmdLoad ("LOADPRG");
-	if (_command.find (cmdLoad) != std::string::npos)
-		_outputStream << MCHEmul::FormatterBuilder::instance () ->
-			formatter("CLOADPRG") -> format (loadProgram (_command.substr 
-				(_command.find (cmdLoad) + std::string (cmdLoad).length ()))) << std::endl;
-	else
-	{
-		MCHEmul::Command* cmd = commandBuilder () -> command (_command);
-		if (cmd == nullptr) _outputStream << _command << ":" << _commandDoesnExitTxt << std::endl;
-		else executeCommandNow (cmd, _emulator -> computer ());
-	}
+	createAndExecuteCommand ();
 
 	// The comand has not to be destroyed
 	// The command builder own all off them...
@@ -146,7 +128,7 @@ bool MCHEmul::Console::readCommand ()
 	bool result = false;
 
 	char chr;
-	if (readChar (chr))
+	if (_consoleKeys -> readKey (chr))
 	{
 		size_t oPos = _cursorPosition;
 
@@ -157,17 +139,17 @@ bool MCHEmul::Console::readCommand ()
 
 		switch (chr)
 		{
-			case _LEFTKEY:
+			case MCHEmul::ConsoleKeys::_LEFTKEY:
 				if (_cursorPosition != 0) 
 					_cursorPosition--;
 				break;
 
-			case _RIGHTKEY:
+			case MCHEmul::ConsoleKeys::_RIGHTKEY:
 				if (_cursorPosition < _command.length ()) 
 					_cursorPosition++;
 				break;
 
-			case _UPKEY:
+			case MCHEmul::ConsoleKeys::_UPKEY:
 				if (_lastCommandPosition > 0)
 				{ 
 					delCurrentCommand ();
@@ -177,7 +159,7 @@ bool MCHEmul::Console::readCommand ()
 
 				break;
 
-			case _DOWNKEY:
+			case MCHEmul::ConsoleKeys::_DOWNKEY:
 				if (_lastCommandPosition < (_lastCommands.size () - 1))
 				{
 					delCurrentCommand ();
@@ -187,7 +169,7 @@ bool MCHEmul::Console::readCommand ()
 
 				break;
 
-			case _BACKKEY:
+			case MCHEmul::ConsoleKeys::_BACKKEY:
 				if (_cursorPosition != 0)
 				{
 					_command = _command.substr (0, _cursorPosition - 1) + _command.substr (_cursorPosition);
@@ -197,20 +179,20 @@ bool MCHEmul::Console::readCommand ()
 
 				break;
 
-			case _DELETEKEY:
+			case MCHEmul::ConsoleKeys::_DELETEKEY:
 				if (_cursorPosition != _command.length ())
 					_command = _command.substr (0, _cursorPosition) + _command.substr (_cursorPosition + 1);
 				break;
 
-			case _ENTERKEY:
+			case MCHEmul::ConsoleKeys::_ENTERKEY:
 				result = true;
 				break;
 
-			case _BEGINKEY:
+			case MCHEmul::ConsoleKeys::_BEGINKEY:
 				_cursorPosition = 0;
 				break;
 
-			case _ENDKEY:
+			case MCHEmul::ConsoleKeys::_ENDKEY:
 				_cursorPosition = _command.length ();
 				break;
 
@@ -246,106 +228,4 @@ void MCHEmul::Console::manageAnswer (MCHEmul::Command* c, const MCHEmul::InfoStr
 void MCHEmul::Console::manageErrorInExecution (MCHEmul::Command* c, const MCHEmul::InfoStructure& rst)
 {
 	_outputStream << _command << ":" << _commandErrorTxt << std::endl;
-}
-
-#ifdef _WIN32
-#include <conio.h>
-// ---
-bool MCHEmul::Win32Console::readChar (char& chr) const
-{ 
-	bool result = false;
-	if (result = (_kbhit () != 0))
-	{
-		int k = _getch ();
-		if (k == 0 || k == 0xe0)
-			k += _getch ();
-
-		switch (k)
-		{
-			case 299:
-				chr = _LEFTKEY;
-				break;
-
-			case 301:
-				chr = _RIGHTKEY;
-				break;
-
-			case 296:
-				chr = _UPKEY;
-				break;
-
-			case 304:
-				chr = _DOWNKEY;
-				break;
-
-			case 13:
-				chr = _ENTERKEY;
-				break;
-
-			case 8:
-				chr = _BACKKEY;
-				break;
-
-			case 307:
-				chr = _DELETEKEY;
-				break;
-
-			case 295:
-				chr = _BEGINKEY;
-				break;
-
-			case 303:
-				chr = _ENDKEY;
-				break;
-
-			default:
-				chr = static_cast <char> (k);
-		}
-	}
-
-	return (result); 
-}
-#endif
-
-// ---
-MCHEmul::InfoStructure MCHEmul::Console::loadProgram (const std::string& nP) const
-{
-	MCHEmul::Assembler::Errors e;
-	MCHEmul::Assembler::ByteCode cL = _emulator -> loadProgram (nP, e);
-
-	MCHEmul::InfoStructure result;
-
-	bool fL = true;
-	std::string ln;
-	std::stringstream ss; 
-	if (!e.empty ())
-	{
-		for (const auto& i : e)
-		{
-			std::stringstream ss; ss << i;
-			ln += (fL ? "" : "\n") + ss.str();
-
-			fL = false;
-		}
-
-		result.add ("CODE", std::string ("No code loaded"));
-		result.add ("ERRORS", ln);
-	}
-	else
-	{
-		_emulator -> computer () -> setActionForNextCycle(MCHEmul::Computer::_ACTIONSTOP);
-
-		for (const auto& i : cL._lines)
-		{
-			ss << i;
-			ln += (fL ? "" : "\n") + ss.str();
-
-			fL = false;
-		}
-
-		result.add ("CODE", ln);
-		result.add ("ERRORS", std::string ("No errors"));
-	}
-
-	return (result);
 }

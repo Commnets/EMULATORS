@@ -49,6 +49,10 @@ namespace MCHEmul
 		virtual ~CommunicationSystem ()
 							{ delete (_communicationChannel); }
 
+		/** Just to send a message. */
+		bool send (const std::string& str, const IPAddress& to)
+							{ return (_communicationChannel -> send (str, to)); }
+
 		// Managing the life cycle of the communication system...
 		// If something happens the variable _lastError sets to something different than _NOERROR...
 		virtual bool initialize ()
@@ -58,11 +62,11 @@ namespace MCHEmul
 		virtual bool finalize ()
 							{ return (_communicationChannel -> finalize ()); }
 
-		bool error () const
+		unsigned int error () const
 							{ return (_communicationChannel -> lastError ()); }
 
 		bool operator ! () const
-							{ return (!_communicationChannel); }
+							{ return (_error != _NOERROR); }
 
 		protected:
 		virtual void manageAnswer (Command *c, const InfoStructure& rst) override;

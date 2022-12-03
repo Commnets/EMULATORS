@@ -6,6 +6,10 @@ bool MCHEmul::CommunicationSystem::processMessagesOn (MCHEmul::Computer* c)
 {
 	MCHEmul::CommandExecuter::executePendingCommands ();
 
+	/** Before processing new messages, the old ones have to be sent. */
+	if (!_communicationChannel -> sendPendingMessages ())
+		return (false);
+
 	assert (c != nullptr);
 
 	// The system hasn't been initialized well!
@@ -16,7 +20,7 @@ bool MCHEmul::CommunicationSystem::processMessagesOn (MCHEmul::Computer* c)
 
 	// Error receiving new messages?
 	if (!_communicationChannel -> receive (str, _lastSender /** To store ho send the message. */))
-		return (false); 
+		return (false);
 
 	// Nothing in the content received
 	if (str == "")

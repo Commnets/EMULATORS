@@ -112,6 +112,7 @@ bool MCHEmul::Computer::initialize ()
 
 	_status = _STATUSRUNNING;
 	_actionForNextCycle = _ACTIONNOTHING;
+	_lastAction = _ACTIONNOTHING;
 
 	return (true);
 }
@@ -123,6 +124,9 @@ bool MCHEmul::Computer::run ()
 
 	_exit = false;
 	_lastError = MCHEmul::_NOERROR;
+	_status = _STATUSRUNNING;
+	_actionForNextCycle = _ACTIONNOTHING;
+	_lastAction = _ACTIONNOTHING;
 
 	startsComputerClock ();
 

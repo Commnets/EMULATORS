@@ -28,7 +28,7 @@ namespace MCHEmul
 
 		IPAddress (unsigned char a, unsigned char b, unsigned char c, unsigned char d, unsigned short p)
 			: _a (a), _b (b), _c (c), _d (d), _port (p), _error (false)
-						{ assert (_a <= 0xff && _b <= 0xff && _c < 0xff && _port <= 0xfff); }
+						{ assert (_a <= 0xff && _b <= 0xff && _c < 0xff && _port <= 0xffff); }
 
 		IPAddress (const std::string& ip);
 

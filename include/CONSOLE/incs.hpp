@@ -14,6 +14,9 @@
 #ifndef __CONSOLE_INCS__
 #define __CONSOLE_INCS__
 
+#include <CONSOLE/ConsoleKeys.hpp>
 #include <CONSOLE/Console.hpp>
+#include <CONSOLE/LocalConsole.hpp>
+#include <CONSOLE/RemoteConsole.hpp>
 
 #endif

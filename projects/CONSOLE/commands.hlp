@@ -83,13 +83,3 @@ No parameters are needed.
 To load a binary set of data from a file into an address.
 Two parameters are needed. The first is the file to load, 
 and the other is the address where to load that info.
-#Specific commands for C64
-;VICII
-To know the status of the VICII chip, including raster and others.
-No parameters needed.
-;CIA1
-To know the status of the CIA1 chip.
-No parameters needed.
-;CIA2
-To know the status of the CIA2 chip.
-No parameters needed.

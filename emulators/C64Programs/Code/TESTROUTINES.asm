@@ -18,7 +18,7 @@ BASE = $c000
 BYTES $4f $77 $50 $65 $6a $4c $6f $7a
 CHARSDEF					= $ca00
 * = $ca10
-BYTES $89 $87 $8e $81 $83 $89 $8f $57 $83 $85 $81 $57 $57 $57 $57 $57
+BYTES $a0 $a0 $89 $87 $8e $81 $83 $89 $8f $a0 $83 $85 $81 $a0 $a0 $a0
 TEXTDEF						= $ca10
 
 * = $cb00
@@ -87,13 +87,39 @@ TEXTEXAMPLEIN:				lda #>TEXTDEF
 							sta DRAWTEXT_TEXTHIGHVAR
 							lda #$10								; Text length.
 							sta DRAWTEXT_TEXTLENVAR
-							lda #$fb								; Pos X.
+							lda #$f0								; Pos X.
 							sta DRAWTEXT_XPOSVAR
 							lda #$09								; Pos Y.
 							sta DRAWTEXT_YPOSVAR
 							lda #$07								; Yellow.
 							sta DRAWTEXT_COLORVAR
 							jsr DRAWTEXTIN
+
+; Test to draw a text crossing the screen (horizontal)...
+TEXTEXAMPLEMOVE:			lda #>TEXTDEF
+							sta DRAWTEXT_TEXTLOWVAR
+							lda #<TEXTDEF
+							sta DRAWTEXT_TEXTHIGHVAR
+							lda #$10								; Text length.
+							sta DRAWTEXT_TEXTLENVAR
+							lda #$0a								; Pos Y.
+							sta DRAWTEXT_YPOSVAR
+							lda #$08								; Orange.
+							sta DRAWTEXT_COLORVAR
+							ldx #$f0								; Starting Pos X.
+TEXTEXAMPLEMOVELOOP:		stx DRAWTEXT_XPOSVAR
+							txa
+							pha
+							jsr DRAWTEXTIN
+							ldx #$00								; Just a delay...
+							ldy #$10
+							jsr DELAY
+							pla
+							tax
+							inx
+							cpx #$28
+							bmi TEXTEXAMPLEMOVELOOP
+							jmp TEXTEXAMPLEMOVE
 
 FOREVER:					jmp FOREVER								; For ever...
 

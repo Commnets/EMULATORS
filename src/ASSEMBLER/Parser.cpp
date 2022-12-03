@@ -3,6 +3,8 @@
 #include <algorithm>
 #include <functional>
 
+const std::string MCHEmul::Assembler::BinaryDefinitionParser::_DEFVALUE = "";
+
 // ---
 void MCHEmul::Assembler::ParserContext::actualizeGlobalParametersFrom (const MCHEmul::Assembler::ParserContext& pC)
 {
@@ -224,6 +226,72 @@ void MCHEmul::Assembler::BytesCommandParser::parse (MCHEmul::Assembler::ParserCo
 }
 
 // ---
+void MCHEmul::Assembler::BinaryDefinitionParser::parse (MCHEmul::Assembler::ParserContext* pC) const
+{
+	if (!canParse (pC))
+	{
+		pC -> _currentLine = "";
+
+		return; // It doesn't generate error, but "forgets" the line
+	}
+
+	size_t eL = MCHEmul::firstSpaceIn (pC -> _currentLine); // The first space like defines where the data really starts...
+	pC -> _currentLineNumber++;
+	MCHEmul::Strings defs = MCHEmul::getElementsFrom (pC -> _currentLine.substr (eL + 1,
+		pC -> _currentLine.find (parser () -> commentSymbol () /** Until a potential comment. */) - (eL + 1)), ' ');
+	for (const auto& i : defs)
+	{	
+		std::string def = MCHEmul::trim (i);
+		size_t ePos = def.find ('=');
+		if (ePos != std::string::npos)
+		{
+			std::string chr = def.substr (0, ePos);
+			std::string value = def.substr (ePos + 1);
+			if (chr.length () == 1 && std::find_if (value.begin (), value.end (), 
+				[](char c) -> bool { return (c != '1' && c != '0'); }) == value.end ())
+				_definitionMap.insert (MCHEmul::Assembler::BinaryDefinitionParser::DefMap::value_type (chr [0], value));
+			else
+				pC -> _errors.push_back (MCHEmul::Assembler::Error 
+					(MCHEmul::Assembler::ErrorType::_MACROBADDEFINED, pC -> _file, pC -> _currentLineNumber, 0, def));
+		}
+	}
+
+	// The line is completed...
+	pC -> _currentLine = "";
+}
+
+// ---
+void MCHEmul::Assembler::BinaryCommandParser::parse (MCHEmul::Assembler::ParserContext* pC) const
+{
+	if (!canParse (pC))
+	{
+		pC -> _currentLine = "";
+
+		return; // It doesn't generate error, but "forgets" the line
+	}
+
+	size_t eL = MCHEmul::firstSpaceIn (pC -> _currentLine); // The first space like defines where the data starts...
+	MCHEmul::Assembler::BytesInMemoryElement* nE = new MCHEmul::Assembler::BytesInMemoryElement;
+	nE -> _id = pC -> _lastBytesId++; // Sequential...
+	nE -> _line = pC -> _currentLineNumber;
+	std::string dt = MCHEmul::noSpaces (pC -> _currentLine.substr (eL));
+	for (size_t i = 0; i < dt.length (); i++)
+		if (dt [i] != '0' && dt [i] != '1') // Other thing than an 0 or an 1, should be managed by a definition...
+			dt = dt.substr (0, i) + 
+				 ((_definitionParser != nullptr) ? _definitionParser -> definitionFor (dt [i]) : "0") +
+				 dt.substr (i + 1);
+	nE -> _elements = (dt == "") ? MCHEmul::Strings () : MCHEmul::Strings({ dt });
+	if (nE -> _elements.empty ())
+		nE -> _error = MCHEmul::Assembler::ErrorType::_BYTESNOTVALID;
+
+	// The element created is added to the gramatic...
+	pC -> _semantic -> addGrammaticalElement (nE);
+
+	// The line is completed...
+	pC -> _currentLine = "";
+}
+
+// ---
 bool MCHEmul::Assembler::InstructionCommandParser::canParse (MCHEmul::Assembler::ParserContext* pC) const
 {
 	std::string cL = MCHEmul::trim 
@@ -286,9 +354,13 @@ MCHEmul::Assembler::Parser::Parser (const MCHEmul::CPU* c, const MCHEmul::Assemb
 	assert (_cpu != nullptr);
 
 	bool cP = false;
+	MCHEmul::Assembler::BinaryDefinitionParser* bD = nullptr;
+	MCHEmul::Assembler::BinaryCommandParser* bP = nullptr;
 	for (auto i : _commandParsers) 
 	{ 
 		cP |= (dynamic_cast <MCHEmul::Assembler::CommentCommandParser*> (i) != nullptr);
+		if (bD == nullptr) bD = dynamic_cast <MCHEmul::Assembler::BinaryDefinitionParser*> (i); // Get the first if any...
+		if (bP == nullptr) bP = dynamic_cast <MCHEmul::Assembler::BinaryCommandParser*> (i); // Get the first if any...
 
 		i -> setCPU (c);
 		i -> setParser (this); 
@@ -297,6 +369,9 @@ MCHEmul::Assembler::Parser::Parser (const MCHEmul::CPU* c, const MCHEmul::Assemb
 	// The comment command parser is always mandatory...
 	if (!cP)
 		_commandParsers.push_back (new MCHEmul::Assembler::CommentCommandParser ());
+	// The binary definition parser could be or not, but if it is it has to be linked to the binary command parser...
+	if (bD != nullptr && bP != nullptr)
+		bP -> setDefinitionParser (bD);
 }
 
 // ---

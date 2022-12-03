@@ -96,6 +96,17 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "C64EmulatorC", "emulators\C
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "C64Programs", "C64Programs", "{BC7BFE65-0F19-4EB9-914F-67B7BC21FBC4}"
+	ProjectSection(SolutionItems) = preProject
+		emulators\C64Programs\Code\RCOPYCHARSET.asm = emulators\C64Programs\Code\RCOPYCHARSET.asm
+		emulators\C64Programs\Code\RGENERAL.asm = emulators\C64Programs\Code\RGENERAL.asm
+		emulators\C64Programs\Code\RGRAPHICS.asm = emulators\C64Programs\Code\RGRAPHICS.asm
+		emulators\C64Programs\Code\RSCREENBOX.asm = emulators\C64Programs\Code\RSCREENBOX.asm
+		emulators\C64Programs\Code\RSCREENCLEAR.asm = emulators\C64Programs\Code\RSCREENCLEAR.asm
+		emulators\C64Programs\Code\RSCREENRECT.asm = emulators\C64Programs\Code\RSCREENRECT.asm
+		emulators\C64Programs\Code\RSCREENTEXT.asm = emulators\C64Programs\Code\RSCREENTEXT.asm
+		emulators\C64Programs\Code\RSPRITES.asm = emulators\C64Programs\Code\RSPRITES.asm
+		emulators\C64Programs\Code\TESTROUTINES.asm = emulators\C64Programs\Code\TESTROUTINES.asm
+	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "C64", "C64", "{CB7D0793-14E8-492E-8620-DBE966D6AA14}"
 EndProject
@@ -115,18 +126,17 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Examples_1", "Examples_1", 
 		emulators\C64Programs\Examples_1\text5.asm = emulators\C64Programs\Examples_1\text5.asm
 	EndProjectSection
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Examples_2", "Examples_2", "{3F4F526E-7410-4F41-8B41-63F7058A371E}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "General", "General", "{AA0DD703-5C11-4DE4-87FE-02BEF245FE66}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Test", "Test", "{B77308BD-D77E-42AE-9A76-F99FD0641DBA}"
-	ProjectSection(SolutionItems) = preProject
-		emulators\C64Programs\Code\RGENERAL.asm = emulators\C64Programs\Code\RGENERAL.asm
-		emulators\C64Programs\Code\RGRAPHICS.asm = emulators\C64Programs\Code\RGRAPHICS.asm
-		emulators\C64Programs\Code\RSCREENBOX.asm = emulators\C64Programs\Code\RSCREENBOX.asm
-		emulators\C64Programs\Code\RSCREENCLEAR.asm = emulators\C64Programs\Code\RSCREENCLEAR.asm
-		emulators\C64Programs\Code\RSCREENRECT.asm = emulators\C64Programs\Code\RSCREENRECT.asm
-		emulators\C64Programs\Code\RSCREENTEXT.asm = emulators\C64Programs\Code\RSCREENTEXT.asm
-		emulators\C64Programs\Code\RSPRITES.asm = emulators\C64Programs\Code\RSPRITES.asm
-		emulators\C64Programs\Code\TESTROUTINES.asm = emulators\C64Programs\Code\TESTROUTINES.asm
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Monitors", "Monitors", "{B6B8F9F7-9FCC-4811-8A0A-D88A40250BE1}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "RConsole", "monitors\RConsole\RConsole.vcxproj", "{650026B3-1AF8-42FB-B520-0B94239CF962}"
+	ProjectSection(ProjectDependencies) = postProject
+		{7A1FE01C-F361-46AD-A385-A59EE5B334C3} = {7A1FE01C-F361-46AD-A385-A59EE5B334C3}
+		{7E7B88C4-4311-4F96-8383-13E07653686D} = {7E7B88C4-4311-4F96-8383-13E07653686D}
+		{8388FEAA-CDFA-430C-945D-5272AB6D3980} = {8388FEAA-CDFA-430C-945D-5272AB6D3980}
+		{A1F7489E-B003-4566-A81F-BFF6AF321BF1} = {A1F7489E-B003-4566-A81F-BFF6AF321BF1}
+		{EFD64A1D-6D9A-4716-BE18-84899483977F} = {EFD64A1D-6D9A-4716-BE18-84899483977F}
 	EndProjectSection
 EndProject
 Global
@@ -225,6 +235,14 @@ Global
 		{AF53DEDC-F49D-447A-8B2F-F5DBE93F6EB7}.Release|x64.Build.0 = Release|x64
 		{AF53DEDC-F49D-447A-8B2F-F5DBE93F6EB7}.Release|x86.ActiveCfg = Release|Win32
 		{AF53DEDC-F49D-447A-8B2F-F5DBE93F6EB7}.Release|x86.Build.0 = Release|Win32
+		{650026B3-1AF8-42FB-B520-0B94239CF962}.Debug|x64.ActiveCfg = Debug|x64
+		{650026B3-1AF8-42FB-B520-0B94239CF962}.Debug|x64.Build.0 = Debug|x64
+		{650026B3-1AF8-42FB-B520-0B94239CF962}.Debug|x86.ActiveCfg = Debug|Win32
+		{650026B3-1AF8-42FB-B520-0B94239CF962}.Debug|x86.Build.0 = Debug|Win32
+		{650026B3-1AF8-42FB-B520-0B94239CF962}.Release|x64.ActiveCfg = Release|x64
+		{650026B3-1AF8-42FB-B520-0B94239CF962}.Release|x64.Build.0 = Release|x64
+		{650026B3-1AF8-42FB-B520-0B94239CF962}.Release|x86.ActiveCfg = Release|Win32
+		{650026B3-1AF8-42FB-B520-0B94239CF962}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -248,9 +266,9 @@ Global
 		{AF53DEDC-F49D-447A-8B2F-F5DBE93F6EB7} = {CB7D0793-14E8-492E-8620-DBE966D6AA14}
 		{BC7BFE65-0F19-4EB9-914F-67B7BC21FBC4} = {CB7D0793-14E8-492E-8620-DBE966D6AA14}
 		{CB7D0793-14E8-492E-8620-DBE966D6AA14} = {33618513-AA35-4A8C-BB0B-98DD4013748D}
-		{C6BB96CB-83B8-4F1E-B49D-A57EC2DC439F} = {B77308BD-D77E-42AE-9A76-F99FD0641DBA}
-		{3F4F526E-7410-4F41-8B41-63F7058A371E} = {B77308BD-D77E-42AE-9A76-F99FD0641DBA}
-		{B77308BD-D77E-42AE-9A76-F99FD0641DBA} = {BC7BFE65-0F19-4EB9-914F-67B7BC21FBC4}
+		{C6BB96CB-83B8-4F1E-B49D-A57EC2DC439F} = {BC7BFE65-0F19-4EB9-914F-67B7BC21FBC4}
+		{AA0DD703-5C11-4DE4-87FE-02BEF245FE66} = {33618513-AA35-4A8C-BB0B-98DD4013748D}
+		{650026B3-1AF8-42FB-B520-0B94239CF962} = {B6B8F9F7-9FCC-4811-8A0A-D88A40250BE1}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {07C45180-3599-4E00-9578-FBB4B9BDDC3E}

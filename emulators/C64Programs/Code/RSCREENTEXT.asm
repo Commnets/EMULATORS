@@ -71,17 +71,19 @@ DRAWTEXTIN:					lda DRAWTEXT_TEXTLOWVAR				; First of all, saves the data that m
 							bmi	DRAWTEXTIN_XPOSNEG				; The text starts before the beginning of the visible zone (very left), but it could still end up within the visible zone...
 							cmp #$28
 							bpl DRAWTEXTIN_RTS					; The text is out of the visible zone (very right) so nothing else to do...
-DRAWTEXTIN_XPOSPOS:			clc									; The text starts in the visibe zone, but what about the end?
+							clc									; The text starts in the visibe zone, but what about the end?
 							adc DRAWTEXT_TEXTLENVAR
-							cmp #$28
+DRAWTEXTIN_XPOSPOS:			cmp #$28
 							bmi DRAWTEXTIN_DRAW					; The end is also witin the visible zone so time to draw, evrything now is in...
 							sec									; It is not so the length has to be adjusted (reduced)...
-							sbc #$28
-							sta DRAWTEXT_TEXTLENVAR
+							lda #$28
+							sbc DRAWTEXT_XPOSVAR
+							sta DRAWTEXT_TEXTLENVAR				; The length of the text is reduced!
 							jmp DRAWTEXTIN_DRAW					; Now everything is fine. Time to draw.
 DRAWTEXTIN_XPOSNEG:			clc									; The beginning of the text if out of the visible zone (very left), but what about the end? is it in?
 							adc DRAWTEXT_TEXTLENVAR
 							bmi DRAWTEXTIN_RTS					; The end is also out of the visible zone so nothing else to do...
+							beq DRAWTEXTIN_RTS					; The 0 is also not vivile...
 							sta TEMP00_DATA						; The number of characters in the visible zone changes...It is temporary stored...
 							sec
 							lda DRAWTEXT_TEXTLENVAR
@@ -93,6 +95,8 @@ DRAWTEXTIN_XPOSNEG:			clc									; The beginning of the text if out of the visi
 							inc DRAWTEXT_TEXTHIGHVAR			; The address of the data has jumped to another page...
 DRAWTEXTIN_TEXTLENADJ:		lda TEMP00_DATA						; The temporal data is now the real length.
 							sta DRAWTEXT_TEXTLENVAR
+							lda #$00
+							sta DRAWTEXT_XPOSVAR
 							jmp DRAWTEXTIN_XPOSPOS				; Time to see whether the end is still in or has to be also adjusted
 DRAWTEXTIN_DRAW:			jsr DRAWTEXT
 DRAWTEXTIN_RTS:				pla

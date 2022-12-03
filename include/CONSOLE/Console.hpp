@@ -15,6 +15,7 @@
 #define __MCHEMUL_CONSOLE__
 
 #include <EMULATORS/incs.hpp>
+#include <CONSOLE/ConsoleKeys.hpp>
 
 namespace MCHEmul
 {
@@ -29,8 +30,8 @@ namespace MCHEmul
 
 		/**
 		  * The constructor reveives: \n
-		  * @param e	The emulator on top of which this console works. \n
 		  * @param cB	The builder used to built up the command introduced throught the console. \n
+		  * @param k	The Class amanaging the console keys (will depend on the OS). \n
 		  * @param cF	A file where the messages, prompt type and other of the console are defined. \n
 		  *				The structure of this file is: \n
 		  *				#... line meaning a comment and not taken into account. \n
@@ -40,12 +41,15 @@ namespace MCHEmul
 		  *				Rest of the lines, with the welcome mesage. \n
 		  *				Blank lines are taking into account.
 		  * @param oS	A reference to the ostream where to send any message. \n
-		  * @param cK	Number of commands kept. It can be greater than 255.
+		  * @param cK	Number of commands kept. It cannot be greater than 255.
 		  */
-		Console (Emulator* e, CommandBuilder* cB,
+		Console (CommandBuilder* cB, ConsoleKeys* k,
 			const std::string& cF = "./console.def", std::ostream& oS = std::cout, size_t cK = 100);
 
 		Console (const Console&) = delete;
+
+		virtual ~Console ()
+							{ delete (_consoleKeys); }
 
 		Console& operator = (const Console&) = delete;
 
@@ -55,46 +59,33 @@ namespace MCHEmul
 		void setMaxCommandsKept (size_t mC)
 							{ if (mC <= 255) _maxCommandsKept = mC; }
 
-		void run ();
+		virtual void run ();
 
 		protected:
 		// Managing commands...
 		/** Read and execute the commands if any. \n
 			This method uses readCommand one. \n
+			This method also uses createAndExecuteCommand. \n
 			Returns true when the command execute is QUIT, and false in other circusntance. */
 		bool readAndExecuteCommand ();
 		/** Returns true when a instruction is ready to be executed and false in other case. */
 		bool readCommand ();
+		/** And execute the command. 
+			It must be overloaded depending omn the type of Console. */
+		virtual void createAndExecuteCommand () = 0;
+
+		/** Run things per cycle. \n
+			It is and "exit" door for simulations. 
+			It returns true if after the execution, the run loop has to finish. */
+		virtual bool runPerCycle () = 0;
 
 		/** Just print out the answer (method comming from the CommandExecuter class). */
 		virtual void manageAnswer (Command* c, const InfoStructure& rst) override;
 		/** Just print out the error. */
 		virtual void manageErrorInExecution (Command* c, const InfoStructure& rst) override;
 
-		/** Standard characters managed by the system.
-			The console is always inserting characters. */
-		static const char _RIGHTKEY = -1; // Cursor right
-		static const char _LEFTKEY = -2; // Cursor left
-		static const char _UPKEY = -3; // To recover previous instructions
-		static const char _DOWNKEY = -4; // To recover next instructions
-		static const char _ENTERKEY = -5; // Execute
-		static const char _DELETEKEY = -6; // Del the char selected and maintains the position
-		static const char _BACKKEY = -7; // Del the char before the selected position and move into that
-		static const char _ENDKEY = -8; // Go to the end of the line
-		static const char _BEGINKEY = -9; // Go to the beginning of the line
-
-		/** The way a character is read from the console is different depending on the OS. \n
-			The method returns true when a char is read and false in other case. \n
-			The internal variable chr holds the char code read if any!. \n
-			This method has to manage also the special characters. */
-		virtual bool readChar (char& chr) const = 0;
-
-		/** To load a program.
-			This is avery special command, using the one defined inthe emulator behind. */
-		InfoStructure loadProgram (const std::string& nP) const;
-
 		protected:
-		Emulator* _emulator;
+		ConsoleKeys* _consoleKeys;
 		std::ostream& _outputStream;
 		size_t _maxCommandsKept;
 
@@ -110,20 +101,6 @@ namespace MCHEmul
 		std::string _welcomeTxt;
 		std::string _commandPrompt;
 	};
-
-#ifdef _WIN32
-	/** A expecial class for W32 systems. */
-	class Win32Console final : public Console
-	{
-		public:
-		Win32Console (Emulator* e, CommandBuilder* cB)
-			: Console (e, cB)
-							{ }
-
-		protected:
-		virtual bool readChar (char& chr) const override;
-	};
-#endif
 }
 
 #endif

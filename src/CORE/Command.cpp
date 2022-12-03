@@ -4,9 +4,11 @@
 // ---
 bool MCHEmul::Command::execute (MCHEmul::CommandExecuter* cE, MCHEmul::Computer* c, MCHEmul::InfoStructure& rst)
 {
-	// "cE" can be null, 
+	// "cE" can be null
 	// but take take when a instruction inject an answer into the executer...
-	if (c == nullptr || !canBeExecuted ())
+	// Also the "c" can be null as some commands (the local ones) might not need a computer behind!
+	// Checj everything at command level!
+	if (!canBeExecuted ())
 		return (false);
 
 	executeImpl (cE, c, rst);
@@ -36,4 +38,3 @@ bool MCHEmul::ComplexCommand::execute (MCHEmul::CommandExecuter* cE, MCHEmul::Co
 
 	return (result);
 }
-

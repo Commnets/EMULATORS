@@ -170,10 +170,16 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="..\..\include\CONSOLE\Console.hpp" />
+    <ClInclude Include="..\..\include\CONSOLE\ConsoleKeys.hpp" />
     <ClInclude Include="..\..\include\CONSOLE\incs.hpp" />
+    <ClInclude Include="..\..\include\CONSOLE\LocalConsole.hpp" />
+    <ClInclude Include="..\..\include\CONSOLE\RemoteConsole.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\CONSOLE\Console.cpp" />
+    <ClCompile Include="..\..\src\CONSOLE\ConsoleKeys.cpp" />
+    <ClCompile Include="..\..\src\CONSOLE\LocalConsole.cpp" />
+    <ClCompile Include="..\..\src\CONSOLE\RemoteConsole.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="conformatters.fmt">

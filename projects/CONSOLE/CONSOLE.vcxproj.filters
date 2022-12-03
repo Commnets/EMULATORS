@@ -24,9 +24,27 @@
     <ClInclude Include="..\..\include\CONSOLE\incs.hpp">
       <Filter>Archivos de encabezado</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\include\CONSOLE\ConsoleKeys.hpp">
+      <Filter>Archivos de encabezado</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\CONSOLE\RemoteConsole.hpp">
+      <Filter>Archivos de encabezado</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\CONSOLE\LocalConsole.hpp">
+      <Filter>Archivos de encabezado</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\CONSOLE\Console.cpp">
+      <Filter>Archivos de origen</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\CONSOLE\ConsoleKeys.cpp">
+      <Filter>Archivos de origen</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\CONSOLE\RemoteConsole.cpp">
+      <Filter>Archivos de origen</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\CONSOLE\LocalConsole.cpp">
       <Filter>Archivos de origen</Filter>
     </ClCompile>
   </ItemGroup>

@@ -280,7 +280,59 @@ namespace MCHEmul
 			virtual void parse (ParserContext* pC) const override;
 		};
 
-		/** To parser a definition of pixels. */
+		/** To parser a binary definition. \n
+			In a binary data chars to group set of bits can be used. \n 
+			The binary definition defines how to interprete those chars in terms of bits. \n
+			So a binary parser should need before a binary definition parser. \n
+			If not no chars can matched the binary value is got. \n
+			The structure of the info is like:
+			BINARYDEF A=01 B=10 ...*/
+		class BinaryDefinitionParser final : public CommandParser
+		{
+			public:
+			BinaryDefinitionParser ()
+				: CommandParser ()
+							{ }
+
+			virtual bool canParse (ParserContext* pC) const override
+							{ size_t p = firstSpaceIn (pC -> _currentLine);
+							  return ((p == std::string::npos) 
+								  ? false : upper (trim (pC -> _currentLine.substr (0, p))) == "BINARYDEF"); }
+			virtual void parse (ParserContext* pC) const override;
+
+			const std::string& definitionFor (char c) const
+							{ DefMap::const_iterator i = _definitionMap.find (c);
+							  return ((i == _definitionMap.end ()) ? _DEFVALUE : (*i).second); }
+
+			private:
+			static const std::string _DEFVALUE;
+
+			using DefMap = std::map <char, std::string>;
+			mutable DefMap _definitionMap;
+		};
+
+		/** To parser a binary declaration. \n
+			How the binary declaration works is affected by the binary definitio0n instructions. \n */
+		class BinaryCommandParser final : public CommandParser
+		{
+			public:
+			BinaryCommandParser (BinaryDefinitionParser* dP = nullptr)
+				: CommandParser (),
+				  _definitionParser (dP)
+							{ }
+
+			void setDefinitionParser (BinaryDefinitionParser* bD)
+							{ _definitionParser = bD; }
+
+			virtual bool canParse (ParserContext* pC) const override
+							{ size_t p = firstSpaceIn (pC -> _currentLine);
+							  return ((p == std::string::npos) 
+								  ? false : upper (trim (pC -> _currentLine.substr (0, p))) == "BINARY"); }
+			virtual void parse (ParserContext* pC) const override;
+
+			private:
+			BinaryDefinitionParser* _definitionParser;
+		};
 
 		/** To parser an instruction. */
 		class InstructionCommandParser final : public CommandParser
@@ -306,7 +358,7 @@ namespace MCHEmul
 					{ new CommentCommandParser, new IncludeCommandParser, 
 					  new MacroCommandParser, new CodeTemplateDefinitionCommandParser, new CodeTemplateUseCommandParser,
 					  new StartingPointCommandParser, 
-					  new LabelCommandParser, new BytesCommandParser,
+					  new LabelCommandParser, new BytesCommandParser, new BinaryDefinitionParser, new BinaryCommandParser,
 					  new InstructionCommandParser });
 
 			Parser (Parser&) = delete;

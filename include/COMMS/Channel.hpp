@@ -61,12 +61,22 @@ namespace MCHEmul
 			If the channel with the element required is not open yet, the communication is stored to be send later.
 			@return true is everything went ok. */
 		bool send (const std::string& str, const IPAddress& to);
+		/** Send the pending messages, if any. \n
+		A pending messages is generated when the communication with a target is not opened yet. \n
+		The pennding messages list can be deleted. \n
+		Returns true when all pending messages has been sent and false if not. */
+		bool sendPendingMessages ();
 
 		unsigned int lastError () const
 							{ return (_lastError); }
 
 		bool operator ! () const
 							{ return (_lastError != MCHEmul::_NOERROR); }
+
+		protected:
+		/** To send just now the messages. \n
+			This method is invoked from send and sendPendingMessages. */
+		bool sendRightNow (const std::string& str, const IPAddress& to);
 
 		protected:
 		/** The post this channel is listen at. */
@@ -81,6 +91,31 @@ namespace MCHEmul
 		/** To keep a track of all other channels connected against this one.
 			Usually clients that want to execute actions on it. */
 		mutable unsigned int _lastError;
+
+		// Implementation
+		/** To store the messages pending to be sent. */
+		struct PendingMessage
+		{
+			PendingMessage () = default;
+
+			PendingMessage (const std::string& msg, const IPAddress& to)
+				: _message (msg), _to (to)
+							{ }
+
+			PendingMessage (const PendingMessage&) = default;
+
+			PendingMessage& operator = (const PendingMessage&) = default;
+
+			std::string _message;
+			IPAddress _to;
+		};
+
+		using PendingMessages = std::vector <PendingMessage>;
+		using StatusLinks = std::map <std::string /** The IP as string to look for it quicker. */, bool>;
+		/** The list of pensing messages. */
+		mutable PendingMessages _pendingMessages;
+		/** The status of the connections. */
+		mutable StatusLinks _statusLinks;
 	};
 }
 
