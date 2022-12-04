@@ -10,6 +10,7 @@ MCHEmul::Console::Console (MCHEmul::CommandBuilder* cB,
 	  _outputStream (oS),
 	  _command (""), _lastCommands (), 
 	  _lastCommandPosition (0), _cursorPosition (0),
+	  _consoleHold (false), // The console can be hold for a while...
 	  _commandErrorTxt (""), _commandDoesnExitTxt (""), _welcomeTxt (""), _commandPrompt ("")
 { 
 	assert (_consoleKeys != nullptr);
@@ -50,8 +51,29 @@ void MCHEmul::Console::run ()
 	std::cout << _welcomeTxt;
 	std::cout << _commandPrompt;
 
+	bool lCH = false;
 	while (!exit)
 	{
+		if (exit = runPerCycle ())
+			continue;
+		
+		if (_consoleHold)
+		{ 
+			lCH = true;
+
+			continue;
+		}
+
+		if (lCH == true)
+		{
+			lCH = false;
+			// First time after being hold, the promt hast to be shown!...
+
+			_outputStream << std::endl;
+
+			std::cout << _commandPrompt;
+		}
+
 		if (isPendingCommands ())
 		{
 			if (!MCHEmul::CommandExecuter::executePendingCommands ())
@@ -62,11 +84,21 @@ void MCHEmul::Console::run ()
 			std::cout << _commandPrompt;
 		}
 
-		if ((exit = readAndExecuteCommand ()))
-			continue;
-
-		exit = runPerCycle ();
+		exit = readAndExecuteCommand ();
 	}
+}
+
+// ---
+void MCHEmul::Console::manageAnswer (MCHEmul::Command* c, const MCHEmul::InfoStructure& rst)
+{
+	_outputStream << MCHEmul::FormatterBuilder::instance () ->
+		formatter (c -> name ()) -> format (rst) << std::endl; // It is used the formatter with the name of the command!
+}
+
+// ---
+void MCHEmul::Console::manageErrorInExecution (MCHEmul::Command* c, const MCHEmul::InfoStructure& rst)
+{
+	_outputStream << _command << ":" << _commandErrorTxt << std::endl;
 }
 
 // ---
@@ -114,7 +146,7 @@ bool MCHEmul::Console::readAndExecuteCommand ()
 
 	_command = ""; _cursorPosition = 0;
 
-	if (!isPendingCommands ())
+	if (!isPendingCommands () && !_consoleHold)
 	{ 
 		_outputStream << std::endl;
 
@@ -221,17 +253,4 @@ bool MCHEmul::Console::readCommand ()
 	}
 
 	return (result);
-}
-
-// ---
-void MCHEmul::Console::manageAnswer (MCHEmul::Command* c, const MCHEmul::InfoStructure& rst)
-{
-	_outputStream << MCHEmul::FormatterBuilder::instance () ->
-		formatter (c -> name ()) -> format (rst) << std::endl; // It is used the formatter with the name of the command!
-}
-
-// ---
-void MCHEmul::Console::manageErrorInExecution (MCHEmul::Command* c, const MCHEmul::InfoStructure& rst)
-{
-	_outputStream << _command << ":" << _commandErrorTxt << std::endl;
 }

@@ -12,7 +12,7 @@ bool C64::CIA2::initialize ()
 	if (!(_CIA2Registers = 
 		dynamic_cast <C64::CIA2Registers*> (memoryRef () -> subset (C64::Memory::_CIA2_SUBSET))))
 	{
-		_lastError = MCHEmul::_INIT_ERROR;
+		_error = MCHEmul::_INIT_ERROR;
 
 		return (false);
 	}

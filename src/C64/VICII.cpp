@@ -154,7 +154,7 @@ bool C64::VICII::initialize ()
 	if (!(_VICIIRegisters = 
 		dynamic_cast <C64::VICIIRegisters*> (memoryRef () -> subset (C64::Memory::_VICREGS_SUBSET))))
 	{
-		_lastError = MCHEmul::_INIT_ERROR;
+		_error = MCHEmul::_INIT_ERROR;
 
 		return (false);
 	}

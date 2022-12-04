@@ -67,11 +67,11 @@ namespace MCHEmul
 		Returns true when all pending messages has been sent and false if not. */
 		bool sendPendingMessages ();
 
-		unsigned int lastError () const
-							{ return (_lastError); }
+		unsigned int error () const
+							{ return (_error); }
 
 		bool operator ! () const
-							{ return (_lastError != MCHEmul::_NOERROR); }
+							{ return (_error != MCHEmul::_NOERROR); }
 
 		protected:
 		/** To send just now the messages. \n
@@ -90,7 +90,7 @@ namespace MCHEmul
 		mutable bool _channelInitialized;
 		/** To keep a track of all other channels connected against this one.
 			Usually clients that want to execute actions on it. */
-		mutable unsigned int _lastError;
+		mutable unsigned int _error;
 
 		// Implementation
 		/** To store the messages pending to be sent. */

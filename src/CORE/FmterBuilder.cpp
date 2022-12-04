@@ -10,7 +10,7 @@ std::shared_ptr <MCHEmul::FormatterBuilder> MCHEmul::FormatterBuilder::_instance
 // ---
 MCHEmul::FormatterBuilder::FormatterBuilder (const MCHEmul::Strings& nF)
 	: _defaultFormatFile (""), _formatters ({ }), _defaultFormatter (nullptr), 
-	  _lastError (MCHEmul::_NOERROR),
+	  _error (MCHEmul::_NOERROR),
 	  _linesPerFile ({ })
 {
 	if (_instance != nullptr)
@@ -23,7 +23,7 @@ MCHEmul::FormatterBuilder::FormatterBuilder (const MCHEmul::Strings& nF)
 // ---
 bool MCHEmul::FormatterBuilder::initialize ()
 {
-	if (_lastError != MCHEmul::_NOERROR)
+	if (_error != MCHEmul::_NOERROR)
 		return (false);
 
 	if (!_formatters.empty ())
@@ -48,7 +48,7 @@ bool MCHEmul::FormatterBuilder::initialize ()
 				fmts.insert (std::pair <std::string, std::shared_ptr <MCHEmul::Formatter>> (fmtsN, fmt));
 			}
 			else
-			_lastError = MCHEmul::_FORMATTERNOTVALID_ERROR;
+			_error = MCHEmul::_FORMATTERNOTVALID_ERROR;
 		};
 
 		for (const auto& j : i.second)
@@ -83,7 +83,7 @@ bool MCHEmul::FormatterBuilder::initialize ()
 
 	_linesPerFile = { };
 
-	return (_lastError == MCHEmul::_NOERROR);
+	return (_error == MCHEmul::_NOERROR);
 }
 
 // ---

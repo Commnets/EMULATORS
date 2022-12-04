@@ -475,16 +475,16 @@ namespace MCHEmul
 		/** It can be overloaded later, to set the specific content of specific zones. \n
 			By default only subsets have to be initialized, and all of them become active and also active for reading. */
 		virtual bool initialize ()
-							{ return ((_lastError == MCHEmul::_NOERROR) ? _content.initialize () : false); }
+							{ return ((_error == MCHEmul::_NOERROR) ? _content.initialize () : false); }
 
 		bool loadInto (const std::string& fN, const Address& a)
 							{ return (_activeView -> loadInto (fN, a)); }
 
 		/** To get the last error happend (usually at construction level) */
-		unsigned int lastError () const
-							{ return (_lastError); }
+		unsigned int error () const
+							{ return (_error); }
 		void resetErrors ()
-							{ _lastError = _NOERROR; }
+							{ _error = _NOERROR; }
 
 		/** The info is the same than in the case of the active view (@see MemoryView). */
 		virtual InfoStructure getInfoStructure () const override
@@ -501,7 +501,7 @@ namespace MCHEmul
 		MemoryView* _activeView;
 		mutable Stack* _stack;
 		mutable MemoryView* _cpuView;
-		mutable unsigned int _lastError;
+		mutable unsigned int _error;
 	};
 }
 

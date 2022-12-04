@@ -86,8 +86,8 @@ namespace MCHEmul
 		virtual bool simulate ();
 
 		/** To get the last error happend (after initialize or simulate methods). */
-		unsigned int lastError () const
-							{ return (_lastError); }
+		unsigned int error () const
+							{ return (_error); }
 
 		/**
 		  *	The name of the fields are: \n
@@ -108,7 +108,7 @@ namespace MCHEmul
 		IOPeripherals _peripherals;
 
 		// Implementation
-		mutable unsigned int _lastError;
+		mutable unsigned int _error;
 	};
 
 	/** To simplify the management of a map of devices. */

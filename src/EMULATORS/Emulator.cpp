@@ -24,7 +24,7 @@ MCHEmul::Emulator::Emulator (const MCHEmul::Strings& argv, MCHEmul::Communicatio
 	  _computer (nullptr),
 	  _peripheralBuilder (nullptr),
 	  _running (false),
-	  _lastError (MCHEmul::_NOERROR)
+	  _error (MCHEmul::_NOERROR)
 {
 	static std::map <unsigned char, std::string> _MATCH =
 		{ { _PARAMBYTEFILE, _BYTEFILE },
@@ -49,7 +49,7 @@ MCHEmul::Emulator::Emulator (const MCHEmul::Strings& argv, MCHEmul::Communicatio
 	sdlE += SDL_Init (SDL_INIT_VIDEO);
 	sdlE += SDL_InitSubSystem (SDL_INIT_JOYSTICK);
 	if (sdlE != 0)
-		_lastError = MCHEmul::_INIT_ERROR;
+		_error = MCHEmul::_INIT_ERROR;
 	else
 		SDL_JoystickEventState (SDL_ENABLE);
 }
@@ -103,7 +103,7 @@ MCHEmul::Assembler::ByteCode MCHEmul::Emulator::loadProgram (const std::string& 
 // ---
 bool MCHEmul::Emulator::initialize ()
 {
-	if (_lastError != MCHEmul::_NOERROR)
+	if (_error != MCHEmul::_NOERROR)
 	{
 		std::cout << "The emulator was not well created" << std::endl;
 
@@ -196,7 +196,7 @@ bool MCHEmul::Emulator::run ()
 
 	_running = false;
 
-	return (computer () -> lastError () != MCHEmul::_NOERROR);
+	return (computer () -> error () != MCHEmul::_NOERROR);
 }
 
 // ---

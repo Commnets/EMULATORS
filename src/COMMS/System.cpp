@@ -3,16 +3,27 @@
 #include <COMMS/AnsSysCommand.hpp>
 
 // ---
+bool MCHEmul::CommunicationSystem::initialize ()
+{ 
+	_messageSent = false;
+	_messageReceived = false; 
+	
+	return (_communicationChannel -> initialize ()); 
+}
+
+// ---
 bool MCHEmul::CommunicationSystem::processMessagesOn (MCHEmul::Computer* c)
 {
+	_messageReceived = false;
+
+	// If the system has errors, it cannot process messages...
+	if (!*this)
+		return (false);
+
 	MCHEmul::CommandExecuter::executePendingCommands ();
 
 	/** Before processing new messages, the old ones have to be sent. */
 	if (!_communicationChannel -> sendPendingMessages ())
-		return (false);
-
-	// The system hasn't been initialized well!
-	if (!*this)
 		return (false);
 
 	std::string str;
@@ -25,9 +36,12 @@ bool MCHEmul::CommunicationSystem::processMessagesOn (MCHEmul::Computer* c)
 	if (str == "")
 		return (true); // Nothing received, but executed...
 
+	_messageReceived = true;
+	_messageSent = false;
+
 	// The received command can't be interpreted, 
 	// so an error will be generated...
-	str = MCHEmul::upper (MCHEmul::trim (str));
+	str = MCHEmul::trim (str);
 	MCHEmul::Command* cmd = commandBuilder () -> command (str);
 	if (cmd == nullptr)
 		return (false); 
@@ -45,14 +59,10 @@ void MCHEmul::CommunicationSystem::manageAnswer (MCHEmul::Command* c, const MCHE
 	{
 		if (_commandExecuterForAnswers != nullptr)
 		{
-			MCHEmul::MoveParametersToAnswerCommand* mCmd = dynamic_cast <MCHEmul::MoveParametersToAnswerCommand*>
-				(_commandExecuterForAnswers -> commandBuilder () -> command (MoveParametersToAnswerCommand::_NAME));
-			if (mCmd != nullptr)
-			{
-				mCmd -> setParameters (MCHEmul::Attributes ({ { "RESULT", rst.attribute ("RESULT") } }));
-
-				_commandExecuterForAnswers -> executeCommand (mCmd, nullptr);
-			}
+			MCHEmul::CommsSystemAnswerCommand* cA = static_cast <MCHEmul::CommsSystemAnswerCommand*> (c);
+			MCHEmul::Command* oC = // Try to get the original command to use the right format to print it out!
+				_commandExecuterForAnswers -> commandBuilder () -> command (cA -> lastCommandAnswerReceived ());
+			_commandExecuterForAnswers -> manageAnswer ((oC != nullptr) ? oC : c, rst);
 		}
 		else
 			std::cout << rst << std::endl; // A very last type of exit...
@@ -60,11 +70,16 @@ void MCHEmul::CommunicationSystem::manageAnswer (MCHEmul::Command* c, const MCHE
 	else
 	{
 		if (!rst.empty ())
-		{
-			if (!_communicationChannel -> send (MCHEmul::CommsSystemAnswerCommand::_NAME + " " + 
-				MCHEmul::CommsSystemAnswerCommand::replaceCharsForComms 
-					(FormatterBuilder::instance () -> formatter (_messageFormatter) -> format (rst)), _lastSender))
-				_lastError = MCHEmul::_CHANNELWRITEERROR_ERROR;
-		}
+			if (_communicationChannel -> send 
+				(MCHEmul::CommsSystemAnswerCommand::_NAME + " " + 
+				 // The first parameter is the formatter used...
+				 MCHEmul::CommsSystemAnswerCommand::_PARFORMATTER + "=" + _messageFormatter + " " + 
+				 // The second parameter is the name of the command which answer is being sent,
+				 MCHEmul::CommsSystemAnswerCommand::_PARORIGINALCMMD + "=" + c -> name () + " " + 
+				 // ...and the third parameter is the data itself...
+				 MCHEmul::CommsSystemAnswerCommand::_PARANSWER + "=" + 
+					MCHEmul::CommsSystemAnswerCommand::replaceCharsForComms  
+						(FormatterBuilder::instance () -> formatter (_messageFormatter) -> format (rst)), _lastSender))
+				_messageSent = true;
 	}
 }

@@ -43,7 +43,8 @@ namespace MCHEmul
 			  _communicationChannel (cC),
 			  _messageFormatter (msgFmter),
 			  _commandExecuterForAnswers (nullptr), // No derivation possible...
-			  _error (false), _lastError (MCHEmul::_NOERROR), _lastSender ()
+			  _lastSender (),
+			  _messageReceived (false) // Becomes true when a message is received...
 							{ assert (_communicationChannel != nullptr && 
 									  _commandBuilder != nullptr); }
 
@@ -54,43 +55,60 @@ namespace MCHEmul
 		virtual ~CommunicationSystem ()
 							{ delete (_communicationChannel); }
 
-		/** To derive the answers received, to another CommandExecuter. */
+		/** To know and change the message formatter using to send the answer to messages
+			when this communication system is acting as a CommandExecuter. */
+		const std::string& messageFormatter () const
+							{ return (_messageFormatter); }
+		void setMessageFormatter (const std::string& mF)
+							{ _messageFormatter = mF; }
+
+		/** To derive the answers received, to another CommandExecuter. \n
+			Usually the Communication Systems is part of a "major" CommandExecuter, like a Console. */
 		void deriveAnswerCommandTo (CommandExecuter* cE)
 							{ _commandExecuterForAnswers = cE; }
 
 		/** Just to send a message. */
 		bool send (const std::string& str, const IPAddress& to)
-							{ return (_communicationChannel -> send (str, to)); }
+							{ _messageSent = true; 
+							  return (_communicationChannel -> send (str, to)); }
+		/** Returns true when a message has been sent. */
+		bool messageSent () const
+							{ return (_messageSent); }
 
 		// Managing the life cycle of the communication system...
-		// If something happens the variable _lastError sets to something different than _NOERROR...
-		virtual bool initialize ()
-							{ return (_communicationChannel -> initialize ()); }
+		// If something happens the variable _error sets to something different than _NOERROR...
+		virtual bool initialize ();
 		/** The method returns true when everything was ok and false in other case. */
 		virtual bool processMessagesOn (Computer* c);
+		/** Returns true when a message has just recived after processinf the messages. */
+		bool messageReceived () const
+							{ return (_messageReceived); }
 		virtual bool finalize ()
 							{ return (_communicationChannel -> finalize ()); }
 
+		/** To know whether the system is waiting for an answer. */
+		bool waitingForAnswer () const
+							{ return (_messageSent && !_messageReceived); }
+
 		unsigned int error () const
-							{ return (_communicationChannel -> lastError ()); }
+							{ return (_communicationChannel -> error ()); }
 
 		bool operator ! () const
-							{ return (_error != _NOERROR); }
+							{ return (!*_communicationChannel); }
 
-		protected:
 		virtual void manageAnswer (Command *c, const InfoStructure& rst) override;
 		virtual void manageErrorInExecution (Command* c, const InfoStructure& rst) override
 							{ }
 
 		protected:
 		PeerCommunicationChannel* _communicationChannel;
-		const std::string _messageFormatter;
+		std::string _messageFormatter;
 		CommandExecuter* _commandExecuterForAnswers;
 
 		// Implementation
-		bool _error;
-		unsigned int _lastError;
 		MCHEmul::IPAddress _lastSender;
+		bool _messageSent;
+		bool _messageReceived;
 	};
 }
 

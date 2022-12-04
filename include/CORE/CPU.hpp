@@ -37,7 +37,7 @@ namespace MCHEmul
 			  _architecture (a), _registers (r), _statusRegister (sR), _instructions (ins),
 			  _programCounter (a.numberBytes ()), _memory (nullptr), _interrupts (),
 			  _lastInstruction (nullptr),
-			  _lastError (_NOERROR), _clockCycles (0),
+			  _error (_NOERROR), _clockCycles (0),
 			  _stopped (false)
 							{ assert (_registers.size () > 0 && _instructions.size () > 0); }
 
@@ -121,10 +121,10 @@ namespace MCHEmul
 		bool executeNextInstruction ();
 
 		/** To get the last error happend (after initialize or simulate methods). */
-		unsigned int lastError () const
-							{ return (_lastError); }
+		unsigned int error () const
+							{ return (_error); }
 		void resetErrors ()
-							{ _lastError = _NOERROR; }
+							{ _error = _NOERROR; }
 
 		/**
 		  *	The name of the fields are: \n
@@ -148,7 +148,7 @@ namespace MCHEmul
 		Instruction* _lastInstruction;
 
 		// Implementation
-		unsigned int _lastError;
+		unsigned int _error;
 		unsigned int _clockCycles;
 		bool _stopped; // When the CPU is stopped and no runCycle is executed...
 	};

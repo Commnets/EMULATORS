@@ -24,6 +24,8 @@ bool MCHEmul::RemoteConsole::runPerCycle ()
 	if (!_communicationSystem -> processMessagesOn (nullptr))
 		_outputStream << "Error processing messages" << std::endl;
 
+	setConsoleHold (_communicationSystem -> waitingForAnswer ());
+
 	return (false); // The main loop doesn't finish even if there is processing errors...
 }
 
@@ -52,6 +54,11 @@ void MCHEmul::RemoteConsole::createAndExecuteCommand ()
 		if (!_communicationSystem -> send (_command, _to))
 			_outputStream << "Error sending command:" << _command << " to:" << _to << std::endl;
 		else
+		{ 
+			// The console is hold until the answer comes...
+			setConsoleHold (true);
+
 			_outputStream << _command << " sent to:" << _to << std::endl;
+		}
 	}
 }

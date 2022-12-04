@@ -35,8 +35,8 @@
     <ClCompile Include="..\..\src\CORE\IO.cpp" />
     <ClCompile Include="..\..\src\CORE\IOPBuilder.cpp" />
     <ClCompile Include="..\..\src\CORE\IOPeripheral.cpp" />
+    <ClCompile Include="..\..\src\CORE\JSONFormatter.cpp" />
     <ClCompile Include="..\..\src\CORE\Memory.cpp" />
-    <ClCompile Include="..\..\src\CORE\NillComputer.cpp" />
     <ClCompile Include="..\..\src\CORE\OSIO.cpp" />
     <ClCompile Include="..\..\src\CORE\Screen.cpp" />
     <ClCompile Include="..\..\src\CORE\ScreenMemory.cpp" />
@@ -71,8 +71,8 @@
     <ClInclude Include="..\..\include\CORE\IO.hpp" />
     <ClInclude Include="..\..\include\CORE\IOPBuilder.hpp" />
     <ClInclude Include="..\..\include\CORE\IOPeripheral.hpp" />
+    <ClInclude Include="..\..\include\CORE\JSONFormatter.hpp" />
     <ClInclude Include="..\..\include\CORE\Memory.hpp" />
-    <ClInclude Include="..\..\include\CORE\NillComputer.hpp" />
     <ClInclude Include="..\..\include\CORE\OSIO.hpp" />
     <ClInclude Include="..\..\include\CORE\ProgramCounter.hpp" />
     <ClInclude Include="..\..\include\CORE\Register.hpp" />

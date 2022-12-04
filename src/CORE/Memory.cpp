@@ -355,13 +355,13 @@ MCHEmul::Memory::Memory (const Content& cnt)
 	  _activeView (nullptr),
 	  _stack (nullptr), 
 	  _cpuView (nullptr), 
-	  _lastError (MCHEmul::_NOERROR)
+	  _error (MCHEmul::_NOERROR)
 {
 	// It has to be verified...
 	cnt.verifyCoherence ();
 
 	if (cnt.error ())
-		_lastError = MCHEmul::_INIT_ERROR;
+		_error = MCHEmul::_INIT_ERROR;
 	else
 	{
 		_content = cnt;

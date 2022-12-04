@@ -11,7 +11,7 @@ MCHEmul::IODevice::IODevice (MCHEmul::IODevice::Type t, int id, const MCHEmul::A
 	  _chips (), 
 	  _attributes (),
 	  _peripherals (),
-	  _lastError (MCHEmul::_NOERROR)
+	  _error (MCHEmul::_NOERROR)
 {
 	// Nothing else to do
 }
@@ -51,7 +51,7 @@ bool MCHEmul::IODevice::initialize ()
 		result &= i.second -> initialize ();
 
 	if (!result)
-		_lastError = MCHEmul::_INIT_ERROR;
+		_error = MCHEmul::_INIT_ERROR;
 
 	return (result);
 }
@@ -64,7 +64,7 @@ bool MCHEmul::IODevice::simulate ()
 		result &= i.second -> simulate ();
 
 	if (!result)
-		_lastError = MCHEmul::_DEVICE_ERROR;
+		_error = MCHEmul::_DEVICE_ERROR;
 
 	return (result);
 }

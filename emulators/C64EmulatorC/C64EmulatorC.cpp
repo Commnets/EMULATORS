@@ -20,5 +20,5 @@ int _tmain (int argc, _TCHAR *argv [])
 	// The keys used are Win32 related.
 	MCHEmul::LocalConsole myConsole (&myEmulator, new C64::CommandBuilder, new MCHEmul::Win32ConsoleKeys);
 	myConsole.run ();
-	return (myEmulator.lastError ());
+	return (myEmulator.error ());
 }

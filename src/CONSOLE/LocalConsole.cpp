@@ -44,6 +44,8 @@ void MCHEmul::LocalConsole::createAndExecuteCommand ()
 bool MCHEmul::LocalConsole::runPerCycle ()
 {
 	return (!_emulator -> runCycle ());
+
+	// The status of the console (hols) is not touched!
 }
 
 // ---
@@ -62,7 +64,7 @@ MCHEmul::InfoStructure MCHEmul::LocalConsole::loadProgram (const std::string& nP
 		for (const auto& i : e)
 		{
 			std::stringstream ss; ss << i;
-			ln += (fL ? "" : "\n") + ss.str();
+			ln += (fL ? "" : "\n") + ss.str ();
 
 			fL = false;
 		}
@@ -72,12 +74,12 @@ MCHEmul::InfoStructure MCHEmul::LocalConsole::loadProgram (const std::string& nP
 	}
 	else
 	{
-		_emulator -> computer () -> setActionForNextCycle(MCHEmul::Computer::_ACTIONSTOP);
+		_emulator -> computer () -> setActionForNextCycle (MCHEmul::Computer::_ACTIONSTOP);
 
 		for (const auto& i : cL._lines)
 		{
 			ss << i;
-			ln += (fL ? "" : "\n") + ss.str();
+			ln += (fL ? "" : "\n") + ss.str ();
 
 			fL = false;
 		}

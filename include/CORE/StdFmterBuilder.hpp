@@ -16,6 +16,7 @@
 
 #include <CORE/FmterBuilder.hpp>
 #include <CORE/StdFormatter.hpp>
+#include <CORE/JSONFormatter.hpp>
 
 namespace MCHEmul
 {
@@ -29,6 +30,8 @@ namespace MCHEmul
 							{ }
 
 		protected:
+		/** In the standard formatter the file where there formatter has been defined is not taken into account. \n
+			Just the name of the formatter invoked. */
 		virtual Formatter* createFormatter (const std::string& f, const std::string& nF, const Strings& l) override
 							{ return ((nF == "JSON" // JSON is taking different...
 								? (Formatter*) new JSONFormatter (l) : (Formatter*) new StdFormatter (l))); }

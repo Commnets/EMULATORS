@@ -9,7 +9,7 @@ C64::Memory::Memory ()
 	: MCHEmul::Memory (C64::Memory::standardMemoryContent ())
 {
 	// In the content...
-	if (lastError () != MCHEmul::_NOERROR)
+	if (error () != MCHEmul::_NOERROR)
 		return;
 
 	bool ok = true;
@@ -25,7 +25,7 @@ C64::Memory::Memory ()
 	subset (_KERNELROM_SUBSET) -> fixDefaultValues ();
 
 	if (!ok)
-		_lastError = MCHEmul::_INIT_ERROR;
+		_error = MCHEmul::_INIT_ERROR;
 }
 
 // ---

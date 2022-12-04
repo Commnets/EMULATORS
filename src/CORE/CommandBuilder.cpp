@@ -90,7 +90,7 @@ MCHEmul::Attributes MCHEmul::CommandBuilder::readCommandParameters (const std::s
 		else
 		{
 			iP = prms.find_first_of (' ');
-			result.insert (MCHEmul::Attributes::value_type (fName, (iP == std::string::npos) ? prms : prms.substr (1, iP)));
+			result.insert (MCHEmul::Attributes::value_type (fName, (iP == std::string::npos) ? prms : prms.substr (0, iP)));
 			prms = (iP == std::string::npos) ? "" : prms.substr (iP + 1);
 		}
 	}

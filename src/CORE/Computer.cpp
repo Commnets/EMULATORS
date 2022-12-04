@@ -13,7 +13,7 @@ MCHEmul::Computer::Computer (MCHEmul::CPU* cpu, const MCHEmul::Chips& c,
 	  _actionsAt (), _status (_STATUSRUNNING), _actionForNextCycle (_ACTIONNOTHING),
 	  _exit (false), 
 	  _debugLevel (MCHEmul::_DEBUGNOTHING),
-	  _lastError (MCHEmul::_NOERROR),
+	  _error (MCHEmul::_NOERROR),
 	  _screen (nullptr), _inputOSSystem (nullptr), _graphicalChip (nullptr),
 	  _clock (cs), 
 	  _lastAction (_ACTIONNOTHING)
@@ -66,26 +66,26 @@ MCHEmul::Computer::~Computer ()
 // ---
 bool MCHEmul::Computer::initialize ()
 {
-	_lastError = MCHEmul::_NOERROR;
+	_error = MCHEmul::_NOERROR;
 
 	if (_screen == nullptr || _inputOSSystem == nullptr ||
 		_graphicalChip == nullptr)
 	{
-		_lastError = MCHEmul::_INIT_ERROR;
+		_error = MCHEmul::_INIT_ERROR;
 
 		return (false);
 	}
 
 	if (!_cpu -> initialize ())
 	{
-		_lastError = MCHEmul::_INIT_ERROR;
+		_error = MCHEmul::_INIT_ERROR;
 
 		return (false);
 	}
 
 	if (!_memory -> initialize ())
 	{
-		_lastError = MCHEmul::_INIT_ERROR;
+		_error = MCHEmul::_INIT_ERROR;
 
 		return (false);
 	}
@@ -95,7 +95,7 @@ bool MCHEmul::Computer::initialize ()
 		resultChips &= i.second -> initialize ();
 	if (!resultChips)
 	{
-		_lastError = MCHEmul::_INIT_ERROR;
+		_error = MCHEmul::_INIT_ERROR;
 
 		return (false);
 	}
@@ -105,7 +105,7 @@ bool MCHEmul::Computer::initialize ()
 		resultIO &= i.second -> initialize ();
 	if (!resultIO)
 	{
-		_lastError = MCHEmul::_INIT_ERROR;
+		_error = MCHEmul::_INIT_ERROR;
 
 		return (false);
 	}
@@ -123,7 +123,7 @@ bool MCHEmul::Computer::run ()
 	// It has to be initialized before...
 
 	_exit = false;
-	_lastError = MCHEmul::_NOERROR;
+	_error = MCHEmul::_NOERROR;
 	_status = _STATUSRUNNING;
 	_actionForNextCycle = _ACTIONNOTHING;
 	_lastAction = _ACTIONNOTHING;
@@ -139,7 +139,7 @@ bool MCHEmul::Computer::run ()
 		finishCycle ();
 	}
 
-	return (_lastError != MCHEmul::_NOERROR);
+	return (_error != MCHEmul::_NOERROR);
 }
 
 // ---
@@ -163,7 +163,7 @@ bool MCHEmul::Computer::runComputerCycle (unsigned int a)
 	{
 		_exit = true;
 
-		_lastError = MCHEmul::_CPU_ERROR;
+		_error = MCHEmul::_CPU_ERROR;
 
 		if (_debugLevel >= MCHEmul::_DEBUGERRORS)
 			std::cout << "Error executing instruction" << std::endl;
@@ -184,7 +184,7 @@ bool MCHEmul::Computer::runComputerCycle (unsigned int a)
 		{
 			_exit = true;
 
-			_lastError = MCHEmul::_CHIP_ERROR;
+			_error = MCHEmul::_CHIP_ERROR;
 
 			if (_debugLevel >= MCHEmul::_DEBUGERRORS)
 				std::cout << "Error simulating chip: " << std::endl << i.second << std::endl;
@@ -205,7 +205,7 @@ bool MCHEmul::Computer::runIOCycle ()
 		{
 			_exit = true;
 
-			_lastError = MCHEmul::_DEVICE_ERROR;
+			_error = MCHEmul::_DEVICE_ERROR;
 
 			if (_debugLevel >= MCHEmul::_DEBUGERRORS)
 				std::cout << "Error in IO device:" << std::endl << i.second << std::endl;

@@ -19,6 +19,7 @@
 #include <CORE/InfoClass.hpp>
 #include <CORE/Formatter.hpp>
 #include <CORE/StdFormatter.hpp>
+#include <CORE/JSONFormatter.hpp>
 #include <CORE/FmterBuilder.hpp>
 #include <CORE/StdFmterBuilder.hpp>
 #include <CORE/Address.hpp>

@@ -56,6 +56,9 @@ namespace MCHEmul
 		/** To format a set of attributes into a string. 
 			It can be redefined to created specific formatters .eg. not based on pieces. */
 		virtual std::string format (const InfoStructure& a) const override;
+		/** This function is not possible in this type of Formatter. */
+		virtual InfoStructure unFormat (const std::string& str) const override
+							{ return (InfoStructure ()); }
 
 		protected:
 		/** Any formatter is made up of different pieces. \n
@@ -203,34 +206,6 @@ namespace MCHEmul
 		Pieces _pieces;
 		std::string _defSeparator, _defEqual;
 		bool _printFirst;
-	};
-
-	/** The JSON formatter. \n
-		The format is always:
-		{ \n
-		ATTR:VALUE \n
-		... \n
-		{ \n
-		... \n
-		} \n
-		} \n
-		The separator beetween the attr name and it value can be redefined, by default it is a ":".
-	  */
-	class JSONFormatter final : public Formatter
-	{
-		public:
-		JSONFormatter (const Strings& l)
-			: Formatter (l),
-			  _defEqual (":")
-							{ }
-
-		virtual void initialize () override
-							{ }
-
-		virtual std::string format (const InfoStructure& a) const override;
-
-		private:
-		std::string _defEqual;
 	};
 }
 

@@ -59,7 +59,19 @@ namespace MCHEmul
 		void setMaxCommandsKept (size_t mC)
 							{ if (mC <= 255) _maxCommandsKept = mC; }
 
+		/** To hold the console, it means no instructions are accepted,
+			and the only instruction executed within run method is runPerCycle. */
+		bool consoleHold () const
+							{ return (_consoleHold); }
+		void setConsoleHold (bool cH)
+							{ _consoleHold = cH; }
+
 		virtual void run ();
+
+		/** Just print out the answer (method comming from the CommandExecuter class). */
+		virtual void manageAnswer (Command* c, const InfoStructure& rst) override;
+		/** Just print out the error. */
+		virtual void manageErrorInExecution (Command* c, const InfoStructure& rst) override;
 
 		protected:
 		// Managing commands...
@@ -73,11 +85,6 @@ namespace MCHEmul
 		/** And execute the command. 
 			It must be overloaded depending omn the type of Console. */
 		virtual void createAndExecuteCommand () = 0;
-
-		/** Just print out the answer (method comming from the CommandExecuter class). */
-		virtual void manageAnswer (Command* c, const InfoStructure& rst) override;
-		/** Just print out the error. */
-		virtual void manageErrorInExecution (Command* c, const InfoStructure& rst) override;
 
 		/** Run things per cycle. \n
 			It is and "exit" door for simulations. 
@@ -95,6 +102,7 @@ namespace MCHEmul
 		std::vector <std::string> _lastCommands;
 		size_t _lastCommandPosition;
 		size_t _cursorPosition;
+		bool _consoleHold;
 
 		std::string _commandErrorTxt;
 		std::string _commandDoesnExitTxt;

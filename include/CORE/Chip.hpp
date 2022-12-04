@@ -32,7 +32,7 @@ namespace MCHEmul
 		Chip (int id, const Attributes& attrs = { })
 			: InfoClass ("Chip"),
 			  _id (id), _memory (nullptr), _attributes (attrs), 
-			  _lastError (_NOERROR) // Memory accessed can be null, take care...
+			  _error (_NOERROR) // Memory accessed can be null, take care...
 							{ }
 
 		Chip (const Chip&) = delete;
@@ -67,15 +67,15 @@ namespace MCHEmul
 
 		/** To simulate th behaviour of the chip. It has to be defined per chip. \n
 			Returns true if everything was ok, and false in any other circunstance. \n 
-			The last error could be recovered from the variable _lastError in that case. \n
+			The last error could be recovered from the variable _error in that case. \n
 			The clock cyclees is added. */
 		virtual bool simulate (CPU*) = 0;
 
 		/** To get the last error happend (after initialize or simulate methods). */
-		unsigned int lastError () const
-							{ return (_lastError); }
+		unsigned int error () const
+							{ return (_error); }
 		void resetErrors ()
-							{ _lastError = _NOERROR; }
+							{ _error = _NOERROR; }
 
 		/**
 		  *	The name of the fields are: \n
@@ -91,7 +91,7 @@ namespace MCHEmul
 		const Attributes _attributes = { }; // Maybe modified at construction level
 
 		// Implementation
-		mutable unsigned int _lastError;
+		mutable unsigned int _error;
 	};
 
 	using Chips = std::map <int, Chip*>;

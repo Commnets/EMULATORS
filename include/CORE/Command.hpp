@@ -48,6 +48,11 @@ namespace MCHEmul
 							{ return (_parameters); }
 		void setParameters (const Attributes& prms)
 							{ _parameters = prms; }
+		bool existParameter (const std::string& pN) const
+							{ return (_parameters.find (pN) != _parameters.end ()); }
+		const std::string& parameter (const std::string& aN) const
+							{ Attributes::const_iterator i = _parameters.find (aN); 
+							  return (i != _parameters.end ()) ? (*i).second : _NOATTRIBUTE; }
 
 		// Manage the execution...
 		/** To determine whether that are part of the commnand are or not valid to 
@@ -74,6 +79,9 @@ namespace MCHEmul
 		int _id;
 		std::string _name;
 		Attributes _parameters;
+
+		// Implementation
+		static const std::string _NOATTRIBUTE;
 	};
 
 	using Commands = std::vector <Command*>;

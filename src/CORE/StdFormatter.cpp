@@ -234,20 +234,3 @@ MCHEmul::StdFormatter::Piece* MCHEmul::StdFormatter::createPiece
 
 	return (result);
 }
-
-// ---
-std::string MCHEmul::JSONFormatter::format (const MCHEmul::InfoStructure& a) const
-{
-	std::string result = "{";
-
-	unsigned int idt = 0;
-
-	for (const auto& i : a.attributes ())
-		result += "\n\"" + i.first + "\":\"" + MCHEmul::replaceAll (i.second, "\"", "\\&34") + "\"";
-	for (const auto& i : a.infoStructures ())
-		result += "\n" + format (i.second); // Recursive...
-
-	result += "\n}";
-
-	return (result);
-}

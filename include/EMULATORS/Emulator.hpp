@@ -131,10 +131,10 @@ namespace MCHEmul
 			The method can receive an action that can affect the execution of the compuer cycle. */
 		bool runCycle (unsigned int a = 0);
 
-		unsigned int lastError () const
-							{ return (_lastError); }
+		unsigned int error () const
+							{ return (_error); }
 		bool operator ! () const
-							{ return (_lastError != MCHEmul::_NOERROR); }
+							{ return (_error != MCHEmul::_NOERROR); }
 
 		protected:
 		const IOPeripheralBuilder* peripherialBuilder () const
@@ -173,7 +173,7 @@ namespace MCHEmul
 		mutable Computer* _computer;
 		mutable IOPeripheralBuilder* _peripheralBuilder;
 		mutable bool _running;
-		unsigned int _lastError;
+		unsigned int _error;
 	};
 }
 

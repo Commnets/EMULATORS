@@ -1,6 +1,8 @@
 #include <CORE/Command.hpp>
 #include <CORE/Computer.hpp>
 
+const std::string MCHEmul::Command::_NOATTRIBUTE = "";
+
 // ---
 bool MCHEmul::Command::execute (MCHEmul::CommandExecuter* cE, MCHEmul::Computer* c, MCHEmul::InfoStructure& rst)
 {

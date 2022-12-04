@@ -41,6 +41,9 @@ namespace MCHEmul
 		/** To format a set of attributes into a string.
 			It can be redefined to created specific formatters .eg. not based on pieces or JSON... */
 		virtual std::string format (const InfoStructure& a) const = 0;
+		/** To unformat an string into an InfoStructure. \n
+		By default it is not possible, just a couple of Formatters could allow this. */
+		virtual InfoStructure unFormat (const std::string& str) const = 0;
 
 		protected:
 		// Implementation

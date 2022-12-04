@@ -7,11 +7,11 @@ MCHEmul::PeerCommunicationChannel::PeerCommunicationChannel (unsigned short p, u
 	: _listenAtPort (p), _simultaneousConnections (nC),
 	  _peer (nullptr),
 	  _channelInitialized (false),
-	  _lastError (MCHEmul::_NOERROR),
+	  _error (MCHEmul::_NOERROR),
 	  _pendingMessages (), _statusLinks ()
 {
 	if ((_peer = RakNet::RakPeerInterface::GetInstance ()) == nullptr)
-		_lastError = MCHEmul::_COMMSINTNOTCREATED_ERROR;
+		_error = MCHEmul::_COMMSINTNOTCREATED_ERROR;
 }
 
 // ---
@@ -25,7 +25,7 @@ MCHEmul::PeerCommunicationChannel::~PeerCommunicationChannel ()
 // ---
 bool MCHEmul::PeerCommunicationChannel::initialize ()
 {
-	if (_lastError != MCHEmul::_NOERROR)
+	if (_error != MCHEmul::_NOERROR)
 		return (false);
 
 	if (!_channelInitialized)
@@ -33,7 +33,7 @@ bool MCHEmul::PeerCommunicationChannel::initialize ()
 		RakNet::SocketDescriptor sd (_listenAtPort, 0);
 		if (_peer -> Startup (_simultaneousConnections, &sd, 1) != RakNet::StartupResult::RAKNET_STARTED)
 		{
-			_lastError = MCHEmul::_COMMSNOTOPENED_ERROR;
+			_error = MCHEmul::_COMMSNOTOPENED_ERROR;
 
 			return (false);
 		}
@@ -67,7 +67,7 @@ bool MCHEmul::PeerCommunicationChannel::receive (std::string& str, MCHEmul::IPAd
 
 	if (!_channelInitialized)
 	{
-		_lastError = MCHEmul::_COMMSNOTOPENED_ERROR;
+		_error = MCHEmul::_COMMSNOTOPENED_ERROR;
 
 		return (false);
 	}
@@ -92,7 +92,7 @@ bool MCHEmul::PeerCommunicationChannel::receive (std::string& str, MCHEmul::IPAd
 					RakNet::BitStream bsIn (packet -> data, packet -> length, false);
 					bsIn.IgnoreBytes (sizeof (RakNet::MessageID));
 					if (!(result = bsIn.Read (rs)))
-						_lastError = MCHEmul::_CHANNELREADERROR_ERROR;
+						_error = MCHEmul::_CHANNELREADERROR_ERROR;
 					else
 						str += rs.C_String (); // The string to be returned is then set...
 											   // The string can be splitted in many!
@@ -158,7 +158,7 @@ bool MCHEmul::PeerCommunicationChannel::send (const std::string& str, const MCHE
 	// and the method returns false y finishes!
 	if (!_channelInitialized)
 	{
-		_lastError = MCHEmul::_COMMSNOTOPENED_ERROR;
+		_error = MCHEmul::_COMMSNOTOPENED_ERROR;
 
 		return (false);
 	}
@@ -176,7 +176,7 @@ bool MCHEmul::PeerCommunicationChannel::send (const std::string& str, const MCHE
 				(to.asString ().c_str (), to.port (), nullptr, 0) == RakNet::CONNECTION_ATTEMPT_STARTED))
 			_pendingMessages.push_back (MCHEmul::PeerCommunicationChannel::PendingMessage (str, to));
 		else
-			_lastError = MCHEmul::_CHANNELWRITEERROR_ERROR;
+			_error = MCHEmul::_CHANNELWRITEERROR_ERROR;
 	}
 
 	return (result);
@@ -216,7 +216,7 @@ bool MCHEmul::PeerCommunicationChannel::sendRightNow (const std::string& str, co
 	RakNet::SystemAddress sA (to.ipAsString ().c_str (), to.port ());
 	if (_peer -> Send (&bsOut, IMMEDIATE_PRIORITY, RELIABLE_ORDERED, 0, sA, false) == 0)
 	{
-		_lastError = MCHEmul::_CHANNELWRITEERROR_ERROR;
+		_error = MCHEmul::_CHANNELWRITEERROR_ERROR;
 
 		result = false;
 	}

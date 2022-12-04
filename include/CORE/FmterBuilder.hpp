@@ -38,7 +38,7 @@ namespace MCHEmul
 		FormatterBuilder (const Strings& nF);
 
 		/** Create the formatters from the lines read at constructions time.
-			If something is wrong during this process, the _lastError avriable will be different than _NOERROR. */
+			If something is wrong during this process, the _error avriable will be different than _NOERROR. */
 		bool initialize ();
 
 		// Managing formatters...
@@ -64,11 +64,11 @@ namespace MCHEmul
 							{ if (fmter != nullptr) _defaultFormatter = fmter; }
 
 		/** Gets the last error. */
-		unsigned int lastError () const
-							{ return (_lastError); }
+		unsigned int error () const
+							{ return (_error); }
 
 		bool operator ! () const
-							{ return (_lastError == _NOERROR); }
+							{ return (_error == _NOERROR); }
 
 		/** To get the unique instance of the formatter builder. 
 			If it has never been invoked before, a default instance is created using the parameters received.
@@ -98,7 +98,7 @@ namespace MCHEmul
 		/** The one that will be choosen by default. 
 			It can be either fixed from a const invocation! */
 		mutable std::shared_ptr <Formatter> _defaultFormatter;
-		mutable unsigned int _lastError;
+		mutable unsigned int _error;
 
 		// Implementation
 		/** The lines read from the different files. */

@@ -157,10 +157,10 @@ namespace MCHEmul
 							{ _debugLevel = dL; }
 
 		/** To get the last error happend (after initialize or simulate methods). */
-		unsigned int lastError () const
-							{ return (_lastError); }
+		unsigned int error () const
+							{ return (_error); }
 		void resetErrors ()
-							{ _lastError = _NOERROR; }
+							{ _error = _NOERROR; }
 
 		/** To know whether the computer is running. 
 			It can be overloaded later, but the default implementation asks by the status RUNNING. */
@@ -270,7 +270,7 @@ namespace MCHEmul
 		unsigned int _debugLevel;
 
 		// Implementation
-		mutable unsigned int _lastError;
+		mutable unsigned int _error;
 		Screen* _screen;
 		InputOSSystem* _inputOSSystem;
 		GraphicalChip* _graphicalChip;

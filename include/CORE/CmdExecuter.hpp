@@ -60,11 +60,8 @@ namespace MCHEmul
 			Returns true if the command was executed properly and false in other case. */
 		bool executeCommandNow (Command* cmd, Computer* c);
 
-		protected:
-		/** To execute the pending list of commands.
-			The method returns true when all command pending were executed right, and false if any was wrong. */
-		bool executePendingCommands ();
-
+		// Mananing the answers of the commands.
+		// This methods are invoked initially from executeComamndNow method, but they can be invoked from outside too!
 		/** This method has to be redefined to determine what to do with the answer of a command. \n
 		It will depend on the type of CommandExecuter. E.g. in a console, the answer should be printed out to the screen
 		whilst in a remote communication it has to be sent back to the invoker. */
@@ -72,6 +69,11 @@ namespace MCHEmul
 		/** This method has also to be redefined to determine ehat to don with an error in 
 		the execution of a command. */
 		virtual void manageErrorInExecution (Command* c, const InfoStructure& rst) = 0;
+
+		protected:
+		/** To execute the pending list of commands.
+			The method returns true when all command pending were executed right, and false if any was wrong. */
+		bool executePendingCommands ();
 
 		protected:
 		/** To keep the invocations. */

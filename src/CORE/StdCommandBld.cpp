@@ -6,47 +6,47 @@ MCHEmul::Command* MCHEmul::StandardCommandBuilder::createEmptyCommand (const std
 {
 	MCHEmul::Command* result = nullptr;
 
-	if (cmdName == "HELP")
+	if (cmdName == "HELP" || cmdName == MCHEmul::HelpCommand::_NAME)
 		result = new MCHEmul::HelpCommand;
-	else if (cmdName == "AUTHOR")
+	else if (cmdName == "AUTHOR" || cmdName == MCHEmul::AuthorInfoCommand::_NAME)
 		result = new MCHEmul::AuthorInfoCommand;
-	else if (cmdName == "STATUS")
+	else if (cmdName == "STATUS" || cmdName == MCHEmul::StatusRegisterStatusCommand::_NAME)
 		result = new MCHEmul::StatusRegisterStatusCommand;
-	else if (cmdName == "PC")
+	else if (cmdName == "PC" || cmdName == MCHEmul::ProgramCounterStatusCommand::_NAME)
 		result = new MCHEmul::ProgramCounterStatusCommand;
-	else if (cmdName == "REGISTERS")
+	else if (cmdName == "REGISTERS" || cmdName == MCHEmul::RegistersStatusCommand::_NAME)
 		result = new MCHEmul::RegistersStatusCommand;
-	else if (cmdName == "STACK")
+	else if (cmdName == "STACK" || cmdName == MCHEmul::StackStatusCommand::_NAME)
 		result = new MCHEmul::StackStatusCommand;
-	else if (cmdName == "CPUSTATUS")
+	else if (cmdName == "CPUSTATUS" || cmdName == MCHEmul::CPUStatusCommand::_NAME)
 		result = new MCHEmul::CPUStatusCommand;
-	else if (cmdName == "CPUSSTATUS")
+	else if (cmdName == "CPUSSTATUS" || cmdName == MCHEmul::CPUSimpleStatusCommand::_NAME)
 		result = new MCHEmul::CPUSimpleStatusCommand;
-	else if (cmdName == "CPUINFO")
+	else if (cmdName == "CPUINFO" || cmdName == MCHEmul::CPUInfoCommand::_NAME)
 		result = new MCHEmul::CPUInfoCommand;
-	else if (cmdName == "MEMORY")
+	else if (cmdName == "MEMORY" || cmdName == MCHEmul::MemoryStatusCommand::_NAME)
 		result = new MCHEmul::MemoryStatusCommand;
-	else if (cmdName == "SETMEMORY")
+	else if (cmdName == "SETMEMORY" || cmdName == MCHEmul::SetMemoryValueCommand::_NAME)
 		result = new MCHEmul::SetMemoryValueCommand;
-	else if (cmdName == "STOP")
+	else if (cmdName == "STOP" || cmdName == MCHEmul::StopCPUCommand::_NAME)
 		result = new MCHEmul::StopCPUCommand;
-	else if (cmdName == "RUN" || cmdName == "R")
+	else if (cmdName == "RUN" || cmdName == "R" || cmdName == MCHEmul::RunCPUCommand::_NAME)
 		result = new MCHEmul::RunCPUCommand;
-	else if (cmdName == "NEXT" || cmdName == "N")
+	else if (cmdName == "NEXT" || cmdName == "N" || cmdName == MCHEmul::NextInstructionCommand::_NAME)
 		result = new MCHEmul::NextInstructionCommand;
-	else if (cmdName == "INST")
+	else if (cmdName == "INST" || cmdName == MCHEmul::LastIntructionCPUCommand::_NAME)
 		result = new MCHEmul::LastIntructionCPUCommand;
-	else if (cmdName == "BREAKS")
+	else if (cmdName == "BREAKS" || cmdName == MCHEmul::ListOfBreakPointsCommand::_NAME)
 		result = new MCHEmul::ListOfBreakPointsCommand;
-	else if (cmdName == "SETBREAK")
+	else if (cmdName == "SETBREAK" || cmdName == MCHEmul::SetBreakPointCommand::_NAME)
 		result = new MCHEmul::SetBreakPointCommand;
-	else if (cmdName == "REMOVEBREAK")
+	else if (cmdName == "REMOVEBREAK" || cmdName == MCHEmul::RemoveBreakPointCommand::_NAME)
 		result = new MCHEmul::RemoveBreakPointCommand;
-	else if (cmdName == "REMOVEBREAKS")
+	else if (cmdName == "REMOVEBREAKS" || cmdName == MCHEmul::RemoveAllBreakPointsCommand::_NAME)
 		result = new MCHEmul::RemoveAllBreakPointsCommand;
-	else if (cmdName == "SPEED")
+	else if (cmdName == "SPEED" || cmdName == MCHEmul::CPUSpeedCommand::_NAME)
 		result = new MCHEmul::CPUSpeedCommand;
-	else if (cmdName == "LOADBIN")
+	else if (cmdName == "LOADBIN" || cmdName == MCHEmul::LoadBinCommand::_NAME)
 		result = new MCHEmul::LoadBinCommand;
 	else if (cmdName == MCHEmul::MoveParametersToAnswerCommand::_NAME)
 		result = new MCHEmul::MoveParametersToAnswerCommand;
