@@ -347,8 +347,9 @@ namespace C64
 							{ return (_graphicsScreenCodeData = 
 								memoryRef () -> values (_VICIIRegisters -> screenMemory () +
 									((size_t) l * _GRAPHMAXCHARCOLUMNS), (size_t) _GRAPHMAXCHARCOLUMNS)); }
-		/** Read the info for the chars received as parameter. */
-		const MCHEmul::UBytes& readCharDataFor (const MCHEmul::UBytes& chrs) const;
+		/** Read the info for the chars received as parameter. 
+			The method receives also a parameter to indicate whether the graphics mode is or not _EXTENDEDBACKGROUNDMODE. */
+		const MCHEmul::UBytes& readCharDataFor (const MCHEmul::UBytes& chrs, bool eM = false) const;
 		/** Read th info of the bitmap. 
 			The info is read as they were char data. That is, the 8 x 8 block are sequential. 
 			The value receive gos from 0 to 199. */
@@ -363,12 +364,15 @@ namespace C64
 		const std::vector <MCHEmul::UBytes>& readSpriteData () const;
 
 		// Draw the graphics in detail...
-		/** Draws a monocolor set of bytes. */
-		MCHEmul::UByte drawMonoColorBytes (int cb, int r, 
+		/** Draws a monocolor char. */
+		MCHEmul::UByte drawMonoColorChar (int cb, int r, 
 			const MCHEmul::UBytes& bt, const MCHEmul::UBytes& clr, const DrawContext& dC);
-		/** Draws a multicolor set of bytes. */
-		MCHEmul::UByte drawMultiColorBytes (int cb, int r,
+		/** Draws a multicolor char. */
+		MCHEmul::UByte drawMultiColorChar (int cb, int r,
 			const MCHEmul::UBytes& bt, const MCHEmul::UBytes& clr, const DrawContext& dC);
+		/** Draws an enhaced multicolor char. */
+		MCHEmul::UByte drawMultiColorEnhancedChar (int cb, int r,
+			const MCHEmul::UBytes& sc, const MCHEmul::UBytes& bt, const MCHEmul::UBytes& clr, const DrawContext& dC);
 		/** Draws a monocolor sprite line. */
 		MCHEmul::UByte drawMonoColorSprite (int c, int r, size_t spr, const DrawContext& dC);
 		/** Draws a multocolor sprite line. */
