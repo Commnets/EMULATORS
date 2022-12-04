@@ -47,6 +47,7 @@ MCHEmul::InfoStructure C64::CIA1::getInfoStructure () const
 {
 	MCHEmul::InfoStructure result = MCHEmul::Chip::getInfoStructure ();
 
+	result.remove ("Memory"); // This is not neccesary...
 	result.add ("Registers",	_CIA1Registers -> getInfoStructure ());
 	result.add ("TimerA",		_timerA.getInfoStructure ());
 	result.add ("TimerB",		_timerB.getInfoStructure ());

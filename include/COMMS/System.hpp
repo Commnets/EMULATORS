@@ -69,7 +69,7 @@ namespace MCHEmul
 
 		/** Just to send a message. */
 		bool send (const std::string& str, const IPAddress& to)
-							{ _messageSent = true; 
+							{ _messageSent = true; _messageReceived = false;
 							  return (_communicationChannel -> send (str, to)); }
 		/** Returns true when a message has been sent. */
 		bool messageSent () const

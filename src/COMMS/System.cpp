@@ -14,8 +14,6 @@ bool MCHEmul::CommunicationSystem::initialize ()
 // ---
 bool MCHEmul::CommunicationSystem::processMessagesOn (MCHEmul::Computer* c)
 {
-	_messageReceived = false;
-
 	// If the system has errors, it cannot process messages...
 	if (!*this)
 		return (false);
@@ -70,16 +68,35 @@ void MCHEmul::CommunicationSystem::manageAnswer (MCHEmul::Command* c, const MCHE
 	else
 	{
 		if (!rst.empty ())
-			if (_communicationChannel -> send 
-				(MCHEmul::CommsSystemAnswerCommand::_NAME + " " + 
-				 // The first parameter is the formatter used...
-				 MCHEmul::CommsSystemAnswerCommand::_PARFORMATTER + "=" + _messageFormatter + " " + 
-				 // The second parameter is the name of the command which answer is being sent,
-				 MCHEmul::CommsSystemAnswerCommand::_PARORIGINALCMMD + "=" + c -> name () + " " + 
-				 // ...and the third parameter is the data itself...
-				 MCHEmul::CommsSystemAnswerCommand::_PARANSWER + "=" + 
-					MCHEmul::CommsSystemAnswerCommand::replaceCharsForComms  
-						(FormatterBuilder::instance () -> formatter (_messageFormatter) -> format (rst)), _lastSender))
-				_messageSent = true;
+		{ 
+			std::string h = 
+				// The name of the command...
+				MCHEmul::CommsSystemAnswerCommand::_NAME + " " + 
+				// The first parameter is the formatter used...
+				MCHEmul::CommsSystemAnswerCommand::_PARFORMATTER + "=" + _messageFormatter + " ";
+
+			std::string msg = h + 
+				// The second parameter is the name of the command which answer is being sent,
+				MCHEmul::CommsSystemAnswerCommand::_PARORIGINALCMMD + "=" + c -> name () + " " +
+				// ...and the third parameter is the data itself...
+				MCHEmul::CommsSystemAnswerCommand::_PARANSWER + "=" + 
+				MCHEmul::CommsSystemAnswerCommand::replaceCharsForComms  
+					(FormatterBuilder::instance () -> formatter (_messageFormatter) -> format (rst));
+
+			if (msg.length () >= 0xffff)
+				msg = h + 
+					"ERRROR=" + c -> name () + " " +
+					// In this case the original command is change into an error...
+					MCHEmul::CommsSystemAnswerCommand::_PARANSWER + "=" + 
+					MCHEmul::CommsSystemAnswerCommand::replaceCharsForComms
+					(FormatterBuilder::instance () -> formatter (_messageFormatter) -> format 
+						(InfoStructure ({ { "ERROR", "Message to long" } }, { })));
+
+			if (_communicationChannel -> send (msg, _lastSender))
+			{ 
+				_messageSent = true; 
+				_messageReceived = false; 
+			}
+		}
 	}
 }

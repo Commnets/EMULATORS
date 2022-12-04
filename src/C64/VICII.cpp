@@ -319,6 +319,7 @@ MCHEmul::InfoStructure C64::VICII::getInfoStructure () const
 {
 	MCHEmul::InfoStructure result = MCHEmul::GraphicalChip::getInfoStructure ();
 
+	result.remove ("Memory"); // This is not neccesary...
 	result.add ("VICIIRegisters",	_VICIIRegisters -> getInfoStructure ());
 	result.add ("Raster",			_raster.getInfoStructure ());
 

@@ -1,0 +1,92 @@
+#C64 Console
+#Formats
+?conformatters.fmt
+#---
+;Registers
+@BYTES{blocksize=16,listsep=\,,tablesep=\ ,minsize=2}@
+#---
+#---
+;RasterX
+POSITION=@POSITION@(@POSITION0@)
+FIRST=@FIRST@, LAST=@LAST@
+#---
+#---
+;RasterY
+POSITION=@POSITION@(@POSITION0@)
+FIRST=@FIRST@, LAST=@LAST@
+#---
+#---
+;Raster
+->Raster Horizontal:
+@RasterX>@
+->Raster Vertical:
+@RasterY>@
+#---
+#---
+;VICIIRegisters
+@BYTES{blocksize=16,listsep=\,,tablesep=\ ,minsize=2}@
+GRAPHICS=@MODE@
+40COL=@40C@
+25ROW=@25R@
+#---
+#---
+;VICII
+ID=@ID@
+@ATTRS?{key=YES,equal==}\n@
+->VICIIRegisters:
+@VICIIRegisters>@
+@Raster>@
+#---
+#---
+;Clock
+IRQ=@IRQ@
+@HOURS@:@MINUTES@:@SECONDS@:@TENTHSECONDS@ (@AHOURS@:@AMINUTES@:@ASECONDS@:@ATENTHSECONDS@)
+#---
+;TimerA
+RUN=@RUN@, COUNT=@COUNT@
+ACTIVE=@STATUS@, IRQ=@IRQ@
+VALUE=@VALUE@(@INITIALVALUE@)
+#---
+#---
+;TimerB
+RUN=@RUN@, COUNT=@COUNT@
+ACTIVE=@STATUS@, IRQ=@IRQ@
+VALUE=@VALUE@(@INITIALVALUE@)
+#---
+#---
+;CIA1
+ID=@ID@
+@ATTRS?{key=YES,equal==}\n@
+->Registers:
+@Registers>@
+->Timer A:
+@TimerA>@
+->Timer B:
+@TimerB>@
+-> Clock:
+@Clock>@
+#---
+#---
+;CIA2
+ID=@ID@
+@ATTRS?{key=YES,equal==}\n@
+->Registers:
+@Registers>@
+->Timer A:
+@TimerA>@
+->Timer B:
+@TimerB>@
+->Clock:
+@Clock>@
+#---
+#---
+;CVICII
+@VICII>@
+#---
+#---
+;CCIA1
+@CIA1>@
+#---#---
+;CCIA2
+@CIA2>@
+#---

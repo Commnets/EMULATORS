@@ -20,7 +20,7 @@ int _tmain (int argc, _TCHAR* argv[])
 	// Sets the formatter for << outputs for this emulation...
 	// This line of code has to be at the beginning of every emulation 
 	// as it fixes the way the internal ino of the important classes will be formatted
-	MCHEmul::FormatterBuilder::instance ({ "./defformatters.fmt" });
+	MCHEmul::FormatterBuilder::instance ({ "./C64formatters.fmt" });
 
 	// Set up the emulator...
 	C64::C64Emulator myEmulator (

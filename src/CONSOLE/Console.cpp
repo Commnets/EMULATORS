@@ -64,7 +64,7 @@ void MCHEmul::Console::run ()
 			continue;
 		}
 
-		if (lCH == true)
+		if (lCH)
 		{
 			lCH = false;
 			// First time after being hold, the promt hast to be shown!...
@@ -85,6 +85,8 @@ void MCHEmul::Console::run ()
 		}
 
 		exit = readAndExecuteCommand ();
+
+		lCH = _consoleHold;
 	}
 }
 

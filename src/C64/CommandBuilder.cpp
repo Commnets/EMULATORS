@@ -8,7 +8,7 @@ MCHEmul::Command* C64::CommandBuilder::createEmptyCommand (const std::string& cm
 
 	if (cmdName == "HELP" || cmdName == MCHEmul::HelpCommand::_NAME)
 		result = new MCHEmul::HelpCommand ("./C64commands.hlp"); // Adding the commands for a C64...
-	if (cmdName == "VICII" || cmdName == C64::VICStatusCommand::_NAME)
+	else if (cmdName == "VICII" || cmdName == C64::VICStatusCommand::_NAME)
 		result = new C64::VICStatusCommand;
 	else if (cmdName == "CIA1" || cmdName == C64::CIA1StatusCommand::_NAME)
 		result = new C64::CIA1StatusCommand;

@@ -100,7 +100,7 @@
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>..\..\lib\$(PlatformShortName)\;$(SDL_HOME)\VisualC\$(Platform)\$(Configuration);$(SDLIMAGE_HOME)\VisualC\$(Platform)\$(Configuration);$(SDLMIXER_HOME)\VisualC\$(Platform)\$(Configuration);$(RAKNET_HOME)\Lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>C64D.lib;F6500D.lib;ASSEMBLERD.lib;COMMSD.lib;EMULSD.lib;CORED.lib;CONSOLED.lib;SDL2D.lib;SDL2_imageD.lib;SDL2_mixerD.lib;RakNet_VS2008_DLL_Debug_Win32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>ASSEMBLERD.lib;COMMSD.lib;EMULSD.lib;CORED.lib;CONSOLED.lib;SDL2D.lib;SDL2_imageD.lib;SDL2_mixerD.lib;RakNet_VS2008_DLL_Debug_Win32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
