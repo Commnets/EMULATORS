@@ -104,7 +104,7 @@ TEXTEXAMPLEMOVE:			lda #>TEXTDEF
 							sta DRAWTEXT_TEXTLENVAR
 							lda #$0a								; Pos Y.
 							sta DRAWTEXT_YPOSVAR
-							lda #$08								; Orange.
+							lda #$0a								; Orange.
 							sta DRAWTEXT_COLORVAR
 							ldx #$f0								; Starting Pos X.
 TEXTEXAMPLEMOVELOOP:		stx DRAWTEXT_XPOSVAR

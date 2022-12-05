@@ -369,10 +369,16 @@ namespace C64
 			const MCHEmul::UBytes& bt, const MCHEmul::UBytes& clr, const DrawContext& dC);
 		/** Draws a multicolor char. */
 		MCHEmul::UByte drawMultiColorChar (int cb, int r,
-			const MCHEmul::UBytes& bt, const MCHEmul::UBytes& clr, const DrawContext& dC);
+			const MCHEmul::UBytes& bt, const MCHEmul::UBytes& clr, const DrawContext& dC, bool blk = false);
 		/** Draws an enhaced multicolor char. */
-		MCHEmul::UByte drawMultiColorEnhancedChar (int cb, int r,
+		MCHEmul::UByte drawMultiColorExtendedChar (int cb, int r,
 			const MCHEmul::UBytes& sc, const MCHEmul::UBytes& bt, const MCHEmul::UBytes& clr, const DrawContext& dC);
+		/** Draws a monocolor bitmap. */
+		MCHEmul::UByte drawMonoColorBitMap (int cb, int r, 
+			const MCHEmul::UBytes& sc, const MCHEmul::UBytes& bt, const DrawContext& dC, bool blk = false);
+		/** Draws a multicolor bitmap. */
+		MCHEmul::UByte drawMultiColorBitMap (int cb, int r, 
+			const MCHEmul::UBytes& sc, const MCHEmul::UBytes& bt, const MCHEmul::UBytes& clr, const DrawContext& dC, bool blk = false);
 		/** Draws a monocolor sprite line. */
 		MCHEmul::UByte drawMonoColorSprite (int c, int r, size_t spr, const DrawContext& dC);
 		/** Draws a multocolor sprite line. */

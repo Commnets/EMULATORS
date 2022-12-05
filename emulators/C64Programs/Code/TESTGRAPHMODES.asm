@@ -23,7 +23,7 @@ TEXTDEF1					= $ca10
 TEXTDEF2					= $ca20
 TEXTDEF3					= $ca30
 TEXTDEF4					= $ca40
-COLORLETTERS				= $0f
+COLORLETTERS				= $09
 
 * = $cb00
 ; A very simple program to test everything works...

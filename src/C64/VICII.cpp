@@ -242,7 +242,7 @@ bool C64::VICII::simulate (MCHEmul::CPU* cpu)
 				(cav + 8) > _raster.visibleColumns () ? (_raster.visibleColumns () - cav) : 8, _VICIIRegisters -> borderColor ());
 
 			// When the raster is in the display zone but in the screen vertical zone too
-			// and for sure the vide is active, then evrything has to happen!
+			// and for sure the vide is active, then everything has to happen!
 			if (_raster.isInDisplayZone () && 
 				_raster.vData ().isInScreenZone () &&
 				_videoActive)
@@ -264,6 +264,7 @@ bool C64::VICII::simulate (MCHEmul::CPU* cpu)
 				}
 
 				// Draw the graphics, including the sprites...
+				// The method also detects the collisions!
 				drawGraphicsAndDetectCollisions ({
 					/** _ICD */ _raster.hData ().firstDisplayPosition (),		// DISLAY: The original...
 					/** _ICS */ _raster.hData ().firstScreenPosition (),		// SCREEN: And the real one (after reduction size)
@@ -301,6 +302,7 @@ bool C64::VICII::simulate (MCHEmul::CPU* cpu)
 	// To store back the info in the VIC Registers...
 	_VICIIRegisters -> setCurrentRasterLine (_raster.currentLine ()); 
 
+	// Just to highlight (in black) the borders of the visible zone...
 	if (_drawBorder)
 	{
 		unsigned short x1, y1, x2, y2;
@@ -319,7 +321,7 @@ MCHEmul::InfoStructure C64::VICII::getInfoStructure () const
 {
 	MCHEmul::InfoStructure result = MCHEmul::GraphicalChip::getInfoStructure ();
 
-	result.remove ("Memory"); // This is not neccesary...
+	result.remove ("Memory"); // This info is not neccesary...
 	result.add ("VICIIRegisters",	_VICIIRegisters -> getInfoStructure ());
 	result.add ("Raster",			_raster.getInfoStructure ());
 
@@ -329,19 +331,6 @@ MCHEmul::InfoStructure C64::VICII::getInfoStructure () const
 // ---
 void C64::VICII::readGraphicsInfoAt (unsigned short gl)
 {
-	// If there is no a valid graphic mode active, then everything is "blank"...
-	if (_VICIIRegisters -> graphicModeActive () == C64::VICIIRegisters::GraphicMode::_ILLEGALMODE)
-	{
-		_graphicsColorData = MCHEmul::UBytes 
-			(std::vector <MCHEmul::UByte> (40 /** Columns visible max */, MCHEmul::UByte::_0));
-		_graphicsCharData = MCHEmul::UBytes 
-			(std::vector <MCHEmul::UByte> (320 /** 40 * 8 (bytes per char) */, MCHEmul::UByte::_FF));
-		_graphicsBitmapData = MCHEmul::UBytes 
-			(std::vector <MCHEmul::UByte> (320 /** 40 * 8 (bytes per char) */, MCHEmul::UByte::_FF));
-		
-		return; // Nothing else to do...
-	}
-
 	unsigned short chrLine = gl >> 3;
 	dynamic_cast <C64::Memory*> (memoryRef ()) -> setVICIIView ();
 
@@ -409,7 +398,7 @@ void C64::VICII::drawGraphicsAndDetectCollisions (const C64::VICII::DrawContext&
 	switch (_VICIIRegisters -> graphicModeActive ())
 	{
 		case C64::VICIIRegisters::GraphicMode::_CHARMODE:
-			colGraphics = drawMonoColorChar (cb, rc, _graphicsCharData /** The char definition */, _graphicsColorData, dC);
+			colGraphics = drawMonoColorChar (cb, rc, _graphicsCharData, _graphicsColorData, dC);
 			break;
 
 		case C64::VICIIRegisters::GraphicMode::_MULTICOLORCHARMODE:
@@ -417,20 +406,32 @@ void C64::VICII::drawGraphicsAndDetectCollisions (const C64::VICII::DrawContext&
 			break;
 
 		case C64::VICIIRegisters::GraphicMode::_EXTENDEDBACKGROUNDMODE:
-			colGraphics = drawMultiColorEnhancedChar 
-				(cb, rc, _graphicsScreenCodeData, _graphicsCharData, _graphicsColorData, dC);
+			colGraphics = drawMultiColorExtendedChar (cb, rc, _graphicsScreenCodeData, _graphicsCharData, _graphicsColorData, dC);
 			break;
 
 		case C64::VICIIRegisters::GraphicMode::_BITMAPMODE:
-			// TODO
+			colGraphics = drawMonoColorBitMap (cb, rc, _graphicsCharData, _graphicsBitmapData, dC);
 			break;
 
 		case C64::VICIIRegisters::GraphicMode::_MULTICOLORBITMAPMODE:
-			// TODO
+			colGraphics = drawMultiColorBitMap (cb, rc, _graphicsCharData, _graphicsBitmapData, _graphicsColorData, dC);
+			break;
+
+		case C64::VICIIRegisters::GraphicMode::_INVALIDTEXMODE:
+			colGraphics = drawMultiColorChar (cb, rc, _graphicsCharData, _graphicsColorData, dC, true /** everything black. */);
+			break;
+
+		case C64::VICIIRegisters::GraphicMode::_INVALIDBITMAPMODE1:
+			colGraphics = drawMonoColorBitMap (cb, rc, _graphicsCharData, _graphicsBitmapData, dC, true /** everything black. */);
+			break;
+
+		case C64::VICIIRegisters::GraphicMode::_INVALIDBITMAPMODE2:
+			colGraphics = drawMultiColorBitMap 
+				(cb, rc, _graphicsCharData, _graphicsBitmapData, _graphicsColorData, dC, true /* everything black. */);
 			break;
 
 		default:
-			// Not graphic mode supported, yet...
+			assert (0); // Not possible...
 			break;
 	}
 
@@ -457,22 +458,22 @@ void C64::VICII::drawGraphicsAndDetectCollisions (const C64::VICII::DrawContext&
 MCHEmul::ScreenMemory* C64::VICII::createScreenMemory ()
 {
 	unsigned int* cP = new unsigned int [16];
-	cP [0]  = SDL_MapRGB (_format, 0x00, 0x00, 0x00);
-	cP [1]  = SDL_MapRGB (_format, 0xff, 0xff, 0xff);
-	cP [2]  = SDL_MapRGB (_format, 0xab, 0x31, 0x26);
-	cP [3]  = SDL_MapRGB (_format, 0x66, 0xda, 0xff);
-	cP [4]  = SDL_MapRGB (_format, 0xbb, 0x3f, 0xb8);
-	cP [5]  = SDL_MapRGB (_format, 0x55, 0xce, 0x58);
-	cP [6]  = SDL_MapRGB (_format, 0x1d, 0x0e, 0x97);
-	cP [7]  = SDL_MapRGB (_format, 0xea, 0xf5, 0x7c);
-	cP [8]  = SDL_MapRGB (_format, 0xb9, 0x74, 0x18);
-	cP [9]  = SDL_MapRGB (_format, 0x78, 0x53, 0x00);
-	cP [10] = SDL_MapRGB (_format, 0xdd, 0x93, 0x87);
-	cP [11] = SDL_MapRGB (_format, 0x5b, 0x5b, 0x5b);
-	cP [12] = SDL_MapRGB (_format, 0x8b, 0x8b, 0x8b);
-	cP [13] = SDL_MapRGB (_format, 0xb0, 0xf4, 0xac);
-	cP [14] = SDL_MapRGB (_format, 0xaa, 0x9d, 0xef);
-	cP [15] = SDL_MapRGB (_format, 0xb8, 0xb8, 0xb8);
+	cP [0]  = SDL_MapRGB (_format, 0x00, 0x00, 0x00); // Black
+	cP [1]  = SDL_MapRGB (_format, 0xff, 0xff, 0xff); // White
+	cP [2]  = SDL_MapRGB (_format, 0x92, 0x4a, 0x40); // Red
+	cP [3]  = SDL_MapRGB (_format, 0x84, 0xc5, 0xcc); // Cyan
+	cP [4]  = SDL_MapRGB (_format, 0x93, 0x51, 0xb6); // Violet
+	cP [5]  = SDL_MapRGB (_format, 0x72, 0xb1, 0x4b); // Green
+	cP [6]  = SDL_MapRGB (_format, 0x48, 0x3a, 0xaa); // Blue
+	cP [7]  = SDL_MapRGB (_format, 0xd5, 0xdf, 0x7c); // Yellow
+	cP [8]  = SDL_MapRGB (_format, 0x67, 0x52, 0x00); // Brown
+	cP [9]  = SDL_MapRGB (_format, 0xc3, 0x3d, 0x00); // Light Red
+	cP [10] = SDL_MapRGB (_format, 0xc1, 0x81, 0x78); // Orange
+	cP [11] = SDL_MapRGB (_format, 0x60, 0x60, 0x60); // Dark Grey
+	cP [12] = SDL_MapRGB (_format, 0x8a, 0x8a, 0x8a); // Medium Grey
+	cP [13] = SDL_MapRGB (_format, 0xb3, 0xec, 0x91); // Light Green
+	cP [14] = SDL_MapRGB (_format, 0x86, 0x7a, 0xde); // Light Blue
+	cP [15] = SDL_MapRGB (_format, 0xb3, 0xb3, 0xb3); // Light Grey
 
 	return (new MCHEmul::ScreenMemory (_raster.visibleColumns (), _raster.visibleLines (), cP));
 }
@@ -512,8 +513,8 @@ const MCHEmul::UBytes& C64::VICII::readBitmapDataAt (unsigned short l) const
 const std::vector <MCHEmul::UBytes>& C64::VICII::readSpriteData () const
 {
 	// The list of sprites enabled is used later to draw them
-	// Only the sprite numbers in the list are then draw, and they are drwan in the order they are in this list
-	// So the last one must be the one with the highest priority, and this is the number 0
+	// Only the sprite numbers in the list are then draw, and they are drawn in the order they are in this list
+	// So the last one must be the one with the highest priority, and this is the number 0!
 	_spritesEnabled = { }; // The list of the sprites enabled...
 
 	MCHEmul::Address sP = _VICIIRegisters -> spritePointersMemory ();
@@ -522,9 +523,9 @@ const std::vector <MCHEmul::UBytes>& C64::VICII::readSpriteData () const
 		if (_VICIIRegisters -> spriteEnable ((size_t) i)) // Read data only if the sprite is active...
 		{ 
 			_spritesEnabled.push_back ((size_t) i);
-			_graphicsSprites [(size_t) i] = MCHEmul::UBytes (memoryRef () -> bytes
-				(_VICIIRegisters -> initAddressBank () + 
-					((size_t) memoryRef () -> value (sP + (size_t) i).value () << 6 /** 64 block. */), 63 /** sprite size in bytes. */));
+			_graphicsSprites [(size_t) i] = 
+				MCHEmul::UBytes (memoryRef () -> bytes (_VICIIRegisters -> initAddressBank () + 
+					((size_t) memoryRef () -> value (sP + (size_t) i).value () << 6 /** 64 blocks. */), 63 /** size in bytes. */));
 		}
 	}
 
@@ -546,7 +547,8 @@ MCHEmul::UByte C64::VICII::drawMonoColorChar (int cb, int r,
 		size_t iBy = ((size_t) pp) >> 3 /** To determine the byte. */;
 		size_t iBt = 7 - (((size_t) pp) % 8); /** From MSB to LSB. */
 		unsigned short pos = dC._RCA + i;
-		if (pos >= dC._ICS && pos <= dC._LCS && bt [(iBy << 3) + (size_t) r].bit (iBt))
+		if (bt [(iBy << 3) + (size_t) r].bit (iBt) && 
+			(pos >= dC._ICS && pos <= dC._LCS))
 		{ 
 			result.setBit (7 - i, true);
 			screenMemory () -> setPixel ((size_t) pos, (size_t) dC._RR, 
@@ -559,7 +561,7 @@ MCHEmul::UByte C64::VICII::drawMonoColorChar (int cb, int r,
 
 // ---
 MCHEmul::UByte C64::VICII::drawMultiColorChar (int cb, int r,
-	const MCHEmul::UBytes& bt, const MCHEmul::UBytes& clr, const C64::VICII::DrawContext& dC)
+	const MCHEmul::UBytes& bt, const MCHEmul::UBytes& clr, const C64::VICII::DrawContext& dC, bool blk)
 {
 	MCHEmul::UByte result = MCHEmul::UByte::_0;
 
@@ -572,29 +574,9 @@ MCHEmul::UByte C64::VICII::drawMultiColorChar (int cb, int r,
 		size_t iBy = ((size_t) pp) >> 3; 
 		size_t iBt = 3 - ((((size_t) pp) % 8) >> 1);
 		unsigned char cs = (bt [(iBy << 3) + (size_t) r].value () >> (iBt << 1)) & 0x03; // 0, 1, 2 or 3
-		unsigned short pos = dC._RCA + i;
-
-		// The way the pixels are gping to be brawn will depend on the information in the color memory
-		// If the most significant bit of the low significant nibble is set to 1
-		// the data will be managed in a multicolor way...
-		if ((clr [iBy] & 0x08) == 0x00) 
-		{
-			unsigned int fc = clr [iBy].value () & 0x07;
-			if ((cs & 0x02) == 0x02 /** if set. */ && (pos >= dC._ICS && pos < dC._LCS)) 
-				screenMemory () -> setPixel ((size_t) pos, (size_t) dC._RR, fc);
-			if ((cs & 0x01) == 0x01 /** if set. */ && ((pos + 1) >= dC._ICS && (pos + 1) < dC._LCS)) 
-				screenMemory () -> setPixel ((size_t) pos + 1, (size_t) dC._RR, fc);
-		}
-		// If it is 0, then it will be draw as in the monocolor version...
-		else
-		{
-			unsigned int fc = (unsigned int) ((cs == 0x03) 
-				? (clr [iBy].value () & 0x07) : (_VICIIRegisters -> backgroundColor (cs)) & 0x0f) /** Useful nibble. */;
-			if (pos >= dC._ICS && pos <= dC._LCS) 
-				screenMemory () -> setPixel ((size_t) pos, (size_t) dC._RR, fc);
-			if ((pos + 1) >= dC._ICS && (pos + 1) <= dC._LCS) 
-				screenMemory () -> setPixel (((size_t) pos + 1), (size_t) dC._RR, fc);
-		}
+		// If the cs is 0, it would have to be drawn in the background color and it is already!
+		if (cs == 0x00)
+			continue;
 
 		// The combinations 0x00 and 0x01 are considered as background!
 		// So they coan not be used in collisions...
@@ -603,14 +585,44 @@ MCHEmul::UByte C64::VICII::drawMultiColorChar (int cb, int r,
 			result.setBit (7 - i, true); 
 			result.setBit (6 - i, true);
 		}
+
+		// When blank nothing is drawn.
+		// Everything is kept in the background color!
+		if (blk)
+			continue;
+
+		// The way the pixels are going to be drawn will depend on the information in the color memory
+		// If the most significant bit of the low significant nibble is set to 1
+		// the data will be managed in a monocolor way...
+		unsigned short pos = dC._RCA + i;
+		if ((clr [iBy] & 0x08) == 0x00) 
+		{
+			unsigned int fc = clr [iBy].value () & 0x07;
+			if ((cs & 0x02) == 0x02 /** if set. */ && (pos >= dC._ICS && pos < dC._LCS)) 
+				screenMemory () -> setPixel ((size_t) pos, (size_t) dC._RR, fc);
+			if ((cs & 0x01) == 0x01 /** if set. */ && ((pos + 1) >= dC._ICS && (pos + 1) < dC._LCS)) 
+				screenMemory () -> setPixel ((size_t) pos + 1, (size_t) dC._RR, fc);
+		}
+		// If it is 1, then it will be draw as in the multicolor version...
+		else
+		{
+			unsigned int fc = 
+				(unsigned int) ((cs == 0x03) 
+					? (clr [iBy].value () & 0x07) 
+					: (_VICIIRegisters -> backgroundColor (cs)) & 0x0f) /** Useful nibble. */;
+			if (pos >= dC._ICS && pos <= dC._LCS)
+				screenMemory () -> setPixel ((size_t) pos, (size_t) dC._RR, fc);
+			if ((pos + 1) >= dC._ICS && (pos + 1) <= dC._LCS)
+				screenMemory () -> setPixel (((size_t) pos + 1), (size_t) dC._RR, fc);
+		}
 	}
 
 	return (result);
 }
 
 // ---
-MCHEmul::UByte C64::VICII::drawMultiColorEnhancedChar (int cb, int r,
-	const MCHEmul::UBytes& sc, const MCHEmul::UBytes& bt, const MCHEmul::UBytes& clr, const DrawContext& dC)
+MCHEmul::UByte C64::VICII::drawMultiColorExtendedChar (int cb, int r,
+	const MCHEmul::UBytes& sc, const MCHEmul::UBytes& bt, const MCHEmul::UBytes& clr, const C64::VICII::DrawContext& dC)
 {
 	MCHEmul::UByte result = MCHEmul::UByte::_0;
 
@@ -622,16 +634,91 @@ MCHEmul::UByte C64::VICII::drawMultiColorEnhancedChar (int cb, int r,
 
 		size_t iBy = ((size_t) pp) >> 3 /** To determine the byte. */;
 		size_t iBt = 7 - (((size_t) pp) % 8); /** From MSB to LSB. */
-		unsigned short pos = dC._RCA + i;
-		// The color of the pixel 0 is determined by the 2 MSB of the char code...
+		// The color of the pixel 0 is determined by the 2 MSBites of the char code...
+		bool bS = bt [(iBy << 3) + (size_t) r].bit (iBt); // To know whether the bit is 1 or 0...
+		result.setBit (7 - i, bS);
 		unsigned int cs = ((sc [iBy].value () & 0xc0) >> 6) & 0x03;
-		bool bS = false; // To know whether the bit is 1 or 0...
-		unsigned int fc = 
-			((bS = bt [(iBy << 3) + (size_t) r].bit (iBt))
-				? clr [iBy].value () : _VICIIRegisters -> backgroundColor (cs)) & 0x0f /** useful nibble. */;
+		unsigned short pos = dC._RCA + i;
+		unsigned int fc = (bS ? clr [iBy].value () : _VICIIRegisters -> backgroundColor (cs)) & 0x0f /** useful nibble. */;
 		if (pos >= dC._ICS && pos <= dC._LCS)
 			screenMemory () -> setPixel ((size_t) pos, (size_t) dC._RR, fc);
+	}
+
+	return (result);
+}
+
+// ---
+MCHEmul::UByte C64::VICII::drawMonoColorBitMap (int cb, int r,
+	const MCHEmul::UBytes& sc, const MCHEmul::UBytes& bt, const C64::VICII::DrawContext& dC, bool blk)
+{
+	MCHEmul::UByte result = MCHEmul::UByte::_0;
+
+	for (int i = 0; i < 8 /** To paint always 8 pixels. */; i++)
+	{
+		int pp = cb + i;
+		if (pp < 0)
+			continue;
+
+		size_t iBy = ((size_t) pp) >> 3 /** To determine the byte. */;
+		size_t iBt = 7 - (((size_t) pp) % 8); /** From MSB to LSB. */
+		bool bS = bt [(iBy << 3) + (size_t) r].bit (iBt);
 		result.setBit (7 - i, bS);
+	
+		if (blk)
+			continue;
+
+		unsigned int fc = bS 
+				? (sc [iBy].value () & 0xf0) >> 4	// If the bit is 1, the color is determined by the MSNibble
+				: (sc [iBy].value () & 0x0f);		// ...and for LSNibble if it is 0...
+		unsigned short pos = dC._RCA + i;
+		if (pos >= dC._ICS && pos <= dC._LCS)
+			screenMemory () -> setPixel ((size_t) pos, (size_t) dC._RR, fc); 
+	}
+
+	return (result);
+}
+
+// ---
+MCHEmul::UByte C64::VICII::drawMultiColorBitMap (int cb, int r,
+	const MCHEmul::UBytes& sc, const MCHEmul::UBytes& bt, const MCHEmul::UBytes& clr, const C64::VICII::DrawContext& dC, bool blk)
+{
+	MCHEmul::UByte result = MCHEmul::UByte::_0;
+
+	for (unsigned short i = 0 ; i < 8 /** To paint always 8 pixels but in block of 2. */; i += 2)
+	{
+		int pp = cb + i;
+		if (pp < 0)
+			continue;
+
+		size_t iBy = ((size_t) pp) >> 3; 
+		size_t iBt = 3 - ((((size_t) pp) % 8) >> 1);
+		unsigned char cs = (bt [(iBy << 3) + (size_t) r].value () >> (iBt << 1)) & 0x03; // 0, 1, 2 or 3
+		// If 0, the pixel should be drawn in the background color and it is already...
+		if (cs == 0x00)
+			continue;
+
+		// The combinations 0x00 and 0x01 are considered as background!
+		// So they cannot be used in collisions...
+		if (cs == 0x10 || cs == 0x11)
+		{
+			result.setBit (7 - i, true); 
+			result.setBit (6 - i, true);
+		}
+
+		if (blk)
+			continue;
+
+		unsigned short pos = dC._RCA + i;
+		unsigned fc = // The value 0x00 is not tested....
+				(cs == 0x01) // The color is the defined in the video matrix, high nibble...
+					? (sc [iBy].value () & 0xf0) >> 4
+					: ((cs == 0x10) // The color is defined in the video matrix, low nibble...
+						? (sc [iBy].value () & 0x0f)
+						: clr [iBy].value () & 0x0f); // The color is defined in color matrix...
+		if (pos >= dC._ICS && pos <= dC._LCS) 
+			screenMemory () -> setPixel ((size_t) pos, (size_t) dC._RR, fc);
+		if ((pos + 1) >= dC._ICS && (pos + 1) <= dC._LCS) 
+			screenMemory () -> setPixel (((size_t) pos + 1), (size_t) dC._RR, fc);
 	}
 
 	return (result);
