@@ -90,13 +90,14 @@ namespace MCHEmul
 	Strings convertIntoStrings (int n, wchar_t** dt); // Unicode...
 
 	/** General functions to determine whether a string is or not valid
-		from a spcific perspective. */
-	bool validLabel (const std::string& s); 
-	bool validBytesOctal (const std::string& s); 
-	bool validBytesHexadecimal (const std::string& s); 
-	bool validBytesDecimal (const std::string& s); 
-	bool validBytes (const std::string& s);
-	bool validOperation (const std::string& s);
+		from a specific perspective. */
+	bool validLabel (const std::string& s);
+	bool validBytesBinary (const std::string& s); // 0 or 1 and must start with a z
+	bool validBytesOctal (const std::string& s); // from 0 to 8 and must start with a 0
+	bool validBytesHexadecimal (const std::string& s); // from 0 to f and must start with a $
+	bool validBytesDecimal (const std::string& s); // only numbers and not starting with 0
+	bool validBytes (const std::string& s); // if type valid...
+	bool validOperation (const std::string& s); // very generic validation...
 
 	/** To determine whether a class is or not a subclass of other. */
 	template <typename Base, typename Type>

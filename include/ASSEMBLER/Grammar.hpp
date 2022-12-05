@@ -172,7 +172,7 @@ namespace MCHEmul
 			enum Type { _LABEL = 0, _BYTESINMEMORY, _INSTRUCTION, _STARTINGPOINT  };
 
 			GrammaticalElement ()
-				: _type (_BYTESINMEMORY), _id (0), _line (0), _actionOn (0),
+				: _type (_BYTESINMEMORY), _id (0), _file (""), _line (0), _actionOn (0),
 				  _nextElement (nullptr), _previousElement (nullptr),
 				  _error (ErrorType::_NOERROR), _codeBytes ()
 							{ }
@@ -207,6 +207,7 @@ namespace MCHEmul
 
 			Type _type;
 			unsigned int _id; // Sequential...
+			std::string _file; //The name of the file where the definition appears...
 			unsigned int _line; // The line where the definition appears...
 			unsigned int _actionOn; // It might be understand by the compiler...
 			/** The next gramatical element linked. */

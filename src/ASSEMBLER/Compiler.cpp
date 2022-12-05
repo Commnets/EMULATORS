@@ -188,7 +188,7 @@ MCHEmul::Assembler::ByteCode MCHEmul::Assembler::Compiler::compile (const std::s
 		MCHEmul::Address spa (i -> codeBytes (smt, cpu () -> architecture ().bigEndian ()));
 		if (!*i)
 		{
-			_errors.push_back (MCHEmul::Assembler::Error (i -> _error, fN, i -> _line, 0));
+			_errors.push_back (MCHEmul::Assembler::Error (i -> _error, i -> _file, i -> _line, 0));
 
 			continue;
 		}
@@ -212,7 +212,7 @@ MCHEmul::Assembler::ByteCode MCHEmul::Assembler::Compiler::compile (const std::s
 					std::vector <MCHEmul::UByte> b = 
 						gE -> codeBytes (smt, cpu () -> architecture ().bigEndian ());
 					if (!*gE)
-						_errors.push_back (MCHEmul::Assembler::Error (gE -> _error, fN, gE -> _line, 0));
+						_errors.push_back (MCHEmul::Assembler::Error (gE -> _error, gE -> _file, gE -> _line, 0));
 					else
 						result._lines.push_back (MCHEmul::Assembler::ByteCodeLine (spa, b, lL, 
 							(gE -> _type == MCHEmul::Assembler::GrammaticalElement::_INSTRUCTION) 

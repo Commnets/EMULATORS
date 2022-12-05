@@ -6,7 +6,7 @@ bool F6500::ASL_General::executeOn (const MCHEmul::Address& a)
 {
 	// Read the value, makes the operation and set it back!
 	MCHEmul::UByte v = memory () -> values (a, 1)[0]; // 1 byte long always
-	bool c = v.shiftLeftC (1, false /** 0 is put into */); // Keeps the status of the last bit to actualize later the carry flag
+	bool c = v.shiftLeftC (false /** 0 is put into */, 1); // Keeps the status of the last bit to actualize later the carry flag
 	memory () -> set (a, { v });
 
 	// Time of the status register...
@@ -39,7 +39,7 @@ _INST_IMPL (F6500::ASL_Accumulator)
 
 	// Set the value...
 	MCHEmul::UBytes v = a.values ();
-	bool c = v.shiftLeftC (1, false /** 0 is put into */);
+	bool c = v.shiftLeftC (false /** 0 is put into */, 1);
 	a.set (v);
 
 	// Time of the status register...

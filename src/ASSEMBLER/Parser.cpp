@@ -164,6 +164,7 @@ void MCHEmul::Assembler::StartingPointCommandParser::parse (MCHEmul::Assembler::
 	size_t mD = pC -> _currentLine.find (_symbol);
 	MCHEmul::Assembler::StartingPointElement* nE = pC -> _semantic -> addNewStartingPoint (); // Starts a new entry point...
 	nE -> _id = pC -> _lastStartingPointId++; // Sequential...
+	nE -> _file = pC -> _file;
 	nE -> _line = pC -> _currentLineNumber;
 	nE -> _value = MCHEmul::trim (pC -> _currentLine.substr (mD + 1,
 		pC -> _currentLine.find (parser () -> commentSymbol () /** Until a potential comment. */) - (mD + 1)));
@@ -187,6 +188,7 @@ void MCHEmul::Assembler::LabelCommandParser::parse (MCHEmul::Assembler::ParserCo
 	size_t eL = pC -> _currentLine.find (_symbol);
 	MCHEmul::Assembler::LabelElement* nE = new MCHEmul::Assembler::LabelElement;
 	nE -> _id = pC -> _lastLabelId++; // Sequential...
+	nE -> _file = pC -> _file;
 	nE -> _line = pC -> _currentLineNumber;
 	nE -> _name = MCHEmul::trim (MCHEmul::upper (pC -> _currentLine.substr (0, eL)));
 	// The label has to be valid...
@@ -212,6 +214,7 @@ void MCHEmul::Assembler::BytesCommandParser::parse (MCHEmul::Assembler::ParserCo
 	size_t eL = MCHEmul::firstSpaceIn (pC -> _currentLine); // The first space like defines where the data starts...
 	MCHEmul::Assembler::BytesInMemoryElement* nE = new MCHEmul::Assembler::BytesInMemoryElement;
 	nE -> _id = pC -> _lastBytesId++; // Sequential...
+	nE -> _file = pC -> _file;
 	nE -> _line = pC -> _currentLineNumber;
 	nE -> _elements = MCHEmul::getElementsFrom (pC -> _currentLine.substr (eL + 1,
 		pC -> _currentLine.find (parser () -> commentSymbol () /** Until a potential comment. */) - (eL + 1)), ' ');
@@ -273,6 +276,7 @@ void MCHEmul::Assembler::BinaryCommandParser::parse (MCHEmul::Assembler::ParserC
 	size_t eL = MCHEmul::firstSpaceIn (pC -> _currentLine); // The first space like defines where the data starts...
 	MCHEmul::Assembler::BytesInMemoryElement* nE = new MCHEmul::Assembler::BytesInMemoryElement;
 	nE -> _id = pC -> _lastBytesId++; // Sequential...
+	nE -> _file = pC -> _file;
 	nE -> _line = pC -> _currentLineNumber;
 	std::string dt = MCHEmul::noSpaces (pC -> _currentLine.substr (eL));
 	for (size_t i = 0; i < dt.length (); i++)
@@ -280,7 +284,7 @@ void MCHEmul::Assembler::BinaryCommandParser::parse (MCHEmul::Assembler::ParserC
 			dt = dt.substr (0, i) + 
 				 ((_definitionParser != nullptr) ? _definitionParser -> definitionFor (dt [i]) : "0") +
 				 dt.substr (i + 1);
-	nE -> _elements = (dt == "") ? MCHEmul::Strings () : MCHEmul::Strings({ dt });
+	nE -> _elements = (dt == "") ? MCHEmul::Strings () : MCHEmul::Strings ({ "z" /** for binary. */ + dt });
 	if (nE -> _elements.empty ())
 		nE -> _error = MCHEmul::Assembler::ErrorType::_BYTESNOTVALID;
 
@@ -320,6 +324,7 @@ void MCHEmul::Assembler::InstructionCommandParser::parse (MCHEmul::Assembler::Pa
 
 	MCHEmul::Assembler::InstructionElement* nE = new MCHEmul::Assembler::InstructionElement;
 	nE -> _id = pC -> _lastInstructionId++;
+	nE -> _file = pC -> _file;
 	nE -> _line = pC -> _currentLineNumber;
 	MCHEmul::Strings prms;
 	for (MCHEmul::Instructions::const_iterator i = cpu () -> instructions ().begin ();

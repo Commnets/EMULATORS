@@ -9,7 +9,7 @@ bool F6500::ROR_General::executeOn (const MCHEmul::Address& a)
 
 	// Read the value, makes the operation and set it back!
 	MCHEmul::UByte v = memory () -> values (a, 1)[0]; // 1 byte long always
-	c = v.rotateRightC (1, c /** The carry is put into. */); // Keeps the status of the last bit to actualize later the carry flag
+	c = v.rotateRightC (c /** The carry is put into. */, 1); // Keeps the status of the last bit to actualize later the carry flag
 	memory () -> set (a, { v });
 
 	// Time of the status register...
@@ -43,7 +43,7 @@ _INST_IMPL (F6500::ROR_Accumulator)
 
 	// Set the value...
 	MCHEmul::UBytes v = a.values ();
-	c = v.rotateRightC (1, c);
+	c = v.rotateRightC (c, 1);
 	a.set (v);
 
 	// Time of the status register...

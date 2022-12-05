@@ -33,17 +33,37 @@ MAIN:						lda #$06
 							sta VICIIFOREGROUND
 							lda #$01
 							sta VICIIBACKGROUND1
-							lda #$05
+							lda #$00
 							sta VICIIBACKGROUND2
-							lda #$0a
+							lda #$05
 							sta VICIIBACKGROUND3
 							jsr CLEARSCREEN
 
+; Change the char set
+SETCHARSET:					lda VICIICTRLMEMREG
+							and #$f1
+							ora #$06								; Put the second character set (lowercase)
+							sta VICIICTRLMEMREG
+
 ; Change the graphics mode...
-SETGRAPHICMODE:				lda VICIISCROLLY
-							and #$bf
-							ora #$40								; Sets the bit 6 on... enhaced multimode...
-							sta VICIISCROLLY
+; Char multicolor extended
+;SETGRAPHICMODE:				lda VICIISCROLLY
+;							and #$bf
+;							ora #$40								; Sets the bit 6 on... enhaced multimode...
+;							sta VICIISCROLLY
+;							lda VICIISCROLLX						; Just to test if the shift doesn't affect!
+;							and #$f8
+;							ora #$07
+;							sta VICIISCROLLX
+; Char multicolor
+SETGRAPHICMODE:			lda VICIISCROLLX						; Sets the bit 4 on... multicolor text mode...
+							and #$ef
+							ora #$10
+							sta VICIISCROLLX
+							lda VICIISCROLLX						; Just to test if the shift doesn't affect!
+							and #$f8
+							ora #$07
+							sta VICIISCROLLX
 
 ; Test to draw a text on the screen.
 ; The elements of the text are defined at TEXTDEF.

@@ -343,7 +343,7 @@ MCHEmul::UInt MCHEmul::UInt::fromStr (const std::string& s, unsigned char f)
 {
 	MCHEmul::UInt result;
 
-	if (s == "")
+	if (s == "" || s == "-")
 		return (result);
 
 	bool n = false;
@@ -359,39 +359,55 @@ MCHEmul::UInt MCHEmul::UInt::fromStr (const std::string& s, unsigned char f)
 
 	switch (str [0])
 	{
+		case 'z':
+		case 'Z':
+			{
+				unsigned int i = 0;
+				if (str.length () > 1)
+					for (size_t ct = 0; ct < (str.length () - 1); ct++)
+						i += (str [str.length () - 1 - ct] == '1') ? (1 << ct) : 0;
+				result = MCHEmul::UInt::fromUnsignedInt (i, f); // Big - endian
+			}
+
+			break;
+
 		case '$':
-		{
-			unsigned int i;
-			std::istringstream ss (str.substr (1));
-			ss >> std::hex >> i;
-			result = MCHEmul::UInt::fromUnsignedInt (i, f); // Big - endian
-		}
+			{
+				unsigned int i = 0;
+				if (str.length () > 1)
+				{ 
+					std::istringstream ss (str.substr (1));
+					ss >> std::hex >> i;
+				}
+
+				result = MCHEmul::UInt::fromUnsignedInt (i, f); // Big - endian
+			}
 		
-		break;
+			break;
 
 		case '0':
-		{
-			unsigned int i = 0;
-			if (str.length () != 0)
 			{
-				std::istringstream ss (str.substr (1));
-				ss >> std::oct >> i;
-			}
+				unsigned int i = 0;
+				if (str.length () > 1)
+				{
+					std::istringstream ss (str.substr (1));
+					ss >> std::oct >> i;
+				}
 			
-			result = MCHEmul::UInt::fromUnsignedInt (i, f); // Big - endian
-		}
+				result = MCHEmul::UInt::fromUnsignedInt (i, f); // Big - endian
+			}
 		
-		break;
+			break;
 
 		default:
-		{
-			unsigned int i;
-			std::istringstream ss (str);
-			ss >> std::dec >> i;
-			result = MCHEmul::UInt::fromUnsignedInt (i, f); // Big - endian
-		}
+			{
+				unsigned int i;
+				std::istringstream ss (str);
+				ss >> std::dec >> i;
+				result = MCHEmul::UInt::fromUnsignedInt (i, f); // Big - endian
+			}
 			
-		break;
+			break;
 	}
 
 	if (n)

@@ -230,6 +230,15 @@ bool MCHEmul::validLabel (const std::string& s)
 }
 
 // ---
+bool MCHEmul::validBytesBinary (const std::string& s)
+{
+	return (s.length () > 1 && 
+		std::find_if (++s.begin (), s.end (), 
+			[](unsigned ch) -> bool { return (ch != '0' && ch != '1'); }) == s.end () &&
+		(s [0] == 'z' || s [0] == 'Z'));
+}
+
+// ---
 bool MCHEmul::validBytesOctal (const std::string& s)
 { 
 	static const std::string oS ("01234567");
@@ -265,7 +274,8 @@ bool MCHEmul::validBytesDecimal (const std::string& s)
 // ---
 bool MCHEmul::validBytes (const std::string& s)
 { 
-	return (MCHEmul::validBytesOctal (s) || 
+	return (MCHEmul::validBytesBinary (s) ||
+			MCHEmul::validBytesOctal (s) || 
 			MCHEmul::validBytesHexadecimal (s) ||
 			MCHEmul::validBytesDecimal (s));
 }

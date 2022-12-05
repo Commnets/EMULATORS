@@ -48,11 +48,11 @@ BOXEXAMPLE:					lda #$10								; Pos X.
 ; The elements of the rectangle are defined at CHARSDEF.
 RECTANGLEEXAMPLE:			lda #$01								; Pos X.
 							sta DRAWRECT_XPOSVAR
-							lda #$01								; Pos Y.
+							lda #$15								; Pos Y.
 							sta DRAWRECT_YPOSVAR
 							lda #$26								; Size X.
 							sta DRAWRECT_XLENVAR
-							lda #$04								; Size Y.
+							lda #$03								; Size Y.
 							sta DRAWRECT_YLENVAR
 							ldx #$07
 LOOPCHARS:					lda CHARSDEF,x
@@ -94,6 +94,17 @@ TEXTEXAMPLEIN:				lda #>TEXTDEF
 							lda #$07								; Yellow.
 							sta DRAWTEXT_COLORVAR
 							jsr DRAWTEXTIN
+
+; cout all the full character set
+COUTCHARSET:				ldx #$00
+							ldy #$00
+COUTCHARSET_LOOP:			txa
+							sta SCREENBASE,y
+							lda #$01								; White
+							sta COLORRAMBASE,y
+							inx
+							iny
+							bne COUTCHARSET_LOOP
 
 ; Test to draw a text crossing the screen (horizontal)...
 TEXTEXAMPLEMOVE:			lda #>TEXTDEF
