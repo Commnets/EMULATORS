@@ -410,11 +410,11 @@ void C64::VICII::drawGraphicsAndDetectCollisions (const C64::VICII::DrawContext&
 			break;
 
 		case C64::VICIIRegisters::GraphicMode::_BITMAPMODE:
-			colGraphics = drawMonoColorBitMap (cb, rc, _graphicsCharData, _graphicsBitmapData, dC);
+			colGraphics = drawMonoColorBitMap (cb, rc, _graphicsScreenCodeData, _graphicsBitmapData, dC);
 			break;
 
 		case C64::VICIIRegisters::GraphicMode::_MULTICOLORBITMAPMODE:
-			colGraphics = drawMultiColorBitMap (cb, rc, _graphicsCharData, _graphicsBitmapData, _graphicsColorData, dC);
+			colGraphics = drawMultiColorBitMap (cb, rc, _graphicsScreenCodeData, _graphicsBitmapData, _graphicsColorData, dC);
 			break;
 
 		case C64::VICIIRegisters::GraphicMode::_INVALIDTEXMODE:
@@ -422,12 +422,12 @@ void C64::VICII::drawGraphicsAndDetectCollisions (const C64::VICII::DrawContext&
 			break;
 
 		case C64::VICIIRegisters::GraphicMode::_INVALIDBITMAPMODE1:
-			colGraphics = drawMonoColorBitMap (cb, rc, _graphicsCharData, _graphicsBitmapData, dC, true /** everything black. */);
+			colGraphics = drawMonoColorBitMap (cb, rc, _graphicsScreenCodeData, _graphicsBitmapData, dC, true /** everything black. */);
 			break;
 
 		case C64::VICIIRegisters::GraphicMode::_INVALIDBITMAPMODE2:
 			colGraphics = drawMultiColorBitMap 
-				(cb, rc, _graphicsCharData, _graphicsBitmapData, _graphicsColorData, dC, true /* everything black. */);
+				(cb, rc, _graphicsScreenCodeData, _graphicsBitmapData, _graphicsColorData, dC, true /* everything black. */);
 			break;
 
 		default:

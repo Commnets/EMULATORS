@@ -21,6 +21,6 @@ VICIIBACKGROUND2			= $d023							; VICII Address for the background 2.
 VICIIBACKGROUND3			= $d024							; VICII Address for the background 3.
 VICIISCROLLY				= $d011							; VICII Address to SCROLL in the Y axis (and also graphic mode)
 VICIISCROLLX				= $d016							; VICII Address to SCROLL in the X axis.
-VICIICTRLMEMREG				= $d018
+VICIICTRLMEMREG				= $d018							; To control the location of the graphical memory
 
 ; End.

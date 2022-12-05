@@ -155,7 +155,7 @@ void C64::VICIIRegisters::setValue (size_t p, const MCHEmul::UByte& v)
 					(((unsigned int) (v.value () & 0x0e)) << 10 /** multiply 1024 */));
 				/* bits xxxx---- */
 				_screenMemory = MCHEmul::Address (MCHEmul::UInt::fromUnsignedInt 
-					(((unsigned int) (v.value () & 0xf0)) << 6 /** multiply by 64 = /16*1024 */));
+					(((unsigned int) (v.value () & 0xf0)) << 6 /** to make it simpler. Really >> 4 << 10 = multiply by 1024 */));
 				/* bit ----x--- (also used above) */
 				_bitmapMemory = MCHEmul::Address (MCHEmul::UInt::fromUnsignedInt 
 					(((unsigned int) (v.value () & 0x08)) << 10 /** multiple by 1024. */));
