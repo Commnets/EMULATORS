@@ -24,14 +24,14 @@ BINARY	00001000
 BINARY	00000100
 BINARY	00000010
 BINARY	00000001
-BINARY	00000001
-BINARY	00000010
-BINARY	00000100
-BINARY	00001000
-BINARY	00010000
-BINARY	00100000
-BINARY	01000000
-BINARY	10000000
+BINARY	11001001
+BINARY	11001001
+BINARY	11001001
+BINARY	11001001
+BINARY	11001001
+BINARY	11001001
+BINARY	11001001
+BINARY	11001001
 
 BLOCKLINE = $ca10
 BITMAPMEM = $2000
@@ -50,6 +50,10 @@ SETGRAPHICMODE:				lda VICIISCROLLY
 							and #$df
 							ora #$20								; Sets the bit 5 on... bitmap mode
 							sta VICIISCROLLY
+							lda VICIISCROLLX
+							and #$ef
+							ora #$10								; Sets the bit 4 on... multicolor bitmap mode
+							sta VICIISCROLLX
 							lda VICIICTRLMEMREG
 							and #$f7
 							ora #$08								; The location of the graphical memory is at 8192
@@ -61,9 +65,12 @@ DRAWGRAPHIC_LOOP:			lda BLOCKLINE,x
 							inx 
 							cpx #$10
 							bne DRAWGRAPHIC_LOOP
-							lda #$f2
+							lda #$17
 							sta SCREENBASE
 							sta SCREENBASE + 1
+							lda #$03
+							sta COLORRAMBASE
+							sta COLORRAMBASE + 1
 
 FOREVER:					jmp FOREVER								; For ever...
 

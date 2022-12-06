@@ -578,9 +578,9 @@ MCHEmul::UByte C64::VICII::drawMultiColorChar (int cb, int r,
 		if (cs == 0x00)
 			continue;
 
-		// The combinations 0x00 and 0x01 are considered as background!
+		// The combinations 0x00 (binary 00) and 0x01 (binary 01) are considered as background!
 		// So they coan not be used in collisions...
-		if (cs == 0x10 || cs == 0x11)
+		if (cs == 0x02 || cs == 0x03)
 		{
 			result.setBit (7 - i, true); 
 			result.setBit (6 - i, true);
@@ -697,9 +697,9 @@ MCHEmul::UByte C64::VICII::drawMultiColorBitMap (int cb, int r,
 		if (cs == 0x00)
 			continue;
 
-		// The combinations 0x00 and 0x01 are considered as background!
+		// The combinations 0x00 (binary 00) and 0x01 (binary 01) are considered as background!
 		// So they cannot be used in collisions...
-		if (cs == 0x10 || cs == 0x11)
+		if (cs == 0x02 || cs == 0x03)
 		{
 			result.setBit (7 - i, true); 
 			result.setBit (6 - i, true);
@@ -712,7 +712,7 @@ MCHEmul::UByte C64::VICII::drawMultiColorBitMap (int cb, int r,
 		unsigned fc = // The value 0x00 is not tested....
 				(cs == 0x01) // The color is the defined in the video matrix, high nibble...
 					? (sc [iBy].value () & 0xf0) >> 4
-					: ((cs == 0x10) // The color is defined in the video matrix, low nibble...
+					: ((cs == 0x02) // The color is defined in the video matrix, low nibble...
 						? (sc [iBy].value () & 0x0f)
 						: clr [iBy].value () & 0x0f); // The color is defined in color matrix...
 		if (pos >= dC._ICS && pos <= dC._LCS) 
