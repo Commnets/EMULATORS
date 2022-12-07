@@ -67,7 +67,7 @@ void MCHEmul::CommunicationSystem::manageAnswer (MCHEmul::Command* c, const MCHE
 	}
 	else
 	{
-		if (!rst.empty ())
+		if (!rst.empty () && c != nullptr)
 		{ 
 			std::string h = 
 				// The name of the command...
@@ -89,8 +89,8 @@ void MCHEmul::CommunicationSystem::manageAnswer (MCHEmul::Command* c, const MCHE
 					// In this case the original command is change into an error...
 					MCHEmul::CommsSystemAnswerCommand::_PARANSWER + "=" + 
 					MCHEmul::CommsSystemAnswerCommand::replaceCharsForComms
-					(FormatterBuilder::instance () -> formatter (_messageFormatter) -> format 
-						(InfoStructure ({ { "ERROR", "Message to long" } }, { })));
+						(FormatterBuilder::instance () -> formatter (_messageFormatter) -> format 
+							(InfoStructure ({ { "ERROR", "Message to long" } }, { })));
 
 			if (_communicationChannel -> send (msg, _lastSender))
 			{ 

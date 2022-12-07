@@ -10,12 +10,7 @@ std::string MCHEmul::CommsSystemAnswerCommand::replaceCharsForComms (const std::
 {
 	std::string result = str;
 
-	result = MCHEmul::replaceAll (result, "\t", "\\&09");
-	result = MCHEmul::replaceAll (result, "\n", "\\&10");
-	result = MCHEmul::replaceAll (result, "\v", "\\&11");
-	result = MCHEmul::replaceAll (result, "\f", "\\&12");
-	result = MCHEmul::replaceAll (result, "\r", "\\&13");
-	result = MCHEmul::replaceAll (result, " " , "\\&32");	
+	result = replaceAllSpacesPerEquivalent (result);
 	result = MCHEmul::replaceAll (result, "=" , "\\&61");
 
 	return (result);
@@ -26,12 +21,7 @@ std::string MCHEmul::CommsSystemAnswerCommand::restablishCharsFromComms (const s
 {
 	std::string result = str;
 
-	result = MCHEmul::replaceAll (result, "\\&09", "\t");
-	result = MCHEmul::replaceAll (result, "\\&10", "\n");
-	result = MCHEmul::replaceAll (result, "\\&11", "\v");
-	result = MCHEmul::replaceAll (result, "\\&12", "\f");
-	result = MCHEmul::replaceAll (result, "\\&13", "\r");
-	result = MCHEmul::replaceAll (result, "\\&32", " " );	
+	result = restoreSpacesFromEquivalent (result);
 	result = MCHEmul::replaceAll (result, "\\&61", "=" );
 
 	return (result);

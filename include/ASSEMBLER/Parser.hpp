@@ -334,6 +334,21 @@ namespace MCHEmul
 			BinaryDefinitionParser* _definitionParser;
 		};
 
+		/** To include a binary set of data comming from a file. */
+		class LoadBytesFileCommandParser final : public CommandParser
+		{
+			public:
+			LoadBytesFileCommandParser ()
+				: CommandParser ()
+							{ }
+
+			virtual bool canParse (ParserContext* pC) const override
+							{ size_t p = firstSpaceIn (pC -> _currentLine);
+							  return ((p == std::string::npos) 
+								  ? false : upper (trim (pC -> _currentLine.substr (0, p))) == "BYTESFILE"); }
+			virtual void parse (ParserContext* pC) const override;
+		};
+
 		/** To parser an instruction. */
 		class InstructionCommandParser final : public CommandParser
 		{
@@ -355,11 +370,17 @@ namespace MCHEmul
 		{
 			public:
 			Parser (const CPU* c, const CommandParsers& lP = // With the standard line parsers...
-					{ new CommentCommandParser, new IncludeCommandParser, 
-					  new MacroCommandParser, new CodeTemplateDefinitionCommandParser, new CodeTemplateUseCommandParser,
-					  new StartingPointCommandParser, 
-					  new LabelCommandParser, new BytesCommandParser, new BinaryDefinitionParser, new BinaryCommandParser,
-					  new InstructionCommandParser });
+					{ new CommentCommandParser, // Comments
+					  new IncludeCommandParser, // Include other assembler files
+					  new MacroCommandParser, // Macro definitions
+					  new CodeTemplateDefinitionCommandParser, new CodeTemplateUseCommandParser, // Templates
+					  new StartingPointCommandParser, // Starting point for data and code
+					  new LabelCommandParser, // Labels for jumps
+					  new BytesCommandParser, // Set of bytes
+					  new LoadBytesFileCommandParser, // Loading a file of bytes
+					  new BinaryDefinitionParser, new BinaryCommandParser, // Binary definition
+					  new InstructionCommandParser // To understand instructions
+					});
 
 			Parser (Parser&) = delete;
 

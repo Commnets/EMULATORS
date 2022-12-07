@@ -34,19 +34,24 @@ namespace MCHEmul
 	class JSONFormatter final : public Formatter
 	{
 		public:
-		JSONFormatter (const Strings& l)
+		JSONFormatter (const Strings& l, char dE = ':')
 			: Formatter (l),
-			  _defEqual (":")
+			  _defEqual (dE)
 							{ }
 
 		virtual void initialize () override
 							{ }
 
+		char defEqual () const
+							{ return (_defEqual); }
+		void setDefEqual (char dE)
+							{ _defEqual = dE; }
+
 		virtual std::string format (const InfoStructure& a) const override;
 		virtual InfoStructure unFormat (const std::string& str) const override;
 
 		private:
-		std::string _defEqual;
+		char _defEqual;
 	};
 }
 

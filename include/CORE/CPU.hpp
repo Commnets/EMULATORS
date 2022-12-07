@@ -32,14 +32,7 @@ namespace MCHEmul
 		public:
 		CPU () = delete;
 
-		CPU (const CPUArchitecture& a, const Registers& r, const StatusRegister& sR, const Instructions& ins)
-			: InfoClass ("CPU"),
-			  _architecture (a), _registers (r), _statusRegister (sR), _instructions (ins),
-			  _programCounter (a.numberBytes ()), _memory (nullptr), _interrupts (),
-			  _lastInstruction (nullptr),
-			  _error (_NOERROR), _clockCycles (0),
-			  _stopped (false)
-							{ assert (_registers.size () > 0 && _instructions.size () > 0); }
+		CPU (const CPUArchitecture& a, const Registers& r, const StatusRegister& sR, const Instructions& ins);
 
 		CPU (const CPU&) = delete;
 
@@ -151,6 +144,9 @@ namespace MCHEmul
 		unsigned int _error;
 		unsigned int _clockCycles;
 		bool _stopped; // When the CPU is stopped and no runCycle is executed...
+		/** The instructions will be moved into an array at construction time,
+			to speed up their access in the executeNextInstruction method. */
+		std::vector <Instruction*> _rowInstructions;
 	};
 }
 

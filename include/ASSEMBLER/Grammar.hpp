@@ -13,6 +13,7 @@
 				 In the case of the Assembler language, the following gramatical elements could be distinguished: \n
 				 LabelElement			:	Represents a point in the memory. \n
 				 BytesElement			:	Simple set of bytes filling up memory positions. \n
+				 BytesFileElement		:	A reference to bytes defined externally in a file. \n
 				 InstructionElement		:	Represents a CPU instruction. It is an special type of BytesElement. \n
 				 StartingPointElement	:	Represents the point in the memory where to locate the other elements. \n
 				 Some of those elements could hold parameters and that parameters could be based on MACROS.
@@ -259,6 +260,25 @@ namespace MCHEmul
 			virtual size_t size (const Semantic* s) const override;
 
 			Strings _elements;
+
+			private:
+			virtual std::vector <UByte> calculateCodeBytes (const Semantic* s, bool bE = true) const override;
+		};
+
+		/** @see explanation at the beggining of the file. */
+		struct BytesFileElement final : public GrammaticalElement
+		{
+			BytesFileElement ()
+				: GrammaticalElement (), _binaryFile ("")
+					{ _type = Type::_BYTESINMEMORY; }
+
+			BytesFileElement (const BytesFileElement&) = default;
+
+			BytesFileElement& operator = (const BytesFileElement&) = default;
+
+			virtual size_t size (const Semantic* s) const override;
+
+			std::string _binaryFile;
 
 			private:
 			virtual std::vector <UByte> calculateCodeBytes (const Semantic* s, bool bE = true) const override;

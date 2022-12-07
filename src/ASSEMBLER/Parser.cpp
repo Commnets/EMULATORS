@@ -296,6 +296,32 @@ void MCHEmul::Assembler::BinaryCommandParser::parse (MCHEmul::Assembler::ParserC
 }
 
 // ---
+void MCHEmul::Assembler::LoadBytesFileCommandParser::parse (MCHEmul::Assembler::ParserContext* pC) const
+{
+	if (!canParse (pC))
+	{
+		pC -> _currentLine = "";
+
+		return; // It doesn't generate error, but "forgets" the line
+	}
+
+	size_t eL = MCHEmul::firstSpaceIn (pC -> _currentLine); // The first space like defines where the data starts...
+	MCHEmul::Assembler::BytesFileElement* nE = new MCHEmul::Assembler::BytesFileElement;
+	nE -> _id = pC -> _lastBytesId++; // Sequential...
+	nE -> _file = pC -> _file;
+	nE -> _line = pC -> _currentLineNumber;
+	nE -> _binaryFile = MCHEmul::noSpaces (pC -> _currentLine.substr (eL));
+	if (nE -> _binaryFile == "")
+		nE -> _error = MCHEmul::Assembler::ErrorType::_BYTESNOTVALID;
+
+	// The element created is added to the gramatic...
+	pC -> _semantic -> addGrammaticalElement (nE);
+
+	// The line is completed...
+	pC -> _currentLine = "";
+}
+
+// ---
 bool MCHEmul::Assembler::InstructionCommandParser::canParse (MCHEmul::Assembler::ParserContext* pC) const
 {
 	std::string cL = MCHEmul::trim 

@@ -3,6 +3,26 @@
 #include <CORE/Formatter.hpp>
 
 // ---
+MCHEmul::CPU::CPU (const MCHEmul::CPUArchitecture& a, const MCHEmul::Registers& r, 
+	const MCHEmul::StatusRegister& sR, const MCHEmul::Instructions& ins)
+	: InfoClass ("CPU"),
+	  _architecture (a), _registers (r), _statusRegister (sR), _instructions (ins),
+	  _programCounter (a.numberBytes ()), _memory (nullptr), _interrupts (),
+	  _lastInstruction (nullptr),
+	  _error (_NOERROR), _clockCycles (0),
+	  _stopped (false),
+	  _rowInstructions () // It will be fulfilled later!
+{ 
+	assert (_registers.size () > 0 && _instructions.size () > 0); 
+
+	// Put the instrucctions in an array to speed up things later...
+	_rowInstructions = std::vector <MCHEmul::Instruction*> 
+		((*_instructions.rbegin ()).second -> code () + 1 /** the last code plus 1. */, nullptr);
+	for (const auto& i : _instructions)
+		_rowInstructions [i.second -> code ()] = i.second;
+}
+
+// ---
 MCHEmul::CPU::~CPU ()
 {
 	for (const auto& i : _instructions)
@@ -62,31 +82,45 @@ bool MCHEmul::CPU::executeNextInstruction ()
 	for (const auto& i : _interrupts)
 	{
 		i.second -> executeOver (this, nC);
+
 		_clockCycles += nC;
 	}
 
-	MCHEmul::Instructions::const_iterator i = 
-		_instructions.find (
-			MCHEmul::UInt (
-				_memory -> values (
-					programCounter ().asAddress (), architecture ().instructionLength ()), 
-				architecture ().bigEndian ()).asUnsignedInt ());
+	// Access the next instruction...
+	MCHEmul::Instruction* inst = nullptr;
+	unsigned int nInst = MCHEmul::UInt (_memory -> values (programCounter ().asAddress (), 
+		architecture ().instructionLength ()), architecture ().bigEndian ()).asUnsignedInt ();
+	if (nInst >= _rowInstructions.size () ||
+		(inst = _rowInstructions [nInst]) == nullptr)
+		return (false); // Not possible to execute the instruction...
 
-	if (i == _instructions.end ())
-		return (false);
+	/**
+		The access to the instruction should be done using the original map, \n
+		but the row list is used instead just to speed up the access. 
 
-	bool result = false;
+		MCHEmul::Instructions::const_iterator i = 
+			_instructions.find (
+				MCHEmul::UInt (
+					_memory -> values (
+						programCounter ().asAddress (), architecture ().instructionLength ()), 
+					architecture ().bigEndian ()).asUnsignedInt ());
 
-	MCHEmul::Instruction* inst = (*i).second;
+		if (i == _instructions.end ())
+			return (false);
+
+		MCHEmul::Instruction* inst = (*i).second;
+	  */
 
 	// Gets the data that the instruction occupies
 	MCHEmul::UBytes dt = _memory -> values (programCounter ().asAddress (), inst -> memoryPositions ());
+
 	// Move the "Program Counter" to the next instruction...
 	// This is done before executing the instruction because the intruction itself could
 	// modify the value of the "Program Counter"
 	_programCounter += (size_t) inst -> memoryPositions ();
+
 	// Then executes the instruction
-	result = inst -> execute (dt, this, _memory, _memory -> stack ());
+	bool result = inst -> execute (dt, this, _memory, _memory -> stack ());
 
 	// And also, take into account what it costs in terms of cycles...
 	_clockCycles += inst -> clockCycles () + inst -> additionalClockCycles ();

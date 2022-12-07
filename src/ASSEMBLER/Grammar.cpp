@@ -1,5 +1,6 @@
 #include <ASSEMBLER/Grammar.hpp>
 #include <algorithm>
+#include <fstream>
 
 // ---
 std::vector <MCHEmul::UByte> MCHEmul::Assembler::Macro::calculateValue 
@@ -188,6 +189,7 @@ std::vector <MCHEmul::UByte> MCHEmul::Assembler::GrammaticalElement::bytesFromEx
 		if (!m) // Error?...
 		{
 			er = true;
+
 			return (result);
 		}
 
@@ -206,7 +208,7 @@ size_t MCHEmul::Assembler::BytesInMemoryElement::size (const MCHEmul::Assembler:
 		return (0); // With error, no size...
 
 	return ((_codeBytes.size () != 0) 
-		? _codeBytes.size () : calculateCodeBytes (s).size () /** Callculus is not kept because architecture is not known here. */);
+		? _codeBytes.size () : calculateCodeBytes (s).size () /** Calculus is not kept because architecture is not known here. */);
 }
 
 // ---
@@ -231,8 +233,52 @@ std::vector <MCHEmul::UByte> MCHEmul::Assembler::BytesInMemoryElement::calculate
 	if (e)
 	{
 		_error = MCHEmul::Assembler::ErrorType::_BYTESNOTVALID;
+
 		result = { }; // Nothing when error...
 	}
+
+	return (result);
+}
+
+// ---
+size_t MCHEmul::Assembler::BytesFileElement::size (const MCHEmul::Assembler::Semantic* s) const
+{
+	size_t result = 0;
+
+	if (!(*this))
+		return (0); // With error, no size...
+
+	return ((_codeBytes.size () != 0) 
+		? _codeBytes.size () : calculateCodeBytes (s).size () /** Calculus is not kept because architecture is not known here. */);
+}
+
+// ---
+std::vector <MCHEmul::UByte> MCHEmul::Assembler::BytesFileElement::calculateCodeBytes
+(const MCHEmul::Assembler::Semantic* s, bool bE) const
+{
+	std::vector <MCHEmul::UByte> result;
+
+	std::ifstream file (_binaryFile, std::ios::binary);
+	if (!file)
+	{
+		_error = MCHEmul::Assembler::ErrorType::_BYTESNOTVALID;
+
+		return (result);
+	}
+
+	file.seekg (0, std::ios::end);
+	std::streamoff lF = file.tellg ();
+	size_t lFA = (size_t) lF;
+	char* fDT = new char [lFA];
+	file.seekg (0, std::ios::beg);
+	file.read (fDT, (std::streamsize) lFA); // Reads the info itself
+
+	file.close ();
+
+	for (size_t i = 0; i < (size_t) (lFA / MCHEmul::UByte::size ()); i += MCHEmul::UByte::size ())
+		result.push_back ((MCHEmul::UByte) (*(fDT + i)));
+
+	delete [] fDT;
 
 	return (result);
 }
@@ -403,6 +449,7 @@ std::vector <MCHEmul::UByte> MCHEmul::Assembler::InstructionElement::calculateCo
 	if (result.size () != inst -> memoryPositions ())
 	{
 		_error = MCHEmul::Assembler::ErrorType::_INSTRUCTIONNOTVALID;
+
 		result = { };
 	}
 

@@ -8,9 +8,9 @@ std::string MCHEmul::JSONFormatter::format (const MCHEmul::InfoStructure& a) con
 	unsigned int idt = 0;
 
 	for (const auto& i : a.attributes ())
-		result += "\n\"" + i.first + "\":\"" + MCHEmul::replaceAll (i.second, "\"", "\\&34") + "\"";
+		result += "\n\"" + i.first + "\"" + _defEqual + "\"" + MCHEmul::replaceAll (i.second, "\"", "\\&34") + "\"";
 	for (const auto& i : a.infoStructures ())
-		result += "\n\"" + i.first + "\":" + format (i.second); // Recursive...
+		result += "\n\"" + i.first + "\"" + _defEqual + format (i.second); // Recursive...
 
 	result += "\n}";
 
@@ -22,15 +22,33 @@ MCHEmul::InfoStructure MCHEmul::JSONFormatter::unFormat (const std::string& str)
 {
 	MCHEmul::InfoStructure result;
 
-	std::string cStr = MCHEmul::noSpaces (str);
+	// Remove from the str received all the strange chars (and also trimmed)
+	// They are not needed to parse it!
+	// Again to simplify the parsing all spaces before and after the equal operator are deleted...
+	size_t pE = 0;
+	std::string cStr = MCHEmul::trim (MCHEmul::noneOf (str, "\t\n\v\f\r"));
+	while (pE != std::string::npos)
+	{ 
+		size_t pEP = 0;
+		if ((pEP = cStr.find (_defEqual, pE)) != std::string::npos)
+		{
+			cStr = MCHEmul::rtrim (cStr.substr (0, pEP)) + 
+				_defEqual + MCHEmul::ltrim (cStr.substr (pEP + 1));
+			pE = cStr.find (_defEqual, pE); 
+			if (pEP != std::string::npos) pE++;
+		}
+		else
+			pE = std::string::npos;
+	}
+
 	if (cStr [0] != '{' && cStr [cStr.length () - 1] != '}')
 		return (result);
-	cStr = cStr.substr (1, cStr.length () - 2);
 
 	size_t p = 0;
+	cStr = MCHEmul::trim (cStr.substr (1, cStr.length () - 2));
 	while (p != cStr.length ())
 	{
-		size_t pI = cStr.find (':', p);
+		size_t pI = cStr.find (_defEqual, p);
 		if (pI == std::string::npos || pI == cStr.length () || pI < (p + 2) ||
 			(cStr [p] != '"' && cStr [pI - 1] != '"') || // The name of the attribute between quotes...
 			(cStr [pI + 1] != '{' && cStr [pI + 1] != '"')) // The parameter mas start with either a parenthesys or an equal...

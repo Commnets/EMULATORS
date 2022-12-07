@@ -74,6 +74,8 @@ namespace MCHEmul
 	std::string upper (const std::string& s);
 	std::string lower (const std::string& s);
 	std::string noSpaces (const std::string& s);
+	std::string replaceAllSpacesPerEquivalent (const std::string& s); // in comms usually...
+	std::string restoreSpacesFromEquivalent (const std::string& s); // in comms usually...
 	std::string onlyAlphanumeric (const std::string& s);
 	std::string noneOf (const std::string& s, const std::string& chrs);
 	std::string removeAllFrom (const std::string& s, const Strings& strs);
