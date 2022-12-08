@@ -13,8 +13,8 @@
  *	Versions: 1.0 Initial
  */
 
-#ifndef __ASSEMBLER_FORMULA__
-#define __ASSEMBLER_FORMULA__
+#ifndef __ASSEMBLER_OPERATIONELMNT__
+#define __ASSEMBLER_OPERATIONELMNT__
 
 #include <CORE/incs.hpp>
 #include <ASSEMBLER/Error.hpp>

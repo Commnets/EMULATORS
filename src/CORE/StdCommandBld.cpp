@@ -48,6 +48,8 @@ MCHEmul::Command* MCHEmul::StandardCommandBuilder::createEmptyCommand (const std
 		result = new MCHEmul::CPUSpeedCommand;
 	else if (cmdName == "LOADBIN" || cmdName == MCHEmul::LoadBinCommand::_NAME)
 		result = new MCHEmul::LoadBinCommand;
+	else if (cmdName == "SAVEBIN" || cmdName == MCHEmul::SaveBinCommand::_NAME)
+		result = new MCHEmul::SaveBinCommand;
 	else if (cmdName == MCHEmul::MoveParametersToAnswerCommand::_NAME)
 		result = new MCHEmul::MoveParametersToAnswerCommand;
 

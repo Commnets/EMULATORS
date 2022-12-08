@@ -1,10 +1,10 @@
 #include <ASSEMBLER/Grammar.hpp>
+#include <ASSEMBLER/OperationParser.hpp>
 #include <algorithm>
-#include <fstream>
 
 // ---
 std::vector <MCHEmul::UByte> MCHEmul::Assembler::Macro::calculateValue 
-	(const std::string& e, const MCHEmul::Assembler::Macros& ms) const
+	(const std::string& e, const MCHEmul::Assembler::Macros& ms, const MCHEmul::Assembler::OperationParser* oP) const
 {
 	std::vector <MCHEmul::UByte> result = { }; 
 
@@ -171,7 +171,7 @@ MCHEmul::Address MCHEmul::Assembler::GrammaticalElement::address (const MCHEmul:
 
 // ---
 std::vector <MCHEmul::UByte> MCHEmul::Assembler::GrammaticalElement::bytesFromExpression 
-	(const std::string& e, const MCHEmul::Assembler::Macros& ms, bool& er) const
+	(const std::string& e, const MCHEmul::Assembler::Macros& ms, bool& er, const MCHEmul::Assembler::OperationParser* oP) const
 {
 	std::vector <MCHEmul::UByte> result;
 
@@ -200,33 +200,35 @@ std::vector <MCHEmul::UByte> MCHEmul::Assembler::GrammaticalElement::bytesFromEx
 }
 
 // ---
-size_t MCHEmul::Assembler::BytesInMemoryElement::size (const MCHEmul::Assembler::Semantic* s) const
+size_t MCHEmul::Assembler::BytesInMemoryElement::size (const MCHEmul::Assembler::Semantic* s, 
+	const MCHEmul::Assembler::OperationParser* oP) const
 {
 	size_t result = 0;
 
 	if (!(*this))
 		return (0); // With error, no size...
 
+	/** The architecture is not important at this point, so big endian is taken as default. */
 	return ((_codeBytes.size () != 0) 
-		? _codeBytes.size () : calculateCodeBytes (s).size () /** Calculus is not kept because architecture is not known here. */);
+		? _codeBytes.size () : calculateCodeBytes (s, true, oP).size ());
 }
 
 // ---
 std::vector <MCHEmul::UByte> MCHEmul::Assembler::BytesInMemoryElement::calculateCodeBytes 
-	(const MCHEmul::Assembler::Semantic* s, bool bE) const
+	(const MCHEmul::Assembler::Semantic* s, bool bE, const MCHEmul::Assembler::OperationParser* oP) const
 {
 	assert (s != nullptr);
 
 	std::vector <MCHEmul::UByte> result;
 
-	if (!(*this))
+	if (!*this)
 		return (result); // Not possible when previous error...
 
 	bool e = false;
 	for (MCHEmul::Strings::const_iterator i = _elements.begin (); 
 			i != _elements.end () && !e; i++)
 	{
-		std::vector <MCHEmul::UByte> n = bytesFromExpression ((*i), s -> macros (), e);
+		std::vector <MCHEmul::UByte> n = bytesFromExpression ((*i), s -> macros (), e, oP);
 		result.insert (result.end (), n.begin (), n.end ());
 	}
 
@@ -241,54 +243,44 @@ std::vector <MCHEmul::UByte> MCHEmul::Assembler::BytesInMemoryElement::calculate
 }
 
 // ---
-size_t MCHEmul::Assembler::BytesFileElement::size (const MCHEmul::Assembler::Semantic* s) const
+size_t MCHEmul::Assembler::BytesFileElement::size (const MCHEmul::Assembler::Semantic* s, 
+	const MCHEmul::Assembler::OperationParser* oP) const
 {
 	size_t result = 0;
 
-	if (!(*this))
+	if (!*this)
 		return (0); // With error, no size...
 
+	/** The architecture is not important at this point, so big endian is taken as default. */
 	return ((_codeBytes.size () != 0) 
-		? _codeBytes.size () : calculateCodeBytes (s).size () /** Calculus is not kept because architecture is not known here. */);
+		? _codeBytes.size () : calculateCodeBytes (s, true, oP).size ());
 }
 
 // ---
 std::vector <MCHEmul::UByte> MCHEmul::Assembler::BytesFileElement::calculateCodeBytes
-(const MCHEmul::Assembler::Semantic* s, bool bE) const
+	(const MCHEmul::Assembler::Semantic* s, bool bE, const MCHEmul::Assembler::OperationParser* oP) const
 {
+	assert (s != nullptr);
+
 	std::vector <MCHEmul::UByte> result;
 
-	std::ifstream file (_binaryFile, std::ios::binary);
-	if (!file)
-	{
-		_error = MCHEmul::Assembler::ErrorType::_BYTESNOTVALID;
-
+	if (!*this)
 		return (result);
-	}
 
-	file.seekg (0, std::ios::end);
-	std::streamoff lF = file.tellg ();
-	size_t lFA = (size_t) lF;
-	char* fDT = new char [lFA];
-	file.seekg (0, std::ios::beg);
-	file.read (fDT, (std::streamsize) lFA); // Reads the info itself
-
-	file.close ();
-
-	for (size_t i = 0; i < (size_t) (lFA / MCHEmul::UByte::size ()); i += MCHEmul::UByte::size ())
-		result.push_back ((MCHEmul::UByte) (*(fDT + i)));
-
-	delete [] fDT;
+	bool e = false;
+	result = MCHEmul::UBytes::loadBytesFrom (_binaryFile, e);
+	if (e)
+		_error = MCHEmul::Assembler::ErrorType::_BINARYFILENOTVALID;
 
 	return (result);
 }
 
 // ---
-size_t MCHEmul::Assembler::InstructionElement::size (const Semantic* s) const 
+size_t MCHEmul::Assembler::InstructionElement::size (const Semantic* s, const MCHEmul::Assembler::OperationParser* oP) const 
 { 
 	size_t result = 0;
 
-	if (!(*this))
+	if (!*this)
 		return (0); // With error, no size...
 
 	if (_possibleInstructions.size () == 1)
@@ -349,7 +341,8 @@ size_t MCHEmul::Assembler::InstructionElement::size (const Semantic* s) const
 					_error = MCHEmul::Assembler::ErrorType::_NOERROR;
 					if ((result = calculateCodeBytesForInstruction 
 						(_possibleInstructions [i], _possibleParameters [i], 
-						 s /** true or false is the same at this point. */).size()) == _possibleInstructions [i] -> memoryPositions ())
+						 s /** true or false is the same at this point. */, true, oP).size()) == 
+							_possibleInstructions [i] -> memoryPositions ())
 						break; // Stops when the first right size is found...
 				}
 			}
@@ -361,23 +354,25 @@ size_t MCHEmul::Assembler::InstructionElement::size (const Semantic* s) const
 
 // ---
 std::vector <MCHEmul::UByte> MCHEmul::Assembler::InstructionElement::calculateCodeBytes 
-	(const MCHEmul::Assembler::Semantic* s, bool bE) const
+	(const MCHEmul::Assembler::Semantic* s, bool bE, const MCHEmul::Assembler::OperationParser* oP) const
 {
 	assert (s != nullptr);
 
-	if (!(*this))
-		return (std::vector <MCHEmul::UByte> ()); // Not possible with previous error...
-
 	std::vector <MCHEmul::UByte> result;
+
+	if (!*this)
+		return (result); // Not possible with previous error...
+
 	for (size_t i = 0; i < _possibleInstructions.size (); i++)
 	{
 		_error = MCHEmul::Assembler::ErrorType::_NOERROR;
-		result = calculateCodeBytesForInstruction (_possibleInstructions [i], _possibleParameters [i], s, bE);
-		if (!(*this))
+		result = calculateCodeBytesForInstruction (_possibleInstructions [i], _possibleParameters [i], s, bE, oP);
+		if (!*this)
 			continue;
 		else
 		{
 			_selectedInstruction = _possibleInstructions [i];
+
 			break;
 		}
 	}
@@ -387,13 +382,15 @@ std::vector <MCHEmul::UByte> MCHEmul::Assembler::InstructionElement::calculateCo
 
 // ---
 std::vector <MCHEmul::UByte> MCHEmul::Assembler::InstructionElement::calculateCodeBytesForInstruction 
-	(const MCHEmul::Instruction* inst, const MCHEmul::Strings& prms, const MCHEmul::Assembler::Semantic* s, bool bE) const
+	(const MCHEmul::Instruction* inst, const MCHEmul::Strings& prms, 
+	 const MCHEmul::Assembler::Semantic* s, bool bE, const MCHEmul::Assembler::OperationParser* oP) const
 {
-	if (!(*this))
-		return (std::vector <MCHEmul::UByte> ()); // Nothing possible when prervious error...
+	std::vector <MCHEmul::UByte> result;
 
-	std::vector <MCHEmul::UByte> result = 
-		MCHEmul::UInt::fromUnsignedInt (inst -> code ()).bytes ();
+	if (!*this)
+		return (result); // Nothing possible when prervious error...
+
+	result = MCHEmul::UInt::fromUnsignedInt (inst -> code ()).bytes ();
 	for (size_t i = 0; i < inst -> internalStructure ()._parameters.size (); i++)
 	{
 		bool e = false;
@@ -403,7 +400,7 @@ std::vector <MCHEmul::UByte> MCHEmul::Assembler::InstructionElement::calculateCo
 			case MCHEmul::Instruction::Structure::Parameter::Type::_DATA:
 			case MCHEmul::Instruction::Structure::Parameter::Type::_DIR:
 			{
-				bt = MCHEmul::UBytes (bytesFromExpression (prms [i], s -> macros (), e), bE).bytes ();
+				bt = MCHEmul::UBytes (bytesFromExpression (prms [i], s -> macros (), e, oP), bE).bytes ();
 			}
 
 			break;
@@ -430,7 +427,7 @@ std::vector <MCHEmul::UByte> MCHEmul::Assembler::InstructionElement::calculateCo
 					}
 				}
 				else
-					bt = MCHEmul::UBytes (bytesFromExpression (prms [i], s -> macros (), e), bE).bytes ();
+					bt = MCHEmul::UBytes (bytesFromExpression (prms [i], s -> macros (), e, oP), bE).bytes ();
 			}
 
 			break;
@@ -458,14 +455,14 @@ std::vector <MCHEmul::UByte> MCHEmul::Assembler::InstructionElement::calculateCo
 
 // ---
 std::vector <MCHEmul::UByte> MCHEmul::Assembler::StartingPointElement::calculateCodeBytes 
-	(const MCHEmul::Assembler::Semantic* s, bool bE) const
+	(const MCHEmul::Assembler::Semantic* s, bool bE, const MCHEmul::Assembler::OperationParser* oP) const
 {
 	assert (s != nullptr);
 
 	std::vector <MCHEmul::UByte> result;
 
 	bool e = false;
-	std::vector <MCHEmul::UByte> n = bytesFromExpression (_value, s -> macros (), e);
+	std::vector <MCHEmul::UByte> n = bytesFromExpression (_value, s -> macros (), e, oP);
 	if (e)
 		_error = MCHEmul::Assembler::ErrorType::_STARTINGPOINTNOTVALID;
 	else

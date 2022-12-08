@@ -39,6 +39,8 @@ namespace MCHEmul
 {
 	namespace Assembler
 	{
+		class OperationParser;
+
 		/** A macro is always made up of a name and a value. \n
 			The value can be either directly a value or a set of referencies (with operations) and links with other macros. \n
 			When evaluating the macro an internal error could happen. \n
@@ -83,8 +85,8 @@ namespace MCHEmul
 			/** Gets the value of the macro taking into account potential relations with other macros. \n
 				The first time it is invoked the very real value is calculated if possible. \n
 				The variable _error will point whether there was and error in the calculus. */
-			const std::vector <UByte>& value (const Macros& ms) const
-							{ return (_value.empty () ? _value = calculateValue (_equivalent, ms) : _value ); }
+			const std::vector <UByte>& value (const Macros& ms, const OperationParser* oP = nullptr) const
+							{ return (_value.empty () ? _value = calculateValue (_equivalent, ms, oP) : _value ); }
 
 			ErrorType error () const
 							{ return (_error); }
@@ -96,7 +98,7 @@ namespace MCHEmul
 			private:
 			/** To calculate the value first time. 
 				It is able to take into account simple operations in the definition: *,+,- */
-			std::vector <UByte> calculateValue (const std::string& e, const Macros& ms) const;
+			std::vector <UByte> calculateValue (const std::string& e, const Macros& ms, const OperationParser* oP) const;
 
 			private:
 			/** Name of the macro. */
@@ -187,14 +189,14 @@ namespace MCHEmul
 
 			/** To get the size of the grammatical element in bytes. 
 				By default the bytes are calculated and then the size. */
-			virtual size_t size (const Semantic* s) const 
+			virtual size_t size (const Semantic* s, const OperationParser* oP = nullptr) const 
 							{ return (0); }
 
 			/** To get the value of the grammatical element (if makes sense) as a set of executable bytes.
 				The value is get taking into account a semantic. \n
 				When using this method errors could be generated. */
-			std::vector <UByte> codeBytes (const Semantic* s, bool bE = true) const
-							{ return (_codeBytes.empty () ? _codeBytes = calculateCodeBytes (s, bE) : _codeBytes); }
+			std::vector <UByte> codeBytes (const Semantic* s, bool bE = true, const OperationParser* oP = nullptr) const
+							{ return (_codeBytes.empty () ? _codeBytes = calculateCodeBytes (s, bE, oP) : _codeBytes); }
 
 			/** To know the address of the grammatical element. */
 			virtual Address address (const MCHEmul::Assembler::Semantic* s) const;
@@ -224,11 +226,12 @@ namespace MCHEmul
 
 			protected:
 			/** To calculat the codeBytes first time. */
-			virtual std::vector <UByte> calculateCodeBytes (const Semantic* s, bool bE = true) const
+			virtual std::vector <UByte> calculateCodeBytes (const Semantic* s, bool bE, const OperationParser* oP) const
 							{ return (std::vector <UByte> ()); }
 
 			// Implementation
-			std::vector <UByte> bytesFromExpression (const std::string& e, const Macros& ms, bool& er) const;
+			std::vector <UByte> bytesFromExpression (const std::string& e, const Macros& ms, 
+				bool& er, const OperationParser* oP) const;
 		};
 
 		/** @see explanation at the beggining of the file. */
@@ -257,12 +260,12 @@ namespace MCHEmul
 
 			BytesInMemoryElement& operator = (const BytesInMemoryElement&) = default;
 
-			virtual size_t size (const Semantic* s) const override;
+			virtual size_t size (const Semantic* s, const OperationParser* oP = nullptr) const override;
 
 			Strings _elements;
 
 			private:
-			virtual std::vector <UByte> calculateCodeBytes (const Semantic* s, bool bE = true) const override;
+			virtual std::vector <UByte> calculateCodeBytes (const Semantic* s, bool bE, const OperationParser* oP) const override;
 		};
 
 		/** @see explanation at the beggining of the file. */
@@ -276,12 +279,12 @@ namespace MCHEmul
 
 			BytesFileElement& operator = (const BytesFileElement&) = default;
 
-			virtual size_t size (const Semantic* s) const override;
+			virtual size_t size (const Semantic* s, const OperationParser* oP = nullptr) const override;
 
 			std::string _binaryFile;
 
 			private:
-			virtual std::vector <UByte> calculateCodeBytes (const Semantic* s, bool bE = true) const override;
+			virtual std::vector <UByte> calculateCodeBytes (const Semantic* s, bool bE, const OperationParser* oP) const override;
 		};
 
 		/** @see explanation at the beggining of the file. 
@@ -299,7 +302,7 @@ namespace MCHEmul
 
 			InstructionElement& operator = (const InstructionElement&) = default;
 
-			virtual size_t size (const Semantic* s) const; 
+			virtual size_t size (const Semantic* s, const OperationParser* oP) const override;
 
 			std::vector <Instruction*> _possibleInstructions;
 			std::vector <Strings> _possibleParameters;
@@ -308,11 +311,11 @@ namespace MCHEmul
 			private:
 			/** The bytes of the first possible instruction taking into account the size of the parameters,
 				once they have been calculated (they could includee also macros). */
-			virtual std::vector <UByte> calculateCodeBytes (const Semantic* s, bool bE = true) const override;
+			virtual std::vector <UByte> calculateCodeBytes (const Semantic* s, bool bE, const OperationParser* oP) const override;
 
 			// Implementation
 			std::vector <UByte> calculateCodeBytesForInstruction 
-				(const Instruction* inst, const Strings& prms, const Semantic* s, bool bE = true) const;
+				(const Instruction* inst, const Strings& prms, const Semantic* s, bool bE, const OperationParser* oP) const;
 		};
 
 		/** @see explanation at the beggining of the file. */
@@ -333,7 +336,7 @@ namespace MCHEmul
 			std::string _value;
 
 			private:
-			virtual std::vector <UByte> calculateCodeBytes (const Semantic* s, bool bE = true) const override;
+			virtual std::vector <UByte> calculateCodeBytes (const Semantic* s, bool bE, const OperationParser* oP) const override;
 		};
 
 		/** Notice that it is a set of pointers. */

@@ -28,6 +28,7 @@ const std::string MCHEmul::RemoveAllBreakPointsCommand::_NAME = "CREMOVEBREAKS";
 const std::string MCHEmul::CPUSpeedCommand::_NAME = "CSPEED";
 const std::string MCHEmul::LoadBinCommand::_NAME = "CLOADBIN";
 const std::string MCHEmul::MoveParametersToAnswerCommand::_NAME = "CMOVEPARAMS";
+const std::string MCHEmul::SaveBinCommand::_NAME = "CSAVEBIN";
 
 // ---
 MCHEmul::HelpCommand::HelpCommand (const std::string& hF)
@@ -95,7 +96,7 @@ void MCHEmul::HelpCommand::executeImpl (MCHEmul::CommandExecuter* cE, MCHEmul::C
 			helpInfoCommand (i.first);
 	}
 	else
-		helpInfoCommand ((*_parameters.begin ()).first);
+		helpInfoCommand (parameter ("00"));
 
 	rst.add ("HELP", iS);
 }
@@ -150,7 +151,7 @@ void MCHEmul::StackStatusCommand::executeImpl (MCHEmul::CommandExecuter* cE, MCH
 		return;
 
 	MCHEmul::InfoStructure iS = c -> memory () -> stack () -> getInfoStructure ();
-	if (_parameters.size () == 0 || (_parameters.size () == 1 && (*_parameters.find ("ALL")).second != "YES"))
+	if (_parameters.size () == 0 || (_parameters.size () == 1 && parameter ("00") != "ALL"))
 		iS.remove ("Memory"); // Reduce the size...
 
 	rst.add ("Stack", iS);
@@ -198,10 +199,10 @@ void MCHEmul::MemoryStatusCommand::executeImpl (MCHEmul::CommandExecuter* cE, MC
 	if (c == nullptr)
 		return;
 
-	MCHEmul::Address a1 = MCHEmul::Address::fromStr ((*_parameters.begin ()).first);
+	MCHEmul::Address a1 = MCHEmul::Address::fromStr (parameter ("00"));
 	if (_parameters.size () == 2)
 	{
-		MCHEmul::Address a2 = MCHEmul::Address::fromStr ((*++_parameters.begin ()).first);
+		MCHEmul::Address a2 = MCHEmul::Address::fromStr (parameter ("01"));
 		MCHEmul::Address iA = ((a1 <= a2) ? a1 : a2);
 		rst.add ("BYTES", c -> cpu () -> memoryRef () -> values (iA, (((a2 >= a1) ? a2 : a1) - iA) + 1).
 				asString (MCHEmul::UByte::OutputFormat::_HEXA, ',', 2));
@@ -216,17 +217,17 @@ void MCHEmul::SetMemoryValueCommand::executeImpl (MCHEmul::CommandExecuter* cE, 
 	if (c == nullptr)
 		return;
 
-	MCHEmul::Address a1 = MCHEmul::Address::fromStr ((*_parameters.begin ()).first);
+	MCHEmul::Address a1 = MCHEmul::Address::fromStr (parameter ("00"));
 	MCHEmul::Address a2 = a1;
 	std::vector <MCHEmul::UByte> v;
 	if (_parameters.size () == 3)
 	{
-		a2 = MCHEmul::Address::fromStr ((*++_parameters.begin ()).first);
+		a2 = MCHEmul::Address::fromStr (parameter ("01"));
 
-		v = MCHEmul::UInt::fromStr ((*++++_parameters.begin ()).first).bytes ();
+		v = MCHEmul::UInt::fromStr (parameter ("02")).bytes ();
 	}
 	else
-		v = MCHEmul::UInt::fromStr ((*++_parameters.begin ()).first).bytes ();
+		v = MCHEmul::UInt::fromStr (parameter ("01")).bytes ();
 
 	MCHEmul::Address iA = (a1 <= a2) ? a1 : a2;
 	MCHEmul::Address fA = (a2 >= a1) ? a2 : a1;
@@ -252,7 +253,7 @@ void MCHEmul::RunCPUCommand::executeImpl (MCHEmul::CommandExecuter* cE, MCHEmul:
 		return;
 
 	if (_parameters.size () == 1)
-		c -> cpu () -> programCounter ().setAddress (MCHEmul::Address::fromStr ((*_parameters.begin ()).first));
+		c -> cpu () -> programCounter ().setAddress (MCHEmul::Address::fromStr (parameter ("00")));
 
 	c -> setActionForNextCycle (MCHEmul::Computer::_ACTIONCONTINUE);
 
@@ -346,8 +347,17 @@ void MCHEmul::LoadBinCommand::executeImpl (MCHEmul::CommandExecuter* cE, MCHEmul
 	if (c == nullptr)
 		return;
 
-	rst.add	("RESULT", c -> loadInto 
-		((*_parameters.begin ()).first, MCHEmul::Address::fromStr ((*++_parameters.begin ()).first)));
+	rst.add	("RESULT", c -> loadInto (parameter ("00"), MCHEmul::Address::fromStr (parameter ("01"))));
+}
+
+// ---
+void MCHEmul::SaveBinCommand::executeImpl (MCHEmul::CommandExecuter* cE, MCHEmul::Computer* c, MCHEmul::InfoStructure& rst)
+{
+	if (c == nullptr)
+		return;
+
+	rst.add	("RESULT", c -> saveFrom
+		(parameter ("00"), std::stoi (parameter ("01").c_str ()), MCHEmul::Address::fromStr (parameter ("02"))));
 }
 
 // ---

@@ -447,12 +447,31 @@ namespace MCHEmul
 		static const int _ID = 18;
 		static const std::string _NAME;
 
-		LoadBinCommand()
+		LoadBinCommand ()
 			: Command (_ID, _NAME)
 							{ }
 
 		virtual bool canBeExecuted () const override
 							{ return (_parameters.size () == 2); }
+
+		private:
+		virtual void executeImpl (CommandExecuter* cE, Computer* c, InfoStructure& rst) override;
+	};
+
+	/** To save a binary file. \n
+		Command line: SAVEBIN PRG SIZE ADDRESS. */
+	class SaveBinCommand final : public Command
+	{
+		public:
+		static const int _ID = 19;
+		static const std::string _NAME;
+
+		SaveBinCommand ()
+			: Command (_ID, _NAME)
+							{ }
+
+		virtual bool canBeExecuted () const override
+							{ return (_parameters.size () == 3); }
 
 		private:
 		virtual void executeImpl (CommandExecuter* cE, Computer* c, InfoStructure& rst) override;

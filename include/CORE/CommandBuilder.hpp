@@ -29,7 +29,7 @@ namespace MCHEmul
 							{ }
 
 		virtual ~CommandBuilder ()
-							{ for (auto i : _commands) delete (i.second); }
+							{ for (const auto& i : _commands) delete (i.second); }
 
 		Command* command (const std::string& cmd) const;
 
@@ -37,7 +37,15 @@ namespace MCHEmul
 		virtual Command* createEmptyCommand (const std::string& cmdName) const = 0;
 
 		// Implementation
+		/** Used from "command" method. \n
+			To extract the name of the command from the cmd parameter of that method. */
 		std::string readCommandName (const std::string& cmd) const;
+		/** Used from "command" method too. \n
+			Important to know: \n
+			The parameters can be provided either in the way NAME=VALUE or simply VALUE (will depend on the use). \n
+			In the second form the parameter internally created will be COUNTER=VALUE, 
+			where counter is the position (as string with the forma XX) in the list of parameters received. 
+			No more than 100 parameters are allowed. */
 		Attributes readCommandParameters (const std::string& cmd) const;
 
 		mutable std::map <std::string, Command*> _commands;

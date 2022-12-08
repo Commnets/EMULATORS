@@ -79,3 +79,12 @@ No parameters are needed.
 ;SPEED
 To know the real speed of the processor.
 No parameters are needed.
+;LOADBIN PRG ADDRESS
+To load a binary set of data from a file into an address.
+Two parameters are needed. The first is the file to load, 
+and the other one is the address where to load that info.
+;SAVEBIN FILE SIZE ADDRESS
+To save the content of the memory into a binary file.
+Three parameters are needed. The first is the file to load, 
+the second the number of bytes to save and 
+the other one is the address where to save that info from.

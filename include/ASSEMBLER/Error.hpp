@@ -36,6 +36,8 @@ namespace MCHEmul
 			_TEMPLATENOTEFINED,
 			_TEMPLATENOTCALCULATED,
 			_DUPLICATECODETEMPLATE,
+			// Related with loading a file
+			_BINARYFILENOTVALID,
 			// Related with Semantic Elements
 			_LABELNOTVALID,
 			_LABELNOTDEFINED,

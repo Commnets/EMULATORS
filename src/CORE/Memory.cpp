@@ -1,7 +1,6 @@
 #include <CORE/Memory.hpp>
 #include <CORE/FmterBuilder.hpp>
 #include <CORE/Formatter.hpp>
-#include <fstream>
 
 // ---
 MCHEmul::UByte MCHEmul::PhysicalStorage::_DEFAULTVALUE (MCHEmul::UByte::_0);
@@ -41,43 +40,38 @@ MCHEmul::PhysicalStorageSubset::PhysicalStorageSubset
 // ---
 bool MCHEmul::PhysicalStorageSubset::load (const std::string& fN, size_t sA, bool bE)
 {
-	std::ifstream file (fN, std::ios::binary);
-	if (!file)
+	bool e = false;
+	std::vector <MCHEmul::UByte> by = MCHEmul::UBytes::loadBytesFrom (fN, bE);
+	if (e)
 		return (false);
 
-	file.seekg (0, std::ios::end);
-	std::streamoff lF = file.tellg ();
-	if (lF > (std::streamoff) std::numeric_limits <size_t>::max () ||
-		lF < (std::streamoff) sA || (lF - (std::streamoff) sA) > (std::streamoff) size ())
-		return (false); // either bad format or too long for this memory...
+	MCHEmul::UBytes bys = MCHEmul::UBytes (by);
+	// The first "sA" bytes are the address (big or little endian format)
+	MCHEmul::Address iA (bys.MSUBytes (sA), bE); 
+	if (iA > _initialAddress || (iA + by.size () - sA) > lastAddress ())
+		return (false); // The data doesn't fit the limits of the memory, so not possible to load!
 
-	size_t lFA = (size_t) lF;
-	char* aDT = new char [sA];
-	file.seekg (0, std::ios::beg);
-	file.read (aDT, (std::streamsize) sA); // Reads the address where to load the info
-	char* fDT = new char [lFA - sA];
-	file.read (fDT, (std::streamsize) (lFA - sA)); // Reads the info itself
-
-	file.close ();
-
-	std::vector <MCHEmul::UByte> aV;
-	for (size_t i = 0; i < (size_t) (sA / MCHEmul::UByte::size  ()); i += MCHEmul::UByte::size ())
-		aV.push_back ((MCHEmul::UByte) (*(aDT + i)));
-	std::vector <MCHEmul::UByte> fV;
-	for (size_t i = 0; i < (size_t) ((lFA - sA) / MCHEmul::UByte::size ()); i += MCHEmul::UByte::size ())
-		fV.push_back ((MCHEmul::UByte) (*(fDT + i)));
-
-	delete [] aDT;
-	delete [] fDT;
-
-	int dt;
-	MCHEmul::Address adr (aV, bE);
-	if (!isIn (adr, dt))
-		return (false);
-	
-	set (adr, fV, true);
+	// Sets the memory...
+	set (iA, bys.LSUBytes (bys.size () - sA));
 
 	return (true);
+}
+
+// ---
+bool MCHEmul::PhysicalStorageSubset::save (const std::string& fN, size_t sA, bool bE)
+{
+	// Get the bytes of the address...
+	std::vector <MCHEmul::UByte> by = _initialAddress.bytes ();
+	if (by.size () < sA)
+		for (size_t i = 0; i < (sA - by.size ()); by.insert (by.begin (), MCHEmul::UByte::_0));
+	by = MCHEmul::UBytes (by, bE).bytes (); // The way to reverse them if any...
+
+	// Get the data bytes
+	std::vector <MCHEmul::UByte> dby = bytes ();
+	by.insert (by.end (), dby.begin (), dby.end ());
+
+	// Save them...
+	return (MCHEmul::UBytes::saveBytesTo (fN, by));
 }
 
 // ---
@@ -109,31 +103,27 @@ void MCHEmul::PhysicalStorageSubset::set (const MCHEmul::Address& a, const std::
 // ---
 bool MCHEmul::PhysicalStorage::loadInto (const std::string& fN, size_t pB)
 {
-	std::ifstream file (fN, std::ios::binary);
-	if (!file)
+	if (pB /** Starts in 0. */ >= size ())
 		return (false);
 
-	file.seekg (0, std::ios::end);
-	std::streamoff lF = file.tellg ();
-	if (pB > size () || lF > (std::streamoff) (size () - pB))
-		return (false); // too long for this memory...
+	bool e = false;
+	std::vector <MCHEmul::UByte> by = MCHEmul::UBytes::loadBytesFrom (fN, e);
+	if (e || by.size () > (size () - pB))
+		return (false); // It can not be loaded...
 
-	size_t lFA = (size_t) lF;
-	char* fDT = new char [lFA];
-	file.seekg (0, std::ios::beg);
-	file.read (fDT, (std::streamsize) lFA); // Reads the info itself
-
-	file.close ();
-
-	std::vector <MCHEmul::UByte> fV;
-	for (size_t i = 0; i < (size_t) (lFA / MCHEmul::UByte::size ()); i += MCHEmul::UByte::size ())
-		fV.push_back ((MCHEmul::UByte) (*(fDT + i)));
-
-	delete [] fDT;
-	
-	set (pB, fV);
+	set (pB, by);
 
 	return (true);
+}
+
+// ---
+bool MCHEmul::PhysicalStorage::saveFrom (const std::string& fN, size_t nB, size_t p)
+{
+	if (p /** Starts in 0. */ >= size () || (p + nB) > size ())
+		return (false); // It is not in the limits of the memory...
+
+	return (MCHEmul::UBytes::saveBytesTo 
+		(fN, std::vector <MCHEmul::UByte> (_data.begin () + p, _data.begin () + p + nB - 1)));
 }
 
 // ---
@@ -301,6 +291,18 @@ bool MCHEmul::MemoryView::loadInto (const std::string& fN, const MCHEmul::Addres
 		ss = (*i).second -> isIn (a, dt) ? (*i).second : nullptr;
 
 	return ((ss == nullptr) ? ss -> loadInto (fN, a) : false);
+}
+
+// ---
+bool MCHEmul::MemoryView::saveFrom (const std::string& fN, size_t nB, const MCHEmul::Address& a)
+{
+	int dt = 0;
+	MCHEmul::PhysicalStorageSubset* ss = nullptr;
+	for (MCHEmul::PhysicalStorageSubsets::const_iterator i = _subsets.begin (); 
+		i != _subsets.end () && ss == nullptr; i++)
+		ss = (*i).second -> isIn (a, dt) ? (*i).second : nullptr;
+
+	return ((ss == nullptr) ? ss -> saveFrom (fN, nB, a) : false);
 }
 
 // ---

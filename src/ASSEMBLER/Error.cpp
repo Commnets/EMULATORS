@@ -15,6 +15,7 @@ std::ostream& MCHEmul::Assembler::operator << (std::ostream& o, const MCHEmul::A
 			{ MCHEmul::Assembler::ErrorType::_TEMPLATENOTEFINED, "Code Template not defined" },
 			{ MCHEmul::Assembler::ErrorType::_TEMPLATENOTCALCULATED, "Code Template not calculated" },
 			{ MCHEmul::Assembler::ErrorType::_DUPLICATECODETEMPLATE, "Duplicated Code Template" },
+			{ MCHEmul::Assembler::ErrorType::_BINARYFILENOTVALID, "Binary file nor valid" },
 			{ MCHEmul::Assembler::ErrorType::_LABELNOTVALID, "Not valid Label" },
 			{ MCHEmul::Assembler::ErrorType::_LABELNOTDEFINED, "Label not defined" },
 			{ MCHEmul::Assembler::ErrorType::_BYTESNOTVALID, "Bytes definition not valid" },

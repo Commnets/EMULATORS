@@ -17,6 +17,7 @@
 #include <CORE/incs.hpp>
 #include <ASSEMBLER/Grammar.hpp>
 #include <ASSEMBLER/Parser.hpp>
+#include <ASSEMBLER/OperationParser.hpp>
 
 namespace MCHEmul
 {
@@ -77,13 +78,19 @@ namespace MCHEmul
 
 		/** The Compiler just to do the work. \n
 			The Compiler is defined for a CPU too (the same than the Parser). \n
-			The Compiler doesn't own the Parser. */
-		class Compiler final
+			The Compiler doesn't own the Parser. \n
+			The Compiler can be overloaded. \n
+			To generate the code sometimes a OperationParser is needed. \n
+			The Operation Parser is own by the Compiler. */
+		class Compiler
 		{
 			public:
 			Compiler (Parser* p)
 				: _parser (p)
 							{ assert (p != nullptr); }
+
+			~Compiler ()
+							{ delete (_operationParser); }
 
 			/** The key method. Generic the Byte Codes to by load and executed.
 				It receives the file with the instructions as parameter.
@@ -94,6 +101,12 @@ namespace MCHEmul
 			const CPU* cpu () const
 							{ return (_parser -> cpu ()); }
 
+			const OperationParser* operationParser () const
+							{ return ((_operationParser == nullptr) 
+								? _operationParser = createOperationParser () : _operationParser); }
+			OperationParser* operationParser ()
+							{ ((OperationParser*) ((const Compiler *) this) -> operationParser ()); }
+
 			Errors errors () const
 							{ return (_errors); }
 
@@ -101,10 +114,15 @@ namespace MCHEmul
 			bool operator ! () const
 							{ return (!_errors.empty ()); }
 
-			private:
+			protected:
+			virtual OperationParser* createOperationParser () const
+							{ return (new OperationParser); }
+
+			protected:
 			Parser* _parser;
 
 			// Implementation
+			mutable OperationParser* _operationParser;
 			mutable Errors _errors;
 		};
 	}

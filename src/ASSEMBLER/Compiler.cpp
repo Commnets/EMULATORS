@@ -164,9 +164,9 @@ MCHEmul::Assembler::ByteCode MCHEmul::Assembler::Compiler::compile (const std::s
 			i != smt -> macros ().end (); i++) // Instead for (auto i : smt -> macros ()) because it makes a copy of the content
 											   // and the values are not then actualized over the original list!
 	{
-		(*i).second.value (smt -> macros ()); // Try to calculate the value (but it wold be used)...
+		(*i).second.value (smt -> macros (), operationParser ()); // Try to calculate the value (but it wold be used)...
 		if (!(*i).second)
-			_errors.push_back(MCHEmul::Assembler::Error((*i).second.error(), 
+			_errors.push_back (MCHEmul::Assembler::Error ((*i).second.error(), 
 				(*i).second.definitionFile (), (*i).second.definitionLine (), 0, (*i).second.name()));
 	}
 
@@ -185,7 +185,7 @@ MCHEmul::Assembler::ByteCode MCHEmul::Assembler::Compiler::compile (const std::s
 	{
 		assert (dynamic_cast <MCHEmul::Assembler::StartingPointElement*> (i) != nullptr);
 
-		MCHEmul::Address spa (i -> codeBytes (smt, cpu () -> architecture ().bigEndian ()));
+		MCHEmul::Address spa (i -> codeBytes (smt, cpu () -> architecture ().bigEndian (), operationParser ()));
 		if (!*i)
 		{
 			_errors.push_back (MCHEmul::Assembler::Error (i -> _error, i -> _file, i -> _line, 0));
@@ -210,7 +210,7 @@ MCHEmul::Assembler::ByteCode MCHEmul::Assembler::Compiler::compile (const std::s
 				case MCHEmul::Assembler::GrammaticalElement::_INSTRUCTION:
 				{
 					std::vector <MCHEmul::UByte> b = 
-						gE -> codeBytes (smt, cpu () -> architecture ().bigEndian ());
+						gE -> codeBytes (smt, cpu () -> architecture ().bigEndian (), operationParser ());
 					if (!*gE)
 						_errors.push_back (MCHEmul::Assembler::Error (gE -> _error, gE -> _file, gE -> _line, 0));
 					else

@@ -51,18 +51,24 @@ MCHEmul::Attributes MCHEmul::CommandBuilder::readCommandParameters (const std::s
 			return (result); // But what is after are only spaces...
 
 	// Now it is time to investigate what is left!
+	unsigned int ctP = 0;
 	while (prms != "")
 	{
 		// The equal symbol defines (almost always) a parameter...
 		iP = prms.find_first_of ('=');
-		// but when there is none, it could be considerered as a simple parameter with the value YES
+		// but when there is none, it could be considerered as a simple parameter...
 		if (iP == std::string::npos)
 		{
-			// The name of that parameter lasts until the following space!
-			iP = prms.find_first_of (' ');
-			std::string fName = (iP == std::string::npos) ? prms : MCHEmul::upper (prms.substr (0, iP));
+			// The name of the parameter will be a consecutive number ocuppying two positions!
+			std::string fName = std::to_string (ctP++); 
+			fName = MCHEmul::_CEROS.substr (0, 2 - fName.length ()) + fName;
+			
+			// The value of that parameter lasts until the following space!
+			iP = prms.find_first_of (' '); 
+			std::string fValue = (iP == std::string::npos) ? prms : MCHEmul::upper (prms.substr (0, iP));
 			prms = (iP == std::string::npos) ? "" : MCHEmul::trim (prms.substr (iP + 1));
-			result.insert (MCHEmul::Attributes::value_type (fName, "YES"));
+			
+			result.insert (MCHEmul::Attributes::value_type (fName, fValue));
 
 			continue; // next...
 		}

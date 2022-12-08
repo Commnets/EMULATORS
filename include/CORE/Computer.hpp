@@ -118,9 +118,13 @@ namespace MCHEmul
 							{ Attributes::const_iterator i = _attributes.find (aN); 
 							  return ((i == _attributes.end ()) ? AttributedNotDefined : (*i).second); }
 
-		// To load data files...
+		/** To load data files. */
 		bool loadInto (const std::string& fN, const Address& a)
 							{ return (memory () -> loadInto (fN, a)); }
+
+		/** To save data files. */
+		bool saveFrom (const std::string& fN, size_t nB, const Address& a)
+							{ return (memory () -> saveFrom (fN, nB, a)); }
 
 		/** To initialize the Computer, when the "power is set up". \n 
 			It could be defined per computer. By default it initializes the chips. \n
@@ -183,7 +187,7 @@ namespace MCHEmul
 		void removeAction (const Address& at);
 		/** Remove a set of them. */
 		void removeActions (const MapOfActions& at)
-							{ for (const auto i : at) removeAction (i.first); }
+							{ for (const auto& i : at) removeAction (i.first); }
 		/** All of them at the same time. */
 		void removeAllActions () 
 							{ _actionsAt = { }; }

@@ -115,6 +115,11 @@ namespace MCHEmul
 		friend std::ostream& operator << (std::ostream& o, const UBytes& u)
 							{ return (o << u.asString (UByte::OutputFormat::_HEXA, '\0', 2 /** sizeof (unsigned char) * 2 */)); }
 
+		static std::vector <MCHEmul::UByte> loadBytesFrom (const std::string& fN, bool& e);
+		static bool saveBytesTo (const std::string& fN, const std::vector <UByte>& u);
+		static bool saveBytesTo (const std::string& fN, const MCHEmul::UBytes& u)
+							{ return (saveBytesTo (fN, u.bytes ())); }
+
 		private:
 		/** Most significant bit in the first elemnt. */
 		std::vector <UByte> _values;

@@ -87,9 +87,13 @@ namespace MCHEmul
 		void set (size_t pB, const std::vector <UByte>& v)
 							{ for (size_t i = 0; i < v.size (); i++) set (pB + i, v [i]); }
 
-		/** Load the info, as many bytes as possible, from a specific byte of the memory. 
-			If nothing is said, the info is load from he vey first bye. */
+		/** Load the info, as many bytes as possible, from a specific byte of the memory. \n
+			If nothing is said, the info is load from the very first byte. */
 		bool loadInto (const std::string& fN, size_t p = 0);
+
+		/** Save the a number of bytes "nB" of the memory into a file, string from a position p. \n
+			If nothing is said the position choosen is the initial one. */
+		bool saveFrom (const std::string& fN, size_t nB, size_t p = 0);
 
 		protected:
 		const int _id = -1; // Modified at construction level
@@ -190,6 +194,13 @@ namespace MCHEmul
 		bool loadInto (const std::string& fN)
 							{ return (loadInto (fN, initialAddress ())); }
 
+		/** Save the content of full PhysycalStorageSubset into a file. 
+			The first "sA" bytes will indicate the address of the first position in big endian of little endian format. */
+		bool save (const std::string& fN, size_t sA, bool bE = true);
+		bool saveFrom (const std::string& fN, size_t nB, const Address& a)
+							{ return ((a >= _initialAddress && (a + nB) < lastAddress ()) 
+								? _physicalStorage -> saveFrom (fN, _initialAddress.distanceWith (a), nB) : false); }
+
 		/** To keep the values for fither initialization. */
 		void fixDefaultValues ()
 							{ _defaultData = _physicalStorage -> values (_initialPhisicalPosition, _size).bytes (); }
@@ -286,8 +297,11 @@ namespace MCHEmul
 		virtual void initialize () 
 							{ for (const auto& i : _subsets) i.second -> initialize (); }
 
-		/** Loaded into the first subset holding the address parameter. */
+		/** Load into the first subset holding the address parameter. */
 		bool loadInto (const std::string& fN, const Address& a);
+
+		/** Save "nB" of memory of the first subset matching the address parameter. */
+		bool saveFrom (const std::string& fN, size_t nB,const Address& a);
 
 		/**
 		  *	The name of the fields are: \n
@@ -477,8 +491,13 @@ namespace MCHEmul
 		virtual bool initialize ()
 							{ return ((_error == MCHEmul::_NOERROR) ? _content.initialize () : false); }
 
+		/** Load info from a file into a memory using the active view. */
 		bool loadInto (const std::string& fN, const Address& a)
 							{ return (_activeView -> loadInto (fN, a)); }
+
+		/** Save a set of "nB" bytes from the memory into a file file, using the activeView. */
+		bool saveFrom (const std::string& fN, size_t nB, const Address& a)
+							{ return (_activeView -> saveFrom (fN, nB, a)); }
 
 		/** To get the last error happend (usually at construction level) */
 		unsigned int error () const

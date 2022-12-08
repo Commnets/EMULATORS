@@ -21,6 +21,7 @@ namespace MCHEmul
 {
 	namespace Assembler
 	{
+		/** It can be overloaded later to support additional functions. */
 		class OperationParser
 		{
 			public:
