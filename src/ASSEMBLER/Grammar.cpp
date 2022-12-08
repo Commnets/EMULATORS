@@ -28,7 +28,7 @@ std::vector <MCHEmul::UByte> MCHEmul::Assembler::Macro::calculateValue
 			MCHEmul::Assembler::Macros::const_iterator i = ms.find (e);
 			if (i != ms.end ())
 			{
-				result = (*i).second.value (ms);
+				result = (*i).second.value (ms, oP);
 				if (!(*i).second)
 				{
 					_error = (*i).second._error;
@@ -49,12 +49,13 @@ std::vector <MCHEmul::UByte> MCHEmul::Assembler::Macro::calculateValue
 		// Unary operators...
 		if (r == 0)
 		{
-			MCHEmul::Assembler::Macro m1 ("" /** no name needed. */, MCHEmul::trim (e.substr (1))); m1.value (ms);
+			MCHEmul::Assembler::Macro m1 ("" /** no name needed. */, MCHEmul::trim (e.substr (1))); 
+			m1.value (ms, oP);
 			if (!m1)
 				_error = MCHEmul::Assembler::ErrorType::_MACROBADDEFINED;
 			else
 			{
-				std::vector <MCHEmul::UByte> m1val = m1.value (ms);
+				std::vector <MCHEmul::UByte> m1val = m1.value (ms, oP);
 				if (e [r] == '>') result = std::vector <MCHEmul::UByte> ({ m1val [m1val.size () - 1] });
 				else if (e [r] == '<') result = std::vector <MCHEmul::UByte> ({ m1val [0] });
 			}
@@ -68,14 +69,16 @@ std::vector <MCHEmul::UByte> MCHEmul::Assembler::Macro::calculateValue
 				_error = MCHEmul::Assembler::ErrorType::_MACROBADDEFINED;
 			else
 			{
-				MCHEmul::Assembler::Macro m1 ("" /** No name needed. */, MCHEmul::trim (e.substr (0, r))); m1.value (ms);
-				MCHEmul::Assembler::Macro m2 ("", MCHEmul::trim (e.substr (r + 1))); m2.value (ms);
+				MCHEmul::Assembler::Macro m1 ("" /** No name needed. */, MCHEmul::trim (e.substr (0, r))); 
+				m1.value (ms, oP);
+				MCHEmul::Assembler::Macro m2 ("", MCHEmul::trim (e.substr (r + 1))); 
+				m2.value (ms, oP);
 				if (!m1 || !m2)
 					_error = MCHEmul::Assembler::ErrorType::_MACROBADDEFINED;
 				else
 				{
-					MCHEmul::UInt u1 (m1.value (ms));
-					MCHEmul::UInt u2 (m2.value (ms));
+					MCHEmul::UInt u1 (m1.value (ms, oP));
+					MCHEmul::UInt u2 (m2.value (ms, oP));
 					if (e [r] == '*') result = (u1 * u2).bytes ();
 					else if (e [r] == '+') result = (u1 + u2).bytes ();
 					else /** - */ result = (u1 - u2).bytes ();
@@ -151,7 +154,8 @@ MCHEmul::Strings MCHEmul::Assembler::CodeTemplate::valueFor (const MCHEmul::Stri
 }
 
 // ---
-MCHEmul::Address MCHEmul::Assembler::GrammaticalElement::address (const MCHEmul::Assembler::Semantic* s) const
+MCHEmul::Address MCHEmul::Assembler::GrammaticalElement::address 
+	(const MCHEmul::Assembler::Semantic* s, const OperationParser* oP) const
 {
 	assert (s != nullptr);
 
@@ -161,12 +165,12 @@ MCHEmul::Address MCHEmul::Assembler::GrammaticalElement::address (const MCHEmul:
 	while (gE != nullptr &&
 		   (sP = dynamic_cast <const MCHEmul::Assembler::StartingPointElement*> (gE)) == nullptr)
 	{
-		b += gE -> size (s);
+		b += gE -> size (s, oP);
 		gE = gE -> _previousElement;
 	}
 
 	return ((sP == nullptr) 
-		? MCHEmul::Address () /** Bad address. */ : sP ->  address (s) + b);
+		? MCHEmul::Address () /** Bad address. */ : sP ->  address (s, oP) + b);
 }
 
 // ---
@@ -185,7 +189,7 @@ std::vector <MCHEmul::UByte> MCHEmul::Assembler::GrammaticalElement::bytesFromEx
 	else
 	{
 		MCHEmul::Assembler::Macro m ("" /** No name needed. */, e);
-		m.value (ms);
+		m.value (ms, oP);
 		if (!m) // Error?...
 		{
 			er = true;
@@ -341,7 +345,7 @@ size_t MCHEmul::Assembler::InstructionElement::size (const Semantic* s, const MC
 					_error = MCHEmul::Assembler::ErrorType::_NOERROR;
 					if ((result = calculateCodeBytesForInstruction 
 						(_possibleInstructions [i], _possibleParameters [i], 
-						 s /** true or false is the same at this point. */, true, oP).size()) == 
+						 s /** true or false is the same at this point. */, true, oP).size ()) == 
 							_possibleInstructions [i] -> memoryPositions ())
 						break; // Stops when the first right size is found...
 				}
@@ -419,11 +423,11 @@ std::vector <MCHEmul::UByte> MCHEmul::Assembler::InstructionElement::calculateCo
 						if (inst -> internalStructure ()._parameters [i]._type == 
 								MCHEmul::Instruction::Structure::Parameter::Type::_RELJUMP)
 						{
-							MCHEmul::Address iA = address (s) + inst -> memoryPositions ();
-							bt = MCHEmul::UInt::fromInt (iA.distanceWith ((*lbsP) -> address (s))).bytes ();
+							MCHEmul::Address iA = address (s, oP) + inst -> memoryPositions ();
+							bt = MCHEmul::UInt::fromInt (iA.distanceWith ((*lbsP) -> address (s, oP))).bytes ();
 						}
 						else
-							bt = MCHEmul::UBytes ((*lbsP) -> address (s).bytes (), bE).bytes ();
+							bt = MCHEmul::UBytes ((*lbsP) -> address (s, oP).bytes (), bE).bytes ();
 					}
 				}
 				else

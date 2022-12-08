@@ -93,7 +93,7 @@ namespace MCHEmul
 
 			/** To make more visual the analysis of the status of macro. */
 			bool operator ! () const
-							{ value ({ }) /** Calculated already? */; return (_error != ErrorType::_NOERROR); }
+							{ return (_error != ErrorType::_NOERROR); }
 
 			private:
 			/** To calculate the value first time. 
@@ -199,7 +199,7 @@ namespace MCHEmul
 							{ return (_codeBytes.empty () ? _codeBytes = calculateCodeBytes (s, bE, oP) : _codeBytes); }
 
 			/** To know the address of the grammatical element. */
-			virtual Address address (const MCHEmul::Assembler::Semantic* s) const;
+			virtual Address address (const MCHEmul::Assembler::Semantic* s, const OperationParser* oP = nullptr) const;
 
 			ErrorType error () const
 							{ return (_error); }
@@ -330,8 +330,8 @@ namespace MCHEmul
 
 			StartingPointElement& operator = (const StartingPointElement&) = default;
 
-			virtual Address address (const Semantic* s) const override
-							{ return (Address (codeBytes (s /**, big Endian implicit. */))); }
+			virtual Address address (const Semantic* s, const OperationParser* oP = nullptr) const override
+							{ return (Address (codeBytes (s, true /**, big Endian implicit. */, oP))); }
 
 			std::string _value;
 
