@@ -58,6 +58,7 @@ namespace MCHEmul
 							{ }
 
 		UByte (const UByte&) = default;
+
 		UByte& operator = (const UByte&) = default;
 
 		/** COmmon to every UByte. */

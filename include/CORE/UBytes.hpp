@@ -34,6 +34,7 @@ namespace MCHEmul
 							{ if (size () > 1 && !bE) _values = reverse ().bytes (); }
 
 		UBytes (const UBytes&) = default;
+
 		UBytes& operator = (const UBytes&) = default;
 
 		size_t size () const

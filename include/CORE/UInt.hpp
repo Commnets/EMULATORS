@@ -21,6 +21,7 @@ namespace MCHEmul
 {
 	 /** 
 	  *	Representing a Integer, with and without sign. \n
+	  * The max size that a UInt can hold is 4 bytes long = 4.294.967.296. It is equivalen to an unsigned int. \n
 	  *	It might by said that this class represents actually CPU's ALU (Arithmetic Logic Unit) as well. \n
 	  * A number is represented by several UBytes. Those UBytes can be given either in big-endian format or low-endian one. \n
 	  * That number can be represented in many different formats. \n
@@ -121,21 +122,36 @@ namespace MCHEmul
 			  _format (_BINARY)
 							{ }
 
-		/** Always kept in Big-endian format. 
-			Negative numbers are complement_2. */
+		/** Always kept in Big-endian format. */
 		UInt (const UBytes& u, bool bE = true, unsigned char f = _BINARY)
 			: _values ((u.size () > 1 && !bE) ? u.reverse () : u),
 			  _carry (false), _overflow (false),
 			  _format (f)
-							{ }
+							{ assert (u.size () <= 4); }
 
+		/** Always kept in Big-endian format. */
 		UInt (const std::vector <UByte>& u, bool bE = true, unsigned char f = _BINARY)
 			: _values (u, bE),
 			  _carry (false), _overflow (false),
 			  _format (f)
+							{ assert (u.size () <= 4); }
+
+		/** From an unsigned int. */
+		UInt (unsigned int n)
+			: _values (fromUnsignedInt (n).bytes () /** Already in big-endian. */),
+			  _carry (false), _overflow (false),
+			  _format (_BINARY)
+							{ }
+
+		/** From an int. */
+		UInt (int n)
+			: _values (fromInt (n).bytes () /** Already in big-endian. */),
+			  _carry (false), _overflow (false),
+			  _format (_BINARY)
 							{ }
 
 		UInt (const UInt&) = default;
+
 		UInt& operator = (const UInt&) = default;
 
 		unsigned char format () const

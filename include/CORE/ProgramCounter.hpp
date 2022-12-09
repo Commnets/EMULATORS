@@ -18,7 +18,7 @@ namespace MCHEmul
 {
 	/** The program counter is a special register within any CPU, 
 		keeping an address inside that is incremented or decremented as the program is executed. 
-		The maximum size is the size of an unsigned int = 4GBytes of addresable memory.  */
+		The maximum size is the size of an unsigned int (4 bytes) = 4GBytes of addresable memory.  */
 	class ProgramCounter final
 	{
 		public:
@@ -27,6 +27,7 @@ namespace MCHEmul
 							{ assert (sz <= sizeof (unsigned int)); }
 
 		ProgramCounter (const ProgramCounter&) = default;
+
 		ProgramCounter& operator = (const ProgramCounter&) = default;
 
 		void initialize ()

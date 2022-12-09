@@ -4,6 +4,8 @@
 
 #include <F6500/incs.hpp>
 
+static std::vector <MCHEmul::Instruction*> ROWINSTRUCTIONS;
+
 class MemoryTest final : public MCHEmul::Memory
 {
 	public:
@@ -92,8 +94,13 @@ MCHEmul::Memory::Content MemoryTest::basicContent ()
 
 unsigned int testInstruction1Second (const MCHEmul::UBytes& u, MCHEmul::CPU* cpu, MCHEmul::Memory* memory)
 {
-	MCHEmul::Instruction* inst = cpu -> instruction ((unsigned int) u [0].value ());
+	/** 
+		Row accesing insted through a map. 
+		MCHEmul::Instruction* inst = cpu -> instruction ((unsigned int) u [0].value ();
+	*/
 
+	MCHEmul::Instruction* inst = ROWINSTRUCTIONS [(unsigned int) u [0].value ()];
+	
 	unsigned int clks = 0;
 	bool e = false;
 	std::chrono::time_point <std::chrono::steady_clock> clk = 
@@ -115,7 +122,12 @@ unsigned int testInstruction1Second (const MCHEmul::UBytes& u, MCHEmul::CPU* cpu
 
 void testInstructionTimes (unsigned int clks, const MCHEmul::UBytes& u, MCHEmul::CPU* cpu, MCHEmul::Memory* memory)
 {
-	MCHEmul::Instruction* inst = cpu -> instruction ((unsigned int) u [0].value ());
+	/** 
+		Row accesing insted through a map. 
+		MCHEmul::Instruction* inst = cpu -> instruction ((unsigned int) u [0].value ();
+	*/
+
+	MCHEmul::Instruction* inst = ROWINSTRUCTIONS [(unsigned int) u [0].value ()];
 
 	std::chrono::time_point <std::chrono::steady_clock> clk = 
 		std::chrono::steady_clock ().now ();
@@ -135,6 +147,11 @@ int _tmain (int argc, _TCHAR *argv [])
 {
 	F6500::C6510 cpu;
 	MemoryTest memory;
+
+	ROWINSTRUCTIONS = std::vector <MCHEmul::Instruction*> 
+		((*cpu.instructions ().rbegin ()).second -> code () + 1, nullptr);
+	for (const auto& i : cpu.instructions ())
+		ROWINSTRUCTIONS [i.second -> code ()] = i.second;
 
 	// NOP
 	for (unsigned int i = 0; i < 10; i++)

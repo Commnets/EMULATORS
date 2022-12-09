@@ -22,8 +22,8 @@
 namespace MCHEmul
 {
 	/** Representing and address that can vary from 0 to a limit.
-		An initial value and the limit is given at construction time. 
-		If no limit is given the maximum possible in the framework is taken. */
+		An initial value and the limit is given at construction time.
+		The address is represented internally by a UInt, so no more than 4 bytes length can be hold. */
 	class Address final
 	{
 		public:
@@ -44,7 +44,13 @@ namespace MCHEmul
 			: _value (a, bE)
 							{ }
 
+		/** The address is always undertood as positive. */
+		Address (unsigned int a)
+			: _value (a)
+							{ }
+
 		Address (const Address&) = default;
+
 		Address& operator = (const Address&) = default;
 
 		size_t size () const
