@@ -97,8 +97,7 @@ namespace MCHEmul
 			private:
 			/** When there is no OperationParser valid a very basic parsing is used for macro values. */
 			std::vector <UByte> calculateValue (const std::string& e, const Macros& ms) const;
-			/** To calculate the value first time. 
-				It is able to take into account simple operations in the definition: *,+,- */
+			/** To calculate the value first time. */
 			std::vector <UByte> calculateValue (const std::string& e, const Macros& ms, const OperationParser* oP) const;
 
 			private:

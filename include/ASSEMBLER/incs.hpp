@@ -20,5 +20,7 @@
 #include <ASSEMBLER/Compiler.hpp>
 #include <ASSEMBLER/Operation.hpp>
 #include <ASSEMBLER/OperationParser.hpp>
+#include <ASSEMBLER/StdOperations.hpp>
+#include <ASSEMBLER/StdOperationParser.hpp>
 
 #endif

@@ -3,7 +3,7 @@
 
 /**	
  *	@file	
- *	File: FormulaParser.hpp \n
+ *	File: OperationParser.hpp \n
  *	Framework: CPU Emulators library \n
  *	Author: Ignacio Cea Forniés (EMULATORS library) \n
  *	Creation Date: 15/11/2022 \n
@@ -11,8 +11,8 @@
  *	Versions: 1.0 Initial
  */
 
-#ifndef __ASSEMBLER_FORMULAPARSER__
-#define __ASSEMBLER_FORMULAPARSER__
+#ifndef __ASSEMBLER_OPERATIONPARSER__
+#define __ASSEMBLER_OPERATIONPARSER__
 
 #include <CORE/incs.hpp>
 #include <ASSEMBLER/Operation.hpp>
@@ -43,21 +43,17 @@ namespace MCHEmul
 			// To create the different elements of the operation...
 			/** To create the right BinaryFunctionOperationElement. */
 			virtual OperationElement* createBinaryOperationElement (unsigned char s,
-				OperationElement* l, OperationElement* r) const;
+				OperationElement* l, OperationElement* r) const = 0;
 			/** To create the right MonoFunctionOperationElement. */
-			virtual OperationElement* createUnaryOperationElement (unsigned char s, OperationElement* o) const;
+			virtual OperationElement* createUnaryOperationElement (unsigned char s, OperationElement* o) const = 0;
 			/** To create the right function. By default there is nothing to create. */
-			virtual OperationElement* createFunctionOperationElement (const OperationElements& oE) const
-							{ return (nullptr); }
+			virtual OperationElement* createFunctionOperationElement (const OperationElements& oE) const = 0;
 
 			/** To get the different possibilities of the different type of elements
 				managed by this parser. They can be overloaded for specific purposes. */
-			virtual std::string validBinarySymbols () const // The order marks the priority...
-							{ return ("+-*/"); }
-			virtual std::string validUnarySymbols () const // The order marks the priority...
-							{ return ("><!"); }
-			virtual std::vector <std::string> validFunctionNames () const // The order marks the priority. There is none by default!
-							{ return (std::vector <std::string> ()); }
+			virtual std::string validBinarySymbols () const = 0; // The order marks the priority...
+			virtual std::string validUnarySymbols () const = 0; // The order marks the priority...
+			virtual std::vector <std::string> validFunctionNames () const = 0; // The order marks the priority. There is none by default!
 
 			private:
 			/** When parsing the parenthesis 

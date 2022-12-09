@@ -36,6 +36,12 @@
     <ClInclude Include="..\..\include\ASSEMBLER\OperationParser.hpp">
       <Filter>Archivos de encabezado</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\include\ASSEMBLER\StdOperationParser.hpp">
+      <Filter>Archivos de encabezado</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\ASSEMBLER\StdOperations.hpp">
+      <Filter>Archivos de encabezado</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\ASSEMBLER\Compiler.cpp">
@@ -54,6 +60,12 @@
       <Filter>Archivos de origen</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\ASSEMBLER\OperationParser.cpp">
+      <Filter>Archivos de origen</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\ASSEMBLER\StdOperationParser.cpp">
+      <Filter>Archivos de origen</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\ASSEMBLER\StdOperations.cpp">
       <Filter>Archivos de origen</Filter>
     </ClCompile>
   </ItemGroup>

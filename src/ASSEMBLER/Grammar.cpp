@@ -100,95 +100,15 @@ std::vector <MCHEmul::UByte> MCHEmul::Assembler::Macro::calculateValue
 
 	if (oP != nullptr)
 	{
-		std::cout << "org:" << e << std::endl;
 		MCHEmul::Assembler::OperationElement* oE = oP -> parser (e);
 		if (oE != nullptr)
-		{
-			MCHEmul::UInt val = oE -> value (ms, oP);
-			std::cout << "to => " << oE -> asString () << " => " << val << std::endl;
-		}
+			result = oE -> value (ms, oP).bytes ();
 		else
-		{
-			std::cout << "Error" << std::endl;
-		}
-	}
-
-	// How to read:
-	// Check whether it exists operations between other macros to define this one...
-	// The checking is done in other or importance!
-	// If no operation symbold is found in the macro value definition, 
-	// it is supossed that it will directly be either a label or a set of valid data... 
-
-	size_t r = e.find_first_of ('*'); // To multiply values...
-	if (r == std::string::npos) r = e.find_first_of ('+'); // To add values...
-	if (r == std::string::npos) r = e.find_first_of ('-'); // To subtract values...
-	if (r == std::string::npos) r = e.find_first_of ('>'); // To get the lowest significant byte of and address
-	if (r == std::string::npos) r = e.find_first_of ('<'); // To get the highest significant byte of and address
-	if (r == std::string::npos)
-	{
-		if (MCHEmul::validLabel (e))
-		{
-			MCHEmul::Assembler::Macros::const_iterator i = ms.find (e);
-			if (i != ms.end ())
-			{
-				result = (*i).second.value (ms, oP);
-				if (!(*i).second)
-				{
-					_error = (*i).second._error;
-					result = { }; // Just to be sure...
-				}
-			}
-			else
-				_error = MCHEmul::Assembler::ErrorType::_MACRONOTDEFINED; 
-		}
-		else
-		if (MCHEmul::validBytes (e))
-			result = MCHEmul::UInt::fromStr (_equivalent).bytes ();
-		else
-			_error = MCHEmul::Assembler::ErrorType::_MACROBADDEFINED;
+			_error = MCHEmul::Assembler::ErrorType::_MACRONOTDEFINED;
+		delete (oE);
 	}
 	else
-	{
-		// Unary operators...
-		if (r == 0)
-		{
-			MCHEmul::Assembler::Macro m1 ("" /** no name needed. */, MCHEmul::trim (e.substr (1))); 
-			m1.value (ms, oP);
-			if (!m1)
-				_error = MCHEmul::Assembler::ErrorType::_MACROBADDEFINED;
-			else
-			{
-				std::vector <MCHEmul::UByte> m1val = m1.value (ms, oP);
-				if (e [r] == '>') result = std::vector <MCHEmul::UByte> ({ m1val [m1val.size () - 1] });
-				else if (e [r] == '<') result = std::vector <MCHEmul::UByte> ({ m1val [0] });
-			}
-		}
-		// Binary operators...
-		else
-		{
-			// ...but not this for sure...
-			// It would mean there is a "symbol" before the unary operator, and can not possible!
-			if (e [r] == '<' || e [r] == '>')
-				_error = MCHEmul::Assembler::ErrorType::_MACROBADDEFINED;
-			else
-			{
-				MCHEmul::Assembler::Macro m1 ("" /** No name needed. */, MCHEmul::trim (e.substr (0, r))); 
-				m1.value (ms, oP);
-				MCHEmul::Assembler::Macro m2 ("", MCHEmul::trim (e.substr (r + 1))); 
-				m2.value (ms, oP);
-				if (!m1 || !m2)
-					_error = MCHEmul::Assembler::ErrorType::_MACROBADDEFINED;
-				else
-				{
-					MCHEmul::UInt u1 (m1.value (ms, oP));
-					MCHEmul::UInt u2 (m2.value (ms, oP));
-					if (e [r] == '*') result = (u1 * u2).bytes ();
-					else if (e [r] == '+') result = (u1 + u2).bytes ();
-					else /** - */ result = (u1 - u2).bytes ();
-				}
-			}
-		}
-	}
+		result = calculateValue (e, ms);
 
 	return (result);
 }
@@ -300,7 +220,7 @@ std::vector <MCHEmul::UByte> MCHEmul::Assembler::GrammaticalElement::bytesFromEx
 			return (result);
 		}
 
-		result.insert (result.end (), m.value (ms).begin (), m.value (ms).end ());
+		result.insert (result.end (), m.value (ms, oP).begin (), m.value (ms, oP).end ());
 	}
 	
 	return (result);

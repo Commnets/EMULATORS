@@ -17,7 +17,7 @@
 #include <CORE/incs.hpp>
 #include <ASSEMBLER/Grammar.hpp>
 #include <ASSEMBLER/Parser.hpp>
-#include <ASSEMBLER/OperationParser.hpp>
+#include <ASSEMBLER/StdOperationParser.hpp>
 
 namespace MCHEmul
 {
@@ -86,7 +86,9 @@ namespace MCHEmul
 		{
 			public:
 			Compiler (Parser* p)
-				: _parser (p)
+				: _parser (p),
+				  _operationParser (nullptr),
+				  _errors ()
 							{ assert (p != nullptr); }
 
 			~Compiler ()
@@ -115,7 +117,7 @@ namespace MCHEmul
 
 			protected:
 			virtual OperationParser* createOperationParser () const
-							{ return (new OperationParser); }
+							{ return (new StdOperationParser); }
 
 			protected:
 			Parser* _parser;

@@ -26,6 +26,8 @@
     <ClInclude Include="..\..\include\ASSEMBLER\Operation.hpp" />
     <ClInclude Include="..\..\include\ASSEMBLER\OperationParser.hpp" />
     <ClInclude Include="..\..\include\ASSEMBLER\Parser.hpp" />
+    <ClInclude Include="..\..\include\ASSEMBLER\StdOperationParser.hpp" />
+    <ClInclude Include="..\..\include\ASSEMBLER\StdOperations.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\ASSEMBLER\Compiler.cpp" />
@@ -34,6 +36,8 @@
     <ClCompile Include="..\..\src\ASSEMBLER\Operation.cpp" />
     <ClCompile Include="..\..\src\ASSEMBLER\OperationParser.cpp" />
     <ClCompile Include="..\..\src\ASSEMBLER\Parser.cpp" />
+    <ClCompile Include="..\..\src\ASSEMBLER\StdOperationParser.cpp" />
+    <ClCompile Include="..\..\src\ASSEMBLER\StdOperations.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>

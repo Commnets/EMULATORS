@@ -56,7 +56,7 @@ namespace MCHEmul
 								: std::vector <UByte> (bytes ().begin () + (bytes ().size () - p), bytes ().end ()))); }
 		UBytes MSUBytes (size_t p) const
 							{ return (UBytes (((p >= size ()) ? bytes () 
-								: std::vector <UByte> (bytes ().begin (), bytes ().begin () + p - 1)))); }
+								: std::vector <UByte> (bytes ().begin (), bytes ().begin () + p)))); }
 
 		/** If you requested for a bit bigger than sizeBits, the crash is guaranteed.
 			No checks are done to increase the speed. */

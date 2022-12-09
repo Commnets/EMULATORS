@@ -87,9 +87,13 @@ bool MCHEmul::CPU::executeNextInstruction ()
 	}
 
 	// Access the next instruction...
+	// Using the row description of the instructions!
 	MCHEmul::Instruction* inst = nullptr;
-	unsigned int nInst = MCHEmul::UInt (_memory -> values (programCounter ().asAddress (), 
-		architecture ().instructionLength ()), architecture ().bigEndian ()).asUnsignedInt ();
+	unsigned int nInst = 
+		MCHEmul::UInt (
+			_memory -> values (
+				programCounter ().asAddress (), architecture ().instructionLength ()), 
+			architecture ().bigEndian ()).asUnsignedInt ();
 	if (nInst >= _rowInstructions.size () ||
 		(inst = _rowInstructions [nInst]) == nullptr)
 		return (false); // Not possible to execute the instruction...
