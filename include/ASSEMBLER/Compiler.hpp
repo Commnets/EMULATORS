@@ -109,7 +109,6 @@ namespace MCHEmul
 
 			Errors errors () const
 							{ return (_errors); }
-
 			/** To simplify checking whether there was or not an error compiling. */
 			bool operator ! () const
 							{ return (!_errors.empty ()); }

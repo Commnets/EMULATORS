@@ -65,8 +65,8 @@ std::string MCHEmul::rtrim (const std::string& s)
 
 // ---
 std::string MCHEmul::trim (const std::string& s)
-{ 
-	return (MCHEmul::rtrim (MCHEmul::ltrim (s)));
+{
+	return (MCHEmul::rtrim (MCHEmul::ltrim (s))); 
 }
 
 // ---

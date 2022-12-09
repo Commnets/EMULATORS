@@ -41,15 +41,9 @@ namespace MCHEmul
 			virtual ~OperationElement ()
 							{ }
 		
-			// Managing the value of the OperationElement
-			/** To calculate the result of an OperationElement, a context is sometimes needed. 
-				That context is given by the Macros defined in the Semantic object
-				extracted from any Assembler program. */
-			virtual void setMacros (const Macros& ms) const = 0;
-		
 			/** To get the value of the OperationElement. \n 
 				The value will depend on the type OperationElement itself. */
-			virtual UInt value () const = 0;
+			virtual UInt value (const Macros& ms, const OperationParser* oP) const = 0;
 		
 			/** To get the OperationElement as a string. \n
 				It could be useful to represent externally the OperationElement. \n
@@ -76,6 +70,27 @@ namespace MCHEmul
 		
 		using OperationElements = std::vector <OperationElement*>;
 		
+		/** Just a value. \n
+			Its value is the number itself. */
+		class ValueOperationElement final : public OperationElement
+		{
+			public:
+			ValueOperationElement (const std::string& n)
+				: OperationElement (),
+				  _value (UInt::fromStr (n, UInt::_BINARY /** The most common. */))
+							{ }
+		
+			virtual UInt value (const Macros&, const OperationParser*) const override
+							{ return (_value); }
+		
+			/** In hexa, that is the format of the assembler!. */
+			virtual std::string asString () const
+							{ return (_value.asString (UByte::OutputFormat::_HEXA, ' ', 2)); }
+		
+			private:
+			const UInt _value; // Set at construction time...
+		};
+
 		/** A variable. \n 
 			Its value will get from the macro comtext. */
 		class VariableOperationElement final : public OperationElement
@@ -86,17 +101,13 @@ namespace MCHEmul
 				  _name (n)
 							{ }
 		
-			virtual void setMacros (const Macros& ms) const override
-							{ _macros = ms; }
-		
-			virtual UInt value () const override;
+			virtual UInt value (const Macros& ms, const OperationParser* oP) const override;
 		
 			virtual std::string asString () const
 							{ return (_name); }
 		
 			private:
 			const std::string _name; // Set at construction time...
-			mutable Macros _macros;
 		};
 		
 		/** Represents a function. \n
@@ -113,11 +124,8 @@ namespace MCHEmul
 			virtual ~FunctionOperationElement ()
 							{ for (const auto& i : _operationElements) delete (i); }
 		
-			virtual void setMacros (const Macros& ms) const override
-							{ for (const auto& i: _operationElements) i -> setMacros (ms); }
-		
-			virtual UInt value () const override;
-		
+			virtual UInt value (const Macros& ms, const OperationParser* oP) const override;
+
 			protected:
 			/** To get the function symbol.
 				It will be likely used in the method "asString". */

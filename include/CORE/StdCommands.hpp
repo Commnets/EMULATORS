@@ -30,7 +30,7 @@ namespace MCHEmul
 		; Line to define that the info for a command starts. 
 		  The command name should be just after and it will be stored in UPPERCASE always \n
 		Normal line = Info about the command defined in the previous line. */
-	class HelpCommand : public Command
+	class HelpCommand final : public Command
 	{
 		public:
 		static const int _ID = -1;

@@ -92,7 +92,7 @@ namespace MCHEmul
 
 		unsigned int error () const
 							{ return (_communicationChannel -> error ()); }
-
+		/** To simplify the way the errors are managed. */
 		bool operator ! () const
 							{ return (!*_communicationChannel); }
 

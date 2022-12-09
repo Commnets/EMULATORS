@@ -58,7 +58,6 @@ namespace MCHEmul
 
 		bool error () const
 						{ return (_error); }
-
 		/** To make it more readable whether there is an error. */
 		bool operator ! () const
 						{ return (_error); }

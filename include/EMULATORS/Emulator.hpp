@@ -133,6 +133,7 @@ namespace MCHEmul
 
 		unsigned int error () const
 							{ return (_error); }
+		/** To simplify the way the errors are managed. */
 		bool operator ! () const
 							{ return (_error != MCHEmul::_NOERROR); }
 

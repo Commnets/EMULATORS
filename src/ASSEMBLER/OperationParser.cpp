@@ -36,6 +36,13 @@ MCHEmul::Assembler::OperationElement* MCHEmul::Assembler::OperationParser::parse
 	// and the content of those parenthesis will be kept into the tmpOpElemnts variable (that is a set)
 	// so there is nothing else to do that parsing the remaining string...
 	MCHEmul::Assembler::OperationElements result = parserPiece (oC, tmpOpElmnts, ct, e);
+	if (result.size () != 1)
+	{ 
+		deleteTOpElements ();
+
+		return (nullptr);
+	}
+
 	// Here there should be only one element in the list...
 	return (result [0]);
 }
@@ -139,7 +146,7 @@ MCHEmul::Assembler::OperationElements MCHEmul::Assembler::OperationParser::parse
 		result = parserBinaryPiece (o, r, ct, e);
 	else
 	if ((pos = MCHEmul::firstOf (o, validUnarySymbols ())) != std::string::npos)
-		result = parserBinaryPiece (o, r, ct, e);
+		result = parserUnaryPiece (o, r, ct, e);
 	else
 	if ((pos = MCHEmul::firstOf (o, validFunctionNames (), rubbish)) != std::string::npos)
 		result = parserFunctionPiece (o, r, ct, e);
@@ -150,6 +157,13 @@ MCHEmul::Assembler::OperationElements MCHEmul::Assembler::OperationParser::parse
 		if (i == r.end ()) e = true;
 		else result = (*i).second._elements; // Just copy it!
 	}
+	// It is not list, not a binary function, not a unary function, not a temporal element...
+	// ...so it must be a simple element, either a variable or a set of bytes...
+	else
+		result = MCHEmul::Assembler::OperationElements (
+			{ MCHEmul::validBytes (o)
+				? (MCHEmul::Assembler::OperationElement*) new MCHEmul::Assembler::ValueOperationElement (MCHEmul::trim (o))
+				: (MCHEmul::Assembler::OperationElement*) new MCHEmul::Assembler::VariableOperationElement (MCHEmul::trim (o)) });
 
 	return (result);
 }
@@ -170,7 +184,8 @@ MCHEmul::Assembler::OperationElements MCHEmul::Assembler::OperationParser::parse
 		if (!e) 
 		{ 
 			deleteOperationElements (rst); 
-			deleteOperationElements (result);  
+			deleteOperationElements (result);
+
 			result = _NORESULT;
 				
 			continue; 
@@ -191,7 +206,7 @@ MCHEmul::Assembler::OperationElements MCHEmul::Assembler::OperationParser::parse
 	size_t pos = MCHEmul::firstOf (o, validBinarySymbols ());
 	
 	MCHEmul::Assembler::OperationElements oLeft = parserPiece (o.substr (0, pos), r, ct, e);
-	if (!e || oLeft.size () != 1) 
+	if (e || oLeft.size () != 1) 
 	{ 
 		deleteOperationElements (oLeft); 
 		
@@ -199,7 +214,7 @@ MCHEmul::Assembler::OperationElements MCHEmul::Assembler::OperationParser::parse
 	}
 	
 	MCHEmul::Assembler::OperationElements oRight = parserPiece (o.substr (pos + 1), r, ct, e);
-	if (!e || oRight.size () != 1) 
+	if (e || oRight.size () != 1) 
 	{ 
 		deleteOperationElements (oLeft); deleteOperationElements (oRight); 
 		
@@ -225,7 +240,7 @@ MCHEmul::Assembler::OperationElements MCHEmul::Assembler::OperationParser::parse
 
 	size_t pos = MCHEmul::firstOf (o, validUnarySymbols ());
 	MCHEmul::Assembler::OperationElements oRight = parserPiece (o.substr (pos + 1), r, ct, e);
-	if (!e || oRight.size () != 1) 
+	if (e || oRight.size () != 1) 
 	{ 
 		deleteOperationElements (oRight); 
 		

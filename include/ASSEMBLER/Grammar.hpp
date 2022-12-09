@@ -90,12 +90,13 @@ namespace MCHEmul
 
 			ErrorType error () const
 							{ return (_error); }
-
 			/** To make more visual the analysis of the status of macro. */
 			bool operator ! () const
 							{ return (_error != ErrorType::_NOERROR); }
 
 			private:
+			/** When there is no OperationParser valid a very basic parsing is used for macro values. */
+			std::vector <UByte> calculateValue (const std::string& e, const Macros& ms) const;
 			/** To calculate the value first time. 
 				It is able to take into account simple operations in the definition: *,+,- */
 			std::vector <UByte> calculateValue (const std::string& e, const Macros& ms, const OperationParser* oP) const;
@@ -153,7 +154,6 @@ namespace MCHEmul
 
 			ErrorType error () const
 							{ return (_error); }
-
 			/** To visually simplify the way the error system is managed. */
 			bool operator ! () const
 							{ return (_error != ErrorType::_NOERROR); }
@@ -203,7 +203,6 @@ namespace MCHEmul
 
 			ErrorType error () const
 							{ return (_error); }
-
 			/** To visually simplify the way the error system is managed. */
 			bool operator ! () const
 							{ return (_error != ErrorType::_NOERROR); }
@@ -395,7 +394,6 @@ namespace MCHEmul
 
 			ErrorType error () const
 							{ return (_error); }
-
 			/** To simplify the analysis of the macro. */
 			bool operator ! () const
 							{ return (_error != ErrorType::_NOERROR); }
