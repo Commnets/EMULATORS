@@ -96,20 +96,6 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "C64EmulatorC", "emulators\C
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "C64Programs", "C64Programs", "{BC7BFE65-0F19-4EB9-914F-67B7BC21FBC4}"
-	ProjectSection(SolutionItems) = preProject
-		emulators\C64Programs\Code\RCOPYCHARSET.asm = emulators\C64Programs\Code\RCOPYCHARSET.asm
-		emulators\C64Programs\Code\RGENERAL.asm = emulators\C64Programs\Code\RGENERAL.asm
-		emulators\C64Programs\Code\RGRAPHICS.asm = emulators\C64Programs\Code\RGRAPHICS.asm
-		emulators\C64Programs\Code\RSCREENBOX.asm = emulators\C64Programs\Code\RSCREENBOX.asm
-		emulators\C64Programs\Code\RSCREENCLEAR.asm = emulators\C64Programs\Code\RSCREENCLEAR.asm
-		emulators\C64Programs\Code\RSCREENRECT.asm = emulators\C64Programs\Code\RSCREENRECT.asm
-		emulators\C64Programs\Code\RSCREENTEXT.asm = emulators\C64Programs\Code\RSCREENTEXT.asm
-		emulators\C64Programs\Code\RSPRITES.asm = emulators\C64Programs\Code\RSPRITES.asm
-		emulators\C64Programs\Code\TESTDEFCHARS.asm = emulators\C64Programs\Code\TESTDEFCHARS.asm
-		emulators\C64Programs\Code\TESTGRAPHMODES.asm = emulators\C64Programs\Code\TESTGRAPHMODES.asm
-		emulators\C64Programs\Code\TESTHRESMODES.asm = emulators\C64Programs\Code\TESTHRESMODES.asm
-		emulators\C64Programs\Code\TESTROUTINES.asm = emulators\C64Programs\Code\TESTROUTINES.asm
-	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "C64", "C64", "{CB7D0793-14E8-492E-8620-DBE966D6AA14}"
 EndProject
@@ -151,6 +137,34 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "R64Console", "monitors\R64C
 		{8388FEAA-CDFA-430C-945D-5272AB6D3980} = {8388FEAA-CDFA-430C-945D-5272AB6D3980}
 		{A1F7489E-B003-4566-A81F-BFF6AF321BF1} = {A1F7489E-B003-4566-A81F-BFF6AF321BF1}
 		{EFD64A1D-6D9A-4716-BE18-84899483977F} = {EFD64A1D-6D9A-4716-BE18-84899483977F}
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Code", "Code", "{C240FE10-B986-4BE3-8142-2A73CA4C3DAB}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Macros", "Macros", "{CDFEFB5E-98A7-4934-9C5B-FD5C55E1B742}"
+	ProjectSection(SolutionItems) = preProject
+		emulators\C64Programs\Code\Macros\MCIAS.asm = emulators\C64Programs\Code\Macros\MCIAS.asm
+		emulators\C64Programs\Code\Macros\MSCREEN.asm = emulators\C64Programs\Code\Macros\MSCREEN.asm
+		emulators\C64Programs\Code\Macros\MVICII.asm = emulators\C64Programs\Code\Macros\MVICII.asm
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Routines", "Routines", "{1B89EA0F-83BA-4635-9B46-131784A734FB}"
+	ProjectSection(SolutionItems) = preProject
+		emulators\C64Programs\Code\Routines\RCOPYCHARSET.asm = emulators\C64Programs\Code\Routines\RCOPYCHARSET.asm
+		emulators\C64Programs\Code\Routines\RGENERAL.asm = emulators\C64Programs\Code\Routines\RGENERAL.asm
+		emulators\C64Programs\Code\Routines\RIRQ.asm = emulators\C64Programs\Code\Routines\RIRQ.asm
+		emulators\C64Programs\Code\Routines\RSCREENBOX.asm = emulators\C64Programs\Code\Routines\RSCREENBOX.asm
+		emulators\C64Programs\Code\Routines\RSCREENCLEAR.asm = emulators\C64Programs\Code\Routines\RSCREENCLEAR.asm
+		emulators\C64Programs\Code\Routines\RSCREENRECT.asm = emulators\C64Programs\Code\Routines\RSCREENRECT.asm
+		emulators\C64Programs\Code\Routines\RSCREENTEXT.asm = emulators\C64Programs\Code\Routines\RSCREENTEXT.asm
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{DD45DD00-02A4-4D13-8CC8-58BE8A459F48}"
+	ProjectSection(SolutionItems) = preProject
+		emulators\C64Programs\Code\Tests\TESTDEFCHARS.asm = emulators\C64Programs\Code\Tests\TESTDEFCHARS.asm
+		emulators\C64Programs\Code\Tests\TESTGRAPHMODES.asm = emulators\C64Programs\Code\Tests\TESTGRAPHMODES.asm
+		emulators\C64Programs\Code\Tests\TESTHRESMODES.asm = emulators\C64Programs\Code\Tests\TESTHRESMODES.asm
+		emulators\C64Programs\Code\Tests\TESTROUTINES.asm = emulators\C64Programs\Code\Tests\TESTROUTINES.asm
 	EndProjectSection
 EndProject
 Global
@@ -292,6 +306,10 @@ Global
 		{AA0DD703-5C11-4DE4-87FE-02BEF245FE66} = {33618513-AA35-4A8C-BB0B-98DD4013748D}
 		{650026B3-1AF8-42FB-B520-0B94239CF962} = {B6B8F9F7-9FCC-4811-8A0A-D88A40250BE1}
 		{791FCA28-ED93-4F02-B2EA-513F086F1C39} = {B6B8F9F7-9FCC-4811-8A0A-D88A40250BE1}
+		{C240FE10-B986-4BE3-8142-2A73CA4C3DAB} = {BC7BFE65-0F19-4EB9-914F-67B7BC21FBC4}
+		{CDFEFB5E-98A7-4934-9C5B-FD5C55E1B742} = {C240FE10-B986-4BE3-8142-2A73CA4C3DAB}
+		{1B89EA0F-83BA-4635-9B46-131784A734FB} = {C240FE10-B986-4BE3-8142-2A73CA4C3DAB}
+		{DD45DD00-02A4-4D13-8CC8-58BE8A459F48} = {C240FE10-B986-4BE3-8142-2A73CA4C3DAB}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {07C45180-3599-4E00-9578-FBB4B9BDDC3E}

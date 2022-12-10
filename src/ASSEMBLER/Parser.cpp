@@ -125,7 +125,7 @@ void MCHEmul::Assembler::CodeTemplateUseCommandParser::parse (MCHEmul::Assembler
 	MCHEmul::Strings prms;
 	std::string cTID = MCHEmul::trim (pC -> _currentLine.substr (1));
 	size_t p = MCHEmul::firstSpaceIn (cTID);
-	if (p == std::string::npos) // It has parameters...
+	if (p != std::string::npos) // It has parameters...
 	{
 		prms = MCHEmul::getElementsFrom (MCHEmul::trim (cTID.substr (p + 1)), ','); // Get the parameters...
 		cTID = cTID.substr (0, p); // ...and the name is just the "thing" before the spaces...
@@ -145,10 +145,15 @@ void MCHEmul::Assembler::CodeTemplateUseCommandParser::parse (MCHEmul::Assembler
 		{
 			pC -> _templateLinesNumber = (unsigned int) nL.size ();
 
-			pC -> _linesPointer = pC -> _lines.insert (pC -> _linesPointer, nL.begin (), nL.end ());
-			pC -> _actionLinesPointer = pC -> _lines.insert (pC -> _actionLinesPointer, nLA.begin (), nLA.end ());
+			// Remove the old lines, and insert the new ones...
+			pC -> _linesPointer = pC -> _lines.erase (pC -> _linesPointer); 
+			pC -> _actionLinesPointer = pC -> _actionLines.erase (pC -> _actionLinesPointer); 
+			pC -> _linesPointer = pC -> _lines.insert (pC -> _linesPointer, nL.begin (), nL.end ()); 
+			pC -> _actionLinesPointer = pC -> _actionLines.insert (pC -> _actionLinesPointer, nLA.begin (), nLA.end ()); 
 		}
 	}
+
+	pC -> _currentLine = ""; // The line is complete...
 }
 
 // ---

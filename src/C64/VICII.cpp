@@ -192,7 +192,7 @@ bool C64::VICII::simulate (MCHEmul::CPU* cpu)
 	if (_VICIIRegisters -> vicIItoGenerateIRQ ())
 		cpu -> interrupt (F6500::IRQInterrupt::_ID) -> setActive (true);
 
-	// Rduce the visible zone if any... The info is passed to the raster!
+	// Reduce the visible zone if any... The info is passed to the raster!
 	_raster.reduceDisplayZone
 		(!_VICIIRegisters -> textDisplay25RowsActive (), !_VICIIRegisters -> textDisplay40ColumnsActive ());
 
@@ -579,7 +579,7 @@ MCHEmul::UByte C64::VICII::drawMultiColorChar (int cb, int r,
 			continue;
 
 		// The combinations 0x00 (binary 00) and 0x01 (binary 01) are considered as background!
-		// So they coan not be used in collisions...
+		// So they can not be used in collisions...
 		if (cs == 0x02 || cs == 0x03)
 		{
 			result.setBit (7 - i, true); 
@@ -637,7 +637,7 @@ MCHEmul::UByte C64::VICII::drawMultiColorExtendedChar (int cb, int r,
 		// The color of the pixel 0 is determined by the 2 MSBites of the char code...
 		bool bS = bt [(iBy << 3) + (size_t) r].bit (iBt); // To know whether the bit is 1 or 0...
 		result.setBit (7 - i, bS);
-		unsigned int cs = ((sc [iBy].value () & 0xc0) >> 6) & 0x03;
+		unsigned int cs = ((sc [iBy].value () & 0xc0) >> 6) & 0x03; // 0, 1, 2, or 3
 		unsigned short pos = dC._RCA + i;
 		unsigned int fc = (bS ? clr [iBy].value () : _VICIIRegisters -> backgroundColor (cs)) & 0x0f /** useful nibble. */;
 		if (pos >= dC._ICS && pos <= dC._LCS)

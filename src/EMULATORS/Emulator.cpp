@@ -87,6 +87,7 @@ MCHEmul::Assembler::ByteCode MCHEmul::Emulator::loadProgram (const std::string& 
 {
 	MCHEmul::Assembler::Compiler* c = compiler ();
 	MCHEmul::Assembler::ByteCode cL = c -> compile (fN);
+
 	if (!*c)
 		e = c -> errors ();
 	else

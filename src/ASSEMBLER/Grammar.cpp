@@ -102,9 +102,13 @@ std::vector <MCHEmul::UByte> MCHEmul::Assembler::Macro::calculateValue
 	{
 		MCHEmul::Assembler::OperationElement* oE = oP -> parser (e);
 		if (oE != nullptr)
-			result = oE -> value (ms, oP).bytes ();
+		{ 
+			if ((result = oE -> value (ms, oP).bytes ()).empty ())
+				_error = MCHEmul::Assembler::ErrorType::_MACRONOTDEFINED;
+		}
 		else
-			_error = MCHEmul::Assembler::ErrorType::_MACRONOTDEFINED;
+			_error = MCHEmul::Assembler::ErrorType::_MACROBADDEFINED;
+
 		delete (oE);
 	}
 	else
