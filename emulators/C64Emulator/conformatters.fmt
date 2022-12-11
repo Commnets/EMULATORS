@@ -153,11 +153,8 @@ Current:@INST@
 Program loaded=@RESULT@
 #---
 #---
-;CLOADPRG
-->Code:
-@CODE@
-->Errors:
-@ERRORS@
+;CSAVEBIN
+Program saved=@RESULT@
 #---
 #---
 ;CANSWER

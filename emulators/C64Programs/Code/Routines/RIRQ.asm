@@ -3,9 +3,9 @@
 ; By Ignacio Cea Forniés.
 ; Copyright Community Networks 2022 - 2023.
 
-#../C64Programs/Code/Macros/MVICII.asm
-#../C64Programs/Code/Macros/MCIAS.asm
-#../C64Programs/Code/Rotines/RIRQ.asm
+#../C64Programs/code/macros/MVICII.asm
+#../C64Programs/code/macros/MCIAS.asm
+#../C64Programs/code/rotines/RIRQ.asm
 
 ; ------------------------------
 ; SETVICIIRASTERIRQ

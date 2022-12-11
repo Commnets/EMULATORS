@@ -162,7 +162,6 @@ bool MCHEmul::Console::readAndExecuteCommand ()
 // ---
 bool MCHEmul::Console::readCommand ()
 {
-	static const std::string bk (200, '\b');
 	static const std::string alKey (" ./$");
 
 	bool result = false;
@@ -173,8 +172,9 @@ bool MCHEmul::Console::readCommand ()
 		size_t oPos = _cursorPosition;
 
 		auto delCurrentCommand = [&]() -> void
-			{	std::cout << bk.substr (0, _cursorPosition) // From the current position...
-						  << MCHEmul::_SPACES.substr (0, _command.length ()) << bk.substr (0, _command.length ());
+			{	std::cout << MCHEmul::_BACKS.substr (0, _cursorPosition) // From the current position...
+						  << MCHEmul::_SPACES.substr (0, _command.length ()) 
+						  << MCHEmul::_BACKS.substr (0, _command.length ());
 				oPos = 0; };
 
 		switch (chr)
@@ -250,8 +250,10 @@ bool MCHEmul::Console::readCommand ()
 				break;
 		}
 
-		std::cout << bk.substr (0, oPos) << _command
-			<< ' ' /** to support the deletion. */ << bk.substr (0, _command.length () - _cursorPosition + 1);
+		std::cout << MCHEmul::_BACKS.substr (0, oPos) 
+				  << _command
+				  << ' ' /** to support the deletion. */ 
+				  << MCHEmul::_BACKS.substr (0, _command.length () - _cursorPosition + 1);
 	}
 
 	return (result);

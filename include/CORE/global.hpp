@@ -60,9 +60,10 @@ namespace MCHEmul
 	static const unsigned int _DEBUGTRACEINTERNALS			= 4;
 
 	/** Generic strings. */
-	static const std::string _SPACES (20, ' ');
-	static const std::string _CEROS (20, '0');
-	static const std::string _TABS (20, '\t');
+	static const std::string _SPACES (100, ' ');
+	static const std::string _CEROS (100, '0');
+	static const std::string _TABS (100, '\t');
+	static const std::string _BACKS (100, '\b');
 
 	/** General functions to manage strings */
 	size_t firstSpaceIn (const std::string& s);

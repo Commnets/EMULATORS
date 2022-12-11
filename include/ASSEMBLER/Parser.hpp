@@ -390,6 +390,11 @@ namespace MCHEmul
 			~Parser ()
 							{ for (auto i : _commandParsers) delete (i); }
 
+			/** To activate or desactivate to print out the parsing process. 
+				using the output channel received as parameter in th eparsing methods. */
+			void setPrintOutProcess (bool a)
+							{ _printOutProcess = a; }
+
 			const CPU* cpu () const
 							{ return (_cpu); }
 			const CommandParsers& commandParsers () const
@@ -439,11 +444,13 @@ namespace MCHEmul
 			  * The method can receive also another file with "actions" to execute over any line. \n
 			  * This action must be simply number. How to interpret them should be determine later. \n
 			  * In the default implementation the number 0 will mean nothing, and the number 1 to stop. \n
-			  * The method can also recive as parameter an external ParameterContext reference.
+			  * The method can also recive as parameter an external ParameterContext reference. \n
+			  * It is possible to print out what the parser is doing. @see method printOutProcess.
 			  */
-			Semantic* parse (const std::string& fN, const std::string& fA = "") const; // A context is created...
+			Semantic* parse (const std::string& fN, const std::string& fA = "",
+				std::ostream& oC = std::cout) const; // A context is created...
 			Semantic* parse (const std::string& fN, const std::string& fA, 
-				ParserContext* pC /** When the context is outside. */) const;
+				ParserContext* pC /** When the context is outside. */, std::ostream& oC = std::cout) const;
 
 			Errors errors () const
 							{ return (_errors); }
@@ -462,15 +469,17 @@ namespace MCHEmul
 			/** To read a file and convert it into Lines to be treaten later. */
 			Strings readLines (const std::string& fN) const;
 			/** To parse in detail. This part of the code can be invoked recursevly. */
-			void parseLines (ParserContext* pC) const;
+			void parseLines (ParserContext* pC, std::ostream& oC) const;
 
 			private:
 			const CPU* _cpu;
 			CommandParsers _commandParsers;
+			bool _printOutProcess;
 
 			// Implementation
 			mutable Errors _errors;
 			mutable unsigned char _commentSymbol;
+			mutable std::string _lastLinePrintedOut;
 		};
 	}
 }

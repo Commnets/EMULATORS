@@ -79,6 +79,7 @@ No parameters are needed.
 ;SPEED
 To know the real speed of the processor.
 No parameters are needed.
+# Commands to load and save files with info
 ;LOADBIN PRG ADDRESS
 To load a binary set of data from a file into an address.
 Two parameters are needed. The first is the file to load, 
@@ -87,7 +88,8 @@ and the other one is the address where to load that info.
 To save the content of the memory into a binary file.
 Three parameters are needed. The first is the file to load, 
 the second the number of bytes to save and 
-the other one is the address where to save that info from.#Specific commands for C64
+the other one is the address where to save that info from.
+#Specific commands for C64 emulation
 ;VICII
 To know the status of the VICII chip, including raster and others.
 No parameters needed.

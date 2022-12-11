@@ -39,6 +39,8 @@ namespace C64
 		  */
 		C64Emulator (const MCHEmul::Strings& argv, MCHEmul::CommunicationSystem* cS = nullptr);
 
+		virtual void printOutParameters (std::ostream& o = std::cout) const override;
+
 		/** To know whether the visualizacion system is or not NTSC. */
 		bool NTSCSystem () const
 							{ return ((_attributes.find (_NTSC) != _attributes.end ()) ? true : false); }

@@ -153,11 +153,25 @@ Current:@INST@
 Program loaded=@RESULT@
 #---
 #---
+;CSAVEBIN
+Program saved=@RESULT@
+#---
+#---
 ;CLOADPRG
 ->Code:
 @CODE@
 ->Errors:
 @ERRORS@
+#---
+#---
+;CLOADBINARY
+->Code:
+@CODE@
+#---
+#---
+;CLOADBLOCKS
+->Code:
+@CODE@
 #---
 #---
 ;CANSWER

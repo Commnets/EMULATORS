@@ -44,6 +44,7 @@ namespace MCHEmul
 			  _messageFormatter (msgFmter),
 			  _commandExecuterForAnswers (nullptr), // No derivation possible...
 			  _lastSender (),
+			  _messageSent (false),
 			  _messageReceived (false) // Becomes true when a message is received...
 							{ assert (_communicationChannel != nullptr && 
 									  _commandBuilder != nullptr); }

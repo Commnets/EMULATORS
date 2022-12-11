@@ -8,6 +8,15 @@ const unsigned char C64::C64Emulator::_PARAMBORDER = 'b';
 const std::string C64::C64Emulator::_BORDER = "BORDER";
 
 // ---
+void C64::C64Emulator::printOutParameters (std::ostream& o) const
+{
+	MCHEmul::Emulator::printOutParameters (o);
+
+	o << "/n:\t\t" << "Emulation using NTSC parameters and screen size." << std::endl;
+	o << "/b:\t\t" << "Draw a dark border in the drawable screen." << std::endl;
+}
+
+// ---
 bool C64::C64Emulator::initialize ()
 {
 	if (!MCHEmul::Emulator::initialize ())

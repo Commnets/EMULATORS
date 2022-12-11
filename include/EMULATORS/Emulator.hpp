@@ -24,8 +24,12 @@ namespace MCHEmul
 	{
 		public:
 		/** The possible parameters of the Emulator. */
+		static const unsigned char _PARAMHELP;
+		static const std::string _HELP;
 		static const unsigned char _PARAMBYTEFILE;
 		static const std::string _BYTEFILE;
+		static const unsigned char _PARAMBLOCKFILE;
+		static const std::string _BLOCKFILE;
 		static const unsigned char _PARAMASMFILE;
 		static const std::string _ASMFILE;
 		static const unsigned char _PARAMLOGLEVEL;
@@ -43,13 +47,32 @@ namespace MCHEmul
 		  * Constructor:
 		  * @param argv		: The parameters as a list of Strings. \n
 		  * The basic parameters for any emulator are: \n
+		  * /h				: Print out the help, telling you the rest of the parameters.
 		  * /fFILENAME		: bytes file (with path) to be loaded into the memory. \n
 		  * /cFILENAME		: ASM file (with path) to be parsed, compiled and loadd into the memory. \n
+		  * /kFILENAME		: Set of blocks file (with path) to be loaded into the memory. \n
 		  * /lLEVEL			: To print out logs. \n
 		  * /aADDRESS		: The address where to start the execution of the emulator. \n
 		  * /d[ADDRESS]		: Line off addresses separeted by comman where the emjulator has to stop. \n
 		  * /s				: When the execution must start stopped. \n
 		  * @param cs		: The communication system. It can be nullptr.
+		  * The emulation is able to load/understood three types of file: \n
+		  * 1.- The most classic one is an Assembler text file with instructions (@see assembler block for this). \n
+		  * 2.- A "binary file" can be also loaded. The binary file is made up of two parts: \n
+		  * The header, that ocuppies the first X bytes of the file.
+		  * In these X bytes the address where to load the bytes after is contained. \n
+		  * That address is kept in the format defined by the architecture of CPU behind (little or big endian),
+		  * and ocuppies the maximum number of bytes addressable for that CPU. \n
+		  * Then the code itself, that is the rest of of the binary file. \n
+		  * 3.- A "set of blocks file" is also understood. \n
+		  * The code file might not necessary ocuppy contiguous bytes of memory. \n
+		  * Use always a binary format to keep info could be very expensive. \n
+		  * A "set of blocks" format could be used instead. \n
+		  * The format of the file is made up of "blocks" of bytes. \n
+		  * Every block consists on a header with the initial address and the number of bytes of data of the block,
+		  * and the block of data itself. \n
+		  * The "binary file" and the "set of blocks file" can be generated from an "assembler" 
+		  * using the compilers. @see Compilers for more details.
 		  */
 		Emulator (const MCHEmul::Strings& argv, CommunicationSystem* cS = nullptr);
 
@@ -57,6 +80,9 @@ namespace MCHEmul
 
 		const Attributes& attributes () const
 							{ return (_attributes); }
+
+		/** To print out the attributes that this emulator undestand. */
+		virtual void printOutParameters (std::ostream& o = std::cout) const;
 
 		const Computer* computer () const
 							{ return (_computer == nullptr) ? (_computer = createComputer ()) : _computer; }
@@ -73,11 +99,21 @@ namespace MCHEmul
 		Assembler::Compiler* compiler ()
 							{ return ((Assembler::Compiler*) (((const Emulator*) this) -> compiler ())); }
 
+		/** Print out help parameter. */
+		bool helpNeeded () const
+							{ return ((_attributes.find (_HELP) != _attributes.end ()) ? true : false); }
+
 		/** To know whether there is a byte file where data to be loaded. \n
 			"" when there is no byte file data. */
 		std::string byteFileName () const
 							{ MCHEmul::Attributes::const_iterator i; 
 								return (((i = _attributes.find (_BYTEFILE)) != _attributes.end ()) ? (*i).second : ""); }
+
+		/** To know whether there is a block file where data to be loaded. \n
+			"" when there is no block file data. */
+		std::string blockFileName () const
+							{ MCHEmul::Attributes::const_iterator i; 
+								return (((i = _attributes.find (_BLOCKFILE)) != _attributes.end ()) ? (*i).second : ""); }
 
 		/** To know whether there is an ASM file where data to be loaded. 
 			"" when there is no ASM file data. */
@@ -116,10 +152,19 @@ namespace MCHEmul
 		bool connectPeripheral (int id, const Attributes& prms, MCHEmul::IODevice* d)
 							{ return (computer () -> connect (peripherialBuilder () -> peripheral (id, prms), d)); }
 
-		/** To load a program into de memory of the computer,
-			using the aseembler and compiler declared for the emulator. \n
+		// Loading programs...
+		/** To load a binary file. \n
+			The binary file has the address where to start to put the data into at the very first bytes loaded. \n
+			If there were errors the variable "e" will be true. */
+		DataMemoryBlock loadBinaryFile (const std::string& fN, bool& e);
+		/** To load a program into the memory of the computer,
+			using the assembler and compiler declared for the emulator. \n
 			Errors are loaded back into "e" variable and the byte code produced and returned. */
 		Assembler::ByteCode loadProgram (const std::string& fN, Assembler::Errors& e);
+		/** To load a file made up of block of data. \n
+			This type of file is made up of several data memory blocks. \n
+			If there were errors the variable "e" will be true. */
+		DataMemoryBlocks loadBlocksFile (const std::string& fN, bool& e);
 
 		/** To initialize the emulator. */
 		virtual bool initialize ();
@@ -152,7 +197,9 @@ namespace MCHEmul
 		// Implementation
 		/** To create the right version of the parser. */
 		virtual Assembler::Parser* createParser () const 
-							{ return (new Assembler::Parser (_computer -> cpu ())); }
+							{ Assembler::Parser* r = new Assembler::Parser (_computer -> cpu ()); 
+							  r -> setPrintOutProcess (true); // To print out the parsing process...
+							  return (r); }
 		/** To create the right version of the compiler. */
 		virtual Assembler::Compiler* createCompiler () const
 							{ return (new Assembler::Compiler ((Assembler::Parser*) parser ())); }

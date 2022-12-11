@@ -48,7 +48,10 @@ namespace MCHEmul
 			unsigned int _actionOn;
 		};
 
-		/** To manage the set of bytecode lines. */
+		/** To manage the set of bytecode lines. \n
+			The ByteCode structure is what the compilation process produces. \n
+			It can be load into the memory and saved into files with the two basic formats supported
+			by the emulation: Binary and Set of Blocks. */
 		struct ByteCode final
 		{
 			ByteCode () = default;
@@ -57,7 +60,7 @@ namespace MCHEmul
 
 			ByteCode& operator = (const ByteCode&) = default;
 
-			// To returns the ByeCode in things that can be lodaded into the memory....
+			// To returns the ByeCode in things that can be lodaded / saved into the memory....
 			/** Returns the initial address in the iA variable. 
 				The addresses with no info are filled with 0x00. */
 			std::vector <UByte> asSetOfBytes (Address& iA) const;
@@ -70,6 +73,17 @@ namespace MCHEmul
 
 			/** To load the info into the memory. */
 			void loadIntoMemory (Memory* m);
+
+			/** To load from a file is not possible from here,
+				because there is no format to keep ByteCodeLine. */
+
+			// Save to a file...
+			/** To save the info into a binary file. \n
+				The starting address is defined at the header of the file. */
+			bool saveAsBinary (const std::string& fN, const CPU* cpu) const;
+			/** To save the ByteCode as a set of blocks. \n
+				Every block defines its starting address and its size at the header. */
+			bool saveAsBlocks (const std::string& fN, const CPU* cpu) const;
 
 			static ByteCode createFromMemory (const Address& a, unsigned int b, Memory* m, CPU* cpu);
 

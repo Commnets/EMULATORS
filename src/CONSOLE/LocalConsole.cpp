@@ -25,13 +25,25 @@ void MCHEmul::LocalConsole::run ()
 // ---
 void MCHEmul::LocalConsole::createAndExecuteCommand ()
 {
-	// LoadPrg is special, 
+	// LoadPrg, LoadBinary and LoadBlocks are special, 
 	// as it is related with the emulation and not with the computer...
-	std::string cmdLoad ("LOADPRG");
-	if (_command.find (cmdLoad) != std::string::npos)
+	std::string cmdLoadPrg ("LOADPRG");
+	std::string cmdLoadBinary ("LOADBINARY");
+	std::string cmdLoadBlocks ("LOADBLOCKS");
+	if (_command.find (cmdLoadPrg) != std::string::npos)
 		_outputStream << MCHEmul::FormatterBuilder::instance () ->
 			formatter ("CLOADPRG") -> format (loadProgram (_command.substr 
-				(_command.find (cmdLoad) + std::string (cmdLoad).length ()))) << std::endl;
+				(_command.find (cmdLoadPrg) + std::string (cmdLoadPrg).length ()))) << std::endl;
+	else
+	if (_command.find (cmdLoadBinary) != std::string::npos)
+		_outputStream << MCHEmul::FormatterBuilder::instance () ->
+			formatter ("CLOADBINARY") -> format (loadProgram (_command.substr 
+				(_command.find (cmdLoadBinary) + std::string (cmdLoadBinary).length ()))) << std::endl;
+	else
+	if (_command.find (cmdLoadBlocks) != std::string::npos)
+		_outputStream << MCHEmul::FormatterBuilder::instance () ->
+			formatter ("CLOADBLOCKS") -> format (loadProgram (_command.substr 
+				(_command.find (cmdLoadBlocks) + std::string (cmdLoadBlocks).length ()))) << std::endl;
 	else
 	{
 		MCHEmul::Command* cmd = commandBuilder () -> command (_command);
@@ -46,6 +58,27 @@ bool MCHEmul::LocalConsole::runPerCycle ()
 	return (!_emulator -> runCycle ());
 
 	// The status of the console (hols) is not touched!
+}
+
+// ---
+MCHEmul::InfoStructure MCHEmul::LocalConsole::loadBinaryFile (const std::string& nP) const
+{
+	bool e;
+	MCHEmul::DataMemoryBlock dM = _emulator -> loadBinaryFile (nP, e);
+
+	MCHEmul::InfoStructure result;
+	if (e)
+		result.add ("CODE", std::string ("No code loaded"));
+	else
+	{
+		_emulator -> computer () -> setActionForNextCycle (MCHEmul::Computer::_ACTIONSTOP);
+
+		result.add ("CODE", std::string ("Binary file (") + 
+			std::to_string (dM._bytes.size ()) + " bytes) loaded at:" + 
+			dM._startAddress.asString (MCHEmul::UByte::OutputFormat::_HEXA, '\0', 2));
+	}
+
+	return (result);
 }
 
 // ---
@@ -91,3 +124,23 @@ MCHEmul::InfoStructure MCHEmul::LocalConsole::loadProgram (const std::string& nP
 	return (result);
 }
 
+// ---
+MCHEmul::InfoStructure MCHEmul::LocalConsole::loadBlocksFile (const std::string& nP) const
+{
+	bool e;
+	MCHEmul::DataMemoryBlocks mB = _emulator -> loadBlocksFile (nP, e);
+
+	MCHEmul::InfoStructure result;
+	if (e)
+		result.add ("CODE", std::string ("No code loaded"));
+	else
+	{
+		_emulator -> computer () -> setActionForNextCycle (MCHEmul::Computer::_ACTIONSTOP);
+
+		result.add ("CODE", std::string ("Binary file (") + 
+			(mB.empty () ? "0" : std::to_string (mB[0]._bytes.size ())) + " bytes) loaded at:" +
+			(mB.empty () ? "-" : mB[0]._startAddress.asString (MCHEmul::UByte::OutputFormat::_HEXA, '\0', 2)));
+	}
+
+	return (result);
+}

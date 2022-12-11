@@ -38,11 +38,10 @@ std::vector <MCHEmul::UByte> MCHEmul::Assembler::ByteCode::asSetOfBytes (MCHEmul
 	{
 		if (i._address > nA)
 		{
-			while (nA != i._address)
-			{
+			for (int j = 0; j < nA.distanceWith (i._address); j++)
 				result.push_back (MCHEmul::UByte::_0);
-				nA = nA + 1;
-			}
+
+			nA = i._address;
 		}
 
 		result.insert (result.end (), i._bytes.begin (), i._bytes.end ());
@@ -109,6 +108,59 @@ void MCHEmul::Assembler::ByteCode::loadIntoMemory (MCHEmul::Memory* m)
 
 	for (const auto& i : _lines)
 		m -> set (i._address, i._bytes);
+}
+
+// ---
+bool MCHEmul::Assembler::ByteCode::saveAsBinary (const std::string& fN, const MCHEmul::CPU* cpu) const
+{
+	if (cpu == nullptr)
+		return (false);
+
+	MCHEmul::Address sA;
+	std::vector <MCHEmul::UByte> dt = asSetOfBytes (sA);
+	MCHEmul::UBytes sAB = MCHEmul::UBytes (sA.bytes (), cpu -> architecture ().bigEndian ());
+	sAB.setMinLength (cpu -> architecture ().numberBytes ());
+	std::vector <MCHEmul::UByte> sABb = sAB.bytes ();
+	// The address in the format understood by the cpu behind (big-endian / little-endian and length)
+	// is inserted into the list of bytes to save. 
+	// The length of the bytes inserts also depends on the cpu behind
+	dt.insert (dt.begin (), sABb.begin (), sABb.end ());
+
+	return (MCHEmul::UBytes::saveBytesTo (fN, dt));
+}
+
+// ---
+bool MCHEmul::Assembler::ByteCode::saveAsBlocks (const std::string& fN, const MCHEmul::CPU* cpu) const
+{
+	if (cpu == nullptr)
+		return (false);
+
+	MCHEmul::DataMemoryBlocks blks = asDataMemoryBlocks ();
+	std::vector <MCHEmul::UByte> dt;
+	for (const auto& i : blks)
+	{
+		std::vector <MCHEmul::UByte> pdt = i._bytes;
+
+		// Insert the length to include
+		MCHEmul::UInt l = MCHEmul::UInt ((unsigned int) pdt.size ()); 
+		l.setMinLength (4); // ...with a minimum length of 4 bytes (is the maximum size admitted by the emulation)
+		pdt.insert (pdt.begin (), l.bytes ().begin (), l.bytes ().end ());
+
+		// Then the address...(@see above), that becomes first...
+		// In the format understood by the cpu (little or big endian)
+		// ...and with number of bytes that are also managed by the cpu behind!
+		MCHEmul::UBytes sAB = MCHEmul::UBytes (i._startAddress.bytes (), cpu -> architecture ().bigEndian ());
+		sAB.setMinLength (cpu -> architecture ().numberBytes ());
+		std::vector <MCHEmul::UByte> sABb = sAB.bytes (); 
+		pdt.insert (pdt.begin (), sABb.begin (), sABb.end ());
+
+		// At this point the address is first and then the length of the data kept.
+
+		// Adds the block to the total list to be saved later...
+		dt.insert (dt.end (), pdt.begin (), pdt.end ());
+	}
+
+	return (MCHEmul::UBytes::saveBytesTo (fN, dt));
 }
 
 // ---

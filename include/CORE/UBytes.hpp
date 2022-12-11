@@ -19,7 +19,8 @@
 
 namespace MCHEmul
 {
-	/** Representing a set of UByte. */
+	/** Representing a set of UByte.
+		The class includes static methods to save / load bytes into / from a bin file. */
 	class UBytes final
 	{
 		public:
@@ -116,7 +117,10 @@ namespace MCHEmul
 		friend std::ostream& operator << (std::ostream& o, const UBytes& u)
 							{ return (o << u.asString (UByte::OutputFormat::_HEXA, '\0', 2 /** sizeof (unsigned char) * 2 */)); }
 
+		// To save and load binary data...
+		/** To load bytes from a file. The variable (parameter) "e" will hold true when error. */
 		static std::vector <MCHEmul::UByte> loadBytesFrom (const std::string& fN, bool& e);
+		/** To save bytes to a file. Returns true when everything ok. */
 		static bool saveBytesTo (const std::string& fN, const std::vector <UByte>& u);
 		static bool saveBytesTo (const std::string& fN, const MCHEmul::UBytes& u)
 							{ return (saveBytesTo (fN, u.bytes ())); }

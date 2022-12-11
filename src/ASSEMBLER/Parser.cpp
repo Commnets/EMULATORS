@@ -384,8 +384,12 @@ void MCHEmul::Assembler::InstructionCommandParser::parse (MCHEmul::Assembler::Pa
 
 // ---
 MCHEmul::Assembler::Parser::Parser (const MCHEmul::CPU* c, const MCHEmul::Assembler::CommandParsers& lP)
-	: _cpu (c), _commandParsers (lP),
-	  _errors (), _commentSymbol (' ')
+	: _cpu (c), 
+	  _commandParsers (lP),
+	  _printOutProcess (false), 
+	  _errors (), 
+	  _commentSymbol (' '),
+	  _lastLinePrintedOut ("")
 { 
 	assert (_cpu != nullptr);
 
@@ -425,10 +429,18 @@ unsigned char MCHEmul::Assembler::Parser::commentSymbol () const
 }
 
 // ---
-MCHEmul::Assembler::Semantic* MCHEmul::Assembler::Parser::parse (const std::string& fN, const std::string& fA) const
+MCHEmul::Assembler::Semantic* MCHEmul::Assembler::Parser::parse 
+	(const std::string& fN, const std::string& fA, std::ostream& oC) const
 { 
 	MCHEmul::Assembler::ParserContext* pC = createParserContext ();
-	MCHEmul::Assembler::Semantic* result = parse (fN, fA, pC);
+
+	// When evrything is comming from internal,
+	// the manage of the printout can be managed...
+	_lastLinePrintedOut = "";
+	MCHEmul::Assembler::Semantic* result = parse (fN, fA, pC, oC);
+	if (_printOutProcess)
+		oC << std::endl;
+
 	delete (pC);
 	
 	return (result);
@@ -436,7 +448,7 @@ MCHEmul::Assembler::Semantic* MCHEmul::Assembler::Parser::parse (const std::stri
 
 // ---
 MCHEmul::Assembler::Semantic* MCHEmul::Assembler::Parser::parse 
-	(const std::string& fN, const std::string& fA, MCHEmul::Assembler::ParserContext* pC) const
+	(const std::string& fN, const std::string& fA, MCHEmul::Assembler::ParserContext* pC, std::ostream& oC) const
 {
 	if (pC == nullptr)
 		return (nullptr);
@@ -467,7 +479,7 @@ MCHEmul::Assembler::Semantic* MCHEmul::Assembler::Parser::parse
 	pC -> _currentLineNumber = 0;
 	pC -> _actionLines = actions;
 	pC -> _actionLinesPointer = pC -> _actionLines.begin ();
-	parseLines (pC);
+	parseLines (pC, oC);
 
 	// ...and return the result, 
 	// that is a mixture of errors and a semantic...
@@ -495,11 +507,25 @@ MCHEmul::Strings MCHEmul::Assembler::Parser::readLines (const std::string& fN) c
 }
 
 // ---
-void MCHEmul::Assembler::Parser::parseLines (MCHEmul::Assembler::ParserContext* pC) const
+void MCHEmul::Assembler::Parser::parseLines (MCHEmul::Assembler::ParserContext* pC, std::ostream& oC) const
 {
 	while (pC -> _linesPointer != pC -> _lines.end ())
 	{
 		pC -> _currentLine = MCHEmul::trim (*pC -> _linesPointer);
+
+		// Print out the line being parser...
+		// If it defined in that way...
+		if (_printOutProcess)
+		{
+			oC << MCHEmul::_SPACES.substr (0, _lastLinePrintedOut.length ()) 
+			   << MCHEmul::_BACKS.substr (0, _lastLinePrintedOut.length ()); // Delete the previous...
+			_lastLinePrintedOut = "(" + std::to_string (pC -> _currentLineNumber * 100 / pC -> _lines.size ()) + 
+				"%) Parsing file:" + pC -> _file + " line:" + std::to_string (pC -> _currentLineNumber); // With % in the current file...
+			if (_lastLinePrintedOut.length () > MCHEmul::_BACKS.length ()) // No more than the limit...
+				_lastLinePrintedOut = _lastLinePrintedOut.substr (0, MCHEmul::_BACKS.length ());
+			oC << _lastLinePrintedOut << MCHEmul::_BACKS.substr (0, _lastLinePrintedOut.length ()); // Print the new one...
+		}
+
 		std::string aLS = MCHEmul::trim (*pC -> _actionLinesPointer);
 		unsigned int aL = (aLS == "") ? 0 /** no action defined. */ : (unsigned int) std::stoi (aLS);
 		while (pC -> _currentLine != "") // Until the line has been treated...

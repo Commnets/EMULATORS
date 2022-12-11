@@ -19,8 +19,7 @@
 
 namespace MCHEmul
 {
-	/** The remote console manages a nill emulation behind
-		and just a simple command builder to interprete the answer commind from the real emulation. */
+	/** The remote console need a communication system behind to send the commands. */
 	class RemoteConsole : public Console
 	{
 		public:

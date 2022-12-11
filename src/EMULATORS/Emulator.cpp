@@ -2,8 +2,12 @@
 #include <SDL.h>
 
 // ---
+const unsigned char MCHEmul::Emulator::_PARAMHELP = 'h';
+const std::string MCHEmul::Emulator::_HELP = "HELP";
 const unsigned char MCHEmul::Emulator::_PARAMBYTEFILE = 'f';
 const std::string MCHEmul::Emulator::_BYTEFILE = "BYTEFILE";
+const unsigned char MCHEmul::Emulator::_PARAMBLOCKFILE = 'k';
+const std::string MCHEmul::Emulator::_BLOCKFILE = "BLOCKFILE";
 const unsigned char MCHEmul::Emulator::_PARAMASMFILE = 'c';
 const std::string MCHEmul::Emulator::_ASMFILE = "ASMFILE";
 const unsigned char MCHEmul::Emulator::_PARAMLOGLEVEL = 'l';
@@ -27,12 +31,14 @@ MCHEmul::Emulator::Emulator (const MCHEmul::Strings& argv, MCHEmul::Communicatio
 	  _error (MCHEmul::_NOERROR)
 {
 	static std::map <unsigned char, std::string> _MATCH =
-		{ { _PARAMBYTEFILE, _BYTEFILE },
+		{ { _PARAMHELP, _HELP },
+		  { _PARAMBYTEFILE, _BYTEFILE },
 		  { _PARAMASMFILE, _ASMFILE },
+		  { _PARAMBLOCKFILE, _BLOCKFILE },
 		  { _PARAMLOGLEVEL, _LOGLEVEL },
 		  { _PARAMADDRESS, _ADDRESS },
 		  { _PARAMADDRESSSTOP, _ADDRESSSTOP },
-		  { _PARAMSTOP , _STOP }
+		  { _PARAMSTOP, _STOP }
 		};
 
 	for (unsigned int i = 1 /** param 0 = name of the executable */; i < argv.size (); i++)
@@ -71,6 +77,22 @@ MCHEmul::Emulator::~Emulator ()
 }
 
 // ---
+void MCHEmul::Emulator::printOutParameters (std::ostream& o) const
+{
+	o << "Copyright (C) 2022 by Ignacio Cea Fornies" << std::endl << std::endl;
+
+	o << "/h:\t\t" << "Print out this help." << std::endl;
+	o << "/f[FILENAME]:\t" << "Load a binary file." << std::endl;
+	o << "/c[FILENAME]:\t" << "Load and compile a file." << std::endl;
+	o << "/k[FILENAME]:\t" << "Load a block memory file." << std::endl;
+	o << "/a[ADDRESS]:\t" << "The initial address of the PC register." << std::endl;
+	o << "\t\tOtherwise the one defined by the computer emulated will be used." << std::endl;
+	o << "/l[LEVEL]:\t" << "The deepness of the debug. 1 - 4. The bigger the deeper." << std::endl;
+	o << "/d[BREAKS]:\t" << "Break points address separated by comma." << std::endl;
+	o << "/s:\t\t" << "Start the emulation stopped." << std::endl;
+}
+
+// ---
 MCHEmul::Addresses MCHEmul::Emulator::stopAddresses () const
 {
 	MCHEmul::Addresses result;
@@ -79,6 +101,37 @@ MCHEmul::Addresses MCHEmul::Emulator::stopAddresses () const
 		(((i = _attributes.find (_ADDRESSSTOP)) != _attributes.end ()) ? (*i).second : "", ',');
 	for (const auto& i : strs)
 		result.push_back (MCHEmul::Address::fromStr (i));
+	return (result);
+}
+
+// ---
+MCHEmul::DataMemoryBlock MCHEmul::Emulator::loadBinaryFile (const std::string& fN, bool& e)
+{
+	e = false;
+
+	std::vector <MCHEmul::UByte> by = UBytes::loadBytesFrom (fN, e);
+	if (e)
+		return (MCHEmul::DataMemoryBlock ());
+
+	// The length of the data file has to be at least the needed to hold the starting address
+	// That is defined by the number of bytes of the cpu behind...
+	size_t nB = _computer -> cpu () -> architecture ().numberBytes ();
+	if (by.size () < nB)
+	{
+		e = true;
+
+		return (MCHEmul::DataMemoryBlock ());
+	}
+
+	// The first bytes (nB) of the data represents the address where to load the rest...
+	// That address has to be represented in the format of the computer behind (little or big endian)
+	MCHEmul::DataMemoryBlock result 
+		(MCHEmul::Address (std::vector <MCHEmul::UByte> (by.begin (), by.begin () + nB), 
+			_computer -> cpu () -> architecture ().bigEndian ()), 
+		 std::vector <MCHEmul::UByte> (by.begin () + nB, by.end ()));
+	
+	_computer -> memory () -> set ({ result });
+	
 	return (result);
 }
 
@@ -102,11 +155,61 @@ MCHEmul::Assembler::ByteCode MCHEmul::Emulator::loadProgram (const std::string& 
 }
 
 // ---
+MCHEmul::DataMemoryBlocks MCHEmul::Emulator::loadBlocksFile (const std::string& fN, bool& e)
+{
+	e = false;
+
+	std::vector <MCHEmul::UByte> by = UBytes::loadBytesFrom (fN, e);
+	if (e)
+		return (MCHEmul::DataMemoryBlocks ());
+
+	// The length of the data file has to be at least the needed to hold the starting address
+	// That is defined by the number of bytes of the cpu behind...
+	size_t nB = _computer -> cpu () -> architecture ().numberBytes ();
+	if (by.size () < (nB + 4 /** 4 bytes for keeping the size of one block. */))
+	{
+		e = true;
+
+		return (MCHEmul::DataMemoryBlocks ());
+	}
+
+	MCHEmul::DataMemoryBlocks result;
+	std::vector <MCHEmul::UByte>::const_iterator i = by.begin ();
+	while (i != by.end ())
+	{
+		// Reads a block...
+		MCHEmul::Address sA (std::vector <MCHEmul::UByte> (i, i + nB), 
+			_computer -> cpu () -> architecture ().bigEndian ());
+		MCHEmul::UInt bS (std::vector <MCHEmul::UByte> (i + nB, i + nB + 4));
+		MCHEmul::DataMemoryBlock pR
+			(sA, std::vector <MCHEmul::UByte> (i + nB + 4, i + nB + 4 + (size_t) bS.asUnsignedInt ()));
+
+		// Adds to the total...
+		result.push_back (pR);
+
+		// Next...
+		i += nB + 4 + (size_t) bS.asUnsignedInt ();
+	}
+
+	_computer -> memory () -> set (result);
+	
+	return (result);
+}
+
+// ---
 bool MCHEmul::Emulator::initialize ()
 {
 	if (_error != MCHEmul::_NOERROR)
 	{
 		std::cout << "The emulator was not well created" << std::endl;
+
+		return (false);
+	}
+
+	/** If help is needed then no other action is executed. */
+	if (helpNeeded ())
+	{ 
+		printOutParameters (std::cout);
 
 		return (false);
 	}
@@ -132,19 +235,24 @@ bool MCHEmul::Emulator::initialize ()
 	if (_debugLevel >= MCHEmul::_DEBUGTRACEINTERNALS)
 		std::cout << *computer () << std::endl;
 
-	if (byteFileName () != "" && asmFileName () == "")
+	bool lF = false;
+
+	if (byteFileName () != "" && asmFileName () == "" && blockFileName () == "")
 	{
-		bool r = computer () -> loadInto (byteFileName (), MCHEmul::Address ({ 0x00, 0x00 }));
-		if (!r)
+		bool e = false;
+		loadBinaryFile (byteFileName (), e);
+		if (e)
 		{
 			if (_debugLevel >= MCHEmul::_DEBUGERRORS)
 				std::cout << "Error loading file: " << byteFileName () << std::endl;
 
 			return (false);
 		}
+
+		lF = true;
 	}
 
-	if (asmFileName () != "" && byteFileName () == "")
+	if (asmFileName () != "" && byteFileName () == "" && blockFileName () == "")
 	{
 		MCHEmul::Assembler::Errors e;
 		MCHEmul::Assembler::ByteCode cL = loadProgram (asmFileName (), e);
@@ -162,6 +270,30 @@ bool MCHEmul::Emulator::initialize ()
 				for (const auto& i : cL._lines)
 					std::cout << i << std::endl;
 		}
+
+		lF = true;
+	}
+
+	if (blockFileName () != "" && byteFileName () == "" && asmFileName () == "")
+	{
+		bool e = false;
+		loadBlocksFile (blockFileName (), e);
+		if (e)
+		{
+			if (_debugLevel >= MCHEmul::_DEBUGERRORS)
+				std::cout << "Error loading file: " << blockFileName () << std::endl;
+
+			return (false);
+		}
+
+		lF = true;
+	}
+
+	if (!lF && (byteFileName () != "" || blockFileName () != "" || asmFileName () != ""))
+	{
+		if (_debugLevel >= MCHEmul::_DEBUGERRORS)
+			std::cout << "Only one type of file can be loaded at the same time" << std::endl
+					  << "No file has been loaded" << std::endl;
 	}
 
 	if (startingAddress () != MCHEmul::Address ())

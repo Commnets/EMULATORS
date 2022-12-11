@@ -3,8 +3,8 @@
 ; By Ignacio Cea Forniés.
 ; Copyright Community Networks 2022 - 2023.
 
-#../C64Programs/Code/Macros/MSCREEN.asm
-#../C64Programs/Code/Routines/RGENERAL.asm
+#../C64Programs/code/macros/MSCREEN.asm
+#../C64Programs/code/routines/RGENERAL.asm
 
 ; ------------------------------
 ; DRAWTEXT

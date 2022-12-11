@@ -6,12 +6,12 @@
 ; The base has to be defined before doing anything...
 ; and also to include the general file!
 BASE = $c000
-#../C64Programs/Code/Routines/RGENERAL.asm
+#../C64Programs/code/routines/RGENERAL.asm
 ; The rest of the files needed
-#../C64Programs/Code/Routines/RSCREENCLEAR.asm
-#../C64Programs/Code/Routines/RSCREENBOX.asm
-#../C64Programs/Code/Routines/RSCREENRECT.asm
-#../C64Programs/Code/Routines/RSCREENTEXT.asm
+#../C64Programs/code/routines/RSCREENCLEAR.asm
+#../C64Programs/code/routines/RSCREENBOX.asm
+#../C64Programs/code/routines/RSCREENRECT.asm
+#../C64Programs/code/routines/RSCREENTEXT.asm
 
 ; Data
 * = $ca00

@@ -79,6 +79,7 @@ No parameters are needed.
 ;SPEED
 To know the real speed of the processor.
 No parameters are needed.
+# Commands to load and save files with info
 ;LOADBIN PRG ADDRESS
 To load a binary set of data from a file into an address.
 Two parameters are needed. The first is the file to load, 

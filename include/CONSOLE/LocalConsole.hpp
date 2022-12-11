@@ -18,7 +18,9 @@
 
 namespace MCHEmul
 {
-	/** The console working over an emulation being executed locally. */
+	/** The console working over an emulation being executed locally. \n
+		The local console can load the three types of file that are managed in the emulation: \n
+		"assembler", "binary" file and "set of blocks" file. @see Emulator for further details. */
 	class LocalConsole : public Console
 	{
 		public:
@@ -37,9 +39,15 @@ namespace MCHEmul
 
 		virtual bool runPerCycle () override;
 
+		// Loading programs
+		/** To load a binary file. \n
+			where the address where to address to load the program from is at the header of the file. */
+		InfoStructure loadBinaryFile (const std::string& nP) const;
 		/** To load a program.
 		This is avery special command, using the one defined inthe emulator behind. */
 		InfoStructure loadProgram (const std::string& nP) const;
+		/** To load a block of files. */
+		InfoStructure loadBlocksFile (const std::string& nP) const;
 
 		protected:
 		/** The emulator over which the console work. */

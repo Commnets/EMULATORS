@@ -347,7 +347,9 @@ void MCHEmul::LoadBinCommand::executeImpl (MCHEmul::CommandExecuter* cE, MCHEmul
 	if (c == nullptr)
 		return;
 
-	rst.add	("RESULT", c -> loadInto (parameter ("00"), MCHEmul::Address::fromStr (parameter ("01"))));
+	rst.add	("RESULT", 
+		(c -> loadInto (parameter ("00"), 
+			MCHEmul::Address::fromStr (parameter ("01")))) ? "Ok" : "Error");
 }
 
 // ---
@@ -356,8 +358,10 @@ void MCHEmul::SaveBinCommand::executeImpl (MCHEmul::CommandExecuter* cE, MCHEmul
 	if (c == nullptr)
 		return;
 
-	rst.add	("RESULT", c -> saveFrom
-		(parameter ("00"), std::stoi (parameter ("01").c_str ()), MCHEmul::Address::fromStr (parameter ("02"))));
+	rst.add	("RESULT", 
+		(c -> saveFrom
+			(parameter ("00"), std::stoi (parameter ("01").c_str ()), 
+				MCHEmul::Address::fromStr (parameter ("02")))) ? "Ok" : "Error");
 }
 
 // ---
