@@ -365,7 +365,8 @@ namespace MCHEmul
 			To convert a file text (or text) into an internal structure. \n
 			The parser is a line parser. That is, it is only able to parser a line. \n
 			There can be added specific instruction parsers but always a comment command parser must exist. \n
-			It is used to determine whether a line finishes or not. */
+			It is used to determine whether a line finishes or not. \n
+			The parser can be extended later to include / change specific command parsers */
 		class Parser
 		{
 			public:

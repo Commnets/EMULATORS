@@ -60,10 +60,12 @@ namespace MCHEmul
 
 			ByteCode& operator = (const ByteCode&) = default;
 
-			// To returns the ByeCode in things that can be lodaded / saved into the memory....
+			// To returns the ByeCode in things that can be loaded / saved into the memory or files...
 			/** Returns the initial address in the iA variable. 
 				The addresses with no info are filled with 0x00. */
 			std::vector <UByte> asSetOfBytes (Address& iA) const;
+			/** Returns the info like a memory block. */
+			DataMemoryBlock asDataMemoryBlock () const;
 			/** Returns a set of code blocks. */
 			DataMemoryBlocks asDataMemoryBlocks () const;
 

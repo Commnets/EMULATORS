@@ -3,25 +3,17 @@
 
 // ---
 const unsigned char MCHEmul::Emulator::_PARAMHELP = 'h';
-const std::string MCHEmul::Emulator::_HELP = "HELP";
 const unsigned char MCHEmul::Emulator::_PARAMBYTEFILE = 'f';
-const std::string MCHEmul::Emulator::_BYTEFILE = "BYTEFILE";
 const unsigned char MCHEmul::Emulator::_PARAMBLOCKFILE = 'k';
-const std::string MCHEmul::Emulator::_BLOCKFILE = "BLOCKFILE";
 const unsigned char MCHEmul::Emulator::_PARAMASMFILE = 'c';
-const std::string MCHEmul::Emulator::_ASMFILE = "ASMFILE";
 const unsigned char MCHEmul::Emulator::_PARAMLOGLEVEL = 'l';
-const std::string MCHEmul::Emulator::_LOGLEVEL = "LOGLEVEL";
 const unsigned char MCHEmul::Emulator::_PARAMADDRESS = 'a';
-const std::string MCHEmul::Emulator::_ADDRESS = "ADDRESS";
 const unsigned char MCHEmul::Emulator::_PARAMADDRESSSTOP = 'd';
-const std::string MCHEmul::Emulator::_ADDRESSSTOP = "ADDRESSSTOP";
 const unsigned char MCHEmul::Emulator::_PARAMSTOP = 's';
-const std::string MCHEmul::Emulator::_STOP = "STOP";
 
 // ---
-MCHEmul::Emulator::Emulator (const MCHEmul::Strings& argv, MCHEmul::CommunicationSystem* cS)
-	: _attributes (),
+MCHEmul::Emulator::Emulator (const MCHEmul::CommandLineArguments& args, MCHEmul::CommunicationSystem* cS)
+	: _cmdlineArguments (args),
 	  _communicationSystem (cS),
 	  _debugLevel (MCHEmul::_DEBUGNOTHING),
 	  _parser (nullptr), _compiler (nullptr),
@@ -30,26 +22,6 @@ MCHEmul::Emulator::Emulator (const MCHEmul::Strings& argv, MCHEmul::Communicatio
 	  _running (false),
 	  _error (MCHEmul::_NOERROR)
 {
-	static std::map <unsigned char, std::string> _MATCH =
-		{ { _PARAMHELP, _HELP },
-		  { _PARAMBYTEFILE, _BYTEFILE },
-		  { _PARAMASMFILE, _ASMFILE },
-		  { _PARAMBLOCKFILE, _BLOCKFILE },
-		  { _PARAMLOGLEVEL, _LOGLEVEL },
-		  { _PARAMADDRESS, _ADDRESS },
-		  { _PARAMADDRESSSTOP, _ADDRESSSTOP },
-		  { _PARAMSTOP, _STOP }
-		};
-
-	for (unsigned int i = 1 /** param 0 = name of the executable */; i < argv.size (); i++)
-	{
-		std::map <unsigned char, std::string>::const_iterator p;
-		if (argv [i].length () < 2 || argv [i][0] != '/' || 
-			(p = _MATCH.find (argv [i][1])) == _MATCH.end ())
-			continue; // Not valid argument...
-		_attributes [(*p).second] = argv [i].substr (2);
-	}
-
 	// The graphical and IO system used is based on SDL...
 	int sdlE = 0;
 	sdlE += SDL_Init (SDL_INIT_VIDEO);
@@ -97,8 +69,10 @@ MCHEmul::Addresses MCHEmul::Emulator::stopAddresses () const
 {
 	MCHEmul::Addresses result;
 	MCHEmul::Attributes::const_iterator i;
-	MCHEmul::Strings strs = MCHEmul::getElementsFrom 
-		(((i = _attributes.find (_ADDRESSSTOP)) != _attributes.end ()) ? (*i).second : "", ',');
+	MCHEmul::Strings strs = 
+		_cmdlineArguments.existsArgument (_PARAMADDRESSSTOP)
+			? MCHEmul::getElementsFrom (_cmdlineArguments.argumentAsString (_PARAMADDRESSSTOP), ',') 
+			: MCHEmul::Strings ();
 	for (const auto& i : strs)
 		result.push_back (MCHEmul::Address::fromStr (i));
 	return (result);
@@ -107,31 +81,14 @@ MCHEmul::Addresses MCHEmul::Emulator::stopAddresses () const
 // ---
 MCHEmul::DataMemoryBlock MCHEmul::Emulator::loadBinaryFile (const std::string& fN, bool& e)
 {
-	e = false;
+	MCHEmul::DataMemoryBlock result = 
+		MCHEmul::DataMemoryBlock::loadBinaryFile (fN, e, 
+			_computer -> cpu () -> architecture ().numberBytes (), 
+			_computer -> cpu () -> architecture ().bigEndian ());
 
-	std::vector <MCHEmul::UByte> by = UBytes::loadBytesFrom (fN, e);
-	if (e)
-		return (MCHEmul::DataMemoryBlock ());
+	if (!e)
+		_computer -> memory () -> set ({ result });
 
-	// The length of the data file has to be at least the needed to hold the starting address
-	// That is defined by the number of bytes of the cpu behind...
-	size_t nB = _computer -> cpu () -> architecture ().numberBytes ();
-	if (by.size () < nB)
-	{
-		e = true;
-
-		return (MCHEmul::DataMemoryBlock ());
-	}
-
-	// The first bytes (nB) of the data represents the address where to load the rest...
-	// That address has to be represented in the format of the computer behind (little or big endian)
-	MCHEmul::DataMemoryBlock result 
-		(MCHEmul::Address (std::vector <MCHEmul::UByte> (by.begin (), by.begin () + nB), 
-			_computer -> cpu () -> architecture ().bigEndian ()), 
-		 std::vector <MCHEmul::UByte> (by.begin () + nB, by.end ()));
-	
-	_computer -> memory () -> set ({ result });
-	
 	return (result);
 }
 
@@ -157,42 +114,14 @@ MCHEmul::Assembler::ByteCode MCHEmul::Emulator::loadProgram (const std::string& 
 // ---
 MCHEmul::DataMemoryBlocks MCHEmul::Emulator::loadBlocksFile (const std::string& fN, bool& e)
 {
-	e = false;
-
-	std::vector <MCHEmul::UByte> by = UBytes::loadBytesFrom (fN, e);
-	if (e)
-		return (MCHEmul::DataMemoryBlocks ());
-
-	// The length of the data file has to be at least the needed to hold the starting address
-	// That is defined by the number of bytes of the cpu behind...
-	size_t nB = _computer -> cpu () -> architecture ().numberBytes ();
-	if (by.size () < (nB + 4 /** 4 bytes for keeping the size of one block. */))
-	{
-		e = true;
-
-		return (MCHEmul::DataMemoryBlocks ());
-	}
-
-	MCHEmul::DataMemoryBlocks result;
-	std::vector <MCHEmul::UByte>::const_iterator i = by.begin ();
-	while (i != by.end ())
-	{
-		// Reads a block...
-		MCHEmul::Address sA (std::vector <MCHEmul::UByte> (i, i + nB), 
+	MCHEmul::DataMemoryBlocks result = 
+		MCHEmul::DataMemoryBlock::loadBlocksFile (fN, e, 
+			_computer -> cpu () -> architecture ().numberBytes (), 
 			_computer -> cpu () -> architecture ().bigEndian ());
-		MCHEmul::UInt bS (std::vector <MCHEmul::UByte> (i + nB, i + nB + 4));
-		MCHEmul::DataMemoryBlock pR
-			(sA, std::vector <MCHEmul::UByte> (i + nB + 4, i + nB + 4 + (size_t) bS.asUnsignedInt ()));
 
-		// Adds to the total...
-		result.push_back (pR);
+	if (!e)
+		_computer -> memory () -> set (result);
 
-		// Next...
-		i += nB + 4 + (size_t) bS.asUnsignedInt ();
-	}
-
-	_computer -> memory () -> set (result);
-	
 	return (result);
 }
 

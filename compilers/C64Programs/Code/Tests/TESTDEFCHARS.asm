@@ -6,10 +6,10 @@
 ; The base has to be defined before doing anything...
 ; and also to include the general file!
 BASE = $c000
-#../C64Programs/Code/Routines/RGENERAL.asm
+#../C64Programs/code/routines/RGENERAL.asm
 ; The rest of the includes...
-#../C64Programs/Code/Routines/RSCREENCLEAR.asm
-#../C64Programs/Code/Routines/RCOPYCHARSET.asm
+#../C64Programs/code/routines/RSCREENCLEAR.asm
+#../C64Programs/code/routines/RCOPYCHARSET.asm
 
 CHARDESTINATION = $3000
 

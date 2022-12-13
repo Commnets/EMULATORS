@@ -26,27 +26,28 @@ namespace C64
 		public:
 		/** The possible additional parameters of the C64 Emulator. */
 		static const unsigned char _PARAMNTSC;
-		static const std::string _NTSC;
 		static const unsigned char _PARAMBORDER;
-		static const std::string _BORDER;
 
 		/**
 		  * Constructor:
 		  * @param argv		: The parameters in the form of Strings.\n
 		  *	The basic parameters for any C64 emulator are (apart of the ones defined by the parent: \n
 		  *	/n				: To indicate if the visualization system is NTSC. PAL by default.
-		  * @param cS		: A reference to the communication syste. It can be nullptr.
+		  *	/b				: To draw a black box around the writable part of the screen.
+		  * @param cS		: A reference to the communication system. It can be nullpt if no requiered.
 		  */
-		C64Emulator (const MCHEmul::Strings& argv, MCHEmul::CommunicationSystem* cS = nullptr);
+		C64Emulator (const MCHEmul::CommandLineArguments& args, MCHEmul::CommunicationSystem* cS = nullptr)
+			: MCHEmul::Emulator (args, cS)
+							{ }
 
 		virtual void printOutParameters (std::ostream& o = std::cout) const override;
 
 		/** To know whether the visualizacion system is or not NTSC. */
 		bool NTSCSystem () const
-							{ return ((_attributes.find (_NTSC) != _attributes.end ()) ? true : false); }
+							{ return (_cmdlineArguments.existsArgument (_PARAMNTSC)); }
 		/** To know whether the border has or not to be drawn. */
 		bool drawBorder () const
-							{ return ((_attributes.find (_BORDER) != _attributes.end ()) ? true : false); }
+							{ return (_cmdlineArguments.existsArgument (_PARAMBORDER)); }
 
 		/** To add the peripherals linked to the computer, according to the parameters. */
 		virtual bool initialize () override;
@@ -61,7 +62,7 @@ namespace C64
 
 		/** Just to actualize the global time of the C64. */
 		virtual bool additionalRunCycle () override
-				{ C64::actualizeGlobalTime ();  return (true); }
+							{ C64::actualizeGlobalTime ();  return (true); }
 	};
 }
 

@@ -11,25 +11,18 @@ int _tmain (int argc, _TCHAR *argv [])
 	std::string destinationFile;
 	enum { _BINARY = 0, _BLOCK } typeFile = _BINARY;
 
-	MCHEmul::Strings prms = MCHEmul::convertIntoStrings (argc, argv);
-	for (const auto& i : prms)
-	{
-		std::map <unsigned char, std::string>::const_iterator p;
-		if (i.length () < 2 || i [0] != '/')
-			continue; // Not valid argument...
-		else
-		{
-			if (i [1] == 'h') help = true;
-			else if (i [1] == 'o') originFile = MCHEmul::trim (i.substr (2));
-			else if (i [1] == 'd') destinationFile = MCHEmul::trim (i.substr (2));
-			else if (i [1] == 't') typeFile = 
-				(std::atoi (MCHEmul::trim (i.substr (2)).c_str ()) == 0) ? _BINARY : _BLOCK;
-		}
-	}
-
+	// Read the parameters of the command line...
+	MCHEmul::CommandLineArguments cmdArgs (argc, argv);
+	help = cmdArgs.existsArgument ('h');
+	if (cmdArgs.existsArgument ('o')) originFile = cmdArgs.argumentAsString ('o');
+	if (cmdArgs.existsArgument ('d')) destinationFile = cmdArgs.argumentAsString ('d');
+	if (cmdArgs.existsArgument ('t')) typeFile = (cmdArgs.argumentAsInt ('t') == 0) ? _BINARY : _BLOCK;
+	
+	// If either the mandatory arguments hasn't be provided or help is requested...
 	if (help || 
 		originFile == "" || destinationFile == "")
 	{
+		std::cout << "C64Compiler" << std::endl;
 		std::cout << "Copyright (2) 2022 by Ignacio Cea" << std::endl << std::endl;
 
 		if (!help)
@@ -40,7 +33,7 @@ int _tmain (int argc, _TCHAR *argv [])
 		std::cout << "/d[FILENAME]\tName of the file to save the result if everything goes ok." << std::endl;
 		std::cout << "/t\t\t0 for BINARY output, 1 for BLOCK output." << std::endl;
 
-		return (0);
+		return (0); // ...and does nothing...
 	}
 
 	// Creates the environment...

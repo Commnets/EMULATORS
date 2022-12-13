@@ -25,21 +25,13 @@ namespace MCHEmul
 		public:
 		/** The possible parameters of the Emulator. */
 		static const unsigned char _PARAMHELP;
-		static const std::string _HELP;
 		static const unsigned char _PARAMBYTEFILE;
-		static const std::string _BYTEFILE;
 		static const unsigned char _PARAMBLOCKFILE;
-		static const std::string _BLOCKFILE;
 		static const unsigned char _PARAMASMFILE;
-		static const std::string _ASMFILE;
 		static const unsigned char _PARAMLOGLEVEL;
-		static const std::string _LOGLEVEL;
 		static const unsigned char _PARAMADDRESS;
-		static const std::string _ADDRESS;
 		static const unsigned char _PARAMADDRESSSTOP;
-		static const std::string _ADDRESSSTOP;
 		static const unsigned char _PARAMSTOP;
-		static const std::string _STOP;
 
 		using MapOfActions = std::map <MCHEmul::Address, unsigned int>;
 
@@ -72,14 +64,15 @@ namespace MCHEmul
 		  * Every block consists on a header with the initial address and the number of bytes of data of the block,
 		  * and the block of data itself. \n
 		  * The "binary file" and the "set of blocks file" can be generated from an "assembler" 
-		  * using the compilers. @see Compilers for more details.
+		  * using the compilers. @see Compilers for more details. \n
+		  * @see class DatamemoryBlock for further details.
 		  */
-		Emulator (const MCHEmul::Strings& argv, CommunicationSystem* cS = nullptr);
+		Emulator (const CommandLineArguments& args, CommunicationSystem* cS = nullptr);
 
 		virtual ~Emulator ();
 
-		const Attributes& attributes () const
-							{ return (_attributes); }
+		const CommandLineArguments& cmdlineArguments () const
+							{ return (_cmdlineArguments); }
 
 		/** To print out the attributes that this emulator undestand. */
 		virtual void printOutParameters (std::ostream& o = std::cout) const;
@@ -101,39 +94,37 @@ namespace MCHEmul
 
 		/** Print out help parameter. */
 		bool helpNeeded () const
-							{ return ((_attributes.find (_HELP) != _attributes.end ()) ? true : false); }
+							{ return (_cmdlineArguments.existsArgument (_PARAMHELP)); }
 
 		/** To know whether there is a byte file where data to be loaded. \n
 			"" when there is no byte file data. */
 		std::string byteFileName () const
-							{ MCHEmul::Attributes::const_iterator i; 
-								return (((i = _attributes.find (_BYTEFILE)) != _attributes.end ()) ? (*i).second : ""); }
+							{ return (_cmdlineArguments.existsArgument (_PARAMBYTEFILE) 
+								? _cmdlineArguments.argumentAsString (_PARAMBYTEFILE) : ""); }
 
 		/** To know whether there is a block file where data to be loaded. \n
 			"" when there is no block file data. */
 		std::string blockFileName () const
-							{ MCHEmul::Attributes::const_iterator i; 
-								return (((i = _attributes.find (_BLOCKFILE)) != _attributes.end ()) ? (*i).second : ""); }
+							{ return (_cmdlineArguments.existsArgument (_PARAMBLOCKFILE) 
+								? _cmdlineArguments.argumentAsString (_PARAMBLOCKFILE) : ""); }
 
 		/** To know whether there is an ASM file where data to be loaded. 
 			"" when there is no ASM file data. */
 		std::string asmFileName () const
-							{ MCHEmul::Attributes::const_iterator i; 
-								return (((i = _attributes.find (_ASMFILE)) != _attributes.end ()) ? (*i).second : ""); }
+							{ return (_cmdlineArguments.existsArgument (_PARAMASMFILE) 
+								? _cmdlineArguments.argumentAsString (_PARAMASMFILE) : ""); }
 
 		/** To know the level of the log. 
 			0 means no log. */
 		unsigned int logLevel () const
-							{ MCHEmul::Attributes::const_iterator i; 
-								return ((unsigned int) std::stoi (((i = _attributes.find (_LOGLEVEL)) != _attributes.end ()) 
-									? (*i).second : "1")); }
+							{ return (_cmdlineArguments.existsArgument (_PARAMLOGLEVEL) 
+								? _cmdlineArguments.argumentAsInt (_PARAMLOGLEVEL) : 1); }
 
 		/** To know the address where to start the execution from. \n
 			0x00 when no address has been defined. */
 		Address startingAddress () const
-							{ Attributes::const_iterator i; 
-								return (Address::fromStr (((i = _attributes.find (_ADDRESS)) != _attributes.end ()) 
-									? (*i).second : "")); }
+							{ return (_cmdlineArguments.existsArgument (_PARAMADDRESS) 
+								? _cmdlineArguments.argumentAsAddress (_PARAMADDRESS) : Address ()); }
 
 		/** To know the list of the addresses where the computer has to stop. 
 			After any only the action 1 (continue) or 2 (next) is admitted. */
@@ -141,7 +132,8 @@ namespace MCHEmul
 
 		/** To know whether the computer hast to start stopped or not. */
 		bool stoppedAtStarting () const
-							{ return ((_attributes.find (_STOP) != _attributes.end ()) ? true : false); }
+							{ return (_cmdlineArguments.existsArgument (_PARAMSTOP) 
+								? _cmdlineArguments.argumentAsBool (_PARAMSTOP) : false); }
 
 		/** To change the debug level. */
 		unsigned int debugLevel () const
@@ -180,7 +172,7 @@ namespace MCHEmul
 							{ return (_error); }
 		/** To simplify the way the errors are managed. */
 		bool operator ! () const
-							{ return (_error != MCHEmul::_NOERROR); }
+							{ return (_error != _NOERROR); }
 
 		protected:
 		const IOPeripheralBuilder* peripherialBuilder () const
@@ -211,7 +203,7 @@ namespace MCHEmul
 
 		protected:
 		/** Defined in the constructor. */
-		Attributes _attributes;
+		CommandLineArguments _cmdlineArguments;
 		CommunicationSystem* _communicationSystem;
 		unsigned int _debugLevel;
 

@@ -21,12 +21,14 @@
   <ItemGroup>
     <ClCompile Include="..\..\src\CORE\Chip.cpp" />
     <ClCompile Include="..\..\src\CORE\CmdExecuter.cpp" />
+    <ClCompile Include="..\..\src\CORE\CmdlineArgs.cpp" />
     <ClCompile Include="..\..\src\CORE\Command.cpp" />
     <ClCompile Include="..\..\src\CORE\CommandBuilder.cpp" />
     <ClCompile Include="..\..\src\CORE\Computer.cpp" />
     <ClCompile Include="..\..\src\CORE\CPU.cpp" />
     <ClCompile Include="..\..\src\CORE\CPUArchitecture.cpp" />
     <ClCompile Include="..\..\src\CORE\CPUInterrupt.cpp" />
+    <ClCompile Include="..\..\src\CORE\DtMemoryBlock.cpp" />
     <ClCompile Include="..\..\src\CORE\FmterBuilder.cpp" />
     <ClCompile Include="..\..\src\CORE\global.cpp" />
     <ClCompile Include="..\..\src\CORE\GraphicalChip.cpp" />
@@ -53,6 +55,7 @@
     <ClInclude Include="..\..\include\CORE\Address.hpp" />
     <ClInclude Include="..\..\include\CORE\Chip.hpp" />
     <ClInclude Include="..\..\include\CORE\CmdExecuter.hpp" />
+    <ClInclude Include="..\..\include\CORE\CmdlineArgs.hpp" />
     <ClInclude Include="..\..\include\CORE\DtMemoryBlock.hpp" />
     <ClInclude Include="..\..\include\CORE\Command.hpp" />
     <ClInclude Include="..\..\include\CORE\CommandBuilder.hpp" />

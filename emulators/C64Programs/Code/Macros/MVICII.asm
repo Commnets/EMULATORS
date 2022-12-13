@@ -27,5 +27,6 @@ VICIISCROLLX				= $d016							; SCROLL in the X axis, and also activation of mul
 VICIICTRLMEMREG				= $d018							; Control the location of the graphical memory.
 ; IRQ
 VICIICTRLIRQ				= $d01a							; To control the source of VICII IRQs.
+VICIIRASTER					= $d012							; To manage the raster line (set and know)
 
 ; End.

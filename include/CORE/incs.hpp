@@ -49,5 +49,6 @@
 #include <CORE/StdCommands.hpp>
 #include <CORE/StdCommandBld.hpp>
 #include <CORE/CmdExecuter.hpp>
+#include <CORE/CmdlineArgs.hpp>
 
 #endif

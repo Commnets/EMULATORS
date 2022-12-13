@@ -17,6 +17,17 @@ extern C_LINKAGE int main(int argc, char* argv[])
 int _tmain (int argc, _TCHAR* argv[])
 #endif /* _CONSOLE */
 {
+	// Read the parameters of the command line...
+	MCHEmul::CommandLineArguments cmdArgs (argc, argv);
+	unsigned int listenPort = 
+		(cmdArgs.existsArgument ('p')) ? listenPort = cmdArgs.argumentAsInt ('p') : 60000;
+
+	std::cout << "C64Emulator" << std::endl;
+	std::cout << "Copyright (C) 2022 by Ignacio Cea" << std::endl;
+	std::cout << "It can receive commands from external tools trough the port." << std::endl;
+	std::cout << "/p[PORTNUMBER]\tPort to listen external communications (0 - 65535)."; 
+	std::cout << "\t\tAbove 1000 recommended" << std::endl << std::endl;
+
 	// Sets the formatter for << outputs for this emulation...
 	// This line of code has to be at the beginning of every emulation 
 	// as it fixes the way the internal ino of the important classes will be formatted
@@ -24,9 +35,9 @@ int _tmain (int argc, _TCHAR* argv[])
 
 	// Set up the emulator...
 	C64::C64Emulator myEmulator (
-		MCHEmul::convertIntoStrings (argc, argv),
+		MCHEmul::CommandLineArguments (argc, argv),
 		new MCHEmul::CommunicationSystem (
-			new MCHEmul::PeerCommunicationChannel (60000 /** port. */, 10 /** simultaneous comms. */), new C64::CommandBuilder));
+			new MCHEmul::PeerCommunicationChannel (listenPort, 10 /** simultaneous comms. */), new C64::CommandBuilder));
 	if (!myEmulator || !myEmulator.initialize ())
 		return (1); // Not possible to run the emulation. Exit with error...
 

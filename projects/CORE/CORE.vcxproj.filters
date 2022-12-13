@@ -129,6 +129,12 @@
     <ClCompile Include="..\..\src\CORE\JSONFormatter.cpp">
       <Filter>Archivos de origen\Foundation</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\CORE\CmdlineArgs.cpp">
+      <Filter>Archivos de origen\Foundation</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\CORE\DtMemoryBlock.cpp">
+      <Filter>Archivos de origen\Foundation</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\include\CORE\IO.hpp">
@@ -240,6 +246,9 @@
       <Filter>Archivos de encabezado\Foundation</Filter>
     </ClInclude>
     <ClInclude Include="..\..\include\CORE\JSONFormatter.hpp">
+      <Filter>Archivos de encabezado\Foundation</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\CORE\CmdlineArgs.hpp">
       <Filter>Archivos de encabezado\Foundation</Filter>
     </ClInclude>
   </ItemGroup>

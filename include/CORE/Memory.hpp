@@ -484,7 +484,7 @@ namespace MCHEmul
 							{ _activeView -> set (a, v, f); }
 		/** To set a vector of codeblocks. */
 		void set (const DataMemoryBlocks& mb, bool f = false)
-							{ for (const auto& i : mb) set (i._startAddress, i._bytes, f); }
+							{ for (const auto& i : mb) set (i.startAddress (), i.bytes (), f); }
 
 		/** It can be overloaded later, to set the specific content of specific zones. \n
 			By default only subsets have to be initialized, and all of them become active and also active for reading. */

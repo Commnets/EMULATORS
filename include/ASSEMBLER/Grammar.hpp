@@ -23,7 +23,7 @@
 				 3.- The set of bytes (bytes and instructions) will be one after other (linked) occupying a memory zone. \n
 				 4.- The labels point to a byte or an instruction. \n
 				 5.- Some instruction parameters can refer to a label, 
-					 and that label can be defined before or after the instruction. To allow jump (e.g). 
+					 and that label can be defined before or after the instruction (to allow jumps (e.g)). 
 				 6.- The position where a set of linked gramatical elements starts is defined using an starting point.
 				 7.- So groups of code are defined by starting point.
  *	Versions: 1.0 Initial

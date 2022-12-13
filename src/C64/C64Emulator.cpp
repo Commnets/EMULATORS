@@ -3,9 +3,7 @@
 
 // ---
 const unsigned char C64::C64Emulator::_PARAMNTSC = 'n';
-const std::string C64::C64Emulator::_NTSC = "NTSC";
 const unsigned char C64::C64Emulator::_PARAMBORDER = 'b';
-const std::string C64::C64Emulator::_BORDER = "BORDER";
 
 // ---
 void C64::C64Emulator::printOutParameters (std::ostream& o) const
@@ -29,23 +27,4 @@ bool C64::C64Emulator::initialize ()
 	// To link the peripherals...
 
 	return (true);
-}
-
-// ---
-C64::C64Emulator::C64Emulator (const MCHEmul::Strings& argv, MCHEmul::CommunicationSystem* cS)
-	: MCHEmul::Emulator (argv, cS)
-{
-	static std::map <unsigned char, std::string> _MATCH =
-		{ { _PARAMNTSC, _NTSC },
-		  { _PARAMBORDER, _BORDER } 
-		};
-
-	for (unsigned int i = 1 /** param 0 = name of the executable */; i < argv.size (); i++)
-	{
-		std::map <unsigned char, std::string>::const_iterator p;
-		if (argv [i].length () < 2 || argv [i][0] != '/' || 
-			(p = _MATCH.find (argv [i][1])) == _MATCH.end ())
-			continue; // Not valid argument...
-		_attributes [(*p).second] = argv [i].substr (2);
-	}
 }

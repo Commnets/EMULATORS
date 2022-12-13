@@ -3,7 +3,7 @@
 ; By Ignacio Cea Forniés.
 ; Copyright Community Networks 2022 - 2023.
 
-#../C64Programs/Code/Routines/RSCREENBOX.asm
+#../C64Programs/code/routines/RSCREENBOX.asm
 
 ; ------------------------------
 ; CLEARSCREEN

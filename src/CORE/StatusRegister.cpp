@@ -6,7 +6,7 @@ MCHEmul::UBytes MCHEmul::StatusRegister::valuesWithout (const MCHEmul::Strings& 
 	MCHEmul::UBytes result = values ();
 	for (const auto& i : _bitNames)
 		if (std::find (bN.begin (), bN.end (), i.first) != bN.end ())
-			result [i.second] = false;
+			result.setBit (i.second, false);
 	return (result);
 }
 

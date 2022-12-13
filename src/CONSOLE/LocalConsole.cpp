@@ -74,8 +74,8 @@ MCHEmul::InfoStructure MCHEmul::LocalConsole::loadBinaryFile (const std::string&
 		_emulator -> computer () -> setActionForNextCycle (MCHEmul::Computer::_ACTIONSTOP);
 
 		result.add ("CODE", std::string ("Binary file (") + 
-			std::to_string (dM._bytes.size ()) + " bytes) loaded at:" + 
-			dM._startAddress.asString (MCHEmul::UByte::OutputFormat::_HEXA, '\0', 2));
+			std::to_string (dM.bytes ().size ()) + " bytes) loaded at:" +
+			dM.startAddress ().asString (MCHEmul::UByte::OutputFormat::_HEXA, '\0', 2));
 	}
 
 	return (result);
@@ -138,8 +138,8 @@ MCHEmul::InfoStructure MCHEmul::LocalConsole::loadBlocksFile (const std::string&
 		_emulator -> computer () -> setActionForNextCycle (MCHEmul::Computer::_ACTIONSTOP);
 
 		result.add ("CODE", std::string ("Binary file (") + 
-			(mB.empty () ? "0" : std::to_string (mB[0]._bytes.size ())) + " bytes) loaded at:" +
-			(mB.empty () ? "-" : mB[0]._startAddress.asString (MCHEmul::UByte::OutputFormat::_HEXA, '\0', 2)));
+			(mB.empty () ? "0" : std::to_string (mB [0].bytes ().size ())) + " bytes) loaded at:" +
+			(mB.empty () ? "-" : mB [0].startAddress ().asString (MCHEmul::UByte::OutputFormat::_HEXA, '\0', 2)));
 	}
 
 	return (result);
