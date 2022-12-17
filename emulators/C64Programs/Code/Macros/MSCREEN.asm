@@ -14,7 +14,8 @@ COLORRAM1_256BLK			= $d800							; The color RAM can be easly dividev in blocks 
 COLORRAM2_256BLK			= $d900							; ...the next variables referes to those blocks.
 COLORRAM3_256BLK			= $da00
 COLORRAM4_256BLK			= $db00
-ROMCHARSET					= $d000							; Where the CPU sees the default char set
-ROMCTRLAVAILABLE			= $01							; To control whether roms are or not visible from CPU
+ROMCHARSET					= $d000							; Where the CPU sees the default char set.
+ROMCTRLAVAILABLE			= $01							; To control whether roms are or not visible from CPU.
+SPRITEBASELOCATION			= $07F8							; Position where to find the 64 block (1 bank) where the sprites are.
 
 ; End.

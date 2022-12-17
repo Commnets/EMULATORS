@@ -252,6 +252,10 @@ namespace MCHEmul
 							{ return (_formaters._formatManagers [f] -> fromUnsignedInt (n)); }
 		static UInt fromInt (int n, unsigned char f = _BINARY)
 							{ return (_formaters._formatManagers [f] -> fromInt (n)); }
+		/** When the str is written either in hexadecimal or binary the length of the UInt result 
+			could be what ever. \n
+			When the str is written in decimal or octal the equivalent UInt 
+			can not have more bytes than be longer than "size_of (unsigned int)". */
 		static UInt fromStr (const std::string& s, unsigned char f = _BINARY);
 
 		friend std::ostream& operator << (std::ostream& o, const UInt& u)

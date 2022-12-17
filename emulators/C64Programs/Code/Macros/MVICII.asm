@@ -8,7 +8,7 @@
 SPRITEENABLE				= $d015							; Sprites on - off.
 SPRITEBASEXPOS				= $d000							; Sprite base coordinate X (+ 2*n sprite).
 SPRITEBASEYPOS				= $d001							; Sprite base coordinate Y (+ 2*n sprite).
-SPRITEMSBCPOS				= $d010							; The most significant bit of the X position for sprites.
+SPRITEMSBXPOS				= $d010							; The most significant bit of the X position for sprites.
 SPRITEDWIDTH				= $d01d							; To set double width for sprites.
 SPRITEDHEIGHT				= $d017							; To set double height for sprites.
 SPRITEBASECOLOR				= $d027							; Sprite base color (+ n sprite).

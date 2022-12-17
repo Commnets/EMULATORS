@@ -14,7 +14,7 @@
 							pha								; Starting from the accumulator...
 							txa
 							pha
-							txy
+							tya
 							pha
 }
 							
@@ -70,6 +70,20 @@ VARIABLES_DATAZONE			= $12
 ; The variables to produce results start from the position $22 (34) to $31 (49).
 ; So there is 16 positions for defining outcome for rotuines.
 OUTCOME_DATAZONE			= $22
+; ------------------------------
+; ------------------------------
+; 8 x 8 DATA BLOCK MEMORY
+; More specific data zone. 
+; This zone is used many times for sprites.
+BYTES $00 $00 $00 $00 $00 $00 $00 $00
+BYTES $00 $00 $00 $00 $00 $00 $00 $00
+BYTES $00 $00 $00 $00 $00 $00 $00 $00
+BYTES $00 $00 $00 $00 $00 $00 $00 $00
+BYTES $00 $00 $00 $00 $00 $00 $00 $00
+BYTES $00 $00 $00 $00 $00 $00 $00 $00
+BYTES $00 $00 $00 $00 $00 $00 $00 $00
+BYTES $00 $00 $00 $00 $00 $00 $00 $00
+BLOCK_DATAZONE				= $32
 ; ------------------------------
 
 ; ------------------------------

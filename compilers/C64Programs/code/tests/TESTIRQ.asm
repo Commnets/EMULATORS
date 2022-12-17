@@ -13,7 +13,7 @@ BASE = $c000
 
 * = $ca00
 IRQPRG1_ADDRESS				= $ca00
-IRQPRG1:					lda #$01
+IRQPRG1:					lda #$05
 							sta VICIIBACKGROUND
 							
 							lda #<IRQPRG2_ADDRESS
@@ -30,7 +30,7 @@ IRQPRG1:					lda #$01
 
 * = $ca64
 IRQPRG2_ADDRESS				= $ca64
-IRQPRG2:					lda #$02
+IRQPRG2:					lda #$06
 							sta VICIIBACKGROUND
 							
 							lda #<IRQPRG1_ADDRESS
@@ -52,6 +52,10 @@ MAIN:						lda #$06
 							lda #$0e
 							sta VICIIFOREGROUND
 							jsr CLEARSCREEN
+
+							lda $01
+							and #$fd
+							sta $01
 							
 							lda #<IRQPRG1_ADDRESS
 							sta SETVICIIRIRQ_PRGHVAR

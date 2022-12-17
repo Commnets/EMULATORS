@@ -31,7 +31,7 @@ int _tmain (int argc, _TCHAR *argv [])
 		std::cout << "/h\t\tFor help." << std::endl;
 		std::cout << "/o[FILENAME]\tName of the file to compile." << std::endl;
 		std::cout << "/d[FILENAME]\tName of the file to save the result if everything goes ok." << std::endl;
-		std::cout << "/t\t\t0 for BINARY output, 1 for BLOCK output." << std::endl;
+		std::cout << "/t[TYPE]\t0 for BINARY output, 1 for BLOCK output." << std::endl;
 
 		return (0); // ...and does nothing...
 	}

@@ -60,14 +60,14 @@ _INST_IMPL (F6500::RTI)
 {
 	assert (parameters ().size () == 1);
 
+	// See the part of the logic where the interruptions are managed, 
+	// to see how status register is also saved!
+	cpu () -> statusRegister ().set (stack () -> pull (1)); 
+
 	// When a interruption is lunched, the status and the program counter is stored,
 	// so it has to be recovered just in the other way around...
 	cpu () -> programCounter ().setAddress 
 		(MCHEmul::Address (stack () -> pull (2), false /** Are recover in Little-endian format */));
-
-	// See the part of the logic where the interruptions are managed, 
-	// to see how status register is also saved!
-	cpu () -> statusRegister ().set (stack () -> pull (1)); 
 
 	return (true);
 }

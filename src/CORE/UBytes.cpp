@@ -222,7 +222,7 @@ bool MCHEmul::UBytes::saveBytesTo (const std::string& fN, const std::vector <MCH
 	char* fV = new char [u.size () * MCHEmul::UByte::size ()];
 	for (size_t i = 0; i < (u.size () * MCHEmul::UByte::size ()); i += MCHEmul::UByte::size ()) 
 		fV [i] = u [i].value ();
-	file.write (fV, (std::streamsize) (u.size () * MCHEmul::UByte::size ())); // If wrong, result = true; 
+	file.write (fV, (std::streamsize) u.size () * (std::streamsize) MCHEmul::UByte::size ()); // If wrong, result = true; 
 	bool result = (!file) ? false : true;
 
 	delete [] fV;

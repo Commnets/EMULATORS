@@ -14,6 +14,8 @@ bool MCHEmul::CPUInterrupt::executeOver (MCHEmul::CPU* c, unsigned int& nC)
 
 		executeOverImpl (c, nC);
 
+		setActive (false);
+
 		result = true;
 	}
 

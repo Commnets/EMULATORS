@@ -19,13 +19,12 @@ int _tmain (int argc, _TCHAR* argv[])
 {
 	// Read the parameters of the command line...
 	MCHEmul::CommandLineArguments cmdArgs (argc, argv);
-	unsigned int listenPort = 
-		(cmdArgs.existsArgument ('p')) ? listenPort = cmdArgs.argumentAsInt ('p') : 60000;
+	unsigned int listenPort = (cmdArgs.existsArgument ('p')) ? cmdArgs.argumentAsInt ('p') : 60000;
 
 	std::cout << "C64Emulator" << std::endl;
 	std::cout << "Copyright (C) 2022 by Ignacio Cea" << std::endl;
-	std::cout << "It can receive commands from external tools trough the port." << std::endl;
-	std::cout << "/p[PORTNUMBER]\tPort to listen external communications (0 - 65535)."; 
+	std::cout << "It can receive commands from external tools through the port." << std::endl;
+	std::cout << "/p[PORTNUMBER]\tPort where to listen external instructions (0 - 65535)." << std::endl; 
 	std::cout << "\t\tAbove 1000 recommended" << std::endl << std::endl;
 
 	// Sets the formatter for << outputs for this emulation...

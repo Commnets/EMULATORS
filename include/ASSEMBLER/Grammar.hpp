@@ -240,29 +240,21 @@ namespace MCHEmul
 				  _name ()
 							{ _type = Type::_LABEL; }
 
-			LabelElement (const LabelElement&) = default;
-
-			LabelElement& operator = (const LabelElement&) = default;
-
 			std::string _name;
 		};
 
 		/** @see explanation at the beggining of the file. */
-		struct BytesInMemoryElement final : public GrammaticalElement
+		struct BytesInMemoryElement : public GrammaticalElement
 		{
 			BytesInMemoryElement ()
 				: GrammaticalElement (), _elements ()
 							{ _type = Type::_BYTESINMEMORY; }
 
-			BytesInMemoryElement (const BytesInMemoryElement&) = default;
-
-			BytesInMemoryElement& operator = (const BytesInMemoryElement&) = default;
-
 			virtual size_t size (const Semantic* s, const OperationParser* oP = nullptr) const override;
 
 			Strings _elements;
 
-			private:
+			protected:
 			virtual std::vector <UByte> calculateCodeBytes (const Semantic* s, bool bE, const OperationParser* oP) const override;
 		};
 
@@ -272,10 +264,6 @@ namespace MCHEmul
 			BytesFileElement ()
 				: GrammaticalElement (), _binaryFile ("")
 					{ _type = Type::_BYTESINMEMORY; }
-
-			BytesFileElement (const BytesFileElement&) = default;
-
-			BytesFileElement& operator = (const BytesFileElement&) = default;
 
 			virtual size_t size (const Semantic* s, const OperationParser* oP = nullptr) const override;
 
@@ -295,10 +283,6 @@ namespace MCHEmul
 				  _possibleParameters (),
 				  _selectedInstruction (nullptr)
 							{ _type = Type::_INSTRUCTION; }
-
-			InstructionElement (const InstructionElement&) = default;
-
-			InstructionElement& operator = (const InstructionElement&) = default;
 
 			virtual size_t size (const Semantic* s, const OperationParser* oP) const override;
 
@@ -323,10 +307,6 @@ namespace MCHEmul
 				: GrammaticalElement (), 
 				  _value ()
 							{ _type = Type::_STARTINGPOINT; }
-
-			StartingPointElement (const StartingPointElement&) = default;
-
-			StartingPointElement& operator = (const StartingPointElement&) = default;
 
 			virtual Address address (const Semantic* s, const OperationParser* oP = nullptr) const override
 							{ return (Address (codeBytes (s, true /**, big Endian implicit. */, oP))); }

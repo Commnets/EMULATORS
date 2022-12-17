@@ -362,25 +362,62 @@ MCHEmul::UInt MCHEmul::UInt::fromStr (const std::string& s, unsigned char f)
 		case 'z':
 		case 'Z':
 			{
-				unsigned int i = 0;
-				if (str.length () > 1)
-					for (size_t ct = 0; ct < (str.length () - 1); ct++)
-						i += (str [str.length () - 1 - ct] == '1') ? (1 << ct) : 0;
-				result = MCHEmul::UInt::fromUnsignedInt (i, f); // Big - endian
+				if (str.length () == 1)
+					break;
+				
+				str = str.substr (1);
+
+				auto toBin8 = [](const std::string& dt) -> unsigned int
+				{
+					unsigned int r = 0;
+					for (size_t ct = 0; ct < dt.length (); ct++)
+						r += (dt [dt.length () - 1 - ct] == '1') ? (1 << ct) : 0;
+					return (r);
+				};
+
+				std::vector <MCHEmul::UByte> by;
+				while (str != "")
+				{ 
+					if (str.length () <= 8)
+						by.insert (by.begin (), fromUnsignedInt (toBin8 (str), f).bytes ()[0]);
+					else
+						by.insert (by.begin (), 
+							fromUnsignedInt (toBin8 (str.substr (str.length () - 8, 8))).bytes ()[0] /** Sure there only one byte. */);
+					str = (str.length () <= 8) ? "" : str.substr (0, str.length () - 8);
+				}
+
+					result = MCHEmul::UInt (by);
 			}
 
 			break;
 
 		case '$':
 			{
-				unsigned int i = 0;
-				if (str.length () > 1)
+				if (str.length () == 1)
+					break;
+
+				str = str.substr (1);
+
+				auto toHexa2 = [](const std::string& dt) -> unsigned int
+				{
+					unsigned int r = 0;
+					std::istringstream ss (dt);
+					ss >> std::hex >> r;
+					return (r);
+				};
+
+				std::vector <MCHEmul::UByte> by;
+				while (str != "")
 				{ 
-					std::istringstream ss (str.substr (1));
-					ss >> std::hex >> i;
+					if (str.length () <= 2)
+						by.insert (by.begin (), fromUnsignedInt (toHexa2 (str), f).bytes ()[0]);
+					else
+						by.insert (by.begin (), 
+							fromUnsignedInt (toHexa2 (str.substr (str.length () - 2, 2))).bytes ()[0] /** Sure there is only one byte. */);
+					str = (str.length () <= 2) ? "" : str.substr (0, str.length () - 2);
 				}
 
-				result = MCHEmul::UInt::fromUnsignedInt (i, f); // Big - endian
+				result = MCHEmul::UInt (by);
 			}
 		
 			break;
