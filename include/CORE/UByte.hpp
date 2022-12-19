@@ -61,7 +61,7 @@ namespace MCHEmul
 
 		UByte& operator = (const UByte&) = default;
 
-		/** COmmon to every UByte. */
+		/** Common to every UByte. */
 		static constexpr size_t size () // (static) All the same...
 							{ return (sizeof (unsigned char)); }
 		static constexpr size_t sizeBits () // (static) All the same...

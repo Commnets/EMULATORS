@@ -8,7 +8,7 @@ _INST_IMPL (F6500::PHA)
 
 	stack () -> push (cpu () -> internalRegister (F6500::C6510::_ACCUMULATOR).values ()); // 1 byte long...
 
-	return (true);
+	return (stack () -> overflow () ? false : true);
 }
 
 // ---
@@ -18,7 +18,7 @@ _INST_IMPL (F6500::PHP)
 
 	stack () -> push (cpu () -> statusRegister ().values ()); // 1 byte long...
 
-	return (true);
+	return (stack () -> overflow () ? false : true);
 }
 
 // ---
@@ -33,7 +33,7 @@ _INST_IMPL (F6500::PLA)
 	st.setBitStatus ("N", u [0][7]);
 	st.setBitStatus ("Z", u [0] == MCHEmul::UByte::_0);
 
-	return (true);
+	return (stack () -> overflow () ? false : true);
 }
 
 // ---
@@ -43,7 +43,7 @@ _INST_IMPL (F6500::PLP)
 
 	cpu () -> statusRegister ().set (stack () -> pull (1 /** 1 byte long. */));
 
-	return (true);
+	return (stack () -> overflow () ? false : true);
 }
 
 // ---

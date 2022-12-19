@@ -135,6 +135,9 @@
     <ClCompile Include="..\..\src\CORE\DtMemoryBlock.cpp">
       <Filter>Archivos de origen\Foundation</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\CORE\TestCPUSpeed.cpp">
+      <Filter>Archivos de origen\Motherboard</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\include\CORE\IO.hpp">
@@ -250,6 +253,9 @@
     </ClInclude>
     <ClInclude Include="..\..\include\CORE\CmdlineArgs.hpp">
       <Filter>Archivos de encabezado\Foundation</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\CORE\TestCPUSpeed.hpp">
+      <Filter>Archivos de encabezado\Motherboard</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

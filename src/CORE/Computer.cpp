@@ -377,7 +377,8 @@ void MCHEmul::Computer::Clock::waitFor (unsigned int cC)
 		// The number of clock cycles executed was bigger 
 		// than the max number of cycles allowed for this CPU
 		// It would be needed to wait for a while...
-		_realCyclesPerSecond = cC - _initialClockCycles;
+		_realCyclesPerSecond = 
+			(cC > _initialClockCycles) ? (cC - _initialClockCycles) : (_initialClockCycles - cC);
 		if (_realCyclesPerSecond > _cyclesPerSecond)
 			std::this_thread::sleep_for (std::chrono::nanoseconds ((long long) 
 				(_realCyclesPerSecond - _cyclesPerSecond) * (elapsed - nanosc) / _realCyclesPerSecond));

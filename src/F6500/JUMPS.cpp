@@ -9,7 +9,7 @@ _INST_IMPL (F6500::BRK)
 	MCHEmul::ProgramCounter& pc = cpu () -> programCounter ();
 	MCHEmul::StatusRegister& st = cpu () -> statusRegister ();
 
-	stack () -> push (pc.asAddress ().bytes ());
+	stack () -> push (pc.asAddress (2).bytes ());
 	stack () -> push (st.values ());
 
 	st.setBitStatus ("I", true); // No more interruptions so far...
@@ -19,7 +19,7 @@ _INST_IMPL (F6500::BRK)
 	pc.setAddress (MCHEmul::Address (memory () -> values 
 		(dynamic_cast <F6500::C6510*> (cpu ()) -> IRQVectorAddress (), 2), false /** Little - endian. */));
 
-	return (true);
+	return (stack () -> overflow () ? false : true);
 }
 
 // ---
@@ -48,7 +48,7 @@ _INST_IMPL (F6500::JSR_Absolute)
 	// The address always is kept in Big-endian format,
 	// The stack stores always high byte first. So no changes are needed...
 	// Different story in RTI or RTS!
-	stack () -> push (pc.asAddress ().values ());
+	stack () -> push (pc.asAddress (2).values ());
 
 	pc.setAddress (address_absolute ());
 
@@ -69,7 +69,7 @@ _INST_IMPL (F6500::RTI)
 	cpu () -> programCounter ().setAddress 
 		(MCHEmul::Address (stack () -> pull (2), false /** Are recover in Little-endian format */));
 
-	return (true);
+	return (stack () -> overflow () ? false : true);
 }
 
 // ---
@@ -80,5 +80,5 @@ _INST_IMPL (F6500::RTS)
 	cpu () -> programCounter ().setAddress 
 		(MCHEmul::Address (stack () -> pull (2), false /** Are recover in Little-endian format */));
 
-	return (true);
+	return (stack () -> overflow () ? false : true);
 }

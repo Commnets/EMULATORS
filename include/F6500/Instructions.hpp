@@ -136,7 +136,7 @@ namespace F6500
 		bool executeOn (const MCHEmul::Address& a);
 	};
 
-	_INST_FROM (0x0e, 3, 6, "ASL[$2]",	ASL_Absolute, ASL_General);
+	_INST_FROM (0x0e, 3, 6, "ASL[$2]",		ASL_Absolute, ASL_General);
 	_INST_FROM (0x06, 2, 5, "ASL[$1]",		ASL_ZeroPage, ASL_General);
 	_INST_FROM (0x0a, 1, 2, "ASL",			ASL_Accumulator, ASL_General);
 	_INST_FROM (0x16, 2, 6, "ASL[$1],X",	ASL_ZeroPageX, ASL_General);

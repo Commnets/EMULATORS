@@ -47,6 +47,7 @@
     <ClCompile Include="..\..\src\CORE\StdCommandBld.cpp" />
     <ClCompile Include="..\..\src\CORE\StdCommands.cpp" />
     <ClCompile Include="..\..\src\CORE\StdFormatter.cpp" />
+    <ClCompile Include="..\..\src\CORE\TestCPUSpeed.cpp" />
     <ClCompile Include="..\..\src\CORE\UByte.cpp" />
     <ClCompile Include="..\..\src\CORE\UBytes.cpp" />
     <ClCompile Include="..\..\src\CORE\UInt.cpp" />
@@ -87,6 +88,7 @@
     <ClInclude Include="..\..\include\CORE\StdCommands.hpp" />
     <ClInclude Include="..\..\include\CORE\StdFmterBuilder.hpp" />
     <ClInclude Include="..\..\include\CORE\StdFormatter.hpp" />
+    <ClInclude Include="..\..\include\CORE\TestCPUSpeed.hpp" />
     <ClInclude Include="..\..\include\CORE\UByte.hpp" />
     <ClInclude Include="..\..\include\CORE\UBytes.hpp" />
     <ClInclude Include="..\..\include\CORE\UInt.hpp" />

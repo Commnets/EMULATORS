@@ -28,6 +28,7 @@
 #include <CORE/CPU.hpp>
 #include <CORE/CPUArchitecture.hpp>
 #include <CORE/CPUInterrupt.hpp>
+#include <CORE/TestCPUSpeed.hpp>
 #include <CORE/Memory.hpp>
 #include <CORE/ProgramCounter.hpp>
 #include <CORE/Register.hpp>

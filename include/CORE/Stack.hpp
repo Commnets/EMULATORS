@@ -30,25 +30,35 @@ namespace MCHEmul
 		Stack (int id, PhysicalStorage* ps, size_t pp, const Address& iA, size_t s, bool b = true, bool e = true)
 			: PhysicalStorageSubset (id, ps, pp, iA, s), 
 			  _position (0), _fromBack (b), _pointToEmpty (e),
-			  _stackOverflow (false),
-			  _empty (true)
+			  _overflow (false),
+			  _notUsed (true)
 							{ setClassName ("Stack"); }
 
-		size_t position () const
+		int position () const
 							{ return (_position); }
 		/** Take care using this method. No checks are done on regards to the speed. 
 			And it is not the same a back-stack than a foward one. */
 		void setPosition (int p)
 							{ _position = p; }
+		/** To move to the beginning. */
+		void reset ();
 
 		virtual void initialize () override;
 
-		void push (const UBytes& v);
-		UBytes pull (size_t nV);
+		/** To manage the stack. */
+		void push (const UBytes& v); // When overflow no more is entered...
+		UBytes pull (size_t nV); // When overflow am empty object is returned...
 
+		/** It is true when the stack is empty. */
+		bool empty () const
+							{ return (_notUsed ? true 
+								: (_fromBack ? (_position == (int) (size () - 1)) : (_position == 0))); }
 		/** It is set to true when something happens after push or pull actions. */
-		bool stackOverflow () const
-							{ return (_stackOverflow); }
+		bool overflow () const
+							{ return (_overflow); }
+		/** To simplify the way the stack status is enquired. */
+		bool operator ! () const
+							{ return (_overflow); }
 
 		/**
 		  *	The name of the fields are: \n
@@ -67,8 +77,8 @@ namespace MCHEmul
 		const bool _pointToEmpty = true; // Adapted at construction time
 
 		// Implementation
-		bool _stackOverflow;
-		bool _empty;
+		bool _overflow;
+		bool _notUsed;
 	};
 }
 

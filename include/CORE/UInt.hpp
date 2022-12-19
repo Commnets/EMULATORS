@@ -21,7 +21,6 @@ namespace MCHEmul
 {
 	 /** 
 	  *	Representing a Integer, with and without sign. \n
-	  * The max size that a UInt can hold is 4 bytes long = 4.294.967.296. It is equivalen to an unsigned int. \n
 	  *	It might by said that this class represents actually CPU's ALU (Arithmetic Logic Unit) as well. \n
 	  * A number is represented by several UBytes. Those UBytes can be given either in big-endian format or low-endian one. \n
 	  * That number can be represented in many different formats. \n
@@ -29,7 +28,9 @@ namespace MCHEmul
 	  * The type of format used in many computers at 80's was the packaged BCD. \n
 	  * The class is prepared to support additional formats further than those two ones. It can be extended somehow. See later. \n
 	  * The negative numbers are always kept and "understood" using complement 2. \n
-	  * The basic operation in an UInt is "adding". The rest are always refer to this one.
+	  * The basic operation in an UInt is "adding". The rest are always refer to this one. \n
+	  * When the UInt is transformed into/from a standard type it has to be a unsigned int. \n
+	  * It means that the maximum number than can be got is (positive): 4.294.967.296.
 	  */
 	class UInt final
 	{

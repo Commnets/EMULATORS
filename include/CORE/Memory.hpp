@@ -279,6 +279,9 @@ namespace MCHEmul
 		
 		bool isIn (const Address& a, int & dt) const;
 
+		Address middleMemoryAddress () const
+							{ return (_minAddress + (_numPositions / 2)); }
+
 		/** If there had been several subsets behind, the write operation would happen 
 			on the first writtable subset possible. */
 		void set (const Address& a, const UByte& d, bool f = false);

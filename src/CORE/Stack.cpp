@@ -3,25 +3,31 @@
 #include <CORE/Formatter.hpp>
 
 // ---
+void MCHEmul::Stack::reset ()
+{ 
+	_position = _fromBack ? (int) (size () - 1) : 0; 
+	_overflow = false; 
+	_notUsed = true; // No elements so far at the beginning...
+}
+
+// ---
 void MCHEmul::Stack::initialize ()
 { 
 	MCHEmul::PhysicalStorageSubset::initialize ();
 
-	_position = _fromBack ? (int) (size () - 1) : 0; 
-	_stackOverflow = false; 
-	_empty = true; // No elements so far at the beginning...
+	reset ();
 }
 
 // ---
 void MCHEmul::Stack::push (const MCHEmul::UBytes& v)
 {
-	if (_stackOverflow)
+	if (_overflow)
 		return;
 
-	_stackOverflow = false;
+	_overflow = false;
 
 	for (std::vector <MCHEmul::UByte>::const_iterator i = v.bytes ().begin (); 
-			i != v.bytes ().end () && !_stackOverflow; i++)
+			i != v.bytes ().end () && !_overflow; i++)
 	{
 		// When the stack is filled from the highest address down to 0...
 		if (_fromBack)
@@ -32,7 +38,7 @@ void MCHEmul::Stack::push (const MCHEmul::UBytes& v)
 			{
 				// In that case, 
 				// If would be only possible to insert a new byte when that pointer is >= 0 (never less than 1)
-				if (!(_stackOverflow = (_position < 0)))
+				if (!(_overflow = (_position < 0)))
 				{
 					set (initialAddress () + (size_t) _position, (*i));
 
@@ -42,11 +48,11 @@ void MCHEmul::Stack::push (const MCHEmul::UBytes& v)
 			else
 			{
 				// The pointer doesn't move after this first insertion!
-				if (_empty)
+				if (_notUsed)
 					set (initialAddress () + (size_t) _position, (*i)); // And not move the pointer...
 				else
 				{
-					if (!(_stackOverflow = (_position < 1)))
+					if (!(_overflow = (_position < 1)))
 					{
 						_position--; // After that the position can become 0 not allowing insertions later!
 
@@ -60,7 +66,7 @@ void MCHEmul::Stack::push (const MCHEmul::UBytes& v)
 		{
 			if (_pointToEmpty)
 			{
-				if (!(_stackOverflow = ((size_t) _position >= size ())))
+				if (!(_overflow = ((size_t) _position >= size ())))
 				{
 					set (initialAddress () + (size_t) _position, (*i));
 
@@ -69,11 +75,11 @@ void MCHEmul::Stack::push (const MCHEmul::UBytes& v)
 			}
 			else
 			{
-				if (_empty)
+				if (_notUsed)
 					set (initialAddress () + (size_t) _position, (*i)); 
 				else
 				{
-					if (!(_stackOverflow = ((size_t) _position >= (size () - 1))))
+					if (!(_overflow = ((size_t) _position >= (size () - 1))))
 					{
 						_position++;
 
@@ -83,27 +89,27 @@ void MCHEmul::Stack::push (const MCHEmul::UBytes& v)
 			}
 		}
 
-		_empty = false;
+		_notUsed = false;
 	}
 }
 
 // ---
 MCHEmul::UBytes MCHEmul::Stack::pull (size_t nV)
 {
-	if (_stackOverflow || _empty)
-		return (MCHEmul::UBytes::_E); // nothing can be pull when error || empty!
+	if (_overflow || _notUsed) // nothing can be pull when error || empty!
+		return (MCHEmul::UBytes (std::vector <MCHEmul::UByte> (nV, MCHEmul::UByte::_0))); 
 
 	std::vector <MCHEmul::UByte> dt = { };
 
-	_stackOverflow = false;
+	_overflow = false;
 
-	for (size_t i = 0; i < nV && !_stackOverflow; i++)
+	for (size_t i = 0; i < nV && !_overflow; i++)
 	{
 		if (_fromBack)
 		{
 			if (_pointToEmpty)
 			{
-				if (!(_stackOverflow = ((size_t) _position >= size ())))
+				if (!(_overflow = ((size_t) _position >= size ())))
 				{
 					_position++;
 
@@ -112,7 +118,7 @@ MCHEmul::UBytes MCHEmul::Stack::pull (size_t nV)
 			}
 			else
 			{
-				if (!(_stackOverflow = ((size_t)_position >= (size () - 1))))
+				if (!(_overflow = ((size_t)_position >= (size () - 1))))
 				{
 					dt.push_back (value (initialAddress () + (size_t) _position));
 
@@ -124,7 +130,7 @@ MCHEmul::UBytes MCHEmul::Stack::pull (size_t nV)
 		{
 			if (_pointToEmpty)
 			{
-				if (!(_stackOverflow = (_position < 0)))
+				if (!(_overflow = (_position < 0)))
 				{
 					_position--;
 
@@ -133,7 +139,7 @@ MCHEmul::UBytes MCHEmul::Stack::pull (size_t nV)
 			}
 			else
 			{
-				if (!(_stackOverflow = (_position < 1)))
+				if (!(_overflow = (_position < 1)))
 				{
 					dt.push_back (value (initialAddress () + (size_t) _position));
 
@@ -143,7 +149,10 @@ MCHEmul::UBytes MCHEmul::Stack::pull (size_t nV)
 		}
 	}
 
-	return (MCHEmul::UBytes (dt));
+	// If the final situation of the stack is overflow, then a list of 0 data is returned, 
+	// but the status of the stack is set to bad!
+	return (_overflow 
+		? MCHEmul::UBytes (std::vector <MCHEmul::UByte> (nV, MCHEmul::UByte::_0)) : MCHEmul::UBytes (dt));
 }
 
 // ---
@@ -154,8 +163,8 @@ MCHEmul::InfoStructure MCHEmul::Stack::getInfoStructure () const
 	result.add ("PhysicalStorageSubset",	MCHEmul::PhysicalStorageSubset::getInfoStructure ());
 	result.add ("BACK",						_fromBack );
 	result.add ("LAST",						_pointToEmpty );
-	result.add ("OVERFLOW",					_stackOverflow );
-	result.add ("EMPTY",					_empty );
+	result.add ("OVERFLOW",					_overflow );
+	result.add ("EMPTY",					_notUsed );
 	result.add ("POSITION",					_position);
 
 	return (result);

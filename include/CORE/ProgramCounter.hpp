@@ -33,8 +33,8 @@ namespace MCHEmul
 		void initialize ()
 							{ _internalRepresentation = 0; }
 
-		Address asAddress () const
-							{ return (Address (UInt::fromUnsignedInt (_internalRepresentation))); }
+		Address asAddress (size_t ml = 0 /** The minimum length. */) const
+							{ UInt r = UInt::fromUnsignedInt (_internalRepresentation); r.setMinLength (ml); return (Address (r)); }
 		void setAddress (const Address& a)
 							{ _internalRepresentation = UInt (a.bytes ()).asUnsignedInt (); }
 
