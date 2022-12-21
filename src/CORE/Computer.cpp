@@ -2,7 +2,6 @@
 #include <CORE/StdCommands.hpp>
 #include <CORE/FmterBuilder.hpp>
 #include <CORE/Formatter.hpp>
-#include <thread>
 #include <sstream>
 
 // ---
@@ -114,6 +113,8 @@ bool MCHEmul::Computer::initialize ()
 	_actionForNextCycle = _ACTIONNOTHING;
 	_lastAction = _ACTIONNOTHING;
 
+	startsComputerClock ();
+
 	return (true);
 }
 
@@ -130,13 +131,17 @@ bool MCHEmul::Computer::run ()
 
 	startsComputerClock ();
 
+	bool jumpCycle = false;
 	bool ok = true;
 	while (ok && !_exit)
 	{
-		ok &= runComputerCycle (/** no action. */);
-		ok &= runIOCycle ();
+		if (!jumpCycle)
+		{
+			ok &= runComputerCycle (/** no action. */);
+			ok &= runIOCycle ();
+		}
 		
-		finishCycle ();
+		jumpCycle = tooQuickAfter (jumpCycle ? 0 : lastClockCycles ());
 	}
 
 	return (_error != MCHEmul::_NOERROR);
@@ -355,36 +360,49 @@ bool MCHEmul::Computer::executeAction (unsigned int& lA, unsigned int at, unsign
 }
 
 // ---
-void MCHEmul::Computer::Clock::start (unsigned int cC)
+void MCHEmul::Computer::Clock::start ()
 {
-	_initialClockCycles = cC;
-
 	_realCyclesPerSecond = 0;
+
+	_realCyclesPerSecondTmp = 0;
+
+	_realCyclesPerSecondCalculated = false;
 
 	_iClock = std::chrono::steady_clock ().now ();
 }
 
 // ---
-void MCHEmul::Computer::Clock::waitFor (unsigned int cC)
+bool MCHEmul::Computer::Clock::tooQuickAfter (unsigned int cC) const
 {
+	// Number of nanoseconds in a second...
 	static const long long nanosc = (long long) 1.0e9;
+	// The time lasted from the last calculation (in nanoseconds) of the speed.
+	// The variable iClock keeps always the last moment when the speed was calculated...
+	long long elapsed = (std::chrono::steady_clock::now () - _iClock).count (); 
 
-	long long elapsed = (std::chrono::steady_clock::now () - _iClock).count ();
-
-	// If after 1 second or more...
-	if (elapsed > nanosc)
+	// If the real speed has already been calculated
+	// Then it is latched in a variable accesible from outside
+	// and starts back again the counter.
+	// Otherwise keep counting cycles until one second has lasted.
+	if (_realCyclesPerSecondCalculated)
 	{
-		// The number of clock cycles executed was bigger 
-		// than the max number of cycles allowed for this CPU
-		// It would be needed to wait for a while...
-		_realCyclesPerSecond = 
-			(cC > _initialClockCycles) ? (cC - _initialClockCycles) : (_initialClockCycles - cC);
-		if (_realCyclesPerSecond > _cyclesPerSecond)
-			std::this_thread::sleep_for (std::chrono::nanoseconds ((long long) 
-				(_realCyclesPerSecond - _cyclesPerSecond) * (elapsed - nanosc) / _realCyclesPerSecond));
+		_realCyclesPerSecond = _realCyclesPerSecondTmp;
 
-		// ...and then starts back to count...
 		_iClock = std::chrono::steady_clock::now ();
-		_initialClockCycles = cC;
+
+		_realCyclesPerSecondTmp = 0;
+
+		_realCyclesPerSecondCalculated = false;
 	}
+	else
+	{
+		if (elapsed < nanosc) 
+			_realCyclesPerSecondTmp += cC;
+		else 
+			_realCyclesPerSecondCalculated = true;
+	}
+
+	// Whether to wait or not has to be based on the projections...
+	// and this data is kep in the rela cycles per second temporal!
+	return ((_realCyclesPerSecondTmp * nanosc / elapsed) > _cyclesPerSecond);
 }

@@ -22,9 +22,10 @@ namespace MCHEmul
 	class ProgramCounter final
 	{
 		public:
-		ProgramCounter (size_t sz)
-			: _internalRepresentation (0)
-							{ assert (sz <= sizeof (unsigned int)); }
+		ProgramCounter (unsigned int sz)
+			: _size (sz),
+			  _internalRepresentation (0)
+							{ assert (_size <= (unsigned int) sizeof (unsigned int)); }
 
 		ProgramCounter (const ProgramCounter&) = default;
 
@@ -33,15 +34,16 @@ namespace MCHEmul
 		void initialize ()
 							{ _internalRepresentation = 0; }
 
-		Address asAddress (size_t ml = 0 /** The minimum length. */) const
-							{ UInt r = UInt::fromUnsignedInt (_internalRepresentation); r.setMinLength (ml); return (Address (r)); }
+		Address asAddress () const
+							{ UInt r = UInt::fromUnsignedInt (_internalRepresentation); 
+							  r.setMinLength (_size); return (Address (r)); }
 		void setAddress (const Address& a)
-							{ _internalRepresentation = UInt (a.bytes ()).asUnsignedInt (); }
+							{ _internalRepresentation = UInt (a.bytes ()).asUnsignedInt (); adjust (); }
 
 		void increment (unsigned int n = 1)
-							{ _internalRepresentation += n; }
+							{ _internalRepresentation += n; adjust (); }
 		void decrement (unsigned int n = 1)
-							{ _internalRepresentation -= n; }
+							{ _internalRepresentation -= n; adjust (); }
 
 		bool operator == (const Address& a) const
 							{ return (asAddress () == a); }
@@ -73,6 +75,13 @@ namespace MCHEmul
 							{ return (o << pc.asString ()); }
 
 		private:
+		void adjust ()
+							{ unsigned int max = 1 << (8 * _size); 
+							  if (_internalRepresentation >= max) _internalRepresentation -= max; }
+
+		private:
+		unsigned int _size;
+
 		// Implementation
 		unsigned int _internalRepresentation;
 	};

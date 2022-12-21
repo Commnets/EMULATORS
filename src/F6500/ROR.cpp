@@ -5,7 +5,7 @@
 bool F6500::ROR_General::executeOn (const MCHEmul::Address& a)
 {
 	MCHEmul::StatusRegister& st = cpu () -> statusRegister ();
-	bool c = st.bitStatus ("C"); 
+	bool c = st.bitStatus (F6500::C6500::_CARRYFLAG); 
 
 	// Read the value, makes the operation and set it back!
 	MCHEmul::UByte v = memory () -> values (a, 1)[0]; // 1 byte long always
@@ -13,9 +13,9 @@ bool F6500::ROR_General::executeOn (const MCHEmul::Address& a)
 	memory () -> set (a, { v });
 
 	// Time of the status register...
-	st.setBitStatus ("N", v [7]);
-	st.setBitStatus ("Z", v == MCHEmul::UByte::_0);
-	st.setBitStatus ("C", c);
+	st.setBitStatus (F6500::C6500::_NEGATIVEFLAG, v [7]);
+	st.setBitStatus (F6500::C6500::_ZEROFLAG, v == MCHEmul::UByte::_0);
+	st.setBitStatus (F6500::C6500::_CARRYFLAG, c);
 
 	return (true);
 }
@@ -39,7 +39,7 @@ _INST_IMPL (F6500::ROR_Accumulator)
 
 	MCHEmul::Register& a = cpu () -> internalRegister (F6500::C6510::_ACCUMULATOR);
 	MCHEmul::StatusRegister& st = cpu () -> statusRegister ();
-	bool c = st.bitStatus ("C"); 
+	bool c = st.bitStatus (F6500::C6500::_CARRYFLAG); 
 
 	// Set the value...
 	MCHEmul::UBytes v = a.values ();
@@ -47,9 +47,9 @@ _INST_IMPL (F6500::ROR_Accumulator)
 	a.set (v);
 
 	// Time of the status register...
-	st.setBitStatus ("N", v [0][7]);
-	st.setBitStatus ("Z", v [0] == MCHEmul::UByte::_0);
-	st.setBitStatus ("C", c);
+	st.setBitStatus (F6500::C6500::_NEGATIVEFLAG, v [0][7]);
+	st.setBitStatus (F6500::C6500::_ZEROFLAG, v [0] == MCHEmul::UByte::_0);
+	st.setBitStatus (F6500::C6500::_CARRYFLAG, c);
 
 	return (true);
 }

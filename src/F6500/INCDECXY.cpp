@@ -15,8 +15,8 @@ _INST_IMPL (F6500::DEX)
 
 	// Time of the status register
 	MCHEmul::StatusRegister& st = cpu () -> statusRegister ();
-	st.setBitStatus ("N", v.negative ());
-	st.setBitStatus ("Z", v == MCHEmul::UInt::_0);
+	st.setBitStatus (F6500::C6500::_NEGATIVEFLAG, v.negative ());
+	st.setBitStatus (F6500::C6500::_ZEROFLAG, v == MCHEmul::UInt::_0);
 
 	return (true);
 }
@@ -35,8 +35,8 @@ _INST_IMPL (F6500::DEY)
 
 	// Time of the status register
 	MCHEmul::StatusRegister& st = cpu () -> statusRegister ();
-	st.setBitStatus ("N", v.negative ());
-	st.setBitStatus ("Z", v == MCHEmul::UInt::_0);
+	st.setBitStatus (F6500::C6500::_NEGATIVEFLAG, v.negative ());
+	st.setBitStatus (F6500::C6500::_ZEROFLAG, v == MCHEmul::UInt::_0);
 
 	return (true);
 }
@@ -55,8 +55,8 @@ _INST_IMPL (F6500::INX)
 
 	// Time of the status register
 	MCHEmul::StatusRegister& st = cpu () -> statusRegister ();
-	st.setBitStatus ("N", v.negative ());
-	st.setBitStatus ("Z", v == MCHEmul::UInt::_0);
+	st.setBitStatus (F6500::C6500::_NEGATIVEFLAG, v.negative ());
+	st.setBitStatus (F6500::C6500::_ZEROFLAG, v == MCHEmul::UInt::_0);
 
 	return (true);
 }
@@ -75,8 +75,8 @@ _INST_IMPL (F6500::INY)
 
 	// Time of the status register
 	MCHEmul::StatusRegister& st = cpu () -> statusRegister ();
-	st.setBitStatus ("N", v.negative ());
-	st.setBitStatus ("Z", v == MCHEmul::UInt::_0);
+	st.setBitStatus (F6500::C6500::_NEGATIVEFLAG, v.negative ());
+	st.setBitStatus (F6500::C6500::_ZEROFLAG, v == MCHEmul::UInt::_0);
 
 	return (true);
 }

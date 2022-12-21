@@ -11,9 +11,9 @@ bool F6500::CMP_General::executeWith (MCHEmul::UByte u)
 
 	// Time of the status register...
 	MCHEmul::StatusRegister& st = cpu () -> statusRegister ();
-	st.setBitStatus ("N", r.negative ());
-	st.setBitStatus ("Z", r == MCHEmul::UInt::_0);
-	st.setBitStatus ("C", r.carry ()); // When the result is positive (a >= u)
+	st.setBitStatus (F6500::C6500::_NEGATIVEFLAG, r.negative ());
+	st.setBitStatus (F6500::C6500::_ZEROFLAG, r == MCHEmul::UInt::_0);
+	st.setBitStatus (F6500::C6500::_CARRYFLAG, r.carry ()); // When the result is positive (a >= u)
 
 	return (true);
 }

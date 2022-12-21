@@ -137,18 +137,27 @@ namespace MCHEmul
 			The parameter is the log level. \n
 			This method used the other tow defined behind and it can be simulated from outside. */
 		bool run ();
-		
+
+		// Managing the clock...
 		/** To indicate that the cpu clock status. */
 		void startsComputerClock ()
-							{ _clock.start (_cpu -> clockCycles ()); }
+							{ _clock.start (); }
+		unsigned int clockCycles () const
+							{ return (cpu () -> clockCycles ()); }
+		unsigned int lastClockCycles () const
+							{ return (cpu () -> lastClockCycles ()); }
+
+		// Managing the cycles...
 		/** Execute one computer cycle (cpu + chips). */
 		bool runComputerCycle (unsigned int a = 0 /** Meaning no action. */);
 		/** Execute the IO Cycle.
 			Returns true when ok, and false when no ok. */
 		bool runIOCycle ();
-		/** To indicate that the cycle finishes. */
-		void finishCycle ()
-							{ _clock.waitFor (_cpu -> clockCycles ()); }
+		/** To know whether the next cycle has to be jumped because the speed. \n
+			The method gets the number of clock cycles lasted to decide whether wait or not. \n
+			emeber that gis method has to be invoked per loop. */
+		bool tooQuickAfter (unsigned int cC)
+							{ return (_clock.tooQuickAfter (cC)); }
 
 		bool exit () const
 							{ return (_exit); }
@@ -233,7 +242,9 @@ namespace MCHEmul
 			Clock (unsigned int cS)
 				: _cyclesPerSecond (cS),
 				  _realCyclesPerSecond (0),
-				  _initialClockCycles (0), _iClock ()
+				  _realCyclesPerSecondTmp (0), 
+				  _realCyclesPerSecondCalculated (false),
+				  _iClock ()
 							{ assert (_cyclesPerSecond > 0); }
 
 			Clock (const Clock&) = default;
@@ -245,16 +256,21 @@ namespace MCHEmul
 			unsigned int realCyclesPerSecond () const
 							{ return (_realCyclesPerSecond); }
 
-			void start (unsigned int cC);
-			void waitFor (unsigned int cC);
+			/** Just to put everything at the beginning. */
+			void start ();
+			/** The method will tell us whether after executing cC clocks
+				the speed is being too much!. \n
+				This method has to be invoked in every loop for the right emulation. */
+			bool tooQuickAfter (unsigned int cC) const;
 
 			private:
 			unsigned int _cyclesPerSecond;
-			unsigned _realCyclesPerSecond;
 
 			// Implementation
-			unsigned int _initialClockCycles;
-			std::chrono::time_point <std::chrono::steady_clock> _iClock;
+			mutable unsigned int _realCyclesPerSecond;
+			mutable unsigned int _realCyclesPerSecondTmp;
+			mutable bool _realCyclesPerSecondCalculated;
+			mutable std::chrono::time_point <std::chrono::steady_clock> _iClock;
 		};
 			
 		CPU* _cpu;

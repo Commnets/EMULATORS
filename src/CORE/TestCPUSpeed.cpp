@@ -109,10 +109,11 @@ void MCHEmul::TestCPUSpeed::testInstructionSet (std::ostream& o, unsigned int nt
 			printOutCPUStatus (o);
 	}
 
-	// Print out also the slowest and the quickest instruction...
+	// Print out final results...
 	o << std::endl;
-	o << "Quickest Instruction: " << maxInst << "(" + std::to_string (maxSpeed) + ") clks/s" << std::endl;
-	o << "Slowest Instruction:  " << minInst << "(" + std::to_string (minSpeed) + ") clks/s" << std::endl;
+	o << "Quickest Instruction: " << maxInst << " => " + std::to_string (maxSpeed) + " clks/s" << std::endl;
+	o << "Slowest Instruction:  " << minInst << " => " + std::to_string (minSpeed) + " clks/s" << std::endl;
+	o << "Average speed: " << std::to_string ((maxSpeed + minSpeed) >> 1) << " clks/s" << std::endl;
 }
 
 // ---

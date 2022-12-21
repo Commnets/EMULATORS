@@ -12,8 +12,8 @@ bool F6500::EOR_General::executeWith (MCHEmul::UByte u)
 	a.set ({ r });
 
 	// Time of the status register...
-	st.setBitStatus ("N", r [7]);
-	st.setBitStatus ("Z", r == MCHEmul::UByte::_0);
+	st.setBitStatus (F6500::C6500::_NEGATIVEFLAG, r [7]);
+	st.setBitStatus (F6500::C6500::_ZEROFLAG, r == MCHEmul::UByte::_0);
 
 	return (true);
 }

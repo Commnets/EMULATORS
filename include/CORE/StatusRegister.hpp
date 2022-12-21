@@ -22,12 +22,12 @@ namespace MCHEmul
 	class StatusRegister : protected Register
 	{
 		public:
-		using BitNames = std::map <std::string, int>;
+		using BitNames = std::map <std::string, size_t>;
 
 		StatusRegister (size_t nB, const BitNames& bN)
 			: Register (-2 /** always */, "ST", UBytes (std::vector <UByte> (nB, UByte::_0))), 
 			  _bitNames (bN)
-							{}
+							{ }
 
 		StatusRegister (const StatusRegister&) = default;
 
@@ -43,8 +43,12 @@ namespace MCHEmul
 		/** Take care using these methods, no check about the name used are don for speed reasons. */
 		bool bitStatus (const std::string& bN) const
 							{ return (_values.bit ((*_bitNames.find (bN)).second)); }
+		bool bitStatus (size_t bP) const
+							{ return (_values.bit (bP)); }
 		void setBitStatus (const std::string& bN, bool s)
 							{ _values.setBit ((*_bitNames.find (bN)).second, s); }
+		void setBitStatus (size_t bP, bool s)
+							{ _values.setBit (bP, s); }
 
 		const UBytes& values () const
 							{ return (Register::values ()); }
@@ -64,7 +68,7 @@ namespace MCHEmul
 							{ return (o << r.asString ()); }
 
 		private:
-		const BitNames _bitNames; 
+		const BitNames _bitNames;
 	};
 }
 

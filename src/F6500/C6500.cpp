@@ -3,6 +3,14 @@
 #include <F6500/IRQInterrupt.hpp>
 #include <F6500/NMIInterrupt.hpp>
 
+const std::string F6500::C6500::_CARRYFLAGNAME = "C";
+const std::string F6500::C6500::_ZEROFLAGNAME = "Z";
+const std::string F6500::C6500::_IRQFLAGNAME = "I";
+const std::string F6500::C6500::_DECIMALFLAGNAME = "D";
+const std::string F6500::C6500::_BREAKFLAGNAME = "B";
+const std::string F6500::C6500::_OVERFLOWFLAGNAME = "V";
+const std::string F6500::C6500::_NEGATIVEFLAGNAME = "N";
+
 // ---
 F6500::C6500::C6500 (const MCHEmul::CPUArchitecture& a)
 	: MCHEmul::CPU (a,
@@ -27,7 +35,7 @@ bool F6500::C6500::initialize ()
 	// After 6 clock sycles, everything starts!
 	addClockCycles (6);
 	// Initially the interruptions are disabled!
-	statusRegister ().setBitStatus ("I", false);
+	statusRegister ().setBitStatus (F6500::C6500::_IRQFLAG, false);
 	// Sets the point where the execution starts!
 	programCounter ().setAddress (MCHEmul::Address 
 		(memoryRef () -> values (ResetVectorAddress (), 2), false /** Little - endian */));

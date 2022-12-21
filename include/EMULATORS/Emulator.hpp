@@ -213,6 +213,7 @@ namespace MCHEmul
 		mutable Computer* _computer;
 		mutable IOPeripheralBuilder* _peripheralBuilder;
 		mutable bool _running;
+		mutable bool _jumpCycle;
 		unsigned int _error;
 	};
 }

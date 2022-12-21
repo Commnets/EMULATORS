@@ -9,7 +9,8 @@ MCHEmul::CPU::CPU (const MCHEmul::CPUArchitecture& a, const MCHEmul::Registers& 
 	  _architecture (a), _registers (r), _statusRegister (sR), _instructions (ins),
 	  _programCounter (a.numberBytes ()), _memory (nullptr), _interrupts (),
 	  _lastInstruction (nullptr),
-	  _error (_NOERROR), _clockCycles (0),
+	  _error (_NOERROR), 
+	  _clockCycles (0), _lastClockCycles (0),
 	  _stopped (false),
 	  _rowInstructions () // It will be fulfilled later!
 { 
@@ -46,6 +47,8 @@ bool MCHEmul::CPU::initialize ()
 
 	_clockCycles = 0;
 
+	_lastClockCycles = 0;
+
 	return (true);
 }
 
@@ -78,12 +81,16 @@ bool MCHEmul::CPU::executeNextInstruction ()
 	if (_stopped)
 		return (true);
 
-	unsigned int nC = 0;
+	// Number of cycles calling interruptions...
+	unsigned int nCInt = 0;
+	// ..and number of cycles executing the last instruction...
+	unsigned int nCInst = 0;
+
 	for (const auto& i : _interrupts)
 	{
-		i.second -> executeOver (this, nC);
+		i.second -> executeOver (this, nCInt);
 
-		_clockCycles += nC;
+		_clockCycles += nCInt;
 	}
 
 	// Access the next instruction...
@@ -98,23 +105,6 @@ bool MCHEmul::CPU::executeNextInstruction ()
 		(inst = _rowInstructions [nInst]) == nullptr)
 		return (false); // Not possible to execute the instruction...
 
-	/**
-		The access to the instruction should be done using the original map, \n
-		but the row list is used instead just to speed up the access. 
-
-		MCHEmul::Instructions::const_iterator i = 
-			_instructions.find (
-				MCHEmul::UInt (
-					_memory -> values (
-						programCounter ().asAddress (), architecture ().instructionLength ()), 
-					architecture ().bigEndian ()).asUnsignedInt ());
-
-		if (i == _instructions.end ())
-			return (false);
-
-		MCHEmul::Instruction* inst = (*i).second;
-	  */
-
 	// Gets the data that the instruction occupies
 	MCHEmul::UBytes dt = _memory -> values (programCounter ().asAddress (), inst -> memoryPositions ());
 
@@ -123,11 +113,12 @@ bool MCHEmul::CPU::executeNextInstruction ()
 	// modify the value of the "Program Counter"
 	_programCounter += (size_t) inst -> memoryPositions ();
 
-	// Then executes the instruction
+	// Then, executes the instruction
 	bool result = inst -> execute (dt, this, _memory, _memory -> stack ());
 
-	// And also, take into account what it costs in terms of cycles...
-	_clockCycles += inst -> clockCycles () + inst -> additionalClockCycles ();
+	_clockCycles += (nCInst = inst -> clockCycles () + inst -> additionalClockCycles ());
+
+	_lastClockCycles = nCInt + nCInst;
 
 	_lastInstruction = inst;
 

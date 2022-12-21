@@ -9,8 +9,8 @@ bool F6500::LDY_General::executeWith (MCHEmul::UByte u)
 
 	// Time of the status register...
 	MCHEmul::StatusRegister& st = cpu () -> statusRegister ();
-	st.setBitStatus ("N", u [7]);
-	st.setBitStatus ("Z", u == MCHEmul::UByte::_0);
+	st.setBitStatus (F6500::C6500::_NEGATIVEFLAG, u [7]);
+	st.setBitStatus (F6500::C6500::_ZEROFLAG, u == MCHEmul::UByte::_0);
 
 	return (true);
 }

@@ -10,8 +10,8 @@ _INST_IMPL (F6500::TAX)
 	cpu () -> internalRegister (F6500::C6510::_XREGISTER).set (u);
 
 	MCHEmul::StatusRegister& st = cpu () -> statusRegister ();
-	st.setBitStatus ("N", u [0][7]);
-	st.setBitStatus ("Z", u [0] == MCHEmul::UByte::_0);
+	st.setBitStatus (F6500::C6500::_NEGATIVEFLAG, u [0][7]);
+	st.setBitStatus (F6500::C6500::_ZEROFLAG, u [0] == MCHEmul::UByte::_0);
 
 	return (true);
 }
@@ -25,8 +25,8 @@ _INST_IMPL (F6500::TAY)
 	cpu () -> internalRegister (F6500::C6510::_YREGISTER).set (u);
 
 	MCHEmul::StatusRegister& st = cpu () -> statusRegister ();
-	st.setBitStatus ("N", u [0][7]);
-	st.setBitStatus ("Z", u [0] == MCHEmul::UByte::_0);
+	st.setBitStatus (F6500::C6500::_NEGATIVEFLAG, u [0][7]);
+	st.setBitStatus (F6500::C6500::_ZEROFLAG, u [0] == MCHEmul::UByte::_0);
 
 	return (true);
 }
@@ -40,8 +40,8 @@ _INST_IMPL (F6500::TXA)
 	cpu () -> internalRegister (F6500::C6510::_ACCUMULATOR).set (u);
 
 	MCHEmul::StatusRegister& st = cpu () -> statusRegister ();
-	st.setBitStatus ("N", u [0][7]);
-	st.setBitStatus ("Z", u [0] == MCHEmul::UByte::_0);
+	st.setBitStatus (F6500::C6500::_NEGATIVEFLAG, u [0][7]);
+	st.setBitStatus (F6500::C6500::_ZEROFLAG, u [0] == MCHEmul::UByte::_0);
 
 	return (true);
 }
@@ -55,8 +55,8 @@ _INST_IMPL (F6500::TYA)
 	cpu () -> internalRegister (F6500::C6510::_ACCUMULATOR).set (u);
 
 	MCHEmul::StatusRegister& st = cpu () -> statusRegister ();
-	st.setBitStatus ("N", u [0][7]);
-	st.setBitStatus ("Z", u [0] == MCHEmul::UByte::_0);
+	st.setBitStatus (F6500::C6500::_NEGATIVEFLAG, u [0][7]);
+	st.setBitStatus (F6500::C6500::_ZEROFLAG, u [0] == MCHEmul::UByte::_0);
 
 	return (true);
 }

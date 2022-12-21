@@ -101,7 +101,7 @@ int _tmain (int argc, _TCHAR *argv [])
 
 	std::cout << "Test6500" << std::endl;
 	std::cout << "Copyright (C) 2022 by Ignacio Cea" << std::endl;
-	std::cout << "To test the different instructions of the &500 family." << std::endl;
+	std::cout << "To test the different instructions of the 6500 family." << std::endl;
 	std::cout << "/t[TIMES]\tNumber of times to test every instruction." << std::endl;
 	std::cout << "/o[TRUE]\tTo print out the status of the CPU after every test." << std::endl << std::endl;
 

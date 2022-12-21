@@ -93,7 +93,9 @@ namespace MCHEmul
 		unsigned int clockCycles () const
 							{ return (_clockCycles); }
 		void addClockCycles (unsigned int cC)
-							{ _clockCycles += cC; }
+							{ _clockCycles += cC; _lastClockCycles += cC; }
+		unsigned int lastClockCycles () const
+							{ return (_lastClockCycles); }
 
 		/** To initialize the CPU. It could be overloaded later. \n
 			By default it just initialize registers and program counter to 0. \n
@@ -143,6 +145,9 @@ namespace MCHEmul
 		// Implementation
 		unsigned int _error;
 		unsigned int _clockCycles;
+		/** To keep just the cycles executed after the last loop, 
+			including invocation if any to the special chips. */
+		unsigned int _lastClockCycles;
 		bool _stopped; // When the CPU is stopped and no runCycle is executed...
 		/** The instructions will be moved into an array at construction time,
 			to speed up their access in the executeNextInstruction method. */

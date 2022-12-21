@@ -11,9 +11,9 @@ bool F6500::LSR_General::executeOn (const MCHEmul::Address& a)
 
 	// Time of the status register...
 	MCHEmul::StatusRegister& st = cpu () -> statusRegister ();
-	st.setBitStatus ("N", v [7]);
-	st.setBitStatus ("Z", v == MCHEmul::UByte::_0);
-	st.setBitStatus ("C", c);
+	st.setBitStatus (F6500::C6500::_NEGATIVEFLAG, v [7]);
+	st.setBitStatus (F6500::C6500::_ZEROFLAG, v == MCHEmul::UByte::_0);
+	st.setBitStatus (F6500::C6500::_CARRYFLAG, c);
 
 	return (true);
 }
@@ -44,9 +44,9 @@ _INST_IMPL (F6500::LSR_Accumulator)
 
 	// Time of the status register...
 	MCHEmul::StatusRegister& st = cpu () -> statusRegister ();
-	st.setBitStatus ("N", v [0][7]);
-	st.setBitStatus ("Z", v [0] == MCHEmul::UByte::_0);
-	st.setBitStatus ("C", c);
+	st.setBitStatus (F6500::C6500::_NEGATIVEFLAG, v [0][7]);
+	st.setBitStatus (F6500::C6500::_ZEROFLAG, v [0] == MCHEmul::UByte::_0);
+	st.setBitStatus (F6500::C6500::_CARRYFLAG, c);
 
 	return (true);
 }

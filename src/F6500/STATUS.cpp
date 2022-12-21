@@ -6,7 +6,7 @@ _INST_IMPL (F6500::CLC)
 {
 	assert (parameters ().size () == 1);
 
-	cpu () -> statusRegister ().setBitStatus ("C", false);
+	cpu () -> statusRegister ().setBitStatus (F6500::C6500::_CARRYFLAG, false);
 
 	return (true);
 }
@@ -16,7 +16,7 @@ _INST_IMPL (F6500::CLD)
 {
 	assert (parameters ().size () == 1);
 
-	cpu () -> statusRegister ().setBitStatus ("D", false);
+	cpu () -> statusRegister ().setBitStatus (F6500::C6500::_DECIMALFLAG, false);
 
 	return (true);
 }
@@ -26,7 +26,7 @@ _INST_IMPL (F6500::CLI)
 {
 	assert (parameters ().size () == 1);
 
-	cpu () -> statusRegister ().setBitStatus ("I", false);
+	cpu () -> statusRegister ().setBitStatus (F6500::C6500::_IRQFLAG, false);
 
 	return (true);
 }
@@ -36,7 +36,7 @@ _INST_IMPL (F6500::CLV)
 {
 	assert (parameters ().size () == 1);
 
-	cpu () -> statusRegister ().setBitStatus ("V", false);
+	cpu () -> statusRegister ().setBitStatus (F6500::C6500::_OVERFLOWFLAG, false);
 
 	return (true);
 }
@@ -46,7 +46,7 @@ _INST_IMPL (F6500::SEC)
 {
 	assert (parameters ().size () == 1);
 
-	cpu () -> statusRegister ().setBitStatus ("C", true);
+	cpu () -> statusRegister ().setBitStatus (F6500::C6500::_CARRYFLAG, true);
 
 	return (true);
 }
@@ -56,7 +56,7 @@ _INST_IMPL (F6500::SED)
 {
 	assert (parameters ().size () == 1);
 
-	cpu () -> statusRegister ().setBitStatus ("D", true);
+	cpu () -> statusRegister ().setBitStatus (F6500::C6500::_DECIMALFLAG, true);
 
 	return (true);
 }
@@ -66,7 +66,7 @@ _INST_IMPL (F6500::SEI)
 {
 	assert (parameters ().size () == 1);
 
-	cpu () -> statusRegister ().setBitStatus ("I", true);
+	cpu () -> statusRegister ().setBitStatus (F6500::C6500::_IRQFLAG, true);
 
 	return (true);
 }
