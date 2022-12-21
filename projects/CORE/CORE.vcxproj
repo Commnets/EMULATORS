@@ -20,6 +20,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\CORE\Chip.cpp" />
+    <ClCompile Include="..\..\src\CORE\Clock.cpp" />
     <ClCompile Include="..\..\src\CORE\CmdExecuter.cpp" />
     <ClCompile Include="..\..\src\CORE\CmdlineArgs.cpp" />
     <ClCompile Include="..\..\src\CORE\Command.cpp" />
@@ -55,6 +56,7 @@
   <ItemGroup>
     <ClInclude Include="..\..\include\CORE\Address.hpp" />
     <ClInclude Include="..\..\include\CORE\Chip.hpp" />
+    <ClInclude Include="..\..\include\CORE\Clock.hpp" />
     <ClInclude Include="..\..\include\CORE\CmdExecuter.hpp" />
     <ClInclude Include="..\..\include\CORE\CmdlineArgs.hpp" />
     <ClInclude Include="..\..\include\CORE\DtMemoryBlock.hpp" />

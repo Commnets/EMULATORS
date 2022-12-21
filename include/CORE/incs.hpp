@@ -15,6 +15,7 @@
 #define __CORE_INCS__
 
 #include <CORE/global.hpp>
+#include <CORE/Clock.hpp>
 #include <CORE/InfoStructure.hpp>
 #include <CORE/InfoClass.hpp>
 #include <CORE/Formatter.hpp>

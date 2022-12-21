@@ -8,9 +8,9 @@ MCHEmul::Screen::Screen (const std::string& n, int id,
 	: MCHEmul::IODevice (MCHEmul::IODevice::Type::_OUTPUT, id, attrs),
 	  _screenName (n), 
 	  _screenColumns (sc), _screenRows (sr), _visibilityFactor (vF), 
-	  _hertzs (hz),
-	  _window (nullptr), _renderer (nullptr), _texture (nullptr), _graphicalChip (nullptr),
-	  _refreshRate (0)
+	  _hertzs (hz), _clock ((unsigned int) hz /** integer. */),
+	  _graphicalChip (nullptr),
+	  _window (nullptr), _renderer (nullptr), _texture (nullptr)
 {
 	assert (_hertzs > 0);
 
@@ -27,8 +27,6 @@ MCHEmul::Screen::Screen (const std::string& n, int id,
 	_renderer = SDL_CreateRenderer (_window, -1, SDL_RENDERER_ACCELERATED);
 	_texture  = SDL_CreateTexture	
 		(_renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, _screenColumns, _screenRows);
-
-	_refreshRate = 1 / _hertzs;
 }
 
 // ---
@@ -57,14 +55,21 @@ bool MCHEmul::Screen::simulate ()
 
 	if (_graphicalChip -> graphicsReady ())
 	{
-		SDL_UpdateTexture (_texture, nullptr, 
-			_graphicalChip -> screenMemory () -> frameData (), 
-			(int) _graphicalChip -> screenMemory () -> columns () * sizeof (unsigned int)); // The link with the chip...
-		SDL_RenderClear (_renderer);
-		SDL_RenderCopy (_renderer, _texture, nullptr, nullptr);
-		SDL_RenderPresent (_renderer);
+		if (!_clock.tooQuick ())
+		{
+			SDL_UpdateTexture (_texture, nullptr, 
+				_graphicalChip -> screenMemory () -> frameData (), 
+				(int) _graphicalChip -> screenMemory () -> columns () * sizeof (unsigned int)); // The link with the chip...
+			SDL_RenderClear (_renderer);
+			SDL_RenderCopy (_renderer, _texture, nullptr, nullptr);
+			SDL_RenderPresent (_renderer);
 
-		_graphicalChip -> setGraphicsReady (false);
+			_graphicalChip -> setGraphicsReady (false);
+
+			_clock.countCycles (1);
+		}
+		else
+			_clock.countCycles (0);
 	}
 
 	return (true);

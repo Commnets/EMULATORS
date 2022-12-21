@@ -15,6 +15,7 @@
 #define __MCHMUL_COMPUTER__
 
 #include <CORE/global.hpp>
+#include <CORE/Clock.hpp>
 #include <CORE/CPU.hpp>
 #include <CORE/Chip.hpp>
 #include <CORE/GraphicalChip.hpp>
@@ -51,7 +52,7 @@ namespace MCHEmul
 		/** The computer owns the different elements.
 			The devices mandatory are the screen and the InputOSDevice. 
 			This is verified at construction level. \n
-			@param	spd		the number of cycles per second of the clock. */
+			@param	cs		the number of cycles per second of the clock. */
 		Computer (CPU* cpu, const Chips& c, Memory* m, const IODevices& d, unsigned int cs, const Attributes& attrs = { });
 
 		Computer (const Computer&) = delete;
@@ -157,7 +158,7 @@ namespace MCHEmul
 			The method gets the number of clock cycles lasted to decide whether wait or not. \n
 			emeber that gis method has to be invoked per loop. */
 		bool tooQuickAfter (unsigned int cC)
-							{ return (_clock.tooQuickAfter (cC)); }
+							{ _clock.countCycles (cC); return (_clock.tooQuick ()); }
 
 		bool exit () const
 							{ return (_exit); }
@@ -232,47 +233,6 @@ namespace MCHEmul
 		virtual bool executeAction (unsigned int& lA, unsigned int at, unsigned int a);
 
 		protected:
-		/** Used internally to align the speed to the microprocessor 
-			to the speed of the code in this machine. */
-		class Clock final
-		{
-			public:
-			Clock () = delete;
-
-			Clock (unsigned int cS)
-				: _cyclesPerSecond (cS),
-				  _realCyclesPerSecond (0),
-				  _realCyclesPerSecondTmp (0), 
-				  _realCyclesPerSecondCalculated (false),
-				  _iClock ()
-							{ assert (_cyclesPerSecond > 0); }
-
-			Clock (const Clock&) = default;
-
-			Clock& operator = (const Clock&) = default;
-
-			unsigned int cyclesPerSecond () const
-							{ return (_cyclesPerSecond); }
-			unsigned int realCyclesPerSecond () const
-							{ return (_realCyclesPerSecond); }
-
-			/** Just to put everything at the beginning. */
-			void start ();
-			/** The method will tell us whether after executing cC clocks
-				the speed is being too much!. \n
-				This method has to be invoked in every loop for the right emulation. */
-			bool tooQuickAfter (unsigned int cC) const;
-
-			private:
-			unsigned int _cyclesPerSecond;
-
-			// Implementation
-			mutable unsigned int _realCyclesPerSecond;
-			mutable unsigned int _realCyclesPerSecondTmp;
-			mutable bool _realCyclesPerSecondCalculated;
-			mutable std::chrono::time_point <std::chrono::steady_clock> _iClock;
-		};
-			
 		CPU* _cpu;
 		Chips _chips; 
 		Memory* _memory;
@@ -294,7 +254,7 @@ namespace MCHEmul
 		Screen* _screen;
 		InputOSSystem* _inputOSSystem;
 		GraphicalChip* _graphicalChip;
-		Clock _clock; // To maintain the sped of the compute...
+		Clock _clock; // To maintain the sped of the computer...
 		unsigned int _lastAction;
 	};
 }

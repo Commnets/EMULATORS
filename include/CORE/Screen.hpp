@@ -16,6 +16,7 @@
 
 #include <CORE/IO.hpp>
 #include <CORE/GraphicalChip.hpp>
+#include <CORE/Clock.hpp>
 #include <SDL.h>
 
 namespace MCHEmul
@@ -77,20 +78,17 @@ namespace MCHEmul
 		const unsigned int _screenRows;
 		const unsigned int _visibilityFactor;
 		const double _hertzs;
+		/** The clock to control the frenquency to print out the screen. */
+		Clock _clock;
 
-		protected:
+		// Implementation
 		/** Set when initialize after assigning the chips.
 			The graphical chip managing the graphical memory. 
 			That the screen displays. */
 		GraphicalChip* _graphicalChip;
-
-		// Implementation
 		SDL_Window* _window;
 		SDL_Renderer* _renderer;
 		SDL_Texture* _texture;
-
-		/** At construction time, to speed up calculus. */
-		double _refreshRate;
 	};
 }
 

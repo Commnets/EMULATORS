@@ -74,6 +74,7 @@ void MCHEmul::TestCPUSpeed::testInstructionSet (std::ostream& o, unsigned int nt
 	unsigned int* clks = new unsigned int [nt];
 
 	// Now test all instructions...
+	std::map <unsigned int, double> _speedPerInstruction;
 	for (const auto& i : _cpu -> instructions ())
 	{
 		for (size_t ct = 0; ct < nt; clks [ct++] = 0);
@@ -101,6 +102,7 @@ void MCHEmul::TestCPUSpeed::testInstructionSet (std::ostream& o, unsigned int nt
 		double a = 0.0f; for (size_t ct = 0; ct < nt; a += (double) clks [ct++]); a /= (double) nt;
 		if ((unsigned int) a < minSpeed) { minSpeed = (unsigned int) a; minInst = instTxt; }
 		if ((unsigned int) a > maxSpeed) { maxSpeed = (unsigned int) a; maxInst = instTxt; }
+		_speedPerInstruction [i.second -> code ()] = a;
 		o << instTxt << MCHEmul::_TABS.substr (0, 4 - (instTxt.length () >> 3)) 
 		  << (unsigned int) a << " clks/s" << std::endl;
 
@@ -113,7 +115,8 @@ void MCHEmul::TestCPUSpeed::testInstructionSet (std::ostream& o, unsigned int nt
 	o << std::endl;
 	o << "Quickest Instruction: " << maxInst << " => " + std::to_string (maxSpeed) + " clks/s" << std::endl;
 	o << "Slowest Instruction:  " << minInst << " => " + std::to_string (minSpeed) + " clks/s" << std::endl;
-	o << "Average speed: " << std::to_string ((maxSpeed + minSpeed) >> 1) << " clks/s" << std::endl;
+	double av = 0.0f; for (const auto& i : _speedPerInstruction) av += i.second; av /= (double) _speedPerInstruction.size ();
+	o << "Average speed: " << std::to_string (av) << " clks/s" << std::endl;
 }
 
 // ---

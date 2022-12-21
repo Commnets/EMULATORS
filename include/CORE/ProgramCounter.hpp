@@ -22,10 +22,11 @@ namespace MCHEmul
 	class ProgramCounter final
 	{
 		public:
-		ProgramCounter (unsigned int sz)
+		ProgramCounter (size_t sz)
 			: _size (sz),
+			  _maxValue ((unsigned int) 1 << (8 * sz)),
 			  _internalRepresentation (0)
-							{ assert (_size <= (unsigned int) sizeof (unsigned int)); }
+							{ assert (_size <= sizeof (unsigned int)); }
 
 		ProgramCounter (const ProgramCounter&) = default;
 
@@ -76,13 +77,13 @@ namespace MCHEmul
 
 		private:
 		void adjust ()
-							{ unsigned int max = 1 << (8 * _size); 
-							  if (_internalRepresentation >= max) _internalRepresentation -= max; }
+							{ if (_internalRepresentation >= _maxValue) _internalRepresentation -= _maxValue; }
 
 		private:
-		unsigned int _size;
+		size_t _size;
 
 		// Implementation
+		const unsigned int _maxValue = 0; // Adjusted at construction time...
 		unsigned int _internalRepresentation;
 	};
 }
