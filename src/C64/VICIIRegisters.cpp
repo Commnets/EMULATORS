@@ -165,8 +165,16 @@ void C64::VICIIRegisters::setValue (size_t p, const MCHEmul::UByte& v)
 			break;
 
 		// VICIRQ: VIC Interrrupt Flag Register
+		// When setting it could be useful to clean up IRQ launched (if any)
 		case 0x19:
-			/** Only make sense when reading. */
+			{
+				if (v.bit (0))_rasterAtLineIRQHappened = false; // clean up the latches...
+				if (v.bit (1)) _spritesCollisionWithDataIRQHappened = false;
+				if (v.bit (2)) _spritesCollisionIRQHappened = false;
+				if (v.bit (3)) _lightPenOnScreenIRQHappened = false;
+				/** bits from 4 to 7 are not used. */
+			}
+
 			break;
 	
 		// IRQMSK: IRQ Mask Register
@@ -176,7 +184,8 @@ void C64::VICIIRegisters::setValue (size_t p, const MCHEmul::UByte& v)
 				_spriteCollisionWithDataIRQActive = v.bit (1);
 				_spriteCollisionsIRQActive = v.bit (2);
 				_lightPenIRQActive = v.bit (3);
-				/** bites 4 - 7 are not used. */
+				/** bites 4 - 6 are not used. */
+				/** bit 7 is always "ora" of bites from 0 to 3. */
 			}
 
 			break;
@@ -216,7 +225,7 @@ void C64::VICIIRegisters::setValue (size_t p, const MCHEmul::UByte& v)
 		// EXTCOLOR: Border Color Register
 		case 0x20:
 			{
-				_borderColor = v.value ();
+				_foregroundColor = v.value ();
 			}
 
 			break;
@@ -366,12 +375,13 @@ const MCHEmul::UByte& C64::VICIIRegisters::readValue (size_t p) const
 		case 0x19:
 			{
 				result = MCHEmul::UByte::_1; 
-				result.setBit (0, _rasterAtIRQLine);
-				result.setBit (1, _spritesCollisionWithDataHappened);
-				result.setBit (2, _spritesCollisionHappened);
-				result.setBit (3, _lightPenOnScreenHappened);
+				result.setBit (0, _rasterAtLineIRQHappened);
+				result.setBit (1, _spritesCollisionWithDataIRQHappened);
+				result.setBit (2, _spritesCollisionIRQHappened);
+				result.setBit (3, _lightPenOnScreenIRQHappened);
 				/** bits 4, 5, and 6 are not used, and always to 1. */
-				result.setBit (7, _vicIItoGenerateIRQ);
+				result.setBit (7, _rasterAtLineIRQHappened || _spritesCollisionWithDataIRQHappened || 
+								  _spritesCollisionIRQHappened || _lightPenOnScreenIRQHappened);
 			}
 
 			break;
@@ -517,6 +527,9 @@ void C64::VICIIRegisters::initializeInternalValues ()
 	// _bitmapMemory	= MCHEmul::Address ({ 0x00, 0x00 }, false);
 	setValue (0x18, MCHEmul::UByte (0x14));
 
+	// No IRQ have been launched!
+	setValue (0x19, MCHEmul::UByte::_FF);
+
 	// _rasterIRQActive = false;
 	// _spriteCollisionWithDataIRQActive = false;
 	// _spriteCollisionsIRQActive = false;
@@ -532,7 +545,7 @@ void C64::VICIIRegisters::initializeInternalValues ()
 	// _spriteDoubleWidth = std::vector <bool> (8, false);
 	setValue (0x1c, MCHEmul::UByte::_0);
 		
-	// _borderColor = 0x0000;
+	// _foregroundColor = 0x0000;
 	setValue (0x20, MCHEmul::UByte::_0);
 	
 	// _backgroundColor = std::vector <unsigned short> (4, 0x0000);
@@ -559,13 +572,12 @@ void C64::VICIIRegisters::initializeInternalValues ()
 	_currentRasterLine = 0x0000;
 	_currentLightPenHorizontalPosition = 0x0000;
 	_currentLightPenVerticalPosition = 0x0000;
-	_rasterAtIRQLine = false;
-	_spritesCollisionWithDataHappened = false;
+	_rasterAtLineIRQHappened = false;
+	_spritesCollisionWithDataIRQHappened = false;
 	_spriteCollisionWithDataHappened = std::vector <bool> (8, false), 
-	_spritesCollisionHappened = false;
+	_spritesCollisionIRQHappened = false;
 	_spriteCollisionHappened = std::vector <bool> (8, false);
-	_lightPenOnScreenHappened = false;
-	_vicIItoGenerateIRQ = false;
+	_lightPenOnScreenIRQHappened = false;
 
 	// This variable will be set from CIAII simulation method...
 	_bank = 0;

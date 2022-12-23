@@ -10,13 +10,11 @@ bool MCHEmul::CPUInterrupt::executeOver (MCHEmul::CPU* c, unsigned int& nC)
 
 	if (active () && isTime (c))
 	{
-		_lastClockCyclesExecuted = c -> clockCycles ();
-
-		executeOverImpl (c, nC);
-
 		setActive (false);
 
-		result = true;
+		_lastClockCyclesExecuted = c -> clockCycles ();
+
+		result = executeOverImpl (c, nC);
 	}
 
 	return (result);

@@ -351,7 +351,7 @@ void testAddress ()
 {
 	std::cout << "Testing Address" << std::endl;
 
-	MCHEmul::Address a ({ 0x00, 0xfA });
+	MCHEmul::Address a ({ 0x00, 0xfA }, false);
 	MCHEmul::Address b ({ 0x00, 0x05 }, false);
 
 	std::cout << "->The addresses to be used" << std::endl;

@@ -123,19 +123,25 @@ namespace MCHEmul
 			  _format (_BINARY)
 							{ }
 
+		UInt (const UByte& u, unsigned char f = _BINARY)
+			: _values ({ u }),
+			  _carry (false), _overflow (false),
+			  _format (f)
+							{ }
+
 		/** Always kept in Big-endian format. */
 		UInt (const UBytes& u, bool bE = true, unsigned char f = _BINARY)
 			: _values ((u.size () > 1 && !bE) ? u.reverse () : u),
 			  _carry (false), _overflow (false),
 			  _format (f)
-							{ assert (u.size () <= 4); }
+							{ }
 
 		/** Always kept in Big-endian format. */
 		UInt (const std::vector <UByte>& u, bool bE = true, unsigned char f = _BINARY)
 			: _values (u, bE),
 			  _carry (false), _overflow (false),
 			  _format (f)
-							{ assert (u.size () <= 4); }
+							{ }
 
 		/** From an unsigned int. */
 		UInt (unsigned int n)

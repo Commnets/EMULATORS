@@ -4,11 +4,11 @@
 // ---
 bool F6500::IRQInterrupt::isTime (MCHEmul::CPU* c) const
 {
-	return (!c -> statusRegister ().bitStatus ("I"));
+	return (!c -> statusRegister ().bitStatus (F6500::C6500::_IRQFLAG));
 }
 
 // ---
-void F6500::IRQInterrupt::executeOverImpl (MCHEmul::CPU* c, unsigned int& nC)
+bool F6500::IRQInterrupt::executeOverImpl (MCHEmul::CPU* c, unsigned int& nC)
 {
 	assert (c != nullptr);
 	assert (c -> memoryRef () != nullptr);
@@ -17,11 +17,13 @@ void F6500::IRQInterrupt::executeOverImpl (MCHEmul::CPU* c, unsigned int& nC)
 	MCHEmul::StatusRegister& st = c -> statusRegister ();
 	MCHEmul::ProgramCounter& pc = c -> programCounter ();
 	c -> memoryRef () -> stack () -> push (pc.asAddress ().bytes () /** First high, then low byte */);
-	c -> memoryRef () -> stack () -> push (st.valuesWithout ({ "B" })); // The break flag is not taken into account...
-	st.setBitStatus ("I", true); // No more interruptions so far...
+	c -> memoryRef () -> stack () -> push (st.values ()); // The break flag is not taken into account...
+	st.setBitStatus (F6500::C6500::_IRQFLAG, true); // No more interruptions so far...
 
 	pc.setAddress (MCHEmul::Address (c -> memoryRef () -> values 
 		(dynamic_cast <F6500::C6510*> (c) -> IRQVectorAddress (), 2), false /** Little - endian. */));
 
 	nC = 7; // 7 ticks has taken...
+
+	return (!c -> memoryRef () -> stack () -> overflow ());
 }

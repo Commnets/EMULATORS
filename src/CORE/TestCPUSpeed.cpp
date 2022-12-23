@@ -15,7 +15,7 @@ MCHEmul::TestCPUSpeed::~TestCPUSpeed ()
 }
 
 // ---
-unsigned int MCHEmul::TestCPUSpeed::clocksInASecondExcutingInstruction (const MCHEmul::UBytes& b) const
+unsigned int MCHEmul::TestCPUSpeed::clocksInASecondExcutingInstruction (const MCHEmul::UBytes& b, bool sM) const
 {
 	MCHEmul::Instruction* inst = 
 		_cpu -> instruction (MCHEmul::UInt 
@@ -37,9 +37,10 @@ unsigned int MCHEmul::TestCPUSpeed::clocksInASecondExcutingInstruction (const MC
 		// ...and located in the middle.
 		_memory -> stack () -> setPosition (_memory -> stack () -> position () / 2);
 
-		// Simulate read in memory, like the emulation of the CPU does...
-		_memory -> bytes (MCHEmul::Address (randomVector (_cpu -> architecture ().numberBytes ())), 
-			b.size () - _cpu -> architecture ().instructionLength ()); // Simulate and access to the memory...
+		// Simulate read in memory (if asked for), like the emulation of the CPU does...
+		if (sM)
+			_memory -> bytes (MCHEmul::Address (randomVector (_cpu -> architecture ().numberBytes ())), 
+				b.size () - _cpu -> architecture ().instructionLength ()); // Simulate and access to the memory...
 		// ...and then execute the instruction...
 		inst -> execute (b, _cpu, _memory, _memory -> stack ());
 		clks += inst -> clockCycles ();
@@ -52,7 +53,7 @@ unsigned int MCHEmul::TestCPUSpeed::clocksInASecondExcutingInstruction (const MC
 }
 
 // ---
-void MCHEmul::TestCPUSpeed::testInstructionSet (std::ostream& o, unsigned int nt, bool pS) const
+void MCHEmul::TestCPUSpeed::testInstructionSet (std::ostream& o, unsigned int nt, bool sM, bool pS) const
 {
 	static char _PROGRESS[4] { '\\', '|', '/', '-' };
 
@@ -94,7 +95,7 @@ void MCHEmul::TestCPUSpeed::testInstructionSet (std::ostream& o, unsigned int nt
 			b.insert (b.begin (), byInst.begin (), byInst.end ());
 
 			// Execute the text...
-			clks [ct] = clocksInASecondExcutingInstruction (MCHEmul::UBytes (b));
+			clks [ct] = clocksInASecondExcutingInstruction (MCHEmul::UBytes (b), sM);
 		}
 
 		// ..and manage the result...

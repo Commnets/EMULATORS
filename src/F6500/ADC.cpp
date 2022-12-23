@@ -10,8 +10,8 @@ bool F6500::ADC_General::executeWith (MCHEmul::UByte u)
 	// Calculate the addition...
 	unsigned char ft = st.bitStatus (F6500::C6500::_DECIMALFLAG) 
 		? MCHEmul::UInt::_PACKAGEDBCD : MCHEmul::UInt::_BINARY; // In BCD?
-	MCHEmul::UInt r = MCHEmul::UInt (a.values () /** 1 byte long. */, false, ft).
-		add (MCHEmul::UInt ({ u }, false, ft), st.bitStatus (F6500::C6500::_CARRYFLAG));
+	MCHEmul::UInt r = MCHEmul::UInt (a.values ()[0], ft).
+		add (MCHEmul::UInt (u, ft), st.bitStatus (F6500::C6500::_CARRYFLAG));
 	a.set (r.bytes ()); // The carry register is taken into account in the addition...
 
 	// Time of the status register...

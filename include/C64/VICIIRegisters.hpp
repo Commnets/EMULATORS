@@ -43,11 +43,14 @@ namespace C64
 		virtual size_t numberRegisters () const override
 							{ return (0x40); }
 
-		unsigned char borderColor () const
-							{ return (_borderColor); }
+		// Managing the different attributes of the elements managed by VICII
+		// Foreground (border) & background.
+		unsigned char foregroundColor () const
+							{ return (_foregroundColor); }
 		unsigned char backgroundColor (size_t p = 0) const
 							{ return ( _backgroundColor [p]); }
 
+		// Sprite attributes
 		unsigned short spriteXCoord (size_t p) const
 							{ return (_spriteXCoord [p]); }
 		unsigned char spriteYCoord (size_t p) const
@@ -67,6 +70,7 @@ namespace C64
 		bool spriteToForegroundPriority (size_t p) const
 							{ return (_spriteToForegroundPriority [p]); }
 		
+		// ScrollX & ScrollY.
 		unsigned char verticalScrollPosition () const
 							{ return (_verticalScrollPosition); }
 		unsigned char horizontalScrollPosition () const
@@ -81,6 +85,7 @@ namespace C64
 		bool videoResetActive () const
 							{ return (_videoResetActive); }
 
+		// Graphical modes.
 		bool graphicBitModeActive () const
 							{ return (_graphicBitModeActive); }
 		bool graphicExtendedColorTextModeActive () const
@@ -92,20 +97,65 @@ namespace C64
 		bool textMode () const
 							{ return (_textMode); }
 
+		// IRQs...
+		// To know whether a IRQ could be generated in different scenarios...
+		// To generate the IRQ the codition has to be reached
+		// To activate or desactivate this sources of IRQ the register $d01A has to be accessed...
+		/** IRQ launched when raster was at line...? */
 		bool rasterIRQActive () const
 							{ return (_rasterIRQActive); }
+		/** IRQ launched when a sprite collisions with data? */
 		bool spriteCollisionWithDataIRQActive () const
 							{ return (_spriteCollisionWithDataIRQActive); }
+		/** IRQ launched when a sprite collisions with other? */
 		bool spriteCollisionsIRQActive () const
 							{ return (_spriteCollisionsIRQActive); }
+		/** IRQ launched when lightpen touche the screen? */
 		bool lightPenIRQActive () const
 							{ return (_lightPenIRQActive); }
-
+		
+		/** Raster line number when the VICII (if active) will generate an IRQ. */
 		unsigned short IRQRasterLineAt () const
 							{ return (_IRQRasterLineAt);  }
 
+		// Activate the IRQ. 
+		// All these methods are called from VICII simulation...
+		void activateRasterAtLineIRQ ()
+							{ _rasterAtLineIRQHappened = true; }
+		void activateSpritesCollisionWithDataIRQ ()
+							{ _spritesCollisionWithDataIRQHappened = true; }
+		void setSpriteCollisionWithDataHappened (size_t p)
+						{ _spriteCollisionWithDataHappened [p] = true; }
+		void activateSpritesCollisionIRQ ()
+							{ _spritesCollisionIRQHappened = true; }
+		void setSpriteCollision (size_t p)
+							{ _spriteCollisionHappened [p] = true; }
+		void activateLightPenOnScreenIRQ ()
+							{ _lightPenOnScreenIRQHappened = true; }
+		/** To know whether the VICII might launch a IRQ (from its internal perspective only).
+			The IRQ will be or not actually launched depending on other elements like whether the IRQ flag is or not active. */
+		bool hasVICIIToGenerateIRQ () const
+							{ return ((_rasterAtLineIRQHappened && _rasterIRQActive) || 
+									  (_spritesCollisionWithDataIRQHappened && _spriteCollisionWithDataIRQActive) || 
+									  (_spritesCollisionIRQHappened && _spriteCollisionsIRQActive) || 
+									  (_lightPenOnScreenIRQHappened && _lightPenIRQActive)); }
+
+		// Temporal variables to know, when an raster or lightpen IRQ happened, where was the element that generated that.
+		// This temporal variables are set from the VICII directly...
+		unsigned short currentRasterLine () const
+							{ return (_currentRasterLine); }
+		void setCurrentRasterLine (unsigned short rL)
+							{ _currentRasterLine = rL; }
+		unsigned short currentLightPenHorizontalPosition () const
+							{ return (_currentLightPenHorizontalPosition); }
+		unsigned short currentLightPenVerticalPosition () const
+							{ return (_currentLightPenVerticalPosition); }
+		void setCurrentLightPenPosition (unsigned char x, unsigned char y)
+							{ _currentLightPenHorizontalPosition = x; _currentLightPenVerticalPosition = y; }
+
+		// Memory address for the different elements managed from VICII
 		const MCHEmul::Address initAddressBank () const
-							{ return (MCHEmul::Address ({ 0x00, 0x00 }) + 
+							{ return (MCHEmul::Address ({ 0x00, 0x00 }, false) + 
 								((size_t) 0x4000 /* 16284 = 16k */ * _bank) /** VICII Only addresses 16k. */); }
 		const MCHEmul::Address charDataMemory () const
 							{ return (_charDataMemory + ((size_t) 0x4000 * _bank)); }
@@ -116,49 +166,8 @@ namespace C64
 		const MCHEmul::Address spritePointersMemory () const
 							{ return (screenMemory () + (size_t) 0x03f8); /** The last 8 bytes of the screen memory. */ }
 
-		// Managed from VICII Chip Emulator
-		// The VICII chip also uses this object as a temporary storage
-		unsigned short currentRasterLine () const
-							{ return (_currentRasterLine); }
-		void setCurrentRasterLine (unsigned short rL)
-							{ _currentRasterLine = rL; }
-
-		unsigned short currentLightPenHorizontalPosition () const
-							{ return (_currentLightPenHorizontalPosition); }
-		unsigned short currentLightPenVerticalPosition () const
-							{ return (_currentLightPenVerticalPosition); }
-		void setCurrentLightPenPosition (unsigned char x, unsigned char y)
-							{ _currentLightPenHorizontalPosition = x; _currentLightPenVerticalPosition = y; }
-
-		bool rasterAtIRQLine () const
-							{ return (_rasterAtIRQLine); }
-		void setRasterAtLine (bool rL)
-							{ _rasterAtIRQLine = rL; }
-		bool spritesCollisionWithDataHappened () const
-							{ return (_spritesCollisionWithDataHappened); }
-		void setSpritesCollisionWithData (bool c)
-							{ _spritesCollisionWithDataHappened = c; }
-		bool spriteCollisionWithDataHappened (size_t p) const
-							{ return (_spriteCollisionWithDataHappened [p]); }
-		void setSpriteCollisionWithDataHappened (size_t p, bool c)
-						{ _spriteCollisionWithDataHappened [p] = c; }
-		bool spritesCollisionHappened () const
-							{ return (_spritesCollisionHappened); }
-		void setSpritesCollision (bool c)
-							{ _spritesCollisionHappened = c; }
-		bool spriteCollisionHappened (size_t p) const
-							{ return (_spriteCollisionHappened [p]); }
-		void setSpriteCollision (size_t p, bool c)
-							{ _spriteCollisionHappened [p] = c; }
-		bool lightPenOnScreenHappened () const
-							{ return (_lightPenOnScreenHappened); }
-		void setLightPenOnScreen (bool l)
-							{ _lightPenOnScreenHappened = l; }
-		bool vicIItoGenerateIRQ () const
-							{ return (_vicIItoGenerateIRQ); }
-		void setVicIItoGenerateIRQ (bool v)
-							{ _vicIItoGenerateIRQ = v; }
-
+		// Active VIVII bank. VICII only seed 16k out of the 64k, 
+		// so 4 different banks (from 0 to 3) can be managed...
 		unsigned char bank () const
 							{ return (_bank); }
 		void setBank (unsigned char bk)
@@ -188,7 +197,7 @@ namespace C64
 		private:
 		// The VICII registers
 		/** Screen related variables. */
-		unsigned char _borderColor;
+		unsigned char _foregroundColor;
 		std::vector <unsigned char> _backgroundColor;
 		/** Sprite related variables. */
 		std::vector <unsigned short> _spriteXCoord; 
@@ -218,22 +227,22 @@ namespace C64
 		bool _lightPenIRQActive;
 		/** Raster Control. */
 		unsigned short _IRQRasterLineAt; // To define where to launch the IRQ. When reading therre is other variable...
+
+		// Some of this variables are set by the emulation of the VICII
+		// The VICII chip also uses this object as a temporary storage
+		unsigned short _currentRasterLine; // Where the raster is now...
+		unsigned short _currentLightPenHorizontalPosition, _currentLightPenVerticalPosition; // Where the light pen is...
+		bool _rasterAtLineIRQHappened; // Whether the raster line has reached the one defined to generate an IRQ.
+		bool _spritesCollisionWithDataIRQHappened; // Whether a collision among sprites and data has happened. The detail is next.
+		mutable std::vector <bool> _spriteCollisionWithDataHappened;
+		bool _spritesCollisionIRQHappened; // Whether a collision among sprites has happened. The detail is next.
+		mutable std::vector <bool> _spriteCollisionHappened;
+		bool _lightPenOnScreenIRQHappened; // Whether the lightpen is on the screen.
+
 		/** Location of the Graphical Memory. */
 		MCHEmul::Address _charDataMemory; // Info about the characters (the address with in the first 16k)
 		MCHEmul::Address _screenMemory; // Where the characters to draw are (The address within the first 16k)
 		MCHEmul::Address _bitmapMemory; // Where the bitmap to draw is (The address within the first 16k)
-
-		// Some of this variables are set by the emulation of the VICII
-		// The VICII chip also uses this object as a temporary storage
-		unsigned short _currentRasterLine;
-		unsigned short _currentLightPenHorizontalPosition, _currentLightPenVerticalPosition;
-		bool _rasterAtIRQLine;
-		bool _spritesCollisionWithDataHappened; /** In general. */
-		mutable std::vector <bool> _spriteCollisionWithDataHappened; // Are modified when reading...
-		bool _spritesCollisionHappened; /** In general. */
-		mutable std::vector <bool> _spriteCollisionHappened;
-		bool _lightPenOnScreenHappened;
-		bool _vicIItoGenerateIRQ;
 
 		/** A very important variable comming from other chip. \n
 			Can be 0, 1, 2 or 3 and it affects to the determination of any memory address. 

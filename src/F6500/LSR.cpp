@@ -7,7 +7,7 @@ bool F6500::LSR_General::executeOn (const MCHEmul::Address& a)
 	// Read the value, makes the operation and set it back!
 	MCHEmul::UByte v = memory () -> values (a, 1)[0]; // 1 byte long always
 	bool c = v.shiftRightC (false /** 0 is put into */, 1); // Keeps the status of the last bit to actualize later the carry flag
-	memory () -> set (a, { v });
+	memory () -> set (a, v);
 
 	// Time of the status register...
 	MCHEmul::StatusRegister& st = cpu () -> statusRegister ();

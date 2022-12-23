@@ -37,12 +37,14 @@ namespace MCHEmul
 
 		/** Number of clocks cycles lasted in a second executing the same instruction. \n
 			The instruction is read from the memory and 
-			all info about it has to be in the data received as parameter. */
-		unsigned int clocksInASecondExcutingInstruction (const UBytes& b) const;
+			all info about it has to be in the data received as parameter. \n
+			The parameter sM is true when an access to memory has to be simulated too. */
+		unsigned int clocksInASecondExcutingInstruction (const UBytes& b, bool sM = false) const;
 
 		/** To ckeck the full set of instructions. 
-			The method receives also the number of times to test every instruction. */
-		void testInstructionSet (std::ostream& o, unsigned int nt = 1, bool pS = false) const;
+			The method receives also the number of times to test every instruction,
+			Whether to simulate access to memory and whether to output the status of the cpu after test. */
+		void testInstructionSet (std::ostream& o, unsigned int nt = 1, bool sM = false, bool pS = false) const;
 
 		private:
 		std::vector <UByte> randomVector (size_t i) const;

@@ -5,7 +5,7 @@
 bool F6500::DEC_General::executeOn (const MCHEmul::Address& a)
 {
 	// Read the value, makes the operation and sets it back...
-	MCHEmul::UInt v = MCHEmul::UInt ((memory () -> values (a, 1))) - MCHEmul::UInt::_1;
+	MCHEmul::UInt v = MCHEmul::UInt ((memory () -> values (a, 1)[0])) - MCHEmul::UInt::_1;
 	// A carry could be generated, but it will be ignored...
 	memory () -> set (a, v.bytes ()); // 1 byte long always
 

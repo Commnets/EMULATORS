@@ -29,7 +29,7 @@ C64::VICII::RasterData::RasterData (
 				  _maxPositions (mp),
 				  _positionsToReduce1 (pr1), _positionsToReduce2 (pr2),
 				  _currentPosition (fp),
-				  _displayZoneReducted (false)
+				  _displayZoneReduced (false)
 {
 	_firstPosition_0				= toBase0 (_firstPosition);
 	_firstVisiblePosition_0			= toBase0 (_firstVisiblePosition);
@@ -69,10 +69,10 @@ bool C64::VICII::RasterData::add (unsigned short i)
 // ---
 void C64::VICII::RasterData::reduceDisplayZone (bool s)
 {
-	if (_displayZoneReducted == s)
+	if (_displayZoneReduced == s)
 		return; // If nothing changes, nothing to do...
 
-	if (_displayZoneReducted = s)
+	if (_displayZoneReduced = s)
 	{
 		_firstDisplayPosition	+= _positionsToReduce1;
 		_firstDisplayPosition_0	+= _positionsToReduce1;
@@ -189,9 +189,6 @@ bool C64::VICII::simulate (MCHEmul::CPU* cpu)
 		{ return (_videoActive && _raster.isInPotentialBadLine () && 
 			((_raster.currentLine () - 0x03) & 0x07 /** The three last bits. */) == _VICIIRegisters -> verticalScrollPosition ()); };
 
-	if (_VICIIRegisters -> vicIItoGenerateIRQ ())
-		cpu -> interrupt (F6500::IRQInterrupt::_ID) -> setActive (true);
-
 	// Reduce the visible zone if any... The info is passed to the raster!
 	_raster.reduceDisplayZone
 		(!_VICIIRegisters -> textDisplay25RowsActive (), !_VICIIRegisters -> textDisplay40ColumnsActive ());
@@ -216,13 +213,8 @@ bool C64::VICII::simulate (MCHEmul::CPU* cpu)
 			}
 
 			// At the beginning of a new line, an interrupt could be generated...
-			if (_VICIIRegisters -> rasterIRQActive () && 
-				_raster.currentLine () == _VICIIRegisters -> IRQRasterLineAt ())
-			{
-				_VICIIRegisters -> setRasterAtLine (true); // The interrupt has been issued!
-
-				cpu -> interrupt (F6500::IRQInterrupt::_ID) -> setActive (true);
-			}
+			if (_raster.currentLine () == _VICIIRegisters -> IRQRasterLineAt ())
+				_VICIIRegisters -> activateRasterAtLineIRQ ();
 
 			_isNewRasterLine = false;
 		}
@@ -239,7 +231,7 @@ bool C64::VICII::simulate (MCHEmul::CPU* cpu)
 
 			// Draws the border...
 			screenMemory () -> setHorizontalLine ((size_t) cav, (size_t) rv,
-				(cav + 8) > _raster.visibleColumns () ? (_raster.visibleColumns () - cav) : 8, _VICIIRegisters -> borderColor ());
+				(cav + 8) > _raster.visibleColumns () ? (_raster.visibleColumns () - cav) : 8, _VICIIRegisters -> foregroundColor ());
 
 			// When the raster is in the display zone but in the screen vertical zone too
 			// and for sure the vide is active, then everything has to happen!
@@ -301,6 +293,11 @@ bool C64::VICII::simulate (MCHEmul::CPU* cpu)
 
 	// To store back the info in the VIC Registers...
 	_VICIIRegisters -> setCurrentRasterLine (_raster.currentLine ()); 
+
+	// Is it needed to generate any IRQ?
+	// It is here after the full simulation of the VICII (raster, collisions and lightpen)
+	if (_VICIIRegisters -> hasVICIIToGenerateIRQ ())
+		cpu -> interrupt (F6500::IRQInterrupt::_ID) -> setActive (true);
 
 	// Just to highlight (in black) the borders of the visible zone...
 	if (_drawBorder)
@@ -441,17 +438,35 @@ void C64::VICII::drawGraphicsAndDetectCollisions (const C64::VICII::DrawContext&
 	// First among the graphics and the sprites
 	bool cGS = false;
 	for (size_t i = 0; i < _spritesEnabled.size (); i++)
-		_VICIIRegisters -> setSpriteCollisionWithDataHappened 
-			(_spritesEnabled [i], cGS |= (colSprites [_spritesEnabled [i]].value () & colGraphics.value ()) != 0x00);
-	_VICIIRegisters -> setSpritesCollisionWithData (cGS);
+	{ 
+		if ((colSprites [_spritesEnabled [i]].value () & 
+			 colGraphics.value ()) != 0x00)
+		{
+			cGS = true;
+
+			_VICIIRegisters -> setSpriteCollisionWithDataHappened (_spritesEnabled [i]);
+		}
+	}
+
+	if (cGS) _VICIIRegisters -> activateSpritesCollisionWithDataIRQ ();
+	
 	// ...and among sprites...
 	bool cSS = false;
 	for (size_t i = 0; i < _spritesEnabled.size (); i++)
+	{
 		for (size_t j = i + 1; j < _spritesEnabled.size (); j++)
-			_VICIIRegisters -> setSpriteCollision 
-				(_spritesEnabled [i], 
-				 cSS |= (colSprites [_spritesEnabled [i]].value () & colSprites [_spritesEnabled [j]].value ()) != 0x00);
-	_VICIIRegisters -> setSpritesCollision (cSS);
+		{
+			if ((colSprites [_spritesEnabled [i]].value () & 
+				 colSprites [_spritesEnabled [j]].value ()) != 0x00)
+			{ 
+				cSS = true;
+
+				_VICIIRegisters -> setSpriteCollision (_spritesEnabled [i]);
+			}
+		}
+	}
+
+	if (cSS) _VICIIRegisters -> activateSpritesCollisionIRQ ();
 }
 
 // ---
@@ -732,31 +747,37 @@ MCHEmul::UByte C64::VICII::drawMonoColorSprite (int c, int r, size_t spr, const 
 	// Horizontal info about the sprite
 	unsigned short dW	= _VICIIRegisters -> spriteDoubleWidth (spr) ? 2 : 1;
 	unsigned short x	= _VICIIRegisters -> spriteXCoord (spr);
+	// Fix raster position in the raster line of the left up corner of sprite
+	// It can be negative if it is partially hidden...
+	int cX				= (int) x - 24; 
 	unsigned short wX	= 24 /** normal width in pixels. */ * dW;
 	unsigned short dW8	= 8 * dW; // 8 or 16
 	// Vertical info about the sprite
 	unsigned short dH	= _VICIIRegisters -> spriteDoubleHeight (spr) ? 2 : 1;
 	unsigned short y	= _VICIIRegisters -> spriteYCoord (spr);
+	// Fix raster line of the left up corner of sprite
+	// It can be negative if it is partially hidden...
+	int rY				= (int) y - 50;
 	unsigned short wY	= 21 /** normal height in pixels. */ * dH;
 
-	if (r < (int) y || r >= (int) (y + wY))
+	if (r < rY || r >= (rY + (int) wY))
 		return (result); // Not visible in the vertical zone...
-	if ((c + 8 /** pixels */) < (int) x || c >= (int) (x + wX))
+	if ((c + 8 /** pixels */) < cX || c >= (cX + (int) wX))
 		return (result); // Not visible in the horizontal zone...
 
 	for (unsigned int i = 0; 
 			i < 8 /** always to draw 8 pixels */; i += dW /** the size of the pixels block. */)
 	{
-		size_t pp = (c + i);
-		if (pp < (size_t) x)
+		int pp = (c + (int) i);
+		if (pp < cX)
 			continue; // Not visible...
-		if (pp >= (size_t) (x + wX))
+		if (pp >= (cX + (int) wX))
 			break; // No more draws...
 
 		// To determine the initial byte (iBy) and bit (iBt) with the info about the sprite...
 		// The bit moves from 7 to 0, and the byte increases...
-		size_t iBy = ((r - y) / dH) * 3 /** 3 bytes per sprite row info. */ + ((pp - x) / dW8);
-		size_t iBt = 7 - (((pp - x) % dW8) / dW);
+		size_t iBy = (size_t) (((r - rY) / (int) dH) * 3 /** 3 bytes per sprite row info. */ + ((pp - cX) / (int) dW8));
+		size_t iBt = (size_t) (7 - (((pp - cX) % (int) dW8) / (int) dW));
 		bool dP = _graphicsSprites [spr][iBy].bit (iBt);
 		if (!dP)
 			continue; // The point is not visible...
@@ -784,30 +805,36 @@ MCHEmul::UByte C64::VICII::drawMultiColorSprite (int c, int r, size_t spr, const
 	// Horizontal info about the sprite
 	unsigned short dW	= _VICIIRegisters -> spriteDoubleWidth (spr) ? 2 : 1;
 	unsigned short x	= _VICIIRegisters -> spriteXCoord (spr);
+	// Fix raster position in the raster line of the left up corner of sprite
+	// It can be negative if it is partially hidden...
+	int cX				= (int) x - 24; 
 	unsigned short wX	= 24 /** normal width in pixels. */ * dW;
 	unsigned short dW8	= 8 * dW; // 8 or 16
 	// Vertical info about the sprite
 	unsigned short dH	= _VICIIRegisters -> spriteDoubleHeight (spr) ? 2 : 1;
 	unsigned short y	= _VICIIRegisters -> spriteYCoord (spr);
+	// Fix raster line of the left up corner of sprite
+	// It can be negative if it is partially hidden...
+	int rY				= (int) y - 50;
 	unsigned short wY	= 21 /** normal height in pixels. */ * dH;
 
-	if (r < (int) y || r >= (int) (y + wY))
+	if (r < rY || r >= (rY + (int) wY))
 		return (result); // Not visible in the vertical zone...
-	if ((c + 8 /** pixels */) < (int) x || c >= (int) (x + wX))
+	if ((c + 8 /** pixels */) < cX || c >= (cX + (int) wX))
 		return (result); // Not visible in the horizontal zone...
 
 	for (unsigned int i = 0; i < 8 /** pixels. */; i += (2 * dW))
 	{
-		size_t pp = (c + i);
-		if (pp < (size_t) x)
+		int pp = (c + (int) i);
+		if (pp < cX)
 			continue; // Not visible...
-		if (pp >= (size_t) (x + wX))
+		if (pp >= (cX + (int) wX))
 			break; // No more draws...
 
 		// To determine the initial byte (iBy) and bit (iBt) with the info about the sprite...
 		// The bit to select moves from 0 to 3, represeting the pair of bits (0,1), (2,3), (4,5), (6,7)
-		size_t iBy = ((r - y) / dH) * 3 /** 3 bytes per sprite row info. */ + ((pp - x) / dW8);
-		size_t iBt = 3 - (((pp - x) % dW8) / (2 * dW));
+		size_t iBy = (size_t) (((r - rY) / (int) dH) * 3 /** 3 bytes per sprite row info. */ + ((pp - cX) / (int) dW8));
+		size_t iBt = (size_t) (3 - (((pp - cX) % (int) dW8) / (2 * (int) dW)));
 		unsigned char cs = (_graphicsSprites [spr][iBy].value () >> (iBt << 1)) & 0x03;
 		if (cs == 0)
 			continue; // The point has no color...

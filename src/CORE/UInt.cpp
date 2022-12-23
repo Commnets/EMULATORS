@@ -4,8 +4,8 @@
 
 // ---
 MCHEmul::UInt::FormatManagers* MCHEmul::UInt::FormatManagers::_instance = nullptr;
-const MCHEmul::UInt MCHEmul::UInt::_0 = MCHEmul::UInt ({ MCHEmul::UByte::_0 }, false, false);
-const MCHEmul::UInt MCHEmul::UInt::_1 = MCHEmul::UInt ({ MCHEmul::UByte::_1 }, false, false);
+const MCHEmul::UInt MCHEmul::UInt::_0 = MCHEmul::UInt ({ MCHEmul::UByte::_0 }, true, MCHEmul::UInt::_BINARY);
+const MCHEmul::UInt MCHEmul::UInt::_1 = MCHEmul::UInt ({ MCHEmul::UByte::_1 }, true, MCHEmul::UInt::_BINARY);
 MCHEmul::UInt::FormatManagers MCHEmul::UInt::_formaters 
 	( { { MCHEmul::UInt::_BINARY, new MCHEmul::UInt::BinaryFormatManager },
 		{ MCHEmul::UInt::_PACKAGEDBCD, new MCHEmul::UInt::PackagedBCDFormatManager } } );

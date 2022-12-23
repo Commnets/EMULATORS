@@ -34,7 +34,7 @@ namespace C64
 						unsigned short fp,		// First position
 						unsigned short fvp,		// First Visible position
 						unsigned short fdp,		// First Display position
-						unsigned short ldp,		// Last Display Sync osition
+						unsigned short ldp,		// Last Display position
 						unsigned short lvp,		// Last Visible position
 						unsigned short lp,		// Last position
 						unsigned short mp,		// Maximum positions
@@ -107,7 +107,7 @@ namespace C64
 			/** The display zone will reduced in both sides by half of the _positionsToReduce value. */
 			void reduceDisplayZone (bool s);
 			bool isDisplayZoneReduced () const
-							{ return (_displayZoneReducted); }
+							{ return (_displayZoneReduced); }
 
 			void initialize ()
 							{ _currentPosition = _firstPosition; _currentPosition_0 = _firstPosition_0; }
@@ -157,7 +157,7 @@ namespace C64
 			// Implementation
 			unsigned short _currentPosition;
 			unsigned short _currentPosition_0;
-			bool _displayZoneReducted;
+			bool _displayZoneReduced;
 		};
 
 		/** The Raster simulates the set of sequential horizontal lines that, 

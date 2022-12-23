@@ -153,7 +153,8 @@ void MCHEmul::Assembler::CodeTemplateUseCommandParser::parse (MCHEmul::Assembler
 		}
 	}
 
-	pC -> _currentLine = ""; // The line is complete...
+	// If there is nothing strange the line to parser becomes then the new one...
+	pC -> _currentLine = (pC -> _linesPointer != pC -> _lines.end ()) ? MCHEmul::trim (*pC -> _linesPointer) : ""; 
 }
 
 // ---

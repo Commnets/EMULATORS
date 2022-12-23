@@ -57,8 +57,9 @@ namespace MCHEmul
 		/** To determine whether it is the time to execute the interruption. */
 		virtual bool isTime (CPU* c) const = 0;
 		/** To really execute the interrupt. \n 
-			This must be overloaded by the real interrupt. */
-		virtual void executeOverImpl (CPU* c, unsigned int& nC) = 0;
+			This must be overloaded by the real interrupt. \n
+			Returns when everything ok. */
+		virtual bool executeOverImpl (CPU* c, unsigned int& nC) = 0;
 
 		protected:
 		int _id;

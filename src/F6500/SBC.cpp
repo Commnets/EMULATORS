@@ -10,8 +10,8 @@ bool F6500::SBC_General::executeWith (MCHEmul::UByte u)
 	// Read the value, makes the operation and set it back!
 	unsigned char ft = st.bitStatus (F6500::C6500::_DECIMALFLAG) 
 		? MCHEmul::UInt::_PACKAGEDBCD : MCHEmul::UInt::_BINARY; // In BCD?
-	MCHEmul::UInt r = MCHEmul::UInt (a.values () /** 1 byte long. */, false, ft).
-		substract (MCHEmul::UInt ({ u }), st.bitStatus (F6500::C6500::_CARRYFLAG));
+	MCHEmul::UInt r = MCHEmul::UInt (a.values ()[0], ft).
+		substract (MCHEmul::UInt (u, ft), st.bitStatus (F6500::C6500::_CARRYFLAG));
 	a.set (r.bytes ()); // The carry is taken into account in the substraction
 
 	// Time of the status register...
