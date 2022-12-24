@@ -93,6 +93,17 @@ the other one is the address where to save that info from.#Specific commands for
 To load an assembler program.
 The program is loaded and compiled.
 Only the name of the program to load is needed.
+;LOADBINARY PRG
+To load an assembler program.
+The program is loaded in the zone of the memory defined within the file (header)
+Only the name of the program to load is needed.
+;LOADBLOCKS PRG
+To load an assembler program.
+The program is loaded by blocks in the zone of the memory defined within the file (header)
+Only the name of the program to load is needed.
+;DECOMPILE ADDRESS SIZE
+To decompile a zone of the memory.
+Te address where to start to decompile from and the number of bytes to decompile are requested.
 # Specific commands for C64 emulation
 ;VICII
 To know the status of the VICII chip, including raster and others.

@@ -131,11 +131,8 @@ std::string MCHEmul::Instruction::parametersAsString (size_t p, size_t nP, bool 
 }
 
 // ---
-std::string MCHEmul::Instruction::asString () const
+std::string MCHEmul::Instruction::asString (size_t iL) const
 {
-	if (_cpu == nullptr || _memory == nullptr || _stack == nullptr)
-		return (""); // If the transaction has not been executed...
-
 	if (internalStructure ()._error)
 		return (_iTemplate); // Nothing else is possible...
 
@@ -143,7 +140,7 @@ std::string MCHEmul::Instruction::asString () const
 
 	std::string toPrint = "";
 
-	size_t nPrm = _cpu -> architecture ().instructionLength ();
+	size_t nPrm = iL;
 	size_t lP = 0;
 	bool end = false;
 	while (!end)
@@ -161,8 +158,8 @@ std::string MCHEmul::Instruction::asString () const
 			std::map <unsigned char, Structure::Parameter::Type>::const_iterator iPrm = _TYPES.find (prm [0]);
 			bool bE = (iPrm != _TYPES.end ()) 
 				? (((*iPrm).second == Structure::Parameter::Type::_DIR ||
-				    (*iPrm).second == Structure::Parameter::Type::_ABSJUMP) 
-						? _cpu -> architecture ().bigEndian () : true)
+					(*iPrm).second == Structure::Parameter::Type::_ABSJUMP) 
+					? _cpu -> architecture ().bigEndian () : true)
 				: true;
 
 			toPrint += t.substr (lP, iPP - lP) + parametersAsString (nPrm, bPrm, bE);
@@ -179,6 +176,15 @@ std::string MCHEmul::Instruction::asString () const
 	}
 
 	return (toPrint);
+}
+
+// ---
+std::string MCHEmul::Instruction::asString () const
+{
+	if (_cpu == nullptr || _memory == nullptr || _stack == nullptr)
+		return (""); // If the transaction has not been executed...
+
+	return (asString (_cpu -> architecture ().instructionLength ()));
 }
 
 bool MCHEmul::Instruction::execute (const MCHEmul::UBytes& p, MCHEmul::CPU* c, MCHEmul::Memory* m, MCHEmul::Stack* stk)

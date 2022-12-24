@@ -118,10 +118,17 @@ namespace MCHEmul
 			When doesn't the parameter prms will have trash!. */
 		bool matchesWith (const std::string& i, Strings& prms);
 
+		// Managing the parameters...
 		const UBytes& parameters () const
 							{ return (_lastParameters); }
+		void setParameters (const UBytes& prms) // rarely used...
+							{ _lastParameters = prms; }
 		const UBytes parameters (size_t p, size_t nP = 1, bool bE = true) const;
 		std::string parametersAsString (size_t p, size_t nP = 1, bool bE = true) const; // The UBytes could grouped to get a parameter...
+		
+		/** To get the instruction as an string from a list of parameters. */
+		std::string asString (size_t iL) const;
+		/** To get the instruction as an string using the parameters inside. */
 		std::string asString () const;
 
 		/** To execute the instruction. It has to be redefined. \n

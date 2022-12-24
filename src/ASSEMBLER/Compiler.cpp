@@ -13,8 +13,10 @@ std::ostream& MCHEmul::Assembler::operator << (std::ostream& o, const MCHEmul::A
 		f = false;
 	}
 
-	o << ((c._instruction != nullptr) ? (" " + c._instruction -> iTemplate ()) : "");
-	o << ((c._label != "") ? " " : "") << c._label;
+	MCHEmul::Assembler::ByteCodeLine cL = c;
+	((MCHEmul::Instruction*) cL._instruction) -> setParameters (cL._bytes);
+	o << ((cL._instruction != nullptr) ? ("\t" + cL._instruction -> asString (1)) : "");
+	o << ((cL._label != "") ? "\t" : "") << cL._label;
 
 	return (o);
 }
@@ -152,13 +154,13 @@ MCHEmul::Assembler::ByteCode MCHEmul::Assembler::ByteCode::createFromMemory
 	{
 		MCHEmul::Instructions::const_iterator pi =
 			cpu -> instructions ().find (MCHEmul::UInt 
-				(m -> values (a, cpu -> architecture ().instructionLength ()).bytes ()).asUnsignedInt ());
+				(m -> values (a + i, cpu -> architecture ().instructionLength ()).bytes ()).asUnsignedInt ());
 		if (pi == cpu -> instructions ().end ())
 			break; // No sense to continue...the instruction doesn't exist...
 
 		const MCHEmul::Instruction* inst = (*pi).second;
 		result._lines.push_back (MCHEmul::Assembler::ByteCodeLine 
-			(a, m -> values (a, inst -> memoryPositions ()).bytes (), "" /** no label ever. */, inst, 0 /** no action. */));
+			(a + i, m -> values (a + i, inst -> memoryPositions ()).bytes (), "" /** no label ever. */, inst, 0 /** no action. */));
 		i += inst -> memoryPositions ();
 	}
 

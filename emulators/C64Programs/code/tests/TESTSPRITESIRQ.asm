@@ -19,7 +19,6 @@ IRQPRG1:					.SAVEREGISTERS
 							sta VICIIIRQ					; and another different one might come later...
 							jsr ACTUALIZESPRITES
 							.RECOVERREGISTERS
-							cli
 							rti
 
 * = $ca64

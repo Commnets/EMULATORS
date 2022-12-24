@@ -48,6 +48,9 @@ namespace MCHEmul
 		InfoStructure loadProgram (const std::string& nP) const;
 		/** To load a block of files. */
 		InfoStructure loadBlocksFile (const std::string& nP) const;
+		
+		/** To decompile the memory. */
+		InfoStructure decompileMemory (const std::string& prms);
 
 		protected:
 		/** The emulator over which the console work. */
