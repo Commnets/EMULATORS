@@ -8,13 +8,16 @@ bool MCHEmul::CPUInterrupt::executeOver (MCHEmul::CPU* c, unsigned int& nC)
 
 	bool result = false;
 
-	if (active () && isTime (c))
+	if (active ()) // Launched?
 	{
 		setActive (false);
 
-		_lastClockCyclesExecuted = c -> clockCycles ();
+		if (isTime (c)) // But allowed?
+		{ 
+			_lastClockCyclesExecuted = c -> clockCycles ();
 
-		result = executeOverImpl (c, nC);
+			result = executeOverImpl (c, nC);
+		}
 	}
 
 	return (result);

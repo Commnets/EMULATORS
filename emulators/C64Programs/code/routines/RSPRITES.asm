@@ -25,12 +25,15 @@ SPRITE_BLOCKVAR				= BLOCK_DATAZONE + 32
 ACTUALIZESPRITES:			lda SPRITE_ENABLEVAR
 							sta SPRITEENABLE
 							ldx #$07
-ACTUALIZESPRITES_LOOP:		lda SPRITE_BLOCKVAR,x
+ACTUALIZESPRITES_LOOP:		txa
+							asl
+							tay								; Y = X * 2
+							lda SPRITE_BLOCKVAR,x
 							sta SPRITEBASELOCATION,x		; The form of the sprite X
 							lda SPRITE_XPOSVAR,x
-							sta SPRITEBASEXPOS,x			; The X position of the sprite X.
+							sta SPRITEBASEXPOS,y			; The X position of the sprite X.
 							lda SPRITE_YPOSVAR,x
-							sta SPRITEBASEYPOS,x			; The Y position of the sprite X.
+							sta SPRITEBASEYPOS,y			; The Y position of the sprite X.
 							txa
 							tay
 							lda #$01

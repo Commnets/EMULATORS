@@ -15,9 +15,20 @@ BASE = $c000
 * = $ca00
 IRQPRG1_ADDRESS				= $ca00
 IRQPRG1:					.SAVEREGISTERS
+							lda #$ff						; Meaning the VICII IRQs are treated 
+							sta VICIIIRQ					; and another different one might come later...
 							jsr ACTUALIZESPRITES
 							.RECOVERREGISTERS
+							cli
 							rti
+
+* = $ca64
+BYTES $08													; Number of sprites managed by the program
+BYTES $40 $55 $6a $80 $95 $aa $c0 $d5						; Initial positions for the sprites (Y coordinate)
+BYTES $01 $02 $03 $04 $05 $07 $00 $09						; Color of the sprites
+NUMBERSPRITES				= $ca64
+SPRITESPOSITION				= $ca65
+SPRITESCOLOR				= $ca6d
 
 ; Define the sprite
 * = $0800
@@ -74,66 +85,88 @@ MAIN:						lda #$06
 							lda #$0e
 							sta VICIIFOREGROUND
 							jsr CLEARSCREEN
-; Set the behaviour attributes linked to the image of the sprite 0
-							lda #$01
-							sta SPRITE_ENABLEVAR			; Only the sprite 0 will be active.
-							lda #$20						; Initial block (definition) for of the sprite 0.
-							sta SPRITE_BLOCKVAR + 0
-							lda #$00						; Initial X position of the sprite 0.
-							sta SPRITE_XPOSVAR + 0
-							lda #$00						; No MSB in X position for sprite 0.
-							sta SPRITE_XMSBPOSVAR + 0
-							lda #$80						; Initial Y position of the sprite 0. Never changes.
-							sta SPRITE_YPOSVAR + 0			
-							lda #$03
-							sta TEMP03_DATA					; To count cycles before chainging the form of the alien.
-; Set the behaviour attributes not linked to the image of the sprite 0.
-							lda #$01
-							sta SPRITEBASECOLOR
-							lda #$01
-							sta SPRITEPRIORITY
-; Set the IRQ.
-							lda $01							; Changes to see the RAM instead the Kernel (and be able to modify it).
-							and #$fd
-							sta $01
+
+; Sets the IRQ
+							lda $01								; The IRQ vector is going to be managed direclty...
+							and #$fd							; ...so the Kernel is desactivated from 6510 view!
+							sta $01								; This shouldn't be done, but it just for testing purposes!
+							
 							lda #<IRQPRG1_ADDRESS
 							sta SETVICIIRIRQ_PRGHVAR
 							lda #>IRQPRG1_ADDRESS
 							sta SETVICIIRIRQ_PRGLVAR
-							lda #$00						; Last screen row...
+							lda #$f0
 							sta SETVICIIRIRQ_ROWLVAR
 							lda #$00
 							sta SETVICIIRIRQ_ROWHVAR
 							jsr SETVICIIRASTERIRQ
-; Now the program starts.
-MOVEALIEN:					ldx #$40
-							ldy #$05
-							jsr DELAY
-; Deals with the form of the alien.
-							dec TEMP03_DATA					; The form is changed every 5 pixels moved.
-							bne MOVE
-							lda #$03
+
+; Set the behaviour attributes linked to the image of the sprite 0
+							lda #$ff
+							sta SPRITE_ENABLEVAR			; Initially all sprotes availables
+							ldx #$00
+LOADSPRITES:				lda #$20						; Initial block (definition) for of the sprite 0.
+							sta TEMP02_DATA					; It will be also useful later!
+							sta SPRITE_BLOCKVAR,x
+							lda #$00						; Initial X position of the sprite 0.
+							sta SPRITE_XPOSVAR,x
+							lda #$00						; No MSB in X position for sprite 0.
+							sta SPRITE_XMSBPOSVAR,x
+							lda SPRITESPOSITION,x			; Initial Y position of the sprite 0. Never changes.
+							sta SPRITE_YPOSVAR,x			
+							lda SPRITESCOLOR,x
+							sta SPRITEBASECOLOR,x
+							inx
+							cpx NUMBERSPRITES 
+							bne LOADSPRITES
+							lda #$ff						; All sprites have the same priority level
+							sta SPRITEPRIORITY
+
+							lda #$00
 							sta TEMP03_DATA
-							inc SPRITE_BLOCKVAR + 0
-							lda SPRITE_BLOCKVAR + 0
+; To move the scene...
+MOVESCENE:					inc TEMP03_DATA
+							lda TEMP03_DATA
+							cmp #$07
+							bne MOVEALLIENS
+							lda #$00
+							sta TEMP03_DATA
+							inc TEMP02_DATA
+							lda TEMP02_DATA
 							cmp #$22
-							bne MOVE
+							bne MOVEALLIENS
 							lda #$20
-							sta SPRITE_BLOCKVAR + 0
-; Now it is moved.
-MOVE:						lda SPRITE_XMSBPOSVAR + 0
-							bne MOVE_ABOVE255				; Is it the above position 255?
-							inc SPRITE_XPOSVAR + 0			; No. So increment the current position below 255.
-							bne MOVE_AGAIN					; If it is not getting then the 255 position, set the movement.
-							inc SPRITE_XMSBPOSVAR + 0		; But if it is, then point out the MSB location..
-							jmp MOVE_AGAIN					; ...and the set the movement.
-MOVE_ABOVE255:				inc SPRITE_XPOSVAR + 0			; The sprite is behond the 255 position
-							lda SPRITE_XPOSVAR + 0
-							cmp #$40						; but at the last visible one?	
-							bne MOVE_AGAIN					; No. so let's go to set the position.
-							lda #$00						; It is at the last visible position...
-							sta SPRITE_XPOSVAR + 0			; so put everything back at the beginning...
-							sta SPRITE_XMSBPOSVAR + 0
-MOVE_AGAIN:					jmp MOVEALIEN					; Starts back again.
+							sta TEMP02_DATA
+; To move the aliens
+MOVEALLIENS:				ldx #$00
+MOVEALLIENS_LOOP:			lda TEMP02_DATA
+							sta SPRITE_BLOCKVAR,x
+							lda SPRITE_XMSBPOSVAR,x
+							bne MOVEALLIENS_MSB
+							inc SPRITE_XPOSVAR,x
+							bne MOVEALLIENS_NEXT
+							lda #$01
+							sta SPRITE_XMSBPOSVAR,x
+							jmp MOVEALLIENS_NEXT
+MOVEALLIENS_MSB:			inc SPRITE_XPOSVAR,x
+							lda SPRITE_XPOSVAR,x
+							cmp #$5a
+							bne MOVEALLIENS_NEXT
+							lda #$00
+							sta SPRITE_XPOSVAR,x
+							sta SPRITE_XMSBPOSVAR,x
+MOVEALLIENS_NEXT:			inx
+							cpx #$08
+							bne MOVEALLIENS_LOOP
+
+; The positions are actualized using the IRQ!
+; A set up a delay...
+							ldx #$05
+							ldy #$80
+							jsr DELAY
+
+							jmp MOVESCENE
+
+FOREVER:					jmp FOREVER
 
 ; End

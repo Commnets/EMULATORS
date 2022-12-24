@@ -120,7 +120,7 @@ void C64::VICIIRegisters::setValue (size_t p, const MCHEmul::UByte& v)
 		// SPENA: Sprite enable register
 		case 0x15:
 			{
-				for (size_t i = 0; i < 7; i++)
+				for (size_t i = 0; i < 8; i++)
 					_spriteEnabled [i] = v.bit (i);
 			}
 
@@ -142,7 +142,7 @@ void C64::VICIIRegisters::setValue (size_t p, const MCHEmul::UByte& v)
 		// YXPAND Sprite Vertical Expansion Register
 		case 0x17:
 			{
-				for (size_t i = 0; i < 7; i++)
+				for (size_t i = 0; i < 8; i++)
 					_spriteDoubleHeight [i] = v.bit (i);
 			}
 			break;
@@ -168,7 +168,7 @@ void C64::VICIIRegisters::setValue (size_t p, const MCHEmul::UByte& v)
 		// When setting it could be useful to clean up IRQ launched (if any)
 		case 0x19:
 			{
-				if (v.bit (0))_rasterAtLineIRQHappened = false; // clean up the latches...
+				if (v.bit (0)) _rasterAtLineIRQHappened = false; // clean up the latches...
 				if (v.bit (1)) _spritesCollisionWithDataIRQHappened = false;
 				if (v.bit (2)) _spritesCollisionIRQHappened = false;
 				if (v.bit (3)) _lightPenOnScreenIRQHappened = false;
