@@ -12,7 +12,11 @@ static std::map <unsigned char, MCHEmul::Instruction::Structure::Parameter::Type
 
 // ---
 MCHEmul::Instruction::Instruction (unsigned int c, unsigned int mp, unsigned int cc, const std::string& t)
-	: _code (c), _memoryPositions (mp), _clockCycles (cc), 
+	: _code (c), 
+	  _codeLength (((size_t) c < ((size_t) 1 << MCHEmul::UByte::sizeBits ())) 
+			? 1 : ((size_t) c < ((size_t) 1 << (MCHEmul::UByte::sizeBits () * 2))) 
+				? 2 : ((size_t) c < ((size_t) 1 << (MCHEmul::UByte::sizeBits () * 3))) ? 3 : 4), // No more than 4...
+	  _memoryPositions (mp), _clockCycles (cc), 
 	  _iTemplate (MCHEmul::noSpaces (MCHEmul::upper (t))),
 	  _iStructure (), // Assigned later...
 	  _lastParameters (), _cpu (nullptr), _memory (nullptr), _stack (nullptr)
@@ -131,7 +135,7 @@ std::string MCHEmul::Instruction::parametersAsString (size_t p, size_t nP, bool 
 }
 
 // ---
-std::string MCHEmul::Instruction::asString (size_t iL) const
+std::string MCHEmul::Instruction::asString () const
 {
 	if (internalStructure ()._error)
 		return (_iTemplate); // Nothing else is possible...
@@ -140,7 +144,7 @@ std::string MCHEmul::Instruction::asString (size_t iL) const
 
 	std::string toPrint = "";
 
-	size_t nPrm = iL;
+	size_t nPrm = codeLength ();
 	size_t lP = 0;
 	bool end = false;
 	while (!end)
@@ -176,15 +180,6 @@ std::string MCHEmul::Instruction::asString (size_t iL) const
 	}
 
 	return (toPrint);
-}
-
-// ---
-std::string MCHEmul::Instruction::asString () const
-{
-	if (_cpu == nullptr || _memory == nullptr || _stack == nullptr)
-		return (""); // If the transaction has not been executed...
-
-	return (asString (_cpu -> architecture ().instructionLength ()));
 }
 
 bool MCHEmul::Instruction::execute (const MCHEmul::UBytes& p, MCHEmul::CPU* c, MCHEmul::Memory* m, MCHEmul::Stack* stk)

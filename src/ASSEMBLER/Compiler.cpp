@@ -13,10 +13,14 @@ std::ostream& MCHEmul::Assembler::operator << (std::ostream& o, const MCHEmul::A
 		f = false;
 	}
 
-	MCHEmul::Assembler::ByteCodeLine cL = c;
-	((MCHEmul::Instruction*) cL._instruction) -> setParameters (cL._bytes);
-	o << ((cL._instruction != nullptr) ? ("\t" + cL._instruction -> asString (1)) : "");
-	o << ((cL._label != "") ? "\t" : "") << cL._label;
+	if (c._instruction != nullptr)
+	{ 
+		MCHEmul::Assembler::ByteCodeLine cL = c; // A copy to put the parameters into...
+		((MCHEmul::Instruction*) cL._instruction) -> setParameters (cL._bytes);
+		o << ((cL._instruction != nullptr) ? ("\t" + cL._instruction -> asString ()) : "");
+	}
+
+	o << ((c._label != "") ? "\t" : "") << c._label;
 
 	return (o);
 }

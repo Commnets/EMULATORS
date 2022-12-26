@@ -101,6 +101,8 @@ namespace MCHEmul
 
 		unsigned int code () const
 							{ return (_code); }
+		size_t codeLength () const
+							{ return (_codeLength); }
 		unsigned int memoryPositions () const
 							{ return (_memoryPositions); }
 		unsigned int clockCycles () const
@@ -126,9 +128,8 @@ namespace MCHEmul
 		const UBytes parameters (size_t p, size_t nP = 1, bool bE = true) const;
 		std::string parametersAsString (size_t p, size_t nP = 1, bool bE = true) const; // The UBytes could grouped to get a parameter...
 		
-		/** To get the instruction as an string from a list of parameters. */
-		std::string asString (size_t iL) const;
-		/** To get the instruction as an string using the parameters inside. */
+		/** To get the instruction as an string using the parameters of the last execution inside. \n
+			If no parameters has been set "blacnk" will be written instead. */
 		std::string asString () const;
 
 		/** To execute the instruction. It has to be redefined. \n
@@ -163,6 +164,7 @@ namespace MCHEmul
 		protected:
 		// Once they assigned at construction level they couldn't be modified...
 		const unsigned int _code = 0; 
+		const size_t _codeLength = 0;
 		const unsigned int _memoryPositions = 0; 
 		const unsigned int _clockCycles = 0; 
 		std::string _iTemplate; // It is modified during the construction...

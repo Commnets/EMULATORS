@@ -170,7 +170,7 @@ MCHEmul::InfoStructure MCHEmul::LocalConsole::decompileMemory (const std::string
 	if (iA.size () > nBA || nB > ((size_t) 1 << (MCHEmul::UByte::sizeBits () * nBA)))
 	{
 		result.add ("CODE", std::string ("Not code decompiled"));
-		result.add ("ERRORS", std::string ("Bad starting address or wrong size requested"));
+		result.add ("ERRORS", std::string ("Bad starting address or wrong memory size requested"));
 
 		return (result);
 	}
