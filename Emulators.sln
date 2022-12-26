@@ -171,6 +171,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{DD45DD00
 		emulators\C64Programs\code\tests\TESTIRQ.asm = emulators\C64Programs\code\tests\TESTIRQ.asm
 		emulators\C64Programs\code\tests\TESTIRQ2.asm = emulators\C64Programs\code\tests\TESTIRQ2.asm
 		emulators\C64Programs\Code\Tests\TESTROUTINES.asm = emulators\C64Programs\Code\Tests\TESTROUTINES.asm
+		emulators\C64Programs\code\tests\TESTROUTINES2.asm = emulators\C64Programs\code\tests\TESTROUTINES2.asm
 		emulators\C64Programs\code\tests\TESTSPRITESIRQ.asm = emulators\C64Programs\code\tests\TESTSPRITESIRQ.asm
 		emulators\C64Programs\code\tests\TESTSPRITESIRQ2.asm = emulators\C64Programs\code\tests\TESTSPRITESIRQ2.asm
 	EndProjectSection

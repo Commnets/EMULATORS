@@ -54,7 +54,7 @@ FILLBOXSCREENIN:			lda FILLSCR_YLENVAR						; First of all, saves the data that 
 							tay										; Saved for further analysis...
 							lda FILLSCR_XLENVAR
 							pha
-							lda FILLSCR_XPOSVAR						; Starts to wotk with the columns first...
+							lda FILLSCR_XPOSVAR						; Starts to work with the columns first...
 							pha
 							bmi FILLBOXSCREENIN_XPOSNEG				; The left side of the box is out of the visible zone, but what about the right one?
 							cmp #$28
@@ -73,15 +73,16 @@ FILLBOXSCREENIN_XPOS0:		lda #$00
 							sta FILLSCR_XPOSVAR
 FILLBOXSCREENIN_XPOSPOS:	clc
 							adc FILLSCR_XLENVAR						; The left side was at lest within the visible columns, but what about the right one?
-							cmp #$28								; 
-							bpl FILLBOXSCREENIN_TESTYLEN			; The right side is out of the visible zone, so adjust it....
-							sec
-							sbc #$28
-							sta FILLSCR_XLENVAR
+							cmp #$28
+							bmi FILLBOXSCREENIN_TESTYLEN			; The right side is in the visible zone,...
+							sec										; It is not so the length has to be adjusted (reduced)...
+							lda #$28
+							sbc FILLSCR_XPOSVAR
+							sta FILLSCR_XLENVAR						; The length of the text is reduced!
 ; Now the rows are adjusted...
 FILLBOXSCREENIN_TESTYLEN:	tya										; Starts to test the rows, with a similar rational...
 							bmi FILLBOXSCREENIN_YPOSNEG
-							cmp #$28
+							cmp #$19
 							bpl FILLBOXSCREENIN_RTS
 							jmp FILLBOXSCREENIN_YPOSPOS
 FILLBOXSCREENIN_YPOSNEG:	clc										; The left side was out the visible zone, but what about the end?
@@ -98,10 +99,11 @@ FILLBOXSCREENIN_YPOS0:		lda #$00
 FILLBOXSCREENIN_YPOSPOS:	clc
 							adc FILLSCR_YLENVAR
 							cmp #$19
-							bpl FILLBOXSCREENIN_DRAW
-							sec
-							sbc #$19
-							sta FILLSCR_YLENVAR
+							bmi FILLBOXSCREENIN_DRAW				; The bottom part is in the limits...
+							sec										; It is not so the length has to be adjusted (reduced)...
+							lda #$19
+							sbc FILLSCR_YPOSVAR
+							sta FILLSCR_YLENVAR						; The length of the text is reduced!
 FILLBOXSCREENIN_DRAW:		jsr FILLBOXSCREEN						; Finally calls the original routine...
 FILLBOXSCREENIN_RTS:		pla										; Put the original values back....
 							sta FILLSCR_XPOSVAR
