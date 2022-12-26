@@ -38,7 +38,7 @@ size_t MCHEmul::firstOf (const std::string& s, const std::string& c)
 size_t MCHEmul::firstOf (const std::string& s, const MCHEmul::Strings& strs, size_t& r)
 {
 	size_t pos = std::string::npos;
-	for (r = 0; r < strs.size () && pos == std::string::npos; pos = strs [r++].find (s));
+	for (r = 0; r < strs.size () && pos == std::string::npos; pos = s.find (strs [r++]));
 	if (pos != std::string::npos) r--; // If something was found the selected string is the previous one...
 	return (pos);
 }

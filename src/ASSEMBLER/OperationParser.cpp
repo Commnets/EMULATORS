@@ -53,7 +53,7 @@ void MCHEmul::Assembler::OperationParser::removeAndParserParenthesis
 {
 	auto cToString = [&](unsigned int n, unsigned int s) -> std::string
 		{ std::string r = std::to_string (n); 
-		  return (((r.length () < s) ? MCHEmul::_SPACES.substr (0, s - r.length ()) : "") + r); };
+		  return (((r.length () < s) ? MCHEmul::_CEROS.substr (0, s - r.length ()) : "") + r); };
 
 	e = false;
 
@@ -109,7 +109,7 @@ MCHEmul::Assembler::OperationElements MCHEmul::Assembler::OperationParser::parse
 			e = true;
 	}
 	else
-	if ((pos = o.find_first_of ("##")) != std::string::npos)
+	if ((pos = o.find ("##")) != std::string::npos)
 	{
 		MCHEmul::Assembler::OperationParser::tOpElements::const_iterator i = r.find (o.substr (pos, 8 /** ##XXX## */));
 		if (i == r.end ()) e = true;

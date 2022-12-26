@@ -16,15 +16,13 @@ IRQPRG1_ADDRESS				= $ca00
 IRQPRG1:					ldx #00
 IRQPRG1_LOOP:				lda #$01
 							sta COLORRAMBASE,x
-							sta COLORRAMBASE + 960,x
+							sta COLORRAMBASE + (24*40),x
 							inc SCREENBASE,x
-							inc SCREENBASE + 960,x
+							inc SCREENBASE + (24*40),x
 							clc
 							inx
 							cpx #$28
 							bne IRQPRG1_LOOP
-;							lda #z01111111
-;							sta $dc0d
 							lda $dc0d
 							.RECOVERREGISTERS
 							rti
