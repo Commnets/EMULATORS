@@ -296,7 +296,8 @@ bool C64::VICII::simulate (MCHEmul::CPU* cpu)
 
 	// Is it needed to generate any IRQ?
 	// It is here after the full simulation of the VICII (raster, collisions and lightpen)
-	if (_VICIIRegisters -> hasVICIIToGenerateIRQ ())
+	if (_VICIIRegisters -> hasVICIIToGenerateIRQ () && 
+		!cpu -> interrupt (F6500::IRQInterrupt::_ID) -> active ())
 		cpu -> interrupt (F6500::IRQInterrupt::_ID) -> setActive (true);
 
 	// Just to highlight (in black) the borders of the visible zone...

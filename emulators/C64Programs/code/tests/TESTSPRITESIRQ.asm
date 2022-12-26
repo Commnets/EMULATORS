@@ -15,7 +15,19 @@ BASE = $c000
 * = $ca00
 IRQPRG1_ADDRESS				= $ca00
 IRQPRG1:					.SAVEREGISTERS
-							lda #$ff						; Meaning the VICII IRQs are treated 
+							lda VICIIIRQ
+							and #$02						; To detect whether a sprite has collsiion against the foreground
+							beq IRQPRG1_NOCOLLISION
+							lda #$02
+							sta SCREENBASE
+							lda #00
+							sta COLORRAMBASE
+							jmp IRQPRG1_ACTSPRITES
+IRQPRG1_NOCOLLISION:		lda #$20
+							sta SCREENBASE
+							lda #06
+							sta COLORRAMBASE
+IRQPRG1_ACTSPRITES:			lda #$ff						; Meaning the VICII IRQs are treated 
 							sta VICIIIRQ					; and another different one might come later...
 							jsr ACTUALIZESPRITES
 							.RECOVERREGISTERS
@@ -84,7 +96,15 @@ MAIN:						lda #$06
 							lda #$0e
 							sta VICIIFOREGROUND
 							jsr CLEARSCREEN
-
+; Draws a letter just to test later the collision with foreground
+DRAWLETTERS:				lda #$01
+							sta SCREENBASE + 445
+							lda #$01
+							sta COLORRAMBASE + 445
+							lda #$06
+							sta SCREENBASE + 550
+							lda #$01
+							sta COLORRAMBASE + 550
 ; Sets the IRQ
 							lda $01								; The IRQ vector is going to be managed direclty...
 							and #$fd							; ...so the Kernel is desactivated from 6510 view!
