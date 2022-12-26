@@ -68,7 +68,7 @@ void C64::CIA1Registers::setValue (size_t p, const MCHEmul::UByte& v)
 		// LSB of the Latch A: TIMALO
 		case 0x04:
 			{
-				_timerA -> setInitialValue (_timerA -> initialValue () & 0x00ff | (unsigned short) v.value ());
+				_timerA -> setInitialValue ((_timerA -> initialValue () & 0xff00) | (unsigned short) v.value ());
 			}
 
 			break;
@@ -76,7 +76,7 @@ void C64::CIA1Registers::setValue (size_t p, const MCHEmul::UByte& v)
 		// MSB of the Latch A: TIMAHI
 		case 0x05:
 			{
-				_timerA -> setInitialValue (_timerA -> initialValue () & 0xff00 | (unsigned short) (v.value () << 8));
+				_timerA -> setInitialValue ((_timerA -> initialValue () & 0x00ff) | (unsigned short) (v.value () << 8));
 			}
 
 			break;
@@ -84,7 +84,7 @@ void C64::CIA1Registers::setValue (size_t p, const MCHEmul::UByte& v)
 		// LSB of the Latch B: TIMBLO
 		case 0x06:
 			{
-				_timerB -> setInitialValue (_timerB -> initialValue () & 0x00ff | (unsigned short) v.value ());
+				_timerB -> setInitialValue ((_timerB -> initialValue () & 0xff00) | (unsigned short) v.value ());
 			}
 
 			break;
@@ -92,12 +92,12 @@ void C64::CIA1Registers::setValue (size_t p, const MCHEmul::UByte& v)
 		// MSB of the Latch B: TIMBHI
 		case 0x07:
 			{
-				_timerB -> setInitialValue (_timerB -> initialValue () & 0xff00 | (unsigned short) (v.value () << 8));
+				_timerB -> setInitialValue ((_timerB -> initialValue () & 0x00ff) | (unsigned short) (v.value () << 8));
 			}
 
 			break;
 
-		// Time of Day Clock Tenths of Seconds: TO2TEN
+		// Time of Day Clock Tenths of Seconds: TODTEN
 		// Bits 0-3: BCD Digits. Bits 4-7: Unused.
 		case 0x08:
 			{
@@ -109,7 +109,7 @@ void C64::CIA1Registers::setValue (size_t p, const MCHEmul::UByte& v)
 
 			break;
 
-		// Time of Day Clock Seconds: TO2SEC
+		// Time of Day Clock Seconds: TODSEC
 		// Bits 0-3: Second BCD Digit. Bits 4-6: First BCD Digit. Bit 7: Unused.
 		case 0x09:
 			{
@@ -121,7 +121,7 @@ void C64::CIA1Registers::setValue (size_t p, const MCHEmul::UByte& v)
 
 			break;
 
-		// Time of Day Clock Minutes: TO2MIN
+		// Time of Day Clock Minutes: TODMIN
 		// Bits 0-3: Second BCD Digit. Bits 4-6: First BCD Digit. Bit 7: Unused.
 		case 0x0b:
 			{
@@ -133,7 +133,7 @@ void C64::CIA1Registers::setValue (size_t p, const MCHEmul::UByte& v)
 
 			break;
 
-		// Time of Day Clock Hours: TO2HRS
+		// Time of Day Clock Hours: TODHRS
 		// Bits 0-3: Second BCD Digit. Bit 4: First BCD Digit. Bits 5-6: Unused. Bit 7: AM/PM Flag (PM = 1)
 		case 0x0a:
 			{
@@ -145,11 +145,11 @@ void C64::CIA1Registers::setValue (size_t p, const MCHEmul::UByte& v)
 
 			break;
 
-		// Serial Data Port CI2SDR
+		// Serial Data Port CIASDR
 		case 0x0c:
 			break;
 
-		// Interrupt Control Register: CI2ICR
+		// Interrupt Control Register: CIAICR
 		// Depending on the bit 7 the behaviour is different: 1 = bits with 1 are set, 0 = bits with 1 are cleared... 
 		case 0x0d:
 			{
@@ -161,7 +161,7 @@ void C64::CIA1Registers::setValue (size_t p, const MCHEmul::UByte& v)
 
 			break;
 
-		// Control Register A: CI2CRA
+		// Control Register A: CIACRA
 		case 0x0e:
 			{
 				_timerA -> setEnabled (v.bit (0));
@@ -169,13 +169,13 @@ void C64::CIA1Registers::setValue (size_t p, const MCHEmul::UByte& v)
 				_timerA -> setRunMode (v.bit (3) ? CIATimer::RunMode::_ONETIME : CIATimer::RunMode::_RESTART);
 				if (v.bit (4)) _timerA -> reset ();
 				_timerA -> setCountMode (v.bit (5)
-					? C64::CIATimer::CountMode::_PROCESSORCYCLES: C64::CIATimer::CountMode::_SIGNALSONCNTLINE);
+					? C64::CIATimer::CountMode::_SIGNALSONCNTLINE : C64::CIATimer::CountMode::_PROCESSORCYCLES);
 				// TODO: Pending to control based on 60Hz or 50 Hz...(bit 7)
 			}
 
 			break;
 
-		// Control Register B: CI2CRB
+		// Control Register B: CIACRB
 		case 0x0f:
 			{
 				_timerB -> setEnabled (v.bit (0));
@@ -183,7 +183,7 @@ void C64::CIA1Registers::setValue (size_t p, const MCHEmul::UByte& v)
 				_timerB -> setRunMode (v.bit (3) ? CIATimer::RunMode::_ONETIME : CIATimer::RunMode::_RESTART);
 				if (v.bit (4)) _timerB -> reset ();
 				// bits 5 & 6 indicates the mode...
-				_timerB -> setCountMode ((C64::CIATimer::CountMode) ((v.value () >> 4) & 0x03));
+				_timerB -> setCountMode ((C64::CIATimer::CountMode) ((v.value () >> 5) & 0x03));
 				// _PROCESSORCYCLES = 0, _SIGNALSONCNTLINE = 1,...
 			}
 
@@ -352,11 +352,11 @@ void C64::CIA1Registers::initializeInternalValues ()
 	setValue (0x05, MCHEmul::UByte::_0);
 	setValue (0x06, MCHEmul::UByte::_0); // No timer B active
 	setValue (0x07, MCHEmul::UByte::_0);
-	setValue (0x08, MCHEmul::UByte::_0); 
-	setValue (0x09, MCHEmul::UByte::_0); 
-	setValue (0x0a, MCHEmul::UByte::_0); 
-	setValue (0x0b, MCHEmul::UByte::_0); 
-	setValue (0x0c, MCHEmul::UByte::_0); 
+	setValue (0x08, MCHEmul::UByte::_0);
+	setValue (0x09, MCHEmul::UByte::_0);
+	setValue (0x0a, MCHEmul::UByte::_0);
+	setValue (0x0b, MCHEmul::UByte::_0);
+	setValue (0x0c, MCHEmul::UByte::_0);
 	setValue (0x0d, MCHEmul::UByte::_0); // No interupts allowed from the early beginning...so stopped!
 	setValue (0x0e, MCHEmul::UByte::_0); // No value in timer A
 	setValue (0x0f, MCHEmul::UByte::_0); // No value in timer B

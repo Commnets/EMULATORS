@@ -1,5 +1,4 @@
 #include <C64/CIAClock.hpp>
-#include <F6500/NMIInterrupt.hpp>
 
 // ---
 void C64::CIAClock::initialize ()
@@ -38,7 +37,7 @@ void C64::CIAClock::simulate (MCHEmul::CPU* cpu)
 		_tenthsSecondL >= _alarmTenthsSecond)
 	{
 		if (_IRQEnabled)
-			cpu -> interrupt (F6500::NMIInterrupt::_ID) -> setActive (_IRQRequested = true);
+			cpu -> interrupt (_interruptId) -> setActive (_IRQRequested = true);
 		
 		_reachesAlarm = true;
 	}

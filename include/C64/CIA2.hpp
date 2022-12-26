@@ -18,6 +18,7 @@
 #include <C64/CIA2Registers.hpp>
 #include <C64/CIATimer.hpp>
 #include <C64/CIAClock.hpp>
+#include <F6500/NMIInterrupt.hpp>
 
 namespace C64
 {
@@ -40,8 +41,8 @@ namespace C64
 				  { "Year", "1980" } }),
 			  _CIA2Registers (nullptr),
 			  _VICIIRef (nullptr),
-			  _timerA (0), _timerB (1), 
-			  _clock (0),
+			  _timerA (0, F6500::NMIInterrupt::_ID), _timerB (1, F6500::NMIInterrupt::_ID), 
+			  _clock (0, F6500::NMIInterrupt::_ID),
 			  _lastClockCycles (0)
 							{ setClassName ("CIA2"); }
 

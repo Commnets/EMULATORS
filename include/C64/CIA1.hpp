@@ -18,6 +18,7 @@
 #include <C64/CIA1Registers.hpp>
 #include <C64/CIATimer.hpp>
 #include <C64/CIAClock.hpp>
+#include <F6500/IRQInterrupt.hpp>
 
 namespace C64
 {
@@ -39,7 +40,8 @@ namespace C64
 				  { "Manufacturer", "Commodore Business Machines CBM" },
 				  { "Year", "1980" } }),
 			  _CIA1Registers (nullptr),
-			  _timerA (0), _timerB (1), _clock (0)
+			  _timerA (0, F6500::IRQInterrupt::_ID), _timerB (1, F6500::IRQInterrupt::_ID), 
+			  _clock (0, F6500::IRQInterrupt::_ID)
 							{ setClassName ("CIA1"); }
 
 		virtual bool initialize () override;

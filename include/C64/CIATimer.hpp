@@ -48,10 +48,13 @@ namespace C64
 		  * IRQENABLED = FALSE
 		  * INITIALVALUE = 0
 		  * TIME = 0 (in thenth of second)
+		  * The constructor receivesan id to identify it 
+		  * and the id of the interrupts to launch when the the max, min values are reached!
 		  */
-		CIATimer (int id /** unique in the CIA chip. */)
+		CIATimer (int id /** unique in the CIA chip. */, unsigned int iID)
 			: MCHEmul::InfoClass ("Clock"),
-			  _id (id)
+			  _id (id),
+			  _interruptId (iID)
 							{ initialize (); }
 
 		/** To initialize the timer. By default it is not enabled. */
@@ -92,7 +95,7 @@ namespace C64
 		/** The value used as the starting point for the count down. */
 		unsigned short initialValue () const
 							{ return (_initialValue); }
-		void setInitialValue (unsigned char iV)
+		void setInitialValue (unsigned short iV)
 							{ _initialValue = iV; _currentValue = _initialValue; }
 		/** The current value of the timer. */
 		unsigned short currentValue () const
@@ -130,7 +133,8 @@ namespace C64
 		bool countDown (MCHEmul::CPU* cpu, CIATimer* t = nullptr);
 
 		private:
-		int _id;
+		const int _id = 0;
+		const unsigned int _interruptId = 0;
 
 		// The variables that define a timer...
 		RunMode _runMode;

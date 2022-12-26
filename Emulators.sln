@@ -153,6 +153,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Routines", "Routines", "{1B
 		emulators\C64Programs\Code\Routines\RCOPYCHARSET.asm = emulators\C64Programs\Code\Routines\RCOPYCHARSET.asm
 		emulators\C64Programs\Code\Routines\RGENERAL.asm = emulators\C64Programs\Code\Routines\RGENERAL.asm
 		emulators\C64Programs\Code\Routines\RIRQ.asm = emulators\C64Programs\Code\Routines\RIRQ.asm
+		emulators\C64Programs\code\routines\RIRQ2.asm = emulators\C64Programs\code\routines\RIRQ2.asm
 		emulators\C64Programs\Code\Routines\RSCREENBOX.asm = emulators\C64Programs\Code\Routines\RSCREENBOX.asm
 		emulators\C64Programs\Code\Routines\RSCREENCLEAR.asm = emulators\C64Programs\Code\Routines\RSCREENCLEAR.asm
 		emulators\C64Programs\Code\Routines\RSCREENRECT.asm = emulators\C64Programs\Code\Routines\RSCREENRECT.asm
@@ -162,12 +163,16 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Routines", "Routines", "{1B
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{DD45DD00-02A4-4D13-8CC8-58BE8A459F48}"
 	ProjectSection(SolutionItems) = preProject
+		emulators\C64Programs\code\tests\TESTCIA1IRQ.asm = emulators\C64Programs\code\tests\TESTCIA1IRQ.asm
 		emulators\C64Programs\Code\Tests\TESTDEFCHARS.asm = emulators\C64Programs\Code\Tests\TESTDEFCHARS.asm
+		emulators\C64Programs\code\tests\TESTFORSKEY.asm = emulators\C64Programs\code\tests\TESTFORSKEY.asm
 		emulators\C64Programs\Code\Tests\TESTGRAPHMODES.asm = emulators\C64Programs\Code\Tests\TESTGRAPHMODES.asm
 		emulators\C64Programs\Code\Tests\TESTHRESMODES.asm = emulators\C64Programs\Code\Tests\TESTHRESMODES.asm
 		emulators\C64Programs\code\tests\TESTIRQ.asm = emulators\C64Programs\code\tests\TESTIRQ.asm
+		emulators\C64Programs\code\tests\TESTIRQ2.asm = emulators\C64Programs\code\tests\TESTIRQ2.asm
 		emulators\C64Programs\Code\Tests\TESTROUTINES.asm = emulators\C64Programs\Code\Tests\TESTROUTINES.asm
 		emulators\C64Programs\code\tests\TESTSPRITESIRQ.asm = emulators\C64Programs\code\tests\TESTSPRITESIRQ.asm
+		emulators\C64Programs\code\tests\TESTSPRITESIRQ2.asm = emulators\C64Programs\code\tests\TESTSPRITESIRQ2.asm
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Compilers", "Compilers", "{CB939E14-E506-4775-A07D-14F332CA2B47}"

@@ -45,9 +45,9 @@ const std::map <SDL_Scancode, C64::InputOSSystem::KeyMPos> C64::InputOSSystem::_
 			{ SDL_SCANCODE_0, std::make_pair (4,3) },
 			/* keymap function keys */
 			{ SDL_SCANCODE_F1, std::make_pair (0,4) },
-			{ SDL_SCANCODE_F3, std::make_pair (0,4) },
-			{ SDL_SCANCODE_F5, std::make_pair (0,4) },
-			{ SDL_SCANCODE_F7, std::make_pair (0,4) },
+			{ SDL_SCANCODE_F3, std::make_pair (0,5) },
+			{ SDL_SCANCODE_F5, std::make_pair (0,6) },
+			{ SDL_SCANCODE_F7, std::make_pair (0,3) },
 			/* keymap: other */
 			{ SDL_SCANCODE_RETURN, std::make_pair (0,1) },
 			{ SDL_SCANCODE_SPACE, std::make_pair (7,4) },

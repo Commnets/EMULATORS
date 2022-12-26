@@ -5,7 +5,6 @@
 
 #../C64Programs/code/macros/MVICII.asm
 #../C64Programs/code/macros/MCIAS.asm
-#../C64Programs/code/routines/RIRQ.asm
 
 ; ------------------------------
 ; SETVICIIRASTERIRQ

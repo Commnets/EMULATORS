@@ -1,5 +1,4 @@
 #include <C64/CIATimer.hpp>
-#include <F6500/NMIInterrupt.hpp>
 
 // ---
 void C64::CIATimer::initialize ()
@@ -32,7 +31,7 @@ void C64::CIATimer::simulate (MCHEmul::CPU* cpu, C64::CIATimer* t)
 	if (countDown (cpu, t))
 	{
 		if (_IRQEnabled)
-			cpu -> interrupt (F6500::NMIInterrupt::_ID) -> setActive (_IRQRequested = true);
+			cpu -> interrupt (_interruptId) -> setActive (_IRQRequested = true);
 		
 		switch (_runMode)
 		{
@@ -50,6 +49,8 @@ void C64::CIATimer::simulate (MCHEmul::CPU* cpu, C64::CIATimer* t)
 
 		_reaches0 = true;
 	}
+	else
+		_reaches0 = false;
 
 	_lastClockCycles = cpu -> clockCycles ();
 }

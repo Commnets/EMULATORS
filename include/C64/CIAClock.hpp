@@ -22,9 +22,11 @@ namespace C64
 	class CIAClock final : public MCHEmul::InfoClass
 	{
 		public:
-		CIAClock (int id /** unique in the CIA chip. */)
+		/** The constructor receives the id of the element,
+			and the id of the type of interruptions to be launched when limits are reached. */
+		CIAClock (int id /** unique in the CIA chip. */, unsigned int iID)
 			: MCHEmul::InfoClass ("Clock"),
-			  _id (id) 
+			  _id (id), _interruptId (iID)
 							{ initialize (); }
 
 		/** To initialize the timer. By default it is not enabled. */
@@ -103,7 +105,8 @@ namespace C64
 		void actualizeTime ();
 
 		private:
-		int _id;
+		const int _id = 0;
+		const unsigned int _interruptId = 0;
 
 		// The variables that define a timer...
 		bool _IRQEnabled;

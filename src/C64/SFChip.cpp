@@ -29,11 +29,11 @@ bool C64::SpecialFunctionsChip::simulate (MCHEmul::CPU* cpu)
 	_BasicROM		-> setActiveForReading (val0.bit (0));
 	_BasicRAM		-> setActiveForReading (!val0.bit (0));
 
-	// Active or desactive the KENEL ROM...
+	// Active or desactive the KERNEL ROM...
 	_KernelROM		-> setActiveForReading (val0.bit (1));
 	_KernelRAM		-> setActiveForReading (!val0.bit (1));
 
-	// Usually the CHAR ROM is only seen from VIC II, 
+	// Usually the CHAR ROM is only seen from VICII, 
 	// because CPU access to the Chip Registers instead
 	// But it could be accessed. Take really care when doing so!
 	_CharROM		-> setActiveForReading (!val0.bit (2));

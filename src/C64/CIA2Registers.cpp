@@ -43,47 +43,47 @@ void C64::CIA2Registers::setValue (size_t p, const MCHEmul::UByte& v)
 
 			break;
 
-		// Data Port Register B: CIAPRB
+		// Data Port Register B: CI2PRB
 		case 0x01:
 			// No special meaning when set (but very important when read!)
 			break;
 
-		// Data Direction Register A: CIDDRA
+		// Data Direction Register A: C2DDRA
 		case 0x02:
 			break;
 
-		// Data Direction Register B: CIDDRB
+		// Data Direction Register B: C2DDRB
 		case 0x03:
 			break;
 
-		// LSB of the Latch A: TIMALO
+		// LSB of the Latch A: TI2ALO
 		case 0x04:
 			{
-				_timerA -> setInitialValue (_timerA -> initialValue () & 0x00ff | (unsigned short) v.value ());
+				_timerA -> setInitialValue ((_timerA -> initialValue () & 0xff00) | (unsigned short) v.value ());
 			}
 
 			break;
 
-		// MSB of the Latch A: TIMAHI
+		// MSB of the Latch A: TI2AHI
 		case 0x05:
 			{
-				_timerA -> setInitialValue (_timerA -> initialValue () & 0xff00 | (unsigned short) (v.value () << 8));
+				_timerA -> setInitialValue ((_timerA -> initialValue () & 0x00ff) | (unsigned short) (v.value () << 8));
 			}
 
 			break;
 
-		// LSB of the Latch B: TIMBLO
+		// LSB of the Latch B: TI2BLO
 		case 0x06:
 			{
-				_timerB -> setInitialValue (_timerB -> initialValue () & 0x00ff | (unsigned short) v.value ());
+				_timerB -> setInitialValue ((_timerB -> initialValue () & 0xff00) | (unsigned short) v.value ());
 			}
 
 			break;
 
-		// MSB of the Latch B: TIMBHI
+		// MSB of the Latch B: TI2BHI
 		case 0x07:
 			{
-				_timerB -> setInitialValue (_timerB -> initialValue () & 0xff00 | (unsigned short) (v.value () << 8));
+				_timerB -> setInitialValue ((_timerB -> initialValue () & 0x00ff) | (unsigned short) (v.value () << 8));
 			}
 
 			break;
@@ -160,7 +160,7 @@ void C64::CIA2Registers::setValue (size_t p, const MCHEmul::UByte& v)
 				_timerA -> setRunMode (v.bit (3) ? CIATimer::RunMode::_ONETIME : CIATimer::RunMode::_RESTART);
 				if (v.bit (4)) _timerA -> reset ();
 				_timerA -> setCountMode (v.bit (5)
-					? C64::CIATimer::CountMode::_PROCESSORCYCLES: C64::CIATimer::CountMode::_SIGNALSONCNTLINE);
+					? C64::CIATimer::CountMode::_SIGNALSONCNTLINE : C64::CIATimer::CountMode::_PROCESSORCYCLES);
 				// TODO: Pending to control based on 60Hz or 50 Hz...(bit 7)
 			}
 
@@ -174,7 +174,7 @@ void C64::CIA2Registers::setValue (size_t p, const MCHEmul::UByte& v)
 				_timerB -> setRunMode (v.bit (3) ? CIATimer::RunMode::_ONETIME : CIATimer::RunMode::_RESTART);
 				if (v.bit (4)) _timerB -> reset ();
 				// bits 5 & 6 indicates the mode...
-				_timerB -> setCountMode ((C64::CIATimer::CountMode) ((v.value () >> 4) & 0x03));
+				_timerB -> setCountMode ((C64::CIATimer::CountMode) ((v.value () >> 5) & 0x03));
 				// _PROCESSORCYCLES = 0, _SIGNALSONCNTLINE = 1,...
 			}
 

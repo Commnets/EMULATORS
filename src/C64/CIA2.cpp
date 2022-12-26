@@ -1,7 +1,6 @@
 #include <C64/CIA2.hpp>
 #include <C64/Memory.hpp>
 #include <C64/VICII.hpp>
-#include <F6500/NMIInterrupt.hpp>
 
 // ---
 bool C64::CIA2::initialize ()
