@@ -11,12 +11,13 @@ static std::map <unsigned char, MCHEmul::Instruction::Structure::Parameter::Type
 	});
 
 // ---
-MCHEmul::Instruction::Instruction (unsigned int c, unsigned int mp, unsigned int cc, const std::string& t)
+MCHEmul::Instruction::Instruction (unsigned int c, unsigned int mp, unsigned int cc, const std::string& t, bool bE)
 	: _code (c), 
 	  _codeLength (((size_t) c < ((size_t) 1 << MCHEmul::UByte::sizeBits ())) 
 			? 1 : ((size_t) c < ((size_t) 1 << (MCHEmul::UByte::sizeBits () * 2))) 
 				? 2 : ((size_t) c < ((size_t) 1 << (MCHEmul::UByte::sizeBits () * 3))) ? 3 : 4), // No more than 4...
 	  _memoryPositions (mp), _clockCycles (cc), 
+	  _bigEndian (bE),
 	  _iTemplate (MCHEmul::noSpaces (MCHEmul::upper (t))),
 	  _iStructure (), // Assigned later...
 	  _lastParameters (), _cpu (nullptr), _memory (nullptr), _stack (nullptr)
@@ -162,8 +163,7 @@ std::string MCHEmul::Instruction::asString () const
 			std::map <unsigned char, Structure::Parameter::Type>::const_iterator iPrm = _TYPES.find (prm [0]);
 			bool bE = (iPrm != _TYPES.end ()) 
 				? (((*iPrm).second == Structure::Parameter::Type::_DIR ||
-					(*iPrm).second == Structure::Parameter::Type::_ABSJUMP) 
-					? _cpu -> architecture ().bigEndian () : true)
+					(*iPrm).second == Structure::Parameter::Type::_ABSJUMP) ? _bigEndian : true)
 				: true;
 
 			toPrint += t.substr (lP, iPP - lP) + parametersAsString (nPrm, bPrm, bE);

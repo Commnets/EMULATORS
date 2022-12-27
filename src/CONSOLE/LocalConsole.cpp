@@ -94,36 +94,21 @@ MCHEmul::InfoStructure MCHEmul::LocalConsole::loadProgram (const std::string& nP
 	MCHEmul::Assembler::ByteCode cL = _emulator -> loadProgram (nP, e);
 
 	MCHEmul::InfoStructure result;
-
-	bool fL = true;
-	std::string ln;
 	if (!e.empty ())
 	{
-		for (const auto& i : e)
-		{
-			std::stringstream ss; ss << i;
-			ln += (fL ? "" : "\n") + ss.str ();
-
-			fL = false;
-		}
-
-		result.add ("CODE", std::string ("No code loaded"));
-		result.add ("ERRORS", ln);
+		MCHEmul::InfoStructure errs;
+		for (size_t i = 0; i < e.size (); i++)
+			errs.add (std::to_string (i), e [i].asString ());
+		result.add ("ERRORS", errs);
 	}
 	else
 	{
 		_emulator -> computer () -> setActionForNextCycle (MCHEmul::Computer::_ACTIONSTOP);
 
-		for (const auto& i : cL._lines)
-		{
-			std::stringstream ss; ss << i;
-			ln += (fL ? "" : "\n") + ss.str ();
-
-			fL = false;
-		}
-
-		result.add ("CODE", ln);
-		result.add ("ERRORS", std::string ("No errors"));
+		MCHEmul::InfoStructure lns;
+		for (size_t i = 0; i < cL._lines.size (); i++)
+			lns.add (std::to_string (i), cL._lines [i].asString (MCHEmul::UByte::OutputFormat::_HEXA, ' ', 2));
+		result.add ("CODELINES", lns);
 	}
 
 	return (result);
@@ -157,39 +142,28 @@ MCHEmul::InfoStructure MCHEmul::LocalConsole::decompileMemory (const std::string
 
 	size_t pS = MCHEmul::firstSpaceIn (prms);
 	if (pS == std::string::npos)
-	{
-		result.add ("CODE", std::string ("Not code decompiled"));
-		result.add ("ERRORS", std::string ("No parameteres received"));
-
 		return (result);
-	}
 
 	MCHEmul::Address iA = MCHEmul::Address::fromStr (MCHEmul::trim (prms.substr (0, pS)));
 	size_t nB = (size_t) std::atoi (MCHEmul::trim (prms.substr (pS)).c_str ());
 	size_t nBA = _emulator -> computer () -> cpu () -> architecture ().numberBytes ();
 	if (iA.size () > nBA || nB > ((size_t) 1 << (MCHEmul::UByte::sizeBits () * nBA)))
 	{
-		result.add ("CODE", std::string ("Not code decompiled"));
-		result.add ("ERRORS", std::string ("Bad starting address or wrong memory size requested"));
-
+		result.add ("ERROR",
+			std::string ("Bad starting address or wrong memory size requested"));
 		return (result);
 	}
 
 	MCHEmul::Assembler::ByteCode cL = MCHEmul::Assembler::ByteCode::createFromMemory 
-		(iA, (unsigned int) nB, _emulator -> computer () -> memory (), _emulator -> computer () -> cpu ());
-
-	bool fL = true;
-	std::string ln;
-	for (const auto& i : cL._lines)
-	{
-		std::stringstream ss; ss << i;
-		ln += (fL ? "" : "\n") + ss.str ();
-
-		fL = false;
+		(iA, (unsigned int) nB, _emulator -> computer () -> memory (), _emulator -> computer ());
+	MCHEmul::InfoStructure lns;
+	for (size_t i = 0; i < cL._lines.size (); i++)
+	{ 
+		std::string iP = std::to_string (i);
+		iP = MCHEmul::_CEROS.substr (0, 5 - iP.length ()) + iP;
+		lns.add (iP, cL._lines [i].asString (MCHEmul::UByte::OutputFormat::_HEXA, ' ', 2));
 	}
 
-	result.add ("CODE", ln);
-	result.add ("ERRORS", std::string ("No errors"));
-
+	result.add ("CODELINES", lns);
 	return (result);
 }

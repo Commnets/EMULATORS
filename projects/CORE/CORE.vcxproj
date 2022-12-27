@@ -19,6 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\src\CORE\ByteCodeLine.cpp" />
     <ClCompile Include="..\..\src\CORE\Chip.cpp" />
     <ClCompile Include="..\..\src\CORE\Clock.cpp" />
     <ClCompile Include="..\..\src\CORE\CmdExecuter.cpp" />
@@ -55,6 +56,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\include\CORE\Address.hpp" />
+    <ClInclude Include="..\..\include\CORE\ByteCodeLine.hpp" />
     <ClInclude Include="..\..\include\CORE\Chip.hpp" />
     <ClInclude Include="..\..\include\CORE\Clock.hpp" />
     <ClInclude Include="..\..\include\CORE\CmdExecuter.hpp" />

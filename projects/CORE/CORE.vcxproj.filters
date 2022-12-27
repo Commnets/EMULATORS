@@ -141,6 +141,9 @@
     <ClCompile Include="..\..\src\CORE\Clock.cpp">
       <Filter>Archivos de origen\Foundation</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\CORE\ByteCodeLine.cpp">
+      <Filter>Archivos de origen\Foundation</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\include\CORE\IO.hpp">
@@ -261,6 +264,9 @@
       <Filter>Archivos de encabezado\Motherboard</Filter>
     </ClInclude>
     <ClInclude Include="..\..\include\CORE\Clock.hpp">
+      <Filter>Archivos de encabezado\Foundation</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\CORE\ByteCodeLine.hpp">
       <Filter>Archivos de encabezado\Foundation</Filter>
     </ClInclude>
   </ItemGroup>

@@ -73,7 +73,10 @@ namespace MCHEmul
 
 			Error& operator = (const Error&) = default;
 
-			friend std::ostream& operator << (std::ostream& o, const Error& e);
+			std::string asString () const;
+
+			friend std::ostream& operator << (std::ostream& o, const Error& e)
+							{ return (o << e.asString ()); }
 
 			ErrorType _type;
 			std::string _file;

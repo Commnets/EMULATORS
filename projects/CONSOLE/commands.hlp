@@ -59,6 +59,10 @@ No parameters needed.
 To execute the next instruction after being stopped.
 N can also be used instead.
 No parameters needed.
+;SHOWNEXT (NUMBER)
+Just to show the instruction about to be executed.
+SN can also be used instead.
+There can be 0 or 1 parameter with the number of next lines to show.
 ;INST
 To know the last instruction executed by the CPU.
 No parameters needed.

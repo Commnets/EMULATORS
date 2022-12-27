@@ -19,23 +19,45 @@ MAIN:						lda #$06
 							sta VICIIBACKGROUND
 							lda #$0e
 							sta VICIIFOREGROUND
-;							jsr CLEARSCREEN
+							jsr CLEARSCREEN
 
 ; Test the creation of a box.
-BOXEXAMPLE:					lda #$ff								; Pos X.
+BOXEXAMPLE:					lda #$fa								; Pos X.
 							sta FILLSCR_XPOSVAR
-							lda #$ff								; Pos Y.
+							lda #$fa								; Pos Y.
 							sta FILLSCR_YPOSVAR
-							lda #$03								; Size X.
+							lda #$05								; Size X.
 							sta FILLSCR_XLENVAR
-							lda #$03								; Size Y.
+							lda #$05								; Size Y.
 							sta FILLSCR_YLENVAR
-							lda #$01								; With letter A.
+							lda #$03								; With letter A.
 							sta FILLSCR_BYTEVAR
 							lda #$01								; White.
 							sta FILLSCR_COLORVAR
+							ldx #$00
+BOXEXAMPLE_LOOP:			txa
+							pha
 							jsr FILLBOXSCREENIN
+							ldx #$ff
+							ldy #$0f
+							jsr DELAY
+							lda #$20
+							sta FILLSCR_BYTEVAR
+							lda #$06
+							sta FILLSCR_COLORVAR
+							jsr FILLBOXSCREENIN
+							inc FILLSCR_XPOSVAR
+							inc FILLSCR_YPOSVAR
+							lda #$03								; With letter A.
+							sta FILLSCR_BYTEVAR
+							lda #$01								; White.
+							sta FILLSCR_COLORVAR
+							pla
+							tax
+							inx
+							cpx #$20
+							bne BOXEXAMPLE_LOOP
 
-FOREVER:					jmp FOREVER								; For ever...
+FOREVER:					jmp BOXEXAMPLE							; For ever...
 
 ; End.

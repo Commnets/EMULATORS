@@ -78,6 +78,9 @@ namespace MCHEmul
 		Instruction* instruction (unsigned int i)
 							{ return ((*_instructions.find (i)).second); }
 
+		/** To get the next instruction (if any) attending to the location of the Program Counter. 
+			This method is not invoked but only from debugging reasons. */
+		const Instruction* nextInstruction () const;
 		const Instruction* lastInstruction () const
 							{ return (_lastInstruction); }
 

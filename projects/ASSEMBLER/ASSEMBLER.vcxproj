@@ -19,6 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\include\ASSEMBLER\ByteCode.hpp" />
     <ClInclude Include="..\..\include\ASSEMBLER\Compiler.hpp" />
     <ClInclude Include="..\..\include\ASSEMBLER\Error.hpp" />
     <ClInclude Include="..\..\include\ASSEMBLER\Grammar.hpp" />
@@ -30,6 +31,7 @@
     <ClInclude Include="..\..\include\ASSEMBLER\StdOperations.hpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\src\ASSEMBLER\ByteCode.cpp" />
     <ClCompile Include="..\..\src\ASSEMBLER\Compiler.cpp" />
     <ClCompile Include="..\..\src\ASSEMBLER\Error.cpp" />
     <ClCompile Include="..\..\src\ASSEMBLER\Grammar.cpp" />

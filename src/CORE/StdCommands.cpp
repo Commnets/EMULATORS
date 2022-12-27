@@ -2,6 +2,7 @@
 #include <CORE/Computer.hpp>
 #include <CORE/Stack.hpp>
 #include <CORE/Instruction.hpp>
+#include <CORE/ByteCodeLine.hpp>
 #include <CORE/CmdExecuter.hpp>
 #include <fstream>
 
@@ -20,6 +21,7 @@ const std::string MCHEmul::SetMemoryValueCommand::_NAME = "CSETMEMORY";
 const std::string MCHEmul::StopCPUCommand::_NAME = "CSTOP";
 const std::string MCHEmul::RunCPUCommand::_NAME = "CRUN";
 const std::string MCHEmul::NextInstructionCommand::_NAME = "CNEXT";
+const std::string MCHEmul::ShowNextInstructionCommand::_NAME = "CSHOWNEXT";
 const std::string MCHEmul::LastIntructionCPUCommand::_NAME = "CINST";
 const std::string MCHEmul::ListOfBreakPointsCommand::_NAME = "CBREAKS";
 const std::string MCHEmul::SetBreakPointCommand::_NAME = "CSETBREAK";
@@ -274,6 +276,41 @@ void MCHEmul::NextInstructionCommand::executeImpl (MCHEmul::CommandExecuter* cE,
 }
 
 // ---
+void MCHEmul::ShowNextInstructionCommand::executeImpl 
+	(MCHEmul::CommandExecuter* cE, MCHEmul::Computer* c, MCHEmul::InfoStructure& rst)
+{
+	unsigned int nI = 1;
+	if (_parameters.size () != 0)
+		nI = std::stoi (parameter ("00").c_str ());
+
+	MCHEmul::ProgramCounter& pC = c -> cpu () -> programCounter ();
+	MCHEmul::Address oA = pC.asAddress ();
+
+	bool e = false;
+	MCHEmul::InfoStructure iS;
+	for (unsigned int i = 0; i < nI && !e; i++)
+	{ 
+		const MCHEmul::Instruction* nI = c -> cpu () -> nextInstruction ();
+		if (e = (nI == nullptr))
+			continue; // Not possible to continue...
+
+		MCHEmul::Address pCA = pC.asAddress ();
+		std::string iP = std::to_string (i);
+		iP = MCHEmul::_CEROS.substr (0, 5 - iP.length ()) + iP;
+		iS.add (iP,
+			MCHEmul::ByteCodeLine (pCA, nI -> parameters ().bytes (), "", nI, c -> action (pCA)).asString
+				(MCHEmul::UByte::OutputFormat::_HEXA, ' ', 2));
+		
+		pC.increment (nI -> memoryPositions ());
+	}
+
+	rst.add ("CODELINES", iS);
+
+	// The program counter is restored!
+	pC.setAddress (oA);
+}
+
+// ---
 void MCHEmul::LastIntructionCPUCommand::executeImpl (MCHEmul::CommandExecuter* cE, MCHEmul::Computer* c, MCHEmul::InfoStructure& rst)
 {
 	if (c == nullptr)
@@ -306,7 +343,7 @@ void MCHEmul::SetBreakPointCommand::executeImpl (MCHEmul::CommandExecuter* cE, M
 		return;
 
 	for (const auto& i : _parameters)
-		c -> addAction (MCHEmul::Address::fromStr (i.first), MCHEmul::Computer::_ACTIONSTOP);
+		c -> addAction (MCHEmul::Address::fromStr (i.second), MCHEmul::Computer::_ACTIONSTOP);
 }
 
 // ---
@@ -317,7 +354,7 @@ void MCHEmul::RemoveBreakPointCommand::executeImpl (MCHEmul::CommandExecuter* cE
 
 	for (const auto& i : _parameters)
 	{
-		MCHEmul::Address bP = MCHEmul::Address::fromStr (i.first);
+		MCHEmul::Address bP = MCHEmul::Address::fromStr (i.second);
 		if (c -> action (bP) == MCHEmul::Computer::_ACTIONSTOP) // Only if stopped...
 			c -> addAction (bP, MCHEmul::Computer::_ACTIONNOTHING);
 	}

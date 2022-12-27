@@ -34,6 +34,29 @@ MCHEmul::CPU::~CPU ()
 }
 
 // ---
+const MCHEmul::Instruction* MCHEmul::CPU::nextInstruction () const
+{
+	// Access the next instruction...
+	// Using the row description of the instructions!
+	MCHEmul::Instruction* inst = nullptr;
+	unsigned int nInst = 
+		MCHEmul::UInt (
+			_memory -> values (
+				programCounter ().asAddress (), architecture ().instructionLength ()), 
+			architecture ().bigEndian ()).asUnsignedInt ();
+	if (nInst >= _rowInstructions.size () ||
+		(inst = _rowInstructions [nInst]) == nullptr)
+		return (nullptr); // Not possible to execute the instruction...
+
+	// Gets the data that the instruction occupies
+	MCHEmul::UBytes dt = _memory -> values (programCounter ().asAddress (), inst -> memoryPositions ());
+
+	inst -> setParameters (dt);
+
+	return (inst);
+}
+
+// ---
 bool MCHEmul::CPU::initialize ()
 {
 	for (auto& i : _registers)

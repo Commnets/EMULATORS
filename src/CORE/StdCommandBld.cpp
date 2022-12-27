@@ -34,6 +34,8 @@ MCHEmul::Command* MCHEmul::StandardCommandBuilder::createEmptyCommand (const std
 		result = new MCHEmul::RunCPUCommand;
 	else if (cmdName == "NEXT" || cmdName == "N" || cmdName == MCHEmul::NextInstructionCommand::_NAME)
 		result = new MCHEmul::NextInstructionCommand;
+	else if (cmdName == "SHOWNEXT" || cmdName == "SN" || cmdName == MCHEmul::ShowNextInstructionCommand::_NAME)
+		result = new MCHEmul::ShowNextInstructionCommand;
 	else if (cmdName == "INST" || cmdName == MCHEmul::LastIntructionCPUCommand::_NAME)
 		result = new MCHEmul::LastIntructionCPUCommand;
 	else if (cmdName == "BREAKS" || cmdName == MCHEmul::ListOfBreakPointsCommand::_NAME)

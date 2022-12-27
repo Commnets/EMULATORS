@@ -39,6 +39,7 @@
 #include <CORE/UBytes.hpp>
 #include <CORE/DtMemoryBlock.hpp>
 #include <CORE/UInt.hpp>
+#include <CORE/ByteCodeLine.hpp>
 #include <CORE/Instruction.hpp>
 #include <CORE/IO.hpp>
 #include <CORE/Screen.hpp>

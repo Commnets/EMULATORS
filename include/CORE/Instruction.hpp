@@ -92,8 +92,9 @@ namespace MCHEmul
 		  *					The parameters should be within [] with two additional data: \n
 		  *					The type of the parameter, and the number of bytes that parameter occupies. \n
 		  *					Regarding the type: # means number, $ means address and & means relative jump (@see type of parameter).
+		  *	@param bE	:	Indicate whether the info contained is managed big or little endian.
 		  */
-		Instruction (unsigned int c, unsigned int mp, unsigned int cc, const std::string& t);
+		Instruction (unsigned int c, unsigned int mp, unsigned int cc, const std::string& t, bool bE = true);
 
 		Instruction (const Instruction&) = default;
 
@@ -167,6 +168,7 @@ namespace MCHEmul
 		const size_t _codeLength = 0;
 		const unsigned int _memoryPositions = 0; 
 		const unsigned int _clockCycles = 0; 
+		const bool _bigEndian = true;
 		std::string _iTemplate; // It is modified during the construction...
 
 		// Implementation
@@ -194,6 +196,7 @@ namespace MCHEmul
   * @param _T  : The templat to print the instruction.
   *	@param _I  : Name of the intruction.
   * @param _J  : Name of the parent class.
+  * @param _K  : Whether the info kept is big or little endian.
   */
 #define _INST_FROM(_C, _M, _CC, _T, _I, _J) \
 class _I final : public _J \
@@ -205,7 +208,7 @@ class _I final : public _J \
 };
 
 /** Idem but inheriting from basic instruction. */
-#define _INST(_C, _M, _CC, _T, _I) \
+#define _INST(_C, _M, _CC, _T, _I, _K) \
 	_INST_FROM(_C, _M, _CC, _T, _I, MCHEmul::Instruction);
 
 #define _INST_IMPL(_I) \

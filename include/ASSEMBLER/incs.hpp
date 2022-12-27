@@ -15,6 +15,7 @@
 #define __ASSEMBLER_INCS__
 
 #include <ASSEMBLER/Error.hpp>
+#include <ASSEMBLER/ByteCode.hpp>
 #include <ASSEMBLER/Grammar.hpp>
 #include <ASSEMBLER/Parser.hpp>
 #include <ASSEMBLER/Compiler.hpp>

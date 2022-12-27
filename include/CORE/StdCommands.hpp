@@ -320,12 +320,31 @@ namespace MCHEmul
 		virtual void executeImpl (CommandExecuter* cE, Computer* c, InfoStructure& rst) override;
 	};
 
+	/** To know what the next/nexts instruction/s will be. */
+	class ShowNextInstructionCommand final : public Command
+	{
+		public:
+		static const int _ID = 12;
+		static const std::string _NAME;
+
+		ShowNextInstructionCommand ()
+			: Command (_ID, _NAME)
+							{ }
+
+		/** With 0 parameters only the next instruction, otherwise the number indicated. */
+		virtual bool canBeExecuted () const override
+							{ return (_parameters.size () == 0 || _parameters.size () == 1); }
+
+		private:
+		virtual void executeImpl (CommandExecuter* cE, Computer* c, InfoStructure& rst) override;
+	};
+
 	/** To get info about the last instruction executed. \n
 		Command line: INST */
 	class LastIntructionCPUCommand final : public Command
 	{
 		public:
-		static const int _ID = 12;
+		static const int _ID = 13;
 		static const std::string _NAME;
 
 		LastIntructionCPUCommand ()
@@ -346,7 +365,7 @@ namespace MCHEmul
 	class ListOfBreakPointsCommand final : public Command
 	{
 		public:
-		static const int _ID = 13;
+		static const int _ID = 14;
 		static const std::string _NAME;
 
 		ListOfBreakPointsCommand ()
@@ -367,7 +386,7 @@ namespace MCHEmul
 	class SetBreakPointCommand final : public Command
 	{
 		public:
-		static const int _ID = 14;
+		static const int _ID = 15;
 		static const std::string _NAME;
 
 		SetBreakPointCommand ()
@@ -387,7 +406,7 @@ namespace MCHEmul
 	class RemoveBreakPointCommand final : public Command
 	{
 		public:
-		static const int _ID = 15;
+		static const int _ID = 16;
 		static const std::string _NAME;
 
 		RemoveBreakPointCommand ()
@@ -406,7 +425,7 @@ namespace MCHEmul
 	class RemoveAllBreakPointsCommand final : public Command
 	{
 		public:
-		static const int _ID = 16;
+		static const int _ID = 17;
 		static const std::string _NAME;
 
 		RemoveAllBreakPointsCommand ()
@@ -425,7 +444,7 @@ namespace MCHEmul
 	class CPUSpeedCommand final : public Command
 	{
 		public:
-		static const int _ID = 17;
+		static const int _ID = 18;
 		static const std::string _NAME;
 
 		CPUSpeedCommand ()
@@ -444,7 +463,7 @@ namespace MCHEmul
 	class LoadBinCommand final : public Command
 	{
 		public:
-		static const int _ID = 18;
+		static const int _ID = 19;
 		static const std::string _NAME;
 
 		LoadBinCommand ()
@@ -463,7 +482,7 @@ namespace MCHEmul
 	class SaveBinCommand final : public Command
 	{
 		public:
-		static const int _ID = 19;
+		static const int _ID = 20;
 		static const std::string _NAME;
 
 		SaveBinCommand ()
@@ -482,7 +501,7 @@ namespace MCHEmul
 	class MoveParametersToAnswerCommand final : public Command
 	{
 		public:
-		static const int _ID = 20;
+		static const int _ID = 21;
 		static const std::string _NAME;
 
 		MoveParametersToAnswerCommand ()

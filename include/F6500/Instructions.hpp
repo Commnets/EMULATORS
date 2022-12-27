@@ -25,7 +25,7 @@ namespace F6500
 	{
 		public:
 		Instruction (unsigned int c, unsigned int mp, unsigned int cc, const std::string& t)
-			: MCHEmul::Instruction (c, mp, cc, t)
+			: MCHEmul::Instruction (c, mp, cc, t, false)
 							{ }
 	
 		protected:
