@@ -291,3 +291,13 @@ bool MCHEmul::Emulator::runCycle (unsigned int a)
 
 	return (result);
 }
+
+// ---
+MCHEmul::Assembler::Parser* MCHEmul::Emulator::createParser () const 
+{ 
+	Assembler::Parser* r = new MCHEmul::Assembler::Parser (_computer -> cpu ());
+	
+	r -> setPrintOutProcess (true); // To print out the parsing process...
+	
+	return (r); 
+}

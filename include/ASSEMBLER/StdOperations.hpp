@@ -102,7 +102,7 @@ namespace MCHEmul
 							{ return ("+"); }
 
 			virtual UInt doFunction (const std::vector <UInt>& v) const override
-							{ return (UInt::fromInt (v [0].asInt () + v [1].asInt ())); }
+							{ return (UInt::adjust (UInt::fromInt (v [0].asInt () + v [1].asInt ()))); }
 		};
 		
 		/** A binary function to subtract two OperationElement. */
@@ -118,7 +118,7 @@ namespace MCHEmul
 							{ return ("-"); }
 
 			virtual UInt doFunction (const std::vector <UInt>& v) const override
-							{ return (UInt::fromInt (v [0].asInt () - v [1].asInt ())); }
+							{ return (UInt::adjust (UInt::fromInt (v [0].asInt () - v [1].asInt ()))); }
 		};
 		
 		/** A binary function to multiply two OperationElement. */
@@ -134,7 +134,7 @@ namespace MCHEmul
 							{ return ("*"); }
 
 			virtual UInt doFunction (const std::vector <UInt>& v) const override
-							{ return (UInt::fromInt (v [0].asInt () * v [1].asInt ())); }
+							{ return (UInt::adjust (UInt::fromInt (v [0].asInt () * v [1].asInt ()))); }
 		};
 		
 		/** A binary function to divide two OperationElement. */

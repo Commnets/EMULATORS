@@ -100,14 +100,13 @@ void MCHEmul::Assembler::CodeTemplateDefinitionCommandParser::parse (MCHEmul::As
 
 	std::string id = cP ? MCHEmul::trim (pC -> _currentLine.substr (1)) : "";
 	MCHEmul::Strings ctLns;
-	bool f = false;
-	for (pC -> _linesPointer++, pC -> _currentLineNumber++;
-			pC -> _linesPointer != pC -> _lines.end () && !(f = ((*pC -> _linesPointer)[0] == _finalSymbol));
-			pC -> _linesPointer++, pC -> _currentLineNumber++)
+	for (pC -> _linesPointer++, pC -> _actionLinesPointer++, pC -> _currentLineNumber++;
+			pC -> _linesPointer != pC -> _lines.end () && ((*pC -> _linesPointer)[0] != _finalSymbol);
+			pC -> _linesPointer++, pC -> _actionLinesPointer++, pC -> _currentLineNumber++)
 		if (cP) ctLns.push_back (*pC -> _linesPointer);
-	if (f) { pC -> _linesPointer++; pC -> _currentLineNumber++; }
-	pC -> _currentLine = MCHEmul::trim (f ? (*pC -> _linesPointer) : "" /** at the end, no more lines to analyse. */);
 
+	// The definition can finishs if the end of the file comes...
+	pC -> _currentLine = "";
 	if (cP)
 		pC -> _semantic -> addCodeTemplate (MCHEmul::Assembler::CodeTemplate (id, ctLns));
 }
@@ -127,13 +126,14 @@ void MCHEmul::Assembler::CodeTemplateUseCommandParser::parse (MCHEmul::Assembler
 	size_t p = MCHEmul::firstSpaceIn (cTID);
 	if (p != std::string::npos) // It has parameters...
 	{
-		prms = MCHEmul::getElementsFrom (MCHEmul::trim (cTID.substr (p + 1)), ','); // Get the parameters...
+		prms = MCHEmul::getElementsFrom (MCHEmul::trim (cTID.substr (p + 1, // Get the parameters...
+			cTID.find (parser () -> commentSymbol ()) - (p + 1) /** Until a potential comment at the end. */)), ','); 
 		cTID = cTID.substr (0, p); // ...and the name is just the "thing" before the spaces...
 	}
 
 	MCHEmul::Assembler::CodeTemplate cT; // With error initially...
 	MCHEmul::Assembler::CodeTemplates::const_iterator i;
-	if ((i = pC -> _semantic -> codeTemplates ().find (MCHEmul::upper (cTID))) != 
+	if ((i = pC -> _semantic -> codeTemplates ().find (cTID)) != 
 				pC -> _semantic -> codeTemplates ().end ())
 	{
 		cT = (*i).second;
@@ -196,7 +196,7 @@ void MCHEmul::Assembler::LabelCommandParser::parse (MCHEmul::Assembler::ParserCo
 	nE -> _id = pC -> _lastLabelId++; // Sequential...
 	nE -> _file = pC -> _file;
 	nE -> _line = pC -> _currentLineNumber;
-	nE -> _name = MCHEmul::trim (MCHEmul::upper (pC -> _currentLine.substr (0, eL)));
+	nE -> _name = MCHEmul::trim (pC -> _currentLine.substr (0, eL));
 	// The label has to be valid...
 	if (!MCHEmul::validLabel (nE -> _name))
 		nE -> _error = MCHEmul::Assembler::ErrorType::_LABELNOTVALID;
@@ -222,8 +222,13 @@ void MCHEmul::Assembler::BytesCommandParser::parse (MCHEmul::Assembler::ParserCo
 	nE -> _id = pC -> _lastBytesId++; // Sequential...
 	nE -> _file = pC -> _file;
 	nE -> _line = pC -> _currentLineNumber;
-	nE -> _elements = MCHEmul::getElementsFrom (pC -> _currentLine.substr (eL + 1,
-		pC -> _currentLine.find (parser () -> commentSymbol () /** Until a potential comment. */) - (eL + 1)), ' ');
+	MCHEmul::Strings dt = 
+		MCHEmul::getElementsFrom (pC -> _currentLine.substr (eL + 1,
+			pC -> _currentLine.find (parser () -> commentSymbol () /** Until a potential comment. */) - (eL + 1)), ' ');
+	// Erase all "empty" elements!
+	MCHEmul::Strings::iterator i = dt.begin (); 
+	while (i != dt.end ()) if (MCHEmul::trim ((*i)) == "") i = dt.erase (i); else i++;
+	nE -> _elements = dt;
 	if (nE -> _elements.empty ())
 		nE -> _error = MCHEmul::Assembler::ErrorType::_BYTESNOTVALID;
 
@@ -293,6 +298,34 @@ void MCHEmul::Assembler::BinaryCommandParser::parse (MCHEmul::Assembler::ParserC
 	nE -> _elements = (dt == "") ? MCHEmul::Strings () : MCHEmul::Strings ({ "z" /** for binary. */ + dt });
 	if (nE -> _elements.empty ())
 		nE -> _error = MCHEmul::Assembler::ErrorType::_BYTESNOTVALID;
+
+	// The element created is added to the gramatic...
+	pC -> _semantic -> addGrammaticalElement (nE);
+
+	// The line is completed...
+	pC -> _currentLine = "";
+}
+
+// ---
+void MCHEmul::Assembler::TextCommandParser::parse (MCHEmul::Assembler::ParserContext* pC) const
+{
+	if (!canParse (pC))
+	{
+		pC -> _currentLine = "";
+
+		return; // It doesn't generate error, but "forgets" the line
+	}
+
+	size_t eL = MCHEmul::firstSpaceIn (pC -> _currentLine); // The first space like defines where the data starts...
+	MCHEmul::Assembler::TextBytesElement* nE = new MCHEmul::Assembler::TextBytesElement;
+	nE -> _id = pC -> _lastBytesId++; // Sequential...
+	nE -> _file = pC -> _file;
+	nE -> _line = pC -> _currentLineNumber;
+	std::string dt = MCHEmul::trim (pC -> _currentLine.substr (eL));
+	if (dt [0] != '"' || dt [dt.length () - 1] != '"') // The text has to be separed with "...
+		nE -> _error = MCHEmul::Assembler::ErrorType::_BYTESNOTVALID;
+	nE -> _text = dt.substr (1, dt.length () - 2);
+	nE -> _ASCIIConverter = _ASCIIConverter; // Transfer the ascii converter...
 
 	// The element created is added to the gramatic...
 	pC -> _semantic -> addGrammaticalElement (nE);
@@ -384,8 +417,10 @@ void MCHEmul::Assembler::InstructionCommandParser::parse (MCHEmul::Assembler::Pa
 }
 
 // ---
-MCHEmul::Assembler::Parser::Parser (const MCHEmul::CPU* c, const MCHEmul::Assembler::CommandParsers& lP)
-	: _cpu (c), 
+MCHEmul::Assembler::Parser::Parser (const MCHEmul::CPU* c, 
+		const MCHEmul::ASCIIConverter* aC, const MCHEmul::Assembler::CommandParsers& lP)
+	: _cpu (c),
+	  _ASCIIConverter (aC),
 	  _commandParsers (lP),
 	  _printOutProcess (false), 
 	  _errors (), 
@@ -397,11 +432,13 @@ MCHEmul::Assembler::Parser::Parser (const MCHEmul::CPU* c, const MCHEmul::Assemb
 	bool cP = false;
 	MCHEmul::Assembler::BinaryDefinitionParser* bD = nullptr;
 	MCHEmul::Assembler::BinaryCommandParser* bP = nullptr;
+	MCHEmul::Assembler::TextCommandParser* bT = nullptr;
 	for (auto i : _commandParsers) 
 	{ 
 		cP |= (dynamic_cast <MCHEmul::Assembler::CommentCommandParser*> (i) != nullptr);
 		if (bD == nullptr) bD = dynamic_cast <MCHEmul::Assembler::BinaryDefinitionParser*> (i); // Get the first if any...
 		if (bP == nullptr) bP = dynamic_cast <MCHEmul::Assembler::BinaryCommandParser*> (i); // Get the first if any...
+		if (bT == nullptr) bT = dynamic_cast <MCHEmul::Assembler::TextCommandParser*> (i); // Get the first oif any...
 
 		i -> setCPU (c);
 		i -> setParser (this); 
@@ -413,6 +450,9 @@ MCHEmul::Assembler::Parser::Parser (const MCHEmul::CPU* c, const MCHEmul::Assemb
 	// The binary definition parser could be or not, but if it is it has to be linked to the binary command parser...
 	if (bD != nullptr && bP != nullptr)
 		bP -> setDefinitionParser (bD);
+	// The text command parser might or not be, but if it is, then the ConvertASCIIIntoBytes is assigned to it...
+	if (bT != nullptr)
+		bT -> setASCIIConverter (aC);
 }
 
 // ---
@@ -512,7 +552,7 @@ void MCHEmul::Assembler::Parser::parseLines (MCHEmul::Assembler::ParserContext* 
 {
 	while (pC -> _linesPointer != pC -> _lines.end ())
 	{
-		pC -> _currentLine = MCHEmul::trim (*pC -> _linesPointer);
+		pC -> _currentLine = MCHEmul::upper (MCHEmul::trim (*pC -> _linesPointer));
 
 		// Print out the line being parser...
 		// If it defined in that way...

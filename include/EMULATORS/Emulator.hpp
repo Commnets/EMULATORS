@@ -188,10 +188,7 @@ namespace MCHEmul
 
 		// Implementation
 		/** To create the right version of the parser. */
-		virtual Assembler::Parser* createParser () const 
-							{ Assembler::Parser* r = new Assembler::Parser (_computer -> cpu ()); 
-							  r -> setPrintOutProcess (true); // To print out the parsing process...
-							  return (r); }
+		virtual Assembler::Parser* createParser () const;
 		/** To create the right version of the compiler. */
 		virtual Assembler::Compiler* createCompiler () const
 							{ return (new Assembler::Compiler ((Assembler::Parser*) parser ())); }

@@ -82,6 +82,9 @@ Id:@ID@
 @PC@
 #---
 #---
+;CSETPC
+#---
+#---
 ;CSTACK
 @Stack>@
 #---

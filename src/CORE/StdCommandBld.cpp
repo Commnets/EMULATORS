@@ -32,6 +32,8 @@ MCHEmul::Command* MCHEmul::StandardCommandBuilder::createEmptyCommand (const std
 		result = new MCHEmul::StopCPUCommand;
 	else if (cmdName == "RUN" || cmdName == "R" || cmdName == MCHEmul::RunCPUCommand::_NAME)
 		result = new MCHEmul::RunCPUCommand;
+	else if (cmdName == "SETPC" || cmdName == MCHEmul::SetProgramCounterCommand::_NAME)
+		result = new MCHEmul::SetProgramCounterCommand;
 	else if (cmdName == "NEXT" || cmdName == "N" || cmdName == MCHEmul::NextInstructionCommand::_NAME)
 		result = new MCHEmul::NextInstructionCommand;
 	else if (cmdName == "SHOWNEXT" || cmdName == "SN" || cmdName == MCHEmul::ShowNextInstructionCommand::_NAME)

@@ -1,0 +1,54 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Archivos de origen">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Archivos de encabezado">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+    <Filter Include="Archivos de recursos">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Archivos de encabezado\IO">
+      <UniqueIdentifier>{6084b447-c5f3-44eb-88d8-03fa812e6650}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Archivos de origen\Motherboard">
+      <UniqueIdentifier>{48fdf40f-69a2-4ff0-8238-c7352416b777}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Archivos de encabezado\Motherboard">
+      <UniqueIdentifier>{15f108bf-5a25-4118-be90-9d3b1d4804aa}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Archivos de origen\IO">
+      <UniqueIdentifier>{83b0d5f9-c14f-4a21-aebe-9fea9f9af451}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Archivos de origen\Motherboard\Chips">
+      <UniqueIdentifier>{84824b7e-baff-4c11-8ec9-3c5707148f9f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Archivos de encabezado\Motherboard\Chips">
+      <UniqueIdentifier>{61503d3f-b542-47ff-b84c-bb0be2546585}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Archivos de origen\Commands">
+      <UniqueIdentifier>{0ba8a678-d37f-4b6e-829a-63be35cb1e48}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Archivos de encabezado\Commands">
+      <UniqueIdentifier>{9d9d0e08-dfbf-43bc-aff1-f5c9c2aa34af}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Archivos de origen\Emulators">
+      <UniqueIdentifier>{9d8ca4c5-e6ad-4c83-bf68-7148bf4c8ff5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Archivos de encabezado\Emulators">
+      <UniqueIdentifier>{05209754-6518-4b21-b8bf-1b7b742d8a5d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Configuration">
+      <UniqueIdentifier>{04e82ca4-8a93-4930-bd39-60c7c0b83cfb}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\include\COMMODORE\incs.hpp">
+      <Filter>Archivos de encabezado</Filter>
+  </ItemGroup>
+</Project>

@@ -24,7 +24,7 @@ MCHEmul::UInt MCHEmul::Assembler::DivideFunctionOperationElement::doFunction
 		? MCHEmul::Assembler::ErrorType::_DIVISIONBYCERO : MCHEmul::Assembler::ErrorType::_NOERROR;
 	
 	return ((_error == MCHEmul::Assembler::ErrorType::_NOERROR) 
-		? MCHEmul::UInt::fromInt (v [0].asInt () / v [1].asInt ()) : _whenError); 
+		? MCHEmul::UInt::adjust (MCHEmul::UInt::fromInt (v [0].asInt () / v [1].asInt ())) : _whenError); 
 }
 
 // ---

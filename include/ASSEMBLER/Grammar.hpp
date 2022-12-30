@@ -273,6 +273,24 @@ namespace MCHEmul
 			virtual std::vector <UByte> calculateCodeBytes (const Semantic* s, bool bE, const OperationParser* oP) const override;
 		};
 
+		/** @see explanation at the beginning of the file. */
+		struct TextBytesElement final : public GrammaticalElement
+		{
+			TextBytesElement ()
+				: GrammaticalElement (), _text ("")
+					{ _type = Type::_BYTESINMEMORY; }
+
+			virtual size_t size (const Semantic* s, const OperationParser* oP = nullptr) const override;
+
+			std::string _text;
+			const ASCIIConverter* _ASCIIConverter;
+
+			private:
+			virtual std::vector <UByte> calculateCodeBytes 
+				(const Semantic* s, bool bE, const OperationParser* oP) const override
+							{ return (_ASCIIConverter -> convert (_text)); }
+		};
+
 		/** @see explanation at the beggining of the file. 
 			An instruction is just also a set of bytes in memory. */
 		struct InstructionElement final : public GrammaticalElement

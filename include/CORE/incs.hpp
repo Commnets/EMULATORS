@@ -18,6 +18,7 @@
 #include <CORE/Clock.hpp>
 #include <CORE/InfoStructure.hpp>
 #include <CORE/InfoClass.hpp>
+#include <CORE/ASCIIConverter.hpp>
 #include <CORE/Formatter.hpp>
 #include <CORE/StdFormatter.hpp>
 #include <CORE/JSONFormatter.hpp>

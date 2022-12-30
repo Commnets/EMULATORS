@@ -5,7 +5,7 @@
 bool F6500::STY_General::executeOn (const MCHEmul::Address& a)
 {
 	// Set the value...
-	memory () -> set (a, cpu () -> internalRegister (F6500::C6510::_XREGISTER).values ()); // 1 byte-length
+	memory () -> set (a, cpu () -> internalRegister (F6500::C6510::_YREGISTER).values ()); // 1 byte-length
 
 	return (true);
 }

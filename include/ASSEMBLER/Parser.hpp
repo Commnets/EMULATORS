@@ -334,6 +334,31 @@ namespace MCHEmul
 			BinaryDefinitionParser* _definitionParser;
 		};
 
+		/** To parser a text declaration. \n
+			How the letters of the text are "managed "translated" into bytes 
+			will depend on the computer at compilation time. \n */
+		class TextCommandParser final : public CommandParser
+		{
+			public:
+			TextCommandParser (const ASCIIConverter* tC)
+				: CommandParser (),
+				  _ASCIIConverter (tC) // It could be null at construction time...
+							{ }
+
+			/** The class is not the owner of the converter as it might be used by other classes. */
+			void setASCIIConverter (const ASCIIConverter* tC)
+							{ _ASCIIConverter = tC; }
+
+			virtual bool canParse (ParserContext* pC) const override
+							{ size_t p = firstSpaceIn (pC -> _currentLine);
+							  return ((p == std::string::npos) 
+								  ? false : upper (trim (pC -> _currentLine.substr (0, p))) == "TEXT"); }
+			virtual void parse (ParserContext* pC) const override;
+
+			private:
+			const ASCIIConverter* _ASCIIConverter;
+		};
+
 		/** To include a binary set of data comming from a file. */
 		class LoadBytesFileCommandParser final : public CommandParser
 		{
@@ -370,18 +395,20 @@ namespace MCHEmul
 		class Parser
 		{
 			public:
-			Parser (const CPU* c, const CommandParsers& lP = // With the standard line parsers...
-					{ new CommentCommandParser, // Comments
-					  new IncludeCommandParser, // Include other assembler files
-					  new MacroCommandParser, // Macro definitions
-					  new CodeTemplateDefinitionCommandParser, new CodeTemplateUseCommandParser, // Templates
-					  new StartingPointCommandParser, // Starting point for data and code
-					  new LabelCommandParser, // Labels for jumps
-					  new BytesCommandParser, // Set of bytes
-					  new LoadBytesFileCommandParser, // Loading a file of bytes
-					  new BinaryDefinitionParser, new BinaryCommandParser, // Binary definition
-					  new InstructionCommandParser // To understand instructions
-					});
+			Parser (const CPU* c, const ASCIIConverter* aC = new ASCIIConverter /** The deafult one does nothing. */,
+					const CommandParsers& lP = // With the standard line parsers...
+						{ new CommentCommandParser, // Comments
+						  new IncludeCommandParser, // Include other assembler files
+						  new MacroCommandParser, // Macro definitions
+						  new CodeTemplateDefinitionCommandParser, new CodeTemplateUseCommandParser, // Templates
+						  new StartingPointCommandParser, // Starting point for data and code
+						  new LabelCommandParser, // Labels for jumps
+						  new BytesCommandParser, // Set of bytes
+						  new TextCommandParser (nullptr), // A text can be converted into bytes in memory...
+						  new LoadBytesFileCommandParser, // Loading a file of bytes
+						  new BinaryDefinitionParser, new BinaryCommandParser, // Binary definition
+						  new InstructionCommandParser // To understand instructions
+						});
 
 			Parser (Parser&) = delete;
 
@@ -389,7 +416,7 @@ namespace MCHEmul
 
 			/** The parser doesn't own the instructions but the CPU, but the line parsers. */
 			~Parser ()
-							{ for (auto i : _commandParsers) delete (i); }
+							{ for (auto i : _commandParsers) delete (i); delete (_ASCIIConverter); }
 
 			/** To activate or desactivate to print out the parsing process. 
 				using the output channel received as parameter in th eparsing methods. */
@@ -474,6 +501,7 @@ namespace MCHEmul
 
 			private:
 			const CPU* _cpu;
+			const ASCIIConverter* _ASCIIConverter;
 			CommandParsers _commandParsers;
 			bool _printOutProcess;
 

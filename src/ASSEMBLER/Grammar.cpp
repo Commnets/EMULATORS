@@ -148,8 +148,8 @@ MCHEmul::Assembler::CodeTemplate::CodeTemplate (const std::string& id, MCHEmul::
 	// There can not be more than 10 parameters...
 	for (const auto& i : _parameters)
 		if (i.length () != 2 ||
-			i [0] != '#' ||
-			(i [0] == '#' && !std::isdigit (i [1])))
+			i [0] != '?' ||
+			(i [0] == '?' && !std::isdigit (i [1])))
 			_error = MCHEmul::Assembler::ErrorType::_TEMPLATENOTVALID;
 	if (_error == MCHEmul::Assembler::ErrorType::_TEMPLATENOTVALID)
 		_parameters = { };
@@ -177,8 +177,8 @@ MCHEmul::Strings MCHEmul::Assembler::CodeTemplate::valueFor (const MCHEmul::Stri
 	MCHEmul::Strings cLines = _lines;
 	for (const auto& i : prmsVal)
 	{
-		for (const auto& j : cLines)
-			MCHEmul::replaceAll (j, _parameters [nP], i);
+		for (auto& j : cLines)
+			j = MCHEmul::replaceAll (j, _parameters [nP], i);
 		nP++;
 	}
 
@@ -309,6 +309,20 @@ std::vector <MCHEmul::UByte> MCHEmul::Assembler::BytesFileElement::calculateCode
 		_error = MCHEmul::Assembler::ErrorType::_BINARYFILENOTVALID;
 
 	return (result);
+}
+
+// ---
+size_t MCHEmul::Assembler::TextBytesElement::size 
+	(const MCHEmul::Assembler::Semantic* s, const MCHEmul::Assembler::OperationParser* oP) const
+{
+	size_t result = 0;
+
+	if (!*this)
+		return (0); // With error, no size...
+
+	/** The architecture is not important at this point, so big endian is taken as default. */
+	return ((_codeBytes.size () != 0) 
+		? _codeBytes.size () : calculateCodeBytes (s, true, oP).size ());
 }
 
 // ---
@@ -461,6 +475,8 @@ std::vector <MCHEmul::UByte> MCHEmul::Assembler::InstructionElement::calculateCo
 						else
 							bt = MCHEmul::UBytes ((*lbsP) -> address (s, oP).bytes (), bE).bytes ();
 					}
+					else // It is a macro and translate direcly into bytes...
+						bt = MCHEmul::UBytes (bytesFromExpression (prms [i], s -> macros (), e, oP), bE).bytes ();
 				}
 				else
 					bt = MCHEmul::UBytes (bytesFromExpression (prms [i], s -> macros (), e, oP), bE).bytes ();

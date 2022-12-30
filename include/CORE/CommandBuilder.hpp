@@ -44,8 +44,8 @@ namespace MCHEmul
 			Important to know: \n
 			The parameters can be provided either in the way NAME=VALUE or simply VALUE (will depend on the use). \n
 			In the second form the parameter internally created will be COUNTER=VALUE, 
-			where counter is the position (as string with the forma XX) in the list of parameters received. 
-			No more than 100 parameters are allowed. */
+			where counter is the position (as string with the form XX) in the list of parameters received. \n
+			So, no more than 100 parameters are allowed. */
 		Attributes readCommandParameters (const std::string& cmd) const;
 
 		mutable std::map <std::string, Command*> _commands;

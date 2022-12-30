@@ -144,6 +144,9 @@
     <ClCompile Include="..\..\src\CORE\ByteCodeLine.cpp">
       <Filter>Archivos de origen\Foundation</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\CORE\ASCIIConverter.cpp">
+      <Filter>Archivos de origen\Foundation</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\include\CORE\IO.hpp">
@@ -269,10 +272,14 @@
     <ClInclude Include="..\..\include\CORE\ByteCodeLine.hpp">
       <Filter>Archivos de encabezado\Foundation</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\include\CORE\ASCIIConverter.hpp">
+      <Filter>Archivos de encabezado\Foundation</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="defformats.fmt">
       <Filter>Configuration</Filter>
     </None>
+    <None Include="packages.config" />
   </ItemGroup>
 </Project>

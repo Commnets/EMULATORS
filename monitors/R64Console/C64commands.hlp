@@ -18,6 +18,10 @@ No parameters needed.
 ;PC
 Get the status of the Program Counter.
 No parameters needed.
+;SETPC
+To change the program counter.
+Only the paremeter with the new address is needed.
+Take care using this command.
 ;CPUSTATUS
 To get the current status of the CPU.
 Including: Status Register (STATUS), Registers (REGISTERS), 
@@ -54,7 +58,6 @@ To keep CPU running.
 An optional parameter allows to start the execution from another position.
 Take care using this command only Program Counter is changed before starting to run.
 R can also be used.
-No parameters needed.
 ;NEXT
 To execute the next instruction after being stopped.
 N can also be used instead.

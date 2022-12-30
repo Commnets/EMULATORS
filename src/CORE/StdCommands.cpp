@@ -20,6 +20,7 @@ const std::string MCHEmul::MemoryStatusCommand::_NAME = "CMEMORY";
 const std::string MCHEmul::SetMemoryValueCommand::_NAME = "CSETMEMORY";
 const std::string MCHEmul::StopCPUCommand::_NAME = "CSTOP";
 const std::string MCHEmul::RunCPUCommand::_NAME = "CRUN";
+const std::string MCHEmul::SetProgramCounterCommand::_NAME = "CSETPC";
 const std::string MCHEmul::NextInstructionCommand::_NAME = "CNEXT";
 const std::string MCHEmul::ShowNextInstructionCommand::_NAME = "CSHOWNEXT";
 const std::string MCHEmul::LastIntructionCPUCommand::_NAME = "CINST";
@@ -263,6 +264,16 @@ void MCHEmul::RunCPUCommand::executeImpl (MCHEmul::CommandExecuter* cE, MCHEmul:
 }
 
 // ---
+void MCHEmul::SetProgramCounterCommand::executeImpl
+	(MCHEmul::CommandExecuter* cE, MCHEmul::Computer* c, MCHEmul::InfoStructure& rst)
+{
+	if (c == nullptr)
+		return;
+
+	c -> cpu () -> programCounter ().setAddress (MCHEmul::Address::fromStr (parameter ("00")));
+}
+
+// ---
 void MCHEmul::NextInstructionCommand::executeImpl (MCHEmul::CommandExecuter* cE, MCHEmul::Computer* c, MCHEmul::InfoStructure& rst)
 {
 	if (c == nullptr)
@@ -279,6 +290,9 @@ void MCHEmul::NextInstructionCommand::executeImpl (MCHEmul::CommandExecuter* cE,
 void MCHEmul::ShowNextInstructionCommand::executeImpl 
 	(MCHEmul::CommandExecuter* cE, MCHEmul::Computer* c, MCHEmul::InfoStructure& rst)
 {
+	if (c == nullptr)
+		return;
+
 	unsigned int nI = 1;
 	if (_parameters.size () != 0)
 		nI = std::stoi (parameter ("00").c_str ());

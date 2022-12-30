@@ -21,6 +21,7 @@
 
 namespace C64
 {
+	/** The c64 emulator admits some additional parameters. */
 	class C64Emulator : public MCHEmul::Emulator
 	{
 		public:

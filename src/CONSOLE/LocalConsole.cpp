@@ -38,12 +38,12 @@ void MCHEmul::LocalConsole::createAndExecuteCommand ()
 	else
 	if (_command.find (cmdLoadBinary) != std::string::npos)
 		_outputStream << MCHEmul::FormatterBuilder::instance () ->
-			formatter ("CLOADBINARY") -> format (loadProgram (MCHEmul::trim (_command.substr 
+			formatter ("CLOADBINARY") -> format (loadBinaryFile (MCHEmul::trim (_command.substr 
 				(_command.find (cmdLoadBinary) + std::string (cmdLoadBinary).length ())))) << std::endl;
 	else
 	if (_command.find (cmdLoadBlocks) != std::string::npos)
 		_outputStream << MCHEmul::FormatterBuilder::instance () ->
-			formatter ("CLOADBLOCKS") -> format (loadProgram (MCHEmul::trim (_command.substr 
+			formatter ("CLOADBLOCKS") -> format (loadBlocksFile (MCHEmul::trim (_command.substr 
 				(_command.find (cmdLoadBlocks) + std::string (cmdLoadBlocks).length ())))) << std::endl;
 	else
 	if (_command.find (cmdDecompileMemory) != std::string::npos)
@@ -107,7 +107,12 @@ MCHEmul::InfoStructure MCHEmul::LocalConsole::loadProgram (const std::string& nP
 
 		MCHEmul::InfoStructure lns;
 		for (size_t i = 0; i < cL._lines.size (); i++)
-			lns.add (std::to_string (i), cL._lines [i].asString (MCHEmul::UByte::OutputFormat::_HEXA, ' ', 2));
+		{ 
+			std::string iP = std::to_string (i);
+			iP = MCHEmul::_CEROS.substr (0, 5 - iP.length ()) + iP;
+			lns.add (iP, cL._lines [i].asString (MCHEmul::UByte::OutputFormat::_HEXA, ' ', 2));
+		}
+
 		result.add ("CODELINES", lns);
 	}
 

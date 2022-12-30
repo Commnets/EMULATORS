@@ -265,6 +265,11 @@ namespace MCHEmul
 			can not have more bytes than be longer than "size_of (unsigned int)". */
 		static UInt fromStr (const std::string& s, unsigned char f = _BINARY);
 
+		/** To eliminate the 0 at the left. */
+		static UInt adjust (const UInt& n)
+							{ return (UInt (std::vector <UByte> (std::find_if (n.bytes ().begin (), 
+								n.bytes ().end (), [](const UByte& u) -> bool { return (u.value () != 0); }), n.bytes ().end ()))); }
+
 		friend std::ostream& operator << (std::ostream& o, const UInt& u)
 							{ return (o << u.asString (UByte::OutputFormat::_HEXA, '\0', 2 /** sizeof (unsigned char) * 2 */)); }
 
