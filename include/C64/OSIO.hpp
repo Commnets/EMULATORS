@@ -61,7 +61,7 @@ namespace C64
 							=========================================================================================
 		*/
 		using KeyMPos = std::pair <unsigned short /** The byte. */, unsigned short /** The bit. */>;
-		static const std::map <SDL_Scancode, KeyMPos> _C64KEYS;
+		static const std::map <SDL_Scancode, const std::vector <KeyMPos>> _C64KEYS;
 	};
 }
 
