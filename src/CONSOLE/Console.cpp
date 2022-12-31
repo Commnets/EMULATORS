@@ -93,6 +93,9 @@ void MCHEmul::Console::run ()
 // ---
 void MCHEmul::Console::manageAnswer (MCHEmul::Command* c, const MCHEmul::InfoStructure& rst)
 {
+	if (rst.empty ())
+		return;
+
 	_outputStream << MCHEmul::FormatterBuilder::instance () ->
 		formatter (c -> name ()) -> format (rst) << std::endl; // It is used the formatter with the name of the command!
 }

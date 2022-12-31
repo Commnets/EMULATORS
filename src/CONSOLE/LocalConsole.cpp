@@ -74,7 +74,7 @@ MCHEmul::InfoStructure MCHEmul::LocalConsole::loadBinaryFile (const std::string&
 
 	MCHEmul::InfoStructure result;
 	if (e)
-		result.add ("CODE", std::string ("No code loaded"));
+		return (result);
 	else
 	{
 		_emulator -> computer () -> setActionForNextCycle (MCHEmul::Computer::_ACTIONSTOP);
@@ -127,7 +127,7 @@ MCHEmul::InfoStructure MCHEmul::LocalConsole::loadBlocksFile (const std::string&
 
 	MCHEmul::InfoStructure result;
 	if (e)
-		result.add ("CODE", std::string ("No code loaded"));
+		return (result);
 	else
 	{
 		_emulator -> computer () -> setActionForNextCycle (MCHEmul::Computer::_ACTIONSTOP);
@@ -150,14 +150,13 @@ MCHEmul::InfoStructure MCHEmul::LocalConsole::decompileMemory (const std::string
 		return (result);
 
 	MCHEmul::Address iA = MCHEmul::Address::fromStr (MCHEmul::trim (prms.substr (0, pS)));
+	if (iA > _emulator -> computer () -> cpu () -> architecture ().longestAddressPossible ())
+		return (result);
+
 	size_t nB = (size_t) std::atoi (MCHEmul::trim (prms.substr (pS)).c_str ());
 	size_t nBA = _emulator -> computer () -> cpu () -> architecture ().numberBytes ();
 	if (iA.size () > nBA || nB > ((size_t) 1 << (MCHEmul::UByte::sizeBits () * nBA)))
-	{
-		result.add ("ERROR",
-			std::string ("Bad starting address or wrong memory size requested"));
 		return (result);
-	}
 
 	MCHEmul::Assembler::ByteCode cL = MCHEmul::Assembler::ByteCode::createFromMemory 
 		(iA, (unsigned int) nB, _emulator -> computer () -> memory (), _emulator -> computer ());

@@ -203,9 +203,14 @@ void MCHEmul::MemoryStatusCommand::executeImpl (MCHEmul::CommandExecuter* cE, MC
 		return;
 
 	MCHEmul::Address a1 = MCHEmul::Address::fromStr (parameter ("00"));
+	if (a1 > c -> cpu () -> architecture ().longestAddressPossible ()) 
+		return;
 	if (_parameters.size () == 2)
 	{
 		MCHEmul::Address a2 = MCHEmul::Address::fromStr (parameter ("01"));
+		if (a2 > c -> cpu () -> architecture ().longestAddressPossible ())
+			return;
+
 		MCHEmul::Address iA = ((a1 <= a2) ? a1 : a2);
 		rst.add ("BYTES", c -> cpu () -> memoryRef () -> values (iA, (((a2 >= a1) ? a2 : a1) - iA) + 1).
 				asString (MCHEmul::UByte::OutputFormat::_HEXA, ',', 2));
@@ -221,11 +226,16 @@ void MCHEmul::SetMemoryValueCommand::executeImpl (MCHEmul::CommandExecuter* cE, 
 		return;
 
 	MCHEmul::Address a1 = MCHEmul::Address::fromStr (parameter ("00"));
+	if (a1 > c -> cpu () -> architecture ().longestAddressPossible ()) 
+		return;
+	
 	MCHEmul::Address a2 = a1;
 	std::vector <MCHEmul::UByte> v;
 	if (_parameters.size () == 3)
 	{
 		a2 = MCHEmul::Address::fromStr (parameter ("01"));
+		if (a2 > c -> cpu () -> architecture ().longestAddressPossible ())
+			return;
 
 		v = MCHEmul::UInt::fromStr (parameter ("02")).bytes ();
 	}
@@ -234,7 +244,7 @@ void MCHEmul::SetMemoryValueCommand::executeImpl (MCHEmul::CommandExecuter* cE, 
 
 	MCHEmul::Address iA = (a1 <= a2) ? a1 : a2;
 	MCHEmul::Address fA = (a2 >= a1) ? a2 : a1;
-	for (size_t i = 0; i < fA - iA; i += v.size ())
+	for (size_t i = 0; i <= fA - iA; i += v.size ())
 		c -> cpu () -> memoryRef () -> set (iA + i, v); // Without force it!
 }
 
@@ -330,8 +340,16 @@ void MCHEmul::LastIntructionCPUCommand::executeImpl (MCHEmul::CommandExecuter* c
 	if (c == nullptr)
 		return;
 
+	/** The instruction is added in the format o a bye code line. */
 	rst.add ("INST", c -> cpu () -> lastInstruction () == nullptr 
-		? "-" : c -> cpu () -> lastInstruction () -> asString ());
+		? "-" 
+		: MCHEmul::ByteCodeLine (
+			c -> cpu () -> programCounter ().asAddress (), 
+			c -> cpu () -> lastInstruction () -> parameters ().bytes (),
+			"", /** No laberl recognized. */
+			c -> cpu () -> lastInstruction (), 
+			c -> action (c -> cpu () -> programCounter ().asAddress ())).
+				asString (MCHEmul::UByte::OutputFormat::_HEXA, ' ', 2));
 }
 
 // ---

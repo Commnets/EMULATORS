@@ -280,6 +280,5 @@
     <None Include="defformats.fmt">
       <Filter>Configuration</Filter>
     </None>
-    <None Include="packages.config" />
   </ItemGroup>
 </Project>

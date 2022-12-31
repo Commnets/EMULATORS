@@ -75,6 +75,9 @@ input:          cmp #87                         ; W - up
                 beq left
                 cmp #68                         ; D - right
                 beq right
+				sta SCREEN_MEMORY
+				lda #$01
+				sta COLOR_MEMORY_MAP
                 jmp loop
 
 up:             ldy SP0Y

@@ -39,7 +39,7 @@ void C64::CIA1Registers::setValue (size_t p, const MCHEmul::UByte& v)
 			{
 				// To indicate the row of the key matrix to be read (later)
 				// It will be affected by the communication direction (CIDDRA)
-				_keyboardRowToRead = v.value () & _dataPortADir;
+				_keyboardRowToRead = v.value ();
 			}
 
 			break;
@@ -212,13 +212,19 @@ const MCHEmul::UByte& C64::CIA1Registers::readValue (size_t p) const
 
 		case 0x01:
 			{
-				// Identify the row to read...
-				// Take into account that the row is identified writting 0 in its bit (so it is necessary to inverse it first)
-				unsigned char bRV = ~_keyboardRowToRead;
-				size_t c = 0; while ((bRV >>= 1) != 0) c++;
-				// If more than 1 row will be possible, the greatest one will be choosen...
-				// The columns (from keyboard or joystick 1) connected will have its bits to 0!...
-				result = _keyboardStatusMatrix [c] & ~_dataPortBDir;
+				if (_keyboardRowToRead == 0xff)
+					result = 0xff;
+				else
+				if (_keyboardRowToRead != 0x00)
+				{
+					// Identify the row to read...
+					// Take into account that the row is identified writting 0 in its bit (so it is necessary to inverse it first)
+					unsigned char bRV = ~_keyboardRowToRead;
+					size_t c = 0; while ((bRV >>= 1) != 0) c++;
+					// If more than 1 row will be possible, the greatest one will be choosen...
+					// The columns (from keyboard or joystick 1) connected will have its bits to 0!...
+					result = _keyboardStatusMatrix [c];
+				}
 			}
 			
 			break;

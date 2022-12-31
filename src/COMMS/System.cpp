@@ -67,7 +67,7 @@ void MCHEmul::CommunicationSystem::manageAnswer (MCHEmul::Command* c, const MCHE
 	}
 	else
 	{
-		if (!rst.empty () && c != nullptr)
+		if (c != nullptr)
 		{ 
 			std::string h = 
 				// The name of the command...

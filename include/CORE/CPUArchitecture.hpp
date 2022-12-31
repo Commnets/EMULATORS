@@ -45,9 +45,12 @@ namespace MCHEmul
 		Register registerLength (int id, const std::string& n, size_t nb /** Bytes. */) const
 							{ return ((nb > 0 && nb <= _numberBytes) 
 								? Register (id, n, UBytes (std::vector <UByte> (nb, UByte::_0))) : NoRegister); }
-		/** To get a exampla of the longest possible register. It is constant so it would have to be copied once it is got. */ 
+		/** To get a example of the longest possible register. It is constant so it would have to be copied once it is got. */ 
 		const Register& longestRegisterPossible () const
 							{ return (_longestRegisterPossible); }
+		/** To get the maxmim address possible. */
+		const Address& longestAddressPossible () const
+							{ return (_longestAddressPossible); }
 
 		const Attributes& attributes () const
 							{ return (_attributes); }
@@ -72,6 +75,7 @@ namespace MCHEmul
 		const bool _bigEndian = true; // Are the most significant Ubyte (in an address) the first or the last in values?
 		const Attributes _attributes = { }; // Optionaly adjusted at construction level
 		const Register _longestRegisterPossible = NoRegister; // Calculated at construction level
+		const Address _longestAddressPossible = Address (); // Calculated at construction level
 	};
 }
 

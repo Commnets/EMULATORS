@@ -6,11 +6,12 @@
 MCHEmul::CPUArchitecture::CPUArchitecture (size_t nb, size_t iL, bool bE, const Attributes& attrs)
 	: MCHEmul::InfoClass ("CPUArchitecture"),
 	  _numberBytes (nb), _instructionLength (iL), _numberBits ((size_t) (nb << 3)), _bigEndian (bE), _attributes (attrs), 
-	  _longestRegisterPossible (0, "-", MCHEmul::UBytes (std::vector <MCHEmul::UByte> (nb, MCHEmul::UByte::_0))) // The id is an imagination...
+	  _longestRegisterPossible (0, "-", MCHEmul::UBytes (std::vector <MCHEmul::UByte> (nb, MCHEmul::UByte::_0))), // The id is an imagination...
+	  _longestAddressPossible (MCHEmul::Address (std::vector <MCHEmul::UByte> (nb, MCHEmul::UByte::_FF)))
 { 
 	assert (_numberBytes > 0 && 
 		    _numberBytes <= MCHEmul::_MAXBYTESMANAGED && // The maximum byte length supported
-		    (_numberBits >> 3) == _numberBytes &&  // To b sure everything matches
+		    (_numberBits >> 3) == _numberBytes &&  // To be sure everything matches
 		    _instructionLength <= _numberBytes); 
 }
 

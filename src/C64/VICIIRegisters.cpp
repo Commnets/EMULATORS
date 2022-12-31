@@ -145,6 +145,7 @@ void C64::VICIIRegisters::setValue (size_t p, const MCHEmul::UByte& v)
 				for (size_t i = 0; i < 8; i++)
 					_spriteDoubleHeight [i] = v.bit (i);
 			}
+
 			break;
 	
 		// VMCSB: VICII Chip Memory Control Register
@@ -262,6 +263,7 @@ void C64::VICIIRegisters::setValue (size_t p, const MCHEmul::UByte& v)
 			{
 				_spriteColor [pp - 0x27] = v.value ();
 			}
+
 			break;
 	
 		// Not connected

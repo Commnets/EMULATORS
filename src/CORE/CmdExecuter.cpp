@@ -17,13 +17,8 @@ bool MCHEmul::CommandExecuter::executeCommandNow (MCHEmul::Command* cmd, MCHEmul
 	bool result = false;
 
 	MCHEmul::InfoStructure rst;
-	if (result = cmd -> execute (this, c, rst))
-	{
-		if (!rst.empty ())
-			manageAnswer (cmd, rst);
-	}
-	else
-		manageErrorInExecution (cmd, rst);
+	if (result = cmd -> execute (this, c, rst)) manageAnswer (cmd, rst);
+	else manageErrorInExecution (cmd, rst);
 
 	return (result);
 }

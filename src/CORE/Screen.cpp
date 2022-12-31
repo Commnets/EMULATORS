@@ -21,7 +21,7 @@ MCHEmul::Screen::Screen (const std::string& n, int id,
 		_screenColumns * _visibilityFactor, 
 		// Maybe one point in certain condition can be represented as 2 and it would need more space...
 		_screenRows * _visibilityFactor,
-		SDL_WINDOW_OPENGL
+		SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE
 	);
 
 	_renderer = SDL_CreateRenderer (_window, -1, SDL_RENDERER_ACCELERATED);

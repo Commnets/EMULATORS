@@ -65,7 +65,14 @@ const std::map <SDL_Scancode, C64::InputOSSystem::KeyMPos> C64::InputOSSystem::_
 			{ SDL_SCANCODE_LEFTBRACKET, std::make_pair (5,0) }, // +
 			{ SDL_SCANCODE_RIGHTBRACKET, std::make_pair (6,1) }, // *
 			{ SDL_SCANCODE_APOSTROPHE, std::make_pair (5,6) }, // @
-			{ SDL_SCANCODE_LGUI, std::make_pair (7,5) } // commodore key
+			{ SDL_SCANCODE_LGUI, std::make_pair (7,5) }, // commodore key
+			{ SDL_SCANCODE_LCTRL, std::make_pair (7,2) }, // Ctrl
+			{ SDL_SCANCODE_RCTRL, std::make_pair (7,2) }, // Ctrl (the same assigned)
+			/** The cursor keys */
+//			{ SDL_SCANCODE_LEFT, std::make_pair (7, 1) },
+			{ SDL_SCANCODE_RIGHT, std::make_pair (0, 2) },
+//			{ SDL_SCANCODE_UP, std::make_pair (6, 6) },
+			{ SDL_SCANCODE_DOWN, std::make_pair (0, 7) }
 		}
 	);
 
@@ -93,7 +100,7 @@ void C64::InputOSSystem::whenKeyReleased (SDL_Scancode k)
 {
 	std::map <SDL_Scancode, C64::InputOSSystem::KeyMPos>::const_iterator i = _C64KEYS.find (k);
 	if (i != _C64KEYS.end ())
-		_cia1 -> setKeyboardStatusMatrix ((*i).second.first, (*i).second.second, true /** meaning released. */);
+		_cia1 -> setKeyboardStatusMatrix ((*i).second.first, (*i).second.second, true /** Meaning released. */);
 }
 
 // ---
