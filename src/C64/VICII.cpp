@@ -187,7 +187,7 @@ bool C64::VICII::simulate (MCHEmul::CPU* cpu)
 	// is loaded at the beginning of every bad line...
 	auto isBadRasterLine = [=]() -> bool
 		{ return (_videoActive && _raster.isInPotentialBadLine () && 
-			((_raster.currentLine () - 0x03) & 0x07 /** The three last bits. */) == _VICIIRegisters -> verticalScrollPosition ()); };
+			(_raster.currentLine () & 0x07 /** The three last bits. */) == _VICIIRegisters -> verticalScrollPosition ()); };
 
 	// Reduce the visible zone if any... The info is passed to the raster!
 	_raster.reduceDisplayZone
@@ -367,8 +367,9 @@ void C64::VICII::drawGraphicsAndDetectCollisions (const C64::VICII::DrawContext&
 	// rc is the line with in the graphics cache to be drawn...
 	// In rc, the SCROLLY is involved, so it could be also negative moving from -7,
 	// When e.g. the raster is at the very first screen line,
-	// there are no reductions in the screen (display == scree) and SCROLL = 0x07,
-	int rc = r - dC._SR;
+	// there are no reductions in the screen (display == screen) and SCROLL = 0x07,
+	// 0x03 is the difference between the FIRTBADLINE = 0x30 and the first visible line = 0x33 (with no reduction)
+	int rc = r - dC._SR + 0x03; 
 	// If negative, then no graphics has to be drawn...
 	if (rc < 0)	return;
 	// Otherwise the position to draw will be within one the 8 lines read...

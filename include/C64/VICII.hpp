@@ -165,8 +165,8 @@ namespace C64
 		class Raster final : public MCHEmul::InfoClass
 		{
 			public:
-			static const unsigned short _FIRSTBADLINE	= 0x33;
-			static const unsigned short _LASTBADLINE	= 0xfa;
+			static const unsigned short _FIRSTBADLINE	= 0x30;
+			static const unsigned short _LASTBADLINE	= 0xf7;
 
 			Raster () = delete;
 

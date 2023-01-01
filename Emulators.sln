@@ -173,6 +173,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{DD45DD00
 		emulators\C64Programs\code\tests\TESTIRQ2.asm = emulators\C64Programs\code\tests\TESTIRQ2.asm
 		emulators\C64Programs\Code\Tests\TESTROUTINES.asm = emulators\C64Programs\Code\Tests\TESTROUTINES.asm
 		emulators\C64Programs\code\tests\TESTROUTINES2.asm = emulators\C64Programs\code\tests\TESTROUTINES2.asm
+		emulators\C64Programs\code\tests\TESTSIMPLEOUT.asm = emulators\C64Programs\code\tests\TESTSIMPLEOUT.asm
 		emulators\C64Programs\code\tests\TESTSPRITESIRQ.asm = emulators\C64Programs\code\tests\TESTSPRITESIRQ.asm
 		emulators\C64Programs\code\tests\TESTSPRITESIRQ2.asm = emulators\C64Programs\code\tests\TESTSPRITESIRQ2.asm
 	EndProjectSection
@@ -182,6 +183,7 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "C64Compiler", "compilers\C64Compiler\C64Compiler.vcxproj", "{050F50AC-6F27-4D65-95B8-F2B630467901}"
 	ProjectSection(ProjectDependencies) = postProject
 		{0B49D3E7-F82E-486A-8212-5DA19CA5F3E8} = {0B49D3E7-F82E-486A-8212-5DA19CA5F3E8}
+		{232573A6-2559-4F0D-8726-7100F1D3F240} = {232573A6-2559-4F0D-8726-7100F1D3F240}
 		{7E7B88C4-4311-4F96-8383-13E07653686D} = {7E7B88C4-4311-4F96-8383-13E07653686D}
 		{8388FEAA-CDFA-430C-945D-5272AB6D3980} = {8388FEAA-CDFA-430C-945D-5272AB6D3980}
 	EndProjectSection

@@ -72,7 +72,12 @@ const std::map <SDL_Scancode, const std::vector <C64::InputOSSystem::KeyMPos>> C
 			{ SDL_SCANCODE_LEFT,		{ std::make_pair (1, 7) /** Shift */, std::make_pair (0, 2) /** Right */ } },
 			{ SDL_SCANCODE_RIGHT,		{ std::make_pair (0, 2) } },
 			{ SDL_SCANCODE_UP,			{ std::make_pair (1, 7), std::make_pair (0, 7) } },
-			{ SDL_SCANCODE_DOWN,		{ std::make_pair (0, 7) } }
+			{ SDL_SCANCODE_DOWN,		{ std::make_pair (0, 7) } },
+			/** Other function keys */
+			{ SDL_SCANCODE_F2,			{ std::make_pair (1, 7), std::make_pair (0, 4) } },
+			{ SDL_SCANCODE_F4,			{ std::make_pair (1, 7), std::make_pair (0, 5) } },
+			{ SDL_SCANCODE_F6,			{ std::make_pair (1, 7), std::make_pair (0, 6) } },
+			{ SDL_SCANCODE_F8,			{ std::make_pair (1, 7), std::make_pair (0, 3) } }
 		}
 	);
 
