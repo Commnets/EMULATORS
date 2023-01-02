@@ -38,7 +38,7 @@ namespace C64
 		private:
 		virtual void whenKeyPressed (SDL_Scancode k) override;
 		virtual void whenKeyReleased (SDL_Scancode k) override;
-		virtual void whenJoystickMoved (const MCHEmul::InputOSSystem::SDL_JoyAxisEvents& js) override;
+		virtual void whenJoystickMoved (const MCHEmul::InputOSSystem::JoystickMovementMap& jm) override;
 		virtual void whenJoystickButtonPressed (SDL_JoyButtonEvent jb) override;
 		virtual void whenJoystickButtonReleased (SDL_JoyButtonEvent jb) override;
 

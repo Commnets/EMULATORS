@@ -2,6 +2,10 @@
 #include <CORE/global.hpp>
 #include <CORE/FmterBuilder.hpp>
 #include <CORE/Formatter.hpp>
+#include <SDL.h>
+
+std::shared_ptr <MCHEmul::IODeviceSystem> MCHEmul::IODeviceSystem::_theSystem = 
+	std::shared_ptr <MCHEmul::IODeviceSystem> (new MCHEmul::IODeviceSystem);
 
 // ---
 MCHEmul::IODevice::IODevice (MCHEmul::IODevice::Type t, int id, const MCHEmul::Attributes& attrs)
@@ -13,7 +17,13 @@ MCHEmul::IODevice::IODevice (MCHEmul::IODevice::Type t, int id, const MCHEmul::A
 	  _peripherals (),
 	  _error (MCHEmul::_NOERROR)
 {
-	// Nothing else to do
+	MCHEmul::IODeviceSystem::system () -> add (this);
+}
+
+// ---
+MCHEmul::IODevice::~IODevice ()
+{
+	MCHEmul::IODeviceSystem::system () -> remove (_id);
 }
 
 // ---		
@@ -83,4 +93,22 @@ MCHEmul::InfoStructure MCHEmul::IODevice::getInfoStructure () const
 	result.add ("IOPERIPHERALS", pers);
 
 	return (result);
+}
+
+// ---
+MCHEmul::IODeviceSystem::IODeviceSystem ()
+{
+	if (_theSystem != nullptr)
+		exit (1); // it shouldn't...but just in case...
+
+	if (SDL_Init (SDL_INIT_EVERYTHING))
+		exit (1); // the system has to be initialized...
+}
+
+// ---
+MCHEmul::IODeviceSystem::~IODeviceSystem ()
+{
+	SDL_Quit ();
+
+	_theSystem = nullptr;
 }

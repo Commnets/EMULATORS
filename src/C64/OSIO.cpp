@@ -111,29 +111,43 @@ void C64::InputOSSystem::whenKeyReleased (SDL_Scancode k)
 }
 
 // ---
-void C64::InputOSSystem::whenJoystickMoved (const MCHEmul::InputOSSystem::SDL_JoyAxisEvents& js)
+void C64::InputOSSystem::whenJoystickMoved (const MCHEmul::InputOSSystem::JoystickMovementMap& jm)
 {
-	unsigned char dr [2] = { 0, 0 }; 
-	for (const auto& i : js)
-	{
-		// Only events for two joysticks (1 & 2) are allowed...
-		if (i.which != 0 && i.which != 1)
-			break;
+	// It necessary to translate the position of the joysticks into the C64 records.
+	// In the C64 there are only 2 possible joysticks with 2 axis (x and y) each.
+	if (jm.size () > 2)
+		return; // No possible to manage...
 
-		dr [i.which] |= (i.axis == 0 /** x axis. */) 
-			? ((i.value > 0) ? 8 /** right. */ : ((i.value < 0) ? 4 /** left. */ : 0))
-			: ((i.axis == 1 /** y axis. */) 
-				? ((i.value > 0) ? 2 /** down. */ : ((i.value < 0) ? 1 /** up. */ : 0))
-				: 0 /** axis not supported. */); 
+	bool e = false;
+	for (const auto& i : jm)
+		e = (i.first != 0 && i.first != 1) || (i.second.size () > 2);
+	if (e)
+		return; // Either, the joysticks id are not recognized or the number of axis received is wrong...
+
+	// Time to translate into C64 register values...
+	int dr [2] = { 0, 0 };
+	for (const auto& i : jm)
+	{
+		size_t ct = 0;
+		for (auto j : i.second)
+		{ 
+			dr [i.first] |= (ct == 0) 
+				? ((j > 0) ? 8 /** right. */ : ((j < 0) ? 4 /** left. */ : 0))
+				: ((j > 0) ? 2 /** down. */ : ((j < 0) ? 1 /** up. */ : 0));
+
+			ct++;
+		}
 	}
 
 	// The events on the joystick 1 are set on the same place than the keyboard...
 	for (size_t i = 0; i < 8; i++)
-		_cia1 -> setKeyboardStatusMatrix (i, _cia1 -> keyboardStatusMatrix (i) | (0xff /** 0 means switch on. */ - dr [0]));
+		_cia1 -> setKeyboardStatusMatrix (i, 
+			(dr [0] == 0) ? 0xff : _cia1 -> keyboardStatusMatrix (i) & (0xff - dr [0] /** 0 means swicth on. */));
 
 	// The movement of the joystick 2...
 	// it is simplier!
-	_cia1 -> setJoystick2Status (_cia1 -> joystick2Status () | (0xff /** 0 means switch on. */ - dr [1]));
+	_cia1 -> setJoystick2Status ((dr [1] == 0) 
+		? 0xff : _cia1 -> joystick2Status () & (0xff - dr [1] /** 0 means switch on. */));
 }
 
 // ---
@@ -143,11 +157,11 @@ void C64::InputOSSystem::whenJoystickButtonPressed (SDL_JoyButtonEvent jb)
 	if (jb.which == 0)
 		// The events on the joystick 1 are set on the same place than the keyboard...
 		for (size_t i = 0; i < 8; i++)
-			_cia1 -> setKeyboardStatusMatrix (i, _cia1 -> keyboardStatusMatrix (i) | 
-				(0xff /** 0 means switch on. */ - 0x10 /** bit 4 on. */));
+			_cia1 -> setKeyboardStatusMatrix (i, _cia1 -> keyboardStatusMatrix (i) & 
+				(0xff - 0x10 /** bit 4 clear when on. */));
 	else
 	if (jb.which == 1)
-		_cia1 -> setJoystick2Status (_cia1 -> joystick2Status () | (0xff /** 0 means switch on. */ - 0x10 /** bit 4 on */));
+		_cia1 -> setJoystick2Status (_cia1 -> joystick2Status () & (0xff /** 0 means switch on. */ - 0x10));
 }
 
 // ---
@@ -157,9 +171,8 @@ void C64::InputOSSystem::whenJoystickButtonReleased (SDL_JoyButtonEvent jb)
 	if (jb.which == 0)
 		// The events on the joystick 1 are set on the same place than the keyboard...
 		for (size_t i = 0; i < 8; i++)
-			_cia1 -> setKeyboardStatusMatrix (i, _cia1 -> keyboardStatusMatrix (i) & 
-				(0xff /** 0 means switch on. */ - 0x10 /** bit 4 on. */));
+			_cia1 -> setKeyboardStatusMatrix (i, _cia1 -> keyboardStatusMatrix (i) | 0x010);
 	else
 	if (jb.which == 1)
-		_cia1 -> setJoystick2Status (_cia1 -> joystick2Status () & (0xff /** 0 means switch on. */ - 0x10 /** bit 4 on */));
+		_cia1 -> setJoystick2Status (_cia1 -> joystick2Status () | 0x10);
 }

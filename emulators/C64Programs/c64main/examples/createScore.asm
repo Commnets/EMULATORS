@@ -4,18 +4,19 @@
 ; Raster time
 ; ==========================================================
 
+* = $C000
 #../C64Programs/c64main/include/constants.asm
+#../C64Programs/c64main/include/COLDINIT.asm
 
 ; ----------------------------------------------------------
 ; Main Loop
 ; ----------------------------------------------------------
 
-*=$c000                         			; sys 49152
+*=$c100                         			; sys 49152
 
-
+				jsr COLDINIT
                 lda #147
-;                jsr $ffd2
-                jsr $f1ca
+                jsr $ffd2
 
 loop:           lda #100
 
@@ -35,8 +36,7 @@ wait1:          cmp RASTER
                 sta score+1
 
                 lda #19
-;                jsr $ffd2
-                jsr $f1ca
+                jsr $ffd2
 
                 ; print score
                 ldx score
@@ -48,6 +48,6 @@ wait1:          cmp RASTER
                 jmp loop
 
 
-*=$c100
-score = $c100
+*=$c200
+score = $c200
 BYTES 0 0                       ; assign low and high byte

@@ -25,7 +25,9 @@ namespace MCHEmul
 		public:
 		InputOSSystem (int id, const Attributes& attrs = { })
 			: IODevice (Type::_OUTPUT, id, attrs),
-			  _quitRequested (false)
+			  _quitRequested (false),
+			  _joysticks (),
+			  _movementMap ()
 							{ }
 
 		bool quitRequested () const
@@ -44,18 +46,31 @@ namespace MCHEmul
 		virtual void whenKeyReleased (SDL_Scancode) = 0;
 
 		// To manage events related with the joystick...
-		using SDL_JoyAxisEvents = std::vector <SDL_JoyAxisEvent>;
-		/** What to do when the joystick is moved.
-			Take care that the events in the joystick have to be managed as a hole, because may of them
-			can happen at the same time: e.g. when the joystick is moved in two axes simultaneosly. */
-		virtual void whenJoystickMoved (const SDL_JoyAxisEvents&) = 0;
+		/** The JoystickMovementMap is a map with different entries per joystick id,
+			and with a vector with the values of different axis per entry. */
+		using JoystickMovementMap = std::map <int /** joystick id. */, std::vector <int> /** vector of axis. */>;
+		/** The situation of the different axis in the different joystick loaded in the system are tracked 
+			in the "simulate" method. When they changed this method is then invoked. */
+		virtual void whenJoystickMoved (const JoystickMovementMap&) = 0;
 		/** What to do when the joystick button is pressed. */
 		virtual void whenJoystickButtonPressed (SDL_JoyButtonEvent) = 0;
 		/** What to do when the joystick button is released. */
 		virtual void whenJoystickButtonReleased (SDL_JoyButtonEvent) = 0;
 
+		private:
+		/** Just to control all the joystick events at the same time. */
+		using SDL_JoyAxisEvents = std::vector <SDL_JoyAxisEvent>;
+		void treatJoystickEvents (const SDL_JoyAxisEvents&);
+
 		protected:
 		bool _quitRequested;
+
+		using SDLJoysticks = std::vector <SDL_Joystick*>;
+		SDLJoysticks _joysticks;
+
+		// Implementation
+		/** To track the movement of the josytick in the different directions. */
+		JoystickMovementMap _movementMap;
 	};
 }
 

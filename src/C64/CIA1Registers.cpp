@@ -213,17 +213,17 @@ const MCHEmul::UByte& C64::CIA1Registers::readValue (size_t p) const
 		case 0x01:
 			{
 				if (_keyboardRowToRead == 0xff)
-					result = 0xff;
+					result = _keyboardStatusMatrix [7] & ~_dataPortBDir;
 				else
 				if (_keyboardRowToRead != 0x00)
 				{
 					// Identify the row to read...
 					// Take into account that the row is identified writting 0 in its bit (so it is necessary to inverse it first)
-					unsigned char bRV = ~_keyboardRowToRead;
+					unsigned char bRV = ~_keyboardRowToRead & _dataPortADir; // 0xff all output...
 					size_t c = 0; while ((bRV >>= 1) != 0) c++;
 					// If more than 1 row will be possible, the greatest one will be choosen...
 					// The columns (from keyboard or joystick 1) connected will have its bits to 0!...
-					result = _keyboardStatusMatrix [c];
+					result = _keyboardStatusMatrix [c] & ~_dataPortBDir; // 0x00 all input...
 				}
 			}
 			

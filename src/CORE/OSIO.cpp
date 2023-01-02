@@ -6,7 +6,22 @@ bool MCHEmul::InputOSSystem::initialize ()
 { 
 	_quitRequested = false; 
 	
-	return (true); 
+	int e = SDL_InitSubSystem (SDL_INIT_JOYSTICK);
+	if (SDL_NumJoysticks () > 0)
+	{
+		for (int i = 0; i < SDL_NumJoysticks (); i++)
+		{
+			SDL_Joystick* joy = SDL_JoystickOpen (i);
+			if (joy)
+				_joysticks.push_back (joy);
+		}
+	}
+
+	SDL_JoystickEventState (SDL_ENABLE);
+
+	_movementMap = MCHEmul::InputOSSystem::JoystickMovementMap ();
+
+	return ((e == 0) ? true : false); 
 }
 
 // ---
@@ -52,8 +67,30 @@ bool MCHEmul::InputOSSystem::simulate ()
 		}
 	}
 
-	if (!js.empty ())
-		whenJoystickMoved (js);
+	treatJoystickEvents (js);
 
 	return (true);
+}
+
+// ---
+void MCHEmul::InputOSSystem::treatJoystickEvents (const MCHEmul::InputOSSystem::SDL_JoyAxisEvents& js)
+{
+	MCHEmul::InputOSSystem::JoystickMovementMap mMC (_movementMap);
+
+	for (const auto& i : js)
+	{ 
+		MCHEmul::InputOSSystem::JoystickMovementMap::const_iterator j = _movementMap.find (i.which);
+		if (j == _movementMap.end ())
+			_movementMap [i.which] = std::vector <int> (i.axis + 1, 0);
+		else
+		if ((*j).second.size () < (size_t) (i.axis + 1))
+			_movementMap [i.which].resize (i.axis + 1, 0);
+
+		_movementMap [i.which][i.axis] = i.value;
+	}
+
+	// ...and only when something changes it is communicated as a movement in the joystick...
+	// so it means that when they become 0 back, the joystick will stopped...
+	if (_movementMap != mMC)
+		whenJoystickMoved (_movementMap);
 }

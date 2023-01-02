@@ -42,8 +42,7 @@ namespace MCHEmul
 
 		/** The device doesn't own the chips, only work with them. 
 			The device doesn't own the peripherals either. */
-		virtual ~IODevice () 
-							{ }
+		virtual ~IODevice ();
 
 		Type type () const
 							{ return (_type); }
@@ -111,8 +110,43 @@ namespace MCHEmul
 		mutable unsigned int _error;
 	};
 
-	/** To simplify the management of a map of devices. */
+	/** To simplify the management of a list of devices. */
 	using IODevices = std::map <int, IODevice*>;
+
+	/** All devices must be managed under a common system. \n
+		That system has to be initialized. \n
+		The way to initialize the device system is using the singleton structure. 
+		Most of the devices are managed using SDL, so this is the framework initialized here. */
+	class IODeviceSystem final
+	{
+		public:
+		IODeviceSystem ();
+
+		IODeviceSystem (const IODeviceSystem&) = delete;
+
+		IODeviceSystem& operator = (const IODeviceSystem&) = delete;
+
+		~IODeviceSystem ();
+
+		/** To get the pointer to the singleton instance of the class. */
+		static std::shared_ptr <IODeviceSystem> system ()
+							{ return (_theSystem); }
+
+		// To manage the list of devices...
+		const IODevices& devices () const
+							{ return (_devices); }
+		void add (IODevice* d)
+							{ _devices.insert (IODevices::value_type (d -> id (), d)); }
+		void remove (int id)
+							{ IODevices::const_iterator i = _devices.find (id); 
+							  if (i != _devices.end ()) _devices.erase (i); }
+
+		private:
+		IODevices _devices;
+
+		/** The static reference to the unique objcet of this instance. */
+		static std::shared_ptr <IODeviceSystem> _theSystem;
+	};
 }
 
 #endif

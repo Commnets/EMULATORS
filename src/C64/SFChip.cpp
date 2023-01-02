@@ -23,27 +23,33 @@ bool C64::SpecialFunctionsChip::initialize ()
 // ---
 bool C64::SpecialFunctionsChip::simulate (MCHEmul::CPU* cpu)
 {
-	MCHEmul::UByte val0 = memoryRef () -> value (MCHEmul::Address ({ 0x01, 0x00 }, false));
+	// To avoid repeat calculus...
+	static const MCHEmul::Address _POS1 ({ 0x01, 0x00 }, false);
+
+	MCHEmul::UByte val0 = memoryRef () -> value (_POS1);
 
 	// Active or desactive the BASIC ROM....
-	_BasicROM		-> setActiveForReading (val0.bit (0));
-	_BasicRAM		-> setActiveForReading (!val0.bit (0));
+	bool bit0 = val0.bit (0);
+	_BasicROM		-> setActiveForReading ( bit0);
+	_BasicRAM		-> setActiveForReading (!bit0);
 
 	// Active or desactive the KERNEL ROM...
-	_KernelROM		-> setActiveForReading (val0.bit (1));
-	_KernelRAM		-> setActiveForReading (!val0.bit (1));
+	bool bit1 = val0.bit (1);
+	_KernelROM		-> setActiveForReading ( bit1);
+	_KernelRAM		-> setActiveForReading (!bit1);
 
 	// Usually the CHAR ROM is only seen from VICII, 
 	// because CPU access to the Chip Registers instead
 	// But it could be accessed. Take really care when doing so!
-	_CharROM		-> setActiveForReading (!val0.bit (2));
-	_VICIIRegisters -> setActiveForReading (val0.bit (2));
-	_SIDRegisters	-> setActiveForReading (val0.bit (2));
-	_ColorRAM		-> setActiveForReading (val0.bit (2));
-	_CIA1Registers	-> setActiveForReading (val0.bit (2));
-	_CIA2registers	-> setActiveForReading (val0.bit (2));
-	_IO1Registers	-> setActiveForReading (val0.bit (2));
-	_IO2registers	-> setActiveForReading (val0.bit (2));
+	bool bit2 = val0.bit (2);
+	_CharROM		-> setActiveForReading (!bit2);
+	_VICIIRegisters -> setActiveForReading ( bit2);
+	_SIDRegisters	-> setActiveForReading ( bit2);
+	_ColorRAM		-> setActiveForReading ( bit2);
+	_CIA1Registers	-> setActiveForReading ( bit2);
+	_CIA2registers	-> setActiveForReading ( bit2);
+	_IO1Registers	-> setActiveForReading ( bit2);
+	_IO2registers	-> setActiveForReading ( bit2);
 
 	return (true);
 }
