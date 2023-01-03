@@ -96,3 +96,11 @@ To save the content of the memory into a binary file.
 Three parameters are needed. The first is the file to load, 
 the second the number of bytes to save and 
 the other one is the address where to save that info from.
+;DEEPON FILENAME
+To activate the deep debugging of the CPU.
+In this state the CPU will trace every instruction executed and also the status of the 
+registers and program counter into the file received as parameter.
+The name (and path) of the file where to write the info is then needed.
+;DEEPOFF
+To desactivate the deep debugging.
+No parameters are needed.

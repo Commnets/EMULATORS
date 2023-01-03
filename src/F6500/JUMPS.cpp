@@ -48,7 +48,9 @@ _INST_IMPL (F6500::JSR_Absolute)
 	// The address always is kept in Big-endian format,
 	// The stack stores always high byte first. So no changes are needed...
 	// Different story in RTI or RTS!
-	stack () -> push (pc.asAddress ().values ());
+	// Take into account that what is kept into the stack is not the next direction 
+	// that is BTW what PC keeps at this point, but that positiom -1. In RTS will be reverted!
+	stack () -> push (pc.asAddress ().previous (1).values ());
 
 	pc.setAddress (address_absolute ());
 
@@ -77,8 +79,10 @@ _INST_IMPL (F6500::RTS)
 {
 	assert (parameters ().size () == 1);
 
+	// The position extracted from the stack has to be incremented in 1 
+	// to get the real next execution position!
 	cpu () -> programCounter ().setAddress 
-		(MCHEmul::Address (stack () -> pull (2), false /** Are recover in Little-endian format */));
+		(MCHEmul::Address (stack () -> pull (2), false /** Are recover in Little-endian format */).next (1));
 
 	return (!stack () -> overflow ());
 }

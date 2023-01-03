@@ -32,6 +32,8 @@ const std::string MCHEmul::CPUSpeedCommand::_NAME = "CSPEED";
 const std::string MCHEmul::LoadBinCommand::_NAME = "CLOADBIN";
 const std::string MCHEmul::MoveParametersToAnswerCommand::_NAME = "CMOVEPARAMS";
 const std::string MCHEmul::SaveBinCommand::_NAME = "CSAVEBIN";
+const std::string MCHEmul::ActivateDeepDebugCommand::_NAME = "CACTIVATEDEEPDEBUG";
+const std::string MCHEmul::DesactivateDeepDebugCommand::_NAME = "CDESACTIVATEDEEPDEBUG";
 
 // ---
 MCHEmul::HelpCommand::HelpCommand (const std::string& hF)
@@ -439,4 +441,24 @@ void MCHEmul::MoveParametersToAnswerCommand::executeImpl
 {
 	for (const auto& i : _parameters)
 		rst.add (i.first, i.second);
+}
+
+// ---
+void MCHEmul::ActivateDeepDebugCommand::executeImpl 
+	(MCHEmul::CommandExecuter* cE, MCHEmul::Computer* c, MCHEmul::InfoStructure& rst)
+{
+	if (c == nullptr)
+		return;
+
+	c -> activateDeepDebug (parameter ("00"));
+}
+
+// ---
+void MCHEmul::DesactivateDeepDebugCommand::executeImpl 
+	(MCHEmul::CommandExecuter* cE, MCHEmul::Computer* c, MCHEmul::InfoStructure& rst)
+{
+	if (c == nullptr)
+		return;
+
+	c -> desactivateDeepDebug ();
 }

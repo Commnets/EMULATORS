@@ -54,6 +54,10 @@ MCHEmul::Command* MCHEmul::StandardCommandBuilder::createEmptyCommand (const std
 		result = new MCHEmul::LoadBinCommand;
 	else if (cmdName == "SAVEBIN" || cmdName == MCHEmul::SaveBinCommand::_NAME)
 		result = new MCHEmul::SaveBinCommand;
+	else if (cmdName == "DEEPON" || cmdName == MCHEmul::ActivateDeepDebugCommand::_NAME)
+		result = new MCHEmul::ActivateDeepDebugCommand;
+	else if (cmdName == "DEEPOFF" || cmdName == MCHEmul::DesactivateDeepDebugCommand::_NAME)
+		result = new MCHEmul::DesactivateDeepDebugCommand;
 	else if (cmdName == MCHEmul::MoveParametersToAnswerCommand::_NAME)
 		result = new MCHEmul::MoveParametersToAnswerCommand;
 

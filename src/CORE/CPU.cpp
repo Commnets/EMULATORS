@@ -1,6 +1,8 @@
 #include <CORE/CPU.hpp>
 #include <CORE/FmterBuilder.hpp>
 #include <CORE/Formatter.hpp>
+#include <CORE/Stack.hpp>
+#include <iostream>
 
 // ---
 MCHEmul::CPU::CPU (const MCHEmul::CPUArchitecture& a, const MCHEmul::Registers& r, 
@@ -9,6 +11,7 @@ MCHEmul::CPU::CPU (const MCHEmul::CPUArchitecture& a, const MCHEmul::Registers& 
 	  _architecture (a), _registers (r), _statusRegister (sR), _instructions (ins),
 	  _programCounter (a.numberBytes ()), _memory (nullptr), _interrupts (),
 	  _lastInstruction (nullptr),
+	  _deepDebugActivated (false), _debugFile (),
 	  _error (_NOERROR), 
 	  _clockCycles (0), _lastClockCycles (0),
 	  _stopped (false),
@@ -31,6 +34,8 @@ MCHEmul::CPU::~CPU ()
 
 	for (const auto& i : _interrupts)
 		delete (i.second);
+
+	_debugFile.close (); // Just in case...
 }
 
 // ---
@@ -104,6 +109,13 @@ bool MCHEmul::CPU::executeNextInstruction ()
 	if (_stopped)
 		return (true);
 
+	// If the very deep debug is activated (dangerous)
+	// Information about the Program Counter and the Stack position is first printed out...
+	// ...see later!
+	if (_deepDebugActivated)
+		_debugFile << MCHEmul::removeAll0 (_programCounter.asString ()) << ":(SP " 
+				   << memoryRef () -> stack () -> position () << ") ";
+
 	// Number of cycles calling interruptions...
 	unsigned int nCInt = 0;
 	// ..and number of cycles executing the last instruction...
@@ -145,6 +157,17 @@ bool MCHEmul::CPU::executeNextInstruction ()
 
 	_lastInstruction = inst;
 
+	// If after the execution of the instruction, the deep debugging is activated,
+	// then additional information about the instruction executed and the stats of the CPU is printed out!
+	if (_deepDebugActivated)
+	{
+		std::string lSt = ""; size_t lenI = (lSt = _lastInstruction -> asString ()).size ();;
+		_debugFile << lSt << MCHEmul::_SPACES.substr (0, 20 - lenI) << "\t";
+		_debugFile << _statusRegister.asString () << "\t";
+		for (const auto& i : _registers) _debugFile << " " << i.asString () << " ";
+		_debugFile << std::endl;
+	}
+
 	return (result);
 }
 
@@ -164,4 +187,23 @@ MCHEmul::InfoStructure MCHEmul::CPU::getInfoStructure () const
 	result.add ("SR", statusRegister ().asString ());
 
 	return (result);
+}
+
+// ---
+void MCHEmul::CPU::activateDeepDebug (const std::string fn)
+{
+	_debugFile.open (fn);
+	if (!_debugFile)
+		return;
+
+	_deepDebugActivated = true;
+}
+
+// ---
+void MCHEmul::CPU::desactivateDeepDebug ()
+{
+	if (!_deepDebugActivated)
+		return;
+
+	_debugFile.close ();
 }

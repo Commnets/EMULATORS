@@ -23,6 +23,7 @@
 #include <CORE/ProgramCounter.hpp>
 #include <CORE/StatusRegister.hpp>
 #include <CORE/Instruction.hpp>
+#include <fstream>
 
 namespace MCHEmul
 {
@@ -133,6 +134,11 @@ namespace MCHEmul
 		  */
 		virtual InfoStructure getInfoStructure () const override;
 
+		/** To activate and desactivate the deep debug,
+			what means to output detail information about every step. */
+		void activateDeepDebug (const std::string fn);
+		void desactivateDeepDebug ();
+
 		protected:
 		const CPUArchitecture _architecture = 
 			CPUArchitecture (2 /** 2 bytes arch. */, 1 /** 1 byte for instruction. */); // Adjusted at construction level
@@ -144,6 +150,10 @@ namespace MCHEmul
 		CPUInterrups _interrupts;
 
 		Instruction* _lastInstruction;
+
+		// To manage the debug info...
+		bool _deepDebugActivated;
+		std::ofstream _debugFile;
 
 		// Implementation
 		unsigned int _error;

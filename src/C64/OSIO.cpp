@@ -140,6 +140,7 @@ void C64::InputOSSystem::whenJoystickMoved (const MCHEmul::InputOSSystem::Joysti
 	}
 
 	// The events on the joystick 1 are set on the same place than the keyboard...
+	_cia1 -> setJoystick1InputPending (dr [0] != 0x00);
 	for (size_t i = 0; i < 8; i++)
 		_cia1 -> setKeyboardStatusMatrix (i, 
 			(dr [0] == 0) ? 0xff : _cia1 -> keyboardStatusMatrix (i) & (0xff - dr [0] /** 0 means swicth on. */));

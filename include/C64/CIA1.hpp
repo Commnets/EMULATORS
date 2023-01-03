@@ -61,6 +61,8 @@ namespace C64
 		private:
 		// These methods are invoked from InputOSSystem...	
 		// To manage the joystick
+		void setJoystick1InputPending (bool jP)
+							{ _CIA1Registers -> setJoystick1InputPending (jP); }
 		unsigned char joystick2Status () const
 							{ return (_CIA1Registers -> joystick2Status ()); }
 		void setJoystick2Status (unsigned char js)

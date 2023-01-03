@@ -17,6 +17,11 @@
 				jsr COLDINIT
                 lda #147
                 jsr $ffd2
+				lda #25						; To point to the right place in the queue of stings
+				sta $16						; Because the basic is not still loaded... for jsr $bdcd to work.
+
+				lda #$05					; Changing the color of the letter
+				jsr $ffd2
 
 loop:           lda #100
 

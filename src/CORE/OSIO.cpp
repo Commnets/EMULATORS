@@ -67,7 +67,8 @@ bool MCHEmul::InputOSSystem::simulate ()
 		}
 	}
 
-	treatJoystickEvents (js);
+	if (!js.empty ())
+		treatJoystickEvents (js);
 
 	return (true);
 }

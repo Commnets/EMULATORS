@@ -45,6 +45,9 @@ namespace C64
 		void initializeInternalValues ();
 
 		// This methods are invoked from CIA chip...
+		/** The josystick 1 is very linked with the keyboard. */
+		void setJoystick1InputPending (bool jp)
+							{ _joystick1InputPending = jp; }
 		/** These to manage the joystick 2... */
 		unsigned char joystick2Status () const
 							{ return (_joystick2Status); }
@@ -70,6 +73,8 @@ namespace C64
 							{ _clock = c; }
 
 		private:
+		/** Whether there is some input pending from the joystick. */
+		bool _joystick1InputPending;
 		/** The joystick 2 status. */
 		unsigned char _joystick2Status;
 		/** The data ports A y B are actually a matrix of info: ( bytes with (bytes each). 

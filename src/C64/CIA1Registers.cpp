@@ -213,7 +213,12 @@ const MCHEmul::UByte& C64::CIA1Registers::readValue (size_t p) const
 		case 0x01:
 			{
 				if (_keyboardRowToRead == 0xff)
-					result = _keyboardStatusMatrix [7] & ~_dataPortBDir;
+				{ 
+					if (_joystick1InputPending)
+						result = _keyboardStatusMatrix [7] & ~_dataPortBDir;
+					else
+						result = 0xff;
+				}
 				else
 				if (_keyboardRowToRead != 0x00)
 				{
@@ -352,21 +357,22 @@ void C64::CIA1Registers::initializeInternalValues ()
 	setValue (0x03, MCHEmul::UByte::_0);
 	// Just to be able to read well the keyboard...
 
-	setValue (0x00, MCHEmul::UByte::_0); // Row 0 of the keyboard to be read
+	setValue (0x00, MCHEmul::UByte::_FF); // No row to be read so far...
 	setValue (0x01, MCHEmul::UByte::_0);
-	setValue (0x04, MCHEmul::UByte::_0); // No timer A active
+	setValue (0x04, MCHEmul::UByte::_0);  // No timer A active
 	setValue (0x05, MCHEmul::UByte::_0);
-	setValue (0x06, MCHEmul::UByte::_0); // No timer B active
+	setValue (0x06, MCHEmul::UByte::_0);  // No timer B active
 	setValue (0x07, MCHEmul::UByte::_0);
 	setValue (0x08, MCHEmul::UByte::_0);
 	setValue (0x09, MCHEmul::UByte::_0);
 	setValue (0x0a, MCHEmul::UByte::_0);
 	setValue (0x0b, MCHEmul::UByte::_0);
 	setValue (0x0c, MCHEmul::UByte::_0);
-	setValue (0x0d, MCHEmul::UByte::_0); // No interupts allowed from the early beginning...so stopped!
-	setValue (0x0e, MCHEmul::UByte::_0); // No value in timer A
-	setValue (0x0f, MCHEmul::UByte::_0); // No value in timer B
+	setValue (0x0d, MCHEmul::UByte::_0);  // No interupts allowed from the early beginning...so stopped!
+	setValue (0x0e, MCHEmul::UByte::_0);  // No value in timer A
+	setValue (0x0f, MCHEmul::UByte::_0);  // No value in timer B
 
+	_joystick1InputPending= false; // Nothing pending from the joystick 1...
 	_joystick2Status = 0xff; // No switches clicked, no fire buttons pressed...
 	for (size_t i = 0; i < 8; _keyboardStatusMatrix [i++] = MCHEmul::UByte::_FF); // No keys pressed...
 }

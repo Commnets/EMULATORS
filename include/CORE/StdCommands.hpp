@@ -532,6 +532,42 @@ namespace MCHEmul
 		private:
 		virtual void executeImpl (CommandExecuter* cE, Computer* c, InfoStructure& rst) override;
 	};
+
+	/** Comand to activate the deep debug. */
+	class ActivateDeepDebugCommand final : public Command
+	{
+		public:
+		static const int _ID = 23;
+		static const std::string _NAME;
+
+		ActivateDeepDebugCommand ()
+			: Command (_ID, _NAME)
+							{ }
+
+		virtual bool canBeExecuted () const override
+							{ return (_parameters.size () == 1); }
+
+		private:
+		virtual void executeImpl (CommandExecuter* cE, Computer* c, InfoStructure& rst) override;
+	};
+
+	/** Comand to desactivate the deep debug. */
+	class DesactivateDeepDebugCommand final : public Command
+	{
+		public:
+		static const int _ID = 23;
+		static const std::string _NAME;
+
+		DesactivateDeepDebugCommand ()
+			: Command (_ID, _NAME)
+							{ }
+
+		virtual bool canBeExecuted () const override
+							{ return (true); }
+
+		private:
+		virtual void executeImpl (CommandExecuter* cE, Computer* c, InfoStructure& rst) override;
+	};
 }
 
 #endif

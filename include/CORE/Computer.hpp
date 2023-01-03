@@ -170,6 +170,11 @@ namespace MCHEmul
 		void setDebugLevel (unsigned int dL)
 							{ _debugLevel = dL; }
 
+		void activateDeepDebug (const std::string& fN)
+							{ cpu () -> activateDeepDebug (fN); }
+		void desactivateDeepDebug ()
+							{ cpu () -> desactivateDeepDebug (); }
+
 		/** To get the last error happend (after initialize or simulate methods). */
 		unsigned int error () const
 							{ return (_error); }
