@@ -367,4 +367,8 @@ docs/html
 docs/rtf
 docs/No/html
 docs/No/rtf
+include_works
+src_works
+include_new
+src_new
 *.exe
