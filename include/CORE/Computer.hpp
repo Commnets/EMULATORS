@@ -149,6 +149,9 @@ namespace MCHEmul
 							{ return (cpu () -> clockCycles ()); }
 		unsigned int lastClockCycles () const
 							{ return (cpu () -> lastClockCycles ()); }
+		/** To count cycles. */
+		void countClockCycles (unsigned int cC)
+							{ _clock.countCycles (cC); }
 
 		// Managing the cycles...
 		/** Execute one computer cycle (cpu + chips). */
@@ -156,11 +159,6 @@ namespace MCHEmul
 		/** Execute the IO Cycle.
 			Returns true when ok, and false when no ok. */
 		bool runIOCycle ();
-		/** To know whether the next cycle has to be jumped because the speed. \n
-			The method gets the number of clock cycles lasted to decide whether wait or not. \n
-			emeber that gis method has to be invoked per loop. */
-		bool tooQuickAfter (unsigned int cC)
-							{ _clock.countCycles (cC); return (_clock.tooQuick ()); }
 
 		bool exit () const
 							{ return (_exit); }

@@ -3,8 +3,6 @@
 // ---
 void MCHEmul::Clock::start ()
 {
-	_tooQuick = false;
-
 	_realCyclesPerSecond = 0;
 
 	_realCyclesPerSecondTmp = 0;
@@ -42,8 +40,4 @@ void MCHEmul::Clock::countCycles (unsigned int cC)
 		else 
 			_realCyclesPerSecondCalculated = true;
 	}
-
-	// To stimate whether the clock goes or not too quick,
-	// attenging the last data...
-	_tooQuick = (_realCyclesPerSecondTmp * _NANOSECOND) > (_cyclesPerSecond * elapsed);
 }

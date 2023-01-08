@@ -15,6 +15,7 @@
 #define __MCHEMUL_OSIO__
 
 #include <CORE/IO.hpp>
+#include <CORE/Clock.hpp>
 #include <SDL_events.h>
 
 namespace MCHEmul
@@ -27,6 +28,7 @@ namespace MCHEmul
 			: IODevice (Type::_OUTPUT, id, attrs),
 			  _quitRequested (false),
 			  _joysticks (),
+			  _clock (50), // The events of the system will be read 50 times per second...
 			  _movementMap ()
 							{ }
 
@@ -64,9 +66,10 @@ namespace MCHEmul
 
 		protected:
 		bool _quitRequested;
-
 		using SDLJoysticks = std::vector <SDL_Joystick*>;
 		SDLJoysticks _joysticks;
+		/** The clock to control the frenquency to read the keyboard. */
+		Clock _clock;
 
 		// Implementation
 		/** To track the movement of the josytick in the different directions. */

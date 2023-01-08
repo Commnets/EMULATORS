@@ -21,6 +21,8 @@ bool MCHEmul::InputOSSystem::initialize ()
 
 	_movementMap = MCHEmul::InputOSSystem::JoystickMovementMap ();
 
+	_clock.start ();
+
 	return ((e == 0) ? true : false); 
 }
 
@@ -29,6 +31,13 @@ bool MCHEmul::InputOSSystem::simulate ()
 {
 	if (!MCHEmul::IODevice::simulate ())
 		return (false);
+
+	if (_clock.realCyclesPerSecond () > _clock.cyclesPerSecond ())
+	{
+		_clock.countCycles (0);
+
+		return (true); // Nothing read, but everything ok...
+	}
 
 	SDL_Event event;
 

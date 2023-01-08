@@ -131,17 +131,12 @@ bool MCHEmul::Computer::run ()
 
 	startsComputerClock ();
 
-	bool jumpCycle = false;
 	bool ok = true;
 	while (ok && !_exit)
 	{
-		if (!jumpCycle)
-		{
-			ok &= runComputerCycle (/** no action. */);
-			ok &= runIOCycle ();
-		}
-		
-		jumpCycle = tooQuickAfter (jumpCycle ? 0 : lastClockCycles ());
+		// Every cycle will be acountable of their own speed...
+		ok &= runComputerCycle (/** no action. */);
+		ok &= runIOCycle ();
 	}
 
 	return (_error != MCHEmul::_NOERROR);
@@ -150,6 +145,14 @@ bool MCHEmul::Computer::run ()
 // ---
 bool MCHEmul::Computer::runComputerCycle (unsigned int a)
 {
+	// If the Computer is running too quick, then the cycle is lost...
+	if (realCyclesPerSecond () > cyclesPerSecond ())
+	{ 
+		countClockCycles (0);
+
+		return (true); // The cycle was not executed, but everything went ok...
+	}
+
 	MCHEmul::Computer::MapOfActions::const_iterator at =
 		_actionsAt.find (cpu () -> programCounter ().asAddress ());
 	if (!executeAction (
@@ -197,6 +200,9 @@ bool MCHEmul::Computer::runComputerCycle (unsigned int a)
 			return (false); // Error...
 		}
 	}
+
+	// After excuting the cycle, the number of cpu cycles are counted...
+	countClockCycles (_cpu -> lastClockCycles ());
 
 	return (true);
 }

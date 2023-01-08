@@ -53,23 +53,25 @@ bool MCHEmul::Screen::simulate ()
 	if (!MCHEmul::IODevice::simulate ())
 		return (false);
 
+	if (_clock.realCyclesPerSecond () > _clock.cyclesPerSecond ())
+	{
+		_clock.countCycles (0);
+
+		return (true); // The cycle was not executed, but everything went ok...
+	}
+
 	if (_graphicalChip -> graphicsReady ())
 	{
-		if (!_clock.tooQuick ())
-		{
-			SDL_UpdateTexture (_texture, nullptr, 
-				_graphicalChip -> screenMemory () -> frameData (), 
-				(int) _graphicalChip -> screenMemory () -> columns () * sizeof (unsigned int)); // The link with the chip...
-			SDL_RenderClear (_renderer);
-			SDL_RenderCopy (_renderer, _texture, nullptr, nullptr);
-			SDL_RenderPresent (_renderer);
+		SDL_UpdateTexture (_texture, nullptr, 
+			_graphicalChip -> screenMemory () -> frameData (), 
+			(int) _graphicalChip -> screenMemory () -> columns () * sizeof (unsigned int)); // The link with the chip...
+		SDL_RenderClear (_renderer);
+		SDL_RenderCopy (_renderer, _texture, nullptr, nullptr);
+		SDL_RenderPresent (_renderer);
 
-			_graphicalChip -> setGraphicsReady (false);
+		_graphicalChip -> setGraphicsReady (false);
 
-			_clock.countCycles (1);
-		}
-		else
-			_clock.countCycles (0);
+		_clock.countCycles (1);
 	}
 
 	return (true);

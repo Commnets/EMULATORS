@@ -31,7 +31,6 @@ namespace MCHEmul
 		Clock (unsigned int cS)
 			: _cyclesPerSecond (cS),
 			  _realCyclesPerSecond (0),
-			  _tooQuick (false),
 			  _realCyclesPerSecondTmp (0), 
 			  _realCyclesPerSecondCalculated (false),
 			  _iClock ()
@@ -41,8 +40,6 @@ namespace MCHEmul
 						{ return (_cyclesPerSecond); }
 		unsigned int realCyclesPerSecond () const
 						{ return (_realCyclesPerSecond); }
-		bool tooQuick () const
-						{ return (_tooQuick); }
 
 		/** Just to put everything at the beginning. */
 		void start ();
@@ -52,7 +49,6 @@ namespace MCHEmul
 		private:
 		unsigned int _cyclesPerSecond;
 		unsigned int _realCyclesPerSecond;
-		bool _tooQuick;
 
 		// Implementation
 		unsigned int _realCyclesPerSecondTmp;

@@ -20,7 +20,6 @@ MCHEmul::Emulator::Emulator (const MCHEmul::CommandLineArguments& args, MCHEmul:
 	  _computer (nullptr),
 	  _peripheralBuilder (nullptr),
 	  _running (false),
-	  _jumpCycle (false),
 	  _error (MCHEmul::_NOERROR)
 {
 	// The graphical and IO system used is based on SDL...
@@ -243,8 +242,6 @@ bool MCHEmul::Emulator::initialize ()
 
 	computer () -> startsComputerClock ();
 
-	_jumpCycle = false;
-
 	return (true);
 }
 
@@ -254,8 +251,6 @@ bool MCHEmul::Emulator::run ()
 	_running = true;
 
 	computer () -> startsComputerClock ();
-
-	_jumpCycle = false;
 
 	while (runCycle (/** no action. */) && 
 		   !computer () -> exit ());
@@ -280,14 +275,9 @@ bool MCHEmul::Emulator::runCycle (unsigned int a)
 				std::cout << "Error Processing Messages" << std::endl;
 	}
 
-	if (!_jumpCycle)
-	{ 
-		result &= computer () -> runComputerCycle (a);
-		result &= computer () -> runIOCycle ();
-		result &= additionalRunCycle ();
-	}
-
-	_jumpCycle = computer () -> tooQuickAfter (_jumpCycle ? 0 : computer () -> lastClockCycles ());
+	result &= computer () -> runComputerCycle (a);
+	result &= computer () -> runIOCycle ();
+	result &= additionalRunCycle ();
 
 	return (result);
 }
