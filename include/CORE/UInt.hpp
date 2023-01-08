@@ -40,8 +40,6 @@ namespace MCHEmul
 		class FormatManager
 		{
 			public:
-			FormatManager () = default;
-
 			/** The way the add is executed depends on the format. */
 			virtual UInt add (const UInt&, const UInt&, bool) const = 0;
 			/** The same for substracting. */
