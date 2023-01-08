@@ -32,18 +32,19 @@ namespace MCHEmul
 
 		UBytes (const std::vector <UByte>& v, bool bE = true)
 			: _values (v)
-							{ if (size () > 1 && !bE) _values = reverse ().bytes (); }
+							{ if (size () > 1 && !bE) std::reverse (_values.begin (), _values.end ()); }
 
-		UBytes (const UBytes&) = default;
-
-		UBytes& operator = (const UBytes&) = default;
+		UBytes (std::vector <UByte>&& v, bool bE = true)
+			: _values (std::move (v))
+							{ if (size () > 1 && !bE) std::reverse (_values.begin (), _values.end ()); }
 
 		size_t size () const
 							{ return (_values.size ()); }
 		size_t sizeBits () const
 							{ return (size () * UByte::sizeBits ()); }
 
-		void setMinLength (size_t l, bool r = true /** right or not? where to introduce the additional byte. */);
+		inline void setMinLength (size_t l, 
+			bool r = true /** on the right or not? where to introduce the additional byte. */);
 
 		const UByte& value (size_t p) const
 							{ return (_values [p]); }
@@ -72,18 +73,18 @@ namespace MCHEmul
 		void toFF ()
 							{ for (auto& i : _values) i = UByte::_FF; }
 
-		UBytes complement () const;
+		inline UBytes complement () const;
 
-		bool shiftLeftC (bool c = false /** value to introduce. */, size_t p = 1);
+		inline bool shiftLeftC (bool c = false /** value to introduce. */, size_t p = 1);
 		UBytes& shiftLeft (size_t p = 1)
 							{ shiftLeftC (false, p); return (*this); }
-		bool shiftRightC (bool c = false, size_t p = 1);
+		inline bool shiftRightC (bool c = false, size_t p = 1);
 		UBytes& shiftRight (size_t p = 1)
 							{ shiftRightC (false, p); return (*this); }
-		bool rotateLeftC (bool c = false, size_t p = 1);
-		UBytes& rotateLeft (size_t p = 1);
-		bool rotateRightC (bool c = false, size_t p = 1);
-		UBytes& rotateRight (size_t p = 1);
+		inline bool rotateLeftC (bool c = false, size_t p = 1);
+		inline UBytes& rotateLeft (size_t p = 1);
+		inline bool rotateRightC (bool c = false, size_t p = 1);
+		inline UBytes& rotateRight (size_t p = 1);
 
 		/** 
 		  *	Just to do a bit adding.
@@ -94,11 +95,12 @@ namespace MCHEmul
 		  * @param	o		Is is actualized whether an overflow is generated, 
 		  *					that is when the MSBits of inputs are equal and different from the output. 
 		  */
-		UBytes bitAdding (const UBytes& u, bool cin, bool& cout, bool& o) const;
+		inline UBytes bitAdding (const UBytes& u, bool cin, bool& cout, bool& o) const;
 
-		UBytes reverse () const;
+		inline UBytes reverse () const;
 
-		bool operator == (const UBytes& u) const;
+		inline bool operator == (const UBytes& u) const
+							{ return (_values == u._values); }
 		bool operator != (const UBytes& u) const
 							{ return (!(*this == u)); }
 
@@ -129,6 +131,142 @@ namespace MCHEmul
 		/** Most significant bit in the first elemnt. */
 		std::vector <UByte> _values;
 	};
+
+	// ---
+	inline void UBytes::setMinLength (size_t l, bool r)
+	{
+		size_t s = size ();
+		if (s < l)
+		{
+			for (size_t i = 0; i < (l - s); i++)
+			{
+				if (r) _values.emplace_back (UByte::_0);
+				else _values.insert (_values.begin (), UByte::_0);
+			}
+		}
+	}
+
+	// ---
+	inline UBytes MCHEmul::UBytes::complement () const
+	{
+		UBytes result = *this;
+		for (auto &i : result._values) 
+			i = i.complement ();
+
+		return (result);
+	}
+
+	// ---
+	inline bool UBytes::shiftLeftC (bool c, size_t p)
+	{
+		bool nC = c;
+		for (size_t i = 0; i < p; i++)
+		{
+			bool mc = c;
+			for (int j = (int) (size () - 1); j >= 0; j--)
+				mc = _values [(size_t) j].shiftLeftC (mc, 1);
+			nC = mc;
+		}
+
+		return (nC);
+	}
+
+	// ---
+	inline bool UBytes::shiftRightC (bool c, size_t p)
+	{
+		bool nC = c;
+		for (size_t i = 0; i < p; i++)
+		{
+			bool mc = c;
+			for (size_t j = 0; j < size (); j++)
+				mc = _values [j].shiftRightC (mc, 1);
+			nC = mc;
+		}
+
+		return (nC);
+	}
+
+	// ---
+	inline bool UBytes::rotateLeftC (bool c, size_t p)
+	{
+		bool nC = c;
+		for (size_t i = 0; i < p; i++)
+		{
+			bool mc = c;
+			for (int j = (int) (size () - 1); j >= 0; j--)
+				mc = _values [(size_t) j].rotateLeftC (mc, 1);
+			nC = mc;
+		}
+
+		return (nC);
+	}
+
+	// ---
+	inline UBytes& MCHEmul::UBytes::rotateLeft (size_t p)
+	{
+		for (size_t i = 0; i < p; i++)
+			rotateLeftC (bit (sizeBits () - 1), 1);
+
+		return (*this);
+	}
+
+	// ---
+	inline bool UBytes::rotateRightC (bool c, size_t p)
+	{
+		bool nC = c;
+		for (size_t i = 0; i < p; i++)
+		{
+			bool mc = c;
+			for (size_t j = 0; j < size (); j++)
+				mc = _values [j].rotateRightC (mc, 1);
+			nC = mc;
+		}
+
+		return (nC);
+	}
+
+	// ---
+	inline UBytes& MCHEmul::UBytes::rotateRight (size_t p)
+	{
+		for (size_t i = 0; i < p; i++)
+			rotateRightC (bit (0), 1);
+
+		return (*this);
+	}
+
+	// ---
+	inline UBytes MCHEmul::UBytes::bitAdding (const UBytes& u, bool cin, bool& cout, bool& o) const
+	{
+		// If the elements to add already have the same size, no silly copies are done...
+
+		UBytes result = *this;
+		cout = cin /** To simplify the loop. */;
+		if (size () != u.size ())
+		{
+			UBytes u2 = u;
+			size_t mL = std::max (result.size (), u2.size ());
+			// The operation has to be done with UBytes of the same length...
+			result.setMinLength (mL, false /** at the beginning the additional 0. */); u2.setMinLength (mL, false);
+
+			for (int i = (int) (result.size () - 1); i >= 0; i--) 
+				result [i] = result [i].bitAdding (u2 [i], cout, cout, o);
+		}
+		else
+		{
+			for (int i = (int) (result.size () - 1); i >= 0; i--) 
+				result [i] = result [i].bitAdding (u [i], cout, cout, o);
+		}
+
+		return (result);
+	}
+
+	// ---
+	inline UBytes UBytes::reverse () const
+	{
+		std::vector <UByte> dt = _values;
+		std::reverse (dt.begin (), dt.end ());
+		return (UBytes (std::move (dt) /** no longer used. */));
+	}
 }
 
 #endif

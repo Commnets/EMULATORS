@@ -30,8 +30,12 @@ namespace MCHEmul
 
 		ScreenMemory& operator = (const ScreenMemory&) = delete;
 
-		~ScreenMemory ()
+		virtual ~ScreenMemory ()
 							{ delete (_frameData); delete (_colorPalette);}
+
+		ScreenMemory (ScreenMemory&&) = delete;
+
+		ScreenMemory& operator = (ScreenMemory&&) = delete;
 
 		// Size...
 		size_t columns () const

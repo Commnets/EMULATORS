@@ -31,7 +31,7 @@ namespace MCHEmul
 							{ for (const auto& i : _operationElements) assert (i != nullptr); }
 		
 			/** The function own the elements involved. */
-			virtual ~FunctionOperationElement ()
+			virtual ~FunctionOperationElement () override
 							{ for (const auto& i : _operationElements) delete (i); }
 		
 			virtual UInt value (const Macros& ms, const OperationParser* oP) const override;
@@ -62,7 +62,7 @@ namespace MCHEmul
 				: FunctionOperationElement ({ l, r })
 							{ }
 		
-			virtual std::string asString () const
+			virtual std::string asString () const override
 							{ return (_operationElements [0] -> asString () + functionSymbol () + 
 								_operationElements [1] -> asString ()); }
 
@@ -80,7 +80,7 @@ namespace MCHEmul
 				: FunctionOperationElement ({ o })
 							{ }
 		
-			virtual std::string asString () const
+			virtual std::string asString () const override
 							{ return (functionSymbol () + 
 								_operationElements [0] -> asString ()); }
 
@@ -98,7 +98,7 @@ namespace MCHEmul
 							{ }
 		
 			private:
-			virtual std::string functionSymbol () const
+			virtual std::string functionSymbol () const override
 							{ return ("+"); }
 
 			virtual UInt doFunction (const std::vector <UInt>& v) const override
@@ -114,7 +114,7 @@ namespace MCHEmul
 							{ }
 		
 			private:
-			virtual std::string functionSymbol () const
+			virtual std::string functionSymbol () const override
 							{ return ("-"); }
 
 			virtual UInt doFunction (const std::vector <UInt>& v) const override
@@ -130,7 +130,7 @@ namespace MCHEmul
 							{ }
 		
 			private:
-			virtual std::string functionSymbol () const
+			virtual std::string functionSymbol () const override
 							{ return ("*"); }
 
 			virtual UInt doFunction (const std::vector <UInt>& v) const override
@@ -146,7 +146,7 @@ namespace MCHEmul
 							{ }
 		
 			private:
-			virtual std::string functionSymbol () const
+			virtual std::string functionSymbol () const override
 							{ return ("/"); }
 
 			virtual UInt doFunction (const std::vector <UInt>& v) const override;
@@ -161,7 +161,7 @@ namespace MCHEmul
 							{ }
 
 			private:
-			virtual std::string functionSymbol () const
+			virtual std::string functionSymbol () const override
 							{ return (">"); }
 
 			virtual UInt doFunction (const std::vector <UInt>& v) const override;
@@ -176,7 +176,7 @@ namespace MCHEmul
 							{ }
 
 			private:
-			virtual std::string functionSymbol () const
+			virtual std::string functionSymbol () const override
 							{ return ("<"); }
 
 			virtual UInt doFunction (const std::vector <UInt>& v) const override;

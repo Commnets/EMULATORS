@@ -48,10 +48,14 @@ namespace MCHEmul
 
 		Console (const Console&) = delete;
 
+		Console& operator = (const Console&) = delete;
+
 		virtual ~Console ()
 							{ delete (_consoleKeys); }
 
-		Console& operator = (const Console&) = delete;
+		Console (Console&&) = delete;
+
+		Console& operator = (Console&&) = delete;
 
 		/** To change the number of commands kept. */
 		size_t maxCommandsKept () const

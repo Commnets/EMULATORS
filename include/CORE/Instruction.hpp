@@ -47,10 +47,6 @@ namespace MCHEmul
 					: _type (tp), _numberBytes (nB)
 							{ assert (_numberBytes > 0); }
 
-				Parameter (const Parameter&) = default;
-
-				Parameter& operator = (const Parameter&) = default;
-
 				Type _type;
 				size_t _numberBytes;
 			};
@@ -62,10 +58,6 @@ namespace MCHEmul
 			Structure (const std::string& t, const std::string& wM, const std::vector <Parameter>& prms)
 				: _error (false), _templateWithNoParameters (t), _waterMark (wM), _parameters (prms)
 							{ }
-
-			Structure (const Structure&) = default;
-
-			Structure& operator = (const Structure&) = default;
 
 			/**
 			  * To indicate whether there was or not a mistake after the analysis of the instruction...
@@ -96,9 +88,16 @@ namespace MCHEmul
 		  */
 		Instruction (unsigned int c, unsigned int mp, unsigned int cc, const std::string& t, bool bE = true);
 
-		Instruction (const Instruction&) = default;
+		Instruction (const Instruction&) = delete;
 
-		Instruction& operator = (const Instruction&) = default;
+		Instruction& operator = (const Instruction&) = delete;
+
+		virtual ~Instruction ()
+							{ }
+
+		Instruction (Instruction&&) = delete;
+
+		Instruction& operator = (Instruction&&) = delete;
 
 		unsigned int code () const
 							{ return (_code); }

@@ -36,7 +36,7 @@ namespace MCHEmul
 	{
 		public:
 		/** This class is accountable for managing aspects 
-			specifically related with the format of a number. */
+			specifically related with the format of a number. \n */
 		class FormatManager
 		{
 			public:
@@ -46,25 +46,26 @@ namespace MCHEmul
 			virtual UInt add (const UInt&, const UInt&, bool) const = 0;
 			/** The same for substracting. */
 			virtual UInt substract (const UInt&, const UInt&, bool) const = 0;
-
+			/** To return the value of the UInt as an unsigned int. 
+				The int like will be the unsigned int taking into account the sign. */
 			virtual unsigned int asUnsignedInt (const UInt&) const = 0;
-
+			/** To create the UInt from an unsigned int. */
 			virtual UInt fromUnsignedInt (unsigned int n) = 0;
+			/** The same but from a in. */
 			virtual UInt fromInt (int n) = 0;
 		};
 
-		/** For _BINARY format. */
+		/** For _BINARY format. \n
+			The very common format. */
 		class BinaryFormatManager final : public FormatManager
 		{
 			public:
 			/** For _BINARY numbers no adjustment is needed at all after adding operation. */
 			virtual UInt add (const UInt& u1, const UInt& u2, bool cIn) const;
 			virtual UInt substract (const UInt& u1, const UInt& u2, bool cIn) const;
-
 			virtual unsigned int asUnsignedInt (const UInt& u) const override;
-			
-			virtual UInt fromUnsignedInt (unsigned int n);
-			virtual UInt fromInt (int n);
+			virtual UInt fromUnsignedInt (unsigned int n) override;
+			virtual UInt fromInt (int n) override;
 		};
 
 		/** For _PACKAGEDBCD format. */
@@ -73,17 +74,17 @@ namespace MCHEmul
 			public:
 			virtual UInt add (const UInt& u1, const UInt& u2, bool cIn) const;
 			virtual UInt substract (const UInt& u1, const UInt& u2, bool cIn) const;
-
 			virtual unsigned int asUnsignedInt (const UInt& u) const override;
-
-			virtual UInt fromUnsignedInt (unsigned int n);
-			virtual UInt fromInt (int n);
+			virtual UInt fromUnsignedInt (unsigned int n) override;
+			virtual UInt fromInt (int n) override;
 		};
 
-		// The different types of formats...
-		/** The default one . */
+		/** Another type of format could be created extendinf the FormatManger class. */
+
+		// The different types of formats defined by default
+		/** The very basic one and the default in most of the methods. */
 		static const unsigned char _BINARY = 0x00;
-		/** ...and also the Packaged BCD very common in 80's computers */
+		/** ...and also the Packaged BCD very common in 80's computers. */
 		static const unsigned char _PACKAGEDBCD = 0x01;
 
 		/** To create and destroy the format managers. 
@@ -106,11 +107,13 @@ namespace MCHEmul
 
 			private:
 			// Implementation
+			/** A very basic class with the two type of basic formats will be create. */
 			static FormatManagers* _instance;			
 		};
 
-		/** The different format managers are kept in a public static map.
-			The map is loaded with the basic formaters (BINARY and BCD), buy others can be added if needed. */
+		/** The different format managers are kept in a public static map. \n
+			The map is loaded with the basic formaters (BINARY and BCD), 
+			buy others can be added if needed later by the user. */
 		static std::map <unsigned char, FormatManager*> _formatManagers;
 
 		/** The very basic numbers, represented in binary. */
@@ -129,6 +132,12 @@ namespace MCHEmul
 			  _format (f)
 							{ }
 
+		UInt (UByte&& u, unsigned char f = _BINARY)
+			: _values ({ std::move (u) }),
+			  _carry (false), _overflow (false),
+			  _format (f)
+							{ }
+
 		/** Always kept in Big-endian format. */
 		UInt (const UBytes& u, bool bE = true, unsigned char f = _BINARY)
 			: _values ((u.size () > 1 && !bE) ? u.reverse () : u),
@@ -136,9 +145,21 @@ namespace MCHEmul
 			  _format (f)
 							{ }
 
+		UInt (UBytes&& u, bool bE = true, unsigned char f = _BINARY)
+			: _values ((u.size () > 1 && !bE) ? std::move (u.reverse ()) : std::move (u)),
+			  _carry (false), _overflow (false),
+			  _format (f)
+							{ }
+
 		/** Always kept in Big-endian format. */
 		UInt (const std::vector <UByte>& u, bool bE = true, unsigned char f = _BINARY)
 			: _values (u, bE),
+			  _carry (false), _overflow (false),
+			  _format (f)
+							{ }
+
+		UInt (std::vector <UByte>&& u, bool bE = true, unsigned char f = _BINARY)
+			: _values (std::move (u), bE),
 			  _carry (false), _overflow (false),
 			  _format (f)
 							{ }

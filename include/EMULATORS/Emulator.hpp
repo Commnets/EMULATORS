@@ -69,7 +69,15 @@ namespace MCHEmul
 		  */
 		Emulator (const CommandLineArguments& args, CommunicationSystem* cS = nullptr);
 
+		Emulator (const Emulator&) = delete;
+
+		Emulator& operator = (const Emulator&)= delete;
+
 		virtual ~Emulator ();
+
+		Emulator (Emulator&&) = delete;
+
+		Emulator& operator = (Emulator&&)= delete;
 
 		const CommandLineArguments& cmdlineArguments () const
 							{ return (_cmdlineArguments); }

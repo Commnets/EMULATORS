@@ -35,9 +35,9 @@ namespace MCHEmul
 			: _attributes (a), _infoStructures (iS)
 							{ }
 
-		InfoStructure (const InfoStructure&) = default;
-
-		InfoStructure& operator = (const InfoStructure&) = default;
+		InfoStructure (Attributes&& a, InfoStructures&& iS)
+			: _attributes (std::move (a)), _infoStructures (std::move (iS))
+							{ }
 
 		/** Returns true when there is no information. */
 		bool empty () const

@@ -24,13 +24,7 @@ namespace MCHEmul
 	class CPUArchitecture final : public InfoClass
 	{
 		public:
-		CPUArchitecture () = delete;
-
 		CPUArchitecture (size_t nb /** Bytes */, size_t iL, bool bE = true, const Attributes& attrs = { });
-
-		CPUArchitecture (const CPUArchitecture&) = default;
-
-		CPUArchitecture& operator = (const CPUArchitecture&) = default;
 
 		size_t numberBytes () const
 							{ return (_numberBytes); }

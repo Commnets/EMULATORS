@@ -33,14 +33,18 @@ namespace MCHEmul
 				: _error (ErrorType::_NOERROR)
 							{ }
 		
-			OperationElement (const OperationElement&) = default;
+			OperationElement (const OperationElement&) = delete;
 		
-			OperationElement& operator = (const OperationElement&) = default;
+			OperationElement& operator = (const OperationElement&) = delete;
 		
 			/** Just in the case of any extension. */
 			virtual ~OperationElement ()
 							{ }
-		
+
+			OperationElement (OperationElement&&) = delete;
+
+			OperationElement& operator = (OperationElement&&) = delete;
+
 			/** To get the value of the OperationElement. \n 
 				The value will depend on the type OperationElement itself. */
 			virtual UInt value (const Macros& ms, const OperationParser* oP) const = 0;

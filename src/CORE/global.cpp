@@ -202,12 +202,12 @@ MCHEmul::Strings MCHEmul::getElementsFrom (const std::string& txt, unsigned char
 		size_t pC = cpTxt.find_first_of (ch);
 		prt = cpTxt.substr (0, pC); 
 		cpTxt = (pC == std::numeric_limits <size_t>::max ()) ? "" : cpTxt.substr (pC + 1);
-		result.push_back (MCHEmul::trim (prt));
+		result.emplace_back (MCHEmul::trim (prt));
 	}
 
 	// Adjust the size...
 	if (result.size () < nE && nE != std::numeric_limits <size_t>::max ()) 
-		for (size_t i = result.size (); i < nE; result.push_back (std::string ("")), i++);
+		for (size_t i = result.size (); i < nE; result.emplace_back (std::string ("")), i++);
 	if (result.size () > nE && nE != std::numeric_limits <size_t>::max ())
 		for (size_t i = result.size (); i > nE; result.pop_back (), i++);
 
@@ -237,7 +237,7 @@ std::string MCHEmul::tableFormat (const MCHEmul::Strings& s, const std::string& 
 MCHEmul::Strings MCHEmul::convertIntoStrings (int n, char** dt)
 {
 	MCHEmul::Strings result;
-	for (int i = 0; i < n; result.push_back (dt [i++]));
+	for (int i = 0; i < n; result.push_back (std::string (dt [i++])));
 	return (result);
 }
 
@@ -340,7 +340,7 @@ bool MCHEmul::validOperation (const std::string& s)
 	// Every parenthesis content is stored to be analysed later!
 	MCHEmul::Strings pL;
 	std::string cS = s; std::string p = "";
-	while ((p = extractAndReplaceDeeperParenthesis (cS)) != "") pL.push_back (p);
+	while ((p = extractAndReplaceDeeperParenthesis (cS)) != "") pL.emplace_back (p);
 	// ..if there is still one at least, it is not a valis operation...
 	if (cS.find ("(") != std::string::npos || cS.find (")") != std::string::npos)
 		return (false);

@@ -37,10 +37,6 @@ namespace MCHEmul
 			  _iClock ()
 						{ assert (_cyclesPerSecond > 0); }
 
-		Clock (const Clock&) = default;
-
-		Clock& operator = (const Clock&) = default;
-
 		unsigned int cyclesPerSecond () const
 						{ return (_cyclesPerSecond); }
 		unsigned int realCyclesPerSecond () const

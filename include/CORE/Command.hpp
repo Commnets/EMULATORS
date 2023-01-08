@@ -33,12 +33,16 @@ namespace MCHEmul
 			: _id (id), _name (n), _parameters (prms)
 							{ }
 
-		Command (const Command&) = default;
+		Command (const Command&) = delete;
 
-		Command& operator = (const Command&) = default;
+		Command& operator = (const Command&) = delete;
 
 		virtual ~Command ()
 							{ }
+
+		Command (Command&&) = delete;
+
+		Command& operator = (Command&&) = delete;
 
 		int id () const
 							{ return (_id); }

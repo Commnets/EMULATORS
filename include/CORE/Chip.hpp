@@ -27,8 +27,6 @@ namespace MCHEmul
 	class Chip : public InfoClass
 	{
 		public:
-		Chip () = delete;
-
 		Chip (int id, const Attributes& attrs = { })
 			: InfoClass ("Chip"),
 			  _id (id), _memory (nullptr), _attributes (attrs), 
@@ -42,6 +40,10 @@ namespace MCHEmul
 		/** The chip is not owner of the memory. */
 		virtual ~Chip ()
 							{ } 
+
+		Chip (Chip&&) = delete;
+
+		Chip& operator = (Chip&&) = delete;
 
 		int id () const
 							{ return (_id); }

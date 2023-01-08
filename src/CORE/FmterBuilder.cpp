@@ -72,7 +72,7 @@ bool MCHEmul::FormatterBuilder::initialize ()
 				fmtsN = tJ.substr (1);
 			}
 			else
-				lfmts.push_back (j);
+				lfmts.emplace_back (j);
 		}
 
 		if (pL)
@@ -135,7 +135,7 @@ MCHEmul::Strings MCHEmul::FormatterBuilder::readLinesFrom (const std::string& nF
 	std::ifstream fFile (nF);
 	if (fFile.is_open ())
 	{
-		char l[255];
+		char l [255];
 		while (!fFile.eof ())
 		{
 			fFile.getline (l, 255);
@@ -148,7 +148,7 @@ MCHEmul::Strings MCHEmul::FormatterBuilder::readLinesFrom (const std::string& nF
 				result.insert (result.end (), ils.begin (), ils.end ());
 			}
 			else 
-				result.push_back (lS); 
+				result.emplace_back (lS); 
 		}
 
 		fFile.close ();

@@ -74,7 +74,7 @@ bool MCHEmul::Instruction::matchesWith (const std::string& i, MCHEmul::Strings& 
 				std::string lP = iL.substr (iPP, ctIL - iPP);
 				if (result = MCHEmul::validOperation (lP)) // A very generic validation...deeper at compilation time! (if any)
 				{ 
-					prms.push_back (lP);
+					prms.emplace_back (lP);
 
 					pW += '?';
 					pW += iL [ctIL];
@@ -98,7 +98,7 @@ bool MCHEmul::Instruction::matchesWith (const std::string& i, MCHEmul::Strings& 
 		std::string lP = iL.substr (ctIL);
 		if (MCHEmul::validOperation (lP)) // A very generic validation...deeper at compiltion time (if any)
 		{
-			prms.push_back (lP);
+			prms.emplace_back (lP);
 
 			pW += '?';
 		}

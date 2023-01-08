@@ -36,7 +36,7 @@ namespace MCHEmul
 			  _graphicsReady (false)
 							{ }
 
-		~GraphicalChip ()
+		virtual ~GraphicalChip () override
 							{ delete (_screenMemory); }
 
 		const ScreenMemory* screenMemory () const

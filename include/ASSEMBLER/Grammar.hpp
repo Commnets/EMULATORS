@@ -65,10 +65,6 @@ namespace MCHEmul
 				  _error (ErrorType::_NOERROR)
 							{ }
 
-			Macro (const Macro&) = default;
-
-			Macro& operator = (const Macro&) = default;
-
 			const std::string& name () const
 							{ return (_name); }
 
@@ -137,10 +133,6 @@ namespace MCHEmul
 				represeting the name and the pareneters used by the code block, and the list of info to replace when needed. */
 			CodeTemplate (const std::string& id, Strings& l);
 
-			CodeTemplate (const CodeTemplate&) = default;
-
-			CodeTemplate& operator = (const CodeTemplate&) = default;
-
 			const std::string& name () const
 							{ return (_name); }
 
@@ -179,12 +171,16 @@ namespace MCHEmul
 				  _error (ErrorType::_NOERROR), _codeBytes ()
 							{ }
 
-			GrammaticalElement (const GrammaticalElement&) = default;
+			GrammaticalElement (const GrammaticalElement&) = delete;
 
-			GrammaticalElement& operator = (const GrammaticalElement&) = default;
+			GrammaticalElement& operator = (const GrammaticalElement&) = delete;
 
 			virtual ~GrammaticalElement ()
 							{ delete (_nextElement); /** Chained. */ }
+
+			GrammaticalElement (GrammaticalElement&&) = delete;
+
+			GrammaticalElement& operator = (GrammaticalElement&) = delete;
 
 			/** To get the size of the grammatical element in bytes. 
 				By default the bytes are calculated and then the size. */
@@ -277,7 +273,7 @@ namespace MCHEmul
 		struct TextBytesElement final : public GrammaticalElement
 		{
 			TextBytesElement ()
-				: GrammaticalElement (), _text ("")
+				: GrammaticalElement (), _text (""), _ASCIIConverter (nullptr)
 					{ _type = Type::_BYTESINMEMORY; }
 
 			virtual size_t size (const Semantic* s, const OperationParser* oP = nullptr) const override;

@@ -33,10 +33,14 @@ namespace MCHEmul
 
 		CPUInterrupt (const CPUInterrupt&) = delete;
 
+		CPUInterrupt& operator = (const CPUInterrupt&) = delete;
+
 		virtual ~CPUInterrupt ()
 							{ }
 
-		CPUInterrupt& operator = (const CPUInterrupt&) = delete;
+		CPUInterrupt (CPUInterrupt&&) = delete;
+
+		CPUInterrupt& operator = (CPUInterrupt&&) = delete;
 
 		int id () const
 							{ return (_id); }

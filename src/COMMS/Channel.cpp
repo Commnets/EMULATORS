@@ -174,7 +174,7 @@ bool MCHEmul::PeerCommunicationChannel::send (const std::string& str, const MCHE
 	{ 
 		if ((result = _peer -> Connect 
 				(to.asString ().c_str (), to.port (), nullptr, 0) == RakNet::CONNECTION_ATTEMPT_STARTED))
-			_pendingMessages.push_back (MCHEmul::PeerCommunicationChannel::PendingMessage (str, to));
+			_pendingMessages.emplace_back (MCHEmul::PeerCommunicationChannel::PendingMessage (str, to));
 		else
 			_error = MCHEmul::_CHANNELWRITEERROR_ERROR;
 	}

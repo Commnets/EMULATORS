@@ -28,10 +28,6 @@ namespace MCHEmul
 			  _internalRepresentation (0)
 							{ assert (_size <= sizeof (unsigned int)); }
 
-		ProgramCounter (const ProgramCounter&) = default;
-
-		ProgramCounter& operator = (const ProgramCounter&) = default;
-
 		void initialize ()
 							{ _internalRepresentation = 0; }
 

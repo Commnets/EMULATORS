@@ -39,10 +39,6 @@ namespace MCHEmul
 			: _arguments (readArgumentsFrom (convertIntoStrings (n, dt)))
 							{ }
 
-		CommandLineArguments (const CommandLineArguments&) = default;
-
-		CommandLineArguments& operator = (const CommandLineArguments&) = default;
-
 		bool existsArgument (char arg) const
 							{ return (_arguments.find (arg) != _arguments.end ()); }
 

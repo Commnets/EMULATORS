@@ -39,8 +39,16 @@ namespace MCHEmul
 				  _errors ()
 							{ assert (p != nullptr); }
 
-			~Compiler ()
+			Compiler (const Compiler&) = delete;
+
+			Compiler& operator = (const Compiler&) = delete;
+
+			virtual ~Compiler ()
 							{ delete (_operationParser); }
+
+			Compiler (Compiler&&) = delete;
+
+			Compiler& operator = (Compiler&&) = delete;
 
 			/** The key method. Generic the Byte Codes to by load and executed.
 				It receives the file with the instructions as parameter.

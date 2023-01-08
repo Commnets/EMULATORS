@@ -40,10 +40,6 @@ namespace MCHEmul
 			unsigned int sc, unsigned int sr, unsigned int vF, double hz,
 			const Attributes& attrs = { });
 
-		Screen (const Screen*) = delete;
-
-		Screen& operator = (const Screen&) = delete;
-
 		virtual ~Screen () override;
 
 		virtual void linkToChips (const Chips& c) override;

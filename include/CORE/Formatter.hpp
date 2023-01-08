@@ -23,8 +23,14 @@ namespace MCHEmul
 	class Formatter
 	{
 		public:
+		Formatter () = default;
+
 		Formatter (const Strings& l)
 			: _lines (l)
+							{ }
+
+		Formatter (Strings&& l)
+			: _lines (std::move (l))
 							{ }
 
 		Formatter (const Formatter&) = delete;
@@ -33,6 +39,10 @@ namespace MCHEmul
 
 		virtual ~Formatter ()
 							{ }
+
+		Formatter (Formatter&&) = delete;
+
+		Formatter& operator = (Formatter&&) = delete;
 
 		/** To initialize the formatter.
 			This method create all neceessary internal elements to manipulate the format. */

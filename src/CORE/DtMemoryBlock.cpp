@@ -69,7 +69,7 @@ MCHEmul::DataMemoryBlocks MCHEmul::DataMemoryBlock::loadBlocksFile (const std::s
 		(sA, std::vector <MCHEmul::UByte> (i + nB + 4, i + nB + 4 + (size_t) bS.asUnsignedInt ()));
 
 		// Adds to the total...
-		result.push_back (pR);
+		result.emplace_back (pR);
 
 		// Next...
 		i += nB + 4 + (size_t) bS.asUnsignedInt ();

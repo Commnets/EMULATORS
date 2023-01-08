@@ -9,7 +9,7 @@ void MCHEmul::StdFormatter::initialize ()
 	for (const auto& i : _lines)
 	{
 		if (!fL)
-			_pieces.push_back (new MCHEmul::StdFormatter::FixTextPiece ("\n"));
+			_pieces.emplace_back (new MCHEmul::StdFormatter::FixTextPiece ("\n"));
 
 		fL = false;
 
@@ -21,7 +21,7 @@ void MCHEmul::StdFormatter::initialize ()
 			// There is no any...
 			if (oi == std::string::npos)
 			{
-				_pieces.push_back (new MCHEmul::StdFormatter::FixTextPiece (l));
+				_pieces.emplace_back (new MCHEmul::StdFormatter::FixTextPiece (l));
 
 				l = "";
 
@@ -34,7 +34,7 @@ void MCHEmul::StdFormatter::initialize ()
 			// So if it the situation, then no data definition at all..
 			if (of == std::string::npos || of == (oi + 1)) 
 			{
-				_pieces.push_back (new MCHEmul::StdFormatter::FixTextPiece (l.substr (oi) + '@'));
+				_pieces.emplace_back (new MCHEmul::StdFormatter::FixTextPiece (l.substr (oi) + '@'));
 				
 				l = (of == std::string::npos) ? "" : l.substr (of + 1);
 
@@ -100,10 +100,10 @@ void MCHEmul::StdFormatter::initialize ()
 
 			// There will be a fix text before the definition of the data...
 			if (oi != 0)
-				_pieces.push_back (new MCHEmul::StdFormatter::FixTextPiece (l.substr (0, oi)));
+				_pieces.emplace_back (new MCHEmul::StdFormatter::FixTextPiece (l.substr (0, oi)));
 			// ...and a maybe a piece if there is a name...
 			if (fName != "")
-				_pieces.push_back (createPiece (tp, fName, prms, pt));
+				_pieces.emplace_back (createPiece (tp, fName, prms, pt));
 
 			l = l.substr (of + 1);
 		}

@@ -140,7 +140,7 @@ void MCHEmul::Assembler::CodeTemplateUseCommandParser::parse (MCHEmul::Assembler
 		MCHEmul::Strings nL = cT.valueFor (prms); // It can generate errors...
 		MCHEmul::Strings nLA (nL.size (), ""); // ...but no actions can be defined in them...
 		if (!cT)
-			pC -> _errors.push_back (MCHEmul::Assembler::Error (cT.error (), pC -> _file, pC -> _currentLineNumber, 0));
+			pC -> _errors.emplace_back (MCHEmul::Assembler::Error (cT.error (), pC -> _file, pC -> _currentLineNumber, 0));
 		else // If no errors, the lines are inserted in the context to be parsed!
 		{
 			pC -> _templateLinesNumber = (unsigned int) nL.size ();
@@ -265,7 +265,7 @@ void MCHEmul::Assembler::BinaryDefinitionParser::parse (MCHEmul::Assembler::Pars
 				[](char c) -> bool { return (c != '1' && c != '0'); }) == value.end ())
 				_definitionMap.insert (MCHEmul::Assembler::BinaryDefinitionParser::DefMap::value_type (chr [0], value));
 			else
-				pC -> _errors.push_back (MCHEmul::Assembler::Error 
+				pC -> _errors.emplace_back (MCHEmul::Assembler::Error 
 					(MCHEmul::Assembler::ErrorType::_MACROBADDEFINED, pC -> _file, pC -> _currentLineNumber, 0, def));
 		}
 	}
@@ -398,7 +398,7 @@ void MCHEmul::Assembler::InstructionCommandParser::parse (MCHEmul::Assembler::Pa
 		if ((*i).second -> matchesWith (cL, prms)) // One option minimum will match this (as it can be parsed)
 		{
 			nE -> _possibleInstructions.push_back ((*i).second);
-			nE -> _possibleParameters.push_back (prms);
+			nE -> _possibleParameters.emplace_back (prms);
 		}
 	}
 
@@ -506,7 +506,7 @@ MCHEmul::Assembler::Semantic* MCHEmul::Assembler::Parser::parse
 	// If there is nothign to parse...
 	if (lines.empty ())
 	{ 
-		_errors.push_back (MCHEmul::Assembler::Error 
+		_errors.emplace_back (MCHEmul::Assembler::Error 
 			(MCHEmul::Assembler::ErrorType::_FILEEMPTY, fN, 0, 0));
 
 		return (pC -> _semantic); // finishes...
@@ -540,7 +540,7 @@ MCHEmul::Strings MCHEmul::Assembler::Parser::readLines (const std::string& fN) c
 
 	char l [512 /** Maximum. */];
 	while (!f.eof ())
-		{ f.getline (l, 512); result.push_back (std::string (l)); }
+		{ f.getline (l, 512); result.emplace_back (std::string (l)); }
 
 	f.close ();
 
@@ -583,12 +583,12 @@ void MCHEmul::Assembler::Parser::parseLines (MCHEmul::Assembler::ParserContext* 
 				{ 
 					MCHEmul::Assembler::ErrorType et = MCHEmul::Assembler::ErrorType::_NOERROR;
 					// If the error happens with in a code template, the line of the error is recorded...
-					_errors.push_back (MCHEmul::Assembler::Error 
+					_errors.emplace_back (MCHEmul::Assembler::Error 
 						(et = pC -> _semantic -> error (), pC -> _file, pC -> _currentLineNumber, col,
 							(pC -> _templateLinesNumber != 0 ? std::to_string (pC -> _templateLinesNumber): "")));
 					// An error in the last element added...more info including the error in the semantic!
 					if (et == MCHEmul::Assembler::ErrorType::_SEMANTICERROR)
-						_errors.push_back (MCHEmul::Assembler::Error 
+						_errors.emplace_back (MCHEmul::Assembler::Error 
 							(pC -> _semantic -> lastGrammaticalElementAdded () -> error (), 
 								pC -> _file, pC -> _currentLineNumber, col));
 				}
@@ -602,7 +602,7 @@ void MCHEmul::Assembler::Parser::parseLines (MCHEmul::Assembler::ParserContext* 
 			{
 				pC -> _currentLine = ""; // The line is considered as treated...
 
-				_errors.push_back (MCHEmul::Assembler::Error 
+				_errors.emplace_back (MCHEmul::Assembler::Error 
 					(MCHEmul::Assembler::ErrorType::_PARSERNOTFOUND, pC -> _file, pC -> _currentLineNumber, col));
 			}
 		}

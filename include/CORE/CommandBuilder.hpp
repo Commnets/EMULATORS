@@ -28,8 +28,16 @@ namespace MCHEmul
 			: _commands ()
 							{ }
 
+		CommandBuilder (const CommandBuilder&) = delete;
+
+		CommandBuilder& operator = (const CommandBuilder&) = delete;
+
 		virtual ~CommandBuilder ()
 							{ for (const auto& i : _commands) delete (i.second); }
+
+		CommandBuilder (CommandBuilder&&) = delete;
+
+		CommandBuilder& operator = (CommandBuilder&&) = delete;
 
 		Command* command (const std::string& cmd) const;
 

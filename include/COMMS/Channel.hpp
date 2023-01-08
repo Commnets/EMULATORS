@@ -39,6 +39,10 @@ namespace MCHEmul
 
 		virtual ~PeerCommunicationChannel ();
 
+		PeerCommunicationChannel (PeerCommunicationChannel&&) = delete;
+
+		PeerCommunicationChannel& operator = (PeerCommunicationChannel&&) = delete;
+
 		// Channel data...
 		unsigned short listenAtPort () const
 							{ return (_listenAtPort); }
@@ -102,9 +106,9 @@ namespace MCHEmul
 				: _message (msg), _to (to)
 							{ }
 
-			PendingMessage (const PendingMessage&) = default;
-
-			PendingMessage& operator = (const PendingMessage&) = default;
+			PendingMessage (const std::string&& msg, const IPAddress& to)
+				: _message (std::move (msg)), _to (to)
+							{ }
 
 			std::string _message;
 			IPAddress _to;

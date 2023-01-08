@@ -44,6 +44,10 @@ namespace MCHEmul
 		virtual ~IOPeripheral () 
 							{ }
 
+		IOPeripheral (IOPeripheral&&) = delete;
+
+		IOPeripheral& operator = (IOPeripheral&&) = delete;
+
 		int id () const
 							{ return (_id); }
 

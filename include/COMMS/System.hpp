@@ -56,6 +56,10 @@ namespace MCHEmul
 		virtual ~CommunicationSystem ()
 							{ delete (_communicationChannel); }
 
+		CommunicationSystem (CommunicationSystem&&) = delete;
+
+		CommunicationSystem& operator = (CommunicationSystem&&) = delete;
+
 		/** To know and change the message formatter using to send the answer to messages
 			when this communication system is acting as a CommandExecuter. */
 		const std::string& messageFormatter () const

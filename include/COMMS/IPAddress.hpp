@@ -32,10 +32,6 @@ namespace MCHEmul
 
 		IPAddress (const std::string& ip);
 
-		IPAddress (const IPAddress&) = default;
-
-		IPAddress& operator = (const IPAddress&) = default;
-
 		/** The parts of the ip address */
 		unsigned char byte1 () const
 						{ return (_a); }

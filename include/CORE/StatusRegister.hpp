@@ -29,10 +29,6 @@ namespace MCHEmul
 			  _bitNames (bN)
 							{ }
 
-		StatusRegister (const StatusRegister&) = default;
-
-		StatusRegister& operator = (const StatusRegister&) = default;
-
 		void initialize ()
 							{ Register::initialize (); }
 

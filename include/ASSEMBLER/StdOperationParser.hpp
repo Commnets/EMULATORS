@@ -20,6 +20,7 @@ namespace MCHEmul
 {
 	namespace Assembler
 	{
+		/** Just to manage the very basic operations. No functions are considered. */
 		class StdOperationParser : public OperationParser
 		{
 			public:

@@ -73,11 +73,11 @@ MCHEmul::UInt MCHEmul::UInt::BinaryFormatManager::fromUnsignedInt (unsigned int 
 	std::vector <MCHEmul::UByte> dt;
 
 	if (n < _1BYTELIMIT)
-		dt.push_back (MCHEmul::UByte ((unsigned char) n));
+		dt.emplace_back (MCHEmul::UByte ((unsigned char) n));
 	else if (n >= _1BYTELIMIT && n < _2BYTELIMIT)
 	{
-		dt.push_back (MCHEmul::UByte ((unsigned char) (n >> MCHEmul::UByte::sizeBits ())));
-		dt.push_back (MCHEmul::UByte ((unsigned char) (n & MCHEmul::UByte::_FF)));
+		dt.emplace_back (MCHEmul::UByte ((unsigned char) (n >> MCHEmul::UByte::sizeBits ())));
+		dt.emplace_back (MCHEmul::UByte ((unsigned char) (n & MCHEmul::UByte::_FF)));
 	}
 	else
 	{
@@ -87,8 +87,8 @@ MCHEmul::UInt MCHEmul::UInt::BinaryFormatManager::fromUnsignedInt (unsigned int 
 		size_t nB = 1; unsigned int r = n; while ((r = (r >> MCHEmul::UByte::sizeBits ())) != 0) nB++;
 		size_t sft = (nB - 1) * MCHEmul::UByte::sizeBits (); // The only multiplication...
 		for (size_t i = nB - 1; i > 0; i--, sft -= MCHEmul::UByte::sizeBits ())
-			dt.push_back (MCHEmul::UByte ((unsigned char) (n >> sft)));
-		dt.push_back (MCHEmul::UByte ((unsigned char) (n & MCHEmul::UByte::_FF))); // The last ubyte...
+			dt.emplace_back (MCHEmul::UByte ((unsigned char) (n >> sft)));
+		dt.emplace_back (MCHEmul::UByte ((unsigned char) (n & MCHEmul::UByte::_FF))); // The last ubyte...
 	}
 
 	return (MCHEmul::UInt (MCHEmul::UBytes (dt), true, MCHEmul::UInt::_BINARY));
@@ -97,18 +97,19 @@ MCHEmul::UInt MCHEmul::UInt::BinaryFormatManager::fromUnsignedInt (unsigned int 
 // ---
 MCHEmul::UInt MCHEmul::UInt::BinaryFormatManager::fromInt (int n)
 {
-	static constexpr unsigned int _1BYTELIMIT = MCHEmul::UByte::_1 << (MCHEmul::UByte::sizeBits () - 1 /** Because the sign. */);
+	static constexpr unsigned int _1BYTELIMIT = 
+		MCHEmul::UByte::_1 << (MCHEmul::UByte::sizeBits () - 1 /** Because the sign. */);
 	static constexpr unsigned int _2BYTELIMIT = _1BYTELIMIT << MCHEmul::UByte::sizeBits ();
 
 	std::vector <MCHEmul::UByte> dt;
 	unsigned int r = (n >= 0) ? n : -n;
 
 	if (r < _1BYTELIMIT)
-		dt.push_back (MCHEmul::UByte ((unsigned char) r));
+		dt.emplace_back (MCHEmul::UByte ((unsigned char) r));
 	else if (r >= _1BYTELIMIT && r < _2BYTELIMIT)
 	{
-		dt.push_back (MCHEmul::UByte ((unsigned char) (r >> MCHEmul::UByte::sizeBits ())));
-		dt.push_back (MCHEmul::UByte ((unsigned char) (r & MCHEmul::UByte::_FF)));
+		dt.emplace_back (MCHEmul::UByte ((unsigned char) (r >> MCHEmul::UByte::sizeBits ())));
+		dt.emplace_back (MCHEmul::UByte ((unsigned char) (r & MCHEmul::UByte::_FF)));
 	}
 	else
 	{
@@ -118,8 +119,8 @@ MCHEmul::UInt MCHEmul::UInt::BinaryFormatManager::fromInt (int n)
 		size_t nB = 2; unsigned r1 = r;  while ((r1 = (r1 >> MCHEmul::UByte::sizeBits ())) != 0) nB++;
 		size_t sft = (nB - 1) * MCHEmul::UByte::sizeBits (); // The only multiplication...
 		for (size_t i = nB - 1; i > 0; i--, sft -= MCHEmul::UByte::sizeBits ())
-			dt.push_back (MCHEmul::UByte ((unsigned char) (r >> sft)));
-		dt.push_back (MCHEmul::UByte ((unsigned char) (r & MCHEmul::UByte::_FF))); // The last ubyte...
+			dt.emplace_back (MCHEmul::UByte ((unsigned char) (r >> sft)));
+		dt.emplace_back (MCHEmul::UByte ((unsigned char) (r & MCHEmul::UByte::_FF))); // The last ubyte...
 	}
 
 	return ((n < 0) 
@@ -139,9 +140,11 @@ MCHEmul::UInt MCHEmul::UInt::PackagedBCDFormatManager::add
 	for (int i = (int) (u2.bytes ().size () - 1); i >= 0; i--) 
 	{
 		r  = (unsigned short) (result [i].value () & MCHEmul::UByte::_0F) + 
-			 (unsigned short) (u2 [i].value () & MCHEmul::UByte::_0F) + (c ? MCHEmul::UByte::_1 : MCHEmul::UByte::_0);
+			 (unsigned short) (u2 [i].value () & MCHEmul::UByte::_0F) + 
+			 (c ? MCHEmul::UByte::_1 : MCHEmul::UByte::_0);
 		if (r > MCHEmul::UByte::_09) r += MCHEmul::UByte::_06;
-		r += (unsigned short) (result [i].value () & MCHEmul::UByte::_F0) + (unsigned short) (u2 [i].value () & MCHEmul::UByte::_F0);
+		r += (unsigned short) (result [i].value () & MCHEmul::UByte::_F0) + 
+			 (unsigned short) (u2 [i].value () & MCHEmul::UByte::_F0);
 		if ((r & 0x01f0) > MCHEmul::UByte::_90) r += MCHEmul::UByte::_60;
 
 		c = r > MCHEmul::UByte::_FF;
@@ -171,9 +174,11 @@ MCHEmul::UInt MCHEmul::UInt::PackagedBCDFormatManager::substract
 			 (unsigned short) (u2 [i].value () & MCHEmul::UByte::_0F) - (c ? MCHEmul::UByte::_0 : MCHEmul::UByte::_1);
 		r = ((r & MCHEmul::UByte::_10) != MCHEmul::UByte::_0)
 				? (unsigned short) ((r - MCHEmul::UByte::_06) & MCHEmul::UByte::_0F) |
-				  (unsigned short) ((result [i].value () & MCHEmul::UByte::_F0) - (u2 [i].value () & MCHEmul::UByte::_F0) - MCHEmul::UByte::_10)
+				  (unsigned short) ((result [i].value () & MCHEmul::UByte::_F0) - 
+					  (u2 [i].value () & MCHEmul::UByte::_F0) - MCHEmul::UByte::_10)
 				: (unsigned short) (r & MCHEmul::UByte::_0F) |
-				  (unsigned short) ((result [i].value () & MCHEmul::UByte::_F0) - (u2 [i].value () & MCHEmul::UByte::_F0));
+				  (unsigned short) ((result [i].value () & MCHEmul::UByte::_F0) - 
+					  (u2 [i].value () & MCHEmul::UByte::_F0));
 		if ((r & 0x0100) != MCHEmul::UByte::_0)
 			r -= MCHEmul::UByte::_60;
 

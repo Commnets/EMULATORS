@@ -33,9 +33,22 @@ namespace MCHEmul
 		public:
 		static const std::shared_ptr <Formatter> _noFormatter;
 
+		FormatterBuilder () = delete;
+
 		/** The constructor receives and read a set of files where formats are defined. \n
 			The formatters are created later, once the element is initialized. */
 		FormatterBuilder (const Strings& nF);
+
+		FormatterBuilder (const FormatterBuilder&) = delete;
+
+		FormatterBuilder& operator = (const FormatterBuilder&) = delete;
+
+		virtual ~FormatterBuilder ()
+							{ }
+
+		FormatterBuilder (FormatterBuilder&&) = delete;
+
+		FormatterBuilder& operator = (FormatterBuilder&&) = delete;
 
 		/** Create the formatters from the lines read at constructions time.
 			If something is wrong during this process, the _error avriable will be different than _NOERROR. */
@@ -82,11 +95,6 @@ namespace MCHEmul
 		virtual Formatter* createFormatter (const std::string& f, const std::string& nF, const Strings& l) = 0;
 
 		private:
-		/** The copy constructor is not allowed. */
-		FormatterBuilder (const FormatterBuilder&) = delete;
-		/** And the same with the operator = */
-		FormatterBuilder& operator = (const FormatterBuilder&) = delete;
-
 		/** To read the lines from a format file. */
 		Strings readLinesFrom (const std::string& nF);
 

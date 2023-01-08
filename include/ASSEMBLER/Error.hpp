@@ -69,10 +69,6 @@ namespace MCHEmul
 				: _type (eT), _file (f), _line (l), _column (c), _detail (d)
 							{ }
 
-			Error (const Error&) = default;
-
-			Error& operator = (const Error&) = default;
-
 			std::string asString () const;
 
 			friend std::ostream& operator << (std::ostream& o, const Error& e)

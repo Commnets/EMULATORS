@@ -27,12 +27,16 @@ namespace MCHEmul
 			public:
 			OperationParser () = default;
 
-			OperationParser (const OperationParser&) = default;
+			OperationParser (const OperationParser&) = delete;
+
+			OperationParser& operator = (const OperationParser&) = delete;
 
 			virtual ~OperationParser ()
 							{ }
 
-			OperationParser& operator = (const OperationParser&) = default;
+			OperationParser (OperationParser&&) = delete;
+
+			OperationParser& operator = (OperationParser&&) = delete;
 
 			/** To verify whether a string is or not valid. */
 			bool valid (const std::string& o) const;
@@ -65,10 +69,6 @@ namespace MCHEmul
 				tOpElement (const std::string& c, const OperationElements& elmnts)
 					: _code (c), _elements (elmnts)
 							{ }
-
-				tOpElement (const tOpElement&) = default;
-
-				tOpElement& operator = (const tOpElement&) = default;
 
 				/** The code assigned to the intermediate OperatationElements generated. */
 				std::string _code; // In the way ##XXXX## always...

@@ -30,9 +30,10 @@ namespace MCHEmul
 			: _address (a), _bytes (b), _label (n), _instruction (i), _actionOn (act)
 						{ }
 
-		ByteCodeLine (const ByteCodeLine&) = default;
-
-		ByteCodeLine& operator = (const ByteCodeLine&) = default;
+		ByteCodeLine (const Address& a, std::vector <UByte>&& b, const std::string& n, 
+				const Instruction* i, unsigned int act)
+			: _address (a), _bytes (std::move (b)), _label (n), _instruction (i), _actionOn (act)
+						{ }
 
 		std::string asString (UByte::OutputFormat oF, 
 			char s /** separator */, size_t l = 0 /** Minimum length per UByte */) const;

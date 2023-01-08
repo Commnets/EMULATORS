@@ -50,10 +50,6 @@ namespace MCHEmul
 			  _data (s, UByte::_0)
 							{ }
 
-		PhysicalStorage (const PhysicalStorage&) = default;
-
-		PhysicalStorage& operator = (const PhysicalStorage&) = default;
-
 		int id () const
 							{ return (_id); }
 		Type type () const
@@ -83,7 +79,7 @@ namespace MCHEmul
 							{ return (UBytes (bytes (pB, nB))); }
 		void set (size_t pB, const UBytes& v)
 							{ set (pB, v.bytes ()); }
-		std::vector <UByte> bytes (size_t pB, size_t nB) const;
+		inline std::vector <UByte> bytes (size_t pB, size_t nB) const;
 		void set (size_t pB, const std::vector <UByte>& v)
 							{ for (size_t i = 0; i < v.size (); i++) set (pB + i, v [i]); }
 
@@ -101,6 +97,15 @@ namespace MCHEmul
 		std::vector <MCHEmul::UByte> _data;
 	};
 
+	// ---
+	inline std::vector <UByte> MCHEmul::PhysicalStorage::bytes (size_t pB, size_t nB) const
+	{
+		std::vector <UByte> result;
+		for (size_t i = 0; i < nB; i++)
+			result.emplace_back (value (pB + i));
+		return (result);
+	}
+
 	/** To simplify the way a map of elements is managed. */
 	using PhysicalStorages = std::map <int, PhysicalStorage*>;
 
@@ -111,8 +116,6 @@ namespace MCHEmul
 		public:
 		friend MemoryView;
 
-		PhysicalStorageSubset () = delete;
-
 		/** It is guarantteed that it must a subset within the boundaries of the phisical storage behind. \n
 			Otherwise the view will be have the same size than that. \n
 			The reference to the phisical storage can't be null at all. \n 
@@ -120,12 +123,16 @@ namespace MCHEmul
 			THe phisical storage can be either active or inactive. */
 		PhysicalStorageSubset (int id, PhysicalStorage* pS, size_t pp /** link a phisical */, const Address& a, size_t s);
 
-		PhysicalStorageSubset (const PhysicalStorageSubset&) = default;
+		PhysicalStorageSubset (const PhysicalStorageSubset&) = delete;
+
+		PhysicalStorageSubset& operator = (const PhysicalStorageSubset&) = delete;
 
 		virtual ~PhysicalStorageSubset () 
 							{ /** Nothing to do by default. */ }
 
-		PhysicalStorageSubset& operator = (const PhysicalStorageSubset&) = default;
+		PhysicalStorageSubset (PhysicalStorageSubset&&) = delete;
+
+		PhysicalStorageSubset& operator = (PhysicalStorageSubset&&) = delete;
 
 		/** Id for the view. It is diiferent than the id of the phisical storage behind. */
 		int id () const
@@ -173,10 +180,10 @@ namespace MCHEmul
 		void set (const Address& a, const UBytes& v, bool f = false)
 							{ set (a, v.bytes (), f); }
 		/** When some of the requested position is out the boundaries, an empty map is returned. */
-		std::vector <UByte> bytes (const Address& a, size_t nB) const;
+		inline std::vector <UByte> bytes (const Address& a, size_t nB) const;
 		std::vector <UByte> bytes () const
 							{ return (bytes (initialAddress (), size ())); }
-		void set (const Address& a, const std::vector <UByte>& v, bool f = false);
+		inline void set (const Address& a, const std::vector <UByte>& v, bool f = false);
 
 		/** To init the memory. It might be overloaded. By default the "defaultData" value is assigned. 
 			It doesn't matter whether the subset is or not active. */
@@ -242,6 +249,32 @@ namespace MCHEmul
 		std::vector <MCHEmul::UByte> _defaultData;
 	};
 
+	// ---
+	inline std::vector <UByte> PhysicalStorageSubset::bytes (const Address& a, size_t nB) const
+	{
+		std::vector <UByte> result;
+
+		int dt;
+		if (_active && _activeForReading &&
+			nB <= _size && (a >= _initialAddress && (dt = _initialAddress.distanceWith (a)) <= (int) (_size - nB))) 
+			for (size_t i = 0; i < nB; i++)
+				result.emplace_back (readValue (dt + i)); 
+
+		return (result);
+	}
+
+	// ---
+	inline void PhysicalStorageSubset::set (const Address& a, const std::vector <UByte>& v, bool f)
+	{
+		std::vector <MCHEmul::UByte> result;
+
+		int dt; 
+		if (_active && _physicalStorage -> canBeWriten (f) &&
+			v.size () < _size && (a >= _initialAddress && (dt = _initialAddress.distanceWith (a)) <= (int) (_size - v.size ())))
+			for (size_t i = 0; i < v.size (); i++)
+				setValue (dt + i, v [i]);
+	}
+
 	/** To simplify the way a map of elements is managed. */
 	using PhysicalStorageSubsets = std::map <int, PhysicalStorageSubset*>;
 	using PhysicalStorageSubsetsList = std::vector <PhysicalStorageSubset*>;
@@ -251,17 +284,19 @@ namespace MCHEmul
 	class MemoryView : public InfoClass
 	{
 		public:
-		MemoryView () = delete;
-
 		/** The memory view is not the owner of the subsets. */
-		MemoryView (int id, PhysicalStorageSubsets ss);
+		MemoryView (int id, const PhysicalStorageSubsets& ss);
 
-		MemoryView (const MemoryView&) = default;
+		MemoryView (const MemoryView&) = delete;
+
+		MemoryView& operator = (const MemoryView&) = delete;
 
 		virtual ~MemoryView ()
 							{ }
 
-		MemoryView& operator = (const MemoryView&) = default;
+		MemoryView (MemoryView&&) = delete;
+
+		MemoryView& operator = (MemoryView&&) = delete;
 
 		int id () const
 							{ return (_id); }
@@ -277,23 +312,23 @@ namespace MCHEmul
 							{ PhysicalStorageSubsets::const_iterator i = _subsets.find (id); 
 								return ((i != _subsets.end ()) ? (*i).second : nullptr); }
 		
-		bool isIn (const Address& a, int & dt) const;
+		inline bool isIn (const Address& a, int & dt) const;
 
 		Address middleMemoryAddress () const
 							{ return (_minAddress + (_numPositions / 2)); }
 
 		/** If there had been several subsets behind, the write operation would happen 
 			on the first writtable subset possible. */
-		void set (const Address& a, const UByte& d, bool f = false);
+		inline void set (const Address& a, const UByte& d, bool f = false);
 		/** If there had been several subsets behind, the read operation would happen 
 			on the first readable subset possible. */
-		const UByte& value (const Address& a) const;
+		inline const UByte& value (const Address& a) const;
 		UBytes values (const Address& a, size_t nB) const
 							{ return (UBytes (bytes (a, nB))); }
-		std::vector <UByte> bytes (const Address& a, size_t nB) const;
+		inline std::vector <UByte> bytes (const Address& a, size_t nB) const;
 		void set (const Address& a, const UBytes& v, bool f = false)
 							{ set (a, v.bytes (), f); }
-		void set (const Address& a, const std::vector <UByte>& v, bool f = false);
+		inline void set (const Address& a, const std::vector <UByte>& v, bool f = false);
 
 		/** To init the memory view. 
 			It might be overloaded. By default the "defaultData" value is assigned. */
@@ -335,6 +370,107 @@ namespace MCHEmul
 		MemoryPositions _memPositions;
 	};
 
+	// ---
+	inline bool MemoryView::isIn (const Address& a, int& dt) const
+	{ 
+		bool result = false;
+
+		int dtT = a.distanceWith (_minAddress);
+		if (dtT >= 0 && (size_t) dtT <= _numPositions)
+		{ 
+			PhysicalStorageSubset* f = nullptr;
+			const PhysicalStorageSubsetsList& pL = _memPositions [dtT]._storages;
+			for (MCHEmul::PhysicalStorageSubsetsList::const_iterator i = pL.begin (); i != pL.end () && f == nullptr; i++)
+				if ((*i) -> active ()) 
+					f = (*i); // The first one active...
+
+			if (result = (f != nullptr)) 
+				dt = dtT;
+		}
+
+		return (result);
+	}
+
+	// ---
+	inline const UByte& MemoryView::value (const Address& a) const
+	{
+		UByte& result = PhysicalStorage::_DEFAULTVALUE;
+
+		int dtT = _minAddress.distanceWith (a);
+		if (dtT >= 0 && (size_t) dtT <= _numPositions)
+		{
+			PhysicalStorageSubset* fS = nullptr;
+			const PhysicalStorageSubsetsList& pL = _memPositions [dtT]._storages;
+			for (size_t i = 0; i < pL.size () && fS == nullptr; i++)
+				if (pL [i] -> active () && pL [i] -> activeForReading ()) 
+					fS = pL [i];
+
+			if (fS != nullptr)
+				result = fS -> readValue (a - fS -> initialAddress ());
+		}
+
+		return (result);
+	}
+
+	// ---
+	inline std::vector <UByte> MemoryView::bytes (const Address& a, size_t nB) const
+	{
+		std::vector <UByte> result;
+
+		int dtT = _minAddress.distanceWith (a);
+		if (dtT >= 0 && (size_t) dtT <= (_numPositions - nB))
+		{
+			for (size_t i = 0; i < nB;i++)
+			{ 
+				PhysicalStorageSubset* fS = nullptr;
+				const PhysicalStorageSubsetsList& pL = _memPositions [dtT + i]._storages;
+				for (size_t j = 0; j < pL.size () && fS == nullptr; j++)
+					if (pL [j] -> active () && pL [j] -> activeForReading ()) 
+						fS = pL [j];
+
+				result.emplace_back ((fS != nullptr) 
+					? fS -> readValue (a - fS -> initialAddress () + i) : PhysicalStorage::_DEFAULTVALUE);
+			}
+		}
+			
+		return (result);
+	}
+
+	// ---
+	inline void MemoryView::set (const Address& a, const UByte& d, bool f)
+	{
+		int dtT = _minAddress.distanceWith (a);
+		if (dtT >= 0 && (size_t) dtT <= _numPositions)
+		{
+			PhysicalStorageSubset* fS = nullptr;
+			const PhysicalStorageSubsetsList& pL = _memPositions [dtT]._storages;
+			for (size_t i = 0; i < pL.size () && fS == nullptr; i++)
+				if (pL [i] -> active () && pL [i] -> canBeWriten (f)) fS = pL [i];
+
+			if (fS != nullptr)
+				fS -> setValue (a - fS -> initialAddress (), d);
+		}
+	}
+
+	// ---
+	inline void MemoryView::set (const Address& a, const std::vector <UByte>& v, bool f)
+	{ 
+		int dtT = _minAddress.distanceWith (a);
+		if (dtT >= 0 && (size_t) dtT <= _numPositions)
+		{
+			for (size_t i = 0; i < v.size (); i++)
+			{
+				PhysicalStorageSubset* fS = nullptr;
+				const PhysicalStorageSubsetsList& pL = _memPositions [dtT]._storages;
+				for (size_t j = 0; j < pL.size () && fS == nullptr; j++)
+					if (pL [j] -> active () && pL [j] -> canBeWriten (f)) fS = pL [j];
+
+				if (fS != nullptr)
+					fS -> setValue (a - fS -> initialAddress () + i, v [i]);
+			}
+		}
+	}
+
 	/** To simplify the way a map of elements is managed. */
 	using MemoryViews = std::map <int, MemoryView*>;
 
@@ -356,12 +492,6 @@ namespace MCHEmul
 				: _physicalStorages (), _subsets (), _views (),
 				  _error (true)
 							{ }
-
-			Content (const Content&) = default;
-
-			~Content () = default;
-
-			Content& operator = (const Content&) = default;
 
 			/** Unless this method is executed, the class is always in error (_error = true). */
 			bool verifyCoherence () const;
@@ -413,15 +543,17 @@ namespace MCHEmul
 			mutable bool _error;
 		};
 
-		Memory () = delete;
-
 		Memory (const Content& cnt);
 
-		Memory (const Memory&) = default;
+		Memory (const Memory&) = delete;
 
-		Memory& operator = (const Memory&) = default;
+		Memory& operator = (const Memory&) = delete;
 
-		~Memory ();
+		virtual ~Memory ();
+
+		Memory (Memory&&) = delete;
+
+		Memory& operator = (Memory&&) = delete;
 
 		const PhysicalStorages& physicalStorages () const
 							{ return (_content.physicalStorages ()); }

@@ -32,9 +32,9 @@ namespace MCHEmul
 			: _startAddress (a), _bytes (dt)
 							{ }
 
-		DataMemoryBlock (const DataMemoryBlock&) = default;
-
-		DataMemoryBlock& operator = (const DataMemoryBlock&) = default;
+		DataMemoryBlock (const Address& a, std::vector <UByte>&& dt)
+			: _startAddress (a), _bytes (std::move (dt))
+							{ }
 
 		// Get & Set methods
 		const Address& startAddress () const

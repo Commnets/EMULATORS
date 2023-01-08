@@ -47,8 +47,6 @@ namespace MCHEmul
 		static const unsigned int _STATUSRUNNING = 0;
 		static const unsigned int _STATUSSTOPPED = 1;
 
-		Computer () = delete;
-
 		/** The computer owns the different elements.
 			The devices mandatory are the screen and the InputOSDevice. 
 			This is verified at construction level. \n
@@ -57,9 +55,13 @@ namespace MCHEmul
 
 		Computer (const Computer&) = delete;
 
+		Computer& operator = (const Computer&) = delete;
+
 		virtual ~Computer (); 
 
-		Computer& operator = (const Computer&) = delete;
+		Computer (Computer&&) = delete;
+
+		Computer& operator = (Computer&&) = delete;
 
 		const CPU* cpu () const
 							{ return (_cpu); }

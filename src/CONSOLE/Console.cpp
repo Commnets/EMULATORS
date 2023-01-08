@@ -30,7 +30,7 @@ MCHEmul::Console::Console (MCHEmul::CommandBuilder* cB,
 			cFile.getline (nl, 255);
 			std::string l = MCHEmul::trim (std::string (nl));
 			if (l != "" && l [0] == '#') continue; // Comments are not taken into account...
-			ls.push_back (l);
+			ls.emplace_back (l);
 		}
 
 		cFile.close ();

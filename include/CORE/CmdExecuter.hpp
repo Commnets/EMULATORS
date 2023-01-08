@@ -27,6 +27,8 @@ namespace MCHEmul
 	class CommandExecuter
 	{
 		public:
+		CommandExecuter () = delete;
+
 		CommandExecuter (int id, CommandBuilder* cB)
 			: _id (id), _commandBuilder (cB)
 							{ assert (_commandBuilder != nullptr); }
@@ -37,6 +39,10 @@ namespace MCHEmul
 
 		virtual ~CommandExecuter ()
 							{ delete (_commandBuilder); }
+
+		CommandExecuter (CommandExecuter&&) = delete;
+
+		CommandExecuter& operator = (CommandExecuter&&) = delete;
 
 		int id () const
 							{ return (_id); }

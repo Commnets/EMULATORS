@@ -22,12 +22,16 @@ namespace MCHEmul
 		public:
 		ConsoleKeys () = default;
 
-		ConsoleKeys (const ConsoleKeys&) = default;
+		ConsoleKeys (const ConsoleKeys&) = delete;
+
+		ConsoleKeys& operator = (const ConsoleKeys&) = delete;
 
 		virtual ~ConsoleKeys ()
 							{ }
 
-		ConsoleKeys& operator = (ConsoleKeys&) = default;
+		ConsoleKeys (ConsoleKeys&) = delete;
+
+		ConsoleKeys& operator = (ConsoleKeys&&) = delete;
 
 		/** Standard keys managed by any Consol.\n
 			The console is always inserting characters. */

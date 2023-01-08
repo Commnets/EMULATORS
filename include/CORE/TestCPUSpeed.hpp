@@ -31,9 +31,13 @@ namespace MCHEmul
 
 		TestCPUSpeed (const TestCPUSpeed&) = delete;
 
+		TestCPUSpeed& operator = (const TestCPUSpeed&) = delete; 
+
 		~TestCPUSpeed ();
 
-		TestCPUSpeed& operator = (const TestCPUSpeed&) = delete; 
+		TestCPUSpeed (TestCPUSpeed&&) = delete;
+
+		TestCPUSpeed& operator = (TestCPUSpeed&&) = delete; 
 
 		/** Number of clocks cycles lasted in a second executing the same instruction. \n
 			The instruction is read from the memory and 

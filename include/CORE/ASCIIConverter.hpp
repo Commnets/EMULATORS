@@ -25,12 +25,16 @@ namespace MCHEmul
 		ASCIIConverter ()
 						{ }
 
-		ASCIIConverter (const ASCIIConverter&) = default;
+		ASCIIConverter (const ASCIIConverter&) = delete;
 
-		ASCIIConverter& operator = (const ASCIIConverter&) = default;
+		ASCIIConverter& operator = (const ASCIIConverter&) = delete;
 
 		virtual ~ASCIIConverter  ()
 						{ }
+
+		ASCIIConverter (ASCIIConverter&&) = delete;
+
+		ASCIIConverter& operator = (ASCIIConverter&&) = delete;
 
 		/** Convert a string into a set of bytes using the conversion table. 
 			By default it doesn't translate anything. */

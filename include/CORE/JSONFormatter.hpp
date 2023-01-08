@@ -39,6 +39,11 @@ namespace MCHEmul
 			  _defEqual (dE)
 							{ }
 
+		JSONFormatter (Strings&& l, char dE = ':')
+			: Formatter (std::move (l)),
+			  _defEqual (dE)
+							{ }
+
 		virtual void initialize () override
 							{ }
 

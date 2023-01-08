@@ -34,6 +34,10 @@ namespace MCHEmul
 		virtual ~IOPeripheralBuilder () 
 							{ for (auto i : _peripherals) delete (i.second); }
 
+		IOPeripheralBuilder (IOPeripheralBuilder&&) = delete;
+
+		IOPeripheralBuilder& operator = (IOPeripheralBuilder&&) = delete;
+
 		/** If the peripherical requeted already existed (one with the same id) a reference to it would be returned,
 			otherwise it sill created...if any! */
 		IOPeripheral* peripheral (int id, const Attributes& attrs) const;

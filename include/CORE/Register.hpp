@@ -31,13 +31,17 @@ namespace MCHEmul
 			: _id (id), _name (n), _values (v) 
 							{ }
 
-		Register (int id, const std::string& n, const std::vector <UByte>&v /** variable */)
+		Register (int id, const std::string& n, UBytes&& v)
+			: _id (id), _name (n), _values (std::move (v)) 
+							{ }
+
+		Register (int id, const std::string& n, const std::vector <UByte>& v /** variable */)
 			: _id (id), _name (n), _values (v) 
 							{ }
 
-		Register (const Register&) = default;
-
-		Register& operator = (const Register&) = default;
+		Register (int id, const std::string& n, std::vector <UByte>&& v)
+			: _id (id), _name (n), _values (std::move (v)) 
+							{ }
 
 		/** To initialize. */
 		void initialize ()
@@ -67,8 +71,13 @@ namespace MCHEmul
 		/** Set values only if they can be accepted. */
 		void set (const std::vector <UByte>& v)
 							{ if (accept (v)) _values = v; }
+		void set (std::vector <UByte>&& v)
+							{ if (accept (v)) _values = std::move (v); }
 		void set (const UBytes& v)
 							{ if (accept (v)) _values = v; }
+		void set (UBytes&& v)
+							{ if (accept (v)) _values = std::move (v); }
+
 		/** Set the values from another register, only if they can be accepted. */
 		void set (const Register& r)
 							{ set (r.values ()); }

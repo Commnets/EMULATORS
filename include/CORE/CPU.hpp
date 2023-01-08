@@ -31,8 +31,6 @@ namespace MCHEmul
 	class CPU : public InfoClass
 	{
 		public:
-		CPU () = delete;
-
 		CPU (const CPUArchitecture& a, const Registers& r, const StatusRegister& sR, const Instructions& ins);
 
 		CPU (const CPU&) = delete;
@@ -40,6 +38,10 @@ namespace MCHEmul
 		CPU& operator = (const CPU&) = delete; 
 
 		virtual ~CPU ();
+
+		CPU (CPU&&) = delete;
+
+		CPU& operator = (CPU&&) = delete; 
 
 		bool stopped () const
 							{ return (_stopped); }

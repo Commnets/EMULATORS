@@ -42,6 +42,13 @@ namespace MCHEmul
 			  _pieces (),
 			  _defSeparator ("\n"), _defEqual ("="), _printFirst (true)
 							{ }
+
+		StdFormatter (Strings&& l)
+			: Formatter (std::move (l)),
+			  _pieces (),
+			  _defSeparator ("\n"), _defEqual ("="), _printFirst (true)
+							{ }
+
 		virtual ~StdFormatter ()
 							{ for (auto& i : _pieces) delete (i); }
 

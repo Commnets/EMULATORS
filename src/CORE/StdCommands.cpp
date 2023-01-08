@@ -50,7 +50,7 @@ MCHEmul::HelpCommand::HelpCommand (const std::string& hF)
 			hFile.getline (l, 255);
 			std::string ls = MCHEmul::trim (l);
 			if (ls != "" && ls [0] == '#') continue; // Comments are not taken into account...
-			hls.push_back (ls);
+			hls.emplace_back (ls);
 		}
 
 		hFile.close ();

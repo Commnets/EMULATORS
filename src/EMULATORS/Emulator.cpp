@@ -75,7 +75,7 @@ MCHEmul::Addresses MCHEmul::Emulator::stopAddresses () const
 			? MCHEmul::getElementsFrom (_cmdlineArguments.argumentAsString (_PARAMADDRESSSTOP), ',') 
 			: MCHEmul::Strings ();
 	for (const auto& i : strs)
-		result.push_back (MCHEmul::Address::fromStr (i));
+		result.emplace_back (MCHEmul::Address::fromStr (i));
 	return (result);
 }
 

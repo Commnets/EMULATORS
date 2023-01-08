@@ -20,7 +20,7 @@ std::vector <MCHEmul::UByte> MCHEmul::Assembler::ByteCode::asSetOfBytes (MCHEmul
 		if (i._address > nA)
 		{
 			for (int j = 0; j < nA.distanceWith (i._address); j++)
-				result.push_back (MCHEmul::UByte::_0);
+				result.emplace_back (MCHEmul::UByte::_0);
 
 			nA = i._address;
 		}
@@ -61,7 +61,7 @@ MCHEmul::DataMemoryBlocks MCHEmul::Assembler::ByteCode::asDataMemoryBlocks () co
 	{
 		if (i._address > nA)
 		{
-			result.push_back (MCHEmul::DataMemoryBlock (iA, bytes));
+			result.emplace_back (MCHEmul::DataMemoryBlock (iA, bytes));
 
 			bytes = { };
 			iA = i._address;
@@ -73,7 +73,7 @@ MCHEmul::DataMemoryBlocks MCHEmul::Assembler::ByteCode::asDataMemoryBlocks () co
 		nA += i._bytes.size ();
 	}
 
-	result.push_back (MCHEmul::DataMemoryBlock (iA, bytes));
+	result.emplace_back (MCHEmul::DataMemoryBlock (iA, bytes));
 
 	return (result);
 }
@@ -138,7 +138,7 @@ MCHEmul::Assembler::ByteCode MCHEmul::Assembler::ByteCode::createFromMemory
 			break; // No sense to continue...the instruction doesn't exist...
 
 		const MCHEmul::Instruction* inst = (*pi).second;
-		result._lines.push_back (MCHEmul::ByteCodeLine 
+		result._lines.emplace_back (MCHEmul::ByteCodeLine 
 			(a + i, m -> values (a + i, inst -> memoryPositions ()).bytes (), 
 				"" /** no label ever. */, inst, c -> action (a + i)));
 		i += inst -> memoryPositions ();

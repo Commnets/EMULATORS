@@ -38,11 +38,7 @@ namespace MCHEmul
 				  _lastStartingPointId (0), _lastLabelId (0), _lastBytesId (0), _lastInstructionId (0)
 							{ }
 
-			ParserContext (const ParserContext&) = default;
-
 			// The parser context doesn't own anything...
-
-			ParserContext& operator = (const ParserContext&) = default;
 
 			/** Actualize the global parameters from another. */
 			void actualizeGlobalParametersFrom (const ParserContext& pC);
@@ -100,8 +96,16 @@ namespace MCHEmul
 				: _cpu (nullptr), _parser (nullptr)
 							{ }
 
+			CommandParser (const CommandParser&) = delete;
+
+			CommandParser& operator = (const CommandParser&) = delete;
+
 			virtual ~CommandParser ()
 							{ }
+
+			CommandParser (CommandParser&&) = delete;
+
+			CommandParser& operator = (CommandParser&&) = delete;
 
 			const CPU* cpu () const
 							{ return (_cpu); }

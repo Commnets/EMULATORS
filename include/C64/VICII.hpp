@@ -42,10 +42,6 @@ namespace C64
 						unsigned short pr2
 					  );
 
-			RasterData (const RasterData&) = default;
-
-			RasterData& operator = (const RasterData&) = default;
-
 			unsigned short currentPosition () const
 							{ return (_currentPosition); }
 			unsigned short currentPositionAtBase0 () const
@@ -170,10 +166,6 @@ namespace C64
 
 			Raster () = delete;
 
-			Raster (const Raster&) = default;
-
-			Raster& operator = (const Raster&) = default;
-
 			Raster (const RasterData& vD, const RasterData& hD)
 				: MCHEmul::InfoClass ("Raster"),
 				  _vRasterData (vD), _hRasterData (hD)
@@ -290,7 +282,7 @@ namespace C64
 		/** Specific classes for PAL & NTSC have been created giving this data as default. */
 		VICII (const RasterData& vd, const RasterData& hd, const MCHEmul::Attributes& attrs = { });
 
-		~VICII ();
+		virtual ~VICII () override;
 
 		/** To change and get the bank. */
 		unsigned short bank () const

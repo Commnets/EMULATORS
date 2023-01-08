@@ -87,7 +87,7 @@ TEXTEXAMPLE2:				lda #>TEXTDEF2
 							sta DRAWTEXT_TEXTLENVAR
 							lda #$02								; Pos X.
 							sta DRAWTEXT_XPOSVAR
-							lda #$09								; Pos Y.
+							lda #$18								; Pos Y.
 							sta DRAWTEXT_YPOSVAR
 							lda #COLORLETTERS
 							sta DRAWTEXT_COLORVAR

@@ -30,10 +30,6 @@ namespace MCHEmul
 		InfoClass (const std::string& cN)
 			: _className (cN)
 							{ }
-		
-		InfoClass (const InfoClass&) = default;
-		
-		InfoClass& operator = (const InfoClass&) = default;
 
 		const std::string& className () const
 							{ return (_className); }

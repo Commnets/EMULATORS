@@ -32,8 +32,6 @@ namespace MCHEmul
 		public:
 		enum class Type { _INPUT = 0, _OUTPUT, _INPUTOUTPUT };
 
-		IODevice () = delete;
-
 		IODevice (Type t, int id, const Attributes& attrs = { });
 
 		IODevice (const IODevice&) = delete;
@@ -43,6 +41,10 @@ namespace MCHEmul
 		/** The device doesn't own the chips, only work with them. 
 			The device doesn't own the peripherals either. */
 		virtual ~IODevice ();
+
+		IODevice (IODevice&&) = delete;
+
+		IODevice& operator = (IODevice&&) = delete;
 
 		Type type () const
 							{ return (_type); }
@@ -127,6 +129,10 @@ namespace MCHEmul
 		IODeviceSystem& operator = (const IODeviceSystem&) = delete;
 
 		~IODeviceSystem ();
+
+		IODeviceSystem (IODeviceSystem&&) = delete;
+
+		IODeviceSystem& operator = (IODeviceSystem&&) = delete;
 
 		/** To get the pointer to the singleton instance of the class. */
 		static std::shared_ptr <IODeviceSystem> system ()

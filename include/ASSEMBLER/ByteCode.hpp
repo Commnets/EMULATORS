@@ -26,12 +26,6 @@ namespace MCHEmul
 			by the emulation: Binary and Set of Blocks. */
 		struct ByteCode final
 		{
-			ByteCode () = default;
-
-			ByteCode (const ByteCode&) = default;
-
-			ByteCode& operator = (const ByteCode&) = default;
-
 			// To returns the ByeCode in things that can be loaded / saved into the memory or files...
 			/** Returns the initial address in the iA variable. 
 				The addresses with no info are filled with 0x00. */
