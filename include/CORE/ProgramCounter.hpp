@@ -32,8 +32,7 @@ namespace MCHEmul
 							{ _internalRepresentation = 0; }
 
 		Address asAddress () const
-							{ UInt r = UInt::fromUnsignedInt (_internalRepresentation); 
-							  r.setMinLength (_size); return (Address (r)); }
+							{ return (Address (_size, _internalRepresentation)); }
 		void setAddress (const Address& a)
 							{ _internalRepresentation = UInt (a.bytes ()).asUnsignedInt (); adjust (); }
 

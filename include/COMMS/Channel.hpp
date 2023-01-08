@@ -106,7 +106,7 @@ namespace MCHEmul
 				: _message (msg), _to (to)
 							{ }
 
-			PendingMessage (const std::string&& msg, const IPAddress& to)
+			PendingMessage (std::string&& msg, const IPAddress& to)
 				: _message (std::move (msg)), _to (to)
 							{ }
 

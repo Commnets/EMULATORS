@@ -246,7 +246,7 @@ void MCHEmul::SetMemoryValueCommand::executeImpl (MCHEmul::CommandExecuter* cE, 
 
 	MCHEmul::Address iA = (a1 <= a2) ? a1 : a2;
 	MCHEmul::Address fA = (a2 >= a1) ? a2 : a1;
-	for (size_t i = 0; i <= fA - iA; i += v.size ())
+	for (size_t i = 0; i <= (size_t) (fA - iA); i += v.size ())
 		c -> cpu () -> memoryRef () -> set (iA + i, v); // Without force it!
 }
 

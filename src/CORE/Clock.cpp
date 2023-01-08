@@ -19,7 +19,7 @@ void MCHEmul::Clock::countCycles (unsigned int cC)
 {
 	// The time lasted from the last calculation (in nanoseconds) of the speed.
 	// The variable iClock keeps always the last moment when the speed was calculated...
-	long long elapsed = (std::chrono::steady_clock::now () - _iClock).count (); 
+	long long elapsed = (std::chrono::steady_clock::now () - _iClock).count ();
 
 	// If the real speed has already been calculated
 	// Then it is latched in a variable accesible from outside
@@ -45,5 +45,5 @@ void MCHEmul::Clock::countCycles (unsigned int cC)
 
 	// To stimate whether the clock goes or not too quick,
 	// attenging the last data...
-	_tooQuick = (_realCyclesPerSecondTmp * _NANOSECOND / elapsed) > _cyclesPerSecond;
+	_tooQuick = (_realCyclesPerSecondTmp * _NANOSECOND) > (_cyclesPerSecond * elapsed);
 }
