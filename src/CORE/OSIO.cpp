@@ -32,7 +32,7 @@ bool MCHEmul::InputOSSystem::simulate ()
 	if (!MCHEmul::IODevice::simulate ())
 		return (false);
 
-	if (_clock.realCyclesPerSecond () > _clock.cyclesPerSecond ())
+	if (_clock.tooQuick ())
 	{
 		_clock.countCycles (0);
 
@@ -75,6 +75,8 @@ bool MCHEmul::InputOSSystem::simulate ()
 				break;
 		}
 	}
+
+	_clock.countCycles (1);
 
 	if (!js.empty ())
 		treatJoystickEvents (js);

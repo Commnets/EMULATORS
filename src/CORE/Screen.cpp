@@ -53,7 +53,7 @@ bool MCHEmul::Screen::simulate ()
 	if (!MCHEmul::IODevice::simulate ())
 		return (false);
 
-	if (_clock.realCyclesPerSecond () > _clock.cyclesPerSecond ())
+	if (_clock.tooQuick ())
 	{
 		_clock.countCycles (0);
 
@@ -70,9 +70,9 @@ bool MCHEmul::Screen::simulate ()
 		SDL_RenderPresent (_renderer);
 
 		_graphicalChip -> setGraphicsReady (false);
-
-		_clock.countCycles (1);
 	}
+
+	_clock.countCycles (1);
 
 	return (true);
 }

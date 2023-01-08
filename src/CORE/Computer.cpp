@@ -146,7 +146,7 @@ bool MCHEmul::Computer::run ()
 bool MCHEmul::Computer::runComputerCycle (unsigned int a)
 {
 	// If the Computer is running too quick, then the cycle is lost...
-	if (realCyclesPerSecond () > cyclesPerSecond ())
+	if (_clock.tooQuick ())
 	{ 
 		countClockCycles (0);
 
