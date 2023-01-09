@@ -226,7 +226,7 @@ void C64::VICIIRegisters::setValue (size_t p, const MCHEmul::UByte& v)
 		// EXTCOLOR: Border Color Register
 		case 0x20:
 			{
-				_foregroundColor = v.value ();
+				_foregroundColor = v.value () & 0x0f;
 			}
 
 			break;
@@ -237,7 +237,7 @@ void C64::VICIIRegisters::setValue (size_t p, const MCHEmul::UByte& v)
 		case 0x23:
 		case 0x24:
 			{
-				_backgroundColor [pp - 0x21] = v.value ();
+				_backgroundColor [pp - 0x21] = v.value () & 0x0f;
 			}
 
 			break;
@@ -246,7 +246,7 @@ void C64::VICIIRegisters::setValue (size_t p, const MCHEmul::UByte& v)
 		case 0x25:
 		case 0x26:
 			{
-				_spriteSharedColor [pp - 0x25] = v.value ();
+				_spriteSharedColor [pp - 0x25] = v.value () & 0x0f;
 			}
 
 			break;
@@ -261,7 +261,7 @@ void C64::VICIIRegisters::setValue (size_t p, const MCHEmul::UByte& v)
 		case 0x2d:
 		case 0x2e:
 			{
-				_spriteColor [pp - 0x27] = v.value ();
+				_spriteColor [pp - 0x27] = v.value () & 0x0f;
 			}
 
 			break;

@@ -232,7 +232,7 @@ bool C64::VICII::simulate (MCHEmul::CPU* cpu)
 			// Draws the border...
 			screenMemory () -> setHorizontalLine ((size_t) cav, (size_t) rv,
 				(cav + 8) > _raster.visibleColumns () ? (_raster.visibleColumns () - cav) : 8, 
-					_VICIIRegisters -> foregroundColor () & 0x0f);
+					_VICIIRegisters -> foregroundColor ());
 
 			// When the raster is in the display zone but in the screen vertical zone too
 			// and for sure the vide is active, then everything has to happen!
@@ -252,8 +252,7 @@ bool C64::VICII::simulate (MCHEmul::CPU* cpu)
 					unsigned short lbk = 8;  // Number of pixels to be drawn...
 					if ((cav + 8) > _raster.hData ().lastScreenPosition ())
 						lbk = _raster.hData ().lastScreenPosition ()  - cav + 1;
-					screenMemory () -> setHorizontalLine ((size_t) cav, (size_t) rv, lbk, 
-						_VICIIRegisters -> backgroundColor () & 0x0f);
+					screenMemory () -> setHorizontalLine ((size_t) cav, (size_t) rv, lbk, _VICIIRegisters -> backgroundColor ());
 				}
 
 				// Draw the graphics, including the sprites...
