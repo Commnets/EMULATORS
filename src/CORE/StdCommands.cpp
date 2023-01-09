@@ -159,7 +159,7 @@ void MCHEmul::StackStatusCommand::executeImpl (MCHEmul::CommandExecuter* cE, MCH
 	if (_parameters.size () == 0 || (_parameters.size () == 1 && parameter ("00") != "ALL"))
 		iS.remove ("Memory"); // Reduce the size...
 
-	rst.add ("Stack", iS);
+	rst.add ("Stack", std::move (iS));
 }
 
 // ---
@@ -330,7 +330,7 @@ void MCHEmul::ShowNextInstructionCommand::executeImpl
 		pC.increment (nI -> memoryPositions ());
 	}
 
-	rst.add ("CODELINES", iS);
+	rst.add ("CODELINES", std::move (iS));
 
 	// The program counter is restored!
 	pC.setAddress (oA);
@@ -367,7 +367,7 @@ void MCHEmul::ListOfBreakPointsCommand::executeImpl (MCHEmul::CommandExecuter* c
 			lst += ((ct++ != 0) ? "," : "\0") + i.first.asString (MCHEmul::UByte::OutputFormat::_HEXA, '\0', 2);
 	lst = MCHEmul::removeAll0 (lst);
 
-	rst.add ("BREAKPOINTS", lst);
+	rst.add ("BREAKPOINTS", std::move (lst));
 }
 
 // ---
@@ -409,7 +409,8 @@ void MCHEmul::CPUSpeedCommand::executeImpl (MCHEmul::CommandExecuter* cE, MCHEmu
 	if (c == nullptr)
 		return;
 
-	rst.add ("SPEED", c -> realCyclesPerSecond ());
+	rst.add ("SPEED",	c -> realCyclesPerSecond ());
+	rst.add ("HERTZS",	c -> screen () -> realHertzs ());
 }
 
 // ---
@@ -420,7 +421,7 @@ void MCHEmul::LoadBinCommand::executeImpl (MCHEmul::CommandExecuter* cE, MCHEmul
 
 	rst.add	("RESULT", 
 		(c -> loadInto (parameter ("00"), 
-			MCHEmul::Address::fromStr (parameter ("01")))) ? "Ok" : "Error");
+			MCHEmul::Address::fromStr (parameter ("01")))) ? std::string ("Ok") : std::string ("Error"));
 }
 
 // ---
@@ -432,7 +433,7 @@ void MCHEmul::SaveBinCommand::executeImpl (MCHEmul::CommandExecuter* cE, MCHEmul
 	rst.add	("RESULT", 
 		(c -> saveFrom
 			(parameter ("00"), std::stoi (parameter ("01").c_str ()), 
-				MCHEmul::Address::fromStr (parameter ("02")))) ? "Ok" : "Error");
+				MCHEmul::Address::fromStr (parameter ("02")))) ? std::string ("Ok") : std::string ("Error"));
 }
 
 // ---

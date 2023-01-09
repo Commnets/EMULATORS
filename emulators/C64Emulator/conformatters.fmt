@@ -146,7 +146,8 @@ Current:@INST@
 #---
 #---
 ;CSPEED
-@SPEED@ cycles/second
+CPU: @SPEED@ cycles/second
+SCREEN: @HERTZS@ cycles/second
 #---
 #---
 ;CLOADBIN

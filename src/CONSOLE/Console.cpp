@@ -8,6 +8,8 @@ MCHEmul::Console::Console (MCHEmul::CommandBuilder* cB,
 	: MCHEmul::CommandExecuter (_ID, cB),
 	  _consoleKeys (k),
 	  _outputStream (oS),
+	  _maxCommandsKept (cK),
+	  _clock (50),
 	  _command (""), _lastCommands (), 
 	  _lastCommandPosition (0), _cursorPosition (0),
 	  _consoleHold (false), // The console can be hold for a while...
@@ -167,6 +169,13 @@ bool MCHEmul::Console::readCommand ()
 {
 	static const std::string alKey (" ./$");
 
+	if (_clock.tooQuick ())
+	{ 
+		_clock.countCycles (0);
+
+		return (false); // No command still read...
+	}
+
 	bool result = false;
 
 	char chr;
@@ -258,6 +267,8 @@ bool MCHEmul::Console::readCommand ()
 				  << ' ' /** to support the deletion. */ 
 				  << MCHEmul::_BACKS.substr (0, _command.length () - _cursorPosition + 1);
 	}
+
+	_clock.countCycles (1);
 
 	return (result);
 }

@@ -52,6 +52,8 @@ namespace MCHEmul
 							{ return (_attributes); }
 		void add (const std::string& an, const std::string& av)
 							{ _attributes.insert (Attributes::value_type (an, av)); }
+		void add (std::string&& an, std::string&& av)
+							{ _attributes.insert (Attributes::value_type (std::move (an), std::move (av))); }
 		void add (const std::string& an, unsigned long long av)
 							{ add (an, std::to_string (av)); }
 		void add (const std::string& an, long long av)
@@ -86,6 +88,8 @@ namespace MCHEmul
 							{ return (_infoStructures); }
 		void add (const std::string& an, const InfoStructure& av)
 							{ _infoStructures.insert (InfoStructures::value_type (an, av)); }
+		void add (std::string&& an, InfoStructure&& av)
+							{ _infoStructures.insert (InfoStructures::value_type (std::move (an), std::move (av))); }
 		void add (const std::string& an, const Attributes& attrs)
 							{ InfoStructure iS; for (const auto& i : attrs) iS.add (i.first, i.second); add (an, iS); }
 

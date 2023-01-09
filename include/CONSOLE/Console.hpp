@@ -99,6 +99,7 @@ namespace MCHEmul
 		ConsoleKeys* _consoleKeys;
 		std::ostream& _outputStream;
 		size_t _maxCommandsKept;
+		Clock _clock;
 
 		// Implementation
 		std::string _command;

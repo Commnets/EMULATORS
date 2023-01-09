@@ -61,6 +61,8 @@ namespace MCHEmul
 							{ return (_visibilityFactor); }
 		const double hertzs () const
 							{ return (_hertzs); }
+		unsigned int realHertzs () const
+							{ return (_clock.realCyclesPerSecond ()); }
 
 		virtual bool initialize () override
 							{ return (true); }
