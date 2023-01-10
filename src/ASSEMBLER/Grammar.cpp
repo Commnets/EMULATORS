@@ -533,11 +533,35 @@ void MCHEmul::Assembler::Semantic::addMacro (const MCHEmul::Assembler::Macro& m)
 }
 
 // ---
+void MCHEmul::Assembler::Semantic::addMacro (MCHEmul::Assembler::Macro&& m) noexcept
+{
+	if (_macros.find (m.name ()) == _macros.end ()) 
+		_macros.insert (MCHEmul::Assembler::Macros::value_type 
+			(m.name () /** A copy still needed here. */, std::move (m)));
+	else
+		_error = MCHEmul::Assembler::ErrorType::_DUPLICATEMACRO;
+}
+
+// ---
 void MCHEmul::Assembler::Semantic::addCodeTemplate (const MCHEmul::Assembler::CodeTemplate& cT)
 {
 	if (_codeTemplates.find (cT.name ()) == _codeTemplates.end ()) 
 	{ 
 		_codeTemplates.insert (MCHEmul::Assembler::CodeTemplates::value_type (cT.name (), cT));
+		if (!cT) 
+			_error = cT.error (); // It could be created with error...
+	}
+	else
+		_error = MCHEmul::Assembler::ErrorType::_DUPLICATECODETEMPLATE;
+}
+
+// ---
+void MCHEmul::Assembler::Semantic::addCodeTemplate (MCHEmul::Assembler::CodeTemplate&& cT) noexcept
+{
+	if (_codeTemplates.find (cT.name ()) == _codeTemplates.end ()) 
+	{ 
+		_codeTemplates.insert (MCHEmul::Assembler::CodeTemplates::value_type 
+			(cT.name () /** a copy still needed. */, std::move (cT)));
 		if (!cT) 
 			_error = cT.error (); // It could be created with error...
 	}

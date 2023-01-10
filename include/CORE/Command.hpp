@@ -52,6 +52,8 @@ namespace MCHEmul
 							{ return (_parameters); }
 		void setParameters (const Attributes& prms)
 							{ _parameters = prms; }
+		void setParameters (Attributes&& prms)
+							{ _parameters = prms; }
 		bool existParameter (const std::string& pN) const
 							{ return (_parameters.find (pN) != _parameters.end ()); }
 		const std::string& parameter (const std::string& aN) const

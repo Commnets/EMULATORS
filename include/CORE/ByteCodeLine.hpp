@@ -31,7 +31,7 @@ namespace MCHEmul
 						{ }
 
 		ByteCodeLine (const Address& a, std::vector <UByte>&& b, const std::string& n, 
-				const Instruction* i, unsigned int act)
+				const Instruction* i, unsigned int act) noexcept
 			: _address (a), _bytes (std::move (b)), _label (n), _instruction (i), _actionOn (act)
 						{ }
 

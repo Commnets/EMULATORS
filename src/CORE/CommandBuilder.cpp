@@ -61,7 +61,7 @@ MCHEmul::Attributes MCHEmul::CommandBuilder::readCommandParameters (const std::s
 		{
 			// The name of the parameter will be a consecutive number ocuppying two positions!
 			std::string fName = std::to_string (ctP++); 
-			fName = MCHEmul::_CEROS.substr (0, 2 - fName.length ()) + fName;
+			fName = std::move (MCHEmul::_CEROS.substr (0, 2 - fName.length ()) + fName);
 			
 			// The value of that parameter lasts until the following space!
 			iP = prms.find_first_of (' '); 
@@ -90,13 +90,14 @@ MCHEmul::Attributes MCHEmul::CommandBuilder::readCommandParameters (const std::s
 			if (iP == std::string::npos) // There must be a quote at the end, otherwise it will be an error!
 				ENDLOOP;
 
-			result.insert (MCHEmul::Attributes::value_type (fName, prms.substr (1, iP - 1)));
+			result.insert (MCHEmul::Attributes::value_type (std::move (fName), std::move (prms.substr (1, iP - 1))));
 			prms = prms.substr (iP + 1);
 		}
 		else
 		{
 			iP = prms.find_first_of (' ');
 			result.insert (MCHEmul::Attributes::value_type (fName, (iP == std::string::npos) ? prms : prms.substr (0, iP)));
+			// Move semantic not recomended to be used as prms might be still valid after this instruction...
 			prms = (iP == std::string::npos) ? "" : prms.substr (iP + 1);
 		}
 	}

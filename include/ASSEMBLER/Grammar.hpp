@@ -65,6 +65,14 @@ namespace MCHEmul
 				  _error (ErrorType::_NOERROR)
 							{ }
 
+			Macro (std::string&& n, std::string&& e, 
+				   const std::string& f = "" /** suaully reused. */, unsigned int l = 0) noexcept
+				: _name (std::move (n)), _equivalent (std::move (e)),
+				  _file (f), _line (l),
+				  _value ({ }),
+				  _error (ErrorType::_NOERROR)
+							{ }
+
 			const std::string& name () const
 							{ return (_name); }
 
@@ -364,11 +372,13 @@ namespace MCHEmul
 			const Macros& macros () const
 							{ return (_macros); }
 			void addMacro (const Macro& m);
+			void addMacro (Macro&& m) noexcept;
 
 			// The code templates...
 			const CodeTemplates& codeTemplates () const
 							{ return (_codeTemplates); }
 			void addCodeTemplate (const CodeTemplate& cT);
+			void addCodeTemplate (CodeTemplate&& cT) noexcept;
 
 			// The starting points...
 			const StartingPointElements& startingPoints () const

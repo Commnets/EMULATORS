@@ -66,10 +66,10 @@ void MCHEmul::Assembler::MacroCommandParser::parse (MCHEmul::Assembler::ParserCo
 
 	size_t mD = pC -> _currentLine.find (_symbol);
 	pC -> _semantic -> addMacro (MCHEmul::Assembler::Macro
-		(MCHEmul::trim (pC -> _currentLine.substr (0, mD)),
-		 MCHEmul::trim (pC -> _currentLine.substr (mD + 1,
-			 pC -> _currentLine.find (parser () -> commentSymbol () /** Until a potential comment. */) - (mD + 1))), 
-		 pC ->_file, pC -> _currentLineNumber)); // Including where the macro has been defined...
+		(std::move (MCHEmul::trim (pC -> _currentLine.substr (0, mD))),
+		 std::move (MCHEmul::trim (pC -> _currentLine.substr (mD + 1,
+			 pC -> _currentLine.find (parser () -> commentSymbol () /** Until a potential comment. */) - (mD + 1)))), 
+		 pC -> _file, pC -> _currentLineNumber)); // Including where the macro has been defined...
 	// The macro is added just if there is no other with the same value...
 	// Otherwise the instruction above will generate an error that will be kept under semantic object...
 
@@ -109,6 +109,7 @@ void MCHEmul::Assembler::CodeTemplateDefinitionCommandParser::parse (MCHEmul::As
 	pC -> _currentLine = "";
 	if (cP)
 		pC -> _semantic -> addCodeTemplate (MCHEmul::Assembler::CodeTemplate (id, ctLns));
+		// Difficult hre to apply the move smemantics as CodeTemplate constructor runs a lot of things...
 }
 
 // ---
@@ -126,8 +127,8 @@ void MCHEmul::Assembler::CodeTemplateUseCommandParser::parse (MCHEmul::Assembler
 	size_t p = MCHEmul::firstSpaceIn (cTID);
 	if (p != std::string::npos) // It has parameters...
 	{
-		prms = MCHEmul::getElementsFrom (MCHEmul::trim (cTID.substr (p + 1, // Get the parameters...
-			cTID.find (parser () -> commentSymbol ()) - (p + 1) /** Until a potential comment at the end. */)), ','); 
+		prms = std::move (MCHEmul::getElementsFrom (MCHEmul::trim (cTID.substr (p + 1, // Get the parameters...
+			cTID.find (parser () -> commentSymbol ()) - (p + 1) /** Until a potential comment at the end. */)), ',')); 
 		cTID = cTID.substr (0, p); // ...and the name is just the "thing" before the spaces...
 	}
 
@@ -172,8 +173,8 @@ void MCHEmul::Assembler::StartingPointCommandParser::parse (MCHEmul::Assembler::
 	nE -> _id = pC -> _lastStartingPointId++; // Sequential...
 	nE -> _file = pC -> _file;
 	nE -> _line = pC -> _currentLineNumber;
-	nE -> _value = MCHEmul::trim (pC -> _currentLine.substr (mD + 1,
-		pC -> _currentLine.find (parser () -> commentSymbol () /** Until a potential comment. */) - (mD + 1)));
+	nE -> _value = std::move (MCHEmul::trim (pC -> _currentLine.substr (mD + 1,
+		pC -> _currentLine.find (parser () -> commentSymbol () /** Until a potential comment. */) - (mD + 1))));
 
 	// Here it is not checked whether _value is or not valid
 	// _value could include symbols and it should be treated later like a macro...
@@ -196,13 +197,13 @@ void MCHEmul::Assembler::LabelCommandParser::parse (MCHEmul::Assembler::ParserCo
 	nE -> _id = pC -> _lastLabelId++; // Sequential...
 	nE -> _file = pC -> _file;
 	nE -> _line = pC -> _currentLineNumber;
-	nE -> _name = MCHEmul::trim (pC -> _currentLine.substr (0, eL));
+	nE -> _name = std::move (MCHEmul::trim (pC -> _currentLine.substr (0, eL)));
 	// The label has to be valid...
 	if (!MCHEmul::validLabel (nE -> _name))
 		nE -> _error = MCHEmul::Assembler::ErrorType::_LABELNOTVALID;
 
 	// The line has not been read totally...
-	pC -> _currentLine = MCHEmul::trim (pC -> _currentLine.substr (eL + 1));
+	pC -> _currentLine = std::move (MCHEmul::trim (pC -> _currentLine.substr (eL + 1)));
 	// The element created is added to the semantic...
 	pC -> _semantic -> addGrammaticalElement (nE);
 }
@@ -222,13 +223,12 @@ void MCHEmul::Assembler::BytesCommandParser::parse (MCHEmul::Assembler::ParserCo
 	nE -> _id = pC -> _lastBytesId++; // Sequential...
 	nE -> _file = pC -> _file;
 	nE -> _line = pC -> _currentLineNumber;
-	MCHEmul::Strings dt = 
-		MCHEmul::getElementsFrom (pC -> _currentLine.substr (eL + 1,
+	MCHEmul::Strings dt = MCHEmul::getElementsFrom (pC -> _currentLine.substr (eL + 1,
 			pC -> _currentLine.find (parser () -> commentSymbol () /** Until a potential comment. */) - (eL + 1)), ' ');
 	// Erase all "empty" elements!
 	MCHEmul::Strings::iterator i = dt.begin (); 
 	while (i != dt.end ()) if (MCHEmul::trim ((*i)) == "") i = dt.erase (i); else i++;
-	nE -> _elements = dt;
+	nE -> _elements = std::move (dt); // No longer needed...
 	if (nE -> _elements.empty ())
 		nE -> _error = MCHEmul::Assembler::ErrorType::_BYTESNOTVALID;
 
@@ -295,7 +295,7 @@ void MCHEmul::Assembler::BinaryCommandParser::parse (MCHEmul::Assembler::ParserC
 			dt = dt.substr (0, i) + 
 				 ((_definitionParser != nullptr) ? _definitionParser -> definitionFor (dt [i]) : "0") +
 				 dt.substr (i + 1);
-	nE -> _elements = (dt == "") ? MCHEmul::Strings () : MCHEmul::Strings ({ "z" /** for binary. */ + dt });
+	nE -> _elements = std::move ((dt == "") ? MCHEmul::Strings () : MCHEmul::Strings ({ "z" /** for binary. */ + dt }));
 	if (nE -> _elements.empty ())
 		nE -> _error = MCHEmul::Assembler::ErrorType::_BYTESNOTVALID;
 
@@ -324,7 +324,7 @@ void MCHEmul::Assembler::TextCommandParser::parse (MCHEmul::Assembler::ParserCon
 	std::string dt = MCHEmul::trim (pC -> _currentLine.substr (eL));
 	if (dt [0] != '"' || dt [dt.length () - 1] != '"') // The text has to be separed with "...
 		nE -> _error = MCHEmul::Assembler::ErrorType::_BYTESNOTVALID;
-	nE -> _text = dt.substr (1, dt.length () - 2);
+	nE -> _text = std::move (dt.substr (1, dt.length () - 2));
 	nE -> _ASCIIConverter = _ASCIIConverter; // Transfer the ascii converter...
 
 	// The element created is added to the gramatic...
@@ -349,7 +349,7 @@ void MCHEmul::Assembler::LoadBytesFileCommandParser::parse (MCHEmul::Assembler::
 	nE -> _id = pC -> _lastBytesId++; // Sequential...
 	nE -> _file = pC -> _file;
 	nE -> _line = pC -> _currentLineNumber;
-	nE -> _binaryFile = MCHEmul::noSpaces (pC -> _currentLine.substr (eL));
+	nE -> _binaryFile = std::move (MCHEmul::noSpaces (pC -> _currentLine.substr (eL)));
 	if (nE -> _binaryFile == "")
 		nE -> _error = MCHEmul::Assembler::ErrorType::_BYTESNOTVALID;
 

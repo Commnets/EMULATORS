@@ -30,14 +30,14 @@ namespace MCHEmul
 		public:
 		/** Represents a no valid Address... \n
 			When size = 0, the _internalValue is not important at all. */
-		Address ()
+		constexpr Address ()
 			: _size (0),
 			  _internalRepresentation (0)
 							{ }
 
 		/** The address is always undertood as positive. 
 			The size could be adjusted depending on the value. */
-		Address (size_t s, unsigned int a)
+		constexpr Address (size_t s, unsigned int a)
 			: _size (s),
 			  _internalRepresentation (a)
 							{ if (_size > 4) _size = 4; }
@@ -57,49 +57,49 @@ namespace MCHEmul
 			  _internalRepresentation (valueFromUBytes (a, bE))
 							{ if (_size > 4) _size = 4; }
 
-		size_t size () const
+		constexpr size_t size () const
 							{ return (_size); }
 
-		unsigned int value () const
+		constexpr unsigned int value () const
 							{ return (_internalRepresentation);}
 		UBytes values () const
 							{ return (UBytes (bytes ())); }
 		inline std::vector <UByte> bytes () const;
 
 		/** Could be negative. */
-		int distanceWith (const Address& a) const
+		constexpr int distanceWith (const Address& a) const
 							{ return ((int) ((long long) a._internalRepresentation - (long long) _internalRepresentation)); }
 
 		/** When reach the limit starts back from 0 (as it is a unsigned int). */
-		Address next (size_t n) const
+		constexpr Address next (size_t n) const
 							{ return (Address (_size, _internalRepresentation + (unsigned int) n /** Can overflow. */)); }
-		Address previous (size_t n) const
+		constexpr Address previous (size_t n) const
 							{ return (Address (_size, _internalRepresentation - (unsigned int) n /** Can overflow. */)); }
 
-		bool operator == (const Address& a) const
+		constexpr bool operator == (const Address& a) const
 							{ return (_internalRepresentation == a._internalRepresentation); }
-		bool operator != (const Address& a) const
+		constexpr bool operator != (const Address& a) const
 							{ return (_internalRepresentation != a._internalRepresentation); }
-		bool operator < (const Address& a) const
+		constexpr bool operator < (const Address& a) const
 							{ return (_internalRepresentation < a._internalRepresentation); }
-		bool operator <= (const Address& a) const
+		constexpr bool operator <= (const Address& a) const
 							{ return (_internalRepresentation <= a._internalRepresentation); }
-		bool operator > (const Address& a) const
+		constexpr bool operator > (const Address& a) const
 							{ return (_internalRepresentation > a._internalRepresentation); }
-		bool operator >= (const Address& a) const
+		constexpr bool operator >= (const Address& a) const
 							{ return (_internalRepresentation >= a._internalRepresentation); }
 
-		Address operator + (size_t n) const
+		constexpr Address operator + (size_t n) const
 							{ return (Address (*this).next (n)); }
-		friend Address operator + (size_t n, const Address& a)
+		constexpr friend Address operator + (size_t n, const Address& a)
 							{ return (a + n); }
 		Address& operator += (size_t n)
 							{ *this = *this + n; return (*this); }
-		int operator - (const Address& a) const
+		constexpr int operator - (const Address& a) const
 							{ return (a.distanceWith (*this)); }
-		Address operator - (size_t n) const
+		constexpr Address operator - (size_t n) const
 							{ return (Address (*this).previous (n)); }
-		friend Address operator - (size_t n, const Address& a)
+		constexpr friend Address operator - (size_t n, const Address& a)
 							{ return (a - n); }
 		Address& operator -= (size_t n)
 							{ *this = *this - n; return (*this); }

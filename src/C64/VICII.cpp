@@ -239,7 +239,12 @@ bool C64::VICII::simulate (MCHEmul::CPU* cpu)
 			if (_raster.isInDisplayZone () && 
 				_raster.vData ().isInScreenZone () &&
 				_videoActive)
-			{ 
+			{
+				if (_raster.isInDisplayZone () && 
+					(_raster.vData ().currentPositionAtBase0 () - 
+						_VICIIRegisters -> verticalScrollPosition ()) >= _raster._LASTBADLINE)
+					emptyGraphicsInfo (); // Just in case to avoid paint something innecesary...
+
 				// Draws the background,
 				// taking into account that the screen can be reduced in the X axis...
 				if (cav < _raster.hData ().firstScreenPosition () &&
@@ -505,10 +510,10 @@ const MCHEmul::UBytes& C64::VICII::readCharDataFor (const MCHEmul::UBytes& chrs,
 			(_VICIIRegisters -> charDataMemory () /** The key. */ + 
 				(((size_t) i.value () & (eM ? 0x3f : 0xff)) 
 					/** In the extended graphics mode there is only 64 chars possible. */ << 3), 8);
-		dt.insert (dt.end (), chrDt.begin (), chrDt.end ());
+		dt.insert (dt.end (), std::make_move_iterator (chrDt.begin ()), std::make_move_iterator (chrDt.end ()));
 	}
 
-	return (_graphicsCharData = MCHEmul::UBytes (dt));
+	return (_graphicsCharData = std::move (MCHEmul::UBytes (dt)));
 }
 
 // ---
@@ -520,10 +525,10 @@ const MCHEmul::UBytes& C64::VICII::readBitmapDataAt (unsigned short l) const
 	{
 		std::vector <MCHEmul::UByte> btDt = 
 			memoryRef () -> bytes (_VICIIRegisters -> bitmapMemory () + (cL + ((size_t) i << 3)), 8);
-		dt.insert (dt.end (), btDt.begin (), btDt.end ());
+		dt.insert (dt.end (), std::make_move_iterator (btDt.begin ()), std::make_move_iterator (btDt.end ()));
 	}
 
-	return (_graphicsBitmapData = MCHEmul::UBytes (dt));
+	return (_graphicsBitmapData = std::move (MCHEmul::UBytes (dt)));
 }
 
 // ---
@@ -540,9 +545,9 @@ const std::vector <MCHEmul::UBytes>& C64::VICII::readSpriteData () const
 		if (_VICIIRegisters -> spriteEnable ((size_t) i)) // Read data only if the sprite is active...
 		{ 
 			_spritesEnabled.push_back ((size_t) i);
-			_graphicsSprites [(size_t) i] = 
+			_graphicsSprites [(size_t) i] = std::move (
 				MCHEmul::UBytes (memoryRef () -> bytes (_VICIIRegisters -> initAddressBank () + 
-					((size_t) memoryRef () -> value (sP + (size_t) i).value () << 6 /** 64 blocks. */), 63 /** size in bytes. */));
+					((size_t) memoryRef () -> value (sP + (size_t) i).value () << 6 /** 64 blocks. */), 63 /** size in bytes. */)));
 		}
 	}
 

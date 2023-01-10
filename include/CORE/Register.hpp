@@ -31,7 +31,7 @@ namespace MCHEmul
 			: _id (id), _name (n), _values (v) 
 							{ }
 
-		Register (int id, const std::string& n, UBytes&& v)
+		Register (int id, const std::string& n, UBytes&& v) noexcept
 			: _id (id), _name (n), _values (std::move (v)) 
 							{ }
 
@@ -39,7 +39,7 @@ namespace MCHEmul
 			: _id (id), _name (n), _values (v) 
 							{ }
 
-		Register (int id, const std::string& n, std::vector <UByte>&& v)
+		Register (int id, const std::string& n, std::vector <UByte>&& v) noexcept
 			: _id (id), _name (n), _values (std::move (v)) 
 							{ }
 
@@ -71,11 +71,11 @@ namespace MCHEmul
 		/** Set values only if they can be accepted. */
 		void set (const std::vector <UByte>& v)
 							{ if (accept (v)) _values = v; }
-		void set (std::vector <UByte>&& v)
+		void set (std::vector <UByte>&& v) noexcept
 							{ if (accept (v)) _values = std::move (v); }
 		void set (const UBytes& v)
 							{ if (accept (v)) _values = v; }
-		void set (UBytes&& v)
+		void set (UBytes&& v) noexcept
 							{ if (accept (v)) _values = std::move (v); }
 
 		/** Set the values from another register, only if they can be accepted. */

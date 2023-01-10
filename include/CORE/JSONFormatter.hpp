@@ -39,7 +39,7 @@ namespace MCHEmul
 			  _defEqual (dE)
 							{ }
 
-		JSONFormatter (Strings&& l, char dE = ':')
+		JSONFormatter (Strings&& l, char dE = ':') noexcept
 			: Formatter (std::move (l)),
 			  _defEqual (dE)
 							{ }

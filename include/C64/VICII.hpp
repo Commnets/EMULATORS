@@ -325,6 +325,8 @@ namespace C64
 
 		/** To read the graphics info. */
 		void readGraphicsInfoAt (unsigned short gl /** screen line, including the effect of the scroll y. */);
+		/** The same but to empty the list of info. */
+		inline void emptyGraphicsInfo ();
 
 		/** @see DrawContext structure. */
 		void drawGraphicsAndDetectCollisions (const DrawContext& dC);
@@ -336,9 +338,9 @@ namespace C64
 		// Read screen data
 		/** Read the chars present in the video matrix. The vale received goes fom 0 to 24. */
 		const MCHEmul::UBytes& readScreenCodeDataAt (unsigned short l) const
-							{ return (_graphicsScreenCodeData = 
+							{ return (_graphicsScreenCodeData = std::move (
 								memoryRef () -> values (_VICIIRegisters -> screenMemory () +
-									((size_t) l * _GRAPHMAXCHARCOLUMNS), (size_t) _GRAPHMAXCHARCOLUMNS)); }
+									((size_t) l * _GRAPHMAXCHARCOLUMNS), (size_t) _GRAPHMAXCHARCOLUMNS))); }
 		/** Read the info for the chars received as parameter. 
 			The method receives also a parameter to indicate whether the graphics mode is or not _EXTENDEDBACKGROUNDMODE. */
 		const MCHEmul::UBytes& readCharDataFor (const MCHEmul::UBytes& chrs, bool eM = false) const;
@@ -349,8 +351,8 @@ namespace C64
 		/** Reads the color of the chars. The _COLORMEMORY is fixed and cann't be changed using VICRegisters. 
 			Th value ecived goes from 0 to 24. */
 		const MCHEmul::UBytes& readColorDataAt (unsigned short l) const
-							{ return (_graphicsColorData = memoryRef () -> values (_COLORMEMORY +
-								((size_t) l * _GRAPHMAXCHARCOLUMNS), (size_t) _GRAPHMAXCHARCOLUMNS)); }
+							{ return (_graphicsColorData = std::move (memoryRef () -> values (_COLORMEMORY +
+								((size_t) l * _GRAPHMAXCHARCOLUMNS), (size_t) _GRAPHMAXCHARCOLUMNS))); }
 		/** Read the sprites data (only for the active ones. 
 			The list of the sprites active (internal variable) is also actualized (not returned) = _spritesEnabled. */
 		const std::vector <MCHEmul::UBytes>& readSpriteData () const;
@@ -407,6 +409,16 @@ namespace C64
 		/** Whether the vertical raster has entered the last VBlank zone already. */
 		bool _lastVBlankEntered;
 	};
+
+	// ---
+	inline void VICII::emptyGraphicsInfo ()
+	{
+		_graphicsScreenCodeData = std::move (MCHEmul::UBytes ());
+		_graphicsCharData = std::move (MCHEmul::UBytes ());
+		_graphicsBitmapData = std::move (MCHEmul::UBytes ());
+		_graphicsColorData = std::move (MCHEmul::UBytes ());
+		_graphicsSprites.clear (); 
+	}
 
 	/** The version para NTSC systems. */
 	class VICII_NTSC final : public VICII

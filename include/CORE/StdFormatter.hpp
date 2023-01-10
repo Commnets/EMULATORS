@@ -43,7 +43,7 @@ namespace MCHEmul
 			  _defSeparator ("\n"), _defEqual ("="), _printFirst (true)
 							{ }
 
-		StdFormatter (Strings&& l)
+		StdFormatter (Strings&& l) noexcept
 			: Formatter (std::move (l)),
 			  _pieces (),
 			  _defSeparator ("\n"), _defEqual ("="), _printFirst (true)
