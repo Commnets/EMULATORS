@@ -527,13 +527,14 @@ namespace MCHEmul
 							{ }
 
 		virtual bool canBeExecuted () const override
-							{ return (true); }
+							{ return (_parameters.size () == 0); }
 
 		private:
 		virtual void executeImpl (CommandExecuter* cE, Computer* c, InfoStructure& rst) override;
 	};
 
-	/** Comand to activate the deep debug. */
+	/** Comand to activate the deep debug. \n
+		The parameter needed is the name of the file where to keep in the info. */
 	class ActivateDeepDebugCommand final : public Command
 	{
 		public:
@@ -551,7 +552,8 @@ namespace MCHEmul
 		virtual void executeImpl (CommandExecuter* cE, Computer* c, InfoStructure& rst) override;
 	};
 
-	/** Comand to desactivate the deep debug. */
+	/** Comand to desactivate the deep debug. \n
+		No parameters are needed. */
 	class DesactivateDeepDebugCommand final : public Command
 	{
 		public:
@@ -564,6 +566,27 @@ namespace MCHEmul
 
 		virtual bool canBeExecuted () const override
 							{ return (true); }
+
+		private:
+		virtual void executeImpl (CommandExecuter* cE, Computer* c, InfoStructure& rst) override;
+	};
+
+	/** Comand to restart the computer. \n
+		No parameters are needed. */
+	class RestartComputerCommand final : public Command
+	{
+		public:
+		static const int _ID = 24;
+		static const std::string _NAME;
+
+		RestartComputerCommand ()
+			: Command (_ID, _NAME)
+							{ }
+
+		/** It could have an optional parameter with the "level" of the restart. \n
+			By default it will be 0. */
+		virtual bool canBeExecuted () const override
+							{ return (_parameters.size () == 0 || _parameters.size () == 1); }
 
 		private:
 		virtual void executeImpl (CommandExecuter* cE, Computer* c, InfoStructure& rst) override;

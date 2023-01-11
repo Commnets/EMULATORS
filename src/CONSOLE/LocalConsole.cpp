@@ -61,9 +61,17 @@ void MCHEmul::LocalConsole::createAndExecuteCommand ()
 // ---
 bool MCHEmul::LocalConsole::runPerCycle ()
 {
-	return (!_emulator -> runCycle ());
+	bool exit = !_emulator -> runCycle ();
 
-	// The status of the console (hols) is not touched!
+	if (exit && _emulator -> computer () -> restartAfterExit ())
+	{
+		// To continue or not will really depend on the intialization process...
+		exit = !_emulator -> computer () -> restart ();
+		// The instruction will not longer be executed. Just once!
+		_emulator -> computer () -> setRestartAfterExit (false /** level 0 back. */);
+	}
+
+	return (exit);
 }
 
 // ---

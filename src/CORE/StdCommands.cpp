@@ -34,6 +34,7 @@ const std::string MCHEmul::MoveParametersToAnswerCommand::_NAME = "CMOVEPARAMS";
 const std::string MCHEmul::SaveBinCommand::_NAME = "CSAVEBIN";
 const std::string MCHEmul::ActivateDeepDebugCommand::_NAME = "CACTIVATEDEEPDEBUG";
 const std::string MCHEmul::DesactivateDeepDebugCommand::_NAME = "CDESACTIVATEDEEPDEBUG";
+const std::string MCHEmul::RestartComputerCommand::_NAME = "CRESTART";
 
 // ---
 MCHEmul::HelpCommand::HelpCommand (const std::string& hF)
@@ -462,4 +463,19 @@ void MCHEmul::DesactivateDeepDebugCommand::executeImpl
 		return;
 
 	c -> desactivateDeepDebug ();
+}
+
+// ---
+void MCHEmul::RestartComputerCommand::executeImpl 
+	(MCHEmul::CommandExecuter* cE, MCHEmul::Computer* c, MCHEmul::InfoStructure& rst)
+{
+	if (c == nullptr)
+		return;
+
+	unsigned int level = (_parameters.size () == 1) ? std::atoi (parameter ("00").c_str ()) : 0;
+
+	// Ends the main loop...
+	c -> setExit (true);
+	// but starts back...
+	c -> setRestartAfterExit (true, level); 
 }

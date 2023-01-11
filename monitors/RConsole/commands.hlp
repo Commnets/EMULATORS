@@ -3,6 +3,11 @@
 ;AUTHOR
 To know info about the author.
 No parameters needed.
+;RESTART
+Just to restart the computer.
+#Commands to know the status of the CPU
+The parameters passed in the command line will not be taken longer into account.
+The level of the restart can be passed as parameter.
 #Commands to know the status of the CPU
 ;LOADPRG PRG
 Load into memory a program given by the parameter.

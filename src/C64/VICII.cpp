@@ -242,7 +242,7 @@ bool C64::VICII::simulate (MCHEmul::CPU* cpu)
 			{
 				if (_raster.isInDisplayZone () && 
 					(_raster.vData ().currentPositionAtBase0 () - 
-						_VICIIRegisters -> verticalScrollPosition ()) >= _raster._LASTBADLINE)
+						_VICIIRegisters -> verticalScrollPosition ()) > _raster._LASTBADLINE)
 					emptyGraphicsInfo (); // Just in case to avoid paint something innecesary...
 
 				// Draws the background,

@@ -58,6 +58,8 @@ MCHEmul::Command* MCHEmul::StandardCommandBuilder::createEmptyCommand (const std
 		result = new MCHEmul::ActivateDeepDebugCommand;
 	else if (cmdName == "DEEPOFF" || cmdName == MCHEmul::DesactivateDeepDebugCommand::_NAME)
 		result = new MCHEmul::DesactivateDeepDebugCommand;
+	else if (cmdName == "RESTART" || cmdName == MCHEmul::RestartComputerCommand::_NAME)
+		result = new MCHEmul::RestartComputerCommand;
 	else if (cmdName == MCHEmul::MoveParametersToAnswerCommand::_NAME)
 		result = new MCHEmul::MoveParametersToAnswerCommand;
 

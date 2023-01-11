@@ -134,6 +134,11 @@ namespace MCHEmul
 			Returns true, when verything was ok, and false in any other circusntance. \n
 			The last error happend could then be checked in _lastEerror. */
 		virtual bool initialize ();
+		/** To restart the computer. \n
+			It should take into account the "level". By default it will by like an initialization. \n 
+			It should return true when everything is ok, and false in any other circunstance. */
+		virtual bool restart ()
+							{ return (initialize ()); }
 
 		/** To simulate how the computer works. 
 			Returns true when finalizing the run ok, and false with error. \n
@@ -164,6 +169,12 @@ namespace MCHEmul
 							{ return (_exit); }
 		void setExit (bool e)
 							{ _exit = e; }
+		bool restartAfterExit () const
+							{ return (_restartAfterExit); }
+		unsigned int restartLevel () const
+							{ return (_restartLevel); }
+		void setRestartAfterExit (bool r, unsigned int l = 0 /** The meaning could be determine by the computer itself. */)
+							{ _restartAfterExit = r; _restartLevel = l;  }
 
 		unsigned int debugLevel () const
 							{ return (_debugLevel); }
@@ -250,6 +261,13 @@ namespace MCHEmul
 		/** Used to to indicate the execution must finishes.
 			There could have been an error or not. */
 		bool _exit;
+		/** Used to indicate whether the execution has to be restarted after exiting the main loop. 
+			This variable can only be set from a command. */
+		bool _restartAfterExit;
+		/** There could be different types of restart: total, just memory, etc...
+			The type of restarting has to be determine by the computer. 
+			By default it will be in the same way that a full initialization. */
+		unsigned int _restartLevel;
 
 		/** The level of the debug info. */
 		unsigned int _debugLevel;

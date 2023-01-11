@@ -248,17 +248,30 @@ bool MCHEmul::Emulator::initialize ()
 // ---
 bool MCHEmul::Emulator::run ()
 {
-	_running = true;
+	do
+	{
+		// Is the emulation is comming from a restarting?
+		if (computer () -> restartAfterExit ())
+		{ 
+			// Once is enough...
+			computer () -> setRestartAfterExit (false);
+			// ...and whether running again will depens on the restart...
+			computer () -> setExit (!computer () -> restart ());
+		}
 
-	computer () -> startsComputerClock ();
+		_running = true;
 
-	while (runCycle (/** no action. */) && 
-		   !computer () -> exit ());
+		computer () -> startsComputerClock ();
+
+		while (runCycle (/** no action. */) && 
+			   !computer () -> exit ());
+
+		_running = false;
+	} 
+	while (computer () -> restartAfterExit ());
 
 	if (_communicationSystem != nullptr)
 		_communicationSystem -> finalize ();
-
-	_running = false;
 
 	return (computer () -> error () != MCHEmul::_NOERROR);
 }

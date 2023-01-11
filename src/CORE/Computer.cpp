@@ -10,7 +10,7 @@ MCHEmul::Computer::Computer (MCHEmul::CPU* cpu, const MCHEmul::Chips& c,
 	: MCHEmul::InfoClass ("Computer"),
 	  _cpu (cpu), _chips (c), _memory (m), _devices (d), _attributes (attrs), 
 	  _actionsAt (), _status (_STATUSRUNNING), _actionForNextCycle (_ACTIONNOTHING),
-	  _exit (false), 
+	  _exit (false), _restartAfterExit (false), _restartLevel (0), // Meaning full!
 	  _debugLevel (MCHEmul::_DEBUGNOTHING),
 	  _error (MCHEmul::_NOERROR),
 	  _screen (nullptr), _inputOSSystem (nullptr), _graphicalChip (nullptr),
@@ -121,23 +121,38 @@ bool MCHEmul::Computer::initialize ()
 // ---
 bool MCHEmul::Computer::run ()
 {
-	// It has to be initialized before...
+	_restartAfterExit = false;
 
-	_exit = false;
-	_error = MCHEmul::_NOERROR;
-	_status = _STATUSRUNNING;
-	_actionForNextCycle = _ACTIONNOTHING;
-	_lastAction = _ACTIONNOTHING;
-
-	startsComputerClock ();
-
-	bool ok = true;
-	while (ok && !_exit)
+	// This loop repets while a restart order (_restartAfterExit == true) is defined...
+	do 
 	{
-		// Every cycle will be acountable of their own speed...
-		ok &= runComputerCycle (/** no action. */);
-		ok &= runIOCycle ();
-	}
+		_exit = false;
+
+		// Is the computer commning from a restarting?
+		if (_restartAfterExit)
+		{
+			// Once is enough...
+			_restartAfterExit = false; 
+			// To really continue the emulation the initialization has to be ok..
+			_exit = !restart (); // This method should take into account the level
+		}
+
+		_error = MCHEmul::_NOERROR;
+		_status = _STATUSRUNNING;
+		_actionForNextCycle = _ACTIONNOTHING;
+		_lastAction = _ACTIONNOTHING;
+
+		startsComputerClock ();
+
+		bool ok = true;
+		while (ok && !_exit)
+		{
+			// Every cycle will be acountable of their own speed...
+			ok &= runComputerCycle (/** no action. */);
+			ok &= runIOCycle ();
+		}
+	} 
+	while (_restartAfterExit);
 
 	return (_error != MCHEmul::_NOERROR);
 }
@@ -145,6 +160,13 @@ bool MCHEmul::Computer::run ()
 // ---
 bool MCHEmul::Computer::runComputerCycle (unsigned int a)
 {
+	if (_exit)
+	{ 
+		_error = MCHEmul::_NOERROR;
+
+		return (false); // Leave... exit is defined!
+	}
+
 	// If the Computer is running too quick, then the cycle is lost...
 	if (_clock.tooQuick ())
 	{ 
