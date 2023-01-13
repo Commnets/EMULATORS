@@ -5,115 +5,13 @@
 
 // ---
 const MCHEmul::Address C64::VICII::_COLORMEMORY ({ 0x00, 0xd8 }, false);
-const C64::VICII::RasterData C64::VICII_NTSC::_VRASTERDATA (27, 41, 51, 250, 12, 26, 262, 4, 4);
-const C64::VICII::RasterData C64::VICII_NTSC::_HRASTERDATA (412, 488, 24, 343, 388, 411, 512, 7, 9);
-const C64::VICII::RasterData C64::VICII_PAL::_VRASTERDATA (0, 16, 51, 250, 299, 311, 312, 4, 4);
-const C64::VICII::RasterData C64::VICII_PAL::_HRASTERDATA (404, 480, 24, 343, 380, 403, 504, 7, 9);
+const MCHEmul::RasterData C64::VICII_NTSC::_VRASTERDATA (27, 41, 51, 250, 12, 26, 262, 4, 4);
+const MCHEmul::RasterData C64::VICII_NTSC::_HRASTERDATA (412, 488, 24, 343, 388, 411, 512, 7, 9);
+const MCHEmul::RasterData C64::VICII_PAL::_VRASTERDATA (0, 16, 51, 250, 299, 311, 312, 4, 4);
+const MCHEmul::RasterData C64::VICII_PAL::_HRASTERDATA (404, 480, 24, 343, 380, 403, 504, 7, 9);
 
 // ---
-C64::VICII::RasterData::RasterData (
-	unsigned short fp,
-	unsigned short fvp,
-	unsigned short fdp,
-	unsigned short ldp,
-	unsigned short lvp,
-	unsigned short lp,
-	unsigned short mp,
-	unsigned short pr1,
-	unsigned short pr2
-					  )
-				: MCHEmul::InfoClass ("RasterData"),
-				  _firstPosition (fp), _firstVisiblePosition (fvp), _firstDisplayPosition (fdp), 
-				  _lastDisplayPosition (ldp), _lastVisiblePosition (lvp), _lastPosition (lp),
-				  _originalFirstDisplayPosition (fdp), _originalLastDisplayPosition (ldp),
-				  _maxPositions (mp),
-				  _positionsToReduce1 (pr1), _positionsToReduce2 (pr2),
-				  _currentPosition (fp),
-				  _displayZoneReduced (false)
-{
-	_firstPosition_0				= toBase0 (_firstPosition);
-	_firstVisiblePosition_0			= toBase0 (_firstVisiblePosition);
-	_firstDisplayPosition_0			= toBase0 (_firstDisplayPosition);
-	_originalFirstDisplayPosition_0 = toBase0 (_firstDisplayPosition);
-	_lastDisplayPosition_0			= toBase0 (_lastDisplayPosition);
-	_originalLastDisplayPosition_0	= toBase0 (_lastDisplayPosition);
-	_lastVisiblePosition_0			= toBase0 (_lastVisiblePosition);
-	_lastPosition_0					= toBase0 (_lastPosition);
-
-	_currentPosition_0				= toBase0 (_currentPosition_0);
-
-	assert (_lastPosition_0 == (_maxPositions - 1));
-}
-
-// ---
-bool C64::VICII::RasterData::add (unsigned short i)
-{
-	bool result = false;
-
-	int cP = (int)_currentPosition_0;
-	cP += i; // Can move to the next (o nexts) lines...
-	if (result = (cP >= (int) _maxPositions))
-		while (cP >= (int) _maxPositions)
-			cP -= (int) _maxPositions;
-
-	cP += (int) _firstPosition;
-	if (cP >= (int) _maxPositions)
-		cP -= (int) _maxPositions;
-
-	_currentPosition = (unsigned short) cP;
-	_currentPosition_0 = toBase0 (_currentPosition);
-
-	return (result);
-}
-
-// ---
-void C64::VICII::RasterData::reduceDisplayZone (bool s)
-{
-	if (_displayZoneReduced == s)
-		return; // If nothing changes, nothing to do...
-
-	if (_displayZoneReduced = s)
-	{
-		_firstDisplayPosition	+= _positionsToReduce1;
-		_firstDisplayPosition_0	+= _positionsToReduce1;
-		_lastDisplayPosition	-= _positionsToReduce2;
-		_lastDisplayPosition_0	-= _positionsToReduce2;
-	}
-	else
-	{
-		_firstDisplayPosition	-= _positionsToReduce1;
-		_firstDisplayPosition_0	-= _positionsToReduce1;
-		_lastDisplayPosition	+= _positionsToReduce2;
-		_lastDisplayPosition_0	+= _positionsToReduce2;
-	}
-}
-
-// ---
-MCHEmul::InfoStructure C64::VICII::RasterData::getInfoStructure () const
-{
-	MCHEmul::InfoStructure result;
-
-	result.add ("POSITION",		_currentPosition);
-	result.add ("POSITION0",	_currentPosition_0);
-	result.add ("FIRST",		_firstPosition_0);
-	result.add ("LAST",			_lastPosition_0);
-
-	return (result);
-}
-
-// ---
-MCHEmul::InfoStructure C64::VICII::Raster::getInfoStructure () const
-{
-	MCHEmul::InfoStructure result;
-
-	result.add ("RasterX", _hRasterData.getInfoStructure ());
-	result.add ("RasterY", _vRasterData.getInfoStructure ());
-
-	return (result);
-}
-
-// ---
-C64::VICII::VICII (const C64::VICII::RasterData& vd, const C64::VICII::RasterData& hd, 
+C64::VICII::VICII (const MCHEmul::RasterData& vd, const MCHEmul::RasterData& hd, 
 		const MCHEmul::Attributes& attrs)
 	: MCHEmul::GraphicalChip (_ID, attrs),
 	  _VICIIRegisters (nullptr), 
@@ -186,7 +84,7 @@ bool C64::VICII::simulate (MCHEmul::CPU* cpu)
 	// the value of the YSCROLL register as the graphics information to be shown 
 	// is loaded at the beginning of every bad line...
 	auto isBadRasterLine = [=]() -> bool
-		{ return (_videoActive && _raster.isInPotentialBadLine () && 
+		{ return (_videoActive && isInPotentialBadLine () && 
 			(_raster.currentLine () & 0x07 /** The three last bits. */) == _VICIIRegisters -> verticalScrollPosition ()); };
 
 	// Reduce the visible zone if any... The info is passed to the raster!
@@ -195,7 +93,7 @@ bool C64::VICII::simulate (MCHEmul::CPU* cpu)
 
 	for (size_t i = (cpu -> clockCycles  () - _lastCPUCycles); i > 0 ; i--)
 	{
-		_videoActive = (_raster.currentLine () == _raster._FIRSTBADLINE) 
+		_videoActive = (_raster.currentLine () == _FIRSTBADLINE) 
 			? !_VICIIRegisters -> videoResetActive () : _videoActive; // Only at first bad line it can change its value...
 
 		if (_isNewRasterLine)
@@ -204,7 +102,7 @@ bool C64::VICII::simulate (MCHEmul::CPU* cpu)
 			{
 				// This is not exactly what VICII does, but it could be a good aproximation...
 				readGraphicsInfoAt (_raster.currentLine () - 
-					_raster._FIRSTBADLINE - _VICIIRegisters -> verticalScrollPosition ());
+					_FIRSTBADLINE - _VICIIRegisters -> verticalScrollPosition ());
 
 				cpu -> addClockCycles (_CPUCYCLESWHENREADGRAPHS + 
 					((unsigned int) _spritesEnabled.size () << 1)); // The cost of reading in terms of cycles...
@@ -242,7 +140,7 @@ bool C64::VICII::simulate (MCHEmul::CPU* cpu)
 			{
 				if (_raster.isInDisplayZone () && 
 					(_raster.vData ().currentPositionAtBase0 () - 
-						_VICIIRegisters -> verticalScrollPosition ()) > _raster._LASTBADLINE)
+						_VICIIRegisters -> verticalScrollPosition ()) > _LASTBADLINE)
 					emptyGraphicsInfo (); // Just in case to avoid paint something innecesary...
 
 				// Draws the background,
@@ -335,6 +233,7 @@ MCHEmul::InfoStructure C64::VICII::getInfoStructure () const
 void C64::VICII::readGraphicsInfoAt (unsigned short gl)
 {
 	unsigned short chrLine = gl >> 3;
+
 	dynamic_cast <C64::Memory*> (memoryRef ()) -> setVICIIView ();
 
 	// In real VIC II color is read at the same time than the graphics data
@@ -498,60 +397,6 @@ MCHEmul::ScreenMemory* C64::VICII::createScreenMemory ()
 	cP [15] = SDL_MapRGB (_format, 0xb3, 0xb3, 0xb3); // Light Grey
 
 	return (new MCHEmul::ScreenMemory (_raster.visibleColumns (), _raster.visibleLines (), cP));
-}
-
-// ---
-const MCHEmul::UBytes& C64::VICII::readCharDataFor (const MCHEmul::UBytes& chrs, bool eM) const
-{
-	std::vector <MCHEmul::UByte> dt;
-	for (const auto& i : chrs.bytes ())
-	{
-		std::vector <MCHEmul::UByte> chrDt = memoryRef () -> bytes 
-			(_VICIIRegisters -> charDataMemory () /** The key. */ + 
-				(((size_t) i.value () & (eM ? 0x3f : 0xff)) 
-					/** In the extended graphics mode there is only 64 chars possible. */ << 3), 8);
-		dt.insert (dt.end (), std::make_move_iterator (chrDt.begin ()), std::make_move_iterator (chrDt.end ()));
-	}
-
-	return (_graphicsCharData = std::move (MCHEmul::UBytes (dt)));
-}
-
-// ---
-const MCHEmul::UBytes& C64::VICII::readBitmapDataAt (unsigned short l) const
-{
-	std::vector <MCHEmul::UByte> dt;
-	unsigned short cL = l * _GRAPHMAXCHARCOLUMNS;
-	for (unsigned short i = 0; i < _GRAPHMAXCHARCOLUMNS; i++)
-	{
-		std::vector <MCHEmul::UByte> btDt = 
-			memoryRef () -> bytes (_VICIIRegisters -> bitmapMemory () + (cL + ((size_t) i << 3)), 8);
-		dt.insert (dt.end (), std::make_move_iterator (btDt.begin ()), std::make_move_iterator (btDt.end ()));
-	}
-
-	return (_graphicsBitmapData = std::move (MCHEmul::UBytes (dt)));
-}
-
-// ---
-const std::vector <MCHEmul::UBytes>& C64::VICII::readSpriteData () const
-{
-	// The list of sprites enabled is used later to draw them
-	// Only the sprite numbers in the list are then draw, and they are drawn in the order they are in this list
-	// So the last one must be the one with the highest priority, and this is the number 0!
-	_spritesEnabled = { }; // The list of the sprites enabled...
-
-	MCHEmul::Address sP = _VICIIRegisters -> spritePointersMemory ();
-	for (int /** can be negative. */ i = 7; i >= 0; i--)
-	{ 
-		if (_VICIIRegisters -> spriteEnable ((size_t) i)) // Read data only if the sprite is active...
-		{ 
-			_spritesEnabled.push_back ((size_t) i);
-			_graphicsSprites [(size_t) i] = std::move (
-				MCHEmul::UBytes (memoryRef () -> bytes (_VICIIRegisters -> initAddressBank () + 
-					((size_t) memoryRef () -> value (sP + (size_t) i).value () << 6 /** 64 blocks. */), 63 /** size in bytes. */)));
-		}
-	}
-
-	return (_graphicsSprites);
 }
 
 // ---

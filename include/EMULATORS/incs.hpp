@@ -17,3 +17,6 @@
 #include <EMULATORS/Emulator.hpp>
 
 #endif
+
+ // End of the file
+ /*@}*/

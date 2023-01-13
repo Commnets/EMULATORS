@@ -16,14 +16,13 @@
 #define __C64_VICIIREGISTERS__
 
 #include <CORE/incs.hpp>
-#include <C64/ChipRegisters.hpp>
 
 namespace C64
 {
 	/** In the VICII Registers, 
 		there are a couple of records that behave different
 		when they are read that when they are written. */
-	class VICIIRegisters final : public ChipRegisters
+	class VICIIRegisters final : public MCHEmul::ChipRegisters
 	{
 		public:
 		enum class GraphicMode

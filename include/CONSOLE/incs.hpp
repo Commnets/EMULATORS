@@ -20,3 +20,7 @@
 #include <CONSOLE/RemoteConsole.hpp>
 
 #endif
+
+ // End of the file
+ /*@}*/
+

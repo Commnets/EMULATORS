@@ -19,7 +19,6 @@
 #include <C64/global.hpp>
 #include <C64/C64.hpp>
 #include <C64/Memory.hpp>
-#include <C64/ChipRegisters.hpp>
 #include <C64/VICII.hpp>
 #include <C64/VICIIRegisters.hpp>
 #include <C64/CIATimer.hpp>
@@ -28,6 +27,8 @@
 #include <C64/CIA1Registers.hpp>
 #include <C64/CIA2.hpp>
 #include <C64/CIA2Registers.hpp>
+#include <C64/SID.hpp>
+#include <C64/SIDRegisters.hpp>
 #include <C64/Screen.hpp>
 #include <C64/OSIO.hpp>
 #include <C64/UserPort.hpp>
@@ -38,3 +39,6 @@
 #include <C64/C64Emulator.hpp>
 
 #endif
+
+ // End of the file
+ /*@}*/

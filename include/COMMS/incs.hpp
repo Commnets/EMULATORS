@@ -21,3 +21,7 @@
 #include <COMMS/AnsSysCmdBld.hpp>
 
 #endif
+
+ // End of the file
+ /*@}*/
+

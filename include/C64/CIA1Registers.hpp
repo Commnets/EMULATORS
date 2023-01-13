@@ -15,7 +15,6 @@
 #define __C64_CIA1REGISTERS__
 
 #include <CORE/incs.hpp>
-#include <C64/ChipRegisters.hpp>
 
 namespace C64
 {
@@ -25,7 +24,7 @@ namespace C64
 
 	/** In the CIA1 Memory, there are a couple of records that behave different
 		when they are read that when they are written. */
-	class CIA1Registers final : public ChipRegisters
+	class CIA1Registers final : public MCHEmul::ChipRegisters
 	{
 		public:
 		friend CIA1;

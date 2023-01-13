@@ -119,3 +119,6 @@ No parameters needed.
 ;CIA2
 To know the status of the CIA2 chip.
 No parameters needed.
+;SID
+To know the status of the SID chip.
+No parameters needed.

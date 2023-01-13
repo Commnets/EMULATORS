@@ -32,6 +32,7 @@
 #include <CORE/CPUInterrupt.hpp>
 #include <CORE/TestCPUSpeed.hpp>
 #include <CORE/Memory.hpp>
+#include <CORE/ChipRegisters.hpp>
 #include <CORE/ProgramCounter.hpp>
 #include <CORE/Register.hpp>
 #include <CORE/Stack.hpp>
@@ -43,9 +44,11 @@
 #include <CORE/ByteCodeLine.hpp>
 #include <CORE/Instruction.hpp>
 #include <CORE/IO.hpp>
+#include <CORE/Raster.hpp>
 #include <CORE/Screen.hpp>
 #include <CORE/ScreenMemory.hpp>
 #include <CORE/OSIO.hpp>
+#include <CORE/Sound.hpp>
 #include <CORE/IOPeripheral.hpp>
 #include <CORE/IOPBuilder.hpp>
 #include <CORE/Command.hpp>
@@ -56,3 +59,6 @@
 #include <CORE/CmdlineArgs.hpp>
 
 #endif
+
+ // End of the file
+ /*@}*/

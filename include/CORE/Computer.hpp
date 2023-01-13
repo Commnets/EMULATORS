@@ -132,13 +132,15 @@ namespace MCHEmul
 		/** To initialize the Computer, when the "power is set up". \n 
 			It could be defined per computer. By default it initializes the chips. \n
 			Returns true, when verything was ok, and false in any other circusntance. \n
-			The last error happend could then be checked in _lastEerror. */
-		virtual bool initialize ();
+			The last error happend could then be checked in _lastEerror. \n
+			The parameter indicates wether the memory is or not initialized. */
+		virtual bool initialize (bool iM = true);
 		/** To restart the computer. \n
 			It should take into account the "level". By default it will by like an initialization. \n 
-			It should return true when everything is ok, and false in any other circunstance. */
-		virtual bool restart ()
-							{ return (initialize ()); }
+			It should return true when everything is ok, and false in any other circunstance. \n
+			By default the level 1 won't restart the memory,
+			and any other value will restart the full computer (= initialize ()). */
+		virtual bool restart ();
 
 		/** To simulate how the computer works. 
 			Returns true when finalizing the run ok, and false with error. \n

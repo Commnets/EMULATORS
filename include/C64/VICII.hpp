@@ -24,248 +24,11 @@ namespace C64
 	class VICII : public MCHEmul::GraphicalChip
 	{
 		public:
-		/** The RasterData describes the infomation the raster need to move across the screen. */
-		class RasterData final : public MCHEmul::InfoClass
-		{
-			public:
-			RasterData () = delete;
-
-			RasterData (
-						unsigned short fp,		// First position
-						unsigned short fvp,		// First Visible position
-						unsigned short fdp,		// First Display position
-						unsigned short ldp,		// Last Display position
-						unsigned short lvp,		// Last Visible position
-						unsigned short lp,		// Last position
-						unsigned short mp,		// Maximum positions
-						unsigned short pr1,		// Positions to reduce in the visible zone 1 & 2
-						unsigned short pr2
-					  );
-
-			unsigned short currentPosition () const
-							{ return (_currentPosition); }
-			unsigned short currentPositionAtBase0 () const
-							{ return (_currentPosition_0); }
-
-			// Managing the blank zone...
-			bool isInBlankZone () const
-							{ return ((_currentPosition_0 >= _firstPosition_0 && 
-											_currentPosition_0 < _firstVisiblePosition_0) ||
-									  (_currentPosition_0 > _lastVisiblePosition_0 && 
-											_currentPosition_0 <= _lastPosition_0)); }
-			bool isInLastBlankZone () const
-							{ return (_currentPosition_0 > _lastVisiblePosition_0 && 
-									  _currentPosition_0 <= _lastPosition_0); }
-
-			// Managin the visible zone...
-			bool isInVisibleZone () const 
-							{ return ((_currentPosition_0 >= _firstVisiblePosition_0 && 
-									   _currentPosition_0 <= _lastVisiblePosition_0)); }
-			unsigned short currentVisiblePosition () const // The 
-							{ return (_currentPosition_0 - _firstVisiblePosition_0); }
-			unsigned short visiblePositions () const
-							{ return (_lastVisiblePosition_0 - _firstVisiblePosition_0 + 1); }
-			unsigned short currentInVisiblePosition () const
-							{ return (_currentPosition_0 - _firstVisiblePosition_0); }
-
-			// Managing the display
-			/** The DISPLAY is the zone where the drawing can happen but not taking 
-				into account potential reductions neither in the columns nor in the rows. */
-			bool isInDisplayZone () const
-							{ return (_currentPosition_0 >= _originalFirstDisplayPosition_0 && 
-									  _currentPosition_0 <= _originalLastDisplayPosition_0); }
-			unsigned short firstDisplayPosition () const
-							{ return (_originalFirstDisplayPosition_0 - _firstVisiblePosition_0); }
-			unsigned short lastDisplayPosition () const
-							{ return (_originalLastDisplayPosition_0 - _firstVisiblePosition_0); }
-			unsigned short displayPositions () const
-							{ return (_originalLastDisplayPosition_0 - _originalFirstDisplayPosition_0 + 1); }
-
-			// Managing the screen
-			/** The SCREEN is the zone where the drawing can happen but taking
-				into account potential reductions either in the columns on in the rows. */
-			bool isInScreenZone () const
-							{ return (_currentPosition_0 >= _firstDisplayPosition_0 &&
-									  _currentPosition_0 <= _lastDisplayPosition_0); }
-			unsigned short firstScreenPosition () const
-							{ return (_firstDisplayPosition_0 - _firstVisiblePosition_0); }
-			unsigned short lastScreenPosition () const
-							{ return (_lastDisplayPosition_0 - _firstVisiblePosition_0); }
-			unsigned short screenPositions () const
-							{ return (_lastDisplayPosition_0 - _firstDisplayPosition_0 + 1); }
-
-			/** Returns true when the limit of the raster is reached. 
-				The parameter is the number of positions to increment the rasterData. */
-			bool add (unsigned short i);
-			bool next ()
-							{ return (add (1)); }
-
-			/** The display zone will reduced in both sides by half of the _positionsToReduce value. */
-			void reduceDisplayZone (bool s);
-			bool isDisplayZoneReduced () const
-							{ return (_displayZoneReduced); }
-
-			void initialize ()
-							{ _currentPosition = _firstPosition; _currentPosition_0 = _firstPosition_0; }
-
-			/**
-			  *	The name of the fields are: \n
-			  * POSITION	= Attribute: Position of the raster.
-			  * POSITION_0	= Attribute: Position of the raster in base 0.
-			  * FIRST		= Attribute: Initial position of the raster.
-			  * LAST		= Attribute: Last position of the raster.
-			  */
-			virtual MCHEmul::InfoStructure getInfoStructure () const override;
-
-			friend std::ostream& operator << (std::ostream& o, const RasterData& r)
-							{ return (o << *((MCHEmul::InfoClass*) &r)); }
-
-			protected:
-			/** Internal method used return a value considering the firrst position as 0. */
-			unsigned short toBase0 (unsigned short m) const
-							{ int t = (int) m - (int) _firstPosition; 
-							  return ((t < 0) ? (unsigned short) t + _maxPositions : (unsigned short) t); }
-
-			protected:
-			const unsigned short _firstPosition = 0; // Adjusted at construction time.
-			const unsigned short _firstVisiblePosition = 0;
-			unsigned short _firstDisplayPosition; // Both can be changed by the method reduceDisplayZone...
-			const unsigned short _originalFirstDisplayPosition; // Before reducing or extending the area...
-			unsigned short _lastDisplayPosition;
-			const unsigned short _originalLastDisplayPosition; // Before reduucing or extending the area...
-			const unsigned short _lastVisiblePosition = 0;
-			const unsigned short _lastPosition = 0;
-			const unsigned short _maxPositions = 0;
-			const unsigned short _positionsToReduce1 = 0;
-			const unsigned short _positionsToReduce2 = 0;
-
-			// Implementation
-			// To speeed up calculus...
-			unsigned short _firstPosition_0; 
-			unsigned short _firstVisiblePosition_0;
-			unsigned short _firstDisplayPosition_0; 
-			unsigned short _originalFirstDisplayPosition_0; 
-			unsigned short _lastDisplayPosition_0;
-			unsigned short _originalLastDisplayPosition_0; 
-			unsigned short _lastVisiblePosition_0;
-			unsigned short _lastPosition_0;
-
-			// Implementation
-			unsigned short _currentPosition;
-			unsigned short _currentPosition_0;
-			bool _displayZoneReduced;
-		};
-
-		/** The Raster simulates the set of sequential horizontal lines that, 
-			in a CRT monitor, draws an image in the screen. */
-		class Raster final : public MCHEmul::InfoClass
-		{
-			public:
-			static const unsigned short _FIRSTBADLINE	= 0x30;
-			static const unsigned short _LASTBADLINE	= 0xf7;
-
-			Raster () = delete;
-
-			Raster (const RasterData& vD, const RasterData& hD)
-				: MCHEmul::InfoClass ("Raster"),
-				  _vRasterData (vD), _hRasterData (hD)
-							{ }
-
-			const RasterData& vData () const
-							{ return (_vRasterData); }
-			RasterData& vData ()
-							{ return (_vRasterData); }
-			const RasterData& hData () const
-							{ return (_hRasterData); }
-			RasterData& hData ()
-							{ return (_hRasterData); }
-
-			unsigned short currentLine () const
-							{ return (_vRasterData.currentPosition ()); }
-			unsigned short currentLineAtBase0 () const
-							{ return (_vRasterData.currentPositionAtBase0 ()); }
-			unsigned short currentColumn () const
-							{ return (_hRasterData.currentPosition ()); }
-			unsigned short currentColumnAtBase0 () const
-							{ return (_hRasterData.currentPositionAtBase0 ()); }
-
-			/** This method is not complete. It would have to consider 
-				the position of the vertical scroll and also whether the display is or not disconnected. */
-			bool isInPotentialBadLine () const
-							{ return (_vRasterData.currentPosition () >= _FIRSTBADLINE && 
-									  _vRasterData.currentPosition () <= _LASTBADLINE); }
-
-			// Managing the blan zone
-			bool isInVBlank () const
-							{ return (_vRasterData.isInBlankZone ()); }
-			bool isInLastVBlank () const
-							{ return (_vRasterData.isInLastBlankZone ()); }
-
-			// Managing the visible zone
-			/** The visible zone is the complete c64 sreen. 
-				The size will be different in PAL and in NTSC. */
-			bool isInVisibleZone () const
-							{ return (_vRasterData.isInVisibleZone () && _hRasterData.isInVisibleZone ()); }
-			unsigned short visibleLines () const
-							{ return (_vRasterData.visiblePositions ()); }
-			unsigned short visibleColumns () const
-							{ return (_hRasterData.visiblePositions ()); }
-			void currentVisiblePosition (unsigned short& x, unsigned short& y) const
-							{ x = _hRasterData.currentVisiblePosition (); y = _vRasterData.currentVisiblePosition (); }
-			void currentInVisiblePosition (unsigned short& x, unsigned short& y) const
-							{ x = _hRasterData.currentInVisiblePosition (); y = _vRasterData.currentInVisiblePosition (); }
-
-			// Managing the display zone
-			/** The display is where drawing is possible. The reduced zones if any are not considered. */
-			bool isInDisplayZone () const
-							{ return (_vRasterData.isInDisplayZone () && _hRasterData.isInDisplayZone ()); }
-			void firstDisplayPosition (unsigned short& x, unsigned short& y) const
-							{ x = _hRasterData.firstDisplayPosition (); y = _vRasterData.firstDisplayPosition (); }
-			void displayPositions (unsigned short& x1, unsigned short& y1, unsigned short& x2, unsigned short& y2)
-							{ x1 = _hRasterData.firstDisplayPosition (); y1 = _vRasterData.firstDisplayPosition ();
-							  x2 = _hRasterData.lastDisplayPosition (); y2 = _vRasterData.lastDisplayPosition (); }
-
-			/** To go from the display zone to the screen one. */
-			void reduceDisplayZone (bool v, bool h)
-							{ _vRasterData.reduceDisplayZone (v); _hRasterData.reduceDisplayZone (h); }
-
-			// Managing the screen
-			/** The screen is where the drawing is possible, considering the reduced zones if any.
-				If there hadn't reduced zones the screen and the display would be equivalent. */
-			bool isInScreenZone () const
-							{ return (_vRasterData.isInScreenZone () && _hRasterData.isInScreenZone ()); }
-			void firstScreenPosition (unsigned short& x, unsigned short& y, bool o = false) const
-							{ x = _hRasterData.firstScreenPosition (); y = _vRasterData.firstScreenPosition (); }
-			void screenPositions (unsigned short& x1, unsigned short& y1, unsigned short& x2, unsigned short& y2)
-							{ x1 = _hRasterData.firstScreenPosition (); y1 = _vRasterData.firstScreenPosition ();
-							  x2 = _hRasterData.lastScreenPosition (); y2 = _vRasterData.lastScreenPosition (); }
-			
-			/** Returns true when the raster goes to the next line. \n
-				The Parameter is the number of cycles to move the raster. \n
-				The raster moves 8 pixels per cycle. */
-			bool moveCycles (unsigned short nC)
-							{ bool result = _hRasterData.add (nC * 8 /** columuns = piexels per cycle. */);
-							  if (result) _vRasterData.next (); 
-							  return (result); }
-
-			void initialize ()
-							{ _vRasterData.initialize (); _hRasterData.initialize (); }
-
-			/**
-			  *	The name of the fields are: \n
-			  * RasterX		= InfoStructure: Horizontal raster info.
-			  * RasterY		= InfoStructure: Vertical raster info.
-			  */
-			virtual MCHEmul::InfoStructure getInfoStructure () const override;
-
-			friend std::ostream& operator << (std::ostream& o, const Raster& r)
-							{ return (o << *((MCHEmul::InfoClass*) &r)); }
-
-			private:
-			RasterData _vRasterData, _hRasterData;
-		};
-
 		static const unsigned int _ID = 4;
+
+		/** The position of the bad lines. */
+		static const unsigned short _FIRSTBADLINE	= 0x30;
+		static const unsigned short _LASTBADLINE	= 0xf7;
 
 		/** Data about the size of the screen */
 		static const unsigned short _GRAPHMAXCHARLINES		= 25; // Not taking into account reductions in the size
@@ -280,7 +43,7 @@ namespace C64
 		static const MCHEmul::Address _COLORMEMORY;
 
 		/** Specific classes for PAL & NTSC have been created giving this data as default. */
-		VICII (const RasterData& vd, const RasterData& hd, const MCHEmul::Attributes& attrs = { });
+		VICII (const MCHEmul::RasterData& vd, const MCHEmul::RasterData& hd, const MCHEmul::Attributes& attrs = { });
 
 		virtual ~VICII () override;
 
@@ -305,6 +68,12 @@ namespace C64
 							{ _drawBorder = dB; }
 
 		private:
+		/** This method is not complete. It would have to consider 
+			the position of the vertical scroll and also whether the display is or not disconnected. */
+		bool isInPotentialBadLine () const
+						{ return (_raster.vData ().currentPosition () >= _FIRSTBADLINE &&
+									_raster.vData ().currentPosition () <= _LASTBADLINE); }
+
 		/** To simplify the use of the routines dedicated to draw. */
 		struct DrawContext
 		{
@@ -343,11 +112,11 @@ namespace C64
 									((size_t) l * _GRAPHMAXCHARCOLUMNS), (size_t) _GRAPHMAXCHARCOLUMNS))); }
 		/** Read the info for the chars received as parameter. 
 			The method receives also a parameter to indicate whether the graphics mode is or not _EXTENDEDBACKGROUNDMODE. */
-		const MCHEmul::UBytes& readCharDataFor (const MCHEmul::UBytes& chrs, bool eM = false) const;
+		inline const MCHEmul::UBytes& readCharDataFor (const MCHEmul::UBytes& chrs, bool eM = false) const;
 		/** Read th info of the bitmap. 
 			The info is read as they were char data. That is, the 8 x 8 block are sequential. 
 			The value receive gos from 0 to 199. */
-		const MCHEmul::UBytes& readBitmapDataAt (unsigned short l) const;
+		inline const MCHEmul::UBytes& readBitmapDataAt (unsigned short l) const;
 		/** Reads the color of the chars. The _COLORMEMORY is fixed and cann't be changed using VICRegisters. 
 			Th value ecived goes from 0 to 24. */
 		const MCHEmul::UBytes& readColorDataAt (unsigned short l) const
@@ -355,7 +124,7 @@ namespace C64
 								((size_t) l * _GRAPHMAXCHARCOLUMNS), (size_t) _GRAPHMAXCHARCOLUMNS))); }
 		/** Read the sprites data (only for the active ones. 
 			The list of the sprites active (internal variable) is also actualized (not returned) = _spritesEnabled. */
-		const std::vector <MCHEmul::UBytes>& readSpriteData () const;
+		inline const std::vector <MCHEmul::UBytes>& readSpriteData () const;
 
 		// Draw the graphics in detail...
 		/** Draws a monocolor char. */
@@ -382,7 +151,7 @@ namespace C64
 		/** The memory is used also as the set of registers of the chip. */
 		C64::VICIIRegisters* _VICIIRegisters;
 		/** The raster. */
-		Raster _raster;
+		MCHEmul::Raster _raster;
 		/** To draw or nor the border between the background and the foreground. */
 		bool _drawBorder;
 
@@ -420,12 +189,66 @@ namespace C64
 		_graphicsSprites.clear (); 
 	}
 
+	// ---
+	const MCHEmul::UBytes& VICII::readCharDataFor (const MCHEmul::UBytes& chrs, bool eM) const
+	{
+		std::vector <MCHEmul::UByte> dt;
+		for (const auto& i : chrs.bytes ())
+		{
+			std::vector <MCHEmul::UByte> chrDt = memoryRef () -> bytes 
+			(_VICIIRegisters -> charDataMemory () /** The key. */ + 
+				(((size_t) i.value () & (eM ? 0x3f : 0xff)) 
+					/** In the extended graphics mode there is only 64 chars possible. */ << 3), 8);
+			dt.insert (dt.end (), std::make_move_iterator (chrDt.begin ()), std::make_move_iterator (chrDt.end ()));
+		}
+
+		return (_graphicsCharData = std::move (MCHEmul::UBytes (dt)));
+	}
+
+	// ---
+	inline const MCHEmul::UBytes& VICII::readBitmapDataAt (unsigned short l) const
+	{
+		std::vector <MCHEmul::UByte> dt;
+		unsigned short cL = l * _GRAPHMAXCHARCOLUMNS;
+		for (unsigned short i = 0; i < _GRAPHMAXCHARCOLUMNS; i++)
+		{
+			std::vector <MCHEmul::UByte> btDt = 
+				memoryRef () -> bytes (_VICIIRegisters -> bitmapMemory () + (cL + ((size_t) i << 3)), 8);
+			dt.insert (dt.end (), std::make_move_iterator (btDt.begin ()), std::make_move_iterator (btDt.end ()));
+		}
+
+		return (_graphicsBitmapData = std::move (MCHEmul::UBytes (dt)));
+	}
+
+	// ---
+	inline const std::vector <MCHEmul::UBytes>& VICII::readSpriteData () const
+	{
+		// The list of sprites enabled is used later to draw them
+		// Only the sprite numbers in the list are then draw, and they are drawn in the order they are in this list
+		// So the last one must be the one with the highest priority, and this is the number 0!
+		_spritesEnabled = { }; // The list of the sprites enabled...
+
+		MCHEmul::Address sP = _VICIIRegisters -> spritePointersMemory ();
+		for (int /** can be negative. */ i = 7; i >= 0; i--)
+		{ 
+			if (_VICIIRegisters -> spriteEnable ((size_t) i)) // Read data only if the sprite is active...
+			{ 
+				_spritesEnabled.push_back ((size_t) i);
+				_graphicsSprites [(size_t) i] = std::move (
+					MCHEmul::UBytes (memoryRef () -> bytes (_VICIIRegisters -> initAddressBank () + 
+						((size_t) memoryRef () -> value (sP + (size_t) i).value () << 6 /** 64 blocks. */), 63 /** size in bytes. */)));
+			}
+		}
+
+		return (_graphicsSprites);
+	}
+
 	/** The version para NTSC systems. */
 	class VICII_NTSC final : public VICII
 	{
 		public:
-		static const RasterData _VRASTERDATA;
-		static const RasterData _HRASTERDATA;
+		static const MCHEmul::RasterData _VRASTERDATA;
+		static const MCHEmul::RasterData _HRASTERDATA;
 
 		VICII_NTSC ();
 	};
@@ -434,8 +257,8 @@ namespace C64
 	class VICII_PAL final : public VICII
 	{
 		public:
-		static const RasterData _VRASTERDATA;
-		static const RasterData _HRASTERDATA;
+		static const MCHEmul::RasterData _VRASTERDATA;
+		static const MCHEmul::RasterData _HRASTERDATA;
 
 		VICII_PAL ();
 	};

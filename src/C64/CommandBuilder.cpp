@@ -14,6 +14,8 @@ MCHEmul::Command* C64::CommandBuilder::createEmptyCommand (const std::string& cm
 		result = new C64::CIA1StatusCommand;
 	else if (cmdName == "CIA2" || cmdName == C64::CIA2StatusCommand::_NAME)
 		result = new C64::CIA2StatusCommand;
+	else if (cmdName == "SID" || cmdName == C64::SIDStatusCommand::_NAME)
+		result = new C64::SIDStatusCommand;
 	else
 		result = MCHEmul::StandardCommandBuilder::createEmptyCommand (cmdName);
 

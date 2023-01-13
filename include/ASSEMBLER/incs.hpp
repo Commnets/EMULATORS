@@ -25,3 +25,7 @@
 #include <ASSEMBLER/StdOperationParser.hpp>
 
 #endif
+
+ // End of the file
+ /*@}*/
+

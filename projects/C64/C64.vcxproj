@@ -21,7 +21,6 @@
   <ItemGroup>
     <ClInclude Include="..\..\include\C64\C64.hpp" />
     <ClInclude Include="..\..\include\C64\C64Emulator.hpp" />
-    <ClInclude Include="..\..\include\C64\ChipRegisters.hpp" />
     <ClInclude Include="..\..\include\C64\CIA1.hpp" />
     <ClInclude Include="..\..\include\C64\CIA2.hpp" />
     <ClInclude Include="..\..\include\C64\CIA2Registers.hpp" />
@@ -32,12 +31,15 @@
     <ClInclude Include="..\..\include\C64\CommandBuilder.hpp" />
     <ClInclude Include="..\..\include\C64\Commands.hpp" />
     <ClInclude Include="..\..\include\C64\global.hpp" />
+    <ClInclude Include="..\..\include\C64\SID.hpp" />
     <ClInclude Include="..\..\include\C64\incs.hpp" />
     <ClInclude Include="..\..\include\C64\IOPBuilder.hpp" />
     <ClInclude Include="..\..\include\C64\Memory.hpp" />
     <ClInclude Include="..\..\include\C64\OSIO.hpp" />
     <ClInclude Include="..\..\include\C64\Screen.hpp" />
     <ClInclude Include="..\..\include\C64\SFChip.hpp" />
+    <ClInclude Include="..\..\include\C64\SIDRegisters.hpp" />
+    <ClInclude Include="..\..\include\C64\Sound.hpp" />
     <ClInclude Include="..\..\include\C64\UserPeripherals.hpp" />
     <ClInclude Include="..\..\include\C64\UserPort.hpp" />
     <ClInclude Include="..\..\include\C64\VICII.hpp" />
@@ -46,7 +48,6 @@
   <ItemGroup>
     <ClCompile Include="..\..\src\C64\C64.cpp" />
     <ClCompile Include="..\..\src\C64\C64Emulator.cpp" />
-    <ClCompile Include="..\..\src\C64\ChipRegisters.cpp" />
     <ClCompile Include="..\..\src\C64\CIA1.cpp" />
     <ClCompile Include="..\..\src\C64\CIA1Registers.cpp" />
     <ClCompile Include="..\..\src\C64\CIA2.cpp" />
@@ -61,6 +62,9 @@
     <ClCompile Include="..\..\src\C64\OSIO.cpp" />
     <ClCompile Include="..\..\src\C64\Screen.cpp" />
     <ClCompile Include="..\..\src\C64\SFChip.cpp" />
+    <ClCompile Include="..\..\src\C64\SID.cpp" />
+    <ClCompile Include="..\..\src\C64\SIDRegisters.cpp" />
+    <ClCompile Include="..\..\src\C64\Sound.cpp" />
     <ClCompile Include="..\..\src\C64\UserPeripherals.cpp" />
     <ClCompile Include="..\..\src\C64\UserPort.cpp" />
     <ClCompile Include="..\..\src\C64\VICII.cpp" />

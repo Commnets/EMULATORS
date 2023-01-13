@@ -4,7 +4,7 @@
 
 // ---
 C64::CIA1Registers::CIA1Registers (int id, MCHEmul::PhysicalStorage* pS)
-	: C64::ChipRegisters (id, pS, 0xdc00, MCHEmul::Address ({ 0x00, 0xdc }, false), 0x0100),
+	: MCHEmul::ChipRegisters (id, pS, 0xdc00, MCHEmul::Address ({ 0x00, 0xdc }, false), 0x0100),
 	  _timerA (nullptr), _timerB (nullptr),
 	  _lastValueRead (MCHEmul::PhysicalStorage::_DEFAULTVALUE)
 	  // At this point all internal variables will have random values...

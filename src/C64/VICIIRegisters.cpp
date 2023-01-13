@@ -3,7 +3,7 @@
 
 // ---
 C64::VICIIRegisters::VICIIRegisters (int id, MCHEmul::PhysicalStorage* ps)
-	: ChipRegisters (id, ps, 0xd000, MCHEmul::Address ({ 0x00, 0xd0 }, false), 0x0400),
+	: MCHEmul::ChipRegisters (id, ps, 0xd000, MCHEmul::Address ({ 0x00, 0xd0 }, false), 0x0400),
 	  _lastValueRead (MCHEmul::PhysicalStorage::_DEFAULTVALUE),
 	  _backgroundColor (4, 0x00),
 	  _spriteXCoord (8, 0x0000), _spriteYCoord (8, 0x0000),
@@ -32,7 +32,7 @@ void C64::VICIIRegisters::initialize ()
 // ---
 MCHEmul::InfoStructure C64::VICIIRegisters::getInfoStructure () const
 {
-	MCHEmul::InfoStructure result = C64::ChipRegisters::getInfoStructure ();
+	MCHEmul::InfoStructure result = MCHEmul::ChipRegisters::getInfoStructure ();
 
 	result.add ("MODE",	(unsigned int) _graphicModeActive);
 	result.add ("40C",	_textDisplay40ColumnsActive);

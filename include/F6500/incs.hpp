@@ -22,3 +22,7 @@
 #include <F6500/Instructions.hpp>
 
 #endif
+
+ // End of the file
+ /*@}*/
+

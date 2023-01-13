@@ -23,6 +23,7 @@
     <ClCompile Include="..\..\src\CORE\ASCIIConverter.cpp" />
     <ClCompile Include="..\..\src\CORE\ByteCodeLine.cpp" />
     <ClCompile Include="..\..\src\CORE\Chip.cpp" />
+    <ClCompile Include="..\..\src\CORE\ChipRegisters.cpp" />
     <ClCompile Include="..\..\src\CORE\Clock.cpp" />
     <ClCompile Include="..\..\src\CORE\CmdExecuter.cpp" />
     <ClCompile Include="..\..\src\CORE\CmdlineArgs.cpp" />
@@ -44,8 +45,10 @@
     <ClCompile Include="..\..\src\CORE\JSONFormatter.cpp" />
     <ClCompile Include="..\..\src\CORE\Memory.cpp" />
     <ClCompile Include="..\..\src\CORE\OSIO.cpp" />
+    <ClCompile Include="..\..\src\CORE\Raster.cpp" />
     <ClCompile Include="..\..\src\CORE\Screen.cpp" />
     <ClCompile Include="..\..\src\CORE\ScreenMemory.cpp" />
+    <ClCompile Include="..\..\src\CORE\Sound.cpp" />
     <ClCompile Include="..\..\src\CORE\Stack.cpp" />
     <ClCompile Include="..\..\src\CORE\StatusRegister.cpp" />
     <ClCompile Include="..\..\src\CORE\StdCommandBld.cpp" />
@@ -61,6 +64,7 @@
     <ClInclude Include="..\..\include\CORE\ASCIIConverter.hpp" />
     <ClInclude Include="..\..\include\CORE\ByteCodeLine.hpp" />
     <ClInclude Include="..\..\include\CORE\Chip.hpp" />
+    <ClInclude Include="..\..\include\CORE\ChipRegisters.hpp" />
     <ClInclude Include="..\..\include\CORE\Clock.hpp" />
     <ClInclude Include="..\..\include\CORE\CmdExecuter.hpp" />
     <ClInclude Include="..\..\include\CORE\CmdlineArgs.hpp" />
@@ -86,9 +90,11 @@
     <ClInclude Include="..\..\include\CORE\Memory.hpp" />
     <ClInclude Include="..\..\include\CORE\OSIO.hpp" />
     <ClInclude Include="..\..\include\CORE\ProgramCounter.hpp" />
+    <ClInclude Include="..\..\include\CORE\Raster.hpp" />
     <ClInclude Include="..\..\include\CORE\Register.hpp" />
     <ClInclude Include="..\..\include\CORE\Screen.hpp" />
     <ClInclude Include="..\..\include\CORE\ScreenMemory.hpp" />
+    <ClInclude Include="..\..\include\CORE\Sound.hpp" />
     <ClInclude Include="..\..\include\CORE\Stack.hpp" />
     <ClInclude Include="..\..\include\CORE\StatusRegister.hpp" />
     <ClInclude Include="..\..\include\CORE\StdCommandBld.hpp" />

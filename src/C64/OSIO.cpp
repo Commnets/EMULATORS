@@ -59,8 +59,10 @@ const std::map <SDL_Scancode, const std::vector <C64::InputOSSystem::KeyMPos>> C
 			{ SDL_SCANCODE_SEMICOLON,	{ std::make_pair (6, 2) } },
 			{ SDL_SCANCODE_EQUALS,		{ std::make_pair (6, 5) } },
 			{ SDL_SCANCODE_BACKSPACE,	{ std::make_pair (0, 0) } },
+			{ SDL_SCANCODE_INSERT,		{ std::make_pair (1, 7) /** Shift. */, std::make_pair (0, 0) /** Insert. */ } },
 			{ SDL_SCANCODE_MINUS,		{ std::make_pair (5, 3) } },
-			/* keymap: these are mapped to other keys */
+			{ SDL_SCANCODE_HOME,		{ std::make_pair (6, 3) } },
+		/* keymap: these are mapped to other keys */
 			{ SDL_SCANCODE_BACKSLASH,	{ std::make_pair (5, 5) } }, // : 
 			{ SDL_SCANCODE_LEFTBRACKET, { std::make_pair (5, 0) } }, // +
 			{ SDL_SCANCODE_RIGHTBRACKET,{ std::make_pair (6, 1) } }, // *
@@ -68,7 +70,7 @@ const std::map <SDL_Scancode, const std::vector <C64::InputOSSystem::KeyMPos>> C
 			{ SDL_SCANCODE_LGUI,		{ std::make_pair (7, 5) } }, // Commodore Key
 			{ SDL_SCANCODE_LCTRL,		{ std::make_pair (7, 2) } }, // Ctrl
 			{ SDL_SCANCODE_RCTRL,		{ std::make_pair (7, 2) } }, // Ctrl (the same assigned)
-			/** The cursor keys */
+			/** the cursor/control keys */
 			{ SDL_SCANCODE_LEFT,		{ std::make_pair (1, 7) /** Shift */, std::make_pair (0, 2) /** Right */ } },
 			{ SDL_SCANCODE_RIGHT,		{ std::make_pair (0, 2) } },
 			{ SDL_SCANCODE_UP,			{ std::make_pair (1, 7), std::make_pair (0, 7) } },

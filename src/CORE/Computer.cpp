@@ -63,7 +63,7 @@ MCHEmul::Computer::~Computer ()
 }
 
 // ---
-bool MCHEmul::Computer::initialize ()
+bool MCHEmul::Computer::initialize (bool iM)
 {
 	_error = MCHEmul::_NOERROR;
 
@@ -82,7 +82,8 @@ bool MCHEmul::Computer::initialize ()
 		return (false);
 	}
 
-	if (!_memory -> initialize ())
+	// Init the memory is optional...
+	if (iM && !_memory -> initialize ())
 	{
 		_error = MCHEmul::_INIT_ERROR;
 
@@ -116,6 +117,15 @@ bool MCHEmul::Computer::initialize ()
 	startsComputerClock ();
 
 	return (true);
+}
+
+// ---
+bool MCHEmul::Computer::restart ()
+{ 
+	if (_restartLevel == 0)
+		return (initialize (true /** with memory. */));
+
+	return (initialize (false /** without memory. */));
 }
 
 // ---

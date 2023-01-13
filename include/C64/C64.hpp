@@ -20,6 +20,7 @@
 #include <C64/VICII.hpp>
 #include <C64/CIA1.hpp>
 #include <C64/CIA2.hpp>
+#include <C64/SID.hpp>
 
 namespace C64
 {
@@ -37,7 +38,7 @@ namespace C64
 
 		virtual bool connect (MCHEmul::IOPeripheral* p, MCHEmul::IODevice* d) override;
 
-		virtual bool initialize () override;
+		virtual bool initialize (bool iM = true) override;
 
 		// To get direct access to the most important C64 chips...
 		const VICII* vicII () const
@@ -52,6 +53,10 @@ namespace C64
 							{ return (dynamic_cast <const CIA2*> ((*_chips.find (CIA2::_ID)).second)); }
 		CIA2* cia2 ()
 							{ return (dynamic_cast <CIA2*> ((*_chips.find (CIA2::_ID)).second)); }
+		const SID* sid () const
+							{ return (dynamic_cast <const SID*> ((*_chips.find (SID::_ID)).second)); }
+		SID* sid ()
+							{ return (dynamic_cast <SID*> ((*_chips.find (SID::_ID)).second)); }
 
 		private:
 		// Implementation

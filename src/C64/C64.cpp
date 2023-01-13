@@ -2,6 +2,7 @@
 #include <C64/Memory.hpp>
 #include <C64/SFChip.hpp>
 #include <C64/Screen.hpp>
+#include <C64/Sound.hpp>
 #include <C64/OSIO.hpp>
 #include <C64/UserPort.hpp>
 #include <F6500/C6510.hpp>
@@ -32,9 +33,9 @@ bool C64::Commodore64::connect (MCHEmul::IOPeripheral* p, MCHEmul::IODevice* d)
 }
 
 // ---
-bool C64::Commodore64::initialize ()
+bool C64::Commodore64::initialize (bool iM)
 {
-	bool result = MCHEmul::Computer::initialize ();
+	bool result = MCHEmul::Computer::initialize (iM);
 	if (!result)
 		return (false);
 
@@ -49,7 +50,8 @@ MCHEmul::Chips C64::Commodore64::standardChips (C64::Commodore64::VisualSystem v
 {
 	MCHEmul::Chips result;
 
-	// The Special Control Chip (invented by me!)
+	// The Special Control Chip...
+	// Invented by me to maintain the architcture, but softly mention at any doc (i guess)!
 	result.insert (MCHEmul::Chips::value_type (C64::SpecialFunctionsChip::_ID, (MCHEmul::Chip*) new C64::SpecialFunctionsChip));
 
 	// The CIA1 & 2
@@ -62,6 +64,9 @@ MCHEmul::Chips C64::Commodore64::standardChips (C64::Commodore64::VisualSystem v
 		(MCHEmul::Chip*) ((vS == C64::Commodore64::VisualSystem::_NTSC) 
 			? (C64::VICII*) new C64::VICII_NTSC : (C64::VICII*) new C64::VICII_PAL)));
 
+	// The SID
+	result.insert (MCHEmul::Chips::value_type (C64::SID::_ID, (MCHEmul::Chip*) new C64::SID));
+
 	return (result);
 }
 
@@ -73,6 +78,7 @@ MCHEmul::IODevices C64::Commodore64::standardDevices (C64::Commodore64::VisualSy
 	result.insert (MCHEmul::IODevices::value_type (C64::Screen::_ID, 
 		(MCHEmul::IODevice*) ((vS == C64::Commodore64::VisualSystem::_NTSC) 
 			? (C64::Screen*) new C64::ScreenNTSC : (C64::Screen*) new C64::ScreenPAL)));
+	result.insert (MCHEmul::IODevices::value_type (C64::SoundSystem::_ID, new C64::SoundSystem));
 	result.insert (MCHEmul::IODevices::value_type (C64::InputOSSystem::_ID, new C64::InputOSSystem));
 	result.insert (MCHEmul::IODevices::value_type (C64::UserIOPort::_ID, new C64::UserIOPort));
 

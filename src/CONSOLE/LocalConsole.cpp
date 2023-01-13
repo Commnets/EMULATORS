@@ -84,13 +84,9 @@ MCHEmul::InfoStructure MCHEmul::LocalConsole::loadBinaryFile (const std::string&
 	if (e)
 		return (result);
 	else
-	{
-		_emulator -> computer () -> setActionForNextCycle (MCHEmul::Computer::_ACTIONSTOP);
-
 		result.add ("CODE", std::string ("Binary file (") + 
 			std::to_string (dM.bytes ().size ()) + " bytes) loaded at:" +
 			dM.startAddress ().asString (MCHEmul::UByte::OutputFormat::_HEXA, '\0', 2));
-	}
 
 	return (result);
 }
@@ -111,8 +107,6 @@ MCHEmul::InfoStructure MCHEmul::LocalConsole::loadProgram (const std::string& nP
 	}
 	else
 	{
-		_emulator -> computer () -> setActionForNextCycle (MCHEmul::Computer::_ACTIONSTOP);
-
 		MCHEmul::InfoStructure lns;
 		for (size_t i = 0; i < cL._lines.size (); i++)
 		{ 
@@ -137,13 +131,9 @@ MCHEmul::InfoStructure MCHEmul::LocalConsole::loadBlocksFile (const std::string&
 	if (e)
 		return (result);
 	else
-	{
-		_emulator -> computer () -> setActionForNextCycle (MCHEmul::Computer::_ACTIONSTOP);
-
 		result.add ("CODE", std::string ("Binary file (") + 
 			(mB.empty () ? "0" : std::to_string (mB [0].bytes ().size ())) + " bytes) loaded at:" +
 			(mB.empty () ? "-" : mB [0].startAddress ().asString (MCHEmul::UByte::OutputFormat::_HEXA, '\0', 2)));
-	}
 
 	return (result);
 }
