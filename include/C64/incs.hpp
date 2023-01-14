@@ -22,6 +22,8 @@
 #include <C64/VICIIRegisters.hpp>
 #include <C64/CIATimer.hpp>
 #include <C64/CIAClock.hpp>
+#include <C64/CIA.hpp>
+#include <C64/CIARegisters.hpp>
 #include <C64/CIA1.hpp>
 #include <C64/CIA1Registers.hpp>
 #include <C64/CIA2.hpp>

@@ -7,7 +7,7 @@ void C64::CIATimer::initialize ()
 	_countMode = CountMode::_PROCESSORCYCLES;
 
 	_enabled = false;
-	_IRQEnabled = false;
+	_InterruptEnabled = false;
 
 	_initialValue = 0x0000;
 	_time = MCHEmul::Time ();
@@ -17,7 +17,7 @@ void C64::CIATimer::initialize ()
 	_lastClockCycles = 0;
 
 	_reaches0 = false;
-	_IRQRequested = false;
+	_InterruptRequested = false;
 }
 
 // ---
@@ -30,8 +30,8 @@ void C64::CIATimer::simulate (MCHEmul::CPU* cpu, C64::CIATimer* t)
 
 	if (countDown (cpu, t))
 	{
-		if (_IRQEnabled)
-			cpu -> interrupt (_interruptId) -> setActive (_IRQRequested = true);
+		if (_InterruptEnabled)
+			cpu -> interrupt (_interruptId) -> setActive (_InterruptRequested = true);
 		
 		switch (_runMode)
 		{
@@ -63,7 +63,7 @@ MCHEmul::InfoStructure C64::CIATimer::getInfoStructure () const
 	result.add ("RUN",			(unsigned int)_runMode);
 	result.add ("COUNT",		(unsigned int) _countMode);
 	result.add ("STATUS",		_enabled);
-	result.add ("IRQ",			_IRQEnabled);
+	result.add ("IRQ",			_InterruptEnabled);
 	result.add ("VALUE",		_currentValue);
 	result.add ("INITIALVALUE", _initialValue);
 

@@ -3,7 +3,7 @@
 // ---
 void C64::CIAClock::initialize ()
 {
-	_IRQEnabled = false;
+	_InterruptEnabled = false;
 
 	_time = MCHEmul::Time ();
 
@@ -16,7 +16,7 @@ void C64::CIAClock::initialize ()
 	_stopped = false;
 
 	_reachesAlarm = false;
-	_IRQRequested = false;
+	_InterruptRequested = false;
 }
 
 // ---
@@ -36,8 +36,8 @@ void C64::CIAClock::simulate (MCHEmul::CPU* cpu)
 	if (_hours == _alarmHours && _minutesL == _alarmMinutes && _secondsL == _alarmSeconds &&
 		_tenthsSecondL >= _alarmTenthsSecond)
 	{
-		if (_IRQEnabled)
-			cpu -> interrupt (_interruptId) -> setActive (_IRQRequested = true);
+		if (_InterruptEnabled)
+			cpu -> interrupt (_interruptId) -> setActive (_InterruptRequested = true);
 		
 		_reachesAlarm = true;
 	}
@@ -50,7 +50,7 @@ MCHEmul::InfoStructure C64::CIAClock::getInfoStructure () const
 {
 	MCHEmul::InfoStructure result;
 
-	result.add ("IRQ",				_IRQEnabled);
+	result.add ("Interrupt",		_InterruptEnabled);
 	result.add ("HOURS",			_hours);
 	result.add ("MINUTES",			_minutes);
 	result.add ("SECONDS",			_seconds);

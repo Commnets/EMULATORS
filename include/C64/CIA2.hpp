@@ -14,10 +14,8 @@
 #ifndef __C64_CIA2__
 #define __C64_CIA2__
 
-#include <CORE/incs.hpp>
+#include <C64/CIA.hpp>
 #include <C64/CIA2Registers.hpp>
-#include <C64/CIATimer.hpp>
-#include <C64/CIAClock.hpp>
 #include <F6500/NMIInterrupt.hpp>
 
 namespace C64
@@ -26,7 +24,7 @@ namespace C64
 	class Commodore64;
 
 	/** The chip is to communicate the C64 with the environment. */
-	class CIA2 : public MCHEmul::Chip
+	class CIA2 final : public CIA
 	{
 		public:
 		friend Commodore64;
@@ -34,41 +32,19 @@ namespace C64
 		static const unsigned int _ID = 103;
 
 		CIA2 ()
-			: MCHEmul::Chip (_ID,
-				{ { "Name", "CIA2" },
-				  { "Code", "6526/6526A/8521" },
-				  { "Manufacturer", "Commodore Business Machines CBM" },
-				  { "Year", "1980" } }),
+			: CIA (_ID, CIA2Registers::_CIA2_SUBSET, F6500::NMIInterrupt::_ID),
 			  _CIA2Registers (nullptr),
-			  _VICIIRef (nullptr),
-			  _timerA (0, F6500::NMIInterrupt::_ID), _timerB (1, F6500::NMIInterrupt::_ID), 
-			  _clock (0, F6500::NMIInterrupt::_ID),
-			  _lastClockCycles (0)
+			  _VICIIRef (nullptr)
 							{ setClassName ("CIA2"); }
 
 		virtual bool initialize () override;
 
 		virtual bool simulate (MCHEmul::CPU* cpu) override;
 
-		/**
-		  *	The name of the fields are: \n
-		  * The ones comming from the parent class. \n
-		  * Registers	= InfoStructure: Value of the registers. \n
-		  *	TimerA		= InfoStructure: Info about the timer A. \n
-		  *	TimerB		= InfoStructure: Info about the timer B. \n
-		  *	Clock		= InfoStructure: Info about the clock. \n
-		  */
-		virtual MCHEmul::InfoStructure getInfoStructure () const override;
-
 		private:
 		C64::CIA2Registers* _CIA2Registers;
 		/** Set directly by Commodore 64. */
 		VICII* _VICIIRef;
-		CIATimer _timerA, _timerB;
-		CIAClock _clock;
-
-		// Implementation
-		unsigned int _lastClockCycles;
 	};
 }
 

@@ -14,17 +14,15 @@
 #ifndef __C64_CIA2REGISTERS__
 #define __C64_CIA2REGISTERS__
 
-#include <CORE/incs.hpp>
+#include <C64/CIARegisters.hpp>
 
 namespace C64
 {
 	class CIA2;
-	class CIATimer;
-	class CIAClock;
 
 	/** In the CIA2 Memory, there are a couple of records that behave different
 		when they are read that when they are written. */
-	class CIA2Registers final : public MCHEmul::ChipRegisters
+	class CIA2Registers final : public CIARegisters
 	{
 		public:
 		friend CIA2;
@@ -33,13 +31,8 @@ namespace C64
 
 		CIA2Registers (MCHEmul::PhysicalStorage* ps, size_t pp, const MCHEmul::Address& a, size_t s);
 
-		virtual size_t numberRegisters () const override
-							{ return (0x10); }
-
 		unsigned char VICIIBank () const
 							{ return (_VICBank); }
-
-		virtual void initialize () override;
 
 		private:
 		virtual void setValue (size_t p, const MCHEmul::UByte& v) override;
@@ -65,9 +58,6 @@ namespace C64
 
 		/** The bank managed by VICII is controlled from this Chip. */
 		unsigned char _VICBank;
-
-		// Implementation
-		mutable MCHEmul::UByte _lastValueRead;
 	};
 }
 

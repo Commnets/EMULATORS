@@ -16,19 +16,7 @@ bool C64::CIA2::initialize ()
 		return (false);
 	}
 
-	_timerA.initialize ();
-
-	_timerB.initialize ();
-
-	_clock.initialize ();
-
-	_CIA2Registers -> lookAtTimers (&_timerA, &_timerB);
-
-	_CIA2Registers -> lookAtClock (&_clock);
-
-	_CIA2Registers -> initialize ();
-
-	return (true);
+	return (C64::CIA::initialize ());
 }
 
 // ---
@@ -36,27 +24,5 @@ bool C64::CIA2::simulate (MCHEmul::CPU* cpu)
 {
 	_VICIIRef -> setBank (_CIA2Registers -> VICIIBank ());
 
-	_timerA.simulate (cpu);
-
-	_timerB.simulate (cpu, &_timerA);
-
-	_clock.simulate (cpu);
-
-	_lastClockCycles = cpu -> clockCycles ();
-
-	return (true);
-}
-
-// ---
-MCHEmul::InfoStructure C64::CIA2::getInfoStructure () const
-{
-	MCHEmul::InfoStructure result = MCHEmul::Chip::getInfoStructure ();
-
-	result.remove ("Memory"); // This is not neccesary...
-	result.add ("Registers",	_CIA2Registers -> getInfoStructure ());
-	result.add ("TimerA",		_timerA.getInfoStructure ());
-	result.add ("TimerB",		_timerB.getInfoStructure ());
-	result.add ("Clock",		_clock.getInfoStructure ());
-
-	return (result);
+	return (C64::CIA::simulate (cpu));
 }

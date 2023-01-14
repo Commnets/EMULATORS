@@ -83,12 +83,12 @@ namespace C64
 		void setEnabled (bool e)
 							{ _enabled = e; }
 
-		bool IRQEnabled () const
-							{ return (_IRQEnabled); }
-		void setIRQEnabled (bool e)
-							{ _IRQEnabled = e; }
-		bool IRQRequested () const
-							{ bool r = _IRQRequested; _IRQRequested = false; return (r); }
+		bool InterruptEnabled () const
+							{ return (_InterruptEnabled); }
+		void setInterruptEnabled (bool e)
+							{ _InterruptEnabled = e; }
+		bool InterruptRequested () const
+							{ bool r = _InterruptRequested; _InterruptRequested = false; return (r); }
 
 		// Managing the values...
 		/** The value used as the starting point for the count down. */
@@ -139,7 +139,7 @@ namespace C64
 		RunMode _runMode;
 		CountMode _countMode;
 		bool _enabled;
-		bool _IRQEnabled;
+		bool _InterruptEnabled;
 		unsigned short _initialValue;
 
 		// It is actualized continiously through the method actualizeTime...
@@ -154,7 +154,7 @@ namespace C64
 		/** When 0 is reached, this variable becomes true, just for the time the timer starts back if any. */
 		bool _reaches0;
 		/** When an IRQ interruption is requested this variable is set to true, until it is read. */
-		mutable bool _IRQRequested;
+		mutable bool _InterruptRequested;
 	};
 }
 

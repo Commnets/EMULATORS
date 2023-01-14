@@ -39,12 +39,12 @@ namespace C64
 		bool reachesAlarm () const
 							{ return (_reachesAlarm); }
 
-		bool IRQEnabled () const
-							{ return (_IRQEnabled); }
-		void setIRQEnabled (bool e)
-							{ _IRQEnabled = e; }
-		bool IRQRequested () const
-							{ bool r = _IRQRequested; _IRQRequested = false; return (r); }
+		bool InterruptEnabled () const
+							{ return (_InterruptEnabled); }
+		void setInterruptEnabled (bool e)
+							{ _InterruptEnabled = e; }
+		bool InterruptRequested () const
+							{ bool r = _InterruptRequested; _InterruptRequested = false; return (r); }
 
 		/** To set the alarm by pieces,
 			because this is the way the CIA chip works. */
@@ -108,7 +108,7 @@ namespace C64
 		const unsigned int _interruptId = 0;
 
 		// The variables that define a timer...
-		bool _IRQEnabled;
+		bool _InterruptEnabled;
 		unsigned char _alarmHours, _alarmMinutes, _alarmSeconds, _alarmTenthsSecond;
 
 		// It is actualized continiously thorugh the method actualizeTime...
@@ -130,7 +130,7 @@ namespace C64
 		/** When the alarm time is reached, this variable becomes true, just for the time the clock starts back if any. */
 		bool _reachesAlarm;
 		/** When an IRQ interruption is requested this variable is set to true, until it is read. */
-		mutable bool _IRQRequested;
+		mutable bool _InterruptRequested;
 	};
 }
 
