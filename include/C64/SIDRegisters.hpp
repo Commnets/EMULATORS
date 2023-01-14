@@ -25,7 +25,9 @@ namespace C64
 		public:
 		friend SID;
 
-		SIDRegisters (int id, MCHEmul::PhysicalStorage* pS);
+		static const int _SIDREGS_SUBSET = 1001;
+
+		SIDRegisters (MCHEmul::PhysicalStorage* ps, size_t pp, const MCHEmul::Address& a, size_t s);
 
 		virtual size_t numberRegisters () const override
 							{ return (0x20); }

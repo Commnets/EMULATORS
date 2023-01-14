@@ -37,15 +37,12 @@ namespace C64
 		static const int _BASICRAM_SUBSET		= 104;
 		static const int _RAM1_SUBSET			= 105;
 		static const int _CHARROM_SUBSET		= 106;
-		static const int _VICREGS_SUBSET		= 107;
-		static const int _SIDREGS_SUBSET		= 108;
 		static const int _COLOR_SUBSET			= 109;
-		static const int _CIA1_SUBSET			= 110;
-		static const int _CIA2_SUBSET			= 111;
 		static const int _IO1_SUBSET			= 112;
 		static const int _IO2_SUBSET			= 113;
 		static const int _KERNELROM_SUBSET		= 114;
 		static const int _KERNELRAM_SUBSET		= 115;
+		/** The id for the registers VICII, SID, ... are defined in those. */
 		// From VICII
 		static const int _BANK0RAM0_SUBSET		= 200;
 		static const int _BANK0CHARROM_SUBSET	= 201;

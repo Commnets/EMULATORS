@@ -29,10 +29,13 @@ namespace C64
 		public:
 		friend CIA1;
 
-		CIA1Registers (int id, MCHEmul::PhysicalStorage* pS);
+		/** A name when this register is a subset in the main memory. */
+		static const int _CIA1_SUBSET = 1002;
+
+		CIA1Registers (MCHEmul::PhysicalStorage* ps, size_t pp, const MCHEmul::Address& a, size_t s);
 
 		virtual size_t numberRegisters () const override
-							{ return (0x10); }
+							{ return (0x10 /** = 32. */); }
 
 		virtual void initialize () override;
 

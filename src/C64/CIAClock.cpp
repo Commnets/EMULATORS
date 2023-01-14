@@ -5,7 +5,7 @@ void C64::CIAClock::initialize ()
 {
 	_IRQEnabled = false;
 
-	_time = C64::Time ();
+	_time = MCHEmul::Time ();
 
 	// The implementation values...
 	_lastClockCycles = 0;
@@ -66,9 +66,9 @@ MCHEmul::InfoStructure C64::CIAClock::getInfoStructure () const
 // ---
 void C64::CIAClock::actualizeTime () 
 {
-	_time += C64::_TENTHSSECONDPAST; // Actualize the timer...
+	_time += MCHEmul::_TENTHSSECONDPAST; // Actualize the timer...
 	if (_time.time_since_epoch ().count () >= 864000 /** Max tenth of second in a day. */)
-		_time = C64::Time ();
+		_time = MCHEmul::Time ();
 
 	// Now it is time to convert it into days, hours,...
 	auto tds = _time.time_since_epoch ().count (); // In tenths of seconds...

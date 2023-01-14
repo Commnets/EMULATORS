@@ -8,7 +8,7 @@ bool C64::SID::initialize ()
 
 	// Gets the memory block dedicated to the SID
 	if (!(_SIDRegisters = 
-		dynamic_cast <C64::SIDRegisters*> (memoryRef () -> subset (C64::Memory::_SIDREGS_SUBSET))))
+		dynamic_cast <C64::SIDRegisters*> (memoryRef () -> subset (C64::SIDRegisters::_SIDREGS_SUBSET))))
 	{
 		_error = MCHEmul::_INIT_ERROR;
 

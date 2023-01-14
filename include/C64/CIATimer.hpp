@@ -15,7 +15,6 @@
 #define __C64_CIATIMER__
 
 #include <CORE/incs.hpp>
-#include <C64/global.hpp>
 
 namespace C64
 {
@@ -145,7 +144,7 @@ namespace C64
 
 		// It is actualized continiously through the method actualizeTime...
 		// The time counts only hours in the day...
-		Time _time;
+		MCHEmul::Time _time;
 
 		// Implementation
 		/** The value the timer has per loop. */

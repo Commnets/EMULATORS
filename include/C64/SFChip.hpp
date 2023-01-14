@@ -21,7 +21,7 @@ namespace C64
 	class SpecialFunctionsChip final : public MCHEmul::Chip
 	{
 		public:
-		static const unsigned int _ID = 1;
+		static const unsigned int _ID = 101;
 
 		SpecialFunctionsChip ()
 			: MCHEmul::Chip (_ID, 

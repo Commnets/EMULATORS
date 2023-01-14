@@ -10,7 +10,7 @@ void C64::CIATimer::initialize ()
 	_IRQEnabled = false;
 
 	_initialValue = 0x0000;
-	_time = C64::Time ();
+	_time = MCHEmul::Time ();
 
 	// The implementation values...
 	_currentValue = 0x0000;

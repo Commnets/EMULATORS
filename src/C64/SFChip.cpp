@@ -1,5 +1,9 @@
 #include <C64/SFChip.hpp>
 #include <C64/Memory.hpp>
+#include <C64/VICIIRegisters.hpp>
+#include <C64/SIDRegisters.hpp>
+#include <C64/CIA1Registers.hpp>
+#include <C64/CIA2Registers.hpp>
 
 // ---
 bool C64::SpecialFunctionsChip::initialize ()
@@ -9,11 +13,11 @@ bool C64::SpecialFunctionsChip::initialize ()
 	_KernelROM		= memoryRef () -> subset (C64::Memory::_KERNELROM_SUBSET);
 	_KernelRAM		= memoryRef () -> subset (C64::Memory::_KERNELRAM_SUBSET);
 	_CharROM		= memoryRef () -> subset (C64::Memory::_CHARROM_SUBSET);
-	_VICIIRegisters = memoryRef () -> subset (C64::Memory::_VICREGS_SUBSET);
-	_SIDRegisters	= memoryRef () -> subset (C64::Memory::_SIDREGS_SUBSET);
+	_VICIIRegisters = memoryRef () -> subset (C64::VICIIRegisters::_VICREGS_SUBSET);
+	_SIDRegisters	= memoryRef () -> subset (C64::SIDRegisters::_SIDREGS_SUBSET);
 	_ColorRAM		= memoryRef () -> subset (C64::Memory::_COLOR_SUBSET);
-	_CIA1Registers	= memoryRef () -> subset (C64::Memory::_CIA1_SUBSET);
-	_CIA2registers	= memoryRef () -> subset (C64::Memory::_CIA2_SUBSET);
+	_CIA1Registers	= memoryRef () -> subset (C64::CIA1Registers::_CIA1_SUBSET);
+	_CIA2registers	= memoryRef () -> subset (C64::CIA2Registers::_CIA2_SUBSET);
 	_IO1Registers	= memoryRef () -> subset (C64::Memory::_IO1_SUBSET);
 	_IO2registers	= memoryRef () -> subset (C64::Memory::_IO2_SUBSET);
 

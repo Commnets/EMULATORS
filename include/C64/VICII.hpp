@@ -24,7 +24,7 @@ namespace C64
 	class VICII : public MCHEmul::GraphicalChip
 	{
 		public:
-		static const unsigned int _ID = 4;
+		static const unsigned int _ID = 104;
 
 		/** The position of the bad lines. */
 		static const unsigned short _FIRSTBADLINE	= 0x30;

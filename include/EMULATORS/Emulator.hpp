@@ -190,9 +190,9 @@ namespace MCHEmul
 							{ return ((IOPeripheralBuilder*) (((const Emulator*) this) -> peripherialBuilder ())); }
 
 		/** An exit method that can hold specific code needed per cycle and per type of emulator. 
-			By default it does nothing. */
+			By default just actualize the global time (@see global.hpp). */
 		virtual bool additionalRunCycle ()
-							{ return (true); }
+							{ actualizeGlobalTime (); return (true); }
 
 		// Implementation
 		/** To create the right version of the parser. */

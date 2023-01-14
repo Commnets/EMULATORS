@@ -50,7 +50,7 @@ bool C64::VICII::initialize ()
 
 	// Gets the memory block dedicated to the VICII
 	if (!(_VICIIRegisters = 
-		dynamic_cast <C64::VICIIRegisters*> (memoryRef () -> subset (C64::Memory::_VICREGS_SUBSET))))
+		dynamic_cast <C64::VICIIRegisters*> (memoryRef () -> subset (C64::VICIIRegisters::_VICREGS_SUBSET))))
 	{
 		_error = MCHEmul::_INIT_ERROR;
 

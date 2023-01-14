@@ -8,7 +8,7 @@ bool C64::CIA1::initialize ()
 
 	// Gets the memory block dedicated to the CIA1
 	if (!(_CIA1Registers = 
-		dynamic_cast <C64::CIA1Registers*> (memoryRef () -> subset (C64::Memory::_CIA1_SUBSET))))
+		dynamic_cast <C64::CIA1Registers*> (memoryRef () -> subset (C64::CIA1Registers::_CIA1_SUBSET))))
 	{
 		_error = MCHEmul::_INIT_ERROR;
 

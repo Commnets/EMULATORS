@@ -20,6 +20,7 @@
 #include <map>
 #include <ostream>
 #include <iostream>
+#include <chrono>
 
 namespace MCHEmul
 {
@@ -106,6 +107,23 @@ namespace MCHEmul
 	template <typename Base, typename Type>
 	bool instanceOf (const Type* ptr)
 							{ return (dynamic_cast <const Base*> (ptr) != nullptr); }
+
+	/** The computer emulation using tenth of seconds only. */
+	using Duration = std::chrono::duration <unsigned long, std::deci>;
+	using Time = std::chrono::time_point <std::chrono::steady_clock, Duration>;
+
+	// The time in the emulation is managed always in nanoseconds.
+	/** This variable is initialized when the emulator starts. \n
+		It keeps the global time. Some chips and structures can benefit from it. */
+	static const Time _STARTINGTIME = std::chrono::time_point_cast <Duration> (std::chrono::steady_clock::now ());
+	/** This variable always keeps the current time in the format used by the C64. \n
+		This variable has to be periodically updated. */
+	static Time _NOW = std::chrono::time_point_cast <Duration> (std::chrono::steady_clock::now ());
+	/** This variable always keeps the number of tenths of second between two actualizations of the global time. */
+	static Duration _TENTHSSECONDPAST = Duration ();
+
+	/** To actualize the time. */
+	void actualizeGlobalTime ();
 }
 
 #endif

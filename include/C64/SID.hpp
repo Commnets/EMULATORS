@@ -23,7 +23,7 @@ namespace C64
 	class SID : public MCHEmul::Chip
 	{
 		public:
-		static const unsigned int _ID = 5;
+		static const unsigned int _ID = 105;
 
 		SID ()
 			: MCHEmul::Chip (_ID,

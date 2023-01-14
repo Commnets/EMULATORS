@@ -1,8 +1,8 @@
 #include <C64/SIDRegisters.hpp>
 
 // ---
-C64::SIDRegisters::SIDRegisters (int id, MCHEmul::PhysicalStorage* pS)
-	: MCHEmul::ChipRegisters (id, pS, 0xd400, MCHEmul::Address ({ 0x00, 0xd4 }, false), 0x0400)
+C64::SIDRegisters::SIDRegisters (MCHEmul::PhysicalStorage* ps, size_t pp, const MCHEmul::Address& a, size_t s)
+	: MCHEmul::ChipRegisters (_SIDREGS_SUBSET, ps, pp, a, s)
 {
 	setClassName ("SIDRegisters");
 

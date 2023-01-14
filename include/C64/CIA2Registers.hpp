@@ -29,7 +29,9 @@ namespace C64
 		public:
 		friend CIA2;
 
-		CIA2Registers (int id, MCHEmul::PhysicalStorage* pS);
+		static const int _CIA2_SUBSET = 1003;
+
+		CIA2Registers (MCHEmul::PhysicalStorage* ps, size_t pp, const MCHEmul::Address& a, size_t s);
 
 		virtual size_t numberRegisters () const override
 							{ return (0x10); }

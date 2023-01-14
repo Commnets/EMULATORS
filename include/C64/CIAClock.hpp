@@ -15,7 +15,6 @@
 #define __C64_CIACLOCK__
 
 #include <CORE/incs.hpp>
-#include <C64/global.hpp>
 
 namespace C64
 {
@@ -114,7 +113,7 @@ namespace C64
 
 		// It is actualized continiously thorugh the method actualizeTime...
 		// The time counts only hours in the day...
-		Time _time;
+		MCHEmul::Time _time;
 
 		// Implementation
 		/** The value of the clock cycles las time the timer counted down. */

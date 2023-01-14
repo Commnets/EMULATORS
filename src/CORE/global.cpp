@@ -358,3 +358,11 @@ bool MCHEmul::validOperation (const std::string& s)
 
 	return (true);
 }
+
+// ---
+void MCHEmul::actualizeGlobalTime ()
+{
+	MCHEmul::Time n = std::chrono::time_point_cast <MCHEmul::Duration> (std::chrono::steady_clock::now ());
+	MCHEmul::_TENTHSSECONDPAST = MCHEmul::_NOW - n;
+	MCHEmul::_NOW = n;
+}

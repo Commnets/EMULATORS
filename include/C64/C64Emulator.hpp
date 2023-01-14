@@ -15,7 +15,6 @@
 #define __C64_C64EMULATOR__
 
 #include <EMULATORS/Emulator.hpp>
-#include <C64/global.hpp>
 #include <C64/C64.hpp>
 #include <C64/IOPBuilder.hpp>
 
@@ -60,10 +59,6 @@ namespace C64
 
 		virtual MCHEmul::IOPeripheralBuilder* createPeripheralBuilder () const override
 							{ return (new C64::IOPeripheralBuilder); }
-
-		/** Just to actualize the global time of the C64. */
-		virtual bool additionalRunCycle () override
-							{ C64::actualizeGlobalTime ();  return (true); }
 	};
 }
 

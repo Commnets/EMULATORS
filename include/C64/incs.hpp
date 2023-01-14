@@ -16,7 +16,6 @@
 
 #include <F6500/incs.hpp>
 #include <EMULATORS/incs.hpp>
-#include <C64/global.hpp>
 #include <C64/C64.hpp>
 #include <C64/Memory.hpp>
 #include <C64/VICII.hpp>

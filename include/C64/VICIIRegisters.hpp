@@ -25,6 +25,8 @@ namespace C64
 	class VICIIRegisters final : public MCHEmul::ChipRegisters
 	{
 		public:
+		static const int _VICREGS_SUBSET = 1000;
+			
 		enum class GraphicMode
 		{
 			_CHARMODE = 0,
@@ -37,7 +39,7 @@ namespace C64
 			_INVALIDBITMAPMODE2,
 		};
 
-		VICIIRegisters (int id, MCHEmul::PhysicalStorage* ps);
+		VICIIRegisters (MCHEmul::PhysicalStorage* ps, size_t pp, const MCHEmul::Address& a, size_t s);
 
 		virtual size_t numberRegisters () const override
 							{ return (0x40); }

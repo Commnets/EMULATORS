@@ -31,7 +31,7 @@ namespace C64
 		public:
 		friend InputOSSystem;
 
-		static const unsigned int _ID = 2;
+		static const unsigned int _ID = 102;
 
 		CIA1 ()
 			: MCHEmul::Chip (_ID,

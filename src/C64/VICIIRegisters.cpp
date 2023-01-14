@@ -2,8 +2,8 @@
 #include <C64/C64.hpp>
 
 // ---
-C64::VICIIRegisters::VICIIRegisters (int id, MCHEmul::PhysicalStorage* ps)
-	: MCHEmul::ChipRegisters (id, ps, 0xd000, MCHEmul::Address ({ 0x00, 0xd0 }, false), 0x0400),
+C64::VICIIRegisters::VICIIRegisters (MCHEmul::PhysicalStorage* ps, size_t pp, const MCHEmul::Address& a, size_t s)
+	: MCHEmul::ChipRegisters (_VICREGS_SUBSET, ps, pp, a, s),
 	  _lastValueRead (MCHEmul::PhysicalStorage::_DEFAULTVALUE),
 	  _backgroundColor (4, 0x00),
 	  _spriteXCoord (8, 0x0000), _spriteYCoord (8, 0x0000),

@@ -31,7 +31,7 @@ namespace C64
 		public:
 		friend Commodore64;
 
-		static const unsigned int _ID = 3;
+		static const unsigned int _ID = 103;
 
 		CIA2 ()
 			: MCHEmul::Chip (_ID,
