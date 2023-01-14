@@ -37,6 +37,9 @@
     <Filter Include="Archivos de origen\Motherboard">
       <UniqueIdentifier>{9c893ee5-755b-4922-bc69-a41c8cdafd9c}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Configuration">
+      <UniqueIdentifier>{1eaeac70-e938-4788-ba4d-ed6fd48a96e8}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\include\COMMODORE\incs.hpp">
@@ -47,5 +50,13 @@
     <ClCompile Include="..\..\src\COMMODORE\Blank.cpp">
       <Filter>Archivos de origen</Filter>
     </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Commodore.fmt">
+      <Filter>Configuration</Filter>
+    </None>
+    <None Include="Commodore.hlp">
+      <Filter>Configuration</Filter>
+    </None>
   </ItemGroup>
 </Project>

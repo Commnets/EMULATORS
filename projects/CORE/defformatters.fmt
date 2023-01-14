@@ -1,9 +1,0 @@
-#Default
-#Formats
-#---
-;JSON
-#---
-#---
-;DEBUGCPUINFO
-@PC@ @INST@ @REGS?{key=NO,equal=:},@ @SR@
-#---

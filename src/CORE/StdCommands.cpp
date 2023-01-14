@@ -41,22 +41,7 @@ MCHEmul::HelpCommand::HelpCommand (const std::string& hF)
 	: Command (_ID, _NAME), 
 	  _helpInfo ()
 {
-	MCHEmul::Strings hls;
-	std::fstream hFile (hF, std::ios_base::in);
-	if (hFile.is_open ())
-	{
-		char l [255];
-		while (!hFile.eof ())
-		{
-			hFile.getline (l, 255);
-			std::string ls = MCHEmul::trim (l);
-			if (ls != "" && ls [0] == '#') continue; // Comments are not taken into account...
-			hls.emplace_back (ls);
-		}
-
-		hFile.close ();
-	}
-
+	MCHEmul::Strings hls = loadHelpFile (hF);
 	MCHEmul::Strings::const_iterator i = hls.begin ();
 	while (i != hls.end ())
 	{
@@ -105,6 +90,36 @@ void MCHEmul::HelpCommand::executeImpl (MCHEmul::CommandExecuter* cE, MCHEmul::C
 		helpInfoCommand (parameter ("00"));
 
 	rst.add ("HELP", iS);
+}
+
+// ---
+MCHEmul::Strings MCHEmul::HelpCommand::loadHelpFile (const std::string& hF)
+{
+	MCHEmul::Strings result;
+
+	std::fstream hFile (hF, std::ios_base::in);
+	if (hFile.is_open ())
+	{
+		char l [255];
+		while (!hFile.eof ())
+		{
+			hFile.getline (l, 255);
+			std::string ls = MCHEmul::trim (l);
+			if (ls != "" && ls [0] == '#') continue; // Comments are not taken into account...
+			if (ls != "" && ls [0] == '?') // It means an include command!
+			{
+				MCHEmul::Strings hls = loadHelpFile (MCHEmul::trim (ls.substr (1)));
+
+				result.insert (result.end (), hls.begin (), hls.end ());
+			}
+			else
+				result.emplace_back (ls);
+		}
+
+		hFile.close ();
+	}
+
+	return (result);
 }
 
 // ---

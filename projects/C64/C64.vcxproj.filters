@@ -196,7 +196,10 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="C64formatters.fmt">
+    <None Include="Commodore.fmt">
+      <Filter>Configuration</Filter>
+    </None>
+    <None Include="Commodore.hlp">
       <Filter>Configuration</Filter>
     </None>
   </ItemGroup>

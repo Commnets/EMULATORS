@@ -25,6 +25,7 @@ int _tmain (int argc, _TCHAR* argv[])
 	std::cout << "C64Emulator" << std::endl;
 	std::cout << "Copyright (C) 2022 by Ignacio Cea" << std::endl;
 	std::cout << "It can receive commands from external tools through a port." << std::endl;
+	std::cout << "/h\t\tJust for help." << std::endl; 
 	std::cout << "/o\t\tWhen the emulator wanted to hear instructions from outside." << std::endl; 
 	std::cout << "\t\tBy default NO allowed." << std::endl;
 	std::cout << "/p[PORTNUMBER]\tPort where to listen external instructions (0 - 65535)." << std::endl; 
@@ -33,7 +34,7 @@ int _tmain (int argc, _TCHAR* argv[])
 	// Sets the formatter for << outputs for this emulation...
 	// This line of code has to be at the beginning of every emulation 
 	// as it fixes the way the internal ino of the important classes will be formatted
-	MCHEmul::FormatterBuilder::instance ({ "./C64formatters.fmt" });
+	MCHEmul::FormatterBuilder::instance ({ "./C64.fmt" });
 
 	// Set up the emulator...
 	C64::C64Emulator myEmulator (

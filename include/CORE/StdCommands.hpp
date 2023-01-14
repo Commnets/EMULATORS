@@ -36,7 +36,7 @@ namespace MCHEmul
 		static const int _ID = -1;
 		static const std::string _NAME;
 	
-		HelpCommand (const std::string& hF = "./commands.hlp");
+		HelpCommand (const std::string& hF = "./Standard.hlp");
 
 		/** Eiher no parameters to show all commands possible or 
 			just a command with the name of the command which info has be shown. */
@@ -45,6 +45,12 @@ namespace MCHEmul
 
 		private:
 		virtual void executeImpl (CommandExecuter* cE, Computer* c, InfoStructure& rst) override;
+
+		// Implementation
+		/** Just to read a file and get the info of the commands managed. \n
+			In many help files were nested (starting with '?') they would be all loaded. \n
+			The comment lines (starting with '#') are ignored. */
+		Strings loadHelpFile (const std::string& hF);
 
 		private:
 		using HelpInfo = std::map <std::string, Strings>;

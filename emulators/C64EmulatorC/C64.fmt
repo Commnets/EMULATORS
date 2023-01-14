@@ -1,0 +1,4 @@
+#Formats used for the C64 Local Console
+#(C) 2022 Ignacio Cea Fornies
+?./Commodore.fmt
+?./LocalConsole.fmt

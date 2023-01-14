@@ -295,7 +295,13 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="defformats.fmt">
+    <None Include="Default.fmt">
+      <Filter>Configuration</Filter>
+    </None>
+    <None Include="Standard.fmt">
+      <Filter>Configuration</Filter>
+    </None>
+    <None Include="Standard.hlp">
       <Filter>Configuration</Filter>
     </None>
   </ItemGroup>

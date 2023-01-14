@@ -1,0 +1,195 @@
+#General Formats
+#Usually attached to Standard Commands
+#(C) 2022 Ignacio Cea Fornies
+?./Default.fmt
+#---
+;Author
+@NAME@
+From @CITY@ (@COUNTRY@) At @DATE@
+email: @EMAIL@
+I hope you like this emulator!
+What I really love is @LOVE@
+#---
+#---
+;Architecture
+@ATTRS?{key=YES,equal==}\n@
+@NBYTES@ bytes, @NBITS@ bits, @NBYTESPERINST@ bytes per instruction
+Big Endian=@ENDIAN@
+#---
+#---
+;CPU
+#The info about the Architecture here
+@Architecture>@
+@REGS?{key=NO,equal=:},@
+@PC@
+@SR@
+#---
+#---
+;PhysicalStorageSubset
+Id:@ID@, Address:$@ADDRESS@, Size:@SIZE@
+ACTIVE=@ACTIVE@, READ=@READ@
+@BYTES{blocksize=16,listsep=\,,tablesep=\ ,minsize=2}@
+#---
+#---
+;MemoryView
+@STORAGES?{key=NO,equal==}\n@
+#---
+#---
+;Memory
+@STORAGES?{key=NO,equal==}\n@
+#---
+#---
+;Stack
+@PhysicalStorageSubset>@
+BACK=@BACK@, POINT LAST=@LAST@
+OVERFLOW=@OVERFLOW@
+EMPTY=@EMPTY@
+POSITION=@POSITION@
+#---
+#---
+;Chip
+Id:@ID@
+@ATTRS?\n@
+->Memory:
+@Memory>@
+#---
+;Computer
+@ATTRS?\n@
+->CPU:
+@CPU>@
+->Chips:
+@CHIPS?{key=NO,equal==}\n@
+->Devices:
+@DEVICES?{key=NO,equal==}\n@
+#---
+#---
+;CAUTHOR
+@Author>@
+#---
+#---
+;CHELP
+@HELP?{key=YES,equal=:\n}\n@
+#---
+#---
+;CSTATUS
+@SR@
+#---
+#---
+;CREGISTERS
+@REGS?{key=NO,equal=:},@
+#---
+#---
+;CPC
+@PC@
+#---
+#---
+;CSETPC
+#---
+#---
+;CSTACK
+@Stack>@
+#---
+#---
+;CCPUSTATUS
+Last:@INST@
+@PC@
+@REGS?{key=NO,equal=:},@
+@SR@
+->Stack:
+@Stack>@
+#---
+#---
+;CCPUSSTATUS
+Last:@INST@
+@PC@
+@REGS?{key=NO,equal=:},@
+@SR@
+#---
+#---
+;CCPUINFO
+@CPU>@
+#---
+#---
+;CMEMORY
+@BYTES{blocksize=16,listsep=\,,tablesep=\ ,minsize=2}@
+#---
+#---
+;CSTOP
+@PC@
+Last:@INST@
+@REGS?{key=NO,equal=:},@
+@SR@
+#---
+#---
+;CRUN
+@PC@
+Current:@INST@
+@REGS?{key=NO,equal=:},@
+@SR@
+#---
+#---
+;CNEXT
+#What it is show is the next instruction executed
+#---
+#---
+;CSHOWNEXT
+@CODELINES?{key=NO,equal=:}\n@
+#---
+#---
+;CINST
+@INST@
+#---
+#---
+;CBREAKS
+@BREAKPOINTS@
+#---
+#---
+;CSETBREAK
+#---
+#---
+;CREMOVEBREAK
+#---
+#---
+;CREMOVEBREAKS
+#---
+#---
+;CSPEED
+CPU: @SPEED@ cycles/second
+SCREEN: @HERTZS@ cycles/second
+#---
+#---
+;CLOADBIN
+Program loaded=@RESULT@
+#---
+#---
+;CSAVEBIN
+Program saved=@RESULT@
+#---
+#---
+;CLOADPRG
+->Code:
+@CODELINES?{key=NO,equal=:}\n@
+->Errors:
+@ERRORS?{key=NO,equal=:}\n@
+#---
+#---
+;CLOADBINARY
+->Code:
+@CODE@
+#---
+#---
+;CLOADBLOCKS
+->Code:
+@CODE@
+#---
+#---
+;CDECOMPILE
+->Code:
+@CODELINES?{key=NO,equal=:}\n@
+->Errors:
+@ERROR@
+#---
+#---
+;CANSWER
+@RESULT@
+#---

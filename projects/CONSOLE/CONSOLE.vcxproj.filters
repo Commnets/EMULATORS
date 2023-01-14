@@ -49,10 +49,10 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="conformatters.fmt">
+    <None Include="LocalConsole.fmt">
       <Filter>Configuration</Filter>
     </None>
-    <None Include="console.def">
+    <None Include="LocalConsole.hlp">
       <Filter>Configuration</Filter>
     </None>
   </ItemGroup>
