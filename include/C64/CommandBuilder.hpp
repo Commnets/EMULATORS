@@ -18,11 +18,11 @@
 
 namespace C64
 {
-	class CommandBuilder final : public MCHEmul::StandardCommandBuilder
+	class CommandBuilder final : public MCHEmul::CommandBuilder
 	{
 		public:
-		CommandBuilder ()
-			: MCHEmul::StandardCommandBuilder ()
+		CommandBuilder (MCHEmul::CommandBuilder* nB = nullptr)
+			: MCHEmul::CommandBuilder (nB)
 							{ }
 
 		protected:

@@ -37,7 +37,7 @@ namespace C64
 			MCHEmul::Computer* c, MCHEmul::InfoStructure& rst) override;
 	};
 
-	/** To get the status of the CIA2 chip. */
+	/** To get the status of the CIA1 chip. */
 	class CIA1StatusCommand final : public MCHEmul::Command
 	{
 		public:

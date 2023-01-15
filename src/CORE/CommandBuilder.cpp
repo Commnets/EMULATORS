@@ -12,7 +12,10 @@ MCHEmul::Command* MCHEmul::CommandBuilder::command (const std::string& cmd) cons
 		(result = (*i).second) -> setParameters (readCommandParameters (CMD));
 	else
 	{
-		if ((result = createEmptyCommand (CName)) != nullptr)
+		result = createEmptyCommand (CName);
+		if (result == nullptr && _nextBuilder != nullptr) 
+			result = _nextBuilder -> command (cmd); // Uses chain of responsability...
+		if (result != nullptr)
 		{
 			result -> setParameters (readCommandParameters (CMD)); // If there is instruction set the prms!
 

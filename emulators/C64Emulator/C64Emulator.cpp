@@ -39,8 +39,11 @@ int _tmain (int argc, _TCHAR* argv[])
 	// Set up the emulator...
 	C64::C64Emulator myEmulator (
 		MCHEmul::CommandLineArguments (argc, argv),
-		eOpen ? new MCHEmul::CommunicationSystem (
-			new MCHEmul::PeerCommunicationChannel (listenPort, 10 /** simultaneous comms. */), new C64::CommandBuilder) : nullptr);
+		eOpen 
+			? new MCHEmul::CommunicationSystem (
+				new MCHEmul::PeerCommunicationChannel (listenPort, 10 /** simultaneous comms. */), 
+				new C64::CommandBuilder (new MCHEmul::StandardCommandBuilder)) 
+			: nullptr);
 	if (!myEmulator || !myEmulator.initialize ())
 		return (1); // Not possible to run the emulation. Exit with error...
 

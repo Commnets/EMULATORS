@@ -23,6 +23,7 @@
     <ClInclude Include="..\..\include\COMMODORE\CIAClock.hpp" />
     <ClInclude Include="..\..\include\COMMODORE\CIARegisters.hpp" />
     <ClInclude Include="..\..\include\COMMODORE\CIATimer.hpp" />
+    <ClInclude Include="..\..\include\COMMODORE\Computer.hpp" />
     <ClInclude Include="..\..\include\COMMODORE\incs.hpp" />
     <ClInclude Include="..\..\include\COMMODORE\SID.hpp" />
     <ClInclude Include="..\..\include\COMMODORE\SIDRegisters.hpp" />

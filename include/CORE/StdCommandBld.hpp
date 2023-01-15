@@ -20,6 +20,11 @@ namespace MCHEmul
 {
 	class StandardCommandBuilder : public CommandBuilder
 	{
+		public:
+		StandardCommandBuilder (CommandBuilder* nB = nullptr)
+			: CommandBuilder (nB)
+							{ }
+
 		protected:
 		virtual Command* createEmptyCommand (const std::string& cmdName) const override;
 	};

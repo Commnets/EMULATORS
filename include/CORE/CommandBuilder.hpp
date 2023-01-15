@@ -20,12 +20,14 @@ namespace MCHEmul
 {
 	/** To create commands from an string that represents it. 
 		The command builder keeps a list with the different types of commands created.
-		The commands are reused changing the parameters if any. */
+		The commands are reused changing the parameters if any. \n
+		The class implements the Chain of Responsability design pattern. */
 	class CommandBuilder
 	{
 		public:
-		CommandBuilder ()
-			: _commands ()
+		CommandBuilder (CommandBuilder* nB = nullptr)
+			: _commands (),
+			  _nextBuilder (nB) // To be linked with other...
 							{ }
 
 		CommandBuilder (const CommandBuilder&) = delete;
@@ -33,7 +35,9 @@ namespace MCHEmul
 		CommandBuilder& operator = (const CommandBuilder&) = delete;
 
 		virtual ~CommandBuilder ()
-							{ for (const auto& i : _commands) delete (i.second); }
+							{ for (const auto& i : _commands) 
+								delete (i.second); 
+							  delete (_nextBuilder); }
 
 		CommandBuilder (CommandBuilder&&) = delete;
 
@@ -56,6 +60,10 @@ namespace MCHEmul
 			So, no more than 100 parameters are allowed. */
 		Attributes readCommandParameters (const std::string& cmd) const;
 
+		protected:
+		/** The builder linked to this, and invoked when a command is not found here. */
+		CommandBuilder* _nextBuilder;
+		// Implementation
 		mutable std::map <std::string, Command*> _commands;
 	};
 }

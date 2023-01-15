@@ -9,7 +9,7 @@
 
 // ---
 C64::Commodore64::Commodore64 (C64::Commodore64::VisualSystem vS)
-	: MCHEmul::Computer 
+	: COMMODORE::Computer 
 		(new F6500::C6510 (),
 		 C64::Commodore64::standardChips (vS),
 		 new C64::Memory (),

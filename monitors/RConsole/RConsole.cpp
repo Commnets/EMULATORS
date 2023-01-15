@@ -26,10 +26,13 @@ int _tmain (int argc, _TCHAR *argv [])
 
 	// It this case the console doesn't know anything about the remote emulator being executeD
 	// ...So only the standard command are understood!
-	MCHEmul::RemoteConsole myConsole (new MCHEmul::StandardCommandBuilder, new MCHEmul::Win32ConsoleKeys,
+	MCHEmul::RemoteConsole myConsole (
+		new MCHEmul::StandardCommandBuilder, 
+		new MCHEmul::Win32ConsoleKeys,
 		new MCHEmul::CommunicationSystem (
 			new MCHEmul::PeerCommunicationChannel (listenPort, 10 /** simultaneous comms. */), 
-				new MCHEmul::CommsSystemAnswerCommandBuilder), consoleAddress);
+			new MCHEmul::CommsSystemAnswerCommandBuilder), 
+		consoleAddress);
 	myConsole.run ();
 
 	return (0);

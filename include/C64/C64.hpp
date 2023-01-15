@@ -28,7 +28,7 @@ namespace C64
 	  *	However the constructor receives attributes comming from the emulator class (createComputer method)
 	  *	and within those there might be attributes to define specific devices connected.
 	  */
-	class Commodore64 final : public MCHEmul::Computer
+	class Commodore64 final : public COMMODORE::Computer
 	{
 		public:
 		enum class VisualSystem { _NTSC, _PAL };

@@ -23,7 +23,9 @@ int _tmain (int argc, _TCHAR *argv [])
 	// Set up the console that will run the emulation...
 	// The console uses the same builder than the communication system...
 	// The keys used are Win32 related.
-	MCHEmul::LocalConsole myConsole (&myEmulator, new C64::CommandBuilder, new MCHEmul::Win32ConsoleKeys);
+	MCHEmul::LocalConsole myConsole (&myEmulator, 
+		new C64::CommandBuilder (new MCHEmul::StandardCommandBuilder),
+		new MCHEmul::Win32ConsoleKeys);
 	myConsole.run ();
 	return (myEmulator.error ());
 }

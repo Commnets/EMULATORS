@@ -21,6 +21,11 @@ namespace MCHEmul
 {
 	class CommsSystemAnswerCommandBuilder : public CommandBuilder
 	{
+		public:
+		CommsSystemAnswerCommandBuilder (CommandBuilder* nB = nullptr)
+			: CommandBuilder (nB)
+							{ }
+
 		protected:
 		virtual Command* createEmptyCommand (const std::string& cmdName) const override;
 	};
