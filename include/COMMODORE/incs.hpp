@@ -25,6 +25,8 @@
 #include <COMMODORE/SIDRegisters.hpp>
 #include <COMMODORE/SID.hpp>
 #include <COMMODORE/Computer.hpp>
+#include <COMMODORE/Commands.hpp>
+#include <COMMODORE/CommandBuilder.hpp>
 
 #endif
 

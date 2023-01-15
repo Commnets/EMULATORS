@@ -3,11 +3,8 @@
 ;VICII
 To know the status of the VICII chip, including raster and others.
 No parameters needed.
-;CIA1
-To know the status of the CIA1 chip.
-No parameters needed.
-;CIA2
-To know the status of the CIA2 chip.
+;CIA
+To know the status of the CIA chip.
 No parameters needed.
 ;SID
 To know the status of the SID chip.

@@ -25,6 +25,8 @@ namespace COMMODORE
 	class CIA : public MCHEmul::Chip
 	{
 		public:
+		static const unsigned int _ID = 102;
+		
 		/** Receives the id of the chip in the computer, the id of the registers linked
 			and the if og the interruption to launch when needed. \n
 			In a computer there could be many of these with little differences. */

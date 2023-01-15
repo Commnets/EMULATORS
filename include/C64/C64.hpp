@@ -40,12 +40,7 @@ namespace C64
 		virtual bool initialize (bool iM = true) override;
 
 		// To get direct access to the most important C64 chips...
-		const COMMODORE::VICII* vicII () const
-							{ return (dynamic_cast <const COMMODORE::VICII*> 
-								((* _chips.find (COMMODORE::VICII::_ID)).second)); }
-		COMMODORE::VICII* vicII ()
-							{ return (dynamic_cast <COMMODORE::VICII*> 
-								((* _chips.find (COMMODORE::VICII::_ID)).second)); }
+		// Other methids can be used at parent level to access other important chips.
 		const CIA1* cia1 () const
 							{ return (dynamic_cast <const CIA1*> ((* _chips.find (CIA1::_ID)).second)); }
 		CIA1* cia1 ()
@@ -54,12 +49,6 @@ namespace C64
 							{ return (dynamic_cast <const CIA2*> ((*_chips.find (CIA2::_ID)).second)); }
 		CIA2* cia2 ()
 							{ return (dynamic_cast <CIA2*> ((*_chips.find (CIA2::_ID)).second)); }
-		const COMMODORE::SID* sid () const
-							{ return (dynamic_cast <const COMMODORE::SID*> 
-								((*_chips.find (COMMODORE::SID::_ID)).second)); }
-		COMMODORE::SID* sid ()
-							{ return (dynamic_cast <COMMODORE::SID*> 
-								((*_chips.find (COMMODORE::SID::_ID)).second)); }
 
 		private:
 		// Implementation

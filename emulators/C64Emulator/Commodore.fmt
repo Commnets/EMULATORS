@@ -54,7 +54,7 @@ ACTIVE=@STATUS@, IRQ=@IRQ@
 VALUE=@VALUE@(@INITIALVALUE@)
 #---
 #---
-;CIA1
+;CIA
 ID=@ID@
 @ATTRS?{key=YES,equal==}\n@
 ->Registers:
@@ -64,19 +64,6 @@ ID=@ID@
 ->Timer B:
 @TimerB>@
 -> Clock:
-@Clock>@
-#---
-#---
-;CIA2
-ID=@ID@
-@ATTRS?{key=YES,equal==}\n@
-->Registers:
-@Registers>@
-->Timer A:
-@TimerA>@
-->Timer B:
-@TimerB>@
-->Clock:
 @Clock>@
 #---
 #---

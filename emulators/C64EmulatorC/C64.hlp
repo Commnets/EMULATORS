@@ -1,3 +1,9 @@
 #C64 Local Console Commands
 ?./LocalConsole.hlp
 ?./Commodore.hlp
+;CIA1
+To know the status of the CIA1 chip.
+No parameters needed.
+;CIA2
+To know the status of the CIA2 chip.
+No parameters needed.

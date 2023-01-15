@@ -154,10 +154,10 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="Commodore.fmt">
+    <None Include="C64.fmt">
       <Filter>Configuration</Filter>
     </None>
-    <None Include="Commodore.hlp">
+    <None Include="C64.hlp">
       <Filter>Configuration</Filter>
     </None>
   </ItemGroup>

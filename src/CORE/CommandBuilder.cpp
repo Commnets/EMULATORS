@@ -12,14 +12,25 @@ MCHEmul::Command* MCHEmul::CommandBuilder::command (const std::string& cmd) cons
 		(result = (*i).second) -> setParameters (readCommandParameters (CMD));
 	else
 	{
-		result = createEmptyCommand (CName);
-		if (result == nullptr && _nextBuilder != nullptr) 
-			result = _nextBuilder -> command (cmd); // Uses chain of responsability...
+		// Look in the hierarchy dwon until find the right builder
+		// ...if it exists...
+		const MCHEmul::CommandBuilder* bC = this;
+		while (result == nullptr && bC != nullptr)
+		{ 
+			result = bC -> createEmptyCommand (CName);
+
+			bC = bC -> _nextBuilder;
+		}
+
+		// If after looking throw the hierarchy a valid builder has been found
+		// ...the parameters are added...
 		if (result != nullptr)
 		{
 			result -> setParameters (readCommandParameters (CMD)); // If there is instruction set the prms!
 
-			_commands.insert (std::pair <std::string, MCHEmul::Command*> (CName, result)); // ...and keep it for later!
+			// The command is kept just once at the builder invoking...
+			_commands.insert 
+				(std::pair <std::string, MCHEmul::Command*> (CName, result)); // ...and keep it for later!
 		}
 	}
 

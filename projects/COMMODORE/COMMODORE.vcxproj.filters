@@ -78,6 +78,12 @@
     <ClInclude Include="..\..\include\COMMODORE\Computer.hpp">
       <Filter>Archivos de encabezado\Motherboard</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\include\COMMODORE\CommandBuilder.hpp">
+      <Filter>Archivos de encabezado\Commands</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\COMMODORE\Commands.hpp">
+      <Filter>Archivos de encabezado\Commands</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Commodore.fmt">
@@ -111,6 +117,12 @@
     </ClCompile>
     <ClCompile Include="..\..\src\COMMODORE\VICIIRegisters.cpp">
       <Filter>Archivos de origen\Motherboard\Chips</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\COMMODORE\CommandBuilder.cpp">
+      <Filter>Archivos de origen\Commands</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\COMMODORE\Commands.cpp">
+      <Filter>Archivos de origen\Commands</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

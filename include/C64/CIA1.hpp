@@ -29,7 +29,7 @@ namespace C64
 		public:
 		friend InputOSSystem;
 
-		static const unsigned int _ID = 102;
+		static const unsigned int _ID = 1020;
 
 		CIA1 ()
 			: CIA (_ID, CIA1Registers::_CIA1_SUBSET, F6500::IRQInterrupt::_ID),
