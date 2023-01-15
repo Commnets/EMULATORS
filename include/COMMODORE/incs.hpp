@@ -16,6 +16,14 @@
 
 #include <F6500/incs.hpp>
 #include <EMULATORS/incs.hpp>
+#include <COMMODORE/VICIIRegisters.hpp>
+#include <COMMODORE/VICII.hpp>
+#include <COMMODORE/CIARegisters.hpp>
+#include <COMMODORE/CIATimer.hpp>
+#include <COMMODORE/CIAClock.hpp>
+#include <COMMODORE/CIA.hpp>
+#include <COMMODORE/SIDRegisters.hpp>
+#include <COMMODORE/SID.hpp>
 
 #endif
 

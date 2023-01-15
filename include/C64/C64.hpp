@@ -15,12 +15,11 @@
 #define __C64_C64__
 
 #include <CORE/incs.hpp>
+#include <COMMODORE/incs.hpp>
 #include <C64/Screen.hpp>
 #include <C64/UserPeripherals.hpp>
-#include <C64/VICII.hpp>
 #include <C64/CIA1.hpp>
 #include <C64/CIA2.hpp>
-#include <C64/SID.hpp>
 
 namespace C64
 {
@@ -41,10 +40,12 @@ namespace C64
 		virtual bool initialize (bool iM = true) override;
 
 		// To get direct access to the most important C64 chips...
-		const VICII* vicII () const
-							{ return (dynamic_cast <const VICII*> ((* _chips.find (VICII::_ID)).second)); }
-		VICII* vicII ()
-							{ return (dynamic_cast <VICII*> ((* _chips.find (VICII::_ID)).second)); }
+		const COMMODORE::VICII* vicII () const
+							{ return (dynamic_cast <const COMMODORE::VICII*> 
+								((* _chips.find (COMMODORE::VICII::_ID)).second)); }
+		COMMODORE::VICII* vicII ()
+							{ return (dynamic_cast <COMMODORE::VICII*> 
+								((* _chips.find (COMMODORE::VICII::_ID)).second)); }
 		const CIA1* cia1 () const
 							{ return (dynamic_cast <const CIA1*> ((* _chips.find (CIA1::_ID)).second)); }
 		CIA1* cia1 ()
@@ -53,10 +54,12 @@ namespace C64
 							{ return (dynamic_cast <const CIA2*> ((*_chips.find (CIA2::_ID)).second)); }
 		CIA2* cia2 ()
 							{ return (dynamic_cast <CIA2*> ((*_chips.find (CIA2::_ID)).second)); }
-		const SID* sid () const
-							{ return (dynamic_cast <const SID*> ((*_chips.find (SID::_ID)).second)); }
-		SID* sid ()
-							{ return (dynamic_cast <SID*> ((*_chips.find (SID::_ID)).second)); }
+		const COMMODORE::SID* sid () const
+							{ return (dynamic_cast <const COMMODORE::SID*> 
+								((*_chips.find (COMMODORE::SID::_ID)).second)); }
+		COMMODORE::SID* sid ()
+							{ return (dynamic_cast <COMMODORE::SID*> 
+								((*_chips.find (COMMODORE::SID::_ID)).second)); }
 
 		private:
 		// Implementation

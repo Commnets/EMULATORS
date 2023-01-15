@@ -1,7 +1,7 @@
-#include <C64/CIATimer.hpp>
+#include <COMMODORE/CIATimer.hpp>
 
 // ---
-void C64::CIATimer::initialize ()
+void COMMODORE::CIATimer::initialize ()
 {
 	_runMode = RunMode::_RESTART;
 	_countMode = CountMode::_PROCESSORCYCLES;
@@ -21,7 +21,7 @@ void C64::CIATimer::initialize ()
 }
 
 // ---
-void C64::CIATimer::simulate (MCHEmul::CPU* cpu, C64::CIATimer* t)
+void COMMODORE::CIATimer::simulate (MCHEmul::CPU* cpu, COMMODORE::CIATimer* t)
 {
 	assert (cpu != nullptr);
 
@@ -35,11 +35,11 @@ void C64::CIATimer::simulate (MCHEmul::CPU* cpu, C64::CIATimer* t)
 		
 		switch (_runMode)
 		{
-			case C64::CIATimer::RunMode::_RESTART:
+			case COMMODORE::CIATimer::RunMode::_RESTART:
 				_currentValue = _initialValue;
 				break;
 
-			case C64::CIATimer::RunMode::_ONETIME:
+			case COMMODORE::CIATimer::RunMode::_ONETIME:
 				_enabled = false;
 				break;
 
@@ -56,7 +56,7 @@ void C64::CIATimer::simulate (MCHEmul::CPU* cpu, C64::CIATimer* t)
 }
 
 // ---
-MCHEmul::InfoStructure C64::CIATimer::getInfoStructure () const
+MCHEmul::InfoStructure COMMODORE::CIATimer::getInfoStructure () const
 {
 	MCHEmul::InfoStructure result;
 
@@ -71,14 +71,14 @@ MCHEmul::InfoStructure C64::CIATimer::getInfoStructure () const
 }
 
 // ---
-bool C64::CIATimer::countDown (MCHEmul::CPU* cpu, C64::CIATimer* t)
+bool COMMODORE::CIATimer::countDown (MCHEmul::CPU* cpu, COMMODORE::CIATimer* t)
 {
 	_reaches0 = false;
 
 	bool result = false;
 	switch (_countMode)
 	{
-		case C64::CIATimer::CountMode::_PROCESSORCYCLES:
+		case COMMODORE::CIATimer::CountMode::_PROCESSORCYCLES:
 			{
 				unsigned int c = cpu -> clockCycles () - _lastClockCycles;
 				result = ((_currentValue -= (c > (unsigned int) _currentValue) ? _currentValue : (unsigned short) c) == 0x0000);
@@ -86,16 +86,16 @@ bool C64::CIATimer::countDown (MCHEmul::CPU* cpu, C64::CIATimer* t)
 
 			break;
 
-		case C64::CIATimer::CountMode::_SIGNALSONCNTLINE:
+		case COMMODORE::CIATimer::CountMode::_SIGNALSONCNTLINE:
 			// TODO: Linked to the serial port...
 			break;
 
-		case C64::CIATimer::CountMode::_TIMERCOUNTSDOWNTO0:
+		case COMMODORE::CIATimer::CountMode::_TIMERCOUNTSDOWNTO0:
 			if (t != nullptr && t -> reaches0 ())
 				result = (--_currentValue == 0x00);
 			break;
 
-		case C64::CIATimer::CountMode::_0ONCNTPULSES:
+		case COMMODORE::CIATimer::CountMode::_0ONCNTPULSES:
 			// TODO: Linked to the serial port...
 			break;
 

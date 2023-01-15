@@ -14,7 +14,7 @@
 #ifndef __C64_CIA2REGISTERS__
 #define __C64_CIA2REGISTERS__
 
-#include <C64/CIARegisters.hpp>
+#include <COMMODORE/incs.hpp>
 
 namespace C64
 {
@@ -22,7 +22,7 @@ namespace C64
 
 	/** In the CIA2 Memory, there are a couple of records that behave different
 		when they are read that when they are written. */
-	class CIA2Registers final : public CIARegisters
+	class CIA2Registers final : public COMMODORE::CIARegisters
 	{
 		public:
 		friend CIA2;
@@ -39,22 +39,22 @@ namespace C64
 		virtual const MCHEmul::UByte& readValue (size_t p) const override;
 
 		// Implementation
-		void initializeInternalValues ();
+		virtual void initializeInternalValues () override;
 
 		// This methods are invoked from CIA chip...
 		/** The registers will observe also the timers. */
-		void lookAtTimers (CIATimer* tA, CIATimer* tB)
+		void lookAtTimers (COMMODORE::CIATimer* tA, COMMODORE::CIATimer* tB)
 							{ _timerA = tA, _timerB = tB; }
 		/** ...and also of the clock. */
-		void lookAtClock (CIAClock* c)
+		void lookAtClock (COMMODORE::CIAClock* c)
 							{ _clock = c; }
 
 		private:
 		// Reference to the timers...
-		CIATimer* _timerA;
-		CIATimer* _timerB;
+		COMMODORE::CIATimer* _timerA;
+		COMMODORE::CIATimer* _timerB;
 		// Reference to the clock...
-		CIAClock* _clock;
+		COMMODORE::CIAClock* _clock;
 
 		/** The bank managed by VICII is controlled from this Chip. */
 		unsigned char _VICBank;

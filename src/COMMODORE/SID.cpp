@@ -1,14 +1,13 @@
-#include <C64/SID.hpp>
-#include <C64/Memory.hpp>
+#include <COMMODORE/SID.hpp>
 
 // ---
-bool C64::SID::initialize ()
+bool COMMODORE::SID::initialize ()
 {
 	assert (memoryRef () != nullptr);
 
 	// Gets the memory block dedicated to the SID
 	if (!(_SIDRegisters = 
-		dynamic_cast <C64::SIDRegisters*> (memoryRef () -> subset (C64::SIDRegisters::_SIDREGS_SUBSET))))
+		dynamic_cast <COMMODORE::SIDRegisters*> (memoryRef () -> subset (COMMODORE::SIDRegisters::_SIDREGS_SUBSET))))
 	{
 		_error = MCHEmul::_INIT_ERROR;
 
@@ -21,14 +20,14 @@ bool C64::SID::initialize ()
 }
 
 // ---
-bool C64::SID::simulate (MCHEmul::CPU* cpu)
+bool COMMODORE::SID::simulate (MCHEmul::CPU* cpu)
 {
 	// TODO
 	return (true);
 }
 
 // ---
-MCHEmul::InfoStructure C64::SID::getInfoStructure () const
+MCHEmul::InfoStructure COMMODORE::SID::getInfoStructure () const
 {
 	MCHEmul::InfoStructure result = MCHEmul::Chip::getInfoStructure ();
 

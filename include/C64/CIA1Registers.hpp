@@ -14,7 +14,7 @@
 #ifndef __C64_CIA1REGISTERS__
 #define __C64_CIA1REGISTERS__
 
-#include <C64/CIARegisters.hpp>
+#include <COMMODORE/incs.hpp>
 
 namespace C64
 {
@@ -22,7 +22,7 @@ namespace C64
 
 	/** In the CIA1 Memory, there are a couple of records that behave different
 		when they are read that when they are written. */
-	class CIA1Registers final : public CIARegisters
+	class CIA1Registers final : public COMMODORE::CIARegisters
 	{
 		public:
 		friend CIA1;
@@ -37,7 +37,7 @@ namespace C64
 		virtual const MCHEmul::UByte& readValue (size_t p) const override;
 
 		// Implementation
-		void initializeInternalValues ();
+		virtual void initializeInternalValues () override;
 
 		// This methods are invoked from CIA chip...
 		/** The josystick 1 is very linked with the keyboard. */

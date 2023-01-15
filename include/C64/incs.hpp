@@ -16,28 +16,24 @@
 
 #include <F6500/incs.hpp>
 #include <EMULATORS/incs.hpp>
-#include <C64/C64.hpp>
-#include <C64/Memory.hpp>
-#include <C64/VICII.hpp>
-#include <C64/VICIIRegisters.hpp>
-#include <C64/CIATimer.hpp>
-#include <C64/CIAClock.hpp>
-#include <C64/CIA.hpp>
-#include <C64/CIARegisters.hpp>
+#include <COMMODORE/incs.hpp>
 #include <C64/CIA1.hpp>
 #include <C64/CIA1Registers.hpp>
 #include <C64/CIA2.hpp>
 #include <C64/CIA2Registers.hpp>
-#include <C64/SID.hpp>
-#include <C64/SIDRegisters.hpp>
+#include <C64/SFChip.hpp>
 #include <C64/Screen.hpp>
+#include <C64/Sound.hpp>
 #include <C64/OSIO.hpp>
-#include <C64/UserPort.hpp>
 #include <C64/UserPeripherals.hpp>
+#include <C64/UserPort.hpp>
 #include <C64/IOPBuilder.hpp>
 #include <C64/Commands.hpp>
 #include <C64/CommandBuilder.hpp>
 #include <C64/C64Emulator.hpp>
+#include <C64/ColorMemory.hpp>
+#include <C64/Memory.hpp>
+#include <C64/C64.hpp>
 
 #endif
 

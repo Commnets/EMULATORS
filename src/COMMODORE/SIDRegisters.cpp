@@ -1,7 +1,7 @@
-#include <C64/SIDRegisters.hpp>
+#include <COMMODORE/SIDRegisters.hpp>
 
 // ---
-C64::SIDRegisters::SIDRegisters (MCHEmul::PhysicalStorage* ps, size_t pp, const MCHEmul::Address& a, size_t s)
+COMMODORE::SIDRegisters::SIDRegisters (MCHEmul::PhysicalStorage* ps, size_t pp, const MCHEmul::Address& a, size_t s)
 	: MCHEmul::ChipRegisters (_SIDREGS_SUBSET, ps, pp, a, s)
 {
 	setClassName ("SIDRegisters");
@@ -10,7 +10,7 @@ C64::SIDRegisters::SIDRegisters (MCHEmul::PhysicalStorage* ps, size_t pp, const 
 }
 
 // ---
-void C64::SIDRegisters::initialize ()
+void COMMODORE::SIDRegisters::initialize ()
 {
 	MCHEmul::PhysicalStorageSubset::initialize ();
 
@@ -18,7 +18,7 @@ void C64::SIDRegisters::initialize ()
 }
 
 // ---
-void C64::SIDRegisters::setValue (size_t p, const MCHEmul::UByte& v)
+void COMMODORE::SIDRegisters::setValue (size_t p, const MCHEmul::UByte& v)
 {
 	MCHEmul::PhysicalStorageSubset::setValue (p, v);
 
@@ -34,7 +34,7 @@ void C64::SIDRegisters::setValue (size_t p, const MCHEmul::UByte& v)
 }
 
 // ---
-const MCHEmul::UByte& C64::SIDRegisters::readValue (size_t p) const
+const MCHEmul::UByte& COMMODORE::SIDRegisters::readValue (size_t p) const
 {
 	MCHEmul::UByte result = MCHEmul::PhysicalStorage::_DEFAULTVALUE;
 
@@ -56,7 +56,7 @@ const MCHEmul::UByte& C64::SIDRegisters::readValue (size_t p) const
 }
 
 // ---
-void C64::SIDRegisters::initializeInternalValues ()
+void COMMODORE::SIDRegisters::initializeInternalValues ()
 {
 	// TODO
 }

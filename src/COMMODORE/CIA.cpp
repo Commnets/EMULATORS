@@ -1,14 +1,13 @@
-#include <C64/CIA.hpp>
-#include <C64/Memory.hpp>
+#include <COMMODORE/CIA.hpp>
 
 // ---
-bool C64::CIA::initialize ()
+bool COMMODORE::CIA::initialize ()
 {
 	assert (memoryRef () != nullptr);
 
-	// Gets the memory block dedicated to the CIA2
+	// Gets the memory block dedicated to the CIA
 	if (!(_CIARegisters = 
-		dynamic_cast <C64::CIARegisters*> (memoryRef () -> subset (_registersId))))
+		dynamic_cast <COMMODORE::CIARegisters*> (memoryRef () -> subset (_registersId))))
 	{
 		_error = MCHEmul::_INIT_ERROR;
 
@@ -31,7 +30,7 @@ bool C64::CIA::initialize ()
 }
 
 // ---
-bool C64::CIA::simulate (MCHEmul::CPU* cpu)
+bool COMMODORE::CIA::simulate (MCHEmul::CPU* cpu)
 {
 	_timerA.simulate (cpu);
 
@@ -45,7 +44,7 @@ bool C64::CIA::simulate (MCHEmul::CPU* cpu)
 }
 
 // ---
-MCHEmul::InfoStructure C64::CIA::getInfoStructure () const
+MCHEmul::InfoStructure COMMODORE::CIA::getInfoStructure () const
 {
 	MCHEmul::InfoStructure result = MCHEmul::Chip::getInfoStructure ();
 

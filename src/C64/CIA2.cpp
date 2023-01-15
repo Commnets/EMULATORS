@@ -1,6 +1,5 @@
 #include <C64/CIA2.hpp>
 #include <C64/Memory.hpp>
-#include <C64/VICII.hpp>
 
 // ---
 bool C64::CIA2::initialize ()
@@ -16,7 +15,7 @@ bool C64::CIA2::initialize ()
 		return (false);
 	}
 
-	return (C64::CIA::initialize ());
+	return (COMMODORE::CIA::initialize ());
 }
 
 // ---
@@ -24,5 +23,5 @@ bool C64::CIA2::simulate (MCHEmul::CPU* cpu)
 {
 	_VICIIRef -> setBank (_CIA2Registers -> VICIIBank ());
 
-	return (C64::CIA::simulate (cpu));
+	return (COMMODORE::CIA::simulate (cpu));
 }

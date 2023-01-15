@@ -59,10 +59,6 @@ namespace C64
 
 		Memory ();
 
-		/** To set the VICII view, useb by the VICII. */
-		void setVICIIView ()
-							{ _activeView = (_VICIIView == nullptr) ? (_VICIIView = lookForVICIIView ()) : _VICIIView; }
-
 		/** To activate the right subsets in the CPU view. */
 		virtual bool initialize () override;
 
@@ -71,8 +67,6 @@ namespace C64
 							{ return (dynamic_cast <MCHEmul::Stack*> (subset (_STACK_SUBSET))); }
 		virtual MCHEmul::MemoryView* lookForCPUView () override
 							{ return (view (_CPU_VIEW)); }
-		MCHEmul::MemoryView* lookForVICIIView ()
-							{ return (view (_VICII_VIEW)); }
 
 		static MCHEmul::Memory::Content standardMemoryContent ();
 

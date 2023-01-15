@@ -40,7 +40,8 @@ bool C64::Commodore64::initialize (bool iM)
 		return (false);
 
 	// Both chips CIAII and VICII are link somehow (when the register 0 of the CIA2 = 0xdd00 is set e.g.)
-	dynamic_cast <C64::CIA2*> (chip (C64::CIA2::_ID)) -> _VICIIRef = dynamic_cast <C64::VICII*> (chip (C64::VICII::_ID));
+	dynamic_cast <C64::CIA2*> (chip (C64::CIA2::_ID)) -> _VICIIRef = 
+		dynamic_cast <COMMODORE::VICII*> (chip (COMMODORE::VICII::_ID));
 
 	return (true);
 }
@@ -60,12 +61,13 @@ MCHEmul::Chips C64::Commodore64::standardChips (C64::Commodore64::VisualSystem v
 
 	// The VicII created will depend on whether the visualization is PAL or NTSC...
 	// Some how it is also controlled by CIA II and Special Control Chip
-	result.insert (MCHEmul::Chips::value_type (VICII::_ID, 
+	result.insert (MCHEmul::Chips::value_type (COMMODORE::VICII::_ID, 
 		(MCHEmul::Chip*) ((vS == C64::Commodore64::VisualSystem::_NTSC) 
-			? (C64::VICII*) new C64::VICII_NTSC : (C64::VICII*) new C64::VICII_PAL)));
+			? (C64::VICII*) new COMMODORE::VICII_NTSC (C64::Memory::_VICII_VIEW) 
+			: (C64::VICII*) new COMMODORE::VICII_PAL (C64::Memory::_VICII_VIEW))));
 
 	// The SID
-	result.insert (MCHEmul::Chips::value_type (C64::SID::_ID, (MCHEmul::Chip*) new C64::SID));
+	result.insert (MCHEmul::Chips::value_type (COMMODORE::SID::_ID, (MCHEmul::Chip*) new COMMODORE::SID));
 
 	return (result);
 }

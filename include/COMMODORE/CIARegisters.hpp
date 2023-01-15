@@ -1,4 +1,4 @@
-/** \ingroup C64 */
+/** \ingroup COMMODORE */
 /*@{*/
 
 /**	
@@ -7,16 +7,16 @@
  *	Framework: CPU Emulators library \n
  *	Author: Ignacio Cea Forniés (EMULATORS library) \n
  *	Creation Date: 15/05/2021 \n
- *	Description: C64 CI 2 Registers Emulation
+ *	Description: CIA Registers Emulation
  *	Versions: 1.0 Initial
  */
 
-#ifndef __C64_CIAREGISTERS__
-#define __C64_CIAREGISTERS__
+#ifndef __COMMODORE_CIAREGISTERS__
+#define __COMMODORE_CIAREGISTERS__
 
 #include <CORE/incs.hpp>
 
-namespace C64
+namespace COMMODORE
 {
 	class CIA;
 	class CIATimer;
@@ -41,7 +41,7 @@ namespace C64
 		virtual const MCHEmul::UByte& readValue (size_t p) const override;
 
 		// Implementation
-		void initializeInternalValues ();
+		virtual void initializeInternalValues ();
 
 		// This methods are invoked from CIA chip...
 		/** The registers will observe also the timers. */

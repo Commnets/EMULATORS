@@ -1,7 +1,7 @@
-#include <C64/CIAClock.hpp>
+#include <COMMODORE/CIAClock.hpp>
 
 // ---
-void C64::CIAClock::initialize ()
+void COMMODORE::CIAClock::initialize ()
 {
 	_InterruptEnabled = false;
 
@@ -20,7 +20,7 @@ void C64::CIAClock::initialize ()
 }
 
 // ---
-void C64::CIAClock::simulate (MCHEmul::CPU* cpu)
+void COMMODORE::CIAClock::simulate (MCHEmul::CPU* cpu)
 {
 	assert (cpu != nullptr); 
 
@@ -46,7 +46,7 @@ void C64::CIAClock::simulate (MCHEmul::CPU* cpu)
 }
 
 // ---
-MCHEmul::InfoStructure C64::CIAClock::getInfoStructure () const
+MCHEmul::InfoStructure COMMODORE::CIAClock::getInfoStructure () const
 {
 	MCHEmul::InfoStructure result;
 
@@ -64,7 +64,7 @@ MCHEmul::InfoStructure C64::CIAClock::getInfoStructure () const
 }
 
 // ---
-void C64::CIAClock::actualizeTime () 
+void COMMODORE::CIAClock::actualizeTime () 
 {
 	_time += MCHEmul::_TENTHSSECONDPAST; // Actualize the timer...
 	if (_time.time_since_epoch ().count () >= 864000 /** Max tenth of second in a day. */)

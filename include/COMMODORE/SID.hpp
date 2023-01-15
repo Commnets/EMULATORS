@@ -1,4 +1,4 @@
-/** \ingroup C64 */
+/** \ingroup COMMODORE */
 /*@{*/
 
 /**	
@@ -7,17 +7,17 @@
  *	Framework: CPU Emulators library \n
  *	Author: Ignacio Cea Forniés (EMULATORS library) \n
  *	Creation Date: 13/01/2023 \n
- *	Description: The SID Chip.
+ *	Description: SID Chip Emulation.
  *	Versions: 1.0 Initial
  */
 
-#ifndef __C64_SID__
-#define __C64_SID__
+#ifndef __COMMODORE_SID__
+#define __COMMODORE_SID__
 
 #include <CORE/incs.hpp>
-#include <C64/SIDRegisters.hpp>
+#include <COMMODORE/SIDRegisters.hpp>
 
-namespace C64
+namespace COMMODORE
 {
 	/** The chip is to produce the sound. */
 	class SID : public MCHEmul::Chip
@@ -41,7 +41,7 @@ namespace C64
 		virtual MCHEmul::InfoStructure getInfoStructure () const override;
 
 		private:
-		C64::SIDRegisters* _SIDRegisters;
+		SIDRegisters* _SIDRegisters;
 	};
 }
 

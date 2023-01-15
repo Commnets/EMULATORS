@@ -15,7 +15,7 @@
 #define __C64_SOUND__
 
 #include <CORE/incs.hpp>
-#include <C64/SID.hpp>
+#include <COMMODORE/incs.hpp>
 
 namespace C64
 {

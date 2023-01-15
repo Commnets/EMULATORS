@@ -1,8 +1,7 @@
-#include <C64/VICIIRegisters.hpp>
-#include <C64/C64.hpp>
+#include <COMMODORE/VICIIRegisters.hpp>
 
 // ---
-C64::VICIIRegisters::VICIIRegisters (MCHEmul::PhysicalStorage* ps, size_t pp, const MCHEmul::Address& a, size_t s)
+COMMODORE::VICIIRegisters::VICIIRegisters (MCHEmul::PhysicalStorage* ps, size_t pp, const MCHEmul::Address& a, size_t s)
 	: MCHEmul::ChipRegisters (_VICREGS_SUBSET, ps, pp, a, s),
 	  _lastValueRead (MCHEmul::PhysicalStorage::_DEFAULTVALUE),
 	  _backgroundColor (4, 0x00),
@@ -22,7 +21,7 @@ C64::VICIIRegisters::VICIIRegisters (MCHEmul::PhysicalStorage* ps, size_t pp, co
 
 
 // ---
-void C64::VICIIRegisters::initialize ()
+void COMMODORE::VICIIRegisters::initialize ()
 {
 	MCHEmul::PhysicalStorageSubset::initialize ();
 
@@ -30,7 +29,7 @@ void C64::VICIIRegisters::initialize ()
 }
 
 // ---
-MCHEmul::InfoStructure C64::VICIIRegisters::getInfoStructure () const
+MCHEmul::InfoStructure COMMODORE::VICIIRegisters::getInfoStructure () const
 {
 	MCHEmul::InfoStructure result = MCHEmul::ChipRegisters::getInfoStructure ();
 
@@ -42,7 +41,7 @@ MCHEmul::InfoStructure C64::VICIIRegisters::getInfoStructure () const
 }
 
 // ---
-void C64::VICIIRegisters::setValue (size_t p, const MCHEmul::UByte& v)
+void COMMODORE::VICIIRegisters::setValue (size_t p, const MCHEmul::UByte& v)
 {
 	MCHEmul::PhysicalStorageSubset::setValue (p, v);
 
@@ -291,7 +290,7 @@ void C64::VICIIRegisters::setValue (size_t p, const MCHEmul::UByte& v)
 }       
 
 // ---
-const MCHEmul::UByte& C64::VICIIRegisters::readValue (size_t p) const
+const MCHEmul::UByte& COMMODORE::VICIIRegisters::readValue (size_t p) const
 {
 	MCHEmul::UByte result = MCHEmul::PhysicalStorage::_DEFAULTVALUE;
 
@@ -475,7 +474,7 @@ const MCHEmul::UByte& C64::VICIIRegisters::readValue (size_t p) const
 }
 
 // ---
-void C64::VICIIRegisters::initializeInternalValues ()
+void COMMODORE::VICIIRegisters::initializeInternalValues ()
 {
 	// The internal variables are initialized direcly throught the data in the register...
 
@@ -586,26 +585,26 @@ void C64::VICIIRegisters::initializeInternalValues ()
 }
 
 // ---
-void C64::VICIIRegisters::setGraphicModeActive ()
+void COMMODORE::VICIIRegisters::setGraphicModeActive ()
 {
-	_graphicModeActive = C64::VICIIRegisters::GraphicMode::_INVALIDBITMAPMODE2; // All on...
+	_graphicModeActive = COMMODORE::VICIIRegisters::GraphicMode::_INVALIDBITMAPMODE2; // All on...
 
 	if (!graphicExtendedColorTextModeActive () && !graphicBitModeActive () && !graphicMulticolorTextModeActive ())
-		_graphicModeActive = C64::VICIIRegisters::GraphicMode::_CHARMODE;
+		_graphicModeActive = COMMODORE::VICIIRegisters::GraphicMode::_CHARMODE;
 	else if (!graphicExtendedColorTextModeActive () && !graphicBitModeActive () && graphicMulticolorTextModeActive ())
-		_graphicModeActive = C64::VICIIRegisters::GraphicMode::_MULTICOLORCHARMODE;
+		_graphicModeActive = COMMODORE::VICIIRegisters::GraphicMode::_MULTICOLORCHARMODE;
 	else if (!graphicExtendedColorTextModeActive () && graphicBitModeActive () && !graphicMulticolorTextModeActive ())
-		_graphicModeActive = C64::VICIIRegisters::GraphicMode::_BITMAPMODE;
+		_graphicModeActive = COMMODORE::VICIIRegisters::GraphicMode::_BITMAPMODE;
 	else if (!graphicExtendedColorTextModeActive () && graphicBitModeActive () && graphicMulticolorTextModeActive ())
-		_graphicModeActive = C64::VICIIRegisters::GraphicMode::_MULTICOLORBITMAPMODE;
+		_graphicModeActive = COMMODORE::VICIIRegisters::GraphicMode::_MULTICOLORBITMAPMODE;
 	else if (graphicExtendedColorTextModeActive () && !graphicBitModeActive () && !graphicMulticolorTextModeActive ())
-		_graphicModeActive = C64::VICIIRegisters::GraphicMode::_EXTENDEDBACKGROUNDMODE;
+		_graphicModeActive = COMMODORE::VICIIRegisters::GraphicMode::_EXTENDEDBACKGROUNDMODE;
 	else if (graphicExtendedColorTextModeActive () && !graphicBitModeActive () && graphicMulticolorTextModeActive ())
-		_graphicModeActive = C64::VICIIRegisters::GraphicMode::_INVALIDTEXMODE;
+		_graphicModeActive = COMMODORE::VICIIRegisters::GraphicMode::_INVALIDTEXMODE;
 	else if (graphicExtendedColorTextModeActive () && graphicBitModeActive () && !graphicMulticolorTextModeActive ())
-		_graphicModeActive = C64::VICIIRegisters::GraphicMode::_INVALIDBITMAPMODE1;
+		_graphicModeActive = COMMODORE::VICIIRegisters::GraphicMode::_INVALIDBITMAPMODE1;
 
-	_textMode = (_graphicModeActive == C64::VICIIRegisters::GraphicMode::_CHARMODE ||
-				 _graphicModeActive == C64::VICIIRegisters::GraphicMode::_MULTICOLORCHARMODE ||
-				 _graphicModeActive == C64::VICIIRegisters::GraphicMode::_EXTENDEDBACKGROUNDMODE);
+	_textMode = (_graphicModeActive == COMMODORE::VICIIRegisters::GraphicMode::_CHARMODE ||
+				 _graphicModeActive == COMMODORE::VICIIRegisters::GraphicMode::_MULTICOLORCHARMODE ||
+				 _graphicModeActive == COMMODORE::VICIIRegisters::GraphicMode::_EXTENDEDBACKGROUNDMODE);
 }

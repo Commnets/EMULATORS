@@ -40,16 +40,41 @@
     <Filter Include="Configuration">
       <UniqueIdentifier>{1eaeac70-e938-4788-ba4d-ed6fd48a96e8}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Archivos de origen\Motherboard\Chips">
+      <UniqueIdentifier>{255eaa9e-4e81-413b-8f41-0273641dba27}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Archivos de encabezado\Motherboard\Chips">
+      <UniqueIdentifier>{db115a70-0313-4120-8877-d3760be107ca}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\include\COMMODORE\incs.hpp">
       <Filter>Archivos de encabezado</Filter>
     </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="..\..\src\COMMODORE\Blank.cpp">
-      <Filter>Archivos de origen</Filter>
-    </ClCompile>
+    <ClInclude Include="..\..\include\COMMODORE\CIA.hpp">
+      <Filter>Archivos de encabezado\Motherboard\Chips</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\COMMODORE\CIAClock.hpp">
+      <Filter>Archivos de encabezado\Motherboard\Chips</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\COMMODORE\CIARegisters.hpp">
+      <Filter>Archivos de encabezado\Motherboard\Chips</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\COMMODORE\CIATimer.hpp">
+      <Filter>Archivos de encabezado\Motherboard\Chips</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\COMMODORE\SID.hpp">
+      <Filter>Archivos de encabezado\Motherboard\Chips</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\COMMODORE\SIDRegisters.hpp">
+      <Filter>Archivos de encabezado\Motherboard\Chips</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\COMMODORE\VICII.hpp">
+      <Filter>Archivos de encabezado\Motherboard\Chips</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\COMMODORE\VICIIRegisters.hpp">
+      <Filter>Archivos de encabezado\Motherboard\Chips</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Commodore.fmt">
@@ -58,5 +83,31 @@
     <None Include="Commodore.hlp">
       <Filter>Configuration</Filter>
     </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\src\COMMODORE\CIA.cpp">
+      <Filter>Archivos de origen\Motherboard\Chips</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\COMMODORE\CIAClock.cpp">
+      <Filter>Archivos de origen\Motherboard\Chips</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\COMMODORE\CIARegisters.cpp">
+      <Filter>Archivos de origen\Motherboard\Chips</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\COMMODORE\CIATimer.cpp">
+      <Filter>Archivos de origen\Motherboard\Chips</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\COMMODORE\SID.cpp">
+      <Filter>Archivos de origen\Motherboard\Chips</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\COMMODORE\SIDRegisters.cpp">
+      <Filter>Archivos de origen\Motherboard\Chips</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\COMMODORE\VICII.cpp">
+      <Filter>Archivos de origen\Motherboard\Chips</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\COMMODORE\VICIIRegisters.cpp">
+      <Filter>Archivos de origen\Motherboard\Chips</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

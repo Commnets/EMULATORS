@@ -14,9 +14,9 @@
 #ifndef __C64_CIA2__
 #define __C64_CIA2__
 
-#include <C64/CIA.hpp>
+#include <CORE/incs.hpp>
+#include <COMMODORE/incs.hpp>
 #include <C64/CIA2Registers.hpp>
-#include <F6500/NMIInterrupt.hpp>
 
 namespace C64
 {
@@ -24,7 +24,7 @@ namespace C64
 	class Commodore64;
 
 	/** The chip is to communicate the C64 with the environment. */
-	class CIA2 final : public CIA
+	class CIA2 final : public COMMODORE::CIA
 	{
 		public:
 		friend Commodore64;
@@ -44,7 +44,7 @@ namespace C64
 		private:
 		C64::CIA2Registers* _CIA2Registers;
 		/** Set directly by Commodore 64. */
-		VICII* _VICIIRef;
+		COMMODORE::VICII* _VICIIRef;
 	};
 }
 

@@ -1,4 +1,4 @@
-/** \ingroup C64 */
+/** \ingroup COMMODORE */
 /*@{*/
 
 /**	
@@ -11,15 +11,15 @@
  *	Versions: 1.0 Initial
  */
 
-#ifndef __C64_CIA__
-#define __C64_CIA__
+#ifndef __COMMODORE_CIA__
+#define __COMMODORE_CIA__
 
 #include <CORE/incs.hpp>
-#include <C64/CIARegisters.hpp>
-#include <C64/CIATimer.hpp>
-#include <C64/CIAClock.hpp>
+#include <COMMODORE/CIARegisters.hpp>
+#include <COMMODORE/CIATimer.hpp>
+#include <COMMODORE/CIAClock.hpp>
 
-namespace C64
+namespace COMMODORE
 {
 	/** The chip is a I/O Chip, with different uses. */
 	class CIA : public MCHEmul::Chip
@@ -56,7 +56,7 @@ namespace C64
 		virtual MCHEmul::InfoStructure getInfoStructure () const override;
 
 		protected:
-		C64::CIARegisters* _CIARegisters;
+		CIARegisters* _CIARegisters;
 		const int _registersId;
 		CIATimer _timerA, _timerB;
 		CIAClock _clock;

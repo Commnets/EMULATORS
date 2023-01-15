@@ -48,9 +48,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\include\C64\VICII.hpp">
-      <Filter>Archivos de encabezado\Motherboard\Chips</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\include\C64\incs.hpp">
       <Filter>Archivos de encabezado</Filter>
     </ClInclude>
@@ -65,9 +62,6 @@
     </ClInclude>
     <ClInclude Include="..\..\include\C64\OSIO.hpp">
       <Filter>Archivos de encabezado\IO</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\include\C64\VICIIRegisters.hpp">
-      <Filter>Archivos de encabezado\Motherboard\Chips</Filter>
     </ClInclude>
     <ClInclude Include="..\..\include\C64\ColorMemory.hpp">
       <Filter>Archivos de encabezado\Motherboard</Filter>
@@ -85,12 +79,6 @@
       <Filter>Archivos de encabezado\Motherboard\Chips</Filter>
     </ClInclude>
     <ClInclude Include="..\..\include\C64\CIA1Registers.hpp">
-      <Filter>Archivos de encabezado\Motherboard\Chips</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\include\C64\CIATimer.hpp">
-      <Filter>Archivos de encabezado\Motherboard\Chips</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\include\C64\CIAClock.hpp">
       <Filter>Archivos de encabezado\Motherboard\Chips</Filter>
     </ClInclude>
     <ClInclude Include="..\..\include\C64\UserPort.hpp">
@@ -114,23 +102,8 @@
     <ClInclude Include="..\..\include\C64\Sound.hpp">
       <Filter>Archivos de encabezado\IO</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\include\C64\SID.hpp">
-      <Filter>Archivos de encabezado\Motherboard\Chips</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\include\C64\SIDRegisters.hpp">
-      <Filter>Archivos de encabezado\Motherboard\Chips</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\include\C64\CIA.hpp">
-      <Filter>Archivos de encabezado\Motherboard\Chips</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\include\C64\CIARegisters.hpp">
-      <Filter>Archivos de encabezado\Motherboard\Chips</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\src\C64\VICII.cpp">
-      <Filter>Archivos de origen\Motherboard\Chips</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\C64\Screen.cpp">
       <Filter>Archivos de origen\IO</Filter>
     </ClCompile>
@@ -139,9 +112,6 @@
     </ClCompile>
     <ClCompile Include="..\..\src\C64\OSIO.cpp">
       <Filter>Archivos de origen\IO</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\C64\VICIIRegisters.cpp">
-      <Filter>Archivos de origen\Motherboard\Chips</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\C64\Memory.cpp">
       <Filter>Archivos de origen\Motherboard</Filter>
@@ -159,12 +129,6 @@
       <Filter>Archivos de origen\Motherboard\Chips</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\C64\CIA2Registers.cpp">
-      <Filter>Archivos de origen\Motherboard\Chips</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\C64\CIATimer.cpp">
-      <Filter>Archivos de origen\Motherboard\Chips</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\C64\CIAClock.cpp">
       <Filter>Archivos de origen\Motherboard\Chips</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\C64\UserPort.cpp">
@@ -187,18 +151,6 @@
     </ClCompile>
     <ClCompile Include="..\..\src\C64\Sound.cpp">
       <Filter>Archivos de origen\IO</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\C64\SID.cpp">
-      <Filter>Archivos de origen\Motherboard\Chips</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\C64\SIDRegisters.cpp">
-      <Filter>Archivos de origen\Motherboard\Chips</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\C64\CIA.cpp">
-      <Filter>Archivos de origen\Motherboard\Chips</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\C64\CIARegisters.cpp">
-      <Filter>Archivos de origen\Motherboard\Chips</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

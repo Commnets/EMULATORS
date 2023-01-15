@@ -1,4 +1,4 @@
-/** \ingroup C64 */
+/** \ingroup COMMODORE */
 /*@{*/
 
 /**	
@@ -7,16 +7,16 @@
  *	Framework: CPU Emulators library \n
  *	Author: Ignacio Cea Forniés (EMULATORS library) \n
  *	Creation Date: 05/08/2021 \n
- *	Description: Any CIA Chip manages Timers
+ *	Description: CIA Chip manages Timers.
  *	Versions: 1.0 Initial
  */
 
-#ifndef __C64_CIATIMER__
-#define __C64_CIATIMER__
+#ifndef __COMMODORE_CIATIMER__
+#define __COMMODORE_CIATIMER__
 
 #include <CORE/incs.hpp>
 
-namespace C64
+namespace COMMODORE
 {
 	class CIATimer : public MCHEmul::InfoClass
 	{

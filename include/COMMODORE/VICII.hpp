@@ -1,4 +1,4 @@
-/** \ingroup VICII */
+/** \ingroup COMMODORE */
 /*@{*/
 
 /**	
@@ -12,13 +12,13 @@
  *	Based on https://www.cebix.net/VIC-Article.txt.
  */
 
-#ifndef __C64_VICII__
-#define __C64_VICII__
+#ifndef __COMMODORE_VICII__
+#define __COMMODORE_VICII__
 
 #include <CORE/incs.hpp>
-#include <C64/VICIIRegisters.hpp>
+#include <COMMODORE/VICIIRegisters.hpp>
 
-namespace C64
+namespace COMMODORE
 {
 	/** The chip that takes care of anything around the graphics in Commodore 64. @see GraphicalChip. */
 	class VICII : public MCHEmul::GraphicalChip
@@ -42,8 +42,10 @@ namespace C64
 		/** Static address. The color memory cann't be changed. */
 		static const MCHEmul::Address _COLORMEMORY;
 
-		/** Specific classes for PAL & NTSC have been created giving this data as default. */
-		VICII (const MCHEmul::RasterData& vd, const MCHEmul::RasterData& hd, const MCHEmul::Attributes& attrs = { });
+		/** Specific classes for PAL & NTSC have been created giving this data as default. \n
+			The VICII constructor receives info over the raster data, the memory view to use and additional attributes. */
+		VICII (const MCHEmul::RasterData& vd, const MCHEmul::RasterData& hd, 
+			int vV, const MCHEmul::Attributes& attrs = { });
 
 		virtual ~VICII () override;
 
@@ -149,7 +151,9 @@ namespace C64
 
 		private:
 		/** The memory is used also as the set of registers of the chip. */
-		C64::VICIIRegisters* _VICIIRegisters;
+		COMMODORE::VICIIRegisters* _VICIIRegisters;
+		/** The number of the memory view used to read the data. */
+		int _VICIIView;
 		/** The raster. */
 		MCHEmul::Raster _raster;
 		/** To draw or nor the border between the background and the foreground. */
@@ -250,7 +254,7 @@ namespace C64
 		static const MCHEmul::RasterData _VRASTERDATA;
 		static const MCHEmul::RasterData _HRASTERDATA;
 
-		VICII_NTSC ();
+		VICII_NTSC (int vV);
 	};
 
 	/** The version para PAL systems. */
@@ -260,7 +264,7 @@ namespace C64
 		static const MCHEmul::RasterData _VRASTERDATA;
 		static const MCHEmul::RasterData _HRASTERDATA;
 
-		VICII_PAL ();
+		VICII_PAL (int vV);
 	};
 }
 

@@ -15,9 +15,8 @@
 #define __C64_CIA1__
 
 #include <CORE/incs.hpp>
-#include <C64/CIA.hpp>
+#include <COMMODORE/incs.hpp>
 #include <C64/CIA1Registers.hpp>
-#include <F6500/IRQInterrupt.hpp>
 
 namespace C64
 {
@@ -25,7 +24,7 @@ namespace C64
 
 	/** CIA1 is mainly to communicate C64 with external devices.
 		Additionaly it is also used to read the keyboard and the joysticks. */
-	class CIA1 final : public CIA
+	class CIA1 final : public COMMODORE::CIA
 	{
 		public:
 		friend InputOSSystem;

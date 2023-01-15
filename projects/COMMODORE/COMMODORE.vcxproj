@@ -19,10 +19,15 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\include\COMMODORE\CIA.hpp" />
+    <ClInclude Include="..\..\include\COMMODORE\CIAClock.hpp" />
+    <ClInclude Include="..\..\include\COMMODORE\CIARegisters.hpp" />
+    <ClInclude Include="..\..\include\COMMODORE\CIATimer.hpp" />
     <ClInclude Include="..\..\include\COMMODORE\incs.hpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="..\..\src\COMMODORE\Blank.cpp" />
+    <ClInclude Include="..\..\include\COMMODORE\SID.hpp" />
+    <ClInclude Include="..\..\include\COMMODORE\SIDRegisters.hpp" />
+    <ClInclude Include="..\..\include\COMMODORE\VICII.hpp" />
+    <ClInclude Include="..\..\include\COMMODORE\VICIIRegisters.hpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Commodore.fmt">
@@ -37,6 +42,16 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\src\COMMODORE\CIA.cpp" />
+    <ClCompile Include="..\..\src\COMMODORE\CIAClock.cpp" />
+    <ClCompile Include="..\..\src\COMMODORE\CIARegisters.cpp" />
+    <ClCompile Include="..\..\src\COMMODORE\CIATimer.cpp" />
+    <ClCompile Include="..\..\src\COMMODORE\SID.cpp" />
+    <ClCompile Include="..\..\src\COMMODORE\SIDRegisters.cpp" />
+    <ClCompile Include="..\..\src\COMMODORE\VICII.cpp" />
+    <ClCompile Include="..\..\src\COMMODORE\VICIIRegisters.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>

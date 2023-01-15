@@ -1,20 +1,19 @@
-#include <C64/VICII.hpp>
-#include <C64/C64.hpp>
-#include <C64/Memory.hpp>
-#include <F6500/incs.hpp>
+#include <COMMODORE/VICII.hpp>
+#include <F6500/IRQInterrupt.hpp>
 
 // ---
-const MCHEmul::Address C64::VICII::_COLORMEMORY ({ 0x00, 0xd8 }, false);
-const MCHEmul::RasterData C64::VICII_NTSC::_VRASTERDATA (27, 41, 51, 250, 12, 26, 262, 4, 4);
-const MCHEmul::RasterData C64::VICII_NTSC::_HRASTERDATA (412, 488, 24, 343, 388, 411, 512, 7, 9);
-const MCHEmul::RasterData C64::VICII_PAL::_VRASTERDATA (0, 16, 51, 250, 299, 311, 312, 4, 4);
-const MCHEmul::RasterData C64::VICII_PAL::_HRASTERDATA (404, 480, 24, 343, 380, 403, 504, 7, 9);
+const MCHEmul::Address COMMODORE::VICII::_COLORMEMORY ({ 0x00, 0xd8 }, false);
+const MCHEmul::RasterData COMMODORE::VICII_NTSC::_VRASTERDATA (27, 41, 51, 250, 12, 26, 262, 4, 4);
+const MCHEmul::RasterData COMMODORE::VICII_NTSC::_HRASTERDATA (412, 488, 24, 343, 388, 411, 512, 7, 9);
+const MCHEmul::RasterData COMMODORE::VICII_PAL::_VRASTERDATA (0, 16, 51, 250, 299, 311, 312, 4, 4);
+const MCHEmul::RasterData COMMODORE::VICII_PAL::_HRASTERDATA (404, 480, 24, 343, 380, 403, 504, 7, 9);
 
 // ---
-C64::VICII::VICII (const MCHEmul::RasterData& vd, const MCHEmul::RasterData& hd, 
-		const MCHEmul::Attributes& attrs)
+COMMODORE::VICII::VICII (const MCHEmul::RasterData& vd, const MCHEmul::RasterData& hd, 
+		int vV, const MCHEmul::Attributes& attrs)
 	: MCHEmul::GraphicalChip (_ID, attrs),
 	  _VICIIRegisters (nullptr), 
+	  _VICIIView (vV),
 	  _raster (vd, hd),
 	  _drawBorder (false),
 	  _lastCPUCycles (0),
@@ -35,13 +34,13 @@ C64::VICII::VICII (const MCHEmul::RasterData& vd, const MCHEmul::RasterData& hd,
 }
 
 // ---
-C64::VICII::~VICII ()
+COMMODORE::VICII::~VICII ()
 {
 	SDL_FreeFormat (_format);
 }
 
 // ---
-bool C64::VICII::initialize ()
+bool COMMODORE::VICII::initialize ()
 {
 	assert (memoryRef () != nullptr);
 
@@ -50,7 +49,7 @@ bool C64::VICII::initialize ()
 
 	// Gets the memory block dedicated to the VICII
 	if (!(_VICIIRegisters = 
-		dynamic_cast <C64::VICIIRegisters*> (memoryRef () -> subset (C64::VICIIRegisters::_VICREGS_SUBSET))))
+		dynamic_cast <COMMODORE::VICIIRegisters*> (memoryRef () -> subset (COMMODORE::VICIIRegisters::_VICREGS_SUBSET))))
 	{
 		_error = MCHEmul::_INIT_ERROR;
 
@@ -78,7 +77,7 @@ bool C64::VICII::initialize ()
 }
 
 // ---
-bool C64::VICII::simulate (MCHEmul::CPU* cpu)
+bool COMMODORE::VICII::simulate (MCHEmul::CPU* cpu)
 {
 	// Notice that the bad line detection routine takes into account 
 	// the value of the YSCROLL register as the graphics information to be shown 
@@ -218,7 +217,7 @@ bool C64::VICII::simulate (MCHEmul::CPU* cpu)
 }
 
 // ---
-MCHEmul::InfoStructure C64::VICII::getInfoStructure () const
+MCHEmul::InfoStructure COMMODORE::VICII::getInfoStructure () const
 {
 	MCHEmul::InfoStructure result = MCHEmul::GraphicalChip::getInfoStructure ();
 
@@ -230,11 +229,11 @@ MCHEmul::InfoStructure C64::VICII::getInfoStructure () const
 }
 
 // ---
-void C64::VICII::readGraphicsInfoAt (unsigned short gl)
+void COMMODORE::VICII::readGraphicsInfoAt (unsigned short gl)
 {
 	unsigned short chrLine = gl >> 3;
 
-	dynamic_cast <C64::Memory*> (memoryRef ()) -> setVICIIView ();
+	memoryRef () -> setActiveView (_VICIIView);
 
 	// In real VIC II color is read at the same time than the graphics data
 	// The color memory is always at the same location (only visible from VICII)
@@ -249,11 +248,11 @@ void C64::VICII::readGraphicsInfoAt (unsigned short gl)
 	// Only data for active sprites is read
 	readSpriteData ();
 
-	dynamic_cast <C64::Memory*> (memoryRef ()) -> setCPUView ();
+	memoryRef () -> setCPUView ();
 }
 
 // ---
-void C64::VICII::drawGraphicsAndDetectCollisions (const C64::VICII::DrawContext& dC)
+void COMMODORE::VICII::drawGraphicsAndDetectCollisions (const COMMODORE::VICII::DrawContext& dC)
 {
 	// If no graphic has been loaded, it is not needed to continue...
 	if (_graphicsColorData.size () == 0)
@@ -300,35 +299,35 @@ void C64::VICII::drawGraphicsAndDetectCollisions (const C64::VICII::DrawContext&
 	MCHEmul::UByte colGraphics = MCHEmul::UByte::_0;
 	switch (_VICIIRegisters -> graphicModeActive ())
 	{
-		case C64::VICIIRegisters::GraphicMode::_CHARMODE:
+		case COMMODORE::VICIIRegisters::GraphicMode::_CHARMODE:
 			colGraphics = drawMonoColorChar (cb, rc, _graphicsCharData, _graphicsColorData, dC);
 			break;
 
-		case C64::VICIIRegisters::GraphicMode::_MULTICOLORCHARMODE:
+		case COMMODORE::VICIIRegisters::GraphicMode::_MULTICOLORCHARMODE:
 			colGraphics = drawMultiColorChar (cb, rc, _graphicsCharData, _graphicsColorData, dC);
 			break;
 
-		case C64::VICIIRegisters::GraphicMode::_EXTENDEDBACKGROUNDMODE:
+		case COMMODORE::VICIIRegisters::GraphicMode::_EXTENDEDBACKGROUNDMODE:
 			colGraphics = drawMultiColorExtendedChar (cb, rc, _graphicsScreenCodeData, _graphicsCharData, _graphicsColorData, dC);
 			break;
 
-		case C64::VICIIRegisters::GraphicMode::_BITMAPMODE:
+		case COMMODORE::VICIIRegisters::GraphicMode::_BITMAPMODE:
 			colGraphics = drawMonoColorBitMap (cb, rc, _graphicsScreenCodeData, _graphicsBitmapData, dC);
 			break;
 
-		case C64::VICIIRegisters::GraphicMode::_MULTICOLORBITMAPMODE:
+		case COMMODORE::VICIIRegisters::GraphicMode::_MULTICOLORBITMAPMODE:
 			colGraphics = drawMultiColorBitMap (cb, rc, _graphicsScreenCodeData, _graphicsBitmapData, _graphicsColorData, dC);
 			break;
 
-		case C64::VICIIRegisters::GraphicMode::_INVALIDTEXMODE:
+		case COMMODORE::VICIIRegisters::GraphicMode::_INVALIDTEXMODE:
 			colGraphics = drawMultiColorChar (cb, rc, _graphicsCharData, _graphicsColorData, dC, true /** everything black. */);
 			break;
 
-		case C64::VICIIRegisters::GraphicMode::_INVALIDBITMAPMODE1:
+		case COMMODORE::VICIIRegisters::GraphicMode::_INVALIDBITMAPMODE1:
 			colGraphics = drawMonoColorBitMap (cb, rc, _graphicsScreenCodeData, _graphicsBitmapData, dC, true /** everything black. */);
 			break;
 
-		case C64::VICIIRegisters::GraphicMode::_INVALIDBITMAPMODE2:
+		case COMMODORE::VICIIRegisters::GraphicMode::_INVALIDBITMAPMODE2:
 			colGraphics = drawMultiColorBitMap 
 				(cb, rc, _graphicsScreenCodeData, _graphicsBitmapData, _graphicsColorData, dC, true /* everything black. */);
 			break;
@@ -376,7 +375,7 @@ void C64::VICII::drawGraphicsAndDetectCollisions (const C64::VICII::DrawContext&
 }
 
 // ---
-MCHEmul::ScreenMemory* C64::VICII::createScreenMemory ()
+MCHEmul::ScreenMemory* COMMODORE::VICII::createScreenMemory ()
 {
 	unsigned int* cP = new unsigned int [16];
 	cP [0]  = SDL_MapRGB (_format, 0x00, 0x00, 0x00); // Black
@@ -400,8 +399,8 @@ MCHEmul::ScreenMemory* C64::VICII::createScreenMemory ()
 }
 
 // ---
-MCHEmul::UByte C64::VICII::drawMonoColorChar (int cb, int r,
-	const MCHEmul::UBytes& bt, const MCHEmul::UBytes& clr, const C64::VICII::DrawContext& dC)
+MCHEmul::UByte COMMODORE::VICII::drawMonoColorChar (int cb, int r,
+	const MCHEmul::UBytes& bt, const MCHEmul::UBytes& clr, const COMMODORE::VICII::DrawContext& dC)
 {
 	MCHEmul::UByte result = MCHEmul::UByte::_0;
 
@@ -427,8 +426,8 @@ MCHEmul::UByte C64::VICII::drawMonoColorChar (int cb, int r,
 }
 
 // ---
-MCHEmul::UByte C64::VICII::drawMultiColorChar (int cb, int r,
-	const MCHEmul::UBytes& bt, const MCHEmul::UBytes& clr, const C64::VICII::DrawContext& dC, bool blk)
+MCHEmul::UByte COMMODORE::VICII::drawMultiColorChar (int cb, int r,
+	const MCHEmul::UBytes& bt, const MCHEmul::UBytes& clr, const COMMODORE::VICII::DrawContext& dC, bool blk)
 {
 	MCHEmul::UByte result = MCHEmul::UByte::_0;
 
@@ -488,8 +487,8 @@ MCHEmul::UByte C64::VICII::drawMultiColorChar (int cb, int r,
 }
 
 // ---
-MCHEmul::UByte C64::VICII::drawMultiColorExtendedChar (int cb, int r,
-	const MCHEmul::UBytes& sc, const MCHEmul::UBytes& bt, const MCHEmul::UBytes& clr, const C64::VICII::DrawContext& dC)
+MCHEmul::UByte COMMODORE::VICII::drawMultiColorExtendedChar (int cb, int r,
+	const MCHEmul::UBytes& sc, const MCHEmul::UBytes& bt, const MCHEmul::UBytes& clr, const COMMODORE::VICII::DrawContext& dC)
 {
 	MCHEmul::UByte result = MCHEmul::UByte::_0;
 
@@ -515,8 +514,8 @@ MCHEmul::UByte C64::VICII::drawMultiColorExtendedChar (int cb, int r,
 }
 
 // ---
-MCHEmul::UByte C64::VICII::drawMonoColorBitMap (int cb, int r,
-	const MCHEmul::UBytes& sc, const MCHEmul::UBytes& bt, const C64::VICII::DrawContext& dC, bool blk)
+MCHEmul::UByte COMMODORE::VICII::drawMonoColorBitMap (int cb, int r,
+	const MCHEmul::UBytes& sc, const MCHEmul::UBytes& bt, const COMMODORE::VICII::DrawContext& dC, bool blk)
 {
 	MCHEmul::UByte result = MCHEmul::UByte::_0;
 
@@ -546,8 +545,8 @@ MCHEmul::UByte C64::VICII::drawMonoColorBitMap (int cb, int r,
 }
 
 // ---
-MCHEmul::UByte C64::VICII::drawMultiColorBitMap (int cb, int r,
-	const MCHEmul::UBytes& sc, const MCHEmul::UBytes& bt, const MCHEmul::UBytes& clr, const C64::VICII::DrawContext& dC, bool blk)
+MCHEmul::UByte COMMODORE::VICII::drawMultiColorBitMap (int cb, int r,
+	const MCHEmul::UBytes& sc, const MCHEmul::UBytes& bt, const MCHEmul::UBytes& clr, const COMMODORE::VICII::DrawContext& dC, bool blk)
 {
 	MCHEmul::UByte result = MCHEmul::UByte::_0;
 
@@ -592,7 +591,7 @@ MCHEmul::UByte C64::VICII::drawMultiColorBitMap (int cb, int r,
 }
 
 // ---
-MCHEmul::UByte C64::VICII::drawMonoColorSprite (int c, int r, size_t spr, const DrawContext& dC)
+MCHEmul::UByte COMMODORE::VICII::drawMonoColorSprite (int c, int r, size_t spr, const DrawContext& dC)
 {
 	MCHEmul::UByte result = MCHEmul::UByte::_0;
 
@@ -650,7 +649,7 @@ MCHEmul::UByte C64::VICII::drawMonoColorSprite (int c, int r, size_t spr, const 
 }
 
 // ---
-MCHEmul::UByte C64::VICII::drawMultiColorSprite (int c, int r, size_t spr, const DrawContext& dC)
+MCHEmul::UByte COMMODORE::VICII::drawMultiColorSprite (int c, int r, size_t spr, const DrawContext& dC)
 {
 	MCHEmul::UByte result = MCHEmul::UByte::_0;
 
@@ -709,9 +708,9 @@ MCHEmul::UByte C64::VICII::drawMultiColorSprite (int c, int r, size_t spr, const
 }
 
 // ---
-C64::VICII_NTSC::VICII_NTSC ()
-	: C64::VICII (
-		 _VRASTERDATA, _HRASTERDATA,
+COMMODORE::VICII_NTSC::VICII_NTSC (int vV)
+	: COMMODORE::VICII (
+		 _VRASTERDATA, _HRASTERDATA, vV,
 		 { { "Name", "VIC-II (NTSC) Video Chip Interface II" },
 		   { "Code", "6567/8562/8564" },
 		   { "Manufacturer", "MOS Technology INC/Commodore Semiconductor Group (CBM)"},
@@ -721,9 +720,9 @@ C64::VICII_NTSC::VICII_NTSC ()
 }
 
 // ---
-C64::VICII_PAL::VICII_PAL ()
-	: C64::VICII (
-		 _VRASTERDATA, _HRASTERDATA,
+COMMODORE::VICII_PAL::VICII_PAL (int vV)
+	: COMMODORE::VICII (
+		 _VRASTERDATA, _HRASTERDATA, vV,
 		 { { "Name", "VIC-II (PAL) Video Chip Interface II" },
 		   { "Code", "6569/8565/8566" },
 		   { "Manufacturer", "MOS Technology INC/Commodore Semiconductor Group (CBM)"},

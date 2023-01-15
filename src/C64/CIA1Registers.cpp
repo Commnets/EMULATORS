@@ -2,7 +2,7 @@
 
 // ---
 C64::CIA1Registers::CIA1Registers (MCHEmul::PhysicalStorage* ps, size_t pp, const MCHEmul::Address& a, size_t s)
-	: C64::CIARegisters (_CIA1_SUBSET, ps, pp, a, s)
+	: COMMODORE::CIARegisters (_CIA1_SUBSET, ps, pp, a, s)
 	  // At this point all internal variables will have random values...
 { 
 	setClassName ("CIA1Registers");
@@ -13,7 +13,7 @@ C64::CIA1Registers::CIA1Registers (MCHEmul::PhysicalStorage* ps, size_t pp, cons
 // ---
 void C64::CIA1Registers::setValue (size_t p, const MCHEmul::UByte& v)
 {
-	C64::CIARegisters::setValue (p, v);
+	COMMODORE::CIARegisters::setValue (p, v);
 
 	size_t pp = p % 0x10;
 
@@ -88,7 +88,7 @@ const MCHEmul::UByte& C64::CIA1Registers::readValue (size_t p) const
 			break;
 			
 		default:
-			result = CIARegisters::readValue (pp);
+			result = COMMODORE::CIARegisters::readValue (pp);
 			break;
 	}
 
@@ -98,7 +98,7 @@ const MCHEmul::UByte& C64::CIA1Registers::readValue (size_t p) const
 // ---
 void C64::CIA1Registers::initializeInternalValues ()
 {
-	C64::CIARegisters::initializeInternalValues ();
+	COMMODORE::CIARegisters::initializeInternalValues ();
 
 	// Data Port A all input...
 	setValue (0x02, MCHEmul::UByte::_FF); 

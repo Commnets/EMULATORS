@@ -1,4 +1,4 @@
-/** \ingroup C64 */
+/** \ingroup COMMODORE */
 /*@{*/
 
 /**	
@@ -7,16 +7,16 @@
  *	Framework: CPU Emulators library \n
  *	Author: Ignacio Cea Forniés (EMULATORS library) \n
  *	Creation Date: 07/08/2021 \n
- *	Description: Any CIA Chip manages a day clock
+ *	Description: CIA Chip manages a day clock.
  *	Versions: 1.0 Initial
  */
 
-#ifndef __C64_CIACLOCK__
-#define __C64_CIACLOCK__
+#ifndef __COMMODORE_CIACLOCK__
+#define __COMMODORE_CIACLOCK__
 
 #include <CORE/incs.hpp>
 
-namespace C64
+namespace COMMODORE
 {
 	class CIAClock final : public MCHEmul::InfoClass
 	{

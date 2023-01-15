@@ -1,4 +1,4 @@
-/** \ingroup C64 */
+/** \ingroup COMMODORE */
 /*@{*/
 
 /**	
@@ -12,12 +12,12 @@
  *	Based on https://www.cebix.net/VIC-Article.txt.
  */
 
-#ifndef __C64_VICIIREGISTERS__
-#define __C64_VICIIREGISTERS__
+#ifndef __COMMODORE_VICIIREGISTERS__
+#define __COMMODORE_VICIIREGISTERS__
 
 #include <CORE/incs.hpp>
 
-namespace C64
+namespace COMMODORE
 {
 	/** In the VICII Registers, 
 		there are a couple of records that behave different

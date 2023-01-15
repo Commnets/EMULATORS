@@ -1,9 +1,9 @@
-#include <C64/CIARegisters.hpp>
-#include <C64/CIATimer.hpp>
-#include <C64/CIAClock.hpp>
+#include <COMMODORE/CIARegisters.hpp>
+#include <COMMODORE/CIATimer.hpp>
+#include <COMMODORE/CIAClock.hpp>
 
 // ---
-C64::CIARegisters::CIARegisters (int id, MCHEmul::PhysicalStorage* ps, size_t pp, const MCHEmul::Address& a, size_t s)
+COMMODORE::CIARegisters::CIARegisters (int id, MCHEmul::PhysicalStorage* ps, size_t pp, const MCHEmul::Address& a, size_t s)
 	: MCHEmul::ChipRegisters (id, ps, pp, a, s),
 	  _timerA (nullptr), _timerB (nullptr),
 	  _lastValueRead (MCHEmul::PhysicalStorage::_DEFAULTVALUE)
@@ -15,7 +15,7 @@ C64::CIARegisters::CIARegisters (int id, MCHEmul::PhysicalStorage* ps, size_t pp
 }
 
 // ---
-void C64::CIARegisters::initialize ()
+void COMMODORE::CIARegisters::initialize ()
 {
 	MCHEmul::PhysicalStorageSubset::initialize ();
 
@@ -23,7 +23,7 @@ void C64::CIARegisters::initialize ()
 }
 
 // ---
-void C64::CIARegisters::setValue (size_t p, const MCHEmul::UByte& v)
+void COMMODORE::CIARegisters::setValue (size_t p, const MCHEmul::UByte& v)
 {
 	if (_timerA == nullptr || _timerB == nullptr || _clock == nullptr)
 		return;
@@ -147,7 +147,7 @@ void C64::CIARegisters::setValue (size_t p, const MCHEmul::UByte& v)
 				_timerA -> setRunMode (v.bit (3) ? CIATimer::RunMode::_ONETIME : CIATimer::RunMode::_RESTART);
 				if (v.bit (4)) _timerA -> reset ();
 				_timerA -> setCountMode (v.bit (5)
-					? C64::CIATimer::CountMode::_SIGNALSONCNTLINE : C64::CIATimer::CountMode::_PROCESSORCYCLES);
+					? COMMODORE::CIATimer::CountMode::_SIGNALSONCNTLINE : COMMODORE::CIATimer::CountMode::_PROCESSORCYCLES);
 			}
 
 			break;
@@ -159,7 +159,7 @@ void C64::CIARegisters::setValue (size_t p, const MCHEmul::UByte& v)
 				_timerB -> setRunMode (v.bit (3) ? CIATimer::RunMode::_ONETIME : CIATimer::RunMode::_RESTART);
 				if (v.bit (4)) _timerB -> reset ();
 				// bits 5 & 6 indicates the mode...
-				_timerB -> setCountMode ((C64::CIATimer::CountMode) ((v.value () >> 5) & 0x03));
+				_timerB -> setCountMode ((COMMODORE::CIATimer::CountMode) ((v.value () >> 5) & 0x03));
 			}
 
 			break;
@@ -170,7 +170,7 @@ void C64::CIARegisters::setValue (size_t p, const MCHEmul::UByte& v)
 }
 
 // ---
-const MCHEmul::UByte& C64::CIARegisters::readValue (size_t p) const
+const MCHEmul::UByte& COMMODORE::CIARegisters::readValue (size_t p) const
 {
 	if (_timerA == nullptr || _timerB == nullptr || _clock == nullptr)
 		return (MCHEmul::PhysicalStorage::_DEFAULTVALUE);
@@ -293,7 +293,7 @@ const MCHEmul::UByte& C64::CIARegisters::readValue (size_t p) const
 }
 
 // ---
-void C64::CIARegisters::initializeInternalValues ()
+void COMMODORE::CIARegisters::initializeInternalValues ()
 {
 	// At this point the timers and the clock might not be set yet...
 	if (_timerA == nullptr || _timerB == nullptr || _clock == nullptr)

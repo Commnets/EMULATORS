@@ -16,5 +16,5 @@ bool C64::CIA1::initialize ()
 		return (false);
 	}
 
-	return (C64::CIA::initialize ());
+	return (COMMODORE::CIA::initialize ());
 }
