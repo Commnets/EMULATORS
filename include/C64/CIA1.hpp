@@ -39,24 +39,7 @@ namespace C64
 		virtual bool initialize () override;
 
 		private:
-		// These methods are invoked from InputOSSystem...	
-		// To manage the joystick
-		void setJoystick1InputPending (bool jP)
-							{ _CIA1Registers -> setJoystick1InputPending (jP); }
-		unsigned char joystick2Status () const
-							{ return (_CIA1Registers -> joystick2Status ()); }
-		void setJoystick2Status (unsigned char js)
-							{ _CIA1Registers -> setJoystick2Status (js); }
-
-		// To manage status of the data ports
-		bool keyboardStatusMatrix (size_t r, size_t c) const
-							{ return (_CIA1Registers -> keyboardStatusMatrix (r, c)); }
-		const MCHEmul::UByte& keyboardStatusMatrix (size_t r) const
-							{ return (_CIA1Registers -> keyboardStatusMatrix (r)); }
-		void setKeyboardStatusMatrix (size_t r, size_t c, bool s)
-							{ _CIA1Registers -> setKeyboardStatusMatrix (r, c, s); }
-		void setKeyboardStatusMatrix (size_t r, const MCHEmul::UByte& u)
-							{ _CIA1Registers -> setKeyboardStatusMatrix (r, u); }
+		virtual void processEvent (MCHEmul::Event&& evnt, MCHEmul::Notifier* n) override;
 
 		private:
 		C64::CIA1Registers* _CIA1Registers;

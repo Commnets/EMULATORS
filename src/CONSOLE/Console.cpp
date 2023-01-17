@@ -9,7 +9,7 @@ MCHEmul::Console::Console (MCHEmul::CommandBuilder* cB,
 	  _consoleKeys (k),
 	  _outputStream (oS),
 	  _maxCommandsKept (cK),
-	  _clock (50),
+	  _clock (25), // Just 25 times per second is enough!
 	  _command (""), _lastCommands (), 
 	  _lastCommandPosition (0), _cursorPosition (0),
 	  _consoleHold (false), // The console can be hold for a while...

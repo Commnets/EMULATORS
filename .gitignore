@@ -368,6 +368,8 @@ docs/rtf
 docs/No/html
 docs/No/rtf
 keep
+Emudore
+OS64-master
 *.exe
 *.lib
 *.obj

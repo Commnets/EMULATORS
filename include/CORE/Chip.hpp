@@ -15,6 +15,7 @@
 #define __MCHEMUL_CHIP__
 
 #include <CORE/global.hpp>
+#include <CORE/NotifyObserver.hpp>
 #include <CORE/Memory.hpp>
 
 namespace MCHEmul
@@ -22,9 +23,10 @@ namespace MCHEmul
 	class CPU;
 
 	/** A chip is a specialized element within the computer (different that the CPU). \n
-		All chips are set with the full memory accesibl when the computer is initialized,
-		unless something specific is said initializing the chip itself!. */
-	class Chip : public InfoClass
+		All chips are set with the full memory accesible when the computer is initialized,
+		unless something specific is said initializing the chip itself!. \n
+		The chip is able to notify event to other element subscribed or receive event from tehm. */
+	class Chip : public InfoClass, public Notifier, public Observer
 	{
 		public:
 		Chip (int id, const Attributes& attrs = { })
@@ -48,7 +50,8 @@ namespace MCHEmul
 		int id () const
 							{ return (_id); }
 
-		/** The memory the chip can access to. */
+		/** The memory that the chip can access to. \n
+			This method is invoked from the Computer constructor. */
 		void setMemoryRef (Memory* m)
 							{ _memory = m; }
 		const Memory* memoryRef () const

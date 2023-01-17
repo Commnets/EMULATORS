@@ -17,6 +17,7 @@
 #include <CORE/IO.hpp>
 #include <CORE/GraphicalChip.hpp>
 #include <CORE/Clock.hpp>
+#include <CORE/NotifyObserver.hpp>
 #include <SDL.h>
 
 namespace MCHEmul
@@ -25,6 +26,9 @@ namespace MCHEmul
 	class Screen : public IODevice
 	{
 		public:
+		/** Different events. */
+		static const unsigned int _GRAPHICSREADY				= 100;
+
 		/** 
 		  * Creates the instance of the window.
 		  * @param n	: The title of the windo to show.
@@ -64,11 +68,13 @@ namespace MCHEmul
 		unsigned int realHertzs () const
 							{ return (_clock.realCyclesPerSecond ()); }
 
-		virtual bool initialize () override
-							{ return (true); }
+		virtual bool initialize () override;
 
 		/** Draws the screen using the info of the frame. */
 		virtual bool simulate () override;
+
+		protected:
+		virtual void processEvent (Event&& evnt, Notifier* n) override;
 
 		protected:
 		const std::string _screenName;
@@ -87,6 +93,9 @@ namespace MCHEmul
 		SDL_Window* _window;
 		SDL_Renderer* _renderer;
 		SDL_Texture* _texture;
+		/** To indicate that the graphics at chip level are ready
+			and the screen can be actualized. */
+		bool _graphicsReady;
 	};
 }
 

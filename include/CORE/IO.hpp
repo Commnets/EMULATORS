@@ -15,6 +15,7 @@
 #define __MCHEMUL_IO__
 
 #include <CORE/Chip.hpp>
+#include <CORE/NotifyObserver.hpp>
 #include <CORE/IOPeripheral.hpp>
 
 namespace MCHEmul
@@ -25,9 +26,13 @@ namespace MCHEmul
 	  * but also the screen or the keyboard. \n
 	  * Connected to a device there might be different peripherials. \n
 	  * For some specific devices (like screen or keyboard) the peripheral connected is "implicit" and
-	  * there is no other way to add other different, but it has to be opened to other possibilities!
+	  * there is no other way to add other different, but it has to be opened to other possibilities! \n
+	  * Any device is able to notify events (usually received by chips subscribed) 
+	  * or also to receive events from them. \n
+	  * The right way to create the relations among them is the method "linkChips" that is invoked in
+	  * the constructor of the computer (@see Computer) when all elements involved are received as parameter.
 	  */
-	class IODevice : public InfoClass
+	class IODevice : public InfoClass, public Notifier, public Observer
 	{
 		public:
 		enum class Type { _INPUT = 0, _OUTPUT, _INPUTOUTPUT };
@@ -58,9 +63,10 @@ namespace MCHEmul
 							{ Attributes::const_iterator i = _attributes.find (aN); 
 							  return ((i == _attributes.end ()) ? AttributedNotDefined : (*i).second); }
 
-		/** To link to the right chips. 
-			The IO device never owns the chips.
-			By default all chips are linked. */
+		/** To link to the right chips. \n
+			The IO device never owns the chips. \n
+			By default all chips are "known". \n
+			To really link them use the patter notify-observer (method "observe"). */
 		virtual void linkToChips (const Chips& c)
 							{ _chips = c; }
 		const Chips& chips () const

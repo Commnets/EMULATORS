@@ -83,8 +83,10 @@ bool COMMODORE::VICII::simulate (MCHEmul::CPU* cpu)
 	// the value of the YSCROLL register as the graphics information to be shown 
 	// is loaded at the beginning of every bad line...
 	auto isBadRasterLine = [=]() -> bool
-		{ return (_videoActive && isInPotentialBadLine () && 
-			(_raster.currentLine () & 0x07 /** The three last bits. */) == _VICIIRegisters -> verticalScrollPosition ()); };
+		{ return (_videoActive && 
+				  _raster.vData ().currentPosition () >= _FIRSTBADLINE &&
+				  _raster.vData ().currentPosition () <= _LASTBADLINE && 
+				  (_raster.currentLine () & 0x07 /** The three last bits. */) == _VICIIRegisters -> verticalScrollPosition ()); };
 
 	// Reduce the visible zone if any... The info is passed to the raster!
 	_raster.reduceDisplayZone
@@ -183,8 +185,13 @@ bool COMMODORE::VICII::simulate (MCHEmul::CPU* cpu)
 		if (_raster.isInLastVBlank ())
 		{
 			if (!_lastVBlankEntered)
-				setGraphicsReady (_lastVBlankEntered = true); // The limit of the visible screen has been reached!
-															  // so it is time to actualize the graphics...
+			{
+				_lastVBlankEntered = true;
+
+				// The limit of the visible screen has been reached!
+				// so it is time to actualize the graphics...
+				notify (MCHEmul::Event (MCHEmul::Screen::_GRAPHICSREADY)); 
+			}
 		}
 		else
 			_lastVBlankEntered = false;

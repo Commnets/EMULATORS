@@ -26,7 +26,11 @@ namespace C64
 	class InputOSSystem final : public MCHEmul::InputOSSystem
 	{
 		public:
-		static const unsigned int _ID = 2;
+		static const unsigned int _ID = 200;
+
+		using Keystroke = 
+			std::pair <unsigned short /** bit at port A. */, unsigned short /** bit at port B. */>;
+		using Keystrokes = std::vector <Keystroke>;
 
 		InputOSSystem (const MCHEmul::Attributes& attrs = { })
 			: MCHEmul::InputOSSystem (_ID, attrs),
@@ -35,12 +39,7 @@ namespace C64
 
 		virtual void linkToChips (const MCHEmul::Chips& c) override;
 
-		private:
-		virtual void whenKeyPressed (SDL_Scancode k) override;
-		virtual void whenKeyReleased (SDL_Scancode k) override;
-		virtual void whenJoystickMoved (const MCHEmul::InputOSSystem::JoystickMovementMap& jm) override;
-		virtual void whenJoystickButtonPressed (SDL_JoyButtonEvent jb) override;
-		virtual void whenJoystickButtonReleased (SDL_JoyButtonEvent jb) override;
+		inline const Keystrokes& keystrokesFor (SDL_Scancode sc) const;
 
 		private:
 		CIA1* _cia1;
@@ -60,9 +59,17 @@ namespace C64
 			Byte 0			| DOWN		| F5	| F3		| F1			| F7	| RIGHT	| RETURN	| DELETE	|
 							=========================================================================================
 		*/
-		using KeyMPos = std::pair <unsigned short /** The byte. */, unsigned short /** The bit. */>;
-		static const std::map <SDL_Scancode, const std::vector <KeyMPos>> _C64KEYS;
+		using KeystrockesMap = std::map <SDL_Scancode, Keystrokes>;
+		static const KeystrockesMap _C64KEYS;
+		static const Keystrokes _NOKEYSTROKES;
 	};
+
+	// ---
+	inline const InputOSSystem::Keystrokes& InputOSSystem::keystrokesFor (SDL_Scancode sc) const
+	{
+		KeystrockesMap::const_iterator i = _C64KEYS.find (sc);
+		return ((i == _C64KEYS.end ()) ? InputOSSystem::_NOKEYSTROKES : (*i).second);
+	}
 }
 
 #endif

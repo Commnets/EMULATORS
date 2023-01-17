@@ -44,6 +44,7 @@
     <ClCompile Include="..\..\src\CORE\IOPeripheral.cpp" />
     <ClCompile Include="..\..\src\CORE\JSONFormatter.cpp" />
     <ClCompile Include="..\..\src\CORE\Memory.cpp" />
+    <ClCompile Include="..\..\src\CORE\NotifyObserver.cpp" />
     <ClCompile Include="..\..\src\CORE\OSIO.cpp" />
     <ClCompile Include="..\..\src\CORE\Raster.cpp" />
     <ClCompile Include="..\..\src\CORE\Screen.cpp" />
@@ -88,6 +89,7 @@
     <ClInclude Include="..\..\include\CORE\IOPeripheral.hpp" />
     <ClInclude Include="..\..\include\CORE\JSONFormatter.hpp" />
     <ClInclude Include="..\..\include\CORE\Memory.hpp" />
+    <ClInclude Include="..\..\include\CORE\NotifyObserver.hpp" />
     <ClInclude Include="..\..\include\CORE\OSIO.hpp" />
     <ClInclude Include="..\..\include\CORE\ProgramCounter.hpp" />
     <ClInclude Include="..\..\include\CORE\Raster.hpp" />

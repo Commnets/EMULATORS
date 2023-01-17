@@ -79,13 +79,13 @@ bool MCHEmul::InputOSSystem::simulate ()
 	_clock.countCycles (1);
 
 	if (!js.empty ())
-		treatJoystickEvents (js);
+		treatJoystickEvents (std::move (js)); // No longer needed...
 
 	return (true);
 }
 
 // ---
-void MCHEmul::InputOSSystem::treatJoystickEvents (const MCHEmul::InputOSSystem::SDL_JoyAxisEvents& js)
+void MCHEmul::InputOSSystem::treatJoystickEvents (MCHEmul::InputOSSystem::SDL_JoyAxisEvents&& js)
 {
 	MCHEmul::InputOSSystem::JoystickMovementMap mMC (_movementMap);
 
@@ -104,5 +104,5 @@ void MCHEmul::InputOSSystem::treatJoystickEvents (const MCHEmul::InputOSSystem::
 	// ...and only when something changes it is communicated as a movement in the joystick...
 	// so it means that when they become 0 back, the joystick will stopped...
 	if (_movementMap != mMC)
-		whenJoystickMoved (_movementMap);
+		whenJoystickMoved (_movementMap); // No longer needed...
 }

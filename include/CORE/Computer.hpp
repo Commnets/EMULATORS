@@ -50,7 +50,16 @@ namespace MCHEmul
 		/** The computer owns the different elements.
 			The devices mandatory are the screen and the InputOSDevice. 
 			This is verified at construction level. \n
-			@param	cs		the number of cycles per second of the clock. */
+			@param cpu		A reference to the cpu used by the computer.
+			@param c		The list of the chips of the computer.
+			@param m		The memory accesible to the computer. \n
+							All blocks. Whether they are or not active is something to configure in the Memory itself. 
+			@param d		The devices connected to the computer. \n
+							There are two that are always mandatory: An screen and a Keyboard. \n
+							The chips and the devices are connected at construction time too, 
+							invoking the method "linkChips" of every Device.
+			@param cs		the number of cycles per second of the clock. 
+			@param attrs	Optional attributes defining the computer. */
 		Computer (CPU* cpu, const Chips& c, Memory* m, const IODevices& d, unsigned int cs, const Attributes& attrs = { });
 
 		Computer (const Computer&) = delete;

@@ -2,7 +2,7 @@
 #include <C64/CIA1.hpp>
 
 // ---
-const std::map <SDL_Scancode, const std::vector <C64::InputOSSystem::KeyMPos>> C64::InputOSSystem::_C64KEYS
+const C64::InputOSSystem::KeystrockesMap C64::InputOSSystem::_C64KEYS
 	(
 		{
 			/** letters */
@@ -62,7 +62,7 @@ const std::map <SDL_Scancode, const std::vector <C64::InputOSSystem::KeyMPos>> C
 			{ SDL_SCANCODE_INSERT,		{ std::make_pair (1, 7) /** Shift. */, std::make_pair (0, 0) /** Insert. */ } },
 			{ SDL_SCANCODE_MINUS,		{ std::make_pair (5, 3) } },
 			{ SDL_SCANCODE_HOME,		{ std::make_pair (6, 3) } },
-		/* keymap: these are mapped to other keys */
+			/* keymap: these are mapped to other keys */
 			{ SDL_SCANCODE_BACKSLASH,	{ std::make_pair (5, 5) } }, // : 
 			{ SDL_SCANCODE_LEFTBRACKET, { std::make_pair (5, 0) } }, // +
 			{ SDL_SCANCODE_RIGHTBRACKET,{ std::make_pair (6, 1) } }, // *
@@ -83,99 +83,16 @@ const std::map <SDL_Scancode, const std::vector <C64::InputOSSystem::KeyMPos>> C
 		}
 	);
 
+const C64::InputOSSystem::Keystrokes C64::InputOSSystem::_NOKEYSTROKES = { };
+
 // ---
 void C64::InputOSSystem::linkToChips (const MCHEmul::Chips& c)
 {
-	for (const auto& i : c)
-		if ((_cia1 = dynamic_cast <C64::CIA1*> (i.second)) != nullptr)
-			break;
-
+	for (MCHEmul::Chips::const_iterator i = c.begin (); i != c.end () && _cia1 == nullptr;
+		_cia1 = dynamic_cast <C64::CIA1*> ((*i++).second));
 	// Can't be null after this method...
 	assert (_cia1 != nullptr);
-}
 
-// ---
-void C64::InputOSSystem::whenKeyPressed (SDL_Scancode k)
-{
-	std::map <SDL_Scancode, const std::vector <C64::InputOSSystem::KeyMPos>>::const_iterator i = _C64KEYS.find (k);
-	if (i != _C64KEYS.end ())
-		for (const auto& j : (*i).second)
-			_cia1 -> setKeyboardStatusMatrix (j.first, j.second, false /** Meaning pressed. */);
-}
-
-// ---
-void C64::InputOSSystem::whenKeyReleased (SDL_Scancode k)
-{
-	std::map <SDL_Scancode, const std::vector <C64::InputOSSystem::KeyMPos>>::const_iterator i = _C64KEYS.find (k);
-	if (i != _C64KEYS.end ())
-		for (const auto& j : (*i).second)
-			_cia1 -> setKeyboardStatusMatrix (j.first, j.second, true /** Meaning released. */);
-}
-
-// ---
-void C64::InputOSSystem::whenJoystickMoved (const MCHEmul::InputOSSystem::JoystickMovementMap& jm)
-{
-	// It necessary to translate the position of the joysticks into the C64 records.
-	// In the C64 there are only 2 possible joysticks with 2 axis (x and y) each.
-	if (jm.size () > 2)
-		return; // No possible to manage...
-
-	bool e = false;
-	for (const auto& i : jm)
-		e = (i.first != 0 && i.first != 1) || (i.second.size () > 2);
-	if (e)
-		return; // Either, the joysticks id are not recognized or the number of axis received is wrong...
-
-	// Time to translate into C64 register values...
-	int dr [2] = { 0, 0 };
-	for (const auto& i : jm)
-	{
-		size_t ct = 0;
-		for (auto j : i.second)
-		{ 
-			dr [i.first] |= (ct == 0) 
-				? ((j > 0) ? 8 /** right. */ : ((j < 0) ? 4 /** left. */ : 0))
-				: ((j > 0) ? 2 /** down. */ : ((j < 0) ? 1 /** up. */ : 0));
-
-			ct++;
-		}
-	}
-
-	// The events on the joystick 1 are set on the same place than the keyboard...
-	_cia1 -> setJoystick1InputPending (dr [0] != 0x00);
-	for (size_t i = 0; i < 8; i++)
-		_cia1 -> setKeyboardStatusMatrix (i, 
-			(dr [0] == 0) ? 0xff : _cia1 -> keyboardStatusMatrix (i) & (0xff - dr [0] /** 0 means swicth on. */));
-
-	// The movement of the joystick 2...
-	// it is simplier!
-	_cia1 -> setJoystick2Status ((dr [1] == 0) 
-		? 0xff : _cia1 -> joystick2Status () & (0xff - dr [1] /** 0 means switch on. */));
-}
-
-// ---
-void C64::InputOSSystem::whenJoystickButtonPressed (SDL_JoyButtonEvent jb)
-{
-	// Only two joysticks are allowed...
-	if (jb.which == 0)
-		// The events on the joystick 1 are set on the same place than the keyboard...
-		for (size_t i = 0; i < 8; i++)
-			_cia1 -> setKeyboardStatusMatrix (i, _cia1 -> keyboardStatusMatrix (i) & 
-				(0xff - 0x10 /** bit 4 clear when on. */));
-	else
-	if (jb.which == 1)
-		_cia1 -> setJoystick2Status (_cia1 -> joystick2Status () & (0xff /** 0 means switch on. */ - 0x10));
-}
-
-// ---
-void C64::InputOSSystem::whenJoystickButtonReleased (SDL_JoyButtonEvent jb)
-{
-	// Only two joysticks are allowed...
-	if (jb.which == 0)
-		// The events on the joystick 1 are set on the same place than the keyboard...
-		for (size_t i = 0; i < 8; i++)
-			_cia1 -> setKeyboardStatusMatrix (i, _cia1 -> keyboardStatusMatrix (i) | 0x010);
-	else
-	if (jb.which == 1)
-		_cia1 -> setJoystick2Status (_cia1 -> joystick2Status () | 0x10);
+	// The CIA 1 will receive the event related with the io system...
+	_cia1 -> observe (this);
 }

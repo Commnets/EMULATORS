@@ -70,12 +70,6 @@ namespace COMMODORE
 							{ _drawBorder = dB; }
 
 		private:
-		/** This method is not complete. It would have to consider 
-			the position of the vertical scroll and also whether the display is or not disconnected. */
-		bool isInPotentialBadLine () const
-						{ return (_raster.vData ().currentPosition () >= _FIRSTBADLINE &&
-									_raster.vData ().currentPosition () <= _LASTBADLINE); }
-
 		/** To simplify the use of the routines dedicated to draw. */
 		struct DrawContext
 		{

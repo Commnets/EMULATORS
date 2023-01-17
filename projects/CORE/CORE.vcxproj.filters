@@ -156,6 +156,9 @@
     <ClCompile Include="..\..\src\CORE\Raster.cpp">
       <Filter>Archivos de origen\IO</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\CORE\NotifyObserver.cpp">
+      <Filter>Archivos de origen\Foundation</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\include\CORE\IO.hpp">
@@ -292,6 +295,9 @@
     </ClInclude>
     <ClInclude Include="..\..\include\CORE\Raster.hpp">
       <Filter>Archivos de encabezado\IO</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\CORE\NotifyObserver.hpp">
+      <Filter>Archivos de encabezado\Foundation</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
