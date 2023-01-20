@@ -74,7 +74,7 @@ namespace MCHEmul
 		virtual bool simulate () override;
 
 		protected:
-		virtual void processEvent (Event&& evnt, Notifier* n) override;
+		virtual void processEvent (const Event& evnt, Notifier* n) override;
 
 		protected:
 		const std::string _screenName;

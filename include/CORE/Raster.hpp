@@ -91,12 +91,12 @@ namespace MCHEmul
 
 		/** Returns true when the limit of the raster is reached. 
 			The parameter is the number of positions to increment the rasterData. */
-		bool add (unsigned short i);
+		inline bool add (unsigned short i);
 		bool next ()
 						{ return (add (1)); }
 
 		/** The display zone will reduced in both sides by half of the _positionsToReduce value. */
-		void reduceDisplayZone (bool s);
+		inline void reduceDisplayZone (bool s);
 		bool isDisplayZoneReduced () const
 						{ return (_displayZoneReduced); }
 
@@ -122,17 +122,17 @@ namespace MCHEmul
 						  return ((t < 0) ? (unsigned short) t + _maxPositions : (unsigned short) t); }
 
 		protected:
-		const unsigned short _firstPosition = 0; // Adjusted at construction time.
-		const unsigned short _firstVisiblePosition = 0;
-		unsigned short _firstDisplayPosition; // Both can be changed by the method reduceDisplayZone...
-		const unsigned short _originalFirstDisplayPosition; // Before reducing or extending the area...
+		const unsigned short _firstPosition;
+		const unsigned short _firstVisiblePosition;
+		unsigned short _firstDisplayPosition;
+		const unsigned short _originalFirstDisplayPosition;
 		unsigned short _lastDisplayPosition;
-		const unsigned short _originalLastDisplayPosition; // Before reduucing or extending the area...
-		const unsigned short _lastVisiblePosition = 0;
-		const unsigned short _lastPosition = 0;
-		const unsigned short _maxPositions = 0;
-		const unsigned short _positionsToReduce1 = 0;
-		const unsigned short _positionsToReduce2 = 0;
+		const unsigned short _originalLastDisplayPosition;
+		const unsigned short _lastVisiblePosition;
+		const unsigned short _lastPosition;
+		const unsigned short _maxPositions;
+		const unsigned short _positionsToReduce1;
+		const unsigned short _positionsToReduce2;
 
 		// Implementation
 		// To speed up calculus... They are also set at construction time.
@@ -150,6 +150,49 @@ namespace MCHEmul
 		unsigned short _currentPosition_0;
 		bool _displayZoneReduced;
 	};
+
+	// ---
+	inline bool RasterData::add (unsigned short i)
+	{
+		bool result = false;
+
+		int cP = (int)_currentPosition_0;
+		cP += i; // Can move to the next (o nexts) lines...
+		if (result = (cP >= (int) _maxPositions))
+			while (cP >= (int) _maxPositions)
+				cP -= (int) _maxPositions;
+
+		cP += (int) _firstPosition;
+		if (cP >= (int) _maxPositions)
+			cP -= (int) _maxPositions;
+
+		_currentPosition = (unsigned short) cP;
+		_currentPosition_0 = toBase0 (_currentPosition);
+
+		return (result);
+	}
+
+	// ---
+	inline void RasterData::reduceDisplayZone (bool s)
+	{
+		if (_displayZoneReduced == s)
+			return; // If nothing changes, nothing to do...
+
+		if (_displayZoneReduced = s)
+		{
+			_firstDisplayPosition	+= _positionsToReduce1;
+			_firstDisplayPosition_0	+= _positionsToReduce1;
+			_lastDisplayPosition	-= _positionsToReduce2;
+			_lastDisplayPosition_0	-= _positionsToReduce2;
+		}
+		else
+		{
+			_firstDisplayPosition	-= _positionsToReduce1;
+			_firstDisplayPosition_0	-= _positionsToReduce1;
+			_lastDisplayPosition	+= _positionsToReduce2;
+			_lastDisplayPosition_0	+= _positionsToReduce2;
+		}
+	}
 
 	/** The Raster simulates the set of sequential horizontal lines that, 
 		in a CRT monitor, draws an image in the screen. */

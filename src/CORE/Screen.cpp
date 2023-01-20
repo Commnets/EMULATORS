@@ -90,7 +90,7 @@ bool MCHEmul::Screen::simulate ()
 }
 
 // ---
-void MCHEmul::Screen::processEvent (MCHEmul::Event&& evnt, MCHEmul::Notifier* n)
+void MCHEmul::Screen::processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifier* n)
 {
 	if (evnt.id () == MCHEmul::Screen::_GRAPHICSREADY)
 		_graphicsReady = true; // To be processed in simulation...

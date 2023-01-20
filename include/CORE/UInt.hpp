@@ -130,7 +130,7 @@ namespace MCHEmul
 			  _format (f)
 							{ }
 
-		UInt (UByte&& u, unsigned char f = _BINARY) noexcept
+		UInt (UByte&& u, unsigned char f = _BINARY)
 			: _values ({ std::move (u) }),
 			  _carry (false), _overflow (false),
 			  _format (f)
@@ -143,7 +143,7 @@ namespace MCHEmul
 			  _format (f)
 							{ }
 
-		UInt (UBytes&& u, bool bE = true, unsigned char f = _BINARY) noexcept
+		UInt (UBytes&& u, bool bE = true, unsigned char f = _BINARY)
 			: _values ((u.size () > 1 && !bE) ? std::move (u.reverse ()) : std::move (u)),
 			  _carry (false), _overflow (false),
 			  _format (f)
@@ -156,7 +156,7 @@ namespace MCHEmul
 			  _format (f)
 							{ }
 
-		UInt (std::vector <UByte>&& u, bool bE = true, unsigned char f = _BINARY) noexcept
+		UInt (std::vector <UByte>&& u, bool bE = true, unsigned char f = _BINARY)
 			: _values (std::move (u), bE),
 			  _carry (false), _overflow (false),
 			  _format (f)

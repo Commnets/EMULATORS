@@ -34,7 +34,7 @@ namespace MCHEmul
 			: _values (v)
 							{ if (size () > 1 && !bE) std::reverse (_values.begin (), _values.end ()); }
 
-		UBytes (std::vector <UByte>&& v, bool bE = true) noexcept
+		UBytes (std::vector <UByte>&& v, bool bE = true)
 			: _values (std::move (v))
 							{ if (size () > 1 && !bE) std::reverse (_values.begin (), _values.end ()); }
 

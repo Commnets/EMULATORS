@@ -21,7 +21,7 @@ bool C64::CIA1::initialize ()
 }
 
 // ---
-void C64::CIA1::processEvent (MCHEmul::Event&& evnt, MCHEmul::Notifier* n)
+void C64::CIA1::processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifier* n)
 {
 	switch (evnt.id ())
 	{

@@ -60,7 +60,7 @@ namespace MCHEmul
 		virtual ~Notifier ();
 
 		/** To notify an event to the observers interested. */
-		void notify (Event&& evnt);
+		void notify (const Event& evnt);
 
 		protected:
 		// To manage entries in the list of notifiers...
@@ -101,7 +101,7 @@ namespace MCHEmul
 		protected:
 		/** What to do when an event is received. 
 			This method has to be overloded in any Observer. */
-		virtual void processEvent (Event&& evnt, Notifier* n)
+		virtual void processEvent (const Event& evnt, Notifier* n)
 							{ /** Nothing by default. */ }
 
 		// Implementation
@@ -116,6 +116,20 @@ namespace MCHEmul
 		/** The lst of notifiers. */
 		mutable std::vector <Notifier*> _notifiers;
 	};
+
+	// ---
+	inline Notifier::~Notifier ()
+	{ 
+		for (Observer* i : _observers) 
+			i -> justTakeOff (this); 
+	}
+
+	// ---
+	inline void Notifier::notify (const Event& evnt)
+	{
+		for (Observer* i : _observers)
+			i -> processEvent (evnt, this);
+	}
 }
 
 #endif

@@ -132,8 +132,8 @@ namespace COMMODORE
 		bool countDown (MCHEmul::CPU* cpu, CIATimer* t = nullptr);
 
 		private:
-		const int _id = 0;
-		const unsigned int _interruptId = 0;
+		const int _id;
+		const unsigned int _interruptId;
 
 		// The variables that define a timer...
 		RunMode _runMode;

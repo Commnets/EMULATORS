@@ -104,8 +104,8 @@ namespace COMMODORE
 		void actualizeTime ();
 
 		private:
-		const int _id = 0;
-		const unsigned int _interruptId = 0;
+		const int _id;
+		const unsigned int _interruptId;
 
 		// The variables that define a timer...
 		bool _InterruptEnabled;

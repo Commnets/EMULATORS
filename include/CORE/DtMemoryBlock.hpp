@@ -32,7 +32,7 @@ namespace MCHEmul
 			: _startAddress (a), _bytes (dt)
 							{ }
 
-		DataMemoryBlock (const Address& a, std::vector <UByte>&& dt) noexcept
+		DataMemoryBlock (const Address& a, std::vector <UByte>&& dt)
 			: _startAddress (a), _bytes (std::move (dt))
 							{ }
 

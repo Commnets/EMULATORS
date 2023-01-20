@@ -15,6 +15,7 @@
 #define __F6500_INSTRUCTIONS__
 
 #include <CORE/incs.hpp>
+#include <F6500/C6510.hpp>
 
 namespace F6500
 {
@@ -31,34 +32,34 @@ namespace F6500
 		protected:
 		// To interpret the parameters of the instruction as an address 
 		/** 2 parameters representing an address. */
-		MCHEmul::Address address_absolute ();
+		inline MCHEmul::Address address_absolute ();
 		/** 1 parameter representing an address in the page 0. */
-		MCHEmul::Address address_zeroPage ();
+		inline MCHEmul::Address address_zeroPage ();
 		/** 2 parameters representing a base address. 
 			The final one is got adding the X register to the base. */
-		MCHEmul::Address address_absoluteX ();
+		inline MCHEmul::Address address_absoluteX ();
 		/** 2 parameters representing a base address. 
 			The final one is got adding the Y register to the base. */
-		MCHEmul::Address address_absoluteY ();
+		inline MCHEmul::Address address_absoluteY ();
 		/** 1 parameter representing a base address in page 0. 
 			The final one is got adding the X register to the base. */
-		MCHEmul::Address address_zeroPageX ();
+		inline MCHEmul::Address address_zeroPageX ();
 		/** 1 parameter representing a base address in page 0. 
 			The final one is got adding the Y register to the base. */
-		MCHEmul::Address address_zeroPageY ();
+		inline MCHEmul::Address address_zeroPageY ();
 		/** 1 parameter representing a base address in page 0. 
 			The final one is got from the position in page 0 result of adding the X register to the base. */
-		MCHEmul::Address address_indirectZeroPageX ();
+		inline MCHEmul::Address address_indirectZeroPageX ();
 		/** 1 parameter representing a base address in page 0. 
 			The final one is got from the position in page 0 result of adding the X register to position found in the base. */
-		MCHEmul::Address address_indirectZeroPageY ();
+		inline MCHEmul::Address address_indirectZeroPageY ();
 		/** 2 parameters representint a base addreess. 
 			The final one is got at the position of that first base address. */
-		MCHEmul::Address address_indirect ();
+		inline MCHEmul::Address address_indirect ();
 
 		// To interpret the parameters of the instruction as a a value
 		/** 1 parameter with the value. */
-		MCHEmul::UByte value_inmediate ();
+		inline MCHEmul::UByte value_inmediate ();
 		MCHEmul::UByte value_absolute ()
 							{ return (memory () -> value (address_absolute ())); }
 		MCHEmul::UByte value_zeroPage ()
@@ -68,7 +69,7 @@ namespace F6500
 		MCHEmul::UByte value_absoluteY ()
 							{ return (memory () -> value (address_absoluteY ())); }
 		/** 1 parameter that can be negative value. It us used in jumps. */
-		MCHEmul::UByte value_relative ();
+		inline MCHEmul::UByte value_relative ();
 		MCHEmul::UByte value_zeroPageX ()
 							{ return (memory () -> value (address_zeroPageX ())); }
 		MCHEmul::UByte value_zeroPageY ()
@@ -78,6 +79,121 @@ namespace F6500
 		MCHEmul::UByte value_indirectZeroPageY ()
 							{ return (memory () -> value (address_indirectZeroPageY ())); }
 	};
+
+	// ---
+	inline MCHEmul::Address Instruction::address_absolute ()
+	{
+		assert (parameters ().size () == 3);
+
+		return (MCHEmul::Address ({ parameters ()[1], parameters ()[2] }, false));
+	}
+
+	// ---
+	inline MCHEmul::Address Instruction::address_zeroPage ()
+	{
+		assert (parameters ().size () == 2);
+
+		return (MCHEmul::Address ({ parameters ()[1] }));
+	}
+
+	// ---
+	inline MCHEmul::Address Instruction::address_absoluteX ()
+	{
+		assert (parameters ().size () == 3);
+
+		MCHEmul::Register& x = cpu () -> internalRegister (C6510::_XREGISTER);
+
+		MCHEmul::Address iA ({ parameters ()[1], parameters ()[2] }, false);
+		MCHEmul::Address fA = iA + x [0].value ();
+		if (iA [0] != fA [0]) _additionalCycles = 1; // Page jump in the address so one cycle more
+		return (fA);
+	}
+
+	// ---
+	inline MCHEmul::Address Instruction::address_absoluteY ()
+	{
+		assert (parameters ().size () == 3);
+
+		MCHEmul::Register& y = cpu () -> internalRegister (C6510::_YREGISTER);
+
+		MCHEmul::Address iA ({ parameters ()[1], parameters ()[2] }, false);
+		MCHEmul::Address fA = iA + y [0].value ();
+		if (iA [0] != fA [0]) _additionalCycles = 1; // Page jump in the address so one cycle more
+		return (fA);
+	}
+
+	// ---
+	inline MCHEmul::Address Instruction::address_zeroPageX ()
+	{
+		assert (parameters ().size () == 2);
+
+		MCHEmul::Register& x = cpu () -> internalRegister (C6510::_XREGISTER);
+
+		MCHEmul::Address iA ({ parameters ()[1] });
+		return (iA + x [0].value ());
+	}
+
+	// ---
+	inline MCHEmul::Address Instruction::address_zeroPageY ()
+	{
+		assert (parameters ().size () == 2);
+
+		MCHEmul::Register& y = cpu () -> internalRegister (C6510::_XREGISTER);
+
+		MCHEmul::Address iA ({ parameters ()[1] });
+		return (iA + y [0].value ());
+	}
+
+	// ---
+	inline MCHEmul::Address Instruction::address_indirectZeroPageX ()
+	{
+		assert (parameters ().size () == 2);
+
+		MCHEmul::Register& x = cpu () -> internalRegister (C6510::_XREGISTER);
+
+		// Pre - indirect zero page addressing...
+		MCHEmul::Address iA = MCHEmul::Address ({ parameters ()[1] }) + x [0].value ();
+		return (MCHEmul::Address (memory () -> values (iA, 2), false)); 
+	}
+
+	// ---
+	inline MCHEmul::Address Instruction::address_indirectZeroPageY ()
+	{
+		assert (parameters ().size () == 2);
+
+		MCHEmul::Register& y = cpu () -> internalRegister (C6510::_YREGISTER);
+
+		// Post - indirect zero page addressing...
+		MCHEmul::Address iA (memory () -> values (MCHEmul::Address ({ parameters ()[1] }), 2), false);
+		MCHEmul::Address fA = iA + y [0].value ();
+		if (iA [0] != fA [0]) _additionalCycles = 1; // Page jump in the address so one cycle more
+		return (fA);
+	}
+
+	// ---
+	inline MCHEmul::Address Instruction::address_indirect ()
+	{
+		assert (parameters ().size () == 3);
+
+		return (MCHEmul::Address (memory () -> values 
+		(MCHEmul::Address ({ parameters ()[1], parameters ()[2] }, false), 2), false));
+	}
+
+	// ---
+	inline MCHEmul::UByte Instruction::value_inmediate ()
+	{
+		assert (parameters ().size () == 2);
+
+		return (parameters ()[1]);
+	}
+
+	// ---
+	inline MCHEmul::UByte Instruction::value_relative ()
+	{
+		assert (parameters ().size () == 2);
+
+		return (parameters ()[1]); // The number can be interpreted as a negative number (used in jumps)...
+	}
 
 	// ADC
 	/** ADC_General: To aggregate common steps in every ADC instruction. */

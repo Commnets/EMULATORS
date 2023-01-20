@@ -36,49 +36,6 @@ MCHEmul::RasterData::RasterData (
 }
 
 // ---
-bool MCHEmul::RasterData::add (unsigned short i)
-{
-	bool result = false;
-
-	int cP = (int)_currentPosition_0;
-	cP += i; // Can move to the next (o nexts) lines...
-	if (result = (cP >= (int) _maxPositions))
-		while (cP >= (int) _maxPositions)
-			cP -= (int) _maxPositions;
-
-	cP += (int) _firstPosition;
-	if (cP >= (int) _maxPositions)
-		cP -= (int) _maxPositions;
-
-	_currentPosition = (unsigned short) cP;
-	_currentPosition_0 = toBase0 (_currentPosition);
-
-	return (result);
-}
-
-// ---
-void MCHEmul::RasterData::reduceDisplayZone (bool s)
-{
-	if (_displayZoneReduced == s)
-		return; // If nothing changes, nothing to do...
-
-	if (_displayZoneReduced = s)
-	{
-		_firstDisplayPosition	+= _positionsToReduce1;
-		_firstDisplayPosition_0	+= _positionsToReduce1;
-		_lastDisplayPosition	-= _positionsToReduce2;
-		_lastDisplayPosition_0	-= _positionsToReduce2;
-	}
-	else
-	{
-		_firstDisplayPosition	-= _positionsToReduce1;
-		_firstDisplayPosition_0	-= _positionsToReduce1;
-		_lastDisplayPosition	+= _positionsToReduce2;
-		_lastDisplayPosition_0	+= _positionsToReduce2;
-	}
-}
-
-// ---
 MCHEmul::InfoStructure MCHEmul::RasterData::getInfoStructure () const
 {
 	MCHEmul::InfoStructure result;

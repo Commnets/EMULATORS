@@ -163,12 +163,12 @@ namespace MCHEmul
 
 		protected:
 		// Once they assigned at construction level they couldn't be modified...
-		const unsigned int _code = 0; 
-		const size_t _codeLength = 0;
-		const unsigned int _memoryPositions = 0; 
-		const unsigned int _clockCycles = 0; 
-		const bool _bigEndian = true;
-		std::string _iTemplate; // It is modified during the construction...
+		const unsigned int _code; 
+		const size_t _codeLength;
+		const unsigned int _memoryPositions; 
+		const unsigned int _clockCycles; 
+		const bool _bigEndian;
+		std::string _iTemplate;
 
 		// Implementation
 		// The internal structure helps us later to deal better with the instruction...

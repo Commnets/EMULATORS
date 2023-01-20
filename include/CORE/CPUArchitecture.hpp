@@ -63,13 +63,13 @@ namespace MCHEmul
 		virtual InfoStructure getInfoStructure () const override;
 
 		private:
-		const size_t _numberBytes = 0; // Adjusted at construction level
-		const size_t _numberBits = 0; // Calculated at construction level
-		const size_t _instructionLength = 0; // Adjusted at construction level
-		const bool _bigEndian = true; // Are the most significant Ubyte (in an address) the first or the last in values?
-		const Attributes _attributes = { }; // Optionaly adjusted at construction level
-		const Register _longestRegisterPossible = NoRegister; // Calculated at construction level
-		const Address _longestAddressPossible = Address (); // Calculated at construction level
+		const size_t _numberBytes;
+		const size_t _numberBits;
+		const size_t _instructionLength;
+		const bool _bigEndian;
+		const Attributes _attributes;
+		const Register _longestRegisterPossible;
+		const Address _longestAddressPossible;
 	};
 }
 

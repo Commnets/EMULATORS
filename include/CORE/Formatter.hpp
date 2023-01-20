@@ -29,7 +29,7 @@ namespace MCHEmul
 			: _lines (l)
 							{ }
 
-		Formatter (Strings&& l) noexcept
+		Formatter (Strings&& l)
 			: _lines (std::move (l))
 							{ }
 

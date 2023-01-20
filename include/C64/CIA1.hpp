@@ -39,7 +39,7 @@ namespace C64
 		virtual bool initialize () override;
 
 		private:
-		virtual void processEvent (MCHEmul::Event&& evnt, MCHEmul::Notifier* n) override;
+		virtual void processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifier* n) override;
 
 		private:
 		C64::CIA1Registers* _CIA1Registers;
