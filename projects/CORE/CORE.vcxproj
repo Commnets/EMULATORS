@@ -44,6 +44,7 @@
     <ClCompile Include="..\..\src\CORE\IOPeripheral.cpp" />
     <ClCompile Include="..\..\src\CORE\JSONFormatter.cpp" />
     <ClCompile Include="..\..\src\CORE\Memory.cpp" />
+    <ClCompile Include="..\..\src\CORE\NotifyObserver.cpp" />
     <ClCompile Include="..\..\src\CORE\OSIO.cpp" />
     <ClCompile Include="..\..\src\CORE\Raster.cpp" />
     <ClCompile Include="..\..\src\CORE\Screen.cpp" />

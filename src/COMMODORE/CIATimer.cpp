@@ -87,7 +87,8 @@ bool COMMODORE::CIATimer::countDown (MCHEmul::CPU* cpu, COMMODORE::CIATimer* t)
 			break;
 
 		case COMMODORE::CIATimer::CountMode::_SIGNALSONCNTLINE:
-			// TODO: Linked to the serial port...
+			// TODO
+
 			break;
 
 		case COMMODORE::CIATimer::CountMode::_TIMERCOUNTSDOWNTO0:
@@ -96,7 +97,8 @@ bool COMMODORE::CIATimer::countDown (MCHEmul::CPU* cpu, COMMODORE::CIATimer* t)
 			break;
 
 		case COMMODORE::CIATimer::CountMode::_0ONCNTPULSES:
-			// TODO: Linked to the serial port...
+			// TODO
+
 			break;
 
 		default:

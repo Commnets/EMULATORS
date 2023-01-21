@@ -23,6 +23,7 @@ bool COMMODORE::SID::initialize ()
 bool COMMODORE::SID::simulate (MCHEmul::CPU* cpu)
 {
 	// TODO
+
 	return (true);
 }
 

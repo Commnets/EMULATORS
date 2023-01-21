@@ -123,13 +123,6 @@ namespace MCHEmul
 		for (Observer* i : _observers) 
 			i -> justTakeOff (this); 
 	}
-
-	// ---
-	inline void Notifier::notify (const Event& evnt)
-	{
-		for (Observer* i : _observers)
-			i -> processEvent (evnt, this);
-	}
 }
 
 #endif

@@ -135,7 +135,6 @@ void COMMODORE::CIARegisters::setValue (size_t p, const MCHEmul::UByte& v)
 				if (v.bit (0)) _timerA -> setInterruptEnabled (v.bit (7));
 				if (v.bit (1)) _timerB -> setInterruptEnabled (v.bit (7));
 				if (v.bit (2)) _clock -> setInterruptEnabled (v.bit (7));
-				// TODO: To manage the serial port...
 			}
 
 			break;
