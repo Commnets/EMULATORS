@@ -53,23 +53,23 @@ namespace COMMODORE
 
 		// Sprite attributes
 		unsigned short spriteXCoord (size_t p) const
-							{ return (_spriteXCoord [p]); }
+							{ return (_spriteInfo [p]._spriteXCoord); }
 		unsigned char spriteYCoord (size_t p) const
-							{ return (_spriteYCoord [p]); }
+							{ return (_spriteInfo [p]._spriteYCoord); }
 		unsigned char spriteColor (size_t p) const
-							{ return (_spriteColor [p]); }
+							{ return (_spriteInfo [p]._spriteColor); }
 		unsigned char spriteSharedColor (size_t p) const
-							{ return (_spriteSharedColor [p]); }
+							{ return (_spriteInfo [p]._spriteSharedColor); }
 		bool spriteEnable (size_t p) const
-							{ return (_spriteEnabled [p]); }
+							{ return (_spriteInfo [p]._spriteEnabled); }
 		bool spriteMulticolorMode (size_t p) const
-							{ return (_spriteMulticolor [p]); }
+							{ return (_spriteInfo [p]._spriteMulticolor); }
 		bool spriteDoubleWidth (size_t p) const
-							{ return (_spriteDoubleWidth [p]); }
+							{ return (_spriteInfo [p]._spriteDoubleWidth); }
 		bool spriteDoubleHeight (size_t p) const
-							{ return (_spriteDoubleHeight [p]); }
+							{ return (_spriteInfo [p]._spriteDoubleHeight); }
 		bool spriteToForegroundPriority (size_t p) const
-							{ return (_spriteToForegroundPriority [p]); }
+							{ return (_spriteInfo [p]._spriteToForegroundPriority); }
 		
 		// ScrollX & ScrollY.
 		unsigned char verticalScrollPosition () const
@@ -196,19 +196,35 @@ namespace COMMODORE
 		void setGraphicModeActive ();
 
 		private:
+		struct SpriteInfo
+		{
+			SpriteInfo ()
+				: _spriteXCoord (0x0000), 
+				  _spriteYCoord (0x00),
+				  _spriteColor (0x00),
+				  _spriteMulticolor (false),
+				  _spriteEnabled (false),
+				  _spriteDoubleWidth (false), 
+				  _spriteDoubleHeight (false),
+				  _spriteToForegroundPriority (false)
+							{ }
+
+			unsigned short _spriteXCoord; 
+			unsigned char _spriteYCoord;
+			unsigned char _spriteColor;
+			bool _spriteMulticolor;
+			bool _spriteEnabled;
+			bool _spriteDoubleWidth, _spriteDoubleHeight;
+			bool _spriteToForegroundPriority;
+		};
+
 		// The VICII registers
 		/** Screen related variables. */
 		unsigned char _foregroundColor;
 		std::vector <unsigned char> _backgroundColor;
 		/** Sprite related variables. */
-		std::vector <unsigned short> _spriteXCoord; 
-		std::vector <unsigned char> _spriteYCoord;
-		std::vector <unsigned char> _spriteColor;
+		std::vector <SpriteInfo> _spriteInfo;
 		std::vector <unsigned char> _spriteSharedColor;
-		std::vector <bool> _spriteMulticolor;
-		std::vector <bool> _spriteEnabled;
-		std::vector <bool> _spriteDoubleWidth, _spriteDoubleHeight;
-		std::vector <bool> _spriteToForegroundPriority;
 		/** ScrollYRegister & ScrollXRegister. */
 		unsigned char _verticalScrollPosition, _horizontalScrollPosition;
 		/** Visible screen control. */

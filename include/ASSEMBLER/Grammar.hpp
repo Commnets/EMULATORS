@@ -66,7 +66,7 @@ namespace MCHEmul
 							{ }
 
 			Macro (std::string&& n, std::string&& e, 
-				   const std::string& f = "" /** suaully reused. */, unsigned int l = 0)
+				   const std::string& f = "" /** suaully reused. */, unsigned int l = 0) noexcept
 				: _name (std::move (n)), _equivalent (std::move (e)),
 				  _file (f), _line (l),
 				  _value ({ }),

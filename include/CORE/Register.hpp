@@ -31,7 +31,7 @@ namespace MCHEmul
 			: _id (id), _name (n), _values (v) 
 							{ }
 
-		Register (int id, const std::string& n, UBytes&& v)
+		Register (int id, const std::string& n, UBytes&& v) noexcept
 			: _id (id), _name (n), _values (std::move (v)) 
 							{ }
 
@@ -39,7 +39,7 @@ namespace MCHEmul
 			: _id (id), _name (n), _values (v) 
 							{ }
 
-		Register (int id, const std::string& n, std::vector <UByte>&& v)
+		Register (int id, const std::string& n, std::vector <UByte>&& v) noexcept
 			: _id (id), _name (n), _values (std::move (v)) 
 							{ }
 

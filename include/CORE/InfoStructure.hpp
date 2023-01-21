@@ -35,7 +35,7 @@ namespace MCHEmul
 			: _attributes (a), _infoStructures (iS)
 							{ }
 
-		InfoStructure (Attributes&& a, InfoStructures&& iS)
+		InfoStructure (Attributes&& a, InfoStructures&& iS) noexcept
 			: _attributes (std::move (a)), _infoStructures (std::move (iS))
 							{ }
 

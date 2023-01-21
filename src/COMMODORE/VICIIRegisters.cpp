@@ -5,12 +5,8 @@ COMMODORE::VICIIRegisters::VICIIRegisters (MCHEmul::PhysicalStorage* ps, size_t 
 	: MCHEmul::ChipRegisters (_VICREGS_SUBSET, ps, pp, a, s),
 	  _lastValueRead (MCHEmul::PhysicalStorage::_DEFAULTVALUE),
 	  _backgroundColor (4, 0x00),
-	  _spriteXCoord (8, 0x0000), _spriteYCoord (8, 0x0000),
-	  _spriteColor (8, 0x0000),
-	  _spriteSharedColor (2, 0x0000), _spriteMulticolor (8, false),
-	  _spriteEnabled (8, false),
-	  _spriteDoubleWidth (8, false), _spriteDoubleHeight (8, false),
-	  _spriteToForegroundPriority (8, false)
+	  _spriteInfo (8, COMMODORE::VICIIRegisters::SpriteInfo ()),
+	  _spriteSharedColor (2, 0x00)
 	  // At this point the rest internal variables will have random values...
 	  // The vector are initialized just to given them a default size!
 {
@@ -59,7 +55,8 @@ void COMMODORE::VICIIRegisters::setValue (size_t p, const MCHEmul::UByte& v)
 		case 0xc:
 		case 0xe:
 			{
-				_spriteXCoord [pp >> 1] = ((unsigned short) v.value ()) | (_spriteXCoord [pp >> 1] & 0x0100);
+				_spriteInfo [pp >> 1]._spriteXCoord = ((unsigned short) v.value ()) | 
+					(_spriteInfo [pp >> 1]._spriteXCoord & 0x0100);
 			}
 
 			break;
@@ -74,7 +71,7 @@ void COMMODORE::VICIIRegisters::setValue (size_t p, const MCHEmul::UByte& v)
 		case 0xd:
 		case 0xf:
 			{
-				_spriteYCoord[pp >> 1] = v.value ();
+				_spriteInfo [pp >> 1]._spriteYCoord = v.value ();
 			}
 
 			break;
@@ -83,7 +80,7 @@ void COMMODORE::VICIIRegisters::setValue (size_t p, const MCHEmul::UByte& v)
 		case 0x10:
 			{
 				for (size_t i = 0; i < 8; i++)
-					_spriteXCoord [i] = (_spriteXCoord [i] & 0x00ff) | (v.bit (i) ? 0x0100 : 0x0000); 
+					_spriteInfo [i]._spriteXCoord = _spriteInfo [i]._spriteXCoord | (v.bit (i) ? 0x0100 : 0x0000); 
 			}
 
 			break;
@@ -97,6 +94,7 @@ void COMMODORE::VICIIRegisters::setValue (size_t p, const MCHEmul::UByte& v)
 				_graphicBitModeActive = v.bit (5);
 				_graphicExtendedColorTextModeActive = v.bit (6);
 				_IRQRasterLineAt = (_IRQRasterLineAt & 0x00ff) | (v.bit (7) ? 0x0100 : 0x0000); // The MSB of the raster position
+
 				setGraphicModeActive ();
 			}
 
@@ -120,7 +118,7 @@ void COMMODORE::VICIIRegisters::setValue (size_t p, const MCHEmul::UByte& v)
 		case 0x15:
 			{
 				for (size_t i = 0; i < 8; i++)
-					_spriteEnabled [i] = v.bit (i);
+					_spriteInfo [i]._spriteEnabled = v.bit (i);
 			}
 
 			break;
@@ -133,6 +131,7 @@ void COMMODORE::VICIIRegisters::setValue (size_t p, const MCHEmul::UByte& v)
 				_graphicMulticolorTextModeActive = v.bit (4);
 				_videoResetActive = v.bit (5);
 				/** bites 6 - 7 are not used. */
+
 				setGraphicModeActive ();
 			}
 
@@ -142,7 +141,7 @@ void COMMODORE::VICIIRegisters::setValue (size_t p, const MCHEmul::UByte& v)
 		case 0x17:
 			{
 				for (size_t i = 0; i < 8; i++)
-					_spriteDoubleHeight [i] = v.bit (i);
+					_spriteInfo [i]._spriteDoubleHeight = v.bit (i);
 			}
 
 			break;
@@ -194,7 +193,7 @@ void COMMODORE::VICIIRegisters::setValue (size_t p, const MCHEmul::UByte& v)
 		case 0x1b:
 			{
 				for (size_t i = 0; i < 8; i++)
-					_spriteToForegroundPriority [i] = v.bit (i);
+					_spriteInfo [i]._spriteToForegroundPriority = v.bit (i);
 			}
 
 			break;
@@ -203,7 +202,7 @@ void COMMODORE::VICIIRegisters::setValue (size_t p, const MCHEmul::UByte& v)
 		case 0x1c:
 			{
 				for (size_t i = 0; i < 8; i++)
-					_spriteMulticolor [i] = v.bit (i);
+					_spriteInfo [i]._spriteMulticolor = v.bit (i);
 			}
 
 			break;
@@ -212,7 +211,7 @@ void COMMODORE::VICIIRegisters::setValue (size_t p, const MCHEmul::UByte& v)
 		case 0x1d:
 			{
 				for (size_t i = 0; i < 8; i++)
-					_spriteDoubleWidth [i] = v.bit (i);
+					_spriteInfo [i]._spriteDoubleWidth = v.bit (i);
 			}
 
 			break;
@@ -260,7 +259,7 @@ void COMMODORE::VICIIRegisters::setValue (size_t p, const MCHEmul::UByte& v)
 		case 0x2d:
 		case 0x2e:
 			{
-				_spriteColor [pp - 0x27] = v.value () & 0x0f;
+				_spriteInfo [pp - 0x27]._spriteColor = v.value () & 0x0f;
 			}
 
 			break;
@@ -555,11 +554,11 @@ void COMMODORE::VICIIRegisters::initializeInternalValues ()
 	setValue (0x23, MCHEmul::UByte::_0);
 	setValue (0x24, MCHEmul::UByte::_0);
 
-	// _spriteSharedColor = std::vector <unsigned short> (2, 0x0000);
+	// _spriteSharedColor = std::vector <unsigned char> (2, 0x00);
 	setValue (0x25, MCHEmul::UByte::_0);
 	setValue (0x26, MCHEmul::UByte::_0);
 
-	// _spriteColor = std::vector <unsigned short> (8, 0x0000);
+	// _spriteColor = std::vector <unsigned char> (8, 0x00);
 	setValue (0x27, MCHEmul::UByte::_0);
 	setValue (0x28, MCHEmul::UByte::_0);
 	setValue (0x29, MCHEmul::UByte::_0);
