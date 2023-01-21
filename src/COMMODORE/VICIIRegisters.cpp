@@ -80,7 +80,8 @@ void COMMODORE::VICIIRegisters::setValue (size_t p, const MCHEmul::UByte& v)
 		case 0x10:
 			{
 				for (size_t i = 0; i < 8; i++)
-					_spriteInfo [i]._spriteXCoord = _spriteInfo [i]._spriteXCoord | (v.bit (i) ? 0x0100 : 0x0000); 
+					_spriteInfo [i]._spriteXCoord = (_spriteInfo [i]._spriteXCoord & 0x00ff) | 
+						(v.bit (i) ? 0x0100 : 0x0000); 
 			}
 
 			break;

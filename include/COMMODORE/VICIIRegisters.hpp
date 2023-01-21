@@ -58,8 +58,6 @@ namespace COMMODORE
 							{ return (_spriteInfo [p]._spriteYCoord); }
 		unsigned char spriteColor (size_t p) const
 							{ return (_spriteInfo [p]._spriteColor); }
-		unsigned char spriteSharedColor (size_t p) const
-							{ return (_spriteInfo [p]._spriteSharedColor); }
 		bool spriteEnable (size_t p) const
 							{ return (_spriteInfo [p]._spriteEnabled); }
 		bool spriteMulticolorMode (size_t p) const
@@ -70,6 +68,8 @@ namespace COMMODORE
 							{ return (_spriteInfo [p]._spriteDoubleHeight); }
 		bool spriteToForegroundPriority (size_t p) const
 							{ return (_spriteInfo [p]._spriteToForegroundPriority); }
+		unsigned char spriteSharedColor (size_t p) const
+							{ return (_spriteSharedColor [p]); }
 		
 		// ScrollX & ScrollY.
 		unsigned char verticalScrollPosition () const
