@@ -1,10 +1,10 @@
 <b>Framework for Classic EMULATORS</b><br>
 Develop By <b>Ignacio Cea Forniés</b>. Copyright (C) 2023.<br>
 Used allowed under GPL license.<br>
-The framework has been developed fully in C++ (version 20) using Visual Studio Community 2022 (64bits).<br>
-<a href="https://visualstudio.microsoft.com/es/vs/">Click here to dfownload Visual Studio Community Version</a><br>
+The framework has been developed fully in C++ (version 20) using <a href="https://visualstudio.microsoft.com/es/vs/">Visual Studio Community 2022 (64bits)</a>.<br>
 <br>
 For better understanding of the framework unzip <b>html.zip</b>, included in the package.<br>
+The package includes classes to develop you own emulator, including also assembler, compiler and consoles, remote and local ones.
 <br>
 The implementation of the framework for C64 has been included.<br>
 In that case, the behaviour of the VICII has been emulated following the fantastic article by Christian Bauer that can be foun at
