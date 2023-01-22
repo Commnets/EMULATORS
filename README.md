@@ -5,3 +5,5 @@ The framework has been developed in C++ (version 20) using Visual Studio Communi
 <a href="https://visualstudio.microsoft.com/es/vs/">Click here to dfownload Visual Studio Community Version</a><br>
 For better understanding of the framework unzip html.zip, included in the package.<br>
 The implementation of the framework for C64 has been included.
+
+<img src="./docs/C64Data/Picture1.png"/>
