@@ -64,13 +64,7 @@ namespace MCHEmul
 			bool _on; // true when pressed, false when released...
 		};
 
-		InputOSSystem (int id, const Attributes& attrs = { })
-			: IODevice (Type::_OUTPUT, id, attrs),
-			  _quitRequested (false),
-			  _joysticks (),
-			  _clock (50), // The events of the system will be read 50 times per second...
-			  _movementMap ()
-							{ }
+		InputOSSystem (int id, const Attributes& attrs = { });
 
 		bool quitRequested () const
 							{ return (_quitRequested); }

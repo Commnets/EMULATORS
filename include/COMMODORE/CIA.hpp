@@ -30,18 +30,7 @@ namespace COMMODORE
 		/** Receives the id of the chip in the computer, the id of the registers linked
 			and the if og the interruption to launch when needed. \n
 			In a computer there could be many of these with little differences. */
-		CIA (int id, int rId, unsigned int intId)
-			: MCHEmul::Chip (id,
-				{ { "Name", "CIA" },
-				  { "Code", "6526/6526A/8521" },
-				  { "Manufacturer", "Commodore Business Machines CBM" },
-				  { "Year", "1980" } }),
-			  _CIARegisters (nullptr),
-			  _registersId (rId),
-			  _timerA (0, intId /** they have to know the interruption id. */), _timerB (1, intId), 
-			  _clock (0, intId),
-			  _lastClockCycles (0)
-							{ setClassName ("CIA"); }
+		CIA (int id, int rId, unsigned int intId);
 
 		virtual bool initialize () override;
 

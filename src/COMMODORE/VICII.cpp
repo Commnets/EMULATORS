@@ -11,7 +11,11 @@ const MCHEmul::RasterData COMMODORE::VICII_PAL::_HRASTERDATA (404, 480, 24, 343,
 // ---
 COMMODORE::VICII::VICII (const MCHEmul::RasterData& vd, const MCHEmul::RasterData& hd, 
 		int vV, const MCHEmul::Attributes& attrs)
-	: MCHEmul::GraphicalChip (_ID, attrs),
+	: MCHEmul::GraphicalChip (_ID, 
+		{ { "Name", "VICII" },
+		  { "Code", "6567/8562/8564 (NTSC), 6569/8565/8566 (PAL)" },
+		  { "Manufacturer", "Commodore Business Machines CBM" },
+		  { "Year", "1983" } }),
 	  _VICIIRegisters (nullptr), 
 	  _VICIIView (vV),
 	  _raster (vd, hd),

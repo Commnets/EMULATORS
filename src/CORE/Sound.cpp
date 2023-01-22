@@ -6,7 +6,7 @@ MCHEmul::SoundSystem::SoundSystem (int id, double hz, const MCHEmul::Attributes&
 	  _hertzs (hz),
 	  _clock ((unsigned int) hz)
 { 
-	// TODO
+	setClassName ("SOUNDSYSTEM");
 }
 
 // ---

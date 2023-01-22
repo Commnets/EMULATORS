@@ -25,12 +25,12 @@ namespace COMMODORE
 	class UserIOPort : public MCHEmul::IODevice
 	{
 		public:
-		static const int _ID = 3;
+		static const int _ID = 101;
 
 		UserIOPort ();
 
-		/** It verifies before adding it that whether the Peripherial is a right peripherical. */
-		virtual void connectPeripheral (MCHEmul::IOPeripheral* p) override;
+		/** It verifies before adding it that whether the peripherial is a right one. */
+		virtual bool connectPeripheral (MCHEmul::IOPeripheral* p) override;
 	};
 }
 

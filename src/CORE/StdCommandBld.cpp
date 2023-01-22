@@ -60,6 +60,10 @@ MCHEmul::Command* MCHEmul::StandardCommandBuilder::createEmptyCommand (const std
 		result = new MCHEmul::DesactivateDeepDebugCommand;
 	else if (cmdName == "RESTART" || cmdName == MCHEmul::RestartComputerCommand::_NAME)
 		result = new MCHEmul::RestartComputerCommand;
+	else if (cmdName == "DEVICES" || cmdName == MCHEmul::IODevicesCommand::_NAME)
+		result = new MCHEmul::IODevicesCommand;
+	else if (cmdName == "PERIPHERALS" || cmdName == MCHEmul::PeripheralsCommand::_NAME)
+		result = new MCHEmul::PeripheralsCommand;
 	else if (cmdName == MCHEmul::MoveParametersToAnswerCommand::_NAME)
 		result = new MCHEmul::MoveParametersToAnswerCommand;
 

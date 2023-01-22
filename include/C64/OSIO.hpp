@@ -26,16 +26,13 @@ namespace C64
 	class InputOSSystem final : public MCHEmul::InputOSSystem
 	{
 		public:
-		static const unsigned int _ID = 200;
+		static const unsigned int _ID = 201;
 
 		using Keystroke = 
 			std::pair <unsigned short /** bit at port A. */, unsigned short /** bit at port B. */>;
 		using Keystrokes = std::vector <Keystroke>;
 
-		InputOSSystem (const MCHEmul::Attributes& attrs = { })
-			: MCHEmul::InputOSSystem (_ID, attrs),
-			  _cia1 (nullptr)
-							{ }
+		InputOSSystem ();
 
 		virtual void linkToChips (const MCHEmul::Chips& c) override;
 

@@ -19,31 +19,28 @@
 
 namespace C64
 {
+	/** The C64 screen is one of the very basic IO systems. */
 	class Screen : public MCHEmul::Screen
 	{
 		public:
-		static const int _ID = 1;
-		Screen (double hz, int w, int h, const MCHEmul::Attributes& attrs = { });
+		static const int _ID = 200;
+		Screen (double hz, int w, int h, const MCHEmul::Attributes& attrs)
+			: MCHEmul::Screen ("C64", _ID, w, h, 2, hz, attrs)
+							{ }
 	};
 
+	/** Screen valid for NTSC systems. Used in USA. */
 	class ScreenNTSC final : public Screen
 	{
 		public:
-		ScreenNTSC ()
-			: Screen (59.940f, 
-				(int) COMMODORE::VICII_NTSC::_HRASTERDATA.visiblePositions (), 
-				(int) COMMODORE::VICII_NTSC::_VRASTERDATA.visiblePositions ())
-							{ }
+		ScreenNTSC ();
 	};
 
+	/** Screen valid for PAL systems. Used in Europe. */
 	class ScreenPAL final : public Screen
 	{
 		public:
-		ScreenPAL ()
-			: Screen (50.125f,
-				(int) COMMODORE::VICII_PAL::_HRASTERDATA.visiblePositions (), 
-				(int) COMMODORE::VICII_PAL::_VRASTERDATA.visiblePositions ())
-							{ }
+		ScreenPAL ();
 	};
 }
 

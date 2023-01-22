@@ -26,7 +26,9 @@ namespace C64
 	{
 		public:
 		DatasetteIOPort ()
-			: COMMODORE::DatasetteIOPort ()
+			: COMMODORE::DatasetteIOPort (),
+			  _cia1 (nullptr),
+			  _specialChip (nullptr)
 							{ }
 
 		virtual void linkToChips (const MCHEmul::Chips& c) override;

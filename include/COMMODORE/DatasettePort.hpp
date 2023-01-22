@@ -39,8 +39,8 @@ namespace COMMODORE
 		/** F-6 SENSE. */
 		bool pintF6 () const;
 
-		/** It verifies before adding it that whether the Peripherial is somtehing competible. */
-		virtual void connectPeripheral (MCHEmul::IOPeripheral* p) override;
+		/** It verifies before adding it that whether the peripherial is somtehing compatible. */
+		virtual bool connectPeripheral (MCHEmul::IOPeripheral* p) override;
 
 		private:
 		// Implementation...

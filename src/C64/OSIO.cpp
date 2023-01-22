@@ -86,6 +86,16 @@ const C64::InputOSSystem::KeystrockesMap C64::InputOSSystem::_C64KEYS
 const C64::InputOSSystem::Keystrokes C64::InputOSSystem::_NOKEYSTROKES = { };
 
 // ---
+C64::InputOSSystem::InputOSSystem ()
+	: MCHEmul::InputOSSystem (_ID, 
+		{ { "Type", "IOSystem" },
+		  { "Frequency", "50.0Hz" } }),
+	  _cia1 (nullptr)
+{ 
+	// Nothing else to do...
+}
+
+// ---
 void C64::InputOSSystem::linkToChips (const MCHEmul::Chips& c)
 {
 	for (MCHEmul::Chips::const_iterator i = c.begin (); i != c.end () && _cia1 == nullptr;

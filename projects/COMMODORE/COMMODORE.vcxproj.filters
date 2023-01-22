@@ -102,6 +102,12 @@
     <ClInclude Include="..\..\include\COMMODORE\UserIOPeripherals.hpp">
       <Filter>Archivos de encabezado\IO</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\include\COMMODORE\ExpansionPeripherals.hpp">
+      <Filter>Archivos de encabezado\IO</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\COMMODORE\ExpansionPort.hpp">
+      <Filter>Archivos de encabezado\IO</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Commodore.fmt">
@@ -152,6 +158,9 @@
       <Filter>Archivos de origen\IO</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\COMMODORE\1530Datasette.cpp">
+      <Filter>Archivos de origen\IO</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\COMMODORE\ExpansionPort.cpp">
       <Filter>Archivos de origen\IO</Filter>
     </ClCompile>
   </ItemGroup>

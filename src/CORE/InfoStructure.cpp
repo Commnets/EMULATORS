@@ -114,7 +114,7 @@ std::string MCHEmul::InfoStructure::asString (const std::string& s, const std::s
 	for (const auto& i : _attributes)
 		result += ((ct++ == 0) ? "" : s) + (pF ? (i.first + sa) : "") + i.second;
 	for (const auto& i : _infoStructures)
-		result += ((ct++ == 0) ? "" : s) + bI + (pF ? (i.first + sa) : "") + i.second.asString (s, sa, bI, bF) + bF;
+		result += ((ct++ == 0) ? "" : s) + bI + (pF ? (i.first + sa) : "") + i.second.asString (s, sa, bI, bF, pF) + bF;
 
 	return (result);
 }

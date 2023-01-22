@@ -28,6 +28,8 @@ MCHEmul::Screen::Screen (const std::string& n, int id,
 	_renderer = SDL_CreateRenderer (_window, -1, SDL_RENDERER_ACCELERATED);
 	_texture  = SDL_CreateTexture	
 		(_renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, _screenColumns, _screenRows);
+
+	setClassName ("SCREEN");
 }
 
 // ---

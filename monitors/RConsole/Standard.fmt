@@ -193,3 +193,7 @@ Program saved=@RESULT@
 ;CANSWER
 @RESULT@
 #---
+#---
+;CDEVICES
+@DEVICES?{key=NO,equal=:}\n@
+#---

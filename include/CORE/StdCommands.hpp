@@ -571,7 +571,7 @@ namespace MCHEmul
 							{ }
 
 		virtual bool canBeExecuted () const override
-							{ return (true); }
+							{ return (_parameters.size () == 0); }
 
 		private:
 		virtual void executeImpl (CommandExecuter* cE, Computer* c, InfoStructure& rst) override;
@@ -591,6 +591,47 @@ namespace MCHEmul
 
 		/** It could have an optional parameter with the "level" of the restart. \n
 			By default it will be 0. */
+		virtual bool canBeExecuted () const override
+							{ return (_parameters.size () == 0 || _parameters.size () == 1); }
+
+		private:
+		virtual void executeImpl (CommandExecuter* cE, Computer* c, InfoStructure& rst) override;
+	};
+
+	/** Comand to list infomation about the io devices connected to the computer. \n
+		Never get wrong the io devices with the peripherals connected to each, that other command is used. \n
+		No parameters are needed. */
+	class IODevicesCommand final : public Command
+	{
+		public:
+		static const int _ID = 25;
+		static const std::string _NAME;
+
+		IODevicesCommand ()
+			: Command (_ID, _NAME)
+							{ }
+
+		virtual bool canBeExecuted () const override
+							{ return (_parameters.size () == 0); }
+
+		private:
+		virtual void executeImpl (CommandExecuter* cE, Computer* c, InfoStructure& rst) override;
+	};
+
+	/** Command to know the peripehrals connected to the computer. \n
+		The command allows to know the peripherals connected to a specific io device or all of them. \n
+		So the commnand gets 0 parameters (all peripherals) or 1 with the name of the io device which
+		peripherals is nneded to know. */
+	class PeripheralsCommand final : public Command
+	{
+		public:
+		static const int _ID = 26;
+		static const std::string _NAME;
+
+		PeripheralsCommand ()
+			: Command (_ID, _NAME)
+							{ }
+
 		virtual bool canBeExecuted () const override
 							{ return (_parameters.size () == 0 || _parameters.size () == 1); }
 

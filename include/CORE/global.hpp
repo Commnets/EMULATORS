@@ -43,12 +43,13 @@ namespace MCHEmul
 	static const unsigned int _CPU_ERROR					= 2;
 	static const unsigned int _CHIP_ERROR					= 3;
 	static const unsigned int _DEVICE_ERROR					= 4;
-	static const unsigned int _COMMSNOTOPENED_ERROR			= 5;
-	static const unsigned int _COMMSCHANNELNOTOPENED_ERROR	= 6;
-	static const unsigned int _COMMSINTNOTCREATED_ERROR		= 7;
-	static const unsigned int _CHANNELREADERROR_ERROR		= 8;
-	static const unsigned int _CHANNELWRITEERROR_ERROR		= 9;
-	static const unsigned int _FORMATTERNOTVALID_ERROR		= 10;
+	static const unsigned int _PERIPHERAL_ERROR				= 5;
+	static const unsigned int _COMMSNOTOPENED_ERROR			= 6;
+	static const unsigned int _COMMSCHANNELNOTOPENED_ERROR	= 7;
+	static const unsigned int _COMMSINTNOTCREATED_ERROR		= 8;
+	static const unsigned int _CHANNELREADERROR_ERROR		= 9;
+	static const unsigned int _CHANNELWRITEERROR_ERROR		= 10;
+	static const unsigned int _FORMATTERNOTVALID_ERROR		= 11;
 
 	/** The max number of bytes managed in this emulator. */
 	static const unsigned int _MAXBYTESMANAGED				= 2;

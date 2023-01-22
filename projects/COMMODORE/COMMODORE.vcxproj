@@ -29,6 +29,8 @@
     <ClInclude Include="..\..\include\COMMODORE\Commands.hpp" />
     <ClInclude Include="..\..\include\COMMODORE\Computer.hpp" />
     <ClInclude Include="..\..\include\COMMODORE\DatasettePort.hpp" />
+    <ClInclude Include="..\..\include\COMMODORE\ExpansionPeripherals.hpp" />
+    <ClInclude Include="..\..\include\COMMODORE\ExpansionPort.hpp" />
     <ClInclude Include="..\..\include\COMMODORE\incs.hpp" />
     <ClInclude Include="..\..\include\COMMODORE\IOPBuilder.hpp" />
     <ClInclude Include="..\..\include\COMMODORE\SID.hpp" />
@@ -61,6 +63,7 @@
     <ClCompile Include="..\..\src\COMMODORE\CommandBuilder.cpp" />
     <ClCompile Include="..\..\src\COMMODORE\Commands.cpp" />
     <ClCompile Include="..\..\src\COMMODORE\DatasettePort.cpp" />
+    <ClCompile Include="..\..\src\COMMODORE\ExpansionPort.cpp" />
     <ClCompile Include="..\..\src\COMMODORE\IOPBuilder.cpp" />
     <ClCompile Include="..\..\src\COMMODORE\SID.cpp" />
     <ClCompile Include="..\..\src\COMMODORE\SIDRegisters.cpp" />

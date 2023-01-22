@@ -20,7 +20,7 @@
 namespace COMMODORE
 {
 	/** This unit was used in many COMMODORE models. \n
-		Mainly all of them excep COMMODORE16. */
+		Mainly all of them except COMMODORE16. */
 	class Datasette1530 : public DatasettePeripheral
 	{
 		public:

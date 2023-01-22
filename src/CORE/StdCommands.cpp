@@ -35,6 +35,8 @@ const std::string MCHEmul::SaveBinCommand::_NAME = "CSAVEBIN";
 const std::string MCHEmul::ActivateDeepDebugCommand::_NAME = "CACTIVATEDEEPDEBUG";
 const std::string MCHEmul::DesactivateDeepDebugCommand::_NAME = "CDESACTIVATEDEEPDEBUG";
 const std::string MCHEmul::RestartComputerCommand::_NAME = "CRESTART";
+const std::string MCHEmul::IODevicesCommand::_NAME = "CDEVICES";
+const std::string MCHEmul::PeripheralsCommand::_NAME = "CPERIPHERALS";
 
 // ---
 MCHEmul::HelpCommand::HelpCommand (const std::string& hF)
@@ -493,4 +495,27 @@ void MCHEmul::RestartComputerCommand::executeImpl
 	c -> setExit (true);
 	// but starts back...
 	c -> setRestartAfterExit (true, level); 
+}
+
+// ---
+void MCHEmul::IODevicesCommand::executeImpl 
+	(MCHEmul::CommandExecuter* cE, MCHEmul::Computer* c, MCHEmul::InfoStructure& rst)
+{
+	if (c == nullptr)
+		return;
+
+	MCHEmul::InfoStructure dvcs;
+	for (const auto& i : c -> devices ())
+		dvcs.add (std::to_string (i.first), i.second -> getInfoStructure ());
+	rst.add ("DEVICES", dvcs);
+}
+
+// ---
+void MCHEmul::PeripheralsCommand::executeImpl 
+	(MCHEmul::CommandExecuter* cE, MCHEmul::Computer* c, MCHEmul::InfoStructure& rst)
+{
+	if (c == nullptr)
+		return;
+
+	return;
 }

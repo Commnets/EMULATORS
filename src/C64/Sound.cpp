@@ -2,7 +2,9 @@
 
 // ---
 C64::SoundSystem::SoundSystem ()
-	: MCHEmul::SoundSystem (_ID, 50, { })
+	: MCHEmul::SoundSystem (_ID, 50, 
+		{ { "Type", "Sound System" },
+		  { "Frequency", "16kHz" } })
 {
-	// TODO
+	// Nothing else to do...
 }

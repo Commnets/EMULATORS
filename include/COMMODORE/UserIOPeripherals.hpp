@@ -32,7 +32,7 @@ namespace COMMODORE
 	class NoUserIOPeripheral : public UserIOPeripheral
 	{
 		public:
-		static const int _ID = -100;
+		static const int _ID = -101;
 
 		NoUserIOPeripheral ()
 			: UserIOPeripheral (_ID, { }) // A nothing identificator...

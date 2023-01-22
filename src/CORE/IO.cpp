@@ -12,9 +12,9 @@ MCHEmul::IODevice::IODevice (MCHEmul::IODevice::Type t, int id, const MCHEmul::A
 	: MCHEmul::InfoClass ("IODevice"),
 	  _type (t), 
 	  _id (id), 
-	  _chips (), 
-	  _attributes (),
-	  _peripherals (),
+	  _chips (), // None by default...
+	  _attributes (attrs),
+	  _peripherals (), // None by default...
 	  _error (MCHEmul::_NOERROR)
 {
 	MCHEmul::IODeviceSystem::system () -> add (this);
@@ -27,19 +27,41 @@ MCHEmul::IODevice::~IODevice ()
 }
 
 // ---		
-void MCHEmul::IODevice::connectPeripheral (MCHEmul::IOPeripheral* p)
+bool MCHEmul::IODevice::connectPeripheral (MCHEmul::IOPeripheral* p)
 {
 	if (p == nullptr)
-		return;
+	{ 
+		_error = MCHEmul::_PERIPHERAL_ERROR;
+
+		return (false); // The element cann't be added...
+	}
 
 	// Only when peripheral with the same id connected...
+	bool result = true;
 	MCHEmul::IOPeripherals::const_iterator i = _peripherals.find (p -> id ());
 	if (i == _peripherals.end ())
 	{
 		_peripherals.insert (MCHEmul::IOPeripherals::value_type (p -> id (), p));
 
 		p -> _device = this; // link it...
+
+		// The peripheral is initialized and has to be ok!
+		if (!p -> initialize ())
+		{
+			_error = MCHEmul::_INIT_ERROR;
+
+			result = false;
+		}
 	}
+	// ...otherwise an error is generated...
+	else
+	{
+		_error = MCHEmul::_PERIPHERAL_ERROR;
+
+		result = false;
+	}
+
+	return (result);
 }
 
 // ---

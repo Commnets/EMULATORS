@@ -6,6 +6,7 @@
 #include <C64/OSIO.hpp>
 #include <C64/DatasettePort.hpp>
 #include <COMMODORE/UserPort.hpp>
+#include <COMMODORE/ExpansionPort.hpp>
 #include <F6500/C6510.hpp>
 
 // ---
@@ -23,14 +24,6 @@ C64::Commodore64::Commodore64 (C64::Commodore64::VisualSystem vS)
 	  _visualSystem (vS)
 {
 	// Nothing else to do...
-}
-
-// ---
-bool C64::Commodore64::connect (MCHEmul::IOPeripheral* p, MCHEmul::IODevice* d)
-{
-	// TODO
-
-	return (true);
 }
 
 // ---
@@ -89,8 +82,10 @@ MCHEmul::IODevices C64::Commodore64::standardDevices (C64::Commodore64::VisualSy
 	// The different ports
 	// The port where usually the datasette is connected...
 	result.insert (MCHEmul::IODevices::value_type (C64::DatasetteIOPort::_ID, new C64::DatasetteIOPort));
-	// The port where the cardtriges are connected...
+	// The port where the printers and similar are connected...
 	result.insert (MCHEmul::IODevices::value_type (COMMODORE::UserIOPort::_ID, new COMMODORE::UserIOPort));
+	// The port where the cartriges are connected...
+	result.insert (MCHEmul::IODevices::value_type (COMMODORE::ExpansionIOPort::_ID, new COMMODORE::ExpansionIOPort));
 
 	return (result);
 }

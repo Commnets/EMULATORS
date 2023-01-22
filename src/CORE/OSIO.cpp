@@ -2,6 +2,17 @@
 #include <SDL.h>
 
 // ---
+MCHEmul::InputOSSystem::InputOSSystem (int id, const MCHEmul::Attributes& attrs)
+	: IODevice (Type::_OUTPUT, id, attrs),
+	  _quitRequested (false),
+	  _joysticks (),
+	  _clock (50), // The events of the system will be read 50 times per second...
+	  _movementMap ()
+{ 
+		setClassName ("IOSYSTEM"); 
+}
+
+// ---
 bool MCHEmul::InputOSSystem::initialize ()
 { 
 	_quitRequested = false; 

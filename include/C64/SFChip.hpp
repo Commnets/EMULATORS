@@ -18,26 +18,24 @@
 
 namespace C64
 {
+	/** Very critical chip. \n
+		The direction of the IO Channels are configurated here at the position 0x00. \n
+		The configuration of the memory is controlled with this chip, accesing the possition 0x01 of the page 0. */
 	class SpecialFunctionsChip final : public MCHEmul::Chip
 	{
 		public:
 		static const unsigned int _ID = 101;
 
-		SpecialFunctionsChip ()
-			: MCHEmul::Chip (_ID, 
-				{ { "Name", "SFChip" },
-				  { "Manufacturer", "Ignacio Cea" },
-				  { "Year", "2022" } }),
-			  _BasicRAM (nullptr), _BasicROM (nullptr), _KernelROM (nullptr), _KernelRAM (nullptr),
-			  _CharROM (nullptr), _VICIIRegisters (nullptr), _SIDRegisters (nullptr), _ColorRAM (nullptr),
-			  _CIA1Registers (nullptr), _CIA2registers (nullptr), _IO1Registers (nullptr), _IO2registers (nullptr)
-							{ }
+		SpecialFunctionsChip ();
 
 		virtual bool initialize () override;
 
 		virtual bool simulate (MCHEmul::CPU* cpu) override;
 
 		private:
+		static const MCHEmul::Address _POS0;
+		static const MCHEmul::Address _POS1;
+
 		MCHEmul::PhysicalStorageSubset* _BasicROM;
 		MCHEmul::PhysicalStorageSubset* _BasicRAM;
 		MCHEmul::PhysicalStorageSubset* _KernelROM;
@@ -50,6 +48,9 @@ namespace C64
 		MCHEmul::PhysicalStorageSubset* _CIA2registers;
 		MCHEmul::PhysicalStorageSubset* _IO1Registers;
 		MCHEmul::PhysicalStorageSubset* _IO2registers;
+
+		// Implementation
+		MCHEmul::UByte _lastValue0, _lastValue1;
 	};
 }
 

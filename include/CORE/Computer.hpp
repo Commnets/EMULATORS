@@ -108,7 +108,8 @@ namespace MCHEmul
 		/** To connect a peripheral to a device on the computer. \n
 			It returns true when it is ok, and false in other circunstance. 
 			The way the peripheral is connected will depend on the computer, on the device and on the peripheral itself. */
-		virtual bool connect (IOPeripheral* p, IODevice* d) = 0;
+		virtual bool connect (IOPeripheral* p, IODevice* d)
+							{ return ((p == nullptr || d == nullptr) ? false : d -> connectPeripheral (p)); }
 
 		const Screen* screen () const
 							{ return (_screen); }

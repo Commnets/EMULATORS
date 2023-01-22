@@ -3,6 +3,31 @@
 #include <C64/CIA1Registers.hpp>
 #include <C64/CIA2Registers.hpp>
 
+const MCHEmul::Address C64::SpecialFunctionsChip::_POS0 = MCHEmul::Address ({ 0x00, 0x00 }, false);
+const MCHEmul::Address C64::SpecialFunctionsChip::_POS1 = MCHEmul::Address ({ 0x01, 0x00 }, false);
+
+// ---
+C64::SpecialFunctionsChip::SpecialFunctionsChip ()
+	: MCHEmul::Chip (_ID, 
+		{ { "Name", "SFChip" },
+		{ "Manufacturer", "Ignacio Cea" },
+		{ "Year", "2022" } }),
+	  _BasicRAM (nullptr), 
+	  _BasicROM (nullptr), 
+	  _KernelROM (nullptr), 
+	  _KernelRAM (nullptr),
+	  _CharROM (nullptr), 
+	  _VICIIRegisters (nullptr), 
+	  _SIDRegisters (nullptr), 
+	  _ColorRAM (nullptr),
+	  _CIA1Registers (nullptr), 
+	  _CIA2registers (nullptr), 
+	  _IO1Registers (nullptr), 
+	  _IO2registers (nullptr)
+{
+	setClassName ("SFChip");
+}
+
 // ---
 bool C64::SpecialFunctionsChip::initialize ()
 {
@@ -19,39 +44,42 @@ bool C64::SpecialFunctionsChip::initialize ()
 	_IO1Registers	= memoryRef () -> subset (C64::Memory::_IO1_SUBSET);
 	_IO2registers	= memoryRef () -> subset (C64::Memory::_IO2_SUBSET);
 
+	_lastValue0 = _lastValue1 = 0;
+
 	return (true);
 }
 
 // ---
 bool C64::SpecialFunctionsChip::simulate (MCHEmul::CPU* cpu)
 {
-	// To avoid repeat calculus...
-	static const MCHEmul::Address _POS1 ({ 0x01, 0x00 }, false);
+	MCHEmul::UByte val1 = memoryRef () -> value (_POS1);
+	if (val1 == _lastValue1)
+		return (true); // Nothing has changed...just to speed everything a little bit more!
 
-	MCHEmul::UByte val0 = memoryRef () -> value (_POS1);
+	_lastValue1 = val1;
 
 	// Active or desactive the BASIC ROM....
-	bool bit0 = val0.bit (0);
-	_BasicROM		-> setActiveForReading ( bit0);
-	_BasicRAM		-> setActiveForReading (!bit0);
+	bool bit10 = val1.bit (0);
+	_BasicROM		-> setActiveForReading ( bit10);
+	_BasicRAM		-> setActiveForReading (!bit10);
 
 	// Active or desactive the KERNEL ROM...
-	bool bit1 = val0.bit (1);
-	_KernelROM		-> setActiveForReading ( bit1);
-	_KernelRAM		-> setActiveForReading (!bit1);
+	bool bit11 = val1.bit (1);
+	_KernelROM		-> setActiveForReading ( bit11);
+	_KernelRAM		-> setActiveForReading (!bit11);
 
 	// Usually the CHAR ROM is only seen from VICII, 
 	// because CPU access to the Chip Registers instead
 	// But it could be accessed. Take really care when doing so!
-	bool bit2 = val0.bit (2);
-	_CharROM		-> setActiveForReading (!bit2);
-	_VICIIRegisters -> setActiveForReading ( bit2);
-	_SIDRegisters	-> setActiveForReading ( bit2);
-	_ColorRAM		-> setActiveForReading ( bit2);
-	_CIA1Registers	-> setActiveForReading ( bit2);
-	_CIA2registers	-> setActiveForReading ( bit2);
-	_IO1Registers	-> setActiveForReading ( bit2);
-	_IO2registers	-> setActiveForReading ( bit2);
+	bool bit12 = val1.bit (2);
+	_CharROM		-> setActiveForReading (!bit12);
+	_VICIIRegisters -> setActiveForReading ( bit12);
+	_SIDRegisters	-> setActiveForReading ( bit12);
+	_ColorRAM		-> setActiveForReading ( bit12);
+	_CIA1Registers	-> setActiveForReading ( bit12);
+	_CIA2registers	-> setActiveForReading ( bit12);
+	_IO1Registers	-> setActiveForReading ( bit12);
+	_IO2registers	-> setActiveForReading ( bit12);
 
 	return (true);
 }

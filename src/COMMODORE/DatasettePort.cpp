@@ -3,7 +3,12 @@
 
 // ---
 COMMODORE::DatasetteIOPort::DatasetteIOPort ()
-	: MCHEmul::IODevice (MCHEmul::IODevice::Type::_INPUTOUTPUT, _ID, { }),
+	: MCHEmul::IODevice (MCHEmul::IODevice::Type::_INPUTOUTPUT, _ID, 
+		{ { "Name", "Datasette Port" },
+		  { "Type", "Input/Output" },
+		  { "Pins", "6 pairs = 12" },
+		  { "Manufacturer", "Commodore Business Machines CBM" },
+		  { "Year", "Unknow" } }),
 	  _datasette (nullptr)
 {
 	// Nothing else to do...
@@ -29,17 +34,19 @@ bool COMMODORE::DatasetteIOPort::pintF6 () const
 }
 
 // ---
-void COMMODORE::DatasetteIOPort::connectPeripheral (MCHEmul::IOPeripheral* p)
+bool COMMODORE::DatasetteIOPort::connectPeripheral (MCHEmul::IOPeripheral* p)
 {
 	// If it is not of the right type, it could be connected at all!
 	if (dynamic_cast <COMMODORE::DatasettePeripheral*> (p) == nullptr)
-		return;
+	{ 
+		_error = MCHEmul::_PERIPHERAL_ERROR;
+
+		return (false);
+	}
 
 	// There can be only one peripheral connected at the same time...
 	if (!peripherals ().empty ())
 		MCHEmul::IODevice::disconnectAllPeripherals ();
-
 	_datasette = static_cast <COMMODORE::DatasettePeripheral*> (p);
-
-	MCHEmul::IODevice::connectPeripheral (p);
+	return (MCHEmul::IODevice::connectPeripheral (p));
 }

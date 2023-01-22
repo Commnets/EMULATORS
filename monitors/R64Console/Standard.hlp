@@ -37,6 +37,10 @@ No parameters needed.
 ;CPUSSTATUS
 Similar to CPUSTATUS but not including info about the stack.
 No parameters needed.
+;DEVICES
+Get the info about all devices connected to the computer.
+The Devices are not the peripherals that connect to the devices.
+No parameters are needed.
 #Commands to know think about the Computer
 ;STACK (ALL)
 Get the status of the stack.

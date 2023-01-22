@@ -34,8 +34,6 @@ namespace C64
 
 		Commodore64 (VisualSystem vS = VisualSystem::_PAL /** Europe initially */);
 
-		virtual bool connect (MCHEmul::IOPeripheral* p, MCHEmul::IODevice* d) override;
-
 		virtual bool initialize (bool iM = true) override;
 
 		// To get direct access to the most important C64 chips...
