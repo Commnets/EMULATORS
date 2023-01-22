@@ -25,14 +25,7 @@ namespace COMMODORE
 		public:
 		static const unsigned int _ID = 105;
 
-		SID ()
-			: MCHEmul::Chip (_ID,
-				{ { "Name", "SID" },
-				  { "Code", "6581/8580" },
-				  { "Manufacturer", "Commodore Business Machines CBM" },
-				  { "Year", "1981" } }),
-			  _SIDRegisters (nullptr)
-							{ setClassName ("SID"); }
+		SID ();
 
 		virtual bool initialize () override;
 

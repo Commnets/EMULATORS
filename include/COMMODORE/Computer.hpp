@@ -18,6 +18,9 @@
 #include <COMMODORE/VICII.hpp>
 #include <COMMODORE/CIA.hpp>
 #include <COMMODORE/SID.hpp>
+#include <COMMODORE/UserPort.hpp>
+#include <COMMODORE/DatasettePort.hpp>
+#include <COMMODORE/1530Datasette.hpp>
 
 namespace COMMODORE
 {
@@ -72,6 +75,34 @@ namespace COMMODORE
 							{ return (existsSID ()
 								? dynamic_cast <COMMODORE::SID*> 
 								  ((*_chips.find (COMMODORE::SID::_ID)).second)
+								: nullptr); }
+
+		/** The User IO Port. */
+		bool existsUserIOPort () const
+							{ return (_devices.find (COMMODORE::UserIOPort::_ID) != _devices.end ());	}
+		const COMMODORE::UserIOPort* userIOPort () const
+							{ return (existsUserIOPort () 
+								? dynamic_cast <const COMMODORE::UserIOPort*> 
+								  ((*_chips.find (COMMODORE::UserIOPort::_ID)).second)
+								: nullptr); }
+		COMMODORE::UserIOPort* userIOPort ()
+							{ return (existsUserIOPort () 
+								? dynamic_cast <COMMODORE::UserIOPort*> 
+								  ((*_chips.find (COMMODORE::UserIOPort::_ID)).second)
+								: nullptr); }
+
+		/** The Datasette Port. */
+		bool existsDatasettePort () const
+							{ return (_devices.find (COMMODORE::DatasetteIOPort::_ID) != _devices.end ());	}
+		const COMMODORE::DatasetteIOPort* userDatasettePort () const
+							{ return (existsDatasettePort () 
+								? dynamic_cast <const COMMODORE::DatasetteIOPort*> 
+								  ((*_chips.find (COMMODORE::DatasetteIOPort::_ID)).second)
+								: nullptr); }
+		COMMODORE::DatasetteIOPort* userDatasettePort ()
+							{ return (existsDatasettePort () 
+								? dynamic_cast <COMMODORE::DatasetteIOPort*> 
+								  ((*_chips.find (COMMODORE::DatasetteIOPort::_ID)).second)
 								: nullptr); }
 	};
 }

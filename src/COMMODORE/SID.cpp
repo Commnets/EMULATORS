@@ -1,6 +1,18 @@
 #include <COMMODORE/SID.hpp>
 
 // ---
+COMMODORE::SID::SID ()
+	: MCHEmul::Chip (_ID,
+		{ { "Name", "SID" },
+		{ "Code", "6581/8580" },
+		{ "Manufacturer", "Commodore Business Machines CBM" },
+		{ "Year", "1981" } }),
+	  _SIDRegisters (nullptr)
+{ 
+	setClassName ("SID"); 
+}
+
+// ---
 bool COMMODORE::SID::initialize ()
 {
 	assert (memoryRef () != nullptr);

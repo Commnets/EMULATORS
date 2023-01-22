@@ -27,11 +27,12 @@ MCHEmul::IODevice::~IODevice ()
 }
 
 // ---		
-void MCHEmul::IODevice::addPeripheral (MCHEmul::IOPeripheral* p)
+void MCHEmul::IODevice::connectPeripheral (MCHEmul::IOPeripheral* p)
 {
 	if (p == nullptr)
 		return;
 
+	// Only when peripheral with the same id connected...
 	MCHEmul::IOPeripherals::const_iterator i = _peripherals.find (p -> id ());
 	if (i == _peripherals.end ())
 	{
@@ -42,7 +43,7 @@ void MCHEmul::IODevice::addPeripheral (MCHEmul::IOPeripheral* p)
 }
 
 // ---
-void MCHEmul::IODevice::removePeripheral (int id)
+void MCHEmul::IODevice::disconnectPeripheral (int id)
 {
 	MCHEmul::IOPeripherals::const_iterator i = _peripherals.find (id);
 	if (i != _peripherals.end ())

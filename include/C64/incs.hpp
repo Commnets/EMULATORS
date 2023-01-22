@@ -25,9 +25,7 @@
 #include <C64/Screen.hpp>
 #include <C64/Sound.hpp>
 #include <C64/OSIO.hpp>
-#include <C64/UserPeripherals.hpp>
-#include <C64/UserPort.hpp>
-#include <C64/IOPBuilder.hpp>
+#include <C64/DatasettePort.hpp>
 #include <C64/Commands.hpp>
 #include <C64/CommandBuilder.hpp>
 #include <C64/C64Emulator.hpp>

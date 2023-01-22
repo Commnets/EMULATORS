@@ -4,7 +4,8 @@
 #include <C64/Screen.hpp>
 #include <C64/Sound.hpp>
 #include <C64/OSIO.hpp>
-#include <C64/UserPort.hpp>
+#include <C64/DatasettePort.hpp>
+#include <COMMODORE/UserPort.hpp>
 #include <F6500/C6510.hpp>
 
 // ---
@@ -77,12 +78,19 @@ MCHEmul::IODevices C64::Commodore64::standardDevices (C64::Commodore64::VisualSy
 {
 	MCHEmul::IODevices result;
 
+	// The very basic systems...
+	// They are really part of the system, with no simlated connections at all!
 	result.insert (MCHEmul::IODevices::value_type (C64::Screen::_ID, 
 		(MCHEmul::IODevice*) ((vS == C64::Commodore64::VisualSystem::_NTSC) 
 			? (C64::Screen*) new C64::ScreenNTSC : (C64::Screen*) new C64::ScreenPAL)));
 	result.insert (MCHEmul::IODevices::value_type (C64::SoundSystem::_ID, new C64::SoundSystem));
 	result.insert (MCHEmul::IODevices::value_type (C64::InputOSSystem::_ID, new C64::InputOSSystem));
-	result.insert (MCHEmul::IODevices::value_type (C64::UserIOPort::_ID, new C64::UserIOPort));
+
+	// The different ports
+	// The port where usually the datasette is connected...
+	result.insert (MCHEmul::IODevices::value_type (C64::DatasetteIOPort::_ID, new C64::DatasetteIOPort));
+	// The port where the cardtriges are connected...
+	result.insert (MCHEmul::IODevices::value_type (COMMODORE::UserIOPort::_ID, new COMMODORE::UserIOPort));
 
 	return (result);
 }

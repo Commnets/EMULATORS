@@ -81,9 +81,12 @@ namespace MCHEmul
 			If either there had been a peripheral with the same id already connected 
 			or the peripheral were not valid, nothing would happen. \n
 			The method can be overloaded to check (e.g) compability before adding it. */
-		virtual void addPeripheral (IOPeripheral* p);
-		/** To remove a Peripheral. if the peripheral doesn't exist nothing happens. */
-		void removePeripheral (int id);
+		virtual void connectPeripheral (IOPeripheral* p);
+		/** To disconnect a Peripheral. if the peripheral doesn't exist nothing happens. */
+		void disconnectPeripheral (int id);
+		/** To remove all peripherals. */
+		void disconnectAllPeripherals ()
+							{ _peripherals.clear (); }
 
 		/** To initialize the device. */
 		virtual bool initialize ();

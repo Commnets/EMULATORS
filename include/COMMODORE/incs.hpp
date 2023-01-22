@@ -24,6 +24,11 @@
 #include <COMMODORE/CIA.hpp>
 #include <COMMODORE/SIDRegisters.hpp>
 #include <COMMODORE/SID.hpp>
+#include <COMMODORE/DatasettePort.hpp>
+#include <COMMODORE/DatasettePeripherals.hpp>
+#include <COMMODORE/1530Datasette.hpp>
+#include <COMMODORE/UserPort.hpp>
+#include <COMMODORE/UserIOPeripherals.hpp>
 #include <COMMODORE/Computer.hpp>
 #include <COMMODORE/Commands.hpp>
 #include <COMMODORE/CommandBuilder.hpp>

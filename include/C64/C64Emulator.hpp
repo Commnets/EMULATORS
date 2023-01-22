@@ -16,7 +16,7 @@
 
 #include <EMULATORS/Emulator.hpp>
 #include <C64/C64.hpp>
-#include <C64/IOPBuilder.hpp>
+#include <COMMODORE/IOPBuilder.hpp>
 
 namespace C64
 {
@@ -58,7 +58,7 @@ namespace C64
 								? C64::Commodore64::VisualSystem::_NTSC : C64::Commodore64::VisualSystem::_PAL)); }
 
 		virtual MCHEmul::IOPeripheralBuilder* createPeripheralBuilder () const override
-							{ return (new C64::IOPeripheralBuilder); }
+							{ return (new COMMODORE::IOPeripheralBuilder); }
 	};
 }
 

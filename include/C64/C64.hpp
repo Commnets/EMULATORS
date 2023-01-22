@@ -17,7 +17,6 @@
 #include <CORE/incs.hpp>
 #include <COMMODORE/incs.hpp>
 #include <C64/Screen.hpp>
-#include <C64/UserPeripherals.hpp>
 #include <C64/CIA1.hpp>
 #include <C64/CIA2.hpp>
 
