@@ -12,6 +12,12 @@ void C64::C64Emulator::printOutParameters (std::ostream& o) const
 
 	o << "/n:\t\t" << "Emulation using NTSC parameters and screen size." << std::endl;
 	o << "/b:\t\t" << "Draw a dark border in the drawable screen." << std::endl;
+	o << "LANGUAGES allowed under command line /i:" << std::endl << 
+		 "ENG:\tEnglish" << std::endl <<
+		 "ESP:\tSpanish" << std::endl << 
+		 "JAP:\tJapanesse" << std::endl << 
+		 "SWE:\tSwedish" << std::endl <<
+		 "DKA:\tDanish" << std::endl;
 }
 
 // ---

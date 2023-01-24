@@ -36,6 +36,15 @@ namespace C64
 
 		virtual void linkToChips (const MCHEmul::Chips& c) override;
 
+		/** The ScanCode is based en where the key is localed in a standard US PC Keyboard. \n
+			So e.g, the ; is where the Ñ is in a spanish layout. \n
+			Important to know about how C64 keyboard layout matches PC Keyboard: \n
+			CBM Key = ALT GRAHICS (RIGHT). \n
+			STOP Key = ALT (LEFT). \n
+			Arrow (located at the left up corner of the C64 Keyboard) = ESC. \n
+			RESTORE = It is wired directly against the CPU, so the simulation comes through out other point. 
+			SHIFT LOCK = Same. 
+			POUND SYMBOL = */
 		inline const Keystrokes& keystrokesFor (SDL_Scancode sc) const;
 
 		private:

@@ -10,11 +10,11 @@
 #include <F6500/C6510.hpp>
 
 // ---
-C64::Commodore64::Commodore64 (C64::Commodore64::VisualSystem vS)
+C64::Commodore64::Commodore64 (C64::Commodore64::VisualSystem vS, const std::string& lang)
 	: COMMODORE::Computer 
 		(new F6500::C6510 (),
 		 C64::Commodore64::standardChips (vS),
-		 new C64::Memory (),
+		 new C64::Memory (lang), // The memory is loaded with different info depending on the language...
 		 C64::Commodore64::standardDevices (vS),
 		 vS == C64::Commodore64::VisualSystem::_PAL ? 985000 /* 0.986 MHz */: 1023000 /** 1.023 MHz */,
 		 { { "Name", "Commodore 64" },

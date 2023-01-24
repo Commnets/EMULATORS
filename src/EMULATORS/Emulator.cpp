@@ -10,6 +10,7 @@ const unsigned char MCHEmul::Emulator::_PARAMLOGLEVEL = 'l';
 const unsigned char MCHEmul::Emulator::_PARAMADDRESS = 'a';
 const unsigned char MCHEmul::Emulator::_PARAMADDRESSSTOP = 'd';
 const unsigned char MCHEmul::Emulator::_PARAMSTOP = 's';
+const unsigned char MCHEmul::Emulator::_PARAMLANGUAGE = 'i';
 
 // ---
 MCHEmul::Emulator::Emulator (const MCHEmul::CommandLineArguments& args, MCHEmul::CommunicationSystem* cS)
@@ -60,7 +61,8 @@ void MCHEmul::Emulator::printOutParameters (std::ostream& o) const
 	o << "/a[ADDRESS]:\t" << "The initial address of the PC register." << std::endl;
 	o << "\t\tOtherwise the one defined by the computer emulated will be used." << std::endl;
 	o << "/l[LEVEL]:\t" << "The deepness of the debug. 1 - 4. The bigger the deeper." << std::endl;
-	o << "/d[BREAKS]:\t" << "Break points address separated by comma." << std::endl;
+	o << "/d[BREAKS]:\t" << "Break points addresses separated by comma." << std::endl;
+	o << "/i[LANGID]:\t" << "Language of the machine emulated. It has to be recognized from the emulated computer" << std::endl;
 	o << "/s:\t\t" << "Start the emulation stopped." << std::endl;
 }
 

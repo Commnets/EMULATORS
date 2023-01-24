@@ -27,6 +27,7 @@ namespace MCHEmul
 	// Important macros used many times
 	static const std::string _YES = "YES";
 	static const std::string _NO = "NO";
+	static const std::string _DEFAULTLANGUAGE = "ENG";
 
 	/** A vector of strings. */
 	using Strings = std::vector <std::string>;

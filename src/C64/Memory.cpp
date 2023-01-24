@@ -4,23 +4,36 @@
 #include <C64/CIA2Registers.hpp>
 
 // ---
-C64::Memory::Memory ()
+C64::Memory::Memory (const std::string& lang)
 	: MCHEmul::Memory (C64::Memory::standardMemoryContent ())
 {
 	// In the content...
 	if (error () != MCHEmul::_NOERROR)
 		return;
 
+	// The default ROMS...
+	// They might change depending on the language
+	std::string ROMFILE = "./basic.901226-01.bin";
+	std::string CHARROMFILE = "./characters.901225-01-ENG.bin";
+	std::string KERNELFILE = "./kernal.901227-03.bin";
+
+	// If the languaje selected is not ENG...
+	// then anither char rom file is selected!
+	if (lang == "ESP") CHARROMFILE = "characters.325056-03-ESP.bin";
+	else if (lang == "JAP") CHARROMFILE = "characters.906143-02-JAP.bin";
+	else if (lang == "SWE") CHARROMFILE = "characters.325018-02-SWE.bin";
+	else if (lang == "DKA") CHARROMFILE = "characters.901225-01-DKA.bin";
+
 	bool ok = true;
-	ok &= subset (_BASICROM_SUBSET) -> loadInto ("./basic.901226-01.bin");
+	ok &= subset (_BASICROM_SUBSET) -> loadInto (ROMFILE);
 	subset (_BASICROM_SUBSET) -> fixDefaultValues (); // Fix the values for further initializations...
-	ok &= subset (_CHARROM_SUBSET) -> loadInto ("./characters.901225-01.bin");
+	ok &= subset (_CHARROM_SUBSET) -> loadInto (CHARROMFILE);
 	subset (_CHARROM_SUBSET) -> fixDefaultValues ();
-	ok &= subset (_BANK0CHARROM_SUBSET) -> loadInto ("./characters.901225-01.bin");
+	ok &= subset (_BANK0CHARROM_SUBSET) -> loadInto (CHARROMFILE);
 	subset (_BANK0CHARROM_SUBSET) -> fixDefaultValues ();
-	ok &= subset (_BANK2CHARROM_SUBSET) -> loadInto ("./characters.901225-01.bin");
+	ok &= subset (_BANK2CHARROM_SUBSET) -> loadInto (CHARROMFILE);
 	subset (_BANK2CHARROM_SUBSET) -> fixDefaultValues ();
-	ok &= subset (_KERNELROM_SUBSET) -> loadInto ("./kernal.901227-03.bin");
+	ok &= subset (_KERNELROM_SUBSET) -> loadInto (KERNELFILE);
 	subset (_KERNELROM_SUBSET) -> fixDefaultValues ();
 
 	if (!ok)

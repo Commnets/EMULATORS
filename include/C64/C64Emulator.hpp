@@ -55,7 +55,8 @@ namespace C64
 		protected:
 		virtual MCHEmul::Computer* createComputer () const override
 							{ return (new C64::Commodore64 (NTSCSystem () 
-								? C64::Commodore64::VisualSystem::_NTSC : C64::Commodore64::VisualSystem::_PAL)); }
+								? C64::Commodore64::VisualSystem::_NTSC : C64::Commodore64::VisualSystem::_PAL,
+								computerLanguage ())); }
 
 		virtual MCHEmul::IOPeripheralBuilder* createPeripheralBuilder () const override
 							{ return (new COMMODORE::IOPeripheralBuilder); }

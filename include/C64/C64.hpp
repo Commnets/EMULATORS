@@ -32,7 +32,8 @@ namespace C64
 		public:
 		enum class VisualSystem { _NTSC, _PAL };
 
-		Commodore64 (VisualSystem vS = VisualSystem::_PAL /** Europe initially */);
+		Commodore64 (VisualSystem vS = VisualSystem::_PAL /** Europe initially */,
+			const std::string& lang = MCHEmul::_DEFAULTLANGUAGE /** English language used behind. */);
 
 		virtual bool initialize (bool iM = true) override;
 

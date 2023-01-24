@@ -32,6 +32,7 @@ namespace MCHEmul
 		static const unsigned char _PARAMADDRESS;
 		static const unsigned char _PARAMADDRESSSTOP;
 		static const unsigned char _PARAMSTOP;
+		static const unsigned char _PARAMLANGUAGE;
 
 		using MapOfActions = std::map <MCHEmul::Address, unsigned int>;
 
@@ -45,7 +46,10 @@ namespace MCHEmul
 		  * /kFILENAME		: Set of blocks file (with path) to be loaded into the memory. \n
 		  * /lLEVEL			: To print out logs. \n
 		  * /aADDRESS		: The address where to start the execution of the emulator. \n
-		  * /d[ADDRESS]		: Line off addresses separeted by comman where the emjulator has to stop. \n
+		  * /d[ADDRESS]		: Line of addresses separeted by comma where the emulator has to stop. \n
+		  * /i[LANGID]		: The language of the emulation. \n
+		  *					  It has to be interpreted by the Computer (@see Computer class). \n
+		  *					  In some situations the ROM and KERNEL, e.g. can be different depending on the language.
 		  * /s				: When the execution must start stopped. \n
 		  * @param cs		: The communication system. It can be nullptr.
 		  * The emulation is able to load/understood three types of file: \n
@@ -142,6 +146,12 @@ namespace MCHEmul
 		bool stoppedAtStarting () const
 							{ return (_cmdlineArguments.existsArgument (_PARAMSTOP) 
 								? _cmdlineArguments.argumentAsBool (_PARAMSTOP) : false); }
+
+		/** To know the language used by the computer emulated behind. \n
+			The value by default will be always _DEFAULTLANGUAGE refering to english. */
+		std::string computerLanguage () const
+							{ return (_cmdlineArguments.existsArgument (_PARAMLANGUAGE) 
+								? _cmdlineArguments.argumentAsString (_PARAMLANGUAGE) : _DEFAULTLANGUAGE); }
 
 		/** To change the debug level. */
 		unsigned int debugLevel () const

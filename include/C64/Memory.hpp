@@ -57,7 +57,7 @@ namespace C64
 		static const int _CPU_VIEW				= 0;
 		static const int _VICII_VIEW			= 1;
 
-		Memory ();
+		Memory (const std::string& lang = MCHEmul::_DEFAULTLANGUAGE);
 
 		/** To activate the right subsets in the CPU view. */
 		virtual bool initialize () override;
