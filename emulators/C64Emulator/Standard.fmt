@@ -207,9 +207,9 @@ Program saved=@RESULT@
 #---
 #---
 ;CDEVICES
-@DEVICES?{fmter=Device}\n@
+@DEVICES?{fmter=Device}---\n@
 #---
 #---
 ;CPERIPHERALS
-@PERIPHERALS?{fmter=Peripheral}\n@
+@PERIPHERALS?{fmter=Peripheral}---\n@
 #---
