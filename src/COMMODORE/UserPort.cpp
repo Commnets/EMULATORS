@@ -6,9 +6,7 @@ COMMODORE::UserIOPort::UserIOPort ()
 	: MCHEmul::IODevice (MCHEmul::IODevice::Type::_INPUTOUTPUT, _ID, 
 		{ { "Name", "User Port" },
 		  { "Type", "Input/Output" },
-		  { "Pins", "24" },
-		  { "Manufacturer", "Commodore Business Machines CBM" },
-		  { "Year", "Unknow" } })
+		  { "Manufacturer", "Commodore Business Machines CBM" } })
 { 
 	// Nothing else to do...
 }

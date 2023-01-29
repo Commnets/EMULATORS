@@ -11,6 +11,7 @@ const unsigned char MCHEmul::Emulator::_PARAMADDRESS = 'a';
 const unsigned char MCHEmul::Emulator::_PARAMADDRESSSTOP = 'd';
 const unsigned char MCHEmul::Emulator::_PARAMSTOP = 's';
 const unsigned char MCHEmul::Emulator::_PARAMLANGUAGE = 'i';
+const unsigned char MCHEmul::Emulator::_PARAMPERIPHERALS = 'p';
 
 // ---
 MCHEmul::Emulator::Emulator (const MCHEmul::CommandLineArguments& args, MCHEmul::CommunicationSystem* cS)
@@ -20,6 +21,7 @@ MCHEmul::Emulator::Emulator (const MCHEmul::CommandLineArguments& args, MCHEmul:
 	  _parser (nullptr), _compiler (nullptr),
 	  _computer (nullptr),
 	  _peripheralBuilder (nullptr),
+	  _fileReader (nullptr),
 	  _running (false),
 	  _error (MCHEmul::_NOERROR)
 {
@@ -46,6 +48,8 @@ MCHEmul::Emulator::~Emulator ()
 
 	delete (_peripheralBuilder);
 
+	delete (_fileReader);
+
 	SDL_Quit ();
 }
 
@@ -63,6 +67,7 @@ void MCHEmul::Emulator::printOutParameters (std::ostream& o) const
 	o << "/l[LEVEL]:\t" << "The deepness of the debug. 1 - 4. The bigger the deeper." << std::endl;
 	o << "/d[BREAKS]:\t" << "Break points addresses separated by comma." << std::endl;
 	o << "/i[LANGID]:\t" << "Language of the machine emulated. It has to be recognized from the emulated computer" << std::endl;
+	o << "/p[PER1,...]:\t" << "List of the peripherals id separated per comma initialy connected" << std::endl;
 	o << "/s:\t\t" << "Start the emulation stopped." << std::endl;
 }
 
@@ -70,6 +75,7 @@ void MCHEmul::Emulator::printOutParameters (std::ostream& o) const
 MCHEmul::Addresses MCHEmul::Emulator::stopAddresses () const
 {
 	MCHEmul::Addresses result;
+
 	MCHEmul::Attributes::const_iterator i;
 	MCHEmul::Strings strs = 
 		_cmdlineArguments.existsArgument (_PARAMADDRESSSTOP)
@@ -77,7 +83,79 @@ MCHEmul::Addresses MCHEmul::Emulator::stopAddresses () const
 			: MCHEmul::Strings ();
 	for (const auto& i : strs)
 		result.emplace_back (MCHEmul::Address::fromStr (i));
+
 	return (result);
+}
+
+// ---
+std::vector <int> MCHEmul::Emulator::peripheralsConnected () const
+{
+	std::vector <int> result = { };
+
+	MCHEmul::Attributes::const_iterator i;
+	MCHEmul::Strings strs = 
+		_cmdlineArguments.existsArgument (_PARAMPERIPHERALS)
+			? MCHEmul::getElementsFrom (_cmdlineArguments.argumentAsString (_PARAMPERIPHERALS), ',') 
+			: MCHEmul::Strings ();
+	for (const auto& i : strs)
+		result.emplace_back (std::atoi (i.c_str ()));
+
+	return (result);
+}
+
+// ---
+bool MCHEmul::Emulator::connectPeripheral (int id, const MCHEmul::Attributes& prms, MCHEmul::IODevice* d)
+{ 
+	assert (d != nullptr); 
+
+	return (computer () -> connectPeripheral (peripherialBuilder () -> peripheral (id, prms), d)); 
+}
+
+// ---
+bool MCHEmul::Emulator::connectPeripheral (int id, const MCHEmul::Attributes& prms)
+{
+	MCHEmul::IOPeripheral* ph = peripherialBuilder () -> peripheral (id, prms);
+	if (ph == nullptr)
+		return (false);
+
+	// Los for the first one where can match...
+	bool result = false;
+	for (MCHEmul::IODevices::const_iterator i = computer () -> devices ().begin ();
+			i != computer () -> devices ().end () && !result; i++)
+		result = (*i).second -> connectPeripheral (ph);
+
+	return (result);
+}
+
+// ---
+bool MCHEmul::Emulator::connectPeripherals 
+	(std::vector <int> ids, const std::vector <MCHEmul::Attributes>& prms)
+{
+	std::vector <MCHEmul::Attributes> prmsC = prms;
+	if (ids.size () != prms.size ())
+		prmsC.resize (ids.size ()); // Using the default Attributes constructor that is n empty list...
+
+	int ct = 0;
+	bool result = true;
+	for (int i : ids)
+		result &= connectPeripheral (i, prmsC [ct++]);
+	return (result); // If just 1 fails, all fails...
+}
+
+// ---
+bool MCHEmul::Emulator::connectDataToPeripheral (const std::string& fN, int id)
+{ 
+	MCHEmul::IOPeripheral* p = _computer -> peripheral (id);
+	if (p == nullptr)
+		return (false);
+
+	MCHEmul::FileData* dt = 
+		_fileReader -> readFile (fN, -1 /** Maning to autodetect. */, 
+			computer () -> cpu () -> architecture ().bigEndian ());
+	if (dt == nullptr)
+		return (false);
+	
+	return (p -> connectData (dt));
 }
 
 // ---
@@ -147,6 +225,7 @@ bool MCHEmul::Emulator::initialize ()
 
 	setDebugLevel (logLevel ());
 
+	// First of all, the computer mut be initialized...
 	if (!_computer -> initialize ()) 
 	{
 		if (_debugLevel >= MCHEmul::_DEBUGERRORS)
@@ -155,6 +234,7 @@ bool MCHEmul::Emulator::initialize ()
 		return (false);
 	}
 
+	// Initialize the communication system if it has been defined...
 	if (_communicationSystem != nullptr && !_communicationSystem -> initialize ())
 	{
 		if (_debugLevel >= MCHEmul::_DEBUGERRORS)
@@ -166,9 +246,19 @@ bool MCHEmul::Emulator::initialize ()
 	if (_debugLevel >= MCHEmul::_DEBUGTRACEINTERNALS)
 		std::cout << *computer () << std::endl;
 
-	bool lF = false;
+	// Connect the peripherals defined...
+	std::vector <int> phs; 
+	if (!(phs = peripheralsConnected ()).empty ())
+	{
+		bool e = true;
+		for (int i : phs)
+			e &= connectPeripheral (i, { });
+		if (!e && _debugLevel >= MCHEmul::_DEBUGERRORS)
+			std::cout << "There are peripherals not connected. Verify" << std::endl;
+	}
 
-	if (byteFileName () != "" && asmFileName () == "" && blockFileName () == "")
+	// Load a byte file if defined...
+	if (byteFileName () != "")
 	{
 		bool e = false;
 		loadBinaryFile (byteFileName (), e);
@@ -179,11 +269,10 @@ bool MCHEmul::Emulator::initialize ()
 
 			return (false);
 		}
-
-		lF = true;
 	}
 
-	if (asmFileName () != "" && byteFileName () == "" && blockFileName () == "")
+	// Load an assembler file (and compile if) if defined...
+	if (asmFileName () != "")
 	{
 		MCHEmul::Assembler::Errors e;
 		MCHEmul::Assembler::ByteCode cL = loadProgram (asmFileName (), e);
@@ -201,11 +290,10 @@ bool MCHEmul::Emulator::initialize ()
 				for (const auto& i : cL._lines)
 					std::cout << i << std::endl;
 		}
-
-		lF = true;
 	}
 
-	if (blockFileName () != "" && byteFileName () == "" && asmFileName () == "")
+	// Load the block data file if defined...
+	if (blockFileName () != "")
 	{
 		bool e = false;
 		loadBlocksFile (blockFileName (), e);
@@ -216,20 +304,13 @@ bool MCHEmul::Emulator::initialize ()
 
 			return (false);
 		}
-
-		lF = true;
 	}
 
-	if (!lF && (byteFileName () != "" || blockFileName () != "" || asmFileName () != ""))
-	{
-		if (_debugLevel >= MCHEmul::_DEBUGERRORS)
-			std::cout << "Only one type of file can be loaded at the same time" << std::endl
-					  << "No file has been loaded" << std::endl;
-	}
-
+	// The address where to start the executed if fixed if defined...
 	if (startingAddress () != MCHEmul::Address ())
 		_computer -> cpu () -> programCounter ().setAddress (startingAddress ());
 
+	// Same with the stop points...
 	MCHEmul::Addresses adrs;
 	if (!(adrs = stopAddresses ()).empty ())
 	{
@@ -239,6 +320,7 @@ bool MCHEmul::Emulator::initialize ()
 		_computer -> addActions (acts);
 	}
 
+	// There is an option to start the programm stooped...
 	if (stoppedAtStarting ())
 		_computer -> setActionForNextCycle (MCHEmul::Computer::_ACTIONSTOP);
 

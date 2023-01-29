@@ -16,6 +16,7 @@
 
 #include <CORE/global.hpp>
 #include <CORE/InfoClass.hpp>
+#include <CORE/FileReader.hpp>
 
 namespace MCHEmul
 {
@@ -65,6 +66,13 @@ namespace MCHEmul
 		/** To initialize the peripheral. 
 			The initialization should return true when everything is ok, and false in other case. */
 		virtual bool initialize () = 0;
+
+		/** To link, when it is needed, the peripheral with data comming from a file. \n
+			Makes sense specially when the peripheral is an input one (like a casette or a unit disk or a cartridge)
+			there might be a content in those types of periperals and this instruction is for that. \n
+			By default the data can't be connected. */
+		virtual bool connectData (FileData* dt)
+							{ return (false); }
 
 		/** To emulate the way it works. \n
 			Should return true if everything was ok. */

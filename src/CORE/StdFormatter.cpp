@@ -155,17 +155,17 @@ std::string MCHEmul::StdFormatter::TablePiece::format (const MCHEmul::InfoStruct
 
 	size_t sb = std::numeric_limits <size_t>::max ();
 	std::string sbs = attribute ("blocksize");
-	if (sbs != "") sb = (size_t)std::atoi (sbs.c_str ());
+	if (sbs != "") sb = (size_t) std::atoi (sbs.c_str ());
 
 	char sp = ',';
 	std::string sps = attribute ("listsep");
-	if (sps != "") sp = sps[0];
+	if (sps != "") sp = sps [0];
 
 	std::string tsp = attribute ("tablesep");
 
 	size_t es = 0;
 	std::string ess = attribute ("minsize");
-	if (ess != "") es = (size_t)std::atoi (ess.c_str ());
+	if (ess != "") es = (size_t) std::atoi (ess.c_str ());
 
 	return (MCHEmul::tableFormat (MCHEmul::getElementsFrom (by, sp), tsp, es, sb));
 }
@@ -177,14 +177,41 @@ std::string MCHEmul::StdFormatter::ArrayPiece::format (const MCHEmul::InfoStruct
 		return ("");
 
 	MCHEmul::InfoStructure sIS = iS.infoStructure (_name);
-	std::shared_ptr <MCHEmul::StdFormatter> sDF = 
-		std::static_pointer_cast <MCHEmul::StdFormatter> (FormatterBuilder::instance () -> defaultFormatter ());
-	if (sDF == nullptr)
-		return (""); // Not valid...
 
-	sDF -> setDefFormatElements (_post, attribute ("equal"), attribute ("key") == MCHEmul::_YES);
+	std::string result = "";
 
-	return (sDF -> format (sIS));
+	bool sft = false;
+	std::string fmter;
+	// A formatter for the elements in the list is used only if it has been defined...
+	if ((fmter = attribute ("fmter")) != "")
+	{
+		std::shared_ptr <MCHEmul::StdFormatter> sDF = std::static_pointer_cast <MCHEmul::StdFormatter>
+			(FormatterBuilder::instance () -> formatter (fmter));
+		if (sDF != nullptr) //.. it has to exist obviously...
+		{ 
+			for (const auto& i : sIS.infoStructures ())
+				result +=  sDF -> format (i.second) + _post;
+
+			sft = true; // A specific formatter has been used...
+		}
+	}
+
+	if (!sft)
+	{
+		// Look for the default formatter...
+		std::shared_ptr <MCHEmul::StdFormatter> sDF = 
+			std::static_pointer_cast <MCHEmul::StdFormatter> (FormatterBuilder::instance () -> defaultFormatter ());
+		if (sDF != nullptr) // ..it has to exit but just in case...
+		{
+			sDF -> setDefFormatElements (_post, attribute ("equal"), attribute ("key") == MCHEmul::_YES);
+
+			result = sDF -> format (sIS);
+		}
+		else
+			result = sIS.asString (); // ...a very very default one might be also used...
+	}
+
+	return (result);
 }
 
 // ---

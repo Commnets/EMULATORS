@@ -6,9 +6,7 @@ COMMODORE::DatasetteIOPort::DatasetteIOPort ()
 	: MCHEmul::IODevice (MCHEmul::IODevice::Type::_INPUTOUTPUT, _ID, 
 		{ { "Name", "Datasette Port" },
 		  { "Type", "Input/Output" },
-		  { "Pins", "6 pairs = 12" },
-		  { "Manufacturer", "Commodore Business Machines CBM" },
-		  { "Year", "Unknow" } }),
+		  { "Manufacturer", "Commodore Business Machines CBM" } }),
 	  _datasette (nullptr)
 {
 	// Nothing else to do...

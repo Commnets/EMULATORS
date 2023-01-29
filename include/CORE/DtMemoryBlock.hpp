@@ -29,14 +29,20 @@ namespace MCHEmul
 		DataMemoryBlock () = default;
 
 		DataMemoryBlock (const Address& a, const std::vector <UByte>& dt)
-			: _startAddress (a), _bytes (dt)
+			: _name (""), _startAddress (a), _bytes (dt)
 							{ }
 
 		DataMemoryBlock (const Address& a, std::vector <UByte>&& dt) noexcept
-			: _startAddress (a), _bytes (std::move (dt))
+			: _name (""), _startAddress (a), _bytes (std::move (dt))
 							{ }
 
 		// Get & Set methods
+		/** The name. */
+		const std::string& name () const
+							{ return (_name); }
+		void setName (const std::string& n)
+							{ _name = n; }
+		/** The address where the info should be start from. */
 		const Address& startAddress () const
 							{ return (_startAddress); }
 		const std::vector <UByte>& bytes () const
@@ -67,6 +73,7 @@ namespace MCHEmul
 		static bool saveDataBlocks (const std::string& fN, const DataMemoryBlocks& blks, size_t nB, bool bE = true);
 
 		private:
+		std::string _name; // The name is very optional...
 		Address _startAddress;
 		std::vector <MCHEmul::UByte> _bytes;
 	};

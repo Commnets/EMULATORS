@@ -33,6 +33,7 @@ namespace MCHEmul
 		static const unsigned char _PARAMADDRESSSTOP;
 		static const unsigned char _PARAMSTOP;
 		static const unsigned char _PARAMLANGUAGE;
+		static const unsigned char _PARAMPERIPHERALS;
 
 		using MapOfActions = std::map <MCHEmul::Address, unsigned int>;
 
@@ -49,7 +50,8 @@ namespace MCHEmul
 		  * /d[ADDRESS]		: Line of addresses separeted by comma where the emulator has to stop. \n
 		  * /i[LANGID]		: The language of the emulation. \n
 		  *					  It has to be interpreted by the Computer (@see Computer class). \n
-		  *					  In some situations the ROM and KERNEL, e.g. can be different depending on the language.
+		  *					  In some situations the ROM and KERNEL, e.g. can be different depending on the language. \n
+		  * /p[PER1:dt,..]	: Connect the peripherals identified in the list separated by comma. \n
 		  * /s				: When the execution must start stopped. \n
 		  * @param cs		: The communication system. It can be nullptr.
 		  * The emulation is able to load/understood three types of file: \n
@@ -153,16 +155,48 @@ namespace MCHEmul
 							{ return (_cmdlineArguments.existsArgument (_PARAMLANGUAGE) 
 								? _cmdlineArguments.argumentAsString (_PARAMLANGUAGE) : _DEFAULTLANGUAGE); }
 
+		/** To know the list of the peripherals connected. */
+		std::vector <int> peripheralsConnected () const;
+
 		/** To change the debug level. */
 		unsigned int debugLevel () const
 							{ return (_debugLevel); }
 		void setDebugLevel (unsigned int dL)
 							{ _debugLevel = dL; computer () -> setDebugLevel (dL); }
 
-		bool connectPeripheral (int id, const Attributes& prms, MCHEmul::IODevice* d)
-							{ return (computer () -> connect (peripherialBuilder () -> peripheral (id, prms), d)); }
+		// The builders...
+		/** To create peripherals. */
+		const IOPeripheralBuilder* peripherialBuilder () const
+							{ return (_peripheralBuilder == nullptr) ? 
+								(_peripheralBuilder = createPeripheralBuilder ()) : _peripheralBuilder; }
+		IOPeripheralBuilder* peripherialBuilder ()
+							{ return ((IOPeripheralBuilder*) (((const Emulator*) this) -> peripherialBuilder ())); }
+		/** To create file readers. */
+		const FileReader* fileReader () const
+							{ return (_fileReader == nullptr) ? 
+								(_fileReader = createFileReader ()) : _fileReader; }
+		FileReader* fileReader ()
+							{ return ((FileReader*) (((const Emulator*) this) -> fileReader ())); }
 
-		// Loading programs...
+		// Managing peripherals...
+		/** Build up and connect a peripheral. */
+		bool connectPeripheral (int id, const Attributes& prms, MCHEmul::IODevice* d);
+		/** This is the simpliest version. It will try to detect automatically 
+			the device where to connect the peripheral which constrction parameters are received. */
+		bool connectPeripheral (int id, const Attributes& prms = { });
+		/** There is also a method to connect a list of them. \n
+			It there have been attributes they would have to be in the same order than ids. */
+		bool connectPeripherals (std::vector <int> ids, const std::vector <Attributes>& prms = { });
+		/** Connect the data to a peripheral, building up the data. */
+		bool connectDataToPeripheral (const std::string& fN, int id);
+		/** To disconnect the peripherals. */
+		void disconnectPeripheral (int id)
+							{ _computer -> disconnectPeripheral (id); }
+		/** Same but all. */
+		void disconnectAllPeripherals ()
+							{ _computer -> disconnectAllPeripherals (); }
+
+		// Loading programs directly into the memory...
 		/** To load a binary file. \n
 			The binary file has the address where to start to put the data into at the very first bytes loaded. \n
 			If there were errors the variable "e" will be true. */
@@ -193,12 +227,6 @@ namespace MCHEmul
 							{ return (_error != _NOERROR); }
 
 		protected:
-		const IOPeripheralBuilder* peripherialBuilder () const
-							{ return (_peripheralBuilder == nullptr) ? 
-								(_peripheralBuilder = createPeripheralBuilder ()) : _peripheralBuilder; }
-		IOPeripheralBuilder* peripherialBuilder ()
-							{ return ((IOPeripheralBuilder*) (((const Emulator*) this) -> peripherialBuilder ())); }
-
 		/** An exit method that can hold specific code needed per cycle and per type of emulator. 
 			By default just actualize the global time (@see global.hpp). */
 		virtual bool additionalRunCycle ()
@@ -215,6 +243,8 @@ namespace MCHEmul
 		virtual Computer* createComputer () const = 0;
 		/** To create the right version of the Peripheral Builder. */
 		virtual IOPeripheralBuilder* createPeripheralBuilder () const = 0;
+		/** To create the right version of the File Reader. */
+		virtual FileReader* createFileReader () const = 0;
 
 		protected:
 		/** Defined in the constructor. */
@@ -227,6 +257,7 @@ namespace MCHEmul
 		mutable Assembler::Compiler* _compiler;
 		mutable Computer* _computer;
 		mutable IOPeripheralBuilder* _peripheralBuilder;
+		mutable FileReader* _fileReader;
 		mutable bool _running;
 		unsigned int _error;
 	};

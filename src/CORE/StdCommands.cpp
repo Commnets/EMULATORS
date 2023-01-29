@@ -517,5 +517,9 @@ void MCHEmul::PeripheralsCommand::executeImpl
 	if (c == nullptr)
 		return;
 
-	return;
+	MCHEmul::InfoStructure prhsD;
+	MCHEmul::IOPeripherals prhs = std::move (c -> peripherals ()); // The list hasbeen built up...
+	for (const auto& i : prhs)
+		prhsD.add (std::to_string (i.first), i.second -> getInfoStructure ());
+	rst.add ("PERIPHERALS", prhsD);
 }

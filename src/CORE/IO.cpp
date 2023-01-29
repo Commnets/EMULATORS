@@ -24,17 +24,14 @@ MCHEmul::IODevice::IODevice (MCHEmul::IODevice::Type t, int id, const MCHEmul::A
 MCHEmul::IODevice::~IODevice ()
 {
 	MCHEmul::IODeviceSystem::system () -> remove (_id);
+
+	disconnectAllPeripherals ();
 }
 
 // ---		
 bool MCHEmul::IODevice::connectPeripheral (MCHEmul::IOPeripheral* p)
 {
-	if (p == nullptr)
-	{ 
-		_error = MCHEmul::_PERIPHERAL_ERROR;
-
-		return (false); // The element cann't be added...
-	}
+	assert (p != nullptr);
 
 	// Only when peripheral with the same id connected...
 	bool result = true;
@@ -51,6 +48,9 @@ bool MCHEmul::IODevice::connectPeripheral (MCHEmul::IOPeripheral* p)
 			_error = MCHEmul::_INIT_ERROR;
 
 			result = false;
+
+			// Unplugged...
+			disconnectPeripheral (p -> id ());
 		}
 	}
 	// ...otherwise an error is generated...

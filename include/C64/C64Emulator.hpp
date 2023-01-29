@@ -57,9 +57,10 @@ namespace C64
 							{ return (new C64::Commodore64 (NTSCSystem () 
 								? C64::Commodore64::VisualSystem::_NTSC : C64::Commodore64::VisualSystem::_PAL,
 								computerLanguage ())); }
-
 		virtual MCHEmul::IOPeripheralBuilder* createPeripheralBuilder () const override
 							{ return (new COMMODORE::IOPeripheralBuilder); }
+		virtual MCHEmul::FileReader* createFileReader () const override
+							{ return (nullptr); }
 	};
 }
 

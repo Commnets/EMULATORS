@@ -96,6 +96,7 @@ namespace MCHEmul
 		Memory* memory ()
 							{ return (_memory); }
 
+		// Managing the devices
 		const IODevices& devices () const
 							{ return (_devices); }
 		bool existsDevice (int id) const
@@ -105,12 +106,37 @@ namespace MCHEmul
 		IODevice* device (int id)
 							{ return (existsDevice (id) ? (*_devices.find (id)).second : nullptr); }
 
+		// Managing the peripherals
+		IOPeripherals peripherals () const;
+		bool existsPeripheral (int id) const
+							{ IOPeripherals prh = std::move (peripherals ()); return (prh.find (id) != prh.end ()); }
+		const IOPeripheral* peripheral (int id) const;
+		IOPeripheral* peripheral (int id)
+							{ return ((IOPeripheral*) (((const Computer*) this) -> peripheral (id))); }
 		/** To connect a peripheral to a device on the computer. \n
-			It returns true when it is ok, and false in other circunstance. 
+			It returns true when it is ok, and false in other circunstance. ºn
 			The way the peripheral is connected will depend on the computer, on the device and on the peripheral itself. */
-		virtual bool connect (IOPeripheral* p, IODevice* d)
-							{ return ((p == nullptr || d == nullptr) ? false : d -> connectPeripheral (p)); }
-
+		bool connectPeripheral (IOPeripheral* p, IODevice* d)
+							{ assert (p != nullptr && d != nullptr); return (d -> connectPeripheral (p)); }
+		/** To connect a peripheral in the right device. 
+			Returns true whether the device to connect the peripheral was found and the connection was right, 
+			and false in any other circunstance. */
+		bool connectPeripheral (IOPeripheral* p);
+		/** To disconnect a peripheral from a device.
+			If the device doesn't manage the peripheral or the peripheral is not found, nothing happens. */
+		void disconnectPeripheral (int id, IODevice* d)
+							{ assert (d != nullptr); return (d -> disconnectPeripheral (id)); }
+		/** To disconnect a peripheral from the right device. Some comment than method above. */
+		void disconnectPeripheral (int id)
+							{ for (const auto& i : _devices) i.second -> disconnectPeripheral (id); /** Try in all. */ }
+		/** To disconnect al peripherals. */
+		void disconnectAllPeripherals ()
+							{ for (const auto& i : _devices) i.second -> disconnectAllPeripherals (); }
+		/** To connect data to a peripheral of the computer. \n
+			It returns true when it is ok, and false in other circunstance. */
+		bool connectPeripheralData (IOPeripheral* p, FileData* dt)
+							{ assert (p != nullptr && dt != nullptr); return (p -> connectData (dt)); }
+	
 		const Screen* screen () const
 							{ return (_screen); }
 		Screen* screen ()

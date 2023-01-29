@@ -108,6 +108,9 @@
     <ClInclude Include="..\..\include\COMMODORE\ExpansionPort.hpp">
       <Filter>Archivos de encabezado\IO</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\include\COMMODORE\Cartridge.hpp">
+      <Filter>Archivos de encabezado\IO</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Commodore.fmt">
@@ -161,6 +164,9 @@
       <Filter>Archivos de origen\IO</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\COMMODORE\ExpansionPort.cpp">
+      <Filter>Archivos de origen\IO</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\COMMODORE\Cartridge.cpp">
       <Filter>Archivos de origen\IO</Filter>
     </ClCompile>
   </ItemGroup>

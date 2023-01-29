@@ -90,7 +90,8 @@ const C64::InputOSSystem::Keystrokes C64::InputOSSystem::_NOKEYSTROKES = { };
 // ---
 C64::InputOSSystem::InputOSSystem ()
 	: MCHEmul::InputOSSystem (_ID, 
-		{ { "Type", "IOSystem" },
+		{ { "Name", "IOSystem" },
+		  { "Type", "Input" },
 		  { "Frequency", "50.0Hz" } }),
 	  _cia1 (nullptr)
 { 

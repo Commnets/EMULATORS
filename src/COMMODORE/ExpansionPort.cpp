@@ -5,10 +5,8 @@
 COMMODORE::ExpansionIOPort::ExpansionIOPort ()
 	: MCHEmul::IODevice (MCHEmul::IODevice::Type::_INPUT, _ID, 
 		{ { "Name", "Expansion Port" },
-		  { "Type", "Input" },
-		  { "Pins", "44" },
-		  { "Manufacturer", "Commodore Business Machines CBM" },
-		  { "Year", "Unknow" } }),
+		  { "Type", "Input/Output" },
+		  { "Manufacturer", "Commodore Business Machines CBM" } }),
 	  _expansionElement (nullptr)
 {
 	// Nothing else to do...

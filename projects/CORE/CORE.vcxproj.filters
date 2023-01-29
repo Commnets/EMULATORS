@@ -159,6 +159,9 @@
     <ClCompile Include="..\..\src\CORE\NotifyObserver.cpp">
       <Filter>Archivos de origen\Foundation</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\CORE\FileReader.cpp">
+      <Filter>Archivos de origen\IO</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\include\CORE\IO.hpp">
@@ -298,6 +301,9 @@
     </ClInclude>
     <ClInclude Include="..\..\include\CORE\NotifyObserver.hpp">
       <Filter>Archivos de encabezado\Foundation</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\CORE\FileReader.hpp">
+      <Filter>Archivos de encabezado\IO</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

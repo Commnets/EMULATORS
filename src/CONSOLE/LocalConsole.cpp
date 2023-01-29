@@ -25,31 +25,50 @@ void MCHEmul::LocalConsole::run ()
 // ---
 void MCHEmul::LocalConsole::createAndExecuteCommand ()
 {
-	// LoadPrg, LoadBinary and LoadBlocks are special, 
+	auto prmsFor = [](const std::string& cmd, const std::string& name) -> std::string
+		{ return (MCHEmul::trim (cmd.substr (cmd.find (name) + std::string (name).length ()))); };
+
+	// LoadPrg, LoadBinary and LoadBlocks... are special, 
 	// as it is related with the emulation and not with the computer...
 	std::string cmdLoadPrg ("LOADPRG");
 	std::string cmdLoadBinary ("LOADBINARY");
 	std::string cmdLoadBlocks ("LOADBLOCKS");
 	std::string cmdDecompileMemory ("DECOMPILE");
+	std::string cmdConnectPeripheral ("CONNECTPER");
+	std::string cmdDisconnectPeripherals ("DISCONENNECTPERS");
+	std::string cmdLoadPeripheralData ("LOADPERDATA");
+	
 	if (_command.find (cmdLoadPrg) != std::string::npos)
 		_outputStream << MCHEmul::FormatterBuilder::instance () ->
-			formatter ("CLOADPRG") -> format (loadProgram (MCHEmul::trim (_command.substr 
-				(_command.find (cmdLoadPrg) + std::string (cmdLoadPrg).length ())))) << std::endl;
+			formatter ("CLOADPRG") -> format (loadProgram (prmsFor (_command, cmdLoadPrg))) << std::endl;
 	else
 	if (_command.find (cmdLoadBinary) != std::string::npos)
 		_outputStream << MCHEmul::FormatterBuilder::instance () ->
-			formatter ("CLOADBINARY") -> format (loadBinaryFile (MCHEmul::trim (_command.substr 
-				(_command.find (cmdLoadBinary) + std::string (cmdLoadBinary).length ())))) << std::endl;
+			formatter ("C" + cmdLoadBinary) -> format (loadBinaryFile (prmsFor (_command, cmdLoadBinary))) << std::endl;
 	else
 	if (_command.find (cmdLoadBlocks) != std::string::npos)
 		_outputStream << MCHEmul::FormatterBuilder::instance () ->
-			formatter ("CLOADBLOCKS") -> format (loadBlocksFile (MCHEmul::trim (_command.substr 
-				(_command.find (cmdLoadBlocks) + std::string (cmdLoadBlocks).length ())))) << std::endl;
+			formatter ("C" + cmdLoadBlocks) -> format (loadBlocksFile (prmsFor (_command, cmdLoadBlocks))) << std::endl;
 	else
 	if (_command.find (cmdDecompileMemory) != std::string::npos)
 		_outputStream << MCHEmul::FormatterBuilder::instance () ->
-			formatter ("CDECOMPILE") -> format (decompileMemory (MCHEmul::trim (_command.substr 
-				(_command.find (cmdDecompileMemory) + std::string (cmdDecompileMemory).length ())))) << std::endl;
+			formatter ("C" + cmdDecompileMemory) -> format (decompileMemory 
+				(prmsFor (_command, cmdDecompileMemory))) << std::endl;
+	else
+	if (_command.find (cmdConnectPeripheral) != std::string::npos)
+		_outputStream << MCHEmul::FormatterBuilder::instance () ->
+			formatter ("C" + cmdConnectPeripheral) -> format (connectPeripheral
+				(prmsFor (_command, cmdConnectPeripheral))) << std::endl;
+	else
+	if (_command.find (cmdDisconnectPeripherals) != std::string::npos)
+		_outputStream << MCHEmul::FormatterBuilder::instance () ->
+			formatter ("C" + cmdDisconnectPeripherals) -> format (disconnectPeripherals
+				(prmsFor (_command, cmdDisconnectPeripherals))) << std::endl;
+	else
+	if (_command.find (cmdLoadPeripheralData) != std::string::npos)
+		_outputStream << MCHEmul::FormatterBuilder::instance () ->
+			formatter ("C" + cmdLoadPeripheralData) -> format (loadPeripheralData 
+				(prmsFor (_command, cmdLoadPeripheralData))) << std::endl;
 	else
 	{
 		MCHEmul::Command* cmd = commandBuilder () -> command (_command);
@@ -143,15 +162,15 @@ MCHEmul::InfoStructure MCHEmul::LocalConsole::decompileMemory (const std::string
 {
 	MCHEmul::InfoStructure result;
 
-	size_t pS = MCHEmul::firstSpaceIn (prms);
-	if (pS == std::string::npos)
+	MCHEmul::Strings prmsL = parametersListFrom (prms);
+	if (prmsL.size () != 2)
 		return (result);
 
-	MCHEmul::Address iA = MCHEmul::Address::fromStr (MCHEmul::trim (prms.substr (0, pS)));
+	MCHEmul::Address iA = MCHEmul::Address::fromStr (prmsL [0]);
 	if (iA > _emulator -> computer () -> cpu () -> architecture ().longestAddressPossible ())
 		return (result);
 
-	size_t nB = (size_t) std::atoi (MCHEmul::trim (prms.substr (pS)).c_str ());
+	size_t nB = (size_t) std::atoi (prmsL [1].c_str ());
 	size_t nBA = _emulator -> computer () -> cpu () -> architecture ().numberBytes ();
 	if (iA.size () > nBA || nB > ((size_t) 1 << (MCHEmul::UByte::sizeBits () * nBA)))
 		return (result);
@@ -167,5 +186,75 @@ MCHEmul::InfoStructure MCHEmul::LocalConsole::decompileMemory (const std::string
 	}
 
 	result.add ("CODELINES", lns);
+	return (result);
+}
+
+// ---
+MCHEmul::InfoStructure MCHEmul::LocalConsole::connectPeripheral (const std::string& prms)
+{
+	MCHEmul::InfoStructure result;
+
+	MCHEmul::Strings prmsL = parametersListFrom (prms);
+
+	int prhId = std::atoi (prmsL [0].c_str ());
+	MCHEmul::Attributes prhAttrs;
+	if (prmsL.size () > 1)
+	{ 
+		 int ct = 0;
+		for (size_t i = 1; i < prmsL.size (); i++, ct++)
+			prhAttrs [std::to_string (ct)] = prmsL [i];
+	}
+
+	if (!_emulator -> connectPeripheral (prhId, prhAttrs))
+		result.add (std::string ("ERROR"), std::string ("Peripheral not connected. Maybe it does exist"));
+
+	return (result);
+}
+
+// ---
+MCHEmul::InfoStructure MCHEmul::LocalConsole::disconnectPeripherals (const std::string& prms)
+{
+	MCHEmul::InfoStructure result;
+
+	MCHEmul::Strings prmsL = parametersListFrom (prms);
+
+	for (const auto& i : prmsL)
+		_emulator -> disconnectPeripheral (std::atoi (i.c_str ()));
+
+	return (result);
+}
+
+// ---
+MCHEmul::InfoStructure MCHEmul::LocalConsole::loadPeripheralData (const std::string& prms) const
+{
+	MCHEmul::InfoStructure result;
+
+	MCHEmul::Strings prmsL = parametersListFrom (prms);
+	if (prmsL.size () != 2)
+		return (result);
+
+	_emulator -> connectDataToPeripheral (prmsL [1], std::atoi (prmsL [0].c_str ()));
+
+	return (result);
+}
+
+// ---
+MCHEmul::Strings MCHEmul::LocalConsole::parametersListFrom (const std::string& cmd) const
+{
+	MCHEmul::Strings result;
+
+	size_t pS = 0;
+	std::string cmdC = MCHEmul::trim (cmd);
+	while (cmdC == "")
+	{
+		pS = MCHEmul::firstSpaceIn (cmdC);
+		if (pS == std::string::npos)
+			break;
+
+		result.emplace_back (cmdC.substr (1, pS));
+
+		cmdC = (pS == (cmdC.length () - 1) /** The last one? */) ? "" : MCHEmul::trim (cmdC.substr (pS));
+	}
+
 	return (result);
 }

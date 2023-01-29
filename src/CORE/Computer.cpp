@@ -63,6 +63,41 @@ MCHEmul::Computer::~Computer ()
 }
 
 // ---
+MCHEmul::IOPeripherals MCHEmul::Computer::peripherals () const
+{
+	MCHEmul::IOPeripherals result;
+	for (const auto& i : _devices)
+	{
+		MCHEmul::IOPeripherals r = i.second -> peripherals ();
+		result.insert (r.begin (), r.end ());
+	}
+
+	return (result);
+}
+
+// ---
+const MCHEmul::IOPeripheral* MCHEmul::Computer::peripheral (int id) const
+{ 
+	MCHEmul::IOPeripherals prh = std::move (peripherals ()); 
+	MCHEmul::IOPeripherals::const_iterator i = prh.find (id); 
+	return (i == prh.end () ? nullptr : (*i).second); 
+}
+
+// ---
+bool MCHEmul::Computer::connectPeripheral (MCHEmul::IOPeripheral* p)
+{
+	assert (p != nullptr);
+
+	bool result = false;
+	
+	for (MCHEmul::IODevices::const_iterator i = _devices.begin (); 
+			i != _devices.end () && !result; i++)
+		result = (*i).second -> connectPeripheral (p);
+	
+	return (result);
+}
+
+// ---
 bool MCHEmul::Computer::initialize (bool iM)
 {
 	_error = MCHEmul::_NOERROR;

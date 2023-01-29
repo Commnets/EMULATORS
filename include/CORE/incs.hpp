@@ -44,6 +44,7 @@
 #include <CORE/UInt.hpp>
 #include <CORE/ByteCodeLine.hpp>
 #include <CORE/Instruction.hpp>
+#include <CORE/FileReader.hpp>
 #include <CORE/IO.hpp>
 #include <CORE/Raster.hpp>
 #include <CORE/Screen.hpp>

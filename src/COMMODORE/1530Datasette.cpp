@@ -4,9 +4,7 @@
 COMMODORE::Datasette1530::Datasette1530 ()
 	: COMMODORE::DatasettePeripheral (_ID, 
 		{ { "Name", "Commodore 1530 (CN2)" },
-		  { "Code", "1530" },
-		  { "Manufacturer", "Commodore Business Machines CBM" },
-		  { "Year", "1978" } })
+		  { "Manufacturer", "Commodore Business Machines CBM" } })
 { 
 	// TODO
 }

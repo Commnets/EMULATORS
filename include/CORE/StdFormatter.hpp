@@ -175,6 +175,9 @@ namespace MCHEmul
 
 		/** To format the elements of a structure. 
 			The attributes can be:
+			fmter			To indicate whether if there is any specific formatter to use for every element in the list. \n
+							It has to be used when there is only elements of this type in the infostructure.
+			or:
 			key = YES|NO	To indicate whether the key element of every element in the array is or not printed out. 
 			equal			In the case the previous element is YES, then a separator has to be indicated. */
 		class ArrayPiece : public Piece

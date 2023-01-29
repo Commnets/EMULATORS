@@ -16,4 +16,13 @@ The program is loaded by blocks in the zone of the memory defined within the fil
 Only the name of the program to load is needed.
 ;DECOMPILE ADDRESS SIZE
 To decompile a zone of the memory.
-Te address where to start to decompile from and the number of bytes to decompile are requested.
+The address where to start to decompile from and the number of bytes to decompile are requested.
+;CONNECTPER ID [ATTR1 ATTR2...]
+To connect a peripheral. 
+The parameters are the id of the peripheral to connect and a optional  list of attributes for that.
+;DISCONNECTPERS ID1 [ID2...]
+To disconnect a set of peripherals.
+The parameters are the list of the ids of the peripherals to disconnect.
+;LOADPERDATA PERID FILEDATA
+To load a peripheral with the data stored into a file with a specific format.
+The id of the peripheral and the name of the file where the data to load is located are are needed.

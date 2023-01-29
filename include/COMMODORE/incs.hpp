@@ -29,6 +29,8 @@
 #include <COMMODORE/1530Datasette.hpp>
 #include <COMMODORE/UserPort.hpp>
 #include <COMMODORE/UserIOPeripherals.hpp>
+#include <COMMODORE/EXpansionPeripherals.hpp>
+#include <COMMODORE/Cartridge.hpp>
 #include <COMMODORE/Computer.hpp>
 #include <COMMODORE/Commands.hpp>
 #include <COMMODORE/CommandBuilder.hpp>

@@ -3,7 +3,8 @@
 // ---
 C64::SoundSystem::SoundSystem ()
 	: MCHEmul::SoundSystem (_ID, 50, 
-		{ { "Type", "Sound System" },
+		{ { "Name", "Sound System" },
+		  { "Type", "Output" },
 		  { "Frequency", "16kHz" } })
 {
 	// Nothing else to do...
