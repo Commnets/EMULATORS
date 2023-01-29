@@ -22,7 +22,7 @@ namespace C64
 	class SoundSystem : public MCHEmul::SoundSystem
 	{
 		public:
-		static const int _ID = 4;
+		static const int _ID = 202;
 
 		SoundSystem ();
 	};
