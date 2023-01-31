@@ -8,9 +8,8 @@ MCHEmul::IOPeripheral* MCHEmul::IOPeripheralBuilder::peripheral (int id, const M
 		return ((*i).second);
 
 	MCHEmul::IOPeripheral* result = createPeripheral (id, prms);
-	assert (result != nullptr);
-
-	_peripherals.insert (MCHEmul::IOPeripherals::value_type (id, result));
+	if (result != nullptr) // only the valid ones are inserted...
+		_peripherals.insert (MCHEmul::IOPeripherals::value_type (id, result));
 
 	return (result);
 }

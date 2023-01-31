@@ -83,11 +83,12 @@ namespace MCHEmul
 			The method can be overloaded to check (e.g) compability before adding it. \n
 			Returns true if everything was ok, and false in other case. */
 		virtual bool connectPeripheral (IOPeripheral* p);
-		/** To disconnect a Peripheral. if the peripheral doesn't exist nothing happens. */
-		void disconnectPeripheral (int id);
-		/** To remove all peripherals. */
-		void disconnectAllPeripherals ()
-							{ _peripherals.clear (); }
+		/** To disconnect a Peripheral. if the peripheral doesn't exist nothing happens (returns true). \n
+			Returns false when an error in the desconnection has happened. */
+		virtual bool disconnectPeripheral (int id);
+		/** To remove all peripherals. \n
+			Returns false when at least one peripheral has an error in the deconnection. */
+		bool disconnectAllPeripherals ();
 
 		/** To initialize the device. */
 		virtual bool initialize ();

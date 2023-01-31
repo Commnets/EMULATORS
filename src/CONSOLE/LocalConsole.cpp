@@ -25,6 +25,10 @@ void MCHEmul::LocalConsole::run ()
 // ---
 void MCHEmul::LocalConsole::createAndExecuteCommand ()
 {
+	auto nameFor = [](const std::string& cmd) -> std::string 
+		{ std::string::const_iterator i = 
+			std::find_if (cmd.begin (), cmd.end (), [](char c) -> bool { return (std::isspace (c)); });
+		  return ((i == cmd.end ()) ? cmd : MCHEmul::trim (cmd.substr (0, cmd.find (*i)))); };
 	auto prmsFor = [](const std::string& cmd, const std::string& name) -> std::string
 		{ return (MCHEmul::trim (cmd.substr (cmd.find (name) + std::string (name).length ()))); };
 
@@ -35,37 +39,39 @@ void MCHEmul::LocalConsole::createAndExecuteCommand ()
 	std::string cmdLoadBlocks ("LOADBLOCKS");
 	std::string cmdDecompileMemory ("DECOMPILE");
 	std::string cmdConnectPeripheral ("CONNECTPER");
-	std::string cmdDisconnectPeripherals ("DISCONENNECTPERS");
+	std::string cmdDisconnectPeripherals ("DISCONNECTPERS");
 	std::string cmdLoadPeripheralData ("LOADPERDATA");
-	
-	if (_command.find (cmdLoadPrg) != std::string::npos)
+
+	std::string cmdName = nameFor (_command);
+
+	if (cmdName == cmdLoadPrg)
 		_outputStream << MCHEmul::FormatterBuilder::instance () ->
 			formatter ("CLOADPRG") -> format (loadProgram (prmsFor (_command, cmdLoadPrg))) << std::endl;
 	else
-	if (_command.find (cmdLoadBinary) != std::string::npos)
+	if (cmdName == cmdLoadBinary)
 		_outputStream << MCHEmul::FormatterBuilder::instance () ->
 			formatter ("C" + cmdLoadBinary) -> format (loadBinaryFile (prmsFor (_command, cmdLoadBinary))) << std::endl;
 	else
-	if (_command.find (cmdLoadBlocks) != std::string::npos)
+	if (cmdName == cmdLoadBlocks)
 		_outputStream << MCHEmul::FormatterBuilder::instance () ->
 			formatter ("C" + cmdLoadBlocks) -> format (loadBlocksFile (prmsFor (_command, cmdLoadBlocks))) << std::endl;
 	else
-	if (_command.find (cmdDecompileMemory) != std::string::npos)
+	if (cmdName == cmdDecompileMemory)
 		_outputStream << MCHEmul::FormatterBuilder::instance () ->
 			formatter ("C" + cmdDecompileMemory) -> format (decompileMemory 
 				(prmsFor (_command, cmdDecompileMemory))) << std::endl;
 	else
-	if (_command.find (cmdConnectPeripheral) != std::string::npos)
+	if (cmdName == cmdConnectPeripheral)
 		_outputStream << MCHEmul::FormatterBuilder::instance () ->
 			formatter ("C" + cmdConnectPeripheral) -> format (connectPeripheral
 				(prmsFor (_command, cmdConnectPeripheral))) << std::endl;
 	else
-	if (_command.find (cmdDisconnectPeripherals) != std::string::npos)
+	if (cmdName == cmdDisconnectPeripherals)
 		_outputStream << MCHEmul::FormatterBuilder::instance () ->
 			formatter ("C" + cmdDisconnectPeripherals) -> format (disconnectPeripherals
 				(prmsFor (_command, cmdDisconnectPeripherals))) << std::endl;
 	else
-	if (_command.find (cmdLoadPeripheralData) != std::string::npos)
+	if (cmdName == cmdLoadPeripheralData)
 		_outputStream << MCHEmul::FormatterBuilder::instance () ->
 			formatter ("C" + cmdLoadPeripheralData) -> format (loadPeripheralData 
 				(prmsFor (_command, cmdLoadPeripheralData))) << std::endl;
@@ -200,7 +206,7 @@ MCHEmul::InfoStructure MCHEmul::LocalConsole::connectPeripheral (const std::stri
 	MCHEmul::Attributes prhAttrs;
 	if (prmsL.size () > 1)
 	{ 
-		 int ct = 0;
+		int ct = 0;
 		for (size_t i = 1; i < prmsL.size (); i++, ct++)
 			prhAttrs [std::to_string (ct)] = prmsL [i];
 	}
@@ -218,8 +224,12 @@ MCHEmul::InfoStructure MCHEmul::LocalConsole::disconnectPeripherals (const std::
 
 	MCHEmul::Strings prmsL = parametersListFrom (prms);
 
+	bool e = true;
 	for (const auto& i : prmsL)
-		_emulator -> disconnectPeripheral (std::atoi (i.c_str ()));
+		e &= _emulator -> disconnectPeripheral (std::atoi (i.c_str ()));
+
+	if (!e)
+		result.add (std::string ("ERROR"), std::string ("Some peripherals were not well disconnected. Verify."));
 
 	return (result);
 }
@@ -233,7 +243,9 @@ MCHEmul::InfoStructure MCHEmul::LocalConsole::loadPeripheralData (const std::str
 	if (prmsL.size () != 2)
 		return (result);
 
-	_emulator -> connectDataToPeripheral (prmsL [1], std::atoi (prmsL [0].c_str ()));
+	bool e = _emulator -> connectDataToPeripheral (prmsL [1], std::atoi (prmsL [0].c_str ()));
+	if (!e)
+		result.add (std::string ("ERROR"), std::string ("The data was not connected to the peripheral."));
 
 	return (result);
 }
@@ -245,15 +257,21 @@ MCHEmul::Strings MCHEmul::LocalConsole::parametersListFrom (const std::string& c
 
 	size_t pS = 0;
 	std::string cmdC = MCHEmul::trim (cmd);
-	while (cmdC == "")
+	while (cmdC != "")
 	{
 		pS = MCHEmul::firstSpaceIn (cmdC);
 		if (pS == std::string::npos)
-			break;
+		{ 
+			result.emplace_back (MCHEmul::trim (cmdC));
 
-		result.emplace_back (cmdC.substr (1, pS));
+			cmdC = "";
+		}
+		else
+		{
+			result.emplace_back (cmdC.substr (0, pS));
 
-		cmdC = (pS == (cmdC.length () - 1) /** The last one? */) ? "" : MCHEmul::trim (cmdC.substr (pS));
+			cmdC = (pS == (cmdC.length () - 1) /** The last one? */) ? "" : MCHEmul::trim (cmdC.substr (pS));
+		}
 	}
 
 	return (result);

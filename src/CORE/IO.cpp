@@ -65,7 +65,7 @@ bool MCHEmul::IODevice::connectPeripheral (MCHEmul::IOPeripheral* p)
 }
 
 // ---
-void MCHEmul::IODevice::disconnectPeripheral (int id)
+bool MCHEmul::IODevice::disconnectPeripheral (int id)
 {
 	MCHEmul::IOPeripherals::const_iterator i = _peripherals.find (id);
 	if (i != _peripherals.end ())
@@ -74,6 +74,21 @@ void MCHEmul::IODevice::disconnectPeripheral (int id)
 
 		_peripherals.erase (i); // unlink it...
 	}
+
+	return (true);
+}
+
+// ---
+bool MCHEmul::IODevice::disconnectAllPeripherals ()
+{
+	std::vector <int> prhs;
+	for (const auto& i : _peripherals)
+		prhs.emplace_back (i.first);
+
+	bool result = true;
+	for (int i : prhs)
+		result &= disconnectPeripheral (i);
+	return (result);
 }
 
 // ---

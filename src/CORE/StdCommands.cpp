@@ -51,13 +51,18 @@ MCHEmul::HelpCommand::HelpCommand (const std::string& hF)
 			continue; // A line to define a command is expected, otherwise ignored!
 		else
 		{
+			// Gets the command line...
 			std::string cN = MCHEmul::upper (MCHEmul::trim ((*i++).substr (1)));
+			// ...extract just the name of the command...
 			auto ecN = std::find_if (cN.begin (), cN.end (), std::isspace);
-			cN = (ecN == cN.end ()) ? cN : cN.substr (0, cN.find (*ecN)); // Only the main word is inserted as key...
+			std::string cNS = (ecN == cN.end ()) ? cN : cN.substr (0, cN.find (*ecN)); // Only the main word is inserted as key...
+			// Insert the full command as part of the information to show...
 			MCHEmul::Strings hI;
+			hI.push_back (cN);
+			// ...and then insert the rest of the instructions associated
 			while (i != hls.end () && (*i)[0] != ';')
 				hI.push_back ((*i++));
-			_helpInfo.insert (std::pair <std::string, MCHEmul::Strings> (cN, hI));
+			_helpInfo.insert (std::pair <std::string, MCHEmul::Strings> (cNS, hI));
 		}
 	}
 }

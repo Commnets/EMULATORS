@@ -7,7 +7,7 @@ COMMODORE::Cartridge::Cartridge ()
 		  { "Manufacturer", "Commodore Business Machibes CBM" } }), // This parameters can be changed when connecting data...
 	  _fileData (nullptr)
 {
-	setClassName ("CARTRIDGE");
+	setClassName ("Cartridge");
 }
 
 // ---

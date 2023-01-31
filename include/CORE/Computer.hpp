@@ -124,14 +124,14 @@ namespace MCHEmul
 		bool connectPeripheral (IOPeripheral* p);
 		/** To disconnect a peripheral from a device.
 			If the device doesn't manage the peripheral or the peripheral is not found, nothing happens. */
-		void disconnectPeripheral (int id, IODevice* d)
+		bool disconnectPeripheral (int id, IODevice* d)
 							{ assert (d != nullptr); return (d -> disconnectPeripheral (id)); }
-		/** To disconnect a peripheral from the right device. Some comment than method above. */
-		void disconnectPeripheral (int id)
-							{ for (const auto& i : _devices) i.second -> disconnectPeripheral (id); /** Try in all. */ }
-		/** To disconnect al peripherals. */
-		void disconnectAllPeripherals ()
-							{ for (const auto& i : _devices) i.second -> disconnectAllPeripherals (); }
+		/** To disconnect a peripheral from the right device. \n
+			It will return false if an error in the deconnection happened. */
+		bool disconnectPeripheral (int id);
+		/** To disconnect al peripherals.
+			It will return false if an error in the deconnection of at leat one peripheral happened. */
+		bool disconnectAllPeripherals ();
 		/** To connect data to a peripheral of the computer. \n
 			It returns true when it is ok, and false in other circunstance. */
 		bool connectPeripheralData (IOPeripheral* p, FileData* dt)

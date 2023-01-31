@@ -35,7 +35,7 @@ namespace MCHEmul
 
 		IOPeripheral (int id, const Attributes& attrs = { })
 			: InfoClass ("IOPeripheral"),
-			  _id (id), _attributes (), _device (nullptr) /** Set when attached. */
+			  _id (id), _attributes (attrs), _device (nullptr) /** Set when attached. */
 							{ }
 
 		IOPeripheral (const IOPeripheral&) = delete;

@@ -190,11 +190,11 @@ namespace MCHEmul
 		/** Connect the data to a peripheral, building up the data. */
 		bool connectDataToPeripheral (const std::string& fN, int id);
 		/** To disconnect the peripherals. */
-		void disconnectPeripheral (int id)
-							{ _computer -> disconnectPeripheral (id); }
+		bool disconnectPeripheral (int id)
+							{ return (_computer -> disconnectPeripheral (id)); }
 		/** Same but all. */
-		void disconnectAllPeripherals ()
-							{ _computer -> disconnectAllPeripherals (); }
+		bool disconnectAllPeripherals ()
+							{ return (_computer -> disconnectAllPeripherals ()); }
 
 		// Loading programs directly into the memory...
 		/** To load a binary file. \n

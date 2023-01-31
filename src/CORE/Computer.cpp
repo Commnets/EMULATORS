@@ -98,6 +98,24 @@ bool MCHEmul::Computer::connectPeripheral (MCHEmul::IOPeripheral* p)
 }
 
 // ---
+bool MCHEmul::Computer::disconnectPeripheral (int id)
+{ 
+	bool result = true; 
+	for (const auto& i : _devices) 
+		result &= i.second -> disconnectPeripheral (id); /** Try in all. */ 
+	return (result);
+}
+
+// ---
+bool MCHEmul::Computer::disconnectAllPeripherals ()
+{ 
+	bool result = true;
+	for (const auto& i : _devices) 
+		result &= i.second -> disconnectAllPeripherals (); 
+	return (result);
+}
+
+// ---
 bool MCHEmul::Computer::initialize (bool iM)
 {
 	_error = MCHEmul::_NOERROR;
