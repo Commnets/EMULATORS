@@ -117,7 +117,7 @@ std::string MCHEmul::StdFormatter::format (const MCHEmul::InfoStructure& iS) con
 
 	// If no piece has been defined...
 	if (_pieces.empty ())
-		result = iS.asString (_defSeparator, _defEqual, "", "", _printFirst); // a very basic conversion is defined...
+		result = iS.asString (_defSeparator, _defEqual, "", "", _printFirst, _whenEmpty); // a very basic conversion is defined...
 	// Otherwise it has to be treaten piece by piece...
 	else
 		for (const auto& i : _pieces)
@@ -189,8 +189,11 @@ std::string MCHEmul::StdFormatter::ArrayPiece::format (const MCHEmul::InfoStruct
 			(FormatterBuilder::instance () -> formatter (fmter));
 		if (sDF != nullptr) //.. it has to exist obviously...
 		{ 
-			for (const auto& i : sIS.infoStructures ())
-				result +=  sDF -> format (i.second) + _post;
+			if (!sIS.infoStructures ().empty ())
+				for (const auto& i : sIS.infoStructures ())
+					result +=  sDF -> format (i.second) + _post;
+			else
+				result += attribute ("empty");
 
 			sft = true; // A specific formatter has been used...
 		}
@@ -203,7 +206,7 @@ std::string MCHEmul::StdFormatter::ArrayPiece::format (const MCHEmul::InfoStruct
 			std::static_pointer_cast <MCHEmul::StdFormatter> (FormatterBuilder::instance () -> defaultFormatter ());
 		if (sDF != nullptr) // ..it has to exit but just in case...
 		{
-			sDF -> setDefFormatElements (_post, attribute ("equal"), attribute ("key") == MCHEmul::_YES);
+			sDF -> setDefFormatElements (_post, attribute ("equal"), attribute ("key") == MCHEmul::_YES, attribute ("empty"));
 
 			result = sDF -> format (sIS);
 		}

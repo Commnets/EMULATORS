@@ -106,8 +106,11 @@ void MCHEmul::InfoStructure::remove (const std::string& an)
 
 // ---
 std::string MCHEmul::InfoStructure::asString (const std::string& s, const std::string& sa, 
-	const std::string& bI, const std::string& bF, bool pF) const
+	const std::string& bI, const std::string& bF, bool pF, const std::string& wE) const
 {
+	if (_attributes.empty () && _infoStructures.empty ())
+		return (wE + bF); // Where the is no info to print out, a default message is sent!
+
 	std::string result = "";
 
 	size_t ct = 0;

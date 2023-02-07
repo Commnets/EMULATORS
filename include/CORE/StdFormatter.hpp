@@ -40,21 +40,21 @@ namespace MCHEmul
 		StdFormatter (const Strings& l)
 			: Formatter (l),
 			  _pieces (),
-			  _defSeparator ("\n"), _defEqual ("="), _printFirst (true)
+			  _defSeparator ("\n"), _defEqual ("="), _printFirst (true), _whenEmpty ("none")
 							{ }
 
 		StdFormatter (Strings&& l)
 			: Formatter (std::move (l)),
 			  _pieces (),
-			  _defSeparator ("\n"), _defEqual ("="), _printFirst (true)
+			  _defSeparator ("\n"), _defEqual ("="), _printFirst (true), _whenEmpty ("none")
 							{ }
 
 		virtual ~StdFormatter ()
 							{ for (auto& i : _pieces) delete (i); }
 
-		/** When no pieces are defined standard separator and equal is defined. */
-		void setDefFormatElements (const std::string& s, const std::string& e, bool pF)
-							{ _defSeparator = s; _defEqual = e; _printFirst = pF; }
+		/** To change the elements used to format things when a no piece is defined for that. */
+		void setDefFormatElements (const std::string& s, const std::string& e, bool pF, const std::string& wE)
+							{ _defSeparator = s; _defEqual = e; _printFirst = pF; _whenEmpty = wE; }
 
 		/** To initialize the formatter. 
 			This method create all pieces and invokes the factiry method: createPiece. */
@@ -216,6 +216,7 @@ namespace MCHEmul
 		Pieces _pieces;
 		std::string _defSeparator, _defEqual;
 		bool _printFirst;
+		std::string _whenEmpty;
 	};
 }
 

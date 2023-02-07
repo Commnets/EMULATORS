@@ -99,7 +99,8 @@ namespace MCHEmul
 		/** To convert the information stored here into a string. \n
 			The characters separating the elements, the name and the vale, and the ones grouping the blocks can be redefined. */
 		std::string asString (const std::string& s = "|", 
-			const std::string& se = ":", const std::string& bI = "[", const std::string& bF = "]", bool pF = true) const;
+			const std::string& se = ":", const std::string& bI = "[", const std::string& bF = "]", bool pF = true, 
+			const std::string& wE = "none" /** What to generate when the info structure is empty. */) const;
 
 		/** The opposite action. */
 		static InfoStructure fromStr (const std::string& str,

@@ -211,8 +211,10 @@ MCHEmul::InfoStructure MCHEmul::LocalConsole::connectPeripheral (const std::stri
 			prhAttrs [std::to_string (ct)] = prmsL [i];
 	}
 
-	if (!_emulator -> connectPeripheral (prhId, prhAttrs))
-		result.add (std::string ("ERROR"), std::string ("Peripheral not connected. Maybe it does exist"));
+	result.add (std::string ("ERROR"), 
+		!_emulator -> connectPeripheral (prhId, prhAttrs)
+			? std::string ("Peripheral not connected. Maybe it does exist")
+			: "No errors");
 
 	return (result);
 }
@@ -228,8 +230,8 @@ MCHEmul::InfoStructure MCHEmul::LocalConsole::disconnectPeripherals (const std::
 	for (const auto& i : prmsL)
 		e &= _emulator -> disconnectPeripheral (std::atoi (i.c_str ()));
 
-	if (!e)
-		result.add (std::string ("ERROR"), std::string ("Some peripherals were not well disconnected. Verify."));
+	result.add (std::string ("ERROR"), 
+		!e ? std::string ("Some peripherals were not well disconnected. Verify.") : "No errors");
 
 	return (result);
 }
@@ -243,9 +245,10 @@ MCHEmul::InfoStructure MCHEmul::LocalConsole::loadPeripheralData (const std::str
 	if (prmsL.size () != 2)
 		return (result);
 
-	bool e = _emulator -> connectDataToPeripheral (prmsL [1], std::atoi (prmsL [0].c_str ()));
-	if (!e)
-		result.add (std::string ("ERROR"), std::string ("The data was not connected to the peripheral."));
+	result.add (std::string ("ERROR"), 
+		!_emulator -> connectDataToPeripheral (prmsL [1], std::atoi (prmsL [0].c_str ()))
+			? std::string ("The data was not connected to the peripheral.")
+			: "No errors");
 
 	return (result);
 }

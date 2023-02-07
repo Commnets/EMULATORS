@@ -72,7 +72,7 @@ Id:@ID@
 Id:@ID@
 @ATTRS?{key=YES,equal==}\n@
 ->Peripherals:
-@IOPERIPHERALS?{fmter=Peripheral}\n@
+@IOPERIPHERALS?{fmter=Peripheral,empty=none\n}\n@
 #---
 #---
 ;CAUTHOR
