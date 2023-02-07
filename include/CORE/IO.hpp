@@ -95,7 +95,7 @@ namespace MCHEmul
 
 		/** To emulate the way it works. \n
 			Return true, if everything was ok. */
-		virtual bool simulate ();
+		virtual bool simulate (CPU* cpu);
 
 		/** To get the last error happend (after initialize or simulate methods). */
 		unsigned int error () const

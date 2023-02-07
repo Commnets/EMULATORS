@@ -71,7 +71,7 @@ namespace MCHEmul
 		virtual bool initialize () override;
 
 		/** Draws the screen using the info of the frame. */
-		virtual bool simulate () override;
+		virtual bool simulate (CPU* cpu) override;
 
 		protected:
 		virtual void processEvent (const Event& evnt, Notifier* n) override;

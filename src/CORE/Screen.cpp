@@ -60,9 +60,9 @@ bool MCHEmul::Screen::initialize ()
 }
 
 // ---
-bool MCHEmul::Screen::simulate ()
+bool MCHEmul::Screen::simulate (MCHEmul::CPU* cpu)
 {
-	if (!MCHEmul::IODevice::simulate ())
+	if (!MCHEmul::IODevice::simulate (cpu))
 		return (false);
 
 	if (_clock.tooQuick ())

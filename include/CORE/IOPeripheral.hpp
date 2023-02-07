@@ -21,6 +21,7 @@
 namespace MCHEmul
 {
 	class IODevice;
+	class CPU;
 
 	/** The IOPeripheral represents an element connected to a IODevice. \n
 		For some IODevices the number and type (and manufacturers) of elements that can be connected might be wide and different. \n
@@ -76,7 +77,7 @@ namespace MCHEmul
 
 		/** To emulate the way it works. \n
 			Should return true if everything was ok. */
-		virtual bool simulate () = 0;
+		virtual bool simulate (CPU* cpu) = 0;
 
 		/**
 		  *	The name of the fields are: \n

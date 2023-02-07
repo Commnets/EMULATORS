@@ -16,6 +16,7 @@
 
 #include <CORE/incs.hpp>
 #include <COMMODORE/ExpansionPeripherals.hpp>
+#include <COMMODORE/FileReaders.hpp>
 
 namespace COMMODORE
 {
@@ -27,15 +28,17 @@ namespace COMMODORE
 		Cartridge ();
 
 		virtual bool initialize () override
-							{ delete (_fileData); _fileData = nullptr; return (true); } 
+							{ delete (_cartridgeData); _cartridgeData = nullptr; return (true); } 
 
 		virtual bool connectData (MCHEmul::FileData* dt) override;
 
-		virtual bool simulate () override
-							{ return (true); } // There is nothing to simulate...
+		virtual bool simulate (MCHEmul::CPU* cpu) override;
 
 		private:
-		MCHEmul::FileData* _fileData;
+		COMMODORE::CRTFileData* _cartridgeData;
+
+		// Implementation
+		bool _restartData;
 	};
 }
 

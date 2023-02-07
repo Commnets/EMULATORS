@@ -297,7 +297,7 @@ bool MCHEmul::Computer::runIOCycle ()
 {
 	for (const auto& i : _devices)
 	{
-		if (!i.second -> simulate ())
+		if (!i.second -> simulate (_cpu))
 		{
 			_exit = true;
 

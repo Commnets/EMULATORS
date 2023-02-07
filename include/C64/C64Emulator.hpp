@@ -14,9 +14,8 @@
 #ifndef __C64_C64EMULATOR__
 #define __C64_C64EMULATOR__
 
-#include <EMULATORS/Emulator.hpp>
+#include <COMMODORE/incs.hpp>
 #include <C64/C64.hpp>
-#include <COMMODORE/IOPBuilder.hpp>
 
 namespace C64
 {
@@ -60,7 +59,9 @@ namespace C64
 		virtual MCHEmul::IOPeripheralBuilder* createPeripheralBuilder () const override
 							{ return (new COMMODORE::IOPeripheralBuilder); }
 		virtual MCHEmul::FileReader* createFileReader () const override
-							{ return (nullptr); }
+							{ return (new MCHEmul::FileReader 
+								(MCHEmul::FileTypeReaderList (
+									{ new COMMODORE::CRTFileTypeReader /** Cartridges. */ }))); }
 	};
 }
 

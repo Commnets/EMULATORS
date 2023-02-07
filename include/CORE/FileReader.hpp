@@ -24,8 +24,8 @@ namespace MCHEmul
 		It can be extended to cover a specific format. */
 	struct FileData
 	{
-		std::string _name;
-		int _type;
+		virtual ~FileData () // Just in case...
+							{ }
 	};
 
 	/** The most common one, is just adding blocks of data memory. */
@@ -39,6 +39,9 @@ namespace MCHEmul
 	class FileTypeReader
 	{
 		public:
+		FileTypeReader ()
+							{ }
+
 		FileTypeReader (const FileTypeReader&) = delete;
 
 		FileTypeReader& operator = (const FileTypeReader&) = delete;

@@ -34,7 +34,7 @@ namespace COMMODORE
 
 		virtual bool initialize () override;
 
-		virtual bool simulate () override;
+		virtual bool simulate (MCHEmul::CPU* cpu) override;
 	};
 }
 

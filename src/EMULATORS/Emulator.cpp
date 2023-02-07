@@ -150,7 +150,7 @@ bool MCHEmul::Emulator::connectDataToPeripheral (const std::string& fN, int id)
 		return (false);
 
 	MCHEmul::FileData* dt = 
-		_fileReader -> readFile (fN, -1 /** Maning to autodetect. */, 
+		fileReader () -> readFile (fN, -1 /** Maning to autodetect. */,
 			computer () -> cpu () -> architecture ().bigEndian ());
 	if (dt == nullptr)
 		return (false);

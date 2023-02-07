@@ -105,11 +105,11 @@ bool MCHEmul::IODevice::initialize ()
 }
 
 // ---
-bool MCHEmul::IODevice::simulate ()
+bool MCHEmul::IODevice::simulate (MCHEmul::CPU* cpu)
 {
 	bool result = true;
 	for (const auto& i : _peripherals)
-		result &= i.second -> simulate ();
+		result &= i.second -> simulate (cpu);
 
 	if (!result)
 		_error = MCHEmul::_DEVICE_ERROR;

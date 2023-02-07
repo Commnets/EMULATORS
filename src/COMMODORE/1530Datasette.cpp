@@ -40,7 +40,7 @@ bool COMMODORE::Datasette1530::initialize ()
 }
 
 // ---
-bool COMMODORE::Datasette1530::simulate ()
+bool COMMODORE::Datasette1530::simulate (MCHEmul::CPU* cpu)
 {
 	// TODO
 

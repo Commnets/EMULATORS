@@ -72,7 +72,7 @@ namespace MCHEmul
 		virtual bool initialize () override;
 
 		/** Algorithm, invoking the protected methods defined. */
-		virtual bool simulate () override;
+		virtual bool simulate (CPU* cpu) override;
 
 		protected:
 		// To manage events related with the keyboard...

@@ -31,7 +31,11 @@
 #---
 #---
 ;CDISCONNECTPER
+->Errors:
+@ERROR@
 #---
 #---
 ;CLOADPERDATA
+->Errors:
+@ERROR@
 #---
