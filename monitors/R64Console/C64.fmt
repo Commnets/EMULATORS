@@ -5,7 +5,7 @@
 #---
 ;CIA1
 ID=@ID@
-@ATTRS?{key=YES,equal==}\n@
+@ATTRS?{key=YES,equal==,empty=no attributes}\n@
 ->Registers:
 @Registers>@
 ->Timer A:
@@ -18,7 +18,7 @@ ID=@ID@
 #---
 ;CIA2
 ID=@ID@
-@ATTRS?{key=YES,equal==}\n@
+@ATTRS?{key=YES,equal==,empty=no attributes}\n@
 ->Registers:
 @Registers>@
 ->Timer A:

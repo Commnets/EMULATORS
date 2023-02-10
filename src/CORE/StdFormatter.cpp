@@ -189,9 +189,10 @@ std::string MCHEmul::StdFormatter::ArrayPiece::format (const MCHEmul::InfoStruct
 			(FormatterBuilder::instance () -> formatter (fmter));
 		if (sDF != nullptr) //.. it has to exist obviously...
 		{ 
+			int ct = 0;
 			if (!sIS.infoStructures ().empty ())
 				for (const auto& i : sIS.infoStructures ())
-					result +=  sDF -> format (i.second) + _post;
+					result +=  ((ct++ == 0) ? "" : _post) + sDF -> format (i.second);
 			else
 				result += attribute ("empty");
 
@@ -206,7 +207,8 @@ std::string MCHEmul::StdFormatter::ArrayPiece::format (const MCHEmul::InfoStruct
 			std::static_pointer_cast <MCHEmul::StdFormatter> (FormatterBuilder::instance () -> defaultFormatter ());
 		if (sDF != nullptr) // ..it has to exit but just in case...
 		{
-			sDF -> setDefFormatElements (_post, attribute ("equal"), attribute ("key") == MCHEmul::_YES, attribute ("empty"));
+			sDF -> setDefFormatElements 
+				(_post, attribute ("equal"), attribute ("key") == MCHEmul::_YES, attribute ("empty"));
 
 			result = sDF -> format (sIS);
 		}

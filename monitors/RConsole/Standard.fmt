@@ -12,7 +12,7 @@ What I really love is @LOVE@
 #---
 #---
 ;Architecture
-@ATTRS?{key=YES,equal==}\n@
+@ATTRS?{key=YES,equal==,empty=no attributes}\n@
 @NBYTES@ bytes, @NBITS@ bits, @NBYTESPERINST@ bytes per instruction
 Big Endian=@ENDIAN@
 #---
@@ -20,7 +20,7 @@ Big Endian=@ENDIAN@
 ;CPU
 #The info about the Architecture here
 @Architecture>@
-@REGS?{key=NO,equal=:},@
+@REGS?{key=NO,equal=:,empty=no registers},@
 @PC@
 @SR@
 #---
@@ -32,11 +32,11 @@ ACTIVE=@ACTIVE@, READ=@READ@
 #---
 #---
 ;MemoryView
-@STORAGES?{key=NO,equal==}\n@
+@STORAGES?{key=NO,equal==,empty=no storages}\n@
 #---
 #---
 ;Memory
-@STORAGES?{key=NO,equal==}\n@
+@STORAGES?{key=NO,equal==,empty=no storages}\n@
 #---
 #---
 ;Stack
@@ -58,21 +58,21 @@ Id:@ID@
 ->CPU:
 @CPU>@
 ->Chips:
-@CHIPS?{key=NO,equal==}\n@
+@CHIPS?{key=NO,equal==,empty=no chips}\n@
 ->Devices:
-@DEVICES?{key=NO,equal==}\n@
+@DEVICES?{key=NO,equal==,empty=no devices}\n@
 #---
 #---
 ;Peripheral
 Id:@ID@
-@ATTRS?{key=YES,equal==}\n@
+@ATTRS?{key=YES,equal==,empty=no attributes}\n@
 #---
 #---
 ;Device
 Id:@ID@
-@ATTRS?{key=YES,equal==}\n@
+@ATTRS?{key=YES,equal==,empty=no attributes}\n@
 ->Peripherals:
-@IOPERIPHERALS?{fmter=Peripheral,empty=none\n}\n@
+@IOPERIPHERALS?{fmter=Peripheral,empty=no peripherals}\n@
 #---
 #---
 ;CAUTHOR
@@ -80,7 +80,7 @@ Id:@ID@
 #---
 #---
 ;CHELP
-@HELP?{key=YES,equal=:\n}\n@
+@HELP?{key=YES,equal=:\n,empty=no help}\n@
 #---
 #---
 ;CSTATUS
@@ -88,7 +88,7 @@ Id:@ID@
 #---
 #---
 ;CREGISTERS
-@REGS?{key=NO,equal=:},@
+@REGS?{key=NO,equal=:,empty=no registers},@
 #---
 #---
 ;CPC
@@ -105,7 +105,7 @@ Id:@ID@
 ;CCPUSTATUS
 Last:@INST@
 @PC@
-@REGS?{key=NO,equal=:},@
+@REGS?{key=NO,equal=:,empty=no registers},@
 @SR@
 ->Stack:
 @Stack>@
@@ -114,7 +114,7 @@ Last:@INST@
 ;CCPUSSTATUS
 Last:@INST@
 @PC@
-@REGS?{key=NO,equal=:},@
+@REGS?{key=NO,equal=:,empty=no registers},@
 @SR@
 #---
 #---
@@ -129,14 +129,14 @@ Last:@INST@
 ;CSTOP
 @PC@
 Last:@INST@
-@REGS?{key=NO,equal=:},@
+@REGS?{key=NO,equal=:,empty=no registers},@
 @SR@
 #---
 #---
 ;CRUN
 @PC@
 Current:@INST@
-@REGS?{key=NO,equal=:},@
+@REGS?{key=NO,equal=:,empty=no registers},@
 @SR@
 #---
 #---
@@ -145,7 +145,7 @@ Current:@INST@
 #---
 #---
 ;CSHOWNEXT
-@CODELINES?{key=NO,equal=:}\n@
+@CODELINES?{key=NO,equal=:,empty=no code\n}\n@
 #---
 #---
 ;CINST
@@ -179,11 +179,11 @@ Program saved=@RESULT@
 #---
 #---
 ;CDEVICES
-@DEVICES?{fmter=Device}---\n@
+@DEVICES?{fmter=Device,empty=no devices}\n---\n@
 #---
 #---
 ;CPERIPHERALS
-@PERIPHERALS?{fmter=Peripheral}---\n@
+@PERIPHERALS?{fmter=Peripheral,empty=no peripherals}\n---\n@
 #---
 #---
 ;CANSWER

@@ -96,8 +96,15 @@ namespace MCHEmul
 		/** To delete either an Attribute or an InfoStructure if exists. */
 		void remove (const std::string& an);
 
-		/** To convert the information stored here into a string. \n
-			The characters separating the elements, the name and the vale, and the ones grouping the blocks can be redefined. */
+		/** 
+		  * To convert the information stored here into a string. \n
+		  * @param s	To separate the elements.
+		  * @param se	To separate the name and the value. (see also pF).
+		  * @param bI	Character to include at the beginning of the internal infostructures.
+		  * @param bF	Character ro include at the end of those.
+		  * @param pF	Wheher the name (the value is always included) has to be included as part of the result.
+		  * @param wE	Text to consider when there is no data to include.
+		  */
 		std::string asString (const std::string& s = "|", 
 			const std::string& se = ":", const std::string& bI = "[", const std::string& bF = "]", bool pF = true, 
 			const std::string& wE = "none" /** What to generate when the info structure is empty. */) const;

@@ -3,7 +3,7 @@
 #---
 ;CLOADPRG
 ->Code:
-@CODELINES?{key=NO,equal=:}\n@
+@CODELINES?{key=NO,equal=:,empty=no code}\n@
 ->Errors:
 @ERRORS?{key=NO,equal=:}\n@
 #---
@@ -20,7 +20,7 @@
 #---
 ;CDECOMPILE
 ->Code:
-@CODELINES?{key=NO,equal=:}\n@
+@CODELINES?{key=NO,equal=:,empty=no code}\n@
 ->Errors:
 @ERROR@
 #---

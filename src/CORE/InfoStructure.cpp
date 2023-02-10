@@ -109,7 +109,7 @@ std::string MCHEmul::InfoStructure::asString (const std::string& s, const std::s
 	const std::string& bI, const std::string& bF, bool pF, const std::string& wE) const
 {
 	if (_attributes.empty () && _infoStructures.empty ())
-		return (wE + bF); // Where the is no info to print out, a default message is sent!
+		return (wE); // Where the is no info to print out, a default message is sent!
 
 	std::string result = "";
 
