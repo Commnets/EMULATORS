@@ -3,11 +3,12 @@
 
 ; MACROS
 ; Related with the screen
-SCREEN			= $0400					; Where the screen starts
+SCREEN0			= $0400					; Where the screen starts
 SCREEN1			= $0500
 SCREEN2			= $0600
 SCREEN3			= $0700
-COLORRAM		= $D800					; Where the ram color starts
+SCREEN			= $0428					; Where the screen starts
+COLORRAM		= $D828					; Where the ram color starts
 BKCOLOR			= $01					; The initial color of the background
 FGCOLOR			= $03					; The initial color of the foregound
 FOREGROUND		= $D020					; The address in VICII for the foreground
@@ -48,7 +49,7 @@ LOOPXNOP:		NOP
 *				= $C200
 CLEAR:			LDA #$20
 				LDX #$00
-LOOPCLEAR:		STA SCREEN,X
+LOOPCLEAR:		STA SCREEN0,X
 				STA SCREEN1,X
 				STA SCREEN2,X
 				STA SCREEN3,X

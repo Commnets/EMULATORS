@@ -28,4 +28,5 @@ init:   lda #6                  ; decimal
         sta $0402
         lda #z0110              ; binary
         sta $0403
-loop:	jmp loop
+
+		rts

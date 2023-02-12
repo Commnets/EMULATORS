@@ -2,8 +2,8 @@
 ; By Ignacio Cea
 
 ; MACROS
-SCREEN			= $0400					; Where the screen starts
-COLORRAM		= $D800					; Where the ram color starts
+SCREEN			= $0428					; Where the screen starts
+COLORRAM		= $D828					; Where the ram color starts
 
 CHARCODES		= $C000					; Where the chars for the screen are defined
 NUMCHARS		= $0C					; Number of chars defined

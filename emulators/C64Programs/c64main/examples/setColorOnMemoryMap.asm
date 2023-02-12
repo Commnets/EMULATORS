@@ -26,6 +26,5 @@ init:   .poke BORDER_COLOR_REGISTER,CYAN
         sta SCREEN_MEMORY
         lda #$05                ; E
         sta SCREEN_MEMORY+1
-        jmp loop
 
-loop:    jmp loop
+		rts

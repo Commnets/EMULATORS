@@ -33,4 +33,4 @@ draw:   .drawCharacterAt $51,$D,$06,$F  ; draw first character
         .drawCharacterAt $58,$E,$06,$E  ; draw second character
         .drawCharacterAt $5A,$F,$06,$D  ; draw third character
 
-loop: 	jmp loop
+		rts

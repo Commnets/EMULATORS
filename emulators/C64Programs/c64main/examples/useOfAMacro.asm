@@ -19,5 +19,6 @@ border = $d020
 
         *=$02a7                 ; sys 679
 
-loop:   .poke BORDER_COLOR_REGISTER,RED
-        jmp loop
+init:   .poke BORDER_COLOR_REGISTER,RED
+        
+		rts

@@ -18,6 +18,7 @@ BORDER = $d020
 
 *=$02a7                 ; sys 679
 
-loop:   lda #BLUE
+init:   lda #BLUE
         sta BORDER
-        jmp loop
+		
+        rts

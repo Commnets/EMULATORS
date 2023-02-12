@@ -6,7 +6,6 @@
 
 * = $C000
 #../C64Programs/c64main/include/constants.asm
-#../C64Programs/c64main/include/COLDINIT.asm
 
 ; ----------------------------------------------------------
 ; Labels
@@ -24,8 +23,7 @@ spr0ShapeData = $0340                           ; = 13 * 64 = 832
 
 *=$4000                         				; sys 16384
 
-init:           jsr COLDINIT					; Initialize everything
-				jsr $e544                       ; clear the screen
+init:           jsr $e544                       ; clear the screen
                             
                 lda #z00001101                  ; use block 13 for sprite 0
                 sta SPRITE_POINTERS
@@ -75,6 +73,8 @@ input:          cmp #87                         ; W - up
                 beq left
                 cmp #68                         ; D - right
                 beq right
+				cmp #69							; E - Exit
+				beq exit
 				sta SCREEN_MEMORY
 				lda #$01
 				sta COLOR_MEMORY_MAP
@@ -99,6 +99,8 @@ right:          ldx SP0X
                 inx
                 stx SP0X
                 jmp loop
+				
+exit:			rts
 
 ; ----------------------------------------------------------
 ; Data

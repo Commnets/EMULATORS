@@ -29,4 +29,5 @@ clear:  lda #$20                ; spacebar screen code
                                 ; did x turn to zero already? 
                                 ; if yes -> stop loop
                                 ; if no -> continue loop
-loop:	jmp loop
+		
+		rts

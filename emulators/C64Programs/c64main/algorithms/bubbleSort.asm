@@ -10,7 +10,7 @@
 ; On the average, N/2 passes are required to sort an N-element list.
 ; ==========================================================
 
-.include "src/include/macros-general.asm"
+#../C64Programs/c64main/include/macros-general.asm
 
 ; ----------------------------------------------------------
 ; Labels
@@ -23,9 +23,9 @@ exchangeFlag    = $CFFF
 ; Program
 ; ----------------------------------------------------------
 
-                *=$02a7                 ; sys679
+				*=$02a7                 ; sys679
 
-init            jsr $e544               ; Clear the screen
+init:           jsr $e544               ; Clear the screen
                 ldx #$01
                 stx $d020               ; Border color register
                 ldx #$00
@@ -34,21 +34,21 @@ init            jsr $e544               ; Clear the screen
                 lda #$00
                 ldx #$00
                 ldy #$00
-ldlist          lda list1,x             ; get byte from list1+x
+ldlist:         lda list1,x             ; get byte from list1+x
                 sta listAddress,y       ; lo-byte of current list address
                 inx                     ; increase x
                 iny                     ; increase y
                 cpx #$04                ; check if end of list reached
                 bne ldlist
 
-sort8           ldy #$00                ; Turn exchange flag off (= 0)
+sort8:          ldy #$00                ; Turn exchange flag off (= 0)
                 sty exchangeFlag        ; Save exchange flag
                 lda listAddress,y       ; Fetch element count
                 tax                     ; and put it into x
                 iny                     ; point to first element in list
                 dex                     ; decrement element count
 
-nxtel           lda listAddress,y       ; fetch element
+nxtel:          lda listAddress,y       ; fetch element
                 iny
                 cmp listAddress,y       ; Is it larger than the next element?
                 bcc chkend              ; Branch on carry clear
@@ -63,10 +63,11 @@ nxtel           lda listAddress,y       ; fetch element
                 sta listAddress,y 
                 lda #$FF                ; Turn exchange flag on (= -1)
                 sta exchangeFlag
-chkend          dex                     ; End of List reached?
+chkend:         dex                     ; End of List reached?
                 bne nxtel               ; No. Fetch the next element.
                 bit exchangeFlag        ; Yes. Echange flag sitll off?
                 bmi sort8               ; No. Go through list again
+
                 rts
 
 
@@ -74,4 +75,6 @@ chkend          dex                     ; End of List reached?
 ; Data
 ; ----------------------------------------------------------
 
-list1           .byte $03, $0A, $08, $02 ; First byte is the list length
+*=$c000
+list1 = $c000
+BYTES $03 $0A $08 $02 					; First byte is the list length

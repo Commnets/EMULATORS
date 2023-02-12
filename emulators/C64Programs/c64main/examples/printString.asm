@@ -39,7 +39,7 @@ text:   lda HELLO,x             ; take byte by byte
         cpx #26                 ; check for end of the string data table
         bne text
 
-loop:   jmp loop                ; endless stupid loop
+		rts                				; endless stupid loop
 
 ; ----------------------------------------------------------
 ; Data

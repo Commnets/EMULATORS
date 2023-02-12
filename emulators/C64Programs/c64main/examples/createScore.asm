@@ -6,7 +6,6 @@
 
 * = $C000
 #../C64Programs/c64main/include/constants.asm
-#../C64Programs/c64main/include/COLDINIT.asm
 
 ; ----------------------------------------------------------
 ; Main Loop
@@ -14,7 +13,6 @@
 
 *=$c100                         			; sys 49152
 
-				jsr COLDINIT
                 lda #147
                 jsr $ffd2
 				lda #25						; To point to the right place in the queue of stings
@@ -50,7 +48,7 @@ wait1:          cmp RASTER
 
                 dec BORDER_COLOR_REGISTER
 
-                jmp loop
+                rts
 
 
 *=$c200

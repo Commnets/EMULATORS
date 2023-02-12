@@ -16,6 +16,7 @@ border = $d020
 
 *=$02a7                 		; sys 679
 
-loop:   lda #$04                ; set border color to purple
+init:   lda #$04                ; set border color to purple
         sta border
-        jmp loop
+		
+        rts

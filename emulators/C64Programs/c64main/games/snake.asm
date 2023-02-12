@@ -4,7 +4,7 @@
 ; Snake
 ; ==========================================================
 
-.include "src/include/constants.asm"
+#../C64Programs/c64main/include/constants.asm
 
 ; ----------------------------------------------------------
 ; Labels
@@ -21,10 +21,6 @@ spr0ShapeData       = $0340                           ; = 13 * 64 = 832
 ; current direction (up = 1, down = 3, left = 5, right = 7)
 currentDir          = 7
 
-
-; up (1+2 byte), down (3+4 byte), left (5+6 byte), right (7+8 byte)
-dirs                .byte $00,$02,$00,$01,$02,$00,$01,$00
-
 ; input keys
 ENTER               = 13
 KEY_W               = 87
@@ -38,11 +34,11 @@ KEY_D               = 68
 
                 *=$4000                         ; sys 16384
 
-init            jsr $e544                       ; clear the screen
+init:           jsr $e544                       ; clear the screen
                             
-                lda #%00001101                  ; use block 13 for sprite 0
+                lda #z00001101                  ; use block 13 for sprite 0
                 sta SPRITE_POINTERS
-                lda #%00000001                  ; load accumulator with value 1
+                lda #z00000001                  ; load accumulator with value 1
                 sta SPRITE_ENABLE_REGISTER      ; enable sprite 0
                 lda #CYAN                       ; use cyan for sprite 0
                 sta SPRITE_0_COLOR_REGISTER     ; load cyan to color register 0
@@ -50,14 +46,14 @@ init            jsr $e544                       ; clear the screen
                 ldx #0
                 lda #0
 
-build           lda spr0,x                      ; get byte from sprite0+x
+build:          lda spr0,x                      ; get byte from sprite0+x
                 sta spr0ShapeData,x             ; store byte at spr0ShapeData+x
                 inx
                 cpx #63
                 bne build
 
                 ; set position
-                lda #%00000000                  ; restrict horizontal position to 0-255
+                lda #z00000000                  ; restrict horizontal position to 0-255
                 sta MSIGX
 
                 ; starting sprite location
@@ -71,7 +67,7 @@ build           lda spr0,x                      ; get byte from sprite0+x
 ; ----------------------------------------------------------
 
                 
-loop            jsr input
+loop:           jsr input
                 jmp loop
 
             
@@ -80,7 +76,7 @@ loop            jsr input
 ; Evaluate Input
 ; ----------------------------------------------------------
 
-input           ; TODO: Is "lda $ff" a better alternative?
+input:          ; TODO: Is "lda $ff" a better alternative?
                 jsr SCNKEY                      ; jump to scan keyboard
                 jsr GETIN                       ; jump to get a character
                 
@@ -98,17 +94,17 @@ input           ; TODO: Is "lda $ff" a better alternative?
                 beq end
                 rts
 
-upKey           ldy SP0Y
+upKey:          ldy SP0Y
                 dey 
                 sty SP0Y
                 rts
 
-downKey         ldy SP0Y
+downKey:        ldy SP0Y
                 iny
                 sty SP0Y
                 rts
 
-leftKey         ldx SP0X
+leftKey:        ldx SP0X
                 dex
                 stx SP0X
                 cpx #255
@@ -117,7 +113,7 @@ leftKey         ldx SP0X
                 sta MSIGX
                 rts
 
-rightKey        ldx SP0X
+rightKey:       ldx SP0X
                 inx
                 stx SP0X
                 rts
@@ -126,9 +122,10 @@ rightKey        ldx SP0X
 ; Clean up at the end
 ; ----------------------------------------------------------
 
-end             jsr CLEAR
+end:            jsr CLEAR
                 lda #0
                 sta SPRITE_ENABLE_REGISTER
+				
                 rts
 
 ; ----------------------------------------------------------
@@ -136,25 +133,31 @@ end             jsr CLEAR
 ; ----------------------------------------------------------
 
 ; snake sprite
+*=$c000
+spr0 = $c000
+BYTES $FF $FF $FF
+BYTES $FF $FF $FF
+BYTES $FF $FF $FF
+BYTES $FF $FF $FF
+BYTES $FF $FF $FF
+BYTES $FF $FF $FF
+BYTES $FF $FF $FF
+BYTES $FF $FF $FF
+BYTES $FF $FF $FF
+BYTES $FF $FF $FF
+BYTES $FF $FF $FF
+BYTES $FF $FF $FF
+BYTES $FF $FF $FF
+BYTES $FF $FF $FF
+BYTES $FF $FF $FF
+BYTES $FF $FF $FF
+BYTES $FF $FF $FF
+BYTES $FF $FF $FF
+BYTES $FF $FF $FF
+BYTES $FF $FF $FF
+BYTES $FF $FF $FF
 
-spr0            .byte $FF, $FF, $FF
-                .byte $FF, $FF, $FF
-                .byte $FF, $FF, $FF
-                .byte $FF, $FF, $FF
-                .byte $FF, $FF, $FF
-                .byte $FF, $FF, $FF
-                .byte $FF, $FF, $FF
-                .byte $FF, $FF, $FF
-                .byte $FF, $FF, $FF
-                .byte $FF, $FF, $FF
-                .byte $FF, $FF, $FF
-                .byte $FF, $FF, $FF
-                .byte $FF, $FF, $FF
-                .byte $FF, $FF, $FF
-                .byte $FF, $FF, $FF
-                .byte $FF, $FF, $FF
-                .byte $FF, $FF, $FF
-                .byte $FF, $FF, $FF
-                .byte $FF, $FF, $FF
-                .byte $FF, $FF, $FF
-                .byte $FF, $FF, $FF
+; up (1+2 byte), down (3+4 byte), left (5+6 byte), right (7+8 byte)
+*=$c040
+dirs = $c040
+BYTES $00 $02 $00 $01 $02 $00 $01 $00

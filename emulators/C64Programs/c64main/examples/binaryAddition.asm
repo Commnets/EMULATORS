@@ -15,4 +15,5 @@ init:   jsr $e544               ; Clear the screen
         clc                     ; Clear Carry flag
         adc #z0010              ; Add with carry (1+2), so accumulator is 3 now
         sta $0400               ; store the result (= 3)
-loop:   jmp loop
+		
+		rts
