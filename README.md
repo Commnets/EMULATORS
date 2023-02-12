@@ -6,8 +6,8 @@ The framework has been developed fully in C++ (version 20) using <a href="https:
 For better understanding of the framework unzip <b>html.zip</b>, included in the package.<br>
 The package includes classes to develop you own emulator, including also assembler, compiler and consoles, remote and local ones.
 <br>
-The implementation of the framework for C64 has been included.<br>
-In that case, the behaviour of the VICII has been emulated following the fantastic article by Christian Bauer that can be foun at
+The implementation of the framework for Commodore 64 has been included.<br>
+In that case, the behaviour of the VICII has been emulated following the fantastic article by Christian Bauer that can be found at
 <a href="http://www.zimmers.net/cbmpics/cbm/c64/vic-ii.txt">Zimmers.net</a><br>
 <br>
 To compile the framework the <a href="https://github.com/libsdl-org/SDL/releases/tag/release-2.26.2">SDL Core</a>, <a href="https://www.libsdl.org/projects/SDL_image/release/">SDL image</a>, <a href="https://github.com/libsdl-org/SDL_mixer">SDL Mixer</a> and <a href="https://github.com/facebookarchive/RakNet">Raknet</a> libraries are necessary.
