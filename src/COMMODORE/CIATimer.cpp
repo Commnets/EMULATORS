@@ -7,7 +7,7 @@ void COMMODORE::CIATimer::initialize ()
 	_countMode = CountMode::_PROCESSORCYCLES;
 
 	_enabled = false;
-	_InterruptEnabled = false;
+	_interruptEnabled = false;
 
 	_initialValue = 0x0000;
 	_time = MCHEmul::Time ();
@@ -17,7 +17,7 @@ void COMMODORE::CIATimer::initialize ()
 	_lastClockCycles = 0;
 
 	_reaches0 = false;
-	_InterruptRequested = false;
+	_interruptRequested = false;
 }
 
 // ---
@@ -30,8 +30,8 @@ void COMMODORE::CIATimer::simulate (MCHEmul::CPU* cpu, COMMODORE::CIATimer* t)
 
 	if (countDown (cpu, t))
 	{
-		if (_InterruptEnabled)
-			cpu -> interrupt (_interruptId) -> setActive (_InterruptRequested = true);
+		if (_interruptEnabled)
+			cpu -> interrupt (_interruptId) -> setActive (_interruptRequested = true);
 		
 		switch (_runMode)
 		{
@@ -63,7 +63,7 @@ MCHEmul::InfoStructure COMMODORE::CIATimer::getInfoStructure () const
 	result.add ("RUN",			(unsigned int)_runMode);
 	result.add ("COUNT",		(unsigned int) _countMode);
 	result.add ("STATUS",		_enabled);
-	result.add ("IRQ",			_InterruptEnabled);
+	result.add ("IRQ",			_interruptEnabled);
 	result.add ("VALUE",		_currentValue);
 	result.add ("INITIALVALUE", _initialValue);
 

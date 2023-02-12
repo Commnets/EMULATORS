@@ -28,34 +28,42 @@ namespace COMMODORE
 			  _valueRead (true),
 			  _valueToWrite (true),
 			  _motorOff (true),
-			  _noKeyPressed (true),
-			  _newValueReceived (false)
+			  _noKeyPressed (true)
 							{ }
 
 		// Managing the datasette...
 		// The important PINS in the datasette are:
 		/** PINC3	: MOTOR CONTROL = To move the motor. */
-		virtual void setMotorOff (bool d)
+		void setMotorOff (bool d)
 							{ _motorOff = d; }
 		/** PIND4	: READ = Data Input. Read FROM the casette. */
 		bool read () const
 							{ return (_valueRead); }
 		/** PINE5	: WRITE = Data Output. Write TO the casette. */
-		virtual void setWrite (bool d)
-							{ _newValueReceived = true; _valueToWrite = d; }
+		void setWrite (bool d)
+							{ _valueToWrite = d; }
 		/** PINF6	: SENSE = Detect when one the main keys is pressed (PLAY, RECORD, F.FWD, REW). */
-		virtual bool noKeyPressed () const
+		bool noKeyPressed () const
 							{ return (_noKeyPressed); }
 
 		virtual bool initialize () override;
 
 		protected:
+		/** To be used from the classes inherint this one. 
+			The methods are the opposite ones to the public ones. */
+		bool motorOff () const
+							{ return (_motorOff); }
+		void setRead (bool v)
+							{ _valueRead = v; }
+		bool valueToWrite () const
+							{ return (_valueToWrite); }
+		void setNoKeyPressed (bool n)
+							{ _noKeyPressed = n; }
+
+		protected:
 		volatile bool _valueRead, _valueToWrite;
 		volatile bool _motorOff;
 		volatile bool _noKeyPressed;
-
-		// Implementation
-		bool _newValueReceived;
 	};
 
 	/** Represents nothing connected. */

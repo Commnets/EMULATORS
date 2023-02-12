@@ -7,7 +7,10 @@ COMMODORE::DatasetteIOPort::DatasetteIOPort ()
 		{ { "Name", "Datasette Port" },
 		  { "Type", "Input/Output" },
 		  { "Manufacturer", "Commodore Business Machines CBM" } }),
-	  _datasette (nullptr)
+	  _datasette (nullptr),
+	  _lastValueRead (false),
+	  _lastMotorOff (true),
+	  _lastNoKeyPressed (true)
 {
 	// Nothing else to do...
 }

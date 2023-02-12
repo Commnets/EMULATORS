@@ -3,7 +3,7 @@
 // ---
 void COMMODORE::CIAClock::initialize ()
 {
-	_InterruptEnabled = false;
+	_interruptEnabled = false;
 
 	_time = MCHEmul::Time ();
 
@@ -16,7 +16,7 @@ void COMMODORE::CIAClock::initialize ()
 	_stopped = false;
 
 	_reachesAlarm = false;
-	_InterruptRequested = false;
+	_interruptRequested = false;
 }
 
 // ---
@@ -36,8 +36,8 @@ void COMMODORE::CIAClock::simulate (MCHEmul::CPU* cpu)
 	if (_hours == _alarmHours && _minutesL == _alarmMinutes && _secondsL == _alarmSeconds &&
 		_tenthsSecondL >= _alarmTenthsSecond)
 	{
-		if (_InterruptEnabled)
-			cpu -> interrupt (_interruptId) -> setActive (_InterruptRequested = true);
+		if (_interruptEnabled)
+			cpu -> interrupt (_interruptId) -> setActive (_interruptRequested = true);
 		
 		_reachesAlarm = true;
 	}
@@ -50,7 +50,7 @@ MCHEmul::InfoStructure COMMODORE::CIAClock::getInfoStructure () const
 {
 	MCHEmul::InfoStructure result;
 
-	result.add ("Interrupt",		_InterruptEnabled);
+	result.add ("Interrupt",		_interruptEnabled);
 	result.add ("HOURS",			_hours);
 	result.add ("MINUTES",			_minutes);
 	result.add ("SECONDS",			_seconds);

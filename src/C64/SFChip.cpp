@@ -53,6 +53,7 @@ bool C64::SpecialFunctionsChip::initialize ()
 // ---
 bool C64::SpecialFunctionsChip::simulate (MCHEmul::CPU* cpu)
 {
+	MCHEmul::UByte val0 = memoryRef () -> value (_POS0);
 	MCHEmul::UByte val1 = memoryRef () -> value (_POS1);
 	if (val1 == _lastValue1)
 		return (true); // Nothing has changed...just to speed everything a little bit more!
@@ -84,12 +85,14 @@ bool C64::SpecialFunctionsChip::simulate (MCHEmul::CPU* cpu)
 
 	// Bit 3 controls what it is written in the datasette...
 	// The bit 3 is connected against the output line of the datasette port.
-	notify (MCHEmul::Event (val1.bit (3) 
+	// The same bit in the memory position 0 hast to be defined as output (value = 1)
+	notify (MCHEmul::Event (val1.bit (3) && val0.bit (3)
 		? COMMODORE::DatasetteIOPort::_WRITE1 : COMMODORE::DatasetteIOPort::_WRITE0));
 
 	// Bit 5 controls the status of the motor in the datasette...
 	// When 1 the motor is stopped (normal situation), when 0 the motor turns.
-	notify (MCHEmul::Event (val1.bit (5)
+	// The same bit in the memory position 0 hast to be defined as output (value = 1)
+	notify (MCHEmul::Event (val1.bit (5) && val0.bit (5)
 		? COMMODORE::DatasetteIOPort::_MOTORSTOPPED : COMMODORE::DatasetteIOPort::_MOTORRUNNING));
 
 	return (true);
@@ -104,6 +107,5 @@ void C64::SpecialFunctionsChip::processEvent (const MCHEmul::Event& evnt, MCHEmu
 	if (evnt.id () == COMMODORE::DatasetteIOPort::_KEYPRESSED ||
 		evnt.id () == COMMODORE::DatasetteIOPort::_NOKEYPRESSED)
 		memoryRef () -> set (_POS1, memoryRef () -> value (_POS1) & 0xef | 
-			(evnt.id () == COMMODORE::DatasetteIOPort::_KEYPRESSED ? 0x10 : 0x00) & 
-			!memoryRef () -> value (_POS0).bit (4) /** This bit must be at 0 for proper working. */);
+			((evnt.id () == COMMODORE::DatasetteIOPort::_KEYPRESSED && !memoryRef () -> value (_POS0).bit (4)) ? 0x10 : 0x00));
 }

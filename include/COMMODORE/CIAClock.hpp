@@ -39,12 +39,12 @@ namespace COMMODORE
 		bool reachesAlarm () const
 							{ return (_reachesAlarm); }
 
-		bool InterruptEnabled () const
-							{ return (_InterruptEnabled); }
+		bool interruptEnabled () const
+							{ return (_interruptEnabled); }
 		void setInterruptEnabled (bool e)
-							{ _InterruptEnabled = e; }
-		bool InterruptRequested () const
-							{ bool r = _InterruptRequested; _InterruptRequested = false; return (r); }
+							{ _interruptEnabled = e; }
+		bool interruptRequested () const
+							{ bool r = _interruptRequested; _interruptRequested = false; return (r); }
 
 		/** To set the alarm by pieces,
 			because this is the way the CIA chip works. */
@@ -108,7 +108,7 @@ namespace COMMODORE
 		const unsigned int _interruptId;
 
 		// The variables that define a timer...
-		bool _InterruptEnabled;
+		bool _interruptEnabled;
 		unsigned char _alarmHours, _alarmMinutes, _alarmSeconds, _alarmTenthsSecond;
 
 		// It is actualized continiously thorugh the method actualizeTime...
@@ -130,7 +130,7 @@ namespace COMMODORE
 		/** When the alarm time is reached, this variable becomes true, just for the time the clock starts back if any. */
 		bool _reachesAlarm;
 		/** When an IRQ interruption is requested this variable is set to true, until it is read. */
-		mutable bool _InterruptRequested;
+		mutable bool _interruptRequested;
 	};
 }
 

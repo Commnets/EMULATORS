@@ -21,16 +21,42 @@ namespace COMMODORE
 {
 	/** This unit was used in many COMMODORE models. \n
 		Mainly all of them except COMMODORE16. */
-	class Datasette1530 : public DatasettePeripheral
+	class Datasette1530 final : public DatasettePeripheral
 	{
 		public:
 		static const int _ID = 100;
 
+		/** The commands accepted by this peripheral. \n
+			They refer mainly to keys that can be pressed. \n
+			Notice that combinations are possible. */
+		static const int _KEYFOWARD = 1;
+		static const int _KEYREWIND = 2;
+		static const int _KEYSTOP   = 4;
+		static const int _KEYPLAY   = 8;
+		static const int _KEYRECORD = 16;
+		/** The key EJECT has no value. */
+
 		Datasette1530 ();
+
+		virtual bool initialize () override;
 
 		virtual bool executeCommand (int id, const MCHEmul::Strings& prms) override;
 
 		virtual bool simulate (MCHEmul::CPU* cpu) override;
+
+		private:
+		/** The different status that this peripheral can be in. \n
+			At creating this datasette is stopped. */
+		enum class Status
+		{
+			_STOPPED = 0,
+			_READING = 1,
+			_SAVING = 2
+		};
+
+		// Immplementation
+		mutable Status _status;
+		MCHEmul::Clock _clock;
 	};
 }
 

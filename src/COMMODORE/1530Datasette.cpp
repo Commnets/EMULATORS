@@ -4,23 +4,60 @@
 COMMODORE::Datasette1530::Datasette1530 ()
 	: COMMODORE::DatasettePeripheral (_ID, 
 		{ { "Name", "Commodore 1530 (CN2)" },
-		  { "Manufacturer", "Commodore Business Machines CBM" } })
+		  { "Manufacturer", "Commodore Business Machines CBM" } }),
+	  _status (),
+	  _clock (400) // 400 baudios, bits per second...
 {
 	// Nothing else to do...
 }
 
 // ---
+bool COMMODORE::Datasette1530::initialize ()
+{
+	_status = Status::_STOPPED;
+
+	_clock.start ();
+
+	return (COMMODORE::DatasettePeripheral::initialize ());
+}
+
+// ---
 bool COMMODORE::Datasette1530::executeCommand (int id, const MCHEmul::Strings& prms)
 {
-	// TODO
+	setNoKeyPressed ((id == _KEYSTOP) ? true : false);
 
-	return (false);
+	// Only keys play and record has effect...
+	_status = ((id & _KEYPLAY) == _KEYPLAY) 
+		? (((id & _KEYRECORD) == _KEYRECORD) ? Status::_SAVING : Status::_READING)
+		: Status::_STOPPED;
+
+	return (true);
 }
 
 // ---
 bool COMMODORE::Datasette1530::simulate (MCHEmul::CPU* cpu)
 {
-	// TODO
+	if (!motorOff ())
+	{
+		if (_status == Status::_SAVING)
+		{
+			// TODO
+
+			std::cout << valueToWrite ();
+		}
+		else
+		if (_status == Status::_READING)
+		{
+			if (_clock.tooQuick ())
+				_clock.countCycles (0);
+			else
+			{ 
+				_clock.countCycles (0);
+
+				// TODO
+			}
+		}
+	}
 
 	return (true);
 }

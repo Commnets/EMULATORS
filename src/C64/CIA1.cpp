@@ -1,6 +1,7 @@
 #include <C64/CIA1.hpp>
 #include <C64/Memory.hpp>
 #include <C64/OSIO.hpp>
+#include <C64/DatasettePort.hpp>
 
 // ---
 bool C64::CIA1::initialize ()
@@ -120,6 +121,12 @@ void C64::CIA1::processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifier* n)
 							_CIA1Registers -> setJoystick2Status (_CIA1Registers -> joystick2Status () | 0x10);
 			}
 
+			break;
+
+		case C64::DatasetteIOPort::_READ0:
+		case C64::DatasetteIOPort::_READ1:
+			_CIA1Registers -> setValue (0x0d, _CIA1Registers -> readValue (0x0d) & 0xef |
+				(evnt.id () == C64::DatasetteIOPort::_READ1 ? 0x10 /** The bit 4. */ : 0x00));
 			break;
 
 		default:

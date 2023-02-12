@@ -135,6 +135,7 @@ void COMMODORE::CIARegisters::setValue (size_t p, const MCHEmul::UByte& v)
 				if (v.bit (0)) _timerA -> setInterruptEnabled (v.bit (7));
 				if (v.bit (1)) _timerB -> setInterruptEnabled (v.bit (7));
 				if (v.bit (2)) _clock -> setInterruptEnabled (v.bit (7));
+				_flagLineInterruptRequested = v.bit (4) && v.bit (7);
 			}
 
 			break;
@@ -264,14 +265,16 @@ const MCHEmul::UByte& COMMODORE::CIARegisters::readValue (size_t p) const
 
 		case 0x0d:
 			{
-				bool IA = _timerA -> InterruptRequested (); // It is set back to false after reading...
-				bool IB = _timerB -> InterruptRequested (); // Same...
-				bool IC = _clock -> InterruptRequested (); // Same...
+				bool IA = _timerA -> interruptRequested (); // It is set back to false after reading...
+				bool IB = _timerB -> interruptRequested (); // Same...
+				bool IC = _clock -> interruptRequested (); // Same...
+				bool ID = flagLineInterruptRequested (); // Same...
 				result = MCHEmul::UByte::_0;
-				result.setBit (7, IA || IB || IC); // Interrupt?
 				result.setBit (0, IA); // in Timer A?
 				result.setBit (1, IB); // in Timer B?
 				result.setBit (2, IC); // in Clock?
+				result.setBit (4, ID); // In the Flag Line?
+				result.setBit (7, IA || IB || IC || ID); // Interrupt?
 			}
 
 			break;

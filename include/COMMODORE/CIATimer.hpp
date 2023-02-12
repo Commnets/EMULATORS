@@ -83,12 +83,12 @@ namespace COMMODORE
 		void setEnabled (bool e)
 							{ _enabled = e; }
 
-		bool InterruptEnabled () const
-							{ return (_InterruptEnabled); }
+		bool interruptEnabled () const
+							{ return (_interruptEnabled); }
 		void setInterruptEnabled (bool e)
-							{ _InterruptEnabled = e; }
-		bool InterruptRequested () const
-							{ bool r = _InterruptRequested; _InterruptRequested = false; return (r); }
+							{ _interruptEnabled = e; }
+		bool interruptRequested () const
+							{ bool r = _interruptRequested; _interruptRequested = false; return (r); }
 
 		// Managing the values...
 		/** The value used as the starting point for the count down. */
@@ -139,7 +139,7 @@ namespace COMMODORE
 		RunMode _runMode;
 		CountMode _countMode;
 		bool _enabled;
-		bool _InterruptEnabled;
+		bool _interruptEnabled;
 		unsigned short _initialValue;
 
 		// It is actualized continiously through the method actualizeTime...
@@ -154,7 +154,7 @@ namespace COMMODORE
 		/** When 0 is reached, this variable becomes true, just for the time the timer starts back if any. */
 		bool _reaches0;
 		/** When an IRQ interruption is requested this variable is set to true, until it is read. */
-		mutable bool _InterruptRequested;
+		mutable bool _interruptRequested;
 	};
 }
 

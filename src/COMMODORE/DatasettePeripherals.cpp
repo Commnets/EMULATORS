@@ -6,7 +6,6 @@ bool COMMODORE::DatasettePeripheral::initialize ()
 	_valueToWrite = true;
 	_motorOff = true;
 	_noKeyPressed = true;
-	_newValueReceived = false;
 
 	return (true);
 }

@@ -121,8 +121,8 @@ namespace COMMODORE
 
 		// Activate the IRQ. 
 		// All these methods are called from VICII simulation...
-		void activateRasterAtLineIRQ ()
-							{ _rasterAtLineIRQHappened = true; }
+		void activateRasterAtLineIRQ (bool a)
+							{ _rasterAtLineIRQHappened = a; }
 		void activateSpritesCollisionWithDataIRQ ()
 							{ _spritesCollisionWithDataIRQHappened = true; }
 		void setSpriteCollisionWithDataHappened (size_t p)

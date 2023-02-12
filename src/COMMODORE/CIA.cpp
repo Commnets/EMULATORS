@@ -1,4 +1,5 @@
 #include <COMMODORE/CIA.hpp>
+#include <F6500/IRQInterrupt.hpp>
 
 COMMODORE::CIA::CIA (int id, int rId, unsigned int intId)
 	: MCHEmul::Chip (id,
@@ -54,6 +55,10 @@ bool COMMODORE::CIA::simulate (MCHEmul::CPU* cpu)
 	_clock.simulate (cpu);
 
 	_lastClockCycles = cpu -> clockCycles ();
+
+	if (_CIARegisters -> flagLineInterruptRequested ())
+		cpu -> interrupt (F6500::IRQInterrupt::_ID) -> setActive (true);
+	// The machine code will set this flag to 0 back...
 
 	return (true);
 }
