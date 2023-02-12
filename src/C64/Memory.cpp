@@ -15,14 +15,14 @@ C64::Memory::Memory (const std::string& lang)
 	// They might change depending on the language
 	std::string ROMFILE = "./basic.901226-01.bin";
 	std::string CHARROMFILE = "./characters.901225-01-ENG.bin";
-	std::string KERNELFILE = "./kernal.901227-03.bin";
+	std::string KERNELFILE = "./kernal.901227-03-ENG.bin";
 
 	// If the languaje selected is not ENG...
 	// then anither char rom file is selected!
-	if (lang == "ESP") CHARROMFILE = "characters.325056-03-ESP.bin";
-	else if (lang == "JAP") CHARROMFILE = "characters.906143-02-JAP.bin";
-	else if (lang == "SWE") CHARROMFILE = "characters.325018-02-SWE.bin";
-	else if (lang == "DKA") CHARROMFILE = "characters.901225-01-DKA.bin";
+	if (lang == "ESP") { CHARROMFILE = "characters.325056-03-ESP.bin"; }
+	else if (lang == "JAP") { CHARROMFILE = "characters.906143-02-JAP.bin"; KERNELFILE = "kernal.906145-02-JAP.bin"; }
+	else if (lang == "SWE") { CHARROMFILE = "characters.325018-02-SWE.bin"; KERNELFILE = "kernal.325017-02-SWE.bin"; }
+	else if (lang == "DKA") { CHARROMFILE = "characters.901225-01-DKA.bin"; KERNELFILE = "kernal.901227-03-DKA.bin"; }
 
 	bool ok = true;
 	ok &= subset (_BASICROM_SUBSET) -> loadInto (ROMFILE);
