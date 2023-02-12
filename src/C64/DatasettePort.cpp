@@ -20,6 +20,7 @@ void C64::DatasetteIOPort::linkToChips (const MCHEmul::Chips& c)
 
 	// The CIA 1 will receive the event related with the datasette port (in reading operations)
 	_cia1 -> observe (this);
-	// And the datasette the same in writting operations!
-	observe (_specialChip);
+	// And the datasette the same in writting operations and the status of motor and keys...
+	_specialChip -> observe (this); // observing when the keys are pressed and the motor runs...
+	observe (_specialChip); // In writting operations...
 }

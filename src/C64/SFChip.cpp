@@ -2,6 +2,7 @@
 #include <C64/Memory.hpp>
 #include <C64/CIA1Registers.hpp>
 #include <C64/CIA2Registers.hpp>
+#include <C64/DatasettePort.hpp>
 
 const MCHEmul::Address C64::SpecialFunctionsChip::_POS0 = MCHEmul::Address ({ 0x00, 0x00 }, false);
 const MCHEmul::Address C64::SpecialFunctionsChip::_POS1 = MCHEmul::Address ({ 0x01, 0x00 }, false);
@@ -81,5 +82,28 @@ bool C64::SpecialFunctionsChip::simulate (MCHEmul::CPU* cpu)
 	_IO1Registers	-> setActiveForReading ( bit12);
 	_IO2registers	-> setActiveForReading ( bit12);
 
+	// Bit 3 controls what it is written in the datasette...
+	// The bit 3 is connected against the output line of the datasette port.
+	notify (MCHEmul::Event (val1.bit (3) 
+		? COMMODORE::DatasetteIOPort::_WRITE1 : COMMODORE::DatasetteIOPort::_WRITE0));
+
+	// Bit 5 controls the status of the motor in the datasette...
+	// When 1 the motor is stopped (normal situation), when 0 the motor turns.
+	notify (MCHEmul::Event (val1.bit (5)
+		? COMMODORE::DatasetteIOPort::_MOTORSTOPPED : COMMODORE::DatasetteIOPort::_MOTORRUNNING));
+
 	return (true);
+}
+
+// ---
+void C64::SpecialFunctionsChip::processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifier* ntier)
+{
+	// Bit 5 reflects whether some key has been pressed on the dataette...
+	// When somethind has been pressed this bit is set to 1.
+	// The same bit at the position 0 has to be set 0 set to indicate that 
+	if (evnt.id () == COMMODORE::DatasetteIOPort::_KEYPRESSED ||
+		evnt.id () == COMMODORE::DatasetteIOPort::_NOKEYPRESSED)
+		memoryRef () -> set (_POS1, memoryRef () -> value (_POS1) & 0xef | 
+			(evnt.id () == COMMODORE::DatasetteIOPort::_KEYPRESSED ? 0x10 : 0x00) & 
+			!memoryRef () -> value (_POS0).bit (4) /** This bit must be at 0 for proper working. */);
 }

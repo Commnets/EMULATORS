@@ -245,10 +245,11 @@ MCHEmul::InfoStructure MCHEmul::LocalConsole::loadPeripheralData (const std::str
 	if (prmsL.size () != 2)
 		return (result);
 
+	MCHEmul::FileData* dt = _emulator -> connectDataToPeripheral (prmsL [1], std::atoi (prmsL [0].c_str ()));
 	result.add (std::string ("ERROR"), 
-		!_emulator -> connectDataToPeripheral (prmsL [1], std::atoi (prmsL [0].c_str ()))
+		(dt == nullptr)
 			? std::string ("The data was not connected to the peripheral.")
-			: "No errors");
+			: "No errors. " + dt -> asString ());
 
 	return (result);
 }

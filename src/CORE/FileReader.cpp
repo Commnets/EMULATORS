@@ -11,7 +11,7 @@ MCHEmul::FileReader::~FileReader ()
 }
 
 // ---
-MCHEmul::FileData* MCHEmul::FileReader::readFile (const std::string& fN, int t, bool bE)
+MCHEmul::FileData* MCHEmul::FileReader::readFile (const std::string& fN, bool bE)
 {
 	// If the file has read before, just get the result...
 	std::map <std::string, MCHEmul::FileData*>::const_iterator i;

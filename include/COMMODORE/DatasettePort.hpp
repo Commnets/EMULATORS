@@ -29,20 +29,36 @@ namespace COMMODORE
 		public:
 		static const int _ID = 100;
 
+		/** Different events. */
+		static const unsigned int _READ0			= 200;
+		static const unsigned int _READ1			= 201;
+		static const unsigned int _WRITE0			= 202;
+		static const unsigned int _WRITE1			= 203;
+		static const unsigned int _NOKEYPRESSED		= 204;
+		static const unsigned int _KEYPRESSED		= 205;
+		static const unsigned int _MOTORRUNNING		= 206;
+		static const unsigned int _MOTORSTOPPED		= 207;
+
 		DatasetteIOPort ();
 
-		// Managing the different pins...
-		/** D-4 READ. */
-		bool pinD4 () const;
-		/** E-5 WRTE. */
-		void pinE5 (bool d);
-		/** F-6 SENSE. */
-		bool pintF6 () const;
-
-		/** It verifies before adding it that whether the peripherial is somtehing compatible. */
+		/** It verifies that the peripheral to add is compatible (= DatasettePeripheral). */
 		virtual bool connectPeripheral (MCHEmul::IOPeripheral* p) override;
 
-		private:
+		virtual bool simulate (MCHEmul::CPU* cpu) override;
+
+		virtual void processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifier* n) override;
+
+		protected:
+		const DatasettePeripheral* datasette () const
+							{ return (_datasette); }
+		DatasettePeripheral* datasette ()
+							{ return (_datasette); }
+
+		protected:
+		bool _lastValueRead;
+		bool _lastMotorOff;
+		bool _lastNoKeyPressed;
+
 		// Implementation...
 		DatasettePeripheral* _datasette;
 	};

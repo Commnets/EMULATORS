@@ -13,25 +13,6 @@ COMMODORE::DatasetteIOPort::DatasetteIOPort ()
 }
 
 // ---
-bool COMMODORE::DatasetteIOPort::pinD4 () const
-{
-	return (_datasette == nullptr) ? false : _datasette -> pinD4 ();
-}
-
-// ---
-void COMMODORE::DatasetteIOPort::pinE5 (bool d)
-{
-	if (_datasette != nullptr) 
-		_datasette -> pintE5 (d);
-}
-
-// ---
-bool COMMODORE::DatasetteIOPort::pintF6 () const
-{ 
-	return (_datasette == nullptr) ? false : _datasette -> pinF6 (); 
-}
-
-// ---
 bool COMMODORE::DatasetteIOPort::connectPeripheral (MCHEmul::IOPeripheral* p)
 {
 	// If it is not of the right type, it could be connected at all!
@@ -47,4 +28,51 @@ bool COMMODORE::DatasetteIOPort::connectPeripheral (MCHEmul::IOPeripheral* p)
 		MCHEmul::IODevice::disconnectAllPeripherals ();
 	_datasette = static_cast <COMMODORE::DatasettePeripheral*> (p);
 	return (MCHEmul::IODevice::connectPeripheral (p));
+}
+
+// ---
+bool COMMODORE::DatasetteIOPort::simulate (MCHEmul::CPU* cpu)
+{
+	// Only modifications in the status are communicated...
+	// If nothing changed nothing is communicated
+	// This is just to improve performance.
+
+	if (_datasette != nullptr)
+	{
+		if (_datasette -> noKeyPressed () != _lastNoKeyPressed)
+		{
+			_lastNoKeyPressed = _datasette -> noKeyPressed ();
+
+			notify (MCHEmul::Event (_lastNoKeyPressed ? _NOKEYPRESSED : _KEYPRESSED));
+		}
+
+		if (_datasette -> read () != _lastValueRead)
+		{
+			_lastValueRead = _datasette -> read ();
+
+			notify (MCHEmul::Event (_lastValueRead ? _READ0 : _READ1));
+		}
+	}
+
+	// The standard simulation is invoked to
+	// involke the simulation methds for all devices connected...
+	return (MCHEmul::IODevice::simulate (cpu));
+}
+
+// ---
+void COMMODORE::DatasetteIOPort::processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifier* n)
+{
+	// The events are received from the special chip...
+
+	if (evnt.id () == _WRITE0 || evnt.id () == _WRITE1)
+	{
+		if (_datasette != nullptr)
+			_datasette -> setWrite ((evnt.id () == _WRITE0) ? false : true);
+	}
+	else
+	if (evnt.id () == _MOTORRUNNING || evnt.id () == _MOTORSTOPPED)
+	{
+		if (_datasette != nullptr)
+			_datasette -> setMotorOff ((evnt.id () == _MOTORRUNNING) ? false : true);
+	}
 }

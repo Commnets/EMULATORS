@@ -187,8 +187,9 @@ namespace MCHEmul
 		/** There is also a method to connect a list of them. \n
 			It there have been attributes they would have to be in the same order than ids. */
 		bool connectPeripherals (std::vector <int> ids, const std::vector <Attributes>& prms = { });
-		/** Connect the data to a peripheral, building up the data. */
-		bool connectDataToPeripheral (const std::string& fN, int id);
+		/** Connect the data to a peripheral, building up the data. 
+			Returns a reference to the data loaded and nullptr if error or nothing. */
+		FileData* connectDataToPeripheral (const std::string& fN, int id);
 		/** To disconnect the peripherals. */
 		bool disconnectPeripheral (int id)
 							{ return (_computer -> disconnectPeripheral (id)); }

@@ -32,6 +32,8 @@ namespace C64
 
 		virtual bool simulate (MCHEmul::CPU* cpu) override;
 
+		virtual void processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifier* ntier) override;
+
 		private:
 		static const MCHEmul::Address _POS0;
 		static const MCHEmul::Address _POS1;

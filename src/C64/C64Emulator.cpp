@@ -18,6 +18,9 @@ void C64::C64Emulator::printOutParameters (std::ostream& o) const
 		 "JAP:\tJapanesse" << std::endl << 
 		 "SWE:\tSwedish" << std::endl <<
 		 "DKA:\tDanish" << std::endl;
+	o << "DEVICES allowed to be connected under command CONNECTPER" << std::endl <<
+		 "100:\tCartridge" << std::endl <<
+		 "200:\tCasette 1530/1" << std::endl;
 }
 
 // ---

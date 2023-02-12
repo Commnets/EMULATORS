@@ -175,5 +175,8 @@
     <ClCompile Include="..\..\src\COMMODORE\FileReaders.cpp">
       <Filter>Archivos de origen\Emulators</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\COMMODORE\DatasettePeripherals.cpp">
+      <Filter>Archivos de origen\IO</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

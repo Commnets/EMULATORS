@@ -26,6 +26,13 @@ namespace MCHEmul
 	{
 		virtual ~FileData () // Just in case...
 							{ }
+
+		/** To print out the result. It is used from the commands mainly. */
+		virtual std::string asString () const
+							{ return (""); }
+
+		friend std::ostream& operator << (std::ostream& o, const FileData& fD)
+							{ return (o << fD.asString ()); }
 	};
 
 	/** The most common one, is just adding blocks of data memory. */
@@ -83,7 +90,7 @@ namespace MCHEmul
 		/** Just read the file. \n
 			If the file can't be read or it is inconsistent, a NODATA object reference is returned,
 			but no variable related with errors is set. */
-		FileData* readFile (const std::string& fN, int t, bool bE = true);
+		FileData* readFile (const std::string& fN, bool bE = true);
 
 		private:
 		FileTypeReaderList _readerList;

@@ -40,8 +40,18 @@ No parameters needed.
 ;DEVICES
 Get the info about all devices connected to the computer.
 The Devices are not the peripherals that connect to the devices.
+See PERIPHERALS command for more info.
 No parameters are needed.
-#Commands to know think about the Computer
+;PERIPHERALS
+Get the info about all peripherals connected to the different devices of the computer.
+No parameters are needed.
+;PERCOMMAND PERID CMDID (ATTRS)
+To send a command/instruction to a device.
+The peripheral has to understand the instruction itself and react according to it.
+The parameters needed are a minimum of two: 
+The id of the peripheral and the id of the command/instruction.
+Additional parameters can be provided whether the command needs more info.
+#Commands to get info from the Computer
 ;STACK (ALL)
 Get the status of the stack.
 Can be invoked with or without the parameter ALL.

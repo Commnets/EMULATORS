@@ -75,6 +75,12 @@ namespace MCHEmul
 		virtual bool connectData (FileData* dt)
 							{ return (false); }
 
+		/** To execute a command. \n
+			Returns true when the command was executed ok, and false in other circunstance. \n
+			By default no command is accepted. */
+		virtual bool executeCommand (int cId, const Strings& prms)
+							{ return (false); }
+
 		/** To emulate the way it works. \n
 			Should return true if everything was ok. */
 		virtual bool simulate (CPU* cpu) = 0;

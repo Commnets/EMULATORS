@@ -638,6 +638,27 @@ namespace MCHEmul
 		private:
 		virtual void executeImpl (CommandExecuter* cE, Computer* c, InfoStructure& rst) override;
 	};
+
+	/** Command to send an instruction to one peripheral. \n
+		The instruction / command has to be understood by the peripheral. \n
+		The command needs minimum two parameters: The id of the peripheral and the number of the command to execute. \n
+		But also additional parameters can be added. */
+	class PeripheralInstructionCommand final : public Command
+	{
+		public:
+		static const int _ID = 27;
+		static const std::string _NAME;
+
+		PeripheralInstructionCommand ()
+			: Command (_ID, _NAME)
+							{ }
+
+		virtual bool canBeExecuted () const override
+							{ return (_parameters.size () >= 2); }
+
+		private:
+		virtual void executeImpl (CommandExecuter* cE, Computer* c, InfoStructure& rst) override;
+	};
 }
 
 #endif

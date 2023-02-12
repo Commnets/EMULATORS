@@ -37,6 +37,7 @@ const std::string MCHEmul::DesactivateDeepDebugCommand::_NAME = "CDESACTIVATEDEE
 const std::string MCHEmul::RestartComputerCommand::_NAME = "CRESTART";
 const std::string MCHEmul::IODevicesCommand::_NAME = "CDEVICES";
 const std::string MCHEmul::PeripheralsCommand::_NAME = "CPERIPHERALS";
+const std::string MCHEmul::PeripheralInstructionCommand::_NAME = "CPERCMD";
 
 // ---
 MCHEmul::HelpCommand::HelpCommand (const std::string& hF)
@@ -74,7 +75,7 @@ void MCHEmul::HelpCommand::executeImpl (MCHEmul::CommandExecuter* cE, MCHEmul::C
 
 	MCHEmul::InfoStructure iS;
 
-	auto helpInfoCommand = [&](const std::string& cmd) -> void
+	auto helpInfoCommand = [&](const std::string& cmd, bool sp) -> void
 		{
 			bool fL = true;
 			MCHEmul::HelpCommand::HelpInfo::const_iterator i;
@@ -84,17 +85,18 @@ void MCHEmul::HelpCommand::executeImpl (MCHEmul::CommandExecuter* cE, MCHEmul::C
 				std::string h = "";
 				for (size_t j = 0; j < (*i).second.size (); j++)
 					h += ((j == 0) ? '\0' : '\n') + (*i).second [j];
-				iS.add ("->" + cmd, MCHEmul::removeAll0 (h));
+				iS.add (((sp) ? "---\n" : "") + std::string ("->") + cmd, MCHEmul::removeAll0 (h));
 			}
 		};
 
 	if (_parameters.size () == 0)
 	{
+		unsigned int ct = 0;
 		for (const auto& i : _helpInfo)
-			helpInfoCommand (i.first);
+			helpInfoCommand (i.first, (ct++ != 0) ? true : false);
 	}
 	else
-		helpInfoCommand (parameter ("00"));
+		helpInfoCommand (parameter ("00"), false);
 
 	rst.add ("HELP", iS);
 }
@@ -527,4 +529,31 @@ void MCHEmul::PeripheralsCommand::executeImpl
 	for (const auto& i : prhs)
 		prhsD.add (std::to_string (i.first), i.second -> getInfoStructure ());
 	rst.add ("PERIPHERALS", prhsD);
+}
+
+// ---
+void MCHEmul::PeripheralInstructionCommand::executeImpl 
+	(MCHEmul::CommandExecuter* cE, MCHEmul::Computer* c, MCHEmul::InfoStructure& rst)
+{
+	if (c == nullptr)
+		return;
+
+	int pId = std::atoi (parameter ("00").c_str ());
+	if (!c -> existsPeripheral (pId))
+	{ 
+		rst.add ("ERROR", std::string ("The peripheral doesn't exist"));
+
+		return;
+	}
+
+	int cId = std::atoi (parameter ("01").c_str ());
+	MCHEmul::Strings aPrms;
+	for (const auto& i : parameters ())
+		if (i.first != "00" && i.first != "01") // The two first parameters have been laready used...
+			aPrms.emplace_back (i.second);
+
+	rst.add ("ERROR", 
+		!c -> peripheral (pId) -> executeCommand (cId, aPrms)
+			? std::string ("The command can not be executed")
+			: ("No errors"));
 }

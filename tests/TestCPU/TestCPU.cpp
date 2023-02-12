@@ -391,6 +391,6 @@ int _tmain (int argc, _TCHAR *argv [])
 	testUInt ();
 	testUIntBCD ();
 	testAddress ();
-
+	
 	return (0);
 }

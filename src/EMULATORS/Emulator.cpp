@@ -143,19 +143,22 @@ bool MCHEmul::Emulator::connectPeripherals
 }
 
 // ---
-bool MCHEmul::Emulator::connectDataToPeripheral (const std::string& fN, int id)
+MCHEmul::FileData* MCHEmul::Emulator::connectDataToPeripheral (const std::string& fN, int id)
 { 
 	MCHEmul::IOPeripheral* p = _computer -> peripheral (id);
 	if (p == nullptr)
-		return (false);
+		return (nullptr);
 
-	MCHEmul::FileData* dt = 
-		fileReader () -> readFile (fN, -1 /** Maning to autodetect. */,
-			computer () -> cpu () -> architecture ().bigEndian ());
-	if (dt == nullptr)
-		return (false);
-	
-	return (p -> connectData (dt));
+	MCHEmul::FileData* result = 
+		fileReader () -> readFile (fN, computer () -> cpu () -> architecture ().bigEndian ());
+	if (result != nullptr)
+	{
+		if (!p -> connectData (result))
+			return (nullptr); // There might have been created the data,
+							  // but a nullptr is returns as nothing can be reused...
+	}
+
+	return (result);
 }
 
 // ---

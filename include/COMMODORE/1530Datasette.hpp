@@ -28,11 +28,7 @@ namespace COMMODORE
 
 		Datasette1530 ();
 
-		virtual bool pinD4 () const override;
-		virtual void pintE5 (bool d) override;
-		virtual bool pinF6 () const override;
-
-		virtual bool initialize () override;
+		virtual bool executeCommand (int id, const MCHEmul::Strings& prms) override;
 
 		virtual bool simulate (MCHEmul::CPU* cpu) override;
 	};

@@ -61,7 +61,8 @@ namespace C64
 		virtual MCHEmul::FileReader* createFileReader () const override
 							{ return (new MCHEmul::FileReader 
 								(MCHEmul::FileTypeReaderList (
-									{ new COMMODORE::CRTFileTypeReader /** Cartridges. */ }))); }
+									{ new COMMODORE::CRTFileTypeReader /** Cartridges. */,
+									  new COMMODORE::T64FileTypeReader /** Tapes. */ }))); }
 	};
 }
 

@@ -64,6 +64,8 @@ MCHEmul::Command* MCHEmul::StandardCommandBuilder::createEmptyCommand (const std
 		result = new MCHEmul::IODevicesCommand;
 	else if (cmdName == "PERIPHERALS" || cmdName == MCHEmul::PeripheralsCommand::_NAME)
 		result = new MCHEmul::PeripheralsCommand;
+	else if (cmdName == "PERCOMMAND" || cmdName == MCHEmul::PeripheralsCommand::_NAME)
+		result = new MCHEmul::PeripheralInstructionCommand;
 	else if (cmdName == MCHEmul::MoveParametersToAnswerCommand::_NAME)
 		result = new MCHEmul::MoveParametersToAnswerCommand;
 
