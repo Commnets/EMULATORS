@@ -1,3 +1,6 @@
+;This program has to be executed before basic is initialized.
+;The location of the basic programs are used to keep the image.
+
 *=$1000
 
 					lda $4710

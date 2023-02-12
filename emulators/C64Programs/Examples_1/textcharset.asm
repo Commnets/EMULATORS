@@ -1,3 +1,7 @@
+; This program has to be executed from the emulation
+; The routines to clear up the screen are used
+; The vector jumps have to be initialized.
+
 *=$1000
 init:			jsr $e544
 				lda #$0d
