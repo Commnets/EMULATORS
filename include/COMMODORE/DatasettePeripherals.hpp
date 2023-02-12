@@ -26,7 +26,7 @@ namespace COMMODORE
 		DatasettePeripheral (int id, const MCHEmul::Attributes& attrs)
 			: MCHEmul::IOPeripheral (id, attrs),
 			  _valueRead (true),
-			  _valueToWrite (true),
+			  _valueToWrite (false),
 			  _motorOff (true),
 			  _noKeyPressed (true)
 							{ }

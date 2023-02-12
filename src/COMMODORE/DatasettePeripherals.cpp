@@ -3,7 +3,7 @@
 bool COMMODORE::DatasettePeripheral::initialize ()
 {
 	_valueRead = true;
-	_valueToWrite = true;
+	_valueToWrite = false;
 	_motorOff = true;
 	_noKeyPressed = true;
 

@@ -4,7 +4,8 @@
 COMMODORE::Datasette1530::Datasette1530 ()
 	: COMMODORE::DatasettePeripheral (_ID, 
 		{ { "Name", "Commodore 1530 (CN2)" },
-		  { "Manufacturer", "Commodore Business Machines CBM" } }),
+		  { "Manufacturer", "Commodore Business Machines CBM" },
+		  { "Commands", "4:STOP, 8:PLAY, 24:RECORD" } }),
 	  _status (),
 	  _clock (400) // 400 baudios, bits per second...
 {
@@ -39,23 +40,23 @@ bool COMMODORE::Datasette1530::simulate (MCHEmul::CPU* cpu)
 {
 	if (!motorOff ())
 	{
-		if (_status == Status::_SAVING)
-		{
-			// TODO
-
-			std::cout << valueToWrite ();
-		}
+		if (_clock.tooQuick ())
+			_clock.countCycles (0);
 		else
-		if (_status == Status::_READING)
 		{
-			if (_clock.tooQuick ())
-				_clock.countCycles (0);
-			else
-			{ 
-				_clock.countCycles (0);
+			if (_status == Status::_SAVING)
+			{
+				// TODO
 
+				std::cout << valueToWrite ();
+			}
+			else
+			if (_status == Status::_READING)
+			{
 				// TODO
 			}
+
+			_clock.countCycles (1);
 		}
 	}
 

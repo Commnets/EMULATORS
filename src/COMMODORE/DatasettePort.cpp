@@ -8,7 +8,7 @@ COMMODORE::DatasetteIOPort::DatasetteIOPort ()
 		  { "Type", "Input/Output" },
 		  { "Manufacturer", "Commodore Business Machines CBM" } }),
 	  _datasette (nullptr),
-	  _lastValueRead (false),
+	  _lastValueRead (true),
 	  _lastMotorOff (true),
 	  _lastNoKeyPressed (true)
 {

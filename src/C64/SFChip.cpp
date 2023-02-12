@@ -93,7 +93,7 @@ bool C64::SpecialFunctionsChip::simulate (MCHEmul::CPU* cpu)
 	// When 1 the motor is stopped (normal situation), when 0 the motor turns.
 	// The same bit in the memory position 0 hast to be defined as output (value = 1)
 	notify (MCHEmul::Event (val1.bit (5) && val0.bit (5)
-		? COMMODORE::DatasetteIOPort::_MOTORSTOPPED : COMMODORE::DatasetteIOPort::_MOTORRUNNING));
+		? COMMODORE::DatasetteIOPort::_MOTORRUNNING : COMMODORE::DatasetteIOPort::_MOTORSTOPPED));
 
 	return (true);
 }
@@ -106,6 +106,6 @@ void C64::SpecialFunctionsChip::processEvent (const MCHEmul::Event& evnt, MCHEmu
 	// The same bit at the position 0 has to be set 0 set to indicate that 
 	if (evnt.id () == COMMODORE::DatasetteIOPort::_KEYPRESSED ||
 		evnt.id () == COMMODORE::DatasetteIOPort::_NOKEYPRESSED)
-		memoryRef () -> set (_POS1, memoryRef () -> value (_POS1) & 0xef | 
-			((evnt.id () == COMMODORE::DatasetteIOPort::_KEYPRESSED && !memoryRef () -> value (_POS0).bit (4)) ? 0x10 : 0x00));
+		memoryRef () -> set (_POS1, memoryRef () -> value (_POS1) & 0xdf | 
+			((evnt.id () == COMMODORE::DatasetteIOPort::_KEYPRESSED) ? 0x20 : 0x00));
 }
