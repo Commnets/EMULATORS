@@ -38,7 +38,7 @@ bool COMMODORE::Datasette1530::executeCommand (int id, const MCHEmul::Strings& p
 // ---
 bool COMMODORE::Datasette1530::simulate (MCHEmul::CPU* cpu)
 {
-	if (!motorOff ())
+	if (motorOn ())
 	{
 		if (_clock.tooQuick ())
 			_clock.countCycles (0);

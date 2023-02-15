@@ -15,6 +15,7 @@
 #define __C64_SFCHIP__
 
 #include <CORE/incs.hpp>
+#include <C64/SFChipRegisters.hpp>
 
 namespace C64
 {
@@ -38,6 +39,7 @@ namespace C64
 		static const MCHEmul::Address _POS0;
 		static const MCHEmul::Address _POS1;
 
+		C64::SpecialFunctionsChipRegisters* _SFRegisters;
 		MCHEmul::PhysicalStorageSubset* _BasicROM;
 		MCHEmul::PhysicalStorageSubset* _BasicRAM;
 		MCHEmul::PhysicalStorageSubset* _KernelROM;

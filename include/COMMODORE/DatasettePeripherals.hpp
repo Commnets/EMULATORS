@@ -27,15 +27,15 @@ namespace COMMODORE
 			: MCHEmul::IOPeripheral (id, attrs),
 			  _valueRead (true),
 			  _valueToWrite (false),
-			  _motorOff (true),
+			  _motorOn (false),
 			  _noKeyPressed (true)
 							{ }
 
 		// Managing the datasette...
 		// The important PINS in the datasette are:
 		/** PINC3	: MOTOR CONTROL = To move the motor. */
-		void setMotorOff (bool d)
-							{ _motorOff = d; }
+		void setMotorOn (bool d)
+							{ _motorOn = d; }
 		/** PIND4	: READ = Data Input. Read FROM the casette. */
 		bool read () const
 							{ return (_valueRead); }
@@ -51,8 +51,8 @@ namespace COMMODORE
 		protected:
 		/** To be used from the classes inherint this one. 
 			The methods are the opposite ones to the public ones. */
-		bool motorOff () const
-							{ return (_motorOff); }
+		bool motorOn () const
+							{ return (_motorOn); }
 		void setRead (bool v)
 							{ _valueRead = v; }
 		bool valueToWrite () const
@@ -62,7 +62,7 @@ namespace COMMODORE
 
 		protected:
 		volatile bool _valueRead, _valueToWrite;
-		volatile bool _motorOff;
+		volatile bool _motorOn;
 		volatile bool _noKeyPressed;
 	};
 

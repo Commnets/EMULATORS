@@ -34,6 +34,7 @@
     <ClInclude Include="..\..\include\C64\OSIO.hpp" />
     <ClInclude Include="..\..\include\C64\Screen.hpp" />
     <ClInclude Include="..\..\include\C64\SFChip.hpp" />
+    <ClInclude Include="..\..\include\C64\SFChipRegisters.hpp" />
     <ClInclude Include="..\..\include\C64\Sound.hpp" />
   </ItemGroup>
   <ItemGroup>
@@ -50,6 +51,7 @@
     <ClCompile Include="..\..\src\C64\OSIO.cpp" />
     <ClCompile Include="..\..\src\C64\Screen.cpp" />
     <ClCompile Include="..\..\src\C64\SFChip.cpp" />
+    <ClCompile Include="..\..\src\C64\SFChipRegisters.cpp" />
     <ClCompile Include="..\..\src\C64\Sound.cpp" />
   </ItemGroup>
   <ItemGroup>

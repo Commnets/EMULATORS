@@ -1,5 +1,6 @@
 #include <C64/Memory.hpp>
 #include <C64/ColorMemory.hpp>
+#include <C64/SFChipRegisters.hpp>
 #include <C64/CIA1Registers.hpp>
 #include <C64/CIA2Registers.hpp>
 
@@ -50,13 +51,6 @@ bool C64::Memory::initialize ()
 	// The active view has to be initially the CPU vire...
 	setCPUView ();
 
-	// Very basic values as the memory starts...
-	// The address 0 controls Chip I/O Data Direction Register: D6510
-	subset (_PAGEZERO_SUBSET)	-> set (MCHEmul::Address ({ 0x00, 0x00 }, false), MCHEmul::UByte (0xef));
-	// Not all Subsets are active for reading activities...
-	// The address 1 keeps that info, about how the 6510 reads the different zones of the memory...
-	subset (_PAGEZERO_SUBSET)	-> set (MCHEmul::Address ({ 0x01, 0x00 }, false), MCHEmul::UByte (0x07));
-
 	return (true);
 }
 
@@ -86,9 +80,13 @@ MCHEmul::Memory::Content C64::Memory::standardMemoryContent ()
 
 	// Subsets
 	// ...Over the RAM and ROM as the CPU sees it
-	// Page 0
+	// First two bytes of the memory that are used by the 6510.
+	MCHEmul::PhysicalStorageSubset* Data6510 = new C64::SpecialFunctionsChipRegisters
+		(/** id = C64::SpecialFunctionsChipRegisters::_SPECIALFUNCTIONSCHIP_SUBSET */ RAM, 
+			0x0000, MCHEmul::Address ( { 0x00, 0x00 }, false), 0x0002);
+	// Page 0 (except the two first bytes)
 	MCHEmul::PhysicalStorageSubset* PageZero = new MCHEmul::PhysicalStorageSubset 
-		(_PAGEZERO_SUBSET, RAM, 0x0000, MCHEmul::Address ({ 0x00, 0x00 }, false), 0x0100);
+		(_PAGEZERO_SUBSET, RAM, 0x0002, MCHEmul::Address ({ 0x02, 0x00 }, false), 0x00fe);
 	// Stack
 	MCHEmul::Stack*  Stack = new MCHEmul::Stack 
 		(_STACK_SUBSET, RAM, 0x0100, MCHEmul::Address ({ 0x00, 0x01 }, false), 0x0100);
@@ -128,22 +126,23 @@ MCHEmul::Memory::Content C64::Memory::standardMemoryContent ()
 	// A map with the subsets swwn from the CPU perspective
 	MCHEmul::PhysicalStorageSubsets cpusubsets (
 		{
-			{ _PAGEZERO_SUBSET,									PageZero }, 
-			{ _STACK_SUBSET,									Stack }, 
-			{ _RAM0_SUBSET,										RAM0 }, 
-			{ _BASICROM_SUBSET,									BasicROM }, 
-			{ _BASICRAM_SUBSET,									BasicRAM }, 
-			{ _RAM1_SUBSET,										RAM1 }, 
-			{ _CHARROM_SUBSET,									CharROM }, 
-			{ COMMODORE::VICIIRegisters::_VICREGS_SUBSET,		VICIIRegisters }, 
-			{ COMMODORE::SIDRegisters::_SIDREGS_SUBSET,			SIDRegisters }, 
-			{ _COLOR_SUBSET,									ColorRAM }, 
-			{ C64::CIA1Registers::_CIA1_SUBSET,					CIA1 }, 
-			{ C64::CIA2Registers::_CIA2_SUBSET,					CIA2 }, 
-			{ _IO1_SUBSET,										IO1}, 
-			{ _IO2_SUBSET,										IO2}, 
-			{ _KERNELROM_SUBSET,								KernelROM }, 
-			{ _KERNELRAM_SUBSET,								KernelRAM }
+			{ C64::SpecialFunctionsChipRegisters::_SPECIALFUNCTIONSCHIP_SUBSET,	Data6510}, 
+			{ _PAGEZERO_SUBSET,													PageZero }, 
+			{ _STACK_SUBSET,													Stack }, 
+			{ _RAM0_SUBSET,														RAM0 }, 
+			{ _BASICROM_SUBSET,													BasicROM }, 
+			{ _BASICRAM_SUBSET,													BasicRAM }, 
+			{ _RAM1_SUBSET,														RAM1 }, 
+			{ _CHARROM_SUBSET,													CharROM }, 
+			{ COMMODORE::VICIIRegisters::_VICREGS_SUBSET,						VICIIRegisters }, 
+			{ COMMODORE::SIDRegisters::_SIDREGS_SUBSET,							SIDRegisters }, 
+			{ _COLOR_SUBSET,													ColorRAM }, 
+			{ C64::CIA1Registers::_CIA1_SUBSET,									CIA1 }, 
+			{ C64::CIA2Registers::_CIA2_SUBSET,									CIA2 }, 
+			{ _IO1_SUBSET,														IO1}, 
+			{ _IO2_SUBSET,														IO2}, 
+			{ _KERNELROM_SUBSET,												KernelROM }, 
+			{ _KERNELRAM_SUBSET,												KernelRAM }
 		});
 
 	// And same like the VICII chips sees it...
@@ -184,30 +183,31 @@ MCHEmul::Memory::Content C64::Memory::standardMemoryContent ()
 	// A map with all the subsets possible...
 	MCHEmul::PhysicalStorageSubsets allsubsets (
 		{
-			{ _PAGEZERO_SUBSET,									PageZero }, 
-			{ _STACK_SUBSET,									Stack }, 
-			{ _RAM0_SUBSET,										RAM0 }, 
-			{ _BASICROM_SUBSET,									BasicROM }, 
-			{ _BASICRAM_SUBSET,									BasicRAM }, 
-			{ _RAM1_SUBSET,										RAM1 }, 
-			{ _CHARROM_SUBSET,									CharROM }, 
-			{ COMMODORE::VICIIRegisters::_VICREGS_SUBSET,		VICIIRegisters }, 
-			{ COMMODORE::SIDRegisters::_SIDREGS_SUBSET,			SIDRegisters }, 
-			{ _COLOR_SUBSET,									ColorRAM }, 
-			{ C64::CIA1Registers::_CIA1_SUBSET,					CIA1 }, 
-			{ C64::CIA2Registers::_CIA2_SUBSET,					CIA2 }, 
-			{ _IO1_SUBSET,										IO1}, 
-			{ _IO2_SUBSET,										IO2}, 
-			{ _KERNELROM_SUBSET,								KernelROM }, 
-			{ _KERNELRAM_SUBSET,								KernelRAM },
-			{ _BANK0RAM0_SUBSET,								Bank0RAM0 },
-			{ _BANK0CHARROM_SUBSET,								Bank0CharROM},
-			{ _BANK0RAM1_SUBSET,								Bank0RAM1 },
-			{ _BANK1RAM_SUBSET,									Bank1RAM },
-			{ _BANK2RAM0_SUBSET,								Bank2RAM0 },
-			{ _BANK2CHARROM_SUBSET,								Bank2CharROM},
-			{ _BANK2RAM1_SUBSET,								Bank2RAM1 },
-			{ _BANK3RAM_SUBSET,									Bank3RAM }
+			{ C64::SpecialFunctionsChipRegisters::_SPECIALFUNCTIONSCHIP_SUBSET,	Data6510}, 
+			{ _PAGEZERO_SUBSET,													PageZero }, 
+			{ _STACK_SUBSET,													Stack }, 
+			{ _RAM0_SUBSET,														RAM0 }, 
+			{ _BASICROM_SUBSET,													BasicROM }, 
+			{ _BASICRAM_SUBSET,													BasicRAM }, 
+			{ _RAM1_SUBSET,														RAM1 }, 
+			{ _CHARROM_SUBSET,													CharROM }, 
+			{ COMMODORE::VICIIRegisters::_VICREGS_SUBSET,						VICIIRegisters }, 
+			{ COMMODORE::SIDRegisters::_SIDREGS_SUBSET,							SIDRegisters }, 
+			{ _COLOR_SUBSET,													ColorRAM }, 
+			{ C64::CIA1Registers::_CIA1_SUBSET,									CIA1 }, 
+			{ C64::CIA2Registers::_CIA2_SUBSET,									CIA2 }, 
+			{ _IO1_SUBSET,														IO1}, 
+			{ _IO2_SUBSET,														IO2}, 
+			{ _KERNELROM_SUBSET,												KernelROM }, 
+			{ _KERNELRAM_SUBSET,												KernelRAM },
+			{ _BANK0RAM0_SUBSET,												Bank0RAM0 },
+			{ _BANK0CHARROM_SUBSET,												Bank0CharROM},
+			{ _BANK0RAM1_SUBSET,												Bank0RAM1 },
+			{ _BANK1RAM_SUBSET,													Bank1RAM },
+			{ _BANK2RAM0_SUBSET,												Bank2RAM0 },
+			{ _BANK2CHARROM_SUBSET,												Bank2CharROM},
+			{ _BANK2RAM1_SUBSET,												Bank2RAM1 },
+			{ _BANK3RAM_SUBSET,													Bank3RAM }
 		});
 
 	// Then the views...

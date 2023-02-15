@@ -13,6 +13,7 @@ C64::SpecialFunctionsChip::SpecialFunctionsChip ()
 		{ { "Name", "SFChip" },
 		{ "Manufacturer", "Ignacio Cea" },
 		{ "Year", "2022" } }),
+	  _SFRegisters (nullptr),
 	  _BasicRAM (nullptr), 
 	  _BasicROM (nullptr), 
 	  _KernelROM (nullptr), 
@@ -32,6 +33,10 @@ C64::SpecialFunctionsChip::SpecialFunctionsChip ()
 // ---
 bool C64::SpecialFunctionsChip::initialize ()
 {
+	_SFRegisters	= dynamic_cast <C64::SpecialFunctionsChipRegisters*>
+		(memoryRef () -> subset (C64::SpecialFunctionsChipRegisters::_SPECIALFUNCTIONSCHIP_SUBSET));
+	assert (_SFRegisters != nullptr); // It has to exists...
+
 	_BasicROM		= memoryRef () -> subset (C64::Memory::_BASICROM_SUBSET);
 	_BasicRAM		= memoryRef () -> subset (C64::Memory::_BASICRAM_SUBSET);
 	_KernelROM		= memoryRef () -> subset (C64::Memory::_KERNELROM_SUBSET);
@@ -45,7 +50,9 @@ bool C64::SpecialFunctionsChip::initialize ()
 	_IO1Registers	= memoryRef () -> subset (C64::Memory::_IO1_SUBSET);
 	_IO2registers	= memoryRef () -> subset (C64::Memory::_IO2_SUBSET);
 
-	_lastValue0 = _lastValue1 = 0;
+	_lastValue1 = MCHEmul::UByte::_0;
+
+	_SFRegisters -> initialize ();
 
 	return (true);
 }
@@ -53,7 +60,6 @@ bool C64::SpecialFunctionsChip::initialize ()
 // ---
 bool C64::SpecialFunctionsChip::simulate (MCHEmul::CPU* cpu)
 {
-	MCHEmul::UByte val0 = memoryRef () -> value (_POS0);
 	MCHEmul::UByte val1 = memoryRef () -> value (_POS1);
 	if (val1 == _lastValue1)
 		return (true); // Nothing has changed...just to speed everything a little bit more!
@@ -61,38 +67,30 @@ bool C64::SpecialFunctionsChip::simulate (MCHEmul::CPU* cpu)
 	_lastValue1 = val1;
 
 	// Active or desactive the BASIC ROM....
-	bool bit10 = val1.bit (0);
-	_BasicROM		-> setActiveForReading ( bit10);
-	_BasicRAM		-> setActiveForReading (!bit10);
+	_BasicROM		-> setActiveForReading ( _SFRegisters -> LORAM ());
+	_BasicRAM		-> setActiveForReading (!_SFRegisters -> LORAM ());
 
 	// Active or desactive the KERNEL ROM...
-	bool bit11 = val1.bit (1);
-	_KernelROM		-> setActiveForReading ( bit11);
-	_KernelRAM		-> setActiveForReading (!bit11);
+	_KernelROM		-> setActiveForReading ( _SFRegisters -> HIRAM ());
+	_KernelRAM		-> setActiveForReading (!_SFRegisters -> HIRAM ());
 
-	// Usually the CHAR ROM is only seen from VICII, 
+	// Usually the CHAR ROM is only seen from VICII,
 	// because CPU access to the Chip Registers instead
 	// But it could be accessed. Take really care when doing so!
-	bool bit12 = val1.bit (2);
-	_CharROM		-> setActiveForReading (!bit12);
-	_VICIIRegisters -> setActiveForReading ( bit12);
-	_SIDRegisters	-> setActiveForReading ( bit12);
-	_ColorRAM		-> setActiveForReading ( bit12);
-	_CIA1Registers	-> setActiveForReading ( bit12);
-	_CIA2registers	-> setActiveForReading ( bit12);
-	_IO1Registers	-> setActiveForReading ( bit12);
-	_IO2registers	-> setActiveForReading ( bit12);
+	_VICIIRegisters -> setActiveForReading ( _SFRegisters -> CHAREN ());
+	_SIDRegisters	-> setActiveForReading ( _SFRegisters -> CHAREN ());
+	_ColorRAM		-> setActiveForReading ( _SFRegisters -> CHAREN ());
+	_CIA1Registers	-> setActiveForReading ( _SFRegisters -> CHAREN ());
+	_CIA2registers	-> setActiveForReading ( _SFRegisters -> CHAREN ());
+	_IO1Registers	-> setActiveForReading ( _SFRegisters -> CHAREN ());
+	_IO2registers	-> setActiveForReading ( _SFRegisters -> CHAREN ());
+	_CharROM		-> setActiveForReading (!_SFRegisters -> CHAREN ());
 
-	// Bit 3 controls what it is written in the datasette...
-	// The bit 3 is connected against the output line of the datasette port.
-	// The same bit in the memory position 0 hast to be defined as output (value = 1)
-	notify (MCHEmul::Event (val1.bit (3) && val0.bit (3)
+	// Send the data to the casette port...
+	notify (MCHEmul::Event (_SFRegisters -> casetteData ()
 		? COMMODORE::DatasetteIOPort::_WRITE1 : COMMODORE::DatasetteIOPort::_WRITE0));
-
-	// Bit 5 controls the status of the motor in the datasette...
-	// When 1 the motor is stopped (normal situation), when 0 the motor turns.
-	// The same bit in the memory position 0 hast to be defined as output (value = 1)
-	notify (MCHEmul::Event (val1.bit (5) && val0.bit (5)
+	// Modify the status of the motor of the casette...
+	notify (MCHEmul::Event (_SFRegisters -> casetteMotorRunning ()
 		? COMMODORE::DatasetteIOPort::_MOTORRUNNING : COMMODORE::DatasetteIOPort::_MOTORSTOPPED));
 
 	return (true);
@@ -101,11 +99,10 @@ bool C64::SpecialFunctionsChip::simulate (MCHEmul::CPU* cpu)
 // ---
 void C64::SpecialFunctionsChip::processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifier* ntier)
 {
-	// Bit 5 reflects whether some key has been pressed on the dataette...
-	// When somethind has been pressed this bit is set to 1.
-	// The same bit at the position 0 has to be set 0 set to indicate that 
+	// Bit 4 reflects whether some key has been pressed on the dataette...
+	// When something has been pressed this bit is set to 0, 1 in the other situation.
+	// The same bit in the memory position 0 hast to be defined as input (value = 0)
 	if (evnt.id () == COMMODORE::DatasetteIOPort::_KEYPRESSED ||
 		evnt.id () == COMMODORE::DatasetteIOPort::_NOKEYPRESSED)
-		memoryRef () -> set (_POS1, memoryRef () -> value (_POS1) & 0xdf | 
-			((evnt.id () == COMMODORE::DatasetteIOPort::_KEYPRESSED) ? 0x20 : 0x00));
+		_SFRegisters -> setValue (0x01, (evnt.id () == COMMODORE::DatasetteIOPort::_NOKEYPRESSED));
 }

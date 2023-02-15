@@ -37,7 +37,7 @@ namespace C64
 		static const int _BASICRAM_SUBSET		= 104;
 		static const int _RAM1_SUBSET			= 105;
 		static const int _CHARROM_SUBSET		= 106;
-		static const int _COLOR_SUBSET			= 109;
+		static const int _COLOR_SUBSET			= 107;
 		static const int _IO1_SUBSET			= 112;
 		static const int _IO2_SUBSET			= 113;
 		static const int _KERNELROM_SUBSET		= 114;

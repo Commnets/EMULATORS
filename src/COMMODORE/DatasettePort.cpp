@@ -70,12 +70,12 @@ void COMMODORE::DatasetteIOPort::processEvent (const MCHEmul::Event& evnt, MCHEm
 	if (evnt.id () == _WRITE0 || evnt.id () == _WRITE1)
 	{
 		if (_datasette != nullptr)
-			_datasette -> setWrite ((evnt.id () == _WRITE0) ? false : true);
+			_datasette -> setWrite (evnt.id () == _WRITE1);
 	}
 	else
 	if (evnt.id () == _MOTORRUNNING || evnt.id () == _MOTORSTOPPED)
 	{
 		if (_datasette != nullptr)
-			_datasette -> setMotorOff ((evnt.id () == _MOTORRUNNING) ? false : true);
+			_datasette -> setMotorOn (evnt.id () == _MOTORRUNNING);
 	}
 }
