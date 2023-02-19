@@ -27,18 +27,17 @@ void C64::SpecialFunctionsChipRegisters::setValue (size_t p, const MCHEmul::UByt
 
 	switch (p)
 	{
-		// The data direction is kept as it is...
-
 		// Dataport 6510
 		case 0x01:
 			{
 				MCHEmul::UByte val0		= MCHEmul::ChipRegisters::readValue (0x00);
-				_LORAM					= v.bit (0) && val0.bit (0); // The value of the direction is taken into account...
-				_HIRAM					= v.bit (1) && val0.bit (1);
-				_CHAREN					= v.bit (2) && val0.bit (2);
-				_casetteData			= v.bit (3) && val0.bit (3);
-				_noCasetteKeyPressed	= v.bit (4) && !val0.bit (4);
-				_casetteMotorRunning	= v.bit (5) && val0.bit (5);;
+				// The following bits are only taking into account when the register 0 is defined as output direction...
+				_LORAM					= val0.bit (0) ? v.bit (0) : false; 
+				_HIRAM					= val0.bit (1) ? v.bit (1) : false; 
+				_CHAREN					= val0.bit (2) ? v.bit (2) : false;
+				_casetteData			= val0.bit (3) ? v.bit (3) : false; 
+				// The bit 4 is important when reading, because is something comming from the casette...
+				_casetteMotorStopped	= val0.bit (5) ? v.bit (5) : false;
 				// The bits 6 & 7 are not used...
 			}
 
@@ -52,19 +51,22 @@ void C64::SpecialFunctionsChipRegisters::setValue (size_t p, const MCHEmul::UByt
 // ---
 const MCHEmul::UByte& C64::SpecialFunctionsChipRegisters::readValue (size_t p) const
 {
-	MCHEmul::UByte result = MCHEmul::PhysicalStorage::_DEFAULTVALUE;
+	MCHEmul::UByte result = MCHEmul::ChipRegisters::readValue (p);
 
 	switch (p)
 	{
 		case 0x01:
 			{
+				MCHEmul::UByte val0 = MCHEmul::ChipRegisters::readValue (0x00);
+
 				result = MCHEmul::UByte::_0;
 				result.setBit (0, _LORAM);
 				result.setBit (1, _HIRAM);
 				result.setBit (2, _CHAREN);
 				result.setBit (3, _casetteData);
-				result.setBit (4, _noCasetteKeyPressed);
-				result.setBit (5, _casetteMotorRunning);
+				// The bit 4 is taken into account only when the bit 4 in the register 0 is defined as input...
+				result.setBit (4, !val0.bit (4) ? _casetteNoKeyPressed : true);
+				result.setBit (5, _casetteMotorStopped);
 				// Bits 6 & 7 are not used...
 			}
 
@@ -85,6 +87,10 @@ void C64::SpecialFunctionsChipRegisters::initializeInternalValues ()
 	setValue (0x00, 0x2f);
 	// Very important register
 	// = BASIC + KERNAL + I/O + 0 in OUTPUT + 
-	// CASETTE SENSE LINE (NOTHING PRESSED) = 1 + CASETTE MOTOR STOPPED = 1; 
-	setValue (0x01, 0x37);
+	// CASETTE SENSE LINE (NOTHING PRESSED) = 0 + CASETTE MOTOR STOPPED = 1; 
+	// The ROM when initialize will set this variable automatically...
+	setValue (0x01, 0xe7);
+
+	// This is an input from the casette and it is not automatically initialized...
+	_casetteNoKeyPressed = true;
 }

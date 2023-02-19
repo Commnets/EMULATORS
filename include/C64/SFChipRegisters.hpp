@@ -69,19 +69,19 @@ namespace C64
 		bool casetteData () const
 							{ return (_casetteData); }
 		/** To know whether the casette motor is or not running. */
-		void setCasetteMotorRunning (bool s)
-							{ _casetteMotorRunning = s; }
-		bool casetteMotorRunning () const
-							{ return (_casetteMotorRunning); }
+		void setCasetteMotorStopped (bool s)
+							{ _casetteMotorStopped = s; }
+		bool casetteMotorStopped () const
+							{ return (_casetteMotorStopped); }
 		/** To know whether there is or not no key pressed at the casette. */
-		void setNoCasetteKeyPressed (bool s)
-							{ _noCasetteKeyPressed = s; }
-		bool noCasetteKeyPressed () const
-							{ return (_noCasetteKeyPressed); }
+		void setCasetteNoKeyPressed (bool s)
+							{ _casetteNoKeyPressed = s; }
+		bool casetteNoKeyPressed () const
+							{ return (_casetteNoKeyPressed); }
 
 		private:
 		bool _CHAREN, _HIRAM, _LORAM;
-		bool _casetteData, _noCasetteKeyPressed, _casetteMotorRunning;
+		bool _casetteData, _casetteNoKeyPressed, _casetteMotorStopped;
 
 		// Implementation
 		mutable MCHEmul::UByte _lastValueRead;

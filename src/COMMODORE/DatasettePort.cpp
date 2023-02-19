@@ -53,7 +53,7 @@ bool COMMODORE::DatasetteIOPort::simulate (MCHEmul::CPU* cpu)
 		{
 			_lastValueRead = _datasette -> read ();
 
-			notify (MCHEmul::Event (_lastValueRead ? _READ0 : _READ1));
+			notify (MCHEmul::Event (_lastValueRead ? _READ1 : _READ0));
 		}
 	}
 
@@ -76,6 +76,6 @@ void COMMODORE::DatasetteIOPort::processEvent (const MCHEmul::Event& evnt, MCHEm
 	if (evnt.id () == _MOTORRUNNING || evnt.id () == _MOTORSTOPPED)
 	{
 		if (_datasette != nullptr)
-			_datasette -> setMotorOn (evnt.id () == _MOTORRUNNING);
+			_datasette -> setMotorOff (evnt.id () == _MOTORSTOPPED);
 	}
 }

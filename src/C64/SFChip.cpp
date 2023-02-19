@@ -90,8 +90,8 @@ bool C64::SpecialFunctionsChip::simulate (MCHEmul::CPU* cpu)
 	notify (MCHEmul::Event (_SFRegisters -> casetteData ()
 		? COMMODORE::DatasetteIOPort::_WRITE1 : COMMODORE::DatasetteIOPort::_WRITE0));
 	// Modify the status of the motor of the casette...
-	notify (MCHEmul::Event (_SFRegisters -> casetteMotorRunning ()
-		? COMMODORE::DatasetteIOPort::_MOTORRUNNING : COMMODORE::DatasetteIOPort::_MOTORSTOPPED));
+	notify (MCHEmul::Event (_SFRegisters -> casetteMotorStopped ()
+		? COMMODORE::DatasetteIOPort::_MOTORSTOPPED : COMMODORE::DatasetteIOPort::_MOTORRUNNING));
 
 	return (true);
 }
@@ -104,5 +104,5 @@ void C64::SpecialFunctionsChip::processEvent (const MCHEmul::Event& evnt, MCHEmu
 	// The same bit in the memory position 0 hast to be defined as input (value = 0)
 	if (evnt.id () == COMMODORE::DatasetteIOPort::_KEYPRESSED ||
 		evnt.id () == COMMODORE::DatasetteIOPort::_NOKEYPRESSED)
-		_SFRegisters -> setValue (0x01, (evnt.id () == COMMODORE::DatasetteIOPort::_NOKEYPRESSED));
+		_SFRegisters -> setCasetteNoKeyPressed (evnt.id () == COMMODORE::DatasetteIOPort::_NOKEYPRESSED);
 }
