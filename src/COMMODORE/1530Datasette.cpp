@@ -47,8 +47,6 @@ bool COMMODORE::Datasette1530::simulate (MCHEmul::CPU* cpu)
 			if (_status == Status::_SAVING)
 			{
 				// TODO
-
-				std::cout << valueToWrite ();
 			}
 			else
 			if (_status == Status::_READING)

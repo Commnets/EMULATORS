@@ -31,6 +31,7 @@ void C64::SpecialFunctionsChipRegisters::setValue (size_t p, const MCHEmul::UByt
 		case 0x01:
 			{
 				MCHEmul::UByte val0		= MCHEmul::ChipRegisters::readValue (0x00);
+
 				// The following bits are only taking into account when the register 0 is defined as output direction...
 				_LORAM					= val0.bit (0) ? v.bit (0) : false; 
 				_HIRAM					= val0.bit (1) ? v.bit (1) : false; 
