@@ -29,14 +29,23 @@ namespace COMMODORE
 		public:
 		static const int _ID = 102;
 
+		/** Different events. */
+		static const unsigned int _CARTRIDGEIN		= 300;
+
 		ExpansionIOPort ();
+
+		virtual bool initialize () override
+							{ _firstExecution = true; return (true); }
 
 		/** It verifies before adding it that whether the peripherial is somtehing compatible. */
 		virtual bool connectPeripheral (MCHEmul::IOPeripheral* p) override;
 
+		virtual bool simulate (MCHEmul::CPU* cpu) override;
+
 		private:
 		// Implementation...
 		ExpansionPeripheral* _expansionElement;
+		bool _firstExecution;
 	};
 }
 

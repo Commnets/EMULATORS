@@ -68,8 +68,8 @@ namespace COMMODORE
 		unsigned int _headerSize;					// $10 - $13 :	Usually $40 = 64.
 		unsigned short _cartridgeVersion;			// $14 - $15
 		unsigned short _cartridgeType;				// $16 - $17
-		bool _EXROMActive;							// $18
-		bool _GAMEActive;							// $19
+		bool _EXROMActive;							// $18 Only valid for C64 machines
+		bool _GAMEActive;							// $19 Only valid for C64 machines
 		// $20 - $23 Reserved for future used...
 		std::string _name;							// $20 - $3f :	No more than 32 chars...
 		ChipsData _chipsData;						// $40 - ...
