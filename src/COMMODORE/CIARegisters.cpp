@@ -132,9 +132,9 @@ void COMMODORE::CIARegisters::setValue (size_t p, const MCHEmul::UByte& v)
 		// Depending on the bit 7 the behaviour is different: 1 = bits with 1 are set, 0 = bits with 1 are cleared... 
 		case 0x0d:
 			{
-				if (v.bit (0)) _timerA -> setInterruptEnabled (v.bit (7));
-				if (v.bit (1)) _timerB -> setInterruptEnabled (v.bit (7));
-				if (v.bit (2)) _clock -> setInterruptEnabled (v.bit (7));
+				_timerA -> setInterruptEnabled (v.bit (0) && v.bit (7));
+				_timerB -> setInterruptEnabled (v.bit (1) && v.bit (7));
+				_clock -> setInterruptEnabled (v.bit (2) && v.bit (7));
 				_flagLineInterruptRequested = v.bit (4) && v.bit (7);
 			}
 
@@ -267,14 +267,14 @@ const MCHEmul::UByte& COMMODORE::CIARegisters::readValue (size_t p) const
 			{
 				bool IA = _timerA -> interruptRequested (); // It is set back to false after reading...
 				bool IB = _timerB -> interruptRequested (); // Same...
-				bool IC = _clock -> interruptRequested (); // Same...
-				bool ID = flagLineInterruptRequested (); // Same...
+				bool IC = _clock -> interruptRequested ();  // Same...
+				bool ID = flagLineInterruptRequested ();    // Same...
 				result = MCHEmul::UByte::_0;
 				result.setBit (0, IA); // in Timer A?
 				result.setBit (1, IB); // in Timer B?
 				result.setBit (2, IC); // in Clock?
 				result.setBit (4, ID); // In the Flag Line?
-				result.setBit (7, IA || IB || IC || ID); // Interrupt?
+				result.setBit (7, IA || IB || IC || ID); // Any Interrupt?
 			}
 
 			break;

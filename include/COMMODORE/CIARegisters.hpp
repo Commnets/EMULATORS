@@ -36,9 +36,10 @@ namespace COMMODORE
 
 		virtual void initialize () override;
 
-		/** To know when the flag line is enabled. */
+		/** To know when the flag line is enabled. 
+			Once the value is got then it is pit back t false. */
 		bool flagLineInterruptRequested () const
-							{ return (_flagLineInterruptRequested); }
+							{ bool r = _flagLineInterruptRequested; _flagLineInterruptRequested = false; return (r); }
 		void setFlagLineInterruptRequested (bool a)
 							{ _flagLineInterruptRequested = a; }
 
@@ -64,7 +65,7 @@ namespace COMMODORE
 		/** Reference to the clock */
 		CIAClock* _clock;
 		/** To indicate that the flag line has been or not activated. */
-		bool _flagLineInterruptRequested;
+		mutable bool _flagLineInterruptRequested;
 
 		// Implementation
 		mutable MCHEmul::UByte _lastValueRead;

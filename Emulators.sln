@@ -169,6 +169,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{DD45DD00
 	ProjectSection(SolutionItems) = preProject
 		emulators\C64Programs\code\tests\TESTCIA1.asm = emulators\C64Programs\code\tests\TESTCIA1.asm
 		emulators\C64Programs\code\tests\TESTCIA1IRQ.asm = emulators\C64Programs\code\tests\TESTCIA1IRQ.asm
+		emulators\C64Programs\Code\Tests\TESTCIA2IRQ.asm = emulators\C64Programs\Code\Tests\TESTCIA2IRQ.asm
 		emulators\C64Programs\Code\Tests\TESTDEFCHARS.asm = emulators\C64Programs\Code\Tests\TESTDEFCHARS.asm
 		emulators\C64Programs\code\tests\TESTFORSKEY.asm = emulators\C64Programs\code\tests\TESTFORSKEY.asm
 		emulators\C64Programs\Code\Tests\TESTGRAPHMODES.asm = emulators\C64Programs\Code\Tests\TESTGRAPHMODES.asm

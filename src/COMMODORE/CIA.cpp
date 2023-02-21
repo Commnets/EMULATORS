@@ -58,7 +58,6 @@ bool COMMODORE::CIA::simulate (MCHEmul::CPU* cpu)
 
 	if (_CIARegisters -> flagLineInterruptRequested ())
 		cpu -> interrupt (F6500::IRQInterrupt::_ID) -> setActive (true);
-	// The machine code will set this flag to 0 back...
 
 	return (true);
 }

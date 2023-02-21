@@ -40,7 +40,7 @@ MAIN:						lda #$06
 							sta $dc0f
 							lda #$ff
 							sta $dc04
-							lda #$00
+							lda #$02
 							sta $dc05
 							lda #$00
 							sta $dc06
