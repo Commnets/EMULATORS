@@ -81,8 +81,8 @@ namespace COMMODORE
 							{ return (_textDisplay25RowsActive); }
 		bool textDisplay40ColumnsActive () const
 							{ return (_textDisplay40ColumnsActive); }
-		bool screenSameColorBorderActive () const
-							{ return (_screenSameColorBorderActive); }
+		bool blankEntireScreen () const
+							{ return (_blankEntireScreen); }
 		bool videoResetActive () const
 							{ return (_videoResetActive); }
 
@@ -229,7 +229,7 @@ namespace COMMODORE
 		unsigned char _verticalScrollPosition, _horizontalScrollPosition;
 		/** Visible screen control. */
 		bool _textDisplay25RowsActive, _textDisplay40ColumnsActive;
-		bool _screenSameColorBorderActive;
+		bool _blankEntireScreen;
 		bool _videoResetActive;
 		/** Graphical modes. */
 		bool _graphicBitModeActive;

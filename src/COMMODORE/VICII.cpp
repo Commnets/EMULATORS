@@ -83,6 +83,10 @@ bool COMMODORE::VICII::initialize ()
 // ---
 bool COMMODORE::VICII::simulate (MCHEmul::CPU* cpu)
 {
+	// If the video reset is active nothing is done...
+	if (_VICIIRegisters -> videoResetActive ())
+		return (true);
+
 	// Notice that the bad line detection routine takes into account 
 	// the value of the YSCROLL register as the graphics information to be shown 
 	// is loaded at the beginning of every bad line...
@@ -99,7 +103,7 @@ bool COMMODORE::VICII::simulate (MCHEmul::CPU* cpu)
 	for (size_t i = (cpu -> clockCycles  () - _lastCPUCycles); i > 0 ; i--)
 	{
 		_videoActive = (_raster.currentLine () == _FIRSTBADLINE) 
-			? !_VICIIRegisters -> videoResetActive () : _videoActive; // Only at first bad line it can change its value...
+			? !_VICIIRegisters -> blankEntireScreen () : _videoActive; // Only at first bad line it can change its value...
 
 		if (_isNewRasterLine)
 		{

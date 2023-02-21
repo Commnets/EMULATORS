@@ -5,6 +5,7 @@
 const std::string COMMODORE::VICStatusCommand::_NAME = "CVICII";
 const std::string COMMODORE::CIAStatusCommand::_NAME = "CCIA";
 const std::string COMMODORE::SIDStatusCommand::_NAME = "CSID";
+const std::string COMMODORE::DatasetteStatusCommand::_NAME = "CDATASETTE";
 
 // ---
 void COMMODORE::VICStatusCommand::executeImpl (MCHEmul::CommandExecuter* cE, MCHEmul::Computer* c, MCHEmul::InfoStructure& rst)
@@ -40,4 +41,20 @@ void COMMODORE::SIDStatusCommand::executeImpl (MCHEmul::CommandExecuter* cE, MCH
 		return;
 
 	rst.add ("SID", static_cast <COMMODORE::Computer*> (c) -> sid () -> getInfoStructure ());
+}
+
+// ---
+void COMMODORE::DatasetteStatusCommand::executeImpl (MCHEmul::CommandExecuter* cE, MCHEmul::Computer* c, MCHEmul::InfoStructure& rst)
+{
+	if (c == nullptr)
+		return;
+
+	// Look for the datasette if any...
+	MCHEmul::IOPeripherals prhs = std::move (c -> peripherals ()); // The list has been built up...
+	COMMODORE::DatasettePeripheral* ds = nullptr;
+	for (MCHEmul::IOPeripherals::const_iterator i = prhs.begin (); 
+			i != prhs.end () && ds == nullptr; i++)
+		ds = dynamic_cast <COMMODORE::DatasettePeripheral*> ((*i).second);
+
+	if (ds != nullptr) rst = ds -> getInfoStructure ();
 }

@@ -23,13 +23,7 @@ namespace COMMODORE
 	class DatasettePeripheral : public MCHEmul::IOPeripheral
 	{
 		public:
-		DatasettePeripheral (int id, const MCHEmul::Attributes& attrs)
-			: MCHEmul::IOPeripheral (id, attrs),
-			  _valueRead (true),
-			  _valueToWrite (false),
-			  _motorOff (true),
-			  _noKeyPressed (true)
-							{ }
+		DatasettePeripheral (int id, const MCHEmul::Attributes& attrs);
 
 		// Managing the datasette...
 		// The important PINS in the datasette are:
@@ -47,6 +41,14 @@ namespace COMMODORE
 							{ return (_noKeyPressed); }
 
 		virtual bool initialize () override;
+
+		/**
+		  *	The name of the fields are: \n
+		  * The ones in the parent class. \n
+		  *			= Attribute: Id of the Peripheral. \n
+		  *	ATTRS	= InfoStructure: Attributes defining the Peripheral. \n
+		  */
+		virtual MCHEmul::InfoStructure getInfoStructure () const override;
 
 		protected:
 		/** To be used from the classes inherint this one. 

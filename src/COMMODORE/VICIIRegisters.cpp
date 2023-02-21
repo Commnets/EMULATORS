@@ -91,7 +91,7 @@ void COMMODORE::VICIIRegisters::setValue (size_t p, const MCHEmul::UByte& v)
 			{
 				_verticalScrollPosition = v.value () & 0x07; // 3 LSBits
 				_textDisplay25RowsActive = v.bit (3);
-				_screenSameColorBorderActive = v.bit (4);
+				_blankEntireScreen = !v.bit (4);
 				_graphicBitModeActive = v.bit (5);
 				_graphicExtendedColorTextModeActive = v.bit (6);
 				_IRQRasterLineAt = (_IRQRasterLineAt & 0x00ff) | (v.bit (7) ? 0x0100 : 0x0000); // The MSB of the raster position
@@ -502,11 +502,11 @@ void COMMODORE::VICIIRegisters::initializeInternalValues ()
 
 	// _verticalScrollPosition = 0x0000;
 	// _textDisplay25RowsActive = true;
-	// _screenSameColorBorderActive = false;
+	// _blankEntireScreen = false;
 	// _graphicBitModeActive = false;
 	// _graphicExtendedColorTextModeActive = false;
 	// _IRQRasterLineAt = 0x00;
-	setValue (0x11, MCHEmul::UByte (0x08));
+	setValue (0x11, MCHEmul::UByte (0x18));
 
 	// _IRQRasterLineAt = 0x00;
 	setValue (0x12, MCHEmul::UByte::_0);

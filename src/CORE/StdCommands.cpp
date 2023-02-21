@@ -525,7 +525,7 @@ void MCHEmul::PeripheralsCommand::executeImpl
 		return;
 
 	MCHEmul::InfoStructure prhsD;
-	MCHEmul::IOPeripherals prhs = std::move (c -> peripherals ()); // The list hasbeen built up...
+	MCHEmul::IOPeripherals prhs = std::move (c -> peripherals ()); // The list has been built up...
 	for (const auto& i : prhs)
 		prhsD.add (std::to_string (i.first), i.second -> getInfoStructure ());
 	rst.add ("PERIPHERALS", prhsD);

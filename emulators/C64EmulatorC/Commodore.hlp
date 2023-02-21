@@ -9,3 +9,6 @@ No parameters needed.
 ;SID
 To know the status of the SID chip.
 No parameters needed.
+;Datasette
+To know the status of the datasette if connected
+No parameters needed.
