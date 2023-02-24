@@ -31,7 +31,7 @@ void COMMODORE::CIAClock::simulate (MCHEmul::CPU* cpu)
 
 	actualizeTime ();
 
-	// The alamr is controlled versus the values latched
+	// The alarm is controlled versus the values latched
 	// because the actualization of the official ones might be in progress...
 	if (_hours == _alarmHours && _minutesL == _alarmMinutes && _secondsL == _alarmSeconds &&
 		_tenthsSecondL >= _alarmTenthsSecond)

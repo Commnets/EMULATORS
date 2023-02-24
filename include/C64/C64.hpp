@@ -49,6 +49,8 @@ namespace C64
 							{ return (dynamic_cast <CIA2*> ((*_chips.find (CIA2::_ID)).second)); }
 
 		private:
+		virtual void processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifier* n) override;
+
 		// Implementation
 		static MCHEmul::Chips standardChips (VisualSystem vS);
 		static MCHEmul::IODevices standardDevices (VisualSystem vS);

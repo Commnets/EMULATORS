@@ -39,7 +39,7 @@ ID=@ID@
 #---
 #---
 ;Clock
-IRQ=@IRQ@
+IRQ=@Interrupt@
 @HOURS@:@MINUTES@:@SECONDS@:@TENTHSECONDS@ (@AHOURS@:@AMINUTES@:@ASECONDS@:@ATENTHSECONDS@)
 #---
 ;TimerA

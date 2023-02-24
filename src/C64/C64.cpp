@@ -37,7 +37,18 @@ bool C64::Commodore64::initialize (bool iM)
 	dynamic_cast <C64::CIA2*> (chip (C64::CIA2::_ID)) -> _VICIIRef = 
 		dynamic_cast <COMMODORE::VICII*> (chip (COMMODORE::VICII::_ID));
 
+	// It is needed to observe the expansion port...
+	// Events when it is disonnected and connected are sent and with many implications
+	// in the structure of the memory...
+	observe (dynamic_cast <COMMODORE::ExpansionIOPort*> (device (COMMODORE::ExpansionIOPort::_ID)));
+
 	return (true);
+}
+
+// ---
+void C64::Commodore64::processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifier* n)
+{
+	// TODO
 }
 
 // ---

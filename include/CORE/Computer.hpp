@@ -31,7 +31,7 @@ namespace MCHEmul
 {
 	/** The computer links many different elements: \n
 		CPU, Memory, Specialized Chips and IODevices. */
-	class Computer : public InfoClass
+	class Computer : public InfoClass, public Notifier, public Observer
 	{
 		public:
 		/** Types of actions than can be executed on a compter. 
