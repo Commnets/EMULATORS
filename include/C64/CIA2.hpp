@@ -33,8 +33,7 @@ namespace C64
 
 		CIA2 ()
 			: CIA (_ID, CIA2Registers::_CIA2_SUBSET, F6500::IRQInterrupt::_ID),
-			  _CIA2Registers (nullptr),
-			  _VICIIRef (nullptr)
+			  _CIA2Registers (nullptr)
 							{ setClassName ("CIA2"); }
 
 		virtual bool initialize () override;
@@ -43,8 +42,6 @@ namespace C64
 
 		private:
 		C64::CIA2Registers* _CIA2Registers;
-		/** Set directly by Commodore 64. */
-		COMMODORE::VICII* _VICIIRef;
 	};
 }
 

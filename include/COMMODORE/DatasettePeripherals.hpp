@@ -92,13 +92,13 @@ namespace COMMODORE
 		bool _motorOff;
 		bool _noKeyPressed;
 
+		MCHEmul::ExtendedDataMemoryBlocks _data;
+
 		// Implementation.
 		mutable bool _motorChangeStatusRequest;
 		mutable bool _readChangeValueRequest;
 		mutable bool _writeChangeValueRequest;
 		mutable bool _keysChangedStatusRequest;
-
-		MCHEmul::ExtendedDataMemoryBlocks _data;
 	};
 
 	/** Represents nothing connected. */

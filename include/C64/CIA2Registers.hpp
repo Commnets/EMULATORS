@@ -49,6 +49,9 @@ namespace C64
 		void lookAtClock (COMMODORE::CIAClock* c)
 							{ _clock = c; }
 
+		bool changesAtPositions () const
+							{ bool nCG = _changesAtPositions; _changesAtPositions = false; return (nCG); }
+
 		private:
 		// Reference to the timers...
 		COMMODORE::CIATimer* _timerA;
@@ -58,6 +61,9 @@ namespace C64
 
 		/** The bank managed by VICII is controlled from this Chip. */
 		unsigned char _VICBank;
+
+		// Implementation
+		mutable bool _changesAtPositions;
 	};
 }
 

@@ -723,6 +723,14 @@ MCHEmul::UByte COMMODORE::VICII::drawMultiColorSprite (int c, int r, size_t spr,
 }
 
 // ---
+void COMMODORE::VICII::processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifier* n)
+{
+	// To set the bank...
+	if (evnt.id () >= _BANK0SET && evnt.id () <= _BANK3SET)
+		setBank (evnt.id () - _BANK0SET);
+}
+
+// ---
 COMMODORE::VICII_NTSC::VICII_NTSC (int vV)
 	: COMMODORE::VICII (
 		 _VRASTERDATA, _HRASTERDATA, vV,

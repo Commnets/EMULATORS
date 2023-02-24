@@ -42,6 +42,15 @@ namespace COMMODORE
 		/** Static address. The color memory cann't be changed. */
 		static const MCHEmul::Address _COLORMEMORY;
 
+		/** Some events. \n
+			As the VICII only addresses 16k and some computers where it is connected to admitis 64,
+			there is the possibility to change the bank. \n
+			The unsigned ints associated to each must be consecutive for everything to work properly. */
+		static const unsigned int _BANK0SET = 300;
+		static const unsigned int _BANK1SET = 301;
+		static const unsigned int _BANK2SET = 302;
+		static const unsigned int _BANK3SET = 303;
+
 		/** Specific classes for PAL & NTSC have been created giving this data as default. \n
 			The VICII constructor receives info over the raster data, the memory view to use and additional attributes. */
 		VICII (const MCHEmul::RasterData& vd, const MCHEmul::RasterData& hd, 
@@ -142,6 +151,9 @@ namespace COMMODORE
 		MCHEmul::UByte drawMonoColorSprite (int c, int r, size_t spr, const DrawContext& dC);
 		/** Draws a multocolor sprite line. */
 		MCHEmul::UByte drawMultiColorSprite (int c, int r, size_t spr, const DrawContext& dC);
+
+		protected:
+		virtual void processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifier* n) override;
 
 		private:
 		/** The memory is used also as the set of registers of the chip. */

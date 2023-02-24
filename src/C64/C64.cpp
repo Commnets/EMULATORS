@@ -33,9 +33,9 @@ bool C64::Commodore64::initialize (bool iM)
 	if (!result)
 		return (false);
 
-	// Both chips CIAII and VICII are link somehow (when the register 0 of the CIA2 = 0xdd00 is set e.g.)
-	dynamic_cast <C64::CIA2*> (chip (C64::CIA2::_ID)) -> _VICIIRef = 
-		dynamic_cast <COMMODORE::VICII*> (chip (COMMODORE::VICII::_ID));
+	// Both chips CIAII and VICII are link somehow
+	// Because the banks connected at VICII are determined in CIA chip.
+	chip (COMMODORE::VICII::_ID) -> observe (chip (C64::CIA2::_ID));
 
 	// It is needed to observe the expansion port...
 	// Events when it is disonnected and connected are sent and with many implications

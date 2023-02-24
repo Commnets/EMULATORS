@@ -30,14 +30,14 @@ namespace COMMODORE
 		static const int _ID = 100;
 
 		/** Different events. */
-		static const unsigned int _READ0			= 200;
-		static const unsigned int _READ1			= 201;
-		static const unsigned int _WRITE0			= 202;
-		static const unsigned int _WRITE1			= 203;
-		static const unsigned int _NOKEYPRESSED		= 204;
-		static const unsigned int _KEYPRESSED		= 205;
-		static const unsigned int _MOTORRUNNING		= 206;
-		static const unsigned int _MOTORSTOPPED		= 207;
+		static const unsigned int _READ0			= 250;
+		static const unsigned int _READ1			= 251;
+		static const unsigned int _WRITE0			= 252;
+		static const unsigned int _WRITE1			= 253;
+		static const unsigned int _NOKEYPRESSED		= 254;
+		static const unsigned int _KEYPRESSED		= 255;
+		static const unsigned int _MOTORRUNNING		= 256;
+		static const unsigned int _MOTORSTOPPED		= 257;
 
 		DatasetteIOPort ();
 

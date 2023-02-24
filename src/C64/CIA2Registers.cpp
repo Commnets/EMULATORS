@@ -3,7 +3,8 @@
 // ---
 C64::CIA2Registers::CIA2Registers (MCHEmul::PhysicalStorage* ps, size_t pp, const MCHEmul::Address& a, size_t s)
 	: COMMODORE::CIARegisters (_CIA2_SUBSET, ps, pp, a, s),
-	  _VICBank (0)
+	  _VICBank (0),
+	  _changesAtPositions (false)
 	  // At this point all internal variables will have random values...
 { 
 	setClassName ("CIA2Registers");
@@ -25,6 +26,8 @@ void C64::CIA2Registers::setValue (size_t p, const MCHEmul::UByte& v)
 		case 0x00:
 			{
 				_VICBank = 0x03 - (v.value () & 0x03); // From 0 to 3...
+
+				_changesAtPositions = true;
 			}
 
 			break;

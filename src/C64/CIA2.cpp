@@ -21,7 +21,8 @@ bool C64::CIA2::initialize ()
 // ---
 bool C64::CIA2::simulate (MCHEmul::CPU* cpu)
 {
-	_VICIIRef -> setBank (_CIA2Registers -> VICIIBank ());
+	if (_CIA2Registers -> changesAtPositions ())
+		notify (COMMODORE::VICII::_BANK0SET + (unsigned int) _CIA2Registers -> VICIIBank ());
 
 	return (COMMODORE::CIA::simulate (cpu));
 }

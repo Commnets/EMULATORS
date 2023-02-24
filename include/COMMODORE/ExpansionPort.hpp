@@ -30,8 +30,8 @@ namespace COMMODORE
 		static const int _ID = 102;
 
 		/** Different events. */
-		static const unsigned int _EXPANSIONELEMENTIN		= 300;
-		static const unsigned int _EXPANSIONELEMENTOUT		= 301;
+		static const unsigned int _EXPANSIONELEMENTIN		= 260;
+		static const unsigned int _EXPANSIONELEMENTOUT		= 261;
 
 		ExpansionIOPort ();
 
