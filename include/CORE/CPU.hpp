@@ -108,6 +108,13 @@ namespace MCHEmul
 			Returns true if everything was ok and false in any other case. */
 		virtual bool initialize ();
 
+		/** There is a possibility to restart the CPU. \n
+			Be really carefully when using this possibility. \n
+			By default it does nothing. \n
+			Return true when evrything is ok, and false in other case. */
+		virtual bool restart ()
+							{ return (true); }
+
 		/** To add and remove interrupts. */
 		bool existsInterrupt (int id) const
 							{ return (_interrupts.find (id) != _interrupts.end ()); }

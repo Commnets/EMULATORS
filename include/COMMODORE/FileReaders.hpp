@@ -59,6 +59,13 @@ namespace COMMODORE
 			  _chipsData ()
 							{ }
 
+		/** 
+			The attributes kept are: \n
+			TYPE:		The type of card. \n
+			VERSION:	The version of card. \n 
+		  */
+		virtual MCHEmul::ExtendedDataMemoryBlocks asMemoryBlocks () const override;
+
 		virtual std::string asString () const override
 							{ return (_name + 
 									  " (Type:" + std::to_string (_cartridgeType) + 
@@ -149,6 +156,8 @@ namespace COMMODORE
 			  _fileRecords (),
 			  _content ()
 							{ }
+
+		virtual MCHEmul::ExtendedDataMemoryBlocks asMemoryBlocks () const override;
 
 		virtual std::string asString () const override
 							{ return (_tapeRecord._userDescriptor + 

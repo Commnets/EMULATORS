@@ -8,7 +8,7 @@ COMMODORE::ExpansionIOPort::ExpansionIOPort ()
 		  { "Type", "Input/Output" },
 		  { "Manufacturer", "Commodore Business Machines CBM" } }),
 	  _expansionElement (nullptr),
-	  _firstExecution (true)
+	  _connectionNotified (false)
 {
 	// Nothing else to do...
 }
@@ -17,7 +17,7 @@ COMMODORE::ExpansionIOPort::ExpansionIOPort ()
 bool COMMODORE::ExpansionIOPort::connectPeripheral (MCHEmul::IOPeripheral* p)
 {
 	// If it is not of the right type, it could be connected at all!
-	if (dynamic_cast <COMMODORE::ExpansionPeripheral*> (p) == nullptr)
+	if (dynamic_cast <COMMODORE::ExpansionPeripheral*> (p) == nullptr && p != nullptr)
 	{
 		_error = MCHEmul::_PERIPHERAL_ERROR;
 
@@ -27,19 +27,25 @@ bool COMMODORE::ExpansionIOPort::connectPeripheral (MCHEmul::IOPeripheral* p)
 	// There can be only one peripheral connected at the same time...
 	if (!peripherals ().empty ())
 		MCHEmul::IODevice::disconnectAllPeripherals ();
+	if (_expansionElement != nullptr)
+		notify (MCHEmul::Event (COMMODORE::ExpansionIOPort::_EXPANSIONELEMENTOUT));
 	_expansionElement = static_cast <COMMODORE::ExpansionPeripheral*> (p);
+	_connectionNotified = false; // New element, connection not notified stilll...
 	return (MCHEmul::IODevice::connectPeripheral (p));
 }
 
 // ---
 bool COMMODORE::ExpansionIOPort::simulate (MCHEmul::CPU* cpu)
 {
-	// If it is the first execution and there is cartridge connected...
-	// ...then a notification is done!
-	if (_firstExecution && _expansionElement != nullptr)
-		notify (MCHEmul::Event (COMMODORE::ExpansionIOPort::_CARTRIDGEIN));
+	// The expansion element is considerer connected just if it has onfo inside...
+	// Otherwise it will be still uncomplete!
+	if (_expansionElement != nullptr && 
+		_expansionElement -> hasDataLoaded () && !_connectionNotified)
+	{ 
+		_connectionNotified = true; 
 
-	_firstExecution = false;
+		notify (MCHEmul::Event (COMMODORE::ExpansionIOPort::_EXPANSIONELEMENTIN));
+	}
 
 	return (true);
 }

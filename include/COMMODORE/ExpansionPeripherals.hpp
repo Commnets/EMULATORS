@@ -24,8 +24,26 @@ namespace COMMODORE
 	{
 		public:
 		ExpansionPeripheral (int id, const MCHEmul::Attributes& attrs)
-			: MCHEmul::IOPeripheral (id, attrs)
+			: MCHEmul::IOPeripheral (id, attrs),
+			  _data ()
 							{ }
+
+		virtual bool connectData (MCHEmul::FileData* dt) override
+							{ _data = dt -> asMemoryBlocks (); return (true); }
+
+		/** To know whether the expansion has data loaded,
+			that has to be loaded into the memory. */
+		bool hasDataLoaded () const
+							{ return (!_data._data.empty ()); }
+		const MCHEmul::ExtendedDataMemoryBlocks& data () const
+							{ return (_data); }
+
+		protected:
+		void clearData ()
+							{ _data = { }; }
+
+		protected:
+		MCHEmul::ExtendedDataMemoryBlocks _data;
 	};
 
 	/** Represents nothing connected. */

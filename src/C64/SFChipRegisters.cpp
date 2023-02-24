@@ -4,7 +4,8 @@
 C64::SpecialFunctionsChipRegisters::SpecialFunctionsChipRegisters 
 		(MCHEmul::PhysicalStorage* ps, size_t pp, const MCHEmul::Address& a, size_t s)
 	: MCHEmul::ChipRegisters (_SPECIALFUNCTIONSCHIP_SUBSET, ps, pp, a, s),
-	  _lastValueRead (MCHEmul::PhysicalStorage::_DEFAULTVALUE)
+	  _lastValueRead (MCHEmul::PhysicalStorage::_DEFAULTVALUE),
+	  _changesAtPositions (true) // To set the first level of changes...
 	  // At this point all internal variables will have random values...
 { 
 	setClassName ("SFChipRegisters");
@@ -27,6 +28,9 @@ void C64::SpecialFunctionsChipRegisters::setValue (size_t p, const MCHEmul::UByt
 
 	switch (p)
 	{
+		// Direction Dataport 6510 (0x00) is stored as it comes...
+		// Its value is taken into account when the Dataport 6510 is either written or read
+
 		// Dataport 6510
 		case 0x01:
 			{
@@ -40,6 +44,8 @@ void C64::SpecialFunctionsChipRegisters::setValue (size_t p, const MCHEmul::UByt
 				// The bit 4 is important when reading, because is something comming from the casette...
 				_casetteMotorStopped	= val0.bit (5) ? v.bit (5) : false;
 				// The bits 6 & 7 are not used...
+				// The action has to be notified...
+				_changesAtPositions = true;
 			}
 
 			break;
@@ -56,6 +62,9 @@ const MCHEmul::UByte& C64::SpecialFunctionsChipRegisters::readValue (size_t p) c
 
 	switch (p)
 	{
+		// Direction Dataport 6510 (0x00) is read as it is stored...
+		// Its value is taken into account when the Dataport 6510 is either written or read
+
 		case 0x01:
 			{
 				MCHEmul::UByte val0 = MCHEmul::ChipRegisters::readValue (0x00);

@@ -6,7 +6,8 @@ COMMODORE::DatasettePeripheral::DatasettePeripheral (int id, const MCHEmul::Attr
 	  _valueRead (true),
 	  _valueToWrite (false),
 	  _motorOff (true),
-	  _noKeyPressed (true)
+	  _noKeyPressed (true),
+	  _data ()
 {
 	setClassName ("Datasette");
 }

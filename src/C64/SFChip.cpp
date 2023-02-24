@@ -50,8 +50,6 @@ bool C64::SpecialFunctionsChip::initialize ()
 	_IO1Registers	= memoryRef () -> subset (C64::Memory::_IO1_SUBSET);
 	_IO2registers	= memoryRef () -> subset (C64::Memory::_IO2_SUBSET);
 
-	_lastValue1 = MCHEmul::UByte::_0;
-
 	_SFRegisters -> initialize ();
 
 	return (true);
@@ -60,11 +58,8 @@ bool C64::SpecialFunctionsChip::initialize ()
 // ---
 bool C64::SpecialFunctionsChip::simulate (MCHEmul::CPU* cpu)
 {
-	MCHEmul::UByte val1 = memoryRef () -> value (_POS1);
-	if (val1 == _lastValue1)
-		return (true); // Nothing has changed...just to speed everything a little bit more!
-
-	_lastValue1 = val1;
+	if (!_SFRegisters -> changesAtPositions ())
+		return (true);
 
 	// Active or desactive the BASIC ROM....
 	_BasicROM		-> setActiveForReading ( _SFRegisters -> LORAM ());

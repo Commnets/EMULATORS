@@ -29,11 +29,11 @@ namespace MCHEmul
 		DataMemoryBlock () = default;
 
 		DataMemoryBlock (const Address& a, const std::vector <UByte>& dt)
-			: _name (""), _startAddress (a), _bytes (dt)
+			: _name (""), _attributes (), _startAddress (a), _bytes (dt)
 							{ }
 
 		DataMemoryBlock (const Address& a, std::vector <UByte>&& dt) noexcept
-			: _name (""), _startAddress (a), _bytes (std::move (dt))
+			: _name (""), _attributes (), _startAddress (a), _bytes (std::move (dt))
 							{ }
 
 		// Get & Set methods
@@ -42,6 +42,14 @@ namespace MCHEmul
 							{ return (_name); }
 		void setName (const std::string& n)
 							{ _name = n; }
+		/** The attributes. */
+		bool existAttribute (const std::string& aN) const
+							{ return (_attributes.find (aN) != _attributes.end ()); }
+		const std::string& attribute (const std::string& aN) const
+							{ Attributes::const_iterator i = _attributes.find (aN); 
+							  return ((i != _attributes.end ()) ? (*i).second : _NOATTRIBUTE); }
+		void setAttribute (const std::string& aN, const std::string& aV)
+							{ _attributes [aN] = aV; }
 		/** The address where the info should be start from. */
 		const Address& startAddress () const
 							{ return (_startAddress); }
@@ -74,8 +82,21 @@ namespace MCHEmul
 
 		private:
 		std::string _name; // The name is very optional...
+		Attributes _attributes; // The attributes are also optional...
 		Address _startAddress;
 		std::vector <MCHEmul::UByte> _bytes;
+
+		// Implementation
+		static const std::string _NOATTRIBUTE;
+	};
+
+	/** Just to represent complex info related with data. 
+		It is not used too much except in the io functions. */
+	struct ExtendedDataMemoryBlocks
+	{
+		std::string _name;
+		Attributes _attributes;
+		DataMemoryBlocks _data;
 	};
 }
 

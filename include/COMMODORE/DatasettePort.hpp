@@ -41,6 +41,12 @@ namespace COMMODORE
 
 		DatasetteIOPort ();
 
+		/** To get the casette connect if any. */
+		const DatasettePeripheral* datasette () const
+							{ return (_datasette); }
+		DatasettePeripheral* datasette ()
+							{ return (_datasette); }
+
 		/** It verifies that the peripheral to add is compatible (= DatasettePeripheral). */
 		virtual bool connectPeripheral (MCHEmul::IOPeripheral* p) override;
 
@@ -49,17 +55,7 @@ namespace COMMODORE
 		virtual void processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifier* n) override;
 
 		protected:
-		const DatasettePeripheral* datasette () const
-							{ return (_datasette); }
-		DatasettePeripheral* datasette ()
-							{ return (_datasette); }
-
-		protected:
-		bool _lastValueRead;
-		bool _lastMotorOff;
-		bool _lastNoKeyPressed;
-
-		// Implementation...
+		/** The casette connected. */
 		DatasettePeripheral* _datasette;
 	};
 }

@@ -31,7 +31,8 @@ MCHEmul::IODevice::~IODevice ()
 // ---		
 bool MCHEmul::IODevice::connectPeripheral (MCHEmul::IOPeripheral* p)
 {
-	assert (p != nullptr);
+	if (p == nullptr)
+		return (true); // Possible, but nothing is done...
 
 	// Only when peripheral with the same id connected...
 	bool result = true;

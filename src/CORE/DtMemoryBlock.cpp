@@ -1,5 +1,7 @@
 #include <CORE/DtMemoryBlock.hpp>
 
+const std::string MCHEmul::DataMemoryBlock::_NOATTRIBUTE = "";
+
 // ---
 bool MCHEmul::DataMemoryBlock::save (const std::string& fN, size_t nB, bool bE) const
 {

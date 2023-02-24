@@ -5,9 +5,11 @@ COMMODORE::Datasette1530::Datasette1530 ()
 	: COMMODORE::DatasettePeripheral (_ID, 
 		{ { "Name", "Commodore 1530 (CN2)" },
 		  { "Manufacturer", "Commodore Business Machines CBM" },
-		  { "Commands", "4:STOP, 8:PLAY, 24:RECORD" } }),
+		  { "Commands", "4:STOP, 8:PLAY, 24:RECORD, 32:EJECT(clear data)" } }),
 	  _status (),
-	  _clock (400) // 400 baudios, bits per second...
+	  _clock (400), // 400 baudios, bits per second...
+	  _readWritePhase (0),
+	  _dataCounter (0), _bitCounter (0), _byteCounter (0)
 {
 	// Nothing else to do...
 }
@@ -32,6 +34,18 @@ bool COMMODORE::Datasette1530::executeCommand (int id, const MCHEmul::Strings& p
 		? (((id & _KEYRECORD) == _KEYRECORD) ? Status::_SAVING : Status::_READING)
 		: Status::_STOPPED;
 
+	if (_status != Status::_STOPPED)
+	{
+		_readWritePhase = 0;
+
+		_dataCounter = 0;
+		_bitCounter = 0;
+		_byteCounter = 0;
+	}
+
+	if (id & _KEYEJECT)
+		clearData (); // No longer data inside...
+
 	return (true);
 }
 
@@ -45,18 +59,28 @@ bool COMMODORE::Datasette1530::simulate (MCHEmul::CPU* cpu)
 		else
 		{
 			if (_status == Status::_SAVING)
-			{
-				// TODO
-			}
+				storeNextDataBit (_valueToWrite); 
 			else
 			if (_status == Status::_READING)
-			{
-				// TODO
-			}
+				setRead (getNextDataBit ());
 
 			_clock.countCycles (1);
 		}
 	}
 
 	return (true);
+}
+
+// ---
+bool COMMODORE::Datasette1530::getNextDataBit ()
+{
+	// TODO
+
+	return (true);
+}
+
+// ---
+void COMMODORE::Datasette1530::storeNextDataBit (bool s)
+{
+	// TODO
 }

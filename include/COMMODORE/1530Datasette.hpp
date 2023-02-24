@@ -34,6 +34,7 @@ namespace COMMODORE
 		static const int _KEYSTOP   = 4;
 		static const int _KEYPLAY   = 8;
 		static const int _KEYRECORD = 16;
+		static const int _KEYEJECT	= 32; // To clean up the data loaded, or to simulate a new castte is inserted...
 		/** The key EJECT has no value. */
 
 		Datasette1530 ();
@@ -43,6 +44,13 @@ namespace COMMODORE
 		virtual bool executeCommand (int id, const MCHEmul::Strings& prms) override;
 
 		virtual bool simulate (MCHEmul::CPU* cpu) override;
+
+		private:
+		/** According with the phase the things to store will be one or another. \n
+			The can be overloaded to simulate different types of storage, if needed. \n
+			But by default they implemented the commodore standard. */
+		virtual bool getNextDataBit ();
+		virtual void storeNextDataBit (bool s);
 
 		private:
 		/** The different status that this peripheral can be in. \n
@@ -57,6 +65,12 @@ namespace COMMODORE
 		// Immplementation
 		mutable Status _status;
 		MCHEmul::Clock _clock;
+		
+		mutable unsigned char _readWritePhase; // Phase in written or readding: header, content, end...
+		// Counting which the info to write or read!
+		mutable unsigned short _dataCounter; 
+		mutable unsigned char _bitCounter;
+		mutable unsigned short _byteCounter;
 	};
 }
 

@@ -1,6 +1,29 @@
 #include <COMMODORE/FileReaders.hpp>
 
 // ---
+MCHEmul::ExtendedDataMemoryBlocks COMMODORE::CRTFileData::asMemoryBlocks () const
+{
+	MCHEmul::ExtendedDataMemoryBlocks result;
+
+	result._name = _name;
+	result._attributes ["TYPE"] = std::to_string (_cartridgeType);
+	result._attributes ["VERSION"] = std::to_string (_cartridgeVersion);
+	// The rest of the attributes of the format loaded are useless...
+	for (const auto& i : _chipsData)
+		result._data.emplace_back (MCHEmul::DataMemoryBlock (i._startingLoadAddress, i._content.bytes ()));
+
+	return (result);
+}
+
+// ---
+MCHEmul::ExtendedDataMemoryBlocks COMMODORE::T64FileData::asMemoryBlocks () const
+{
+	// TODO
+
+	return (MCHEmul::ExtendedDataMemoryBlocks ());
+}
+
+// ---
 bool COMMODORE::CRTFileTypeReader::canRead (const std::string& fN)
 {
 	if (fN.size () < 4 || 

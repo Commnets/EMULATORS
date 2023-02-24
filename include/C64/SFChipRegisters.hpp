@@ -78,6 +78,12 @@ namespace C64
 							{ _casetteNoKeyPressed = s; }
 		bool casetteNoKeyPressed () const
 							{ return (_casetteNoKeyPressed); }
+		
+		/** To know whether any set to register 0x01 has happened. \n
+			It is used in the SFChip class. \n
+			The internal variable to control this is set back to false once it is read. */
+		bool changesAtPositions () const
+							{ bool nCG = _changesAtPositions; _changesAtPositions = false; return (nCG); }
 
 		private:
 		bool _CHAREN, _HIRAM, _LORAM;
@@ -85,6 +91,7 @@ namespace C64
 
 		// Implementation
 		mutable MCHEmul::UByte _lastValueRead;
+		mutable bool _changesAtPositions;
 	};
 }
 

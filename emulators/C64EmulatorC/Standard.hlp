@@ -8,6 +8,10 @@ No parameters needed.
 #To restart the computer emulation
 ;RESTART (LEVEL)
 Just to restart the computer.
+A level can be passed as parameter.
+The way the levels are managed depends on the computer implementation.
+By default 0 restart just the CPU, 1 restart the computer but not affecting the memory content and 
+any other value restart the computer (initialize).
 #Commands to know the status of the CPU
 The parameters passed in the command line will not be taken longer into account.
 The level of the restart can be passed as parameter.

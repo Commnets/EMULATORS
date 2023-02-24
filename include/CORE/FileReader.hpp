@@ -27,6 +27,10 @@ namespace MCHEmul
 		virtual ~FileData () // Just in case...
 							{ }
 
+		/** To getthe info of the file as memory blocks,
+			that id mainly the standard format understood in the platform to move data into/from memory. */
+		virtual ExtendedDataMemoryBlocks asMemoryBlocks () const = 0;
+
 		/** To print out the result. It is used from the commands mainly. */
 		virtual std::string asString () const
 							{ return (""); }

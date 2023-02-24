@@ -52,9 +52,6 @@ namespace C64
 		MCHEmul::PhysicalStorageSubset* _CIA2registers;
 		MCHEmul::PhysicalStorageSubset* _IO1Registers;
 		MCHEmul::PhysicalStorageSubset* _IO2registers;
-
-		// Implementation
-		MCHEmul::UByte _lastValue0, _lastValue1;
 	};
 }
 

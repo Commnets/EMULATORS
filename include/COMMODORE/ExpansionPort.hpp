@@ -30,12 +30,21 @@ namespace COMMODORE
 		static const int _ID = 102;
 
 		/** Different events. */
-		static const unsigned int _CARTRIDGEIN		= 300;
+		static const unsigned int _EXPANSIONELEMENTIN		= 300;
+		static const unsigned int _EXPANSIONELEMENTOUT		= 301;
 
 		ExpansionIOPort ();
 
+		/** To know the element connected. */
+		const ExpansionPeripheral* expansionElement () const
+							{ return (_expansionElement); }
+		ExpansionPeripheral* expansionElement ()
+							{ return (_expansionElement); }
+
+		/** Notice than in the initialization, the expansion element is not put back to null,
+		    as it might have been loaded before and used in the simulation. */
 		virtual bool initialize () override
-							{ _firstExecution = true; return (true); }
+							{ _connectionNotified = false; return (true); }
 
 		/** It verifies before adding it that whether the peripherial is somtehing compatible. */
 		virtual bool connectPeripheral (MCHEmul::IOPeripheral* p) override;
@@ -43,9 +52,11 @@ namespace COMMODORE
 		virtual bool simulate (MCHEmul::CPU* cpu) override;
 
 		private:
-		// Implementation...
+		/** The element connected. */
 		ExpansionPeripheral* _expansionElement;
-		bool _firstExecution;
+
+		// Implementation
+		bool _connectionNotified;
 	};
 }
 

@@ -54,6 +54,11 @@ namespace F6500
 
 		virtual bool initialize () override;
 
+		/** Just set the program counter with the address where the cpu
+			holds the vector address needed to restart the cpu. */
+		virtual bool restart () override
+							{ programCounter ().setAddress (ResetVectorAddress ()); return (true); }
+
 		/** To identify the number of the registers. */
 		static const size_t _ACCUMULATOR = 0;
 		static const size_t _XREGISTER = 1;

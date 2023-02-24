@@ -176,6 +176,8 @@ bool MCHEmul::Computer::initialize (bool iM)
 bool MCHEmul::Computer::restart ()
 { 
 	if (_restartLevel == 0)
+		cpu () -> restart ();
+	else if (_restartLevel == 1)
 		return (initialize (true /** with memory. */));
 
 	return (initialize (false /** without memory. */));

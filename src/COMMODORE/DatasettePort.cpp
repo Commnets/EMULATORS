@@ -7,10 +7,7 @@ COMMODORE::DatasetteIOPort::DatasetteIOPort ()
 		{ { "Name", "Datasette Port" },
 		  { "Type", "Input/Output" },
 		  { "Manufacturer", "Commodore Business Machines CBM" } }),
-	  _datasette (nullptr),
-	  _lastValueRead (true),
-	  _lastMotorOff (true),
-	  _lastNoKeyPressed (true)
+	  _datasette (nullptr)
 {
 	// Nothing else to do...
 }
@@ -19,7 +16,7 @@ COMMODORE::DatasetteIOPort::DatasetteIOPort ()
 bool COMMODORE::DatasetteIOPort::connectPeripheral (MCHEmul::IOPeripheral* p)
 {
 	// If it is not of the right type, it could be connected at all!
-	if (dynamic_cast <COMMODORE::DatasettePeripheral*> (p) == nullptr)
+	if (dynamic_cast <COMMODORE::DatasettePeripheral*> (p) == nullptr && p != nullptr)
 	{ 
 		_error = MCHEmul::_PERIPHERAL_ERROR;
 
@@ -29,7 +26,10 @@ bool COMMODORE::DatasetteIOPort::connectPeripheral (MCHEmul::IOPeripheral* p)
 	// There can be only one peripheral connected at the same time...
 	if (!peripherals ().empty ())
 		MCHEmul::IODevice::disconnectAllPeripherals ();
-	_datasette = static_cast <COMMODORE::DatasettePeripheral*> (p);
+	if (_datasette != nullptr)
+		notify (MCHEmul::Event (_NOKEYPRESSED)); // just in case...
+	_datasette = (p == nullptr) // It is possible to disconnect the peripheral simply...
+		? nullptr : static_cast <COMMODORE::DatasettePeripheral*> (p);
 	return (MCHEmul::IODevice::connectPeripheral (p));
 }
 
@@ -42,19 +42,10 @@ bool COMMODORE::DatasetteIOPort::simulate (MCHEmul::CPU* cpu)
 
 	if (_datasette != nullptr)
 	{
-		if (_datasette -> noKeyPressed () != _lastNoKeyPressed)
-		{
-			_lastNoKeyPressed = _datasette -> noKeyPressed ();
-
-			notify (MCHEmul::Event (_lastNoKeyPressed ? _NOKEYPRESSED : _KEYPRESSED));
-		}
-
-		if (_datasette -> read () != _lastValueRead)
-		{
-			_lastValueRead = _datasette -> read ();
-
-			notify (MCHEmul::Event (_lastValueRead ? _READ1 : _READ0));
-		}
+		if (_datasette -> keysChangedStatusRequested ())
+			notify (MCHEmul::Event (_datasette -> noKeyPressed () ? _NOKEYPRESSED : _KEYPRESSED));
+		if (_datasette -> readChangeValueRequested ())
+			notify (MCHEmul::Event (_datasette -> read () ? _READ1 : _READ0));
 	}
 
 	// The standard simulation is invoked to
