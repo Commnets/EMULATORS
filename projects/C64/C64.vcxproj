@@ -21,6 +21,7 @@
   <ItemGroup>
     <ClInclude Include="..\..\include\C64\C64.hpp" />
     <ClInclude Include="..\..\include\C64\C64Emulator.hpp" />
+    <ClInclude Include="..\..\include\C64\Cartridge.hpp" />
     <ClInclude Include="..\..\include\C64\CIA1.hpp" />
     <ClInclude Include="..\..\include\C64\CIA2.hpp" />
     <ClInclude Include="..\..\include\C64\CIA2Registers.hpp" />
@@ -40,6 +41,7 @@
   <ItemGroup>
     <ClCompile Include="..\..\src\C64\C64.cpp" />
     <ClCompile Include="..\..\src\C64\C64Emulator.cpp" />
+    <ClCompile Include="..\..\src\C64\Cartridge.cpp" />
     <ClCompile Include="..\..\src\C64\CIA1.cpp" />
     <ClCompile Include="..\..\src\C64\CIA1Registers.cpp" />
     <ClCompile Include="..\..\src\C64\CIA2.cpp" />

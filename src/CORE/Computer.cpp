@@ -188,7 +188,7 @@ bool MCHEmul::Computer::run ()
 {
 	_restartAfterExit = false;
 
-	// This loop repets while a restart order (_restartAfterExit == true) is defined...
+	// This loop repeats while a restart order (_restartAfterExit == true) is defined...
 	do 
 	{
 		_exit = false;

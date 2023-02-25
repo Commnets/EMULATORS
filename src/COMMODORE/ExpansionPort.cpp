@@ -30,7 +30,7 @@ bool COMMODORE::ExpansionIOPort::connectPeripheral (MCHEmul::IOPeripheral* p)
 	if (_expansionElement != nullptr)
 		notify (MCHEmul::Event (COMMODORE::ExpansionIOPort::_EXPANSIONELEMENTOUT));
 	_expansionElement = static_cast <COMMODORE::ExpansionPeripheral*> (p);
-	_connectionNotified = false; // New element, connection not notified stilll...
+	_connectionNotified = false; // New element, connection not notified still...
 	return (MCHEmul::IODevice::connectPeripheral (p));
 }
 

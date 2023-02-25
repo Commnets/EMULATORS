@@ -273,7 +273,6 @@ namespace MCHEmul
 		virtual InfoStructure getInfoStructure () const override;
 
 		protected:
-		// To be used when e.g debugging...
 		/** In the method runComputerCycle, before executing the cycle related to the computer (cpu + chips), this method is invoked. \n
 			The parameters passed through are: "lA" is the last action executed (if any), 
 			"at" is the action associated to the point where the program counter is now at, 

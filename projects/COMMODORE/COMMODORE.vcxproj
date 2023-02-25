@@ -20,7 +20,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\include\COMMODORE\1530Datasette.hpp" />
-    <ClInclude Include="..\..\include\COMMODORE\Cartridge.hpp" />
     <ClInclude Include="..\..\include\COMMODORE\DatasettePeripherals.hpp" />
     <ClInclude Include="..\..\include\COMMODORE\CIA.hpp" />
     <ClInclude Include="..\..\include\COMMODORE\CIAClock.hpp" />
@@ -58,7 +57,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\COMMODORE\1530Datasette.cpp" />
-    <ClCompile Include="..\..\src\COMMODORE\Cartridge.cpp" />
     <ClCompile Include="..\..\src\COMMODORE\CIA.cpp" />
     <ClCompile Include="..\..\src\COMMODORE\CIAClock.cpp" />
     <ClCompile Include="..\..\src\COMMODORE\CIARegisters.cpp" />

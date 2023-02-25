@@ -58,8 +58,6 @@ namespace C64
 		protected:
 		/** The video system used by the commodore 64. */
 		VisualSystem _visualSystem;
-		/** Other parameters used when initialized. */
-		MCHEmul::Attributes _parameters;
 	};
 }
 

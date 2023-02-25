@@ -2,8 +2,8 @@
 #include <COMMODORE/UserIOPeripherals.hpp>
 #include <COMMODORE/DatasettePeripherals.hpp>
 #include <COMMODORE/ExpansionPeripherals.hpp>
-#include <COMMODORE/Cartridge.hpp>
 #include <COMMODORE/1530Datasette.hpp>
+#include <C64/Cartridge.hpp>
 
 // ---
 MCHEmul::IOPeripheral* COMMODORE::IOPeripheralBuilder::createPeripheral (int id, const MCHEmul::Attributes& prms) const
@@ -18,8 +18,8 @@ MCHEmul::IOPeripheral* COMMODORE::IOPeripheralBuilder::createPeripheral (int id,
 		result = new COMMODORE::NoExpansionPeripheral;
 	else if (id == COMMODORE::Datasette1530::_ID)
 		result = new COMMODORE::Datasette1530;
-	else if (id == COMMODORE::Cartridge::_ID)
-		result = new COMMODORE::Cartridge;
+	else if (id == C64::Cartridge::_ID)
+		result = new C64::Cartridge;
 
 	// Take care, it could be null...
 	return (result);

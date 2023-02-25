@@ -7,6 +7,7 @@
 #include <C64/DatasettePort.hpp>
 #include <COMMODORE/UserPort.hpp>
 #include <COMMODORE/ExpansionPort.hpp>
+#include <C64/Cartridge.hpp>
 #include <F6500/C6510.hpp>
 
 // ---
@@ -29,6 +30,48 @@ C64::Commodore64::Commodore64 (C64::Commodore64::VisualSystem vS, const std::str
 // ---
 bool C64::Commodore64::initialize (bool iM)
 {
+	// Check whether there is an expansion element inserted in the expansion port
+	COMMODORE::ExpansionPeripheral* eP = 
+		dynamic_cast <COMMODORE::ExpansionIOPort*> (device (COMMODORE::ExpansionIOPort::_ID)) -> expansionElement ();
+	if (eP != nullptr)
+	{
+		// The expansion elements in the C64 affects the way the memory is configured
+		// ..activating or desactivating the different parts of it...
+		MCHEmul::PhysicalStorageSubset* basicROM		= memory () -> subset (C64::Memory::_BASICROM_SUBSET);
+		MCHEmul::PhysicalStorageSubset* basicRAM		= memory () -> subset (C64::Memory::_BASICRAM_SUBSET);
+		MCHEmul::PhysicalStorageSubset* kernelROM		= memory () -> subset (C64::Memory::_KERNELROM_SUBSET);
+		MCHEmul::PhysicalStorageSubset* kernelRAM		= memory () -> subset (C64::Memory::_KERNELRAM_SUBSET);
+		MCHEmul::PhysicalStorageSubset* charROM			= memory () -> subset (C64::Memory::_CHARROM_SUBSET);
+		MCHEmul::PhysicalStorageSubset* vicIIRegisters	= memory () -> subset (COMMODORE::VICIIRegisters::_VICREGS_SUBSET);
+		MCHEmul::PhysicalStorageSubset* sidRegisters	= memory () -> subset (COMMODORE::SIDRegisters::_SIDREGS_SUBSET);
+		MCHEmul::PhysicalStorageSubset* colorRAM		= memory () -> subset (C64::Memory::_COLOR_SUBSET);
+		MCHEmul::PhysicalStorageSubset* cia1Registers	= memory () -> subset (C64::CIA1Registers::_CIA1_SUBSET);
+		MCHEmul::PhysicalStorageSubset* cia2registers	= memory () -> subset (C64::CIA2Registers::_CIA2_SUBSET);
+		MCHEmul::PhysicalStorageSubset* io1Registers	= memory () -> subset (C64::Memory::_IO1_SUBSET);
+		MCHEmul::PhysicalStorageSubset* io2registers	= memory () -> subset (C64::Memory::_IO2_SUBSET);
+
+		// When there is a cartridge inserted...
+		// (BTW it is the only type of device managed today)
+		C64::Cartridge* cd = dynamic_cast <C64::Cartridge*> (eP);
+		if (cd != nullptr)
+		{
+/*
+			basicROM		-> setActiveForReading ( _iLORAM);
+			basicRAM		-> setActiveForReading (!_iLORAM);
+			kernelROM		-> setActiveForReading ( _iHIRAM);
+			kernelRAM		-> setActiveForReading (!_iHIRAM);
+			vicIIRegisters	-> setActiveForReading ( _iCHAREN);
+			sidRegisters	-> setActiveForReading ( _iCHAREN);
+			colorRAM		-> setActiveForReading ( _iCHAREN);
+			cia1Registers	-> setActiveForReading ( _iCHAREN);
+			cia2registers	-> setActiveForReading ( _iCHAREN);
+			io1Registers	-> setActiveForReading ( _iCHAREN);
+			io2registers	-> setActiveForReading ( _iCHAREN);
+			charROM			-> setActiveForReading (!_iCHAREN);
+*/
+		}
+	}
+
 	bool result = MCHEmul::Computer::initialize (iM);
 	if (!result)
 		return (false);
@@ -36,7 +79,6 @@ bool C64::Commodore64::initialize (bool iM)
 	// Both chips CIAII and VICII are link somehow
 	// Because the banks connected at VICII are determined in CIA chip.
 	chip (COMMODORE::VICII::_ID) -> observe (chip (C64::CIA2::_ID));
-
 	// It is needed to observe the expansion port...
 	// Events when it is disonnected and connected are sent and with many implications
 	// in the structure of the memory...
@@ -48,7 +90,13 @@ bool C64::Commodore64::initialize (bool iM)
 // ---
 void C64::Commodore64::processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifier* n)
 {
-	// TODO
+	// When a expansion element is inserted, then everything has to restart...
+	if (evnt.id () == COMMODORE::ExpansionIOPort::_EXPANSIONELEMENTIN ||
+		evnt.id () == COMMODORE::ExpansionIOPort::_EXPANSIONELEMENTOUT)
+	{
+		setExit (true);
+		setRestartAfterExit (true);
+	}
 }
 
 // ---

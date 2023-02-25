@@ -16,11 +16,10 @@
 #define __COMMODORE_EXPANSIONPORT__
 
 #include <CORE/incs.hpp>
+#include <COMMODORE/ExpansionPeripherals.hpp>
 
 namespace COMMODORE
 {
-	class ExpansionPeripheral;
-
 	/** This class represents the Expansion Port. \n
 		The class is not final because when it is attached to a specific computer,
 		the links to chip o memory zones could be different. */
@@ -40,6 +39,11 @@ namespace COMMODORE
 							{ return (_expansionElement); }
 		ExpansionPeripheral* expansionElement ()
 							{ return (_expansionElement); }
+
+		bool _GAME () const
+							{ return ((_expansionElement != nullptr) ? _expansionElement -> _GAME () : false); }
+		bool _EXROM () const
+							{ return ((_expansionElement != nullptr) ? _expansionElement -> _EXROM () : false); }
 
 		/** Notice than in the initialization, the expansion element is not put back to null,
 		    as it might have been loaded before and used in the simulation. */

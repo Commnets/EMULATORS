@@ -8,6 +8,8 @@ MCHEmul::ExtendedDataMemoryBlocks COMMODORE::CRTFileData::asMemoryBlocks () cons
 	result._name = _name;
 	result._attributes ["TYPE"] = std::to_string (_cartridgeType);
 	result._attributes ["VERSION"] = std::to_string (_cartridgeVersion);
+	result._attributes ["_GAME"] = _GAMEActive ? "YES" : "NO";
+	result._attributes ["_EXROM"] = _EXROMActive ? "YES" : "NO";
 	// The rest of the attributes of the format loaded are useless...
 	for (const auto& i : _chipsData)
 		result._data.emplace_back (MCHEmul::DataMemoryBlock (i._startingLoadAddress, i._content.bytes ()));

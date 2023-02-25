@@ -54,8 +54,7 @@ namespace COMMODORE
 
 		virtual bool initialize () override;
 
-		virtual bool connectData (MCHEmul::FileData* dt) override
-							{ _data = dt -> asMemoryBlocks (); return (true); }
+		virtual bool connectData (MCHEmul::FileData* dt) override;
 
 		/** To know whether data is or not loaded into the casette, ready to be read. */
 		bool hasDataLoaded () const

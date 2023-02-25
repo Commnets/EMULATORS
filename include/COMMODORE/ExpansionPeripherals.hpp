@@ -28,8 +28,10 @@ namespace COMMODORE
 			  _data ()
 							{ }
 
-		virtual bool connectData (MCHEmul::FileData* dt) override
-							{ _data = dt -> asMemoryBlocks (); return (true); }
+		virtual bool _GAME () const
+							{ return (false); } // By default...
+		virtual bool _EXROM () const
+							{ return (false); } // By default...
 
 		/** To know whether the expansion has data loaded,
 			that has to be loaded into the memory. */

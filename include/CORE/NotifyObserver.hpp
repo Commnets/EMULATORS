@@ -93,7 +93,8 @@ namespace MCHEmul
 
 		/** To observe a new element. */
 		void observe (Notifier* n)
-							{ n -> addObserver (this); _notifiers.push_back (n); }
+							{ if (std::find (_notifiers.begin (), _notifiers.end (), n) == _notifiers.end ()) // Only once...
+								{ n -> addObserver (this); _notifiers.push_back (n); } }
 		/** To stop observing any element. */
 		void unObserve (Notifier* n)
 							{ n -> removeObserver (this); justTakeOff (n); }
