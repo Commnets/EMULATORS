@@ -48,7 +48,7 @@ void COMMODORE::CIAClock::simulate (MCHEmul::CPU* cpu)
 // ---
 MCHEmul::InfoStructure COMMODORE::CIAClock::getInfoStructure () const
 {
-	MCHEmul::InfoStructure result;
+	MCHEmul::InfoStructure result = MCHEmul::InfoClass::getInfoStructure ();
 
 	result.add ("Interrupt",		_interruptEnabled);
 	result.add ("HOURS",			_hours);

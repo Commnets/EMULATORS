@@ -180,41 +180,60 @@ std::string MCHEmul::StdFormatter::ArrayPiece::format (const MCHEmul::InfoStruct
 
 	std::string result = "";
 
-	bool sft = false;
-	std::string fmter;
-	// A formatter for the elements in the list is used only if it has been defined...
-	if ((fmter = attribute ("fmter")) != "")
-	{
-		std::shared_ptr <MCHEmul::StdFormatter> sDF = std::static_pointer_cast <MCHEmul::StdFormatter>
-			(FormatterBuilder::instance () -> formatter (fmter));
-		if (sDF != nullptr) //.. it has to exist obviously...
-		{ 
-			int ct = 0;
-			if (!sIS.infoStructures ().empty ())
-				for (const auto& i : sIS.infoStructures ())
-					result +=  ((ct++ == 0) ? "" : _post) + sDF -> format (i.second);
-			else
-				result += attribute ("empty");
-
-			sft = true; // A specific formatter has been used...
-		}
-	}
-
-	if (!sft)
-	{
-		// Look for the default formatter...
-		std::shared_ptr <MCHEmul::StdFormatter> sDF = 
-			std::static_pointer_cast <MCHEmul::StdFormatter> (FormatterBuilder::instance () -> defaultFormatter ());
-		if (sDF != nullptr) // ..it has to exit but just in case...
+	auto basicFmt = [=](const MCHEmul::InfoStructure& iS) -> std::string
 		{
-			sDF -> setDefFormatElements 
-				(_post, attribute ("equal"), attribute ("key") == MCHEmul::_YES, attribute ("empty"));
+			std::string r = "";
+			std::shared_ptr <MCHEmul::StdFormatter> dF = std::static_pointer_cast <MCHEmul::StdFormatter> 
+				(FormatterBuilder::instance () -> defaultFormatter ());
+			if (dF != nullptr)
+			{ 
+				dF -> setDefFormatElements 
+					(_post, attribute ("equal"), attribute ("key") == MCHEmul::_YES, attribute ("empty"));
 
-			result = sDF -> format (sIS);
+				r = dF -> format (iS);
+			}
+			else
+				r = iS.asString (); // ...a very very default one might be also used...
+
+			return (r);
+		};
+
+	// If there is an arrau of elements to print out...
+	if (!sIS.infoStructures ().empty ())
+	{ 
+		int ct = 0;
+		std::shared_ptr <MCHEmul::StdFormatter> sDF = nullptr;
+		for (const auto& i : sIS.infoStructures ())
+		{
+			// To indicate whether a special formatter was finally used...
+			bool sft = false;
+			std::string fmter = attribute ("fmter");
+			if (fmter != "")
+			{ 
+				if (fmter == ".CLASS") // The formatter aligned with the class name is taken.
+					sDF = std::static_pointer_cast <MCHEmul::StdFormatter> 
+						(FormatterBuilder::instance () -> formatter (i.second.attribute	("CLASSNAME")));
+				else // otherwise the formatter indicated is taken...
+					sDF = std::static_pointer_cast <MCHEmul::StdFormatter> (FormatterBuilder::instance () -> formatter (fmter));
+
+				if (sDF != nullptr)
+				{
+					result +=  ((ct == 0) ? "" : _post) + sDF -> format (i.second);
+
+					sft = true; // A formatter was used...
+				}
+			}
+
+			// If no special formatter was used,
+			// the default one will be used insted, if exists, and if not the most basic one...
+			if (!sft)
+				result = basicFmt (i.second);
+
+			ct++;
 		}
-		else
-			result = sIS.asString (); // ...a very very default one might be also used...
 	}
+	else
+		result = basicFmt (sIS);
 
 	return (result);
 }

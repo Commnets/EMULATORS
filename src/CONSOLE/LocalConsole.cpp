@@ -86,8 +86,9 @@ void MCHEmul::LocalConsole::createAndExecuteCommand ()
 // ---
 bool MCHEmul::LocalConsole::runPerCycle ()
 {
+	// Exist when something is wrong...
 	bool exit = !_emulator -> runCycle ();
-
+	// ...and if it has been defined to restart when finished tryit bac...
 	if (exit && _emulator -> computer () -> restartAfterExit ())
 	{
 		// To continue or not will really depend on the intialization process...
@@ -170,16 +171,28 @@ MCHEmul::InfoStructure MCHEmul::LocalConsole::decompileMemory (const std::string
 
 	MCHEmul::Strings prmsL = parametersListFrom (prms);
 	if (prmsL.size () != 2)
+	{ 
+		result.add (std::string ("ERROR"), std::string ("Insuficient numberof arguments"));
+
 		return (result);
+	}
 
 	MCHEmul::Address iA = MCHEmul::Address::fromStr (prmsL [0]);
 	if (iA > _emulator -> computer () -> cpu () -> architecture ().longestAddressPossible ())
+	{ 
+		result.add (std::string ("ERROR"), std::string ("Initial address out of memory"));
+
 		return (result);
+	}
 
 	size_t nB = (size_t) std::atoi (prmsL [1].c_str ());
 	size_t nBA = _emulator -> computer () -> cpu () -> architecture ().numberBytes ();
 	if (iA.size () > nBA || nB > ((size_t) 1 << (MCHEmul::UByte::sizeBits () * nBA)))
+	{ 
+		result.add (std::string ("ERROR"), std::string ("Final address out of memory"));
+
 		return (result);
+	}
 
 	MCHEmul::Assembler::ByteCode cL = MCHEmul::Assembler::ByteCode::createFromMemory 
 		(iA, (unsigned int) nB, _emulator -> computer () -> memory (), _emulator -> computer ());
@@ -191,6 +204,7 @@ MCHEmul::InfoStructure MCHEmul::LocalConsole::decompileMemory (const std::string
 		lns.add (iP, cL._lines [i].asString (MCHEmul::UByte::OutputFormat::_HEXA, ' ', 2));
 	}
 
+	result.add (std::string ("ERROR"), std::string ("no errors"));
 	result.add ("CODELINES", lns);
 	return (result);
 }
@@ -243,7 +257,11 @@ MCHEmul::InfoStructure MCHEmul::LocalConsole::loadPeripheralData (const std::str
 
 	MCHEmul::Strings prmsL = parametersListFrom (prms);
 	if (prmsL.size () != 2)
+	{ 
+		result.add (std::string ("ERROR"), std::string ("Insuficient number of arguments"));
+
 		return (result);
+	}
 
 	MCHEmul::FileData* dt = _emulator -> connectDataToPeripheral (prmsL [1], std::atoi (prmsL [0].c_str ()));
 	result.add (std::string ("ERROR"), 

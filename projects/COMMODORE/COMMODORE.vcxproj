@@ -65,6 +65,7 @@
     <ClCompile Include="..\..\src\COMMODORE\Commands.cpp" />
     <ClCompile Include="..\..\src\COMMODORE\DatasettePeripherals.cpp" />
     <ClCompile Include="..\..\src\COMMODORE\DatasettePort.cpp" />
+    <ClCompile Include="..\..\src\COMMODORE\ExpansionPeripherals.cpp" />
     <ClCompile Include="..\..\src\COMMODORE\ExpansionPort.cpp" />
     <ClCompile Include="..\..\src\COMMODORE\FileReaders.cpp" />
     <ClCompile Include="..\..\src\COMMODORE\IOPBuilder.cpp" />

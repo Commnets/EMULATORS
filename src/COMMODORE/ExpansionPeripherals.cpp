@@ -1,13 +1,11 @@
 #include <COMMODORE/ExpansionPeripherals.hpp>
-#include <COMMODORE/FileReaders.hpp>
 
 // ---
-bool COMMODORE::ExpansionPeripheral::connectData (MCHEmul::FileData* dt)
-{ 
-	if (dynamic_cast <COMMODORE::CRTFileData*> (dt) == nullptr)
-		return (false); // This type of data can not come from the cartridge...
+MCHEmul::InfoStructure COMMODORE::ExpansionPeripheral::getInfoStructure () const
+{
+	MCHEmul::InfoStructure result = MCHEmul::IOPeripheral::getInfoStructure ();
 
-	_data = dt -> asMemoryBlocks (); 
-	
-	return (true); 
+	result.add ("DATA", _data._data.empty () ? std::string ("no data") : _data._name);
+
+	return (result);
 }

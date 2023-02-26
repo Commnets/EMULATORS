@@ -25,20 +25,24 @@ namespace COMMODORE
 		public:
 		ExpansionPeripheral (int id, const MCHEmul::Attributes& attrs)
 			: MCHEmul::IOPeripheral (id, attrs),
-			  _data ()
+			  _data (),
+			  _dataJustLoaded (false)
 							{ }
 
-		virtual bool _GAME () const
+		/** From 1 to 22. */
+		virtual bool PIN_UP (unsigned char nP) const
 							{ return (false); } // By default...
-		virtual bool _EXROM () const
+		/** From A to Z. */
+		virtual bool PIN_DOWN (unsigned char nP) const
 							{ return (false); } // By default...
 
-		/** To know whether the expansion has data loaded,
-			that has to be loaded into the memory. */
-		bool hasDataLoaded () const
-							{ return (!_data._data.empty ()); }
+		/** To know whether the data has just loaded. */
+		bool dataJustLoaded () const
+							{ bool r = _dataJustLoaded; _dataJustLoaded = false; return (r); }
 		const MCHEmul::ExtendedDataMemoryBlocks& data () const
 							{ return (_data); }
+
+		virtual MCHEmul::InfoStructure getInfoStructure () const override;
 
 		protected:
 		void clearData ()
@@ -46,6 +50,11 @@ namespace COMMODORE
 
 		protected:
 		MCHEmul::ExtendedDataMemoryBlocks _data;
+
+		// Implementation
+		/** Becomes true when the data es just loaded. 
+			This data becomes back to false when the method dataJustLoaded is read. */
+		mutable bool _dataJustLoaded;
 	};
 
 	/** Represents nothing connected. */

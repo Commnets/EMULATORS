@@ -5,9 +5,9 @@
 #include <C64/Sound.hpp>
 #include <C64/OSIO.hpp>
 #include <C64/DatasettePort.hpp>
-#include <COMMODORE/UserPort.hpp>
-#include <COMMODORE/ExpansionPort.hpp>
+#include <C64/ExpansionPort.hpp>
 #include <C64/Cartridge.hpp>
+#include <COMMODORE/UserPort.hpp>
 #include <F6500/C6510.hpp>
 
 // ---
@@ -55,6 +55,8 @@ bool C64::Commodore64::initialize (bool iM)
 		C64::Cartridge* cd = dynamic_cast <C64::Cartridge*> (eP);
 		if (cd != nullptr)
 		{
+			bool game = cd -> PIN_UP (C64::ExpansionIOPort::_GAME);
+			bool exrom = cd -> PIN_UP (C64::ExpansionIOPort::_EXROM);
 /*
 			basicROM		-> setActiveForReading ( _iLORAM);
 			basicRAM		-> setActiveForReading (!_iLORAM);
@@ -95,7 +97,7 @@ void C64::Commodore64::processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifi
 		evnt.id () == COMMODORE::ExpansionIOPort::_EXPANSIONELEMENTOUT)
 	{
 		setExit (true);
-		setRestartAfterExit (true);
+		setRestartAfterExit (true, 1 /** Without memory. */);
 	}
 }
 
@@ -144,7 +146,7 @@ MCHEmul::IODevices C64::Commodore64::standardDevices (C64::Commodore64::VisualSy
 	// The port where the printers and similar are connected...
 	result.insert (MCHEmul::IODevices::value_type (COMMODORE::UserIOPort::_ID, new COMMODORE::UserIOPort));
 	// The port where the cartriges are connected...
-	result.insert (MCHEmul::IODevices::value_type (COMMODORE::ExpansionIOPort::_ID, new COMMODORE::ExpansionIOPort));
+	result.insert (MCHEmul::IODevices::value_type (C64::ExpansionIOPort::_ID, new C64::ExpansionIOPort));
 
 	return (result);
 }

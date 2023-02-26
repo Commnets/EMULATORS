@@ -341,7 +341,7 @@ bool MCHEmul::Emulator::run ()
 		if (computer () -> restartAfterExit ())
 		{ 
 			// Once is enough...
-			computer () -> setRestartAfterExit (false);
+			computer () -> setRestartAfterExit (false, 1 /** Full, but without memory. */);
 			// ...and whether running again will depens on the restart...
 			computer () -> setExit (!computer () -> restart ());
 		}

@@ -158,7 +158,9 @@ MCHEmul::UBytes MCHEmul::Stack::pull (size_t nV)
 // ---
 MCHEmul::InfoStructure MCHEmul::Stack::getInfoStructure () const
 {
-	MCHEmul::InfoStructure result;
+	// Take into account that InfoClass method is invoked instead the parent one,
+	// as the info from parent class is included in the informatiomn added as a subset...
+	MCHEmul::InfoStructure result = MCHEmul::InfoClass::getInfoStructure ();
 
 	result.add ("PhysicalStorageSubset",	MCHEmul::PhysicalStorageSubset::getInfoStructure ());
 	result.add ("BACK",						_fromBack );

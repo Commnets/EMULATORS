@@ -175,12 +175,12 @@ bool MCHEmul::Computer::initialize (bool iM)
 // ---
 bool MCHEmul::Computer::restart ()
 { 
+	_exit = false; // No more...
 	if (_restartLevel == 0)
-		cpu () -> restart ();
+		return (cpu () -> restart ());
 	else if (_restartLevel == 1)
-		return (initialize (true /** with memory. */));
-
-	return (initialize (false /** without memory. */));
+		return (initialize (false /** withou memory. */));
+	return (initialize (true /** with memory. */));
 }
 
 // ---
@@ -312,7 +312,7 @@ bool MCHEmul::Computer::runIOCycle ()
 		}
 	}
 
-	_exit = _inputOSSystem -> quitRequested ();
+	_exit |= _inputOSSystem -> quitRequested ();
 
 	return (true);
 }
@@ -348,7 +348,7 @@ void MCHEmul::Computer::removeAllActions (unsigned int a)
 // ---
 MCHEmul::InfoStructure MCHEmul::Computer::getInfoStructure () const
 {
-	MCHEmul::InfoStructure result;
+	MCHEmul::InfoStructure result = MCHEmul::InfoClass::getInfoStructure ();
 
 	result.add ("ATTRS", _attributes);
 	result.add ("CPU", _cpu -> getInfoStructure ());

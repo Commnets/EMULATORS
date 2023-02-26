@@ -25,8 +25,7 @@ namespace C64
 
 		Cartridge ();
 
-		virtual bool _GAME () const override;
-		virtual bool _EXROM () const override;
+		virtual bool PIN_UP (unsigned char nP) const;
 
 		virtual bool connectData (MCHEmul::FileData* dt) override;
 

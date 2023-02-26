@@ -102,6 +102,9 @@
     <ClInclude Include="..\..\include\C64\Cartridge.hpp">
       <Filter>Archivos de encabezado\IO</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\include\C64\ExpansionPort.hpp">
+      <Filter>Archivos de encabezado\IO</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\C64\Screen.cpp">

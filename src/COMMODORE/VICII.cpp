@@ -70,7 +70,7 @@ bool COMMODORE::VICII::initialize ()
 	_graphicsCharData = MCHEmul::UBytes::_E;
 	_graphicsBitmapData = MCHEmul::UBytes::_E;
 	_graphicsColorData = MCHEmul::UBytes::_E;
-	for (size_t i = 0; i < 8; _graphicsSprites [i++] = MCHEmul::UBytes::_E);
+	for (size_t i = 0; i < _graphicsSprites.size (); _graphicsSprites [i++] = MCHEmul::UBytes::_E);
 
 	_isNewRasterLine = true; // The first...
 	_videoActive = true;

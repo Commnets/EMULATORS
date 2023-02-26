@@ -94,7 +94,7 @@ bool MCHEmul::PhysicalStorage::saveFrom (const std::string& fN, size_t nB, size_
 // ---
 MCHEmul::InfoStructure MCHEmul::PhysicalStorageSubset::getInfoStructure () const
 {
-	MCHEmul::InfoStructure result;
+	MCHEmul::InfoStructure result = MCHEmul::InfoClass::getInfoStructure ();
 
 	result.add ("ID",		_id);
 	result.add ("ADDRESS",	_initialAddress);
@@ -175,7 +175,7 @@ bool MCHEmul::MemoryView::saveFrom (const std::string& fN, size_t nB, const MCHE
 // ---
 MCHEmul::InfoStructure MCHEmul::MemoryView::getInfoStructure () const
 {
-	MCHEmul::InfoStructure result;
+	MCHEmul::InfoStructure result = MCHEmul::InfoClass::getInfoStructure ();
 
 	MCHEmul::InfoStructure mems;
 	for (const auto& i : _subsets)

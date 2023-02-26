@@ -54,6 +54,7 @@ MCHEmul::InfoStructure COMMODORE::DatasettePeripheral::getInfoStructure () const
 
 	result.add ("KEYS", !_noKeyPressed);
 	result.add ("MOTOR", !_motorOff);
+	result.add ("DATA", _data._data.empty () ? std::string ("no data") : _data._name);
 
 	return (result);
 }

@@ -74,6 +74,20 @@ ID=@ID@
 @Registers>@
 #---
 #---
+;Datasette
+Id:@ID@
+@ATTRS?{key=YES,equal==,empty=no attributes}\n@
+Keys Pressed:@KEYS@
+Motor on:@MOTOR@
+Data:@DATA@
+#---
+#---
+;Cartridge
+Id:@ID@
+@ATTRS?{key=YES,equal==,empty=no attributes}\n@
+Data:@DATA@
+#---
+#---
 ;CVICII
 @VICII>@
 #---

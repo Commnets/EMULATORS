@@ -1,4 +1,5 @@
 #include <C64/Cartridge.hpp>
+#include <C64/ExpansionPort.hpp>
 
 // ---
 C64::Cartridge::Cartridge ()
@@ -10,19 +11,16 @@ C64::Cartridge::Cartridge ()
 }
 
 // ---
-bool C64::Cartridge::_GAME () const
+bool C64::Cartridge::PIN_UP (unsigned char nP) const
 {
-	if (_data._data.empty ())
-		return (true);
-	return (MCHEmul::upper ((*_data._attributes.find ("_GAME")).second) == "YES");
-}
+	bool result = false;
+	
+	if (nP == C64::ExpansionIOPort::_GAME)
+		result = MCHEmul::upper ((*_data._attributes.find ("_GAME")).second) == "YES";
+	else if (nP == C64::ExpansionIOPort::_EXROM)
+		result = MCHEmul::upper ((*_data._attributes.find ("_EXROM")).second) == "YES";
 
-// ---
-bool C64::Cartridge::_EXROM () const
-{
-	if (_data._data.empty ())
-		return (true);
-	return (MCHEmul::upper ((*_data._attributes.find ("_EXROM")).second) == "YES");
+	return (result);
 }
 
 // ---
@@ -32,6 +30,8 @@ bool C64::Cartridge::connectData (MCHEmul::FileData* dt)
 		return (false); // This type of data can not come from the cartridge...
 
 	_data = dt -> asMemoryBlocks (); 
+
+	_dataJustLoaded = true;
 	
 	return (true); 
 }

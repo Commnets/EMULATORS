@@ -58,7 +58,7 @@ void COMMODORE::CIATimer::simulate (MCHEmul::CPU* cpu, COMMODORE::CIATimer* t)
 // ---
 MCHEmul::InfoStructure COMMODORE::CIATimer::getInfoStructure () const
 {
-	MCHEmul::InfoStructure result;
+	MCHEmul::InfoStructure result = MCHEmul::InfoClass::getInfoStructure ();
 
 	result.add ("RUN",			(unsigned int)_runMode);
 	result.add ("COUNT",		(unsigned int) _countMode);

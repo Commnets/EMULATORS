@@ -174,7 +174,7 @@ bool MCHEmul::CPU::executeNextInstruction ()
 // ---
 MCHEmul::InfoStructure MCHEmul::CPU::getInfoStructure () const
 {
-	MCHEmul::InfoStructure result;
+	MCHEmul::InfoStructure result = MCHEmul::InfoClass::getInfoStructure ();
 
 	result.add ("Architecture", _architecture.getInfoStructure ());
 

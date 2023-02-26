@@ -97,7 +97,7 @@ MCHEmul::FileData* COMMODORE::CRTFileTypeReader::readFile (const std::string& fN
 		char* romData = new char [cD._romSize];
 		f.read (romData, cD._romSize);
 		std::vector <MCHEmul::UByte> romBytes;
-		for (size_t i = 0; i < cD._romSize; romBytes.emplace_back (romData [i++]));
+		for (size_t i = 0; i < cD._romSize; i++) romBytes.emplace_back (romData [i]);
 		cD._content = MCHEmul::UBytes (romBytes);
 		delete [] romData;
 

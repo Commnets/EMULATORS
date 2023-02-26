@@ -72,7 +72,7 @@ Id:@ID@
 Id:@ID@
 @ATTRS?{key=YES,equal==,empty=no attributes}\n@
 ->Peripherals:
-@IOPERIPHERALS?{fmter=Peripheral,empty=no peripherals}\n@
+@IOPERIPHERALS?{fmter=.CLASS,empty=no peripherals}\n@
 #---
 #---
 ;CAUTHOR
@@ -183,7 +183,7 @@ Program saved=@RESULT@
 #---
 #---
 ;CPERIPHERALS
-@PERIPHERALS?{fmter=Peripheral,empty=no peripherals}\n---\n@
+@PERIPHERALS?{fmter=.CLASS,empty=no peripherals}\n---\n@
 #---
 #---
 ;CANSWER

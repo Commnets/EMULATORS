@@ -18,7 +18,7 @@ MCHEmul::CPUArchitecture::CPUArchitecture (size_t nb, size_t iL, bool bE, const 
 // ---
 MCHEmul::InfoStructure MCHEmul::CPUArchitecture::getInfoStructure () const
 {
-	MCHEmul::InfoStructure result;
+	MCHEmul::InfoStructure result = MCHEmul::InfoClass::getInfoStructure ();
 
 	result.add ("ATTRS",			_attributes);
 	result.add ("NBYTES",			_numberBytes);

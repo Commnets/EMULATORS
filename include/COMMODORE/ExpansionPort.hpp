@@ -40,15 +40,15 @@ namespace COMMODORE
 		ExpansionPeripheral* expansionElement ()
 							{ return (_expansionElement); }
 
-		bool _GAME () const
-							{ return ((_expansionElement != nullptr) ? _expansionElement -> _GAME () : false); }
-		bool _EXROM () const
-							{ return ((_expansionElement != nullptr) ? _expansionElement -> _EXROM () : false); }
-
-		/** Notice than in the initialization, the expansion element is not put back to null,
-		    as it might have been loaded before and used in the simulation. */
-		virtual bool initialize () override
-							{ _connectionNotified = false; return (true); }
+		// The expansion port is mape up of 44 pins...
+		// 22 in one side (UP) andd 22 in the other side (DOWN).
+		// The first 22 are nominated in numbers and the other 22 in letters...
+		/** From 1 to 22. */
+		bool PIN_UP (unsigned char nP) const
+							{ return ((_expansionElement != nullptr) ? _expansionElement -> PIN_UP (nP) : false); }
+		/** From A to Z. */
+		bool PIN_DOWN (unsigned char nP) const
+							{ return ((_expansionElement != nullptr) ? _expansionElement -> PIN_DOWN (nP) : false); }
 
 		/** It verifies before adding it that whether the peripherial is somtehing compatible. */
 		virtual bool connectPeripheral (MCHEmul::IOPeripheral* p) override;
@@ -58,9 +58,6 @@ namespace COMMODORE
 		private:
 		/** The element connected. */
 		ExpansionPeripheral* _expansionElement;
-
-		// Implementation
-		bool _connectionNotified;
 	};
 }
 

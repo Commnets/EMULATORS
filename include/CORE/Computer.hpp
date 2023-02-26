@@ -174,8 +174,10 @@ namespace MCHEmul
 		/** To restart the computer. \n
 			It should take into account the "level". By default it will by like an initialization. \n 
 			It should return true when everything is ok, and false in any other circunstance. \n
-			By default the level 1 won't restart the memory,
-			and any other value will restart the full computer (= initialize ()). */
+			By default the level 0 just invoke the CPU restart method, 
+			level 1 call initialize (Computer) but it won't restart the memory,
+			and any other value will initialize including the memory. \n
+			Return true when everything ok and false in other case. */
 		virtual bool restart ();
 
 		/** To simulate how the computer works. 

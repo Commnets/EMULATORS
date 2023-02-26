@@ -229,7 +229,8 @@ namespace MCHEmul
 
 		protected:
 		/** An exit method that can hold specific code needed per cycle and per type of emulator. 
-			By default just actualize the global time (@see global.hpp). */
+			By default just actualize the global time (@see global.hpp). \n
+			Returns true when evrythinh ok, and false in other case. */
 		virtual bool additionalRunCycle ()
 							{ actualizeGlobalTime (); return (true); }
 

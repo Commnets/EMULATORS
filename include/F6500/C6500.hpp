@@ -57,7 +57,9 @@ namespace F6500
 		/** Just set the program counter with the address where the cpu
 			holds the vector address needed to restart the cpu. */
 		virtual bool restart () override
-							{ programCounter ().setAddress (ResetVectorAddress ()); return (true); }
+							{ programCounter ().setAddress 
+								(MCHEmul::Address (memoryRef () -> bytes (ResetVectorAddress (), 2), false)); 
+							  return (true); }
 
 		/** To identify the number of the registers. */
 		static const size_t _ACCUMULATOR = 0;

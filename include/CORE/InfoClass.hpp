@@ -36,12 +36,14 @@ namespace MCHEmul
 		void setClassName (const std::string& cN)
 							{ _className = cN; }
 
-		virtual InfoStructure getInfoStructure () const = 0;
+		/** By default it resutrns the attribute .CLASSNAME with the name of the class. */
+		virtual InfoStructure getInfoStructure () const
+							{ InfoStructure r; r.add ("CLASSNAME", className ()); return (r); }
 
 		/** Generic print out method. */
 		friend std::ostream& operator << (std::ostream& o, const InfoClass& iC)
 							{ return (o << FormatterBuilder::instance () -> 
-								formatter (iC.className ()) ->  format (iC.getInfoStructure ())); }
+								formatter (iC.className ()) -> format (iC.getInfoStructure ())); }
 
 		private:
 		std::string _className;

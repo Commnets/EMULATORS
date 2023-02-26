@@ -7,8 +7,7 @@ COMMODORE::ExpansionIOPort::ExpansionIOPort ()
 		{ { "Name", "Expansion Port" },
 		  { "Type", "Input/Output" },
 		  { "Manufacturer", "Commodore Business Machines CBM" } }),
-	  _expansionElement (nullptr),
-	  _connectionNotified (false)
+	  _expansionElement (nullptr)
 {
 	// Nothing else to do...
 }
@@ -30,22 +29,17 @@ bool COMMODORE::ExpansionIOPort::connectPeripheral (MCHEmul::IOPeripheral* p)
 	if (_expansionElement != nullptr)
 		notify (MCHEmul::Event (COMMODORE::ExpansionIOPort::_EXPANSIONELEMENTOUT));
 	_expansionElement = static_cast <COMMODORE::ExpansionPeripheral*> (p);
-	_connectionNotified = false; // New element, connection not notified still...
 	return (MCHEmul::IODevice::connectPeripheral (p));
 }
 
 // ---
 bool COMMODORE::ExpansionIOPort::simulate (MCHEmul::CPU* cpu)
 {
-	// The expansion element is considerer connected just if it has onfo inside...
+	// The expansion element is considerer connected just if it has info inside...
 	// Otherwise it will be still uncomplete!
 	if (_expansionElement != nullptr && 
-		_expansionElement -> hasDataLoaded () && !_connectionNotified)
-	{ 
-		_connectionNotified = true; 
-
+		_expansionElement -> dataJustLoaded ())
 		notify (MCHEmul::Event (COMMODORE::ExpansionIOPort::_EXPANSIONELEMENTIN));
-	}
 
 	return (true);
 }
