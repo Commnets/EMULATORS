@@ -417,10 +417,11 @@ namespace MCHEmul
 	{
 		std::vector <UByte> result;
 
+		// If more bytes are required than max available nothing is returned...
 		int dtT = _minAddress.distanceWith (a);
 		if (dtT >= 0 && (size_t) dtT <= (_numPositions - nB))
 		{
-			for (size_t i = 0; i < nB;i++)
+			for (size_t i = 0; i < nB; i++)
 			{ 
 				PhysicalStorageSubset* fS = nullptr;
 				const PhysicalStorageSubsetsList& pL = _memPositions [dtT + i]._storages;
@@ -455,13 +456,14 @@ namespace MCHEmul
 	// ---
 	inline void MemoryView::set (const Address& a, const std::vector <UByte>& v, bool f)
 	{ 
+		// If there are more bytes to set than max available nothing is done...
 		int dtT = _minAddress.distanceWith (a);
-		if (dtT >= 0 && (size_t) dtT <= _numPositions)
+		if (dtT >= 0 && (size_t) dtT <= (_numPositions - v.size ()))
 		{
 			for (size_t i = 0; i < v.size (); i++)
 			{
 				PhysicalStorageSubset* fS = nullptr;
-				const PhysicalStorageSubsetsList& pL = _memPositions [dtT]._storages;
+				const PhysicalStorageSubsetsList& pL = _memPositions [dtT + i]._storages;
 				for (size_t j = 0; j < pL.size () && fS == nullptr; j++)
 					if (pL [j] -> active () && pL [j] -> canBeWriten (f)) fS = pL [j];
 

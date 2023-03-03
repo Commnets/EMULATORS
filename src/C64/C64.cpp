@@ -30,41 +30,6 @@ C64::Commodore64::Commodore64 (C64::Commodore64::VisualSystem vS, const std::str
 // ---
 bool C64::Commodore64::initialize (bool iM)
 {
-	// Check whether there is an expansion element inserted in the expansion port
-	COMMODORE::ExpansionPeripheral* eP = 
-		dynamic_cast <COMMODORE::ExpansionIOPort*> (device (COMMODORE::ExpansionIOPort::_ID)) -> expansionElement ();
-	if (eP != nullptr)
-	{
-		// When there is a cartridge inserted...
-		// (BTW it is the only type of device managed today)
-		C64::Cartridge* cd = dynamic_cast <C64::Cartridge*> (eP);
-		if (cd != nullptr)
-		{
-			bool game	= cd -> PIN_UP (C64::ExpansionIOPort::_GAME);
-			bool exrom	= cd -> PIN_UP (C64::ExpansionIOPort::_EXROM);
-			const MCHEmul::ExtendedDataMemoryBlocks& dt = cd -> data ();
-			switch (cd -> data ()._data.size ())
-			{
-				case 1:
-					break;
-
-				case 2:
-					break;
-
-				case 3:
-					break;
-
-				case 4:
-					break;
-			}
-
-			for (const auto& i : cd -> data ()._data)
-				std::cout << "data:" << i.startAddress () << " (" << i.bytes ().size () << ")" << std::endl;
-
-			// It is time to configure the access to the memory...
-		}
-	}
-
 	bool result = MCHEmul::Computer::initialize (iM);
 	if (!result)
 		return (false);
@@ -76,6 +41,13 @@ bool C64::Commodore64::initialize (bool iM)
 	// Events when it is disonnected and connected are sent and with many implications
 	// in the structure of the memory...
 	observe (dynamic_cast <COMMODORE::ExpansionIOPort*> (device (COMMODORE::ExpansionIOPort::_ID)));
+
+	// Check whether there is an expansion element inserted in the expansion port
+	// If it is, it's info is loaded if any...
+	COMMODORE::ExpansionPeripheral* eP = 
+		dynamic_cast <COMMODORE::ExpansionIOPort*> (device (COMMODORE::ExpansionIOPort::_ID)) -> expansionElement ();
+	if (eP != nullptr && !eP -> data ()._data.empty ())
+		dynamic_cast <C64::Cartridge*> (eP) -> configureMemoryAndLoadData (dynamic_cast <C64::Memory*> (memory ()));
 
 	return (true);
 }

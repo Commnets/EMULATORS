@@ -53,6 +53,16 @@ namespace C64
 		static const int _BANK2RAM1_SUBSET		= 206;
 		static const int _BANK3RAM_SUBSET		= 207;
 
+		// Memory locations for important areas of the memory...
+		static const MCHEmul::Address _POS0_ADDRESS;
+		static const MCHEmul::Address _POS1_ADDRESS;
+		static const MCHEmul::Address _BASICROMINIT_ADDRESS;
+		static const MCHEmul::Address _BASICROMEND_ADDRESS;
+		static const MCHEmul::Address _CHARROMINIT_ADDRESS;
+		static const MCHEmul::Address _CHARROMEND_ADDRESS;
+		static const MCHEmul::Address _KERNELROMINIT_ADDRESS;
+		static const MCHEmul::Address _KERNELROMEND_ADDRESS;
+
 		// Views
 		static const int _CPU_VIEW				= 0;
 		static const int _VICII_VIEW			= 1;

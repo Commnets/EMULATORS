@@ -4,6 +4,15 @@
 #include <C64/CIA1Registers.hpp>
 #include <C64/CIA2Registers.hpp>
 
+const MCHEmul::Address C64::Memory::_POS0_ADDRESS = MCHEmul::Address ({ 0x00, 0x00 }, false);
+const MCHEmul::Address C64::Memory::_POS1_ADDRESS = MCHEmul::Address ({ 0x01, 0x00 }, false);
+const MCHEmul::Address C64::Memory::_BASICROMINIT_ADDRESS = MCHEmul::Address ({ 0x00, 0xa0 }, false);
+const MCHEmul::Address C64::Memory::_BASICROMEND_ADDRESS = MCHEmul::Address ({ 0xff, 0xbf }, false);
+const MCHEmul::Address C64::Memory::_CHARROMINIT_ADDRESS = MCHEmul::Address ({ 0x00, 0xd0 }, false);
+const MCHEmul::Address C64::Memory::_CHARROMEND_ADDRESS = MCHEmul::Address ({ 0xff, 0xdf }, false);
+const MCHEmul::Address C64::Memory::_KERNELROMINIT_ADDRESS = MCHEmul::Address ({ 0x00, 0xe0 }, false);
+const MCHEmul::Address C64::Memory::_KERNELROMEND_ADDRESS = MCHEmul::Address ({ 0xff, 0xff }, false);
+
 // ---
 C64::Memory::Memory (const std::string& lang)
 	: MCHEmul::Memory (C64::Memory::standardMemoryContent ()),

@@ -1,5 +1,6 @@
 #include <C64/Cartridge.hpp>
 #include <C64/ExpansionPort.hpp>
+#include <C64/Memory.hpp>
 
 // ---
 C64::Cartridge::Cartridge ()
@@ -34,4 +35,32 @@ bool C64::Cartridge::connectData (MCHEmul::FileData* dt)
 	_dataJustLoaded = true;
 	
 	return (true); 
+}
+
+// ---
+void C64::Cartridge::configureMemoryAndLoadData (C64::Memory* m)
+{
+	bool lR = true, hR = true, cR = true;
+	for (const auto& i : _data._data)
+	{
+		if (std::abs ((C64::Memory::_BASICROMEND_ADDRESS - i.startAddress ())) <=
+			std::abs (((int) i.size () + (C64::Memory::_BASICROMEND_ADDRESS - C64::Memory::_BASICROMINIT_ADDRESS + 1)))) 
+			lR = false;
+		if (std::abs ((C64::Memory::_CHARROMEND_ADDRESS - i.startAddress ())) <=
+			std::abs (((int) i.size () + (C64::Memory::_CHARROMEND_ADDRESS - C64::Memory::_CHARROMINIT_ADDRESS + 1)))) 
+			hR = false;
+		if (std::abs ((C64::Memory::_KERNELROMEND_ADDRESS - i.startAddress ())) <=
+			std::abs (((int) i.size () + (C64::Memory::_KERNELROMEND_ADDRESS - C64::Memory::_KERNELROMINIT_ADDRESS + 1)))) 
+			cR = false;
+	}
+
+	// Configure the memory...
+	MCHEmul::UByte dr = m -> value (C64::Memory::_POS1_ADDRESS);
+	dr.setBit (0, lR); dr.setBit (1, hR); dr.setBit (2, cR);
+	m -> set (C64::Memory::_POS1_ADDRESS, dr); // To keep the data in the registers...
+	m -> configureMemoryAccess (lR, hR, cR); // But the configuration is now needed...
+
+	// ...and keep the data
+	for (const auto& i : _data._data)
+		m -> set (i.startAddress (), i.bytes ());
 }

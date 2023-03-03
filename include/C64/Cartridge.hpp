@@ -18,6 +18,8 @@
 
 namespace C64
 {
+	class Memory;
+
 	class Cartridge : public COMMODORE::ExpansionPeripheral
 	{
 		public:
@@ -34,6 +36,8 @@ namespace C64
 
 		virtual bool simulate (MCHEmul::CPU* cpu) override
 							{ return (true); }
+
+		void configureMemoryAndLoadData (Memory* m);
 	};
 }
 

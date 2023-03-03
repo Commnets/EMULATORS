@@ -55,6 +55,10 @@ namespace MCHEmul
 							{ return (_startAddress); }
 		const std::vector <UByte>& bytes () const
 							{ return (_bytes); }
+		size_t size () const
+							{ return (bytes ().size ()); }
+		Address endAddress () const
+							{ return (startAddress () + size ()); }
 
 		/** Save the memory block.
 			It receives only the size of the address at the header and whether that address
