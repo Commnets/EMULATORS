@@ -16,7 +16,7 @@ COMMODORE::ExpansionIOPort::ExpansionIOPort ()
 bool COMMODORE::ExpansionIOPort::connectPeripheral (MCHEmul::IOPeripheral* p)
 {
 	// If it is not of the right type, it could be connected at all!
-	if (dynamic_cast <COMMODORE::ExpansionPeripheral*> (p) == nullptr && p != nullptr)
+	if (p != nullptr && dynamic_cast <COMMODORE::ExpansionPeripheral*> (p) == nullptr)
 	{
 		_error = MCHEmul::_PERIPHERAL_ERROR;
 

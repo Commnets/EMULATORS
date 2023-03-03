@@ -4,8 +4,8 @@
 ?./LocalConsole.fmt
 #---
 ;CIA1
-ID=@ID@
-@ATTRS?{key=YES,equal==,empty=no attributes}\n@
+id:@ID@
+@ATTRS?{key=YES,equal=:,empty=no attributes}\n@
 ->Registers:
 @Registers>@
 ->Timer A:
@@ -17,8 +17,8 @@ ID=@ID@
 #---
 #---
 ;CIA2
-ID=@ID@
-@ATTRS?{key=YES,equal==,empty=no attributes}\n@
+Id:@ID@
+@ATTRS?{key=YES,equal=:,empty=no attributes}\n@
 ->Registers:
 @Registers>@
 ->Timer A:

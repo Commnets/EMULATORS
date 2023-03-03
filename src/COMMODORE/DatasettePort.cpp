@@ -16,7 +16,7 @@ COMMODORE::DatasetteIOPort::DatasetteIOPort ()
 bool COMMODORE::DatasetteIOPort::connectPeripheral (MCHEmul::IOPeripheral* p)
 {
 	// If it is not of the right type, it could be connected at all!
-	if (dynamic_cast <COMMODORE::DatasettePeripheral*> (p) == nullptr && p != nullptr)
+	if (p != nullptr && dynamic_cast <COMMODORE::DatasettePeripheral*> (p) == nullptr)
 	{ 
 		_error = MCHEmul::_PERIPHERAL_ERROR;
 

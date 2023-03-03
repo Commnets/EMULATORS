@@ -6,15 +6,15 @@
 ;Author
 @NAME@
 From @CITY@ (@COUNTRY@) At @DATE@
-email: @EMAIL@
+email:@EMAIL@
 I hope you like this emulator!
 What I really love is @LOVE@
 #---
 #---
 ;Architecture
-@ATTRS?{key=YES,equal==,empty=no attributes}\n@
+@ATTRS?{key=YES,equal=:,empty=no attributes}\n@
 @NBYTES@ bytes, @NBITS@ bits, @NBYTESPERINST@ bytes per instruction
-Big Endian=@ENDIAN@
+Big Endian:@ENDIAN@
 #---
 #---
 ;CPU
@@ -27,24 +27,24 @@ Big Endian=@ENDIAN@
 #---
 ;PhysicalStorageSubset
 Id:@ID@, Address:$@ADDRESS@, Size:@SIZE@
-ACTIVE=@ACTIVE@, READ=@READ@
+Active:@ACTIVE@, Read:@READ@
 @BYTES{blocksize=16,listsep=\,,tablesep=\ ,minsize=2}@
 #---
 #---
 ;MemoryView
-@STORAGES?{key=NO,equal==,empty=no storages}\n@
+@STORAGES?{key=NO,equal=:,empty=no storages}\n@
 #---
 #---
 ;Memory
-@STORAGES?{key=NO,equal==,empty=no storages}\n@
+@STORAGES?{key=NO,equal=:,empty=no storages}\n@
 #---
 #---
 ;Stack
 @PhysicalStorageSubset>@
-BACK=@BACK@, POINT LAST=@LAST@
-OVERFLOW=@OVERFLOW@
-EMPTY=@EMPTY@
-POSITION=@POSITION@
+From Back:@BACK@, Last Point:@LAST@
+Overflow:@OVERFLOW@
+Empty:@EMPTY@
+Position:@POSITION@
 #---
 #---
 ;Chip
@@ -58,19 +58,19 @@ Id:@ID@
 ->CPU:
 @CPU>@
 ->Chips:
-@CHIPS?{key=NO,equal==,empty=no chips}\n@
+@CHIPS?{key=NO,equal=:,empty=no chips}\n@
 ->Devices:
-@DEVICES?{key=NO,equal==,empty=no devices}\n@
+@DEVICES?{key=NO,equal=:,empty=no devices}\n@
 #---
 #---
 ;Peripheral
 Id:@ID@
-@ATTRS?{key=YES,equal==,empty=no attributes}\n@
+@ATTRS?{key=YES,equal=:,empty=no attributes}\n@
 #---
 #---
 ;Device
 Id:@ID@
-@ATTRS?{key=YES,equal==,empty=no attributes}\n@
+@ATTRS?{key=YES,equal=:,empty=no attributes}\n@
 ->Peripherals:
 @IOPERIPHERALS?{fmter=.CLASS,empty=no peripherals}\n@
 #---
@@ -166,8 +166,8 @@ Current:@INST@
 #---
 #---
 ;CSPEED
-CPU: @SPEED@ cycles/second
-SCREEN: @HERTZS@ cycles/second
+CPU:@SPEED@ cycles/second
+Screen Speed:@HERTZS@ cycles/second
 #---
 #---
 ;CLOADBIN

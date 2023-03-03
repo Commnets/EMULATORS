@@ -6,11 +6,37 @@
 
 // ---
 C64::Memory::Memory (const std::string& lang)
-	: MCHEmul::Memory (C64::Memory::standardMemoryContent ())
+	: MCHEmul::Memory (C64::Memory::standardMemoryContent ()),
+	  _VICIIView (nullptr),
+	  _basicROM (nullptr),
+	  _basicRAM (nullptr),
+	  _kernelROM (nullptr),
+	  _kernelRAM (nullptr),
+	  _charROM (nullptr),
+	  _vicIIRegisters (nullptr),
+	  _sidRegisters (nullptr),
+	  _colorRAM (nullptr),
+	  _cia1Registers (nullptr),
+	  _cia2registers (nullptr),
+	  _io1Registers (nullptr),
+	  _io2registers (nullptr)
 {
 	// In the content...
 	if (error () != MCHEmul::_NOERROR)
 		return;
+
+	_basicROM		= subset (_BASICROM_SUBSET);
+	_basicRAM		= subset (_BASICRAM_SUBSET);
+	_kernelROM		= subset (_KERNELROM_SUBSET);
+	_kernelRAM		= subset (_KERNELRAM_SUBSET);
+	_charROM		= subset (_CHARROM_SUBSET);
+	_vicIIRegisters	= subset (COMMODORE::VICIIRegisters::_VICREGS_SUBSET);
+	_sidRegisters	= subset (COMMODORE::SIDRegisters::_SIDREGS_SUBSET);
+	_colorRAM		= subset (_COLOR_SUBSET);
+	_cia1Registers	= subset (C64::CIA1Registers::_CIA1_SUBSET);
+	_cia2registers	= subset (C64::CIA2Registers::_CIA2_SUBSET);
+	_io1Registers	= subset (_IO1_SUBSET);
+	_io2registers	= subset (_IO2_SUBSET);
 
 	// The default ROMS...
 	// They might change depending on the language
@@ -52,6 +78,25 @@ bool C64::Memory::initialize ()
 	setCPUView ();
 
 	return (true);
+}
+
+// ---
+void C64::Memory::configureMemoryAccess (bool lR, bool hR, bool c)
+{
+	_basicROM			-> setActiveForReading (lR);
+	_basicRAM			-> setActiveForReading (!lR);
+
+	_kernelROM			-> setActiveForReading (hR);
+	_kernelRAM			-> setActiveForReading (!hR);
+
+	_vicIIRegisters		-> setActiveForReading (c);
+	_sidRegisters		-> setActiveForReading (c);
+	_colorRAM			-> setActiveForReading (c);
+	_cia1Registers		-> setActiveForReading (c);
+	_cia2registers		-> setActiveForReading (c);
+	_io1Registers		-> setActiveForReading (c);
+	_io2registers		-> setActiveForReading (c);
+	_charROM			-> setActiveForReading (!c);
 }
 
 // ---

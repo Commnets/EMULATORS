@@ -4,28 +4,13 @@
 #include <C64/CIA2Registers.hpp>
 #include <C64/DatasettePort.hpp>
 
-const MCHEmul::Address C64::SpecialFunctionsChip::_POS0 = MCHEmul::Address ({ 0x00, 0x00 }, false);
-const MCHEmul::Address C64::SpecialFunctionsChip::_POS1 = MCHEmul::Address ({ 0x01, 0x00 }, false);
-
 // ---
 C64::SpecialFunctionsChip::SpecialFunctionsChip ()
 	: MCHEmul::Chip (_ID, 
 		{ { "Name", "SFChip" },
 		{ "Manufacturer", "Ignacio Cea" },
 		{ "Year", "2022" } }),
-	  _SFRegisters (nullptr),
-	  _BasicRAM (nullptr), 
-	  _BasicROM (nullptr), 
-	  _KernelROM (nullptr), 
-	  _KernelRAM (nullptr),
-	  _CharROM (nullptr), 
-	  _VICIIRegisters (nullptr), 
-	  _SIDRegisters (nullptr), 
-	  _ColorRAM (nullptr),
-	  _CIA1Registers (nullptr), 
-	  _CIA2registers (nullptr), 
-	  _IO1Registers (nullptr), 
-	  _IO2registers (nullptr)
+	  _SFRegisters (nullptr)
 {
 	setClassName ("SFChip");
 }
@@ -36,20 +21,6 @@ bool C64::SpecialFunctionsChip::initialize ()
 	_SFRegisters	= dynamic_cast <C64::SpecialFunctionsChipRegisters*>
 		(memoryRef () -> subset (C64::SpecialFunctionsChipRegisters::_SPECIALFUNCTIONSCHIP_SUBSET));
 	assert (_SFRegisters != nullptr); // It has to exists...
-
-	_BasicROM		= memoryRef () -> subset (C64::Memory::_BASICROM_SUBSET);
-	_BasicRAM		= memoryRef () -> subset (C64::Memory::_BASICRAM_SUBSET);
-	_KernelROM		= memoryRef () -> subset (C64::Memory::_KERNELROM_SUBSET);
-	_KernelRAM		= memoryRef () -> subset (C64::Memory::_KERNELRAM_SUBSET);
-	_CharROM		= memoryRef () -> subset (C64::Memory::_CHARROM_SUBSET);
-	_VICIIRegisters = memoryRef () -> subset (COMMODORE::VICIIRegisters::_VICREGS_SUBSET);
-	_SIDRegisters	= memoryRef () -> subset (COMMODORE::SIDRegisters::_SIDREGS_SUBSET);
-	_ColorRAM		= memoryRef () -> subset (C64::Memory::_COLOR_SUBSET);
-	_CIA1Registers	= memoryRef () -> subset (C64::CIA1Registers::_CIA1_SUBSET);
-	_CIA2registers	= memoryRef () -> subset (C64::CIA2Registers::_CIA2_SUBSET);
-	_IO1Registers	= memoryRef () -> subset (C64::Memory::_IO1_SUBSET);
-	_IO2registers	= memoryRef () -> subset (C64::Memory::_IO2_SUBSET);
-
 	_SFRegisters -> initialize ();
 
 	return (true);
@@ -61,25 +32,8 @@ bool C64::SpecialFunctionsChip::simulate (MCHEmul::CPU* cpu)
 	if (!_SFRegisters -> changesAtPositions ())
 		return (true);
 
-	// Active or desactive the BASIC ROM....
-	_BasicROM		-> setActiveForReading ( _SFRegisters -> LORAM ());
-	_BasicRAM		-> setActiveForReading (!_SFRegisters -> LORAM ());
-
-	// Active or desactive the KERNEL ROM...
-	_KernelROM		-> setActiveForReading ( _SFRegisters -> HIRAM ());
-	_KernelRAM		-> setActiveForReading (!_SFRegisters -> HIRAM ());
-
-	// Usually the CHAR ROM is only seen from VICII,
-	// because CPU access to the Chip Registers instead
-	// But it could be accessed. Take really care when doing so!
-	_VICIIRegisters -> setActiveForReading ( _SFRegisters -> CHAREN ());
-	_SIDRegisters	-> setActiveForReading ( _SFRegisters -> CHAREN ());
-	_ColorRAM		-> setActiveForReading ( _SFRegisters -> CHAREN ());
-	_CIA1Registers	-> setActiveForReading ( _SFRegisters -> CHAREN ());
-	_CIA2registers	-> setActiveForReading ( _SFRegisters -> CHAREN ());
-	_IO1Registers	-> setActiveForReading ( _SFRegisters -> CHAREN ());
-	_IO2registers	-> setActiveForReading ( _SFRegisters -> CHAREN ());
-	_CharROM		-> setActiveForReading (!_SFRegisters -> CHAREN ());
+	dynamic_cast <C64::Memory*> (memoryRef ()) -> configureMemoryAccess 
+		(_SFRegisters -> LORAM (), _SFRegisters -> HIRAM (), _SFRegisters -> CHAREN ());
 
 	// Send the data to the casette port...
 	notify (MCHEmul::Event (_SFRegisters -> casetteData ()

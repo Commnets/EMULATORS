@@ -62,6 +62,16 @@ namespace C64
 		/** To activate the right subsets in the CPU view. */
 		virtual bool initialize () override;
 
+		/** 
+		  *	In C64 memory several parts can be defined as RAM or ROM (from the CPU view). \n
+		  *	This method is to switch on / off the different options. \n
+		  *	The paremeters are:
+		  *	@param lR	: LORAM access ($a000 - $bfff). true = BASIC ROM, false = RAM. 
+		  *	@param hR	: HIRAM access ($e000 - $ffff). true = KERNEL ROM, false = RAM. 
+		  * @param c	: CHAREN acsess ($d000 - $dfff). true = CHARROM (from VICII) & IO (from CPU), false = RAM.
+		  */
+		void configureMemoryAccess (bool lR, bool hR, bool c);
+
 		private:
 		virtual MCHEmul::Stack* lookForStack () override
 							{ return (dynamic_cast <MCHEmul::Stack*> (subset (_STACK_SUBSET))); }
@@ -72,6 +82,23 @@ namespace C64
 
 		private:
 		MCHEmul::MemoryView* _VICIIView;
+
+		// Implementation
+		/** To speed up the access to the different zones of the memory. */
+		// The expansion elements in the C64 affects the way the memory is configured
+		// ..activating or desactivating the different parts of it...
+		MCHEmul::PhysicalStorageSubset* _basicROM;
+		MCHEmul::PhysicalStorageSubset* _basicRAM;
+		MCHEmul::PhysicalStorageSubset* _kernelROM;
+		MCHEmul::PhysicalStorageSubset* _kernelRAM;
+		MCHEmul::PhysicalStorageSubset* _charROM;
+		MCHEmul::PhysicalStorageSubset* _vicIIRegisters;
+		MCHEmul::PhysicalStorageSubset* _sidRegisters;
+		MCHEmul::PhysicalStorageSubset* _colorRAM;
+		MCHEmul::PhysicalStorageSubset* _cia1Registers;
+		MCHEmul::PhysicalStorageSubset* _cia2registers;
+		MCHEmul::PhysicalStorageSubset* _io1Registers;
+		MCHEmul::PhysicalStorageSubset* _io2registers;
 	};
 }
 

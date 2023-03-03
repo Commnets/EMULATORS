@@ -7,13 +7,13 @@
 #---
 #---
 ;RasterX
-POSITION=@POSITION@(@POSITION0@)
-FIRST=@FIRST@, LAST=@LAST@
+Position:@POSITION@(@POSITION0@)
+First:@FIRST@, Last:@LAST@
 #---
 #---
 ;RasterY
-POSITION=@POSITION@(@POSITION0@)
-FIRST=@FIRST@, LAST=@LAST@
+Position:@POSITION@(@POSITION0@)
+First:@FIRST@, Last:@LAST@
 #---
 #---
 ;Raster
@@ -25,38 +25,38 @@ FIRST=@FIRST@, LAST=@LAST@
 #---
 ;VICIIRegisters
 @BYTES{blocksize=16,listsep=\,,tablesep=\ ,minsize=2}@
-GRAPHICS=@MODE@
-40COL=@40C@
-25ROW=@25R@
+Graphic Mode:@MODE@
+40 Columns:@40C@
+25 Rows:@25R@
 #---
 #---
 ;VICII
-ID=@ID@
-@ATTRS?{key=YES,equal==,empty=no attributes}\n@
+Id:@ID@
+@ATTRS?{key=YES,equal=:,empty=no attributes}\n@
 ->VICIIRegisters:
 @VICIIRegisters>@
 @Raster>@
 #---
 #---
 ;Clock
-IRQ=@Interrupt@
+IRQ:@Interrupt@
 @HOURS@:@MINUTES@:@SECONDS@:@TENTHSECONDS@ (@AHOURS@:@AMINUTES@:@ASECONDS@:@ATENTHSECONDS@)
 #---
 ;TimerA
-RUN=@RUN@, COUNT=@COUNT@
-ACTIVE=@STATUS@, IRQ=@IRQ@
-VALUE=@VALUE@(@INITIALVALUE@)
+Run Mode:@RUN@, Count Mode:@COUNT@
+Active:@STATUS@, IRQ:@IRQ@
+Value:@VALUE@(@INITIALVALUE@)
 #---
 #---
 ;TimerB
-RUN=@RUN@, COUNT=@COUNT@
-ACTIVE=@STATUS@, IRQ=@IRQ@
-VALUE=@VALUE@(@INITIALVALUE@)
+Run Mode:@RUN@, Count Mode:@COUNT@
+Active:@STATUS@, IRQ:@IRQ@
+Value:@VALUE@(@INITIALVALUE@)
 #---
 #---
 ;CIA
-ID=@ID@
-@ATTRS?{key=YES,equal==,empty=no attributes}\n@
+Id:@ID@
+@ATTRS?{key=YES,equal=:,empty=no attributes}\n@
 ->Registers:
 @Registers>@
 ->Timer A:
@@ -68,15 +68,15 @@ ID=@ID@
 #---
 #---
 ;SID
-ID=@ID@
-@ATTRS?{key=YES,equal==,empty=no attributes}\n@
+Id:@ID@
+@ATTRS?{key=YES,equal=:,empty=no attributes}\n@
 ->Registers:
 @Registers>@
 #---
 #---
 ;Datasette
 Id:@ID@
-@ATTRS?{key=YES,equal==,empty=no attributes}\n@
+@ATTRS?{key=YES,equal=:,empty=no attributes}\n@
 Keys Pressed:@KEYS@
 Motor on:@MOTOR@
 Data:@DATA@
@@ -84,7 +84,7 @@ Data:@DATA@
 #---
 ;Cartridge
 Id:@ID@
-@ATTRS?{key=YES,equal==,empty=no attributes}\n@
+@ATTRS?{key=YES,equal=:,empty=no attributes}\n@
 Data:@DATA@
 #---
 #---
@@ -106,7 +106,7 @@ Data:@DATA@
 #---
 ;CDATASETTE
 Id:@ID@
-@ATTRS?{key=YES,equal==,empty=no attributes}\n@
+@ATTRS?{key=YES,equal:=,empty=no attributes}\n@
 Keys Pressed:@KEYS@
 Motor on:@MOTOR@
 #---

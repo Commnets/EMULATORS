@@ -36,22 +36,7 @@ namespace C64
 		virtual void processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifier* ntier) override;
 
 		private:
-		static const MCHEmul::Address _POS0;
-		static const MCHEmul::Address _POS1;
-
 		C64::SpecialFunctionsChipRegisters* _SFRegisters;
-		MCHEmul::PhysicalStorageSubset* _BasicROM;
-		MCHEmul::PhysicalStorageSubset* _BasicRAM;
-		MCHEmul::PhysicalStorageSubset* _KernelROM;
-		MCHEmul::PhysicalStorageSubset* _KernelRAM;
-		MCHEmul::PhysicalStorageSubset* _CharROM;
-		MCHEmul::PhysicalStorageSubset* _VICIIRegisters;
-		MCHEmul::PhysicalStorageSubset* _SIDRegisters;
-		MCHEmul::PhysicalStorageSubset* _ColorRAM;
-		MCHEmul::PhysicalStorageSubset* _CIA1Registers;
-		MCHEmul::PhysicalStorageSubset* _CIA2registers;
-		MCHEmul::PhysicalStorageSubset* _IO1Registers;
-		MCHEmul::PhysicalStorageSubset* _IO2registers;
 	};
 }
 

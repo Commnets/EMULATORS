@@ -35,42 +35,33 @@ bool C64::Commodore64::initialize (bool iM)
 		dynamic_cast <COMMODORE::ExpansionIOPort*> (device (COMMODORE::ExpansionIOPort::_ID)) -> expansionElement ();
 	if (eP != nullptr)
 	{
-		// The expansion elements in the C64 affects the way the memory is configured
-		// ..activating or desactivating the different parts of it...
-		MCHEmul::PhysicalStorageSubset* basicROM		= memory () -> subset (C64::Memory::_BASICROM_SUBSET);
-		MCHEmul::PhysicalStorageSubset* basicRAM		= memory () -> subset (C64::Memory::_BASICRAM_SUBSET);
-		MCHEmul::PhysicalStorageSubset* kernelROM		= memory () -> subset (C64::Memory::_KERNELROM_SUBSET);
-		MCHEmul::PhysicalStorageSubset* kernelRAM		= memory () -> subset (C64::Memory::_KERNELRAM_SUBSET);
-		MCHEmul::PhysicalStorageSubset* charROM			= memory () -> subset (C64::Memory::_CHARROM_SUBSET);
-		MCHEmul::PhysicalStorageSubset* vicIIRegisters	= memory () -> subset (COMMODORE::VICIIRegisters::_VICREGS_SUBSET);
-		MCHEmul::PhysicalStorageSubset* sidRegisters	= memory () -> subset (COMMODORE::SIDRegisters::_SIDREGS_SUBSET);
-		MCHEmul::PhysicalStorageSubset* colorRAM		= memory () -> subset (C64::Memory::_COLOR_SUBSET);
-		MCHEmul::PhysicalStorageSubset* cia1Registers	= memory () -> subset (C64::CIA1Registers::_CIA1_SUBSET);
-		MCHEmul::PhysicalStorageSubset* cia2registers	= memory () -> subset (C64::CIA2Registers::_CIA2_SUBSET);
-		MCHEmul::PhysicalStorageSubset* io1Registers	= memory () -> subset (C64::Memory::_IO1_SUBSET);
-		MCHEmul::PhysicalStorageSubset* io2registers	= memory () -> subset (C64::Memory::_IO2_SUBSET);
-
 		// When there is a cartridge inserted...
 		// (BTW it is the only type of device managed today)
 		C64::Cartridge* cd = dynamic_cast <C64::Cartridge*> (eP);
 		if (cd != nullptr)
 		{
-			bool game = cd -> PIN_UP (C64::ExpansionIOPort::_GAME);
-			bool exrom = cd -> PIN_UP (C64::ExpansionIOPort::_EXROM);
-/*
-			basicROM		-> setActiveForReading ( _iLORAM);
-			basicRAM		-> setActiveForReading (!_iLORAM);
-			kernelROM		-> setActiveForReading ( _iHIRAM);
-			kernelRAM		-> setActiveForReading (!_iHIRAM);
-			vicIIRegisters	-> setActiveForReading ( _iCHAREN);
-			sidRegisters	-> setActiveForReading ( _iCHAREN);
-			colorRAM		-> setActiveForReading ( _iCHAREN);
-			cia1Registers	-> setActiveForReading ( _iCHAREN);
-			cia2registers	-> setActiveForReading ( _iCHAREN);
-			io1Registers	-> setActiveForReading ( _iCHAREN);
-			io2registers	-> setActiveForReading ( _iCHAREN);
-			charROM			-> setActiveForReading (!_iCHAREN);
-*/
+			bool game	= cd -> PIN_UP (C64::ExpansionIOPort::_GAME);
+			bool exrom	= cd -> PIN_UP (C64::ExpansionIOPort::_EXROM);
+			const MCHEmul::ExtendedDataMemoryBlocks& dt = cd -> data ();
+			switch (cd -> data ()._data.size ())
+			{
+				case 1:
+					break;
+
+				case 2:
+					break;
+
+				case 3:
+					break;
+
+				case 4:
+					break;
+			}
+
+			for (const auto& i : cd -> data ()._data)
+				std::cout << "data:" << i.startAddress () << " (" << i.bytes ().size () << ")" << std::endl;
+
+			// It is time to configure the access to the memory...
 		}
 	}
 

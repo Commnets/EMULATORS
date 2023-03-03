@@ -15,11 +15,11 @@ int _tmain (int argc, _TCHAR *argv [])
 
 	std::cout << "R64Console" << std::endl;
 	std::cout << "Copyright (C) 2022 by Ignacio Cea" << std::endl;
-	std::cout << "It can send instructions to a C64 emulator and receive the answers from it." << std::endl;
-	std::cout << "/h\t\tJust for help." << std::endl; 
-	std::cout << "/i[IPADDRESS]\tAddress of the C64 emulator to monitor (xxx (1 to 255).xxx.xxx.xxx:xxxxx (0 - 65535)." << std::endl;
+	std::cout << "It can send instructions to a C64 emulator and receive the answers from it" << std::endl;
+	std::cout << "/h\t\tJust for help" << std::endl; 
+	std::cout << "/i[IPADDRESS]\tAddress of the C64 emulator to monitor (xxx (1 to 255).xxx.xxx.xxx:xxxxx (0 - 65535)" << std::endl;
 	std::cout << "\t\tBy default 60000. Above 1000 recommended" << std::endl;
-	std::cout << "/p[PORTNUMBER]\tPort where to listen the answers from it (0 - 65535)." << std::endl;
+	std::cout << "/p[PORTNUMBER]\tPort where to listen the answers from it (0 - 65535)" << std::endl;
 	std::cout << "\t\tBy default 60001. Above 1000 recommended" << std::endl << std::endl;
 
 	// The formatter for the messages related with the C64...
