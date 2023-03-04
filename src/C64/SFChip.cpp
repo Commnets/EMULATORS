@@ -32,9 +32,9 @@ bool C64::SpecialFunctionsChip::simulate (MCHEmul::CPU* cpu)
 	if (!_SFRegisters -> changesAtPositions ())
 		return (true);
 
-	dynamic_cast <C64::Memory*> (memoryRef ()) -> configureMemoryAccess 
-		(_SFRegisters -> LORAM (), _SFRegisters -> HIRAM (), _SFRegisters -> CHAREN ());
-
+	// Send the notification when the C64 IO Port bits changes (Byte 1, bits 0. 1 or 2)
+	notify (MCHEmul::Event (_C64PORTIOBITSACTUALIZED, 
+		(_SFRegisters -> LORAM () ? 1 : 0) + (_SFRegisters -> HIRAM () ? 2 : 0) + (_SFRegisters -> CHAREN () ? 4 : 0)));
 	// Send the data to the casette port...
 	notify (MCHEmul::Event (_SFRegisters -> casetteData ()
 		? COMMODORE::DatasetteIOPort::_WRITE1 : COMMODORE::DatasetteIOPort::_WRITE0));

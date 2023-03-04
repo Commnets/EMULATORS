@@ -50,12 +50,12 @@ namespace COMMODORE
 		bool PIN_DOWN (unsigned char nP) const
 							{ return ((_expansionElement != nullptr) ? _expansionElement -> PIN_DOWN (nP) : false); }
 
-		/** It verifies before adding it that whether the peripherial is somtehing compatible. */
+		/** It verifies before adding it that whether the peripheral is something compatible. */
 		virtual bool connectPeripheral (MCHEmul::IOPeripheral* p) override;
 
 		virtual bool simulate (MCHEmul::CPU* cpu) override;
 
-		private:
+		protected:
 		/** The element connected. */
 		ExpansionPeripheral* _expansionElement;
 	};

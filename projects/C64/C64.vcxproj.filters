@@ -105,6 +105,12 @@
     <ClInclude Include="..\..\include\C64\ExpansionPort.hpp">
       <Filter>Archivos de encabezado\IO</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\include\C64\PLA.hpp">
+      <Filter>Archivos de encabezado\Motherboard\Chips</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\C64\IOPBuilder.hpp">
+      <Filter>Archivos de encabezado\IO</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\C64\Screen.cpp">
@@ -153,6 +159,15 @@
       <Filter>Archivos de origen\Motherboard\Chips</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\C64\Cartridge.cpp">
+      <Filter>Archivos de origen\IO</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\C64\PLA.cpp">
+      <Filter>Archivos de origen\Motherboard\Chips</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\C64\ExpansionPort.cpp">
+      <Filter>Archivos de origen\IO</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\C64\IOPBuilder.cpp">
       <Filter>Archivos de origen\IO</Filter>
     </ClCompile>
   </ItemGroup>

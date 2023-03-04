@@ -25,7 +25,10 @@ namespace C64
 	class SpecialFunctionsChip final : public MCHEmul::Chip
 	{
 		public:
-		static const unsigned int _ID = 101;
+		static const unsigned int _ID = 1040;
+
+		/** Event when the C64 Port IO bits are actualized. */
+		static const unsigned int _C64PORTIOBITSACTUALIZED = 300;
 
 		SpecialFunctionsChip ();
 

@@ -78,11 +78,11 @@ namespace MCHEmul
 		// To manage events related with the keyboard...
 		/** What to do when a key has been pressed. */
 		void whenKeyPressed (SDL_Scancode kc) // No reference is needed as SDL_Scancode is a enum (basic type)
-							{ notify (Event (_KEYBOARDKEYPRESSED, 
+							{ notify (Event (_KEYBOARDKEYPRESSED, 0,
 								std::shared_ptr <Event::Data> ((Event::Data*) new KeyboardEvent (kc, true)))); }
 		/** What to do when a key has been released. */
 		void whenKeyReleased (SDL_Scancode kc)
-							{ notify (Event (_KEYBOARDKEYRELEASED, 
+							{ notify (Event (_KEYBOARDKEYRELEASED, 0,
 								std::shared_ptr <Event::Data> ((Event::Data*) new KeyboardEvent (kc, false)))); }
 
 		// To manage events related with the joystick...
@@ -93,16 +93,16 @@ namespace MCHEmul
 			in the "simulate" method. When they changed this method is then invoked. */
 		void whenJoystickMoved (const JoystickMovementMap& jm)
 							{ for (auto& i : jm ) 
-								notify (Event (_JOYSTICKMOVED,
+								notify (Event (_JOYSTICKMOVED, 0,
 									std::shared_ptr <Event::Data> ((Event::Data*) 
 										new JoystickMovementEvent (i.first, i.second)))); }
 		/** What to do when the joystick button is pressed. */
 		void whenJoystickButtonPressed (const SDL_JoyButtonEvent& jb)
-							{ notify (Event (_JOYSTICKBUTTONPRESSED, 
+							{ notify (Event (_JOYSTICKBUTTONPRESSED, 0,
 								std::shared_ptr <Event::Data> ((Event::Data*) new JoystickButtonEvent (jb.button, true)))); }
 		/** What to do when the joystick button is released. */
 		void whenJoystickButtonReleased (const SDL_JoyButtonEvent& jb)
-							{ notify (Event (_JOYSTICKBUTTONRELEASED, 
+							{ notify (Event (_JOYSTICKBUTTONRELEASED, 0,
 								std::shared_ptr <Event::Data> ((Event::Data*) new JoystickButtonEvent (jb.button, false)))); }
 
 		private:

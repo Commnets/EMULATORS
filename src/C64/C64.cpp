@@ -1,6 +1,7 @@
 #include <C64/C64.hpp>
 #include <C64/Memory.hpp>
 #include <C64/SFChip.hpp>
+#include <C64/PLA.hpp>
 #include <C64/Screen.hpp>
 #include <C64/Sound.hpp>
 #include <C64/OSIO.hpp>
@@ -41,13 +42,20 @@ bool C64::Commodore64::initialize (bool iM)
 	// Events when it is disonnected and connected are sent and with many implications
 	// in the structure of the memory...
 	observe (dynamic_cast <COMMODORE::ExpansionIOPort*> (device (COMMODORE::ExpansionIOPort::_ID)));
+	// The C64 IO Ports (Memory location 1) and the PLA are linked...
+	chip (C64::PLA::_ID) -> observe (chip (C64::SpecialFunctionsChip::_ID));
+	// The expansion port and the PLA are linked...
+	chip (C64::PLA::_ID) -> observe (device (C64::ExpansionIOPort::_ID));
 
 	// Check whether there is an expansion element inserted in the expansion port
 	// If it is, it's info is loaded if any...
 	COMMODORE::ExpansionPeripheral* eP = 
 		dynamic_cast <COMMODORE::ExpansionIOPort*> (device (COMMODORE::ExpansionIOPort::_ID)) -> expansionElement ();
 	if (eP != nullptr && !eP -> data ()._data.empty ())
-		dynamic_cast <C64::Cartridge*> (eP) -> configureMemoryAndLoadData (dynamic_cast <C64::Memory*> (memory ()));
+		dynamic_cast <C64::Cartridge*> (eP) -> dumpDataInto 
+			(memory () -> subset (C64::Memory::_EXPANSIONROML_SUBSET),
+			 memory () -> subset (C64::Memory::_EXPANSIONROMH1_SUBSET),
+			 memory () -> subset (C64::Memory::_EXPANSIONROMH2_SUBSET));
 
 	return (true);
 }
@@ -86,6 +94,9 @@ MCHEmul::Chips C64::Commodore64::standardChips (C64::Commodore64::VisualSystem v
 
 	// The SID
 	result.insert (MCHEmul::Chips::value_type (COMMODORE::SID::_ID, (MCHEmul::Chip*) new COMMODORE::SID));
+
+	// The PLA
+	result.insert (MCHEmul::Chips::value_type (C64::PLA::_ID, (MCHEmul::Chip*) new C64::PLA));
 
 	return (result);
 }

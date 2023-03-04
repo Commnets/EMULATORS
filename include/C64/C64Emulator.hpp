@@ -16,6 +16,7 @@
 
 #include <COMMODORE/incs.hpp>
 #include <C64/C64.hpp>
+#include <C64/IOPBuilder.hpp>
 
 namespace C64
 {
@@ -57,7 +58,7 @@ namespace C64
 								? C64::Commodore64::VisualSystem::_NTSC : C64::Commodore64::VisualSystem::_PAL,
 								computerLanguage ())); }
 		virtual MCHEmul::IOPeripheralBuilder* createPeripheralBuilder () const override
-							{ return (new COMMODORE::IOPeripheralBuilder); }
+							{ return (new IOPeripheralBuilder); }
 		virtual MCHEmul::FileReader* createFileReader () const override
 							{ return (new MCHEmul::FileReader 
 								(MCHEmul::FileTypeReaderList (

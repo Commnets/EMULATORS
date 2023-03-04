@@ -41,5 +41,7 @@ bool COMMODORE::ExpansionIOPort::simulate (MCHEmul::CPU* cpu)
 		_expansionElement -> dataJustLoaded ())
 		notify (MCHEmul::Event (COMMODORE::ExpansionIOPort::_EXPANSIONELEMENTIN));
 
-	return (true);
+	// The standard simulation is invoked to
+	// involke the simulation methdos for all devices connected...
+	return (MCHEmul::IODevice::simulate (cpu));
 }

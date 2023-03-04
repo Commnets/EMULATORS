@@ -32,8 +32,5 @@ bool C64::C64Emulator::initialize ()
 	if (drawBorder ())
 		dynamic_cast <C64::Commodore64*> (computer ()) -> vicII () -> setDrawBorder (true);
 
-	// TODO
-	// To link the peripherals...
-
 	return (true);
 }

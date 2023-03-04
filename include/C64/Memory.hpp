@@ -27,6 +27,9 @@ namespace C64
 		static const int _BASICROM				= 1;
 		static const int _CHARROM				= 2;
 		static const int _KERNELROM				= 3;
+		static const int _EXPANSIONROMLO		= 4;
+		static const int _EXPANSIONROMHI1		= 5;
+		static const int _EXPANSIONROMHI2		= 6;
 
 		// Subsets
 		// Fom CPU
@@ -42,6 +45,9 @@ namespace C64
 		static const int _IO2_SUBSET			= 113;
 		static const int _KERNELROM_SUBSET		= 114;
 		static const int _KERNELRAM_SUBSET		= 115;
+		static const int _EXPANSIONROML_SUBSET	= 120; // When the expansion is connected...
+		static const int _EXPANSIONROMH1_SUBSET = 121; // When the expansion is connected... 
+		static const int _EXPANSIONROMH2_SUBSET = 122; // When the expansion is connected...
 		/** The id for the registers VICII, SID, ... are defined in those. */
 		// From VICII
 		static const int _BANK0RAM0_SUBSET		= 200;
@@ -76,11 +82,12 @@ namespace C64
 		  *	In C64 memory several parts can be defined as RAM or ROM (from the CPU view). \n
 		  *	This method is to switch on / off the different options. \n
 		  *	The paremeters are:
+		  * @param 
 		  *	@param lR	: LORAM access ($a000 - $bfff). true = BASIC ROM, false = RAM. 
 		  *	@param hR	: HIRAM access ($e000 - $ffff). true = KERNEL ROM, false = RAM. 
 		  * @param c	: CHAREN acsess ($d000 - $dfff). true = CHARROM (from VICII) & IO (from CPU), false = RAM.
 		  */
-		void configureMemoryAccess (bool lR, bool hR, bool c);
+		void configureMemoryStructure (bool lR, bool hR, bool c);
 
 		private:
 		virtual MCHEmul::Stack* lookForStack () override
@@ -109,6 +116,9 @@ namespace C64
 		MCHEmul::PhysicalStorageSubset* _cia2registers;
 		MCHEmul::PhysicalStorageSubset* _io1Registers;
 		MCHEmul::PhysicalStorageSubset* _io2registers;
+		MCHEmul::PhysicalStorageSubset* _expansionROMLO;
+		MCHEmul::PhysicalStorageSubset* _expansionROMHI1;
+		MCHEmul::PhysicalStorageSubset* _expansionROMHI2;
 	};
 }
 

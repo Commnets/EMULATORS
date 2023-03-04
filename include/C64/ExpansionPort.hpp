@@ -18,16 +18,33 @@
 
 namespace C64
 {
-	class ExpansionIOPort : public COMMODORE::ExpansionIOPort
+	class PLA;
+
+	class ExpansionIOPort final : public COMMODORE::ExpansionIOPort
 	{
 		public:
-		/** The name of the different PINS in the C64 implementation. */
+		/** Name of the different PINS in the C64 implementation of the Expansion Port. */
 		static const unsigned char _GAME = 8;
 		static const unsigned char _EXROM = 9;
 
+		/** Event to inform the structure of the memory. */
+		static const unsigned int _C64EXPANSIONPORTMEMLINESACTUALIZED = 310;
+
 		ExpansionIOPort ()
-			: COMMODORE::ExpansionIOPort ()
+			: COMMODORE::ExpansionIOPort (),
+			  _pla (nullptr)
 							{ }
+
+		/** The C64 Expansion port is observed from the PLA chip. */
+		virtual void linkToChips (const MCHEmul::Chips& c) override;
+
+		/** Overload the parent method, 
+			because any change in the lines defining the structure of the memory has to be notified,
+			and not only a change in the data loaded that is what happened at parent level only. */
+		virtual bool simulate (MCHEmul::CPU* cpu) override;
+
+		private:
+		PLA* _pla;
 	};
 }
 

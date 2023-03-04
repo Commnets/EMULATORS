@@ -22,12 +22,14 @@
 #include <C64/CIA2.hpp>
 #include <C64/CIA2Registers.hpp>
 #include <C64/SFChip.hpp>
+#include <C64/PLA.hpp>
 #include <C64/Screen.hpp>
 #include <C64/Sound.hpp>
 #include <C64/OSIO.hpp>
 #include <C64/DatasettePort.hpp>
 #include <C64/ExpansionPort.hpp>
 #include <C64/Cartridge.hpp>
+#include <C64/IOPBuilder.hpp>
 #include <C64/Commands.hpp>
 #include <C64/CommandBuilder.hpp>
 #include <C64/C64Emulator.hpp>

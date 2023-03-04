@@ -18,8 +18,6 @@ MCHEmul::IOPeripheral* COMMODORE::IOPeripheralBuilder::createPeripheral (int id,
 		result = new COMMODORE::NoExpansionPeripheral;
 	else if (id == COMMODORE::Datasette1530::_ID)
 		result = new COMMODORE::Datasette1530;
-	else if (id == C64::Cartridge::_ID)
-		result = new C64::Cartridge;
 
 	// Take care, it could be null...
 	return (result);

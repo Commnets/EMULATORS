@@ -33,13 +33,17 @@ namespace MCHEmul
 		};
 
 		/** The Event is very simple it has only an identification number (id), 
-			and a pointer to data. The data doesn't belong to the class. So it is not destructed either. */
-		Event (unsigned int id, std::shared_ptr <Data> dt = nullptr)
-			: _id (id), _data (dt)
+			a potential additional value and also a pointer to data. \n
+			This two last parameters are optional. \n
+			The data doesn't belong to the class. So it is not destructed either. */
+		Event (unsigned int id, unsigned int val = 0, std::shared_ptr <Data> dt = nullptr)
+			: _id (id), _value (val), _data (dt)
 							{ }
 
 		unsigned int id () const
 							{ return (_id); }
+		unsigned int value () const
+							{ return (_value); }
 		const std::shared_ptr <Data> data () const
 							{ return (_data); }
 		std::shared_ptr <Data> data ()
@@ -47,6 +51,7 @@ namespace MCHEmul
 
 		protected:
 		unsigned int _id;
+		unsigned int _value;
 		std::shared_ptr <Data> _data;
 	};
 
