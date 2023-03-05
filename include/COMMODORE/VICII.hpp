@@ -64,6 +64,10 @@ namespace COMMODORE
 		void setBank (unsigned char bk)
 							{ _VICIIRegisters -> setBank (bk); }
 
+		/** To get the raster info. */
+		const MCHEmul::Raster& raster () const
+							{ return (_raster); }
+
 		virtual bool initialize () override;
 
 		virtual bool simulate (MCHEmul::CPU* cpu) override;
@@ -74,9 +78,6 @@ namespace COMMODORE
 		  * Raster		= InfoStructure: Info about the raster.
 		  */
 		virtual MCHEmul::InfoStructure getInfoStructure () const override;
-
-		void setDrawBorder (bool dB)
-							{ _drawBorder = dB; }
 
 		private:
 		/** To simplify the use of the routines dedicated to draw. */
@@ -162,8 +163,6 @@ namespace COMMODORE
 		int _VICIIView;
 		/** The raster. */
 		MCHEmul::Raster _raster;
-		/** To draw or nor the border between the background and the foreground. */
-		bool _drawBorder;
 
 		// Implementation
 		/** The number of bytes drawn should be the same than the number of CPU cycles happened

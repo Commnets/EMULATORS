@@ -76,6 +76,8 @@ bool MCHEmul::Screen::simulate (MCHEmul::CPU* cpu)
 		so they are ready to be pull out to the screen. */
 	if (_graphicsReady)
 	{
+		drawAdditional ();
+
 		SDL_UpdateTexture (_texture, nullptr, 
 			_graphicalChip -> screenMemory () -> frameData (), 
 			(int) _graphicalChip -> screenMemory () -> columns () * sizeof (unsigned int)); // The link with the chip...

@@ -19,7 +19,6 @@ COMMODORE::VICII::VICII (const MCHEmul::RasterData& vd, const MCHEmul::RasterDat
 	  _VICIIRegisters (nullptr), 
 	  _VICIIView (vV),
 	  _raster (vd, hd),
-	  _drawBorder (false),
 	  _lastCPUCycles (0),
 	  _format (nullptr),
 	  _graphicsScreenCodeData (MCHEmul::UBytes::_E), 
@@ -216,17 +215,6 @@ bool COMMODORE::VICII::simulate (MCHEmul::CPU* cpu)
 	if (_VICIIRegisters -> hasVICIIToGenerateIRQ () && 
 		!cpu -> interrupt (F6500::IRQInterrupt::_ID) -> active ())
 		cpu -> interrupt (F6500::IRQInterrupt::_ID) -> setActive (true);
-
-	// Just to highlight (in black) the borders of the visible zone...
-	if (_drawBorder)
-	{
-		unsigned short x1, y1, x2, y2;
-		_raster.screenPositions (x1, y1, x2, y2);
-		screenMemory () -> setHorizontalLine ((size_t) x1 - 1, (size_t) y1 - 1, (size_t) x2 - x1 + 3, 0);
-		screenMemory () -> setHorizontalLine ((size_t) x1 - 1, (size_t) y2 + 1, (size_t) x2 - x1 + 3, 0);
-		screenMemory () -> setVerticalLine ((size_t) x1 - 1, (size_t) y1 - 1, (size_t) y2 - y1 + 3, 0);
-		screenMemory () -> setVerticalLine ((size_t) x2 + 1, (size_t) y1 - 1, (size_t) y2 - y1 + 3, 0);
-	}
 
 	return (true);
 }

@@ -265,7 +265,7 @@ namespace MCHEmul
 						{ return (_vRasterData.isInScreenZone () && _hRasterData.isInScreenZone ()); }
 		void firstScreenPosition (unsigned short& x, unsigned short& y, bool o = false) const
 						{ x = _hRasterData.firstScreenPosition (); y = _vRasterData.firstScreenPosition (); }
-		void screenPositions (unsigned short& x1, unsigned short& y1, unsigned short& x2, unsigned short& y2)
+		void screenPositions (unsigned short& x1, unsigned short& y1, unsigned short& x2, unsigned short& y2) const
 						{ x1 = _hRasterData.firstScreenPosition (); y1 = _vRasterData.firstScreenPosition ();
 							x2 = _hRasterData.lastScreenPosition (); y2 = _vRasterData.lastScreenPosition (); }
 			

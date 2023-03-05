@@ -24,9 +24,22 @@ namespace C64
 	{
 		public:
 		static const int _ID = 200;
+		
 		Screen (double hz, int w, int h, const MCHEmul::Attributes& attrs)
-			: MCHEmul::Screen ("C64", _ID, w, h, 2, hz, attrs)
+			: MCHEmul::Screen ("C64", _ID, w, h, 2, hz, attrs),
+			  _drawBorder (false), _borderColor (0)
 							{ }
+
+		/** Managing the border. */
+		void setDrawBorder (bool dB, unsigned int c = 0)
+							{ _drawBorder = dB; _borderColor = c; }
+
+		protected:
+		virtual void drawAdditional () override;
+
+		protected:
+		bool _drawBorder;
+		unsigned int _borderColor;
 	};
 
 	/** Screen valid for NTSC systems. Used in USA. */

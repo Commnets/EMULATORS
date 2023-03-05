@@ -33,8 +33,8 @@ namespace C64
 		  * @param argv		: The parameters in the form of Strings.\n
 		  *	The basic parameters for any C64 emulator are (apart of the ones defined by the parent: \n
 		  *	/n				: To indicate if the visualization system is NTSC. PAL by default.
-		  *	/b				: To draw a black box around the writable part of the screen.
-		  * @param cS		: A reference to the communication system. It can be nullpt if no requiered.
+		  *	/b[COLOR]		: To draw a black box around the writable part of the screen. The color is optional.
+		  * @param cS		: A reference to the communication system. It can be nullptr if no required.
 		  */
 		C64Emulator (const MCHEmul::CommandLineArguments& args, MCHEmul::CommunicationSystem* cS = nullptr)
 			: MCHEmul::Emulator (args, cS)
@@ -44,10 +44,12 @@ namespace C64
 
 		/** To know whether the visualizacion system is or not NTSC. */
 		bool NTSCSystem () const
-							{ return (_cmdlineArguments.existsArgument (_PARAMNTSC)); }
+							{ return (cmdlineArguments ().existsArgument (_PARAMNTSC)); }
 		/** To know whether the border has or not to be drawn. */
 		bool drawBorder () const
-							{ return (_cmdlineArguments.existsArgument (_PARAMBORDER)); }
+							{ return (cmdlineArguments ().existsArgument (_PARAMBORDER)); }
+		unsigned int borderColor () const
+							{ return (drawBorder () ? cmdlineArguments ().argumentAsInt (_PARAMBORDER) : 0); }
 
 		/** To add the peripherals linked to the computer, according to the parameters. */
 		virtual bool initialize () override;

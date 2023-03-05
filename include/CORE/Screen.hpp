@@ -76,6 +76,13 @@ namespace MCHEmul
 		protected:
 		virtual void processEvent (const Event& evnt, Notifier* n) override;
 
+		/** Before moving the graphs to the screen,
+			something could be draw on top of everything, like a water maks.
+			So this is an exit method that by default does nothing. \n
+			Nothing to do by default. */
+		virtual void drawAdditional ()
+							{ }
+
 		protected:
 		const std::string _screenName;
 		const unsigned int _screenColumns;

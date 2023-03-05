@@ -20,6 +20,7 @@ namespace C64
 {
 	class Memory;
 
+	/** Ultramax Cartridge is not still supported. */
 	class Cartridge final : public COMMODORE::ExpansionPeripheral
 	{
 		public:

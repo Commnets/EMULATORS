@@ -35,16 +35,17 @@ namespace C64
 		// Fom CPU
 		static const int _PAGEZERO_SUBSET		= 100;
 		static const int _STACK_SUBSET			= 101;
-		static const int _RAM0_SUBSET			= 102;
-		static const int _BASICROM_SUBSET		= 103;
-		static const int _BASICRAM_SUBSET		= 104;
-		static const int _RAM1_SUBSET			= 105;
-		static const int _CHARROM_SUBSET		= 106;
-		static const int _COLOR_SUBSET			= 107;
-		static const int _IO1_SUBSET			= 112;
-		static const int _IO2_SUBSET			= 113;
-		static const int _KERNELROM_SUBSET		= 114;
-		static const int _KERNELRAM_SUBSET		= 115;
+		static const int _RAM00_SUBSET			= 102;
+		static const int _RAM01_SUBSET			= 103;
+		static const int _BASICROM_SUBSET		= 104;
+		static const int _BASICRAM_SUBSET		= 105;
+		static const int _RAM1_SUBSET			= 106;
+		static const int _CHARROM_SUBSET		= 107;
+		static const int _COLOR_SUBSET			= 108;
+		static const int _IO1_SUBSET			= 110;
+		static const int _IO2_SUBSET			= 111;
+		static const int _KERNELROM_SUBSET		= 112;
+		static const int _KERNELRAM_SUBSET		= 113;
 		static const int _EXPANSIONROML_SUBSET	= 120; // When the expansion is connected...
 		static const int _EXPANSIONROMH1_SUBSET = 121; // When the expansion is connected... 
 		static const int _EXPANSIONROMH2_SUBSET = 122; // When the expansion is connected...
@@ -82,12 +83,20 @@ namespace C64
 		  *	In C64 memory several parts can be defined as RAM or ROM (from the CPU view). \n
 		  *	This method is to switch on / off the different options. \n
 		  *	The paremeters are:
-		  * @param 
-		  *	@param lR	: LORAM access ($a000 - $bfff). true = BASIC ROM, false = RAM. 
-		  *	@param hR	: HIRAM access ($e000 - $ffff). true = KERNEL ROM, false = RAM. 
-		  * @param c	: CHAREN acsess ($d000 - $dfff). true = CHARROM (from VICII) & IO (from CPU), false = RAM.
+		  * @param BASIC	:	True when the BASIC ROM is on.
+		  * @param KERNEL	:	True when the KERNEL ROM is on.
+		  * @param CHARROM	:	True when the CHARACTER SET ROM is on.
+		  * @param ROML		:	True when the EXPANSION PORT ROML is on.
+		  * @param ROMH1	:	True when the EXPANSION PORT ROMH1 (zone at BASIC ROM) is on.
+		  * @param ROMH2	:	True when the EXPANSION PORT ROMH2 (zone at KERNEL ROM) is on.
+		  * To determine whether the RAM in those places is on or off,
+		  * some logic has to be applied:
+		  * RAM at $8000 = !ROML
+		  * RAM at $a000 = !ROMH1 AND !BASIC
+		  * RAM at $e000 = !ROMH2 AND !KERNEL
 		  */
-		void configureMemoryStructure (bool lR, bool hR, bool c);
+		void configureMemoryStructure (bool BASIC, bool KERNEL, bool CHARROM, 
+			bool ROML, bool ROMH1, bool ROMH2);
 
 		private:
 		virtual MCHEmul::Stack* lookForStack () override
@@ -117,6 +126,7 @@ namespace C64
 		MCHEmul::PhysicalStorageSubset* _io1Registers;
 		MCHEmul::PhysicalStorageSubset* _io2registers;
 		MCHEmul::PhysicalStorageSubset* _expansionROMLO;
+		MCHEmul::PhysicalStorageSubset* _expansionRAMLO;
 		MCHEmul::PhysicalStorageSubset* _expansionROMHI1;
 		MCHEmul::PhysicalStorageSubset* _expansionROMHI2;
 	};

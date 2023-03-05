@@ -30,6 +30,7 @@ C64::Memory::Memory (const std::string& lang)
 	  _io1Registers (nullptr),
 	  _io2registers (nullptr),
 	  _expansionROMLO (nullptr),
+	  _expansionRAMLO (nullptr),
 	  _expansionROMHI1 (nullptr),
 	  _expansionROMHI2 (nullptr)
 {
@@ -50,6 +51,7 @@ C64::Memory::Memory (const std::string& lang)
 	_io1Registers		= subset (_IO1_SUBSET);
 	_io2registers		= subset (_IO2_SUBSET);
 	_expansionROMLO		= subset (_EXPANSIONROML_SUBSET);
+	_expansionRAMLO		= subset (_RAM01_SUBSET);
 	_expansionROMHI1	= subset (_EXPANSIONROMH1_SUBSET);
 	_expansionROMHI2	= subset (_EXPANSIONROMH2_SUBSET);
 
@@ -89,11 +91,6 @@ bool C64::Memory::initialize ()
 	if (!result)
 		return (false);
 
-	// The expansion elements are no active at the beginning...
-	_expansionROMLO -> setActive (false);
-	_expansionROMHI1 -> setActive (false);
-	_expansionROMHI2 -> setActive (false);
-
 	// The active view has to be initially the CPU vire...
 	setCPUView ();
 
@@ -101,22 +98,28 @@ bool C64::Memory::initialize ()
 }
 
 // ---
-void C64::Memory::configureMemoryStructure (bool lR, bool hR, bool c)
+void C64::Memory::configureMemoryStructure (bool BASIC, bool KERNEL, bool CHARROM, 
+	bool ROML, bool ROMH1, bool ROMH2)
 {
-	_basicROM			-> setActiveForReading (lR);
-	_basicRAM			-> setActiveForReading (!lR);
+	_expansionROMLO		-> setActiveForReading (ROML);
+	_expansionRAMLO		-> setActiveForReading (!ROML);
 
-	_kernelROM			-> setActiveForReading (hR);
-	_kernelRAM			-> setActiveForReading (!hR);
+	_basicROM			-> setActiveForReading (BASIC);
+	_basicRAM			-> setActiveForReading (!ROMH1 && !BASIC);
+	_expansionROMHI1	-> setActiveForReading (ROMH1);
 
-	_vicIIRegisters		-> setActiveForReading (c);
-	_sidRegisters		-> setActiveForReading (c);
-	_colorRAM			-> setActiveForReading (c);
-	_cia1Registers		-> setActiveForReading (c);
-	_cia2registers		-> setActiveForReading (c);
-	_io1Registers		-> setActiveForReading (c);
-	_io2registers		-> setActiveForReading (c);
-	_charROM			-> setActiveForReading (!c);
+	_kernelROM			-> setActiveForReading (KERNEL);
+	_kernelRAM			-> setActiveForReading (!ROMH2 && !KERNEL);
+	_expansionROMHI2	-> setActiveForReading (ROMH2);
+
+	_charROM			-> setActiveForReading (CHARROM);
+	_vicIIRegisters		-> setActiveForReading (!CHARROM);
+	_sidRegisters		-> setActiveForReading (!CHARROM);
+	_colorRAM			-> setActiveForReading (!CHARROM);
+	_cia1Registers		-> setActiveForReading (!CHARROM);
+	_cia2registers		-> setActiveForReading (!CHARROM);
+	_io1Registers		-> setActiveForReading (!CHARROM);
+	_io2registers		-> setActiveForReading (!CHARROM);
 }
 
 // ---
@@ -165,9 +168,11 @@ MCHEmul::Memory::Content C64::Memory::standardMemoryContent ()
 	MCHEmul::Stack*  Stack = new MCHEmul::Stack 
 		(_STACK_SUBSET, RAM, 0x0100, MCHEmul::Address ({ 0x00, 0x01 }, false), 0x0100);
 	// Pure RAM. A piece used by BASIC (40k)
-	MCHEmul::PhysicalStorageSubset* RAM0 = new MCHEmul::PhysicalStorageSubset 
-		(_RAM0_SUBSET, RAM, 0x0200, MCHEmul::Address ({ 0x00, 0x02 }, false), 0x9e00); 					// 40k pure (a bit used by BASIC)
+	MCHEmul::PhysicalStorageSubset* RAM00 = new MCHEmul::PhysicalStorageSubset 
+		(_RAM00_SUBSET, RAM, 0x0200, MCHEmul::Address ({ 0x00, 0x02 }, false), 0x7e00); 					// 31,5k pure (a bit used by BASIC)
 	// In the last part of the RAM a 8k Expansion ROM is located (no active unless a expansion element uses it)
+	MCHEmul::PhysicalStorageSubset* RAM01 = new MCHEmul::PhysicalStorageSubset
+		(_RAM01_SUBSET, RAM, 0x8000, MCHEmul::Address ({ 0x00, 0x80 }, false), 0x2000);						// 2k pure a (a bit used by basic, but can be shared with expansion port)
 	MCHEmul::PhysicalStorageSubset* ExpansionROMLO = new MCHEmul::PhysicalStorageSubset
 		(_EXPANSIONROML_SUBSET, EXPANSIONROMLO, 0x0000, MCHEmul::Address ({ 0x00, 0x80 }, false), 0x2000); // Only when expansion element uses it...
 	// Where the basic is can be either ROM or RAM (depends on bits in position 1 of the page 0) or EXPANSION ROM (when uses it)
@@ -210,7 +215,8 @@ MCHEmul::Memory::Content C64::Memory::standardMemoryContent ()
 			{ C64::SpecialFunctionsChipRegisters::_SPECIALFUNCTIONSCHIP_SUBSET,	Data6510}, 
 			{ _PAGEZERO_SUBSET,													PageZero }, 
 			{ _STACK_SUBSET,													Stack }, 
-			{ _RAM0_SUBSET,														RAM0 }, 
+			{ _RAM00_SUBSET,													RAM00 }, 
+			{ _RAM01_SUBSET,													RAM01 }, 
 			{ _EXPANSIONROML_SUBSET,											ExpansionROMLO },
 			{ _BASICROM_SUBSET,													BasicROM }, 
 			{ _BASICRAM_SUBSET,													BasicRAM }, 
@@ -270,7 +276,8 @@ MCHEmul::Memory::Content C64::Memory::standardMemoryContent ()
 			{ C64::SpecialFunctionsChipRegisters::_SPECIALFUNCTIONSCHIP_SUBSET,	Data6510}, 
 			{ _PAGEZERO_SUBSET,													PageZero }, 
 			{ _STACK_SUBSET,													Stack }, 
-			{ _RAM0_SUBSET,														RAM0 }, 
+			{ _RAM00_SUBSET,													RAM00 }, 
+			{ _RAM01_SUBSET,													RAM01 }, 
 			{ _EXPANSIONROML_SUBSET,											ExpansionROMLO },
 			{ _BASICROM_SUBSET,													BasicROM }, 
 			{ _BASICRAM_SUBSET,													BasicRAM }, 

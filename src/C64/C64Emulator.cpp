@@ -11,7 +11,7 @@ void C64::C64Emulator::printOutParameters (std::ostream& o) const
 	MCHEmul::Emulator::printOutParameters (o);
 
 	o << "/n:\t\t" << "Emulation using NTSC parameters and screen size." << std::endl;
-	o << "/b:\t\t" << "Draw a dark border in the drawable screen." << std::endl;
+	o << "/b[COLOR]:\t" << "Draw a dark border in the drawable screen. Color optional" << std::endl;
 	o << "LANGUAGES allowed under command line /i:" << std::endl << 
 		 "ENG:\tEnglish" << std::endl <<
 		 "ESP:\tSpanish" << std::endl << 
@@ -19,8 +19,8 @@ void C64::C64Emulator::printOutParameters (std::ostream& o) const
 		 "SWE:\tSwedish" << std::endl <<
 		 "DKA:\tDanish" << std::endl;
 	o << "DEVICES allowed to be connected under command CONNECTPER" << std::endl <<
-		 "100:\tCartridge" << std::endl <<
-		 "200:\tCasette 1530/1" << std::endl;
+		 "100:\tCasette 1530/1" << std::endl <<
+		 "200:\tCartridge" << std::endl;
 }
 
 // ---
@@ -29,8 +29,9 @@ bool C64::C64Emulator::initialize ()
 	if (!MCHEmul::Emulator::initialize ())
 		return (false);
 
-	if (drawBorder ())
-		dynamic_cast <C64::Commodore64*> (computer ()) -> vicII () -> setDrawBorder (true);
+	// Draw border, Which color?
+	dynamic_cast <C64::Screen*> (dynamic_cast <C64::Commodore64*> (computer ()) -> 
+		device (C64::Screen::_ID)) -> setDrawBorder (drawBorder (), borderColor ());
 
 	return (true);
 }
