@@ -32,7 +32,7 @@ namespace C64
 		static const unsigned int _ID = 1030;
 
 		CIA2 ()
-			: CIA (_ID, CIA2Registers::_CIA2_SUBSET, F6500::IRQInterrupt::_ID),
+			: CIA (_ID, CIA2Registers::_CIA2_SUBSET, F6500::NMIInterrupt::_ID),
 			  _CIA2Registers (nullptr)
 							{ setClassName ("CIA2"); }
 

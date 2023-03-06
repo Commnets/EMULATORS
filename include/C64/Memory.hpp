@@ -94,6 +94,7 @@ namespace C64
 		  * RAM at $8000 = !ROML
 		  * RAM at $a000 = !ROMH1 AND !BASIC
 		  * RAM at $e000 = !ROMH2 AND !KERNEL
+		  *	https://www.c64-wiki.com/wiki/Bank_Switching (very important to know all combinations possible)
 		  */
 		void configureMemoryStructure (bool BASIC, bool KERNEL, bool CHARROM, 
 			bool ROML, bool ROMH1, bool ROMH2);

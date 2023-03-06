@@ -35,27 +35,27 @@ bool C64::Commodore64::initialize (bool iM)
 	if (!result)
 		return (false);
 
-	// Both chips CIAII and VICII are link somehow
-	// Because the banks connected at VICII are determined in CIA chip.
-	chip (COMMODORE::VICII::_ID) -> observe (chip (C64::CIA2::_ID));
+	// Connection among elements...
 	// It is needed to observe the expansion port...
 	// Events when it is disonnected and connected are sent and with many implications
 	// in the structure of the memory...
 	observe (dynamic_cast <COMMODORE::ExpansionIOPort*> (device (COMMODORE::ExpansionIOPort::_ID)));
-	// The C64 IO Ports (Memory location 1) and the PLA are linked...
+	// Both chips CIAII and VICII are link somehow
+	// Because the banks connected at VICII are determined in CIA chip...
+	// In the real C64 the communciation happens trough the PLA, but here it has been simplified...
+	chip (COMMODORE::VICII::_ID) -> observe (chip (C64::CIA2::_ID));
+	// The C64 IO Ports (Memory location 1, bit 0,1,2) and the PLA are linked...
 	chip (C64::PLA::_ID) -> observe (chip (C64::SpecialFunctionsChip::_ID));
-	// The expansion port and the PLA are linked...
-	chip (C64::PLA::_ID) -> observe (device (C64::ExpansionIOPort::_ID));
 
 	// Check whether there is an expansion element inserted in the expansion port
 	// If it is, it's info is loaded if any...
-	COMMODORE::ExpansionPeripheral* eP = 
-		dynamic_cast <COMMODORE::ExpansionIOPort*> (device (COMMODORE::ExpansionIOPort::_ID)) -> expansionElement ();
-	if (eP != nullptr && !eP -> data ()._data.empty ())
-		dynamic_cast <C64::Cartridge*> (eP) -> dumpDataInto 
-			(memory () -> subset (C64::Memory::_EXPANSIONROML_SUBSET),
-			 memory () -> subset (C64::Memory::_EXPANSIONROMH1_SUBSET),
-			 memory () -> subset (C64::Memory::_EXPANSIONROMH2_SUBSET));
+	C64::Cartridge* cT = 
+		dynamic_cast <C64::Cartridge*> (dynamic_cast <COMMODORE::ExpansionIOPort*> 
+			(device (COMMODORE::ExpansionIOPort::_ID)) -> expansionElement ());
+	if (cT != nullptr && !cT -> data ()._data.empty ())
+		cT -> dumpDataInto (memory () -> subset (C64::Memory::_EXPANSIONROML_SUBSET),
+							memory () -> subset (C64::Memory::_EXPANSIONROMH1_SUBSET),
+							memory () -> subset (C64::Memory::_EXPANSIONROMH2_SUBSET));
 
 	return (true);
 }

@@ -81,9 +81,7 @@ MCHEmul::FileData* COMMODORE::CRTFileTypeReader::readFile (const std::string& fN
 
 		// The header...
 		f.read (data, 4); data [4] = 0; // End of char...
-		if (f.eof ())
-			continue;
-
+		if (f.eof ()) continue;
 		cD._signature = std::string (data);
 		f.read (data, 4);
 		cD._packageSize = (data [0] << 24) + (data [1] << 16) + (data [2] << 8) + data [3];

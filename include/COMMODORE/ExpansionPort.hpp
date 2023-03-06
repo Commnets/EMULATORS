@@ -52,12 +52,16 @@ namespace COMMODORE
 
 		/** It verifies before adding it that whether the peripheral is something compatible. */
 		virtual bool connectPeripheral (MCHEmul::IOPeripheral* p) override;
+		/** It moves to null the _expansionElement data if needed. */
+		virtual bool disconnectPeripheral (int id) override;
 
 		virtual bool simulate (MCHEmul::CPU* cpu) override;
 
 		protected:
 		/** The element connected. */
 		ExpansionPeripheral* _expansionElement;
+		/** The element just extracted. */
+		bool _expansionElementOut;
 	};
 }
 

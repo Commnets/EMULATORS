@@ -55,7 +55,7 @@ bool C64::Cartridge::simulate (MCHEmul::CPU* cpu)
 void C64::Cartridge::dumpDataInto (MCHEmul::PhysicalStorageSubset* eL,
 	MCHEmul::PhysicalStorageSubset* eH1, MCHEmul::PhysicalStorageSubset* eH2)
 {
-	int trush; // Not useful...
+	int trush = 0; // Not useful...
 	for (const auto& i : data ()._data)
 	{
 		size_t ct = 0;
