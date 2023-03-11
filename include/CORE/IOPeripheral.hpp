@@ -64,9 +64,12 @@ namespace MCHEmul
 		IODevice* device ()
 							{ return (_device); }
 
-		/** To initialize the peripheral. 
+		/** To initialize the peripheral. \n
 			The initialization should return true when everything is ok, and false in other case. */
 		virtual bool initialize () = 0;
+		/** To finalize the peripheral when needed. \n
+			The process should return true when everything is ok and false when problems. */
+		virtual bool finalize () = 0;
 
 		/** To link, when it is needed, the peripheral with data comming from a file. \n
 			Makes sense specially when the peripheral is an input one (like a casette or a unit disk or a cartridge)

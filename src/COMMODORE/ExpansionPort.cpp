@@ -26,9 +26,12 @@ bool COMMODORE::ExpansionIOPort::connectPeripheral (MCHEmul::IOPeripheral* p)
 
 	// There can be only one peripheral connected at the same time...
 	if (!peripherals ().empty ())
-		MCHEmul::IODevice::disconnectAllPeripherals ();
-	if (_expansionElement != nullptr)
+	{
 		notify (MCHEmul::Event (COMMODORE::ExpansionIOPort::_EXPANSIONELEMENTOUT));
+
+		MCHEmul::IODevice::disconnectAllPeripherals ();
+	}
+
 	_expansionElement = static_cast <COMMODORE::ExpansionPeripheral*> (p);
 	return (MCHEmul::IODevice::connectPeripheral (p));
 }

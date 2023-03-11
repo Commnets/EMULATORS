@@ -113,39 +113,37 @@ MCHEmul::MemoryView::MemoryView (int id, const MCHEmul::PhysicalStorageSubsets& 
 	  // They all will be set in the constructor body!
 	  _minAddress (), _maxAddress (), _numPositions (0), _memPositions ()
 {
-	// Try to create a linear vision of the memory...
-	// Identifying first which the min and max address in the memory!
-	bool fL = true;
-	for (const auto& i : _subsets)
-	{
-		if (fL)
-		{
-			_minAddress = i.second -> initialAddress ();
-			_maxAddress = i.second -> lastAddress ();
-		}
-		else
-		{
-			if (i.second -> initialAddress () < _minAddress) 
-				_minAddress = i.second -> initialAddress ();
-			if (i.second -> lastAddress () > _maxAddress) 
-				_maxAddress = i.second -> lastAddress ();
-		}
+	plainMemory ();
+}
 
-		fL = false;
-	}
-
-	// And then identifying how many physical storages are attached to every memory location...
-	_numPositions = (_maxAddress - _minAddress) + 1;
-	_memPositions = MCHEmul::MemoryView::MemoryPositions (_numPositions, MCHEmul::MemoryView::MemoryPosition ());
-	for (const auto& i : _subsets)
+// ---
+bool MCHEmul::MemoryView::addSubset (MCHEmul::PhysicalStorageSubset* s)
+{ 
+	PhysicalStorageSubsets::const_iterator i = _subsets.find (s -> id ());
+	bool result = (i == _subsets.end ());
+	if (result)
 	{
-		size_t mA = i.second -> initialAddress () - _minAddress;
-		for (size_t j = 0; j < i.second -> size (); j++)
-		{
-			_memPositions [mA + j]._number++;
-			_memPositions [mA + j]._storages.push_back (i.second);
-		}
+		_subsets.insert (MCHEmul::PhysicalStorageSubsets::value_type (s -> id (), s));
+
+		plainMemory ();
 	}
+	
+	return (result); 
+}
+
+// ---
+bool MCHEmul::MemoryView::removeSubSet (int id)
+{
+	PhysicalStorageSubsets::const_iterator i = _subsets.find (id);
+	bool result = (i != _subsets.end ());
+	if (result)
+	{
+		_subsets.erase (i);
+
+		plainMemory ();
+	}
+	
+	return (result); 
 }
 
 // ---
@@ -186,6 +184,46 @@ MCHEmul::InfoStructure MCHEmul::MemoryView::getInfoStructure () const
 }
 
 // ---
+void MCHEmul::MemoryView::plainMemory ()
+{
+	_minAddress = _maxAddress = MCHEmul::Address ();
+	_numPositions = 0;
+	_memPositions = { };
+	
+	bool fL = true;
+	for (const auto& i : _subsets)
+	{
+		if (fL)
+		{
+			_minAddress = i.second -> initialAddress ();
+			_maxAddress = i.second -> lastAddress ();
+		}
+		else
+		{
+			if (i.second -> initialAddress () < _minAddress) 
+				_minAddress = i.second -> initialAddress ();
+			if (i.second -> lastAddress () > _maxAddress) 
+				_maxAddress = i.second -> lastAddress ();
+		}
+
+		fL = false;
+	}
+
+	// And then identifying how many physical storages are attached to every memory location...
+	_numPositions = (_maxAddress - _minAddress) + 1;
+	_memPositions = MCHEmul::MemoryView::MemoryPositions (_numPositions, MCHEmul::MemoryView::MemoryPosition ());
+	for (const auto& i : _subsets)
+	{
+		size_t mA = i.second -> initialAddress () - _minAddress;
+		for (size_t j = 0; j < i.second -> size (); j++)
+		{
+			_memPositions [mA + j]._number++;
+			_memPositions [mA + j]._storages.push_back (i.second);
+		}
+	}
+}
+
+// ---
 bool MCHEmul::Memory::Content::verifyCoherence () const
 {
 	_error = _physicalStorages.empty () || _subsets.empty () || _views.empty ();
@@ -206,6 +244,40 @@ bool MCHEmul::Memory::Content::verifyCoherence () const
 }
 
 // ---
+bool MCHEmul::Memory::addAdditionalSubsets (int id, const MCHEmul::PhysicalStorageSubsets& ss, MCHEmul::MemoryView* v)
+{
+	bool result = false;
+
+	MCHEmul::Memory::AdditionalSubsets::const_iterator i = _additionalSubsets.find (id);
+	if (i == _additionalSubsets.end ())
+	{
+		_additionalSubsets.insert (MCHEmul::Memory::AdditionalSubsets::value_type (id, ss));
+
+		result = ((v == nullptr) ? _activeView : v) -> addSubSets (ss);
+	}
+
+	return (result);
+}
+
+// ---
+bool MCHEmul::Memory::removeAdditionalSubsets (int id, MCHEmul::MemoryView* v)
+{
+	bool result = false;
+
+	MCHEmul::Memory::AdditionalSubsets::const_iterator i = _additionalSubsets.find (id);
+	if (i != _additionalSubsets.end ())
+	{
+		std::vector <int> vId;
+		for (auto j : (*i).second) vId.emplace_back (j.second -> id ());
+		result = ((v == nullptr) ? _activeView : v) -> removeSubsets (vId);
+
+		_additionalSubsets.erase (i);
+	}
+
+	return (result);
+}
+
+// ---
 bool MCHEmul::Memory::Content::initialize ()
 { 
 	if (_error) 
@@ -220,7 +292,8 @@ bool MCHEmul::Memory::Content::initialize ()
 // ---
 MCHEmul::Memory::Memory (const Content& cnt)
 	: MCHEmul::InfoClass ("Memory"),
-	  _content (), 
+	  _content (),
+	  _additionalSubsets (),
 	  _activeView (nullptr),
 	  _stack (nullptr), 
 	  _cpuView (nullptr), 

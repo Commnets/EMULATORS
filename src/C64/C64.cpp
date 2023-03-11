@@ -52,10 +52,8 @@ bool C64::Commodore64::initialize (bool iM)
 	C64::Cartridge* cT = 
 		dynamic_cast <C64::Cartridge*> (dynamic_cast <COMMODORE::ExpansionIOPort*> 
 			(device (COMMODORE::ExpansionIOPort::_ID)) -> expansionElement ());
-	if (cT != nullptr && !cT -> data ()._data.empty ())
-		cT -> dumpDataInto (memory () -> subset (C64::Memory::_EXPANSIONROML_SUBSET),
-							memory () -> subset (C64::Memory::_EXPANSIONROMH1_SUBSET),
-							memory () -> subset (C64::Memory::_EXPANSIONROMH2_SUBSET));
+	if (cT != nullptr)
+		cT -> dumpDataInto (dynamic_cast <C64::Memory*> (memory ()), memory () -> activeView ());
 
 	return (true);
 }

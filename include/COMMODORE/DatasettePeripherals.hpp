@@ -53,6 +53,8 @@ namespace COMMODORE
 							{ return (_noKeyPressed); }
 
 		virtual bool initialize () override;
+		virtual bool finalize () override
+							{ return (true); }
 
 		virtual bool connectData (MCHEmul::FileData* dt) override;
 

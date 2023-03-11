@@ -87,6 +87,8 @@ namespace COMMODORE
 
 		virtual bool initialize () override
 							{ return (true); }
+		virtual bool finalize () override
+							{ return (true); }
 
 		virtual bool simulate (MCHEmul::CPU* cpu) override
 							{ return (true); }

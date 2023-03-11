@@ -18,6 +18,7 @@
 
 #include <CORE/global.hpp>
 #include <CORE/InfoClass.hpp>
+#include <CORE/NotifyObserver.hpp>
 #include <CORE/Address.hpp>
 #include <CORE/UByte.hpp>
 #include <CORE/UBytes.hpp>
@@ -110,8 +111,9 @@ namespace MCHEmul
 	using PhysicalStorages = std::map <int, PhysicalStorage*>;
 
 	/** Represents a subset of the physical storage. \n
-		Many subsets can be created over the same physical location. */
-	class PhysicalStorageSubset : public InfoClass
+		Many subsets can be created over the same physical location. \n
+		This class can send and receive events. */
+	class PhysicalStorageSubset : public InfoClass, public Observer, public Notifier
 	{
 		public:
 		friend MemoryView;
@@ -311,6 +313,17 @@ namespace MCHEmul
 		PhysicalStorageSubset* subset (int id)
 							{ PhysicalStorageSubsets::const_iterator i = _subsets.find (id); 
 								return ((i != _subsets.end ()) ? (*i).second : nullptr); }
+		/** Returns true when the element was added. */
+		bool addSubset (PhysicalStorageSubset* s);
+		/** Returns true when all have been sucessfully added. */
+		bool addSubSets (const PhysicalStorageSubsets& ss)
+							{ bool r = true; for (const auto& i : ss) r &= addSubset (i.second); return (r); }
+		/** Returns true when the element was extracted. \n
+			(NOTE) The element is only extracted from the set but not deleted. */
+		bool removeSubSet (int id);
+		/** Returns true when all have been sucessfully removed. */
+		bool removeSubsets (const std::vector <int>& ss)
+							{ bool r = true; for (auto i : ss) r &= removeSubSet (i); return (r); }
 		
 		inline bool isIn (const Address& a, int & dt) const;
 
@@ -346,6 +359,13 @@ namespace MCHEmul
 		  *	STORAGES	= InfoStructure: Every storage belonging to the view (@see PhysicalStorageSubset).
 		  */
 		virtual InfoStructure getInfoStructure () const override;
+
+		protected:
+		// Implementation
+		/** Used internally to convert the structure of the memory view into a "plain view"
+			much quicker to be accessed from the CPU simulation. \n
+			Affects the elements "_minAddress, _maxAddress, _numPositions and _memPositions. */
+		void plainMemory ();
 
 		protected:
 		int _id;
@@ -545,6 +565,9 @@ namespace MCHEmul
 			mutable bool _error;
 		};
 
+		using Contents = std::map <int, Content>;
+		using AdditionalSubsets = std::map <int, PhysicalStorageSubsets>;
+
 		Memory (const Content& cnt);
 
 		Memory (const Memory&) = delete;
@@ -584,13 +607,24 @@ namespace MCHEmul
 		MemoryView* view (int id)
 							{ return (_content.view (id));  }
 
-		// Managing the active view of the memory...
+		/** Managing the active view of the memory. */
 		const MemoryView* activeView () const
 							{ return (_activeView); }
 		MemoryView* activeView ()
 							{ return (_activeView); }
 		void setActiveView (int id)
 							{ if (existsView (id)) _activeView = view (id); }
+
+		/** This method is quite important for changing dinamically the configuration of the memory.
+			Additional subsets can be added and taken off from the active view. 
+			Memory view where to add all in is optional. If none the active one is used. \n
+			Returns false when either a set of subsets with the same id already exists (adding),
+			or no set of subsets exists with that id. \n
+			After that firs verification returns also false if the elements of the set of subsets 
+			were not all of them finally added ot removed from the view. \n
+			Other situations returs true. */
+		bool addAdditionalSubsets (int id, const PhysicalStorageSubsets& ss, MemoryView* v = nullptr);
+		bool removeAdditionalSubsets (int id, MemoryView* v = nullptr);
 
 		bool isIn (const Address& a, int & dt) const
 							{ return (_activeView -> isIn (a, dt)); }
@@ -652,6 +686,7 @@ namespace MCHEmul
 
 		protected:
 		Content _content;
+		AdditionalSubsets _additionalSubsets;
 
 		// Implementation
 		MemoryView* _activeView;

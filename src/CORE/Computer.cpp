@@ -51,15 +51,15 @@ MCHEmul::Computer::Computer (MCHEmul::CPU* cpu, const MCHEmul::Chips& c,
 // ---
 MCHEmul::Computer::~Computer ()
 { 
-	delete (_cpu); 
-
-	delete (_memory);
+	for (const auto& i : _devices)
+		delete (i.second);
 
 	for (const auto& i : _chips)
 		delete (i.second);
 
-	for (const auto& i : _devices)
-		delete (i.second);
+	delete (_cpu); 
+
+	delete (_memory);
 }
 
 // ---

@@ -3,6 +3,7 @@
 #include <C64/SFChipRegisters.hpp>
 #include <C64/CIA1Registers.hpp>
 #include <C64/CIA2Registers.hpp>
+#include <C64/Cartridge.hpp>
 
 const MCHEmul::Address C64::Memory::_POS0_ADDRESS = MCHEmul::Address ({ 0x00, 0x00 }, false);
 const MCHEmul::Address C64::Memory::_POS1_ADDRESS = MCHEmul::Address ({ 0x01, 0x00 }, false);
@@ -17,6 +18,7 @@ const MCHEmul::Address C64::Memory::_KERNELROMEND_ADDRESS = MCHEmul::Address ({ 
 C64::Memory::Memory (const std::string& lang)
 	: MCHEmul::Memory (C64::Memory::standardMemoryContent ()),
 	  _VICIIView (nullptr),
+	  _cartridge (nullptr),
 	  _basicROM (nullptr),
 	  _basicRAM (nullptr),
 	  _kernelROM (nullptr),
@@ -29,10 +31,7 @@ C64::Memory::Memory (const std::string& lang)
 	  _cia2registers (nullptr),
 	  _io1Registers (nullptr),
 	  _io2registers (nullptr),
-	  _expansionROMLO (nullptr),
-	  _expansionRAMLO (nullptr),
-	  _expansionROMHI1 (nullptr),
-	  _expansionROMHI2 (nullptr)
+	  _expansionRAMLO (nullptr)
 {
 	// In the content...
 	if (error () != MCHEmul::_NOERROR)
@@ -50,10 +49,7 @@ C64::Memory::Memory (const std::string& lang)
 	_cia2registers		= subset (C64::CIA2Registers::_CIA2_SUBSET);
 	_io1Registers		= subset (_IO1_SUBSET);
 	_io2registers		= subset (_IO2_SUBSET);
-	_expansionROMLO		= subset (_EXPANSIONROML_SUBSET);
 	_expansionRAMLO		= subset (_RAM01_SUBSET);
-	_expansionROMHI1	= subset (_EXPANSIONROMH1_SUBSET);
-	_expansionROMHI2	= subset (_EXPANSIONROMH2_SUBSET);
 
 	// The default ROMS...
 	// They might change depending on the language
@@ -101,16 +97,13 @@ bool C64::Memory::initialize ()
 void C64::Memory::configureMemoryStructure (bool BASIC, bool KERNEL, bool CHARROM, 
 	bool ROML, bool ROMH1, bool ROMH2)
 {
-	_expansionROMLO		-> setActiveForReading (ROML);
 	_expansionRAMLO		-> setActiveForReading (!ROML);
 
 	_basicROM			-> setActiveForReading (BASIC);
 	_basicRAM			-> setActiveForReading (!ROMH1 && !BASIC);
-	_expansionROMHI1	-> setActiveForReading (ROMH1);
 
 	_kernelROM			-> setActiveForReading (KERNEL);
 	_kernelRAM			-> setActiveForReading (!ROMH2 && !KERNEL);
-	_expansionROMHI2	-> setActiveForReading (ROMH2);
 
 	_charROM			-> setActiveForReading (CHARROM);
 	_vicIIRegisters		-> setActiveForReading (!CHARROM);
@@ -120,6 +113,9 @@ void C64::Memory::configureMemoryStructure (bool BASIC, bool KERNEL, bool CHARRO
 	_cia2registers		-> setActiveForReading (!CHARROM);
 	_io1Registers		-> setActiveForReading (!CHARROM);
 	_io2registers		-> setActiveForReading (!CHARROM);
+
+	if (_cartridge != nullptr)
+		_cartridge -> configureMemoryStructure (ROML, ROMH1, ROMH2);
 }
 
 // ---
@@ -136,12 +132,6 @@ MCHEmul::Memory::Content C64::Memory::standardMemoryContent ()
 		new MCHEmul::PhysicalStorage (_CHARROM, MCHEmul::PhysicalStorage::Type::_ROM, 0x1000);			// 4k
 	MCHEmul::PhysicalStorage* KERNELROM	= 
 		new MCHEmul::PhysicalStorage (_KERNELROM, MCHEmul::PhysicalStorage::Type::_ROM, 0x2000);		// 8k
-	MCHEmul::PhysicalStorage* EXPANSIONROMLO =
-		new MCHEmul::PhysicalStorage (_EXPANSIONROMLO, MCHEmul::PhysicalStorage::Type::_ROM, 0x2000);	// 8k, associated to the expansion port
-	MCHEmul::PhysicalStorage* EXPANSIONROMHI1 =
-		new MCHEmul::PhysicalStorage (_EXPANSIONROMHI1, MCHEmul::PhysicalStorage::Type::_ROM, 0x2000);	// 8k, associated to the expansion port
-	MCHEmul::PhysicalStorage* EXPANSIONROMHI2 =
-		new MCHEmul::PhysicalStorage (_EXPANSIONROMHI2, MCHEmul::PhysicalStorage::Type::_ROM, 0x2000);	// 8k, associated to the expansion port
 
 	// The map of phisical storages, used later...
 	MCHEmul::PhysicalStorages storages (
@@ -149,10 +139,7 @@ MCHEmul::Memory::Content C64::Memory::standardMemoryContent ()
 			{ _RAM, RAM },
 			{ _BASICROM, BASICROM },
 			{ _CHARROM, CHARROM },
-			{ _KERNELROM, KERNELROM },
-			{ _EXPANSIONROMLO, EXPANSIONROMLO },
-			{ _EXPANSIONROMHI1, EXPANSIONROMHI1 },
-			{ _EXPANSIONROMHI2, EXPANSIONROMHI2 }
+			{ _KERNELROM, KERNELROM }
 		});
 
 	// Subsets
@@ -173,15 +160,11 @@ MCHEmul::Memory::Content C64::Memory::standardMemoryContent ()
 	// In the last part of the RAM a 8k Expansion ROM is located (no active unless a expansion element uses it)
 	MCHEmul::PhysicalStorageSubset* RAM01 = new MCHEmul::PhysicalStorageSubset
 		(_RAM01_SUBSET, RAM, 0x8000, MCHEmul::Address ({ 0x00, 0x80 }, false), 0x2000);						// 2k pure a (a bit used by basic, but can be shared with expansion port)
-	MCHEmul::PhysicalStorageSubset* ExpansionROMLO = new MCHEmul::PhysicalStorageSubset
-		(_EXPANSIONROML_SUBSET, EXPANSIONROMLO, 0x0000, MCHEmul::Address ({ 0x00, 0x80 }, false), 0x2000); // Only when expansion element uses it...
 	// Where the basic is can be either ROM or RAM (depends on bits in position 1 of the page 0) or EXPANSION ROM (when uses it)
 	MCHEmul::PhysicalStorageSubset* BasicROM = new MCHEmul::PhysicalStorageSubset
 		(_BASICROM_SUBSET, BASICROM, 0x0000, MCHEmul::Address ({ 0x00, 0xa0 }, false), 0x2000);	
 	MCHEmul::PhysicalStorageSubset* BasicRAM = new MCHEmul::PhysicalStorageSubset
 		(_BASICRAM_SUBSET, RAM, 0x0a000, MCHEmul::Address ({ 0x00, 0xa0 }, false), 0x2000);				// 8k (over BasicROM)
-	MCHEmul::PhysicalStorageSubset* ExpansionROMHI1 = new MCHEmul::PhysicalStorageSubset
-		(_EXPANSIONROMH1_SUBSET, EXPANSIONROMHI1, 0x0000, MCHEmul::Address ({ 0x00, 0xa0 }, false), 0x2000);
 	// 	Pure RAM (4k)
 	MCHEmul::PhysicalStorageSubset* RAM1 = new MCHEmul::PhysicalStorageSubset
 		(_RAM1_SUBSET, RAM, 0x0c000, MCHEmul::Address ({ 0x00, 0xc0 }, false), 0x1000);					// 4k
@@ -206,8 +189,6 @@ MCHEmul::Memory::Content C64::Memory::standardMemoryContent ()
 		(_KERNELROM_SUBSET, KERNELROM, 0x0000, MCHEmul::Address ({ 0x00, 0xe0 }, false), 0x2000);
 	MCHEmul::PhysicalStorageSubset* KernelRAM = new MCHEmul::PhysicalStorageSubset 
 		(_KERNELRAM_SUBSET, RAM, 0xe000, MCHEmul::Address ({ 0x00, 0xe0 }, false), 0x2000);				// 8k (over KernelROM)
-	MCHEmul::PhysicalStorageSubset* ExpansionROMHI2 = new MCHEmul::PhysicalStorageSubset
-		(_EXPANSIONROMH2_SUBSET, EXPANSIONROMHI2, 0x0000, MCHEmul::Address ({ 0x00, 0xe0 }, false), 0x2000);
 
 	// A map with the subsets swwn from the CPU perspective
 	MCHEmul::PhysicalStorageSubsets cpusubsets (
@@ -217,10 +198,8 @@ MCHEmul::Memory::Content C64::Memory::standardMemoryContent ()
 			{ _STACK_SUBSET,													Stack }, 
 			{ _RAM00_SUBSET,													RAM00 }, 
 			{ _RAM01_SUBSET,													RAM01 }, 
-			{ _EXPANSIONROML_SUBSET,											ExpansionROMLO },
 			{ _BASICROM_SUBSET,													BasicROM }, 
 			{ _BASICRAM_SUBSET,													BasicRAM }, 
-			{ _EXPANSIONROMH1_SUBSET,											ExpansionROMHI1 },
 			{ _RAM1_SUBSET,														RAM1 }, 
 			{ _CHARROM_SUBSET,													CharROM }, 
 			{ COMMODORE::VICIIRegisters::_VICREGS_SUBSET,						VICIIRegisters }, 
@@ -231,8 +210,7 @@ MCHEmul::Memory::Content C64::Memory::standardMemoryContent ()
 			{ _IO1_SUBSET,														IO1}, 
 			{ _IO2_SUBSET,														IO2}, 
 			{ _KERNELROM_SUBSET,												KernelROM }, 
-			{ _KERNELRAM_SUBSET,												KernelRAM },
-			{ _EXPANSIONROMH2_SUBSET,											ExpansionROMHI2 }
+			{ _KERNELRAM_SUBSET,												KernelRAM }
 		});
 
 	// And same like the VICII chips sees it...
@@ -278,10 +256,8 @@ MCHEmul::Memory::Content C64::Memory::standardMemoryContent ()
 			{ _STACK_SUBSET,													Stack }, 
 			{ _RAM00_SUBSET,													RAM00 }, 
 			{ _RAM01_SUBSET,													RAM01 }, 
-			{ _EXPANSIONROML_SUBSET,											ExpansionROMLO },
 			{ _BASICROM_SUBSET,													BasicROM }, 
 			{ _BASICRAM_SUBSET,													BasicRAM }, 
-			{ _EXPANSIONROMH1_SUBSET,											ExpansionROMHI1 },
 			{ _RAM1_SUBSET,														RAM1 }, 
 			{ _CHARROM_SUBSET,													CharROM }, 
 			{ COMMODORE::VICIIRegisters::_VICREGS_SUBSET,						VICIIRegisters }, 
@@ -293,7 +269,6 @@ MCHEmul::Memory::Content C64::Memory::standardMemoryContent ()
 			{ _IO2_SUBSET,														IO2}, 
 			{ _KERNELROM_SUBSET,												KernelROM }, 
 			{ _KERNELRAM_SUBSET,												KernelRAM },
-			{ _EXPANSIONROMH2_SUBSET,											ExpansionROMHI2 },
 			{ _BANK0RAM0_SUBSET,												Bank0RAM0 },
 			{ _BANK0CHARROM_SUBSET,												Bank0CharROM},
 			{ _BANK0RAM1_SUBSET,												Bank0RAM1 },

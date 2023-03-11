@@ -195,7 +195,7 @@ namespace COMMODORE
 		_graphicsCharData = std::move (MCHEmul::UBytes ());
 		_graphicsBitmapData = std::move (MCHEmul::UBytes ());
 		_graphicsColorData = std::move (MCHEmul::UBytes ());
-		_graphicsSprites.clear (); 
+		_graphicsSprites = std::vector <MCHEmul::UBytes> (8, MCHEmul::UBytes::_E);
 	}
 
 	// ---

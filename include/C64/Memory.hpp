@@ -18,18 +18,19 @@
 
 namespace C64
 {
+	class Cartridge;
+
 	/** The memory itself for the commodore 64... */
 	class Memory final : public MCHEmul::Memory
 	{
 		public:
+		friend Cartridge;
+
 		// Phisical Storages
 		static const int _RAM					= 0;
 		static const int _BASICROM				= 1;
 		static const int _CHARROM				= 2;
 		static const int _KERNELROM				= 3;
-		static const int _EXPANSIONROMLO		= 4;
-		static const int _EXPANSIONROMHI1		= 5;
-		static const int _EXPANSIONROMHI2		= 6;
 
 		// Subsets
 		// Fom CPU
@@ -46,9 +47,6 @@ namespace C64
 		static const int _IO2_SUBSET			= 111;
 		static const int _KERNELROM_SUBSET		= 112;
 		static const int _KERNELRAM_SUBSET		= 113;
-		static const int _EXPANSIONROML_SUBSET	= 120; // When the expansion is connected...
-		static const int _EXPANSIONROMH1_SUBSET = 121; // When the expansion is connected... 
-		static const int _EXPANSIONROMH2_SUBSET = 122; // When the expansion is connected...
 		/** The id for the registers VICII, SID, ... are defined in those. */
 		// From VICII
 		static const int _BANK0RAM0_SUBSET		= 200;
@@ -107,8 +105,13 @@ namespace C64
 
 		static MCHEmul::Memory::Content standardMemoryContent ();
 
+		/** Invoked from the cartridge. */
+		void setExtensionAt (Cartridge* c)
+							{ _cartridge = c; }
+
 		private:
 		MCHEmul::MemoryView* _VICIIView;
+		Cartridge* _cartridge;
 
 		// Implementation
 		/** To speed up the access to the different zones of the memory. */
@@ -126,10 +129,7 @@ namespace C64
 		MCHEmul::PhysicalStorageSubset* _cia2registers;
 		MCHEmul::PhysicalStorageSubset* _io1Registers;
 		MCHEmul::PhysicalStorageSubset* _io2registers;
-		MCHEmul::PhysicalStorageSubset* _expansionROMLO;
 		MCHEmul::PhysicalStorageSubset* _expansionRAMLO;
-		MCHEmul::PhysicalStorageSubset* _expansionROMHI1;
-		MCHEmul::PhysicalStorageSubset* _expansionROMHI2;
 	};
 }
 

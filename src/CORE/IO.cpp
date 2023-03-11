@@ -68,15 +68,23 @@ bool MCHEmul::IODevice::connectPeripheral (MCHEmul::IOPeripheral* p)
 // ---
 bool MCHEmul::IODevice::disconnectPeripheral (int id)
 {
+	bool result = true;
 	MCHEmul::IOPeripherals::const_iterator i = _peripherals.find (id);
 	if (i != _peripherals.end ())
 	{
+		if (!(*i).second -> finalize ())
+		{
+			_error = MCHEmul::_PERIPHERAL_ERROR;
+
+			result = false;
+		}
+
 		(*i).second -> _device = nullptr;
 
 		_peripherals.erase (i); // unlink it...
 	}
 
-	return (true);
+	return (result);
 }
 
 // ---
