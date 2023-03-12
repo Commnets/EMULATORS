@@ -83,6 +83,15 @@ MCHEmul::Instructions F6500::C6500::createInstructions ()
 	result [0x7D] = new ADC_AbsoluteX;
 	result [0x79] = new ADC_AbsoluteY;
 
+	// ALR: AND + LSR
+	// Instructions totally undocumented...
+	result [0x4B] = new ALR_Inmediate;
+
+	// ANC: AND + Carry Flag
+	// Instructions totally undocumented...
+	result [0x0B] = new ANC_Inmediate;
+	result [0x2B] = new ANC_Inmediate;
+
 	// AND
 	result [0x29] = new AND_Inmediate;
 	result [0x2D] = new AND_Absolute;
@@ -92,6 +101,10 @@ MCHEmul::Instructions F6500::C6500::createInstructions ()
 	result [0x35] = new AND_ZeroPageX;
 	result [0x3D] = new AND_AbsoluteX;
 	result [0x39] = new AND_AbsoluteY;
+
+	// ARR: AND + ROR
+	// Instructions totally undocumented...
+	result [0x6B] = new ARR_Inmediate;
 
 	// ASL
 	result [0x0E] = new ASL_Absolute;
@@ -163,6 +176,16 @@ MCHEmul::Instructions F6500::C6500::createInstructions ()
 	result [0xCC] = new CPY_Absolute;
 	result [0xC4] = new CPY_ZeroPage;
 
+	// DCP: DEC + CMP
+	// Instructions totally undocumented...
+	result [0xC7] = new DCP_ZeroPage;
+	result [0xD7] = new DCP_ZeroPageX;
+	result [0xC3] = new DCP_ZeroPageIndirectX;
+	result [0xD3] = new DCP_ZeroPageIndirectY;
+	result [0xCF] = new DCP_Absolute;
+	result [0xDF] = new DCP_AbsoluteX;
+	result [0xDB] = new DCP_AbsoluteY;
+
 	// DEC
 	result [0xCE] = new DEC_Absolute;
 	result [0xC6] = new DEC_ZeroPage;
@@ -197,12 +220,46 @@ MCHEmul::Instructions F6500::C6500::createInstructions ()
 	// INY
 	result [0xC8] = new INY;
 
+	// ISC: INC + SBC
+	// Instructions totally undocumented...
+	result [0xE7] = new ISC_ZeroPage;
+	result [0xF7] = new ISC_ZeroPageX;
+	result [0xE3] = new ISC_ZeroPageIndirectX;
+	result [0xF3] = new ISC_ZeroPageIndirectY;
+	result [0xEf] = new ISC_Absolute;
+	result [0xFF] = new ISC_AbsoluteX;
+	result [0xFB] = new ISC_AbsoluteY;
+
+	// JAM: Restart the CPU
+	// Totally undocumented
+	result [0x02] = new JAM;
+	result [0x12] = new JAM;
+	result [0x22] = new JAM;
+	result [0x32] = new JAM;
+	result [0x42] = new JAM;
+	result [0x52] = new JAM;
+	result [0x62] = new JAM;
+	result [0x72] = new JAM;
+	result [0x92] = new JAM;
+	result [0xB2] = new JAM;
+	result [0xD2] = new JAM;
+	result [0xF2] = new JAM;
+
 	// JMP
 	result [0x4C] = new JMP_Absolute;
 	result [0x6C] = new JMP_Indirect;
 
 	// JSR
 	result [0x20] = new JSR_Absolute;
+
+	// LAX: LDA + TAX
+	// Instructions totally undocumented...
+	result [0xA7] = new LAX_ZeroPage;
+	result [0xB7] = new LAX_ZeroPageY;
+	result [0xA3] = new LAX_ZeroPageIndirectX;
+	result [0xB3] = new LAX_ZeroPageIndirectY;
+	result [0xAF] = new LAX_Absolute;
+	result [0xBF] = new LAX_AbsoluteY;
 
 	// LDA
 	result [0xA9] = new LDA_Inmediate;
@@ -236,7 +293,34 @@ MCHEmul::Instructions F6500::C6500::createInstructions ()
 	result [0x5E] = new LSR_AbsoluteX;
 
 	// NOP
+	// The official one...
 	result [0xEA] = new NOP;
+	// The un official ones...
+	result [0x1A] = new NOP;
+	result [0x3A] = new NOP;
+	result [0x5A] = new NOP;
+	result [0x7A] = new NOP;
+	result [0xDA] = new NOP;
+	result [0xFA] = new NOP;
+	result [0x80] = new NOP_Inmediate;
+	// The inestable versions are not created...
+	result [0x89] = new NOP_Inmediate;
+	result [0x04] = new NOP_ZeroPage;
+	result [0x44] = new NOP_ZeroPage;
+	result [0x64] = new NOP_ZeroPage;
+	result [0x14] = new NOP_ZeroPageX;
+	result [0x34] = new NOP_ZeroPageX;
+	result [0x54] = new NOP_ZeroPageX;
+	result [0x74] = new NOP_ZeroPageX;
+	result [0xD4] = new NOP_ZeroPageX;
+	result [0xF4] = new NOP_ZeroPageX;
+	result [0x0C] = new NOP_Absolute;
+	result [0x1C] = new NOP_AbsoluteX;
+	result [0x3C] = new NOP_AbsoluteX;
+	result [0x5C] = new NOP_AbsoluteX;
+	result [0x7C] = new NOP_AbsoluteX;
+	result [0xDC] = new NOP_AbsoluteX;
+	result [0xFC] = new NOP_AbsoluteX;
 
 	// ORA
 	result [0x09] = new ORA_Inmediate;
@@ -260,6 +344,16 @@ MCHEmul::Instructions F6500::C6500::createInstructions ()
 	// PLP
 	result [0x28] = new	PLP;
 
+	// RLA: ROL + AND
+	// Instructions totally undocumented...
+	result [0x27] = new RLA_ZeroPage;
+	result [0x37] = new RLA_ZeroPageX;
+	result [0x23] = new RLA_ZeroPageIndirectX;
+	result [0x33] = new RLA_ZeroPageIndirectY;
+	result [0x2F] = new RLA_Absolute;
+	result [0x3F] = new RLA_AbsoluteX;
+	result [0x3B] = new RLA_AbsoluteY;
+
 	// ROL
 	result [0x2E] = new ROL_Absolute;
 	result [0x26] = new ROL_ZeroPage;
@@ -274,11 +368,28 @@ MCHEmul::Instructions F6500::C6500::createInstructions ()
 	result [0x76] = new ROR_ZeroPageX;
 	result [0x7E] = new ROR_AbsoluteX;
 
+	// RRA: ROR + ADC
+	// Instructions totally undocumented...
+	result [0x67] = new RRA_ZeroPage;
+	result [0x77] = new RRA_ZeroPageX;
+	result [0x63] = new RRA_ZeroPageIndirectX;
+	result [0x73] = new RRA_ZeroPageIndirectY;
+	result [0x6F] = new RRA_Absolute;
+	result [0x7F] = new RRA_AbsoluteX;
+	result [0x7B] = new RRA_AbsoluteY;
+
 	// RTI
 	result [0x40] = new RTI;
 
 	// RTS
 	result [0x60] = new RTS;
+
+	// SAX: PHP + PHA + STX + AND + STA + PLA + PLP
+	// Instructions totally undocumented...
+	result [0x87] = new SAX_ZeroPage;
+	result [0x97] = new SAX_ZeroPageY;
+	result [0x83] = new SAX_ZeroPageIndirectX;
+	result [0x8F] = new SAX_Absolute;
 
 	// SBC
 	result [0xE9] = new SBC_Inmediate;
@@ -289,6 +400,12 @@ MCHEmul::Instructions F6500::C6500::createInstructions ()
 	result [0xF5] = new SBC_ZeroPageX;
 	result [0xFD] = new SBC_AbsoluteX;
 	result [0xF9] = new SBC_AbsoluteY;
+	// SBC Not documented...
+	result [0xEB] = new SBC_Inmediate;
+
+	// SBX: STA + TXA + AND + CMP + PHP + SEC + CLD + SBC + TAX + LDA + PLP
+	// Instructions totally undocumented...
+	result [0xCB] = new SBX_Inmediate;
 
 	// SEC
 	result [0x38] = new SEC;
@@ -298,6 +415,26 @@ MCHEmul::Instructions F6500::C6500::createInstructions ()
 
 	// SEI
 	result [0x78] = new SEI;
+
+	// SLO: ASL + ORA
+	// Instructions totally undocumented...
+	result [0x07] = new SLO_ZeroPage;
+	result [0x17] = new SLO_ZeroPageX;
+	result [0x03] = new SLO_ZeroPageIndirectX;
+	result [0x13] = new SLO_ZeroPageIndirectY;
+	result [0x0F] = new SLO_Absolute;
+	result [0x1F] = new SLO_AbsoluteX;
+	result [0x1B] = new SLO_AbsoluteY;
+
+	// SRE: LSR + EOR
+	// Instructions totally undocumented...
+	result [0x47] = new SRE_ZeroPage;
+	result [0x57] = new SRE_ZeroPageX;
+	result [0x43] = new SRE_ZeroPageIndirectX;
+	result [0x53] = new SRE_ZeroPageIndirectY;
+	result [0x4F] = new SRE_Absolute;
+	result [0x5F] = new SRE_AbsoluteX;
+	result [0x5B] = new SRE_AbsoluteY;
 
 	// STA
 	result [0x8D] = new STA_Absolute;
@@ -336,7 +473,7 @@ MCHEmul::Instructions F6500::C6500::createInstructions ()
 	// TYA
 	result [0x98] = new TYA;
 
-	assert (result.size () == 151); 
+	assert (result.size () == 245); 
 
 	return (result);
 }

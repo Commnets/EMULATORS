@@ -91,8 +91,8 @@ bool C64::Memory::initialize ()
 	setCPUView ();
 
 	// The initial basic configuration of the memory is the standard
-	// BASIC, KERNEL and CHARROM connected, and no cartridge extension...
-	configureMemoryStructure (true, true, true, false, false, false);
+	// BASIC, KERNEL connected, CHARROM not connected, and no cartridge extension...
+	configureMemoryStructure (true, true, false, false, false, false);
 
 	return (true);
 }

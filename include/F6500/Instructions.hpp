@@ -7,7 +7,9 @@
  *	Framework: CPU Emulators library \n
  *	Author: Ignacio Cea Forniés (EMULATORS library) \n
  *	Creation Date: 11/04/2021 \n
- *	Description: The list of instructions used by any F6500 family.
+ *	Description: The list of instructions used by any F6500 family. \n
+ *				 The no documented instructions have also been included. \n
+ *				 Only the stable ones. \n
  *	Versions: 1.0 Initial
  */
 
@@ -20,7 +22,7 @@
 namespace F6500
 {
 	/** Most of 6500 instruction inherits from this class
-		because it includes diffrent access for any addrss mode. 
+		because it includes diffrent access for any addrss mode. \N
 		Always little-endian format and no more than 2 bytes for and address are values taken. */
 	class Instruction : public MCHEmul::Instruction
 	{
@@ -217,6 +219,40 @@ namespace F6500
 	_INST_FROM (0x7d, 3, 4, "ADC[$2],X",	ADC_AbsoluteX, ADC_General);
 	_INST_FROM (0x79, 3, 4, "ADC[$2],Y",	ADC_AbsoluteY, ADC_General);
 
+	// Non documented
+	// ALR: AND + LSR
+	// https://www.esocop.org/docs/MOS6510UnintendedOpcodes-20152412.pdf
+	/** ALR_General: To aggregate common steps in every ALR instruction. */
+	class ALR_General : public Instruction
+	{
+		public:
+		ALR_General (unsigned int c, unsigned int mp, unsigned int cc, const std::string& t)
+			: Instruction (c, mp, cc, t)
+							{ }
+
+		protected:
+		bool executeWith (MCHEmul::UByte u);
+	};
+
+	_INST_FROM (0x4b, 2, 2, "ALR#[#1]", ALR_Inmediate, ALR_General);
+
+	// Non documented
+	// ANC: AND + Carry flag
+	// https://www.esocop.org/docs/MOS6510UnintendedOpcodes-20152412.pdf
+	/** ANC_General: To aggregate common steps in every ANC instruction. */
+	class ANC_General : public Instruction
+	{
+		public:
+		ANC_General (unsigned int c, unsigned int mp, unsigned int cc, const std::string& t)
+			: Instruction (c, mp, cc, t)
+							{ }
+
+		protected:
+		bool executeWith (MCHEmul::UByte u);
+	};
+
+	_INST_FROM (0x0b /** 2b */, 2, 2, "ANC#[#1]", ANC_Inmediate, ANC_General);
+
 	// AND
 	/** AND_General: To aggregate common steps in every AND instruction. */
 	class AND_General : public Instruction
@@ -238,6 +274,23 @@ namespace F6500
 	_INST_FROM (0x35, 2, 4, "AND[$1],X",	AND_ZeroPageX, AND_General);
 	_INST_FROM (0x3d, 3, 4, "AND[$2],X",	AND_AbsoluteX, AND_General);
 	_INST_FROM (0x39, 3, 4, "AND[$2],Y",	AND_AbsoluteY, AND_General);
+
+	// Non documented
+	// ARR: AND + ROR
+	// https://www.esocop.org/docs/MOS6510UnintendedOpcodes-20152412.pdf
+	/** ARR_General: To aggregate common steps in every ARR instruction. */
+	class ARR_General : public Instruction
+	{
+		public:
+		ARR_General (unsigned int c, unsigned int mp, unsigned int cc, const std::string& t)
+			: Instruction (c, mp, cc, t)
+							{ }
+
+		protected:
+		bool executeWith (MCHEmul::UByte u);
+	};
+
+	_INST_FROM (0x6b, 2, 2, "ARR#[#1]", ARR_Inmediate, ARR_General);
 
 	// ASL
 	/** ASL_General: To aggregate common steps in every ASL instruction. */
@@ -327,7 +380,7 @@ namespace F6500
 	};
 
 	_INST_FROM (0xc9, 2, 2, "CMP#[#1]",		CMP_Inmediate, CMP_General);
-	_INST_FROM (0xcd, 3, 4, "CMP[$2]",	CMP_Absolute, CMP_General);
+	_INST_FROM (0xcd, 3, 4, "CMP[$2]",		CMP_Absolute, CMP_General);
 	_INST_FROM (0xc5, 2, 3, "CMP[$1]",		CMP_ZeroPage, CMP_General);
 	_INST_FROM (0xc1, 2, 6, "CMP([$1],X)",	CMP_ZeroPageIndirectX, CMP_General);
 	_INST_FROM (0xd1, 2, 5, "CMP([$1]),Y",	CMP_ZeroPageIndirectY, CMP_General);
@@ -349,7 +402,7 @@ namespace F6500
 	};
 
 	_INST_FROM (0xe0, 2, 2, "CPX#[#1]",		CPX_Inmediate, CPX_General);
-	_INST_FROM (0xec, 3, 4, "CPX[$2]",	CPX_Absolute, CPX_General);
+	_INST_FROM (0xec, 3, 4, "CPX[$2]",		CPX_Absolute, CPX_General);
 	_INST_FROM (0xe4, 2, 3, "CPX[$1]",		CPX_ZeroPage, CPX_General);
 
 	// CPY
@@ -369,6 +422,29 @@ namespace F6500
 	_INST_FROM (0xcc, 3, 4, "CPY[$2]",	CPY_Absolute, CPY_General);
 	_INST_FROM (0xc4, 2, 3, "CPY[$1]",		CPY_ZeroPage, CPY_General);
 
+	// Non documented
+	// DCP: DEC + CMP
+	// https://www.esocop.org/docs/MOS6510UnintendedOpcodes-20152412.pdf
+	/** DCP_General: To aggregate common steps in every DCP instruction. */
+	class DCP_General : public Instruction
+	{
+		public:
+		DCP_General (unsigned int c, unsigned int mp, unsigned int cc, const std::string& t)
+			: Instruction (c, mp, cc, t)
+							{ }
+
+		protected:
+		bool executeOn (const MCHEmul::Address& a);
+	};
+
+	_INST_FROM (0xcf, 3, 6, "DCP[$2]",		DCP_Absolute, DCP_General);
+	_INST_FROM (0xc7, 2, 5, "DCP[$1]",		DCP_ZeroPage, DCP_General);
+	_INST_FROM (0xc3, 2, 8, "DCP([$1],X)",	DCP_ZeroPageIndirectX, DCP_General);
+	_INST_FROM (0xd3, 2, 8, "DCP([$1]),Y",	DCP_ZeroPageIndirectY, DCP_General);
+	_INST_FROM (0xd7, 2, 6, "DCP[$1],X",	DCP_ZeroPageX, DCP_General);
+	_INST_FROM (0xdf, 3, 7, "DCP[$2],X",	DCP_AbsoluteX, DCP_General);
+	_INST_FROM (0xdb, 3, 7, "DCP[$2],Y",	DCP_AbsoluteY, DCP_General);
+
 	// DEC
 	/** DEC_General: To aggregate common steps in every DEC instruction. */
 	class DEC_General : public Instruction
@@ -382,7 +458,7 @@ namespace F6500
 		bool executeOn (const MCHEmul::Address& a);
 	};
 
-	_INST_FROM (0xce, 3, 6, "DEC[$2]",	DEC_Absolute, DEC_General);
+	_INST_FROM (0xce, 3, 6, "DEC[$2]",		DEC_Absolute, DEC_General);
 	_INST_FROM (0xc6, 2, 5, "DEC[$1]",		DEC_ZeroPage, DEC_General);
 	_INST_FROM (0xd6, 2, 6, "DEC[$1],X",	DEC_ZeroPageX, DEC_General);
 	_INST_FROM (0xde, 3, 7, "DEC[$2],X",	DEC_AbsoluteX, DEC_General);
@@ -439,6 +515,35 @@ namespace F6500
 	// INY
 	_INST_FROM (0xc8, 1, 2, "INY",			INY, Instruction);
 
+	// Non documented
+	// ISC: INC + SBC
+	// https://www.esocop.org/docs/MOS6510UnintendedOpcodes-20152412.pdf
+	/** ISC_General: To aggregate common steps in every ISC instruction. */
+	class ISC_General : public Instruction
+	{
+		public:
+		ISC_General (unsigned int c, unsigned int mp, unsigned int cc, const std::string& t)
+			: Instruction (c, mp, cc, t)
+							{ }
+
+		protected:
+		bool executeOn (const MCHEmul::Address& a);
+	};
+
+	_INST_FROM (0xef, 3, 6, "ISC[$2]",		ISC_Absolute, ISC_General);
+	_INST_FROM (0xe7, 2, 5, "ISC[$1]",		ISC_ZeroPage, ISC_General);
+	_INST_FROM (0xe3, 2, 8, "ISC([$1],X)",	ISC_ZeroPageIndirectX, ISC_General);
+	_INST_FROM (0xf3, 2, 8, "ISC([$1]),Y",	ISC_ZeroPageIndirectY, ISC_General);
+	_INST_FROM (0xf7, 2, 6, "ISC[$1],X",	ISC_ZeroPageX, ISC_General);
+	_INST_FROM (0xff, 3, 7, "ISC[$2],X",	ISC_AbsoluteX, ISC_General);
+	_INST_FROM (0xfb, 3, 7, "ISC[$2],Y",	ISC_AbsoluteY, ISC_General);
+
+	// Non documented
+	// JAM
+	// https://www.esocop.org/docs/MOS6510UnintendedOpcodes-20152412.pdf
+	// Restart the cpu...
+	_INST_FROM (0x02 /** 0x02, 0x12, 0x22, 0x32, 0x42, 0x52, 0x62, 0x72, 0x92, 0xb2, 0xd2, 0xf2 */, 1, 1, "JAM", JAM, Instruction);
+
 	// JMP
 	_INST_FROM (0x4c, 3, 3, "JMP[%2]",		JMP_Absolute, Instruction);
 	_INST_FROM (0x6c, 3, 5, "JMP([%2])",	JMP_Indirect, Instruction);
@@ -467,6 +572,28 @@ namespace F6500
 	_INST_FROM (0xb5, 2, 4, "LDA[$1],X",	LDA_ZeroPageX, LDA_General);
 	_INST_FROM (0xbd, 3, 4, "LDA[$2],X",	LDA_AbsoluteX, LDA_General);
 	_INST_FROM (0xb9, 3, 4, "LDA[$2],Y",	LDA_AbsoluteY, LDA_General);
+
+	// Non documented
+	// LAX: LDA + TAX
+	// https://www.esocop.org/docs/MOS6510UnintendedOpcodes-20152412.pdf
+	/** LAX_General: To aggregate common steps in every LAX instruction. */
+	class LAX_General : public Instruction
+	{
+		public:
+		LAX_General (unsigned int c, unsigned int mp, unsigned int cc, const std::string& t)
+			: Instruction (c, mp, cc, t)
+							{ }
+
+		protected:
+		bool executeOn (const MCHEmul::Address& a);
+	};
+
+	_INST_FROM (0xaf, 3, 6, "LAX[$2]",		LAX_Absolute, LAX_General);
+	_INST_FROM (0xa7, 2, 5, "LAX[$1]",		LAX_ZeroPage, LAX_General);
+	_INST_FROM (0xa3, 2, 8, "LAX([$1],X)",	LAX_ZeroPageIndirectX, LAX_General);
+	_INST_FROM (0xb3, 2, 8, "LAX([$1]),Y",	LAX_ZeroPageIndirectY, LAX_General);
+	_INST_FROM (0xb7, 2, 6, "LAX[$1],Y",	LAX_ZeroPageY, LAX_General);
+	_INST_FROM (0xbf, 3, 7, "LAX[$2],Y",	LAX_AbsoluteY, LAX_General);
 
 	// LDX
 	/** LDX_General: To aggregate common steps in every LDX instruction. */
@@ -526,7 +653,28 @@ namespace F6500
 	_INST_FROM (0x5e, 3, 7, "LSR[$2],X",	LSR_AbsoluteX, LSR_General);
 
 	// NOP
+	/** NOP_General. \n 
+		There is only one official version of NOP, but many undocumented. */
+	class NOP_General : public Instruction
+	{
+		public:
+		NOP_General (unsigned int c, unsigned int mp, unsigned int cc, const std::string& t)
+			: Instruction (c, mp, cc, t)
+							{ }
+
+		protected:
+		bool executeWith (MCHEmul::UByte u);
+	};
+
+	// The official and documented one...
 	_INST_FROM (0xea, 1, 2, "NOP",			NOP, Instruction);
+	// The rest are undocumented...
+	// https://www.esocop.org/docs/MOS6510UnintendedOpcodes-20152412.pdf
+	_INST_FROM (0x80 /** 0x82 (inestable), 0xc2 (insestable), 0xe2 (inestable) */, 2, 2, "NOP#[#1]", NOP_Inmediate, NOP_General);
+	_INST_FROM (0x0c, 3, 6, "NOP[$2]",		NOP_Absolute, NOP_General);
+	_INST_FROM (0x04 /** 0x04, 0x44, 0x64 */, 2, 5, "NOP[$1]",		NOP_ZeroPage, NOP_General);
+	_INST_FROM (0x14 /** 0x34, 0x54, 0x74, 0xd4, 0xf4 */, 2, 6, "NOP[$1],X",	NOP_ZeroPageX, NOP_General);
+	_INST_FROM (0x1c /** 0x3c, 0x5c, 0x7x, 0xdc, 0xfc */, 3, 7, "NOP[$2],X",	NOP_AbsoluteX, NOP_General);
 
 	// ORA
 	/** ORA_General: To aggregate common steps in every ORA instruction. */
@@ -561,6 +709,29 @@ namespace F6500
 
 	// PLP
 	_INST_FROM (0x28, 1, 4, "PLP",			PLP, Instruction);
+
+	// Non documented
+	// RLO: ROL + AND
+	// https://www.esocop.org/docs/MOS6510UnintendedOpcodes-20152412.pdf
+	/** RLA_General: To aggregate common steps in every RLA instruction. */
+	class RLA_General : public Instruction
+	{
+		public:
+		RLA_General (unsigned int c, unsigned int mp, unsigned int cc, const std::string& t)
+			: Instruction (c, mp, cc, t)
+							{ }
+
+		protected:
+		bool executeOn (const MCHEmul::Address& a);
+	};
+
+	_INST_FROM (0x2f, 3, 6, "RLA[$2]",		RLA_Absolute, RLA_General);
+	_INST_FROM (0x27, 2, 5, "RLA[$1]",		RLA_ZeroPage, RLA_General);
+	_INST_FROM (0x23, 2, 8, "RLA([$1],X)",	RLA_ZeroPageIndirectX, RLA_General);
+	_INST_FROM (0x33, 2, 8, "RLA([$1]),Y",	RLA_ZeroPageIndirectY, RLA_General);
+	_INST_FROM (0x37, 2, 6, "RLA[$1],X",	RLA_ZeroPageX, RLA_General);
+	_INST_FROM (0x3f, 3, 7, "RLA[$2],X",	RLA_AbsoluteX, RLA_General);
+	_INST_FROM (0x3b, 3, 7, "RLA[$2],Y",	RLA_AbsoluteY, RLA_General);
 
 	// ROL
 	/** ROL_General: To aggregate common steps in every ROL instruction. */
@@ -600,11 +771,54 @@ namespace F6500
 	_INST_FROM (0x76, 2, 6, "ROR[$1],X",	ROR_ZeroPageX, ROR_General);
 	_INST_FROM (0x7e, 3, 7, "ROR[$2],X",	ROR_AbsoluteX, ROR_General);
 
+	// Non documented
+	// RRA: ROR + ADC
+	// https://www.esocop.org/docs/MOS6510UnintendedOpcodes-20152412.pdf
+	/** RRA_General: To aggregate common steps in every RRA instruction. */
+	class RRA_General : public Instruction
+	{
+		public:
+		RRA_General (unsigned int c, unsigned int mp, unsigned int cc, const std::string& t)
+			: Instruction (c, mp, cc, t)
+							{ }
+
+		protected:
+		bool executeOn (const MCHEmul::Address& a);
+	};
+
+	_INST_FROM (0x6f, 3, 6, "RRA[$2]",		RRA_Absolute, RRA_General);
+	_INST_FROM (0x67, 2, 5, "RRA[$1]",		RRA_ZeroPage, RRA_General);
+	_INST_FROM (0x63, 2, 8, "RRA([$1],X)",	RRA_ZeroPageIndirectX, RRA_General);
+	_INST_FROM (0x73, 2, 8, "RRA([$1]),Y",	RRA_ZeroPageIndirectY, RRA_General);
+	_INST_FROM (0x77, 2, 6, "RRA[$1],X",	RRA_ZeroPageX, RRA_General);
+	_INST_FROM (0x7f, 3, 7, "RRA[$2],X",	RRA_AbsoluteX, RRA_General);
+	_INST_FROM (0x7b, 3, 7, "RRA[$2],Y",	RRA_AbsoluteY, RRA_General);
+
 	// RTI
 	_INST_FROM (0x40, 1, 6, "RTI",			RTI, Instruction);
 
 	// RTS
 	_INST_FROM (0x60, 1, 6, "RTS",			RTS, Instruction);
+
+	// Non documented
+	// SAX: PHP + PHA + STX + AND + STA + PLA + PLP
+	// https://www.esocop.org/docs/MOS6510UnintendedOpcodes-20152412.pdf
+	/** SAX_General: To aggregate common steps in every SAX instruction. */
+	class SAX_General : public Instruction
+	{
+		public:
+		SAX_General (unsigned int c, unsigned int mp, unsigned int cc, const std::string& t)
+			: Instruction (c, mp, cc, t)
+							{ }
+
+		protected:
+		bool executeOn (const MCHEmul::Address& a);
+	};
+
+	_INST_FROM (0x8f, 3, 4, "SAX[$2]",		SAX_Absolute, SAX_General);
+	_INST_FROM (0x87, 2, 3, "SAX[$1]",		SAX_ZeroPage, SAX_General);
+	_INST_FROM (0x97, 2, 6, "SAX[$1],Y",	SAX_ZeroPageY, SAX_General);
+	_INST_FROM (0x83, 2, 6, "SAX([$1],X)",	SAX_ZeroPageIndirectX, SAX_General);
 
 	// SBC
 	/** SBC_General: To aggregate common steps in every SBC instruction. */
@@ -619,7 +833,7 @@ namespace F6500
 		bool executeWith (MCHEmul::UByte u);
 	};
 
-	_INST_FROM (0xe9, 2, 2, "SBC#[#1]",		SBC_Inmediate, SBC_General);
+	_INST_FROM (0xe9 /** 0xeb (undocumented) */, 2, 2, "SBC#[#1]", SBC_Inmediate, SBC_General);
 	_INST_FROM (0xed, 3, 4, "SBC[$2]",		SBC_Absolute, SBC_General);
 	_INST_FROM (0xe5, 2, 3, "SBC[$1]",		SBC_ZeroPage, SBC_General);
 	_INST_FROM (0xe1, 2, 6, "SBC([$1],X)",	SBC_ZeroPageIndirectX, SBC_General);
@@ -627,6 +841,23 @@ namespace F6500
 	_INST_FROM (0xf5, 2, 4, "SBC[$1],X",	SBC_ZeroPageX, SBC_General);
 	_INST_FROM (0xfd, 3, 4, "SBC[$2],X",	SBC_AbsoluteX, SBC_General);
 	_INST_FROM (0xf9, 3, 4, "SBC[$2],Y",	SBC_AbsoluteY, SBC_General);
+
+	// Non documented
+	// SBX: STA + TXA + AND + CMP + PHP + SEC + CLD + SBC + TAX + LDA + PLP
+	// https://www.esocop.org/docs/MOS6510UnintendedOpcodes-20152412.pdf
+	/** SBX_General: To aggregate common steps in every SBX instruction. */
+	class SBX_General : public Instruction
+	{
+		public:
+		SBX_General (unsigned int c, unsigned int mp, unsigned int cc, const std::string& t)
+			: Instruction (c, mp, cc, t)
+							{ }
+
+		protected:
+		bool executeWith (MCHEmul::UByte u);
+	};
+
+	_INST_FROM (0xcb, 2, 2, "SBX#[#1]",		SBX_Inmediate, SBX_General);
 
 	// SEC
 	_INST_FROM (0x38, 1, 2, "SEC",			SEC, Instruction);
@@ -636,6 +867,52 @@ namespace F6500
 
 	// SEI
 	_INST_FROM (0x78, 1, 2, "SEI",			SEI, Instruction);
+
+	// Non documented
+	// SLO: ASL + ORA
+	// https://www.esocop.org/docs/MOS6510UnintendedOpcodes-20152412.pdf
+	/** SLO_General: To aggregate common steps in every SLO instruction. */
+	class SLO_General : public Instruction
+	{
+		public:
+		SLO_General (unsigned int c, unsigned int mp, unsigned int cc, const std::string& t)
+			: Instruction (c, mp, cc, t)
+							{ }
+
+		protected:
+		bool executeOn (const MCHEmul::Address& a);
+	};
+
+	_INST_FROM (0x0f, 3, 6, "SLO[$2]",		SLO_Absolute, SLO_General);
+	_INST_FROM (0x07, 2, 5, "SLO[$1]",		SLO_ZeroPage, SLO_General);
+	_INST_FROM (0x03, 2, 8, "SLO([$1],X)",	SLO_ZeroPageIndirectX, SLO_General);
+	_INST_FROM (0x13, 2, 8, "SLO([$1]),Y",	SLO_ZeroPageIndirectY, SLO_General);
+	_INST_FROM (0x17, 2, 6, "SLO[$1],X",	SLO_ZeroPageX, SLO_General);
+	_INST_FROM (0x1f, 3, 7, "SLO[$2],X",	SLO_AbsoluteX, SLO_General);
+	_INST_FROM (0x1b, 3, 7, "SLO[$2],Y",	SLO_AbsoluteY, SLO_General);
+
+	// Non documented
+	// SRE: LSR + EOR
+	// https://www.esocop.org/docs/MOS6510UnintendedOpcodes-20152412.pdf
+	/** SRE_General: To aggregate common steps in every SRE instruction. */
+	class SRE_General : public Instruction
+	{
+		public:
+		SRE_General (unsigned int c, unsigned int mp, unsigned int cc, const std::string& t)
+			: Instruction (c, mp, cc, t)
+							{ }
+
+		protected:
+		bool executeOn (const MCHEmul::Address& a);
+	};
+
+	_INST_FROM (0x4f, 3, 6, "SRE[$2]",		SRE_Absolute, SRE_General);
+	_INST_FROM (0x47, 2, 5, "SRE[$1]",		SRE_ZeroPage, SRE_General);
+	_INST_FROM (0x43, 2, 8, "SRE([$1],X)",	SRE_ZeroPageIndirectX, SRE_General);
+	_INST_FROM (0x53, 2, 8, "SRE([$1]),Y",	SRE_ZeroPageIndirectY, SRE_General);
+	_INST_FROM (0x57, 2, 6, "SRE[$1],X",	SRE_ZeroPageX, SRE_General);
+	_INST_FROM (0x5f, 3, 7, "SRE[$2],X",	SRE_AbsoluteX, SRE_General);
+	_INST_FROM (0x5b, 3, 7, "SRE[$2],Y",	SRE_AbsoluteY, SRE_General);
 
 	// STA
 	/** STA_General: To aggregate common steps in every STA instruction. */

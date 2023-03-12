@@ -1,5 +1,6 @@
 #include <F6500/Instructions.hpp>
 
+// ---
 _INST_IMPL (F6500::BIT_Absolute)
 {
 	MCHEmul::UByte v = value_absolute ();
@@ -14,6 +15,7 @@ _INST_IMPL (F6500::BIT_Absolute)
 	return (true);
 }
 
+// ---
 _INST_IMPL (F6500::BIT_ZeroPage)
 {
 	MCHEmul::UByte v = value_zeroPage ();
@@ -25,13 +27,5 @@ _INST_IMPL (F6500::BIT_ZeroPage)
 	st.setBitStatus ("V", v [6]);
 	st.setBitStatus ("Z", z);
 
-	return (true);
-}
-
-_INST_IMPL (F6500::NOP)
-{
-	assert (parameters ().size () == 1);
-
-	// Does nothing
 	return (true);
 }

@@ -43,25 +43,25 @@ SETCHARSET:					lda VICIICTRLMEMREG
 							ora #$06								; Put the second character set (lowercase)
 							sta VICIICTRLMEMREG
 
- ;Change the graphics mode...
- ;Char multicolor extended
-SETGRAPHICMODE:				lda VICIISCROLLY
-							and #$bf
-							ora #$40								; Sets the bit 6 on... enhaced multimode...
-							sta VICIISCROLLY
-							lda VICIISCROLLX						; Just to test if the shift doesn't affect!
-							and #$f8
-							ora #$07
-							sta VICIISCROLLX
-; Char multicolor
-;SETGRAPHICMODE:				lda VICIISCROLLX						; Sets the bit 4 on... multicolor text mode...
-;							and #$ef
-;							ora #$10
-;							sta VICIISCROLLX
+; Change the graphics mode...
+; Char multicolor extended
+;SETGRAPHICMODE:				lda VICIISCROLLY
+;							and #$bf
+;							ora #$40								; Sets the bit 6 on... enhaced multimode...
+;							sta VICIISCROLLY
 ;							lda VICIISCROLLX						; Just to test if the shift doesn't affect!
 ;							and #$f8
 ;							ora #$07
 ;							sta VICIISCROLLX
+; Char multicolor
+SETGRAPHICMODE:				lda VICIISCROLLX						; Sets the bit 4 on... multicolor text mode...
+							and #$ef
+							ora #$10
+							sta VICIISCROLLX
+							lda VICIISCROLLX						; Just to test if the shift doesn't affect!
+							and #$f8
+							ora #$07
+							sta VICIISCROLLX
 
 ; Test to draw a text on the screen.
 ; The elements of the text are defined at TEXTDEF.

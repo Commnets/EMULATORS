@@ -27,9 +27,23 @@
     <ClInclude Include="..\..\include\F6500\NMIInterrupt.hpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\src\F6500\ALR.cpp" />
+    <ClCompile Include="..\..\src\F6500\ANC.cpp" />
+    <ClCompile Include="..\..\src\F6500\ARR.cpp" />
     <ClCompile Include="..\..\src\F6500\C6500.cpp" />
+    <ClCompile Include="..\..\src\F6500\DCP.cpp" />
     <ClCompile Include="..\..\src\F6500\IRQInterrupt.cpp" />
+    <ClCompile Include="..\..\src\F6500\ISC.cpp" />
+    <ClCompile Include="..\..\src\F6500\JAM.cpp" />
+    <ClCompile Include="..\..\src\F6500\LAX.cpp" />
     <ClCompile Include="..\..\src\F6500\NMIInterrupt.cpp" />
+    <ClCompile Include="..\..\src\F6500\NOP.cpp" />
+    <ClCompile Include="..\..\src\F6500\RLA.cpp" />
+    <ClCompile Include="..\..\src\F6500\RRA.cpp" />
+    <ClCompile Include="..\..\src\F6500\SAX.cpp" />
+    <ClCompile Include="..\..\src\F6500\SBX.cpp" />
+    <ClCompile Include="..\..\src\F6500\SLO.cpp" />
+    <ClCompile Include="..\..\src\F6500\SRE.cpp" />
     <ClCompile Include="..\..\src\F6500\TRANSFERS.cpp" />
     <ClCompile Include="..\..\src\F6500\ADC.cpp" />
     <ClCompile Include="..\..\src\F6500\AND.cpp" />

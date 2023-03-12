@@ -16,6 +16,9 @@
     <Filter Include="Archivos de origen\instructions">
       <UniqueIdentifier>{ac6e6fa4-1831-4565-8cad-c086c7a9b8be}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Archivos de origen\instructions\undocumented">
+      <UniqueIdentifier>{da0a1e89-0265-4c87-8f76-f748245dded3}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\include\F6500\C6510.hpp">
@@ -130,6 +133,48 @@
     </ClCompile>
     <ClCompile Include="..\..\src\F6500\Instructions.cpp">
       <Filter>Archivos de origen</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\F6500\NOP.cpp">
+      <Filter>Archivos de origen\instructions\undocumented</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\F6500\SLO.cpp">
+      <Filter>Archivos de origen\instructions\undocumented</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\F6500\SRE.cpp">
+      <Filter>Archivos de origen\instructions\undocumented</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\F6500\RRA.cpp">
+      <Filter>Archivos de origen\instructions\undocumented</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\F6500\SAX.cpp">
+      <Filter>Archivos de origen\instructions\undocumented</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\F6500\LAX.cpp">
+      <Filter>Archivos de origen\instructions\undocumented</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\F6500\RLA.cpp">
+      <Filter>Archivos de origen\instructions\undocumented</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\F6500\DCP.cpp">
+      <Filter>Archivos de origen\instructions\undocumented</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\F6500\ISC.cpp">
+      <Filter>Archivos de origen\instructions\undocumented</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\F6500\ANC.cpp">
+      <Filter>Archivos de origen\instructions\undocumented</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\F6500\ALR.cpp">
+      <Filter>Archivos de origen\instructions\undocumented</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\F6500\ARR.cpp">
+      <Filter>Archivos de origen\instructions\undocumented</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\F6500\SBX.cpp">
+      <Filter>Archivos de origen\instructions\undocumented</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\F6500\JAM.cpp">
+      <Filter>Archivos de origen\instructions\undocumented</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
