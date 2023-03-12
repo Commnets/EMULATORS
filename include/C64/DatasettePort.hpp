@@ -19,7 +19,6 @@
 namespace C64
 {
 	class CIA1;
-	class SpecialFunctionsChip;
 
 	/** This class represents the UserIOPort. */
 	class DatasetteIOPort final : public COMMODORE::DatasetteIOPort
@@ -27,15 +26,13 @@ namespace C64
 		public:
 		DatasetteIOPort ()
 			: COMMODORE::DatasetteIOPort (),
-			  _cia1 (nullptr),
-			  _specialChip (nullptr)
+			  _cia1 (nullptr)
 							{ }
 
 		virtual void linkToChips (const MCHEmul::Chips& c) override;
 
 		private:
 		CIA1* _cia1;
-		SpecialFunctionsChip* _specialChip;
 	};
 }
 

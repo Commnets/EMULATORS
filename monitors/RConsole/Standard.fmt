@@ -186,6 +186,11 @@ Program saved=@RESULT@
 @PERIPHERALS?{fmter=.CLASS,empty=no peripherals}\n---\n@
 #---
 #---
+;CPERCMD
+->Errors:
+@ERROR@
+#---
+#---
 ;CANSWER
 @RESULT@
 #---

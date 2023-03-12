@@ -10,9 +10,12 @@ MCHEmul::ExtendedDataMemoryBlocks COMMODORE::CRTFileData::asMemoryBlocks () cons
 	result._attributes ["VERSION"] = std::to_string (_cartridgeVersion);
 	result._attributes ["_GAME"] = _GAMEActive ? "YES" : "NO";
 	result._attributes ["_EXROM"] = _EXROMActive ? "YES" : "NO";
-	// The rest of the attributes of the format loaded are useless...
 	for (const auto& i : _chipsData)
-		result._data.emplace_back (MCHEmul::DataMemoryBlock (i._startingLoadAddress, i._content.bytes ()));
+	{
+		MCHEmul::DataMemoryBlock mB (i._startingLoadAddress, i._content.bytes ());
+		mB.setAttribute ("BANK", std::to_string (i._bankNumber)); // The bank is important depending on the type of cartridge...
+		result._data.emplace_back (std::move (mB)); // No more used...
+	}
 
 	return (result);
 }

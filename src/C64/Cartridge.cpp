@@ -21,10 +21,9 @@ void C64::Cartridge::configureMemoryStructure (bool ROML, bool ROMH1, bool ROMH2
 	if (data ()._data.empty ())
 		return;
 
-	switch (std::atoi (((*_data._attributes.find ("TYPE")).second).c_str ()))
+	switch (type ())
 	{
-		// Normal cartridge...
-		case 0:
+		default:
 			assert (_subsets.size () == 3);
 			_subsets [_EXPANSIONROMBASE + 0] -> setActive (true);
 			_subsets [_EXPANSIONROMBASE + 0] -> setActiveForReading (ROML);
@@ -32,9 +31,6 @@ void C64::Cartridge::configureMemoryStructure (bool ROML, bool ROMH1, bool ROMH2
 			_subsets [_EXPANSIONROMBASE + 1] -> setActiveForReading (ROMH1);
 			_subsets [_EXPANSIONROMBASE + 2] -> setActive (true);
 			_subsets [_EXPANSIONROMBASE + 2] -> setActiveForReading (ROMH2);
-			break;
-
-		default:
 			break;
 	}
 }
@@ -104,10 +100,9 @@ void C64::Cartridge::dumpDataInto (C64::Memory* m, MCHEmul::MemoryView* mV)
 		return; // Makes no sense to continue...
 
 	// The structure of the memoy will depend on the type of cartridge...
-	switch (std::atoi (((*_data._attributes.find ("TYPE")).second).c_str ()))
+	switch (type ())
 	{
-		// Normal cartridge...
-		case 0:
+		default:
 			{
 				_storages = MCHEmul::PhysicalStorages 
 					({ { _EXPANSIONROMBASE + 0, new MCHEmul::PhysicalStorage 
@@ -145,9 +140,6 @@ void C64::Cartridge::dumpDataInto (C64::Memory* m, MCHEmul::MemoryView* mV)
 				}
 			}
 
-			break;
-
-		default:
 			break;
 	}
 

@@ -1,7 +1,7 @@
 #include <C64/PLA.hpp>
-#include <C64/SFChip.hpp>
 #include <C64/ExpansionPort.hpp>
 #include <C64/Memory.hpp>
+#include <C64/IO6510Registers.hpp>
 
 // ---
 C64::PLA::PLA ()
@@ -52,7 +52,7 @@ bool C64::PLA::simulate (MCHEmul::CPU* cpu)
 // ---
 void C64::PLA::processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifier*)
 {
-	if (evnt.id () == C64::SpecialFunctionsChip::_C64PORTIOBITSACTUALIZED)
+	if (evnt.id () == C64::IO6510Registers::_C64PORTIOBITSACTUALIZED)
 	{
 		_statusAffected = true;
 

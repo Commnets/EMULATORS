@@ -128,15 +128,15 @@ bool MCHEmul::Computer::initialize (bool iM)
 		return (false);
 	}
 
-	if (!_cpu -> initialize ())
+	// Init the memory is optional...
+	if (iM && !_memory -> initialize ())
 	{
 		_error = MCHEmul::_INIT_ERROR;
 
 		return (false);
 	}
 
-	// Init the memory is optional...
-	if (iM && !_memory -> initialize ())
+	if (!_cpu -> initialize ())
 	{
 		_error = MCHEmul::_INIT_ERROR;
 

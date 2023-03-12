@@ -21,7 +21,7 @@
 #include <C64/CIA1Registers.hpp>
 #include <C64/CIA2.hpp>
 #include <C64/CIA2Registers.hpp>
-#include <C64/SFChip.hpp>
+#include <C64/IO6510Registers.hpp>
 #include <C64/PLA.hpp>
 #include <C64/Screen.hpp>
 #include <C64/Sound.hpp>

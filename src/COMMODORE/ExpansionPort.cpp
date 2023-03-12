@@ -45,6 +45,8 @@ bool COMMODORE::ExpansionIOPort::disconnectPeripheral (int id)
 		_expansionElement = nullptr;
 
 		_expansionElementOut = true;
+
+		notify (MCHEmul::Event (COMMODORE::ExpansionIOPort::_EXPANSIONELEMENTOUT));
 	}
 
 	return (MCHEmul::IODevice::disconnectPeripheral (id));

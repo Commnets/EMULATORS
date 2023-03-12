@@ -1,6 +1,6 @@
 #include <C64/C64.hpp>
 #include <C64/Memory.hpp>
-#include <C64/SFChip.hpp>
+#include <C64/IO6510Registers.hpp>
 #include <C64/PLA.hpp>
 #include <C64/Screen.hpp>
 #include <C64/Sound.hpp>
@@ -35,17 +35,22 @@ bool C64::Commodore64::initialize (bool iM)
 	if (!result)
 		return (false);
 
-	// Connection among elements...
+	// The connections among chips and devices are set in the method "linkToChips" of the IODevice class
+	// Any other type of connetion has to be done at C64 level...
+
 	// It is needed to observe the expansion port...
 	// Events when it is disonnected and connected are sent and with many implications
 	// in the structure of the memory...
 	observe (dynamic_cast <COMMODORE::ExpansionIOPort*> (device (COMMODORE::ExpansionIOPort::_ID)));
 	// Both chips CIAII and VICII are link somehow
 	// Because the banks connected at VICII are determined in CIA chip...
-	// In the real C64 the communciation happens trough the PLA, but here it has been simplified...
+	// In the real C64 the communciation happens through the PLA, but here it has been simplified...
 	chip (COMMODORE::VICII::_ID) -> observe (chip (C64::CIA2::_ID));
 	// The C64 IO Ports (Memory location 1, bit 0,1,2) and the PLA are linked...
-	chip (C64::PLA::_ID) -> observe (chip (C64::SpecialFunctionsChip::_ID));
+	chip (C64::PLA::_ID) -> observe (memory () -> subset (C64::IO6510Registers::_IO6510REGISTERS_SUBSET));
+	// ...and the datasette port is linked to that memory position
+	memory () -> subset (C64::IO6510Registers::_IO6510REGISTERS_SUBSET) -> observe (device (COMMODORE::DatasetteIOPort::_ID));
+	device (COMMODORE::DatasetteIOPort::_ID) -> observe (memory () -> subset (C64::IO6510Registers::_IO6510REGISTERS_SUBSET));
 
 	// Check whether there is an expansion element inserted in the expansion port
 	// If it is, it's info is loaded if any...
@@ -66,7 +71,7 @@ void C64::Commodore64::processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifi
 		evnt.id () == COMMODORE::ExpansionIOPort::_EXPANSIONELEMENTOUT)
 	{
 		setExit (true);
-		setRestartAfterExit (true, 1 /** Without memory. */);
+		setRestartAfterExit (true, 9999 /** Full */);
 	}
 }
 
@@ -74,10 +79,6 @@ void C64::Commodore64::processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifi
 MCHEmul::Chips C64::Commodore64::standardChips (C64::Commodore64::VisualSystem vS)
 {
 	MCHEmul::Chips result;
-
-	// The Special Control Chip...
-	// Invented by me to maintain the architcture, but softly mention at any doc (i guess)!
-	result.insert (MCHEmul::Chips::value_type (C64::SpecialFunctionsChip::_ID, (MCHEmul::Chip*) new C64::SpecialFunctionsChip));
 
 	// The CIA1 & 2
 	result.insert (MCHEmul::Chips::value_type (C64::CIA1::_ID, (MCHEmul::Chip*) new C64::CIA1));

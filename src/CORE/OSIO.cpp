@@ -17,6 +17,8 @@ bool MCHEmul::InputOSSystem::initialize ()
 { 
 	_quitRequested = false; 
 	
+	_joysticks.clear ();
+
 	int e = SDL_InitSubSystem (SDL_INIT_JOYSTICK);
 	if (SDL_NumJoysticks () > 0)
 	{
