@@ -801,7 +801,7 @@ namespace F6500
 	_INST_FROM (0x60, 1, 6, "RTS",			RTS, Instruction);
 
 	// Non documented
-	// SAX: PHP + PHA + STX + AND + STA + PLA + PLP
+	// SAX: PHP + PHA + STX + AND + STA + PLA + PLP = _ACCUMULATOR & _XREGISTER...
 	// https://www.esocop.org/docs/MOS6510UnintendedOpcodes-20152412.pdf
 	/** SAX_General: To aggregate common steps in every SAX instruction. */
 	class SAX_General : public Instruction
@@ -843,7 +843,7 @@ namespace F6500
 	_INST_FROM (0xf9, 3, 4, "SBC[$2],Y",	SBC_AbsoluteY, SBC_General);
 
 	// Non documented
-	// SBX: STA + TXA + AND + CMP + PHP + SEC + CLD + SBC + TAX + LDA + PLP
+	// SBX: STA + TXA + AND + CMP + PHP + SEC + CLD + SBC + TAX + LDA + PLP = (_ACCUMULATOR & _XREGISTER) - DATA
 	// https://www.esocop.org/docs/MOS6510UnintendedOpcodes-20152412.pdf
 	/** SBX_General: To aggregate common steps in every SBX instruction. */
 	class SBX_General : public Instruction

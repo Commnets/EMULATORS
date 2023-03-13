@@ -8,7 +8,7 @@ bool F6500::ROL_General::executeOn (const MCHEmul::Address& a)
 	bool c = st.bitStatus (F6500::C6500::_CARRYFLAG); 
 
 	// Read the value, makes the operation and set it back!
-	MCHEmul::UByte v = memory () -> values (a, 1)[0]; // 1 byte long always
+	MCHEmul::UByte v = memory () -> value (a); // 1 byte long always
 	c = v.rotateLeftC (c /** The carry is put into. */, 1); // Keeps the status of the last bit to actualize later the carry flag
 	memory () -> set (a, v);
 

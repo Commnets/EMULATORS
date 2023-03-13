@@ -6,6 +6,7 @@ _INST_IMPL (F6500::JAM)
 {
 	assert (parameters ().size () == 1);
 
+	// Just start...
 	cpu () -> restart ();
 
 	return (true);

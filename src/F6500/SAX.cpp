@@ -4,10 +4,11 @@
 // ---
 bool F6500::SAX_General::executeOn (const MCHEmul::Address& a)
 {
-	memory () -> set (a, cpu () -> internalRegister (F6500::C6510::_XREGISTER).values ());
-	memory () -> set (a, cpu () -> internalRegister (F6500::C6510::_ACCUMULATOR).values ()[0] /** 1 byte long. */ & a.values () [0]);
+	// At the end the memory is stored with _ACCUMULATOR & _XREGISTER
+	memory () -> set (a, cpu () -> internalRegister (F6500::C6510::_ACCUMULATOR).values ()[0] &
+		cpu () -> internalRegister (F6500::C6510::_XREGISTER).values ()[0]); // Always 1 byte long...
 
-	// No impact in registers...
+	// ...with no impact in registers...
 
 	return (true);
 }

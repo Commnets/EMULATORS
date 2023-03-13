@@ -4,9 +4,10 @@
 // ---
 bool F6500::LAX_General::executeOn (const MCHEmul::Address& a)
 {
-	MCHEmul::UByte v = memory () -> value (a);
-	cpu () -> internalRegister (F6500::C6510::_ACCUMULATOR).set ({ v }); // 1 byte long always...
-	cpu () -> internalRegister (F6500::C6510::_XREGISTER).set ({ v }); // 1 byte long always...
+	// The memory location is copied into both _ACCUMULATOR & _XREGISTER
+	MCHEmul::UByte v = memory () -> value (a); // 1 byte long always...
+	cpu () -> internalRegister (F6500::C6510::_ACCUMULATOR).set ({ v }); 
+	cpu () -> internalRegister (F6500::C6510::_XREGISTER).set ({ v });
 
 	// Time of the status register...
 	MCHEmul::StatusRegister& st = cpu () -> statusRegister ();

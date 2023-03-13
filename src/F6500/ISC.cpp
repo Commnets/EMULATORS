@@ -8,16 +8,16 @@ bool F6500::ISC_General::executeOn (const MCHEmul::Address& a)
 	MCHEmul::StatusRegister& st = cpu () -> statusRegister ();
 
 	// Read the value, makes the operation and sets it back...
-	MCHEmul::UInt v = MCHEmul::UInt ((memory () -> values (a, 1)[0])) + MCHEmul::UInt::_1;
+	MCHEmul::UInt v = MCHEmul::UInt ((memory () -> value (a))) /** 1 bytelong. */ + MCHEmul::UInt::_1; // INC...
 	// A carry could be generated, but it will be ignored...
-	memory () -> set (a, v.bytes ()); // 1 byte long always
+	memory () -> set (a, v.bytes ());
 
-	// Read the value, makes the operation and set it back!
+	// ...and then the substract...
 	unsigned char ft = st.bitStatus (F6500::C6500::_DECIMALFLAG) 
 		? MCHEmul::UInt::_PACKAGEDBCD : MCHEmul::UInt::_BINARY; // In BCD?
 	MCHEmul::UInt r = MCHEmul::UInt (ac.values ()[0], ft).substract 
-		(MCHEmul::UInt (v.bytes (), ft), st.bitStatus (F6500::C6500::_CARRYFLAG));
-	ac.set (r.bytes ()); // The carry is taken into account in the substraction. ! bytelong always...
+		(MCHEmul::UInt (v.bytes (), ft), st.bitStatus (F6500::C6500::_CARRYFLAG)); // ...SBC
+	ac.set (r.bytes ());
 
 	// Time of the status register...
 	st.setBitStatus (F6500::C6500::_NEGATIVEFLAG, r.negative ());
