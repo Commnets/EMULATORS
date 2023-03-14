@@ -64,8 +64,10 @@ MCHEmul::Command* MCHEmul::StandardCommandBuilder::createEmptyCommand (const std
 		result = new MCHEmul::IODevicesCommand;
 	else if (cmdName == "PERIPHERALS" || cmdName == MCHEmul::PeripheralsCommand::_NAME)
 		result = new MCHEmul::PeripheralsCommand;
-	else if (cmdName == "PERCOMMAND" || cmdName == MCHEmul::PeripheralsCommand::_NAME)
+	else if (cmdName == "PERCOMMAND" || cmdName == MCHEmul::PeripheralInstructionCommand::_NAME)
 		result = new MCHEmul::PeripheralInstructionCommand;
+	else if (cmdName == "ASSIGNJOY" || cmdName == MCHEmul::AssignJoystickNameCommand::_NAME)
+		result = new MCHEmul::AssignJoystickNameCommand;
 	else if (cmdName == MCHEmul::MoveParametersToAnswerCommand::_NAME)
 		result = new MCHEmul::MoveParametersToAnswerCommand;
 

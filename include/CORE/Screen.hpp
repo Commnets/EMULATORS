@@ -73,6 +73,15 @@ namespace MCHEmul
 		/** Draws the screen using the info of the frame. */
 		virtual bool simulate (CPU* cpu) override;
 
+		/**
+		  *	Adding to parent fields:
+		  * NAME	= Name of the screen. \n
+		  * COLUMNS	= The size in columns. \n
+		  * ROWS	= The size in rows. \n
+		  * HERTZS	= The refresh rate. \n
+		  */
+		virtual InfoStructure getInfoStructure () const override;
+
 		protected:
 		virtual void processEvent (const Event& evnt, Notifier* n) override;
 

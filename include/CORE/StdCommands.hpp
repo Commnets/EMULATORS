@@ -659,6 +659,27 @@ namespace MCHEmul
 		private:
 		virtual void executeImpl (CommandExecuter* cE, Computer* c, InfoStructure& rst) override;
 	};
+
+	/** Command to asign a number to a joystick. \n
+		E.g. When there is only one joystick the "system" assign it the number 0, but
+		we might want it to act as joystick number 1 so an assigment from 0 to 1 is needed. */
+	class AssignJoystickNameCommand final : public Command
+	{
+		public:
+		static const int _ID = 28;
+		static const std::string _NAME;
+
+		AssignJoystickNameCommand ()
+			: Command (_ID, _NAME)
+							{ }
+
+		/** The original josyctick number and the wanted number. */
+		virtual bool canBeExecuted () const override
+							{ return (_parameters.size () == 2); }
+
+		private:
+		virtual void executeImpl (CommandExecuter* cE, Computer* c, InfoStructure& rst) override;
+	};
 }
 
 #endif

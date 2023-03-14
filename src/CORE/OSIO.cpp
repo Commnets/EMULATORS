@@ -6,10 +6,11 @@ MCHEmul::InputOSSystem::InputOSSystem (int id, const MCHEmul::Attributes& attrs)
 	: IODevice (Type::_OUTPUT, id, attrs),
 	  _quitRequested (false),
 	  _joysticks (),
+	  _conversionJoystickMap (), // Nothing by default...
 	  _clock (50), // The events of the system will be read 50 times per second...
 	  _movementMap ()
 { 
-		setClassName ("IOSYSTEM"); 
+	setClassName ("IOSystem"); 
 }
 
 // ---
@@ -98,20 +99,43 @@ bool MCHEmul::InputOSSystem::simulate (MCHEmul::CPU* cpu)
 }
 
 // ---
+MCHEmul::InfoStructure MCHEmul::InputOSSystem::getInfoStructure () const
+{
+	MCHEmul::InfoStructure result = MCHEmul::IODevice::getInfoStructure ();
+
+	// Just to add the information about the joysticks...
+	int ct = 0;
+	std::map <int, int>::const_iterator j;
+	std::string jI = "";
+	for (const auto& i : _joysticks) 
+	{ 
+		jI += ((ct != 0) ? "," : "") + std::to_string (ct) + "(" + 
+			(((j = _conversionJoystickMap.find (ct)) == _conversionJoystickMap.end ()) ? "none" : std::to_string ((*j).second)) + ")";
+		ct++;
+	}
+
+	result.add ("JOYSTICKS", jI);
+
+	return (result);
+}
+
+// ---
 void MCHEmul::InputOSSystem::treatJoystickEvents (MCHEmul::InputOSSystem::SDL_JoyAxisEvents&& js)
 {
 	MCHEmul::InputOSSystem::JoystickMovementMap mMC (_movementMap);
 
 	for (const auto& i : js)
 	{ 
-		MCHEmul::InputOSSystem::JoystickMovementMap::const_iterator j = _movementMap.find (i.which);
+		std::map <int, int>::const_iterator cM;
+		int nJ = ((cM = _conversionJoystickMap.find (i.which)) == _conversionJoystickMap.end ()) ? i.which : (*cM).second;
+		MCHEmul::InputOSSystem::JoystickMovementMap::const_iterator j = _movementMap.find (nJ);
 		if (j == _movementMap.end ())
-			_movementMap [i.which] = std::vector <int> (i.axis + 1, 0);
+			_movementMap [nJ] = std::vector <int> (i.axis + 1, 0);
 		else
 		if ((*j).second.size () < (size_t) (i.axis + 1))
-			_movementMap [i.which].resize (i.axis + 1, 0);
+			_movementMap [nJ].resize (i.axis + 1, 0);
 
-		_movementMap [i.which][i.axis] = i.value;
+		_movementMap [nJ][i.axis] = i.value;
 	}
 
 	// ...and only when something changes it is communicated as a movement in the joystick...

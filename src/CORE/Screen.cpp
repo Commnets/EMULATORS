@@ -29,7 +29,7 @@ MCHEmul::Screen::Screen (const std::string& n, int id,
 	_texture  = SDL_CreateTexture	
 		(_renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, _screenColumns, _screenRows);
 
-	setClassName ("SCREEN");
+	setClassName ("Screen");
 }
 
 // ---
@@ -91,6 +91,19 @@ bool MCHEmul::Screen::simulate (MCHEmul::CPU* cpu)
 	_clock.countCycles (1);
 
 	return (true);
+}
+
+// ---
+MCHEmul::InfoStructure MCHEmul::Screen::getInfoStructure () const
+{
+	MCHEmul::InfoStructure result = MCHEmul::IODevice::getInfoStructure ();
+
+	result.add ("NAME", _screenName);
+	result.add ("HERTZS", std::to_string (_hertzs));
+	result.add ("COLUMNS", std::to_string (_screenColumns));
+	result.add ("ROWS", std::to_string (_screenRows));
+
+	return (result);
 }
 
 // ---

@@ -68,9 +68,25 @@ Id:@ID@
 @ATTRS?{key=YES,equal=:,empty=no attributes}\n@
 #---
 #---
-;Device
+;IODevice
 Id:@ID@
 @ATTRS?{key=YES,equal=:,empty=no attributes}\n@
+->Peripherals:
+@IOPERIPHERALS?{fmter=.CLASS,empty=no peripherals}\n@
+#---
+#---
+;IOSystem
+Id:@ID@
+@ATTRS?{key=YES,equal=:,empty=no attributes}\n@
+Joysticks:@JOYSTICKS@
+->Peripherals:
+@IOPERIPHERALS?{fmter=.CLASS,empty=no peripherals}\n@
+#---
+#---
+;Screen
+Id:@ID@
+@ATTRS?{key=YES,equal=:,empty=no attributes}\n@
+@NAME@(@HERTZS@Hz)@COLUMNS@x@ROWS@
 ->Peripherals:
 @IOPERIPHERALS?{fmter=.CLASS,empty=no peripherals}\n@
 #---
@@ -179,7 +195,7 @@ Program saved=@RESULT@
 #---
 #---
 ;CDEVICES
-@DEVICES?{fmter=Device,empty=no devices}\n---\n@
+@DEVICES?{fmter=.CLASS,empty=no devices}\n---\n@
 #---
 #---
 ;CPERIPHERALS
@@ -187,6 +203,11 @@ Program saved=@RESULT@
 #---
 #---
 ;CPERCMD
+->Errors:
+@ERROR@
+#---
+#---
+;CASSIGNJ
 ->Errors:
 @ERROR@
 #---

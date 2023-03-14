@@ -66,6 +66,12 @@ namespace MCHEmul
 
 		InputOSSystem (int id, const Attributes& attrs = { });
 
+		/** Assign a number to a joystick id. */
+		void addConversionJoystick (int id, int n)
+							{ _conversionJoystickMap [id] = n; }
+		void setConversionJoystickMap (std::map <int, int>&& cJM)
+							{ _conversionJoystickMap = std::move (cJM); }
+
 		bool quitRequested () const
 							{ return (_quitRequested); }
 
@@ -73,6 +79,12 @@ namespace MCHEmul
 
 		/** Algorithm, invoking the protected methods defined. */
 		virtual bool simulate (CPU* cpu) override;
+
+		/**
+		  *	Adding to parent fields:
+		  * JOYSTICK	= Joystick id connected with the name in parenthesis. \n
+		  */
+		virtual InfoStructure getInfoStructure () const override;
 
 		protected:
 		// To manage events related with the keyboard...
@@ -92,7 +104,7 @@ namespace MCHEmul
 		/** The situation of the different axis in the different joystick loaded in the system are tracked 
 			in the "simulate" method. When they changed this method is then invoked. */
 		void whenJoystickMoved (const JoystickMovementMap& jm)
-							{ for (auto& i : jm ) 
+							{ for (auto& i : jm) 
 								notify (Event (_JOYSTICKMOVED, 0,
 									std::shared_ptr <Event::Data> ((Event::Data*) 
 										new JoystickMovementEvent (i.first, i.second)))); }
@@ -108,12 +120,15 @@ namespace MCHEmul
 		private:
 		/** Just to control all the joystick events at the same time. */
 		using SDL_JoyAxisEvents = std::vector <SDL_JoyAxisEvent>;
+		/** This method is able to assign a number according to the id. 
+			So it is possible to make that a joystick can behave in a machine like being connected in other port. */
 		void treatJoystickEvents (SDL_JoyAxisEvents&& js);
 
 		protected:
 		bool _quitRequested;
 		using SDLJoysticks = std::vector <SDL_Joystick*>;
 		SDLJoysticks _joysticks;
+		std::map <int, int> _conversionJoystickMap; // between the internal id and the one to be notified...
 		/** The clock to control the frenquency to read the keyboard. */
 		Clock _clock;
 
