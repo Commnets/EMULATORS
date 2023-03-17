@@ -15,7 +15,7 @@ Download them, install them and set the environmental variables: <b>SDL_HOME</b>
 <br><br>
 <img src="./docs/C64Data/Picture1.png"/><br><br>
 The important C64 keys in a Win32 standard keyboard are:<br>
-LEFT CONTROL&emsp= CTRL<br>
+<p>LEFT CONTROL&emsp= CTRL</p><br>
 RIGHT CONTROL&emsp= CTRL<br>
 LEFT ALT					  = STOP<br>
 SHIFT + LEFT ALT		= RUN<br>
