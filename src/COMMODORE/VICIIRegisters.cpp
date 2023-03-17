@@ -42,7 +42,7 @@ MCHEmul::InfoStructure COMMODORE::VICIIRegisters::getInfoStructure () const
 	MCHEmul::InfoStructure sInfo;
 	for (size_t i = 0; i < 8; i++)
 		sInfo.add (std::to_string (i), _spriteInfo [i].getInfoStructure ());
-	result.add ("SPRITES",		sInfo);
+	result.add ("SPRITES",		std::move (sInfo));
 	result.add ("IRQ",			_rasterIRQActive);
 	result.add ("IRQLINE",		_IRQRasterLineAt);
 

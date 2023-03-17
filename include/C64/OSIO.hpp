@@ -64,6 +64,18 @@ namespace C64
 			Byte 1			| LEFTSHIFT	| E		| S			| Z				| 4		| A		| W			| 3			|
 			Byte 0			| DOWN		| F5	| F3		| F1			| F7	| RIGHT	| RETURN	| DELETE	|
 							=========================================================================================
+			The important C64 keys in a Win32 standard keyboard are:
+			LEFT CONTROL				= CTRL
+			RIGHT CONTROL				= CTRL
+			LEFT ALT					= STOP
+			SHIFT + LEFT ALT			= RUN
+			PAUSE						= COMMODORE KEY
+			LEFT BRACKET				= +
+			RIGHT BRACKET				= *
+			APOSTROPHE					= :
+			BACKSLASH					= @
+			ESCAPE						= ARROW BACK
+			GRAVE						= POUND
 		*/
 		using KeystrockesMap = std::map <SDL_Scancode, Keystrokes>;
 		static const KeystrockesMap _C64KEYS;
