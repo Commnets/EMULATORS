@@ -38,8 +38,6 @@ namespace C64
 
 		virtual bool initialize () override;
 
-		virtual bool simulate (MCHEmul::CPU* cpu) override;
-
 		private:
 		C64::CIA2Registers* _CIA2Registers;
 	};

@@ -43,6 +43,19 @@ namespace COMMODORE
 		void setFlagLineInterruptRequested (bool a)
 							{ _flagLineInterruptRequested = a; }
 
+		/** A potential value to be reflected at the bit 6 of the Port B:
+			0: don't do anything. \n
+			1: true. \n 
+			2: false. */
+		unsigned int reflectTimerAAtPortDataB () const
+							{ return (_reflectTimerAAtPortDataB); }
+		void setReflectTimerAAtPortDataB (unsigned int w)
+							{ _reflectTimerAAtPortDataB = w; }
+		unsigned int reflectTimerBAtPortDataB () const
+							{ return (_reflectTimerBAtPortDataB); }
+		void setReflectTimerBAtPortDataB (unsigned int w)
+							{ _reflectTimerBAtPortDataB = w; }
+
 		protected:
 		virtual void setValue (size_t p, const MCHEmul::UByte& v) override;
 		virtual const MCHEmul::UByte& readValue (size_t p) const override;
@@ -69,6 +82,8 @@ namespace COMMODORE
 
 		// Implementation
 		mutable MCHEmul::UByte _lastValueRead;
+		unsigned int _reflectTimerAAtPortDataB;
+		unsigned int _reflectTimerBAtPortDataB;
 	};
 }
 

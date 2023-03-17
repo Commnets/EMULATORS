@@ -580,7 +580,7 @@ void COMMODORE::VICIIRegisters::initializeInternalValues ()
 	_spriteCollisionHappened = std::vector <bool> (8, false);
 	_lightPenOnScreenIRQHappened = false;
 
-	// This variable will be set from CIAII simulation method...
+	// This variable will be set from CIA2 Registers...
 	_bank = 0;
 }
 

@@ -49,11 +49,6 @@ namespace C64
 		void lookAtClock (COMMODORE::CIAClock* c)
 							{ _clock = c; }
 
-		/** The method returns whether there was a change in important positions. 
-			One it is read, the false go back to 0. */
-		bool changesAtPositions () const
-							{ bool nCG = _changesAtPositions; _changesAtPositions = false; return (nCG); }
-
 		private:
 		// Reference to the timers...
 		COMMODORE::CIATimer* _timerA;
@@ -63,13 +58,6 @@ namespace C64
 
 		/** The bank managed by VICII is controlled from this Chip. */
 		unsigned char _VICBank;
-
-		// Implementation
-		/** This flag sets when the position 0 is set. \n
-			That position signals the active bank for VICII. \n
-			That information will be used by CIA2 simulation to notify the change of bacnk to VICII. \n
-			@see chagesAtPositions () method. */
-		mutable bool _changesAtPositions;
 	};
 }
 

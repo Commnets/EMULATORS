@@ -83,6 +83,12 @@ const MCHEmul::UByte& C64::CIA1Registers::readValue (size_t p) const
 					// The columns (from keyboard or joystick 1) connected will have its bits to 0!...
 					result = _keyboardStatusMatrix [c] & ~_dataPortBDir; // 0x00 all input...
 				}
+
+				// These bits override anything if the timer has been parameterized for that...
+				if (reflectTimerAAtPortDataB () != 0) 
+					result.setBit (6, reflectTimerAAtPortDataB () == 1 ? true : false);
+				if (reflectTimerBAtPortDataB () != 0)
+					result.setBit (7, reflectTimerBAtPortDataB () == 1 ? true : false);
 			}
 			
 			break;

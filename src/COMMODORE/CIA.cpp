@@ -11,7 +11,9 @@ COMMODORE::CIA::CIA (int id, int rId, unsigned int intId)
 	  _registersId (rId),
 	  _timerA (0, intId /** they have to know the interruption id. */), _timerB (1, intId), 
 	  _clock (0, intId),
-	  _lastClockCycles (0)
+	  _lastClockCycles (0),
+	  _timerAValueAtPortB (0), _pulseTimerASentToPortB (false),
+	  _timerBValueAtPortB (0), _pulseTimerBSentToPortB (false)
 { 
 	setClassName ("CIA"); 
 }
@@ -42,15 +44,63 @@ bool COMMODORE::CIA::initialize ()
 
 	_CIARegisters -> initialize ();
 
+	_pulseTimerASentToPortB = _pulseTimerBSentToPortB;
+
+	_timerAValueAtPortB = _timerBValueAtPortB = 0; // Do not anything...
+
 	return (true);
 }
 
 // ---
 bool COMMODORE::CIA::simulate (MCHEmul::CPU* cpu)
 {
+	// Simulate the Timer...
+	// After that the timer can reach 0
+	// If so (apart of launching a interrupt if configured) the result can be reflected
+	// in the port B of the Chip...
 	_timerA.simulate (cpu);
+	if (_timerA.affectPortDataB ())
+	{
+		if (_timerA.reaches0 ())
+			_timerAValueAtPortB = (_pulseTimerASentToPortB = _timerA.pulseAtPortDataB ()) 
+				? 1 : (_timerAValueAtPortB == 1) ? 2 : 1;
+		else
+		if (_pulseTimerASentToPortB)
+		{
+			_pulseTimerASentToPortB = false;
 
-	_timerB.simulate (cpu, &_timerA);
+			_timerAValueAtPortB = 2; // Swith it off...
+		}
+		else
+			_timerAValueAtPortB = 0; // Do nothing...
+	}
+	else
+		_timerAValueAtPortB = 0; // Do nothing...
+
+	// Finally the value reflected is set into the registers...
+	_CIARegisters -> setReflectTimerAAtPortDataB (_timerAValueAtPortB /** 0 means do nothing. */);
+
+	// Same but with timer B
+	_timerB.simulate (cpu);
+	if (_timerB.affectPortDataB ())
+	{
+		if (_timerB.reaches0 ())
+			_timerBValueAtPortB = (_pulseTimerBSentToPortB = _timerB.pulseAtPortDataB ()) 
+				? 1 : (_timerBValueAtPortB == 1) ? 2 : 1;
+		else
+		if (_pulseTimerBSentToPortB)
+		{
+			_pulseTimerBSentToPortB = false;
+
+			_timerBValueAtPortB = 2;
+		}
+		else
+			_timerBValueAtPortB = 0;
+	}
+	else
+		_timerBValueAtPortB = 0;
+
+	_CIARegisters -> setReflectTimerAAtPortDataB (_timerBValueAtPortB /** 0 means do nothing. */);
 
 	_clock.simulate (cpu);
 

@@ -6,6 +6,9 @@ void COMMODORE::CIATimer::initialize ()
 	_runMode = RunMode::_RESTART;
 	_countMode = CountMode::_PROCESSORCYCLES;
 
+	_affectPortDataB = false;
+	_pulseAtPortDataB = false;
+
 	_enabled = false;
 	_interruptEnabled = false;
 

@@ -5,7 +5,7 @@
 // ---
 COMMODORE::CIARegisters::CIARegisters (int id, MCHEmul::PhysicalStorage* ps, size_t pp, const MCHEmul::Address& a, size_t s)
 	: MCHEmul::ChipRegisters (id, ps, pp, a, s),
-	  _timerA (nullptr), _timerB (nullptr),
+	  _timerA (nullptr), _timerB (nullptr), _clock (nullptr),
 	  _lastValueRead (MCHEmul::PhysicalStorage::_DEFAULTVALUE)
 	  // At this point all internal variables will have random values...
 { 
@@ -81,7 +81,7 @@ void COMMODORE::CIARegisters::setValue (size_t p, const MCHEmul::UByte& v)
 		case 0x08:
 			{
 				int ts = MCHEmul::UInt ({ MCHEmul::PhysicalStorageSubset::readValue (0x08) }, 
-					true /** 1 byte...doesn't matter. */, true /** BCD */).asInt (); // A BCD value to int...
+					true /** 1 byte...doesn't matter. */, MCHEmul::UInt::_PACKAGEDBCD).asInt (); // A BCD value to int...
 				if (MCHEmul::PhysicalStorageSubset::readValue (0x0f).bit (7)) _clock -> setAlarmTenthSeconds ((unsigned char) ts); 
 				else _clock -> setTenthSeconds ((unsigned char) ts);
 			}
@@ -93,28 +93,16 @@ void COMMODORE::CIARegisters::setValue (size_t p, const MCHEmul::UByte& v)
 		case 0x09:
 			{
 				int s = MCHEmul::UInt ({ MCHEmul::PhysicalStorageSubset::readValue (0x08) }, 
-					true /** 1 byte...doesn't matter. */, true /** BCD */).asInt (); // A BCD value to int...
+					true /** 1 byte...doesn't matter. */, MCHEmul::UInt::_PACKAGEDBCD).asInt (); // A BCD value to int...
 				if (MCHEmul::PhysicalStorageSubset::readValue (0x0f).bit (7)) _clock -> setSeconds ((unsigned char) s); 
 				else _clock -> setSeconds ((unsigned char) s);
 			}
 
 			break;
 
-		// Time of Day Clock Hours
-		// Bits 0-3: Second BCD Digit. Bit 4: First BCD Digit. Bits 5-6: Unused. Bit 7: AM/PM Flag (PM = 1)
-		case 0x0a:
-			{
-				int h = MCHEmul::UInt ({ MCHEmul::PhysicalStorageSubset::readValue (0x08) }, 
-					true /** 1 byte...doesn't matter. */, true /** BCD */).asInt (); // A BCD value to int...
-				if (MCHEmul::PhysicalStorageSubset::readValue (0x0f).bit (7)) _clock -> setAlarmHours ((unsigned char) h); 
-				else _clock -> setHours ((unsigned char) h);
-			}
-
-			break;
-
 		// Time of Day Clock Minutes
 		// Bits 0-3: Second BCD Digit. Bits 4-6: First BCD Digit. Bit 7: Unused.
-		case 0x0b:
+		case 0x0a:
 			{
 				int m = MCHEmul::UInt ({ MCHEmul::PhysicalStorageSubset::readValue (0x08) }, 
 					true /** 1 byte...doesn't matter. */, true /** BCD */).asInt (); // A BCD value to int...
@@ -124,18 +112,44 @@ void COMMODORE::CIARegisters::setValue (size_t p, const MCHEmul::UByte& v)
 
 			break;
 
+		// Time of Day Clock Hours
+		// Bits 0-3: Second BCD Digit. Bit 4: First BCD Digit. Bits 5-6: Unused. Bit 7: AM/PM Flag (PM = 1)
+		case 0x0b:
+			{
+				MCHEmul::UByte dt = MCHEmul::PhysicalStorageSubset::readValue (0x08);
+				int h = MCHEmul::UInt ({ dt & 0x0f }, 
+					true /** 1 byte...doesn't matter. */, MCHEmul::UInt::_PACKAGEDBCD).asInt (); // A BCD value to int...
+				if (dt.bit (7)) h += 12; // PM...
+				if (MCHEmul::PhysicalStorageSubset::readValue (0x0f).bit (7)) _clock -> setAlarmHours ((unsigned char) h); 
+				else _clock -> setHours ((unsigned char) h);
+			}
+
+			break;
+
 		// Serial Data Port
 		case 0x0c:
 			break;
 
 		// Interrupt Control Register
-		// Depending on the bit 7 the behaviour is different: 1 = bits with 1 are set, 0 = bits with 1 are cleared... 
+		// Depending on the bit 7 the behaviour is different: 
+		// 1 = bits with 1 are set, 0 = bits with 1 are cleared... 
+		// In any case, bits with 0 are left as they were...
 		case 0x0d:
 			{
-				_timerA -> setInterruptEnabled (v.bit (0) && v.bit (7));
-				_timerB -> setInterruptEnabled (v.bit (1) && v.bit (7));
-				_clock -> setInterruptEnabled (v.bit (2) && v.bit (7));
-				_flagLineInterruptRequested = v.bit (4) && v.bit (7);
+				if (v.bit (7)) 
+				{
+					if (v.bit (0)) _timerA -> setInterruptEnabled (true);
+					if (v.bit (1)) _timerB -> setInterruptEnabled (true);
+					if (v.bit (2)) _clock  -> setInterruptEnabled (true);
+					if (v.bit (4)) _flagLineInterruptRequested =   true;
+				}
+				else
+				{
+					if (v.bit (0)) _timerA -> setInterruptEnabled (false);
+					if (v.bit (1)) _timerB -> setInterruptEnabled (false);
+					if (v.bit (2)) _clock  -> setInterruptEnabled (false);
+					if (v.bit (4)) _flagLineInterruptRequested =   false;
+				}
 			}
 
 			break;
@@ -144,10 +158,13 @@ void COMMODORE::CIARegisters::setValue (size_t p, const MCHEmul::UByte& v)
 		case 0x0e:
 			{
 				_timerA -> setEnabled (v.bit (0));
+				_timerA -> setAffectPortDataB (v.bit (1));
+				_timerA -> setPulseAtPortDataB (v.bit (2));
 				_timerA -> setRunMode (v.bit (3) ? CIATimer::RunMode::_ONETIME : CIATimer::RunMode::_RESTART);
 				if (v.bit (4)) _timerA -> reset ();
 				_timerA -> setCountMode (v.bit (5)
 					? COMMODORE::CIATimer::CountMode::_SIGNALSONCNTLINE : COMMODORE::CIATimer::CountMode::_PROCESSORCYCLES);
+				// The bit 7 to select whether TOD ic actualized under 50Hz or 60Hz is not emulated...
 			}
 
 			break;
@@ -156,6 +173,8 @@ void COMMODORE::CIARegisters::setValue (size_t p, const MCHEmul::UByte& v)
 		case 0x0f:
 			{
 				_timerB -> setEnabled (v.bit (0));
+				_timerB -> setAffectPortDataB (v.bit (1));
+				_timerB -> setPulseAtPortDataB (v.bit (2));
 				_timerB -> setRunMode (v.bit (3) ? CIATimer::RunMode::_ONETIME : CIATimer::RunMode::_RESTART);
 				if (v.bit (4)) _timerB -> reset ();
 				// bits 5 & 6 indicates the mode...
@@ -181,15 +200,22 @@ const MCHEmul::UByte& COMMODORE::CIARegisters::readValue (size_t p) const
 
 	switch (pp)
 	{
-		// When reading no special behaviour...but when setting!
+		// When reading no special behaviour...but when setting, take a look!
 		case 0x00:
-		case 0x01:
 		case 0x02:
 		case 0x03:
 			{
 				result = MCHEmul::PhysicalStorageSubset::readValue (p);
 			}
 
+			break;
+
+		/** In the Data Port B a reflection of the timers could happen. */
+		case 0x01:
+			if (_reflectTimerAAtPortDataB != 0) 
+				result.setBit (6, _reflectTimerAAtPortDataB == 1 ? true : false);
+			if (_reflectTimerBAtPortDataB != 0)
+				result.setBit (7, _reflectTimerBAtPortDataB == 1 ? true : false);
 			break;
 
 		case 0x04:
@@ -319,4 +345,8 @@ void COMMODORE::CIARegisters::initializeInternalValues ()
 	setValue (0x0d, MCHEmul::UByte::_0); // No interupts allowed from the early beginning...so stopped!
 	setValue (0x0e, MCHEmul::UByte::_0); // No value in timer A
 	setValue (0x0f, MCHEmul::UByte::_0); // No value in timer B
+
+	_flagLineInterruptRequested = false;
+
+	_reflectTimerAAtPortDataB = _reflectTimerBAtPortDataB = 0; // Do not do anything...
 }

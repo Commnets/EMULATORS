@@ -72,6 +72,19 @@ namespace COMMODORE
 		void setCountMode (CountMode cm)
 							{ _countMode = cm; }
 
+		// What to do with the data port
+		/** When the timer reaches 0 it can or not affect the port data. */
+		bool affectPortDataB () const
+							{ return (_affectPortDataB); }
+		void setAffectPortDataB (bool a)
+							{ _affectPortDataB = a; }
+		/** ...and if it affects it can be trought out a pulse or a change in the state. 
+			This methods returns tue whether it is a pulse and false if toggle the state. */
+		bool pulseAtPortDataB ()
+							{ return (_pulseAtPortDataB); }
+		void setPulseAtPortDataB (bool p)
+							{ _pulseAtPortDataB = p; }
+
 		/** To point whether the timer reached 0. 
 			This variable will be true until the timer starts back. */
 		bool reaches0 () const
@@ -138,6 +151,8 @@ namespace COMMODORE
 		// The variables that define a timer...
 		RunMode _runMode;
 		CountMode _countMode;
+		bool _affectPortDataB;
+		bool _pulseAtPortDataB;
 		bool _enabled;
 		bool _interruptEnabled;
 		unsigned short _initialValue;
