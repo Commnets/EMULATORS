@@ -12,9 +12,10 @@ BASE = $c000
 #../C64Programs/code/routines/RIRQ2.asm
 
 * = $ca00
-IRQPRG1_ADDRESS				= $ca00
-IRQPRG1:					ldx #00
-IRQPRG1_LOOP:				lda #$01
+NMIPRG1_ADDRESS				= $ca00
+NMIPRG1:					.SAVEREGISTERS
+							ldx #00
+NMIPRG1_LOOP:				lda #$06
 							sta COLORRAMBASE,x
 							sta COLORRAMBASE + (24*40),x
 							inc SCREENBASE,x
@@ -22,44 +23,40 @@ IRQPRG1_LOOP:				lda #$01
 							clc
 							inx
 							cpx #$28
-							bne IRQPRG1_LOOP
+							bne NMIPRG1_LOOP
 							lda $dc0d
-;							.RECOVERREGISTERS
-;							rti
-; Instead of the previous two instructions a jump to the normal vector could be done...
-							jmp $ea31								; Jump to the standard routine...
+							.RECOVERREGISTERS
+							rti
 
 * = $cb00
 ; A very simple program to test everything works...
-MAIN:						lda #$06
+MAIN:						lda #$05
 							sta VICIIBACKGROUND
-							lda #$0e
+							lda #$0d
 							sta VICIIFOREGROUND
 							jsr CLEARSCREEN
 
-							sei
-							lda #z01010011
-							sta $dc0f
 							lda #$ff
-							sta $dc04
+							sta $dd04
 							lda #$02
-							sta $dc05
+							sta $dd05
 							lda #$00
-							sta $dc06
+							sta $dd06
 							lda #$02
-							sta $dc07
-							lda #z10000010
-							sta $dc0d								; Allow interruptions...
-
-							lda #>IRQPRG1_ADDRESS
-							sta $0314
-							lda #<IRQPRG1_ADDRESS
-							sta $0315
-
+							sta $dd07
 							lda #z00010001
-							sta $dc0e
-							cli
-							
+							sta $dd0e
+							lda #z01010001
+							sta $dd0f
+
+							lda #z10000010
+							sta $dd0d								; Allow interruptions...
+
+							lda #>NMIPRG1_ADDRESS
+							sta $0318
+							lda #<NMIPRG1_ADDRESS
+							sta $0319
+					
 FOREVER:					jmp FOREVER								; For ever...
 
 ; End.
