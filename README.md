@@ -14,15 +14,15 @@ To compile the framework the <a href="https://github.com/libsdl-org/SDL/releases
 Download them, install them and set the environmental variables: <b>SDL_HOME</b>, <b>SDL_IMAGEHOME</b>, <b>SDL_MIXERHOME</b>, <b>RAKNET_HOME</b>
 <br><br>
 <img src="./docs/C64Data/Picture1.png"/>
-The important C64 keys in a Win32 standard keyboard are:
-LEFT CONTROL				= CTRL
-RIGHT CONTROL				= CTRL
-LEFT ALT					  = STOP
-SHIFT + LEFT ALT		= RUN
-PAUSE						    = COMMODORE KEY
-LEFT BRACKET				= +
-RIGHT BRACKET				= *
-APOSTROPHE					= :
-BACKSLASH					  = @
-ESCAPE						  = ARROW BACK
-GRAVE						    = POUND
+The important C64 keys in a Win32 standard keyboard are:<br>
+LEFT CONTROL				= CTRL<br>
+RIGHT CONTROL				= CTRL<br>
+LEFT ALT					  = STOP<br>
+SHIFT + LEFT ALT		= RUN<br>
+PAUSE						    = COMMODORE KEY<br>
+LEFT BRACKET				= +<br>
+RIGHT BRACKET				= *<br>
+APOSTROPHE					= :<br>
+BACKSLASH					  = @<br>
+ESCAPE						  = ARROW BACK<br>
+GRAVE						    = POUND<br>
