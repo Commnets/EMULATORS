@@ -94,7 +94,7 @@ namespace COMMODORE
 		bool enabled () const
 							{ return (_enabled); }
 		void setEnabled (bool e)
-							{ _enabled = e; }
+							{ _enabled = _firstCycle = e; }
 
 		bool interruptEnabled () const
 							{ return (_interruptEnabled); }
@@ -162,6 +162,8 @@ namespace COMMODORE
 		MCHEmul::Time _time;
 
 		// Implementation
+		/** When the first cycle is about to happen this variable is true. */
+		bool _firstCycle;
 		/** The value the timer has per loop. */
 		unsigned short _currentValue; 
 		/** The value of the clock cycles las time the timer counted down. */

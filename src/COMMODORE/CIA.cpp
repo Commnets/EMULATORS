@@ -81,7 +81,8 @@ bool COMMODORE::CIA::simulate (MCHEmul::CPU* cpu)
 	_CIARegisters -> setReflectTimerAAtPortDataB (_timerAValueAtPortB /** 0 means do nothing. */);
 
 	// Same but with timer B
-	_timerB.simulate (cpu);
+	// The timer B has to take into account the timer A...
+	_timerB.simulate (cpu, &_timerA);
 	if (_timerB.affectPortDataB ())
 	{
 		if (_timerB.reaches0 ())

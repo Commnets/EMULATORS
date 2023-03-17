@@ -36,8 +36,6 @@ MAIN:						lda #$06
 							jsr CLEARSCREEN
 
 							sei
-							lda #z01010011
-							sta $dc0f
 							lda #$ff
 							sta $dc04
 							lda #$02
@@ -46,6 +44,11 @@ MAIN:						lda #$06
 							sta $dc06
 							lda #$02
 							sta $dc07
+							lda #z00010001
+							sta $dc0e
+							lda #z01010001
+							sta $dc0f
+
 							lda #z10000010
 							sta $dc0d								; Allow interruptions...
 
@@ -54,8 +57,6 @@ MAIN:						lda #$06
 							lda #<IRQPRG1_ADDRESS
 							sta $0315
 
-							lda #z00010001
-							sta $dc0e
 							cli
 							
 FOREVER:					jmp FOREVER								; For ever...

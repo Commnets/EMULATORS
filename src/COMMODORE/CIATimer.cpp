@@ -16,6 +16,8 @@ void COMMODORE::CIATimer::initialize ()
 	_time = MCHEmul::Time ();
 
 	// The implementation values...
+	_firstCycle = false;
+
 	_currentValue = 0x0000;
 	_lastClockCycles = 0;
 
@@ -30,6 +32,13 @@ void COMMODORE::CIATimer::simulate (MCHEmul::CPU* cpu, COMMODORE::CIATimer* t)
 
 	if (!_enabled)
 		return;
+
+	if (_firstCycle)
+	{
+		_firstCycle = false;
+
+		_lastClockCycles = cpu -> clockCycles (); // Just to set up in the first cycle...
+	}
 
 	if (countDown (cpu, t))
 	{

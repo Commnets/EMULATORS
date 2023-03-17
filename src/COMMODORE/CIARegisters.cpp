@@ -212,10 +212,15 @@ const MCHEmul::UByte& COMMODORE::CIARegisters::readValue (size_t p) const
 
 		/** In the Data Port B a reflection of the timers could happen. */
 		case 0x01:
-			if (_reflectTimerAAtPortDataB != 0) 
-				result.setBit (6, _reflectTimerAAtPortDataB == 1 ? true : false);
-			if (_reflectTimerBAtPortDataB != 0)
-				result.setBit (7, _reflectTimerBAtPortDataB == 1 ? true : false);
+			{
+				result = MCHEmul::PhysicalStorageSubset::readValue (p);
+
+				if (_reflectTimerAAtPortDataB != 0) 
+					result.setBit (6, _reflectTimerAAtPortDataB == 1 ? true : false);
+				if (_reflectTimerBAtPortDataB != 0)
+					result.setBit (7, _reflectTimerBAtPortDataB == 1 ? true : false);
+			}
+
 			break;
 
 		case 0x04:
