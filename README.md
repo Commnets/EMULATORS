@@ -15,14 +15,14 @@ Download them, install them and set the environmental variables: <b>SDL_HOME</b>
 <br><br>
 <img src="./docs/C64Data/Picture1.png"/><br><br>
 The important C64 keys in a Win32 standard keyboard are:<br>
-<p>LEFT CONTROL&emsp= CTRL</p><br>
-RIGHT CONTROL&emsp= CTRL<br>
-LEFT ALT					  = STOP<br>
-SHIFT + LEFT ALT		= RUN<br>
-PAUSE						    = COMMODORE KEY<br>
-LEFT BRACKET				= +<br>
-RIGHT BRACKET				= *<br>
-APOSTROPHE					= :<br>
-BACKSLASH					  = @<br>
-ESCAPE						  = ARROW BACK<br>
-GRAVE						    = POUND<br>
+LEFT CONTROL=CTRL<br>
+RIGHT CONTROL=CTRL<br>
+LEFT ALT=STOP<br>
+SHIFT + LEFT ALT=RUN<br>
+PAUSE=COMMODORE KEY<br>
+LEFT BRACKET=+<br>
+RIGHT BRACKET=*<br>
+APOSTROPHE=:<br>
+BACKSLASH=@<br>
+ESCAPE=ARROW BACK<br>
+GRAVE=POUND<br>
