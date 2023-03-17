@@ -29,9 +29,22 @@ MCHEmul::InfoStructure COMMODORE::VICIIRegisters::getInfoStructure () const
 {
 	MCHEmul::InfoStructure result = MCHEmul::ChipRegisters::getInfoStructure ();
 
-	result.add ("MODE",	(unsigned int) _graphicModeActive);
-	result.add ("40C",	_textDisplay40ColumnsActive);
-	result.add ("25R",	_textDisplay25RowsActive);
+	result.add ("MODE",			(unsigned int) _graphicModeActive);
+	result.add ("40C",			_textDisplay40ColumnsActive);
+	result.add ("25R",			_textDisplay25RowsActive);
+	result.add ("SCROLLX",		_horizontalScrollPosition);
+	result.add ("SCROLLY",		_verticalScrollPosition);
+	result.add ("FORECOLOR",	_foregroundColor);
+	result.add ("BKCOLOR1",		_backgroundColor [0]);
+	result.add ("BKCOLOR2",		_backgroundColor [1]);
+	result.add ("BKCOLOR3",		_backgroundColor [2]);
+	result.add ("BKCOLOR4",		_backgroundColor [3]);
+	MCHEmul::InfoStructure sInfo;
+	for (size_t i = 0; i < 8; i++)
+		sInfo.add (std::to_string (i), _spriteInfo [i].getInfoStructure ());
+	result.add ("SPRITES",		sInfo);
+	result.add ("IRQ",			_rasterIRQActive);
+	result.add ("IRQLINE",		_IRQRasterLineAt);
 
 	return (result);
 }
@@ -607,4 +620,21 @@ void COMMODORE::VICIIRegisters::setGraphicModeActive ()
 	_textMode = (_graphicModeActive == COMMODORE::VICIIRegisters::GraphicMode::_CHARMODE ||
 				 _graphicModeActive == COMMODORE::VICIIRegisters::GraphicMode::_MULTICOLORCHARMODE ||
 				 _graphicModeActive == COMMODORE::VICIIRegisters::GraphicMode::_EXTENDEDBACKGROUNDMODE);
+}
+
+// ---
+MCHEmul::InfoStructure COMMODORE::VICIIRegisters::SpriteInfo::getInfoStructure () const
+{
+	MCHEmul::InfoStructure result = MCHEmul::InfoClass::getInfoStructure ();
+
+	result.add ("X",			_spriteXCoord);
+	result.add ("Y",			_spriteYCoord);
+	result.add ("COLOR",		_spriteColor);
+	result.add ("MULTICOLOR",	_spriteMulticolor);
+	result.add ("ENABLED",		_spriteEnabled);
+	result.add ("DOUBLEW",		_spriteDoubleWidth);
+	result.add ("DOUBLEH",		_spriteDoubleHeight);
+	result.add ("PRIORITY",		_spriteToForegroundPriority);
+
+	return (result);
 }

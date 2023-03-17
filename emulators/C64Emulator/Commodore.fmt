@@ -23,11 +23,19 @@ First:@FIRST@, Last:@LAST@
 @RasterY>@
 #---
 #---
+;SpriteInfo
+Enabled:@ENABLED@ X:@X@,Y:@Y@ Width:@DOUBLEW@,Height:@DOUBLEW@ Color:@COLOR@(@MULTICOLOR@) Priority:@PRIORITY@
+#---
+#---
 ;VICIIRegisters
 @BYTES{blocksize=16,listsep=\,,tablesep=\ ,minsize=2}@
 Graphic Mode:@MODE@
-40 Columns:@40C@
-25 Rows:@25R@
+40 Columns:@40C@, 25 Rows:@25R@
+ScrollX:@SCROLLX@, ScrollY:@SCROLLY@
+IRQ:@IRQ@(@IRQLINE@)
+COLORS:@FORECOLOR@(@BKCOLOR1@,@BKCOLOR2@,@BKCOLOR3@,@BKCOLOR4@)
+->Sprites:
+@SPRITES?{fmter=.CLASS,empty=no sprites}\n@
 #---
 #---
 ;VICII

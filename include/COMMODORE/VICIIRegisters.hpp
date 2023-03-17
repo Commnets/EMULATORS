@@ -196,10 +196,11 @@ namespace COMMODORE
 		void setGraphicModeActive ();
 
 		private:
-		struct SpriteInfo
+		struct SpriteInfo : public MCHEmul::InfoClass
 		{
 			SpriteInfo ()
-				: _spriteXCoord (0x0000), 
+				: MCHEmul::InfoClass ("SpriteInfo"),
+				  _spriteXCoord (0x0000), 
 				  _spriteYCoord (0x00),
 				  _spriteColor (0x00),
 				  _spriteMulticolor (false),
@@ -208,6 +209,8 @@ namespace COMMODORE
 				  _spriteDoubleHeight (false),
 				  _spriteToForegroundPriority (false)
 							{ }
+
+			MCHEmul::InfoStructure getInfoStructure () const override;
 
 			unsigned short _spriteXCoord; 
 			unsigned char _spriteYCoord;
