@@ -370,6 +370,7 @@ void COMMODORE::VICII::drawGraphicsAndDetectCollisions (const COMMODORE::VICII::
 				cSS = true;
 
 				_VICIIRegisters -> setSpriteCollision (_spritesEnabled [i]);
+				_VICIIRegisters -> setSpriteCollision (_spritesEnabled [j]);
 			}
 		}
 	}
