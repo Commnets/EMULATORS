@@ -389,8 +389,8 @@ MCHEmul::ScreenMemory* COMMODORE::VICII::createScreenMemory ()
 	cP [5]  = SDL_MapRGB (_format, 0x72, 0xb1, 0x4b); // Green
 	cP [6]  = SDL_MapRGB (_format, 0x48, 0x3a, 0xaa); // Blue
 	cP [7]  = SDL_MapRGB (_format, 0xd5, 0xdf, 0x7c); // Yellow
-	cP [8]  = SDL_MapRGB (_format, 0x67, 0x52, 0x00); // Brown
-	cP [9]  = SDL_MapRGB (_format, 0x66, 0x44, 0x00); // Light Red
+	cP [8]  = SDL_MapRGB (_format, 0x99, 0x69, 0x2d); // Brown
+	cP [9]  = SDL_MapRGB (_format, 0x67, 0x52, 0x00); // Light Red
 	cP [10] = SDL_MapRGB (_format, 0xc1, 0x81, 0x78); // Orange
 	cP [11] = SDL_MapRGB (_format, 0x60, 0x60, 0x60); // Dark Grey
 	cP [12] = SDL_MapRGB (_format, 0x8a, 0x8a, 0x8a); // Medium Grey
