@@ -39,6 +39,7 @@ const std::string MCHEmul::IODevicesCommand::_NAME = "CDEVICES";
 const std::string MCHEmul::PeripheralsCommand::_NAME = "CPERIPHERALS";
 const std::string MCHEmul::PeripheralInstructionCommand::_NAME = "CPERCMD";
 const std::string MCHEmul::AssignJoystickNameCommand::_NAME = "CASSIGNJ";
+const std::string MCHEmul::ChangeCPUClockCommand::_NAME = "CCLOCKFACTOR";
 
 // ---
 MCHEmul::HelpCommand::HelpCommand (const std::string& hF)
@@ -578,4 +579,14 @@ void MCHEmul::AssignJoystickNameCommand::executeImpl
 	const_cast <MCHEmul::InputOSSystem*> (c -> inputOSSystem ()) -> addConversionJoystick (jId, jN);
 
 	rst.add ("ERROR", std::string ("No errors"));
+}
+
+// ---
+void MCHEmul::ChangeCPUClockCommand::executeImpl 
+	(MCHEmul::CommandExecuter* cE, MCHEmul::Computer* c, MCHEmul::InfoStructure& rst)
+{
+	if (c == nullptr)
+		return;
+
+	c -> clock ().setFactor (std::atof (parameter ("00").c_str ()));
 }

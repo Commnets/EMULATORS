@@ -56,11 +56,12 @@ namespace MCHEmul
 		/** To identify an event in the joystick related with the buttons. */
 		struct JoystickButtonEvent : public Event::Data
 		{
-			JoystickButtonEvent (int id, bool o)
-				: _joystickId (id), _on (o)
+			JoystickButtonEvent (int jId, int bId, bool o)
+				: _joystickId (jId), _buttonId (bId), _on (o)
 							{ }
 
 			int _joystickId;
+			int _buttonId;
 			bool _on; // true when pressed, false when released...
 		};
 
@@ -68,9 +69,9 @@ namespace MCHEmul
 
 		/** Assign a number to a joystick id. */
 		void addConversionJoystick (int id, int n)
-							{ _conversionJoystickMap [id] = n; }
+							{ _conversionJoystickMap [id] = n; _movementMap = { }; }
 		void setConversionJoystickMap (std::map <int, int>&& cJM)
-							{ _conversionJoystickMap = std::move (cJM); }
+							{ _conversionJoystickMap = std::move (cJM); _movementMap = { }; }
 
 		bool quitRequested () const
 							{ return (_quitRequested); }
@@ -111,18 +112,26 @@ namespace MCHEmul
 		/** What to do when the joystick button is pressed. */
 		void whenJoystickButtonPressed (const SDL_JoyButtonEvent& jb)
 							{ notify (Event (_JOYSTICKBUTTONPRESSED, 0,
-								std::shared_ptr <Event::Data> ((Event::Data*) new JoystickButtonEvent (jb.button, true)))); }
+								std::shared_ptr <Event::Data> ((Event::Data*) 
+									new JoystickButtonEvent (joystickEquivalentId (jb.which), jb.button, true)))); }
 		/** What to do when the joystick button is released. */
 		void whenJoystickButtonReleased (const SDL_JoyButtonEvent& jb)
 							{ notify (Event (_JOYSTICKBUTTONRELEASED, 0,
-								std::shared_ptr <Event::Data> ((Event::Data*) new JoystickButtonEvent (jb.button, false)))); }
+								std::shared_ptr <Event::Data> ((Event::Data*) 
+									new JoystickButtonEvent (joystickEquivalentId (jb.which), jb.button, false)))); }
 
 		private:
 		/** Just to control all the joystick events at the same time. */
 		using SDL_JoyAxisEvents = std::vector <SDL_JoyAxisEvent>;
 		/** This method is able to assign a number according to the id. 
 			So it is possible to make that a joystick can behave in a machine like being connected in other port. */
-		void treatJoystickEvents (SDL_JoyAxisEvents&& js);
+		void treatJoystickMovementEvents (SDL_JoyAxisEvents&& js);
+
+		// Implementation
+		/** To find the joystick equivalent id after passing through the conversion. */
+		int joystickEquivalentId (int a) const
+							{ std::map <int, int>::const_iterator i = _conversionJoystickMap.find (a);
+							  return ((i == _conversionJoystickMap.end ()) ? a : (*i).second); }
 
 		protected:
 		bool _quitRequested;

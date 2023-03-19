@@ -90,6 +90,7 @@
     <ClInclude Include="..\..\include\CORE\IOPBuilder.hpp" />
     <ClInclude Include="..\..\include\CORE\IOPeripheral.hpp" />
     <ClInclude Include="..\..\include\CORE\JSONFormatter.hpp" />
+    <ClInclude Include="..\..\include\CORE\Latch.hpp" />
     <ClInclude Include="..\..\include\CORE\Memory.hpp" />
     <ClInclude Include="..\..\include\CORE\NotifyObserver.hpp" />
     <ClInclude Include="..\..\include\CORE\OSIO.hpp" />

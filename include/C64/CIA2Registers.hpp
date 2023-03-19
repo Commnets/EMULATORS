@@ -41,14 +41,6 @@ namespace C64
 		// Implementation
 		virtual void initializeInternalValues () override;
 
-		// This methods are invoked from CIA chip...
-		/** The registers will observe also the timers. */
-		void lookAtTimers (COMMODORE::CIATimer* tA, COMMODORE::CIATimer* tB)
-							{ _timerA = tA, _timerB = tB; }
-		/** ...and also of the clock. */
-		void lookAtClock (COMMODORE::CIAClock* c)
-							{ _clock = c; }
-
 		private:
 		// Reference to the timers...
 		COMMODORE::CIATimer* _timerA;

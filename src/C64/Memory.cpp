@@ -3,6 +3,7 @@
 #include <C64/IO6510Registers.hpp>
 #include <C64/CIA1Registers.hpp>
 #include <C64/CIA2Registers.hpp>
+#include <C64/IOExpansionMemory.hpp>
 #include <C64/Cartridge.hpp>
 
 const MCHEmul::Address C64::Memory::_POS0_ADDRESS = MCHEmul::Address ({ 0x00, 0x00 }, false);
@@ -47,8 +48,8 @@ C64::Memory::Memory (const std::string& lang)
 	_colorRAM			= subset (_COLOR_SUBSET);
 	_cia1Registers		= subset (C64::CIA1Registers::_CIA1_SUBSET);
 	_cia2registers		= subset (C64::CIA2Registers::_CIA2_SUBSET);
-	_io1Registers		= subset (_IO1_SUBSET);
-	_io2registers		= subset (_IO2_SUBSET);
+	_io1Registers		= subset (C64::IOExpansionMemoryI::_IO1_SUBSET);
+	_io2registers		= subset (C64::IOExpansionMemoryII::_IO2_SUBSET);
 	_expansionRAMLO		= subset (_RAM01_SUBSET);
 
 	// The default ROMS...
@@ -185,10 +186,10 @@ MCHEmul::Memory::Content C64::Memory::standardMemoryContent ()
 	MCHEmul::PhysicalStorageSubset* CIA2 = new C64::CIA2Registers 
 		(/** id = C64::CIA2Registers::_CIA2_SUBSET */ RAM, 0xdd00, MCHEmul::Address ({ 0x00, 0xdd }, false), 0x0100);
 	// Used by the expansion cartridges...
-	MCHEmul::PhysicalStorageSubset* IO1 = new MCHEmul::PhysicalStorageSubset 
-		(_IO1_SUBSET, RAM, 0xde00, MCHEmul::Address ({ 0x00, 0xde }, false), 0x0100); 
-	MCHEmul::PhysicalStorageSubset* IO2 = new MCHEmul::PhysicalStorageSubset 
-		(_IO2_SUBSET, RAM, 0xdf00, MCHEmul::Address ({ 0x00, 0xdf }, false), 0x0100); 
+	MCHEmul::PhysicalStorageSubset* IO1 = new C64::IOExpansionMemoryI
+		(/** id = C64::IOExpansionMemoryI::_IO1_SUBSET */ RAM, 0xde00, MCHEmul::Address ({ 0x00, 0xde }, false), 0x0100);
+	MCHEmul::PhysicalStorageSubset* IO2 = new C64::IOExpansionMemoryI
+		(/** id = C64::IOExpansionMemoryI::_IO1_SUBSET */ RAM, 0xdf00, MCHEmul::Address ({ 0x00, 0xdf }, false), 0x0100);
 	// Where the kernel is defined can be either RAM or ROM (depending on the bits 0, 1, 2 at 0x01 position)
 	MCHEmul::PhysicalStorageSubset* KernelROM = new MCHEmul::PhysicalStorageSubset 
 		(_KERNELROM_SUBSET, KERNELROM, 0x0000, MCHEmul::Address ({ 0x00, 0xe0 }, false), 0x2000);
@@ -212,8 +213,8 @@ MCHEmul::Memory::Content C64::Memory::standardMemoryContent ()
 			{ _COLOR_SUBSET,										ColorRAM }, 
 			{ C64::CIA1Registers::_CIA1_SUBSET,						CIA1 }, 
 			{ C64::CIA2Registers::_CIA2_SUBSET,						CIA2 }, 
-			{ _IO1_SUBSET,											IO1}, 
-			{ _IO2_SUBSET,											IO2}, 
+			{ C64::IOExpansionMemoryI::_IO1_SUBSET,					IO1}, 
+			{ C64::IOExpansionMemoryII::_IO2_SUBSET,				IO2}, 
 			{ _KERNELROM_SUBSET,									KernelROM }, 
 			{ _KERNELRAM_SUBSET,									KernelRAM }
 		});
@@ -270,8 +271,8 @@ MCHEmul::Memory::Content C64::Memory::standardMemoryContent ()
 			{ _COLOR_SUBSET,									ColorRAM }, 
 			{ C64::CIA1Registers::_CIA1_SUBSET,					CIA1 }, 
 			{ C64::CIA2Registers::_CIA2_SUBSET,					CIA2 }, 
-			{ _IO1_SUBSET,										IO1}, 
-			{ _IO2_SUBSET,										IO2}, 
+			{ C64::IOExpansionMemoryI::_IO1_SUBSET,				IO1}, 
+			{ C64::IOExpansionMemoryII::_IO2_SUBSET,			IO2}, 
 			{ _KERNELROM_SUBSET,								KernelROM }, 
 			{ _KERNELRAM_SUBSET,								KernelRAM },
 			{ _BANK0RAM0_SUBSET,								Bank0RAM0 },

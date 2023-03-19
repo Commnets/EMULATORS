@@ -25,8 +25,15 @@ MCHEmul::Screen::Screen (const std::string& n, int id,
 		SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE
 	);
 
+	// The render...
 	_renderer = SDL_CreateRenderer (_window, -1, SDL_RENDERER_ACCELERATED);
-	_texture  = SDL_CreateTexture	
+	// The background is black...
+	SDL_SetRenderDrawColor (_renderer, 0, 0, 0, 255);
+	// Just to maintain always the aspect ratio even when the size of the output window is changed...
+	SDL_RenderSetLogicalSize (_renderer, _screenColumns, _screenRows);
+
+	// The texture drawn in the render zone...
+	_texture  = SDL_CreateTexture
 		(_renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, _screenColumns, _screenRows);
 
 	setClassName ("Screen");

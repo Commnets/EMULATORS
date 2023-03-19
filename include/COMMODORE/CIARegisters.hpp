@@ -36,6 +36,7 @@ namespace COMMODORE
 
 		virtual void initialize () override;
 
+		// All these method are invoked from CIA emulation
 		/** To know when the flag line is enabled. 
 			Once the value is got then it is pit back t false. */
 		bool flagLineInterruptRequested () const

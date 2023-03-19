@@ -149,6 +149,14 @@ MCHEmul::Attributes MCHEmul::StdFormatter::Piece::attrsFromStrings (const MCHEmu
 }
 
 // ---
+MCHEmul::StdFormatter::FixTextPiece::FixTextPiece (const std::string& n)
+	: MCHEmul::StdFormatter::Piece (Type::_TEXT, n, { }, "")
+{ 
+	_name = MCHEmul::replaceAll (_name, "\\n", "\n");
+	_name = MCHEmul::replaceAll (_name, "\\t", "\t");
+}
+
+// ---
 std::string MCHEmul::StdFormatter::TablePiece::format (const MCHEmul::InfoStructure& iS) const
 {
 	std::string by = iS.attribute (_name);

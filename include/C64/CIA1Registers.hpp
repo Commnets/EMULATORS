@@ -32,13 +32,6 @@ namespace C64
 
 		CIA1Registers (MCHEmul::PhysicalStorage* ps, size_t pp, const MCHEmul::Address& a, size_t s);
 
-		private:
-		virtual void setValue (size_t p, const MCHEmul::UByte& v) override;
-		virtual const MCHEmul::UByte& readValue (size_t p) const override;
-
-		// Implementation
-		virtual void initializeInternalValues () override;
-
 		// This methods are invoked from CIA chip...
 		/** The josystick 1 is very linked with the keyboard. */
 		void setJoystick1InputPending (bool jp)
@@ -59,6 +52,13 @@ namespace C64
 							{ _keyboardStatusMatrix [r].setBit (c, s); }
 		void setKeyboardStatusMatrix (size_t r, const MCHEmul::UByte& u)
 							{ _keyboardStatusMatrix [r] = u; }
+
+		private:
+		virtual void setValue (size_t p, const MCHEmul::UByte& v) override;
+		virtual const MCHEmul::UByte& readValue (size_t p) const override;
+
+		// Implementation
+		virtual void initializeInternalValues () override;
 
 		private:
 		/** Whether there is some input pending from the joystick. */

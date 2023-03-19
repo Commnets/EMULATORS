@@ -17,11 +17,13 @@
 #include <F6500/incs.hpp>
 #include <EMULATORS/incs.hpp>
 #include <COMMODORE/incs.hpp>
+#include <C64/Memory.hpp>
 #include <C64/CIA1.hpp>
 #include <C64/CIA1Registers.hpp>
 #include <C64/CIA2.hpp>
 #include <C64/CIA2Registers.hpp>
 #include <C64/IO6510Registers.hpp>
+#include <C64/IOExpansionMemory.hpp>
 #include <C64/PLA.hpp>
 #include <C64/Screen.hpp>
 #include <C64/Sound.hpp>
@@ -34,7 +36,6 @@
 #include <C64/CommandBuilder.hpp>
 #include <C64/C64Emulator.hpp>
 #include <C64/ColorMemory.hpp>
-#include <C64/Memory.hpp>
 #include <C64/C64.hpp>
 
 #endif

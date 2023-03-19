@@ -45,5 +45,5 @@ void MCHEmul::Clock::countCycles (unsigned int cC)
 
 	// To stimate whether the clock goes or not too quick attending the last data...
 	// Some tolerance is taking into account (2,5%)
-	_tooQuick = (_realCyclesPerSecondTmp * _NANOSECOND) > (_cyclesPerSecond * (elapsed * 1.025));
+	_tooQuick = (_realCyclesPerSecondTmp * _NANOSECOND) > (_cyclesPerSecond * (elapsed * _factor));
 }

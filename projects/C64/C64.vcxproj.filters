@@ -108,6 +108,9 @@
     <ClInclude Include="..\..\include\C64\IOPBuilder.hpp">
       <Filter>Archivos de encabezado\IO</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\include\C64\IOExpansionMemory.hpp">
+      <Filter>Archivos de encabezado\Motherboard</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\C64\Screen.cpp">

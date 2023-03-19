@@ -39,12 +39,20 @@ MCHEmul::InfoStructure COMMODORE::VICIIRegisters::getInfoStructure () const
 	result.add ("BKCOLOR2",		_backgroundColor [1]);
 	result.add ("BKCOLOR3",		_backgroundColor [2]);
 	result.add ("BKCOLOR4",		_backgroundColor [3]);
-	MCHEmul::InfoStructure sInfo;
-	for (size_t i = 0; i < 8; i++)
-		sInfo.add (std::to_string (i), _spriteInfo [i].getInfoStructure ());
-	result.add ("SPRITES",		std::move (sInfo));
 	result.add ("IRQ",			_rasterIRQActive);
 	result.add ("IRQLINE",		_IRQRasterLineAt);
+
+	// Info for the sprites...
+	MCHEmul::InfoStructure sInfo;
+	for (size_t i = 0; i < 8; i++)
+	{ 
+		MCHEmul::InfoStructure sInfoD = _spriteInfo [i].getInfoStructure (); 
+		sInfoD.add ("ID", i);
+
+		sInfo.add (std::to_string (i), std::move (sInfoD));
+	}
+
+	result.add ("SPRITES",		std::move (sInfo));
 
 	return (result);
 }

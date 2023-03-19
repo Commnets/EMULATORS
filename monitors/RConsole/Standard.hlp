@@ -41,6 +41,9 @@ No parameters needed.
 ;CPUSSTATUS
 Similar to CPUSTATUS but not including info about the stack.
 No parameters needed.
+;CLOCKFACTOR VALUE
+To change the speed factor of the CPU.
+It usually equal to 1.
 ;DEVICES
 Get the info about all devices connected to the computer.
 The Devices are not the peripherals that connect to the devices.

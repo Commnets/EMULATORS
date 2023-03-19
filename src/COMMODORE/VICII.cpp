@@ -119,8 +119,8 @@ bool COMMODORE::VICII::simulate (MCHEmul::CPU* cpu)
 			}
 
 			// At the beginning of a new line, an interrupt could be generated...
-			_VICIIRegisters -> activateRasterAtLineIRQ 
-				(_raster.currentLine () == _VICIIRegisters -> IRQRasterLineAt ());
+			if (_raster.currentLine () == _VICIIRegisters -> IRQRasterLineAt ())
+				_VICIIRegisters -> activateRasterAtLineIRQ ();
 
 			_isNewRasterLine = false;
 		}

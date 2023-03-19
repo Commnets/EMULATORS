@@ -72,6 +72,11 @@ namespace MCHEmul
 
 		Computer& operator = (Computer&&) = delete;
 
+		const Clock& clock () const
+							{ return (_clock); }
+		Clock& clock ()
+							{ return (_clock); }
+
 		const CPU* cpu () const
 							{ return (_cpu); }
 		CPU* cpu ()

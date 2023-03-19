@@ -93,7 +93,7 @@ bool MCHEmul::InputOSSystem::simulate (MCHEmul::CPU* cpu)
 	_clock.countCycles (1);
 
 	if (!js.empty ())
-		treatJoystickEvents (std::move (js)); // No longer needed...
+		treatJoystickMovementEvents (std::move (js)); // No longer needed...
 
 	return (true);
 }
@@ -120,14 +120,13 @@ MCHEmul::InfoStructure MCHEmul::InputOSSystem::getInfoStructure () const
 }
 
 // ---
-void MCHEmul::InputOSSystem::treatJoystickEvents (MCHEmul::InputOSSystem::SDL_JoyAxisEvents&& js)
+void MCHEmul::InputOSSystem::treatJoystickMovementEvents (MCHEmul::InputOSSystem::SDL_JoyAxisEvents&& js)
 {
 	MCHEmul::InputOSSystem::JoystickMovementMap mMC (_movementMap);
 
 	for (const auto& i : js)
 	{ 
-		std::map <int, int>::const_iterator cM;
-		int nJ = ((cM = _conversionJoystickMap.find (i.which)) == _conversionJoystickMap.end ()) ? i.which : (*cM).second;
+		int nJ = joystickEquivalentId (i.which);
 		MCHEmul::InputOSSystem::JoystickMovementMap::const_iterator j = _movementMap.find (nJ);
 		if (j == _movementMap.end ())
 			_movementMap [nJ] = std::vector <int> (i.axis + 1, 0);

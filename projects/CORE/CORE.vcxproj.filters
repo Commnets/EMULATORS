@@ -305,6 +305,9 @@
     <ClInclude Include="..\..\include\CORE\FileReader.hpp">
       <Filter>Archivos de encabezado\IO</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\include\CORE\Latch.hpp">
+      <Filter>Archivos de encabezado\Motherboard</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Default.fmt">

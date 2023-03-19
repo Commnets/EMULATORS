@@ -88,18 +88,17 @@ void C64::CIA1::processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifier* n)
 
 		case MCHEmul::InputOSSystem::_JOYSTICKBUTTONPRESSED:
 			{
-				// Only two buttons are allowed...
-				if (std::static_pointer_cast 
-						<MCHEmul::InputOSSystem::JoystickButtonEvent> (evnt.data ()) -> _joystickId == 0)
-				{
+				std::shared_ptr <MCHEmul::InputOSSystem::JoystickButtonEvent> jb = 
+					std::static_pointer_cast <MCHEmul::InputOSSystem::JoystickButtonEvent> (evnt.data ());
+				if (jb -> _joystickId != 0 && jb -> _joystickId != 1)
+					break; // Only joysticks 0 y 1 are allowed!
+	
+				if (jb -> _joystickId == 0)
 					// The events on the joystick 1 are set on the same place than the keyboard...
 					for (size_t i = 0; i < 8; i++)
 						_CIA1Registers -> setKeyboardStatusMatrix (i, _CIA1Registers -> keyboardStatusMatrix (i) & 
 							(0xff - 0x10 /** bit 4 clear when on. */));
-				}
 				else
-				if (std::static_pointer_cast 
-						<MCHEmul::InputOSSystem::JoystickButtonEvent> (evnt.data ()) -> _joystickId == 1)
 					_CIA1Registers -> setJoystick2Status (_CIA1Registers -> joystick2Status () & 
 						(0xff /** 0 means switch on. */ - 0x10));
 			}
@@ -108,18 +107,18 @@ void C64::CIA1::processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifier* n)
 
 		case MCHEmul::InputOSSystem::_JOYSTICKBUTTONRELEASED:
 			{
+				std::shared_ptr <MCHEmul::InputOSSystem::JoystickButtonEvent> jb = 
+					std::static_pointer_cast <MCHEmul::InputOSSystem::JoystickButtonEvent> (evnt.data ());
+				if (jb -> _joystickId != 0 && jb -> _joystickId != 1)
+					break; // Only joysticks 0 y 1 are allowed!
+	
 				// Only two joysticks are allowed...
-				if (std::static_pointer_cast 
-					<MCHEmul::InputOSSystem::JoystickButtonEvent> (evnt.data ()) -> _joystickId == 0)
-				{
+				if (jb -> _joystickId == 0)
 					// The events on the joystick 1 are set on the same place than the keyboard...
 					for (size_t i = 0; i < 8; i++)
 						_CIA1Registers -> setKeyboardStatusMatrix (i, _CIA1Registers -> keyboardStatusMatrix (i) | 0x10);
-				}
 				else
-					if (std::static_pointer_cast 
-						<MCHEmul::InputOSSystem::JoystickButtonEvent> (evnt.data ()) -> _joystickId == 1)
-							_CIA1Registers -> setJoystick2Status (_CIA1Registers -> joystick2Status () | 0x10);
+					_CIA1Registers -> setJoystick2Status (_CIA1Registers -> joystick2Status () | 0x10);
 			}
 
 			break;

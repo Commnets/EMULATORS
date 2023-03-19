@@ -32,6 +32,7 @@
     <ClInclude Include="..\..\include\C64\DatasettePort.hpp" />
     <ClInclude Include="..\..\include\C64\ExpansionPort.hpp" />
     <ClInclude Include="..\..\include\C64\incs.hpp" />
+    <ClInclude Include="..\..\include\C64\IOExpansionMemory.hpp" />
     <ClInclude Include="..\..\include\C64\IOPBuilder.hpp" />
     <ClInclude Include="..\..\include\C64\Memory.hpp" />
     <ClInclude Include="..\..\include\C64\OSIO.hpp" />

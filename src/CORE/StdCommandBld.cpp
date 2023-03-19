@@ -68,6 +68,8 @@ MCHEmul::Command* MCHEmul::StandardCommandBuilder::createEmptyCommand (const std
 		result = new MCHEmul::PeripheralInstructionCommand;
 	else if (cmdName == "ASSIGNJOY" || cmdName == MCHEmul::AssignJoystickNameCommand::_NAME)
 		result = new MCHEmul::AssignJoystickNameCommand;
+	else if (cmdName == "CLOCKFACTOR" || cmdName == MCHEmul::ChangeCPUClockCommand::_NAME)
+		result = new MCHEmul::ChangeCPUClockCommand;
 	else if (cmdName == MCHEmul::MoveParametersToAnswerCommand::_NAME)
 		result = new MCHEmul::MoveParametersToAnswerCommand;
 

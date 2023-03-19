@@ -24,7 +24,7 @@ First:@FIRST@, Last:@LAST@
 #---
 #---
 ;SpriteInfo
-Enabled:@ENABLED@ X:@X@,Y:@Y@ Width:@DOUBLEW@,Height:@DOUBLEW@ Color:@COLOR@(@MULTICOLOR@) Priority:@PRIORITY@
+(@ID@):\tEnabled:@ENABLED@\tX:@X@,Y:@Y@\tWidth:@DOUBLEW@,Height:@DOUBLEW@\tColor:@COLOR@(@MULTICOLOR@)\tPriority:@PRIORITY@
 #---
 #---
 ;VICIIRegisters

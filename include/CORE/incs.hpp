@@ -36,6 +36,7 @@
 #include <CORE/ChipRegisters.hpp>
 #include <CORE/ProgramCounter.hpp>
 #include <CORE/Register.hpp>
+#include <CORE/Latch.hpp>
 #include <CORE/Stack.hpp>
 #include <CORE/StatusRegister.hpp>
 #include <CORE/UByte.hpp>

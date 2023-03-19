@@ -660,9 +660,9 @@ namespace MCHEmul
 		virtual void executeImpl (CommandExecuter* cE, Computer* c, InfoStructure& rst) override;
 	};
 
-	/** Command to asign a number to a joystick. \n
-		E.g. When there is only one joystick the "system" assign it the number 0, but
-		we might want it to act as joystick number 1 so an assigment from 0 to 1 is needed. */
+	/** Command to assign a different number to a given joystick. \n
+		E.g. When there is only one joystick the "system" assigns the number 0 to it, but
+		we might want it to act as joystick number 1. so an assigment from 0 to 1 would be needed. */
 	class AssignJoystickNameCommand final : public Command
 	{
 		public:
@@ -673,9 +673,28 @@ namespace MCHEmul
 			: Command (_ID, _NAME)
 							{ }
 
-		/** The original josyctick number and the wanted number. */
+		/** The original joystick number and the wanted number. */
 		virtual bool canBeExecuted () const override
 							{ return (_parameters.size () == 2); }
+
+		private:
+		virtual void executeImpl (CommandExecuter* cE, Computer* c, InfoStructure& rst) override;
+	};
+
+	/** Command to change the factor affecting the speed of the CPU clock. */
+	class ChangeCPUClockCommand final : public Command
+	{
+		public:
+		static const int _ID = 29;
+		static const std::string _NAME;
+
+		ChangeCPUClockCommand ()
+			: Command (_ID, _NAME)
+							{ }
+
+		/** The only parameter has to be the factor. */
+		virtual bool canBeExecuted () const override
+							{ return (_parameters.size () == 1); }
 
 		private:
 		virtual void executeImpl (CommandExecuter* cE, Computer* c, InfoStructure& rst) override;

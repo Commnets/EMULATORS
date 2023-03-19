@@ -25,6 +25,9 @@ Big Endian:@ENDIAN@
 @SR@
 #---
 #---
+;ClockFactor
+#---
+#---
 ;PhysicalStorageSubset
 Id:@ID@, Address:$@ADDRESS@, Size:@SIZE@
 Active:@ACTIVE@, Read:@READ@

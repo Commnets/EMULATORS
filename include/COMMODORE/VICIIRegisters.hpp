@@ -121,18 +121,18 @@ namespace COMMODORE
 
 		// Activate the IRQ. 
 		// All these methods are called from VICII simulation...
-		void activateRasterAtLineIRQ (bool a)
-							{ _rasterAtLineIRQHappened = a; }
+		void activateRasterAtLineIRQ ()
+							{ if (_rasterIRQActive) _rasterAtLineIRQHappened = true; }
 		void activateSpritesCollisionWithDataIRQ ()
-							{ _spritesCollisionWithDataIRQHappened = true; }
+							{ if (_spriteCollisionWithDataIRQActive) _spritesCollisionWithDataIRQHappened = true; }
 		void setSpriteCollisionWithDataHappened (size_t p)
 						{ _spriteCollisionWithDataHappened [p] = true; }
 		void activateSpritesCollisionIRQ ()
-							{ _spritesCollisionIRQHappened = true; }
+							{ if (_spriteCollisionsIRQActive) _spritesCollisionIRQHappened = true; }
 		void setSpriteCollision (size_t p)
 							{ _spriteCollisionHappened [p] = true; }
 		void activateLightPenOnScreenIRQ ()
-							{ _lightPenOnScreenIRQHappened = true; }
+							{ if (_lightPenIRQActive) _lightPenOnScreenIRQHappened = true; }
 		/** To know whether the VICII might launch a IRQ (from its internal perspective only).
 			The IRQ will be or not actually launched depending on other elements like whether the IRQ flag is or not active. */
 		bool hasVICIIToGenerateIRQ () const
@@ -252,12 +252,16 @@ namespace COMMODORE
 		// The VICII chip also uses this object as a temporary storage
 		unsigned short _currentRasterLine; // Where the raster is now...
 		unsigned short _currentLightPenHorizontalPosition, _currentLightPenVerticalPosition; // Where the light pen is...
-		bool _rasterAtLineIRQHappened; // Whether the raster line has reached the one defined to generate an IRQ.
-		bool _spritesCollisionWithDataIRQHappened; // Whether a collision among sprites and data has happened. The detail is next.
+		/** Whether the raster line has reached the one defined to generate an IRQ. */
+		bool _rasterAtLineIRQHappened;
+		/** Whether a collision among sprites and data has happened. The detail is next. */
+		bool _spritesCollisionWithDataIRQHappened;
 		mutable std::vector <bool> _spriteCollisionWithDataHappened;
-		bool _spritesCollisionIRQHappened; // Whether a collision among sprites has happened. The detail is next.
+		/** Whether a collision among sprites has happened. The detail is next. */
+		bool _spritesCollisionIRQHappened;
 		mutable std::vector <bool> _spriteCollisionHappened;
-		bool _lightPenOnScreenIRQHappened; // Whether the lightpen is on the screen.
+		/** Whether the lightpen is on the screen. */
+		bool _lightPenOnScreenIRQHappened;
 
 		/** Location of the Graphical Memory. */
 		MCHEmul::Address _charDataMemory; // Info about the characters (the address with in the first 16k)

@@ -28,14 +28,27 @@ namespace MCHEmul
 
 		Clock () = delete;
 
-		Clock (unsigned int cS)
+		/** 
+		  * Constructor.
+		  * @param cS	The number of clocks per second. \n
+		  * @param f	A factor to affect the number of clocks. \n
+		  *				It can be used to temporaly affcet the speed of the clock. *
+		  */
+		Clock (unsigned int cS, double f = 1.01526)
 			: _cyclesPerSecond (cS),
 			  _realCyclesPerSecond (0),
+			  _factor (f),
 			  _tooQuick (false),
 			  _realCyclesPerSecondTmp (0), 
 			  _realCyclesPerSecondCalculated (false),
 			  _iClock ()
 						{ assert (_cyclesPerSecond > 0); }
+
+		/** To change the factor. */
+		double factor () const
+						{ return (_factor); }
+		void setFactor (double f)
+						{ _factor = f; }
 
 		unsigned int cyclesPerSecond () const
 						{ return (_cyclesPerSecond); }
@@ -52,6 +65,7 @@ namespace MCHEmul
 		private:
 		unsigned int _cyclesPerSecond;
 		unsigned int _realCyclesPerSecond;
+		double _factor; // A factor for the speed of the clock...
 		bool _tooQuick;
 
 		// Implementation

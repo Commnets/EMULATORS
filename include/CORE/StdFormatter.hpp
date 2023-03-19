@@ -135,10 +135,9 @@ namespace MCHEmul
 		class FixTextPiece final : public Piece
 		{
 			public:
-			/** The constructor receives just the text to print. No formatted is added. */
-			FixTextPiece (const std::string& n)
-				: Piece (Type::_TEXT, n, { }, "")
-							{ }
+			/** The constructor receives just the text to print. No formatted is added. 
+				Special characters (e.g \t) are taken into account. */
+			FixTextPiece (const std::string& n);
 
 			/** The infoStructure received is not taken into account at all. */
 			virtual std::string format (const InfoStructure&) const override
