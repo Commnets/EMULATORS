@@ -28,24 +28,19 @@ namespace COMMODORE
 
 		static const int _SIDREGS_SUBSET = 1001;
 
-		SIDRegisters (MCHEmul::PhysicalStorage* ps, size_t pp, const MCHEmul::Address& a, size_t s)
-				: MCHEmul::ChipRegisters (_SIDREGS_SUBSET, ps, pp, a, s),
-				  _resid_sid (nullptr)
-							{ setClassName ("SIDRegisters"); }
+		SIDRegisters (MCHEmul::PhysicalStorage* ps, size_t pp, const MCHEmul::Address& a, size_t s);
 
 		virtual size_t numberRegisters () const override
 							{ return (0x20); }
 
+		virtual void initialize () override;
+
 		private:
-		virtual void setValue (size_t p, const MCHEmul::UByte& v) override
-							{ MCHEmul::PhysicalStorageSubset::setValue (p, v);
-							  if (_resid_sid != nullptr) // Can happen when emulation starts...
-								  _resid_sid -> write ((RESID::reg8) (p % 0x20), (RESID::reg8) v.value ()); }
-		virtual const MCHEmul::UByte& readValue (size_t p) const override
-							{ return (_lastValueRead = 
-								(_resid_sid == nullptr) // It shouldn't happen ever but...
-									? MCHEmul::PhysicalStorage::_DEFAULTVALUE
-									: MCHEmul::UByte ((unsigned char) _resid_sid -> read ((RESID::reg8) (p % 0x20)))); }
+		virtual void setValue (size_t p, const MCHEmul::UByte& v) override;
+		virtual const MCHEmul::UByte& readValue (size_t p) const override;
+
+		/** To initialize the internal values. */
+		void initializeInternalValues ();
 
 		/** This methis is invoked from the SID emulation to set a reference to the RESID SID emulation. */
 		void setRESID_SID (RESID::SID* sid)
