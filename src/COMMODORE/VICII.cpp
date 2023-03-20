@@ -212,8 +212,7 @@ bool COMMODORE::VICII::simulate (MCHEmul::CPU* cpu)
 
 	// Is it needed to generate any IRQ?
 	// It is here after the full simulation of the VICII (raster, collisions and lightpen)
-	if (_VICIIRegisters -> hasVICIIToGenerateIRQ () && 
-		!cpu -> interrupt (F6500::IRQInterrupt::_ID) -> active ())
+	if (_VICIIRegisters -> launchIRQ ())
 		cpu -> interrupt (F6500::IRQInterrupt::_ID) -> setActive (true);
 
 	return (true);

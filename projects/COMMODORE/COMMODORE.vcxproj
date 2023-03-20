@@ -153,7 +153,7 @@
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>..\..\include;$(SDL_HOME)\include;$(SDLIMAGE_HOME);$(SDLMIXER_HOME);$(RAKNET_HOME)\Source</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\include;..\..\thirdparties;$(SDL_HOME)\include;$(SDLIMAGE_HOME);$(SDLMIXER_HOME);$(RAKNET_HOME)\Source</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>
@@ -171,7 +171,7 @@
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>..\..\include;$(SDL_HOME)\include;$(SDLIMAGE_HOME);$(SDLMIXER_HOME);$(RAKNET_HOME)\Source</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\include;..\..\thirdparties;$(SDL_HOME)\include;$(SDLIMAGE_HOME);$(SDLMIXER_HOME);$(RAKNET_HOME)\Source</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>
@@ -189,7 +189,7 @@
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>..\..\include;$(SDL_HOME)\include;$(SDLIMAGE_HOME);$(SDLMIXER_HOME);$(RAKNET_HOME)\Source</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\include;..\..\thirdparties;$(SDL_HOME)\include;$(SDLIMAGE_HOME);$(SDLMIXER_HOME);$(RAKNET_HOME)\Source</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>
@@ -207,7 +207,7 @@
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>..\..\include;$(SDL_HOME)\include;$(SDLIMAGE_HOME);$(SDLMIXER_HOME);$(RAKNET_HOME)\Source</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\include;..\..\thirdparties;$(SDL_HOME)\include;$(SDLIMAGE_HOME);$(SDLMIXER_HOME);$(RAKNET_HOME)\Source</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>

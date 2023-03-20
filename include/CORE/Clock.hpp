@@ -34,7 +34,7 @@ namespace MCHEmul
 		  * @param f	A factor to affect the number of clocks. \n
 		  *				It can be used to temporaly affcet the speed of the clock. *
 		  */
-		Clock (unsigned int cS, double f = 1.01526)
+		Clock (unsigned int cS, double f = 1.0)
 			: _cyclesPerSecond (cS),
 			  _realCyclesPerSecond (0),
 			  _factor (f),

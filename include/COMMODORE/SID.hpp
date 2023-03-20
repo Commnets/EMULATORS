@@ -8,6 +8,9 @@
  *	Author: Ignacio Cea Forniés (EMULATORS library) \n
  *	Creation Date: 13/01/2023 \n
  *	Description: SID Chip Emulation.
+ *				 The emulation is created using the RESID library:
+ *				 http://www.zimmers.net/anonftp/pub/cbm/crossplatform/emulators/resid/index.html
+ *				 This library has been integrated in many emulators like VICE (my reference).
  *	Versions: 1.0 Initial
  */
 
@@ -16,6 +19,7 @@
 
 #include <CORE/incs.hpp>
 #include <COMMODORE/SIDRegisters.hpp>
+#include <resid/sid.h>
 
 namespace COMMODORE
 {
@@ -25,7 +29,8 @@ namespace COMMODORE
 		public:
 		static const unsigned int _ID = 105;
 
-		SID ();
+		/** The parameter is the clock speed. */
+		SID (unsigned int cF);
 
 		virtual bool initialize () override;
 
@@ -35,6 +40,11 @@ namespace COMMODORE
 
 		private:
 		SIDRegisters* _SIDRegisters;
+
+		// Implementation
+		/** A reference to the SID implementation of the resid library. */
+		RESID::SID _resid_sid;
+		mutable unsigned int _lastClockCycles;
 	};
 }
 

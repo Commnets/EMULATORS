@@ -122,7 +122,7 @@ DRAWLETTERS:				lda #$01
 
 ; Set the behaviour attributes linked to the image of the sprite 0
 							lda #$ff
-							sta SPRITE_ENABLEVAR			; Initially all sprotes availables
+							sta SPRITE_ENABLEVAR			; Initially all sprites availables
 							ldx #$00
 LOADSPRITES:				lda #$20						; Initial block (definition) for of the sprite 0.
 							sta TEMP02_DATA					; It will be also useful later!

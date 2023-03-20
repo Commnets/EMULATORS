@@ -18,7 +18,7 @@ C64::Commodore64::Commodore64 (C64::Commodore64::VisualSystem vS, const std::str
 		 C64::Commodore64::standardChips (vS),
 		 new C64::Memory (lang), // The memory is loaded with different info depending on the language...
 		 C64::Commodore64::standardDevices (vS),
-		 vS == C64::Commodore64::VisualSystem::_PAL ? 985000 /* 0.986 MHz */: 1023000 /** 1.023 MHz */,
+		 vS == C64::Commodore64::VisualSystem::_PAL ? _PALCLOCK : _NTSCCLOCK,
 		 { { "Name", "Commodore 64" },
 		   { "Manufacturer", "Commodore Business Machines CBM" },
 		   { "Year", "1980" }
@@ -97,7 +97,9 @@ MCHEmul::Chips C64::Commodore64::standardChips (C64::Commodore64::VisualSystem v
 			: (C64::VICII*) new COMMODORE::VICII_PAL (C64::Memory::_VICII_VIEW))));
 
 	// The SID
-	result.insert (MCHEmul::Chips::value_type (COMMODORE::SID::_ID, (MCHEmul::Chip*) new COMMODORE::SID));
+	result.insert (MCHEmul::Chips::value_type (COMMODORE::SID::_ID, 
+		(MCHEmul::Chip*) new COMMODORE::SID // The SID depends on the speed...
+			((vS == C64::Commodore64::VisualSystem::_NTSC) ? _NTSCCLOCK : _PALCLOCK)));
 
 	// The PLA
 	result.insert (MCHEmul::Chips::value_type (C64::PLA::_ID, (MCHEmul::Chip*) new C64::PLA));

@@ -1,15 +1,19 @@
 #include <COMMODORE/SID.hpp>
 
 // ---
-COMMODORE::SID::SID ()
+COMMODORE::SID::SID (unsigned int cF)
 	: MCHEmul::Chip (_ID,
 		{ { "Name", "SID" },
 		{ "Code", "6581/8580" },
 		{ "Manufacturer", "Commodore Business Machines CBM" },
 		{ "Year", "1981" } }),
-	  _SIDRegisters (nullptr)
+	  _SIDRegisters (nullptr),
+	  _resid_sid (), // The sampling parameters are adjusted later...
+	  _lastClockCycles (0)
 { 
-	setClassName ("SID"); 
+	setClassName ("SID");
+
+	_resid_sid.set_sampling_parameters ((double) cF, SAMPLE_FAST, (double) 44100);
 }
 
 // ---
@@ -26,7 +30,11 @@ bool COMMODORE::SID::initialize ()
 		return (false);
 	}
 
-	// TODO
+	_resid_sid.reset ();
+
+	_SIDRegisters -> setRESID_SID (&_resid_sid);
+
+	_lastClockCycles = 0;
 
 	return (true);
 }
@@ -34,7 +42,17 @@ bool COMMODORE::SID::initialize ()
 // ---
 bool COMMODORE::SID::simulate (MCHEmul::CPU* cpu)
 {
-	// TODO
+	// First time?
+	if (_lastClockCycles == 0)
+	{ 
+		_lastClockCycles = cpu -> clockCycles (); // Nothing to do...
+
+		return (true);
+	}
+
+	_resid_sid.clock (cpu -> clockCycles () - _lastClockCycles);
+	
+	_lastClockCycles = cpu -> clockCycles ();
 
 	return (true);
 }

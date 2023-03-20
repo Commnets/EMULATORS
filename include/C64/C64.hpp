@@ -32,6 +32,10 @@ namespace C64
 		public:
 		enum class VisualSystem { _NTSC, _PAL };
 
+		/** Macros for the speed. */
+		static const unsigned int _PALCLOCK		= 985248; // 0.985 MHz
+		static const unsigned int _NTSCCLOCK	= 1022727;  // 1.023 MHz
+
 		Commodore64 (VisualSystem vS = VisualSystem::_PAL /** Europe initially */,
 			const std::string& lang = MCHEmul::_DEFAULTLANGUAGE /** English language used behind. */);
 

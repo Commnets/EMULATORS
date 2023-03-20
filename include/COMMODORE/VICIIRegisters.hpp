@@ -122,23 +122,23 @@ namespace COMMODORE
 		// Activate the IRQ. 
 		// All these methods are called from VICII simulation...
 		void activateRasterAtLineIRQ ()
-							{ if (_rasterIRQActive) _rasterAtLineIRQHappened = true; }
+							{ _rasterAtLineIRQHappened = true; }
 		void activateSpritesCollisionWithDataIRQ ()
-							{ if (_spriteCollisionWithDataIRQActive) _spritesCollisionWithDataIRQHappened = true; }
+							{ _spritesCollisionWithDataIRQHappened = true; }
 		void setSpriteCollisionWithDataHappened (size_t p)
-						{ _spriteCollisionWithDataHappened [p] = true; }
+							{ _spriteCollisionWithDataHappened [p] = true; }
 		void activateSpritesCollisionIRQ ()
-							{ if (_spriteCollisionsIRQActive) _spritesCollisionIRQHappened = true; }
+							{ _spritesCollisionIRQHappened = true; }
 		void setSpriteCollision (size_t p)
 							{ _spriteCollisionHappened [p] = true; }
 		void activateLightPenOnScreenIRQ ()
-							{ if (_lightPenIRQActive) _lightPenOnScreenIRQHappened = true; }
+							{ _lightPenOnScreenIRQHappened = true; }
 		/** To know whether the VICII might launch a IRQ (from its internal perspective only).
 			The IRQ will be or not actually launched depending on other elements like whether the IRQ flag is or not active. */
-		bool hasVICIIToGenerateIRQ () const
-							{ return ((_rasterAtLineIRQHappened && _rasterIRQActive) || 
-									  (_spritesCollisionWithDataIRQHappened && _spriteCollisionWithDataIRQActive) || 
-									  (_spritesCollisionIRQHappened && _spriteCollisionsIRQActive) || 
+		bool launchIRQ () const
+							{ return ((_rasterAtLineIRQHappened && _rasterIRQActive) ||
+									  (_spritesCollisionWithDataIRQHappened && _spriteCollisionWithDataIRQActive) ||
+									  (_spritesCollisionIRQHappened && _spriteCollisionsIRQActive) ||
 									  (_lightPenOnScreenIRQHappened && _lightPenIRQActive)); }
 
 		// Temporal variables to know, when an raster or lightpen IRQ happened, where was the element that generated that.

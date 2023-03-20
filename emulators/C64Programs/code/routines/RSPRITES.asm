@@ -16,7 +16,7 @@
 ;SPRITE_XPOSVAR			:	8 bytes (1 per sprite) to point the X position (together with the MSB byte).
 ;SPRITE_YPOSVAR			:	8 bytes (1 per sprite) to point the Y position (together with the MSB byte).
 ;SPRITE_XMSBPOSVAR		:	8 bytes 81 per sprite) to point whether a sprite is above the $ff position, only the first bit is used.
-;SPRITE_BLOCKVAR		:	8 bytes (1 per sprite) to indicate the block of 64 (within the current bacnk) where the form of the sprite is.
+;SPRITE_BLOCKVAR		:	8 bytes (1 per sprite) to indicate the block of 64 (within the current bank) where the form of the sprite is.
 SPRITE_ENABLEVAR			= BLOCK_DATAZONE
 SPRITE_XPOSVAR				= BLOCK_DATAZONE + 8
 SPRITE_YPOSVAR				= BLOCK_DATAZONE + 16
