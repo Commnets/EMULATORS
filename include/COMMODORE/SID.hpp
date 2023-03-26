@@ -24,7 +24,7 @@
 namespace COMMODORE
 {
 	/** The chip is to produce the sound. */
-	class SID : public MCHEmul::Chip
+	class SID : public MCHEmul::SoundChip
 	{
 		public:
 		static const unsigned int _ID = 105;
@@ -37,6 +37,9 @@ namespace COMMODORE
 		virtual bool simulate (MCHEmul::CPU* cpu) override;
 
 		virtual MCHEmul::InfoStructure getInfoStructure () const override;
+
+		private:
+		virtual MCHEmul::SoundMemory* createSoundMemory () override;
 
 		private:
 		SIDRegisters* _SIDRegisters;

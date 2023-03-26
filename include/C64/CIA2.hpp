@@ -29,7 +29,7 @@ namespace C64
 		public:
 		friend Commodore64;
 
-		static const unsigned int _ID = 1030;
+		static const unsigned int _ID = 201;
 
 		CIA2 ()
 			: CIA (_ID, CIA2Registers::_CIA2_SUBSET, F6500::NMIInterrupt::_ID),

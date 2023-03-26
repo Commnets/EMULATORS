@@ -109,7 +109,7 @@ namespace C64
 			_PARTNET64 = 78
 		};
 
-		static const int _ID = 200;
+		static const int _ID = 203;
 
 		Cartridge ();
 
@@ -159,7 +159,7 @@ namespace C64
 		MCHEmul::PhysicalStorages _storages;
 		MCHEmul::PhysicalStorageSubsets _subsets;
 		/** The physical storage. */
-		static const int _EXPANSIONROMBASE			= 2000; //The different chips of memory are created using this base...
+		static const int _EXPANSIONROMBASE			= 4000; //The different chips of memory are created using this base...
 	};
 }
 

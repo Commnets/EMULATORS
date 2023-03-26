@@ -1,5 +1,6 @@
 #include <C64/C64Emulator.hpp>
 #include <C64/C64.hpp>
+#include <C64/Cartridge.hpp>
 
 // ---
 const unsigned char C64::C64Emulator::_PARAMNTSC = 'n';
@@ -19,8 +20,8 @@ void C64::C64Emulator::printOutParameters (std::ostream& o) const
 		 "SWE:\tSwedish" << std::endl <<
 		 "DKA:\tDanish" << std::endl;
 	o << "DEVICES allowed to be connected under command CONNECTPER" << std::endl <<
-		 "100:\tCasette 1530/1" << std::endl <<
-		 "200:\tCartridge" << std::endl;
+		 std::to_string (COMMODORE::Datasette1530::_ID) << ":\tCasette 1530 / 1" << std::endl <<
+		 std::to_string (C64::Cartridge::_ID) << ":\tCartridge" << std::endl;
 }
 
 // ---

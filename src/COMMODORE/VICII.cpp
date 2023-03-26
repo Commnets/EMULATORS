@@ -197,7 +197,7 @@ bool COMMODORE::VICII::simulate (MCHEmul::CPU* cpu)
 
 				// The limit of the visible screen has been reached!
 				// so it is time to actualize the graphics...
-				notify (MCHEmul::Event (MCHEmul::Screen::_GRAPHICSREADY)); 
+				notify (MCHEmul::Event (_GRAPHICSREADY)); 
 			}
 		}
 		else

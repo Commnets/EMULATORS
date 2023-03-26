@@ -13,7 +13,7 @@ MCHEmul::Computer::Computer (MCHEmul::CPU* cpu, const MCHEmul::Chips& c,
 	  _exit (false), _restartAfterExit (false), _restartLevel (0), // Meaning full!
 	  _debugLevel (MCHEmul::_DEBUGNOTHING),
 	  _error (MCHEmul::_NOERROR),
-	  _screen (nullptr), _inputOSSystem (nullptr), _graphicalChip (nullptr),
+	  _screen (nullptr), _sound (nullptr), _inputOSSystem (nullptr), _graphicalChip (nullptr),
 	  _clock (cs), 
 	  _lastAction (_ACTIONNOTHING)
 { 
@@ -37,6 +37,8 @@ MCHEmul::Computer::Computer (MCHEmul::CPU* cpu, const MCHEmul::Chips& c,
 	{
 		if (_screen == nullptr) 
 			_screen = dynamic_cast <MCHEmul::Screen*> (i.second);
+		if (_sound == nullptr)
+			_sound = dynamic_cast <MCHEmul::SoundSystem*> (i.second);
 		if (_inputOSSystem == nullptr) 
 			_inputOSSystem = dynamic_cast <MCHEmul::InputOSSystem*> (i.second);
 
@@ -45,6 +47,7 @@ MCHEmul::Computer::Computer (MCHEmul::CPU* cpu, const MCHEmul::Chips& c,
 	}
 
 	// These are mandatory...
+	// But the sound system is not mandatory (there are many old computers with no sound...really? but possible)
 	assert (_screen != nullptr && _inputOSSystem != nullptr);
 }
 

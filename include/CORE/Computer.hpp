@@ -24,6 +24,7 @@
 #include <CORE/Instruction.hpp>
 #include <CORE/IO.hpp>
 #include <CORE/Screen.hpp>
+#include <CORE/Sound.hpp>
 #include <CORE/OSIO.hpp>
 #include <chrono>
 
@@ -150,6 +151,10 @@ namespace MCHEmul
 							{ return (_inputOSSystem); }
 		InputOSSystem* inputOSSytem ()
 							{ return (_inputOSSystem); }
+		const SoundSystem* sound () const // Can be nullptr...
+							{ return (_sound); }
+		SoundSystem* sound () // Can be nullptr...
+							{ return (_sound); }
 
 		unsigned int cyclesPerSecond () const
 							{ return (_clock.cyclesPerSecond ()); }
@@ -318,7 +323,8 @@ namespace MCHEmul
 
 		// Implementation
 		mutable unsigned int _error;
-		Screen* _screen;
+		Screen* _screen; // it cann't be nullptr ever...
+		SoundSystem* _sound; // it can be nullptr...
 		InputOSSystem* _inputOSSystem;
 		GraphicalChip* _graphicalChip;
 		Clock _clock; // To maintain the sped of the computer...

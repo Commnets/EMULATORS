@@ -94,6 +94,14 @@ Id:@ID@
 @IOPERIPHERALS?{fmter=.CLASS,empty=no peripherals}\n@
 #---
 #---
+;SoundSystem
+Id:@ID@
+@ATTRS?{key=YES,equal=:,empty=no attributes}\n@
+Data Form:@TYPE@ Frequency:@FREQUENCY@kHz Channels:@CHANNELS@ Samples:@SAMPLES@ (in buffer)
+->Peripherals:
+@IOPERIPHERALS?{fmter=.CLASS,empty=no peripherals}\n@
+#---
+#---
 ;CAUTHOR
 @Author>@
 #---

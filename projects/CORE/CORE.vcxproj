@@ -51,6 +51,8 @@
     <ClCompile Include="..\..\src\CORE\Screen.cpp" />
     <ClCompile Include="..\..\src\CORE\ScreenMemory.cpp" />
     <ClCompile Include="..\..\src\CORE\Sound.cpp" />
+    <ClCompile Include="..\..\src\CORE\SoundChip.cpp" />
+    <ClCompile Include="..\..\src\CORE\SoundMemory.cpp" />
     <ClCompile Include="..\..\src\CORE\Stack.cpp" />
     <ClCompile Include="..\..\src\CORE\StatusRegister.cpp" />
     <ClCompile Include="..\..\src\CORE\StdCommandBld.cpp" />
@@ -100,6 +102,8 @@
     <ClInclude Include="..\..\include\CORE\Screen.hpp" />
     <ClInclude Include="..\..\include\CORE\ScreenMemory.hpp" />
     <ClInclude Include="..\..\include\CORE\Sound.hpp" />
+    <ClInclude Include="..\..\include\CORE\SoundChip.hpp" />
+    <ClInclude Include="..\..\include\CORE\SoundMemory.hpp" />
     <ClInclude Include="..\..\include\CORE\Stack.hpp" />
     <ClInclude Include="..\..\include\CORE\StatusRegister.hpp" />
     <ClInclude Include="..\..\include\CORE\StdCommandBld.hpp" />

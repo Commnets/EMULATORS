@@ -25,11 +25,11 @@ namespace MCHEmul
 	{
 		public:
 		/** Different events. */
-		static const unsigned int _KEYBOARDKEYPRESSED			= 101;
-		static const unsigned int _KEYBOARDKEYRELEASED			= 102;
-		static const unsigned int _JOYSTICKMOVED				= 103;
-		static const unsigned int _JOYSTICKBUTTONPRESSED		= 104;
-		static const unsigned int _JOYSTICKBUTTONRELEASED		= 105;
+		static const unsigned int _KEYBOARDKEYPRESSED			= 102;
+		static const unsigned int _KEYBOARDKEYRELEASED			= 103;
+		static const unsigned int _JOYSTICKMOVED				= 104;
+		static const unsigned int _JOYSTICKBUTTONPRESSED		= 105;
+		static const unsigned int _JOYSTICKBUTTONRELEASED		= 106;
 
 		/** To identify an event in the keyboard. */
 		struct KeyboardEvent : public Event::Data
@@ -75,6 +75,10 @@ namespace MCHEmul
 
 		bool quitRequested () const
 							{ return (_quitRequested); }
+
+		/** Not possible to connect any peripheral. */
+		virtual bool connectPeripheral (IOPeripheral* p) override
+							{ return (false); }
 
 		virtual bool initialize () override;
 

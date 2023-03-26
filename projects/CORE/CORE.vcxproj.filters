@@ -90,9 +90,6 @@
     <ClCompile Include="..\..\src\CORE\global.cpp">
       <Filter>Archivos de origen</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\CORE\ScreenMemory.cpp">
-      <Filter>Archivos de origen\Motherboard</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\CORE\GraphicalChip.cpp">
       <Filter>Archivos de origen\Motherboard</Filter>
     </ClCompile>
@@ -162,6 +159,15 @@
     <ClCompile Include="..\..\src\CORE\FileReader.cpp">
       <Filter>Archivos de origen\IO</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\CORE\ScreenMemory.cpp">
+      <Filter>Archivos de origen\IO</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\CORE\SoundMemory.cpp">
+      <Filter>Archivos de origen\IO</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\CORE\SoundChip.cpp">
+      <Filter>Archivos de origen\Motherboard</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\include\CORE\IO.hpp">
@@ -223,9 +229,6 @@
     </ClInclude>
     <ClInclude Include="..\..\include\CORE\incs.hpp">
       <Filter>Archivos de encabezado</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\include\CORE\ScreenMemory.hpp">
-      <Filter>Archivos de encabezado\Motherboard</Filter>
     </ClInclude>
     <ClInclude Include="..\..\include\CORE\GraphicalChip.hpp">
       <Filter>Archivos de encabezado\Motherboard</Filter>
@@ -306,6 +309,15 @@
       <Filter>Archivos de encabezado\IO</Filter>
     </ClInclude>
     <ClInclude Include="..\..\include\CORE\Latch.hpp">
+      <Filter>Archivos de encabezado\Motherboard</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\CORE\ScreenMemory.hpp">
+      <Filter>Archivos de encabezado\IO</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\CORE\SoundMemory.hpp">
+      <Filter>Archivos de encabezado\IO</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\CORE\SoundChip.hpp">
       <Filter>Archivos de encabezado\Motherboard</Filter>
     </ClInclude>
   </ItemGroup>

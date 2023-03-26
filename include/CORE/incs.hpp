@@ -27,6 +27,8 @@
 #include <CORE/StdFmterBuilder.hpp>
 #include <CORE/Address.hpp>
 #include <CORE/Chip.hpp>
+#include <CORE/GraphicalChip.hpp>
+#include <CORE/SoundChip.hpp>
 #include <CORE/Computer.hpp>
 #include <CORE/CPU.hpp>
 #include <CORE/CPUArchitecture.hpp>
@@ -52,6 +54,7 @@
 #include <CORE/ScreenMemory.hpp>
 #include <CORE/OSIO.hpp>
 #include <CORE/Sound.hpp>
+#include <CORE/SoundMemory.hpp>
 #include <CORE/IOPeripheral.hpp>
 #include <CORE/IOPBuilder.hpp>
 #include <CORE/Command.hpp>

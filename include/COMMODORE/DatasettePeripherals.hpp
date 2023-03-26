@@ -106,7 +106,7 @@ namespace COMMODORE
 	class NoDatasettePeripheral : public DatasettePeripheral
 	{
 		public:
-		static const int _ID = -101;
+		static const int _ID = -100;
 
 		NoDatasettePeripheral ()
 			: DatasettePeripheral (_ID, { }) // A nothing identificator...

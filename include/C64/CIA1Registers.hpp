@@ -28,7 +28,7 @@ namespace C64
 		friend CIA1;
 
 		/** A name when this register is a subset in the main memory. */
-		static const int _CIA1_SUBSET = 1002;
+		static const int _CIA1_SUBSET = 2000;
 
 		CIA1Registers (MCHEmul::PhysicalStorage* ps, size_t pp, const MCHEmul::Address& a, size_t s);
 

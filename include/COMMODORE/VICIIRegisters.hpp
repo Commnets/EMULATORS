@@ -25,7 +25,7 @@ namespace COMMODORE
 	class VICIIRegisters final : public MCHEmul::ChipRegisters
 	{
 		public:
-		static const int _VICREGS_SUBSET = 1000;
+		static const int _VICREGS_SUBSET = 1040;
 			
 		enum class GraphicMode
 		{

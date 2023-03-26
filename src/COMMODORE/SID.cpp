@@ -2,12 +2,12 @@
 
 // ---
 COMMODORE::SID::SID (unsigned int cF)
-	: MCHEmul::Chip (_ID,
+	: MCHEmul::SoundChip (_ID,
 		{ { "Name", "SID" },
-		{ "Code", "6581/8580" },
-		{ "Manufacturer", "Commodore Business Machines CBM" },
-		{ "Year", "1981" } }),
-	  _SIDRegisters (nullptr),
+		  { "Code", "6581/8580" },
+		  { "Manufacturer", "Commodore Business Machines CBM" },
+		  { "Year", "1982" } }),
+		  _SIDRegisters (nullptr),
 	  _resid_sid (), // The sampling parameters are adjusted later...
 	  _lastClockCycles (0)
 { 
@@ -36,7 +36,7 @@ bool COMMODORE::SID::initialize ()
 
 	_lastClockCycles = 0;
 
-	return (true);
+	return (MCHEmul::SoundChip::initialize ());
 }
 
 // ---
@@ -50,7 +50,11 @@ bool COMMODORE::SID::simulate (MCHEmul::CPU* cpu)
 		return (true);
 	}
 
+	// Add the output to the sound memory...
 	_resid_sid.clock (cpu -> clockCycles () - _lastClockCycles);
+	unsigned int data = _resid_sid.output ();
+	if (soundMemory () -> addSampleData ((unsigned char*) &data, 4 /** 2 bytes only. */))
+		notify (MCHEmul::Event (_SOUNDREADY));
 	
 	_lastClockCycles = cpu -> clockCycles ();
 
@@ -60,10 +64,16 @@ bool COMMODORE::SID::simulate (MCHEmul::CPU* cpu)
 // ---
 MCHEmul::InfoStructure COMMODORE::SID::getInfoStructure () const
 {
-	MCHEmul::InfoStructure result = MCHEmul::Chip::getInfoStructure ();
+	MCHEmul::InfoStructure result = MCHEmul::SoundChip::getInfoStructure ();
 
 	result.remove ("Memory"); // This is not neccesary...
 	result.add ("Registers",	_SIDRegisters -> getInfoStructure ());
 
 	return (result);
+}
+
+// ---
+MCHEmul::SoundMemory* COMMODORE::SID::createSoundMemory ()
+{
+	return (new MCHEmul::SoundMemory (160 /** Twice the samples in SDL. */, 4 /** The resid returns a int. */));
 }

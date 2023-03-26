@@ -26,7 +26,7 @@ namespace COMMODORE
 		public:
 		friend SID;
 
-		static const int _SIDREGS_SUBSET = 1001;
+		static const int _SIDREGS_SUBSET = 1050;
 
 		SIDRegisters (MCHEmul::PhysicalStorage* ps, size_t pp, const MCHEmul::Address& a, size_t s);
 

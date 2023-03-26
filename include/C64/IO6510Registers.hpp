@@ -26,7 +26,7 @@ namespace C64
 		friend SpecialFunctionsChip;
 
 		/** A name when this register is a subset in the main memory. */
-		static const int _IO6510REGISTERS_SUBSET = 1004;
+		static const int _IO6510REGISTERS_SUBSET = 2040;
 
 		/** Event when the C64 Port IO bits are actualized. */
 		static const unsigned int _C64PORTIOBITSACTUALIZED = 300;

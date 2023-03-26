@@ -17,7 +17,6 @@
 #include <CORE/IO.hpp>
 #include <CORE/GraphicalChip.hpp>
 #include <CORE/Clock.hpp>
-#include <CORE/NotifyObserver.hpp>
 #include <SDL.h>
 
 namespace MCHEmul
@@ -26,9 +25,6 @@ namespace MCHEmul
 	class Screen : public IODevice
 	{
 		public:
-		/** Different events. */
-		static const unsigned int _GRAPHICSREADY				= 100;
-
 		/** 
 		  * Creates the instance of the window.
 		  * @param n	: The title of the windo to show.
@@ -67,6 +63,10 @@ namespace MCHEmul
 							{ return (_hertzs); }
 		unsigned int realHertzs () const
 							{ return (_clock.realCyclesPerSecond ()); }
+
+		/** Not possible to connect any peripheral. */
+		virtual bool connectPeripheral (IOPeripheral* p) override
+							{ return (false); }
 
 		virtual bool initialize () override;
 

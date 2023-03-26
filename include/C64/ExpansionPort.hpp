@@ -28,7 +28,7 @@ namespace C64
 		static const unsigned char _EXROM = 9;
 
 		/** Event to inform the structure of the memory. */
-		static const unsigned int _C64EXPANSIONPORTMEMLINESACTUALIZED = 310;
+		static const unsigned int _C64EXPANSIONPORTMEMLINESACTUALIZED = 360;
 
 		ExpansionIOPort ()
 			: COMMODORE::ExpansionIOPort (),

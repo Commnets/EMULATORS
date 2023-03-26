@@ -32,7 +32,7 @@ namespace C64
 		/** The simulation of the chips are excecuted according with their ids. 
 			It is important ths chip is executed the last one to adjust the memory 
 			once the information from the rest has been received. */
-		static const unsigned int _ID = 1050;
+		static const unsigned int _ID = 203;
 		
 		PLA ();
 

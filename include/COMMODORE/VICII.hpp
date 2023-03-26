@@ -46,10 +46,10 @@ namespace COMMODORE
 			As the VICII only addresses 16k and some computers where it is connected to admitis 64,
 			there is the possibility to change the bank. \n
 			The unsigned ints associated to each must be consecutive for everything to work properly. */
-		static const unsigned int _BANK0SET = 300;
-		static const unsigned int _BANK1SET = 301;
-		static const unsigned int _BANK2SET = 302;
-		static const unsigned int _BANK3SET = 303;
+		static const unsigned int _BANK0SET = 200;
+		static const unsigned int _BANK1SET = 201;
+		static const unsigned int _BANK2SET = 202;
+		static const unsigned int _BANK3SET = 203;
 
 		/** Specific classes for PAL & NTSC have been created giving this data as default. \n
 			The VICII constructor receives info over the raster data, the memory view to use and additional attributes. */

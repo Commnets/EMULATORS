@@ -24,12 +24,14 @@ namespace MCHEmul
 	  * The graphical chip uses the ScreenMemory to write. \n
 	  * The same object will be taken by th Screen to finaly put the graphics out to the display. \n
 	  * The instance of the ScreenMemory object used is created in the method "createScreenMemory ()" that has to be overload. \n
-	  * When a graphic is ready (complete) to be sent to the screen, the method "setGraphicsReady (true)" should be invoked. \n
-	  * The Screen, when output the raphics to the display invokes back the method "setGraphicsReady (false)".
-	  */
+	  * When a graphic is ready (complete) to be sent to the screen, a notification has to be sent. \n
+	  * That notification will be received at the screen and converted into the graphics. */
 	class GraphicalChip : public Chip
 	{
 		public:
+		/** Different events. */
+		static const unsigned int _GRAPHICSREADY				= 100;
+
 		GraphicalChip (int id, const Attributes& attrs = { })
 			: Chip (id, attrs), 
 			  _screenMemory (nullptr)
