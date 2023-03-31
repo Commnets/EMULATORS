@@ -6,6 +6,8 @@
 ;CIA1
 id:@ID@
 @ATTRS?{key=YES,equal=:,empty=no attributes}\n@
+CIAPRA:@CIAPRA@
+CIDDRA:@CIDDRA@ CIDDRB:@CIDDRB@
 ->Registers:
 @Registers>@
 ->Timer A:

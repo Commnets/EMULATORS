@@ -25,7 +25,7 @@ namespace MCHEmul
 	{
 		public:
 		SoundSystem (int id, 
-			unsigned short tp, int sF, unsigned char nC, unsigned short nS, const Attributes& attrs = { });
+			unsigned short tp, int sF, unsigned char nC, const Attributes& attrs = { });
 
 		~SoundSystem ();
 
@@ -45,8 +45,6 @@ namespace MCHEmul
 							{ return (_samplingFrequency); }
 		unsigned char numberChannels () const
 							{ return (_numberChannels); }
-		unsigned short numberSamples () const
-							{ return (_numberSamples); }
 
 		/** Not possible to connect any peripheral. */
 		virtual bool connectPeripheral (IOPeripheral* p) override
@@ -76,8 +74,6 @@ namespace MCHEmul
 		const int _samplingFrequency;
 		/** The number of channels to be used. */
 		const unsigned char _numberChannels;
-		/** The number of samples any chunk of information sent from the chip. */
-		const unsigned short _numberSamples;
 	
 		// Implementation
 		SoundChip* _soundChip;

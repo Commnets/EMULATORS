@@ -23,6 +23,18 @@ bool C64::CIA1::initialize ()
 }
 
 // ---
+MCHEmul::InfoStructure C64::CIA1::getInfoStructure () const
+{
+	MCHEmul::InfoStructure result (std::move (COMMODORE::CIA::getInfoStructure ()));
+
+	result.add ("CIAPRA", _CIA1Registers -> _keyboardRowToRead);
+	result.add ("CIDDRA", _CIA1Registers -> _dataPortADir);
+	result.add ("CIDDRB", _CIA1Registers -> _dataPortBDir);
+
+	return (result);
+}
+
+// ---
 void C64::CIA1::processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifier* n)
 {
 	switch (evnt.id ())
@@ -94,10 +106,13 @@ void C64::CIA1::processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifier* n)
 					break; // Only joysticks 0 y 1 are allowed!
 	
 				if (jb -> _joystickId == 0)
+				{ 
 					// The events on the joystick 1 are set on the same place than the keyboard...
+					_CIA1Registers -> setJoystick1InputPending (true);
 					for (size_t i = 0; i < 8; i++)
 						_CIA1Registers -> setKeyboardStatusMatrix (i, _CIA1Registers -> keyboardStatusMatrix (i) & 
 							(0xff - 0x10 /** bit 4 clear when on. */));
+				}
 				else
 					_CIA1Registers -> setJoystick2Status (_CIA1Registers -> joystick2Status () & 
 						(0xff /** 0 means switch on. */ - 0x10));
@@ -114,9 +129,12 @@ void C64::CIA1::processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifier* n)
 	
 				// Only two joysticks are allowed...
 				if (jb -> _joystickId == 0)
+				{ 
 					// The events on the joystick 1 are set on the same place than the keyboard...
+					_CIA1Registers -> setJoystick1InputPending (true);
 					for (size_t i = 0; i < 8; i++)
 						_CIA1Registers -> setKeyboardStatusMatrix (i, _CIA1Registers -> keyboardStatusMatrix (i) | 0x10);
+				}
 				else
 					_CIA1Registers -> setJoystick2Status (_CIA1Registers -> joystick2Status () | 0x10);
 			}

@@ -22,14 +22,16 @@ void C64::CIA1Registers::setValue (size_t p, const MCHEmul::UByte& v)
 		// Data Port Register A: CIAPRA
 		case 0x00:
 			{
-				// To indicate the row of the key matrix to be read (later)
-				// It will be affected by the communication direction (CIDDRA)
+				// To indicate the row of the key matrix to be selected (later)
+				// It is affected by the communication direction (CIDDRA) (bits 1 output)
+				// bits = 0 will indicate rows selected!
 				_keyboardRowToRead = v.value ();
 			}
 
 			break;
 
 		// Data Direction Register A: CIDDRA
+		// The row to read is also affected...
 		case 0x02:
 			{
 				_dataPortADir = v.value ();
@@ -65,23 +67,24 @@ const MCHEmul::UByte& C64::CIA1Registers::readValue (size_t p) const
 
 		case 0x01:
 			{
-				if (_keyboardRowToRead == 0xff)
-				{ 
-					if (_joystick1InputPending)
-						result = _keyboardStatusMatrix [7] & ~_dataPortBDir;
-					else
-						result = 0xff;
-				}
-				else
-				if (_keyboardRowToRead != 0x00)
+				switch (_keyboardRowToRead)
 				{
-					// Identify the row to read...
-					// Take into account that the row is identified writting 0 in its bit (so it is necessary to inverse it first)
-					unsigned char bRV = ~_keyboardRowToRead & _dataPortADir; // 0xff all output...
-					size_t c = 0; while ((bRV >>= 1) != 0) c++;
-					// If more than 1 row will be possible, the greatest one will be choosen...
-					// The columns (from keyboard or joystick 1) connected will have its bits to 0!...
-					result = _keyboardStatusMatrix [c] & ~_dataPortBDir; // 0x00 all input...
+					case 0x00:
+						break;
+
+					case 0xff:
+						result = _joystick1InputPending ? (_keyboardStatusMatrix [7] & ~_dataPortBDir) : 0xff;
+						break;
+
+					default:
+						// Identify the row to read...
+						// Take into account that the row is identified writting 0 in its bit (so it is necessary to inverse it first)
+						unsigned char bRV = ~_keyboardRowToRead & _dataPortADir; // 0xff all output...
+						size_t c = 0; while ((bRV >>= 1) != 0) c++;
+						// If more than 1 row will be possible, the greatest one will be choosen...
+						// The columns (from keyboard or joystick 1) connected will have its bits to 0!...
+						result = _keyboardStatusMatrix [c] & ~_dataPortBDir; // 0x00 all input...
+						break;
 				}
 
 				// These bits override anything if the timer has been parameterized for that...
@@ -105,14 +108,14 @@ const MCHEmul::UByte& C64::CIA1Registers::readValue (size_t p) const
 void C64::CIA1Registers::initializeInternalValues ()
 {
 	COMMODORE::CIARegisters::initializeInternalValues ();
-
+	
 	// Data Port A all input...
 	setValue (0x02, MCHEmul::UByte::_FF); 
 	// Data Port B all output...
 	setValue (0x03, MCHEmul::UByte::_0);
 	// Just to be able to read well the keyboard...
 
-	_joystick1InputPending= false; // Nothing pending from the joystick 1...
+	_joystick1InputPending = false; // Nothing pending from the joystick 1...
 	_joystick2Status = 0xff; // No switches clicked, no fire buttons pressed...
 	for (size_t i = 0; i < 8; _keyboardStatusMatrix [i++] = MCHEmul::UByte::_FF); // No keys pressed...
 }

@@ -285,7 +285,7 @@ bool MCHEmul::Computer::runComputerCycle (unsigned int a)
 			_error = MCHEmul::_CHIP_ERROR;
 
 			if (_debugLevel >= MCHEmul::_DEBUGERRORS)
-				std::cout << "Error simulating chip: " << std::endl << i.second << std::endl;
+				std::cout << "Error simulating chip: " << std::endl << *(i.second) << std::endl;
 
 			return (false); // Error...
 		}
@@ -309,7 +309,7 @@ bool MCHEmul::Computer::runIOCycle ()
 			_error = MCHEmul::_DEVICE_ERROR;
 
 			if (_debugLevel >= MCHEmul::_DEBUGERRORS)
-				std::cout << "Error in IO device:" << std::endl << i.second << std::endl;
+				std::cout << "Error in IO device:" << std::endl << *(i.second) << std::endl;
 
 			return (false); // Error...
 		}

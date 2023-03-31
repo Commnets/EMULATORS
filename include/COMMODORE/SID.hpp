@@ -42,6 +42,8 @@ namespace COMMODORE
 		virtual MCHEmul::SoundMemory* createSoundMemory () override;
 
 		private:
+		static const size_t _SAMPLESTOKEEP = 441; // 44100 Hz / 10 (times per second) = 441;
+
 		SIDRegisters* _SIDRegisters;
 
 		// Implementation

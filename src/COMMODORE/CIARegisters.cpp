@@ -179,6 +179,7 @@ void COMMODORE::CIARegisters::setValue (size_t p, const MCHEmul::UByte& v)
 				if (v.bit (4)) _timerB -> reset ();
 				// bits 5 & 6 indicates the mode...
 				_timerB -> setCountMode ((COMMODORE::CIATimer::CountMode) ((v.value () >> 5) & 0x03));
+				// The bit 7 is taken into account when managing TOD...
 			}
 
 			break;
@@ -334,22 +335,24 @@ void COMMODORE::CIARegisters::initializeInternalValues ()
 
 	// The internal variables are initialized through the data in memory...
 
-	setValue (0x00, MCHEmul::UByte::_0); 
-	setValue (0x01, MCHEmul::UByte::_0);
-	setValue (0x02, MCHEmul::UByte::_0);
-	setValue (0x03, MCHEmul::UByte::_0);
-	setValue (0x04, MCHEmul::UByte::_0); // No timer A active
+	setValue (0x00, MCHEmul::UByte::_FF); 
+	setValue (0x01, MCHEmul::UByte::_FF);
+	setValue (0x02, MCHEmul::UByte::_FF); // All lines output...
+	setValue (0x03, MCHEmul::UByte::_0);  // All lines input...
+	setValue (0x04, MCHEmul::UByte::_0);
 	setValue (0x05, MCHEmul::UByte::_0);
-	setValue (0x06, MCHEmul::UByte::_0); // No timer B active
+	setValue (0x06, MCHEmul::UByte::_0);
 	setValue (0x07, MCHEmul::UByte::_0);
 	setValue (0x08, MCHEmul::UByte::_0); 
 	setValue (0x09, MCHEmul::UByte::_0); 
 	setValue (0x0a, MCHEmul::UByte::_0); 
 	setValue (0x0b, MCHEmul::UByte::_0); 
 	setValue (0x0c, MCHEmul::UByte::_0); 
-	setValue (0x0d, MCHEmul::UByte::_0); // No interupts allowed from the early beginning...so stopped!
-	setValue (0x0e, MCHEmul::UByte::_0); // No value in timer A
-	setValue (0x0f, MCHEmul::UByte::_0); // No value in timer B
+	setValue (0x0d, 0x1f);  // To clear all interrupts...
+	setValue (0x0e, 0xa0);  // Register A: Stopped, no value appear on bit 6 port B, pulse,
+							// continuous, not load, counting cycles, and 50 hz frequecy (by default)
+	setValue (0x0f, 0xa0);  // Register B: Stopped, no value appear on bit 7 port B, pulse, 
+							// continuous, not load, counting cycles, writting to TOD regisers sets alarm.
 
 	_flagLineInterruptRequested = false;
 

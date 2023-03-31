@@ -62,7 +62,7 @@ namespace C64
 
 		private:
 		/** Whether there is some input pending from the joystick. */
-		bool _joystick1InputPending;
+		mutable bool _joystick1InputPending;
 		/** The joystick 2 status. */
 		unsigned char _joystick2Status;
 		/** The data ports A y B are actually a matrix of info: ( bytes with (bytes each). 
@@ -70,7 +70,7 @@ namespace C64
 		MCHEmul::UByte _keyboardStatusMatrix [8];
 
 		// Implementation
-		unsigned char _keyboardRowToRead; // bit = 0, means row to be read!
+		unsigned char _keyboardRowToRead; // bit = 0, means row selected to be read!
 		unsigned char _dataPortADir, _dataPortBDir;
 	};
 }
