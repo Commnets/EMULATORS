@@ -18,11 +18,19 @@ MCHEmul::SoundSystem::SoundSystem (int id,
 	SDL_zero (specIn);
 	specIn.freq = _samplingFrequency;
 	specIn.format = _type;
-	specIn.channels = _numberChannels;
+	specIn.channels = (Uint8) _numberChannels;
 	specIn.samples = 0; // It will be determined later...
 	specIn.callback = nullptr; // SDL_QueueAudio will be used intead...
 	specIn.userdata = nullptr; // No callback no special data to be passed...
 	_deviceId = SDL_OpenAudioDevice (nullptr, 0, &specIn, &_audioSpec, SDL_AUDIO_ALLOW_ANY_CHANGE);
+	
+	// After openning the device the initial variables can be changed...
+	bool changed = false;
+	if (_audioSpec.freq != _samplingFrequency) { _samplingFrequency = _audioSpec.freq; changed = true; }
+	if (_audioSpec.format != _type) { _type = _audioSpec.format; changed = true; }
+	if (_audioSpec.channels != _numberChannels) { _numberChannels = _audioSpec.channels; changed = true; }
+	if (changed)
+		std::cout << "Original sound format has been changed" << std::endl;
 
 	SDL_PauseAudioDevice (_deviceId, 0); // 0 to start...
 }
@@ -71,17 +79,19 @@ bool MCHEmul::SoundSystem::simulate (MCHEmul::CPU* cpu)
 		int tC = 0;
 		SDL_AudioCVT cvt;
 		SDL_memset (&cvt, 0, sizeof (cvt));
-		result = (tC = SDL_BuildAudioCVT (&cvt, AUDIO_S16, 1, 44100, _audioSpec.format, _audioSpec.channels, _audioSpec.freq)) >= 0;
+		result = (tC = SDL_BuildAudioCVT (&cvt, 
+			_soundChip -> type (), (Uint8) _soundChip -> numberChannels (), (int) _soundChip -> samplingFrecuency (),
+			_type, _numberChannels, _samplingFrequency)) >= 0; // Change from the chip format to the card sound format...
 		if (!result) // And error has happened when conversion is planned...
 			std::cout << SDL_GetError () << std::endl;
 		else
 		{
 			if (tC != 0) // Conversion is needed...
 			{
-				cvt.len = (int) _soundChip -> soundMemory () -> size ();
+				cvt.len = _soundChip -> soundBufferSize ();
 				int cvt_lencvt = cvt.len * cvt.len_mult;
 				cvt.buf = (Uint8*) SDL_malloc (cvt_lencvt);
-				memcpy (cvt.buf, _soundChip -> soundMemory () -> samplingData (), cvt.len);
+				memcpy ((void*) cvt.buf, (void*) _soundChip -> soundMemory () -> samplingData (), cvt.len);
 				SDL_ConvertAudio (&cvt);
 				if (!(result = SDL_QueueAudio (_deviceId, (void*) cvt.buf, cvt_lencvt) != -1))
 					std::cout << SDL_GetError () << std::endl;
@@ -89,7 +99,7 @@ bool MCHEmul::SoundSystem::simulate (MCHEmul::CPU* cpu)
 			}
 			else // No conversion is needed...
 				if (!(result = SDL_QueueAudio (_deviceId, (void*) _soundChip -> soundMemory () -> samplingData (), 
-					(Uint32) _soundChip -> soundMemory () -> size ()) != -1))
+						(Uint32) _soundChip -> soundBufferSize ()) != -1))
 					std::cout << SDL_GetError () << std::endl;
 		}
 

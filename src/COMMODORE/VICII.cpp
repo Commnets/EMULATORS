@@ -398,7 +398,7 @@ MCHEmul::ScreenMemory* COMMODORE::VICII::createScreenMemory ()
 	cP [14] = SDL_MapRGB (_format, 0x86, 0x7a, 0xde); // Light Blue
 	cP [15] = SDL_MapRGB (_format, 0xb3, 0xb3, 0xb3); // Light Grey
 
-	return (new MCHEmul::ScreenMemory (_raster.visibleColumns (), _raster.visibleLines (), cP));
+	return (new MCHEmul::ScreenMemory (numberColumns (), numberRows (), cP));
 }
 
 // ---

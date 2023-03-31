@@ -40,6 +40,13 @@ namespace MCHEmul
 		virtual ~GraphicalChip () override
 							{ delete (_screenMemory); }
 
+		/** To know the size of the window. */
+		virtual unsigned short numberColumns () const = 0;
+		virtual unsigned short numberRows () const = 0;
+		int screenBufferSize () const
+							{ return (numberColumns () * numberRows ()); }
+
+		// They will be nullptr if the initialize method hasn't been invoked...
 		const ScreenMemory* screenMemory () const
 							{ return (_screenMemory); }
 		ScreenMemory* screenMemory ()

@@ -32,6 +32,14 @@ namespace COMMODORE
 		/** The parameter is the clock speed. */
 		SID (unsigned int cF);
 
+		/** The main characteristics of the SID. */
+		virtual SDL_AudioFormat type () const override
+							{ return (AUDIO_S16MSB); } // resid represents the information as a unsigned short with the MSB at the left
+		virtual int maxFrequency () const override
+							{ return (4000); } // The max frequecy that the SID can play is 4000Hz
+		virtual unsigned char numberChannels () const override
+							{ return (1); } // SID is mono...
+
 		virtual bool initialize () override;
 
 		virtual bool simulate (MCHEmul::CPU* cpu) override;
@@ -39,11 +47,6 @@ namespace COMMODORE
 		virtual MCHEmul::InfoStructure getInfoStructure () const override;
 
 		private:
-		virtual MCHEmul::SoundMemory* createSoundMemory () override;
-
-		private:
-		static const size_t _SAMPLESTOKEEP = 441; // 44100 Hz / 10 (times per second) = 441;
-
 		SIDRegisters* _SIDRegisters;
 
 		// Implementation

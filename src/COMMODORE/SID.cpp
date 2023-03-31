@@ -13,7 +13,7 @@ COMMODORE::SID::SID (unsigned int cF)
 { 
 	setClassName ("SID");
 
-	_resid_sid.set_sampling_parameters ((double) cF, SAMPLE_FAST, (double) 44100);
+	_resid_sid.set_sampling_parameters ((double) cF, SAMPLE_FAST, (double) samplingFrecuency ());
 }
 
 // ---
@@ -53,7 +53,7 @@ bool COMMODORE::SID::simulate (MCHEmul::CPU* cpu)
 	// Add the output to the sound memory...
 	_resid_sid.clock (cpu -> clockCycles () - _lastClockCycles);
 	short data = (short) _resid_sid.output (); // The output is between -32768 and 32767 it is 16 bits...
-	if (soundMemory () -> addSampleData ((unsigned char*) &data, sizeof (short)))
+	if (soundMemory () -> addSampleData ((unsigned char*) &data, sampleSize ()))
 		notify (MCHEmul::Event (_SOUNDREADY));
 	
 	_lastClockCycles = cpu -> clockCycles ();
@@ -70,10 +70,4 @@ MCHEmul::InfoStructure COMMODORE::SID::getInfoStructure () const
 	result.add ("Registers",	_SIDRegisters -> getInfoStructure ());
 
 	return (result);
-}
-
-// ---
-MCHEmul::SoundMemory* COMMODORE::SID::createSoundMemory ()
-{
-	return (new MCHEmul::SoundMemory (_SAMPLESTOKEEP, sizeof (short)));
 }

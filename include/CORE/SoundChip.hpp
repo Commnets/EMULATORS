@@ -16,6 +16,7 @@
 
 #include <CORE/Chip.hpp>
 #include <CORE/SoundMemory.hpp>
+#include <SDL.h>
 
 namespace MCHEmul
 {
@@ -41,6 +42,20 @@ namespace MCHEmul
 		virtual ~SoundChip () override
 							{ delete (_soundMemory); }
 
+		/** To know the characteristic of the soun chip. */
+		virtual SDL_AudioFormat type () const = 0;
+		virtual int maxFrequency () const = 0;
+		int samplingFrecuency () const
+							{ return (maxFrequency () << 1); }
+		unsigned char sampleSize () const
+							{ return ((type () & 0x00ff) >> 3); } // From the type always... (@see format of SDL_AudioSpec)
+		virtual unsigned char numberChannels () const = 0;
+		// The theoretical number of elements of the buffer (frequency * channels * sampleSize) is divided by 10...
+		// ..meaning that the buffer will be filled 10 times per second!...
+		int soundBufferSize () const
+							{ return ((samplingFrecuency () * (int) numberChannels () * (int) sampleSize ()) / 10); }
+
+		// They will be nullptr if the initialize method hasn't been invoked...
 		const SoundMemory* soundMemory () const
 							{ return (_soundMemory); }
 		SoundMemory* soundMemory ()
@@ -50,7 +65,8 @@ namespace MCHEmul
 
 		protected:
 		/** Invoked from initialize to create the right sound memory. */
-		virtual SoundMemory* createSoundMemory () = 0;
+		virtual SoundMemory* createSoundMemory ()
+							{ return (new SoundMemory (soundBufferSize () / sampleSize (), sampleSize ())); }
 
 		protected:
 		SoundMemory* _soundMemory;

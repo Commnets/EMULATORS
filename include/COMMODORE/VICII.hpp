@@ -58,6 +58,11 @@ namespace COMMODORE
 
 		virtual ~VICII () override;
 
+		virtual unsigned short numberColumns () const override
+							{ return (_raster.visibleColumns ()); }
+		virtual unsigned short numberRows () const override
+							{ return (_raster.visibleLines ()); }
+
 		/** To change and get the bank. */
 		unsigned short bank () const
 							{ return (_VICIIRegisters -> bank ()); }

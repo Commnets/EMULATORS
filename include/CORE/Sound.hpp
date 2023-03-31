@@ -25,7 +25,7 @@ namespace MCHEmul
 	{
 		public:
 		SoundSystem (int id, 
-			unsigned short tp, int sF, unsigned char nC, const Attributes& attrs = { });
+			SDL_AudioFormat tp, int sF, unsigned char nC, const Attributes& attrs = { });
 
 		~SoundSystem ();
 
@@ -39,7 +39,7 @@ namespace MCHEmul
 							{ return (_soundChip); }
 
 		/** To get the value of parameters. */
-		unsigned short type () const
+		SDL_AudioFormat type () const
 							{ return (_type); }
 		int samplingFrequency () const
 							{ return (_samplingFrequency); }
@@ -68,12 +68,12 @@ namespace MCHEmul
 		/** The type of any sample. \n
 			It is used by SDL to determine later the structure of the internal buffer used
 			in the communication with the sound card. */
-		const unsigned short _type;
+		SDL_AudioFormat _type;
 		/** The sampling frequency. \n
 			It must be double than the maximum allowed (according with the characteristics of the chip connected). */
-		const int _samplingFrequency;
+		int _samplingFrequency;
 		/** The number of channels to be used. */
-		const unsigned char _numberChannels;
+		unsigned char _numberChannels;
 	
 		// Implementation
 		SoundChip* _soundChip;
