@@ -57,8 +57,8 @@ namespace MCHEmul
 
 	/** Levels of debugging */
 	static const unsigned int _DEBUGNOTHING					= 0;
-	static const unsigned int _DUMPATEXIT					= 1;
-	static const unsigned int _DEBUGERRORS					= 2;
+	static const unsigned int _DEBUGERRORS					= 1;
+	static const unsigned int _DUMPATEXIT					= 2;
 	static const unsigned int _DEBUGERRORANDWARNINGS		= 3;
 	static const unsigned int _DEBUGALL						= 4;
 	static const unsigned int _DEBUGTRACEINTERNALS			= 5;
