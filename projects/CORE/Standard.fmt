@@ -57,13 +57,13 @@ Id:@ID@
 @Memory>@
 #---
 ;Computer
-@ATTRS?\n@
+@ATTRS?{key=YES,equal=:,empty=no attributes}\n@
 ->CPU:
 @CPU>@
 ->Chips:
-@CHIPS?{key=NO,equal=:,empty=no chips}\n@
+@CHIPS?{fmter=.CLASS,empty=no chips}\n---\n@
 ->Devices:
-@DEVICES?{key=NO,equal=:,empty=no devices}\n@
+@DEVICES?{fmter=.CLASS,empty=no devices}\n---\n@
 #---
 #---
 ;Peripheral

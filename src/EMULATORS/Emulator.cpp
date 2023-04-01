@@ -360,7 +360,13 @@ bool MCHEmul::Emulator::run ()
 	if (_communicationSystem != nullptr)
 		_communicationSystem -> finalize ();
 
-	return (computer () -> error () != MCHEmul::_NOERROR);
+	// When exiting a dump is done if either there was an error 
+	// or the right debug level was selected...
+	bool result = (_computer -> error () != MCHEmul::_NOERROR);
+	if (_debugLevel >= MCHEmul::_DUMPATEXIT || !result)
+		std::cout << MCHEmul::FormatterBuilder::instance () -> 
+			formatter ("Computer") -> format (_computer -> getInfoStructure ()) << std::endl;
+	return (result);
 }
 
 // ---

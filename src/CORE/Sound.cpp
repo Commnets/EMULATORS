@@ -19,7 +19,6 @@ MCHEmul::SoundSystem::SoundSystem (int id,
 	specIn.freq = _samplingFrequency;
 	specIn.format = _type;
 	specIn.channels = (Uint8) _numberChannels;
-	specIn.samples = 0; // It will be determined later...
 	specIn.callback = nullptr; // SDL_QueueAudio will be used intead...
 	specIn.userdata = nullptr; // No callback no special data to be passed...
 	_deviceId = SDL_OpenAudioDevice (nullptr, 0, &specIn, &_audioSpec, SDL_AUDIO_ALLOW_ANY_CHANGE);
@@ -80,7 +79,7 @@ bool MCHEmul::SoundSystem::simulate (MCHEmul::CPU* cpu)
 		SDL_AudioCVT cvt;
 		SDL_memset (&cvt, 0, sizeof (cvt));
 		result = (tC = SDL_BuildAudioCVT (&cvt, 
-			_soundChip -> type (), (Uint8) _soundChip -> numberChannels (), (int) _soundChip -> samplingFrecuency (),
+			_soundChip -> type (), (Uint8) _soundChip -> numberChannels (), _soundChip -> samplingFrecuency (),
 			_type, _numberChannels, _samplingFrequency)) >= 0; // Change from the chip format to the card sound format...
 		if (!result) // And error has happened when conversion is planned...
 			std::cout << SDL_GetError () << std::endl;

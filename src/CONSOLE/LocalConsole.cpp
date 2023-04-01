@@ -20,6 +20,13 @@ void MCHEmul::LocalConsole::run ()
 		<< *_emulator -> computer () -> memory () -> stack () << std::endl << std::endl;
 
 	MCHEmul::Console::run ();
+
+	// When exiting a dump is done if either there was an error 
+	// or the right debug level was selected...
+	if (_emulator -> debugLevel () >= MCHEmul::_DUMPATEXIT || 
+		_emulator -> computer () -> error () != MCHEmul::_NOERROR)
+		std::cout << MCHEmul::FormatterBuilder::instance () -> 
+			formatter ("Computer") -> format (_emulator -> computer () -> getInfoStructure ()) << std::endl;
 }
 
 // ---

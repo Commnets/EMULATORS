@@ -132,7 +132,7 @@ namespace MCHEmul
 			0 means no log. */
 		unsigned int logLevel () const
 							{ return (_cmdlineArguments.existsArgument (_PARAMLOGLEVEL) 
-								? _cmdlineArguments.argumentAsInt (_PARAMLOGLEVEL) : 1); }
+								? _cmdlineArguments.argumentAsInt (_PARAMLOGLEVEL) : _DEBUGERRORS); }
 
 		/** To know the address where to start the execution from. \n
 			0x00 when no address has been defined. */

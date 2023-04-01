@@ -69,7 +69,10 @@ bool MCHEmul::CPU::initialize ()
 
 	_statusRegister.initialize ();
 
-	_programCounter.initialize (); 
+	_programCounter.initialize ();
+
+	for (auto& i : _interrupts)
+		i.second -> initialize ();
 
 	_lastInstruction = nullptr;
 

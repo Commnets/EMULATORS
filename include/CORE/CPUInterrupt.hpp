@@ -50,6 +50,10 @@ namespace MCHEmul
 		void setActive (bool a)
 							{ _active = a; }
 
+		/** The defult intialization of the interrupt leaves it inactive. */
+		virtual void initialize ()
+							{ _active = false; _lastClockCyclesExecuted = 0; }
+
 		/** Receive the CPU the interrupts works for. \n
 			It receives also a reference to a variable where to load the number of cycles it 
 			took the execution (when the return was ok). \n
