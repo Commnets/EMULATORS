@@ -3,7 +3,7 @@
 // ---
 C64::SoundSystem::SoundSystem ()
 	: MCHEmul::SoundSystem (_ID, 
-		AUDIO_F32, 8000 /** = 2 KHz * 2 */, 2,
+		AUDIO_F32, 44100, 2,
 		{ { "Name", "Sound System" },
 		  { "Type", "Output" },
 		  { "Max Frequency", "4kHz" } })

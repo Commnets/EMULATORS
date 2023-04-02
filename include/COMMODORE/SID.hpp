@@ -36,7 +36,7 @@ namespace COMMODORE
 		virtual SDL_AudioFormat type () const override
 							{ return (AUDIO_S16MSB); } // resid represents the information as a unsigned short with the MSB at the left
 		virtual int maxFrequency () const override
-							{ return (4000); } // The max frequecy that the SID can play is 4000Hz
+							{ return (22050); } // The max frequecy that the SID can play is 4000Hz
 		virtual unsigned char numberChannels () const override
 							{ return (1); } // SID is mono...
 
