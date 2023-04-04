@@ -11,6 +11,7 @@ const unsigned char MCHEmul::Emulator::_PARAMADDRESS = 'a';
 const unsigned char MCHEmul::Emulator::_PARAMADDRESSSTOP = 'd';
 const unsigned char MCHEmul::Emulator::_PARAMSTOP = 's';
 const unsigned char MCHEmul::Emulator::_PARAMLANGUAGE = 'i';
+const unsigned char MCHEmul::Emulator::_PARAMSOUND = 'r';
 const unsigned char MCHEmul::Emulator::_PARAMPERIPHERALS = 'p';
 
 // ---
@@ -58,17 +59,19 @@ void MCHEmul::Emulator::printOutParameters (std::ostream& o) const
 {
 	o << "Copyright (C) 2022 by Ignacio Cea Fornies" << std::endl << std::endl;
 
-	o << "/h:\t\t" << "Print out this help." << std::endl;
-	o << "/f[FILENAME]:\t" << "Load a binary file." << std::endl;
-	o << "/c[FILENAME]:\t" << "Load and compile a file." << std::endl;
-	o << "/k[FILENAME]:\t" << "Load a block memory file." << std::endl;
-	o << "/a[ADDRESS]:\t" << "The initial address of the PC register." << std::endl;
-	o << "\t\tOtherwise the one defined by the computer emulated will be used." << std::endl;
-	o << "/l[LEVEL]:\t" << "The deepness of the debug. 1 - 4. The bigger the deeper." << std::endl;
-	o << "/d[BREAKS]:\t" << "Break points addresses separated by comma." << std::endl;
+	o << "/h:\t\t" << "Print out this help" << std::endl;
+	o << "/f[FILENAME]:\t" << "Load a binary file" << std::endl;
+	o << "/c[FILENAME]:\t" << "Load and compile a file" << std::endl;
+	o << "/k[FILENAME]:\t" << "Load a block memory file" << std::endl;
+	o << "/a[ADDRESS]:\t" << "The initial address of the PC register" << std::endl;
+	o << "\t\tOtherwise the one defined by the computer emulated will be used" << std::endl;
+	o << "/l[LEVEL]:\t" << "The deepness of the debug. 1 - 4. The bigger the deeper" << std::endl;
+	o << "/d[BREAKS]:\t" << "Break points addresses separated by comma" << std::endl;
 	o << "/i[LANGID]:\t" << "Language of the machine emulated. It has to be recognized from the emulated computer" << std::endl;
 	o << "/p[PER1,...]:\t" << "List of the peripherals id separated per comma initialy connected" << std::endl;
-	o << "/s:\t\t" << "Start the emulation stopped." << std::endl;
+	o << "/r[ON/OFF]:\t" << "To activate or desactivate the sound when started" << std::endl; 
+	o << "\t\tBy default it is activated" << std::endl;
+	o << "/s:\t\t" << "Start the emulation stopped" << std::endl;
 }
 
 // ---
@@ -211,12 +214,26 @@ MCHEmul::DataMemoryBlocks MCHEmul::Emulator::loadBlocksFile (const std::string& 
 // ---
 bool MCHEmul::Emulator::initialize ()
 {
+	// No initialization possible with errors...
 	if (_error != MCHEmul::_NOERROR)
 	{
 		std::cout << "The emulator was not well created" << std::endl;
 
 		return (false);
 	}
+
+	// Only once!
+	// If the _computer variable already exists, 
+	// it would mean that the initialization was already executed
+	if (_computer != nullptr)
+	{
+		std::cout << "The emulator was was already initialized" << std::endl;
+
+		return (false);
+	}
+
+	// The most important line: The computer is created!...
+	computer ();
 
 	/** If help is needed then no other action is executed. */
 	if (helpNeeded ())
@@ -327,7 +344,11 @@ bool MCHEmul::Emulator::initialize ()
 	if (stoppedAtStarting ())
 		_computer -> setActionForNextCycle (MCHEmul::Computer::_ACTIONSTOP);
 
-	computer () -> startsComputerClock ();
+	// There is another option to actiavte (by default) or desactivate the sound when starting...
+	if (!soundAtStarting () && _computer -> sound () != nullptr)
+		_computer -> sound () -> setSilence (true);
+
+	_computer -> startsComputerClock ();
 
 	return (true);
 }

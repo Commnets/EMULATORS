@@ -699,6 +699,44 @@ namespace MCHEmul
 		private:
 		virtual void executeImpl (CommandExecuter* cE, Computer* c, InfoStructure& rst) override;
 	};
+
+	/** Command to turn on the sound */
+	class SoundOnCommand final : public Command
+	{
+		public:
+		static const int _ID = 30;
+		static const std::string _NAME;
+
+		SoundOnCommand ()
+			: Command (_ID, _NAME)
+							{ }
+
+		/** The only parameter has to be the factor. */
+		virtual bool canBeExecuted () const override
+							{ return (_parameters.size () == 0); }
+
+		private:
+		virtual void executeImpl (CommandExecuter* cE, Computer* c, InfoStructure& rst) override;
+	};
+
+	/** Command to turn off the sound */
+	class SoundOffCommand final : public Command
+	{
+		public:
+		static const int _ID = 31;
+		static const std::string _NAME;
+
+		SoundOffCommand ()
+			: Command (_ID, _NAME)
+							{ }
+
+		/** The only parameter has to be the factor. */
+		virtual bool canBeExecuted () const override
+							{ return (_parameters.size () == 0); }
+
+		private:
+		virtual void executeImpl (CommandExecuter* cE, Computer* c, InfoStructure& rst) override;
+	};
 }
 
 #endif

@@ -60,8 +60,10 @@ namespace MCHEmul
 							The chips and the devices are connected at construction time too, 
 							invoking the method "linkChips" of every Device.
 			@param cs		the number of cycles per second of the clock. 
-			@param attrs	Optional attributes defining the computer. */
-		Computer (CPU* cpu, const Chips& c, Memory* m, const IODevices& d, unsigned int cs, const Attributes& attrs = { });
+			@param attrs	Optional attributes defining the computer. 
+			@param sL		Number of stabilizatoion loops before starting to execute CPU instructions. */
+		Computer (CPU* cpu, const Chips& c, Memory* m, const IODevices& d, unsigned int cs, 
+			const Attributes& attrs = { }, unsigned short sL = 10);
 
 		Computer (const Computer&) = delete;
 
@@ -321,6 +323,11 @@ namespace MCHEmul
 		/** The level of the debug info. */
 		unsigned int _debugLevel;
 
+		/** Sometimes, when the computer starts a stabilization is required in the devices and chips.
+			It implies that no transaction is executed in the meantime for a couple of loops.
+			The number of loops to wait is defined at construction time. */
+		unsigned short _stabilizationLoops;
+
 		// Implementation
 		mutable unsigned int _error;
 		Screen* _screen; // it cann't be nullptr ever...
@@ -329,6 +336,8 @@ namespace MCHEmul
 		GraphicalChip* _graphicalChip;
 		Clock _clock; // To maintain the sped of the computer...
 		unsigned int _lastAction;
+		mutable bool _stabilized;
+		mutable unsigned short _currentStabilizationLoops;
 	};
 }
 

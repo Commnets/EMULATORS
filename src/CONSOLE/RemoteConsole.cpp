@@ -5,7 +5,7 @@ void MCHEmul::RemoteConsole::run ()
 {
 	if (!_communicationSystem -> initialize ())
 	{
-		_outputStream << "Error initializating communciations" << std::endl;
+		outputStream () << "Error initializating communciations" << std::endl;
 
 		return; // No possible to run the remote console...
 	}
@@ -22,7 +22,7 @@ void MCHEmul::RemoteConsole::run ()
 bool MCHEmul::RemoteConsole::runPerCycle ()
 {
 	if (!_communicationSystem -> processMessagesOn (nullptr))
-		_outputStream << "Error processing messages" << std::endl;
+		outputStream () << "Error processing messages" << std::endl;
 
 	setConsoleHold (_communicationSystem -> waitingForAnswer ());
 
@@ -37,7 +37,7 @@ void MCHEmul::RemoteConsole::createAndExecuteCommand ()
 	MCHEmul::Command* cmd = _commandBuilder -> command (_command);
 	if (cmd == nullptr)
 	{
-		_outputStream << _command << ":" << _commandDoesnExitTxt << std::endl;
+		outputStream () << _command << ":" << _commandDoesnExitTxt << std::endl;
 
 		return;
 	}
@@ -52,13 +52,13 @@ void MCHEmul::RemoteConsole::createAndExecuteCommand ()
 	else
 	{ 
 		if (!_communicationSystem -> send (_command, _to))
-			_outputStream << "Error sending command:" << _command << " to:" << _to << std::endl;
+			outputStream () << "Error sending command:" << _command << " to:" << _to << std::endl;
 		else
 		{ 
 			// The console is hold until the answer comes...
 			setConsoleHold (true);
 
-			_outputStream << _command << " sent to:" << _to << std::endl;
+			outputStream () << _command << " sent to:" << _to << std::endl;
 		}
 	}
 }

@@ -12,6 +12,10 @@ void C64::Screen::drawAdditional ()
 		gC -> screenMemory () -> setHorizontalLine ((size_t) x1 - 1, (size_t) y2 + 1, (size_t) x2 - x1 + 3, _borderColor);
 		gC -> screenMemory () -> setVerticalLine ((size_t) x1 - 1, (size_t) y1 - 1, (size_t) y2 - y1 + 3, _borderColor);
 		gC -> screenMemory () -> setVerticalLine ((size_t) x2 + 1, (size_t) y1 - 1, (size_t) y2 - y1 + 3, _borderColor);
+		for (unsigned short i = y1; i <= y2; i += 8)
+			gC -> screenMemory () -> setHorizontalLineStep ((size_t) x1 - 1, (size_t) i - 1, (size_t) x2 - x1 + 3, _borderColor, 2);
+		for (unsigned short i = x1; i <= x2; i += 8)
+			gC -> screenMemory () -> setVerticalLineStep ((size_t) i - 1, (size_t) y1 - 1, (size_t) y2 - y1 + 3, _borderColor, 2);
 	}
 }
 

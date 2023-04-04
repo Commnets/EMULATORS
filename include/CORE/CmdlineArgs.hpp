@@ -48,7 +48,8 @@ namespace MCHEmul
 							  return ((i == _arguments.end ()) ? _NOARGUMENT : (*i).second); }
 		/** Everything not - will be understood as true. */
 		bool argumentAsBool (char arg) const
-							{ return (argumentAsString (arg) != _NOARGUMENT); }
+							{ std::string val = upper (argumentAsString (arg)); 
+							  return (val == _NOARGUMENT ? false : (val == "YES" || val == "")); }
 		/** A "no number" will return 0. */
 		unsigned int argumentAsInt (char arg) const
 							{ return (std::atoi (argumentAsString (arg).c_str ())); }

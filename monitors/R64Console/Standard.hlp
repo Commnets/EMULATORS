@@ -58,7 +58,7 @@ The peripheral has to understand the instruction itself and react according to i
 The parameters needed are a minimum of two: 
 The id of the peripheral and the id of the command/instruction.
 Additional parameters can be provided whether the command needs more info.
-#Commands to get info from the Computer
+#Commands to get info from the Computer or to control it
 ;STACK (ALL)
 Get the status of the stack.
 Can be invoked with or without the parameter ALL.
@@ -77,6 +77,15 @@ A optional second memory position can be given meaning that the value
 will be set among those two positions.
 Be really careful using this method. It can destroy the memory.
 If the value is more than 1 byte length, the memory steps will be equal to that length.
+;ASSIGNJOY ID NEWID
+To change the identification assigned to a joystick.
+It requires two parameters: The id of the joystick to change and the new id assigned.
+;SOUNDON
+To activate the sound.
+No parameters are needed.
+;SOUNDOFF
+To desactivate the sound.
+No parameters are needed.
 #Commnands to control the execution of the CPU
 ;STOP
 To stop the cpu.

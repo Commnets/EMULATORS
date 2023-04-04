@@ -70,6 +70,10 @@ MCHEmul::Command* MCHEmul::StandardCommandBuilder::createEmptyCommand (const std
 		result = new MCHEmul::AssignJoystickNameCommand;
 	else if (cmdName == "CLOCKFACTOR" || cmdName == MCHEmul::ChangeCPUClockCommand::_NAME)
 		result = new MCHEmul::ChangeCPUClockCommand;
+	else if (cmdName == "SOUNDON" || cmdName == MCHEmul::SoundOnCommand::_NAME)
+		result = new MCHEmul::SoundOnCommand;
+	else if (cmdName == "SOUNDOFF" || cmdName == MCHEmul::SoundOffCommand::_NAME)
+		result = new MCHEmul::SoundOffCommand;
 	else if (cmdName == MCHEmul::MoveParametersToAnswerCommand::_NAME)
 		result = new MCHEmul::MoveParametersToAnswerCommand;
 

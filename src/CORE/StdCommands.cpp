@@ -40,6 +40,8 @@ const std::string MCHEmul::PeripheralsCommand::_NAME = "CPERIPHERALS";
 const std::string MCHEmul::PeripheralInstructionCommand::_NAME = "CPERCMD";
 const std::string MCHEmul::AssignJoystickNameCommand::_NAME = "CASSIGNJ";
 const std::string MCHEmul::ChangeCPUClockCommand::_NAME = "CCLOCKFACTOR";
+const std::string MCHEmul::SoundOnCommand::_NAME = "CSOUNDON";
+const std::string MCHEmul::SoundOffCommand::_NAME = "CSOUNDOFF";
 
 // ---
 MCHEmul::HelpCommand::HelpCommand (const std::string& hF)
@@ -589,4 +591,24 @@ void MCHEmul::ChangeCPUClockCommand::executeImpl
 		return;
 
 	c -> clock ().setFactor (std::atof (parameter ("00").c_str ()));
+}
+
+// ---
+void MCHEmul::SoundOnCommand::executeImpl 
+	(MCHEmul::CommandExecuter* cE, MCHEmul::Computer* c, MCHEmul::InfoStructure& rst)
+{
+	if (c == nullptr || c -> sound () == nullptr)
+		return; // Nothing to do...
+
+	c -> sound () -> setSilence (false);
+}
+
+// ---
+void MCHEmul::SoundOffCommand::executeImpl 
+	(MCHEmul::CommandExecuter* cE, MCHEmul::Computer* c, MCHEmul::InfoStructure& rst)
+{
+	if (c == nullptr || c -> sound () == nullptr)
+		return; // Nothing to do...
+
+	c -> sound () -> setSilence (true);
 }

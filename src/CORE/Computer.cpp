@@ -6,16 +6,19 @@
 
 // ---
 MCHEmul::Computer::Computer (MCHEmul::CPU* cpu, const MCHEmul::Chips& c, 
-		MCHEmul::Memory* m, const MCHEmul::IODevices& d, unsigned int cs, const MCHEmul::Attributes& attrs)
+		MCHEmul::Memory* m, const MCHEmul::IODevices& d, unsigned int cs, 
+		const MCHEmul::Attributes& attrs, unsigned short sL)
 	: MCHEmul::InfoClass ("Computer"),
 	  _cpu (cpu), _chips (c), _memory (m), _devices (d), _attributes (attrs), 
 	  _actionsAt (), _status (_STATUSRUNNING), _actionForNextCycle (_ACTIONNOTHING),
 	  _exit (false), _restartAfterExit (false), _restartLevel (0), // Meaning full!
 	  _debugLevel (MCHEmul::_DEBUGNOTHING),
+	  _stabilizationLoops (sL),
 	  _error (MCHEmul::_NOERROR),
 	  _screen (nullptr), _sound (nullptr), _inputOSSystem (nullptr), _graphicalChip (nullptr),
 	  _clock (cs), 
-	  _lastAction (_ACTIONNOTHING)
+	  _lastAction (_ACTIONNOTHING),
+	  _stabilized (false), _currentStabilizationLoops (0)
 { 
 	assert (_cpu != nullptr);
 	assert (_memory != nullptr && _memory -> stack () != nullptr);
@@ -172,6 +175,9 @@ bool MCHEmul::Computer::initialize (bool iM)
 
 	startsComputerClock ();
 
+	_currentStabilizationLoops = 0;
+	_stabilized = (_stabilizationLoops == _currentStabilizationLoops); // Can be stable from the beginning...
+
 	return (true);
 }
 
@@ -257,17 +263,23 @@ bool MCHEmul::Computer::runComputerCycle (unsigned int a)
 
 	_actionForNextCycle = _ACTIONNOTHING;
 
-	if (!_cpu -> executeNextInstruction ())
-	{
-		_exit = true;
+	// The CPU is executed only when the computer is stable...
+	if (_stabilized)
+	{ 
+		if (!_cpu -> executeNextInstruction ())
+		{
+			_exit = true;
 
-		_error = MCHEmul::_CPU_ERROR;
+			_error = MCHEmul::_CPU_ERROR;
 
-		if (_debugLevel >= MCHEmul::_DEBUGERRORS)
-			std::cout << "Error executing instruction" << std::endl;
+			if (_debugLevel >= MCHEmul::_DEBUGERRORS)
+				std::cout << "Error executing instruction" << std::endl;
 
-		return (false); // Error...
+			return (false); // Error...
+		}
 	}
+	else
+		_stabilized = (++_currentStabilizationLoops >= _stabilizationLoops);
 
 	if (_debugLevel >= MCHEmul::_DEBUGALL)
 	{

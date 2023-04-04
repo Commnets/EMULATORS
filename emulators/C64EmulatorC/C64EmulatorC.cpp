@@ -8,7 +8,7 @@ int _tmain (int argc, _TCHAR *argv [])
 	std::cout << "C64Emulator with Console" << std::endl;
 	std::cout << "Copyright (C) 2022 by Ignacio Cea" << std::endl;
 	std::cout << "The console controls directly the execution" << std::endl;
-	std::cout << "/h\t\tJust for help." << std::endl << std::endl;
+	std::cout << "/h\t\tJust for help" << std::endl << std::endl;
 
 	// Sets the formatter for << outputs for this emulation...
 	// This line of code has to be at the beginning of every emulation 

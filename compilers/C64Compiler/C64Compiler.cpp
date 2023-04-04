@@ -11,6 +11,9 @@ int _tmain (int argc, _TCHAR *argv [])
 	std::string destinationFile;
 	enum { _BINARY = 0, _BLOCK } typeFile = _BINARY;
 
+	std::cout << "C64Compiler" << std::endl;
+	std::cout << "Copyright (2) 2022 by Ignacio Cea" << std::endl << std::endl;
+
 	// Read the parameters of the command line...
 	MCHEmul::CommandLineArguments cmdArgs (argc, argv);
 	help = cmdArgs.existsArgument ('h');
@@ -22,9 +25,6 @@ int _tmain (int argc, _TCHAR *argv [])
 	if (help || 
 		originFile == "" || destinationFile == "")
 	{
-		std::cout << "C64Compiler" << std::endl;
-		std::cout << "Copyright (2) 2022 by Ignacio Cea" << std::endl << std::endl;
-
 		if (!help)
 			std::cout << "Lack of parameters" << std::endl;
 

@@ -55,8 +55,9 @@ bool COMMODORE::SID::simulate (MCHEmul::CPU* cpu)
 	{
 		_resid_sid.clock ();
 		short data = (short) _resid_sid.output (); // The output is between -32768 and 32767 it is 16 bits...
-		if (soundMemory () -> addSampleData ((unsigned char*) &data, sampleSize ()))
-			notify (MCHEmul::Event (_SOUNDREADY));
+		for (int j = 0; j < 3; j++)
+			if (soundMemory () -> addSampleData ((unsigned char*) &data, sampleSize ()))
+				notify (MCHEmul::Event (_SOUNDREADY));
 	}
 	
 	_lastClockCycles = cpu -> clockCycles ();

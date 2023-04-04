@@ -57,6 +57,10 @@ namespace MCHEmul
 
 		Console& operator = (Console&&) = delete;
 
+		/** To get the output stream. */
+		std::ostream& outputStream ()
+							{ return (_outputStream); }
+
 		/** To change the number of commands kept. */
 		size_t maxCommandsKept () const
 							{ return (_maxCommandsKept); }

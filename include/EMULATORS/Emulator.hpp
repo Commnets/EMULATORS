@@ -33,6 +33,7 @@ namespace MCHEmul
 		static const unsigned char _PARAMADDRESSSTOP;
 		static const unsigned char _PARAMSTOP;
 		static const unsigned char _PARAMLANGUAGE;
+		static const unsigned char _PARAMSOUND;
 		static const unsigned char _PARAMPERIPHERALS;
 
 		using MapOfActions = std::map <MCHEmul::Address, unsigned int>;
@@ -52,6 +53,7 @@ namespace MCHEmul
 		  *					  It has to be interpreted by the Computer (@see Computer class). \n
 		  *					  In some situations the ROM and KERNEL, e.g. can be different depending on the language. \n
 		  * /p[PER1:dt,..]	: Connect the peripherals identified in the list separated by comma. \n
+		  * /r[ON|OFF]		: To activate or desactivate the sound when starting. By default it is activated.
 		  * /s				: When the execution must start stopped. \n
 		  * @param cs		: The communication system. It can be nullptr.
 		  * The emulation is able to load/understood three types of file: \n
@@ -155,6 +157,11 @@ namespace MCHEmul
 							{ return (_cmdlineArguments.existsArgument (_PARAMLANGUAGE) 
 								? _cmdlineArguments.argumentAsString (_PARAMLANGUAGE) : _DEFAULTLANGUAGE); }
 
+		/** To activate or desactivate the sound. */
+		bool soundAtStarting () const
+							{ return (_cmdlineArguments.existsArgument (_PARAMSOUND)
+									? _cmdlineArguments.argumentAsBool (_PARAMSOUND) : true); }
+
 		/** To know the list of the peripherals connected. */
 		std::vector <int> peripheralsConnected () const;
 
@@ -162,7 +169,7 @@ namespace MCHEmul
 		unsigned int debugLevel () const
 							{ return (_debugLevel); }
 		void setDebugLevel (unsigned int dL)
-							{ _debugLevel = dL; computer () -> setDebugLevel (dL); }
+							{ _debugLevel = dL; _computer -> setDebugLevel (dL); }
 
 		// The builders...
 		/** To create peripherals. */

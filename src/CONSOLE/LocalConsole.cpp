@@ -14,9 +14,9 @@ MCHEmul::LocalConsole::LocalConsole (MCHEmul::Emulator* e, MCHEmul::CommandBuild
 void MCHEmul::LocalConsole::run ()
 {
 	/** Print out basic info about the computer managed. */
-	_outputStream << "---- CPU ---" << std::endl
+	outputStream () << "---- CPU ---" << std::endl
 		<< *_emulator -> computer () -> cpu () << std::endl;
-	_outputStream << "---- STACK -" << std::endl
+	outputStream () << "---- STACK -" << std::endl
 		<< *_emulator -> computer () -> memory () -> stack () << std::endl << std::endl;
 
 	MCHEmul::Console::run ();
@@ -25,7 +25,7 @@ void MCHEmul::LocalConsole::run ()
 	// or the right debug level was selected...
 	if (_emulator -> debugLevel () >= MCHEmul::_DUMPATEXIT || 
 		_emulator -> computer () -> error () != MCHEmul::_NOERROR)
-		std::cout << MCHEmul::FormatterBuilder::instance () -> 
+		outputStream () << MCHEmul::FormatterBuilder::instance () -> 
 			formatter ("Computer") -> format (_emulator -> computer () -> getInfoStructure ()) << std::endl;
 }
 
@@ -52,40 +52,40 @@ void MCHEmul::LocalConsole::createAndExecuteCommand ()
 	std::string cmdName = nameFor (_command);
 
 	if (cmdName == cmdLoadPrg)
-		_outputStream << MCHEmul::FormatterBuilder::instance () ->
+		outputStream () << MCHEmul::FormatterBuilder::instance () ->
 			formatter ("CLOADPRG") -> format (loadProgram (prmsFor (_command, cmdLoadPrg))) << std::endl;
 	else
 	if (cmdName == cmdLoadBinary)
-		_outputStream << MCHEmul::FormatterBuilder::instance () ->
+		outputStream () << MCHEmul::FormatterBuilder::instance () ->
 			formatter ("C" + cmdLoadBinary) -> format (loadBinaryFile (prmsFor (_command, cmdLoadBinary))) << std::endl;
 	else
 	if (cmdName == cmdLoadBlocks)
-		_outputStream << MCHEmul::FormatterBuilder::instance () ->
+		outputStream () << MCHEmul::FormatterBuilder::instance () ->
 			formatter ("C" + cmdLoadBlocks) -> format (loadBlocksFile (prmsFor (_command, cmdLoadBlocks))) << std::endl;
 	else
 	if (cmdName == cmdDecompileMemory)
-		_outputStream << MCHEmul::FormatterBuilder::instance () ->
+		outputStream () << MCHEmul::FormatterBuilder::instance () ->
 			formatter ("C" + cmdDecompileMemory) -> format (decompileMemory 
 				(prmsFor (_command, cmdDecompileMemory))) << std::endl;
 	else
 	if (cmdName == cmdConnectPeripheral)
-		_outputStream << MCHEmul::FormatterBuilder::instance () ->
+		outputStream () << MCHEmul::FormatterBuilder::instance () ->
 			formatter ("C" + cmdConnectPeripheral) -> format (connectPeripheral
 				(prmsFor (_command, cmdConnectPeripheral))) << std::endl;
 	else
 	if (cmdName == cmdDisconnectPeripherals)
-		_outputStream << MCHEmul::FormatterBuilder::instance () ->
+		outputStream () << MCHEmul::FormatterBuilder::instance () ->
 			formatter ("C" + cmdDisconnectPeripherals) -> format (disconnectPeripherals
 				(prmsFor (_command, cmdDisconnectPeripherals))) << std::endl;
 	else
 	if (cmdName == cmdLoadPeripheralData)
-		_outputStream << MCHEmul::FormatterBuilder::instance () ->
+		outputStream () << MCHEmul::FormatterBuilder::instance () ->
 			formatter ("C" + cmdLoadPeripheralData) -> format (loadPeripheralData 
 				(prmsFor (_command, cmdLoadPeripheralData))) << std::endl;
 	else
 	{
 		MCHEmul::Command* cmd = commandBuilder () -> command (_command);
-		if (cmd == nullptr) _outputStream << _command << ":" << _commandDoesnExitTxt << std::endl;
+		if (cmd == nullptr) outputStream () << _command << ":" << _commandDoesnExitTxt << std::endl;
 		else executeCommandNow (cmd, _emulator -> computer ());
 	}
 }

@@ -31,6 +31,12 @@ namespace MCHEmul
 
 		virtual void linkToChips (const Chips& c) override;
 
+		/** To put the sound on/off */
+		bool silence () const
+							{ return (_silence); }
+		void setSilence (bool s)
+							{ _silence = s; }
+
 		/** The reference to the sopund chip. 
 			It can be null as it is not mandatory the relation between them. */
 		const SoundChip* graphicalChip () const
@@ -74,6 +80,8 @@ namespace MCHEmul
 		int _samplingFrequency;
 		/** The number of channels to be used. */
 		unsigned char _numberChannels;
+		/** true when there is no sound, and false in other case. */
+		bool _silence;
 	
 		// Implementation
 		SoundChip* _soundChip;
