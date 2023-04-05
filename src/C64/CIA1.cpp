@@ -82,7 +82,6 @@ void C64::CIA1::processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifier* n)
 				if (jm -> _joystickId == 0)
 				{ 
 					// The events on the joystick 1 are set on the same place than the keyboard...
-					_CIA1Registers -> setJoystick1InputPending (dr != 0x00);
 					for (size_t i = 0; i < 8; i++)
 						_CIA1Registers -> setKeyboardStatusMatrix (i,
 							(dr == 0) ? 0xff : _CIA1Registers -> keyboardStatusMatrix (i) & (0xff - dr));
@@ -108,7 +107,6 @@ void C64::CIA1::processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifier* n)
 				if (jb -> _joystickId == 0)
 				{ 
 					// The events on the joystick 1 are set on the same place than the keyboard...
-					_CIA1Registers -> setJoystick1InputPending (true);
 					for (size_t i = 0; i < 8; i++)
 						_CIA1Registers -> setKeyboardStatusMatrix (i, _CIA1Registers -> keyboardStatusMatrix (i) & 
 							(0xff - 0x10 /** bit 4 clear when on. */));
@@ -131,7 +129,6 @@ void C64::CIA1::processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifier* n)
 				if (jb -> _joystickId == 0)
 				{ 
 					// The events on the joystick 1 are set on the same place than the keyboard...
-					_CIA1Registers -> setJoystick1InputPending (true);
 					for (size_t i = 0; i < 8; i++)
 						_CIA1Registers -> setKeyboardStatusMatrix (i, _CIA1Registers -> keyboardStatusMatrix (i) | 0x10);
 				}

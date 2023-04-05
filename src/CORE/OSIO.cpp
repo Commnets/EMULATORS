@@ -7,7 +7,7 @@ MCHEmul::InputOSSystem::InputOSSystem (int id, const MCHEmul::Attributes& attrs)
 	  _quitRequested (false),
 	  _joysticks (),
 	  _conversionJoystickMap (), // Nothing by default...
-	  _clock (50), // The events of the system will be read 50 times per second...
+	  _clock (25), // The events of the system will be read 25 times per second...
 	  _movementMap ()
 { 
 	setClassName ("IOSystem"); 
@@ -122,8 +122,7 @@ MCHEmul::InfoStructure MCHEmul::InputOSSystem::getInfoStructure () const
 // ---
 void MCHEmul::InputOSSystem::treatJoystickMovementEvents (MCHEmul::InputOSSystem::SDL_JoyAxisEvents&& js)
 {
-	MCHEmul::InputOSSystem::JoystickMovementMap mMC (_movementMap);
-
+	// All event received in a cycle are consolidated...
 	for (const auto& i : js)
 	{ 
 		int nJ = joystickEquivalentId (i.which);
@@ -137,8 +136,6 @@ void MCHEmul::InputOSSystem::treatJoystickMovementEvents (MCHEmul::InputOSSystem
 		_movementMap [nJ][i.axis] = i.value;
 	}
 
-	// ...and only when something changes it is communicated as a movement in the joystick...
-	// so it means that when they become 0 back, the joystick will stopped...
-	if (_movementMap != mMC)
-		whenJoystickMoved (_movementMap); // No longer needed...
+	// ...and the consolidated status is notified...
+	whenJoystickMoved (_movementMap); 
 }

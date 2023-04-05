@@ -339,10 +339,10 @@ void COMMODORE::CIARegisters::initializeInternalValues ()
 	setValue (0x01, MCHEmul::UByte::_FF);
 	setValue (0x02, MCHEmul::UByte::_FF); // All lines output...
 	setValue (0x03, MCHEmul::UByte::_0);  // All lines input...
-	setValue (0x04, MCHEmul::UByte::_0);
-	setValue (0x05, MCHEmul::UByte::_0);
-	setValue (0x06, MCHEmul::UByte::_0);
-	setValue (0x07, MCHEmul::UByte::_0);
+	setValue (0x04, MCHEmul::UByte::_FF);
+	setValue (0x05, MCHEmul::UByte::_FF);
+	setValue (0x06, MCHEmul::UByte::_FF);
+	setValue (0x07, MCHEmul::UByte::_FF);
 	setValue (0x08, MCHEmul::UByte::_0); 
 	setValue (0x09, MCHEmul::UByte::_0); 
 	setValue (0x0a, MCHEmul::UByte::_0); 

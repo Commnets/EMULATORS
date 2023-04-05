@@ -33,9 +33,6 @@ namespace C64
 		CIA1Registers (MCHEmul::PhysicalStorage* ps, size_t pp, const MCHEmul::Address& a, size_t s);
 
 		// This methods are invoked from CIA chip...
-		/** The josystick 1 is very linked with the keyboard. */
-		void setJoystick1InputPending (bool jp)
-							{ _joystick1InputPending = jp; }
 		/** These to manage the joystick 2... */
 		unsigned char joystick2Status () const
 							{ return (_joystick2Status); }
@@ -61,8 +58,6 @@ namespace C64
 		virtual void initializeInternalValues () override;
 
 		private:
-		/** Whether there is some input pending from the joystick. */
-		mutable bool _joystick1InputPending;
 		/** The joystick 2 status. */
 		unsigned char _joystick2Status;
 		/** The data ports A y B are actually a matrix of info: ( bytes with (bytes each). 
