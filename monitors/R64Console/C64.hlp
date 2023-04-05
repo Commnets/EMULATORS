@@ -1,5 +1,5 @@
 #C64 Local Console Commands
-?./LocalConsole.hlp
+?./Standard.hlp
 ?./Commodore.hlp
 ;CIA1
 To know the status of the CIA1 chip.
