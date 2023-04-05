@@ -434,15 +434,26 @@ MCHEmul::UByte COMMODORE::VICII::drawMultiColorChar (int cb, int r,
 {
 	MCHEmul::UByte result = MCHEmul::UByte::_0;
 
-	for (unsigned short i = 0 ; i < 8 /** To paint always 8 pixels but in block of 2. */; i += 2)
+	for (unsigned short i = 0 ; i < 8 /** To paint always 8 pixels but in blocks of 2. */; i += 2)
 	{
 		int pp = cb + i;
-		if (pp < 0)
+		if (pp < -1)
 			continue;
 
-		size_t iBy = ((size_t) pp) >> 3; 
-		size_t iBt = 3 - ((((size_t) pp) % 8) >> 1);
-		unsigned char cs = (bt [(iBy << 3) + (size_t) r].value () >> (iBt << 1)) & 0x03; // 0, 1, 2 or 3
+		// After this pp can be -1...
+
+		size_t iBy = 0;
+		unsigned char cs = 0;
+		if (pp >= 0)
+		{
+			iBy = ((size_t) pp) >> 3; 
+			size_t iBt = 3 - ((((size_t) pp) % 8) >> 1);
+			cs = (bt [(iBy << 3) + (size_t) r].value () >> (iBt << 1)) & 0x03; // 0, 1, 2 or 3
+		}
+		// This is the case when pp == -1...
+		else
+			cs = (bt [(size_t) r].value () >> 6) & 0x03; // 0, 1, 2 or 3
+
 		// If the cs is 0, it would have to be drawn in the background color and it is already!
 		if (cs == 0x00)
 			continue;
@@ -467,9 +478,9 @@ MCHEmul::UByte COMMODORE::VICII::drawMultiColorChar (int cb, int r,
 		if ((clr [iBy] & 0x08) == 0x00) 
 		{
 			unsigned int fc = clr [iBy].value () & 0x07;
-			if ((cs & 0x02) == 0x02 /** if set. */ && (pos >= dC._ICS && pos < dC._LCS)) 
+			if ((cs & 0x02) == 0x02 /** if set. */ && (pos >= dC._ICS && pos <= dC._LCS)) 
 				screenMemory () -> setPixel ((size_t) pos, (size_t) dC._RR, fc);
-			if ((cs & 0x01) == 0x01 /** if set. */ && ((pos + 1) >= dC._ICS && (pos + 1) < dC._LCS)) 
+			if ((cs & 0x01) == 0x01 /** if set. */ && ((pos + 1) >= dC._ICS && (pos + 1) <= dC._LCS)) 
 				screenMemory () -> setPixel ((size_t) pos + 1, (size_t) dC._RR, fc);
 		}
 		// If it is 1, then it will be draw as in the multicolor version...
@@ -553,15 +564,26 @@ MCHEmul::UByte COMMODORE::VICII::drawMultiColorBitMap (int cb, int r,
 {
 	MCHEmul::UByte result = MCHEmul::UByte::_0;
 
-	for (unsigned short i = 0 ; i < 8 /** To paint always 8 pixels but in block of 2. */; i += 2)
+	for (unsigned short i = 0 ; i < 8 /** To paint always 8 pixels but in blocks of 2. */; i += 2)
 	{
 		int pp = cb + i;
-		if (pp < 0)
+		if (pp < -1)
 			continue;
 
-		size_t iBy = ((size_t) pp) >> 3; 
-		size_t iBt = 3 - ((((size_t) pp) % 8) >> 1);
-		unsigned char cs = (bt [(iBy << 3) + (size_t) r].value () >> (iBt << 1)) & 0x03; // 0, 1, 2 or 3
+		// After this point pp can be -1
+
+		size_t iBy = 0;
+		unsigned char cs = 0;
+		if (pp >= 0)
+		{
+			iBy = ((size_t) pp) >> 3; 
+			size_t iBt = 3 - ((((size_t) pp) % 8) >> 1);
+			cs = (bt [(iBy << 3) + (size_t) r].value () >> (iBt << 1)) & 0x03; // 0, 1, 2 or 3
+		}
+		// This is the case when pp == -1...
+		else
+			cs = (bt [(size_t) r].value () >> 6) & 0x03; // 0, 1, 2 or 3
+
 		// If 0, the pixel should be drawn in the background color and it is already...
 		if (cs == 0x00)
 			continue;

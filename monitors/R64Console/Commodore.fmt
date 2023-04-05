@@ -32,8 +32,9 @@ First:@FIRST@, Last:@LAST@
 Graphic Mode:@MODE@
 40 Columns:@40C@, 25 Rows:@25R@
 ScrollX:@SCROLLX@, ScrollY:@SCROLLY@
+Colors:@FORECOLOR@(@BKCOLOR1@,@BKCOLOR2@,@BKCOLOR3@,@BKCOLOR4@)
+Memory: Chars(@CHARADDRESS@), Screen(@SCREENADDRESS@), Bitmap(@BITMAPADDRESS@), Sprites(@SPRITEADDRESS@)
 IRQ:@IRQ@(@IRQLINE@)
-COLORS:@FORECOLOR@(@BKCOLOR1@,@BKCOLOR2@,@BKCOLOR3@,@BKCOLOR4@)
 ->Sprites:
 @SPRITES?{fmter=.CLASS,empty=no sprites}\n@
 #---

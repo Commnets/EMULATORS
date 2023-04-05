@@ -29,18 +29,22 @@ MCHEmul::InfoStructure COMMODORE::VICIIRegisters::getInfoStructure () const
 {
 	MCHEmul::InfoStructure result = MCHEmul::ChipRegisters::getInfoStructure ();
 
-	result.add ("MODE",			(unsigned int) _graphicModeActive);
-	result.add ("40C",			_textDisplay40ColumnsActive);
-	result.add ("25R",			_textDisplay25RowsActive);
-	result.add ("SCROLLX",		_horizontalScrollPosition);
-	result.add ("SCROLLY",		_verticalScrollPosition);
-	result.add ("FORECOLOR",	_foregroundColor);
-	result.add ("BKCOLOR1",		_backgroundColor [0]);
-	result.add ("BKCOLOR2",		_backgroundColor [1]);
-	result.add ("BKCOLOR3",		_backgroundColor [2]);
-	result.add ("BKCOLOR4",		_backgroundColor [3]);
-	result.add ("IRQ",			_rasterIRQActive);
-	result.add ("IRQLINE",		_IRQRasterLineAt);
+	result.add ("MODE",				(unsigned int) _graphicModeActive);
+	result.add ("40C",				_textDisplay40ColumnsActive);
+	result.add ("25R",				_textDisplay25RowsActive);
+	result.add ("SCROLLX",			_horizontalScrollPosition);
+	result.add ("SCROLLY",			_verticalScrollPosition);
+	result.add ("FORECOLOR",		_foregroundColor);
+	result.add ("BKCOLOR1",			_backgroundColor [0]);
+	result.add ("BKCOLOR2",			_backgroundColor [1]);
+	result.add ("BKCOLOR3",			_backgroundColor [2]);
+	result.add ("BKCOLOR4",			_backgroundColor [3]);
+	result.add ("IRQ",				_rasterIRQActive);
+	result.add ("IRQLINE",			_IRQRasterLineAt);
+	result.add ("CHARADDRESS",		charDataMemory ());
+	result.add ("SCREENADDRESS",	screenMemory ());
+	result.add ("BITMAPADDRESS",	bitmapMemory ());
+	result.add ("SPRITEADDRESS",	spritePointersMemory ());
 
 	// Info for the sprites...
 	MCHEmul::InfoStructure sInfo;
@@ -396,7 +400,7 @@ const MCHEmul::UByte& COMMODORE::VICIIRegisters::readValue (size_t p) const
 		// VICIRQ: VIC Interrrupt Flag Register
 		case 0x19:
 			{
-				result = MCHEmul::UByte::_1; 
+				result = MCHEmul::UByte::_0; 
 				result.setBit (0, _rasterAtLineIRQHappened);
 				result.setBit (1, _spritesCollisionWithDataIRQHappened);
 				result.setBit (2, _spritesCollisionIRQHappened);
@@ -411,7 +415,7 @@ const MCHEmul::UByte& COMMODORE::VICIIRegisters::readValue (size_t p) const
 		// IRQMSK: IRQ Mask Register
 		case 0x1a:
 			{
-				result = MCHEmul::UByte::_1; 
+				result = MCHEmul::UByte::_FF; 
 				result.setBit (0, _rasterIRQActive);
 				result.setBit (1, _spriteCollisionWithDataIRQActive);
 				result.setBit (2, _spriteCollisionsIRQActive);
@@ -547,7 +551,8 @@ void COMMODORE::VICIIRegisters::initializeInternalValues ()
 	// _charDataMemory	= MCHEmul::Address ({ 0x00, 0x10 }, false);
 	// _screenMemory	= MCHEmul::Address ({ 0x00, 0x04 }, false); 
 	// _bitmapMemory	= MCHEmul::Address ({ 0x00, 0x00 }, false);
-	setValue (0x18, MCHEmul::UByte (0x14));
+	// + bit 0 = 1...
+	setValue (0x18, MCHEmul::UByte (0x15));
 
 	// No IRQ have been launched!
 	setValue (0x19, MCHEmul::UByte::_FF);

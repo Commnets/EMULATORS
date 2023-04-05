@@ -180,7 +180,7 @@ MOVEALLIENS_NEXT:			inx
 
 ; The positions are actualized using the IRQ!
 ; A set up a delay...
-							ldx #$05
+							ldx #$0b
 							ldy #$80
 							jsr DELAY
 
