@@ -33,7 +33,7 @@ bool MCHEmul::InputOSSystem::initialize ()
 
 	SDL_JoystickEventState (SDL_ENABLE);
 
-	_movementMap = MCHEmul::InputOSSystem::JoystickMovementMap ();
+	_movementMap = { };
 
 	_clock.start ();
 

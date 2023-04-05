@@ -32,6 +32,8 @@ bool COMMODORE::CIA::initialize ()
 		return (false);
 	}
 
+	_CIARegisters -> initializeInternalValues ();
+
 	_timerA.initialize ();
 
 	_timerB.initialize ();
