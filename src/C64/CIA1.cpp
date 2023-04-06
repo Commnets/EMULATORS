@@ -80,19 +80,11 @@ void C64::CIA1::processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifier* n)
 				}
 
 				if (jm -> _joystickId == 0)
-				{ 
-					// The events on the joystick 1 are set on the same place than the keyboard...
-					for (size_t i = 0; i < 8; i++)
-						_CIA1Registers -> setKeyboardStatusMatrix (i,
-							(dr == 0) ? 0xff : _CIA1Registers -> keyboardStatusMatrix (i) & (0xff - dr));
-				}
+					_CIA1Registers -> setJoystick1Status 
+						((dr == 0x00) ? 0xff : _CIA1Registers -> joystick1Status () & (0xff - dr));
 				else
-				{
-					// The movement of the joystick 2...
-					// it is simplier!
 					_CIA1Registers -> setJoystick2Status 
-						((dr == 0) ? 0xff : _CIA1Registers -> joystick2Status () & (0xff - dr));
-				}
+						((dr == 0x00) ? 0xff : _CIA1Registers -> joystick2Status () & (0xff - dr));
 			}
 
 			break;
@@ -105,12 +97,8 @@ void C64::CIA1::processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifier* n)
 					break; // Only joysticks 0 y 1 are allowed!
 	
 				if (jb -> _joystickId == 0)
-				{ 
-					// The events on the joystick 1 are set on the same place than the keyboard...
-					for (size_t i = 0; i < 8; i++)
-						_CIA1Registers -> setKeyboardStatusMatrix (i, _CIA1Registers -> keyboardStatusMatrix (i) & 
-							(0xff - 0x10 /** bit 4 clear when on. */));
-				}
+					_CIA1Registers -> setJoystick1Status (_CIA1Registers -> joystick1Status () & 
+						(0xff /** 0 means switch on. */ - 0x10));
 				else
 					_CIA1Registers -> setJoystick2Status (_CIA1Registers -> joystick2Status () & 
 						(0xff /** 0 means switch on. */ - 0x10));
@@ -127,11 +115,7 @@ void C64::CIA1::processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifier* n)
 	
 				// Only two joysticks are allowed...
 				if (jb -> _joystickId == 0)
-				{ 
-					// The events on the joystick 1 are set on the same place than the keyboard...
-					for (size_t i = 0; i < 8; i++)
-						_CIA1Registers -> setKeyboardStatusMatrix (i, _CIA1Registers -> keyboardStatusMatrix (i) | 0x10);
-				}
+					_CIA1Registers -> setJoystick1Status (_CIA1Registers -> joystick1Status () | 0x10);
 				else
 					_CIA1Registers -> setJoystick2Status (_CIA1Registers -> joystick2Status () | 0x10);
 			}

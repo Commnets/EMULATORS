@@ -62,36 +62,31 @@ const MCHEmul::UByte& C64::CIA1Registers::readValue (size_t p) const
 	switch (pp)
 	{
 		case 0x00:
-			result = MCHEmul::UByte (_joystick2Status);
+			{
+				result = MCHEmul::UByte (_joystick2Status);
+			}
+
 			break;
 
 		case 0x01:
 			{
-				switch (_keyboardRowToRead)
-				{
-					case 0x00:
-						break;
-
-					case 0xff:
-						{
-							result = _keyboardStatusMatrix [7] & ~_dataPortBDir;
-						}
-
-						break;
-
-					default:
-						{
-							// Identify the row to read...
-							// Take into account that the row is identified writting 0 in its bit (so it is necessary to inverse it first)
-							unsigned char bRV = ~_keyboardRowToRead & _dataPortADir; // 0xff all output...
-							size_t c = 0; while ((bRV >>= 1) != 0) c++;
-							// If more than 1 row will be possible, the greatest one will be choosen...
-							// The columns (from keyboard or joystick 1) connected will have its bits to 0!...
-							result = _keyboardStatusMatrix [c] & ~_dataPortBDir; // 0x00 all input...
-						}
-
-						break;
+				// Result will mark with true the bit corresponding to the key of the row selected....
+				result = MCHEmul::UByte::_0;
+				// All rows are going to be tested...
+				for (size_t i = 0; i < 8; i++)
+				{ 
+					// if the row has been selected and it is also defined for input...
+					// ...the values in that row are taken into account...
+					if ((~_keyboardRowToRead & _dataPortADir & (1 << i)) != 0x00)
+						result |= ~(_keyboardStatusMatrix [i] & ~_dataPortBDir);
 				}
+
+				// The input of the joystick has also to be taken into account...
+				result |= ~(_joystick1Status & ~_dataPortBDir);
+
+				// But C64 expects the result in the opposite way...
+				// it is: the bits corresponding to keys selected must be set to 0...
+				result = ~result;
 
 				// These bits override anything if the timer has been parameterized for that...
 				if (reflectTimerAAtPortDataB () != 0) 
@@ -99,11 +94,14 @@ const MCHEmul::UByte& C64::CIA1Registers::readValue (size_t p) const
 				if (reflectTimerBAtPortDataB () != 0)
 					result.setBit (7, reflectTimerBAtPortDataB () == 1 ? true : false);
 			}
-			
+
 			break;
 			
 		default:
-			result = COMMODORE::CIARegisters::readValue (pp);
+			{
+				result = COMMODORE::CIARegisters::readValue (pp);
+			}
+
 			break;
 	}
 
@@ -121,6 +119,7 @@ void C64::CIA1Registers::initializeInternalValues ()
 	setValue (0x03, MCHEmul::UByte::_0);
 	// Just to be able to read well the keyboard...
 
+	_joystick1Status = 0xff; // No switches clicked, no fire buttons pressed...
 	_joystick2Status = 0xff; // No switches clicked, no fire buttons pressed...
 	for (size_t i = 0; i < 8; _keyboardStatusMatrix [i++] = MCHEmul::UByte::_FF); // No keys pressed...
 }

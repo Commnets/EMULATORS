@@ -93,9 +93,11 @@ bool MCHEmul::Screen::simulate (MCHEmul::CPU* cpu)
 		SDL_RenderPresent (_renderer);
 
 		_graphicsReady = false;
-	}
 
-	_clock.countCycles (1);
+		_clock.countCycles (1);
+	}
+	else
+		_clock.countCycles (0);
 
 	return (true);
 }
