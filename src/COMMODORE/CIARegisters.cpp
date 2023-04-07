@@ -35,9 +35,28 @@ void COMMODORE::CIARegisters::setValue (size_t p, const MCHEmul::UByte& v)
 	switch (pp)
 	{
 		// Data Port Register A
+		// Only the bits maked for for input are kept...
 		case 0x00:
+			{
+				MCHEmul::PhysicalStorageSubset::setValue 
+					(0x00, (v & 
+							~MCHEmul::PhysicalStorageSubset::readValue (0x02)) | 
+							MCHEmul::PhysicalStorageSubset::readValue (0x02) /** The rest of tbits are maintained at 1. */);
+			}
+
+			break;
+
 		// Data Port Register B
 		case 0x01:
+			{
+				MCHEmul::PhysicalStorageSubset::setValue 
+					(0x01, (v & 
+							~MCHEmul::PhysicalStorageSubset::readValue (0x03)) | 
+							MCHEmul::PhysicalStorageSubset::readValue (0x03) /** The rest of tbits are maintained at 1. */);
+			}
+
+			break;
+
 		// Data Direction Register A
 		case 0x02:
 		// Data Direction Register B
@@ -201,12 +220,10 @@ const MCHEmul::UByte& COMMODORE::CIARegisters::readValue (size_t p) const
 
 	switch (pp)
 	{
-		// When reading no special behaviour...but when setting, take a look!
 		case 0x00:
-		case 0x02:
-		case 0x03:
 			{
-				result = MCHEmul::PhysicalStorageSubset::readValue (p);
+				result = MCHEmul::PhysicalStorageSubset::readValue (0x00) & 
+					 MCHEmul::PhysicalStorageSubset::readValue (0x02);  // bits =1 mean output, so able to read...
 			}
 
 			break;
@@ -214,12 +231,22 @@ const MCHEmul::UByte& COMMODORE::CIARegisters::readValue (size_t p) const
 		/** In the Data Port B a reflection of the timers could happen. */
 		case 0x01:
 			{
-				result = MCHEmul::PhysicalStorageSubset::readValue (p);
+				result = MCHEmul::PhysicalStorageSubset::readValue (0x01) & 
+					 MCHEmul::PhysicalStorageSubset::readValue (0x03);  // bits =1 mean output, so able to read...
 
 				if (_reflectTimerAAtPortDataB != 0) 
 					result.setBit (6, _reflectTimerAAtPortDataB == 1 ? true : false);
 				if (_reflectTimerBAtPortDataB != 0)
 					result.setBit (7, _reflectTimerBAtPortDataB == 1 ? true : false);
+			}
+
+			break;
+
+		// When reading no special behaviour...but when setting, take a look!
+		case 0x02:
+		case 0x03:
+			{
+				result = MCHEmul::PhysicalStorageSubset::readValue (p);
 			}
 
 			break;
