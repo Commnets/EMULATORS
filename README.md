@@ -15,8 +15,9 @@ The implementation of the SID chip has been based on the resid libry found at:<b
 To compile the framework the <a href="https://github.com/libsdl-org/SDL/releases/tag/release-2.26.2">SDL Core</a>, <a href="https://www.libsdl.org/projects/SDL_image/release/">SDL image</a>, <a href="https://github.com/libsdl-org/SDL_mixer">SDL Mixer</a> and <a href="https://github.com/facebookarchive/RakNet">Raknet</a> libraries are necessary.
 Download them, install them and set the environmental variables: <b>SDL_HOME</b>, <b>SDL_IMAGEHOME</b>, <b>SDL_MIXERHOME</b>, <b>RAKNET_HOME</b>
 <br><br>
-<img src="./docs/C64Data/Picture1.png"/><br>
-https://user-images.githubusercontent.com/5286165/230733912-1623cfa6-05e1-4e5b-b3df-0cd3f13c1f58.mp4<br>
+<img src="./docs/C64Data/Picture1.png"/>
+https://user-images.githubusercontent.com/5286165/230734211-a8efba49-ef6e-426e-8e5b-dc8852ef3115.mp4
+<br>
 It has been an intention to emulate the location of the keys as they are inthe original keyboard.<br>
 For this reason the position of the different key can be a little bit "strange"<br>
 The important C64 keys in a Win32 standard <b>Spanish</b> keyboard are:<br>
