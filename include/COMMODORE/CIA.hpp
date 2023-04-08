@@ -32,6 +32,16 @@ namespace COMMODORE
 			In a computer there could be many of these with little differences. */
 		CIA (int id, int rId, unsigned int intId);
 
+		// Managing the ports...
+		const MCHEmul::UByte& portA () const
+							{ return (_CIARegisters -> portA ()); }
+		void setPortA (const MCHEmul::UByte& v)
+							{ _CIARegisters -> setPortA (v); }
+		const MCHEmul::UByte& portB () const
+							{ return (_CIARegisters -> portB ()); }
+		void setPortB (const MCHEmul::UByte& v)
+							{ _CIARegisters -> setPortB (v); }
+
 		virtual bool initialize () override;
 
 		virtual bool simulate (MCHEmul::CPU* cpu) override;

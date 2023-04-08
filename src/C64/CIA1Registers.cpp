@@ -19,30 +19,13 @@ void C64::CIA1Registers::setValue (size_t p, const MCHEmul::UByte& v)
 
 	switch (pp)
 	{
-		// Data Port Register A: CIAPRA
+		// Data Port Register A: CIA1PRA
 		case 0x00:
 			{
 				// To indicate the row of the key matrix to be selected (later)
-				// It is affected by the communication direction (CIDDRA) (bits 1 output)
+				// It is affected by the communication direction (CIDDRA1) (bits 1 output)
 				// bits = 0 will indicate rows selected!
 				_keyboardRowToRead = v.value ();
-			}
-
-			break;
-
-		// Data Direction Register A: CIDDRA
-		// The row to read is also affected...
-		case 0x02:
-			{
-				_dataPortADir = v.value ();
-			}
-
-			break;
-
-		// Data Direction Register B: CIDDRB
-		case 0x03:
-			{
-				_dataPortBDir = v.value ();
 			}
 
 			break;
@@ -85,7 +68,7 @@ const MCHEmul::UByte& C64::CIA1Registers::readValue (size_t p) const
 				}
 
 				// The input of the joystick has also to be taken into account...
-				result |= ~_joystick1Status & ~_dataPortBDir;
+				result |= MCHEmul::UByte (~_joystick1Status & ~_dataPortBDir);
 
 				// But C64 expects the result in the opposite way...
 				// it is: the bits corresponding to keys selected must be set to 0...

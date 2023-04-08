@@ -21,7 +21,11 @@ namespace C64
 	class CIA1;
 
 	/** In the CIA1 Memory, there are a couple of records that behave different
-		when they are read that when they are written. */
+		when they are read that when they are written. \n
+		In CIA1 the portA and the portB are connected to the keyboard matrix. \n
+		Read this document to know how the keyboard works: \n
+		https://c64os.com/post/howthekeyboardworks
+		*/
 	class CIA1Registers final : public COMMODORE::CIARegisters
 	{
 		public:
@@ -72,7 +76,6 @@ namespace C64
 
 		// Implementation
 		unsigned char _keyboardRowToRead; // bit = 0, means row selected to be read!
-		unsigned char _dataPortADir, _dataPortBDir;
 	};
 }
 

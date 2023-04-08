@@ -26,6 +26,8 @@ void C64::CIA2Registers::setValue (size_t p, const MCHEmul::UByte& v)
 			{
 				_VICBank = 0x03 - (v.value () & 0x03); // From 0 to 3...
 
+				// Pending to implement the RS232 and Serial bus in the port A...
+
 				// Notifies the change...
 				notify (COMMODORE::VICII::_BANK0SET + (unsigned int) _VICBank);
 			}
@@ -46,10 +48,21 @@ const MCHEmul::UByte& C64::CIA2Registers::readValue (size_t p) const
 
 	switch (pp)
 	{
-		// TODO
+		case 0x00:
+			{
+				result = MCHEmul::PhysicalStorageSubset::readValue (pp);
+
+				// Pending to implement the RS232 and Serial bus in the port A...
+
+			}
+
+			break;
 			
 		default:
-			result = COMMODORE::CIARegisters::readValue (pp);
+			{
+				result = COMMODORE::CIARegisters::readValue (pp);
+			}
+
 			break;
 	}
 

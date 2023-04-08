@@ -34,33 +34,53 @@ void COMMODORE::CIARegisters::setValue (size_t p, const MCHEmul::UByte& v)
 
 	switch (pp)
 	{
-		// Data Port Register A
+		// Data Port Register A: CIAPRA
 		// Only the bits maked for for input are kept...
 		case 0x00:
 			{
-				MCHEmul::PhysicalStorageSubset::setValue 
-					(0x00, (v & 
-							~MCHEmul::PhysicalStorageSubset::readValue (0x02)) | 
-							MCHEmul::PhysicalStorageSubset::readValue (0x02) /** The rest of tbits are maintained at 1. */);
+				// What id sent to the portA, will depend on what is in this register, 
+				// but also in what existed before in the line.
+				// In _dataPortADir bits to 1 mean output and bits to 0 mean input, so...
+				_portA = 
+					(_portA & ~_dataPortADir) |		// The bits not affected by the output as maintained as they are...
+					(v.value () & _dataPortADir);	// and blended with the ones affected from the value received...
+
+				// Notify the change in the content of the port...
+				notify (MCHEmul::Event (_PORTAACTUALIZED, _portA));
 			}
 
 			break;
 
-		// Data Port Register B
+		// Data Port Register B: CIAPRB
 		case 0x01:
 			{
-				MCHEmul::PhysicalStorageSubset::setValue 
-					(0x01, (v & 
-							~MCHEmul::PhysicalStorageSubset::readValue (0x03)) | 
-							MCHEmul::PhysicalStorageSubset::readValue (0x03) /** The rest of tbits are maintained at 1. */);
+				// What id sent to the portB, will depend on what is in this register, 
+				// but also in what existed before in the line.
+				// In _dataPortBDir bits to 1 mean output and bits to 0 mean input, so...
+				_portB = 
+					(_portB & ~_dataPortBDir) |		// The bits not affected by the output as maintained as they are...
+					(v.value () & _dataPortBDir);	// and blended with the ones affected from the value received...
+
+				// Notify the change in the content of the port...
+				notify (MCHEmul::Event (_PORTBACTUALIZED, _portB));
 			}
 
 			break;
 
-		// Data Direction Register A
+		// Data Direction Register A: CIDDRA
 		case 0x02:
-		// Data Direction Register B
+			{
+				_dataPortADir = v.value ();
+			}
+
+			break;
+
+		// Data Direction Register A: CIDDRB
 		case 0x03:
+			{
+				_dataPortBDir = v.value ();
+			}
+
 			break;
 
 		// LSB of the Latch A
@@ -222,8 +242,8 @@ const MCHEmul::UByte& COMMODORE::CIARegisters::readValue (size_t p) const
 	{
 		case 0x00:
 			{
-				result = MCHEmul::PhysicalStorageSubset::readValue (0x00) & 
-					 MCHEmul::PhysicalStorageSubset::readValue (0x02);  // bits =1 mean output, so able to read...
+				// In _dataPortADir bits to 1 mean output and bits to 0 mean input, so...
+				result = MCHEmul::UByte (_portA & ~_dataPortADir); // ...only the ones at 0 are read...
 			}
 
 			break;
@@ -231,8 +251,8 @@ const MCHEmul::UByte& COMMODORE::CIARegisters::readValue (size_t p) const
 		/** In the Data Port B a reflection of the timers could happen. */
 		case 0x01:
 			{
-				result = MCHEmul::PhysicalStorageSubset::readValue (0x01) & 
-					 MCHEmul::PhysicalStorageSubset::readValue (0x03);  // bits =1 mean output, so able to read...
+				// In _dataPortBDir bits to 1 mean output and bits to 0 mean input, so...
+				result = MCHEmul::UByte (_portB & ~_dataPortBDir); // ...only the ones at 0 are read...
 
 				if (_reflectTimerAAtPortDataB != 0) 
 					result.setBit (6, _reflectTimerAAtPortDataB == 1 ? true : false);
@@ -242,11 +262,16 @@ const MCHEmul::UByte& COMMODORE::CIARegisters::readValue (size_t p) const
 
 			break;
 
-		// When reading no special behaviour...but when setting, take a look!
 		case 0x02:
+			{
+				result = MCHEmul::UByte (_dataPortADir);
+			}
+
+			break;
+
 		case 0x03:
 			{
-				result = MCHEmul::PhysicalStorageSubset::readValue (p);
+				result = MCHEmul::UByte (_dataPortBDir);
 			}
 
 			break;
@@ -380,6 +405,8 @@ void COMMODORE::CIARegisters::initializeInternalValues ()
 							// continuous, not load, counting cycles, and 50 hz frequecy (by default)
 	setValue (0x0f, 0xa0);  // Register B: Stopped, no value appear on bit 7 port B, pulse, 
 							// continuous, not load, counting cycles, writting to TOD regisers sets alarm.
+
+	_portA = _portB = MCHEmul::UByte::_FF; // As described in the documentation they all have a pull up resistor...
 
 	_flagLineInterruptRequested = false;
 

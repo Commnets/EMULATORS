@@ -23,11 +23,17 @@ namespace COMMODORE
 	class CIAClock;
 
 	/** In the CIA Memory, there are a couple of records that behave different
-		when they are read that when they are written. */
+		when they are read that when they are written. \n
+		Read this document for better understanding: \n
+		http://archive.6502.org/datasheets/mos_6526_cia_recreated.pdf */
 	class CIARegisters : public MCHEmul::ChipRegisters
 	{
 		public:
 		friend CIA;
+
+		/** Some events. */
+		static const unsigned int _PORTAACTUALIZED = 300;
+		static const unsigned int _PORTBACTUALIZED = 301;
 
 		CIARegisters (int id, MCHEmul::PhysicalStorage* ps, size_t pp, const MCHEmul::Address& a, size_t s);
 
@@ -37,6 +43,16 @@ namespace COMMODORE
 		virtual void initialize () override;
 
 		// All these method are invoked from CIA emulation
+		/** Managing the ports. */
+		const MCHEmul::UByte& portA () const
+							{ return (_portA); }
+		void setPortA (const MCHEmul::UByte& v)
+							{ _portA = v.value (); }
+		const MCHEmul::UByte& portB () const
+							{ return (_portB); }
+		void setPortB (const MCHEmul::UByte& v)
+							{ _portB = v.value (); }
+
 		/** To know when the flag line is enabled. 
 			Once the value is got then it is pit back t false. */
 		bool flagLineInterruptRequested () const
@@ -73,6 +89,10 @@ namespace COMMODORE
 							{ _clock = c; }
 
 		protected:
+		/** Ports used by the CIA. */
+		unsigned char _portA, _portB;
+		/** The direction of the different ports used by the CIA. */
+		unsigned char _dataPortADir, _dataPortBDir;
 		/** Reference to the timers */
 		CIATimer* _timerA;
 		CIATimer* _timerB;
