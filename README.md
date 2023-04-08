@@ -16,9 +16,7 @@ To compile the framework the <a href="https://github.com/libsdl-org/SDL/releases
 Download them, install them and set the environmental variables: <b>SDL_HOME</b>, <b>SDL_IMAGEHOME</b>, <b>SDL_MIXERHOME</b>, <b>RAKNET_HOME</b>
 <br><br>
 <img src="./docs/C64Data/Picture1.png"/><br>
-The image is quite close to the original one!<br><br>
 https://user-images.githubusercontent.com/5286165/230733912-1623cfa6-05e1-4e5b-b3df-0cd3f13c1f58.mp4<br>
-And the way the different games are reproduced is almost perfect!<br><br>
 It has been an intention to emulate the location of the keys as they are inthe original keyboard.<br>
 For this reason the position of the different key can be a little bit "strange"<br>
 The important C64 keys in a Win32 standard <b>Spanish</b> keyboard are:<br>
