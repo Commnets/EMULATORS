@@ -19,12 +19,9 @@ Download them, install them and set the environmental variables: <b>SDL_HOME</b>
 
 
 
-
-https://user-images.githubusercontent.com/5286165/230734256-60c95059-c7c0-4a0d-8246-1f60961d7295.mp4
-
+https://user-images.githubusercontent.com/5286165/230734318-87df150c-da9e-4961-bb81-9f970615e0cf.mp4
 
 
-https://user-images.githubusercontent.com/5286165/230734211-a8efba49-ef6e-426e-8e5b-dc8852ef3115.mp4
 <br>
 It has been an intention to emulate the location of the keys as they are inthe original keyboard.<br>
 For this reason the position of the different key can be a little bit "strange"<br>
