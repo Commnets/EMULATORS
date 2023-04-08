@@ -17,7 +17,7 @@ COMMODORE::CIARegisters::CIARegisters (int id, MCHEmul::PhysicalStorage* ps, siz
 // ---
 void COMMODORE::CIARegisters::initialize ()
 {
-	MCHEmul::PhysicalStorageSubset::initialize ();
+	MCHEmul::PhysicalStorageSubset::initialize (); 
 
 	initializeInternalValues ();
 }
@@ -35,14 +35,18 @@ void COMMODORE::CIARegisters::setValue (size_t p, const MCHEmul::UByte& v)
 	switch (pp)
 	{
 		// Data Port Register A: CIAPRA
-		// Only the bits maked for for input are kept...
+		// Data Direction Register A: CIDDRA
 		case 0x00:
+		case 0x02:
 			{
-				// What id sent to the portA, will depend on what is in this register, 
+				if (pp == 0x02)
+					_dataPortADir = v.value ();
+
+				// What is sent to the portA will depend on what is in this register, 
 				// but also in what existed before in the line.
 				// In _dataPortADir bits to 1 mean output and bits to 0 mean input, so...
 				_portA = 
-					(_portA & ~_dataPortADir) |		// The bits not affected by the output as maintained as they are...
+					(_portA & ~_dataPortADir) |		// The bits not affected by the output as maintained as they were...
 					(v.value () & _dataPortADir);	// and blended with the ones affected from the value received...
 
 				// Notify the change in the content of the port...
@@ -52,33 +56,22 @@ void COMMODORE::CIARegisters::setValue (size_t p, const MCHEmul::UByte& v)
 			break;
 
 		// Data Port Register B: CIAPRB
+		// Data Direction Register A: CIDDRB
 		case 0x01:
+		case 0x03:
 			{
-				// What id sent to the portB, will depend on what is in this register, 
+				if (pp == 0x03)
+					_dataPortBDir = v.value ();
+
+				// What is sent to the portB, will depend on what is in this register, 
 				// but also in what existed before in the line.
 				// In _dataPortBDir bits to 1 mean output and bits to 0 mean input, so...
 				_portB = 
-					(_portB & ~_dataPortBDir) |		// The bits not affected by the output as maintained as they are...
+					(_portB & ~_dataPortBDir) |		// The bits not affected by the output as maintained as they were...
 					(v.value () & _dataPortBDir);	// and blended with the ones affected from the value received...
 
 				// Notify the change in the content of the port...
 				notify (MCHEmul::Event (_PORTBACTUALIZED, _portB));
-			}
-
-			break;
-
-		// Data Direction Register A: CIDDRA
-		case 0x02:
-			{
-				_dataPortADir = v.value ();
-			}
-
-			break;
-
-		// Data Direction Register A: CIDDRB
-		case 0x03:
-			{
-				_dataPortBDir = v.value ();
 			}
 
 			break;
@@ -243,7 +236,10 @@ const MCHEmul::UByte& COMMODORE::CIARegisters::readValue (size_t p) const
 		case 0x00:
 			{
 				// In _dataPortADir bits to 1 mean output and bits to 0 mean input, so...
-				result = MCHEmul::UByte (_portA & ~_dataPortADir); // ...only the ones at 0 are read...
+				result = MCHEmul::UByte (
+					_portA & ~_dataPortADir | // ...only the ones at 0 are read...
+					_portA & _dataPortADir);  // ...and the rest are maintained as they were!	
+				// at the end result == _portA! (but in this way is better explained)
 			}
 
 			break;
@@ -252,12 +248,19 @@ const MCHEmul::UByte& COMMODORE::CIARegisters::readValue (size_t p) const
 		case 0x01:
 			{
 				// In _dataPortBDir bits to 1 mean output and bits to 0 mean input, so...
-				result = MCHEmul::UByte (_portB & ~_dataPortBDir); // ...only the ones at 0 are read...
+				result = MCHEmul::UByte (
+					_portB & ~_dataPortBDir | // ...only the ones at 0 are read...
+					_portB & _dataPortBDir);  // ...and the rest are maintained as they were!
+				// at the end result == _portB! (but in this way is better explained)
 
 				if (_reflectTimerAAtPortDataB != 0) 
-					result.setBit (6, _reflectTimerAAtPortDataB == 1 ? true : false);
+					result.setBit (6, _reflectTimerAAtPortDataB == 1 
+						? (result.bit (6) ? false : true) /** toggle. */ 
+						: (_reflectTimerAAtPortDataB == 2) ? true /** pulse on. */ : false /** pulse off. */);
 				if (_reflectTimerBAtPortDataB != 0)
-					result.setBit (7, _reflectTimerBAtPortDataB == 1 ? true : false);
+					result.setBit (7, _reflectTimerBAtPortDataB == 1 
+						? (result.bit (7) ? false : true) /** toggle. */ 
+						: (_reflectTimerBAtPortDataB == 2) ? true /** pulse on. */ : false /** pulse off. */);
 			}
 
 			break;
@@ -390,10 +393,12 @@ void COMMODORE::CIARegisters::initializeInternalValues ()
 
 	// The internal variables are initialized through the data in memory...
 
-	setValue (0x00, MCHEmul::UByte::_FF); 
-	setValue (0x01, MCHEmul::UByte::_FF);
+	// The direction is first set up to set up accodingly the values of the ports A and B...
 	setValue (0x02, MCHEmul::UByte::_FF); // All lines output...
 	setValue (0x03, MCHEmul::UByte::_0);  // All lines input...
+	setValue (0x00, MCHEmul::UByte::_FF); // When they are no connected to nothing, the documentation sais that they are pulled up!
+	setValue (0x01, MCHEmul::UByte::_FF); // same than previous one...
+	// After this the port A and B will be still FF...
 	setValue (0x04, MCHEmul::UByte::_FF);
 	setValue (0x05, MCHEmul::UByte::_FF);
 	setValue (0x06, MCHEmul::UByte::_FF);

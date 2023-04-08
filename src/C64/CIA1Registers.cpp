@@ -75,10 +75,15 @@ const MCHEmul::UByte& C64::CIA1Registers::readValue (size_t p) const
 				result = ~result;
 
 				// These bits override anything if the timer has been parameterized for that...
+				// Replicates the behaviour already written in CIA generic readvalue method.
 				if (reflectTimerAAtPortDataB () != 0) 
-					result.setBit (6, reflectTimerAAtPortDataB () == 1 ? true : false);
+					result.setBit (6, reflectTimerAAtPortDataB () == 1
+						? (result.bit (6) ? false : true) /** toggle. */ 
+						: (reflectTimerAAtPortDataB () == 2) ? true /** pulse on. */ : false /** pulse off. */);
 				if (reflectTimerBAtPortDataB () != 0)
-					result.setBit (7, reflectTimerBAtPortDataB () == 1 ? true : false);
+					result.setBit (7, reflectTimerBAtPortDataB () == 1
+						? (result.bit (7) ? false : true) /** toggle. */ 
+						: (reflectTimerBAtPortDataB () == 2) ? true /** pulse on. */ : false /** pulse off. */);
 			}
 
 			break;

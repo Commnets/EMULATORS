@@ -22,8 +22,37 @@ namespace C64
 
 	/** In the CIA1 Memory, there are a couple of records that behave different
 		when they are read that when they are written. \n
-		In CIA1 the portA and the portB are connected to the keyboard matrix. \n
-		Read this document to know how the keyboard works: \n
+		The keyboard matrix is a matrix of 8x8 "cables" not connected to anything in one extreme.
+		and to the the ports of the CIA in the other. \n
+		Any of the 64 keys of the keyboard is a switch located in each of the intersection of those 2 groups of cables. \n
+					C0	C1	C2	C3	C4	C5	C6	C7	
+					|	|	|	|	|	|	|	|     
+			  R0----+---+---+---+---+---+---+---+----C
+			    	|	|	|	|	|	|	|	|	 o
+			  R1----+---+---+---+---+---+---+---+----n
+			    	|	|	|	|	|	|	|	|	 n
+			  R2----+---+---+---+---+---+---+---+----e
+			    	|	|	|	|	|	|	|	|	 c
+			  R3----+---+---+---+---+---+---+---+----t
+			    	|	|	|	|	|	|	|	|	 e
+			  R4----+---+---+---+---+---+---+---+----d
+			    	|	|	|	|	|	|	|	|	 
+			  R5----+---+---+---+---+---+---+---+----P
+			    	|	|	|	|	|	|	|	|	 o
+			  R6----+---+---+---+---+---+---+---+----r
+			    	|	|	|	|	|	|	|	|	 t
+			  R7----+---+---+---+---+---+---+---+----B
+					|	|	|	|	|	|	|	|	
+					Connected PortA
+		The switch only allow the flow of the current in one way (using a diode). \n
+		When a key is pressed the status of one line is transmited to the other. \n
+		The diode allows to transmite the status of the Column to the Row.
+		The default status of the lines, when read is, according with CIA datasheet 1.
+		So to read a key the status of a the column is set to 0, and then is read the status of the row, 
+		when a 0 appears the key has been pressed. \n
+		Additionally the joystick 2 is connected to the port A and the joystick 1 to the port B. \n
+		As the port B is where the info is read, the status created by it can be confused with keys,
+		which is not the case for joystick 2.
 		https://c64os.com/post/howthekeyboardworks
 		*/
 	class CIA1Registers final : public COMMODORE::CIARegisters

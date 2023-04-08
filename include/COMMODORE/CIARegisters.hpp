@@ -25,7 +25,16 @@ namespace COMMODORE
 	/** In the CIA Memory, there are a couple of records that behave different
 		when they are read that when they are written. \n
 		Read this document for better understanding: \n
-		http://archive.6502.org/datasheets/mos_6526_cia_recreated.pdf */
+		http://archive.6502.org/datasheets/mos_6526_cia_recreated.pdf \n
+		One of the most important characteristics of the CIA is the port management. \n
+		The CIA manages two ports independently: Port A (PA) and Port B (PB). \n
+		Initially the ports are not connected to anything so any state could be read, but the documentation 
+		of the chip says that tha 1 is read. \n
+		One something is connected the state might by determined by the device connected 
+		(in the case of the keyboard it is not the case, e.g.). \n
+		So when output a value the pins not affected has to maintain the value they have,
+		ans when reading a value, the pins not affected will be read as 1. \n
+		*/
 	class CIARegisters : public MCHEmul::ChipRegisters
 	{
 		public:

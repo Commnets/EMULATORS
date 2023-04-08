@@ -64,14 +64,14 @@ bool COMMODORE::CIA::simulate (MCHEmul::CPU* cpu)
 	if (_timerA.affectPortDataB ())
 	{
 		if (_timerA.reaches0 ())
-			_timerAValueAtPortB = (_pulseTimerASentToPortB = _timerA.pulseAtPortDataB ()) 
-				? 1 : (_timerAValueAtPortB == 1) ? 2 : 1;
+			_timerAValueAtPortB = 
+				(_pulseTimerASentToPortB = _timerA.pulseAtPortDataB ()) ? 1 : 2;
 		else
 		if (_pulseTimerASentToPortB)
 		{
 			_pulseTimerASentToPortB = false;
 
-			_timerAValueAtPortB = 2; // Swith it off...
+			_timerAValueAtPortB = 3; // Swith it off...
 		}
 		else
 			_timerAValueAtPortB = 0; // Do nothing...
@@ -85,25 +85,31 @@ bool COMMODORE::CIA::simulate (MCHEmul::CPU* cpu)
 	// Same but with timer B
 	// The timer B has to take into account the timer A...
 	_timerB.simulate (cpu, &_timerA);
+	// Does what the timer does to the status of the port B?
 	if (_timerB.affectPortDataB ())
 	{
+		// if it affects and reaches 0, there can 
 		if (_timerB.reaches0 ())
-			_timerBValueAtPortB = (_pulseTimerBSentToPortB = _timerB.pulseAtPortDataB ()) 
-				? 1 : (_timerBValueAtPortB == 1) ? 2 : 1;
+			_timerBValueAtPortB = 
+				(_pulseTimerBSentToPortB = _timerB.pulseAtPortDataB ()) ? 1 /** toggle bit. */ : 2 /** 1 cycle pulse. */;
 		else
+		// if it affects but not reaches 0 but it was sent a pulse...
+		// ...it has to be set up back to 0
 		if (_pulseTimerBSentToPortB)
 		{
 			_pulseTimerBSentToPortB = false;
 
-			_timerBValueAtPortB = 2;
+			_timerBValueAtPortB = 3; /* switch off the pulse. */
 		}
+		// any other circunstancem does nothing...
 		else
 			_timerBValueAtPortB = 0;
 	}
+	// No, no affects, so do nothing...
 	else
 		_timerBValueAtPortB = 0;
 
-	_CIARegisters -> setReflectTimerAAtPortDataB (_timerBValueAtPortB /** 0 means do nothing. */);
+	_CIARegisters -> setReflectTimerAAtPortDataB (_timerBValueAtPortB /** 0 means do nothing, 1 toggle, 2 pulse, 3 off pulse. */);
 
 	_clock.simulate (cpu);
 
