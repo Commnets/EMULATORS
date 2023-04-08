@@ -385,6 +385,9 @@ void COMMODORE::CIARegisters::initializeInternalValues ()
 	if (_timerA == nullptr || _timerB == nullptr || _clock == nullptr)
 		return;
 
+	//They have to be initialized in advanced as the value set depends also on the value at the beginning...
+	_portA = _portB = MCHEmul::UByte::_FF; // As described in the documentation they all have a pull up resistor...
+
 	// The internal variables are initialized through the data in memory...
 
 	setValue (0x00, MCHEmul::UByte::_FF); 
@@ -405,8 +408,6 @@ void COMMODORE::CIARegisters::initializeInternalValues ()
 							// continuous, not load, counting cycles, and 50 hz frequecy (by default)
 	setValue (0x0f, 0xa0);  // Register B: Stopped, no value appear on bit 7 port B, pulse, 
 							// continuous, not load, counting cycles, writting to TOD regisers sets alarm.
-
-	_portA = _portB = MCHEmul::UByte::_FF; // As described in the documentation they all have a pull up resistor...
 
 	_flagLineInterruptRequested = false;
 

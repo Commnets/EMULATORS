@@ -1,0 +1,143 @@
+#General Commands
+#They can be executed local and remotly
+#(C) 2022 Ignacio Cea Fornies
+#My info
+;AUTHOR
+To know info about the author.
+No parameters needed.
+#To restart the computer emulation
+;RESTART (LEVEL)
+Just to restart the computer.
+A level can be passed as parameter.
+The way the levels are managed depends on the computer implementation.
+By default 0 restart just the CPU, 1 restart the computer but not affecting the memory content and 
+any other value restart the computer (initialize).
+#Commands to know the status of the CPU
+The parameters passed in the command line will not be taken longer into account.
+The level of the restart can be passed as parameter.
+;LOADPRG PRG
+Load into memory a program given by the parameter.
+The execution, if any is stopped.
+Take care using this command. A crash can be generated.
+Start the execution back usng RUN ADDRESS. 
+;STATUS
+Get the status of the Status Register.
+No parameters needed.
+;REGISTERS
+Get the status of every register defined in the CPU.
+No parameters needed.
+;PC
+Get the status of the Program Counter.
+No parameters needed.
+;SETPC
+To change the program counter.
+Only the paremeter with the new address is needed.
+Take care using this command.
+;CPUSTATUS
+To get the current status of the CPU.
+Including: Status Register (STATUS), Registers (REGISTERS), 
+Program Counter (PC) and Stack (STACK).
+No parameters needed.
+;CPUSSTATUS
+Similar to CPUSTATUS but not including info about the stack.
+No parameters needed.
+;CLOCKFACTOR VALUE
+To change the speed factor of the CPU.
+It usually equal to 1.
+;DEVICES
+Get the info about all devices connected to the computer.
+The Devices are not the peripherals that connect to the devices.
+See PERIPHERALS command for more info.
+No parameters are needed.
+;PERIPHERALS
+Get the info about all peripherals connected to the different devices of the computer.
+No parameters are needed.
+;PERCOMMAND PERID CMDID (ATTRS)
+To send a command/instruction to a device.
+The peripheral has to understand the instruction itself and react according to it.
+The parameters needed are a minimum of two: 
+The id of the peripheral and the id of the command/instruction.
+Additional parameters can be provided whether the command needs more info.
+#Commands to get info from the Computer or to control it
+;STACK (ALL)
+Get the status of the stack.
+Can be invoked with or without the parameter ALL.
+ALL will get you info also about the content of the stack.
+;CPUINFO
+To get info about the CPU.
+Very complex info returned. No parameters needed.
+;MEMORY INITIAL (FINAL)
+To get the content of a memory position.
+One parameter minimum is required that is the position of the memory.
+If a second parameter is given then te content between the two location is returned.
+;SETMEMORY INITIAL (FINAL) VALUE
+To set the value of the memory with a value
+Two parameters minimum are required that are tha memory position to set and the value
+A optional second memory position can be given meaning that the value
+will be set among those two positions.
+Be really careful using this method. It can destroy the memory.
+If the value is more than 1 byte length, the memory steps will be equal to that length.
+;ASSIGNJOY ID NEWID
+To change the identification assigned to a joystick.
+It requires two parameters: The id of the joystick to change and the new id assigned.
+;SOUNDON
+To activate the sound.
+No parameters are needed.
+;SOUNDOFF
+To desactivate the sound.
+No parameters are needed.
+#Commnands to control the execution of the CPU
+;STOP
+To stop the cpu.
+No parameters needed.
+;RUN (ADDRESS)
+To keep CPU running.
+An optional parameter allows to start the execution from another position.
+Take care using this command only Program Counter is changed before starting to run.
+R can also be used.
+;NEXT
+To execute the next instruction after being stopped.
+N can also be used instead.
+No parameters needed.
+;SHOWNEXT (NUMBER)
+Just to show the instruction about to be executed.
+SN can also be used instead.
+There can be 0 or 1 parameter with the number of next lines to show.
+;INST
+To know the last instruction executed by the CPU.
+No parameters needed.
+;BREAKS
+To know the list of break points defined in the computer.
+No parameters are needed.
+;SETBREAK
+To set a new break point.
+It is needed at leat one address, but many other can be also provided separated by space.
+The address can be passed in any format possible: HEX($), OCT(0), DECIMAL
+;REMOVEBREAK
+To remove a break point.
+It is needed at leat one address, but many other can be also provided separated by space.
+The address can be passed in any format possible: HEX($), OCT(0), DECIMAL
+;REMOVEBREAKS
+To remove all break points.
+No parameters are needed.
+;SPEED
+To know the real speed of the processor.
+No parameters are needed.
+# Commands to load and save files with info
+;LOADBIN PRG ADDRESS
+To load a binary set of data from a file into an address.
+Two parameters are needed. The first is the file to load, 
+and the other one is the address where to load that info.
+;SAVEBIN FILE SIZE ADDRESS
+To save the content of the memory into a binary file.
+Three parameters are needed. The first is the file to load, 
+the second the number of bytes to save and 
+the other one is the address where to save that info from.#Specific commands for C64
+;DEEPON FILENAME
+To activate the deep debugging of the CPU.
+In this state the CPU will trace every instruction executed and also the status of the 
+registers and program counter into the file received as parameter.
+The name (and path) of the file where to write the info is then needed.
+;DEEPOFF
+To desactivate the deep debugging.
+No parameters are needed.

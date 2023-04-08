@@ -53,7 +53,6 @@ const MCHEmul::UByte& C64::CIA2Registers::readValue (size_t p) const
 				result = MCHEmul::PhysicalStorageSubset::readValue (pp);
 
 				// Pending to implement the RS232 and Serial bus in the port A...
-
 			}
 
 			break;

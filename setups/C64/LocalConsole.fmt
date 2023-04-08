@@ -1,0 +1,41 @@
+#Formats associated to the commands executed in a Local Console
+#(C) 2022 Ignacio Cea Fornies
+#---
+;CLOADPRG
+->Code:
+@CODELINES?{key=NO,equal=:,empty=no code}\n@
+->Errors:
+@ERRORS?{key=NO,equal=:}\n@
+#---
+#---
+;CLOADBINARY
+->Code:
+@CODE@
+#---
+#---
+;CLOADBLOCKS
+->Code:
+@CODE@
+#---
+#---
+;CDECOMPILE
+->Code:
+@CODELINES?{key=NO,equal=:,empty=no code}\n@
+->Errors:
+@ERROR@
+#---
+#---
+;CCONNECTPER
+->Errors:
+@ERROR@
+#---
+#---
+;CDISCONNECTPER
+->Errors:
+@ERROR@
+#---
+#---
+;CLOADPERDATA
+->Errors:
+@ERROR@
+#---

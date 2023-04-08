@@ -33,20 +33,20 @@ Echo --------------------------------------------------------------------
 
 Echo --------------------------------------------------------------------
 Echo Creates the instalation C64 package...
-COPY .\exe\x86\C64Emulator.exe .\packages\C64\ /Y
-COPY .\exe\x86\C64EmulatorC.exe .\packages\C64\ /Y
-COPY .\exe\x86\R64Console.exe .\packages\C64\ /Y
-COPY .\exe\x86\C64Compiler.exe .\packages\C64\ /Y
-COPY .\exe\x86\Test6500.exe .\packages\C64\ /Y
-COPY .\emulators\C64Commons\*.* .\packages\C64\ /Y
-COPY .\projects\C64\*.fmt .\packages\C64\ /Y
-COPY .\projects\C64\*.hlp .\packages\C64\ /Y
-COPY .\projects\COMMODORE\*.fmt .\packages\C64\ /Y
-COPY .\projects\COMMODORE\*.hlp .\packages\C64\ /Y
-COPY .\projects\CONSOLE\*.fmt .\packages\C64\ /Y
-COPY .\projects\CONSOLE\*.hlp .\packages\C64\ /Y
-COPY .\projects\CORE\*.fmt .\packages\C64\ /Y
-COPY .\projects\CORE\*.hlp .\packages\C64\ /Y
-"C:\Program files (x86)\Inno Setup 6\iscc" ".\packages\C64\C64.iss"
+COPY .\exe\x86\C64Emulator.exe .\setups\C64\ /Y
+COPY .\exe\x86\C64EmulatorC.exe .\setups\C64\ /Y
+COPY .\exe\x86\R64Console.exe .\setups\C64\ /Y
+COPY .\exe\x86\C64Compiler.exe .\setups\C64\ /Y
+COPY .\exe\x86\Test6500.exe .\setups\C64\ /Y
+COPY .\emulators\C64Commons\*.* .\setups\C64\ /Y
+COPY .\projects\C64\*.fmt .\setups\C64\ /Y
+COPY .\projects\C64\*.hlp .\setups\C64\ /Y
+COPY .\projects\COMMODORE\*.fmt .\setups\C64\ /Y
+COPY .\projects\COMMODORE\*.hlp .\setups\C64\ /Y
+COPY .\projects\CONSOLE\*.fmt .\setups\C64\ /Y
+COPY .\projects\CONSOLE\*.hlp .\setups\C64\ /Y
+COPY .\projects\CORE\*.fmt .\setups\C64\ /Y
+COPY .\projects\CORE\*.hlp .\setups\C64\ /Y
+"C:\Program files (x86)\Inno Setup 6\iscc" ".\setups\C64\C64.iss"
 
 
