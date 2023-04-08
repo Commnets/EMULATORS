@@ -14,7 +14,10 @@ To compile the framework the <a href="https://github.com/libsdl-org/SDL/releases
 Download them, install them and set the environmental variables: <b>SDL_HOME</b>, <b>SDL_IMAGEHOME</b>, <b>SDL_MIXERHOME</b>, <b>RAKNET_HOME</b>
 <br><br>
 <img src="./docs/C64Data/Picture1.png"/><br><br>
-The important C64 keys in a Win32 standard keyboard are:<br>
+<img src="https://youtu.be/TOvzUBLcttw"/><br><br>
+It has been an intention to emulate the location of the keys as they are inthe original keyboard.<br>
+For this reason the position of the different key can be a little bit "strange"<br>
+The important C64 keys in a Win32 standard <b>Spanish</b> keyboard are:<br>
 LEFT CONTROL         = CTRL<br>
 RIGHT CONTROL        = CTRL<br>
 LEFT ALT             = STOP<br>
@@ -26,3 +29,16 @@ APOSTROPHE           = :<br>
 BACKSLASH            = @<br>
 ESCAPE               = ARROW BACK<br>
 GRAVE                = POUND<br>
+ACCENT               = MINUS<br>
+OPEN EXCLAMATION     = EQUAL<br>
+OPEN BRACKET         = PLUS<br>
+CLOSE BRACKET        = ASTERISC<br>
+OPEN PARENTHESIS     = TWO POINTS<br>
+CLOSE PARENTEHEIS    = ADDRESS<br>
+COMMA                = COMMA<br>
+PERIOD               = PERIOD<br>
+MINUS                = SLASH<br>
+SHIFT COMMA          = LESSER THAN<br>
+SHIFT PERIOD         = GREATER THAN<br>
+SHIFT MINUS          = QUESTION MARK<br>
+Ñ                    = POINT AND COMMA<br>
