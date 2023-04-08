@@ -8,10 +8,10 @@ The package includes classes to develop you own emulator, including also assembl
 <br>
 <h1><b>Commodore64 emulator</b></h1>
 The implementation of the framework for Commodore 64 has been included.<br>
-In that case, the behaviour of the VICII has been emulated following the fantastic article by Christian Bauer that can be found at:<br>
+In that case, the behaviour of the VICII has been emulated following the fantastic article by Christian Bauer that can be found at:
 <a href="http://www.zimmers.net/cbmpics/cbm/c64/vic-ii.txt">Zimmers.net</a><br>
-The implementation of the SID chip has been based on the resid libry found at:<br>
-<a href="http://www.zimmers.net/anonftp/pub/cbm/crossplatform/emulators/resid/index.html">Resid library></a><br>
+The implementation of the SID chip has been based on the resid libry found at:
+<a href="http://www.zimmers.net/anonftp/pub/cbm/crossplatform/emulators/resid/index.html">Resid library</a><br>
 To compile the framework the <a href="https://github.com/libsdl-org/SDL/releases/tag/release-2.26.2">SDL Core</a>, <a href="https://www.libsdl.org/projects/SDL_image/release/">SDL image</a>, <a href="https://github.com/libsdl-org/SDL_mixer">SDL Mixer</a> and <a href="https://github.com/facebookarchive/RakNet">Raknet</a> libraries are necessary.
 Download them, install them and set the environmental variables: <b>SDL_HOME</b>, <b>SDL_IMAGEHOME</b>, <b>SDL_MIXERHOME</b>, <b>RAKNET_HOME</b>
 <br><br>
