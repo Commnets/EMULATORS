@@ -64,10 +64,7 @@ namespace COMMODORE
 
 		// Implementation
 		unsigned int _lastClockCycles;
-		unsigned int _timerAValueAtPortB;
-		bool _pulseTimerASentToPortB;
-		unsigned int _timerBValueAtPortB;
-		bool _pulseTimerBSentToPortB;
+		bool _pulseTimerASentToPortB, _pulseTimerBSentToPortB;
 	};
 }
 

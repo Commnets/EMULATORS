@@ -12,8 +12,7 @@ COMMODORE::CIA::CIA (int id, int rId, unsigned int intId)
 	  _timerA (0, intId /** they have to know the interruption id. */), _timerB (1, intId), 
 	  _clock (0, intId),
 	  _lastClockCycles (0),
-	  _timerAValueAtPortB (0), _pulseTimerASentToPortB (false),
-	  _timerBValueAtPortB (0), _pulseTimerBSentToPortB (false)
+	  _pulseTimerASentToPortB (false), _pulseTimerBSentToPortB (false)
 { 
 	setClassName ("CIA"); 
 }
@@ -46,9 +45,7 @@ bool COMMODORE::CIA::initialize ()
 
 	_CIARegisters -> initialize ();
 
-	_pulseTimerASentToPortB = _pulseTimerBSentToPortB;
-
-	_timerAValueAtPortB = _timerBValueAtPortB = 0; // Do not anything...
+	_pulseTimerASentToPortB = _pulseTimerBSentToPortB = false;
 
 	return (true);
 }
@@ -56,60 +53,53 @@ bool COMMODORE::CIA::initialize ()
 // ---
 bool COMMODORE::CIA::simulate (MCHEmul::CPU* cpu)
 {
-	// Simulate the Timer...
+	// Simulate the Timers...
 	// After that the timer can reach 0
 	// If so (apart of launching a interrupt if configured) the result can be reflected
 	// in the port B of the Chip...
+
+	// Timer A
 	_timerA.simulate (cpu);
+	// Does timer A outcome affect the port B?
 	if (_timerA.affectPortDataB ())
 	{
+		// if it affects and the timer A has reached 0...
 		if (_timerA.reaches0 ())
-			_timerAValueAtPortB = 
-				(_pulseTimerASentToPortB = _timerA.pulseAtPortDataB ()) ? 1 : 2;
+			// Sets the way this is reflected
+			_CIARegisters -> setReflectTimerAAtPortDataB (true, 
+				(_pulseTimerASentToPortB = _timerA.pulseAtPortDataB ()) 
+					? true // if it is a pulse, the pulse is reflected as true but marked hee to set it off inthe next cycle...
+					: _CIARegisters -> readValue (0x01).bit (6 /** Timer A affects bit 6. */) ? false : true); // Toggle the bit!
 		else
+		// If it affects, it hasn't reached 0, and the pulse is active...
 		if (_pulseTimerASentToPortB)
-		{
-			_pulseTimerASentToPortB = false;
-
-			_timerAValueAtPortB = 3; // Swith it off...
-		}
+			_CIARegisters -> setReflectTimerAAtPortDataB (true, _pulseTimerASentToPortB = false); // Switch it off...
+		// Otherwise, do not change anything...
 		else
-			_timerAValueAtPortB = 0; // Do nothing...
+			_CIARegisters -> setReflectTimerAAtPortDataB (false); // No longer affects...
 	}
+	// Not affect...
 	else
-		_timerAValueAtPortB = 0; // Do nothing...
-
-	// Finally the value reflected is set into the registers...
-	_CIARegisters -> setReflectTimerAAtPortDataB (_timerAValueAtPortB /** 0 means do nothing. */);
+		_CIARegisters -> setReflectTimerAAtPortDataB (false); // Nothing...
 
 	// Same but with timer B
 	// The timer B has to take into account the timer A...
 	_timerB.simulate (cpu, &_timerA);
-	// Does what the timer does to the status of the port B?
 	if (_timerB.affectPortDataB ())
 	{
-		// if it affects and reaches 0, there can 
 		if (_timerB.reaches0 ())
-			_timerBValueAtPortB = 
-				(_pulseTimerBSentToPortB = _timerB.pulseAtPortDataB ()) ? 1 /** toggle bit. */ : 2 /** 1 cycle pulse. */;
+			_CIARegisters -> setReflectTimerBAtPortDataB (true, 
+				(_pulseTimerBSentToPortB = _timerB.pulseAtPortDataB ()) 
+					? true
+					: _CIARegisters -> readValue (0x01).bit (7 /** timer B affects bit 7. */) ? false : true);
 		else
-		// if it affects but not reaches 0 but it was sent a pulse...
-		// ...it has to be set up back to 0
 		if (_pulseTimerBSentToPortB)
-		{
-			_pulseTimerBSentToPortB = false;
-
-			_timerBValueAtPortB = 3; /* switch off the pulse. */
-		}
-		// any other circunstancem does nothing...
+			_CIARegisters -> setReflectTimerBAtPortDataB (true, _pulseTimerBSentToPortB = false);
 		else
-			_timerBValueAtPortB = 0;
+			_CIARegisters -> setReflectTimerBAtPortDataB (false);
 	}
-	// No, no affects, so do nothing...
 	else
-		_timerBValueAtPortB = 0;
-
-	_CIARegisters -> setReflectTimerAAtPortDataB (_timerBValueAtPortB /** 0 means do nothing, 1 toggle, 2 pulse, 3 off pulse. */);
+		_CIARegisters -> setReflectTimerBAtPortDataB (false); // Nothing...
 
 	_clock.simulate (cpu);
 

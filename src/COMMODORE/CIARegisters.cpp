@@ -70,6 +70,11 @@ void COMMODORE::CIARegisters::setValue (size_t p, const MCHEmul::UByte& v)
 					(_portB & ~_dataPortBDir) |		// The bits not affected by the output as maintained as they were...
 					(v.value () & _dataPortBDir);	// and blended with the ones affected from the value received...
 
+				if (_reflectTimerAAtPortDataB)
+					_portB = _portB & 0xbf | (_timerAValueAtPortDataB ? 0x40 : 0x00); 
+				if (_reflectTimerBAtPortDataB)
+					_portB = _portB & 0x7f | (_timerBValueAtPortDataB ? 0x80 : 0x00); 
+
 				// Notify the change in the content of the port...
 				notify (MCHEmul::Event (_PORTBACTUALIZED, _portB));
 			}
@@ -190,7 +195,7 @@ void COMMODORE::CIARegisters::setValue (size_t p, const MCHEmul::UByte& v)
 		case 0x0e:
 			{
 				_timerA -> setEnabled (v.bit (0));
-				_timerA -> setAffectPortDataB (v.bit (1));
+				_timerA -> setAffectPortDataB (_reflectTimerAAtPortDataB = v.bit (1));
 				_timerA -> setPulseAtPortDataB (v.bit (2));
 				_timerA -> setRunMode (v.bit (3) ? CIATimer::RunMode::_ONETIME : CIATimer::RunMode::_RESTART);
 				if (v.bit (4)) _timerA -> reset ();
@@ -205,7 +210,7 @@ void COMMODORE::CIARegisters::setValue (size_t p, const MCHEmul::UByte& v)
 		case 0x0f:
 			{
 				_timerB -> setEnabled (v.bit (0));
-				_timerB -> setAffectPortDataB (v.bit (1));
+				_timerB -> setAffectPortDataB (_reflectTimerBAtPortDataB = v.bit (1));
 				_timerB -> setPulseAtPortDataB (v.bit (2));
 				_timerB -> setRunMode (v.bit (3) ? CIATimer::RunMode::_ONETIME : CIATimer::RunMode::_RESTART);
 				if (v.bit (4)) _timerB -> reset ();
@@ -252,15 +257,6 @@ const MCHEmul::UByte& COMMODORE::CIARegisters::readValue (size_t p) const
 					_portB & ~_dataPortBDir | // ...only the ones at 0 are read...
 					_portB & _dataPortBDir);  // ...and the rest are maintained as they were!
 				// at the end result == _portB! (but in this way is better explained)
-
-				if (_reflectTimerAAtPortDataB != 0) 
-					result.setBit (6, _reflectTimerAAtPortDataB == 1 
-						? (result.bit (6) ? false : true) /** toggle. */ 
-						: (_reflectTimerAAtPortDataB == 2) ? true /** pulse on. */ : false /** pulse off. */);
-				if (_reflectTimerBAtPortDataB != 0)
-					result.setBit (7, _reflectTimerBAtPortDataB == 1 
-						? (result.bit (7) ? false : true) /** toggle. */ 
-						: (_reflectTimerBAtPortDataB == 2) ? true /** pulse on. */ : false /** pulse off. */);
 			}
 
 			break;
@@ -416,5 +412,7 @@ void COMMODORE::CIARegisters::initializeInternalValues ()
 
 	_flagLineInterruptRequested = false;
 
-	_reflectTimerAAtPortDataB = _reflectTimerBAtPortDataB = 0; // Do not do anything...
+	_reflectTimerAAtPortDataB = _reflectTimerBAtPortDataB = false; // Do not do anything...
+
+	_timerAValueAtPortDataB = _timerBValueAtPortDataB = false; // It is the same, but just in case...
 }

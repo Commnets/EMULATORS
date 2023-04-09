@@ -69,18 +69,27 @@ namespace COMMODORE
 		void setFlagLineInterruptRequested (bool a)
 							{ _flagLineInterruptRequested = a; }
 
-		/** A potential value to be reflected at the bit 6 of the Port B:
-			0: don't do anything. \n
-			1: true. \n 
-			2: false. */
-		unsigned int reflectTimerAAtPortDataB () const
+		/** The value to reflect at the bit 6 or 7 of the port B. */
+		/** To know first whether the timer A is affecting or not to the bit 6. */
+		bool reflectTimerAAtPortDataB () const
 							{ return (_reflectTimerAAtPortDataB); }
-		void setReflectTimerAAtPortDataB (unsigned int w)
-							{ _reflectTimerAAtPortDataB = w; }
-		unsigned int reflectTimerBAtPortDataB () const
+		/** To knwo the value affecting. */
+		bool timerAValueAtPortDataB () const
+							{ return (_timerAValueAtPortDataB); }
+		/** In case that the timer is affecting, to know whic is the value affecting. */
+		void setReflectTimerAAtPortDataB (bool r, bool v = false /** it is not taken into account when r == false. */)
+							{ if (_reflectTimerAAtPortDataB = r) 
+								setValue (0x01, readValue (0x01)); // Reflects the value if needed a notification can also happen...
+							  _timerAValueAtPortDataB = v; }
+		// Same for timer B...
+		bool reflectTimerBAtPortDataB () const
 							{ return (_reflectTimerBAtPortDataB); }
-		void setReflectTimerBAtPortDataB (unsigned int w)
-							{ _reflectTimerBAtPortDataB = w; }
+		bool timerBValueAtPortDataB () const
+							{ return (_timerBValueAtPortDataB); }
+		void setReflectTimerBAtPortDataB (bool r, bool v = false)
+							{ if (_reflectTimerBAtPortDataB = r)
+								setValue (0x01, readValue (0x01));
+							  _timerBValueAtPortDataB = v; }
 
 		protected:
 		virtual void setValue (size_t p, const MCHEmul::UByte& v) override;
@@ -112,8 +121,8 @@ namespace COMMODORE
 
 		// Implementation
 		mutable MCHEmul::UByte _lastValueRead;
-		unsigned int _reflectTimerAAtPortDataB;
-		unsigned int _reflectTimerBAtPortDataB;
+		bool _reflectTimerAAtPortDataB, _timerAValueAtPortDataB;
+		bool _reflectTimerBAtPortDataB, _timerBValueAtPortDataB;
 	};
 }
 
