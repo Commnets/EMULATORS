@@ -51,16 +51,24 @@ namespace COMMODORE
 
 		virtual void initialize () override;
 
-		// All these method are invoked from CIA emulation
 		/** Managing the ports. */
-		const MCHEmul::UByte& portA () const
-							{ return (_portA); }
+		MCHEmul::UByte portA () const
+							{ return (MCHEmul::UByte (_portA)); }
 		void setPortA (const MCHEmul::UByte& v)
-							{ _portA = v.value (); }
-		const MCHEmul::UByte& portB () const
-							{ return (_portB); }
+							{ _portA = v.value (); 
+							  notify (MCHEmul::Event (_PORTBACTUALIZED, _portA)); }
+		MCHEmul::UByte portB () const
+							{ return (MCHEmul::UByte (_portB)); }
 		void setPortB (const MCHEmul::UByte& v)
-							{ _portB = v.value (); }
+							{ _portB = v.value ();
+							  notify (MCHEmul::Event (_PORTBACTUALIZED, _portB)); }
+
+		// All these method are invoked from CIA emulation
+		/** To know the value of the data reiction registers. */
+		unsigned char dataPortADir () const
+							{ return (_dataPortADir); }
+		unsigned char dataPortBDir () const
+							{ return (_dataPortBDir); }
 
 		/** To know when the flag line is enabled. 
 			Once the value is got then it is pit back t false. */

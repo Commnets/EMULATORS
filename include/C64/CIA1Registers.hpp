@@ -102,9 +102,6 @@ namespace C64
 		/** The data ports A y B are actually a matrix of info: ( bytes with (bytes each). 
 			And it is used to know both the keyboard pressed and also the status of the jiystick 1. */
 		MCHEmul::UByte _keyboardStatusMatrix [8];
-
-		// Implementation
-		unsigned char _keyboardRowToRead; // bit = 0, means row selected to be read!
 	};
 }
 

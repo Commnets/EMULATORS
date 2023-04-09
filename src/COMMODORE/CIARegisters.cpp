@@ -35,48 +35,47 @@ void COMMODORE::CIARegisters::setValue (size_t p, const MCHEmul::UByte& v)
 	switch (pp)
 	{
 		// Data Port Register A: CIAPRA
-		// Data Direction Register A: CIDDRA
 		case 0x00:
-		case 0x02:
 			{
-				if (pp == 0x02)
-					_dataPortADir = v.value ();
-
-				// What is sent to the portA will depend on what is in this register, 
-				// but also in what existed before in the line.
-				// In _dataPortADir bits to 1 mean output and bits to 0 mean input, so...
-				_portA = 
-					(_portA & ~_dataPortADir) |		// The bits not affected by the output as maintained as they were...
-					(v.value () & _dataPortADir);	// and blended with the ones affected from the value received...
-
-				// Notify the change in the content of the port...
-				notify (MCHEmul::Event (_PORTAACTUALIZED, _portA));
+				setPortA (MCHEmul::UByte (
+					(_portA & ~_dataPortADir) |
+						(v.value () & _dataPortADir)));	// If the data is changed the new value is taken into account...
 			}
 
 			break;
 
 		// Data Port Register B: CIAPRB
-		// Data Direction Register A: CIDDRB
 		case 0x01:
-		case 0x03:
 			{
-				if (pp == 0x03)
-					_dataPortBDir = v.value ();
+				MCHEmul::UByte cV = v;
+				// The result of the timer could take into account...
+				if (_reflectTimerAAtPortDataB)
+					cV = MCHEmul::UByte (cV.value () & 0xbf | (_timerAValueAtPortDataB ? 0x40 : 0x00));
+				if (_reflectTimerBAtPortDataB)
+					cV = MCHEmul::UByte (cV.value () & 0x7f | (_timerBValueAtPortDataB ? 0x80 : 0x00));
 
 				// What is sent to the portB, will depend on what is in this register, 
 				// but also in what existed before in the line.
 				// In _dataPortBDir bits to 1 mean output and bits to 0 mean input, so...
-				_portB = 
-					(_portB & ~_dataPortBDir) |		// The bits not affected by the output as maintained as they were...
-					(v.value () & _dataPortBDir);	// and blended with the ones affected from the value received...
+				setPortB (MCHEmul::UByte (
+					(_portB & ~_dataPortBDir) |
+						(cV.value () & _dataPortBDir)));	// If the data is changed the new value is taken into account...
+			}
 
-				if (_reflectTimerAAtPortDataB)
-					_portB = _portB & 0xbf | (_timerAValueAtPortDataB ? 0x40 : 0x00); 
-				if (_reflectTimerBAtPortDataB)
-					_portB = _portB & 0x7f | (_timerBValueAtPortDataB ? 0x80 : 0x00); 
+			break;
 
-				// Notify the change in the content of the port...
-				notify (MCHEmul::Event (_PORTBACTUALIZED, _portB));
+		// Data Direction Register A: CIDDRA
+		case 0x02:
+			{
+				_dataPortADir = v.value ();
+			}
+
+			break;
+
+		// Data Direction Register A: CIDDRB
+		case 0x03:
+			{
+				_dataPortBDir = v.value ();
 			}
 
 			break;
@@ -245,6 +244,8 @@ const MCHEmul::UByte& COMMODORE::CIARegisters::readValue (size_t p) const
 					_portA & ~_dataPortADir | // ...only the ones at 0 are read...
 					_portA & _dataPortADir);  // ...and the rest are maintained as they were!	
 				// at the end result == _portA! (but in this way is better explained)
+				// as it is described in page 5 of the 6526 datasheet
+				// http://archive.6502.org/datasheets/mos_6526_cia_recreated.pdf
 			}
 
 			break;
@@ -411,6 +412,8 @@ void COMMODORE::CIARegisters::initializeInternalValues ()
 							// continuous, not load, counting cycles, writting to TOD regisers sets alarm.
 
 	_flagLineInterruptRequested = false;
+
+	_portA = _portB = 0xff; 
 
 	_reflectTimerAAtPortDataB = _reflectTimerBAtPortDataB = false; // Do not do anything...
 

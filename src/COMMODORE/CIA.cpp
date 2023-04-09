@@ -121,6 +121,10 @@ MCHEmul::InfoStructure COMMODORE::CIA::getInfoStructure () const
 	result.add ("TimerA",		_timerA.getInfoStructure ());
 	result.add ("TimerB",		_timerB.getInfoStructure ());
 	result.add ("Clock",		_clock.getInfoStructure ());
+	result.add ("PortA",		_CIARegisters -> portA ());
+	result.add ("PortB",		_CIARegisters -> portB ());
+	result.add ("CIDDRA",		_CIARegisters -> dataPortADir ());
+	result.add ("CIDDRB",		_CIARegisters -> dataPortBDir ());
 
 	return (result);
 }

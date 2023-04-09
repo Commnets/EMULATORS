@@ -22,10 +22,17 @@ void C64::CIA1Registers::setValue (size_t p, const MCHEmul::UByte& v)
 		// Data Port Register A: CIA1PRA
 		case 0x00:
 			{
-				// To indicate the row of the key matrix to be selected (later)
-				// It is affected by the communication direction (CIDDRA1) (bits 1 output)
-				// bits = 0 will indicate rows selected!
-				_keyboardRowToRead = v.value ();
+				// As explained the port A y connected to the portB through the keybiard matrix,...
+				// ...so when a column is selected for output the value is taken into account. 
+				// Addign all those values received and store in the portB for them later to be read!
+				// Notice that is the value into the portB what is put and not the value received
+				// as what it is transfer to the portB is what is really there!
+				MCHEmul::UByte pB = MCHEmul::UByte::_0;
+				if (v != MCHEmul::UByte::_FF)
+					for (size_t i = 0; i < 8; i++)
+						if ((~portA ().value () & (1 << i)) != 0x00)
+							pB |= MCHEmul::UByte (~_keyboardStatusMatrix [i]);
+				setPortB (~pB);
 			}
 
 			break;
@@ -46,33 +53,16 @@ const MCHEmul::UByte& C64::CIA1Registers::readValue (size_t p) const
 	{
 		case 0x00:
 			{
-				result = MCHEmul::UByte (_joystick2Status);
+				result = COMMODORE::CIARegisters::readValue (pp) & // What is in the port A...
+					MCHEmul::UByte (_joystick2Status); // ...plus the info from the joystick...
 			}
 
 			break;
 
 		case 0x01:
 			{
-				// Result will mark with true the bit corresponding to the key of the row selected....
-				result = MCHEmul::UByte::_0;
-				// All rows are going to be tested...
-				if (_keyboardRowToRead != 0xff)
-				{
-					for (size_t i = 0; i < 8; i++)
-					{ 
-						// if the row has been selected and it is also defined for input...
-						// ...the values in that row are taken into account...
-						if ((~_keyboardRowToRead & _dataPortADir & (1 << i)) != 0x00)
-							result |= MCHEmul::UByte (~_keyboardStatusMatrix [i] & ~_dataPortBDir /** 0 bit marked is input */);
-					}
-				}
-
-				// The input of the joystick has also to be taken into account...
-				result |= MCHEmul::UByte (~_joystick1Status & ~_dataPortBDir);
-
-				// But C64 expects the result in the opposite way...
-				// it is: the bits corresponding to keys selected must be set to 0...
-				result = ~result;
+				result = COMMODORE::CIARegisters::readValue (0x01) & // What is in the port B...(taking into account the affection from timers) 
+					MCHEmul::UByte (_joystick1Status); // ...plust the info from the joystick
 			}
 
 			break;

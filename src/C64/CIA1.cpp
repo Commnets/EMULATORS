@@ -23,18 +23,6 @@ bool C64::CIA1::initialize ()
 }
 
 // ---
-MCHEmul::InfoStructure C64::CIA1::getInfoStructure () const
-{
-	MCHEmul::InfoStructure result (std::move (COMMODORE::CIA::getInfoStructure ()));
-
-	result.add ("CIAPRA", _CIA1Registers -> _keyboardRowToRead);
-	result.add ("CIDDRA", _CIA1Registers -> _dataPortADir);
-	result.add ("CIDDRB", _CIA1Registers -> _dataPortBDir);
-
-	return (result);
-}
-
-// ---
 void C64::CIA1::processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifier* n)
 {
 	switch (evnt.id ())

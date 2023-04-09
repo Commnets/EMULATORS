@@ -74,6 +74,10 @@ Id:@ID@
 @TimerB>@
 -> Clock:
 @Clock>@
+-> Ports:
+A:@PortA@, B:@PortB@
+-> Directions:
+A:@CIDDRA@, B:@CIDDRB@
 #---
 #---
 ;SID

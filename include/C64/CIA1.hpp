@@ -38,8 +38,6 @@ namespace C64
 
 		virtual bool initialize () override;
 
-		virtual MCHEmul::InfoStructure getInfoStructure () const override;
-
 		private:
 		virtual void processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifier* n) override;
 

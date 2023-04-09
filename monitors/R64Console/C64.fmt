@@ -1,13 +1,11 @@
 #Formats used for the C64 Emulation
 #(C) 2022 Ignacio Cea Fornies
 ?./Commodore.fmt
-?./LocalConsole.fmt
+?./Standard.fmt
 #---
 ;CIA1
-id:@ID@
+Id:@ID@
 @ATTRS?{key=YES,equal=:,empty=no attributes}\n@
-CIAPRA:@CIAPRA@
-CIDDRA:@CIDDRA@ CIDDRB:@CIDDRB@
 ->Registers:
 @Registers>@
 ->Timer A:
@@ -16,6 +14,10 @@ CIDDRA:@CIDDRA@ CIDDRB:@CIDDRB@
 @TimerB>@
 -> Clock:
 @Clock>@
+-> Ports:
+A:@PortA@, B:@PortB@
+-> Directions:
+A:@CIDDRA@, B:@CIDDRB@
 #---
 #---
 ;CIA2
@@ -27,6 +29,10 @@ Id:@ID@
 @TimerA>@
 ->Timer B:
 @TimerB>@
-->Clock:
+-> Clock:
 @Clock>@
+-> Ports:
+A:@PortA@, B:@PortB@
+-> Directions:
+A:@CIDDRA@, B:@CIDDRB@
 #---
