@@ -6,7 +6,7 @@ The framework has been developed fully in C++ (version 20) using <a href="https:
 For better understanding of the framework unzip <b>html.zip</b>, included in the package.<br>
 The package includes classes to develop you own emulator, including also assembler, compiler and consoles, remote and local ones.
 <br>
-<h1><b>Commodore64 emulator</b></h1>
+<h1><b>Commodore 64 emulator</b></h1>
 The implementation of the framework for Commodore 64 has been included.<br>
 In that case, the behaviour of the VICII has been emulated following the fantastic article by Christian Bauer that can be found at:
 <a href="http://www.zimmers.net/cbmpics/cbm/c64/vic-ii.txt">Zimmers.net</a><br>
