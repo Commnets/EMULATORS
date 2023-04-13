@@ -11,6 +11,7 @@ COMMODORE::CIA::CIA (int id, int rId, unsigned int intId)
 	  _registersId (rId),
 	  _timerA (0, intId /** they have to know the interruption id. */), _timerB (1, intId), 
 	  _clock (0, intId),
+	  _serialPort (0, intId),
 	  _lastClockCycles (0),
 	  _pulseTimerASentToPortB (false), _pulseTimerBSentToPortB (false)
 { 
@@ -39,9 +40,13 @@ bool COMMODORE::CIA::initialize ()
 
 	_clock.initialize ();
 
+	_serialPort.initialize ();
+
 	_CIARegisters -> lookAtTimers (&_timerA, &_timerB);
 
 	_CIARegisters -> lookAtClock (&_clock);
+
+	_CIARegisters -> lookAtSerialPort (&_serialPort);
 
 	_CIARegisters -> initialize ();
 
@@ -103,6 +108,8 @@ bool COMMODORE::CIA::simulate (MCHEmul::CPU* cpu)
 
 	_clock.simulate (cpu);
 
+	_serialPort.simulate (cpu, &_timerA);
+
 	_lastClockCycles = cpu -> clockCycles ();
 
 	if (_CIARegisters -> flagLineInterruptRequested ())
@@ -121,10 +128,27 @@ MCHEmul::InfoStructure COMMODORE::CIA::getInfoStructure () const
 	result.add ("TimerA",		_timerA.getInfoStructure ());
 	result.add ("TimerB",		_timerB.getInfoStructure ());
 	result.add ("Clock",		_clock.getInfoStructure ());
+	result.add ("SerialPort",	_serialPort.getInfoStructure ());
 	result.add ("PortA",		_CIARegisters -> portA ());
 	result.add ("PortB",		_CIARegisters -> portB ());
 	result.add ("CIDDRA",		_CIARegisters -> dataPortADir ());
 	result.add ("CIDDRB",		_CIARegisters -> dataPortBDir ());
 
 	return (result);
+}
+
+//---
+void COMMODORE::CIA::processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifier* n)
+{
+	if (evnt.id () == 0)
+	{
+		_serialPort.setCNTSignal (evnt.value () == 1);
+		
+		_timerA.setCNTSignal (evnt.value () == 1);
+
+		_timerB.setCNTSignal (evnt.value () == 1);
+	}
+	else
+	if (evnt.id () == 1)
+		_serialPort.setSPSignal (evnt.value () == 1);
 }

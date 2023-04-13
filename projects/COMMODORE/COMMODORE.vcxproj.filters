@@ -111,6 +111,9 @@
     <ClInclude Include="..\..\include\COMMODORE\FileReaders.hpp">
       <Filter>Archivos de encabezado\Emulators</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\include\COMMODORE\CIASerialPort.hpp">
+      <Filter>Archivos de encabezado\Motherboard\Chips</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Commodore.fmt">
@@ -174,6 +177,9 @@
     </ClCompile>
     <ClCompile Include="..\..\src\COMMODORE\ExpansionPeripherals.cpp">
       <Filter>Archivos de origen\IO</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\COMMODORE\CIASerialPort.cpp">
+      <Filter>Archivos de origen\Motherboard\Chips</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

@@ -1,6 +1,7 @@
 #include <COMMODORE/CIARegisters.hpp>
 #include <COMMODORE/CIATimer.hpp>
 #include <COMMODORE/CIAClock.hpp>
+#include <COMMODORE/CIASerialPort.hpp>
 
 // ---
 COMMODORE::CIARegisters::CIARegisters (int id, MCHEmul::PhysicalStorage* ps, size_t pp, const MCHEmul::Address& a, size_t s)
@@ -164,6 +165,10 @@ void COMMODORE::CIARegisters::setValue (size_t p, const MCHEmul::UByte& v)
 
 		// Serial Data Port
 		case 0x0c:
+			{
+				_serialPort -> setValue (v.value ());
+			}
+
 			break;
 
 		// Interrupt Control Register
@@ -177,7 +182,8 @@ void COMMODORE::CIARegisters::setValue (size_t p, const MCHEmul::UByte& v)
 					if (v.bit (0)) _timerA -> setInterruptEnabled (true);
 					if (v.bit (1)) _timerB -> setInterruptEnabled (true);
 					if (v.bit (2)) _clock  -> setInterruptEnabled (true);
-					if (v.bit (4)) _flagLineInterruptRequested =   true;
+					if (v.bit (4)) _flagLineInterruptRequested = true;
+					if (v.bit (6)) _serialPort -> setInterruptEnabled (true);
 				}
 				else
 				{
@@ -185,6 +191,7 @@ void COMMODORE::CIARegisters::setValue (size_t p, const MCHEmul::UByte& v)
 					if (v.bit (1)) _timerB -> setInterruptEnabled (false);
 					if (v.bit (2)) _clock  -> setInterruptEnabled (false);
 					if (v.bit (4)) _flagLineInterruptRequested =   false;
+					if (v.bit (6)) _serialPort -> setInterruptEnabled (false);
 				}
 			}
 
@@ -200,6 +207,8 @@ void COMMODORE::CIARegisters::setValue (size_t p, const MCHEmul::UByte& v)
 				if (v.bit (4)) _timerA -> reset ();
 				_timerA -> setCountMode (v.bit (5)
 					? COMMODORE::CIATimer::CountMode::_SIGNALSONCNTLINE : COMMODORE::CIATimer::CountMode::_PROCESSORCYCLES);
+				_serialPort -> setStatus (v.bit (6) 
+					? COMMODORE::CIASerialPort::Status::_SAVING : COMMODORE::CIASerialPort::Status::_READING); // true when output and false when input...
 				// The bit 7 to select whether TOD ic actualized under 50Hz or 60Hz is not emulated...
 			}
 
@@ -352,18 +361,26 @@ const MCHEmul::UByte& COMMODORE::CIARegisters::readValue (size_t p) const
 				bool IA = _timerA -> interruptRequested (); // It is set back to false after reading...
 				bool IB = _timerB -> interruptRequested (); // Same...
 				bool IC = _clock -> interruptRequested ();  // Same...
+				bool IS = _serialPort -> interruptRequested ();	// Same...
 				bool ID = flagLineInterruptRequested ();    // Same...
 				result = MCHEmul::UByte::_0;
 				result.setBit (0, IA); // in Timer A?
 				result.setBit (1, IB); // in Timer B?
 				result.setBit (2, IC); // in Clock?
+				result.setBit (3, IS); // in Serial Port?
 				result.setBit (4, ID); // In the Flag Line?
-				result.setBit (7, IA || IB || IC || ID); // Any Interrupt?
+				result.setBit (7, IA || IB || IC || IS || ID); // Any Interrupt?
 			}
 
 			break;
 
 		case 0x0e:
+			{
+				result = _serialPort -> value ();
+			}
+
+			break;
+
 		case 0x0f:
 			{
 				result = MCHEmul::PhysicalStorageSubset::readValue (p);
@@ -404,16 +421,16 @@ void COMMODORE::CIARegisters::initializeInternalValues ()
 	setValue (0x09, MCHEmul::UByte::_0); 
 	setValue (0x0a, MCHEmul::UByte::_0); 
 	setValue (0x0b, MCHEmul::UByte::_0); 
-	setValue (0x0c, MCHEmul::UByte::_0); 
+	setValue (0x0c, MCHEmul::UByte::_FF); // Not connected against anything...
 	setValue (0x0d, 0x1f);  // To clear all interrupts...
-	setValue (0x0e, 0xa0);  // Register A: Stopped, no value appear on bit 6 port B, pulse,
-							// continuous, not load, counting cycles, and 50 hz frequecy (by default)
+	setValue (0x0e, 0xe0);  // Register A: Stopped, no value appear on bit 6 port B, pulse,
+							// continuous, not load, counting cycles, serial port output, and 50 hz frequecy (by default)
 	setValue (0x0f, 0xa0);  // Register B: Stopped, no value appear on bit 7 port B, pulse, 
 							// continuous, not load, counting cycles, writting to TOD regisers sets alarm.
 
 	_flagLineInterruptRequested = false;
 
-	_portA = _portB = 0xff; 
+	_portA = _portB = 0xff; // They are not initially connected against anything...
 
 	_reflectTimerAAtPortDataB = _reflectTimerBAtPortDataB = false; // Do not do anything...
 

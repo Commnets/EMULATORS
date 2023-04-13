@@ -21,6 +21,7 @@ namespace COMMODORE
 	class CIA;
 	class CIATimer;
 	class CIAClock;
+	class CIASerialPort;
 
 	/** In the CIA Memory, there are a couple of records that behave different
 		when they are read that when they are written. \n
@@ -64,7 +65,7 @@ namespace COMMODORE
 							  notify (MCHEmul::Event (_PORTBACTUALIZED, _portB)); }
 
 		// All these method are invoked from CIA emulation
-		/** To know the value of the data reiction registers. */
+		/** To know the value of the data direction registers. */
 		unsigned char dataPortADir () const
 							{ return (_dataPortADir); }
 		unsigned char dataPortBDir () const
@@ -113,6 +114,9 @@ namespace COMMODORE
 		/** ...and also of the clock. */
 		void lookAtClock (CIAClock* c)
 							{ _clock = c; }
+		/** ..al also to the CIA Serial Port. */
+		void lookAtSerialPort (CIASerialPort* sp)
+							{ _serialPort = sp; }
 
 		protected:
 		/** Ports used by the CIA. */
@@ -124,6 +128,8 @@ namespace COMMODORE
 		CIATimer* _timerB;
 		/** Reference to the clock */
 		CIAClock* _clock;
+		/** Reference to the CIA Serial Port. */
+		CIASerialPort *_serialPort;
 		/** To indicate that the flag line has been or not activated. */
 		mutable bool _flagLineInterruptRequested;
 

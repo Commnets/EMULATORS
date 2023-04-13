@@ -15,14 +15,18 @@ void COMMODORE::CIATimer::initialize ()
 	_initialValue = 0x0000;
 	_time = MCHEmul::Time ();
 
+	_CNTPin = false;
+
 	// The implementation values...
 	_firstCycle = false;
 
 	_currentValue = 0x0000;
 	_lastClockCycles = 0;
 
-	_reaches0 = false;
+	_reaches0 = _reachesHalf = _alreadyReachedHalf = false;
 	_interruptRequested = false;
+
+	_CNTPulse = false;
 }
 
 // ---
@@ -48,11 +52,19 @@ void COMMODORE::CIATimer::simulate (MCHEmul::CPU* cpu, COMMODORE::CIATimer* t)
 		switch (_runMode)
 		{
 			case COMMODORE::CIATimer::RunMode::_RESTART:
-				_currentValue = _initialValue;
+				{
+					_currentValue = _initialValue;
+
+					_alreadyReachedHalf = false;
+				}
+
 				break;
 
 			case COMMODORE::CIATimer::RunMode::_ONETIME:
-				_enabled = false;
+				{
+					_enabled = false;
+				}
+
 				break;
 
 			default:
@@ -86,6 +98,9 @@ MCHEmul::InfoStructure COMMODORE::CIATimer::getInfoStructure () const
 bool COMMODORE::CIATimer::countDown (MCHEmul::CPU* cpu, COMMODORE::CIATimer* t)
 {
 	_reaches0 = false;
+	bool _reachesHalf = false;
+
+	bool cP = CNTPulse (); // If not used it is forgotted...
 
 	bool result = false;
 	switch (_countMode)
@@ -93,29 +108,44 @@ bool COMMODORE::CIATimer::countDown (MCHEmul::CPU* cpu, COMMODORE::CIATimer* t)
 		case COMMODORE::CIATimer::CountMode::_PROCESSORCYCLES:
 			{
 				unsigned int c = cpu -> clockCycles () - _lastClockCycles;
-				result = ((_currentValue -= (c > (unsigned int) _currentValue) ? _currentValue : (unsigned short) c) == 0x0000);
+				result = ((_currentValue -= (c > (unsigned int) _currentValue) 
+					? _currentValue : (unsigned short) c) == 0x0000);
 			}
 
 			break;
 
 		case COMMODORE::CIATimer::CountMode::_SIGNALSONCNTLINE:
-			// TODO
+			{
+				if (cP)
+					result = (--_currentValue == 0x00);
+			}
 
 			break;
 
 		case COMMODORE::CIATimer::CountMode::_TIMERCOUNTSDOWNTO0:
-			if (t != nullptr && t -> reaches0 ())
-				result = (--_currentValue == 0x00);
+			{
+				if (t != nullptr && t -> reaches0 ())
+					result = (--_currentValue == 0x00);
+			}
+
 			break;
 
 		case COMMODORE::CIATimer::CountMode::_0ONCNTPULSES:
-			// TODO
+			{
+				if (t != nullptr && 
+					_CNTPin &&
+					t -> reaches0 ())
+						result = (--_currentValue == 0x00);
+			}
 
 			break;
 
 		default:
 			break;
 	}
+
+	// This variable is set first time the value is below the half...
+	_reachesHalf = (_currentValue >> 1 < _initialValue) && !_alreadyReachedHalf;
 
 	return (result);
 }

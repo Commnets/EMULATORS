@@ -63,6 +63,11 @@ Active:@STATUS@, IRQ:@IRQ@
 Value:@VALUE@(@INITIALVALUE@)
 #---
 #---
+;CIASerialPort
+Status:@Status@
+Buffer:@Buffer@
+#---
+#---
 ;CIA
 Id:@ID@
 @ATTRS?{key=YES,equal=:,empty=no attributes}\n@
@@ -76,6 +81,8 @@ Id:@ID@
 @Clock>@
 -> Ports:
 A:@PortA@, B:@PortB@
+-> SerialPort:
+@SerialPort>@
 -> Directions:
 A:@CIDDRA@, B:@CIDDRB@
 #---

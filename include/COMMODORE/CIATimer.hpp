@@ -85,16 +85,21 @@ namespace COMMODORE
 		void setPulseAtPortDataB (bool p)
 							{ _pulseAtPortDataB = p; }
 
-		/** To point whether the timer reached 0. 
-			This variable will be true until the timer starts back. */
+		/** To point whether the timer reached 0. \n
+			When true, this variable will be true until the timer starts back. */
 		bool reaches0 () const
 							{ return (_reaches0); }
+		/** To point whether the timer reaches half of the initial value. \n
+			When true, this variable will be true until the timer simulation is invoked again. */
+		bool reachesHalf () const
+							{ return (_reachesHalf); }
 
 		// Managing the status...
 		bool enabled () const
 							{ return (_enabled); }
 		void setEnabled (bool e)
-							{ _enabled = _firstCycle = e; }
+							{ if (_enabled = e)
+								{ _firstCycle = true; _alreadyReachedHalf = false; } }
 
 		bool interruptEnabled () const
 							{ return (_interruptEnabled); }
@@ -115,6 +120,12 @@ namespace COMMODORE
 		/** The timer is forced to start back. */
 		void reset ()
 							{ _currentValue = _initialValue; }
+		/** A signal has been received throught out the CNT pin. 
+			If a change from high to low (pulse) is produced. \n
+			That pulse is taken into account then to read later the value 
+			of the register associated in the CIARegisters. */
+		void setCNTSignal (bool v)
+							{ _CNTPulse = _CNTPin && !(_CNTPin = v);}
 
 		/** To simulate the behaviour of the timer. \n
 			It invokes also some private methods. */
@@ -144,6 +155,10 @@ namespace COMMODORE
 		  */
 		bool countDown (MCHEmul::CPU* cpu, CIATimer* t = nullptr);
 
+		// Implementation
+		bool CNTPulse () const
+							{ bool r = _CNTPulse; _CNTPulse = false; return (r); }
+
 		private:
 		const int _id;
 		const unsigned int _interruptId;
@@ -156,6 +171,7 @@ namespace COMMODORE
 		bool _enabled;
 		bool _interruptEnabled;
 		unsigned short _initialValue;
+		bool _CNTPin;
 
 		// It is actualized continiously through the method actualizeTime...
 		// The time counts only hours in the day...
@@ -170,8 +186,14 @@ namespace COMMODORE
 		unsigned int _lastClockCycles;
 		/** When 0 is reached, this variable becomes true, just for the time the timer starts back if any. */
 		bool _reaches0;
+		/** When half of the value is reached. */
+		bool _reachesHalf;
+		/** If already reached half... */
+		bool _alreadyReachedHalf;
 		/** When an IRQ interruption is requested this variable is set to true, until it is read. */
 		mutable bool _interruptRequested;
+		/** When a pulse is generated in the CNT line. It means that the signal received passed from up to low.*/
+		mutable bool _CNTPulse;
 	};
 }
 

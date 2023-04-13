@@ -18,6 +18,7 @@
 #include <COMMODORE/CIARegisters.hpp>
 #include <COMMODORE/CIATimer.hpp>
 #include <COMMODORE/CIAClock.hpp>
+#include <COMMODORE/CIASerialPort.hpp>
 
 namespace COMMODORE
 {
@@ -57,10 +58,14 @@ namespace COMMODORE
 		virtual MCHEmul::InfoStructure getInfoStructure () const override;
 
 		protected:
+		virtual void processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifier* n) override;
+
+		protected:
 		CIARegisters* _CIARegisters;
 		const int _registersId;
 		CIATimer _timerA, _timerB;
 		CIAClock _clock;
+		CIASerialPort _serialPort;
 
 		// Implementation
 		unsigned int _lastClockCycles;
