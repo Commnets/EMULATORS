@@ -19,19 +19,26 @@
 namespace F6500
 {
 	/** A Maskarable Interrupt. It could be avoided using the bit I of the status flag. */
-	class IRQInterrupt : public MCHEmul::CPUInterrupt
+	class IRQInterrupt final : public MCHEmul::CPUInterrupt
 	{
 		public:
 		static const unsigned int _ID = 0;
 
 		IRQInterrupt ()
-			: MCHEmul::CPUInterrupt (_ID)
-							{ }
+			: MCHEmul::CPUInterrupt (_ID),
+			  _exeAddress ()
+							{ setClassName ("IRQInterrupt"); }
 
-		protected:
+		virtual MCHEmul::InfoStructure getInfoStructure () const override;
+
+		private:
 		/** Only when the status flag B allows it. It is a Maskarable Interrupt. */
 		virtual bool isTime (MCHEmul::CPU* c) const override; 
 		virtual bool executeOverImpl (MCHEmul::CPU* c, unsigned int& nC) override;
+
+		private:
+		// Implementation
+		MCHEmul::Address _exeAddress;
 	};
 }
 

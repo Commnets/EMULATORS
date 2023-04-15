@@ -188,8 +188,8 @@ MCHEmul::Memory::Content C64::Memory::standardMemoryContent ()
 	// Used by the expansion cartridges...
 	MCHEmul::PhysicalStorageSubset* IO1 = new C64::IOExpansionMemoryI
 		(/** id = C64::IOExpansionMemoryI::_IO1_SUBSET */ RAM, 0xde00, MCHEmul::Address ({ 0x00, 0xde }, false), 0x0100);
-	MCHEmul::PhysicalStorageSubset* IO2 = new C64::IOExpansionMemoryI
-		(/** id = C64::IOExpansionMemoryI::_IO1_SUBSET */ RAM, 0xdf00, MCHEmul::Address ({ 0x00, 0xdf }, false), 0x0100);
+	MCHEmul::PhysicalStorageSubset* IO2 = new C64::IOExpansionMemoryII
+		(/** id = C64::IOExpansionMemoryII::_IO2_SUBSET */ RAM, 0xdf00, MCHEmul::Address ({ 0x00, 0xdf }, false), 0x0100);
 	// Where the kernel is defined can be either RAM or ROM (depending on the bits 0, 1, 2 at 0x01 position)
 	MCHEmul::PhysicalStorageSubset* KernelROM = new MCHEmul::PhysicalStorageSubset 
 		(_KERNELROM_SUBSET, KERNELROM, 0x0000, MCHEmul::Address ({ 0x00, 0xe0 }, false), 0x2000);

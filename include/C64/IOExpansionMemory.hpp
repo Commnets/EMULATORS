@@ -22,9 +22,10 @@ namespace C64
 	class IOExpansionMemory : public MCHEmul::PhysicalStorageSubset
 	{
 		public:
-		/** Different events. */
-		static const unsigned int _SET		= 300;
-		static const unsigned int _READ		= 301;
+		// Different events.
+		/** When this part of the memory is accesed usually the cartridge should do something. */
+		static const unsigned int _SET		= 310;
+		static const unsigned int _READ		= 311;
 
 		IOExpansionMemory (int id, MCHEmul::PhysicalStorage* ps, size_t ss, const MCHEmul::Address& a, size_t s)
 			: MCHEmul::PhysicalStorageSubset (id, ps, ss, a, s)

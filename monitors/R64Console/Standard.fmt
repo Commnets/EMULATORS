@@ -17,12 +17,18 @@ What I really love is @LOVE@
 Big Endian:@ENDIAN@
 #---
 #---
+;Interrupt
+Id:@ID@, In Execution:@EXECUTION@
+#---
+#---
 ;CPU
 #The info about the Architecture here
 @Architecture>@
 @REGS?{key=NO,equal=:,empty=no registers},@
 @PC@
 @SR@
+->Interrupts:
+@INTERRUPTS?{fmter=.CLASS,empty=no interruptions}\n@
 #---
 #---
 ;ClockFactor

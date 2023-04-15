@@ -91,13 +91,13 @@ void MCHEmul::CPU::addInterrupt (MCHEmul::CPUInterrupt* in)
 	if (_interrupts.find (in -> id ()) != _interrupts.end ())
 		return; // Only one with the the same id...
 
-	_interrupts.insert (MCHEmul::CPUInterrups::value_type (in -> id (), in));
+	_interrupts.insert (MCHEmul::CPUInterrupts::value_type (in -> id (), in));
 }
 
 // ---
 void MCHEmul::CPU::removeInterrrupt (int id)
 {
-	MCHEmul::CPUInterrups::const_iterator i;
+	MCHEmul::CPUInterrupts::const_iterator i;
 	if ((i = _interrupts.find (id)) == _interrupts.end ())
 		return;
 
@@ -178,6 +178,11 @@ bool MCHEmul::CPU::executeNextInstruction ()
 MCHEmul::InfoStructure MCHEmul::CPU::getInfoStructure () const
 {
 	MCHEmul::InfoStructure result = MCHEmul::InfoClass::getInfoStructure ();
+
+	MCHEmul::InfoStructure intr;
+	for (const auto& i : _interrupts)
+		intr.add (std::to_string (i.second -> id ()), i.second -> getInfoStructure ());
+	result.add ("INTERRUPTS", intr);
 
 	result.add ("Architecture", _architecture.getInfoStructure ());
 

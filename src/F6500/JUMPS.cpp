@@ -1,5 +1,7 @@
 #include <F6500/Instructions.hpp>
 #include <F6500/C6510.hpp>
+#include <F6500/IRQInterrupt.hpp>
+#include <F6500/NMIInterrupt.hpp>
 
 // ---
 _INST_IMPL (F6500::BRK)
@@ -64,7 +66,12 @@ _INST_IMPL (F6500::RTI)
 
 	// See the part of the logic where the interruptions are managed, 
 	// to see how status register is also saved!
-	cpu () -> statusRegister ().set (stack () -> pull (1)); 
+	cpu () -> statusRegister ().set (stack () -> pull (1));
+
+	// The interruption is no longer under execution but...which one?
+	// Just in case both are set off...
+	cpu () -> interrupt (F6500::IRQInterrupt::_ID) -> setInExecution (false);
+	cpu () -> interrupt (F6500::NMIInterrupt::_ID) -> setInExecution (false);
 
 	// When a interruption is lunched, the status and the program counter is stored,
 	// so it has to be recovered just in the other way around...

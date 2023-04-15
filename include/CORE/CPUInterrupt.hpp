@@ -15,19 +15,22 @@
 #define __MCHEMUL_CPUINTERRUPT__
 
 #include <CORE/global.hpp>
+#include <CORE/InfoClass.hpp>
 
 namespace MCHEmul
 {
 	class CPU;
 
 	/** A CPU Interrupt is something that is able to stop the normal progress of the CPU execution. */
-	class CPUInterrupt
+	class CPUInterrupt : public InfoClass
 	{
 		public:
 		CPUInterrupt () = delete;
 
 		CPUInterrupt (int id)
-			: _id (id), _active (false /** by default. */),
+			: InfoClass ("Interrupt"),
+			  _id (id), _active (false /** by default. */),
+			  _inExecution (false),
 			  _lastClockCyclesExecuted (0)
 							{ }
 
@@ -45,10 +48,20 @@ namespace MCHEmul
 		int id () const
 							{ return (_id); }
 
+		/** When the interrupt is active. */
 		bool active () const
 							{ return (_active); }
 		void setActive (bool a)
 							{ _active = a; }
+
+		/** When the interrupt in under execution. 
+			The switch is set on when start the execution, but the finalization 
+			has to been set back off depending on the CPU being implemented. \n
+			In com CPU when the interruption start to run can be distinguish from other. */
+		bool inExecution () const
+							{ return (_inExecution); }
+		void setInExecution (bool i)
+							{ _inExecution = i; }
 
 		/** The defult intialization of the interrupt leaves it inactive. */
 		virtual void initialize ()
@@ -59,6 +72,8 @@ namespace MCHEmul
 			took the execution (when the return was ok). \n
 			It returns true if ok and false if not. */
 		bool executeOver (CPU* c, unsigned int& nC);
+
+		virtual InfoStructure getInfoStructure () const override;
 
 		protected:
 		// These methods are invoked by executeOver (defined above);
@@ -72,13 +87,14 @@ namespace MCHEmul
 		protected:
 		int _id;
 		bool _active;
+		bool _inExecution;
 
 		// Implementation
 		mutable unsigned int _lastClockCyclesExecuted;
 	};
 
 	/** A map of interrupts. */
-	using CPUInterrups = std::map <int, CPUInterrupt*>;
+	using CPUInterrupts = std::map <int, CPUInterrupt*>;
 }
 
 #endif

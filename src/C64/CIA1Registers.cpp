@@ -22,7 +22,7 @@ void C64::CIA1Registers::setValue (size_t p, const MCHEmul::UByte& v)
 		// Data Port Register A: CIA1PRA
 		case 0x00:
 			{
-				// As explained the port A y connected to the portB through the keybiard matrix,...
+				// As explained the port A y connected to the portB through the keyboard matrix,...
 				// ...so when a column is selected for output the value is taken into account. 
 				// Addign all those values received and store in the portB for them later to be read!
 				// Notice that is the value into the portB what is put and not the value received

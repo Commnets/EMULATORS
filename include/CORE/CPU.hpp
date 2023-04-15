@@ -156,7 +156,7 @@ namespace MCHEmul
 		ProgramCounter _programCounter;
 		StatusRegister _statusRegister;
 		Memory* _memory; // A reference...
-		CPUInterrups _interrupts;
+		CPUInterrupts _interrupts;
 
 		Instruction* _lastInstruction;
 

@@ -69,13 +69,26 @@ namespace C64
 			RIGHT CONTROL				= CTRL
 			LEFT ALT					= STOP
 			SHIFT + LEFT ALT			= RUN
-			PAUSE						= COMMODORE KEY
+			TAB							= COMMODORE KEY
 			LEFT BRACKET				= +
 			RIGHT BRACKET				= *
 			APOSTROPHE					= :
 			BACKSLASH					= @
 			ESCAPE						= ARROW BACK
 			GRAVE						= POUND
+			ACCENT						= MINUS
+			OPEN EXCLAMATION			= EQUAL
+			OPEN BRACKET				= PLUS
+			CLOSE BRACKET				= ASTERISC
+			OPEN PARENTHESIS			= TWO POINTS
+			CLOSE PARENTEHEIS			= ADDRESS
+			COMMA						= COMMA
+			PERIOD						= PERIOD
+			MINUS						= SLASH
+			SHIFT COMMA					= LESSER THAN
+			SHIFT PERIOD				= GREATER THAN
+			SHIFT MINUS					= QUESTION MARK
+			Ñ							= POINT AND COMMA
 		*/
 		using KeystrockesMap = std::map <SDL_Scancode, Keystrokes>;
 		static const KeystrockesMap _C64KEYS;

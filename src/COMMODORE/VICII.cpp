@@ -261,20 +261,20 @@ void COMMODORE::VICII::drawGraphicsAndDetectCollisions (const COMMODORE::VICII::
 		return; // It could happen at the first lines of the screen when the vertical SCROLL is active...
 
 	// The graphical column being involved...
-	int c = dC._RCA - dC._ICD;
+	int c = (int) dC._RCA - (int) dC._ICD;
 	// In cb, the SCROLLX is involved, so it could be negative! starting from -7, 
 	// When e.g. the raster is at the very first screen position, 
 	// there are no reductions is the screen (display == screen) and SCROLLX = 0x07
-	int cb = c - dC._SC;
+	int cb = c - (int) dC._SC;
 
 	// The graphical line being involved...
-	int r = dC._RR - dC._IRD;  
+	int r = (int) dC._RR - (int) dC._IRD;  
 	// rc is the line with in the graphics cache to be drawn...
 	// In rc, the SCROLLY is involved, so it could be also negative moving from -7,
 	// When e.g. the raster is at the very first screen line,
 	// there are no reductions in the screen (display == screen) and SCROLL = 0x07,
 	// 0x03 is the difference between the FIRTBADLINE = 0x30 and the first visible line = 0x33 (with no reduction)
-	int rc = r - dC._SR + 0x03; 
+	int rc = r - (int) dC._SR + 0x03; 
 	// If negative, then no graphics has to be drawn...
 	if (rc < 0)	return;
 	// Otherwise the position to draw will be within one the 8 lines read...

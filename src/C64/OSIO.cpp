@@ -54,7 +54,7 @@ const C64::InputOSSystem::KeystrockesMap C64::InputOSSystem::_C64KEYS
 			{ SDL_SCANCODE_LCTRL,			{ std::make_pair (7, 2) } }, // Ctrl instead
 			{ SDL_SCANCODE_RCTRL,			{ std::make_pair (7, 2) } }, // Ctrl (the same assigned) instead
 			{ SDL_SCANCODE_LALT,			{ std::make_pair (7, 7) } }, // Stop instead (+ shift = Run)
-			{ SDL_SCANCODE_PAUSE,			{ std::make_pair (7, 5) } }, // Commodore key instead
+			{ SDL_SCANCODE_TAB,				{ std::make_pair (7, 5) } }, // Commodore key instead
 			/* keymap: others */
 			{ SDL_SCANCODE_RETURN,			{ std::make_pair (0, 1) } },
 			{ SDL_SCANCODE_SPACE,			{ std::make_pair (7, 4) } },

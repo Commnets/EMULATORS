@@ -130,9 +130,9 @@ MCHEmul::InfoStructure COMMODORE::CIA::getInfoStructure () const
 	result.add ("Clock",		_clock.getInfoStructure ());
 	result.add ("SerialPort",	_serialPort.getInfoStructure ());
 	result.add ("PortA",		_CIARegisters -> portA ());
-	result.add ("PortB",		_CIARegisters -> portB ());
-	result.add ("CIDDRA",		_CIARegisters -> dataPortADir ());
-	result.add ("CIDDRB",		_CIARegisters -> dataPortBDir ());
+	result.add ("PortB",		_CIARegisters -> portB ()); // This is already a Ubyte...
+	result.add ("CIDDRA",		MCHEmul::UByte (_CIARegisters -> dataPortADir ())); // To write doen it in hexadecimal form...
+	result.add ("CIDDRB",		MCHEmul::UByte (_CIARegisters -> dataPortBDir ()));
 
 	return (result);
 }
