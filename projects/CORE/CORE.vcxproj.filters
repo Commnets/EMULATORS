@@ -320,6 +320,15 @@
     <ClInclude Include="..\..\include\CORE\SoundChip.hpp">
       <Filter>Archivos de encabezado\Motherboard</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\include\CORE\Wire.hpp">
+      <Filter>Archivos de encabezado\Motherboard</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\CORE\Bus.hpp">
+      <Filter>Archivos de encabezado\Motherboard</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\CORE\MicroBus.hpp">
+      <Filter>Archivos de encabezado\Motherboard</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Default.fmt">

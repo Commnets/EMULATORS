@@ -28,7 +28,9 @@ namespace C64
 		/** A name when this register is a subset in the main memory. */
 		static const int _IO6510REGISTERS_SUBSET = 2040;
 
-		/** Event when the C64 Port IO bits are actualized. */
+		// Some events.
+		/** Event when the C64 Port IO bits are actualized. 
+			This even is sent when the bits 0,1,2 are modified at the register 0x01. */
 		static const unsigned int _C64PORTIOBITSACTUALIZED = 300;
 
 		IO6510Registers (MCHEmul::PhysicalStorage* ps, size_t pp, const MCHEmul::Address& a, size_t s);

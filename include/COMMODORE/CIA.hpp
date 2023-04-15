@@ -27,6 +27,14 @@ namespace COMMODORE
 	{
 		public:
 		static const unsigned int _ID = 102;
+
+		// Some events.
+		/** The CNT and SP signals are sused by many elements within the CIA. \n
+			This is the reason for them to be defined here. \n/
+			In C64 e.g. the CNT signal is received from the UserPort mainly, but it is output from the SerialPort. */
+		static const unsigned int _CNTSIGNAL	= 220;
+		/** In the C64 the SP signal is received from the UserPort and it is also an output from the SerialPort. */
+		static const unsigned int _SPSIGNAL		= 221;
 		
 		/** Receives the id of the chip in the computer, the id of the registers linked
 			and the if og the interruption to launch when needed. \n

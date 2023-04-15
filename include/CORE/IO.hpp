@@ -35,7 +35,12 @@ namespace MCHEmul
 	class IODevice : public InfoClass, public Notifier, public Observer
 	{
 		public:
-		enum class Type { _INPUT = 0, _OUTPUT, _INPUTOUTPUT };
+		enum class Type 
+		{ 
+			_INPUT = 0, 
+			_OUTPUT, 
+			_INPUTOUTPUT 
+		};
 
 		IODevice (Type t, int id, const Attributes& attrs = { });
 

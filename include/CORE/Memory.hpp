@@ -42,7 +42,11 @@ namespace MCHEmul
 
 		friend PhysicalStorageSubset;
 
-		enum class Type { _ROM, _RAM };
+		enum class Type 
+		{ 
+			_ROM, 
+			_RAM 
+		};
 
 		PhysicalStorage () = delete;
 

@@ -140,7 +140,7 @@ MCHEmul::InfoStructure COMMODORE::CIA::getInfoStructure () const
 //---
 void COMMODORE::CIA::processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifier* n)
 {
-	if (evnt.id () == 0)
+	if (evnt.id () == _CNTSIGNAL)
 	{
 		_serialPort.setCNTSignal (evnt.value () == 1);
 		
@@ -149,6 +149,6 @@ void COMMODORE::CIA::processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifier
 		_timerB.setCNTSignal (evnt.value () == 1);
 	}
 	else
-	if (evnt.id () == 1)
+	if (evnt.id () == _SPSIGNAL)
 		_serialPort.setSPSignal (evnt.value () == 1);
 }

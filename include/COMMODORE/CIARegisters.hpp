@@ -41,9 +41,11 @@ namespace COMMODORE
 		public:
 		friend CIA;
 
-		/** Some events. */
-		static const unsigned int _PORTAACTUALIZED = 300;
-		static const unsigned int _PORTBACTUALIZED = 301;
+		// Some events.
+		/** When the ports are actualized. \n
+			The parameter is the value (1 or 0) of the actualization. */
+		static const unsigned int _PORTAACTUALIZED = 210;
+		static const unsigned int _PORTBACTUALIZED = 211;
 
 		CIARegisters (int id, MCHEmul::PhysicalStorage* ps, size_t pp, const MCHEmul::Address& a, size_t s);
 
@@ -57,7 +59,7 @@ namespace COMMODORE
 							{ return (MCHEmul::UByte (_portA)); }
 		void setPortA (const MCHEmul::UByte& v)
 							{ _portA = v.value (); 
-							  notify (MCHEmul::Event (_PORTBACTUALIZED, _portA)); }
+							  notify (MCHEmul::Event (_PORTAACTUALIZED, _portA)); }
 		MCHEmul::UByte portB () const
 							{ return (MCHEmul::UByte (_portB)); }
 		void setPortB (const MCHEmul::UByte& v)

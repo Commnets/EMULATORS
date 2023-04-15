@@ -24,12 +24,21 @@ namespace MCHEmul
 	class InputOSSystem : public IODevice
 	{
 		public:
-		/** Different events. */
-		static const unsigned int _KEYBOARDKEYPRESSED			= 102;
-		static const unsigned int _KEYBOARDKEYRELEASED			= 103;
-		static const unsigned int _JOYSTICKMOVED				= 104;
-		static const unsigned int _JOYSTICKBUTTONPRESSED		= 105;
-		static const unsigned int _JOYSTICKBUTTONRELEASED		= 106;
+		// Different events.
+		/** Key pressed. \n
+			The parameter of the event is the scand_code, 
+			this is the position of the key within the keyboard not necessary the key code that depends on
+			the configuration of the keyboard (country). */
+		static const unsigned int _KEYBOARDKEYPRESSED			= 150;
+		/** Key released. */
+		static const unsigned int _KEYBOARDKEYRELEASED			= 151;
+		/** Joystick moved. \n
+			The parametes are the joystick id and the the axis id moved. */
+		static const unsigned int _JOYSTICKMOVED				= 152;
+		/** Joystick button pressed. \n
+			The parametes are the joystick id and the the axis id moved. */
+		static const unsigned int _JOYSTICKBUTTONPRESSED		= 153;
+		static const unsigned int _JOYSTICKBUTTONRELEASED		= 154;
 
 		/** To identify an event in the keyboard. */
 		struct KeyboardEvent : public Event::Data

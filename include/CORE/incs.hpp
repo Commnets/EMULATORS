@@ -26,6 +26,9 @@
 #include <CORE/FmterBuilder.hpp>
 #include <CORE/StdFmterBuilder.hpp>
 #include <CORE/Address.hpp>
+#include <CORE/Wire.hpp>
+#include <CORE/Bus.hpp>
+#include <CORE/MicroBus.hpp>
 #include <CORE/Chip.hpp>
 #include <CORE/GraphicalChip.hpp>
 #include <CORE/SoundChip.hpp>

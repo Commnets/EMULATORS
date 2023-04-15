@@ -27,7 +27,7 @@ bool COMMODORE::ExpansionIOPort::connectPeripheral (MCHEmul::IOPeripheral* p)
 	// There can be only one peripheral connected at the same time...
 	if (!peripherals ().empty ())
 	{
-		notify (MCHEmul::Event (COMMODORE::ExpansionIOPort::_EXPANSIONELEMENTOUT));
+		notify (MCHEmul::Event (_EXPANSIONELEMENTOUT));
 
 		MCHEmul::IODevice::disconnectAllPeripherals ();
 	}
@@ -46,7 +46,7 @@ bool COMMODORE::ExpansionIOPort::disconnectPeripheral (int id)
 
 		_expansionElementOut = true;
 
-		notify (MCHEmul::Event (COMMODORE::ExpansionIOPort::_EXPANSIONELEMENTOUT));
+		notify (MCHEmul::Event (_EXPANSIONELEMENTOUT));
 	}
 
 	return (MCHEmul::IODevice::disconnectPeripheral (id));
@@ -59,14 +59,14 @@ bool COMMODORE::ExpansionIOPort::simulate (MCHEmul::CPU* cpu)
 	// Otherwise it will be still uncomplete!
 	if (_expansionElement != nullptr && 
 		_expansionElement -> dataJustLoaded ())
-		notify (MCHEmul::Event (COMMODORE::ExpansionIOPort::_EXPANSIONELEMENTIN));
+		notify (MCHEmul::Event (_EXPANSIONELEMENTIN));
 
 	// if the expansion element has been extracted...
 	if (_expansionElement == nullptr && _expansionElementOut)
 	{
 		_expansionElementOut = false;
 
-		notify (MCHEmul::Event (COMMODORE::ExpansionIOPort::_EXPANSIONELEMENTOUT));
+		notify (MCHEmul::Event (_EXPANSIONELEMENTOUT));
 	}
 
 	// The standard simulation is invoked to

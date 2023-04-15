@@ -29,7 +29,9 @@ namespace MCHEmul
 	class GraphicalChip : public Chip
 	{
 		public:
-		/** Different events. */
+		// Different events.
+		/** When the graphical chip is ready to send out the graphic bufer filled up
+			a notification with this event should happen. (@see Screen for more info). */
 		static const unsigned int _GRAPHICSREADY				= 100;
 
 		GraphicalChip (int id, const Attributes& attrs = { })

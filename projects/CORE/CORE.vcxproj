@@ -66,6 +66,7 @@
   <ItemGroup>
     <ClInclude Include="..\..\include\CORE\Address.hpp" />
     <ClInclude Include="..\..\include\CORE\ASCIIConverter.hpp" />
+    <ClInclude Include="..\..\include\CORE\Bus.hpp" />
     <ClInclude Include="..\..\include\CORE\ByteCodeLine.hpp" />
     <ClInclude Include="..\..\include\CORE\Chip.hpp" />
     <ClInclude Include="..\..\include\CORE\ChipRegisters.hpp" />
@@ -94,6 +95,7 @@
     <ClInclude Include="..\..\include\CORE\JSONFormatter.hpp" />
     <ClInclude Include="..\..\include\CORE\Latch.hpp" />
     <ClInclude Include="..\..\include\CORE\Memory.hpp" />
+    <ClInclude Include="..\..\include\CORE\MicroBus.hpp" />
     <ClInclude Include="..\..\include\CORE\NotifyObserver.hpp" />
     <ClInclude Include="..\..\include\CORE\OSIO.hpp" />
     <ClInclude Include="..\..\include\CORE\ProgramCounter.hpp" />
@@ -114,6 +116,7 @@
     <ClInclude Include="..\..\include\CORE\UByte.hpp" />
     <ClInclude Include="..\..\include\CORE\UBytes.hpp" />
     <ClInclude Include="..\..\include\CORE\UInt.hpp" />
+    <ClInclude Include="..\..\include\CORE\Wire.hpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Default.fmt">

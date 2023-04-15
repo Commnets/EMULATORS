@@ -29,13 +29,15 @@ namespace COMMODORE
 		public:
 		static const int _ID = 100;
 
-		/** Different events. */
-		static const unsigned int _READ0			= 250;
-		static const unsigned int _READ1			= 251;
-		static const unsigned int _WRITE0			= 252;
-		static const unsigned int _WRITE1			= 253;
+		// Different events.
+		/** When read data from a datasette this event is sent. */
+		static const unsigned int _READ				= 250;
+		/** When this event is received a data is written in the peripheral connected. */
+		static const unsigned int _WRITE			= 251;
+		/** Managing the cassette the keys are simulated usind events. */
 		static const unsigned int _NOKEYPRESSED		= 254;
 		static const unsigned int _KEYPRESSED		= 255;
+		/** With this events the motor can be activated or desactivated. */
 		static const unsigned int _MOTORRUNNING		= 256;
 		static const unsigned int _MOTORSTOPPED		= 257;
 

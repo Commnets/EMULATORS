@@ -42,8 +42,8 @@ namespace COMMODORE
 		/** Static address. The color memory cann't be changed. */
 		static const MCHEmul::Address _COLORMEMORY;
 
-		/** Some events. \n
-			As the VICII only addresses 16k and some computers where it is connected to admitis 64,
+		// Some events.
+		/** As the VICII only addresses 16k and some computers where it is connected to admitis 64,
 			there is the possibility to change the bank. \n
 			The unsigned ints associated to each must be consecutive for everything to work properly. */
 		static const unsigned int _BANK0SET = 200;

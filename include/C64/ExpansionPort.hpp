@@ -27,7 +27,10 @@ namespace C64
 		static const unsigned char _GAME = 8;
 		static const unsigned char _EXROM = 9;
 
-		/** Event to inform the structure of the memory. */
+		// Different events.
+		/** Event to inform the structure of the memory. 
+			This is event is sent when the cartridge is ready to work and it is to restructure 
+			the way the memory is configured at the C64. */
 		static const unsigned int _C64EXPANSIONPORTMEMLINESACTUALIZED = 360;
 
 		ExpansionIOPort ()

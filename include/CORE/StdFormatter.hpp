@@ -79,7 +79,13 @@ namespace MCHEmul
 				_ARRAY	The name of the piece represents the name of the InfoStructure which attributes get. \n
 				_INVOKE	The name of the piece represents the name of the InfoStructure which attributes format using
 						another formatter with the same n ame of that InfoStructure. */
-			enum class Type { _TEXT, _DATA, _ARRAY, _INVOKE };
+			enum class Type 
+			{ 
+				_TEXT, 
+				_DATA, 
+				_ARRAY, 
+				_INVOKE 
+			};
 
 			/** The constructor reveives: \n
 			  *	@param tp		The type of formatter requiered. \n

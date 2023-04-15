@@ -31,7 +31,10 @@ namespace MCHEmul
 	class SoundChip : public Chip
 	{
 		public:
-		/** Different events. */
+		// Different events.
+		/** When a SoundChip is ready to send out the sound buffer created,
+			this event has to be sent. \n
+			The event has to be received from a Sound IO Device (@see SoundSystem) for more info. */
 		static const unsigned int _SOUNDREADY				= 101;
 
 		SoundChip (int id, const Attributes& attrs = { })
@@ -64,7 +67,8 @@ namespace MCHEmul
 		virtual bool initialize () override;
 
 		protected:
-		/** Invoked from initialize to create the right sound memory. */
+		/** Invoked from initialize method to create the right sound memory. \n
+			The SounChip implementation must fill up this memory and notify _SOUNDREADY event when finished. */
 		virtual SoundMemory* createSoundMemory ()
 							{ return (new SoundMemory (soundBufferSize () / sampleSize (), sampleSize ())); }
 

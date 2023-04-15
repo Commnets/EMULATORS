@@ -23,8 +23,8 @@ namespace C64
 	{
 		public:
 		/** Different events. */
-		static const unsigned int _SET		= 380;
-		static const unsigned int _READ		= 381;
+		static const unsigned int _SET		= 300;
+		static const unsigned int _READ		= 301;
 
 		IOExpansionMemory (int id, MCHEmul::PhysicalStorage* ps, size_t ss, const MCHEmul::Address& a, size_t s)
 			: MCHEmul::PhysicalStorageSubset (id, ps, ss, a, s)

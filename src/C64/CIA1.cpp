@@ -110,10 +110,9 @@ void C64::CIA1::processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifier* n)
 
 			break;
 
-		case C64::DatasetteIOPort::_READ0:
-		case C64::DatasetteIOPort::_READ1:
+		case C64::DatasetteIOPort::_READ:
 			_CIA1Registers -> setValue (0x0d, _CIA1Registers -> readValue (0x0d) & 0xef |
-				(evnt.id () == C64::DatasetteIOPort::_READ1 ? 0x10 /** The bit 4. */ : 0x00));
+				(evnt.value () == 1 ? 0x10 /** The bit 4. */ : 0x00));
 			break;
 
 		default:

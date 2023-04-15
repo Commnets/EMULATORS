@@ -45,7 +45,7 @@ bool COMMODORE::DatasetteIOPort::simulate (MCHEmul::CPU* cpu)
 		if (_datasette -> keysChangedStatusRequested ())
 			notify (MCHEmul::Event (_datasette -> noKeyPressed () ? _NOKEYPRESSED : _KEYPRESSED));
 		if (_datasette -> readChangeValueRequested ())
-			notify (MCHEmul::Event (_datasette -> read () ? _READ1 : _READ0));
+			notify (MCHEmul::Event (_READ, _datasette -> read () ? 1 : 0));
 	}
 
 	// The standard simulation is invoked to
@@ -58,10 +58,10 @@ void COMMODORE::DatasetteIOPort::processEvent (const MCHEmul::Event& evnt, MCHEm
 {
 	// The events are received from the special chip...
 
-	if (evnt.id () == _WRITE0 || evnt.id () == _WRITE1)
+	if (evnt.id () == _WRITE)
 	{
 		if (_datasette != nullptr)
-			_datasette -> setWrite (evnt.id () == _WRITE1);
+			_datasette -> setWrite (evnt.value () == 1);
 	}
 	else
 	if (evnt.id () == _MOTORRUNNING || evnt.id () == _MOTORSTOPPED)

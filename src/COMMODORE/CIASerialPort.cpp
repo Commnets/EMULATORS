@@ -1,5 +1,6 @@
 #include <COMMODORE/CIASerialPort.hpp>
 #include <COMMODORE/CIATimer.hpp>
+#include <COMMODORE/CIA.hpp> // for the signals in CNT and SP...
 
 // ---
 void COMMODORE::CIASerialPort::initialize ()
@@ -63,12 +64,12 @@ void COMMODORE::CIASerialPort::simulate (MCHEmul::CPU* cpu, COMMODORE::CIATimer*
 					// If the output hasn't finished, just a notification is needed
 					// for the ouput devices to take this into account...
 					else
-						notify (MCHEmul::Event (0, bT ? 1 : 0));
+						notify (MCHEmul::Event (COMMODORE::CIA::_SPSIGNAL, bT ? 1 : 0));
 
 					// The CNT is push back up!
 					setCNTSignal (true);
 					// ...and notified...
-					notify (MCHEmul::Event (0, 1));
+					notify (MCHEmul::Event (COMMODORE::CIA::_CNTSIGNAL, 1));
 				}
 			}
 

@@ -28,8 +28,14 @@ namespace COMMODORE
 		public:
 		static const int _ID = 102;
 
-		/** Different events. */
+		// Different events.
+		/** When the data element of the expansion element is loaded, 
+			this event will be sent. \n
+			This event should imply a reinitializacion of the computer. \n
+			At least, this is the situation in the C64. */
 		static const unsigned int _EXPANSIONELEMENTIN		= 260;
+		/** When the data is out or the element disconnected. \n
+			Again this should imply a reinitialization of the computer. */
 		static const unsigned int _EXPANSIONELEMENTOUT		= 261;
 
 		ExpansionIOPort ();

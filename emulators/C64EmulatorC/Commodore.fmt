@@ -63,7 +63,7 @@ Active:@STATUS@, IRQ:@IRQ@
 Value:@VALUE@(@INITIALVALUE@)
 #---
 #---
-;CIASerialPort
+;SerialPort
 Status:@Status@
 Buffer:@Buffer@
 #---

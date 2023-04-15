@@ -60,8 +60,8 @@ void C64::IO6510Registers::setValue (size_t p, const MCHEmul::UByte& v)
 				notify (MCHEmul::Event (_C64PORTIOBITSACTUALIZED, 
 					(_LORAM ? 1 : 0) + (_HIRAM ? 2 : 0) + (_CHAREN ? 4 : 0)));
 				// Send the data to the casette port...
-				notify (MCHEmul::Event (_casetteData
-					? COMMODORE::DatasetteIOPort::_WRITE1 : COMMODORE::DatasetteIOPort::_WRITE0));
+				notify (MCHEmul::Event (COMMODORE::DatasetteIOPort::_WRITE, 
+					_casetteData ? 1 : 0));
 				// Modify the status of the motor of the casette...
 				notify (MCHEmul::Event (_casetteMotorStopped
 					? COMMODORE::DatasetteIOPort::_MOTORSTOPPED : COMMODORE::DatasetteIOPort::_MOTORRUNNING));

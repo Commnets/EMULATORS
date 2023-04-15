@@ -33,7 +33,13 @@ namespace MCHEmul
 		{
 			struct Parameter
 			{
-				enum class Type { _DATA = 0, _DIR, _RELJUMP, _ABSJUMP };
+				enum class Type 
+				{ 
+					_DATA = 0, 
+					_DIR, 
+					_RELJUMP, 
+					_ABSJUMP 
+				};
 
 				/** To link a char with the type. 
 					It used in many places into the code. */
