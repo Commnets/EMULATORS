@@ -33,6 +33,9 @@ No parameters needed.
 To change the program counter.
 Only the paremeter with the new address is needed.
 Take care using this command.
+;INTERRUPTS
+To know the status of the interrups managed by the system.
+No parameters needed.
 ;CPUSTATUS
 To get the current status of the CPU.
 Including: Status Register (STATUS), Registers (REGISTERS), 

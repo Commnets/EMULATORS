@@ -42,6 +42,7 @@ const std::string MCHEmul::AssignJoystickNameCommand::_NAME = "CASSIGNJ";
 const std::string MCHEmul::ChangeCPUClockCommand::_NAME = "CCLOCKFACTOR";
 const std::string MCHEmul::SoundOnCommand::_NAME = "CSOUNDON";
 const std::string MCHEmul::SoundOffCommand::_NAME = "CSOUNDOFF";
+const std::string MCHEmul::InterruptsCommand::_NAME = "CINTERRUPTS";
 
 // ---
 MCHEmul::HelpCommand::HelpCommand (const std::string& hF)
@@ -199,7 +200,8 @@ MCHEmul::CPUStatusCommand::CPUStatusCommand ()
 				  new RegistersStatusCommand,
 				  new ProgramCounterStatusCommand,
 				  new LastIntructionCPUCommand,
-				  new StackStatusCommand
+				  new StackStatusCommand,
+				  new InterruptsCommand
 				}))
 {
 	// Nothing else...
@@ -213,6 +215,7 @@ MCHEmul::CPUSimpleStatusCommand::CPUSimpleStatusCommand ()
 				  new RegistersStatusCommand,
 				  new ProgramCounterStatusCommand,
 				  new LastIntructionCPUCommand,
+				  new InterruptsCommand
 				}))
 {
 	// Nothing else...
@@ -611,4 +614,19 @@ void MCHEmul::SoundOffCommand::executeImpl
 		return; // Nothing to do...
 
 	c -> sound () -> setSilence (true);
+}
+
+// ---
+void MCHEmul::InterruptsCommand::executeImpl
+	(MCHEmul::CommandExecuter* cE, MCHEmul::Computer* c, MCHEmul::InfoStructure& rst)
+{
+	if (c == nullptr)
+		return; // Nothing to do...
+
+	rst.add ("NUMBER", c -> cpu () -> interrupts ().size ());
+
+	MCHEmul::InfoStructure intr;
+	for (const auto& i : c -> cpu () -> interrupts ())
+		intr.add (std::to_string (i.second -> id ()), i.second -> getInfoStructure ());
+	rst.add ("INTERRUPTS", intr);
 }

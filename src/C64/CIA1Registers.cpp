@@ -24,7 +24,7 @@ void C64::CIA1Registers::setValue (size_t p, const MCHEmul::UByte& v)
 			{
 				// As explained the port A y connected to the portB through the keyboard matrix,...
 				// ...so when a column is selected for output the value is taken into account. 
-				// Addign all those values received and store in the portB for them later to be read!
+				// Adding all those values received and store in the portB for them later to be read!
 				// Notice that is the value into the portB what is put and not the value received
 				// as what it is transfer to the portB is what is really there!
 				MCHEmul::UByte pB = MCHEmul::UByte::_0;
@@ -61,7 +61,7 @@ const MCHEmul::UByte& C64::CIA1Registers::readValue (size_t p) const
 
 		case 0x01:
 			{
-				result = COMMODORE::CIARegisters::readValue (0x01) & // What is in the port B...(taking into account the affection from timers) 
+				result = COMMODORE::CIARegisters::readValue (pp) & // What is in the port B...(taking into account the affection from timers) 
 					MCHEmul::UByte (_joystick1Status); // ...plust the info from the joystick
 			}
 
@@ -91,5 +91,6 @@ void C64::CIA1Registers::initializeInternalValues ()
 
 	_joystick1Status = 0xff; // No switches clicked, no fire buttons pressed...
 	_joystick2Status = 0xff; // No switches clicked, no fire buttons pressed...
-	for (size_t i = 0; i < 8; _keyboardStatusMatrix [i++] = MCHEmul::UByte::_FF); // No keys pressed...
+	for (size_t i = 0; i < 8; i++)
+		_keyboardStatusMatrix [i] = _rev_keyboardStatusMatrix [i] = MCHEmul::UByte::_FF; // No keys pressed...
 }

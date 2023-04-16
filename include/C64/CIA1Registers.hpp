@@ -80,12 +80,11 @@ namespace C64
 			...and also the inputs comming from the joystick 1... */
 		bool keyboardStatusMatrix (size_t r, size_t c) const
 							{ return (_keyboardStatusMatrix [r].bit (c)); }
-		const MCHEmul::UByte& keyboardStatusMatrix (size_t r) const
-							{ return (_keyboardStatusMatrix [r]); }
+		bool rev_keyboardStatusMatrix (size_t r, size_t c) const
+							{ return (_rev_keyboardStatusMatrix [c].bit (r)); }
 		void setKeyboardStatusMatrix (size_t r, size_t c, bool s)
-							{ _keyboardStatusMatrix [r].setBit (c, s); }
-		void setKeyboardStatusMatrix (size_t r, const MCHEmul::UByte& u)
-							{ _keyboardStatusMatrix [r] = u; }
+							{ _keyboardStatusMatrix [r].setBit (c, s);
+							  _rev_keyboardStatusMatrix [c].setBit (r, s); }
 
 		private:
 		virtual void setValue (size_t p, const MCHEmul::UByte& v) override;
@@ -102,6 +101,8 @@ namespace C64
 		/** The data ports A y B are actually a matrix of info: ( bytes with (bytes each). 
 			And it is used to know both the keyboard pressed and also the status of the jiystick 1. */
 		MCHEmul::UByte _keyboardStatusMatrix [8];
+		/** The opposite. */
+		MCHEmul::UByte _rev_keyboardStatusMatrix [8];
 	};
 }
 

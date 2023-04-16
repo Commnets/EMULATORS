@@ -125,15 +125,16 @@ void MCHEmul::InputOSSystem::treatJoystickMovementEvents (MCHEmul::InputOSSystem
 	// All event received in a cycle are consolidated...
 	for (const auto& i : js)
 	{ 
-		int nJ = joystickEquivalentId (i.which);
-		MCHEmul::InputOSSystem::JoystickMovementMap::const_iterator j = _movementMap.find (nJ);
+		MCHEmul::InputOSSystem::JoystickMovementMap::iterator j = 
+			_movementMap.find (i.which);
 		if (j == _movementMap.end ())
-			_movementMap [nJ] = std::vector <int> (i.axis + 1, 0);
+			_movementMap [i.which] = std::vector <int> (i.axis + 1, 0);
 		else
 		if ((*j).second.size () < (size_t) (i.axis + 1))
-			_movementMap [nJ].resize (i.axis + 1, 0);
+			(*j).second.resize (i.axis + 1, 0);
 
-		_movementMap [nJ][i.axis] = i.value;
+		// Adds the value of the axis...
+		_movementMap [i.which][i.axis] = i.value;
 	}
 
 	// ...and the consolidated status is notified...

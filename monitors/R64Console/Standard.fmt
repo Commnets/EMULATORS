@@ -116,6 +116,11 @@ Data Form:@TYPE@ Frequency:@FREQUENCY@kHz Channels:@CHANNELS@
 @HELP?{key=YES,equal=:\n,empty=no help}\n@
 #---
 #---
+;CINTERRUPTS
+Number:@NUMBER@
+@INTERRUPTS?{fmter=.CLASS,empty=no interruptions}\n@
+#---
+#---
 ;CSTATUS
 @SR@
 #---
@@ -142,6 +147,9 @@ Last:@INST@
 @SR@
 ->Stack:
 @Stack>@
+->Interrupts:
+Number:@NUMBER@
+@INTERRUPTS?{fmter=.CLASS,empty=no interruptions}\n@
 #---
 #---
 ;CCPUSSTATUS
@@ -149,6 +157,9 @@ Last:@INST@
 @PC@
 @REGS?{key=NO,equal=:,empty=no registers},@
 @SR@
+->Interrupts:
+Number:@NUMBER@
+@INTERRUPTS?{fmter=.CLASS,empty=no interruptions}\n@
 #---
 #---
 ;CCPUINFO

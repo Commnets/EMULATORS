@@ -116,6 +116,8 @@ namespace MCHEmul
 							{ return (true); }
 
 		/** To add and remove interrupts. */
+		const CPUInterrupts& interrupts () const
+							{ return (_interrupts); }
 		bool existsInterrupt (int id) const
 							{ return (_interrupts.find (id) != _interrupts.end ()); }
 		const CPUInterrupt* interrupt (int id) const

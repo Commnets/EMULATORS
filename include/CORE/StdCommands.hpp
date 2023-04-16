@@ -737,6 +737,25 @@ namespace MCHEmul
 		private:
 		virtual void executeImpl (CommandExecuter* cE, Computer* c, InfoStructure& rst) override;
 	};
+
+	/** Interrpts */
+	class InterruptsCommand final : public Command
+	{
+		public:
+		static const int _ID = 32;
+		static const std::string _NAME;
+
+		InterruptsCommand ()
+			: Command (_ID, _NAME)
+							{ }
+
+		/** The only parameter has to be the factor. */
+		virtual bool canBeExecuted () const override
+							{ return (_parameters.size () == 0); }
+
+		private:
+		virtual void executeImpl (CommandExecuter* cE, Computer* c, InfoStructure& rst) override;
+	};
 }
 
 #endif

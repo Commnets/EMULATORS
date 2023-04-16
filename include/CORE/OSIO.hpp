@@ -121,7 +121,7 @@ namespace MCHEmul
 							{ for (auto& i : jm) 
 								notify (Event (_JOYSTICKMOVED, 0,
 									std::shared_ptr <Event::Data> ((Event::Data*) 
-										new JoystickMovementEvent (i.first, i.second)))); }
+										new JoystickMovementEvent (joystickEquivalentId (i.first), i.second)))); }
 		/** What to do when the joystick button is pressed. */
 		void whenJoystickButtonPressed (const SDL_JoyButtonEvent& jb)
 							{ notify (Event (_JOYSTICKBUTTONPRESSED, 0,
