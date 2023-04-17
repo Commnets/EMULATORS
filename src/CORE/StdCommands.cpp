@@ -623,8 +623,6 @@ void MCHEmul::InterruptsCommand::executeImpl
 	if (c == nullptr)
 		return; // Nothing to do...
 
-	rst.add ("NUMBER", c -> cpu () -> interrupts ().size ());
-
 	MCHEmul::InfoStructure intr;
 	for (const auto& i : c -> cpu () -> interrupts ())
 		intr.add (std::to_string (i.second -> id ()), i.second -> getInfoStructure ());
