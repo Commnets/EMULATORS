@@ -39,8 +39,9 @@ void COMMODORE::CIARegisters::setValue (size_t p, const MCHEmul::UByte& v)
 		case 0x00:
 			{
 				setPortA (MCHEmul::UByte (
-					(_portA & ~_dataPortADir) |
-						(v.value () & _dataPortADir)));	// If the data is changed the new value is taken into account...
+					v.value () | ~_dataPortADir));
+				// _dataPortADir: bits 0 = input, bits 1 = output.
+				// So input positions are maintained to 1, and output positions the value of v is maintained....
 			}
 
 			break;
@@ -51,16 +52,13 @@ void COMMODORE::CIARegisters::setValue (size_t p, const MCHEmul::UByte& v)
 				MCHEmul::UByte cV = v;
 				// The result of the timer could take into account...
 				if (_reflectTimerAAtPortDataB)
-					cV = MCHEmul::UByte (cV.value () & 0xbf | (_timerAValueAtPortDataB ? 0x40 : 0x00));
+					cV.setBit (6, _timerAValueAtPortDataB ? true : false);
 				if (_reflectTimerBAtPortDataB)
-					cV = MCHEmul::UByte (cV.value () & 0x7f | (_timerBValueAtPortDataB ? 0x80 : 0x00));
+					cV.setBit (7, _timerBValueAtPortDataB ? true : false);
 
-				// What is sent to the portB, will depend on what is in this register, 
-				// but also in what existed before in the line.
-				// In _dataPortBDir bits to 1 mean output and bits to 0 mean input, so...
 				setPortB (MCHEmul::UByte (
-					(_portB & ~_dataPortBDir) |
-						(cV.value () & _dataPortBDir)));	// If the data is changed the new value is taken into account...
+					v.value () | ~_dataPortBDir));
+				// @see 0x00. Same but with PortB instead...
 			}
 
 			break;
