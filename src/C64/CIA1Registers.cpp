@@ -22,15 +22,16 @@ const MCHEmul::UByte& C64::CIA1Registers::readValue (size_t p) const
 		// Data Port Register A: CIA1PRA
 		case 0x00:
 			{
-				// @see 0x01 for futher explanarions.
-				// This behaviour is equivalent to that one.
+				// @see 0x01 for futher explanations.
+				// This behaviour is a mirror in the port A of that one...
 				result = MCHEmul::UByte::_0;
-				MCHEmul::UByte msk = portB () & MCHEmul::UByte (_joystick1Status);
+				MCHEmul::UByte msk = (MCHEmul::PhysicalStorageSubset::readValue (0x01) & 
+					_joystick1Status) | ~dataPortBDir ();
 				for (size_t i = 0; i < 8; i++)
 					if ((~msk.value () & (1 << i)) != 0x00)
-						result |= MCHEmul::UByte (~_rev_keyboardStatusMatrix [i]);
-				result = ~result & MCHEmul::UByte (_joystick2Status) & 
-					(MCHEmul::PhysicalStorageSubset::readValue (0x00) | ~dataPortADir ());
+						result |= ~(_rev_keyboardStatusMatrix [i] & ~dataPortADir ());
+				result |= ~(_joystick2Status & ~dataPortADir ());
+				result = ~result;
 				result |= MCHEmul::UByte (dataPortADir () & dataPortBDir ()) & 
 					MCHEmul::PhysicalStorageSubset::readValue (0x00);
 			}
@@ -50,10 +51,10 @@ const MCHEmul::UByte& C64::CIA1Registers::readValue (size_t p) const
 				result = MCHEmul::UByte::_0;
 				// What is in the 0x00 port (+ joystick2) corrected by the direction at that port (output bits = 1)
 				// is what will drive the value at the port B depending on the keys pressed (corrected by input, bits = 0)
-				MCHEmul::UByte msk = ~(MCHEmul::PhysicalStorageSubset::readValue (0x00) & 
-					MCHEmul::UByte (_joystick2Status)) & dataPortADir ();
+				MCHEmul::UByte msk = (MCHEmul::PhysicalStorageSubset::readValue (0x00) &
+					_joystick2Status) | ~dataPortADir ();
 				for (size_t i = 0; i < 8; i++)
-					if ((msk & (1 << i)) != 0x00)
+					if ((~msk & (1 << i)) != 0x00)
 						result |= ~(_keyboardStatusMatrix [i] & ~dataPortBDir ());
 				// The input of the joystick1 connected has also to be taken into account...
 				result |= ~(_joystick1Status & ~dataPortBDir ());
