@@ -115,7 +115,7 @@ bool MCHEmul::SoundSystem::simulate (MCHEmul::CPU* cpu)
 // ---
 MCHEmul::InfoStructure MCHEmul::SoundSystem::getInfoStructure () const
 {
-	MCHEmul::InfoStructure result = MCHEmul::IODevice::getInfoStructure ();
+	MCHEmul::InfoStructure result = std::move (MCHEmul::IODevice::getInfoStructure ());
 
 	result.add ("DATA", _type);
 	result.add ("FREQUENCY", std::to_string ((double) _samplingFrequency / 1000.0f));

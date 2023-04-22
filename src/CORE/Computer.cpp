@@ -363,20 +363,20 @@ void MCHEmul::Computer::removeAllActions (unsigned int a)
 // ---
 MCHEmul::InfoStructure MCHEmul::Computer::getInfoStructure () const
 {
-	MCHEmul::InfoStructure result = MCHEmul::InfoClass::getInfoStructure ();
+	MCHEmul::InfoStructure result = std::move (MCHEmul::InfoClass::getInfoStructure ());
 
-	result.add ("ATTRS", _attributes);
-	result.add ("CPU", _cpu -> getInfoStructure ());
+	result.add ("ATTRS",	_attributes);
+	result.add ("CPU",		std::move (_cpu -> getInfoStructure ()));
 
 	MCHEmul::InfoStructure chps;
 	for (const auto& i : _chips)
-		chps.add (std::to_string (i.first), i.second -> getInfoStructure ());
-	result.add ("CHIPS", chps);
+		chps.add (std::to_string (i.first), std::move (i.second -> getInfoStructure ()));
+	result.add ("CHIPS", std::move (chps));
 
 	MCHEmul::InfoStructure dvcs;
 	for (const auto& i : _devices)
-		dvcs.add (std::to_string (i.first), i.second -> getInfoStructure ());
-	result.add ("DEVICES", dvcs);
+		dvcs.add (std::to_string (i.first), std::move (i.second -> getInfoStructure ()));
+	result.add ("DEVICES", std::move (dvcs));
 
 	return (result);
 }

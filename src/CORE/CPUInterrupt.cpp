@@ -28,10 +28,10 @@ bool MCHEmul::CPUInterrupt::executeOver (MCHEmul::CPU* c, unsigned int& nC)
 // ---
 MCHEmul::InfoStructure MCHEmul::CPUInterrupt::getInfoStructure () const
 {
-	MCHEmul::InfoStructure result = MCHEmul::InfoClass::getInfoStructure ();
+	MCHEmul::InfoStructure result = std::move (MCHEmul::InfoClass::getInfoStructure ());
 
-	result.add ("ID", _id);
-	result.add ("EXECUTION", std::string (_inExecution ? "YES" : "NO"));
+	result.add ("ID",			_id);
+	result.add ("EXECUTION",	std::string (_inExecution ? "YES" : "NO"));
 
 	return (result);
 }

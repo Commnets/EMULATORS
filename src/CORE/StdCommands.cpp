@@ -625,6 +625,6 @@ void MCHEmul::InterruptsCommand::executeImpl
 
 	MCHEmul::InfoStructure intr;
 	for (const auto& i : c -> cpu () -> interrupts ())
-		intr.add (std::to_string (i.second -> id ()), i.second -> getInfoStructure ());
+		intr.add (std::to_string (i.second -> id ()), std::move (i.second -> getInfoStructure ()));
 	rst.add ("INTERRUPTS", intr);
 }

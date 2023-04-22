@@ -177,22 +177,22 @@ bool MCHEmul::CPU::executeNextInstruction ()
 // ---
 MCHEmul::InfoStructure MCHEmul::CPU::getInfoStructure () const
 {
-	MCHEmul::InfoStructure result = MCHEmul::InfoClass::getInfoStructure ();
+	MCHEmul::InfoStructure result = std::move (MCHEmul::InfoClass::getInfoStructure ());
 
 	MCHEmul::InfoStructure intr;
 	for (const auto& i : _interrupts)
-		intr.add (std::to_string (i.second -> id ()), i.second -> getInfoStructure ());
-	result.add ("INTERRUPTS", intr);
+		intr.add (std::to_string (i.second -> id ()), std::move (i.second -> getInfoStructure ()));
+	result.add ("INTERRUPTS", std::move (intr));
 
-	result.add ("Architecture", _architecture.getInfoStructure ());
+	result.add ("Architecture", std::move (_architecture.getInfoStructure ()));
 
 	MCHEmul::InfoStructure regs;
 	for (const auto& i : internalRegisters ())
-		regs.add (i.name (), i.asString ());
-	result.add ("REGS", regs);
+		regs.add (i.name (), std::move (i.asString ()));
+	result.add ("REGS",	std::move (regs));
 
-	result.add ("PC", programCounter ().asString ());
-	result.add ("SR", statusRegister ().asString ());
+	result.add ("PC", std::move (programCounter ().asString ()));
+	result.add ("SR", std::move (statusRegister ().asString ()));
 
 	return (result);
 }

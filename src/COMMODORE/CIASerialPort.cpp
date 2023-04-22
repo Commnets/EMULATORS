@@ -84,7 +84,7 @@ void COMMODORE::CIASerialPort::simulate (MCHEmul::CPU* cpu, COMMODORE::CIATimer*
 // ---
 MCHEmul::InfoStructure COMMODORE::CIASerialPort::getInfoStructure () const
 {
-	MCHEmul::InfoStructure result = MCHEmul::InfoClass::getInfoStructure ();
+	MCHEmul::InfoStructure result = std::move (MCHEmul::InfoClass::getInfoStructure ());
 
 	result.add ("Status", std::string ((_status == CIASerialPort::Status::_READING) ? "Read" : "Write"));
 	result.add ("Buffer", _bufferValue);

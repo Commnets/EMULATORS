@@ -74,6 +74,8 @@ namespace MCHEmul
 							{ add (an, av.asString (UByte::OutputFormat::_HEXA, ',', 2)); }
 		void add (const std::string& an, const std::vector <UByte>& av)
 							{ add (an, UBytes (av)); }
+		void add (const std::string&& an, std::vector <UByte>&& av)
+							{ add (an, UBytes (std::move (av))); }
 		void add (const std::string& an, const UInt& av)
 							{ add (an, av.asString (UByte::OutputFormat::_HEXA, '\0', 2)); }
 		void add (const std::string& an, const Address& av)

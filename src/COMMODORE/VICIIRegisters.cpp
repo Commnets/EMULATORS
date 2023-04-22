@@ -27,7 +27,7 @@ void COMMODORE::VICIIRegisters::initialize ()
 // ---
 MCHEmul::InfoStructure COMMODORE::VICIIRegisters::getInfoStructure () const
 {
-	MCHEmul::InfoStructure result = MCHEmul::ChipRegisters::getInfoStructure ();
+	MCHEmul::InfoStructure result = std::move (MCHEmul::ChipRegisters::getInfoStructure ());
 
 	result.add ("MODE",				(unsigned int) _graphicModeActive);
 	result.add ("40C",				_textDisplay40ColumnsActive);
@@ -50,7 +50,8 @@ MCHEmul::InfoStructure COMMODORE::VICIIRegisters::getInfoStructure () const
 	MCHEmul::InfoStructure sInfo;
 	for (size_t i = 0; i < 8; i++)
 	{ 
-		MCHEmul::InfoStructure sInfoD = _spriteInfo [i].getInfoStructure (); 
+		MCHEmul::InfoStructure sInfoD = 
+			std::move (_spriteInfo [i].getInfoStructure ()); 
 		sInfoD.add ("ID", i);
 
 		sInfo.add (std::to_string (i), std::move (sInfoD));
@@ -638,7 +639,7 @@ void COMMODORE::VICIIRegisters::setGraphicModeActive ()
 // ---
 MCHEmul::InfoStructure COMMODORE::VICIIRegisters::SpriteInfo::getInfoStructure () const
 {
-	MCHEmul::InfoStructure result = MCHEmul::InfoClass::getInfoStructure ();
+	MCHEmul::InfoStructure result = std::move (MCHEmul::InfoClass::getInfoStructure ());
 
 	result.add ("X",			_spriteXCoord);
 	result.add ("Y",			_spriteYCoord);

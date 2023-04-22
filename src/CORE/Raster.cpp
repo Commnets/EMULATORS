@@ -38,7 +38,7 @@ MCHEmul::RasterData::RasterData (
 // ---
 MCHEmul::InfoStructure MCHEmul::RasterData::getInfoStructure () const
 {
-	MCHEmul::InfoStructure result = MCHEmul::InfoClass::getInfoStructure ();
+	MCHEmul::InfoStructure result = std::move (MCHEmul::InfoClass::getInfoStructure ());
 
 	result.add ("POSITION",		_currentPosition);
 	result.add ("POSITION0",	_currentPosition_0);
@@ -51,10 +51,10 @@ MCHEmul::InfoStructure MCHEmul::RasterData::getInfoStructure () const
 // ---
 MCHEmul::InfoStructure MCHEmul::Raster::getInfoStructure () const
 {
-	MCHEmul::InfoStructure result = MCHEmul::InfoClass::getInfoStructure ();
+	MCHEmul::InfoStructure result = std::move (MCHEmul::InfoClass::getInfoStructure ());
 
-	result.add ("RasterX", _hRasterData.getInfoStructure ());
-	result.add ("RasterY", _vRasterData.getInfoStructure ());
+	result.add ("RasterX", std::move (_hRasterData.getInfoStructure ()));
+	result.add ("RasterY", std::move (_vRasterData.getInfoStructure ()));
 
 	return (result);
 }

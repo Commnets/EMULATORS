@@ -69,10 +69,10 @@ bool COMMODORE::SID::simulate (MCHEmul::CPU* cpu)
 // ---
 MCHEmul::InfoStructure COMMODORE::SID::getInfoStructure () const
 {
-	MCHEmul::InfoStructure result = MCHEmul::SoundChip::getInfoStructure ();
+	MCHEmul::InfoStructure result = std::move (MCHEmul::SoundChip::getInfoStructure ());
 
 	result.remove ("Memory"); // This is not neccesary...
-	result.add ("Registers",	_SIDRegisters -> getInfoStructure ());
+	result.add ("Registers",	std::move (_SIDRegisters -> getInfoStructure ()));
 
 	return (result);
 }

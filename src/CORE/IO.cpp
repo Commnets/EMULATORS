@@ -129,15 +129,15 @@ bool MCHEmul::IODevice::simulate (MCHEmul::CPU* cpu)
 // ---
 MCHEmul::InfoStructure MCHEmul::IODevice::getInfoStructure () const
 {
-	MCHEmul::InfoStructure result = MCHEmul::InfoClass::getInfoStructure ();
+	MCHEmul::InfoStructure result = std::move (MCHEmul::InfoClass::getInfoStructure ());
 
-	result.add ("ID", _id);
-	result.add ("ATTRS", _attributes);
+	result.add ("ID",		_id);
+	result.add ("ATTRS",	_attributes);
 
 	MCHEmul::InfoStructure pers;
 	for (const auto& i : _peripherals)
-		pers.add (std::to_string (i.first), i.second -> getInfoStructure ());
-	result.add ("IOPERIPHERALS", pers);
+		pers.add (std::to_string (i.first), std::move (i.second -> getInfoStructure ()));
+	result.add ("IOPERIPHERALS", std::move (pers));
 
 	return (result);
 }

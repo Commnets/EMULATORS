@@ -5,10 +5,10 @@
 // ---
 MCHEmul::InfoStructure MCHEmul::IOPeripheral::getInfoStructure () const
 {
-	MCHEmul::InfoStructure result = MCHEmul::InfoClass::getInfoStructure ();
+	MCHEmul::InfoStructure result = std::move (MCHEmul::InfoClass::getInfoStructure ());
 
-	result.add ("ID", _id);
-	result.add ("ATTRS", _attributes);
+	result.add ("ID",		_id);
+	result.add ("ATTRS",	_attributes);
 
 	return (result);
 }

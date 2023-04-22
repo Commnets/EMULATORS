@@ -6,7 +6,7 @@
 C64::Cartridge::Cartridge ()
 	: COMMODORE::ExpansionPeripheral (_ID,
 		{ { "Name", "Commodore 64 Cartridge" },
-		  { "Manufacturer", "Commodore Business Machibes CBM" } }), // This parameters can be changed when connecting data...
+		  { "Manufacturer", "Commodore Business Machines CBM" } }), // This parameters can be changed when connecting data...
 	  _dataDumped (false),
 	  _memoryRef (nullptr), _memoryView (nullptr),
 	  _storages (), _subsets ()

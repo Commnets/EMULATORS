@@ -5,11 +5,11 @@
 // ---
 MCHEmul::InfoStructure MCHEmul::Chip::getInfoStructure () const
 {
-	MCHEmul::InfoStructure result = MCHEmul::InfoClass::getInfoStructure ();
+	MCHEmul::InfoStructure result = std::move (MCHEmul::InfoClass::getInfoStructure ());
 
 	result.add ("ID",		_id);
 	result.add ("ATTRS",	_attributes);
-	result.add ("Memory",	_memory -> getInfoStructure ());
+	result.add ("Memory",	std::move (_memory -> getInfoStructure ()));
 
 	return (result);
 }

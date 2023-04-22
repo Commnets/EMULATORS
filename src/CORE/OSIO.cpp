@@ -101,7 +101,7 @@ bool MCHEmul::InputOSSystem::simulate (MCHEmul::CPU* cpu)
 // ---
 MCHEmul::InfoStructure MCHEmul::InputOSSystem::getInfoStructure () const
 {
-	MCHEmul::InfoStructure result = MCHEmul::IODevice::getInfoStructure ();
+	MCHEmul::InfoStructure result = std::move (MCHEmul::IODevice::getInfoStructure ());
 
 	// Just to add the information about the joysticks...
 	int ct = 0;
@@ -114,7 +114,7 @@ MCHEmul::InfoStructure MCHEmul::InputOSSystem::getInfoStructure () const
 		ct++;
 	}
 
-	result.add ("JOYSTICKS", jI);
+	result.add ("JOYSTICKS", std::move (jI));
 
 	return (result);
 }

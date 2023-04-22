@@ -121,14 +121,14 @@ bool COMMODORE::CIA::simulate (MCHEmul::CPU* cpu)
 // ---
 MCHEmul::InfoStructure COMMODORE::CIA::getInfoStructure () const
 {
-	MCHEmul::InfoStructure result = MCHEmul::Chip::getInfoStructure ();
+	MCHEmul::InfoStructure result = std::move (MCHEmul::Chip::getInfoStructure ());
 
 	result.remove ("Memory"); // This is not neccesary...
 	result.add ("Registers",	_CIARegisters -> getInfoStructure ());
-	result.add ("TimerA",		_timerA.getInfoStructure ());
-	result.add ("TimerB",		_timerB.getInfoStructure ());
-	result.add ("Clock",		_clock.getInfoStructure ());
-	result.add ("SerialPort",	_serialPort.getInfoStructure ());
+	result.add ("TimerA",		std::move (_timerA.getInfoStructure ())); // the info origin is no longer needed...
+	result.add ("TimerB",		std::move (_timerB.getInfoStructure ()));
+	result.add ("Clock",		std::move (_clock.getInfoStructure ()));
+	result.add ("SerialPort",	std::move (_serialPort.getInfoStructure ()));
 	result.add ("PortA",		_CIARegisters -> portA ());
 	result.add ("PortB",		_CIARegisters -> portB ()); // This is already a Ubyte...
 	result.add ("CIDDRA",		MCHEmul::UByte (_CIARegisters -> dataPortADir ())); // To write doen it in hexadecimal form...

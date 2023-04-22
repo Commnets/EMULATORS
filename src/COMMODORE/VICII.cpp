@@ -221,11 +221,11 @@ bool COMMODORE::VICII::simulate (MCHEmul::CPU* cpu)
 // ---
 MCHEmul::InfoStructure COMMODORE::VICII::getInfoStructure () const
 {
-	MCHEmul::InfoStructure result = MCHEmul::GraphicalChip::getInfoStructure ();
+	MCHEmul::InfoStructure result = std::move (MCHEmul::GraphicalChip::getInfoStructure ());
 
 	result.remove ("Memory"); // This info is not neccesary...
-	result.add ("VICIIRegisters",	_VICIIRegisters -> getInfoStructure ());
-	result.add ("Raster",			_raster.getInfoStructure ());
+	result.add ("VICIIRegisters",	std::move (_VICIIRegisters -> getInfoStructure ()));
+	result.add ("Raster",			std::move (_raster.getInfoStructure ()));
 
 	return (result);
 }

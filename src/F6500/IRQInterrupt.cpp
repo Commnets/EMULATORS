@@ -31,7 +31,7 @@ bool F6500::IRQInterrupt::executeOverImpl (MCHEmul::CPU* c, unsigned int& nC)
 // ---
 MCHEmul::InfoStructure F6500::IRQInterrupt::getInfoStructure () const
 {
-	MCHEmul::InfoStructure result = MCHEmul::CPUInterrupt::getInfoStructure ();
+	MCHEmul::InfoStructure result = std::move (MCHEmul::CPUInterrupt::getInfoStructure ());
 
 	result.add ("ADDRESS", _exeAddress);
 

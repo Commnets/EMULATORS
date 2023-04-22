@@ -160,9 +160,9 @@ MCHEmul::InfoStructure MCHEmul::Stack::getInfoStructure () const
 {
 	// Take into account that InfoClass method is invoked instead the parent one,
 	// as the info from parent class is included in the informatiomn added as a subset...
-	MCHEmul::InfoStructure result = MCHEmul::InfoClass::getInfoStructure ();
+	MCHEmul::InfoStructure result = std::move (MCHEmul::InfoClass::getInfoStructure ());
 
-	result.add ("PhysicalStorageSubset",	MCHEmul::PhysicalStorageSubset::getInfoStructure ());
+	result.add ("PhysicalStorageSubset",	std::move (MCHEmul::PhysicalStorageSubset::getInfoStructure ()));
 	result.add ("BACK",						_fromBack );
 	result.add ("LAST",						_pointToEmpty );
 	result.add ("OVERFLOW",					_overflow );

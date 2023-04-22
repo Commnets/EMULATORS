@@ -24,7 +24,7 @@ bool F6500::NMIInterrupt::executeOverImpl (MCHEmul::CPU* c, unsigned int& nC)
 // ---
 MCHEmul::InfoStructure F6500::NMIInterrupt::getInfoStructure () const
 {
-	MCHEmul::InfoStructure result = MCHEmul::CPUInterrupt::getInfoStructure ();
+	MCHEmul::InfoStructure result = std::move (MCHEmul::CPUInterrupt::getInfoStructure ());
 
 	result.add ("ADDRESS", _exeAddress);
 

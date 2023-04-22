@@ -39,7 +39,7 @@ namespace MCHEmul
 
 		/** The reference to the sopund chip. 
 			It can be null as it is not mandatory the relation between them. */
-		const SoundChip* graphicalChip () const
+		const SoundChip* soundChip () const
 							{ return (_soundChip); }
 		SoundChip* soundChip ()
 							{ return (_soundChip); }

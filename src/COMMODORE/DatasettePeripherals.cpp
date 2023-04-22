@@ -50,11 +50,11 @@ bool COMMODORE::DatasettePeripheral::connectData (MCHEmul::FileData* dt)
 // ---
 MCHEmul::InfoStructure COMMODORE::DatasettePeripheral::getInfoStructure () const
 {
-	MCHEmul::InfoStructure result = MCHEmul::IOPeripheral::getInfoStructure ();
+	MCHEmul::InfoStructure result = std::move (MCHEmul::IOPeripheral::getInfoStructure ());
 
-	result.add ("KEYS", !_noKeyPressed);
-	result.add ("MOTOR", !_motorOff);
-	result.add ("DATA", _data._data.empty () ? std::string ("no data") : _data._name);
+	result.add ("KEYS",		!_noKeyPressed);
+	result.add ("MOTOR",	!_motorOff);
+	result.add ("DATA",		_data._data.empty () ? std::string ("no data") : _data._name);
 
 	return (result);
 }

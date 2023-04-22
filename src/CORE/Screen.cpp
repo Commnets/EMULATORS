@@ -105,12 +105,12 @@ bool MCHEmul::Screen::simulate (MCHEmul::CPU* cpu)
 // ---
 MCHEmul::InfoStructure MCHEmul::Screen::getInfoStructure () const
 {
-	MCHEmul::InfoStructure result = MCHEmul::IODevice::getInfoStructure ();
+	MCHEmul::InfoStructure result = std::move (MCHEmul::IODevice::getInfoStructure ());
 
-	result.add ("NAME", _screenName);
-	result.add ("HERTZS", std::to_string (_clock.realCyclesPerSecond ()));
-	result.add ("COLUMNS", std::to_string (_screenColumns));
-	result.add ("ROWS", std::to_string (_screenRows));
+	result.add ("NAME",		_screenName);
+	result.add ("HERTZS",	std::to_string (_clock.realCyclesPerSecond ()));
+	result.add ("COLUMNS",	std::to_string (_screenColumns));
+	result.add ("ROWS",		std::to_string (_screenRows));
 
 	return (result);
 }

@@ -94,14 +94,14 @@ bool MCHEmul::PhysicalStorage::saveFrom (const std::string& fN, size_t nB, size_
 // ---
 MCHEmul::InfoStructure MCHEmul::PhysicalStorageSubset::getInfoStructure () const
 {
-	MCHEmul::InfoStructure result = MCHEmul::InfoClass::getInfoStructure ();
+	MCHEmul::InfoStructure result = std::move (MCHEmul::InfoClass::getInfoStructure ());
 
 	result.add ("ID",		_id);
 	result.add ("ADDRESS",	_initialAddress);
 	result.add ("SIZE",		_size);
 	result.add ("ACTIVE",	_active);
 	result.add ("READ",		_activeForReading);
-	result.add ("BYTES",	bytes ());
+	result.add ("BYTES",	std::move (bytes ()));
 
 	return (result);
 }
@@ -173,12 +173,12 @@ bool MCHEmul::MemoryView::saveFrom (const std::string& fN, size_t nB, const MCHE
 // ---
 MCHEmul::InfoStructure MCHEmul::MemoryView::getInfoStructure () const
 {
-	MCHEmul::InfoStructure result = MCHEmul::InfoClass::getInfoStructure ();
+	MCHEmul::InfoStructure result = std::move (MCHEmul::InfoClass::getInfoStructure ());
 
 	MCHEmul::InfoStructure mems;
 	for (const auto& i : _subsets)
-		mems.add (std::to_string (i.first), i.second -> getInfoStructure ());
-	result.add ("STORAGES", mems);
+		mems.add (std::to_string (i.first), std::move (i.second -> getInfoStructure ()));
+	result.add ("STORAGES", std::move (mems));
 
 	return (result);
 }
