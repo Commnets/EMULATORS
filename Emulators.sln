@@ -113,8 +113,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Examples_1", "Examples_1", 
 		emulators\C64Programs\Examples_1\screencolors3.asm = emulators\C64Programs\Examples_1\screencolors3.asm
 		emulators\C64Programs\Examples_1\sprite1.asm = emulators\C64Programs\Examples_1\sprite1.asm
 		emulators\C64Programs\Examples_1\sprite2.asm = emulators\C64Programs\Examples_1\sprite2.asm
-		emulators\C64Programs\Examples_1\text1.asm = emulators\C64Programs\Examples_1\text1.asm
 		emulators\C64Programs\Examples_1\testkeyboard.asm = emulators\C64Programs\Examples_1\testkeyboard.asm
+		emulators\C64Programs\Examples_1\text1.asm = emulators\C64Programs\Examples_1\text1.asm
 		emulators\C64Programs\Examples_1\text2.asm = emulators\C64Programs\Examples_1\text2.asm
 		emulators\C64Programs\Examples_1\text3.asm = emulators\C64Programs\Examples_1\text3.asm
 		emulators\C64Programs\Examples_1\text4.asm = emulators\C64Programs\Examples_1\text4.asm
@@ -217,6 +217,8 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Third Parties", "Third Parties", "{9E003CF6-761F-453E-BC47-ED144EB0EFB8}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "RESID", "thirdparties\resid\RESID.vcxproj", "{4844D8BE-3DCA-455A-87CD-25AF8FFBC0E8}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TestSDL", "tests\TestSDL\TestSDL.vcxproj", "{F5541340-0F51-4C48-8AD1-3DC8F25D1A5D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -354,6 +356,14 @@ Global
 		{4844D8BE-3DCA-455A-87CD-25AF8FFBC0E8}.Release|x64.Build.0 = Release|x64
 		{4844D8BE-3DCA-455A-87CD-25AF8FFBC0E8}.Release|x86.ActiveCfg = Release|Win32
 		{4844D8BE-3DCA-455A-87CD-25AF8FFBC0E8}.Release|x86.Build.0 = Release|Win32
+		{F5541340-0F51-4C48-8AD1-3DC8F25D1A5D}.Debug|x64.ActiveCfg = Debug|x64
+		{F5541340-0F51-4C48-8AD1-3DC8F25D1A5D}.Debug|x64.Build.0 = Debug|x64
+		{F5541340-0F51-4C48-8AD1-3DC8F25D1A5D}.Debug|x86.ActiveCfg = Debug|Win32
+		{F5541340-0F51-4C48-8AD1-3DC8F25D1A5D}.Debug|x86.Build.0 = Debug|Win32
+		{F5541340-0F51-4C48-8AD1-3DC8F25D1A5D}.Release|x64.ActiveCfg = Release|x64
+		{F5541340-0F51-4C48-8AD1-3DC8F25D1A5D}.Release|x64.Build.0 = Release|x64
+		{F5541340-0F51-4C48-8AD1-3DC8F25D1A5D}.Release|x86.ActiveCfg = Release|Win32
+		{F5541340-0F51-4C48-8AD1-3DC8F25D1A5D}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -389,6 +399,7 @@ Global
 		{37B5BB98-47CC-4566-9ACF-51E1E181B732} = {2CDC5360-C91C-4FCA-AE01-98DEFDC778B6}
 		{2CDC5360-C91C-4FCA-AE01-98DEFDC778B6} = {7CF4FC5F-24E3-4E24-AF7F-246D698BBE1E}
 		{4844D8BE-3DCA-455A-87CD-25AF8FFBC0E8} = {9E003CF6-761F-453E-BC47-ED144EB0EFB8}
+		{F5541340-0F51-4C48-8AD1-3DC8F25D1A5D} = {C595171B-2D87-4C94-8028-51FEBB948C36}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {07C45180-3599-4E00-9578-FBB4B9BDDC3E}

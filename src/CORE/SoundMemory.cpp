@@ -10,5 +10,5 @@ MCHEmul::SoundMemory::SoundMemory (size_t ns, size_t ss)
 { 
 	assert (_numberSamples > 0 && _sizeSample > 0);
 							
-	_samplingData = new unsigned char [_numberSamples * _sizeSample]; 
+	_samplingData = new char [_numberSamples * _sizeSample]; 
 }

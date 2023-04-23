@@ -9,6 +9,10 @@ No parameters needed.
 ;SID
 To know the status of the SID chip.
 No parameters needed.
+;SIDW
+To change the sound wrapper used
+The only parameter needed is the number of the library to use.
+0 is the standard RESID library and 1 is a pulse simulation just to test.
 ;Datasette
 To know the status of the datasette if connected
 No parameters needed.

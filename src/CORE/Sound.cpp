@@ -75,7 +75,7 @@ bool MCHEmul::SoundSystem::simulate (MCHEmul::CPU* cpu)
 	{
 		if (!_silence)
 		{
-			if (SDL_GetQueuedAudioSize (_deviceId) >= (_audioSpec.size * 20))
+ 			if (SDL_GetQueuedAudioSize (_deviceId) >= (_audioSpec.size * 20))
 				SDL_ClearQueuedAudio (_deviceId); // If the data queued is too much...it is taken off!
 
 			int tC = 0;

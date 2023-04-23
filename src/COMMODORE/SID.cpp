@@ -1,6 +1,40 @@
 #include <COMMODORE/SID.hpp>
 
 // ---
+MCHEmul::UBytes COMMODORE::SoundRESIDWrapper::getData (MCHEmul::CPU* cpu)
+{
+	_resid_sid.clock ();
+	short rData = (short) _resid_sid.output ();
+	return (MCHEmul::UBytes ({ *(((char*)&rData) + 0), *(((char*)&rData) + 1) }));
+}
+
+// ---
+void COMMODORE::SoundPulseWrapper::setParameters (const MCHEmul::Attributes& attrs)
+{ 
+	MCHEmul::Attributes::const_iterator i = attrs.find ("COUNTER");
+	if (i != attrs.end ()) 
+		_maxCounter = std::atoi ((*i).second.c_str ()); 
+
+	i = attrs.find ("VALUE");
+	if (i != attrs.end ()) 
+		_pulseValue = std::atoi ((*i).second.c_str ()); 
+}
+
+// ---
+MCHEmul::UBytes COMMODORE::SoundPulseWrapper::getData (MCHEmul::CPU *cpu)
+{ 
+	if (++_counter > _maxCounter)
+	{
+		if (++_status > 2) _status = 0;
+		_counter = 0;
+		_data = MCHEmul::UBytes 
+			({ (_status == 0) ? 0 : ((_status == 1) ? _pulseValue : -_pulseValue) });
+	}
+
+	return (_data);
+}
+
+// ---
 COMMODORE::SID::SID (unsigned int cF)
 	: MCHEmul::SoundChip (_ID,
 		{ { "Name", "SID" },
@@ -8,14 +42,15 @@ COMMODORE::SID::SID (unsigned int cF)
 		  { "Manufacturer", "Commodore Business Machines CBM" },
 		  { "Year", "1982" } }),
 		  _SIDRegisters (nullptr),
-	  _resid_sid (), // The sampling parameters are adjusted later...
 	  _lastClockCycles (0)
 { 
 	setClassName ("SID");
 
-	_resid_sid.set_sampling_parameters ((double) cF, SAMPLE_FAST, (double) samplingFrecuency ());
-
-	assert (sizeof (short) == sampleSize ());
+	setSoundWrapper (new COMMODORE::SoundRESIDWrapper (cF, SAMPLE_FAST, samplingFrecuency ()));
+/**
+	For testing. 
+	setSoundWrapper (new COMMODORE::SoundPulseWrapper ());
+*/
 }
 
 // ---
@@ -32,7 +67,8 @@ bool COMMODORE::SID::initialize ()
 		return (false);
 	}
 
-	_resid_sid.reset ();
+	if (soundWrapper () != nullptr)
+		soundWrapper () -> initialize ();
 
 	_SIDRegisters -> setRESID_SID (&_resid_sid);
 
@@ -53,12 +89,19 @@ bool COMMODORE::SID::simulate (MCHEmul::CPU* cpu)
 	}
 
 	// Add the output to the sound memory...
-	for (unsigned int i = 0; i < (cpu -> clockCycles () - _lastClockCycles); i++)
+	if (soundWrapper () != nullptr)
 	{
-		_resid_sid.clock ();
-		short data = (short) _resid_sid.output (); // The output is between -32768 and 32767 it is 16 bits...
-		if (soundMemory () -> addSampleData ((unsigned char*) &data, sizeof (short)))
-			notify (MCHEmul::Event (_SOUNDREADY));
+		for (unsigned int i = 0; i < (cpu -> clockCycles () - _lastClockCycles); i++)
+		{
+			// The number of bytes that can come from the warpper is not fixed...
+			MCHEmul::UBytes data = soundWrapper () -> getData (cpu);
+			for (size_t j = 0; j < data.size (); j++)
+			{
+				char dt = data [j].value ();
+				if (soundMemory () -> addSampleData (&dt, sizeof (char)))
+					notify (MCHEmul::Event (_SOUNDREADY));
+			}
+		}
 	}
 	
 	_lastClockCycles = cpu -> clockCycles ();
@@ -73,6 +116,8 @@ MCHEmul::InfoStructure COMMODORE::SID::getInfoStructure () const
 
 	result.remove ("Memory"); // This is not neccesary...
 	result.add ("Registers",	std::move (_SIDRegisters -> getInfoStructure ()));
+	if (soundWrapper () != nullptr)
+		result.add ("Wrapper",	std::move (soundWrapper () -> getInfoStructure ()));
 
 	return (result);
 }

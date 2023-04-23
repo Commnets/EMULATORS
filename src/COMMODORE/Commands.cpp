@@ -6,6 +6,8 @@ const std::string COMMODORE::VICStatusCommand::_NAME = "CVICII";
 const std::string COMMODORE::CIAStatusCommand::_NAME = "CCIA";
 const std::string COMMODORE::SIDStatusCommand::_NAME = "CSID";
 const std::string COMMODORE::DatasetteStatusCommand::_NAME = "CDATASETTE";
+const std::string COMMODORE::SIDWrapperCommand::_NAME = "CSIDW";
+
 
 // ---
 void COMMODORE::VICStatusCommand::executeImpl (MCHEmul::CommandExecuter* cE, MCHEmul::Computer* c, MCHEmul::InfoStructure& rst)
@@ -16,7 +18,7 @@ void COMMODORE::VICStatusCommand::executeImpl (MCHEmul::CommandExecuter* cE, MCH
 		static_cast <COMMODORE::Computer*> (c) -> vicII () == nullptr)
 		return;
 
-	rst.add ("VICII", static_cast <COMMODORE::Computer*> (c) -> vicII () -> getInfoStructure ());
+	rst.add ("VICII", std::move (static_cast <COMMODORE::Computer*> (c) -> vicII () -> getInfoStructure ()));
 }
 
 // ---
@@ -28,7 +30,7 @@ void COMMODORE::CIAStatusCommand::executeImpl (MCHEmul::CommandExecuter* cE, MCH
 		static_cast <COMMODORE::Computer*> (c) -> cia () == nullptr)
 		return;
 
-	rst.add ("CIA", static_cast <COMMODORE::Computer*> (c) -> cia () -> getInfoStructure ());
+	rst.add ("CIA", std::move (static_cast <COMMODORE::Computer*> (c) -> cia () -> getInfoStructure ()));
 }
 
 // ---
@@ -40,7 +42,49 @@ void COMMODORE::SIDStatusCommand::executeImpl (MCHEmul::CommandExecuter* cE, MCH
 		static_cast <COMMODORE::Computer*> (c) -> sid () == nullptr)
 		return;
 
-	rst.add ("SID", static_cast <COMMODORE::Computer*> (c) -> sid () -> getInfoStructure ());
+	rst.add ("SID", std::move (static_cast <COMMODORE::Computer*> (c) -> sid () -> getInfoStructure ()));
+}
+
+// ---
+void COMMODORE::SIDWrapperCommand::executeImpl (MCHEmul::CommandExecuter* cE, MCHEmul::Computer* c, MCHEmul::InfoStructure& rst)
+{
+	// Only with a valid computer, but also a C64 one. 
+	if (c == nullptr || 
+		dynamic_cast <COMMODORE::Computer*> (c) == nullptr ||
+		static_cast <COMMODORE::Computer*> (c) -> sid () == nullptr)
+		return;
+
+	MCHEmul::SoundLibWrapper* wrapper = nullptr;
+	switch (std::atoi (parameter ("00").c_str ()))
+	{
+		case 0:
+			{
+				wrapper = new COMMODORE::SoundRESIDWrapper
+					(c -> clock ().cyclesPerSecond (), RESID::SAMPLE_FAST,
+						static_cast <COMMODORE::Computer*> (c) -> sid () -> samplingFrecuency ());
+			}
+
+			break;
+
+		case 1:
+			{
+				int mC = existParameter ("01") // The length of the pulse...
+					? std::atoi (parameter ("01").c_str ()) : 10;
+				char pV = (char) (existParameter ("02") // The value of the pulse...
+					? std::atoi (parameter ("02").c_str ()) : 100);
+				wrapper = new COMMODORE::SoundPulseWrapper (mC, pV);
+			}
+
+			break;
+
+		default:
+			break;
+	}
+
+	if (wrapper == nullptr)
+		rst.add ("ERRORS", std::string ("Wrapper not defined"));
+	else
+		static_cast <COMMODORE::Computer*> (c) -> sid () -> setSoundWrapper (wrapper);
 }
 
 // ---

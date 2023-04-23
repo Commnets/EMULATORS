@@ -103,7 +103,7 @@ void MCHEmul::HelpCommand::executeImpl (MCHEmul::CommandExecuter* cE, MCHEmul::C
 	else
 		helpInfoCommand (parameter ("00"), false);
 
-	rst.add ("HELP", iS);
+	rst.add ("HELP", std::move (iS));
 }
 
 // ---
@@ -227,7 +227,7 @@ void MCHEmul::CPUInfoCommand::executeImpl (MCHEmul::CommandExecuter* cE, MCHEmul
 	if (c == nullptr)
 		return;
 
-	rst.add ("CPU", c -> cpu () -> getInfoStructure ());
+	rst.add ("CPU", std::move (c -> cpu () -> getInfoStructure ()));
 }
 
 // ---
@@ -355,7 +355,7 @@ void MCHEmul::ShowNextInstructionCommand::executeImpl
 		MCHEmul::Address pCA = pC.asAddress ();
 		std::string iP = std::to_string (i);
 		iP = MCHEmul::_CEROS.substr (0, 5 - iP.length ()) + iP;
-		iS.add (iP,
+		iS.add (std::move (iP),
 			MCHEmul::ByteCodeLine (pCA, nI -> parameters ().bytes (), "", nI, c -> action (pCA)).asString
 				(MCHEmul::UByte::OutputFormat::_HEXA, ' ', 2));
 		
@@ -520,8 +520,8 @@ void MCHEmul::IODevicesCommand::executeImpl
 
 	MCHEmul::InfoStructure dvcs;
 	for (const auto& i : c -> devices ())
-		dvcs.add (std::to_string (i.first), i.second -> getInfoStructure ());
-	rst.add ("DEVICES", dvcs);
+		dvcs.add (std::to_string (i.first), std::move (i.second -> getInfoStructure ()));
+	rst.add ("DEVICES", std::move (dvcs));
 }
 
 // ---
@@ -534,8 +534,8 @@ void MCHEmul::PeripheralsCommand::executeImpl
 	MCHEmul::InfoStructure prhsD;
 	MCHEmul::IOPeripherals prhs = std::move (c -> peripherals ()); // The list has been built up...
 	for (const auto& i : prhs)
-		prhsD.add (std::to_string (i.first), i.second -> getInfoStructure ());
-	rst.add ("PERIPHERALS", prhsD);
+		prhsD.add (std::to_string (i.first), std::move (i.second -> getInfoStructure ()));
+	rst.add ("PERIPHERALS", std::move (prhsD));
 }
 
 // ---
@@ -626,5 +626,5 @@ void MCHEmul::InterruptsCommand::executeImpl
 	MCHEmul::InfoStructure intr;
 	for (const auto& i : c -> cpu () -> interrupts ())
 		intr.add (std::to_string (i.second -> id ()), std::move (i.second -> getInfoStructure ()));
-	rst.add ("INTERRUPTS", intr);
+	rst.add ("INTERRUPTS", std::move (intr));
 }

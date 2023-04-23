@@ -75,11 +75,30 @@ namespace COMMODORE
 			MCHEmul::Computer* c, MCHEmul::InfoStructure& rst) override;
 	};
 
+	/** To change the sound wrapper used. */
+	class SIDWrapperCommand final : public MCHEmul::Command
+	{
+		public:
+		static const int _ID = 103;
+		static const std::string _NAME;
+
+		SIDWrapperCommand ()
+			: MCHEmul::Command (_ID, _NAME)
+							{ }
+
+		virtual bool canBeExecuted () const override
+							{ return (_parameters.size () != 0); }
+
+		private:
+		virtual void executeImpl (MCHEmul::CommandExecuter* cE, 
+			MCHEmul::Computer* c, MCHEmul::InfoStructure& rst) override;
+	};
+
 	/** To get the status of the Datasette. */
 	class DatasetteStatusCommand final : public MCHEmul::Command
 	{
 		public:
-		static const int _ID = 103;
+		static const int _ID = 104;
 		static const std::string _NAME;
 
 		DatasetteStatusCommand ()

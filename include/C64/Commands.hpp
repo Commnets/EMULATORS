@@ -18,30 +18,11 @@
 
 namespace C64
 {
-	/** To get the status of the VIC chip. */
-	class VICStatusCommand final : public MCHEmul::Command
-	{
-		public:
-		static const int _ID = 100;
-		static const std::string _NAME;
-	
-		VICStatusCommand ()
-			: MCHEmul::Command (_ID, _NAME)
-							{ }
-
-		virtual bool canBeExecuted () const override
-							{ return (_parameters.size () == 0); }
-
-		private:
-		virtual void executeImpl (MCHEmul::CommandExecuter* cE, 
-			MCHEmul::Computer* c, MCHEmul::InfoStructure& rst) override;
-	};
-
 	/** To get the status of the CIA1 chip. */
 	class CIA1StatusCommand final : public MCHEmul::Command
 	{
 		public:
-		static const int _ID = 101;
+		static const int _ID = 200;
 		static const std::string _NAME;
 
 		CIA1StatusCommand ()
@@ -60,29 +41,10 @@ namespace C64
 	class CIA2StatusCommand final : public MCHEmul::Command
 	{
 		public:
-		static const int _ID = 102;
+		static const int _ID = 201;
 		static const std::string _NAME;
 
 		CIA2StatusCommand ()
-			: MCHEmul::Command (_ID, _NAME)
-							{ }
-
-		virtual bool canBeExecuted () const override
-							{ return (_parameters.size () == 0); }
-
-		private:
-		virtual void executeImpl (MCHEmul::CommandExecuter* cE, 
-			MCHEmul::Computer* c, MCHEmul::InfoStructure& rst) override;
-	};
-
-	/** To get the status of the SID chip. */
-	class SIDStatusCommand final : public MCHEmul::Command
-	{
-		public:
-		static const int _ID = 103;
-		static const std::string _NAME;
-
-		SIDStatusCommand ()
 			: MCHEmul::Command (_ID, _NAME)
 							{ }
 

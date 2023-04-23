@@ -20,6 +20,39 @@
 
 namespace MCHEmul
 {
+	/** To create the "sound" many external tools could be even used.
+		So a general class to create the next frame of sound is defined. */
+	class SoundLibWrapper : public InfoClass
+	{
+		public:
+		SoundLibWrapper (const Attributes& attrs = { })
+			: InfoClass	("SoundLibWrapper"),
+			  _attributes (attrs)
+							{ }
+
+		virtual ~SoundLibWrapper ()
+							{ }
+
+		/** The warpper can accept changes receiving a list of parameters. */
+		virtual void setParameters (const Attributes& attrs)
+							{ _attributes = attrs; }
+		const Attributes& parameters () const
+							{ return (_attributes); }
+
+		virtual void initialize ()
+							{ }
+
+		/** To get the next data considering the status of the CPU. 
+			The method has to return the Ubytes that makes the next sound, and
+			receive a reference to the CPU just in case it is needed to calculate the new frame. */
+		virtual UBytes getData (CPU *) = 0;
+
+		virtual InfoStructure getInfoStructure () const override;
+
+		protected:
+		Attributes _attributes;
+	};
+
 	/**
 	  * SoundChip is very connected with a Sound. \n
 	  * The sound chip uses the SoundMemory to write. \n
@@ -37,13 +70,26 @@ namespace MCHEmul
 			The event has to be received from a Sound IO Device (@see SoundSystem) for more info. */
 		static const unsigned int _SOUNDREADY				= 101;
 
-		SoundChip (int id, const Attributes& attrs = { })
+		SoundChip (int id, const Attributes& attrs = { }, 
+				SoundLibWrapper* w = nullptr)
 			: Chip (id, attrs), 
+			  _soundWrapper (w),
 			  _soundMemory (nullptr)
 							{ }
 
 		virtual ~SoundChip () override
-							{ delete (_soundMemory); }
+							{ delete (_soundMemory); 
+							  delete (_soundWrapper); }
+
+		/** To change the wrapper used. */
+		const SoundLibWrapper* soundWrapper () const
+							{ return (_soundWrapper); }
+		SoundLibWrapper* soundWrapper ()
+							{ return (_soundWrapper); }
+		void setSoundWrapper (SoundLibWrapper* w)
+							{ delete (_soundWrapper); 
+							  if ((_soundWrapper = w) != nullptr) 
+								  _soundWrapper -> initialize (); }
 
 		/** To know the characteristic of the soun chip. */
 		virtual SDL_AudioFormat type () const = 0;
@@ -73,6 +119,9 @@ namespace MCHEmul
 							{ return (new SoundMemory (soundBufferSize () / sampleSize (), sampleSize ())); }
 
 		protected:
+		/** A reference to the sound wrapper. */
+		SoundLibWrapper* _soundWrapper;
+		/** The sound of memory used. */
 		SoundMemory* _soundMemory;
 	};
 }

@@ -51,7 +51,7 @@ namespace MCHEmul
 							{ return (_sizeSample); }
 		size_t size () const
 							{ return (_numberSamples * _sizeSample); }
-		const unsigned char* samplingData () const
+		const char* samplingData () const
 							{ return (_samplingData); }
 
 		// Managing the info of the sampling...
@@ -66,11 +66,11 @@ namespace MCHEmul
 			The method returns true when the internal sampling buffer is full and false when not. ºn
 			When o = true and more data that capacity still available is wanted to be stored, 
 			it is stored back from the beginning. */
-		inline bool addSampleData (unsigned char* sB, size_t nD, bool o = false);
+		inline bool addSampleData (char* sB, size_t nD, bool o = false);
 
 		private:
 		// Represents a circular buffer...
-		unsigned char* _samplingData;
+		char* _samplingData;
 		size_t _numberSamples;
 		size_t _sizeSample;
 
@@ -79,15 +79,15 @@ namespace MCHEmul
 	};
 
 	// ---
-	inline bool SoundMemory::addSampleData (unsigned char* sB, size_t nD, bool o)
+	inline bool SoundMemory::addSampleData (char* sB, size_t nD, bool o)
 	{ 
 		if ((nD % _sizeSample) != 0)
 			return (false); // No well defined...
-					// The number of bytes received have to be a multiple of the size of the sample...
+							// The number of bytes received have to be a multiple of the size of the sample...
 		
 		bool result = false;
 
-		unsigned char* cB = sB;
+		char* cB = sB;
 		// Samples to write...
 		size_t pS = nD / _sizeSample; 
 		while (pS > 0 && ((!result && !o) || o))
@@ -98,7 +98,7 @@ namespace MCHEmul
 			pS -= wS; // Still pending samples to add...
 
 			// Write part of the received data into the buffer...
-			std::memcpy (_samplingData + (_pointerToSample * _sizeSample), cB, wS * _sizeSample);
+			std::memcpy ((void*) (_samplingData + (_pointerToSample * _sizeSample)), (void*) cB, wS * _sizeSample);
 
 			cB += (wS * _sizeSample);
 			if ((_pointerToSample += wS) >= _numberSamples)
