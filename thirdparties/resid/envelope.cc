@@ -25,32 +25,32 @@ using namespace RESID;
 // ----------------------------------------------------------------------------
 // Constructor.
 // ----------------------------------------------------------------------------
-EnvelopeGenerator::EnvelopeGenerator()
+EnvelopeGenerator::EnvelopeGenerator ()
 {
-  reset();
+	reset ();
 }
 
 // ----------------------------------------------------------------------------
 // SID reset.
 // ----------------------------------------------------------------------------
-void EnvelopeGenerator::reset()
+void EnvelopeGenerator::reset ()
 {
-  envelope_counter = 0;
+	envelope_counter = 0;
 
-  attack = 0;
-  decay = 0;
-  sustain = 0;
-  release = 0;
+	attack = 0;
+	decay = 0;
+	sustain = 0;
+	release = 0;
 
-  gate = 0;
+	gate = 0;
 
-  rate_counter = 0;
-  exponential_counter = 0;
-  exponential_counter_period = 1;
+	rate_counter = 0;
+	exponential_counter = 0;
+	exponential_counter_period = 1;
 
-  state = RELEASE;
-  rate_period = rate_counter_period[release];
-  hold_zero = true;
+	state = RELEASE;
+	rate_period = rate_counter_period [release];
+	hold_zero = true;
 }
 
 
@@ -98,17 +98,17 @@ void EnvelopeGenerator::reset()
 // The described method is thus sufficient for exact calculation of the rate
 // periods.
 //
-reg16 EnvelopeGenerator::rate_counter_period[] = {
-      9,  //   2ms*1.0MHz/256 =     7.81
-     32,  //   8ms*1.0MHz/256 =    31.25
-     63,  //  16ms*1.0MHz/256 =    62.50
-     95,  //  24ms*1.0MHz/256 =    93.75
-    149,  //  38ms*1.0MHz/256 =   148.44
-    220,  //  56ms*1.0MHz/256 =   218.75
-    267,  //  68ms*1.0MHz/256 =   265.63
-    313,  //  80ms*1.0MHz/256 =   312.50
-    392,  // 100ms*1.0MHz/256 =   390.63
-    977,  // 250ms*1.0MHz/256 =   976.56
+reg16 EnvelopeGenerator::rate_counter_period [] = {
+	  9,  //   2ms*1.0MHz/256 =     7.81
+	 32,  //   8ms*1.0MHz/256 =    31.25
+	 63,  //  16ms*1.0MHz/256 =    62.50
+	 95,  //  24ms*1.0MHz/256 =    93.75
+	149,  //  38ms*1.0MHz/256 =   148.44
+	220,  //  56ms*1.0MHz/256 =   218.75
+	267,  //  68ms*1.0MHz/256 =   265.63
+	313,  //  80ms*1.0MHz/256 =   312.50
+	392,  // 100ms*1.0MHz/256 =   390.63
+	977,  // 250ms*1.0MHz/256 =   976.56
    1954,  // 500ms*1.0MHz/256 =  1953.13
    3126,  // 800ms*1.0MHz/256 =  3125.00
    3907,  //   1 s*1.0MHz/256 =  3906.25
@@ -155,7 +155,7 @@ reg16 EnvelopeGenerator::rate_counter_period[] = {
 // envelope counter are compared to the 4-bit sustain value.
 // This has been verified by sampling ENV3.
 //
-reg8 EnvelopeGenerator::sustain_level[] = {
+reg8 EnvelopeGenerator::sustain_level [] = {
   0x00,
   0x11,
   0x22,
@@ -178,52 +178,52 @@ reg8 EnvelopeGenerator::sustain_level[] = {
 // ----------------------------------------------------------------------------
 // Register functions.
 // ----------------------------------------------------------------------------
-void EnvelopeGenerator::writeCONTROL_REG(reg8 control)
+void EnvelopeGenerator::writeCONTROL_REG (reg8 control)
 {
-  reg8 gate_next = control & 0x01;
+	reg8 gate_next = control & 0x01;
 
-  // The rate counter is never reset, thus there will be a delay before the
-  // envelope counter starts counting up (attack) or down (release).
+	// The rate counter is never reset, thus there will be a delay before the
+	// envelope counter starts counting up (attack) or down (release).
 
-  // Gate bit on: Start attack, decay, sustain.
-  if (!gate && gate_next) {
-    state = ATTACK;
-    rate_period = rate_counter_period[attack];
+	// Gate bit on: Start attack, decay, sustain.
+	if (!gate && gate_next) {
+		state = ATTACK;
+		rate_period = rate_counter_period [attack];
 
-    // Switching to attack state unlocks the zero freeze.
-    hold_zero = false;
-  }
-  // Gate bit off: Start release.
-  else if (gate && !gate_next) {
-    state = RELEASE;
-    rate_period = rate_counter_period[release];
-  }
+		// Switching to attack state unlocks the zero freeze.
+		hold_zero = false;
+	}
+	// Gate bit off: Start release.
+	else if (gate && !gate_next) {
+		state = RELEASE;
+		rate_period = rate_counter_period [release];
+	}
 
-  gate = gate_next;
+	gate = gate_next;
 }
 
-void EnvelopeGenerator::writeATTACK_DECAY(reg8 attack_decay)
+void EnvelopeGenerator::writeATTACK_DECAY (reg8 attack_decay)
 {
-  attack = (attack_decay >> 4) & 0x0f;
-  decay = attack_decay & 0x0f;
-  if (state == ATTACK) {
-    rate_period = rate_counter_period[attack];
-  }
-  else if (state == DECAY_SUSTAIN) {
-    rate_period = rate_counter_period[decay];
-  }
+	attack = (attack_decay >> 4) & 0x0f;
+	decay = attack_decay & 0x0f;
+	if (state == ATTACK) {
+		rate_period = rate_counter_period [attack];
+	}
+	else if (state == DECAY_SUSTAIN) {
+		rate_period = rate_counter_period [decay];
+	}
 }
 
-void EnvelopeGenerator::writeSUSTAIN_RELEASE(reg8 sustain_release)
+void EnvelopeGenerator::writeSUSTAIN_RELEASE (reg8 sustain_release)
 {
-  sustain = (sustain_release >> 4) & 0x0f;
-  release = sustain_release & 0x0f;
-  if (state == RELEASE) {
-    rate_period = rate_counter_period[release];
-  }
+	sustain = (sustain_release >> 4) & 0x0f;
+	release = sustain_release & 0x0f;
+	if (state == RELEASE) {
+		rate_period = rate_counter_period [release];
+	}
 }
 
-reg8 EnvelopeGenerator::readENV()
+reg8 EnvelopeGenerator::readENV ()
 {
-  return output();
+	return output ();
 }

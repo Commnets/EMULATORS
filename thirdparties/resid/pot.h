@@ -24,13 +24,11 @@
 
 namespace RESID
 {
-
-class Potentiometer
-{
-public:
-  reg8 readPOT();
-};
-
+	class Potentiometer
+	{
+		public:
+		reg8 readPOT ();
+	};
 }
 
 #endif

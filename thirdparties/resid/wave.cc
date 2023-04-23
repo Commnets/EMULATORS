@@ -25,122 +25,122 @@ using namespace RESID;
 // ----------------------------------------------------------------------------
 // Constructor.
 // ----------------------------------------------------------------------------
-WaveformGenerator::WaveformGenerator()
+WaveformGenerator::WaveformGenerator ()
 {
-  sync_source = this;
+	sync_source = this;
 
-  set_chip_model(MOS6581);
+	set_chip_model (MOS6581);
 
-  reset();
+	reset ();
 }
 
 
 // ----------------------------------------------------------------------------
 // Set sync source.
 // ----------------------------------------------------------------------------
-void WaveformGenerator::set_sync_source(WaveformGenerator* source)
+void WaveformGenerator::set_sync_source (WaveformGenerator* source)
 {
-  sync_source = source;
-  source->sync_dest = this;
+	sync_source = source;
+	source->sync_dest = this;
 }
 
 
 // ----------------------------------------------------------------------------
 // Set chip model.
 // ----------------------------------------------------------------------------
-void WaveformGenerator::set_chip_model(chip_model model)
+void WaveformGenerator::set_chip_model (chip_model model)
 {
-  if (model == MOS6581) {
-    wave__ST = wave6581__ST;
-    wave_P_T = wave6581_P_T;
-    wave_PS_ = wave6581_PS_;
-    wave_PST = wave6581_PST;
-  }
-  else {
-    wave__ST = wave8580__ST;
-    wave_P_T = wave8580_P_T;
-    wave_PS_ = wave8580_PS_;
-    wave_PST = wave8580_PST;
-  }
+	if (model == MOS6581) {
+		wave__ST = wave6581__ST;
+		wave_P_T = wave6581_P_T;
+		wave_PS_ = wave6581_PS_;
+		wave_PST = wave6581_PST;
+	}
+	else {
+		wave__ST = wave8580__ST;
+		wave_P_T = wave8580_P_T;
+		wave_PS_ = wave8580_PS_;
+		wave_PST = wave8580_PST;
+	}
 }
 
 
 // ----------------------------------------------------------------------------
 // Register functions.
 // ----------------------------------------------------------------------------
-void WaveformGenerator::writeFREQ_LO(reg8 freq_lo)
+void WaveformGenerator::writeFREQ_LO (reg8 freq_lo)
 {
-  freq = freq & 0xff00 | freq_lo & 0x00ff;
+	freq = freq & 0xff00 | freq_lo & 0x00ff;
 }
 
-void WaveformGenerator::writeFREQ_HI(reg8 freq_hi)
+void WaveformGenerator::writeFREQ_HI (reg8 freq_hi)
 {
-  freq = (freq_hi << 8) & 0xff00 | freq & 0x00ff;
+	freq = (freq_hi << 8) & 0xff00 | freq & 0x00ff;
 }
 
-void WaveformGenerator::writePW_LO(reg8 pw_lo)
+void WaveformGenerator::writePW_LO (reg8 pw_lo)
 {
-  pw = pw & 0xf00 | pw_lo & 0x0ff;
+	pw = pw & 0xf00 | pw_lo & 0x0ff;
 }
 
-void WaveformGenerator::writePW_HI(reg8 pw_hi)
+void WaveformGenerator::writePW_HI (reg8 pw_hi)
 {
-  pw = (pw_hi << 8) & 0xf00 | pw & 0x0ff;
+	pw = (pw_hi << 8) & 0xf00 | pw & 0x0ff;
 }
 
-void WaveformGenerator::writeCONTROL_REG(reg8 control)
+void WaveformGenerator::writeCONTROL_REG (reg8 control)
 {
-  waveform = (control >> 4) & 0x0f;
-  ring_mod = control & 0x04;
-  sync = control & 0x02;
+	waveform = (control >> 4) & 0x0f;
+	ring_mod = control & 0x04;
+	sync = control & 0x02;
 
-  reg8 test_next = control & 0x08;
+	reg8 test_next = control & 0x08;
 
-  // Test bit set.
-  // The accumulator and the shift register are both cleared.
-  // NB! The shift register is not really cleared immediately. It seems like
-  // the individual bits in the shift register start to fade down towards
-  // zero when test is set. All bits reach zero within approximately
-  // $2000 - $4000 cycles.
-  // This is not modeled. There should fortunately be little audible output
-  // from this peculiar behavior.
-  if (test_next) {
-    accumulator = 0;
-    shift_register = 0;
-  }
-  // Test bit cleared.
-  // The accumulator starts counting, and the shift register is reset to
-  // the value 0x7ffff8.
-  // NB! The shift register will not actually be set to this exact value if the
-  // shift register bits have not had time to fade to zero.
-  // This is not modeled.
-  else if (test) {
-    shift_register = 0x7ffff8;
-  }
+	// Test bit set.
+	// The accumulator and the shift register are both cleared.
+	// NB! The shift register is not really cleared immediately. It seems like
+	// the individual bits in the shift register start to fade down towards
+	// zero when test is set. All bits reach zero within approximately
+	// $2000 - $4000 cycles.
+	// This is not modeled. There should fortunately be little audible output
+	// from this peculiar behavior.
+	if (test_next) {
+		accumulator = 0;
+		shift_register = 0;
+	}
+	// Test bit cleared.
+	// The accumulator starts counting, and the shift register is reset to
+	// the value 0x7ffff8.
+	// NB! The shift register will not actually be set to this exact value if the
+	// shift register bits have not had time to fade to zero.
+	// This is not modeled.
+	else if (test) {
+		shift_register = 0x7ffff8;
+	}
 
-  test = test_next;
+	test = test_next;
 
-  // The gate bit is handled by the EnvelopeGenerator.
+	// The gate bit is handled by the EnvelopeGenerator.
 }
 
-reg8 WaveformGenerator::readOSC()
+reg8 WaveformGenerator::readOSC ()
 {
-  return output() >> 4;
+	return output () >> 4;
 }
 
 // ----------------------------------------------------------------------------
 // SID reset.
 // ----------------------------------------------------------------------------
-void WaveformGenerator::reset()
+void WaveformGenerator::reset ()
 {
-  accumulator = 0;
-  shift_register = 0x7ffff8;
-  freq = 0;
-  pw = 0;
+	accumulator = 0;
+	shift_register = 0x7ffff8;
+	freq = 0;
+	pw = 0;
 
-  test = 0;
-  ring_mod = 0;
-  sync = 0;
+	test = 0;
+	ring_mod = 0;
+	sync = 0;
 
-  msb_rising = false;
+	msb_rising = false;
 }

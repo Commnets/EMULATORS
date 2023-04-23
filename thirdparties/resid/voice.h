@@ -26,35 +26,33 @@
 
 namespace RESID
 {
+	class Voice
+	{
+		public:
+		Voice ();
 
-class Voice
-{
-public:
-  Voice();
+		void set_chip_model (chip_model model);
+		void set_sync_source (Voice*);
+		void reset ();
 
-  void set_chip_model(chip_model model);
-  void set_sync_source(Voice*);
-  void reset();
+		void writeCONTROL_REG (reg8);
 
-  void writeCONTROL_REG(reg8);
+		// Amplitude modulated waveform output.
+		// Range [-2048*255, 2047*255].
+		RESID_INLINE sound_sample output ();
 
-  // Amplitude modulated waveform output.
-  // Range [-2048*255, 2047*255].
-  RESID_INLINE sound_sample output();
+		protected:
+		WaveformGenerator wave;
+		EnvelopeGenerator envelope;
 
-protected:
-  WaveformGenerator wave;
-  EnvelopeGenerator envelope;
+		// Waveform D/A zero level.
+		sound_sample wave_zero;
 
-  // Waveform D/A zero level.
-  sound_sample wave_zero;
+		// Multiplying D/A DC offset.
+		sound_sample voice_DC;
 
-  // Multiplying D/A DC offset.
-  sound_sample voice_DC;
-
-friend class SID;
-};
-
+		friend class SID;
+	};
 }
 
 using namespace RESID;
@@ -72,10 +70,10 @@ using namespace RESID;
 // Ideal range [-2048*255, 2047*255].
 // ----------------------------------------------------------------------------
 RESID_INLINE
-sound_sample Voice::output()
+sound_sample Voice::output ()
 {
-  // Multiply oscillator output with envelope output.
-  return (wave.output() - wave_zero)*envelope.output() + voice_DC;
+	// Multiply oscillator output with envelope output.
+	return (wave.output () - wave_zero) * envelope.output () + voice_DC;
 }
 
 #endif // RESID_INLINING || defined(__VOICE_CC__)

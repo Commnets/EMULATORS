@@ -21,8 +21,8 @@
 
 using namespace RESID;
 
-reg8 Potentiometer::readPOT()
+reg8 Potentiometer::readPOT ()
 {
-  // NB! Not modeled.
-  return 0xff;
+	// NB! Not modeled.
+	return 0xff;
 }

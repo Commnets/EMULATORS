@@ -28,124 +28,122 @@
 
 namespace RESID
 {
+	class SID
+	{
+		public:
+		SID ();
+		~SID ();
 
-class SID
-{
-public:
-  SID();
-  ~SID();
+		void set_chip_model (chip_model model);
+		void enable_filter (bool enable);
+		void enable_external_filter (bool enable);
+		bool set_sampling_parameters (double clock_freq, sampling_method method,
+			double sample_freq, double pass_freq = -1,
+			double filter_scale = 0.97);
+		void adjust_sampling_frequency (double sample_freq);
 
-  void set_chip_model(chip_model model);
-  void enable_filter(bool enable);
-  void enable_external_filter(bool enable);
-  bool set_sampling_parameters(double clock_freq, sampling_method method,
-			       double sample_freq, double pass_freq = -1,
-			       double filter_scale = 0.97);
-  void adjust_sampling_frequency(double sample_freq);
+		void fc_default (const fc_point*& points, int& count);
+		PointPlotter<sound_sample> fc_plotter ();
 
-  void fc_default(const fc_point*& points, int& count);
-  PointPlotter<sound_sample> fc_plotter();
+		void clock ();
+		void clock (cycle_count delta_t);
+		int clock (cycle_count& delta_t, short* buf, int n, int interleave = 1);
+		void reset ();
 
-  void clock();
-  void clock(cycle_count delta_t);
-  int clock(cycle_count& delta_t, short* buf, int n, int interleave = 1);
-  void reset();
-  
-  // Read/write registers.
-  reg8 read(reg8 offset);
-  void write(reg8 offset, reg8 value);
+		// Read/write registers.
+		reg8 read (reg8 offset);
+		void write (reg8 offset, reg8 value);
 
-  // Read/write state.
-  class State
-  {
-  public:
-    State();
+		// Read/write state.
+		class State
+		{
+			public:
+			State ();
 
-    char sid_register[0x20];
+			char sid_register [0x20];
 
-    reg8 bus_value;
-    cycle_count bus_value_ttl;
+			reg8 bus_value;
+			cycle_count bus_value_ttl;
 
-    reg24 accumulator[3];
-    reg24 shift_register[3];
-    reg16 rate_counter[3];
-    reg16 rate_counter_period[3];
-    reg16 exponential_counter[3];
-    reg16 exponential_counter_period[3];
-    reg8 envelope_counter[3];
-    EnvelopeGenerator::State envelope_state[3];
-    bool hold_zero[3];
-  };
-    
-  State read_state();
-  void write_state(const State& state);
+			reg24 accumulator [3];
+			reg24 shift_register [3];
+			reg16 rate_counter [3];
+			reg16 rate_counter_period [3];
+			reg16 exponential_counter [3];
+			reg16 exponential_counter_period [3];
+			reg8 envelope_counter [3];
+			EnvelopeGenerator::State envelope_state [3];
+			bool hold_zero [3];
+		};
 
-  // 16-bit input (EXT IN).
-  void input(int sample);
+		State read_state ();
+		void write_state (const State& state);
 
-  // 16-bit output (AUDIO OUT).
-  int output();
-  // n-bit output.
-  int output(int bits);
+		// 16-bit input (EXT IN).
+		void input (int sample);
 
-protected:
-  static double I0(double x);
-  RESID_INLINE int clock_fast(cycle_count& delta_t, short* buf, int n,
-			      int interleave);
-  RESID_INLINE int clock_interpolate(cycle_count& delta_t, short* buf, int n,
-				     int interleave);
-  RESID_INLINE int clock_resample_interpolate(cycle_count& delta_t, short* buf,
-					      int n, int interleave);
-  RESID_INLINE int clock_resample_fast(cycle_count& delta_t, short* buf,
-				       int n, int interleave);
+		// 16-bit output (AUDIO OUT).
+		int output ();
+		// n-bit output.
+		int output (int bits);
 
-  Voice voice[3];
-  Filter filter;
-  ExternalFilter extfilt;
-  Potentiometer potx;
-  Potentiometer poty;
+		protected:
+		static double I0 (double x);
+		RESID_INLINE int clock_fast (cycle_count& delta_t, short* buf, int n,
+			int interleave);
+		RESID_INLINE int clock_interpolate (cycle_count& delta_t, short* buf, int n,
+			int interleave);
+		RESID_INLINE int clock_resample_interpolate (cycle_count& delta_t, short* buf,
+			int n, int interleave);
+		RESID_INLINE int clock_resample_fast (cycle_count& delta_t, short* buf,
+			int n, int interleave);
 
-  reg8 bus_value;
-  cycle_count bus_value_ttl;
+		Voice voice [3];
+		Filter filter;
+		ExternalFilter extfilt;
+		Potentiometer potx;
+		Potentiometer poty;
 
-  double clock_frequency;
+		reg8 bus_value;
+		cycle_count bus_value_ttl;
 
-  // External audio input.
-  int ext_in;
+		double clock_frequency;
 
-  // Resampling constants.
-  // The error in interpolated lookup is bounded by 1.234/L^2,
-  // while the error in non-interpolated lookup is bounded by
-  // 0.7854/L + 0.4113/L^2, see
-  // http://www-ccrma.stanford.edu/~jos/resample/Choice_Table_Size.html
-  // For a resolution of 16 bits this yields L >= 285 and L >= 51473,
-  // respectively.
-  static const int FIR_N = 125;
-  static const int FIR_RES_INTERPOLATE = 285;
-  static const int FIR_RES_FAST = 51473;
-  static const int FIR_SHIFT = 15;
-  static const int RINGSIZE = 16384;
+		// External audio input.
+		int ext_in;
 
-  // Fixpoint constants (16.16 bits).
-  static const int FIXP_SHIFT = 16;
-  static const int FIXP_MASK = 0xffff;
+		// Resampling constants.
+		// The error in interpolated lookup is bounded by 1.234/L^2,
+		// while the error in non-interpolated lookup is bounded by
+		// 0.7854/L + 0.4113/L^2, see
+		// http://www-ccrma.stanford.edu/~jos/resample/Choice_Table_Size.html
+		// For a resolution of 16 bits this yields L >= 285 and L >= 51473,
+		// respectively.
+		static const int FIR_N = 125;
+		static const int FIR_RES_INTERPOLATE = 285;
+		static const int FIR_RES_FAST = 51473;
+		static const int FIR_SHIFT = 15;
+		static const int RINGSIZE = 16384;
 
-  // Sampling variables.
-  sampling_method sampling;
-  cycle_count cycles_per_sample;
-  cycle_count sample_offset;
-  int sample_index;
-  short sample_prev;
-  int fir_N;
-  int fir_RES;
+		// Fixpoint constants (16.16 bits).
+		static const int FIXP_SHIFT = 16;
+		static const int FIXP_MASK = 0xffff;
 
-  // Ring buffer with overflow for contiguous storage of RINGSIZE samples.
-  short* sample;
+		// Sampling variables.
+		sampling_method sampling;
+		cycle_count cycles_per_sample;
+		cycle_count sample_offset;
+		int sample_index;
+		short sample_prev;
+		int fir_N;
+		int fir_RES;
 
-  // FIR_RES filter tables (FIR_N*FIR_RES).
-  short* fir;
-};
+		// Ring buffer with overflow for contiguous storage of RINGSIZE samples.
+		short* sample;
 
+		// FIR_RES filter tables (FIR_N*FIR_RES).
+		short* fir;
+	};
 }
 
 #endif // not __SID_H__

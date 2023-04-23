@@ -31,37 +31,37 @@ const bool false = 0;
 
 namespace RESID
 {
+	// We could have used the smallest possible data type for each SID register,
+	// however this would give a slower engine because of data type conversions.
+	// An int is assumed to be at least 32 bits (necessary in the types reg24,
+	// cycle_count, and sound_sample). GNU does not support 16-bit machines
+	// (GNU Coding Standards: Portability between CPUs), so this should be
+	// a valid assumption.
 
-// We could have used the smallest possible data type for each SID register,
-// however this would give a slower engine because of data type conversions.
-// An int is assumed to be at least 32 bits (necessary in the types reg24,
-// cycle_count, and sound_sample). GNU does not support 16-bit machines
-// (GNU Coding Standards: Portability between CPUs), so this should be
-// a valid assumption.
+	typedef unsigned int reg4;
+	typedef unsigned int reg8;
+	typedef unsigned int reg12;
+	typedef unsigned int reg16;
+	typedef unsigned int reg24;
 
-typedef unsigned int reg4;
-typedef unsigned int reg8;
-typedef unsigned int reg12;
-typedef unsigned int reg16;
-typedef unsigned int reg24;
+	typedef int cycle_count;
+	typedef int sound_sample;
+	typedef sound_sample fc_point [2];
 
-typedef int cycle_count;
-typedef int sound_sample;
-typedef sound_sample fc_point[2];
+	enum chip_model { MOS6581, MOS8580 };
 
-enum chip_model { MOS6581, MOS8580 };
-
-enum sampling_method { SAMPLE_FAST, SAMPLE_INTERPOLATE,
-		       SAMPLE_RESAMPLE_INTERPOLATE, SAMPLE_RESAMPLE_FAST };
-
+	enum sampling_method {
+		SAMPLE_FAST, SAMPLE_INTERPOLATE,
+		SAMPLE_RESAMPLE_INTERPOLATE, SAMPLE_RESAMPLE_FAST
+	};
 }
 
 extern "C"
 {
 #ifndef __VERSION_CC__
-extern const char* resid_version_string;
+	extern const char* resid_version_string;
 #else
-const char* resid_version_string = VERSION;
+	const char* resid_version_string = VERSION;
 #endif
 }
 
