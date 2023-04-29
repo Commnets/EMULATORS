@@ -42,10 +42,10 @@ namespace MCHEmul
 		virtual void initialize ()
 							{ }
 
-		/** To get the next data considering the status of the CPU. 
-			The method has to return the Ubytes that makes the next sound, and
-			receive a reference to the CPU just in case it is needed to calculate the new frame. */
-		virtual UBytes getData (CPU *) = 0;
+		/** To get the next data considering the status of the CPU. \n
+			The method returns true when there is data "available" and false if it is not. \n
+			In case te data is available the parameter "UBytes" will have been filled up with the value. */
+		virtual bool getData (CPU*, UBytes&) = 0;
 
 		virtual InfoStructure getInfoStructure () const override;
 

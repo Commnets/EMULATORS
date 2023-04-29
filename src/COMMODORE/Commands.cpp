@@ -68,11 +68,9 @@ void COMMODORE::SIDWrapperCommand::executeImpl (MCHEmul::CommandExecuter* cE, MC
 
 		case 1:
 			{
-				int mC = existParameter ("01") // The length of the pulse...
-					? std::atoi (parameter ("01").c_str ()) : 10;
-				char pV = (char) (existParameter ("02") // The value of the pulse...
-					? std::atoi (parameter ("02").c_str ()) : 100);
-				wrapper = new COMMODORE::SoundPulseWrapper (mC, pV);
+				wrapper = new COMMODORE::SoundSimpleWrapper 
+					(c -> clock ().cyclesPerSecond (),
+					 static_cast <COMMODORE::Computer*> (c) -> sid () -> samplingFrecuency ());
 			}
 
 			break;

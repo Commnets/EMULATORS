@@ -3,7 +3,7 @@
 // ---
 COMMODORE::SIDRegisters::SIDRegisters (MCHEmul::PhysicalStorage* ps, size_t pp, const MCHEmul::Address& a, size_t s)
 	: MCHEmul::ChipRegisters (_SIDREGS_SUBSET, ps, pp, a, s),
-	  _resid_sid (nullptr)
+	  _sidWrapper (nullptr)
 { 
 	setClassName ("SIDRegisters"); 
 
@@ -23,70 +23,16 @@ void COMMODORE::SIDRegisters::setValue (size_t p, const MCHEmul::UByte& v)
 { 
 	MCHEmul::PhysicalStorageSubset::setValue (p, v);
 							 
-	if (_resid_sid != nullptr) // Can happen when emulation starts...
-		_resid_sid -> write ((RESID::reg8) (p % 0x20), (RESID::reg8) v.value ()); 
+	if (_sidWrapper != nullptr) // Can happen when emulation starts...
+		_sidWrapper -> setValue ((p % 0x20), v.value ()); 
 }
 
 // ---
 const MCHEmul::UByte& COMMODORE::SIDRegisters::readValue (size_t p) const
 {
 	MCHEmul::UByte result = MCHEmul::PhysicalStorage::_DEFAULTVALUE;
-
-	if (_resid_sid != nullptr)
-	{
-		size_t pp = p % 0x20;
-
-		switch (pp)
-		{ 
-			case 0x00:
-			case 0x01:
-			case 0x02:
-			case 0x03:
-			case 0x04:
-			case 0x05:
-			case 0x06:
-			case 0x07:
-			case 0x08:
-			case 0x09:
-			case 0x0a:
-			case 0x0b:
-			case 0x0c:
-			case 0x0d:
-			case 0x0e:
-			case 0x0f:
-			case 0x10:
-			case 0x11:
-			case 0x12:
-			case 0x13:
-			case 0x14:
-			case 0x15:
-			case 0x16:
-			case 0x17:
-			case 0x18:
-				result = std::move (_resid_sid -> read_state ()).sid_register [pp];
-				break;
-
-
-			// Direct information from the structure kept into the REDSID::SID
-			case 0x19:
-			case 0x1a:
-			case 0x1b:
-			case 0x1c:
-				MCHEmul::UByte ((unsigned char) _resid_sid -> read ((RESID::reg8) (p % 0x20)));
-				break;
-
-			// Not connected...
-			case 0x1d:
-			case 0x1e:
-			case 0x1f:
-				result = MCHEmul::UByte::_FF;
-				break;
-
-			default:
-				result = MCHEmul::PhysicalStorageSubset::readValue (pp);
-				break;
-		}
-	}
+	if (_sidWrapper != nullptr)
+		result = _sidWrapper -> readValue (p % 0x20);
 
 	return (_lastValueRead = result);
 }

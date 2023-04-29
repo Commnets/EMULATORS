@@ -168,6 +168,9 @@
     <ClCompile Include="..\..\src\CORE\SoundChip.cpp">
       <Filter>Archivos de origen\Motherboard</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\CORE\SoundWave.cpp">
+      <Filter>Archivos de origen\IO</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\include\CORE\IO.hpp">
@@ -328,6 +331,9 @@
     </ClInclude>
     <ClInclude Include="..\..\include\CORE\MicroBus.hpp">
       <Filter>Archivos de encabezado\Motherboard</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\CORE\SoundWave.hpp">
+      <Filter>Archivos de encabezado\IO</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

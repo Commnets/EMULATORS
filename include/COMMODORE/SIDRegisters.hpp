@@ -15,7 +15,7 @@
 #define __COMMODORE_SIDREGISTERS__
 
 #include <CORE/incs.hpp>
-#include <resid/sid.h>
+#include <COMMODORE/SIDLibWrapper.hpp>
 
 namespace COMMODORE
 {
@@ -42,14 +42,14 @@ namespace COMMODORE
 		/** To initialize the internal values. */
 		void initializeInternalValues ();
 
-		/** This methis is invoked from the SID emulation to set a reference to the RESID SID emulation. */
-		void setRESID_SID (RESID::SID* sid)
-							{ _resid_sid = sid; }
+		/** This method is to establish the wrapper used. */
+		void setSIDLibWrapper (SIDLibWrapper* w)
+							{ _sidWrapper = w; }
 
 		/** Just to avoid unnecessary copies later. */
 		mutable MCHEmul::UByte _lastValueRead;
-		/** A reference to the RESID SID emulation has to be considered. */
-		RESID::SID* _resid_sid;
+		/** A reference to SID Lib Wrapper. */
+		SIDLibWrapper* _sidWrapper;
 	};
 }
 

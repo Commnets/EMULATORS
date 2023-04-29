@@ -57,6 +57,7 @@
 #include <CORE/ScreenMemory.hpp>
 #include <CORE/OSIO.hpp>
 #include <CORE/Sound.hpp>
+#include <CORE/SoundWave.hpp>
 #include <CORE/SoundMemory.hpp>
 #include <CORE/IOPeripheral.hpp>
 #include <CORE/IOPBuilder.hpp>

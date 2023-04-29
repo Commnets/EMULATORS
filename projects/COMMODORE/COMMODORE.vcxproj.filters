@@ -114,6 +114,9 @@
     <ClInclude Include="..\..\include\COMMODORE\CIASerialPort.hpp">
       <Filter>Archivos de encabezado\Motherboard\Chips</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\include\COMMODORE\SIDLibWrapper.hpp">
+      <Filter>Archivos de encabezado\Motherboard\Chips</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Commodore.fmt">
@@ -179,6 +182,9 @@
       <Filter>Archivos de origen\IO</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\COMMODORE\CIASerialPort.cpp">
+      <Filter>Archivos de origen\Motherboard\Chips</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\COMMODORE\SIDLibWrapper.cpp">
       <Filter>Archivos de origen\Motherboard\Chips</Filter>
     </ClCompile>
   </ItemGroup>

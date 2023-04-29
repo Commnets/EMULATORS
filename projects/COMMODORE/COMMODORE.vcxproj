@@ -36,6 +36,7 @@
     <ClInclude Include="..\..\include\COMMODORE\incs.hpp" />
     <ClInclude Include="..\..\include\COMMODORE\IOPBuilder.hpp" />
     <ClInclude Include="..\..\include\COMMODORE\SID.hpp" />
+    <ClInclude Include="..\..\include\COMMODORE\SIDLibWrapper.hpp" />
     <ClInclude Include="..\..\include\COMMODORE\SIDRegisters.hpp" />
     <ClInclude Include="..\..\include\COMMODORE\UserIOPeripherals.hpp" />
     <ClInclude Include="..\..\include\COMMODORE\UserPort.hpp" />
@@ -72,6 +73,7 @@
     <ClCompile Include="..\..\src\COMMODORE\FileReaders.cpp" />
     <ClCompile Include="..\..\src\COMMODORE\IOPBuilder.cpp" />
     <ClCompile Include="..\..\src\COMMODORE\SID.cpp" />
+    <ClCompile Include="..\..\src\COMMODORE\SIDLibWrapper.cpp" />
     <ClCompile Include="..\..\src\COMMODORE\SIDRegisters.cpp" />
     <ClCompile Include="..\..\src\COMMODORE\UserPort.cpp" />
     <ClCompile Include="..\..\src\COMMODORE\VICII.cpp" />

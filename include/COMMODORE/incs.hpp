@@ -22,6 +22,7 @@
 #include <COMMODORE/CIATimer.hpp>
 #include <COMMODORE/CIAClock.hpp>
 #include <COMMODORE/CIA.hpp>
+#include <COMMODORE/SIDLibWrapper.hpp>
 #include <COMMODORE/SIDRegisters.hpp>
 #include <COMMODORE/SID.hpp>
 #include <COMMODORE/FileReaders.hpp>
