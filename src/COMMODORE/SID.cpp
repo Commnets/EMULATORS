@@ -12,8 +12,8 @@ COMMODORE::SID::SID (unsigned int cF)
 { 
 	setClassName ("SID");
 
-	setSoundWrapper (new COMMODORE::SoundRESIDWrapper (cF, SAMPLE_FAST, samplingFrecuency ()));
-//	setSoundWrapper (new COMMODORE::SoundSimpleWrapper (cF, samplingFrecuency ()));
+//	setSoundWrapper (new COMMODORE::SoundRESIDWrapper (cF, SAMPLE_FAST, samplingFrecuency ()));
+	setSoundWrapper (new COMMODORE::SoundSimpleWrapper (cF, samplingFrecuency ()));
 }
 
 // ---

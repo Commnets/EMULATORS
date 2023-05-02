@@ -88,6 +88,10 @@ void COMMODORE::SoundSimpleWrapper::initialize ()
 
 	_counterClocksPerSample = 0;
 
+	// All voices are active in this emulation...
+	for (auto i : _voices)
+		i -> setActive (true);
+
 	// All registers are 0 by default...
 	_registers = std::vector <MCHEmul::UByte> (0x20, MCHEmul::UByte::_0); 
 }
@@ -97,27 +101,27 @@ bool COMMODORE::SoundSimpleWrapper::getData (MCHEmul::CPU *cpu, MCHEmul::UBytes&
 {
 	bool result = false;
 
-	unsigned int nC = cpu -> clockCycles () - _lastClockCycles;
-
 	for (auto i : _voices)
-		i -> clock (nC);
+		i -> clock (); // just one...
 
-	if ((result = ((_counterClocksPerSample += nC) >= _clocksPerSample)))
+	if ((result = ((++_counterClocksPerSample) >= _clocksPerSample)))
 	{
 		if ((_counterClocksPerSample -= _clocksPerSample) >= _clocksPerSample)
-			_counterClocksPerSample = 0;
+			_counterClocksPerSample = 0; // Just in case _clocksPerSample == 0...
 
 		double iR = 0;
 		for (auto i : _voices)
-			iR += i -> data (); // This number could be greater than 1!
+			if (i -> active ()) // Only if the voice is active...
+				iR += i -> data (); // but the values are added...
+		iR *= _volumen; // Adjust the volumen...
+		
+		// This number could be greater than 1!
 		if (iR > 1.0f) iR = 1.0f; // ...so it is needed to correct.
 
-		// TODO: To apply the filters...
-
-		dt = MCHEmul::UBytes ({ (unsigned char) (iR * 256.0f) });
+		dt = MCHEmul::UBytes ({ (unsigned char) (iR * 256.0f /** between 0 and 255. */) });
 	}
 
-	_lastClockCycles += nC;
+	_lastClockCycles++;
 
 	return (result);
 }
@@ -145,8 +149,9 @@ void COMMODORE::SoundSimpleWrapper::setValue (size_t p, const MCHEmul::UByte& v)
 		case 0x02:
 		case 0x03:
 			{
-				_voices [0] -> setDutyCycle
-					((((unsigned short) _registers [0x03].value ()) << 8) + ((unsigned short) _registers [0x00].value ()));
+				dynamic_cast <COMMODORE::SoundSimpleWrapper::Voice*> (_voices [0]) -> setPulseUpPercentage
+					((double) ((((unsigned short) _registers [0x03].value ()) << 8) + 
+								((unsigned short) _registers [0x00].value ())) / 4096.0f);
 			}
 
 			break;
@@ -155,8 +160,7 @@ void COMMODORE::SoundSimpleWrapper::setValue (size_t p, const MCHEmul::UByte& v)
 		case 0x04:
 			{
 				_voices [0] -> setStart (v.bit (0));
-				// Bits 1 and 2 not implemented...
-				_voices [0] -> setActive (v.bit (3));
+				// Bits 1, 2 and 3 not implemented...
 				_voices [0] -> wave (MCHEmul::SoundWave::Type::_TRIANGLE) -> setActive (v.bit (4));
 				_voices [0] -> wave (MCHEmul::SoundWave::Type::_SAWTOOTH) -> setActive (v.bit (5));
 				_voices [0] -> wave (MCHEmul::SoundWave::Type::_PULSE)	-> setActive (v.bit (6));
@@ -177,7 +181,7 @@ void COMMODORE::SoundSimpleWrapper::setValue (size_t p, const MCHEmul::UByte& v)
 		// Voice 1 Sustain/Release register: SUREL1
 		case 0x06:
 			{
-				_voices [0] -> setSustainVolumen ((v.value () & 0xf0) >> 4);
+				_voices [0] -> setSustainVolumen ((double) ((v.value () & 0xf0) >> 4) / 15.0f /** between 0 an 1. */);
 				_voices [0] -> setRelease (_RELEASETIMES [v.value () & 0x0f]);
 			}
 
@@ -197,8 +201,9 @@ void COMMODORE::SoundSimpleWrapper::setValue (size_t p, const MCHEmul::UByte& v)
 		case 0x09:
 		case 0x0a:
 			{
-				_voices [1] -> setDutyCycle
-					((((unsigned short) _registers [0x0a].value ()) << 8) + ((unsigned short) _registers [0x09].value ()));
+				dynamic_cast <COMMODORE::SoundSimpleWrapper::Voice*> (_voices [1]) -> setPulseUpPercentage
+						((double) ((((unsigned short) _registers [0x0a].value ()) << 8) + 
+								((unsigned short) _registers [0x09].value ())) / 4096.0f);
 			}
 
 			break;
@@ -207,8 +212,7 @@ void COMMODORE::SoundSimpleWrapper::setValue (size_t p, const MCHEmul::UByte& v)
 		case 0x0b:
 			{
 				_voices [1] -> setStart (v.bit (0));
-				// Bits 1 and 2 not implemented...
-				_voices [1] -> setActive (v.bit (3));
+				// Bits 1, 2 and 3 not implemented...
 				_voices [1] -> wave (MCHEmul::SoundWave::Type::_TRIANGLE) -> setActive (v.bit (4));
 				_voices [1] -> wave (MCHEmul::SoundWave::Type::_SAWTOOTH) -> setActive (v.bit (5));
 				_voices [1] -> wave (MCHEmul::SoundWave::Type::_PULSE)	-> setActive (v.bit (6));
@@ -229,7 +233,7 @@ void COMMODORE::SoundSimpleWrapper::setValue (size_t p, const MCHEmul::UByte& v)
 		// Voice 2 Sustain/Release register: SUREL2
 		case 0x0d:
 			{
-				_voices [1] -> setSustainVolumen ((v.value () & 0xf0) >> 4);
+				_voices [1] -> setSustainVolumen ((double) ((v.value () & 0xf0) >> 4) / 15.0f);
 				_voices [1] -> setRelease (_RELEASETIMES [v.value () & 0x0f]);
 			}
 
@@ -249,8 +253,9 @@ void COMMODORE::SoundSimpleWrapper::setValue (size_t p, const MCHEmul::UByte& v)
 		case 0x10:
 		case 0x11:
 			{
-				_voices [2] -> setDutyCycle
-					((((unsigned short) _registers [0x11].value ()) << 8) + ((unsigned short) _registers [0x10].value ()));
+				dynamic_cast <COMMODORE::SoundSimpleWrapper::Voice*> (_voices [2]) -> setPulseUpPercentage
+					((double) ((((unsigned short) _registers [0x11].value ()) << 8) + 
+								((unsigned short) _registers [0x10].value ())) / 4096.0f);
 			}
 
 			break;
@@ -259,8 +264,7 @@ void COMMODORE::SoundSimpleWrapper::setValue (size_t p, const MCHEmul::UByte& v)
 		case 0x12:
 			{
 				_voices [2] -> setStart (v.bit (0));
-				// Bits 1 and 2 not implemented...
-				_voices [2] -> setActive (v.bit (3));
+				// Bits 1, 2 and 3 not implemented...
 				_voices [2] -> wave (MCHEmul::SoundWave::Type::_TRIANGLE) -> setActive (v.bit (4));
 				_voices [2] -> wave (MCHEmul::SoundWave::Type::_SAWTOOTH) -> setActive (v.bit (5));
 				_voices [1] -> wave (MCHEmul::SoundWave::Type::_PULSE)	-> setActive (v.bit (6));
@@ -281,7 +285,7 @@ void COMMODORE::SoundSimpleWrapper::setValue (size_t p, const MCHEmul::UByte& v)
 		// Voice 3 Sustain/Release register: SUREL3
 		case 0x14:
 			{
-				_voices [2] -> setSustainVolumen ((v.value () & 0xf0) >> 4);
+				_voices [2] -> setSustainVolumen ((double) ((v.value () & 0xf0) >> 4) / 15.0f);
 				_voices [2] -> setRelease (_RELEASETIMES [v.value () & 0x0f]);
 			}
 
@@ -297,8 +301,7 @@ void COMMODORE::SoundSimpleWrapper::setValue (size_t p, const MCHEmul::UByte& v)
 		// Volumen: SIGVOL
 		case 0x18:
 			{
-				for (auto i : _voices) 
-					i -> setVolumen (v.value () & 0x0f);
+				setVolumen ((double) (v.value () & 0x0f) / 15.0f /** between 0 and 1. */);
 			}
 
 			break;

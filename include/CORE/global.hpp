@@ -106,6 +106,9 @@ namespace MCHEmul
 	bool validBytes (const std::string& s); // if type valid...
 	bool validOperation (const std::string& s); // very generic validation...
 
+	/** To calculate the point in a curve. */
+	double linearInterpolation (double minx, double miny, double maxx, double maxy, double x);
+
 	/** To determine whether a class is or not a subclass of other. */
 	template <typename Base, typename Type>
 	bool instanceOf (const Type* ptr)

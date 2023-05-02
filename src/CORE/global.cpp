@@ -360,6 +360,13 @@ bool MCHEmul::validOperation (const std::string& s)
 }
 
 // ---
+double MCHEmul::linearInterpolation (double minx, double miny, double maxx, double maxy, double x)
+{ 
+	// When there is no length in x, the value returned is always the maxy...
+	return ((maxx == minx) ? maxy : (miny + ((x - minx) * (maxy - miny) / (maxx - minx)))); 
+};
+
+// ---
 void MCHEmul::actualizeGlobalTime ()
 {
 	MCHEmul::Time n = std::chrono::time_point_cast <MCHEmul::Duration> (std::chrono::steady_clock::now ());

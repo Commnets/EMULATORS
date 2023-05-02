@@ -53,6 +53,7 @@
     <ClCompile Include="..\..\src\CORE\Sound.cpp" />
     <ClCompile Include="..\..\src\CORE\SoundChip.cpp" />
     <ClCompile Include="..\..\src\CORE\SoundMemory.cpp" />
+    <ClCompile Include="..\..\src\CORE\SoundVoice.cpp" />
     <ClCompile Include="..\..\src\CORE\SoundWave.cpp" />
     <ClCompile Include="..\..\src\CORE\Stack.cpp" />
     <ClCompile Include="..\..\src\CORE\StatusRegister.cpp" />
@@ -107,6 +108,7 @@
     <ClInclude Include="..\..\include\CORE\Sound.hpp" />
     <ClInclude Include="..\..\include\CORE\SoundChip.hpp" />
     <ClInclude Include="..\..\include\CORE\SoundMemory.hpp" />
+    <ClInclude Include="..\..\include\CORE\SoundVoice.hpp" />
     <ClInclude Include="..\..\include\CORE\SoundWave.hpp" />
     <ClInclude Include="..\..\include\CORE\Stack.hpp" />
     <ClInclude Include="..\..\include\CORE\StatusRegister.hpp" />

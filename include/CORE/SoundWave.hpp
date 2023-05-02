@@ -18,10 +18,15 @@
 
 namespace MCHEmul
 {
-	/** To replicate a wave. */
+	class SoundVoice;
+
+	/** To replicate a wave. 
+		The waves can only be used from a SoundVoice. */
 	class SoundWave
 	{
 		public:
+		friend SoundVoice;
+
 		// The four different types of waves supported...
 		enum class Type
 		{
@@ -41,10 +46,7 @@ namespace MCHEmul
 			  _chipFrequency (cF),
 			  _active (false), // to indicate whether the wave s or not active...
 			  _frequency (0),
-			  _attack (0), _decay (0), _release (0),
-			  _sustainVolumen (0),
-			  _maximumVolumen (0),
-			  _state (State::_ATTACK)
+			  _cyclesPerWave (0), _counterInCyclesPerWave (0)
 						{ calculateWaveSamplingData (); }
 
 		/** Just in case. The default behaviour is doing nothing. */
@@ -62,54 +64,33 @@ namespace MCHEmul
 		void setActive (bool a)
 						{ _active = a; }
 
-		void setStart (bool s)
-						{ _state = s ? State::_ATTACK : State::_RELEASE; }
-
+		/** The frequency. */
 		unsigned short frequency () const
 						{ return (_frequency); }
 		void setFrequency (unsigned short f)
 						{ _frequency = f; calculateWaveSamplingData (); }
 
-		/** The values are returned in milliseconds. */
-		unsigned short attack () const
-						{ return (_attack); }
-		/** But they are set based on the values of the register. */
-		void setAttack (unsigned short a)
-						{ _attack = a; calculateWaveSamplingData (); }
-		unsigned short decay () const
-						{ return (_decay); }
-		void setDecay (unsigned short d)
-						{ _decay = d; calculateWaveSamplingData (); }
-		unsigned short release () const
-						{ return (_release); }
-		void setRelease (unsigned short r)
-						{ _release = r; calculateWaveSamplingData (); }
-
-		unsigned char sustainVolumen () const // From 0 to 0x0f...
-						{ return (_sustainVolumen); }
-		void setSustainVolumen (unsigned char s)
-						{ _sustainVolumen = s; calculateWaveSamplingData (); }
-
-		unsigned char maximumVolumen () const // From 0 to 0x0f
-						{ return (_maximumVolumen); }
-		void setMaximumVolumen (unsigned char v)
-						{ _maximumVolumen = v; }
-
 		virtual void initialize ();
 
-		void clock (unsigned int nC)
+		protected:
+		// Tese two method can only be invoked from a Voice.
+		/** This method has to be invoked in every cpu cycle,
+			receiving as parameter the number of cycles happened from the last invocation. \n
+			It can be overloaded to cover specific needs for specific sound waves. \n
+			The method is invoked from SoundVoice. */
+		virtual void clock (unsigned int nC = 1)
 						{ if (((_counterInCyclesPerWave += nC) >= _cyclesPerWave) &&
 							  ((_counterInCyclesPerWave -= _cyclesPerWave) >= _cyclesPerWave))
 								_counterInCyclesPerWave = 0; } // Just in case _cyclesPerWave is 0...
 
-		/** When a data is requested a value from 0% to 100% is returned. 
-			The value returned has to be the equivalent to the _counterInCyclesPerWave location. */
+		/** This method should return a value between 0 and 1. \n
+			Indicating the %(1) of the maximum situation achieved. \n
+			Decimal numbers are admitted (are needed). */
 		virtual double data () const = 0;
 
-		protected:
-		/** To calculate the internal data needed to 
-			later "draw" the different waves. \n
-			It could be overloaded later to include more intenal data needed
+		// Implementation
+		/** To calculate the internal data needed to later "draw" the different waves. \n
+			It could be overloaded to include more intenal data needed
 			depending on the type of wave. \n
 			Any moment a key value is changed this method should be invoked. */
 		virtual void calculateWaveSamplingData ();
@@ -117,31 +98,12 @@ namespace MCHEmul
 		protected:
 		/** Tipo de forma de onda. */
 		Type _type;
-		/** Chip frequency. */
+		/** Chip frequency in cycles per second. */
 		unsigned int _chipFrequency;
 		/** When the wave is active within a voice. */
 		bool _active;
-		/** The frequency of the wave. In milliseconds. */
+		/** The frequency of the wave. In waves per second. */
 		unsigned short _frequency;
-		/** The variables used for the envelop. In milliseconds. */
-		unsigned short _attack, _decay, _release;
-		/** The volumen for sustain. From 0 to 10. */
-		unsigned char _sustainVolumen;
-		/** The maximum volumen. From 0 to 10. */
-		unsigned char _maximumVolumen;
-
-		// Implementation
-		/** The status in which the wave is in. */
-		enum class State
-		{
-			_ATTACK = 0,
-			_DECAY = 1,
-			_SUSTAIN = 2,
-			_RELEASE = 3
-		};
-
-		/** The state in which the full wave is. */
-		State _state;
 
 		/** The number of computer cycles needed to complete a wave cycle. */
 		unsigned int _cyclesPerWave;
@@ -152,7 +114,7 @@ namespace MCHEmul
 	/** To sumplify managing a list of sound waves. */
 	using SoundWaves = std::vector <SoundWave*>;
 
-	/** The most typical sound wave used in the C64. */
+	/** This the one that imitates a sinusoidal wave with its harmonic the best. */
 	class SawSmoothSoundWave final : public SoundWave
 	{
 		public:
@@ -160,9 +122,11 @@ namespace MCHEmul
 			: SoundWave (Type::_SAWTOOTH, cF)
 						{ }
 
+		private:
 		virtual double data () const override;
 	};
 
+	/** Triangle. */
 	class TriangleSoundWave final : public SoundWave
 	{
 		public:
@@ -170,37 +134,57 @@ namespace MCHEmul
 			: SoundWave (Type::_SAWTOOTH, cF)
 						{ }
 
+		private:
 		virtual double data () const override;
 	};
 
+	/** A pulse. \n
+		In a pulse wave is important to know how much percentage of the cycle the pulse is up
+		and how much of it is down. */
 	class PulseSoundWave final : public SoundWave
 	{
 		public:
 		PulseSoundWave (unsigned int cF)
 			: SoundWave (Type::_PULSE, cF),
-			  _dutyCycle (0),
-			  _pulseUp (false)
-						{ }
+			  _pulseUpPercentage (0),
+			  _pulseUp (false),
+			  _cyclesPulseUp (0), _counterCyclesPulseUp (0),
+			  _cyclesPulseDown (0), _counterCyclesPulseDown (0)
+						{ calculateWaveSamplingData (); }
 
-		unsigned short dutyCycle () const
-						{ return (_dutyCycle); }
-		void setDutyCycle (unsigned short dC)
-						{ _dutyCycle = dC; }
+		/** To manage the part of the pulse up...
+			It is a number between 0 and 1% */
+		double pulseUpPercentage () const
+						{ return (_pulseUpPercentage); }
+		void setPulseUpPercentage (double pU)
+						{ _pulseUpPercentage = (pU > 1.0f ? 1.0f : pU); calculateWaveSamplingData (); }
 
-		virtual void initialize () override 
-						{ SoundWave::initialize (); 
-						  _pulseUp = false; }
+		virtual void initialize () override;
+
+		private:
+		virtual void clock (unsigned int nC) override;
 
 		virtual double data () const override;
 
 		private:
-		unsigned short _dutyCycle;
+		virtual void calculateWaveSamplingData () override;
+
+		private:
+		/** The percentage of the cycle that the pulse is up.
+			It is a number between 0% and 1%. */
+		double _pulseUpPercentage;
 
 		// Implementation
 		/** = false, pulse down. = true, pulse up. */
 		bool _pulseUp;
+		/** Number of cycles within _cyclesPerWave (@see paent class) that the pulse is up, and down. */
+		unsigned int _cyclesPulseUp, _cyclesPulseDown;
+		/** A counter for the cycles when the pulse is up and down. */
+		unsigned int _counterCyclesPulseUp, _counterCyclesPulseDown;
+		
 	};
 
+	/** Random. */
 	class NoiseSoundWave final : public SoundWave
 	{
 		public:
@@ -208,6 +192,7 @@ namespace MCHEmul
 			: SoundWave (Type::_NOISE, cF)
 						{ }
 
+		private:
 		virtual double data () const override;
 	};
 }

@@ -83,6 +83,7 @@ namespace COMMODORE
 		  */
 		SoundSimpleWrapper (unsigned int cF, unsigned int sF)
 			: SIDLibWrapper (),
+			  _volumen (0.0f), // There is no volumen at the beginning...
 			  _voices (
 				  { new Voice (0, cF), 
 				    new Voice (1, cF), 
@@ -93,6 +94,12 @@ namespace COMMODORE
 			  _counterClocksPerSample (0)
 							{ }
 
+		/** The volumen is a number between 0 and 1. */
+		double volumen () const
+						{ return (_volumen); }
+		void setVolumen (double v)
+						{ _volumen = v; }
+
 		virtual void setValue (size_t p, const MCHEmul::UByte& v) override;
 		virtual const MCHEmul::UByte& readValue (size_t p) const override
 							{ return (_lastValueRead = _registers [p % 0x20]); } // Every 20 registers the value is repeated...
@@ -102,106 +109,35 @@ namespace COMMODORE
 		virtual bool getData (MCHEmul::CPU *cpu, MCHEmul::UBytes& dt) override;
 
 		private:
-		/** SID Is able to manage three different voices. */
-		class Voice final
+		double _volumen;
+
+		/** The SID voice is made up of 4 waves and
+			there is special methos to deal with the pulse one. */
+		class Voice final : public MCHEmul::SoundVoice
 		{
 			public:
 			Voice (int id, unsigned int cF)
-				: _id (id),
-				  _active (false), // No active by default...
-				  _volumen (0),
-				  _waves ({ new MCHEmul::SawSmoothSoundWave (cF), // Wave number 0
-							new MCHEmul::TriangleSoundWave (cF),  // Wave number 1
-							new MCHEmul::PulseSoundWave (cF),     // Wave number 2
-							new MCHEmul::NoiseSoundWave (cF) })   // Wave number 3 in the list of waves...
+				: MCHEmul::SoundVoice (id, cF,
+					{
+						new MCHEmul::SawSmoothSoundWave (cF),
+						new MCHEmul::TriangleSoundWave (cF),
+						new MCHEmul::PulseSoundWave (cF),
+						new MCHEmul::NoiseSoundWave (cF)
+					})
 							{ }
 
-			~Voice ()
-							{ for (auto i : _waves) delete (i); }
-
-			int id () const
-							{ return (_id); }
-
-			bool active () const
-							{ return (_active); }
-			void setActive (bool a)
-							{ _active = a; }
-
-			void setStart (bool s)
-							{ for (auto i : _waves) i -> setStart (s); }
-			
-			const MCHEmul::SoundWaves& waves () const
-							{ return (_waves); }
-			const MCHEmul::SoundWave* wave (MCHEmul::SoundWave::Type t) const
-							{ return (_waves [(int) t]); }
-			MCHEmul::SoundWave* wave (MCHEmul::SoundWave::Type t)
-							{ return ((MCHEmul::SoundWave*) (((const Voice*) (this)) -> wave (t))); }
-
-			unsigned short frequency () const
-							{ return (_waves [0] -> frequency ()); /** could be any, as all have the same value. */ }
-			void setFrequency (unsigned short f)
-							{ for (auto i : _waves) 
-								i -> setFrequency (f); }
-
-			unsigned short attack () const
-							{ return (_waves [0] -> attack ()); /** could be any, as all have the same value. */ }
-			void setAttack (unsigned short a)
-							{ for (auto i : _waves) 
-								i -> setAttack (a); }
-			unsigned short decay () const
-							{ return (_waves [0] -> decay ()); /** could be any, as all have the same value. */ }
-			void setDecay (unsigned short d)
-							{ for (auto i : _waves) 
-								i -> setDecay (d); }
-			unsigned short release () const
-							{ return (_waves [0] -> release ()); /** could be any, as all have the same value. */ }
-			void setRelease (unsigned short r)
-							{ for (auto i : _waves) 
-								i -> setRelease (r); }
-
-			unsigned char sustainVolumen () const
-							{ return (_waves [0] -> sustainVolumen ()); /** could be any, as all have the same value. */ }
-			void setSustainVolumen (unsigned char s)
-							{ for (auto i : _waves) 
-								i -> setSustainVolumen (s); }
-
-			unsigned short dutyCycle () const
-							{ return (static_cast <MCHEmul::PulseSoundWave*> 
-								(_waves [(int) MCHEmul::SoundWave::Type::_PULSE]) -> dutyCycle ()); }
-			void setDutyCycle (unsigned short dC)
-							{ static_cast <MCHEmul::PulseSoundWave*> 
-								(_waves [(int) MCHEmul::SoundWave::Type::_PULSE]) -> setDutyCycle (dC); }
-
-			unsigned char volumen () const
-							{ return (_volumen); } // From 0 to 0x0f...
-			void setVolumen (unsigned char v)
-							{ _volumen = v; 
-							  for (auto i : _waves) 
-								i -> setMaximumVolumen (v); }
-
-			void clock (unsigned int nC)
-							{ for (auto i : _waves)
-								i -> clock (nC); }
-
-			/** The data of the voice comes from all active waves. */
-			virtual double data () const
-							{ double r = 0; 
-							  for (auto i : _waves) 
-								  r += i -> data (); 
-							  return (r); }
-
-			protected:
-			/** The id of the voice. */
-			int _id;
-			/** When the voice is active. */
-			bool _active;
-			/** The volumen. */
-			unsigned char _volumen;
-			/** All possible waves. */
-			MCHEmul::SoundWaves _waves;
+			/** To control the percentage of the pulse wave when active. */
+			double pulseUpPercentage () const
+							{ return (dynamic_cast <MCHEmul::PulseSoundWave*> (waves ()[2]) -> pulseUpPercentage ()); }
+			void setPulseUpPercentage (double pU)
+							{ dynamic_cast <MCHEmul::PulseSoundWave*> (waves ()[2]) -> setPulseUpPercentage (pU); }
 		};
 
-		std::vector <Voice*> _voices;
+		/** The different voices used by SID. \n
+			They will be three defined at construction time. */
+		MCHEmul::SoundVoices _voices;
+
+		/** The registers used by the SID. */
 		std::vector <MCHEmul::UByte> _registers;
 
 		// Implementation
