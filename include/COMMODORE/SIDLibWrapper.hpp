@@ -83,6 +83,7 @@ namespace COMMODORE
 		  */
 		SoundSimpleWrapper (unsigned int cF, unsigned int sF)
 			: SIDLibWrapper (),
+			  _chipFrequency (cF), _samplingFrequency (sF),
 			  _volumen (0.0f), // There is no volumen at the beginning...
 			  _voices (
 				  { new Voice (0, cF), 
@@ -109,6 +110,8 @@ namespace COMMODORE
 		virtual bool getData (MCHEmul::CPU *cpu, MCHEmul::UBytes& dt) override;
 
 		private:
+		unsigned int _chipFrequency;
+		unsigned int _samplingFrequency;
 		double _volumen;
 
 		/** The SID voice is made up of 4 waves and

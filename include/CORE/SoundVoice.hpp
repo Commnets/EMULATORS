@@ -50,7 +50,9 @@ namespace MCHEmul
 
 		/** To define the state of the voice. */
 		void setStart (bool s)
-						{ _state = s ? State::_ATTACK : State::_RELEASE; }
+						{ _state = s ? State::_ATTACK : State::_RELEASE; 
+						  for (auto& i : _stateCounters) 
+							  i.initialize (); }
 	
 		// ADSR values...
 		/** The values are given and returned in milliseconds. */
@@ -140,11 +142,17 @@ namespace MCHEmul
 		struct StateCounters
 		{
 			StateCounters ()
-				: _cyclesPerState (0), _counterCyclesPerState (0)
+				: _cyclesPerState (0), _counterCyclesPerState (0),
+				  _limit (false)
 							{ }
+
+			void initialize ()
+							{ _counterCyclesPerState = 0;
+							  _limit = false; }
 
 			unsigned int _cyclesPerState;
 			unsigned int _counterCyclesPerState;
+			bool _limit;
 		}; 
 
 		mutable std::vector <StateCounters> _stateCounters;

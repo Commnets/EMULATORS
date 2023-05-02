@@ -25,13 +25,13 @@ void MCHEmul::SoundVoice::clock (unsigned int nC)
 				_state = State::_SUSTAIN;
 				break;
 
-			// This situation will never happen...(@see above)
+			/** This situation can not happen,
+				as the _SUSTAIN state can only be exit desactivating the signal. */
 			case State::_SUSTAIN:
-				_state = State::_RELEASE;
 				break;
 
+			/** When the limit is reached the _RELEASE state is maintained. */
 			case State::_RELEASE:
-				_state = State::_ATTACK; /** Starts back. */
 				break;
 
 			default:
@@ -42,7 +42,17 @@ void MCHEmul::SoundVoice::clock (unsigned int nC)
 		MCHEmul::SoundVoice::StateCounters& sCN = _stateCounters [(int) _state];
 		if ((sCN._counterCyclesPerState = sCA._counterCyclesPerState - sCA._cyclesPerState) >= sCN._cyclesPerState)
 			sCN._counterCyclesPerState = 0;
+
+		// The limit of the previous state was reached...
+		sCA._limit = true;
+		// ...and its counter has to been set back to 0...
 		sCA._counterCyclesPerState = 0;
+
+		// This is only valid when origin and destination states are different...
+		if (&sCA != &sCN)
+			// ...and the limit for the new state has not been reached...
+			sCN._limit = false;
+			// The its counter was set above...
 	}
 }
 
@@ -63,22 +73,28 @@ double MCHEmul::SoundVoice::data () const
 	switch (_state)
 	{
 		case State::_ATTACK:
+			// When the limit was reached, the state will have been move to _DECAY...
 			f = MCHEmul::linearInterpolation 
 				(0.0f, 0.0f, sC._cyclesPerState, 1.0f, sC._counterCyclesPerState);
 			break;
 
 		case State::_DECAY:
+			// When the limit was reached, the state will have been move to _SUSTAIN...
 			f = MCHEmul::linearInterpolation
 				(0.0f, 1.0f, sC._cyclesPerState, _sustainVolumen, sC._counterCyclesPerState);
 			break;
 
 		case State::_SUSTAIN:
+			// in _SUSTAIN there is no limits in time...
 			f = _sustainVolumen;
 			break;
 
 		case State::_RELEASE:
-			f = MCHEmul::linearInterpolation
-				(0.0f, _sustainVolumen, sC._cyclesPerState, 0.0f, sC._counterCyclesPerState);
+			// When the limit is reached, the sound is back to 0...
+			f = (sC._limit)
+				? 0.0f 
+				: MCHEmul::linearInterpolation
+					(0.0f, _sustainVolumen, sC._cyclesPerState, 0.0f, sC._counterCyclesPerState);
 			break;
 	}
 

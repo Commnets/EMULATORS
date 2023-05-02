@@ -139,8 +139,13 @@ void COMMODORE::SoundSimpleWrapper::setValue (size_t p, const MCHEmul::UByte& v)
 		case 0x00:
 		case 0x01:
 			{
+//				_voices [0] -> setFrequency
+//					((unsigned short) ((double) ((((unsigned short) _registers [0x01].value ()) << 8) + 
+//												  ((unsigned short) _registers [0x00].value ())) 
+//												 * (double) _chipFrequency / 16777216.0f));
 				_voices [0] -> setFrequency
-					((((unsigned short) _registers [0x01].value ()) << 8) + ((unsigned short) _registers [0x00].value ()));
+					((unsigned short) ((double) ((((unsigned short) _registers [0x01].value ()) << 8) + 
+												  ((unsigned short) _registers [0x00].value ())) * 0.25f));
 			}
 
 			break;
@@ -151,7 +156,7 @@ void COMMODORE::SoundSimpleWrapper::setValue (size_t p, const MCHEmul::UByte& v)
 			{
 				dynamic_cast <COMMODORE::SoundSimpleWrapper::Voice*> (_voices [0]) -> setPulseUpPercentage
 					((double) ((((unsigned short) _registers [0x03].value ()) << 8) + 
-								((unsigned short) _registers [0x00].value ())) / 4096.0f);
+								((unsigned short) _registers [0x02].value ())) / 4096.0f);
 			}
 
 			break;
@@ -191,8 +196,13 @@ void COMMODORE::SoundSimpleWrapper::setValue (size_t p, const MCHEmul::UByte& v)
 		case 0x07:
 		case 0x08:
 			{
+//				_voices [1] -> setFrequency
+//					((unsigned short) ((double) ((((unsigned short) _registers [0x08].value ()) << 8) + 
+//												  ((unsigned short) _registers [0x07].value ())) 
+//												 * (double) _chipFrequency / 16777216.0f));
 				_voices [1] -> setFrequency
-					((((unsigned short) _registers [0x08].value ()) << 8) + ((unsigned short) _registers [0x07].value ()));
+					((unsigned short) ((double) ((((unsigned short) _registers [0x08].value ()) << 8) + 
+												  ((unsigned short) _registers [0x07].value ())) * 0.25f)); 
 			}
 
 			break;
@@ -243,8 +253,13 @@ void COMMODORE::SoundSimpleWrapper::setValue (size_t p, const MCHEmul::UByte& v)
 		case 0x0e:
 		case 0x0f:
 			{
+//				_voices [2] -> setFrequency
+//					((unsigned short) ((double) ((((unsigned short) _registers [0x0f].value ()) << 8) + 
+//												  ((unsigned short) _registers [0x0e].value ())) 
+//												 * (double) _chipFrequency / 16777216.0f));
 				_voices [2] -> setFrequency
-					((((unsigned short) _registers [0x0f].value ()) << 8) + ((unsigned short) _registers [0x0e].value ()));
+					((unsigned short) ((double) ((((unsigned short) _registers [0x0f].value ()) << 8) + 
+												  ((unsigned short) _registers [0x0e].value ())) * 0.25f)); 
 			}
 
 			break;
