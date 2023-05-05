@@ -52,10 +52,12 @@ namespace COMMODORE
 		  *	@param sM	Sampling method admitted by the RESID library. 
 		  *	@param sF	Sampling frequency. This couldn't be less than 4000Hz.
 		  */
-		SoundRESIDWrapper (double cF, RESID::sampling_method sM, double sF)
+		SoundRESIDWrapper (unsigned int cF, RESID::sampling_method sM, unsigned int sF)
 			: SIDLibWrapper (),
+			  _chipFrequency (cF),
+			  _samplingFrequency (sF),
 			  _resid_sid ()
-							{ _resid_sid.set_sampling_parameters (cF, sM, sF); }
+							{ _resid_sid.set_sampling_parameters ((double) cF, sM, (double) sF); }
 
 		virtual void initialize () override
 							{ _resid_sid.reset (); }
@@ -67,6 +69,8 @@ namespace COMMODORE
 		virtual bool getData (MCHEmul::CPU *cpu, MCHEmul::UBytes& dt) override;
 
 		private:
+		unsigned int _chipFrequency;
+		unsigned int _samplingFrequency;
 		RESID::SID _resid_sid;
 	};
 
@@ -90,8 +94,6 @@ namespace COMMODORE
 				    new Voice (1, cF), 
 				    new Voice (2, cF) }),
 			  _registers (std::vector <MCHEmul::UByte> (0x20, MCHEmul::UByte::_0)),
-			  _lastClockCycles (0),
-			  _clocksPerSample ((unsigned int) ((double) cF / (double) sF)), // sF can not be 0...
 			  _counterClocksPerSample (0)
 							{ }
 
@@ -144,9 +146,6 @@ namespace COMMODORE
 		std::vector <MCHEmul::UByte> _registers;
 
 		// Implementation
-		unsigned int _lastClockCycles;
-		/** Number of cycles per sample. */
-		unsigned int _clocksPerSample;
 		/** Counter from 0 to _clockPerSample. */
 		unsigned int _counterClocksPerSample;
 

@@ -84,8 +84,6 @@ void COMMODORE::SoundSimpleWrapper::initialize ()
 { 
 	SIDLibWrapper::initialize ();
 							  
-	_lastClockCycles = 0;
-
 	_counterClocksPerSample = 0;
 
 	// All voices are active in this emulation...
@@ -104,9 +102,9 @@ bool COMMODORE::SoundSimpleWrapper::getData (MCHEmul::CPU *cpu, MCHEmul::UBytes&
 	for (auto i : _voices)
 		i -> clock (); // just one...
 
-	if ((result = ((++_counterClocksPerSample) >= _clocksPerSample)))
+	if ((result = ((++_counterClocksPerSample) >= _samplingFrequency)))
 	{
-		if ((_counterClocksPerSample -= _clocksPerSample) >= _clocksPerSample)
+		if ((_counterClocksPerSample -= _samplingFrequency) >= _samplingFrequency)
 			_counterClocksPerSample = 0; // Just in case _clocksPerSample == 0...
 
 		double iR = 0;
@@ -120,8 +118,6 @@ bool COMMODORE::SoundSimpleWrapper::getData (MCHEmul::CPU *cpu, MCHEmul::UBytes&
 
 		dt = MCHEmul::UBytes ({ (unsigned char) (iR * 256.0f /** between 0 and 255. */) });
 	}
-
-	_lastClockCycles++;
 
 	return (result);
 }
@@ -139,13 +135,10 @@ void COMMODORE::SoundSimpleWrapper::setValue (size_t p, const MCHEmul::UByte& v)
 		case 0x00:
 		case 0x01:
 			{
-//				_voices [0] -> setFrequency
-//					((unsigned short) ((double) ((((unsigned short) _registers [0x01].value ()) << 8) + 
-//												  ((unsigned short) _registers [0x00].value ())) 
-//												 * (double) _chipFrequency / 16777216.0f));
 				_voices [0] -> setFrequency
 					((unsigned short) ((double) ((((unsigned short) _registers [0x01].value ()) << 8) + 
-												  ((unsigned short) _registers [0x00].value ())) * 0.25f));
+												  ((unsigned short) _registers [0x00].value ())) 
+												 * (double) _chipFrequency / 16777216.0f));
 			}
 
 			break;
@@ -196,13 +189,10 @@ void COMMODORE::SoundSimpleWrapper::setValue (size_t p, const MCHEmul::UByte& v)
 		case 0x07:
 		case 0x08:
 			{
-//				_voices [1] -> setFrequency
-//					((unsigned short) ((double) ((((unsigned short) _registers [0x08].value ()) << 8) + 
-//												  ((unsigned short) _registers [0x07].value ())) 
-//												 * (double) _chipFrequency / 16777216.0f));
 				_voices [1] -> setFrequency
 					((unsigned short) ((double) ((((unsigned short) _registers [0x08].value ()) << 8) + 
-												  ((unsigned short) _registers [0x07].value ())) * 0.25f)); 
+												  ((unsigned short) _registers [0x07].value ())) 
+												 * (double) _chipFrequency / 16777216.0f));
 			}
 
 			break;
@@ -253,13 +243,10 @@ void COMMODORE::SoundSimpleWrapper::setValue (size_t p, const MCHEmul::UByte& v)
 		case 0x0e:
 		case 0x0f:
 			{
-//				_voices [2] -> setFrequency
-//					((unsigned short) ((double) ((((unsigned short) _registers [0x0f].value ()) << 8) + 
-//												  ((unsigned short) _registers [0x0e].value ())) 
-//												 * (double) _chipFrequency / 16777216.0f));
 				_voices [2] -> setFrequency
 					((unsigned short) ((double) ((((unsigned short) _registers [0x0f].value ()) << 8) + 
-												  ((unsigned short) _registers [0x0e].value ())) * 0.25f)); 
+												  ((unsigned short) _registers [0x0e].value ())) 
+												 * (double) _chipFrequency / 16777216.0f));
 			}
 
 			break;
