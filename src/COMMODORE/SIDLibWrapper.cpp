@@ -102,9 +102,9 @@ bool COMMODORE::SoundSimpleWrapper::getData (MCHEmul::CPU *cpu, MCHEmul::UBytes&
 	for (auto i : _voices)
 		i -> clock (); // just one...
 
-	if ((result = ((++_counterClocksPerSample) >= _samplingFrequency)))
+	if ((result = ((++_counterClocksPerSample) >= _clocksPerSample)))
 	{
-		if ((_counterClocksPerSample -= _samplingFrequency) >= _samplingFrequency)
+		if ((_counterClocksPerSample -= _clocksPerSample) >= _clocksPerSample)
 			_counterClocksPerSample = 0; // Just in case _clocksPerSample == 0...
 
 		double iR = 0;

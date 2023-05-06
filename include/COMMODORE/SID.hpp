@@ -36,7 +36,7 @@ namespace COMMODORE
 		virtual SDL_AudioFormat type () const override
 							{ return (AUDIO_U8); }
 		virtual int maxFrequency () const override
-							{ return (44100); }
+							{ return (22050); }
 		virtual unsigned char numberChannels () const override
 							{ return (1); }
 

@@ -94,6 +94,7 @@ namespace COMMODORE
 				    new Voice (1, cF), 
 				    new Voice (2, cF) }),
 			  _registers (std::vector <MCHEmul::UByte> (0x20, MCHEmul::UByte::_0)),
+			  _clocksPerSample ((unsigned int) ((double) cF / (double (sF)))),
 			  _counterClocksPerSample (0)
 							{ }
 
@@ -146,6 +147,7 @@ namespace COMMODORE
 		std::vector <MCHEmul::UByte> _registers;
 
 		// Implementation
+		unsigned int _clocksPerSample;
 		/** Counter from 0 to _clockPerSample. */
 		unsigned int _counterClocksPerSample;
 
