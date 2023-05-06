@@ -34,9 +34,11 @@ namespace C64
 
 		/** Macros for the speed. */
 		static const unsigned int _PALCLOCK		= 985248; // 0.985 MHz
-		static const unsigned int _NTSCCLOCK	= 1022727;  // 1.023 MHz
+		static const unsigned int _NTSCCLOCK	= 1022727; // 1.023 MHz
 
-		Commodore64 (VisualSystem vS = VisualSystem::_PAL /** Europe initially */,
+		Commodore64 (
+			VisualSystem vS = VisualSystem::_PAL /** Europe initially */,
+			const std::string& sS = "SID", /** Sound Emulation Library used is initially SID. */
 			const std::string& lang = MCHEmul::_DEFAULTLANGUAGE /** English language used behind. */);
 
 		virtual bool initialize (bool iM = true) override;
@@ -56,7 +58,7 @@ namespace C64
 		virtual void processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifier* n) override;
 
 		// Implementation
-		static MCHEmul::Chips standardChips (VisualSystem vS);
+		static MCHEmul::Chips standardChips (VisualSystem vS, const std::string& sS /** The sound emulation library used. */);
 		static MCHEmul::IODevices standardDevices (VisualSystem vS);
 
 		protected:

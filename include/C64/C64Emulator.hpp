@@ -26,6 +26,7 @@ namespace C64
 		public:
 		/** The possible additional parameters of the C64 Emulator. */
 		static const unsigned char _PARAMNTSC;
+		static const unsigned char _PARAMSID;
 		static const unsigned char _PARAMBORDER;
 
 		/**
@@ -45,6 +46,12 @@ namespace C64
 		/** To know whether the visualizacion system is or not NTSC. */
 		bool NTSCSystem () const
 							{ return (cmdlineArguments ().existsArgument (_PARAMNTSC)); }
+
+		/** To know which is the library used for the SID simultion. */
+		std::string SIDEmulationLib () const
+							{ return (cmdlineArguments ().existsArgument (_PARAMSID) 
+								? cmdlineArguments ().argumentAsString (_PARAMSID) : "OWN" /** My own. */); }
+
 		/** To know whether the border has or not to be drawn. */
 		bool drawBorder () const
 							{ return (cmdlineArguments ().existsArgument (_PARAMBORDER)); }
@@ -56,8 +63,10 @@ namespace C64
 
 		protected:
 		virtual MCHEmul::Computer* createComputer () const override
-							{ return (new C64::Commodore64 (NTSCSystem () 
-								? C64::Commodore64::VisualSystem::_NTSC : C64::Commodore64::VisualSystem::_PAL,
+							{ return (new C64::Commodore64 (
+								NTSCSystem () 
+									? C64::Commodore64::VisualSystem::_NTSC : C64::Commodore64::VisualSystem::_PAL,
+								SIDEmulationLib (),
 								computerLanguage ())); }
 		virtual MCHEmul::IOPeripheralBuilder* createPeripheralBuilder () const override
 							{ return (new IOPeripheralBuilder); }

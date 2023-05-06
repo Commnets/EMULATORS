@@ -12,10 +12,10 @@
 #include <F6500/C6510.hpp>
 
 // ---
-C64::Commodore64::Commodore64 (C64::Commodore64::VisualSystem vS, const std::string& lang)
+C64::Commodore64::Commodore64 (C64::Commodore64::VisualSystem vS, const std::string& sS, const std::string& lang)
 	: COMMODORE::Computer 
 		(new F6500::C6510 (),
-		 C64::Commodore64::standardChips (vS),
+		 C64::Commodore64::standardChips (vS, sS),
 		 new C64::Memory (lang), // The memory is loaded with different info depending on the language...
 		 C64::Commodore64::standardDevices (vS),
 		 vS == C64::Commodore64::VisualSystem::_PAL ? _PALCLOCK : _NTSCCLOCK,
@@ -81,7 +81,7 @@ void C64::Commodore64::processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifi
 }
 
 // ---
-MCHEmul::Chips C64::Commodore64::standardChips (C64::Commodore64::VisualSystem vS)
+MCHEmul::Chips C64::Commodore64::standardChips (C64::Commodore64::VisualSystem vS, const std::string& sS)
 {
 	MCHEmul::Chips result;
 
@@ -96,10 +96,13 @@ MCHEmul::Chips C64::Commodore64::standardChips (C64::Commodore64::VisualSystem v
 			? (C64::VICII*) new COMMODORE::VICII_NTSC (C64::Memory::_VICII_VIEW) 
 			: (C64::VICII*) new COMMODORE::VICII_PAL (C64::Memory::_VICII_VIEW))));
 
-	// The SID
+	// The SID...
+	unsigned int cSpd = (vS == C64::Commodore64::VisualSystem::_NTSC) ? _NTSCCLOCK : _PALCLOCK;
+	MCHEmul::SoundLibWrapper* sLib = nullptr;
+	if (sS == "SID") sLib = new COMMODORE::SoundRESIDWrapper (cSpd, RESID::SAMPLE_FAST, COMMODORE::SID::_SOUNDSAMPLINGCLOCK);
+	else sLib = (MCHEmul::SoundLibWrapper*) new COMMODORE::SoundSimpleWrapper (cSpd, COMMODORE::SID::_SOUNDSAMPLINGCLOCK);
 	result.insert (MCHEmul::Chips::value_type (COMMODORE::SID::_ID, 
-		(MCHEmul::Chip*) new COMMODORE::SID // The SID depends on the speed...
-			((vS == C64::Commodore64::VisualSystem::_NTSC) ? _NTSCCLOCK : _PALCLOCK)));
+		(MCHEmul::Chip*) new COMMODORE::SID (cSpd, sLib))); // The SID depends on the speed...
 
 	// The PLA
 	result.insert (MCHEmul::Chips::value_type (C64::PLA::_ID, (MCHEmul::Chip*) new C64::PLA));

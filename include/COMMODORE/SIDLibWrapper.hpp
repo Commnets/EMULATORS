@@ -85,18 +85,7 @@ namespace COMMODORE
 		  *	@param cF	Chip frequency in clocks / second.
 		  * @param sF	Sampling frequency in samples / second. It cannot be 0.
 		  */
-		SoundSimpleWrapper (unsigned int cF, unsigned int sF)
-			: SIDLibWrapper (),
-			  _chipFrequency (cF), _samplingFrequency (sF),
-			  _volumen (0.0f), // There is no volumen at the beginning...
-			  _voices (
-				  { new Voice (0, cF), 
-				    new Voice (1, cF), 
-				    new Voice (2, cF) }),
-			  _registers (std::vector <MCHEmul::UByte> (0x20, MCHEmul::UByte::_0)),
-			  _clocksPerSample ((unsigned int) ((double) cF / (double (sF)))),
-			  _counterClocksPerSample (0)
-							{ }
+		SoundSimpleWrapper (unsigned int cF, unsigned int sF);
 
 		/** The volumen is a number between 0 and 1. */
 		double volumen () const
@@ -105,8 +94,7 @@ namespace COMMODORE
 						{ _volumen = v; }
 
 		virtual void setValue (size_t p, const MCHEmul::UByte& v) override;
-		virtual const MCHEmul::UByte& readValue (size_t p) const override
-							{ return (_lastValueRead = _registers [p % 0x20]); } // Every 20 registers the value is repeated...
+		virtual const MCHEmul::UByte& readValue (size_t p) const override;
 
 		virtual void initialize () override;
 
@@ -129,14 +117,46 @@ namespace COMMODORE
 						new MCHEmul::TriangleSoundWave (cF),
 						new MCHEmul::PulseSoundWave (cF),
 						new MCHEmul::NoiseSoundWave (cF)
-					})
+					}),
+				  _voiceRelated (nullptr),
+				  _ringModulation (false)
 							{ }
+
+			/** The other voices this one could be related with. **/
+			void setRelation (Voice* v)
+							{ _voiceRelated = v; }
+
+			/** To set up / off the ring modulation with other voices. */
+			bool ringModulation () const
+							{ return (_ringModulation); }
+			void setRingModulation (bool a)
+							{ _ringModulation = a; }
+
+			/** To know the value of the oscilator behind.
+				It is used sometimes for complex effects. \n
+				It returns a number from 0 to 255 depending on the wave that is moving behind!. */
+			unsigned char oscillatorValue () const
+							{ return ((unsigned char) (wavesData () * 255)); }
+			/** Same but for the envelope. */
+			unsigned char envelopeValue () const
+							{ return ((unsigned char) (ADSRData () * 255)); }
 
 			/** To control the percentage of the pulse wave when active. */
 			double pulseUpPercentage () const
 							{ return (dynamic_cast <MCHEmul::PulseSoundWave*> (waves ()[2]) -> pulseUpPercentage ()); }
 			void setPulseUpPercentage (double pU)
 							{ dynamic_cast <MCHEmul::PulseSoundWave*> (waves ()[2]) -> setPulseUpPercentage (pU); }
+
+			/** To suppomg the ring modulation. */
+			virtual double data () const override
+							{ return (MCHEmul::SoundVoice::data () + 
+								((_ringModulation && _voiceRelated != nullptr) ? _voiceRelated -> data () : 0.0f)); }
+
+			private:
+			/** The voice related. */
+			Voice* _voiceRelated;
+			/** The ring modulation. */
+			bool _ringModulation;
 		};
 
 		/** The different voices used by SID. \n

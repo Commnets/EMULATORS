@@ -1,19 +1,20 @@
 #include <COMMODORE/SID.hpp>
 
 // ---
-COMMODORE::SID::SID (unsigned int cF)
+COMMODORE::SID::SID (unsigned int cF, MCHEmul::SoundLibWrapper* sW)
 	: MCHEmul::SoundChip (_ID,
 		{ { "Name", "SID" },
 		  { "Code", "6581/8580" },
 		  { "Manufacturer", "Commodore Business Machines CBM" },
-		  { "Year", "1982" } }),
-		  _SIDRegisters (nullptr),
+		  { "Year", "1982" } }, 
+		sW),
+	  _SIDRegisters (nullptr),
 	  _lastClockCycles (0)
 { 
-	setClassName ("SID");
+	// Take care that the sound wmulation library was not null at all...
+	assert (soundWrapper () != nullptr);
 
-//	setSoundWrapper (new COMMODORE::SoundRESIDWrapper (cF, SAMPLE_FAST, samplingFrecuency ()));
-	setSoundWrapper (new COMMODORE::SoundSimpleWrapper (cF, samplingFrecuency ()));
+	setClassName ("SID");
 }
 
 // ---

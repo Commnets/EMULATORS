@@ -57,51 +57,6 @@ void MCHEmul::SoundVoice::clock (unsigned int nC)
 }
 
 // ---
-double MCHEmul::SoundVoice::data () const
-{ 
-	double r = 0; 
-						 
-	for (auto i : _waves) 
-		if (i -> active ()) // Only when the wave active...
-			r += i -> data (); 
-	if (r > 1.0f)
-		r = 1.0f; // It can not be bigger that 1.0f
-
-	// Time to modify the value according with the state of the wave...
-	double f = 1.0f;
-	MCHEmul::SoundVoice::StateCounters& sC = _stateCounters [(int) _state];
-	switch (_state)
-	{
-		case State::_ATTACK:
-			// When the limit was reached, the state will have been move to _DECAY...
-			f = MCHEmul::linearInterpolation 
-				(0.0f, 0.0f, sC._cyclesPerState, 1.0f, sC._counterCyclesPerState);
-			break;
-
-		case State::_DECAY:
-			// When the limit was reached, the state will have been move to _SUSTAIN...
-			f = MCHEmul::linearInterpolation
-				(0.0f, 1.0f, sC._cyclesPerState, _sustainVolumen, sC._counterCyclesPerState);
-			break;
-
-		case State::_SUSTAIN:
-			// in _SUSTAIN there is no limits in time...
-			f = _sustainVolumen;
-			break;
-
-		case State::_RELEASE:
-			// When the limit is reached, the sound is back to 0...
-			f = (sC._limit)
-				? 0.0f 
-				: MCHEmul::linearInterpolation
-					(0.0f, _sustainVolumen, sC._cyclesPerState, 0.0f, sC._counterCyclesPerState);
-			break;
-	}
-
-	return (r * f);
-}
-
-// ---
 void MCHEmul::SoundVoice::calculateWaveSamplingData ()
 {
 	_stateCounters [(int) State::_ATTACK]._cyclesPerState =
@@ -116,3 +71,54 @@ void MCHEmul::SoundVoice::calculateWaveSamplingData ()
 	for (size_t i = 0; i < 4; _stateCounters [i++]._counterCyclesPerState = 0);
 }
 
+// ---
+double MCHEmul::SoundVoice::wavesData () const
+{
+	double result = 0; 
+						 
+	for (auto i : _waves) 
+		if (i -> active ()) // Only when the wave active...
+			result += i -> data (); 
+
+	// It can not be bigger that 1.0f...
+	return ((result > 1.0f) ? 1.0f : result);
+}
+
+// ---
+double MCHEmul::SoundVoice::ADSRData () const
+{
+	double result = 1.0f;
+	MCHEmul::SoundVoice::StateCounters& sC = _stateCounters [(int) _state];
+	switch (_state)
+	{
+		case State::_ATTACK:
+			// When the limit was reached, the state will have been move to _DECAY...
+			result = MCHEmul::linearInterpolation 
+				(0.0f, 0.0f, sC._cyclesPerState, 1.0f, sC._counterCyclesPerState);
+			break;
+
+		case State::_DECAY:
+			// When the limit was reached, the state will have been move to _SUSTAIN...
+			result = MCHEmul::linearInterpolation
+				(0.0f, 1.0f, sC._cyclesPerState, _sustainVolumen, sC._counterCyclesPerState);
+			break;
+
+		case State::_SUSTAIN:
+			// in _SUSTAIN there is no limits in time...
+			result = _sustainVolumen;
+			break;
+
+		case State::_RELEASE:
+			// When the limit is reached, the sound is back to 0...
+			result = (sC._limit)
+				? 0.0f 
+				: MCHEmul::linearInterpolation
+					(0.0f, _sustainVolumen, sC._cyclesPerState, 0.0f, sC._counterCyclesPerState);
+			break;
+
+		default:
+			break;
+	}
+
+	return (result);
+}

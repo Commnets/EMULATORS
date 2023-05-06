@@ -80,46 +80,25 @@ bool COMMODORE::SoundRESIDWrapper::getData (MCHEmul::CPU* cpu, MCHEmul::UBytes& 
 }
 
 // ---
-void COMMODORE::SoundSimpleWrapper::initialize ()
+COMMODORE::SoundSimpleWrapper::SoundSimpleWrapper (unsigned int cF, unsigned int sF)
+	: SIDLibWrapper (),
+	  _chipFrequency (cF), _samplingFrequency (sF),
+	  _volumen (0.0f), // There is no volumen at the beginning...
+	  _voices (
+		{ new COMMODORE::SoundSimpleWrapper::Voice (0, cF), 
+		  new COMMODORE::SoundSimpleWrapper::Voice (1, cF), 
+		  new COMMODORE::SoundSimpleWrapper::Voice (2, cF) }),
+	  _registers (std::vector <MCHEmul::UByte> (0x20, MCHEmul::UByte::_0)),
+	  _clocksPerSample ((unsigned int) ((double) cF / (double (sF)))),
+	  _counterClocksPerSample (0)
 { 
-	SIDLibWrapper::initialize ();
-							  
-	_counterClocksPerSample = 0;
-
-	// All voices are active in this emulation...
-	for (auto i : _voices)
-		i -> setActive (true);
-
-	// All registers are 0 by default...
-	_registers = std::vector <MCHEmul::UByte> (0x20, MCHEmul::UByte::_0); 
-}
-
-// ---
-bool COMMODORE::SoundSimpleWrapper::getData (MCHEmul::CPU *cpu, MCHEmul::UBytes& dt)
-{
-	bool result = false;
-
-	for (auto i : _voices)
-		i -> clock (); // just one...
-
-	if ((result = ((++_counterClocksPerSample) >= _clocksPerSample)))
-	{
-		if ((_counterClocksPerSample -= _clocksPerSample) >= _clocksPerSample)
-			_counterClocksPerSample = 0; // Just in case _clocksPerSample == 0...
-
-		double iR = 0;
-		for (auto i : _voices)
-			if (i -> active ()) // Only if the voice is active...
-				iR += i -> data (); // but the values are added...
-		iR *= _volumen; // Adjust the volumen...
-		
-		// This number could be greater than 1!
-		if (iR > 1.0f) iR = 1.0f; // ...so it is needed to correct.
-
-		dt = MCHEmul::UBytes ({ (unsigned char) (iR * 256.0f /** between 0 and 255. */) });
-	}
-
-	return (result);
+	// Link the different voices to make complex effects when requested...
+	dynamic_cast <COMMODORE::SoundSimpleWrapper::Voice*> (_voices [0]) -> 
+		setRelation (static_cast <COMMODORE::SoundSimpleWrapper::Voice*> (_voices [2]));
+	dynamic_cast <COMMODORE::SoundSimpleWrapper::Voice*> (_voices [1]) -> 
+		setRelation (static_cast <COMMODORE::SoundSimpleWrapper::Voice*> (_voices [0]));
+	dynamic_cast <COMMODORE::SoundSimpleWrapper::Voice*> (_voices [2]) -> 
+		setRelation (static_cast <COMMODORE::SoundSimpleWrapper::Voice*> (_voices [1]));
 }
 
 // ---
@@ -158,11 +137,13 @@ void COMMODORE::SoundSimpleWrapper::setValue (size_t p, const MCHEmul::UByte& v)
 		case 0x04:
 			{
 				_voices [0] -> setStart (v.bit (0));
-				// Bits 1, 2 and 3 not implemented...
+				// Bit 1 still not implemented...
+				dynamic_cast <COMMODORE::SoundSimpleWrapper::Voice*> (_voices [0]) -> setRingModulation (v.bit (2));
+				_voices [0] -> setActive (!v.bit (3));
 				_voices [0] -> wave (MCHEmul::SoundWave::Type::_TRIANGLE) -> setActive (v.bit (4));
 				_voices [0] -> wave (MCHEmul::SoundWave::Type::_SAWTOOTH) -> setActive (v.bit (5));
-				_voices [0] -> wave (MCHEmul::SoundWave::Type::_PULSE)	-> setActive (v.bit (6));
-				_voices [0] -> wave (MCHEmul::SoundWave::Type::_NOISE)	-> setActive (v.bit (7));
+				_voices [0] -> wave (MCHEmul::SoundWave::Type::_PULSE) -> setActive (v.bit (6));
+				_voices [0] -> wave (MCHEmul::SoundWave::Type::_NOISE) -> setActive (v.bit (7));
 			}
 
 			break;
@@ -212,11 +193,13 @@ void COMMODORE::SoundSimpleWrapper::setValue (size_t p, const MCHEmul::UByte& v)
 		case 0x0b:
 			{
 				_voices [1] -> setStart (v.bit (0));
-				// Bits 1, 2 and 3 not implemented...
+				// Bit 1 still not implemented...
+				dynamic_cast <COMMODORE::SoundSimpleWrapper::Voice*> (_voices [1]) -> setRingModulation (v.bit (2));
+				_voices [1] -> setActive (!v.bit (3));
 				_voices [1] -> wave (MCHEmul::SoundWave::Type::_TRIANGLE) -> setActive (v.bit (4));
 				_voices [1] -> wave (MCHEmul::SoundWave::Type::_SAWTOOTH) -> setActive (v.bit (5));
-				_voices [1] -> wave (MCHEmul::SoundWave::Type::_PULSE)	-> setActive (v.bit (6));
-				_voices [1] -> wave (MCHEmul::SoundWave::Type::_NOISE)	-> setActive (v.bit (7));
+				_voices [1] -> wave (MCHEmul::SoundWave::Type::_PULSE) -> setActive (v.bit (6));
+				_voices [1] -> wave (MCHEmul::SoundWave::Type::_NOISE) -> setActive (v.bit (7));
 			}
 
 			break;
@@ -266,11 +249,13 @@ void COMMODORE::SoundSimpleWrapper::setValue (size_t p, const MCHEmul::UByte& v)
 		case 0x12:
 			{
 				_voices [2] -> setStart (v.bit (0));
-				// Bits 1, 2 and 3 not implemented...
+				// Bit 1 still not implemented...
+				dynamic_cast <COMMODORE::SoundSimpleWrapper::Voice*> (_voices [2]) -> setRingModulation (v.bit (2));
+				_voices [2] -> setActive (!v.bit (3));
 				_voices [2] -> wave (MCHEmul::SoundWave::Type::_TRIANGLE) -> setActive (v.bit (4));
 				_voices [2] -> wave (MCHEmul::SoundWave::Type::_SAWTOOTH) -> setActive (v.bit (5));
-				_voices [1] -> wave (MCHEmul::SoundWave::Type::_PULSE)	-> setActive (v.bit (6));
-				_voices [1] -> wave (MCHEmul::SoundWave::Type::_NOISE)	-> setActive (v.bit (7));
+				_voices [2] -> wave (MCHEmul::SoundWave::Type::_PULSE) -> setActive (v.bit (6));
+				_voices [2] -> wave (MCHEmul::SoundWave::Type::_NOISE) -> setActive (v.bit (7));
 			}
 
 			break;
@@ -329,4 +314,75 @@ void COMMODORE::SoundSimpleWrapper::setValue (size_t p, const MCHEmul::UByte& v)
 		default:
 			break;
 	}
+}
+
+// ---
+const MCHEmul::UByte& COMMODORE::SoundSimpleWrapper::readValue (size_t p) const
+{ 
+	size_t pp = p % 0x20;
+
+	MCHEmul::UByte result = MCHEmul::PhysicalStorage::_DEFAULTVALUE;
+
+	switch (pp)
+	{
+		// Random number generator (oscilltor 3): RANDOM
+		case 0x1b:
+			result = dynamic_cast <COMMODORE::SoundSimpleWrapper::Voice*> (_voices [2]) -> oscillatorValue ();
+			break;
+
+		// Envelope generator 3: ENV3
+		case 0x1c:
+			result = dynamic_cast <COMMODORE::SoundSimpleWrapper::Voice*> (_voices [2]) -> envelopeValue ();
+			break;
+
+		// Other case, get the default value...
+		default:
+			result = _registers [p % 0x20];
+			break;
+	}
+
+	return (_lastValueRead = result);
+}
+
+// ---
+void COMMODORE::SoundSimpleWrapper::initialize ()
+{ 
+	SIDLibWrapper::initialize ();
+							  
+	_counterClocksPerSample = 0;
+
+	// All voices are active in this emulation...
+	for (auto i : _voices)
+		i -> setActive (true);
+
+	// All registers are 0 by default...
+	_registers = std::vector <MCHEmul::UByte> (0x20, MCHEmul::UByte::_0); 
+}
+
+// ---
+bool COMMODORE::SoundSimpleWrapper::getData (MCHEmul::CPU *cpu, MCHEmul::UBytes& dt)
+{
+	bool result = false;
+
+	for (auto i : _voices)
+		i -> clock (); // just one...
+
+	if ((result = ((++_counterClocksPerSample) >= _clocksPerSample)))
+	{
+		if ((_counterClocksPerSample -= _clocksPerSample) >= _clocksPerSample)
+			_counterClocksPerSample = 0; // Just in case _clocksPerSample == 0...
+
+		double iR = 0;
+		for (auto i : _voices)
+			if (i -> active ()) // Only if the voice is active...
+				iR += i -> data (); // but the values are added...
+		iR *= _volumen; // Adjust the volumen...
+		
+		// This number could be greater than 1!
+		if (iR > 1.0f) iR = 1.0f; // ...so it is needed to correct.
+
+		dt = MCHEmul::UBytes ({ (unsigned char) (iR * 256.0f /** between 0 and 255. */) });
+	}
+
+	return (result);
 }

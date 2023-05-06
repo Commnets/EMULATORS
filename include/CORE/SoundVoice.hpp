@@ -100,7 +100,8 @@ namespace MCHEmul
 		/** To get the output data of the voice. \n
 			It is number between 0 an 1. \n
 			It can be overloaded later for special purposes. */
-		virtual double data () const;
+		virtual double data () const
+							{ return (wavesData () * ADSRData ()); }
 
 		protected:
 		// Implementation
@@ -109,6 +110,11 @@ namespace MCHEmul
 			depending on the type of voice. \n
 			Any moment a key value is changed this method should be invoked. */
 		virtual void calculateWaveSamplingData ();
+
+		/** To calculate the value comming from the waves. */
+		double wavesData () const;
+		/** Same with the value of the ADSR. */
+		double ADSRData () const;
 
 		protected:
 		/** The id of the voice. */
