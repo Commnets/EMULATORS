@@ -91,6 +91,10 @@ namespace MCHEmul
 		/** The audio data. */
 		SDL_AudioDeviceID _deviceId;
 		SDL_AudioSpec _audioSpec;
+		/** To convert the sound data from the chip format to the sound card format when needed. \n
+			To identify whether the conversion of info is needed. */
+		bool _conversionNeeded;
+		SDL_AudioCVT _conversionData;
 	};
 }
 

@@ -15,6 +15,7 @@
 #define __CORE_SOUNDWAVE__
 
 #include <CORE/global.hpp>
+#include <CORE/InfoClass.hpp>
 
 namespace MCHEmul
 {
@@ -22,7 +23,7 @@ namespace MCHEmul
 
 	/** To replicate a wave. 
 		The waves can only be used from a SoundVoice. */
-	class SoundWave
+	class SoundWave : public InfoClass
 	{
 		public:
 		friend SoundVoice;
@@ -42,7 +43,8 @@ namespace MCHEmul
 		  *	@param cF	Chip frequency, in cycles per second.
 		  */
 		SoundWave (Type t, unsigned int cF)
-			: _type (t),
+			: InfoClass ("SoundWave"), 
+			  _type (t),
 			  _chipFrequency (cF),
 			  _active (false), // to indicate whether the wave s or not active...
 			  _frequency (0),
@@ -72,6 +74,15 @@ namespace MCHEmul
 
 		virtual void initialize ();
 
+		/** Just to initialize the internal counters. \n
+			All the internal counters defining the state are moved back to 0. \n
+			It can be overloaded for futher purposes. \n
+			Initially it is also invoked from the method calculateWaveSamplingData (). */
+		virtual void initializeInternalCounters ()
+						{ _counterInCyclesPerWave = 0; }
+
+		virtual InfoStructure getInfoStructure () const override;
+
 		protected:
 		// Tese two method can only be invoked from a Voice.
 		/** This method has to be invoked in every cpu cycle,
@@ -92,7 +103,8 @@ namespace MCHEmul
 		/** To calculate the internal data needed to later "draw" the different waves. \n
 			It could be overloaded to include more intenal data needed
 			depending on the type of wave. \n
-			Any moment a key value is changed this method should be invoked. */
+			Any moment a key value is changed this method should be invoked. ºn
+			This method invokes the next one. */
 		virtual void calculateWaveSamplingData ();
 
 		protected:
@@ -131,7 +143,7 @@ namespace MCHEmul
 	{
 		public:
 		TriangleSoundWave (unsigned int cF)
-			: SoundWave (Type::_SAWTOOTH, cF)
+			: SoundWave (Type::_TRIANGLE, cF)
 						{ }
 
 		private:
@@ -144,13 +156,7 @@ namespace MCHEmul
 	class PulseSoundWave final : public SoundWave
 	{
 		public:
-		PulseSoundWave (unsigned int cF)
-			: SoundWave (Type::_PULSE, cF),
-			  _pulseUpPercentage (0),
-			  _pulseUp (false),
-			  _cyclesPulseUp (0), _counterCyclesPulseUp (0),
-			  _cyclesPulseDown (0), _counterCyclesPulseDown (0)
-						{ calculateWaveSamplingData (); }
+		PulseSoundWave (unsigned int cF);
 
 		/** To manage the part of the pulse up...
 			It is a number between 0 and 1% */
@@ -160,6 +166,10 @@ namespace MCHEmul
 						{ _pulseUpPercentage = (pU > 1.0f ? 1.0f : pU); calculateWaveSamplingData (); }
 
 		virtual void initialize () override;
+
+		virtual void initializeInternalCounters () override;
+
+		virtual InfoStructure getInfoStructure () const override;
 
 		private:
 		virtual void clock (unsigned int nC) override;

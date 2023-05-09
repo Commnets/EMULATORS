@@ -1,13 +1,30 @@
 #include <CORE/SoundVoice.hpp>
 
 // ---
+void MCHEmul::SoundVoice::initialize ()
+{ 
+	_active = false; // By default...
+
+	_attack = _decay = _release = 0; 
+	
+	_sustainVolumen = 0.0f; 
+
+	_state = State::_ATTACK;
+		  
+	calculateVoiceSamplingData ();
+	
+	for (auto i : _waves) 
+		i -> initialize (); 
+}
+
+// ---
 void MCHEmul::SoundVoice::clock (unsigned int nC)
 { 
-	for (auto i : _waves)
-		i -> clock (nC); 
-
 	if (!_active)
 		return;
+
+	for (auto i : _waves)
+		i -> clock (nC); 
 
 	if (_state == State::_SUSTAIN)
 		return;
@@ -57,7 +74,28 @@ void MCHEmul::SoundVoice::clock (unsigned int nC)
 }
 
 // ---
-void MCHEmul::SoundVoice::calculateWaveSamplingData ()
+MCHEmul::InfoStructure MCHEmul::SoundVoice::getInfoStructure () const
+{
+	MCHEmul::InfoStructure result = std::move (MCHEmul::InfoClass::getInfoStructure ());
+
+	result.add ("ID", _id);
+	result.add ("ACTIVE", _active);
+	result.add ("ATTACK", _attack);
+	result.add ("DECAY", _decay);
+	result.add ("RELEASE", _release);
+	result.add ("SUSTAIN", _sustainVolumen);
+
+	unsigned char ct = 0;
+	MCHEmul::InfoStructure wDt;
+	for (auto i : _waves)
+		wDt.add (std::to_string (ct++), std::move (i -> getInfoStructure ()));
+	result.add ("WAVES", wDt);
+
+	return (result);
+}
+
+// ---
+void MCHEmul::SoundVoice::calculateVoiceSamplingData ()
 {
 	_stateCounters [(int) State::_ATTACK]._cyclesPerState =
 		(_attack == 0) ? 0 : (unsigned int) ((double) _chipFrequency * (double) _attack / 1000.0f);
@@ -67,8 +105,7 @@ void MCHEmul::SoundVoice::calculateWaveSamplingData ()
 	_stateCounters [(int) State::_RELEASE]._cyclesPerState =
 		(_release == 0) ? 0 : (unsigned int) ((double) _chipFrequency * (double) _release / 1000.0f);
 
-	// Initialize the counters...
-	for (size_t i = 0; i < 4; _stateCounters [i++]._counterCyclesPerState = 0);
+	initializeInternalCounters ();
 }
 
 // ---
@@ -78,7 +115,7 @@ double MCHEmul::SoundVoice::wavesData () const
 						 
 	for (auto i : _waves) 
 		if (i -> active ()) // Only when the wave active...
-			result += i -> data (); 
+			result += i -> data ();
 
 	// It can not be bigger that 1.0f...
 	return ((result > 1.0f) ? 1.0f : result);

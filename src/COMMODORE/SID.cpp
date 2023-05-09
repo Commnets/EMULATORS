@@ -11,8 +11,9 @@ COMMODORE::SID::SID (unsigned int cF, MCHEmul::SoundLibWrapper* sW)
 	  _SIDRegisters (nullptr),
 	  _lastClockCycles (0)
 { 
-	// Take care that the sound wmulation library was not null at all...
-	assert (soundWrapper () != nullptr);
+	// Take care that the sound emulation library was not null at all...
+	// ...and also belonging to the right type..
+	assert (dynamic_cast <COMMODORE::SIDLibWrapper*> (soundWrapper ()) != nullptr);
 
 	setClassName ("SID");
 }
@@ -81,10 +82,18 @@ MCHEmul::InfoStructure COMMODORE::SID::getInfoStructure () const
 {
 	MCHEmul::InfoStructure result = std::move (MCHEmul::SoundChip::getInfoStructure ());
 
-	result.remove ("Memory"); // This is not neccesary...
-	result.add ("Registers",	std::move (_SIDRegisters -> getInfoStructure ()));
-	if (soundWrapper () != nullptr)
-		result.add ("Wrapper",	std::move (soundWrapper () -> getInfoStructure ()));
+	result.remove ("Memory"); // This attribute is not neccesary...
+	result.add ("Registers",		
+		std::move (_SIDRegisters -> getInfoStructure ())); // Maybe they will all appear as 0...
+	result.add ("SoundLibWrapper",	
+		std::move (soundWrapper () -> getInfoStructure ())); // To know which library is behing...
+
+	// Information about the voices...
+	MCHEmul::InfoStructure vDt;
+	for (unsigned char i = 0; i < 3; i++)
+		vDt.add (std::to_string (i), 
+				 std::move (static_cast <const COMMODORE::SIDLibWrapper*> (soundWrapper ()) -> getVoiceInfoStructure (i)));
+	result.add ("VOICES", vDt);
 
 	return (result);
 }

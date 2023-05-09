@@ -60,6 +60,7 @@
 #include <CORE/SoundWave.hpp>
 #include <CORE/SoundVoice.hpp>
 #include <CORE/SoundMemory.hpp>
+#include <CORE/SoundLibWrapper.hpp>
 #include <CORE/IOPeripheral.hpp>
 #include <CORE/IOPBuilder.hpp>
 #include <CORE/Command.hpp>

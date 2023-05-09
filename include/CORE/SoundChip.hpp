@@ -16,50 +16,20 @@
 
 #include <CORE/Chip.hpp>
 #include <CORE/SoundMemory.hpp>
+#include <CORE/SoundLibWrapper.hpp>
 #include <SDL.h>
 
 namespace MCHEmul
 {
-	/** To create the "sound" many external tools could be even used.
-		So a general class to create the next frame of sound is defined. */
-	class SoundLibWrapper : public InfoClass
-	{
-		public:
-		SoundLibWrapper (const Attributes& attrs = { })
-			: InfoClass	("SoundLibWrapper"),
-			  _attributes (attrs)
-							{ }
-
-		virtual ~SoundLibWrapper ()
-							{ }
-
-		/** The warpper can accept changes receiving a list of parameters. */
-		virtual void setParameters (const Attributes& attrs)
-							{ _attributes = attrs; }
-		const Attributes& parameters () const
-							{ return (_attributes); }
-
-		virtual void initialize ()
-							{ }
-
-		/** To get the next data considering the status of the CPU. \n
-			The method returns true when there is data "available" and false if it is not. \n
-			In case te data is available the parameter "UBytes" will have been filled up with the value. */
-		virtual bool getData (CPU*, UBytes&) = 0;
-
-		virtual InfoStructure getInfoStructure () const override;
-
-		protected:
-		Attributes _attributes;
-	};
-
 	/**
 	  * SoundChip is very connected with a Sound. \n
 	  * The sound chip uses the SoundMemory to write. \n
 	  * The same object will be taken by the Sound to finaly put the sound out to the sound card. \n
 	  * The instance of the SoundMemory object used is created in the method "createSoundMemory ()" that has to be overload. \n
-	  * When a sound is ready (from the Chip) a notification has to be issed.
-	  * That notification will be received at the Sound System represetation to move it into the sound card.
+	  * When a sound is ready (from the Chip) a notification has to be issed. \n
+	  * That notification will be received at the Sound System represetation to move it into the sound card. \n
+	  * To emulate how the chip is working a thrid party library could be used. \n
+	  * For this reason a reference to a SoundLibWarpper could be used but it s nor mandatory.
 	  */
 	class SoundChip : public Chip
 	{
@@ -81,7 +51,8 @@ namespace MCHEmul
 							{ delete (_soundMemory); 
 							  delete (_soundWrapper); }
 
-		/** To change the wrapper used. */
+		/** To change the wrapper used. \n
+			It could be nullptr if no wrapper is used. */
 		const SoundLibWrapper* soundWrapper () const
 							{ return (_soundWrapper); }
 		SoundLibWrapper* soundWrapper ()
@@ -100,7 +71,7 @@ namespace MCHEmul
 							{ return ((type () & 0x00ff) >> 3); } // From the type always... (@see format of SDL_AudioSpec)
 		virtual unsigned char numberChannels () const = 0;
 		// The theoretical number of elements of the buffer (frequency * channels * sampleSize) is divided by 10...
-		// ..meaning that the buffer will be filled 100 times per second!...
+		// ..meaning that the buffer will be filled 100 times per second to guaranttee the continuity of the sound!...
 		int soundBufferSize () const
 							{ return ((samplingFrecuency () * (int) numberChannels () * (int) sampleSize ()) / 100); }
 

@@ -15,18 +15,20 @@
 #ifndef __CORE_SOUNDVOICE__
 #define __CORE_SOUNDVOICE__
 
+#include <CORE/InfoClass.hpp>
 #include <CORE/SoundWave.hpp>
 
 namespace MCHEmul
 {
 	/** Represents a voice. \n
 		Ot can be overloaded for specific needs. */
-	class SoundVoice
+	class SoundVoice : public InfoClass
 	{
 		public:
 		/** The voice is owner of the waves. */
 		SoundVoice (int id, unsigned int cF, const SoundWaves& sw)
-			: _id (id),
+			: InfoClass ("SoundVoice"),
+			  _id (id),
 			  _chipFrequency (cF),
 			  _active (false), // No active by default...
 			  _attack (0), _decay (0), _release (0),
@@ -34,7 +36,7 @@ namespace MCHEmul
 			  _waves (sw),
 			  _state (State::_ATTACK),
 			  _stateCounters (4, StateCounters ()) // All to 0...
-						{ calculateWaveSamplingData (); }
+						{ calculateVoiceSamplingData (); }
 
 		~SoundVoice ()
 						{ for (auto i : _waves) 
@@ -45,8 +47,10 @@ namespace MCHEmul
 
 		bool active () const
 						{ return (_active); }
-		void setActive (bool a)
-						{ _active = a; }
+		/** It can be overloaded for special purposes. */
+		virtual void setActive (bool a)
+						{ if ((_active != a) && (_active = a))
+							initializeInternalCounters (); }
 
 		/** To define the state of the voice. */
 		void setStart (bool s)
@@ -59,15 +63,15 @@ namespace MCHEmul
 		unsigned short attack () const
 						{ return (_attack); }
 		void setAttack (unsigned short a)
-						{ _attack = a; calculateWaveSamplingData (); }
+						{ _attack = a; calculateVoiceSamplingData (); }
 		unsigned short decay () const
 						{ return (_decay); }
 		void setDecay (unsigned short d)
-						{ _decay = d; calculateWaveSamplingData (); }
+						{ _decay = d; calculateVoiceSamplingData (); }
 		unsigned short release () const
 						{ return (_release); }
 		void setRelease (unsigned short r)
-						{ _release = r; calculateWaveSamplingData (); }
+						{ _release = r; calculateVoiceSamplingData (); }
 
 		/** The sustain volumen is a number between 0 and 1 indicating 
 			the %(1) over a "maximum value". */
@@ -76,7 +80,7 @@ namespace MCHEmul
 		void setSustainVolumen (double s)
 						{ if ((_sustainVolumen = s) > 1.0f) 
 							_sustainVolumen = 1.0f; 
-						  calculateWaveSamplingData (); }
+						  calculateVoiceSamplingData (); }
 	
 		const SoundWaves& waves () const
 						{ return (_waves); }
@@ -92,6 +96,19 @@ namespace MCHEmul
 						{ for (auto i : _waves) 
 							i -> setFrequency (f); }
 
+		/** To initialize. */
+		virtual void initialize ();
+
+		/** To initialize the internal counters. \n
+			All counters about the internal state are move back to initial values. \n
+			Can be overloaded for further purposes. \n
+			By default it is also used from the method calculateVoiceSamplingData. */
+		virtual void initializeInternalCounters ()
+							{ for (auto i : _waves) 
+								i -> initializeInternalCounters ();
+							  for (size_t i = 0; i < 4; 
+								_stateCounters [i++]._counterCyclesPerState = 0); }
+
 		/** This method has to be invoked at every cpu cycle to 
 			actualize the situation of the waves, ADSR cycle and others. \n
 			It can be overloaded for specific needs (imagin a filter class is added!). */
@@ -103,13 +120,15 @@ namespace MCHEmul
 		virtual double data () const
 							{ return (wavesData () * ADSRData ()); }
 
+		virtual InfoStructure getInfoStructure () const override;
+
 		protected:
 		// Implementation
 		/** To calculate the internal data needed to later "draw" the voice. \n
 			It could be overloaded to include more intenal data needed
 			depending on the type of voice. \n
 			Any moment a key value is changed this method should be invoked. */
-		virtual void calculateWaveSamplingData ();
+		virtual void calculateVoiceSamplingData ();
 
 		/** To calculate the value comming from the waves. */
 		double wavesData () const;

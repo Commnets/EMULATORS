@@ -37,6 +37,10 @@ namespace COMMODORE
 		virtual const MCHEmul::UByte& readValue (size_t p) const
 							{ return (_lastValueRead); }
 
+		/** To get information about the voices from then wrapper. \n
+			That infomation is not neccesary stored in the registers. */
+		virtual MCHEmul::InfoStructure getVoiceInfoStructure (unsigned char nV) const = 0;
+
 		protected:
 		// Implementation
 		mutable MCHEmul::UByte _lastValueRead;
@@ -63,10 +67,14 @@ namespace COMMODORE
 							{ _resid_sid.reset (); }
 
 		virtual void setValue (size_t p, const MCHEmul::UByte& v) override
-							{	_resid_sid.write ((RESID::reg8) (p % 0x20), (RESID::reg8) v.value ()); }
-		virtual const MCHEmul::UByte& readValue (size_t p) const override;
+							{ _resid_sid.write ((RESID::reg8) (p % 0x20), (RESID::reg8) v.value ()); }
+		virtual const MCHEmul::UByte& readValue (size_t p) const override
+							{ return (_lastValueRead = 
+								MCHEmul::UByte ((unsigned char) (*(const_cast <RESID::SID*> (&_resid_sid))).read ((RESID::reg8) (p % 0x20)))); }
 
 		virtual bool getData (MCHEmul::CPU *cpu, MCHEmul::UBytes& dt) override;
+
+		virtual MCHEmul::InfoStructure getVoiceInfoStructure (unsigned char nV) const override;
 
 		private:
 		unsigned int _chipFrequency;
@@ -100,6 +108,9 @@ namespace COMMODORE
 
 		virtual bool getData (MCHEmul::CPU *cpu, MCHEmul::UBytes& dt) override;
 
+		virtual MCHEmul::InfoStructure getVoiceInfoStructure (unsigned char nV) const override
+						{ return ((nV < 3) ? _voices [nV] -> getInfoStructure () : MCHEmul::InfoStructure ()); }
+
 		private:
 		unsigned int _chipFrequency;
 		unsigned int _samplingFrequency;
@@ -120,11 +131,18 @@ namespace COMMODORE
 					}),
 				  _voiceRelated (nullptr),
 				  _ringModulation (false)
-							{ }
+							{ setClassName ("SIDVoice"); }
+
+			virtual void setActive (bool a) override
+							{ if ((_active != a) && (_active = a)) 
+								for (auto i : _waves) // Initialize only the counters of the waves...
+									i -> initializeInternalCounters (); }
 
 			/** The other voices this one could be related with. **/
 			void setRelation (Voice* v)
 							{ _voiceRelated = v; }
+			/** To synchronize the voices. */
+			void sync (bool s);
 
 			/** To set up / off the ring modulation with other voices. */
 			bool ringModulation () const
@@ -147,10 +165,14 @@ namespace COMMODORE
 			void setPulseUpPercentage (double pU)
 							{ dynamic_cast <MCHEmul::PulseSoundWave*> (waves ()[2]) -> setPulseUpPercentage (pU); }
 
+			virtual void initialize () override;
+
 			/** To suppomg the ring modulation. */
 			virtual double data () const override
 							{ return (MCHEmul::SoundVoice::data () + 
 								((_ringModulation && _voiceRelated != nullptr) ? _voiceRelated -> data () : 0.0f)); }
+
+			virtual MCHEmul::InfoStructure getInfoStructure () const override;
 
 			private:
 			/** The voice related. */

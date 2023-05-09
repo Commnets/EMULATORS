@@ -52,6 +52,7 @@
     <ClCompile Include="..\..\src\CORE\ScreenMemory.cpp" />
     <ClCompile Include="..\..\src\CORE\Sound.cpp" />
     <ClCompile Include="..\..\src\CORE\SoundChip.cpp" />
+    <ClCompile Include="..\..\src\CORE\SoundLibWrapper.cpp" />
     <ClCompile Include="..\..\src\CORE\SoundMemory.cpp" />
     <ClCompile Include="..\..\src\CORE\SoundVoice.cpp" />
     <ClCompile Include="..\..\src\CORE\SoundWave.cpp" />

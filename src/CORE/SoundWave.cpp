@@ -3,11 +3,23 @@
 // ---
 void MCHEmul::SoundWave::initialize ()
 { 
-	_frequency = 0;
-
 	_active = false; // By default...
+
+	_frequency = 0;
 							  
 	calculateWaveSamplingData (); 
+}
+
+// ---
+MCHEmul::InfoStructure MCHEmul::SoundWave::getInfoStructure () const
+{
+	MCHEmul::InfoStructure result = MCHEmul::InfoClass::getInfoStructure ();
+
+	result.add ("ACTIVE", _active);
+	result.add ("TYPE", (int) _type);
+	result.add ("FREQUENCY", _frequency);
+
+	return (result);
 }
 
 // ---
@@ -17,8 +29,7 @@ void MCHEmul::SoundWave::calculateWaveSamplingData ()
 	_cyclesPerWave= (_frequency != 0) 
 		? (int) ((double) _chipFrequency / (double) _frequency) : 0;
 
-	// Any time the calculation is done, the counter starts back from 0...
-	_counterInCyclesPerWave = 0;
+	initializeInternalCounters ();
 }
 
 // ---
@@ -44,6 +55,19 @@ double MCHEmul::TriangleSoundWave::data () const
 }
 
 // ---
+MCHEmul::PulseSoundWave::PulseSoundWave (unsigned int cF)
+	: MCHEmul::SoundWave (Type::_PULSE, cF),
+	  _pulseUpPercentage (0),
+	  _pulseUp (false),
+	  _cyclesPulseUp (0), _counterCyclesPulseUp (0),
+	  _cyclesPulseDown (0), _counterCyclesPulseDown (0)
+{ 
+	setClassName ("SoundPulseWave");
+						  
+	calculateWaveSamplingData (); 
+}
+
+// ---
 void MCHEmul::PulseSoundWave::initialize ()
 { 
 	SoundWave::initialize (); 
@@ -52,9 +76,25 @@ void MCHEmul::PulseSoundWave::initialize ()
 						  
 	_pulseUp = false;
 
-	_cyclesPulseUp = _counterCyclesPulseUp = 0;
-
 	calculateWaveSamplingData ();
+}
+
+// ---
+void MCHEmul::PulseSoundWave::initializeInternalCounters ()
+{ 
+	SoundWave::initializeInternalCounters ();
+						  
+	_counterCyclesPulseUp = _counterCyclesPulseDown = 0; 
+}
+
+// --
+MCHEmul::InfoStructure MCHEmul::PulseSoundWave::getInfoStructure () const
+{
+	MCHEmul::InfoStructure result = MCHEmul::SoundWave::getInfoStructure ();
+
+	result.add ("PULSEUP",_pulseUpPercentage);
+
+	return (result);
 }
 
 // ---
@@ -102,15 +142,12 @@ double MCHEmul::PulseSoundWave::data () const
 // ---
 void MCHEmul::PulseSoundWave::calculateWaveSamplingData ()
 {
-	MCHEmul::SoundWave::calculateWaveSamplingData ();
-
 	// How many cycles within the cyclesPerWave is the pulse up?
 	_cyclesPulseUp = (int) ((double) _cyclesPerWave * (double) _pulseUpPercentage);
 	// ...and down..simple:
 	_cyclesPulseDown = _cyclesPerWave - _cyclesPulseUp;
 
-	// Any time this method is invoked the counters are moved back to 0...
-	_counterCyclesPulseUp = _counterCyclesPulseDown = 0;
+	MCHEmul::SoundWave::calculateWaveSamplingData ();
 }
 
 // ---

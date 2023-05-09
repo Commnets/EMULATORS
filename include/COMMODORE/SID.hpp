@@ -18,7 +18,6 @@
 #define __COMMODORE_SID__
 
 #include <CORE/incs.hpp>
-#include <COMMODORE/SIDLibWrapper.hpp>
 #include <COMMODORE/SIDRegisters.hpp>
 
 namespace COMMODORE

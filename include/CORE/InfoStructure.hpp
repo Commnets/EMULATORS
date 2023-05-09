@@ -66,6 +66,8 @@ namespace MCHEmul
 							{ add (an, std::to_string (av)); }
 		void add (const std::string& an, int av)
 							{ add (an, std::to_string (av)); }
+		void add (const std::string& an, double av)
+							{ add (an, std::to_string (av)); }
 		void add (const std::string& an, bool av)
 							{ add (an, av ? _YES : _NO); }
 		void add (const std::string& an, const UByte& av)
