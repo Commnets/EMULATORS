@@ -108,6 +108,24 @@ Data Form:@TYPE@ Frequency:@FREQUENCY@kHz Channels:@CHANNELS@
 @IOPERIPHERALS?{fmter=.CLASS,empty=no peripherals}\n@
 #---
 #---
+;SoundLibWrapper
+@ATTRS?{key=YES,equal=:,empty=no attributes}\n@
+#---
+#---
+;SoundVoice
+Active:@ACTIVE@
+ADSR:@ATTACK@/@DECAY@/@SUSTAIN@/@RELEASE@(@STATE@)
+@WAVES?{fmter=.CLASS,empty=no waves}\n@
+#---
+#---
+;SoundWave
+Active:@ACTIVE@, Type:@TYPE@, Frequency:@FREQUENCY@
+#---
+#---
+;SoundPulseWave
+Active:@ACTIVE@, Type:@TYPE@, Frequency:@FREQUENCY@(@PULSEUP@)
+#---
+#---
 ;CAUTHOR
 @Author>@
 #---

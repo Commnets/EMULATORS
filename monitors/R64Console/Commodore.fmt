@@ -95,11 +95,22 @@ A:@CIDDRA@, B:@CIDDRB@
 @SerialPort>@
 #---
 #---
+;SIDVoice
+Id:@ID@, Active:@ACTIVE@
+ADSR:@ATTACK@/@DECAY@/@SUSTAIN@/@RELEASE@
+Linked:@VOICERELATED@, Ring:@RINGMODULATION@
+@WAVES?{fmter=.CLASS,empty=no waves}\n@
+#---
+#---
 ;SID
 Id:@ID@
 @ATTRS?{key=YES,equal=:,empty=no attributes}\n@
+->Wrapper:
+@SoundLibWrapper>@
 ->Registers:
 @Registers>@
+->Voices:
+@VOICES?{fmter=.CLASS,empty=no voices}\n---\n@
 #---
 #---
 ;Datasette
