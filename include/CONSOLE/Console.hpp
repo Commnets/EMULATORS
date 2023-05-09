@@ -50,7 +50,7 @@ namespace MCHEmul
 
 		Console& operator = (const Console&) = delete;
 
-		virtual ~Console ()
+		virtual ~Console () override
 							{ delete (_consoleKeys); }
 
 		Console (Console&&) = delete;

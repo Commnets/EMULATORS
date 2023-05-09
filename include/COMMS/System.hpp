@@ -53,7 +53,7 @@ namespace MCHEmul
 
 		CommunicationSystem& operator = (const CommunicationSystem&) = delete;
 
-		virtual ~CommunicationSystem ()
+		virtual ~CommunicationSystem () override
 							{ delete (_communicationChannel); }
 
 		CommunicationSystem (CommunicationSystem&&) = delete;

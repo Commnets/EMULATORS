@@ -133,7 +133,7 @@ namespace MCHEmul
 
 		PhysicalStorageSubset& operator = (const PhysicalStorageSubset&) = delete;
 
-		virtual ~PhysicalStorageSubset () 
+		virtual ~PhysicalStorageSubset () override
 							{ /** Nothing to do by default. */ }
 
 		PhysicalStorageSubset (PhysicalStorageSubset&&) = delete;

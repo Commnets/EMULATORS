@@ -141,7 +141,7 @@ namespace COMMODORE
 			/** The other voices this one could be related with. **/
 			void setRelation (Voice* v)
 							{ _voiceRelated = v; }
-			/** To synchronize the voices. */
+			/** To synchronize the voice with the linked one. */
 			void sync (bool s);
 
 			/** To set up / off the ring modulation with other voices. */

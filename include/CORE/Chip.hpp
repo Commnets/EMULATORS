@@ -40,7 +40,7 @@ namespace MCHEmul
 		Chip& operator = (const Chip&) = delete;
 
 		/** The chip is not owner of the memory. */
-		virtual ~Chip ()
+		virtual ~Chip () override
 							{ } 
 
 		Chip (Chip&&) = delete;

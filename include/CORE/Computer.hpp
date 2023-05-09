@@ -69,7 +69,7 @@ namespace MCHEmul
 
 		Computer& operator = (const Computer&) = delete;
 
-		virtual ~Computer (); 
+		virtual ~Computer () override; 
 
 		Computer (Computer&&) = delete;
 

@@ -39,7 +39,7 @@ namespace MCHEmul
 		CPUInterrupt& operator = (const CPUInterrupt&) = delete;
 
 		virtual ~CPUInterrupt ()
-							{ }
+							{ /** Nothing by default. */ }
 
 		CPUInterrupt (CPUInterrupt&&) = delete;
 

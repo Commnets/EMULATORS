@@ -49,7 +49,7 @@ namespace MCHEmul
 			  _defSeparator ("\n"), _defEqual ("="), _printFirst (true), _whenEmpty ("none")
 							{ }
 
-		virtual ~StdFormatter ()
+		virtual ~StdFormatter () override
 							{ for (auto& i : _pieces) delete (i); }
 
 		/** To change the elements used to format things when a no piece is defined for that. */

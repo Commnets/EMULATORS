@@ -50,7 +50,7 @@ namespace MCHEmul
 
 		/** The device doesn't own the chips, only work with them. 
 			The device doesn't own the peripherals either. */
-		virtual ~IODevice ();
+		virtual ~IODevice () override;
 
 		IODevice (IODevice&&) = delete;
 
