@@ -131,8 +131,9 @@ namespace COMMODORE
 						new MCHEmul::PulseSoundWave (cF),
 						new MCHEmul::NoiseSoundWave (cF)
 					}),
-				  _voiceRelated (nullptr),
-				  _ringModulation (false),
+				  _voiceRelated (nullptr), // set when Emulation is built (it is guarentted that it is not nullptr when running)
+				  _ringModulation (false), // Not modulated by default...
+				  _sync (false), // Not sync by default...
 				  _wavesActive (0)
 							{ setClassName ("SIDVoice"); }
 
@@ -144,8 +145,6 @@ namespace COMMODORE
 			/** The other voices this one could be related with. **/
 			void setRelation (Voice* v)
 							{ _voiceRelated = v; }
-			/** To synchronize the voice with the linked one. */
-			void sync (bool s);
 
 			/** To set up / off the ring modulation with other voices. */
 			bool ringModulation () const
@@ -153,11 +152,19 @@ namespace COMMODORE
 			void setRingModulation (bool a)
 							{ _ringModulation = a; }
 
+			/** To synchronize the voice with the linked one. */
+			void setSync (bool s)
+							{ _sync = s; }
+
 			/** To know the value of the oscilator behind.
 				It is used sometimes for complex effects. \n
 				It returns a number from 0 to 255 depending on the wave that is moving behind!. */
-			unsigned char clockValue () const
+			unsigned char wavesClockValue () const
 							{ return ((unsigned char) (waves ()[0] /** whatever. */ -> clockValue () * 255)); }
+			bool wavesClockRestarted () const
+							{ bool r = true; 
+							  for (auto i : waves ()) r &= i -> clockRestarted (); /** One will be enought, but just to set all rest to 0. */
+							  return (r); }
 			unsigned char oscillatorValue () const
 							{ return ((unsigned char) (wavesData () * 255)); }
 			/** Same but for the envelope. */
@@ -188,6 +195,8 @@ namespace COMMODORE
 			Voice* _voiceRelated;
 			/** The ring modulation. */
 			bool _ringModulation;
+			/** Is it sync with its voice related?. */
+			bool _sync;
 
 			// Implementation
 			// Waves active..to speed up the calculus later

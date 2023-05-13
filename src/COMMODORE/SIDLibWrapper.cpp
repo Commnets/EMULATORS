@@ -176,7 +176,7 @@ void COMMODORE::SoundSimpleWrapper::setValue (size_t p, const MCHEmul::UByte& v)
 			{
 				_voices [0] -> setStart (v.bit (0));
 				static_cast <COMMODORE::SoundSimpleWrapper::Voice*> 
-					(_voices [0]) -> sync (v.bit (1)); 
+					(_voices [0]) -> setSync (v.bit (1)); 
 				static_cast <COMMODORE::SoundSimpleWrapper::Voice*> 
 					(_voices [0]) -> setRingModulation (v.bit (2));
 				_voices [0] -> setActive (!v.bit (3));
@@ -236,7 +236,7 @@ void COMMODORE::SoundSimpleWrapper::setValue (size_t p, const MCHEmul::UByte& v)
 			{
 				_voices [1] -> setStart (v.bit (0));
 				static_cast <COMMODORE::SoundSimpleWrapper::Voice*> 
-					(_voices [1]) -> sync (v.bit (1)); 
+					(_voices [1]) -> setSync (v.bit (1)); 
 				static_cast <COMMODORE::SoundSimpleWrapper::Voice*> 
 					(_voices [1]) -> setRingModulation (v.bit (2));
 				_voices [1] -> setActive (!v.bit (3));
@@ -296,7 +296,7 @@ void COMMODORE::SoundSimpleWrapper::setValue (size_t p, const MCHEmul::UByte& v)
 			{
 				_voices [2] -> setStart (v.bit (0));
 				static_cast <COMMODORE::SoundSimpleWrapper::Voice*> 
-					(_voices [2]) -> sync (v.bit (1)); 
+					(_voices [2]) -> setSync (v.bit (1)); 
 				static_cast <COMMODORE::SoundSimpleWrapper::Voice*> 
 					(_voices [2]) -> setRingModulation (v.bit (2));
 				_voices [2] -> setActive (!v.bit (3));
@@ -439,12 +439,6 @@ bool COMMODORE::SoundSimpleWrapper::getData (MCHEmul::CPU *cpu, MCHEmul::UBytes&
 }
 
 // ---
-void COMMODORE::SoundSimpleWrapper::Voice::sync (bool s)
-{
-	// TODO...
-}
-
-// ---
 void COMMODORE::SoundSimpleWrapper::Voice::initialize ()
 {
 	MCHEmul::SoundVoice::initialize ();
@@ -457,8 +451,12 @@ double COMMODORE::SoundSimpleWrapper::Voice::data () const
 { 
 	// When the wave is active or is in test active and the selected wave is a pulse...
 	// ...the sound has to be produced
-	if (!active () || (!active () && _wavesActive == 0x40 /** pulse. */))
+	if (!(active () || (!active () && _wavesActive == 0x40 /** pulse. */)))
 		return (0.0f);
+
+	// When sync the internal clocks of the waves are synchronized...
+	if (_sync && wavesClockRestarted ())
+		_voiceRelated -> initializeWavesInternalCounters ();
 
 	double result = 0.0f;
 
@@ -492,28 +490,28 @@ double COMMODORE::SoundSimpleWrapper::Voice::data () const
 
 		// sawtooth & triangle
 		case 0x30:
-			result = (double) _SAWTRIWAVE_6581 [(size_t) clockValue ()] / 256.0f;
+			result = (double) _SAWTRIWAVE_6581 [(size_t) wavesClockValue ()] / 256.0f;
 			break;
 
 		// pulse & triangle
 		case 0x50:
 			if (static_cast <MCHEmul::PulseSoundWave*> 
 					(waves ()[(size_t) MCHEmul::SoundWave::Type::_PULSE]) -> pulseUp ())
-				result = (double) _PULSETRIWAVE_6581 [(size_t) clockValue ()] / 256.0f;
+				result = (double) _PULSETRIWAVE_6581 [(size_t) wavesClockValue ()] / 256.0f;
 			break;
 
 		// pulse & sawtooth
 		case 0x60:
 			if (static_cast <MCHEmul::PulseSoundWave*> 
 					(waves ()[(size_t) MCHEmul::SoundWave::Type::_PULSE]) -> pulseUp ())
-				result = (double) _PULSESAWWAVE_6581 [(size_t) clockValue ()] / 256.0f;
+				result = (double) _PULSESAWWAVE_6581 [(size_t) wavesClockValue ()] / 256.0f;
 			break;
 
 		// pulse & sawtooth & triangle
 		case 0x70:
 			if (static_cast <MCHEmul::PulseSoundWave*> 
 					(waves ()[(size_t) MCHEmul::SoundWave::Type::_PULSE]) -> pulseUp ())
-				result = (double) _PULSESAWTRIWAVE_6581 [(size_t) clockValue ()] / 256.0f;
+				result = (double) _PULSESAWTRIWAVE_6581 [(size_t) wavesClockValue ()] / 256.0f;
 			break;
 
 		// With this other combinations no output is produced...
@@ -549,6 +547,7 @@ MCHEmul::InfoStructure COMMODORE::SoundSimpleWrapper::Voice::getInfoStructure ()
 
 	result.add ("RINGMODULATION", _ringModulation);
 	result.add ("VOICERELATED", _voiceRelated -> id ());
+	result.add ("SYNC", _sync);
 
 	return (result);
 }

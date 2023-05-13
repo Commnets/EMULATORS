@@ -44,7 +44,8 @@ namespace MCHEmul
 			  _chipFrequency (cF),
 			  _active (false), // to indicate whether the wave s or not active...
 			  _frequency (0),
-			  _cyclesPerWave (0), _counterInCyclesPerWave (0)
+			  _cyclesPerWave (0), _counterInCyclesPerWave (0),
+			  _clockRestarted (false)
 						{ calculateWaveSamplingData (); }
 
 		/** Just in case. The default behaviour is doing nothing. */
@@ -83,15 +84,21 @@ namespace MCHEmul
 			receiving as parameter the number of cycles happened from the last invocation. \n
 			It can be overloaded to cover specific needs for specific sound waves. */
 		virtual void clock (unsigned int nC = 1)
-						{ if (((_counterInCyclesPerWave += nC) >= _cyclesPerWave) &&
-							  ((_counterInCyclesPerWave -= _cyclesPerWave) >= _cyclesPerWave))
-								_counterInCyclesPerWave = 0; } // Just in case _cyclesPerWave is 0...
+						{ if ((_counterInCyclesPerWave += nC) >= _cyclesPerWave) { 
+							_clockRestarted = true;
+							if ((_counterInCyclesPerWave -= _cyclesPerWave) >= _cyclesPerWave)
+								_counterInCyclesPerWave = 0; /* Just in case _cyclesPerWave is 0... */ } }
 		
 		/** To know the position from 0 to 1 of the internal clock.
 			It can not be overloaded. */
 		double clockValue () const
 						{ return ((_cyclesPerWave == 0) 
 							? 0.0f : (double) _counterInCyclesPerWave / (double) _cyclesPerWave); }
+
+		/** To know whether the clock has pass over 0. \n
+			When the value is read, it is set back to false. */
+		bool clockRestarted () const
+						{ bool r = _clockRestarted; _clockRestarted = false; return (r); }
 
 		/** This method should return always a value between 0 and 1. \n
 			Indicating the %(1) of the maximum situation achieved. \n
@@ -122,6 +129,9 @@ namespace MCHEmul
 		unsigned int _cyclesPerWave;
 		/** A counter for the current cycle within the _cyclesPerWave. */
 		unsigned int _counterInCyclesPerWave;
+
+		// Implementation
+		mutable bool _clockRestarted;
 	};
 
 	/** To sumplify managing a list of sound waves. */

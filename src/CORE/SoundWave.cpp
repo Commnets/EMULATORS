@@ -6,8 +6,10 @@ void MCHEmul::SoundWave::initialize ()
 	_active = false; // By default...
 
 	_frequency = 0;
-							  
+
 	calculateWaveSamplingData (); 
+
+	_clockRestarted = false;
 }
 
 // ---
@@ -91,6 +93,8 @@ void MCHEmul::PulseSoundWave::initializeInternalCounters ()
 	SoundWave::initializeInternalCounters ();
 						  
 	_counterCyclesPulseUp = _counterCyclesPulseDown = 0; 
+
+	_pulseUp = false;
 }
 
 // --
@@ -155,6 +159,8 @@ void MCHEmul::PulseSoundWave::calculateWaveSamplingData ()
 	_cyclesPulseUp = (int) ((double) _cyclesPerWave * (double) _pulseUpPercentage);
 	// ...and down..simple:
 	_cyclesPulseDown = _cyclesPerWave - _cyclesPulseUp;
+
+	_pulseUp = false;
 
 	MCHEmul::SoundWave::calculateWaveSamplingData ();
 }

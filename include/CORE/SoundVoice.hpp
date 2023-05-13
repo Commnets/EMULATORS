@@ -100,13 +100,17 @@ namespace MCHEmul
 		/** To initialize. */
 		virtual void initialize ();
 
+		/** To initialize the interal counter of the waves only. */
+		void initializeWavesInternalCounters ()
+							{ for (auto i : _waves) 
+								i -> initializeInternalCounters (); }
+
 		/** To initialize the internal counters. \n
 			All counters about the internal state are move back to initial values. \n
 			Can be overloaded for further purposes. \n
 			By default it is also used from the method calculateVoiceSamplingData. */
 		virtual void initializeInternalCounters ()
-							{ for (auto i : _waves) 
-								i -> initializeInternalCounters ();
+							{ initializeWavesInternalCounters ();
 							  for (size_t i = 0; i < 5; // The states of the ADSR (Just 4)...
 								_stateCounters [i++]._counterCyclesPerState = 0); }
 
