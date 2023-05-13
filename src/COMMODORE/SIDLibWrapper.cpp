@@ -7,6 +7,89 @@ unsigned short COMMODORE::SoundSimpleWrapper::_DECAYTIMES [0x10] =
 unsigned short COMMODORE::SoundSimpleWrapper::_RELEASETIMES [0x10] =
 	{ 6, 24, 48, 72, 114, 168, 204, 240, 300, 750, 1500, 2400, 3000, 9000, 15000, 24000 };
 
+// Sampled from a 6581R4
+// When the triangle and sawtooth waves are mixed...
+const unsigned char COMMODORE::SoundSimpleWrapper::Voice::_SAWTRIWAVE_6581 [0x100] =
+{
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x08,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x10, 0x3c,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x08,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x10, 0x3c
+};
+
+// When the triangle and pulse waves are mixed...
+const unsigned char COMMODORE::SoundSimpleWrapper::Voice::_PULSETRIWAVE_6581 [0x100] = 
+{
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x80,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x80,
+	0, 0, 0, 0, 0, 0, 0x80, 0xc0, 0, 0x80, 0x80, 0xe0, 0x80, 0xe0, 0xf0, 0xfc,
+	0xff, 0xfc, 0xfa, 0xf0, 0xf6, 0xe0, 0xe0, 0x80, 0xee, 0xe0, 0xe0, 0x80, 0xc0, 0, 0, 0,
+	0xde, 0xc0, 0xc0, 0, 0x80, 0, 0, 0, 0x80, 0, 0, 0, 0, 0, 0, 0,
+	0xbe, 0x80, 0x80, 0, 0x80, 0, 0, 0, 0x80, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0x7e, 0x40, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+};
+
+const unsigned char COMMODORE::SoundSimpleWrapper::Voice::_PULSESAWWAVE_6581 [0x100] = 
+{
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x78,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x78
+};
+
+const unsigned char COMMODORE::SoundSimpleWrapper::Voice::_PULSESAWTRIWAVE_6581 [0x100] = 
+{
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x78,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x78
+};
+
 // ---
 bool COMMODORE::SoundRESIDWrapper::getData (MCHEmul::CPU* cpu, MCHEmul::UBytes& dt)
 {
@@ -48,11 +131,11 @@ COMMODORE::SoundSimpleWrapper::SoundSimpleWrapper (unsigned int cF, unsigned int
 	  _counterClocksPerSample (0)
 { 
 	// Link the different voices to make complex effects when requested...
-	dynamic_cast <COMMODORE::SoundSimpleWrapper::Voice*> (_voices [0]) -> 
+	static_cast <COMMODORE::SoundSimpleWrapper::Voice*> (_voices [0]) -> 
 		setRelation (static_cast <COMMODORE::SoundSimpleWrapper::Voice*> (_voices [2]));
-	dynamic_cast <COMMODORE::SoundSimpleWrapper::Voice*> (_voices [1]) -> 
+	static_cast <COMMODORE::SoundSimpleWrapper::Voice*> (_voices [1]) -> 
 		setRelation (static_cast <COMMODORE::SoundSimpleWrapper::Voice*> (_voices [0]));
-	dynamic_cast <COMMODORE::SoundSimpleWrapper::Voice*> (_voices [2]) -> 
+	static_cast <COMMODORE::SoundSimpleWrapper::Voice*> (_voices [2]) -> 
 		setRelation (static_cast <COMMODORE::SoundSimpleWrapper::Voice*> (_voices [1]));
 }
 
@@ -81,7 +164,7 @@ void COMMODORE::SoundSimpleWrapper::setValue (size_t p, const MCHEmul::UByte& v)
 		case 0x02:
 		case 0x03:
 			{
-				dynamic_cast <COMMODORE::SoundSimpleWrapper::Voice*> (_voices [0]) -> setPulseUpPercentage
+				static_cast <COMMODORE::SoundSimpleWrapper::Voice*> (_voices [0]) -> setPulseUpPercentage
 					((double) ((((unsigned short) _registers [0x03].value ()) << 8) + 
 								((unsigned short) _registers [0x02].value ())) / 4096.0f);
 			}
@@ -92,13 +175,17 @@ void COMMODORE::SoundSimpleWrapper::setValue (size_t p, const MCHEmul::UByte& v)
 		case 0x04:
 			{
 				_voices [0] -> setStart (v.bit (0));
-				dynamic_cast <COMMODORE::SoundSimpleWrapper::Voice*> (_voices [0]) -> sync (v.bit (1)); 
-				dynamic_cast <COMMODORE::SoundSimpleWrapper::Voice*> (_voices [0]) -> setRingModulation (v.bit (2));
+				static_cast <COMMODORE::SoundSimpleWrapper::Voice*> 
+					(_voices [0]) -> sync (v.bit (1)); 
+				static_cast <COMMODORE::SoundSimpleWrapper::Voice*> 
+					(_voices [0]) -> setRingModulation (v.bit (2));
 				_voices [0] -> setActive (!v.bit (3));
 				_voices [0] -> wave (MCHEmul::SoundWave::Type::_TRIANGLE) -> setActive (v.bit (4));
 				_voices [0] -> wave (MCHEmul::SoundWave::Type::_SAWTOOTH) -> setActive (v.bit (5));
 				_voices [0] -> wave (MCHEmul::SoundWave::Type::_PULSE) -> setActive (v.bit (6));
 				_voices [0] -> wave (MCHEmul::SoundWave::Type::_NOISE) -> setActive (v.bit (7));
+				static_cast <COMMODORE::SoundSimpleWrapper::Voice*> 
+					(_voices [0]) -> setWavesActive (v.value () & 0xf0);
 			}
 
 			break;
@@ -137,7 +224,7 @@ void COMMODORE::SoundSimpleWrapper::setValue (size_t p, const MCHEmul::UByte& v)
 		case 0x09:
 		case 0x0a:
 			{
-				dynamic_cast <COMMODORE::SoundSimpleWrapper::Voice*> (_voices [1]) -> setPulseUpPercentage
+				static_cast <COMMODORE::SoundSimpleWrapper::Voice*> (_voices [1]) -> setPulseUpPercentage
 						((double) ((((unsigned short) _registers [0x0a].value ()) << 8) + 
 								((unsigned short) _registers [0x09].value ())) / 4096.0f);
 			}
@@ -148,13 +235,17 @@ void COMMODORE::SoundSimpleWrapper::setValue (size_t p, const MCHEmul::UByte& v)
 		case 0x0b:
 			{
 				_voices [1] -> setStart (v.bit (0));
-				dynamic_cast <COMMODORE::SoundSimpleWrapper::Voice*> (_voices [1]) -> sync (v.bit (1)); 
-				dynamic_cast <COMMODORE::SoundSimpleWrapper::Voice*> (_voices [1]) -> setRingModulation (v.bit (2));
+				static_cast <COMMODORE::SoundSimpleWrapper::Voice*> 
+					(_voices [1]) -> sync (v.bit (1)); 
+				static_cast <COMMODORE::SoundSimpleWrapper::Voice*> 
+					(_voices [1]) -> setRingModulation (v.bit (2));
 				_voices [1] -> setActive (!v.bit (3));
 				_voices [1] -> wave (MCHEmul::SoundWave::Type::_TRIANGLE) -> setActive (v.bit (4));
 				_voices [1] -> wave (MCHEmul::SoundWave::Type::_SAWTOOTH) -> setActive (v.bit (5));
 				_voices [1] -> wave (MCHEmul::SoundWave::Type::_PULSE) -> setActive (v.bit (6));
 				_voices [1] -> wave (MCHEmul::SoundWave::Type::_NOISE) -> setActive (v.bit (7));
+				static_cast <COMMODORE::SoundSimpleWrapper::Voice*> 
+					(_voices [1]) -> setWavesActive (v.value () & 0xf0);
 			}
 
 			break;
@@ -193,7 +284,7 @@ void COMMODORE::SoundSimpleWrapper::setValue (size_t p, const MCHEmul::UByte& v)
 		case 0x10:
 		case 0x11:
 			{
-				dynamic_cast <COMMODORE::SoundSimpleWrapper::Voice*> (_voices [2]) -> setPulseUpPercentage
+				static_cast <COMMODORE::SoundSimpleWrapper::Voice*> (_voices [2]) -> setPulseUpPercentage
 					((double) ((((unsigned short) _registers [0x11].value ()) << 8) + 
 								((unsigned short) _registers [0x10].value ())) / 4096.0f);
 			}
@@ -204,13 +295,17 @@ void COMMODORE::SoundSimpleWrapper::setValue (size_t p, const MCHEmul::UByte& v)
 		case 0x12:
 			{
 				_voices [2] -> setStart (v.bit (0));
-				dynamic_cast <COMMODORE::SoundSimpleWrapper::Voice*> (_voices [2]) -> sync (v.bit (1)); 
-				dynamic_cast <COMMODORE::SoundSimpleWrapper::Voice*> (_voices [2]) -> setRingModulation (v.bit (2));
+				static_cast <COMMODORE::SoundSimpleWrapper::Voice*> 
+					(_voices [2]) -> sync (v.bit (1)); 
+				static_cast <COMMODORE::SoundSimpleWrapper::Voice*> 
+					(_voices [2]) -> setRingModulation (v.bit (2));
 				_voices [2] -> setActive (!v.bit (3));
 				_voices [2] -> wave (MCHEmul::SoundWave::Type::_TRIANGLE) -> setActive (v.bit (4));
 				_voices [2] -> wave (MCHEmul::SoundWave::Type::_SAWTOOTH) -> setActive (v.bit (5));
 				_voices [2] -> wave (MCHEmul::SoundWave::Type::_PULSE) -> setActive (v.bit (6));
 				_voices [2] -> wave (MCHEmul::SoundWave::Type::_NOISE) -> setActive (v.bit (7));
+				static_cast <COMMODORE::SoundSimpleWrapper::Voice*> 
+					(_voices [2]) -> setWavesActive (v.value () & 0xf0);
 			}
 
 			break;
@@ -331,8 +426,7 @@ bool COMMODORE::SoundSimpleWrapper::getData (MCHEmul::CPU *cpu, MCHEmul::UBytes&
 
 		double iR = 0;
 		for (auto i : _voices)
-			if (i -> active ()) // Only if the voice is active...
-				iR += i -> data (); // but the values are added...
+			iR += i -> data (); // but the values are added...
 		iR *= _volumen; // Adjust the volumen...
 		
 		// This number could be greater than 1!
@@ -356,6 +450,96 @@ void COMMODORE::SoundSimpleWrapper::Voice::initialize ()
 	MCHEmul::SoundVoice::initialize ();
 
 	_ringModulation = false;
+}
+
+// ---
+double COMMODORE::SoundSimpleWrapper::Voice::data () const
+{ 
+	// When the wave is active or is in test active and the selected wave is a pulse...
+	// ...the sound has to be produced
+	if (!active () || (!active () && _wavesActive == 0x40 /** pulse. */))
+		return (0.0f);
+
+	double result = 0.0f;
+
+	// The way the different waves is merged in the SID
+	// is not the standard way of just adding the values...
+	// ...because the way they are played are not the same...
+	// ..and definetively is not adding data!
+	switch (_wavesActive)
+	{
+		// triangle
+		case 0x10:
+			// Depending whether the voice is modulated or not, 
+			// ...just happens on the triangle wave...
+			result = waves ()[(size_t) MCHEmul::SoundWave::Type::_TRIANGLE] -> data ();
+			break;
+
+		// sawtooth
+		case 0x20:
+			result = waves ()[(size_t) MCHEmul::SoundWave::Type::_SAWTOOTH] -> data ();
+			break;
+
+		// pulse
+		case 0x40:
+			result = waves ()[(size_t) MCHEmul::SoundWave::Type::_PULSE] -> data ();
+			break;
+
+		// noise
+		case 0x80:
+			result = waves ()[(size_t) MCHEmul::SoundWave::Type::_NOISE] -> data ();
+			break;
+
+		// sawtooth & triangle
+		case 0x30:
+			result = (double) _SAWTRIWAVE_6581 [(size_t) clockValue ()] / 256.0f;
+			break;
+
+		// pulse & triangle
+		case 0x50:
+			if (static_cast <MCHEmul::PulseSoundWave*> 
+					(waves ()[(size_t) MCHEmul::SoundWave::Type::_PULSE]) -> pulseUp ())
+				result = (double) _PULSETRIWAVE_6581 [(size_t) clockValue ()] / 256.0f;
+			break;
+
+		// pulse & sawtooth
+		case 0x60:
+			if (static_cast <MCHEmul::PulseSoundWave*> 
+					(waves ()[(size_t) MCHEmul::SoundWave::Type::_PULSE]) -> pulseUp ())
+				result = (double) _PULSESAWWAVE_6581 [(size_t) clockValue ()] / 256.0f;
+			break;
+
+		// pulse & sawtooth & triangle
+		case 0x70:
+			if (static_cast <MCHEmul::PulseSoundWave*> 
+					(waves ()[(size_t) MCHEmul::SoundWave::Type::_PULSE]) -> pulseUp ())
+				result = (double) _PULSESAWTRIWAVE_6581 [(size_t) clockValue ()] / 256.0f;
+			break;
+
+		// With this other combinations no output is produced...
+		// noise & triangle
+		case 0x90:
+		// noise & sawtooth
+		case 0xa0:
+		// noise & sawtooth & triangle
+		case 0xb0:
+		// noise & pulse
+		case 0xc0:
+		// noise & pulse & triangle
+		case 0xd0:
+		// noise & pulse & sawtooth
+		case 0xe0:
+		// noise & pulse & sawtooth & triangle 
+		case 0xf0:
+		// This sitution is not possible but just in case!
+		default:
+			break;
+	}
+
+	if (result != 0.0f)
+		result *= ADSRData ();
+
+	return ((result > 1.0f) ? 1.0f : result);
 }
 
 // ---

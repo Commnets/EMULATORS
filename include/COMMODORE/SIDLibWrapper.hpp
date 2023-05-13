@@ -121,16 +121,19 @@ namespace COMMODORE
 		class Voice final : public MCHEmul::SoundVoice
 		{
 			public:
+			friend SoundSimpleWrapper;
+
 			Voice (int id, unsigned int cF)
 				: MCHEmul::SoundVoice (id, cF,
 					{
-						new MCHEmul::SawSmoothSoundWave (cF),
 						new MCHEmul::TriangleSoundWave (cF),
+						new MCHEmul::SawSmoothSoundWave (cF),
 						new MCHEmul::PulseSoundWave (cF),
 						new MCHEmul::NoiseSoundWave (cF)
 					}),
 				  _voiceRelated (nullptr),
-				  _ringModulation (false)
+				  _ringModulation (false),
+				  _wavesActive (0)
 							{ setClassName ("SIDVoice"); }
 
 			virtual void setActive (bool a) override
@@ -153,6 +156,8 @@ namespace COMMODORE
 			/** To know the value of the oscilator behind.
 				It is used sometimes for complex effects. \n
 				It returns a number from 0 to 255 depending on the wave that is moving behind!. */
+			unsigned char clockValue () const
+							{ return ((unsigned char) (waves ()[0] /** whatever. */ -> clockValue () * 255)); }
 			unsigned char oscillatorValue () const
 							{ return ((unsigned char) (wavesData () * 255)); }
 			/** Same but for the envelope. */
@@ -161,24 +166,38 @@ namespace COMMODORE
 
 			/** To control the percentage of the pulse wave when active. */
 			double pulseUpPercentage () const
-							{ return (dynamic_cast <MCHEmul::PulseSoundWave*> (waves ()[2]) -> pulseUpPercentage ()); }
+							{ return (static_cast <MCHEmul::PulseSoundWave*> 
+								(waves ()[(size_t) MCHEmul::SoundWave::Type::_PULSE]) -> pulseUpPercentage ()); }
 			void setPulseUpPercentage (double pU)
-							{ dynamic_cast <MCHEmul::PulseSoundWave*> (waves ()[2]) -> setPulseUpPercentage (pU); }
+							{ static_cast <MCHEmul::PulseSoundWave*> 
+								(waves ()[(size_t) MCHEmul::SoundWave::Type::_PULSE]) -> setPulseUpPercentage (pU); }
 
 			virtual void initialize () override;
 
 			/** To suppomg the ring modulation. */
-			virtual double data () const override
-							{ return (MCHEmul::SoundVoice::data () + 
-								((_ringModulation && _voiceRelated != nullptr) ? _voiceRelated -> data () : 0.0f)); }
+			virtual double data () const override;
 
 			virtual MCHEmul::InfoStructure getInfoStructure () const override;
+
+			private:
+			void setWavesActive (unsigned char wA)
+							{ _wavesActive = wA; }
 
 			private:
 			/** The voice related. */
 			Voice* _voiceRelated;
 			/** The ring modulation. */
 			bool _ringModulation;
+
+			// Implementation
+			// Waves active..to speed up the calculus later
+			unsigned char _wavesActive;
+
+			// For the situations when a table of sounds is required...
+			static const unsigned char _SAWTRIWAVE_6581 [0x100]; // The number of elements that the oscillator can take...
+			static const unsigned char _PULSETRIWAVE_6581 [0x100];
+			static const unsigned char _PULSESAWWAVE_6581 [0x100];
+			static const unsigned char _PULSESAWTRIWAVE_6581 [0x100];
 		};
 
 		/** The different voices used by SID. \n

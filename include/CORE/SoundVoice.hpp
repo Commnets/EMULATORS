@@ -35,7 +35,7 @@ namespace MCHEmul
 			  _sustainVolumen (0.0f),
 			  _waves (sw),
 			  _state (State::_ATTACK),
-			  _stateCounters (4, StateCounters ()) // All to 0...
+			  _stateCounters (5 /** The five internal states of the wave = ADSR+Idle */, StateCounters ()) // All to 0...
 						{ calculateVoiceSamplingData (); }
 
 		~SoundVoice ()
@@ -54,10 +54,11 @@ namespace MCHEmul
 
 		/** To define the state of the voice. */
 		void setStart (bool s)
-						{ _state = s ? State::_ATTACK : State::_RELEASE; 
-						  for (auto& i : _stateCounters) 
-							  i.initialize (); }
-	
+						{ bool iC = false;
+						  if (s) { iC = true; _state = State::_ATTACK; }
+						  else /** Only when no idle. */ { if (_state != State::_IDLE) { iC = true; _state = State::_RELEASE; } }
+						  if (iC) for (auto& i : _stateCounters) i.initialize (); }
+
 		// ADSR values...
 		/** The values are given and returned in milliseconds. */
 		unsigned short attack () const
@@ -85,11 +86,11 @@ namespace MCHEmul
 		const SoundWaves& waves () const
 						{ return (_waves); }
 		const SoundWave* wave (SoundWave::Type t) const
-						{ return (_waves [(int) t]); }
+						{ return (_waves [(size_t) t]); }
 		SoundWave* wave (SoundWave::Type t)
 						{ return ((SoundWave*) (((const SoundVoice*) (this)) -> wave (t))); }
 
-		/** All waves being part of the voce must "follow the same"vibrate" at the same frequency. */
+		/** All waves being part of the voice must "vibrate" at the same frequency. */
 		unsigned short frequency () const
 						{ return (_waves [0] -> frequency ()); /** could be any, as all have the same value. */ }
 		void setFrequency (unsigned short f)
@@ -106,7 +107,7 @@ namespace MCHEmul
 		virtual void initializeInternalCounters ()
 							{ for (auto i : _waves) 
 								i -> initializeInternalCounters ();
-							  for (size_t i = 0; i < 4; 
+							  for (size_t i = 0; i < 5; // The states of the ADSR (Just 4)...
 								_stateCounters [i++]._counterCyclesPerState = 0); }
 
 		/** This method has to be invoked at every cpu cycle to 
@@ -156,7 +157,8 @@ namespace MCHEmul
 			_ATTACK = 0,
 			_DECAY = 1,
 			_SUSTAIN = 2,
-			_RELEASE = 3
+			_RELEASE = 3,
+			_IDLE = 4
 		};
 
 		/** The state in which the full wave is. */

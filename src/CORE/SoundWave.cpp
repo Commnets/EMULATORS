@@ -33,18 +33,11 @@ void MCHEmul::SoundWave::calculateWaveSamplingData ()
 }
 
 // ---
-double MCHEmul::SawSmoothSoundWave::data () const
-{
-	if (_cyclesPerWave == 0)
-		return (0.0f); // No data...
-
-	return (MCHEmul::linearInterpolation 
-		(0, 0, (double) _cyclesPerWave, 1.0f, (double) _counterInCyclesPerWave));
-}
-
-// ---
 double MCHEmul::TriangleSoundWave::data () const
 {
+	if (!_active)
+		return (0.0f); // No active...
+
 	if (_cyclesPerWave == 0)
 		return (0.0f); // No data...
 
@@ -52,6 +45,19 @@ double MCHEmul::TriangleSoundWave::data () const
 		? MCHEmul::linearInterpolation (0.0f, 0.0f, (double) (_cyclesPerWave >> 1), 1.0f, (double) _counterInCyclesPerWave)
 		: MCHEmul::linearInterpolation (0.0f, 1.0f, (double) (_cyclesPerWave >> 1), 
 			0.0f, (double) (_counterInCyclesPerWave - (_cyclesPerWave >> 1))));
+}
+
+// ---
+double MCHEmul::SawSmoothSoundWave::data () const
+{
+	if (!_active)
+		return (0.0f); // No active...
+
+	if (_cyclesPerWave == 0)
+		return (0.0f); // No data...
+
+	return (MCHEmul::linearInterpolation 
+		(0, 0, (double) _cyclesPerWave, 1.0f, (double) _counterInCyclesPerWave));
 }
 
 // ---
@@ -133,6 +139,9 @@ void MCHEmul::PulseSoundWave::clock (unsigned int nC)
 // ---
 double MCHEmul::PulseSoundWave::data () const
 {
+	if (!_active)
+		return (0.0f); // No active...
+
 	if (_cyclesPerWave == 0)
 		return (0.0f);
 
@@ -153,6 +162,9 @@ void MCHEmul::PulseSoundWave::calculateWaveSamplingData ()
 // ---
 double MCHEmul::NoiseSoundWave::data () const
 {
+	if (!_active)
+		return (0.0f); // No active...
+
 	if (_cyclesPerWave == 0)
 		return (0.0); // No data...
 

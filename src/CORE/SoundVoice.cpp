@@ -49,6 +49,7 @@ void MCHEmul::SoundVoice::clock (unsigned int nC)
 
 			/** When the limit is reached the _RELEASE state is maintained. */
 			case State::_RELEASE:
+				_state = State::_IDLE;
 				break;
 
 			default:
@@ -104,6 +105,7 @@ void MCHEmul::SoundVoice::calculateVoiceSamplingData ()
 	// The state _SUSTAIN has no duration...
 	_stateCounters [(int) State::_RELEASE]._cyclesPerState =
 		(_release == 0) ? 0 : (unsigned int) ((double) _chipFrequency * (double) _release / 1000.0f);
+	// The state _IDLE has a duration of 0.0....
 
 	initializeInternalCounters ();
 }
@@ -146,12 +148,13 @@ double MCHEmul::SoundVoice::ADSRData () const
 			break;
 
 		case State::_RELEASE:
-			// When the limit is reached, the sound is back to 0...
-			result = (sC._limit)
-				? 0.0f 
-				: MCHEmul::linearInterpolation
-					(0.0f, _sustainVolumen, sC._cyclesPerState, 0.0f, sC._counterCyclesPerState);
+			// When the limit was reached, the state will have been move to _IDLE...
+			result = MCHEmul::linearInterpolation
+				(0.0f, _sustainVolumen, sC._cyclesPerState, 0.0f, sC._counterCyclesPerState);
 			break;
+
+		case State::_IDLE:
+			result = 0.0f;
 
 		default:
 			break;

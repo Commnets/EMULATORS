@@ -19,20 +19,16 @@
 
 namespace MCHEmul
 {
-	class SoundVoice;
-
 	/** To replicate a wave. 
 		The waves can only be used from a SoundVoice. */
 	class SoundWave : public InfoClass
 	{
 		public:
-		friend SoundVoice;
-
 		// The four different types of waves supported...
 		enum class Type
 		{
-			_SAWTOOTH = 0,
-			_TRIANGLE = 1,
+			_TRIANGLE = 0,
+			_SAWTOOTH = 1,
 			_PULSE = 2,
 			_NOISE = 3
 		};
@@ -83,22 +79,27 @@ namespace MCHEmul
 
 		virtual InfoStructure getInfoStructure () const override;
 
-		protected:
-		// Tese two method can only be invoked from a Voice.
 		/** This method has to be invoked in every cpu cycle,
 			receiving as parameter the number of cycles happened from the last invocation. \n
-			It can be overloaded to cover specific needs for specific sound waves. \n
-			The method is invoked from SoundVoice. */
+			It can be overloaded to cover specific needs for specific sound waves. */
 		virtual void clock (unsigned int nC = 1)
 						{ if (((_counterInCyclesPerWave += nC) >= _cyclesPerWave) &&
 							  ((_counterInCyclesPerWave -= _cyclesPerWave) >= _cyclesPerWave))
 								_counterInCyclesPerWave = 0; } // Just in case _cyclesPerWave is 0...
+		
+		/** To know the position from 0 to 1 of the internal clock.
+			It can not be overloaded. */
+		double clockValue () const
+						{ return ((_cyclesPerWave == 0) 
+							? 0.0f : (double) _counterInCyclesPerWave / (double) _cyclesPerWave); }
 
-		/** This method should return a value between 0 and 1. \n
+		/** This method should return always a value between 0 and 1. \n
 			Indicating the %(1) of the maximum situation achieved. \n
-			Decimal numbers are admitted (are needed). */
+			Decimal numbers are admitted (are needed). \n
+			Muct be overloaded according to the type of wave. */
 		virtual double data () const = 0;
 
+		protected:
 		// Implementation
 		/** To calculate the internal data needed to later "draw" the different waves. \n
 			It could be overloaded to include more intenal data needed
@@ -126,18 +127,6 @@ namespace MCHEmul
 	/** To sumplify managing a list of sound waves. */
 	using SoundWaves = std::vector <SoundWave*>;
 
-	/** This the one that imitates a sinusoidal wave with its harmonic the best. */
-	class SawSmoothSoundWave final : public SoundWave
-	{
-		public:
-		SawSmoothSoundWave (unsigned int cF)
-			: SoundWave (Type::_SAWTOOTH, cF)
-						{ }
-
-		private:
-		virtual double data () const override;
-	};
-
 	/** Triangle. */
 	class TriangleSoundWave final : public SoundWave
 	{
@@ -146,7 +135,17 @@ namespace MCHEmul
 			: SoundWave (Type::_TRIANGLE, cF)
 						{ }
 
-		private:
+		virtual double data () const override;
+	};
+
+	/** This the one that imitates a sinusoidal wave with its harmonic the best. */
+	class SawSmoothSoundWave final : public SoundWave
+	{
+		public:
+		SawSmoothSoundWave (unsigned int cF)
+			: SoundWave (Type::_SAWTOOTH, cF)
+						{ }
+
 		virtual double data () const override;
 	};
 
@@ -165,13 +164,16 @@ namespace MCHEmul
 		void setPulseUpPercentage (double pU)
 						{ _pulseUpPercentage = (pU > 1.0f ? 1.0f : pU); calculateWaveSamplingData (); }
 
+		/* Returns true when the pulse is in the up situation. */
+		bool pulseUp () const
+						{ return (_pulseUp); }
+
 		virtual void initialize () override;
 
 		virtual void initializeInternalCounters () override;
 
 		virtual InfoStructure getInfoStructure () const override;
 
-		private:
 		virtual void clock (unsigned int nC) override;
 
 		virtual double data () const override;
@@ -202,7 +204,6 @@ namespace MCHEmul
 			: SoundWave (Type::_NOISE, cF)
 						{ }
 
-		private:
 		virtual double data () const override;
 	};
 }
