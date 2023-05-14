@@ -470,7 +470,8 @@ double COMMODORE::SoundSimpleWrapper::Voice::data () const
 		case 0x10:
 			// Depending whether the voice is modulated or not, 
 			// ...just happens on the triangle wave...
-			result = waves ()[(size_t) MCHEmul::SoundWave::Type::_TRIANGLE] -> data ();
+			result = waves ()[(size_t) MCHEmul::SoundWave::Type::_TRIANGLE] -> data () *
+				(_ringModulation ? _voiceRelated -> data () : 1.0f); // Multipying two waves...
 			break;
 
 		// sawtooth
