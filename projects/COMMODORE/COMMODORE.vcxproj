@@ -35,6 +35,8 @@
     <ClInclude Include="..\..\include\COMMODORE\FileReaders.hpp" />
     <ClInclude Include="..\..\include\COMMODORE\incs.hpp" />
     <ClInclude Include="..\..\include\COMMODORE\IOPBuilder.hpp" />
+    <ClInclude Include="..\..\include\COMMODORE\SerialIOPeripherals.hpp" />
+    <ClInclude Include="..\..\include\COMMODORE\SerialPort.hpp" />
     <ClInclude Include="..\..\include\COMMODORE\SID.hpp" />
     <ClInclude Include="..\..\include\COMMODORE\SIDLibWrapper.hpp" />
     <ClInclude Include="..\..\include\COMMODORE\SIDRegisters.hpp" />
@@ -72,6 +74,7 @@
     <ClCompile Include="..\..\src\COMMODORE\ExpansionPort.cpp" />
     <ClCompile Include="..\..\src\COMMODORE\FileReaders.cpp" />
     <ClCompile Include="..\..\src\COMMODORE\IOPBuilder.cpp" />
+    <ClCompile Include="..\..\src\COMMODORE\SerialPort.cpp" />
     <ClCompile Include="..\..\src\COMMODORE\SID.cpp" />
     <ClCompile Include="..\..\src\COMMODORE\SIDLibWrapper.cpp" />
     <ClCompile Include="..\..\src\COMMODORE\SIDRegisters.cpp" />

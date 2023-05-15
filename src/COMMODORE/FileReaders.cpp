@@ -21,14 +21,6 @@ MCHEmul::ExtendedDataMemoryBlocks COMMODORE::CRTFileData::asMemoryBlocks () cons
 }
 
 // ---
-MCHEmul::ExtendedDataMemoryBlocks COMMODORE::T64FileData::asMemoryBlocks () const
-{
-	// TODO
-
-	return (MCHEmul::ExtendedDataMemoryBlocks ());
-}
-
-// ---
 bool COMMODORE::CRTFileTypeReader::canRead (const std::string& fN)
 {
 	if (fN.size () < 4 || 
@@ -111,6 +103,14 @@ MCHEmul::FileData* COMMODORE::CRTFileTypeReader::readFile (const std::string& fN
 	f.close ();
 
 	return (result);
+}
+
+// ---
+MCHEmul::ExtendedDataMemoryBlocks COMMODORE::T64FileData::asMemoryBlocks () const
+{
+	// TODO
+
+	return (MCHEmul::ExtendedDataMemoryBlocks ());
 }
 
 // ---

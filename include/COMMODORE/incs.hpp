@@ -32,6 +32,8 @@
 #include <COMMODORE/1530Datasette.hpp>
 #include <COMMODORE/UserPort.hpp>
 #include <COMMODORE/UserIOPeripherals.hpp>
+#include <COMMODORE/SerialPort.hpp>
+#include <COMMODORE/SerialIOPeripherals.hpp>
 #include <COMMODORE/ExpansionPort.hpp>
 #include <COMMODORE/ExpansionPeripherals.hpp>
 #include <COMMODORE/Computer.hpp>

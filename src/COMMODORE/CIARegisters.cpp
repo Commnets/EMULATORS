@@ -180,16 +180,16 @@ void COMMODORE::CIARegisters::setValue (size_t p, const MCHEmul::UByte& v)
 					if (v.bit (0)) _timerA -> setInterruptEnabled (true);
 					if (v.bit (1)) _timerB -> setInterruptEnabled (true);
 					if (v.bit (2)) _clock  -> setInterruptEnabled (true);
+					if (v.bit (3)) _serialPort -> setInterruptEnabled (true);
 					if (v.bit (4)) _flagLineInterruptRequested = true;
-					if (v.bit (6)) _serialPort -> setInterruptEnabled (true);
 				}
 				else
 				{
 					if (v.bit (0)) _timerA -> setInterruptEnabled (false);
 					if (v.bit (1)) _timerB -> setInterruptEnabled (false);
 					if (v.bit (2)) _clock  -> setInterruptEnabled (false);
+					if (v.bit (3)) _serialPort -> setInterruptEnabled (false);
 					if (v.bit (4)) _flagLineInterruptRequested =   false;
-					if (v.bit (6)) _serialPort -> setInterruptEnabled (false);
 				}
 			}
 

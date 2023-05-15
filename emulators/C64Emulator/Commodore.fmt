@@ -89,8 +89,7 @@ Id:@ID@
 @Clock>@
 -> Ports:
 A:@PortA@, B:@PortB@
--> Directions:
-A:@CIDDRA@, B:@CIDDRB@
+Dir A:@CIDDRA@, Dir B:@CIDDRB@
 -> SerialPort:
 @SerialPort>@
 #---

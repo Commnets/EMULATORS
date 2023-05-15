@@ -70,7 +70,7 @@ namespace COMMODORE
 		void setSPSignal (bool b)
 							{ _SPPin = b; }
 
-
+		// To manage the interrupts from the CIA...
 		bool interruptEnabled () const
 							{ return (_interruptEnabled); }
 		void setInterruptEnabled (bool e)

@@ -48,7 +48,7 @@ void COMMODORE::CIASerialPort::simulate (MCHEmul::CPU* cpu, COMMODORE::CIATimer*
 					t -> runMode () != CIATimer::RunMode::_RESTART)
 					break;
 
-				// It is transmited just in the falling eded of the CNT line...
+				// It is transmited just in the falling edge of the CNT line...
 				bool bT = false;
 				if (cP)
 				{
