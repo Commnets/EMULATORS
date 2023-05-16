@@ -349,7 +349,7 @@ const MCHEmul::UByte& COMMODORE::CIARegisters::readValue (size_t p) const
 
 		case 0x0c:
 			{
-				result = MCHEmul::PhysicalStorageSubset::readValue (p);
+				result = _serialPort -> value ();
 			}
 
 			break;
@@ -374,14 +374,34 @@ const MCHEmul::UByte& COMMODORE::CIARegisters::readValue (size_t p) const
 
 		case 0x0e:
 			{
-				result = _serialPort -> value ();
+				result = MCHEmul::UByte::_0;
+				result.setBit (0, _timerA -> enabled ());
+				result.setBit (1, _reflectTimerAAtPortDataB);
+				result.setBit (2, _timerA -> pulseAtPortDataB ());
+				result.setBit (3, (_timerA -> runMode () == CIATimer::RunMode::_ONETIME) ? true : false);
+				// Bit 4 is always 0 when read...
+				// In timer A there can only run PROCESSORCYCLES OR SIGNALONCNTLINE...
+				result.setBit (5, (_timerA -> countMode () == CIATimer::CountMode::_SIGNALSONCNTLINE) ? true : false);
+				result.setBit (6, (_serialPort -> status () == COMMODORE::CIASerialPort::Status::_SAVING) ? true : false);
+				// Bit 7 to select whether the TOD is actualized under 50Hz or 60Hz is not still implemented...
+				// By default it is left to 0 when read.
 			}
 
 			break;
 
 		case 0x0f:
 			{
-				result = MCHEmul::PhysicalStorageSubset::readValue (p);
+				result = MCHEmul::UByte::_0;
+				result.setBit (0, _timerB -> enabled ());
+				result.setBit (1, _reflectTimerBAtPortDataB);
+				result.setBit (2, _timerB -> pulseAtPortDataB ());
+				result.setBit (3, (_timerB -> runMode () == CIATimer::RunMode::_ONETIME) ? true : false);
+				// Bit 4 is always 0 when read...
+				result.setBit (5, (_timerB -> countMode () == CIATimer::CountMode::_SIGNALSONCNTLINE ||
+								   _timerA -> countMode () == CIATimer::CountMode::_0ONCNTPULSES) ? true : false);
+				result.setBit (6, (_timerB -> countMode () == CIATimer::CountMode::_TIMERCOUNTSDOWNTO0 || 
+								   _timerB -> countMode () == CIATimer::CountMode::_0ONCNTPULSES) ? true : false);
+				// Bit 7 is always 0 when read...
 			}
 
 			break;

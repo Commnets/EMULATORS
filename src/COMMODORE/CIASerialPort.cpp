@@ -61,10 +61,9 @@ void COMMODORE::CIASerialPort::simulate (MCHEmul::CPU* cpu, COMMODORE::CIATimer*
 							cpu -> interrupt (_interruptId) -> setActive (true);
 						}
 					}
-					// If the output hasn't finished, just a notification is needed
-					// for the ouput devices to take this into account...
-					else
-						notify (MCHEmul::Event (COMMODORE::CIA::_SPSIGNAL, bT ? 1 : 0));
+
+					// The value is notified in the SP PIN...
+					notify (MCHEmul::Event (COMMODORE::CIA::_SPSIGNAL, bT ? 1 : 0));
 
 					// The CNT is push back up!
 					setCNTSignal (true);
