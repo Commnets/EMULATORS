@@ -73,12 +73,22 @@ namespace COMMODORE
 		unsigned char dataPortBDir () const
 							{ return (_dataPortBDir); }
 
-		/** To know when the flag line is enabled. 
+		/** To know whether the interruptions related with the FLAG line are or not allowed. */
+		bool flagLineInterruptEnabled () const
+							{ return (_flagLineInterruptEnabled); }
+		void setFlagLineInterruptEnabled (bool fL)
+							{ _flagLineInterruptEnabled = fL; }
+
+		/** To know when the FLAG line is enabled. 
 			Once the value is got then it is pit back t false. */
 		bool flagLineInterruptRequested () const
 							{ bool r = _flagLineInterruptRequested; _flagLineInterruptRequested = false; return (r); }
 		void setFlagLineInterruptRequested (bool a)
 							{ _flagLineInterruptRequested = a; }
+
+		/** To know whether a interruption related with the FLAG line has or not to be launched. */
+		bool launchFlagLineInterruption ()
+							{ return (_flagLineInterruptEnabled && _flagLineInterruptEnabled); }
 
 		/** The value to reflect at the bit 6 or 7 of the port B. */
 		/** To know first whether the timer A is affecting or not to the bit 6. */
@@ -132,7 +142,9 @@ namespace COMMODORE
 		CIAClock* _clock;
 		/** Reference to the CIA Serial Port. */
 		CIASerialPort *_serialPort;
-		/** To indicate that the flag line has been or not activated. */
+		/** To indicate whether the FLAG line interruption is or not allowed. */
+		bool _flagLineInterruptEnabled;
+		/** To indicate that the FLAG line has been or not activated. */
 		mutable bool _flagLineInterruptRequested;
 
 		// Implementation

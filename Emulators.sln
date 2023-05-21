@@ -107,8 +107,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "C64", "C64", "{CB7D0793-14E
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Examples_1", "Examples_1", "{C6BB96CB-83B8-4F1E-B49D-A57EC2DC439F}"
 	ProjectSection(SolutionItems) = preProject
-		emulators\C64Programs\Examples_1\Characters1.asm = emulators\C64Programs\Examples_1\Characters1.asm
-		emulators\C64Programs\Examples_1\inst.asm = emulators\C64Programs\Examples_1\inst.asm
+		emulators\C64Programs\Examples_1\bitmaps.asm = emulators\C64Programs\Examples_1\bitmaps.asm
+		emulators\C64Programs\Examples_1\bitmaps.prg = emulators\C64Programs\Examples_1\bitmaps.prg
+		emulators\C64Programs\Examples_1\rasterlines.asm = emulators\C64Programs\Examples_1\rasterlines.asm
 		emulators\C64Programs\Examples_1\screencolors1.asm = emulators\C64Programs\Examples_1\screencolors1.asm
 		emulators\C64Programs\Examples_1\screencolors2.asm = emulators\C64Programs\Examples_1\screencolors2.asm
 		emulators\C64Programs\Examples_1\screencolors3.asm = emulators\C64Programs\Examples_1\screencolors3.asm
@@ -120,6 +121,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Examples_1", "Examples_1", 
 		emulators\C64Programs\Examples_1\text3.asm = emulators\C64Programs\Examples_1\text3.asm
 		emulators\C64Programs\Examples_1\text4.asm = emulators\C64Programs\Examples_1\text4.asm
 		emulators\C64Programs\Examples_1\text5.asm = emulators\C64Programs\Examples_1\text5.asm
+		emulators\C64Programs\Examples_1\textcharset.64c = emulators\C64Programs\Examples_1\textcharset.64c
+		emulators\C64Programs\Examples_1\textcharset.asm = emulators\C64Programs\Examples_1\textcharset.asm
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "General", "General", "{AA0DD703-5C11-4DE4-87FE-02BEF245FE66}"

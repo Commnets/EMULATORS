@@ -39,12 +39,21 @@ namespace COMMODORE
 		bool reachesAlarm () const
 							{ return (_reachesAlarm); }
 
+		/** To define whether Clock related interruptions are allowed. */
 		bool interruptEnabled () const
 							{ return (_interruptEnabled); }
 		void setInterruptEnabled (bool e)
 							{ _interruptEnabled = e; }
+		
+		/** To know whether the interrupt condition for the Clock has or not been reached. \n
+			When this variable is read, the value comes back to false. */
 		bool interruptRequested () const
 							{ bool r = _interruptRequested; _interruptRequested = false; return (r); }
+
+		/** To know whether an interruption related with the Clock should be launched. \n
+			That happen when there is a interruption requested and also they are allowed. */
+		bool launchInterruption () const
+							{ return (_interruptRequested && _interruptEnabled); }
 
 		/** To set the alarm by pieces,
 			because this is the way the CIA chip works. */

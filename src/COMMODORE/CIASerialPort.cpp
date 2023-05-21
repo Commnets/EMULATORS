@@ -34,7 +34,7 @@ void COMMODORE::CIASerialPort::simulate (MCHEmul::CPU* cpu, COMMODORE::CIATimer*
 					addBit (_SPPin) && // When the buffer is filled up, 
 									   // true is returned and the bufferValue is moved into the _value variable!
 					_interruptEnabled) // If interruptions are active one will be generated!...
-					cpu -> interrupt (_interruptId) -> setActive (_interruptRequested = true);
+					_interruptRequested = true;
 			}
 
 			break;
@@ -52,15 +52,8 @@ void COMMODORE::CIASerialPort::simulate (MCHEmul::CPU* cpu, COMMODORE::CIATimer*
 				bool bT = false;
 				if (cP)
 				{
-					if (removeBit (bT))
-					{ 
-						if (_interruptEnabled)
-						{
-							_interruptRequested = true;
-
-							cpu -> interrupt (_interruptId) -> setActive (true);
-						}
-					}
+					if (removeBit (bT) && _interruptEnabled)
+						_interruptRequested = true;
 
 					// The value is notified in the SP PIN...
 					notify (MCHEmul::Event (COMMODORE::CIA::_SPSIGNAL, bT ? 1 : 0));

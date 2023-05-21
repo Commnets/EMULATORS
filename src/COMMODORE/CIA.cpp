@@ -7,8 +7,9 @@ COMMODORE::CIA::CIA (int id, int rId, unsigned int intId)
 		  { "Code", "6526/6526A/8521" },
 		  { "Manufacturer", "Commodore Business Machines CBM" },
 		  { "Year", "1980" } }),
-	  _CIARegisters (nullptr),
 	  _registersId (rId),
+	  _CIARegisters (nullptr),
+	  _interruptId (intId),
 	  _timerA (0, intId /** they have to know the interruption id. */), _timerB (1, intId), 
 	  _clock (0, intId),
 	  _serialPort (0, intId),
@@ -112,8 +113,13 @@ bool COMMODORE::CIA::simulate (MCHEmul::CPU* cpu)
 
 	_lastClockCycles = cpu -> clockCycles ();
 
-	if (_CIARegisters -> flagLineInterruptRequested ())
-		cpu -> interrupt (F6500::IRQInterrupt::_ID) -> setActive (true);
+	// Any reason to launch an interruption?...
+	if (_timerA.launchInterruption () ||
+		_timerB.launchInterruption () ||
+		_clock.launchInterruption () ||
+		_serialPort.launchInterruption () ||
+		_CIARegisters -> launchFlagLineInterruption ())
+		cpu -> interrupt (_interruptId) -> setActive (true);
 
 	return (true);
 }

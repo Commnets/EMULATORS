@@ -47,7 +47,7 @@ void COMMODORE::CIATimer::simulate (MCHEmul::CPU* cpu, COMMODORE::CIATimer* t)
 	if (countDown (cpu, t))
 	{
 		if (_interruptEnabled)
-			cpu -> interrupt (_interruptId) -> setActive (_interruptRequested = true);
+			_interruptRequested = true;
 		
 		switch (_runMode)
 		{

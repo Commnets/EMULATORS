@@ -101,12 +101,21 @@ namespace COMMODORE
 							{ if (_enabled = e)
 								{ _firstCycle = true; _alreadyReachedHalf = false; } }
 
+		/** To define whether Timer related interruptions are allowed. */
 		bool interruptEnabled () const
 							{ return (_interruptEnabled); }
 		void setInterruptEnabled (bool e)
 							{ _interruptEnabled = e; }
+
+		/** To know whether the interrupt condition for the Timer has or not been reached. \n
+			When this variable is read, the value comes back to false. */
 		bool interruptRequested () const
 							{ bool r = _interruptRequested; _interruptRequested = false; return (r); }
+
+		/** To know whether an interruption related with the Timer should be launched. \n
+			That happen when there is a interruption requested and also they are allowed. */
+		bool launchInterruption () const
+							{ return (_interruptRequested && _interruptEnabled); }
 
 		// Managing the values...
 		/** The value used as the starting point for the count down. */

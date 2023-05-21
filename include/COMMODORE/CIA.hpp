@@ -69,8 +69,9 @@ namespace COMMODORE
 		virtual void processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifier* n) override;
 
 		protected:
-		CIARegisters* _CIARegisters;
 		const int _registersId;
+		CIARegisters* _CIARegisters;
+		unsigned int _interruptId;
 		CIATimer _timerA, _timerB;
 		CIAClock _clock;
 		CIASerialPort _serialPort;

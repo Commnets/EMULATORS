@@ -70,13 +70,21 @@ namespace COMMODORE
 		void setSPSignal (bool b)
 							{ _SPPin = b; }
 
-		// To manage the interrupts from the CIA...
+		/** To know whether the interrupts on the Serial Port are or not allowed. */
 		bool interruptEnabled () const
 							{ return (_interruptEnabled); }
 		void setInterruptEnabled (bool e)
 							{ _interruptEnabled = e; }
+
+		/** To know whether the interrupt condition for the Serial Port has or not been reached. \n
+			When this variable is read, the value comes back to false. */
 		bool interruptRequested () const
 							{ bool r = _interruptRequested; _interruptRequested = false; return (r); }
+
+		/** To know whether an interruption related with the Clock should be launched. \n
+			That happen when there is a interruption requested and also they are allowed. */
+		bool launchInterruption () const
+							{ return (_interruptRequested && _interruptEnabled); }
 
 		void initialize ();
 
