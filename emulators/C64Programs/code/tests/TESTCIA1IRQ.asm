@@ -42,7 +42,7 @@ MAIN:						lda #$06
 							sta $dc05
 							lda #$00
 							sta $dc06
-							lda #$02
+							lda #$03
 							sta $dc07
 							lda #z00010001
 							sta $dc0e

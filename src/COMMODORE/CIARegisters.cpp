@@ -398,7 +398,7 @@ const MCHEmul::UByte& COMMODORE::CIARegisters::readValue (size_t p) const
 				result.setBit (3, (_timerB -> runMode () == CIATimer::RunMode::_ONETIME) ? true : false);
 				// Bit 4 is always 0 when read...
 				result.setBit (5, (_timerB -> countMode () == CIATimer::CountMode::_SIGNALSONCNTLINE ||
-								   _timerA -> countMode () == CIATimer::CountMode::_0ONCNTPULSES) ? true : false);
+								   _timerB -> countMode () == CIATimer::CountMode::_0ONCNTPULSES) ? true : false);
 				result.setBit (6, (_timerB -> countMode () == CIATimer::CountMode::_TIMERCOUNTSDOWNTO0 || 
 								   _timerB -> countMode () == CIATimer::CountMode::_0ONCNTPULSES) ? true : false);
 				// Bit 7 is always 0 when read...
