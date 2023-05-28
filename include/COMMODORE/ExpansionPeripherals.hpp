@@ -48,11 +48,17 @@ namespace COMMODORE
 		bool pinStatusChanged () const
 							{ bool r = _pinStatusChanged; _pinStatusChanged = false; return (r); }
 
+		/**
+		  *	The name of the fields are: \n
+		  *	DATA			= Attribute with the name of the data connected to the peripheral.
+		  */
 		virtual MCHEmul::InfoStructure getInfoStructure () const override;
 
 		protected:
 		void setData (const MCHEmul::ExtendedDataMemoryBlocks& dt)
 							{ _data = dt; }
+		void setData (MCHEmul::ExtendedDataMemoryBlocks&& dt)
+							{ _data = std::move (dt); }
 		void clearData ()
 							{ _data = { }; }
 

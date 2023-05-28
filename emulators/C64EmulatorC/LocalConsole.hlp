@@ -25,4 +25,8 @@ To disconnect a set of peripherals.
 The parameters are the list of the ids of the peripherals to disconnect.
 ;LOADPERDATA PERID FILEDATA
 To load a peripheral with the data stored into a file with a specific format.
-The id of the peripheral and the name of the file where the data to load is located are are needed.
+The id of the peripheral and the name of the file where the data to load is located are needed.
+;SAVEPERDATA PERID FILEDATA
+To save the data from a peripheral into a file with a specific format.
+The format is decided by the peripheral.
+The id of the peripheral and the name of the file where to save the data are needed.

@@ -90,6 +90,11 @@ namespace COMMODORE
 
 		void simulate (MCHEmul::CPU* cpu, CIATimer* t);
 
+		/**
+		  *	The name of the fields are: \n
+		  *	Status			= Attribute with Read when the statis of the serial port is reading and write in other case.
+		  *	Buffer			= Attribute with the current buffer value (read or to be written).
+		  */
 		MCHEmul::InfoStructure getInfoStructure () const;
 
 		private:

@@ -60,7 +60,7 @@ bool C64::Cartridge::connectData (MCHEmul::FileData* dt)
 	if (dynamic_cast <COMMODORE::CRTFileData*> (dt) == nullptr)
 		return (false); // This type of data can not come from the cartridge...
 
-	setData (dt -> asMemoryBlocks ()); 
+	setData (std::move (dt -> asMemoryBlocks ())); 
 
 	setDataJustLoaded ();
 

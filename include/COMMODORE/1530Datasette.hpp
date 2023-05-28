@@ -45,6 +45,13 @@ namespace COMMODORE
 
 		virtual bool simulate (MCHEmul::CPU* cpu) override;
 
+		/**
+		  *	The name of the fields are: \n
+		  * The ones in the parent class. \n
+		  *	ATTRS	= InfoStructure: Attributes defining the Peripheral. \n
+		  */
+		virtual MCHEmul::InfoStructure getInfoStructure () const override;
+
 		private:
 		/** According with the phase the things to store will be one or another. \n
 			The can be overloaded to simulate different types of storage, if needed. \n
@@ -68,7 +75,7 @@ namespace COMMODORE
 		
 		mutable unsigned char _readWritePhase; // Phase in written or readding: header, content, end...
 		// Counting which the info to write or read!
-		mutable unsigned short _dataCounter; 
+		mutable size_t _dataCounter; 
 		mutable unsigned char _bitCounter;
 		mutable unsigned short _byteCounter;
 	};

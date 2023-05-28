@@ -153,13 +153,32 @@ MCHEmul::FileData* MCHEmul::Emulator::connectDataToPeripheral (const std::string
 		return (nullptr);
 
 	MCHEmul::FileData* result = 
-		fileReader () -> readFile (fN, computer () -> cpu () -> architecture ().bigEndian ());
+		fileIO () -> readFile (fN, computer () -> cpu () -> architecture ().bigEndian ());
 	if (result != nullptr)
 	{
 		if (!p -> connectData (result))
 			return (nullptr); // There might have been created the data,
 							  // but a nullptr is returns as nothing can be reused...
 	}
+
+	return (result);
+}
+
+// ---
+bool MCHEmul::Emulator::saveDataFromPeripheral (const std::string & fN, int id)
+{
+	MCHEmul::IOPeripheral* p = _computer -> peripheral (id);
+	if (p == nullptr)
+		return (false);
+
+	bool result = false;
+	MCHEmul::FileData* data = p -> retrieveData ();
+	if (data != nullptr)
+		result = fileIO () -> 
+			saveFile (data, fN, computer () -> cpu () -> architecture ().bigEndian ());
+
+	// The data has to be deleted...
+	delete (data);
 
 	return (result);
 }

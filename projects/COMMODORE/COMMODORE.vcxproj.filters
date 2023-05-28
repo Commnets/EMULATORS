@@ -108,7 +108,7 @@
     <ClInclude Include="..\..\include\COMMODORE\ExpansionPort.hpp">
       <Filter>Archivos de encabezado\IO</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\include\COMMODORE\FileReaders.hpp">
+    <ClInclude Include="..\..\include\COMMODORE\FileIO.hpp">
       <Filter>Archivos de encabezado\Emulators</Filter>
     </ClInclude>
     <ClInclude Include="..\..\include\COMMODORE\CIASerialPort.hpp">
@@ -178,7 +178,7 @@
     <ClCompile Include="..\..\src\COMMODORE\ExpansionPort.cpp">
       <Filter>Archivos de origen\IO</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\COMMODORE\FileReaders.cpp">
+    <ClCompile Include="..\..\src\COMMODORE\FileIO.cpp">
       <Filter>Archivos de origen\Emulators</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\COMMODORE\DatasettePeripherals.cpp">

@@ -184,6 +184,12 @@ namespace COMMODORE
 			/** To suppomg the ring modulation. */
 			virtual double data () const override;
 
+			/**
+			  *	The name of the fields are: \n
+			  *	RINGMODULATION	= Attribute with YES when Ring Modulation is active and NO in other case.
+			  *	VOICERELATED	= Attribute with the id of the voice related with this one.
+			  *	SYNC			= Attribute with YES when Syncronization is active and NO in other case.
+			  */
 			virtual MCHEmul::InfoStructure getInfoStructure () const override;
 
 			private:

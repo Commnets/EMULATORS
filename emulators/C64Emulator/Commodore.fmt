@@ -117,7 +117,16 @@ Id:@ID@
 @ATTRS?{key=YES,equal=:,empty=no attributes}\n@
 Keys Pressed:@KEYS@
 Motor on:@MOTOR@
-Data:@DATA@
+Data:@DATA@(Size:@DATASIZE€@)
+#---
+#---
+;C2N1530
+Id:@ID@
+@ATTRS?{key=YES,equal=:,empty=no attributes}\n@
+Keys Pressed:@KEYS@
+Motor on:@MOTOR@
+Data:@DATA@(Size:@DATASIZE@)
+Data Counter: @DATACOUNTER@
 #---
 #---
 ;Cartridge

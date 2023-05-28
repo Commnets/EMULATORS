@@ -29,6 +29,11 @@ namespace F6500
 			  _exeAddress ()
 							{ setClassName ("NMIInterrupt"); }
 
+		/**
+		  *	The name of the fields are: \n
+		  *	The ones from the CPUInterrupt +
+		  *	ADDRESS			= The address where the NMI should start the execution from.
+		  */
 		virtual MCHEmul::InfoStructure getInfoStructure () const override;
 
 		private:

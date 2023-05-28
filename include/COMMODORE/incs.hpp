@@ -25,7 +25,7 @@
 #include <COMMODORE/SIDLibWrapper.hpp>
 #include <COMMODORE/SIDRegisters.hpp>
 #include <COMMODORE/SID.hpp>
-#include <COMMODORE/FileReaders.hpp>
+#include <COMMODORE/FileIO.hpp>
 #include <COMMODORE/IOPBuilder.hpp>
 #include <COMMODORE/DatasettePort.hpp>
 #include <COMMODORE/DatasettePeripherals.hpp>

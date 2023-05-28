@@ -210,6 +210,17 @@ namespace COMMODORE
 				  _spriteToForegroundPriority (false)
 							{ }
 
+			/**
+			 *	The name of the fields are: \n
+			 *	X				= X Position of the sprite.
+			 *	Y				= Y Position of the sprite.
+			 *	COLOR			= Attribute with the color number if the sprite.
+			 *	MULTICOLOR		= Attribute with YES when Multicolor is active and NO in other case.
+			 *	ENABLED			= Attribute with YES when the sprite is enabled and NO in other case.
+			 *	DOUBLEW			= Attribute with YES when the sprite is x expanded and NO in other case.
+			 *	DOUBLEH			= Attribute with YES when the sprite is y expanded and NO in other case.
+			 *	PRIORITY		= Attribute with YES when the sprite has priority over the foreground characters.
+			 */
 			MCHEmul::InfoStructure getInfoStructure () const override;
 
 			unsigned short _spriteXCoord; 

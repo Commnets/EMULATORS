@@ -70,11 +70,13 @@ namespace C64
 								computerLanguage ())); }
 		virtual MCHEmul::IOPeripheralBuilder* createPeripheralBuilder () const override
 							{ return (new IOPeripheralBuilder); }
-		virtual MCHEmul::FileReader* createFileReader () const override
-							{ return (new MCHEmul::FileReader 
-								(MCHEmul::FileTypeReaderList (
-									{ new COMMODORE::CRTFileTypeReader /** Cartridges. */,
-									  new COMMODORE::T64FileTypeReader /** Tapes. */ }))); }
+		virtual MCHEmul::FileIO* createFileReader () const override
+							{ return (new MCHEmul::FileIO 
+								(MCHEmul::FileTypeIOList (
+									{ new COMMODORE::CRTFileTypeIO /** Cartridges. */,
+									  new COMMODORE::T64FileTypeIO /** Tapes. */,
+									  new COMMODORE::TAPFileTypeIO /** Tapes. */,
+									  new COMMODORE::RawFileTypeIO /** Row data. */ }))); }
 	};
 }
 

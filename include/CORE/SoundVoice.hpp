@@ -125,6 +125,15 @@ namespace MCHEmul
 		virtual double data () const
 							{ return (wavesData () * ADSRData ()); }
 
+		/**
+		  *	The name of the fields are: \n
+		  *	ID				= Id of the voice.
+		  *	ACTIVE			= Attribute with YES when the voice is active and NO in other case.
+		  *	ATTACK			= Value (from to 0 to 1) of the _attack parameter.
+		  *	DECAY			= Value (from to 0 to 1) of the _decay parameter.
+		  *	RELEASE			= Value (from to 0 to 1) of the _release parameter.
+		  *	SUSTAIN			= Value (from to 0 to 1) of the _sustain parameter.
+		  */
 		virtual InfoStructure getInfoStructure () const override;
 
 		protected:

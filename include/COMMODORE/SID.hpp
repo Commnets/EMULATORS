@@ -50,6 +50,11 @@ namespace COMMODORE
 
 		virtual bool simulate (MCHEmul::CPU* cpu) override;
 
+		/**
+		  *	The name of the fields are: \n
+		  *	Registers		= Info of the SID registers (memory).
+		  *	SoundLibWrapper	= Info of the sound lib wrapper used.
+		  */
 		virtual MCHEmul::InfoStructure getInfoStructure () const override;
 
 		private:

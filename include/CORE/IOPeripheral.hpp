@@ -16,7 +16,7 @@
 
 #include <CORE/global.hpp>
 #include <CORE/InfoClass.hpp>
-#include <CORE/FileReader.hpp>
+#include <CORE/FileIO.hpp>
 
 namespace MCHEmul
 {
@@ -72,11 +72,18 @@ namespace MCHEmul
 		virtual bool finalize () = 0;
 
 		/** To link, when it is needed, the peripheral with data comming from a file. \n
-			Makes sense specially when the peripheral is an input one (like a casette or a unit disk or a cartridge)
-			there might be a content in those types of periperals and this instruction is for that. \n
+			Makes sense specially when the peripheral is an input one (like a casette or a unit disk or a cartridge). \n
+			There might be a content in those types of periperals and this instruction is for that. \n
 			By default the data can't be connected. */
 		virtual bool connectData (FileData* dt)
 							{ return (false); }
+
+		/** To get, when it is needed, the data of the peripheral because it could be saved back into a file. \n
+			Makes sense specially when the peripheral is an putput one (like a casette or a unit disk. \n
+			By default returns nullptr. \n
+			The element returned has to be deleted later. */
+		virtual FileData* retrieveData () const
+							{ return (nullptr); }
 
 		/** To execute a command. \n
 			Returns true when the command was executed ok, and false in other circunstance. \n

@@ -73,6 +73,11 @@ namespace MCHEmul
 			It returns true if ok and false if not. */
 		bool executeOver (CPU* c, unsigned int& nC);
 
+		/**
+		  *	The name of the fields are: \n
+		  *	ID				= Id of the interrupt.
+		  *	EXECUTION		= Attribute with YES when the interrupt is in execution and NO in other case.
+		  */
 		virtual InfoStructure getInfoStructure () const override;
 
 		protected:

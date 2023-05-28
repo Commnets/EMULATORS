@@ -58,6 +58,9 @@ namespace COMMODORE
 
 		virtual bool connectData (MCHEmul::FileData* dt) override;
 
+		/** The file type returned is always RAW (@see RawFileData at FileIO.hpp in COMMODORE. */
+		virtual MCHEmul::FileData* retrieveData () const override;
+
 		/** To know whether data is or not loaded into the casette, ready to be read. */
 		bool hasDataLoaded () const
 							{ return (!_data._data.empty ()); }
@@ -67,7 +70,6 @@ namespace COMMODORE
 		/**
 		  *	The name of the fields are: \n
 		  * The ones in the parent class. \n
-		  *			= Attribute: Id of the Peripheral. \n
 		  *	ATTRS	= InfoStructure: Attributes defining the Peripheral. \n
 		  */
 		virtual MCHEmul::InfoStructure getInfoStructure () const override;

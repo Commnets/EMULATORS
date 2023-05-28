@@ -56,9 +56,17 @@ namespace MCHEmul
 		const std::vector <UByte>& bytes () const
 							{ return (_bytes); }
 		size_t size () const
-							{ return (bytes ().size ()); }
+							{ return (_bytes.size ()); }
 		Address endAddress () const
 							{ return (startAddress () + size ()); }
+
+		/** To add bytes. */
+		void addByte (const UByte& by)
+							{ _bytes.emplace_back (by); }
+		void addBytes (const std::vector <UByte>& bys)
+							{ for (const auto& i : bys) _bytes.emplace_back (i); }
+		void addBytes (const UBytes& by)
+							{ addBytes (by.bytes ()); }
 
 		/** Save the memory block.
 			It receives only the size of the address at the header and whether that address

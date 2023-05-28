@@ -102,7 +102,7 @@ MCHEmul::InfoStructure MCHEmul::PulseSoundWave::getInfoStructure () const
 {
 	MCHEmul::InfoStructure result = MCHEmul::SoundWave::getInfoStructure ();
 
-	result.add ("PULSEUP",_pulseUpPercentage);
+	result.add ("PULSEUP", _pulseUpPercentage);
 
 	return (result);
 }

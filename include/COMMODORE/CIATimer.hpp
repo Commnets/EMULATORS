@@ -128,7 +128,7 @@ namespace COMMODORE
 							{ return (_currentValue); }
 		/** The timer is forced to start back. */
 		void reset ()
-							{ _currentValue = _initialValue; }
+							{ _currentValue = _initialValue; _alreadyReachedHalf = false; }
 		/** A signal has been received throught out the CNT pin. 
 			If a change from high to low (pulse) is produced. \n
 			That pulse is taken into account then to read later the value 

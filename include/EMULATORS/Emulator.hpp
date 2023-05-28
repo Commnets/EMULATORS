@@ -179,11 +179,11 @@ namespace MCHEmul
 		IOPeripheralBuilder* peripherialBuilder ()
 							{ return ((IOPeripheralBuilder*) (((const Emulator*) this) -> peripherialBuilder ())); }
 		/** To create file readers. */
-		const FileReader* fileReader () const
+		const FileIO* fileIO () const
 							{ return (_fileReader == nullptr) ? 
 								(_fileReader = createFileReader ()) : _fileReader; }
-		FileReader* fileReader ()
-							{ return ((FileReader*) (((const Emulator*) this) -> fileReader ())); }
+		FileIO* fileIO ()
+							{ return ((FileIO*) (((const Emulator*) this) -> fileIO ())); }
 
 		// Managing peripherals...
 		/** Build up and connect a peripheral. */
@@ -197,6 +197,9 @@ namespace MCHEmul
 		/** Connect the data to a peripheral, building up the data. 
 			Returns a reference to the data loaded and nullptr if error or nothing. */
 		FileData* connectDataToPeripheral (const std::string& fN, int id);
+		/** To retrieve data from a peripheral into a file. 
+			Returns true when the data was sucessfully saved and false in other circunstance. */
+		bool saveDataFromPeripheral (const std::string& fN, int id);
 		/** To disconnect the peripherals. */
 		bool disconnectPeripheral (int id)
 							{ return (_computer -> disconnectPeripheral (id)); }
@@ -253,7 +256,7 @@ namespace MCHEmul
 		/** To create the right version of the Peripheral Builder. */
 		virtual IOPeripheralBuilder* createPeripheralBuilder () const = 0;
 		/** To create the right version of the File Reader. */
-		virtual FileReader* createFileReader () const = 0;
+		virtual FileIO* createFileReader () const = 0;
 
 		protected:
 		/** Defined in the constructor. */
@@ -266,7 +269,7 @@ namespace MCHEmul
 		mutable Assembler::Compiler* _compiler;
 		mutable Computer* _computer;
 		mutable IOPeripheralBuilder* _peripheralBuilder;
-		mutable FileReader* _fileReader;
+		mutable FileIO* _fileReader;
 		mutable bool _running;
 		unsigned int _error;
 	};

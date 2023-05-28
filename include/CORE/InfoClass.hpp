@@ -36,7 +36,7 @@ namespace MCHEmul
 		void setClassName (const std::string& cN)
 							{ _className = cN; }
 
-		/** By default it resutrns the attribute .CLASSNAME with the name of the class. */
+		/** By default it returns the attribute .CLASSNAME with the name of the class. */
 		virtual InfoStructure getInfoStructure () const
 							{ InfoStructure r; r.add ("CLASSNAME", className ()); return (r); }
 
