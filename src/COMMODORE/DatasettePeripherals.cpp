@@ -59,7 +59,8 @@ MCHEmul::FileData* COMMODORE::DatasettePeripheral::retrieveData () const
 	MCHEmul::FileData* result = new COMMODORE::RawFileData; 
 	COMMODORE::RawFileData* tap = dynamic_cast <COMMODORE::RawFileData*> (result);
 
-	// The signature is not changed... 
+	// Later, when saving if any, the size will be limited...
+	tap -> _signature = _data._name;
 
 	unsigned int dS = 0;
 	std::vector <MCHEmul::UByte> _bytes;
@@ -67,7 +68,7 @@ MCHEmul::FileData* COMMODORE::DatasettePeripheral::retrieveData () const
 	{
 		dS += (unsigned int) i.size ();
 
-		_bytes.insert (i.bytes ().end (), i.bytes ().begin (), i.bytes ().end ());
+		_bytes.insert (_bytes.end (), i.bytes ().begin (), i.bytes ().end ());
 	}
 
 	tap -> _dataSize = dS;

@@ -122,7 +122,7 @@ bool COMMODORE::RawFileTypeIO::writeFile (MCHEmul::FileData* fD, const std::stri
 	size_t i = 0;
 	for (; i < tap -> _signature.size () && i < 15; i++)
 		data [i] = tap -> _signature [i];
-	for (; i < 16; data [i++] = 0)
+	for (; i < 16; data [i++] = 0);
 	f.write (data, 16);
 
 	// The data size
