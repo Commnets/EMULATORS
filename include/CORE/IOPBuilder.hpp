@@ -19,6 +19,8 @@
 
 namespace MCHEmul
 {
+	class Computer;
+
 	/** This builder is to create any type of peripherical that might be connected to the computer simulated. \n
 		The builder is the owner of the periphericals created,
 		and they will be deleted as this object is also deleted. */
@@ -39,12 +41,13 @@ namespace MCHEmul
 		IOPeripheralBuilder& operator = (IOPeripheralBuilder&&) = delete;
 
 		/** If the peripherical requeted already existed (one with the same id) a reference to it would be returned,
-			otherwise it sill created...if any! */
-		IOPeripheral* peripheral (int id, const Attributes& attrs) const;
+			otherwise it sill created...if any! \n
+			The peripherals could need to take into account the computer they belong to. */
+		IOPeripheral* peripheral (int id, Computer* c, const Attributes& attrs) const;
 
 		protected:
 		/** This method must be overloaded to include any new type of peripherals. */
-		virtual IOPeripheral* createPeripheral (int id, const Attributes& prms) const = 0;
+		virtual IOPeripheral* createPeripheral (int id, Computer* c, const Attributes& prms) const = 0;
 
 		protected:
 		mutable IOPeripherals _peripherals;

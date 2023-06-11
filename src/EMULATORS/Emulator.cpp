@@ -111,13 +111,13 @@ bool MCHEmul::Emulator::connectPeripheral (int id, const MCHEmul::Attributes& pr
 { 
 	assert (d != nullptr); 
 
-	return (computer () -> connectPeripheral (peripherialBuilder () -> peripheral (id, prms), d)); 
+	return (computer () -> connectPeripheral (peripherialBuilder () -> peripheral (id, computer (), prms), d)); 
 }
 
 // ---
 bool MCHEmul::Emulator::connectPeripheral (int id, const MCHEmul::Attributes& prms)
 {
-	MCHEmul::IOPeripheral* ph = peripherialBuilder () -> peripheral (id, prms);
+	MCHEmul::IOPeripheral* ph = peripherialBuilder () -> peripheral (id, computer (), prms);
 	if (ph == nullptr)
 		return (false);
 

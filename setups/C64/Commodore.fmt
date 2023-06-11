@@ -112,12 +112,20 @@ Id:@ID@
 @VOICES?{fmter=.CLASS,empty=no voices}\n---\n@
 #---
 #---
+;DatasetteData
+Id:@ID@(Size:@SIZE@)
+@BYTES{blocksize=32,listsep=\,,tablesep=\ ,minsize=2}@
+#---
+#---
 ;Datasette
 Id:@ID@
 @ATTRS?{key=YES,equal=:,empty=no attributes}\n@
 Keys Pressed:@KEYS@
 Motor on:@MOTOR@
-Data:@DATA@(Size:@DATASIZE€@)
+->Data:
+Name:@DATANAME@
+Size:@DATASIZE@
+@DATA?{fmter=DatasetteData,empty=no data}\n---\n@
 #---
 #---
 ;C2N1530
@@ -125,8 +133,11 @@ Id:@ID@
 @ATTRS?{key=YES,equal=:,empty=no attributes}\n@
 Keys Pressed:@KEYS@
 Motor on:@MOTOR@
-Data:@DATA@(Size:@DATASIZE@)
 Data Counter: @DATACOUNTER@
+->Data:
+Name:@DATANAME@
+Size:@DATASIZE@
+@DATA?{fmter=DatasetteData,empty=no data}\n---\n@
 #---
 #---
 ;Cartridge

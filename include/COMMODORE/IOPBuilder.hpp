@@ -28,7 +28,8 @@ namespace COMMODORE
 
 		protected:
 		/** This method must be overloaded to include any new type of peripherals. */
-		virtual MCHEmul::IOPeripheral* createPeripheral (int id, const MCHEmul::Attributes& prms) const override;
+		virtual MCHEmul::IOPeripheral* createPeripheral 
+			(int id, MCHEmul::Computer* c, const MCHEmul::Attributes& prms) const override;
 	};
 }
 

@@ -26,7 +26,8 @@ namespace C64
 				{ }
 
 		protected:
-		virtual MCHEmul::IOPeripheral* createPeripheral (int id, const MCHEmul::Attributes& prms) const override;
+		virtual MCHEmul::IOPeripheral* createPeripheral 
+			(int id, MCHEmul::Computer* c, const MCHEmul::Attributes& prms) const override;
 	};
 }
 

@@ -10,7 +10,7 @@ COMMODORE::Datasette1530::Datasette1530 ()
 	  _clock (300), // 300 baudios, bits per second...
 	  _readWritePhase (0),
 	  _dataCounter (0), 
-	  _bitCounter (0), _byteCounter (0)
+	  _elementCounter (0)
 {
 	setClassName ("C2N1530");
 }
@@ -56,8 +56,12 @@ bool COMMODORE::Datasette1530::executeCommand (int id, const MCHEmul::Strings& p
 				}
 
 				// Any other curcunstance nothing to do...
-
+				// But always stopped...
 				_status = Status::_STOPPED;
+
+				// No keys is supossed to be pressed...
+				// if the user wanted to move to the next / previous element ç
+				// the same command would have to be executed...
 
 				setNoKeyPressed (true);
 			}
@@ -74,14 +78,20 @@ bool COMMODORE::Datasette1530::executeCommand (int id, const MCHEmul::Strings& p
 				{
 					_status = (id == 8) ? Status::_READING : Status::_SAVING;
 
-					_byteCounter = 0;
-					_bitCounter = 0;
+					_elementCounter = 0;
 
 					setNoKeyPressed (false);
 
-					// If saving, but the counter is pointing at the end, a null data element is added...
-					if (id == 24 && _dataCounter >= _data._data.size ())
-						_data._data.push_back (MCHEmul::DataMemoryBlock ());
+					// If saving... 
+					if (id == 24)
+					{
+						// ... but the counter is pointing at the end, a null data element is added...
+						if (_dataCounter >= _data._data.size ())
+							_data._data.push_back (MCHEmul::DataMemoryBlock ());
+
+						// ...and that element is fully clearead...
+						_data._data [_dataCounter].clear ();
+					}
 				}
 			}
 
@@ -90,12 +100,16 @@ bool COMMODORE::Datasette1530::executeCommand (int id, const MCHEmul::Strings& p
 		// EJECT...
 		case 32:
 			{
+				// Data is forgetted...
 				clearData ();
 
-				_byteCounter = 0;
-				_bitCounter = 0;
-
+				// ...always stopped...
 				_status = Status::_STOPPED;
+
+				// and starts back from the beginning...
+				_dataCounter = 0;
+
+				_elementCounter = 0;
 
 				setNoKeyPressed (true);
 			}
@@ -123,25 +137,10 @@ bool COMMODORE::Datasette1530::simulate (MCHEmul::CPU* cpu)
 				_clock.countCycles (0);
 			else
 			{
-				switch (_status)
-				{
-					case Status::_READING:
-						{
-							setRead (getNextDataBit ());
-						}
-
-						break;
-
-					case Status::_SAVING:
-						{
-							storeNextDataBit (_valueToWrite);
-						}
-
-						break;
-
-					default:
-						break; // Shouldn't be here, just in case...
-				}
+				if (_status == Status::_READING) 
+					setRead (getNextDataBit ());
+				else 
+					storeNextDataBit (_valueToWrite);
 
 				_clock.countCycles (1);
 			}
@@ -164,9 +163,7 @@ MCHEmul::InfoStructure COMMODORE::Datasette1530::getInfoStructure () const
 // ---
 bool COMMODORE::Datasette1530::getNextDataBit ()
 {
-	// TODO
-
-	return (true);
+	return (_data._data [_dataCounter].bytes ()[_elementCounter++] == MCHEmul::UByte::_1);
 }
 
 // ---
@@ -174,9 +171,5 @@ void COMMODORE::Datasette1530::storeNextDataBit (bool s)
 {
 	_data._data [_dataCounter].addByte (s ? MCHEmul::UByte::_1 : MCHEmul::UByte::_0);
 
-	if (++_bitCounter >= 8)
-	{
-		_bitCounter = 0;
-		++_byteCounter;
-	}
+	_elementCounter++;
 }

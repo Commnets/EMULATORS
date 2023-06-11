@@ -6,7 +6,8 @@
 #include <C64/Cartridge.hpp>
 
 // ---
-MCHEmul::IOPeripheral* COMMODORE::IOPeripheralBuilder::createPeripheral (int id, const MCHEmul::Attributes& prms) const
+MCHEmul::IOPeripheral* COMMODORE::IOPeripheralBuilder::createPeripheral 
+	(int id, MCHEmul::Computer* c, const MCHEmul::Attributes& prms) const
 {
 	MCHEmul::IOPeripheral* result = nullptr;
 

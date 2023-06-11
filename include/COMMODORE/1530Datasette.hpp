@@ -76,8 +76,7 @@ namespace COMMODORE
 		mutable unsigned char _readWritePhase; // Phase in written or readding: header, content, end...
 		// Counting which the info to write or read!
 		mutable size_t _dataCounter; 
-		mutable unsigned char _bitCounter;
-		mutable unsigned short _byteCounter;
+		mutable unsigned short _elementCounter;
 	};
 }
 

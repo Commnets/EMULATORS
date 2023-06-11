@@ -156,13 +156,13 @@ namespace MCHEmul
 	{
 		bool result = false;
 
-		int cP = (int)_currentPosition_0;
-		cP += i; // Can move to the next (o nexts) lines...
+		int cP = (int) _currentPosition_0;
+		cP += (int) i; // Can move to the next (o nexts) lines...
 		if (result = (cP >= (int) _maxPositions))
 			while (cP >= (int) _maxPositions)
 				cP -= (int) _maxPositions;
 
-		cP += (int) _firstPosition;
+		cP += (int) _firstPosition; // Now is no longer in base 0...
 		if (cP >= (int) _maxPositions)
 			cP -= (int) _maxPositions;
 

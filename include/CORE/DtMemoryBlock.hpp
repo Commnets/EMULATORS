@@ -60,6 +60,10 @@ namespace MCHEmul
 		Address endAddress () const
 							{ return (startAddress () + size ()); }
 
+		/** Clear the bytes. */
+		void clear ()
+							{ _bytes.clear (); }
+
 		/** To add bytes. */
 		void addByte (const UByte& by)
 							{ _bytes.emplace_back (by); }

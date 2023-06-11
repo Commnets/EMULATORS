@@ -84,8 +84,20 @@ MCHEmul::InfoStructure COMMODORE::DatasettePeripheral::getInfoStructure () const
 
 	result.add ("KEYS",		!_noKeyPressed);
 	result.add ("MOTOR",	!_motorOff);
-	result.add ("DATA",		_data._data.empty () ? std::string ("no data") : _data._name);
+	result.add ("DATANAME",	_data._name);
 	result.add ("DATASIZE", _data._data.size ());
+
+	MCHEmul::InfoStructure dS;
+	for (size_t i = 0; i < (size_t) _data._data.size (); i++)
+	{
+		MCHEmul::InfoStructure dSA;
+		dSA.add ("ID",		i); // The id...
+		dSA.add ("SIZE",	_data._data [i].size ());
+		dSA.add ("BYTES",	_data._data [i].bytes () /** It has to be a copy. */);
+		dS.add (std::to_string (i), std::move (dSA));
+	}
+
+	result.add ("DATA", dS);
 
 	return (result);
 }
