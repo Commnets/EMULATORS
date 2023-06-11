@@ -153,13 +153,13 @@ namespace COMMODORE
 		/** To draw any type of graphic. \n
 			This method uses the ones below. \n
 			The method receives:
-			ctx = other info about the raster used to finally draw. */
+			dC = other info about the raster used to finally draw. */
 		MCHEmul::UByte drawGraphics (const DrawContext& dC);
 		/** Draws a monocolor char. \n
 			All methods receive: \n
-			cb = window column adjusted by the scrollX value where to start to draw 8 puixels. \n
+			cb = window column adjusted by the scrollX value where to start to draw 8 pixels. \n
 			rc = window row adjusted by the scrollY value where to draw. \n
-			ctx = other info about the raster used to finally draw. */
+			dC = other info about the raster used to finally draw. */
 		MCHEmul::UByte drawMonoColorChar (int cb, int rc, 
 			const MCHEmul::UBytes& bt, const MCHEmul::UBytes& clr, const DrawContext& dC);
 		/** Draws a multicolor char. */
@@ -176,13 +176,21 @@ namespace COMMODORE
 			const MCHEmul::UBytes& sc, const MCHEmul::UBytes& bt, const MCHEmul::UBytes& clr, const DrawContext& dC, bool blk = false);
 		
 		// Draw the sprites in detail...
+		/** To draw the sprites: \n
+			This method uses the ones below. \n
+			The method receives:
+			spr = the number of sprite to draw. \n
+			dC = other info about the raster used to finally draw. */
+		MCHEmul::UByte drawSprite (size_t spr, const DrawContext& dC);
 		/** Draws a monocolor sprite line. \n
 			all methos receives: \n 
+			c = window column value where to start to draw 8 pixels. \n
+			r = window row value where to draw. \n
 			spr = the number of sprite to draw. \n
 			dC = more info about the raster. */
-		MCHEmul::UByte drawMonoColorSprite (size_t spr, const DrawContext& dC);
+		MCHEmul::UByte drawMonoColorSprite (int c, int r, size_t spr, const DrawContext& dC);
 		/** Draws a multocolor sprite line. */
-		MCHEmul::UByte drawMultiColorSprite (size_t spr, const DrawContext& dC);
+		MCHEmul::UByte drawMultiColorSprite (int c, int r, size_t spr, const DrawContext& dC);
 
 		/** Detect the collision between graphics and sprites info
 			affecting the right registers in the VICII. */
@@ -227,8 +235,6 @@ namespace COMMODORE
 		_graphicsCharData = std::move (MCHEmul::UBytes ());
 		_graphicsBitmapData = std::move (MCHEmul::UBytes ());
 		_graphicsColorData = std::move (MCHEmul::UBytes ());
-		_graphicsSprites = std::vector <MCHEmul::UBytes> (8, MCHEmul::UBytes::_E);
-		_graphicsLineSprites = std::vector <MCHEmul::UBytes> (8, MCHEmul::UBytes::_E);
 	}
 	
 	// ---
@@ -338,7 +344,7 @@ namespace COMMODORE
 							memoryRef () -> bytes (iAB + 
 							((size_t) memoryRef () -> value (sP + i).value () << 6) /** 64 bytes block size. */ + 
 							/** If sprite is double-height, the data line read must be half. */
-							(((unsigned int) lY) >> (_VICIIRegisters -> spriteDoubleHeight (i) ? 1 : 0) * 3 /** bytes per line. */), 3)));
+							(((((unsigned int) lY) >> (_VICIIRegisters -> spriteDoubleHeight (i) ? 1 : 0))) * 3 /** bytes per line. */), 3)));
 				}
 			}
 		}

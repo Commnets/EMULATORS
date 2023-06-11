@@ -114,6 +114,11 @@ bool COMMODORE::VICII::simulate_I (MCHEmul::CPU* cpu)
 		{
 			memoryRef () -> setActiveView (_VICIIView);
 			
+			size_t nS = 0;
+			readSpriteDataAt (_raster.currentLine (), nS);
+			// Reading the sprites costs _CPUCYCLESWHENREADSPRITES cycles per sprite read...
+			cpu -> addClockCycles (_CPUCYCLESWHENREADSPRITES * (unsigned int) nS);
+
 			if (isBadRasterLine () /** @see definition above. */)
 			{
 				// This is not exactly what VICII does, but it could be a good aproximation...
@@ -121,14 +126,9 @@ bool COMMODORE::VICII::simulate_I (MCHEmul::CPU* cpu)
 				readGraphicsInfoAt (_raster.currentLine () - 
 					_FIRSTBADLINE - _VICIIRegisters -> verticalScrollPosition ());
 				// ...and also the sprite info...
-				size_t nS = 0;
-				readSpriteData (nS);
 
 				// Reading the color/char/bitmap costs _CPUCYCLESWHENREADGRAPHS 
 				cpu -> addClockCycles (_CPUCYCLESWHENREADGRAPHS);
-				// Reading the sprites costs _CPUCYCLESWHENREADSPRITES cycles per sprite read...
-				cpu -> addClockCycles (_CPUCYCLESWHENREADGRAPHS + 
-					_CPUCYCLESWHENREADSPRITES * (unsigned int) nS);
 			}
 
 			// At the beginning of a new line, an interrupt could be generated...
@@ -285,6 +285,11 @@ bool COMMODORE::VICII::simulate_II (MCHEmul::CPU* cpu)
 		// But if it is...
 		if (_raster.isInVisibleZone ())
 		{
+			if (_raster.isInDisplayZone () && 
+				(_raster.vData ().currentPosition () - 
+					_VICIIRegisters -> verticalScrollPosition ()) > _LASTBADLINE)
+				emptyGraphicsInfo (); // Just in case to avoid paint something innecesary...
+
 			// These two variables are very key
 			// They hold the position of the raster within the visible zone.
 			// It is the left up corner of the "computer screen" will be cv = 0 & rv = 0...
@@ -427,9 +432,7 @@ void COMMODORE::VICII::drawGraphicsSpritesAndDetectCollisions (unsigned short cv
 		for (auto i : spritesEnabled)
 			if ((f && !_VICIIRegisters -> spriteToForegroundPriority (i)) ||
 				(!f && _VICIIRegisters -> spriteToForegroundPriority (i)))
-				colSprites [i] = _VICIIRegisters -> spriteMulticolorMode (i)
-					? drawMultiColorSprite (i, dC)
-					: drawMonoColorSprite (i, dC);
+				colSprites [i] = drawSprite (i, dC);
 	};
 
 	drawSprites (false);
@@ -774,14 +777,25 @@ MCHEmul::UByte COMMODORE::VICII::drawMultiColorBitMap (int cb, int rc,
 }
 
 // ---
-MCHEmul::UByte COMMODORE::VICII::drawMonoColorSprite (size_t spr, const DrawContext& dC)
+MCHEmul::UByte COMMODORE::VICII::drawSprite (size_t spr, const COMMODORE::VICII::DrawContext& dC)
 {
-	MCHEmul::UByte result = MCHEmul::UByte::_0;
+	if (_graphicsLineSprites [spr].size () == 0)
+		return (MCHEmul::UByte::_0);
 
 	// The "display" line being involved...
 	int r = (int) dC._RR - (int) dC._IRD;
 	// The "display" column being involved, adjusted to blocks of 8!
 	int c = (int) dC._RCA /** raster column adjusted to blocks of 8. */ - (int) dC._ICD;
+
+	return (_VICIIRegisters -> spriteMulticolorMode (spr)
+		? drawMultiColorSprite (c, r, spr, dC)
+		: drawMonoColorSprite (c, r, spr, dC));
+}
+
+// ---
+MCHEmul::UByte COMMODORE::VICII::drawMonoColorSprite (int c, int r, size_t spr, const COMMODORE::VICII::DrawContext& dC)
+{
+	MCHEmul::UByte result = MCHEmul::UByte::_0;
 
 	// Horizontal info about the sprite
 	unsigned short dW	= _VICIIRegisters -> spriteDoubleWidth (spr) ? 2 : 1;
@@ -815,9 +829,9 @@ MCHEmul::UByte COMMODORE::VICII::drawMonoColorSprite (size_t spr, const DrawCont
 
 		// To determine the initial byte (iBy) and bit (iBt) with the info about the sprite...
 		// The bit moves from 7 to 0, and the byte increases...
-		size_t iBy = (size_t) (((r - rY) / (int) dH) * 3 /** 3 bytes per sprite row info. */ + ((pp - cX) / (int) dW8));
+		size_t iBy = (size_t) ((pp - cX) / (int) dW8);
 		size_t iBt = (size_t) (7 - (((pp - cX) % (int) dW8) / (int) dW));
-		bool dP = _graphicsSprites [spr][iBy].bit (iBt);
+		bool dP = _graphicsLineSprites [spr][iBy].bit (iBt);
 		if (!dP)
 			continue; // The point is not visible...
 
@@ -837,14 +851,9 @@ MCHEmul::UByte COMMODORE::VICII::drawMonoColorSprite (size_t spr, const DrawCont
 }
 
 // ---
-MCHEmul::UByte COMMODORE::VICII::drawMultiColorSprite (size_t spr, const DrawContext& dC)
+MCHEmul::UByte COMMODORE::VICII::drawMultiColorSprite (int c, int r, size_t spr, const COMMODORE::VICII::DrawContext& dC)
 {
 	MCHEmul::UByte result = MCHEmul::UByte::_0;
-
-	// The "display" line being involved...
-	int r = (int) dC._RR - (int) dC._IRD;
-	// The "display" column being involved, adjusted to blocks of 8!
-	int c = (int) dC._RCA /** raster column adjusted to blocks of 8. */ - (int) dC._ICD;
 
 	// Horizontal info about the sprite
 	unsigned short dW	= _VICIIRegisters -> spriteDoubleWidth (spr) ? 2 : 1;
@@ -877,9 +886,9 @@ MCHEmul::UByte COMMODORE::VICII::drawMultiColorSprite (size_t spr, const DrawCon
 
 		// To determine the initial byte (iBy) and bit (iBt) with the info about the sprite...
 		// The bit to select moves from 0 to 3, represeting the pair of bits (0,1), (2,3), (4,5), (6,7)
-		size_t iBy = (size_t) (((r - rY) / (int) dH) * 3 /** 3 bytes per sprite row info. */ + ((pp - cX) / (int) dW8));
+		size_t iBy = (size_t) ((pp - cX) / (int) dW8);
 		size_t iBt = (size_t) (3 - (((pp - cX) % (int) dW8) / (2 * (int) dW)));
-		unsigned char cs = (_graphicsSprites [spr][iBy].value () >> (iBt << 1)) & 0x03;
+		unsigned char cs = (_graphicsLineSprites [spr][iBy].value () >> (iBt << 1)) & 0x03;
 		if (cs == 0)
 			continue; // The point has no color...
 
