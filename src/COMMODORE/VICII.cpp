@@ -313,10 +313,9 @@ bool COMMODORE::VICII::simulate_II (MCHEmul::CPU* cpu)
 			{
 				// This is the starting pixel to start to draw...
 				unsigned short stp = cav;
-				// This is the number of pixels that would be drawn by default...
-				// 8 by default, but never more than the ones remaining to the limit of the window...
-				unsigned short lbk = ((cav + 8) > _raster.hData ().lastDisplayPosition ())
-					? (_raster.hData ().lastDisplayPosition () - cav) : 8;
+				// ...and the number to draw by default...
+				unsigned short lbk = (cav + 8) > _raster.visibleColumns () 
+					? (_raster.visibleColumns () - cav) : 8;
 
 				// But when the raster line is in the "screen" part of the window,
 				// any of these two previous variables could change...
@@ -416,28 +415,18 @@ void COMMODORE::VICII::drawGraphicsSpritesAndDetectCollisions (unsigned short cv
 	// This other one will hold the char text info...
 	MCHEmul::UByte colGraphics = MCHEmul::UByte::_0;
 
-	// Defines a list with all sprites enabled in "this" moment...
-	// This is something than can change per line, so this is the reason
-	// to determine it at every drawable line...
-	std::vector <size_t> spritesEnabled = { };
-	// The sprite 0 has the highest priority...
-	// This is the reason to iterate in the other direction...
-	for (int /** can be negative. */ i = 7; i >= 0; i--)
-		if (_VICIIRegisters -> spriteEnable ((size_t) i))
-			spritesEnabled.emplace_back ((size_t) i);
-
 	// The interim function to draw the sprites...
 	auto drawSprites = [&](bool f /** false if they don't have priorit against the background. */) -> void
 	{
-		for (auto i : spritesEnabled)
-			if ((f && !_VICIIRegisters -> spriteToForegroundPriority (i)) ||
-				(!f && _VICIIRegisters -> spriteToForegroundPriority (i)))
+		for (int i = 7; i >= 0; i--)
+			if (_VICIIRegisters -> spriteEnable ((size_t) i) &&
+				((f && !_VICIIRegisters -> spriteToForegroundPriority (i)) ||
+				(!f && _VICIIRegisters -> spriteToForegroundPriority (i))))
 				colSprites [i] = drawSprite (i, dC);
 	};
 
 	drawSprites (false);
 
-	// To draw grahics the raster has to be in the "display" zone...
 	if (_raster.isInDisplayZone ())
 		colGraphics = drawGraphics (dC);
 

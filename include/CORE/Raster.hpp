@@ -58,10 +58,10 @@ namespace MCHEmul
 								   _currentPosition_0 <= _lastVisiblePosition_0)); }
 		unsigned short currentVisiblePosition () const // The 
 						{ return (_currentPosition_0 - _firstVisiblePosition_0); }
+		unsigned short lastVisiblePosition () const
+						{ return (_lastVisiblePosition_0 - _firstVisiblePosition_0); }
 		unsigned short visiblePositions () const
 						{ return (_lastVisiblePosition_0 - _firstVisiblePosition_0 + 1); }
-		unsigned short currentInVisiblePosition () const
-						{ return (_currentPosition_0 - _firstVisiblePosition_0); }
 
 		// Managing the display
 		/** The DISPLAY is the zone where the drawing can happen but not taking 
@@ -241,8 +241,6 @@ namespace MCHEmul
 						{ return (_hRasterData.visiblePositions ()); }
 		void currentVisiblePosition (unsigned short& x, unsigned short& y) const
 						{ x = _hRasterData.currentVisiblePosition (); y = _vRasterData.currentVisiblePosition (); }
-		void currentInVisiblePosition (unsigned short& x, unsigned short& y) const
-						{ x = _hRasterData.currentInVisiblePosition (); y = _vRasterData.currentInVisiblePosition (); }
 
 		// Managing the display zone
 		/** The display is where drawing is possible. The reduced zones if any are not considered. */
