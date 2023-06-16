@@ -552,12 +552,14 @@ MCHEmul::UByte COMMODORE::VICII::drawMonoColorChar (int cb, int rc,
 
 		size_t iBy = ((size_t) pp) >> 3 /** To determine the byte. */;
 		size_t iBt = 7 - (((size_t) pp) % 8); /** From MSB to LSB. */
-		result.setBit (7 - i, true);
 		unsigned short pos = dC._RCA + i;
-		if (bt [(iBy << 3) + nrc].bit (iBt) && 
-			(pos >= dC._ICS && pos <= dC._LCS))
-			screenMemory () -> setPixel ((size_t) pos, (size_t) dC._RR, 
-				(unsigned int) (clr [iBy].value () & 0x0f /** Useful nibble. */));
+		if (bt [(iBy << 3) + nrc].bit (iBt))
+		{
+			result.setBit (7 - i, true);
+			if (pos >= dC._ICS && pos <= dC._LCS)
+				screenMemory () -> setPixel ((size_t) pos, (size_t) dC._RR, 
+					(unsigned int) (clr [iBy].value () & 0x0f /** Useful nibble. */));
+		}
 	}
 
 	return (result);
