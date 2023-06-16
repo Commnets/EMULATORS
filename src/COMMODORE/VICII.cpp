@@ -82,7 +82,7 @@ bool COMMODORE::VICII::initialize ()
 // ---
 bool COMMODORE::VICII::simulate (MCHEmul::CPU* cpu)
 {
-	return (simulate_I (cpu));
+	return (simulate_II (cpu));
 }
 
 // ---
@@ -309,7 +309,8 @@ bool COMMODORE::VICII::simulate_II (MCHEmul::CPU* cpu)
 
 			// If the raster is not in the very visible zone...
 			// it is time to cover with the border...
-			if (!_raster.isInScreenZone ())
+			if (!_raster.isInScreenZone () ||
+				(_raster.isInScreenZone () && (cav + 8) > _raster.hData ().lastScreenPosition ()))
 			{
 				// This is the starting pixel to start to draw...
 				unsigned short stp = cav;
@@ -399,14 +400,14 @@ void COMMODORE::VICII::drawGraphicsSpritesAndDetectCollisions (unsigned short cv
 			/** _LCD */ _raster.hData ().lastDisplayPosition (),		// DISPLAY: The original...
 			/** _LCS */ _raster.hData ().lastScreenPosition (),			// SCREEN: And the real one (after reduction size)
 			/** _SC	 */ _VICIIRegisters -> horizontalScrollPosition (),	// From 0 - 7 
-			/** _RC	 */ cv,												// Where the horizontal raster is (not adjusted to 8)
-			/** _RCA */ cav,											// Where the horizontal raster is (adjusted to 8)
+			/** _RC	 */ cv,												// Where the horizontal raster is (not adjusted to 8) inside the window
+			/** _RCA */ cav,											// Where the horizontal raster is (adjusted to 8) inside the window
 			/** _IRD */ _raster.vData ().firstDisplayPosition (),		// DISPLAY: The original... 
 			/** _IRS */ _raster.vData ().firstScreenPosition (),		// SCREEN:  And the real one (after reduction size)
 			/** _LRD */ _raster.vData ().lastDisplayPosition (),		// DISPLAY: The original...
 			/** _LRS */ _raster.vData ().lastScreenPosition (),			// SCREEN: And the real one (after reduction size)
 			/** _SR	 */ _VICIIRegisters -> verticalScrollPosition (),	// From 0 - 7 (taken into account in bad lines)
-			/** _RR	 */ rv												// Where the vertical raster is...
+			/** _RR	 */ rv												// Where the vertical raster is inside the window (it is not the chip raster line)
 		};
 
 	// This variable will hold the bytes drawn per sprite
@@ -427,6 +428,8 @@ void COMMODORE::VICII::drawGraphicsSpritesAndDetectCollisions (unsigned short cv
 
 	drawSprites (false);
 
+	// The method could be invoked directly, 
+	// ...but is better to avoid no useful invocations...
 	if (_raster.isInDisplayZone ())
 		colGraphics = drawGraphics (dC);
 
@@ -481,6 +484,10 @@ MCHEmul::UByte COMMODORE::VICII::drawGraphics (const COMMODORE::VICII::DrawConte
 	// When e.g. the raster is at the very first "screen "dislay" column, 
 	// there are no reductions is the screen (display == screen) and SCROLLX = 0x00
 	int cb = (int) dC._RCA - (int) dC._ICD - (int) dC._SC;
+
+	// At this poitn rc positive for sure, and cb could be negative...
+	// Never invoke the methods within the swith case statements direcly
+	// a crash might be generated...
 
 	MCHEmul::UByte result = MCHEmul::UByte::_0;
 	switch (_VICIIRegisters -> graphicModeActive ())
@@ -545,14 +552,12 @@ MCHEmul::UByte COMMODORE::VICII::drawMonoColorChar (int cb, int rc,
 
 		size_t iBy = ((size_t) pp) >> 3 /** To determine the byte. */;
 		size_t iBt = 7 - (((size_t) pp) % 8); /** From MSB to LSB. */
+		result.setBit (7 - i, true);
 		unsigned short pos = dC._RCA + i;
 		if (bt [(iBy << 3) + nrc].bit (iBt) && 
 			(pos >= dC._ICS && pos <= dC._LCS))
-		{ 
-			result.setBit (7 - i, true);
 			screenMemory () -> setPixel ((size_t) pos, (size_t) dC._RR, 
 				(unsigned int) (clr [iBy].value () & 0x0f /** Useful nibble. */));
-		}
 	}
 
 	return (result);
@@ -776,6 +781,10 @@ MCHEmul::UByte COMMODORE::VICII::drawSprite (size_t spr, const COMMODORE::VICII:
 	// The "display" column being involved, adjusted to blocks of 8!
 	int c = (int) dC._RCA /** raster column adjusted to blocks of 8. */ - (int) dC._ICD;
 
+	// at this point r and c are positive always...
+	// Never invoke the methods within the ? : structure direcly
+	// crash might be generated...
+
 	return (_VICIIRegisters -> spriteMulticolorMode (spr)
 		? drawMultiColorSprite (c, r, spr, dC)
 		: drawMonoColorSprite (c, r, spr, dC));
@@ -827,12 +836,11 @@ MCHEmul::UByte COMMODORE::VICII::drawMonoColorSprite (int c, int r, size_t spr, 
 		unsigned short pos = dC._RCA + i;
 		for (size_t j = 0; j < (size_t) dW; j++)
 		{
-			if ((pos + j) >= dC._ICS && (pos + j) <= dC._LCS)
-			{ 
-				result.setBit (7 - (i + j), true);
+			result.setBit (7 - (i + j), true);
+			if (((pos + j) >= dC._ICS && (pos + j) <= dC._LCS) &&
+				(dC._RR >= dC._IRS && dC._RR <= dC._LRS))
 				screenMemory () -> setPixel ((size_t) (pos + j), (size_t) dC._RR, 
 					_VICIIRegisters -> spriteColor (spr) & 0x0f /** useful nibble. */);
-			}
 		}
 	}
 
@@ -887,11 +895,11 @@ MCHEmul::UByte COMMODORE::VICII::drawMultiColorSprite (int c, int r, size_t spr,
 		unsigned short pos = dC._RCA + i;
 		for (size_t j = 0; j < (size_t) (2 * dW); j++)
 		{
-			if ((pos + j) >= dC._ICS && (pos + j) <= dC._LCS)
-			{
-				result.setBit (7 - (i + j), true); result.setBit (6 - (i + j), true);
+			result.setBit (7 - (i + j), true); 
+			result.setBit (6 - (i + j), true);
+			if (((pos + j) >= dC._ICS && (pos + j) <= dC._LCS) &&
+				(dC._RR >= dC._IRS && dC._RR <= dC._LRS))
 				screenMemory () -> setPixel ((size_t) (pos + j), (size_t) dC._RR, fc);
-			}
 		}
 	}
 
