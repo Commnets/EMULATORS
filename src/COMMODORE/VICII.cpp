@@ -388,6 +388,17 @@ void COMMODORE::VICII::processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifi
 	// To set the bank...
 	if (evnt.id () >= _BANK0SET && evnt.id () <= _BANK3SET)
 		setBank (evnt.id () - _BANK0SET);
+	else
+	// The position of the mouse is translated into the position of the light pen...
+	if (evnt.id () == MCHEmul::InputOSSystem::_MOUSEMOVED)
+	{
+		unsigned short x = (unsigned short) std::dynamic_pointer_cast <MCHEmul::InputOSSystem::MouseMovementEvent> (evnt.data ()) -> _x;
+		unsigned short y = (unsigned short) std::dynamic_pointer_cast <MCHEmul::InputOSSystem::MouseMovementEvent> (evnt.data ()) -> _y;
+		setLightPenPosition ((x >= _raster.hData ().firstDisplayPosition () && y <= _raster.hData ().lastDisplayPosition ()) 
+								? (x - _raster.hData ().firstDisplayPosition ()) : 0, 
+							 (y >= _raster.vData ().firstDisplayPosition () && y <= _raster.vData ().lastDisplayPosition ()) 
+								? (y - _raster.vData ().firstDisplayPosition ()) : 0);
+	}
 }
 
 // ---

@@ -71,6 +71,13 @@ namespace COMMODORE
 		void setBank (unsigned char bk)
 							{ _VICIIRegisters -> setBank (bk); }
 
+		/** To set the position of the light - pen. \n
+			The position received must be relative within the display zone. */
+		void lightPenPosition (unsigned short& x, unsigned short& y)
+							{ _VICIIRegisters -> currentLightPenPosition (x, y); }
+		void setLightPenPosition (unsigned short x, unsigned short y)
+							{ _VICIIRegisters -> setCurrentLightPenPosition (x, y); }
+
 		/** To get the raster info. */
 		const MCHEmul::Raster& raster () const
 							{ return (_raster); }

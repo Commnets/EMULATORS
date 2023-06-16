@@ -8,7 +8,7 @@ MCHEmul::InputOSSystem::InputOSSystem (int id, const MCHEmul::Attributes& attrs)
 	  _joysticks (),
 	  _conversionJoystickMap (), // Nothing by default...
 	  _clock (25), // The events of the system will be read 25 times per second...
-	  _movementMap ()
+	  _joyMovementMap ()
 { 
 	setClassName ("IOSystem"); 
 }
@@ -33,7 +33,7 @@ bool MCHEmul::InputOSSystem::initialize ()
 
 	SDL_JoystickEventState (SDL_ENABLE);
 
-	_movementMap = { };
+	_joyMovementMap = { };
 
 	_clock.start ();
 
@@ -81,6 +81,18 @@ bool MCHEmul::InputOSSystem::simulate (MCHEmul::CPU* cpu)
 				whenJoystickButtonReleased (event.jbutton);
 				break;
 
+			case SDL_MOUSEMOTION:
+				whenMouseMoved (event.motion);
+				break;
+
+			case SDL_MOUSEBUTTONDOWN:
+				whenMouseButtonPressed (event.button);
+					break;
+
+			case SDL_MOUSEBUTTONUP:
+				whenMouseButtonReleased (event.button);
+					break;
+
 			case SDL_QUIT:
 				_quitRequested = true;
 				break;
@@ -126,17 +138,17 @@ void MCHEmul::InputOSSystem::treatJoystickMovementEvents (MCHEmul::InputOSSystem
 	for (const auto& i : js)
 	{ 
 		MCHEmul::InputOSSystem::JoystickMovementMap::iterator j = 
-			_movementMap.find (i.which);
-		if (j == _movementMap.end ())
-			_movementMap [i.which] = std::vector <int> (i.axis + 1, 0);
+			_joyMovementMap.find (i.which);
+		if (j == _joyMovementMap.end ())
+			_joyMovementMap [i.which] = std::vector <int> (i.axis + 1, 0);
 		else
 		if ((*j).second.size () < (size_t) (i.axis + 1))
 			(*j).second.resize (i.axis + 1, 0);
 
 		// Adds the value of the axis...
-		_movementMap [i.which][i.axis] = i.value;
+		_joyMovementMap [i.which][i.axis] = i.value;
 	}
 
 	// ...and the consolidated status is notified...
-	whenJoystickMoved (_movementMap); 
+	whenJoystickMoved (_joyMovementMap); 
 }

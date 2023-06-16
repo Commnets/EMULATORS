@@ -88,7 +88,7 @@ namespace COMMODORE
 
 		/** To know whether a interruption related with the FLAG line has or not to be launched. */
 		bool launchFlagLineInterruption ()
-							{ return (_flagLineInterruptEnabled && _flagLineInterruptEnabled); }
+							{ return (_flagLineInterruptEnabled && _flagLineInterruptRequested); }
 
 		/** The value to reflect at the bit 6 or 7 of the port B. */
 		/** To know first whether the timer A is affecting or not to the bit 6. */

@@ -14,7 +14,7 @@
 #ifndef __C64_OSIO__
 #define __C64_OSIO__
 
-#include <CORE/incs.hpp>
+#include <COMMODORE/incs.hpp>
 
 namespace C64
 {
@@ -49,6 +49,7 @@ namespace C64
 
 		private:
 		CIA1* _cia1;
+		COMMODORE::VICII* _vicII;
 
 		/** 
 			How SDL keys are mapped into the chars map of the C64.

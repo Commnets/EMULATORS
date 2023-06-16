@@ -45,6 +45,8 @@ MCHEmul::InfoStructure COMMODORE::VICIIRegisters::getInfoStructure () const
 	result.add ("SCREENADDRESS",	screenMemory ());
 	result.add ("BITMAPADDRESS",	bitmapMemory ());
 	result.add ("SPRITEADDRESS",	spritePointersMemory ());
+	result.add ("LIGHTPENX",		_currentLightPenHorizontalPosition);
+	result.add ("LIGHTPENY",		_currentLightPenVerticalPosition);
 
 	// Info for the sprites...
 	MCHEmul::InfoStructure sInfo;
@@ -374,17 +376,19 @@ const MCHEmul::UByte& COMMODORE::VICIIRegisters::readValue (size_t p) const
 			break;
 
 		// LPENX: Light Pen Horizontal Position
+		// The position is adjusted very two pixels...
 		case 0x13:
 			{
-				result = MCHEmul::UByte ((unsigned char) _currentLightPenHorizontalPosition);
+				result = MCHEmul::UByte ((unsigned char) (_currentLightPenHorizontalPosition >> 1));
 			}
 
 			break;
 
 		// LPENY: Light Pen Vertical Position
+		// The position is adjusted very two pixels...
 		case 0x14:
 			{
-				result = MCHEmul::UByte ((unsigned char) _currentLightPenVerticalPosition);
+				result = MCHEmul::UByte ((unsigned char) (_currentLightPenVerticalPosition >> 1));
 			}
 
 			break;

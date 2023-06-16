@@ -39,6 +39,13 @@ namespace MCHEmul
 			The parametes are the joystick id and the the axis id moved. */
 		static const unsigned int _JOYSTICKBUTTONPRESSED		= 153;
 		static const unsigned int _JOYSTICKBUTTONRELEASED		= 154;
+		/** Mouse moved. \n
+			The parametes are the mouse id and the the axis id moved. */
+		static const unsigned int _MOUSEMOVED					= 155;
+		/** Mouse button pressed. \n
+			The parametes are the mouse id and the the axis id moved. */
+		static const unsigned int _MOUSEBUTTONPRESSED			= 156;
+		static const unsigned int _MOUSEBUTTONRELEASED			= 157;
 
 		/** To identify an event in the keyboard. */
 		struct KeyboardEvent : public Event::Data
@@ -59,7 +66,8 @@ namespace MCHEmul
 							{ }
 
 			int _joystickId;
-			std::vector <int> _axisValues;
+			std::vector <int> _axisValues; // Really there will be usually two, 
+										   // but this structure is easir to manipulate!
 		};
 
 		/** To identify an event in the joystick related with the buttons. */
@@ -74,13 +82,37 @@ namespace MCHEmul
 			bool _on; // true when pressed, false when released...
 		};
 
+		/** To identify an event in the mouse related with the movement. */
+		struct MouseMovementEvent : public Event::Data
+		{
+			MouseMovementEvent (int id, int x, int y)
+				: _mouseId (id), 
+				  _x (x), _y (y)
+							{ }
+
+			int _mouseId;
+			int _x, _y;
+		};
+
+		/** To identify an event in the mouse related with the buttons. */
+		struct MouseButtonEvent : public Event::Data
+		{
+			MouseButtonEvent (int jId, int bId, bool o)
+				: _mouseId (jId), _buttonId (bId), _on (o)
+							{ }
+
+			int _mouseId;
+			int _buttonId;
+			bool _on; // true when pressed, false when released...
+		};
+
 		InputOSSystem (int id, const Attributes& attrs = { });
 
 		/** Assign a number to a joystick id. */
 		void addConversionJoystick (int id, int n)
-							{ _conversionJoystickMap [id] = n; _movementMap = { }; }
+							{ _conversionJoystickMap [id] = n; _joyMovementMap = { }; }
 		void setConversionJoystickMap (std::map <int, int>&& cJM)
-							{ _conversionJoystickMap = std::move (cJM); _movementMap = { }; }
+							{ _conversionJoystickMap = std::move (cJM); _joyMovementMap = { }; }
 
 		bool quitRequested () const
 							{ return (_quitRequested); }
@@ -133,11 +165,28 @@ namespace MCHEmul
 								std::shared_ptr <Event::Data> ((Event::Data*) 
 									new JoystickButtonEvent (joystickEquivalentId (jb.which), jb.button, false)))); }
 
+		// To manage the events related with the mouse...
+		/** The situation of the different axis in the different mouses loaded in the system are tracked 
+			in the "simulate" method. When they changed this method is then invoked. */
+		void whenMouseMoved (const SDL_MouseMotionEvent& mm)
+							{ notify (Event (_MOUSEMOVED, 0,
+									std::shared_ptr <Event::Data> ((Event::Data*) 
+										new MouseMovementEvent (mm.which, mm.x, mm.y)))); }
+		/** What to do when the mouse button is pressed. */
+		void whenMouseButtonPressed (const SDL_MouseButtonEvent& jb)
+							{ notify (Event (_MOUSEBUTTONPRESSED, 0,
+								std::shared_ptr <Event::Data> ((Event::Data*) 
+									new MouseButtonEvent (jb.which, jb.button, true)))); }
+		/** What to do when the joystick button is released. */
+		void whenMouseButtonReleased (const SDL_MouseButtonEvent& jb)
+							{ notify (Event (_MOUSEBUTTONRELEASED, 0,
+								std::shared_ptr <Event::Data> ((Event::Data*) 
+									new JoystickButtonEvent (jb.which, jb.button, false)))); }
+
 		private:
+		// Joystick movements...
 		/** Just to control all the joystick events at the same time. */
 		using SDL_JoyAxisEvents = std::vector <SDL_JoyAxisEvent>;
-		/** This method is able to assign a number according to the id. 
-			So it is possible to make that a joystick can behave in a machine like being connected in other port. */
 		void treatJoystickMovementEvents (SDL_JoyAxisEvents&& js);
 
 		// Implementation
@@ -155,8 +204,8 @@ namespace MCHEmul
 		Clock _clock;
 
 		// Implementation
-		/** To track the movement of the josytick in the different directions. */
-		JoystickMovementMap _movementMap;
+		/** To track the movement of the josyticks in the different directions. */
+		JoystickMovementMap _joyMovementMap;
 	};
 }
 

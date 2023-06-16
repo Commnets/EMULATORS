@@ -151,7 +151,9 @@ namespace COMMODORE
 							{ return (_currentLightPenHorizontalPosition); }
 		unsigned short currentLightPenVerticalPosition () const
 							{ return (_currentLightPenVerticalPosition); }
-		void setCurrentLightPenPosition (unsigned char x, unsigned char y)
+		void currentLightPenPosition (unsigned short& x, unsigned short& y)
+							{ x = _currentLightPenHorizontalPosition; y = _currentLightPenVerticalPosition; }
+		void setCurrentLightPenPosition (unsigned short x, unsigned short y)
 							{ _currentLightPenHorizontalPosition = x; _currentLightPenVerticalPosition = y; }
 
 		// Memory address for the different elements managed from VICII
