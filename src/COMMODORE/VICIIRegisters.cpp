@@ -633,7 +633,8 @@ void COMMODORE::VICIIRegisters::setGraphicModeActive ()
 
 	_textMode = (_graphicModeActive == COMMODORE::VICIIRegisters::GraphicMode::_CHARMODE ||
 				 _graphicModeActive == COMMODORE::VICIIRegisters::GraphicMode::_MULTICOLORCHARMODE ||
-				 _graphicModeActive == COMMODORE::VICIIRegisters::GraphicMode::_EXTENDEDBACKGROUNDMODE);
+				 _graphicModeActive == COMMODORE::VICIIRegisters::GraphicMode::_EXTENDEDBACKGROUNDMODE ||
+				 _graphicModeActive == COMMODORE::VICIIRegisters::GraphicMode::_INVALIDTEXMODE);
 }
 
 // ---

@@ -466,7 +466,8 @@ MCHEmul::ScreenMemory* COMMODORE::VICII::createScreenMemory ()
 MCHEmul::UByte COMMODORE::VICII::drawGraphics (const COMMODORE::VICII::DrawContext& dC)
 {
 	// If no graphic has been loaded, it is not needed to continue...
-	if (_graphicsColorData.size () == 0)
+	if ((_VICIIRegisters -> textMode () && _graphicsCharData.size () == 0) ||
+		(!_VICIIRegisters -> textMode () && _graphicsBitmapData.size () == 0))
 		return (MCHEmul::UByte::_0); // It could happen at the first lines of the screen when the vertical SCROLL is active...
 
 	// The "display" line being involved...
