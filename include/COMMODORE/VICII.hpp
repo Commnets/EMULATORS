@@ -224,8 +224,7 @@ namespace COMMODORE
 		/** The bytes read describing a line of graphics. 
 			They are all actualized at the methods readXXXX. */
 		mutable MCHEmul::UBytes _graphicsScreenCodeData;
-		mutable MCHEmul::UBytes _graphicsCharData;
-		mutable MCHEmul::UBytes _graphicsBitmapData;
+		mutable MCHEmul::UBytes _graphicsGraphicData;
 		mutable MCHEmul::UBytes _graphicsColorData;
 		mutable std::vector <MCHEmul::UBytes> _graphicsSprites; // Eight sprites...
 		mutable std::vector <MCHEmul::UBytes> _graphicsLineSprites; // Eight sprites...
@@ -243,8 +242,7 @@ namespace COMMODORE
 	inline void VICII::emptyGraphicsInfo ()
 	{
 		_graphicsScreenCodeData = std::move (MCHEmul::UBytes ());
-		_graphicsCharData = std::move (MCHEmul::UBytes ());
-		_graphicsBitmapData = std::move (MCHEmul::UBytes ());
+		_graphicsGraphicData = std::move (MCHEmul::UBytes ());
 		_graphicsColorData = std::move (MCHEmul::UBytes ());
 	}
 	
@@ -278,7 +276,7 @@ namespace COMMODORE
 			dt.insert (dt.end (), std::make_move_iterator (chrDt.begin ()), std::make_move_iterator (chrDt.end ()));
 		}
 
-		return (_graphicsCharData = std::move (MCHEmul::UBytes (dt)));
+		return (_graphicsGraphicData = std::move (MCHEmul::UBytes (dt)));
 	}
 
 	// ---
@@ -295,7 +293,7 @@ namespace COMMODORE
 			dt.insert (dt.end (), std::make_move_iterator (btDt.begin ()), std::make_move_iterator (btDt.end ()));
 		}
 
-		return (_graphicsBitmapData = std::move (MCHEmul::UBytes (dt)));
+		return (_graphicsGraphicData = std::move (MCHEmul::UBytes (dt)));
 	}
 
 	// ---

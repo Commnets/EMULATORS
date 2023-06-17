@@ -22,8 +22,7 @@ COMMODORE::VICII::VICII (const MCHEmul::RasterData& vd, const MCHEmul::RasterDat
 	  _lastCPUCycles (0),
 	  _format (nullptr),
 	  _graphicsScreenCodeData (MCHEmul::UBytes::_E), 
-	  _graphicsCharData (MCHEmul::UBytes::_E), 
-	  _graphicsBitmapData (MCHEmul::UBytes::_E),
+	  _graphicsGraphicData (MCHEmul::UBytes::_E),
 	  _graphicsColorData (MCHEmul::UBytes::_E),
 	  _graphicsSprites (8, MCHEmul::UBytes::_E),
 	  _graphicsLineSprites (8, MCHEmul::UBytes::_E),
@@ -66,8 +65,7 @@ bool COMMODORE::VICII::initialize ()
 	_lastCPUCycles = 0;
 
 	_graphicsScreenCodeData = MCHEmul::UBytes::_E; 
-	_graphicsCharData = MCHEmul::UBytes::_E;
-	_graphicsBitmapData = MCHEmul::UBytes::_E;
+	_graphicsGraphicData = MCHEmul::UBytes::_E;
 	_graphicsColorData = MCHEmul::UBytes::_E;
 	_graphicsSprites = std::vector <MCHEmul::UBytes> (8, MCHEmul::UBytes::_E);
 
@@ -372,8 +370,7 @@ MCHEmul::ScreenMemory* COMMODORE::VICII::createScreenMemory ()
 MCHEmul::UByte COMMODORE::VICII::drawGraphics (const COMMODORE::VICII::DrawContext& dC)
 {
 	// If no graphic has been loaded, it is not needed to continue...
-	if ((_VICIIRegisters -> textMode () && _graphicsCharData.size () == 0) ||
-		(!_VICIIRegisters -> textMode () && _graphicsBitmapData.size () == 0))
+	if (_graphicsGraphicData.size () == 0)
 		return (MCHEmul::UByte::_0); // It could happen at the first lines of the screen when the vertical SCROLL is active...
 
 	// The "display" line being involved...
@@ -400,36 +397,36 @@ MCHEmul::UByte COMMODORE::VICII::drawGraphics (const COMMODORE::VICII::DrawConte
 	switch (_VICIIRegisters -> graphicModeActive ())
 	{
 		case COMMODORE::VICIIRegisters::GraphicMode::_CHARMODE:
-			result = drawMonoColorChar (cb, rc, _graphicsCharData, _graphicsColorData, dC);
+			result = drawMonoColorChar (cb, rc, _graphicsGraphicData, _graphicsColorData, dC);
 			break;
 
 		case COMMODORE::VICIIRegisters::GraphicMode::_MULTICOLORCHARMODE:
-			result = drawMultiColorChar (cb, rc, _graphicsCharData, _graphicsColorData, dC);
+			result = drawMultiColorChar (cb, rc, _graphicsGraphicData, _graphicsColorData, dC);
 			break;
 
 		case COMMODORE::VICIIRegisters::GraphicMode::_EXTENDEDBACKGROUNDMODE:
-			result = drawMultiColorExtendedChar (cb, rc, _graphicsScreenCodeData, _graphicsCharData, _graphicsColorData, dC);
+			result = drawMultiColorExtendedChar (cb, rc, _graphicsScreenCodeData, _graphicsGraphicData, _graphicsColorData, dC);
 			break;
 
 		case COMMODORE::VICIIRegisters::GraphicMode::_BITMAPMODE:
-			result = drawMonoColorBitMap (cb, rc, _graphicsScreenCodeData, _graphicsBitmapData, dC);
+			result = drawMonoColorBitMap (cb, rc, _graphicsScreenCodeData, _graphicsGraphicData, dC);
 			break;
 
 		case COMMODORE::VICIIRegisters::GraphicMode::_MULTICOLORBITMAPMODE:
-			result = drawMultiColorBitMap (cb, rc, _graphicsScreenCodeData, _graphicsBitmapData, _graphicsColorData, dC);
+			result = drawMultiColorBitMap (cb, rc, _graphicsScreenCodeData, _graphicsGraphicData, _graphicsColorData, dC);
 			break;
 
 		case COMMODORE::VICIIRegisters::GraphicMode::_INVALIDTEXMODE:
-			result = drawMultiColorChar (cb, rc, _graphicsCharData, _graphicsColorData, dC, true /** everything black. */);
+			result = drawMultiColorChar (cb, rc, _graphicsGraphicData, _graphicsColorData, dC, true /** everything black. */);
 			break;
 
 		case COMMODORE::VICIIRegisters::GraphicMode::_INVALIDBITMAPMODE1:
-			result = drawMonoColorBitMap (cb, rc, _graphicsScreenCodeData, _graphicsBitmapData, dC, true /** everything black. */);
+			result = drawMonoColorBitMap (cb, rc, _graphicsScreenCodeData, _graphicsGraphicData, dC, true /** everything black. */);
 			break;
 
 		case COMMODORE::VICIIRegisters::GraphicMode::_INVALIDBITMAPMODE2:
 			result = drawMultiColorBitMap 
-				(cb, rc, _graphicsScreenCodeData, _graphicsBitmapData, _graphicsColorData, dC, true /* everything black. */);
+				(cb, rc, _graphicsScreenCodeData, _graphicsGraphicData, _graphicsColorData, dC, true /* everything black. */);
 			break;
 
 		default:
