@@ -33,7 +33,7 @@ IRQPRG1:					lda #$05
 
 * = $ca64
 IRQPRG2_ADDRESS				= $ca64
-IRQPRG2:					lda #$06
+IRQPRG2:					lda #$00
 							sta VICIIBACKGROUND
 
 							lda #$ff						; Meaning the VICII IRQs are treated 
@@ -43,7 +43,7 @@ IRQPRG2:					lda #$06
 							sta SETVICIIRIRQ_PRGHVAR
 							lda #>IRQPRG1_ADDRESS
 							sta SETVICIIRIRQ_PRGLVAR
-							lda #$96
+							lda #$d3
 							sta SETVICIIRIRQ_ROWLVAR
 							lda #$00
 							sta SETVICIIRIRQ_ROWHVAR
@@ -67,7 +67,7 @@ MAIN:						lda #$06
 							sta SETVICIIRIRQ_PRGHVAR
 							lda #>IRQPRG1_ADDRESS
 							sta SETVICIIRIRQ_PRGLVAR
-							lda #$96
+							lda #$d3
 							sta SETVICIIRIRQ_ROWLVAR
 							lda #$00
 							sta SETVICIIRIRQ_ROWHVAR

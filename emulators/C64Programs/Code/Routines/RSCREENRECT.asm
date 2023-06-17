@@ -24,7 +24,7 @@ DRAWRECT_COLORVAR			= VARIABLES_DATAZONE + 7
 DRAWRECT_BYTEVAR			= VARIABLES_DATAZONE + 8
 ; First calculates the memory position where the box starts
 ; Take into account that the value 0 is not allowed
-DRAWRECTANGLE:				
+DRAWRECTANGLE:				.SAVEREGISTERS
 ; First of all, fills the matriz with color...
 							lda #>COLORRAMBASE
 							sta FILLMX_LOCSLOWVAR
@@ -78,6 +78,7 @@ DRAWRECT_DOWNLINELOOP:		dey
 							bne DRAWRECT_DOWNLINELOOP
 							lda DRAWRECT_BYTEVAR + 5			; The left down corner character.
 							sta (MATRIXADDR_LOCLOWRST),y
+							.RECOVERREGISTERS
 DRAWRECT_RTS:				rts
 ; ------------------------------
 

@@ -22,7 +22,8 @@ FILLSCR_YLENVAR				= FILLMX_YLENVAR
 FILLSCR_BYTEVAR				= FILLMX_BYTEVAR
 FILLSCR_COLORVAR			= VARIABLES_DATAZONE + 8
 ; First draws the character...
-FILLBOXSCREEN:				lda #>SCREENBASE
+FILLBOXSCREEN:				.SAVEREGISTERS
+							lda #>SCREENBASE
 							sta FILLMX_LOCSLOWVAR
 							lda #<SCREENBASE
 							sta FILLMX_LOCSHIGHVAR
@@ -37,6 +38,7 @@ FILLBOXSCREEN:				lda #>SCREENBASE
 							lda FILLSCR_COLORVAR
 							sta FILLMX_BYTEVAR
 							jsr FILLMATRIX
+							.RECOVERREGISTERS
 							rts
 ; ------------------------------
 
@@ -47,7 +49,8 @@ FILLBOXSCREEN:				lda #>SCREENBASE
 ; The other routine will be invoked but limiting the size of the box.
 ; The initial data of the invocation is maintained.
 ; Adjust the columns first...
-FILLBOXSCREENIN:			lda FILLSCR_YLENVAR						; First of all, saves the data that might change...
+FILLBOXSCREENIN:			.SAVEREGISTERS
+							lda FILLSCR_YLENVAR						; First of all, saves the data that might change...
 							pha
 							lda FILLSCR_YPOSVAR
 							pha
@@ -113,6 +116,7 @@ FILLBOXSCREENIN_RTS:		pla										; Put the original values back....
 							sta FILLSCR_YPOSVAR
 							pla
 							sta FILLSCR_YLENVAR 
+							.RECOVERREGISTERS
 							rts
 ; ------------------------------
 

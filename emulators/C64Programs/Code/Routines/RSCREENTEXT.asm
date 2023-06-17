@@ -22,7 +22,8 @@ DRAWTEXT_TEXTLOWVAR			= VARIABLES_DATAZONE + 6
 DRAWTEXT_TEXTHIGHVAR		= VARIABLES_DATAZONE + 7
 DRAWTEXT_COLORVAR			= VARIABLES_DATAZONE + 8
 ; Draw text.
-DRAWTEXT:					lda #>SCREENBASE
+DRAWTEXT:					.SAVEREGISTERS
+							lda #>SCREENBASE
 							sta MATRIXADDR_LOCLOWVAR
 							lda #<SCREENBASE
 							sta MATRIXADDR_LOCHIGHVAR
@@ -46,6 +47,7 @@ DRAWTEXT_LOOPLETTERS:		dey
 DRAWTEXT_LOOPCOLOR:			dey
 							sta (MATRIXADDR_LOCLOWRST),y
 							bne DRAWTEXT_LOOPCOLOR
+							.RECOVERREGISTERS
 							rts
 ; ------------------------------
 
@@ -54,7 +56,8 @@ DRAWTEXT_LOOPCOLOR:			dey
 ; Draw a text within the screen taking into account that the initial position could be aout of the screen
 ; The parameters used by this routine are the same than the previous one.
 ; The other routine will be finally invoked but changing the initial data.
-DRAWTEXTIN:					lda DRAWTEXT_TEXTLOWVAR				; First of all, saves the data that might change...
+DRAWTEXTIN:					.SAVEREGISTERS
+							lda DRAWTEXT_TEXTLOWVAR				; First of all, saves the data that might change...
 							pha
 							lda DRAWTEXT_TEXTHIGHVAR
 							pha
@@ -107,6 +110,7 @@ DRAWTEXTIN_RTS:				pla
 							sta DRAWTEXT_TEXTHIGHVAR
 							pla
 							sta DRAWTEXT_TEXTLOWVAR
+							.RECOVERREGISTERS
 							rts
 ; ------------------------------
 
