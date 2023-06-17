@@ -82,146 +82,6 @@ bool COMMODORE::VICII::initialize ()
 // ---
 bool COMMODORE::VICII::simulate (MCHEmul::CPU* cpu)
 {
-	return (simulate_II (cpu));
-}
-
-// ---
-bool COMMODORE::VICII::simulate_I (MCHEmul::CPU* cpu)
-{
-	// If the video reset is active nothing is done...
-	if (_VICIIRegisters -> videoResetActive ())
-		return (true);
-
-	// Notice that the bad line detection routine takes into account 
-	// the value of the YSCROLL register as the graphics information to be shown 
-	// is loaded at the beginning of every bad line...
-	auto isBadRasterLine = [=]() -> bool
-		{ return (_videoActive && 
-				  _raster.currentLine () >= _FIRSTBADLINE &&
-				  _raster.currentLine () <= _LASTBADLINE && 
-				  (_raster.currentLine () & 0x07 /** The three last bits. */) == _VICIIRegisters -> verticalScrollPosition ()); };
-
-	// Reduce the visible zone if any... The info is passed to the raster!
-	_raster.reduceDisplayZone
-		(!_VICIIRegisters -> textDisplay25RowsActive (), !_VICIIRegisters -> textDisplay40ColumnsActive ());
-
-	for (size_t i = (cpu -> clockCycles  () - _lastCPUCycles); i > 0 ; i--)
-	{
-		_videoActive = (_raster.currentLine () == _FIRSTBADLINE) 
-			? !_VICIIRegisters -> blankEntireScreen () : _videoActive; // Only at first bad line it can change its value...
-
-		if (_isNewRasterLine)
-		{
-			memoryRef () -> setActiveView (_VICIIView);
-			
-			size_t nS = 0;
-			readSpriteDataAt (_raster.currentLine (), nS);
-			// Reading the sprites costs _CPUCYCLESWHENREADSPRITES cycles per sprite read...
-			cpu -> addClockCycles (_CPUCYCLESWHENREADSPRITES * (unsigned int) nS);
-
-			if (isBadRasterLine () /** @see definition above. */)
-			{
-				// This is not exactly what VICII does, but it could be a good aproximation...
-				// Read the graphic data...
-				readGraphicsInfoAt (_raster.currentLine () - 
-					_FIRSTBADLINE - _VICIIRegisters -> verticalScrollPosition ());
-				// ...and also the sprite info...
-
-				// Reading the color/char/bitmap costs _CPUCYCLESWHENREADGRAPHS 
-				cpu -> addClockCycles (_CPUCYCLESWHENREADGRAPHS);
-			}
-
-			// At the beginning of a new line, an interrupt could be generated...
-			if (_raster.currentLine () == _VICIIRegisters -> IRQRasterLineAt ())
-				_VICIIRegisters -> activateRasterAtLineIRQ ();
-
-			_isNewRasterLine = false;
-
-			memoryRef () -> setCPUView ();
-		}
-
-		if (_raster.isInVisibleZone ())
-		{
-			// READ: Important variables
-			// Where is the raster in the visible part of the screen? (starting from 0)
-			unsigned short cv, rv; _raster.currentVisiblePosition (cv, rv);
-			// Which is the horizontal closest block of 8 pixels (from left to the right)?
-			// Take into account that the step - size of the raster is always 8 pixels per cycle..
-			// It always starts at 0...
-			unsigned short cav = (cv >> 3) << 3;
-
-			// Draws the border...
-			screenMemory () -> setHorizontalLine ((size_t) cav, (size_t) rv,
-				(cav + 8) > _raster.visibleColumns () ? (_raster.visibleColumns () - cav) : 8, 
-					_VICIIRegisters -> foregroundColor ());
-
-			// When the raster is in the display zone but in the screen vertical zone too
-			// and for sure the vide is active, then everything has to happen!
-			if (_raster.isInDisplayZone () && 
-				_raster.vData ().isInScreenZone () &&
-				_videoActive)
-			{
-				if (_raster.isInDisplayZone () && 
-					(_raster.vData ().currentPosition () - 
-						_VICIIRegisters -> verticalScrollPosition ()) > _LASTBADLINE)
-					emptyGraphicsInfo (); // Just in case to avoid paint something innecesary...
-
-				// Draws the background,
-				// taking into account that the screen can be reduced in the X axis...
-				if (cav < _raster.hData ().firstScreenPosition () &&
-					(cav + 8) > _raster.hData ().firstScreenPosition ())
-					screenMemory () -> setHorizontalLine ((size_t) _raster.hData ().firstScreenPosition (), (size_t) rv,
-						cav + 8 - _raster.hData ().firstScreenPosition (), _VICIIRegisters -> backgroundColor ());
-				else 
-				if (cav < _raster.hData ().lastScreenPosition ())
-				{
-					unsigned short lbk = 8;  // Number of pixels to be drawn...
-					if ((cav + 8) > _raster.hData ().lastScreenPosition ())
-						lbk = _raster.hData ().lastScreenPosition ()  - cav + 1;
-					screenMemory () -> setHorizontalLine ((size_t) cav, (size_t) rv, lbk, _VICIIRegisters -> backgroundColor ());
-				}
-
-				// Draw the graphics, including the sprites...
-				// The method also detects the collisions!
-				drawGraphicsSpritesAndDetectCollisions (cv, cav, rv);
-			}
-		}
-
-		// 1 cycle = 8 horizontal columns = 8 pixels...
-		_isNewRasterLine = _raster.moveCycles (1); 
-
-		if (_raster.isInLastVBlank ())
-		{
-			if (!_lastVBlankEntered)
-			{
-				_lastVBlankEntered = true;
-
-				// The limit of the visible screen has been reached!
-				// so it is time to actualize the graphics...
-				notify (MCHEmul::Event (_GRAPHICSREADY)); 
-			}
-		}
-		else
-			_lastVBlankEntered = false;
-	}
-
-	// It might have been incremented after reading graphics...
-	_lastCPUCycles = cpu -> clockCycles (); 
-
-	// To store back the info in the VIC Registers...
-	_VICIIRegisters -> setCurrentRasterLine (_raster.currentLine ()); 
-
-	// Is it needed to generate any IRQ?
-	// It is here after the full simulation of the VICII (raster, collisions and lightpen)
-	if (_VICIIRegisters -> launchIRQ ())
-		cpu -> interrupt (F6500::IRQInterrupt::_ID) -> setActive (true);
-
-	return (true);
-}
-
-// ---
-bool COMMODORE::VICII::simulate_II (MCHEmul::CPU* cpu)
-{
 	// If the "video reset flag" is actived nothing is done...
 	if (_VICIIRegisters -> videoResetActive ())
 		return (true);
@@ -253,17 +113,13 @@ bool COMMODORE::VICII::simulate_II (MCHEmul::CPU* cpu)
 			// ...taking into account that this process delayes a little bit the processor...
 			size_t nS = 0;
 			readSpriteDataAt (_raster.currentLine (), nS);
-			cpu -> addClockCycles (_CPUCYCLESWHENREADSPRITES * (unsigned int) nS);
 
 			// and if is it also a bad line?...
 			if (isBadRasterLine ())
-			{
 				// ..the graphics / text / color info has to be read too
 				// ...taking again into account that this process deletes again a little bit more the processor...
 				readGraphicsInfoAt (_raster.currentLine () - 
 					_FIRSTBADLINE - _VICIIRegisters -> verticalScrollPosition ());
-				cpu -> addClockCycles (_CPUCYCLESWHENREADGRAPHS);
-			}
 
 			// The VICII doesn't work actually like this
 			// The information about the sprites 0 to 3 is read during the last cycles of the previous raster line
@@ -386,18 +242,57 @@ MCHEmul::InfoStructure COMMODORE::VICII::getInfoStructure () const
 void COMMODORE::VICII::processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifier* n)
 {
 	// To set the bank...
-	if (evnt.id () >= _BANK0SET && evnt.id () <= _BANK3SET)
-		setBank (evnt.id () - _BANK0SET);
-	else
-	// The position of the mouse is translated into the position of the light pen...
-	if (evnt.id () == MCHEmul::InputOSSystem::_MOUSEMOVED)
+	switch (evnt.id ())
 	{
-		unsigned short x = (unsigned short) std::dynamic_pointer_cast <MCHEmul::InputOSSystem::MouseMovementEvent> (evnt.data ()) -> _x;
-		unsigned short y = (unsigned short) std::dynamic_pointer_cast <MCHEmul::InputOSSystem::MouseMovementEvent> (evnt.data ()) -> _y;
-		setLightPenPosition ((x >= _raster.hData ().firstDisplayPosition () && y <= _raster.hData ().lastDisplayPosition ()) 
-								? (x - _raster.hData ().firstDisplayPosition ()) : 0, 
-							 (y >= _raster.vData ().firstDisplayPosition () && y <= _raster.vData ().lastDisplayPosition ()) 
-								? (y - _raster.vData ().firstDisplayPosition ()) : 0);
+		case _BANK0SET:
+		case _BANK1SET:
+		case _BANK2SET:
+		case _BANK3SET:
+			{
+				setBank (evnt.id () - _BANK0SET);
+			}
+
+			break;
+
+		case MCHEmul::InputOSSystem::_MOUSEMOVED:
+			{
+				unsigned short x = (unsigned short) 
+					std::dynamic_pointer_cast <MCHEmul::InputOSSystem::MouseMovementEvent> (evnt.data ()) -> _x;
+				unsigned short y = (unsigned short) 
+					std::dynamic_pointer_cast <MCHEmul::InputOSSystem::MouseMovementEvent> (evnt.data ()) -> _y;
+				setLightPenPosition ((x >= _raster.hData ().firstDisplayPosition () && 
+									  y <= _raster.hData ().lastDisplayPosition ()) 
+										? (x - _raster.hData ().firstDisplayPosition ()) : 0, 
+									 (y >= _raster.vData ().firstDisplayPosition () && 
+									  y <= _raster.vData ().lastDisplayPosition ()) 
+										? (y - _raster.vData ().firstDisplayPosition ()) : 0);
+			}
+
+			break;
+
+		// The lightpen actives when the right button of the mouse is pressed...
+		case MCHEmul::InputOSSystem::_MOUSEBUTTONPRESSED:
+			{
+				if (std::dynamic_pointer_cast <MCHEmul::InputOSSystem::MouseButtonEvent> 
+					(evnt.data ()) -> _buttonId == 0 /** Left. */)
+					setLightPenActive (true);
+			}
+			
+			break;
+
+		// ...and stop being active when released...
+		case MCHEmul::InputOSSystem::_MOUSEBUTTONRELEASED:
+			{
+				if (std::dynamic_pointer_cast <MCHEmul::InputOSSystem::MouseButtonEvent> 
+					(evnt.data ()) -> _buttonId == 0 /** Left. */)
+					setLightPenActive (false);
+			}
+
+			break;
+
+		default:
+			break;
+
 	}
 }
 

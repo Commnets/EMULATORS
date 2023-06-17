@@ -155,6 +155,10 @@ namespace COMMODORE
 							{ x = _currentLightPenHorizontalPosition; y = _currentLightPenVerticalPosition; }
 		void setCurrentLightPenPosition (unsigned short x, unsigned short y)
 							{ _currentLightPenHorizontalPosition = x; _currentLightPenVerticalPosition = y; }
+		bool lightPenActive () const
+							{ return (_lightPenActive); }
+		void setLigthPenActive (bool lP)
+							{ _lightPenActive = lP; }
 
 		// Memory address for the different elements managed from VICII
 		const MCHEmul::Address initAddressBank () const
@@ -265,6 +269,7 @@ namespace COMMODORE
 		// The VICII chip also uses this object as a temporary storage
 		unsigned short _currentRasterLine; // Where the raster is now...
 		unsigned short _currentLightPenHorizontalPosition, _currentLightPenVerticalPosition; // Where the light pen is...
+		bool _lightPenActive;
 		/** Whether the raster line has reached the one defined to generate an IRQ. */
 		bool _rasterAtLineIRQHappened;
 		/** Whether a collision among sprites and data has happened. The detail is next. */

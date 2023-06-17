@@ -379,7 +379,8 @@ const MCHEmul::UByte& COMMODORE::VICIIRegisters::readValue (size_t p) const
 		// The position is adjusted very two pixels...
 		case 0x13:
 			{
-				result = MCHEmul::UByte ((unsigned char) (_currentLightPenHorizontalPosition >> 1));
+				result = _lightPenActive // Only when the lightpen is active...
+					? MCHEmul::UByte ((unsigned char) (_currentLightPenHorizontalPosition >> 1)) : 0;
 			}
 
 			break;
@@ -388,7 +389,8 @@ const MCHEmul::UByte& COMMODORE::VICIIRegisters::readValue (size_t p) const
 		// The position is adjusted very two pixels...
 		case 0x14:
 			{
-				result = MCHEmul::UByte ((unsigned char) (_currentLightPenVerticalPosition >> 1));
+				result = _lightPenActive // only when the lightpen is active...
+					? MCHEmul::UByte ((unsigned char) (_currentLightPenVerticalPosition >> 1)) : 0;
 			}
 
 			break;
@@ -604,6 +606,7 @@ void COMMODORE::VICIIRegisters::initializeInternalValues ()
 	_currentRasterLine = 0x0000;
 	_currentLightPenHorizontalPosition = 0x0000;
 	_currentLightPenVerticalPosition = 0x0000;
+	_lightPenActive = false;
 	_rasterAtLineIRQHappened = false;
 	_spritesCollisionWithDataIRQHappened = false;
 	_spriteCollisionWithDataHappened = std::vector <bool> (8, false), 

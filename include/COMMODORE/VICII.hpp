@@ -73,10 +73,16 @@ namespace COMMODORE
 
 		/** To set the position of the light - pen. \n
 			The position received must be relative within the display zone. */
-		void lightPenPosition (unsigned short& x, unsigned short& y)
+		void lightPenPosition (unsigned short& x, unsigned short& y) const
 							{ _VICIIRegisters -> currentLightPenPosition (x, y); }
 		void setLightPenPosition (unsigned short x, unsigned short y)
 							{ _VICIIRegisters -> setCurrentLightPenPosition (x, y); }
+
+		/** To know ehether the light pen is ative or not. */
+		bool lightPenActive () const
+							{ return (_VICIIRegisters -> lightPenActive ()); }
+		void setLightPenActive (bool lP)
+							{ _VICIIRegisters -> setLigthPenActive (lP); }
 
 		/** To get the raster info. */
 		const MCHEmul::Raster& raster () const
@@ -85,8 +91,6 @@ namespace COMMODORE
 		virtual bool initialize () override;
 
 		virtual bool simulate (MCHEmul::CPU* cpu) override;
-		bool simulate_I (MCHEmul::CPU* cpu);
-		bool simulate_II (MCHEmul::CPU* cpu);
 
 		/**
 		  *	The name of the fields are: \n
