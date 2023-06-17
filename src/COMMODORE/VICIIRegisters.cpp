@@ -656,7 +656,7 @@ MCHEmul::InfoStructure COMMODORE::VICIIRegisters::SpriteInfo::getInfoStructure (
 	result.add ("ENABLED",		_spriteEnabled);
 	result.add ("DOUBLEW",		_spriteDoubleWidth);
 	result.add ("DOUBLEH",		_spriteDoubleHeight);
-	result.add ("PRIORITY",		_spriteToForegroundPriority);
+	result.add ("PRIORITY",		!_spriteToForegroundPriority); // Priority over the background...
 
 	return (result);
 }

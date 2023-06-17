@@ -173,15 +173,15 @@ namespace MCHEmul
 									std::shared_ptr <Event::Data> ((Event::Data*) 
 										new MouseMovementEvent (mm.which, mm.x, mm.y)))); }
 		/** What to do when the mouse button is pressed. */
-		void whenMouseButtonPressed (const SDL_MouseButtonEvent& jb)
+		void whenMouseButtonPressed (const SDL_MouseButtonEvent& mb)
 							{ notify (Event (_MOUSEBUTTONPRESSED, 0,
 								std::shared_ptr <Event::Data> ((Event::Data*) 
-									new MouseButtonEvent (jb.which, jb.button, true)))); }
+									new MouseButtonEvent (mb.which, mb.button, true)))); }
 		/** What to do when the joystick button is released. */
-		void whenMouseButtonReleased (const SDL_MouseButtonEvent& jb)
+		void whenMouseButtonReleased (const SDL_MouseButtonEvent& mb)
 							{ notify (Event (_MOUSEBUTTONRELEASED, 0,
 								std::shared_ptr <Event::Data> ((Event::Data*) 
-									new JoystickButtonEvent (jb.which, jb.button, false)))); }
+									new MouseButtonEvent (mb.which, mb.button, false)))); }
 
 		private:
 		// Joystick movements...
