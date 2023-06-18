@@ -50,7 +50,7 @@ MAIN:						lda #$06
 							sta $dc0f
 
 							lda #z10000010
-							sta $dc0d								; Allow interruptions...
+							sta $dc0d							; Allow interruptions...
 
 							lda #>IRQPRG1_ADDRESS
 							sta $0314
@@ -59,6 +59,6 @@ MAIN:						lda #$06
 
 							cli
 							
-FOREVER:					jmp FOREVER								; For ever...
+FOREVER:					jmp FOREVER							; For ever...
 
 ; End.

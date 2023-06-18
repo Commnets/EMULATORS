@@ -16,8 +16,8 @@ IRQPRG1_ADDRESS				= $ca00
 IRQPRG1:					lda #$05
 							sta VICIIBACKGROUND
 
-							lda #$ff						; Meaning the VICII IRQs are treated 
-							sta VICIIIRQ					; and another different one might come later...
+							lda #$ff							; Meaning the VICII IRQs are treated 
+							sta VICIIIRQ						; and another different one might come later...
 															
 							lda #<IRQPRG2_ADDRESS
 							sta SETVICIIRIRQ_PRGHVAR
@@ -36,8 +36,8 @@ IRQPRG2_ADDRESS				= $ca64
 IRQPRG2:					lda #$00
 							sta VICIIBACKGROUND
 
-							lda #$ff						; Meaning the VICII IRQs are treated 
-							sta VICIIIRQ					; and another different one might come later...
+							lda #$ff							; Meaning the VICII IRQs are treated 
+							sta VICIIIRQ						; and another different one might come later...
 							
 							lda #<IRQPRG1_ADDRESS
 							sta SETVICIIRIRQ_PRGHVAR

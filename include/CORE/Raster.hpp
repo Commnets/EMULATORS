@@ -56,7 +56,7 @@ namespace MCHEmul
 		bool isInVisibleZone () const 
 						{ return ((_currentPosition_0 >= _firstVisiblePosition_0 && 
 								   _currentPosition_0 <= _lastVisiblePosition_0)); }
-		unsigned short currentVisiblePosition () const // The 
+		unsigned short currentVisiblePosition () const 
 						{ return (_currentPosition_0 - _firstVisiblePosition_0); }
 		unsigned short lastVisiblePosition () const
 						{ return (_lastVisiblePosition_0 - _firstVisiblePosition_0); }
@@ -69,6 +69,8 @@ namespace MCHEmul
 		bool isInDisplayZone () const
 						{ return (_currentPosition_0 >= _originalFirstDisplayPosition_0 && 
 								  _currentPosition_0 <= _originalLastDisplayPosition_0); }
+		unsigned short currentDisplayPosition () const 
+						{ return (_currentPosition_0 - _firstDisplayPosition_0); }
 		unsigned short firstDisplayPosition () const
 						{ return (_originalFirstDisplayPosition_0 - _firstVisiblePosition_0); }
 		unsigned short lastDisplayPosition () const
@@ -251,6 +253,8 @@ namespace MCHEmul
 		void displayPositions (unsigned short& x1, unsigned short& y1, unsigned short& x2, unsigned short& y2)
 						{ x1 = _hRasterData.firstDisplayPosition (); y1 = _vRasterData.firstDisplayPosition ();
 							x2 = _hRasterData.lastDisplayPosition (); y2 = _vRasterData.lastDisplayPosition (); }
+		void currentDisplayPosition (unsigned short& x, unsigned short& y) const
+						{ x = _hRasterData.currentDisplayPosition (); y = _vRasterData.currentDisplayPosition (); }
 
 		/** To go from the display zone to the screen one. */
 		void reduceDisplayZone (bool v, bool h)

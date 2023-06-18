@@ -45,15 +45,15 @@ MAIN:						lda #$06
 ; Bitmap mode
 SETGRAPHICMODE:				lda VICIISCROLLY
 							and #$df
-							ora #$20								; Sets the bit 5 on... bitmap mode
+							ora #$20							; Sets the bit 5 on... bitmap mode
 							sta VICIISCROLLY
 							lda VICIISCROLLX
 							and #$ef
-							ora #$10								; Sets the bit 4 on... multicolor bitmap mode
+							ora #$10							; Sets the bit 4 on... multicolor bitmap mode
 							sta VICIISCROLLX
 							lda VICIICTRLMEMREG
 							and #$f7
-							ora #$08								; The location of the graphical memory is at 8192
+							ora #$08							; The location of the graphical memory is at 8192
 							sta VICIICTRLMEMREG
 
 DRAWGRAPHIC:				ldx #$00
@@ -69,6 +69,6 @@ DRAWGRAPHIC_LOOP:			lda BLOCKLINE,x
 							sta COLORRAMBASE
 							sta COLORRAMBASE + 1
 
-FOREVER:					jmp FOREVER								; For ever...
+FOREVER:					jmp FOREVER							; For ever...
 
 ; End.

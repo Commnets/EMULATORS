@@ -15,7 +15,7 @@ BASE = $c000
 * = $ca00
 IRQPRG1_ADDRESS				= $ca00
 IRQPRG1:					lda VICIIIRQ
-							and #$02						; To detect whether a sprite has collsiion against the foreground
+							and #$02							; To detect whether a sprite has collsiion against the foreground
 							beq IRQPRG1_NOCOLLISION
 							lda #$02
 							sta SCREENBASE
@@ -26,16 +26,16 @@ IRQPRG1_NOCOLLISION:		lda #$20
 							sta SCREENBASE
 							lda #06
 							sta COLORRAMBASE
-IRQPRG1_ACTSPRITES:			lda #$ff						; Meaning the VICII IRQs are treated 
-							sta VICIIIRQ					; and another different one might come later...
+IRQPRG1_ACTSPRITES:			lda #$ff							; Meaning the VICII IRQs are treated 
+							sta VICIIIRQ						; and another different one might come later...
 							jsr ACTUALIZESPRITES
 							.RECOVERREGISTERS
 							rti
 
 * = $ca64
-BYTES $08													; Number of sprites managed by the program
-BYTES $40 $55 $6a $80 $95 $aa $c0 $d5						; Initial positions for the sprites (Y coordinate)
-BYTES $01 $02 $03 $04 $05 $07 $00 $09						; Color of the sprites
+BYTES $08														; Number of sprites managed by the program
+BYTES $40 $55 $6a $80 $95 $aa $c0 $d5							; Initial positions for the sprites (Y coordinate)
+BYTES $01 $02 $03 $04 $05 $07 $00 $09							; Color of the sprites
 NUMBERSPRITES				= $ca64
 SPRITESPOSITION				= $ca65
 SPRITESCOLOR				= $ca6d
@@ -117,23 +117,23 @@ DRAWLETTERS:				lda #$01
 
 ; Set the behaviour attributes linked to the image of the sprite 0
 							lda #$ff
-							sta SPRITE_ENABLEVAR			; Initially all sprotes availables
+							sta SPRITE_ENABLEVAR				; Initially all sprotes availables
 							ldx #$00
-LOADSPRITES:				lda #$20						; Initial block (definition) for of the sprite 0.
-							sta TEMP02_DATA					; It will be also useful later!
+LOADSPRITES:				lda #$20							; Initial block (definition) for of the sprite 0.
+							sta TEMP02_DATA						; It will be also useful later!
 							sta SPRITE_BLOCKVAR,x
-							lda #$00						; Initial X position of the sprite 0.
+							lda #$00							; Initial X position of the sprite 0.
 							sta SPRITE_XPOSVAR,x
-							lda #$00						; No MSB in X position for sprite 0.
+							lda #$00							; No MSB in X position for sprite 0.
 							sta SPRITE_XMSBPOSVAR,x
-							lda SPRITESPOSITION,x			; Initial Y position of the sprite 0. Never changes.
+							lda SPRITESPOSITION,x				; Initial Y position of the sprite 0. Never changes.
 							sta SPRITE_YPOSVAR,x			
 							lda SPRITESCOLOR,x
 							sta SPRITEBASECOLOR,x
 							inx
 							cpx NUMBERSPRITES 
 							bne LOADSPRITES
-							lda #$ff						; All sprites have the same priority level
+							lda #$ff							; All sprites have the same priority level
 							sta SPRITEPRIORITY
 
 							lda #$00

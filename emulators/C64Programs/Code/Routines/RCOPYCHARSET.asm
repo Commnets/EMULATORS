@@ -15,10 +15,10 @@
 COPYCHAR_TEXTLOWVAR			= VARIABLES_DATAZONE
 COPYCHAR_TEXTHIGHVAR		= VARIABLES_DATAZONE + 1
 COPYCHARSET:                lda COPYCHAR_TEXTHIGHVAR
-							pha                             ; Because it is going to be modified...
+							pha                             	; Because it is going to be modified...
 							lda #$00
 							sta COPYCHAR_TEXTLOWVAR
-							lda #>ROMCHARSET				; Where the char data is stored...
+							lda #>ROMCHARSET					; Where the char data is stored...
 							sta TEMP00_DATA
 							lda #<ROMCHARSET
 							sta TEMP01_DATA
@@ -29,10 +29,10 @@ COPYCHARSET:                lda COPYCHAR_TEXTHIGHVAR
 							and #$fb
 							sta ROMCTRLAVAILABLE			
 ; Copy the char set
-							ldx #10							; 16 blocks of 256 bytes (32 chars each) = 512 chars copied = 4096 bytes.
+							ldx #10								; 16 blocks of 256 bytes (32 chars each) = 512 chars copied = 4096 bytes.
 COPYCHARSET_LOOPBLOCK:      ldy #$00
-COPYCHARSET_LOOPPAGE:       lda (TEMP00_DATA),y             ; Read data from ROM...
-							sta (COPYCHAR_TEXTLOWVAR),y     ; ...and copy them into RAM.
+COPYCHARSET_LOOPPAGE:       lda (TEMP00_DATA),y             	; Read data from ROM...
+							sta (COPYCHAR_TEXTLOWVAR),y     	; ...and copy them into RAM.
 							iny
 							bne COPYCHARSET_LOOPPAGE
 							inc TEMP01_DATA
@@ -57,9 +57,9 @@ COPYCHARSET_LOOPPAGE:       lda (TEMP00_DATA),y             ; Read data from ROM
 ; The paramaters are the same than in the previous method.
 ; The previous code doesn't activate the location, 
 ; because many things can happen from copy to activation!
-ACTIVATECHARSET:			lda COPYCHAR_TEXTHIGHVAR		; Gets high value of the address...
-							lsr								; Blocks of 1024 bytes...
-							lsr								; High byte determines the number of "256 block" so 4 times more is the number of the "1024 block" equivalent).
+ACTIVATECHARSET:			lda COPYCHAR_TEXTHIGHVAR			; Gets high value of the address...
+							lsr									; Blocks of 1024 bytes...
+							lsr									; High byte determines the number of "256 block" so 4 times more is the number of the "1024 block" equivalent).
 							sta TEMP00_DATA
 							lda VICIICTRLMEMREG
 							and #$f0

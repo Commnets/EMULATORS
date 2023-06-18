@@ -22,17 +22,17 @@ MAIN:						lda #$06
 							jsr CLEARSCREEN
 
 ; Test the creation of a box.
-BOXEXAMPLE:					lda #$fa								; Pos X.
+BOXEXAMPLE:					lda #$fa							; Pos X.
 							sta FILLSCR_XPOSVAR
-							lda #$fa								; Pos Y.
+							lda #$fa							; Pos Y.
 							sta FILLSCR_YPOSVAR
-							lda #$05								; Size X.
+							lda #$05							; Size X.
 							sta FILLSCR_XLENVAR
-							lda #$05								; Size Y.
+							lda #$05							; Size Y.
 							sta FILLSCR_YLENVAR
-							lda #$03								; With letter A.
+							lda #$03							; With letter A.
 							sta FILLSCR_BYTEVAR
-							lda #$01								; White.
+							lda #$01							; White.
 							sta FILLSCR_COLORVAR
 							ldx #$00
 BOXEXAMPLE_LOOP:			txa
@@ -48,9 +48,9 @@ BOXEXAMPLE_LOOP:			txa
 							jsr FILLBOXSCREENIN
 							inc FILLSCR_XPOSVAR
 							inc FILLSCR_YPOSVAR
-							lda #$03								; With letter A.
+							lda #$03							; With letter A.
 							sta FILLSCR_BYTEVAR
-							lda #$01								; White.
+							lda #$01							; White.
 							sta FILLSCR_COLORVAR
 							pla
 							tax
@@ -58,6 +58,6 @@ BOXEXAMPLE_LOOP:			txa
 							cpx #$20
 							bne BOXEXAMPLE_LOOP
 
-FOREVER:					jmp BOXEXAMPLE							; For ever...
+FOREVER:					jmp BOXEXAMPLE						; For ever...
 
 ; End.

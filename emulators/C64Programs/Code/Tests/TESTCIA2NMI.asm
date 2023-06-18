@@ -50,13 +50,13 @@ MAIN:						lda #$05
 							sta $dd0f
 
 							lda #z10000010
-							sta $dd0d								; Allow interruptions...
+							sta $dd0d							; Allow interruptions...
 
 							lda #>NMIPRG1_ADDRESS
 							sta $0318
 							lda #<NMIPRG1_ADDRESS
 							sta $0319
 					
-FOREVER:					jmp FOREVER								; For ever...
+FOREVER:					jmp FOREVER							; For ever...
 
 ; End.

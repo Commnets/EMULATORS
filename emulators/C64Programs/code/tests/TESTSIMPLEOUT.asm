@@ -24,6 +24,6 @@ MAIN:						lda #$01
 							lda #$01
 							sta COLORRAMBASE
 
-FOREVER:					jmp FOREVER								; For ever...
+FOREVER:					jmp FOREVER							; For ever...
 
 ; End.

@@ -30,36 +30,36 @@ MAIN:						lda #$06
 							jsr CLEARSCREEN
 
 ; Test the creation of a box.
-BOXEXAMPLE:					lda #$10								; Pos X.
+BOXEXAMPLE:					lda #$10							; Pos X.
 							sta FILLSCR_XPOSVAR
-							lda #$0e								; Pos Y.
+							lda #$0e							; Pos Y.
 							sta FILLSCR_YPOSVAR
-							lda #$10								; Size X.
+							lda #$10							; Size X.
 							sta FILLSCR_XLENVAR
-							lda #$06								; Size Y.
+							lda #$06							; Size Y.
 							sta FILLSCR_YLENVAR
-							lda #$01								; With letter A.
+							lda #$01							; With letter A.
 							sta FILLSCR_BYTEVAR
-							lda #$01								; White.
+							lda #$01							; White.
 							sta FILLSCR_COLORVAR
 							jsr FILLBOXSCREEN
 
 ; Test the creation of a rectangle.
 ; The elements of the rectangle are defined at CHARSDEF.
-RECTANGLEEXAMPLE:			lda #$01								; Pos X.
+RECTANGLEEXAMPLE:			lda #$01							; Pos X.
 							sta DRAWRECT_XPOSVAR
-							lda #$15								; Pos Y.
+							lda #$15							; Pos Y.
 							sta DRAWRECT_YPOSVAR
-							lda #$26								; Size X.
+							lda #$26							; Size X.
 							sta DRAWRECT_XLENVAR
-							lda #$03								; Size Y.
+							lda #$03							; Size Y.
 							sta DRAWRECT_YLENVAR
 							ldx #$07
 LOOPCHARS:					lda CHARSDEF,x
 							sta DRAWRECT_BYTEVAR,x
 							dex
 							bpl LOOPCHARS
-							lda #$03								; Green.
+							lda #$03							; Green.
 							sta DRAWRECT_COLORVAR
 							jsr DRAWRECTANGLE
 
@@ -69,13 +69,13 @@ TEXTEXAMPLE:				lda #>TEXTDEF
 							sta DRAWTEXT_TEXTLOWVAR
 							lda #<TEXTDEF
 							sta DRAWTEXT_TEXTHIGHVAR
-							lda #$10								; Text length.
+							lda #$10							; Text length.
 							sta DRAWTEXT_TEXTLENVAR
-							lda #$02								; Pos X.
+							lda #$02							; Pos X.
 							sta DRAWTEXT_XPOSVAR
-							lda #$08								; Pos Y.
+							lda #$08							; Pos Y.
 							sta DRAWTEXT_YPOSVAR
-							lda #$07								; Yellow.
+							lda #$07							; Yellow.
 							sta DRAWTEXT_COLORVAR
 							jsr DRAWTEXT
 
@@ -85,13 +85,13 @@ TEXTEXAMPLEIN:				lda #>TEXTDEF
 							sta DRAWTEXT_TEXTLOWVAR
 							lda #<TEXTDEF
 							sta DRAWTEXT_TEXTHIGHVAR
-							lda #$10								; Text length.
+							lda #$10							; Text length.
 							sta DRAWTEXT_TEXTLENVAR
-							lda #$f0								; Pos X.
+							lda #$f0							; Pos X.
 							sta DRAWTEXT_XPOSVAR
-							lda #$09								; Pos Y.
+							lda #$09							; Pos Y.
 							sta DRAWTEXT_YPOSVAR
-							lda #$07								; Yellow.
+							lda #$07							; Yellow.
 							sta DRAWTEXT_COLORVAR
 							jsr DRAWTEXTIN
 
@@ -100,7 +100,7 @@ COUTCHARSET:				ldx #$00
 							ldy #$00
 COUTCHARSET_LOOP:			txa
 							sta SCREENBASE,y
-							lda #$01								; White
+							lda #$01							; White
 							sta COLORRAMBASE,y
 							inx
 							iny
@@ -111,18 +111,18 @@ TEXTEXAMPLEMOVE:			lda #>TEXTDEF
 							sta DRAWTEXT_TEXTLOWVAR
 							lda #<TEXTDEF
 							sta DRAWTEXT_TEXTHIGHVAR
-							lda #$10								; Text length.
+							lda #$10							; Text length.
 							sta DRAWTEXT_TEXTLENVAR
-							lda #$0a								; Pos Y.
+							lda #$0a							; Pos Y.
 							sta DRAWTEXT_YPOSVAR
-							lda #$0a								; Orange.
+							lda #$0a							; Orange.
 							sta DRAWTEXT_COLORVAR
-							ldx #$f0								; Starting Pos X.
+							ldx #$f0							; Starting Pos X.
 TEXTEXAMPLEMOVELOOP:		stx DRAWTEXT_XPOSVAR
 							txa
 							pha
 							jsr DRAWTEXTIN
-							ldx #$00								; Just a delay...
+							ldx #$00							; Just a delay...
 							ldy #$10
 							jsr DELAY
 							pla
@@ -132,6 +132,6 @@ TEXTEXAMPLEMOVELOOP:		stx DRAWTEXT_XPOSVAR
 							bmi TEXTEXAMPLEMOVELOOP
 							jmp TEXTEXAMPLEMOVE
 
-FOREVER:					jmp FOREVER								; For ever...
+FOREVER:					jmp FOREVER							; For ever...
 
 ; End.

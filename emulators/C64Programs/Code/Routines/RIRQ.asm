@@ -25,24 +25,24 @@ SETVICIIRASTERIRQ:			.SWITCHOFFIRQ
 							lda VICIICTRLIRQ
 							and #$fe
 							ora #$01
-							sta VICIICTRLIRQ				; This is how to tell the VICII to generate a raster interrupt.
+							sta VICIICTRLIRQ					; This is how to tell the VICII to generate a raster interrupt.
 ; Set the line where the interrupt has to happen.							
-							lda SETVICIIRIRQ_ROWLVAR		; This is how to tell at which rasterline we want the irq to be triggered.
+							lda SETVICIIRIRQ_ROWLVAR			; This is how to tell at which rasterline we want the irq to be triggered.
 							sta VICIIRASTER
 							lda SETVICIIRIRQ_ROWHVAR		
-							beq SETVICIIRASTERIRQ_LOADPRG	; The raster line is below 255.
+							beq SETVICIIRASTERIRQ_LOADPRG		; The raster line is below 255.
 							lda VICIISCROLLY
 							and #$7f
 							ora #$80
-							sta VICIISCROLLY				; Activate the MSB of the VICIIRASTER that is hold in VICIISCROLLY.
+							sta VICIISCROLLY					; Activate the MSB of the VICIIRASTER that is hold in VICIISCROLLY.
 ; Set the Kernel to indicate the address where to deal with the IRQ.
 ; This piece of code understands that there is no system IRQ to deal with.
-SETVICIIRASTERIRQ_LOADPRG:	lda SETVICIIRIRQ_PRGLVAR		; Load the address where the program is
-							sta $fffe						; This is where the IRQ system looks for where to jump...
-							lda SETVICIIRIRQ_PRGHVAR		; When Kernel is disactivated (see address $1)
+SETVICIIRASTERIRQ_LOADPRG:	lda SETVICIIRIRQ_PRGLVAR			; Load the address where the program is
+							sta $fffe							; This is where the IRQ system looks for where to jump...
+							lda SETVICIIRIRQ_PRGHVAR			; When Kernel is disactivated (see address $1)
 							sta $ffff
 
-							cli								; Enable maskable interrupts again
+							cli									; Enable maskable interrupts again
 
 							rts   
 ; ------------------------------

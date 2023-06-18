@@ -12,7 +12,7 @@ BASE = $c000
 
 * = $cb00
 ; A very simple program to test everything works...
-MAIN:						jsr $fd15								; To set up the jumping kernal table...
+MAIN:						jsr $fd15							; To set up the jumping kernal table...
 							lda #$06
 							sta VICIIBACKGROUND
 							lda #$0e
@@ -27,6 +27,6 @@ LOOP:						lda #z10111111
 							sta COLORRAMBASE
 							jmp LOOP
 							
-FOREVER:					jmp FOREVER								; For ever...
+FOREVER:					jmp FOREVER							; For ever...
 
 ; End.

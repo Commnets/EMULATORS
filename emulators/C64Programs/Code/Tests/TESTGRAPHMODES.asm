@@ -40,25 +40,25 @@ MAIN:						lda #$06
 ; Change the char set
 SETCHARSET:					lda VICIICTRLMEMREG
 							and #$f1
-							ora #$06								; Put the second character set (lowercase)
+							ora #$06							; Put the second character set (lowercase)
 							sta VICIICTRLMEMREG
 
 ; Change the graphics mode...
 ; Char multicolor extended
 ;SETGRAPHICMODE:				lda VICIISCROLLY
 ;							and #$bf
-;							ora #$40								; Sets the bit 6 on... enhaced multimode...
+;							ora #$40							; Sets the bit 6 on... enhaced multimode...
 ;							sta VICIISCROLLY
-;							lda VICIISCROLLX						; Just to test if the shift doesn't affect!
+;							lda VICIISCROLLX					; Just to test if the shift doesn't affect!
 ;							and #$f8
 ;							ora #$07
 ;							sta VICIISCROLLX
 ; Char multicolor
-SETGRAPHICMODE:				lda VICIISCROLLX						; Sets the bit 4 on... multicolor text mode...
+SETGRAPHICMODE:				lda VICIISCROLLX					; Sets the bit 4 on... multicolor text mode...
 							and #$ef
 							ora #$10
 							sta VICIISCROLLX
-							lda VICIISCROLLX						; Just to test if the shift doesn't affect!
+							lda VICIISCROLLX					; Just to test if the shift doesn't affect!
 							and #$f8
 							ora #$07
 							sta VICIISCROLLX
@@ -69,11 +69,11 @@ TEXTEXAMPLE1:				lda #>TEXTDEF1
 							sta DRAWTEXT_TEXTLOWVAR
 							lda #<TEXTDEF1
 							sta DRAWTEXT_TEXTHIGHVAR
-							lda #$0f								; Text length.
+							lda #$0f							; Text length.
 							sta DRAWTEXT_TEXTLENVAR
-							lda #$02								; Pos X.
+							lda #$02							; Pos X.
 							sta DRAWTEXT_XPOSVAR
-							lda #$08								; Pos Y.
+							lda #$08							; Pos Y.
 							sta DRAWTEXT_YPOSVAR
 							lda #COLORLETTERS
 							sta DRAWTEXT_COLORVAR
@@ -83,11 +83,11 @@ TEXTEXAMPLE2:				lda #>TEXTDEF2
 							sta DRAWTEXT_TEXTLOWVAR
 							lda #<TEXTDEF2
 							sta DRAWTEXT_TEXTHIGHVAR
-							lda #$0f								; Text length.
+							lda #$0f							; Text length.
 							sta DRAWTEXT_TEXTLENVAR
-							lda #$02								; Pos X.
+							lda #$02							; Pos X.
 							sta DRAWTEXT_XPOSVAR
-							lda #$18								; Pos Y.
+							lda #$18							; Pos Y.
 							sta DRAWTEXT_YPOSVAR
 							lda #COLORLETTERS
 							sta DRAWTEXT_COLORVAR
@@ -97,11 +97,11 @@ TEXTEXAMPLE3:				lda #>TEXTDEF3
 							sta DRAWTEXT_TEXTLOWVAR
 							lda #<TEXTDEF3
 							sta DRAWTEXT_TEXTHIGHVAR
-							lda #$0f								; Text length.
+							lda #$0f							; Text length.
 							sta DRAWTEXT_TEXTLENVAR
-							lda #$02								; Pos X.
+							lda #$02							; Pos X.
 							sta DRAWTEXT_XPOSVAR
-							lda #$0a								; Pos Y.
+							lda #$0a							; Pos Y.
 							sta DRAWTEXT_YPOSVAR
 							lda #COLORLETTERS
 							sta DRAWTEXT_COLORVAR
@@ -111,16 +111,16 @@ TEXTEXAMPLE4:				lda #>TEXTDEF4
 							sta DRAWTEXT_TEXTLOWVAR
 							lda #<TEXTDEF4
 							sta DRAWTEXT_TEXTHIGHVAR
-							lda #$0f								; Text length.
+							lda #$0f							; Text length.
 							sta DRAWTEXT_TEXTLENVAR
-							lda #$02								; Pos X.
+							lda #$02							; Pos X.
 							sta DRAWTEXT_XPOSVAR
-							lda #$0b								; Pos Y.
+							lda #$0b							; Pos Y.
 							sta DRAWTEXT_YPOSVAR
 							lda #COLORLETTERS
 							sta DRAWTEXT_COLORVAR
 							jsr DRAWTEXT
 
-FOREVER:					jmp FOREVER								; For ever...
+FOREVER:					jmp FOREVER							; For ever...
 
 ; End.

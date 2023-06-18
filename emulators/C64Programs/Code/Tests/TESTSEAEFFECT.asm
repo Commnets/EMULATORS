@@ -21,12 +21,13 @@ IRQPRG1:					.SAVEREGISTERS
 							lda #$ff
 							sta VICIIBACKGROUND
 
-							lda #$ff						; Meaning the VICII IRQs are treated 
-							sta VICIIIRQ					; and another different one might come later...
+							lda #$ff							; Meaning the VICII IRQs are treated 
+							sta VICIIIRQ						; and another different one might come later...
 
-							lda #$ff						; All sprites have the same priority level
+							lda #$00							; All sprites have the same priority level
 							sta SPRITEPRIORITY
-							jsr ACTUALIZESPRITES			; Just to move the sprites
+							
+							jsr ACTUALIZESPRITES				; Just to move the sprites
 												
 							lda #<IRQPRG2_ADDRESS
 							sta SETVICIIRIRQ_PRGHVAR
@@ -47,10 +48,10 @@ IRQPRG2:					.SAVEREGISTERS
 							lda #$05
 							sta VICIIBACKGROUND
 
-							lda #$ff						; Meaning the VICII IRQs are treated 
-							sta VICIIIRQ					; and another different one might come later...
+							lda #$ff							; Meaning the VICII IRQs are treated 
+							sta VICIIIRQ						; and another different one might come later...
 
-							lda #$00						; All sprites have the same priority level
+							lda #$ff							; All sprites have the same priority level
 							sta SPRITEPRIORITY
 							
 							lda #<IRQPRG1_ADDRESS
@@ -67,9 +68,9 @@ IRQPRG2:					.SAVEREGISTERS
 							rti
 
 * = $cac8
-BYTES $08													; Number of sprites managed by the program
-BYTES $40 $55 $6a $80 $95 $aa $c0 $d5						; Initial positions for the sprites (Y coordinate)
-BYTES $01 $02 $03 $04 $05 $07 $01 $09						; Color of the sprites
+BYTES $08														; Number of sprites managed by the program
+BYTES $40 $55 $6a $80 $95 $aa $c0 $d5							; Initial positions for the sprites (Y coordinate)
+BYTES $01 $02 $03 $04 $05 $07 $01 $09							; Color of the sprites
 NUMBERSPRITES				= $cac8
 SPRITESPOSITION				= $cac9
 SPRITESCOLOR				= $cad1
@@ -128,70 +129,70 @@ MAIN:						lda #$06
 							sta VICIIFOREGROUND
 							jsr CLEARSCREEN
 
-							lda $01							; The IRQ vector is going to be managed direclty...
-							and #$fd						; ...so the Kernel is desactivated from 6510 view!
-							sta $01							; This shouldn't be done, but it just for testing purposes!
+							lda $01								; The IRQ vector is going to be managed direclty...
+							and #$fd							; ...so the Kernel is desactivated from 6510 view!
+							sta $01								; This shouldn't be done, but it just for testing purposes!
 							
 SCROLLPOS:					lda VICIISCROLLY					
 							and #$f7
 							ora #$03
 							STA VICIISCROLLY
 							
-SEA:						lda #$00						; Pos X.
+SEA:						lda #$00							; Pos X.
 							sta FILLSCR_XPOSVAR
-							lda #$13						; Pos Y.
+							lda #$13							; Pos Y.
 							sta FILLSCR_YPOSVAR
-							lda #$28						; Size X.
+							lda #$28							; Size X.
 							sta FILLSCR_XLENVAR
-							lda #$06						; Size Y.
+							lda #$06							; Size Y.
 							sta FILLSCR_YLENVAR
-							lda #$a0						; The block to make the sea
+							lda #$a0							; The block to make the sea
 							sta FILLSCR_BYTEVAR
-							lda #$06						; Blue
+							lda #$0e							; Blue
 							sta FILLSCR_COLORVAR
 							jsr FILLBOXSCREENIN
 
-SKY:						lda #$00						; Pos X.
+SKY:						lda #$00							; Pos X.
 							sta FILLSCR_XPOSVAR
-							lda #$00						; Pos Y.
+							lda #$00							; Pos Y.
 							sta FILLSCR_YPOSVAR
-							lda #$28						; Size X.
+							lda #$28							; Size X.
 							sta FILLSCR_XLENVAR
-							lda #$13						; Size Y.
+							lda #$13							; Size Y.
 							sta FILLSCR_YLENVAR
-							lda #$a0						; The block to make the sea
+							lda #$a0							; The block to make the sea
 							sta FILLSCR_BYTEVAR
-							lda #$00						; Black
+							lda #$00							; Black
 							sta FILLSCR_COLORVAR
 							jsr FILLBOXSCREENIN
 
 ; Set the behaviour attributes linked to the image of the sprite 0
 							lda #$ff
-							sta SPRITE_ENABLEVAR			; Initially all sprites availables
+							sta SPRITE_ENABLEVAR				; Initially all sprites availables
 							ldx #$00
-LOADSPRITES:				lda #$20						; Initial block (definition) for of the sprite 0.
-							sta TEMP02_DATA					; It will be also useful later!
+LOADSPRITES:				lda #$20							; Initial block (definition) for of the sprite 0.
+							sta TEMP02_DATA						; It will be also useful later!
 							sta SPRITE_BLOCKVAR,x
-							lda #$00						; Initial X position of the sprite 0.
+							lda #$00							; Initial X position of the sprite 0.
 							sta SPRITE_XPOSVAR,x
-							lda #$00						; No MSB in X position for sprite 0.
+							lda #$00							; No MSB in X position for sprite 0.
 							sta SPRITE_XMSBPOSVAR,x
-							lda SPRITESPOSITION,x			; Initial Y position of the sprite 0. Never changes.
+							lda SPRITESPOSITION,x				; Initial Y position of the sprite 0. Never changes.
 							sta SPRITE_YPOSVAR,x			
 							lda SPRITESCOLOR,x
 							sta SPRITEBASECOLOR,x
 							inx
 							cpx NUMBERSPRITES 
 							bne LOADSPRITES
-							lda #$00						; All sprites have the same priority level
+							lda #$00							; All sprites have the same priority level
 							sta SPRITEPRIORITY
 
 ;Sets the IRQ							
-							lda #<IRQPRG1_ADDRESS			; Stablish the first raster IRQ (the top part of the sea)
+							lda #<IRQPRG1_ADDRESS				; Stablish the first raster IRQ (the top part of the sea)
 							sta SETVICIIRIRQ_PRGHVAR
 							lda #>IRQPRG1_ADDRESS
 							sta SETVICIIRIRQ_PRGLVAR
-							lda #$00						; Almost at the end
+							lda #$00							; Almost at the end
 							sta SETVICIIRIRQ_ROWLVAR
 							lda #$00
 							sta SETVICIIRIRQ_ROWHVAR
@@ -247,6 +248,6 @@ DELAY1:						dec TEMP10_DATA
 
 							jmp MOVESCENE
 
-FOREVER:					jmp FOREVER						; For ever...
+FOREVER:					jmp FOREVER							; For ever...
 
 ; End.

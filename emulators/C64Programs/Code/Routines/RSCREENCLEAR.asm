@@ -9,18 +9,22 @@
 ; CLEARSCREEN
 ; To clear the screen with the color of the foreground.
 ; No parameters are needed.
-CLEARSCREEN:				lda #$00
+CLEARSCREEN:				.SAVEREGISTERS						; Save the registers as it is a complex routine...
+
+							lda #$00
 							sta FILLSCR_XPOSVAR
 							sta FILLSCR_YPOSVAR
-							lda #$28								; Max number of text columns in the screen.
+							lda #$28							; Max number of text columns in the screen.
 							sta FILLSCR_XLENVAR
-							lda #$19								; Max number of rown in the screen.
+							lda #$19							; Max number of rown in the screen.
 							sta FILLSCR_YLENVAR
-							lda #$20								; It is the equivalent to a space.
+							lda #$20							; It is the equivalent to a space.
 							sta FILLSCR_BYTEVAR
 							lda VICIIBACKGROUND
 							sta FILLSCR_COLORVAR
 							jsr FILLBOXSCREEN
+							
+							.RECOVERREGISTERS
 							rts
 ; ------------------------------
 

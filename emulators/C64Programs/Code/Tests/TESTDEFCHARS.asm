@@ -54,11 +54,11 @@ COPYCHARS:					lda #<CHARDESTINATION
 							sta COPYCHAR_TEXTHIGHVAR
 							jsr COPYCHARSET
 
-SETGRAPHICMODE:				lda VICIISCROLLX						; Sets the bit 4 on... multicolor text mode...
+SETGRAPHICMODE:				lda VICIISCROLLX					; Sets the bit 4 on... multicolor text mode...
 							and #$ef
 							ora #$10
 							sta VICIISCROLLX
-							lda VICIISCROLLX						; Just to test if the shift doesn't affect!
+							lda VICIISCROLLX					; Just to test if the shift doesn't affect!
 							and #$f8
 							ora #$07
 							sta VICIISCROLLX
@@ -73,10 +73,10 @@ DEFCHARS:					ldy #$00
 DEFCHARS_LOOP:				lda CHARDEF,y
 							sta CHARDESTINATION,y
 							iny
-							cpy #$18								; Only two chars to test
+							cpy #$18							; Only two chars to test
 							bne DEFCHARS_LOOP
 
-NEWCHARON:					jsr ACTIVATECHARSET						; The new char set is activated
+NEWCHARON:					jsr ACTIVATECHARSET					; The new char set is activated
 
 SHOWCHARS:					lda #$00
 							sta SCREENBASE
@@ -87,7 +87,7 @@ SHOWCHARS:					lda #$00
 							lda #$01
 							sta COLORRAMBASE
 							sta COLORRAMBASE + 1
-							lda #$0a								; Flag multicolor...
+							lda #$0a							; Flag multicolor...
 							sta COLORRAMBASE + 2
 
-FOREVER:					jmp FOREVER								; For ever...
+FOREVER:					jmp FOREVER							; For ever...

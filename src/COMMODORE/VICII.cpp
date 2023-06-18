@@ -102,20 +102,19 @@ bool COMMODORE::VICII::simulate (MCHEmul::CPU* cpu)
 		_videoActive = (_raster.currentLine () == _FIRSTBADLINE) 
 			? !_VICIIRegisters -> blankEntireScreen () : _videoActive; // Only at first bad line it can change its value...
 
-		// Any tine a new line comes..
-		if (_isNewRasterLine)
+		// Any time a new line comes..
+		// ...and when the video is not active, the graphical information is read...
+		if (_isNewRasterLine && _videoActive)
 		{
 			memoryRef () -> setActiveView (_VICIIView);
 
 			// The sprites info at that line (if any) has to be read...
-			// ...taking into account that this process delayes a little bit the processor...
 			size_t nS = 0;
 			readSpriteDataAt (_raster.currentLine (), nS);
 
 			// and if is it also a bad line?...
 			if (isBadRasterLine ())
 				// ..the graphics / text / color info has to be read too
-				// ...taking again into account that this process deletes again a little bit more the processor...
 				readGraphicsInfoAt (_raster.currentLine () - 
 					_FIRSTBADLINE - _VICIIRegisters -> verticalScrollPosition ());
 
@@ -139,11 +138,6 @@ bool COMMODORE::VICII::simulate (MCHEmul::CPU* cpu)
 		// But if it is...
 		if (_raster.isInVisibleZone ())
 		{
-			if (_raster.isInDisplayZone () && 
-				(_raster.vData ().currentPosition () - 
-					_VICIIRegisters -> verticalScrollPosition ()) > _LASTBADLINE)
-				emptyGraphicsInfo (); // Just in case to avoid paint something innecesary...
-
 			// These two variables are very key
 			// They hold the position of the raster within the visible zone.
 			// It is the left up corner of the "computer screen" will be cv = 0 & rv = 0...
@@ -151,55 +145,78 @@ bool COMMODORE::VICII::simulate (MCHEmul::CPU* cpu)
 			_raster.currentVisiblePosition (cv, rv);
 			unsigned short cav = (cv >> 3) << 3;
 
-			// Everyting is the color of the background initially...
-			// ..and it will be covered with the foreground (border) later if needed..
-			// This is how the VICII works...
-			screenMemory () -> setHorizontalLine ((size_t) cav, (size_t) rv,
-				(cav + 8) > _raster.visibleColumns () ? (_raster.visibleColumns () - cav) : 8, 
-					_VICIIRegisters -> backgroundColor ());
-
-			// Now the information is drawn...
-			drawGraphicsSpritesAndDetectCollisions (cv, cav, rv);
-
-			// If the raster is not in the very visible zone...
-			// it is time to cover with the border...
-			if (!_raster.isInScreenZone () ||
-				(_raster.isInScreenZone () && (cav + 8) > _raster.hData ().lastScreenPosition ()))
+			// If the video is not active, 
+			// then evrything will have the border color...
+			if (!_videoActive)
+				screenMemory () -> setHorizontalLine ((size_t) cav, (size_t) rv,
+					(cav + 8) > _raster.visibleColumns () ? (_raster.visibleColumns () - cav) : 8, 
+						_VICIIRegisters -> foregroundColor ());
+			// Otherwise the elements are drawn...
+			else
 			{
-				// This is the starting pixel to start to draw...
-				unsigned short stp = cav;
-				// ...and the number to draw by default...
-				unsigned short lbk = (cav + 8) > _raster.visibleColumns () 
-					? (_raster.visibleColumns () - cav) : 8;
+				if (_raster.isInDisplayZone () && 
+					(_raster.vData ().currentPosition () - 
+						_VICIIRegisters -> verticalScrollPosition ()) > _LASTBADLINE)
+					emptyGraphicsInfo (); // Just in case to avoid paint something innecesary...
 
-				// But when the raster line is in the "screen" part of the window,
-				// any of these two previous variables could change...
-				if (rv >= _raster.vData ().firstScreenPosition () &&
-					rv <= _raster.vData ().lastScreenPosition ())
+				// Everyting is the color of the background initially...
+				// ..and it will be covered with the foreground (border) later if needed..
+				// This is how the VICII works...
+				screenMemory () -> setHorizontalLine ((size_t) cav, (size_t) rv,
+					(cav + 8) > _raster.visibleColumns () ? (_raster.visibleColumns () - cav) : 8, 
+						_VICIIRegisters -> backgroundColor ());
+
+				// Now the information is drawn...
+				drawGraphicsSpritesAndDetectCollisions (cv, cav, rv);
+
+				// If the raster is not in the very visible zone...
+				// it is time to cover with the border...
+				if (!_raster.isInScreenZone () ||
+					(_raster.isInScreenZone () && (cav + 8) > _raster.hData ().lastScreenPosition ()))
 				{
-					// If the initial horizontal position is before the "screen" part...
-					// ...but not the final position, the number of pixels to draw have to be reduced 
-					if (cav < _raster.hData ().firstScreenPosition () &&
-						(cav + 8) >= _raster.hData ().firstScreenPosition ())
-						lbk = _raster.hData ().firstScreenPosition () - cav;
+					// This is the starting pixel to start to draw...
+					unsigned short stp = cav;
+					// ...and the number to draw by default...
+					unsigned short lbk = (cav + 8) > _raster.visibleColumns () 
+						? (_raster.visibleColumns () - cav) : 8;
 
-					// If the initial horizontal position is still in the "screen" part...
-					// ...but not the final position, 
-					// ...both the starting pixel and the number of pixels to draw have to be reduced
-					if (cav < _raster.hData ().lastScreenPosition () && 
-						(cav + 8) > _raster.hData ().lastScreenPosition ())
+					// But when the raster line is in the "screen" part of the window,
+					// any of these two previous variables could change...
+					if (rv >= _raster.vData ().firstScreenPosition () &&
+						rv <= _raster.vData ().lastScreenPosition ())
 					{
-						stp = _raster.hData ().lastScreenPosition () + 1;
-						lbk = (cav + 8) - stp;
+						// If the initial horizontal position is before the "screen" part...
+						// ...but not the final position, the number of pixels to draw have to be reduced 
+						if (cav < _raster.hData ().firstScreenPosition () &&
+							(cav + 8) >= _raster.hData ().firstScreenPosition ())
+							lbk = _raster.hData ().firstScreenPosition () - cav;
+
+						// If the initial horizontal position is still in the "screen" part...
+						// ...but not the final position, 
+						// ...both the starting pixel and the number of pixels to draw have to be reduced
+						if (cav < _raster.hData ().lastScreenPosition () && 
+							(cav + 8) > _raster.hData ().lastScreenPosition ())
+						{
+							stp = _raster.hData ().lastScreenPosition () + 1;
+							lbk = (cav + 8) - stp;
+						}
 					}
+
+					screenMemory () -> setHorizontalLine ((size_t) stp, (size_t) rv, lbk, 
+						_VICIIRegisters -> foregroundColor ());
 				}
 
-				screenMemory () -> setHorizontalLine ((size_t) stp, (size_t) rv, lbk, 
-					_VICIIRegisters -> foregroundColor ());
+				// The IRQ related with the lightpen...
+				unsigned short dx, dy;
+				_raster.currentDisplayPosition (dx, dy);
+				unsigned short lpx, lpy;
+				_VICIIRegisters -> currentLightPenPosition (lpx, lpy);
+				if (dy == lpy && (lpx >= dx && lpx < (dx + 8))) // The beam moves every 8 pixels...
+					_VICIIRegisters -> activateLightPenOnScreenIRQ ();
 			}
 		}
 
-		_isNewRasterLine = _raster.moveCycles (1); 
+		_isNewRasterLine = _raster.moveCycles (1);
 
 		if (_raster.isInLastVBlank ())
 		{
