@@ -121,8 +121,8 @@ namespace COMMODORE
 
 		// Activate the IRQ. 
 		// All these methods are called from VICII simulation...
-		void activateRasterAtLineIRQ ()
-							{ _rasterAtLineIRQHappened = true; }
+		void activateRasterIRQ ()
+							{ _rasterIRQHappened = true; }
 		void activateSpriteCollisionWithDataIRQ ()
 							{ _spriteCollisionWithDataIRQHappened = true; }
 		void setSpriteCollisionWithDataHappened (size_t p)
@@ -132,7 +132,7 @@ namespace COMMODORE
 		void setSpriteCollision (size_t p)
 							{ _spriteCollisionHappened [p] = true; }
 		void activateLightPenOnScreenIRQ ()
-							{ _lightPenOnScreenIRQHappened = true; }
+							{ _lightPenIRQHappened = true; }
 		/** To know whether the VICII might launch a IRQ (from its internal perspective only).
 			The IRQ will be or not actually launched depending on other elements like whether the IRQ flag is or not active. */
 		inline bool launchIRQ () const;
@@ -267,7 +267,7 @@ namespace COMMODORE
 		unsigned short _currentLightPenHorizontalPosition, _currentLightPenVerticalPosition; // Where the light pen is...
 		bool _lightPenActive;
 		/** Whether the raster line has reached the one defined to generate an IRQ. */
-		bool _rasterAtLineIRQHappened;
+		bool _rasterIRQHappened;
 		/** Whether a collision among sprites and data has happened. The detail is next. */
 		bool _spriteCollisionWithDataIRQHappened;
 		mutable std::vector <bool> _spriteCollisionWithDataHappened;
@@ -275,7 +275,7 @@ namespace COMMODORE
 		bool _spriteCollisionIRQHappened;
 		mutable std::vector <bool> _spriteCollisionHappened;
 		/** Whether the lightpen is on the screen. */
-		bool _lightPenOnScreenIRQHappened;
+		bool _lightPenIRQHappened;
 
 		/** Location of the Graphical Memory. */
 		MCHEmul::Address _charDataMemory; // Info about the characters (the address with in the first 16k)
@@ -294,10 +294,10 @@ namespace COMMODORE
 	// ---
 	inline bool VICIIRegisters::launchIRQ () const
 	{ 
-		return ((_rasterAtLineIRQHappened && _rasterIRQActive) ||
+		return ((_rasterIRQHappened && _rasterIRQActive) ||
 				(_spriteCollisionWithDataIRQHappened && _spriteCollisionWithDataIRQActive) ||
 				(_spriteCollisionIRQHappened && _spriteCollisionsIRQActive) ||
-				(_lightPenOnScreenIRQHappened && _lightPenIRQActive)); 
+				(_lightPenIRQHappened && _lightPenIRQActive)); 
 	}
 }
 

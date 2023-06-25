@@ -130,7 +130,7 @@ bool COMMODORE::VICII::simulate_I (MCHEmul::CPU* cpu)
 			// ...the situation is flagged into the register
 			// Whether finally a IRQ is or not issued is something that is calculated booton in this method...
 			if (_raster.currentLine () == _VICIIRegisters -> IRQRasterLineAt ())
-				_VICIIRegisters -> activateRasterAtLineIRQ ();
+				_VICIIRegisters -> activateRasterIRQ ();
 
 			_isNewRasterLine = false;
 
@@ -263,7 +263,7 @@ bool COMMODORE::VICII::simulate_II (MCHEmul::CPU* cpu)
 			// ...the situation is flagged into the register
 			// Whether finally a IRQ is or not issued is something that is calculated booton in this method...
 			if (_raster.currentLine () == _VICIIRegisters -> IRQRasterLineAt ())
-				_VICIIRegisters -> activateRasterAtLineIRQ ();
+				_VICIIRegisters -> activateRasterIRQ ();
 
 			_isNewRasterLine = false;
 
