@@ -80,7 +80,7 @@ bool COMMODORE::VICII::initialize ()
 // ---
 bool COMMODORE::VICII::simulate (MCHEmul::CPU* cpu)
 {
-	return (simulate_I (cpu));
+	return (simulate_II (cpu));
 }
 
 // ---
@@ -241,7 +241,7 @@ bool COMMODORE::VICII::simulate_II (MCHEmul::CPU* cpu)
 
 		// Any time a new line comes..
 		// ...and when the video is not active, the graphical information is read...
-		if (_isNewRasterLine && _videoActive)
+		if (_isNewRasterLine)
 		{
 			memoryRef () -> setActiveView (_VICIIView);
 
