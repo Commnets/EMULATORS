@@ -607,11 +607,12 @@ void COMMODORE::VICIIRegisters::initializeInternalValues ()
 	_currentLightPenHorizontalPosition = 0x0000;
 	_currentLightPenVerticalPosition = 0x0000;
 	_lightPenActive = false;
+	_spriteCollisionWithDataHappened = std::vector <bool> (8, false), 
+	_spriteCollisionHappened = std::vector <bool> (8, false);
+	// Reasons for IRQ
 	_rasterIRQHappened = false;
 	_spriteCollisionWithDataIRQHappened = false;
-	_spriteCollisionWithDataHappened = std::vector <bool> (8, false), 
 	_spriteCollisionIRQHappened = false;
-	_spriteCollisionHappened = std::vector <bool> (8, false);
 	_lightPenIRQHappened = false;
 
 	// This variable will be set from CIA2 Registers...
