@@ -80,6 +80,143 @@ bool COMMODORE::VICII::initialize ()
 // ---
 bool COMMODORE::VICII::simulate (MCHEmul::CPU* cpu)
 {
+	return (simulate_I (cpu));
+}
+
+// ---
+bool COMMODORE::VICII::simulate_I (MCHEmul::CPU* cpu)
+{
+	// If the video reset is active nothing is done...
+	if (_VICIIRegisters -> videoResetActive ())
+		return (true);
+
+	// Notice that the bad line detection routine takes into account 
+	// the value of the YSCROLL register as the graphics information to be shown 
+	// is loaded at the beginning of every bad line...
+	auto isBadRasterLine = [=]() -> bool
+		{ return (_videoActive && 
+				  _raster.vData ().currentPosition () >= _FIRSTBADLINE &&
+				  _raster.vData ().currentPosition () <= _LASTBADLINE && 
+				  (_raster.currentLine () & 0x07 /** The three last bits. */) == _VICIIRegisters -> verticalScrollPosition ()); };
+
+	// Reduce the visible zone if any... The info is passed to the raster!
+	_raster.reduceDisplayZone
+		(!_VICIIRegisters -> textDisplay25RowsActive (), !_VICIIRegisters -> textDisplay40ColumnsActive ());
+
+	for (size_t i = (cpu -> clockCycles  () - _lastCPUCycles); i > 0 ; i--)
+	{
+		_videoActive = (_raster.currentLine () == _FIRSTBADLINE) 
+			? !_VICIIRegisters -> blankEntireScreen () : _videoActive; // Only at first bad line it can change its value...
+
+		if (_isNewRasterLine)
+		{
+			memoryRef () -> setActiveView (_VICIIView);
+
+			// The sprites info at that line (if any) has to be read...
+			size_t nS = 0;
+			readSpriteDataAt (_raster.currentLine (), nS);
+
+			// and if is it also a bad line?...
+			if (isBadRasterLine ())
+				// ..the graphics / text / color info has to be read too
+				readGraphicsInfoAt (_raster.currentLine () - 
+					_FIRSTBADLINE - _VICIIRegisters -> verticalScrollPosition ());
+
+			// The VICII doesn't work actually like this
+			// The information about the sprites 0 to 3 is read during the last cycles of the previous raster line
+			// but this is a good proxy!
+
+			// If the current line is one where has been declared to issue an IRQ...
+			// ...the situation is flagged into the register
+			// Whether finally a IRQ is or not issued is something that is calculated booton in this method...
+			if (_raster.currentLine () == _VICIIRegisters -> IRQRasterLineAt ())
+				_VICIIRegisters -> activateRasterAtLineIRQ ();
+
+			_isNewRasterLine = false;
+
+			memoryRef () -> setCPUView ();
+		}
+
+		if (_raster.isInVisibleZone ())
+		{
+			// READ: Important variables
+			// Where is the raster in the visible part of the screen? (starting from 0)
+			unsigned short cv, rv; _raster.currentVisiblePosition (cv, rv);
+			// Which is the horizontal closest block of 8 pixels (from left to the right)?
+			// Take into account that the step - size of the raster is always 8 pixels per cycle..
+			// It always starts at 0...
+			unsigned short cav = (cv >> 3) << 3;
+
+			// Draws the border...
+			screenMemory () -> setHorizontalLine ((size_t) cav, (size_t) rv,
+				(cav + 8) > _raster.visibleColumns () ? (_raster.visibleColumns () - cav) : 8, 
+					_VICIIRegisters -> foregroundColor ());
+
+			// When the raster is in the display zone but in the screen vertical zone too
+			// and for sure the vide is active, then everything has to happen!
+			if (_raster.isInDisplayZone () && 
+				_raster.vData ().isInScreenZone () &&
+				_videoActive)
+			{
+				if (_raster.isInDisplayZone () && 
+					(_raster.vData ().currentPosition () - 
+						_VICIIRegisters -> verticalScrollPosition ()) > _LASTBADLINE)
+					emptyGraphicsInfo (); // Just in case to avoid paint something innecesary...
+
+				// Draws the background,
+				// taking into account that the screen can be reduced in the X axis...
+				if (cav < _raster.hData ().firstScreenPosition () &&
+					(cav + 8) > _raster.hData ().firstScreenPosition ())
+					screenMemory () -> setHorizontalLine ((size_t) _raster.hData ().firstScreenPosition (), (size_t) rv,
+						cav + 8 - _raster.hData ().firstScreenPosition (), _VICIIRegisters -> backgroundColor ());
+				else 
+				if (cav < _raster.hData ().lastScreenPosition ())
+				{
+					unsigned short lbk = 8;  // Number of pixels to be drawn...
+					if ((cav + 8) > _raster.hData ().lastScreenPosition ())
+						lbk = _raster.hData ().lastScreenPosition ()  - cav + 1;
+					screenMemory () -> setHorizontalLine ((size_t) cav, (size_t) rv, lbk, _VICIIRegisters -> backgroundColor ());
+				}
+
+				drawGraphicsSpritesAndDetectCollisions (cv, cav, rv);
+			}
+		}
+
+		// 1 cycle = 8 horizontal columns = 8 pixels...
+		_isNewRasterLine = _raster.moveCycles (1); 
+
+		if (_raster.isInLastVBlank ())
+		{
+			if (!_lastVBlankEntered)
+			{
+				_lastVBlankEntered = true;
+
+				// The limit of the visible screen has been reached!
+				// so it is time to actualize the graphics...
+				notify (MCHEmul::Event (_GRAPHICSREADY)); 
+			}
+		}
+		else
+			_lastVBlankEntered = false;
+	}
+
+	// It might have been incremented after reading graphics...
+	_lastCPUCycles = cpu -> clockCycles (); 
+
+	// To store back the info in the VIC Registers...
+	_VICIIRegisters -> setCurrentRasterLine (_raster.currentLine ()); 
+
+	// Is it needed to generate any IRQ?
+	// It is here after the full simulation of the VICII (raster, collisions and lightpen)
+	if (_VICIIRegisters -> launchIRQ ())
+		cpu -> interrupt (F6500::IRQInterrupt::_ID) -> setActive (true);
+
+	return (true);
+}
+
+// ---
+bool COMMODORE::VICII::simulate_II (MCHEmul::CPU* cpu)
+{
 	// If the "video reset flag" is actived nothing is done...
 	if (_VICIIRegisters -> videoResetActive ())
 		return (true);
@@ -839,7 +976,7 @@ void COMMODORE::VICII::detectCollisions (const MCHEmul::UByte& g, const std::vec
 		if ((cGS = (s [i].value () & g.value ()) != 0x00)) // ...at the first collision detected, the check stops...
 			_VICIIRegisters -> setSpriteCollisionWithDataHappened (i);
 	if (cGS) 
-		_VICIIRegisters -> activateSpritesCollisionWithDataIRQ ();
+		_VICIIRegisters -> activateSpriteCollisionWithDataIRQ ();
 	
 	// ...and among sprites...
 	bool cSS = false;
@@ -857,7 +994,7 @@ void COMMODORE::VICII::detectCollisions (const MCHEmul::UByte& g, const std::vec
 	}
 
 	if (cSS) 
-		_VICIIRegisters -> activateSpritesCollisionIRQ ();
+		_VICIIRegisters -> activateSpriteCollisionIRQ ();
 }
 
 // ---

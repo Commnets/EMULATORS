@@ -91,6 +91,8 @@ namespace COMMODORE
 		virtual bool initialize () override;
 
 		virtual bool simulate (MCHEmul::CPU* cpu) override;
+		bool simulate_I (MCHEmul::CPU* cpu);
+		bool simulate_II (MCHEmul::CPU* cpu);
 
 		/**
 		  *	The name of the fields are: \n

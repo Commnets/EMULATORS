@@ -123,23 +123,19 @@ namespace COMMODORE
 		// All these methods are called from VICII simulation...
 		void activateRasterAtLineIRQ ()
 							{ _rasterAtLineIRQHappened = true; }
-		void activateSpritesCollisionWithDataIRQ ()
-							{ _spritesCollisionWithDataIRQHappened = true; }
+		void activateSpriteCollisionWithDataIRQ ()
+							{ _spriteCollisionWithDataIRQHappened = true; }
 		void setSpriteCollisionWithDataHappened (size_t p)
 							{ _spriteCollisionWithDataHappened [p] = true; }
-		void activateSpritesCollisionIRQ ()
-							{ _spritesCollisionIRQHappened = true; }
+		void activateSpriteCollisionIRQ ()
+							{ _spriteCollisionIRQHappened = true; }
 		void setSpriteCollision (size_t p)
 							{ _spriteCollisionHappened [p] = true; }
 		void activateLightPenOnScreenIRQ ()
 							{ _lightPenOnScreenIRQHappened = true; }
 		/** To know whether the VICII might launch a IRQ (from its internal perspective only).
 			The IRQ will be or not actually launched depending on other elements like whether the IRQ flag is or not active. */
-		bool launchIRQ () const
-							{ return ((_rasterAtLineIRQHappened && _rasterIRQActive) ||
-									  (_spritesCollisionWithDataIRQHappened && _spriteCollisionWithDataIRQActive) ||
-									  (_spritesCollisionIRQHappened && _spriteCollisionsIRQActive) ||
-									  (_lightPenOnScreenIRQHappened && _lightPenIRQActive)); }
+		inline bool launchIRQ () const;
 
 		// Temporal variables to know, when an raster or lightpen IRQ happened, where was the element that generated that.
 		// This temporal variables are set from the VICII directly...
@@ -273,10 +269,10 @@ namespace COMMODORE
 		/** Whether the raster line has reached the one defined to generate an IRQ. */
 		bool _rasterAtLineIRQHappened;
 		/** Whether a collision among sprites and data has happened. The detail is next. */
-		bool _spritesCollisionWithDataIRQHappened;
+		bool _spriteCollisionWithDataIRQHappened;
 		mutable std::vector <bool> _spriteCollisionWithDataHappened;
 		/** Whether a collision among sprites has happened. The detail is next. */
-		bool _spritesCollisionIRQHappened;
+		bool _spriteCollisionIRQHappened;
 		mutable std::vector <bool> _spriteCollisionHappened;
 		/** Whether the lightpen is on the screen. */
 		bool _lightPenOnScreenIRQHappened;
@@ -294,6 +290,15 @@ namespace COMMODORE
 		// Implementation
 		mutable MCHEmul::UByte _lastValueRead;
 	};
+
+	// ---
+	inline bool VICIIRegisters::launchIRQ () const
+	{ 
+		return ((_rasterAtLineIRQHappened && _rasterIRQActive) ||
+				(_spriteCollisionWithDataIRQHappened && _spriteCollisionWithDataIRQActive) ||
+				(_spriteCollisionIRQHappened && _spriteCollisionsIRQActive) ||
+				(_lightPenOnScreenIRQHappened && _lightPenIRQActive)); 
+	}
 }
 
 #endif

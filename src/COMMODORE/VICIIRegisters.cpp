@@ -197,8 +197,8 @@ void COMMODORE::VICIIRegisters::setValue (size_t p, const MCHEmul::UByte& v)
 		case 0x19:
 			{
 				if (v.bit (0)) _rasterAtLineIRQHappened = false; // clean up the latches...
-				if (v.bit (1)) _spritesCollisionWithDataIRQHappened = false;
-				if (v.bit (2)) _spritesCollisionIRQHappened = false;
+				if (v.bit (1)) _spriteCollisionWithDataIRQHappened = false;
+				if (v.bit (2)) _spriteCollisionIRQHappened = false;
 				if (v.bit (3)) _lightPenOnScreenIRQHappened = false;
 				/** bits from 4 to 7 are not used. */
 			}
@@ -409,12 +409,12 @@ const MCHEmul::UByte& COMMODORE::VICIIRegisters::readValue (size_t p) const
 			{
 				result = MCHEmul::UByte::_0; 
 				result.setBit (0, _rasterAtLineIRQHappened);
-				result.setBit (1, _spritesCollisionWithDataIRQHappened);
-				result.setBit (2, _spritesCollisionIRQHappened);
+				result.setBit (1, _spriteCollisionWithDataIRQHappened);
+				result.setBit (2, _spriteCollisionIRQHappened);
 				result.setBit (3, _lightPenOnScreenIRQHappened);
 				/** bits 4, 5, and 6 are not used, and always to 1. */
-				result.setBit (7, _rasterAtLineIRQHappened || _spritesCollisionWithDataIRQHappened || 
-								  _spritesCollisionIRQHappened || _lightPenOnScreenIRQHappened);
+				result.setBit (7, _rasterAtLineIRQHappened || _spriteCollisionWithDataIRQHappened || 
+								  _spriteCollisionIRQHappened || _lightPenOnScreenIRQHappened);
 			}
 
 			break;
@@ -608,9 +608,9 @@ void COMMODORE::VICIIRegisters::initializeInternalValues ()
 	_currentLightPenVerticalPosition = 0x0000;
 	_lightPenActive = false;
 	_rasterAtLineIRQHappened = false;
-	_spritesCollisionWithDataIRQHappened = false;
+	_spriteCollisionWithDataIRQHappened = false;
 	_spriteCollisionWithDataHappened = std::vector <bool> (8, false), 
-	_spritesCollisionIRQHappened = false;
+	_spriteCollisionIRQHappened = false;
 	_spriteCollisionHappened = std::vector <bool> (8, false);
 	_lightPenOnScreenIRQHappened = false;
 
