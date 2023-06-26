@@ -12,6 +12,7 @@ bool F6500::NMIInterrupt::executeOverImpl (MCHEmul::CPU* c, unsigned int& nC)
 	MCHEmul::StatusRegister& st = c -> statusRegister ();
 	c -> memoryRef () -> stack () -> push ((_exeAddress = pc.asAddress ()).bytes () /** First high, then low byte */);
 	c -> memoryRef () -> stack () -> push (st.values ()); // The break flag is not taken into account...
+	st.setBitStatus (F6500::C6500::_IRQFLAG, true); // No more interruptions so far...
 
 	pc.setAddress (MCHEmul::Address (c -> memoryRef () -> values 
 		(dynamic_cast <F6500::C6510*> (c) -> NMIVectorAddress (), 2), false /** Little - endian. */));
