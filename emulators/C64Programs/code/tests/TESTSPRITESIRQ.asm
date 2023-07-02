@@ -16,7 +16,7 @@ BASE = $c000
 IRQPRG1_ADDRESS				= $ca00
 IRQPRG1:					.SAVEREGISTERS
 							lda VICIIIRQ
-							and #$02							; To detect whether a sprite has collsiion against the foreground
+							and #$02							; To detect whether a sprite has collision against the foreground
 							beq IRQPRG1_NOCOLLISION
 							lda #$02
 							sta SCREENBASE
@@ -27,19 +27,22 @@ IRQPRG1_NOCOLLISION:		lda #$20
 							sta SCREENBASE
 							lda #06
 							sta COLORRAMBASE
-IRQPRG1_ACTSPRITES:			lda #$ff							; Meaning the VICII IRQs are treated 
-							sta VICIIIRQ						; and another different one might come later...
+IRQPRG1_ACTSPRITES:			lda VICIIIRQ
+							and #$01
+							beq IRQPRG1_EXIT
 							jsr ACTUALIZESPRITES
+IRQPRG1_EXIT:				lda #$ff							; Meaning the VICII IRQs are treated 
+							sta VICIIIRQ						; and another different one might come later...
 							.RECOVERREGISTERS
 							rti
 
-* = $ca64
+* = $caa0
 BYTES $08														; Number of sprites managed by the program
 BYTES $40 $55 $6a $80 $95 $aa $c0 $d5							; Initial positions for the sprites (Y coordinate)
 BYTES $01 $02 $03 $04 $05 $07 $00 $09							; Color of the sprites
-NUMBERSPRITES				= $ca64
-SPRITESPOSITION				= $ca65
-SPRITESCOLOR				= $ca6d
+NUMBERSPRITES				= $caa0
+SPRITESPOSITION				= $caa1
+SPRITESCOLOR				= $caa9
 
 ; Define the sprite
 * = $0800
@@ -105,11 +108,19 @@ DRAWLETTERS:				lda #$01
 							sta SCREENBASE + 550
 							lda #$01
 							sta COLORRAMBASE + 550
-; Sets the IRQ
+
+							sei									; Stop interrupts...
+
+; The IRQ are going to be managed directly from 6510
 							lda $01								; The IRQ vector is going to be managed direclty...
 							and #$fd							; ...so the Kernel is desactivated from 6510 view!
 							sta $01								; This shouldn't be done, but it just for testing purposes!
 							
+; Sets the VICII IRQ also for collisions...
+							lda #z00000111						; The collisiones among sprites and among data and sprites will also generate IRQ
+							sta VICIICTRLIRQ
+
+; Sets the IRQ vector. The raster line has to be defined...
 							lda #<IRQPRG1_ADDRESS
 							sta SETVICIIRIRQ_PRGHVAR
 							lda #>IRQPRG1_ADDRESS
@@ -143,6 +154,8 @@ LOADSPRITES:				lda #$20							; Initial block (definition) for of the sprite 0.
 
 							lda #$00
 							sta TEMP03_DATA
+
+							cli									; Interrupts are again allowed...
 ; To move the scene...
 MOVESCENE:					inc TEMP03_DATA
 							lda TEMP03_DATA

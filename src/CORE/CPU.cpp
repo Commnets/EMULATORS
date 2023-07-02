@@ -125,11 +125,13 @@ bool MCHEmul::CPU::executeNextInstruction ()
 	}
 
 	// If the very deep debug is activated (dangerous)
-	// Information about the Program Counter and the Stack position is first printed out...
+	// Information about the Program Counter and the Stack position has to be first printed out...
 	// ...see later!
+	bool dd = _deepDebugActivated;
+	std::string sdd = "";
 	if (_deepDebugActivated)
-		_debugFile << MCHEmul::removeAll0 (_programCounter.asString ()) << ":(SP " 
-				   << memoryRef () -> stack () -> position () << ") ";
+		sdd = MCHEmul::removeAll0 (_programCounter.asString ()) + ":(SP " 
+				   + std::to_string (memoryRef () -> stack () -> position ()) + ") ";
 
 	// Access the next instruction...
 	// Using the row description of the instructions!
@@ -162,12 +164,15 @@ bool MCHEmul::CPU::executeNextInstruction ()
 
 	// If after the execution of the instruction, the deep debugging is activated,
 	// then additional information about the instruction executed and the stats of the CPU is printed out!
-	if (_deepDebugActivated)
+	if (dd)
 	{
-		std::string lSt = ""; size_t lenI = (lSt = _lastInstruction -> asString ()).size ();;
-		_debugFile << lSt << MCHEmul::_SPACES.substr (0, 20 - lenI) << "\t";
-		_debugFile << _statusRegister.asString () << "\t";
-		for (const auto& i : _registers) _debugFile << " " << i.asString () << " ";
+		std::string lSt = ""; 
+		size_t lenI = (lSt = _lastInstruction -> asString ()).size ();;
+		_debugFile << sdd
+				   << lSt << MCHEmul::_SPACES.substr (0, 20 - lenI) << "\t"
+				   << _statusRegister.asString () << "\t";
+		for (const auto& i : _registers) 
+			_debugFile << " " << i.asString () << " ";
 		_debugFile << std::endl;
 	}
 

@@ -192,7 +192,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{DD45DD00
 		emulators\C64Programs\code\tests\TESTROUTINES2.asm = emulators\C64Programs\code\tests\TESTROUTINES2.asm
 		emulators\C64Programs\code\tests\TESTSIMPLEOUT.asm = emulators\C64Programs\code\tests\TESTSIMPLEOUT.asm
 		emulators\C64Programs\code\tests\TESTSPRITESIRQ.asm = emulators\C64Programs\code\tests\TESTSPRITESIRQ.asm
-		emulators\C64Programs\code\tests\TESTSPRITESIRQ2.asm = emulators\C64Programs\code\tests\TESTSPRITESIRQ2.asm
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Compilers", "Compilers", "{CB939E14-E506-4775-A07D-14F332CA2B47}"

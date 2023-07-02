@@ -198,7 +198,7 @@ void COMMODORE::VICIIRegisters::setValue (size_t p, const MCHEmul::UByte& v)
 			{
 				if (v.bit (0)) _rasterIRQHappened = false; // clean up the latches...
 				if (v.bit (1)) _spriteCollisionWithDataIRQHappened = false;
-				if (v.bit (2)) _spriteCollisionIRQHappened = false;
+				if (v.bit (2)) _spriteCollisionsIRQHappened = false;
 				if (v.bit (3)) _lightPenIRQHappened = false;
 				/** bits from 4 to 7 are not used. */
 			}
@@ -407,14 +407,13 @@ const MCHEmul::UByte& COMMODORE::VICIIRegisters::readValue (size_t p) const
 		// VICIRQ: VIC Interrrupt Flag Register
 		case 0x19:
 			{
-				result = MCHEmul::UByte::_0; 
-				result.setBit (0, _rasterIRQHappened);
-				result.setBit (1, _spriteCollisionWithDataIRQHappened);
-				result.setBit (2, _spriteCollisionIRQHappened);
-				result.setBit (3, _lightPenIRQHappened);
+				result = MCHEmul::UByte::_FF; 
+				result.setBit (0, (_rasterIRQHappened && _rasterIRQActive));
+				result.setBit (1, (_spriteCollisionWithDataIRQHappened && _spriteCollisionWithDataIRQActive));
+				result.setBit (2, (_spriteCollisionsIRQHappened && _spriteCollisionsIRQActive));
+				result.setBit (3, (_lightPenIRQHappened && _lightPenIRQActive));
 				/** bits 4, 5, and 6 are not used, and always to 1. */
-				result.setBit (7, _rasterIRQHappened || _spriteCollisionWithDataIRQHappened || 
-								  _spriteCollisionIRQHappened || _lightPenIRQHappened);
+				result.setBit (7, launchIRQ ());
 			}
 
 			break;
@@ -612,7 +611,7 @@ void COMMODORE::VICIIRegisters::initializeInternalValues ()
 	// Reasons for IRQ
 	_rasterIRQHappened = false;
 	_spriteCollisionWithDataIRQHappened = false;
-	_spriteCollisionIRQHappened = false;
+	_spriteCollisionsIRQHappened = false;
 	_lightPenIRQHappened = false;
 
 	// This variable will be set from CIA2 Registers...

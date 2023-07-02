@@ -128,7 +128,7 @@ namespace COMMODORE
 		void setSpriteCollisionWithDataHappened (size_t p)
 							{ _spriteCollisionWithDataHappened [p] = true; }
 		void activateSpriteCollisionIRQ ()
-							{ _spriteCollisionIRQHappened = true; }
+							{ _spriteCollisionsIRQHappened = true; }
 		void setSpriteCollision (size_t p)
 							{ _spriteCollisionHappened [p] = true; }
 		void activateLightPenOnScreenIRQ ()
@@ -272,7 +272,7 @@ namespace COMMODORE
 		bool _spriteCollisionWithDataIRQHappened;
 		mutable std::vector <bool> _spriteCollisionWithDataHappened;
 		/** Whether a collision among sprites has happened. The detail is next. */
-		bool _spriteCollisionIRQHappened;
+		bool _spriteCollisionsIRQHappened;
 		mutable std::vector <bool> _spriteCollisionHappened;
 		/** Whether the lightpen is on the screen. */
 		bool _lightPenIRQHappened;
@@ -296,7 +296,7 @@ namespace COMMODORE
 	{ 
 		return ((_rasterIRQHappened && _rasterIRQActive) ||
 				(_spriteCollisionWithDataIRQHappened && _spriteCollisionWithDataIRQActive) ||
-				(_spriteCollisionIRQHappened && _spriteCollisionsIRQActive) ||
+				(_spriteCollisionsIRQHappened && _spriteCollisionsIRQActive) ||
 				(_lightPenIRQHappened && _lightPenIRQActive)); 
 	}
 }
