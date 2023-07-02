@@ -233,10 +233,15 @@ namespace MCHEmul
 		void setDebugLevel (unsigned int dL)
 							{ _debugLevel = dL; }
 
-		void activateDeepDebug (const std::string& fN)
-							{ cpu () -> activateDeepDebug (fN); }
-		void desactivateDeepDebug ()
-							{ cpu () -> desactivateDeepDebug (); }
+		/** To activate and desactive the deep debug at CPU level. \n
+			Returns true when ok, and false when not possible. \n
+			When activated the parameter needed is the name of the file where to store the info. */
+		bool deepDebug () const
+							{ return (cpu () -> deepDebug ()); }
+		bool activateDeepDebug (const std::string& fN, bool a = false /** meaning not adding the info at the end, but new file. */)
+							{ return (cpu () -> activateDeepDebug (fN, a)); }
+		bool desactivateDeepDebug ()
+							{ return (cpu () -> desactivateDeepDebug ()); }
 
 		/** To get the last error happend (after initialize or simulate methods). */
 		unsigned int error () const

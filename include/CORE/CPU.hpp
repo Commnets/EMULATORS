@@ -146,9 +146,17 @@ namespace MCHEmul
 		virtual InfoStructure getInfoStructure () const override;
 
 		/** To activate and desactivate the deep debug,
-			what means to output detail information about every step. */
-		void activateDeepDebug (const std::string fn);
-		void desactivateDeepDebug ();
+			what means to output detail information about every step. \n
+			The deep debug info could be limited just only for interruptions. */
+		bool deepDebug () const
+							{ return (_deepDebugActivated); }
+		/** Receives the name of the file to put the debug info and 
+			whether the info has to be added or it is new. \n
+			By default it is new. */
+		bool activateDeepDebug (const std::string fn, bool a = false /** meaning not add info at the end, but creating a new file */);
+		bool desactivateDeepDebug ();
+		std::ofstream& deepDebugFile () // Take care using this method can give you a closed file!
+							{ return (_debugFile); }
 
 		protected:
 		const CPUArchitecture _architecture = 

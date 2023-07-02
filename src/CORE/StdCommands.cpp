@@ -43,6 +43,8 @@ const std::string MCHEmul::ChangeCPUClockCommand::_NAME = "CCLOCKFACTOR";
 const std::string MCHEmul::SoundOnCommand::_NAME = "CSOUNDON";
 const std::string MCHEmul::SoundOffCommand::_NAME = "CSOUNDOFF";
 const std::string MCHEmul::InterruptsCommand::_NAME = "CINTERRUPTS";
+const std::string MCHEmul::InterruptDebugOnCommand::_NAME = "CIDEBUGON";
+const std::string MCHEmul::InterruptDebugOffCommand::_NAME = "CIDEBUGOFF";
 
 // ---
 MCHEmul::HelpCommand::HelpCommand (const std::string& hF)
@@ -483,7 +485,11 @@ void MCHEmul::ActivateDeepDebugCommand::executeImpl
 	if (c == nullptr)
 		return;
 
-	c -> activateDeepDebug (parameter ("00"));
+	rst.add ("ERROR", 
+		c -> activateDeepDebug (parameter ("00"), 
+			(existParameter ("01") ? ((parameter ("01") == "YES") ? true : false) : false))
+				? std::string ("No errors")
+				: std::string ("Deep debugging activation error"));
 }
 
 // ---
@@ -493,7 +499,10 @@ void MCHEmul::DesactivateDeepDebugCommand::executeImpl
 	if (c == nullptr)
 		return;
 
-	c -> desactivateDeepDebug ();
+	rst.add ("ERROR", 
+		c -> desactivateDeepDebug ()
+			? std::string ("No errors")
+			: std::string ("Deep debugging desactivation error"));
 }
 
 // ---
@@ -627,4 +636,31 @@ void MCHEmul::InterruptsCommand::executeImpl
 	for (const auto& i : c -> cpu () -> interrupts ())
 		intr.add (std::to_string (i.second -> id ()), std::move (i.second -> getInfoStructure ()));
 	rst.add ("INTERRUPTS", std::move (intr));
+}
+
+// ---
+void MCHEmul::InterruptDebugOnCommand::executeImpl 
+	(MCHEmul::CommandExecuter* cE, MCHEmul::Computer* c, MCHEmul::InfoStructure& rst)
+{
+	if (c == nullptr)
+		return;
+
+	rst.add ("ERROR", 
+		MCHEmul::CPUInterrupt::activateDebug (c, parameter ("00"), 
+			(existParameter ("01") ? ((parameter ("01") == "YES") ? true : false) : false /** default value. */))
+				? std::string ("No errors")
+				: std::string ("Interrupt debug activation error"));
+}
+
+// ---
+void MCHEmul::InterruptDebugOffCommand::executeImpl 
+	(MCHEmul::CommandExecuter* cE, MCHEmul::Computer* c, MCHEmul::InfoStructure& rst)
+{
+	if (c == nullptr)
+		return;
+
+	rst.add ("ERROR", 
+		MCHEmul::CPUInterrupt::desactivateDebug (c)
+			? std::string ("No errors")
+			: std::string ("Interrupt debug desactivation error"));
 }

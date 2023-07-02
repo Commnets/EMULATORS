@@ -76,6 +76,10 @@ MCHEmul::Command* MCHEmul::StandardCommandBuilder::createEmptyCommand (const std
 		result = new MCHEmul::SoundOffCommand;
 	else if (cmdName == "INTERRUPTS" || cmdName == MCHEmul::InterruptsCommand::_NAME)
 		result = new MCHEmul::InterruptsCommand;
+	else if (cmdName == "IDEBUGON" || cmdName == MCHEmul::InterruptDebugOnCommand::_NAME)
+		result = new MCHEmul::InterruptDebugOnCommand;
+	else if (cmdName == "IDEBUGOFF" || cmdName == MCHEmul::InterruptDebugOffCommand::_NAME)
+		result = new MCHEmul::InterruptDebugOffCommand;
 	else if (cmdName == MCHEmul::MoveParametersToAnswerCommand::_NAME)
 		result = new MCHEmul::MoveParametersToAnswerCommand;
 

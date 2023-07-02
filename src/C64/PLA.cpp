@@ -14,7 +14,7 @@ C64::PLA::PLA ()
 	  _EXROM (true), _GAME (true),
 	  _statusAffected (false)
 {
-	// Nothing else to do...
+	setClassName ("PLA");
 }
 
 bool C64::PLA::initialize ()
@@ -68,4 +68,19 @@ void C64::PLA::processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifier*)
 		_GAME	= !((evnt.value () & 0x01) != 0);
 		_EXROM	= !((evnt.value () & 0x02) != 0);
 	}
+}
+
+// ---
+MCHEmul::InfoStructure C64::PLA::getInfoStructure () const
+{
+	MCHEmul::InfoStructure result = std::move (MCHEmul::Chip::getInfoStructure ());
+
+	result.remove ("Memory");
+	result.add ("_GAME",	_GAME);
+	result.add ("_EXROM",	_EXROM);
+	result.add ("_LORAM",	_LORAM);
+	result.add ("_HIRAM",	_HIRAM);
+	result.add ("_CHAREN",	_CHAREN);
+
+	return (result);
 }

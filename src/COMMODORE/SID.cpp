@@ -56,7 +56,7 @@ bool COMMODORE::SID::simulate (MCHEmul::CPU* cpu)
 	// Add the output to the sound memory...
 	if (soundWrapper () != nullptr)
 	{
-		for (unsigned int i = 0; i < (cpu -> clockCycles () - _lastClockCycles); i++)
+		for (unsigned int i = (cpu -> clockCycles () - _lastClockCycles); i > 0 ; i--)
 		{
 			// The number of bytes that can come from the wrapper might not be fixed...
 			MCHEmul::UBytes data;

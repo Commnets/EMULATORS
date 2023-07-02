@@ -540,7 +540,8 @@ namespace MCHEmul
 	};
 
 	/** Comand to activate the deep debug. \n
-		The parameter needed is the name of the file where to keep in the info. */
+		The parameter needed is the name of the file where to keep in the info. 
+		If the debug of only interruptions were activated the command wouldn't work. */
 	class ActivateDeepDebugCommand final : public Command
 	{
 		public:
@@ -551,15 +552,19 @@ namespace MCHEmul
 			: Command (_ID, _NAME)
 							{ }
 
+		/** The parameter needed is the name of the file and
+			whether every execution has to be added at the end or not. \n
+			By default it is false (meaning not to add, but new file) */
 		virtual bool canBeExecuted () const override
-							{ return (_parameters.size () == 1); }
+							{ return (_parameters.size () == 1 || _parameters.size () == 2); }
 
 		private:
 		virtual void executeImpl (CommandExecuter* cE, Computer* c, InfoStructure& rst) override;
 	};
 
 	/** Comand to desactivate the deep debug. \n
-		No parameters are needed. */
+		No parameters are needed. \n
+		If the debug of only interruptions were activated the command wouldn't work. */
 	class DesactivateDeepDebugCommand final : public Command
 	{
 		public:
@@ -750,6 +755,48 @@ namespace MCHEmul
 							{ }
 
 		/** The only parameter has to be the factor. */
+		virtual bool canBeExecuted () const override
+							{ return (_parameters.size () == 0); }
+
+		private:
+		virtual void executeImpl (CommandExecuter* cE, Computer* c, InfoStructure& rst) override;
+	};
+
+	/** To activate debug for an interruption. \n
+		No parameters are needed because the debug is activated for all interruptions. */
+	class InterruptDebugOnCommand final : public Command
+	{
+		public:
+		static const int _ID = 33;
+		static const std::string _NAME;
+
+		InterruptDebugOnCommand ()
+			: Command (_ID, _NAME)
+							{ }
+
+		/** The parameter needed is the name of the file and (optional)
+			whether every execution has to be added at the end or not. \n 
+			By default it is false, meaning not to add the data at the end but a new file. */
+		virtual bool canBeExecuted () const override
+							{ return (_parameters.size () == 1 || _parameters.size () == 2); }
+
+		private:
+		virtual void executeImpl (CommandExecuter* cE, Computer* c, InfoStructure& rst) override;
+	};
+
+	/** To desactivate debug for an interruption. \n
+		No parameters are need. */
+	class InterruptDebugOffCommand final : public Command
+	{
+		public:
+		static const int _ID = 34;
+		static const std::string _NAME;
+
+		InterruptDebugOffCommand ()
+			: Command (_ID, _NAME)
+							{ }
+
+		/** No parameters are needed. */
 		virtual bool canBeExecuted () const override
 							{ return (_parameters.size () == 0); }
 

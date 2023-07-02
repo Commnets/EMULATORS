@@ -252,7 +252,7 @@ namespace MCHEmul
 						{ x = _hRasterData.firstDisplayPosition (); y = _vRasterData.firstDisplayPosition (); }
 		void displayPositions (unsigned short& x1, unsigned short& y1, unsigned short& x2, unsigned short& y2)
 						{ x1 = _hRasterData.firstDisplayPosition (); y1 = _vRasterData.firstDisplayPosition ();
-							x2 = _hRasterData.lastDisplayPosition (); y2 = _vRasterData.lastDisplayPosition (); }
+						  x2 = _hRasterData.lastDisplayPosition (); y2 = _vRasterData.lastDisplayPosition (); }
 		void currentDisplayPosition (unsigned short& x, unsigned short& y) const
 						{ x = _hRasterData.currentDisplayPosition (); y = _vRasterData.currentDisplayPosition (); }
 
@@ -269,15 +269,15 @@ namespace MCHEmul
 						{ x = _hRasterData.firstScreenPosition (); y = _vRasterData.firstScreenPosition (); }
 		void screenPositions (unsigned short& x1, unsigned short& y1, unsigned short& x2, unsigned short& y2) const
 						{ x1 = _hRasterData.firstScreenPosition (); y1 = _vRasterData.firstScreenPosition ();
-							x2 = _hRasterData.lastScreenPosition (); y2 = _vRasterData.lastScreenPosition (); }
+						  x2 = _hRasterData.lastScreenPosition (); y2 = _vRasterData.lastScreenPosition (); }
 			
 		/** Returns true when the raster goes to the next line. \n
 			The Parameter is the number of cycles to move the raster. \n
 			The raster moves 8 pixels per cycle. */
 		bool moveCycles (unsigned short nC)
 						{ bool result = _hRasterData.add (nC * 8 /** columuns = piexels per cycle. */);
-							if (result) _vRasterData.next (); 
-							return (result); }
+						  if (result) _vRasterData.next (); 
+						  return (result); }
 
 		void initialize ()
 						{ _vRasterData.initialize (); _hRasterData.initialize (); }

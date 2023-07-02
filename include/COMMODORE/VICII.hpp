@@ -257,11 +257,14 @@ namespace COMMODORE
 		// The color memory is always at the same location (only visible from VICII)
 		readColorDataAt (chrLine);
 
-		// Depending on the graphics mode either char data or bit data is loaded
-		readScreenCodeDataAt (chrLine); // load _graphicsScreenCodeData...
+		// Load _graphicsScreenCodeData first..
+		readScreenCodeDataAt (chrLine); 
+		// ...and if it is a text mode...
 		if (_VICIIRegisters -> textMode ()) 
-			readCharDataFor (_graphicsScreenCodeData, _VICIIRegisters -> graphicExtendedColorTextModeActive ());
-		else readBitmapDataAt (gl);
+			readCharDataFor (_graphicsScreenCodeData, _VICIIRegisters -> graphicExtendedColorTextModeActive ()); // ...and then the detailed info...
+		// ...and if it is not, load directly the graphics data...
+		else 
+			readBitmapDataAt (gl);
 	}
 
 	// ---

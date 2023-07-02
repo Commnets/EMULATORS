@@ -20,6 +20,7 @@
 namespace MCHEmul
 {
 	class CPU;
+	class Computer;
 
 	/** A CPU Interrupt is something that is able to stop the normal progress of the CPU execution. */
 	class CPUInterrupt : public InfoClass
@@ -60,8 +61,7 @@ namespace MCHEmul
 			In com CPU when the interruption start to run can be distinguish from other. */
 		bool inExecution () const
 							{ return (_inExecution); }
-		void setInExecution (bool i)
-							{ _inExecution = i; }
+		void setInExecution (bool i);
 
 		/** The defult intialization of the interrupt leaves it inactive. */
 		virtual void initialize ()
@@ -80,6 +80,19 @@ namespace MCHEmul
 		  */
 		virtual InfoStructure getInfoStructure () const override;
 
+		// To manage the debug for interruptions...
+		static bool debug ()
+							{ return (_debug); }
+		/** To activate or desactivate the debug of the code for the interruptions (all). \n
+			The debug for interruptions is incompatible with the deepDebug.
+			When that one is activated this other one can not. \n 
+			Returns true whether the action was possible. 
+			Receives a reference to the environment (the computer), the name of the file where to trace,
+			and also whether the info has to be added to that file or is new. */
+		static bool activateDebug (Computer* c, const std::string& nF = ".\\INT.log", bool a = true /** meaning add info at the end. */);
+		/** Same to desactivate. */
+		static bool desactivateDebug (Computer* c);
+
 		protected:
 		// These methods are invoked by executeOver (defined above);
 		/** To determine whether it is the time to execute the interruption. */
@@ -93,9 +106,17 @@ namespace MCHEmul
 		int _id;
 		bool _active;
 		bool _inExecution;
+		
+		// To debug the code in the interruption...
+		static bool _debug;
+		static std::string _debugFileName;
+		static bool _addDebugInfo;
+		static Computer* _computer;
 
 		// Implementation
 		mutable unsigned int _lastClockCyclesExecuted;
+		static bool _debugOffWhenFinishes;
+
 	};
 
 	/** A map of interrupts. */

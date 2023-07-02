@@ -145,7 +145,8 @@ bool COMMODORE::CIATimer::countDown (MCHEmul::CPU* cpu, COMMODORE::CIATimer* t)
 	}
 
 	// This variable is set first time the value is below the half...
-	_reachesHalf = (_currentValue >> 1 < _initialValue) && !_alreadyReachedHalf;
+	if ((_reachesHalf = ((_currentValue >> 1) < _initialValue) && !_alreadyReachedHalf)) 
+		_alreadyReachedHalf = true; // Latches, but not follow the value...
 
 	return (result);
 }

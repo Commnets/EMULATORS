@@ -112,13 +112,6 @@ bool MCHEmul::CPU::executeNextInstruction ()
 	if (_stopped)
 		return (true);
 
-	// If the very deep debug is activated (dangerous)
-	// Information about the Program Counter and the Stack position is first printed out...
-	// ...see later!
-	if (_deepDebugActivated)
-		_debugFile << MCHEmul::removeAll0 (_programCounter.asString ()) << ":(SP " 
-				   << memoryRef () -> stack () -> position () << ") ";
-
 	// Number of cycles calling interruptions...
 	unsigned int nCInt = 0;
 	// ..and number of cycles executing the last instruction...
@@ -130,6 +123,13 @@ bool MCHEmul::CPU::executeNextInstruction ()
 
 		_clockCycles += nCInt;
 	}
+
+	// If the very deep debug is activated (dangerous)
+	// Information about the Program Counter and the Stack position is first printed out...
+	// ...see later!
+	if (_deepDebugActivated)
+		_debugFile << MCHEmul::removeAll0 (_programCounter.asString ()) << ":(SP " 
+				   << memoryRef () -> stack () -> position () << ") ";
 
 	// Access the next instruction...
 	// Using the row description of the instructions!
@@ -198,20 +198,33 @@ MCHEmul::InfoStructure MCHEmul::CPU::getInfoStructure () const
 }
 
 // ---
-void MCHEmul::CPU::activateDeepDebug (const std::string fn)
+bool MCHEmul::CPU::activateDeepDebug (const std::string fn, bool a)
 {
-	_debugFile.open (fn);
+	// If deepDebug were already activated
+	if (_deepDebugActivated)
+		return (false); // ...no activation will be possible...
+
+	_debugFile.open (fn, a 
+		? (std::ios::out | std::ios::app) /** Add at the end */
+		: (std::ios::out | std::ios::trunc) /** Remove everything */ );
 	if (!_debugFile)
-		return;
+		return (false);
 
 	_deepDebugActivated = true;
+
+	return (true);
 }
 
 // ---
-void MCHEmul::CPU::desactivateDeepDebug ()
+bool MCHEmul::CPU::desactivateDeepDebug ()
 {
+	// If not deepDebugging were activated
 	if (!_deepDebugActivated)
-		return;
+		return (false); // ...no desactivation will be possible...
 
 	_debugFile.close ();
+
+	_deepDebugActivated = false;
+
+	return (true);
 }

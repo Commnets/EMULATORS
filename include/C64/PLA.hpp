@@ -50,6 +50,8 @@ namespace C64
 		bool statusAffected () const
 							{ bool r = _statusAffected; _statusAffected = false; return (r); }
 
+		virtual MCHEmul::InfoStructure getInfoStructure () const override;
+
 		private:
 		// Inputs to the PLA...
 		/** From the C64 IO Port (Byte 0x011m bites 0,1,2). */

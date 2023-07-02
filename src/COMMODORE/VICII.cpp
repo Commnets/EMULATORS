@@ -103,7 +103,7 @@ bool COMMODORE::VICII::simulate_I (MCHEmul::CPU* cpu)
 	_raster.reduceDisplayZone
 		(!_VICIIRegisters -> textDisplay25RowsActive (), !_VICIIRegisters -> textDisplay40ColumnsActive ());
 
-	for (size_t i = (cpu -> clockCycles  () - _lastCPUCycles); i > 0 ; i--)
+	for (unsigned int i = (cpu -> clockCycles  () - _lastCPUCycles); i > 0 ; i--)
 	{
 		_videoActive = (_raster.currentLine () == _FIRSTBADLINE) 
 			? !_VICIIRegisters -> blankEntireScreen () : _videoActive; // Only at first bad line it can change its value...
@@ -234,7 +234,7 @@ bool COMMODORE::VICII::simulate_II (MCHEmul::CPU* cpu)
 	_raster.reduceDisplayZone
 		(!_VICIIRegisters -> textDisplay25RowsActive (), !_VICIIRegisters -> textDisplay40ColumnsActive ());
 
-	for (size_t i = (cpu -> clockCycles  () - _lastCPUCycles); i > 0 ; i--)
+	for (unsigned int i = (cpu -> clockCycles  () - _lastCPUCycles); i > 0 ; i--)
 	{
 		_videoActive = (_raster.currentLine () == _FIRSTBADLINE) 
 			? !_VICIIRegisters -> blankEntireScreen () : _videoActive; // Only at first bad line it can change its value...
@@ -479,9 +479,9 @@ void COMMODORE::VICII::drawGraphicsSpritesAndDetectCollisions (unsigned short cv
 	{
 		for (int i = 7; i >= 0; i--)
 			if (_VICIIRegisters -> spriteEnable ((size_t) i) &&
-				((f && !_VICIIRegisters -> spriteToForegroundPriority (i)) ||
-				(!f && _VICIIRegisters -> spriteToForegroundPriority (i))))
-				colSprites [i] = drawSprite (i, dC);
+				((f && !_VICIIRegisters -> spriteToForegroundPriority ((size_t) i)) ||
+				(!f && _VICIIRegisters -> spriteToForegroundPriority ((size_t) i))))
+				colSprites [(size_t) i] = drawSprite ((size_t) i, dC);
 	};
 
 	drawSprites (false);
@@ -817,10 +817,10 @@ MCHEmul::UByte COMMODORE::VICII::drawMultiColorBitMap (int cb, int rc,
 		unsigned short pos = dC._RCA + i;
 		unsigned fc = // The value 0x00 is not tested....
 				(cs == 0x01) // The color is the defined in the video matrix, high nibble...
-					? (sc [iBy].value () & 0xf0) >> 4
-					: ((cs == 0x02) // The color is defined in the video matrix, low nibble...
-						? (sc [iBy].value () & 0x0f)
-						: clr [iBy].value () & 0x0f); // The color is defined in color matrix...
+						? (sc [iBy].value () & 0xf0) >> 4
+						: ((cs == 0x02) // The color is defined in the video matrix, low nibble...
+							? sc [iBy].value () & 0x0f
+							: clr [iBy].value () & 0x0f); // The color is defined in color matrix...
 		if (pos >= dC._ICS && pos <= dC._LCS) 
 			screenMemory () -> setPixel ((size_t) pos, (size_t) dC._RR, fc);
 		if ((pos + 1) >= dC._ICS && (pos + 1) <= dC._LCS) 

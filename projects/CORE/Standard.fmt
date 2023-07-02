@@ -126,6 +126,9 @@ Active:@ACTIVE@, Type:@TYPE@, Frequency:@FREQUENCY@
 Active:@ACTIVE@, Type:@TYPE@, Frequency:@FREQUENCY@(@PULSEUP@)
 #---
 #---
+;CRESTART
+#---
+#---
 ;CAUTHOR
 @Author>@
 #---
@@ -136,6 +139,16 @@ Active:@ACTIVE@, Type:@TYPE@, Frequency:@FREQUENCY@(@PULSEUP@)
 #---
 ;CINTERRUPTS
 @INTERRUPTS?{fmter=.CLASS,empty=no interruptions}\n@
+#---
+#---
+;CIDEBUGON
+->Errors:
+@ERROR@
+#---
+#---
+;CIDEBUGOFF
+->Errors:
+@ERROR@
 #---
 #---
 ;CSTATUS
@@ -181,6 +194,15 @@ Last:@INST@
 @CPU>@
 #---
 #---
+;CACTIVATEDEEPDEBUG
+#---
+#---
+;CDESACTIVATEDEEPDEBUG
+#---
+#---
+;CCLOCKFACTOR
+#---
+#---
 ;CMEMORY
 @BYTES{blocksize=16,listsep=\,,tablesep=\ ,minsize=2}@
 #---
@@ -200,7 +222,6 @@ Current:@INST@
 #---
 #---
 ;CNEXT
-#What it is show is the next instruction executed
 #---
 #---
 ;CSHOWNEXT
@@ -255,6 +276,15 @@ Program saved=@RESULT@
 @ERROR@
 #---
 #---
+;CSOUNDON
+#---
+#---
+;CSOUNDOFF
+#---
+#---
 ;CANSWER
 @RESULT@
+#---
+#---
+;CMOVEPARAMS
 #---

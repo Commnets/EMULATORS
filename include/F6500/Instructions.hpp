@@ -178,7 +178,7 @@ namespace F6500
 		assert (parameters ().size () == 3);
 
 		return (MCHEmul::Address (memory () -> values 
-		(MCHEmul::Address ({ parameters ()[1], parameters ()[2] }, false), 2), false));
+			(MCHEmul::Address ({ parameters ()[1], parameters ()[2] }, false), 2), false));
 	}
 
 	// ---
