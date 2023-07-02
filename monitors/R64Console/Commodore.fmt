@@ -86,12 +86,12 @@ Id:@ID@
 @TimerA>@
 ->Timer B:
 @TimerB>@
--> Clock:
+->Clock:
 @Clock>@
--> Ports:
+->Ports:
 A:@PortA@, B:@PortB@
 Dir A:@CIDDRA@, Dir B:@CIDDRB@
--> SerialPort:
+->SerialPort:
 @SerialPort>@
 #---
 #---

@@ -48,28 +48,13 @@ void COMMODORE::CIATimer::simulate (MCHEmul::CPU* cpu, COMMODORE::CIATimer* t)
 	{
 		if (_interruptEnabled)
 			_interruptRequested = true;
-		
-		switch (_runMode)
-		{
-			case COMMODORE::CIATimer::RunMode::_RESTART:
-				{
-					_currentValue = _initialValue;
 
-					_alreadyReachedHalf = false;
-				}
+		_currentValue = _initialValue;
 
-				break;
+		_alreadyReachedHalf = false;
 
-			case COMMODORE::CIATimer::RunMode::_ONETIME:
-				{
-					_enabled = false;
-				}
-
-				break;
-
-			default:
-				break;
-		}
+		if (_runMode == COMMODORE::CIATimer::RunMode::_ONETIME)
+			_enabled = false;
 
 		_reaches0 = true;
 	}

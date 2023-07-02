@@ -127,6 +127,8 @@ bool MCHEmul::CPUInterrupt::desactivateDebug (MCHEmul::Computer* c)
 		_debugOffWhenFinishes = true;
 	else
 	{
+		_computer -> cpu () -> desactivateDeepDebug (); // ...deactivate the deep debug...
+
 		_debug = false;
 
 		_debugOffWhenFinishes = false;
@@ -134,8 +136,6 @@ bool MCHEmul::CPUInterrupt::desactivateDebug (MCHEmul::Computer* c)
 		_debugFileName = "";
 
 		_computer = nullptr;
-			
-		_computer -> cpu () -> desactivateDeepDebug (); // ...deactivate the deep debug...
 	}
 
 	return (true);
