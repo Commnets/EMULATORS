@@ -127,7 +127,9 @@ namespace MCHEmul
 		void addInterrupt (CPUInterrupt* in);
 		void removeInterrrupt (int id);
 
-		/** To execute the next instruction. */
+		/** To execute the next instruction. 
+			The execution can stop the debugging if it was active. \n
+			But, however, the last instruction will be printed out! */
 		bool executeNextInstruction ();
 
 		/** To get the last error happend (after initialize or simulate methods). */
@@ -154,6 +156,8 @@ namespace MCHEmul
 			whether the info has to be added or it is new. \n
 			By default it is new. */
 		bool activateDeepDebug (const std::string fn, bool a = false /** meaning not add info at the end, but creating a new file */);
+		/** If executing a transaction the file is not closed. 
+			until the transaction is kept into the faile. */
 		bool desactivateDeepDebug ();
 		std::ofstream& deepDebugFile () // Take care using this method can give you a closed file!
 							{ return (_debugFile); }
@@ -184,6 +188,8 @@ namespace MCHEmul
 		/** The instructions will be moved into an array at construction time,
 			to speed up their access in the executeNextInstruction method. */
 		std::vector <Instruction*> _rowInstructions;
+		/** If executing a transaction this variable becomes true. */
+		mutable bool _executingTransaction;
 	};
 }
 

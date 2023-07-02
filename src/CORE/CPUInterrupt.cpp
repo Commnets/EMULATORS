@@ -24,7 +24,7 @@ void MCHEmul::CPUInterrupt::setInExecution (bool i)
 			{ 
 				_computer -> cpu () -> deepDebugFile () <<
 					"---------" << std::endl <<
-					"Starting Interrupt Debugging" << std::endl;
+					"Starting Interrupt Debugging" << std::endl << std::endl;
 				_computer -> cpu () -> deepDebugFile () <<
 					MCHEmul::removeAll0 (
 						MCHEmul::FormatterBuilder::instance () -> formatter ("Computer") -> 
@@ -37,10 +37,6 @@ void MCHEmul::CPUInterrupt::setInExecution (bool i)
 		// Debugging...and first time to pass over this point?
 		if (_debug && _computer -> cpu () -> deepDebug ())
 		{
-			_computer -> cpu () -> deepDebugFile () <<
-				std::endl << "Finishing Interrupt Debugging" << std::endl <<
-				"---------" << std::endl; // ...no more debugging...
-
 			_computer -> cpu () -> desactivateDeepDebug (); // ...deactivate the deep debug...
 
 			if (_debugOffWhenFinishes)

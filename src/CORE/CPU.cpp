@@ -15,7 +15,8 @@ MCHEmul::CPU::CPU (const MCHEmul::CPUArchitecture& a, const MCHEmul::Registers& 
 	  _error (_NOERROR), 
 	  _clockCycles (0), _lastClockCycles (0),
 	  _stopped (false),
-	  _rowInstructions () // It will be fulfilled later!
+	  _rowInstructions (), // It will be fulfilled later!
+	  _executingTransaction (false)
 { 
 	assert (_registers.size () > 0 && _instructions.size () > 0); 
 
@@ -80,6 +81,8 @@ bool MCHEmul::CPU::initialize ()
 
 	_lastClockCycles = 0;
 
+	_executingTransaction = false;
+
 	return (true);
 }
 
@@ -127,8 +130,8 @@ bool MCHEmul::CPU::executeNextInstruction ()
 	// If the very deep debug is activated (dangerous)
 	// Information about the Program Counter and the Stack position has to be first printed out...
 	// ...see later!
-	bool dd = _deepDebugActivated;
 	std::string sdd = "";
+	bool dd = _deepDebugActivated; // Keep the status before anything...
 	if (_deepDebugActivated)
 		sdd = MCHEmul::removeAll0 (_programCounter.asString ()) + ":(SP " 
 				   + std::to_string (memoryRef () -> stack () -> position ()) + ") ";
@@ -154,7 +157,9 @@ bool MCHEmul::CPU::executeNextInstruction ()
 	_programCounter += (size_t) inst -> memoryPositions ();
 
 	// Then, executes the instruction
+	_executingTransaction = true;
 	bool result = inst -> execute (dt, this, _memory, _memory -> stack ());
+	_executingTransaction = false;
 
 	_clockCycles += (nCInst = inst -> clockCycles () + inst -> additionalClockCycles ());
 
@@ -162,18 +167,22 @@ bool MCHEmul::CPU::executeNextInstruction ()
 
 	_lastInstruction = inst;
 
-	// If after the execution of the instruction, the deep debugging is activated,
-	// then additional information about the instruction executed and the stats of the CPU is printed out!
-	if (dd)
+	// If after the execution of the instruction, the deep debugging is still activated...
+	// ...then information about the instruction executed and the stats of the CPU is printed out!
+	if (_deepDebugActivated || // still debugging..
+		(dd && !_deepDebugActivated)) // not yet but the last instruction has to be saved...
 	{
 		std::string lSt = ""; 
 		size_t lenI = (lSt = _lastInstruction -> asString ()).size ();;
-		_debugFile << sdd
-				   << lSt << MCHEmul::_SPACES.substr (0, 20 - lenI) << "\t"
-				   << _statusRegister.asString () << "\t";
+		_debugFile << sdd // ...The program counter and the stack position...
+				   << lSt << MCHEmul::_SPACES.substr (0, 20 - lenI) << "\t" // The last instruction...
+				   << _statusRegister.asString () << "\t"; // ...The status register...
 		for (const auto& i : _registers) 
-			_debugFile << " " << i.asString () << " ";
+			_debugFile << " " << i.asString () << " "; // ...and the registers info.
 		_debugFile << std::endl;
+
+		if (!_deepDebugActivated)
+			_debugFile.close ();
 	}
 
 	return (result);
@@ -227,9 +236,10 @@ bool MCHEmul::CPU::desactivateDeepDebug ()
 	if (!_deepDebugActivated)
 		return (false); // ...no desactivation will be possible...
 
-	_debugFile.close ();
-
 	_deepDebugActivated = false;
+
+	if (!_executingTransaction)
+		_debugFile.close ();
 
 	return (true);
 }
