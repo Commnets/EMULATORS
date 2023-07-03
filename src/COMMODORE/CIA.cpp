@@ -114,11 +114,7 @@ bool COMMODORE::CIA::simulate (MCHEmul::CPU* cpu)
 	_lastClockCycles = cpu -> clockCycles ();
 
 	// Any reason to launch an interruption?...
-	if (_timerA.launchInterruption () ||
-		_timerB.launchInterruption () ||
-		_clock.launchInterruption () ||
-		_serialPort.launchInterruption () ||
-		_CIARegisters -> launchFlagLineInterruption ())
+	if (_CIARegisters -> launchInterruption ())
 		cpu -> interrupt (_interruptId) -> setActive (true);
 
 	return (true);

@@ -36,8 +36,7 @@ void COMMODORE::CIAClock::simulate (MCHEmul::CPU* cpu)
 	if (_hours == _alarmHours && _minutesL == _alarmMinutes && _secondsL == _alarmSeconds &&
 		_tenthsSecondL >= _alarmTenthsSecond)
 	{
-		if (_interruptEnabled)
-			_interruptRequested = true;
+		_interruptRequested = true;
 		
 		_reachesAlarm = true;
 	}

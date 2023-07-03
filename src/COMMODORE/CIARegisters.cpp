@@ -24,6 +24,15 @@ void COMMODORE::CIARegisters::initialize ()
 }
 
 // ---
+bool COMMODORE::CIARegisters::launchInterruption () const
+{
+	return (_timerA	-> launchInterruption () ||
+			_timerB -> launchInterruption () ||
+			_clock  -> launchInterruption () ||
+			launchFlagLineInterruption ());
+}
+
+// ---
 void COMMODORE::CIARegisters::setValue (size_t p, const MCHEmul::UByte& v)
 {
 	if (_timerA == nullptr || _timerB == nullptr || _clock == nullptr)
@@ -356,18 +365,13 @@ const MCHEmul::UByte& COMMODORE::CIARegisters::readValue (size_t p) const
 
 		case 0x0d:
 			{
-				bool IA = _timerA -> interruptRequested (); // It is set back to false after reading...
-				bool IB = _timerB -> interruptRequested (); // Same...
-				bool IC = _clock -> interruptRequested ();  // Same...
-				bool IS = _serialPort -> interruptRequested ();	// Same...
-				bool ID = flagLineInterruptRequested ();    // Same...
 				result = MCHEmul::UByte::_0;
-				result.setBit (0, IA); // in Timer A?
-				result.setBit (1, IB); // in Timer B?
-				result.setBit (2, IC); // in Clock?
-				result.setBit (3, IS); // in Serial Port?
-				result.setBit (4, ID); // In the Flag Line?
-				result.setBit (7, IA || IB || IC || IS || ID); // Any Interrupt?
+				result.setBit (7, launchInterruption ()); // Any Interrupt?
+				result.setBit (0, _timerA -> interruptRequested ()); // in Timer A?
+				result.setBit (1, _timerB -> interruptRequested ()); // in Timer B?
+				result.setBit (2, _clock -> interruptRequested ()); // in Clock?
+				result.setBit (3, _serialPort -> interruptRequested ()); // in Serial Port?
+				result.setBit (4, flagLineInterruptRequested ()); // In the Flag Line?
 			}
 
 			break;
