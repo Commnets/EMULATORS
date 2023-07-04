@@ -1,7 +1,4 @@
 #include <COMMODORE/CIARegisters.hpp>
-#include <COMMODORE/CIATimer.hpp>
-#include <COMMODORE/CIAClock.hpp>
-#include <COMMODORE/CIASerialPort.hpp>
 
 // ---
 COMMODORE::CIARegisters::CIARegisters (int id, MCHEmul::PhysicalStorage* ps, size_t pp, const MCHEmul::Address& a, size_t s)
@@ -21,15 +18,6 @@ void COMMODORE::CIARegisters::initialize ()
 	MCHEmul::PhysicalStorageSubset::initialize (); 
 
 	initializeInternalValues ();
-}
-
-// ---
-bool COMMODORE::CIARegisters::launchInterruption () const
-{
-	return (_timerA	-> launchInterruption () ||
-			_timerB -> launchInterruption () ||
-			_clock  -> launchInterruption () ||
-			launchFlagLineInterruption ());
 }
 
 // ---

@@ -23,12 +23,14 @@ void MCHEmul::CPUInterrupt::setInExecution (bool i)
 			if (_computer -> cpu () -> activateDeepDebug (_debugFileName, _addDebugInfo)) // ...activate the deep debug, and if there is no error...
 			{ 
 				_computer -> cpu () -> deepDebugFile () <<
-					"---------" << std::endl <<
-					"Starting Interrupt Debugging" << std::endl << std::endl;
+					std::endl << "****************************************" << std::endl <<
+					"Starting Interrupt Debugging" << std::endl <<
+					"CPU STATUS" << std::endl << std::endl;
 				_computer -> cpu () -> deepDebugFile () <<
 					MCHEmul::removeAll0 (
 						MCHEmul::FormatterBuilder::instance () -> formatter ("Computer") -> 
 							format (_computer -> getInfoStructure ())) << std::endl; // ...and prints out the status of the computer...
+				_computer -> cpu () -> deepDebugFile () << std::endl;
 			}
 		}
 	}

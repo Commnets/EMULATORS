@@ -250,7 +250,7 @@ namespace MCHEmul
 						{ return (_vRasterData.isInDisplayZone () && _hRasterData.isInDisplayZone ()); }
 		void firstDisplayPosition (unsigned short& x, unsigned short& y) const
 						{ x = _hRasterData.firstDisplayPosition (); y = _vRasterData.firstDisplayPosition (); }
-		void displayPositions (unsigned short& x1, unsigned short& y1, unsigned short& x2, unsigned short& y2)
+		void displayPositions (unsigned short& x1, unsigned short& y1, unsigned short& x2, unsigned short& y2) const
 						{ x1 = _hRasterData.firstDisplayPosition (); y1 = _vRasterData.firstDisplayPosition ();
 						  x2 = _hRasterData.lastDisplayPosition (); y2 = _vRasterData.lastDisplayPosition (); }
 		void currentDisplayPosition (unsigned short& x, unsigned short& y) const

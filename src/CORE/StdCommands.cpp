@@ -380,7 +380,8 @@ void MCHEmul::LastIntructionCPUCommand::executeImpl (MCHEmul::CommandExecuter* c
 	rst.add ("INST", c -> cpu () -> lastInstruction () == nullptr 
 		? "-" 
 		: MCHEmul::ByteCodeLine (
-			c -> cpu () -> programCounter ().asAddress (), 
+			c -> cpu () -> programCounter ().asAddress () - 
+				(c -> cpu () -> lastInstruction () -> codeLength () + 1), // Before the execution
 			c -> cpu () -> lastInstruction () -> parameters ().bytes (),
 			"", /** No laberl recognized. */
 			c -> cpu () -> lastInstruction (), 

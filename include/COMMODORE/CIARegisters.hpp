@@ -15,6 +15,9 @@
 #define __COMMODORE_CIAREGISTERS__
 
 #include <CORE/incs.hpp>
+#include <COMMODORE/CIATimer.hpp>
+#include <COMMODORE/CIAClock.hpp>
+#include <COMMODORE/CIASerialPort.hpp>
 
 namespace COMMODORE
 {
@@ -90,7 +93,7 @@ namespace COMMODORE
 							{ return (_flagLineInterruptEnabled && _flagLineInterruptRequested); }
 
 		/** To know whether the interruption has or not to be launched. */
-		bool launchInterruption () const;
+		inline bool launchInterruption () const;
 
 		/** The value to reflect at the bit 6 or 7 of the port B. */
 		/** To know first whether the timer A is affecting or not to the bit 6. */
@@ -154,6 +157,15 @@ namespace COMMODORE
 		bool _reflectTimerAAtPortDataB, _timerAValueAtPortDataB;
 		bool _reflectTimerBAtPortDataB, _timerBValueAtPortDataB;
 	};
+
+	// ---
+	inline bool CIARegisters::launchInterruption () const
+	{
+		return (_timerA	-> launchInterruption () ||
+				_timerB -> launchInterruption () ||
+				_clock  -> launchInterruption () ||
+				launchFlagLineInterruption ());
+	}
 }
 
 #endif

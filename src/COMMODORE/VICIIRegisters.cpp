@@ -67,9 +67,10 @@ MCHEmul::InfoStructure COMMODORE::VICIIRegisters::getInfoStructure () const
 // ---
 void COMMODORE::VICIIRegisters::setValue (size_t p, const MCHEmul::UByte& v)
 {
-	MCHEmul::PhysicalStorageSubset::setValue (p, v);
-
 	size_t pp = p % 0x40;
+
+	// The 64 first bytes will keep the right value...
+	MCHEmul::PhysicalStorageSubset::setValue (p, v);
 
 	switch (pp)
 	{
@@ -408,12 +409,12 @@ const MCHEmul::UByte& COMMODORE::VICIIRegisters::readValue (size_t p) const
 		case 0x19:
 			{
 				result = MCHEmul::UByte::_FF; 
+				result.setBit (7, launchIRQ ());
 				result.setBit (0, (_rasterIRQHappened && _rasterIRQActive));
 				result.setBit (1, (_spriteCollisionWithDataIRQHappened && _spriteCollisionWithDataIRQActive));
 				result.setBit (2, (_spriteCollisionsIRQHappened && _spriteCollisionsIRQActive));
 				result.setBit (3, (_lightPenIRQHappened && _lightPenIRQActive));
 				/** bits 4, 5, and 6 are not used, and always to 1. */
-				result.setBit (7, launchIRQ ());
 			}
 
 			break;
