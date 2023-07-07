@@ -20,12 +20,12 @@ IRQPRG1:					.SAVEREGISTERS
 							beq IRQPRG1_NOCOLLISION
 							lda #$02
 							sta SCREENBASE
-							lda #00
+							lda #$00
 							sta COLORRAMBASE
 							jmp IRQPRG1_ACTSPRITES
 IRQPRG1_NOCOLLISION:		lda #$20
 							sta SCREENBASE
-							lda #06
+							lda #$06
 							sta COLORRAMBASE
 IRQPRG1_ACTSPRITES:			lda VICIIIRQ
 							and #$01
@@ -149,7 +149,7 @@ LOADSPRITES:				lda #$20							; Initial block (definition) for of the sprite 0.
 							inx
 							cpx NUMBERSPRITES 
 							bne LOADSPRITES
-							lda #$ff							; All sprites have the same priority level
+							lda #$00							; All sprites have the same priority level (over the foreground)
 							sta SPRITEPRIORITY
 
 							lda #$00

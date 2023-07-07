@@ -468,32 +468,31 @@ void COMMODORE::VICII::drawGraphicsSpritesAndDetectCollisions (unsigned short cv
 			/** _RR	 */ rv												// Where the vertical raster is inside the window (it is not the chip raster line)
 		};
 
-	// This variable will hold the bytes drawn per sprite
-	// it will be used later to determine the collision among sprites....
-	std::vector <MCHEmul::UByte> colSprites (8, MCHEmul::UByte::_0);
-	// This other one will hold the char text info...
-	MCHEmul::UByte colGraphics = MCHEmul::UByte::_0;
-
-	// The interim function to draw the sprites...
-	auto drawSprites = [&](bool f /** false if they don't have priorit against the background. */) -> void
-	{
-		for (int i = 7; i >= 0; i--)
-			if (_VICIIRegisters -> spriteEnable ((size_t) i) &&
-				((f && !_VICIIRegisters -> spriteToForegroundPriority ((size_t) i)) ||
-				(!f && _VICIIRegisters -> spriteToForegroundPriority ((size_t) i))))
-				colSprites [(size_t) i] = drawSprite ((size_t) i, dC);
-	};
-
-	drawSprites (false);
-
-	// The method could be invoked directly, 
-	// ...but is better to avoid no useful invocations...
-	if (_raster.isInDisplayZone ())
+	// This varible keeps info about the text/graphics:
+	// Whether the 8 pixels to draw are foreground or background...
+	// ...and the color of the ones that are not finally background!
+	// ...and also info to control later the collision with sprites!
+	COMMODORE::VICII::DrawResult colGraphics;
+	if (_raster.isInDisplayZone ()) // Makes only sense when the raster in in visible zone...
 		colGraphics = drawGraphics (dC);
 
-	drawSprites (true);
+	// The sprites are draw over the _background or the _foreground data
+	// ...attending on how they are configured...
+	// The info has also to be calculated wven when the raste is not in the visible zone yet!
+	std::vector <MCHEmul::UByte> sprCollData (8, MCHEmul::UByte::_0);
+	for (int i = 7; i >= 0; i--)
+	{
+		if (_VICIIRegisters -> spriteEnable ((size_t) i))
+			sprCollData [(size_t) i] =
+				_VICIIRegisters -> spriteToForegroundPriority ((size_t) i)
+					? drawSpriteOver (i, colGraphics._backgroundColorData, dC)
+					: drawSpriteOver (i, colGraphics._foregroundColorData, dC);
+	}
 
-	detectCollisions (colGraphics, colSprites);
+	// The the graphical info is moved to the screen...
+	drawResultToScreen (colGraphics, dC);
+	// ...and the collisions are also detected...
+	detectCollisions (colGraphics._collisionData, sprCollData);
 }
 
 // ---
@@ -521,11 +520,11 @@ MCHEmul::ScreenMemory* COMMODORE::VICII::createScreenMemory ()
 }
 
 // ---
-MCHEmul::UByte COMMODORE::VICII::drawGraphics (const COMMODORE::VICII::DrawContext& dC)
+COMMODORE::VICII::DrawResult COMMODORE::VICII::drawGraphics (const COMMODORE::VICII::DrawContext& dC)
 {
 	// If no graphic has been loaded, it is not needed to continue...
 	if (_graphicsGraphicData.size () == 0)
-		return (MCHEmul::UByte::_0); // It could happen at the first lines of the screen when the vertical SCROLL is active...
+		return (COMMODORE::VICII::DrawResult ()); // It could happen at the first lines of the screen when the vertical SCROLL is active...
 
 	// The "display" line being involved...
 	// rc is the "display" line affected by the SROLLY
@@ -535,7 +534,7 @@ MCHEmul::UByte COMMODORE::VICII::drawGraphics (const COMMODORE::VICII::DrawConte
 	// 0x03 is the difference between the FIRTBADLINE = 0x30 and the first visible line = 0x33 (with no reduction)
 	int rc = (int) dC._RR - (int) dC._IRD - (int) dC._SR + 0x03;
 	if (rc < 0)
-		return (MCHEmul::UByte::_0);
+		return (COMMODORE::VICII::DrawResult ());
 
 	// The "display" column being involved...
 	// In cb, the SCROLLX is involved, so it could be negative! starting from -7, 
@@ -547,44 +546,77 @@ MCHEmul::UByte COMMODORE::VICII::drawGraphics (const COMMODORE::VICII::DrawConte
 	// Never invoke the methods within the swith case statements direcly
 	// a crash might be generated...
 
-	MCHEmul::UByte result = MCHEmul::UByte::_0;
+	COMMODORE::VICII::DrawResult result;
 	switch (_VICIIRegisters -> graphicModeActive ())
 	{
 		case COMMODORE::VICIIRegisters::GraphicMode::_CHARMODE:
-			result = drawMonoColorChar (cb, rc, _graphicsGraphicData, _graphicsColorData, dC);
+			{
+				result = std::move (drawMonoColorChar (cb, rc, _graphicsGraphicData, _graphicsColorData));
+			}
+
 			break;
 
 		case COMMODORE::VICIIRegisters::GraphicMode::_MULTICOLORCHARMODE:
-			result = drawMultiColorChar (cb, rc, _graphicsGraphicData, _graphicsColorData, dC);
+			{
+				result = std::move (drawMultiColorChar (cb, rc, _graphicsGraphicData, _graphicsColorData));
+			}
+
 			break;
 
 		case COMMODORE::VICIIRegisters::GraphicMode::_EXTENDEDBACKGROUNDMODE:
-			result = drawMultiColorExtendedChar (cb, rc, _graphicsScreenCodeData, _graphicsGraphicData, _graphicsColorData, dC);
+			{
+				result = std::move (drawMultiColorExtendedChar (cb, rc, _graphicsScreenCodeData, _graphicsGraphicData, _graphicsColorData));
+			}
+
 			break;
 
 		case COMMODORE::VICIIRegisters::GraphicMode::_BITMAPMODE:
-			result = drawMonoColorBitMap (cb, rc, _graphicsScreenCodeData, _graphicsGraphicData, dC);
+			{
+				result = std::move (drawMonoColorBitMap (cb, rc, _graphicsScreenCodeData, _graphicsGraphicData));
+			}
+
 			break;
 
 		case COMMODORE::VICIIRegisters::GraphicMode::_MULTICOLORBITMAPMODE:
-			result = drawMultiColorBitMap (cb, rc, _graphicsScreenCodeData, _graphicsGraphicData, _graphicsColorData, dC);
+			{
+				result = std::move (drawMultiColorBitMap (cb, rc, _graphicsScreenCodeData, _graphicsGraphicData, _graphicsColorData));
+			}
+
 			break;
 
 		case COMMODORE::VICIIRegisters::GraphicMode::_INVALIDTEXMODE:
-			result = drawMultiColorChar (cb, rc, _graphicsGraphicData, _graphicsColorData, dC, true /** everything black. */);
+			{
+				// Like multicolor char mode...
+				result = std::move (drawMultiColorChar (cb, rc, _graphicsGraphicData, _graphicsColorData));
+				// ...but invalid.
+				result._invalid = true;
+			}
+
 			break;
 
 		case COMMODORE::VICIIRegisters::GraphicMode::_INVALIDBITMAPMODE1:
-			result = drawMonoColorBitMap (cb, rc, _graphicsScreenCodeData, _graphicsGraphicData, dC, true /** everything black. */);
+			{
+				// linke moncocolor bitmap mode...
+				result = std::move (drawMonoColorBitMap (cb, rc, _graphicsScreenCodeData, _graphicsGraphicData));
+				// ...but invalid.
+				result._invalid = true;
+			}
 			break;
 
 		case COMMODORE::VICIIRegisters::GraphicMode::_INVALIDBITMAPMODE2:
-			result = drawMultiColorBitMap 
-				(cb, rc, _graphicsScreenCodeData, _graphicsGraphicData, _graphicsColorData, dC, true /* everything black. */);
+			{
+				// Like multicolor bitmap mode...
+				result = std::move (
+					drawMultiColorBitMap 
+						(cb, rc, _graphicsScreenCodeData, _graphicsGraphicData, _graphicsColorData));
+				// ...but invalid.
+				result._invalid = true;
+			}
+
 			break;
 
 		default:
-			assert (0); // Not possible...
+			assert (0); // Not possible...the code shouldn't pass over this point!
 			break;
 	}
 
@@ -592,10 +624,10 @@ MCHEmul::UByte COMMODORE::VICII::drawGraphics (const COMMODORE::VICII::DrawConte
 }
 
 // ---
-MCHEmul::UByte COMMODORE::VICII::drawMonoColorChar (int cb, int rc,
-	const MCHEmul::UBytes& bt, const MCHEmul::UBytes& clr, const COMMODORE::VICII::DrawContext& dC)
+COMMODORE::VICII::DrawResult COMMODORE::VICII::drawMonoColorChar (int cb, int rc,
+	const MCHEmul::UBytes& bt, const MCHEmul::UBytes& clr)
 {
-	MCHEmul::UByte result = MCHEmul::UByte::_0;
+	COMMODORE::VICII::DrawResult result;
 
 	// The graphics are described in blocks of 8 bytes...
 	// // and a row is made up of 8 * 40 = 320 bytes.
@@ -610,13 +642,13 @@ MCHEmul::UByte COMMODORE::VICII::drawMonoColorChar (int cb, int rc,
 
 		size_t iBy = ((size_t) pp) >> 3 /** To determine the byte. */;
 		size_t iBt = 7 - (((size_t) pp) % 8); /** From MSB to LSB. */
-		unsigned short pos = dC._RCA + i;
+
 		if (bt [(iBy << 3) + nrc].bit (iBt))
 		{
-			result.setBit (7 - i, true);
-			if (pos >= dC._ICS && pos <= dC._LCS)
-				screenMemory () -> setPixel ((size_t) pos, (size_t) dC._RR, 
-					(unsigned int) (clr [iBy].value () & 0x0f /** Useful nibble. */));
+			result._collisionData.setBit (7 - i, true);
+
+			result._foregroundColorData [i] = 
+				(unsigned int) (clr [iBy].value () & 0x0f /** Useful nibble. */);
 		}
 	}
 
@@ -624,10 +656,10 @@ MCHEmul::UByte COMMODORE::VICII::drawMonoColorChar (int cb, int rc,
 }
 
 // ---
-MCHEmul::UByte COMMODORE::VICII::drawMultiColorChar (int cb, int rc,
-	const MCHEmul::UBytes& bt, const MCHEmul::UBytes& clr, const COMMODORE::VICII::DrawContext& dC, bool blk)
+COMMODORE::VICII::DrawResult COMMODORE::VICII::drawMultiColorChar (int cb, int rc,
+	const MCHEmul::UBytes& bt, const MCHEmul::UBytes& clr)
 {
-	MCHEmul::UByte result = MCHEmul::UByte::_0;
+	COMMODORE::VICII::DrawResult result;
 
 	// The graphics are described in blocks of 8 bytes...
 	// // and a row is made up of 8 * 40 = 320 bytes.
@@ -654,46 +686,58 @@ MCHEmul::UByte COMMODORE::VICII::drawMultiColorChar (int cb, int rc,
 		else
 			cs = (bt [nrc].value () >> 6) & 0x03; // 0, 1, 2 or 3
 
-		// If the cs is 0, it would have to be drawn in the background color and it is already!
+		// If 0, the pixel should be drawn (and considered) as background 
+		// and it is already the default status tha comes from the parent method...
 		if (cs == 0x00)
 			continue;
 
-		// The combinations 0x00 (binary 00) and 0x01 (binary 01) are considered as background!
-		// So they can not be used in collisions...
-		if (cs == 0x02 || cs == 0x03)
-		{
-			result.setBit (7 - i, true); 
-			result.setBit (6 - i, true);
-		}
-
-		// When blank nothing is drawn.
-		// Everything is kept in the background color!
-		if (blk)
-			continue;
-
 		// The way the pixels are going to be drawn will depend on the information in the color memory
-		// If the most significant bit of the low significant nibble is set to 1
+		// If the most significant bit of the low significant nibble of the color memory is set to 1
 		// the data will be managed in a monocolor way...
-		unsigned short pos = dC._RCA + i;
 		if ((clr [iBy] & 0x08) == 0x00) 
 		{
 			unsigned int fc = clr [iBy].value () & 0x07;
-			if ((cs & 0x02) == 0x02 /** if set. */ && (pos >= dC._ICS && pos <= dC._LCS)) 
-				screenMemory () -> setPixel ((size_t) pos, (size_t) dC._RR, fc);
-			if ((cs & 0x01) == 0x01 /** if set. */ && ((pos + 1) >= dC._ICS && (pos + 1) <= dC._LCS)) 
-				screenMemory () -> setPixel ((size_t) pos + 1, (size_t) dC._RR, fc);
+			
+			if ((cs & 0x02) == 0x02 /** if set. */) 
+			{
+				result._collisionData.setBit (7 - i, true);
+
+				result._foregroundColorData [i] = fc;
+			}
+			
+			if ((cs & 0x01) == 0x01 /** if set. */)
+			{
+				result._collisionData.setBit (7 - i, true);
+
+				result._foregroundColorData [i + 1] = fc;
+			}
 		}
-		// If it is 1, then it will be draw as in the multicolor version...
+		// But if it is 1, 
+		// then it will be draw as in the multicolor version...
 		else
 		{
 			unsigned int fc = 
 				(unsigned int) ((cs == 0x03) 
-					? (clr [iBy].value () & 0x07) 
+					? (clr [iBy].value () & 0x07)
 					: (_VICIIRegisters -> backgroundColor (cs)) & 0x0f) /** Useful nibble. */;
-			if (pos >= dC._ICS && pos <= dC._LCS)
-				screenMemory () -> setPixel ((size_t) pos, (size_t) dC._RR, fc);
-			if ((pos + 1) >= dC._ICS && (pos + 1) <= dC._LCS)
-				screenMemory () -> setPixel (((size_t) pos + 1), (size_t) dC._RR, fc);
+
+			// The combination "01" is also considered as part of the background...
+			// ...and are not taken into account to detect collision...
+			if (cs == 0x01)
+			{
+				result._backgroundColorData [i] = fc;
+				result._backgroundColorData [i + 1] = fc;
+			}
+			// ..while the other two are part of the foreground...
+			// ..and also included in the collision info!
+			else
+			{
+				result._collisionData.setBit (7 - i, true);
+				result._collisionData.setBit (6 - i, true);
+
+				result._foregroundColorData [i] = fc;
+				result._foregroundColorData [i + 1] = fc;
+			}
 		}
 	}
 
@@ -701,10 +745,10 @@ MCHEmul::UByte COMMODORE::VICII::drawMultiColorChar (int cb, int rc,
 }
 
 // ---
-MCHEmul::UByte COMMODORE::VICII::drawMultiColorExtendedChar (int cb, int rc,
-	const MCHEmul::UBytes& sc, const MCHEmul::UBytes& bt, const MCHEmul::UBytes& clr, const COMMODORE::VICII::DrawContext& dC)
+COMMODORE::VICII::DrawResult COMMODORE::VICII::drawMultiColorExtendedChar (int cb, int rc,
+	const MCHEmul::UBytes& sc, const MCHEmul::UBytes& bt, const MCHEmul::UBytes& clr)
 {
-	MCHEmul::UByte result = MCHEmul::UByte::_0;
+	COMMODORE::VICII::DrawResult result;
 
 	// The graphics are described in blocks of 8 bytes...
 	// // and a row is made up of 8 * 40 = 320 bytes.
@@ -721,22 +765,23 @@ MCHEmul::UByte COMMODORE::VICII::drawMultiColorExtendedChar (int cb, int rc,
 		size_t iBt = 7 - (((size_t) pp) % 8); /** From MSB to LSB. */
 		// The color of the pixel 0 is determined by the 2 MSBites of the char code...
 		bool bS = bt [(iBy << 3) + nrc].bit (iBt); // To know whether the bit is 1 or 0...
-		result.setBit (7 - i, bS);
 		unsigned int cs = ((sc [iBy].value () & 0xc0) >> 6) & 0x03; // 0, 1, 2, or 3
-		unsigned short pos = dC._RCA + i;
 		unsigned int fc = (bS ? clr [iBy].value () : _VICIIRegisters -> backgroundColor (cs)) & 0x0f /** useful nibble. */;
-		if (pos >= dC._ICS && pos <= dC._LCS)
-			screenMemory () -> setPixel ((size_t) pos, (size_t) dC._RR, fc);
+
+		if (bS)
+			result._collisionData.setBit (7 - i, true);
+
+		result._foregroundColorData [i] = fc;
 	}
 
 	return (result);
 }
 
 // ---
-MCHEmul::UByte COMMODORE::VICII::drawMonoColorBitMap (int cb, int rc,
-	const MCHEmul::UBytes& sc, const MCHEmul::UBytes& bt, const COMMODORE::VICII::DrawContext& dC, bool blk)
+COMMODORE::VICII::DrawResult COMMODORE::VICII::drawMonoColorBitMap (int cb, int rc,
+	const MCHEmul::UBytes& sc, const MCHEmul::UBytes& bt)
 {
-	MCHEmul::UByte result = MCHEmul::UByte::_0;
+	COMMODORE::VICII::DrawResult result;
 
 	// The graphics are described in blocks of 8 bytes...
 	// // and a row is made up of 8 * 40 = 320 bytes.
@@ -752,27 +797,23 @@ MCHEmul::UByte COMMODORE::VICII::drawMonoColorBitMap (int cb, int rc,
 		size_t iBy = ((size_t) pp) >> 3 /** To determine the byte. */;
 		size_t iBt = 7 - (((size_t) pp) % 8); /** From MSB to LSB. */
 		bool bS = bt [(iBy << 3) + nrc].bit (iBt);
-		result.setBit (7 - i, bS);
-	
-		if (blk)
-			continue;
-
 		unsigned int fc = bS 
 				? (sc [iBy].value () & 0xf0) >> 4	// If the bit is 1, the color is determined by the MSNibble
 				: (sc [iBy].value () & 0x0f);		// ...and for LSNibble if it is 0...
-		unsigned short pos = dC._RCA + i;
-		if (pos >= dC._ICS && pos <= dC._LCS)
-			screenMemory () -> setPixel ((size_t) pos, (size_t) dC._RR, fc); 
+
+		result._collisionData.setBit (7 - i, true);
+
+		result._foregroundColorData [i] = fc;
 	}
 
 	return (result);
 }
 
 // ---
-MCHEmul::UByte COMMODORE::VICII::drawMultiColorBitMap (int cb, int rc,
-	const MCHEmul::UBytes& sc, const MCHEmul::UBytes& bt, const MCHEmul::UBytes& clr, const COMMODORE::VICII::DrawContext& dC, bool blk)
+COMMODORE::VICII::DrawResult COMMODORE::VICII::drawMultiColorBitMap (int cb, int rc,
+	const MCHEmul::UBytes& sc, const MCHEmul::UBytes& bt, const MCHEmul::UBytes& clr)
 {
-	MCHEmul::UByte result = MCHEmul::UByte::_0;
+	COMMODORE::VICII::DrawResult result;
 
 	// The graphics are described in blocks of 8 bytes...
 	// // and a row is made up of 8 * 40 = 320 bytes.
@@ -799,42 +840,42 @@ MCHEmul::UByte COMMODORE::VICII::drawMultiColorBitMap (int cb, int rc,
 		else
 			cs = (bt [nrc].value () >> 6) & 0x03; // 0, 1, 2 or 3
 
-		// If 0, the pixel should be drawn in the background color and it is already...
+		// If 0, the pixel should be drawn (and considered) as background 
+		// and it is already the default status tha comes from the parent method...
 		if (cs == 0x00)
 			continue;
 
-		// The combinations 0x00 (binary 00) and 0x01 (binary 01) are considered as background!
-		// So they cannot be used in collisions...
-		if (cs == 0x02 || cs == 0x03)
-		{
-			result.setBit (7 - i, true); 
-			result.setBit (6 - i, true);
-		}
-
-		if (blk)
-			continue;
-
-		unsigned short pos = dC._RCA + i;
 		unsigned fc = // The value 0x00 is not tested....
 				(cs == 0x01) // The color is the defined in the video matrix, high nibble...
 						? (sc [iBy].value () & 0xf0) >> 4
 						: ((cs == 0x02) // The color is defined in the video matrix, low nibble...
 							? sc [iBy].value () & 0x0f
 							: clr [iBy].value () & 0x0f); // The color is defined in color matrix...
-		if (pos >= dC._ICS && pos <= dC._LCS) 
-			screenMemory () -> setPixel ((size_t) pos, (size_t) dC._RR, fc);
-		if ((pos + 1) >= dC._ICS && (pos + 1) <= dC._LCS) 
-			screenMemory () -> setPixel (((size_t) pos + 1), (size_t) dC._RR, fc);
+
+		// The combination "01" is managed as background...
+		if (cs == 0x01)
+		{
+			result._backgroundColorData [i] = fc;
+			result._backgroundColorData [i + 1] = fc;
+		}
+		// ...while the rest as managed as foreground...
+		else
+		{
+			result._foregroundColorData [i] = fc;
+			result._foregroundColorData [i + 1] = fc;
+		}
 	}
 
 	return (result);
 }
 
 // ---
-MCHEmul::UByte COMMODORE::VICII::drawSprite (size_t spr, const COMMODORE::VICII::DrawContext& dC)
+MCHEmul::UByte COMMODORE::VICII::drawSpriteOver (size_t spr, unsigned int* d, const COMMODORE::VICII::DrawContext& dC)
 {
+	MCHEmul::UByte result = MCHEmul::UByte::_0;
+
 	if (_graphicsLineSprites [spr].size () == 0)
-		return (MCHEmul::UByte::_0);
+		return (result);
 
 	// The "display" line being involved...
 	int r = (int) dC._RR - (int) dC._IRD;
@@ -845,13 +886,14 @@ MCHEmul::UByte COMMODORE::VICII::drawSprite (size_t spr, const COMMODORE::VICII:
 	// Never invoke the methods within the ? : structure direcly
 	// crash might be generated...
 
-	return (_VICIIRegisters -> spriteMulticolorMode (spr)
-		? drawMultiColorSprite (c, r, spr, dC)
-		: drawMonoColorSprite (c, r, spr, dC));
+	return (
+		_VICIIRegisters -> spriteMulticolorMode (spr)
+			? drawMultiColorSpriteOver (c, r, spr, d)
+			: drawMonoColorSpriteOver (c, r, spr, d));
 }
 
 // ---
-MCHEmul::UByte COMMODORE::VICII::drawMonoColorSprite (int c, int r, size_t spr, const COMMODORE::VICII::DrawContext& dC)
+MCHEmul::UByte COMMODORE::VICII::drawMonoColorSpriteOver (int c, int r, size_t spr, unsigned int* d)
 {
 	MCHEmul::UByte result = MCHEmul::UByte::_0;
 
@@ -893,14 +935,11 @@ MCHEmul::UByte COMMODORE::VICII::drawMonoColorSprite (int c, int r, size_t spr, 
 		if (!dP)
 			continue; // The point is not visible...
 
-		unsigned short pos = dC._RCA + i;
 		for (size_t j = 0; j < (size_t) dW; j++)
 		{
 			result.setBit (7 - (i + j), true);
-			if (((pos + j) >= dC._ICS && (pos + j) <= dC._LCS) &&
-				(dC._RR >= dC._IRS && dC._RR <= dC._LRS))
-				screenMemory () -> setPixel ((size_t) (pos + j), (size_t) dC._RR, 
-					_VICIIRegisters -> spriteColor (spr) & 0x0f /** useful nibble. */);
+
+			d [i + j] = _VICIIRegisters -> spriteColor (spr) & 0x0f /** useful nibble. */;
 		}
 	}
 
@@ -908,7 +947,7 @@ MCHEmul::UByte COMMODORE::VICII::drawMonoColorSprite (int c, int r, size_t spr, 
 }
 
 // ---
-MCHEmul::UByte COMMODORE::VICII::drawMultiColorSprite (int c, int r, size_t spr, const COMMODORE::VICII::DrawContext& dC)
+MCHEmul::UByte COMMODORE::VICII::drawMultiColorSpriteOver (int c, int r, size_t spr, unsigned int* d)
 {
 	MCHEmul::UByte result = MCHEmul::UByte::_0;
 
@@ -952,18 +991,51 @@ MCHEmul::UByte COMMODORE::VICII::drawMultiColorSprite (int c, int r, size_t spr,
 		unsigned int fc = (unsigned int) ((cs == 0x01) 
 			? _VICIIRegisters -> spriteSharedColor (0) 
 			: ((cs == 0x02) ? _VICIIRegisters -> spriteColor (spr) : _VICIIRegisters -> spriteSharedColor (1)));
-		unsigned short pos = dC._RCA + i;
 		for (size_t j = 0; j < (size_t) (2 * dW); j++)
-		{
-			result.setBit (7 - (i + j), true); 
-			result.setBit (6 - (i + j), true);
-			if (((pos + j) >= dC._ICS && (pos + j) <= dC._LCS) &&
-				(dC._RR >= dC._IRS && dC._RR <= dC._LRS))
-				screenMemory () -> setPixel ((size_t) (pos + j), (size_t) dC._RR, fc);
+		{ 
+			result.setBit (7 - (i + j), true);
+
+			d [i + j] = fc;
 		}
 	}
 
 	return (result);
+}
+
+// ---
+void COMMODORE::VICII::drawResultToScreen (const COMMODORE::VICII::DrawResult& cT, const COMMODORE::VICII::DrawContext& dC)
+{
+	// The line is not visible yet...
+	if (dC._RR < dC._IRS || dC._RR > dC._LRS)
+		return;
+
+	// The eight pixels to draw...
+	for (size_t i = 0; i < 8; i++)
+	{
+		size_t pos = (size_t) dC._RCA + i;
+
+		// If the graphic mode was invalid...
+		if (cT._invalid)
+		{
+			// the pixel will be always black...
+			screenMemory () -> setPixel (pos, (size_t) dC._RR, 0 /** black. */);
+			// ...and only the sprites over the foreground will be visible.
+			if (cT._foregroundColorData [i] != ~0)
+				screenMemory () -> setPixel (pos, (size_t) dC._RR, cT._foregroundColorData [i]);
+		}
+		// ...but if not...
+		else
+		{
+			// First the pure background...
+			// Where only the bits in multicolor modes than are defined as background ("00" & "01") will be draw,
+			// ...and also the sprites below the foregound!
+			if (cT._backgroundColorData [i] != ~0)
+				screenMemory () -> setPixel (pos, (size_t) dC._RR, cT._backgroundColorData [i]);
+			// Now the foreground info, inclusing the sprites over the foreground.
+			if (cT._foregroundColorData [i] != ~0)
+				screenMemory () -> setPixel (pos, (size_t) dC._RR, cT._foregroundColorData [i]);
+		}
+	}
 }
 
 // ---

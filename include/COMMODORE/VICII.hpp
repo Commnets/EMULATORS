@@ -91,7 +91,12 @@ namespace COMMODORE
 		virtual bool initialize () override;
 
 		virtual bool simulate (MCHEmul::CPU* cpu) override;
+		/** Draw the border AT THE SAME time the graphic info is drawn. \n
+			So the sprite and graphical info out of the screen zone 
+			is not be taken into account to determine collision. */
 		bool simulate_I (MCHEmul::CPU* cpu);
+		/** Draw the border AFTER the graphic info is draw within the display zone. \n
+			In this case sprite and graphical info is taken into account to determine collisions. */
 		bool simulate_II (MCHEmul::CPU* cpu);
 
 		/**
@@ -104,7 +109,61 @@ namespace COMMODORE
 		protected:
 		virtual void processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifier* n) override;
 
-		/** To simplify the use of the routines dedicated to draw. */
+		/** 
+		  * @see DrawContext and @DraResult structure for a better understanding. 
+		  *	The parameters are:
+		  *	@param cv	The raster beam X position within the visible window. 0 is the first value.
+		  *	@param cav	The same raster beam X position but adjusted to a multiple of 8. 
+		  *	@param rv	The raster beam Y position with the visinle window. O is the first value.
+		  */
+		void drawGraphicsSpritesAndDetectCollisions 
+			(unsigned short cv, unsigned short cav, unsigned short rv);
+
+		/** Invoked from initialize to create the right screen memory. \n
+			It also creates the Palette used by CBM 64 (_format variable). */
+		virtual MCHEmul::ScreenMemory* createScreenMemory () override;
+
+		// Read screen data
+		/** To read the graphics info. \n
+			This method will use the ones below. */
+		inline void readGraphicsInfoAt (unsigned short gl /** screen line, including the effect of the scroll y. */);
+		/** To empty the list of info. */
+		inline void emptyGraphicsInfo ();
+		/** Read the chars present in the video matrix. \n
+			The parameter received goes fom 0 to 24 (visible C64 line). */
+		const MCHEmul::UBytes& readScreenCodeDataAt (unsigned short l) const
+							{ return (_graphicsScreenCodeData = std::move (
+								memoryRef () -> values (_VICIIRegisters -> screenMemory () +
+									((size_t) l * _GRAPHMAXCHARCOLUMNS), (size_t) _GRAPHMAXCHARCOLUMNS))); }
+		/** Read the info for the chars received as parameter. \n
+			The method receives also a parameter to indicate whether the graphics mode is or not _EXTENDEDBACKGROUNDMODE,
+			because in that case the info is read slightly different. */
+		inline const MCHEmul::UBytes& readCharDataFor (const MCHEmul::UBytes& chrs, bool eM = false) const;
+		/** Read the info of the bitmap. \n
+			The info is read as they were char data. That is, the 8 x 8 block are sequential. 
+			The parameter received goes from 0 to 199 (visible scan line ((0 - 25 lines) * 8) - 1, and
+			takes into account the effect of the SCROLLY variable. */
+		inline const MCHEmul::UBytes& readBitmapDataAt (unsigned short l) const;
+		/** Reads the color of the chars. \n
+			The _COLORMEMORY localtion is fixed and can not be changed using VICRegisters. 
+			Th parameter received goes from 0 to 24. */
+		const MCHEmul::UBytes& readColorDataAt (unsigned short l) const
+							{ return (_graphicsColorData = std::move (memoryRef () -> values (_COLORMEMORY +
+								((size_t) l * _GRAPHMAXCHARCOLUMNS), (size_t) _GRAPHMAXCHARCOLUMNS))); }
+
+		// Read sprites data
+		/** Read the sprites data (only for the active ones) \n
+			The list of the sprites active (internal variable) is also actualized (not returned) = _spritesEnabled. \n
+			nS = number of sprites read. */
+		inline const std::vector <MCHEmul::UBytes>& readSpriteData (size_t& nS) const;
+		/** Read the graphical info of the active sprites at one specific raster line. \n
+			The parameter received goes from 0 to PAL/NTSC maximum raster line,
+			and doesn't take into account the SCROLLY value. \n
+			nS = number of sprites read. */
+		inline const std::vector <MCHEmul::UBytes>& readSpriteDataAt (unsigned short l, size_t& nS) const;
+
+		// Draw the graphics & Sprites in detail...
+		/** To simplify the use of some of the routines dedicated to draw. */
 		struct DrawContext
 		{
 			unsigned short _ICD;	// Initial Column of the Display (Not taken into account reductions in size).
@@ -122,89 +181,86 @@ namespace COMMODORE
 			unsigned short _RR;		// Raster Y (Moves 1 by 1. No adjusted neadd)
 		};
 
-		/** @see DrawContext structure. */
-		void drawGraphicsSpritesAndDetectCollisions (unsigned short cv, unsigned short cav, unsigned short rv);
+		/** To simplify the way the result of a drawing text/bitmaps routines are managed. \n
+			Any time a draw routine runs, 8 bits of info are calculated. \n
+			These bits can be either foreground or background and their color ar e kept in 
+			their respective variable _colorData. */
+		struct DrawResult
+		{
+			/** The data used to detect the collisions. */
+			MCHEmul::UByte _collisionData;
+			/** The color of the each pixel considered as background. */
+			unsigned int _backgroundColorData [8];
+			/** The color of the each pixel considered as foreground. */
+			unsigned int _foregroundColorData [8];
+			/** To indicate whether it is or not consecuencia of a "bad mode",
+				and the has to be everything draw in black, but taking into account the real graphics behaind. */
+			bool _invalid;
 
-		/** Invoked from initialize to create the right screen memory. \n
-			It also creates the Palette used by CBM 64 (_format variable). */
-		virtual MCHEmul::ScreenMemory* createScreenMemory () override;
+			DrawResult (unsigned int bC = ~0 /** Meaning transparent (jumped later when moving info to screen). */)
+				: _collisionData (MCHEmul::UByte::_0),
+				  _backgroundColorData { bC, bC, bC, bC, bC, bC, bC, bC },
+				  _foregroundColorData { bC, bC, bC, bC, bC, bC, bC, bC },
+				  _invalid (false)
+							{ }
+		};
 
-		// Read screen data
-		/** To read the graphics info. \n
-			This method will use the ones below. */
-		inline void readGraphicsInfoAt (unsigned short gl /** screen line, including the effect of the scroll y. */);
-		/** The same but to empty the list of info. */
-		inline void emptyGraphicsInfo ();
-		/** Read the chars present in the video matrix. The vale received goes fom 0 to 24. */
-		const MCHEmul::UBytes& readScreenCodeDataAt (unsigned short l) const
-							{ return (_graphicsScreenCodeData = std::move (
-								memoryRef () -> values (_VICIIRegisters -> screenMemory () +
-									((size_t) l * _GRAPHMAXCHARCOLUMNS), (size_t) _GRAPHMAXCHARCOLUMNS))); }
-		/** Read the info for the chars received as parameter. 
-			The method receives also a parameter to indicate whether the graphics mode is or not _EXTENDEDBACKGROUNDMODE. */
-		inline const MCHEmul::UBytes& readCharDataFor (const MCHEmul::UBytes& chrs, bool eM = false) const;
-		/** Read th info of the bitmap. 
-			The info is read as they were char data. That is, the 8 x 8 block are sequential. 
-			The value receive gos from 0 to 199. */
-		inline const MCHEmul::UBytes& readBitmapDataAt (unsigned short l) const;
-		/** Reads the color of the chars. The _COLORMEMORY is fixed and cann't be changed using VICRegisters. 
-			Th value ecived goes from 0 to 24. */
-		const MCHEmul::UBytes& readColorDataAt (unsigned short l) const
-							{ return (_graphicsColorData = std::move (memoryRef () -> values (_COLORMEMORY +
-								((size_t) l * _GRAPHMAXCHARCOLUMNS), (size_t) _GRAPHMAXCHARCOLUMNS))); }
-
-		// Read sprites data
-		/** Read the sprites data (only for the active ones. \n
-			The list of the sprites active (internal variable) is also actualized (not returned) = _spritesEnabled. \n
-			nS = number of sprites read. */
-		inline const std::vector <MCHEmul::UBytes>& readSpriteData (size_t& nS) const;
-		/** Read the info of the active sprites at one specific raster line. \n
-			nS = number of sprites read. */
-		inline const std::vector <MCHEmul::UBytes>& readSpriteDataAt (unsigned short l, size_t& nS) const;
-
-		// Draw the graphics in detail...
-		/** To draw any type of graphic. \n
-			This method uses the ones below. \n
-			The method receives:
-			dC = other info about the raster used to finally draw. */
-		MCHEmul::UByte drawGraphics (const DrawContext& dC);
-		/** Draws a monocolor char. \n
-			All methods receive: \n
-			cb = window column adjusted by the scrollX value where to start to draw 8 pixels. \n
-			rc = window row adjusted by the scrollY value where to draw. \n
-			dC = other info about the raster used to finally draw. */
-		MCHEmul::UByte drawMonoColorChar (int cb, int rc, 
-			const MCHEmul::UBytes& bt, const MCHEmul::UBytes& clr, const DrawContext& dC);
+		/** To draw any type of graphic \n
+			This method uses the ones below it \n
+			The method receives: \n
+			dC = other info about the raster used to finally draw. \n
+			They all return a instance of DrawResult (@see above). */
+		DrawResult drawGraphics (const DrawContext& dC);
+		/**
+		  *	Draws a monocolor char. \n
+		  *	All methods receive: \n
+		  *	cb	= window column adjusted by the scrollX value where to start to draw 8 pixels. \n
+		  *	rc	= window row adjusted by the scrollY value where to draw. \n
+		  *	also some of those:
+		  *	bt	= The bits to draw, from the graphical memory. \n
+		  *	clr = The color of those bits, from the ram color memory. \n
+		  *	sc  = The screen codes, from the matrix memory. \n
+		  *	and, some of them:
+		  *	blk = When the graphical mode is inavlid and nothing has to be drawn.
+		  */
+		DrawResult drawMonoColorChar (int cb, int rc, 
+			const MCHEmul::UBytes& bt, const MCHEmul::UBytes& clr);
 		/** Draws a multicolor char. */
-		MCHEmul::UByte drawMultiColorChar (int cb, int rc,
-			const MCHEmul::UBytes& bt, const MCHEmul::UBytes& clr, const DrawContext& dC, bool blk = false);
+		DrawResult drawMultiColorChar (int cb, int rc,
+			const MCHEmul::UBytes& bt, const MCHEmul::UBytes& clr);
 		/** Draws an enhaced multicolor char. */
-		MCHEmul::UByte drawMultiColorExtendedChar (int cb, int rc,
-			const MCHEmul::UBytes& sc, const MCHEmul::UBytes& bt, const MCHEmul::UBytes& clr, const DrawContext& dC);
+		DrawResult drawMultiColorExtendedChar (int cb, int rc,
+			const MCHEmul::UBytes& sc, const MCHEmul::UBytes& bt, const MCHEmul::UBytes& clr);
 		/** Draws a monocolor bitmap. */
-		MCHEmul::UByte drawMonoColorBitMap (int cb, int rc, 
-			const MCHEmul::UBytes& sc, const MCHEmul::UBytes& bt, const DrawContext& dC, bool blk = false);
+		DrawResult drawMonoColorBitMap (int cb, int rc, 
+			const MCHEmul::UBytes& sc, const MCHEmul::UBytes& bt);
 		/** Draws a multicolor bitmap. */
-		MCHEmul::UByte drawMultiColorBitMap (int cb, int rc, 
-			const MCHEmul::UBytes& sc, const MCHEmul::UBytes& bt, const MCHEmul::UBytes& clr, const DrawContext& dC, bool blk = false);
+		DrawResult drawMultiColorBitMap (int cb, int rc, 
+			const MCHEmul::UBytes& sc, const MCHEmul::UBytes& bt, const MCHEmul::UBytes& clr);
 		
 		// Draw the sprites in detail...
-		/** To draw the sprites: \n
-			This method uses the ones below. \n
-			The method receives:
-			spr = the number of sprite to draw. \n
-			dC = other info about the raster used to finally draw. */
-		MCHEmul::UByte drawSprite (size_t spr, const DrawContext& dC);
-		/** Draws a monocolor sprite line. \n
-			all methos receives: \n 
-			c = window column value where to start to draw 8 pixels. \n
-			r = window row value where to draw. \n
-			spr = the number of sprite to draw. \n
-			dC = more info about the raster. */
-		MCHEmul::UByte drawMonoColorSprite (int c, int r, size_t spr, const DrawContext& dC);
-		/** Draws a multocolor sprite line. */
-		MCHEmul::UByte drawMultiColorSprite (int c, int r, size_t spr, const DrawContext& dC);
+		/** 
+		  *	To draw the sprites: \n
+		  *	This method uses the ones below. \n
+		  *	All of them receive:
+		  *	c = window column value where to start to draw 8 pixels. \n
+		  *	r = window row value where to draw. \n
+		  *	spr = the number of sprite to draw. \n
+		  *	The reference to the array where to store the color is also passed. \n
+		  *	This array comes from the outcome of drawing the text/bitmaps! \n
+		  *	Info to detect collisions is also returned. 
+		  */
+		MCHEmul::UByte drawSpriteOver (size_t spr, unsigned int* d, const DrawContext& dC);
+		/** Draws a monocolor sprite line. */
+		MCHEmul::UByte drawMonoColorSpriteOver (int c, int r, size_t spr, unsigned int* d);
+		/** Draws a multicolor sprite line. */
+		MCHEmul::UByte drawMultiColorSpriteOver (int c, int r, size_t spr, unsigned int* d);
 
+		// The last part...
+		/** To move the graphics drawn to the screen. \n
+			The info move is the text/bitmap info that has been already draw to the screen. \n
+			That text/bitmap info included the sprite data as well ordered. */
+		void drawResultToScreen (const DrawResult& cT, const DrawContext& dC);
 		/** Detect the collision between graphics and sprites info
 			affecting the right registers in the VICII. */
 		void detectCollisions (const MCHEmul::UByte& g, const std::vector <MCHEmul::UByte>& s);
@@ -261,7 +317,8 @@ namespace COMMODORE
 		readScreenCodeDataAt (chrLine); 
 		// ...and if it is a text mode...
 		if (_VICIIRegisters -> textMode ()) 
-			readCharDataFor (_graphicsScreenCodeData, _VICIIRegisters -> graphicExtendedColorTextModeActive ()); // ...and then the detailed info...
+			readCharDataFor (_graphicsScreenCodeData, 
+							 _VICIIRegisters -> graphicExtendedColorTextModeActive ()); // ...and then the detailed info...
 		// ...and if it is not, load directly the graphics data...
 		else 
 			readBitmapDataAt (gl);
