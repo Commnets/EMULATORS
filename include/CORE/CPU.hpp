@@ -15,6 +15,7 @@
 #define __MCHEMUL_CPU__
 
 #include <CORE/global.hpp>
+#include <CORE/DebugFile.hpp>
 #include <CORE/CPUArchitecture.hpp>
 #include <CORE/Chip.hpp>
 #include <CORE/Memory.hpp>
@@ -147,20 +148,14 @@ namespace MCHEmul
 		  */
 		virtual InfoStructure getInfoStructure () const override;
 
-		/** To activate and desactivate the deep debug,
-			what means to output detail information about every step. \n
-			The deep debug info could be limited just only for interruptions. */
-		bool deepDebug () const
-							{ return (_deepDebugActivated); }
-		/** Receives the name of the file to put the debug info and 
-			whether the info has to be added or it is new. \n
-			By default it is new. */
-		bool activateDeepDebug (const std::string fn, bool a = false /** meaning not add info at the end, but creating a new file */);
-		/** If executing a transaction the file is not closed. 
-			until the transaction is kept into the faile. */
-		bool desactivateDeepDebug ();
-		std::ofstream& deepDebugFile () // Take care using this method can give you a closed file!
-							{ return (_debugFile); }
+		/** Manages the deep debug file. \n
+			Take care it can be set back to a nullptr. */
+		void setDeepDebugFile (DebugFile* dF)
+							{ _deepDebugFile = dF; }
+		const DebugFile* deepDebugFile () const
+							{ return (_deepDebugFile); }
+		DebugFile* deepDebugFile ()
+							{ return (_deepDebugFile); }
 
 		protected:
 		const CPUArchitecture _architecture = 
@@ -175,8 +170,7 @@ namespace MCHEmul
 		Instruction* _lastInstruction;
 
 		// To manage the debug info...
-		bool _deepDebugActivated;
-		std::ofstream _debugFile;
+		DebugFile* _deepDebugFile;
 
 		// Implementation
 		unsigned int _error;
@@ -188,8 +182,6 @@ namespace MCHEmul
 		/** The instructions will be moved into an array at construction time,
 			to speed up their access in the executeNextInstruction method. */
 		std::vector <Instruction*> _rowInstructions;
-		/** If executing a transaction this variable becomes true. */
-		mutable bool _executingTransaction;
 	};
 }
 

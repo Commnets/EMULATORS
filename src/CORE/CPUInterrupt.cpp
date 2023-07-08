@@ -18,28 +18,29 @@ void MCHEmul::CPUInterrupt::setInExecution (bool i)
 	{
 		// Debugging...and first time to pass over this point?
 		if (_debug && 
-			!_computer -> cpu () -> deepDebug ())
+			!_computer -> deepDebug ())
 		{
-			if (_computer -> cpu () -> activateDeepDebug (_debugFileName, _addDebugInfo)) // ...activate the deep debug, and if there is no error...
+			if (_computer -> activateDeepDebug (_debugFileName, _addDebugInfo)) // ...activate the deep debug, and if there is no error...
 			{ 
-				_computer -> cpu () -> deepDebugFile () <<
-					std::endl << "****************************************" << std::endl <<
-					"Starting Interrupt Debugging" << std::endl <<
-					"CPU STATUS" << std::endl << std::endl;
-				_computer -> cpu () -> deepDebugFile () <<
+				*_computer -> deepDebugFile () <<
+					"\n" << "****************************************" << "\n" <<
+					"Starting Interrupt Debugging" << "\n" <<
+					"CPU STATUS" << "\n\n";
+				*_computer -> deepDebugFile () <<
 					MCHEmul::removeAll0 (
 						MCHEmul::FormatterBuilder::instance () -> formatter ("Computer") -> 
-							format (_computer -> getInfoStructure ())) << std::endl; // ...and prints out the status of the computer...
-				_computer -> cpu () -> deepDebugFile () << std::endl;
+						format (_computer -> getInfoStructure ())) << "\n"; // ...and prints out the status of the computer...
+				*_computer -> deepDebugFile () << "\n";
 			}
 		}
 	}
 	else
 	{
 		// Debugging...and first time to pass over this point?
-		if (_debug && _computer -> cpu () -> deepDebug ())
+		if (_debug && 
+			_computer -> deepDebug ())
 		{
-			_computer -> cpu () -> desactivateDeepDebug (); // ...deactivate the deep debug...
+			_computer -> desactivateDeepDebug (); // ...deactivate the deep debug...
 
 			if (_debugOffWhenFinishes)
 			{ 
@@ -102,13 +103,15 @@ bool MCHEmul::CPUInterrupt::activateDebug (MCHEmul::Computer* c, const std::stri
 	// If it is already debugging or 
 	// the deepDebug at CPU level is activated...
 	if (_debug || 
-		c -> cpu () -> deepDebug ())
+		c -> deepDebug ())
 		return (false); // ...no activation will be possible...
 
 	_debug = true;
+
 	_debugOffWhenFinishes = false;
 
 	_debugFileName = nF;
+
 	_addDebugInfo = a;
 
 	_computer = c;
@@ -125,11 +128,11 @@ bool MCHEmul::CPUInterrupt::desactivateDebug (MCHEmul::Computer* c)
 	if (!_debug)
 		return (false); // ...no activation will be possible...
 
-	if (_computer -> cpu () -> deepDebug ())
+	if (_computer -> deepDebug ())
 		_debugOffWhenFinishes = true;
 	else
 	{
-		_computer -> cpu () -> desactivateDeepDebug (); // ...deactivate the deep debug...
+		_computer -> desactivateDeepDebug (); // ...deactivate the deep debug...
 
 		_debug = false;
 

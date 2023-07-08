@@ -33,6 +33,7 @@
     <ClCompile Include="..\..\src\CORE\CPU.cpp" />
     <ClCompile Include="..\..\src\CORE\CPUArchitecture.cpp" />
     <ClCompile Include="..\..\src\CORE\CPUInterrupt.cpp" />
+    <ClCompile Include="..\..\src\CORE\DebugFile.cpp" />
     <ClCompile Include="..\..\src\CORE\DtMemoryBlock.cpp" />
     <ClCompile Include="..\..\src\CORE\FileIO.cpp" />
     <ClCompile Include="..\..\src\CORE\FmterBuilder.cpp" />
@@ -76,6 +77,7 @@
     <ClInclude Include="..\..\include\CORE\Clock.hpp" />
     <ClInclude Include="..\..\include\CORE\CmdExecuter.hpp" />
     <ClInclude Include="..\..\include\CORE\CmdlineArgs.hpp" />
+    <ClInclude Include="..\..\include\CORE\DebugFile.hpp" />
     <ClInclude Include="..\..\include\CORE\DtMemoryBlock.hpp" />
     <ClInclude Include="..\..\include\CORE\Command.hpp" />
     <ClInclude Include="..\..\include\CORE\CommandBuilder.hpp" />

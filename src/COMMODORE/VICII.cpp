@@ -126,12 +126,6 @@ bool COMMODORE::VICII::simulate_I (MCHEmul::CPU* cpu)
 			// The information about the sprites 0 to 3 is read during the last cycles of the previous raster line
 			// but this is a good proxy!
 
-			// If the current line is one where has been declared to issue an IRQ...
-			// ...the situation is flagged into the register
-			// Whether finally a IRQ is or not issued is something that is calculated booton in this method...
-			if (_raster.currentLine () == _VICIIRegisters -> IRQRasterLineAt ())
-				_VICIIRegisters -> activateRasterIRQ ();
-
 			_isNewRasterLine = false;
 
 			memoryRef () -> setCPUView ();
@@ -183,7 +177,12 @@ bool COMMODORE::VICII::simulate_I (MCHEmul::CPU* cpu)
 		}
 
 		// 1 cycle = 8 horizontal columns = 8 pixels...
-		_isNewRasterLine = _raster.moveCycles (1); 
+		// If the current line is one where has been declared to issue an IRQ...
+		// ...the situation is flagged into the register
+		// Whether finally a IRQ is or not issued is something that is calculated booton in this method...
+		if ((_isNewRasterLine = _raster.moveCycles (1)) &&
+			_raster.currentLine () == _VICIIRegisters -> IRQRasterLineAt ())
+			_VICIIRegisters -> activateRasterIRQ ();
 
 		if (_raster.isInLastVBlank ())
 		{
@@ -258,12 +257,6 @@ bool COMMODORE::VICII::simulate_II (MCHEmul::CPU* cpu)
 			// The VICII doesn't work actually like this
 			// The information about the sprites 0 to 3 is read during the last cycles of the previous raster line
 			// but this is a good proxy!
-
-			// If the current line is one where has been declared to issue an IRQ...
-			// ...the situation is flagged into the register
-			// Whether finally a IRQ is or not issued is something that is calculated booton in this method...
-			if (_raster.currentLine () == _VICIIRegisters -> IRQRasterLineAt ())
-				_VICIIRegisters -> activateRasterIRQ ();
 
 			_isNewRasterLine = false;
 
@@ -353,7 +346,13 @@ bool COMMODORE::VICII::simulate_II (MCHEmul::CPU* cpu)
 			}
 		}
 
-		_isNewRasterLine = _raster.moveCycles (1);
+		// Move 8 pixels right and jump to line is possible...
+		// If the current new line is one where has been declared to issue an IRQ...
+		// ...the situation is flagged into the register
+		// Whether finally a IRQ is or not issued is something that is calculated booton in this method...
+		if ((_isNewRasterLine = _raster.moveCycles (1)) &&
+			_raster.currentLine () == _VICIIRegisters -> IRQRasterLineAt ())
+			_VICIIRegisters -> activateRasterIRQ ();
 
 		if (_raster.isInLastVBlank ())
 		{

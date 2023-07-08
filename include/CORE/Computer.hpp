@@ -15,6 +15,7 @@
 #define __MCHMUL_COMPUTER__
 
 #include <CORE/global.hpp>
+#include <CORE/DebugFile.hpp>
 #include <CORE/Clock.hpp>
 #include <CORE/CPU.hpp>
 #include <CORE/Chip.hpp>
@@ -233,15 +234,17 @@ namespace MCHEmul
 		void setDebugLevel (unsigned int dL)
 							{ _debugLevel = dL; }
 
-		/** To activate and desactive the deep debug at CPU level. \n
+		/** To activate and desactive the deep debug to a file. \n
 			Returns true when ok, and false when not possible. \n
 			When activated the parameter needed is the name of the file where to store the info. */
 		bool deepDebug () const
-							{ return (cpu () -> deepDebug ()); }
-		bool activateDeepDebug (const std::string& fN, bool a = false /** meaning not adding the info at the end, but new file. */)
-							{ return (cpu () -> activateDeepDebug (fN, a)); }
-		bool desactivateDeepDebug ()
-							{ return (cpu () -> desactivateDeepDebug ()); }
+							{ return (_deepDebug.active ()); }
+		inline bool activateDeepDebug (const std::string& fN, bool a = false /** meaning not adding the info at the end, but new file. */);
+		inline bool desactivateDeepDebug ();
+		const DebugFile* deepDebugFile () const
+							{ return (&_deepDebug); }
+		DebugFile* deepDebugFile ()
+							{ return (&_deepDebug); }
 
 		/** To get the last error happend (after initialize or simulate methods). */
 		unsigned int error () const
@@ -313,6 +316,7 @@ namespace MCHEmul
 		MapOfActions _actionsAt;
 		unsigned int _status;
 		unsigned int _actionForNextCycle; // The action to be executed in the next cycle...
+		DebugFile _deepDebug; // When the deep debug is requested...
 
 		/** Used to to indicate the execution must finishes.
 			There could have been an error or not. */
@@ -344,6 +348,28 @@ namespace MCHEmul
 		mutable bool _stabilized;
 		mutable unsigned short _currentStabilizationLoops;
 	};
+
+	// ---
+	inline bool Computer::activateDeepDebug (const std::string& fN, bool a)
+	{ 
+		bool result = _deepDebug.activate (fN, a);
+
+		if (result)
+			cpu () -> setDeepDebugFile (&_deepDebug); /** Minimum the CPU is activated. */
+
+		return (result); 
+	}
+
+	// ---
+	inline bool Computer::desactivateDeepDebug ()
+	{ 
+		bool result = _deepDebug.desactivate ();
+
+		if (result)
+			cpu () -> setDeepDebugFile (nullptr);
+
+		return (result); 
+	}
 }
 
 #endif

@@ -11,6 +11,7 @@ MCHEmul::Computer::Computer (MCHEmul::CPU* cpu, const MCHEmul::Chips& c,
 	: MCHEmul::InfoClass ("Computer"),
 	  _cpu (cpu), _chips (c), _memory (m), _devices (d), _attributes (attrs), 
 	  _actionsAt (), _status (_STATUSRUNNING), _actionForNextCycle (_ACTIONNOTHING),
+	  _deepDebug (), // No active at all...
 	  _exit (false), _restartAfterExit (false), _restartLevel (0), // Meaning full!
 	  _debugLevel (MCHEmul::_DEBUGNOTHING),
 	  _stabilizationLoops (sL),
@@ -266,7 +267,15 @@ bool MCHEmul::Computer::runComputerCycle (unsigned int a)
 	// The CPU is executed only when the computer is stable...
 	if (_stabilized)
 	{ 
-		if (!_cpu -> executeNextInstruction ())
+		// The desativation of the deep debug is desactivated when
+		// a instruction is about to be executed...
+		_deepDebug.setBlockDesactivate ();
+		bool rInst = _cpu -> executeNextInstruction ();
+		// If some instruction tried to desactivate the debug, now it is the moment...
+		if (_deepDebug.desactivateTryWhenBlockDesativate ())
+			_deepDebug.desactivate ();
+
+		if (!rInst)
 		{
 			_exit = true;
 
