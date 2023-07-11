@@ -28,6 +28,7 @@ COMMODORE::VICII::VICII (const MCHEmul::RasterData& vd, const MCHEmul::RasterDat
 	  _graphicsLineSprites (8, MCHEmul::UBytes::_E),
 	  _isNewRasterLine (false),
 	  _cycleInRasterLine (0),
+	  _stopCPUCycles (0),
 	  _videoActive (true),
 	  _lastVBlankEntered (false)
 {
@@ -71,7 +72,10 @@ bool COMMODORE::VICII::initialize ()
 	_graphicsSprites = std::vector <MCHEmul::UBytes> (8, MCHEmul::UBytes::_E);
 
 	_isNewRasterLine = true; // The first...
-	_cycleInRasterLine = 0;
+	
+	_cycleInRasterLine = 1;
+	_stopCPUCycles = 0;
+
 	_videoActive = true;
 
 	_lastVBlankEntered = false;
@@ -117,8 +121,7 @@ bool COMMODORE::VICII::simulate_OLD (MCHEmul::CPU* cpu)
 			memoryRef () -> setActiveView (_VICIIView);
 
 			// The sprites info at that line (if any) has to be read...
-			size_t nS = 0;
-			readSpritesDataAt (_raster.currentLine (), nS);
+			readSpritesDataAt (_raster.currentLine ());
 
 			// and if is it also a bad line?...
 			if (isBadRasterLine ())
@@ -176,7 +179,184 @@ bool COMMODORE::VICII::simulate_OLD (MCHEmul::CPU* cpu)
 // ---
 bool COMMODORE::VICII::simulate_NEW (MCHEmul::CPU* cpu)
 {
+	// If the "video reset flag" is actived nothing is done...
+	if (_VICIIRegisters -> videoResetActive ())
+		return (true);
+
+	enum RasterLineStatus
+	{
+		_BEFOREVISIBLEZONE,
+		_VISIBLEZONE,
+		_AFTERVISIBLEZONE
+	};
+
+	// Adapt the size of the display zone to the parameters specificied in the register...
+	// The zone where sprites and texts are finally visible is call the "screen zone"
+	_raster.reduceDisplayZone
+		(!_VICIIRegisters -> textDisplay25RowsActive (), !_VICIIRegisters -> textDisplay40ColumnsActive ());
+
+	unsigned int cc = 
+		(cpu -> clockCycles  () - _lastCPUCycles) + ((_stopCPUCycles > 0) ? 1 : 0);
+	for (; cc > 0; cc--)
+	{
+		if (_stopCPUCycles > 0)
+		{
+			_stopCPUCycles--;
+
+			cpu -> addClockCycles (1); // For the rest chips to work...
+		}
+
+		_videoActive = (_raster.currentLine () == _FIRSTBADLINE) 
+			? !_VICIIRegisters -> blankEntireScreen () : _videoActive; // Only at first bad line it can change its value...
+
+		// Depending on the cycle the VICII does different things...
+		switch ((_cycleInRasterLine >= 1 && _cycleInRasterLine <= 9) 
+			? _BEFOREVISIBLEZONE
+			: ((_cycleInRasterLine >= 10 && _cycleInRasterLine <= 58) 
+				? _VISIBLEZONE
+				: _AFTERVISIBLEZONE))
+		{
+			case _BEFOREVISIBLEZONE:
+				{
+					_stopCPUCycles = simulate_BEFOREVISIBLEZONE (cpu);
+				}
+
+				break;
+
+			case _VISIBLEZONE:
+				{
+					_stopCPUCycles = simulate_VISIBLEZONE (cpu);
+				}
+
+				break;
+
+			case _AFTERVISIBLEZONE:
+				{
+					_stopCPUCycles = simulate_AFTERVISIBLEZONE (cpu);
+				}
+
+				break;
+		}
+
+		// Stops the CPU when it has been decided in the internal methods...
+		cpu -> setStop (_stopCPUCycles > 0);
+
+		// Move to the next cycle...
+		_cycleInRasterLine++;
+
+		// Move 8 pixels right and jump to line is possible...
+		// If the current new line is one where has been declared to issue an IRQ...
+		// ...the situation is flagged into the register
+		// Whether finally a IRQ is or not issued is something that is calculated booton in this method...
+		if (_isNewRasterLine = _raster.moveCycles (1))
+		{
+			_cycleInRasterLine = 1;
+			if (_raster.currentLine () == _VICIIRegisters -> IRQRasterLineAt ())
+				_VICIIRegisters -> activateRasterIRQ ();
+		}
+
+		if (_raster.isInLastVBlank ())
+		{
+			if (!_lastVBlankEntered)
+			{
+				_lastVBlankEntered = true;
+
+				notify (MCHEmul::Event (_GRAPHICSREADY)); 
+			}
+		}
+		else
+			_lastVBlankEntered = false;
+	}
+
+	_lastCPUCycles = cpu -> clockCycles ();
+
+	_VICIIRegisters -> setCurrentRasterLine (_raster.currentLine ()); 
+
+	if (_VICIIRegisters -> launchIRQ ())
+		cpu -> interrupt (F6500::IRQInterrupt::_ID) -> setActive (true);
+
 	return (true);
+}
+
+// ---
+unsigned int COMMODORE::VICII::simulate_BEFOREVISIBLEZONE (MCHEmul::CPU* cpu)
+{
+	unsigned int result = 0;
+
+	if (_cycleInRasterLine == 1 ||
+		_cycleInRasterLine == 3 ||
+		_cycleInRasterLine == 5 ||
+		_cycleInRasterLine == 7 ||
+		_cycleInRasterLine == 9)
+	{
+		// Read the sprite data...
+		memoryRef () -> setActiveView (_VICIIView);
+		if (readSpriteDataAt (_raster.currentLine (), 
+			(_cycleInRasterLine >> 1) + 3 /** 3, 4, 5, 6 or 7. */))
+ 		   result = 1;
+		memoryRef () -> setCPUView ();
+	}
+
+	return (result);
+}
+
+// ---
+unsigned int COMMODORE::VICII::simulate_VISIBLEZONE (MCHEmul::CPU* cpu)
+{
+	unsigned int result = 0;
+
+	// This is a function used inside to determine whether 
+	// a rater line is or not a bad one!
+	auto isBadRasterLine = [=]() -> bool
+		{ return (_videoActive && 
+				  _raster.currentLine () >= _FIRSTBADLINE &&
+				  _raster.currentLine () <= _LASTBADLINE && 
+				  (_raster.currentLine () & 0x07 /** The three last bits. */) == _VICIIRegisters -> verticalScrollPosition ()); };
+
+	// This is not exactly what VICII does
+	// as it is reading cycle by cyle the bytes in the memory
+	// But it is a good aproximation!
+	if (_cycleInRasterLine == 10)
+	{
+		if (isBadRasterLine ())
+		{
+			result = 40; // The number of cycles added to the cpu...
+
+			memoryRef () -> setActiveView (_VICIIView);
+			readGraphicsInfoAt (_raster.currentLine () - 
+				_FIRSTBADLINE - _VICIIRegisters -> verticalScrollPosition ());
+			memoryRef () -> setCPUView ();
+		}
+	}
+	else
+	{
+		if (_raster.isInVisibleZone ())
+			simulate_VisibleZone (cpu);
+	}
+
+	return (result);
+}
+
+// ---
+unsigned int COMMODORE::VICII::simulate_AFTERVISIBLEZONE (MCHEmul::CPU* cpu)
+{
+	unsigned int result = 0;
+
+	// This is not totally true as it will depend on the type of VIC, 
+	// ...but it a s good aproximation...
+	if (_cycleInRasterLine == 59 ||
+		_cycleInRasterLine == 61 ||
+		_cycleInRasterLine == 63) 
+	{
+		// Read the sprite data...
+		memoryRef () -> setActiveView (_VICIIView);
+		if (readSpriteDataAt (_raster.nextLine (), // The sprite info read is for the next line...
+			(_cycleInRasterLine - 59) >> 1 /** 0, 1 or 2. */))
+ 		   result = 1;
+		memoryRef () -> setCPUView ();
+	}
+
+	return (result);
 }
 
 // ---

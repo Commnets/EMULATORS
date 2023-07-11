@@ -37,10 +37,16 @@ namespace MCHEmul
 					unsigned short pr2
 				  );
 
+		// The default copy constructors are ok...
+
 		unsigned short currentPosition () const
 						{ return (_currentPosition); }
+		unsigned short nextPosition () const // Without affecting the current one...
+						{ RasterData c = *this; c.add (1); return (c.currentPosition ()); }
 		unsigned short currentPositionAtBase0 () const
 						{ return (_currentPosition_0); }
+		unsigned short nextPositionAtBase0 () const
+						{ RasterData c = *this; c.add (1); return (c.currentPositionAtBase0 ()); }
 
 		// Managing the blank zone...
 		bool isInBlankZone () const
@@ -219,8 +225,12 @@ namespace MCHEmul
 
 		unsigned short currentLine () const
 						{ return (_vRasterData.currentPosition ()); }
+		unsigned short nextLine () const
+						{ return (_vRasterData.nextPosition ()); }
 		unsigned short currentLineAtBase0 () const
 						{ return (_vRasterData.currentPositionAtBase0 ()); }
+		unsigned short nextLineAtBase0 () const
+						{ return (_vRasterData.nextPositionAtBase0 ()); }
 		unsigned short currentColumn () const
 						{ return (_hRasterData.currentPosition ()); }
 		unsigned short currentColumnAtBase0 () const

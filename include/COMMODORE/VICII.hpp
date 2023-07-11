@@ -90,6 +90,9 @@ namespace COMMODORE
 		virtual bool simulate (MCHEmul::CPU* cpu) override;
 		bool simulate_OLD (MCHEmul::CPU* cpu);
 		bool simulate_NEW (MCHEmul::CPU* cpu);
+		unsigned int simulate_BEFOREVISIBLEZONE (MCHEmul::CPU* cpu);
+		unsigned int simulate_VISIBLEZONE (MCHEmul::CPU* cpu);
+		unsigned int simulate_AFTERVISIBLEZONE (MCHEmul::CPU* cpu);
 		void simulate_VisibleZone (MCHEmul::CPU* cpu);
 
 		/**
@@ -149,17 +152,13 @@ namespace COMMODORE
 								((size_t) l * _GRAPHMAXCHARCOLUMNS), (size_t) _GRAPHMAXCHARCOLUMNS))); }
 
 		// Read sprites data
-		/** Read the sprites data (only for the active ones) \n
-			The list of the sprites active (internal variable) is also actualized (not returned) = _spritesEnabled. \n
-			nS = number of sprites read. */
-		inline const std::vector <MCHEmul::UBytes>& readSpritesData (size_t& nS) const;
 		/** Read the graphical info of the active sprites at one specific raster line. \n
 			The parameter received goes from 0 to PAL/NTSC maximum raster line,
-			and doesn't take into account the SCROLLY value. \n
-			nS = number of sprites read. */
-		inline const std::vector <MCHEmul::UBytes>& readSpritesDataAt (unsigned short l, size_t& nS) const;
-		/** Method used by the method previous to read the info of a sprite only. */
-		inline MCHEmul::UBytes readSpriteDataAt (unsigned short l, size_t nS) const;
+			and doesn't take into account the SCROLLY value. */
+		inline const std::vector <MCHEmul::UBytes>& readSpritesDataAt (unsigned short l) const;
+		/** Method used by the method previous to read the info of a sprite only. 
+			It returns true when the sprite data was read, and false in other case. */
+		inline bool readSpriteDataAt (unsigned short l, size_t nS) const;
 
 		// Draw the graphics & Sprites in detail...
 		/** To simplify the use of some of the routines dedicated to draw. */
@@ -291,6 +290,9 @@ namespace COMMODORE
 		/** When a raster line is processed is necessary to know which cycle is being processed. 
 			The number of max cycles is get from the method (@see) cyclesPerRasterLine */
 		unsigned int _cycleInRasterLine;
+		/** When the VICII takes control of the memory and CPU address the CPU has to stop processing.
+			This variable keeps the number of cycles to stop. */
+		unsigned int _stopCPUCycles;
 		/** When the raster is in the first bad line this variable is set taking into account what 
 			is kept in the VICII register about whether the video ir or not active. \n
 			In any other circunstance is kept its value. */
@@ -362,71 +364,32 @@ namespace COMMODORE
 	}
 
 	// ---
-	inline const std::vector <MCHEmul::UBytes>& VICII::readSpritesData (size_t& nS) const
-	{
-		_graphicsSprites = 
-			std::vector <MCHEmul::UBytes> (8, MCHEmul::UBytes::_E);
-
-		nS = 0;
-
-		MCHEmul::Address sP = 
-			_VICIIRegisters -> spritePointersMemory (); // Will depend on where the screen memory is located...
-		MCHEmul::Address iAB = _VICIIRegisters -> initAddressBank ();
-
-		for (size_t i = 0; i < 8; i++)
-		{
-			if (_VICIIRegisters -> spriteEnable ((size_t) i))
-			{ 
-				nS++;
-
-				_graphicsSprites [i] = std::move (
-					MCHEmul::UBytes (memoryRef () -> bytes (iAB + 
-						((size_t) memoryRef () -> value (sP + i).value () << 6 /** 64 blocks. */), 63 /** size in bytes. */)));
-			}
-		}
-
-		return (_graphicsSprites);
-	}
-
-	// ---
-	inline const std::vector <MCHEmul::UBytes>& VICII::readSpritesDataAt (unsigned short l, size_t& nS) const
+	inline const std::vector <MCHEmul::UBytes>& VICII::readSpritesDataAt (unsigned short l) const
 	{
 		_graphicsLineSprites = 
 			std::vector <MCHEmul::UBytes> (8, MCHEmul::UBytes::_E);
-
-		nS = 0;
-		for (size_t i = 0; i < 8; i++)
-		{ 
-			if (_VICIIRegisters -> spriteEnable (nS)) // Has to be active...
-			{
-				_graphicsLineSprites [i] = 
-					std::move (readSpriteDataAt (l, i)); // The method also check if enabled, 
-														 // but it has been included here to avoid additional checks...
-				
-				nS++;
-			}
-		}
-
+		for (size_t i = 0; i < 8; 
+			readSpriteDataAt (l, i++)); // _graphicsLineSprites is updated...
 		return (_graphicsLineSprites);
 	}
 
 	// ---
-	inline MCHEmul::UBytes VICII::readSpriteDataAt (unsigned short l, size_t nS) const
+	inline bool VICII::readSpriteDataAt (unsigned short l, size_t nS) const
 	{
-		MCHEmul::UBytes result = MCHEmul::UBytes::_E;
+		bool result = _VICIIRegisters -> spriteEnable (nS);
 
-		MCHEmul::Address sP = 
-			_VICIIRegisters -> spritePointersMemory (); // Will depend on where the screen memory is located...
-		MCHEmul::Address iAB = _VICIIRegisters -> initAddressBank ();
-
-		if (_VICIIRegisters -> spriteEnable (nS)) // Has to be active...
+		if (result) // Has to be active...
 		{
+			MCHEmul::Address sP = 
+				_VICIIRegisters -> spritePointersMemory (); // Will depend on where the screen memory is located...
+			MCHEmul::Address iAB = _VICIIRegisters -> initAddressBank ();
+
 			// Can be negative...(reason to use an int)
 			// If some part of the sprite were visible in the line...
 			int lY = l - _VICIIRegisters -> spriteYCoord (nS) - 1;
 			if (lY >= 0 && 
 				lY < (_VICIIRegisters -> spriteDoubleHeight (nS) ? 42 /** When double high. */ : 21))
-				result = std::move (
+					_graphicsLineSprites [nS] = std::move (
 					MCHEmul::UBytes (
 						memoryRef () -> bytes (iAB + 
 						((size_t) memoryRef () -> value (sP + nS).value () << 6) /** 64 bytes block size. */ + 

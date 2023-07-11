@@ -134,9 +134,9 @@ namespace MCHEmul
 							{ return (_clockCycles); }
 		/** Add or subtract clock cycles. */
 		void addClockCycles (unsigned int cC)
-							{ _clockCycles += cC; _lastClockCycles += cC; }
+							{ _clockCycles += cC; }
 		void subtractClockCycles (unsigned int cC)
-							{ _clockCycles -= cC; _lastClockCycles -= cC; }
+							{ _clockCycles -= cC; }
 		/** After the execution of the method executeNextIntruction this variable
 			will contain the number of clock cycles that the cpu took to execute the
 			interruptions and the instruction. \n
