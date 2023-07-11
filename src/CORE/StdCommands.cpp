@@ -45,6 +45,7 @@ const std::string MCHEmul::SoundOffCommand::_NAME = "CSOUNDOFF";
 const std::string MCHEmul::InterruptsCommand::_NAME = "CINTERRUPTS";
 const std::string MCHEmul::InterruptDebugOnCommand::_NAME = "CIDEBUGON";
 const std::string MCHEmul::InterruptDebugOffCommand::_NAME = "CIDEBUGOFF";
+const std::string MCHEmul::ChipsListCommand::_NAME = "CCHIPS";
 
 // ---
 MCHEmul::HelpCommand::HelpCommand (const std::string& hF)
@@ -486,9 +487,34 @@ void MCHEmul::ActivateDeepDebugCommand::executeImpl
 	if (c == nullptr)
 		return;
 
+
+	std::string fN = parameter ("00");
+	std::vector <int> cId = { };
+	bool a = false;
+	if (parameters ().size () >= 2)
+	{
+		a = (parameter ("01") == "YES") ? true : false;
+
+		if (parameters ().size () >= 3)
+		{
+			if (parameter ("02") == "ALL")
+				cId = { -1 };
+			else
+			{
+				int nP = 3;
+				std::string nPStr = "0" + std::to_string (nP);
+				while (existParameter (nPStr))
+				{
+					cId.emplace_back (std::atoi (parameter (nPStr).c_str ()));
+
+					nPStr = "0" + std::to_string (++nP);
+				}
+			}
+		}
+	}
+
 	rst.add ("ERROR", 
-		c -> activateDeepDebug (parameter ("00"), 
-			(existParameter ("01") ? ((parameter ("01") == "YES") ? true : false) : false))
+		c -> activateDeepDebug (fN, cId, a)
 				? std::string ("No errors")
 				: std::string ("Deep debugging activation error"));
 }
@@ -664,4 +690,31 @@ void MCHEmul::InterruptDebugOffCommand::executeImpl
 		MCHEmul::CPUInterrupt::desactivateDebug (c)
 			? std::string ("No errors")
 			: std::string ("Interrupt debug desactivation error"));
+}
+
+// ---
+void MCHEmul::ChipsListCommand::executeImpl
+	(MCHEmul::CommandExecuter* cE, Computer* c, InfoStructure& rst)
+{
+	if (c == nullptr)
+		return;
+
+	auto attrToStr = [=](const MCHEmul::Attributes& attrs) -> std::string
+	{
+		bool f = true;
+		std::string result = "";
+		for (const auto& i : attrs)
+		{
+			result += (!f ? "," : "") + i.second;
+
+			f = false;
+		}
+
+		return (result);
+	};
+
+	MCHEmul::InfoStructure ch;
+	for (const auto& i : c -> chips ())
+		ch.add (std::to_string (i.second -> id ()), std::move (attrToStr (i.second -> attributes ())));
+	rst.add ("CHIPS", std::move (ch));
 }

@@ -2,17 +2,17 @@
 #(C) 2022 Ignacio Cea Fornies
 ;VICII
 To know the status of the VICII chip, including raster and others.
-No parameters needed.
+No parameters are needed.
 ;CIA
 To know the status of the CIA chip.
-No parameters needed.
+No parameters are needed.
 ;SID
 To know the status of the SID chip.
-No parameters needed.
-;SIDW
-To change the sound wrapper used
-The only parameter needed is the number of the library to use.
-0 is the standard RESID library and 1 is a pulse simulation just to test.
+No parameters are needed.
+;SIDW LIBID
+To change the sound wrapper used.
+The only parameter needed is the number of the library (LIBID) to use.
+Where 0 is the standard RESID library and 1 is an very basic simulation made by Ignacio Cea.
 ;Datasette
 To know the status of the datasette if connected
-No parameters needed.
+No parameters are needed.

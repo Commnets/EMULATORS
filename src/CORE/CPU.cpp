@@ -108,7 +108,11 @@ bool MCHEmul::CPU::executeNextInstruction ()
 	memoryRef () -> setCPUView (); // Always...
 
 	if (_stopped)
+	{
+		_lastClockCycles = 0;
+
 		return (true);
+	}
 
 	// Number of cycles calling interruptions...
 	unsigned int nCInt = 0;
@@ -126,9 +130,7 @@ bool MCHEmul::CPU::executeNextInstruction ()
 	// Information about the Program Counter and the Stack position has to be first printed out...
 	// ...see later!
 	std::string sdd = "";
-	bool dd = (_deepDebugFile != nullptr) && 
-			  _deepDebugFile -> active (); // Keep the status before anything...
-	if (dd)
+	if (deepDebugActive ())
 		sdd = MCHEmul::removeAll0 (_programCounter.asString ()) + ":(SP " 
 				   + std::to_string (memoryRef () -> stack () -> position ()) + ") ";
 
@@ -163,7 +165,7 @@ bool MCHEmul::CPU::executeNextInstruction ()
 
 	// If after the execution of the instruction, the deep debugging is still activated...
 	// ...then information about the instruction executed and the stats of the CPU is printed out!
-	if (dd)
+	if (deepDebugActive ())
 	{
 		std::string lSt = ""; 
 		size_t lenI = (lSt = _lastInstruction -> asString ()).size ();;

@@ -26,14 +26,18 @@ namespace MCHEmul
 			: _fileName (),
 			  _addInfo (false),
 			  _file (),
-			  _active (false)
+			  _active (false),
+			  _blockDesactivate (false),
+			  _desactivateTryWhenBlockDesactivate (false)
 							{ }
 
 		DebugFile (const std::string& fN, bool a = true)
 			: _fileName (fN),
 			  _addInfo (a),
 			  _file (),
-			  _active (false)
+			  _active (false),
+			  _blockDesactivate (false),
+			  _desactivateTryWhenBlockDesactivate (false)
 							{ /** The file is not opened. */ }
 
 		/** To know the parameters. 
@@ -59,11 +63,11 @@ namespace MCHEmul
 			Once it has been checked is retored to false. */
 		inline bool desactivateTryWhenBlockDesativate () const;
 
-		/** To simplify the output of info. */
-		std::ofstream& operator ()()
-							{ return (_file); }
+		/** To simplify the output of info. \n
+			Only valid when it is active. */
 		friend DebugFile& operator << (DebugFile& dF, const std::string& i)
-							{ dF._file << i; return (dF); }
+							{ if (dF._active) dF._file << i; 
+							  return (dF); }
 
 		protected:
 		std::string _fileName; // can not be changed.

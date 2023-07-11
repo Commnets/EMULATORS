@@ -49,6 +49,9 @@ namespace COMMODORE
 			When this variable is read, the value comes back to false. */
 		bool interruptRequested () const
 							{ bool r = _interruptRequested; _interruptRequested = false; return (r); }
+		/** Same than the previous method but without modifying the value. */
+		bool peekInterruptRequested () const
+							{ return (_interruptRequested); }
 
 		/** To know whether an interruption related with the Clock should be launched. \n
 			That happen when there is a interruption requested and also they are allowed. */
@@ -86,6 +89,18 @@ namespace COMMODORE
 							{ return (_timeLatched ? _secondsL : _seconds); }
 		unsigned char tenthsSecond () const
 							{ unsigned char r = _timeLatched ? _tenthsSecondL : _tenthsSecond; _timeLatched = false; return (r); }
+
+		// Equivalent to the previous methods
+		// ...but not affecting the variable.
+		// Usually there are invoked in the peekValue method of the CIARegister...
+		unsigned char peekHours () const
+							{ return (_hours); }
+		unsigned char peekMinutes () const
+							{ return (_minutes); }
+		unsigned char peekSeconds () const
+							{ return (_seconds); }
+		unsigned char peekTenthsSecond () const
+							{ return (_tenthsSecond); }
 
 		/** To simulate the behaviour of the timer. \n
 			It invokes also some private methods.

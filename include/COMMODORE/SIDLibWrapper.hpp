@@ -36,6 +36,9 @@ namespace COMMODORE
 							{ /** do nothing. */ }
 		virtual const MCHEmul::UByte& readValue (size_t p) const
 							{ return (_lastValueRead); }
+		/** Like the previous one but not affecting the value. */
+		virtual const MCHEmul::UByte& peekValue (size_t p) const
+							{ return (readValue (p)); }
 
 		/** To get information about the voices from then wrapper. \n
 			That infomation is not neccesary stored in the registers. */

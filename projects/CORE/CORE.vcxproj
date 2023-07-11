@@ -77,6 +77,7 @@
     <ClInclude Include="..\..\include\CORE\Clock.hpp" />
     <ClInclude Include="..\..\include\CORE\CmdExecuter.hpp" />
     <ClInclude Include="..\..\include\CORE\CmdlineArgs.hpp" />
+    <ClInclude Include="..\..\include\CORE\ComputerClock.hpp" />
     <ClInclude Include="..\..\include\CORE\DebugFile.hpp" />
     <ClInclude Include="..\..\include\CORE\DtMemoryBlock.hpp" />
     <ClInclude Include="..\..\include\CORE\Command.hpp" />

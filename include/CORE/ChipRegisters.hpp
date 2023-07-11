@@ -36,6 +36,12 @@ namespace MCHEmul
 		  * BYTES = Attribute: Bytes controlled by this register.
 		  */
 		virtual MCHEmul::InfoStructure getInfoStructure () const override;
+
+		protected:
+		/** Like "readValue" but not affecting the value in anycase. \n
+			By default it behaves like "readValue" (@see readValue). */
+		virtual const UByte& peekValue (size_t nB) const
+							{ return (readValue (nB)); }
 	};
 }
 

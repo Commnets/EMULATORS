@@ -15,7 +15,6 @@
 #define __MCHMUL_COMPUTER__
 
 #include <CORE/global.hpp>
-#include <CORE/DebugFile.hpp>
 #include <CORE/Clock.hpp>
 #include <CORE/CPU.hpp>
 #include <CORE/Chip.hpp>
@@ -27,6 +26,7 @@
 #include <CORE/Screen.hpp>
 #include <CORE/Sound.hpp>
 #include <CORE/OSIO.hpp>
+#include <CORE/DebugFile.hpp>
 #include <chrono>
 
 namespace MCHEmul
@@ -199,17 +199,10 @@ namespace MCHEmul
 			This method used the other tow defined behind and it can be simulated from outside. */
 		bool run ();
 
-		// Managing the clock...
-		/** To indicate that the cpu clock status. */
-		void startsComputerClock ()
+		// Managing the clock to accelerate or desacelerate the execution...
+		/** To indicate that the speed clock status. */
+		void startsSpeedClock ()
 							{ _clock.start (); }
-		unsigned int clockCycles () const
-							{ return (cpu () -> clockCycles ()); }
-		unsigned int lastClockCycles () const
-							{ return (cpu () -> lastClockCycles ()); }
-		/** To count cycles. */
-		void countClockCycles (unsigned int cC)
-							{ _clock.countCycles (cC); }
 
 		// Managing the cycles...
 		/** Execute one computer cycle (cpu + chips). */
@@ -234,12 +227,21 @@ namespace MCHEmul
 		void setDebugLevel (unsigned int dL)
 							{ _debugLevel = dL; }
 
-		/** To activate and desactive the deep debug to a file. \n
-			Returns true when ok, and false when not possible. \n
-			When activated the parameter needed is the name of the file where to store the info. */
+		// Managing the deep debugging...
+		/** To knwow whether the debug file is or not active. */
 		bool deepDebug () const
 							{ return (_deepDebug.active ()); }
-		inline bool activateDeepDebug (const std::string& fN, bool a = false /** meaning not adding the info at the end, but new file. */);
+		/** To activate and desactive the deep debug to a file. \n
+			Returns true when ok, and false when not possible. \n
+			When activated, the only mandatory parameter needed is the 
+			name of the file where to store the info. \n
+			The deep debug is activated at CPU level minimum, 
+			but optionally a list of chips id can be passed as parameter (a single parameter = -1 will mean all). \n
+			Finally another optional parameter is whether the info generated has to be added to the file if it exists
+			or a new one should be created. */
+		inline bool activateDeepDebug (const std::string& fN, 
+			const std::vector <int>& cId = { -1 }, // Menaing all chips included...
+			bool a = false /** meaning not adding the info at the end, but new file. */);
 		inline bool desactivateDeepDebug ();
 		const DebugFile* deepDebugFile () const
 							{ return (&_deepDebug); }
@@ -350,12 +352,28 @@ namespace MCHEmul
 	};
 
 	// ---
-	inline bool Computer::activateDeepDebug (const std::string& fN, bool a)
+	inline bool Computer::activateDeepDebug (const std::string& fN, const std::vector <int>& cId, bool a)
 	{ 
 		bool result = _deepDebug.activate (fN, a);
 
 		if (result)
+		{ 
 			cpu () -> setDeepDebugFile (&_deepDebug); /** Minimum the CPU is activated. */
+
+			// For the chips...
+			// if there is only one element in the list and it is a -1, means all!
+			if (cId.size () == 1 && cId [0] == -1)
+			{
+				for (auto& i : _chips)
+					i.second -> setDeepDebugFile (&_deepDebug);
+			}
+			else
+			{
+				for (auto i : cId)
+					if (existsChip (i))
+						chip (i) -> setDeepDebugFile (&_deepDebug);
+			}
+		}
 
 		return (result); 
 	}
@@ -366,7 +384,11 @@ namespace MCHEmul
 		bool result = _deepDebug.desactivate ();
 
 		if (result)
+		{ 
 			cpu () -> setDeepDebugFile (nullptr);
+			for (auto& i : _chips)
+				i.second -> setDeepDebugFile (nullptr);
+		}
 
 		return (result); 
 	}

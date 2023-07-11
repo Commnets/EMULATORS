@@ -111,6 +111,9 @@ namespace COMMODORE
 			When this variable is read, the value comes back to false. */
 		bool interruptRequested () const
 							{ bool r = _interruptRequested; _interruptRequested = false; return (r); }
+		/** Same than the previous method but without modifying the value. */
+		bool peekInterruptRequested () const
+							{ return (_interruptRequested); }
 
 		/** To know whether an interruption related with the Timer should be launched. \n
 			That happen when there is a interruption requested and also they are allowed. */

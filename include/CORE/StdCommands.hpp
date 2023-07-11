@@ -539,9 +539,12 @@ namespace MCHEmul
 		virtual void executeImpl (CommandExecuter* cE, Computer* c, InfoStructure& rst) override;
 	};
 
-	/** Comand to activate the deep debug. \n
-		The parameter needed is the name of the file where to keep in the info. 
-		If the debug of only interruptions were activated the command wouldn't work. */
+	/** Comand to activate the deep debug.
+		The parameter needed is the name of the file,
+		whether every execution has to be added at the end or not. \n
+		By default it is false (meaning not to add, but new file) and
+		additional elements indicating the chips to include in the deep debug.
+		By default none is included and ALL will mean all chips. */
 	class ActivateDeepDebugCommand final : public Command
 	{
 		public:
@@ -552,11 +555,8 @@ namespace MCHEmul
 			: Command (_ID, _NAME)
 							{ }
 
-		/** The parameter needed is the name of the file and
-			whether every execution has to be added at the end or not. \n
-			By default it is false (meaning not to add, but new file) */
 		virtual bool canBeExecuted () const override
-							{ return (_parameters.size () == 1 || _parameters.size () == 2); }
+							{ return (_parameters.size () >= 1); }
 
 		private:
 		virtual void executeImpl (CommandExecuter* cE, Computer* c, InfoStructure& rst) override;
@@ -793,6 +793,26 @@ namespace MCHEmul
 		static const std::string _NAME;
 
 		InterruptDebugOffCommand ()
+			: Command (_ID, _NAME)
+							{ }
+
+		/** No parameters are needed. */
+		virtual bool canBeExecuted () const override
+							{ return (_parameters.size () == 0); }
+
+		private:
+		virtual void executeImpl (CommandExecuter* cE, Computer* c, InfoStructure& rst) override;
+	};
+
+	/** To get a list of the chips connected to the computer. \n
+		No parameters are needed. */
+	class ChipsListCommand final : public Command
+	{
+		public:
+		static const int _ID = 35;
+		static const std::string _NAME;
+
+		ChipsListCommand ()
 			: Command (_ID, _NAME)
 							{ }
 

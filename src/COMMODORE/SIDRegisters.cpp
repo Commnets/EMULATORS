@@ -38,6 +38,16 @@ const MCHEmul::UByte& COMMODORE::SIDRegisters::readValue (size_t p) const
 }
 
 // ---
+const MCHEmul::UByte& COMMODORE::SIDRegisters::peekValue (size_t p) const
+{
+	MCHEmul::UByte result = MCHEmul::PhysicalStorage::_DEFAULTVALUE;
+	if (_sidWrapper != nullptr)
+		result = _sidWrapper -> peekValue (p % 0x20); // Not modifying...
+
+	return (_lastValueRead = result);
+}
+
+// ---
 void COMMODORE::SIDRegisters::initializeInternalValues ()
 {
 	setValue (0x00, MCHEmul::UByte::_0);

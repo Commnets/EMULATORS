@@ -17,6 +17,7 @@
 #include <CORE/global.hpp>
 #include <CORE/NotifyObserver.hpp>
 #include <CORE/Memory.hpp>
+#include <CORE/DebugFile.hpp>
 
 namespace MCHEmul
 {
@@ -31,7 +32,8 @@ namespace MCHEmul
 		public:
 		Chip (int id, const Attributes& attrs = { })
 			: InfoClass ("Chip"),
-			  _id (id), _memory (nullptr), _attributes (attrs), 
+			  _id (id), _memory (nullptr), _attributes (attrs),
+			  _deepDebugFile (nullptr),
 			  _error (_NOERROR) // Memory accessed can be null, take care...
 							{ }
 
@@ -90,10 +92,24 @@ namespace MCHEmul
 		  */
 		virtual InfoStructure getInfoStructure () const override;
 
+		/** Manages the deep debug file. \n
+			Take care it can be set back to a nullptr. */
+		bool deepDebugActive () const
+							{ return (_deepDebugFile != nullptr && _deepDebugFile -> active ()); }
+		void setDeepDebugFile (DebugFile* dF)
+							{ _deepDebugFile = dF; }
+		const DebugFile* deepDebugFile () const
+							{ return (_deepDebugFile); }
+		DebugFile* deepDebugFile ()
+							{ return (_deepDebugFile); }
+
 		protected:
 		const int _id = -1; // Modified at construction level
 		Memory* _memory;
 		const Attributes _attributes = { }; // Maybe modified at construction level
+
+		// To manage the debug info...
+		DebugFile* _deepDebugFile;
 
 		// Implementation
 		mutable unsigned int _error;

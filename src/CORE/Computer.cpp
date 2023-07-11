@@ -174,7 +174,7 @@ bool MCHEmul::Computer::initialize (bool iM)
 	_actionForNextCycle = _ACTIONNOTHING;
 	_lastAction = _ACTIONNOTHING;
 
-	startsComputerClock ();
+	_clock.start ();
 
 	_currentStabilizationLoops = 0;
 	_stabilized = (_stabilizationLoops == _currentStabilizationLoops); // Can be stable from the beginning...
@@ -189,7 +189,7 @@ bool MCHEmul::Computer::restart ()
 	if (_restartLevel == 0)
 		return (cpu () -> restart ());
 	else if (_restartLevel == 1)
-		return (initialize (false /** withou memory. */));
+		return (initialize (false /** without memory. */));
 	return (initialize (true /** with memory. */));
 }
 
@@ -217,7 +217,7 @@ bool MCHEmul::Computer::run ()
 		_actionForNextCycle = _ACTIONNOTHING;
 		_lastAction = _ACTIONNOTHING;
 
-		startsComputerClock ();
+		_clock.start ();
 
 		bool ok = true;
 		while (ok && !_exit)
@@ -245,7 +245,7 @@ bool MCHEmul::Computer::runComputerCycle (unsigned int a)
 	// If the Computer is running too quick, then the cycle is lost...
 	if (_clock.tooQuick ())
 	{ 
-		countClockCycles (0);
+		_clock.countCycles (0);
 
 		return (true); // The cycle was not executed, but everything went ok...
 	}
@@ -267,7 +267,7 @@ bool MCHEmul::Computer::runComputerCycle (unsigned int a)
 	// The CPU is executed only when the computer is stable...
 	if (_stabilized)
 	{ 
-		// The desativation of the deep debug is desactivated when
+		// The desativation of the deep debug is forbidden when
 		// a instruction is about to be executed...
 		_deepDebug.setBlockDesactivate ();
 		bool rInst = _cpu -> executeNextInstruction ();
@@ -312,8 +312,9 @@ bool MCHEmul::Computer::runComputerCycle (unsigned int a)
 		}
 	}
 
-	// After excuting the cycle, the number of cpu cycles are counted...
-	countClockCycles (_cpu -> lastClockCycles ());
+	// After excuting the cycle, 
+	// the number of speed cycles are counted...
+	_clock.countCycles (_cpu -> lastClockCycles ());
 
 	return (true);
 }

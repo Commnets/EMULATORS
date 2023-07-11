@@ -86,6 +86,10 @@ namespace COMMODORE
 			Once the value is got then it is pit back t false. */
 		bool flagLineInterruptRequested () const
 							{ bool r = _flagLineInterruptRequested; _flagLineInterruptRequested = false; return (r); }
+		/** Same than the previous method but without modifying the value. */
+		bool peekFlagLineInterruptRequested () const
+							{ return (_flagLineInterruptRequested); }
+
 		void setFlagLineInterruptRequested (bool a)
 							{ _flagLineInterruptRequested = a; }
 		/** To know whether a interruption related with the FLAG line has or not to be launched. */
@@ -120,6 +124,7 @@ namespace COMMODORE
 		protected:
 		virtual void setValue (size_t p, const MCHEmul::UByte& v) override;
 		virtual const MCHEmul::UByte& readValue (size_t p) const override;
+		virtual const MCHEmul::UByte& peekValue (size_t p) const override;
 
 		// Implementation
 		virtual void initializeInternalValues ();
@@ -164,6 +169,7 @@ namespace COMMODORE
 		return (_timerA	-> launchInterruption () ||
 				_timerB -> launchInterruption () ||
 				_clock  -> launchInterruption () ||
+				_serialPort -> interruptRequested () ||
 				launchFlagLineInterruption ());
 	}
 }

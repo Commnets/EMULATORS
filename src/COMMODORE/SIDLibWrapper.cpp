@@ -375,7 +375,7 @@ const MCHEmul::UByte& COMMODORE::SoundSimpleWrapper::readValue (size_t p) const
 
 	switch (pp)
 	{
-		// Random number generator (oscilltor 3): RANDOM
+		// Random number generator (oscillator 3): RANDOM
 		case 0x1b:
 			result = dynamic_cast <COMMODORE::SoundSimpleWrapper::Voice*> (_voices [2]) -> oscillatorValue ();
 			break;
@@ -385,7 +385,8 @@ const MCHEmul::UByte& COMMODORE::SoundSimpleWrapper::readValue (size_t p) const
 			result = dynamic_cast <COMMODORE::SoundSimpleWrapper::Voice*> (_voices [2]) -> envelopeValue ();
 			break;
 
-		// Other case, 0 is returned...
+		// The rest of the registers are write only,
+		// ...so reading it gets back 0!
 		default:
 			result = MCHEmul::UByte::_0;
 			break;

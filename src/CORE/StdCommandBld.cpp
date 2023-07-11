@@ -80,6 +80,8 @@ MCHEmul::Command* MCHEmul::StandardCommandBuilder::createEmptyCommand (const std
 		result = new MCHEmul::InterruptDebugOnCommand;
 	else if (cmdName == "IDEBUGOFF" || cmdName == MCHEmul::InterruptDebugOffCommand::_NAME)
 		result = new MCHEmul::InterruptDebugOffCommand;
+	else if (cmdName == "CHIPS" || cmdName == MCHEmul::ChipsListCommand::_NAME)
+		result = new MCHEmul::ChipsListCommand;
 	else if (cmdName == MCHEmul::MoveParametersToAnswerCommand::_NAME)
 		result = new MCHEmul::MoveParametersToAnswerCommand;
 

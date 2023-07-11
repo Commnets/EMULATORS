@@ -367,7 +367,7 @@ bool MCHEmul::Emulator::initialize ()
 	if (!soundAtStarting () && _computer -> sound () != nullptr)
 		_computer -> sound () -> setSilence (true);
 
-	_computer -> startsComputerClock ();
+	_computer -> startsSpeedClock ();
 
 	return (true);
 }
@@ -388,7 +388,7 @@ bool MCHEmul::Emulator::run ()
 
 		_running = true;
 
-		computer () -> startsComputerClock ();
+		computer () -> startsSpeedClock ();
 
 		while (runCycle (/** no action. */) && 
 			   !computer () -> exit ());

@@ -195,12 +195,20 @@ Last:@INST@
 #---
 #---
 ;CACTIVATEDEEPDEBUG
+->Errors:
+@ERROR@
 #---
 #---
 ;CDESACTIVATEDEEPDEBUG
+->Errors:
+@ERROR@
 #---
 #---
 ;CCLOCKFACTOR
+#---
+#---
+;CCHIPS
+@CHIPS?{key=YES,equal=:,empty=no chips}\n@
 #---
 #---
 ;CMEMORY

@@ -335,8 +335,8 @@ const MCHEmul::UByte& COMMODORE::CIARegisters::readValue (size_t p) const
 		case 0x0b:
 			{
 				// 2 digits. 1º: from 0 to 9 (4 bits), 2º: either 0 or 1 (1 bit). Bits 5,6 unused. Bit 7 AM/PM flag (PM = 1)
-				unsigned int h = (unsigned int) _clock -> hours ();
-				bool pm = h > 12 || (h == 12 && _clock -> minutes () > 0);
+				unsigned int h = (unsigned int) _clock -> hours (); // Only hours is affected...
+				bool pm = h > 12 || (h == 12 && _clock -> peekMinutes () > 0); // ...minutes is not affected.
 				if (pm && h > 12) h -= 12; // The value 12 is kept...
 				result = MCHEmul::UInt::fromUnsignedInt (h, MCHEmul::UInt::_PACKAGEDBCD).bytes ()[0];
 				result.setBit (7, pm);
@@ -399,6 +399,74 @@ const MCHEmul::UByte& COMMODORE::CIARegisters::readValue (size_t p) const
 			break;
 			
 		default:
+			break;
+	}
+
+	return (_lastValueRead = result);
+}
+
+// ---
+const MCHEmul::UByte& COMMODORE::CIARegisters::peekValue (size_t p) const
+{
+	// It is like readvalue except for a couple of registers
+	// that when red are actualized...
+
+	if (_timerA == nullptr || _timerB == nullptr || _clock == nullptr)
+		return (MCHEmul::PhysicalStorage::_DEFAULTVALUE);
+
+	MCHEmul::UByte result = MCHEmul::PhysicalStorage::_DEFAULTVALUE;
+
+	size_t pp = p % 0x10;
+
+	switch (pp)
+	{
+		case 0x08:
+			{
+				result = MCHEmul::UInt::fromUnsignedInt (_clock -> peekTenthsSecond (), MCHEmul::UInt::_PACKAGEDBCD).bytes ()[0];
+			}
+
+			break;
+
+		case 0x09:
+			{
+				result = MCHEmul::UInt::fromUnsignedInt (_clock -> peekSeconds (), MCHEmul::UInt::_PACKAGEDBCD).bytes ()[0];
+			}
+
+			break;
+
+		case 0x0a:
+			{
+				result = MCHEmul::UInt::fromUnsignedInt (_clock -> peekMinutes (), MCHEmul::UInt::_PACKAGEDBCD).bytes ()[0];
+			}
+
+			break;
+
+		case 0x0b:
+			{
+				unsigned int h = (unsigned int) _clock -> peekHours ();
+				bool pm = h > 12 || (h == 12 && _clock -> peekMinutes () > 0);
+				if (pm && h > 12) h -= 12;
+				result = MCHEmul::UInt::fromUnsignedInt (h, MCHEmul::UInt::_PACKAGEDBCD).bytes ()[0];
+				result.setBit (7, pm);
+			}
+
+			break;
+
+		case 0x0d:
+			{
+				result = MCHEmul::UByte::_0;
+				result.setBit (7, launchInterruption ());
+				result.setBit (0, _timerA -> peekInterruptRequested ());
+				result.setBit (1, _timerB -> peekInterruptRequested ());
+				result.setBit (2, _clock -> peekInterruptRequested ());
+				result.setBit (3, _serialPort -> peekInterruptRequested ());
+				result.setBit (4, peekFlagLineInterruptRequested ());
+			}
+
+			break;
+
+		default:
+			result = readValue (pp);
 			break;
 	}
 

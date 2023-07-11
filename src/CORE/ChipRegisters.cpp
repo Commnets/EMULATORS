@@ -4,7 +4,7 @@
 std::vector <MCHEmul::UByte> MCHEmul::ChipRegisters::valueRegisters () const
 {
 	std::vector <MCHEmul::UByte> result; 
-	for (size_t i = 0; i < numberRegisters (); result.emplace_back (readValue (i++))); 
+	for (size_t i = 0; i < numberRegisters (); result.emplace_back (peekValue (i++))); 
 	return (result);
 }
 

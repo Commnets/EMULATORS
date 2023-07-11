@@ -207,6 +207,10 @@ Last:@INST@
 ;CCLOCKFACTOR
 #---
 #---
+;CCHIPS
+@CHIPS?{key=YES,equal=:,empty=no chips}\n@
+#---
+#---
 ;CMEMORY
 @BYTES{blocksize=16,listsep=\,,tablesep=\ ,minsize=2}@
 #---

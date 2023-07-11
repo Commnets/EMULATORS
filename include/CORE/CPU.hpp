@@ -97,13 +97,6 @@ namespace MCHEmul
 		Memory* memoryRef () 
 							{ return (_memory); }
 
-		unsigned int clockCycles () const
-							{ return (_clockCycles); }
-		void addClockCycles (unsigned int cC)
-							{ _clockCycles += cC; _lastClockCycles += cC; }
-		unsigned int lastClockCycles () const
-							{ return (_lastClockCycles); }
-
 		/** To initialize the CPU. It could be overloaded later. \n
 			By default it just initialize registers and program counter to 0. \n
 			Returns true if everything was ok and false in any other case. */
@@ -128,10 +121,28 @@ namespace MCHEmul
 		void addInterrupt (CPUInterrupt* in);
 		void removeInterrrupt (int id);
 
-		/** To execute the next instruction. 
-			The execution can stop the debugging if it was active. \n
-			But, however, the last instruction will be printed out! */
+		/** The core:
+			To execute the next instruction. \n
+			The execution of the instruction can be debugged. \n
+			The clock is affected. @see method lastClockCycles. */
 		bool executeNextInstruction ();
+
+		// The CPU generates the clock cycles,
+		// than can be transmited to the rest of chips in the computer.
+		/** The number of clockcycles since restarting. */
+		unsigned int clockCycles () const
+							{ return (_clockCycles); }
+		/** Add or subtract clock cycles. */
+		void addClockCycles (unsigned int cC)
+							{ _clockCycles += cC; _lastClockCycles += cC; }
+		void subtractClockCycles (unsigned int cC)
+							{ _clockCycles -= cC; _lastClockCycles -= cC; }
+		/** After the execution of the method executeNextIntruction this variable
+			will contain the number of clock cycles that the cpu took to execute the
+			interruptions and the instruction. \n
+			If the CPU is stopped this variable will be 0. */
+		unsigned int lastClockCycles () const
+							{ return (_lastClockCycles); }
 
 		/** To get the last error happend (after initialize or simulate methods). */
 		unsigned int error () const
@@ -150,6 +161,8 @@ namespace MCHEmul
 
 		/** Manages the deep debug file. \n
 			Take care it can be set back to a nullptr. */
+		bool deepDebugActive () const
+							{ return (_deepDebugFile != nullptr && _deepDebugFile -> active ()); }
 		void setDeepDebugFile (DebugFile* dF)
 							{ _deepDebugFile = dF; }
 		const DebugFile* deepDebugFile () const
