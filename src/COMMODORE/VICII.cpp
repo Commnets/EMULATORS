@@ -86,7 +86,7 @@ bool COMMODORE::VICII::initialize ()
 // ---
 bool COMMODORE::VICII::simulate (MCHEmul::CPU* cpu)
 {
-	return (simulate_OLD (cpu));
+	return (simulate_NEW (cpu));
 }
 
 // ---
@@ -240,10 +240,6 @@ bool COMMODORE::VICII::simulate_NEW (MCHEmul::CPU* cpu)
 
 		// Stops the CPU when it has been decided in the internal methods...
 		cpu -> setStop (_stopCPUCycles > 0);
-
-		std::cout << "LINE: " << _raster.currentLine () 
-				  << " " << "CYCLE: " << _cycleInRasterLine 
-				  << " " << "CPU: " << (cpu -> stopped () ? "STOP" : "RUN") << std::endl;
 
 		// Move to the next cycle...
 		_cycleInRasterLine++;
