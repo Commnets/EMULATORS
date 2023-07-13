@@ -137,12 +137,6 @@ namespace MCHEmul
 							{ _clockCycles += cC; }
 		void subtractClockCycles (unsigned int cC)
 							{ _clockCycles -= cC; }
-		/** After the execution of the method executeNextIntruction this variable
-			will contain the number of clock cycles that the cpu took to execute the
-			interruptions and the instruction. \n
-			If the CPU is stopped this variable will be 0. */
-		unsigned int lastClockCycles () const
-							{ return (_lastClockCycles); }
 
 		/** To get the last error happend (after initialize or simulate methods). */
 		unsigned int error () const
@@ -188,9 +182,6 @@ namespace MCHEmul
 		// Implementation
 		unsigned int _error;
 		unsigned int _clockCycles;
-		/** To keep just the cycles executed after the last loop, 
-			including invocation if any to the special chips. */
-		unsigned int _lastClockCycles;
 		bool _stopped; // When the CPU is stopped and no runCycle is executed...
 		/** The instructions will be moved into an array at construction time,
 			to speed up their access in the executeNextInstruction method. */

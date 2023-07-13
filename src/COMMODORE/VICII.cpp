@@ -185,7 +185,7 @@ bool COMMODORE::VICII::simulate_NEW (MCHEmul::CPU* cpu)
 
 	enum RasterLineStatus
 	{
-		_BEFOREVISIBLEZONE,
+		_BEFOREVISIBLEZONE = 0,
 		_VISIBLEZONE,
 		_AFTERVISIBLEZONE
 	};
@@ -199,40 +199,40 @@ bool COMMODORE::VICII::simulate_NEW (MCHEmul::CPU* cpu)
 		(cpu -> clockCycles  () - _lastCPUCycles) + ((_stopCPUCycles > 0) ? 1 : 0);
 	for (; cc > 0; cc--)
 	{
-		if (_stopCPUCycles > 0)
-		{
-			_stopCPUCycles--;
-
-			cpu -> addClockCycles (1); // For the rest chips to work...
-		}
-
 		_videoActive = (_raster.currentLine () == _FIRSTBADLINE) 
 			? !_VICIIRegisters -> blankEntireScreen () : _videoActive; // Only at first bad line it can change its value...
+
+		if (_stopCPUCycles > 0)
+		{ 
+			_stopCPUCycles--;
+
+			cpu -> addClockCycles (1);
+		}
 
 		// Depending on the cycle the VICII does different things...
 		switch ((_cycleInRasterLine >= 1 && _cycleInRasterLine <= 9) 
 			? _BEFOREVISIBLEZONE
-			: ((_cycleInRasterLine >= 10 && _cycleInRasterLine <= 58) 
+			: ((_cycleInRasterLine >= 10 && _cycleInRasterLine <= 55) 
 				? _VISIBLEZONE
 				: _AFTERVISIBLEZONE))
 		{
 			case _BEFOREVISIBLEZONE:
 				{
-					_stopCPUCycles = simulate_BEFOREVISIBLEZONE (cpu);
+					_stopCPUCycles += simulate_BEFOREVISIBLEZONE (cpu);
 				}
 
 				break;
 
 			case _VISIBLEZONE:
 				{
-					_stopCPUCycles = simulate_VISIBLEZONE (cpu);
+					_stopCPUCycles += simulate_VISIBLEZONE (cpu);
 				}
 
 				break;
 
 			case _AFTERVISIBLEZONE:
 				{
-					_stopCPUCycles = simulate_AFTERVISIBLEZONE (cpu);
+					_stopCPUCycles += simulate_AFTERVISIBLEZONE (cpu);
 				}
 
 				break;
@@ -240,6 +240,10 @@ bool COMMODORE::VICII::simulate_NEW (MCHEmul::CPU* cpu)
 
 		// Stops the CPU when it has been decided in the internal methods...
 		cpu -> setStop (_stopCPUCycles > 0);
+
+		std::cout << "LINE: " << _raster.currentLine () 
+				  << " " << "CYCLE: " << _cycleInRasterLine 
+				  << " " << "CPU: " << (cpu -> stopped () ? "STOP" : "RUN") << std::endl;
 
 		// Move to the next cycle...
 		_cycleInRasterLine++;
@@ -344,17 +348,21 @@ unsigned int COMMODORE::VICII::simulate_AFTERVISIBLEZONE (MCHEmul::CPU* cpu)
 
 	// This is not totally true as it will depend on the type of VIC, 
 	// ...but it a s good aproximation...
-	if (_cycleInRasterLine == 59 ||
-		_cycleInRasterLine == 61 ||
-		_cycleInRasterLine == 63) 
+	if (_cycleInRasterLine == 58 ||
+		_cycleInRasterLine == 60 ||
+		_cycleInRasterLine == 62) 
 	{
 		// Read the sprite data...
 		memoryRef () -> setActiveView (_VICIIView);
 		if (readSpriteDataAt (_raster.nextLine (), // The sprite info read is for the next line...
-			(_cycleInRasterLine - 59) >> 1 /** 0, 1 or 2. */))
+			(_cycleInRasterLine - 58) >> 1 /** 0, 1 or 2. */))
  		   result = 1;
 		memoryRef () -> setCPUView ();
 	}
+
+	// Is this zone there would be a remaining visible zone...
+	if (_raster.isInVisibleZone ())
+		simulate_VisibleZone (cpu);
 
 	return (result);
 }

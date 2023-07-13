@@ -13,7 +13,7 @@ MCHEmul::CPU::CPU (const MCHEmul::CPUArchitecture& a, const MCHEmul::Registers& 
 	  _lastInstruction (nullptr),
 	  _deepDebugFile (nullptr),
 	  _error (_NOERROR), 
-	  _clockCycles (0), _lastClockCycles (0),
+	  _clockCycles (0),
 	  _stopped (false),
 	  _rowInstructions () // It will be fulfilled later!
 { 
@@ -76,8 +76,6 @@ bool MCHEmul::CPU::initialize ()
 
 	_clockCycles = 0;
 
-	_lastClockCycles = 0;
-
 	return (true);
 }
 
@@ -108,19 +106,11 @@ bool MCHEmul::CPU::executeNextInstruction ()
 	memoryRef () -> setCPUView (); // Always...
 
 	if (_stopped)
-	{
-		_lastClockCycles = 0;
-
 		return (true);
-	}
-
-	// Number of cycles calling interruptions...
-	unsigned int nCInt = 0;
-	// ..and number of cycles executing the last instruction...
-	unsigned int nCInst = 0;
 
 	for (const auto& i : _interrupts)
 	{
+		unsigned int nCInt = 0;
 		i.second -> executeOver (this, nCInt);
 
 		_clockCycles += nCInt;
@@ -157,9 +147,7 @@ bool MCHEmul::CPU::executeNextInstruction ()
 	// Then, executes the instruction
 	bool result = inst -> execute (dt, this, _memory, _memory -> stack ());
 
-	_clockCycles += (nCInst = inst -> clockCycles () + inst -> additionalClockCycles ());
-
-	_lastClockCycles = nCInt + nCInst;
+	_clockCycles += (inst -> clockCycles () + inst -> additionalClockCycles ());
 
 	_lastInstruction = inst;
 
@@ -168,7 +156,7 @@ bool MCHEmul::CPU::executeNextInstruction ()
 	if (deepDebugActive ())
 	{
 		std::string lSt = ""; 
-		size_t lenI = (lSt = _lastInstruction -> asString ()).size ();;
+		size_t lenI = (lSt = _lastInstruction -> asString ()).size ();
 		*_deepDebugFile << sdd // ...The program counter and the stack position...
 				   << lSt << MCHEmul::_SPACES.substr (0, 20 - lenI) << "\t" // The last instruction...
 				   << _statusRegister.asString () << "\t"; // ...The status register...

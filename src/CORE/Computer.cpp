@@ -250,6 +250,8 @@ bool MCHEmul::Computer::runComputerCycle (unsigned int a)
 		return (true); // The cycle was not executed, but everything went ok...
 	}
 
+	unsigned int cI = cpu () -> clockCycles ();
+
 	MCHEmul::Computer::MapOfActions::const_iterator at =
 		_actionsAt.find (cpu () -> programCounter ().asAddress ());
 	if (!executeAction (
@@ -314,7 +316,7 @@ bool MCHEmul::Computer::runComputerCycle (unsigned int a)
 
 	// After excuting the cycle, 
 	// the number of speed cycles are counted...
-	_clock.countCycles (_cpu -> lastClockCycles ());
+	_clock.countCycles (_cpu -> clockCycles () - cI);
 
 	return (true);
 }
