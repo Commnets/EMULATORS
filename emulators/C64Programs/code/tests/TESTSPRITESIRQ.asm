@@ -18,15 +18,15 @@ IRQPRG1:					.SAVEREGISTERS
 							lda VICIIIRQ
 							and #$02							; To detect whether a sprite has collision against the foreground
 							beq IRQPRG1_NOCOLLISION
-							lda #$02
-							sta SCREENBASE
+							lda #$02							; A B symbol will be drawn when the collision happens
+							sta SCREENBASE + 40
 							lda #$00
-							sta COLORRAMBASE
+							sta COLORRAMBASE + 40
 							jmp IRQPRG1_ACTSPRITES
 IRQPRG1_NOCOLLISION:		lda #$20
-							sta SCREENBASE
+							sta SCREENBASE + 40
 							lda #$06
-							sta COLORRAMBASE
+							sta COLORRAMBASE + 40
 IRQPRG1_ACTSPRITES:			lda VICIIIRQ
 							and #$01
 							beq IRQPRG1_EXIT
@@ -117,7 +117,7 @@ DRAWLETTERS:				lda #$01
 							sta $01								; This shouldn't be done, but it just for testing purposes!
 							
 ; Sets the VICII IRQ also for collisions...
-							lda #z00000111						; The collisiones among sprites and among data and sprites will also generate IRQ
+							lda #z00000001						; The collisiones among sprites and among data and sprites will also be detected at IRQ
 							sta VICIICTRLIRQ
 
 ; Sets the IRQ vector. The raster line has to be defined...
