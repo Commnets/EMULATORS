@@ -105,10 +105,6 @@ namespace COMMODORE
 		protected:
 		virtual void processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifier* n) override;
 
-		/** To get the number of cycles per raster line. 
-			They are not the same depending on the type of graphical chip. */
-		virtual unsigned int cyclesPerRasterLine () const = 0;
-
 		/** 
 		  * @see DrawContext and @DraResult structure for a better understanding. 
 		  *	The parameters are:
@@ -408,10 +404,6 @@ namespace COMMODORE
 		static const MCHEmul::RasterData _HRASTERDATA;
 
 		VICII_NTSC (int vV);
-
-		private:
-		virtual unsigned int cyclesPerRasterLine () const override
-							{ return (63); }
 	};
 
 	/** The version para PAL systems. */
@@ -422,10 +414,6 @@ namespace COMMODORE
 		static const MCHEmul::RasterData _HRASTERDATA;
 
 		VICII_PAL (int vV);
-
-		private:
-		virtual unsigned int cyclesPerRasterLine () const override
-							{ return (64); }
 	};
 }
 
