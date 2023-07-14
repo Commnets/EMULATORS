@@ -320,7 +320,7 @@ unsigned int COMMODORE::VICII::simulate_VISIBLEZONE (MCHEmul::CPU* cpu)
 	{
 		if (isBadRasterLine ())
 		{
-			result = 40; // The number of cycles added to the cpu...
+			result = 43; // The number of cycles added to the cpu...
 
 			memoryRef () -> setActiveView (_VICIIView);
 			readGraphicsInfoAt (_raster.currentLine () - 
