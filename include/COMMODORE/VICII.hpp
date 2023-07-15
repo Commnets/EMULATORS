@@ -289,6 +289,8 @@ namespace COMMODORE
 		/** When the VICII takes control of the memory and CPU address the CPU has to stop processing.
 			This variable keeps the number of cycles to stop. */
 		unsigned int _stopCPUCycles;
+		/** These variables get set when there are sprites present in the raster line. */
+		bool _sprites4to8, _sprites1to3;
 		/** When the raster is in the first bad line this variable is set taking into account what 
 			is kept in the VICII register about whether the video ir or not active. \n
 			In any other circunstance is kept its value. */

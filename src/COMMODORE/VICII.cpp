@@ -29,6 +29,7 @@ COMMODORE::VICII::VICII (const MCHEmul::RasterData& vd, const MCHEmul::RasterDat
 	  _isNewRasterLine (false),
 	  _cycleInRasterLine (0),
 	  _stopCPUCycles (0),
+	  _sprites4to8 (false), _sprites1to3 (false),
 	  _videoActive (true),
 	  _lastVBlankEntered (false)
 {
@@ -65,6 +66,7 @@ bool COMMODORE::VICII::initialize ()
 	_VICIIRegisters -> initialize ();
 
 	_lastCPUCycles = 0;
+	_sprites4to8 = _sprites1to3 = false;
 
 	_graphicsScreenCodeData = MCHEmul::UBytes::_E; 
 	_graphicsGraphicData = MCHEmul::UBytes::_E;
@@ -251,6 +253,11 @@ bool COMMODORE::VICII::simulate_NEW (MCHEmul::CPU* cpu)
 		if (_isNewRasterLine = _raster.moveCycles (1))
 		{
 			_cycleInRasterLine = 1;
+			
+			_sprites4to8 = _sprites1to3 = false;
+			
+			_stopCPUCycles = 0;
+
 			if (_raster.currentLine () == _VICIIRegisters -> IRQRasterLineAt ())
 				_VICIIRegisters -> activateRasterIRQ ();
 		}
@@ -291,9 +298,15 @@ unsigned int COMMODORE::VICII::simulate_BEFOREVISIBLEZONE (MCHEmul::CPU* cpu)
 	{
 		// Read the sprite data...
 		memoryRef () -> setActiveView (_VICIIView);
+		
 		if (readSpriteDataAt (_raster.currentLine (), 
 			(_cycleInRasterLine >> 1) + 3 /** 3, 4, 5, 6 or 7. */))
- 		   result = 1;
+		{ 
+ 		  	result = 1;
+			if (!_sprites4to8)
+				_sprites4to8 = true;
+		}
+
 		memoryRef () -> setCPUView ();
 	}
 
@@ -323,8 +336,10 @@ unsigned int COMMODORE::VICII::simulate_VISIBLEZONE (MCHEmul::CPU* cpu)
 			result = 43; // The number of cycles added to the cpu...
 
 			memoryRef () -> setActiveView (_VICIIView);
+
 			readGraphicsInfoAt (_raster.currentLine () - 
 				_FIRSTBADLINE - _VICIIRegisters -> verticalScrollPosition ());
+
 			memoryRef () -> setCPUView ();
 		}
 	}
@@ -350,9 +365,15 @@ unsigned int COMMODORE::VICII::simulate_AFTERVISIBLEZONE (MCHEmul::CPU* cpu)
 	{
 		// Read the sprite data...
 		memoryRef () -> setActiveView (_VICIIView);
+
 		if (readSpriteDataAt (_raster.nextLine (), // The sprite info read is for the next line...
 			(_cycleInRasterLine - 58) >> 1 /** 0, 1 or 2. */))
+		{
  		   result = 1;
+		   if (!_sprites1to3)
+			   _sprites1to3 = true;
+		}
+
 		memoryRef () -> setCPUView ();
 	}
 
