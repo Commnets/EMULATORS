@@ -27,8 +27,9 @@ namespace F6500
 	class Instruction : public MCHEmul::Instruction
 	{
 		public:
-		Instruction (unsigned int c, unsigned int mp, unsigned int cc, const std::string& t)
-			: MCHEmul::Instruction (c, mp, cc, t, false)
+		Instruction (unsigned int c, unsigned int mp, unsigned int cc, unsigned int rcc, 
+				const std::string& t)
+			: MCHEmul::Instruction (c, mp, cc, rcc, t, false)
 							{ }
 	
 		protected:
@@ -202,22 +203,23 @@ namespace F6500
 	class ADC_General : public Instruction
 	{
 		public:
-		ADC_General (unsigned int c, unsigned int mp, unsigned int cc, const std::string& t)
-			: Instruction (c, mp, cc, t)
+		ADC_General (unsigned int c, unsigned int mp, unsigned int cc, unsigned int rcc, 
+				const std::string& t)
+			: Instruction (c, mp, cc, rcc, t)
 							{ }
 
 		protected:
 		bool executeWith (MCHEmul::UByte u);
 	};
 
-	_INST_FROM (0x69, 2, 2, "ADC#[#1]",		ADC_Inmediate, ADC_General);
-	_INST_FROM (0x6d, 3, 4, "ADC[$2]",		ADC_Absolute, ADC_General);
-	_INST_FROM (0x65, 2, 3, "ADC[$1]",		ADC_ZeroPage, ADC_General);
-	_INST_FROM (0x61, 2, 6, "ADC([$1],X)",	ADC_ZeroPageIndirectX, ADC_General);
-	_INST_FROM (0x71, 2, 5, "ADC([$1]),Y",	ADC_ZeroPageIndirectY, ADC_General);
-	_INST_FROM (0x75, 2, 4, "ADC[$1],X",	ADC_ZeroPageX, ADC_General);
-	_INST_FROM (0x7d, 3, 4, "ADC[$2],X",	ADC_AbsoluteX, ADC_General);
-	_INST_FROM (0x79, 3, 4, "ADC[$2],Y",	ADC_AbsoluteY, ADC_General);
+	_INST_FROM (0x69, 2, 2, 2, "ADC#[#1]",				ADC_Inmediate, ADC_General);
+	_INST_FROM (0x6d, 3, 4, 4, "ADC[$2]",				ADC_Absolute, ADC_General);
+	_INST_FROM (0x65, 2, 3, 3, "ADC[$1]",				ADC_ZeroPage, ADC_General);
+	_INST_FROM (0x61, 2, 6, 6, "ADC([$1],X)",			ADC_ZeroPageIndirectX, ADC_General);
+	_INST_FROM (0x71, 2, 5, 5, "ADC([$1]),Y",			ADC_ZeroPageIndirectY, ADC_General);
+	_INST_FROM (0x75, 2, 4, 4, "ADC[$1],X",				ADC_ZeroPageX, ADC_General);
+	_INST_FROM (0x7d, 3, 4, 4, "ADC[$2],X",				ADC_AbsoluteX, ADC_General);
+	_INST_FROM (0x79, 3, 4, 4, "ADC[$2],Y",				ADC_AbsoluteY, ADC_General);
 
 	// Non documented
 	// ALR: AND + LSR
@@ -226,15 +228,16 @@ namespace F6500
 	class ALR_General : public Instruction
 	{
 		public:
-		ALR_General (unsigned int c, unsigned int mp, unsigned int cc, const std::string& t)
-			: Instruction (c, mp, cc, t)
+		ALR_General (unsigned int c, unsigned int mp, unsigned int cc, unsigned int rcc, 
+				const std::string& t)
+			: Instruction (c, mp, cc, rcc, t)
 							{ }
 
 		protected:
 		bool executeWith (MCHEmul::UByte u);
 	};
 
-	_INST_FROM (0x4b, 2, 2, "ALR#[#1]", ALR_Inmediate, ALR_General);
+	_INST_FROM (0x4b, 2, 2, 2, "ALR#[#1]",				ALR_Inmediate, ALR_General);
 
 	// Non documented
 	// ANC: AND + Carry flag
@@ -243,37 +246,39 @@ namespace F6500
 	class ANC_General : public Instruction
 	{
 		public:
-		ANC_General (unsigned int c, unsigned int mp, unsigned int cc, const std::string& t)
-			: Instruction (c, mp, cc, t)
+		ANC_General (unsigned int c, unsigned int mp, unsigned int cc, unsigned int rcc, 
+				const std::string& t)
+			: Instruction (c, mp, cc, rcc, t)
 							{ }
 
 		protected:
 		bool executeWith (MCHEmul::UByte u);
 	};
 
-	_INST_FROM (0x0b /** 2b */, 2, 2, "ANC#[#1]", ANC_Inmediate, ANC_General);
+	_INST_FROM (0x0b /** 2b */, 2, 2, 2, "ANC#[#1]",	ANC_Inmediate, ANC_General);
 
 	// AND
 	/** AND_General: To aggregate common steps in every AND instruction. */
 	class AND_General : public Instruction
 	{
 		public:
-		AND_General (unsigned int c, unsigned int mp, unsigned int cc, const std::string& t)
-			: Instruction (c, mp, cc, t)
+		AND_General (unsigned int c, unsigned int mp, unsigned int cc, unsigned int rcc, 
+				const std::string& t)
+			: Instruction (c, mp, cc, rcc, t)
 							{ }
 
 		protected:
 		bool executeWith (MCHEmul::UByte u);
 	};
 
-	_INST_FROM (0x29, 2, 2, "AND#[#1]",		AND_Inmediate, AND_General);
-	_INST_FROM (0x2d, 3, 4, "AND[$2]",		AND_Absolute, AND_General);
-	_INST_FROM (0x25, 2, 3, "AND[$1]",		AND_ZeroPage, AND_General);
-	_INST_FROM (0x21, 2, 6, "AND([$1],X)",	AND_ZeroPageIndirectX, AND_General);
-	_INST_FROM (0x31, 2, 5, "AND([$1]),Y",	AND_ZeroPageIndirectY, AND_General);
-	_INST_FROM (0x35, 2, 4, "AND[$1],X",	AND_ZeroPageX, AND_General);
-	_INST_FROM (0x3d, 3, 4, "AND[$2],X",	AND_AbsoluteX, AND_General);
-	_INST_FROM (0x39, 3, 4, "AND[$2],Y",	AND_AbsoluteY, AND_General);
+	_INST_FROM (0x29, 2, 2, 2, "AND#[#1]",				AND_Inmediate, AND_General);
+	_INST_FROM (0x2d, 3, 4, 4, "AND[$2]",				AND_Absolute, AND_General);
+	_INST_FROM (0x25, 2, 3, 3, "AND[$1]",				AND_ZeroPage, AND_General);
+	_INST_FROM (0x21, 2, 6, 6, "AND([$1],X)",			AND_ZeroPageIndirectX, AND_General);
+	_INST_FROM (0x31, 2, 5, 5, "AND([$1]),Y",			AND_ZeroPageIndirectY, AND_General);
+	_INST_FROM (0x35, 2, 4, 4, "AND[$1],X",				AND_ZeroPageX, AND_General);
+	_INST_FROM (0x3d, 3, 4, 4, "AND[$2],X",				AND_AbsoluteX, AND_General);
+	_INST_FROM (0x39, 3, 4, 4, "AND[$2],Y",				AND_AbsoluteY, AND_General);
 
 	// Non documented
 	// ARR: AND + ROR
@@ -282,41 +287,44 @@ namespace F6500
 	class ARR_General : public Instruction
 	{
 		public:
-		ARR_General (unsigned int c, unsigned int mp, unsigned int cc, const std::string& t)
-			: Instruction (c, mp, cc, t)
+		ARR_General (unsigned int c, unsigned int mp, unsigned int cc, unsigned int rcc,
+				const std::string& t)
+			: Instruction (c, mp, cc, rcc, t)
 							{ }
 
 		protected:
 		bool executeWith (MCHEmul::UByte u);
 	};
 
-	_INST_FROM (0x6b, 2, 2, "ARR#[#1]", ARR_Inmediate, ARR_General);
+	_INST_FROM (0x6b, 2, 2, 2, "ARR#[#1]",				ARR_Inmediate, ARR_General);
 
 	// ASL
 	/** ASL_General: To aggregate common steps in every ASL instruction. */
 	class ASL_General : public Instruction
 	{
 		public:
-		ASL_General (unsigned int c, unsigned int mp, unsigned int cc, const std::string& t)
-			: Instruction (c, mp, cc, t)
+		ASL_General (unsigned int c, unsigned int mp, unsigned int cc, unsigned int rcc, 
+				const std::string& t)
+			: Instruction (c, mp, cc, rcc, t)
 							{ }
 
 		protected:
 		bool executeOn (const MCHEmul::Address& a);
 	};
 
-	_INST_FROM (0x0e, 3, 6, "ASL[$2]",		ASL_Absolute, ASL_General);
-	_INST_FROM (0x06, 2, 5, "ASL[$1]",		ASL_ZeroPage, ASL_General);
-	_INST_FROM (0x0a, 1, 2, "ASL",			ASL_Accumulator, ASL_General);
-	_INST_FROM (0x16, 2, 6, "ASL[$1],X",	ASL_ZeroPageX, ASL_General);
-	_INST_FROM (0x1e, 3, 7, "ASL[$2],X",	ASL_AbsoluteX, ASL_General);
+	_INST_FROM (0x0e, 3, 6, 4, "ASL[$2]",				ASL_Absolute, ASL_General);
+	_INST_FROM (0x06, 2, 5, 3, "ASL[$1]",				ASL_ZeroPage, ASL_General);
+	_INST_FROM (0x0a, 1, 2, 2, "ASL",					ASL_Accumulator, ASL_General);
+	_INST_FROM (0x16, 2, 6, 4, "ASL[$1],X",				ASL_ZeroPageX, ASL_General);
+	_INST_FROM (0x1e, 3, 7, 5, "ASL[$2],X",				ASL_AbsoluteX, ASL_General);
 
 	/** BXX_General: To aggregate common steps in every Branch instruction. */
 	class BXX_General : public Instruction
 	{
 		public:
-		BXX_General (unsigned int c, unsigned int mp, unsigned int cc, const std::string& t)
-			: Instruction (c, mp, cc, t)
+		BXX_General (unsigned int c, unsigned int mp, unsigned int cc, unsigned int rcc,
+				const std::string& t)
+			: Instruction (c, mp, cc, rcc, t)
 							{ }
 
 		protected:
@@ -324,103 +332,106 @@ namespace F6500
 	};
 
 	// BCC 
-	_INST_FROM (0x90, 2, 2, "BCC[&1]",		BCC, BXX_General);
+	_INST_FROM (0x90, 2, 2, 2, "BCC[&1]",				BCC, BXX_General);
 
 	// BCS 
-	_INST_FROM (0xb0, 2, 2, "BCS[&1]",		BCS, BXX_General);
+	_INST_FROM (0xb0, 2, 2, 2, "BCS[&1]",				BCS, BXX_General);
 
 	// BEQ
-	_INST_FROM (0xf0, 2, 2, "BEQ[&1]",		BEQ, BXX_General);
+	_INST_FROM (0xf0, 2, 2, 2, "BEQ[&1]",				BEQ, BXX_General);
 
 	// BIT
-	_INST_FROM (0x2c, 3, 4, "BIT[$2]",		BIT_Absolute, Instruction);
-	_INST_FROM (0x24, 2, 3, "BIT[$1]",		BIT_ZeroPage, Instruction);
+	_INST_FROM (0x2c, 3, 4, 4, "BIT[$2]",				BIT_Absolute, Instruction);
+	_INST_FROM (0x24, 2, 3, 3, "BIT[$1]",				BIT_ZeroPage, Instruction);
 
 	// BMI
-	_INST_FROM (0x30, 2, 2, "BMI[&1]",		BMI, BXX_General);
+	_INST_FROM (0x30, 2, 2, 2, "BMI[&1]",				BMI, BXX_General);
 
 	// BNE
-	_INST_FROM (0xd0, 2, 2, "BNE[&1]",		BNE, BXX_General);
+	_INST_FROM (0xd0, 2, 2, 2, "BNE[&1]",				BNE, BXX_General);
 
 	// BPL
-	_INST_FROM (0x10, 2, 2, "BPL[&1]",		BPL, BXX_General);
+	_INST_FROM (0x10, 2, 2, 2, "BPL[&1]",				BPL, BXX_General);
 
 	// BRK
-	_INST_FROM (0x00, 1, 7, "BRK",			BRK, Instruction);
+	_INST_FROM (0x00, 1, 7, 4, "BRK",					BRK, Instruction);
 
 	// BVC
-	_INST_FROM (0x50, 2, 2, "BVC[&1]",		BVC, BXX_General);
+	_INST_FROM (0x50, 2, 2, 2, "BVC[&1]",				BVC, BXX_General);
 
 	// BVS
-	_INST_FROM (0x70, 2, 2, "BVS[&1]",		BVS, BXX_General);
+	_INST_FROM (0x70, 2, 2, 2, "BVS[&1]",				BVS, BXX_General);
 
 	// CLC
-	_INST_FROM (0x18, 1, 2, "CLC",			CLC, Instruction);
+	_INST_FROM (0x18, 1, 2, 2, "CLC",					CLC, Instruction);
 
 	// CLD
-	_INST_FROM (0xd8, 1, 2, "CLD",			CLD, Instruction);
+	_INST_FROM (0xd8, 1, 2, 2, "CLD",					CLD, Instruction);
 
 	// CLI
-	_INST_FROM (0x58, 1, 2, "CLI",			CLI, Instruction);
+	_INST_FROM (0x58, 1, 2, 2, "CLI",					CLI, Instruction);
 
 	// CLV
-	_INST_FROM (0xb8, 1, 2, "CLV",			CLV, Instruction);
+	_INST_FROM (0xb8, 1, 2, 2, "CLV",					CLV, Instruction);
 
 	// CMP
 	/** CMP_General: To aggregate common steps in every CMP instruction. */
 	class CMP_General : public Instruction
 	{
 		public:
-		CMP_General (unsigned int c, unsigned int mp, unsigned int cc, const std::string& t)
-			: Instruction (c, mp, cc, t)
+		CMP_General (unsigned int c, unsigned int mp, unsigned int cc, unsigned int rcc,
+				const std::string& t)
+			: Instruction (c, mp, cc, rcc, t)
 							{ }
 
 		protected:
 		bool executeWith (MCHEmul::UByte u);
 	};
 
-	_INST_FROM (0xc9, 2, 2, "CMP#[#1]",		CMP_Inmediate, CMP_General);
-	_INST_FROM (0xcd, 3, 4, "CMP[$2]",		CMP_Absolute, CMP_General);
-	_INST_FROM (0xc5, 2, 3, "CMP[$1]",		CMP_ZeroPage, CMP_General);
-	_INST_FROM (0xc1, 2, 6, "CMP([$1],X)",	CMP_ZeroPageIndirectX, CMP_General);
-	_INST_FROM (0xd1, 2, 5, "CMP([$1]),Y",	CMP_ZeroPageIndirectY, CMP_General);
-	_INST_FROM (0xd5, 2, 4, "CMP[$1],X",	CMP_ZeroPageX, CMP_General);
-	_INST_FROM (0xdd, 3, 4, "CMP[$2],X",	CMP_AbsoluteX, CMP_General);
-	_INST_FROM (0xd9, 3, 4, "CMP[$2],Y",	CMP_AbsoluteY, CMP_General);
+	_INST_FROM (0xc9, 2, 2, 2, "CMP#[#1]",				CMP_Inmediate, CMP_General);
+	_INST_FROM (0xcd, 3, 4, 4, "CMP[$2]",				CMP_Absolute, CMP_General);
+	_INST_FROM (0xc5, 2, 3, 3, "CMP[$1]",				CMP_ZeroPage, CMP_General);
+	_INST_FROM (0xc1, 2, 6, 6, "CMP([$1],X)",			CMP_ZeroPageIndirectX, CMP_General);
+	_INST_FROM (0xd1, 2, 5, 5, "CMP([$1]),Y",			CMP_ZeroPageIndirectY, CMP_General);
+	_INST_FROM (0xd5, 2, 4, 4, "CMP[$1],X",				CMP_ZeroPageX, CMP_General);
+	_INST_FROM (0xdd, 3, 4, 4, "CMP[$2],X",				CMP_AbsoluteX, CMP_General);
+	_INST_FROM (0xd9, 3, 4, 4, "CMP[$2],Y",				CMP_AbsoluteY, CMP_General);
 
 	// CPX
 	/** CPX_General: To aggregate common steps in every CPX instruction. */
 	class CPX_General : public Instruction
 	{
 		public:
-		CPX_General (unsigned int c, unsigned int mp, unsigned int cc, const std::string& t)
-			: Instruction (c, mp, cc, t)
+		CPX_General (unsigned int c, unsigned int mp, unsigned int cc, unsigned int rcc, 
+				const std::string& t)
+			: Instruction (c, mp, cc, rcc, t)
 							{ }
 
 		protected:
 		bool executeWith (MCHEmul::UByte u);
 	};
 
-	_INST_FROM (0xe0, 2, 2, "CPX#[#1]",		CPX_Inmediate, CPX_General);
-	_INST_FROM (0xec, 3, 4, "CPX[$2]",		CPX_Absolute, CPX_General);
-	_INST_FROM (0xe4, 2, 3, "CPX[$1]",		CPX_ZeroPage, CPX_General);
+	_INST_FROM (0xe0, 2, 2, 2, "CPX#[#1]",				CPX_Inmediate, CPX_General);
+	_INST_FROM (0xec, 3, 4, 4, "CPX[$2]",				CPX_Absolute, CPX_General);
+	_INST_FROM (0xe4, 2, 3, 3, "CPX[$1]",				CPX_ZeroPage, CPX_General);
 
 	// CPY
 	/** CPY_General: To aggregate common steps in every CPY instruction. */
 	class CPY_General : public Instruction
 	{
 		public:
-		CPY_General (unsigned int c, unsigned int mp, unsigned int cc, const std::string& t)
-			: Instruction (c, mp, cc, t)
+		CPY_General (unsigned int c, unsigned int mp, unsigned int cc, unsigned int rcc, 
+				const std::string& t)
+			: Instruction (c, mp, cc, rcc, t)
 							{ }
 
 		protected:
 		bool executeWith (MCHEmul::UByte u);
 	};
 
-	_INST_FROM (0xc0, 2, 2, "CPY#[#1]",		CPY_Inmediate, CPY_General);
-	_INST_FROM (0xcc, 3, 4, "CPY[$2]",	CPY_Absolute, CPY_General);
-	_INST_FROM (0xc4, 2, 3, "CPY[$1]",		CPY_ZeroPage, CPY_General);
+	_INST_FROM (0xc0, 2, 2, 2, "CPY#[#1]",				CPY_Inmediate, CPY_General);
+	_INST_FROM (0xcc, 3, 4, 4, "CPY[$2]",				CPY_Absolute, CPY_General);
+	_INST_FROM (0xc4, 2, 3, 3, "CPY[$1]",				CPY_ZeroPage, CPY_General);
 
 	// Non documented
 	// DCP: DEC + CMP
@@ -429,91 +440,95 @@ namespace F6500
 	class DCP_General : public Instruction
 	{
 		public:
-		DCP_General (unsigned int c, unsigned int mp, unsigned int cc, const std::string& t)
-			: Instruction (c, mp, cc, t)
+		DCP_General (unsigned int c, unsigned int mp, unsigned int cc, unsigned int rcc, 
+				const std::string& t)
+			: Instruction (c, mp, cc, rcc, t)
 							{ }
 
 		protected:
 		bool executeOn (const MCHEmul::Address& a);
 	};
 
-	_INST_FROM (0xcf, 3, 6, "DCP[$2]",		DCP_Absolute, DCP_General);
-	_INST_FROM (0xc7, 2, 5, "DCP[$1]",		DCP_ZeroPage, DCP_General);
-	_INST_FROM (0xc3, 2, 8, "DCP([$1],X)",	DCP_ZeroPageIndirectX, DCP_General);
-	_INST_FROM (0xd3, 2, 8, "DCP([$1]),Y",	DCP_ZeroPageIndirectY, DCP_General);
-	_INST_FROM (0xd7, 2, 6, "DCP[$1],X",	DCP_ZeroPageX, DCP_General);
-	_INST_FROM (0xdf, 3, 7, "DCP[$2],X",	DCP_AbsoluteX, DCP_General);
-	_INST_FROM (0xdb, 3, 7, "DCP[$2],Y",	DCP_AbsoluteY, DCP_General);
+	_INST_FROM (0xcf, 3, 6, 4, "DCP[$2]",				DCP_Absolute, DCP_General);
+	_INST_FROM (0xc7, 2, 5, 3, "DCP[$1]",				DCP_ZeroPage, DCP_General);
+	_INST_FROM (0xc3, 2, 8, 6, "DCP([$1],X)",			DCP_ZeroPageIndirectX, DCP_General);
+	_INST_FROM (0xd3, 2, 8, 6, "DCP([$1]),Y",			DCP_ZeroPageIndirectY, DCP_General);
+	_INST_FROM (0xd7, 2, 6, 4, "DCP[$1],X",				DCP_ZeroPageX, DCP_General);
+	_INST_FROM (0xdf, 3, 7, 5, "DCP[$2],X",				DCP_AbsoluteX, DCP_General);
+	_INST_FROM (0xdb, 3, 7, 5, "DCP[$2],Y",				DCP_AbsoluteY, DCP_General);
 
 	// DEC
 	/** DEC_General: To aggregate common steps in every DEC instruction. */
 	class DEC_General : public Instruction
 	{
 		public:
-		DEC_General (unsigned int c, unsigned int mp, unsigned int cc, const std::string& t)
-			: Instruction (c, mp, cc, t)
+		DEC_General (unsigned int c, unsigned int mp, unsigned int cc, unsigned int rcc, 
+				const std::string& t)
+			: Instruction (c, mp, cc, rcc, t)
 							{ }
 
 		protected:
 		bool executeOn (const MCHEmul::Address& a);
 	};
 
-	_INST_FROM (0xce, 3, 6, "DEC[$2]",		DEC_Absolute, DEC_General);
-	_INST_FROM (0xc6, 2, 5, "DEC[$1]",		DEC_ZeroPage, DEC_General);
-	_INST_FROM (0xd6, 2, 6, "DEC[$1],X",	DEC_ZeroPageX, DEC_General);
-	_INST_FROM (0xde, 3, 7, "DEC[$2],X",	DEC_AbsoluteX, DEC_General);
+	_INST_FROM (0xce, 3, 6, 4, "DEC[$2]",				DEC_Absolute, DEC_General);
+	_INST_FROM (0xc6, 2, 5, 3, "DEC[$1]",				DEC_ZeroPage, DEC_General);
+	_INST_FROM (0xd6, 2, 6, 4, "DEC[$1],X",				DEC_ZeroPageX, DEC_General);
+	_INST_FROM (0xde, 3, 7, 5, "DEC[$2],X",				DEC_AbsoluteX, DEC_General);
 
 	// DEX
-	_INST_FROM (0xca, 1, 2, "DEX",			DEX, Instruction);
+	_INST_FROM (0xca, 1, 2, 2, "DEX",					DEX, Instruction);
 
 	// DEY
-	_INST_FROM (0x88, 1, 2, "DEY",			DEY, Instruction);
+	_INST_FROM (0x88, 1, 2, 2, "DEY",					DEY, Instruction);
 
 	// EOR
 	/** EOR_General: To aggregate common steps in every EOR instruction. */
 	class EOR_General : public Instruction
 	{
 		public:
-		EOR_General (unsigned int c, unsigned int mp, unsigned int cc, const std::string& t)
-			: Instruction (c, mp, cc, t)
+		EOR_General (unsigned int c, unsigned int mp, unsigned int cc, unsigned int rcc, 
+				const std::string& t)
+			: Instruction (c, mp, cc, rcc, t)
 							{ }
 
 		protected:
 		bool executeWith (MCHEmul::UByte u);
 	};
 
-	_INST_FROM (0x49, 2, 2, "EOR#[#1]",		EOR_Inmediate, EOR_General);
-	_INST_FROM (0x4d, 3, 4, "EOR[$2]",		EOR_Absolute, EOR_General);
-	_INST_FROM (0x45, 2, 3, "EOR[$1]",		EOR_ZeroPage, EOR_General);
-	_INST_FROM (0x41, 2, 6, "EOR([$1],X)",	EOR_ZeroPageIndirectX, EOR_General);
-	_INST_FROM (0x51, 2, 5, "EOR([$1]),Y",	EOR_ZeroPageIndirectY, EOR_General);
-	_INST_FROM (0x55, 2, 4, "EOR[$1],X",	EOR_ZeroPageX, EOR_General);
-	_INST_FROM (0x5d, 3, 4, "EOR[$2],X",	EOR_AbsoluteX, EOR_General);
-	_INST_FROM (0x59, 3, 4, "EOR[$2],Y",	EOR_AbsoluteY, EOR_General);
+	_INST_FROM (0x49, 2, 2, 2, "EOR#[#1]",				EOR_Inmediate, EOR_General);
+	_INST_FROM (0x4d, 3, 4, 4, "EOR[$2]",				EOR_Absolute, EOR_General);
+	_INST_FROM (0x45, 2, 3, 3, "EOR[$1]",				EOR_ZeroPage, EOR_General);
+	_INST_FROM (0x41, 2, 6, 6, "EOR([$1],X)",			EOR_ZeroPageIndirectX, EOR_General);
+	_INST_FROM (0x51, 2, 5, 5, "EOR([$1]),Y",			EOR_ZeroPageIndirectY, EOR_General);
+	_INST_FROM (0x55, 2, 4, 4, "EOR[$1],X",				EOR_ZeroPageX, EOR_General);
+	_INST_FROM (0x5d, 3, 4, 4, "EOR[$2],X",				EOR_AbsoluteX, EOR_General);
+	_INST_FROM (0x59, 3, 4, 4, "EOR[$2],Y",				EOR_AbsoluteY, EOR_General);
 
 	// INC
 	/** INC_General: To aggregate common steps in every INC instruction. */
 	class INC_General : public Instruction
 	{
 		public:
-		INC_General (unsigned int c, unsigned int mp, unsigned int cc, const std::string& t)
-			: Instruction (c, mp, cc, t)
+		INC_General (unsigned int c, unsigned int mp, unsigned int cc, unsigned int rcc, 
+				const std::string& t)
+			: Instruction (c, mp, cc, rcc, t)
 							{ }
 
 		protected:
 		bool executeOn (const MCHEmul::Address& a);
 	};
 
-	_INST_FROM (0xee, 3, 6, "INC[$2]",		INC_Absolute, INC_General);
-	_INST_FROM (0xe6, 2, 5, "INC[$1]",		INC_ZeroPage, INC_General);
-	_INST_FROM (0xf6, 2, 6, "INC[$1],X",	INC_ZeroPageX, INC_General);
-	_INST_FROM (0xfe, 3, 7, "INC[$2],X",	INC_AbsoluteX, INC_General);
+	_INST_FROM (0xee, 3, 6, 4, "INC[$2]",				INC_Absolute, INC_General);
+	_INST_FROM (0xe6, 2, 5, 3, "INC[$1]",				INC_ZeroPage, INC_General);
+	_INST_FROM (0xf6, 2, 6, 4, "INC[$1],X",				INC_ZeroPageX, INC_General);
+	_INST_FROM (0xfe, 3, 7, 5, "INC[$2],X",				INC_AbsoluteX, INC_General);
 
 	// INX
-	_INST_FROM (0xe8, 1, 2, "INX",			INX, Instruction);
+	_INST_FROM (0xe8, 1, 2, 2, "INX",					INX, Instruction);
 
 	// INY
-	_INST_FROM (0xc8, 1, 2, "INY",			INY, Instruction);
+	_INST_FROM (0xc8, 1, 2, 2, "INY",					INY, Instruction);
 
 	// Non documented
 	// ISC: INC + SBC
@@ -522,56 +537,58 @@ namespace F6500
 	class ISC_General : public Instruction
 	{
 		public:
-		ISC_General (unsigned int c, unsigned int mp, unsigned int cc, const std::string& t)
-			: Instruction (c, mp, cc, t)
+		ISC_General (unsigned int c, unsigned int mp, unsigned int cc, unsigned int rcc, 
+				const std::string& t)
+			: Instruction (c, mp, cc, rcc, t)
 							{ }
 
 		protected:
 		bool executeOn (const MCHEmul::Address& a);
 	};
 
-	_INST_FROM (0xef, 3, 6, "ISC[$2]",		ISC_Absolute, ISC_General);
-	_INST_FROM (0xe7, 2, 5, "ISC[$1]",		ISC_ZeroPage, ISC_General);
-	_INST_FROM (0xe3, 2, 8, "ISC([$1],X)",	ISC_ZeroPageIndirectX, ISC_General);
-	_INST_FROM (0xf3, 2, 8, "ISC([$1]),Y",	ISC_ZeroPageIndirectY, ISC_General);
-	_INST_FROM (0xf7, 2, 6, "ISC[$1],X",	ISC_ZeroPageX, ISC_General);
-	_INST_FROM (0xff, 3, 7, "ISC[$2],X",	ISC_AbsoluteX, ISC_General);
-	_INST_FROM (0xfb, 3, 7, "ISC[$2],Y",	ISC_AbsoluteY, ISC_General);
+	_INST_FROM (0xef, 3, 6, 4, "ISC[$2]",				ISC_Absolute, ISC_General);
+	_INST_FROM (0xe7, 2, 5, 3, "ISC[$1]",				ISC_ZeroPage, ISC_General);
+	_INST_FROM (0xe3, 2, 8, 6, "ISC([$1],X)",			ISC_ZeroPageIndirectX, ISC_General);
+	_INST_FROM (0xf3, 2, 8, 6, "ISC([$1]),Y",			ISC_ZeroPageIndirectY, ISC_General);
+	_INST_FROM (0xf7, 2, 6, 4, "ISC[$1],X",				ISC_ZeroPageX, ISC_General);
+	_INST_FROM (0xff, 3, 7, 5, "ISC[$2],X",				ISC_AbsoluteX, ISC_General);
+	_INST_FROM (0xfb, 3, 7, 5, "ISC[$2],Y",				ISC_AbsoluteY, ISC_General);
 
 	// Non documented
 	// JAM
 	// https://www.esocop.org/docs/MOS6510UnintendedOpcodes-20152412.pdf
 	// Restart the cpu...
-	_INST_FROM (0x02 /** 0x02, 0x12, 0x22, 0x32, 0x42, 0x52, 0x62, 0x72, 0x92, 0xb2, 0xd2, 0xf2 */, 1, 1, "JAM", JAM, Instruction);
+	_INST_FROM (0x02 /** 0x02, 0x12, 0x22, 0x32, 0x42, 0x52, 0x62, 0x72, 0x92, 0xb2, 0xd2, 0xf2 */, 1, 1, 1, "JAM", JAM, Instruction);
 
 	// JMP
-	_INST_FROM (0x4c, 3, 3, "JMP[%2]",		JMP_Absolute, Instruction);
-	_INST_FROM (0x6c, 3, 5, "JMP([%2])",	JMP_Indirect, Instruction);
+	_INST_FROM (0x4c, 3, 3, 3, "JMP[%2]",				JMP_Absolute, Instruction);
+	_INST_FROM (0x6c, 3, 5, 5, "JMP([%2])",				JMP_Indirect, Instruction);
 
 	// JSR
-	_INST_FROM (0x20, 3, 6, "JSR[%2]",		JSR_Absolute, Instruction);
+	_INST_FROM (0x20, 3, 6, 4, "JSR[%2]",				JSR_Absolute, Instruction);
 
 	// LDA
 	/** LDA_General: To aggregate common steps in every LDA instruction. */
 	class LDA_General : public Instruction
 	{
 		public:
-		LDA_General (unsigned int c, unsigned int mp, unsigned int cc, const std::string& t)
-			: Instruction (c, mp, cc, t)
+		LDA_General (unsigned int c, unsigned int mp, unsigned int cc, unsigned int rcc, 
+				const std::string& t)
+			: Instruction (c, mp, cc, rcc, t)
 							{ }
 
 		protected:
 		bool executeWith (MCHEmul::UByte u);
 	};
 
-	_INST_FROM (0xa9, 2, 2, "LDA#[#1]",		LDA_Inmediate, LDA_General);
-	_INST_FROM (0xad, 3, 4, "LDA[$2]",		LDA_Absolute, LDA_General);
-	_INST_FROM (0xa5, 2, 3, "LDA[$1]",		LDA_ZeroPage, LDA_General);
-	_INST_FROM (0xa1, 2, 6, "LDA([$1],X)",	LDA_ZeroPageIndirectX, LDA_General);
-	_INST_FROM (0xb1, 2, 5, "LDA([$1]),Y",	LDA_ZeroPageIndirectY, LDA_General);
-	_INST_FROM (0xb5, 2, 4, "LDA[$1],X",	LDA_ZeroPageX, LDA_General);
-	_INST_FROM (0xbd, 3, 4, "LDA[$2],X",	LDA_AbsoluteX, LDA_General);
-	_INST_FROM (0xb9, 3, 4, "LDA[$2],Y",	LDA_AbsoluteY, LDA_General);
+	_INST_FROM (0xa9, 2, 2, 2, "LDA#[#1]",				LDA_Inmediate, LDA_General);
+	_INST_FROM (0xad, 3, 4, 4, "LDA[$2]",				LDA_Absolute, LDA_General);
+	_INST_FROM (0xa5, 2, 3, 3, "LDA[$1]",				LDA_ZeroPage, LDA_General);
+	_INST_FROM (0xa1, 2, 6, 6, "LDA([$1],X)",			LDA_ZeroPageIndirectX, LDA_General);
+	_INST_FROM (0xb1, 2, 5, 5, "LDA([$1]),Y",			LDA_ZeroPageIndirectY, LDA_General);
+	_INST_FROM (0xb5, 2, 4, 4, "LDA[$1],X",				LDA_ZeroPageX, LDA_General);
+	_INST_FROM (0xbd, 3, 4, 4, "LDA[$2],X",				LDA_AbsoluteX, LDA_General);
+	_INST_FROM (0xb9, 3, 4, 4, "LDA[$2],Y",				LDA_AbsoluteY, LDA_General);
 
 	// Non documented
 	// LAX: LDA + TAX
@@ -580,77 +597,81 @@ namespace F6500
 	class LAX_General : public Instruction
 	{
 		public:
-		LAX_General (unsigned int c, unsigned int mp, unsigned int cc, const std::string& t)
-			: Instruction (c, mp, cc, t)
+		LAX_General (unsigned int c, unsigned int mp, unsigned int cc, unsigned int rcc, 
+				const std::string& t)
+			: Instruction (c, mp, cc, rcc, t)
 							{ }
 
 		protected:
 		bool executeOn (const MCHEmul::Address& a);
 	};
 
-	_INST_FROM (0xaf, 3, 6, "LAX[$2]",		LAX_Absolute, LAX_General);
-	_INST_FROM (0xa7, 2, 5, "LAX[$1]",		LAX_ZeroPage, LAX_General);
-	_INST_FROM (0xa3, 2, 8, "LAX([$1],X)",	LAX_ZeroPageIndirectX, LAX_General);
-	_INST_FROM (0xb3, 2, 8, "LAX([$1]),Y",	LAX_ZeroPageIndirectY, LAX_General);
-	_INST_FROM (0xb7, 2, 6, "LAX[$1],Y",	LAX_ZeroPageY, LAX_General);
-	_INST_FROM (0xbf, 3, 7, "LAX[$2],Y",	LAX_AbsoluteY, LAX_General);
+	_INST_FROM (0xaf, 3, 6, 6, "LAX[$2]",				LAX_Absolute, LAX_General);
+	_INST_FROM (0xa7, 2, 5, 5, "LAX[$1]",				LAX_ZeroPage, LAX_General);
+	_INST_FROM (0xa3, 2, 8, 8, "LAX([$1],X)",			LAX_ZeroPageIndirectX, LAX_General);
+	_INST_FROM (0xb3, 2, 8, 8, "LAX([$1]),Y",			LAX_ZeroPageIndirectY, LAX_General);
+	_INST_FROM (0xb7, 2, 6, 6, "LAX[$1],Y",				LAX_ZeroPageY, LAX_General);
+	_INST_FROM (0xbf, 3, 7, 7, "LAX[$2],Y",				LAX_AbsoluteY, LAX_General);
 
 	// LDX
 	/** LDX_General: To aggregate common steps in every LDX instruction. */
 	class LDX_General : public Instruction
 	{
 		public:
-		LDX_General (unsigned int c, unsigned int mp, unsigned int cc, const std::string& t)
-			: Instruction (c, mp, cc, t)
+		LDX_General (unsigned int c, unsigned int mp, unsigned int cc, unsigned int rcc, 
+				const std::string& t)
+			: Instruction (c, mp, cc, rcc, t)
 							{ }
 
 		protected:
 		bool executeWith (MCHEmul::UByte u);
 	};
 
-	_INST_FROM (0xa2, 2, 2, "LDX#[#1]",		LDX_Inmediate, LDX_General);
-	_INST_FROM (0xae, 3, 4, "LDX[$2]",		LDX_Absolute, LDX_General);
-	_INST_FROM (0xa6, 2, 3, "LDX[$1]",		LDX_ZeroPage, LDX_General);
-	_INST_FROM (0xbe, 3, 4, "LDX[$2],Y",	LDX_AbsoluteY, LDX_General);
-	_INST_FROM (0xb6, 2, 4, "LDX[$1],Y",	LDX_ZeroPageY, LDX_General);
+	_INST_FROM (0xa2, 2, 2, 2, "LDX#[#1]",				LDX_Inmediate, LDX_General);
+	_INST_FROM (0xae, 3, 4, 4, "LDX[$2]",				LDX_Absolute, LDX_General);
+	_INST_FROM (0xa6, 2, 3, 3, "LDX[$1]",				LDX_ZeroPage, LDX_General);
+	_INST_FROM (0xbe, 3, 4, 4, "LDX[$2],Y",				LDX_AbsoluteY, LDX_General);
+	_INST_FROM (0xb6, 2, 4, 4, "LDX[$1],Y",				LDX_ZeroPageY, LDX_General);
 
 	// LDY
 	/** LDY_General: To aggregate common steps in every LDY instruction. */
 	class LDY_General : public Instruction
 	{
 		public:
-		LDY_General (unsigned int c, unsigned int mp, unsigned int cc, const std::string& t)
-			: Instruction (c, mp, cc, t)
+		LDY_General (unsigned int c, unsigned int mp, unsigned int cc, unsigned int rcc, 
+				const std::string& t)
+			: Instruction (c, mp, cc, rcc, t)
 							{ }
 
 		protected:
 		bool executeWith (MCHEmul::UByte u);
 	};
 
-	_INST_FROM (0xa0, 2, 2, "LDY#[#1]",		LDY_Inmediate, LDY_General);
-	_INST_FROM (0xac, 3, 4, "LDY[$2]",		LDY_Absolute, LDY_General);
-	_INST_FROM (0xa4, 2, 3, "LDY[$1]",		LDY_ZeroPage, LDY_General);
-	_INST_FROM (0xb4, 2, 4, "LDY[$1],X",	LDY_ZeroPageX, LDY_General);
-	_INST_FROM (0xbc, 3, 4, "LDY[$2],X",	LDY_AbsoluteX, LDY_General);
+	_INST_FROM (0xa0, 2, 2, 2, "LDY#[#1]",				LDY_Inmediate, LDY_General);
+	_INST_FROM (0xac, 3, 4, 4, "LDY[$2]",				LDY_Absolute, LDY_General);
+	_INST_FROM (0xa4, 2, 3, 3, "LDY[$1]",				LDY_ZeroPage, LDY_General);
+	_INST_FROM (0xb4, 2, 4, 4, "LDY[$1],X",				LDY_ZeroPageX, LDY_General);
+	_INST_FROM (0xbc, 3, 4, 4, "LDY[$2],X",				LDY_AbsoluteX, LDY_General);
 
 	// LSR
 	/** LSR_General: To aggregate common steps in every LSR instruction. */
 	class LSR_General : public Instruction
 	{
 		public:
-		LSR_General (unsigned int c, unsigned int mp, unsigned int cc, const std::string& t)
-			: Instruction (c, mp, cc, t)
+		LSR_General (unsigned int c, unsigned int mp, unsigned int cc, unsigned int rcc, 
+				const std::string& t)
+			: Instruction (c, mp, cc, rcc, t)
 							{ }
 
 		protected:
 		bool executeOn (const MCHEmul::Address& a);
 	};
 
-	_INST_FROM (0x4e, 3, 6, "LSR[$2]",		LSR_Absolute, LSR_General);
-	_INST_FROM (0x46, 2, 5, "LSR[$1]",		LSR_ZeroPage, LSR_General);
-	_INST_FROM (0x4a, 1, 2, "LSR",			LSR_Accumulator, LSR_General);
-	_INST_FROM (0x56, 2, 6, "LSR[$1],X",	LSR_ZeroPageX, LSR_General);
-	_INST_FROM (0x5e, 3, 7, "LSR[$2],X",	LSR_AbsoluteX, LSR_General);
+	_INST_FROM (0x4e, 3, 6, 4, "LSR[$2]",				LSR_Absolute, LSR_General);
+	_INST_FROM (0x46, 2, 5, 3, "LSR[$1]",				LSR_ZeroPage, LSR_General);
+	_INST_FROM (0x4a, 1, 2, 2, "LSR",					LSR_Accumulator, LSR_General);
+	_INST_FROM (0x56, 2, 6, 4, "LSR[$1],X",				LSR_ZeroPageX, LSR_General);
+	_INST_FROM (0x5e, 3, 7, 5, "LSR[$2],X",				LSR_AbsoluteX, LSR_General);
 
 	// NOP
 	/** NOP_General. \n 
@@ -658,8 +679,9 @@ namespace F6500
 	class NOP_General : public Instruction
 	{
 		public:
-		NOP_General (unsigned int c, unsigned int mp, unsigned int cc, const std::string& t)
-			: Instruction (c, mp, cc, t)
+		NOP_General (unsigned int c, unsigned int mp, unsigned int cc, unsigned int rcc, 
+				const std::string& t)
+			: Instruction (c, mp, cc, rcc, t)
 							{ }
 
 		protected:
@@ -667,48 +689,49 @@ namespace F6500
 	};
 
 	// The official and documented one...
-	_INST_FROM (0xea, 1, 2, "NOP",			NOP, Instruction);
+	_INST_FROM (0xea, 1, 2, 2, "NOP",					NOP, Instruction);
 	// The rest are undocumented...
 	// https://www.esocop.org/docs/MOS6510UnintendedOpcodes-20152412.pdf
-	_INST_FROM (0x80 /** 0x82 (inestable), 0xc2 (insestable), 0xe2 (inestable) */, 2, 2, "NOP#[#1]", NOP_Inmediate, NOP_General);
-	_INST_FROM (0x0c, 3, 6, "NOP[$2]",		NOP_Absolute, NOP_General);
-	_INST_FROM (0x04 /** 0x04, 0x44, 0x64 */, 2, 5, "NOP[$1]",		NOP_ZeroPage, NOP_General);
-	_INST_FROM (0x14 /** 0x34, 0x54, 0x74, 0xd4, 0xf4 */, 2, 6, "NOP[$1],X",	NOP_ZeroPageX, NOP_General);
-	_INST_FROM (0x1c /** 0x3c, 0x5c, 0x7x, 0xdc, 0xfc */, 3, 7, "NOP[$2],X",	NOP_AbsoluteX, NOP_General);
+	_INST_FROM (0x80 /** 0x82 (inestable), 0xc2 (insestable), 0xe2 (inestable) */, 2, 2, 2, "NOP#[#1]", NOP_Inmediate, NOP_General);
+	_INST_FROM (0x0c, 3, 6, 6, "NOP[$2]",				NOP_Absolute, NOP_General);
+	_INST_FROM (0x04 /** 0x04, 0x44, 0x64 */, 2, 5, 5, "NOP[$1]", NOP_ZeroPage, NOP_General);
+	_INST_FROM (0x14 /** 0x34, 0x54, 0x74, 0xd4, 0xf4 */, 2, 6, 6, "NOP[$1],X",	NOP_ZeroPageX, NOP_General);
+	_INST_FROM (0x1c /** 0x3c, 0x5c, 0x7x, 0xdc, 0xfc */, 3, 7, 7, "NOP[$2],X",	NOP_AbsoluteX, NOP_General);
 
 	// ORA
 	/** ORA_General: To aggregate common steps in every ORA instruction. */
 	class ORA_General : public Instruction
 	{
 		public:
-		ORA_General (unsigned int c, unsigned int mp, unsigned int cc, const std::string& t)
-			: Instruction (c, mp, cc, t)
+		ORA_General (unsigned int c, unsigned int mp, unsigned int cc, unsigned int rcc, 
+				const std::string& t)
+			: Instruction (c, mp, cc, rcc, t)
 							{ }
 
 		protected:
 		bool executeWith (MCHEmul::UByte u);
 	};
 
-	_INST_FROM (0x09, 2, 2, "ORA#[#1]",		ORA_Inmediate, ORA_General);
-	_INST_FROM (0x0d, 3, 4, "ORA[$2]",		ORA_Absolute, ORA_General);
-	_INST_FROM (0x05, 2, 3, "ORA[$1]",		ORA_ZeroPage, ORA_General);
-	_INST_FROM (0x01, 2, 6, "ORA([$1],X)",	ORA_ZeroPageIndirectX, ORA_General);
-	_INST_FROM (0x11, 2, 5, "ORA([$1]),Y",	ORA_ZeroPageIndirectY, ORA_General);
-	_INST_FROM (0x15, 2, 4, "ORA[$1],X",	ORA_ZeroPageX, ORA_General);
-	_INST_FROM (0x1d, 3, 4, "ORA[$2],X",	ORA_AbsoluteX, ORA_General);
-	_INST_FROM (0x19, 3, 4, "ORA[$2],Y",	ORA_AbsoluteY, ORA_General);
+	_INST_FROM (0x09, 2, 2, 2, "ORA#[#1]",				ORA_Inmediate, ORA_General);
+	_INST_FROM (0x0d, 3, 4, 4, "ORA[$2]",				ORA_Absolute, ORA_General);
+	_INST_FROM (0x05, 2, 3, 3, "ORA[$1]",				ORA_ZeroPage, ORA_General);
+	_INST_FROM (0x01, 2, 6, 6, "ORA([$1],X)",			ORA_ZeroPageIndirectX, ORA_General);
+	_INST_FROM (0x11, 2, 5, 5, "ORA([$1]),Y",			ORA_ZeroPageIndirectY, ORA_General);
+	_INST_FROM (0x15, 2, 4, 4, "ORA[$1],X",				ORA_ZeroPageX, ORA_General);
+	_INST_FROM (0x1d, 3, 4, 4, "ORA[$2],X",				ORA_AbsoluteX, ORA_General);
+	_INST_FROM (0x19, 3, 4, 4, "ORA[$2],Y",				ORA_AbsoluteY, ORA_General);
 
 	// PHA
-	_INST_FROM (0x48, 1, 3, "PHA",			PHA, Instruction);
+	_INST_FROM (0x48, 1, 3, 2, "PHA",					PHA, Instruction);
 
 	// PHP
-	_INST_FROM (0x08, 1, 3, "PHP",			PHP, Instruction);
+	_INST_FROM (0x08, 1, 3, 2, "PHP",					PHP, Instruction);
 
 	// PLA
-	_INST_FROM (0x68, 1, 4, "PLA",			PLA, Instruction);
+	_INST_FROM (0x68, 1, 4, 4, "PLA",					PLA, Instruction);
 
 	// PLP
-	_INST_FROM (0x28, 1, 4, "PLP",			PLP, Instruction);
+	_INST_FROM (0x28, 1, 4, 4, "PLP",					PLP, Instruction);
 
 	// Non documented
 	// RLO: ROL + AND
@@ -717,59 +740,62 @@ namespace F6500
 	class RLA_General : public Instruction
 	{
 		public:
-		RLA_General (unsigned int c, unsigned int mp, unsigned int cc, const std::string& t)
-			: Instruction (c, mp, cc, t)
+		RLA_General (unsigned int c, unsigned int mp, unsigned int cc, unsigned int rcc,
+				const std::string& t)
+			: Instruction (c, mp, cc, rcc, t)
 							{ }
 
 		protected:
 		bool executeOn (const MCHEmul::Address& a);
 	};
 
-	_INST_FROM (0x2f, 3, 6, "RLA[$2]",		RLA_Absolute, RLA_General);
-	_INST_FROM (0x27, 2, 5, "RLA[$1]",		RLA_ZeroPage, RLA_General);
-	_INST_FROM (0x23, 2, 8, "RLA([$1],X)",	RLA_ZeroPageIndirectX, RLA_General);
-	_INST_FROM (0x33, 2, 8, "RLA([$1]),Y",	RLA_ZeroPageIndirectY, RLA_General);
-	_INST_FROM (0x37, 2, 6, "RLA[$1],X",	RLA_ZeroPageX, RLA_General);
-	_INST_FROM (0x3f, 3, 7, "RLA[$2],X",	RLA_AbsoluteX, RLA_General);
-	_INST_FROM (0x3b, 3, 7, "RLA[$2],Y",	RLA_AbsoluteY, RLA_General);
+	_INST_FROM (0x2f, 3, 6, 4, "RLA[$2]",				RLA_Absolute, RLA_General);
+	_INST_FROM (0x27, 2, 5, 3, "RLA[$1]",				RLA_ZeroPage, RLA_General);
+	_INST_FROM (0x23, 2, 8, 6, "RLA([$1],X)",			RLA_ZeroPageIndirectX, RLA_General);
+	_INST_FROM (0x33, 2, 8, 6, "RLA([$1]),Y",			RLA_ZeroPageIndirectY, RLA_General);
+	_INST_FROM (0x37, 2, 6, 4, "RLA[$1],X",				RLA_ZeroPageX, RLA_General);
+	_INST_FROM (0x3f, 3, 7, 5, "RLA[$2],X",				RLA_AbsoluteX, RLA_General);
+	_INST_FROM (0x3b, 3, 7, 5, "RLA[$2],Y",				RLA_AbsoluteY, RLA_General);
 
 	// ROL
 	/** ROL_General: To aggregate common steps in every ROL instruction. */
 	class ROL_General : public Instruction
 	{
 		public:
-		ROL_General (unsigned int c, unsigned int mp, unsigned int cc, const std::string& t)
-			: Instruction (c, mp, cc, t)
+		ROL_General (unsigned int c, unsigned int mp, unsigned int cc, unsigned int rcc, 
+				const std::string& t)
+			: Instruction (c, mp, cc, rcc, t)
 							{ }
 
 		protected:
 		bool executeOn (const MCHEmul::Address& a);
 	};
 
-	_INST_FROM (0x2e, 3, 6, "ROL[$2]",		ROL_Absolute, ROL_General);
-	_INST_FROM (0x26, 2, 5, "ROL[$1]",		ROL_ZeroPage, ROL_General);
-	_INST_FROM (0x2a, 1, 2, "ROL",			ROL_Accumulator, ROL_General);
-	_INST_FROM (0x36, 2, 6, "ROL[$1],X",	ROL_ZeroPageX, ROL_General);
-	_INST_FROM (0x3e, 3, 7, "ROL[$2],X",	ROL_AbsoluteX, ROL_General);
+	_INST_FROM (0x2e, 3, 6, 4, "ROL[$2]",				ROL_Absolute, ROL_General);
+	_INST_FROM (0x26, 2, 5, 3, "ROL[$1]",				ROL_ZeroPage, ROL_General);
+	_INST_FROM (0x2a, 1, 2, 2, "ROL",					ROL_Accumulator, ROL_General);
+	_INST_FROM (0x36, 2, 6, 4, "ROL[$1],X",				ROL_ZeroPageX, ROL_General);
+	_INST_FROM (0x3e, 3, 7, 5, "ROL[$2],X",				ROL_AbsoluteX, ROL_General);
 
 	// ROR
 	/** ROR_General: To aggregate common steps in every ROR instruction. */
 	class ROR_General : public Instruction
 	{
 		public:
-		ROR_General (unsigned int c, unsigned int mp, unsigned int cc, const std::string& t)
-			: Instruction (c, mp, cc, t)
+		ROR_General (unsigned int c, unsigned int mp, unsigned int cc, unsigned int rcc, 
+				const std::string& t)
+			: Instruction (c, mp, cc, rcc, t)
 							{ }
 
 		protected:
 		bool executeOn (const MCHEmul::Address& a);
 	};
 
-	_INST_FROM (0x6e, 3, 6, "ROR[$2]",		ROR_Absolute, ROR_General);
-	_INST_FROM (0x66, 2, 5, "ROR[$1]",		ROR_ZeroPage, ROR_General);
-	_INST_FROM (0x6a, 1, 2, "ROR",			ROR_Accumulator, ROR_General);
-	_INST_FROM (0x76, 2, 6, "ROR[$1],X",	ROR_ZeroPageX, ROR_General);
-	_INST_FROM (0x7e, 3, 7, "ROR[$2],X",	ROR_AbsoluteX, ROR_General);
+	_INST_FROM (0x6e, 3, 6, 4, "ROR[$2]",				ROR_Absolute, ROR_General);
+	_INST_FROM (0x66, 2, 5, 3, "ROR[$1]",				ROR_ZeroPage, ROR_General);
+	_INST_FROM (0x6a, 1, 2, 2, "ROR",					ROR_Accumulator, ROR_General);
+	_INST_FROM (0x76, 2, 6, 4, "ROR[$1],X",				ROR_ZeroPageX, ROR_General);
+	_INST_FROM (0x7e, 3, 7, 5, "ROR[$2],X",				ROR_AbsoluteX, ROR_General);
 
 	// Non documented
 	// RRA: ROR + ADC
@@ -778,27 +804,28 @@ namespace F6500
 	class RRA_General : public Instruction
 	{
 		public:
-		RRA_General (unsigned int c, unsigned int mp, unsigned int cc, const std::string& t)
-			: Instruction (c, mp, cc, t)
+		RRA_General (unsigned int c, unsigned int mp, unsigned int cc, unsigned int rcc, 
+				const std::string& t)
+			: Instruction (c, mp, cc, rcc, t)
 							{ }
 
 		protected:
 		bool executeOn (const MCHEmul::Address& a);
 	};
 
-	_INST_FROM (0x6f, 3, 6, "RRA[$2]",		RRA_Absolute, RRA_General);
-	_INST_FROM (0x67, 2, 5, "RRA[$1]",		RRA_ZeroPage, RRA_General);
-	_INST_FROM (0x63, 2, 8, "RRA([$1],X)",	RRA_ZeroPageIndirectX, RRA_General);
-	_INST_FROM (0x73, 2, 8, "RRA([$1]),Y",	RRA_ZeroPageIndirectY, RRA_General);
-	_INST_FROM (0x77, 2, 6, "RRA[$1],X",	RRA_ZeroPageX, RRA_General);
-	_INST_FROM (0x7f, 3, 7, "RRA[$2],X",	RRA_AbsoluteX, RRA_General);
-	_INST_FROM (0x7b, 3, 7, "RRA[$2],Y",	RRA_AbsoluteY, RRA_General);
+	_INST_FROM (0x6f, 3, 6, 4, "RRA[$2]",				RRA_Absolute, RRA_General);
+	_INST_FROM (0x67, 2, 5, 3, "RRA[$1]",				RRA_ZeroPage, RRA_General);
+	_INST_FROM (0x63, 2, 8, 6, "RRA([$1],X)",			RRA_ZeroPageIndirectX, RRA_General);
+	_INST_FROM (0x73, 2, 8, 6, "RRA([$1]),Y",			RRA_ZeroPageIndirectY, RRA_General);
+	_INST_FROM (0x77, 2, 6, 4, "RRA[$1],X",				RRA_ZeroPageX, RRA_General);
+	_INST_FROM (0x7f, 3, 7, 5, "RRA[$2],X",				RRA_AbsoluteX, RRA_General);
+	_INST_FROM (0x7b, 3, 7, 5, "RRA[$2],Y",				RRA_AbsoluteY, RRA_General);
 
 	// RTI
-	_INST_FROM (0x40, 1, 6, "RTI",			RTI, Instruction);
+	_INST_FROM (0x40, 1, 6, 6, "RTI",					RTI, Instruction);
 
 	// RTS
-	_INST_FROM (0x60, 1, 6, "RTS",			RTS, Instruction);
+	_INST_FROM (0x60, 1, 6, 6, "RTS",					RTS, Instruction);
 
 	// Non documented
 	// SAX: PHP + PHA + STX + AND + STA + PLA + PLP = _ACCUMULATOR & _XREGISTER...
@@ -807,40 +834,42 @@ namespace F6500
 	class SAX_General : public Instruction
 	{
 		public:
-		SAX_General (unsigned int c, unsigned int mp, unsigned int cc, const std::string& t)
-			: Instruction (c, mp, cc, t)
+		SAX_General (unsigned int c, unsigned int mp, unsigned int cc, unsigned int rcc, 
+				const std::string& t)
+			: Instruction (c, mp, cc, rcc, t)
 							{ }
 
 		protected:
 		bool executeOn (const MCHEmul::Address& a);
 	};
 
-	_INST_FROM (0x8f, 3, 4, "SAX[$2]",		SAX_Absolute, SAX_General);
-	_INST_FROM (0x87, 2, 3, "SAX[$1]",		SAX_ZeroPage, SAX_General);
-	_INST_FROM (0x97, 2, 6, "SAX[$1],Y",	SAX_ZeroPageY, SAX_General);
-	_INST_FROM (0x83, 2, 6, "SAX([$1],X)",	SAX_ZeroPageIndirectX, SAX_General);
+	_INST_FROM (0x8f, 3, 4, 3, "SAX[$2]",				SAX_Absolute, SAX_General);
+	_INST_FROM (0x87, 2, 3, 2, "SAX[$1]",				SAX_ZeroPage, SAX_General);
+	_INST_FROM (0x97, 2, 6, 5, "SAX[$1],Y",				SAX_ZeroPageY, SAX_General);
+	_INST_FROM (0x83, 2, 6, 5, "SAX([$1],X)",			SAX_ZeroPageIndirectX, SAX_General);
 
 	// SBC
 	/** SBC_General: To aggregate common steps in every SBC instruction. */
 	class SBC_General : public Instruction
 	{
 		public:
-		SBC_General (unsigned int c, unsigned int mp, unsigned int cc, const std::string& t)
-			: Instruction (c, mp, cc, t)
+		SBC_General (unsigned int c, unsigned int mp, unsigned int cc, unsigned int rcc, 
+				const std::string& t)
+			: Instruction (c, mp, cc, rcc, t)
 							{ }
 
 		protected:
 		bool executeWith (MCHEmul::UByte u);
 	};
 
-	_INST_FROM (0xe9 /** 0xeb (undocumented) */, 2, 2, "SBC#[#1]", SBC_Inmediate, SBC_General);
-	_INST_FROM (0xed, 3, 4, "SBC[$2]",		SBC_Absolute, SBC_General);
-	_INST_FROM (0xe5, 2, 3, "SBC[$1]",		SBC_ZeroPage, SBC_General);
-	_INST_FROM (0xe1, 2, 6, "SBC([$1],X)",	SBC_ZeroPageIndirectX, SBC_General);
-	_INST_FROM (0xf1, 2, 5, "SBC([$1]),Y",	SBC_ZeroPageIndirectY, SBC_General);
-	_INST_FROM (0xf5, 2, 4, "SBC[$1],X",	SBC_ZeroPageX, SBC_General);
-	_INST_FROM (0xfd, 3, 4, "SBC[$2],X",	SBC_AbsoluteX, SBC_General);
-	_INST_FROM (0xf9, 3, 4, "SBC[$2],Y",	SBC_AbsoluteY, SBC_General);
+	_INST_FROM (0xe9 /** 0xeb (undocumented) */, 2, 2, 2, "SBC#[#1]", SBC_Inmediate, SBC_General);
+	_INST_FROM (0xed, 3, 4, 4, "SBC[$2]",				SBC_Absolute, SBC_General);
+	_INST_FROM (0xe5, 2, 3, 3, "SBC[$1]",				SBC_ZeroPage, SBC_General);
+	_INST_FROM (0xe1, 2, 6, 6, "SBC([$1],X)",			SBC_ZeroPageIndirectX, SBC_General);
+	_INST_FROM (0xf1, 2, 5, 5, "SBC([$1]),Y",			SBC_ZeroPageIndirectY, SBC_General);
+	_INST_FROM (0xf5, 2, 4, 4, "SBC[$1],X",				SBC_ZeroPageX, SBC_General);
+	_INST_FROM (0xfd, 3, 4, 4, "SBC[$2],X",				SBC_AbsoluteX, SBC_General);
+	_INST_FROM (0xf9, 3, 4, 4, "SBC[$2],Y",				SBC_AbsoluteY, SBC_General);
 
 	// Non documented
 	// SBX: STA + TXA + AND + CMP + PHP + SEC + CLD + SBC + TAX + LDA + PLP = (_ACCUMULATOR & _XREGISTER) - DATA
@@ -849,24 +878,25 @@ namespace F6500
 	class SBX_General : public Instruction
 	{
 		public:
-		SBX_General (unsigned int c, unsigned int mp, unsigned int cc, const std::string& t)
-			: Instruction (c, mp, cc, t)
+		SBX_General (unsigned int c, unsigned int mp, unsigned int cc, unsigned int rcc, 
+				const std::string& t)
+			: Instruction (c, mp, cc, rcc, t)
 							{ }
 
 		protected:
 		bool executeWith (MCHEmul::UByte u);
 	};
 
-	_INST_FROM (0xcb, 2, 2, "SBX#[#1]",		SBX_Inmediate, SBX_General);
+	_INST_FROM (0xcb, 2, 2, 2, "SBX#[#1]",				SBX_Inmediate, SBX_General);
 
 	// SEC
-	_INST_FROM (0x38, 1, 2, "SEC",			SEC, Instruction);
+	_INST_FROM (0x38, 1, 2, 2, "SEC",					SEC, Instruction);
 
 	// SED
-	_INST_FROM (0xf8, 1, 2, "SED",			SED, Instruction);
+	_INST_FROM (0xf8, 1, 2, 2, "SED",					SED, Instruction);
 
 	// SEI
-	_INST_FROM (0x78, 1, 2, "SEI",			SEI, Instruction);
+	_INST_FROM (0x78, 1, 2, 2, "SEI",					SEI, Instruction);
 
 	// Non documented
 	// SLO: ASL + ORA
@@ -875,21 +905,22 @@ namespace F6500
 	class SLO_General : public Instruction
 	{
 		public:
-		SLO_General (unsigned int c, unsigned int mp, unsigned int cc, const std::string& t)
-			: Instruction (c, mp, cc, t)
+		SLO_General (unsigned int c, unsigned int mp, unsigned int cc, unsigned int rcc, 
+				const std::string& t)
+			: Instruction (c, mp, cc, rcc, t)
 							{ }
 
 		protected:
 		bool executeOn (const MCHEmul::Address& a);
 	};
 
-	_INST_FROM (0x0f, 3, 6, "SLO[$2]",		SLO_Absolute, SLO_General);
-	_INST_FROM (0x07, 2, 5, "SLO[$1]",		SLO_ZeroPage, SLO_General);
-	_INST_FROM (0x03, 2, 8, "SLO([$1],X)",	SLO_ZeroPageIndirectX, SLO_General);
-	_INST_FROM (0x13, 2, 8, "SLO([$1]),Y",	SLO_ZeroPageIndirectY, SLO_General);
-	_INST_FROM (0x17, 2, 6, "SLO[$1],X",	SLO_ZeroPageX, SLO_General);
-	_INST_FROM (0x1f, 3, 7, "SLO[$2],X",	SLO_AbsoluteX, SLO_General);
-	_INST_FROM (0x1b, 3, 7, "SLO[$2],Y",	SLO_AbsoluteY, SLO_General);
+	_INST_FROM (0x0f, 3, 6, 4, "SLO[$2]",				SLO_Absolute, SLO_General);
+	_INST_FROM (0x07, 2, 5, 3, "SLO[$1]",				SLO_ZeroPage, SLO_General);
+	_INST_FROM (0x03, 2, 8, 6, "SLO([$1],X)",			SLO_ZeroPageIndirectX, SLO_General);
+	_INST_FROM (0x13, 2, 8, 6, "SLO([$1]),Y",			SLO_ZeroPageIndirectY, SLO_General);
+	_INST_FROM (0x17, 2, 6, 4, "SLO[$1],X",				SLO_ZeroPageX, SLO_General);
+	_INST_FROM (0x1f, 3, 7, 5, "SLO[$2],X",				SLO_AbsoluteX, SLO_General);
+	_INST_FROM (0x1b, 3, 7, 5, "SLO[$2],Y",				SLO_AbsoluteY, SLO_General);
 
 	// Non documented
 	// SRE: LSR + EOR
@@ -898,94 +929,98 @@ namespace F6500
 	class SRE_General : public Instruction
 	{
 		public:
-		SRE_General (unsigned int c, unsigned int mp, unsigned int cc, const std::string& t)
-			: Instruction (c, mp, cc, t)
+		SRE_General (unsigned int c, unsigned int mp, unsigned int cc, unsigned int rcc, 
+				const std::string& t)
+			: Instruction (c, mp, cc, rcc, t)
 							{ }
 
 		protected:
 		bool executeOn (const MCHEmul::Address& a);
 	};
 
-	_INST_FROM (0x4f, 3, 6, "SRE[$2]",		SRE_Absolute, SRE_General);
-	_INST_FROM (0x47, 2, 5, "SRE[$1]",		SRE_ZeroPage, SRE_General);
-	_INST_FROM (0x43, 2, 8, "SRE([$1],X)",	SRE_ZeroPageIndirectX, SRE_General);
-	_INST_FROM (0x53, 2, 8, "SRE([$1]),Y",	SRE_ZeroPageIndirectY, SRE_General);
-	_INST_FROM (0x57, 2, 6, "SRE[$1],X",	SRE_ZeroPageX, SRE_General);
-	_INST_FROM (0x5f, 3, 7, "SRE[$2],X",	SRE_AbsoluteX, SRE_General);
-	_INST_FROM (0x5b, 3, 7, "SRE[$2],Y",	SRE_AbsoluteY, SRE_General);
+	_INST_FROM (0x4f, 3, 6, 4, "SRE[$2]",				SRE_Absolute, SRE_General);
+	_INST_FROM (0x47, 2, 5, 3, "SRE[$1]",				SRE_ZeroPage, SRE_General);
+	_INST_FROM (0x43, 2, 8, 6, "SRE([$1],X)",			SRE_ZeroPageIndirectX, SRE_General);
+	_INST_FROM (0x53, 2, 8, 6, "SRE([$1]),Y",			SRE_ZeroPageIndirectY, SRE_General);
+	_INST_FROM (0x57, 2, 6, 4, "SRE[$1],X",				SRE_ZeroPageX, SRE_General);
+	_INST_FROM (0x5f, 3, 7, 5, "SRE[$2],X",				SRE_AbsoluteX, SRE_General);
+	_INST_FROM (0x5b, 3, 7, 5, "SRE[$2],Y",				SRE_AbsoluteY, SRE_General);
 
 	// STA
 	/** STA_General: To aggregate common steps in every STA instruction. */
 	class STA_General : public Instruction
 	{
 		public:
-		STA_General (unsigned int c, unsigned int mp, unsigned int cc, const std::string& t)
-			: Instruction (c, mp, cc, t)
+		STA_General (unsigned int c, unsigned int mp, unsigned int cc, unsigned int rcc, 
+				const std::string& t)
+			: Instruction (c, mp, cc, rcc, t)
 							{ }
 
 		protected:
 		bool executeOn (const MCHEmul::Address& a);
 	};
 
-	_INST_FROM (0x8d, 3, 4, "STA[$2]",		STA_Absolute, STA_General);
-	_INST_FROM (0x85, 2, 3, "STA[$1]",		STA_ZeroPage, STA_General);
-	_INST_FROM (0x81, 2, 6, "STA([$1],X)",	STA_ZeroPageIndirectX, STA_General);
-	_INST_FROM (0x91, 2, 6, "STA([$1]),Y",	STA_ZeroPageIndirectY, STA_General);
-	_INST_FROM (0x95, 2, 4, "STA[$1],X",	STA_ZeroPageX, STA_General);
-	_INST_FROM (0x9d, 3, 5, "STA[$2],X",	STA_AbsoluteX, STA_General);
-	_INST_FROM (0x99, 3, 5, "STA[$2],Y",	STA_AbsoluteY, STA_General);
+	_INST_FROM (0x8d, 3, 4, 3, "STA[$2]",				STA_Absolute, STA_General);
+	_INST_FROM (0x85, 2, 3, 2, "STA[$1]",				STA_ZeroPage, STA_General);
+	_INST_FROM (0x81, 2, 6, 5, "STA([$1],X)",			STA_ZeroPageIndirectX, STA_General);
+	_INST_FROM (0x91, 2, 6, 5, "STA([$1]),Y",			STA_ZeroPageIndirectY, STA_General);
+	_INST_FROM (0x95, 2, 4, 3, "STA[$1],X",				STA_ZeroPageX, STA_General);
+	_INST_FROM (0x9d, 3, 5, 4, "STA[$2],X",				STA_AbsoluteX, STA_General);
+	_INST_FROM (0x99, 3, 5, 4, "STA[$2],Y",				STA_AbsoluteY, STA_General);
 
 	// STX
 	/** STX_General: To aggregate common steps in every STX instruction. */
 	class STX_General : public Instruction
 	{
 		public:
-		STX_General (unsigned int c, unsigned int mp, unsigned int cc, const std::string& t)
-			: Instruction (c, mp, cc, t)
+		STX_General (unsigned int c, unsigned int mp, unsigned int cc, unsigned int rcc, 
+				const std::string& t)
+			: Instruction (c, mp, cc, rcc, t)
 							{ }
 
 		protected:
 		bool executeOn (const MCHEmul::Address& a);
 	};
 
-	_INST_FROM (0x8e, 3, 4, "STX[$2]",		STX_Absolute, STX_General);
-	_INST_FROM (0x86, 2, 3, "STX[$1]",		STX_ZeroPage, STX_General);
-	_INST_FROM (0x96, 2, 4, "STX[$1],Y",	STX_ZeroPageY, STX_General);
+	_INST_FROM (0x8e, 3, 4, 3, "STX[$2]",				STX_Absolute, STX_General);
+	_INST_FROM (0x86, 2, 3, 2, "STX[$1]",				STX_ZeroPage, STX_General);
+	_INST_FROM (0x96, 2, 4, 3, "STX[$1],Y",				STX_ZeroPageY, STX_General);
 
 	// STY
 	/** STY_General: To aggregate common steps in every STY instruction. */
 	class STY_General : public Instruction
 	{
 		public:
-		STY_General (unsigned int c, unsigned int mp, unsigned int cc, const std::string& t)
-			: Instruction (c, mp, cc, t)
+		STY_General (unsigned int c, unsigned int mp, unsigned int cc, unsigned int rcc, 
+				const std::string& t)
+			: Instruction (c, mp, cc, rcc, t)
 							{ }
 
 		protected:
 		bool executeOn (const MCHEmul::Address& a);
 	};
 
-	_INST_FROM (0x8c, 3, 4, "STY[$2]",		STY_Absolute, STY_General);
-	_INST_FROM (0x84, 2, 3, "STY[$1]",		STY_ZeroPage, STY_General);
-	_INST_FROM (0x94, 2, 4, "STY[$1],X",	STY_ZeroPageX, STY_General);
+	_INST_FROM (0x8c, 3, 4, 3, "STY[$2]",				STY_Absolute, STY_General);
+	_INST_FROM (0x84, 2, 3, 2, "STY[$1]",				STY_ZeroPage, STY_General);
+	_INST_FROM (0x94, 2, 4, 3, "STY[$1],X",				STY_ZeroPageX, STY_General);
 
 	// TAX
-	_INST_FROM (0xaa, 1, 2, "TAX",			TAX, Instruction);
+	_INST_FROM (0xaa, 1, 2, 2, "TAX",					TAX, Instruction);
 
 	// TAY
-	_INST_FROM (0xa8, 1, 2, "TAY",			TAY, Instruction);
+	_INST_FROM (0xa8, 1, 2, 2, "TAY",					TAY, Instruction);
 
 	// TSX
-	_INST_FROM (0xba, 1, 2, "TSX",			TSX, Instruction);
+	_INST_FROM (0xba, 1, 2, 2, "TSX",					TSX, Instruction);
 
 	// TXA
-	_INST_FROM (0x8a, 1, 2, "TXA",			TXA, Instruction);
+	_INST_FROM (0x8a, 1, 2, 2, "TXA",					TXA, Instruction);
 
 	// TXS
-	_INST_FROM (0x9a, 1, 2, "TXS",			TXS, Instruction);
+	_INST_FROM (0x9a, 1, 2, 2, "TXS",					TXS, Instruction);
 
 	// TYA
-	_INST_FROM (0x98, 1, 2, "TYA",			TYA, Instruction);
+	_INST_FROM (0x98, 1, 2, 2, "TYA",					TYA, Instruction);
 }
 
 #endif

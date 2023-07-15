@@ -85,6 +85,7 @@ namespace MCHEmul
 		  * @param cc	:	The number of clock cyles the instruction uses to be executed (usually). \n
 		  *					Some ocassions, some instructions under certain circunstances can take longer than expected. \n
 		  *					@see for so: _additionalClockCycles (method and variable).
+		  * @param rcc	:	The number of reading clock cycles within the total. 
 		  *	@param t	:	The template of the instruction. \n
 		  *					The way it is defined is key for it to be read and understood by the parsers. \n
 		  *					The parameters should be within [] with two additional data: \n
@@ -92,7 +93,8 @@ namespace MCHEmul
 		  *					Regarding the type: # means number, $ means address and & means relative jump (@see type of parameter).
 		  *	@param bE	:	Indicate whether the info contained is managed big or little endian.
 		  */
-		Instruction (unsigned int c, unsigned int mp, unsigned int cc, const std::string& t, bool bE = true);
+		Instruction (unsigned int c, unsigned int mp, unsigned int cc, unsigned int rcc, 
+			const std::string& t, bool bE = true);
 
 		Instruction (const Instruction&) = delete;
 
@@ -113,6 +115,10 @@ namespace MCHEmul
 							{ return (_memoryPositions); }
 		unsigned int clockCycles () const
 							{ return (_clockCycles); }
+		unsigned int readingClockCycles () const
+							{ return (_readingClockCycles); }
+		unsigned int writtingClockCyles () const
+							{ return (_writtingClockCycles); }
 		unsigned int additionalClockCycles () const
 							{ return (_additionalCycles); }
 		const std::string iTemplate () const
@@ -172,7 +178,9 @@ namespace MCHEmul
 		const unsigned int _code; 
 		const size_t _codeLength;
 		const unsigned int _memoryPositions; 
-		const unsigned int _clockCycles; 
+		const unsigned int _clockCycles;
+		const unsigned int _readingClockCycles;
+		const unsigned int _writtingClockCycles;
 		const bool _bigEndian;
 		std::string _iTemplate;
 
@@ -198,23 +206,24 @@ namespace MCHEmul
   *	@param _C  : Code.
   *	@param _M  : MemoryPositions occupied.
   *	@param _CC : Clock cycles used. 
-  * @param _T  : The templat to print the instruction.
+  * @param _RCC: Read clock cycles used within the total.
+  * @param _T  : The template to print the instruction.
   *	@param _I  : Name of the intruction.
   * @param _J  : Name of the parent class.
   * @param _K  : Whether the info kept is big or little endian.
   */
-#define _INST_FROM(_C, _M, _CC, _T, _I, _J) \
+#define _INST_FROM(_C, _M, _CC, _RCC, _T, _I, _J) \
 class _I final : public _J \
 { \
 	public: \
-	_I () : _J (_C, _M, _CC, _T) { } \
+	_I () : _J (_C, _M, _CC, _RCC, _T) { } \
 	protected: \
 	virtual bool executeImpl () override; \
 };
 
 /** Idem but inheriting from basic instruction. */
-#define _INST(_C, _M, _CC, _T, _I, _K) \
-	_INST_FROM(_C, _M, _CC, _T, _I, MCHEmul::Instruction);
+#define _INST(_C, _M, _CC, _RCC, _T, _I, _K) \
+	_INST_FROM(_C, _M, _CC, _RCC, _T, _I, MCHEmul::Instruction);
 
 #define _INST_IMPL(_I) \
 bool _I::executeImpl ()

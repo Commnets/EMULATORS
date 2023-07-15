@@ -13,7 +13,7 @@ MCHEmul::CPU::CPU (const MCHEmul::CPUArchitecture& a, const MCHEmul::Registers& 
 	  _lastInstruction (nullptr),
 	  _deepDebugFile (nullptr),
 	  _error (_NOERROR), 
-	  _clockCycles (0),
+	  _clockCycles (0), _lastCPUClockCycles (0),
 	  _stopped (false),
 	  _rowInstructions () // It will be fulfilled later!
 { 
@@ -74,7 +74,7 @@ bool MCHEmul::CPU::initialize ()
 
 	_lastInstruction = nullptr;
 
-	_clockCycles = 0;
+	_clockCycles = _lastCPUClockCycles = 0;
 
 	return (true);
 }
@@ -105,6 +105,8 @@ bool MCHEmul::CPU::executeNextInstruction ()
 {
 	memoryRef () -> setCPUView (); // Always...
 
+	_lastCPUClockCycles = 0;
+
 	if (_stopped)
 		return (true);
 
@@ -113,7 +115,7 @@ bool MCHEmul::CPU::executeNextInstruction ()
 		unsigned int nCInt = 0;
 		i.second -> executeOver (this, nCInt);
 
-		_clockCycles += nCInt;
+		_lastCPUClockCycles += nCInt;
 	}
 
 	// If the very deep debug is activated (dangerous)
@@ -147,7 +149,9 @@ bool MCHEmul::CPU::executeNextInstruction ()
 	// Then, executes the instruction
 	bool result = inst -> execute (dt, this, _memory, _memory -> stack ());
 
-	_clockCycles += (inst -> clockCycles () + inst -> additionalClockCycles ());
+	_lastCPUClockCycles += (inst -> clockCycles () + inst -> additionalClockCycles ());
+
+	_clockCycles += _lastCPUClockCycles;
 
 	_lastInstruction = inst;
 
