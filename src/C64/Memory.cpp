@@ -25,6 +25,7 @@ C64::Memory::Memory (const std::string& lang)
 	  _kernelROM (nullptr),
 	  _kernelRAM (nullptr),
 	  _charROM (nullptr),
+	  _charRAM (nullptr),
 	  _vicIIRegisters (nullptr),
 	  _sidRegisters (nullptr),
 	  _colorRAM (nullptr),
@@ -43,6 +44,7 @@ C64::Memory::Memory (const std::string& lang)
 	_kernelROM			= subset (_KERNELROM_SUBSET);
 	_kernelRAM			= subset (_KERNELRAM_SUBSET);
 	_charROM			= subset (_CHARROM_SUBSET);
+	_charRAM			= subset (_CHARRAM_SUBSET);
 	_vicIIRegisters		= subset (COMMODORE::VICIIRegisters::_VICREGS_SUBSET);
 	_sidRegisters		= subset (COMMODORE::SIDRegisters::_SIDREGS_SUBSET);
 	_colorRAM			= subset (_COLOR_SUBSET);
@@ -111,13 +113,16 @@ void C64::Memory::configureMemoryStructure (bool BASIC, bool KERNEL, bool CHARRO
 	_kernelRAM			-> setActiveForReading (!ROMH2 && !KERNEL);
 
 	_charROM			-> setActiveForReading (CHARROM);
-	_vicIIRegisters		-> setActiveForReading (!CHARROM);
-	_sidRegisters		-> setActiveForReading (!CHARROM);
-	_colorRAM			-> setActiveForReading (!CHARROM);
-	_cia1Registers		-> setActiveForReading (!CHARROM);
-	_cia2registers		-> setActiveForReading (!CHARROM);
-	_io1Registers		-> setActiveForReading (!CHARROM);
-	_io2registers		-> setActiveForReading (!CHARROM);
+	_charRAM			-> setActive (CHARROM);  // Either RAM active...
+	_vicIIRegisters		-> setActive (!CHARROM); // ..or IO active
+	_sidRegisters		-> setActive (!CHARROM);
+	_colorRAM			-> setActive (!CHARROM);
+	_cia1Registers		-> setActive (!CHARROM);
+	_cia2registers		-> setActive (!CHARROM);
+	_io1Registers		-> setActive (!CHARROM);
+	_io2registers		-> setActive (!CHARROM);
+	// ...and when RAM active, never for reading...just for writting...
+	_charRAM			-> setActiveForReading (!CHARROM);
 
 	if (_cartridge != nullptr)
 		_cartridge -> configureMemoryStructure (ROML, ROMH1, ROMH2);
@@ -176,6 +181,8 @@ MCHEmul::Memory::Content C64::Memory::standardMemoryContent ()
 	// Where the CharROM is defined we have also the access to the chips (VIC, SID,...)
 	MCHEmul::PhysicalStorageSubset* CharROM = new MCHEmul::PhysicalStorageSubset
 		(_CHARROM_SUBSET, CHARROM, 0x0000, MCHEmul::Address ({ 0x00, 0xd0 }, false), 0x1000);
+	MCHEmul::PhysicalStorageSubset* CharRAM = new MCHEmul::PhysicalStorageSubset
+		(_CHARRAM_SUBSET, RAM, 0xd000, MCHEmul::Address ({ 0x00, 0xd0 }, false), 0x1000);				// 4k behing the char ROM (initially desactivated)...
 	MCHEmul::PhysicalStorageSubset* VICIIRegisters = new COMMODORE::VICIIRegisters 
 		(/** id = C64::VICIIRegisters::_VICREGS_SUBSET */ RAM, 0xd000, MCHEmul::Address ({ 0x00, 0xd0 }, false), 0x0400);
 	MCHEmul::PhysicalStorageSubset* SIDRegisters = new COMMODORE::SIDRegisters 
@@ -208,6 +215,7 @@ MCHEmul::Memory::Content C64::Memory::standardMemoryContent ()
 			{ _BASICRAM_SUBSET,										BasicRAM }, 
 			{ _RAM1_SUBSET,											RAM1 }, 
 			{ _CHARROM_SUBSET,										CharROM }, 
+			{ _CHARRAM_SUBSET,										CharRAM }, 
 			{ COMMODORE::VICIIRegisters::_VICREGS_SUBSET,			VICIIRegisters }, 
 			{ COMMODORE::SIDRegisters::_SIDREGS_SUBSET,				SIDRegisters }, 
 			{ _COLOR_SUBSET,										ColorRAM }, 
@@ -257,32 +265,33 @@ MCHEmul::Memory::Content C64::Memory::standardMemoryContent ()
 	// A map with all the subsets possible...
 	MCHEmul::PhysicalStorageSubsets allsubsets (
 		{
-			{ C64::IO6510Registers::_IO6510REGISTERS_SUBSET,	IO6510}, 
-			{ _PAGEZERO_SUBSET,									PageZero }, 
-			{ _STACK_SUBSET,									Stack }, 
-			{ _RAM00_SUBSET,									RAM00 }, 
-			{ _RAM01_SUBSET,									RAM01 }, 
-			{ _BASICROM_SUBSET,									BasicROM }, 
-			{ _BASICRAM_SUBSET,									BasicRAM }, 
-			{ _RAM1_SUBSET,										RAM1 }, 
-			{ _CHARROM_SUBSET,									CharROM }, 
-			{ COMMODORE::VICIIRegisters::_VICREGS_SUBSET,		VICIIRegisters }, 
-			{ COMMODORE::SIDRegisters::_SIDREGS_SUBSET,			SIDRegisters }, 
-			{ _COLOR_SUBSET,									ColorRAM }, 
-			{ C64::CIA1Registers::_CIA1_SUBSET,					CIA1 }, 
-			{ C64::CIA2Registers::_CIA2_SUBSET,					CIA2 }, 
-			{ C64::IOExpansionMemoryI::_IO1_SUBSET,				IO1}, 
-			{ C64::IOExpansionMemoryII::_IO2_SUBSET,			IO2}, 
-			{ _KERNELROM_SUBSET,								KernelROM }, 
-			{ _KERNELRAM_SUBSET,								KernelRAM },
-			{ _BANK0RAM0_SUBSET,								Bank0RAM0 },
-			{ _BANK0CHARROM_SUBSET,								Bank0CharROM},
-			{ _BANK0RAM1_SUBSET,								Bank0RAM1 },
-			{ _BANK1RAM_SUBSET,									Bank1RAM },
-			{ _BANK2RAM0_SUBSET,								Bank2RAM0 },
-			{ _BANK2CHARROM_SUBSET,								Bank2CharROM},
-			{ _BANK2RAM1_SUBSET,								Bank2RAM1 },
-			{ _BANK3RAM_SUBSET,									Bank3RAM }
+			{ C64::IO6510Registers::_IO6510REGISTERS_SUBSET,		IO6510}, 
+			{ _PAGEZERO_SUBSET,										PageZero }, 
+			{ _STACK_SUBSET,										Stack }, 
+			{ _RAM00_SUBSET,										RAM00 }, 
+			{ _RAM01_SUBSET,										RAM01 }, 
+			{ _BASICROM_SUBSET,										BasicROM }, 
+			{ _BASICRAM_SUBSET,										BasicRAM }, 
+			{ _RAM1_SUBSET,											RAM1 }, 
+			{ _CHARROM_SUBSET,										CharROM }, 
+			{ _CHARRAM_SUBSET,										CharRAM }, 
+			{ COMMODORE::VICIIRegisters::_VICREGS_SUBSET,			VICIIRegisters }, 
+			{ COMMODORE::SIDRegisters::_SIDREGS_SUBSET,				SIDRegisters }, 
+			{ _COLOR_SUBSET,										ColorRAM }, 
+			{ C64::CIA1Registers::_CIA1_SUBSET,						CIA1 }, 
+			{ C64::CIA2Registers::_CIA2_SUBSET,						CIA2 }, 
+			{ C64::IOExpansionMemoryI::_IO1_SUBSET,					IO1}, 
+			{ C64::IOExpansionMemoryII::_IO2_SUBSET,				IO2}, 
+			{ _KERNELROM_SUBSET,									KernelROM }, 
+			{ _KERNELRAM_SUBSET,									KernelRAM },
+			{ _BANK0RAM0_SUBSET,									Bank0RAM0 },
+			{ _BANK0CHARROM_SUBSET,									Bank0CharROM},
+			{ _BANK0RAM1_SUBSET,									Bank0RAM1 },
+			{ _BANK1RAM_SUBSET,										Bank1RAM },
+			{ _BANK2RAM0_SUBSET,									Bank2RAM0 },
+			{ _BANK2CHARROM_SUBSET,									Bank2CharROM},
+			{ _BANK2RAM1_SUBSET,									Bank2RAM1 },
+			{ _BANK3RAM_SUBSET,										Bank3RAM }
 		});
 
 	// Then the views...

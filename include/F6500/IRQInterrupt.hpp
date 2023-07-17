@@ -39,7 +39,7 @@ namespace F6500
 		private:
 		/** Only when the status flag B allows it. It is a Maskarable Interrupt. */
 		virtual bool isTime (MCHEmul::CPU* c) const override; 
-		virtual bool executeOverImpl (MCHEmul::CPU* c, unsigned int& nC) override;
+		virtual bool executeOverImpl (MCHEmul::CPU* c, unsigned int& nC, unsigned int &nCR) override;
 
 		private:
 		// Implementation

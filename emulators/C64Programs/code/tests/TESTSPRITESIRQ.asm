@@ -31,9 +31,9 @@ IRQPRG1_ACTSPRITES:			lda VICIIIRQ
 							and #$01
 							beq IRQPRG1_EXIT
 							jsr ACTUALIZESPRITES
-IRQPRG1_EXIT:				lda #$ff							; Meaning the VICII IRQs are treated 
+							lda #$ff							; Meaning the VICII IRQs are treated 
 							sta VICIIIRQ						; and another different one might come later...
-							.RECOVERREGISTERS
+IRQPRG1_EXIT:				.RECOVERREGISTERS
 							rti
 
 * = $caa0
@@ -117,7 +117,7 @@ DRAWLETTERS:				lda #$01
 							sta $01								; This shouldn't be done, but it just for testing purposes!
 							
 ; Sets the VICII IRQ also for collisions...
-							lda #z00000001						; The collisiones among sprites and among data and sprites will also be detected at IRQ
+							lda #z00000011						; The collisiones among sprites and among data and sprites will also be detected at IRQ
 							sta VICIICTRLIRQ
 
 ; Sets the IRQ vector. The raster line has to be defined...

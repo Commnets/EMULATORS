@@ -40,7 +40,7 @@ namespace F6500
 		/** Always. It is a Non Maskarable Interrupt. */
 		virtual bool isTime (MCHEmul::CPU* c) const override 
 							{return (true); } 
-		virtual bool executeOverImpl (MCHEmul::CPU* c, unsigned int& nC) override;
+		virtual bool executeOverImpl (MCHEmul::CPU* c, unsigned int& nC, unsigned int& nCR) override;
 
 		private:
 		// Implementation

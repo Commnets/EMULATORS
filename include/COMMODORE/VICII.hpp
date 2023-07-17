@@ -89,7 +89,10 @@ namespace COMMODORE
 			In this case sprite and graphical info is taken into account to determine collisions. */
 		virtual bool simulate (MCHEmul::CPU* cpu) override;
 		bool simulate_OLD (MCHEmul::CPU* cpu);
+		/** This simulation method takes into account that 
+			the CPU stops when reading graphics/bitmaps/sprites info. */
 		bool simulate_NEW (MCHEmul::CPU* cpu);
+		/** Asscoiated with similate_NEW. */
 		unsigned int simulate_BEFOREVISIBLEZONE (MCHEmul::CPU* cpu);
 		unsigned int simulate_VISIBLEZONE (MCHEmul::CPU* cpu);
 		unsigned int simulate_AFTERVISIBLEZONE (MCHEmul::CPU* cpu);

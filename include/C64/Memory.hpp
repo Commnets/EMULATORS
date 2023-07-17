@@ -42,7 +42,8 @@ namespace C64
 		static const int _BASICRAM_SUBSET		= 105;
 		static const int _RAM1_SUBSET			= 106;
 		static const int _CHARROM_SUBSET		= 107;
-		static const int _COLOR_SUBSET			= 108;
+		static const int _CHARRAM_SUBSET		= 108;
+		static const int _COLOR_SUBSET			= 109;
 		static const int _KERNELROM_SUBSET		= 112;
 		static const int _KERNELRAM_SUBSET		= 113;
 		/** The id for the registers VICII, SID, IO Expansion,... are defined in those. */
@@ -120,6 +121,7 @@ namespace C64
 		MCHEmul::PhysicalStorageSubset* _kernelROM;
 		MCHEmul::PhysicalStorageSubset* _kernelRAM;
 		MCHEmul::PhysicalStorageSubset* _charROM;
+		MCHEmul::PhysicalStorageSubset* _charRAM;
 		MCHEmul::PhysicalStorageSubset* _vicIIRegisters;
 		MCHEmul::PhysicalStorageSubset* _sidRegisters;
 		MCHEmul::PhysicalStorageSubset* _colorRAM;

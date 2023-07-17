@@ -77,6 +77,7 @@ bool COMMODORE::VICII::initialize ()
 	
 	_cycleInRasterLine = 1;
 	_stopCPUCycles = 0;
+	_sprites4to8 = _sprites1to3 = false;
 
 	_videoActive = true;
 

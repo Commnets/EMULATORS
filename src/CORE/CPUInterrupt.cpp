@@ -57,7 +57,7 @@ void MCHEmul::CPUInterrupt::setInExecution (bool i)
 }
 
 // ---
-bool MCHEmul::CPUInterrupt::executeOver (MCHEmul::CPU* c, unsigned int& nC)
+bool MCHEmul::CPUInterrupt::executeOver (MCHEmul::CPU* c, unsigned int& nC, unsigned int &nCR)
 {
 	assert (c != nullptr);
 
@@ -73,7 +73,7 @@ bool MCHEmul::CPUInterrupt::executeOver (MCHEmul::CPU* c, unsigned int& nC)
 
 			_lastClockCyclesExecuted = c -> clockCycles ();
 
-			result = executeOverImpl (c, nC);
+			result = executeOverImpl (c, nC, nCR);
 
 			// The sentence (dependen of the CPU instruction set)
 			// finishing the execution of the interruption will invoke setInExecution (false)

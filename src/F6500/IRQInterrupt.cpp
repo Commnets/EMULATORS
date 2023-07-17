@@ -8,7 +8,7 @@ bool F6500::IRQInterrupt::isTime (MCHEmul::CPU* c) const
 }
 
 // ---
-bool F6500::IRQInterrupt::executeOverImpl (MCHEmul::CPU* c, unsigned int& nC)
+bool F6500::IRQInterrupt::executeOverImpl (MCHEmul::CPU* c, unsigned int& nC, unsigned int& nCR)
 {
 	assert (c != nullptr);
 	assert (c -> memoryRef () != nullptr);
@@ -24,6 +24,7 @@ bool F6500::IRQInterrupt::executeOverImpl (MCHEmul::CPU* c, unsigned int& nC)
 		(dynamic_cast <F6500::C6510*> (c) -> IRQVectorAddress (), 2), false /** Little - endian. */));
 
 	nC = 7; // 7 ticks has taken...
+	nCR = 4; // 4 of which where on reading activities...
 
 	return (!c -> memoryRef () -> stack () -> overflow ());
 }

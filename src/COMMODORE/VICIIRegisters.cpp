@@ -410,14 +410,11 @@ const MCHEmul::UByte& COMMODORE::VICIIRegisters::readValue (size_t p) const
 		case 0x19:
 			{
 				result = MCHEmul::UByte::_FF; 
-				result.setBit (7, _rasterIRQHappened || 
-								  _spriteCollisionWithDataIRQHappened ||
-								  _spriteCollisionsIRQHappened ||
-								  _lightPenIRQHappened);
-				result.setBit (0, _rasterIRQHappened);
-				result.setBit (1, _spriteCollisionWithDataIRQHappened);
-				result.setBit (2, _spriteCollisionsIRQHappened);
-				result.setBit (3, _lightPenIRQHappened);
+				result.setBit (7, launchIRQ ());
+				result.setBit (0, (_rasterIRQHappened && _rasterIRQActive));
+				result.setBit (1, (_spriteCollisionWithDataIRQHappened && _spriteCollisionWithDataIRQActive));
+				result.setBit (2, (_spriteCollisionsIRQHappened && _spriteCollisionsIRQActive));
+				result.setBit (3, (_lightPenIRQHappened && _lightPenIRQActive));
 				/** bits 4, 5, and 6 are not used, and always to 1. */
 			}
 

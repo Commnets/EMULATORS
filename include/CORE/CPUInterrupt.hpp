@@ -68,10 +68,10 @@ namespace MCHEmul
 							{ _active = false; _lastClockCyclesExecuted = 0; }
 
 		/** Receive the CPU the interrupts works for. \n
-			It receives also a reference to a variable where to load the number of cycles it 
-			took the execution (when the return was ok). \n
+			It receives also a reference to a variable where to load the number of cycles that
+			the execution tooks (when the return was ok), both total and reading cycles. \n
 			It returns true if ok and false if not. */
-		bool executeOver (CPU* c, unsigned int& nC);
+		bool executeOver (CPU* c, unsigned int& nC, unsigned int& nCR);
 
 		/**
 		  *	The name of the fields are: \n
@@ -100,7 +100,7 @@ namespace MCHEmul
 		/** To really execute the interrupt. \n 
 			This must be overloaded by the real interrupt. \n
 			Returns when everything ok. */
-		virtual bool executeOverImpl (CPU* c, unsigned int& nC) = 0;
+		virtual bool executeOverImpl (CPU* c, unsigned int& nC, unsigned int& nCR) = 0;
 
 		protected:
 		int _id;
