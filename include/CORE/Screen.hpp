@@ -108,7 +108,10 @@ namespace MCHEmul
 		GraphicalChip* _graphicalChip;
 		SDL_Window* _window;
 		SDL_Renderer* _renderer;
+		/** The texture where the draw happens. */
 		SDL_Texture* _texture;
+		/** A texture created and initialized at construction time just to similñate the CRT effect. */
+		SDL_Texture* _CRTTextureEffect;
 		/** To indicate that the graphics at chip level are ready
 			and the screen can be actualized. */
 		bool _graphicsReady;

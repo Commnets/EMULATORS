@@ -10,7 +10,7 @@ MCHEmul::Screen::Screen (const std::string& n, int id,
 	  _screenColumns (sc), _screenRows (sr), _visibilityFactor (vF), 
 	  _hertzs (hz), _clock ((unsigned int) hz /** integer. */),
 	  _graphicalChip (nullptr),
-	  _window (nullptr), _renderer (nullptr), _texture (nullptr),
+	  _window (nullptr), _renderer (nullptr), _texture (nullptr), _CRTTextureEffect (nullptr),
 	  _graphicsReady (false)
 {
 	assert (_hertzs > 0);
@@ -34,7 +34,20 @@ MCHEmul::Screen::Screen (const std::string& n, int id,
 
 	// The texture drawn in the render zone...
 	_texture  = SDL_CreateTexture
-		(_renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, _screenColumns, _screenRows);
+		(_renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, 
+			(int) _screenColumns, (int) _screenRows);
+	SDL_SetTextureBlendMode (_texture, SDL_BLENDMODE_BLEND);
+
+	// The CRT texture that created to create a CRT effect is needed...
+	_CRTTextureEffect = SDL_CreateTexture
+		(_renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, 
+			(int) _screenColumns, (int) _screenRows);
+	SDL_SetRenderTarget (_renderer, _CRTTextureEffect);
+	SDL_SetRenderDrawColor (_renderer, 0, 0, 0, 255);
+	for (int i = 0; i < (int) _screenRows; i += 3)
+		SDL_RenderDrawLine (_renderer, 0, i, (int) _screenColumns, i);
+	SDL_SetRenderTarget (_renderer, nullptr);
+	SDL_SetTextureBlendMode (_CRTTextureEffect, SDL_BLENDMODE_BLEND);
 
 	setClassName ("Screen");
 }
@@ -44,6 +57,7 @@ MCHEmul::Screen::~Screen ()
 {
 	SDL_DestroyRenderer (_renderer);
 	SDL_DestroyTexture (_texture);
+	SDL_DestroyTexture (_CRTTextureEffect);
 }
 
 // ---
