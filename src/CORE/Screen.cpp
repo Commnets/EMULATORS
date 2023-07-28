@@ -6,6 +6,7 @@ MCHEmul::Screen::Screen (const std::string& n, int id,
 		unsigned int sc, unsigned int sr, unsigned int vF, double hz,
 		const Attributes& attrs)
 	: MCHEmul::IODevice (MCHEmul::IODevice::Type::_OUTPUT, id, attrs),
+	  _CRTActive (false), // It is not active by default...
 	  _screenName (n), 
 	  _screenColumns (sc), _screenRows (sr), _visibilityFactor (vF), 
 	  _hertzs (hz), _clock ((unsigned int) hz /** integer. */),
@@ -27,27 +28,23 @@ MCHEmul::Screen::Screen (const std::string& n, int id,
 
 	// The render...
 	_renderer = SDL_CreateRenderer (_window, -1, SDL_RENDERER_ACCELERATED);
-	// The background is black...
-	SDL_SetRenderDrawColor (_renderer, 0, 0, 0, 255);
 	// Just to maintain always the aspect ratio even when the size of the output window is changed...
 	SDL_RenderSetLogicalSize (_renderer, _screenColumns, _screenRows);
 
 	// The texture drawn in the render zone...
 	_texture  = SDL_CreateTexture
-		(_renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, 
-			(int) _screenColumns, (int) _screenRows);
+		(_renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, (int) _screenColumns, (int) _screenRows);
 	SDL_SetTextureBlendMode (_texture, SDL_BLENDMODE_BLEND);
 
-	// The CRT texture that created to create a CRT effect is needed...
+	// The CRT texture to create a CRT effect if needed...
 	_CRTTextureEffect = SDL_CreateTexture
-		(_renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, 
-			(int) _screenColumns, (int) _screenRows);
+		(_renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, (int) _screenColumns, (int) _screenRows);
 	SDL_SetRenderTarget (_renderer, _CRTTextureEffect);
-	SDL_SetRenderDrawColor (_renderer, 0, 0, 0, 255);
+	SDL_SetRenderDrawColor (_renderer, 50, 50, 50, 255);
 	for (int i = 0; i < (int) _screenRows; i += 3)
 		SDL_RenderDrawLine (_renderer, 0, i, (int) _screenColumns, i);
+	SDL_SetTextureBlendMode (_CRTTextureEffect, SDL_BLENDMODE_ADD);
 	SDL_SetRenderTarget (_renderer, nullptr);
-	SDL_SetTextureBlendMode (_CRTTextureEffect, SDL_BLENDMODE_BLEND);
 
 	setClassName ("Screen");
 }
@@ -56,6 +53,7 @@ MCHEmul::Screen::Screen (const std::string& n, int id,
 MCHEmul::Screen::~Screen ()
 {
 	SDL_DestroyRenderer (_renderer);
+
 	SDL_DestroyTexture (_texture);
 	SDL_DestroyTexture (_CRTTextureEffect);
 }
@@ -77,6 +75,8 @@ bool MCHEmul::Screen::initialize ()
 {
 	_graphicsReady = false;
 
+	_clock.start ();
+
 	return (MCHEmul::IODevice::initialize ());
 }
 
@@ -97,13 +97,20 @@ bool MCHEmul::Screen::simulate (MCHEmul::CPU* cpu)
 		so they are ready to be pull out to the screen. */
 	if (_graphicsReady)
 	{
+		// At this point the screen memory has the "computer screen" drawn
+		// it is needed to move to the real screen later using the raster...
+		// Additional things could be drawn on top of the "computer screen"...
 		drawAdditional ();
-
+		// That "computer screen" is then moved to the texture 
+		// that will be moved into the screen eventually...
 		SDL_UpdateTexture (_texture, nullptr, 
 			_graphicalChip -> screenMemory () -> frameData (), 
 			(int) _graphicalChip -> screenMemory () -> columns () * sizeof (unsigned int)); // The link with the chip...
-		SDL_RenderClear (_renderer);
+
+		// Time to render...
 		SDL_RenderCopy (_renderer, _texture, nullptr, nullptr);
+		if (_CRTActive) // With effect if any...
+			SDL_RenderCopy (_renderer, _CRTTextureEffect, nullptr, nullptr);
 		SDL_RenderPresent (_renderer);
 
 		_graphicsReady = false;

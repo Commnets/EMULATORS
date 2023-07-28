@@ -823,6 +823,46 @@ namespace MCHEmul
 		private:
 		virtual void executeImpl (CommandExecuter* cE, Computer* c, InfoStructure& rst) override;
 	};
+
+	/** To activate the CRT effect. \n
+		No parameters are needed. */
+	class CRTEffectOnCommand final : public Command
+	{
+		public:
+		static const int _ID = 36;
+		static const std::string _NAME;
+
+		CRTEffectOnCommand ()
+			: Command (_ID, _NAME)
+							{ }
+
+		/** No parameters are needed. */
+		virtual bool canBeExecuted () const override
+							{ return (_parameters.size () == 0); }
+
+		private:
+		virtual void executeImpl (CommandExecuter* cE, Computer* c, InfoStructure& rst) override;
+	};
+
+	/** To desactivate the CRT effect. \n
+		No parameters are needed. */
+	class CRTEffectOffCommand final : public Command
+	{
+		public:
+		static const int _ID = 37;
+		static const std::string _NAME;
+
+		CRTEffectOffCommand ()
+			: Command (_ID, _NAME)
+							{ }
+
+		/** No parameters are needed. */
+		virtual bool canBeExecuted () const override
+							{ return (_parameters.size () == 0); }
+
+		private:
+		virtual void executeImpl (CommandExecuter* cE, Computer* c, InfoStructure& rst) override;
+	};
 }
 
 #endif

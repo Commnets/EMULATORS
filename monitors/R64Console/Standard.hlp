@@ -106,6 +106,12 @@ No parameters are needed.
 ;SOUNDOFF
 To desactivate the sound.
 No parameters are needed.
+;CRTON
+To activate the CRT Effect in the screen.
+No parameters are needed.
+;CRTOFF
+To desactivate the CRT Effect in the screen.
+No parameters are needed.
 ;STOP
 To stop the cpu.
 No parameters are needed.

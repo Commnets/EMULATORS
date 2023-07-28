@@ -290,6 +290,12 @@ Program saved=@RESULT@
 ;CSOUNDOFF
 #---
 #---
+;CCRTON
+#---
+#---
+;CCRTOFF
+#---
+#---
 ;CANSWER
 @RESULT@
 #---

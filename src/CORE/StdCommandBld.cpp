@@ -82,6 +82,10 @@ MCHEmul::Command* MCHEmul::StandardCommandBuilder::createEmptyCommand (const std
 		result = new MCHEmul::InterruptDebugOffCommand;
 	else if (cmdName == "CHIPS" || cmdName == MCHEmul::ChipsListCommand::_NAME)
 		result = new MCHEmul::ChipsListCommand;
+	else if (cmdName == "CRTON" || cmdName == MCHEmul::CRTEffectOnCommand::_NAME)
+		result = new MCHEmul::CRTEffectOnCommand;
+	else if (cmdName == "CRTOFF" || cmdName == MCHEmul::CRTEffectOffCommand::_NAME)
+		result = new MCHEmul::CRTEffectOffCommand;
 	else if (cmdName == MCHEmul::MoveParametersToAnswerCommand::_NAME)
 		result = new MCHEmul::MoveParametersToAnswerCommand;
 

@@ -46,6 +46,8 @@ const std::string MCHEmul::InterruptsCommand::_NAME = "CINTERRUPTS";
 const std::string MCHEmul::InterruptDebugOnCommand::_NAME = "CIDEBUGON";
 const std::string MCHEmul::InterruptDebugOffCommand::_NAME = "CIDEBUGOFF";
 const std::string MCHEmul::ChipsListCommand::_NAME = "CCHIPS";
+const std::string MCHEmul::CRTEffectOnCommand::_NAME = "CCRTON";
+const std::string MCHEmul::CRTEffectOffCommand::_NAME = "CCRTOFF";
 
 // ---
 MCHEmul::HelpCommand::HelpCommand (const std::string& hF)
@@ -717,4 +719,24 @@ void MCHEmul::ChipsListCommand::executeImpl
 	for (const auto& i : c -> chips ())
 		ch.add (std::to_string (i.second -> id ()), std::move (attrToStr (i.second -> attributes ())));
 	rst.add ("CHIPS", std::move (ch));
+}
+
+// ---
+void MCHEmul::CRTEffectOnCommand::executeImpl
+	(MCHEmul::CommandExecuter* cE, MCHEmul::Computer* c, InfoStructure& rst)
+{
+	if (c == nullptr)
+		return;
+
+	c -> screen () -> setCRTEffect (true);
+}
+
+// ---
+void MCHEmul::CRTEffectOffCommand::executeImpl
+	(MCHEmul::CommandExecuter* cE, MCHEmul::Computer* c, InfoStructure& rst)
+{
+	if (c == nullptr)
+		return;
+
+	c -> screen () -> setCRTEffect (false);
 }

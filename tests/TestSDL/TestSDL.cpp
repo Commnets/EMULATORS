@@ -1,6 +1,7 @@
 #include "stdafx.h"
 
 #include <SDL.h>
+#include <SDL_image.h>
 #include <iostream>
 
 #define FREQUENCY 44100
@@ -91,7 +92,6 @@ void _audio_callback (void* userdata, Uint8* stream, int len)
 	SDL_AudioCVT cvt;
 	SDL_memset (&cvt, 0, sizeof (cvt));
 	tC = SDL_BuildAudioCVT (&cvt, AUDIO_S8, 1, 44100, FORMAT, CHANNELS, FREQUENCY);
-//	tC = SDL_BuildAudioCVT (&cvt, AUDIO_S16, 1, 44100, FORMAT, CHANNELS, FREQUENCY);
 	if (tC < 0)
 	{ 
 		std::cout << SDL_GetError () << std::endl;
@@ -111,7 +111,7 @@ void _audio_callback (void* userdata, Uint8* stream, int len)
 	delete [](dC);
 }
 
-int _tmain (int argc, _TCHAR* argv [])
+void testAudio ()
 {
 	if (SDL_Init (SDL_INIT_EVERYTHING) != 0)
 	{ 
@@ -153,4 +153,153 @@ int _tmain (int argc, _TCHAR* argv [])
 	}
 
 	SDL_Quit ();
+}
+
+void testGraphics_I ()
+{
+	const int XSIZE = 800;
+	const int YSIZE = 627;
+
+	if (SDL_Init (SDL_INIT_EVERYTHING) != 0)
+	{ 
+		std::cout << SDL_GetError () << std::endl;
+
+		exit (1);
+	}
+
+	SDL_Window* window = SDL_CreateWindow ("Test", 
+		SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, XSIZE, YSIZE, SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
+	SDL_Renderer* renderer = SDL_CreateRenderer (window, -1, SDL_RENDERER_ACCELERATED);
+
+	SDL_Surface* surface = IMG_Load ("C64.jpg");
+	SDL_Texture* texture1 = SDL_CreateTextureFromSurface (renderer, surface);
+	// This blend mode will affect the way the texture 1 is blended with the texture 2...
+	SDL_SetTextureBlendMode (texture1, SDL_BLENDMODE_ADD);
+	SDL_FreeSurface (surface);
+
+	SDL_Texture* texture2 = SDL_CreateTexture 
+		(renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, XSIZE, YSIZE);
+	SDL_SetRenderTarget (renderer, texture2);
+	SDL_SetRenderDrawColor (renderer, 50, 50, 50, 255);
+	for (int i = 0; i < YSIZE; i += 3)
+		SDL_RenderDrawLine (renderer, 0, i, XSIZE, i);
+
+	// This blend mode will affect the way the texture 2 is blended with the window...
+	SDL_SetTextureBlendMode (texture2, SDL_BLENDMODE_ADD);
+	SDL_SetRenderTarget (renderer, nullptr);
+
+	SDL_RenderCopy (renderer, texture1, nullptr, nullptr);
+	SDL_RenderCopy (renderer, texture2, nullptr, nullptr);
+	SDL_RenderPresent (renderer);
+
+	bool e = false;
+	while (!e)
+	{
+		SDL_Event event;
+		while (SDL_PollEvent (&event))
+		{
+			switch (event.type)
+			{
+				case SDL_QUIT:
+					e = true;
+					break;
+
+				default:
+					break;
+			}
+		}
+	}
+
+	SDL_DestroyTexture (texture1);
+	SDL_DestroyTexture (texture2);
+	SDL_DestroyRenderer (renderer);
+
+	SDL_Quit ();
+}
+
+void testGraphics_II ()
+{
+	const int XSIZE = 800;
+	const int YSIZE = 627;
+
+	if (SDL_Init (SDL_INIT_EVERYTHING) != 0)
+	{ 
+		std::cout << SDL_GetError () << std::endl;
+
+		exit (1);
+	}
+
+	SDL_PixelFormat* format = SDL_AllocFormat (SDL_PIXELFORMAT_ARGB8888);
+	unsigned int cRed = SDL_MapRGBA (format, 0xff, 0x00, 0x00, 0xf0);
+	unsigned int cBlk = SDL_MapRGBA (format, 0x00, 0x00, 0x00, 0xf0);
+	unsigned int cWht = SDL_MapRGBA (format, 0xff, 0xff, 0xff, 0xf0);
+	unsigned int* frame = new unsigned int [YSIZE * XSIZE];
+	for (size_t i = 0; i < (YSIZE * XSIZE); frame [i++] = cWht);
+	for (size_t i = 0; i < YSIZE; i++)
+	{
+		frame [(i * XSIZE) + i] = cRed;
+		frame [((rand () % YSIZE) * XSIZE) + (rand () % XSIZE)] = cBlk;
+	}
+
+	SDL_Window* window = SDL_CreateWindow ("Test", 
+		SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, XSIZE, YSIZE, SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
+	SDL_Renderer* renderer = SDL_CreateRenderer (window, -1, SDL_RENDERER_ACCELERATED);
+
+	SDL_Texture* texture1 = SDL_CreateTexture 
+		(renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, XSIZE, YSIZE);
+	SDL_SetTextureBlendMode (texture1, SDL_BLENDMODE_ADD);
+	SDL_UpdateTexture (texture1, nullptr, (void*) frame, XSIZE * sizeof (unsigned int));
+
+	SDL_Texture* texture2 = SDL_CreateTexture 
+		(renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, XSIZE, YSIZE);
+	SDL_SetRenderTarget (renderer, texture2);
+	SDL_SetRenderDrawColor (renderer, 50, 50, 50, 255);
+	for (int i = 0; i < YSIZE; i += 5)
+	{
+		SDL_RenderDrawLine (renderer, 0, i, XSIZE, i);
+		SDL_RenderDrawLine (renderer, 0, i + 1, XSIZE, i + 1);
+		SDL_RenderDrawLine (renderer, 0, i + 2, XSIZE, i + 2);
+	}
+	SDL_SetTextureBlendMode (texture2, SDL_BLENDMODE_ADD);
+	SDL_SetRenderTarget (renderer, nullptr);
+
+	SDL_RenderCopy (renderer, texture1, nullptr, nullptr);
+	SDL_RenderCopy (renderer, texture2, nullptr, nullptr);
+	SDL_RenderPresent (renderer);
+
+	bool e = false;
+	while (!e)
+	{
+		SDL_Event event;
+		while (SDL_PollEvent (&event))
+		{
+			switch (event.type)
+			{
+				case SDL_QUIT:
+					e = true;
+					break;
+
+				default:
+					break;
+			}
+		}
+	}
+
+	SDL_DestroyTexture (texture1);
+	SDL_DestroyTexture (texture2);
+	SDL_DestroyRenderer (renderer);
+	SDL_FreeFormat (format);
+	delete [] frame;
+
+	SDL_Quit ();
+}
+
+// ---
+int _tmain (int argc, _TCHAR* argv [])
+{
+//	testAudio ();
+	
+//	testGraphics_I ();
+
+	testGraphics_II ();
 }

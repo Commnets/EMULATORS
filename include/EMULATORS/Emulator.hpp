@@ -35,6 +35,7 @@ namespace MCHEmul
 		static const unsigned char _PARAMLANGUAGE;
 		static const unsigned char _PARAMSOUND;
 		static const unsigned char _PARAMPERIPHERALS;
+		static const unsigned char _PARAMCRTEFFECT;
 
 		using MapOfActions = std::map <MCHEmul::Address, unsigned int>;
 
@@ -55,6 +56,7 @@ namespace MCHEmul
 		  * /p[PER1:dt,..]	: Connect the peripherals identified in the list separated by comma. \n
 		  * /r[ON|OFF]		: To activate or desactivate the sound when starting. By default it is activated.
 		  * /s				: When the execution must start stopped. \n
+		  * /e[ON|OFF]		: To activate or desactivate the CRT effect in the screen.
 		  * @param cs		: The communication system. It can be nullptr.
 		  * The emulation is able to load/understood three types of file: \n
 		  * 1.- The most classic one is an Assembler text file with instructions (@see assembler block for this). \n
@@ -161,6 +163,11 @@ namespace MCHEmul
 		bool soundAtStarting () const
 							{ return (_cmdlineArguments.existsArgument (_PARAMSOUND)
 									? _cmdlineArguments.argumentAsBool (_PARAMSOUND) : true); }
+
+		/** To activate or desactivate the CRT effect. */
+		bool CRTEffectAtStarting () const
+							{ return (_cmdlineArguments.existsArgument (_PARAMCRTEFFECT)
+									? _cmdlineArguments.argumentAsBool (_PARAMCRTEFFECT) : false); }
 
 		/** To know the list of the peripherals connected. */
 		std::vector <int> peripheralsConnected () const;

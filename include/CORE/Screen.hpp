@@ -42,6 +42,10 @@ namespace MCHEmul
 
 		virtual ~Screen () override;
 
+		/** Activate or desactivate the CRT mode. */
+		void setCRTEffect (bool a)
+							{ _CRTActive = a; }
+
 		virtual void linkToChips (const Chips& c) override;
 
 		/** The reference to the graphical chip. */
@@ -93,6 +97,7 @@ namespace MCHEmul
 							{ }
 
 		protected:
+		bool _CRTActive; // When CRT effect is visible...
 		const std::string _screenName;
 		const unsigned int _screenColumns;
 		const unsigned int _screenRows;
