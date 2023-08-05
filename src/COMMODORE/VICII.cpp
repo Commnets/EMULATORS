@@ -587,22 +587,23 @@ void COMMODORE::VICII::drawGraphicsSpritesAndDetectCollisions (unsigned short cv
 MCHEmul::ScreenMemory* COMMODORE::VICII::createScreenMemory ()
 {
 	unsigned int* cP = new unsigned int [16];
-	cP [0]  = SDL_MapRGB (_format, 0x00, 0x00, 0x00); // Black
-	cP [1]  = SDL_MapRGB (_format, 0xff, 0xff, 0xff); // White
-	cP [2]  = SDL_MapRGB (_format, 0x92, 0x4a, 0x40); // Red
-	cP [3]  = SDL_MapRGB (_format, 0x84, 0xc5, 0xcc); // Cyan
-	cP [4]  = SDL_MapRGB (_format, 0x93, 0x51, 0xb6); // Violet
-	cP [5]  = SDL_MapRGB (_format, 0x72, 0xb1, 0x4b); // Green
-	cP [6]  = SDL_MapRGB (_format, 0x48, 0x3a, 0xaa); // Blue
-	cP [7]  = SDL_MapRGB (_format, 0xd5, 0xdf, 0x7c); // Yellow
-	cP [8]  = SDL_MapRGB (_format, 0x99, 0x69, 0x2d); // Brown
-	cP [9]  = SDL_MapRGB (_format, 0x67, 0x52, 0x00); // Light Red
-	cP [10] = SDL_MapRGB (_format, 0xc1, 0x81, 0x78); // Orange
-	cP [11] = SDL_MapRGB (_format, 0x60, 0x60, 0x60); // Dark Grey
-	cP [12] = SDL_MapRGB (_format, 0x8a, 0x8a, 0x8a); // Medium Grey
-	cP [13] = SDL_MapRGB (_format, 0xb3, 0xec, 0x91); // Light Green
-	cP [14] = SDL_MapRGB (_format, 0x86, 0x7a, 0xde); // Light Blue
-	cP [15] = SDL_MapRGB (_format, 0xb3, 0xb3, 0xb3); // Light Grey
+	// The colors are partially transparents to allow the blending...
+	cP [0]  = SDL_MapRGBA (_format, 0x00, 0x00, 0x00, 0xc0); // Black
+	cP [1]  = SDL_MapRGBA (_format, 0xff, 0xff, 0xff, 0xc0); // White
+	cP [2]  = SDL_MapRGBA (_format, 0x92, 0x4a, 0x40, 0xc0); // Red
+	cP [3]  = SDL_MapRGBA (_format, 0x84, 0xc5, 0xcc, 0xc0); // Cyan
+	cP [4]  = SDL_MapRGBA (_format, 0x93, 0x51, 0xb6, 0xc0); // Violet
+	cP [5]  = SDL_MapRGBA (_format, 0x72, 0xb1, 0x4b, 0xc0); // Green
+	cP [6]  = SDL_MapRGBA (_format, 0x48, 0x3a, 0xaa, 0xc0); // Blue
+	cP [7]  = SDL_MapRGBA (_format, 0xd5, 0xdf, 0x7c, 0xc0); // Yellow
+	cP [8]  = SDL_MapRGBA (_format, 0x99, 0x69, 0x2d, 0xc0); // Brown
+	cP [9]  = SDL_MapRGBA (_format, 0x67, 0x52, 0x00, 0xc0); // Light Red
+	cP [10] = SDL_MapRGBA (_format, 0xc1, 0x81, 0x78, 0xc0); // Orange
+	cP [11] = SDL_MapRGBA (_format, 0x60, 0x60, 0x60, 0xc0); // Dark Grey
+	cP [12] = SDL_MapRGBA (_format, 0x8a, 0x8a, 0x8a, 0xc0); // Medium Grey
+	cP [13] = SDL_MapRGBA (_format, 0xb3, 0xec, 0x91, 0xc0); // Light Green
+	cP [14] = SDL_MapRGBA (_format, 0x86, 0x7a, 0xde, 0xc0); // Light Blue
+	cP [15] = SDL_MapRGBA (_format, 0xb3, 0xb3, 0xb3, 0xc0); // Light Grey
 
 	return (new MCHEmul::ScreenMemory (numberColumns (), numberRows (), cP));
 }

@@ -230,15 +230,17 @@ void testGraphics_II ()
 	}
 
 	SDL_PixelFormat* format = SDL_AllocFormat (SDL_PIXELFORMAT_ARGB8888);
-	unsigned int cRed = SDL_MapRGBA (format, 0xff, 0x00, 0x00, 0xf0);
-	unsigned int cBlk = SDL_MapRGBA (format, 0x00, 0x00, 0x00, 0xf0);
-	unsigned int cWht = SDL_MapRGBA (format, 0xff, 0xff, 0xff, 0xf0);
+	unsigned int cRed = SDL_MapRGBA (format, 0xff, 0x00, 0x00, 0xff);
+	unsigned int cBlk = SDL_MapRGBA (format, 0x00, 0x00, 0x00, 0xff);
+	unsigned int cWht = SDL_MapRGBA (format, 0xff, 0xff, 0xff, 0xff);
+	unsigned int cGry = SDL_MapRGBA (format, 0xa0, 0xa0, 0xa0, 0xff);
+
 	unsigned int* frame = new unsigned int [YSIZE * XSIZE];
-	for (size_t i = 0; i < (YSIZE * XSIZE); frame [i++] = cWht);
+	for (size_t i = 0; i < (YSIZE * XSIZE); frame [i++] = cBlk);
 	for (size_t i = 0; i < YSIZE; i++)
 	{
 		frame [(i * XSIZE) + i] = cRed;
-		frame [((rand () % YSIZE) * XSIZE) + (rand () % XSIZE)] = cBlk;
+		frame [((rand () % YSIZE) * XSIZE) + (rand () % XSIZE)] = cRed;
 	}
 
 	SDL_Window* window = SDL_CreateWindow ("Test", 
@@ -251,18 +253,18 @@ void testGraphics_II ()
 	SDL_UpdateTexture (texture1, nullptr, (void*) frame, XSIZE * sizeof (unsigned int));
 
 	SDL_Texture* texture2 = SDL_CreateTexture 
-		(renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, XSIZE, YSIZE);
+		(renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_TARGET, XSIZE, YSIZE);
 	SDL_SetRenderTarget (renderer, texture2);
-	SDL_SetRenderDrawColor (renderer, 50, 50, 50, 255);
+	SDL_SetRenderDrawColor (renderer, 0x00, 0x00, 0x00, 0x00);
+	SDL_RenderClear (renderer);
+	SDL_SetRenderDrawColor (renderer, 0xa0, 0xa0, 0xa0, 0xff);
 	for (int i = 0; i < YSIZE; i += 5)
-	{
 		SDL_RenderDrawLine (renderer, 0, i, XSIZE, i);
-		SDL_RenderDrawLine (renderer, 0, i + 1, XSIZE, i + 1);
-		SDL_RenderDrawLine (renderer, 0, i + 2, XSIZE, i + 2);
-	}
 	SDL_SetTextureBlendMode (texture2, SDL_BLENDMODE_ADD);
 	SDL_SetRenderTarget (renderer, nullptr);
 
+	SDL_SetRenderDrawColor (renderer, 0x00, 0x00, 0x00, 0x00);
+	SDL_RenderClear (renderer);
 	SDL_RenderCopy (renderer, texture1, nullptr, nullptr);
 	SDL_RenderCopy (renderer, texture2, nullptr, nullptr);
 	SDL_RenderPresent (renderer);

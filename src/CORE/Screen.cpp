@@ -11,7 +11,7 @@ MCHEmul::Screen::Screen (const std::string& n, int id,
 	  _screenColumns (sc), _screenRows (sr), _visibilityFactor (vF), 
 	  _hertzs (hz), _clock ((unsigned int) hz /** integer. */),
 	  _graphicalChip (nullptr),
-	  _window (nullptr), _renderer (nullptr), _texture (nullptr), _CRTTextureEffect (nullptr),
+	  _window (nullptr), _renderer (nullptr), _texture (nullptr),
 	  _graphicsReady (false)
 {
 	assert (_hertzs > 0);
@@ -36,16 +36,6 @@ MCHEmul::Screen::Screen (const std::string& n, int id,
 		(_renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, (int) _screenColumns, (int) _screenRows);
 	SDL_SetTextureBlendMode (_texture, SDL_BLENDMODE_BLEND);
 
-	// The CRT texture to create a CRT effect if needed...
-	_CRTTextureEffect = SDL_CreateTexture
-		(_renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, (int) _screenColumns, (int) _screenRows);
-	SDL_SetRenderTarget (_renderer, _CRTTextureEffect);
-	SDL_SetRenderDrawColor (_renderer, 50, 50, 50, 255);
-	for (int i = 0; i < (int) _screenRows; i += 3)
-		SDL_RenderDrawLine (_renderer, 0, i, (int) _screenColumns, i);
-	SDL_SetTextureBlendMode (_CRTTextureEffect, SDL_BLENDMODE_ADD);
-	SDL_SetRenderTarget (_renderer, nullptr);
-
 	setClassName ("Screen");
 }
 
@@ -55,7 +45,6 @@ MCHEmul::Screen::~Screen ()
 	SDL_DestroyRenderer (_renderer);
 
 	SDL_DestroyTexture (_texture);
-	SDL_DestroyTexture (_CRTTextureEffect);
 }
 
 // ---
@@ -108,9 +97,19 @@ bool MCHEmul::Screen::simulate (MCHEmul::CPU* cpu)
 			(int) _graphicalChip -> screenMemory () -> columns () * sizeof (unsigned int)); // The link with the chip...
 
 		// Time to render...
+		// First the background color (with Alpha in totally transparent to allow blending)
+		SDL_SetRenderDrawColor (_renderer, 0x00, 0x00, 0x00, 0x00);
+		SDL_RenderClear (_renderer);
+		// The effect is redered first f any...
+		if (_CRTActive)
+		{
+			SDL_SetRenderDrawColor (_renderer, 0x30, 0x30, 0x30, 0xc0);
+			for (int i = 0; i < (int) _screenRows; i += 2)
+				SDL_RenderDrawLine (_renderer, 0, i, (int) _screenColumns, i);
+		}
+		// ...and then the textur blended...
+		// The colors of the texture are partialy transparents....
 		SDL_RenderCopy (_renderer, _texture, nullptr, nullptr);
-		if (_CRTActive) // With effect if any...
-			SDL_RenderCopy (_renderer, _CRTTextureEffect, nullptr, nullptr);
 		SDL_RenderPresent (_renderer);
 
 		_graphicsReady = false;
