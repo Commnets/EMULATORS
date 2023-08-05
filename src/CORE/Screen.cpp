@@ -30,6 +30,10 @@ MCHEmul::Screen::Screen (const std::string& n, int id,
 	_renderer = SDL_CreateRenderer (_window, -1, SDL_RENDERER_ACCELERATED);
 	// Just to maintain always the aspect ratio even when the size of the output window is changed...
 	SDL_RenderSetLogicalSize (_renderer, _screenColumns, _screenRows);
+	// For the draw lines...
+	SDL_SetRenderDrawBlendMode (_renderer, SDL_BLENDMODE_BLEND);
+	// CRT effect...
+	SDL_SetHint (SDL_HINT_RENDER_SCALE_QUALITY, "1");
 
 	// The texture drawn in the render zone...
 	_texture  = SDL_CreateTexture
@@ -103,7 +107,7 @@ bool MCHEmul::Screen::simulate (MCHEmul::CPU* cpu)
 		// The effect is redered first f any...
 		if (_CRTActive)
 		{
-			SDL_SetRenderDrawColor (_renderer, 0x30, 0x30, 0x30, 0xc0);
+			SDL_SetRenderDrawColor (_renderer, 0x30, 0x30, 0x30, 0xe0);
 			for (int i = 0; i < (int) _screenRows; i += 2)
 				SDL_RenderDrawLine (_renderer, 0, i, (int) _screenColumns, i);
 		}
