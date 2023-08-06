@@ -32,8 +32,8 @@ MCHEmul::Screen::Screen (const std::string& n, int id,
 	SDL_RenderSetLogicalSize (_renderer, _screenColumns, _screenRows);
 	// For the draw lines...
 	SDL_SetRenderDrawBlendMode (_renderer, SDL_BLENDMODE_BLEND);
-	// CRT effect...
-	SDL_SetHint (SDL_HINT_RENDER_SCALE_QUALITY, "1");
+	// CRT effect... No blur by default...
+	SDL_SetHint (SDL_HINT_RENDER_SCALE_QUALITY, "nearest");
 
 	// The texture drawn in the render zone...
 	_texture  = SDL_CreateTexture
@@ -49,6 +49,22 @@ MCHEmul::Screen::~Screen ()
 	SDL_DestroyRenderer (_renderer);
 
 	SDL_DestroyTexture (_texture);
+}
+
+// ---
+void MCHEmul::Screen::setCRTEffect (bool a)
+{ 
+	_CRTActive = a;
+
+	SDL_SetHintWithPriority (SDL_HINT_RENDER_SCALE_QUALITY, 
+		_CRTActive ? "linear" : "nearest", SDL_HINT_OVERRIDE);
+	
+	// When the render system is changed
+	// The texture has to be recrestaed for the change to take place...
+	SDL_DestroyTexture (_texture);
+	_texture  = SDL_CreateTexture
+		(_renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, (int) _screenColumns, (int) _screenRows);
+	SDL_SetTextureBlendMode (_texture, SDL_BLENDMODE_BLEND);
 }
 
 // ---

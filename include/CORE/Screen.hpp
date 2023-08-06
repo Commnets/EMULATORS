@@ -43,8 +43,7 @@ namespace MCHEmul
 		virtual ~Screen () override;
 
 		/** Activate or desactivate the CRT mode. */
-		void setCRTEffect (bool a)
-							{ _CRTActive = a; }
+		void setCRTEffect (bool a);
 
 		virtual void linkToChips (const Chips& c) override;
 
