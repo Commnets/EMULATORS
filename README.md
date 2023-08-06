@@ -15,12 +15,9 @@ The implementation of the SID chip has been based on the resid libry found at:
 To compile the framework the <a href="https://github.com/libsdl-org/SDL/releases/tag/release-2.26.2">SDL Core</a>, <a href="https://www.libsdl.org/projects/SDL_image/release/">SDL image</a>, <a href="https://github.com/libsdl-org/SDL_mixer">SDL Mixer</a> and <a href="https://github.com/facebookarchive/RakNet">Raknet</a> libraries are necessary.
 Download them, install them and set the environmental variables: <b>SDL_HOME</b>, <b>SDL_IMAGEHOME</b>, <b>SDL_MIXERHOME</b>, <b>RAKNET_HOME</b>
 <br><br>
-<img src="./docs/C64Data/Picture1.png"/>
+<img src="./docs/C64Data/Picture1.png"/> 
 
-
-
-https://user-images.githubusercontent.com/5286165/230734318-87df150c-da9e-4961-bb81-9f970615e0cf.mp4
-
+https://github.com/Commnets/EMULATORS/assets/5286165/20ed0a48-3744-45fd-8665-de1879c963ae
 
 <br>
 It has been an intention to emulate the location of the keys as they are inthe original keyboard.<br>
