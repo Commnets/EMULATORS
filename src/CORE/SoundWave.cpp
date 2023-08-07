@@ -59,7 +59,7 @@ double MCHEmul::SawSmoothSoundWave::data () const
 		return (0.0f); // No data...
 
 	return (MCHEmul::linearInterpolation 
-		(0, 0, (double) _cyclesPerWave, 1.0f, (double) _counterInCyclesPerWave));
+		(0.0f, 0.0f, (double) _cyclesPerWave, 1.0f, (double) _counterInCyclesPerWave));
 }
 
 // ---
@@ -172,7 +172,7 @@ double MCHEmul::NoiseSoundWave::data () const
 		return (0.0f); // No active...
 
 	if (_cyclesPerWave == 0)
-		return (0.0); // No data...
+		return (0.0f); // No data...
 
 	return ((double) (std::rand () % 1000) / 1000.0f);
 }

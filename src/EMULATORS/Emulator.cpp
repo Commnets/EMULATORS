@@ -13,7 +13,7 @@ const unsigned char MCHEmul::Emulator::_PARAMSTOP = 's';
 const unsigned char MCHEmul::Emulator::_PARAMLANGUAGE = 'i';
 const unsigned char MCHEmul::Emulator::_PARAMSOUND = 'r';
 const unsigned char MCHEmul::Emulator::_PARAMPERIPHERALS = 'p';
-const unsigned char MCHEmul::Emulator::_PARAMCRTEFFECT = 'w';
+const unsigned char MCHEmul::Emulator::_PARAMCRTEFFECT = 'g';
 
 // ---
 MCHEmul::Emulator::Emulator (const MCHEmul::CommandLineArguments& args, MCHEmul::CommunicationSystem* cS)
@@ -73,7 +73,7 @@ void MCHEmul::Emulator::printOutParameters (std::ostream& o) const
 	o << "/r[YES/NO]:\t" << "To activate or desactivate the sound when started. ON if no parameter" << std::endl; 
 	o << "\t\tBy default it is activated" << std::endl;
 	o << "/s:\t\t" << "Start the emulation stopped" << std::endl;
-	o << "/w[YES/NO]:\t" << "To activate or desactivate the CRT effect in the screen. OFF if no parameter" << std::endl;
+	o << "/g[YES/NO]:\t" << "To activate or desactivate the CRT effect in the screen. OFF if no parameter" << std::endl;
 }
 
 // ---

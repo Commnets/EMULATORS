@@ -93,11 +93,12 @@ const unsigned char COMMODORE::SoundSimpleWrapper::Voice::_PULSESAWTRIWAVE_6581 
 // ---
 bool COMMODORE::SoundRESIDWrapper::getData (MCHEmul::CPU* cpu, MCHEmul::UBytes& dt)
 {
-	_resid_sid.clock ();
-
-	// Always a positive number between 0 and 255...
-	dt = MCHEmul::UBytes ({ (unsigned char) 
-		((double) _resid_sid.output () / 256.0f - (double) std::numeric_limits <char>::min ()) });
+	// Maximum 1 element...
+	RESID::cycle_count nC = 1;
+	// A minumum buffer (it could be even shorter!)
+	short buffer [4];
+	if (_resid_sid.clock (nC, buffer, 1) != 0) // When element ready...
+		dt = MCHEmul::UBytes ({ (unsigned char) ((int (*buffer) / 256) + 128) }); // ...they are transformed into a unsigned char...
 
 	return (true);
 }
