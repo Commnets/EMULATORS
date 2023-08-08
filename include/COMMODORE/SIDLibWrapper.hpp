@@ -91,6 +91,10 @@ namespace COMMODORE
 	class SoundSimpleWrapper final : public SIDLibWrapper
 	{
 		public:
+		static unsigned short _ATTACKTIMES [0x10];  // In milliseconds
+		static unsigned short _DECAYTIMES [0x10];   // In milliseconds
+		static unsigned short _RELEASETIMES [0x10]; // In milliseconds
+
 		/** 
 		  *	Constructor.
 		  *	@param cF	Chip frequency in clocks / second.
@@ -229,10 +233,6 @@ namespace COMMODORE
 		unsigned int _clocksPerSample;
 		/** Counter from 0 to _clockPerSample. */
 		unsigned int _counterClocksPerSample;
-
-		static unsigned short _ATTACKTIMES [0x10];  // In milliseconds
-		static unsigned short _DECAYTIMES [0x10];   // In milliseconds
-		static unsigned short _RELEASETIMES [0x10]; // In milliseconds
 	};
 }
 

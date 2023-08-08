@@ -110,10 +110,30 @@ MCHEmul::InfoStructure COMMODORE::SoundRESIDWrapper::getVoiceInfoStructure (unsi
 
 	RESID::SID::State st = (*(const_cast <RESID::SID*> (&_resid_sid))).read_state ();
 
-	for (unsigned char i = 0; i < 3; i++)
-	{
-		// TODO...
-	}
+	// All voices have the same structured info in the register...
+	size_t iP = nV * 7;
+	result.add ("CLASSNAME", std::string ("SIDVoice"));
+	result.add ("ID", nV);
+	result.add ("ACTIVE", (st.sid_register [iP + 4] & 0x01) != 0);
+	result.add ("ATTACK", 
+		COMMODORE::SoundSimpleWrapper::_ATTACKTIMES [(st.sid_register [iP + 5] & 0xf0) >> 4]);
+	result.add ("DECAY", 
+		COMMODORE::SoundSimpleWrapper::_DECAYTIMES [st.sid_register [iP + 5] & 0x0f]);
+	result.add ("SUSTAIN", (st.sid_register [iP + 6] & 0xf0) >> 4);
+	result.add ("RELEASE", 
+		COMMODORE::SoundSimpleWrapper::_RELEASETIMES [st.sid_register [iP + 6] & 0x0f]);
+	result.add ("RINGMODULATION", (st.sid_register [iP + 4] & 0x04) != 0);
+	result.add ("VOICERELATED", (nV == 0) ? 2 : ((nV == 1) ? 0 : 1));
+	result.add ("SYNC", (st.sid_register [iP + 4] & 0x02) != 0);
+
+	MCHEmul::InfoStructure wDt, wDt1;
+	wDt1.add ("CLASSNAME", std::string ("SoundWave"));
+	wDt1.add ("ACTIVE", true);
+	wDt1.add ("TYPE", (int) ((st.sid_register [iP + 4] & 0xf0) >> 4));
+	wDt1.add ("FREQUENCY", 
+		int (double (st.sid_register [1] * 256 + st.sid_register [0]) * (double) _chipFrequency / 16777216.0f));
+	wDt.add ("0", std::move (wDt1));
+	result.add ("WAVES", wDt);
 
 	return (result);
 }
