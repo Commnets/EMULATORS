@@ -68,6 +68,8 @@ namespace MCHEmul
 						{ return (_lastVisiblePosition_0 - _firstVisiblePosition_0); }
 		unsigned short visiblePositions () const
 						{ return (_lastVisiblePosition_0 - _firstVisiblePosition_0 + 1); }
+		unsigned short positionInVisibleZone (unsigned short p) const
+						{ return (toBase0 (p) - _firstVisiblePosition_0); }
 
 		// Managing the display
 		/** The DISPLAY is the zone where the drawing can happen but not taking 
@@ -83,6 +85,8 @@ namespace MCHEmul
 						{ return (_originalLastDisplayPosition_0 - _firstVisiblePosition_0); }
 		unsigned short displayPositions () const
 						{ return (_originalLastDisplayPosition_0 - _originalFirstDisplayPosition_0 + 1); }
+		unsigned short positionInDisplayZone (unsigned short p) const
+						{ return (toBase0 (p) - _firstDisplayPosition_0); }
 
 		// Managing the screen
 		/** The SCREEN is the zone where the drawing can happen but taking
@@ -253,6 +257,10 @@ namespace MCHEmul
 						{ return (_hRasterData.visiblePositions ()); }
 		void currentVisiblePosition (unsigned short& x, unsigned short& y) const
 						{ x = _hRasterData.currentVisiblePosition (); y = _vRasterData.currentVisiblePosition (); }
+		unsigned short lineInVisibleZone (unsigned short l) const
+						{ return (_vRasterData.positionInVisibleZone (l)); }
+		unsigned short columnInVisibleZone (unsigned short c) const
+						{ return (_hRasterData.positionInVisibleZone (c)); }
 
 		// Managing the display zone
 		/** The display is where drawing is possible. The reduced zones if any are not considered. */
@@ -265,6 +273,10 @@ namespace MCHEmul
 						  x2 = _hRasterData.lastDisplayPosition (); y2 = _vRasterData.lastDisplayPosition (); }
 		void currentDisplayPosition (unsigned short& x, unsigned short& y) const
 						{ x = _hRasterData.currentDisplayPosition (); y = _vRasterData.currentDisplayPosition (); }
+		unsigned short lineInDislayZone (unsigned short l) const
+						{ return (_vRasterData.positionInDisplayZone (l)); }
+		unsigned short columnInDisplayZone (unsigned short c) const
+						{ return (_hRasterData.positionInDisplayZone (c)); }
 
 		/** To go from the display zone to the screen one. */
 		void reduceDisplayZone (bool v, bool h)

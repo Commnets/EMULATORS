@@ -114,6 +114,16 @@ bool COMMODORE::VICII::simulate_OLD (MCHEmul::CPU* cpu)
 
 	for (unsigned int i = (cpu -> clockCycles  () - _lastCPUCycles); i > 0 ; i--)
 	{
+		// When the deep debug mode is active, the info about where the raster line of the VICII is in and 
+		// the graphical mode active is is printed out...
+		if (deepDebugActive ())
+			*deepDebugFile () 
+				<< "VICII: Raster at " 
+				<< std::to_string (_raster.currentColumnAtBase0 ()) << "," 
+				<< std::to_string (_raster.currentLineAtBase0 ())
+				<< ", Graphic mode "
+				<< std::to_string ((int) _VICIIRegisters -> graphicModeActive ()) << "\n";
+
 		_videoActive = (_raster.currentLine () == _FIRSTBADLINE) 
 			? !_VICIIRegisters -> blankEntireScreen () : _videoActive; // Only at first bad line it can change its value...
 
@@ -123,14 +133,24 @@ bool COMMODORE::VICII::simulate_OLD (MCHEmul::CPU* cpu)
 		{
 			memoryRef () -> setActiveView (_VICIIView);
 
+			if (deepDebugActive ())
+				*deepDebugFile () 
+					<< "VICII: Reading sprites info" << "\n";
+
 			// The sprites info at that line (if any) has to be read...
 			readSpritesDataAt (_raster.currentLine ());
 
 			// and if is it also a bad line?...
 			if (isBadRasterLine ())
+			{
+				if (deepDebugActive ())
+					*deepDebugFile () 
+						<< "VICII: Reading graphical info" << "\n";
+			
 				// ..the graphics / text / color info has to be read too
 				readGraphicsInfoAt (_raster.currentLine () - 
 					_FIRSTBADLINE - _VICIIRegisters -> verticalScrollPosition ());
+			}
 
 			// The VICII doesn't work actually like this
 			// The information about the sprites 0 to 3 is read during the last cycles of the previous raster line
@@ -147,6 +167,19 @@ bool COMMODORE::VICII::simulate_OLD (MCHEmul::CPU* cpu)
 		// The light pen is also controlled here...
 		if (_raster.isInVisibleZone ())
 			simulate_VisibleZone (cpu);
+
+		// ...When the deep debug mode is active a line where the interruption is defined is also drawn
+		if (deepDebugActive ())
+		{
+			unsigned short lrt = 
+				_raster.lineInVisibleZone (_VICIIRegisters -> IRQRasterLineAt ());
+			if (lrt <= _raster.vData ().lastVisiblePosition ())
+			{
+				unsigned char clrt = _VICIIRegisters -> backgroundColor () == 15 
+					? 0 : _VICIIRegisters -> backgroundColor () + 1; /** to be visible. */
+				screenMemory () -> setHorizontalLine (0, lrt, _raster.visibleColumns (), clrt);
+			}
+		}
 
 		// Move 8 pixels right and jump to line is possible...
 		// If the current new line is one where has been declared to issue an IRQ...
@@ -202,6 +235,16 @@ bool COMMODORE::VICII::simulate_NEW (MCHEmul::CPU* cpu)
 		(cpu -> clockCycles  () - _lastCPUCycles) + ((_stopCPUCycles > 0) ? 1 : 0);
 	for (; cc > 0; cc--)
 	{
+		// When the deep debug mode is active, the info about where the raster line of the VICII is in and 
+		// the graphical mode active is is printed out...
+		if (deepDebugActive ())
+			*deepDebugFile () 
+				<< "VICII: Raster at " 
+				<< std::to_string (_raster.currentColumnAtBase0 ()) << "," 
+				<< std::to_string (_raster.currentLineAtBase0 ())
+				<< ", Graphic mode "
+				<< std::to_string ((int) _VICIIRegisters -> graphicModeActive ()) << "\n";
+
 		_videoActive = (_raster.currentLine () == _FIRSTBADLINE) 
 			? !_VICIIRegisters -> blankEntireScreen () : _videoActive; // Only at first bad line it can change its value...
 
@@ -239,6 +282,19 @@ bool COMMODORE::VICII::simulate_NEW (MCHEmul::CPU* cpu)
 				}
 
 				break;
+		}
+
+		// ...When the deep debug mode is active a line where the interruption is defined is also drawn...
+		if (deepDebugActive ())
+		{
+			unsigned short lrt = 
+				_raster.lineInVisibleZone (_VICIIRegisters -> IRQRasterLineAt ());
+			if (lrt <= _raster.vData ().lastVisiblePosition ())
+			{
+				unsigned char clrt = _VICIIRegisters -> backgroundColor () == 15 
+					? 0 : _VICIIRegisters -> backgroundColor () + 1; /** to be visible. */
+				screenMemory () -> setHorizontalLine (0, lrt, _raster.visibleColumns (), clrt);
+			}
 		}
 
 		// Stops the CPU when it has been decided in the internal methods...
@@ -297,6 +353,10 @@ unsigned int COMMODORE::VICII::simulate_BEFOREVISIBLEZONE (MCHEmul::CPU* cpu)
 		_cycleInRasterLine == 7 ||
 		_cycleInRasterLine == 9)
 	{
+		if (deepDebugActive ())
+			*deepDebugFile () 
+				<< "VICII: Reading sprite info " << std::to_string ((_cycleInRasterLine >> 1) + 3) << "\n";
+
 		// Read the sprite data...
 		memoryRef () -> setActiveView (_VICIIView);
 		
@@ -334,6 +394,10 @@ unsigned int COMMODORE::VICII::simulate_VISIBLEZONE (MCHEmul::CPU* cpu)
 	{
 		if (isBadRasterLine ())
 		{
+			if (deepDebugActive ())
+				*deepDebugFile () 
+					<< "VICII: Reading graphical info" << "\n";
+
 			result = 43; // The number of cycles added to the cpu...
 
 			memoryRef () -> setActiveView (_VICIIView);
@@ -364,6 +428,10 @@ unsigned int COMMODORE::VICII::simulate_AFTERVISIBLEZONE (MCHEmul::CPU* cpu)
 		_cycleInRasterLine == 60 ||
 		_cycleInRasterLine == 62) 
 	{
+		if (deepDebugActive ())
+			*deepDebugFile ()
+				<< "VICII: Reading sprite info " << std::to_string ((_cycleInRasterLine - 58) >> 1) << "\n";
+
 		// Read the sprite data...
 		memoryRef () -> setActiveView (_VICIIView);
 
@@ -739,6 +807,10 @@ COMMODORE::VICII::DrawResult COMMODORE::VICII::drawMonoColorChar (int cb, int rc
 			result._foregroundColorData [i] = 
 				(unsigned int) (clr [iBy].value () & 0x0f /** Useful nibble. */);
 		}
+		// When 0, it is background...
+		// Not necessary to specify neither collision information
+		// nor the color of the pixels as it will be always the basic background color,
+		// that has already been set to the value of $d021 in the main loop...
 	}
 
 	return (result);
@@ -786,7 +858,9 @@ COMMODORE::VICII::DrawResult COMMODORE::VICII::drawMultiColorChar (int cb, int r
 		if ((clr [iBy] & 0x08) == 0x00) 
 		{
 			unsigned int fc = clr [iBy].value () & 0x07;
-			
+
+			// ...and remember we are dealing with pairs of pixels...
+
 			if ((cs & 0x02) == 0x02 /** if set. */) 
 			{
 				result._collisionData.setBit (7 - i, true);
@@ -796,10 +870,12 @@ COMMODORE::VICII::DrawResult COMMODORE::VICII::drawMultiColorChar (int cb, int r
 			
 			if ((cs & 0x01) == 0x01 /** if set. */)
 			{
-				result._collisionData.setBit (7 - i, true);
+				result._collisionData.setBit (6 - i, true);
 
 				result._foregroundColorData [i + 1] = fc;
 			}
+
+			// if boths "bits" are set, boths pixels will be drawn...
 		}
 		// But if it is 1, 
 		// then it will be draw as in the multicolor version...
@@ -837,6 +913,9 @@ COMMODORE::VICII::DrawResult COMMODORE::VICII::drawMultiColorChar (int cb, int r
 COMMODORE::VICII::DrawResult COMMODORE::VICII::drawMultiColorExtendedChar (int cb, int rc,
 	const MCHEmul::UBytes& sc, const MCHEmul::UBytes& bt, const MCHEmul::UBytes& clr)
 {
+	// The mode is quite similar to the standard text mode, 
+	// with the difference the 0 pixels (background) can have different background colors...
+
 	COMMODORE::VICII::DrawResult result;
 
 	// The graphics are described in blocks of 8 bytes...
@@ -858,9 +937,17 @@ COMMODORE::VICII::DrawResult COMMODORE::VICII::drawMultiColorExtendedChar (int c
 		unsigned int fc = (bS ? clr [iBy].value () : _VICIIRegisters -> backgroundColor (cs)) & 0x0f /** useful nibble. */;
 
 		if (bS)
+		{
 			result._collisionData.setBit (7 - i, true);
 
-		result._foregroundColorData [i] = fc;
+			result._foregroundColorData [i] = fc;
+		}
+		else
+		// ...all of them are treated as background...
+		// ...but with the possibility to have different colors!
+		// The value 0x00 has been already treated in the main loop...(drawn as $d021)
+		if (cs != 0x00)
+			result._backgroundColorData [i] = fc;
 	}
 
 	return (result);
@@ -890,9 +977,17 @@ COMMODORE::VICII::DrawResult COMMODORE::VICII::drawMonoColorBitMap (int cb, int 
 				? (sc [iBy].value () & 0xf0) >> 4	// If the bit is 1, the color is determined by the MSNibble
 				: (sc [iBy].value () & 0x0f);		// ...and for LSNibble if it is 0...
 
-		result._collisionData.setBit (7 - i, true);
+		if (bS)
+		{
+			result._collisionData.setBit (7 - i, true);
 
-		result._foregroundColorData [i] = fc;
+			result._foregroundColorData [i] = fc;
+		}
+		// The pixels 0 are treated as background...
+		// but they will have different color that the one defined in $d021 (and treated in the main loop)..
+		// but the one defined in the graphics data (2 nibbles)...
+		else
+			result._backgroundColorData [i] = fc;
 	}
 
 	return (result);
@@ -936,12 +1031,13 @@ COMMODORE::VICII::DrawResult COMMODORE::VICII::drawMultiColorBitMap (int cb, int
 
 		unsigned fc = // The value 0x00 is not tested....
 				(cs == 0x01) // The color is the defined in the video matrix, high nibble...
-						? (sc [iBy].value () & 0xf0) >> 4
-						: ((cs == 0x02) // The color is defined in the video matrix, low nibble...
-							? sc [iBy].value () & 0x0f
-							: clr [iBy].value () & 0x0f); // The color is defined in color matrix...
+					? (sc [iBy].value () & 0xf0) >> 4
+					: ((cs == 0x02) // The color is defined in the video matrix, low nibble...
+						? sc [iBy].value () & 0x0f
+						: clr [iBy].value () & 0x0f); // The color is defined in color matrix...
 
-		// The combination "01" is managed as background...
+		// The combination "01" is managed as background also...
+		// ...the 0x00 has already been jumped an then treated as background!
 		if (cs == 0x01)
 		{
 			result._backgroundColorData [i] = fc;
@@ -950,6 +1046,9 @@ COMMODORE::VICII::DrawResult COMMODORE::VICII::drawMultiColorBitMap (int cb, int
 		// ...while the rest as managed as foreground...
 		else
 		{
+			result._collisionData.setBit (7 -i, true);
+			result._collisionData.setBit (6 -i, true);
+
 			result._foregroundColorData [i] = fc;
 			result._foregroundColorData [i + 1] = fc;
 		}

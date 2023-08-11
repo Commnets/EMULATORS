@@ -489,7 +489,6 @@ void MCHEmul::ActivateDeepDebugCommand::executeImpl
 	if (c == nullptr)
 		return;
 
-
 	std::string fN = parameter ("00");
 	std::vector <int> cId = { };
 	bool a = false;
