@@ -121,6 +121,25 @@ bool MCHEmul::Assembler::ByteCode::saveAsBlocks (const std::string& fN, const MC
 }
 
 // ---
+bool MCHEmul::Assembler::ByteCode::saveAsBlocksFormatter (const std::string& fN, const std::string& fF) const
+{
+	MCHEmul::DataMemoryBlocks blks = asDataMemoryBlocks ();
+
+	bool result = false;
+	std::ofstream f (fN);
+	if (!f)
+		return (false);
+
+	MCHEmul::DataMemoryBlockTextFormatter formatter (fF);
+	for (const auto& i : blks)
+		f << MCHEmul::removeAll0 (formatter.format (i)) << std::endl;
+
+	f.close ();
+
+	return (true);
+}
+
+// ---
 MCHEmul::Assembler::ByteCode MCHEmul::Assembler::ByteCode::createFromMemory 
 	(const MCHEmul::Address& a, unsigned int b, MCHEmul::Memory* m, MCHEmul::Computer* c)
 {

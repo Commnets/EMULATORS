@@ -52,6 +52,8 @@ namespace MCHEmul
 			/** To save the ByteCode as a set of blocks. \n
 				Every block defines its starting address and its size at the header. */
 			bool saveAsBlocks (const std::string& fN, const CPU* cpu) const;
+			/** Save its data blocks as per defined in formatter block file. */
+			bool saveAsBlocksFormatter (const std::string& fN, const std::string& fF = ".\\blkFormatter.fmt") const;
 
 			static ByteCode createFromMemory (const Address& a, unsigned int b, Memory* m, Computer* cpu);
 

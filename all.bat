@@ -47,6 +47,7 @@ COPY .\projects\CONSOLE\*.fmt .\setups\C64\ /Y
 COPY .\projects\CONSOLE\*.hlp .\setups\C64\ /Y
 COPY .\projects\CORE\*.fmt .\setups\C64\ /Y
 COPY .\projects\CORE\*.hlp .\setups\C64\ /Y
+COPY .\projects\ASSEMBLER\*.fmt .\setups\C64\ /Y
 "C:\Program files (x86)\Inno Setup 6\iscc" ".\setups\C64\C64.iss"
 
 
