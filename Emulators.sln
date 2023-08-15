@@ -175,7 +175,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Routines", "Routines", "{1B
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{DD45DD00-02A4-4D13-8CC8-58BE8A459F48}"
 	ProjectSection(SolutionItems) = preProject
-		emulators\C64Programs\Code\Tests\SP2.asm = emulators\C64Programs\Code\Tests\SP2.asm
+		emulators\C64Programs\Code\Tests\SP4.asm = emulators\C64Programs\Code\Tests\SP4.asm
 		emulators\C64Programs\Code\Tests\SPRITESPRIORITY.asm = emulators\C64Programs\Code\Tests\SPRITESPRIORITY.asm
 		emulators\C64Programs\Code\Tests\TESTBIT.asm = emulators\C64Programs\Code\Tests\TESTBIT.asm
 		emulators\C64Programs\code\tests\TESTCIA1.asm = emulators\C64Programs\code\tests\TESTCIA1.asm

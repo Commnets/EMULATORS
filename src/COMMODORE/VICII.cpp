@@ -27,7 +27,7 @@ COMMODORE::VICII::VICII (const MCHEmul::RasterData& vd, const MCHEmul::RasterDat
 	  _graphicsSprites (8, MCHEmul::UBytes::_E),
 	  _graphicsLineSprites (8, MCHEmul::UBytes::_E),
 	  _isNewRasterLine (false),
-	  _cycleInRasterLine (0),
+	  _cycleInRasterLine (1),
 	  _stopCPUCycles (0),
 	  _sprites4to8 (false), _sprites1to3 (false),
 	  _videoActive (true),
