@@ -11,21 +11,20 @@ static std::map <unsigned char, MCHEmul::Instruction::Structure::Parameter::Type
 	});
 
 // ---
-MCHEmul::Instruction::Instruction (unsigned int c, unsigned int mp, unsigned int cc, unsigned int rcc, 
+MCHEmul::Instruction::Instruction (unsigned int c, unsigned int mp, unsigned int cc, 
 		const std::string& t, bool bE)
 	: _code (c), 
 	  _codeLength (((size_t) c < ((size_t) 1 << MCHEmul::UByte::sizeBits ())) 
 			? 1 : ((size_t) c < ((size_t) 1 << (MCHEmul::UByte::sizeBits () * 2))) 
 				? 2 : ((size_t) c < ((size_t) 1 << (MCHEmul::UByte::sizeBits () * 3))) ? 3 : 4), // No more than 4...
 	  _memoryPositions (mp), 
-	  _clockCycles (cc), _readingClockCycles (rcc), _writtingClockCycles (cc - rcc),
+	  _clockCycles (cc),
 	  _bigEndian (bE),
 	  _iTemplate (MCHEmul::noSpaces (MCHEmul::upper (t))),
 	  _iStructure (), // Assigned later...
 	  _lastParameters (), _cpu (nullptr), _memory (nullptr), _stack (nullptr)
 { 
 	assert (_memoryPositions > 0 && _clockCycles > 0); 
-	assert (_readingClockCycles <= _clockCycles);
 	assert (_iTemplate != ""); 
 
 	// The template if stored in uppercase and with no spaces...

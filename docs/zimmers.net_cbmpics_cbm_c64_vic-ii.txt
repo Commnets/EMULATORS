@@ -1007,7 +1007,12 @@ Cycl-# 6                   1 1 1 1 1 1 1 1 1 1 |5 5 5 5 5 5 5 6 6 6 6
                                                |
    VIC i 3 i 4 i 5 i 6 i 7 i r r r r r g g g g |g g g i i 0 i 1 i 2 i 3
   6510  x x x x x x x x x x x x x x x x x x x x| x x x x x x x x x x x x
-                                               |
+
+Cycl-# 6                   1 1 1 1 1 1 1 1 1 1 |5 5 5 5 5 5 5 6 6 6 6
+       3 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 |3 4 5 6 7 8 9 0 1 2 3 1
+  6510x x x P P P p p       x x X X X          | x x P P P p p x x x x x  -> La CPU se ejecuta primero
+   VIC i 3 i 4 i 5sss6sss7sssr r r r rcgcgcgcgc|gcgcg i i 0sss1 i 2 i 3 
+                                               |             P P P p p  
 Graph.                      |===========0102030|7383940=========
                                                |
 X coo. \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\|\\\\\\\\\\\\\\\\\\\\\\\\
@@ -1032,6 +1037,8 @@ Cycl-# 6                   1 1 1 1 1 1 1 1 1 1 |5 5 5 5 5 5 5 6 6 6 6 6
                                                |
    VIC i 3 i 4 i 5sss6sss7sssr r r r rcgcgcgcgc|gcgcg i i i 0sss1 i 2 i 3 
   6510  x x X X X             x X X X          |     x X X X     x x x x x
+   VIC i 3 i 4 i 5sss6sss7sssr r r r rcgcgcgcgc|gcgcg i i i 0 i 1 i 2 i 3 
+  6510  x x X X X             x X X X          |     x x x x x x x X X X x
                                                |
 Graph.                      |===========0102030|7383940===========
                                                |

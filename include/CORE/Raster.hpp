@@ -41,6 +41,8 @@ namespace MCHEmul
 
 		unsigned short currentPosition () const
 						{ return (_currentPosition); }
+		unsigned short previousPosition () const // Without affecting the current one...
+						{ RasterData c = *this; c.add (-1); return (c.currentPosition ()); }
 		unsigned short nextPosition () const // Without affecting the current one...
 						{ RasterData c = *this; c.add (1); return (c.currentPosition ()); }
 		unsigned short currentPositionAtBase0 () const
@@ -103,7 +105,7 @@ namespace MCHEmul
 
 		/** Returns true when the limit of the raster is reached. 
 			The parameter is the number of positions to increment the rasterData. */
-		inline bool add (unsigned short i);
+		inline bool add (int i);
 		bool next ()
 						{ return (add (1)); }
 
@@ -164,20 +166,24 @@ namespace MCHEmul
 	};
 
 	// ---
-	inline bool RasterData::add (unsigned short i)
+	inline bool RasterData::add (int i)
 	{
 		bool result = false;
 
-		int cP = (int) _currentPosition_0;
-		cP += (int) i; // Can move to the next (o nexts) lines...
+		// Move to the next or previous position 
+		// and adjust it to the limits if needed...
+		int cP = (int) _currentPosition_0 + i;
 		if (result = (cP >= (int) _maxPositions))
 			while (cP >= (int) _maxPositions)
 				cP -= (int) _maxPositions;
+		else
+		if (result = (cP < (int) 0))
+			while (cP < 0)
+				cP += (int) _maxPositions;
 
 		cP += (int) _firstPosition; // Now is no longer in base 0...
 		if (cP >= (int) _maxPositions)
 			cP -= (int) _maxPositions;
-
 		_currentPosition = (unsigned short) cP;
 		_currentPosition_0 = toBase0 (_currentPosition);
 
@@ -229,6 +235,8 @@ namespace MCHEmul
 
 		unsigned short currentLine () const
 						{ return (_vRasterData.currentPosition ()); }
+		unsigned short previousLine () const
+						{ return (_vRasterData.previousPosition ()); }
 		unsigned short nextLine () const
 						{ return (_vRasterData.nextPosition ()); }
 		unsigned short currentLineAtBase0 () const

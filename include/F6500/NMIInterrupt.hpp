@@ -15,6 +15,7 @@
 #define __F6500_NMIINTERRUPT__
 
 #include <CORE/incs.hpp>
+#include <F6500/Interrupt.hpp>
 
 namespace F6500
 {
@@ -25,7 +26,7 @@ namespace F6500
 		static const int _ID = 1;
 
 		NMIInterrupt ()
-			: MCHEmul::CPUInterrupt (_ID),
+			: MCHEmul::CPUInterrupt (_ID, 7, 4),
 			  _exeAddress ()
 							{ setClassName ("NMIInterrupt"); }
 
@@ -38,9 +39,9 @@ namespace F6500
 
 		private:
 		/** Always. It is a Non Maskarable Interrupt. */
-		virtual bool isTime (MCHEmul::CPU* c) const override 
+		virtual bool isTime (MCHEmul::CPU* c, unsigned int cC) const override 
 							{return (true); } 
-		virtual bool executeOverImpl (MCHEmul::CPU* c, unsigned int& nC, unsigned int& nCR) override;
+		virtual bool executeOverImpl (MCHEmul::CPU* c, unsigned int cC) override;
 
 		private:
 		// Implementation

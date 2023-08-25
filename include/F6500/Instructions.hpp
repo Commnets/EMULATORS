@@ -22,15 +22,26 @@
 namespace F6500
 {
 	/** Most of 6500 instruction inherits from this class
-		because it includes diffrent access for any addrss mode. \N
-		Always little-endian format and no more than 2 bytes for and address are values taken. */
+		because it includes diffrent access for any addrss mode. \n
+		Always little-endian format and no more than 2 bytes for and address are values taken. \n
+		All 6500 instructions access to the data - bus in every cycle, even when they have to run some internal operation. \n
+		Most of the access cycles are to read, and just a couple of operations access the bus to write. \n
+		When this happen the write accesses are the last cycles of the total in almost any case, and the rest will be for "reading". \n
+		The exception is in the instructions related with jumping. \n
+		So as the default the type of cycle will be _CYCLEREAD for the first of them, and _CYCLEWRITE for the rest. \n
+		@see: https://datasheet4u.com/datasheet-pdf/Synertek/SY6500/pdf.php?id=1306768 (last pages). */
 	class Instruction : public MCHEmul::Instruction
 	{
 		public:
 		Instruction (unsigned int c, unsigned int mp, unsigned int cc, unsigned int rcc, 
 				const std::string& t)
-			: MCHEmul::Instruction (c, mp, cc, rcc, t, false)
-							{ }
+			: MCHEmul::Instruction (c, mp, cc, t, false),
+			  _readingClockCycles (rcc)
+							{ assert (_readingClockCycles <= clockCycles ()); }
+		
+		virtual unsigned int typeOfCycle (unsigned int nC) const override
+						{ return ((nC < _readingClockCycles)
+							? MCHEmul::Instruction::_CYCLEREAD : MCHEmul::Instruction::_CYCLEWRITE); }
 	
 		protected:
 		// To interpret the parameters of the instruction as an address 
@@ -81,6 +92,9 @@ namespace F6500
 							{ return (memory () -> value (address_indirectZeroPageX ())); }
 		MCHEmul::UByte value_indirectZeroPageY ()
 							{ return (memory () -> value (address_indirectZeroPageY ())); }
+
+		protected:
+		unsigned int _readingClockCycles;
 	};
 
 	// ---

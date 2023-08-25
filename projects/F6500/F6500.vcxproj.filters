@@ -39,6 +39,9 @@
     <ClInclude Include="..\..\include\F6500\Instructions.hpp">
       <Filter>Archivos de encabezado</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\include\F6500\Interrupt.hpp">
+      <Filter>Archivos de encabezado</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\F6500\C6510.cpp">
@@ -175,6 +178,9 @@
     </ClCompile>
     <ClCompile Include="..\..\src\F6500\JAM.cpp">
       <Filter>Archivos de origen\instructions\undocumented</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\F6500\Interrupt.cpp">
+      <Filter>Archivos de origen</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

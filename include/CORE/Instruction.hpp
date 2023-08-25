@@ -23,7 +23,11 @@ namespace MCHEmul
 	class Memory;
 	class Stack;
 
-	/** Represents a instruction executed by a CPU. */
+	/** Represents a instruction executed by a CPU. 
+		A instruction is made up of cycles. 
+		Depending on the type of processor implementing a instruction, the type of cycles can vary. \n
+		However although they can be extended later, three basic types are provided by default: \n
+		Internal (the default one), to read data from memory and to write data to memory. */
 	class Instruction
 	{
 		public:
@@ -76,6 +80,15 @@ namespace MCHEmul
 			std::vector <Parameter> _parameters;
 		};
 
+		// The different type of cycles than an instruction could have
+		/** When a cycle is internal, that is the default value. 
+			Used in internal calculus, o movement between registers inside the processor. */
+		static const unsigned int _CYCLEINTERNAL = 0;
+		/** When a cycle read info from the memory. */
+		static const unsigned int _CYCLEREAD = 1;
+		/** When it used to write info to the memory. */
+		static const unsigned int _CYCLEWRITE = 2;
+
 		Instruction () = delete;
 
 		/** 
@@ -85,7 +98,6 @@ namespace MCHEmul
 		  * @param cc	:	The number of clock cyles the instruction uses to be executed (usually). \n
 		  *					Some ocassions, some instructions under certain circunstances can take longer than expected. \n
 		  *					@see for so: _additionalClockCycles (method and variable).
-		  * @param rcc	:	The number of reading clock cycles within the total. 
 		  *	@param t	:	The template of the instruction. \n
 		  *					The way it is defined is key for it to be read and understood by the parsers. \n
 		  *					The parameters should be within [] with two additional data: \n
@@ -93,7 +105,7 @@ namespace MCHEmul
 		  *					Regarding the type: # means number, $ means address and & means relative jump (@see type of parameter).
 		  *	@param bE	:	Indicate whether the info contained is managed big or little endian.
 		  */
-		Instruction (unsigned int c, unsigned int mp, unsigned int cc, unsigned int rcc, 
+		Instruction (unsigned int c, unsigned int mp, unsigned int cc, 
 			const std::string& t, bool bE = true);
 
 		Instruction (const Instruction&) = delete;
@@ -113,18 +125,23 @@ namespace MCHEmul
 							{ return (_codeLength); }
 		unsigned int memoryPositions () const
 							{ return (_memoryPositions); }
+
+		// Related with the cycles of the operation...
+		/** The total, without any additional one after its execuction. */
 		unsigned int clockCycles () const
 							{ return (_clockCycles); }
-		unsigned int readingClockCycles () const
-							{ return (_readingClockCycles); }
-		unsigned int writtingClockCyles () const
-							{ return (_writtingClockCycles); }
 		unsigned int additionalClockCycles () const
 							{ return (_additionalCycles); }
 		const std::string iTemplate () const
 							{ return (_iTemplate); }
 		const Structure& internalStructure () const
 							{ return (_iStructure); }
+
+		/** To get the type of the cycle. \n
+			This operation can be overloaded later depending on the set of instructions. 
+			From 0 to _clockCycles - 1. */
+		virtual unsigned int typeOfCycle (unsigned int c) const
+							{ return (_CYCLEINTERNAL); }
 
 		/** To know whether the instruction template matches of not with the example received. \n
 			Returns true when matches, and false when it doesn't. \n
@@ -179,8 +196,6 @@ namespace MCHEmul
 		const size_t _codeLength;
 		const unsigned int _memoryPositions; 
 		const unsigned int _clockCycles;
-		const unsigned int _readingClockCycles;
-		const unsigned int _writtingClockCycles;
 		const bool _bigEndian;
 		std::string _iTemplate;
 

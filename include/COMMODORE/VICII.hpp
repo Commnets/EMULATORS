@@ -49,9 +49,10 @@ namespace COMMODORE
 		static const unsigned int _BANK3SET = 203;
 
 		/** Specific classes for PAL & NTSC have been created giving this data as default. \n
-			The VICII constructor receives info over the raster data, the memory view to use and additional attributes. */
+			The VICII constructor receives info over the raster data, the memory view to use,
+			The number of cycles of every raster line (changes per version) and additional attributes. */
 		VICII (const MCHEmul::RasterData& vd, const MCHEmul::RasterData& hd, 
-			int vV, const MCHEmul::Attributes& attrs = { });
+			int vV, unsigned short cRL, const MCHEmul::Attributes& attrs = { });
 
 		virtual ~VICII () override;
 
@@ -59,6 +60,10 @@ namespace COMMODORE
 							{ return (_raster.visibleColumns ()); }
 		virtual unsigned short numberRows () const override
 							{ return (_raster.visibleLines ()); }
+
+		/** To get the number of cycles per raster line used in this chip. */
+		unsigned short cyclesPerRasterLine () const
+							{ return (_cyclesPerRasterLine); }
 
 		/** To change and get the bank. */
 		unsigned short bank () const
@@ -88,15 +93,11 @@ namespace COMMODORE
 		/** Draw the border AFTER the graphic info is draw within the display zone. \n
 			In this case sprite and graphical info is taken into account to determine collisions. */
 		virtual bool simulate (MCHEmul::CPU* cpu) override;
-		bool simulate_OLD (MCHEmul::CPU* cpu);
-		/** This simulation method takes into account that 
-			the CPU stops when reading graphics/bitmaps/sprites info. */
-		bool simulate_NEW (MCHEmul::CPU* cpu);
-		/** Asscoiated with similate_NEW. */
-		unsigned int simulate_BEFOREVISIBLEZONE (MCHEmul::CPU* cpu);
-		unsigned int simulate_VISIBLEZONE (MCHEmul::CPU* cpu);
-		unsigned int simulate_AFTERVISIBLEZONE (MCHEmul::CPU* cpu);
-		void simulate_VisibleZone (MCHEmul::CPU* cpu);
+		/** Associated with the previous method. */
+		void simulate_BEFOREVISIBLEZONE (MCHEmul::CPU* cpu, unsigned int& cS);
+		void simulate_VISIBLEZONE (MCHEmul::CPU* cpu, unsigned int& cS);
+		void simulate_AFTERVISIBLEZONE (MCHEmul::CPU* cpu, unsigned int &cS);
+		void drawInVisibleZone (MCHEmul::CPU* cpu);
 
 		/**
 		  *	The name of the fields are: \n
@@ -151,6 +152,12 @@ namespace COMMODORE
 								((size_t) l * _GRAPHMAXCHARCOLUMNS), (size_t) _GRAPHMAXCHARCOLUMNS))); }
 
 		// Read sprites data
+		/** To know the line sprite data to read in a raster line. \n
+			The method receives the raster line and the number of sprite. \n
+			The result will be positive (indicating the line of data to read) when the sprite is present in the rasterline
+			and -1 when the sprite is not present in the raster line because 
+			either is not availble or it is not visible in that line. */
+		inline int spriteLineDataAt (unsigned short l, size_t nS) const;
 		/** Read the graphical info of the active sprites at one specific raster line. \n
 			The parameter received goes from 0 to PAL/NTSC maximum raster line,
 			and doesn't take into account the SCROLLY value. */
@@ -262,15 +269,29 @@ namespace COMMODORE
 			affecting the right registers in the VICII. */
 		void detectCollisions (const MCHEmul::UByte& g, const std::vector <MCHEmul::UByte>& s);
 
+		// Very internal methods
+		// These methods are used in the simulation...
+		/** To know whether the current raster line is a bad line. */
+		inline bool isBadLine () const;
+		/** To know whether the to VICII is about to initiate a reading activity for graphical or sprites info. */
+		inline bool isAboutToReadGraphicalInfo () const;
+
 		private:
 		/** The memory is used also as the set of registers of the chip. */
 		COMMODORE::VICIIRegisters* _VICIIRegisters;
 		/** The number of the memory view used to read the data. */
 		int _VICIIView;
+		/** The number of cycles per raster line as it depends on the type of Chip. */
+		unsigned short _cyclesPerRasterLine;
 		/** The raster. */
 		MCHEmul::Raster _raster;
 
 		// Implementation
+		/** When VICII is about to read graphics/sprite info, 
+			the CPU has to be stopped three cycles in advance for reading activities,
+			unless it was stopped previouly and that stop situation were still valid. \n
+			This variable points this situation. */
+		bool _readingGraphState;
 		/** When the CPU is not stopped (sometimes the VIC requires to stop it). \n 
 			and a instruction is executed, the number of cycles that that instruction required, has to be taken into account
 			to define qhat the VICII has to do. */
@@ -288,12 +309,7 @@ namespace COMMODORE
 		bool _isNewRasterLine; 
 		/** When a raster line is processed is necessary to know which cycle is being processed. 
 			The number of max cycles is get from the method (@see) cyclesPerRasterLine */
-		unsigned int _cycleInRasterLine;
-		/** When the VICII takes control of the memory and CPU address the CPU has to stop processing.
-			This variable keeps the number of cycles to stop. */
-		unsigned int _stopCPUCycles;
-		/** These variables get set when there are sprites present in the raster line. */
-		bool _sprites4to8, _sprites1to3;
+		unsigned short _cycleInRasterLine;
 		/** When the raster is in the first bad line this variable is set taking into account what 
 			is kept in the VICII register about whether the video ir or not active. \n
 			In any other circunstance is kept its value. */
@@ -365,6 +381,14 @@ namespace COMMODORE
 	}
 
 	// ---
+	inline int VICII::spriteLineDataAt (unsigned short l, size_t nS) const
+	{
+		int lY = l - _VICIIRegisters -> spriteYCoord (nS) - 1;
+		return ((_VICIIRegisters -> spriteEnable (nS) &&
+			(lY >= 0 && lY < (_VICIIRegisters -> spriteDoubleHeight (nS) ? 42 /** When double high. */ : 21))) ? lY : -1);
+	}
+
+	// ---
 	inline const std::vector <MCHEmul::UBytes>& VICII::readSpritesDataAt (unsigned short l) const
 	{
 		_graphicsLineSprites = 
@@ -377,28 +401,32 @@ namespace COMMODORE
 	// ---
 	inline bool VICII::readSpriteDataAt (unsigned short l, size_t nS) const
 	{
-		bool result = _VICIIRegisters -> spriteEnable (nS);
+		bool result = false;
 
-		if (result) // Has to be active...
+		int lY = spriteLineDataAt (l, nS);
+		if (result = (lY != -1))
 		{
 			MCHEmul::Address sP = 
 				_VICIIRegisters -> spritePointersMemory (); // Will depend on where the screen memory is located...
 			MCHEmul::Address iAB = _VICIIRegisters -> initAddressBank ();
-
-			// Can be negative...(reason to use an int)
-			// If some part of the sprite were visible in the line...
-			int lY = l - _VICIIRegisters -> spriteYCoord (nS) - 1;
-			if (lY >= 0 && 
-				lY < (_VICIIRegisters -> spriteDoubleHeight (nS) ? 42 /** When double high. */ : 21))
-					_graphicsLineSprites [nS] = std::move (
-					MCHEmul::UBytes (
-						memoryRef () -> bytes (iAB + 
+			_graphicsLineSprites [nS] = std::move (
+				MCHEmul::UBytes (
+					memoryRef () -> bytes (iAB + 
 						((size_t) memoryRef () -> value (sP + nS).value () << 6) /** 64 bytes block size. */ + 
 						/** If sprite is double-height, the data line read must be half. */
 						(((((unsigned int) lY) >> (_VICIIRegisters -> spriteDoubleHeight (nS) ? 1 : 0))) * 3 /** bytes per line. */), 3)));
 		}
 
 		return (result);
+	}
+
+	// ---
+	inline bool VICII::isBadLine () const
+	{
+		return (_videoActive && 
+				_raster.currentLine () >= _FIRSTBADLINE &&
+				_raster.currentLine () <= _LASTBADLINE && 
+				(_raster.currentLine () & 0x07 /** The three last bits. */) == _VICIIRegisters -> verticalScrollPosition ());
 	}
 
 	/** The version para NTSC systems. */
@@ -418,8 +446,31 @@ namespace COMMODORE
 		static const MCHEmul::RasterData _VRASTERDATA;
 		static const MCHEmul::RasterData _HRASTERDATA;
 
+		static constexpr unsigned short _CYCLESPERRASTERLINE = 63;
+
 		VICII_PAL (int vV);
 	};
+		
+	// ---
+	inline bool VICII::isAboutToReadGraphicalInfo () const
+	{
+		unsigned short nL = _raster.nextLine ();
+		return (
+			(_cycleInRasterLine == 2  && spriteLineDataAt (_raster.currentLine (), 5) != -1) ||
+			(_cycleInRasterLine == 4  && spriteLineDataAt (_raster.currentLine (), 6) != -1) ||
+			(_cycleInRasterLine == 6  && spriteLineDataAt (_raster.currentLine (), 7) != -1) ||
+			(_cycleInRasterLine == 12 && isBadLine ()) ||
+			(_cycleInRasterLine == (55 + // To addapt it to the type of Chip...
+				(_cyclesPerRasterLine - VICII_PAL::_CYCLESPERRASTERLINE)) && spriteLineDataAt (nL, 0) != -1) ||
+			(_cycleInRasterLine == (57 + 
+				(_cyclesPerRasterLine - VICII_PAL::_CYCLESPERRASTERLINE)) && spriteLineDataAt (nL, 1) != -1) ||
+			(_cycleInRasterLine == (59 + 
+				(_cyclesPerRasterLine - VICII_PAL::_CYCLESPERRASTERLINE)) && spriteLineDataAt (nL, 2) != -1) ||
+			(_cycleInRasterLine == (61 + 
+				(_cyclesPerRasterLine - VICII_PAL::_CYCLESPERRASTERLINE)) && spriteLineDataAt (nL, 3) != -1) ||
+			(_cycleInRasterLine == (63 + 
+				(_cyclesPerRasterLine - VICII_PAL::_CYCLESPERRASTERLINE)) && spriteLineDataAt (nL, 4) != -1));
+	}
 }
 
 #endif

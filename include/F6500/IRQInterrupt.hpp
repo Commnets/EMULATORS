@@ -15,6 +15,7 @@
 #define __F6500_IRQINTERRUPT__
 
 #include <CORE/incs.hpp>
+#include <F6500/Interrupt.hpp>
 
 namespace F6500
 {
@@ -25,7 +26,7 @@ namespace F6500
 		static const unsigned int _ID = 0;
 
 		IRQInterrupt ()
-			: MCHEmul::CPUInterrupt (_ID),
+			: MCHEmul::CPUInterrupt (_ID, 7, 4),
 			  _exeAddress ()
 							{ setClassName ("IRQInterrupt"); }
 
@@ -38,8 +39,8 @@ namespace F6500
 
 		private:
 		/** Only when the status flag B allows it. It is a Maskarable Interrupt. */
-		virtual bool isTime (MCHEmul::CPU* c) const override; 
-		virtual bool executeOverImpl (MCHEmul::CPU* c, unsigned int& nC, unsigned int &nCR) override;
+		virtual bool isTime (MCHEmul::CPU* c, unsigned int cC) const override; 
+		virtual bool executeOverImpl (MCHEmul::CPU* c, unsigned int cC) override;
 
 		private:
 		// Implementation

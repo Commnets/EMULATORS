@@ -28,9 +28,11 @@ namespace MCHEmul
 		public:
 		CPUInterrupt () = delete;
 
-		CPUInterrupt (int id)
+		CPUInterrupt (int id, unsigned int cL, unsigned int rCL)
 			: InfoClass ("Interrupt"),
-			  _id (id), _active (false /** by default. */),
+			  _id (id),
+			  _cyclesToLaunch (cL), _readingCyclesToLaunch (rCL),
+			  _active (true /** by default. */),
 			  _inExecution (false),
 			  _lastClockCyclesExecuted (0)
 							{ }
@@ -65,13 +67,26 @@ namespace MCHEmul
 
 		/** The defult intialization of the interrupt leaves it inactive. */
 		virtual void initialize ()
-							{ _active = false; _lastClockCyclesExecuted = 0; }
+							{ _active = true; _lastClockCyclesExecuted = 0; }
 
+		// Managin the interruption itself...
+		/** To define whether the interrupt can or not be executed. 
+			It might be overloaded later, but using the internal method isTime (), 
+			that is invoked from this one. \n
+			The method receives a reference to the CPU where it has to be executed, 
+			and the CPU cycles when the interrupt happened. */
+		bool canBeExecutedOver (CPU* c, unsigned int cC)
+							{ assert (c != nullptr);
+							  return (active () && isTime (c, cC)); }
 		/** Receive the CPU the interrupts works for. \n
 			It receives also a reference to a variable where to load the number of cycles that
 			the execution tooks (when the return was ok), both total and reading cycles. \n
 			It returns true if ok and false if not. */
-		bool executeOver (CPU* c, unsigned int& nC, unsigned int& nCR);
+		bool executeOver (CPU* c, unsigned int cC);
+		unsigned int cyclesToLaunch () const
+							{ return (_cyclesToLaunch); }
+		unsigned int readingCyclesTolaunch () const
+							{ return (_readingCyclesToLaunch); }
 
 		/**
 		  *	The name of the fields are: \n
@@ -96,14 +111,15 @@ namespace MCHEmul
 		protected:
 		// These methods are invoked by executeOver (defined above);
 		/** To determine whether it is the time to execute the interruption. */
-		virtual bool isTime (CPU* c) const = 0;
+		virtual bool isTime (CPU* c, unsigned int cC) const = 0;
 		/** To really execute the interrupt. \n 
 			This must be overloaded by the real interrupt. \n
 			Returns when everything ok. */
-		virtual bool executeOverImpl (CPU* c, unsigned int& nC, unsigned int& nCR) = 0;
+		virtual bool executeOverImpl (CPU* c, unsigned int cC) = 0;
 
 		protected:
 		int _id;
+		unsigned int _cyclesToLaunch, _readingCyclesToLaunch;
 		bool _active;
 		bool _inExecution;
 		

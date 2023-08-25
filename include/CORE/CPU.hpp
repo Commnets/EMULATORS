@@ -24,6 +24,7 @@
 #include <CORE/ProgramCounter.hpp>
 #include <CORE/StatusRegister.hpp>
 #include <CORE/Instruction.hpp>
+#include <CORE/CPUInterrupt.hpp>
 #include <fstream>
 
 namespace MCHEmul
@@ -32,7 +33,20 @@ namespace MCHEmul
 	class CPU : public InfoClass
 	{
 		public:
-		CPU (const CPUArchitecture& a, const Registers& r, const StatusRegister& sR, const Instructions& ins);
+		/** The possible different states of the CPU. 
+			As the CPU can be overloaded, additional states could be added later. */
+		/** When a instruction is being executed... \n
+			Every instruction is made up of different internal steps \n
+			So the system will be in this state while a cycle of a instruction was still pending. */
+		static const unsigned int _EXECUTINGINSTRUCTION = 0; 
+		/** When the CPU is stopped because it has been requested (i.e) from other chip of the motherboard.
+			The CPU can be stopped for a number of cycles or "forever" (until someone unstops it). */
+		static const unsigned int _STOPPED = 1;
+
+		/** The most important attribute is maybe the "set of instructions". \n
+			Define them very carefully. They are the CORE of the processor. */
+		CPU (const CPUArchitecture& a, 
+			const Registers& r, const StatusRegister& sR, const Instructions& ins);
 
 		CPU (const CPU&) = delete;
 
@@ -45,9 +59,19 @@ namespace MCHEmul
 		CPU& operator = (CPU&&) = delete; 
 
 		bool stopped () const
-							{ return (_stopped); }
-		void setStop (bool s)
-							{ _stopped = s; }
+							{ return (_state == _STOPPED); }
+		/** 
+		  *	By default: \n
+		  *	Only possible to stop (s = true) if it was either executing an instruction or starting an interruption. \n
+		  *	Only possible to restart back (s = false) when it was previouly stopped.
+		  * Once the CPU resumes the execution of what it was doing previoulsy.
+		  * The stop can be partial. It is for a specific type of cycle (of the transaction under execution).
+		  * This behaviour can be overloaded later.
+		  */
+		virtual void setStop (bool s /** true when stop, 0 when run. */, 
+			unsigned int tC, /** Type of cycle affected when stop. 9999 means all. */
+			unsigned int cC, /** Number of cycles of the microprocessor when the the stop was requested. */
+			int nC = -1 /** how many cycles when s = true. -1 will mean forever. */);
 
 		const CPUArchitecture& architecture () const
 							{ return (_architecture); }
@@ -85,6 +109,7 @@ namespace MCHEmul
 		/** To get the next instruction (if any) attending to the location of the Program Counter. 
 			This method is not invoked but only from debugging reasons. */
 		const Instruction* nextInstruction () const;
+		/** To get the last instruction fully executed. */
 		const Instruction* lastInstruction () const
 							{ return (_lastInstruction); }
 
@@ -109,6 +134,7 @@ namespace MCHEmul
 		virtual bool restart ()
 							{ return (true); }
 
+		// Managing interruptions
 		/** To add and remove interrupts. */
 		const CPUInterrupts& interrupts () const
 							{ return (_interrupts); }
@@ -120,29 +146,42 @@ namespace MCHEmul
 							{ return ((*_interrupts.find (id)).second); }
 		void addInterrupt (CPUInterrupt* in);
 		void removeInterrrupt (int id);
+		/** And to request an interrupt. \n
+			Receives the id of the interruption requested, the clockCycle where it has happened,
+			and the sender (optional). \n
+			It can be overloaded, but by default just only one interruption at the same time can be invoked. */
+		virtual void requestInterrupt (int id, unsigned int nC, Chip* src = nullptr)
+							{ if (_interruptRequested == -1)
+								{ _interruptRequested = id; _clyclesAtInterruption = nC; } }
 
-		/** The core:
-			To execute the next instruction. \n
-			The execution of the instruction can be debugged. \n
-			The clock is affected. @see method lastClockCycles. */
-		bool executeNextInstruction ();
+		/** 
+		  *	The real CORE of the class. \n
+		  *	The behaviour can be changed and adapted to different types of CPUs, overloading this method. \n
+		  *	However the definition has always to be by cycle, as the CPU manages cycles.
+		  *	The CPU can be in different states. By default 2 are supported: \n
+		  *	1.- _EXECUTINGINSTRUCTION:	To execute a new instruction. \n
+		  *								Increments the _clockCycles variable un the number of cycles that the last instruction finally took. \n
+		  *	2.-	_STOPPED:				Just passes a cycle until the maximum declared is reached. \n
+		  *								Increments the _clokcCycles variable is just 1.
+		  * The CPU by default is always executing the first state unless it was stopped for a number of cycles. \n
+		  * An interruption might be invoked to the CPU during the simulation of any other chip. \n
+		  * If it was the case, before executing a new transaction, this situation will be taken into account.
+		  */
+		virtual bool executeNextCycle ();
 
-		// The CPU generates the clock cycles,
-		// than can be transmited to the rest of chips in the computer.
+		// Controlling the clock
 		/** The number of clockcycles since restarting. */
 		unsigned int clockCycles () const
 							{ return (_clockCycles); }
-		/** Add or subtract clock cycles. */
+		/** Add or subtract clock cycles to the total. 
+			By careful using these two methods. */
 		void addClockCycles (unsigned int cC)
 							{ _clockCycles += cC; }
 		void subtractClockCycles (unsigned int cC)
 							{ _clockCycles -= cC; }
-		/** To know the cycles of the last CPU execution. */
+		/** To know the cycles of the last CPU instruction/interuption launching execution. */
 		unsigned int lastCPUClockCycles () const
 							{ return (_lastCPUClockCycles); }
-		/** To know the cycles of the last reading activities. */
-		unsigned int lastCPUReadingClockCycles () const
-							{ return (_lastCPUReadingClockActivities); }
 
 		/** To get the last error happend (after initialize or simulate methods). */
 		unsigned int error () const
@@ -160,7 +199,7 @@ namespace MCHEmul
 		virtual InfoStructure getInfoStructure () const override;
 
 		/** Manages the deep debug file. \n
-			Take care it can be set back to a nullptr. */
+			Take care: it can be set back to a nullptr. */
 		bool deepDebugActive () const
 							{ return (_deepDebugFile != nullptr && _deepDebugFile -> active ()); }
 		void setDeepDebugFile (DebugFile* dF)
@@ -171,6 +210,17 @@ namespace MCHEmul
 							{ return (_deepDebugFile); }
 
 		protected:
+		/** To make a row data with the interruptions. */
+		void makeInterruptionRowData ();
+
+		// Internal methods to simplify the comprension of the code.
+		// Invoke from executeNextInstruction
+		/** When the state is: _EXECUTINGINST. */
+		virtual bool when_ExecutingInstruction ();
+		/** When the state is: _STOPPED. */
+		virtual bool when_Stopped ();
+
+		protected:
 		const CPUArchitecture _architecture = 
 			CPUArchitecture (2 /** 2 bytes arch. */, 1 /** 1 byte for instruction. */); // Adjusted at construction level
 		Registers _registers;
@@ -179,8 +229,8 @@ namespace MCHEmul
 		StatusRegister _statusRegister;
 		Memory* _memory; // A reference...
 		CPUInterrupts _interrupts;
-
-		Instruction* _lastInstruction;
+		/** The state. */
+		unsigned int _state;
 
 		// To manage the debug info...
 		DebugFile* _deepDebugFile;
@@ -194,12 +244,37 @@ namespace MCHEmul
 			Usually they are the cycles of a instruction except when interruptions
 			happens that the time to set up the interruption is also taken into account. */
 		unsigned int _lastCPUClockCycles;
-		/** THe number of _lastCPUClockCycles spend in reading activities. */
-		unsigned int _lastCPUReadingClockActivities;
-		bool _stopped; // When the CPU is stopped and no runCycle is executed...
+		/** The last state. */
+		unsigned int _lastState;
+
+		// Parameters related with the differet states of the CPU...
+		// When _EXECUTINGINST:
+		/** Last instruction executed. */
+		Instruction* _lastInstruction;
+
+		// When _STOPPED:
+		/** Number of cycles to be stopped. -1 when it is forever... */
+		int _cyclesStopped; 
+		/** Number of cycles of the processor when the stop was requested. */
+		unsigned int _cyclesAtStop;
+		/** Current number of cycles already stopped, 
+			obviously when it is the situation and it is nor forever. */
+		unsigned int _counterCyclesStopped;
+
+		/** When the CPU is executing a transaction, and a interruption is requested,
+			the current instruction has to finish first, and the the interruption is invoked. \n
+			It the CPU were stopped, first of all the CPU would have to run back 
+			and then finish the instruction that could be running when it was stopped. \n
+			The parameter has the id of the interrupt requested. -1 means none. */
+		int _interruptRequested;
+		/** In some CPU is important to know there the clock was when the interruption was requested. */
+		unsigned int _clyclesAtInterruption;
+
 		/** The instructions will be moved into an array at construction time,
 			to speed up their access in the executeNextInstruction method. */
 		std::vector <Instruction*> _rowInstructions;
+		/** Also a row vector with the interruptions. */
+		std::vector <CPUInterrupt*> _rowInterrupts;
 	};
 }
 

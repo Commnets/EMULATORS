@@ -38,11 +38,14 @@ IRQPRG1_EXIT:				.RECOVERREGISTERS
 
 * = $caa0
 BYTES $08														; Number of sprites managed by the program
-BYTES $40 $55 $6a $80 $95 $aa $c0 $d5							; Initial positions for the sprites (Y coordinate)
+BYTES $00 $00 $00 $00 $20 $00 $00 $00							; Initial positions for the sprites (X coordinate)
+BYTES $40 $55 $6a $80 $80 $aa $c0 $d5							; Initial positions for the sprites (Y coordinate)
+;BYTES $40 $55 $6a $80 $95 $aa $c0 $d5							; Initial positions for the sprites (Y coordinate)
 BYTES $01 $02 $03 $04 $05 $07 $00 $09							; Color of the sprites
 NUMBERSPRITES				= $caa0
-SPRITESPOSITION				= $caa1
-SPRITESCOLOR				= $caa9
+SPRITESPOSITIONX			= $caa1
+SPRITESPOSITIONY			= $caa9
+SPRITESCOLOR				= $cab0
 
 ; Define the sprite
 * = $0800
@@ -138,11 +141,11 @@ DRAWLETTERS:				lda #$01
 LOADSPRITES:				lda #$20							; Initial block (definition) for of the sprite 0.
 							sta TEMP02_DATA						; It will be also useful later!
 							sta SPRITE_BLOCKVAR,x
-							lda #$00							; Initial X position of the sprite 0.
+							lda SPRITESPOSITIONX,x				; Initial X position of the sprite 0.
 							sta SPRITE_XPOSVAR,x
 							lda #$00							; No MSB in X position for sprite 0.
 							sta SPRITE_XMSBPOSVAR,x
-							lda SPRITESPOSITION,x				; Initial Y position of the sprite 0. Never changes.
+							lda SPRITESPOSITIONY,x				; Initial Y position of the sprite 0. Never changes.
 							sta SPRITE_YPOSVAR,x			
 							lda SPRITESCOLOR,x
 							sta SPRITEBASECOLOR,x

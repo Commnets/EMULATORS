@@ -2,7 +2,7 @@
 #include <F6500/C6510.hpp>
 
 // ---
-bool F6500::NMIInterrupt::executeOverImpl (MCHEmul::CPU* c, unsigned int& nC, unsigned int& nCR)
+bool F6500::NMIInterrupt::executeOverImpl (MCHEmul::CPU* c, unsigned int cC)
 {
 	assert (c != nullptr);
 	assert (c -> memoryRef () != nullptr);
@@ -16,9 +16,6 @@ bool F6500::NMIInterrupt::executeOverImpl (MCHEmul::CPU* c, unsigned int& nC, un
 
 	pc.setAddress (MCHEmul::Address (c -> memoryRef () -> values 
 		(dynamic_cast <F6500::C6510*> (c) -> NMIVectorAddress (), 2), false /** Little - endian. */));
-
-	nC = 7; // It took 7 ticks to run it...
-	nCR = 4; // 4 of which where on reading activities...
 
 	return (!c -> memoryRef () -> stack () -> overflow ());
 }

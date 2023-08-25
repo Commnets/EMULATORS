@@ -272,7 +272,7 @@ bool MCHEmul::Computer::runComputerCycle (unsigned int a)
 		// The desativation of the deep debug is forbidden when
 		// a instruction is about to be executed...
 		_deepDebug.setBlockDesactivate ();
-		bool rInst = _cpu -> executeNextInstruction ();
+		bool rInst = _cpu -> executeNextCycle ();
 		// If some instruction tried to desactivate the debug, now it is the moment...
 		if (_deepDebug.desactivateTryWhenBlockDesativate ())
 			_deepDebug.desactivate ();
@@ -281,10 +281,10 @@ bool MCHEmul::Computer::runComputerCycle (unsigned int a)
 		{
 			_exit = true;
 
-			_error = MCHEmul::_CPU_ERROR;
+			_error = _cpu -> error ();
 
 			if (_debugLevel >= MCHEmul::_DEBUGERRORS)
-				std::cout << "Error executing instruction" << std::endl;
+				std::cout << "Error executing CPU Cycle:" << _error << std::endl;
 
 			return (false); // Error...
 		}

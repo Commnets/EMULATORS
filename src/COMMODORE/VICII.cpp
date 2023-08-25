@@ -10,7 +10,7 @@ const MCHEmul::RasterData COMMODORE::VICII_PAL::_HRASTERDATA (404, 480, 24, 343,
 
 // ---
 COMMODORE::VICII::VICII (const MCHEmul::RasterData& vd, const MCHEmul::RasterData& hd, 
-		int vV, const MCHEmul::Attributes& attrs)
+		int vV, unsigned short cRL, const MCHEmul::Attributes& attrs)
 	: MCHEmul::GraphicalChip (_ID, 
 		{ { "Name", "VICII" },
 		  { "Code", "6567/8562/8564 (NTSC), 6569/8565/8566 (PAL)" },
@@ -18,6 +18,7 @@ COMMODORE::VICII::VICII (const MCHEmul::RasterData& vd, const MCHEmul::RasterDat
 		  { "Year", "1983" } }),
 	  _VICIIRegisters (nullptr), 
 	  _VICIIView (vV),
+	  _cyclesPerRasterLine (cRL),
 	  _raster (vd, hd),
 	  _lastCPUCycles (0),
 	  _format (nullptr),
@@ -28,11 +29,11 @@ COMMODORE::VICII::VICII (const MCHEmul::RasterData& vd, const MCHEmul::RasterDat
 	  _graphicsLineSprites (8, MCHEmul::UBytes::_E),
 	  _isNewRasterLine (false),
 	  _cycleInRasterLine (1),
-	  _stopCPUCycles (0),
-	  _sprites4to8 (false), _sprites1to3 (false),
 	  _videoActive (true),
 	  _lastVBlankEntered (false)
 {
+	assert (_cyclesPerRasterLine >= 63);
+
 	setClassName ("VICII");
 
 	_format = SDL_AllocFormat (SDL_PIXELFORMAT_ARGB8888);
@@ -65,8 +66,9 @@ bool COMMODORE::VICII::initialize ()
 
 	_VICIIRegisters -> initialize ();
 
+	_readingGraphState = false;
+
 	_lastCPUCycles = 0;
-	_sprites4to8 = _sprites1to3 = false;
 
 	_graphicsScreenCodeData = MCHEmul::UBytes::_E; 
 	_graphicsGraphicData = MCHEmul::UBytes::_E;
@@ -76,8 +78,6 @@ bool COMMODORE::VICII::initialize ()
 	_isNewRasterLine = true; // The first...
 	
 	_cycleInRasterLine = 1;
-	_stopCPUCycles = 0;
-	_sprites4to8 = _sprites1to3 = false;
 
 	_videoActive = true;
 
@@ -89,199 +89,55 @@ bool COMMODORE::VICII::initialize ()
 // ---
 bool COMMODORE::VICII::simulate (MCHEmul::CPU* cpu)
 {
-	return (simulate_NEW (cpu));
-}
-
-// ---
-bool COMMODORE::VICII::simulate_OLD (MCHEmul::CPU* cpu)
-{
 	// If the "video reset flag" is actived nothing is done...
 	if (_VICIIRegisters -> videoResetActive ())
 		return (true);
-
-	// This is a function used inside to determine whether 
-	// a rater line is or not a bad one!
-	auto isBadRasterLine = [=]() -> bool
-		{ return (_videoActive && 
-				  _raster.currentLine () >= _FIRSTBADLINE &&
-				  _raster.currentLine () <= _LASTBADLINE && 
-				  (_raster.currentLine () & 0x07 /** The three last bits. */) == _VICIIRegisters -> verticalScrollPosition ()); };
 
 	// Adapt the size of the display zone to the parameters specificied in the register...
 	// The zone where sprites and texts are finally visible is call the "screen zone"
 	_raster.reduceDisplayZone
 		(!_VICIIRegisters -> textDisplay25RowsActive (), !_VICIIRegisters -> textDisplay40ColumnsActive ());
 
-	for (unsigned int i = (cpu -> clockCycles  () - _lastCPUCycles); i > 0 ; i--)
+	// The simulation has to be repeated as many timeas as cycles have spent since the last invocation...
+	for (unsigned int i = (cpu -> clockCycles  () - _lastCPUCycles); i > 0; i--)
 	{
-		// When the deep debug mode is active, the info about where the raster line of the VICII is in and 
-		// the graphical mode active is is printed out...
 		if (deepDebugActive ())
-			*deepDebugFile () 
-				<< "VICII: Raster at " 
+			*_deepDebugFile
+				<< "VICII=> Raster at [" 
 				<< std::to_string (_raster.currentColumnAtBase0 ()) << "," 
 				<< std::to_string (_raster.currentLineAtBase0 ())
-				<< ", Graphic mode "
+				<< "], Graphic mode:"
 				<< std::to_string ((int) _VICIIRegisters -> graphicModeActive ()) << "\n";
 
-		_videoActive = (_raster.currentLine () == _FIRSTBADLINE) 
-			? !_VICIIRegisters -> blankEntireScreen () : _videoActive; // Only at first bad line it can change its value...
+		// When the VIC is about to read info, a request to stop the CPU is sent
+		// unless a equivalent request was done before and it is still on...
+		if (!_readingGraphState && isAboutToReadGraphicalInfo ())
+		{ 
+			_readingGraphState = true;
 
-		// Any time a new line comes..
-		// ...and when the video is not active, the graphical information is read...
-		if (_isNewRasterLine)
-		{
-			memoryRef () -> setActiveView (_VICIIView);
+			cpu -> setStop (true, MCHEmul::Instruction::_CYCLEREAD, cpu -> clockCycles  () - i, 3);
 
 			if (deepDebugActive ())
-				*deepDebugFile () 
-					<< "VICII: Reading sprites info" << "\n";
-
-			// The sprites info at that line (if any) has to be read...
-			readSpritesDataAt (_raster.currentLine ());
-
-			// and if is it also a bad line?...
-			if (isBadRasterLine ())
-			{
-				if (deepDebugActive ())
-					*deepDebugFile () 
-						<< "VICII: Reading graphical info" << "\n";
-			
-				// ..the graphics / text / color info has to be read too
-				readGraphicsInfoAt (_raster.currentLine () - 
-					_FIRSTBADLINE - _VICIIRegisters -> verticalScrollPosition ());
-			}
-
-			// The VICII doesn't work actually like this
-			// The information about the sprites 0 to 3 is read during the last cycles of the previous raster line
-			// but this is a good proxy!
-
-			_isNewRasterLine = false;
-
-			memoryRef () -> setCPUView ();
+				*_deepDebugFile << "VICII=> Stop CPU cycles 3 pre-reading\n";
 		}
-
-		// Nothing else is done
-		// if the raster is not in a visible zone...
-		// But if it is...
-		// The light pen is also controlled here...
-		if (_raster.isInVisibleZone ())
-			simulate_VisibleZone (cpu);
-
-		// ...When the deep debug mode is active a line where the interruption is defined is also drawn
-		if (deepDebugActive ())
-		{
-			unsigned short lrt = 
-				_raster.lineInVisibleZone (_VICIIRegisters -> IRQRasterLineAt ());
-			if (lrt <= _raster.vData ().lastVisiblePosition ())
-			{
-				unsigned char clrt = _VICIIRegisters -> backgroundColor () == 15 
-					? 0 : _VICIIRegisters -> backgroundColor () + 1; /** to be visible. */
-				screenMemory () -> setHorizontalLine (0, lrt, _raster.visibleColumns (), clrt);
-			}
-		}
-
-		// Move 8 pixels right and jump to line is possible...
-		// If the current new line is one where has been declared to issue an IRQ...
-		// ...the situation is flagged into the register
-		// Whether finally a IRQ is or not issued is something that is calculated booton in this method...
-		if ((_isNewRasterLine = _raster.moveCycles (1)) &&
-			_raster.currentLine () == _VICIIRegisters -> IRQRasterLineAt ())
-			_VICIIRegisters -> activateRasterIRQ ();
-
-		if (_raster.isInLastVBlank ())
-		{
-			if (!_lastVBlankEntered)
-			{
-				_lastVBlankEntered = true;
-
-				notify (MCHEmul::Event (_GRAPHICSREADY)); 
-			}
-		}
-		else
-			_lastVBlankEntered = false;
-	}
-
-	_lastCPUCycles = cpu -> clockCycles (); 
-
-	_VICIIRegisters -> setCurrentRasterLine (_raster.currentLine ()); 
-
-	if (_VICIIRegisters -> launchIRQ ())
-		cpu -> interrupt (F6500::IRQInterrupt::_ID) -> setActive (true);
-
-	return (true);
-}
-
-// ---
-bool COMMODORE::VICII::simulate_NEW (MCHEmul::CPU* cpu)
-{
-	// If the "video reset flag" is actived nothing is done...
-	if (_VICIIRegisters -> videoResetActive ())
-		return (true);
-
-	enum RasterLineStatus
-	{
-		_BEFOREVISIBLEZONE = 0,
-		_VISIBLEZONE,
-		_AFTERVISIBLEZONE
-	};
-
-	// Adapt the size of the display zone to the parameters specificied in the register...
-	// The zone where sprites and texts are finally visible is call the "screen zone"
-	_raster.reduceDisplayZone
-		(!_VICIIRegisters -> textDisplay25RowsActive (), !_VICIIRegisters -> textDisplay40ColumnsActive ());
-
-	unsigned int cc = 
-		(cpu -> clockCycles  () - _lastCPUCycles) + ((_stopCPUCycles > 0) ? 1 : 0);
-	for (; cc > 0; cc--)
-	{
-		// When the deep debug mode is active, the info about where the raster line of the VICII is in and 
-		// the graphical mode active is is printed out...
-		if (deepDebugActive ())
-			*deepDebugFile () 
-				<< "VICII: Raster at " 
-				<< std::to_string (_raster.currentColumnAtBase0 ()) << "," 
-				<< std::to_string (_raster.currentLineAtBase0 ())
-				<< ", Graphic mode "
-				<< std::to_string ((int) _VICIIRegisters -> graphicModeActive ()) << "\n";
 
 		_videoActive = (_raster.currentLine () == _FIRSTBADLINE) 
 			? !_VICIIRegisters -> blankEntireScreen () : _videoActive; // Only at first bad line it can change its value...
 
-		if (_stopCPUCycles > 0)
-		{ 
-			_stopCPUCycles--;
-
-			cpu -> addClockCycles (1);
-		}
-
 		// Depending on the cycle the VICII does different things...
-		switch ((_cycleInRasterLine >= 1 && _cycleInRasterLine <= 9) 
-			? _BEFOREVISIBLEZONE
-			: ((_cycleInRasterLine >= 10 && _cycleInRasterLine <= 55) 
-				? _VISIBLEZONE
-				: _AFTERVISIBLEZONE))
+		unsigned int cS = 0;
+		if (_cycleInRasterLine >= 1 && _cycleInRasterLine <= 9) simulate_BEFOREVISIBLEZONE (cpu, cS);
+		else if (_cycleInRasterLine >= 10 && _cycleInRasterLine <= 55) simulate_VISIBLEZONE (cpu, cS);
+		else simulate_AFTERVISIBLEZONE (cpu, cS);
+		// Stops the CPU when it has been decided in the internal methods...
+		// ...and for the number of cycles also decided...
+		if (cS > 0)
 		{
-			case _BEFOREVISIBLEZONE:
-				{
-					_stopCPUCycles += simulate_BEFOREVISIBLEZONE (cpu);
-				}
+			cpu -> setStop (true, MCHEmul::Instruction::_CYCLEREAD, _lastCPUCycles + i, (int) cS);
 
-				break;
-
-			case _VISIBLEZONE:
-				{
-					_stopCPUCycles += simulate_VISIBLEZONE (cpu);
-				}
-
-				break;
-
-			case _AFTERVISIBLEZONE:
-				{
-					_stopCPUCycles += simulate_AFTERVISIBLEZONE (cpu);
-				}
-
-				break;
+			if (deepDebugActive ())
+				*_deepDebugFile << "VICII=> Stop CPU cycles:" 
+								<< std::to_string (cS) << "\n";
 		}
 
 		// ...When the deep debug mode is active a line where the interruption is defined is also drawn...
@@ -297,9 +153,6 @@ bool COMMODORE::VICII::simulate_NEW (MCHEmul::CPU* cpu)
 			}
 		}
 
-		// Stops the CPU when it has been decided in the internal methods...
-		cpu -> setStop (_stopCPUCycles > 0);
-
 		// Move to the next cycle...
 		_cycleInRasterLine++;
 
@@ -310,10 +163,6 @@ bool COMMODORE::VICII::simulate_NEW (MCHEmul::CPU* cpu)
 		if (_isNewRasterLine = _raster.moveCycles (1))
 		{
 			_cycleInRasterLine = 1;
-			
-			_sprites4to8 = _sprites1to3 = false;
-			
-			_stopCPUCycles = 0;
 
 			if (_raster.currentLine () == _VICIIRegisters -> IRQRasterLineAt ())
 				_VICIIRegisters -> activateRasterIRQ ();
@@ -330,131 +179,116 @@ bool COMMODORE::VICII::simulate_NEW (MCHEmul::CPU* cpu)
 		}
 		else
 			_lastVBlankEntered = false;
-	}
 
-	_lastCPUCycles = cpu -> clockCycles ();
+		if (_VICIIRegisters -> launchIRQ ())
+			cpu -> requestInterrupt (F6500::IRQInterrupt::_ID, cpu -> clockCycles  () - i, this);
+	}
 
 	_VICIIRegisters -> setCurrentRasterLine (_raster.currentLine ()); 
 
-	if (_VICIIRegisters -> launchIRQ ())
-		cpu -> interrupt (F6500::IRQInterrupt::_ID) -> setActive (true);
+	_lastCPUCycles = cpu -> clockCycles ();
 
 	return (true);
 }
 
 // ---
-unsigned int COMMODORE::VICII::simulate_BEFOREVISIBLEZONE (MCHEmul::CPU* cpu)
+void COMMODORE::VICII::simulate_BEFOREVISIBLEZONE (MCHEmul::CPU* cpu, unsigned int& cS)
 {
-	unsigned int result = 0;
-
 	if (_cycleInRasterLine == 1 ||
 		_cycleInRasterLine == 3 ||
 		_cycleInRasterLine == 5 ||
 		_cycleInRasterLine == 7 ||
 		_cycleInRasterLine == 9)
 	{
-		if (deepDebugActive ())
-			*deepDebugFile () 
-				<< "VICII: Reading sprite info " << std::to_string ((_cycleInRasterLine >> 1) + 3) << "\n";
-
-		// Read the sprite data...
 		memoryRef () -> setActiveView (_VICIIView);
-		
+
+		// Is there sprite info avaliable?
 		if (readSpriteDataAt (_raster.currentLine (), 
-			(_cycleInRasterLine >> 1) + 3 /** 3, 4, 5, 6 or 7. */))
+			((_cycleInRasterLine - 1) >> 1) + 3 /** 3, 4, 5, 6 or 7. */))
 		{ 
- 		  	result = 1;
-			if (!_sprites4to8)
-				_sprites4to8 = true;
+			cS = 2;	// VICII has to read three bytes, Meaning 2 clock cycles stopped more... 
+
+			if (deepDebugActive ())
+				*_deepDebugFile
+					<< "VICII=> Reading info sprite:" << std::to_string ((_cycleInRasterLine >> 1) + 3) << "\n";
 		}
+		// If not, the reading state declared previously is not longer valid...
+		else
+			_readingGraphState = false;
 
 		memoryRef () -> setCPUView ();
 	}
-
-	return (result);
 }
 
 // ---
-unsigned int COMMODORE::VICII::simulate_VISIBLEZONE (MCHEmul::CPU* cpu)
+void COMMODORE::VICII::simulate_VISIBLEZONE (MCHEmul::CPU* cpu, unsigned int& cS)
 {
-	unsigned int result = 0;
-
-	// This is a function used inside to determine whether 
-	// a rater line is or not a bad one!
-	auto isBadRasterLine = [=]() -> bool
-		{ return (_videoActive && 
-				  _raster.currentLine () >= _FIRSTBADLINE &&
-				  _raster.currentLine () <= _LASTBADLINE && 
-				  (_raster.currentLine () & 0x07 /** The three last bits. */) == _VICIIRegisters -> verticalScrollPosition ()); };
-
 	// This is not exactly what VICII does
 	// as it is reading cycle by cyle the bytes in the memory
 	// But it is a good aproximation!
-	if (_cycleInRasterLine == 10)
+	if (_cycleInRasterLine == 15)
 	{
-		if (isBadRasterLine ())
+		if (isBadLine ())
 		{
-			if (deepDebugActive ())
-				*deepDebugFile () 
-					<< "VICII: Reading graphical info" << "\n";
-
-			result = 43; // The number of cycles added to the cpu...
-
 			memoryRef () -> setActiveView (_VICIIView);
 
 			readGraphicsInfoAt (_raster.currentLine () - 
 				_FIRSTBADLINE - _VICIIRegisters -> verticalScrollPosition ());
 
+			// 40 cycles more just for reading the chars...
+			cS = 40;
+
+			if (deepDebugActive ())
+				*_deepDebugFile
+					<< "VICII=> Reading graphical info" << "\n";
+
 			memoryRef () -> setCPUView ();
 		}
-	}
-	else
-	{
-		if (_raster.isInVisibleZone ())
-			simulate_VisibleZone (cpu);
+		else
+			_readingGraphState = false;
 	}
 
-	return (result);
+	// Is this zone there would be a remaining visible zone...
+	if (_raster.isInVisibleZone ())
+		drawInVisibleZone (cpu);
 }
 
 // ---
-unsigned int COMMODORE::VICII::simulate_AFTERVISIBLEZONE (MCHEmul::CPU* cpu)
+void COMMODORE::VICII::simulate_AFTERVISIBLEZONE (MCHEmul::CPU* cpu, unsigned int & cS)
 {
-	unsigned int result = 0;
-
 	// This is not totally true as it will depend on the type of VIC, 
 	// ...but it a s good aproximation...
-	if (_cycleInRasterLine == 58 ||
-		_cycleInRasterLine == 60 ||
-		_cycleInRasterLine == 62) 
+	if (_cycleInRasterLine == 58 + (_cyclesPerRasterLine - COMMODORE::VICII_PAL::_CYCLESPERRASTERLINE) ||
+		_cycleInRasterLine == 60 + (_cyclesPerRasterLine - COMMODORE::VICII_PAL::_CYCLESPERRASTERLINE) ||
+		_cycleInRasterLine == 62 + (_cyclesPerRasterLine - COMMODORE::VICII_PAL::_CYCLESPERRASTERLINE)) 
 	{
-		if (deepDebugActive ())
-			*deepDebugFile ()
-				<< "VICII: Reading sprite info " << std::to_string ((_cycleInRasterLine - 58) >> 1) << "\n";
-
-		// Read the sprite data...
 		memoryRef () -> setActiveView (_VICIIView);
 
+		// Is there sprite info available?
 		if (readSpriteDataAt (_raster.nextLine (), // The sprite info read is for the next line...
-			(_cycleInRasterLine - 58) >> 1 /** 0, 1 or 2. */))
+			(_cycleInRasterLine - (58 + (_cyclesPerRasterLine - COMMODORE::VICII_PAL::_CYCLESPERRASTERLINE))) >> 1 /** 0, 1 or 2. */))
 		{
- 		   result = 1;
-		   if (!_sprites1to3)
-			   _sprites1to3 = true;
+			cS = 2;	// VICII has to read three bytes, Meaning 2 clock cycles stopped more... 
+
+			if (deepDebugActive ())
+				*_deepDebugFile
+					<< "VICII=> Reading info sprite:" << std::to_string ((_cycleInRasterLine - 58) >> 1) << "\n";
 		}
+		// If not, the reading state declared previously is not longer valid...
+		else
+			_readingGraphState = false;
+
 
 		memoryRef () -> setCPUView ();
 	}
 
 	// Is this zone there would be a remaining visible zone...
 	if (_raster.isInVisibleZone ())
-		simulate_VisibleZone (cpu);
-
-	return (result);
+		drawInVisibleZone (cpu);
 }
 
 // ---
-void COMMODORE::VICII::simulate_VisibleZone (MCHEmul::CPU* cpu)
+void COMMODORE::VICII::drawInVisibleZone (MCHEmul::CPU* cpu)
 {
 	// These two variables are very key
 	// They hold the position of the raster within the visible zone.
@@ -1260,7 +1094,7 @@ void COMMODORE::VICII::detectCollisions (const MCHEmul::UByte& g, const std::vec
 // ---
 COMMODORE::VICII_NTSC::VICII_NTSC (int vV)
 	: COMMODORE::VICII (
-		 _VRASTERDATA, _HRASTERDATA, vV,
+		 _VRASTERDATA, _HRASTERDATA, vV, 64,
 		 { { "Name", "VIC-II (NTSC) Video Chip Interface II" },
 		   { "Code", "6567/8562/8564" },
 		   { "Manufacturer", "MOS Technology INC/Commodore Semiconductor Group (CBM)"},
@@ -1272,7 +1106,7 @@ COMMODORE::VICII_NTSC::VICII_NTSC (int vV)
 // ---
 COMMODORE::VICII_PAL::VICII_PAL (int vV)
 	: COMMODORE::VICII (
-		 _VRASTERDATA, _HRASTERDATA, vV,
+		 _VRASTERDATA, _HRASTERDATA, vV, 63,
 		 { { "Name", "VIC-II (PAL) Video Chip Interface II" },
 		   { "Code", "6569/8565/8566" },
 		   { "Manufacturer", "MOS Technology INC/Commodore Semiconductor Group (CBM)"},
