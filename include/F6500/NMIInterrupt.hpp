@@ -20,13 +20,13 @@
 namespace F6500
 {
 	/** A non Maskarable Interrupt. Any time it is invoked it has to be executed. */
-	class NMIInterrupt final : public MCHEmul::CPUInterrupt
+	class NMIInterrupt final : public Interrupt
 	{
 		public:
 		static const int _ID = 1;
 
 		NMIInterrupt ()
-			: MCHEmul::CPUInterrupt (_ID, 7, 4),
+			: Interrupt (_ID, 7, 4),
 			  _exeAddress ()
 							{ setClassName ("NMIInterrupt"); }
 
@@ -38,9 +38,6 @@ namespace F6500
 		virtual MCHEmul::InfoStructure getInfoStructure () const override;
 
 		private:
-		/** Always. It is a Non Maskarable Interrupt. */
-		virtual bool isTime (MCHEmul::CPU* c, unsigned int cC) const override 
-							{return (true); } 
 		virtual bool executeOverImpl (MCHEmul::CPU* c, unsigned int cC) override;
 
 		private:

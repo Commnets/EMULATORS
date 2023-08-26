@@ -20,13 +20,13 @@
 namespace F6500
 {
 	/** A Maskarable Interrupt. It could be avoided using the bit I of the status flag. */
-	class IRQInterrupt final : public MCHEmul::CPUInterrupt
+	class IRQInterrupt final : public Interrupt
 	{
 		public:
 		static const unsigned int _ID = 0;
 
 		IRQInterrupt ()
-			: MCHEmul::CPUInterrupt (_ID, 7, 4),
+			: Interrupt (_ID, 7, 4),
 			  _exeAddress ()
 							{ setClassName ("IRQInterrupt"); }
 

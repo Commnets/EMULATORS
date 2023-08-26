@@ -46,6 +46,10 @@ void MCHEmul::CPU::setStop (bool s, unsigned int tC, unsigned int cC, int nC)
 	// Stop requested...
 	if (s)
 	{
+		if (deepDebugActive ())
+			*_deepDebugFile 
+				<< "\t\t\t\tStop CPU requested:" << std::to_string (nC) << " cycles\n";
+
 		// ...if already stopped the cycles are added
 		// ...but no counter is updated!
 		if (_state == CPU::_STOPPED)
@@ -160,6 +164,21 @@ void MCHEmul::CPU::removeInterrrupt (int id)
 }
 
 // ---
+void MCHEmul::CPU::requestInterrupt (int id, unsigned int nC, MCHEmul::Chip* src)
+{ 
+	if (_interruptRequested == -1)
+	{ 
+		_interruptRequested = id; 
+		
+		_clyclesAtInterruption = nC; 
+
+		if (deepDebugActive ())
+			*_deepDebugFile 
+				<< "\t\t\t\tInterrupt CPU requested:" << std::to_string (id) << "\n";
+	} 
+}
+
+// ---
 bool MCHEmul::CPU::executeNextCycle ()
 {
 	memoryRef () -> setCPUView (); // Always...
@@ -224,6 +243,17 @@ bool MCHEmul::CPU::when_ExecutingInstruction ()
 {
 	assert (_state == MCHEmul::CPU::_EXECUTINGINSTRUCTION);
 
+	if (deepDebugActive ())
+		*_deepDebugFile
+			// Where
+			<< "CPU\t\t"
+			// When
+			<< std::to_string (_clockCycles) << "\t"
+			// What
+			<< "Info Cycle\t\t"
+			// Data
+			<< "Last:" + ((_lastInstruction == nullptr) ? "0" : std::to_string (_lastInstruction -> clockCycles ())) + " cycles\n";
+
 	// The activation of the interruptions has priority over the execution of the code
 	// But to execute, the last instruction must finish, 
 	// otherwise the execution is not possible...
@@ -233,8 +263,7 @@ bool MCHEmul::CPU::when_ExecutingInstruction ()
 		intr -> canBeExecutedOver (this, _clyclesAtInterruption)) // ...and the execution can depend on internal state of the CPU...
 	{
 		if (deepDebugActive ())
-			*_deepDebugFile << "CPU=> Interruption to start:" 
-							<< std::to_string (intr -> id ()) << "\n";
+			*_deepDebugFile << "\t\t\t\tInterrupt launched:" << std::to_string (intr -> id ()) << "\n";
 
 		_lastCPUClockCycles = intr -> cyclesToLaunch ();
 		_clockCycles += _lastCPUClockCycles;
@@ -266,8 +295,8 @@ bool MCHEmul::CPU::when_ExecutingInstruction ()
 
 	std::string sdd = "";
 	if (deepDebugActive ())
-		sdd = MCHEmul::removeAll0 (_programCounter.asString ()) + ":(SP " 
-					+ std::to_string (memoryRef () -> stack () -> position ()) + ") ";
+		sdd = MCHEmul::removeAll0 (_programCounter.asString ()) + "(Stack "
+				+ std::to_string (memoryRef () -> stack () -> position ()) + ") ";
 
 	// Gets the data that the instruction occupies
 	// before updating the Program Counter...
@@ -292,11 +321,14 @@ bool MCHEmul::CPU::when_ExecutingInstruction ()
 		{
 			std::string lSt = ""; 
 			size_t lenI = (lSt = _lastInstruction -> asString ()).size ();
-			*_deepDebugFile << sdd // ...The program counter and the stack position...
-							<< lSt << MCHEmul::_SPACES.substr (0, 20 - lenI) << "\t" // The last instruction...
-							<< _statusRegister.asString () << "\t"; // ...The status register...
+			*_deepDebugFile 
+					<< "\t\t\t\t"
+					<< sdd // ...The program counter and the stack position...
+					<< lSt << MCHEmul::_SPACES.substr (0, 15 - lenI) << "\t" // The last instruction...
+					<< _statusRegister.asString () << "\t"; // ...The status register...
 			for (const auto& i : _registers) 
-				*_deepDebugFile << " " << i.asString () << " "; // ...and the registers info.
+				*_deepDebugFile 
+					<< " " << i.asString () << " "; // ...and the registers info.
 			*_deepDebugFile << "\n";
 		}
 	}
@@ -317,8 +349,15 @@ bool MCHEmul::CPU::when_Stopped ()
 	assert (_state == MCHEmul::CPU::_STOPPED);
 
 	if (deepDebugActive ())
-		*_deepDebugFile << "CPU=> Stopped cycle:" 
-						<< ((_cyclesStopped == -1) ? "-" : std::to_string (_counterCyclesStopped)) << "\n";
+		*_deepDebugFile 
+			// Where
+			<< "CPU\t\t"
+			// When
+			<< std::to_string (_clockCycles) << "\t"
+			// What
+			<< "Stopped\t\t"
+			// Data
+			<< ((_cyclesStopped == -1) ? "-" : std::to_string (_counterCyclesStopped)) << " cycle\n";
 
 	if (_cyclesStopped != -1 &&
 		(++_counterCyclesStopped == (unsigned int) _cyclesStopped))

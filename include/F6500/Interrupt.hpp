@@ -27,7 +27,7 @@ namespace F6500
 			  _instChecked (false)
 							{ }
 
-		private:
+		protected:
 		/** As the code is designed, the interrupt is invoked after the execution of one instruction,
 			when the _lockCycles of the CPU have been actualized, 
 			but it should have been launched at cC cycles (the chip decides when). \n
@@ -35,7 +35,8 @@ namespace F6500
 		virtual bool isTime (MCHEmul::CPU* c, unsigned int cC) const override;
 		/** Just to put back the counter to 0. */
 		virtual bool executeOverImpl (MCHEmul::CPU* c, unsigned int cC) override
-							{ _instChecked = false; /** just in case. */ }
+							{ _instChecked = false; /** Just in case. */ 
+							  return (true); /** Not relevant. */ }
 
 		private:
 		// Implementation

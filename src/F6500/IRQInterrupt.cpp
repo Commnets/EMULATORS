@@ -4,12 +4,15 @@
 // ---
 bool F6500::IRQInterrupt::isTime (MCHEmul::CPU* c, unsigned int cC) const
 {
-	return (!c -> statusRegister ().bitStatus (F6500::C6500::_IRQFLAG));
+	return (!c -> statusRegister ().bitStatus (F6500::C6500::_IRQFLAG) &&
+			F6500::Interrupt::isTime (c, cC));
 }
 
 // ---
 bool F6500::IRQInterrupt::executeOverImpl (MCHEmul::CPU* c, unsigned int cC)
 {
+	F6500::Interrupt::executeOverImpl (c, cC);
+
 	assert (c != nullptr);
 	assert (c -> memoryRef () != nullptr);
 	assert (c -> memoryRef () -> stack () != nullptr);

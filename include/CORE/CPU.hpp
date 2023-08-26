@@ -150,9 +150,7 @@ namespace MCHEmul
 			Receives the id of the interruption requested, the clockCycle where it has happened,
 			and the sender (optional). \n
 			It can be overloaded, but by default just only one interruption at the same time can be invoked. */
-		virtual void requestInterrupt (int id, unsigned int nC, Chip* src = nullptr)
-							{ if (_interruptRequested == -1)
-								{ _interruptRequested = id; _clyclesAtInterruption = nC; } }
+		virtual void requestInterrupt (int id, unsigned int nC, Chip* src = nullptr);
 
 		/** 
 		  *	The real CORE of the class. \n

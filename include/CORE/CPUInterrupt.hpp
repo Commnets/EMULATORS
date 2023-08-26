@@ -69,7 +69,7 @@ namespace MCHEmul
 		virtual void initialize ()
 							{ _active = true; _lastClockCyclesExecuted = 0; }
 
-		// Managin the interruption itself...
+		// Managin the interrupt itself...
 		/** To define whether the interrupt can or not be executed. 
 			It might be overloaded later, but using the internal method isTime (), 
 			that is invoked from this one. \n
