@@ -94,9 +94,9 @@ namespace COMMODORE
 			In this case sprite and graphical info is taken into account to determine collisions. */
 		virtual bool simulate (MCHEmul::CPU* cpu) override;
 		/** Associated with the previous method. */
-		void simulate_BEFOREVISIBLEZONE (MCHEmul::CPU* cpu, unsigned int& cS);
-		void simulate_VISIBLEZONE (MCHEmul::CPU* cpu, unsigned int& cS);
-		void simulate_AFTERVISIBLEZONE (MCHEmul::CPU* cpu, unsigned int &cS);
+		void simulate_BEFORESCREENCYCLES (MCHEmul::CPU* cpu, unsigned int& cS);
+		void simulate_SCREENCYCLES (MCHEmul::CPU* cpu, unsigned int& cS);
+		void simulate_AFTERSCREENCYCLES (MCHEmul::CPU* cpu, unsigned int &cS);
 		void drawInVisibleZone (MCHEmul::CPU* cpu);
 
 		/**
@@ -311,6 +311,33 @@ namespace COMMODORE
 		bool _videoActive;
 		/** Whether the vertical raster has entered the last VBlank zone already. */
 		bool _lastVBlankEntered;
+
+		// Pending to be implemented...
+		/** 
+		  * Important things that happen suring the raster line and affects the sprites...
+		  *	As the raster moves the VICII has to decide	which sprite info to draw.\n
+		  *	That is based on info gather in three major variables. \n
+		  *	The rules to manipulate every value are decribed below attending to the cycle in the raster. \n
+		  *	https://www.cebix.net/VIC-Article.txt. (point 3.8.1): \n
+		  *	The vertical flipflop is set as long as 
+		  *	the bit in the resgiter $d017 (vertical expansion) is cleared. \n
+		  *	CYCLE 55 (PAL):			If the bit in the register $d017 is set, the _FF is inverted. \n
+		  *	CYCLE 55 & 56 (PAL):	The VICII checks whether every sprite is on (bit at $d015) 
+		  *							and the Y coordinate of the sprite matches the lower 8 bits of the raster. \n
+		  *							If _DMA is still off, the is it is activated, _MCBASE is cleared,
+		  *							and if the bit in the register $d017 is set the _FF is reset (put back to true). \n
+		  *	CYCLE 58 (PAL):			_MCBASE is moved to MC. \n
+		  *							If _DMA is on and (again) the Y coordinate matches the lower 8 bits of the raster 
+		  *							the visualization of the Sprite is swithed on!. \n
+		  *	CYCLEs ss:				If _DMA is switched the sprite data is accesed and the _MC is incremented in 3. \n
+		  *	CYCLE visible:			If _visible is true, the sprite info is drawn. \n
+		  *							The rules to dowble the X size are taken as the visualization of each comes. \n
+		  *	CYCLE 15:				If the _FF is set, _MCBASE is incremented in 2. \n
+		  *	CYCLE 16:				If the _FF is set, _MCBASE is incremented in 1. \n
+		  *							If _MCBASE is 63 then _DMA and _visible are set to off. \n
+		  * In our simulation neither _MC is not needed, and MCBASE is just to control 63 bytes.
+		  *	as the variables that control the situation that they referes to are different
+		  */
 	};
 
 	// ---
@@ -378,6 +405,10 @@ namespace COMMODORE
 	// ---
 	inline int VICII::spriteLineDataAt (unsigned short l, size_t nS) const
 	{
+		// The VICII checks whether a sprite is visible at the raster cycle 55/56
+		// and also whether the Y coordinate matches the lower 8 bits of the raster
+		// so determine whether to draw it from the next line onwards.
+		// This is the reason whoy the line of the Y coordinate should be 1 less than the raster!
 		int lY = l - _VICIIRegisters -> spriteYCoord (nS) - 1;
 		return ((_VICIIRegisters -> spriteEnable (nS) &&
 			(lY >= 0 && lY < (_VICIIRegisters -> spriteDoubleHeight (nS) ? 42 /** When double high. */ : 21))) ? lY : -1);

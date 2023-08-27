@@ -133,9 +133,10 @@ bool COMMODORE::VICII::simulate (MCHEmul::CPU* cpu)
 
 		// Depending on the cycle the VICII does different things...
 		unsigned int cS = 0;
-		if (_cycleInRasterLine >= 1 && _cycleInRasterLine <= 9) simulate_BEFOREVISIBLEZONE (cpu, cS);
-		else if (_cycleInRasterLine >= 10 && _cycleInRasterLine <= 55) simulate_VISIBLEZONE (cpu, cS);
-		else simulate_AFTERVISIBLEZONE (cpu, cS);
+		if (_cycleInRasterLine >= 1 && _cycleInRasterLine < 10) simulate_BEFORESCREENCYCLES (cpu, cS);
+		else if (_cycleInRasterLine >= 10 && _cycleInRasterLine < 55) simulate_SCREENCYCLES (cpu, cS);
+		// The non scrren zone can vary depending on the type of VICII chip...
+		else simulate_AFTERSCREENCYCLES (cpu, cS);
 		// Stops the CPU when it has been decided in the internal methods...
 		// ...and for the number of cycles also decided...
 		if (cS > 0)
@@ -192,7 +193,7 @@ bool COMMODORE::VICII::simulate (MCHEmul::CPU* cpu)
 }
 
 // ---
-void COMMODORE::VICII::simulate_BEFOREVISIBLEZONE (MCHEmul::CPU* cpu, unsigned int& cS)
+void COMMODORE::VICII::simulate_BEFORESCREENCYCLES (MCHEmul::CPU* cpu, unsigned int& cS)
 {
 	if (_cycleInRasterLine == 1 ||
 		_cycleInRasterLine == 3 ||
@@ -218,7 +219,7 @@ void COMMODORE::VICII::simulate_BEFOREVISIBLEZONE (MCHEmul::CPU* cpu, unsigned i
 }
 
 // ---
-void COMMODORE::VICII::simulate_VISIBLEZONE (MCHEmul::CPU* cpu, unsigned int& cS)
+void COMMODORE::VICII::simulate_SCREENCYCLES (MCHEmul::CPU* cpu, unsigned int& cS)
 {
 	// This is not exactly what VICII does
 	// as it is reading cycle by cyle the bytes in the memory
@@ -245,7 +246,7 @@ void COMMODORE::VICII::simulate_VISIBLEZONE (MCHEmul::CPU* cpu, unsigned int& cS
 }
 
 // ---
-void COMMODORE::VICII::simulate_AFTERVISIBLEZONE (MCHEmul::CPU* cpu, unsigned int & cS)
+void COMMODORE::VICII::simulate_AFTERSCREENCYCLES (MCHEmul::CPU* cpu, unsigned int & cS)
 {
 	// This is not totally true as it will depend on the type of VIC, 
 	// ...but it a s good aproximation...
