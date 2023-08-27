@@ -112,7 +112,8 @@ bool COMMODORE::VICII::simulate (MCHEmul::CPU* cpu)
 				// Data
 				<< "Raster:["
 				<< std::to_string (_raster.currentColumnAtBase0 ()) << "," 
-				<< std::to_string (_raster.currentLineAtBase0 ())
+				<< std::to_string (_raster.currentLineAtBase0 ()) << ","
+				<< std::to_string (_cycleInRasterLine)
 				<< "], Graphics:"
 				<< std::to_string ((int) _VICIIRegisters -> graphicModeActive ()) << "\n";
 

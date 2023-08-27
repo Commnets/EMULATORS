@@ -38,10 +38,11 @@ IRQPRG1_EXIT:				.RECOVERREGISTERS
 
 * = $caa0
 BYTES $08														; Number of sprites managed by the program
-BYTES $00 $00 $00 $00 $20 $00 $00 $00							; Initial positions for the sprites (X coordinate)
-BYTES $40 $55 $6a $80 $80 $aa $c0 $d5							; Initial positions for the sprites (Y coordinate)
-;BYTES $40 $55 $6a $80 $95 $aa $c0 $d5							; Initial positions for the sprites (Y coordinate)
-BYTES $01 $02 $03 $04 $05 $07 $00 $09							; Color of the sprites
+;BYTES $00 $00 $00 $00 $20 $00 $00 $00							; Original initial positions for the sprites (X coordinate)
+;BYTES $40 $55 $6a $80 $95 $aa $c0 $d5							; Original initial positions for the sprites (Y coordinate)
+BYTES $00 $20 $40 $60 $80 $a0 $c0 $e0							; Initial positions for the sprites (X coordinate)
+BYTES $60 $60 $60 $60 $60 $60 $60 $60							; Initial positions for the sprites (Y coordinate)
+BYTES $01 $02 $03 $04 $05 $07 $08 $09							; Color of the sprites
 NUMBERSPRITES				= $caa0
 SPRITESPOSITIONX			= $caa1
 SPRITESPOSITIONY			= $caa9
