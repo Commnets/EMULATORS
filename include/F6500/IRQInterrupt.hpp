@@ -26,7 +26,7 @@ namespace F6500
 		static const unsigned int _ID = 0;
 
 		IRQInterrupt ()
-			: Interrupt (_ID, 7, 4),
+			: Interrupt (_ID),
 			  _exeAddress ()
 							{ setClassName ("IRQInterrupt"); }
 

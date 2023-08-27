@@ -66,8 +66,6 @@ bool COMMODORE::VICII::initialize ()
 
 	_VICIIRegisters -> initialize ();
 
-	_readingGraphState = false;
-
 	_lastCPUCycles = 0;
 
 	_graphicsScreenCodeData = MCHEmul::UBytes::_E; 
@@ -117,6 +115,9 @@ bool COMMODORE::VICII::simulate (MCHEmul::CPU* cpu)
 				<< "], Graphics:"
 				<< std::to_string ((int) _VICIIRegisters -> graphicModeActive ()) << "\n";
 
+		_videoActive = (_raster.currentLine () == _FIRSTBADLINE) 
+			? !_VICIIRegisters -> blankEntireScreen () : _videoActive; // Only at first bad line it can change its value...
+
 		// Always when there is a new line the Raster IRQ has to be checked, 
 		// and the situation flagged into the register if true...
 		// Whether finally a IRQ is or not issued is something that is calculated bottom in this method...
@@ -124,17 +125,11 @@ bool COMMODORE::VICII::simulate (MCHEmul::CPU* cpu)
 			_raster.currentLine () == _VICIIRegisters -> IRQRasterLineAt ())
 				_VICIIRegisters -> activateRasterIRQ ();
 
-		// When the VIC is about to read info, a request to stop the CPU is sent
-		// unless a equivalent request was done before and it is still on...
-		if (!_readingGraphState && isAboutToReadGraphicalInfo ())
-		{ 
-			_readingGraphState = true;
-
+		// When VICII is about to read graphics/sprite info, 
+		// the CPU has to be stopped three cycles in advance for reading activities,
+		// unless it was stopped previously and that stop situation were still valid...
+		if (!cpu -> stopped () && isAboutToReadGraphicalInfo ())
 			cpu -> setStop (true, MCHEmul::Instruction::_CYCLEREAD, cpu -> clockCycles  () - i, 3);
-		}
-
-		_videoActive = (_raster.currentLine () == _FIRSTBADLINE) 
-			? !_VICIIRegisters -> blankEntireScreen () : _videoActive; // Only at first bad line it can change its value...
 
 		// Depending on the cycle the VICII does different things...
 		unsigned int cS = 0;
@@ -145,6 +140,10 @@ bool COMMODORE::VICII::simulate (MCHEmul::CPU* cpu)
 		// ...and for the number of cycles also decided...
 		if (cS > 0)
 			cpu -> setStop (true, MCHEmul::Instruction::_CYCLEREAD, cpu -> clockCycles  () - i, (int) cS);
+
+		// Is this zone there would be a remaining visible zone...
+		if (_raster.isInVisibleZone ())
+			drawInVisibleZone (cpu);
 
 		// ...When the deep debug mode is active a line where the interruption is defined is also drawn...
 		if (deepDebugActive ())
@@ -213,9 +212,6 @@ void COMMODORE::VICII::simulate_BEFOREVISIBLEZONE (MCHEmul::CPU* cpu, unsigned i
 				*_deepDebugFile
 					<< "\t\t\t\tReading info sprite:" << std::to_string ((_cycleInRasterLine >> 1) + 3) << "\n";
 		}
-		// If not, the reading state declared previously is not longer valid...
-		else
-			_readingGraphState = false;
 
 		memoryRef () -> setCPUView ();
 	}
@@ -245,13 +241,7 @@ void COMMODORE::VICII::simulate_VISIBLEZONE (MCHEmul::CPU* cpu, unsigned int& cS
 
 			memoryRef () -> setCPUView ();
 		}
-		else
-			_readingGraphState = false;
 	}
-
-	// Is this zone there would be a remaining visible zone...
-	if (_raster.isInVisibleZone ())
-		drawInVisibleZone (cpu);
 }
 
 // ---
@@ -275,17 +265,9 @@ void COMMODORE::VICII::simulate_AFTERVISIBLEZONE (MCHEmul::CPU* cpu, unsigned in
 				*_deepDebugFile
 					<< "\t\t\t\tReading info sprite:" << std::to_string ((_cycleInRasterLine - 58) >> 1) << "\n";
 		}
-		// If not, the reading state declared previously is not longer valid...
-		else
-			_readingGraphState = false;
-
 
 		memoryRef () -> setCPUView ();
 	}
-
-	// Is this zone there would be a remaining visible zone...
-	if (_raster.isInVisibleZone ())
-		drawInVisibleZone (cpu);
 }
 
 // ---

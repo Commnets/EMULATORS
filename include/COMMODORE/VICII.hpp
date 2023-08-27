@@ -287,11 +287,6 @@ namespace COMMODORE
 		MCHEmul::Raster _raster;
 
 		// Implementation
-		/** When VICII is about to read graphics/sprite info, 
-			the CPU has to be stopped three cycles in advance for reading activities,
-			unless it was stopped previouly and that stop situation were still valid. \n
-			This variable points this situation. */
-		bool _readingGraphState;
 		/** When the CPU is not stopped (sometimes the VIC requires to stop it). \n 
 			and a instruction is executed, the number of cycles that that instruction required, has to be taken into account
 			to define qhat the VICII has to do. */

@@ -50,10 +50,14 @@ void MCHEmul::CPU::setStop (bool s, unsigned int tC, unsigned int cC, int nC)
 			*_deepDebugFile 
 				<< "\t\t\t\tStop CPU requested:" << std::to_string (nC) << " cycles\n";
 
-		// ...if already stopped the cycles are added
-		// ...but no counter is updated!
+		// If the CPU was already stopped...
+		// the counter starts back, but neither the state changes
+		// nor the point where the stop started...
 		if (_state == CPU::_STOPPED)
-			_cyclesStopped += nC;
+		{ 
+			_cyclesStopped = nC; 
+			_counterCyclesStopped = 0; 
+		}
 		else
 		{
 			// If not already stopped, 

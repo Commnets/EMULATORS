@@ -26,7 +26,7 @@ namespace F6500
 		static const int _ID = 1;
 
 		NMIInterrupt ()
-			: Interrupt (_ID, 7, 4),
+			: Interrupt (_ID),
 			  _exeAddress ()
 							{ setClassName ("NMIInterrupt"); }
 

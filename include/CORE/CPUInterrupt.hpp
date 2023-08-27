@@ -28,10 +28,10 @@ namespace MCHEmul
 		public:
 		CPUInterrupt () = delete;
 
-		CPUInterrupt (int id, unsigned int cL, unsigned int rCL)
+		CPUInterrupt (int id, unsigned int cL)
 			: InfoClass ("Interrupt"),
 			  _id (id),
-			  _cyclesToLaunch (cL), _readingCyclesToLaunch (rCL),
+			  _cyclesToLaunch (cL),
 			  _active (true /** by default. */),
 			  _inExecution (false),
 			  _lastClockCyclesExecuted (0)
@@ -78,15 +78,11 @@ namespace MCHEmul
 		bool canBeExecutedOver (CPU* c, unsigned int cC)
 							{ assert (c != nullptr);
 							  return (active () && isTime (c, cC)); }
-		/** Receive the CPU the interrupts works for. \n
-			It receives also a reference to a variable where to load the number of cycles that
-			the execution tooks (when the return was ok), both total and reading cycles. \n
-			It returns true if ok and false if not. */
+		/** Receive the CPU the interrupts works for,
+			and the number of cycles when the execution takes place. */
 		bool executeOver (CPU* c, unsigned int cC);
 		unsigned int cyclesToLaunch () const
 							{ return (_cyclesToLaunch); }
-		unsigned int readingCyclesTolaunch () const
-							{ return (_readingCyclesToLaunch); }
 
 		/**
 		  *	The name of the fields are: \n
@@ -119,7 +115,7 @@ namespace MCHEmul
 
 		protected:
 		int _id;
-		unsigned int _cyclesToLaunch, _readingCyclesToLaunch;
+		unsigned int _cyclesToLaunch;
 		bool _active;
 		bool _inExecution;
 		

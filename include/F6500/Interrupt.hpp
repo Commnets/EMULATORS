@@ -22,10 +22,13 @@ namespace F6500
 	class Interrupt : public MCHEmul::CPUInterrupt
 	{
 		public:
-		Interrupt (int id, unsigned int cL, unsigned int rCL)
-			: MCHEmul::CPUInterrupt (id, cL, rCL),
+		Interrupt (int id)
+			: MCHEmul::CPUInterrupt (id, 7),
 			  _instChecked (false)
 							{ }
+
+		unsigned int readingCyclesTolaunch () const
+							{ return (4); }
 
 		protected:
 		/** As the code is designed, the interrupt is invoked after the execution of one instruction,
