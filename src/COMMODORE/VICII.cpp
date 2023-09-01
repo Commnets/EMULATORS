@@ -91,6 +91,40 @@ bool COMMODORE::VICII::initialize ()
 // ---
 bool COMMODORE::VICII::simulate (MCHEmul::CPU* cpu)
 {
+	auto isNewBadLine = [=]() -> bool
+	{
+		bool result = 
+				_videoActive && // Bad lines only possible when the video is active...
+				_raster.currentLine () >= _FIRSTBADLINE && // between the first...
+				_raster.currentLine () <= _LASTBADLINE && // ...and the last bad lines
+				(_raster.currentLine () & 0x07 /** The three last bits. */) == _VICIIRegisters -> verticalScrollPosition () && // aligned with the scrollY
+				_lastBadLineScrollY != (int) _VICIIRegisters -> verticalScrollPosition (); //..and onvious if that situation in the scroll changed
+		
+		if (result)
+			_lastBadLineScrollY = _VICIIRegisters -> verticalScrollPosition ();
+
+		return (result);
+	};
+
+	auto isAboutToReadSpriteInfo = [&]() -> bool
+	{
+		unsigned short nL = _raster.nextLine ();
+		return (
+			(_cycleInRasterLine == 2  && spriteLineDataAt (_raster.currentLine (), 5) != -1) ||
+			(_cycleInRasterLine == 4  && spriteLineDataAt (_raster.currentLine (), 6) != -1) ||
+			(_cycleInRasterLine == 6  && spriteLineDataAt (_raster.currentLine (), 7) != -1) ||
+			(_cycleInRasterLine == (55 + // To addapt it to the type of Chip...
+				(_cyclesPerRasterLine - VICII_PAL::_CYCLESPERRASTERLINE)) && spriteLineDataAt (nL, 0) != -1) ||
+			(_cycleInRasterLine == (57 + 
+				(_cyclesPerRasterLine - VICII_PAL::_CYCLESPERRASTERLINE)) && spriteLineDataAt (nL, 1) != -1) ||
+			(_cycleInRasterLine == (59 + 
+				(_cyclesPerRasterLine - VICII_PAL::_CYCLESPERRASTERLINE)) && spriteLineDataAt (nL, 2) != -1) ||
+			(_cycleInRasterLine == (61 + 
+				(_cyclesPerRasterLine - VICII_PAL::_CYCLESPERRASTERLINE)) && spriteLineDataAt (nL, 3) != -1) ||
+			(_cycleInRasterLine == (63 + 
+				(_cyclesPerRasterLine - VICII_PAL::_CYCLESPERRASTERLINE)) && spriteLineDataAt (nL, 4) != -1));
+	};
+
 	// If the "video reset flag" is actived nothing is done...
 	if (_VICIIRegisters -> videoResetActive ())
 		return (true);
@@ -119,37 +153,50 @@ bool COMMODORE::VICII::simulate (MCHEmul::CPU* cpu)
 				<< "], Graphics:"
 				<< std::to_string ((int) _VICIIRegisters -> graphicModeActive ()) << "\n";
 
+		// Whether the video is active or not is only checked at the very first bad line...
 		_videoActive = (_raster.currentLine () == _FIRSTBADLINE) 
 			? !_VICIIRegisters -> blankEntireScreen () : _videoActive; // Only at first bad line it can change its value...
 
 		// Always when there is a new line the Raster IRQ has to be checked, 
-		// and the situation flagged into the register if true...
-		// Whether finally a IRQ is or not issued is something that is calculated bottom in this method...
+		// and the situation is flagged into the register if true...
+		// Whether finally a IRQ is or not actually launched is something that is determined later per cycle
+		// just to take into account other issuing possibilities like two sprites collision...
 		if (_isNewRasterLine &&
 			_raster.currentLine () == _VICIIRegisters -> IRQRasterLineAt ())
 				_VICIIRegisters -> activateRasterIRQ ();
 
-		// Is this cycle a new bad line?, then it is latched...
+		// Is there a bad line situation?
+		// A bad line can happen at any cycle within the raster line.
+		// When happened, the graphics are read and the situation is latched because maybe stop cycles could be added
 		if (isNewBadLine ())
-			_newBadLineCondition = true;
-		// When VICII is about to read graphics/sprite info, 
-		// the CPU has to be stopped three cycles in advance for reading activities,
+		{
+			memoryRef () -> setActiveView (_VICIIView);
+
+			readGraphicsInfoAt (_raster.currentLine () - 
+				_FIRSTBADLINE - _VICIIRegisters -> verticalScrollPosition ());
+
+			if (deepDebugActive ())
+				*_deepDebugFile << "\t\t\t\tBad line situation\n";
+
+			memoryRef () -> setCPUView ();
+
+			_newBadLineCondition = true; // latched...
+		}
+
+		// When VICII is about to read sprite or graphics info (bad line)
+		// the CPU has to be stopped three cycles in advance for those activities,
 		// unless it was stopped previously and that stop situation were still valid...
-		if (!cpu -> stopped () && (_newBadLineCondition || isAboutToReadSpriteInfo ()))
+		// In the case of graphics that stop only happens when the situation arise in the "screen cycles" (40)
+		if (!cpu -> stopped () && 
+			(isAboutToReadSpriteInfo () || 
+				(_newBadLineCondition && (_cycleInRasterLine >= 12 && _cycleInRasterLine < 52))))
 			cpu -> setStop (true, MCHEmul::Instruction::_CYCLEREAD /** only read in not allowed. */, 
 				cpu -> clockCycles () - i, 3);
 
-		// Depending on the cycle the VICII does different things...
-		// Basically 3 types of things in the worst (stopping the most the CPU) scenario:
-		// Read info for the sprites from 3 to 7, read info of the grahics (bad line) and read info for the sprites 0 to 2.
-		// cS variable will keep the cycles that CPU should stop as a consecuence of what has been done in the raster.
-		unsigned int cS = 0;
-		if (_cycleInRasterLine >= 1 && _cycleInRasterLine < 15)	simulate_SPRITE3TO7RASTERCYLES (cpu, cS);
-		else if (_cycleInRasterLine >= 15 && _cycleInRasterLine < 55) simulate_BADLINERASTERCYCLES (cpu, cS);
-		else simulate_SPRITE0TO2RASTERCYCLES (cpu, cS);
 		// Stops the CPU when it has been decided in the internal methods...
 		// ...and for the number of cycles also decided...
-		if (cS > 0)
+		unsigned int cS = 0;
+		if ((cS = treatRasterCycle ()) > 0)
 			cpu -> setStop (true, MCHEmul::Instruction::_CYCLEALL /** fully stopped. */, cpu -> clockCycles () - i, (int) cS);
 
 		// Draws the graphics/border if it has to do so...
@@ -207,8 +254,16 @@ bool COMMODORE::VICII::simulate (MCHEmul::CPU* cpu)
 }
 
 // ---
-void COMMODORE::VICII::simulate_SPRITE3TO7RASTERCYLES (MCHEmul::CPU* cpu, unsigned int& cS)
+unsigned int COMMODORE::VICII::treatRasterCycle ()
 {
+	// Depending on the raster cycle, the VICII does different things...
+	// Basically 3 types of things in the worst (stopping the most the CPU) scenario:
+	// Read info for the sprites from 3 to 7,
+	// Read info of the grahics (bad line),
+	// Read info for the sprites 0 to 2.
+	// result variable will hold the cycles that CPU should stop as a consecuence of what has been done in the raster.
+	unsigned int result = 0;
+	// Read the sprite 3 to 7 data?
 	if (_cycleInRasterLine == 1 ||
 		_cycleInRasterLine == 3 ||
 		_cycleInRasterLine == 5 ||
@@ -221,7 +276,7 @@ void COMMODORE::VICII::simulate_SPRITE3TO7RASTERCYLES (MCHEmul::CPU* cpu, unsign
 		if (readSpriteDataAt (_raster.currentLine (), 
 			((_cycleInRasterLine - 1) >> 1) + 3 /** 3, 4, 5, 6 or 7. */))
 		{ 
-			cS = 2;	// VICII has to read three bytes, Meaning 2 clock cycles stopped more... 
+			result = 2;	// VICII has to read three bytes, Meaning 2 clock cycles stopped more... 
 
 			if (deepDebugActive ())
 				*_deepDebugFile
@@ -230,36 +285,23 @@ void COMMODORE::VICII::simulate_SPRITE3TO7RASTERCYLES (MCHEmul::CPU* cpu, unsign
 
 		memoryRef () -> setCPUView ();
 	}
-}
 
-// ---
-void COMMODORE::VICII::simulate_BADLINERASTERCYCLES (MCHEmul::CPU* cpu, unsigned int& cS)
-{
-	if (_newBadLineCondition)
-	{
+	// Read the graphic data?
+	if ((_cycleInRasterLine >= 15 && _cycleInRasterLine < 55) &&
+		_newBadLineCondition)
+	{ 
 		_newBadLineCondition = false;
 
-		memoryRef () -> setActiveView (_VICIIView);
-
-		readGraphicsInfoAt (_raster.currentLine () - 
-			_FIRSTBADLINE - _VICIIRegisters -> verticalScrollPosition ());
-
 		// 40 cycles more (maximum) just for reading the chars...
-		cS = 55 - _cycleInRasterLine;
+		result = 55 - _cycleInRasterLine;
 
 		if (deepDebugActive ())
 			*_deepDebugFile
 				<< "\t\t\t\tReading graphical info" << "\n";
-
-		memoryRef () -> setCPUView ();
 	}
-}
 
-// ---
-void COMMODORE::VICII::simulate_SPRITE0TO2RASTERCYCLES (MCHEmul::CPU* cpu, unsigned int & cS)
-{
-	// This is not totally true as it will depend on the type of VIC, 
-	// ...but it a s good aproximation...
+	// Read sprite 0 to 2 data?
+	// The real cycle taken will depend on the type of VICII chip...
 	if (_cycleInRasterLine == 58 + (_cyclesPerRasterLine - COMMODORE::VICII_PAL::_CYCLESPERRASTERLINE) ||
 		_cycleInRasterLine == 60 + (_cyclesPerRasterLine - COMMODORE::VICII_PAL::_CYCLESPERRASTERLINE) ||
 		_cycleInRasterLine == 62 + (_cyclesPerRasterLine - COMMODORE::VICII_PAL::_CYCLESPERRASTERLINE)) 
@@ -270,7 +312,7 @@ void COMMODORE::VICII::simulate_SPRITE0TO2RASTERCYCLES (MCHEmul::CPU* cpu, unsig
 		if (readSpriteDataAt (_raster.nextLine (), // The sprite info read is for the next line...
 			(_cycleInRasterLine - (58 + (_cyclesPerRasterLine - COMMODORE::VICII_PAL::_CYCLESPERRASTERLINE))) >> 1 /** 0, 1 or 2. */))
 		{
-			cS = 2;	// VICII has to read three bytes, Meaning 2 clock cycles stopped more... 
+			result = 2;	// VICII has to read three bytes, Meaning 2 clock cycles stopped more... 
 
 			if (deepDebugActive ())
 				*_deepDebugFile
@@ -279,6 +321,8 @@ void COMMODORE::VICII::simulate_SPRITE0TO2RASTERCYCLES (MCHEmul::CPU* cpu, unsig
 
 		memoryRef () -> setCPUView ();
 	}
+
+	return (result);
 }
 
 // ---
