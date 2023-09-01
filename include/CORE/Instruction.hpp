@@ -80,14 +80,20 @@ namespace MCHEmul
 			std::vector <Parameter> _parameters;
 		};
 
-		// The different type of cycles than an instruction could have
+		// The different type of cycles than an instruction could be made of
+		// If more types of cycles were defined in classes inheriting from this, 
+		// be sure that its id is power of two different than the ones already used.
+		// _CYCLEALL will be still valid!
 		/** When a cycle is internal, that is the default value. 
 			Used in internal calculus, o movement between registers inside the processor. */
-		static const unsigned int _CYCLEINTERNAL = 0;
+		static const unsigned int _CYCLEINTERNAL = 1;
 		/** When a cycle read info from the memory. */
-		static const unsigned int _CYCLEREAD = 1;
+		static const unsigned int _CYCLEREAD = 2;
 		/** When it used to write info to the memory. */
-		static const unsigned int _CYCLEWRITE = 2;
+		static const unsigned int _CYCLEWRITE = 4;
+		/** More types might be added... */
+		/** All at the same time. */
+		static const unsigned int _CYCLEALL = std::numeric_limits <unsigned int>::max ();
 
 		Instruction () = delete;
 

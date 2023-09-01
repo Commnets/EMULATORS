@@ -16,7 +16,7 @@ MCHEmul::CPU::CPU (const MCHEmul::CPUArchitecture& a, const MCHEmul::Registers& 
 	  _clockCycles (0), _lastCPUClockCycles (0),
 	  _lastState (MCHEmul::CPU::_EXECUTINGINSTRUCTION),
 	  _lastInstruction (nullptr),
-	  _cyclesStopped (0), _cyclesAtStop (0), _counterCyclesStopped (0),
+	  _typeCycleStopped (0 /** nothing. */), _cyclesStopped (0), _cyclesAtStop (0), _counterCyclesStopped (0),
 	  _interruptRequested (-1), _clyclesAtInterruption (0),
 	  _rowInstructions (), // It will be fulfilled later!
 	  _rowInterrupts () // Idem
@@ -48,13 +48,16 @@ void MCHEmul::CPU::setStop (bool s, unsigned int tC, unsigned int cC, int nC)
 	{
 		if (deepDebugActive ())
 			*_deepDebugFile 
-				<< "\t\t\t\tStop CPU requested:" << std::to_string (nC) << " cycles\n";
+				<< "\t\t\t\tStop CPU requested:" << std::to_string (nC) 
+				<< " cycles(" << std::to_string (tC) << " type)\n";
 
 		// If the CPU was already stopped...
 		// the counter starts back, but neither the state changes
 		// nor the point where the stop started...
 		if (_state == CPU::_STOPPED)
 		{ 
+			_typeCycleStopped = tC;
+
 			_cyclesStopped = nC; 
 			_counterCyclesStopped = 0; 
 		}
@@ -67,6 +70,8 @@ void MCHEmul::CPU::setStop (bool s, unsigned int tC, unsigned int cC, int nC)
 				_lastState = _state;
 
 				_state = CPU::_STOPPED; 
+
+				_typeCycleStopped = tC;
 			
 				_cyclesAtStop = cC;
 
@@ -135,7 +140,9 @@ bool MCHEmul::CPU::initialize ()
 
 	// Related with the internal states...
 	_lastInstruction = nullptr;
-	_cyclesStopped = _cyclesAtStop = _counterCyclesStopped = 0;
+	_typeCycleStopped = 0; // Meaning none
+	_cyclesStopped = 0;
+	_cyclesAtStop = _counterCyclesStopped = 0;
 	_interruptRequested = -1; // Meaning none...
 	_clyclesAtInterruption = 0;
 

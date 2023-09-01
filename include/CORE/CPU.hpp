@@ -58,8 +58,9 @@ namespace MCHEmul
 
 		CPU& operator = (CPU&&) = delete; 
 
-		bool stopped () const
-							{ return (_state == _STOPPED); }
+		/** Is the CPU stopped? The type of cycles the CPU is stopped is optional. */
+		bool stopped (unsigned int tC = Instruction::_CYCLEALL) const
+							{ return (_state == _STOPPED && ((_typeCycleStopped & tC) != 0)); }
 		/** 
 		  *	By default: \n
 		  *	Only possible to stop (s = true) if it was either executing an instruction or starting an interruption. \n
@@ -69,7 +70,7 @@ namespace MCHEmul
 		  * This behaviour can be overloaded later.
 		  */
 		virtual void setStop (bool s /** true when stop, 0 when run. */, 
-			unsigned int tC, /** Type of cycle affected when stop. 9999 means all. */
+			unsigned int tC, /** Type of cycle affected when stop. 0 means none, than might be contradictory with s value. */
 			unsigned int cC, /** Number of cycles of the microprocessor when the the stop was requested. */
 			int nC = -1 /** how many cycles when s = true. -1 will mean forever. */);
 
@@ -251,6 +252,8 @@ namespace MCHEmul
 		Instruction* _lastInstruction;
 
 		// When _STOPPED:
+		/** Type of cycle stopped. */
+		unsigned int _typeCycleStopped;
 		/** Number of cycles to be stopped. -1 when it is forever... */
 		int _cyclesStopped; 
 		/** Number of cycles of the processor when the stop was requested. */

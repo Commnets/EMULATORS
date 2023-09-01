@@ -1,0 +1,642 @@
+The memory accesses of the MOS 6569 VIC-II and MOS 8566 VIC-IIe
+                      Video Interface Controller
+
+
+                             Marko Mäkelä
+                            3rd June, 1994
+
+  This document is based on my screen size measurements in Sweden at
+Peter Andersson's place, on Pasi Ojala's inaccurate timing diagrams in
+his article "Missing cycles" in the C=Hacking net magazine, Volume 1,
+Issue 3, and from the output data of Andreas Boose's program, which
+determines which addresses are being read by the video chip by reading
+non-connected address space, i.e. some byte in the area $DE00--$DFFF
+when the I/O is switched on.  When reading such addresses, the data
+bus will reflect the data read by the video chip on the previous Phi-1
+cycle.  This fact was discovered by me when I visited Andreas in late
+March 1994.  Alas, this does not work reliably on all Commodore 64's
+or 128's.  Some data bits will stay on the logical '1' or '0' level
+when reading from $DE00--$DFFF on some units.  One C64 succeeded to
+execute a program in $DE00--$DE7F several seconds, but jammed as I
+turned the disk drive off.  These tricks require very good RF
+protection in the computer.
+
+  If you are interested in this topic, read the C=Hacking article if
+you haven't read it by now.  Although the article is inaccurate and
+contains some errors, it tells you the idea of the video timing and
+gives a rough picture of what is going on in the computer.
+
+  If you have anything to add or correct, please exchange your ideas
+with Andreas Boose <Boose@Unixserv.RZ.FH-Hannover.DE>, as I don't have
+direct access to Internet until August 1994.  You can write to me at the
+address <Marko.Makela@FTP.FUNET.FI>, but I can only reply after a delay
+of one month or so, and I probably won't be able to measure or verify
+anything.
+
+  These results have been measured on two Commodore 64's, on a
+Commodore 128D (flat C128 board in plastic case, floppy controller
+on separate board) and on a 128DCR (128D in metal housing with only
+one board inside).  I don't know the revision numbers of the 8566 chips
+in the C128's, but the video chips measured on the C64's include a
+ceramic 6569R1, a ceramic 6569R3 and a plastic 6569R3.  These results
+were equal on all chips, but the whole timing is not.  There are some
+differences at least in the sprite timing on the 6569R1.
+
+
+Bad scan line, no sprites:
+
+         1         2         3         4         5         6
+123456789012345678901234567890123456789012345678901234567890123
+         [      {                                      }   ]
+3-4-5-6-7-rrrrrgggggggggggggggggggggggggggggggggggggggg--0-1-2- Phi-1 6569R3
+              cccccccccccccccccccccccccccccccccccccccc          Phi-2 6569R3
+xxxxxxxxxxxXXX========================================xxxxxxxxx Phi-2 6510
+
+
+Normal scan line, no sprites:
+
+         1         2         3         4         5         6
+123456789012345678901234567890123456789012345678901234567890123
+         [      {                                      }   ]
+3-4-5-6-7-rrrrrgggggggggggggggggggggggggggggggggggggggg--0-1-2- Phi-1 6569R3
+                                                                Phi-2 6569R3
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx Phi-2 6510
+
+
+Overscan raster line (vertical border) or blanked screen, no sprites:
+
+         1         2         3         4         5         6
+123456789012345678901234567890123456789012345678901234567890123
+         [      {                                      }   ]
+3-4-5-6-7-rrrrr++++++++++++++++++++++++++++++++++++++++--0-1-2- Phi-1 6569R3
+                                                                Phi-2 6569R3
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx Phi-2 6510
+
+
+Bad scan line, at least the sprites 3--7 active on the current scan
+line and the sprites 0--2 on the following scan line:
+
+         1         2         3         4         5         6
+123456789012345678901234567890123456789012345678901234567890123
+         [      {                                      }   ]
+3s4s5s6s7srrrrrgggggggggggggggggggggggggggggggggggggggg--0s1s2s Phi-1 6569R3
+ssssssssss    cccccccccccccccccccccccccccccccccccccccc   ssssss Phi-2 6569R3
+==========xXXX========================================***====== Phi-2 6510
+
+
+Normal scan line, no sprites on the current scan line but at least the
+sprites 1 and 2 active on the following scan line:
+
+         1         2         3         4         5         6
+123456789012345678901234567890123456789012345678901234567890123
+         [      {                                      }   ]
+3-4-5-6-7-rrrrrgggggggggggggggggggggggggggggggggggggggg--0-1s2s Phi-1 6569R3
+                                                           ssss Phi-2 6569R3
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxXXX==== Phi-2 6510
+
+
+Two successive overscan raster lines (vertical border),
+sprites 1, 3 and 7 active on the latter:
+
+         1         2         3         4         5         6
+123456789012345678901234567890123456789012345678901234567890123
+         [      {                                      }   ]
+3-4-5-6-7-rrrrr++++++++++++++++++++++++++++++++++++++++--0-1s2- Phi-1 6569R3
+                                                           ss   Phi-2 6569R3
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxXXX==** Phi-2 6510
+
+3s4-5-6-7srrrrr++++++++++++++++++++++++++++++++++++++++--0-1-2- Phi-1 6569R3
+ss      ss                                                      Phi-2 6569R3
+==xxxXXX==xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx Phi-2 6510
+
+
+
+Note:   The left edge of the diagrams is the start of the raster line,
+        as indicated by the Raster Counter register ($D012/$D011).
+
+Legend: [ left edge of the overscan screen (sprite co-ordinate $1E0 at
+                                            the beginning of this cycle)
+        { left edge of the text screen (at the beginning of this cycle)
+        } right edge of the text screen (at the end of this cycle)
+        ] right edge of the overscan screen (a bit after the end of this cycle)
+
+        - idle bus cycle (reads from the last byte of the video bank,
+          e.g. (video bank base address) + $3FFF)
+        + idle bus cycle (just like '-', but reads from
+          (video bank base address) + $39FF if ECM ($D011 bit 6) is selected)
+        0 pointer fetch for sprite 0
+        1 pointer fetch for sprite 1
+        2 pointer fetch for sprite 2
+        3 pointer fetch for sprite 3
+        4 pointer fetch for sprite 4
+        5 pointer fetch for sprite 5
+        6 pointer fetch for sprite 6
+        7 pointer fetch for sprite 7
+        r memory refresh cycle
+        g graphics fetch
+        c character pointer and/or color data fetch
+
+        x processor executes instructions (BA high, AEC high)
+        X bus request pending, bus still available (BA low, AEC high);
+          processor may execute write cycles, stops on the next read cycle.
+        * bus request pending, bus still available (BA low, AEC high);
+          processor is blocked because it would like to read something.
+        = bus unavailable (BA low, AEC low);
+          processor is blocked because it would like to read something.
+
+
+  If you have played with your monitor's picture size controls, which
+are hidden under the cover in most units, you know that the full
+overscan screen is far bigger than 320x200 points.  At the very left
+edge (horizontal sprite co-ordinate $1D8), there is an
+eight-pixels-wide vertical bar of color 8 (dark brown).  It is
+neighbored by a white two-pixels-wide bar, which covers the horizontal
+co-ordinates $1E0 and $1E1.
+
+  The area between the horizontal co-ordinates $1E2 and $17C,
+inclusive, can be controlled by programming means (usually by changing
+the border color, or by removing the borders and putting sprites to
+the overscan area).  On all revisions of the 6569, the raster lines
+range from $0 to $137, inclusive.  The lines $10 to $12B are visible.
+The default text screen resides in the horizontal co-ordinate range
+$18--$157 and the raster line range $33--$F9, inclusive.
+
+  So, the full overscan area is 411 * 284 points big.  In my notes I
+have written that the horizontal resolution would be 411.5 points.
+Maybe the rightmost point was half of the normal width, or I counted
+the border color.  You know, the colors change eight and a half pixels
+after the beginning of the write cycle to a VIC-II register. Newer
+video chips, whose type number is something else than 6569 or 6567,
+draw a randomly colored, mostly light gray point whenever you change a
+color while it is being used for drawing something.  You can note this
+with a loop like FORA=1TO1E37:POKE53281,0:NEXT.  If you see flickering
+points on the screen, you have a flaky video chip.  Such chips are used
+on the Commodore 128 and on the newest generation of the Commodore 64.
+
+  Note that the vertical sprite co-ordinates always are one smaller
+than the raster lines.  This is because the video chip fetches the
+sprite data for the next scan line right after displaying the
+characters or graphics for the current line, and the raster line does
+not change until the data for the fourth sprite is being fetched.
+
+  The character pointers will be fetched one cycle before the image
+data of the first scan line of a text line, or "bad line".  This is
+natural, since otherwise the video chip would not know where to fetch
+the images.  Similarly, the image data will be fetched one cycle
+before it gets displayed, as the graphics cannot be drawn while
+waiting for the data to come from the memory chips.
+
+  The sprites are buffered, too.  If you place the sprite 0 to the
+very right border of the overscan area, its right edge gets distorted.
+No wonder, since the video chip is fetching the graphics data for the
+sprite 0 at the very right edge of the screen.
+
+  Note that the sprite data will be fetched even outside the overscan
+screen, also while the electron gun is returning from the bottom of
+the screen to the top, if the horizontal sprite co-ordinate matches
+with the lowmost eight bits of the Raster Counter register.  Due to
+this, if you use vertical sprite co-ordinates 0 to 55, inclusive, the
+sprite data will be fetched twice per frame.  If you open the vertical
+borders and put a sprite to the very bottom of the screen, you will be
+able to see it at the top border, too.  In addition to that, if you
+expand the sprite vertically, you will be able to see the top part of
+the sprite at the bottom of the screen, the bottom part at the top of
+the screen, and the whole sprite near the top of the screen.
+
+  If you open the vertical borders by switching to 24 line mode while
+the video chip is drawing the 25th text line (and by switching back to
+25 line mode after the video chip has passed the point where it would
+turn the border on), you will be able to display sprites and also
+other graphics in it.  Just write a value to the last byte of the
+video bank (by default $3FFF), and the video chip will put the data as
+graphics on the screen.  The graphics is always black, or so we have
+been told.  (If you find a way to change its color, please tell me
+how.)  If you fiddle with the $D011 register near the bottom border,
+you might be able to use the colors of the last text row.
+
+  If you select Enhanced Color Mode (ECM) together with Bitmap Mode
+(BMM), you will get a black screen as a result.  The video chip will
+read the data for a bitmap screen but AND the address with $B9FF.  The
+AND is because the Enhanced Color Mode.  This mode lets you to use 64
+different characters, while the two topmost character code bits are
+used for background color selection.  When loading the character
+images, these two bits must be masked off, that's why the character
+generator address gets ANDed by $B9FF.  When the video chip is drawing
+the border (or if the screen is disabled), the '+' cycles will be
+fetched from $39FF also in this hybrid mode (ECM + BMM).
+
+  The Multicolor Mode (MCM) offers more illegal display modes.  The
+combination ECM + BMM + MCM produces the same results than ECM + BMM,
+but ECM + MCM is something revolutionary, although it produces a black
+screen, too.  In this mode, the '+' cycles are just like in plain ECM,
+but the graphics fetches are totally different.  The text matrix data
+does not count at all in this mode, although it should be a text mode!
+The address bits A13--A11 are the character generator base address, as
+always with text modes.  The bits A10--A9 are 0, just like in the ECM
+mode.  The text matrix base address bits will show up at A8--A5, and
+the bits A4--A3 seem to be always 0.  The three lowmost address bits
+will tell you which scan line of a character would be drawn if it was
+a text mode.  On a bad line, it should be 0 (this cannot be measured
+without extra hardware), and on other lines it ranges from 1 to 7.  It
+seems that the CSG or MOS Technologies engineers designed this mode
+for testing the video chip.
+
+  All these illegal display modes have bad lines, so there is no real
+advantage of using them in a program except if you want to confuse
+someone who tries to examine your $DE00 program.  ($DE00 programs are
+programs that run on the unconnected I/O area.  The video chip will
+fetch the program data for the processor, which makes it hard to do
+branches and stuff like that.)
+
+  There are still two interesting modes left.  The 8566 (PAL) and the
+8564 (NTSC), the video chips designed for the Commodore 128, have a
+'test' bit in the register $30, bit 1.  When this bit is turned on,
+the computer will output no valid video signal.  I couldn't measure
+this mode with Andreas Boose's program, as it disables any VIC-IIe
+interrupts.  There should also be a 'reset' bit (register $16, bit 5)
+on some video chips, but I haven't encountered any function in this
+bit so far.  These modes should be analyzed thoroughly, as they can
+reveal something.
+
+  Finally a word about the memory refresh.  Dynamic memory arrays are
+divided to rows and columns of memory cells.  The memories need to be
+periodically refreshed, and this will be accomplished by refreshing
+each memory row periodically by reading its contents.  As the eight
+lowmost system address bus bits are connected to the row address of
+the memory chips, and the eight highmost to the column address, the
+video chip will need to vary the eight lowmost address bits while
+refreshing the memory.  The column address could be random, but it is
+the last page of the current video bank.  The row address is regular,
+too. The first address to be refreshed on a given raster line is
+(start address of video bank) OR $3F00 OR ($FF AND (-1-5*rasterline)),
+and the refresh counter is decreasing.  For instance, if using the default
+video bank (starting at 0), the video chip will read from $3FF1, $3FF0,
+$3FEF, $3FEE and $3FED on the raster lines $36 and $136.
+
+
+Notes:
+
+  On the NTSC systems, there must be far more differences between the
+MOS 6567 chip revisions.  I have tested a 6567R8, which was dated in
+late 1984.  Note the high revision number; the newest 6569 I have seen
+is R5.  Unlike the latter 6567's, my chip had 64 cycles per raster
+line and 262 lines.  Usually the 6567's have 65 cycles per line and
+263 lines, which makes the frame rate nearer the specification, 60
+Hz. The system clock runs at 14318181/14 Hz on NTSC and 17734472/18 Hz
+on PAL systems, and the dot clock is eight times that.  Thus, the
+frame rate on my chip was 14318181 Hz / 14 / 64 / 262 = 60.9928 Hz.
+The picture could not be displayed on a multi-norm television, but a
+PAL television showed it in black and white, although the line
+transformer was screaming pain.
+
+  The 6567R8 had an error (or feature) in the vertical sprite
+co-ordinate register: when moving the sprite vertically in the bottom
+border, increasing the vertical co-ordinate always by one, the sprite
+jumped several lines at some value which I have forgotten.
+
+
+Credits:
+    Peter Andersson <PAnd@Kullmar.SE>
+        Peter invited me to his place in January 1994 to help him with his
+        C64 emulator project (for 386 compatible processors using protected
+        mode).  The emulator is still not ready, as the source code got lost
+        with a hard drive crash, but if it would be, nobody would use the
+        current emulators whose emulation -- to put nicely -- suck.
+
+        Peter's monitor had good picture size controls that let me to
+        measure the overscan screen size reliably.
+
+    Andreas Boose <Boose@Unixserv.RZ.FH-Hannover.DE>
+        If he wouldn't have asked me how to write data to the memory
+        places 0 and 1, this information would never have been discovered,
+        at least not without logic analyzators and other expensive things.
+
+        Andreas wrote a very good program that can be used for measuring
+        the video timing.  When he wrote the program, I did not have
+        access to any 8-bit Commodore, and even if I would have had, it
+        would have been extremely difficult for me to synchronize such
+        routine to the screen.
+
+    John West <John@UCC.GU.UWA.Edu.AU>
+        John pointed out that the video chip reads from $39FF in the border
+        if using the ECM.  He also said that the colors change one cycle
+        after writing to a color register (VIC-II registers $20--$2F).
+
+
+Appendixes:
+
+  Here are a couple of programs written by Andreas Boose.  All of them
+are designed for PAL systems (63 cycles/line, 312 lines/frame), but
+feel free to NTSC fix them.  If you fix any of them, please send the
+program to me <Marko.Makela@FTP.FUNET.FI>.  Also, it would be nice if
+someone would test the NTSC video chips and report the differences.
+There are at least two fundamentally different versions of the NTSC
+video chips.  The older chips have 64 cycles/line and 262 lines/frame,
+and the newer have 65 cycles/line and 263 lines/frame.  So, please
+specify the video chip type (6567 or 8564) and revision (the number
+after the letter R, like 6567R8), if you provide me with test results
+of NTSC video chips.
+
+  First, here is the Turbo Assembler source code for the timing
+measurement program:
+
+        .SETPC $C000
+        .PROGRAM"OBJ"
+        
+        +VALUE    = $02
+        +TAB      = $F7
+        +CNTZY    = $F9
+        +HELPBYTE = $FB
+        +BASEVEC  = $FC
+        +JOB      = $FE
+        
+        +BASEPAGE = $4000
+        +TABBEG   = $8000
+        +ZEILE    = 47
+        
+                  LDA #$7F
+                  STA $DC0D
+                  STA $DD0D
+                  STA $DD05
+                  STA $DD04
+                  LDA #<IRQ1
+                  STA $0314
+                  LDA #>IRQ1
+                  STA $0315
+                  LDA $D012
+                  BNE *-3
+                  LDA #$3B
+                  STA $D011
+                  LDA #ZEILE
+                  STA $D012
+                  LDA $D019
+                  STA $D019
+                  LDA #$81
+                  STA $D01A
+                  LDA #<BASEPAGE
+                  STA BASEVEC
+                  LDA #>BASEPAGE
+                  STA BASEVEC+1
+                  LDY #0
+                  LDX #$40
+        +L06      LDA BASEVEC+1
+        +L05      STA (BASEVEC),Y
+                  INY
+                  BNE L05
+                  INC BASEVEC+1
+                  DEX
+                  BNE L06
+                  LDA #<TABBEG
+                  STA TAB
+                  LDA #>TABBEG
+                  STA TAB+1
+                  LDA ANFTAB
+                  STA CNTZY
+                  LDA ANFTAB+1
+                  STA CNTZY+1
+        +L02      JSR SETTIME
+                  JSR GETADR
+                  LDA #<$D012
+                  LDX #>$D012
+                  LDY #$00
+                  JSR GETDATA
+                  LDA #<$DD04
+                  LDX #>$DD04
+                  LDY #$FF
+                  JSR GETDATA
+                  INC CNTZY
+                  BNE L01
+                  INC CNTZY+1
+        +L01      LDA CNTZY
+                  CMP ENDTAB
+                  BNE L02
+                  LDA CNTZY+1
+                  CMP ENDTAB+1
+                  BNE L02
+                  LDA #0
+                  STA $D01A
+                  LDA $D019
+                  STA $D019
+                  LDA #<$EA31
+                  STA $0314
+                  LDA #>$EA31
+                  STA $0315
+                  LDA #$81
+                  STA $DC0D
+                  LDA #$1B
+                  STA $D011
+                  RTS
+        
+        +SETTIME  LDA CNTZY
+                  AND #7
+                  STA HELPBYTE
+                  LDX #7
+        +L04      TXA
+                  ASL
+                  TAY
+                  LDA #$24
+                  DEC HELPBYTE
+                  BMI L03
+                  LDA #$EA
+        +L03      STA DELAY1,Y
+                  DEX
+                  BNE L04
+                  LDA CNTZY+1
+                  STA HELPBYTE
+                  LDA CNTZY
+                  ROR HELPBYTE
+                  ROR
+                  ROR HELPBYTE
+                  ROR
+                  ROR HELPBYTE
+                  ROR
+                  STA DELAY8+1
+                  RTS
+        
+        +GETDATA  STA LOAD+1
+                  STX LOAD+2
+                  TYA
+                  LDY #1
+                  STY JOB
+                  LDY JOB
+                  BNE *-2
+                  EOR VALUE
+                  JMP WRITE
+        
+        +GETADR   LDA #<$DE00
+                  STA LOAD+1
+                  LDA #>$DE00
+                  STA LOAD+2
+                  LDA #1
+                  STA JOB
+                  LDY JOB
+                  BNE *-2
+                  LDX VALUE
+                  STX BASEVEC+1
+        +L07      TYA
+                  STA (BASEVEC),Y
+                  INY
+                  BNE L07
+                  INY
+                  STY JOB
+                  LDY JOB
+                  BNE *-2
+                  LDA VALUE
+                  JSR WRITE
+                  TXA
+        +L09      STA (BASEVEC),Y
+                  INY
+                  BNE L09
+        +WRITE    STA (TAB),Y
+                  INC TAB
+                  BNE *+4
+                  INC TAB+1
+                  RTS
+        
+        +ANFTAB .W 0
+        +ENDTAB .W 1023
+        
+        +IRQ1     LDA #<IRQ2
+                  STA $0314
+                  LDA #6
+                  STA $DD00
+                  LDX $D012
+                  INX
+                  INX
+                  STX $D012
+                  DEC $D019
+                  CLI
+                  LDX #$0A
+                  DEX
+                  BNE *-1  
+                  NOP
+                  NOP
+                  NOP
+                  NOP
+                  JMP $EA81
+        
+        +IRQ2     LDA #<IRQ1
+                  STA $0314
+                  DEC $D019
+                  PHA
+                  PLA
+                  LDY #$11
+                  LDA $D012
+                  CMP $D012
+                  BNE *+2        ;7
+                  STY $DD0E      ;4
+                  DEC $D020
+                  LDX #8         ;1
+                  DEX            ;10*5
+                  BNE *-1        ;
+                  NOP
+                  NOP
+        +DELAY8   LDX #0         ;2
+                  BIT $FF        ;3
+                  DEX            ;2
+                  BPL *-3        ;2
+        +DELAY1   BIT $EA        ;8*3 =
+                  BIT $EA
+                  BIT $EA
+                  BIT $EA
+                  BIT $EA
+                  BIT $EA
+                  BIT $EA
+                  BIT $EA
+        
+        +LOAD     LDA $DE00      ;4  162
+                  STA VALUE
+        
+                  LDA #0
+                  STA JOB
+        +YY       LDA #$3B
+                  STA $D011
+                  LDA #ZEILE
+                  STA $D012
+                  INC $D020
+                  LDA #7
+                  STA $DD00
+                  JMP $EA81
+
+  The results will be copied to memory starting from $8000.  There are
+four bytes of data for each sample.  The two first bytes tell the
+address which the video chip was reading, the third byte is the raster
+line, and the fourth byte is a timer value, so that you can see the cycle
+counts for DMA.
+
+  Here is an uuencoded binary of the above program:
+
+begin 644 obj
+M`,"I?XT-W(T-W8T%W8T$W:DCC10#J<&-%0.M$M#0^ZD[C1'0J2^-$M"M&="-
+M&="I@8T:T*D`A?RI0(7]H`"B0*7]D?S(T/OF_<K0]*D`A?>I@(7XK1_!A?FM
+M(,&%^B"HP"#HP*D2HM"@`"#4P*D$HMV@_R#4P.;YT`+F^J7YS2'!T-NE^LTB
+MP=#4J0"-&M"M&="-&="I,8T4`ZGJC14#J8&-#=RI&XT1T&"E^2D'A?NB!XH*
+MJ*DDQOLP`JGJF6W!RM#OI?J%^Z7Y9OMJ9OMJ9OMJC6?!8(U^P8Y_P9B@`83^
+MI/[0_$4"3!;!J0"-?L&IWHU_P:D!A?ZD_M#\I@*&_9B1_,C0^LB$_J3^T/RE
+M`B`6P8J1_,C0^Y'WYO?0`N;X8```_P.I18T4`ZD&C0#=KA+0Z.B.$M#.&=!8
+MH@K*T/WJZNKJ3('JJ2.-%`/.&=!(:*`1K1+0S1+0T`",#MW.(-"B",K0_>KJ
+MH@`D_\H0^R3J).HDZB3J).HDZB3J).JM`-Z%`JD`A?ZI.XT1T*DOC1+0[B#0
+(J0>-`-U,@>KJ
+`
+end
+
+  In the beginning of this document I hinted that you could execute
+programs in the I/O1 and I/O2.  Here are two programs that demonstrate
+this.  Both use the addresses $DE00--$DE7F (so that they work also
+with Andreas Boose's I/O devices installed), and the program "de00all"
+runs all the time on that address range.  If these programs do not
+work on your computer, make sure you don't have any memory devices in
+these addresses.  If you haven't customized your computer, then you
+have bad luck: your computer is not $DE00-compatible.  That's normal,
+of the 6 computers I have tested only 2 are $DE00-compatible.  You
+could try to put your computer in a metal box or something, so that
+it wouldn't pick any noise to the data lines when reading the weak
+signals from the open address space.
+
+begin 644 de00all.prg
+M`,!X&*D&C0#=J3N-$="I&(T8T*D`A?>I8(7XH@"@![V.P)'WB!#[I?=I"(7W
+MD`+F^.C@*-#GQOB@]ZFAD??F^*;XX'_0U8W_?ZGJC?A_H@>]@<"=^$>]B<"=
+M6W_*$/&I8(W/?JFUC?]^C3=_J0"-P0&IWHW"`:+`FJD@S1+0T/M,`-Z:8.JE
+MM0"EM:7JI;7JJ0"BT)H`K`'<`,#O\/Y(J0&-(-``3`#>J:&-^4<`J:&-_$<`
+$HL#J`*7J
+`
+
+end
+begin 644 de00int.prg
+M`,`@&.6I?XT-W*D_C10#J<"-%0.B'XH*"@JHO93`F0%`RA#RK1+0T/NI.XT1
+MT*DOC1+0K1G0C1G0J8&-&M!,/,"I88T4`ZD&C0#=KA+0Z.B.$M#.&=!8H@K*
+MT/WJZNKJ3('JJ3^-%`/.&="I+XT2T"3_K1+0S1+0T`"B$,K0_>KJ(`#>J3N-
+E$="B4,K0_:D'C0#=3('JJ0"Z`*P!W`#`[_#^2*D!C2#0`)H`8.KJ
+`
+end
+
+
+  Finally, I will include my addresses here so that you can contact
+me.  If you are on the net but write a snail mail letter, please
+include your E-mail address to your letter, so that I could answer you
+electronically if possible.  I will be in Germany between 4th of June
+1994 and will be back on the net on 2st of August.  My address
+Marko.Makela@FTP.FUNET.FI should work all the time, I just cannot read
+the E-mail too often.  In contrary to that, the address
+Marko.Makela@Helsinki.FI will be deleted in the future, so please do
+not use it, at least not after August 1994.
+
+  Snail mail (Germany, valid until July 30th, 1994):
+
+        Marko Mäkelä
+        Anschützstraße 15, Zimmer I/209
+        D-23562 Lübeck
+
+  Snail mail (Finland, valid all the time, but not read until 2st of August):
+
+        Marko Mäkelä
+        Sillitie 10 A
+        FIN-01480 Vantaa
+
+  In case you are not using the ISO 8859-1 character set, you may want to
+know that the letter ä represents an adiaeresis, an a with two little points
+on top of it.  Similarly, ü is an udiaeresis, an u with two points on it.
+The points are just like the point over the lower case i and j letters, but
+there are two of them, and they are placed horizontally.  The ß character is
+the German sharp s and looks like the lower case Greek beta character.  If
+you don't know how to write it, write two s characters on its place.

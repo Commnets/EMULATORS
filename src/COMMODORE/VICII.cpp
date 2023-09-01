@@ -30,7 +30,8 @@ COMMODORE::VICII::VICII (const MCHEmul::RasterData& vd, const MCHEmul::RasterDat
 	  _isNewRasterLine (true), // The first
 	  _cycleInRasterLine (1),
 	  _videoActive (true),
-	  _lastVBlankEntered (false)
+	  _lastVBlankEntered (false),
+	  _lastBadLineScrollY (-1), _newBadLineCondition (false)
 {
 	assert (_cyclesPerRasterLine >= 63);
 
@@ -81,6 +82,9 @@ bool COMMODORE::VICII::initialize ()
 
 	_lastVBlankEntered = false;
 
+	_lastBadLineScrollY = -1;
+	_newBadLineCondition = false;
+
 	return (true);
 }
 
@@ -125,28 +129,33 @@ bool COMMODORE::VICII::simulate (MCHEmul::CPU* cpu)
 			_raster.currentLine () == _VICIIRegisters -> IRQRasterLineAt ())
 				_VICIIRegisters -> activateRasterIRQ ();
 
+		// Is this cycle a new bad line?, then it is latched...
+		if (isNewBadLine ())
+			_newBadLineCondition = true;
 		// When VICII is about to read graphics/sprite info, 
 		// the CPU has to be stopped three cycles in advance for reading activities,
 		// unless it was stopped previously and that stop situation were still valid...
-		if (!cpu -> stopped () && isAboutToReadGraphicalInfo ())
-			cpu -> setStop (true, MCHEmul::Instruction::_CYCLEREAD, cpu -> clockCycles  () - i, 3);
+		if (!cpu -> stopped () && (_newBadLineCondition || isAboutToReadSpriteInfo ()))
+			cpu -> setStop (true, MCHEmul::Instruction::_CYCLEREAD /** only read in not allowed. */, 
+				cpu -> clockCycles () - i, 3);
 
 		// Depending on the cycle the VICII does different things...
+		// Basically 3 types of things in the worst (stopping the most the CPU) scenario:
+		// Read info for the sprites from 3 to 7, read info of the grahics (bad line) and read info for the sprites 0 to 2.
+		// cS variable will keep the cycles that CPU should stop as a consecuence of what has been done in the raster.
 		unsigned int cS = 0;
-		if (_cycleInRasterLine >= 1 && _cycleInRasterLine < 10) simulate_BEFORESCREENCYCLES (cpu, cS);
-		else if (_cycleInRasterLine >= 10 && _cycleInRasterLine < 55) simulate_SCREENCYCLES (cpu, cS);
-		// The non scrren zone can vary depending on the type of VICII chip...
-		else simulate_AFTERSCREENCYCLES (cpu, cS);
+		if (_cycleInRasterLine >= 1 && _cycleInRasterLine < 15)	simulate_SPRITE3TO7RASTERCYLES (cpu, cS);
+		else if (_cycleInRasterLine >= 15 && _cycleInRasterLine < 55) simulate_BADLINERASTERCYCLES (cpu, cS);
+		else simulate_SPRITE0TO2RASTERCYCLES (cpu, cS);
 		// Stops the CPU when it has been decided in the internal methods...
 		// ...and for the number of cycles also decided...
 		if (cS > 0)
-			cpu -> setStop (true, MCHEmul::Instruction::_CYCLEREAD, cpu -> clockCycles  () - i, (int) cS);
+			cpu -> setStop (true, MCHEmul::Instruction::_CYCLEALL /** fully stopped. */, cpu -> clockCycles () - i, (int) cS);
 
-		// Is this zone there would be a remaining visible zone...
+		// Draws the graphics/border if it has to do so...
 		if (_raster.isInVisibleZone ())
 			drawInVisibleZone (cpu);
 
-		// ...When the deep debug mode is active a line where the interruption is defined is also drawn...
 		if (deepDebugActive ())
 		{
 			unsigned short lrt = 
@@ -164,7 +173,12 @@ bool COMMODORE::VICII::simulate (MCHEmul::CPU* cpu)
 		// Move 8 pixels right in the raster line and jump to line is possible...
 		// Notice that the variable _isNewRasterLine becomes true when a new line comes...
 		if (_isNewRasterLine = _raster.moveCycles (1))
+		{ 
 			_cycleInRasterLine = 1;
+
+			_lastBadLineScrollY = -1;
+			_newBadLineCondition = false;
+		}
 
 		// When the raster enters the non visible part of the screen,
 		// a notification is sent just to draw the screen...
@@ -193,7 +207,7 @@ bool COMMODORE::VICII::simulate (MCHEmul::CPU* cpu)
 }
 
 // ---
-void COMMODORE::VICII::simulate_BEFORESCREENCYCLES (MCHEmul::CPU* cpu, unsigned int& cS)
+void COMMODORE::VICII::simulate_SPRITE3TO7RASTERCYLES (MCHEmul::CPU* cpu, unsigned int& cS)
 {
 	if (_cycleInRasterLine == 1 ||
 		_cycleInRasterLine == 3 ||
@@ -219,34 +233,30 @@ void COMMODORE::VICII::simulate_BEFORESCREENCYCLES (MCHEmul::CPU* cpu, unsigned 
 }
 
 // ---
-void COMMODORE::VICII::simulate_SCREENCYCLES (MCHEmul::CPU* cpu, unsigned int& cS)
+void COMMODORE::VICII::simulate_BADLINERASTERCYCLES (MCHEmul::CPU* cpu, unsigned int& cS)
 {
-	// This is not exactly what VICII does
-	// as it is reading cycle by cyle the bytes in the memory
-	// But it is a good aproximation!
-	if (_cycleInRasterLine == 15)
+	if (_newBadLineCondition)
 	{
-		if (isBadLine ())
-		{
-			memoryRef () -> setActiveView (_VICIIView);
+		_newBadLineCondition = false;
 
-			readGraphicsInfoAt (_raster.currentLine () - 
-				_FIRSTBADLINE - _VICIIRegisters -> verticalScrollPosition ());
+		memoryRef () -> setActiveView (_VICIIView);
 
-			// 40 cycles more just for reading the chars...
-			cS = 40;
+		readGraphicsInfoAt (_raster.currentLine () - 
+			_FIRSTBADLINE - _VICIIRegisters -> verticalScrollPosition ());
 
-			if (deepDebugActive ())
-				*_deepDebugFile
-					<< "\t\t\t\tReading graphical info" << "\n";
+		// 40 cycles more (maximum) just for reading the chars...
+		cS = 55 - _cycleInRasterLine;
 
-			memoryRef () -> setCPUView ();
-		}
+		if (deepDebugActive ())
+			*_deepDebugFile
+				<< "\t\t\t\tReading graphical info" << "\n";
+
+		memoryRef () -> setCPUView ();
 	}
 }
 
 // ---
-void COMMODORE::VICII::simulate_AFTERSCREENCYCLES (MCHEmul::CPU* cpu, unsigned int & cS)
+void COMMODORE::VICII::simulate_SPRITE0TO2RASTERCYCLES (MCHEmul::CPU* cpu, unsigned int & cS)
 {
 	// This is not totally true as it will depend on the type of VIC, 
 	// ...but it a s good aproximation...

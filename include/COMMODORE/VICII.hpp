@@ -90,13 +90,13 @@ namespace COMMODORE
 
 		virtual bool initialize () override;
 
-		/** Draw the border AFTER the graphic info is draw within the display zone. \n
-			In this case sprite and graphical info is taken into account to determine collisions. */
+		/** Simulates cycles in the VICII. \n
+			Draw the border AFTER once graphic info is drawn within the display zone. */
 		virtual bool simulate (MCHEmul::CPU* cpu) override;
-		/** Associated with the previous method. */
-		void simulate_BEFORESCREENCYCLES (MCHEmul::CPU* cpu, unsigned int& cS);
-		void simulate_SCREENCYCLES (MCHEmul::CPU* cpu, unsigned int& cS);
-		void simulate_AFTERSCREENCYCLES (MCHEmul::CPU* cpu, unsigned int &cS);
+		/** Invoked from the previous method. */
+		void simulate_SPRITE3TO7RASTERCYLES (MCHEmul::CPU* cpu, unsigned int& cS);
+		void simulate_BADLINERASTERCYCLES (MCHEmul::CPU* cpu, unsigned int& cS);
+		void simulate_SPRITE0TO2RASTERCYCLES (MCHEmul::CPU* cpu, unsigned int &cS);
 		void drawInVisibleZone (MCHEmul::CPU* cpu);
 
 		/**
@@ -271,10 +271,11 @@ namespace COMMODORE
 
 		// Very internal methods
 		// These methods are used in the simulation...
-		/** To know whether the current raster line is a bad line. */
-		inline bool isBadLine () const;
-		/** To know whether the to VICII is about to initiate a reading activity for graphical or sprites info. */
-		inline bool isAboutToReadGraphicalInfo () const;
+		/** To know whether the current raster position originates a bad line. 
+			In VICII the bad line situation can be originated at any raster cycle between 12 and 55. */
+		inline bool isNewBadLine () const;
+		/** To know whether the to VICII is about to initiate a reading sprites info. */
+		inline bool isAboutToReadSpriteInfo () const;
 
 		private:
 		/** The memory is used also as the set of registers of the chip. */
@@ -311,6 +312,14 @@ namespace COMMODORE
 		bool _videoActive;
 		/** Whether the vertical raster has entered the last VBlank zone already. */
 		bool _lastVBlankEntered;
+		/** The last value of the SCROLLY variable when a bad line was detected.
+			This value is gather anytime the bad line condition is checked (usually between raster cycles 12 and 52). 
+			-1 will mean no previous value to be taken into account. \n
+			This variable is set to -1 at the beginning of every raster line. */
+		mutable int _lastBadLineScrollY;
+		/** When the situation of a new bad line araise is latched in this variable. \n
+			This variabe is desactivated at the end of the line, and when the graphical info is read. */
+		mutable bool _newBadLineCondition;
 
 		// Pending to be implemented...
 		/** 
@@ -447,12 +456,20 @@ namespace COMMODORE
 	}
 
 	// ---
-	inline bool VICII::isBadLine () const
+	inline bool VICII::isNewBadLine () const
 	{
-		return (_videoActive && 
-				_raster.currentLine () >= _FIRSTBADLINE &&
-				_raster.currentLine () <= _LASTBADLINE && 
-				(_raster.currentLine () & 0x07 /** The three last bits. */) == _VICIIRegisters -> verticalScrollPosition ());
+		bool result = 
+				_videoActive && // Bad lines only possible when the video is active...
+				_cycleInRasterLine >= 12 && _cycleInRasterLine < 52 && // The situation for reading graphics can only in these raster cycles...
+				_raster.currentLine () >= _FIRSTBADLINE && // between the first...
+				_raster.currentLine () <= _LASTBADLINE && // ...and the last bad lines
+				(_raster.currentLine () & 0x07 /** The three last bits. */) == _VICIIRegisters -> verticalScrollPosition () && // aligned with the scrollY
+				_lastBadLineScrollY != (int) _VICIIRegisters -> verticalScrollPosition (); //..and onvious if that situation in the scroll changed
+		
+		if (result)
+			_lastBadLineScrollY = _VICIIRegisters -> verticalScrollPosition ();
+
+		return (result);
 	}
 
 	/** The version para NTSC systems. */
@@ -478,14 +495,15 @@ namespace COMMODORE
 	};
 		
 	// ---
-	inline bool VICII::isAboutToReadGraphicalInfo () const
+	inline bool VICII::isAboutToReadSpriteInfo () const
 	{
+		// The cycles at which this situation might happen are very defined in the VICII...
+		// They can vary a little in NTSC systems or other VICII like chips.
 		unsigned short nL = _raster.nextLine ();
 		return (
 			(_cycleInRasterLine == 2  && spriteLineDataAt (_raster.currentLine (), 5) != -1) ||
 			(_cycleInRasterLine == 4  && spriteLineDataAt (_raster.currentLine (), 6) != -1) ||
 			(_cycleInRasterLine == 6  && spriteLineDataAt (_raster.currentLine (), 7) != -1) ||
-			(_cycleInRasterLine == 12 && isBadLine ()) ||
 			(_cycleInRasterLine == (55 + // To addapt it to the type of Chip...
 				(_cyclesPerRasterLine - VICII_PAL::_CYCLESPERRASTERLINE)) && spriteLineDataAt (nL, 0) != -1) ||
 			(_cycleInRasterLine == (57 + 
