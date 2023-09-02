@@ -91,7 +91,7 @@ bool COMMODORE::VICII::initialize ()
 // ---
 bool COMMODORE::VICII::simulate (MCHEmul::CPU* cpu)
 {
-	auto isNewBadLine = [=]() -> bool
+	auto isNewBadLine = [&]() -> bool
 	{
 		bool result = 
 				_videoActive && // Bad lines only possible when the video is active...

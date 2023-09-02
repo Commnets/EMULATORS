@@ -49,7 +49,7 @@ void MCHEmul::CPU::setStop (bool s, unsigned int tC, unsigned int cC, int nC)
 		if (deepDebugActive ())
 			*_deepDebugFile 
 				<< "\t\t\t\tStop CPU requested:" << std::to_string (nC) 
-				<< " cycles(" << std::to_string (tC) << " type)\n";
+				<< " cycles(" << ((tC == std::numeric_limits <unsigned int>::max ()) ? "-" : std::to_string (tC)) << " type)\n";
 
 		// If the CPU was already stopped...
 		// the counter starts back, but neither the state changes
