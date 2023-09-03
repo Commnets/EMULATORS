@@ -312,8 +312,6 @@ namespace COMMODORE
 		/** When the situation of a new bad line araise is latched in this variable. \n
 			This variabe is desactivated at the end of the line, and when the graphical info is read. */
 		mutable bool _newBadLineCondition;
-
-		// Pending to be implemented...
 		/** 
 		  * Important things that happen suring the raster line and affects the sprites...
 		  *	As the raster moves the VICII has to decide	which sprite info to draw.\n
@@ -337,8 +335,24 @@ namespace COMMODORE
 		  *	CYCLE 16:				If the _FF is set, _MCBASE is incremented in 1. \n
 		  *							If _MCBASE is 63 then _DMA and _visible are set to off. \n
 		  * In our simulation neither _MC is not needed, and MCBASE is just to control 63 bytes.
-		  *	as the variables that control the situation that they referes to are different
+		  *	as the variables that control the situation that they referes to are different.
 		  */
+		struct VICSpriteInfo
+		{
+			VICSpriteInfo ()
+				: _active (false), _line (0), _expansionY (false),
+				  _ff (false)
+							{ }
+
+			bool _active;
+			unsigned char _line;
+			bool _expansionY;
+
+			// Implementation
+			bool _ff;
+		};
+
+		VICSpriteInfo _vicSpriteInfo [8];
 	};
 
 	// ---

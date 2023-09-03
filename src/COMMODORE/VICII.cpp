@@ -31,13 +31,16 @@ COMMODORE::VICII::VICII (const MCHEmul::RasterData& vd, const MCHEmul::RasterDat
 	  _cycleInRasterLine (1),
 	  _videoActive (true),
 	  _lastVBlankEntered (false),
-	  _lastBadLineScrollY (-1), _newBadLineCondition (false)
+	  _lastBadLineScrollY (-1), _newBadLineCondition (false),
+	  _vicSpriteInfo ()
 {
 	assert (_cyclesPerRasterLine >= 63);
 
 	setClassName ("VICII");
 
 	_format = SDL_AllocFormat (SDL_PIXELFORMAT_ARGB8888);
+
+	for (size_t i = 0; i < 8; _vicSpriteInfo [i++] = VICSpriteInfo ());
 }
 
 // ---
@@ -84,6 +87,8 @@ bool COMMODORE::VICII::initialize ()
 
 	_lastBadLineScrollY = -1;
 	_newBadLineCondition = false;
+
+	for (size_t i = 0; i < 8; _vicSpriteInfo [i++] = VICSpriteInfo ());
 
 	return (true);
 }
@@ -298,6 +303,36 @@ unsigned int COMMODORE::VICII::treatRasterCycle ()
 		if (deepDebugActive ())
 			*_deepDebugFile
 				<< "\t\t\t\tReading graphical info" << "\n";
+	}
+
+	// The raster cycle 55 is ver critical
+	// to determine the sprite behaviour in the next lines...
+	if (_cycleInRasterLine == 55)
+	{
+		for (size_t i = 0; i < 8; i++)
+		{
+			if (_vicSpriteInfo [i]._active)
+			{
+				if ((_vicSpriteInfo [i]._expansionY && 
+						(!(_vicSpriteInfo [i]._ff = !_vicSpriteInfo [i]._ff))) ||
+					(!_vicSpriteInfo [i]._expansionY))
+				{ 
+					if (++_vicSpriteInfo [i]._line == 63)
+						_vicSpriteInfo [i] = VICSpriteInfo ();
+				}
+			}
+			else
+			{
+				if (_VICIIRegisters -> spriteEnable (i) &&
+					_raster.currentLine () == _VICIIRegisters -> spriteYCoord (i))
+				{
+					_vicSpriteInfo [i]._active = true;
+					_vicSpriteInfo [i]._line = 0;
+					_vicSpriteInfo [i]._expansionY = _VICIIRegisters -> spriteDoubleWidth (i);
+					_vicSpriteInfo [i]._ff = false;
+				}
+			}
+		}
 	}
 
 	// Read sprite 0 to 2 data?
