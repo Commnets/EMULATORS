@@ -103,7 +103,7 @@ bool COMMODORE::VICII::simulate (MCHEmul::CPU* cpu)
 				_raster.currentLine () >= _FIRSTBADLINE && // between the first...
 				_raster.currentLine () <= _LASTBADLINE && // ...and the last bad lines
 				(_raster.currentLine () & 0x07 /** The three last bits. */) == _VICIIRegisters -> verticalScrollPosition () && // aligned with the scrollY
-				_lastBadLineScrollY != (int) _VICIIRegisters -> verticalScrollPosition (); //..and onvious if that situation in the scroll changed
+				_lastBadLineScrollY != (int) _VICIIRegisters -> verticalScrollPosition (); //..and obvious if that situation in the scroll changed
 		
 		if (result)
 			_lastBadLineScrollY = _VICIIRegisters -> verticalScrollPosition ();
@@ -305,8 +305,8 @@ unsigned int COMMODORE::VICII::treatRasterCycle ()
 				<< "\t\t\t\tReading graphical info" << "\n";
 	}
 
-	// The raster cycle 55 is ver critical
-	// to determine the sprite behaviour in the next lines...
+	// The raster cycle 55/56 (we have choosen 55) is very important for sprite behaviour
+	// It determine what is about to happen within the next rasterline mainly...
 	if (_cycleInRasterLine == 55)
 	{
 		for (size_t i = 0; i < 8; i++)
