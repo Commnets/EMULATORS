@@ -180,12 +180,12 @@ namespace MCHEmul
 		if (result = (cP < (int) 0))
 			while (cP < 0)
 				cP += (int) _maxPositions;
+		_currentPosition_0 = (unsigned short) cP;
 
 		cP += (int) _firstPosition; // Now is no longer in base 0...
 		if (cP >= (int) _maxPositions)
 			cP -= (int) _maxPositions;
 		_currentPosition = (unsigned short) cP;
-		_currentPosition_0 = toBase0 (_currentPosition);
 
 		return (result);
 	}

@@ -27,27 +27,27 @@ SPRITELOC		= $07F8					; Location where to find the 64 block where the sprite 1 
 
 * 				= $0800
 ; The data for the sprite 1: A cross.
-BYTES			$00 $00 $00
-BYTES			$00 $00 $00
-BYTES			$00 $7F $00
-BYTES			$00 $7F $00
-BYTES			$00 $7F $00
-BYTES			$00 $7F $00
-BYTES			$00 $7F $00
-BYTES			$00 $7F $00
-BYTES			$00 $7F $00
-BYTES			$1F $FF $F8
-BYTES			$1F $FF $F8
-BYTES			$1F $FF $F8
-BYTES			$00 $7F $00
-BYTES			$00 $7F $00
-BYTES			$00 $7F $00
-BYTES			$00 $7F $00
-BYTES			$00 $7F $00
-BYTES			$00 $7F $00
-BYTES			$00 $7F $00
-BYTES			$00 $00 $00
-BYTES			$00 $00 $00
+BYTES			$ff $ff $ff
+BYTES			$80 $7f $01
+BYTES			$80 $7f $01
+BYTES			$80 $7f $01
+BYTES			$80 $7f $01
+BYTES			$80 $7f $01
+BYTES			$80 $7f $01
+BYTES			$80 $7f $01
+BYTES			$80 $7f $01
+BYTES			$ff $ff $ff
+BYTES			$ff $ff $ff
+BYTES			$ff $ff $ff
+BYTES			$80 $ff $01
+BYTES			$80 $7f $01
+BYTES			$80 $7f $01
+BYTES			$80 $7f $01
+BYTES			$80 $7f $01
+BYTES			$80 $7f $01
+BYTES			$80 $7f $01
+BYTES			$80 $7f $01
+BYTES			$ff $ff $ff
 
 ; Just a delay
 *				= $0900
@@ -93,7 +93,7 @@ SETSPRITE:		LDA #$20
 				STA SPRITELOC
 				LDA #$00
 				STA SPRITEXPOS
-				LDA #$32
+				LDA #$50
 				STA SPRITEYPOS
 				LDA #$06
 				STA SPRITECOLOR

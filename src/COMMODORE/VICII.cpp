@@ -19,6 +19,7 @@ COMMODORE::VICII::VICII (const MCHEmul::RasterData& vd, const MCHEmul::RasterDat
 	  _VICIIRegisters (nullptr), 
 	  _VICIIView (vV),
 	  _cyclesPerRasterLine (cRL),
+	  _incCyclesPerRasterLine (cRL - VICII_PAL::_CYCLESPERRASTERLINE),
 	  _raster (vd, hd),
 	  _lastCPUCycles (0),
 	  _format (nullptr),
@@ -99,11 +100,12 @@ bool COMMODORE::VICII::simulate (MCHEmul::CPU* cpu)
 	auto isNewBadLine = [&]() -> bool
 	{
 		bool result = 
-				_videoActive && // Bad lines only possible when the video is active...
-				_raster.currentLine () >= _FIRSTBADLINE && // between the first...
-				_raster.currentLine () <= _LASTBADLINE && // ...and the last bad lines
-				(_raster.currentLine () & 0x07 /** The three last bits. */) == _VICIIRegisters -> verticalScrollPosition () && // aligned with the scrollY
-				_lastBadLineScrollY != (int) _VICIIRegisters -> verticalScrollPosition (); //..and obvious if that situation in the scroll changed
+			_videoActive && // Bad lines only possible when the video is active...
+			_raster.currentLine () >= _FIRSTBADLINE && // between the first...
+			_raster.currentLine () <= _LASTBADLINE && // ...and the last bad lines
+			(unsigned char) (_raster.currentLine () & 0x07) /** The three last bits. */ == 
+				_VICIIRegisters -> verticalScrollPosition () && // aligned with the scrollY
+			_lastBadLineScrollY != (int) _VICIIRegisters -> verticalScrollPosition (); //..and obvious if that situation in the scroll changed
 		
 		if (result)
 			_lastBadLineScrollY = _VICIIRegisters -> verticalScrollPosition ();
@@ -113,21 +115,15 @@ bool COMMODORE::VICII::simulate (MCHEmul::CPU* cpu)
 
 	auto isAboutToReadSpriteInfo = [&]() -> bool
 	{
-		unsigned short nL = _raster.nextLine ();
 		return (
-			(_cycleInRasterLine == 2  && spriteLineDataAt (_raster.currentLine (), 5) != -1) ||
-			(_cycleInRasterLine == 4  && spriteLineDataAt (_raster.currentLine (), 6) != -1) ||
-			(_cycleInRasterLine == 6  && spriteLineDataAt (_raster.currentLine (), 7) != -1) ||
-			(_cycleInRasterLine == (55 + // To addapt it to the type of Chip...
-				(_cyclesPerRasterLine - VICII_PAL::_CYCLESPERRASTERLINE)) && spriteLineDataAt (nL, 0) != -1) ||
-			(_cycleInRasterLine == (57 + 
-				(_cyclesPerRasterLine - VICII_PAL::_CYCLESPERRASTERLINE)) && spriteLineDataAt (nL, 1) != -1) ||
-			(_cycleInRasterLine == (59 + 
-				(_cyclesPerRasterLine - VICII_PAL::_CYCLESPERRASTERLINE)) && spriteLineDataAt (nL, 2) != -1) ||
-			(_cycleInRasterLine == (61 + 
-				(_cyclesPerRasterLine - VICII_PAL::_CYCLESPERRASTERLINE)) && spriteLineDataAt (nL, 3) != -1) ||
-			(_cycleInRasterLine == (63 + 
-				(_cyclesPerRasterLine - VICII_PAL::_CYCLESPERRASTERLINE)) && spriteLineDataAt (nL, 4) != -1));
+			(_cycleInRasterLine == 2								&& _vicSpriteInfo [5]._active) ||
+			(_cycleInRasterLine == 4								&& _vicSpriteInfo [6]._active) ||
+			(_cycleInRasterLine == 6								&& _vicSpriteInfo [7]._active) ||
+			(_cycleInRasterLine == (55 + _incCyclesPerRasterLine)	&& _vicSpriteInfo [0]._active) ||
+			(_cycleInRasterLine == (57 + _incCyclesPerRasterLine)	&& _vicSpriteInfo [1]._active) ||
+			(_cycleInRasterLine == (59 + _incCyclesPerRasterLine)	&& _vicSpriteInfo [2]._active) ||
+			(_cycleInRasterLine == (61 + _incCyclesPerRasterLine)	&& _vicSpriteInfo [3]._active) ||
+			(_cycleInRasterLine == (63 + _incCyclesPerRasterLine)	&& _vicSpriteInfo [4]._active));
 	};
 
 	// If the "video reset flag" is actived nothing is done...
@@ -139,7 +135,7 @@ bool COMMODORE::VICII::simulate (MCHEmul::CPU* cpu)
 	_raster.reduceDisplayZone
 		(!_VICIIRegisters -> textDisplay25RowsActive (), !_VICIIRegisters -> textDisplay40ColumnsActive ());
 
-	// The simulation has to be repeated as many timeas as cycles have spent since the last invocation...
+	// The simulation has to be repeated as many time as cycles have spent since the last invocation...
 	for (unsigned int i = (cpu -> clockCycles  () - _lastCPUCycles); i > 0; i--)
 	{
 		if (deepDebugActive ())
@@ -160,19 +156,19 @@ bool COMMODORE::VICII::simulate (MCHEmul::CPU* cpu)
 
 		// Whether the video is active or not is only checked at the very first bad line...
 		_videoActive = (_raster.currentLine () == _FIRSTBADLINE) 
-			? !_VICIIRegisters -> blankEntireScreen () : _videoActive; // Only at first bad line it can change its value...
+			? !_VICIIRegisters -> blankEntireScreen () : _videoActive; // The value can change at any cycle of this first bad line...
 
 		// Always when there is a new line the Raster IRQ has to be checked, 
 		// and the situation is flagged into the register if true...
 		// Whether finally a IRQ is or not actually launched is something that is determined later per cycle
-		// just to take into account other issuing possibilities like two sprites collision...
+		// just to take into account other issuing possibilities like two sprites collision analized later.
 		if (_isNewRasterLine &&
 			_raster.currentLine () == _VICIIRegisters -> IRQRasterLineAt ())
 				_VICIIRegisters -> activateRasterIRQ ();
 
 		// Is there a bad line situation?
 		// A bad line can happen at any cycle within the raster line.
-		// When happened, the graphics are read and the situation is latched because maybe stop cycles could be added
+		// When happened, the graphics are read and the situation is latched because maybe additional stop cycles could be needed.
 		if (isNewBadLine ())
 		{
 			memoryRef () -> setActiveView (_VICIIView);
@@ -188,8 +184,8 @@ bool COMMODORE::VICII::simulate (MCHEmul::CPU* cpu)
 			_newBadLineCondition = true; // latched...
 		}
 
-		// When VICII is about to read sprite or graphics info (bad line)
-		// the CPU has to be stopped three cycles in advance for those activities,
+		// When VICII is about to read sprite or graphics info (bad line),
+		// the CPU has to stop 3 cycles in advance (just for READ activities) for those activities,
 		// unless it was stopped previously and that stop situation were still valid...
 		// In the case of graphics that stop only happens when the situation arise in the "screen cycles" (40)
 		if (!cpu -> stopped () && 
@@ -199,14 +195,14 @@ bool COMMODORE::VICII::simulate (MCHEmul::CPU* cpu)
 				cpu -> clockCycles () - i, 3);
 
 		// Stops the CPU when it has been decided in the internal methods...
-		// ...and for the number of cycles also decided...
+		// ...and for the number of cycles also decided there
 		unsigned int cS = 0;
 		if ((cS = treatRasterCycle ()) > 0)
 			cpu -> setStop (true, MCHEmul::Instruction::_CYCLEALL /** fully stopped. */, cpu -> clockCycles () - i, (int) cS);
 
-		// Draws the graphics/border if it has to do so...
+		// Draws the graphics & border if it has to do so...
 		if (_raster.isInVisibleZone ())
-			drawInVisibleZone (cpu);
+			drawVisibleZone (cpu);
 
 		if (deepDebugActive ())
 		{
@@ -222,7 +218,7 @@ bool COMMODORE::VICII::simulate (MCHEmul::CPU* cpu)
 
 		// Move to the next cycle...
 		_cycleInRasterLine++;
-		// Move 8 pixels right in the raster line and jump to line is possible...
+		// Move 8 pixels right in the raster line and jump to other line is possible...
 		// Notice that the variable _isNewRasterLine becomes true when a new line comes...
 		if (_isNewRasterLine = _raster.moveCycles (1))
 		{ 
@@ -233,7 +229,7 @@ bool COMMODORE::VICII::simulate (MCHEmul::CPU* cpu)
 		}
 
 		// When the raster enters the non visible part of the screen,
-		// a notification is sent just to draw the screen...
+		// a notification is sent (to the Screen class usually) just to draw the screen...
 		if (_raster.isInLastVBlank ())
 		{
 			if (!_lastVBlankEntered)
@@ -256,189 +252,6 @@ bool COMMODORE::VICII::simulate (MCHEmul::CPU* cpu)
 	_lastCPUCycles = cpu -> clockCycles ();
 
 	return (true);
-}
-
-// ---
-unsigned int COMMODORE::VICII::treatRasterCycle ()
-{
-	// Depending on the raster cycle, the VICII does different things...
-	// Basically 3 types of things in the worst (stopping the most the CPU) scenario:
-	// Read info for the sprites from 3 to 7,
-	// Read info of the grahics (bad line),
-	// Read info for the sprites 0 to 2.
-	// result variable will hold the cycles that CPU should stop as a consecuence of what has been done in the raster.
-	unsigned int result = 0;
-	// Read the sprite 3 to 7 data?
-	if (_cycleInRasterLine == 1 ||
-		_cycleInRasterLine == 3 ||
-		_cycleInRasterLine == 5 ||
-		_cycleInRasterLine == 7 ||
-		_cycleInRasterLine == 9)
-	{
-		memoryRef () -> setActiveView (_VICIIView);
-
-		// Is there sprite info avaliable?
-		if (readSpriteDataAt (_raster.currentLine (), 
-			((_cycleInRasterLine - 1) >> 1) + 3 /** 3, 4, 5, 6 or 7. */))
-		{ 
-			result = 2;	// VICII has to read three bytes, Meaning 2 clock cycles stopped more... 
-
-			if (deepDebugActive ())
-				*_deepDebugFile
-					<< "\t\t\t\tReading info sprite:" << std::to_string ((_cycleInRasterLine >> 1) + 3) << "\n";
-		}
-
-		memoryRef () -> setCPUView ();
-	}
-
-	// Read the graphic data?
-	if ((_cycleInRasterLine >= 15 && _cycleInRasterLine < 55) &&
-		_newBadLineCondition)
-	{ 
-		_newBadLineCondition = false;
-
-		// 40 cycles more (maximum) just for reading the chars...
-		result = 55 - _cycleInRasterLine;
-
-		if (deepDebugActive ())
-			*_deepDebugFile
-				<< "\t\t\t\tReading graphical info" << "\n";
-	}
-
-	// The raster cycle 55/56 (we have choosen 55) is very important for sprite behaviour
-	// It determine what is about to happen within the next rasterline mainly...
-	if (_cycleInRasterLine == 55)
-	{
-		for (size_t i = 0; i < 8; i++)
-		{
-			if (_vicSpriteInfo [i]._active)
-			{
-				if ((_vicSpriteInfo [i]._expansionY && 
-						(!(_vicSpriteInfo [i]._ff = !_vicSpriteInfo [i]._ff))) ||
-					(!_vicSpriteInfo [i]._expansionY))
-				{ 
-					if (++_vicSpriteInfo [i]._line == 63)
-						_vicSpriteInfo [i] = VICSpriteInfo ();
-				}
-			}
-			else
-			{
-				if (_VICIIRegisters -> spriteEnable (i) &&
-					_raster.currentLine () == _VICIIRegisters -> spriteYCoord (i))
-				{
-					_vicSpriteInfo [i]._active = true;
-					_vicSpriteInfo [i]._line = 0;
-					_vicSpriteInfo [i]._expansionY = _VICIIRegisters -> spriteDoubleWidth (i);
-					_vicSpriteInfo [i]._ff = false;
-				}
-			}
-		}
-	}
-
-	// Read sprite 0 to 2 data?
-	// The real cycle taken will depend on the type of VICII chip...
-	if (_cycleInRasterLine == 58 + (_cyclesPerRasterLine - COMMODORE::VICII_PAL::_CYCLESPERRASTERLINE) ||
-		_cycleInRasterLine == 60 + (_cyclesPerRasterLine - COMMODORE::VICII_PAL::_CYCLESPERRASTERLINE) ||
-		_cycleInRasterLine == 62 + (_cyclesPerRasterLine - COMMODORE::VICII_PAL::_CYCLESPERRASTERLINE)) 
-	{
-		memoryRef () -> setActiveView (_VICIIView);
-
-		// Is there sprite info available?
-		if (readSpriteDataAt (_raster.nextLine (), // The sprite info read is for the next line...
-			(_cycleInRasterLine - (58 + (_cyclesPerRasterLine - COMMODORE::VICII_PAL::_CYCLESPERRASTERLINE))) >> 1 /** 0, 1 or 2. */))
-		{
-			result = 2;	// VICII has to read three bytes, Meaning 2 clock cycles stopped more... 
-
-			if (deepDebugActive ())
-				*_deepDebugFile
-					<< "\t\t\t\tReading info sprite:" << std::to_string ((_cycleInRasterLine - 58) >> 1) << "\n";
-		}
-
-		memoryRef () -> setCPUView ();
-	}
-
-	return (result);
-}
-
-// ---
-void COMMODORE::VICII::drawInVisibleZone (MCHEmul::CPU* cpu)
-{
-	// These two variables are very key
-	// They hold the position of the raster within the visible zone.
-	// It is the left up corner of the "computer screen" will be cv = 0 & rv = 0...
-	unsigned short cv, rv; 
-	_raster.currentVisiblePosition (cv, rv);
-	unsigned short cav = (cv >> 3) << 3;
-
-	// If the video is not active, 
-	// then evrything will have the border color...
-	if (!_videoActive)
-		screenMemory () -> setHorizontalLine ((size_t) cav, (size_t) rv,
-			(cav + 8) > _raster.visibleColumns () ? (_raster.visibleColumns () - cav) : 8, 
-				_VICIIRegisters -> foregroundColor ());
-	// Otherwise the elements are drawn...
-	else
-	{
-		if (_raster.isInDisplayZone () && 
-			(_raster.vData ().currentPosition () - 
-				_VICIIRegisters -> verticalScrollPosition ()) > _LASTBADLINE)
-			emptyGraphicsInfo (); // Just in case to avoid paint something innecesary...
-
-		// Everyting is the color of the background initially...
-		// ..and it will be covered with the foreground (border) later if needed..
-		// This is how the VICII works...
-		screenMemory () -> setHorizontalLine ((size_t) cav, (size_t) rv,
-			(cav + 8) > _raster.visibleColumns () ? (_raster.visibleColumns () - cav) : 8, 
-				_VICIIRegisters -> backgroundColor ());
-
-		// Now the information is drawn...
-		drawGraphicsSpritesAndDetectCollisions (cv, cav, rv);
-
-		// If the raster is not in the very visible zone...
-		// it is time to cover with the border...
-		if (!_raster.isInScreenZone () ||
-			(_raster.isInScreenZone () && (cav + 8) > _raster.hData ().lastScreenPosition ()))
-		{
-			// This is the starting pixel to start to draw...
-			unsigned short stp = cav;
-			// ...and the number to draw by default...
-			unsigned short lbk = (cav + 8) > _raster.visibleColumns () 
-				? (_raster.visibleColumns () - cav) : 8;
-
-			// But when the raster line is in the "screen" part of the window,
-			// any of these two previous variables could change...
-			if (rv >= _raster.vData ().firstScreenPosition () &&
-				rv <= _raster.vData ().lastScreenPosition ())
-			{
-				// If the initial horizontal position is before the "screen" part...
-				// ...but not the final position, the number of pixels to draw have to be reduced 
-				if (cav < _raster.hData ().firstScreenPosition () &&
-					(cav + 8) >= _raster.hData ().firstScreenPosition ())
-					lbk = _raster.hData ().firstScreenPosition () - cav;
-
-				// If the initial horizontal position is still in the "screen" part...
-				// ...but not the final position, 
-				// ...both the starting pixel and the number of pixels to draw have to be reduced
-				if (cav < _raster.hData ().lastScreenPosition () && 
-					(cav + 8) > _raster.hData ().lastScreenPosition ())
-				{
-					stp = _raster.hData ().lastScreenPosition () + 1;
-					lbk = (cav + 8) - stp;
-				}
-			}
-
-			screenMemory () -> setHorizontalLine ((size_t) stp, (size_t) rv, lbk, 
-				_VICIIRegisters -> foregroundColor ());
-		}
-
-		// The IRQ related with the lightpen...
-		unsigned short dx, dy;
-		_raster.currentDisplayPosition (dx, dy);
-		unsigned short lpx, lpy;
-		_VICIIRegisters -> currentLightPenPosition (lpx, lpy);
-		if (dy == lpy && (lpx >= dx && lpx < (dx + 8))) // The beam moves every 8 pixels...
-			_VICIIRegisters -> activateLightPenOnScreenIRQ ();
-	}
 }
 
 // ---
@@ -512,6 +325,195 @@ void COMMODORE::VICII::processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifi
 }
 
 // ---
+unsigned int COMMODORE::VICII::treatRasterCycle ()
+{
+	// Depending on the raster cycle, the VICII does different things...
+	// Basically 3 types of things in the worst (stopping the most the CPU) scenario:
+	// Read info for the sprites from 3 to 7,
+	// Read info of the grahics (bad line),
+	// Read info for the sprites 0 to 2.
+	// result variable will hold the cycles that CPU should stop as a consecuence of what has been done in the raster cycle.
+	unsigned int result = 0;
+	// Read the sprite 3 to 7 data?
+	if (_cycleInRasterLine == 1 ||
+		_cycleInRasterLine == 3 ||
+		_cycleInRasterLine == 5 ||
+		_cycleInRasterLine == 7 ||
+		_cycleInRasterLine == 9)
+	{
+		memoryRef () -> setActiveView (_VICIIView);
+
+		// Is there sprite info avaliable?
+		if (readSpriteData (((_cycleInRasterLine - 1) >> 1) + 3) /** 3, 4, 5, 6 or 7. */)
+		{ 
+			result = 2;	// VICII has to read three bytes, meaning 2 clock cycles stopped more... 
+
+			if (deepDebugActive ())
+				*_deepDebugFile
+					<< "\t\t\t\tReading info sprite:" << std::to_string ((_cycleInRasterLine >> 1) + 3) << "\n";
+		}
+
+		memoryRef () -> setCPUView ();
+	}
+
+	// After reading info of the sprites, cycles 58 - 62 (previos raster line) + 1 - 9 (this line),
+	// the information about the active sprites is actualized...
+	if (_cycleInRasterLine == 15)
+	{
+		for (size_t i = 0; i < 8; i++)
+		{
+			if (_vicSpriteInfo [i]._active &&
+				((_vicSpriteInfo [i]._expansionY && 
+					(!(_vicSpriteInfo [i]._ff = !_vicSpriteInfo [i]._ff))) || 
+					// Note that when expansion is on, the line attribute is incremented very two raster lines...
+				(!_vicSpriteInfo [i]._expansionY)))
+			{ 
+				// When the line treated of the sprite is the last one, the sprite is desactivated...
+				if (_vicSpriteInfo [i]._line++ == 21)
+					_vicSpriteInfo [i] = VICSpriteInfo (); // Starts back...
+			}
+		}
+	}
+
+	// Read the graphic data?
+	if ((_cycleInRasterLine >= 15 && _cycleInRasterLine < 55) &&
+		_newBadLineCondition)
+	{ 
+		_newBadLineCondition = false;
+
+		// 40 cycles more (maximum) just for reading the chars...
+		result = 55 - _cycleInRasterLine;
+
+		if (deepDebugActive ())
+			*_deepDebugFile
+				<< "\t\t\t\tReading graphical info" << "\n";
+	}
+
+	// The raster cycle 55/56 (we have choosen 55) is very important for sprite behaviour.
+	// At this point the active sprites are defined.
+	// Notice that this identification is done before two events:
+	// The VICII to decide whether it has or not to stop 3 cycles because sprite info is going to be read (first sprite at cycle 55),
+	// and the sprite info is actually read (first sprite at cycle 58)
+	// That the reason to choose 52, when in the real VICII this hhapen at cycles 55/56.
+	if (_cycleInRasterLine == 52)
+	{
+		for (size_t i = 0; i < 8; i++)
+		{
+			if (_VICIIRegisters -> spriteEnable (i) &&
+				_raster.currentLine () == (unsigned short) _VICIIRegisters -> spriteYCoord (i))
+				_vicSpriteInfo [i] = VICSpriteInfo (true /** active. */, 0 /** first line. */, 
+					_VICIIRegisters -> spriteDoubleHeight (i) /** double height? */);
+		}
+	}
+
+	// Read sprite 0 to 2 data?
+	// The real cycle taken will depend on the type of VICII chip...
+	if (_cycleInRasterLine == 58 + _incCyclesPerRasterLine ||
+		_cycleInRasterLine == 60 + _incCyclesPerRasterLine ||
+		_cycleInRasterLine == 62 + _incCyclesPerRasterLine) 
+	{
+		memoryRef () -> setActiveView (_VICIIView);
+
+		// Is there sprite info available?
+		if (readSpriteData ((_cycleInRasterLine - 
+				(58 + _incCyclesPerRasterLine)) >> 1) /** 0, 1 or 2. */)
+		{
+			result = 2;	// VICII has to read three bytes, Meaning 2 clock cycles stopped more... 
+
+			if (deepDebugActive ())
+				*_deepDebugFile
+					<< "\t\t\t\tReading info sprite:" << std::to_string ((_cycleInRasterLine - 58) >> 1) << "\n";
+		}
+
+		memoryRef () -> setCPUView ();
+	}
+
+	return (result);
+}
+
+// ---
+void COMMODORE::VICII::drawVisibleZone (MCHEmul::CPU* cpu)
+{
+	// These two variables are very key.
+	// They hold the position of the raster within the VISIBLE ZONE.
+	// It is the left up corner of the "computer screen" will be cv = 0 & rv = 0...
+	unsigned short cv, rv; 
+	_raster.currentVisiblePosition (cv, rv);
+	// The same value than cv, but adjusted to a multiple of 8.
+	unsigned short cav = (cv >> 3) << 3;
+
+	// If the video is not active, 
+	// then everything will have the border color...
+	if (!_videoActive)
+		screenMemory () -> setHorizontalLine ((size_t) cav, (size_t) rv,
+			(cav + 8) > _raster.visibleColumns () ? (_raster.visibleColumns () - cav) : 8, 
+				_VICIIRegisters -> foregroundColor ());
+	// Otherwise the elements are drawn...
+	else
+	{
+		if (_raster.isInDisplayZone () && 
+			(_raster.vData ().currentPosition () - 
+				_VICIIRegisters -> verticalScrollPosition ()) > _LASTBADLINE)
+			emptyGraphicsInfo (); // Just in case to avoid paint something unnecesary...
+
+		// Everyting is the color of the background initially...
+		// ..and it will be covered with the foreground (border) later if needed..
+		// This is how the VICII works...
+		screenMemory () -> setHorizontalLine ((size_t) cav, (size_t) rv,
+			(cav + 8) > _raster.visibleColumns () ? (_raster.visibleColumns () - cav) : 8, 
+				_VICIIRegisters -> backgroundColor ());
+
+		// Now the information is drawn, and also the collisions detected at the same time
+		drawGraphicsSpritesAndDetectCollisions (cv, cav, rv);
+
+		// If the raster is not in the very visible zone...
+		// it is time to cover with the border...
+		if (!_raster.isInScreenZone () ||
+			(_raster.isInScreenZone () && (cav + 8) > _raster.hData ().lastScreenPosition ()))
+		{
+			// This is the starting pixel to start to draw...
+			unsigned short stp = cav;
+			// ...and the number to draw by default...
+			unsigned short lbk = (cav + 8) > _raster.visibleColumns () 
+				? (_raster.visibleColumns () - cav) : 8;
+
+			// But when the raster line is in the "screen" part of the window,
+			// any of these two previous variables could change...
+			if (rv >= _raster.vData ().firstScreenPosition () &&
+				rv <= _raster.vData ().lastScreenPosition ())
+			{
+				// If the initial horizontal position is before the "screen" part...
+				// ...but not the final position, the number of pixels to draw have to be reduced 
+				if (cav < _raster.hData ().firstScreenPosition () &&
+					(cav + 8) >= _raster.hData ().firstScreenPosition ())
+					lbk = _raster.hData ().firstScreenPosition () - cav;
+
+				// If the initial horizontal position is still in the "screen" part...
+				// ...but not the final position, 
+				// ...both the starting pixel and the number of pixels to draw have to be reduced
+				if (cav < _raster.hData ().lastScreenPosition () && 
+					(cav + 8) > _raster.hData ().lastScreenPosition ())
+				{
+					stp = _raster.hData ().lastScreenPosition () + 1;
+					lbk = (cav + 8) - stp;
+				}
+			}
+
+			screenMemory () -> setHorizontalLine ((size_t) stp, (size_t) rv, lbk, 
+				_VICIIRegisters -> foregroundColor ());
+		}
+
+		// The IRQ related with the lightpen is calculated...
+		unsigned short dx, dy;
+		_raster.currentDisplayPosition (dx, dy);
+		unsigned short lpx, lpy;
+		_VICIIRegisters -> currentLightPenPosition (lpx, lpy);
+		if (dy == lpy && (lpx >= dx && lpx < (dx + 8))) // The beam moves every 8 pixels...
+			_VICIIRegisters -> activateLightPenOnScreenIRQ ();
+	}
+}
+
+// ---
 void COMMODORE::VICII::drawGraphicsSpritesAndDetectCollisions (unsigned short cv, unsigned short cav, unsigned short rv)
 {
 	COMMODORE::VICII::DrawContext dC = 
@@ -545,11 +547,11 @@ void COMMODORE::VICII::drawGraphicsSpritesAndDetectCollisions (unsigned short cv
 	std::vector <MCHEmul::UByte> sprCollData (8, MCHEmul::UByte::_0);
 	for (int i = 7; i >= 0; i--)
 	{
-		if (_VICIIRegisters -> spriteEnable ((size_t) i))
+		if (_vicSpriteInfo [(size_t) i]._active)
 			sprCollData [(size_t) i] =
 				_VICIIRegisters -> spriteToForegroundPriority ((size_t) i)
-					? drawSpriteOver (i, colGraphics._backgroundColorData, dC)
-					: drawSpriteOver (i, colGraphics._foregroundColorData, dC);
+					? drawSpriteOver (i, colGraphics._backgroundColorData)
+					: drawSpriteOver (i, colGraphics._foregroundColorData);
 	}
 
 	// The the graphical info is moved to the screen...
@@ -606,7 +608,7 @@ COMMODORE::VICII::DrawResult COMMODORE::VICII::drawGraphics (const COMMODORE::VI
 	// there are no reductions is the screen (display == screen) and SCROLLX = 0x00
 	int cb = (int) dC._RCA - (int) dC._ICD - (int) dC._SC;
 
-	// At this poitn rc positive for sure, and cb could be negative...
+	// At this point rc positive for sure, and cb could be negative...
 	// Never invoke the methods within the swith case statements direcly
 	// a crash might be generated...
 
@@ -965,67 +967,48 @@ COMMODORE::VICII::DrawResult COMMODORE::VICII::drawMultiColorBitMap (int cb, int
 }
 
 // ---
-MCHEmul::UByte COMMODORE::VICII::drawSpriteOver (size_t spr, unsigned int* d, const COMMODORE::VICII::DrawContext& dC)
+MCHEmul::UByte COMMODORE::VICII::drawSpriteOver (size_t spr, unsigned int* d)
 {
-	MCHEmul::UByte result = MCHEmul::UByte::_0;
-
-	if (_graphicsLineSprites [spr].size () == 0)
-		return (result);
-
-	// The "display" line being involved...
-	int r = (int) dC._RR - (int) dC._IRD;
-	// The "display" column being involved, adjusted to blocks of 8!
-	int c = (int) dC._RCA /** raster column adjusted to blocks of 8. */ - (int) dC._ICD;
-
-	// at this point r and c are positive always...
-	// Never invoke the methods within the ? : structure direcly
-	// crash might be generated...
-
-	return (
-		_VICIIRegisters -> spriteMulticolorMode (spr)
-			? drawMultiColorSpriteOver (c, r, spr, d)
-			: drawMonoColorSpriteOver (c, r, spr, d));
+	return ((_graphicsLineSprites [spr].size () == 0)
+		? MCHEmul::UByte::_0
+		: (_VICIIRegisters -> spriteMulticolorMode (spr)
+			? drawMultiColorSpriteOver (_raster.currentColumn (), _raster.currentLine (), spr, d)
+			: drawMonoColorSpriteOver (_raster.currentColumn (), _raster.currentLine (), spr, d)));
 }
 
 // ---
-MCHEmul::UByte COMMODORE::VICII::drawMonoColorSpriteOver (int c, int r, size_t spr, unsigned int* d)
+MCHEmul::UByte COMMODORE::VICII::drawMonoColorSpriteOver (unsigned short c, unsigned short r, size_t spr, unsigned int* d)
 {
 	MCHEmul::UByte result = MCHEmul::UByte::_0;
 
 	// Horizontal info about the sprite
 	unsigned short dW	= _VICIIRegisters -> spriteDoubleWidth (spr) ? 2 : 1;
-	unsigned short x	= _VICIIRegisters -> spriteXCoord (spr);
-	// Fix raster position in the raster line of the left up corner of sprite
-	// It can be negative if it is partially hidden...
-	int cX				= (int) x - 24; 
+	unsigned short x	= _VICIIRegisters -> spriteXCoord (spr) + 4;
 	unsigned short wX	= 24 /** normal width in pixels. */ * dW;
 	unsigned short dW8	= 8 * dW; // 8 or 16
 	// Vertical info about the sprite
-	unsigned short dH	= _VICIIRegisters -> spriteDoubleHeight (spr) ? 2 : 1;
-	unsigned short y	= _VICIIRegisters -> spriteYCoord (spr);
-	// Fix raster line of the left up corner of sprite
-	// It can be negative if it is partially hidden...
-	int rY				= (int) y - 50;
-	unsigned short wY	= 21 /** normal height in pixels. */ * dH;
+	/** Because the position 50 correspond at the raster line position 51. */
+	unsigned short y	= _VICIIRegisters -> spriteYCoord (spr) + 1;
+	unsigned short wY	= _VICIIRegisters -> spriteDoubleHeight (spr) ? 42 : 21;
 
-	if (r < rY || r >= (rY + (int) wY))
+	if (r < y || r >= (y + wY))
 		return (result); // Not visible in the vertical zone...
-	if ((c + 8 /** pixels */) < cX || c >= (cX + (int) wX))
+	if ((c + 8 /** pixels */) < x || c >= (x + wX))
 		return (result); // Not visible in the horizontal zone...
 
-	for (unsigned int i = 0; 
+	for (unsigned short i = 0; 
 			i < 8 /** always to draw 8 pixels */; i += dW /** the size of the pixels block. */)
 	{
-		int pp = (c + (int) i);
-		if (pp < cX)
+		unsigned short pp = (c + i);
+		if (pp < x)
 			continue; // Not visible...
-		if (pp >= (cX + (int) wX))
+		if (pp >= (x + wX))
 			break; // No more draws...
 
 		// To determine the initial byte (iBy) and bit (iBt) with the info about the sprite...
 		// The bit moves from 7 to 0, and the byte increases...
-		size_t iBy = (size_t) ((pp - cX) / (int) dW8);
-		size_t iBt = (size_t) (7 - (((pp - cX) % (int) dW8) / (int) dW));
+		size_t iBy = (size_t) ((pp - x) / dW8);
+		size_t iBt = (size_t) (7 - (((pp - x) % dW8) / dW));
 		bool dP = _graphicsLineSprites [spr][iBy].bit (iBt);
 		if (!dP)
 			continue; // The point is not visible...
@@ -1042,43 +1025,36 @@ MCHEmul::UByte COMMODORE::VICII::drawMonoColorSpriteOver (int c, int r, size_t s
 }
 
 // ---
-MCHEmul::UByte COMMODORE::VICII::drawMultiColorSpriteOver (int c, int r, size_t spr, unsigned int* d)
+MCHEmul::UByte COMMODORE::VICII::drawMultiColorSpriteOver (unsigned short c, unsigned short r, size_t spr, unsigned int* d)
 {
 	MCHEmul::UByte result = MCHEmul::UByte::_0;
 
 	// Horizontal info about the sprite
 	unsigned short dW	= _VICIIRegisters -> spriteDoubleWidth (spr) ? 2 : 1;
-	unsigned short x	= _VICIIRegisters -> spriteXCoord (spr);
-	// Fix raster position in the raster line of the left up corner of sprite
-	// It can be negative if it is partially hidden...
-	int cX				= (int) x - 24; 
+	unsigned short x	= _VICIIRegisters -> spriteXCoord (spr) + 4;
 	unsigned short wX	= 24 /** normal width in pixels. */ * dW;
 	unsigned short dW8	= 8 * dW; // 8 or 16
 	// Vertical info about the sprite
-	unsigned short dH	= _VICIIRegisters -> spriteDoubleHeight (spr) ? 2 : 1;
-	unsigned short y	= _VICIIRegisters -> spriteYCoord (spr);
-	// Fix raster line of the left up corner of sprite
-	// It can be negative if it is partially hidden...
-	int rY				= (int) y - 50;
-	unsigned short wY	= 21 /** normal height in pixels. */ * dH;
+	unsigned short y	= _VICIIRegisters -> spriteYCoord (spr) + 1;
+	unsigned short wY	= _VICIIRegisters -> spriteDoubleHeight (spr) ? 42 : 21;
 
-	if (r < rY || r >= (rY + (int) wY))
+	if (r < y || r >= (y + wY))
 		return (result); // Not visible in the vertical zone...
-	if ((c + 8 /** pixels */) < cX || c >= (cX + (int) wX))
+	if ((c + 8 /** pixels */) < x || c >= (x + wX))
 		return (result); // Not visible in the horizontal zone...
 
-	for (unsigned int i = 0; i < 8 /** pixels. */; i += (2 * dW))
+	for (unsigned short i = 0; i < 8 /** pixels. */; i += (2 * dW))
 	{
-		int pp = (c + (int) i);
-		if (pp < cX)
+		unsigned short pp = (c + i);
+		if (pp < x)
 			continue; // Not visible...
-		if (pp >= (cX + (int) wX))
+		if (pp >= (x + wX))
 			break; // No more draws...
 
 		// To determine the initial byte (iBy) and bit (iBt) with the info about the sprite...
 		// The bit to select moves from 0 to 3, represeting the pair of bits (0,1), (2,3), (4,5), (6,7)
-		size_t iBy = (size_t) ((pp - cX) / (int) dW8);
-		size_t iBt = (size_t) (3 - (((pp - cX) % (int) dW8) / (2 * (int) dW)));
+		size_t iBy = (size_t) ((pp - x) / dW8);
+		size_t iBt = (size_t) (3 - (((pp - x) % dW8) / (2 * dW)));
 		unsigned char cs = (_graphicsLineSprites [spr][iBy].value () >> (iBt << 1)) & 0x03;
 		if (cs == 0)
 			continue; // The point has no color...
@@ -1100,10 +1076,6 @@ MCHEmul::UByte COMMODORE::VICII::drawMultiColorSpriteOver (int c, int r, size_t 
 // ---
 void COMMODORE::VICII::drawResultToScreen (const COMMODORE::VICII::DrawResult& cT, const COMMODORE::VICII::DrawContext& dC)
 {
-	// The line is not visible yet...
-	if (dC._RR < dC._IRS || dC._RR > dC._LRS)
-		return;
-
 	// The eight pixels to draw...
 	for (size_t i = 0; i < 8; i++)
 	{

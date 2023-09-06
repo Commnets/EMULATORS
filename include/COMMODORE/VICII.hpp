@@ -20,7 +20,8 @@
 
 namespace COMMODORE
 {
-	/** The chip that takes care of anything around the graphics in Commodore 64. @see GraphicalChip. */
+	/** The chip that takes care of anything around the graphics in Commodore 64. 
+		@see GraphicalChip. */
 	class VICII : public MCHEmul::GraphicalChip
 	{
 		public:
@@ -31,18 +32,19 @@ namespace COMMODORE
 		static const unsigned short _LASTBADLINE	= 0xf7;
 
 		/** Data about the size of the screen */
-		static const unsigned short _GRAPHMAXCHARLINES		= 25; // Not taking into account reductions in the size
+		static const unsigned short _GRAPHMAXCHARLINES		= 25;	// Not taking into account reductions in the size
 		static const unsigned short _GRAPHMAXCHARCOLUMNS	= 40;
-		static const unsigned short _GRAPHMAXBITMAPCOLUMNS	= 320; // Not taking into account double coulors
+		static const unsigned short _GRAPHMAXBITMAPCOLUMNS	= 320;	// Not taking into account double coulors
 		static const unsigned short _GRAPHMAXBITMAPROWS		= 200;
 
-		/** Static address. The color memory cann't be changed. */
+		/** Static address. The color memory can not be changed. */
 		static const MCHEmul::Address _COLORMEMORY;
 
 		// Some events.
-		/** As the VICII only addresses 16k and some computers where it is connected to admitis 64,
+		/** As the VICII only addresses 16k and some computers where it might be connected to, admits up to 64k,
 			there is the possibility to change the bank. \n
-			The unsigned ints associated to each must be consecutive for everything to work properly. */
+			The unsigned ints associated to each must be consecutive for everything to work properly. \n
+			NOTE: Don't tounch these values! */
 		static const unsigned int _BANK0SET = 200;
 		static const unsigned int _BANK1SET = 201;
 		static const unsigned int _BANK2SET = 202;
@@ -50,7 +52,8 @@ namespace COMMODORE
 
 		/** Specific classes for PAL & NTSC have been created giving this data as default. \n
 			The VICII constructor receives info over the raster data, the memory view to use,
-			The number of cycles of every raster line (changes per version) and additional attributes. */
+			The number of cycles of every raster line (different depending on the VICII version) 
+			and additional attributes. */
 		VICII (const MCHEmul::RasterData& vd, const MCHEmul::RasterData& hd, 
 			int vV, unsigned short cRL, const MCHEmul::Attributes& attrs = { });
 
@@ -78,7 +81,7 @@ namespace COMMODORE
 		void setLightPenPosition (unsigned short x, unsigned short y)
 							{ _VICIIRegisters -> setCurrentLightPenPosition (x, y); }
 
-		/** To know ehether the light pen is ative or not. */
+		/** To know whether the light pen is active. */
 		bool lightPenActive () const
 							{ return (_VICIIRegisters -> lightPenActive ()); }
 		void setLightPenActive (bool lP)
@@ -91,31 +94,34 @@ namespace COMMODORE
 		virtual bool initialize () override;
 
 		/** Simulates cycles in the VICII. \n
-			Draw the border AFTER once graphic info is drawn within the display zone. */
+			It draws the border AFTER once graphics info has been drawn within the display zone. \n
+			So sprites can be drawn behing the border and collisions could take place out of the visible zone. */
 		virtual bool simulate (MCHEmul::CPU* cpu) override;
-		// Invoked from the previous method.
-		/** Returns the number of cycle that as a consequence of dealing with a raster line, 
-			the CPU should be stopped. */
-		unsigned int treatRasterCycle ();
-		void drawInVisibleZone (MCHEmul::CPU* cpu);
 
 		/**
 		  *	The name of the fields are: \n
-		  * Registers	= InfoStructure: Info about the registers.
-		  * Raster		= InfoStructure: Info about the raster.
+		  * VICIIRegisters	= InfoStructure: Info about the registers.
+		  * Raster			= InfoStructure: Info about the raster.
 		  */
 		virtual MCHEmul::InfoStructure getInfoStructure () const override;
 
 		protected:
 		virtual void processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifier* n) override;
 
-		/** 
-		  * @see DrawContext and @DraResult structure for a better understanding. 
+		// Invoked from the method "simulation".
+		/** Different actions are taken attending the raster cycle. \n
+			Returns the number of cycles that, as a consequence of dealing with a raster line, 
+			the CPU should be stopped. */
+		unsigned int treatRasterCycle ();
+		/** Treat the viciel zone.
+			Draws the graphics, detect collions, and finally draw the border. */
+		void drawVisibleZone (MCHEmul::CPU* cpu);
+		/** Invoked from the previous one, just to draw and detect collisions. \n
 		  *	The parameters are:
 		  *	@param cv	The raster beam X position within the visible window. 0 is the first value.
 		  *	@param cav	The same raster beam X position but adjusted to a multiple of 8. 
-		  *	@param rv	The raster beam Y position with the visinle window. O is the first value.
-		  */
+		  *	@param rv	The raster beam Y position with the visinle window. O is the first value. 
+		  *	@see also DrawContext and DrawResult structures. */
 		void drawGraphicsSpritesAndDetectCollisions 
 			(unsigned short cv, unsigned short cav, unsigned short rv);
 
@@ -152,22 +158,15 @@ namespace COMMODORE
 								((size_t) l * _GRAPHMAXCHARCOLUMNS), (size_t) _GRAPHMAXCHARCOLUMNS))); }
 
 		// Read sprites data
-		/** To know the line sprite data to read in a raster line. \n
-			The method receives the raster line and the number of sprite. \n
-			The result will be positive (indicating the line of data to read) when the sprite is present in the rasterline
-			and -1 when the sprite is not present in the raster line because 
-			either is not availble or it is not visible in that line. */
-		inline int spriteLineDataAt (unsigned short l, size_t nS) const;
-		/** Read the graphical info of the active sprites at one specific raster line. \n
-			The parameter received goes from 0 to PAL/NTSC maximum raster line,
-			and doesn't take into account the SCROLLY value. */
-		inline const std::vector <MCHEmul::UBytes>& readSpritesDataAt (unsigned short l) const;
-		/** Method used by the method previous to read the info of a sprite only. 
-			It returns true when the sprite data was read, and false in other case. */
-		inline bool readSpriteDataAt (unsigned short l, size_t nS) const;
+		// The sprite data is read a long as the raster cycle progresses.
+		// The info is read attending to the contecytt of the interval variable _vicSpriteInfo (@see below)
+		/** Read the graphical info of the active sprites. */
+		inline const std::vector <MCHEmul::UBytes>& readSpritesData () const;
+		/** Method used from the previous method to read the info of one sprite only. */
+		inline bool readSpriteData (size_t nS) const;
 
 		// Draw the graphics & Sprites in detail...
-		/** To simplify the use of some of the routines dedicated to draw. */
+		/** To simplify the use of some of the routines dedicated to draw graphics. */
 		struct DrawContext
 		{
 			unsigned short _ICD;	// Initial Column of the Display (Not taken into account reductions in size).
@@ -182,12 +181,13 @@ namespace COMMODORE
 			unsigned short _LRD;	// Last Row of the Display 
 			unsigned short _LRS;	// Last Row of the Screen
 			unsigned short _SR;		// Scroll Y
-			unsigned short _RR;		// Raster Y (Moves 1 by 1. No adjusted neadd)
+			unsigned short _RR;		// Raster Y (From the beginning of the visible zone.
+									// Moves 1 by 1. No adjusted needed)
 		};
 
 		/** To simplify the way the result of a drawing text/bitmaps routines are managed. \n
 			Any time a draw routine runs, 8 bits of info are calculated. \n
-			These bits can be either foreground or background and their color ar e kept in 
+			These bits can be either foreground or background and their color are kept in 
 			their respective variable _colorData. */
 		struct DrawResult
 		{
@@ -247,18 +247,20 @@ namespace COMMODORE
 		  *	To draw the sprites: \n
 		  *	This method uses the ones below. \n
 		  *	All of them receive:
-		  *	c = window column value where to start to draw 8 pixels. \n
-		  *	r = window row value where to draw. \n
+		  *	c = raster column where to start to draw 8 pixels. \n
+		  *	r = raster line where to draw. \n
 		  *	spr = the number of sprite to draw. \n
-		  *	The reference to the array where to store the color is also passed. \n
+		  *	The reference to the array where to store the color info is also passed. \n
 		  *	This array comes from the outcome of drawing the text/bitmaps! \n
-		  *	Info to detect collisions is also returned. 
+		  *	Info to detect collisions later is also returned.
 		  */
-		MCHEmul::UByte drawSpriteOver (size_t spr, unsigned int* d, const DrawContext& dC);
+		MCHEmul::UByte drawSpriteOver (size_t spr, unsigned int* d);
 		/** Draws a monocolor sprite line. */
-		MCHEmul::UByte drawMonoColorSpriteOver (int c, int r, size_t spr, unsigned int* d);
+		MCHEmul::UByte drawMonoColorSpriteOver (unsigned short c, unsigned short r, 
+			size_t spr, unsigned int* d);
 		/** Draws a multicolor sprite line. */
-		MCHEmul::UByte drawMultiColorSpriteOver (int c, int r, size_t spr, unsigned int* d);
+		MCHEmul::UByte drawMultiColorSpriteOver (unsigned short c, unsigned short r, 
+			size_t spr, unsigned int* d);
 
 		// The last part...
 		/** To move the graphics drawn to the screen. \n
@@ -276,13 +278,15 @@ namespace COMMODORE
 		int _VICIIView;
 		/** The number of cycles per raster line as it depends on the type of Chip. */
 		unsigned short _cyclesPerRasterLine;
+		/** The difference with the PAL System. */
+		unsigned short _incCyclesPerRasterLine;
 		/** The raster. */
 		MCHEmul::Raster _raster;
 
 		// Implementation
 		/** When the CPU is not stopped (sometimes the VIC requires to stop it). \n 
 			and a instruction is executed, the number of cycles that that instruction required, has to be taken into account
-			to define qhat the VICII has to do. */
+			to define what the VICII has to do. */
 		unsigned int _lastCPUCycles;
 		/** The format used to draw. It has to be the same that is used by the Screen object. */
 		SDL_PixelFormat* _format;
@@ -295,22 +299,22 @@ namespace COMMODORE
 		mutable std::vector <MCHEmul::UBytes> _graphicsLineSprites; // Eight sprites...
 		/** Whenever a new raster line is reached, this variable becomes true. */
 		bool _isNewRasterLine; 
-		/** When a raster line is processed is necessary to know which cycle is being processed. 
-			The number of max cycles is get from the method (@see) cyclesPerRasterLine */
+		/** When a raster line is processed, it is necessary to know which cycle is being processed. 
+			The number of max cycles is get from the method (@see) "cyclesPerRasterLine". */
 		unsigned short _cycleInRasterLine;
 		/** When the raster is in the first bad line this variable is set taking into account what 
 			is kept in the VICII register about whether the video ir or not active. \n
-			In any other circunstance is kept its value. */
+			In any other circunstance it kepts its value. */
 		bool _videoActive;
 		/** Whether the vertical raster has entered the last VBlank zone already. */
 		bool _lastVBlankEntered;
 		/** The last value of the SCROLLY variable when a bad line was detected.
-			This value is gather anytime the bad line condition is checked (usually between raster cycles 12 and 52). 
+			This value is gathered anytime the bad line condition is checked (usually between raster cycles 12 and 52). 
 			-1 will mean no previous value to be taken into account. \n
 			This variable is set to -1 at the beginning of every raster line. */
 		mutable int _lastBadLineScrollY;
-		/** When the situation of a new bad line araise is latched in this variable. \n
-			This variabe is desactivated at the end of the line, and when the graphical info is read. */
+		/** When the situation of a new bad line araises, is latched in this variable. \n
+			This variabe is desactivated at the end of the line, and when the graphical info is finally read. */
 		mutable bool _newBadLineCondition;
 		/** 
 		  * Important things that happen suring the raster line and affects the sprites...
@@ -334,13 +338,19 @@ namespace COMMODORE
 		  *	CYCLE 15:				If the _FF is set, _MCBASE is incremented in 2. \n
 		  *	CYCLE 16:				If the _FF is set, _MCBASE is incremented in 1. \n
 		  *							If _MCBASE is 63 then _DMA and _visible are set to off. \n
-		  * In our simulation neither _MC is not needed, and MCBASE is just to control 63 bytes.
-		  *	as the variables that control the situation that they referes to are different.
+		  * In this simulation this behaviour has been simplified:
+		  * At cycle 15 the info _line is incremented. 
+		  * At cycle 52 sprites situation is actualized.
 		  */
 		struct VICSpriteInfo
 		{
 			VICSpriteInfo ()
 				: _active (false), _line (0), _expansionY (false),
+				  _ff (false)
+							{ }
+
+			VICSpriteInfo (bool a, unsigned char l, bool e)
+				: _active (a), _line (l), _expansionY (e),
 				  _ff (false)
 							{ }
 
@@ -418,47 +428,32 @@ namespace COMMODORE
 	}
 
 	// ---
-	inline int VICII::spriteLineDataAt (unsigned short l, size_t nS) const
-	{
-		// The VICII checks whether a sprite is visible at the raster cycle 55/56
-		// and also whether the Y coordinate matches the lower 8 bits of the raster
-		// so determine whether to draw it from the next line onwards.
-		// This is the reason whoy the line of the Y coordinate should be 1 less than the raster!
-		int lY = l - _VICIIRegisters -> spriteYCoord (nS) - 1;
-		return ((_VICIIRegisters -> spriteEnable (nS) &&
-			(lY >= 0 && lY < (_VICIIRegisters -> spriteDoubleHeight (nS) ? 42 /** When double high. */ : 21))) ? lY : -1);
-	}
-
-	// ---
-	inline const std::vector <MCHEmul::UBytes>& VICII::readSpritesDataAt (unsigned short l) const
+	inline const std::vector <MCHEmul::UBytes>& VICII::readSpritesData () const
 	{
 		_graphicsLineSprites = 
 			std::vector <MCHEmul::UBytes> (8, MCHEmul::UBytes::_E);
 		for (size_t i = 0; i < 8; 
-			readSpriteDataAt (l, i++)); // _graphicsLineSprites is updated...
+			readSpriteData (i++)); // _graphicsLineSprites is updated...
 		return (_graphicsLineSprites);
 	}
 
 	// ---
-	inline bool VICII::readSpriteDataAt (unsigned short l, size_t nS) const
+	inline bool VICII::readSpriteData (size_t nS) const
 	{
-		bool result = false;
+		if (!_vicSpriteInfo [nS]._active)
+			return (false);
 
-		int lY = spriteLineDataAt (l, nS);
-		if (result = (lY != -1))
-		{
-			MCHEmul::Address sP = 
-				_VICIIRegisters -> spritePointersMemory (); // Will depend on where the screen memory is located...
-			MCHEmul::Address iAB = _VICIIRegisters -> initAddressBank ();
-			_graphicsLineSprites [nS] = std::move (
-				MCHEmul::UBytes (
-					memoryRef () -> bytes (iAB + 
-						((size_t) memoryRef () -> value (sP + nS).value () << 6) /** 64 bytes block size. */ + 
-						/** If sprite is double-height, the data line read must be half. */
-						(((((unsigned int) lY) >> (_VICIIRegisters -> spriteDoubleHeight (nS) ? 1 : 0))) * 3 /** bytes per line. */), 3)));
-		}
+		MCHEmul::Address sP = 
+			_VICIIRegisters -> spritePointersMemory (); // Will depend on where the screen memory is located...
+		MCHEmul::Address iAB = _VICIIRegisters -> initAddressBank ();
+		_graphicsLineSprites [nS] = std::move (
+			MCHEmul::UBytes (
+				memoryRef () -> bytes (iAB + 
+					((size_t) memoryRef () -> value (sP + nS).value () << 6) /** 64 bytes block size. */ + 
+					/** If sprite is double-height, the data line read must be half. */
+					(_vicSpriteInfo [nS]._line * 3) /** bytes per line. */, 3)));
 
-		return (result);
+		return (true);
 	}
 
 	/** The version para NTSC systems. */
