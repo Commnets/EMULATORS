@@ -5,7 +5,7 @@ void COMMODORE::CIAClock::initialize ()
 {
 	_interruptEnabled = false;
 
-	_time = MCHEmul::Time ();
+	_time = MCHEmul::ClockDurationType (0);
 
 	// The implementation values...
 	_lastClockCycles = 0;
@@ -65,16 +65,23 @@ MCHEmul::InfoStructure COMMODORE::CIAClock::getInfoStructure () const
 // ---
 void COMMODORE::CIAClock::actualizeTime () 
 {
-	_time += MCHEmul::_TENTHSSECONDPAST; // Actualize the timer...
-	if (_time.time_since_epoch ().count () >= 864000 /** Max tenth of second in a day. */)
-		_time = MCHEmul::Time ();
+	_time = MCHEmul::_NOW - MCHEmul::_STARTINGTIME; // Actualize the time spend...
+	if (_time.count () >= 86400000 /** Max milliseconds in a day = 24 * 60 * 60 * 1000 */)
+		_time -= MCHEmul::ClockDurationType (8640000);
 
 	// Now it is time to convert it into days, hours,...
-	auto tds = _time.time_since_epoch ().count (); // In tenths of seconds...
-	_hours = (unsigned char) (tds / 36000); tds -= (unsigned long) _hours * 36000; // tenths of second per hour = 60 * 60 * 10
-	_minutes = (unsigned char) (tds / 600); tds -= (unsigned long) _minutes * 600; // tenths of second per minute = 60 * 10
-	_seconds = (unsigned char) (tds / 10); tds -= (unsigned long) _seconds * 10; // tenths of second per second = 10;
-	_tenthsSecond = (unsigned char) tds; // What remains are the tenths of second...
+	long long tds = _time.count ();
+	// milliseconds per hour = 60 * 60 * 1000
+	_hours = (unsigned char) (tds / 3600000);
+	tds -= (long long) _hours * 3600000; 
+	// milliseconds per minute = 60 * 1000
+	_minutes = (unsigned char) (tds / 60000);
+	tds -= (long long) _minutes * 60000; 
+	// milliseconds per second = 1000;
+	_seconds = (unsigned char) (tds / 1000);
+	tds -= (long long) _seconds * 1000;	
+	// What remains are milliseconds converted into tenths of second...
+	_tenthsSecond = (unsigned char) (tds / 100);
 
 	if (!_timeLatched)
 		{ _minutesL = _minutes; _secondsL = _seconds; _tenthsSecondL = _tenthsSecond; }

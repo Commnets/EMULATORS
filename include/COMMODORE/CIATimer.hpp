@@ -187,7 +187,7 @@ namespace COMMODORE
 
 		// It is actualized continiously through the method actualizeTime...
 		// The time counts only hours in the day...
-		MCHEmul::Time _time;
+		MCHEmul::ClockTime _time;
 
 		// Implementation
 		/** When the first cycle is about to happen this variable is true. */

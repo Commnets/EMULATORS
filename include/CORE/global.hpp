@@ -114,19 +114,20 @@ namespace MCHEmul
 	bool instanceOf (const Type* ptr)
 							{ return (dynamic_cast <const Base*> (ptr) != nullptr); }
 
-	/** The computer emulation using tenth of seconds only. */
-	using Duration = std::chrono::duration <unsigned long, std::deci>;
-	using Time = std::chrono::time_point <std::chrono::steady_clock, Duration>;
-
-	// The time in the emulation is managed always in nanoseconds.
+	/** The computer emulation using milliseconds only. */
+	using ClockType = std::chrono::steady_clock;
+	using ClockDurationType = std::chrono::duration <long long, std::milli>;
+	using ClockTime = std::chrono::time_point <ClockType, ClockDurationType>;
+	// The time in the emulation is managed always in milliseconds.
+	// It is decalred as extern because it will be used all over the application...
 	/** This variable is initialized when the emulator starts. \n
 		It keeps the global time. Some chips and structures can benefit from it. */
-	static const Time _STARTINGTIME = std::chrono::time_point_cast <Duration> (std::chrono::steady_clock::now ());
+	extern const ClockTime _STARTINGTIME; 
 	/** This variable always keeps the current time in the format used by the C64. \n
 		This variable has to be periodically updated. */
-	static Time _NOW = std::chrono::time_point_cast <Duration> (std::chrono::steady_clock::now ());
-	/** This variable always keeps the number of tenths of second between two actualizations of the global time. */
-	static Duration _TENTHSSECONDPAST = Duration ();
+	extern ClockTime _NOW;
+	/** This variable always keeps the number of milliseconds between two actualizations of the global time. */
+	extern ClockDurationType _MILLISECONDSPAST;
 
 	/** To actualize the time. */
 	void actualizeGlobalTime ();

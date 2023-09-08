@@ -4,6 +4,11 @@
 #include <locale>
 #include <codecvt>
 
+const MCHEmul::ClockTime MCHEmul::_STARTINGTIME = 
+	std::chrono::time_point_cast <MCHEmul::ClockDurationType> (ClockType::now ());
+MCHEmul::ClockTime MCHEmul::_NOW = std::chrono::time_point_cast <MCHEmul::ClockDurationType> (MCHEmul::ClockType::now ());
+MCHEmul::ClockDurationType MCHEmul::_MILLISECONDSPAST = ClockDurationType (0);
+
 // ---
 std::ostream& MCHEmul::operator << (std::ostream& o, const MCHEmul::Attributes& attrs)
 { 
@@ -369,7 +374,8 @@ double MCHEmul::linearInterpolation (double minx, double miny, double maxx, doub
 // ---
 void MCHEmul::actualizeGlobalTime ()
 {
-	MCHEmul::Time n = std::chrono::time_point_cast <MCHEmul::Duration> (std::chrono::steady_clock::now ());
-	MCHEmul::_TENTHSSECONDPAST = MCHEmul::_NOW - n;
+	MCHEmul::ClockTime n = 
+		std::chrono::time_point_cast <MCHEmul::ClockDurationType> (MCHEmul::ClockType::now ());
+	MCHEmul::_MILLISECONDSPAST = n - MCHEmul::_NOW;
 	MCHEmul::_NOW = n;
 }

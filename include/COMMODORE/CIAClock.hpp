@@ -67,7 +67,7 @@ namespace COMMODORE
 		void setAlarmSeconds (unsigned char s)
 							{ _alarmSeconds = s; }
 		void setAlarmTenthSeconds (unsigned char ts)
-							{ _alarmTenthsSecond = ts; _stopped = true;}
+							{ _alarmTenthsSecond = ts; _stopped = false;}
 
 		void setHours (unsigned char h)
 							{ _stopped = true, _hours = h; }
@@ -76,7 +76,7 @@ namespace COMMODORE
 		void setSeconds (unsigned char s)
 							{ _seconds = s; }
 		void setTenthSeconds (unsigned char ts)
-							{ _tenthsSecond = ts; _stopped = true;}
+							{ _tenthsSecond = ts; _stopped = false;}
 
 		/** To know the alarm, by pieces.
 			This is the way the chips works. 
@@ -137,7 +137,7 @@ namespace COMMODORE
 
 		// It is actualized continiously thorugh the method actualizeTime...
 		// The time counts only hours in the day...
-		MCHEmul::Time _time;
+		MCHEmul::ClockDurationType _time;
 
 		// Implementation
 		/** The value of the clock cycles las time the timer counted down. */

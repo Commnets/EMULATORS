@@ -13,7 +13,7 @@ void COMMODORE::CIATimer::initialize ()
 	_interruptEnabled = false;
 
 	_initialValue = 0x0000;
-	_time = MCHEmul::Time ();
+	_time = MCHEmul::ClockTime ();
 
 	_CNTPin = false;
 

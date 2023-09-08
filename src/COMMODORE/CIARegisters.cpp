@@ -495,10 +495,11 @@ void COMMODORE::CIARegisters::initializeInternalValues ()
 	setValue (0x05, MCHEmul::UByte::_FF);
 	setValue (0x06, MCHEmul::UByte::_FF);
 	setValue (0x07, MCHEmul::UByte::_FF);
-	setValue (0x08, MCHEmul::UByte::_0); 
-	setValue (0x09, MCHEmul::UByte::_0); 
-	setValue (0x0a, MCHEmul::UByte::_0); 
-	setValue (0x0b, MCHEmul::UByte::_0); 
+	// 0x0b, 0x0a, 0x09, 0x08: In reverse order to maintain active the clock at the end...
+	setValue (0x0b, MCHEmul::UByte::_0);
+	setValue (0x0a, MCHEmul::UByte::_0);
+	setValue (0x09, MCHEmul::UByte::_0);
+	setValue (0x08, MCHEmul::UByte::_0);
 	setValue (0x0c, MCHEmul::UByte::_FF); // Not connected against anything...
 	setValue (0x0d, 0x1f);  // To clear all interrupts...
 	setValue (0x0e, 0xe0);  // Register A: Stopped, no value appear on bit 6 port B, pulse,

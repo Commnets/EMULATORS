@@ -384,13 +384,35 @@ void testAddress ()
 	std::cout << "-----------" << std::endl;
 }
 
+void testChrono ()
+{
+	MCHEmul::_NOW = 
+		std::chrono::time_point_cast <MCHEmul::ClockDurationType> (MCHEmul::ClockType::now ());
+	MCHEmul::_MILLISECONDSPAST = MCHEmul::ClockDurationType (0);
+
+	for (unsigned int i = 0; i < 10000; i++);
+
+	for (unsigned int i = 0; i < 100; i++)
+	{
+		MCHEmul::ClockTime n = 
+			std::chrono::time_point_cast <MCHEmul::ClockDurationType> (MCHEmul::ClockType::now ());
+		MCHEmul::_MILLISECONDSPAST = n - MCHEmul::_NOW;
+		std::cout << MCHEmul::_MILLISECONDSPAST.count () << std::endl;
+		MCHEmul::_NOW = n;
+	}
+
+	std::string a;
+	std::cout << ":"; std::cin >> a; 
+}
+
 int _tmain (int argc, _TCHAR *argv [])
 {
-	testUByte ();
-	testUBytes ();
-	testUInt ();
-	testUIntBCD ();
-	testAddress ();
+//	testUByte ();
+//	testUBytes ();
+//	testUInt ();
+//	testUIntBCD ();
+//	testAddress ();
+	testChrono ();
 	
 	return (0);
 }
