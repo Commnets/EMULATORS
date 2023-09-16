@@ -22,18 +22,17 @@ const MCHEmul::UByte& C64::CIA1Registers::readValue (size_t p) const
 		// Data Port Register A: CIA1PRA
 		case 0x00:
 			{
-				// @see 0x01 for futher explanations.
-				// This behaviour is a mirror in the port A of that one...
-				result = MCHEmul::UByte::_0;
-				MCHEmul::UByte msk = (MCHEmul::PhysicalStorageSubset::readValue (0x01) & 
-					_joystick1Status) | ~dataPortBDir ();
+				// In CIA 1 the value of the port can be affected 
+				// by the keyboard and the joystick 1
+				// What is in the portB make conexions (see .hpp) in the portA
+				// determining what is shown there...
+				unsigned char dtA = MCHEmul::UByte::_0;
 				for (size_t i = 0; i < 8; i++)
-					if ((~msk.value () & (1 << i)) != 0x00)
-						result |= ~(_rev_keyboardStatusMatrix [i] & ~dataPortADir ());
-				result |= ~(_joystick2Status & ~dataPortADir ());
-				result = ~result;
-				result |= MCHEmul::UByte (dataPortADir () & dataPortBDir ()) & 
-					MCHEmul::PhysicalStorageSubset::readValue (0x00);
+					if ((~_portB & (1 << i)) != 0x00)
+						dtA |= ~_rev_keyboardStatusMatrix [i].value (); // 1 if clicked...
+				_portA = (_outputRegA | ~_dataPortADir) /** What it should go to portA as internal configuration determines. */ & 
+					(~dtA & _joystick2Status) /** but affected by the keys and joystick switches pressed. */;
+				result = MCHEmul::UByte (_portA);
 			}
 
 			break;
@@ -41,28 +40,13 @@ const MCHEmul::UByte& C64::CIA1Registers::readValue (size_t p) const
 		// Data Port Register B: CIA1PRB
 		case 0x01:
 			{
-				// As explained the port A y connected to the portB through the keyboard matrix,...
-				// So when portA (columns) is selected to be read, 
-				// the values from the portB (including the joystick1) are taken.
-				// The initial active points in that portB (rows) will the OR 
-				// of all those ones where the portA is active.
-
-				// "result" will mark with true the bit corresponding to the key of the row selected....
-				result = MCHEmul::UByte::_0;
-				// What is in the 0x00 port (+ joystick2) corrected by the direction at that port (output bits = 1)
-				// is what will drive the value at the port B depending on the keys pressed (corrected by input, bits = 0)
-				MCHEmul::UByte msk = (MCHEmul::PhysicalStorageSubset::readValue (0x00) &
-					_joystick2Status) | ~dataPortADir ();
+				// @see above
+				unsigned char dtB = MCHEmul::UByte::_0;
 				for (size_t i = 0; i < 8; i++)
-					if ((~msk & (1 << i)) != 0x00)
-						result |= ~(_keyboardStatusMatrix [i] & ~dataPortBDir ());
-				// The input of the joystick1 connected has also to be taken into account...
-				result |= ~(_joystick1Status & ~dataPortBDir ());
-				// But C64 expects the result in the opposite way...
-				// it is: the bits corresponding to keys selected must be set to 0...
-				result = ~result;
-				result |= MCHEmul::UByte (dataPortADir () & dataPortBDir ()) & 
-					MCHEmul::PhysicalStorageSubset::readValue (0x01);
+					if ((~_portA & (1 << i)) != 0x00)
+						dtB |= ~_keyboardStatusMatrix [i].value ();  // 1 if clicked...
+				_portB = (_outputRegB | ~_dataPortBDir) & (~dtB & _joystick1Status);
+				result = MCHEmul::UByte (_portB);
 			}
 
 			break;

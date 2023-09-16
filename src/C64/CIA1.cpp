@@ -71,10 +71,10 @@ void C64::CIA1::processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifier* n)
 
 				if (jm -> _joystickId == 0)
 					_CIA1Registers -> setJoystick1Status 
-						((dr == 0x00) ? 0xff : _CIA1Registers -> joystick1Status () & (0xff - dr));
+						((dr == 0x00) ? 0xff /** none connected. */ : _CIA1Registers -> joystick1Status () & ~dr);
 				else
 					_CIA1Registers -> setJoystick2Status 
-						((dr == 0x00) ? 0xff : _CIA1Registers -> joystick2Status () & (0xff - dr));
+						((dr == 0x00) ? 0xff : _CIA1Registers -> joystick2Status () & ~dr);
 			}
 
 			break;
@@ -87,11 +87,9 @@ void C64::CIA1::processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifier* n)
 					break; // Only joysticks 0 y 1 are allowed!
 	
 				if (jb -> _joystickId == 0)
-					_CIA1Registers -> setJoystick1Status (_CIA1Registers -> joystick1Status () & 
-						(0xff /** 0 means switch on. */ - 0x10));
+					_CIA1Registers -> setJoystick1Status (_CIA1Registers -> joystick1Status () & ~0x10);
 				else
-					_CIA1Registers -> setJoystick2Status (_CIA1Registers -> joystick2Status () & 
-						(0xff /** 0 means switch on. */ - 0x10));
+					_CIA1Registers -> setJoystick2Status (_CIA1Registers -> joystick2Status () & ~0x10);
 			}
 
 			break;
@@ -115,7 +113,8 @@ void C64::CIA1::processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifier* n)
 		case C64::DatasetteIOPort::_READ:
 			// Activate the interrupt as a value has been received...
 			// It doesn't matter whether the value is 1 or 0, the interrupt is always activated...
-			_CIA1Registers -> setValue (0x0d, _CIA1Registers -> readValue (0x0d) & 0xef | 0x10 /** Activate bit 4 = FLAG interrupt. */);
+			_CIA1Registers -> setValue (0x0d, 
+				_CIA1Registers -> readValue (0x0d) & 0xef | 0x10 /** Activate bit 4 = FLAG interrupt. */);
 			break;
 
 		default:

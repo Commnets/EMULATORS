@@ -44,12 +44,12 @@ namespace COMMODORE
 		// Managing the ports...
 		const MCHEmul::UByte& portA () const
 							{ return (_CIARegisters -> portA ()); }
-		void setPortA (const MCHEmul::UByte& v)
-							{ _CIARegisters -> setPortA (v); }
+		MCHEmul::UByte setPortA (const MCHEmul::UByte& v, bool f = false)
+							{ return (_CIARegisters -> setPortA (v, f)); }
 		const MCHEmul::UByte& portB () const
 							{ return (_CIARegisters -> portB ()); }
-		void setPortB (const MCHEmul::UByte& v)
-							{ _CIARegisters -> setPortB (v); }
+		MCHEmul::UByte setPortB (const MCHEmul::UByte& v, bool f = false)
+							{ return (_CIARegisters -> setPortB (v, f)); }
 
 		virtual bool initialize () override;
 

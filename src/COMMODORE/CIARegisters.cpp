@@ -35,10 +35,11 @@ void COMMODORE::CIARegisters::setValue (size_t p, const MCHEmul::UByte& v)
 		// Data Port Register A: CIAPRA
 		case 0x00:
 			{
-				setPortA (MCHEmul::UByte (
-					v.value () | ~_dataPortADir));
-				// _dataPortADir: bits 0 = input, bits 1 = output.
-				// So input positions are maintained to 1, and output positions the value of v is maintained....
+				_outputRegA = v.value ();
+
+				// The value of the portA needs to be reset...
+				// If there were any previous value set in the portA, it will be overwritten...
+				setPortA (v, false);
 			}
 
 			break;
@@ -47,15 +48,17 @@ void COMMODORE::CIARegisters::setValue (size_t p, const MCHEmul::UByte& v)
 		case 0x01:
 			{
 				MCHEmul::UByte cV = v;
-				// The result of the timer could take into account...
+				// The result of the timer could be taken into account...
 				if (_reflectTimerAAtPortDataB)
 					cV.setBit (6, _timerAValueAtPortDataB ? true : false);
 				if (_reflectTimerBAtPortDataB)
 					cV.setBit (7, _timerBValueAtPortDataB ? true : false);
 
-				setPortB (MCHEmul::UByte (
-					v.value () | ~_dataPortBDir));
-				// @see 0x00. Same but with PortB instead...
+				_outputRegB = cV.value ();
+
+				// The value of the portB needs to be reset...
+				// If there were any previous value set in the portB, it will be overwritten...
+				setPortB (cV, false);
 			}
 
 			break;
@@ -64,6 +67,8 @@ void COMMODORE::CIARegisters::setValue (size_t p, const MCHEmul::UByte& v)
 		case 0x02:
 			{
 				_dataPortADir = v.value ();
+
+				setPortA (MCHEmul::UByte (_outputRegA), false);
 			}
 
 			break;
@@ -72,6 +77,8 @@ void COMMODORE::CIARegisters::setValue (size_t p, const MCHEmul::UByte& v)
 		case 0x03:
 			{
 				_dataPortBDir = v.value ();
+
+				setPortB (MCHEmul::UByte (_outputRegB), false);
 			}
 
 			break;
@@ -243,13 +250,7 @@ const MCHEmul::UByte& COMMODORE::CIARegisters::readValue (size_t p) const
 	{
 		case 0x00:
 			{
-				// In _dataPortADir bits to 1 mean output and bits to 0 mean input, so...
-				result = MCHEmul::UByte (
-					_portA & ~_dataPortADir | // ...only the ones at 0 are read...
-					_portA & _dataPortADir);  // ...and the rest are maintained as they were!	
-				// at the end result == _portA! (but in this way is better explained)
-				// as it is described in page 5 of the 6526 datasheet
-				// http://archive.6502.org/datasheets/mos_6526_cia_recreated.pdf
+				result = MCHEmul::UByte (_portA);
 			}
 
 			break;
@@ -257,11 +258,7 @@ const MCHEmul::UByte& COMMODORE::CIARegisters::readValue (size_t p) const
 		/** In the Data Port B a reflection of the timers could happen. */
 		case 0x01:
 			{
-				// In _dataPortBDir bits to 1 mean output and bits to 0 mean input, so...
-				result = MCHEmul::UByte (
-					_portB & ~_dataPortBDir | // ...only the ones at 0 are read...
-					_portB & _dataPortBDir);  // ...and the rest are maintained as they were!
-				// at the end result == _portB! (but in this way is better explained)
+				result = MCHEmul::UByte (_portB);
 			}
 
 			break;
@@ -482,6 +479,8 @@ void COMMODORE::CIARegisters::initializeInternalValues ()
 
 	//They have to be initialized in advanced as the value set depends also on the value at the beginning...
 	_portA = _portB = MCHEmul::UByte::_FF; // As described in the documentation they all have a pull up resistor...
+	// Same with the output registers
+	_outputRegA = _outputRegB = MCHEmul::UByte::_FF;
 
 	// The internal variables are initialized through the data in memory...
 

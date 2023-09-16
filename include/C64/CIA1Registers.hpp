@@ -80,8 +80,12 @@ namespace C64
 			...and also the inputs comming from the joystick 1... */
 		bool keyboardStatusMatrix (size_t r, size_t c) const
 							{ return (_keyboardStatusMatrix [r].bit (c)); }
+		const MCHEmul::UByte& keyboardStatusMatrix (size_t r) const
+							{ return (_keyboardStatusMatrix [r]); }
 		bool rev_keyboardStatusMatrix (size_t r, size_t c) const
 							{ return (_rev_keyboardStatusMatrix [c].bit (r)); }
+		const MCHEmul::UByte& rev_keyboardStatusMatrix (size_t c) const
+							{ return (_rev_keyboardStatusMatrix [c]); }
 		void setKeyboardStatusMatrix (size_t r, size_t c, bool s)
 							{ _keyboardStatusMatrix [r].setBit (c, s);
 							  _rev_keyboardStatusMatrix [c].setBit (r, s); }

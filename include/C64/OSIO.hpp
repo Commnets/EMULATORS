@@ -52,44 +52,45 @@ namespace C64
 		COMMODORE::VICII* _vicII;
 
 		/** 
-			How SDL keys are mapped into the chars map of the C64.
-			That key will have an image in the status zone. 
-			$DC01 (read)	Bit 7		 Bit 6	 Bit 5		 Bit 4			 Bit 3	 Bit 2	 Bit 1		 Bit 0
-			$DC00 (select)	=========================================================================================
-			Byte 7			| STOP		| Q		| CLOGO		| SPACE			| 2		| CTRL	| LEFT		| 1			|
-			Byte 6			| /			| UP	| =			| RIGHTSHIFT	| HOME	| ;		| *			| POUND		|
-			Byte 5			| ,			| @		| :			| .				| -		| L		| P			| +			|
-			Byte 4			| N			| O		| K			| M				| 0		| J		| I			| 9			|
-			Byte 3			| V			| U		| H			| B				| 8		| G		| Y			| 7			|
-			Byte 2			| X			| T		| F			| C				| 6		| D		| R			| 5			|
-			Byte 1			| LEFTSHIFT	| E		| S			| Z				| 4		| A		| W			| 3			|
-			Byte 0			| DOWN		| F5	| F3		| F1			| F7	| RIGHT	| RETURN	| DELETE	|
-							=========================================================================================
-			The important C64 keys in a Win32 standard keyboard are:
-			LEFT CONTROL				= CTRL
-			RIGHT CONTROL				= CTRL
-			LEFT ALT					= STOP
-			SHIFT + LEFT ALT			= RUN
-			TAB							= COMMODORE KEY
-			LEFT BRACKET				= +
-			RIGHT BRACKET				= *
-			APOSTROPHE					= :
-			BACKSLASH					= @
-			ESCAPE						= ARROW BACK
-			GRAVE						= POUND
-			ACCENT						= MINUS
-			OPEN EXCLAMATION			= EQUAL
-			OPEN BRACKET				= PLUS
-			CLOSE BRACKET				= ASTERISC
-			OPEN PARENTHESIS			= TWO POINTS
-			CLOSE PARENTEHEIS			= ADDRESS
-			COMMA						= COMMA
-			PERIOD						= PERIOD
-			MINUS						= SLASH
-			SHIFT COMMA					= LESSER THAN
-			SHIFT PERIOD				= GREATER THAN
-			SHIFT MINUS					= QUESTION MARK
-			Ñ							= POINT AND COMMA
+			How SDL keys are mapped into the chars map of the C64. \n
+			That key will have an image in the status zone. \n
+			$DC01 (read)	Bit 7		 Bit 6	 Bit 5		 Bit 4			 Bit 3	 Bit 2	 Bit 1		 Bit 0 \n
+			$DC00 (select)	========================================================================================= \n
+			Byte 7			| STOP		| Q		| CLOGO		| SPACE			| 2		| CTRL	| LEFT		| 1			| \n
+			Byte 6			| /			| UP	| =			| RIGHTSHIFT	| HOME	| ;		| *			| POUND		| \n
+			Byte 5			| ,			| @		| :			| .				| -		| L		| P			| +			| \n
+			Byte 4			| N			| O		| K			| M				| 0		| J		| I			| 9			| \n
+			Byte 3			| V			| U		| H			| B				| 8		| G		| Y			| 7			| \n
+			Byte 2			| X			| T		| F			| C				| 6		| D		| R			| 5			| \n
+			Byte 1			| LEFTSHIFT	| E		| S			| Z				| 4		| A		| W			| 3			| \n
+			Byte 0			| DOWN		| F5	| F3		| F1			| F7	| RIGHT	| RETURN	| DELETE	| \n
+							========================================================================================= \n
+			Take into account that the activity can be done in th eother way around...\n
+			The important C64 keys in a Win32 standard keyboard are: \n
+			LEFT CONTROL				= CTRL \n
+			RIGHT CONTROL				= CTRL \n
+			LEFT ALT					= STOP \n
+			SHIFT + LEFT ALT			= RUN  \n
+			TAB							= COMMODORE KEY \n
+			LEFT BRACKET				= + \n
+			RIGHT BRACKET				= *	\n
+			APOSTROPHE					= :	\n
+			BACKSLASH					= @	\n
+			ESCAPE						= ARROW BACK \n
+			GRAVE						= POUND \n
+			ACCENT						= MINUS	\n
+			OPEN EXCLAMATION			= EQUAL	\n
+			OPEN BRACKET				= PLUS \n
+			CLOSE BRACKET				= ASTERISC \n
+			OPEN PARENTHESIS			= TWO POINTS \n
+			CLOSE PARENTEHEIS			= ADDRESS \n
+			COMMA						= COMMA \n
+			PERIOD						= PERIOD \n
+			MINUS						= SLASH \n
+			SHIFT COMMA					= LESSER THAN \n
+			SHIFT PERIOD				= GREATER THAN \n
+			SHIFT MINUS					= QUESTION MARK \n
+			Ñ							= POINT AND COMMA \n
 		*/
 		using KeystrockesMap = std::map <SDL_Scancode, Keystrokes>;
 		static const KeystrockesMap _C64KEYS;

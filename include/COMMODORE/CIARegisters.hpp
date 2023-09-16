@@ -57,17 +57,39 @@ namespace COMMODORE
 
 		virtual void initialize () override;
 
-		/** Managing the ports. */
+		// managing the ports...
+		/** Read the value. */
 		MCHEmul::UByte portA () const
 							{ return (MCHEmul::UByte (_portA)); }
-		void setPortA (const MCHEmul::UByte& v)
-							{ _portA = v.value (); 
-							  notify (MCHEmul::Event (_PORTAACTUALIZED, _portA)); }
+		/** Put a new value into the port. \n
+			It can be done "forcing" the value into the port or taking into account the _dataPortDir value. \n
+			Forcing can happen when something with a mandatory value is connected to the port. \n
+			e.g if a joystick is connected to the pin, when moving, the right switch is grounded and the mandatory value is 0. \n
+			In the other hand a keyboard matrix is not connected to anything, so the new values can not be forced. \n
+			When not forced: \n
+			The values at 1 of the port are maintained at the pins where the dataPortDir is in read (0) mode.
+			The values selected are pushed to the port at the pins where the dataPortDir is in write (1) mode.
+			The final value of the port is returned. \n
+			http://archive.6502.org/datasheets/mos_6526_cia_recreated.pdf
+			By default the value is not forced. */
+		MCHEmul::UByte setPortA (const MCHEmul::UByte& v, bool f = false)
+							{ notify (MCHEmul::Event (_PORTAACTUALIZED, 
+								_portA = f ? v.value () : (_outputRegA | ~_dataPortADir) & v.value ()));
+							  return (MCHEmul::UByte (_portA)); }
+		/** Same than port A. */
 		MCHEmul::UByte portB () const
 							{ return (MCHEmul::UByte (_portB)); }
-		void setPortB (const MCHEmul::UByte& v)
-							{ _portB = v.value ();
-							  notify (MCHEmul::Event (_PORTBACTUALIZED, _portB)); }
+		MCHEmul::UByte setPortB (const MCHEmul::UByte& v, bool f = false)
+							{ notify (MCHEmul::Event (_PORTBACTUALIZED, 
+								_portB = f ? v.value () : (_outputRegB | ~_dataPortBDir) & v.value ()));
+							  return (MCHEmul::UByte (_portB)); }
+
+		// The output registers...
+		/** Their values are used internally to operate ports. */
+		unsigned char outputRegisterA () const
+							{ return (_outputRegA); }
+		unsigned char outputRegisterB () const
+							{ return (_outputRegB); }
 
 		// All these method are invoked from CIA emulation
 		/** To know the value of the data direction registers. */
@@ -142,7 +164,9 @@ namespace COMMODORE
 
 		protected:
 		/** Ports used by the CIA. */
-		unsigned char _portA, _portB;
+		mutable unsigned char _portA, _portB;
+		/** The output registers that are not neccesary iqual to the ports. */
+		mutable unsigned char _outputRegA, _outputRegB;
 		/** The direction of the different ports used by the CIA. */
 		unsigned char _dataPortADir, _dataPortBDir;
 		/** Reference to the timers */
