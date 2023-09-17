@@ -1,0 +1,7 @@
+To run Myth, you must type the following on the blank screen
+upon loading the crt file (include the spaces):
+
+SYS 3 MYTH
+
+If you are successful, a bitmap picture should appear followed
+by the title screen.

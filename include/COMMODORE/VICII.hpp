@@ -135,21 +135,24 @@ namespace COMMODORE
 		inline void readGraphicsInfoAt (unsigned short gl /** screen line, including the effect of the scroll y. */);
 		/** To empty the list of info. */
 		inline void emptyGraphicsInfo ();
-		/** Read the chars present in the video matrix. \n
+		/** Read the chars present in the video matrix for a specific videlo line. \n
 			The parameter received goes fom 0 to 24 (visible C64 line). */
-		const MCHEmul::UBytes& readScreenCodeDataAt (unsigned short l) const
-							{ return (_graphicsScreenCodeData = std::move (
-								memoryRef () -> values (_VICIIRegisters -> screenMemory () +
-									((size_t) l * _GRAPHMAXCHARCOLUMNS), (size_t) _GRAPHMAXCHARCOLUMNS))); }
+		inline const MCHEmul::UBytes& readScreenCodeDataAt (unsigned short l) const;
+		/** Same than previous, but reading only the char where the raster is now. */
+		inline const MCHEmul::UBytes& readScreenCodeDataAtRaster () const;
 		/** Read the info for the chars received as parameter. \n
 			The method receives also a parameter to indicate whether the graphics mode is or not _EXTENDEDBACKGROUNDMODE,
 			because in that case the info is read slightly different. */
 		inline const MCHEmul::UBytes& readCharDataFor (const MCHEmul::UBytes& chrs, bool eM = false) const;
+		/** Same than previous but reading only the info for a character, where the raster is now. */
+		inline const MCHEmul::UBytes& readCharDataForAtRaster (const MCHEmul::UByte chr, bool eM = false) const;
 		/** Read the info of the bitmap. \n
 			The info is read as they were char data. That is, the 8 x 8 block are sequential. 
 			The parameter received goes from 0 to 199 (visible scan line ((0 - 25 lines) * 8) - 1, and
 			takes into account the effect of the SCROLLY variable. */
 		inline const MCHEmul::UBytes& readBitmapDataAt (unsigned short l) const;
+		/** Same than previous but reading the info where the raster is now. */
+		inline const MCHEmul::UBytes& readBitmapDataAtRaster () const;
 		/** Reads the color of the chars. \n
 			The _COLORMEMORY localtion is fixed and can not be changed using VICRegisters. 
 			Th parameter received goes from 0 to 24. */
@@ -394,16 +397,35 @@ namespace COMMODORE
 	}
 
 	// ---
-	const MCHEmul::UBytes& VICII::readCharDataFor (const MCHEmul::UBytes& chrs, bool eM) const
-	{
-		MCHEmul::Address cDM = _VICIIRegisters -> charDataMemory (); // The key....
+	inline const MCHEmul::UBytes& VICII::readScreenCodeDataAt (unsigned short l) const
+	{ 
+		return (_graphicsScreenCodeData = std::move (
+					memoryRef () -> values (_VICIIRegisters -> screenMemory () +
+						((size_t) l * _GRAPHMAXCHARCOLUMNS), (size_t) _GRAPHMAXCHARCOLUMNS))); 
+	}
 
+	// ---
+	inline const MCHEmul::UBytes& VICII::readScreenCodeDataAtRaster () const
+	{ 
+		_graphicsScreenCodeData [(size_t) (_cycleInRasterLine - 15)] = 
+			memoryRef () -> value (_VICIIRegisters -> screenMemory () +
+				((size_t) ((((_raster.currentLine () - _FIRSTBADLINE - 
+					_VICIIRegisters -> verticalScrollPosition ()) >> 3) * _GRAPHMAXCHARCOLUMNS) + 
+				 (size_t) (_cycleInRasterLine - 15))));
+							  
+		return (_graphicsScreenCodeData); 
+	}
+
+	// ---
+	inline const MCHEmul::UBytes& VICII::readCharDataFor (const MCHEmul::UBytes& chrs, bool eM) const
+	{
 		std::vector <MCHEmul::UByte> dt;
 		for (const auto& i : chrs.bytes ())
 		{
 			std::vector <MCHEmul::UByte> chrDt = std::move (
-				memoryRef () -> bytes (cDM + (((size_t) i.value () & (eM ? 0x3f : 0xff)) 
-					/** In the extended graphics mode there is only 64 chars possible. */ << 3), 8));
+				memoryRef () -> bytes (_VICIIRegisters -> charDataMemory () + 
+					(((size_t) i.value () & (eM ? 0x3f : 0xff)) 
+						/** In the extended graphics mode there is only 64 chars possible. */ << 3), 8));
 			dt.insert (dt.end (), std::make_move_iterator (chrDt.begin ()), std::make_move_iterator (chrDt.end ()));
 		}
 
@@ -411,20 +433,46 @@ namespace COMMODORE
 	}
 
 	// ---
+	inline const MCHEmul::UBytes& VICII::readCharDataForAtRaster (const MCHEmul::UByte chr, bool eM) const
+	{
+		std::vector <MCHEmul::UByte> dt = std::move (
+			memoryRef () -> bytes (_VICIIRegisters -> charDataMemory () + 
+				(((size_t) chr.value () & (eM ? 0x3f : 0xff)) 
+					/** In the extended graphics mode there is only 64 chars possible. */ << 3), 8));
+		for (size_t i = 0; i < 8; i++)
+			_graphicsGraphicData [(size_t) ((_cycleInRasterLine - 15) << 3) + i] = dt [i];
+
+		return (_graphicsGraphicData);
+	}
+
+	// ---
 	inline const MCHEmul::UBytes& VICII::readBitmapDataAt (unsigned short l) const
 	{
-		MCHEmul::Address bDM = _VICIIRegisters -> bitmapMemory ();
-
 		std::vector <MCHEmul::UByte> dt;
 		unsigned short cL = l * _GRAPHMAXCHARCOLUMNS;
 		for (unsigned short i = 0; i < _GRAPHMAXCHARCOLUMNS; i++)
 		{
 			std::vector <MCHEmul::UByte> btDt = std::move (
-				memoryRef () -> bytes (bDM + (cL + ((size_t) i << 3)), 8));
+				memoryRef () -> bytes (_VICIIRegisters -> bitmapMemory () + 
+					(cL + ((size_t) i << 3)), 8));
 			dt.insert (dt.end (), std::make_move_iterator (btDt.begin ()), std::make_move_iterator (btDt.end ()));
 		}
 
 		return (_graphicsGraphicData = std::move (MCHEmul::UBytes (dt)));
+	}
+
+	// ---
+	inline const MCHEmul::UBytes& VICII::readBitmapDataAtRaster () const
+	{
+		std::vector <MCHEmul::UByte> dt = std::move (
+			memoryRef () -> bytes (_VICIIRegisters -> bitmapMemory () + 
+				((size_t) (((_raster.currentLine () - _FIRSTBADLINE - 
+					_VICIIRegisters -> verticalScrollPosition ()) >> 3) * _GRAPHMAXCHARCOLUMNS) + 
+				 (size_t) ((_cycleInRasterLine - 15) << 3)), 8));
+		for (size_t i = 0; i < 8; i++)
+			_graphicsGraphicData [(size_t) ((_cycleInRasterLine - 15) << 3) + i] = dt [i];
+
+		return (_graphicsGraphicData);
 	}
 
 	// ---
@@ -443,13 +491,11 @@ namespace COMMODORE
 		if (!_vicSpriteInfo [nS]._active)
 			return (false);
 
-		MCHEmul::Address sP = 
-			_VICIIRegisters -> spritePointersMemory (); // Will depend on where the screen memory is located...
-		MCHEmul::Address iAB = _VICIIRegisters -> initAddressBank ();
 		_graphicsLineSprites [nS] = std::move (
 			MCHEmul::UBytes (
-				memoryRef () -> bytes (iAB + 
-					((size_t) memoryRef () -> value (sP + nS).value () << 6) /** 64 bytes block size. */ + 
+				memoryRef () -> bytes (_VICIIRegisters -> initAddressBank () + 
+					((size_t) memoryRef () -> value 
+						(_VICIIRegisters -> spritePointersMemory () /** Depnds on where the escreen is located. */ + nS).value () << 6) /** 64 bytes block. */ +
 					/** If sprite is double-height, the data line read must be half. */
 					(_vicSpriteInfo [nS]._line * 3) /** bytes per line. */, 3)));
 

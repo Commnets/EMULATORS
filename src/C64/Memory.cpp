@@ -169,7 +169,7 @@ MCHEmul::Memory::Content C64::Memory::standardMemoryContent ()
 		(_RAM00_SUBSET, RAM, 0x0200, MCHEmul::Address ({ 0x00, 0x02 }, false), 0x7e00); 					// 31,5k pure (a bit used by BASIC)
 	// In the last part of the RAM a 8k Expansion ROM is located (no active unless a expansion element uses it)
 	MCHEmul::PhysicalStorageSubset* RAM01 = new MCHEmul::PhysicalStorageSubset
-		(_RAM01_SUBSET, RAM, 0x8000, MCHEmul::Address ({ 0x00, 0x80 }, false), 0x2000);						// 2k pure a (a bit used by basic, but can be shared with expansion port)
+		(_RAM01_SUBSET, RAM, 0x8000, MCHEmul::Address ({ 0x00, 0x80 }, false), 0x2000);						// 8k pure a (a bit used by basic, but can be shared with expansion port)
 	// Where the basic is can be either ROM or RAM (depends on bits in position 1 of the page 0) or EXPANSION ROM (when uses it)
 	MCHEmul::PhysicalStorageSubset* BasicROM = new MCHEmul::PhysicalStorageSubset
 		(_BASICROM_SUBSET, BASICROM, 0x0000, MCHEmul::Address ({ 0x00, 0xa0 }, false), 0x2000);	

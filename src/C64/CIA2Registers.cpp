@@ -29,7 +29,7 @@ void C64::CIA2Registers::setValue (size_t p, const MCHEmul::UByte& v)
 				// Pending to implement the RS232 and Serial bus in the port A...
 
 				// Notifies the change...
-				notify (COMMODORE::VICII::_BANK0SET + (unsigned int) _VICBank);
+				notify (MCHEmul::Event (COMMODORE::VICII::_BANK0SET + (unsigned int) _VICBank));
 			}
 
 			break;

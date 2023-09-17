@@ -53,6 +53,7 @@ namespace COMMODORE
 
 		virtual bool initialize () override;
 
+		// Just to add debug info when active...
 		virtual bool simulate (MCHEmul::CPU* cpu) override;
 
 		/**

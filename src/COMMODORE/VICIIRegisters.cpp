@@ -189,6 +189,8 @@ void COMMODORE::VICIIRegisters::setValue (size_t p, const MCHEmul::UByte& v)
 				_bitmapMemory = MCHEmul::Address (MCHEmul::UInt::fromUnsignedInt 
 					(((unsigned int) (v.value () & 0x08)) << 10 /** multiple by 1024. */));
 				/** bit 0 is not used. */
+
+				calculateMemoryPositions ();
 			}
 
 			break;

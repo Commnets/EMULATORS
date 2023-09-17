@@ -152,7 +152,15 @@ bool COMMODORE::VICII::simulate (MCHEmul::CPU* cpu)
 				<< std::to_string (_raster.currentLineAtBase0 ()) << ","
 				<< std::to_string (_cycleInRasterLine)
 				<< "], Graphics:"
-				<< std::to_string ((int) _VICIIRegisters -> graphicModeActive ()) << "\n";
+				<< std::to_string ((int) _VICIIRegisters -> graphicModeActive ())
+				<< ", Memory:["
+				<< "Bk" << std::to_string ((int) _VICIIRegisters -> bank ()) << ","
+				<< "$" << MCHEmul::removeAll0 (_VICIIRegisters -> screenMemory ().asString
+					(MCHEmul::UByte::OutputFormat::_HEXA, '\0', 2)) << ","
+				<< "$" << MCHEmul::removeAll0 (_VICIIRegisters -> charDataMemory ().asString
+					(MCHEmul::UByte::OutputFormat::_HEXA, '\0', 2)) << ","
+				<< "$" << MCHEmul::removeAll0 (_VICIIRegisters -> bitmapMemory ().asString
+					(MCHEmul::UByte::OutputFormat::_HEXA, '\0', 2)) << "]\n";
 
 		// Whether the video is active or not is only checked at the very first bad line...
 		_videoActive = (_raster.currentLine () == _FIRSTBADLINE) 

@@ -156,25 +156,26 @@ namespace COMMODORE
 		void setLigthPenActive (bool lP)
 							{ _lightPenActive = lP; }
 
-		// Memory address for the different elements managed from VICII
-		const MCHEmul::Address initAddressBank () const
-							{ return (MCHEmul::Address ({ 0x00, 0x00 }, false) + 
-								((size_t) 0x4000 /* 16284 = 16k */ * _bank) /** VICII Only addresses 16k. */); }
-		const MCHEmul::Address charDataMemory () const
-							{ return (_charDataMemory + ((size_t) 0x4000 * _bank)); }
-		const MCHEmul::Address screenMemory () const 
-							{ return (_screenMemory + ((size_t) 0x4000 * _bank)); }
-		const MCHEmul::Address bitmapMemory () const 
-							{ return (_bitmapMemory + ((size_t) 0x4000 * _bank)); }
-		const MCHEmul::Address spritePointersMemory () const
-							{ return (screenMemory () + (size_t) 0x03f8); /** The last 8 bytes of the screen memory. */ }
+		// Memory address for the different elements managed from VICII...
+		// These methods are invoked from the VIC mainly when reading elements...
+		const MCHEmul::Address& initAddressBank () const
+							{ return (_initAddresbankPos); } 
+		const MCHEmul::Address& charDataMemory () const
+							{ return (_charDataMemoryPos); }
+		const MCHEmul::Address& screenMemory () const 
+							{ return (_screenMemoryPos); }
+		const MCHEmul::Address& bitmapMemory () const 
+							{ return (_bitmapMemoryPos); }
+		const MCHEmul::Address& spritePointersMemory () const
+							{ return (_spritePointerMemoryPos); }
 
 		// Active VIVII bank. VICII only seed 16k out of the 64k, 
 		// so 4 different banks (from 0 to 3) can be managed...
 		unsigned char bank () const
 							{ return (_bank); }
 		void setBank (unsigned char bk)
-							{ if (bk == 0 || bk == 1 || bk == 2 || bk == 3) _bank = bk; }
+							{ if (bk == 0 || bk == 1 || bk == 2 || bk == 3) 
+								{ _bank = bk; calculateMemoryPositions (); } }
 		
 		virtual void initialize () override;
 
@@ -196,6 +197,8 @@ namespace COMMODORE
 		void initializeInternalValues ();
 		/** Depending on how bits ar set, a no valid mode could be set. */
 		void setGraphicModeActive ();
+		/** Calculate the internal memroy positions. */
+		inline void calculateMemoryPositions ();
 
 		private:
 		struct SpriteInfo : public MCHEmul::InfoClass
@@ -289,6 +292,11 @@ namespace COMMODORE
 
 		// Implementation
 		mutable MCHEmul::UByte _lastValueRead;
+		MCHEmul::Address _initAddresbankPos;
+		MCHEmul::Address _charDataMemoryPos; 
+		MCHEmul::Address _screenMemoryPos;
+		MCHEmul::Address _bitmapMemoryPos;
+		MCHEmul::Address _spritePointerMemoryPos;
 	};
 
 	// ---
@@ -298,6 +306,18 @@ namespace COMMODORE
 				(_spriteCollisionWithDataIRQHappened && _spriteCollisionWithDataIRQActive) ||
 				(_spriteCollisionsIRQHappened && _spriteCollisionsIRQActive) ||
 				(_lightPenIRQHappened && _lightPenIRQActive)); 
+	}
+
+	// ---
+	inline void VICIIRegisters::calculateMemoryPositions ()
+	{ 
+		// All will depend on the bank...
+		_initAddresbankPos			= MCHEmul::Address ({ 0x00, 0x00 }, false) + 
+			((size_t) 0x4000 /* 16284 = 16k */ * _bank); /** VICII Only addresses 16k. */
+		_screenMemoryPos			= _screenMemory + ((size_t) 0x4000 * _bank);
+		_charDataMemoryPos			= _charDataMemory + ((size_t) 0x4000 * _bank); 
+		_bitmapMemoryPos			= _bitmapMemory + ((size_t) 0x4000 * _bank);
+		_spritePointerMemoryPos		= _screenMemoryPos + (size_t) 0x03f8; /** The last 8 bytes of the screen memory. */
 	}
 }
 

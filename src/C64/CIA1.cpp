@@ -23,6 +23,30 @@ bool C64::CIA1::initialize ()
 }
 
 // ---
+bool C64::CIA1::simulate (MCHEmul::CPU* cpu)
+{
+	if (deepDebugActive ())
+		*_deepDebugFile
+			// Where
+			<< "CIA1\t" 
+			// When
+			<< std::to_string (_lastClockCycles) << "\t" // clock cycles at that point
+			// What
+			<< "Info cycle\t\t"
+			// Data
+			<< "PortA:["
+			<< std::to_string (_CIA1Registers -> outputRegisterA ()) << "," 
+			<< std::to_string (_CIA1Registers -> dataPortADir ()) << ","
+			<< _CIA1Registers -> portA ().asString (MCHEmul::UByte::OutputFormat::_HEXA, 0)
+			<< "], PortB:["
+			<< std::to_string (_CIA1Registers -> outputRegisterB ()) << "," 
+			<< std::to_string (_CIA1Registers -> dataPortBDir ()) << ","
+			<< _CIA1Registers -> portB ().asString (MCHEmul::UByte::OutputFormat::_HEXA, 0) << "]\n";
+
+	return (COMMODORE::CIA::simulate (cpu));
+}
+
+// ---
 void C64::CIA1::processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifier* n)
 {
 	COMMODORE::CIA::processEvent (evnt, n);
