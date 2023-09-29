@@ -111,8 +111,9 @@ namespace COMMODORE
 		// Invoked from the method "simulation".
 		/** Different actions are taken attending the raster cycle. \n
 			Returns the number of cycles that, as a consequence of dealing with a raster line, 
-			the CPU should be stopped. */
-		unsigned int treatRasterCycle ();
+			the CPU should be stopped. \n
+			The way the raster cycles are treated will depend (somehow) on the type of VICII chip. */
+		virtual unsigned int treatRasterCycle ();
 		/** Treat the viciel zone.
 			Draws the graphics, detect collions, and finally draw the border. */
 		void drawVisibleZone (MCHEmul::CPU* cpu);
@@ -137,36 +138,36 @@ namespace COMMODORE
 		inline void emptyGraphicsInfo ();
 		/** Read the chars present in the video matrix for a specific videlo line. \n
 			The parameter received goes fom 0 to 24 (visible C64 line). */
-		inline const MCHEmul::UBytes& readScreenCodeDataAt (unsigned short l) const;
-		/** Same than previous, but reading only the char where the raster is now. */
-		inline const MCHEmul::UBytes& readScreenCodeDataAtRaster () const;
+		inline const MCHEmul::UBytes& readScreenCodeDataAt (unsigned short l);
 		/** Read the info for the chars received as parameter. \n
 			The method receives also a parameter to indicate whether the graphics mode is or not _EXTENDEDBACKGROUNDMODE,
 			because in that case the info is read slightly different. */
-		inline const MCHEmul::UBytes& readCharDataFor (const MCHEmul::UBytes& chrs, bool eM = false) const;
-		/** Same than previous but reading only the info for a character, where the raster is now. */
-		inline const MCHEmul::UBytes& readCharDataForAtRaster (const MCHEmul::UByte chr, bool eM = false) const;
+		inline const MCHEmul::UBytes& readCharDataFor (const MCHEmul::UBytes& chrs);
 		/** Read the info of the bitmap. \n
 			The info is read as they were char data. That is, the 8 x 8 block are sequential. 
 			The parameter received goes from 0 to 199 (visible scan line ((0 - 25 lines) * 8) - 1, and
 			takes into account the effect of the SCROLLY variable. */
-		inline const MCHEmul::UBytes& readBitmapDataAt (unsigned short l) const;
-		/** Same than previous but reading the info where the raster is now. */
-		inline const MCHEmul::UBytes& readBitmapDataAtRaster () const;
+		inline const MCHEmul::UBytes& readBitmapDataAt (unsigned short l);
 		/** Reads the color of the chars. \n
 			The _COLORMEMORY localtion is fixed and can not be changed using VICRegisters. 
 			Th parameter received goes from 0 to 24. */
-		const MCHEmul::UBytes& readColorDataAt (unsigned short l) const
-							{ return (_graphicsColorData = std::move (memoryRef () -> values (_COLORMEMORY +
-								((size_t) l * _GRAPHMAXCHARCOLUMNS), (size_t) _GRAPHMAXCHARCOLUMNS))); }
+		inline const MCHEmul::UBytes& readColorDataAt (unsigned short l);
+
+		// Methods linked to the raster line to the read the graphics...
+		/** To read the video matrix and the RAM color. \n
+			Someting that happens during a badline. */
+		inline void readVideoMatrixAndColorRAM ();
+		/** To read the graphical info, considerig the info read in the previous method. \n
+			This method is executed per raster cycles. */
+		inline void readGraphicalInfo ();
 
 		// Read sprites data
 		// The sprite data is read a long as the raster cycle progresses.
 		// The info is read attending to the contecytt of the interval variable _vicSpriteInfo (@see below)
 		/** Read the graphical info of the active sprites. */
-		inline const std::vector <MCHEmul::UBytes>& readSpritesData () const;
+		inline void readSpritesData ();
 		/** Method used from the previous method to read the info of one sprite only. */
-		inline bool readSpriteData (size_t nS) const;
+		inline bool readSpriteData (size_t nS);
 
 		// Draw the graphics & Sprites in detail...
 		/** To simplify the use of some of the routines dedicated to draw graphics. */
@@ -274,7 +275,7 @@ namespace COMMODORE
 			affecting the right registers in the VICII. */
 		void detectCollisions (const MCHEmul::UByte& g, const std::vector <MCHEmul::UByte>& s);
 
-		private:
+		protected:
 		/** The memory is used also as the set of registers of the chip. */
 		COMMODORE::VICIIRegisters* _VICIIRegisters;
 		/** The number of the memory view used to read the data. */
@@ -293,15 +294,6 @@ namespace COMMODORE
 		unsigned int _lastCPUCycles;
 		/** The format used to draw. It has to be the same that is used by the Screen object. */
 		SDL_PixelFormat* _format;
-		/** The bytes read describing a line of graphics. 
-			They are all actualized at the methods readXXXX. */
-		mutable MCHEmul::UBytes _graphicsScreenCodeData;
-		mutable MCHEmul::UBytes _graphicsGraphicData;
-		mutable MCHEmul::UBytes _graphicsColorData;
-		mutable std::vector <MCHEmul::UBytes> _graphicsSprites; // Eight sprites...
-		mutable std::vector <MCHEmul::UBytes> _graphicsLineSprites; // Eight sprites...
-		/** Whenever a new raster line is reached, this variable becomes true. */
-		bool _isNewRasterLine; 
 		/** When a raster line is processed, it is necessary to know which cycle is being processed. 
 			The number of max cycles is get from the method (@see) "cyclesPerRasterLine". */
 		unsigned short _cycleInRasterLine;
@@ -319,8 +311,62 @@ namespace COMMODORE
 		/** When the situation of a new bad line araises, is latched in this variable. \n
 			This variabe is desactivated at the end of the line, and when the graphical info is finally read. */
 		mutable bool _newBadLineCondition;
+		/** This very simple variable manages only when the additional stop bad line related cycles applies. */
+		mutable bool _badLineStopCyclesAdded;
+
+		/** The bytes read describing a line of graphics. 
+			They are all actualized at the methods readXXXX. */
+		mutable MCHEmul::UBytes _graphicsScreenCodeData;
+		mutable MCHEmul::UBytes _graphicsGraphicData;
+		mutable MCHEmul::UBytes _graphicsColorData;
+
 		/** 
-		  * Important things that happen suring the raster line and affects the sprites...
+		  *	Structure to control how the graphics are displayed in the screen. \n
+		  * There are a couple of important things that happen as the raster line moves accross the line. \n
+		  *	The rules to manipulate every value are decribed below attending to the cycle in the raster. \n
+		  *	https://www.cebix.net/VIC-Article.txt. (point 3.7.2): \n
+		  * There are 3 important registers within the VICII related with the graphics: \n
+		  * VCBASE moves from 0 to 1000 (40 * 25) in a 40 step length. \n
+		  * VC moves from 0 to 1000 1 by 1. \n
+		  * Both will help to determine the position within the video matrix/color RAM to read. \n
+		  * RC counts from 0 to 7 one by one and determines the line the graphics data RAM where to find the final info. \n
+		  * RASTER LINE 0:			VCBASE is set to 0. \n
+		  * RASTER LINE $30 - $f7: \n
+		  *		CYCLE 14:			VC = VCBASE. If Bad Line => RC = 0 \n
+		  *		CYCLES 15 - 54:		VC = VC + 1 \n
+		  *		CYCLE 58:			if RC == 7 => VCBASE = VC; RC = RC + 1 \n
+		  * So VC goes from 0 to 40 7 times before VBASE incrementes in 40,
+		  * then 7 times more from 40 to 80 before VCBASE moves to 80 and so on and so forth.
+		  */
+		struct VICGraphicInfo
+		{
+			VICGraphicInfo ()
+				: _VCBASE (0), _VC (0), _VLMI (0),
+				  _RC (0),
+				  _screenCodeData (std::vector <MCHEmul::UByte> (40, MCHEmul::UByte::_0)),
+				  _graphicData (std::vector <MCHEmul::UByte> (40, MCHEmul::UByte::_0)),
+				  _colorData (std::vector <MCHEmul::UByte> (40, MCHEmul::UByte::_0))
+							{ }
+
+			void emptyVideoMatrixAndColorRAMData ()
+							{ _screenCodeData	= std::vector <MCHEmul::UByte> (40, MCHEmul::UByte::_0);
+							  _colorData		= std::vector <MCHEmul::UByte> (40, MCHEmul::UByte::_0); }
+			
+			void emptyGraphicData ()
+							{ _graphicData		= std::vector <MCHEmul::UByte> (40, MCHEmul::UByte::_0); }
+
+			unsigned short _VCBASE, _VC, _VLMI;
+			unsigned char _RC;
+			mutable MCHEmul::UBytes _screenCodeData;
+			mutable MCHEmul::UBytes _graphicData; 
+			mutable MCHEmul::UBytes _colorData;
+		};
+
+		VICGraphicInfo _vicGraphicInfo;
+
+		/** 
+		  * Structure used in controlling how sprites are managed: \n
+		  *	Important things that happen during the raster line and affects the sprites... \n
 		  *	As the raster moves the VICII has to decide	which sprite info to draw.\n
 		  *	That is based on info gather in three major variables. \n
 		  *	The rules to manipulate every value are decribed below attending to the cycle in the raster. \n
@@ -354,15 +400,17 @@ namespace COMMODORE
 
 			VICSpriteInfo (bool a, unsigned char l, bool e)
 				: _active (a), _line (l), _expansionY (e),
+				  _graphicsLineSprites (MCHEmul::UBytes::_E),
 				  _ff (false)
 							{ }
 
-			bool _active;
-			unsigned char _line;
-			bool _expansionY;
+			bool _active; // True when the sprite is active in the current raster line
+			unsigned char _line; // Line of the sprite to be drawn (from 0 to 21)
+			bool _expansionY; // True when the sprite is expanded in the Y axis
+			mutable MCHEmul::UBytes _graphicsLineSprites; // 3 bytes line info each
 
 			// Implementation
-			bool _ff;
+			bool _ff; // Used in controlling how _line is incremented (per line)
 		};
 
 		VICSpriteInfo _vicSpriteInfo [8];
@@ -381,44 +429,36 @@ namespace COMMODORE
 	{
 		unsigned short chrLine = gl >> 3;
 
+		memoryRef () -> setActiveView (_VICIIView);
+
 		// In real VIC II color is read at the same time than the graphics data
 		// The color memory is always at the same location (only visible from VICII)
 		readColorDataAt (chrLine);
 
 		// Load _graphicsScreenCodeData first..
 		readScreenCodeDataAt (chrLine); 
+
 		// ...and if it is a text mode...
-		if (_VICIIRegisters -> textMode ()) 
-			readCharDataFor (_graphicsScreenCodeData, 
-							 _VICIIRegisters -> graphicExtendedColorTextModeActive ()); // ...and then the detailed info...
+		if (_VICIIRegisters -> textMode ()) readCharDataFor (_graphicsScreenCodeData); // ...and then the detailed info...
 		// ...and if it is not, load directly the graphics data...
-		else 
-			readBitmapDataAt (gl);
+		else readBitmapDataAt (gl);
+
+		memoryRef () -> setCPUView ();
 	}
 
 	// ---
-	inline const MCHEmul::UBytes& VICII::readScreenCodeDataAt (unsigned short l) const
+	inline const MCHEmul::UBytes& VICII::readScreenCodeDataAt (unsigned short l)
 	{ 
 		return (_graphicsScreenCodeData = std::move (
-					memoryRef () -> values (_VICIIRegisters -> screenMemory () +
-						((size_t) l * _GRAPHMAXCHARCOLUMNS), (size_t) _GRAPHMAXCHARCOLUMNS))); 
+			memoryRef () -> values (_VICIIRegisters -> screenMemory () +
+				((size_t) l * _GRAPHMAXCHARCOLUMNS), (size_t) _GRAPHMAXCHARCOLUMNS))); 
 	}
 
 	// ---
-	inline const MCHEmul::UBytes& VICII::readScreenCodeDataAtRaster () const
-	{ 
-		_graphicsScreenCodeData [(size_t) (_cycleInRasterLine - 15)] = 
-			memoryRef () -> value (_VICIIRegisters -> screenMemory () +
-				((size_t) ((((_raster.currentLine () - _FIRSTBADLINE - 
-					_VICIIRegisters -> verticalScrollPosition ()) >> 3) * _GRAPHMAXCHARCOLUMNS) + 
-				 (size_t) (_cycleInRasterLine - 15))));
-							  
-		return (_graphicsScreenCodeData); 
-	}
-
-	// ---
-	inline const MCHEmul::UBytes& VICII::readCharDataFor (const MCHEmul::UBytes& chrs, bool eM) const
+	inline const MCHEmul::UBytes& VICII::readCharDataFor (const MCHEmul::UBytes& chrs)
 	{
+		bool eM = _VICIIRegisters -> graphicExtendedColorTextModeActive ();
+
 		std::vector <MCHEmul::UByte> dt;
 		for (const auto& i : chrs.bytes ())
 		{
@@ -433,20 +473,7 @@ namespace COMMODORE
 	}
 
 	// ---
-	inline const MCHEmul::UBytes& VICII::readCharDataForAtRaster (const MCHEmul::UByte chr, bool eM) const
-	{
-		std::vector <MCHEmul::UByte> dt = std::move (
-			memoryRef () -> bytes (_VICIIRegisters -> charDataMemory () + 
-				(((size_t) chr.value () & (eM ? 0x3f : 0xff)) 
-					/** In the extended graphics mode there is only 64 chars possible. */ << 3), 8));
-		for (size_t i = 0; i < 8; i++)
-			_graphicsGraphicData [(size_t) ((_cycleInRasterLine - 15) << 3) + i] = dt [i];
-
-		return (_graphicsGraphicData);
-	}
-
-	// ---
-	inline const MCHEmul::UBytes& VICII::readBitmapDataAt (unsigned short l) const
+	inline const MCHEmul::UBytes& VICII::readBitmapDataAt (unsigned short l)
 	{
 		std::vector <MCHEmul::UByte> dt;
 		unsigned short cL = l * _GRAPHMAXCHARCOLUMNS;
@@ -462,42 +489,63 @@ namespace COMMODORE
 	}
 
 	// ---
-	inline const MCHEmul::UBytes& VICII::readBitmapDataAtRaster () const
-	{
-		std::vector <MCHEmul::UByte> dt = std::move (
-			memoryRef () -> bytes (_VICIIRegisters -> bitmapMemory () + 
-				((size_t) (((_raster.currentLine () - _FIRSTBADLINE - 
-					_VICIIRegisters -> verticalScrollPosition ()) >> 3) * _GRAPHMAXCHARCOLUMNS) + 
-				 (size_t) ((_cycleInRasterLine - 15) << 3)), 8));
-		for (size_t i = 0; i < 8; i++)
-			_graphicsGraphicData [(size_t) ((_cycleInRasterLine - 15) << 3) + i] = dt [i];
+	inline const MCHEmul::UBytes& VICII::readColorDataAt (unsigned short l)
+	{ 
+		return (_graphicsColorData = std::move (memoryRef () -> values (_COLORMEMORY +
+			((size_t) l * _GRAPHMAXCHARCOLUMNS), (size_t) _GRAPHMAXCHARCOLUMNS))); 
+	}
 
-		return (_graphicsGraphicData);
+	inline void VICII::readVideoMatrixAndColorRAM ()
+	{
+		memoryRef () -> setActiveView (_VICIIView);
+		_vicGraphicInfo._screenCodeData [_vicGraphicInfo._VLMI] =
+			memoryRef () -> value (_VICIIRegisters -> screenMemory () + (size_t) _vicGraphicInfo._VC); 
+		_vicGraphicInfo._colorData [_vicGraphicInfo._VLMI] = 
+			memoryRef () -> value (_COLORMEMORY + (size_t) _vicGraphicInfo._VC); 
+		memoryRef () -> setCPUView ();
 	}
 
 	// ---
-	inline const std::vector <MCHEmul::UBytes>& VICII::readSpritesData () const
+	inline void VICII::readGraphicalInfo ()
 	{
-		_graphicsLineSprites = 
-			std::vector <MCHEmul::UBytes> (8, MCHEmul::UBytes::_E);
-		for (size_t i = 0; i < 8; 
-			readSpriteData (i++)); // _graphicsLineSprites is updated...
-		return (_graphicsLineSprites);
+		memoryRef () -> setActiveView (_VICIIView);
+		_vicGraphicInfo._graphicData [_vicGraphicInfo._VLMI] = _VICIIRegisters -> textMode () 
+			? memoryRef () -> value (_VICIIRegisters -> charDataMemory () + 
+				(((size_t) _vicGraphicInfo._screenCodeData [_vicGraphicInfo._VLMI].value () & 
+					(_VICIIRegisters -> graphicExtendedColorTextModeActive () ? 0x3f : 0xff)) 
+					/** In the extended graphics mode there is only 64 chars possible. */ << 3) + _vicGraphicInfo._RC)
+			: memoryRef () -> value (_VICIIRegisters -> bitmapMemory () + 
+				(_vicGraphicInfo._VC << 3) + _vicGraphicInfo._RC);
+		memoryRef () -> setCPUView ();
 	}
 
 	// ---
-	inline bool VICII::readSpriteData (size_t nS) const
+	inline void VICII::readSpritesData ()
+	{
+		for (size_t i = 0; i < 8; i++) 
+		{
+			// Put it back to null, first...
+			_vicSpriteInfo [i]._graphicsLineSprites = MCHEmul::UBytes::_E;
+			// ...and update the info if the sprite is active...
+			readSpriteData (i); 
+		}
+	}
+
+	// ---
+	inline bool VICII::readSpriteData (size_t nS)
 	{
 		if (!_vicSpriteInfo [nS]._active)
 			return (false);
 
-		_graphicsLineSprites [nS] = std::move (
+		memoryRef () -> setActiveView (_VICIIView);
+		_vicSpriteInfo [nS]._graphicsLineSprites = std::move (
 			MCHEmul::UBytes (
 				memoryRef () -> bytes (_VICIIRegisters -> initAddressBank () + 
 					((size_t) memoryRef () -> value 
 						(_VICIIRegisters -> spritePointersMemory () /** Depnds on where the escreen is located. */ + nS).value () << 6) /** 64 bytes block. */ +
 					/** If sprite is double-height, the data line read must be half. */
 					(_vicSpriteInfo [nS]._line * 3) /** bytes per line. */, 3)));
+		memoryRef () -> setCPUView ();
 
 		return (true);
 	}
@@ -510,6 +558,9 @@ namespace COMMODORE
 		static const MCHEmul::RasterData _HRASTERDATA;
 
 		VICII_NTSC (int vV);
+
+		private:
+		virtual unsigned int treatRasterCycle () override;
 	};
 
 	/** The version para PAL systems. */
@@ -522,6 +573,9 @@ namespace COMMODORE
 		static constexpr unsigned short _CYCLESPERRASTERLINE = 63;
 
 		VICII_PAL (int vV);
+
+		private:
+		virtual unsigned int treatRasterCycle () override;
 	};
 }
 
