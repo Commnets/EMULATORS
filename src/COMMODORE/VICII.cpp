@@ -335,6 +335,31 @@ void COMMODORE::VICII::processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifi
 }
 
 // ---
+MCHEmul::ScreenMemory* COMMODORE::VICII::createScreenMemory ()
+{
+	unsigned int* cP = new unsigned int [16];
+	// The colors are partially transparents to allow the blending...
+	cP [0]  = SDL_MapRGBA (_format, 0x00, 0x00, 0x00, 0xe0); // Black
+	cP [1]  = SDL_MapRGBA (_format, 0xff, 0xff, 0xff, 0xe0); // White
+	cP [2]  = SDL_MapRGBA (_format, 0x92, 0x4a, 0x40, 0xe0); // Red
+	cP [3]  = SDL_MapRGBA (_format, 0x84, 0xc5, 0xcc, 0xe0); // Cyan
+	cP [4]  = SDL_MapRGBA (_format, 0x93, 0x51, 0xb6, 0xe0); // Violet
+	cP [5]  = SDL_MapRGBA (_format, 0x72, 0xb1, 0x4b, 0xe0); // Green
+	cP [6]  = SDL_MapRGBA (_format, 0x48, 0x3a, 0xaa, 0xe0); // Blue
+	cP [7]  = SDL_MapRGBA (_format, 0xd5, 0xdf, 0x7c, 0xe0); // Yellow
+	cP [8]  = SDL_MapRGBA (_format, 0x99, 0x69, 0x2d, 0xe0); // Brown
+	cP [9]  = SDL_MapRGBA (_format, 0x67, 0x52, 0x00, 0xe0); // Light Red
+	cP [10] = SDL_MapRGBA (_format, 0xc1, 0x81, 0x78, 0xe0); // Orange
+	cP [11] = SDL_MapRGBA (_format, 0x60, 0x60, 0x60, 0xe0); // Dark Grey
+	cP [12] = SDL_MapRGBA (_format, 0x8a, 0x8a, 0x8a, 0xe0); // Medium Grey
+	cP [13] = SDL_MapRGBA (_format, 0xb3, 0xec, 0x91, 0xe0); // Light Green
+	cP [14] = SDL_MapRGBA (_format, 0x86, 0x7a, 0xde, 0xe0); // Light Blue
+	cP [15] = SDL_MapRGBA (_format, 0xb3, 0xb3, 0xb3, 0xe0); // Light Grey
+
+	return (new MCHEmul::ScreenMemory (numberColumns (), numberRows (), cP));
+}
+
+// ---
 unsigned int COMMODORE::VICII::treatRasterCycle ()
 {
 	unsigned int result = 0;
@@ -552,7 +577,22 @@ void COMMODORE::VICII::drawVisibleZone (MCHEmul::CPU* cpu)
 
 	// Now the information is drawn,...
 	// ...and also the collisions detected at the same time
-	drawGraphicsSpritesAndDetectCollisions (cv, cav, rv);
+	drawGraphicsSpritesAndDetectCollisions (
+		{
+			/** _ICD */ _raster.hData ().firstDisplayPosition (),		// DISLAY: The original...
+			/** _ICS */ _raster.hData ().firstScreenPosition (),		// SCREEN: And the real one (after reduction size)
+			/** _LCD */ _raster.hData ().lastDisplayPosition (),		// DISPLAY: The original...
+			/** _LCS */ _raster.hData ().lastScreenPosition (),			// SCREEN: And the real one (after reduction size)
+			/** _SC	 */ _VICIIRegisters -> horizontalScrollPosition (),	// From 0 - 7 
+			/** _RC	 */ cv,												// Where the horizontal raster is (not adjusted to 8) inside the window
+			/** _RCA */ cav,											// Where the horizontal raster is (adjusted to 8) inside the window
+			/** _IRD */ _raster.vData ().firstDisplayPosition (),		// DISPLAY: The original... 
+			/** _IRS */ _raster.vData ().firstScreenPosition (),		// SCREEN:  And the real one (after reduction size)
+			/** _LRD */ _raster.vData ().lastDisplayPosition (),		// DISPLAY: The original...
+			/** _LRS */ _raster.vData ().lastScreenPosition (),			// SCREEN: And the real one (after reduction size)
+			/** _SR	 */ _VICIIRegisters -> verticalScrollPosition (),	// From 0 - 7 (taken into account in bad lines)
+			/** _RR	 */ rv												// Where the vertical raster is inside the window (it is not the chip raster line)
+		});
 
 	// If the raster is not in the very visible zone...
 	// it is time to cover with the border...
@@ -601,25 +641,8 @@ void COMMODORE::VICII::drawVisibleZone (MCHEmul::CPU* cpu)
 }
 
 // ---
-void COMMODORE::VICII::drawGraphicsSpritesAndDetectCollisions (unsigned short cv, unsigned short cav, unsigned short rv)
+void COMMODORE::VICII::drawGraphicsSpritesAndDetectCollisions (const COMMODORE::VICII::DrawContext& dC)
 {
-	COMMODORE::VICII::DrawContext dC = 
-		{
-			/** _ICD */ _raster.hData ().firstDisplayPosition (),		// DISLAY: The original...
-			/** _ICS */ _raster.hData ().firstScreenPosition (),		// SCREEN: And the real one (after reduction size)
-			/** _LCD */ _raster.hData ().lastDisplayPosition (),		// DISPLAY: The original...
-			/** _LCS */ _raster.hData ().lastScreenPosition (),			// SCREEN: And the real one (after reduction size)
-			/** _SC	 */ _VICIIRegisters -> horizontalScrollPosition (),	// From 0 - 7 
-			/** _RC	 */ cv,												// Where the horizontal raster is (not adjusted to 8) inside the window
-			/** _RCA */ cav,											// Where the horizontal raster is (adjusted to 8) inside the window
-			/** _IRD */ _raster.vData ().firstDisplayPosition (),		// DISPLAY: The original... 
-			/** _IRS */ _raster.vData ().firstScreenPosition (),		// SCREEN:  And the real one (after reduction size)
-			/** _LRD */ _raster.vData ().lastDisplayPosition (),		// DISPLAY: The original...
-			/** _LRS */ _raster.vData ().lastScreenPosition (),			// SCREEN: And the real one (after reduction size)
-			/** _SR	 */ _VICIIRegisters -> verticalScrollPosition (),	// From 0 - 7 (taken into account in bad lines)
-			/** _RR	 */ rv												// Where the vertical raster is inside the window (it is not the chip raster line)
-		};
-
 	// This varible keeps info about the text/graphics:
 	// Whether the 8 pixels to draw are foreground or background...
 	// ...and the color of the ones that are not finally background!
@@ -643,31 +666,6 @@ void COMMODORE::VICII::drawGraphicsSpritesAndDetectCollisions (unsigned short cv
 	drawResultToScreen (colGraphics, dC);
 	// ...and the collisions are also detected...
 	detectCollisions (colGraphics._collisionData, sprCollData);
-}
-
-// ---
-MCHEmul::ScreenMemory* COMMODORE::VICII::createScreenMemory ()
-{
-	unsigned int* cP = new unsigned int [16];
-	// The colors are partially transparents to allow the blending...
-	cP [0]  = SDL_MapRGBA (_format, 0x00, 0x00, 0x00, 0xe0); // Black
-	cP [1]  = SDL_MapRGBA (_format, 0xff, 0xff, 0xff, 0xe0); // White
-	cP [2]  = SDL_MapRGBA (_format, 0x92, 0x4a, 0x40, 0xe0); // Red
-	cP [3]  = SDL_MapRGBA (_format, 0x84, 0xc5, 0xcc, 0xe0); // Cyan
-	cP [4]  = SDL_MapRGBA (_format, 0x93, 0x51, 0xb6, 0xe0); // Violet
-	cP [5]  = SDL_MapRGBA (_format, 0x72, 0xb1, 0x4b, 0xe0); // Green
-	cP [6]  = SDL_MapRGBA (_format, 0x48, 0x3a, 0xaa, 0xe0); // Blue
-	cP [7]  = SDL_MapRGBA (_format, 0xd5, 0xdf, 0x7c, 0xe0); // Yellow
-	cP [8]  = SDL_MapRGBA (_format, 0x99, 0x69, 0x2d, 0xe0); // Brown
-	cP [9]  = SDL_MapRGBA (_format, 0x67, 0x52, 0x00, 0xe0); // Light Red
-	cP [10] = SDL_MapRGBA (_format, 0xc1, 0x81, 0x78, 0xe0); // Orange
-	cP [11] = SDL_MapRGBA (_format, 0x60, 0x60, 0x60, 0xe0); // Dark Grey
-	cP [12] = SDL_MapRGBA (_format, 0x8a, 0x8a, 0x8a, 0xe0); // Medium Grey
-	cP [13] = SDL_MapRGBA (_format, 0xb3, 0xec, 0x91, 0xe0); // Light Green
-	cP [14] = SDL_MapRGBA (_format, 0x86, 0x7a, 0xde, 0xe0); // Light Blue
-	cP [15] = SDL_MapRGBA (_format, 0xb3, 0xb3, 0xb3, 0xe0); // Light Grey
-
-	return (new MCHEmul::ScreenMemory (numberColumns (), numberRows (), cP));
 }
 
 // ---

@@ -108,44 +108,9 @@ namespace COMMODORE
 		protected:
 		virtual void processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifier* n) override;
 
-		// Invoked from the method "simulation".
-		/** Different actions are taken attending the raster cycle. \n
-			Returns the number of cycles that, as a consequence of dealing with a raster line, 
-			the CPU should be stopped. \n
-			The way the raster cycles are treated will depend (somehow) on the type of VICII chip. */
-		virtual unsigned int treatRasterCycle ();
-		/** Treat the viciel zone.
-			Draws the graphics, detect collions, and finally draw the border. */
-		void drawVisibleZone (MCHEmul::CPU* cpu);
-		/** Invoked from the previous one, just to draw and detect collisions. \n
-		  *	The parameters are:
-		  *	@param cv	The raster beam X position within the visible window. 0 is the first value.
-		  *	@param cav	The same raster beam X position but adjusted to a multiple of 8. 
-		  *	@param rv	The raster beam Y position with the visinle window. O is the first value. 
-		  *	@see also DrawContext and DrawResult structures. */
-		void drawGraphicsSpritesAndDetectCollisions 
-			(unsigned short cv, unsigned short cav, unsigned short rv);
-
 		/** Invoked from initialize to create the right screen memory. \n
 			It also creates the Palette used by CBM 64 (_format variable). */
 		virtual MCHEmul::ScreenMemory* createScreenMemory () override;
-
-		// Read screen data
-		// Methods linked to the raster line to the read the graphics...
-		/** To read the video matrix and the RAM color. \n
-			Someting that happens during a badline. */
-		inline void readVideoMatrixAndColorRAM ();
-		/** To read the graphical info, considerig the info read in the previous method. \n
-			This method is executed per raster cycles. */
-		inline void readGraphicalInfo ();
-
-		// Read sprites data
-		// The sprite data is read a long as the raster cycle progresses.
-		// The info is read attending to the contecytt of the interval variable _vicSpriteInfo (@see below)
-		/** Read the graphical info of the active sprites. */
-		inline void readSpritesData ();
-		/** Method used from the previous method to read the info of one sprite only. */
-		inline bool readSpriteData (size_t nS);
 
 		// Draw the graphics & Sprites in detail...
 		/** To simplify the use of some of the routines dedicated to draw graphics. */
@@ -190,6 +155,39 @@ namespace COMMODORE
 				  _invalid (false)
 							{ }
 		};
+
+		// Invoked from the method "simulation"....
+		/** Different actions are taken attending the raster cycle. \n
+			Returns the number of cycles that, as a consequence of dealing with a raster line, 
+			the CPU should be stopped. \n
+			The way the raster cycles are treated will depend (somehow) on the type of VICII chip. */
+		virtual unsigned int treatRasterCycle ();
+		/** Treat the viciel zone.
+			Draws the graphics, detect collions, and finally draw the border. */
+		void drawVisibleZone (MCHEmul::CPU* cpu);
+		/** Invoked from the previous one, just to draw and detect collisions. \n
+		  *	The parameters are the context of the draw. \n
+		  *	@see also DrawContext and DrawResult structures. */
+		void drawGraphicsSpritesAndDetectCollisions (const DrawContext& dC);
+
+		// These all methods are invoked from the three ones above!
+		// They are here just to structure better the code...
+		// Read screen data
+		// Methods linked to the raster line to the read the graphics...
+		/** To read the video matrix and the RAM color. \n
+			Someting that happens during a badline. */
+		inline void readVideoMatrixAndColorRAM ();
+		/** To read the graphical info, considerig the info read in the previous method. \n
+			This method is executed per raster cycles. */
+		inline void readGraphicalInfo ();
+
+		// Read sprites data
+		// The sprite data is read a long as the raster cycle progresses.
+		// The info is read attending to the contecytt of the interval variable _vicSpriteInfo (@see below)
+		/** Read the graphical info of the active sprites. */
+		inline void readSpritesData ();
+		/** Method used from the previous method to read the info of one sprite only. */
+		inline bool readSpriteData (size_t nS);
 
 		/** To draw any type of graphic \n
 			This method uses the ones below it \n
