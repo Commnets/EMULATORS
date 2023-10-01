@@ -7,6 +7,8 @@ const MCHEmul::RasterData COMMODORE::VICII_NTSC::_VRASTERDATA (27, 41, 51, 250, 
 const MCHEmul::RasterData COMMODORE::VICII_NTSC::_HRASTERDATA (412, 488, 24, 343, 388, 411, 512, 7, 9);
 const MCHEmul::RasterData COMMODORE::VICII_PAL::_VRASTERDATA (0, 16, 51, 250, 299, 311, 312, 4, 4);
 const MCHEmul::RasterData COMMODORE::VICII_PAL::_HRASTERDATA (404, 480, 24, 343, 380, 403, 504, 7, 9);
+const MCHEmul::Address COMMODORE::VICII::_MEMORYPOSIDLE1 = MCHEmul::Address ({ 0xff, 0x39 }, false);
+const MCHEmul::Address COMMODORE::VICII::_MEMORYPOSIDLE2 = MCHEmul::Address ({ 0xff, 0x3f }, false);
 
 // ---
 COMMODORE::VICII::VICII (const MCHEmul::RasterData& vd, const MCHEmul::RasterData& hd, 
@@ -27,9 +29,6 @@ COMMODORE::VICII::VICII (const MCHEmul::RasterData& vd, const MCHEmul::RasterDat
 	  _videoActive (true),
 	  _lastVBlankEntered (false),
 	  _lastBadLineScrollY (-1), _newBadLineCondition (false), _badLineStopCyclesAdded (false),
-	  _graphicsScreenCodeData (MCHEmul::UBytes::_E), 
-	  _graphicsGraphicData (MCHEmul::UBytes::_E),
-	  _graphicsColorData (MCHEmul::UBytes::_E),
 	  _vicGraphicInfo (),
 	  _vicSpriteInfo ()
 {
@@ -81,10 +80,6 @@ bool COMMODORE::VICII::initialize ()
 	_newBadLineCondition = false;
 	_badLineStopCyclesAdded = false;
 
-	_graphicsScreenCodeData = MCHEmul::UBytes::_E; 
-	_graphicsGraphicData = MCHEmul::UBytes::_E;
-	_graphicsColorData = MCHEmul::UBytes::_E;
-
 	_vicGraphicInfo = VICGraphicInfo ();
 	for (size_t i = 0; i < 8; _vicSpriteInfo [i++] = VICSpriteInfo ());
 
@@ -98,8 +93,8 @@ bool COMMODORE::VICII::simulate (MCHEmul::CPU* cpu)
 	{
 		bool result = 
 			_videoActive && // Bad lines only possible when the video is active...
-			_raster.currentLine () >= _FIRSTBADLINE && // between the first...
-			_raster.currentLine () <= _LASTBADLINE && // ...and the last bad lines
+			_raster.currentLine () >= _FIRSTBADLINE && 
+			_raster.currentLine () <= _LASTBADLINE &&
 			(unsigned char) (_raster.currentLine () & 0x07) /** The three last bits. */ == 
 				_VICIIRegisters -> verticalScrollPosition () && // aligned with the scrollY
 			_lastBadLineScrollY != (int) _VICIIRegisters -> verticalScrollPosition (); //..and obvious if that situation in the scroll changed
@@ -183,11 +178,10 @@ bool COMMODORE::VICII::simulate (MCHEmul::CPU* cpu)
 			if (deepDebugActive ())
 				*_deepDebugFile << "\t\t\t\tBad line situation\n";
 
-			readGraphicsInfoAt (_raster.currentLine () - 
-				_FIRSTBADLINE - _VICIIRegisters -> verticalScrollPosition ());
+			_newBadLineCondition = true;		// latched...
+			_badLineStopCyclesAdded = false;	// ...the cycles have to be added...
 
-			_newBadLineCondition = true; // latched...
-			_badLineStopCyclesAdded = false; // ...the cycles have to be added...
+			_vicGraphicInfo._idleState = false; // No longer in "idle" state but in the "screen" one!
 		}
 
 		// When VICII is about to read sprites or graphics info (bad line),
@@ -228,9 +222,11 @@ bool COMMODORE::VICII::simulate (MCHEmul::CPU* cpu)
 			_badLineStopCyclesAdded = false;
 
 			// The graphics counters are set back to initial values at line 0!
-			_vicGraphicInfo.emptyGraphicData (); // The graphics starts back...
-			if (_raster.currentLine () == 0) 
+			if (_raster.currentLine () == 0)
+			{ 
 				_vicGraphicInfo._VCBASE = _vicGraphicInfo._VC = 0;
+				_vicGraphicInfo._RC = 0;
+			}
 			// In any other line number, VC start back to count from the value in VCBASE.
 			// VCBASE is actualized only then RC reaches 8. @see rasterCycle 58 treatment.
 			else 
@@ -343,10 +339,6 @@ unsigned int COMMODORE::VICII::treatRasterCycle ()
 {
 	unsigned int result = 0;
 
-	// In the bad line zone the graphics are managed...
-	bool blZone = _raster.currentLine () >= _FIRSTBADLINE && 
-				  _raster.currentLine () <= _LASTBADLINE;
-	
 	// Read graphics zone?
 	bool rG = false;
 	switch (_cycleInRasterLine)
@@ -374,15 +366,11 @@ unsigned int COMMODORE::VICII::treatRasterCycle ()
 		// In raster cycle 14 the graphics information moves...
 		case 14:
 			{
-				// ...But only in the display zone...
-				if (blZone)
-				{
-					_vicGraphicInfo._VC = _vicGraphicInfo._VCBASE;
-					_vicGraphicInfo._VLMI = 0;
+				_vicGraphicInfo._VC = _vicGraphicInfo._VCBASE;
+				_vicGraphicInfo._VLMI = 0;
 
-					if (_newBadLineCondition)
-						_vicGraphicInfo._RC = 0;
-				}
+				if (_newBadLineCondition)
+					_vicGraphicInfo._RC = 0;
 			}
 
 			break;
@@ -452,7 +440,7 @@ unsigned int COMMODORE::VICII::treatRasterCycle ()
 		case 54:
 		case 55:
 			{
-				rG = blZone;
+				rG = true;
 			}
 
 			break;
@@ -473,7 +461,7 @@ unsigned int COMMODORE::VICII::treatRasterCycle ()
 							_VICIIRegisters -> spriteDoubleHeight (i) /** double height? */);
 				}
 
-				rG = blZone;
+				rG = true;
 			}
 
 			break;
@@ -481,18 +469,15 @@ unsigned int COMMODORE::VICII::treatRasterCycle ()
 		// In cycle 58 again the graphical info is updated...
 		case 58:
 			{
-				// ...but again only in the visible zone...
-				if (blZone)
+				if (_vicGraphicInfo._RC == 7)
 				{
-					if (_vicGraphicInfo._RC == 7)
-						_vicGraphicInfo._VCBASE = _vicGraphicInfo._VC;
-					if (++_vicGraphicInfo._RC == 8)
-					{
-						_vicGraphicInfo._RC = 0; // Only from 0 to 7...
-
-						_vicGraphicInfo.emptyVideoMatrixAndColorRAMData (); // At this point the internal values are no longer used!
-					}
+					_vicGraphicInfo._VCBASE = _vicGraphicInfo._VC;
+					if (!_newBadLineCondition) // When RC gets 7 and there is no bad condition, then the idle state is set back...
+						_vicGraphicInfo._idleState = true;
 				}
+
+				if (++_vicGraphicInfo._RC == 8)
+					_vicGraphicInfo._RC = 0; // Only from 0 to 7...
 			}
 
 			break;
@@ -527,7 +512,8 @@ unsigned int COMMODORE::VICII::treatRasterCycle ()
 
 		readGraphicalInfo ();
 
-		_vicGraphicInfo._VC++;	
+		if (!_vicGraphicInfo._idleState)
+			_vicGraphicInfo._VC++;	
 		_vicGraphicInfo._VLMI++;
 	}
 
@@ -548,72 +534,70 @@ void COMMODORE::VICII::drawVisibleZone (MCHEmul::CPU* cpu)
 	// If the video is not active, 
 	// then everything will have the border color...
 	if (!_videoActive)
-		screenMemory () -> setHorizontalLine ((size_t) cav, (size_t) rv,
-			(cav + 8) > _raster.visibleColumns () ? (_raster.visibleColumns () - cav) : 8, 
-				_VICIIRegisters -> foregroundColor ());
-	// Otherwise the elements are drawn...
-	else
 	{
-		if (_raster.isInDisplayZone () && 
-			(_raster.vData ().currentPosition () - 
-				_VICIIRegisters -> verticalScrollPosition ()) > _LASTBADLINE)
-			emptyGraphicsInfo (); // Just in case to avoid paint something unnecesary...
-
-		// Everyting is the color of the background initially...
-		// ..and it will be covered with the foreground (border) later if needed..
-		// This is how the VICII works...
 		screenMemory () -> setHorizontalLine ((size_t) cav, (size_t) rv,
 			(cav + 8) > _raster.visibleColumns () ? (_raster.visibleColumns () - cav) : 8, 
-				_VICIIRegisters -> backgroundColor ());
-
-		// Now the information is drawn, and also the collisions detected at the same time
-		drawGraphicsSpritesAndDetectCollisions (cv, cav, rv);
-
-		// If the raster is not in the very visible zone...
-		// it is time to cover with the border...
-		if (!_raster.isInScreenZone () ||
-			(_raster.isInScreenZone () && (cav + 8) > _raster.hData ().lastScreenPosition ()))
-		{
-			// This is the starting pixel to start to draw...
-			unsigned short stp = cav;
-			// ...and the number to draw by default...
-			unsigned short lbk = (cav + 8) > _raster.visibleColumns () 
-				? (_raster.visibleColumns () - cav) : 8;
-
-			// But when the raster line is in the "screen" part of the window,
-			// any of these two previous variables could change...
-			if (rv >= _raster.vData ().firstScreenPosition () &&
-				rv <= _raster.vData ().lastScreenPosition ())
-			{
-				// If the initial horizontal position is before the "screen" part...
-				// ...but not the final position, the number of pixels to draw have to be reduced 
-				if (cav < _raster.hData ().firstScreenPosition () &&
-					(cav + 8) >= _raster.hData ().firstScreenPosition ())
-					lbk = _raster.hData ().firstScreenPosition () - cav;
-
-				// If the initial horizontal position is still in the "screen" part...
-				// ...but not the final position, 
-				// ...both the starting pixel and the number of pixels to draw have to be reduced
-				if (cav < _raster.hData ().lastScreenPosition () && 
-					(cav + 8) > _raster.hData ().lastScreenPosition ())
-				{
-					stp = _raster.hData ().lastScreenPosition () + 1;
-					lbk = (cav + 8) - stp;
-				}
-			}
-
-			screenMemory () -> setHorizontalLine ((size_t) stp, (size_t) rv, lbk, 
 				_VICIIRegisters -> foregroundColor ());
+
+		return;
+	}
+
+	// In other case...
+	// Everyting is the color of the background initially...
+	// ..and it will be covered with the foreground (border) later if needed..
+	// This is how the VICII works...
+	screenMemory () -> setHorizontalLine ((size_t) cav, (size_t) rv,
+		(cav + 8) > _raster.visibleColumns () ? (_raster.visibleColumns () - cav) : 8, 
+			_VICIIRegisters -> backgroundColor ());
+
+	// Now the information is drawn,...
+	// ...and also the collisions detected at the same time
+	drawGraphicsSpritesAndDetectCollisions (cv, cav, rv);
+
+	// If the raster is not in the very visible zone...
+	// it is time to cover with the border...
+	if (!_raster.isInScreenZone () ||
+		(_raster.isInScreenZone () && (cav + 8) > _raster.hData ().lastScreenPosition ()))
+	{
+		// This is the starting pixel to start to draw...
+		unsigned short stp = cav;
+		// ...and the number to draw by default...
+		unsigned short lbk = (cav + 8) > _raster.visibleColumns () 
+			? (_raster.visibleColumns () - cav) : 8;
+
+		// But when the raster line is in the "screen" part of the window,
+		// any of these two previous variables could change...
+		if (rv >= _raster.vData ().firstScreenPosition () &&
+			rv <= _raster.vData ().lastScreenPosition ())
+		{
+			// If the initial horizontal position is before the "screen" part...
+			// ...but not the final position, the number of pixels to draw have to be reduced 
+			if (cav < _raster.hData ().firstScreenPosition () &&
+				(cav + 8) >= _raster.hData ().firstScreenPosition ())
+				lbk = _raster.hData ().firstScreenPosition () - cav;
+
+			// If the initial horizontal position is still in the "screen" part...
+			// ...but not the final position, 
+			// ...both the starting pixel and the number of pixels to draw have to be reduced
+			if (cav < _raster.hData ().lastScreenPosition () && 
+				(cav + 8) > _raster.hData ().lastScreenPosition ())
+			{
+				stp = _raster.hData ().lastScreenPosition () + 1;
+				lbk = (cav + 8) - stp;
+			}
 		}
 
-		// The IRQ related with the lightpen is calculated...
-		unsigned short dx, dy;
-		_raster.currentDisplayPosition (dx, dy);
-		unsigned short lpx, lpy;
-		_VICIIRegisters -> currentLightPenPosition (lpx, lpy);
-		if (dy == lpy && (lpx >= dx && lpx < (dx + 8))) // The beam moves every 8 pixels...
-			_VICIIRegisters -> activateLightPenOnScreenIRQ ();
+		screenMemory () -> setHorizontalLine ((size_t) stp, (size_t) rv, lbk, 
+			_VICIIRegisters -> foregroundColor ());
 	}
+
+	// The IRQ related with the lightpen is calculated...
+	unsigned short dx, dy;
+	_raster.currentDisplayPosition (dx, dy);
+	unsigned short lpx, lpy;
+	_VICIIRegisters -> currentLightPenPosition (lpx, lpy);
+	if (dy == lpy && (lpx >= dx && lpx < (dx + 8))) // The beam moves every 8 pixels...
+		_VICIIRegisters -> activateLightPenOnScreenIRQ ();
 }
 
 // ---
@@ -640,9 +624,7 @@ void COMMODORE::VICII::drawGraphicsSpritesAndDetectCollisions (unsigned short cv
 	// Whether the 8 pixels to draw are foreground or background...
 	// ...and the color of the ones that are not finally background!
 	// ...and also info to control later the collision with sprites!
-	COMMODORE::VICII::DrawResult colGraphics;
-	if (_raster.isInDisplayZone ()) // Makes only sense when the raster in in visible zone...
-		colGraphics = drawGraphics (dC);
+	COMMODORE::VICII::DrawResult colGraphics = drawGraphics (dC);
 
 	// The sprites are draw over the _background or the _foreground data
 	// ...attending on how they are configured...
@@ -691,18 +673,8 @@ MCHEmul::ScreenMemory* COMMODORE::VICII::createScreenMemory ()
 // ---
 COMMODORE::VICII::DrawResult COMMODORE::VICII::drawGraphics (const COMMODORE::VICII::DrawContext& dC)
 {
-	// If no graphic has been loaded, it is not needed to continue...
-	if (_graphicsGraphicData.size () == 0)
-		return (COMMODORE::VICII::DrawResult ()); // It could happen at the first lines of the screen when the vertical SCROLL is active...
-
-	// The "display" line being involved...
-	// rc is the "display" line affected by the SROLLY
-	// it could be also negative moving from -7,
-	// When e.g. the raster is at the very first "display" line,
-	// there are no reductions in the screen (display == screen) and SCROLLY = 0x03,
-	// 0x03 is the difference between the FIRTBADLINE = 0x30 and the first visible line = 0x33 (with no reduction)
-	int rc = (int) dC._RR - (int) dC._IRD - (int) dC._SR + 0x03;
-	if (rc < 0)
+	// To draw is only valid in the graphical state...
+	if (_vicGraphicInfo._idleState)
 		return (COMMODORE::VICII::DrawResult ());
 
 	// The "display" column being involved...
@@ -710,6 +682,9 @@ COMMODORE::VICII::DrawResult COMMODORE::VICII::drawGraphics (const COMMODORE::VI
 	// When e.g. the raster is at the very first "screen "dislay" column, 
 	// there are no reductions is the screen (display == screen) and SCROLLX = 0x00
 	int cb = (int) dC._RCA - (int) dC._ICD - (int) dC._SC;
+	// To ddraw just only when there is a possibility of at least draw a pixel!
+	if (cb <= -8)
+		return (COMMODORE::VICII::DrawResult ());
 
 	// At this point rc positive for sure, and cb could be negative...
 	// Never invoke the methods within the swith case statements direcly
@@ -720,35 +695,35 @@ COMMODORE::VICII::DrawResult COMMODORE::VICII::drawGraphics (const COMMODORE::VI
 	{
 		case COMMODORE::VICIIRegisters::GraphicMode::_CHARMODE:
 			{
-				result = std::move (drawMonoColorChar (cb, rc, _graphicsGraphicData, _graphicsColorData));
+				result = std::move (drawMonoColorChar (cb));
 			}
 
 			break;
 
 		case COMMODORE::VICIIRegisters::GraphicMode::_MULTICOLORCHARMODE:
 			{
-				result = std::move (drawMultiColorChar (cb, rc, _graphicsGraphicData, _graphicsColorData));
+				result = std::move (drawMultiColorChar (cb));
 			}
 
 			break;
 
 		case COMMODORE::VICIIRegisters::GraphicMode::_EXTENDEDBACKGROUNDMODE:
 			{
-				result = std::move (drawMultiColorExtendedChar (cb, rc, _graphicsScreenCodeData, _graphicsGraphicData, _graphicsColorData));
+				result = std::move (drawMultiColorExtendedChar (cb));
 			}
 
 			break;
 
 		case COMMODORE::VICIIRegisters::GraphicMode::_BITMAPMODE:
 			{
-				result = std::move (drawMonoColorBitMap (cb, rc, _graphicsScreenCodeData, _graphicsGraphicData));
+				result = std::move (drawMonoColorBitMap (cb));
 			}
 
 			break;
 
 		case COMMODORE::VICIIRegisters::GraphicMode::_MULTICOLORBITMAPMODE:
 			{
-				result = std::move (drawMultiColorBitMap (cb, rc, _graphicsScreenCodeData, _graphicsGraphicData, _graphicsColorData));
+				result = std::move (drawMultiColorBitMap (cb));
 			}
 
 			break;
@@ -756,7 +731,7 @@ COMMODORE::VICII::DrawResult COMMODORE::VICII::drawGraphics (const COMMODORE::VI
 		case COMMODORE::VICIIRegisters::GraphicMode::_INVALIDTEXMODE:
 			{
 				// Like multicolor char mode...
-				result = std::move (drawMultiColorChar (cb, rc, _graphicsGraphicData, _graphicsColorData));
+				result = std::move (drawMultiColorChar (cb));
 				// ...but invalid.
 				result._invalid = true;
 			}
@@ -765,8 +740,8 @@ COMMODORE::VICII::DrawResult COMMODORE::VICII::drawGraphics (const COMMODORE::VI
 
 		case COMMODORE::VICIIRegisters::GraphicMode::_INVALIDBITMAPMODE1:
 			{
-				// linke moncocolor bitmap mode...
-				result = std::move (drawMonoColorBitMap (cb, rc, _graphicsScreenCodeData, _graphicsGraphicData));
+				// Like moncocolor bitmap mode...
+				result = std::move (drawMonoColorBitMap (cb));
 				// ...but invalid.
 				result._invalid = true;
 			}
@@ -775,9 +750,7 @@ COMMODORE::VICII::DrawResult COMMODORE::VICII::drawGraphics (const COMMODORE::VI
 		case COMMODORE::VICIIRegisters::GraphicMode::_INVALIDBITMAPMODE2:
 			{
 				// Like multicolor bitmap mode...
-				result = std::move (
-					drawMultiColorBitMap 
-						(cb, rc, _graphicsScreenCodeData, _graphicsGraphicData, _graphicsColorData));
+				result = std::move (drawMultiColorBitMap (cb));
 				// ...but invalid.
 				result._invalid = true;
 			}
@@ -793,31 +766,27 @@ COMMODORE::VICII::DrawResult COMMODORE::VICII::drawGraphics (const COMMODORE::VI
 }
 
 // ---
-COMMODORE::VICII::DrawResult COMMODORE::VICII::drawMonoColorChar (int cb, int rc,
-	const MCHEmul::UBytes& bt, const MCHEmul::UBytes& clr)
+COMMODORE::VICII::DrawResult COMMODORE::VICII::drawMonoColorChar (int cb)
 {
 	COMMODORE::VICII::DrawResult result;
-
-	// The graphics are described in blocks of 8 bytes...
-	// // and a row is made up of 8 * 40 = 320 bytes.
-	// ...so this is to know wich "bytes "byte line" of every char is involved in the graphic line!
-	size_t nrc = ((size_t) rc) % 8;
 
 	for (int i = 0; i < 8 /** To paint always 8 pixels */; i++)
 	{
 		int pp = cb + i;
 		if (pp < 0)
 			continue;
+		if (pp >= 320)
+			break;
 
 		size_t iBy = ((size_t) pp) >> 3; // To determine the byte...
 		size_t iBt = 7 - (((size_t) pp) % 8); // From MSB to LSB...
 
-		if (bt [(iBy << 3) + nrc].bit (iBt))
+		if (_vicGraphicInfo._graphicData [iBy].bit (iBt))
 		{
 			result._collisionData.setBit (7 - i, true);
 
 			result._foregroundColorData [i] = 
-				(unsigned int) (clr [iBy].value () & 0x0f /** Useful nibble. */);
+				(unsigned int) (_vicGraphicInfo._colorData [iBy].value () & 0x0f /** Useful nibble. */);
 		}
 		// When 0, it is background...
 		// Not necessary to specify neither collision information
@@ -829,21 +798,17 @@ COMMODORE::VICII::DrawResult COMMODORE::VICII::drawMonoColorChar (int cb, int rc
 }
 
 // ---
-COMMODORE::VICII::DrawResult COMMODORE::VICII::drawMultiColorChar (int cb, int rc,
-	const MCHEmul::UBytes& bt, const MCHEmul::UBytes& clr)
+COMMODORE::VICII::DrawResult COMMODORE::VICII::drawMultiColorChar (int cb)
 {
 	COMMODORE::VICII::DrawResult result;
-
-	// The graphics are described in blocks of 8 bytes...
-	// // and a row is made up of 8 * 40 = 320 bytes.
-	// ...so this is to know wich "bytes "byte line" of every char is involved in the graphic line!
-	size_t nrc = ((size_t) rc) % 8;
 
 	for (unsigned short i = 0 ; i < 8 /** To paint always 8 pixels but in blocks of 2. */; i += 2)
 	{
 		int pp = cb + i;
 		if (pp < -1)
 			continue;
+		if (pp >= 320)
+			break;
 
 		// After this pp can be -1...
 
@@ -853,11 +818,11 @@ COMMODORE::VICII::DrawResult COMMODORE::VICII::drawMultiColorChar (int cb, int r
 		{
 			iBy = ((size_t) pp) >> 3; 
 			size_t iBt = 3 - ((((size_t) pp) % 8) >> 1);
-			cs = (bt [(iBy << 3) + nrc].value () >> (iBt << 1)) & 0x03; // 0, 1, 2 or 3
+			cs = (_vicGraphicInfo._graphicData [iBy].value () >> (iBt << 1)) & 0x03; // 0, 1, 2 or 3
 		}
 		// This is the case when pp == -1...
 		else
-			cs = (bt [nrc].value () >> 6) & 0x03; // 0, 1, 2 or 3
+			cs = (_vicGraphicInfo._graphicData [0].value () >> 6) & 0x03; // 0, 1, 2 or 3
 
 		// If 0, the pixel should be drawn (and considered) as background 
 		// and it is already the default status tha comes from the parent method...
@@ -867,9 +832,9 @@ COMMODORE::VICII::DrawResult COMMODORE::VICII::drawMultiColorChar (int cb, int r
 		// The way the pixels are going to be drawn will depend on the information in the color memory
 		// If the most significant bit of the low significant nibble of the color memory is set to 1
 		// the data will be managed in a monocolor way...
-		if ((clr [iBy] & 0x08) == 0x00) 
+		if ((_vicGraphicInfo._colorData [iBy] & 0x08) == 0x00) 
 		{
-			unsigned int fc = clr [iBy].value () & 0x07;
+			unsigned int fc = _vicGraphicInfo._colorData [iBy].value () & 0x07;
 
 			// ...and remember we are dealing with pairs of pixels...
 
@@ -895,7 +860,7 @@ COMMODORE::VICII::DrawResult COMMODORE::VICII::drawMultiColorChar (int cb, int r
 		{
 			unsigned int fc = 
 				(unsigned int) ((cs == 0x03) 
-					? (clr [iBy].value () & 0x07)
+					? (_vicGraphicInfo._colorData [iBy].value () & 0x07)
 					: (_VICIIRegisters -> backgroundColor (cs)) & 0x0f); // Useful nibble...
 
 			// The combination "01" is also considered as part of the background...
@@ -922,31 +887,27 @@ COMMODORE::VICII::DrawResult COMMODORE::VICII::drawMultiColorChar (int cb, int r
 }
 
 // ---
-COMMODORE::VICII::DrawResult COMMODORE::VICII::drawMultiColorExtendedChar (int cb, int rc,
-	const MCHEmul::UBytes& sc, const MCHEmul::UBytes& bt, const MCHEmul::UBytes& clr)
+COMMODORE::VICII::DrawResult COMMODORE::VICII::drawMultiColorExtendedChar (int cb)
 {
 	// The mode is quite similar to the standard text mode, 
 	// with the difference the 0 pixels (background) can have different background colors...
 
 	COMMODORE::VICII::DrawResult result;
 
-	// The graphics are described in blocks of 8 bytes...
-	// // and a row is made up of 8 * 40 = 320 bytes.
-	// ...so this is to know wich "bytes "byte line" of every char is involved in the graphic line!
-	size_t nrc = ((size_t) rc) % 8;
-
 	for (int i = 0; i < 8 /** To paint always 8 pixels */; i++)
 	{
 		int pp = cb + i;
 		if (pp < 0)
 			continue;
+		if (pp >= 320)
+			break;
 
 		size_t iBy = ((size_t) pp) >> 3 /** To determine the byte. */;
 		size_t iBt = 7 - (((size_t) pp) % 8); /** From MSB to LSB. */
 		// The color of the pixel 0 is determined by the 2 MSBites of the char code...
-		bool bS = bt [(iBy << 3) + nrc].bit (iBt); // To know whether the bit is 1 or 0...
-		unsigned int cs = ((sc [iBy].value () & 0xc0) >> 6) & 0x03; // 0, 1, 2, or 3
-		unsigned int fc = (bS ? clr [iBy].value () : _VICIIRegisters -> backgroundColor (cs)) & 0x0f; // Useful nibble...
+		bool bS = _vicGraphicInfo._graphicData [iBy].bit (iBt); // To know whether the bit is 1 or 0...
+		unsigned int cs = ((_vicGraphicInfo._screenCodeData [iBy].value () & 0xc0) >> 6) & 0x03; // 0, 1, 2, or 3
+		unsigned int fc = (bS ? _vicGraphicInfo._colorData [iBy].value () : _VICIIRegisters -> backgroundColor (cs)) & 0x0f; // Useful nibble...
 
 		if (bS)
 		{
@@ -966,28 +927,24 @@ COMMODORE::VICII::DrawResult COMMODORE::VICII::drawMultiColorExtendedChar (int c
 }
 
 // ---
-COMMODORE::VICII::DrawResult COMMODORE::VICII::drawMonoColorBitMap (int cb, int rc,
-	const MCHEmul::UBytes& sc, const MCHEmul::UBytes& bt)
+COMMODORE::VICII::DrawResult COMMODORE::VICII::drawMonoColorBitMap (int cb)
 {
 	COMMODORE::VICII::DrawResult result;
-
-	// The graphics are described in blocks of 8 bytes...
-	// // and a row is made up of 8 * 40 = 320 bytes.
-	// ...so this is to know wich "bytes "byte line" of every char is involved in the graphic line!
-	size_t nrc = ((size_t) rc) % 8;
 
 	for (int i = 0; i < 8 /** To paint always 8 pixels. */; i++)
 	{
 		int pp = cb + i;
 		if (pp < 0)
 			continue;
+		if (pp >= 320)
+			break;
 
 		size_t iBy = ((size_t) pp) >> 3; // To determine the byte...
 		size_t iBt = 7 - (((size_t) pp) % 8); // From MSB to LSB...
-		bool bS = bt [(iBy << 3) + nrc].bit (iBt);
+		bool bS = _vicGraphicInfo._graphicData [iBy].bit (iBt);
 		unsigned int fc = bS 
-				? (sc [iBy].value () & 0xf0) >> 4	// If the bit is 1, the color is determined by the MSNibble
-				: (sc [iBy].value () & 0x0f);		// ...and for LSNibble if it is 0...
+				? (_vicGraphicInfo._screenCodeData [iBy].value () & 0xf0) >> 4	// If the bit is 1, the color is determined by the MSNibble
+				: (_vicGraphicInfo._screenCodeData [iBy].value () & 0x0f);		// ...and for LSNibble if it is 0...
 
 		if (bS)
 		{
@@ -1006,21 +963,17 @@ COMMODORE::VICII::DrawResult COMMODORE::VICII::drawMonoColorBitMap (int cb, int 
 }
 
 // ---
-COMMODORE::VICII::DrawResult COMMODORE::VICII::drawMultiColorBitMap (int cb, int rc,
-	const MCHEmul::UBytes& sc, const MCHEmul::UBytes& bt, const MCHEmul::UBytes& clr)
+COMMODORE::VICII::DrawResult COMMODORE::VICII::drawMultiColorBitMap (int cb)
 {
 	COMMODORE::VICII::DrawResult result;
-
-	// The graphics are described in blocks of 8 bytes...
-	// // and a row is made up of 8 * 40 = 320 bytes.
-	// ...so this is to know wich "bytes "byte line" of every char is involved in the graphic line!
-	size_t nrc = ((size_t) rc) % 8;
 
 	for (unsigned short i = 0 ; i < 8 /** To paint always 8 pixels but in blocks of 2. */; i += 2)
 	{
 		int pp = cb + i;
 		if (pp < -1)
 			continue;
+		if (pp >= 320)
+			break;
 
 		// After this point pp can be -1
 
@@ -1030,11 +983,11 @@ COMMODORE::VICII::DrawResult COMMODORE::VICII::drawMultiColorBitMap (int cb, int
 		{
 			iBy = ((size_t) pp) >> 3; 
 			size_t iBt = 3 - ((((size_t) pp) % 8) >> 1);
-			cs = (bt [(iBy << 3) + nrc].value () >> (iBt << 1)) & 0x03; // 0, 1, 2 or 3
+			cs = (_vicGraphicInfo._graphicData [iBy].value () >> (iBt << 1)) & 0x03; // 0, 1, 2 or 3
 		}
 		// This is the case when pp == -1...
 		else
-			cs = (bt [nrc].value () >> 6) & 0x03; // 0, 1, 2 or 3
+			cs = (_vicGraphicInfo._graphicData [0].value () >> 6) & 0x03; // 0, 1, 2 or 3
 
 		// If 0, the pixel should be drawn (and considered) as background 
 		// and it is already the default status tha comes from the parent method...
@@ -1043,10 +996,10 @@ COMMODORE::VICII::DrawResult COMMODORE::VICII::drawMultiColorBitMap (int cb, int
 
 		unsigned fc = // The value 0x00 is not tested....
 				(cs == 0x01) // The color is the defined in the video matrix, high nibble...
-					? (sc [iBy].value () & 0xf0) >> 4
+					? (_vicGraphicInfo._screenCodeData [iBy].value () & 0xf0) >> 4
 					: ((cs == 0x02) // The color is defined in the video matrix, low nibble...
-						? sc [iBy].value () & 0x0f
-						: clr [iBy].value () & 0x0f); // The color is defined in color matrix...
+						? _vicGraphicInfo._screenCodeData [iBy].value () & 0x0f
+						: _vicGraphicInfo._colorData [iBy].value () & 0x0f); // The color is defined in color matrix...
 
 		// The combination "01" is managed as background also...
 		// ...the 0x00 has already been jumped an then treated as background!

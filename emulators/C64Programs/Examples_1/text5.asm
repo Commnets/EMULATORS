@@ -31,7 +31,7 @@ DELAY:			PHA
 				PHA
 				TYA
 				PHA
-				LDY #$0C
+				LDY #$0f
 LOOPYNOP:		LDX #$FF
 LOOPXNOP:		NOP
 				DEX
@@ -59,8 +59,14 @@ LOOPCLEAR:		STA SCREEN0,X
 
 ; The main program
 *				= $C300
-				JSR CLEAR
-				LDX #$00				; To draw the text in the screen
+SCREENCOLOR:	LDA #BKCOLOR			; To set the color of the screen
+				STA BACKGROUND
+				LDA #FGCOLOR
+				STA FOREGROUND
+
+SCREENCLEAR:	JSR CLEAR
+
+SCREENCHARS:	LDX #$00				; To draw the text in the screen
 LOOPCHARS:		LDA CHARCODES,X
 				STA SCREEN,X
 				LDA #COLORCHARS
@@ -69,27 +75,19 @@ LOOPCHARS:		LDA CHARCODES,X
 				CPX #NUMCHARS
 				BNE LOOPCHARS
 
-SCREENCOLOR:	LDA #BKCOLOR			; To set the color of the screen
-				STA BACKGROUND
-				LDA #FGCOLOR
-				STA FOREGROUND
-
-SCREENSIZE:		LDA SCROLLY
-				AND #$F7
-				STA SCROLLY
-		
-MOVE:			LDA #$01
+START:			LDA #$00
 				STA SCROLLYPOS
-				TAX
 LOOPMOVE:		LDA SCROLLY
 				AND #$F8
 				ORA SCROLLYPOS
 				STA SCROLLY
 				JSR DELAY
-				INX
-				STX SCROLLYPOS
-				CPX #$08
+				INC SCROLLYPOS
+				LDA SCROLLYPOS
+				CMP #$08
 				BNE LOOPMOVE
-				JMP MOVE				; Jump to the beginning and starts back
+				JMP START
+				
+FOREVER:		JMP FOREVER
 
 ; That's all

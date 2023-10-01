@@ -131,28 +131,6 @@ namespace COMMODORE
 		virtual MCHEmul::ScreenMemory* createScreenMemory () override;
 
 		// Read screen data
-		/** To read the graphics info. \n
-			This method will use the ones below. */
-		inline void readGraphicsInfoAt (unsigned short gl /** screen line, including the effect of the scroll y. */);
-		/** To empty the list of info. */
-		inline void emptyGraphicsInfo ();
-		/** Read the chars present in the video matrix for a specific videlo line. \n
-			The parameter received goes fom 0 to 24 (visible C64 line). */
-		inline const MCHEmul::UBytes& readScreenCodeDataAt (unsigned short l);
-		/** Read the info for the chars received as parameter. \n
-			The method receives also a parameter to indicate whether the graphics mode is or not _EXTENDEDBACKGROUNDMODE,
-			because in that case the info is read slightly different. */
-		inline const MCHEmul::UBytes& readCharDataFor (const MCHEmul::UBytes& chrs);
-		/** Read the info of the bitmap. \n
-			The info is read as they were char data. That is, the 8 x 8 block are sequential. 
-			The parameter received goes from 0 to 199 (visible scan line ((0 - 25 lines) * 8) - 1, and
-			takes into account the effect of the SCROLLY variable. */
-		inline const MCHEmul::UBytes& readBitmapDataAt (unsigned short l);
-		/** Reads the color of the chars. \n
-			The _COLORMEMORY localtion is fixed and can not be changed using VICRegisters. 
-			Th parameter received goes from 0 to 24. */
-		inline const MCHEmul::UBytes& readColorDataAt (unsigned short l);
-
 		// Methods linked to the raster line to the read the graphics...
 		/** To read the video matrix and the RAM color. \n
 			Someting that happens during a badline. */
@@ -231,20 +209,15 @@ namespace COMMODORE
 		  *	and, some of them:
 		  *	blk = When the graphical mode is inavlid and nothing has to be drawn.
 		  */
-		DrawResult drawMonoColorChar (int cb, int rc, 
-			const MCHEmul::UBytes& bt, const MCHEmul::UBytes& clr);
+		DrawResult drawMonoColorChar (int cb);
 		/** Draws a multicolor char. */
-		DrawResult drawMultiColorChar (int cb, int rc,
-			const MCHEmul::UBytes& bt, const MCHEmul::UBytes& clr);
+		DrawResult drawMultiColorChar (int cb);
 		/** Draws an enhaced multicolor char. */
-		DrawResult drawMultiColorExtendedChar (int cb, int rc,
-			const MCHEmul::UBytes& sc, const MCHEmul::UBytes& bt, const MCHEmul::UBytes& clr);
+		DrawResult drawMultiColorExtendedChar (int cb);
 		/** Draws a monocolor bitmap. */
-		DrawResult drawMonoColorBitMap (int cb, int rc, 
-			const MCHEmul::UBytes& sc, const MCHEmul::UBytes& bt);
+		DrawResult drawMonoColorBitMap (int cb);
 		/** Draws a multicolor bitmap. */
-		DrawResult drawMultiColorBitMap (int cb, int rc, 
-			const MCHEmul::UBytes& sc, const MCHEmul::UBytes& bt, const MCHEmul::UBytes& clr);
+		DrawResult drawMultiColorBitMap (int cb);
 		
 		// Draw the sprites in detail...
 		/** 
@@ -314,17 +287,17 @@ namespace COMMODORE
 		/** This very simple variable manages only when the additional stop bad line related cycles applies. */
 		mutable bool _badLineStopCyclesAdded;
 
-		/** The bytes read describing a line of graphics. 
-			They are all actualized at the methods readXXXX. */
-		mutable MCHEmul::UBytes _graphicsScreenCodeData;
-		mutable MCHEmul::UBytes _graphicsGraphicData;
-		mutable MCHEmul::UBytes _graphicsColorData;
-
 		/** 
 		  *	Structure to control how the graphics are displayed in the screen. \n
+		  *	https://www.cebix.net/VIC-Article.txt. (points 3.7.1 & 3.7.2): \n
+		  *	The VICII can be in either "idle" state or "screen" state... \n
+		  *	In the idle state c and g accesses (code and color matrix and graphics data) takes place one, 
+		  *	Whilest in the second one only access to $3fff memory takes place
+		  *	(or $39ff when ECM = multicolor bit in register $d016 is set). \n
+		  *	The screen state is set as soon as a bad condition comes. \n
+		  *	The idle state is set at cycle 58 if RC == 7 and ther eis no bad condition. \n
 		  * There are a couple of important things that happen as the raster line moves accross the line. \n
 		  *	The rules to manipulate every value are decribed below attending to the cycle in the raster. \n
-		  *	https://www.cebix.net/VIC-Article.txt. (point 3.7.2): \n
 		  * There are 3 important registers within the VICII related with the graphics: \n
 		  * VCBASE moves from 0 to 1000 (40 * 25) in a 40 step length. \n
 		  * VC moves from 0 to 1000 1 by 1. \n
@@ -343,6 +316,7 @@ namespace COMMODORE
 			VICGraphicInfo ()
 				: _VCBASE (0), _VC (0), _VLMI (0),
 				  _RC (0),
+				  _idleState (true),
 				  _screenCodeData (std::vector <MCHEmul::UByte> (40, MCHEmul::UByte::_0)),
 				  _graphicData (std::vector <MCHEmul::UByte> (40, MCHEmul::UByte::_0)),
 				  _colorData (std::vector <MCHEmul::UByte> (40, MCHEmul::UByte::_0))
@@ -357,6 +331,7 @@ namespace COMMODORE
 
 			unsigned short _VCBASE, _VC, _VLMI;
 			unsigned char _RC;
+			bool _idleState; 
 			mutable MCHEmul::UBytes _screenCodeData;
 			mutable MCHEmul::UBytes _graphicData; 
 			mutable MCHEmul::UBytes _colorData;
@@ -414,86 +389,10 @@ namespace COMMODORE
 		};
 
 		VICSpriteInfo _vicSpriteInfo [8];
+
+		private:
+		static const MCHEmul::Address _MEMORYPOSIDLE1, _MEMORYPOSIDLE2;
 	};
-
-	// ---
-	inline void VICII::emptyGraphicsInfo ()
-	{
-		_graphicsScreenCodeData = std::move (MCHEmul::UBytes ());
-		_graphicsGraphicData = std::move (MCHEmul::UBytes ());
-		_graphicsColorData = std::move (MCHEmul::UBytes ());
-	}
-	
-	// ---
-	inline void COMMODORE::VICII::readGraphicsInfoAt (unsigned short gl)
-	{
-		unsigned short chrLine = gl >> 3;
-
-		memoryRef () -> setActiveView (_VICIIView);
-
-		// In real VIC II color is read at the same time than the graphics data
-		// The color memory is always at the same location (only visible from VICII)
-		readColorDataAt (chrLine);
-
-		// Load _graphicsScreenCodeData first..
-		readScreenCodeDataAt (chrLine); 
-
-		// ...and if it is a text mode...
-		if (_VICIIRegisters -> textMode ()) readCharDataFor (_graphicsScreenCodeData); // ...and then the detailed info...
-		// ...and if it is not, load directly the graphics data...
-		else readBitmapDataAt (gl);
-
-		memoryRef () -> setCPUView ();
-	}
-
-	// ---
-	inline const MCHEmul::UBytes& VICII::readScreenCodeDataAt (unsigned short l)
-	{ 
-		return (_graphicsScreenCodeData = std::move (
-			memoryRef () -> values (_VICIIRegisters -> screenMemory () +
-				((size_t) l * _GRAPHMAXCHARCOLUMNS), (size_t) _GRAPHMAXCHARCOLUMNS))); 
-	}
-
-	// ---
-	inline const MCHEmul::UBytes& VICII::readCharDataFor (const MCHEmul::UBytes& chrs)
-	{
-		bool eM = _VICIIRegisters -> graphicExtendedColorTextModeActive ();
-
-		std::vector <MCHEmul::UByte> dt;
-		for (const auto& i : chrs.bytes ())
-		{
-			std::vector <MCHEmul::UByte> chrDt = std::move (
-				memoryRef () -> bytes (_VICIIRegisters -> charDataMemory () + 
-					(((size_t) i.value () & (eM ? 0x3f : 0xff)) 
-						/** In the extended graphics mode there is only 64 chars possible. */ << 3), 8));
-			dt.insert (dt.end (), std::make_move_iterator (chrDt.begin ()), std::make_move_iterator (chrDt.end ()));
-		}
-
-		return (_graphicsGraphicData = std::move (MCHEmul::UBytes (dt)));
-	}
-
-	// ---
-	inline const MCHEmul::UBytes& VICII::readBitmapDataAt (unsigned short l)
-	{
-		std::vector <MCHEmul::UByte> dt;
-		unsigned short cL = l * _GRAPHMAXCHARCOLUMNS;
-		for (unsigned short i = 0; i < _GRAPHMAXCHARCOLUMNS; i++)
-		{
-			std::vector <MCHEmul::UByte> btDt = std::move (
-				memoryRef () -> bytes (_VICIIRegisters -> bitmapMemory () + 
-					(cL + ((size_t) i << 3)), 8));
-			dt.insert (dt.end (), std::make_move_iterator (btDt.begin ()), std::make_move_iterator (btDt.end ()));
-		}
-
-		return (_graphicsGraphicData = std::move (MCHEmul::UBytes (dt)));
-	}
-
-	// ---
-	inline const MCHEmul::UBytes& VICII::readColorDataAt (unsigned short l)
-	{ 
-		return (_graphicsColorData = std::move (memoryRef () -> values (_COLORMEMORY +
-			((size_t) l * _GRAPHMAXCHARCOLUMNS), (size_t) _GRAPHMAXCHARCOLUMNS))); 
-	}
 
 	inline void VICII::readVideoMatrixAndColorRAM ()
 	{
@@ -509,13 +408,18 @@ namespace COMMODORE
 	inline void VICII::readGraphicalInfo ()
 	{
 		memoryRef () -> setActiveView (_VICIIView);
-		_vicGraphicInfo._graphicData [_vicGraphicInfo._VLMI] = _VICIIRegisters -> textMode () 
-			? memoryRef () -> value (_VICIIRegisters -> charDataMemory () + 
-				(((size_t) _vicGraphicInfo._screenCodeData [_vicGraphicInfo._VLMI].value () & 
-					(_VICIIRegisters -> graphicExtendedColorTextModeActive () ? 0x3f : 0xff)) 
-					/** In the extended graphics mode there is only 64 chars possible. */ << 3) + _vicGraphicInfo._RC)
-			: memoryRef () -> value (_VICIIRegisters -> bitmapMemory () + 
-				(_vicGraphicInfo._VC << 3) + _vicGraphicInfo._RC);
+		if (_vicGraphicInfo._idleState) // In this state the info is read from a specific place of the memory...
+			_vicGraphicInfo._graphicData [_vicGraphicInfo._VLMI] = 
+			_VICIIRegisters -> graphicExtendedColorTextModeActive () 
+				? memoryRef () -> value (_MEMORYPOSIDLE1) : memoryRef () -> value (_MEMORYPOSIDLE2);
+		else // ..in the other one the info will be read attending to the situation of the memory...
+			_vicGraphicInfo._graphicData [_vicGraphicInfo._VLMI] = _VICIIRegisters -> textMode () 
+				? memoryRef () -> value (_VICIIRegisters -> charDataMemory () + 
+					(((size_t) _vicGraphicInfo._screenCodeData [_vicGraphicInfo._VLMI].value () & 
+						(_VICIIRegisters -> graphicExtendedColorTextModeActive () ? 0x3f : 0xff)) 
+						/** In the extended graphics mode there is only 64 chars possible. */ << 3) + _vicGraphicInfo._RC)
+				: memoryRef () -> value (_VICIIRegisters -> bitmapMemory () + 
+					(_vicGraphicInfo._VC << 3) + _vicGraphicInfo._RC);
 		memoryRef () -> setCPUView ();
 	}
 
