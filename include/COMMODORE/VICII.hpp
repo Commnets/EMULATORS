@@ -208,14 +208,17 @@ namespace COMMODORE
 		  *	blk = When the graphical mode is inavlid and nothing has to be drawn.
 		  */
 		DrawResult drawMonoColorChar (int cb);
-		/** Draws a multicolor char. */
-		DrawResult drawMultiColorChar (int cb);
+		/** Draws a multicolor char. \n
+			The mode can be used also as an invalid mode. */
+		DrawResult drawMultiColorChar (int cb, bool inv = false);
 		/** Draws an enhaced multicolor char. */
 		DrawResult drawMultiColorExtendedChar (int cb);
-		/** Draws a monocolor bitmap. */
-		DrawResult drawMonoColorBitMap (int cb);
-		/** Draws a multicolor bitmap. */
-		DrawResult drawMultiColorBitMap (int cb);
+		/** Draws a monocolor bitmap. \n
+			The mode can be used also as an invalid mode. */
+		DrawResult drawMonoColorBitMap (int cb, bool inv = false);
+		/** Draws a multicolor bitmap. \n
+			The mode can be used as an invalid mode. */
+		DrawResult drawMultiColorBitMap (int cb, bool inv = false);
 		
 		// Draw the sprites in detail...
 		/** 
@@ -373,6 +376,7 @@ namespace COMMODORE
 
 			VICSpriteInfo (bool a, unsigned char l, bool e)
 				: _active (a), _line (l), _expansionY (e),
+				  _spriteBaseAddress ({ 0x00, 0x00 }, true), // it is the same than using false and quicker...
 				  _graphicsLineSprites (MCHEmul::UBytes::_E),
 				  _ff (false)
 							{ }
@@ -380,6 +384,7 @@ namespace COMMODORE
 			bool _active; // True when the sprite is active in the current raster line
 			unsigned char _line; // Line of the sprite to be drawn (from 0 to 21)
 			bool _expansionY; // True when the sprite is expanded in the Y axis
+			mutable MCHEmul::Address _spriteBaseAddress;
 			mutable MCHEmul::UBytes _graphicsLineSprites; // 3 bytes line info each
 
 			// Implementation
@@ -395,10 +400,12 @@ namespace COMMODORE
 	inline void VICII::readVideoMatrixAndColorRAM ()
 	{
 		memoryRef () -> setActiveView (_VICIIView);
+		
 		_vicGraphicInfo._screenCodeData [_vicGraphicInfo._VLMI] =
 			memoryRef () -> value (_VICIIRegisters -> screenMemory () + (size_t) _vicGraphicInfo._VC); 
 		_vicGraphicInfo._colorData [_vicGraphicInfo._VLMI] = 
 			memoryRef () -> value (_COLORMEMORY + (size_t) _vicGraphicInfo._VC); 
+		
 		memoryRef () -> setCPUView ();
 	}
 
@@ -406,6 +413,7 @@ namespace COMMODORE
 	inline void VICII::readGraphicalInfo ()
 	{
 		memoryRef () -> setActiveView (_VICIIView);
+
 		if (_vicGraphicInfo._idleState) // In this state the info is read from a specific place of the memory...
 			_vicGraphicInfo._graphicData [_vicGraphicInfo._VLMI] = 
 			_VICIIRegisters -> graphicExtendedColorTextModeActive () 
@@ -418,6 +426,7 @@ namespace COMMODORE
 						/** In the extended graphics mode there is only 64 chars possible. */ << 3) + _vicGraphicInfo._RC)
 				: memoryRef () -> value (_VICIIRegisters -> bitmapMemory () + 
 					(_vicGraphicInfo._VC << 3) + _vicGraphicInfo._RC);
+		
 		memoryRef () -> setCPUView ();
 	}
 
@@ -436,20 +445,29 @@ namespace COMMODORE
 	// ---
 	inline bool VICII::readSpriteData (size_t nS)
 	{
-		if (!_vicSpriteInfo [nS]._active)
-			return (false);
+		bool result = false;
 
 		memoryRef () -> setActiveView (_VICIIView);
-		_vicSpriteInfo [nS]._graphicsLineSprites = std::move (
-			MCHEmul::UBytes (
-				memoryRef () -> bytes (_VICIIRegisters -> initAddressBank () + 
-					((size_t) memoryRef () -> value 
-						(_VICIIRegisters -> spritePointersMemory () /** Depnds on where the escreen is located. */ + nS).value () << 6) /** 64 bytes block. */ +
-					/** If sprite is double-height, the data line read must be half. */
+
+		// The pointer is always read, whether it is active or not...
+		_vicSpriteInfo [nS]._spriteBaseAddress = _VICIIRegisters -> initAddressBank () + 
+			((size_t) memoryRef () -> value (_VICIIRegisters -> spritePointersMemory () 
+				/** Depends on where the screen is located. */ + nS).value () << 6); /** 64 bytes block. */
+
+		if (_vicSpriteInfo [nS]._active)
+		{
+			_vicSpriteInfo [nS]._graphicsLineSprites = 
+				std::move (MCHEmul::UBytes (memoryRef () -> bytes (_vicSpriteInfo [nS]._spriteBaseAddress + 
 					(_vicSpriteInfo [nS]._line * 3) /** bytes per line. */, 3)));
+
+			result = true;
+		}
+		else
+			_vicSpriteInfo [nS]._graphicsLineSprites = MCHEmul::UBytes::_E;
+
 		memoryRef () -> setCPUView ();
 
-		return (true);
+		return (result);
 	}
 
 	/** The version para NTSC systems. */

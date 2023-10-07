@@ -136,6 +136,9 @@ namespace COMMODORE
 		/** To know whether the VICII might launch a IRQ (from its internal perspective only).
 			The IRQ will be or not actually launched depending on other elements like whether the IRQ flag is or not active. */
 		inline bool launchIRQ () const;
+		/** To have a code for the reason of the interruption. 
+			There might be several reasons defined within the code. */
+		inline unsigned int reasonIRQCode () const;
 
 		// Temporal variables to know, when an raster or lightpen IRQ happened, where was the element that generated that.
 		// This temporal variables are set from the VICII directly...
@@ -306,6 +309,15 @@ namespace COMMODORE
 				(_spriteCollisionWithDataIRQHappened && _spriteCollisionWithDataIRQActive) ||
 				(_spriteCollisionsIRQHappened && _spriteCollisionsIRQActive) ||
 				(_lightPenIRQHappened && _lightPenIRQActive)); 
+	}
+
+	// ---
+	inline unsigned int VICIIRegisters::reasonIRQCode () const
+	{
+		return (((_rasterIRQHappened && _rasterIRQActive) ? 1 : 0) +
+				((_spriteCollisionWithDataIRQHappened && _spriteCollisionWithDataIRQActive) ? 2 : 0) +
+				((_spriteCollisionsIRQHappened && _spriteCollisionsIRQActive) ? 4 : 0) +
+				((_lightPenIRQHappened && _lightPenIRQActive) ? 8 : 0)); 
 	}
 
 	// ---

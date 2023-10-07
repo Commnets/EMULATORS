@@ -237,9 +237,15 @@ bool COMMODORE::VICII::simulate (MCHEmul::CPU* cpu)
 				_VICIIRegisters -> activateRasterIRQ (); // ...the interrupt is activated (but not necessary launched!)
 		}
 
-		// Per cycle, the IRQ condition is checked! (many reasons during the cycle can unchain the IRQ interrupt)
-		if (_VICIIRegisters -> launchIRQ ())
-			cpu -> requestInterrupt (F6500::IRQInterrupt::_ID, cpu -> clockCycles  () - i, this);
+		// Per cycle, the IRQ condition is checked! 
+		// (many reasons during the cycle can unchain the IRQ interrupt)
+		int cI = -1;
+		if ((cI = (int)_VICIIRegisters -> reasonIRQCode ()) != 0)
+			cpu -> requestInterrupt (
+				F6500::IRQInterrupt::_ID, 
+				cpu -> clockCycles  () - i, 
+				this,
+				cI);
 	}
 
 	// When the raster enters the non visible part of the screen,
@@ -728,29 +734,23 @@ COMMODORE::VICII::DrawResult COMMODORE::VICII::drawGraphics (const COMMODORE::VI
 
 		case COMMODORE::VICIIRegisters::GraphicMode::_INVALIDTEXMODE:
 			{
-				// Like multicolor char mode...
-				result = std::move (drawMultiColorChar (cb));
-				// ...but invalid.
-				result._invalid = true;
+				// Like multicolor char mode, but invalid...
+				result = std::move (drawMultiColorChar (cb, result._invalid = true));
 			}
 
 			break;
 
 		case COMMODORE::VICIIRegisters::GraphicMode::_INVALIDBITMAPMODE1:
 			{
-				// Like moncocolor bitmap mode...
-				result = std::move (drawMonoColorBitMap (cb));
-				// ...but invalid.
-				result._invalid = true;
+				// Like moncocolor bitmap mode, but invalid...
+				result = std::move (drawMonoColorBitMap (cb, result._invalid = true));
 			}
 			break;
 
 		case COMMODORE::VICIIRegisters::GraphicMode::_INVALIDBITMAPMODE2:
 			{
-				// Like multicolor bitmap mode...
-				result = std::move (drawMultiColorBitMap (cb));
-				// ...but invalid.
-				result._invalid = true;
+				// Like multicolor bitmap mode, but invalid...
+				result = std::move (drawMultiColorBitMap (cb, result._invalid = true));
 			}
 
 			break;
@@ -796,7 +796,7 @@ COMMODORE::VICII::DrawResult COMMODORE::VICII::drawMonoColorChar (int cb)
 }
 
 // ---
-COMMODORE::VICII::DrawResult COMMODORE::VICII::drawMultiColorChar (int cb)
+COMMODORE::VICII::DrawResult COMMODORE::VICII::drawMultiColorChar (int cb, bool inv)
 {
 	COMMODORE::VICII::DrawResult result;
 
@@ -832,34 +832,56 @@ COMMODORE::VICII::DrawResult COMMODORE::VICII::drawMultiColorChar (int cb)
 		// the data will be managed in a monocolor way...
 		if ((_vicGraphicInfo._colorData [iBy] & 0x08) == 0x00) 
 		{
-			unsigned int fc = _vicGraphicInfo._colorData [iBy].value () & 0x07;
+			unsigned int fc = 
+				inv 
+					? 0x00 // When invalid all pixels are black...
+					: _vicGraphicInfo._colorData [iBy].value () & 0x07;
 
 			// ...and remember we are dealing with pairs of pixels...
 
-			if ((cs & 0x02) == 0x02 /** if set. */) 
+			switch (cs)
 			{
-				result._collisionData.setBit (7 - i, true);
+				case 0x01:
+					{
+						result._backgroundColorData [i + 1] = fc;
+					}
 
-				result._foregroundColorData [i] = fc;
+					break;
+
+				case 0x02:
+					{
+						result._collisionData.setBit (7 - i, true);
+
+						result._foregroundColorData [i] = fc;
+					}
+
+					break;
+
+				case 0x03:
+					{
+						result._collisionData.setBit (7 - i, true);
+						result._collisionData.setBit (6 - i, true);
+
+						result._foregroundColorData [i] = fc;
+						result._foregroundColorData [i + 1] = fc;
+					}
+
+					break;
+
+				default:
+					break;
 			}
-			
-			if ((cs & 0x01) == 0x01 /** if set. */)
-			{
-				result._collisionData.setBit (6 - i, true);
-
-				result._foregroundColorData [i + 1] = fc;
-			}
-
-			// if boths "bits" are set, boths pixels will be drawn...
 		}
 		// But if it is 1, 
 		// then it will be draw as in the multicolor version...
 		else
 		{
 			unsigned int fc = 
-				(unsigned int) ((cs == 0x03) 
-					? (_vicGraphicInfo._colorData [iBy].value () & 0x07)
-					: (_VICIIRegisters -> backgroundColor (cs)) & 0x0f); // Useful nibble...
+				inv 
+					? 0x00 
+					: (unsigned int) ((cs == 0x03) 
+						? (_vicGraphicInfo._colorData [iBy].value () & 0x07)
+						: _VICIIRegisters -> backgroundColor (cs));
 
 			// The combination "01" is also considered as part of the background...
 			// ...and are not taken into account to detect collision...
@@ -905,7 +927,10 @@ COMMODORE::VICII::DrawResult COMMODORE::VICII::drawMultiColorExtendedChar (int c
 		// The color of the pixel 0 is determined by the 2 MSBites of the char code...
 		bool bS = _vicGraphicInfo._graphicData [iBy].bit (iBt); // To know whether the bit is 1 or 0...
 		unsigned int cs = ((_vicGraphicInfo._screenCodeData [iBy].value () & 0xc0) >> 6) & 0x03; // 0, 1, 2, or 3
-		unsigned int fc = (bS ? _vicGraphicInfo._colorData [iBy].value () : _VICIIRegisters -> backgroundColor (cs)) & 0x0f; // Useful nibble...
+		unsigned int fc = 
+			bS 
+				? (_vicGraphicInfo._colorData [iBy].value () & 0x0f) 
+				: _VICIIRegisters -> backgroundColor (cs);
 
 		if (bS)
 		{
@@ -925,7 +950,7 @@ COMMODORE::VICII::DrawResult COMMODORE::VICII::drawMultiColorExtendedChar (int c
 }
 
 // ---
-COMMODORE::VICII::DrawResult COMMODORE::VICII::drawMonoColorBitMap (int cb)
+COMMODORE::VICII::DrawResult COMMODORE::VICII::drawMonoColorBitMap (int cb, bool inv)
 {
 	COMMODORE::VICII::DrawResult result;
 
@@ -940,9 +965,12 @@ COMMODORE::VICII::DrawResult COMMODORE::VICII::drawMonoColorBitMap (int cb)
 		size_t iBy = ((size_t) pp) >> 3; // To determine the byte...
 		size_t iBt = 7 - (((size_t) pp) % 8); // From MSB to LSB...
 		bool bS = _vicGraphicInfo._graphicData [iBy].bit (iBt);
-		unsigned int fc = bS 
-				? (_vicGraphicInfo._screenCodeData [iBy].value () & 0xf0) >> 4	// If the bit is 1, the color is determined by the MSNibble
-				: (_vicGraphicInfo._screenCodeData [iBy].value () & 0x0f);		// ...and for LSNibble if it is 0...
+		unsigned int fc = 
+			inv 
+				? 0x00 // When invalid, all pixels are black...
+				: bS 
+					? (_vicGraphicInfo._screenCodeData [iBy].value () & 0xf0) >> 4	// If the bit is 1, the color is determined by the MSNibble
+					: (_vicGraphicInfo._screenCodeData [iBy].value () & 0x0f);		// ...and for LSNibble if it is 0...
 
 		if (bS)
 		{
@@ -961,7 +989,7 @@ COMMODORE::VICII::DrawResult COMMODORE::VICII::drawMonoColorBitMap (int cb)
 }
 
 // ---
-COMMODORE::VICII::DrawResult COMMODORE::VICII::drawMultiColorBitMap (int cb)
+COMMODORE::VICII::DrawResult COMMODORE::VICII::drawMultiColorBitMap (int cb, bool inv)
 {
 	COMMODORE::VICII::DrawResult result;
 
@@ -993,11 +1021,13 @@ COMMODORE::VICII::DrawResult COMMODORE::VICII::drawMultiColorBitMap (int cb)
 			continue;
 
 		unsigned fc = // The value 0x00 is not tested....
-				(cs == 0x01) // The color is the defined in the video matrix, high nibble...
-					? (_vicGraphicInfo._screenCodeData [iBy].value () & 0xf0) >> 4
-					: ((cs == 0x02) // The color is defined in the video matrix, low nibble...
-						? _vicGraphicInfo._screenCodeData [iBy].value () & 0x0f
-						: _vicGraphicInfo._colorData [iBy].value () & 0x0f); // The color is defined in color matrix...
+				inv
+					? 0x00 // When invalid all pixels are black...
+					: (cs == 0x01) // The color is the defined in the video matrix, high nibble...
+						? (_vicGraphicInfo._screenCodeData [iBy].value () & 0xf0) >> 4
+						: ((cs == 0x02) // The color is defined in the video matrix, low nibble...
+							? (_vicGraphicInfo._screenCodeData [iBy].value () & 0x0f)
+							: (_vicGraphicInfo._colorData [iBy].value () & 0x0f)); // The color is defined in color matrix...
 
 		// The combination "01" is managed as background also...
 		// ...the 0x00 has already been jumped an then treated as background!
@@ -1071,7 +1101,7 @@ MCHEmul::UByte COMMODORE::VICII::drawMonoColorSpriteOver (unsigned short c, unsi
 		{
 			result.setBit (7 - (i + j), true);
 
-			d [i + j] = _VICIIRegisters -> spriteColor (spr) & 0x0f; // Useful nibble...
+			d [i + j] = _VICIIRegisters -> spriteColor (spr);
 		}
 	}
 
@@ -1113,9 +1143,13 @@ MCHEmul::UByte COMMODORE::VICII::drawMultiColorSpriteOver (unsigned short c, uns
 		if (cs == 0)
 			continue; // The point has no color...
 
-		unsigned int fc = (unsigned int) ((cs == 0x01) 
-			? _VICIIRegisters -> spriteSharedColor (0) 
-			: ((cs == 0x02) ? _VICIIRegisters -> spriteColor (spr) : _VICIIRegisters -> spriteSharedColor (1)));
+		unsigned int fc = 
+			(unsigned int) ((cs == 0x01) 
+				? _VICIIRegisters -> spriteSharedColor (0)
+				: ((cs == 0x02) 
+					? _VICIIRegisters -> spriteColor (spr)
+					: _VICIIRegisters -> spriteSharedColor (1)));
+
 		for (size_t j = 0; j < (size_t) (2 * dW); j++)
 		{ 
 			result.setBit (7 - (i + j), true);
@@ -1137,25 +1171,15 @@ void COMMODORE::VICII::drawResultToScreen (const COMMODORE::VICII::DrawResult& c
 
 		// If the graphic mode was invalid...
 		if (cT._invalid)
-		{
-			// the pixel will be always black...
-			screenMemory () -> setPixel (pos, (size_t) dC._RR, 0 /** black. */);
-			// ...and only the sprites over the foreground will be visible.
-			if (cT._foregroundColorData [i] != ~0)
-				screenMemory () -> setPixel (pos, (size_t) dC._RR, cT._foregroundColorData [i]);
-		}
-		// ...but if not...
-		else
-		{
-			// First the pure background...
-			// Where only the bits in multicolor modes than are defined as background ("00" & "01") will be draw,
-			// ...and also the sprites below the foregound!
-			if (cT._backgroundColorData [i] != ~0)
-				screenMemory () -> setPixel (pos, (size_t) dC._RR, cT._backgroundColorData [i]);
-			// Now the foreground info, inclusing the sprites over the foreground.
-			if (cT._foregroundColorData [i] != ~0)
-				screenMemory () -> setPixel (pos, (size_t) dC._RR, cT._foregroundColorData [i]);
-		}
+			// the pixel will be always black by default...
+			screenMemory () -> setPixel (pos, (size_t) dC._RR, 0x00 /** black. */);
+
+		// And then the background pixels...
+		if (cT._backgroundColorData [i] != ~0)
+			screenMemory () -> setPixel (pos, (size_t) dC._RR, cT._backgroundColorData [i]);
+		// and the foreground ones finally...
+		if (cT._foregroundColorData [i] != ~0)
+			screenMemory () -> setPixel (pos, (size_t) dC._RR, cT._foregroundColorData [i]);
 	}
 }
 

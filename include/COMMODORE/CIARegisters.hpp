@@ -120,6 +120,8 @@ namespace COMMODORE
 
 		/** To know whether the interruption has or not to be launched. */
 		inline bool launchInterruption () const;
+		/** Just to have a code with the reason of the interrupt when happens. */
+		inline unsigned int reasonIRQCode () const;
 
 		/** The value to reflect at the bit 6 or 7 of the port B. */
 		/** To know first whether the timer A is affecting or not to the bit 6. */
@@ -196,6 +198,17 @@ namespace COMMODORE
 				_serialPort -> interruptRequested () ||
 				launchFlagLineInterruption ());
 	}
+
+	// ---
+	inline unsigned int CIARegisters::reasonIRQCode () const
+	{
+		return ((_timerA -> launchInterruption () ? 1 : 0) +
+				(_timerB -> launchInterruption () ? 2 : 0) +
+				(_clock  -> launchInterruption () ? 4 : 0) +
+				(_serialPort -> interruptRequested () ? 8 : 0) +
+				(launchFlagLineInterruption () ? 16 : 0));
+	}
+
 }
 
 #endif

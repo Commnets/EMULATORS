@@ -175,7 +175,7 @@ void MCHEmul::CPU::removeInterrrupt (int id)
 }
 
 // ---
-void MCHEmul::CPU::requestInterrupt (int id, unsigned int nC, MCHEmul::Chip* src)
+void MCHEmul::CPU::requestInterrupt (int id, unsigned int nC, MCHEmul::Chip* src, int cR)
 { 
 	if (_interruptRequested == -1)
 	{ 
@@ -185,7 +185,9 @@ void MCHEmul::CPU::requestInterrupt (int id, unsigned int nC, MCHEmul::Chip* src
 
 		if (deepDebugActive ())
 			*_deepDebugFile 
-				<< "\t\t\t\tInterrupt CPU requested:" << std::to_string (id) << "\n";
+				<< "\t\t\t\tInterrupt CPU requested:" << std::to_string (id) 
+				<< " from:" << ((src == nullptr) ? "-" : std::to_string (src -> id ())) 
+				<< " reason: " << std::to_string (cR) << "\n";
 	} 
 }
 

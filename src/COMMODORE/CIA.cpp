@@ -116,8 +116,13 @@ bool COMMODORE::CIA::simulate (MCHEmul::CPU* cpu)
 		_serialPort.simulate (cpu, &_timerA);
 
 		// Any reason to launch an interruption?...
-		if (_CIARegisters -> launchInterruption ())
-			cpu -> requestInterrupt (_interruptId, cpu -> clockCycles  () - i, this);
+		int cI = -1;
+		if ((cI = (int) _CIARegisters -> reasonIRQCode ()) != 0)
+			cpu -> requestInterrupt (
+				_interruptId, 
+				cpu -> clockCycles  () - i, 
+				this,
+				cI);
 	}
 
 	_lastClockCycles = cpu -> clockCycles ();

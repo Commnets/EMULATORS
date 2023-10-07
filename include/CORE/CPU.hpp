@@ -149,9 +149,9 @@ namespace MCHEmul
 		void removeInterrrupt (int id);
 		/** And to request an interrupt. \n
 			Receives the id of the interruption requested, the clockCycle where it has happened,
-			and the sender (optional). \n
+			the sender (optional), and a code for the reason (also optional, -1 = not defined. \n
 			It can be overloaded, but by default just only one interruption at the same time can be invoked. */
-		virtual void requestInterrupt (int id, unsigned int nC, Chip* src = nullptr);
+		virtual void requestInterrupt (int id, unsigned int nC, Chip* src = nullptr, int cR = -1);
 
 		/** 
 		  *	The real CORE of the class. \n
