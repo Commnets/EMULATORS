@@ -269,7 +269,7 @@ MCHEmul::InfoStructure MCHEmul::LocalConsole::loadPeripheralData (const std::str
 	MCHEmul::InfoStructure result;
 
 	MCHEmul::Strings prmsL = parametersListFrom (prms);
-	if (prmsL.size () != 2)
+	if (prmsL.size () != 2 && prmsL.size () != 3)
 	{ 
 		result.add (std::string ("ERROR"), std::string ("Insuficient number of arguments"));
 
@@ -281,6 +281,10 @@ MCHEmul::InfoStructure MCHEmul::LocalConsole::loadPeripheralData (const std::str
 		(dt == nullptr)
 			? std::string ("The data was not connected to the peripheral.")
 			: "No errors. " + dt -> asString ());
+
+	// If there were a third parameter it could be the file were to trace...
+	if (dt != nullptr && prmsL.size () == 3)
+		_emulator -> computer () -> activateDeepDebug (prmsL [2], { }, true);
 
 	return (result);
 }
