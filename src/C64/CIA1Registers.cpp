@@ -28,7 +28,7 @@ const MCHEmul::UByte& C64::CIA1Registers::readValue (size_t p) const
 				// determining what is shown there...
 				unsigned char dtA = MCHEmul::UByte::_0;
 				for (size_t i = 0; i < 8; i++)
-					if ((~_portB & (1 << i)) != 0x00)
+					if ((~(_portB & _joystick1Status) & (1 << i)) != 0x00)
 						dtA |= ~_rev_keyboardStatusMatrix [i].value (); // 1 if clicked...
 				_portA = (_outputRegA | ~_dataPortADir) /** What it should go to portA as internal configuration determines. */ & 
 					(~dtA & _joystick2Status) /** but affected by the keys and joystick switches pressed. */;
@@ -43,7 +43,7 @@ const MCHEmul::UByte& C64::CIA1Registers::readValue (size_t p) const
 				// @see above
 				unsigned char dtB = MCHEmul::UByte::_0;
 				for (size_t i = 0; i < 8; i++)
-					if ((~_portA & (1 << i)) != 0x00)
+					if ((~(_portA & _joystick2Status) & (1 << i)) != 0x00)
 						dtB |= ~_keyboardStatusMatrix [i].value ();  // 1 if clicked...
 				_portB = (_outputRegB | ~_dataPortBDir) & (~dtB & _joystick1Status);
 				result = MCHEmul::UByte (_portB);

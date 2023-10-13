@@ -67,8 +67,15 @@ namespace COMMODORE
 			e.g if a joystick is connected to the pin, when moving, the right switch is grounded and the mandatory value is 0. \n
 			In the other hand a keyboard matrix is not connected to anything, so the new values can not be forced. \n
 			When not forced: \n
-			The values at 1 of the port are maintained at the pins where the dataPortDir is in read (0) mode.
-			The values selected are pushed to the port at the pins where the dataPortDir is in write (1) mode.
+			The values at 1 of the port are maintained at the pins where the dataPortDir is in read (0) mode. \n
+			The values selected are pushed to the port at the pins where the dataPortDir is in write (1) mode. \n
+			The truth table is: \n
+			dc00	dc02 (0 = input; 1 output)	Port effect \n
+			0		0							1 See that the effect in the ouput is by default nothing, then Hi - level!
+			0		1							0 \n
+			1		0							1 See that the effect in the otput is by default nothing, then Hi - level!
+			1		1							1 \n
+			Port effect = !(!dc00 (_outputRegA) & dc02 (_dataPortADir)) = dc00 | !dc02 \n
 			The final value of the port is returned. \n
 			http://archive.6502.org/datasheets/mos_6526_cia_recreated.pdf
 			By default the value is not forced. */

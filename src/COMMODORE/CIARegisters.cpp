@@ -39,7 +39,7 @@ void COMMODORE::CIARegisters::setValue (size_t p, const MCHEmul::UByte& v)
 
 				// The value of the portA needs to be reset...
 				// If there were any previous value set in the portA, it will be overwritten...
-				setPortA (v, false);
+				setPortA (0xff, false);
 			}
 
 			break;
@@ -58,7 +58,7 @@ void COMMODORE::CIARegisters::setValue (size_t p, const MCHEmul::UByte& v)
 
 				// The value of the portB needs to be reset...
 				// If there were any previous value set in the portB, it will be overwritten...
-				setPortB (cV, false);
+				setPortB (0xff, false);
 			}
 
 			break;
@@ -68,7 +68,7 @@ void COMMODORE::CIARegisters::setValue (size_t p, const MCHEmul::UByte& v)
 			{
 				_dataPortADir = v.value ();
 
-				setPortA (MCHEmul::UByte (_outputRegA), false);
+				setPortA (0xff, false);
 			}
 
 			break;
@@ -78,7 +78,7 @@ void COMMODORE::CIARegisters::setValue (size_t p, const MCHEmul::UByte& v)
 			{
 				_dataPortBDir = v.value ();
 
-				setPortB (MCHEmul::UByte (_outputRegB), false);
+				setPortB (0xff, false);
 			}
 
 			break;
