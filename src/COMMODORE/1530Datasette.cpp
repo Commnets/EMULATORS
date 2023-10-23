@@ -7,9 +7,8 @@ COMMODORE::Datasette1530::Datasette1530 (unsigned int cps)
 		  { "Manufacturer", "Commodore Business Machines CBM" },
 		  { "Commands", "1:FORWARD, 2:REWIND, 4:STOP, 8:PLAY, 24:PLAY + RECORD, 32:EJECT(and clear data)" } }),
 	  _cyclesPerSecond (cps),
-	  _status (),
+	  _status (Status::_STOPPED),
 	  _clock ((unsigned int) ((float) _cyclesPerSecond / 3284.0f) /** 300 bauds in PAL, 311 in NTSC */),
-	  _readWritePhase (0),
 	  _dataCounter (0), 
 	  _elementCounter (0)
 {
