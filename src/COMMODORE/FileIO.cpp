@@ -7,37 +7,12 @@ MCHEmul::ExtendedDataMemoryBlocks COMMODORE::RawFileData::asMemoryBlocks () cons
 
 	result._name = std::string ("COMMTYNETS");
 	result._attributes = MCHEmul::Attributes ();
-
-	// Every block of data is separated from the next for a couple of 0s (meaning a leading in the file)...
-	// We have stabliched a maximum of 10...
-	unsigned int n0 = 0;
-	bool fBlk = true;
-	MCHEmul::DataMemoryBlocks mBlks;
-	const std::vector <MCHEmul::UByte>& _by = _bytes.bytes ();
-	std::vector <MCHEmul::UByte>::const_iterator i = _by.begin ();
-	std::vector <MCHEmul::UByte>::const_iterator j = i;
-	for (; i != _by.end (); i++)
-	{
-		if ((*i).value () == 0) n0++;
-		else n0 = 0;
-		
-		if (n0 >= 10 && !fBlk) // 5 0 all together and not at the beginning...
-		{
-			mBlks.emplace_back (MCHEmul::DataMemoryBlock 
-				(MCHEmul::Address (), std::vector <MCHEmul::UByte> (j, i - 10 /** The 10 already read. */)));
-
-			j = i - 10; // To save the rest...
-
-			n0 = 0;
-
-			fBlk = false;
-		}
+	for (auto& i : _blocks)
+	{ 
+		MCHEmul::DataMemoryBlock dMB (MCHEmul::Address (), i._bytes.bytes ()); 
+		dMB.setName (i._name); // No more attributes per block...
+		result._data.emplace_back (std::move (dMB));
 	}
-
-	mBlks.emplace_back (MCHEmul::DataMemoryBlock
-		(MCHEmul::Address (), std::vector <MCHEmul::UByte> (j, i)));
-
-	result._data = mBlks;
 
 	return (result);
 }
@@ -56,7 +31,7 @@ bool COMMODORE::RawFileTypeIO::canRead (const std::string& fN) const
 	f.seekg (0, std::ios::end);
 	std::streamoff s = f.tellg ();
 	f.close ();
-	if (s < (std::streamoff) (0x14 /** Header = 16 bytes with the signature + 4 bytes with the size. */))
+	if (s < (std::streamoff) (0x14 /** Header = 16 bytes with the signature + 4 bytes with the number of blocks. */))
 		return (false); // The length of the file is less than expected...
 
 	return (true);
@@ -74,30 +49,44 @@ MCHEmul::FileData* COMMODORE::RawFileTypeIO::readFile (const std::string& fN, bo
 	COMMODORE::RawFileData* tap = 
 		static_cast <COMMODORE::RawFileData*> (result); // To better manipulation...
 
-	f.seekg (0, std::ios::end);
-	std::streamoff size = f.tellg ();
-	f.seekg (0, std::ios::beg);
-
 	// The header
+	// First of all, the name of the data...
 	f.read (data, 16); data [16] = 0; // End of char...
 	tap -> _signature = std::string (data);
+	// The number of blocks the data is made up of...
 	f.read (data, 4);
-	tap -> _dataSize = (data [3] << 24) + (data [2] << 16) + (data [1] << 8) + data [0];
-	f.read (data, tap -> _dataSize); 
+	tap -> _dataBlocks = (unsigned int) 
+		(data [3] << 24) + (data [2] << 16) + (data [1] << 8) + data [0];
 
-	// The data...
-	unsigned int dSize = (unsigned int) tap -> _dataSize - 20;
-	if (dSize != 0)
+	// Now to read the blocks info...
+	for (unsigned int i = 0; i < tap -> _dataBlocks; i++)
 	{
-		char* romData = new char [dSize];
-		f.read (romData, dSize);
-		std::vector <MCHEmul::UByte> romBytes;
-		for (size_t i = 0; i < dSize; romBytes.emplace_back (romData [i++]));
-		tap -> _bytes = MCHEmul::UBytes (romBytes);
-		delete [] romData;
+		COMMODORE::RawFileData::Block dB;
+
+		// The header of the block
+		// First of all, the size of this block
+		f.read (data, 4);
+		dB._dataSize = (unsigned int)
+			((data [3] << 24) + (data [2] << 16) + (data [1] << 8) + data [0]);
+		
+		// ..the name of the block, made up of 16 chars...
+		f.read (data, 16); data [16] = 0; // End of char...
+		dB._name = std::string (data);
+
+		// ...and the data
+		if (dB._dataSize > 0)
+		{
+			char* romData = new char [(size_t) dB._dataSize];
+			f.read (romData, (std::streamsize) dB._dataSize);
+			std::vector <MCHEmul::UByte> romBytes;
+			for (size_t j = 0; j < (size_t) dB._dataSize; 
+				romBytes.emplace_back (romData [j++]));
+			dB._bytes = MCHEmul::UBytes (romBytes);
+			delete [] romData;
+		}
+
+		tap -> _blocks.emplace_back (std::move (dB));
 	}
-	else
-		tap -> _bytes = { };
 
 	f.close ();
 
@@ -125,19 +114,38 @@ bool COMMODORE::RawFileTypeIO::writeFile (MCHEmul::FileData* fD, const std::stri
 	for (; i < 16; data [i++] = 0);
 	f.write (data, 16);
 
-	// The data size
-	data [3] = (char) ((tap -> _dataSize & 0xff000000) >> 24);
-	data [2] = (char) ((tap -> _dataSize & 0x00ff0000) >> 16);
-	data [1] = (char) ((tap -> _dataSize & 0x0000ff00) >> 8);
-	data [0] = (char) ((tap -> _dataSize & 0x000000ff));
+	// The number of blocks...
+	data [3] = (char) ((tap -> _dataBlocks & 0xff000000) >> 24);
+	data [2] = (char) ((tap -> _dataBlocks & 0x00ff0000) >> 16);
+	data [1] = (char) ((tap -> _dataBlocks & 0x0000ff00) >> 8);
+	data [0] = (char)  (tap -> _dataBlocks & 0x000000ff);
 	f.write (data, 4);
 
-	// The data
-	char* prgData = new char [tap -> _dataSize];
-	for (size_t i = 0; i < tap -> _dataSize; i++)
-		prgData [i] = tap -> _bytes.bytes ()[i].value ();
-	f.write (prgData, tap -> _dataSize);
-	delete [] prgData;
+	// Every block...
+	for (auto& i : tap -> _blocks)
+	{
+		// The size of the block in bytes
+		// including 16 positions with the name of the block...
+		data [3] = (char) ((i._dataSize & 0xff000000) >> 24);
+		data [2] = (char) ((i._dataSize & 0x00ff0000) >> 16);
+		data [1] = (char) ((i._dataSize & 0x0000ff00) >> 8);
+		data [0] = (char)  (i._dataSize & 0x000000ff);
+		f.write (data, 4);
+
+		// ...the name of the block...
+		size_t j = 0;
+		for (; j < i._name.size () && j < 15; j++)
+			data [j] = i._name [j];
+		for (; j < 16; data [j++] = 0);
+		f.write (data, 16);
+
+		// ...and finally the block data...
+		char* prgData = new char [(size_t) i._dataSize];
+		for (size_t j = 0; j < (size_t) i._dataSize; j++)
+			prgData [j] = i._bytes.bytes ()[j].value ();
+		f.write (prgData, (std::streamsize) i._dataSize);
+		delete [] prgData;
+	}
 
 	f.close ();
 
@@ -151,10 +159,10 @@ MCHEmul::ExtendedDataMemoryBlocks COMMODORE::TAPFileData::asMemoryBlocks() const
 
 	result._name = _signature;
 	MCHEmul::Attributes attrs;
-	attrs ["VERSION"] = std::to_string ((unsigned int) _version);
-	attrs ["CVERSION"] = std::to_string ((unsigned int) _computerVersion);
-	attrs ["VVERSION"] = std::to_string ((unsigned int) _videoVersion);
-	result._attributes = std::move (attrs); // It is not longer valid...
+	attrs ["VERSION"]	= std::to_string ((unsigned int) _version);
+	attrs ["CVERSION"]	= std::to_string ((unsigned int) _computerVersion);
+	attrs ["VVERSION"]	= std::to_string ((unsigned int) _videoVersion);
+	result._attributes	= std::move (attrs); // It is not longer valid...
 	result._data = { MCHEmul::DataMemoryBlock (MCHEmul::Address (), _bytes.bytes ()) }; // Just the data...
 
 	return (result);
@@ -172,7 +180,7 @@ bool COMMODORE::TAPFileTypeIO::canRead (const std::string& fN) const
 		return (false); // Possible to be open...
 
 	f.seekg (0, std::ios::end);
-	std::streamoff s = f.tellg ();
+	std::streamoff s = (std::streamoff) f.tellg ();
 	f.close ();
 	if (s < (std::streamoff) (0x14 /** Header. */ + 0x1 /** At least one byte. */))
 		return (false); // The length of the file is less than expected...
@@ -192,10 +200,6 @@ MCHEmul::FileData* COMMODORE::TAPFileTypeIO::readFile (const std::string& fN, bo
 	COMMODORE::TAPFileData* tap = 
 		static_cast <COMMODORE::TAPFileData*> (result); // To better manipulation...
 
-	f.seekg (0, std::ios::end);
-	std::streamoff size = f.tellg ();
-	f.seekg (0, std::ios::beg);
-
 	// The header
 	f.read (data, 12); data [12] = 0; // End of char...
 	tap -> _signature = std::string (data);
@@ -207,17 +211,19 @@ MCHEmul::FileData* COMMODORE::TAPFileTypeIO::readFile (const std::string& fN, bo
 	tap -> _videoVersion = (COMMODORE::TAPFileData::VideoVersion) data [0];
 	f.read (data, 1); // 1 byte free for future expansion...
 	f.read (data, 4);
-	tap -> _dataSize = (data [3] << 24) + (data [2] << 16) + (data [1] << 8) + data [0];
-	f.read (data, tap -> _dataSize); 
+	tap -> _dataSize = (unsigned int)
+		((data [3] << 24) + (data [2] << 16) + (data [1] << 8) + data [0]);
+	f.read (data, (std::streamsize) tap -> _dataSize); 
 
 	// The data...
-	unsigned int dSize = (unsigned int) tap -> _dataSize - 20;
+	unsigned int dSize = tap -> _dataSize - 20;
 	if (dSize != 0)
 	{
-		char* romData = new char [dSize];
-		f.read (romData, dSize);
+		char* romData = new char [(size_t) dSize];
+		f.read (romData, (std::streamsize) dSize);
 		std::vector <MCHEmul::UByte> romBytes;
-		for (size_t i = 0; i < dSize; romBytes.emplace_back (romData [i++]));
+		for (size_t i = 0; i < (size_t) dSize; 
+			romBytes.emplace_back (romData [i++]));
 		tap -> _bytes = MCHEmul::UBytes (romBytes);
 		delete [] romData;
 	}
@@ -272,10 +278,10 @@ bool COMMODORE::TAPFileTypeIO::writeFile (MCHEmul::FileData* fD, const std::stri
 	f.write (data, 4);
 
 	// The data
-	char* prgData = new char [tap -> _dataSize];
-	for (size_t i = 0; i < tap -> _dataSize; i++)
+	char* prgData = new char [(size_t) tap -> _dataSize];
+	for (size_t i = 0; i < (size_t) tap -> _dataSize; i++)
 		prgData [i] = tap -> _bytes.bytes ()[i].value ();
-	f.write (prgData, tap -> _dataSize);
+	f.write (prgData, (std::streamsize) tap -> _dataSize);
 	delete [] prgData;
 
 	f.close ();
@@ -303,7 +309,7 @@ bool COMMODORE::T64FileTypeIO::canRead (const std::string& fN) const
 		return (false); // Possible to be open...
 
 	f.seekg (0, std::ios::end);
-	std::streamoff s = f.tellg ();
+	std::streamoff s = (std::streamoff) f.tellg ();
 	f.close ();
 	if (s < (std::streamoff) (0x64 /** Header. */ + 0x32 /** Tap Header. */ + 0x1 /** At least one byte. */))
 		return (false); // The length of the file is less than expected...
@@ -324,7 +330,7 @@ MCHEmul::FileData* COMMODORE::T64FileTypeIO::readFile (const std::string& fN, bo
 		static_cast <COMMODORE::T64FileData*> (result); // To better manipulation...
 
 	f.seekg (0, std::ios::end);
-	std::streamoff size = f.tellg ();
+	std::streamoff size = (std::streamoff) f.tellg ();
 	f.seekg (0, std::ios::beg);
 
 	// The header
@@ -356,7 +362,8 @@ MCHEmul::FileData* COMMODORE::T64FileTypeIO::readFile (const std::string& fN, bo
 		fR._endLoadAddress = MCHEmul::Address ({ data [0], data [1] }, true);
 		f.read (data, 2); // 2 bytes free...
 		f.read (data, 4);
-		fR._offset = (data [3] << 24) + (data [2] << 16) + (data [1] << 8) + data [0];
+		fR._offset = (unsigned int) 
+			((data [3] << 24) + (data [2] << 16) + (data [1] << 8) + data [0]);
 		f.read (data, 4); // 4 bytes free...
 		f.read (data, 24); data [24] = 0;
 		fR._fileName = std::string (data);
@@ -365,9 +372,10 @@ MCHEmul::FileData* COMMODORE::T64FileTypeIO::readFile (const std::string& fN, bo
 	}
 
 	// The data...
-	unsigned int dSize = (unsigned int) size - 64 - (32 * rT64 -> _tapeRecord._entries);
+	unsigned int dSize = (unsigned int) size - 
+		64 - (32 * (unsigned int) rT64 -> _tapeRecord._entries);
 	char* romData = new char [dSize];
-	f.read (romData, dSize);
+	f.read (romData, (std::streamsize) dSize);
 	std::vector <MCHEmul::UByte> romBytes;
 	for (size_t i = 0; i < dSize; romBytes.emplace_back (romData [i++]));
 	rT64 -> _content = MCHEmul::UBytes (romBytes);
@@ -384,10 +392,10 @@ MCHEmul::ExtendedDataMemoryBlocks COMMODORE::CRTFileData::asMemoryBlocks () cons
 	MCHEmul::ExtendedDataMemoryBlocks result;
 
 	result._name = _name;
-	result._attributes ["TYPE"] = std::to_string (_cartridgeType);
-	result._attributes ["VERSION"] = std::to_string (_cartridgeVersion);
-	result._attributes ["_GAME"] = _GAMEActive ? "YES" : "NO";
-	result._attributes ["_EXROM"] = _EXROMActive ? "YES" : "NO";
+	result._attributes ["TYPE"]		= std::to_string (_cartridgeType);
+	result._attributes ["VERSION"]	= std::to_string (_cartridgeVersion);
+	result._attributes ["_GAME"]	= _GAMEActive ? "YES" : "NO";
+	result._attributes ["_EXROM"]	= _EXROMActive ? "YES" : "NO";
 	for (const auto& i : _chipsData)
 	{
 		MCHEmul::DataMemoryBlock mB (i._startingLoadAddress, i._content.bytes ());
@@ -410,7 +418,7 @@ bool COMMODORE::CRTFileTypeIO::canRead (const std::string& fN) const
 		return (false); // Possible to be open...
 
 	f.seekg (0, std::ios::end);
-	std::streamoff s = f.tellg ();
+	std::streamoff s = (std::streamoff) f.tellg ();
 	f.close ();
 	if (s < (std::streamoff) (0x40 /** Header. */ + 0x10 /** Chip Header. */ + 0x1000 /** 4k = Minimum data length. */))
 		return (false); // The length of the file is less than expected...
@@ -434,11 +442,12 @@ MCHEmul::FileData* COMMODORE::CRTFileTypeIO::readFile (const std::string& fN, bo
 	f.read (data, 16); data [16] = 0; // End of char...
 	rCRT -> _signature = std::string (data);
 	f.read (data, 4);
-	rCRT -> _headerSize = (data [0] << 24) + (data [1] << 16) + (data [2] << 8) + data [3];
+	rCRT -> _headerSize = 
+		(unsigned int) ((data [0] << 24) + (data [1] << 16) + (data [2] << 8) + data [3]);
 	f.read (data, 2);
-	rCRT -> _cartridgeVersion = (data [0] << 8) + data [1];
+	rCRT -> _cartridgeVersion = (unsigned short) ((data [0] << 8) + data [1]);
 	f.read (data, 2);
-	rCRT -> _cartridgeType = (data [0] << 8) + data [1];
+	rCRT -> _cartridgeType = (unsigned short) ((data [0] << 8) + data [1]);
 	f.read (data, 1);
 	rCRT -> _EXROMActive = (data [0] == 0) ? false : true;  
 	f.read (data, 1);
@@ -457,21 +466,23 @@ MCHEmul::FileData* COMMODORE::CRTFileTypeIO::readFile (const std::string& fN, bo
 		if (f.eof ()) continue;
 		cD._signature = std::string (data);
 		f.read (data, 4);
-		cD._packageSize = (data [0] << 24) + (data [1] << 16) + (data [2] << 8) + data [3];
+		cD._packageSize = (unsigned int) 
+			((data [0] << 24) + (data [1] << 16) + (data [2] << 8) + data [3]);
 		f.read (data, 2);
-		cD._type = (data [0] << 8) + data [1];
+		cD._type = (unsigned short) ((data [0] << 8) + data [1]);
 		f.read (data, 2);
-		cD._bankNumber = (data [0] << 8) + data [1];
+		cD._bankNumber = (unsigned short) ((data [0] << 8) + data [1]);
 		f.read (data, 2);
 		cD._startingLoadAddress = MCHEmul::Address ({ data [0], data [1] }, true);
 		f.read (data, 2);
-		cD._romSize = (data [0] << 8) + data [1];
+		cD._romSize = (unsigned short) ((data [0] << 8) + data [1]);
 		
 		// The data...
-		char* romData = new char [cD._romSize];
-		f.read (romData, cD._romSize);
+		char* romData = new char [(size_t) cD._romSize];
+		f.read (romData, (std::streamsize) cD._romSize);
 		std::vector <MCHEmul::UByte> romBytes;
-		for (size_t i = 0; i < cD._romSize; i++) romBytes.emplace_back (romData [i]);
+		for (size_t i = 0; i < (size_t) cD._romSize; 
+			romBytes.emplace_back (romData [i++]));
 		cD._content = MCHEmul::UBytes (romBytes);
 		delete [] romData;
 

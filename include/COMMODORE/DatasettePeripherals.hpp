@@ -79,8 +79,8 @@ namespace COMMODORE
 			The methods are the opposite ones to the public ones. */
 		bool motorOff () const
 							{ return (_motorOff); }
-		void setRead (bool v)
-							{ _valueRead = v; _readChangeValueRequest = true; }
+		/** The notification that something has changed only happens in the transition from 0 to 1. */
+		inline void setRead (bool v);
 		bool valueToWrite () const
 							{ return (_valueToWrite); }
 		void setNoKeyPressed (bool n)
@@ -88,7 +88,7 @@ namespace COMMODORE
 		
 		/** To clear the data. */
 		void clearData ()
-							{ _data = { }; }
+							{ _data = { }; _data._name = "COMMTYNETS"; }
 
 		protected:
 		bool _valueRead, _valueToWrite;
@@ -117,6 +117,16 @@ namespace COMMODORE
 		virtual bool simulate (MCHEmul::CPU* cpu) override
 							{ return (true); } // Always right but nothing is done with the variations of the internal data...
 	};
+
+	// ---
+	inline void DatasettePeripheral::setRead (bool v)
+	{ 
+		// It is detected when the signal moves from 0 to 1...
+		// Depeding how long the pulse took...
+		if (v && !_valueRead) 
+			_readChangeValueRequest = true;
+		_valueRead = v; 
+	}
 }
 
 #endif

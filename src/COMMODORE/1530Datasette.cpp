@@ -1,13 +1,14 @@
 #include <COMMODORE/1530Datasette.hpp>
 
 // ---
-COMMODORE::Datasette1530::Datasette1530 ()
+COMMODORE::Datasette1530::Datasette1530 (unsigned int cps)
 	: COMMODORE::DatasettePeripheral (_ID, 
 		{ { "Name", "Commodore 1530 (CN2)" },
 		  { "Manufacturer", "Commodore Business Machines CBM" },
 		  { "Commands", "1:FORWARD, 2:REWIND, 4:STOP, 8:PLAY, 24:PLAY + RECORD, 32:EJECT(and clear data)" } }),
+	  _cyclesPerSecond (cps),
 	  _status (),
-	  _clock (300), // 300 baudios, bits per second...
+	  _clock ((unsigned int) ((float) _cyclesPerSecond / 3284.0f) /** 300 bauds in PAL, 311 in NTSC */),
 	  _readWritePhase (0),
 	  _dataCounter (0), 
 	  _elementCounter (0)
@@ -35,33 +36,43 @@ bool COMMODORE::Datasette1530::executeCommand (int id, const MCHEmul::Strings& p
 	{
 		// FORWARD...
 		case 1:
-		// REWIND...
-		case 2:
-		// STOPPED...
-		case 4:
 			{
-				// When FORWARD...
-				if (id == 1)
-				{ 
-					// ...move the pointer to the next element in the list...
-					if (++_dataCounter > _data._data.size ())
-						_dataCounter = 0; // ...or to the first one if there is none else to point to...
-				}
-				// When REWIND...
-				if (id == 2)
-				{
-					// ...move the pointer to the previous element in the list...
-					if (--_dataCounter > _data._data.size ()) // it is an unsigned short...
-						_dataCounter = _data._data.size (); //...or to after the last one if there is none else to point to...
-				}
+				// ...move the pointer to the next element in the list...
+				if (++_dataCounter > _data._data.size ())
+					_dataCounter = 0; // ...or to the first one if there is none else to point to...
 
-				// Any other curcunstance nothing to do...
-				// But always stopped...
+				// Always stopped...
 				_status = Status::_STOPPED;
 
 				// No keys is supossed to be pressed...
-				// if the user wanted to move to the next / previous element ç
+				// if the user wanted to move to the next / previous element
 				// the same command would have to be executed...
+				setNoKeyPressed (true);
+			}
+
+			break;
+
+		// REWIND...
+		case 2:
+			{
+				// ...move the pointer to the previous element in the list...
+				if (--_dataCounter > _data._data.size ()) // it is an unsigned short...
+					_dataCounter = _data._data.size (); //...or to after the last one if there is none else to point to...
+
+				_status = Status::_STOPPED;
+
+				setNoKeyPressed (true);
+			}
+
+			break;
+
+		// STOPPED...
+		case 4:
+			{
+				if (_status == Status::_SAVING)
+					_dataCounter++;
+
+				_status = Status::_STOPPED;
 
 				setNoKeyPressed (true);
 			}
@@ -70,28 +81,39 @@ bool COMMODORE::Datasette1530::executeCommand (int id, const MCHEmul::Strings& p
 
 		// PLAY...
 		case 8:
+			{
+				if (_status == Status::_STOPPED &&
+					_dataCounter < _data._data.size () /** Only possible when the data is not at the end. */)
+				{
+					_elementCounter = 0;
+
+					_status = Status::_READING;
+
+					setNoKeyPressed (false);
+				}
+			}
+
+			break;
+
 		// RECORD...
 		case 24:
 			{
 				// The change in the status is only possible when stopped previously...
 				if (_status == Status::_STOPPED)
 				{
-					_status = (id == 8) ? Status::_READING : Status::_SAVING;
-
 					_elementCounter = 0;
 
+					_status = Status::_SAVING;
+
+					_clock = MCHEmul::Clock (300 /** bauds. */);
+
+					// If the counter is pointing at the end, a null data element is added...
+					if (_dataCounter >= _data._data.size ())
+						_data._data.push_back (MCHEmul::DataMemoryBlock ());
+					// ...and, any case, the element affected is fully clearead...
+					_data._data [_dataCounter].clear ();
+
 					setNoKeyPressed (false);
-
-					// If saving... 
-					if (id == 24)
-					{
-						// ... but the counter is pointing at the end, a null data element is added...
-						if (_dataCounter >= _data._data.size ())
-							_data._data.push_back (MCHEmul::DataMemoryBlock ());
-
-						// ...and that element is fully clearead...
-						_data._data [_dataCounter].clear ();
-					}
 				}
 			}
 
@@ -151,6 +173,17 @@ bool COMMODORE::Datasette1530::simulate (MCHEmul::CPU* cpu)
 }
 
 // ---
+bool COMMODORE::Datasette1530::connectData (MCHEmul::FileData* dt)
+{
+	bool result = COMMODORE::DatasettePeripheral::connectData (dt);
+
+	if (result)
+		_dataCounter = 0; // at the beginning...
+
+	return (result);
+}
+
+// ---
 MCHEmul::InfoStructure COMMODORE::Datasette1530::getInfoStructure () const
 {
 	MCHEmul::InfoStructure result = std::move (COMMODORE::DatasettePeripheral::getInfoStructure ());
@@ -160,16 +193,3 @@ MCHEmul::InfoStructure COMMODORE::Datasette1530::getInfoStructure () const
 	return (result);
 }
 
-// ---
-bool COMMODORE::Datasette1530::getNextDataBit ()
-{
-	return (_data._data [_dataCounter].bytes ()[_elementCounter++] == MCHEmul::UByte::_1);
-}
-
-// ---
-void COMMODORE::Datasette1530::storeNextDataBit (bool s)
-{
-	_data._data [_dataCounter].addByte (s ? MCHEmul::UByte::_1 : MCHEmul::UByte::_0);
-
-	_elementCounter++;
-}

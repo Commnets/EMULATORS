@@ -135,10 +135,12 @@ void C64::CIA1::processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifier* n)
 			break;
 
 		case C64::DatasetteIOPort::_READ:
-			// Activate the interrupt as a value has been received...
-			// It doesn't matter whether the value is 1 or 0, the interrupt is always activated...
-			_CIA1Registers -> setValue (0x0d, 
-				_CIA1Registers -> readValue (0x0d) & 0xef | 0x10 /** Activate bit 4 = FLAG interrupt. */);
+			// When this signal is received from the casette...
+			// ...it means that a variation from negative to positive in the wave cyle has happened.
+			// Whether it is a 0 or a 1 will depend on the time lasted from the previous one!
+			// And it is something that the routines must interpret.
+			// So it is not important the value notified...
+			_CIA1Registers -> setFlagLineInterruptEnabled (true);
 			break;
 
 		default:

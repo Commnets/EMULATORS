@@ -28,6 +28,8 @@ bool COMMODORE::DatasettePeripheral::initialize ()
 	_motorOff = true;
 	_noKeyPressed = true;
 
+	clearData ();
+
 	// Notice that the data is not initialized...
 	// After being loaded it could be also usefull to keep it here...
 
@@ -59,20 +61,19 @@ MCHEmul::FileData* COMMODORE::DatasettePeripheral::retrieveData () const
 	MCHEmul::FileData* result = new COMMODORE::RawFileData; 
 	COMMODORE::RawFileData* tap = dynamic_cast <COMMODORE::RawFileData*> (result);
 
-	// Later, when saving if any, the size will be limited...
+	// Later, when saving if any, the size in the name will be limited...
 	tap -> _signature = _data._name;
-
-	unsigned int dS = 0;
-	std::vector <MCHEmul::UByte> _bytes;
+	// ..the number of blocks...
+	tap -> _dataBlocks = (unsigned int) _data._data.size ();
+	// ...and the data...
 	for (const auto& i : _data._data)
 	{
-		dS += (unsigned int) i.size ();
-
-		_bytes.insert (_bytes.end (), i.bytes ().begin (), i.bytes ().end ());
+		COMMODORE::RawFileData::Block dB;
+		dB._name = "";
+		dB._dataSize = (unsigned int) i.size ();
+		dB._bytes = i.bytes ();
+		tap -> _blocks.emplace_back (std::move (dB));
 	}
-
-	tap -> _dataSize = dS;
-	tap -> _bytes = std::move (_bytes); // It is not longer used...
 
 	return (result);
 }

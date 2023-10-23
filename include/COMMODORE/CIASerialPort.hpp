@@ -53,20 +53,21 @@ namespace COMMODORE
 		/** The value is always set when there is an intention to transmit it. ºn
 			This is done within the method simulate. \n
 			The value can be only set when the port has been configured for ouput purpouses. */
-		void setValue (const MCHEmul::UByte& v)
-							{ _value = v;
-							  if (_status == Status::_SAVING)
-								{ _bufferValue = v; _toTransmit = true; _numberBitsTransmitted = 0; } }
+		inline void setValue (const MCHEmul::UByte& v);
 		const MCHEmul::UByte& value () const
 							{ return (_value); }
 
 		/** When the CNTsignal is received 
 			it is needed to determine whether a raising edge is generated or not and also a pulse.
 			The first will be used in reading operations while the second will be used on reading ones. */
+		bool CNTSignal () const
+							{ return (_CNTPin); }
 		void setCNTSignal (bool v)
 							{ _CNTRaisingEdge = !_CNTPin && (v);
 							  _CNTPulse = _CNTPin && !v; 
 							  _CNTPin = v; }
+		bool SPSignal () const
+							{ return (_SPPin); }
 		void setSPSignal (bool b)
 							{ _SPPin = b; }
 
@@ -135,6 +136,19 @@ namespace COMMODORE
 		MCHEmul::UByte _bufferValue;
 		mutable bool _CNTPulse, _CNTRaisingEdge;
 	};
+
+	// ---
+	inline void CIASerialPort::setValue (const MCHEmul::UByte& v)
+	{ 
+		// The official register is loaded with the data...
+		// but also the buffer that it is used to receive information...
+		_value = _bufferValue = v;
+
+		// Now it is ready to transmit info if needed...
+		_toTransmit = true; 
+		// ...and the number of bits transmitted is set back to 0
+		_numberBitsTransmitted = 0; 
+	}
 
 	// ---
 	inline bool CIASerialPort::addBit (bool b)

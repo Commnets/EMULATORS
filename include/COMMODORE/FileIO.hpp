@@ -27,20 +27,34 @@ namespace COMMODORE
 		bytes with tha data (that can be empty). */
 	struct RawFileData final : public MCHEmul::FileData
 	{
+		struct Block
+		{
+			Block ()
+				: _name (""),
+				  _dataSize (0),
+				  _bytes ()
+							{ }
+
+			std::string _name;
+			unsigned int _dataSize;
+			MCHEmul::UBytes _bytes;
+		};
+
 		RawFileData ()
 			: _signature (""),
-			  _dataSize (0),
-			  _bytes ()
+			  _dataBlocks (0),
+			  _blocks ()
 							{ }
 
 		virtual MCHEmul::ExtendedDataMemoryBlocks asMemoryBlocks () const override;
 
 		virtual std::string asString () const override
-							{ return (_signature + "(Size: " + std::to_string (_dataSize)); }
+							{ return (_signature + 
+								"(Blocks: " + std::to_string (_blocks.size ()) + ")"); }
 
 		std::string _signature;
-		unsigned int _dataSize;
-		MCHEmul::UBytes _bytes;
+		unsigned int _dataBlocks;
+		std::vector <Block> _blocks;
 	};
 
 	/** To read/write raw data. \n

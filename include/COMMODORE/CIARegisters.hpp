@@ -202,7 +202,7 @@ namespace COMMODORE
 		return (_timerA	-> launchInterruption () ||
 				_timerB -> launchInterruption () ||
 				_clock  -> launchInterruption () ||
-				_serialPort -> interruptRequested () ||
+				_serialPort -> launchInterruption () ||
 				launchFlagLineInterruption ());
 	}
 
@@ -212,10 +212,9 @@ namespace COMMODORE
 		return ((_timerA -> launchInterruption () ? 1 : 0) +
 				(_timerB -> launchInterruption () ? 2 : 0) +
 				(_clock  -> launchInterruption () ? 4 : 0) +
-				(_serialPort -> interruptRequested () ? 8 : 0) +
+				(_serialPort -> launchInterruption () ? 8 : 0) +
 				(launchFlagLineInterruption () ? 16 : 0));
 	}
-
 }
 
 #endif
