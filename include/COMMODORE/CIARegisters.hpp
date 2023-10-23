@@ -118,7 +118,6 @@ namespace COMMODORE
 		/** Same than the previous method but without modifying the value. */
 		bool peekFlagLineInterruptRequested () const
 							{ return (_flagLineInterruptRequested); }
-
 		void setFlagLineInterruptRequested (bool a)
 							{ _flagLineInterruptRequested = a; }
 		/** To know whether a interruption related with the FLAG line has or not to be launched. */

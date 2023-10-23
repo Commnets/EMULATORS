@@ -174,7 +174,7 @@ Data:@DATA@
 #---
 ;CDATASETTE
 Id:@ID@
-@ATTRS?{key=YES,equal:=,empty=no attributes}\n@
+@ATTRS?{key=YES,equal=:,empty=no attributes}\n@
 Keys Pressed:@KEYS@
 Motor on:@MOTOR@
 #---

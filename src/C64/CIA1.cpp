@@ -140,7 +140,7 @@ void C64::CIA1::processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifier* n)
 			// Whether it is a 0 or a 1 will depend on the time lasted from the previous one!
 			// And it is something that the routines must interpret.
 			// So it is not important the value notified...
-			_CIA1Registers -> setFlagLineInterruptEnabled (true);
+			_CIA1Registers -> setFlagLineInterruptRequested (true);
 			break;
 
 		default:

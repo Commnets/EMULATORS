@@ -155,12 +155,31 @@ bool COMMODORE::Datasette1530::simulate (MCHEmul::CPU* cpu)
 		if (_status == Status::_READING || 
 			_status == Status::_SAVING) // It shouldn't happen in other circunstance, but just to be sure...
 		{
+			// Only works at the speed of the tap...
 			if (_clock.tooQuick ())
 				_clock.countCycles (0);
 			else
 			{
-				if (_status == Status::_READING) 
-					setRead (getNextDataBit ());
+				// When reading is allowed...
+				// makes only sense when there is still data to read in the loaded file...
+				if (_status == Status::_READING)
+				{ 
+					bool r = false;
+					if (_dataCounter < _data._data.size ())
+					{
+						r = true;
+						if (_elementCounter >= _data._data [_dataCounter].bytes ().size ())
+						{
+							_elementCounter = 0;
+
+							if (++_dataCounter >= _data._data.size ())
+								r = false;
+						}
+					}
+
+					if (r)
+						setRead (getNextDataBit ());
+				}
 				else 
 					storeNextDataBit (_valueToWrite);
 
