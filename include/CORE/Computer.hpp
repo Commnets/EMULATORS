@@ -43,11 +43,80 @@ namespace MCHEmul
 		static const unsigned int _ACTIONCONTINUE = 2; // Menaing to continue the execution until any other stop action is found...
 		static const unsigned int _ACTIONNEXT = 3; // Meaning to execute just only the next instruction...
 
-		using MapOfActions = std::map <MCHEmul::Address, unsigned int>;
-
 		/** The types of status that a computer can have. */
 		static const unsigned int _STATUSRUNNING = 0;
 		static const unsigned int _STATUSSTOPPED = 1;
+
+		/** The computer might execute different actions when reaching a specific position. */
+		class Action
+		{
+			public:
+			// No default constructors are needed...
+			Action (unsigned int id)
+				: _id (id)
+							{ }
+
+			unsigned int id () const
+							{ return (_id); }
+
+			virtual ~Action () 
+							{ /** Just in case an extension is needed. */ }
+
+			/** Returns true when the next CPU cycle has to be executed after this action,
+				and false in any other circusntance. */
+			virtual bool execute (Computer*) = 0;
+
+			protected:
+			unsigned int _id;
+		};
+
+		/** No action at all. 
+			Usually it is not needed. It is defined just in case. */
+		class NoAction final : public Action
+		{
+			public:
+			NoAction ()
+				: Action (_ACTIONNOTHING)
+							{ }
+			
+			virtual inline bool execute (Computer*) override;
+		};
+
+		/** A clear and simple action is just to stop the execution. */
+		class StopAction final : public Action
+		{
+			public:
+			StopAction ()
+				: Action (_ACTIONSTOP)
+							{ }
+
+			virtual inline bool execute (Computer* c) override;
+		};
+
+		/** In the opposite side, the action is to continue with the execution. */
+		class ContinueAction final : public Action
+		{
+			public:
+			ContinueAction ()
+				: Action (_ACTIONCONTINUE)
+							{ }
+
+			virtual inline bool execute (Computer* c) override;
+		};
+
+		/** Move to the next instrction. */
+		class NextCommandAction final : public Action
+		{
+			public:
+			NextCommandAction ()
+				: Action (_ACTIONNEXT)
+							{ }
+
+			virtual inline bool execute (Computer* c) override;
+		};
+
+		using TemplateOfActions = std::map <unsigned int, Action*>;
+		using MapOfActions = std::map <MCHEmul::Address, unsigned int>;
 
 		/** The computer owns the different elements.
 			The devices mandatory are the screen and the InputOSDevice. 
@@ -297,17 +366,18 @@ namespace MCHEmul
 		virtual InfoStructure getInfoStructure () const override;
 
 		protected:
-		/** In the method runComputerCycle, before executing the cycle related to the computer (cpu + chips), this method is invoked. \n
-			The parameters passed through are: "lA" is the last action executed (if any), 
-			"at" is the action associated to the point where the program counter is now at, 
-			and "a" is the action parameter received by the method itself. \n
-			A potential "like a" parameter received through the communication system (if active and if any) is 
-			also taken into account. However the parameter "a" received by the method has priority.
-			With these three/four variables this method should do whatever is requires and decide whether execute the 
-			cycle of the computer (true) or not (return false). \n
-			It can be overloaded for specific pruposes. \n
+		/** In the method runComputerCycle, 
+			before executing the cycle related to the computer (cpu + chips), this method is invoked
+			just in case an action should be executed. \n
+			The method receive the id of an action to be executed. \n
+			The default behaviour:
+			A parameter received through the communication system (if active and if any) is 
+			taken into account. However the " received by the method has priority over it.
+			And if the parameter received is _ACTIONNOTHING and also the one received throught comms
+			it will be executed the one defined at PC (if any). \n
+			It can be overloaded for specific purposes. \n
 			During the execution of the method the firt parameter (lastAction) can be modified. */
-		virtual bool executeAction (unsigned int& lA, unsigned int at, unsigned int a);
+		virtual bool executeActionAtPC (unsigned int a);
 
 		protected:
 		CPU* _cpu;
@@ -315,6 +385,7 @@ namespace MCHEmul
 		Memory* _memory;
 		IODevices _devices;
 		const Attributes _attributes = { }; // Maybe modified at construction level
+		TemplateOfActions _templateActions; // The templates are used to acclerate what to do!
 		MapOfActions _actionsAt;
 		unsigned int _status;
 		unsigned int _actionForNextCycle; // The action to be executed in the next cycle...
@@ -349,7 +420,55 @@ namespace MCHEmul
 		unsigned int _lastAction;
 		mutable bool _stabilized;
 		mutable unsigned short _currentStabilizationLoops;
+		std::vector <Action*> _templateListActions; // The same the template of actions but in a vector to speed up access...
 	};
+
+	// ---
+	bool Computer::NoAction::execute (Computer* c)
+	{
+		// What to do now will depend on was the last action was...
+		switch (c -> _lastAction)
+		{
+			case _ACTIONNOTHING:
+				// The status doesn't change as there is nothing else to do...
+				break;
+
+			case _ACTIONSTOP:
+			case _ACTIONNEXT:
+				c -> _status = _STATUSSTOPPED;
+				break;
+
+			case _ACTIONCONTINUE:
+				c -> _status = _STATUSRUNNING;
+				break;
+		}
+
+		return (c -> _status == _STATUSRUNNING);
+	}
+
+	// ---
+	bool Computer::StopAction::execute (Computer* c)
+	{
+		c -> _status = _STATUSSTOPPED;
+
+		return (false);
+	}
+
+	// ---
+	bool Computer::ContinueAction::execute (Computer* c)
+	{
+		c -> _status = _STATUSRUNNING;
+
+		return (true);
+	}
+
+	// ---
+	bool Computer::NextCommandAction::execute (Computer* c)
+	{
+		c -> _status = _STATUSRUNNING;
+
+		return (true);
+	}
 
 	// ---
 	inline bool Computer::activateDeepDebug (const std::string& fN, const std::vector <int>& cId, bool a)

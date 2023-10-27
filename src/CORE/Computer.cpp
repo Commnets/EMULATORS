@@ -10,7 +10,7 @@ MCHEmul::Computer::Computer (MCHEmul::CPU* cpu, const MCHEmul::Chips& c,
 		const MCHEmul::Attributes& attrs, unsigned short sL)
 	: MCHEmul::InfoClass ("Computer"),
 	  _cpu (cpu), _chips (c), _memory (m), _devices (d), _attributes (attrs), 
-	  _actionsAt (), _status (_STATUSRUNNING), _actionForNextCycle (_ACTIONNOTHING),
+	  _templateActions (), _actionsAt (), _status (_STATUSRUNNING), _actionForNextCycle (_ACTIONNOTHING),
 	  _deepDebug (), // No active at all...
 	  _exit (false), _restartAfterExit (false), _restartLevel (0), // Meaning full!
 	  _debugLevel (MCHEmul::_DEBUGNOTHING),
@@ -53,6 +53,16 @@ MCHEmul::Computer::Computer (MCHEmul::CPU* cpu, const MCHEmul::Chips& c,
 	// These are mandatory...
 	// But the sound system is not mandatory (there are many old computers with no sound...really? but possible)
 	assert (_screen != nullptr && _inputOSSystem != nullptr);
+
+	// Create the template of actions more common...
+	// More actions can be added in later instances of the class computer!
+	_templateActions =
+		{ 
+			{  _ACTIONNOTHING,	new MCHEmul::Computer::NoAction }, 
+			{  _ACTIONCONTINUE,	new MCHEmul::Computer::ContinueAction }, 
+			{  _ACTIONSTOP,		new MCHEmul::Computer::StopAction }, 
+			{  _ACTIONNEXT,		new MCHEmul::Computer::NextCommandAction}
+		};
 }
 
 // ---
@@ -62,6 +72,9 @@ MCHEmul::Computer::~Computer ()
 		delete (i.second);
 
 	for (const auto& i : _chips)
+		delete (i.second);
+
+	for (const auto& i : _templateActions)
 		delete (i.second);
 
 	delete (_cpu); 
@@ -179,6 +192,16 @@ bool MCHEmul::Computer::initialize (bool iM)
 	_currentStabilizationLoops = 0;
 	_stabilized = (_stabilizationLoops == _currentStabilizationLoops); // Can be stable from the beginning...
 
+	// Put in a plain format the list of actions...
+	unsigned int maxTAId = 0;
+	_templateListActions = { };
+	for (auto& i : _templateActions)
+		if (i.second -> id () > maxTAId)
+			maxTAId = i.second -> id ();
+	_templateListActions = std::vector <MCHEmul::Computer::Action*> (maxTAId, nullptr);
+	for (auto& i : _templateActions)
+		_templateListActions [i.second -> id ()] = i.second;
+
 	return (true);
 }
 
@@ -252,12 +275,10 @@ bool MCHEmul::Computer::runComputerCycle (unsigned int a)
 
 	unsigned int cI = cpu () -> clockCycles ();
 
-	MCHEmul::Computer::MapOfActions::const_iterator at =
-		_actionsAt.find (cpu () -> programCounter ().asAddress ());
-	if (!executeAction (
-		_lastAction /* can be modified within the method. */,
-		(at == _actionsAt.end ()) ? _ACTIONNOTHING : (*at).second, /** What is defined in the address where the PC is on. */
-		(_actionForNextCycle != _ACTIONNOTHING) ? _actionForNextCycle : a /** If there is something pending to be processed it has priority. */))
+	// Maybe there will be some to be execute at the point where the CPU is now stopped
+	// The action received in the loop is passed to the method to 
+	// be considered in the decision in case of conflict!
+	if (!executeActionAtPC (a))
 	{
 		_actionForNextCycle = _ACTIONNOTHING;
 
@@ -394,88 +415,31 @@ MCHEmul::InfoStructure MCHEmul::Computer::getInfoStructure () const
 }
 
 // ---
-bool MCHEmul::Computer::executeAction (unsigned int& lA, unsigned int at, unsigned int a)
+bool MCHEmul::Computer::executeActionAtPC (unsigned int a)
 {
-	// The action passed as parameter to the runCycle method has priority 
-	// over the one defined at the address where the program counter is now on
-	unsigned int act = (a != _ACTIONNOTHING) ? a : at;
+	// Select where there is an action at the address where the CPU is sopped now
+	MCHEmul::Computer::MapOfActions::const_iterator at =
+		_actionsAt.find (cpu () -> programCounter ().asAddress ());
+	// Internal actions received has priority over the external ones...
+	unsigned int na = (_actionForNextCycle != _ACTIONNOTHING) ? _actionForNextCycle : a;
+	// ..and even over the ones defined at one specific point...
+	unsigned int act = 
+		(na != _ACTIONNOTHING)
+			? na
+			: (at == _actionsAt.end ()) 
+				? _ACTIONNOTHING
+				: (*at).second;
 
-	unsigned int lS = _status;
-
-	switch (lA)
-	{
-		// Nothing was executed before...
-		case _ACTIONNOTHING:
-			switch (act)
-			{
-				case _ACTIONSTOP:
-					_status = _STATUSSTOPPED;
-					break;
-
-				case _ACTIONCONTINUE:
-				case _ACTIONNEXT:
-					_status = _STATUSRUNNING;
-					break;
-
-				default:
-					break;
-			}
-
-			break;
-
-		// The last requested action was to stop...
-		case _ACTIONSTOP:
-			switch (act)
-			{
-				case _ACTIONNOTHING:
-				case _ACTIONSTOP:
-					_status = _STATUSSTOPPED;
-					break;
-
-				case _ACTIONCONTINUE:
-				case _ACTIONNEXT:
-					_status = _STATUSRUNNING;
-					break;
-			}
-
-			break;
-
-		// The last requested action was to go on...
-		case _ACTIONCONTINUE:
-			switch (act)
-			{
-				case _ACTIONNOTHING:
-				case _ACTIONCONTINUE:
-				case _ACTIONNEXT:
-					_status = _STATUSRUNNING;
-					break;
-
-				case _ACTIONSTOP:
-					_status = _STATUSSTOPPED;
-					break;
-			}
-
-			break;
-
-		case _ACTIONNEXT:
-			switch (act)
-			{
-				case _ACTIONNOTHING:
-				case _ACTIONSTOP:
-					_status = _STATUSSTOPPED;
-					break;
-
-				case _ACTIONCONTINUE:
-				case _ACTIONNEXT:
-					_status = _STATUSRUNNING;
-			}
-			break;
-	}
+	// Get the action from the template...
+	bool result = false;
+	MCHEmul::Computer::Action* actPtr = nullptr;
+	if (act >= _templateListActions.size () || // Defined?
+		(actPtr = _templateListActions [act]) != nullptr)
+		result = actPtr -> execute (this);
 
 	// Keep track of the last action executed...
-	lA = act;
-
-	// The execution of the next instruction is allowed if the status is = _STATUSRUNNING...
-	return (_status == _STATUSRUNNING);
+	_lastAction = act;
+	
+	return (result);
 }
 
