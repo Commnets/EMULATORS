@@ -1,16 +1,15 @@
 #include <COMMODORE/1530Datasette.hpp>
 
 // ---
-COMMODORE::Datasette1530::Datasette1530 (unsigned int cps)
+COMMODORE::Datasette1530::Datasette1530 ()
 	: COMMODORE::DatasettePeripheral (_ID, 
 		{ { "Name", "Commodore 1530 (CN2)" },
 		  { "Manufacturer", "Commodore Business Machines CBM" },
 		  { "Commands", "1:FORWARD, 2:REWIND, 4:STOP, 8:PLAY, 24:PLAY + RECORD, 32:EJECT(and clear data)" } }),
-	  _cyclesPerSecond (cps),
 	  _status (Status::_STOPPED),
-	  _clock ((unsigned int) ((float) _cyclesPerSecond / 3284.0f) /** 300 bauds in PAL, 311 in NTSC */),
 	  _dataCounter (0), 
-	  _elementCounter (0)
+	  _elementCounter (0),
+	  _firstCycleSimulation (false), _lastCPUCycles (0), _clockCycles (0)
 {
 	setClassName ("C2N1530");
 }
@@ -19,8 +18,6 @@ COMMODORE::Datasette1530::Datasette1530 (unsigned int cps)
 bool COMMODORE::Datasette1530::initialize ()
 {
 	_status = Status::_STOPPED;
-
-	_clock.start ();
 
 	return (COMMODORE::DatasettePeripheral::initialize ());
 }
@@ -88,6 +85,11 @@ bool COMMODORE::Datasette1530::executeCommand (int id, const MCHEmul::Strings& p
 
 					_status = Status::_READING;
 
+					// Starting to count...
+					_clockCycles = 0;
+
+					_firstCycleSimulation = true;
+
 					setNoKeyPressed (false);
 				}
 			}
@@ -104,13 +106,16 @@ bool COMMODORE::Datasette1530::executeCommand (int id, const MCHEmul::Strings& p
 
 					_status = Status::_SAVING;
 
-					_clock = MCHEmul::Clock (300 /** bauds. */);
-
 					// If the counter is pointing at the end, a null data element is added...
 					if (_dataCounter >= _data._data.size ())
 						_data._data.push_back (MCHEmul::DataMemoryBlock ());
 					// ...and, any case, the element affected is fully clearead...
 					_data._data [_dataCounter].clear ();
+
+					// Starting to count...
+					_clockCycles = 0;
+
+					_firstCycleSimulation = true;
 
 					setNoKeyPressed (false);
 				}
@@ -149,43 +154,53 @@ bool COMMODORE::Datasette1530::executeCommand (int id, const MCHEmul::Strings& p
 // ---
 bool COMMODORE::Datasette1530::simulate (MCHEmul::CPU* cpu)
 {
-	if (!motorOff ())
+	if (motorOff ())
+		return (true);
+
+	if (_status != Status::_READING &&
+		_status != Status::_SAVING)
+		return (true);
+
+	if (_firstCycleSimulation)
 	{
-		if (_status == Status::_READING || 
-			_status == Status::_SAVING) // It shouldn't happen in other circunstance, but just to be sure...
-		{
-			// Only works at the speed of the tap...
-			if (_clock.tooQuick ())
-				_clock.countCycles (0);
-			else
-			{
-				// When reading is allowed...
-				// makes only sense when there is still data to read in the loaded file...
-				if (_status == Status::_READING)
-				{ 
-					bool r = false;
-					if (_dataCounter < _data._data.size ())
-					{
-						r = true;
-						if (_elementCounter >= _data._data [_dataCounter].bytes ().size ())
-						{
-							_elementCounter = 0;
+		_firstCycleSimulation = false;
 
-							if (++_dataCounter >= _data._data.size ())
-								r = false;
-						}
-					}
-
-					if (r)
-						setRead (getNextDataBit ());
-				}
-				else 
-					storeNextDataBit (_valueToWrite);
-
-				_clock.countCycles (1);
-			}
-		}
+		_lastCPUCycles = cpu -> clockCycles () - cpu -> lastCPUClockCycles ();
 	}
+
+	for (unsigned int i = (cpu -> clockCycles  () - _lastCPUCycles); i > 0; i--)
+	{
+		if (++_clockCycles <= 3284 /** = 300 baudios when CPU speed = 985.248 c/s, = 310 baudios when CPU speed = 1.023.000 c/s. */)
+			continue; // Not the time...
+	
+		// Start back...
+		_clockCycles = 0; 
+		
+		// When reading is allowed...
+		// makes only sense when there is still data to read in the loaded file...
+		if (_status == Status::_READING)
+		{ 
+			bool r = false;
+			if (_dataCounter < _data._data.size ())
+			{
+				r = true;
+				if (_elementCounter >= _data._data [_dataCounter].bytes ().size ())
+				{
+					_elementCounter = 0;
+
+					if (++_dataCounter >= _data._data.size ())
+						r = false;
+				}
+			}
+
+			if (r)
+				setRead (getNextDataBit ());
+		}
+		else 
+			storeNextDataBit (_valueToWrite);
+	}
+
+	_lastCPUCycles = cpu -> clockCycles ();
 
 	return (true);
 }

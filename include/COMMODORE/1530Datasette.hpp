@@ -49,7 +49,7 @@ namespace COMMODORE
 		static const int _KEYEJECT	= 32; // To clean up the data loaded, or to simulate a new castte is inserted...
 		/** The key EJECT has no value. */
 
-		Datasette1530 (unsigned int cps);
+		Datasette1530 ();
 
 		virtual bool initialize () override;
 
@@ -74,8 +74,6 @@ namespace COMMODORE
 		inline void storeNextDataBit (bool s);
 
 		private:
-		unsigned int _cyclesPerSecond;
-
 		/** The different status that this peripheral can be in. \n
 			At creating this datasette is stopped. */
 		enum class Status
@@ -87,11 +85,15 @@ namespace COMMODORE
 
 		// Immplementation
 		mutable Status _status;
-		MCHEmul::Clock _clock;
 		
 		// Counting which the info to write or read!
 		mutable size_t _dataCounter; 
 		mutable unsigned short _elementCounter;
+
+		// Managing the clockcycles...
+		bool _firstCycleSimulation;
+		unsigned int _lastCPUCycles;
+		unsigned int _clockCycles;
 	};
 
 	// ---

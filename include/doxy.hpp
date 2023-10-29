@@ -27,6 +27,11 @@
  *	Classes and macros defining the characteristics of the Motorola 6500 chip family.
  */
 
+/**
+ *	\defgroup	FZX80 Classes defining the ZX80 chip family
+ *	Classes and macros defining the characteristics of the Zilog ZX80 chip family.
+ */
+
  /**
  *	\defgroup	COMMODORE Classes defining COMMODORE Chips
  *	Classes and macros defining the characteristics of Commodore Chips/Features.

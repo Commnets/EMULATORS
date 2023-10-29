@@ -18,7 +18,7 @@ MCHEmul::IOPeripheral* COMMODORE::IOPeripheralBuilder::createPeripheral
 	else if (id == COMMODORE::NoExpansionPeripheral::_ID)
 		result = new COMMODORE::NoExpansionPeripheral;
 	else if (id == COMMODORE::Datasette1530::_ID)
-		result = new COMMODORE::Datasette1530 (c -> clock ().cyclesPerSecond ());
+		result = new COMMODORE::Datasette1530;
 
 	// Take care, it could be null...
 	return (result);

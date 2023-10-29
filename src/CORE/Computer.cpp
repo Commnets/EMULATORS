@@ -198,7 +198,7 @@ bool MCHEmul::Computer::initialize (bool iM)
 	for (auto& i : _templateActions)
 		if (i.second -> id () > maxTAId)
 			maxTAId = i.second -> id ();
-	_templateListActions = std::vector <MCHEmul::Computer::Action*> (maxTAId, nullptr);
+	_templateListActions = std::vector <MCHEmul::Computer::Action*> (maxTAId + 1, nullptr);
 	for (auto& i : _templateActions)
 		_templateListActions [i.second -> id ()] = i.second;
 
@@ -433,7 +433,7 @@ bool MCHEmul::Computer::executeActionAtPC (unsigned int a)
 	// Get the action from the template...
 	bool result = false;
 	MCHEmul::Computer::Action* actPtr = nullptr;
-	if (act >= _templateListActions.size () || // Defined?
+	if (act < _templateListActions.size () && // Defined?
 		(actPtr = _templateListActions [act]) != nullptr)
 		result = actPtr -> execute (this);
 

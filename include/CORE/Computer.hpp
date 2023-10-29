@@ -70,6 +70,25 @@ namespace MCHEmul
 			unsigned int _id;
 		};
 
+		using Actions = std::vector <Action*>;
+
+		/** Made up of a set of actions. */
+		class CompositeAction : public Action
+		{
+			public:
+			CompositeAction (unsigned int id, const Actions& a)
+				: Action (id),
+				  _actions (a)
+							{ }
+
+			/** It will return true when all elements return true, 
+				and false in other circunstance. */
+			virtual inline bool execute (Computer* c) override;
+
+			protected:
+			Actions _actions;
+		};
+
 		/** No action at all. 
 			Usually it is not needed. It is defined just in case. */
 		class NoAction final : public Action
@@ -422,6 +441,15 @@ namespace MCHEmul
 		mutable unsigned short _currentStabilizationLoops;
 		std::vector <Action*> _templateListActions; // The same the template of actions but in a vector to speed up access...
 	};
+
+	// ---
+	inline bool Computer::CompositeAction::execute (Computer* c)
+	{
+		bool result = true;
+		for (auto& i : _actions)
+			result &= i -> execute (c);
+		return (result);
+	}
 
 	// ---
 	bool Computer::NoAction::execute (Computer* c)
