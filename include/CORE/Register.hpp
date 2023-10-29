@@ -104,6 +104,8 @@ namespace MCHEmul
 	};
 
 	using Registers = std::vector <Register>;
+	// Good when an access to a union of registers is needed...
+	using RefRegisters = std::vector <Register*>;
 
 	/** It can not be modified. */
 	static const Register NoRegister = Register (0, "-", UBytes ());

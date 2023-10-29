@@ -56,48 +56,76 @@ namespace FZ80
 		static const size_t _SIGNFLAG = 7;
 		static const std::string _SIGNFLAGNAME;
 
-		CZ80 (const MCHEmul::CPUArchitecture& a);
+		CZ80 (const MCHEmul::CPUArchitecture& a = createArchitecture ());
 
 		// Accesing he registers...
 		MCHEmul::Register& aRegister ()
 							{ return (internalRegister (_AREGISTER)); }
 		MCHEmul::Register& fRegister ()
 							{ return (internalRegister (_FREGISTER)); }
+		MCHEmul::RefRegisters& afRegister ()
+							{ return (_afRegister); }
 		MCHEmul::Register& bRegister ()
 							{ return (internalRegister (_BREGISTER)); }
 		MCHEmul::Register& cRegister ()
 							{ return (internalRegister (_CREGISTER)); }
+		MCHEmul::RefRegisters& bcRegister ()
+							{ return (_bcRegister); }
 		MCHEmul::Register& dRegister ()
 							{ return (internalRegister (_DREGISTER)); }
 		MCHEmul::Register& eRegister ()
 							{ return (internalRegister (_EREGISTER)); }
+		MCHEmul::RefRegisters& deRegister ()
+							{ return (_deRegister); }
 		MCHEmul::Register& hRegister ()
 							{ return (internalRegister (_HREGISTER)); }
-		MCHEmul::Register& kRegister ()
+		MCHEmul::Register& lRegister ()
 							{ return (internalRegister (_LREGISTER)); }
+		MCHEmul::RefRegisters& hlRegister ()
+							{ return (_hlRegister); }
+
 		MCHEmul::Register& apRegister ()
 							{ return (internalRegister (_APREGISTER)); }
 		MCHEmul::Register& fpRegister ()
 							{ return (internalRegister (_FPREGISTER)); }
+		MCHEmul::RefRegisters& afpRegister ()
+							{ return (_afpRegister); }
 		MCHEmul::Register& bpRegister ()
 							{ return (internalRegister (_BPREGISTER)); }
 		MCHEmul::Register& cpRegister ()
 							{ return (internalRegister (_CPREGISTER)); }
+		MCHEmul::RefRegisters& bcpRegister ()
+							{ return (_bcpRegister); }
 		MCHEmul::Register& dpRegister ()
 							{ return (internalRegister (_DPREGISTER)); }
 		MCHEmul::Register& epRegister ()
 							{ return (internalRegister (_EPREGISTER)); }
+		MCHEmul::RefRegisters& depRegister ()
+							{ return (_depRegister); }
 		MCHEmul::Register& hpRegister ()
 							{ return (internalRegister (_HPREGISTER)); }
-		MCHEmul::Register& kpRegister ()
+		MCHEmul::Register& lpRegister ()
 							{ return (internalRegister (_LPREGISTER)); }
+		MCHEmul::RefRegisters& hlpRegister ()
+							{ return (_hlpRegister); }
 		MCHEmul::Register& ixRegister ()
 							{ return (internalRegister (_IXREGISTER)); }
 		MCHEmul::Register& iyRegister ()
 							{ return (internalRegister (_IYREGISTER)); }
 
+		protected:
+		MCHEmul::RefRegisters _afRegister;
+		MCHEmul::RefRegisters _bcRegister;
+		MCHEmul::RefRegisters _deRegister;
+		MCHEmul::RefRegisters _hlRegister;
+		MCHEmul::RefRegisters _afpRegister;
+		MCHEmul::RefRegisters _bcpRegister;
+		MCHEmul::RefRegisters _depRegister;
+		MCHEmul::RefRegisters _hlpRegister;
+
 		private:
 		// Implementation
+		static MCHEmul::CPUArchitecture createArchitecture ();
 		static MCHEmul::Registers createInternalRegisters ();
 		static MCHEmul::StatusRegister createStatusRegister ();
 		static MCHEmul::Instructions createInstructions ();

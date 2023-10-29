@@ -9,12 +9,44 @@ const std::string FZ80::CZ80::_ZEROFLAGNAME = "Z";
 const std::string FZ80::CZ80::_SIGNFLAGNAME = "S";
 
 // ---
+MCHEmul::CPUArchitecture FZ80::CZ80::createArchitecture ()
+{
+	return (
+		MCHEmul::CPUArchitecture 
+			(2 /** 2 bytes = 16 bites */, 
+			 1 /** bytes per instruction */, 
+			 false /** Little endian. */, 
+			 { { "Code", "Z80" },
+			   { "Manufacturer", "Zilog"},
+			   { "Year", "1976" },
+			   { "Speed Range", "2.5-10 MHz" } }));
+}
+
+// ---
 FZ80::CZ80::CZ80 (const MCHEmul::CPUArchitecture& a)
 	: MCHEmul::CPU (a,
 		FZ80::CZ80::createInternalRegisters (), 
 		FZ80::CZ80::createStatusRegister (),
-		FZ80::CZ80::createInstructions ())
+		FZ80::CZ80::createInstructions ()),
+		_afRegister  ({ nullptr, nullptr }),
+		_bcRegister  ({ nullptr, nullptr }),
+		_deRegister  ({ nullptr, nullptr }),
+		_hlRegister  ({ nullptr, nullptr }),
+		_afpRegister ({ nullptr, nullptr }),
+		_bcpRegister ({ nullptr, nullptr }),
+		_depRegister ({ nullptr, nullptr }),
+		_hlpRegister ({ nullptr, nullptr })
 {
+	// Create the union of several registers...
+	// ...to speed up later the access..
+	_afRegister  = { &aRegister (),  &fRegister ()  };
+	_bcRegister  = { &bRegister (),  &cRegister ()  };
+	_deRegister  = { &dRegister (),  &eRegister ()  };
+	_hlRegister  = { &hRegister (),  &lRegister ()  };
+	_afpRegister = { &apRegister (), &fpRegister () };
+	_bcpRegister = { &bpRegister (), &cpRegister () };
+	_depRegister = { &dpRegister (), &epRegister () };
+	_hlpRegister = { &hpRegister (), &lpRegister () };
 }
 
 // ---
