@@ -225,7 +225,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "RESID", "thirdparties\resid
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TestSDL", "tests\TestSDL\TestSDL.vcxproj", "{F5541340-0F51-4C48-8AD1-3DC8F25D1A5D}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "FZX80", "projects\FZX80\FZX80.vcxproj", "{BB5F1B61-0ECD-4B61-8E1C-2C68D7A1A0CC}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "FZ80", "projects\FZ80\FZ80.vcxproj", "{BB5F1B61-0ECD-4B61-8E1C-2C68D7A1A0CC}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

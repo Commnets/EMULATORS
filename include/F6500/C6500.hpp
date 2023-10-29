@@ -22,6 +22,27 @@ namespace F6500
 	class C6500 : public MCHEmul::CPU
 	{
 		public:
+		/** To identify the number of the registers. */
+		static const size_t _ACCUMULATOR = 0;
+		static const size_t _XREGISTER = 1;
+		static const size_t _YREGISTER = 2;
+
+		/** To identify the position of the flags in the status register. */
+		static const size_t _CARRYFLAG = 0;
+		static const std::string _CARRYFLAGNAME;
+		static const size_t _ZEROFLAG = 1;
+		static const std::string _ZEROFLAGNAME;
+		static const size_t _IRQFLAG = 2;
+		static const std::string _IRQFLAGNAME;
+		static const size_t _DECIMALFLAG = 3;
+		static const std::string _DECIMALFLAGNAME;
+		static const size_t _BREAKFLAG = 4;
+		static const std::string _BREAKFLAGNAME;
+		static const size_t _OVERFLOWFLAG = 6;
+		static const std::string _OVERFLOWFLAGNAME;
+		static const size_t _NEGATIVEFLAG = 7;
+		static const std::string _NEGATIVEFLAGNAME;
+
 		/** The different possibilities a 6500 instruction set has to understand its parameters. */
 		enum class AddressMode
 		{
@@ -45,6 +66,7 @@ namespace F6500
 		virtual MCHEmul::Address NMIVectorAddress () const = 0;
 		virtual MCHEmul::Address ResetVectorAddress () const = 0;
 
+		// Accessing the registers...
 		MCHEmul::Register& accumulator ()
 							{ return (internalRegister (_ACCUMULATOR)); }
 		MCHEmul::Register& xRegister ()
@@ -60,27 +82,6 @@ namespace F6500
 							{ programCounter ().setAddress 
 								(MCHEmul::Address (memoryRef () -> bytes (ResetVectorAddress (), 2), false)); 
 							  return (true); }
-
-		/** To identify the number of the registers. */
-		static const size_t _ACCUMULATOR = 0;
-		static const size_t _XREGISTER = 1;
-		static const size_t _YREGISTER = 2;
-
-		/** To identify the position of the flags in the status register. */
-		static const size_t _CARRYFLAG = 0;
-		static const std::string _CARRYFLAGNAME;
-		static const size_t _ZEROFLAG = 1;
-		static const std::string _ZEROFLAGNAME;
-		static const size_t _IRQFLAG = 2;
-		static const std::string _IRQFLAGNAME;
-		static const size_t _DECIMALFLAG = 3;
-		static const std::string _DECIMALFLAGNAME;
-		static const size_t _BREAKFLAG = 4;
-		static const std::string _BREAKFLAGNAME;
-		static const size_t _OVERFLOWFLAG = 6;
-		static const std::string _OVERFLOWFLAGNAME;
-		static const size_t _NEGATIVEFLAG = 7;
-		static const std::string _NEGATIVEFLAGNAME;
 
 		private:
 		// Implementation

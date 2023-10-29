@@ -28,7 +28,7 @@
  */
 
 /**
- *	\defgroup	FZX80 Classes defining the ZX80 chip family
+ *	\defgroup	FZ80 Classes defining the ZX80 chip family
  *	Classes and macros defining the characteristics of the Zilog ZX80 chip family.
  */
 

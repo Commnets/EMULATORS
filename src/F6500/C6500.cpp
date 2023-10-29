@@ -47,9 +47,11 @@ bool F6500::C6500::initialize ()
 MCHEmul::Registers F6500::C6500::createInternalRegisters ()
 {
 	return (MCHEmul::Registers
-			({ MCHEmul::Register ((int) _ACCUMULATOR,	"A", { MCHEmul::UByte::_0 } /** 1 byte long */),
-			   MCHEmul::Register ((int) _XREGISTER,		"X", { MCHEmul::UByte::_0 } /** 1 byte long */),
-			   MCHEmul::Register ((int) _YREGISTER,		"Y", { MCHEmul::UByte::_0 } /** 1 byte long */) }));
+			({ 
+			   MCHEmul::Register ((int) _ACCUMULATOR,	"A",	{ MCHEmul::UByte::_0 } /** 1 byte long */),
+			   MCHEmul::Register ((int) _XREGISTER,		"X",	{ MCHEmul::UByte::_0 } /** 1 byte long */),
+			   MCHEmul::Register ((int) _YREGISTER,		"Y",	{ MCHEmul::UByte::_0 } /** 1 byte long */) 
+			 }));
 }
 
 // ---
@@ -58,14 +60,14 @@ MCHEmul::StatusRegister F6500::C6500::createStatusRegister ()
 	return (MCHEmul::StatusRegister 
 			(
 				1 /** 1 byte long */,
-				{ { "C", 0 /** bit number */ },		// Carry flag
-				  { "Z", 1 },		// Zero flag
-				  { "I", 2 },		// Interrupt disable flag
-				  { "D", 3 },		// Decimal mode flag
-				  { "B", 4 },		// Break flag
-				  { "-", 5 },		// Not used
-				  { "V", 6 },		// Overflow flag
-				  { "N", 7 } }));	// Negative flag
+				{ { _CARRYFLAGNAME, _CARRYFLAG /** bit number */ },	// Carry flag
+				  { _ZEROFLAGNAME, _ZEROFLAG },						// Zero flag
+				  { _IRQFLAGNAME, _IRQFLAG },						// Interrupt disable flag
+				  { _DECIMALFLAGNAME, _DECIMALFLAG },				// Decimal mode flag
+				  { _BREAKFLAGNAME, _BREAKFLAG },					// Break flag
+				  { "-", 5 },										// Not used
+				  { _OVERFLOWFLAGNAME, _OVERFLOWFLAG },				// Overflow flag
+				  { _NEGATIVEFLAGNAME, _NEGATIVEFLAG } }));			// Negative flag
 }
 
 // ---
