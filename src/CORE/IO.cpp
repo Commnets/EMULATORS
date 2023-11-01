@@ -15,6 +15,7 @@ MCHEmul::IODevice::IODevice (MCHEmul::IODevice::Type t, int id, const MCHEmul::A
 	  _chips (), // None by default...
 	  _attributes (attrs),
 	  _peripherals (), // None by default...
+	  _deepDebugFile (nullptr),
 	  _error (MCHEmul::_NOERROR)
 {
 	MCHEmul::IODeviceSystem::system () -> add (this);

@@ -120,12 +120,26 @@ namespace MCHEmul
 		friend std::ostream& operator << (std::ostream& o, const IODevice& d)
 							{ return (o << (*(dynamic_cast <const InfoClass*> (&d)))); }
 
+		/** Manages the deep debug file. \n
+			Take care it can be set back to a nullptr. */
+		bool deepDebugActive () const
+							{ return (_deepDebugFile != nullptr && _deepDebugFile -> active ()); }
+		void setDeepDebugFile (DebugFile* dF)
+							{ _deepDebugFile = dF; }
+		const DebugFile* deepDebugFile () const
+							{ return (_deepDebugFile); }
+		DebugFile* deepDebugFile ()
+							{ return (_deepDebugFile); }
+
 		protected:
 		const Type _type; // Modified at constrution level
 		const int _id; // Idem
 		Chips _chips; // linked when computer instance is built!
 		const Attributes _attributes = { }; // Maybe modified at construction level
 		IOPeripherals _peripherals;
+
+		// To manage the debug info...
+		DebugFile* _deepDebugFile;
 
 		// Implementation
 		mutable unsigned int _error;

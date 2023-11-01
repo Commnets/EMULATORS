@@ -489,33 +489,47 @@ void MCHEmul::ActivateDeepDebugCommand::executeImpl
 	if (c == nullptr)
 		return;
 
-	std::string fN = parameter ("00");
-	std::vector <int> cId = { };
-	bool a = false;
+	std::string fN = parameter ("00");	// The name of the file is always mandatory...
+	std::vector <int> cId = { };		// None by default...
+	std::vector <int> iId = { };		// None by default...
+	bool a = false;						// Not to add by default...
 	if (parameters ().size () >= 2)
 	{
 		a = (parameter ("01") == "YES") ? true : false;
 
 		if (parameters ().size () >= 3)
 		{
-			if (parameter ("02") == "ALL")
-				cId = { -1 };
-			else
+			int nP = 2;
+			std::string nPStr = ((nP < 10) ? "0" : "") + std::to_string (nP);
+			while (existParameter (nPStr))
 			{
-				int nP = 3;
-				std::string nPStr = "0" + std::to_string (nP);
-				while (existParameter (nPStr))
+				std::string prm = parameter (nPStr);
+				if (prm == "ALLCHIP")
+					cId = { -1 };
+				else
+				if (prm == "ALLIO")
+					iId = { -1 };
+				else
 				{
-					cId.emplace_back (std::atoi (parameter (nPStr).c_str ()));
-
-					nPStr = "0" + std::to_string (++nP);
+					if (prm.length () > 2)
+					{
+						if (prm.substr (0, 2) == "C=" && 
+							(cId.size () == 0 || (cId.size () != 0 && cId [0] != -1))) 	// When a -1 is already in the list, nothing else makes sense...
+							cId.emplace_back (std::atoi (prm.substr (2).c_str ()));
+						if (prm.substr (0, 2) == "I=" && 
+							(iId.size () == 0 || (iId.size () != 0 && iId [0] != -1)))
+							iId.emplace_back (std::atoi (prm.substr (2).c_str ()));
+					}
 				}
+
+				nP++;
+				nPStr = ((nP < 10) ? "0" : "") + std::to_string (nP);
 			}
 		}
 	}
 
 	rst.add ("ERROR", 
-		c -> activateDeepDebug (fN, cId, a)
+		c -> activateDeepDebug (fN, cId, iId, a)
 				? std::string ("No errors")
 				: std::string ("Deep debugging activation error"));
 }
