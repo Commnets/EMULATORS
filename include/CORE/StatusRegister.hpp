@@ -18,8 +18,9 @@
 
 namespace MCHEmul
 {
-	/** In the register avery bit could have a different meaning. */
-	class StatusRegister : protected Register
+	/** In the register very bit could have a different meaning. 
+		But at the end of the day it is a Register!. */
+	class StatusRegister : public Register
 	{
 		public:
 		using BitNames = std::map <std::string, size_t>;
@@ -28,9 +29,6 @@ namespace MCHEmul
 			: Register (-2 /** always */, "ST", UBytes (std::vector <UByte> (nB, UByte::_0))), 
 			  _bitNames (bN)
 							{ }
-
-		void initialize ()
-							{ Register::initialize (); }
 
 		const BitNames& bitNames () const
 							{ return (_bitNames); }
@@ -46,16 +44,7 @@ namespace MCHEmul
 		void setBitStatus (size_t bP, bool s)
 							{ _values.setBit (bP, s); }
 
-		const UBytes& values () const
-							{ return (Register::values ()); }
-		const std::vector <UByte>& bytes () const
-							{ return (Register::bytes ()); }
-
 		UBytes valuesWithout (const Strings& bN);
-		void set (const std::vector <UByte>& v)
-							{ Register::set (v); }
-		void set (const UBytes& v)
-							{ Register::set (v); }
 
 		/** The status of every bit is show next to its name. */
 		std::string asString () const;

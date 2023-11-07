@@ -13,6 +13,9 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Archivos de origen\Instructions">
+      <UniqueIdentifier>{df9cfec0-28ab-4cbc-9cb4-0a356a7943d7}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\FZ80\CZ80.cpp">
@@ -20,6 +23,9 @@
     </ClCompile>
     <ClCompile Include="..\..\src\FZ80\Instructions.cpp">
       <Filter>Archivos de origen</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\FZ80\LD.cpp">
+      <Filter>Archivos de origen\Instructions</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

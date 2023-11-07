@@ -21,7 +21,7 @@ C64::Commodore64::Commodore64 (C64::Commodore64::VisualSystem vS, const std::str
 		 vS == C64::Commodore64::VisualSystem::_PAL ? _PALCLOCK : _NTSCCLOCK,
 		 { { "Name", "Commodore 64" },
 		   { "Manufacturer", "Commodore Business Machines CBM" },
-		   { "Year", "1980" }
+		   { "Year", "1982" }
 		 }),
 	  _visualSystem (vS)
 {

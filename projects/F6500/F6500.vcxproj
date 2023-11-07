@@ -20,6 +20,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\include\F6500\C6500.hpp" />
+    <ClInclude Include="..\..\include\F6500\C6502.hpp" />
     <ClInclude Include="..\..\include\F6500\Interrupt.hpp" />
     <ClInclude Include="..\..\include\F6500\C6510.hpp" />
     <ClInclude Include="..\..\include\F6500\incs.hpp" />
@@ -32,6 +33,7 @@
     <ClCompile Include="..\..\src\F6500\ANC.cpp" />
     <ClCompile Include="..\..\src\F6500\ARR.cpp" />
     <ClCompile Include="..\..\src\F6500\C6500.cpp" />
+    <ClCompile Include="..\..\src\F6500\C6502.cpp" />
     <ClCompile Include="..\..\src\F6500\Interrupt.cpp" />
     <ClCompile Include="..\..\src\F6500\DCP.cpp" />
     <ClCompile Include="..\..\src\F6500\IRQInterrupt.cpp" />

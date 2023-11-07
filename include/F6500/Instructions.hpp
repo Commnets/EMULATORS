@@ -121,7 +121,7 @@ namespace F6500
 		MCHEmul::Register& x = cpu () -> internalRegister (C6510::_XREGISTER);
 
 		MCHEmul::Address iA ({ parameters ()[1], parameters ()[2] }, false);
-		MCHEmul::Address fA = iA + x [0].value ();
+		MCHEmul::Address fA = iA + (size_t) (x [0].value ());
 		if (iA [0] != fA [0]) _additionalCycles = 1; // Page jump in the address so one cycle more
 		return (fA);
 	}
@@ -134,7 +134,7 @@ namespace F6500
 		MCHEmul::Register& y = cpu () -> internalRegister (C6510::_YREGISTER);
 
 		MCHEmul::Address iA ({ parameters ()[1], parameters ()[2] }, false);
-		MCHEmul::Address fA = iA + y [0].value ();
+		MCHEmul::Address fA = iA + (size_t) (y [0].value ());
 		if (iA [0] != fA [0]) _additionalCycles = 1; // Page jump in the address so one cycle more
 		return (fA);
 	}
@@ -144,10 +144,8 @@ namespace F6500
 	{
 		assert (parameters ().size () == 2);
 
-		MCHEmul::Register& x = cpu () -> internalRegister (C6510::_XREGISTER);
-
-		MCHEmul::Address iA ({ parameters ()[1] });
-		return (iA + x [0].value ());
+		return (MCHEmul::Address ({ parameters ()[1] }) + 
+			(size_t) (cpu () -> internalRegister (C6510::_XREGISTER)[0].value ())); 
 	}
 
 	// ---
@@ -155,10 +153,8 @@ namespace F6500
 	{
 		assert (parameters ().size () == 2);
 
-		MCHEmul::Register& y = cpu () -> internalRegister (C6510::_XREGISTER);
-
-		MCHEmul::Address iA ({ parameters ()[1] });
-		return (iA + y [0].value ());
+		return (MCHEmul::Address ({ parameters ()[1] }) + 
+			(size_t) (cpu () -> internalRegister (C6510::_YREGISTER)[0].value ())); 
 	}
 
 	// ---
@@ -166,11 +162,9 @@ namespace F6500
 	{
 		assert (parameters ().size () == 2);
 
-		MCHEmul::Register& x = cpu () -> internalRegister (C6510::_XREGISTER);
-
 		// Pre - indirect zero page addressing...
-		MCHEmul::Address iA = MCHEmul::Address ({ parameters ()[1] }) + x [0].value ();
-		return (MCHEmul::Address (memory () -> values (iA, 2), false)); 
+		return (MCHEmul::Address (memory () -> values (MCHEmul::Address ({ parameters ()[1] }) + 
+			(size_t) (cpu () -> internalRegister (C6510::_XREGISTER)[0].value ()), 2), false)); 
 	}
 
 	// ---
@@ -182,7 +176,7 @@ namespace F6500
 
 		// Post - indirect zero page addressing...
 		MCHEmul::Address iA (memory () -> values (MCHEmul::Address ({ parameters ()[1] }), 2), false);
-		MCHEmul::Address fA = iA + y [0].value ();
+		MCHEmul::Address fA = iA + (size_t) (y [0].value ());
 		if (iA [0] != fA [0]) _additionalCycles = 1; // Page jump in the address so one cycle more
 		return (fA);
 	}
@@ -576,6 +570,11 @@ namespace F6500
 
 	// JMP
 	_INST_FROM (0x4c, 3, 3, 3, "JMP[%2]",				JMP_Absolute, Instruction);
+	/** 6502 had a bug when jumping indirect. \n
+		That bug happened when the low byte of the address where to find the final jumping address was 0xFF. \n
+		In that case the high bytes was looked at the adress 0x00 of the same page (high bytes), 
+		instead of the one at the next page. \n
+		That bug was sorted out at the 65C02 version, that the one implemented here. */
 	_INST_FROM (0x6c, 3, 5, 5, "JMP([%2])",				JMP_Indirect, Instruction);
 
 	// JSR

@@ -23,24 +23,28 @@ namespace FZ80
 	{
 		public:
 		/** To identify the number and name of the registers. */
-		static const size_t _AREGISTER	= 0;
-		static const size_t _FREGISTER	= 1;
-		static const size_t _BREGISTER	= 2;
-		static const size_t _CREGISTER	= 3;
-		static const size_t _DREGISTER	= 4;
-		static const size_t _EREGISTER	= 5;
-		static const size_t _HREGISTER	= 6;
-		static const size_t _LREGISTER	= 7;
-		static const size_t _APREGISTER = 10;
-		static const size_t _FPREGISTER = 11;
-		static const size_t _BPREGISTER = 11;
-		static const size_t _CPREGISTER = 12;
-		static const size_t _DPREGISTER = 13;
-		static const size_t _EPREGISTER = 14;
-		static const size_t _HPREGISTER = 15;
-		static const size_t _LPREGISTER = 16;
-		static const size_t _IXREGISTER = 20;
-		static const size_t _IYREGISTER = 21;
+		static const size_t _AREGISTER	 = 0;
+		// The F Register is the status...
+		static const size_t _BREGISTER	 = 2;
+		static const size_t _CREGISTER	 = 3;
+		static const size_t _DREGISTER	 = 4;
+		static const size_t _EREGISTER	 = 5;
+		static const size_t _HREGISTER	 = 6;
+		static const size_t _LREGISTER	 = 7;
+		static const size_t _APREGISTER	 = 10;
+		static const size_t _FPREGISTER	 = 11;
+		static const size_t _BPREGISTER	 = 11;
+		static const size_t _CPREGISTER	 = 12;
+		static const size_t _DPREGISTER	 = 13;
+		static const size_t _EPREGISTER	 = 14;
+		static const size_t _HPREGISTER	 = 15;
+		static const size_t _LPREGISTER	 = 16;
+		static const size_t _IXHREGISTER = 20;
+		static const size_t _IXLREGISTER = 21;
+		static const size_t _IYHREGISTER = 22;
+		static const size_t _IYLREGISTER = 23;
+		static const size_t _IREGISTER   = 24;
+		static const size_t _RREGISTER   = 25;
 
 		/** To identify the position of the flags in the status register. */
 		static const size_t _CARRYFLAG = 0;
@@ -58,11 +62,11 @@ namespace FZ80
 
 		CZ80 (const MCHEmul::CPUArchitecture& a = createArchitecture ());
 
-		// Accesing he registers...
+		// Accesing the main registers...
 		MCHEmul::Register& aRegister ()
 							{ return (internalRegister (_AREGISTER)); }
 		MCHEmul::Register& fRegister ()
-							{ return (internalRegister (_FREGISTER)); }
+							{ return (statusRegister ()); }
 		MCHEmul::RefRegisters& afRegister ()
 							{ return (_afRegister); }
 		MCHEmul::Register& bRegister ()
@@ -84,6 +88,7 @@ namespace FZ80
 		MCHEmul::RefRegisters& hlRegister ()
 							{ return (_hlRegister); }
 
+		// Accesing the alternative registers...
 		MCHEmul::Register& apRegister ()
 							{ return (internalRegister (_APREGISTER)); }
 		MCHEmul::Register& fpRegister ()
@@ -108,10 +113,26 @@ namespace FZ80
 							{ return (internalRegister (_LPREGISTER)); }
 		MCHEmul::RefRegisters& hlpRegister ()
 							{ return (_hlpRegister); }
-		MCHEmul::Register& ixRegister ()
-							{ return (internalRegister (_IXREGISTER)); }
-		MCHEmul::Register& iyRegister ()
-							{ return (internalRegister (_IYREGISTER)); }
+
+		// Accesing the index registers...
+		MCHEmul::Register& ixhRegister ()
+							{ return (internalRegister (_IXHREGISTER)); }
+		MCHEmul::Register& ixlRegister ()
+							{ return (internalRegister (_IXLREGISTER)); }
+		MCHEmul::RefRegisters& ixRegister ()
+							{ return (_ixRegister); }
+		MCHEmul::Register& iyhRegister ()
+							{ return (internalRegister (_IYHREGISTER)); }
+		MCHEmul::Register& iylRegister ()
+							{ return (internalRegister (_IYLREGISTER)); }
+		MCHEmul::RefRegisters& iyRegister ()
+							{ return (_iyRegister); }
+
+		// Accesing other registers used only in some computers...
+		MCHEmul::Register& iRegister ()
+							{ return (internalRegister (_IREGISTER)); }
+		MCHEmul::Register& rRegister ()
+							{ return (internalRegister (_RREGISTER)); }
 
 		protected:
 		MCHEmul::RefRegisters _afRegister;
@@ -122,6 +143,8 @@ namespace FZ80
 		MCHEmul::RefRegisters _bcpRegister;
 		MCHEmul::RefRegisters _depRegister;
 		MCHEmul::RefRegisters _hlpRegister;
+		MCHEmul::RefRegisters _ixRegister;
+		MCHEmul::RefRegisters _iyRegister;
 
 		private:
 		// Implementation

@@ -147,12 +147,12 @@ bool COMMODORE::VICII::simulate (MCHEmul::CPU* cpu)
 				<< "], Graphics:"
 				<< std::to_string ((int) _VICIIRegisters -> graphicModeActive ())
 				<< ", Memory:["
-				<< "Bk" << std::to_string ((int) _VICIIRegisters -> bank ()) << ","
-				<< "$" << MCHEmul::removeAll0 (_VICIIRegisters -> screenMemory ().asString
+				<< "Bk=" << std::to_string ((int) _VICIIRegisters -> bank ()) << ","
+				<< "SM=$" << MCHEmul::removeAll0 (_VICIIRegisters -> screenMemory ().asString
 					(MCHEmul::UByte::OutputFormat::_HEXA, '\0', 2)) << ","
-				<< "$" << MCHEmul::removeAll0 (_VICIIRegisters -> charDataMemory ().asString
+				<< "CM=$" << MCHEmul::removeAll0 (_VICIIRegisters -> charDataMemory ().asString
 					(MCHEmul::UByte::OutputFormat::_HEXA, '\0', 2)) << ","
-				<< "$" << MCHEmul::removeAll0 (_VICIIRegisters -> bitmapMemory ().asString
+				<< "BM=$" << MCHEmul::removeAll0 (_VICIIRegisters -> bitmapMemory ().asString
 					(MCHEmul::UByte::OutputFormat::_HEXA, '\0', 2)) << "]\n";
 
 			// Draws lines where there is a IRQ interruption...

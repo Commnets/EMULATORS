@@ -43,6 +43,11 @@
  */
 
 /**
+ *	\defgroup	VIC20 Classes defining the VIC20 Computer
+ *	Classes and macros defining the characteristics of any VIC20 Computer.
+ */
+
+/**
  *	\defgroup	EMULS Classes defining a template for any emulator.
  *	Classes and macros defining the common characteristics to any Emulator.
  */

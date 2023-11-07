@@ -155,6 +155,7 @@
   <ItemGroup>
     <ClCompile Include="..\..\src\FZ80\CZ80.cpp" />
     <ClCompile Include="..\..\src\FZ80\Instructions.cpp" />
+    <ClCompile Include="..\..\src\FZ80\LD.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\include\FZ80\CZ80.hpp" />

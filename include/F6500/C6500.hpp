@@ -62,9 +62,12 @@ namespace F6500
 
 		C6500 (const MCHEmul::CPUArchitecture& a);
 
-		virtual MCHEmul::Address IRQVectorAddress () const = 0;
-		virtual MCHEmul::Address NMIVectorAddress () const = 0;
-		virtual MCHEmul::Address ResetVectorAddress () const = 0;
+		virtual MCHEmul::Address IRQVectorAddress () const
+							{ return (MCHEmul::Address ({ 0xfe, 0xff }, false /** Little - endian */)); }
+		virtual MCHEmul::Address NMIVectorAddress () const
+							{ return (MCHEmul::Address ({ 0xfa, 0xff }, false /** Little - endian */)); }
+		virtual MCHEmul::Address ResetVectorAddress () const
+							{ return (MCHEmul::Address ({ 0xfc, 0xff }, false /** Little - endian */)); }
 
 		// Accessing the registers...
 		MCHEmul::Register& accumulator ()

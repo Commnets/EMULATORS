@@ -16,6 +16,7 @@
 
 #include <CORE/incs.hpp>
 #include <F6500/C6500.hpp>
+#include <F6500/C6502.hpp>
 #include <F6500/C6510.hpp>
 #include <F6500/IRQInterrupt.hpp>
 #include <F6500/NMIInterrupt.hpp>
