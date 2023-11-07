@@ -87,7 +87,9 @@ namespace MCHEmul
 		bool operator != (const Register& r) const
 							{ return (_values != r._values); }
 
-		UByte operator [] (size_t p) const
+		const UByte& operator [] (size_t p) const
+							{ return (_values [p]); }
+		UByte& operator [] (size_t p)
 							{ return (_values [p]); }
 
 		std::string asString () const

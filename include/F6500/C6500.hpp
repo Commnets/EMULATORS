@@ -72,9 +72,15 @@ namespace F6500
 		// Accessing the registers...
 		MCHEmul::Register& accumulator ()
 							{ return (internalRegister (_ACCUMULATOR)); }
+		const MCHEmul::Register& accumulator () const
+							{ return (internalRegister (_ACCUMULATOR)); }
 		MCHEmul::Register& xRegister ()
 							{ return (internalRegister (_XREGISTER)); }
+		const MCHEmul::Register& xRegister () const
+							{ return (internalRegister (_XREGISTER)); }
 		MCHEmul::Register& yRegister ()
+							{ return (internalRegister (_YREGISTER)); }
+		const MCHEmul::Register& yRegister () const
 							{ return (internalRegister (_YREGISTER)); }
 
 		virtual bool initialize () override;

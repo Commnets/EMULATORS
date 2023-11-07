@@ -5,9 +5,7 @@ _INST_IMPL (FZ80::LD_A)
 {
 	assert (parameters().size () == 2);
 
-	return (executeWith (
-		dynamic_cast <FZ80::CZ80*> (cpu ()) -> aRegister (),
-		parameters ()[1].value ()));
+	return (executeWith (registerA (), parameters ()[1].value ()));
 }
 
 // ---
@@ -15,9 +13,7 @@ _INST_IMPL (FZ80::LD_AFromA)
 {
 	assert (parameters().size () == 1);
 
-	return (executeWith (
-		dynamic_cast <FZ80::CZ80*> (cpu ()) -> aRegister (),
-		dynamic_cast <FZ80::CZ80*> (cpu ()) -> aRegister ().values ()[0]));
+	return (executeWith (registerA (), valueRegisterA ()));
 }
 
 // ---
@@ -25,9 +21,7 @@ _INST_IMPL (FZ80::LD_AFromB)
 {
 	assert (parameters().size () == 1);
 
-	return (executeWith (
-		dynamic_cast <FZ80::CZ80*> (cpu ()) -> aRegister (),
-		dynamic_cast <FZ80::CZ80*> (cpu ()) -> bRegister ().values ()[0]));
+	return (executeWith (registerA (), valueRegisterB ()));
 }
 
 // ---
@@ -35,9 +29,7 @@ _INST_IMPL (FZ80::LD_AFromC)
 {
 	assert (parameters().size () == 1);
 
-	return (executeWith (
-		dynamic_cast <FZ80::CZ80*> (cpu ()) -> aRegister (),
-		dynamic_cast <FZ80::CZ80*> (cpu ()) -> cRegister ().values ()[0]));
+	return (executeWith (registerA (), valueRegisterC ()));
 }
 
 // ---
@@ -45,9 +37,7 @@ _INST_IMPL (FZ80::LD_AFromD)
 {
 	assert (parameters().size () == 1);
 
-	return (executeWith (
-		dynamic_cast <FZ80::CZ80*> (cpu ()) -> aRegister (),
-		dynamic_cast <FZ80::CZ80*> (cpu ()) -> dRegister ().values ()[0]));
+	return (executeWith (registerA (), valueRegisterD ()));
 }
 
 // ---
@@ -55,9 +45,7 @@ _INST_IMPL (FZ80::LD_AFromE)
 {
 	assert (parameters().size () == 1);
 
-	return (executeWith (
-		dynamic_cast <FZ80::CZ80*> (cpu ()) -> aRegister (),
-		dynamic_cast <FZ80::CZ80*> (cpu ()) -> eRegister ().values ()[0]));
+	return (executeWith (registerA (), valueRegisterE ()));
 }
 
 // ---
@@ -65,9 +53,7 @@ _INST_IMPL (FZ80::LD_AFromF)
 {
 	assert (parameters().size () == 1);
 
-	return (executeWith (
-		dynamic_cast <FZ80::CZ80*> (cpu ()) -> aRegister (),
-		dynamic_cast <FZ80::CZ80*> (cpu ()) -> fRegister ().values ()[0]));
+	return (executeWith (registerA (), valueRegisterF ()));
 }
 
 // ---
@@ -75,9 +61,7 @@ _INST_IMPL (FZ80::LD_AFromL)
 {
 	assert (parameters().size () == 1);
 
-	return (executeWith (
-		dynamic_cast <FZ80::CZ80*> (cpu ()) -> aRegister (),
-		dynamic_cast <FZ80::CZ80*> (cpu ()) -> lRegister ().values ()[0]));
+	return (executeWith (registerA (), valueRegisterL ()));
 }
 
 // ---
@@ -85,9 +69,7 @@ _INST_IMPL (FZ80::LD_AFromI)
 {
 	assert (parameters().size () == 2);
 
-	return (executeWith (
-		dynamic_cast <FZ80::CZ80*> (cpu ()) -> aRegister (),
-		dynamic_cast <FZ80::CZ80*> (cpu ()) -> iRegister ().values ()[0]));
+	return (executeWith (registerA (), valueRegisterI ()));
 }
 
 // ---
@@ -95,9 +77,7 @@ _INST_IMPL (FZ80::LD_AFromR)
 {
 	assert (parameters().size () == 2);
 
-	return (executeWith (
-		dynamic_cast <FZ80::CZ80*> (cpu ()) -> aRegister (),
-		dynamic_cast <FZ80::CZ80*> (cpu ()) -> rRegister ().values ()[0]));
+	return (executeWith (registerA (), valueRegisterR ()));
 }
 
 // ---
@@ -105,10 +85,7 @@ _INST_IMPL (FZ80::LD_AFromAddressHL)
 {
 	assert (parameters().size () == 1);
 
-	MCHEmul::RefRegisters& hl = dynamic_cast <FZ80::CZ80*> (cpu ()) -> hlRegister ();
-	return (executeWith (
-		dynamic_cast <FZ80::CZ80*> (cpu ()) -> aRegister (),
-		memory () -> value (MCHEmul::Address (MCHEmul::UBytes ({ hl [0] -> values ()[0], hl [1] -> values ()[0] }), true))));
+	return (executeWith (registerA (), valueAddressHL ()));
 }
 
 // ---
@@ -116,10 +93,7 @@ _INST_IMPL (FZ80::LD_AFromAddressBC)
 {
 	assert (parameters().size () == 1);
 
-	MCHEmul::RefRegisters& bc = dynamic_cast <FZ80::CZ80*> (cpu ()) -> bcRegister ();
-	return (executeWith (
-		dynamic_cast <FZ80::CZ80*> (cpu ()) -> aRegister (),
-		memory () -> value (MCHEmul::Address (MCHEmul::UBytes ({ bc [0] -> values ()[0], bc [1] -> values ()[0] }), true))));
+	return (executeWith (registerA (), valueAddressBC ()));
 }
 
 // ---
@@ -127,10 +101,7 @@ _INST_IMPL (FZ80::LD_AFromAddressDE)
 {
 	assert (parameters().size () == 1);
 
-	MCHEmul::RefRegisters& de = dynamic_cast <FZ80::CZ80*> (cpu ()) -> deRegister ();
-	return (executeWith (
-		dynamic_cast <FZ80::CZ80*> (cpu ()) -> aRegister (),
-		memory () -> value (MCHEmul::Address (MCHEmul::UBytes ({ de [0] -> values ()[0], de [1] -> values ()[0] }), true))));
+	return (executeWith (registerA (), valueAddressDE ()));
 }
 
 // ---
@@ -138,11 +109,7 @@ _INST_IMPL (FZ80::LD_AFromAddressIndexIX)
 {
 	assert (parameters().size () == 3);
 
-	MCHEmul::RefRegisters& ix = dynamic_cast <FZ80::CZ80*> (cpu ()) -> ixRegister ();
-	return (executeWith (
-		dynamic_cast <FZ80::CZ80*> (cpu ()) -> aRegister (),
-		memory () -> value (MCHEmul::Address (MCHEmul::UBytes ({ ix [0] -> values ()[0], ix [1] -> values ()[0] }), true) + 
-			(size_t) (parameters ()[2].value ()))));
+	return (executeWith (registerA (), valueAddressIX ((size_t) parameters ()[2].value ())));
 }
 
 // ---
@@ -150,11 +117,7 @@ _INST_IMPL (FZ80::LD_AFromAddressIndexIY)
 {
 	assert (parameters().size () == 3);
 
-	MCHEmul::RefRegisters& iy = dynamic_cast <FZ80::CZ80*> (cpu ()) -> iyRegister ();
-	return (executeWith (
-		dynamic_cast <FZ80::CZ80*> (cpu ()) -> aRegister (),
-		memory () -> value (MCHEmul::Address (MCHEmul::UBytes ({ iy [0] -> values ()[0], iy [1] -> values ()[0] }), true) + 
-			(size_t) (parameters ()[2].value ()))));
+	return (executeWith (registerA (), valueAddressIY ((size_t) parameters ()[2].value ())));
 }
 
 // ---
@@ -162,9 +125,9 @@ _INST_IMPL (FZ80::LD_AFromAddress)
 {
 	assert (parameters().size () == 3);
 
-	return (executeWith (
-		dynamic_cast <FZ80::CZ80*> (cpu ()) -> aRegister (),
-		memory () -> value (MCHEmul::Address (MCHEmul::UBytes ({ parameters ()[1].value (), parameters ()[2].value () }), true))));
+	return (executeWith (registerA (), 
+		memory () -> value (MCHEmul::Address 
+			({ parameters ()[1].value (), parameters ()[2].value () }, false /** little - endian */))));
 }
 
 // ---
@@ -172,9 +135,7 @@ _INST_IMPL (FZ80::LD_B)
 {
 	assert (parameters().size () == 2);
 
-	return (executeWith (
-		dynamic_cast <FZ80::CZ80*> (cpu ()) -> bRegister (),
-		parameters ()[1].value ()));
+	return (executeWith (registerB (), parameters ()[1].value ()));
 }
 
 // ---
@@ -182,9 +143,7 @@ _INST_IMPL (FZ80::LD_BFromA)
 {
 	assert (parameters().size () == 1);
 
-	return (executeWith (
-		dynamic_cast <FZ80::CZ80*> (cpu ()) -> bRegister (),
-		dynamic_cast <FZ80::CZ80*> (cpu ()) -> aRegister ().values ()[0]));
+	return (executeWith (registerB (), valueRegisterA ()));
 }
 
 // ---
@@ -192,9 +151,7 @@ _INST_IMPL (FZ80::LD_BFromB)
 {
 	assert (parameters().size () == 1);
 
-	return (executeWith (
-		dynamic_cast <FZ80::CZ80*> (cpu ()) -> bRegister (),
-		dynamic_cast <FZ80::CZ80*> (cpu ()) -> bRegister ().values ()[0]));
+	return (executeWith (registerB (), valueRegisterB ()));
 }
 
 // ---
@@ -202,9 +159,7 @@ _INST_IMPL (FZ80::LD_BFromC)
 {
 	assert (parameters().size () == 1);
 
-	return (executeWith (
-		dynamic_cast <FZ80::CZ80*> (cpu ()) -> bRegister (),
-		dynamic_cast <FZ80::CZ80*> (cpu ()) -> cRegister ().values ()[0]));
+	return (executeWith (registerB (), valueRegisterC ()));
 }
 
 // ---
@@ -212,9 +167,7 @@ _INST_IMPL (FZ80::LD_BFromD)
 {
 	assert (parameters().size () == 1);
 
-	return (executeWith (
-		dynamic_cast <FZ80::CZ80*> (cpu ()) -> bRegister (),
-		dynamic_cast <FZ80::CZ80*> (cpu ()) -> dRegister ().values ()[0]));
+	return (executeWith (registerB (), valueRegisterD ()));
 }
 
 // ---
@@ -222,9 +175,7 @@ _INST_IMPL (FZ80::LD_BFromE)
 {
 	assert (parameters().size () == 1);
 
-	return (executeWith (
-		dynamic_cast <FZ80::CZ80*> (cpu ()) -> bRegister (),
-		dynamic_cast <FZ80::CZ80*> (cpu ()) -> eRegister ().values ()[0]));
+	return (executeWith (registerB (), valueRegisterE ()));
 }
 
 // ---
@@ -232,9 +183,7 @@ _INST_IMPL (FZ80::LD_BFromF)
 {
 	assert (parameters().size () == 1);
 
-	return (executeWith (
-		dynamic_cast <FZ80::CZ80*> (cpu ()) -> bRegister (),
-		dynamic_cast <FZ80::CZ80*> (cpu ()) -> fRegister ().values ()[0]));
+	return (executeWith (registerB (), valueRegisterF ()));
 }
 
 // ---
@@ -242,9 +191,7 @@ _INST_IMPL (FZ80::LD_BFromL)
 {
 	assert (parameters().size () == 1);
 
-	return (executeWith (
-		dynamic_cast <FZ80::CZ80*> (cpu ()) -> bRegister (),
-		dynamic_cast <FZ80::CZ80*> (cpu ()) -> lRegister ().values ()[0]));
+	return (executeWith (registerB (), valueRegisterL ()));
 }
 
 // ---
@@ -252,11 +199,7 @@ _INST_IMPL (FZ80::LD_BFromAddressIndexIX)
 {
 	assert (parameters().size () == 3);
 
-	MCHEmul::RefRegisters& ix = dynamic_cast <FZ80::CZ80*> (cpu ()) -> ixRegister ();
-	return (executeWith (
-		dynamic_cast <FZ80::CZ80*> (cpu ()) -> bRegister (),
-		memory () -> value (MCHEmul::Address (MCHEmul::UBytes ({ ix [0] -> values ()[0], ix [1] -> values ()[0] }), true) + 
-			(size_t) (parameters ()[2].value ()))));
+	return (executeWith (registerB (), valueAddressIX ((size_t) parameters ()[2].value ())));
 }
 
 // ---
@@ -264,11 +207,7 @@ _INST_IMPL (FZ80::LD_BFromAddressIndexIY)
 {
 	assert (parameters().size () == 3);
 
-	MCHEmul::RefRegisters& iy = dynamic_cast <FZ80::CZ80*> (cpu ()) -> iyRegister ();
-	return (executeWith (
-		dynamic_cast <FZ80::CZ80*> (cpu ()) -> bRegister (),
-		memory () -> value (MCHEmul::Address (MCHEmul::UBytes ({ iy [0] -> values ()[0], iy [1] -> values ()[0] }), true) + 
-			(size_t) (parameters ()[2].value ()))));
+	return (executeWith (registerB (), valueAddressIY ((size_t) parameters ()[2].value ())));
 }
 
 // ---
@@ -276,9 +215,7 @@ _INST_IMPL (FZ80::LD_C)
 {
 	assert (parameters().size () == 2);
 
-	return (executeWith (
-		dynamic_cast <FZ80::CZ80*> (cpu ()) -> cRegister (),
-		parameters ()[1].value ()));
+	return (executeWith (registerC (), parameters ()[1].value ()));
 }
 
 // ---
@@ -286,9 +223,7 @@ _INST_IMPL (FZ80::LD_CFromA)
 {
 	assert (parameters().size () == 1);
 
-	return (executeWith (
-		dynamic_cast <FZ80::CZ80*> (cpu ()) -> cRegister (),
-		dynamic_cast <FZ80::CZ80*> (cpu ()) -> aRegister ().values ()[0]));
+	return (executeWith (registerC (), valueRegisterA ()));
 }
 
 // ---
@@ -296,9 +231,7 @@ _INST_IMPL (FZ80::LD_CFromB)
 {
 	assert (parameters().size () == 1);
 
-	return (executeWith (
-		dynamic_cast <FZ80::CZ80*> (cpu ()) -> cRegister (),
-		dynamic_cast <FZ80::CZ80*> (cpu ()) -> bRegister ().values ()[0]));
+	return (executeWith (registerC (), valueRegisterB ()));
 }
 
 // ---
@@ -306,9 +239,7 @@ _INST_IMPL (FZ80::LD_CFromC)
 {
 	assert (parameters().size () == 1);
 
-	return (executeWith (
-		dynamic_cast <FZ80::CZ80*> (cpu ()) -> cRegister (),
-		dynamic_cast <FZ80::CZ80*> (cpu ()) -> cRegister ().values ()[0]));
+	return (executeWith (registerC (), valueRegisterC ()));
 }
 
 // ---
@@ -316,9 +247,7 @@ _INST_IMPL (FZ80::LD_CFromD)
 {
 	assert (parameters().size () == 1);
 
-	return (executeWith (
-		dynamic_cast <FZ80::CZ80*> (cpu ()) -> cRegister (),
-		dynamic_cast <FZ80::CZ80*> (cpu ()) -> dRegister ().values ()[0]));
+	return (executeWith (registerC (), valueRegisterD ()));
 }
 
 // ---
@@ -326,9 +255,7 @@ _INST_IMPL (FZ80::LD_CFromE)
 {
 	assert (parameters().size () == 1);
 
-	return (executeWith (
-		dynamic_cast <FZ80::CZ80*> (cpu ()) -> cRegister (),
-		dynamic_cast <FZ80::CZ80*> (cpu ()) -> eRegister ().values ()[0]));
+	return (executeWith (registerC (), valueRegisterE ()));
 }
 
 // ---
@@ -336,9 +263,7 @@ _INST_IMPL (FZ80::LD_CFromF)
 {
 	assert (parameters().size () == 1);
 
-	return (executeWith (
-		dynamic_cast <FZ80::CZ80*> (cpu ()) -> cRegister (),
-		dynamic_cast <FZ80::CZ80*> (cpu ()) -> fRegister ().values ()[0]));
+	return (executeWith (registerC (), valueRegisterF ()));
 }
 
 // ---
@@ -346,9 +271,7 @@ _INST_IMPL (FZ80::LD_CFromL)
 {
 	assert (parameters().size () == 1);
 
-	return (executeWith (
-		dynamic_cast <FZ80::CZ80*> (cpu ()) -> cRegister (),
-		dynamic_cast <FZ80::CZ80*> (cpu ()) -> lRegister ().values ()[0]));
+	return (executeWith (registerC (), valueRegisterL ()));
 }
 
 // ---
@@ -356,11 +279,7 @@ _INST_IMPL (FZ80::LD_CFromAddressIndexIX)
 {
 	assert (parameters().size () == 3);
 
-	MCHEmul::RefRegisters& ix = dynamic_cast <FZ80::CZ80*> (cpu ()) -> ixRegister ();
-	return (executeWith (
-		dynamic_cast <FZ80::CZ80*> (cpu ()) -> cRegister (),
-		memory () -> value (MCHEmul::Address (MCHEmul::UBytes ({ ix [0] -> values ()[0], ix [1] -> values ()[0] }), true) + 
-			(size_t) (parameters ()[2].value ()))));
+	return (executeWith (registerC (), valueAddressIX ((size_t) parameters ()[2].value ())));
 }
 
 // ---
@@ -368,11 +287,7 @@ _INST_IMPL (FZ80::LD_CFromAddressIndexIY)
 {
 	assert (parameters().size () == 3);
 
-	MCHEmul::RefRegisters& iy = dynamic_cast <FZ80::CZ80*> (cpu ()) -> iyRegister ();
-	return (executeWith (
-		dynamic_cast <FZ80::CZ80*> (cpu ()) -> cRegister (),
-		memory () -> value (MCHEmul::Address (MCHEmul::UBytes ({ iy [0] -> values ()[0], iy [1] -> values ()[0] }), true) + 
-			(size_t) (parameters ()[2].value ()))));
+	return (executeWith (registerC (), valueAddressIY ((size_t) parameters ()[2].value ())));
 }
 
 // ---
@@ -380,9 +295,7 @@ _INST_IMPL (FZ80::LD_D)
 {
 	assert (parameters().size () == 2);
 
-	return (executeWith (
-		dynamic_cast <FZ80::CZ80*> (cpu ()) -> dRegister (),
-		parameters ()[1].value ()));
+	return (executeWith (registerD (), parameters ()[1].value ()));
 }
 
 // ---
@@ -390,9 +303,7 @@ _INST_IMPL (FZ80::LD_DFromA)
 {
 	assert (parameters().size () == 1);
 
-	return (executeWith (
-		dynamic_cast <FZ80::CZ80*> (cpu ()) -> dRegister (),
-		dynamic_cast <FZ80::CZ80*> (cpu ()) -> aRegister ().values ()[0]));
+	return (executeWith (registerD (), valueRegisterA ()));
 }
 
 // ---
@@ -400,9 +311,7 @@ _INST_IMPL (FZ80::LD_DFromB)
 {
 	assert (parameters().size () == 1);
 
-	return (executeWith (
-		dynamic_cast <FZ80::CZ80*> (cpu ()) -> dRegister (),
-		dynamic_cast <FZ80::CZ80*> (cpu ()) -> bRegister ().values ()[0]));
+	return (executeWith (registerD (), valueRegisterB ()));
 }
 
 // ---
@@ -410,9 +319,7 @@ _INST_IMPL (FZ80::LD_DFromC)
 {
 	assert (parameters().size () == 1);
 
-	return (executeWith (
-		dynamic_cast <FZ80::CZ80*> (cpu ()) -> dRegister (),
-		dynamic_cast <FZ80::CZ80*> (cpu ()) -> cRegister ().values ()[0]));
+	return (executeWith (registerD (), valueRegisterC ()));
 }
 
 // ---
@@ -420,9 +327,7 @@ _INST_IMPL (FZ80::LD_DFromD)
 {
 	assert (parameters().size () == 1);
 
-	return (executeWith (
-		dynamic_cast <FZ80::CZ80*> (cpu ()) -> dRegister (),
-		dynamic_cast <FZ80::CZ80*> (cpu ()) -> dRegister ().values ()[0]));
+	return (executeWith (registerD (), valueRegisterD ()));
 }
 
 // ---
@@ -430,9 +335,7 @@ _INST_IMPL (FZ80::LD_DFromE)
 {
 	assert (parameters().size () == 1);
 
-	return (executeWith (
-		dynamic_cast <FZ80::CZ80*> (cpu ()) -> dRegister (),
-		dynamic_cast <FZ80::CZ80*> (cpu ()) -> eRegister ().values ()[0]));
+	return (executeWith (registerD (), valueRegisterE ()));
 }
 
 // ---
@@ -440,9 +343,7 @@ _INST_IMPL (FZ80::LD_DFromF)
 {
 	assert (parameters().size () == 1);
 
-	return (executeWith (
-		dynamic_cast <FZ80::CZ80*> (cpu ()) -> dRegister (),
-		dynamic_cast <FZ80::CZ80*> (cpu ()) -> fRegister ().values ()[0]));
+	return (executeWith (registerD (), valueRegisterF ()));
 }
 
 // ---
@@ -450,9 +351,7 @@ _INST_IMPL (FZ80::LD_DFromL)
 {
 	assert (parameters().size () == 1);
 
-	return (executeWith (
-		dynamic_cast <FZ80::CZ80*> (cpu ()) -> dRegister (),
-		dynamic_cast <FZ80::CZ80*> (cpu ()) -> lRegister ().values ()[0]));
+	return (executeWith (registerD (), valueRegisterL ()));
 }
 
 // ---
@@ -460,11 +359,7 @@ _INST_IMPL (FZ80::LD_DFromAddressIndexIX)
 {
 	assert (parameters().size () == 3);
 
-	MCHEmul::RefRegisters& ix = dynamic_cast <FZ80::CZ80*> (cpu ()) -> ixRegister ();
-	return (executeWith (
-		dynamic_cast <FZ80::CZ80*> (cpu ()) -> dRegister (),
-		memory () -> value (MCHEmul::Address (MCHEmul::UBytes ({ ix [0] -> values ()[0], ix [1] -> values ()[0] }), true) + 
-			(size_t) (parameters ()[2].value ()))));
+	return (executeWith (registerD (), valueAddressIX ((size_t) parameters ()[2].value ())));
 }
 
 // ---
@@ -472,21 +367,7 @@ _INST_IMPL (FZ80::LD_DFromAddressIndexIY)
 {
 	assert (parameters().size () == 3);
 
-	MCHEmul::RefRegisters& iy = dynamic_cast <FZ80::CZ80*> (cpu ()) -> iyRegister ();
-	return (executeWith (
-		dynamic_cast <FZ80::CZ80*> (cpu ()) -> dRegister (),
-		memory () -> value (MCHEmul::Address (MCHEmul::UBytes ({ iy [0] -> values ()[0], iy [1] -> values ()[0] }), true) + 
-			(size_t) (parameters ()[2].value ()))));
-}
-
-// ---
-_INST_IMPL (FZ80::LD_EFromA)
-{
-	assert (parameters().size () == 1);
-
-	return (executeWith (
-		dynamic_cast <FZ80::CZ80*> (cpu ()) -> eRegister (),
-		dynamic_cast <FZ80::CZ80*> (cpu ()) -> aRegister ().values ()[0]));
+	return (executeWith (registerD (), valueAddressIY ((size_t) parameters ()[2].value ())));
 }
 
 // ---
@@ -494,9 +375,15 @@ _INST_IMPL (FZ80::LD_E)
 {
 	assert (parameters().size () == 2);
 
-	return (executeWith (
-		dynamic_cast <FZ80::CZ80*> (cpu ()) -> eRegister (),
-		parameters ()[1].value ()));
+	return (executeWith (registerE (), parameters ()[1].value ()));
+}
+
+// ---
+_INST_IMPL (FZ80::LD_EFromA)
+{
+	assert (parameters().size () == 1);
+
+	return (executeWith (registerE (), valueRegisterA ()));
 }
 
 // ---
@@ -504,9 +391,7 @@ _INST_IMPL (FZ80::LD_EFromB)
 {
 	assert (parameters().size () == 1);
 
-	return (executeWith (
-		dynamic_cast <FZ80::CZ80*> (cpu ()) -> eRegister (),
-		dynamic_cast <FZ80::CZ80*> (cpu ()) -> bRegister ().values ()[0]));
+	return (executeWith (registerE (), valueRegisterB ()));
 }
 
 // ---
@@ -514,9 +399,7 @@ _INST_IMPL (FZ80::LD_EFromC)
 {
 	assert (parameters().size () == 1);
 
-	return (executeWith (
-		dynamic_cast <FZ80::CZ80*> (cpu ()) -> eRegister (),
-		dynamic_cast <FZ80::CZ80*> (cpu ()) -> cRegister ().values ()[0]));
+	return (executeWith (registerE (), valueRegisterC ()));
 }
 
 // ---
@@ -524,9 +407,7 @@ _INST_IMPL (FZ80::LD_EFromD)
 {
 	assert (parameters().size () == 1);
 
-	return (executeWith (
-		dynamic_cast <FZ80::CZ80*> (cpu ()) -> eRegister (),
-		dynamic_cast <FZ80::CZ80*> (cpu ()) -> dRegister ().values ()[0]));
+	return (executeWith (registerE (), valueRegisterD ()));
 }
 
 // ---
@@ -534,9 +415,7 @@ _INST_IMPL (FZ80::LD_EFromE)
 {
 	assert (parameters().size () == 1);
 
-	return (executeWith (
-		dynamic_cast <FZ80::CZ80*> (cpu ()) -> eRegister (),
-		dynamic_cast <FZ80::CZ80*> (cpu ()) -> eRegister ().values ()[0]));
+	return (executeWith (registerE (), valueRegisterE ()));
 }
 
 // ---
@@ -544,9 +423,7 @@ _INST_IMPL (FZ80::LD_EFromF)
 {
 	assert (parameters().size () == 1);
 
-	return (executeWith (
-		dynamic_cast <FZ80::CZ80*> (cpu ()) -> eRegister (),
-		dynamic_cast <FZ80::CZ80*> (cpu ()) -> fRegister ().values ()[0]));
+	return (executeWith (registerE (), valueRegisterF ()));
 }
 
 // ---
@@ -554,9 +431,7 @@ _INST_IMPL (FZ80::LD_EFromL)
 {
 	assert (parameters().size () == 1);
 
-	return (executeWith (
-		dynamic_cast <FZ80::CZ80*> (cpu ()) -> aRegister (),
-		dynamic_cast <FZ80::CZ80*> (cpu ()) -> lRegister ().values ()[0]));
+	return (executeWith (registerE (), valueRegisterL ()));
 }
 
 // ---
@@ -564,11 +439,7 @@ _INST_IMPL (FZ80::LD_EFromAddressIndexIX)
 {
 	assert (parameters().size () == 3);
 
-	MCHEmul::RefRegisters& ix = dynamic_cast <FZ80::CZ80*> (cpu ()) -> ixRegister ();
-	return (executeWith (
-		dynamic_cast <FZ80::CZ80*> (cpu ()) -> eRegister (),
-		memory () -> value (MCHEmul::Address (MCHEmul::UBytes ({ ix [0] -> values ()[0], ix [1] -> values ()[0] }), true) + 
-			(size_t) (parameters ()[2].value ()))));
+	return (executeWith (registerE (), valueAddressIX ((size_t) (parameters ()[2].value ()))));
 }
 
 // ---
@@ -576,11 +447,7 @@ _INST_IMPL (FZ80::LD_EFromAddressIndexIY)
 {
 	assert (parameters().size () == 3);
 
-	MCHEmul::RefRegisters& iy = dynamic_cast <FZ80::CZ80*> (cpu ()) -> iyRegister ();
-	return (executeWith (
-		dynamic_cast <FZ80::CZ80*> (cpu ()) -> eRegister (),
-		memory () -> value (MCHEmul::Address (MCHEmul::UBytes ({ iy [0] -> values ()[0], iy [1] -> values ()[0] }), true) + 
-			(size_t) (parameters ()[2].value ()))));
+	return (executeWith (registerE (), valueAddressIY ((size_t) (parameters ()[2].value ()))));
 }
 
 // ---
@@ -588,9 +455,7 @@ _INST_IMPL (FZ80::LD_H)
 {
 	assert (parameters().size () == 2);
 
-	return (executeWith (
-		dynamic_cast <FZ80::CZ80*> (cpu ()) -> hRegister (),
-		parameters ()[1].value ()));
+	return (executeWith (registerH (), parameters ()[1].value ()));
 }
 
 // ---
@@ -598,9 +463,7 @@ _INST_IMPL (FZ80::LD_HFromA)
 {
 	assert (parameters().size () == 1);
 
-	return (executeWith (
-		dynamic_cast <FZ80::CZ80*> (cpu ()) -> hRegister (),
-		dynamic_cast <FZ80::CZ80*> (cpu ()) -> aRegister ().values ()[0]));
+	return (executeWith (registerH (), valueRegisterA ()));
 }
 
 // ---
@@ -608,9 +471,7 @@ _INST_IMPL (FZ80::LD_HFromB)
 {
 	assert (parameters().size () == 1);
 
-	return (executeWith (
-		dynamic_cast <FZ80::CZ80*> (cpu ()) -> hRegister (),
-		dynamic_cast <FZ80::CZ80*> (cpu ()) -> bRegister ().values ()[0]));
+	return (executeWith (registerH (), valueRegisterB ()));
 }
 
 // ---
@@ -618,9 +479,7 @@ _INST_IMPL (FZ80::LD_HFromC)
 {
 	assert (parameters().size () == 1);
 
-	return (executeWith (
-		dynamic_cast <FZ80::CZ80*> (cpu ()) -> hRegister (),
-		dynamic_cast <FZ80::CZ80*> (cpu ()) -> cRegister ().values ()[0]));
+	return (executeWith (registerH (), valueRegisterC ()));
 }
 
 // ---
@@ -628,9 +487,7 @@ _INST_IMPL (FZ80::LD_HFromD)
 {
 	assert (parameters().size () == 1);
 
-	return (executeWith (
-		dynamic_cast <FZ80::CZ80*> (cpu ()) -> hRegister (),
-		dynamic_cast <FZ80::CZ80*> (cpu ()) -> dRegister ().values ()[0]));
+	return (executeWith (registerH (), valueRegisterD ()));
 }
 
 // ---
@@ -638,9 +495,7 @@ _INST_IMPL (FZ80::LD_HFromE)
 {
 	assert (parameters().size () == 1);
 
-	return (executeWith (
-		dynamic_cast <FZ80::CZ80*> (cpu ()) -> hRegister (),
-		dynamic_cast <FZ80::CZ80*> (cpu ()) -> eRegister ().values ()[0]));
+	return (executeWith (registerH (), valueRegisterE ()));
 }
 
 // ---
@@ -648,9 +503,7 @@ _INST_IMPL (FZ80::LD_HFromF)
 {
 	assert (parameters().size () == 1);
 
-	return (executeWith (
-		dynamic_cast <FZ80::CZ80*> (cpu ()) -> hRegister (),
-		dynamic_cast <FZ80::CZ80*> (cpu ()) -> fRegister ().values ()[0]));
+	return (executeWith (registerH (), valueRegisterF ()));
 }
 
 // ---
@@ -658,9 +511,7 @@ _INST_IMPL (FZ80::LD_HFromL)
 {
 	assert (parameters().size () == 1);
 
-	return (executeWith (
-		dynamic_cast <FZ80::CZ80*> (cpu ()) -> hRegister (),
-		dynamic_cast <FZ80::CZ80*> (cpu ()) -> lRegister ().values ()[0]));
+	return (executeWith (registerH (), valueRegisterL ()));
 }
 
 // ---
@@ -668,11 +519,7 @@ _INST_IMPL (FZ80::LD_HFromAddressIndexIX)
 {
 	assert (parameters().size () == 3);
 
-	MCHEmul::RefRegisters& ix = dynamic_cast <FZ80::CZ80*> (cpu ()) -> ixRegister ();
-	return (executeWith (
-		dynamic_cast <FZ80::CZ80*> (cpu ()) -> hRegister (),
-		memory () -> value (MCHEmul::Address (MCHEmul::UBytes ({ ix [0] -> values ()[0], ix [1] -> values ()[0] }), true) + 
-			(size_t) (parameters ()[2].value ()))));
+	return (executeWith (registerH (), valueAddressIX ((size_t) (parameters ()[2].value ()))));
 }
 
 // ---
@@ -680,11 +527,7 @@ _INST_IMPL (FZ80::LD_HFromAddressIndexIY)
 {
 	assert (parameters().size () == 3);
 
-	MCHEmul::RefRegisters& iy = dynamic_cast <FZ80::CZ80*> (cpu ()) -> iyRegister ();
-	return (executeWith (
-		dynamic_cast <FZ80::CZ80*> (cpu ()) -> hRegister (),
-		memory () -> value (MCHEmul::Address (MCHEmul::UBytes ({ iy [0] -> values ()[0], iy [1] -> values ()[0] }), true) + 
-			(size_t) (parameters ()[2].value ()))));
+	return (executeWith (registerH (), valueAddressIY ((size_t) (parameters ()[2].value ()))));
 }
 
 // ---
@@ -692,9 +535,7 @@ _INST_IMPL (FZ80::LD_L)
 {
 	assert (parameters().size () == 2);
 
-	return (executeWith (
-		dynamic_cast <FZ80::CZ80*> (cpu ()) -> lRegister (),
-		parameters ()[1].value ()));
+	return (executeWith (registerL (), parameters ()[1].value ()));
 }
 
 // ---
@@ -702,9 +543,7 @@ _INST_IMPL (FZ80::LD_LFromA)
 {
 	assert (parameters().size () == 1);
 
-	return (executeWith (
-		dynamic_cast <FZ80::CZ80*> (cpu ()) -> lRegister (),
-		dynamic_cast <FZ80::CZ80*> (cpu ()) -> aRegister ().values ()[0]));
+	return (executeWith (registerL (), valueRegisterA ()));
 }
 
 // ---
@@ -712,9 +551,7 @@ _INST_IMPL (FZ80::LD_LFromB)
 {
 	assert (parameters().size () == 1);
 
-	return (executeWith (
-		dynamic_cast <FZ80::CZ80*> (cpu ()) -> lRegister (),
-		dynamic_cast <FZ80::CZ80*> (cpu ()) -> bRegister ().values ()[0]));
+	return (executeWith (registerL (), valueRegisterB ()));
 }
 
 // ---
@@ -722,9 +559,7 @@ _INST_IMPL (FZ80::LD_LFromC)
 {
 	assert (parameters().size () == 1);
 
-	return (executeWith (
-		dynamic_cast <FZ80::CZ80*> (cpu ()) -> lRegister (),
-		dynamic_cast <FZ80::CZ80*> (cpu ()) -> cRegister ().values ()[0]));
+	return (executeWith (registerL (), valueRegisterC ()));
 }
 
 // ---
@@ -732,9 +567,7 @@ _INST_IMPL (FZ80::LD_LFromD)
 {
 	assert (parameters().size () == 1);
 
-	return (executeWith (
-		dynamic_cast <FZ80::CZ80*> (cpu ()) -> lRegister (),
-		dynamic_cast <FZ80::CZ80*> (cpu ()) -> dRegister ().values ()[0]));
+	return (executeWith (registerL (), valueRegisterD ()));
 }
 
 // ---
@@ -742,9 +575,7 @@ _INST_IMPL (FZ80::LD_LFromE)
 {
 	assert (parameters().size () == 1);
 
-	return (executeWith (
-		dynamic_cast <FZ80::CZ80*> (cpu ()) -> lRegister (),
-		dynamic_cast <FZ80::CZ80*> (cpu ()) -> eRegister ().values ()[0]));
+	return (executeWith (registerL (), valueRegisterE ()));
 }
 
 // ---
@@ -752,9 +583,7 @@ _INST_IMPL (FZ80::LD_LFromF)
 {
 	assert (parameters().size () == 1);
 
-	return (executeWith (
-		dynamic_cast <FZ80::CZ80*> (cpu ()) -> lRegister (),
-		dynamic_cast <FZ80::CZ80*> (cpu ()) -> fRegister ().values ()[0]));
+	return (executeWith (registerL (), valueRegisterF ()));
 }
 
 // ---
@@ -762,9 +591,7 @@ _INST_IMPL (FZ80::LD_LFromL)
 {
 	assert (parameters().size () == 1);
 
-	return (executeWith (
-		dynamic_cast <FZ80::CZ80*> (cpu ()) -> lRegister (),
-		dynamic_cast <FZ80::CZ80*> (cpu ()) -> lRegister ().values ()[0]));
+	return (executeWith (registerL (), valueRegisterL ()));
 }
 
 // ---
@@ -772,11 +599,7 @@ _INST_IMPL (FZ80::LD_LFromAddressIndexIX)
 {
 	assert (parameters().size () == 3);
 
-	MCHEmul::RefRegisters& ix = dynamic_cast <FZ80::CZ80*> (cpu ()) -> ixRegister ();
-	return (executeWith (
-		dynamic_cast <FZ80::CZ80*> (cpu ()) -> lRegister (),
-		memory () -> value (MCHEmul::Address (MCHEmul::UBytes ({ ix [0] -> values ()[0], ix [1] -> values ()[0] }), true) + 
-			(size_t) (parameters ()[2].value ()))));
+	return (executeWith (registerL (), valueAddressIX ((size_t) (parameters ()[2].value ()))));
 }
 
 // ---
@@ -784,9 +607,240 @@ _INST_IMPL (FZ80::LD_LFromAddressIndexIY)
 {
 	assert (parameters().size () == 3);
 
-	MCHEmul::RefRegisters& iy = dynamic_cast <FZ80::CZ80*> (cpu ()) -> iyRegister ();
+	return (executeWith (registerL (), valueAddressIX ((size_t) (parameters ()[2].value ()))));
+}
+
+// ---
+_INST_IMPL (FZ80::LD_IndirectHL)
+{
+	assert (parameters().size () == 2);
+
+	return (executeWith (addressHL (), parameters ()[1].value ()));
+}
+
+// ---
+_INST_IMPL (FZ80::LD_IndirectHLFromA)
+{
+	assert (parameters().size () == 1);
+
+	return (executeWith (addressHL (), valueRegisterA ()));
+}
+
+// ---
+_INST_IMPL (FZ80::LD_IndirectHLFromB)
+{
+	assert (parameters().size () == 1);
+
+	return (executeWith (addressHL (), valueRegisterB ()));
+}
+
+// ---
+_INST_IMPL (FZ80::LD_IndirectHLFromC)
+{
+	assert (parameters().size () == 1);
+
+	return (executeWith (addressHL (), valueRegisterC ()));
+}
+
+// ---
+_INST_IMPL (FZ80::LD_IndirectHLFromD)
+{
+	assert (parameters().size () == 1);
+
+	return (executeWith (addressHL (), valueRegisterD ()));
+}
+
+// ---
+_INST_IMPL (FZ80::LD_IndirectHLFromE)
+{
+	assert (parameters().size () == 1);
+
+	return (executeWith (addressHL (), valueRegisterE ()));
+}
+
+// ---
+_INST_IMPL (FZ80::LD_IndirectHLFromF)
+{
+	assert (parameters().size () == 1);
+
+	return (executeWith (addressHL (), valueRegisterF ()));
+}
+
+// ---
+_INST_IMPL (FZ80::LD_IndirectHLFromL)
+{
+	assert (parameters().size () == 1);
+
+	return (executeWith (addressHL (), valueRegisterL ()));
+}
+
+// ---
+_INST_IMPL (FZ80::LD_IndirectBCFromA)
+{
+	assert (parameters().size () == 1);
+
+	return (executeWith (addressBC (), valueRegisterA ()));
+}
+
+// ---
+_INST_IMPL (FZ80::LD_IndirectDEFromA)
+{
+	assert (parameters().size () == 1);
+
+	return (executeWith (addressDE (), valueRegisterA ()));
+}
+
+// ---
+_INST_IMPL (FZ80::LD_IndirectIndexIX)
+{
+	assert (parameters().size () == 4);
+
+	return (executeWith (addressIX ((size_t) parameters ()[2].value ()), parameters ()[3].value ()));
+}
+
+// ---
+_INST_IMPL (FZ80::LD_IndirectIndexIXFromA)
+{
+	assert (parameters().size () == 3);
+
+	return (executeWith (addressIX ((size_t) parameters ()[2].value ()), valueRegisterA ()));
+}
+
+// ---
+_INST_IMPL (FZ80::LD_IndirectIndexIXFromB)
+{
+	assert (parameters().size () == 3);
+
+	return (executeWith (addressIX ((size_t) parameters ()[2].value ()), valueRegisterB ()));
+}
+
+// ---
+_INST_IMPL (FZ80::LD_IndirectIndexIXFromC)
+{
+	assert (parameters().size () == 3);
+
+	return (executeWith (addressIX ((size_t) parameters ()[2].value ()), valueRegisterC ()));
+}
+
+// ---
+_INST_IMPL (FZ80::LD_IndirectIndexIXFromD)
+{
+	assert (parameters().size () == 3);
+
+	return (executeWith (addressIX ((size_t) parameters ()[2].value ()), valueRegisterD ()));
+}
+
+// ---
+_INST_IMPL (FZ80::LD_IndirectIndexIXFromE)
+{
+	assert (parameters().size () == 3);
+
+	return (executeWith (addressIX ((size_t) parameters ()[2].value ()), valueRegisterE ()));
+}
+
+// ---
+_INST_IMPL (FZ80::LD_IndirectIndexIXFromF)
+{
+	assert (parameters().size () == 3);
+
+	return (executeWith (addressIX ((size_t) parameters ()[2].value ()), valueRegisterF ()));
+}
+
+// ---
+_INST_IMPL (FZ80::LD_IndirectIndexIXFromL)
+{
+	assert (parameters().size () == 3);
+
+	return (executeWith (addressIX ((size_t) parameters ()[2].value ()), valueRegisterL ()));
+}
+
+// ---
+_INST_IMPL (FZ80::LD_IndirectIndexIY)
+{
+	assert (parameters().size () == 4);
+
+	return (executeWith (addressIY ((size_t) parameters ()[2].value ()), parameters ()[3].value ()));
+}
+
+// ---
+_INST_IMPL (FZ80::LD_IndirectIndexIYFromA)
+{
+	assert (parameters().size () == 3);
+
+	return (executeWith (addressIY ((size_t) parameters ()[2].value ()), valueRegisterA ()));
+}
+
+// ---
+_INST_IMPL (FZ80::LD_IndirectIndexIYFromB)
+{
+	assert (parameters().size () == 3);
+
+	return (executeWith (addressIY ((size_t) parameters ()[2].value ()), valueRegisterB ()));
+}
+
+// ---
+_INST_IMPL (FZ80::LD_IndirectIndexIYFromC)
+{
+	assert (parameters().size () == 3);
+
+	return (executeWith (addressIY ((size_t) parameters ()[2].value ()), valueRegisterC ()));
+}
+
+// ---
+_INST_IMPL (FZ80::LD_IndirectIndexIYFromD)
+{
+	assert (parameters().size () == 3);
+
+	return (executeWith (addressIY ((size_t) parameters ()[2].value ()), valueRegisterD ()));
+}
+
+// ---
+_INST_IMPL (FZ80::LD_IndirectIndexIYFromE)
+{
+	assert (parameters().size () == 3);
+
+	return (executeWith (addressIY ((size_t) parameters ()[2].value ()), valueRegisterE ()));
+}
+
+// ---
+_INST_IMPL (FZ80::LD_IndirectIndexIYFromF)
+{
+	assert (parameters().size () == 3);
+
+	return (executeWith (addressIY ((size_t) parameters ()[2].value ()), valueRegisterF ()));
+}
+
+// ---
+_INST_IMPL (FZ80::LD_IndirectIndexIYFromL)
+{
+	assert (parameters().size () == 3);
+
+	return (executeWith (addressIY ((size_t) parameters ()[2].value ()), valueRegisterL ()));
+}
+
+// ---
+_INST_IMPL (FZ80::LD_AddressFromA)
+{
+	assert (parameters().size () == 3);
+
 	return (executeWith (
-		dynamic_cast <FZ80::CZ80*> (cpu ()) -> lRegister (),
-		memory () -> value (MCHEmul::Address (MCHEmul::UBytes ({ iy [0] -> values ()[0], iy [1] -> values ()[0] }), true) + 
-			(size_t) (parameters ()[2].value ()))));
+		MCHEmul::Address ({ 
+			parameters ()[1].value (), 
+			parameters ()[2].value () }, false /** Little - endian. */), valueRegisterA ()));
+}
+
+// ---
+_INST_IMPL (FZ80::LD_IFromA)
+{
+	assert (parameters().size () == 2);
+
+	return (executeWith (registerI (), valueRegisterA ()));
+}
+
+// ---
+_INST_IMPL (FZ80::LD_RFromA)
+{
+	assert (parameters().size () == 2);
+
+	return (executeWith (registerR (), valueRegisterA ()));
 }

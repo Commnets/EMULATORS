@@ -104,7 +104,7 @@ namespace MCHEmul
 		bool operator != (const UBytes& u) const
 							{ return (!(*this == u)); }
 
-		UByte operator [] (size_t p) const
+		const UByte& operator [] (size_t p) const
 							{ return (value (p)); }
 		UByte& operator [] (size_t p) 
 							{ return (value (p)); }
