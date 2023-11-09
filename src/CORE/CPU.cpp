@@ -24,7 +24,7 @@ MCHEmul::CPU::CPU (const MCHEmul::CPUArchitecture& a, const MCHEmul::Registers& 
 	assert (_registers.size () > 0 && _instructions.size () > 0); 
 
 	// Put the instrucctions in an array to speed up things later...
-	_rowInstructions = std::vector <MCHEmul::Instruction*> 
+	_rowInstructions = MCHEmul::ListOfInstructions  
 		((*_instructions.rbegin ()).second -> code () + 1 /** the last code plus 1. */, nullptr);
 	for (const auto& i : _instructions)
 		_rowInstructions [i.second -> code ()] = i.second;
@@ -245,7 +245,7 @@ void MCHEmul::CPU::makeInterruptionRowData ()
 	_rowInterrupts.clear ();
 
 	// Put the interruptions in an array to speed up things later...
-	_rowInterrupts = std::vector <MCHEmul::CPUInterrupt*> 
+	_rowInterrupts = MCHEmul::CPUListOfInterrupts
 		((*_interrupts.rbegin ()).second -> id () + 1 /** the last code plus 1. */, nullptr);
 	for (const auto& i : _interrupts)
 		_rowInterrupts [i.second -> id ()] = i.second;

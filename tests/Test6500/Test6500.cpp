@@ -107,7 +107,7 @@ int _tmain (int argc, _TCHAR *argv [])
 	std::cout << "/o\t\tTo print out the status of the CPU after every test" << std::endl;
 	std::cout << "/m\t\tTo simulate the access to the memory." << std::endl << std::endl;
 
-	MCHEmul::TestCPUSpeed (new F6500::C6510, new MemoryTest).testInstructionSet (std::cout, nTimes, accessM, output);
+	MCHEmul::TestCPUSpeed (new F6500::C6510, new MemoryTest).testAllInstructionSet (std::cout, nTimes, accessM, output);
 
 	std::string ex; std::cin >> ex;
 

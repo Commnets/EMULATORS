@@ -273,9 +273,9 @@ namespace MCHEmul
 
 		/** The instructions will be moved into an array at construction time,
 			to speed up their access in the executeNextInstruction method. */
-		std::vector <Instruction*> _rowInstructions;
+		ListOfInstructions _rowInstructions;
 		/** Also a row vector with the interruptions. */
-		std::vector <CPUInterrupt*> _rowInterrupts;
+		CPUListOfInterrupts _rowInterrupts;
 	};
 }
 

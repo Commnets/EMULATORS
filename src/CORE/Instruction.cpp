@@ -186,7 +186,7 @@ std::string MCHEmul::Instruction::asString () const
 
 bool MCHEmul::Instruction::execute (const MCHEmul::UBytes& p, MCHEmul::CPU* c, MCHEmul::Memory* m, MCHEmul::Stack* stk)
 {
-	assert (p.size () == _memoryPositions);
+	// The assertion of the number of positions has to be done in the execution implementation...
 	assert (c != nullptr && m != nullptr);
 
 	_lastParameters = p;
@@ -246,4 +246,50 @@ MCHEmul::Instruction::Structure MCHEmul::Instruction::analyzeInstruction () cons
 	result._waterMarkPlus = wmak;
 
 	return (result);
+}
+
+// ---
+MCHEmul::InstructionsGroup::InstructionsGroup (unsigned int c, unsigned char nBG, unsigned char nBI,
+		const MCHEmul::Instructions& inst, const std::string& t)
+	: MCHEmul::Instruction (c, std::numeric_limits <unsigned int>::max (), std::numeric_limits <unsigned int>::max (), t, true), // max = doesn't matter...
+	  _bytesGroupCode (nBG), _bytesInstructionCode (nBI),
+	  _instructions (inst),
+	  _rawInstructions () // Defined later...
+{
+	// As an example:
+	// full instruction code structure example = 0xff_ffff
+	// _bytesGroupCode = 1
+	// _bytesInstructionCode = 2
+
+	// size = 1 << (8 * 2) = 65536
+	_rawInstructions = MCHEmul::ListOfInstructions 
+		((size_t) (1 << (8 * _bytesInstructionCode)), nullptr);
+	// msk = (1 << (8 * 2)) - 1 = 0xffff = 65535
+	unsigned int msk = (1 << (8 * _bytesInstructionCode /** Just the "LSB" bits. */)) - 1;
+	for (const auto& i : _instructions)
+	{
+		// All instructions within the group must have the same seed...
+		// cc = 0x23
+		// inst_code = 0x23_1245
+		// & = 0xffff_ffff ^ 0xffff = 0xffff_0000
+		// inst_code & 0xffff_0000 = 0x0023_0000
+		// >> (8 * 2) = 0x23
+		assert ((i.second -> code () & 
+			(std::numeric_limits <unsigned int>::max () ^ msk)) >> (8 * _bytesInstructionCode) == c);
+
+		// inst_code & msk = 0x0000_1245
+		_rawInstructions [(size_t) (i.second -> code () & msk)] = i.second;
+	}
+}
+
+// ---
+bool MCHEmul::InstructionsGroup::executeImpl ()
+{
+	assert (parameters ().size () > 1);
+
+	// The second parameter will always be the subinstruction code...
+	unsigned int sc = MCHEmul::UInt (parameters ().MSUBytes 
+		(_bytesGroupCode + _bytesInstructionCode).LSUBytes (_bytesInstructionCode)).asUnsignedInt ();
+	return ((sc >= _rawInstructions.size () || _rawInstructions [sc] == nullptr) ? false
+		: _rawInstructions [sc] -> execute (parameters (), cpu (), memory (), stack ()));
 }

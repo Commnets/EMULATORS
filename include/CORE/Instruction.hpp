@@ -220,6 +220,37 @@ namespace MCHEmul
 	};
 
 	using Instructions = std::map <unsigned int, Instruction*>;
+	using ListOfInstructions = std::vector <Instruction*>;
+
+	/** A "group instruction" is an instruction which groups many others. */
+	class InstructionsGroup final : public Instruction
+	{
+		public:
+		/** 
+		  * Any "instruction code" is represented as an "unsigned int" 
+		  * which is made up of several bytes (unsigned char), up to a maximum of 4 = sizeof (unsigned int). \n
+		  *	To define a group it is needed to define the code (c) of the group. \n
+		  * All instructions added to the group should share the same (c) code. \n
+		  * The shared code has to be present at the first nBG bytes of the instruction code of any instructiona added to the group.
+		  */
+		InstructionsGroup (unsigned int c, unsigned char nBG, unsigned char nBI,
+			const Instructions& inst, const std::string& t = "");
+
+		const Instructions& instructions () const
+							{ return (_instructions); }
+
+		private:
+		virtual bool executeImpl () override;
+
+		private:
+		unsigned char _bytesGroupCode; 
+		unsigned char _bytesInstructionCode;
+		Instructions _instructions;
+
+		// Implementation
+		/** To speed up everything. */
+		ListOfInstructions _rawInstructions;
+	};
 }
 
 /** 

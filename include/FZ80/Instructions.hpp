@@ -25,9 +25,7 @@ namespace FZ80
 	{
 		public:
 		Instruction (unsigned int c, unsigned int mp, unsigned int cc, unsigned int rcc, 
-				const std::string& t)
-			: MCHEmul::Instruction (c, mp, cc, t, false)
-							{ }
+				const std::string& t);
 
 		// To get the reference to the registers...
 		MCHEmul::Register& registerA ()
@@ -202,12 +200,20 @@ namespace FZ80
 		protected:
 		// LD can be used both to load register or memory positions (in other micros this is a storage command)
 		// None of these instructions affects the status register!...
-		/** To load a register with a byte. */
+		/** To load a single register with a single byte. */
 		bool executeWith (MCHEmul::Register& r, const MCHEmul::UByte& u)
 							{ r.set ({ u }); return (true); }
+		/** To load a extended register with two bytes. 
+			It is supossed that the bytes come as they are in memory, so that's it in little - endian order. */
+		bool executeWith (MCHEmul::RefRegisters& r, const MCHEmul::UBytes& u)
+							{ r [0] -> set ({ u [1] }); r [1] -> set ({ u [0] }); return (true); }
 		/** To load a memory position with the value of a byte. */
 		bool executeWith (const MCHEmul::Address& a, const MCHEmul::UByte& u)
 							{ memory () -> set (a, { u }); return (true); }
+		/** To load a memory position with two bytes. \n
+			It is supossed that the bytes come as they are in memory, so that's it in litlee endian order. */
+		bool executeWith (const MCHEmul::Address& a, const MCHEmul::UBytes& u)
+							{ memory () -> set (a, { u [1], u [0] }); return (true); }
 	};
 
 	// Target Main Registers
@@ -220,8 +226,8 @@ namespace FZ80
 	_INST_FROM (0x7B,	1, 4, 4,	"LD A,E",				LD_AFromE, LD_General);
 	_INST_FROM (0x7C,	1, 4, 4,	"LD A,F",				LD_AFromF, LD_General);
 	_INST_FROM (0x7D,	1, 4, 4,	"LD A,L",				LD_AFromL, LD_General);
-	_INST_FROM (0xED57, 1, 4, 4,	"LD A,I",				LD_AFromI, LD_General);
-	_INST_FROM (0xED5F, 1, 4, 4,	"LD A,R",				LD_AFromR, LD_General);
+	_INST_FROM (0xED57, 2, 4, 4,	"LD A,I",				LD_AFromI, LD_General);
+	_INST_FROM (0xED5F, 2, 4, 4,	"LD A,R",				LD_AFromR, LD_General);
 	_INST_FROM (0x7E,	1, 7, 7,	"LD A,(HL)",			LD_AFromAddressHL, LD_General);
 	_INST_FROM (0x0A,	1, 7, 7,	"LD A,(BC)",			LD_AFromAddressBC, LD_General);
 	_INST_FROM (0x1A,	1, 7, 7,	"LD A,(DE)",			LD_AFromAddressDE, LD_General);
@@ -331,6 +337,27 @@ namespace FZ80
 	_INST_FROM (0xED47,	2, 4, 4,	"LD I,A",				LD_IFromA, LD_General);
 	// Target R
 	_INST_FROM (0xED4F,	2, 4, 4,	"LD R,A",				LD_RFromA, LD_General);
+	// Target BC
+	_INST_FROM (0x01,	3, 10, 10,	"LD BC,[#2]",			LD_BC, LD_General);
+	_INST_FROM (0xED48,	4, 20, 20,	"LD BC,([$2])",			LD_BCFromAddress, LD_General);
+	// Target DE
+	_INST_FROM (0x11,	3, 10, 10,	"LD DE,[#2]",			LD_DE, LD_General);
+	_INST_FROM (0xED5B,	4, 20, 20,	"LD DE,([$2])",			LD_DEFromAddress, LD_General);
+	// Target HL
+	_INST_FROM (0x21,	3, 10, 10,	"LD HL,[#2]",			LD_HL, LD_General);
+	_INST_FROM (0x2A,	3, 16, 16,	"LD HL,([$2])",			LD_HLFromAddress, LD_General);
+	// Target IX
+	_INST_FROM (0xDD21,	4, 10, 10,	"LD IX,[#2]",			LD_IX, LD_General);
+	_INST_FROM (0xDD2A,	4, 20, 20,	"LD IX,([$2])",			LD_IXFromAddress, LD_General);
+	// Target IY
+	_INST_FROM (0xFD21,	4, 10, 10,	"LD IY,[#2]",			LD_IY, LD_General);
+	_INST_FROM (0xFD2A,	4, 20, 20,	"LD IY,([$2])",			LD_IYFromAddress, LD_General);
+	// Target SP
+	_INST_FROM (0x31,	3, 10, 10,	"LD SP,[#2]",			LD_SP, LD_General);
+	_INST_FROM (0xF9,	1, 6, 6,	"LD SP,HL",				LD_SPFromHL, LD_General);
+	_INST_FROM (0xDDF9,	2, 10, 10,	"LD SP,IX",				LD_SPFromIX, LD_General);
+	_INST_FROM (0xFDF9,	2, 10, 10,	"LD SP,IY",				LD_SPFromIY, LD_General);
+	_INST_FROM (0xED7B,	4, 10, 10,	"LD SP,([$2])",			LD_SPFromAddress, LD_General);
 }
 
 #endif

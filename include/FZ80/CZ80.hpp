@@ -25,26 +25,26 @@ namespace FZ80
 		/** To identify the number and name of the registers. */
 		static const size_t _AREGISTER	 = 0;
 		// The F Register is the status...
-		static const size_t _BREGISTER	 = 2;
-		static const size_t _CREGISTER	 = 3;
-		static const size_t _DREGISTER	 = 4;
-		static const size_t _EREGISTER	 = 5;
-		static const size_t _HREGISTER	 = 6;
-		static const size_t _LREGISTER	 = 7;
-		static const size_t _APREGISTER	 = 10;
-		static const size_t _FPREGISTER	 = 11;
-		static const size_t _BPREGISTER	 = 11;
-		static const size_t _CPREGISTER	 = 12;
-		static const size_t _DPREGISTER	 = 13;
-		static const size_t _EPREGISTER	 = 14;
-		static const size_t _HPREGISTER	 = 15;
-		static const size_t _LPREGISTER	 = 16;
-		static const size_t _IXHREGISTER = 20;
-		static const size_t _IXLREGISTER = 21;
-		static const size_t _IYHREGISTER = 22;
-		static const size_t _IYLREGISTER = 23;
-		static const size_t _IREGISTER   = 24;
-		static const size_t _RREGISTER   = 25;
+		static const size_t _BREGISTER	 = 1;
+		static const size_t _CREGISTER	 = 2;
+		static const size_t _DREGISTER	 = 3;
+		static const size_t _EREGISTER	 = 4;
+		static const size_t _HREGISTER	 = 5;
+		static const size_t _LREGISTER	 = 6;
+		static const size_t _APREGISTER	 = 7;
+		static const size_t _FPREGISTER	 = 8;
+		static const size_t _BPREGISTER	 = 9;
+		static const size_t _CPREGISTER	 = 10;
+		static const size_t _DPREGISTER	 = 11;
+		static const size_t _EPREGISTER	 = 12;
+		static const size_t _HPREGISTER	 = 13;
+		static const size_t _LPREGISTER	 = 14;
+		static const size_t _IXHREGISTER = 15;
+		static const size_t _IXLREGISTER = 16;
+		static const size_t _IYHREGISTER = 17;
+		static const size_t _IYLREGISTER = 18;
+		static const size_t _IREGISTER   = 19;
+		static const size_t _RREGISTER   = 20;
 
 		/** To identify the position of the flags in the status register. */
 		static const size_t _CARRYFLAG = 0;

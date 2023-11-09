@@ -133,6 +133,8 @@ namespace MCHEmul
 
 	/** A map of interrupts. */
 	using CPUInterrupts = std::map <int, CPUInterrupt*>;
+	/** A list of instructions. */
+	using CPUListOfInterrupts = std::vector <CPUInterrupt*>;
 }
 
 #endif
