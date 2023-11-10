@@ -79,6 +79,8 @@ namespace MCHEmul
 
 		const Registers& internalRegisters () const
 							{ return (_registers); }
+		Registers& internalRegisters ()
+							{ return (_registers); }
 		bool existsInternalRegister (size_t nR) const
 							{ return (nR < _registers.size ()); }
 		const Register& internalRegister (size_t nR) const

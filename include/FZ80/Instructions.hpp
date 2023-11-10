@@ -164,7 +164,7 @@ namespace FZ80
 
 		// To get the address pointed by the register...
 		MCHEmul::Address addressBC (size_t n = 0) const
-							{ return (MCHEmul::Address (valueRegisterBC (), true) + n); }
+							{ return (MCHEmul::Address (valueRegisterBC (), true /** Addresses in Registers are big - endian. */) + n); }
 		MCHEmul::Address addressDE (size_t n = 0) const
 							{ return (MCHEmul::Address (valueRegisterDE (), true) + n); }
 		MCHEmul::Address addressHL (size_t n = 0) const

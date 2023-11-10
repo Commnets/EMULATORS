@@ -48,7 +48,7 @@ namespace MCHEmul
 
 		/** See info below. 
 			This is a similar instruction just to test all instruction set. */
-		void testAllInstructionSet (std::ostream& o, unsigned int nt = 1, bool sM = false, bool pS = false) const;
+		void testAllInstructionSet (std::ostream& o, unsigned int nt = 1, bool sM = false, bool pS = false);
 
 		private:
 		/** 
@@ -64,10 +64,11 @@ namespace MCHEmul
 		  */
 		void testInstructionSet (std::ostream& o, const Instructions& inst, 
 			std::map <unsigned int, unsigned int>& sPI, std::map <unsigned int, std::string>& iT,
-			unsigned int nt = 1, bool sM = false, bool pS = false) const;
+			unsigned int nt = 1, bool sM = false, bool pS = false);
 
 		// Implementation
 		std::vector <UByte> randomVector (size_t i) const;
+		void setRandomRegisters ();
 		void printOutCPUStatus (std::ostream& o) const;
 
 		private:

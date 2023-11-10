@@ -263,7 +263,7 @@ MCHEmul::InstructionsGroup::InstructionsGroup (unsigned int c, unsigned char nBG
 
 	// size = 1 << (8 * 2) = 65536
 	_rawInstructions = MCHEmul::ListOfInstructions 
-		((size_t) (1 << (8 * _bytesInstructionCode)), nullptr);
+		((size_t (1) << (8 * _bytesInstructionCode)), nullptr);
 	// msk = (1 << (8 * 2)) - 1 = 0xffff = 65535
 	unsigned int msk = (1 << (8 * _bytesInstructionCode /** Just the "LSB" bits. */)) - 1;
 	for (const auto& i : _instructions)

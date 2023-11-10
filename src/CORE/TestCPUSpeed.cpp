@@ -53,7 +53,7 @@ unsigned int MCHEmul::TestCPUSpeed::clocksInASecondExcutingInstruction (const MC
 }
 
 // ---
-void MCHEmul::TestCPUSpeed::testAllInstructionSet (std::ostream& o, unsigned int nt, bool sM, bool pS) const
+void MCHEmul::TestCPUSpeed::testAllInstructionSet (std::ostream& o, unsigned int nt, bool sM, bool pS)
 { 
 	if (nt == 0)
 		return;
@@ -98,7 +98,7 @@ void MCHEmul::TestCPUSpeed::testAllInstructionSet (std::ostream& o, unsigned int
 // ---
 void MCHEmul::TestCPUSpeed::testInstructionSet (std::ostream& o, const MCHEmul::Instructions& inst, 
 	std::map <unsigned int, unsigned int>& sPI, std::map <unsigned int, std::string>& iT,
-	unsigned int nt, bool sM, bool pS) const
+	unsigned int nt, bool sM, bool pS)
 {
 	static char _PROGRESS[4] { '\\', '|', '/', '-' };
 	unsigned int* clks = new unsigned int [nt];
@@ -106,6 +106,9 @@ void MCHEmul::TestCPUSpeed::testInstructionSet (std::ostream& o, const MCHEmul::
 	// Now test all instructions...
 	for (const auto& i : inst)
 	{
+		if (i.second == nullptr)
+			continue; // Just in case...
+
 		// If the instruction found is a group, everything inside is tested...
 		if (dynamic_cast <MCHEmul::InstructionsGroup*> (i.second) != nullptr)
 		{
@@ -115,8 +118,14 @@ void MCHEmul::TestCPUSpeed::testInstructionSet (std::ostream& o, const MCHEmul::
 			continue;
 		}
 
-		// It is not a group and everything goes fine...
-		// Otherwise every instruction in the list is tested 
+		// if it is not a group, but a single instruction...
+		// ...the test is done...
+		// Before testing the instruction the register is set...
+		setRandomRegisters ();
+		// ...and the status is printed out if requested...
+		if (pS)
+			printOutCPUStatus (o);
+
 		// the number of times that the received parameter says.
 		for (size_t ct = 0; ct < nt; clks [ct++] = 0);
 		for (unsigned int ct = 0; ct < nt; ct++)
@@ -157,6 +166,18 @@ std::vector <MCHEmul::UByte> MCHEmul::TestCPUSpeed::randomVector (size_t nB) con
 	std::vector <MCHEmul::UByte> result (nB, MCHEmul::UByte::_0);
 	for (size_t i = 0; i < nB; result [i++] = MCHEmul::UByte (rand () % 255));
 	return (result);
+}
+
+// ---
+void MCHEmul::TestCPUSpeed::setRandomRegisters ()
+{
+	// First of all, the internal registers of the CPU...
+	for (auto& i : _cpu -> internalRegisters ())
+		i.set (randomVector (i.size ()));
+	// Then the status register...
+	_cpu -> statusRegister ().set (randomVector (_cpu -> statusRegister ().size ()));
+	// ...and finally the stack pointer, to any random position in memory...
+	_memory -> stack () -> setPosition (std::rand () % ((1 << _cpu -> architecture ().numberBytes ()) - 1));
 }
 
 // ---

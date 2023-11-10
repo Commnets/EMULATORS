@@ -125,6 +125,7 @@ _INST_IMPL (FZ80::LD_AFromAddress)
 {
 	assert (parameters ().size () == 3);
 
+	/** Addresses in memory are kept little - endian. */
 	return (executeWith (registerA (), 
 		memory () -> value (MCHEmul::Address 
 			({ parameters ()[1].value (), parameters ()[2].value () }, false /** little - endian */))));
@@ -823,6 +824,7 @@ _INST_IMPL (FZ80::LD_AddressFromA)
 {
 	assert (parameters ().size () == 3);
 
+	/** Addresses in memory are kept little - endian. */
 	return (executeWith (
 		MCHEmul::Address ({ 
 			parameters ()[1].value (), 
@@ -877,6 +879,7 @@ _INST_IMPL (FZ80::LD_DEFromAddress)
 {
 	assert (parameters ().size () == 4);
 
+	/** Addresses in memory are kept little - endian. */
 	return (executeWith (registerDE (), 
 		memory () -> values (MCHEmul::Address ({ parameters ()[2].value (), parameters ()[3].value () }, false /** little - endian. */), 2)));
 }
@@ -943,7 +946,7 @@ _INST_IMPL (FZ80::LD_SP)
 	// The position loaded is the ones located at the address pointer by the parameters,
 	// that is kept in litlee - endian format and ocuppies two bytes...
 	memory () -> stack () -> setPosition 
-		(MCHEmul::Address ({ parameters ()[2].value (), parameters ()[1].value () }, false /** little - endian. */).value ());
+		(MCHEmul::Address ({ parameters ()[1].value (), parameters ()[2].value () }, false /** little - endian. */).value ());
 	return (true);
 }
 
@@ -992,6 +995,6 @@ _INST_IMPL (FZ80::LD_SPFromAddress)
 	// that is kept in little - endian format, and ocuppies 2 bytes...
 	memory () -> stack () -> setPosition 
 		(MCHEmul::Address (memory () -> values (MCHEmul::Address 
-			({ parameters ()[3].value (), parameters ()[2].value () }, false /** little - endian. */), 2), false /** little - endian. */).value ());
+			({ parameters ()[2].value (), parameters ()[3].value () }, false /** little - endian. */), 2), false /** little - endian. */).value ());
 	return (true);
 }

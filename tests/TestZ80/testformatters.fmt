@@ -1,0 +1,29 @@
+#Console
+#Formats
+?defformatters.fmt
+#---
+;PhysicalStorageSubset
+Id:@ID@, Address:$@ADDRESS@, Size:@SIZE@
+ACTIVE=@ACTIVE@, READ=@READ@
+@BYTES{blocksize=16,listsep=\,,tablesep=\ ,minsize=2}@
+#---
+#---
+;Stack
+@PhysicalStorageSubset>@
+BACK=@BACK@, POINT LAST=@LAST@
+OVERFLOW=@OVERFLOW@
+EMPTY=@EMPTY@
+POSITION=@POSITION@
+#---
+#---
+;CPU
+#The info about the Architecture here
+@REGS?{key=NO,equal=:},@
+@PC@
+@SR@
+#---
+#---
+;TESTCPUSTATUS
+@CPU>@
+@Stack>@
+#---
