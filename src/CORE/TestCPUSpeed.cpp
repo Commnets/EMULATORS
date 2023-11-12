@@ -42,8 +42,9 @@ unsigned int MCHEmul::TestCPUSpeed::clocksInASecondExcutingInstruction (const MC
 			_memory -> bytes (MCHEmul::Address (randomVector (_cpu -> architecture ().numberBytes ())), 
 				b.size () - _cpu -> architecture ().instructionLength ()); // Simulate and access to the memory...
 		// ...and then execute the instruction...
-		inst -> execute (b, _cpu, _memory, _memory -> stack ());
-		clks += inst -> clockCycles ();
+		bool finish = true;
+		inst -> execute (b, _cpu, _memory, _memory -> stack (), finish);
+		clks += (inst -> clockCycles () + inst -> additionalClockCycles ());
 
 		// Repeat during a second...
 		e = (std::chrono::steady_clock ().now () - clk).count () >= 1e9; 
@@ -89,6 +90,7 @@ void MCHEmul::TestCPUSpeed::testAllInstructionSet (std::ostream& o, unsigned int
 
 	// Print out final results...
 	o << std::endl;
+	o << "Instructions: " << _instructionsTemplates.size () << std::endl;
 	o << "Quickest Instruction: " << _instructionsTemplates [maxExecInstId] 
 	  << " => " + std::to_string (maxExec) + " exec/s" << std::endl;
 	o << "Slowest Instruction:  " << _instructionsTemplates [minExecInstId] 

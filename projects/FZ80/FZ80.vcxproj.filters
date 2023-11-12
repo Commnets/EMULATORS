@@ -27,6 +27,48 @@
     <ClCompile Include="..\..\src\FZ80\LD.cpp">
       <Filter>Archivos de origen\Instructions</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\FZ80\STACK.cpp">
+      <Filter>Archivos de origen\Instructions</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\FZ80\EX.cpp">
+      <Filter>Archivos de origen\Instructions</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\FZ80\AND.cpp">
+      <Filter>Archivos de origen\Instructions</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\FZ80\OR.cpp">
+      <Filter>Archivos de origen\Instructions</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\FZ80\XOR.cpp">
+      <Filter>Archivos de origen\Instructions</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\FZ80\ADD.cpp">
+      <Filter>Archivos de origen\Instructions</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\FZ80\Interrupt.cpp">
+      <Filter>Archivos de origen</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\FZ80\INTInterrupt.cpp">
+      <Filter>Archivos de origen</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\FZ80\NMIInterrupt.cpp">
+      <Filter>Archivos de origen</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\FZ80\INC.cpp">
+      <Filter>Archivos de origen\Instructions</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\FZ80\DEC.cpp">
+      <Filter>Archivos de origen\Instructions</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\FZ80\SUB.cpp">
+      <Filter>Archivos de origen\Instructions</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\FZ80\CP.cpp">
+      <Filter>Archivos de origen\Instructions</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\FZ80\ALUCTRL_Generic.cpp">
+      <Filter>Archivos de origen\Instructions</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\include\FZ80\CZ80.hpp">
@@ -36,6 +78,15 @@
       <Filter>Archivos de encabezado</Filter>
     </ClInclude>
     <ClInclude Include="..\..\include\FZ80\Instructions.hpp">
+      <Filter>Archivos de encabezado</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\FZ80\Interrupt.hpp">
+      <Filter>Archivos de encabezado</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\FZ80\INTInterrupt.hpp">
+      <Filter>Archivos de encabezado</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\FZ80\NMIInterrupt.hpp">
       <Filter>Archivos de encabezado</Filter>
     </ClInclude>
   </ItemGroup>

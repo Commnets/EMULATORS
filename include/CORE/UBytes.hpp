@@ -65,6 +65,10 @@ namespace MCHEmul
 			No checks are done to increase the speed. */
 		bool bit (size_t p) const 
 							{ return (_values [size () - (p / UByte::sizeBits ()) - 1][p % UByte::sizeBits ()]); }
+		size_t numberBitsOn () const
+							{ size_t r = 0; for (const auto& i : _values) r += i.numberBitsOn (); return (r); }
+		size_t numberBitsOff () const
+							{ return ((_values.size () << 3) - numberBitsOn ()); }
 		void setBit (size_t p, bool s)
 							{ _values [size () - (p / UByte::sizeBits ()) - 1].setBit (p % UByte::sizeBits (), s); }
 		

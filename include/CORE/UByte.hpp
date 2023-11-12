@@ -77,6 +77,10 @@ namespace MCHEmul
 			No checks are done to increase the speed. */
 		constexpr bool bit (size_t p) const
 							{ return ((_value & (_1 << p)) != _0); }
+		constexpr unsigned char numberBitsOn () const
+							{ unsigned char r = 0; for (size_t i = 0; i < 8; r += (bit (i++) ? 1 : 0)); return (r); }
+		constexpr unsigned char numberBitsOff () const
+							{ return (8 - numberBitsOn ()); }
 		constexpr void setBit (size_t p, bool s)
 							{ unsigned char v = _1 << p; _value = _value & (~v) | (s ? v : _0); }
 

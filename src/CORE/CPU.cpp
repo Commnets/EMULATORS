@@ -320,8 +320,9 @@ bool MCHEmul::CPU::when_ExecutingInstruction ()
 	_programCounter += (size_t) inst -> memoryPositions ();
 
 	// Then, the instruction is executed and if everything went ok...
+	bool finish = true; // Always by default...
 	bool result = true;
-	if (result = inst -> execute (dt, this, _memory, _memory -> stack ()))
+	if (result = inst -> execute (dt, this, _memory, _memory -> stack (), finish))
 	{
 		// Actualize the clock cycles used by the last instruction...
 		_lastCPUClockCycles = (inst -> clockCycles () + inst -> additionalClockCycles ());
@@ -329,6 +330,13 @@ bool MCHEmul::CPU::when_ExecutingInstruction ()
 		_clockCycles += _lastCPUClockCycles;
 		// ...and finally saves the instruction executed...
 		_lastInstruction = inst;
+
+		// The program counter won't move if finally the instruction didin't finish!
+		// It is very strange but if could happen in some CPU types with complex instructions
+		// like Z80 or 8086 where there are instruction to manipulate blocks of memory
+		// but those instruction allowing interrupts!
+		if (!finish)
+			_programCounter -= (size_t) inst -> memoryPositions ();
 
 		if (deepDebugActive ())
 		{

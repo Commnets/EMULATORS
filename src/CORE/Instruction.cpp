@@ -184,7 +184,7 @@ std::string MCHEmul::Instruction::asString () const
 	return (toPrint);
 }
 
-bool MCHEmul::Instruction::execute (const MCHEmul::UBytes& p, MCHEmul::CPU* c, MCHEmul::Memory* m, MCHEmul::Stack* stk)
+bool MCHEmul::Instruction::execute (const MCHEmul::UBytes& p, MCHEmul::CPU* c, MCHEmul::Memory* m, MCHEmul::Stack* stk, bool& f)
 {
 	// The assertion of the number of positions has to be done in the execution implementation...
 	assert (c != nullptr && m != nullptr);
@@ -196,7 +196,7 @@ bool MCHEmul::Instruction::execute (const MCHEmul::UBytes& p, MCHEmul::CPU* c, M
 
 	_additionalCycles = 0; // executeImpl could add additional cycles...
 
-	return (executeImpl ());
+	return (executeImpl (f));
 }
 
 // ---
@@ -251,11 +251,25 @@ MCHEmul::Instruction::Structure MCHEmul::Instruction::analyzeInstruction () cons
 // ---
 MCHEmul::InstructionsGroup::InstructionsGroup (unsigned int c, unsigned char nBG, unsigned char nBI,
 		const MCHEmul::Instructions& inst, const std::string& t)
-	: MCHEmul::Instruction (c, std::numeric_limits <unsigned int>::max (), std::numeric_limits <unsigned int>::max (), t, true), // max = doesn't matter...
+	: MCHEmul::Instruction (c, 1 /** adjusted later. */, 1 /** adjusted later. */, t, true),
 	  _bytesGroupCode (nBG), _bytesInstructionCode (nBI),
 	  _instructions (inst),
 	  _rawInstructions () // Defined later...
 {
+	assert (_instructions.size () != 0);
+
+	// By default, the internal execution values...
+	// are the ones from the first instruction in the lis!
+	MCHEmul::Instruction* fInst = (*_instructions.begin ()).second;
+	_code				= fInst -> code ();
+	_codeLength			= fInst -> codeLength ();
+	_memoryPositions	= fInst -> memoryPositions ();
+	_clockCycles		= fInst -> clockCycles ();
+	_bigEndian			= fInst -> bigEndian ();
+	_iTemplate			= fInst -> iTemplate ();
+	_additionalCycles	= fInst -> additionalClockCycles ();
+	_iStructure			= fInst -> internalStructure ();
+
 	// As an example:
 	// full instruction code structure example = 0xff_ffff
 	// _bytesGroupCode = 1
@@ -283,13 +297,34 @@ MCHEmul::InstructionsGroup::InstructionsGroup (unsigned int c, unsigned char nBG
 }
 
 // ---
-bool MCHEmul::InstructionsGroup::executeImpl ()
+bool MCHEmul::InstructionsGroup::executeImpl (bool& f)
 {
 	assert (parameters ().size () > 1);
 
+	// When arrives here, 
+	// the parameters to invoke the instruction are already set: CPU, Memory, Stack,...
+	
 	// The second parameter will always be the subinstruction code...
+	_lastInstruction = nullptr;
 	unsigned int sc = MCHEmul::UInt (parameters ().MSUBytes 
 		(_bytesGroupCode + _bytesInstructionCode).LSUBytes (_bytesInstructionCode)).asUnsignedInt ();
-	return ((sc >= _rawInstructions.size () || _rawInstructions [sc] == nullptr) ? false
-		: _rawInstructions [sc] -> execute (parameters (), cpu (), memory (), stack ()));
+	// Execute the instruction selected if any...
+	bool result = (sc >= _rawInstructions.size () || _rawInstructions [sc] == nullptr) ? false
+		: (_lastInstruction = _rawInstructions [sc]) -> execute (parameters (), cpu (), memory (), stack (), f);
+	// If the last instruction was not null,
+	// all internal parameters are adjusted to the last instruction executed!
+	// If not, the values are still from the last execution!
+	if (_lastInstruction != nullptr) 
+	{
+		_code				= _lastInstruction -> code ();
+		_codeLength			= _lastInstruction -> codeLength ();
+		_memoryPositions	= _lastInstruction -> memoryPositions ();
+		_clockCycles		= _lastInstruction -> clockCycles ();
+		_bigEndian			= _lastInstruction -> bigEndian ();
+		_iTemplate			= _lastInstruction -> iTemplate ();
+		_additionalCycles	= _lastInstruction -> additionalClockCycles ();
+		_iStructure			= _lastInstruction -> internalStructure ();
+	}
+
+	return (result);
 }

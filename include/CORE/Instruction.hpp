@@ -131,6 +131,8 @@ namespace MCHEmul
 							{ return (_codeLength); }
 		unsigned int memoryPositions () const
 							{ return (_memoryPositions); }
+		bool bigEndian () const
+							{ return (_bigEndian); }
 
 		// Related with the cycles of the operation...
 		/** The total, without any additional one after its execuction. */
@@ -164,12 +166,14 @@ namespace MCHEmul
 		std::string parametersAsString (size_t p, size_t nP = 1, bool bE = true) const; // The UBytes could grouped to get a parameter...
 		
 		/** To get the instruction as an string using the parameters of the last execution inside. \n
-			If no parameters has been set "blacnk" will be written instead. */
-		std::string asString () const;
+			If no parameters has been set "blankk" will be written instead. */
+		virtual std::string asString () const;
 
 		/** To execute the instruction. It has to be redefined. \n
-			It returns true if everything is ok, */
-		bool execute (const UBytes& p, CPU* c, Memory* m, Stack* stk);
+			It returns true if everything is ok. \n
+			The parameter f is set to true whether the instruction is fully executed,
+			and with false if not, and next CPU cycle has also to considered it! */
+		bool execute (const UBytes& p, CPU* c, Memory* m, Stack* stk, bool& f);
 
 		friend std::ostream& operator << (std::ostream& o, const Instruction& i)
 							{ return (o << i.asString ()); }
@@ -179,8 +183,11 @@ namespace MCHEmul
 		Structure analyzeInstruction () const;
 
 		/** The implementation of the execution.
-			It has to be redefined. */
-		virtual bool executeImpl () = 0;
+			It has to be redefined.
+			@return		true if the execution was ok, and false in other situation. 
+			The parameter f must be set to false whether the execution didin't finish
+			and the next CPU cycle has to considere it back. */
+		virtual bool executeImpl (bool &f) = 0;
 
 		// Implementation
 		const CPU* cpu () const
@@ -198,11 +205,15 @@ namespace MCHEmul
 
 		protected:
 		// Once they assigned at construction level they couldn't be modified...
-		const unsigned int _code; 
-		const size_t _codeLength;
-		const unsigned int _memoryPositions; 
-		const unsigned int _clockCycles;
-		const bool _bigEndian;
+		// IMPORTANT NOTE:
+		// Most of these attributes are usually modified! (there is no method for so)
+		// So they could be defined as const,
+		// However the Instruction Group does when executing, take this into account!
+		unsigned int _code;
+		size_t _codeLength;
+		unsigned int _memoryPositions; 
+		unsigned int _clockCycles;
+		bool _bigEndian;
 		std::string _iTemplate;
 
 		// Implementation
@@ -222,16 +233,21 @@ namespace MCHEmul
 	using Instructions = std::map <unsigned int, Instruction*>;
 	using ListOfInstructions = std::vector <Instruction*>;
 
-	/** A "group instruction" is an instruction which groups many others. */
+	/** A "group instruction" is an instruction which groups many others. 
+		This is a very strange instruction used as a trick in some CPUs, like Z80. */
 	class InstructionsGroup final : public Instruction
 	{
 		public:
 		/** 
-		  * Any "instruction code" is represented as an "unsigned int" 
+		  * Any "instruction code" is represented as an "unsigned int", 
 		  * which is made up of several bytes (unsigned char), up to a maximum of 4 = sizeof (unsigned int). \n
 		  *	To define a group it is needed to define the code (c) of the group. \n
 		  * All instructions added to the group should share the same (c) code. \n
-		  * The shared code has to be present at the first nBG bytes of the instruction code of any instructiona added to the group.
+		  * The shared code has to be present at the first nBG bytes of the instruction code of any instructiona added to the group. \n
+		  * This is checked at construction time of the instruction group. \n
+		  * The number of memory positions ocuppied by the group instruction and 
+		  * the number of clock cycles that its execution takes is undefined. It will depend on the last instruction executed. \n
+		  * To avoid debug errors at construction time boths are declared as 1. \n
 		  */
 		InstructionsGroup (unsigned int c, unsigned char nBG, unsigned char nBI,
 			const Instructions& inst, const std::string& t = "");
@@ -239,13 +255,20 @@ namespace MCHEmul
 		const Instructions& instructions () const
 							{ return (_instructions); }
 
+		/** Delegated in the real instruction executed. */
+		virtual std::string asString () const override
+							{ return ((_lastInstruction != nullptr) ? _lastInstruction -> asString () : ""); }
+
 		private:
-		virtual bool executeImpl () override;
+		virtual bool executeImpl (bool& f) override;
 
 		private:
 		unsigned char _bytesGroupCode; 
 		unsigned char _bytesInstructionCode;
 		Instructions _instructions;
+
+		/** The last instruction executed inside. */
+		Instruction* _lastInstruction;
 
 		// Implementation
 		/** To speed up everything. */
@@ -263,6 +286,8 @@ namespace MCHEmul
   *	@param _I  : Name of the intruction.
   * @param _J  : Name of the parent class.
   * @param _K  : Whether the info kept is big or little endian.
+  * Always this method is used take into account that the variable _FINISH 
+  * must be set to true of false to indicate whether the instruction has or not finished.
   */
 #define _INST_FROM(_C, _M, _CC, _RCC, _T, _I, _J) \
 class _I final : public _J \
@@ -270,7 +295,7 @@ class _I final : public _J \
 	public: \
 	_I () : _J (_C, _M, _CC, _RCC, _T) { } \
 	protected: \
-	virtual bool executeImpl () override; \
+	virtual bool executeImpl (bool& _FINISH) override; \
 };
 
 /** Idem but inheriting from basic instruction. */
@@ -278,7 +303,7 @@ class _I final : public _J \
 	_INST_FROM(_C, _M, _CC, _RCC, _T, _I, MCHEmul::Instruction);
 
 #define _INST_IMPL(_I) \
-bool _I::executeImpl ()
+bool _I::executeImpl (bool& _FINISH)
 
 #endif
   

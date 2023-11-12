@@ -153,14 +153,31 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\src\FZ80\ADD.cpp" />
+    <ClCompile Include="..\..\src\FZ80\ALUCTRL_Generic.cpp" />
+    <ClCompile Include="..\..\src\FZ80\AND.cpp" />
+    <ClCompile Include="..\..\src\FZ80\CP.cpp" />
     <ClCompile Include="..\..\src\FZ80\CZ80.cpp" />
+    <ClCompile Include="..\..\src\FZ80\DEC.cpp" />
+    <ClCompile Include="..\..\src\FZ80\EX.cpp" />
+    <ClCompile Include="..\..\src\FZ80\INC.cpp" />
     <ClCompile Include="..\..\src\FZ80\Instructions.cpp" />
+    <ClCompile Include="..\..\src\FZ80\Interrupt.cpp" />
+    <ClCompile Include="..\..\src\FZ80\INTInterrupt.cpp" />
     <ClCompile Include="..\..\src\FZ80\LD.cpp" />
+    <ClCompile Include="..\..\src\FZ80\NMIInterrupt.cpp" />
+    <ClCompile Include="..\..\src\FZ80\OR.cpp" />
+    <ClCompile Include="..\..\src\FZ80\STACK.cpp" />
+    <ClCompile Include="..\..\src\FZ80\SUB.cpp" />
+    <ClCompile Include="..\..\src\FZ80\XOR.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\include\FZ80\CZ80.hpp" />
     <ClInclude Include="..\..\include\FZ80\incs.hpp" />
     <ClInclude Include="..\..\include\FZ80\Instructions.hpp" />
+    <ClInclude Include="..\..\include\FZ80\Interrupt.hpp" />
+    <ClInclude Include="..\..\include\FZ80\INTInterrupt.hpp" />
+    <ClInclude Include="..\..\include\FZ80\NMIInterrupt.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

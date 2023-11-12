@@ -60,6 +60,21 @@ namespace FZ80
 		static const size_t _SIGNFLAG = 7;
 		static const std::string _SIGNFLAGNAME;
 
+		/** The different possibilities a Z80 instruction set has to understand its parameters. */
+		enum class AddressMode
+		{
+			_INMEDIATE,				// The parameter is a 8 bit value
+			_INMEDIATEEXTENDED,		// The parameter is a 16 bit value
+			_ZEPOPAGEMODIFIED,		// The parameter is an address in the zero page
+			_RELATIVE,				// The parameter is a number of steps in pc counter from the current position
+			_EXTENDED,				// The paremeter is an address in the memory
+			_INDEXED,				// The paremeter is an address from the registers HL, IX or IY
+			_REGISTER,				// There is no explicit parameters. They are all implicit.
+			_INDIRECTREGISTER,		// Used in stck movements
+			_IMPLICIT,				// The parameter is implicit in the instruction
+			_BIT,					// The parameter is the bit of a register
+		};
+
 		CZ80 (const MCHEmul::CPUArchitecture& a = createArchitecture ());
 
 		// Accesing the main registers...
@@ -206,11 +221,12 @@ namespace FZ80
 							{ return (internalRegister (_RREGISTER)); }
 
 		protected:
-		MCHEmul::RefRegisters _afRegister;
+		/** The registers that are made up of two. */
+		MCHEmul::RefRegisters _afRegister;  // A and F
 		MCHEmul::RefRegisters _bcRegister;
 		MCHEmul::RefRegisters _deRegister;
 		MCHEmul::RefRegisters _hlRegister;
-		MCHEmul::RefRegisters _afpRegister;
+		MCHEmul::RefRegisters _afpRegister; // A and F shadow
 		MCHEmul::RefRegisters _bcpRegister;
 		MCHEmul::RefRegisters _depRegister;
 		MCHEmul::RefRegisters _hlpRegister;
