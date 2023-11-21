@@ -69,6 +69,12 @@
     <ClCompile Include="..\..\src\FZ80\ALUCTRL_Generic.cpp">
       <Filter>Archivos de origen\Instructions</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\FZ80\BITSHIFTLEFT.cpp">
+      <Filter>Archivos de origen\Instructions</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\FZ80\BITSHIFTRIGHT.cpp">
+      <Filter>Archivos de origen\Instructions</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\include\FZ80\CZ80.hpp">

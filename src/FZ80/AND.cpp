@@ -24,7 +24,8 @@ bool FZ80::AND_General::executeWith (const MCHEmul::UByte& v)
 // ---
 _INST_IMPL (FZ80::AND_A)
 {
-	assert (parameters ().size () == 1);
+	assert (parameters ().size () == 1 ||parameters ().size () == 2);
+	// Because in the non documented instructions the instruction code is 2 bytes long
 
 	return (executeWith (registerA ().values ()[0]));
 }
@@ -32,7 +33,8 @@ _INST_IMPL (FZ80::AND_A)
 // ---
 _INST_IMPL (FZ80::AND_B)
 {
-	assert (parameters ().size () == 1);
+	assert (parameters ().size () == 1 ||parameters ().size () == 2);
+	// Because in the non documented instructions the instruction code is 2 bytes long
 
 	return (executeWith (registerB ().values ()[0]));
 }
@@ -40,7 +42,8 @@ _INST_IMPL (FZ80::AND_B)
 // ---
 _INST_IMPL (FZ80::AND_C)
 {
-	assert (parameters ().size () == 1);
+	assert (parameters ().size () == 1 ||parameters ().size () == 2);
+	// Because in the non documented instructions the instruction code is 2 bytes long
 
 	return (executeWith (registerC ().values ()[0]));
 }
@@ -48,7 +51,8 @@ _INST_IMPL (FZ80::AND_C)
 // ---
 _INST_IMPL (FZ80::AND_D)
 {
-	assert (parameters ().size () == 1);
+	assert (parameters ().size () == 1 ||parameters ().size () == 2);
+	// Because in the non documented instructions the instruction code is 2 bytes long
 
 	return (executeWith (registerD ().values ()[0]));
 }
@@ -56,17 +60,18 @@ _INST_IMPL (FZ80::AND_D)
 // ---
 _INST_IMPL (FZ80::AND_E)
 {
-	assert (parameters ().size () == 1);
+	assert (parameters ().size () == 1 ||parameters ().size () == 2);
+	// Because in the non documented instructions the instruction code is 2 bytes long
 
 	return (executeWith (registerE ().values ()[0]));
 }
 
 // ---
-_INST_IMPL (FZ80::AND_F)
+_INST_IMPL (FZ80::AND_H)
 {
 	assert (parameters ().size () == 1);
 
-	return (executeWith (registerF ().values ()[0]));
+	return (executeWith (registerH ().values ()[0]));
 }
 
 // ---
@@ -107,4 +112,36 @@ _INST_IMPL (FZ80::AND)
 	assert (parameters ().size () == 2);
 
 	return (executeWith (parameters ()[1].value ()));
+}
+
+// ---
+_INST_IMPL (FZ80::AND_IXH)
+{
+	assert (parameters ().size () == 2);
+
+	return (executeWith (registerIXH ().values ()[0]));
+}
+
+// ---
+_INST_IMPL (FZ80::AND_IXL)
+{
+	assert (parameters ().size () == 2);
+
+	return (executeWith (registerIXL ().values ()[0]));
+}
+
+// ---
+_INST_IMPL (FZ80::AND_IYH)
+{
+	assert (parameters ().size () == 2);
+
+	return (executeWith (registerIYH ().values ()[0]));
+}
+
+// ---
+_INST_IMPL (FZ80::AND_IYL)
+{
+	assert (parameters ().size () == 2);
+
+	return (executeWith (registerIYL ().values ()[0]));
 }

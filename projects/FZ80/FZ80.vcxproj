@@ -156,6 +156,7 @@
     <ClCompile Include="..\..\src\FZ80\ADD.cpp" />
     <ClCompile Include="..\..\src\FZ80\ALUCTRL_Generic.cpp" />
     <ClCompile Include="..\..\src\FZ80\AND.cpp" />
+    <ClCompile Include="..\..\src\FZ80\BITSHIFTRIGHT.cpp" />
     <ClCompile Include="..\..\src\FZ80\CP.cpp" />
     <ClCompile Include="..\..\src\FZ80\CZ80.cpp" />
     <ClCompile Include="..\..\src\FZ80\DEC.cpp" />
@@ -167,6 +168,7 @@
     <ClCompile Include="..\..\src\FZ80\LD.cpp" />
     <ClCompile Include="..\..\src\FZ80\NMIInterrupt.cpp" />
     <ClCompile Include="..\..\src\FZ80\OR.cpp" />
+    <ClCompile Include="..\..\src\FZ80\BITSHIFTLEFT.cpp" />
     <ClCompile Include="..\..\src\FZ80\STACK.cpp" />
     <ClCompile Include="..\..\src\FZ80\SUB.cpp" />
     <ClCompile Include="..\..\src\FZ80\XOR.cpp" />

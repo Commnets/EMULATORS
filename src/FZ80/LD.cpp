@@ -11,7 +11,8 @@ _INST_IMPL (FZ80::LD_A)
 // ---
 _INST_IMPL (FZ80::LD_AFromA)
 {
-	assert (parameters ().size () == 1);
+	assert (parameters ().size () == 1 || parameters ().size () == 2);
+	// Because undocumented can be longer!
 
 	return (executeWith (registerA (), valueRegisterA ()));
 }
@@ -19,7 +20,8 @@ _INST_IMPL (FZ80::LD_AFromA)
 // ---
 _INST_IMPL (FZ80::LD_AFromB)
 {
-	assert (parameters ().size () == 1);
+	assert (parameters ().size () == 1 || parameters ().size () == 2);
+	// Because undocumented can be longer!
 
 	return (executeWith (registerA (), valueRegisterB ()));
 }
@@ -27,7 +29,8 @@ _INST_IMPL (FZ80::LD_AFromB)
 // ---
 _INST_IMPL (FZ80::LD_AFromC)
 {
-	assert (parameters ().size () == 1);
+	assert (parameters ().size () == 1 || parameters ().size () == 2);
+	// Because undocumented can be longer!
 
 	return (executeWith (registerA (), valueRegisterC ()));
 }
@@ -35,7 +38,8 @@ _INST_IMPL (FZ80::LD_AFromC)
 // ---
 _INST_IMPL (FZ80::LD_AFromD)
 {
-	assert (parameters ().size () == 1);
+	assert (parameters ().size () == 1 || parameters ().size () == 2);
+	// Because undocumented can be longer!
 
 	return (executeWith (registerA (), valueRegisterD ()));
 }
@@ -43,17 +47,18 @@ _INST_IMPL (FZ80::LD_AFromD)
 // ---
 _INST_IMPL (FZ80::LD_AFromE)
 {
-	assert (parameters ().size () == 1);
+	assert (parameters ().size () == 1 || parameters ().size () == 2);
+	// Because undocumented can be longer!
 
 	return (executeWith (registerA (), valueRegisterE ()));
 }
 
 // ---
-_INST_IMPL (FZ80::LD_AFromF)
+_INST_IMPL (FZ80::LD_AFromH)
 {
 	assert (parameters ().size () == 1);
 
-	return (executeWith (registerA (), valueRegisterF ()));
+	return (executeWith (registerA (), valueRegisterH ()));
 }
 
 // ---
@@ -132,9 +137,42 @@ _INST_IMPL (FZ80::LD_AFromAddress)
 }
 
 // ---
-_INST_IMPL (FZ80::LD_B)
+_INST_IMPL (FZ80::LD_AFromIXH)
 {
 	assert (parameters ().size () == 2);
+
+	return (executeWith (registerA (), valueRegisterIXH ()));
+}
+
+// ---
+_INST_IMPL (FZ80::LD_AFromIXL)
+{
+	assert (parameters ().size () == 2);
+
+	return (executeWith (registerA (), valueRegisterIXL ()));
+}
+
+// ---
+_INST_IMPL (FZ80::LD_AFromIYH)
+{
+	assert (parameters ().size () == 2);
+
+	return (executeWith (registerA (), valueRegisterIYH ()));
+}
+
+// ---
+_INST_IMPL (FZ80::LD_AFromIYL)
+{
+	assert (parameters ().size () == 2);
+
+	return (executeWith (registerA (), valueRegisterIYL ()));
+}
+
+// ---
+_INST_IMPL (FZ80::LD_B)
+{
+	assert (parameters ().size () == 1 || parameters ().size () == 2);
+	// Because undocumented can be longer!
 
 	return (executeWith (registerB (), parameters ()[1].value ()));
 }
@@ -142,7 +180,8 @@ _INST_IMPL (FZ80::LD_B)
 // ---
 _INST_IMPL (FZ80::LD_BFromA)
 {
-	assert (parameters ().size () == 1);
+	assert (parameters ().size () == 1 || parameters ().size () == 2);
+	// Because undocumented can be longer!
 
 	return (executeWith (registerB (), valueRegisterA ()));
 }
@@ -150,7 +189,8 @@ _INST_IMPL (FZ80::LD_BFromA)
 // ---
 _INST_IMPL (FZ80::LD_BFromB)
 {
-	assert (parameters ().size () == 1);
+	assert (parameters ().size () == 1 || parameters ().size () == 2);
+	// Because undocumented can be longer!
 
 	return (executeWith (registerB (), valueRegisterB ()));
 }
@@ -158,7 +198,8 @@ _INST_IMPL (FZ80::LD_BFromB)
 // ---
 _INST_IMPL (FZ80::LD_BFromC)
 {
-	assert (parameters ().size () == 1);
+	assert (parameters ().size () == 1 || parameters ().size () == 2);
+	// Because undocumented can be longer!
 
 	return (executeWith (registerB (), valueRegisterC ()));
 }
@@ -166,7 +207,8 @@ _INST_IMPL (FZ80::LD_BFromC)
 // ---
 _INST_IMPL (FZ80::LD_BFromD)
 {
-	assert (parameters ().size () == 1);
+	assert (parameters ().size () == 1 || parameters ().size () == 2);
+	// Because undocumented can be longer!
 
 	return (executeWith (registerB (), valueRegisterD ()));
 }
@@ -174,17 +216,18 @@ _INST_IMPL (FZ80::LD_BFromD)
 // ---
 _INST_IMPL (FZ80::LD_BFromE)
 {
-	assert (parameters ().size () == 1);
+	assert (parameters ().size () == 1 || parameters ().size () == 2);
+	// Because undocumented can be longer!
 
 	return (executeWith (registerB (), valueRegisterE ()));
 }
 
 // ---
-_INST_IMPL (FZ80::LD_BFromF)
+_INST_IMPL (FZ80::LD_BFromH)
 {
 	assert (parameters ().size () == 1);
 
-	return (executeWith (registerB (), valueRegisterF ()));
+	return (executeWith (registerB (), valueRegisterH ()));
 }
 
 // ---
@@ -193,6 +236,14 @@ _INST_IMPL (FZ80::LD_BFromL)
 	assert (parameters ().size () == 1);
 
 	return (executeWith (registerB (), valueRegisterL ()));
+}
+
+// ---
+_INST_IMPL (FZ80::LD_BFromAddressHL)
+{
+	assert (parameters ().size () == 1);
+
+	return (executeWith (registerB (), valueAddressHL ()));
 }
 
 // ---
@@ -212,9 +263,42 @@ _INST_IMPL (FZ80::LD_BFromAddressIndexIY)
 }
 
 // ---
-_INST_IMPL (FZ80::LD_C)
+_INST_IMPL (FZ80::LD_BFromIXH)
 {
 	assert (parameters ().size () == 2);
+
+	return (executeWith (registerB (), valueRegisterIXH ()));
+}
+
+// ---
+_INST_IMPL (FZ80::LD_BFromIXL)
+{
+	assert (parameters ().size () == 2);
+
+	return (executeWith (registerB (), valueRegisterIXL ()));
+}
+
+// ---
+_INST_IMPL (FZ80::LD_BFromIYH)
+{
+	assert (parameters ().size () == 2);
+
+	return (executeWith (registerB (), valueRegisterIYH ()));
+}
+
+// ---
+_INST_IMPL (FZ80::LD_BFromIYL)
+{
+	assert (parameters ().size () == 2);
+
+	return (executeWith (registerB (), valueRegisterIYL ()));
+}
+
+// ---
+_INST_IMPL (FZ80::LD_C)
+{
+	assert (parameters ().size () == 1 || parameters ().size () == 2);
+	// Because undocumented can be longer!
 
 	return (executeWith (registerC (), parameters ()[1].value ()));
 }
@@ -222,7 +306,8 @@ _INST_IMPL (FZ80::LD_C)
 // ---
 _INST_IMPL (FZ80::LD_CFromA)
 {
-	assert (parameters ().size () == 1);
+	assert (parameters ().size () == 1 || parameters ().size () == 2);
+	// Because undocumented can be longer!
 
 	return (executeWith (registerC (), valueRegisterA ()));
 }
@@ -230,7 +315,8 @@ _INST_IMPL (FZ80::LD_CFromA)
 // ---
 _INST_IMPL (FZ80::LD_CFromB)
 {
-	assert (parameters ().size () == 1);
+	assert (parameters ().size () == 1 || parameters ().size () == 2);
+	// Because undocumented can be longer!
 
 	return (executeWith (registerC (), valueRegisterB ()));
 }
@@ -238,7 +324,8 @@ _INST_IMPL (FZ80::LD_CFromB)
 // ---
 _INST_IMPL (FZ80::LD_CFromC)
 {
-	assert (parameters ().size () == 1);
+	assert (parameters ().size () == 1 || parameters ().size () == 2);
+	// Because undocumented can be longer!
 
 	return (executeWith (registerC (), valueRegisterC ()));
 }
@@ -246,7 +333,8 @@ _INST_IMPL (FZ80::LD_CFromC)
 // ---
 _INST_IMPL (FZ80::LD_CFromD)
 {
-	assert (parameters ().size () == 1);
+	assert (parameters ().size () == 1 || parameters ().size () == 2);
+	// Because undocumented can be longer!
 
 	return (executeWith (registerC (), valueRegisterD ()));
 }
@@ -254,17 +342,18 @@ _INST_IMPL (FZ80::LD_CFromD)
 // ---
 _INST_IMPL (FZ80::LD_CFromE)
 {
-	assert (parameters ().size () == 1);
+	assert (parameters ().size () == 1 || parameters ().size () == 2);
+	// Because undocumented can be longer!
 
 	return (executeWith (registerC (), valueRegisterE ()));
 }
 
 // ---
-_INST_IMPL (FZ80::LD_CFromF)
+_INST_IMPL (FZ80::LD_CFromH)
 {
 	assert (parameters ().size () == 1);
 
-	return (executeWith (registerC (), valueRegisterF ()));
+	return (executeWith (registerC (), valueRegisterH ()));
 }
 
 // ---
@@ -273,6 +362,14 @@ _INST_IMPL (FZ80::LD_CFromL)
 	assert (parameters ().size () == 1);
 
 	return (executeWith (registerC (), valueRegisterL ()));
+}
+
+// ---
+_INST_IMPL (FZ80::LD_CFromAddressHL)
+{
+	assert (parameters ().size () == 1);
+
+	return (executeWith (registerC (), valueAddressHL ()));
 }
 
 // ---
@@ -292,9 +389,42 @@ _INST_IMPL (FZ80::LD_CFromAddressIndexIY)
 }
 
 // ---
-_INST_IMPL (FZ80::LD_D)
+_INST_IMPL (FZ80::LD_CFromIXH)
 {
 	assert (parameters ().size () == 2);
+
+	return (executeWith (registerC (), valueRegisterIXH ()));
+}
+
+// ---
+_INST_IMPL (FZ80::LD_CFromIXL)
+{
+	assert (parameters ().size () == 2);
+
+	return (executeWith (registerC (), valueRegisterIXL ()));
+}
+
+// ---
+_INST_IMPL (FZ80::LD_CFromIYH)
+{
+	assert (parameters ().size () == 2);
+
+	return (executeWith (registerC (), valueRegisterIYH ()));
+}
+
+// ---
+_INST_IMPL (FZ80::LD_CFromIYL)
+{
+	assert (parameters ().size () == 2);
+
+	return (executeWith (registerC (), valueRegisterIYL ()));
+}
+
+// ---
+_INST_IMPL (FZ80::LD_D)
+{
+	assert (parameters ().size () == 1 || parameters ().size () == 2);
+	// Because undocumented can be longer!
 
 	return (executeWith (registerD (), parameters ()[1].value ()));
 }
@@ -302,7 +432,8 @@ _INST_IMPL (FZ80::LD_D)
 // ---
 _INST_IMPL (FZ80::LD_DFromA)
 {
-	assert (parameters ().size () == 1);
+	assert (parameters ().size () == 1 || parameters ().size () == 2);
+	// Because undocumented can be longer!
 
 	return (executeWith (registerD (), valueRegisterA ()));
 }
@@ -310,7 +441,8 @@ _INST_IMPL (FZ80::LD_DFromA)
 // ---
 _INST_IMPL (FZ80::LD_DFromB)
 {
-	assert (parameters ().size () == 1);
+	assert (parameters ().size () == 1 || parameters ().size () == 2);
+	// Because undocumented can be longer!
 
 	return (executeWith (registerD (), valueRegisterB ()));
 }
@@ -318,7 +450,8 @@ _INST_IMPL (FZ80::LD_DFromB)
 // ---
 _INST_IMPL (FZ80::LD_DFromC)
 {
-	assert (parameters ().size () == 1);
+	assert (parameters ().size () == 1 || parameters ().size () == 2);
+	// Because undocumented can be longer!
 
 	return (executeWith (registerD (), valueRegisterC ()));
 }
@@ -326,7 +459,8 @@ _INST_IMPL (FZ80::LD_DFromC)
 // ---
 _INST_IMPL (FZ80::LD_DFromD)
 {
-	assert (parameters ().size () == 1);
+	assert (parameters ().size () == 1 || parameters ().size () == 2);
+	// Because undocumented can be longer!
 
 	return (executeWith (registerD (), valueRegisterD ()));
 }
@@ -334,13 +468,14 @@ _INST_IMPL (FZ80::LD_DFromD)
 // ---
 _INST_IMPL (FZ80::LD_DFromE)
 {
-	assert (parameters ().size () == 1);
+	assert (parameters ().size () == 1 || parameters ().size () == 2);
+	// Because undocumented can be longer!
 
 	return (executeWith (registerD (), valueRegisterE ()));
 }
 
 // ---
-_INST_IMPL (FZ80::LD_DFromF)
+_INST_IMPL (FZ80::LD_DFromH)
 {
 	assert (parameters ().size () == 1);
 
@@ -353,6 +488,14 @@ _INST_IMPL (FZ80::LD_DFromL)
 	assert (parameters ().size () == 1);
 
 	return (executeWith (registerD (), valueRegisterL ()));
+}
+
+// ---
+_INST_IMPL (FZ80::LD_DFromAddressHL)
+{
+	assert (parameters ().size () == 1);
+
+	return (executeWith (registerD (), valueAddressHL ()));
 }
 
 // ---
@@ -372,9 +515,42 @@ _INST_IMPL (FZ80::LD_DFromAddressIndexIY)
 }
 
 // ---
-_INST_IMPL (FZ80::LD_E)
+_INST_IMPL (FZ80::LD_DFromIXH)
 {
 	assert (parameters ().size () == 2);
+
+	return (executeWith (registerD (), valueRegisterIXH ()));
+}
+
+// ---
+_INST_IMPL (FZ80::LD_DFromIXL)
+{
+	assert (parameters ().size () == 2);
+
+	return (executeWith (registerD (), valueRegisterIXL ()));
+}
+
+// ---
+_INST_IMPL (FZ80::LD_DFromIYH)
+{
+	assert (parameters ().size () == 2);
+
+	return (executeWith (registerD (), valueRegisterIYH ()));
+}
+
+// ---
+_INST_IMPL (FZ80::LD_DFromIYL)
+{
+	assert (parameters ().size () == 2);
+
+	return (executeWith (registerD (), valueRegisterIYL ()));
+}
+
+// ---
+_INST_IMPL (FZ80::LD_E)
+{
+	assert (parameters ().size () == 1 || parameters ().size () == 2);
+	// Because undocumented can be longer!
 
 	return (executeWith (registerE (), parameters ()[1].value ()));
 }
@@ -382,7 +558,8 @@ _INST_IMPL (FZ80::LD_E)
 // ---
 _INST_IMPL (FZ80::LD_EFromA)
 {
-	assert (parameters ().size () == 1);
+	assert (parameters ().size () == 1 || parameters ().size () == 2);
+	// Because undocumented can be longer!
 
 	return (executeWith (registerE (), valueRegisterA ()));
 }
@@ -390,7 +567,8 @@ _INST_IMPL (FZ80::LD_EFromA)
 // ---
 _INST_IMPL (FZ80::LD_EFromB)
 {
-	assert (parameters ().size () == 1);
+	assert (parameters ().size () == 1 || parameters ().size () == 2);
+	// Because undocumented can be longer!
 
 	return (executeWith (registerE (), valueRegisterB ()));
 }
@@ -398,7 +576,8 @@ _INST_IMPL (FZ80::LD_EFromB)
 // ---
 _INST_IMPL (FZ80::LD_EFromC)
 {
-	assert (parameters ().size () == 1);
+	assert (parameters ().size () == 1 || parameters ().size () == 2);
+	// Because undocumented can be longer!
 
 	return (executeWith (registerE (), valueRegisterC ()));
 }
@@ -406,7 +585,8 @@ _INST_IMPL (FZ80::LD_EFromC)
 // ---
 _INST_IMPL (FZ80::LD_EFromD)
 {
-	assert (parameters ().size () == 1);
+	assert (parameters ().size () == 1 || parameters ().size () == 2);
+	// Because undocumented can be longer!
 
 	return (executeWith (registerE (), valueRegisterD ()));
 }
@@ -414,17 +594,18 @@ _INST_IMPL (FZ80::LD_EFromD)
 // ---
 _INST_IMPL (FZ80::LD_EFromE)
 {
-	assert (parameters ().size () == 1);
+	assert (parameters ().size () == 1 || parameters ().size () == 2);
+	// Because undocumented can be longer!
 
 	return (executeWith (registerE (), valueRegisterE ()));
 }
 
 // ---
-_INST_IMPL (FZ80::LD_EFromF)
+_INST_IMPL (FZ80::LD_EFromH)
 {
 	assert (parameters ().size () == 1);
 
-	return (executeWith (registerE (), valueRegisterF ()));
+	return (executeWith (registerE (), valueRegisterH ()));
 }
 
 // ---
@@ -433,6 +614,14 @@ _INST_IMPL (FZ80::LD_EFromL)
 	assert (parameters ().size () == 1);
 
 	return (executeWith (registerE (), valueRegisterL ()));
+}
+
+// ---
+_INST_IMPL (FZ80::LD_EFromAddressHL)
+{
+	assert (parameters ().size () == 1);
+
+	return (executeWith (registerE (), valueAddressHL ()));
 }
 
 // ---
@@ -449,6 +638,38 @@ _INST_IMPL (FZ80::LD_EFromAddressIndexIY)
 	assert (parameters ().size () == 3);
 
 	return (executeWith (registerE (), valueAddressIY ((size_t) (parameters ()[2].value ()))));
+}
+
+// ---
+_INST_IMPL (FZ80::LD_EFromIXH)
+{
+	assert (parameters ().size () == 2);
+
+	return (executeWith (registerE (), valueRegisterIXH ()));
+}
+
+// ---
+_INST_IMPL (FZ80::LD_EFromIXL)
+{
+	assert (parameters ().size () == 2);
+
+	return (executeWith (registerE (), valueRegisterIXL ()));
+}
+
+// ---
+_INST_IMPL (FZ80::LD_EFromIYH)
+{
+	assert (parameters ().size () == 2);
+
+	return (executeWith (registerE (), valueRegisterIYH ()));
+}
+
+// ---
+_INST_IMPL (FZ80::LD_EFromIYL)
+{
+	assert (parameters ().size () == 2);
+
+	return (executeWith (registerE (), valueRegisterIYL ()));
 }
 
 // ---
@@ -500,11 +721,11 @@ _INST_IMPL (FZ80::LD_HFromE)
 }
 
 // ---
-_INST_IMPL (FZ80::LD_HFromF)
+_INST_IMPL (FZ80::LD_HFromH)
 {
 	assert (parameters ().size () == 1);
 
-	return (executeWith (registerH (), valueRegisterF ()));
+	return (executeWith (registerH (), valueRegisterH ()));
 }
 
 // ---
@@ -513,6 +734,14 @@ _INST_IMPL (FZ80::LD_HFromL)
 	assert (parameters ().size () == 1);
 
 	return (executeWith (registerH (), valueRegisterL ()));
+}
+
+// ---
+_INST_IMPL (FZ80::LD_HFromAddressHL)
+{
+	assert (parameters ().size () == 1);
+
+	return (executeWith (registerH (), valueAddressHL ()));
 }
 
 // ---
@@ -580,11 +809,11 @@ _INST_IMPL (FZ80::LD_LFromE)
 }
 
 // ---
-_INST_IMPL (FZ80::LD_LFromF)
+_INST_IMPL (FZ80::LD_LFromH)
 {
 	assert (parameters ().size () == 1);
 
-	return (executeWith (registerL (), valueRegisterF ()));
+	return (executeWith (registerL (), valueRegisterH ()));
 }
 
 // ---
@@ -593,6 +822,14 @@ _INST_IMPL (FZ80::LD_LFromL)
 	assert (parameters ().size () == 1);
 
 	return (executeWith (registerL (), valueRegisterL ()));
+}
+
+// ---
+_INST_IMPL (FZ80::LD_LFromAddressHL)
+{
+	assert (parameters ().size () == 1);
+
+	return (executeWith (registerL (), valueAddressHL ()));
 }
 
 // ---
@@ -832,6 +1069,81 @@ _INST_IMPL (FZ80::LD_AddressFromA)
 }
 
 // ---
+_INST_IMPL (FZ80::LD_AddressFromHL)
+{
+	assert (parameters ().size () == 3 || parameters ().size () == 4);
+	// Because the undocumented can have more bytes to defined it!
+
+	/** Addresses in memory are kept little - endian. */
+	return (executeWith (
+		MCHEmul::Address ({ 
+			parameters ()[1].value (), 
+			parameters ()[2].value () }, false /** Little - endian. */), valueRegisterHL ()));
+}
+
+// ---
+_INST_IMPL (FZ80::LD_AddressFromBC)
+{
+	assert (parameters ().size () == 3);
+
+	/** Addresses in memory are kept little - endian. */
+	return (executeWith (
+		MCHEmul::Address ({ 
+			parameters ()[1].value (), 
+			parameters ()[2].value () }, false /** Little - endian. */), valueRegisterBC ()));
+}
+
+// ---
+_INST_IMPL (FZ80::LD_AddressFromIX)
+{
+	assert (parameters ().size () == 3);
+
+	/** Addresses in memory are kept little - endian. */
+	return (executeWith (
+		MCHEmul::Address ({ 
+			parameters ()[1].value (), 
+			parameters ()[2].value () }, false /** Little - endian. */), valueRegisterIX ()));
+}
+
+// ---
+_INST_IMPL (FZ80::LD_AddressFromIY)
+{
+	assert (parameters ().size () == 3);
+
+	/** Addresses in memory are kept little - endian. */
+	return (executeWith (
+		MCHEmul::Address ({ 
+			parameters ()[1].value (), 
+			parameters ()[2].value () }, false /** Little - endian. */), valueRegisterIY ()));
+}
+
+// ---
+_INST_IMPL (FZ80::LD_AddressFromDE)
+{
+	assert (parameters ().size () == 3);
+
+	/** Addresses in memory are kept little - endian. */
+	return (executeWith (
+		MCHEmul::Address ({ 
+			parameters ()[1].value (), 
+			parameters ()[2].value () }, false /** Little - endian. */), valueRegisterDE ()));
+}
+
+// ---
+_INST_IMPL (FZ80::LD_AddressFromSP)
+{
+	assert (parameters ().size () == 3);
+
+	/** Addresses in memory are kept little - endian. */
+	MCHEmul::UInt v = MCHEmul::UInt::fromUnsignedInt (memory () -> stack () -> position ());
+	v.setMinLength (2); // It has always to be 2 bytes long...
+	return (executeWith (
+		MCHEmul::Address ({ 
+			parameters ()[1].value (), 
+			parameters ()[2].value () }, false /** Little - endian. */), v.values ()));
+}
+
+// ---
 _INST_IMPL (FZ80::LD_IFromA)
 {
 	assert (parameters ().size () == 2);
@@ -896,7 +1208,8 @@ _INST_IMPL (FZ80::LD_HL)
 // ---
 _INST_IMPL (FZ80::LD_HLFromAddress)
 {
-	assert (parameters ().size () == 3);
+	assert (parameters ().size () == 3 || parameters ().size () == 4);
+	// Because the non documented version uses more...
 
 	return (executeWith (registerHL (), 
 		memory () -> values (MCHEmul::Address ({ parameters ()[1].value (), parameters ()[2].value () }, false /** little - endian. */), 2)));

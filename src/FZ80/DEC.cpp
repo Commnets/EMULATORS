@@ -9,16 +9,27 @@ bool FZ80::DEC_General::executeWith (MCHEmul::Register& r)
 	MCHEmul::UInt v  (r.values ()[0]);
 	MCHEmul::UInt hv (r.values ()[0] & 0x0f); // Just half byte!
 	bool i80 = (v == MCHEmul::UInt (MCHEmul::UByte (0x80)));
-	v  -= MCHEmul::UInt::_1; // Increment...
-	hv -= MCHEmul::UInt::_1; // ..just to see whether there is hafl carry!
+	v  -= MCHEmul::UInt::_1; // Decrement...
+	hv -= MCHEmul::UInt::_1; // ..just to see whether there is half borrow!
 	r.set (v.bytes ()); // Put back the info
 
 	// How the flags are affected...
 	st.setBitStatus (FZ80::CZ80::_NEGATIVEFLAG, true);
 	st.setBitStatus (FZ80::CZ80::_PARITYOVERFLOWFLAG, i80); // Only if it was 0x80 before the operation...
-	st.setBitStatus (FZ80::CZ80::_HALFCARRYFLAG, hv [0].bit (4)); // If true, there will have been half carry!
+	st.setBitStatus (FZ80::CZ80::_HALFCARRYFLAG, hv [0].bit (4)); // If true, there will have been half borrow!
 	st.setBitStatus (FZ80::CZ80::_ZEROFLAG, v == MCHEmul::UByte::_0);
 	st.setBitStatus (FZ80::CZ80::_SIGNFLAG, v.negative ());
+
+	return (true);
+}
+
+// ---
+bool FZ80::DEC_General::executeWith (MCHEmul::RefRegisters& r)
+{
+	MCHEmul::UInt v  ({ r [0] -> values ()[0], r [1] -> values ()[0] });
+	v  -= MCHEmul::UInt::_1; // Decrement
+	r [0] -> set ({ v [0] }); // Put the info back...
+	r [1] -> set ({ v [1] });
 
 	return (true);
 }
@@ -47,7 +58,8 @@ bool FZ80::DEC_General::executeWith (const MCHEmul::Address& a)
 // ---
 _INST_IMPL (FZ80::DEC_A)
 {
-	assert (parameters ().size () == 1);
+	assert (parameters ().size () == 1 ||parameters ().size () == 2);
+	// Because in the non documented instructions the instruction code is 2 bytes long
 
 	return (executeWith (registerA ()));
 }
@@ -55,7 +67,8 @@ _INST_IMPL (FZ80::DEC_A)
 // ---
 _INST_IMPL (FZ80::DEC_B)
 {
-	assert (parameters ().size () == 1);
+	assert (parameters ().size () == 1 ||parameters ().size () == 2);
+	// Because in the non documented instructions the instruction code is 2 bytes long
 
 	return (executeWith (registerB ()));
 }
@@ -63,7 +76,8 @@ _INST_IMPL (FZ80::DEC_B)
 // ---
 _INST_IMPL (FZ80::DEC_C)
 {
-	assert (parameters ().size () == 1);
+	assert (parameters ().size () == 1 ||parameters ().size () == 2);
+	// Because in the non documented instructions the instruction code is 2 bytes long
 
 	return (executeWith (registerC ()));
 }
@@ -71,7 +85,8 @@ _INST_IMPL (FZ80::DEC_C)
 // ---
 _INST_IMPL (FZ80::DEC_D)
 {
-	assert (parameters ().size () == 1);
+	assert (parameters ().size () == 1 ||parameters ().size () == 2);
+	// Because in the non documented instructions the instruction code is 2 bytes long
 
 	return (executeWith (registerD ()));
 }
@@ -79,17 +94,18 @@ _INST_IMPL (FZ80::DEC_D)
 // ---
 _INST_IMPL (FZ80::DEC_E)
 {
-	assert (parameters ().size () == 1);
+	assert (parameters ().size () == 1 ||parameters ().size () == 2);
+	// Because in the non documented instructions the instruction code is 2 bytes long
 
 	return (executeWith (registerE ()));
 }
 
 // ---
-_INST_IMPL (FZ80::DEC_F)
+_INST_IMPL (FZ80::DEC_H)
 {
 	assert (parameters ().size () == 1);
 
-	return (executeWith (registerF ()));
+	return (executeWith (registerH ()));
 }
 
 // ---
@@ -122,4 +138,86 @@ _INST_IMPL (FZ80::DEC_IndirectIndexIY)
 	assert (parameters ().size () == 3);
 
 	return (executeWith (addressIY (parameters ()[2].value ())));
+}
+
+// ---
+_INST_IMPL (FZ80::DEC_BC)
+{
+	assert (parameters ().size () == 1);
+
+	return (executeWith (registerBC ()));
+}
+
+// ---
+_INST_IMPL (FZ80::DEC_DE)
+{
+	assert (parameters ().size () == 1);
+
+	return (executeWith (registerBC ()));
+}
+
+// ---
+_INST_IMPL (FZ80::DEC_HL)
+{
+	assert (parameters ().size () == 1);
+
+	return (executeWith (registerHL ()));
+}
+
+// ---
+_INST_IMPL (FZ80::DEC_SP)
+{
+	assert (parameters ().size () == 1);
+
+	memory () -> stack () -> setPosition (memory () -> stack () -> position () - 1);
+	
+	return (true);
+}
+
+// ---
+_INST_IMPL (FZ80::DEC_IX)
+{
+	assert (parameters ().size () == 2);
+
+	return (executeWith (registerIX ()));
+}
+
+// ---
+_INST_IMPL (FZ80::DEC_IY)
+{
+	assert (parameters ().size () == 2);
+
+	return (executeWith (registerIY ()));
+}
+
+// ---
+_INST_IMPL (FZ80::DEC_IXH)
+{
+	assert (parameters ().size () == 2);
+
+	return (executeWith (registerIXH ()));
+}
+
+// ---
+_INST_IMPL (FZ80::DEC_IXL)
+{
+	assert (parameters ().size () == 2);
+
+	return (executeWith (registerIXL ()));
+}
+
+// ---
+_INST_IMPL (FZ80::DEC_IYH)
+{
+	assert (parameters ().size () == 2);
+
+	return (executeWith (registerIYH ()));
+}
+
+// ---
+_INST_IMPL (FZ80::DEC_IYL)
+{
+	assert (parameters ().size () == 2);
+
+	return (executeWith (registerIYL ()));
 }

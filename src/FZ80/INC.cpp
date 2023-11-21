@@ -24,6 +24,20 @@ bool FZ80::INC_General::executeWith (MCHEmul::Register& r)
 }
 
 // ---
+bool FZ80::INC_General::executeWith (MCHEmul::RefRegisters& r)
+{
+	// The operation...
+	MCHEmul::UInt v	({ r [0] -> values ()[0], r [1] -> values ()[0] });
+	v  += MCHEmul::UInt::_1; // Increment...
+	r [0] -> set ({ v [0] }); // Put back the info
+	r [1] -> set ({ v [1] });
+
+	// No flags affected
+
+	return (true);
+}
+
+// ---
 bool FZ80::INC_General::executeWith (const MCHEmul::Address& a)
 {
 	MCHEmul::StatusRegister& st = cpu () -> statusRegister ();
@@ -47,7 +61,8 @@ bool FZ80::INC_General::executeWith (const MCHEmul::Address& a)
 // ---
 _INST_IMPL (FZ80::INC_A)
 {
-	assert (parameters ().size () == 1);
+	assert (parameters ().size () == 1 ||parameters ().size () == 2);
+	// Because in the non documented instructions the instruction code is 2 bytes long
 
 	return (executeWith (registerA ()));
 }
@@ -55,7 +70,8 @@ _INST_IMPL (FZ80::INC_A)
 // ---
 _INST_IMPL (FZ80::INC_B)
 {
-	assert (parameters ().size () == 1);
+	assert (parameters ().size () == 1 ||parameters ().size () == 2);
+	// Because in the non documented instructions the instruction code is 2 bytes long
 
 	return (executeWith (registerB ()));
 }
@@ -63,7 +79,8 @@ _INST_IMPL (FZ80::INC_B)
 // ---
 _INST_IMPL (FZ80::INC_C)
 {
-	assert (parameters ().size () == 1);
+	assert (parameters ().size () == 1 ||parameters ().size () == 2);
+	// Because in the non documented instructions the instruction code is 2 bytes long
 
 	return (executeWith (registerC ()));
 }
@@ -71,7 +88,8 @@ _INST_IMPL (FZ80::INC_C)
 // ---
 _INST_IMPL (FZ80::INC_D)
 {
-	assert (parameters ().size () == 1);
+	assert (parameters ().size () == 1 ||parameters ().size () == 2);
+	// Because in the non documented instructions the instruction code is 2 bytes long
 
 	return (executeWith (registerD ()));
 }
@@ -79,17 +97,18 @@ _INST_IMPL (FZ80::INC_D)
 // ---
 _INST_IMPL (FZ80::INC_E)
 {
-	assert (parameters ().size () == 1);
+	assert (parameters ().size () == 1 ||parameters ().size () == 2);
+	// Because in the non documented instructions the instruction code is 2 bytes long
 
 	return (executeWith (registerE ()));
 }
 
 // ---
-_INST_IMPL (FZ80::INC_F)
+_INST_IMPL (FZ80::INC_H)
 {
 	assert (parameters ().size () == 1);
 
-	return (executeWith (registerF ()));
+	return (executeWith (registerH ()));
 }
 
 // ---
@@ -122,4 +141,86 @@ _INST_IMPL (FZ80::INC_IndirectIndexIY)
 	assert (parameters ().size () == 3);
 
 	return (executeWith (addressIY (parameters ()[2].value ())));
+}
+
+// ---
+_INST_IMPL (FZ80::INC_BC)
+{
+	assert (parameters ().size () == 1);
+
+	return (executeWith (registerBC ()));
+}
+
+// ---
+_INST_IMPL (FZ80::INC_DE)
+{
+	assert (parameters ().size () == 1);
+
+	return (executeWith (registerDE ()));
+}
+
+// ---
+_INST_IMPL (FZ80::INC_HL)
+{
+	assert (parameters ().size () == 1);
+
+	return (executeWith (registerHL ()));
+}
+
+// ---
+_INST_IMPL (FZ80::INC_SP)
+{
+	assert (parameters ().size () == 1);
+
+	memory () -> stack () -> setPosition (memory () -> stack () -> position () + 1);
+	
+	return (true);
+}
+
+// ---
+_INST_IMPL (FZ80::INC_IX)
+{
+	assert (parameters ().size () == 2);
+
+	return (executeWith (registerIX ()));
+}
+
+// ---
+_INST_IMPL (FZ80::INC_IY)
+{
+	assert (parameters ().size () == 2);
+
+	return (executeWith (registerIY ()));
+}
+
+// ---
+_INST_IMPL (FZ80::INC_IXH)
+{
+	assert (parameters ().size () == 2);
+
+	return (executeWith (registerIXH ()));
+}
+
+// ---
+_INST_IMPL (FZ80::INC_IXL)
+{
+	assert (parameters ().size () == 2);
+
+	return (executeWith (registerIXL ()));
+}
+
+// ---
+_INST_IMPL (FZ80::INC_IYH)
+{
+	assert (parameters ().size () == 2);
+
+	return (executeWith (registerIYH ()));
+}
+
+// ---
+_INST_IMPL (FZ80::INC_IYL)
+{
+	assert (parameters ().size () == 2);
+
+	return (executeWith (registerIYL ()));
 }

@@ -184,21 +184,6 @@ std::string MCHEmul::Instruction::asString () const
 	return (toPrint);
 }
 
-bool MCHEmul::Instruction::execute (const MCHEmul::UBytes& p, MCHEmul::CPU* c, MCHEmul::Memory* m, MCHEmul::Stack* stk, bool& f)
-{
-	// The assertion of the number of positions has to be done in the execution implementation...
-	assert (c != nullptr && m != nullptr);
-
-	_lastParameters = p;
-	_cpu = c;
-	_memory = m;
-	_stack = stk;
-
-	_additionalCycles = 0; // executeImpl could add additional cycles...
-
-	return (executeImpl (f));
-}
-
 // ---
 MCHEmul::Instruction::Structure MCHEmul::Instruction::analyzeInstruction () const
 {
@@ -248,13 +233,43 @@ MCHEmul::Instruction::Structure MCHEmul::Instruction::analyzeInstruction () cons
 	return (result);
 }
 
+bool MCHEmul::InstructionDefined::execute (MCHEmul::CPU* c, MCHEmul::Memory* m, MCHEmul::Stack* stk, 
+	MCHEmul::ProgramCounter* pc)
+{
+	// It can not be executed unless the references are not nullptr...
+	assert (c != nullptr && 
+			m != nullptr && 
+			stk != nullptr &&
+			pc != nullptr);
+
+	_cpu = c;
+	_memory = m;
+	_stack = stk;
+
+	// Gets the data that the instruction occupies
+	// before updating the Program Counter...
+	_lastParameters = 
+		_memory -> values (pc -> asAddress (), memoryPositions ());
+	// Then, the Program Counter is moved to the next instruction...
+	// This is done in this way because the intruction itself could
+	// modify the value of the Program Counter (Jumps, returns,...)
+	*pc += (size_t) memoryPositions ();
+
+	_additionalCycles = 0; // executeImpl could add additional cycles...
+
+	bool f = true;
+	bool r = executeImpl (f);
+	if (r && !f)
+		pc -= memoryPositions ();
+
+	return (r);
+}
+
 // ---
-MCHEmul::InstructionsGroup::InstructionsGroup (unsigned int c, unsigned char nBG, unsigned char nBI,
-		const MCHEmul::Instructions& inst, const std::string& t)
-	: MCHEmul::Instruction (c, 1 /** adjusted later. */, 1 /** adjusted later. */, t, true),
-	  _bytesGroupCode (nBG), _bytesInstructionCode (nBI),
+MCHEmul::InstructionUndefined::InstructionUndefined (unsigned int c, const MCHEmul::Instructions& inst)
+	: MCHEmul::Instruction (c, 1 /** adjusted later. */, 1 /** adjusted later. */, "UNDEFINED", true),
 	  _instructions (inst),
-	  _rawInstructions () // Defined later...
+	  _lastInstruction (nullptr)
 {
 	assert (_instructions.size () != 0);
 
@@ -269,53 +284,29 @@ MCHEmul::InstructionsGroup::InstructionsGroup (unsigned int c, unsigned char nBG
 	_iTemplate			= fInst -> iTemplate ();
 	_additionalCycles	= fInst -> additionalClockCycles ();
 	_iStructure			= fInst -> internalStructure ();
-
-	// As an example:
-	// full instruction code structure example = 0xff_ffff
-	// _bytesGroupCode = 1
-	// _bytesInstructionCode = 2
-
-	// size = 1 << (8 * 2) = 65536
-	_rawInstructions = MCHEmul::ListOfInstructions 
-		((size_t (1) << (8 * _bytesInstructionCode)), nullptr);
-	// msk = (1 << (8 * 2)) - 1 = 0xffff = 65535
-	unsigned int msk = (1 << (8 * _bytesInstructionCode /** Just the "LSB" bits. */)) - 1;
-	for (const auto& i : _instructions)
-	{
-		// All instructions within the group must have the same seed...
-		// cc = 0x23
-		// inst_code = 0x23_1245
-		// & = 0xffff_ffff ^ 0xffff = 0xffff_0000
-		// inst_code & 0xffff_0000 = 0x0023_0000
-		// >> (8 * 2) = 0x23
-		assert ((i.second -> code () & 
-			(std::numeric_limits <unsigned int>::max () ^ msk)) >> (8 * _bytesInstructionCode) == c);
-
-		// inst_code & msk = 0x0000_1245
-		_rawInstructions [(size_t) (i.second -> code () & msk)] = i.second;
-	}
 }
 
 // ---
-bool MCHEmul::InstructionsGroup::executeImpl (bool& f)
+bool MCHEmul::InstructionUndefined::execute (MCHEmul::CPU* c, MCHEmul::Memory* m, MCHEmul::Stack* stk, 
+	MCHEmul::ProgramCounter* pc)
 {
-	assert (parameters ().size () > 1);
+	// It can not be executed unless the references are not nullptr...
+	assert (c != nullptr && 
+			m != nullptr && 
+			stk != nullptr &&
+			pc != nullptr);
 
-	// When arrives here, 
-	// the parameters to invoke the instruction are already set: CPU, Memory, Stack,...
-	
-	// The second parameter will always be the subinstruction code...
-	_lastInstruction = nullptr;
-	unsigned int sc = MCHEmul::UInt (parameters ().MSUBytes 
-		(_bytesGroupCode + _bytesInstructionCode).LSUBytes (_bytesInstructionCode)).asUnsignedInt ();
-	// Execute the instruction selected if any...
-	bool result = (sc >= _rawInstructions.size () || _rawInstructions [sc] == nullptr) ? false
-		: (_lastInstruction = _rawInstructions [sc]) -> execute (parameters (), cpu (), memory (), stack (), f);
-	// If the last instruction was not null,
-	// all internal parameters are adjusted to the last instruction executed!
-	// If not, the values are still from the last execution!
-	if (_lastInstruction != nullptr) 
+	_cpu = c;
+	_memory = m;
+	_stack = stk;
+
+	bool result = false; // By default...
+	MCHEmul::Instruction* sI = selectInstruction (c, m, stk, pc); // To select the instruction...
+	if (sI != nullptr && (result = sI -> execute (c, m, stk, pc)))
 	{
+		_lastInstruction = (dynamic_cast <MCHEmul::InstructionDefined*> (sI) != nullptr)
+			? static_cast <MCHEmul::InstructionDefined*> (sI)
+			: static_cast <MCHEmul::InstructionUndefined*> (sI) -> _lastInstruction;
 		_code				= _lastInstruction -> code ();
 		_codeLength			= _lastInstruction -> codeLength ();
 		_memoryPositions	= _lastInstruction -> memoryPositions ();

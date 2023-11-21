@@ -30,12 +30,12 @@ namespace F6500
 		The exception is in the instructions related with jumping. \n
 		So as the default the type of cycle will be _CYCLEREAD for the first of them, and _CYCLEWRITE for the rest. \n
 		@see: https://datasheet4u.com/datasheet-pdf/Synertek/SY6500/pdf.php?id=1306768 (last pages). */
-	class Instruction : public MCHEmul::Instruction
+	class Instruction : public MCHEmul::InstructionDefined
 	{
 		public:
 		Instruction (unsigned int c, unsigned int mp, unsigned int cc, unsigned int rcc, 
 				const std::string& t)
-			: MCHEmul::Instruction (c, mp, cc, t, false),
+			: MCHEmul::InstructionDefined (c, mp, cc, t, false),
 			  _readingClockCycles (rcc)
 							{ assert (_readingClockCycles <= clockCycles ()); }
 		

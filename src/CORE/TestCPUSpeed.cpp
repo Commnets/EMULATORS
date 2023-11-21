@@ -17,12 +17,20 @@ MCHEmul::TestCPUSpeed::~TestCPUSpeed ()
 // ---
 unsigned int MCHEmul::TestCPUSpeed::clocksInASecondExcutingInstruction (const MCHEmul::UBytes& b, bool sM) const
 {
-	MCHEmul::Instruction* inst = 
-		_cpu -> instruction (MCHEmul::UInt 
-			(b.MSUBytes (_cpu -> architecture ().instructionLength ())).asUnsignedInt ());
+	MCHEmul::UInt iCU (b.MSUBytes (_cpu -> architecture ().instructionLength ()));
+	unsigned int iC = iCU.asUnsignedInt ();
 
+	if (!_cpu -> existsInstruction (iC))
+	{
+		std::cout << "Error in definition of instruction:" << std::endl;
+		std::cout << "Instruction with code " << iCU << " not in the list" << std::endl;
+		std::cout << "The code assigned is not the code used in the definition" << std::endl;
+		
+		return (0);
+	}
+
+	MCHEmul::Instruction* inst = _cpu -> instruction (iC);
 	unsigned int clks = 0;
-
 	bool e = false;
 	std::chrono::time_point <std::chrono::steady_clock> clk = 
 		std::chrono::steady_clock ().now ();
@@ -42,8 +50,7 @@ unsigned int MCHEmul::TestCPUSpeed::clocksInASecondExcutingInstruction (const MC
 			_memory -> bytes (MCHEmul::Address (randomVector (_cpu -> architecture ().numberBytes ())), 
 				b.size () - _cpu -> architecture ().instructionLength ()); // Simulate and access to the memory...
 		// ...and then execute the instruction...
-		bool finish = true;
-		inst -> execute (b, _cpu, _memory, _memory -> stack (), finish);
+		inst -> execute (_cpu, _memory, _memory -> stack (), &_cpu -> programCounter ());
 		clks += (inst -> clockCycles () + inst -> additionalClockCycles ());
 
 		// Repeat during a second...
@@ -66,6 +73,11 @@ void MCHEmul::TestCPUSpeed::testAllInstructionSet (std::ostream& o, unsigned int
 	_memory -> initialize ();
 	_memory -> stack (); // Just to initialize the pointer...
 	_cpu -> initialize ();
+
+	// Fill up the memory with random values...
+	for (size_t i = 0; i < _memory -> size (); 
+		_memory -> set (MCHEmul::Address (_cpu -> architecture ().instructionLength (), i++), std::rand () % 256));
+	_memory -> stack () -> initialize (); // To put it back to 0!
 
 	std::map <unsigned int, unsigned int> _execInstructions;
 	std::map <unsigned int, std::string> _instructionsTemplates;
@@ -112,9 +124,9 @@ void MCHEmul::TestCPUSpeed::testInstructionSet (std::ostream& o, const MCHEmul::
 			continue; // Just in case...
 
 		// If the instruction found is a group, everything inside is tested...
-		if (dynamic_cast <MCHEmul::InstructionsGroup*> (i.second) != nullptr)
+		if (dynamic_cast <MCHEmul::InstructionUndefined*> (i.second) != nullptr)
 		{
-			testInstructionSet (o, static_cast <MCHEmul::InstructionsGroup*> (i.second) -> instructions (), 
+			testInstructionSet (o, static_cast <MCHEmul::InstructionUndefined*> (i.second) -> instructions (), 
 				sPI, iT,nt, sM, pS); 
 
 			continue;

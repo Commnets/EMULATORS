@@ -22,12 +22,15 @@ namespace MCHEmul
 	class CPU;
 	class Memory;
 	class Stack;
+	class ProgramCounter;
 
-	/** Represents a instruction executed by a CPU. 
-		A instruction is made up of cycles. 
+	/** Represents a instruction executed by a CPU. \n
+		To process a instruction several CPU cycles are consumed. \n 
 		Depending on the type of processor implementing a instruction, the type of cycles can vary. \n
-		However although they can be extended later, three basic types are provided by default: \n
-		Internal (the default one), to read data from memory and to write data to memory. */
+		However, although they list can be extended later, three basic types are provided by default: \n
+		Internal (_CYCLEINTERNAL, the default one), \n
+		to read data from memory (_CYCLEREAD), 
+		and to write data to memory (_CYCLEWRITE). */
 	class Instruction
 	{
 		public:
@@ -169,11 +172,16 @@ namespace MCHEmul
 			If no parameters has been set "blankk" will be written instead. */
 		virtual std::string asString () const;
 
-		/** To execute the instruction. It has to be redefined. \n
-			It returns true if everything is ok. \n
-			The parameter f is set to true whether the instruction is fully executed,
-			and with false if not, and next CPU cycle has also to considered it! */
-		bool execute (const UBytes& p, CPU* c, Memory* m, Stack* stk, bool& f);
+		/**	
+		  *	To execute the instruction. \n
+		  * It can be redefined, because the way the instruction is executed will depend on the type of it.
+		  * @param	c	:	A reference to the CPU asking for the execution.
+		  * @param	m	:	A reference to the memory used in the execution.
+		  * @param	stk :	Same for the stack.
+		  * @param	pc	:	A reference to the program counter, that will be affected depending on the instruction.
+		  *	It returns true if everything is ok.
+		  */
+		virtual bool execute (CPU* c, Memory* m, Stack* stk, ProgramCounter* pc) = 0;
 
 		friend std::ostream& operator << (std::ostream& o, const Instruction& i)
 							{ return (o << i.asString ()); }
@@ -181,13 +189,6 @@ namespace MCHEmul
 		protected:
 		/** To analyze the structure of the instruction. */
 		Structure analyzeInstruction () const;
-
-		/** The implementation of the execution.
-			It has to be redefined.
-			@return		true if the execution was ok, and false in other situation. 
-			The parameter f must be set to false whether the execution didin't finish
-			and the next CPU cycle has to considere it back. */
-		virtual bool executeImpl (bool &f) = 0;
 
 		// Implementation
 		const CPU* cpu () const
@@ -207,8 +208,8 @@ namespace MCHEmul
 		// Once they assigned at construction level they couldn't be modified...
 		// IMPORTANT NOTE:
 		// Most of these attributes are usually modified! (there is no method for so)
-		// So they could be defined as const,
-		// However the Instruction Group does when executing, take this into account!
+		// So they could be defined as const.
+		// However the InstructionUndefined does when executing, take this into account!
 		unsigned int _code;
 		size_t _codeLength;
 		unsigned int _memoryPositions; 
@@ -223,68 +224,93 @@ namespace MCHEmul
 		unsigned int _additionalCycles; // Sometimes, when executed, 
 										// an instruction could take more than expected... (@see additionalClockCylces method)
 
-		private:
+		protected:
 		MCHEmul::UBytes _lastParameters;
 		MCHEmul::CPU* _cpu;
 		MCHEmul::Memory* _memory;
 		MCHEmul::Stack* _stack;
 	};
 
+	// To simplify the way the instruction set is used...
 	using Instructions = std::map <unsigned int, Instruction*>;
 	using ListOfInstructions = std::vector <Instruction*>;
 
-	/** A "group instruction" is an instruction which groups many others. 
-		This is a very strange instruction used as a trick in some CPUs, like Z80. */
-	class InstructionsGroup final : public Instruction
+	/** The most common type of instruction. \n
+		This type of instruction is fully defined at costruction time. \n
+		That's it, the number of cycles it takes, the bytes in memory it occupies, etc. is defined at construction time. */
+	class InstructionDefined : public Instruction
+	{
+		public:
+		InstructionDefined (unsigned int c, unsigned int mp, unsigned int cc, 
+			const std::string& t, bool bE = true)
+			: Instruction (c, mp, cc, t, bE)
+							{ }
+
+		/** Modifies the pc with the length of the instruction, before executed it. \n
+			Take this into account when defining jump instructions. 
+			This methid can not be longer extended. \n
+			The one to define the datail of the instruction is executeImpl. */
+		virtual bool execute (CPU* c, Memory* m, Stack* stk, ProgramCounter* pc) final override;
+
+		protected:
+		/** The implementation of the execution.
+			It has to be redefined when the instruction was implemented.
+			@return		true if the execution was ok, and false in other situation. 
+			The parameter f must be set to false whether the execution didin't finish
+			and the next CPU cycle has to considere it back. */
+		virtual bool executeImpl (bool &f) = 0;
+	};
+
+	/** This type of instruction is defined as it is processed. \n
+		The instruction needs a list of different possibilities to choose. \n 
+		The one to execute finally can depend on, e.g, other bytes read from the memory. */
+	class InstructionUndefined : public Instruction
 	{
 		public:
 		/** 
-		  * Any "instruction code" is represented as an "unsigned int", 
-		  * which is made up of several bytes (unsigned char), up to a maximum of 4 = sizeof (unsigned int). \n
-		  *	To define a group it is needed to define the code (c) of the group. \n
-		  * All instructions added to the group should share the same (c) code. \n
-		  * The shared code has to be present at the first nBG bytes of the instruction code of any instructiona added to the group. \n
-		  * This is checked at construction time of the instruction group. \n
-		  * The number of memory positions ocuppied by the group instruction and 
-		  * the number of clock cycles that its execution takes is undefined. It will depend on the last instruction executed. \n
-		  * To avoid debug errors at construction time boths are declared as 1. \n
+		  * @param	c	:	A generic code for the Undefined Instruction.
+		  * @param	inst:	The list of instruction where to select the right one to finally execute. 
 		  */
-		InstructionsGroup (unsigned int c, unsigned char nBG, unsigned char nBI,
-			const Instructions& inst, const std::string& t = "");
+		InstructionUndefined (unsigned int c, const Instructions& inst);
 
 		const Instructions& instructions () const
 							{ return (_instructions); }
+		Instructions& instructions ()
+							{ return (_instructions); }
 
-		/** Delegated in the real instruction executed. */
-		virtual std::string asString () const override
-							{ return ((_lastInstruction != nullptr) ? _lastInstruction -> asString () : ""); }
+		const InstructionDefined* lastInstruction () const
+							{ return (_lastInstruction); }
+		InstructionDefined* lasInstruction ()
+							{ return (_lastInstruction); }
 
-		private:
-		virtual bool executeImpl (bool& f) override;
+		/** The final instruction executed should be always a defined one,
+			and is is dragged up to the first level. */
+		virtual bool execute (CPU* c, Memory* m, Stack* stk, ProgramCounter* pc) override;
 
-		private:
-		unsigned char _bytesGroupCode; 
-		unsigned char _bytesInstructionCode;
+		protected:
+		/** As the instruction is undefined, 
+			it is needed to select first the right instruction to execute. \n 
+			This method has to be redefined to follow the right processes of the CPU emulated. */
+		virtual Instruction* selectInstruction (CPU* c, Memory* m, Stack* stk, ProgramCounter* pc) = 0;
+
+		protected:
 		Instructions _instructions;
 
-		/** The last instruction executed inside. */
-		Instruction* _lastInstruction;
-
 		// Implementation
-		/** To speed up everything. */
-		ListOfInstructions _rawInstructions;
+		/** The last defined instruction executed inside finally. */
+		InstructionDefined* _lastInstruction;
 	};
 }
 
 /** 
-  *	To simplify the way a new instruction is defined.
+  *	To simplify the way a new InstructionDefined is implemented.
   *	@param _C  : Code.
   *	@param _M  : MemoryPositions occupied.
   *	@param _CC : Clock cycles used. 
   * @param _RCC: Read clock cycles used within the total.
   * @param _T  : The template to print the instruction.
   *	@param _I  : Name of the intruction.
-  * @param _J  : Name of the parent class.
+  * @param _J  : Name of the parent class. The last parent class should be InstructionDefined.
   * @param _K  : Whether the info kept is big or little endian.
   * Always this method is used take into account that the variable _FINISH 
   * must be set to true of false to indicate whether the instruction has or not finished.
@@ -300,7 +326,7 @@ class _I final : public _J \
 
 /** Idem but inheriting from basic instruction. */
 #define _INST(_C, _M, _CC, _RCC, _T, _I, _K) \
-	_INST_FROM(_C, _M, _CC, _RCC, _T, _I, MCHEmul::Instruction);
+	_INST_FROM(_C, _M, _CC, _RCC, _T, _I, MCHEmul::InstructionDefined);
 
 #define _INST_IMPL(_I) \
 bool _I::executeImpl (bool& _FINISH)

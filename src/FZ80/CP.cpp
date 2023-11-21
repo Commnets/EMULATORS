@@ -24,7 +24,8 @@ bool FZ80::CP_General::executeWith (const MCHEmul::UByte& v)
 // ---
 _INST_IMPL (FZ80::CP_WithA)
 {
-	assert (parameters ().size () == 1);
+	assert (parameters ().size () == 1 ||parameters ().size () == 2);
+	// Because in the non documented instructions the instruction code is 2 bytes long
 
 	return (executeWith (registerA ().values ()[0]));
 }
@@ -32,7 +33,8 @@ _INST_IMPL (FZ80::CP_WithA)
 // ---
 _INST_IMPL (FZ80::CP_WithB)
 {
-	assert (parameters ().size () == 1);
+	assert (parameters ().size () == 1 ||parameters ().size () == 2);
+	// Because in the non documented instructions the instruction code is 2 bytes long
 
 	return (executeWith (registerB ().values ()[0]));
 }
@@ -40,7 +42,8 @@ _INST_IMPL (FZ80::CP_WithB)
 // ---
 _INST_IMPL (FZ80::CP_WithC)
 {
-	assert (parameters ().size () == 1);
+	assert (parameters ().size () == 1 ||parameters ().size () == 2);
+	// Because in the non documented instructions the instruction code is 2 bytes long
 
 	return (executeWith (registerC ().values ()[0]));
 }
@@ -48,7 +51,8 @@ _INST_IMPL (FZ80::CP_WithC)
 // ---
 _INST_IMPL (FZ80::CP_WithD)
 {
-	assert (parameters ().size () == 1);
+	assert (parameters ().size () == 1 ||parameters ().size () == 2);
+	// Because in the non documented instructions the instruction code is 2 bytes long
 
 	return (executeWith (registerD ().values ()[0]));
 }
@@ -56,17 +60,18 @@ _INST_IMPL (FZ80::CP_WithD)
 // ---
 _INST_IMPL (FZ80::CP_WithE)
 {
-	assert (parameters ().size () == 1);
+	assert (parameters ().size () == 1 ||parameters ().size () == 2);
+	// Because in the non documented instructions the instruction code is 2 bytes long
 
 	return (executeWith (registerE ().values ()[0]));
 }
 
 // ---
-_INST_IMPL (FZ80::CP_WithF)
+_INST_IMPL (FZ80::CP_WithH)
 {
 	assert (parameters ().size () == 1);
 
-	return (executeWith (registerF ().values ()[0]));
+	return (executeWith (registerH ().values ()[0]));
 }
 
 // ---
@@ -107,4 +112,36 @@ _INST_IMPL (FZ80::CP)
 	assert (parameters ().size () == 2);
 
 	return (executeWith (parameters ()[1].value ()));
+}
+
+// ---
+_INST_IMPL (FZ80::CP_WithIXH)
+{
+	assert (parameters ().size () == 2);
+
+	return (executeWith (registerIXH ().values ()[0]));
+}
+
+// ---
+_INST_IMPL (FZ80::CP_WithIXL)
+{
+	assert (parameters ().size () == 2);
+
+	return (executeWith (registerIXL ().values ()[0]));
+}
+
+// ---
+_INST_IMPL (FZ80::CP_WithIYH)
+{
+	assert (parameters ().size () == 2);
+
+	return (executeWith (registerIYH ().values ()[0]));
+}
+
+// ---
+_INST_IMPL (FZ80::CP_WithIYL)
+{
+	assert (parameters ().size () == 2);
+
+	return (executeWith (registerIYL ().values ()[0]));
 }

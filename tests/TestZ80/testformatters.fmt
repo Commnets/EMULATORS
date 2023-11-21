@@ -18,7 +18,7 @@ POSITION=@POSITION@
 #---
 ;CPU
 #The info about the Architecture here
-@REGS?{key=NO,equal=:},@
+@REGS?{key=NO,equal=:}\n@
 @PC@
 @SR@
 #---

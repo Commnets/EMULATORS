@@ -2,6 +2,7 @@
 #include <CORE/FmterBuilder.hpp>
 #include <CORE/Formatter.hpp>
 #include <CORE/Stack.hpp>
+#include <CORE/ProgramCounter.hpp>
 #include <iostream>
 
 // ---
@@ -25,9 +26,9 @@ MCHEmul::CPU::CPU (const MCHEmul::CPUArchitecture& a, const MCHEmul::Registers& 
 
 	// Put the instrucctions in an array to speed up things later...
 	_rowInstructions = MCHEmul::ListOfInstructions  
-		((*_instructions.rbegin ()).second -> code () + 1 /** the last code plus 1. */, nullptr);
+		((*_instructions.rbegin ()).first + 1 /** the last code plus 1. */, nullptr);
 	for (const auto& i : _instructions)
-		_rowInstructions [i.second -> code ()] = i.second;
+		_rowInstructions [i.first] = i.second;
 }
 
 // ---
@@ -311,18 +312,9 @@ bool MCHEmul::CPU::when_ExecutingInstruction ()
 		sdd = MCHEmul::removeAll0 (_programCounter.asString ()) + "(Stack "
 				+ std::to_string (memoryRef () -> stack () -> position ()) + ") ";
 
-	// Gets the data that the instruction occupies
-	// before updating the Program Counter...
-	MCHEmul::UBytes dt = _memory -> values (programCounter ().asAddress (), inst -> memoryPositions ());
-	// Then, the Program Counter is moved to the next instruction...
-	// This is done in this way because the intruction itself could
-	// modify the value of the Program Counter (Juimps, returns,...)
-	_programCounter += (size_t) inst -> memoryPositions ();
-
 	// Then, the instruction is executed and if everything went ok...
-	bool finish = true; // Always by default...
 	bool result = true;
-	if (result = inst -> execute (dt, this, _memory, _memory -> stack (), finish))
+	if (result = inst -> execute (this, _memory, _memory -> stack (), &_programCounter))
 	{
 		// Actualize the clock cycles used by the last instruction...
 		_lastCPUClockCycles = (inst -> clockCycles () + inst -> additionalClockCycles ());
@@ -330,13 +322,6 @@ bool MCHEmul::CPU::when_ExecutingInstruction ()
 		_clockCycles += _lastCPUClockCycles;
 		// ...and finally saves the instruction executed...
 		_lastInstruction = inst;
-
-		// The program counter won't move if finally the instruction didin't finish!
-		// It is very strange but if could happen in some CPU types with complex instructions
-		// like Z80 or 8086 where there are instruction to manipulate blocks of memory
-		// but those instruction allowing interrupts!
-		if (!finish)
-			_programCounter -= (size_t) inst -> memoryPositions ();
 
 		if (deepDebugActive ())
 		{

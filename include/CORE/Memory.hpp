@@ -306,6 +306,8 @@ namespace MCHEmul
 
 		int id () const
 							{ return (_id); }
+		size_t size () const
+							{ return (_numPositions); }
 
 		// To manage the subsets...
 		const PhysicalStorageSubsets& subsets () const
@@ -632,6 +634,8 @@ namespace MCHEmul
 
 		bool isIn (const Address& a, int & dt) const
 							{ return (_activeView -> isIn (a, dt)); }
+		size_t size () const
+							{ return (_activeView -> size ()); }
 
 		/** To get the stack space reserve in the memory. 
 			This is something every implementation must define. */
