@@ -6,7 +6,9 @@
 const std::string FZ80::CZ80::_CARRYFLAGNAME = "C";
 const std::string FZ80::CZ80::_NEGATIVEFLAGNAME = "N";
 const std::string FZ80::CZ80::_PARITYOVERFLOWFLAGNAME = "PO";
+const std::string FZ80::CZ80::_BIT3FLAGNAME = "B3";
 const std::string FZ80::CZ80::_HALFCARRYFLAGNAME = "H";
+const std::string FZ80::CZ80::_BIT5FLAGNAME = "B5";
 const std::string FZ80::CZ80::_ZEROFLAGNAME = "Z";
 const std::string FZ80::CZ80::_SIGNFLAGNAME = "S";
 
@@ -25,7 +27,8 @@ FZ80::CZ80::CZ80 (const MCHEmul::CPUArchitecture& a)
 	  _depRegister ({ &dpRegister  (), &epRegister  () }),
 	  _hlpRegister ({ &hpRegister  (), &lpRegister  () }),
 	  _ixRegister  ({ &ixhRegister (), &ixlRegister () }),
-	  _iyRegister  ({ &iyhRegister (), &iylRegister () })
+	  _iyRegister  ({ &iyhRegister (), &iylRegister () }),
+	  _IFF1 (false), _IFF2 (false)
 {
 	// The reference to the memory has not set still here...
 	// It is linked to the CPU at computer (class) level!

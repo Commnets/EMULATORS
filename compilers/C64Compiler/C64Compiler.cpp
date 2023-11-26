@@ -13,7 +13,7 @@ int _tmain (int argc, _TCHAR *argv [])
 	enum { _BINARY = 0, _BLOCK, _DATATEXT } typeFile = _BINARY;
 
 	std::cout << "C64Compiler" << std::endl;
-	std::cout << "Copyright (2) 2022 by Ignacio Cea" << std::endl << std::endl;
+	std::cout << "Copyright (C) 2022 by Ignacio Cea" << std::endl << std::endl;
 
 	// Read the parameters of the command line...
 	MCHEmul::CommandLineArguments cmdArgs (argc, argv);

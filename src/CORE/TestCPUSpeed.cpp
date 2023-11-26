@@ -76,13 +76,13 @@ void MCHEmul::TestCPUSpeed::testAllInstructionSet (std::ostream& o, unsigned int
 
 	// Fill up the memory with random values...
 	for (size_t i = 0; i < _memory -> size (); 
-		_memory -> set (MCHEmul::Address (_cpu -> architecture ().instructionLength (), i++), std::rand () % 256));
+		_memory -> set (MCHEmul::Address (_cpu -> architecture ().instructionLength (), (unsigned int) i++), std::rand () % 256));
 	_memory -> stack () -> initialize (); // To put it back to 0!
 
 	std::map <unsigned int, unsigned int> _execInstructions;
 	std::map <unsigned int, std::string> _instructionsTemplates;
-	 testInstructionSet (o, _cpu -> instructions (), 
-		 _execInstructions, _instructionsTemplates, nt, sM, pS); 
+	testInstructionSet (o, _cpu -> instructions (), 
+		_execInstructions, _instructionsTemplates, nt, sM, pS); 
 
 	// Now to present the results...
 	// Remember that _speedInstructions will hold the performance per instruction code...
@@ -160,7 +160,8 @@ void MCHEmul::TestCPUSpeed::testInstructionSet (std::ostream& o, const MCHEmul::
 		}
 
 		// Store the outcome because it will managed later...
-		std::string instTxt = i.second -> asString () + "(code:" + std::to_string (i.second -> code ()) + ")";
+		std::string instTxt = i.second -> asString () + 
+			"(code:" + std::to_string (i.second -> code ()) + ", " + std::to_string (i.first) + ")";
 		iT [i.second -> code ()] = instTxt;
 		double a = 0.0f; for (size_t ct = 0; ct < nt; a += (double) clks [ct++]); a /= (double) nt;
 		sPI [i.second -> code ()] = (unsigned int) (a / i.second -> clockCycles ()); // Execs in a second...

@@ -53,8 +53,12 @@ namespace FZ80
 		static const std::string _NEGATIVEFLAGNAME;
 		static const size_t _PARITYOVERFLOWFLAG = 2;
 		static const std::string _PARITYOVERFLOWFLAGNAME;
+		static const size_t _BIT3FLAG = 3;
+		static const std::string _BIT3FLAGNAME;
 		static const size_t _HALFCARRYFLAG = 4;
 		static const std::string _HALFCARRYFLAGNAME;
+		static const size_t _BIT5FLAG = 5;
+		static const std::string _BIT5FLAGNAME;
 		static const size_t _ZEROFLAG = 6;
 		static const std::string _ZEROFLAGNAME;
 		static const size_t _SIGNFLAG = 7;
@@ -220,6 +224,17 @@ namespace FZ80
 		const MCHEmul::Register& rRegister () const
 							{ return (internalRegister (_RREGISTER)); }
 
+		// Managing the status of the flipflop registers...
+		bool IFF1 () const
+							{ return (_IFF1); }
+		void setIFF1 (bool v)
+							{ _IFF1 = v; }
+		bool IFF2 () const
+							{ return (_IFF2); }
+		void setIFF2 (bool v)
+							{ _IFF2 = v; }
+
+
 		protected:
 		/** The registers that are made up of two. */
 		MCHEmul::RefRegisters _afRegister;  // A and F
@@ -232,6 +247,10 @@ namespace FZ80
 		MCHEmul::RefRegisters _hlpRegister;
 		MCHEmul::RefRegisters _ixRegister;
 		MCHEmul::RefRegisters _iyRegister;
+
+		// The flipflop register in Z80 help to control the status of the interrupts!
+		bool _IFF1;
+		bool _IFF2;
 
 		private:
 		// Implementation

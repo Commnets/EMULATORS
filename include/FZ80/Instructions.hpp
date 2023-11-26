@@ -21,6 +21,15 @@
 
 namespace FZ80
 {
+	/** 
+	  *	Follow the definitions at:
+	  *	https://map.grauw.nl/resources/z80instr.php \n
+	  *	https://clrhome.org/table/#inc \n
+	  *	https://wikiti.brandonw.net/index.php?title=Z80_Instruction_Set \n
+	  *	http://www.z80.info/z80sflag.htm 
+	  *	http://www.z80.info/zip/z80-documented.pdf // Very important to understand the behaviour final. 
+	  *											   // Shows mistakes in the original Z80 documentation.
+	  */
 	class Instruction : public MCHEmul::InstructionDefined
 	{
 		public:
@@ -29,7 +38,7 @@ namespace FZ80
 			: MCHEmul::InstructionDefined (c, mp, cc, t, false)
 							{ }
 
-		// To get the reference to the registers...
+		// To get the reference to registers...
 		MCHEmul::Register& registerA ()
 							{ return (dynamic_cast <CZ80*> (cpu ()) -> aRegister ()); }
 		const MCHEmul::Register& registerA () const
@@ -192,6 +201,8 @@ namespace FZ80
 							{ return (MCHEmul::Address (valueRegisterIX (), true) + n); }
 		MCHEmul::Address addressIY (size_t n = 0) const
 							{ return (MCHEmul::Address (valueRegisterIY (), true) + n); }
+		MCHEmul::Address addressSP (size_t n = 0) const
+							{ return (MCHEmul::Address (valueRegisterSP (), true) + n); }
 
 		// To get the value pointed by the registers...
 		const MCHEmul::UByte& valueAddressBC (size_t n = 0) const
@@ -204,6 +215,8 @@ namespace FZ80
 							{ return (memory () -> value (addressIX (n))); }
 		const MCHEmul::UByte& valueAddressIY (size_t n = 0) const
 							{ return (memory () -> value (addressIY (n))); }
+		const MCHEmul::UByte& valueAddressSP (size_t n = 0) const
+							{ return (memory () -> value (addressSP (n))); }
 	};
 
 	// ---
@@ -260,7 +273,8 @@ namespace FZ80
 	};
 
 	// ----------
-	/** LD_General: To load any register / memory location with a value. */
+	/** LD_General: To load any register / memory location with a value. 
+		None LD instruction, except LD A,I and LD A,R, affects the flag status. */
 	class LD_General : public Instruction
 	{
 		public:
@@ -485,7 +499,8 @@ namespace FZ80
 	// ----------
 
 	// ----------
-	/** PUSH_General: To move the content of a register into the stack. */
+	/** PUSH_General: To move the content of a register into the stack. \n
+		Any version of this instruction doesn't affect to any flag. */
 	class PUSH_General : public Instruction
 	{
 		public:
@@ -495,7 +510,8 @@ namespace FZ80
 							{ }
 
 		protected:
-		/** These intructions don't affect either to any flag. */
+		/** To move the contant of a set of registers into the stack. \n
+			These intructions don't affect either to any flag. */
 		bool executeWith (MCHEmul::RefRegisters& r);
 	};
 
@@ -515,7 +531,8 @@ namespace FZ80
 	// ----------
 
 	// ----------
-	/** POP_General: To move the content of the stack to a register. */
+	/** POP_General: To move the content of the stack to a register \n
+		Any version of this instruction doesn't affect to any flag. */
 	class POP_General : public Instruction
 	{
 		public:
@@ -525,7 +542,8 @@ namespace FZ80
 							{ }
 
 		protected:
-		/** These intructions don't affect either to any flag. */
+		/** To move the content of the stack into a set of registers. \n
+			These intructions don't affect either to any flag. */
 		bool executeWith (MCHEmul::RefRegisters& r);
 	};
 
@@ -545,8 +563,8 @@ namespace FZ80
 	// ----------
 
 	// ----------
-	/** These instructions are used to interchange content between registers. 
-		The registers affected are usually double registers. */
+	/** These instructions are used to interchange content between registers. \n
+		None of these instructions affects the register flag! */
 	class EX_General : public Instruction
 	{
 		public:
@@ -556,7 +574,8 @@ namespace FZ80
 							{ }
 
 		protected:
-		/** These instructions don't affect either to the registers. */
+		/** To exchange the context of two set of registers. \n
+			These instructions don't affect either to the registers. */
 		bool executeWith (MCHEmul::RefRegisters& r, MCHEmul::RefRegisters& rp);
 	};
 
@@ -573,7 +592,9 @@ namespace FZ80
 	// ----------
 
 	// ----------
-	/** To move a block of data. */
+	/** To move a block of data. \n
+		These instructions affects the flags in a similar way than DEC/INC instructions for LDD/LDDR/LDI/LDIR or 
+		or CP for CPI/CPIR/CPD/CPDR. */
 	class InstBlock_General : public Instruction
 	{
 		public:
@@ -620,7 +641,8 @@ namespace FZ80
 	// ----------
 
 	// ----------
-	/** AND is always over the value of A. */
+	/** AND is always over the value of A. \n
+		The flags are affected according with the final result stored in A. */
 	class AND_General : public Instruction
 	{
 		public:
@@ -664,7 +686,8 @@ namespace FZ80
 	// ----------
 
 	// ----------
-	/** OR is always over the value of A. */
+	/** OR is always over the value of A. \n
+		The flags are affected according with the final result stored in A. */
 	class OR_General : public Instruction
 	{
 		public:
@@ -708,7 +731,8 @@ namespace FZ80
 	// ----------
 
 	// ----------
-	/** XOR is always over the value of A. */
+	/** XOR is always over the value of A. \n
+		The flags are affected according with the final result stored in A. */
 	class XOR_General : public Instruction
 	{
 		public:
@@ -752,7 +776,8 @@ namespace FZ80
 	// ----------
 
 	// ----------
-	/** ADD is always over the value of A. */
+	/** ADD is always over the value of A in 8 bits operations. \n
+		The flags are affected in a different way depending on whether the operation is 8 bits ot 16 bits. */
 	class ADD_General : public Instruction
 	{
 		public:
@@ -763,9 +788,10 @@ namespace FZ80
 
 		protected:
 		/** With a value. \n
+			The 8 bits operations are always done using the A destination. \n
 			The value of the carry is or not taken into account according with the parameter c. \n
 			No carry is taken into account by default. */
-		bool executeWith (MCHEmul::Register& r, const MCHEmul::UByte& v, bool c = false);
+		bool executeWith (const MCHEmul::UByte& v, bool c = false);
 		/** With a double register and a value. \n
 			Same importance to the carry. */
 		bool executeWith (MCHEmul::RefRegisters& r, const MCHEmul::UBytes& v, bool c = false);

@@ -15,7 +15,9 @@ bool FZ80::SUB_General::executeWith (MCHEmul::Register& r, const MCHEmul::UByte&
 	st.setBitStatus (FZ80::CZ80::_CARRYFLAG, rst.carry ());
 	st.setBitStatus (FZ80::CZ80::_NEGATIVEFLAG, true); // Always!
 	st.setBitStatus (FZ80::CZ80::_PARITYOVERFLOWFLAG, rst.overflow ());
+	st.setBitStatus (FZ80::CZ80::_BIT3FLAG, rst [0].bit (3)); // a copy of the status of the bit 3... but undocumented!
 	st.setBitStatus (FZ80::CZ80::_HALFCARRYFLAG, rstH [0].bit (4)); // When true, there will have been a half borrow!
+	st.setBitStatus (FZ80::CZ80::_BIT5FLAG, rst [0].bit (5)); // a copy of the status of the bit 3... but undocumented!
 	st.setBitStatus (FZ80::CZ80::_ZEROFLAG, rst == MCHEmul::UInt::_0);
 	st.setBitStatus (FZ80::CZ80::_SIGNFLAG, rst.negative ());
 
@@ -37,8 +39,13 @@ bool FZ80::SUB_General::executeWith (MCHEmul::RefRegisters& r, const MCHEmul::UB
 
 	// How the flags are affected...
 	st.setBitStatus (FZ80::CZ80::_CARRYFLAG, rst.carry ());
-	st.setBitStatus (FZ80::CZ80::_NEGATIVEFLAG, false); // Always!
+	st.setBitStatus (FZ80::CZ80::_NEGATIVEFLAG, true); // Always! 
+	// Bit parity is not affected...
+	st.setBitStatus (FZ80::CZ80::_BIT3FLAG, rst [0].bit (3)); // a copy of the status of the bit 3... but undocumented!
 	st.setBitStatus (FZ80::CZ80::_HALFCARRYFLAG, rstH [0].bit (4 /** Bit 12 within the total. */)); 
+	st.setBitStatus (FZ80::CZ80::_BIT5FLAG, rst [0].bit (5)); // a copy of the status of the bit 3... but undocumented!
+	// Bit zero is not affected...
+	// Bit sign is not affected...
 
 	return (true);
 }

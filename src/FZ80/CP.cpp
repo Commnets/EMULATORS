@@ -14,7 +14,9 @@ bool FZ80::CP_General::executeWith (const MCHEmul::UByte& v)
 	st.setBitStatus (FZ80::CZ80::_CARRYFLAG, rst.carry ());
 	st.setBitStatus (FZ80::CZ80::_NEGATIVEFLAG, true); // Always!
 	st.setBitStatus (FZ80::CZ80::_PARITYOVERFLOWFLAG, rst.overflow ());
+	st.setBitStatus (FZ80::CZ80::_BIT3FLAG, rst [0].bit (3)); // a copy of the status of the bit 3... but undocumented!
 	st.setBitStatus (FZ80::CZ80::_HALFCARRYFLAG, rstH [0].bit (4)); // When true, there will have been a half borrow!
+	st.setBitStatus (FZ80::CZ80::_BIT5FLAG, rst [0].bit (5)); // a copy of the status of the bit 5... but undocumented!
 	st.setBitStatus (FZ80::CZ80::_ZEROFLAG, rst == MCHEmul::UInt::_0);
 	st.setBitStatus (FZ80::CZ80::_SIGNFLAG, rst.negative ());
 

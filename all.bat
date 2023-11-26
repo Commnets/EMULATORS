@@ -10,6 +10,8 @@ COPY .\exe\x86\R64Console.exe .\monitors\R64Console\ /Y
 COPY .\exe\x86\R64ConsoleD.exe .\monitors\R64Console\ /Y
 COPY .\exe\x86\C64Compiler.exe .\compilers\C64Compiler\ /Y
 COPY .\exe\x86\C64CompilerD.exe .\compilers\C64Compiler\ /Y
+COPY .\exe\x86\Z80Compiler.exe .\compilers\Z80Compiler\ /Y
+COPY .\exe\x86\Z80CompilerD.exe .\compilers\Z80Compiler\ /Y
 COPY .\exe\x86\TestCPU.exe .\tests\TestCPU\ /Y
 COPY .\exe\x86\TestCPUD.exe .\tests\TestCPU\ /Y
 COPY .\exe\x86\Test6500.exe .\tests\Test6500\ /Y
