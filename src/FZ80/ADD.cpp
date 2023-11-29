@@ -14,11 +14,11 @@ bool FZ80::ADD_General::executeWith (const MCHEmul::UByte& v, bool c)
 
 	// How the flags are affected...
 	st.setBitStatus (FZ80::CZ80::_CARRYFLAG, rst.carry ());
-	st.setBitStatus (FZ80::CZ80::_NEGATIVEFLAG, false); // Always!
+	st.setBitStatus (FZ80::CZ80::_NEGATIVEFLAG, false); // Always in additions!
 	st.setBitStatus (FZ80::CZ80::_PARITYOVERFLOWFLAG, rst.overflow ());
-	st.setBitStatus (FZ80::CZ80::_BIT3FLAG, rst [0].bit (3)); // Undocumented!
+	st.setBitStatus (FZ80::CZ80::_BIT3FLAG, rst [0].bit (3)); // Undocumented...
 	st.setBitStatus (FZ80::CZ80::_HALFCARRYFLAG, rstH [0].bit (4)); // When true, there will have been a half carry from bit 3 to 4!
-	st.setBitStatus (FZ80::CZ80::_BIT5FLAG, rst [0].bit (5)); // Undocumented!
+	st.setBitStatus (FZ80::CZ80::_BIT5FLAG, rst [0].bit (5)); // Undocumented...
 	st.setBitStatus (FZ80::CZ80::_ZEROFLAG, rst == MCHEmul::UInt::_0);
 	st.setBitStatus (FZ80::CZ80::_SIGNFLAG, rst.negative ());
 

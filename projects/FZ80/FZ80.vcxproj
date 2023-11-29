@@ -154,7 +154,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\FZ80\ADD.cpp" />
-    <ClCompile Include="..\..\src\FZ80\ALUCTRL_Generic.cpp" />
+    <ClCompile Include="..\..\src\FZ80\ALUCTRL.cpp" />
     <ClCompile Include="..\..\src\FZ80\AND.cpp" />
     <ClCompile Include="..\..\src\FZ80\BITSHIFTRIGHT.cpp" />
     <ClCompile Include="..\..\src\FZ80\CP.cpp" />
@@ -174,12 +174,26 @@
     <ClCompile Include="..\..\src\FZ80\XOR.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\include\FZ80\ADD.hpp" />
+    <ClInclude Include="..\..\include\FZ80\ALUCTRL.hpp" />
+    <ClInclude Include="..\..\include\FZ80\AND.hpp" />
+    <ClInclude Include="..\..\include\FZ80\BITSHIFTLEFT.hpp" />
+    <ClInclude Include="..\..\include\FZ80\BITSHIFTRIGHT.hpp" />
+    <ClInclude Include="..\..\include\FZ80\CP.hpp" />
     <ClInclude Include="..\..\include\FZ80\CZ80.hpp" />
+    <ClInclude Include="..\..\include\FZ80\DEC.hpp" />
+    <ClInclude Include="..\..\include\FZ80\EX.hpp" />
+    <ClInclude Include="..\..\include\FZ80\INC.hpp" />
     <ClInclude Include="..\..\include\FZ80\incs.hpp" />
     <ClInclude Include="..\..\include\FZ80\Instructions.hpp" />
     <ClInclude Include="..\..\include\FZ80\Interrupt.hpp" />
     <ClInclude Include="..\..\include\FZ80\INTInterrupt.hpp" />
+    <ClInclude Include="..\..\include\FZ80\LD.hpp" />
     <ClInclude Include="..\..\include\FZ80\NMIInterrupt.hpp" />
+    <ClInclude Include="..\..\include\FZ80\OR.hpp" />
+    <ClInclude Include="..\..\include\FZ80\STACK.hpp" />
+    <ClInclude Include="..\..\include\FZ80\SUB.hpp" />
+    <ClInclude Include="..\..\include\FZ80\XOR.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

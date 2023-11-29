@@ -16,6 +16,9 @@
     <Filter Include="Archivos de origen\Instructions">
       <UniqueIdentifier>{df9cfec0-28ab-4cbc-9cb4-0a356a7943d7}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Archivos de encabezado\Instructions">
+      <UniqueIdentifier>{d1f8769c-71c4-4825-a9f4-c636ec5e6747}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\FZ80\CZ80.cpp">
@@ -66,7 +69,7 @@
     <ClCompile Include="..\..\src\FZ80\CP.cpp">
       <Filter>Archivos de origen\Instructions</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\FZ80\ALUCTRL_Generic.cpp">
+    <ClCompile Include="..\..\src\FZ80\ALUCTRL.cpp">
       <Filter>Archivos de origen\Instructions</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\FZ80\BITSHIFTLEFT.cpp">
@@ -94,6 +97,48 @@
     </ClInclude>
     <ClInclude Include="..\..\include\FZ80\NMIInterrupt.hpp">
       <Filter>Archivos de encabezado</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\FZ80\ADD.hpp">
+      <Filter>Archivos de encabezado\Instructions</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\FZ80\ALUCTRL.hpp">
+      <Filter>Archivos de encabezado\Instructions</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\FZ80\AND.hpp">
+      <Filter>Archivos de encabezado\Instructions</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\FZ80\BITSHIFTLEFT.hpp">
+      <Filter>Archivos de encabezado\Instructions</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\FZ80\BITSHIFTRIGHT.hpp">
+      <Filter>Archivos de encabezado\Instructions</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\FZ80\CP.hpp">
+      <Filter>Archivos de encabezado\Instructions</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\FZ80\DEC.hpp">
+      <Filter>Archivos de encabezado\Instructions</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\FZ80\EX.hpp">
+      <Filter>Archivos de encabezado\Instructions</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\FZ80\INC.hpp">
+      <Filter>Archivos de encabezado\Instructions</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\FZ80\LD.hpp">
+      <Filter>Archivos de encabezado\Instructions</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\FZ80\OR.hpp">
+      <Filter>Archivos de encabezado\Instructions</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\FZ80\STACK.hpp">
+      <Filter>Archivos de encabezado\Instructions</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\FZ80\SUB.hpp">
+      <Filter>Archivos de encabezado\Instructions</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\FZ80\XOR.hpp">
+      <Filter>Archivos de encabezado\Instructions</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

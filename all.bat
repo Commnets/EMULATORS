@@ -8,8 +8,8 @@ COPY .\exe\x86\RConsole.exe .\monitors\RConsole\ /Y
 COPY .\exe\x86\RConsoleD.exe .\monitors\RConsole\ /Y
 COPY .\exe\x86\R64Console.exe .\monitors\R64Console\ /Y
 COPY .\exe\x86\R64ConsoleD.exe .\monitors\R64Console\ /Y
-COPY .\exe\x86\C64Compiler.exe .\compilers\C64Compiler\ /Y
-COPY .\exe\x86\C64CompilerD.exe .\compilers\C64Compiler\ /Y
+COPY .\exe\x86\6500Compiler.exe .\compilers\6500Compiler\ /Y
+COPY .\exe\x86\6500CompilerD.exe .\compilers\6500Compiler\ /Y
 COPY .\exe\x86\Z80Compiler.exe .\compilers\Z80Compiler\ /Y
 COPY .\exe\x86\Z80CompilerD.exe .\compilers\Z80Compiler\ /Y
 COPY .\exe\x86\TestCPU.exe .\tests\TestCPU\ /Y
@@ -40,7 +40,7 @@ Echo Creates the instalation C64 package...
 COPY .\exe\x86\C64Emulator.exe .\setups\C64\ /Y
 COPY .\exe\x86\C64EmulatorC.exe .\setups\C64\ /Y
 COPY .\exe\x86\R64Console.exe .\setups\C64\ /Y
-COPY .\exe\x86\C64Compiler.exe .\setups\C64\ /Y
+COPY .\exe\x86\6500Compiler.exe .\setups\C64\ /Y
 COPY .\exe\x86\Test6500.exe .\setups\C64\ /Y
 COPY .\emulators\C64Commons\*.* .\setups\C64\ /Y
 COPY .\projects\C64\*.fmt .\setups\C64\ /Y

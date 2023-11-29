@@ -17,7 +17,7 @@ UninstallDisplayIcon={app}\C64Logo.ico
 Source: "C64Emulator.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "C64EmulatorC.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "R64Console.exe"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C64Compiler.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "6500Compiler.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Test6500.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "basic.901226-01.bin"; DestDir: "{app}"; Flags: ignoreversion
 Source: "characters.901225-01-ENG.bin"; DestDir: "{app}"; Flags: ignoreversion

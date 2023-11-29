@@ -711,8 +711,8 @@ MCHEmul::Instructions FZ80::CZ80::createInstructions ()
 	CBInstructions [0xCB02]		= new FZ80::RLC_D;
 	CBInstructions [0xCB03]		= new FZ80::RLC_E;
 	CBInstructions [0xCB04]		= new FZ80::RLC_H;
-	CBInstructions [0xCB06]		= new FZ80::RLC_L;
-	CBInstructions [0xCB0E]		= new FZ80::RLC_IndirectHL;
+	CBInstructions [0xCB05]		= new FZ80::RLC_L;
+	CBInstructions [0xCB06]		= new FZ80::RLC_IndirectHL;
 	DDCBInstructions [0xDDCB06] = new FZ80::RLC_IndirectIndexIX;
 	DDCBInstructions [0xDDCB07] = new FZ80::RLC_IndirectIndexIXCopyA;	// Undocumented
 	DDCBInstructions [0xDDCB00] = new FZ80::RLC_IndirectIndexIXCopyB;	// Undocumented
@@ -730,15 +730,97 @@ MCHEmul::Instructions FZ80::CZ80::createInstructions ()
 	FDCBInstructions [0xFDCB04] = new FZ80::RLC_IndirectIndexIYCopyH;	// Undocumented
 	FDCBInstructions [0xFDCB05] = new FZ80::RLC_IndirectIndexIYCopyL;	// Undocumented
 
+	// RL
+	result [0x17] = new FZ80::RL_A;
+	CBInstructions [0xCB17]		= new FZ80::RL_ASlower;
+	CBInstructions [0xCB10]		= new FZ80::RL_B;
+	CBInstructions [0xCB11]		= new FZ80::RL_C;
+	CBInstructions [0xCB12]		= new FZ80::RL_D;
+	CBInstructions [0xCB13]		= new FZ80::RL_E;
+	CBInstructions [0xCB14]		= new FZ80::RL_H;
+	CBInstructions [0xCB15]		= new FZ80::RL_L;
+	CBInstructions [0xCB16]		= new FZ80::RL_IndirectHL;
+	DDCBInstructions [0xDDCB06] = new FZ80::RL_IndirectIndexIX;
+	DDCBInstructions [0xDDCB07] = new FZ80::RL_IndirectIndexIXCopyA;	// Undocumented
+	DDCBInstructions [0xDDCB00] = new FZ80::RL_IndirectIndexIXCopyB;	// Undocumented
+	DDCBInstructions [0xDDCB01] = new FZ80::RL_IndirectIndexIXCopyC;	// Undocumented
+	DDCBInstructions [0xDDCB02] = new FZ80::RL_IndirectIndexIXCopyD;	// Undocumented
+	DDCBInstructions [0xDDCB03] = new FZ80::RL_IndirectIndexIXCopyE;	// Undocumented
+	DDCBInstructions [0xDDCB04] = new FZ80::RL_IndirectIndexIXCopyH;	// Undocumented
+	DDCBInstructions [0xDDCB05] = new FZ80::RL_IndirectIndexIXCopyL;	// Undocumented
+	FDCBInstructions [0xFDCB06] = new FZ80::RL_IndirectIndexIY;
+	FDCBInstructions [0xFDCB07] = new FZ80::RL_IndirectIndexIYCopyA;	// Undocumented
+	FDCBInstructions [0xFDCB00] = new FZ80::RL_IndirectIndexIYCopyB;	// Undocumented
+	FDCBInstructions [0xFDCB01] = new FZ80::RL_IndirectIndexIYCopyC;	// Undocumented
+	FDCBInstructions [0xFDCB02] = new FZ80::RL_IndirectIndexIYCopyD;	// Undocumented
+	FDCBInstructions [0xFDCB03] = new FZ80::RL_IndirectIndexIYCopyE;	// Undocumented
+	FDCBInstructions [0xFDCB04] = new FZ80::RL_IndirectIndexIYCopyH;	// Undocumented
+	FDCBInstructions [0xFDCB05] = new FZ80::RL_IndirectIndexIYCopyL;	// Undocumented
+
+	// RLD
+	EDInstructions [0xED6F]		= new RLD;
+
+	// SLA
+	CBInstructions [0xCB27]		= new SLA_A;
+	CBInstructions [0xCB20]		= new SLA_B;
+	CBInstructions [0xCB21]		= new SLA_C;
+	CBInstructions [0xCB22]		= new SLA_D;
+	CBInstructions [0xCB23]		= new SLA_E;
+	CBInstructions [0xCB24]		= new SLA_H;
+	CBInstructions [0xCB25]		= new SLA_L;
+	CBInstructions [0xCB26]		= new SLA_IndirectHL;
+	DDCBInstructions [0xDDCB26] = new SLA_IndirectIndexIX;
+	DDCBInstructions [0xDDCB27] = new SLA_IndirectIndexIXCopyA;			// Undocumented
+	DDCBInstructions [0xDDCB20] = new SLA_IndirectIndexIXCopyB;			// Undocumented
+	DDCBInstructions [0xDDCB21] = new SLA_IndirectIndexIXCopyC;			// Undocumented
+	DDCBInstructions [0xDDCB22] = new SLA_IndirectIndexIXCopyD;			// Undocumented
+	DDCBInstructions [0xDDCB23] = new SLA_IndirectIndexIXCopyE;			// Undocumented
+	DDCBInstructions [0xDDCB24] = new SLA_IndirectIndexIXCopyH;			// Undocumented
+	DDCBInstructions [0xDDCB25] = new SLA_IndirectIndexIXCopyL;			// Undocumented
+	FDCBInstructions [0xFDCB26] = new SLA_IndirectIndexIY;
+	FDCBInstructions [0xFDCB27] = new SLA_IndirectIndexIYCopyA;			// Undocumented
+	FDCBInstructions [0xFDCB20] = new SLA_IndirectIndexIYCopyB;			// Undocumented
+	FDCBInstructions [0xFDCB21] = new SLA_IndirectIndexIYCopyC;			// Undocumented
+	FDCBInstructions [0xFDCB22] = new SLA_IndirectIndexIYCopyD;			// Undocumented
+	FDCBInstructions [0xFDCB23] = new SLA_IndirectIndexIYCopyE;			// Undocumented
+	FDCBInstructions [0xFDCB24] = new SLA_IndirectIndexIYCopyH;			// Undocumented
+	FDCBInstructions [0xFDCB25] = new SLA_IndirectIndexIYCopyL;			// Undocumented
+
+	// SLL
+	CBInstructions [0xCB37]		= new SLL_A;
+	CBInstructions [0xCB30]		= new SLL_B;
+	CBInstructions [0xCB31]		= new SLL_C;
+	CBInstructions [0xCB32]		= new SLL_D;
+	CBInstructions [0xCB33]		= new SLL_E;
+	CBInstructions [0xCB34]		= new SLL_H;
+	CBInstructions [0xCB35]		= new SLL_L;
+	CBInstructions [0xCB36]		= new SLL_IndirectHL;
+	DDCBInstructions [0xDDCB36] = new SLL_IndirectIndexIX;
+	DDCBInstructions [0xDDCB37] = new SLL_IndirectIndexIXCopyA;			// Undocumented
+	DDCBInstructions [0xDDCB30] = new SLL_IndirectIndexIXCopyB;			// Undocumented
+	DDCBInstructions [0xDDCB31] = new SLL_IndirectIndexIXCopyC;			// Undocumented
+	DDCBInstructions [0xDDCB32] = new SLL_IndirectIndexIXCopyD;			// Undocumented
+	DDCBInstructions [0xDDCB33] = new SLL_IndirectIndexIXCopyE;			// Undocumented
+	DDCBInstructions [0xDDCB34] = new SLL_IndirectIndexIXCopyH;			// Undocumented
+	DDCBInstructions [0xDDCB35] = new SLL_IndirectIndexIXCopyL;			// Undocumented
+	FDCBInstructions [0xFDCB36] = new SLL_IndirectIndexIY;
+	FDCBInstructions [0xFDCB37] = new SLL_IndirectIndexIYCopyA;			// Undocumented
+	FDCBInstructions [0xFDCB30] = new SLL_IndirectIndexIYCopyB;			// Undocumented
+	FDCBInstructions [0xFDCB31] = new SLL_IndirectIndexIYCopyC;			// Undocumented
+	FDCBInstructions [0xFDCB32] = new SLL_IndirectIndexIYCopyD;			// Undocumented
+	FDCBInstructions [0xFDCB33] = new SLL_IndirectIndexIYCopyE;			// Undocumented
+	FDCBInstructions [0xFDCB34] = new SLL_IndirectIndexIYCopyH;			// Undocumented
+	FDCBInstructions [0xFDCB35] = new SLL_IndirectIndexIYCopyL;			// Undocumented
+
 	// RRC
 	result [0x0F] = new FZ80::RRC_A;
-	CBInstructions [0xCB07]		= new FZ80::RRC_ASlower;
-	CBInstructions [0xCB00]		= new FZ80::RRC_B;
-	CBInstructions [0xCB01]		= new FZ80::RRC_C;
-	CBInstructions [0xCB02]		= new FZ80::RRC_D;
-	CBInstructions [0xCB03]		= new FZ80::RRC_E;
-	CBInstructions [0xCB04]		= new FZ80::RRC_F;
-	CBInstructions [0xCB06]		= new FZ80::RRC_L;
+	CBInstructions [0xCB0F]		= new FZ80::RRC_ASlower;
+	CBInstructions [0xCB08]		= new FZ80::RRC_B;
+	CBInstructions [0xCB09]		= new FZ80::RRC_C;
+	CBInstructions [0xCB0A]		= new FZ80::RRC_D;
+	CBInstructions [0xCB0B]		= new FZ80::RRC_E;
+	CBInstructions [0xCB0C]		= new FZ80::RRC_F;
+	CBInstructions [0xCB0D]		= new FZ80::RRC_L;
 	CBInstructions [0xCB0E]		= new FZ80::RRC_IndirectHL;
 	DDCBInstructions [0xDDCB0E] = new FZ80::RRC_IndirectIndexIX;
 	DDCBInstructions [0xDDCB0F] = new FZ80::RRC_IndirectIndexIXCopyA;	// Undocumented
@@ -756,6 +838,36 @@ MCHEmul::Instructions FZ80::CZ80::createInstructions ()
 	FDCBInstructions [0xFDCB0B] = new FZ80::RRC_IndirectIndexIYCopyE;	// Undocumented
 	FDCBInstructions [0xFDCB0C] = new FZ80::RRC_IndirectIndexIYCopyH;	// Undocumented
 	FDCBInstructions [0xFDCB0D] = new FZ80::RRC_IndirectIndexIYCopyL;	// Undocumented
+
+	// RR
+	result [0x0F] = new FZ80::RR_A;
+	CBInstructions [0xCB0F]		= new FZ80::RR_ASlower;
+	CBInstructions [0xCB08]		= new FZ80::RR_B;
+	CBInstructions [0xCB09]		= new FZ80::RR_C;
+	CBInstructions [0xCB0A]		= new FZ80::RR_D;
+	CBInstructions [0xCB0B]		= new FZ80::RR_E;
+	CBInstructions [0xCB0C]		= new FZ80::RR_F;
+	CBInstructions [0xCB0D]		= new FZ80::RR_L;
+	CBInstructions [0xCB0E]		= new FZ80::RR_IndirectHL;
+	DDCBInstructions [0xDDCB0E] = new FZ80::RR_IndirectIndexIX;
+	DDCBInstructions [0xDDCB0F] = new FZ80::RR_IndirectIndexIXCopyA;	// Undocumented
+	DDCBInstructions [0xDDCB08] = new FZ80::RR_IndirectIndexIXCopyB;	// Undocumented
+	DDCBInstructions [0xDDCB09] = new FZ80::RR_IndirectIndexIXCopyC;	// Undocumented
+	DDCBInstructions [0xDDCB0A] = new FZ80::RR_IndirectIndexIXCopyD;	// Undocumented
+	DDCBInstructions [0xDDCB0B] = new FZ80::RR_IndirectIndexIXCopyE;	// Undocumented
+	DDCBInstructions [0xDDCB0C] = new FZ80::RR_IndirectIndexIXCopyH;	// Undocumented
+	DDCBInstructions [0xDDCB0D] = new FZ80::RR_IndirectIndexIXCopyL;	// Undocumented
+	FDCBInstructions [0xFDCB0E] = new FZ80::RR_IndirectIndexIY;
+	FDCBInstructions [0xFDCB0F] = new FZ80::RR_IndirectIndexIYCopyA;	// Undocumented
+	FDCBInstructions [0xFDCB08] = new FZ80::RR_IndirectIndexIYCopyB;	// Undocumented
+	FDCBInstructions [0xFDCB09] = new FZ80::RR_IndirectIndexIYCopyC;	// Undocumented
+	FDCBInstructions [0xFDCB0A] = new FZ80::RR_IndirectIndexIYCopyD;	// Undocumented
+	FDCBInstructions [0xFDCB0B] = new FZ80::RR_IndirectIndexIYCopyE;	// Undocumented
+	FDCBInstructions [0xFDCB0C] = new FZ80::RR_IndirectIndexIYCopyH;	// Undocumented
+	FDCBInstructions [0xFDCB0D] = new FZ80::RR_IndirectIndexIYCopyL;	// Undocumented
+
+	// RRD
+	EDInstructions [0xED67]		= new RRD;
 
 	// There are two levels of abstraction!
 	// Add the bit instruction groups into their parent groups...
