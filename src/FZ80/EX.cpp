@@ -1,19 +1,4 @@
-#include <FZ80/Instructions.hpp>
-
-// ---
-bool FZ80::EX_General::executeWith (MCHEmul::RefRegisters& r, MCHEmul::RefRegisters& rp)
-{
-	// Keep a copy of first register content..
-	MCHEmul::UBytes o ({ r [0] -> values ()[0], r [1] -> values ()[0] });
-	// ...Move the second register content into the first
-	r  [0] -> set (MCHEmul::UBytes ({ rp [0]  -> values ()[0] }));
-	r  [1] -> set (MCHEmul::UBytes ({ rp [1]  -> values ()[0] }));
-	// ...Move the copy kept into the second register...
-	rp [0] -> set (MCHEmul::UBytes ({ o  [0] }));
-	rp [1] -> set (MCHEmul::UBytes ({ o  [1] }));
-
-	return (true);
-}
+#include <FZ80/EX.hpp>
 
 // ---
 _INST_IMPL (FZ80::EX_AF)

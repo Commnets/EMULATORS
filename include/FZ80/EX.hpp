@@ -15,6 +15,8 @@
 #ifndef __FZX80_EXINSTRUCTIONS__
 #define __FZX80_EXINSTRUCTIONS__
 
+#include <FZ80/Instruction.hpp>
+
 namespace FZ80
 {
 	/** These instructions are used to interchange content between registers. \n
@@ -30,8 +32,23 @@ namespace FZ80
 		protected:
 		/** To exchange the context of two set of registers. \n
 			These instructions don't affect either to the registers. */
-		bool executeWith (MCHEmul::RefRegisters& r, MCHEmul::RefRegisters& rp);
+		inline bool executeWith (MCHEmul::RefRegisters& r, MCHEmul::RefRegisters& rp);
 	};
+
+	// ---
+	inline bool EX_General::executeWith (MCHEmul::RefRegisters& r, MCHEmul::RefRegisters& rp)
+	{
+		// Keep a copy of first register content..
+		MCHEmul::UBytes o ({ r [0] -> values ()[0], r [1] -> values ()[0] });
+		// ...Move the second register content into the first
+		r  [0] -> set (MCHEmul::UBytes ({ rp [0]  -> values ()[0] }));
+		r  [1] -> set (MCHEmul::UBytes ({ rp [1]  -> values ()[0] }));
+		// ...Move the copy kept into the second register...
+		rp [0] -> set (MCHEmul::UBytes ({ o  [0] }));
+		rp [1] -> set (MCHEmul::UBytes ({ o  [1] }));
+
+		return (true);
+	}
 
 	// AF and AF'
 	_INST_FROM (0x08,	1, 4, 4,	"EX AF,AF'",			EX_AF, EX_General);

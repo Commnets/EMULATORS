@@ -1,27 +1,4 @@
-#include <FZ80/Instructions.hpp>
-
-// ---
-bool FZ80::OR_General::executeWith (const MCHEmul::UByte& v)
-{
-	MCHEmul::Register& a = registerA ();
-	MCHEmul::StatusRegister& st = cpu () -> statusRegister ();
-
-	// The operation...
-	MCHEmul::UByte r = a.values ()[0] | v;
-	a.set ({ r }); // and stored it back...
-
-	// How the flags are affected...
-	st.setBitStatus (FZ80::CZ80::_CARRYFLAG, false);
-	st.setBitStatus (FZ80::CZ80::_NEGATIVEFLAG, false);
-	st.setBitStatus (FZ80::CZ80::_PARITYOVERFLOWFLAG, (r.numberBitsOn () % 2) == 0); // If it isn even number then it is set...
-	st.setBitStatus (FZ80::CZ80::_BIT3FLAG, r.bit (3)); // a copy of the status of the bit 3... but undocumented!
-	st.setBitStatus (FZ80::CZ80::_HALFCARRYFLAG, false);
-	st.setBitStatus (FZ80::CZ80::_BIT5FLAG, r.bit (5)); // a copy of the status of the bit 5... but undocumented!
-	st.setBitStatus (FZ80::CZ80::_ZEROFLAG, r == MCHEmul::UByte::_0);
-	st.setBitStatus (FZ80::CZ80::_SIGNFLAG, r.bit (7));
-
-	return (true);
-}
+#include <FZ80/OR.hpp>
 
 // ---
 _INST_IMPL (FZ80::OR_A)

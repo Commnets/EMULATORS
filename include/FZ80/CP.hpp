@@ -15,6 +15,8 @@
 #ifndef __FZX80_CPINSTRUCTIONS__
 #define __FZX80_CPINSTRUCTIONS__
 
+#include <FZ80/Instruction.hpp>
+
 namespace FZ80
 {
 	/** CP, to compare always A register with a value. */
@@ -28,8 +30,31 @@ namespace FZ80
 
 		protected:
 		/** With a a value. */
-		bool executeWith (const MCHEmul::UByte& v);
+		inline bool executeWith (const MCHEmul::UByte& v);
 	};
+
+	// ---
+	inline bool CP_General::executeWith (const MCHEmul::UByte& v)
+	{
+		MCHEmul::Register& r = registerA ();
+		MCHEmul::StatusRegister& st = cpu () -> statusRegister ();
+
+		// The operation...
+		MCHEmul::UInt rst  = MCHEmul::UInt (r.values ()[0]) - MCHEmul::UInt (v);
+		MCHEmul::UInt rstH = MCHEmul::UInt (r.values ()[0] & 0x0f) - MCHEmul::UInt (v & 0x0f); // Just to calculate the half borrow!
+
+		// How the flags are affected...
+		st.setBitStatus (CZ80::_CARRYFLAG, rst.carry ());
+		st.setBitStatus (CZ80::_NEGATIVEFLAG, true); // Always!
+		st.setBitStatus (CZ80::_PARITYOVERFLOWFLAG, rst.overflow ());
+		st.setBitStatus (CZ80::_BIT3FLAG, v.bit (3)); // Undocuented... Not from A - s but from s!
+		st.setBitStatus (CZ80::_HALFCARRYFLAG, rstH [0].bit (4)); // When true, there will have been a half borrow!
+		st.setBitStatus (CZ80::_BIT5FLAG, v.bit (5)); // Undocumented...Not from A - s but from s!
+		st.setBitStatus (CZ80::_ZEROFLAG, rst == MCHEmul::UInt::_0);
+		st.setBitStatus (CZ80::_SIGNFLAG, rst.negative ());
+
+		return (true);
+	}
 
 	// With A
 	_INST_FROM (0xBF,	1, 4, 4,	"CP A",					CP_WithA, CP_General);					// Also undocumented with codes: DDBF & FDBF

@@ -15,6 +15,8 @@
 #ifndef __FZX80_ALUCTRLINSTRUCTIONS__
 #define __FZX80_ALUCTRLINSTRUCTIONS__
 
+#include <FZ80/Instruction.hpp>
+
 namespace FZ80
 {
 	// ALU Generic Instructions

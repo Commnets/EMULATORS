@@ -15,6 +15,8 @@
 #ifndef __FZX80_LDINSTRUCTIONS__
 #define __FZX80_LDINSTRUCTIONS__
 
+#include <FZ80/Instruction.hpp>
+
 namespace FZ80
 {
 	/** LD_General: To load any register / memory location with a value. 

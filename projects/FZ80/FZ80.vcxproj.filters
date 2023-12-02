@@ -24,7 +24,7 @@
     <ClCompile Include="..\..\src\FZ80\CZ80.cpp">
       <Filter>Archivos de origen</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\FZ80\Instructions.cpp">
+    <ClCompile Include="..\..\src\FZ80\Instruction.cpp">
       <Filter>Archivos de origen</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\FZ80\LD.cpp">
@@ -76,6 +76,9 @@
       <Filter>Archivos de origen\Instructions</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\FZ80\BITSHIFTRIGHT.cpp">
+      <Filter>Archivos de origen\Instructions</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\FZ80\BIT.cpp">
       <Filter>Archivos de origen\Instructions</Filter>
     </ClCompile>
   </ItemGroup>
@@ -139,6 +142,12 @@
     </ClInclude>
     <ClInclude Include="..\..\include\FZ80\XOR.hpp">
       <Filter>Archivos de encabezado\Instructions</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\FZ80\BIT.hpp">
+      <Filter>Archivos de encabezado\Instructions</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\FZ80\Instruction.hpp">
+      <Filter>Archivos de encabezado</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

@@ -15,6 +15,8 @@
 #ifndef __FZX80_ORINSTRUCTIONS__
 #define __FZX80_ORINSTRUCTIONS__
 
+#include <FZ80/Instruction.hpp>
+
 namespace FZ80
 {
 	/** OR is always over the value of A. \n
@@ -29,8 +31,31 @@ namespace FZ80
 
 		protected:
 		/** And is also done with the value of the accumulator. */
-		bool executeWith (const MCHEmul::UByte& v);
+		inline bool executeWith (const MCHEmul::UByte& v);
 	};
+
+	// ---
+	inline bool OR_General::executeWith (const MCHEmul::UByte& v)
+	{
+		MCHEmul::Register& a = registerA ();
+		MCHEmul::StatusRegister& st = cpu () -> statusRegister ();
+
+		// The operation...
+		MCHEmul::UByte r = a.values ()[0] | v;
+		a.set ({ r }); // and stored it back...
+
+		// How the flags are affected...
+		st.setBitStatus (CZ80::_CARRYFLAG, false);
+		st.setBitStatus (CZ80::_NEGATIVEFLAG, false);
+		st.setBitStatus (CZ80::_PARITYOVERFLOWFLAG, (r.numberBitsOn () % 2) == 0); // If it isn even number then it is set...
+		st.setBitStatus (CZ80::_BIT3FLAG, r.bit (3)); // a copy of the status of the bit 3... but undocumented!
+		st.setBitStatus (CZ80::_HALFCARRYFLAG, false);
+		st.setBitStatus (CZ80::_BIT5FLAG, r.bit (5)); // a copy of the status of the bit 5... but undocumented!
+		st.setBitStatus (CZ80::_ZEROFLAG, r == MCHEmul::UByte::_0);
+		st.setBitStatus (CZ80::_SIGNFLAG, r.bit (7));
+
+		return (true);
+	}
 
 	// With A
 	_INST_FROM (0xB7,	1, 4, 4,	"OR A",					OR_A, OR_General);						// Also undocumented with codes: DDB7 & FDB7 

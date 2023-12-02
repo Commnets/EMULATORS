@@ -1,89 +1,4 @@
-#include <FZ80/Instructions.hpp>
-
-// ---
-bool FZ80::BITSHIFTRight_General::executeRotateWith (MCHEmul::Register& r, bool crr)
-{
-	MCHEmul::StatusRegister& st = cpu () -> statusRegister ();
-
-	MCHEmul::UByte v = r.values ()[0];
-	bool c = v.bit (7);
-	v.shiftRightC (crr ? st.bitStatus (FZ80::CZ80::_CARRYFLAG) : c);
-	r.set ({ v });
-
-	// When the register affect is A and is the documented version, 
-	// the flags affected are different (some less) than in non documented versions...
-	if (&r == &registerA () && parameters ().size () == 1)
-	{
-		// How the flags are accepted...
-		st.setBitStatus (FZ80::CZ80::_CARRYFLAG, c);
-		st.setBitStatus (FZ80::CZ80::_NEGATIVEFLAG, false); // Always
-		// Flag Parity/Overflow not affected...
-		st.setBitStatus (FZ80::CZ80::_BIT3FLAG, v.bit (3)); // Undocumented...
-		st.setBitStatus (FZ80::CZ80::_HALFCARRYFLAG, false);
-		st.setBitStatus (FZ80::CZ80::_BIT5FLAG, v.bit (5)); // Undocumented...
-		// Flag Negative not affected...
-		// Flag Sign not affected...
-	}
-	else
-		affectFlagsWith (v, c);
-
-	return (true);
-}
-
-// ---
-bool FZ80::BITSHIFTRight_General::executeRotateWith (const MCHEmul::Address& a, bool crr)
-{
-	MCHEmul::StatusRegister& st = cpu () -> statusRegister ();
-
-	MCHEmul::UByte v = memory () -> value (a);
-	bool c = v.bit (7);
-	v.shiftRightC (crr ? st.bitStatus (FZ80::CZ80::_CARRYFLAG) : c);
-	memory () -> set (a, v); // Set back the value...
-
-	affectFlagsWith (v, c);
-
-	return (true);
-}
-
-// ---
-bool FZ80::BITSHIFTRight_General::executeRotateWith (const MCHEmul::Address& a, MCHEmul::Register& r, bool crr)
-{
-	MCHEmul::StatusRegister& st = cpu () -> statusRegister ();
-
-	MCHEmul::UByte v = memory () -> value (a);
-	bool c = v.bit (7);
-	v.shiftLeftC (crr ? st.bitStatus (FZ80::CZ80::_CARRYFLAG) : c);
-	memory () -> set (a, v); // Set back the value...
-	r.set ({ v }); // And store it in the register...
-
-	affectFlagsWith (v, c);
-
-	return (true);
-}
-
-// ---
-bool FZ80::BITSHIFTRight_General::executeShiftWith (MCHEmul::Register& r, bool crr)
-{
-	// TODO
-
-	return (true);
-}
-
-// ---
-bool FZ80::BITSHIFTRight_General::executeShiftWith (const MCHEmul::Address& a, bool crr)
-{
-	// TODO
-
-	return (true);
-}
-
-// ---
-bool FZ80::BITSHIFTRight_General::executeShiftWith (const MCHEmul::Address& a, MCHEmul::Register& r, bool crr)
-{
-	// TODO
-
-	return (true);
-}
+#include <FZ80/BITSHIFTRIGHT.hpp>
 
 // ---
 _INST_IMPL (FZ80::RRC_A)
@@ -574,4 +489,452 @@ _INST_IMPL (FZ80::RRD)
 	st.setBitStatus (CZ80::_SIGNFLAG, nA.bit (7));
 
 	return (true);
+}
+
+// ---
+_INST_IMPL (FZ80::SRA_A)
+{
+	assert (parameters ().size () == 1);
+
+	return (executeShiftWith (registerA (), false));
+}
+
+// ---
+_INST_IMPL (FZ80::SRA_B)
+{
+	assert (parameters ().size () == 2);
+
+	return (executeShiftWith (registerB (), false));
+}
+
+// ---
+_INST_IMPL (FZ80::SRA_C)
+{
+	assert (parameters ().size () == 2);
+
+	return (executeShiftWith (registerC (), false));
+}
+
+// ---
+_INST_IMPL (FZ80::SRA_D)
+{
+	assert (parameters ().size () == 2);
+
+	return (executeShiftWith (registerD (), false));
+}
+
+// ---
+_INST_IMPL (FZ80::SRA_E)
+{
+	assert (parameters ().size () == 2);
+
+	return (executeShiftWith (registerE (), false));
+}
+
+// ---
+_INST_IMPL (FZ80::SRA_H)
+{
+	assert (parameters ().size () == 2);
+
+	return (executeShiftWith (registerH (), false));
+}
+
+// ---
+_INST_IMPL (FZ80::SRA_L)
+{
+	assert (parameters ().size () == 2);
+
+	return (executeShiftWith (registerL (), false));
+}
+
+// ---
+_INST_IMPL (FZ80::SRA_IndirectHL)
+{
+	assert (parameters ().size () == 2);
+
+	return (executeShiftWith (addressHL (), false));
+}
+
+// ---
+_INST_IMPL (FZ80::SRA_IndirectIndexIX)
+{
+	assert (parameters ().size () == 4);
+
+	// The parameter 3rd is not used...
+
+	return (executeShiftWith (addressIX (parameters ()[3].value ()), false));
+}
+
+// ---
+_INST_IMPL (FZ80::SRA_IndirectIndexIXCopyA)
+{
+	assert (parameters ().size () == 4);
+
+	// The parameter 3rd is not used...
+
+	return (executeShiftWith (addressIX (parameters ()[3].value ()), registerA (), false));
+}
+
+// ---
+_INST_IMPL (FZ80::SRA_IndirectIndexIXCopyB)
+{
+	assert (parameters ().size () == 4);
+
+	// The parameter 3rd is not used...
+
+	return (executeShiftWith (addressIX (parameters ()[3].value ()), registerB (), false));
+}
+
+// ---
+_INST_IMPL (FZ80::SRA_IndirectIndexIXCopyC)
+{
+	assert (parameters ().size () == 4);
+
+	// The parameter 3rd is not used...
+
+	return (executeShiftWith (addressIX (parameters ()[3].value ()), registerC (), false));
+}
+
+// ---
+_INST_IMPL (FZ80::SRA_IndirectIndexIXCopyD)
+{
+	assert (parameters ().size () == 4);
+
+	// The parameter 3rd is not used...
+
+	return (executeShiftWith (addressIX (parameters ()[3].value ()), registerD (), false));
+}
+
+// ---
+_INST_IMPL (FZ80::SRA_IndirectIndexIXCopyE)
+{
+	assert (parameters ().size () == 4);
+
+	// The parameter 3rd is not used...
+
+	return (executeShiftWith (addressIX (parameters ()[3].value ()), registerE (), false));
+}
+
+// ---
+_INST_IMPL (FZ80::SRA_IndirectIndexIXCopyH)
+{
+	assert (parameters ().size () == 4);
+
+	// The parameter 3rd is not used...
+
+	return (executeShiftWith (addressIX (parameters ()[3].value ()), registerH (), false));
+}
+
+// ---
+_INST_IMPL (FZ80::SRA_IndirectIndexIXCopyL)
+{
+	assert (parameters ().size () == 4);
+
+	// The parameter 3rd is not used...
+
+	return (executeShiftWith (addressIX (parameters ()[3].value ()), registerL (), false));
+}
+
+// ---
+_INST_IMPL (FZ80::SRA_IndirectIndexIY)
+{
+	assert (parameters ().size () == 4);
+
+	// The parameter 3rd is not used...
+
+	return (executeShiftWith (addressIY (parameters ()[3].value ()), false));
+}
+
+// ---
+_INST_IMPL (FZ80::SRA_IndirectIndexIYCopyA)
+{
+	assert (parameters ().size () == 4);
+
+	// The parameter 3rd is not used...
+
+	return (executeShiftWith (addressIY (parameters ()[3].value ()), registerA (), false));
+}
+
+// ---
+_INST_IMPL (FZ80::SRA_IndirectIndexIYCopyB)
+{
+	assert (parameters ().size () == 4);
+
+	// The parameter 3rd is not used...
+
+	return (executeShiftWith (addressIY (parameters ()[3].value ()), registerB (), false));
+}
+
+// ---
+_INST_IMPL (FZ80::SRA_IndirectIndexIYCopyC)
+{
+	assert (parameters ().size () == 4);
+
+	// The parameter 3rd is not used...
+
+	return (executeShiftWith (addressIY (parameters ()[3].value ()), registerC (), false));
+}
+
+// ---
+_INST_IMPL (FZ80::SRA_IndirectIndexIYCopyD)
+{
+	assert (parameters ().size () == 4);
+
+	// The parameter 3rd is not used...
+
+	return (executeShiftWith (addressIY (parameters ()[3].value ()), registerD (), false));
+}
+
+// ---
+_INST_IMPL (FZ80::SRA_IndirectIndexIYCopyE)
+{
+	assert (parameters ().size () == 4);
+
+	// The parameter 3rd is not used...
+
+	return (executeShiftWith (addressIY (parameters ()[3].value ()), registerE (), false));
+}
+
+// ---
+_INST_IMPL (FZ80::SRA_IndirectIndexIYCopyH)
+{
+	assert (parameters ().size () == 4);
+
+	// The parameter 3rd is not used...
+
+	return (executeShiftWith (addressIY (parameters ()[3].value ()), registerH (), false));
+}
+
+// ---
+_INST_IMPL (FZ80::SRA_IndirectIndexIYCopyL)
+{
+	assert (parameters ().size () == 4);
+
+	// The parameter 3rd is not used...
+
+	return (executeShiftWith (addressIY (parameters ()[3].value ()), registerL (), false));
+}
+
+// ---
+_INST_IMPL (FZ80::SRL_A)
+{
+	assert (parameters ().size () == 1);
+
+	return (executeShiftWith (registerA (), true));
+}
+
+// ---
+_INST_IMPL (FZ80::SRL_B)
+{
+	assert (parameters ().size () == 2);
+
+	return (executeShiftWith (registerB (), true));
+}
+
+// ---
+_INST_IMPL (FZ80::SRL_C)
+{
+	assert (parameters ().size () == 2);
+
+	return (executeShiftWith (registerC (), true));
+}
+
+// ---
+_INST_IMPL (FZ80::SRL_D)
+{
+	assert (parameters ().size () == 2);
+
+	return (executeShiftWith (registerD (), true));
+}
+
+// ---
+_INST_IMPL (FZ80::SRL_E)
+{
+	assert (parameters ().size () == 2);
+
+	return (executeShiftWith (registerE (), true));
+}
+
+// ---
+_INST_IMPL (FZ80::SRL_H)
+{
+	assert (parameters ().size () == 2);
+
+	return (executeShiftWith (registerH (), true));
+}
+
+// ---
+_INST_IMPL (FZ80::SRL_L)
+{
+	assert (parameters ().size () == 2);
+
+	return (executeShiftWith (registerL (), true));
+}
+
+// ---
+_INST_IMPL (FZ80::SRL_IndirectHL)
+{
+	assert (parameters ().size () == 2);
+
+	return (executeShiftWith (addressHL (), true));
+}
+
+// ---
+_INST_IMPL (FZ80::SRL_IndirectIndexIX)
+{
+	assert (parameters ().size () == 4);
+
+	// The parameter 3rd is not used...
+
+	return (executeShiftWith (addressIX (parameters ()[3].value ()), true));
+}
+
+// ---
+_INST_IMPL (FZ80::SRL_IndirectIndexIXCopyA)
+{
+	assert (parameters ().size () == 4);
+
+	// The parameter 3rd is not used...
+
+	return (executeShiftWith (addressIX (parameters ()[3].value ()), registerA (), true));
+}
+
+// ---
+_INST_IMPL (FZ80::SRL_IndirectIndexIXCopyB)
+{
+	assert (parameters ().size () == 4);
+
+	// The parameter 3rd is not used...
+
+	return (executeShiftWith (addressIX (parameters ()[3].value ()), registerB (), true));
+}
+
+// ---
+_INST_IMPL (FZ80::SRL_IndirectIndexIXCopyC)
+{
+	assert (parameters ().size () == 4);
+
+	// The parameter 3rd is not used...
+
+	return (executeShiftWith (addressIX (parameters ()[3].value ()), registerC (), true));
+}
+
+// ---
+_INST_IMPL (FZ80::SRL_IndirectIndexIXCopyD)
+{
+	assert (parameters ().size () == 4);
+
+	// The parameter 3rd is not used...
+
+	return (executeShiftWith (addressIX (parameters ()[3].value ()), registerD (), true));
+}
+
+// ---
+_INST_IMPL (FZ80::SRL_IndirectIndexIXCopyE)
+{
+	assert (parameters ().size () == 4);
+
+	// The parameter 3rd is not used...
+
+	return (executeShiftWith (addressIX (parameters ()[3].value ()), registerE (), true));
+}
+
+// ---
+_INST_IMPL (FZ80::SRL_IndirectIndexIXCopyH)
+{
+	assert (parameters ().size () == 4);
+
+	// The parameter 3rd is not used...
+
+	return (executeShiftWith (addressIX (parameters ()[3].value ()), registerH (), true));
+}
+
+// ---
+_INST_IMPL (FZ80::SRL_IndirectIndexIXCopyL)
+{
+	assert (parameters ().size () == 4);
+
+	// The parameter 3rd is not used...
+
+	return (executeShiftWith (addressIX (parameters ()[3].value ()), registerL (), true));
+}
+
+// ---
+_INST_IMPL (FZ80::SRL_IndirectIndexIY)
+{
+	assert (parameters ().size () == 4);
+
+	// The parameter 3rd is not used...
+
+	return (executeShiftWith (addressIY (parameters ()[3].value ()), true));
+}
+
+// ---
+_INST_IMPL (FZ80::SRL_IndirectIndexIYCopyA)
+{
+	assert (parameters ().size () == 4);
+
+	// The parameter 3rd is not used...
+
+	return (executeShiftWith (addressIY (parameters ()[3].value ()), registerA (), true));
+}
+
+// ---
+_INST_IMPL (FZ80::SRL_IndirectIndexIYCopyB)
+{
+	assert (parameters ().size () == 4);
+
+	// The parameter 3rd is not used...
+
+	return (executeShiftWith (addressIY (parameters ()[3].value ()), registerB (), true));
+}
+
+// ---
+_INST_IMPL (FZ80::SRL_IndirectIndexIYCopyC)
+{
+	assert (parameters ().size () == 4);
+
+	// The parameter 3rd is not used...
+
+	return (executeShiftWith (addressIY (parameters ()[3].value ()), registerC (), true));
+}
+
+// ---
+_INST_IMPL (FZ80::SRL_IndirectIndexIYCopyD)
+{
+	assert (parameters ().size () == 4);
+
+	// The parameter 3rd is not used...
+
+	return (executeShiftWith (addressIY (parameters ()[3].value ()), registerD (), true));
+}
+
+// ---
+_INST_IMPL (FZ80::SRL_IndirectIndexIYCopyE)
+{
+	assert (parameters ().size () == 4);
+
+	// The parameter 3rd is not used...
+
+	return (executeShiftWith (addressIY (parameters ()[3].value ()), registerE (), true));
+}
+
+// ---
+_INST_IMPL (FZ80::SRL_IndirectIndexIYCopyH)
+{
+	assert (parameters ().size () == 4);
+
+	// The parameter 3rd is not used...
+
+	return (executeShiftWith (addressIY (parameters ()[3].value ()), registerH (), true));
+}
+
+// ---
+_INST_IMPL (FZ80::SRL_IndirectIndexIYCopyL)
+{
+	assert (parameters ().size () == 4);
+
+	// The parameter 3rd is not used...
+
+	return (executeShiftWith (addressIY (parameters ()[3].value ()), registerL (), true));
 }

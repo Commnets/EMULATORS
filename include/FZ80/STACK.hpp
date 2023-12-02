@@ -15,6 +15,8 @@
 #ifndef __FZX80_STACKINSTRUCTIONS__
 #define __FZX80_STACKINSTRUCTIONS__
 
+#include <FZ80/Instruction.hpp>
+
 namespace FZ80
 {
 	/** PUSH_General: To move the content of a register into the stack. \n
@@ -30,8 +32,17 @@ namespace FZ80
 		protected:
 		/** To move the contant of a set of registers into the stack. \n
 			These intructions don't affect either to any flag. */
-		bool executeWith (MCHEmul::RefRegisters& r);
+		inline bool executeWith (MCHEmul::RefRegisters& r);
 	};
+
+	// ---
+	inline bool PUSH_General::executeWith (MCHEmul::RefRegisters& r)
+	{
+		// The values are kept in the same order that they appear...
+		stack () -> push (MCHEmul::UBytes ({ r [0] -> values ()[0], r [1]  -> values ()[0] })); // 2 bytes always...
+
+		return (!stack () -> overflow ());
+	}
 
 	// PUSH
 	// From AF
@@ -60,10 +71,21 @@ namespace FZ80
 		protected:
 		/** To move the content of the stack into a set of registers. \n
 			These intructions don't affect either to any flag. */
-		bool executeWith (MCHEmul::RefRegisters& r);
+		inline bool executeWith (MCHEmul::RefRegisters& r);
 	};
 
-	// PULL
+	// ---
+	inline bool POP_General::executeWith (MCHEmul::RefRegisters& r)
+	{
+		// The bystes are extracted in the other way around...
+		MCHEmul::UBytes dt = stack () -> pull (2); // 2 bytes always...
+		r [1] -> set ({ dt [0].value () });
+		r [0] -> set ({ dt [1].value () });
+
+		return (!stack () -> overflow ());
+	}
+
+	// POP
 	// To AF
 	_INST_FROM (0xF1,	1, 10, 10,	"POP AF",				POP_AF, POP_General);
 	// To BC

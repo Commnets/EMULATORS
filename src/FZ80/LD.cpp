@@ -1,4 +1,4 @@
-#include <FZ80/Instructions.hpp>
+#include <FZ80/LD.hpp>
 
 // ---
 _INST_IMPL (FZ80::LD_A)

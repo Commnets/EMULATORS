@@ -1,13 +1,4 @@
-#include <FZ80/Instructions.hpp>
-
-// ---
-bool FZ80::PUSH_General::executeWith (MCHEmul::RefRegisters& r)
-{
-	// The values are kept in the same order that they appear...
-	stack () -> push (MCHEmul::UBytes ({ r [0] -> values ()[0], r [1]  -> values ()[0] })); // 2 bytes always...
-
-	return (!stack () -> overflow ());
-}
+#include <FZ80/STACK.hpp>
 
 // ---
 _INST_IMPL (FZ80::PUSH_AF)
@@ -55,17 +46,6 @@ _INST_IMPL (FZ80::PUSH_IY)
 	assert (parameters ().size () == 2);
 
 	return (executeWith (registerIY ()));
-}
-
-// ---
-bool FZ80::POP_General::executeWith (MCHEmul::RefRegisters& r)
-{
-	// The bystes are extracted in the other way around...
-	MCHEmul::UBytes dt = stack () -> pull (2); // 2 bytes always...
-	r [1] -> set ({ dt [0].value () });
-	r [0] -> set ({ dt [1].value () });
-
-	return (!stack () -> overflow ());
 }
 
 // ---

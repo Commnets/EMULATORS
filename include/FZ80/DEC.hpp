@@ -15,6 +15,8 @@
 #ifndef __FZX80_DECINSTRUCTIONS__
 #define __FZX80_DECINSTRUCTIONS__
 
+#include <FZ80/Instruction.hpp>
+
 namespace FZ80
 {
 	/** Decrement the value of several things. */
@@ -27,10 +29,68 @@ namespace FZ80
 							{ }
 
 		protected:
-		bool executeWith (MCHEmul::Register& r);
-		bool executeWith (MCHEmul::RefRegisters& r);
-		bool executeWith (const MCHEmul::Address& a);
+		inline bool executeWith (MCHEmul::Register& r);
+		inline bool executeWith (MCHEmul::RefRegisters& r);
+		inline bool executeWith (const MCHEmul::Address& a);
 	};
+
+	// ---
+	inline bool DEC_General::executeWith (MCHEmul::Register& r)
+	{
+		MCHEmul::StatusRegister& st = cpu () -> statusRegister ();
+
+		// The operation...
+		MCHEmul::UInt v  (r.values ()[0]);
+		MCHEmul::UInt hv (r.values ()[0] & 0x0f); // Just half byte!
+		bool i80 = (v == MCHEmul::UInt (MCHEmul::UByte (0x80)));
+		v  -= MCHEmul::UInt::_1; // Decrement...
+		hv -= MCHEmul::UInt::_1; // ..just to see whether there is half borrow!
+		r.set (v.bytes ()); // Put back the info
+
+		// How the flags are affected...
+		// The carry flag is not modified...
+		st.setBitStatus (CZ80::_NEGATIVEFLAG, true); // as the last instruction has been a substract!
+		st.setBitStatus (CZ80::_PARITYOVERFLOWFLAG, v.overflow ());
+		st.setBitStatus (CZ80::_BIT3FLAG, v [0].bit (3)); // Undocumented...
+		st.setBitStatus (CZ80::_HALFCARRYFLAG, hv [0].bit (4)); // If true, there will have been half carry!
+		st.setBitStatus (CZ80::_BIT5FLAG, v [0].bit (5)); // Undocumented...
+		st.setBitStatus (CZ80::_ZEROFLAG, v == MCHEmul::UByte::_0);
+		st.setBitStatus (CZ80::_SIGNFLAG, v.negative ());
+
+		return (true);
+	}
+
+	// ---
+	inline bool DEC_General::executeWith (MCHEmul::RefRegisters& r)
+	{
+		MCHEmul::UInt v  ({ r [0] -> values ()[0], r [1] -> values ()[0] });
+		v  -= MCHEmul::UInt::_1; // Decrement
+		r [0] -> set ({ v [0] }); // Put the info back...
+		r [1] -> set ({ v [1] });
+
+		return (true);
+	}
+
+	// ---
+	inline bool DEC_General::executeWith (const MCHEmul::Address& a)
+	{
+		MCHEmul::StatusRegister& st = cpu () -> statusRegister ();
+
+		// The operation...
+		MCHEmul::UInt v (memory () -> value (a));
+		bool i7F = (v == MCHEmul::UInt (MCHEmul::UByte (0x7f)));
+		v -= 1; // DECrement...
+		memory () -> set (a, v.values ()[0]);
+
+		// How the flags are affected...
+		st.setBitStatus (CZ80::_NEGATIVEFLAG, false);
+		st.setBitStatus (CZ80::_PARITYOVERFLOWFLAG, i7F); // Only if it was 7F before the operation...
+		st.setBitStatus (CZ80::_HALFCARRYFLAG, true);
+		st.setBitStatus (CZ80::_ZEROFLAG, v == MCHEmul::UByte::_0);
+		st.setBitStatus (CZ80::_SIGNFLAG, v.negative ());
+
+		return (true);
+	}
 
 	// With A
 	_INST_FROM (0x3D,	1, 4, 4,	"DEC A",				DEC_A, DEC_General);					// Also undocumented with codes: DD3D & FD3D

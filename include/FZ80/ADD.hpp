@@ -15,6 +15,8 @@
 #ifndef __FZX80_ADDINSTRUCTIONS__
 #define __FZX80_ADDINSTRUCTIONS__
 
+#include <FZ80/Instruction.hpp>
+
 namespace FZ80
 {
 	/** ADD is always over the value of A in 8 bits operations. \n
@@ -32,11 +34,73 @@ namespace FZ80
 			The 8 bits operations are always done using the A destination. \n
 			The value of the carry is or not taken into account according with the parameter c. \n
 			No carry is taken into account by default. */
-		bool executeWith (const MCHEmul::UByte& v, bool c = false);
+		inline bool executeWith (const MCHEmul::UByte& v, bool c = false);
 		/** With a double register and a value. \n
 			Same importance to the carry. */
-		bool executeWith (MCHEmul::RefRegisters& r, const MCHEmul::UBytes& v, bool c = false);
+		inline bool executeWith (MCHEmul::RefRegisters& r, const MCHEmul::UBytes& v, bool c = false);
 	};
+
+	// ---
+	inline bool ADD_General::executeWith (const MCHEmul::UByte& v, bool c)
+	{
+		MCHEmul::Register& r = registerA ();
+		MCHEmul::StatusRegister& st = cpu () -> statusRegister ();
+
+		// The operation...
+		bool a = c ? (st.bitStatus (CZ80::_CARRYFLAG) ? true : false) : false;
+		MCHEmul::UInt rst  = MCHEmul::UInt (r.values ()[0]).add (MCHEmul::UInt (v, a));
+		MCHEmul::UInt rstH = MCHEmul::UInt (r.values ()[0] & 0x0f).add (MCHEmul::UInt (v & 0x0f, a)); // Just to calculate the half carry! (from 3 to 4)
+		r.set (rst.values ()); // and stored back...
+
+		// How the flags are affected...
+		st.setBitStatus (CZ80::_CARRYFLAG, rst.carry ());
+		st.setBitStatus (CZ80::_NEGATIVEFLAG, false); // Always in additions!
+		st.setBitStatus (CZ80::_PARITYOVERFLOWFLAG, rst.overflow ());
+		st.setBitStatus (CZ80::_BIT3FLAG, rst [0].bit (3)); // Undocumented...
+		st.setBitStatus (CZ80::_HALFCARRYFLAG, rstH [0].bit (4)); // When true, there will have been a half carry from bit 3 to 4!
+		st.setBitStatus (CZ80::_BIT5FLAG, rst [0].bit (5)); // Undocumented...
+		st.setBitStatus (CZ80::_ZEROFLAG, rst == MCHEmul::UInt::_0);
+		st.setBitStatus (CZ80::_SIGNFLAG, rst.negative ());
+
+		return (true);
+	}
+
+	// ---
+	inline bool ADD_General::executeWith (MCHEmul::RefRegisters& r, const MCHEmul::UBytes& v, bool c)
+	{
+		MCHEmul::StatusRegister& st = cpu () -> statusRegister ();
+
+		// The operation...
+		bool a = c ? (st.bitStatus (CZ80::_CARRYFLAG) ? true : false) : false;
+		MCHEmul::UInt rst  = MCHEmul::UInt ({ r [0] -> values ()[0], r [1] -> values ()[0] }).
+			add (MCHEmul::UInt ({ v [0], v [1] }, a));
+		MCHEmul::UInt rstH = MCHEmul::UInt ({ r [0] -> values ()[0] & 0x0f, r [1] -> values ()[0] }).
+			add (MCHEmul::UInt ({ v [0] & 0x0f, v [1] }, a)); // Just to calculate the half carry in bit 11 to 12!
+		r [0] -> set ({ rst.values ()[0] }); r [1] -> set ({ rst.values ()[1] }); 
+
+		// How the flags are affected is not the same when the... 
+		// ...operation requested is and ANC that when it is not...
+		st.setBitStatus (CZ80::_CARRYFLAG, rst.carry ());
+		st.setBitStatus (CZ80::_NEGATIVEFLAG, false); // Always! (only true when the last operation was a substraction)
+		// Bit parity is itially affected...
+		st.setBitStatus (CZ80::_BIT3FLAG, rst [0].bit (3)); // Undocumented...
+		st.setBitStatus (CZ80::_HALFCARRYFLAG, rstH [0].bit (4 /** Bit 12 within the total. */)); 
+		st.setBitStatus (CZ80::_BIT5FLAG, rst [0].bit (5)); // Undocumented...
+		st.setBitStatus (CZ80::_ZEROFLAG, rst == MCHEmul::UInt::_0);
+		// Bit Zero is not initially affected...
+		// Bit Sign is not initially affected...
+
+		// But if the operation is with carry!
+		if (c) 
+		{
+			// The initially not affected bits are impacted!
+			st.setBitStatus (CZ80::_PARITYOVERFLOWFLAG, rst.overflow ());
+			st.setBitStatus (CZ80::_ZEROFLAG, rst == MCHEmul::UInt::_0);
+			st.setBitStatus (CZ80::_SIGNFLAG, rst.negative ());
+		}
+
+		return (true);
+	}
 
 	// Without carry
 	// With A
