@@ -2,23 +2,6 @@
 #include <F6500/C6510.hpp>
 
 // ---
-bool F6500::EOR_General::executeWith (MCHEmul::UByte u)
-{
-	MCHEmul::Register& a = cpu () -> internalRegister (F6500::C6510::_ACCUMULATOR);
-	MCHEmul::StatusRegister& st = cpu () -> statusRegister ();
-	
-	// Read the value, makes the operation and sets it back...
-	MCHEmul::UByte r = a.values ()[0] ^ u;
-	a.set ({ r });
-
-	// Time of the status register...
-	st.setBitStatus (F6500::C6500::_NEGATIVEFLAG, r [7]);
-	st.setBitStatus (F6500::C6500::_ZEROFLAG, r == MCHEmul::UByte::_0);
-
-	return (true);
-}
-
-// ---
 _INST_IMPL (F6500::EOR_Inmediate)
 {
 	return (executeWith (value_inmediate ()));

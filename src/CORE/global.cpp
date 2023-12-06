@@ -85,6 +85,29 @@ std::string MCHEmul::upper (const std::string& s)
 }
 
 // ---
+std::string MCHEmul::upperExcept (const std::string& s)
+{
+	std::string r = s; 
+
+	bool q = false;
+	for (auto& i : r)
+	{
+		if (i == '\'' || i == '\"')
+		{
+			q = !q;
+
+			continue;
+		}
+
+		if (!q)
+			i = std::toupper (i);
+	}
+	
+	return (r);
+
+}
+
+// ---
 std::string MCHEmul::lower (const std::string& s)
 {
 	std::string r = s; 
@@ -92,6 +115,29 @@ std::string MCHEmul::lower (const std::string& s)
 		i = std::tolower (i); 
 	
 	return (r);
+}
+
+// ---
+std::string MCHEmul::lowerExcept (const std::string& s)
+{
+	std::string r = s; 
+
+	bool q = false;
+	for (auto& i : r)
+	{
+		if (i == '\'' || i == '\"')
+		{
+			q = !q;
+
+			continue;
+		}
+
+		if (!q)
+			i = std::tolower (i);
+	}
+	
+	return (r);
+
 }
 
 // ---
@@ -265,12 +311,24 @@ bool MCHEmul::validLabel (const std::string& s)
 }
 
 // ---
+bool MCHEmul::validBytesChar (const std::string& s)
+{
+	if (s.length () < 2 ||
+		(s.length () >= 2 && (*s.begin () != '\'' || *s.rbegin () != '\'')))
+		return (false);
+
+	std::string sc = s.substr (1, s.length () - 2);
+	return (std::find_if (sc.begin (), sc.end (),
+			[](unsigned ch) -> bool { return (!std::isalnum (ch)); }) == sc.end ());
+}
+
+// ---
 bool MCHEmul::validBytesBinary (const std::string& s)
 {
 	return (s.length () > 1 && 
-		std::find_if (++s.begin (), s.end (), 
-			[](unsigned ch) -> bool { return (ch != '0' && ch != '1'); }) == s.end () &&
-		(s [0] == 'z' || s [0] == 'Z'));
+			std::find_if (++s.begin (), s.end (), 
+				[](unsigned ch) -> bool { return (ch != '0' && ch != '1'); }) == s.end () &&
+			(s [0] == 'z' || s [0] == 'Z'));
 }
 
 // ---
@@ -309,7 +367,8 @@ bool MCHEmul::validBytesDecimal (const std::string& s)
 // ---
 bool MCHEmul::validBytes (const std::string& s)
 { 
-	return (MCHEmul::validBytesBinary (s) ||
+	return (MCHEmul::validBytesChar (s) ||
+			MCHEmul::validBytesBinary (s) ||
 			MCHEmul::validBytesOctal (s) || 
 			MCHEmul::validBytesHexadecimal (s) ||
 			MCHEmul::validBytesDecimal (s));

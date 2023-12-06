@@ -217,8 +217,30 @@ namespace F6500
 							{ }
 
 		protected:
-		bool executeWith (MCHEmul::UByte u);
+		inline bool executeWith (MCHEmul::UByte u);
 	};
+
+	// ---
+	inline bool ADC_General::executeWith (MCHEmul::UByte u)
+	{
+		MCHEmul::Register& a = cpu () -> internalRegister (C6510::_ACCUMULATOR);
+		MCHEmul::StatusRegister& st = cpu () -> statusRegister ();
+	
+		// Calculate the addition...
+		unsigned char ft = st.bitStatus (C6500::_DECIMALFLAG) 
+			? MCHEmul::UInt::_PACKAGEDBCD : MCHEmul::UInt::_BINARY; // In BCD?
+		MCHEmul::UInt r = MCHEmul::UInt (a.values ()[0], ft).
+			add (MCHEmul::UInt (u, ft), st.bitStatus (C6500::_CARRYFLAG));
+		a.set (r.bytes ()); // The carry register is taken into account in the addition...
+
+		// Time of the status register...
+		st.setBitStatus (C6500::_NEGATIVEFLAG, r.negative ());
+		st.setBitStatus (C6500::_OVERFLOWFLAG, r.overflow ());
+		st.setBitStatus (C6500::_ZEROFLAG, r == MCHEmul::UInt::_0);
+		st.setBitStatus (C6500::_CARRYFLAG, r.carry ());
+
+		return (true);
+	}
 
 	_INST_FROM (0x69, 2, 2, 2, "ADC#[#1]",				ADC_Inmediate, ADC_General);
 	_INST_FROM (0x6d, 3, 4, 4, "ADC[$2]",				ADC_Absolute, ADC_General);
@@ -242,8 +264,27 @@ namespace F6500
 							{ }
 
 		protected:
-		bool executeWith (MCHEmul::UByte u);
+		inline bool executeWith (MCHEmul::UByte u);
 	};
+
+	// ---
+	inline bool ALR_General::executeWith (MCHEmul::UByte u)
+	{
+		MCHEmul::Register& a = cpu () -> internalRegister (C6510::_ACCUMULATOR);
+		MCHEmul::StatusRegister& st = cpu () -> statusRegister ();
+	
+		// Makes the operation...
+		MCHEmul::UByte r = (a.values ()[0] & u); // AND...
+		bool c = r.shiftRightC (false, 1); // ...LSR
+		a.set ({ r });
+
+		// Time of the status register...
+		st.setBitStatus (C6500::_NEGATIVEFLAG, r [7]);
+		st.setBitStatus (C6500::_ZEROFLAG, r == MCHEmul::UByte::_0);
+		st.setBitStatus (C6500::_CARRYFLAG, c);
+
+		return (true);
+	}
 
 	_INST_FROM (0x4b, 2, 2, 2, "ALR#[#1]",				ALR_Inmediate, ALR_General);
 
@@ -260,8 +301,26 @@ namespace F6500
 							{ }
 
 		protected:
-		bool executeWith (MCHEmul::UByte u);
+		inline bool executeWith (MCHEmul::UByte u);
 	};
+
+	// ---
+	inline bool ANC_General::executeWith (MCHEmul::UByte u)
+	{
+		MCHEmul::Register& a = cpu () -> internalRegister (C6510::_ACCUMULATOR);
+		MCHEmul::StatusRegister& st = cpu () -> statusRegister ();
+	
+		// Set the value...
+		MCHEmul::UByte r = a.values ()[0] /** 1 byte long. */ & u; // AND...
+		a.set ({ r });
+
+		// Time of the status register...
+		st.setBitStatus (C6500::_NEGATIVEFLAG, r [7]);
+		st.setBitStatus (C6500::_ZEROFLAG, r == MCHEmul::UByte::_0);
+		st.setBitStatus (C6500::_CARRYFLAG, r [7] /** Carry always like sign. */);
+
+		return (true);
+	}
 
 	_INST_FROM (0x0b /** 2b */, 2, 2, 2, "ANC#[#1]",	ANC_Inmediate, ANC_General);
 
@@ -276,8 +335,26 @@ namespace F6500
 							{ }
 
 		protected:
-		bool executeWith (MCHEmul::UByte u);
+		inline bool executeWith (MCHEmul::UByte u);
 	};
+
+	// ---
+	inline bool AND_General::executeWith (MCHEmul::UByte u)
+	{
+		MCHEmul::Register& a = cpu () -> internalRegister (C6510::_ACCUMULATOR);
+		MCHEmul::StatusRegister& st = cpu () -> statusRegister ();
+	
+		// Set the value...
+		// The register is always 1 byte long...
+		MCHEmul::UByte r = a.values ()[0] & u;
+		a.set ({ r });
+
+		// Time of the status register...
+		st.setBitStatus (C6500::_NEGATIVEFLAG, r [7]);
+		st.setBitStatus (C6500::_ZEROFLAG, r == MCHEmul::UByte::_0);
+
+		return (true);
+	}
 
 	_INST_FROM (0x29, 2, 2, 2, "AND#[#1]",				AND_Inmediate, AND_General);
 	_INST_FROM (0x2d, 3, 4, 4, "AND[$2]",				AND_Absolute, AND_General);
@@ -301,8 +378,28 @@ namespace F6500
 							{ }
 
 		protected:
-		bool executeWith (MCHEmul::UByte u);
+		inline bool executeWith (MCHEmul::UByte u);
 	};
+
+	// ---
+	inline bool ARR_General::executeWith (MCHEmul::UByte u)
+	{
+		MCHEmul::Register& a = cpu () -> internalRegister (C6510::_ACCUMULATOR);
+		MCHEmul::StatusRegister& st = cpu () -> statusRegister ();
+	
+		MCHEmul::UByte r = (a.values ()[0] & u); // AND...
+		bool o = r [7] ^ r [6]; // The overflow flag is calculated different...
+		r.rotateRightC (st.bitStatus (C6500::_CARRYFLAG), 1); // ...ROR
+		a.set ({ r });
+
+		// Time of the status register...
+		st.setBitStatus (C6500::_NEGATIVEFLAG, r [7]);
+		st.setBitStatus (C6500::_OVERFLOWFLAG, o);
+		st.setBitStatus (C6500::_ZEROFLAG, r == MCHEmul::UByte::_0);
+		st.setBitStatus (C6500::_CARRYFLAG, r [6] /** after. */);
+
+		return (true);
+	}
 
 	_INST_FROM (0x6b, 2, 2, 2, "ARR#[#1]",				ARR_Inmediate, ARR_General);
 
@@ -317,8 +414,25 @@ namespace F6500
 							{ }
 
 		protected:
-		bool executeOn (const MCHEmul::Address& a);
+		inline bool executeOn (const MCHEmul::Address& a);
 	};
+
+	// ---
+	inline bool ASL_General::executeOn (const MCHEmul::Address& a)
+	{
+		// Read the value, makes the operation and set it back!
+		MCHEmul::UByte v = memory () -> value (a); // 1 byte long always
+		bool c = v.shiftLeftC (false /** 0 is put into */, 1); // Keeps the status of the last bit to actualize later the carry flag
+		memory () -> set (a, { v });
+
+		// Time of the status register...
+		MCHEmul::StatusRegister& st = cpu () -> statusRegister ();
+		st.setBitStatus (C6500::_NEGATIVEFLAG, v [7]);
+		st.setBitStatus (C6500::_ZEROFLAG, v == MCHEmul::UByte::_0);
+		st.setBitStatus (C6500::_CARRYFLAG, c);
+
+		return (true);
+	}
 
 	_INST_FROM (0x0e, 3, 6, 4, "ASL[$2]",				ASL_Absolute, ASL_General);
 	_INST_FROM (0x06, 2, 5, 3, "ASL[$1]",				ASL_ZeroPage, ASL_General);
@@ -336,8 +450,21 @@ namespace F6500
 							{ }
 
 		protected:
-		void executeBranch ();
+		inline void executeBranch ();
 	};
+
+	// ---
+	inline void BXX_General::executeBranch ()
+	{
+		int jR = MCHEmul::UInt ({ value_relative () }).asInt (); // The value can be negative meaning back jump!
+
+		if (jR == 0)
+			return; // No need to continue...
+
+		MCHEmul::ProgramCounter& pc = cpu () -> programCounter ();
+		if (jR > 0) pc.increment ((size_t) jR);
+		else pc.decrement ((size_t) -jR); // Parameter to "decrement" always positive...
+	}
 
 	// BCC 
 	_INST_FROM (0x90, 2, 2, 2, "BCC[&1]",				BCC, BXX_General);
@@ -393,8 +520,25 @@ namespace F6500
 							{ }
 
 		protected:
-		bool executeWith (MCHEmul::UByte u);
+		inline bool executeWith (MCHEmul::UByte u);
 	};
+
+	// ---
+	inline bool CMP_General::executeWith (MCHEmul::UByte u)
+	{
+		// To compare is like to substract...
+		MCHEmul::UInt r = 
+			MCHEmul::UInt (cpu () -> internalRegister (C6510::_ACCUMULATOR).values ()[0]) - 
+			MCHEmul::UInt (u);  // Never longer that 1 byte, but the result could be negative...
+
+		// Time of the status register...
+		MCHEmul::StatusRegister& st = cpu () -> statusRegister ();
+		st.setBitStatus (C6500::_NEGATIVEFLAG, r.negative ());
+		st.setBitStatus (C6500::_ZEROFLAG, r == MCHEmul::UInt::_0);
+		st.setBitStatus (C6500::_CARRYFLAG, r.carry ()); // When the result is positive (a >= u)
+
+		return (true);
+	}
 
 	_INST_FROM (0xc9, 2, 2, 2, "CMP#[#1]",				CMP_Inmediate, CMP_General);
 	_INST_FROM (0xcd, 3, 4, 4, "CMP[$2]",				CMP_Absolute, CMP_General);
@@ -416,8 +560,25 @@ namespace F6500
 							{ }
 
 		protected:
-		bool executeWith (MCHEmul::UByte u);
+		inline bool executeWith (MCHEmul::UByte u);
 	};
+
+	// ---
+	inline bool CPX_General::executeWith (MCHEmul::UByte u)
+	{
+		// To compare is like to substract...
+		MCHEmul::UInt r = 
+			MCHEmul::UInt (cpu () -> internalRegister (C6510::_XREGISTER).values ()[0]) - 
+			MCHEmul::UInt (u);  // Never longer that 1 byte, but the result could be negative...
+
+		// Time of the status register...
+		MCHEmul::StatusRegister& st = cpu () -> statusRegister ();
+		st.setBitStatus (C6500::_NEGATIVEFLAG, r.negative ());
+		st.setBitStatus (C6500::_ZEROFLAG, r [0] == MCHEmul::UByte::_0);
+		st.setBitStatus (C6500::_CARRYFLAG, r.carry ()); // When the result is positive (a >= u)
+
+		return (true);
+	}
 
 	_INST_FROM (0xe0, 2, 2, 2, "CPX#[#1]",				CPX_Inmediate, CPX_General);
 	_INST_FROM (0xec, 3, 4, 4, "CPX[$2]",				CPX_Absolute, CPX_General);
@@ -434,8 +595,25 @@ namespace F6500
 							{ }
 
 		protected:
-		bool executeWith (MCHEmul::UByte u);
+		inline bool executeWith (MCHEmul::UByte u);
 	};
+
+	// ---
+	inline bool CPY_General::executeWith (MCHEmul::UByte u)
+	{
+		// To compare is like to substract...
+		MCHEmul::UInt r = 
+			MCHEmul::UInt (cpu () -> internalRegister (C6510::_YREGISTER).values ()[0]) -
+			MCHEmul::UInt (u);  // Never longer that 1 byte, but the result could be negative...
+
+		// Time of the status register...
+		MCHEmul::StatusRegister& st = cpu () -> statusRegister ();
+		st.setBitStatus (C6500::_NEGATIVEFLAG, r.negative ());
+		st.setBitStatus (C6500::_ZEROFLAG, r [0] == MCHEmul::UByte::_0);
+		st.setBitStatus (C6500::_CARRYFLAG, r.carry ()); // When the result is positive (a >= u)
+
+		return (true);
+	}
 
 	_INST_FROM (0xc0, 2, 2, 2, "CPY#[#1]",				CPY_Inmediate, CPY_General);
 	_INST_FROM (0xcc, 3, 4, 4, "CPY[$2]",				CPY_Absolute, CPY_General);
@@ -454,8 +632,28 @@ namespace F6500
 							{ }
 
 		protected:
-		bool executeOn (const MCHEmul::Address& a);
+		inline bool executeOn (const MCHEmul::Address& a);
 	};
+
+	// ---
+	inline bool DCP_General::executeOn (const MCHEmul::Address& a)
+	{
+		// The memoy location is reduced by 1...
+		MCHEmul::UInt v = MCHEmul::UInt ((memory () -> value (a))) /** 1 byte long always. */ - MCHEmul::UInt::_1; // DEC...
+		// A carry could be generated, but it will be ignored...
+		memory () -> set (a, v.bytes ()); // ...and stored back
+		// To compare is like to substract...
+		MCHEmul::UInt r = 
+			MCHEmul::UInt (cpu () -> internalRegister (C6510::_ACCUMULATOR).values ()[0]) - v;  //...CMP
+
+		// Time of the status register...
+		MCHEmul::StatusRegister& st = cpu () -> statusRegister ();
+		st.setBitStatus (C6500::_NEGATIVEFLAG, r.negative ());
+		st.setBitStatus (C6500::_ZEROFLAG, r == MCHEmul::UInt::_0);
+		st.setBitStatus (C6500::_CARRYFLAG, r.carry ()); // When the result is positive (a >= u)
+
+		return (true);
+	}
 
 	_INST_FROM (0xcf, 3, 6, 4, "DCP[$2]",				DCP_Absolute, DCP_General);
 	_INST_FROM (0xc7, 2, 5, 3, "DCP[$1]",				DCP_ZeroPage, DCP_General);
@@ -476,8 +674,24 @@ namespace F6500
 							{ }
 
 		protected:
-		bool executeOn (const MCHEmul::Address& a);
+		inline bool executeOn (const MCHEmul::Address& a);
 	};
+
+	// ---
+	inline bool DEC_General::executeOn (const MCHEmul::Address& a)
+	{
+		// Read the value, makes the operation and sets it back...
+		MCHEmul::UInt v = MCHEmul::UInt ((memory () -> value (a))) - MCHEmul::UInt::_1;
+		// A carry could be generated, but it will be ignored...
+		memory () -> set (a, v.bytes ()); // 1 byte long always
+
+		// Time of the status register...
+		MCHEmul::StatusRegister& st = cpu () -> statusRegister ();
+		st.setBitStatus (C6500::_NEGATIVEFLAG, v.negative ());
+		st.setBitStatus (C6500::_ZEROFLAG, v == MCHEmul::UInt::_0);
+
+		return (true);
+	}
 
 	_INST_FROM (0xce, 3, 6, 4, "DEC[$2]",				DEC_Absolute, DEC_General);
 	_INST_FROM (0xc6, 2, 5, 3, "DEC[$1]",				DEC_ZeroPage, DEC_General);
@@ -501,8 +715,25 @@ namespace F6500
 							{ }
 
 		protected:
-		bool executeWith (MCHEmul::UByte u);
+		inline bool executeWith (MCHEmul::UByte u);
 	};
+
+	// ---
+	inline bool EOR_General::executeWith (MCHEmul::UByte u)
+	{
+		MCHEmul::Register& a = cpu () -> internalRegister (C6510::_ACCUMULATOR);
+		MCHEmul::StatusRegister& st = cpu () -> statusRegister ();
+	
+		// Read the value, makes the operation and sets it back...
+		MCHEmul::UByte r = a.values ()[0] ^ u;
+		a.set ({ r });
+
+		// Time of the status register...
+		st.setBitStatus (C6500::_NEGATIVEFLAG, r [7]);
+		st.setBitStatus (C6500::_ZEROFLAG, r == MCHEmul::UByte::_0);
+
+		return (true);
+	}
 
 	_INST_FROM (0x49, 2, 2, 2, "EOR#[#1]",				EOR_Inmediate, EOR_General);
 	_INST_FROM (0x4d, 3, 4, 4, "EOR[$2]",				EOR_Absolute, EOR_General);
@@ -524,8 +755,24 @@ namespace F6500
 							{ }
 
 		protected:
-		bool executeOn (const MCHEmul::Address& a);
+		inline bool executeOn (const MCHEmul::Address& a);
 	};
+
+	// ---
+	inline bool INC_General::executeOn (const MCHEmul::Address& a)
+	{
+		// Read the value, makes the operation and sets it back...
+		MCHEmul::UInt v = MCHEmul::UInt ((memory () -> value (a))) + MCHEmul::UInt::_1;
+		// A carry could be generated, but it will be ignored...
+		memory () -> set (a, v.bytes ()); // 1 byte long always
+
+		// Time of the status register...
+		MCHEmul::StatusRegister& st = cpu () -> statusRegister ();
+		st.setBitStatus (C6500::_NEGATIVEFLAG, v.negative ());
+		st.setBitStatus (C6500::_ZEROFLAG, v == MCHEmul::UInt::_0);
+
+		return (true);
+	}
 
 	_INST_FROM (0xee, 3, 6, 4, "INC[$2]",				INC_Absolute, INC_General);
 	_INST_FROM (0xe6, 2, 5, 3, "INC[$1]",				INC_ZeroPage, INC_General);
@@ -551,8 +798,35 @@ namespace F6500
 							{ }
 
 		protected:
-		bool executeOn (const MCHEmul::Address& a);
+		inline bool executeOn (const MCHEmul::Address& a);
 	};
+
+	// ---
+	inline bool ISC_General::executeOn (const MCHEmul::Address& a)
+	{
+		MCHEmul::Register& ac = cpu () -> internalRegister (C6510::_ACCUMULATOR);
+		MCHEmul::StatusRegister& st = cpu () -> statusRegister ();
+
+		// Read the value, makes the operation and sets it back...
+		MCHEmul::UInt v = MCHEmul::UInt ((memory () -> value (a))) /** 1 bytelong. */ + MCHEmul::UInt::_1; // INC...
+		// A carry could be generated, but it will be ignored...
+		memory () -> set (a, v.bytes ());
+
+		// ...and then the substract...
+		unsigned char ft = st.bitStatus (C6500::_DECIMALFLAG) 
+			? MCHEmul::UInt::_PACKAGEDBCD : MCHEmul::UInt::_BINARY; // In BCD?
+		MCHEmul::UInt r = MCHEmul::UInt (ac.values ()[0], ft).substract 
+			(MCHEmul::UInt (v.bytes (), ft), st.bitStatus (C6500::_CARRYFLAG)); // ...SBC
+		ac.set (r.bytes ());
+
+		// Time of the status register...
+		st.setBitStatus (C6500::_NEGATIVEFLAG, r.negative ());
+		st.setBitStatus (C6500::_OVERFLOWFLAG, r.overflow ());
+		st.setBitStatus (C6500::_ZEROFLAG, r == MCHEmul::UInt::_0);
+		st.setBitStatus (C6500::_CARRYFLAG, r.carry ());
+
+		return (true);
+	}
 
 	_INST_FROM (0xef, 3, 6, 4, "ISC[$2]",				ISC_Absolute, ISC_General);
 	_INST_FROM (0xe7, 2, 5, 3, "ISC[$1]",				ISC_ZeroPage, ISC_General);
@@ -591,8 +865,22 @@ namespace F6500
 							{ }
 
 		protected:
-		bool executeWith (MCHEmul::UByte u);
+		inline bool executeWith (MCHEmul::UByte u);
 	};
+
+	// ---
+	inline bool LDA_General::executeWith (MCHEmul::UByte u)
+	{
+		// Set the value...
+		cpu () -> internalRegister (C6510::_ACCUMULATOR).set ({ u });
+
+		// Time of the status register...
+		MCHEmul::StatusRegister& st = cpu () -> statusRegister ();
+		st.setBitStatus (C6500::_NEGATIVEFLAG, u [7]);
+		st.setBitStatus (C6500::_ZEROFLAG, u == MCHEmul::UByte::_0);
+
+		return (true);
+	}
 
 	_INST_FROM (0xa9, 2, 2, 2, "LDA#[#1]",				LDA_Inmediate, LDA_General);
 	_INST_FROM (0xad, 3, 4, 4, "LDA[$2]",				LDA_Absolute, LDA_General);
@@ -616,8 +904,24 @@ namespace F6500
 							{ }
 
 		protected:
-		bool executeOn (const MCHEmul::Address& a);
+		inline bool executeOn (const MCHEmul::Address& a);
 	};
+
+	// ---
+	inline bool LAX_General::executeOn (const MCHEmul::Address& a)
+	{
+		// The memory location is copied into both _ACCUMULATOR & _XREGISTER
+		MCHEmul::UByte v = memory () -> value (a); // 1 byte long always...
+		cpu () -> internalRegister (C6510::_ACCUMULATOR).set ({ v }); 
+		cpu () -> internalRegister (C6510::_XREGISTER).set ({ v });
+
+		// Time of the status register...
+		MCHEmul::StatusRegister& st = cpu () -> statusRegister ();
+		st.setBitStatus (C6500::_NEGATIVEFLAG, v.bit (7));
+		st.setBitStatus (C6500::_ZEROFLAG, v == MCHEmul::UByte::_0);
+
+		return (true);
+	}
 
 	_INST_FROM (0xaf, 3, 6, 6, "LAX[$2]",				LAX_Absolute, LAX_General);
 	_INST_FROM (0xa7, 2, 5, 5, "LAX[$1]",				LAX_ZeroPage, LAX_General);
@@ -637,8 +941,22 @@ namespace F6500
 							{ }
 
 		protected:
-		bool executeWith (MCHEmul::UByte u);
+		inline bool executeWith (MCHEmul::UByte u);
 	};
+
+	// ---
+	inline bool LDX_General::executeWith (MCHEmul::UByte u)
+	{
+		// Set the value...
+		cpu () -> internalRegister (C6510::_XREGISTER).set ({ u });
+
+		// Time of the status register...
+		MCHEmul::StatusRegister& st = cpu () -> statusRegister ();
+		st.setBitStatus (C6500::_NEGATIVEFLAG, u [7]);
+		st.setBitStatus (C6500::_ZEROFLAG, u == MCHEmul::UByte::_0);
+
+		return (true);
+	}
 
 	_INST_FROM (0xa2, 2, 2, 2, "LDX#[#1]",				LDX_Inmediate, LDX_General);
 	_INST_FROM (0xae, 3, 4, 4, "LDX[$2]",				LDX_Absolute, LDX_General);
@@ -657,8 +975,22 @@ namespace F6500
 							{ }
 
 		protected:
-		bool executeWith (MCHEmul::UByte u);
+		inline bool executeWith (MCHEmul::UByte u);
 	};
+
+	// ---
+	inline bool LDY_General::executeWith (MCHEmul::UByte u)
+	{
+		// Set the value...
+		cpu () -> internalRegister (C6510::_YREGISTER).set ({ u });
+
+		// Time of the status register...
+		MCHEmul::StatusRegister& st = cpu () -> statusRegister ();
+		st.setBitStatus (C6500::_NEGATIVEFLAG, u [7]);
+		st.setBitStatus (C6500::_ZEROFLAG, u == MCHEmul::UByte::_0);
+
+		return (true);
+	}
 
 	_INST_FROM (0xa0, 2, 2, 2, "LDY#[#1]",				LDY_Inmediate, LDY_General);
 	_INST_FROM (0xac, 3, 4, 4, "LDY[$2]",				LDY_Absolute, LDY_General);
@@ -677,8 +1009,25 @@ namespace F6500
 							{ }
 
 		protected:
-		bool executeOn (const MCHEmul::Address& a);
+		inline bool executeOn (const MCHEmul::Address& a);
 	};
+
+	// ---
+	inline bool LSR_General::executeOn (const MCHEmul::Address& a)
+	{
+		// Read the value, makes the operation and set it back!
+		MCHEmul::UByte v = memory () -> value (a); // 1 byte long always
+		bool c = v.shiftRightC (false /** 0 is put into */, 1); // Keeps the status of the last bit to actualize later the carry flag
+		memory () -> set (a, v);
+
+		// Time of the status register...
+		MCHEmul::StatusRegister& st = cpu () -> statusRegister ();
+		st.setBitStatus (C6500::_NEGATIVEFLAG, v [7]);
+		st.setBitStatus (C6500::_ZEROFLAG, v == MCHEmul::UByte::_0);
+		st.setBitStatus (C6500::_CARRYFLAG, c);
+
+		return (true);
+	}
 
 	_INST_FROM (0x4e, 3, 6, 4, "LSR[$2]",				LSR_Absolute, LSR_General);
 	_INST_FROM (0x46, 2, 5, 3, "LSR[$1]",				LSR_ZeroPage, LSR_General);
@@ -698,8 +1047,16 @@ namespace F6500
 							{ }
 
 		protected:
-		bool executeWith (MCHEmul::UByte u);
+		inline bool executeWith (MCHEmul::UByte u);
 	};
+
+	// ---
+	inline bool NOP_General::executeWith (MCHEmul::UByte u)
+	{
+		// Nothing to do...
+
+		return (true);
+	}
 
 	// The official and documented one...
 	_INST_FROM (0xea, 1, 2, 2, "NOP",					NOP, Instruction);
@@ -722,8 +1079,25 @@ namespace F6500
 							{ }
 
 		protected:
-		bool executeWith (MCHEmul::UByte u);
+		inline bool executeWith (MCHEmul::UByte u);
 	};
+
+	// ---
+	inline bool ORA_General::executeWith (MCHEmul::UByte u)
+	{
+		MCHEmul::Register& a = cpu () -> internalRegister (C6510::_ACCUMULATOR);
+		MCHEmul::StatusRegister& st = cpu () -> statusRegister ();
+	
+		// Read the value, makes the operation and sets it back...
+		MCHEmul::UByte r = a.values ()[0] | u;
+		a.set ({ r });
+
+		// Time of the status register...
+		st.setBitStatus (C6500::_NEGATIVEFLAG, r [7]);
+		st.setBitStatus (C6500::_ZEROFLAG, r == MCHEmul::UByte::_0);
+
+		return (true);
+	}
 
 	_INST_FROM (0x09, 2, 2, 2, "ORA#[#1]",				ORA_Inmediate, ORA_General);
 	_INST_FROM (0x0d, 3, 4, 4, "ORA[$2]",				ORA_Absolute, ORA_General);
@@ -747,7 +1121,7 @@ namespace F6500
 	_INST_FROM (0x28, 1, 4, 4, "PLP",					PLP, Instruction);
 
 	// Non documented
-	// RLO: ROL + AND
+	// RLA: ROL + AND
 	// https://www.esocop.org/docs/MOS6510UnintendedOpcodes-20152412.pdf
 	/** RLA_General: To aggregate common steps in every RLA instruction. */
 	class RLA_General : public Instruction
@@ -759,8 +1133,31 @@ namespace F6500
 							{ }
 
 		protected:
-		bool executeOn (const MCHEmul::Address& a);
+		inline bool executeOn (const MCHEmul::Address& a);
 	};
+
+	// ---
+	inline bool RLA_General::executeOn (const MCHEmul::Address& a)
+	{
+		MCHEmul::Register& ac = cpu () -> internalRegister (C6510::_ACCUMULATOR);
+		MCHEmul::StatusRegister& st = cpu () -> statusRegister ();
+
+		// The memory is affected...
+		MCHEmul::UByte v = memory () -> value (a); // 1 byte long always...
+		bool c = v.rotateLeftC (st.bitStatus (C6500::_CARRYFLAG), 1); // ROL...
+		memory () -> set (a, { v });
+
+		// ...and also the accumulator...
+		v = ac.values ()[0] & v; // ...AND
+		ac.set ({ v });
+
+		// Time of the status register...
+		st.setBitStatus (C6500::_NEGATIVEFLAG, v [7]);
+		st.setBitStatus (C6500::_ZEROFLAG, v == MCHEmul::UByte::_0);
+		st.setBitStatus (C6500::_CARRYFLAG, c);
+
+		return (true);
+	}
 
 	_INST_FROM (0x2f, 3, 6, 4, "RLA[$2]",				RLA_Absolute, RLA_General);
 	_INST_FROM (0x27, 2, 5, 3, "RLA[$1]",				RLA_ZeroPage, RLA_General);
@@ -781,8 +1178,27 @@ namespace F6500
 							{ }
 
 		protected:
-		bool executeOn (const MCHEmul::Address& a);
+		inline bool executeOn (const MCHEmul::Address& a);
 	};
+
+	// ---
+	inline bool ROL_General::executeOn (const MCHEmul::Address& a)
+	{
+		MCHEmul::StatusRegister& st = cpu () -> statusRegister ();
+		bool c = st.bitStatus (C6500::_CARRYFLAG); 
+
+		// Read the value, makes the operation and set it back!
+		MCHEmul::UByte v = memory () -> value (a); // 1 byte long always
+		c = v.rotateLeftC (c /** The carry is put into. */, 1); // Keeps the status of the last bit to actualize later the carry flag
+		memory () -> set (a, v);
+
+		// Time of the status register...
+		st.setBitStatus (C6500::_NEGATIVEFLAG, v [7]);
+		st.setBitStatus (C6500::_ZEROFLAG, v == MCHEmul::UByte::_0);
+		st.setBitStatus (C6500::_CARRYFLAG, c);
+
+		return (true);
+	}
 
 	_INST_FROM (0x2e, 3, 6, 4, "ROL[$2]",				ROL_Absolute, ROL_General);
 	_INST_FROM (0x26, 2, 5, 3, "ROL[$1]",				ROL_ZeroPage, ROL_General);
@@ -801,8 +1217,27 @@ namespace F6500
 							{ }
 
 		protected:
-		bool executeOn (const MCHEmul::Address& a);
+		inline bool executeOn (const MCHEmul::Address& a);
 	};
+
+	// ---
+	inline bool ROR_General::executeOn (const MCHEmul::Address& a)
+	{
+		MCHEmul::StatusRegister& st = cpu () -> statusRegister ();
+		bool c = st.bitStatus (C6500::_CARRYFLAG); 
+
+		// Read the value, makes the operation and set it back!
+		MCHEmul::UByte v = memory () -> value (a); // 1 byte long always
+		c = v.rotateRightC (c /** The carry is put into. */, 1); // Keeps the status of the last bit to actualize later the carry flag
+		memory () -> set (a, v);
+
+		// Time of the status register...
+		st.setBitStatus (C6500::_NEGATIVEFLAG, v [7]);
+		st.setBitStatus (C6500::_ZEROFLAG, v == MCHEmul::UByte::_0);
+		st.setBitStatus (C6500::_CARRYFLAG, c);
+
+		return (true);
+	}
 
 	_INST_FROM (0x6e, 3, 6, 4, "ROR[$2]",				ROR_Absolute, ROR_General);
 	_INST_FROM (0x66, 2, 5, 3, "ROR[$1]",				ROR_ZeroPage, ROR_General);
@@ -823,8 +1258,34 @@ namespace F6500
 							{ }
 
 		protected:
-		bool executeOn (const MCHEmul::Address& a);
+		inline bool executeOn (const MCHEmul::Address& a);
 	};
+
+	// ---
+	inline bool RRA_General::executeOn (const MCHEmul::Address& a)
+	{
+		MCHEmul::Register& ac = cpu () -> internalRegister (C6510::_ACCUMULATOR);
+		MCHEmul::StatusRegister& st = cpu () -> statusRegister ();
+
+		// The operation affects the memory...
+		MCHEmul::UByte v = memory () -> value (a); // Always 1 byte long...
+		bool c = v.rotateRightC (st.bitStatus (C6500::_CARRYFLAG), 1); // ROR...
+		memory () -> set (a, { v });
+
+		// ...and also the accumulator...
+		unsigned char ft = st.bitStatus (C6500::_DECIMALFLAG) 
+			? MCHEmul::UInt::_PACKAGEDBCD : MCHEmul::UInt::_BINARY; // In BCD?
+		MCHEmul::UInt r = MCHEmul::UInt (ac.values ()[0], ft).add (MCHEmul::UInt (v, ft), c); // ...ADC
+		ac.set (r.bytes ());
+
+		// Time of the status register...
+		st.setBitStatus (C6500::_NEGATIVEFLAG, r.negative ());
+		st.setBitStatus (C6500::_OVERFLOWFLAG, r.overflow ());
+		st.setBitStatus (C6500::_ZEROFLAG, r == MCHEmul::UInt::_0);
+		st.setBitStatus (C6500::_CARRYFLAG, r.carry ());
+
+		return (true);
+	}
 
 	_INST_FROM (0x6f, 3, 6, 4, "RRA[$2]",				RRA_Absolute, RRA_General);
 	_INST_FROM (0x67, 2, 5, 3, "RRA[$1]",				RRA_ZeroPage, RRA_General);
@@ -853,8 +1314,20 @@ namespace F6500
 							{ }
 
 		protected:
-		bool executeOn (const MCHEmul::Address& a);
+		inline bool executeOn (const MCHEmul::Address& a);
 	};
+
+	// ---
+	inline bool SAX_General::executeOn (const MCHEmul::Address& a)
+	{
+		// At the end the memory is stored with _ACCUMULATOR & _XREGISTER
+		memory () -> set (a, cpu () -> internalRegister (C6510::_ACCUMULATOR).values ()[0] &
+			cpu () -> internalRegister (C6510::_XREGISTER).values ()[0]); // Always 1 byte long...
+
+		// ...with no impact in registers...
+
+		return (true);
+	}
 
 	_INST_FROM (0x8f, 3, 4, 3, "SAX[$2]",				SAX_Absolute, SAX_General);
 	_INST_FROM (0x87, 2, 3, 2, "SAX[$1]",				SAX_ZeroPage, SAX_General);
@@ -872,8 +1345,30 @@ namespace F6500
 							{ }
 
 		protected:
-		bool executeWith (MCHEmul::UByte u);
+		inline bool executeWith (MCHEmul::UByte u);
 	};
+
+	// ---
+	inline bool SBC_General::executeWith (MCHEmul::UByte u)
+	{
+		MCHEmul::Register& a = cpu () -> internalRegister (C6510::_ACCUMULATOR);
+		MCHEmul::StatusRegister& st = cpu () -> statusRegister ();
+
+		// Read the value, makes the operation and set it back!
+		unsigned char ft = st.bitStatus (C6500::_DECIMALFLAG) 
+			? MCHEmul::UInt::_PACKAGEDBCD : MCHEmul::UInt::_BINARY; // In BCD?
+		MCHEmul::UInt r = MCHEmul::UInt (a.values ()[0], ft).
+			substract (MCHEmul::UInt (u, ft), st.bitStatus (C6500::_CARRYFLAG));
+		a.set (r.bytes ()); // The carry is taken into account in the substraction
+
+		// Time of the status register...
+		st.setBitStatus (C6500::_NEGATIVEFLAG, r.negative ());
+		st.setBitStatus (C6500::_OVERFLOWFLAG, r.overflow ());
+		st.setBitStatus (C6500::_ZEROFLAG, r == MCHEmul::UInt::_0);
+		st.setBitStatus (C6500::_CARRYFLAG, r.carry ());
+
+		return (true);
+	}
 
 	_INST_FROM (0xe9 /** 0xeb (undocumented) */, 2, 2, 2, "SBC#[#1]", SBC_Inmediate, SBC_General);
 	_INST_FROM (0xed, 3, 4, 4, "SBC[$2]",				SBC_Absolute, SBC_General);
@@ -897,8 +1392,25 @@ namespace F6500
 							{ }
 
 		protected:
-		bool executeWith (MCHEmul::UByte u);
+		inline bool executeWith (MCHEmul::UByte u);
 	};
+
+	// ---
+	inline bool SBX_General::executeWith (MCHEmul::UByte u)
+	{
+		MCHEmul::Register& x = cpu () -> internalRegister (C6510::_XREGISTER);
+		MCHEmul::UInt v = MCHEmul::UInt (cpu () -> 
+			internalRegister (C6510::_ACCUMULATOR).values ()[0] & x.values ()[0]) - MCHEmul::UInt ({ u });
+		x.set (v.values ()); // But always 1 byte long...
+
+		// Time of the status register...
+		MCHEmul::StatusRegister& st = cpu () -> statusRegister ();
+		st.setBitStatus (C6500::_NEGATIVEFLAG, v.negative ());
+		st.setBitStatus (C6500::_ZEROFLAG, v == MCHEmul::UInt::_0);
+		st.setBitStatus (C6500::_CARRYFLAG, v.carry ());
+
+		return (true);
+	}
 
 	_INST_FROM (0xcb, 2, 2, 2, "SBX#[#1]",				SBX_Inmediate, SBX_General);
 
@@ -924,8 +1436,30 @@ namespace F6500
 							{ }
 
 		protected:
-		bool executeOn (const MCHEmul::Address& a);
+		inline bool executeOn (const MCHEmul::Address& a);
 	};
+
+	// ---
+	inline bool SLO_General::executeOn (const MCHEmul::Address& a)
+	{
+		MCHEmul::Register& ac = cpu () -> internalRegister (C6510::_ACCUMULATOR);
+		MCHEmul::StatusRegister& st = cpu () -> statusRegister ();
+
+		// The memory is affected
+		MCHEmul::UByte v = memory () -> value (a); 
+		bool c = v.shiftLeftC (false /** 0 is put into */, 1); // ASL...
+		memory () -> set (a, { v });
+		// ...and also the accumulator...
+		v = ac.values ()[0] | v; // ...ORA
+		ac.set ({ v });
+
+		// Time of the status register...
+		st.setBitStatus (C6500::_NEGATIVEFLAG, v [7]);
+		st.setBitStatus (C6500::_ZEROFLAG, v == MCHEmul::UByte::_0);
+		st.setBitStatus (C6500::_CARRYFLAG, c);
+
+		return (true);
+	}
 
 	_INST_FROM (0x0f, 3, 6, 4, "SLO[$2]",				SLO_Absolute, SLO_General);
 	_INST_FROM (0x07, 2, 5, 3, "SLO[$1]",				SLO_ZeroPage, SLO_General);
@@ -948,8 +1482,30 @@ namespace F6500
 							{ }
 
 		protected:
-		bool executeOn (const MCHEmul::Address& a);
+		inline bool executeOn (const MCHEmul::Address& a);
 	};
+
+	// ---
+	inline bool SRE_General::executeOn (const MCHEmul::Address& a)
+	{
+		MCHEmul::Register& ac = cpu () -> internalRegister (C6510::_ACCUMULATOR);
+		MCHEmul::StatusRegister& st = cpu () -> statusRegister ();
+
+		// The operation affects the memory...
+		MCHEmul::UByte v = memory () -> value (a);
+		bool c = v.shiftRightC (false, 1); // LSR...
+		memory () -> set (a, { v });
+		// ...and also the accumulator...
+		v = ac.values ()[0] ^ v; // ...EOR
+		ac.set ({ v });
+
+		// Time of the status register...
+		st.setBitStatus (C6500::_NEGATIVEFLAG, v [7]);
+		st.setBitStatus (C6500::_ZEROFLAG, v == MCHEmul::UByte::_0);
+		st.setBitStatus (C6500::_CARRYFLAG, c);
+
+		return (true);
+	}
 
 	_INST_FROM (0x4f, 3, 6, 4, "SRE[$2]",				SRE_Absolute, SRE_General);
 	_INST_FROM (0x47, 2, 5, 3, "SRE[$1]",				SRE_ZeroPage, SRE_General);
@@ -970,8 +1526,17 @@ namespace F6500
 							{ }
 
 		protected:
-		bool executeOn (const MCHEmul::Address& a);
+		inline bool executeOn (const MCHEmul::Address& a);
 	};
+
+	// ---
+	inline bool STA_General::executeOn (const MCHEmul::Address& a)
+	{
+		// Set the value...
+		memory () -> set (a, cpu () -> internalRegister (C6510::_ACCUMULATOR).values ()); // 1 byte-length
+
+		return (true);
+	}
 
 	_INST_FROM (0x8d, 3, 4, 3, "STA[$2]",				STA_Absolute, STA_General);
 	_INST_FROM (0x85, 2, 3, 2, "STA[$1]",				STA_ZeroPage, STA_General);
@@ -992,8 +1557,17 @@ namespace F6500
 							{ }
 
 		protected:
-		bool executeOn (const MCHEmul::Address& a);
+		inline bool executeOn (const MCHEmul::Address& a);
 	};
+
+	// ---
+	inline bool STX_General::executeOn (const MCHEmul::Address& a)
+	{
+		// Set the value...
+		memory () -> set (a, cpu () -> internalRegister (C6510::_XREGISTER).values ()); // 1 byte-length
+
+		return (true);
+	}
 
 	_INST_FROM (0x8e, 3, 4, 3, "STX[$2]",				STX_Absolute, STX_General);
 	_INST_FROM (0x86, 2, 3, 2, "STX[$1]",				STX_ZeroPage, STX_General);
@@ -1010,8 +1584,17 @@ namespace F6500
 							{ }
 
 		protected:
-		bool executeOn (const MCHEmul::Address& a);
+		inline bool executeOn (const MCHEmul::Address& a);
 	};
+
+	// ---
+	inline bool STY_General::executeOn (const MCHEmul::Address& a)
+	{
+		// Set the value...
+		memory () -> set (a, cpu () -> internalRegister (C6510::_YREGISTER).values ()); // 1 byte-length
+
+		return (true);
+	}
 
 	_INST_FROM (0x8c, 3, 4, 3, "STY[$2]",				STY_Absolute, STY_General);
 	_INST_FROM (0x84, 2, 3, 2, "STY[$1]",				STY_ZeroPage, STY_General);

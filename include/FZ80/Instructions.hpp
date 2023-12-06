@@ -33,11 +33,17 @@
 #include <FZ80/AND.hpp>
 #include <FZ80/OR.hpp>
 #include <FZ80/XOR.hpp>
-#include <FZ80/BITSHIFTLEFT.hpp>
-#include <FZ80/BITSHIFTRIGHT.hpp>
+#include <FZ80/SHIFTLEFT.hpp>
+#include <FZ80/SHIFTRIGHT.hpp>
+#include <FZ80/ROTATELEFT.hpp>
+#include <FZ80/ROTATERIGHT.hpp>
 #include <FZ80/CP.hpp>
 #include <FZ80/ALUCTRL.hpp>
 #include <FZ80/BIT.hpp>
+#include <FZ80/SET.hpp>
+#include <FZ80/RES.hpp>
+#include <FZ80/JUMP.hpp>
+#include <FZ80/CALL.hpp>
 
 #endif
   

@@ -3,7 +3,7 @@
 
 /**	
  *	@file	
- *	File: ALUCTRL_Generic.hpp \n
+ *	File: ALUCTRL.hpp \n
  *	Framework: CPU Emulators library \n
  *	Author: Ignacio Cea Forniés (EMULATORS library) \n
  *	Creation Date: 29/10/2023 \n

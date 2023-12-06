@@ -28,7 +28,7 @@ MCHEmul::Assembler::ByteCode MCHEmul::Assembler::Compiler::compile (const std::s
 			i != smt -> macros ().end (); i++) // Instead for (auto i : smt -> macros ()) because it makes a copy of the content
 											   // and the values are not then actualized over the original list!
 	{
-		(*i).second.value (smt -> macros (), operationParser ()); // Try to calculate the value (but it wold be used)...
+		(*i).second.value (smt -> macros (), operationParser ()); // Try to calculate the value (but it would be used)...
 		if (!(*i).second)
 			_errors.emplace_back (MCHEmul::Assembler::Error ((*i).second.error (), 
 				(*i).second.definitionFile (), (*i).second.definitionLine (), 0, (*i).second.name ()));

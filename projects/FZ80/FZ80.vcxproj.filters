@@ -72,13 +72,31 @@
     <ClCompile Include="..\..\src\FZ80\ALUCTRL.cpp">
       <Filter>Archivos de origen\Instructions</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\FZ80\BITSHIFTLEFT.cpp">
-      <Filter>Archivos de origen\Instructions</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\FZ80\BITSHIFTRIGHT.cpp">
-      <Filter>Archivos de origen\Instructions</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\FZ80\BIT.cpp">
+      <Filter>Archivos de origen\Instructions</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\FZ80\RES.cpp">
+      <Filter>Archivos de origen\Instructions</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\FZ80\SET.cpp">
+      <Filter>Archivos de origen\Instructions</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\FZ80\ROTATELEFT.cpp">
+      <Filter>Archivos de origen\Instructions</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\FZ80\ROTATERIGHT.cpp">
+      <Filter>Archivos de origen\Instructions</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\FZ80\SHIFTLEFT.cpp">
+      <Filter>Archivos de origen\Instructions</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\FZ80\SHIFTRIGHT.cpp">
+      <Filter>Archivos de origen\Instructions</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\FZ80\JUMP.cpp">
+      <Filter>Archivos de origen\Instructions</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\FZ80\CALL.cpp">
       <Filter>Archivos de origen\Instructions</Filter>
     </ClCompile>
   </ItemGroup>
@@ -108,12 +126,6 @@
       <Filter>Archivos de encabezado\Instructions</Filter>
     </ClInclude>
     <ClInclude Include="..\..\include\FZ80\AND.hpp">
-      <Filter>Archivos de encabezado\Instructions</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\include\FZ80\BITSHIFTLEFT.hpp">
-      <Filter>Archivos de encabezado\Instructions</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\include\FZ80\BITSHIFTRIGHT.hpp">
       <Filter>Archivos de encabezado\Instructions</Filter>
     </ClInclude>
     <ClInclude Include="..\..\include\FZ80\CP.hpp">
@@ -148,6 +160,30 @@
     </ClInclude>
     <ClInclude Include="..\..\include\FZ80\Instruction.hpp">
       <Filter>Archivos de encabezado</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\FZ80\RES.hpp">
+      <Filter>Archivos de encabezado\Instructions</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\FZ80\SET.hpp">
+      <Filter>Archivos de encabezado\Instructions</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\FZ80\ROTATELEFT.hpp">
+      <Filter>Archivos de encabezado\Instructions</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\FZ80\ROTATERIGHT.hpp">
+      <Filter>Archivos de encabezado\Instructions</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\FZ80\SHIFTLEFT.hpp">
+      <Filter>Archivos de encabezado\Instructions</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\FZ80\SHIFTRIGHT.hpp">
+      <Filter>Archivos de encabezado\Instructions</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\FZ80\JUMP.hpp">
+      <Filter>Archivos de encabezado\Instructions</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\FZ80\CALL.hpp">
+      <Filter>Archivos de encabezado\Instructions</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

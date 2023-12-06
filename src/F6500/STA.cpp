@@ -2,15 +2,6 @@
 #include <F6500/C6510.hpp>
 
 // ---
-bool F6500::STA_General::executeOn (const MCHEmul::Address& a)
-{
-	// Set the value...
-	memory () -> set (a, cpu () -> internalRegister (F6500::C6510::_ACCUMULATOR).values ()); // 1 byte-length
-
-	return (true);
-}
-
-// ---
 _INST_IMPL (F6500::STA_Absolute)
 {
 	return (executeOn (address_absolute ()));

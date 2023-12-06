@@ -3,7 +3,7 @@
 
 ; The main program
 *				= $0B00
-MAIN:			LDA #$00
+MAIN:			LDA #'a'
 				STA $C000
 FOREEVER:		JMP FOREEVER
 

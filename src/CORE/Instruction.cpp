@@ -42,7 +42,7 @@ bool MCHEmul::Instruction::matchesWith (const std::string& i, MCHEmul::Strings& 
 
 	std::string inst = _iStructure._templateWithNoParameters;
 
-	std::string iL = MCHEmul::upper (MCHEmul::noSpaces (i));
+	std::string iL = MCHEmul::upperExcept (MCHEmul::noSpaces (i));
 
 	std::string pW = "";
 
@@ -134,6 +134,25 @@ std::string MCHEmul::Instruction::parametersAsString (size_t p, size_t nP, bool 
 	std::string result = "";
 	for (size_t i = 0; i < ub.size (); i++)
 		result += ((i == 0) ? "$" : "") + ub [i].asString (MCHEmul::UByte::OutputFormat::_HEXA, 2);
+	return (result);
+}
+
+// ---
+std::vector <MCHEmul::UByte> MCHEmul::Instruction::shapeCodeWithData
+	(const std::vector <std::vector <MCHEmul::UByte>>& b, bool& e) const
+{
+	// Build the instruction...
+	std::vector <MCHEmul::UByte> result = 
+		MCHEmul::UInt::fromUnsignedInt (code ()).bytes ();
+	for (const auto& i : b)
+		result.insert (result.end (), i.begin (), i.end ());
+
+	// Is the result right in length?
+	// If not it was becasue either the number of parameters was wrong
+	// or the code of the instruction was longer that expected
+	// There might happen however that with both mistakes at the same time the length was ok!
+	e = (result.size () != memoryPositions ());
+
 	return (result);
 }
 

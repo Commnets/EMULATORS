@@ -2,23 +2,6 @@
 #include <F6500/C6510.hpp>
 
 // ---
-bool F6500::ASL_General::executeOn (const MCHEmul::Address& a)
-{
-	// Read the value, makes the operation and set it back!
-	MCHEmul::UByte v = memory () -> value (a); // 1 byte long always
-	bool c = v.shiftLeftC (false /** 0 is put into */, 1); // Keeps the status of the last bit to actualize later the carry flag
-	memory () -> set (a, { v });
-
-	// Time of the status register...
-	MCHEmul::StatusRegister& st = cpu () -> statusRegister ();
-	st.setBitStatus (F6500::C6500::_NEGATIVEFLAG, v [7]);
-	st.setBitStatus (F6500::C6500::_ZEROFLAG, v == MCHEmul::UByte::_0);
-	st.setBitStatus (F6500::C6500::_CARRYFLAG, c);
-
-	return (true);
-}
-
-// ---
 _INST_IMPL (F6500::ASL_Absolute)
 {
 	return (executeOn (address_absolute ()));

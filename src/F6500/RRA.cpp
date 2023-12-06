@@ -2,32 +2,6 @@
 #include <F6500/C6510.hpp>
 
 // ---
-bool F6500::RRA_General::executeOn (const MCHEmul::Address& a)
-{
-	MCHEmul::Register& ac = cpu () -> internalRegister (F6500::C6510::_ACCUMULATOR);
-	MCHEmul::StatusRegister& st = cpu () -> statusRegister ();
-
-	// The operation affects the memory...
-	MCHEmul::UByte v = memory () -> value (a); // Always 1 byte long...
-	bool c = v.rotateRightC (st.bitStatus (F6500::C6500::_CARRYFLAG), 1); // ROR...
-	memory () -> set (a, { v });
-
-	// ...and also the accumulator...
-	unsigned char ft = st.bitStatus (F6500::C6500::_DECIMALFLAG) 
-		? MCHEmul::UInt::_PACKAGEDBCD : MCHEmul::UInt::_BINARY; // In BCD?
-	MCHEmul::UInt r = MCHEmul::UInt (ac.values ()[0], ft).add (MCHEmul::UInt (v, ft), c); // ...ADC
-	ac.set (r.bytes ());
-
-	// Time of the status register...
-	st.setBitStatus (F6500::C6500::_NEGATIVEFLAG, r.negative ());
-	st.setBitStatus (F6500::C6500::_OVERFLOWFLAG, r.overflow ());
-	st.setBitStatus (F6500::C6500::_ZEROFLAG, r == MCHEmul::UInt::_0);
-	st.setBitStatus (F6500::C6500::_CARRYFLAG, r.carry ());
-
-	return (true);
-}
-
-// ---
 _INST_IMPL (F6500::RRA_Absolute)
 {
 	return (executeOn (address_absolute ()));

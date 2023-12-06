@@ -2,20 +2,6 @@
 #include <F6500/C6510.hpp>
 
 // ---
-bool F6500::LDY_General::executeWith (MCHEmul::UByte u)
-{
-	// Set the value...
-	cpu () -> internalRegister (F6500::C6510::_YREGISTER).set ({ u });
-
-	// Time of the status register...
-	MCHEmul::StatusRegister& st = cpu () -> statusRegister ();
-	st.setBitStatus (F6500::C6500::_NEGATIVEFLAG, u [7]);
-	st.setBitStatus (F6500::C6500::_ZEROFLAG, u == MCHEmul::UByte::_0);
-
-	return (true);
-}
-
-// ---
 _INST_IMPL (F6500::LDY_Inmediate)
 {
 	return (executeWith (value_inmediate ()));

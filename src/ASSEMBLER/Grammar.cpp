@@ -440,10 +440,10 @@ std::vector <MCHEmul::UByte> MCHEmul::Assembler::InstructionElement::calculateCo
 	if (!*this)
 		return (result); // Nothing possible when prervious error...
 
-	result = MCHEmul::UInt::fromUnsignedInt (inst -> code ()).bytes ();
+	bool e = false;
+	std::vector <std::vector <MCHEmul::UByte>> bts;
 	for (size_t i = 0; i < inst -> internalStructure ()._parameters.size (); i++)
 	{
-		bool e = false;
 		std::vector <MCHEmul::UByte> bt;
 		switch (inst -> internalStructure ()._parameters [i]._type)
 		{
@@ -488,20 +488,30 @@ std::vector <MCHEmul::UByte> MCHEmul::Assembler::InstructionElement::calculateCo
 				assert (false); // Just in case...
 		}
 
+		// If there haven't been errors building the data...
+		// They are added to the set that will be used to build up the full intruction later on...
 		if (!e)
-			result.insert (result.end (), bt.begin (), bt.end ());
+			bts.emplace_back (std::move (bt));
+		// Otherwise makes no sense to continue...
+		else
+			break;
 	}
 
-	// The number of bytes generated has to match with the size of the instruction...
-	// When an instruction has parameters with MACRO it is not possible to know its size
-	// before tha MACROS as calculated...
-	if (result.size () != inst -> memoryPositions ())
+	// If no errors have happened building the data...
+	// The system tries to build up the instruction!
+	if (!e)
+		result = inst -> shapeCodeWithData (bts, e);
+
+	// But if something was wrong...
+	// the method finalizes with an error telling that the instruction is not valid!
+	if (e)
 	{
 		_error = MCHEmul::Assembler::ErrorType::_INSTRUCTIONNOTVALID;
 
 		result = { };
 	}
 
+	// ...which is finally returned...
 	return (result);
 }
 

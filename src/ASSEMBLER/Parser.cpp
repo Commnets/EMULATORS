@@ -552,7 +552,7 @@ void MCHEmul::Assembler::Parser::parseLines (MCHEmul::Assembler::ParserContext* 
 {
 	while (pC -> _linesPointer != pC -> _lines.end ())
 	{
-		pC -> _currentLine = MCHEmul::upper (MCHEmul::trim (*pC -> _linesPointer));
+		pC -> _currentLine = MCHEmul::upperExcept (MCHEmul::trim (*pC -> _linesPointer));
 
 		// Print out the line being parser...
 		// If it defined in that way...

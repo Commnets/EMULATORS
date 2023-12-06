@@ -11,14 +11,6 @@ _INST_IMPL (F6500::NOP)
 }
 
 // ---
-bool F6500::NOP_General::executeWith (MCHEmul::UByte u)
-{
-	// Nothing to do...
-
-	return (true);
-}
-
-// ---
 _INST_IMPL (F6500::NOP_Inmediate)
 {
 	return (executeWith (value_inmediate ()));

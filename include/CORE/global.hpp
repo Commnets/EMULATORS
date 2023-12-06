@@ -77,7 +77,9 @@ namespace MCHEmul
 	std::string rtrim (const std::string& s);
 	std::string trim (const std::string& s);
 	std::string upper (const std::string& s);
+	std::string upperExcept (const std::string& s); // All to upper except things between quotes! (qhen quote starts upper stops)
 	std::string lower (const std::string& s);
+	std::string lowerExcept (const std::string& s); // All to lower except things between quotes! (when quote starts lower stops)
 	std::string noSpaces (const std::string& s);
 	std::string replaceAllSpacesPerEquivalent (const std::string& s); // in comms usually...
 	std::string restoreSpacesFromEquivalent (const std::string& s); // in comms usually...
@@ -98,7 +100,8 @@ namespace MCHEmul
 
 	/** General functions to determine whether a string is or not valid
 		from a specific perspective. */
-	bool validLabel (const std::string& s);
+	bool validLabel (const std::string& s); // alphanumeric characters and no _
+	bool validBytesChar (const std::string& s); // any alphanumeric character in ''
 	bool validBytesBinary (const std::string& s); // 0 or 1 and must start with a z
 	bool validBytesOctal (const std::string& s); // from 0 to 8 and must start with a 0
 	bool validBytesHexadecimal (const std::string& s); // from 0 to f and must start with a $

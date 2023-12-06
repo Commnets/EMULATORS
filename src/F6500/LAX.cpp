@@ -2,22 +2,6 @@
 #include <F6500/C6510.hpp>
 
 // ---
-bool F6500::LAX_General::executeOn (const MCHEmul::Address& a)
-{
-	// The memory location is copied into both _ACCUMULATOR & _XREGISTER
-	MCHEmul::UByte v = memory () -> value (a); // 1 byte long always...
-	cpu () -> internalRegister (F6500::C6510::_ACCUMULATOR).set ({ v }); 
-	cpu () -> internalRegister (F6500::C6510::_XREGISTER).set ({ v });
-
-	// Time of the status register...
-	MCHEmul::StatusRegister& st = cpu () -> statusRegister ();
-	st.setBitStatus (F6500::C6500::_NEGATIVEFLAG, v.bit (7));
-	st.setBitStatus (F6500::C6500::_ZEROFLAG, v == MCHEmul::UByte::_0);
-
-	return (true);
-}
-
-// ---
 _INST_IMPL (F6500::LAX_Absolute)
 {
 	return (executeOn (address_absolute ()));

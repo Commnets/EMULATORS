@@ -167,6 +167,15 @@ namespace MCHEmul
 							{ _lastParameters = prms; }
 		const UBytes parameters (size_t p, size_t nP = 1, bool bE = true) const;
 		std::string parametersAsString (size_t p, size_t nP = 1, bool bE = true) const; // The UBytes could grouped to get a parameter...
+
+		/** This method is key when, i.e. compiling assembler code. \n
+			Given a set of data (or several sets) in the for of bytes, 
+			the method returns the bytes to complete the full instruction. \n
+			The data is already provided in the right order that the instruction defines (i.e. so the big endian effect, if any, is included). \n
+			Usually the code is written at the beginning of the data. This is the default behaviour. \n
+			If might not be possible to build the instruction, the e variable would get set. 
+			The method can be overloaded. */
+		virtual std::vector <UByte> shapeCodeWithData (const std::vector <std::vector <UByte>>& b, bool& e) const;
 		
 		/** To get the instruction as an string using the parameters of the last execution inside. \n
 			If no parameters has been set "blankk" will be written instead. */

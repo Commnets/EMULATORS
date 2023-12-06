@@ -364,6 +364,16 @@ MCHEmul::UInt MCHEmul::UInt::fromStr (const std::string& s, unsigned char f)
 
 	switch (str [0])
 	{
+		case '\'':
+			{
+				str = str.substr (1, str.length () - 2);
+				std::vector <MCHEmul::UByte> by;
+				for (auto i : str) by.emplace_back (MCHEmul::UByte (i));
+				result = MCHEmul::UInt (by);
+			}
+
+			break;
+
 		case 'z':
 		case 'Z':
 			{
