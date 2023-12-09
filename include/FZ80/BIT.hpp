@@ -238,7 +238,7 @@ namespace FZ80
 	_INST_FROM (0xDDCB73,	4, 20, 20,	"U4BIT 6,(IX+[#1])",	U4BIT_6WithIndirectIndexIX, BIT_Index);			// Undocumented
 	_INST_FROM (0xDDCB74,	4, 20, 20,	"U5BIT 6,(IX+[#1])",	U5BIT_6WithIndirectIndexIX, BIT_Index);			// Undocumented
 	_INST_FROM (0xDDCB75,	4, 20, 20,	"U6BIT 6,(IX+[#1])",	U6BIT_6WithIndirectIndexIX, BIT_Index);			// Undocumented
-	_INST_FROM (0xDDCB76,	4, 20, 20,	"U7BIT 6,(IX+[#1])",	U7BIT_6WithIndirectIndexIX, BIT_Index);			// Undocumented
+	_INST_FROM (0xDDCB77,	4, 20, 20,	"U7BIT 6,(IX+[#1])",	U7BIT_6WithIndirectIndexIX, BIT_Index);			// Undocumented
 	_INST_FROM (0xFDCB76,	4, 20, 20,	"BIT 6,(IY+[#1])",		BIT_6WithIndirectIndexIY, BIT_Index);
 	_INST_FROM (0xFDCB70,	4, 20, 20,	"U1BIT 6,(IY+[#1])",	U1BIT_6WithIndirectIndexIY, BIT_Index);			// Undocumented
 	_INST_FROM (0xFDCB71,	4, 20, 20,	"U2BIT 6,(IY+[#1])",	U2BIT_6WithIndirectIndexIY, BIT_Index);			// Undocumented

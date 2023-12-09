@@ -189,7 +189,7 @@ namespace FZ80
 	_INST_FROM (0xFDCB99,	4, 23, 23,	"RES 3,(IY+[#1]),C",	RES_3WithIndirectIndexIYCopyC, RES_Index);		// Undocumented
 	_INST_FROM (0xFDCB9A,	4, 23, 23,	"RES 3,(IY+[#1]),D",	RES_3WithIndirectIndexIYCopyD, RES_Index);		// Undocumented
 	_INST_FROM (0xFDCB9B,	4, 23, 23,	"RES 3,(IY+[#1]),E",	RES_3WithIndirectIndexIYCopyE, RES_Index);		// Undocumented
-	_INST_FROM (0xFDCB9D,	4, 23, 23,	"RES 3,(IY+[#1]),H",	RES_3WithIndirectIndexIYCopyH, RES_Index);		// Undocumented
+	_INST_FROM (0xFDCB9C,	4, 23, 23,	"RES 3,(IY+[#1]),H",	RES_3WithIndirectIndexIYCopyH, RES_Index);		// Undocumented
 	_INST_FROM (0xFDCB9D,	4, 23, 23,	"RES 3,(IY+[#1]),L",	RES_3WithIndirectIndexIYCopyL, RES_Index);		// Undocumented
 
 	// Bit 4

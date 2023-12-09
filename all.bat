@@ -4,6 +4,8 @@ COPY .\exe\x86\C64Emulator.exe .\emulators\C64Emulator\ /Y
 COPY .\exe\x86\C64EmulatorD.exe .\emulators\C64Emulator\ /Y
 COPY .\exe\x86\C64EmulatorC.exe .\emulators\C64EmulatorC\ /Y
 COPY .\exe\x86\C64EmulatorCD.exe .\emulators\C64EmulatorC\ /Y
+COPY .\exe\x86\VIC20EmulatorC.exe .\emulators\VIC20EmulatorC\ /Y
+COPY .\exe\x86\VIC20EmulatorCD.exe .\emulators\VIC20EmulatorC\ /Y
 COPY .\exe\x86\RConsole.exe .\monitors\RConsole\ /Y
 COPY .\exe\x86\RConsoleD.exe .\monitors\RConsole\ /Y
 COPY .\exe\x86\R64Console.exe .\monitors\R64Console\ /Y
@@ -52,6 +54,22 @@ COPY .\projects\CONSOLE\*.hlp .\setups\C64\ /Y
 COPY .\projects\CORE\*.fmt .\setups\C64\ /Y
 COPY .\projects\CORE\*.hlp .\setups\C64\ /Y
 COPY .\projects\ASSEMBLER\*.fmt .\setups\C64\ /Y
+
 "C:\Program files (x86)\Inno Setup 6\iscc" ".\setups\C64\C64.iss"
+Echo Creates the instalation VIC20 package...
+COPY .\exe\x86\VIC20EmulatorC.exe .\setups\VIC20\ /Y
+COPY .\exe\x86\6500Compiler.exe .\setups\VIC20\ /Y
+COPY .\exe\x86\Test6500.exe .\setups\VIC20\ /Y
+COPY .\emulators\VIC20Commons\*.* .\setups\VIC20\ /Y
+COPY .\projects\VIC20\*.fmt .\setups\VIC20\ /Y
+COPY .\projects\VIC20\*.hlp .\setups\VIC20\ /Y
+COPY .\projects\COMMODORE\*.fmt .\setups\VIC20\ /Y
+COPY .\projects\COMMODORE\*.hlp .\setups\VIC20\ /Y
+COPY .\projects\CONSOLE\*.fmt .\setups\VIC20\ /Y
+COPY .\projects\CONSOLE\*.hlp .\setups\VIC20\ /Y
+COPY .\projects\CORE\*.fmt .\setups\VIC20\ /Y
+COPY .\projects\CORE\*.hlp .\setups\VIC20\ /Y
+COPY .\projects\ASSEMBLER\*.fmt .\setups\VIC20\ /Y
+"C:\Program files (x86)\Inno Setup 6\iscc" ".\setups\VIC20\VIC20.iss"
 
 

@@ -19,7 +19,7 @@
 
 namespace VIC20
 {
-	class VIC20 final : public COMMODORE::Computer
+	class CommodoreVIC20 final : public COMMODORE::Computer
 	{
 		public:
 		enum class VisualSystem { _NTSC, _PAL };
@@ -28,7 +28,7 @@ namespace VIC20
 		static const unsigned int _PALCLOCK		= 985248; // 0.985 MHz
 		static const unsigned int _NTSCCLOCK	= 1022727; // 1.023 MHz
 
-		VIC20 (VisualSystem vS);
+		CommodoreVIC20 (VisualSystem vS, const std::string& lg);
 
 		virtual bool initialize (bool iM = true) override;
 

@@ -33,8 +33,9 @@ namespace C64
 		  * Constructor:
 		  * @param argv		: The parameters in the form of Strings.\n
 		  *	The basic parameters for any C64 emulator are (apart of the ones defined by the parent: \n
-		  *	/n				: To indicate if the visualization system is NTSC. PAL by default.
-		  *	/b[COLOR]		: To draw a black box around the writable part of the screen. The color is optional.
+		  *	/n				: To indicate if the visualization system is NTSC. PAL by default. \n
+		  * /w[OWN|SID]		: To indicate the libary to be used in the simulation of the sound. SID = RESID, OWN = Mine. \n
+		  *	/b[COLOR]		: To draw a black box around the writable part of the screen. The color is optional. \n
 		  * @param cS		: A reference to the communication system. It can be nullptr if no required.
 		  */
 		C64Emulator (const MCHEmul::CommandLineArguments& args, MCHEmul::CommunicationSystem* cS = nullptr)

@@ -2,13 +2,13 @@
 #include <F6500/C6502.hpp>
 
 // ---
-VIC20::VIC20::VIC20 (VIC20::VIC20::VisualSystem vS)
+VIC20::CommodoreVIC20::CommodoreVIC20 (VIC20::CommodoreVIC20::VisualSystem vS, const std::string& lg)
 	: COMMODORE::Computer 
 		(new F6500::C6502 (),
-		 VIC20::VIC20::standardChips (),
+		 VIC20::CommodoreVIC20::standardChips (),
 		 nullptr, // The memory TODO
-		 VIC20::VIC20::standardDevices (),
-		 vS == VIC20::VIC20::VisualSystem::_PAL ? _PALCLOCK : _NTSCCLOCK,
+		 VIC20::CommodoreVIC20::standardDevices (),
+		 vS == VIC20::CommodoreVIC20::VisualSystem::_PAL ? _PALCLOCK : _NTSCCLOCK,
 		 { { "Name", "VIC20" },
 		   { "Manufacturer", "Commodore Business Machines CBM" },
 		   { "Year", "1980" }
@@ -19,7 +19,7 @@ VIC20::VIC20::VIC20 (VIC20::VIC20::VisualSystem vS)
 }
 
 // ---
-bool VIC20::VIC20::initialize (bool iM)
+bool VIC20::CommodoreVIC20::initialize (bool iM)
 {
 	bool result = MCHEmul::Computer::initialize (iM);
 	if (!result)
@@ -29,13 +29,13 @@ bool VIC20::VIC20::initialize (bool iM)
 }
 
 // ---
-void VIC20::VIC20::processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifier* n)
+void VIC20::CommodoreVIC20::processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifier* n)
 {
 	// TODO
 }
 
 // ---
-MCHEmul::Chips VIC20::VIC20::standardChips ()
+MCHEmul::Chips VIC20::CommodoreVIC20::standardChips ()
 {
 	MCHEmul::Chips result;
 
@@ -45,7 +45,7 @@ MCHEmul::Chips VIC20::VIC20::standardChips ()
 }
 
 // ---
-MCHEmul::IODevices VIC20::VIC20::standardDevices ()
+MCHEmul::IODevices VIC20::CommodoreVIC20::standardDevices ()
 {
 	MCHEmul::IODevices result;
 

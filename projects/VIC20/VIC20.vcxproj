@@ -153,10 +153,24 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\src\VIC20\CommandBuilder.cpp" />
+    <ClCompile Include="..\..\src\VIC20\Commands.cpp" />
+    <ClCompile Include="..\..\src\VIC20\IOPBuilder.cpp" />
+    <ClCompile Include="..\..\src\VIC20\Memory.cpp" />
+    <ClCompile Include="..\..\src\VIC20\Screen.cpp" />
+    <ClCompile Include="..\..\src\VIC20\Sound.cpp" />
     <ClCompile Include="..\..\src\VIC20\VIC20.cpp" />
+    <ClCompile Include="..\..\src\VIC20\VIC20Emulator.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\include\VIC20\CommandBuilder.hpp" />
+    <ClInclude Include="..\..\include\VIC20\Commands.hpp" />
+    <ClInclude Include="..\..\include\VIC20\IOPBuilder.hpp" />
+    <ClInclude Include="..\..\include\VIC20\Memory.hpp" />
+    <ClInclude Include="..\..\include\VIC20\Screen.hpp" />
+    <ClInclude Include="..\..\include\VIC20\Sound.hpp" />
     <ClInclude Include="..\..\include\VIC20\VIC20.hpp" />
+    <ClInclude Include="..\..\include\VIC20\VIC20Emulator.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
