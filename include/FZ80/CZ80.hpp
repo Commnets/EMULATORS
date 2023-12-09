@@ -18,6 +18,64 @@
 
 namespace FZ80
 {
+	class CZ80;
+
+	/** The Z80 m anages many ports.
+		And the way they are understood will depend on the computer,
+		although there is a defaul implementation per each. */
+	class Z80Port
+	{
+		public:
+		Z80Port (unsigned char id, const std::string& name)
+			: _id (id), _name (name),
+			  _cpu (nullptr)
+							{ }
+
+		unsigned char id () const
+							{ return (_id); }
+		const std::string& name () const
+							{ return (_name); }
+
+		/** To get & set the values.
+			They must be overloaded, depending on the computer that uses it. */
+		virtual MCHEmul::UByte value () const = 0;
+		virtual void setValue (const MCHEmul::UByte& v) = 0;
+
+		virtual void initialize ()
+							{ setValue (0); }
+
+		virtual MCHEmul::InfoStructure getInfoStructure () const;
+
+		protected:
+		unsigned char _id;
+		std::string _name;
+
+		// Implementation
+		CZ80* _cpu;
+	};
+
+	// To simplify the management of a list of ports!...
+	using Z80PortsList = std::vector <Z80Port*>;
+	using Z80PortsMap = std::map <unsigned char, Z80Port*>;
+
+	/** The basic port keeps its own value. */
+	class Z80BasicPort final : public Z80Port
+	{
+		public:
+		Z80BasicPort (unsigned char n, const std::string& name)
+			: Z80Port (n, name),
+			  _value (MCHEmul::UByte::_0)
+							{ }
+
+		virtual MCHEmul::UByte value () const override
+							{ return (_value); }
+		virtual void setValue (const MCHEmul::UByte& v) override
+							{ _value = v; }
+		
+		private:
+		MCHEmul::UByte _value;
+	};
+
 	/** The Chip CPU type ZX80 */
 	class CZ80 : public MCHEmul::CPU
 	{
@@ -79,7 +137,25 @@ namespace FZ80
 			_BIT,					// The parameter is the bit of a register
 		};
 
-		CZ80 (const MCHEmul::CPUArchitecture& a = createArchitecture ());
+		CZ80 (const Z80PortsMap& pts = { }, const MCHEmul::CPUArchitecture& a = createArchitecture ());
+
+		~CZ80 ();
+
+		unsigned char INTmode () const
+						{ return (_INTMode); }
+		void setINTMode (unsigned char iM)
+						{ _INTMode = iM; }
+
+		/** In the case of the interrupt type 0, what the processor does is to execute the code of the instruction
+			that is in the data bus. */
+		/** The type of interrupt type 1 uses this address and it is constant. */
+		MCHEmul::Address INT1VectorAddress () const
+							{ return (MCHEmul::Address ({ 0x38, 0xff }, false /** Little - endian */)); }
+		/** In the case of the interrupt type 2, the address to jump to is deducted from the values in the dataBus and register I. */
+		MCHEmul::Address INT2VectorAddress () const
+							{ return (MCHEmul::Address ({ dataBusValue ()[0], iRegister ().values () [0] }, false /** Little - endian */)); }
+		MCHEmul::Address NMIVectorAddress () const
+							{ return (MCHEmul::Address ({ 0x66, 0x00 }, false /** Little - endian */)); }
 
 		// Accesing the main registers...
 		MCHEmul::Register& aRegister ()
@@ -234,8 +310,20 @@ namespace FZ80
 		void setIFF2 (bool v)
 							{ _IFF2 = v; }
 
+		// Managing the ports...
+		/** The way that the port is read, can be changed depending on the computer. \n
+			i.e in ZX Spectrum, when reading port $FE the value of the register A is taken into account. */
+		MCHEmul::UByte port (unsigned char p) const
+							{ return (_portsRaw [(size_t) p] -> value ()); }
+		void setPort (unsigned char p, const MCHEmul::UByte& v)
+							{ _portsRaw [(size_t) p] -> setValue (v); }
+
+		virtual bool initialize () override;
 
 		protected:
+		/** The type of interruption. */
+		unsigned char _INTMode;
+
 		/** The registers that are made up of two. */
 		MCHEmul::RefRegisters _afRegister;  // A and F
 		MCHEmul::RefRegisters _bcRegister;
@@ -248,9 +336,15 @@ namespace FZ80
 		MCHEmul::RefRegisters _ixRegister;
 		MCHEmul::RefRegisters _iyRegister;
 
+		/** The ports value. */
+		Z80PortsMap _ports;
+
 		// The flipflop register in Z80 help to control the status of the interrupts!
 		bool _IFF1;
 		bool _IFF2;
+
+		private:
+		Z80PortsList _portsRaw;
 
 		private:
 		// Implementation

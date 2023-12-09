@@ -34,7 +34,7 @@ bool F6500::IRQInterrupt::executeOverImpl (MCHEmul::CPU* c, unsigned int cC)
 	st.setBitStatus (F6500::C6500::_IRQFLAG, true); // No more interruptions so far...
 
 	pc.setAddress (MCHEmul::Address (c -> memoryRef () -> values 
-		(dynamic_cast <F6500::C6510*> (c) -> IRQVectorAddress (), 2), false /** Little - endian. */));
+		(static_cast <F6500::C6500*> (c) -> IRQVectorAddress (), 2), false /** Little - endian. */));
 
 	return (!c -> memoryRef () -> stack () -> overflow ());
 }

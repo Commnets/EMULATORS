@@ -163,6 +163,7 @@
     <ClCompile Include="..\..\src\FZ80\DEC.cpp" />
     <ClCompile Include="..\..\src\FZ80\EX.cpp" />
     <ClCompile Include="..\..\src\FZ80\INC.cpp" />
+    <ClCompile Include="..\..\src\FZ80\INOUT.cpp" />
     <ClCompile Include="..\..\src\FZ80\Instruction.cpp" />
     <ClCompile Include="..\..\src\FZ80\Interrupt.cpp" />
     <ClCompile Include="..\..\src\FZ80\INTInterrupt.cpp" />
@@ -192,6 +193,7 @@
     <ClInclude Include="..\..\include\FZ80\EX.hpp" />
     <ClInclude Include="..\..\include\FZ80\INC.hpp" />
     <ClInclude Include="..\..\include\FZ80\incs.hpp" />
+    <ClInclude Include="..\..\include\FZ80\INOUT.hpp" />
     <ClInclude Include="..\..\include\FZ80\Instruction.hpp" />
     <ClInclude Include="..\..\include\FZ80\Instructions.hpp" />
     <ClInclude Include="..\..\include\FZ80\Interrupt.hpp" />

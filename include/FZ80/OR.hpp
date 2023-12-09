@@ -58,15 +58,25 @@ namespace FZ80
 	}
 
 	// With A
-	_INST_FROM (0xB7,	1, 4, 4,	"OR A",					OR_A, OR_General);						// Also undocumented with codes: DDB7 & FDB7 
+	_INST_FROM (0xB7,	1, 4, 4,	"OR A",					OR_A, OR_General);
+	_INST_FROM (0xDDB7,	2, 8, 8,	"U1OR A",				U1OR_A, OR_General);					// Undocumented
+	_INST_FROM (0xFDB7,	2, 8, 8,	"U2OR A",				U2OR_A, OR_General);					// Undocumented
 	// With B
-	_INST_FROM (0xB0,	1, 4, 4,	"OR B",					OR_B, OR_General);						// Also undocumented with codes: DDB0 & FDB0
+	_INST_FROM (0xB0,	1, 4, 4,	"OR B",					OR_B, OR_General);
+	_INST_FROM (0xDDB0,	2, 8, 8,	"U1OR B",				U1OR_B, OR_General);					// Undocumented
+	_INST_FROM (0xFDB0,	2, 8, 8,	"U2OR B",				U2OR_B, OR_General);					// Undocumented
 	// With C
-	_INST_FROM (0xB1,	1, 4, 4,	"OR C",					OR_C, OR_General);						// Also undocumented with codes: DDB1 & FDB1
+	_INST_FROM (0xB1,	1, 4, 4,	"OR C",					OR_C, OR_General);
+	_INST_FROM (0xDDB1,	2, 8, 8,	"U1OR C",				U1OR_C, OR_General);					// Undocumented
+	_INST_FROM (0xFDB1,	2, 8, 8,	"U2OR C",				U2OR_C, OR_General);					// Undocumented
 	// With D
-	_INST_FROM (0xB2,	1, 4, 4,	"OR D",					OR_D, OR_General);						// Also undocumented with codes: DDB2 & FDB2
+	_INST_FROM (0xB2,	1, 4, 4,	"OR D",					OR_D, OR_General);
+	_INST_FROM (0xDDB2,	2, 8, 8,	"U1OR D",				U1OR_D, OR_General);					// Undocumented
+	_INST_FROM (0xFDB2,	2, 8, 8,	"U2OR D",				U2OR_D, OR_General);					// Undocumented
 	// With E
-	_INST_FROM (0xB3,	1, 4, 4,	"OR E",					OR_E, OR_General);						// Also undocumented with codes: DDB3 & FDB3
+	_INST_FROM (0xB3,	1, 4, 4,	"OR E",					OR_E, OR_General);
+	_INST_FROM (0xDDB3,	2, 8, 8,	"U1OR E",				U1OR_E, OR_General);					// Undocumented
+	_INST_FROM (0xFDB3,	2, 8, 8,	"U2OR E",				U2OR_E, OR_General);					// Undocumented
 	// With H
 	_INST_FROM (0xB4,	1, 4, 4,	"OR H",					OR_H, OR_General);
 	// With L

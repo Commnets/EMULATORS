@@ -99,11 +99,91 @@ _INST_IMPL (FZ80::CALL_M)
 }
 
 // ---
+_INST_IMPL (FZ80::RST_00)
+{
+	assert (parameters ().size () == 1);
+
+	executeBranch (0);
+
+	return (true);
+}
+
+// ---
+_INST_IMPL (FZ80::RST_08)
+{
+	assert (parameters ().size () == 1);
+
+	executeBranch (1);
+
+	return (true);
+}
+
+// ---
+_INST_IMPL (FZ80::RST_10)
+{
+	assert (parameters ().size () == 1);
+
+	executeBranch (2);
+
+	return (true);
+}
+
+// ---
+_INST_IMPL (FZ80::RST_18)
+{
+	assert (parameters ().size () == 1);
+
+	executeBranch (3);
+
+	return (true);
+}
+
+// ---
+_INST_IMPL (FZ80::RST_20)
+{
+	assert (parameters ().size () == 1);
+
+	executeBranch (4);
+
+	return (true);
+}
+
+// ---
+_INST_IMPL (FZ80::RST_28)
+{
+	assert (parameters ().size () == 1);
+
+	executeBranch (5);
+
+	return (true);
+}
+
+// ---
+_INST_IMPL (FZ80::RST_30)
+{
+	assert (parameters ().size () == 1);
+
+	executeBranch (6);
+
+	return (true);
+}
+
+// ---
+_INST_IMPL (FZ80::RST_38)
+{
+	assert (parameters ().size () == 1);
+
+	executeBranch (7);
+
+	return (true);
+}
+
+// ---
 _INST_IMPL (FZ80::RET)
 {
 	assert (parameters ().size () == 1);
 
-	executeReturn ();
+	executeReturn (false);
 
 	return (true);
 }
@@ -114,7 +194,7 @@ _INST_IMPL (FZ80::RET_NZ)
 	assert (parameters ().size () == 1);
 
 	if (!cpu () -> statusRegister ().bitStatus (FZ80::CZ80::_NEGATIVEFLAG))
-		executeReturn ();
+		executeReturn (true);
 
 	return (true);
 }
@@ -125,7 +205,7 @@ _INST_IMPL (FZ80::RET_Z)
 	assert (parameters ().size () == 1);
 
 	if (cpu () -> statusRegister ().bitStatus (FZ80::CZ80::_NEGATIVEFLAG))
-		executeReturn ();
+		executeReturn (true);
 
 	return (true);
 }
@@ -136,7 +216,7 @@ _INST_IMPL (FZ80::RET_NC)
 	assert (parameters ().size () == 1);
 
 	if (!cpu () -> statusRegister ().bitStatus (FZ80::CZ80::_CARRYFLAG))
-		executeReturn ();
+		executeReturn (true);
 
 	return (true);
 }
@@ -147,7 +227,7 @@ _INST_IMPL (FZ80::RET_C)
 	assert (parameters ().size () == 1);
 
 	if (cpu () -> statusRegister ().bitStatus (FZ80::CZ80::_CARRYFLAG))
-		executeReturn ();
+		executeReturn (true);
 
 	return (true);
 }
@@ -158,7 +238,7 @@ _INST_IMPL (FZ80::RET_PO)
 	assert (parameters ().size () == 1);
 
 	if (!cpu () -> statusRegister ().bitStatus (FZ80::CZ80::_PARITYOVERFLOWFLAG))
-		executeReturn ();
+		executeReturn (true);
 
 	return (true);
 }
@@ -169,7 +249,7 @@ _INST_IMPL (FZ80::RET_PE)
 	assert (parameters ().size () == 1);
 
 	if (cpu () -> statusRegister ().bitStatus (FZ80::CZ80::_PARITYOVERFLOWFLAG))
-		executeReturn ();
+		executeReturn (true);
 
 	return (true);
 }
@@ -180,7 +260,7 @@ _INST_IMPL (FZ80::RET_P)
 	assert (parameters ().size () == 1);
 
 	if (!cpu () -> statusRegister ().bitStatus (FZ80::CZ80::_SIGNFLAG))
-		executeReturn ();
+		executeReturn (true);
 
 	return (true);
 }
@@ -191,7 +271,32 @@ _INST_IMPL (FZ80::RET_M)
 	assert (parameters ().size () == 1);
 
 	if (cpu () -> statusRegister ().bitStatus (FZ80::CZ80::_SIGNFLAG))
-		executeReturn ();
+		executeReturn (true);
+
+	return (true);
+}
+
+// ---
+_INST_IMPL (FZ80::RET_I)
+{
+	assert (parameters ().size () == 2);
+
+	// Undocumented!
+	static_cast <FZ80::CZ80*> (cpu ()) -> setIFF1 (static_cast <FZ80::CZ80*> (cpu ()) -> IFF2 ());
+
+	executeReturn (false);
+
+	return (true);
+}
+
+// ---
+_INST_IMPL (FZ80::RET_N)
+{
+	assert (parameters ().size () == 2);
+
+	static_cast <FZ80::CZ80*> (cpu ()) -> setIFF1 (static_cast <FZ80::CZ80*> (cpu ()) -> IFF2 ());
+
+	executeReturn (false);
 
 	return (true);
 }

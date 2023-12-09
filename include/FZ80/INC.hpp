@@ -96,18 +96,28 @@ namespace FZ80
 	}
 
 	// With A
-	_INST_FROM (0x3C,	1, 4, 4,	"INC A",				INC_A, INC_General);					// Also undocumented with codes: DD3C & FD3C
+	_INST_FROM (0x3C,	1, 4, 4,	"INC A",				INC_A, INC_General);
+	_INST_FROM (0xDD3C,	2, 8, 8,	"U1INC A",				U1INC_A, INC_General);					// Undocumented
+	_INST_FROM (0xFD3C,	2, 8, 8,	"U2INC A",				U2INC_A, INC_General);					// Undocumented
 	// With B
-	_INST_FROM (0x04,	1, 4, 4,	"INC B",				INC_B, INC_General);					// Also undocumented with codes: DD04 & FD04
-	// Wit C
-	_INST_FROM (0x0C,	1, 4, 4,	"INC C",				INC_C, INC_General);					// Also undocumented with codes: DD0C & FD0C
-	// Wih D
-	_INST_FROM (0x14,	1, 4, 4,	"INC D",				INC_D, INC_General);					// Also undocumented with codes: DD14 & FD14
-	// Wth E
-	_INST_FROM (0x1C,	1, 4, 4,	"INC E",				INC_E, INC_General);					// Also undocumented with codes: DD1C & FD1C
-	// Wih F
+	_INST_FROM (0x04,	1, 4, 4,	"INC B",				INC_B, INC_General);
+	_INST_FROM (0xDD04,	2, 8, 8,	"U1INC B",				U1INC_B, INC_General);					// Undocumented
+	_INST_FROM (0xFD04,	2, 8, 8,	"U2INC B",				U2INC_B, INC_General);					// Undocumented
+	// With C
+	_INST_FROM (0x0C,	1, 4, 4,	"INC C",				INC_C, INC_General);
+	_INST_FROM (0xDD0C,	2, 8, 8,	"U1INC C",				U1INC_C, INC_General);					// Undocumented
+	_INST_FROM (0xFD0C,	2, 8, 8,	"U2INC C",				U2INC_C, INC_General);					// Undocumented
+	// With D
+	_INST_FROM (0x14,	1, 4, 4,	"INC D",				INC_D, INC_General);
+	_INST_FROM (0xDD14,	2, 8, 8,	"U1INC D",				U1INC_D, INC_General);					// Undocumented
+	_INST_FROM (0xFD14,	2, 8, 8,	"U2INC D",				U2INC_D, INC_General);					// Undocumented
+	// With E
+	_INST_FROM (0x1C,	1, 4, 4,	"INC E",				INC_E, INC_General);
+	_INST_FROM (0xDD1C,	2, 8, 8,	"U1INC E",				U1INC_E, INC_General);					// Undocumented
+	_INST_FROM (0xFD1C,	2, 8, 8,	"U2INC E",				U2INC_E, INC_General);					// Undocumented
+	// With F
 	_INST_FROM (0x24,	1, 4, 4,	"INC H",				INC_H, INC_General);
-	// Wih L
+	// With L
 	_INST_FROM (0x2C,	1, 4, 4,	"INC L",				INC_L, INC_General);
 	// With (HL)
 	_INST_FROM (0x34,	1, 11, 11,	"INC (HL)",				INC_IndirectHL, INC_General);
@@ -128,10 +138,10 @@ namespace FZ80
 	// With IY
 	_INST_FROM (0xFD23,	2, 10, 10,	"INC IY",				INC_IY, INC_General);
 	// With IXH, IXL, IYH or IYL
-	_INST_FROM (0xDD24,	2, 8, 8,	"INC IXH",				INC_IXH, INC_General);						// Undocumented
-	_INST_FROM (0xDD2C,	2, 8, 8,	"INC IXL",				INC_IXL, INC_General);						// Undocumented
-	_INST_FROM (0xFD24,	2, 8, 8,	"INC IYH",				INC_IYH, INC_General);						// Undocumented
-	_INST_FROM (0xFD2C,	2, 8, 8,	"INC IYL",				INC_IYL, INC_General);						// Undocumented
+	_INST_FROM (0xDD24,	2, 8, 8,	"INC IXH",				INC_IXH, INC_General);					// Undocumented
+	_INST_FROM (0xDD2C,	2, 8, 8,	"INC IXL",				INC_IXL, INC_General);					// Undocumented
+	_INST_FROM (0xFD24,	2, 8, 8,	"INC IYH",				INC_IYH, INC_General);					// Undocumented
+	_INST_FROM (0xFD2C,	2, 8, 8,	"INC IYL",				INC_IYL, INC_General);					// Undocumented
 }
 
 #endif

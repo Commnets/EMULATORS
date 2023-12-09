@@ -1,18 +1,11 @@
 #include <FZ80/Interrupt.hpp>
 
 // ---
-bool FZ80::Interrupt::isTime (MCHEmul::CPU* c, unsigned int cC) const
+MCHEmul::InfoStructure FZ80::Interrupt::getInfoStructure () const
 {
-	// TODO
-	
-	return (true);
+	MCHEmul::InfoStructure result = std::move (MCHEmul::CPUInterrupt::getInfoStructure ());
+
+	result.add ("ADDRESS", _exeAddress);
+
+	return (result);
 }
-
-// ---
-bool FZ80::Interrupt::executeOverImpl (MCHEmul::CPU* c, unsigned int cC)
-{
-	// TODO
-
-	return (true);
-}
-

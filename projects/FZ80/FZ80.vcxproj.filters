@@ -99,6 +99,9 @@
     <ClCompile Include="..\..\src\FZ80\CALL.cpp">
       <Filter>Archivos de origen\Instructions</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\FZ80\INOUT.cpp">
+      <Filter>Archivos de origen\Instructions</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\include\FZ80\CZ80.hpp">
@@ -183,6 +186,9 @@
       <Filter>Archivos de encabezado\Instructions</Filter>
     </ClInclude>
     <ClInclude Include="..\..\include\FZ80\CALL.hpp">
+      <Filter>Archivos de encabezado\Instructions</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\FZ80\INOUT.hpp">
       <Filter>Archivos de encabezado\Instructions</Filter>
     </ClInclude>
   </ItemGroup>

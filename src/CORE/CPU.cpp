@@ -12,6 +12,7 @@ MCHEmul::CPU::CPU (const MCHEmul::CPUArchitecture& a, const MCHEmul::Registers& 
 	  _architecture (a), _registers (r), _statusRegister (sR), _instructions (ins),
 	  _programCounter (a.numberBytes ()), _memory (nullptr), _interrupts (),
 	  _state (MCHEmul::CPU::_EXECUTINGINSTRUCTION),
+	  _dataBusValue (), _addressBusValue (),
 	  _deepDebugFile (nullptr),
 	  _error (_NOERROR), 
 	  _clockCycles (0), _lastCPUClockCycles (0),
@@ -138,6 +139,9 @@ bool MCHEmul::CPU::initialize ()
 	_clockCycles = _lastCPUClockCycles = 0;
 
 	_state = _lastState = MCHEmul::CPU::_EXECUTINGINSTRUCTION;
+
+	_dataBusValue = {  };
+	_addressBusValue = _programCounter.asAddress ();
 
 	// Related with the internal states...
 	_lastInstruction = nullptr;

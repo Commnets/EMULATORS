@@ -44,6 +44,7 @@
 #include <FZ80/RES.hpp>
 #include <FZ80/JUMP.hpp>
 #include <FZ80/CALL.hpp>
+#include <FZ80/INOUT.hpp>
 
 #endif
   

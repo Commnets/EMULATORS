@@ -58,15 +58,25 @@ namespace FZ80
 	}
 
 	// With A
-	_INST_FROM (0xAF,	1, 4, 4,	"XOR A",				XOR_A, XOR_General);					// Also undocumented with codes: DDAF & FDAF
+	_INST_FROM (0xAF,	1, 4, 4,	"XOR A",				XOR_A, XOR_General);
+	_INST_FROM (0xDDAF,	2, 8, 8,	"U1XOR A",				U1XOR_A, XOR_General);					// Undocumented
+	_INST_FROM (0xFDAF,	2, 8, 8,	"U2XOR A",				U2XOR_A, XOR_General);					// Undocumented
 	// WithB
-	_INST_FROM (0xA8,	1, 4, 4,	"XOR B",				XOR_B, XOR_General);					// Also undocumented with codes: DDA8 & FDA8
+	_INST_FROM (0xA8,	1, 4, 4,	"XOR B",				XOR_B, XOR_General);
+	_INST_FROM (0xDDA8,	2, 8, 8,	"U1XOR B",				U1XOR_B, XOR_General);					// Undocumented
+	_INST_FROM (0xFDA8,	2, 8, 8,	"U2XOR B",				U2XOR_B, XOR_General);					// Undocumented
 	// Wit C
-	_INST_FROM (0xA9,	1, 4, 4,	"XOR C",				XOR_C, XOR_General);					// Also undocumented with codes: DDA9 & FDA9
+	_INST_FROM (0xA9,	1, 4, 4,	"XOR C",				XOR_C, XOR_General);
+	_INST_FROM (0xDDA9,	2, 8, 8,	"U1XOR C",				U1XOR_C, XOR_General);					// Undocumented
+	_INST_FROM (0xFDA9,	2, 8, 8,	"U2XOR C",				U2XOR_C, XOR_General);					// Undocumented
 	// Wih D
-	_INST_FROM (0xAA,	1, 4, 4,	"XOR D",				XOR_D, XOR_General);					// Also undocumented with codes: DDAA & FDAA
+	_INST_FROM (0xAA,	1, 4, 4,	"XOR D",				XOR_D, XOR_General);
+	_INST_FROM (0xDDAA,	2, 8, 8,	"U1XOR D",				U1XOR_D, XOR_General);					// Undocumented
+	_INST_FROM (0xFDAA,	2, 8, 8,	"U2XOR D",				U2XOR_D, XOR_General);					// Undocumented
 	// Wth E
-	_INST_FROM (0xAB,	1, 4, 4,	"XOR E",				XOR_E, XOR_General);					// Also undocumented with codes: DDAB & FDAB
+	_INST_FROM (0xAB,	1, 4, 4,	"XOR E",				XOR_E, XOR_General);
+	_INST_FROM (0xDDAB,	2, 8, 8,	"U1XOR E",				U1XOR_E, XOR_General);					// Undocumented
+	_INST_FROM (0xFDAB,	2, 8, 8,	"U2XOR E",				U2XOR_E, XOR_General);					// Undocumented
 	// With H
 	_INST_FROM (0xAC,	1, 4, 4,	"XOR H",				XOR_H, XOR_General);
 	// With L

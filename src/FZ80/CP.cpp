@@ -3,8 +3,23 @@
 // ---
 _INST_IMPL (FZ80::CP_WithA)
 {
-	assert (parameters ().size () == 1 ||parameters ().size () == 2);
-	// Because in the non documented instructions the instruction code is 2 bytes long
+	assert (parameters ().size () == 1);
+
+	return (executeWith (registerA ().values ()[0]));
+}
+
+// ---
+_INST_IMPL (FZ80::U1CP_WithA)
+{
+	assert (parameters ().size () == 2);
+
+	return (executeWith (registerA ().values ()[0]));
+}
+
+// ---
+_INST_IMPL (FZ80::U2CP_WithA)
+{
+	assert (parameters ().size () == 2);
 
 	return (executeWith (registerA ().values ()[0]));
 }
@@ -12,8 +27,23 @@ _INST_IMPL (FZ80::CP_WithA)
 // ---
 _INST_IMPL (FZ80::CP_WithB)
 {
-	assert (parameters ().size () == 1 ||parameters ().size () == 2);
-	// Because in the non documented instructions the instruction code is 2 bytes long
+	assert (parameters ().size () == 1);
+
+	return (executeWith (registerB ().values ()[0]));
+}
+
+// ---
+_INST_IMPL (FZ80::U1CP_WithB)
+{
+	assert (parameters ().size () == 2);
+
+	return (executeWith (registerB ().values ()[0]));
+}
+
+// ---
+_INST_IMPL (FZ80::U2CP_WithB)
+{
+	assert (parameters ().size () == 2);
 
 	return (executeWith (registerB ().values ()[0]));
 }
@@ -21,8 +51,23 @@ _INST_IMPL (FZ80::CP_WithB)
 // ---
 _INST_IMPL (FZ80::CP_WithC)
 {
-	assert (parameters ().size () == 1 ||parameters ().size () == 2);
-	// Because in the non documented instructions the instruction code is 2 bytes long
+	assert (parameters ().size () == 1);
+
+	return (executeWith (registerC ().values ()[0]));
+}
+
+// ---
+_INST_IMPL (FZ80::U1CP_WithC)
+{
+	assert (parameters ().size () == 2);
+
+	return (executeWith (registerC ().values ()[0]));
+}
+
+// ---
+_INST_IMPL (FZ80::U2CP_WithC)
+{
+	assert (parameters ().size () == 2);
 
 	return (executeWith (registerC ().values ()[0]));
 }
@@ -30,8 +75,23 @@ _INST_IMPL (FZ80::CP_WithC)
 // ---
 _INST_IMPL (FZ80::CP_WithD)
 {
-	assert (parameters ().size () == 1 ||parameters ().size () == 2);
-	// Because in the non documented instructions the instruction code is 2 bytes long
+	assert (parameters ().size () == 1);
+
+	return (executeWith (registerD ().values ()[0]));
+}
+
+// ---
+_INST_IMPL (FZ80::U1CP_WithD)
+{
+	assert (parameters ().size () == 2);
+
+	return (executeWith (registerD ().values ()[0]));
+}
+
+// ---
+_INST_IMPL (FZ80::U2CP_WithD)
+{
+	assert (parameters ().size () == 2);
 
 	return (executeWith (registerD ().values ()[0]));
 }
@@ -39,8 +99,24 @@ _INST_IMPL (FZ80::CP_WithD)
 // ---
 _INST_IMPL (FZ80::CP_WithE)
 {
-	assert (parameters ().size () == 1 ||parameters ().size () == 2);
-	// Because in the non documented instructions the instruction code is 2 bytes long
+	assert (parameters ().size () == 1);
+
+	return (executeWith (registerE ().values ()[0]));
+}
+
+// ---
+_INST_IMPL (FZ80::U1CP_WithE)
+{
+	assert (parameters ().size () == 2);
+
+	return (executeWith (registerE ().values ()[0]));
+}
+
+// ---
+_INST_IMPL (FZ80::U2CP_WithE)
+{
+	assert (parameters ().size () == 2);
+
 
 	return (executeWith (registerE ().values ()[0]));
 }

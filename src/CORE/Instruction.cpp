@@ -148,7 +148,7 @@ std::vector <MCHEmul::UByte> MCHEmul::Instruction::shapeCodeWithData
 		result.insert (result.end (), i.begin (), i.end ());
 
 	// Is the result right in length?
-	// If not it was becasue either the number of parameters was wrong
+	// If not it was because either the number of parameters was wrong
 	// or the code of the instruction was longer that expected
 	// There might happen however that with both mistakes at the same time the length was ok!
 	e = (result.size () != memoryPositions ());

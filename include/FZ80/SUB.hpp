@@ -93,15 +93,25 @@ namespace FZ80
 
 	// Without carry
 	// With A
-	_INST_FROM (0x97,	1, 4, 4,	"SUB A",				SUB_AWithA, SUB_General);				// Also undocumented with codes: DD97 & FD97
+	_INST_FROM (0x97,	1, 4, 4,	"SUB A",				SUB_AWithA, SUB_General);
+	_INST_FROM (0xDD97,	2, 8, 8,	"U1SUB A",				U1SUB_AWithA, SUB_General);				// Undocumented
+	_INST_FROM (0xFD97,	2, 8, 8,	"U2SUB A",				U2SUB_AWithA, SUB_General);				// Undocumented
 	// With B
-	_INST_FROM (0x90,	1, 4, 4,	"SUB B",				SUB_AWithB, SUB_General);				// Also undocumented with codes: DD90 & FD90
+	_INST_FROM (0x90,	1, 4, 4,	"SUB B",				SUB_AWithB, SUB_General);
+	_INST_FROM (0xDD90,	2, 8, 8,	"U1SUB B",				U1SUB_AWithB, SUB_General);				// Undocumented
+	_INST_FROM (0xFD90,	2, 8, 8,	"U2SUB B",				U2SUB_AWithB, SUB_General);				// Undocumented
 	// Wit C
-	_INST_FROM (0x91,	1, 4, 4,	"SUB C",				SUB_AWithC, SUB_General);				// Also undocumented with codes: DD91 & FD91
+	_INST_FROM (0x91,	1, 4, 4,	"SUB C",				SUB_AWithC, SUB_General);
+	_INST_FROM (0xDD91,	2, 8, 8,	"U1SUB C",				U1SUB_AWithC, SUB_General);				// Undocumented
+	_INST_FROM (0xFD91,	2, 8, 8,	"U2SUB C",				U2SUB_AWithC, SUB_General);				// Undocumented
 	// Wih D
-	_INST_FROM (0x92,	1, 4, 4,	"SUB D",				SUB_AWithD, SUB_General);				// Also undocumented with codes: DD92 & FD92
+	_INST_FROM (0x92,	1, 4, 4,	"SUB D",				SUB_AWithD, SUB_General);
+	_INST_FROM (0xDD92,	2, 8, 8,	"U1SUB D",				U1SUB_AWithD, SUB_General);				// Undocumented
+	_INST_FROM (0xFD92,	2, 8, 8,	"U2SUB D",				U2SUB_AWithD, SUB_General);				// Undocumented
 	// Wth E
-	_INST_FROM (0x93,	1, 4, 4,	"SUB E",				SUB_AWithE, SUB_General);				// Also undocumented with codes: DD93 & FD93
+	_INST_FROM (0x93,	1, 4, 4,	"SUB E",				SUB_AWithE, SUB_General);
+	_INST_FROM (0xDD93,	2, 8, 8,	"U1SUB E",				U1SUB_AWithE, SUB_General);				// Undocumented
+	_INST_FROM (0xFD93,	2, 8, 8,	"U2SUB E",				U2SUB_AWithE, SUB_General);				// Undocumented
 	// Wih H
 	_INST_FROM (0x94,	1, 4, 4,	"SUB H",				SUB_AWithH, SUB_General);
 	// Wih L
@@ -123,15 +133,25 @@ namespace FZ80
 
 	// With carry
 	// With A
-	_INST_FROM (0x9F,	1, 4, 4,	"SBC A,A",				SBC_AWithA, SUB_General);				// Also undocumented with codes: DD9F & FD9F
+	_INST_FROM (0x9F,	1, 4, 4,	"SBC A,A",				SBC_AWithA, SUB_General);
+	_INST_FROM (0xDD9F,	2, 8, 8,	"U1SBC A,A",			U1SBC_AWithA, SUB_General);				// Undocumented
+	_INST_FROM (0xFD9F,	2, 8, 8,	"U2SBC A,A",			U2SBC_AWithA, SUB_General);				// Undocumented
 	// With B
-	_INST_FROM (0x98,	1, 4, 4,	"SBC A,B",				SBC_AWithB, SUB_General);				// Also undocumented with codes: DD98 & FD98
+	_INST_FROM (0x98,	1, 4, 4,	"SBC A,B",				SBC_AWithB, SUB_General);
+	_INST_FROM (0xDD98,	2, 8, 8,	"U1SBC A,B",			U1SBC_AWithB, SUB_General);				// Undocumented
+	_INST_FROM (0xFD98,	2, 8, 8,	"U2SBC A,B",			U2SBC_AWithB, SUB_General);				// Undocumented
 	// Wit C
-	_INST_FROM (0x99,	1, 4, 4,	"SBC A,C",				SBC_AWithC, SUB_General);				// Also undocumented with codes: DD99 & FD99
+	_INST_FROM (0x99,	1, 4, 4,	"SBC A,C",				SBC_AWithC, SUB_General);
+	_INST_FROM (0xDD99,	2, 8, 8,	"U1SBC A,C",			U1SBC_AWithC, SUB_General);				// Undocumented
+	_INST_FROM (0xFD99,	2, 8, 8,	"U2SBC A,C",			U2SBC_AWithC, SUB_General);				// Undocumented
 	// Wih D
-	_INST_FROM (0x9A,	1, 4, 4,	"SBC A,D",				SBC_AWithD, SUB_General);				// Also undocumented with codes: DD9A & FD9A
+	_INST_FROM (0x9A,	1, 4, 4,	"SBC A,D",				SBC_AWithD, SUB_General);
+	_INST_FROM (0xDD9A,	2, 8, 8,	"U1SBC A,D",			U1SBC_AWithD, SUB_General);				// Undocumented
+	_INST_FROM (0xFD9A,	2, 8, 8,	"U2SBC A,D",			U2SBC_AWithD, SUB_General);				// Undocumented
 	// Wth E
-	_INST_FROM (0x9B,	1, 4, 4,	"SBC A,E",				SBC_AWithE, SUB_General);				// Also undocumented with codes: DD9B & FD9B
+	_INST_FROM (0x9B,	1, 4, 4,	"SBC A,E",				SBC_AWithE, SUB_General);
+	_INST_FROM (0xDD9B,	2, 8, 8,	"U1SBC A,E",			U1SBC_AWithE, SUB_General);				// Undocumented
+	_INST_FROM (0xFD9B,	2, 8, 8,	"U2SBC A,E",			U2SBC_AWithE, SUB_General);				// Undocumented
 	// Wih H
 	_INST_FROM (0x9C,	1, 4, 4,	"SBC A,H",				SBC_AWithH, SUB_General);
 	// Wih L

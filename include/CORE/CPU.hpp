@@ -29,7 +29,27 @@
 
 namespace MCHEmul
 {
-	/** The center of any Machine. */
+	/** 
+	  * The center of any Machine. \n
+	  * Any CPU, as this library undestrood them, is made up of:
+	  * Registers:			The number of these can vary and also the length in bits of each. \n
+	  *						Usually this length is never longer that the one defined by the architecture. \n
+	  * PC Counter:			An special register which length in bits is like the architecture,
+	  *						It will define the number of positions reachable from the CPU. \n
+	  * Status Register:	An special register that defines flags to indicate the result 
+	  *						of the operations executed from the CPU. \n
+	  * Instructions:		A set of instructions with the length defined by the architecture each. \n
+	  * Interrupts:			A set of interrupts type that can be active or desactive from the CPU.
+	  * The CPU also accesses to an address bus (which length is the same than the program counter), 
+	  *	and to a data bus (which length may vary depeding on the CPU). \n
+	  * The method to execute one instruction is: executeNextCycle, than can be overlaoded. \n
+	  * The CPU can be eithe RUNNING or STOPPED. \n
+	  * When Running, and a cycle is executed, verifies whether there migth be a interrupt active and ready to execute first. \n
+	  * If not, execute the operation. \n
+	  * To do so reads the number of bytes that the architecture defines for an instruction, 
+	  * and invokes the instruction if it is valid (otherwise it generates n error). \n
+	  * Any instruction is accountable to update both the data and the address bus if makes sense. \n
+	  */
 	class CPU : public InfoClass
 	{
 		public:
@@ -154,6 +174,19 @@ namespace MCHEmul
 			the sender (optional), and a code for the reason (also optional, -1 = not defined. \n
 			It can be overloaded, but by default just only one interruption at the same time can be invoked. */
 		virtual void requestInterrupt (int id, unsigned int nC, Chip* src = nullptr, int cR = -1);
+		/** To know whether there is a interrupt requested. -1 if not. */
+		int interruptRequested () const
+							{ return (_interruptRequested); }
+
+		// To access and set the address and data bus value.
+		const UBytes& dataBusValue () const
+							{ return (_dataBusValue); }
+		void setDataBusValue (const UBytes& d)
+							{ _dataBusValue = d; }
+		const Address& addressBusValue () const
+							{ return (_addressBusValue); }
+		void setAddressBusValues (const Address& a)
+							{ _addressBusValue = a; }
 
 		/** 
 		  *	The real CORE of the class. \n
@@ -232,6 +265,9 @@ namespace MCHEmul
 		CPUInterrupts _interrupts;
 		/** The state. */
 		unsigned int _state;
+		/** The values in the data and address bus. */
+		UBytes _dataBusValue;
+		Address _addressBusValue;
 
 		// To manage the debug info...
 		DebugFile* _deepDebugFile;

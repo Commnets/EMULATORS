@@ -58,15 +58,25 @@ namespace FZ80
 	}
 
 	// With A
-	_INST_FROM (0xA7,	1, 4, 4,	"AND A",					AND_A, AND_General);				// Also undocumented with codes: DDA7 & FDA7 
+	_INST_FROM (0xA7,	1, 4, 4,	"AND A",					AND_A, AND_General);
+	_INST_FROM (0xDDA7,	2, 8, 8,	"U1AND A",					U1AND_A, AND_General);				// Undocumented
+	_INST_FROM (0xFDA7,	2, 8, 8,	"U2AND A",					U2AND_A, AND_General);				// Undocumented
 	// With B
-	_INST_FROM (0xA0,	1, 4, 4,	"AND B",					AND_B, AND_General);				// Also undocumented with codes: DDA0 & FDA0
+	_INST_FROM (0xA0,	1, 4, 4,	"AND B",					AND_B, AND_General);				
+	_INST_FROM (0xDDA0,	2, 8, 8,	"U1AND B",					U1AND_B, AND_General);				// Undocumented
+	_INST_FROM (0xFDA0,	2, 8, 8,	"U2AND B",					U2AND_B, AND_General);				// Undocumented
 	// With C
-	_INST_FROM (0xA1,	1, 4, 4,	"AND C",					AND_C, AND_General);				// Also undocumented with codes: DDA1 & FDA1
+	_INST_FROM (0xA1,	1, 4, 4,	"AND C",					AND_C, AND_General);
+	_INST_FROM (0xDDA1,	2, 8, 8,	"U1AND C",					U1AND_C, AND_General);				// Undocumented
+	_INST_FROM (0xFDA1,	2, 8, 8,	"U2AND C",					U2AND_C, AND_General);				// Undocumented
 	// With D
-	_INST_FROM (0xA2,	1, 4, 4,	"AND D",					AND_D, AND_General);				// Also undocumented with codes: DDA2 & FDA2
+	_INST_FROM (0xA2,	1, 4, 4,	"AND D",					AND_D, AND_General);
+	_INST_FROM (0xDDA2,	2, 8, 8,	"U1AND D",					U1AND_D, AND_General);				// Undocumented
+	_INST_FROM (0xFDA2,	2, 8, 8,	"U2AND D",					U2AND_D, AND_General);				// Undocumented
 	// With E
-	_INST_FROM (0xA3,	1, 4, 4,	"AND E",					AND_E, AND_General);				// Also undocumented with codes: DDA3 & FDA3
+	_INST_FROM (0xA3,	1, 4, 4,	"AND E",					AND_E, AND_General);
+	_INST_FROM (0xDDA3,	2, 8, 8,	"U1AND E",					U1AND_E, AND_General);				// Undocumented
+	_INST_FROM (0xFDA3,	2, 8, 8,	"U2AND E",					U2AND_E, AND_General);				// Undocumented
 	// With H
 	_INST_FROM (0xA4,	1, 4, 4,	"AND H",					AND_H, AND_General);
 	// With L

@@ -57,15 +57,25 @@ namespace FZ80
 	}
 
 	// With A
-	_INST_FROM (0xBF,	1, 4, 4,	"CP A",					CP_WithA, CP_General);					// Also undocumented with codes: DDBF & FDBF
+	_INST_FROM (0xBF,	1, 4, 4,	"CP A",					CP_WithA, CP_General);
+	_INST_FROM (0xDDBF,	2, 8, 8,	"U1CP A",				U1CP_WithA, CP_General);				// Undocumented
+	_INST_FROM (0xFDBF,	2, 8, 8,	"U2CP A",				U2CP_WithA, CP_General);				// Undocumented
 	// With B
-	_INST_FROM (0xB8,	1, 4, 4,	"CP B",					CP_WithB, CP_General);					// Also undocumented with codes: DDB8 & FDB8
+	_INST_FROM (0xB8,	1, 4, 4,	"CP B",					CP_WithB, CP_General);
+	_INST_FROM (0xDDB8,	2, 8, 8,	"U1CP B",				U1CP_WithB, CP_General);				// Undocumented
+	_INST_FROM (0xFDB8,	2, 8, 8,	"U2CP B",				U2CP_WithB, CP_General);				// Undocumented
 	// With C
-	_INST_FROM (0xB9,	1, 4, 4,	"CP C",					CP_WithC, CP_General);					// Also undocumented with codes: DDB9 & FDB9
+	_INST_FROM (0xB9,	1, 4, 4,	"CP C",					CP_WithC, CP_General);
+	_INST_FROM (0xDDB9,	2, 8, 8,	"U1CP C",				U1CP_WithC, CP_General);				// Undocumented
+	_INST_FROM (0xFDB9,	2, 8, 8,	"U2CP C",				U2CP_WithC, CP_General);				// Undocumented
 	// With D
-	_INST_FROM (0xBA,	1, 4, 4,	"CP D",					CP_WithD, CP_General);					// Also undocumented with codes: DDBA & FDBA
+	_INST_FROM (0xBA,	1, 4, 4,	"CP D",					CP_WithD, CP_General);
+	_INST_FROM (0xDDBA,	2, 8, 8,	"U1CP D",				U1CP_WithD, CP_General);				// Undocumented
+	_INST_FROM (0xFDBA,	2, 8, 8,	"U2CP D",				U2CP_WithD, CP_General);				// Undocumented
 	// With E
-	_INST_FROM (0xBB,	1, 4, 4,	"CP E",					CP_WithE, CP_General);					// Also undocumented with codes: DDBB & FDBB
+	_INST_FROM (0xBB,	1, 4, 4,	"CP E",					CP_WithE, CP_General);
+	_INST_FROM (0xDDBB,	2, 8, 8,	"U1CP E",				U1CP_WithE, CP_General);				// Undocumented
+	_INST_FROM (0xFDBB,	2, 8, 8,	"U2CP E",				U2CP_WithE, CP_General);				// Undocumented
 	// With F
 	_INST_FROM (0xBC,	1, 4, 4,	"CP H",					CP_WithH, CP_General);
 	// With L

@@ -39,7 +39,9 @@ unsigned int MCHEmul::TestCPUSpeed::clocksInASecondExcutingInstruction (const MC
 		// Reset the environment of the execution to avoid overflows...
 		_memory -> setActiveView (0);
 		// The program counter is set to an address in the middle of the memory...
-		_cpu -> programCounter ().setAddress (_memory -> activeView () -> middleMemoryAddress ()); 
+		_cpu -> programCounter ().setAddress (_memory -> activeView () -> middleMemoryAddress ());
+		// ...and the memory is filled up with the bytes received...
+		_memory -> set (_cpu -> programCounter ().asAddress (), b);
 		// The stack is reset 
 		_memory -> stack () -> reset (); 
 		// ...and located in the middle.
@@ -80,9 +82,10 @@ void MCHEmul::TestCPUSpeed::testAllInstructionSet (std::ostream& o, unsigned int
 	_memory -> stack () -> initialize (); // To put it back to 0!
 
 	std::map <unsigned int, unsigned int> _execInstructions;
+	std::map <unsigned int, unsigned int> _clockInstructions;
 	std::map <unsigned int, std::string> _instructionsTemplates;
 	testInstructionSet (o, _cpu -> instructions (), 
-		_execInstructions, _instructionsTemplates, nt, sM, pS); 
+		_execInstructions, _clockInstructions, _instructionsTemplates, nt, sM, pS); 
 
 	// Now to present the results...
 	// Remember that _speedInstructions will hold the performance per instruction code...
@@ -104,14 +107,16 @@ void MCHEmul::TestCPUSpeed::testAllInstructionSet (std::ostream& o, unsigned int
 	o << std::endl;
 	o << "Instructions: " << _instructionsTemplates.size () << std::endl;
 	o << "Quickest Instruction: " << _instructionsTemplates [maxExecInstId] 
-	  << " => " + std::to_string (maxExec) + " exec/s" << std::endl;
+	  << " => " + std::to_string (maxExec) + " exec/s" 
+	  << " [" << (maxExec * _clockInstructions [maxExecInstId]) << " cyles/s]" << std::endl;
 	o << "Slowest Instruction:  " << _instructionsTemplates [minExecInstId] 
-	  << " => " + std::to_string (minExec) + " exec/s" << std::endl;
+	  << " => " + std::to_string (minExec) + " exec/s" 
+	  << " [" << (minExec * _clockInstructions [minExecInstId]) << " cyles/s]" << std::endl;
 }
 
 // ---
 void MCHEmul::TestCPUSpeed::testInstructionSet (std::ostream& o, const MCHEmul::Instructions& inst, 
-	std::map <unsigned int, unsigned int>& sPI, std::map <unsigned int, std::string>& iT,
+	std::map <unsigned int, unsigned int>& sPI, std::map <unsigned int, unsigned int>& cPI, std::map <unsigned int, std::string>& iT,
 	unsigned int nt, bool sM, bool pS)
 {
 	static char _PROGRESS[4] { '\\', '|', '/', '-' };
@@ -127,7 +132,7 @@ void MCHEmul::TestCPUSpeed::testInstructionSet (std::ostream& o, const MCHEmul::
 		if (dynamic_cast <MCHEmul::InstructionUndefined*> (i.second) != nullptr)
 		{
 			testInstructionSet (o, static_cast <MCHEmul::InstructionUndefined*> (i.second) -> instructions (), 
-				sPI, iT,nt, sM, pS); 
+				sPI, cPI, iT,nt, sM, pS); 
 
 			continue;
 		}
@@ -147,13 +152,18 @@ void MCHEmul::TestCPUSpeed::testInstructionSet (std::ostream& o, const MCHEmul::
 			// To show the progress...
 			std::cout << _PROGRESS [ct % 4] << MCHEmul::_BACKS.substr (0,1);
 
-			// The code of the instruction will be the first x bytes...
+			// Shape the instruction with data!
+			bool e = false;
 			std::vector <MCHEmul::UByte> byInst =
 				MCHEmul::UInt::fromUnsignedInt (i.second -> code (), MCHEmul::UInt::_BINARY).bytes ();
-			// The parameters of the instruction will be random...
 			std::vector <MCHEmul::UByte> byDt = 
-				randomVector (i.second -> memoryPositions () - byInst.size ());
-			byDt.insert (byDt.begin (), byInst.begin (), byInst.end ());
+				i.second -> shapeCodeWithData ({ randomVector (i.second -> memoryPositions () - byInst.size ()) }, e);
+			if (e)
+			{
+				std::cout << "Instruction " << i.second -> iTemplate () << " bad defined" << std::endl;
+
+				continue;
+			}
 
 			// Execute the instruction and get the number of cycles spent in a second...
 			clks [ct] = clocksInASecondExcutingInstruction (MCHEmul::UBytes (byDt), sM);
@@ -164,10 +174,11 @@ void MCHEmul::TestCPUSpeed::testInstructionSet (std::ostream& o, const MCHEmul::
 			"(code:" + std::to_string (i.second -> code ()) + ", " + std::to_string (i.first) + ")";
 		iT [i.second -> code ()] = instTxt;
 		double a = 0.0f; for (size_t ct = 0; ct < nt; a += (double) clks [ct++]); a /= (double) nt;
-		sPI [i.second -> code ()] = (unsigned int) (a / i.second -> clockCycles ()); // Execs in a second...
+		sPI [i.second -> code ()] = (unsigned int) (a / (cPI [i.second -> code () ] = i.second -> clockCycles ())); // Execs in a second...
 		// Print out the just tested instruction...
-		o << instTxt << MCHEmul::_TABS.substr (0, 4 - (instTxt.length () >> 3)) 
-		  << (unsigned int) sPI [i.second -> code ()] << " exec/s" << std::endl;
+		o << instTxt << MCHEmul::_TABS.substr (0, 6 - (instTxt.length () >> 3)) 
+		  << sPI [i.second -> code ()] << " exec/s" 
+		  << " [" << (sPI [i.second -> code ()] * cPI [i.second -> code ()]) << " cycles/s]" << std::endl;
 
 		// ...and also the status of the CPU if requested...
 		if (pS)

@@ -104,15 +104,25 @@ namespace FZ80
 
 	// Without carry
 	// With A
-	_INST_FROM (0x87,	1, 4, 4,	"ADD A,A",				ADD_AWithA, ADD_General);				// Also undocumented with codes: DD87 & FD87
+	_INST_FROM (0x87,	1, 4, 4,	"ADD A,A",				ADD_AWithA, ADD_General);
+	_INST_FROM (0xDD87,	2, 8, 8,	"U1 ADD A,A",			U1ADD_AWithA, ADD_General);				// Undocumented
+	_INST_FROM (0xFD87,	2, 8, 8,	"U2 ADD A,A",			U2ADD_AWithA, ADD_General);				// Undocumented
 	// With B
-	_INST_FROM (0x80,	1, 4, 4,	"ADD A,B",				ADD_AWithB, ADD_General);				// Also undocumented with codes: DD80 & FD80
+	_INST_FROM (0x80,	1, 4, 4,	"ADD A,B",				ADD_AWithB, ADD_General);
+	_INST_FROM (0xDD80,	2, 8, 8,	"U1 ADD A,B",			U1ADD_AWithB, ADD_General);				// Undocumented
+	_INST_FROM (0xFD80,	2, 8, 8,	"U2 ADD A,B",			U2ADD_AWithB, ADD_General);				// Undocumented
 	// With C
-	_INST_FROM (0x81,	1, 4, 4,	"ADD A,C",				ADD_AWithC, ADD_General);				// Also undocumented with codes: DD81 & FD81
+	_INST_FROM (0x81,	1, 4, 4,	"ADD A,C",				ADD_AWithC, ADD_General);
+	_INST_FROM (0xDD81,	2, 8, 8,	"U1 ADD A,C",			U1ADD_AWithC, ADD_General);				// Undocumented
+	_INST_FROM (0xFD81,	2, 8, 8,	"U2 ADD A,C",			U2ADD_AWithC, ADD_General);				// Undocumented
 	// With D
-	_INST_FROM (0x82,	1, 4, 4,	"ADD A,D",				ADD_AWithD, ADD_General);				// Also undocumented with codes: DD82 & FD82
+	_INST_FROM (0x82,	1, 4, 4,	"ADD A,D",				ADD_AWithD, ADD_General);
+	_INST_FROM (0xDD82,	2, 8, 8,	"U1 ADD A,D",			U1ADD_AWithD, ADD_General);				// Undocumented
+	_INST_FROM (0xFD82,	2, 8, 8,	"U2 ADD A,D",			U2ADD_AWithD, ADD_General);				// Undocumented
 	// With E
-	_INST_FROM (0x83,	1, 4, 4,	"ADD A,E",				ADD_AWithE, ADD_General);				// Also undocumented with codes: DD83 & FD83
+	_INST_FROM (0x83,	1, 4, 4,	"ADD A,E",				ADD_AWithE, ADD_General);
+	_INST_FROM (0xDD83,	2, 8, 8,	"U1 ADD A,E",			U1ADD_AWithE, ADD_General);				// Undocumented
+	_INST_FROM (0xFD83,	2, 8, 8,	"U2 ADD A,E",			U2ADD_AWithE, ADD_General);				// Undocumented
 	// With H
 	_INST_FROM (0x84,	1, 4, 4,	"ADD A,H",				ADD_AWithH, ADD_General);
 	// With L
@@ -158,15 +168,25 @@ namespace FZ80
 
 	// With carry
 	// With A
-	_INST_FROM (0x8F,	1, 4, 4,	"ADC A,A",				ADC_AWithA, ADD_General);				// Also undocumented with codes: DD8F & FD8F
+	_INST_FROM (0x8F,	1, 4, 4,	"ADC A,A",				ADC_AWithA, ADD_General);
+	_INST_FROM (0xDD8F,	2, 8, 8,	"U1 ADC A,A",			U1ADC_AWithA, ADD_General);				// Undocumented
+	_INST_FROM (0xFD8F,	2, 8, 8,	"U2 ADC A,A",			U2ADC_AWithA, ADD_General);				// Undocumented
 	// With B
-	_INST_FROM (0x88,	1, 4, 4,	"ADC A,B",				ADC_AWithB, ADD_General);				// Also undocumented with codes: DD88 & FD88
-	// With C
-	_INST_FROM (0x89,	1, 4, 4,	"ADC A,C",				ADC_AWithC, ADD_General);				// Also undocumented with codes: DD89 & FD89
+	_INST_FROM (0x88,	1, 4, 4,	"ADC A,B",				ADC_AWithB, ADD_General);
+	_INST_FROM (0xDD88,	2, 8, 8,	"U1 ADC A,B",			U1ADC_AWithB, ADD_General);				// Undocumented
+	_INST_FROM (0xFD88,	2, 8, 8,	"U2 ADC A,B",			U2ADC_AWithB, ADD_General);				// Undocumented
+	
+	_INST_FROM (0x89,	1, 4, 4,	"ADC A,C",				ADC_AWithC, ADD_General);
+	_INST_FROM (0xDD89,	2, 8, 8,	"U1 ADC A,C",			U1ADC_AWithC, ADD_General);				// Undocumented
+	_INST_FROM (0xFD89,	2, 8, 8,	"U2 ADC A,C",			U2ADC_AWithC, ADD_General);				// Undocumented
 	// With D
-	_INST_FROM (0x8A,	1, 4, 4,	"ADC A,D",				ADC_AWithD, ADD_General);				// Also undocumented with codes: DD8A & FD8A
+	_INST_FROM (0x8A,	1, 4, 4,	"ADC A,D",				ADC_AWithD, ADD_General);
+	_INST_FROM (0xDD8A,	2, 8, 8,	"U1 ADC A,D",			U1ADC_AWithD, ADD_General);				// Undocumented
+	_INST_FROM (0xFD8A,	2, 8, 8,	"U2 ADC A,D",			U2ADC_AWithD, ADD_General);				// Undocumented
 	// Wth E
-	_INST_FROM (0x8B,	1, 4, 4,	"ADC A,E",				ADC_AWithE, ADD_General);				// Also undocumented with codes: DD8B & FD8B
+	_INST_FROM (0x8B,	1, 4, 4,	"ADC A,E",				ADC_AWithE, ADD_General);
+	_INST_FROM (0xDD8B,	2, 8, 8,	"U1 ADC A,E",			U1ADC_AWithE, ADD_General);				// Undocumented
+	_INST_FROM (0xFD8B,	2, 8, 8,	"U2 ADC A,E",			U2ADC_AWithE, ADD_General);				// Undocumented
 	// With H
 	_INST_FROM (0x8C,	1, 4, 4,	"ADC A,H",				ADC_AWithH, ADD_General);
 	// With L

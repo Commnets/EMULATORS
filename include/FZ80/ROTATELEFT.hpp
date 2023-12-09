@@ -120,6 +120,20 @@ namespace FZ80
 		st.setBitStatus (CZ80::_SIGNFLAG, v.bit (7));
 	}
 
+	/** The ROTATELEFT instruction, when managing indexes, creates its code in another way. */
+	class ROTATELeft_Index : public ROTATELeft_General
+	{
+		public:
+		ROTATELeft_Index (unsigned int c, unsigned int mp, unsigned int cc, unsigned int rcc, 
+				const std::string& t)
+			: ROTATELeft_General (c, mp, cc, rcc, t)
+							{ }
+
+		/** The last part of the code is at the end of the byte codes. */
+		virtual std::vector <MCHEmul::UByte> shapeCodeWithData 
+			(const std::vector <std::vector <MCHEmul::UByte>>& b, bool& e) const override;
+	};
+
 	// Rotate with bit 7...
 	// Within A
 	_INST_FROM (0x07,		1, 4, 4,	"RLCA",				RLC_A, ROTATELeft_General);
@@ -142,27 +156,27 @@ namespace FZ80
 	// Within (IX + d)...4 block but it really uses only 3!
 	// The instruction code is really DDCD(opCode)06, but is done in this way to simplify the way it is used...
 	// This applicable to all instructions...
-	_INST_FROM (0xDDCB06,	4, 23, 23,	"RLC (IX+[#1])",	RLC_IndirectIndexIX, ROTATELeft_General);
+	_INST_FROM (0xDDCB06,	4, 23, 23,	"RLC (IX+[#1])",	RLC_IndirectIndexIX, ROTATELeft_Index);
 	// Within (IX + d) and the result copied into a register. 
 	// All of them are non documented
-	_INST_FROM (0xDDCB07,	4, 23, 23,	"RLC (IX+[#1]),A",	RLC_IndirectIndexIXCopyA, ROTATELeft_General);	// Undocumented
-	_INST_FROM (0xDDCB00,	4, 23, 23,	"RLC (IX+[#1]),B",	RLC_IndirectIndexIXCopyB, ROTATELeft_General);	// Undocumented
-	_INST_FROM (0xDDCB01,	4, 23, 23,	"RLC (IX+[#1]),C",	RLC_IndirectIndexIXCopyC, ROTATELeft_General);	// Undocumented
-	_INST_FROM (0xDDCB02,	4, 23, 23,	"RLC (IX+[#1]),D",	RLC_IndirectIndexIXCopyD, ROTATELeft_General);	// Undocumented
-	_INST_FROM (0xDDCB03,	4, 23, 23,	"RLC (IX+[#1]),E",	RLC_IndirectIndexIXCopyE, ROTATELeft_General);	// Undocumented
-	_INST_FROM (0xDDCB04,	4, 23, 23,	"RLC (IX+[#1]),H",	RLC_IndirectIndexIXCopyH, ROTATELeft_General);	// Undocumented
-	_INST_FROM (0xDDCB05,	4, 23, 23,	"RLC (IX+[#1]),L",	RLC_IndirectIndexIXCopyL, ROTATELeft_General);	// Undocumented
+	_INST_FROM (0xDDCB07,	4, 23, 23,	"RLC (IX+[#1]),A",	RLC_IndirectIndexIXCopyA, ROTATELeft_Index);	// Undocumented
+	_INST_FROM (0xDDCB00,	4, 23, 23,	"RLC (IX+[#1]),B",	RLC_IndirectIndexIXCopyB, ROTATELeft_Index);	// Undocumented
+	_INST_FROM (0xDDCB01,	4, 23, 23,	"RLC (IX+[#1]),C",	RLC_IndirectIndexIXCopyC, ROTATELeft_Index);	// Undocumented
+	_INST_FROM (0xDDCB02,	4, 23, 23,	"RLC (IX+[#1]),D",	RLC_IndirectIndexIXCopyD, ROTATELeft_Index);	// Undocumented
+	_INST_FROM (0xDDCB03,	4, 23, 23,	"RLC (IX+[#1]),E",	RLC_IndirectIndexIXCopyE, ROTATELeft_Index);	// Undocumented
+	_INST_FROM (0xDDCB04,	4, 23, 23,	"RLC (IX+[#1]),H",	RLC_IndirectIndexIXCopyH, ROTATELeft_Index);	// Undocumented
+	_INST_FROM (0xDDCB05,	4, 23, 23,	"RLC (IX+[#1]),L",	RLC_IndirectIndexIXCopyL, ROTATELeft_Index);	// Undocumented
 	// Within (IY + d)...4 block instruction but it really uses only 3!
-	_INST_FROM (0xFDCB06,	4, 23, 23,	"RLC (IY+[#1])",	RLC_IndirectIndexIY, ROTATELeft_General);
+	_INST_FROM (0xFDCB06,	4, 23, 23,	"RLC (IY+[#1])",	RLC_IndirectIndexIY, ROTATELeft_Index);
 	// Within (IX + d) and the result copied into a register. 
 	// All of them are non documented
-	_INST_FROM (0xFDCB07,	4, 23, 23,	"RLC (IY+[#1]),A",	RLC_IndirectIndexIYCopyA, ROTATELeft_General);	// Undocumented
-	_INST_FROM (0xFDCB00,	4, 23, 23,	"RLC (IY+[#1]),B",	RLC_IndirectIndexIYCopyB, ROTATELeft_General);	// Undocumented
-	_INST_FROM (0xFDCB01,	4, 23, 23,	"RLC (IY+[#1]),C",	RLC_IndirectIndexIYCopyC, ROTATELeft_General);	// Undocumented
-	_INST_FROM (0xFDCB02,	4, 23, 23,	"RLC (IY+[#1]),D",	RLC_IndirectIndexIYCopyD, ROTATELeft_General);	// Undocumented
-	_INST_FROM (0xFDCB03,	4, 23, 23,	"RLC (IY+[#1]),E",	RLC_IndirectIndexIYCopyE, ROTATELeft_General);	// Undocumented
-	_INST_FROM (0xFDCB04,	4, 23, 23,	"RLC (IY+[#1]),H",	RLC_IndirectIndexIYCopyH, ROTATELeft_General);	// Undocumented
-	_INST_FROM (0xFDCB05,	4, 23, 23,	"RLC (IY+[#1]),L",	RLC_IndirectIndexIYCopyL, ROTATELeft_General);	// Undocumented
+	_INST_FROM (0xFDCB07,	4, 23, 23,	"RLC (IY+[#1]),A",	RLC_IndirectIndexIYCopyA, ROTATELeft_Index);	// Undocumented
+	_INST_FROM (0xFDCB00,	4, 23, 23,	"RLC (IY+[#1]),B",	RLC_IndirectIndexIYCopyB, ROTATELeft_Index);	// Undocumented
+	_INST_FROM (0xFDCB01,	4, 23, 23,	"RLC (IY+[#1]),C",	RLC_IndirectIndexIYCopyC, ROTATELeft_Index);	// Undocumented
+	_INST_FROM (0xFDCB02,	4, 23, 23,	"RLC (IY+[#1]),D",	RLC_IndirectIndexIYCopyD, ROTATELeft_Index);	// Undocumented
+	_INST_FROM (0xFDCB03,	4, 23, 23,	"RLC (IY+[#1]),E",	RLC_IndirectIndexIYCopyE, ROTATELeft_Index);	// Undocumented
+	_INST_FROM (0xFDCB04,	4, 23, 23,	"RLC (IY+[#1]),H",	RLC_IndirectIndexIYCopyH, ROTATELeft_Index);	// Undocumented
+	_INST_FROM (0xFDCB05,	4, 23, 23,	"RLC (IY+[#1]),L",	RLC_IndirectIndexIYCopyL, ROTATELeft_Index);	// Undocumented
 
 	// Rotate with carry!
 	// Within A
@@ -186,27 +200,27 @@ namespace FZ80
 	// Within (IX + d)...4 block but it really uses only 3!
 	// The instruction code is really DDCD(opCode)06, but is done in this way to simplify the way it is used...
 	// This applicable to all instructions...
-	_INST_FROM (0xDDCB16,	4, 23, 23,	"RL (IX+[#1])",		RL_IndirectIndexIX, ROTATELeft_General);
+	_INST_FROM (0xDDCB16,	4, 23, 23,	"RL (IX+[#1])",		RL_IndirectIndexIX, ROTATELeft_Index);
 	// Within (IX + d) and the result copied into a register. 
 	// All of them are non documented
-	_INST_FROM (0xDDCB17,	4, 23, 23,	"RL (IX+[#1]),A",	RL_IndirectIndexIXCopyA, ROTATELeft_General);	// Undocumented
-	_INST_FROM (0xDDCB10,	4, 23, 23,	"RL (IX+[#1]),B",	RL_IndirectIndexIXCopyB, ROTATELeft_General);	// Undocumented
-	_INST_FROM (0xDDCB11,	4, 23, 23,	"RL (IX+[#1]),C",	RL_IndirectIndexIXCopyC, ROTATELeft_General);	// Undocumented
-	_INST_FROM (0xDDCB12,	4, 23, 23,	"RL (IX+[#1]),D",	RL_IndirectIndexIXCopyD, ROTATELeft_General);	// Undocumented
-	_INST_FROM (0xDDCB13,	4, 23, 23,	"RL (IX+[#1]),E",	RL_IndirectIndexIXCopyE, ROTATELeft_General);	// Undocumented
-	_INST_FROM (0xDDCB14,	4, 23, 23,	"RL (IX+[#1]),H",	RL_IndirectIndexIXCopyH, ROTATELeft_General);	// Undocumented
-	_INST_FROM (0xDDCB15,	4, 23, 23,	"RL (IX+[#1]),L",	RL_IndirectIndexIXCopyL, ROTATELeft_General);	// Undocumented
+	_INST_FROM (0xDDCB17,	4, 23, 23,	"RL (IX+[#1]),A",	RL_IndirectIndexIXCopyA, ROTATELeft_Index);		// Undocumented
+	_INST_FROM (0xDDCB10,	4, 23, 23,	"RL (IX+[#1]),B",	RL_IndirectIndexIXCopyB, ROTATELeft_Index);		// Undocumented
+	_INST_FROM (0xDDCB11,	4, 23, 23,	"RL (IX+[#1]),C",	RL_IndirectIndexIXCopyC, ROTATELeft_Index);		// Undocumented
+	_INST_FROM (0xDDCB12,	4, 23, 23,	"RL (IX+[#1]),D",	RL_IndirectIndexIXCopyD, ROTATELeft_Index);		// Undocumented
+	_INST_FROM (0xDDCB13,	4, 23, 23,	"RL (IX+[#1]),E",	RL_IndirectIndexIXCopyE, ROTATELeft_Index);		// Undocumented
+	_INST_FROM (0xDDCB14,	4, 23, 23,	"RL (IX+[#1]),H",	RL_IndirectIndexIXCopyH, ROTATELeft_Index);		// Undocumented
+	_INST_FROM (0xDDCB15,	4, 23, 23,	"RL (IX+[#1]),L",	RL_IndirectIndexIXCopyL, ROTATELeft_Index);		// Undocumented
 	// Within (IY + d)...4 block instruction but it really uses only 3!
-	_INST_FROM (0xFDCB16,	4, 23, 23,	"RL (IY+[#1])",		RL_IndirectIndexIY, ROTATELeft_General);
+	_INST_FROM (0xFDCB16,	4, 23, 23,	"RL (IY+[#1])",		RL_IndirectIndexIY, ROTATELeft_Index);
 	// Within (IX + d) and the result copied into a register. 
 	// All of them are non documented
-	_INST_FROM (0xFDCB17,	4, 23, 23,	"RL (IY+[#1]),A",	RL_IndirectIndexIYCopyA, ROTATELeft_General);	// Undocumented
-	_INST_FROM (0xFDCB10,	4, 23, 23,	"RL (IY+[#1]),B",	RL_IndirectIndexIYCopyB, ROTATELeft_General);	// Undocumented
-	_INST_FROM (0xFDCB11,	4, 23, 23,	"RL (IY+[#1]),C",	RL_IndirectIndexIYCopyC, ROTATELeft_General);	// Undocumented
-	_INST_FROM (0xFDCB12,	4, 23, 23,	"RL (IY+[#1]),D",	RL_IndirectIndexIYCopyD, ROTATELeft_General);	// Undocumented
-	_INST_FROM (0xFDCB13,	4, 23, 23,	"RL (IY+[#1]),E",	RL_IndirectIndexIYCopyE, ROTATELeft_General);	// Undocumented
-	_INST_FROM (0xFDCB14,	4, 23, 23,	"RL (IY+[#1]),H",	RL_IndirectIndexIYCopyH, ROTATELeft_General);	// Undocumented
-	_INST_FROM (0xFDCB15,	4, 23, 23,	"RL (IY+[#1]),L",	RL_IndirectIndexIYCopyL, ROTATELeft_General);	// Undocumented
+	_INST_FROM (0xFDCB17,	4, 23, 23,	"RL (IY+[#1]),A",	RL_IndirectIndexIYCopyA, ROTATELeft_Index);		// Undocumented
+	_INST_FROM (0xFDCB10,	4, 23, 23,	"RL (IY+[#1]),B",	RL_IndirectIndexIYCopyB, ROTATELeft_Index);		// Undocumented
+	_INST_FROM (0xFDCB11,	4, 23, 23,	"RL (IY+[#1]),C",	RL_IndirectIndexIYCopyC, ROTATELeft_Index);		// Undocumented
+	_INST_FROM (0xFDCB12,	4, 23, 23,	"RL (IY+[#1]),D",	RL_IndirectIndexIYCopyD, ROTATELeft_Index);		// Undocumented
+	_INST_FROM (0xFDCB13,	4, 23, 23,	"RL (IY+[#1]),E",	RL_IndirectIndexIYCopyE, ROTATELeft_Index);		// Undocumented
+	_INST_FROM (0xFDCB14,	4, 23, 23,	"RL (IY+[#1]),H",	RL_IndirectIndexIYCopyH, ROTATELeft_Index);		// Undocumented
+	_INST_FROM (0xFDCB15,	4, 23, 23,	"RL (IY+[#1]),L",	RL_IndirectIndexIYCopyL, ROTATELeft_Index);		// Undocumented
 
 	/** The content of low nibble (HL) is copied into the high one,
 		the content of the high nibble (HL) is copied into the low nibble A, 

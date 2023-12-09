@@ -29,15 +29,9 @@ namespace FZ80
 			: Interrupt (_ID)
 							{ setClassName ("NMIInterrupt"); }
 
-		/**
-		  *	The name of the fields are: \n
-		  *	The ones from the CPUInterrupt +
-		  *	ADDRESS			= The address where the NMI should start the execution from.
-		  */
-		virtual MCHEmul::InfoStructure getInfoStructure () const override;
-
 		private:
-		virtual bool isTime (MCHEmul::CPU* c, unsigned int cC) const override; 
+		virtual bool isTime (MCHEmul::CPU* c, unsigned int cC) const override
+							{ return (!inExecution ()); }
 		virtual bool executeOverImpl (MCHEmul::CPU* c, unsigned int cC) override;
 	};
 }

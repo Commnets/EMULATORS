@@ -19,7 +19,7 @@ _INST_IMPL (F6500::BRK)
 
 	// Jump to the IRQ vector...
 	pc.setAddress (MCHEmul::Address (memory () -> values 
-		(dynamic_cast <F6500::C6510*> (cpu ()) -> IRQVectorAddress (), 2), false /** Little - endian. */));
+		(static_cast <F6500::C6500*> (cpu ()) -> IRQVectorAddress (), 2), false /** Little - endian. */));
 
 	return (!stack () -> overflow ());
 }

@@ -2,33 +2,16 @@
 #include <FZ80/CZ80.hpp>
 
 // ---
-MCHEmul::InfoStructure FZ80::NMIInterrupt::getInfoStructure () const
-{
-	MCHEmul::InfoStructure result = std::move (MCHEmul::CPUInterrupt::getInfoStructure ());
-
-	// TODO
-
-	return (result);
-}
-
-// ---
-bool FZ80::NMIInterrupt::isTime (MCHEmul::CPU* c, unsigned int cC) const
-{
-	// TODO
-
-	return (FZ80::Interrupt::isTime (c, cC));
-}
-
-// ---
 bool FZ80::NMIInterrupt::executeOverImpl (MCHEmul::CPU* c, unsigned int cC)
 {
-	FZ80::Interrupt::executeOverImpl (c, cC);
-
 	assert (c != nullptr);
 	assert (c -> memoryRef () != nullptr);
 	assert (c -> memoryRef () -> stack () != nullptr);
-	
-	// TODO
+
+	c -> memoryRef () -> stack () -> push ((_exeAddress = c -> programCounter ().asAddress ()).bytes ());
+	static_cast <FZ80::CZ80*> (c) -> setIFF2 (static_cast <FZ80::CZ80*> (c) -> IFF1 ()); // save IFF2
+	static_cast <FZ80::CZ80*> (c) -> setIFF1 (false);
+	c -> programCounter ().setAddress (static_cast <FZ80::CZ80*> (c) -> NMIVectorAddress ());
 	
 	return (true);
 }

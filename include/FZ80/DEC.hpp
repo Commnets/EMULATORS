@@ -93,15 +93,25 @@ namespace FZ80
 	}
 
 	// With A
-	_INST_FROM (0x3D,	1, 4, 4,	"DEC A",				DEC_A, DEC_General);					// Also undocumented with codes: DD3D & FD3D
+	_INST_FROM (0x3D,	1, 4, 4,	"DEC A",				DEC_A, DEC_General);
+	_INST_FROM (0xDD3D,	2, 8, 8,	"U1DEC A",				U1DEC_A, DEC_General);					// Undocumented
+	_INST_FROM (0xFD3D,	2, 8, 8,	"U2DEC A",				U2DEC_A, DEC_General);					// Undocumented
 	// With B
-	_INST_FROM (0x05,	1, 4, 4,	"DEC B",				DEC_B, DEC_General);					// Also undocumented with codes: DD05 & FD05
+	_INST_FROM (0x05,	1, 4, 4,	"DEC B",				DEC_B, DEC_General);
+	_INST_FROM (0xDD05,	2, 8, 8,	"U1DEC B",				U1DEC_B, DEC_General);					// Undocumented
+	_INST_FROM (0xFD05,	2, 8, 8,	"U2DEC B",				U2DEC_B, DEC_General);					// Undocumented
 	// Wit C
-	_INST_FROM (0x0D,	1, 4, 4,	"DEC C",				DEC_C, DEC_General);					// Also undocumented with codes: DD0D & FD0D
+	_INST_FROM (0x0D,	1, 4, 4,	"DEC C",				DEC_C, DEC_General);
+	_INST_FROM (0xDD0D,	2, 8, 8,	"U1DEC C",				U1DEC_C, DEC_General);					// Undocumented
+	_INST_FROM (0xFD0D,	2, 8, 8,	"U2DEC C",				U2DEC_C, DEC_General);					// Undocumented
 	// Wih D
-	_INST_FROM (0x15,	1, 4, 4,	"DEC D",				DEC_D, DEC_General);					// Also undocumented with codes: DD15 & FD15
+	_INST_FROM (0x15,	1, 4, 4,	"DEC D",				DEC_D, DEC_General);
+	_INST_FROM (0xDD15,	2, 8, 8,	"U1DEC D",				U1DEC_D, DEC_General);					// Undocumented
+	_INST_FROM (0xFD15,	2, 8, 8,	"U2DEC D",				U2DEC_D, DEC_General);					// Undocumented
 	// Wth E
-	_INST_FROM (0x1D,	1, 4, 4,	"DEC E",				DEC_E, DEC_General);					// Also undocumented with codes: DD1D & FD1D
+	_INST_FROM (0x1D,	1, 4, 4,	"DEC E",				DEC_E, DEC_General);
+	_INST_FROM (0xDD1D,	2, 8, 8,	"U1DEC E",				U1DEC_E, DEC_General);					// Undocumented
+	_INST_FROM (0xFD1D,	2, 8, 8,	"U2DEC E",				U2DEC_E, DEC_General);					// Undocumented
 	// Wih F
 	_INST_FROM (0x25,	1, 4, 4,	"DEC H",				DEC_H, DEC_General);
 	// Wih L
@@ -125,10 +135,10 @@ namespace FZ80
 	// With IY
 	_INST_FROM (0xFD2B,	2, 10, 10,	"DEC IY",				DEC_IY, DEC_General);
 	// With IXH, IXL, IYH or IYL
-	_INST_FROM (0xDD25,	2, 8, 8,	"DEC IXH",				DEC_IXH, DEC_General);						// Undocumented
-	_INST_FROM (0xDD2D,	2, 8, 8,	"DEC IXL",				DEC_IXL, DEC_General);						// Undocumented
-	_INST_FROM (0xFD25,	2, 8, 8,	"DEC IYH",				DEC_IYH, DEC_General);						// Undocumented
-	_INST_FROM (0xFD2D,	2, 8, 8,	"DEC IYL",				DEC_IYL, DEC_General);						// Undocumented
+	_INST_FROM (0xDD25,	2, 8, 8,	"DEC IXH",				DEC_IXH, DEC_General);					// Undocumented
+	_INST_FROM (0xDD2D,	2, 8, 8,	"DEC IXL",				DEC_IXL, DEC_General);					// Undocumented
+	_INST_FROM (0xFD25,	2, 8, 8,	"DEC IYH",				DEC_IYH, DEC_General);					// Undocumented
+	_INST_FROM (0xFD2D,	2, 8, 8,	"DEC IYL",				DEC_IYL, DEC_General);					// Undocumented
 }
 
 #endif

@@ -232,7 +232,8 @@ namespace FZ80
 		MCHEmul::ListOfInstructions _rawInstructions;
 	};
 
-	/** Instruction code in the second byte in memory next to program counter location. */
+	/** Instruction code in the second byte in memory next to program counter location. 
+		This is only useful for execution purposes. */
 	class Byte2InstructionCode final : public InstructionUndefined
 	{
 		public:
@@ -247,7 +248,8 @@ namespace FZ80
 							  return (_rawInstructions [size_t (m -> values (pc -> asAddress (), 2)[1].value ())]); }
 	};
 
-	/** Instruction code in the fourth byte in memory next to program counter location. */
+	/** Instruction code in the fourth byte in memory next to program counter location. 
+		This is only useful for execution purposes. */
 	class Byte4InstructionCode final : public InstructionUndefined
 	{
 		public:

@@ -23,17 +23,20 @@ namespace FZ80
 	{
 		public:
 		Interrupt (int id)
-			: MCHEmul::CPUInterrupt (id, 7)
+			: MCHEmul::CPUInterrupt (id, 7),
+			  _exeAddress ()
 							{ }
 
+		/**
+		  *	The name of the fields are: \n
+		  *	The ones from the CPUInterrupt +
+		  *	ADDRESS			= The address where the NMI should start the execution from.
+		  */
+		virtual MCHEmul::InfoStructure getInfoStructure () const override;
+
 		protected:
-		/** As the code is designed, the interrupt is invoked after the execution of one instruction,
-			when the _lockCycles of the CPU have been actualized, 
-			but it should have been launched at cC cycles (the chip decides when). \n
-			In the 6500 family a interrupt can not be launched never before 2 cycles the end of the last instruction. */
-		virtual bool isTime (MCHEmul::CPU* c, unsigned int cC) const override;
-		/** Just to put back the counter to 0. */
-		virtual bool executeOverImpl (MCHEmul::CPU* c, unsigned int cC) override;
+		// Implementation
+		MCHEmul::Address _exeAddress;
 	};
 }
 

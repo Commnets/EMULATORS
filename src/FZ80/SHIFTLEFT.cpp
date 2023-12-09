@@ -1,9 +1,29 @@
 #include <FZ80/SHIFTLEFT.hpp>
 
 // ---
+std::vector <MCHEmul::UByte> FZ80::SHIFTLeft_Index::shapeCodeWithData
+	(const std::vector <std::vector <MCHEmul::UByte>>& b, bool& e) const
+{
+	// Build the instruction...
+	std::vector <MCHEmul::UByte> result = 
+		MCHEmul::UInt::fromUnsignedInt ((code () & 0xffff00) >> 8).bytes (); // First 2 bytes of its code...
+	for (const auto& i : b)
+		result.insert (result.end (), i.begin (), i.end ()); // Then the data...
+	result.insert (result.end (), (unsigned char) (code () & 0xff)); //...and finally the last byte of the code!
+
+	// Is the result right in length?
+	// If not it was because either the number of parameters was wrong
+	// or the code of the instruction was longer that expected
+	// There might happen however that with both mistakes at the same time the length was ok!
+	e = (result.size () != memoryPositions ());
+
+	return (result);
+}
+
+// ---
 _INST_IMPL (FZ80::SLA_A)
 {
-	assert (parameters ().size () == 1);
+	assert (parameters ().size () == 2);
 
 	return (executeWith (registerA (), false));
 }
@@ -227,7 +247,7 @@ _INST_IMPL (FZ80::SLA_IndirectIndexIYCopyL)
 // ---
 _INST_IMPL (FZ80::SLL_A)
 {
-	assert (parameters ().size () == 1);
+	assert (parameters ().size () == 2);
 
 	return (executeWith (registerA (), true));
 }

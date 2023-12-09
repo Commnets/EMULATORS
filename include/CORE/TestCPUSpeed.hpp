@@ -57,13 +57,14 @@ namespace MCHEmul
 		  *	@param o		: A reference to the stream where to output the info.
 		  *	@param inst		: The instruction set to test. It will be recursive.
 		  *	@param sPI		: This is a reference to a vector that are filled up with speeds per instruction.
+		  *	@param cPI		: This is a reference to a vector that are filled up with clocks per instruction.
 		  *	@param iT		: This is a reference to a vector that are filled up with the aspect of avery instruction.
 		  *	@param nt		: Number of times every instruction has to be tested. 
 		  *	@param sM		: Whether to simulate or not the access to the memory. False by default.
 		  *	@param pS		: Whether to print out or not the status of the system after every execution. False by default. 
 		  */
 		void testInstructionSet (std::ostream& o, const Instructions& inst, 
-			std::map <unsigned int, unsigned int>& sPI, std::map <unsigned int, std::string>& iT,
+			std::map <unsigned int, unsigned int>& sPI, std::map <unsigned int, unsigned int>& cPI, std::map <unsigned int, std::string>& iT,
 			unsigned int nt = 1, bool sM = false, bool pS = false);
 
 		// Implementation

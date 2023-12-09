@@ -1,6 +1,26 @@
 #include <FZ80/ROTATERIGHT.hpp>
 
 // ---
+std::vector <MCHEmul::UByte> FZ80::ROTATERight_Index::shapeCodeWithData
+	(const std::vector <std::vector <MCHEmul::UByte>>& b, bool& e) const
+{
+	// Build the instruction...
+	std::vector <MCHEmul::UByte> result = 
+		MCHEmul::UInt::fromUnsignedInt ((code () & 0xffff00) >> 8).bytes (); // First 2 bytes of its code...
+	for (const auto& i : b)
+		result.insert (result.end (), i.begin (), i.end ()); // Then the data...
+	result.insert (result.end (), (unsigned char) (code () & 0xff)); //...and finally the last byte of the code!
+
+	// Is the result right in length?
+	// If not it was because either the number of parameters was wrong
+	// or the code of the instruction was longer that expected
+	// There might happen however that with both mistakes at the same time the length was ok!
+	e = (result.size () != memoryPositions ());
+
+	return (result);
+}
+
+// ---
 _INST_IMPL (FZ80::RRC_A)
 {
 	assert (parameters ().size () == 1);

@@ -1,6 +1,26 @@
 #include <FZ80/BIT.hpp>
 
 // ---
+std::vector <MCHEmul::UByte> FZ80::BIT_Index::shapeCodeWithData
+	(const std::vector <std::vector <MCHEmul::UByte>>& b, bool& e) const
+{
+	// Build the instruction...
+	std::vector <MCHEmul::UByte> result = 
+		MCHEmul::UInt::fromUnsignedInt ((code () & 0xffff00) >> 8).bytes (); // First 2 bytes of its code...
+	for (const auto& i : b)
+		result.insert (result.end (), i.begin (), i.end ()); // Then the data...
+	result.insert (result.end (), (unsigned char) (code () & 0xff)); //...and finally the last byte of the code!
+
+	// Is the result right in length?
+	// If not it was because either the number of parameters was wrong
+	// or the code of the instruction was longer that expected
+	// There might happen however that with both mistakes at the same time the length was ok!
+	e = (result.size () != memoryPositions ());
+
+	return (result);
+}
+
+// ---
 _INST_IMPL (FZ80::BIT_0WithA)
 {
 	assert (parameters ().size () == 2);
@@ -75,11 +95,123 @@ _INST_IMPL (FZ80::BIT_0WithIndirectIndexIX)
 }
 
 // ---
+_INST_IMPL (FZ80::U1BIT_0WithIndirectIndexIX)
+{
+	assert (parameters ().size () == 4);
+
+	return (executeWith (0, valueAddressIX (parameters ()[2].value ())));
+}
+
+// ---
+_INST_IMPL (FZ80::U2BIT_0WithIndirectIndexIX)
+{
+	assert (parameters ().size () == 4);
+
+	return (executeWith (0, valueAddressIX (parameters ()[2].value ())));
+}
+
+// ---
+_INST_IMPL (FZ80::U3BIT_0WithIndirectIndexIX)
+{
+	assert (parameters ().size () == 4);
+
+	return (executeWith (0, valueAddressIX (parameters ()[2].value ())));
+}
+
+// ---
+_INST_IMPL (FZ80::U4BIT_0WithIndirectIndexIX)
+{
+	assert (parameters ().size () == 4);
+
+	return (executeWith (0, valueAddressIX (parameters ()[2].value ())));
+}
+
+// ---
+_INST_IMPL (FZ80::U5BIT_0WithIndirectIndexIX)
+{
+	assert (parameters ().size () == 4);
+
+	return (executeWith (0, valueAddressIX (parameters ()[2].value ())));
+}
+
+// ---
+_INST_IMPL (FZ80::U6BIT_0WithIndirectIndexIX)
+{
+	assert (parameters ().size () == 4);
+
+	return (executeWith (0, valueAddressIX (parameters ()[2].value ())));
+}
+
+// ---
+_INST_IMPL (FZ80::U7BIT_0WithIndirectIndexIX)
+{
+	assert (parameters ().size () == 4);
+
+	return (executeWith (0, valueAddressIX (parameters ()[2].value ())));
+}
+
+// ---
 _INST_IMPL (FZ80::BIT_0WithIndirectIndexIY)
 {
 	assert (parameters ().size () == 4);
 
 	// The parameter 3 is not used. It is the last code of the instruction actually
+
+	return (executeWith (0, valueAddressIY (parameters ()[2].value ())));
+}
+
+// ---
+_INST_IMPL (FZ80::U1BIT_0WithIndirectIndexIY)
+{
+	assert (parameters ().size () == 4);
+
+	return (executeWith (0, valueAddressIY (parameters ()[2].value ())));
+}
+
+// ---
+_INST_IMPL (FZ80::U2BIT_0WithIndirectIndexIY)
+{
+	assert (parameters ().size () == 4);
+
+	return (executeWith (0, valueAddressIY (parameters ()[2].value ())));
+}
+
+// ---
+_INST_IMPL (FZ80::U3BIT_0WithIndirectIndexIY)
+{
+	assert (parameters ().size () == 4);
+
+	return (executeWith (0, valueAddressIY (parameters ()[2].value ())));
+}
+
+// ---
+_INST_IMPL (FZ80::U4BIT_0WithIndirectIndexIY)
+{
+	assert (parameters ().size () == 4);
+
+	return (executeWith (0, valueAddressIY (parameters ()[2].value ())));
+}
+
+// ---
+_INST_IMPL (FZ80::U5BIT_0WithIndirectIndexIY)
+{
+	assert (parameters ().size () == 4);
+
+	return (executeWith (0, valueAddressIY (parameters ()[2].value ())));
+}
+
+// ---
+_INST_IMPL (FZ80::U6BIT_0WithIndirectIndexIY)
+{
+	assert (parameters ().size () == 4);
+
+	return (executeWith (0, valueAddressIY (parameters ()[2].value ())));
+}
+
+// ---
+_INST_IMPL (FZ80::U7BIT_0WithIndirectIndexIY)
+{
+	assert (parameters ().size () == 4);
 
 	return (executeWith (0, valueAddressIY (parameters ()[2].value ())));
 }
@@ -159,11 +291,123 @@ _INST_IMPL (FZ80::BIT_1WithIndirectIndexIX)
 }
 
 // ---
+_INST_IMPL (FZ80::U1BIT_1WithIndirectIndexIX)
+{
+	assert (parameters ().size () == 4);
+
+	return (executeWith (1, valueAddressIX (parameters ()[2].value ())));
+}
+
+// ---
+_INST_IMPL (FZ80::U2BIT_1WithIndirectIndexIX)
+{
+	assert (parameters ().size () == 4);
+
+	return (executeWith (1, valueAddressIX (parameters ()[2].value ())));
+}
+
+// ---
+_INST_IMPL (FZ80::U3BIT_1WithIndirectIndexIX)
+{
+	assert (parameters ().size () == 4);
+
+	return (executeWith (1, valueAddressIX (parameters ()[2].value ())));
+}
+
+// ---
+_INST_IMPL (FZ80::U4BIT_1WithIndirectIndexIX)
+{
+	assert (parameters ().size () == 4);
+
+	return (executeWith (1, valueAddressIX (parameters ()[2].value ())));
+}
+
+// ---
+_INST_IMPL (FZ80::U5BIT_1WithIndirectIndexIX)
+{
+	assert (parameters ().size () == 4);
+
+	return (executeWith (1, valueAddressIX (parameters ()[2].value ())));
+}
+
+// ---
+_INST_IMPL (FZ80::U6BIT_1WithIndirectIndexIX)
+{
+	assert (parameters ().size () == 4);
+
+	return (executeWith (1, valueAddressIX (parameters ()[2].value ())));
+}
+
+// ---
+_INST_IMPL (FZ80::U7BIT_1WithIndirectIndexIX)
+{
+	assert (parameters ().size () == 4);
+
+	return (executeWith (1, valueAddressIX (parameters ()[2].value ())));
+}
+
+// ---
 _INST_IMPL (FZ80::BIT_1WithIndirectIndexIY)
 {
 	assert (parameters ().size () == 4);
 
 	// The parameter 3 is not used. It is the last code of the instruction actually
+
+	return (executeWith (1, valueAddressIY (parameters ()[2].value ())));
+}
+
+// ---
+_INST_IMPL (FZ80::U1BIT_1WithIndirectIndexIY)
+{
+	assert (parameters ().size () == 4);
+
+	return (executeWith (1, valueAddressIY (parameters ()[2].value ())));
+}
+
+// ---
+_INST_IMPL (FZ80::U2BIT_1WithIndirectIndexIY)
+{
+	assert (parameters ().size () == 4);
+
+	return (executeWith (1, valueAddressIY (parameters ()[2].value ())));
+}
+
+// ---
+_INST_IMPL (FZ80::U3BIT_1WithIndirectIndexIY)
+{
+	assert (parameters ().size () == 4);
+
+	return (executeWith (1, valueAddressIY (parameters ()[2].value ())));
+}
+
+// ---
+_INST_IMPL (FZ80::U4BIT_1WithIndirectIndexIY)
+{
+	assert (parameters ().size () == 4);
+
+	return (executeWith (1, valueAddressIY (parameters ()[2].value ())));
+}
+
+// ---
+_INST_IMPL (FZ80::U5BIT_1WithIndirectIndexIY)
+{
+	assert (parameters ().size () == 4);
+
+	return (executeWith (1, valueAddressIY (parameters ()[2].value ())));
+}
+
+// ---
+_INST_IMPL (FZ80::U6BIT_1WithIndirectIndexIY)
+{
+	assert (parameters ().size () == 4);
+
+	return (executeWith (1, valueAddressIY (parameters ()[2].value ())));
+}
+
+// ---
+_INST_IMPL (FZ80::U7BIT_1WithIndirectIndexIY)
+{
+	assert (parameters ().size () == 4);
 
 	return (executeWith (1, valueAddressIY (parameters ()[2].value ())));
 }
@@ -243,11 +487,123 @@ _INST_IMPL (FZ80::BIT_2WithIndirectIndexIX)
 }
 
 // ---
+_INST_IMPL (FZ80::U1BIT_2WithIndirectIndexIX)
+{
+	assert (parameters ().size () == 4);
+
+	return (executeWith (2, valueAddressIX (parameters ()[2].value ())));
+}
+
+// ---
+_INST_IMPL (FZ80::U2BIT_2WithIndirectIndexIX)
+{
+	assert (parameters ().size () == 4);
+
+	return (executeWith (2, valueAddressIX (parameters ()[2].value ())));
+}
+
+// ---
+_INST_IMPL (FZ80::U3BIT_2WithIndirectIndexIX)
+{
+	assert (parameters ().size () == 4);
+
+	return (executeWith (2, valueAddressIX (parameters ()[2].value ())));
+}
+
+// ---
+_INST_IMPL (FZ80::U4BIT_2WithIndirectIndexIX)
+{
+	assert (parameters ().size () == 4);
+
+	return (executeWith (2, valueAddressIX (parameters ()[2].value ())));
+}
+
+// ---
+_INST_IMPL (FZ80::U5BIT_2WithIndirectIndexIX)
+{
+	assert (parameters ().size () == 4);
+
+	return (executeWith (2, valueAddressIX (parameters ()[2].value ())));
+}
+
+// ---
+_INST_IMPL (FZ80::U6BIT_2WithIndirectIndexIX)
+{
+	assert (parameters ().size () == 4);
+
+	return (executeWith (2, valueAddressIX (parameters ()[2].value ())));
+}
+
+// ---
+_INST_IMPL (FZ80::U7BIT_2WithIndirectIndexIX)
+{
+	assert (parameters ().size () == 4);
+
+	return (executeWith (2, valueAddressIX (parameters ()[2].value ())));
+}
+
+// ---
 _INST_IMPL (FZ80::BIT_2WithIndirectIndexIY)
 {
 	assert (parameters ().size () == 4);
 
 	// The parameter 3 is not used. It is the last code of the instruction actually
+
+	return (executeWith (2, valueAddressIY (parameters ()[2].value ())));
+}
+
+// ---
+_INST_IMPL (FZ80::U1BIT_2WithIndirectIndexIY)
+{
+	assert (parameters ().size () == 4);
+
+	return (executeWith (2, valueAddressIY (parameters ()[2].value ())));
+}
+
+// ---
+_INST_IMPL (FZ80::U2BIT_2WithIndirectIndexIY)
+{
+	assert (parameters ().size () == 4);
+
+	return (executeWith (2, valueAddressIY (parameters ()[2].value ())));
+}
+
+// ---
+_INST_IMPL (FZ80::U3BIT_2WithIndirectIndexIY)
+{
+	assert (parameters ().size () == 4);
+
+	return (executeWith (2, valueAddressIY (parameters ()[2].value ())));
+}
+
+// ---
+_INST_IMPL (FZ80::U4BIT_2WithIndirectIndexIY)
+{
+	assert (parameters ().size () == 4);
+
+	return (executeWith (2, valueAddressIY (parameters ()[2].value ())));
+}
+
+// ---
+_INST_IMPL (FZ80::U5BIT_2WithIndirectIndexIY)
+{
+	assert (parameters ().size () == 4);
+
+	return (executeWith (2, valueAddressIY (parameters ()[2].value ())));
+}
+
+// ---
+_INST_IMPL (FZ80::U6BIT_2WithIndirectIndexIY)
+{
+	assert (parameters ().size () == 4);
+
+	return (executeWith (2, valueAddressIY (parameters ()[2].value ())));
+}
+
+// ---
+_INST_IMPL (FZ80::U7BIT_2WithIndirectIndexIY)
+{
+	assert (parameters ().size () == 4);
 
 	return (executeWith (2, valueAddressIY (parameters ()[2].value ())));
 }
@@ -327,11 +683,123 @@ _INST_IMPL (FZ80::BIT_3WithIndirectIndexIX)
 }
 
 // ---
+_INST_IMPL (FZ80::U1BIT_3WithIndirectIndexIX)
+{
+	assert (parameters ().size () == 4);
+
+	return (executeWith (3, valueAddressIX (parameters ()[2].value ())));
+}
+
+// ---
+_INST_IMPL (FZ80::U2BIT_3WithIndirectIndexIX)
+{
+	assert (parameters ().size () == 4);
+
+	return (executeWith (3, valueAddressIX (parameters ()[2].value ())));
+}
+
+// ---
+_INST_IMPL (FZ80::U3BIT_3WithIndirectIndexIX)
+{
+	assert (parameters ().size () == 4);
+
+	return (executeWith (3, valueAddressIX (parameters ()[2].value ())));
+}
+
+// ---
+_INST_IMPL (FZ80::U4BIT_3WithIndirectIndexIX)
+{
+	assert (parameters ().size () == 4);
+
+	return (executeWith (3, valueAddressIX (parameters ()[2].value ())));
+}
+
+// ---
+_INST_IMPL (FZ80::U5BIT_3WithIndirectIndexIX)
+{
+	assert (parameters ().size () == 4);
+
+	return (executeWith (3, valueAddressIX (parameters ()[2].value ())));
+}
+
+// ---
+_INST_IMPL (FZ80::U6BIT_3WithIndirectIndexIX)
+{
+	assert (parameters ().size () == 4);
+
+	return (executeWith (3, valueAddressIX (parameters ()[2].value ())));
+}
+
+// ---
+_INST_IMPL (FZ80::U7BIT_3WithIndirectIndexIX)
+{
+	assert (parameters ().size () == 4);
+
+	return (executeWith (3, valueAddressIX (parameters ()[2].value ())));
+}
+
+// ---
 _INST_IMPL (FZ80::BIT_3WithIndirectIndexIY)
 {
 	assert (parameters ().size () == 4);
 
 	// The parameter 3 is not used. It is the last code of the instruction actually
+
+	return (executeWith (3, valueAddressIY (parameters ()[2].value ())));
+}
+
+// ---
+_INST_IMPL (FZ80::U1BIT_3WithIndirectIndexIY)
+{
+	assert (parameters ().size () == 4);
+
+	return (executeWith (3, valueAddressIY (parameters ()[2].value ())));
+}
+
+// ---
+_INST_IMPL (FZ80::U2BIT_3WithIndirectIndexIY)
+{
+	assert (parameters ().size () == 4);
+
+	return (executeWith (3, valueAddressIY (parameters ()[2].value ())));
+}
+
+// ---
+_INST_IMPL (FZ80::U3BIT_3WithIndirectIndexIY)
+{
+	assert (parameters ().size () == 4);
+
+	return (executeWith (3, valueAddressIY (parameters ()[2].value ())));
+}
+
+// ---
+_INST_IMPL (FZ80::U4BIT_3WithIndirectIndexIY)
+{
+	assert (parameters ().size () == 4);
+
+	return (executeWith (3, valueAddressIY (parameters ()[2].value ())));
+}
+
+// ---
+_INST_IMPL (FZ80::U5BIT_3WithIndirectIndexIY)
+{
+	assert (parameters ().size () == 4);
+
+	return (executeWith (3, valueAddressIY (parameters ()[2].value ())));
+}
+
+// ---
+_INST_IMPL (FZ80::U6BIT_3WithIndirectIndexIY)
+{
+	assert (parameters ().size () == 4);
+
+	return (executeWith (3, valueAddressIY (parameters ()[2].value ())));
+}
+
+// ---
+_INST_IMPL (FZ80::U7BIT_3WithIndirectIndexIY)
+{
+	assert (parameters ().size () == 4);
 
 	return (executeWith (3, valueAddressIY (parameters ()[2].value ())));
 }
@@ -411,11 +879,123 @@ _INST_IMPL (FZ80::BIT_4WithIndirectIndexIX)
 }
 
 // ---
+_INST_IMPL (FZ80::U1BIT_4WithIndirectIndexIX)
+{
+	assert (parameters ().size () == 4);
+
+	return (executeWith (4, valueAddressIX (parameters ()[2].value ())));
+}
+
+// ---
+_INST_IMPL (FZ80::U2BIT_4WithIndirectIndexIX)
+{
+	assert (parameters ().size () == 4);
+
+	return (executeWith (4, valueAddressIX (parameters ()[2].value ())));
+}
+
+// ---
+_INST_IMPL (FZ80::U3BIT_4WithIndirectIndexIX)
+{
+	assert (parameters ().size () == 4);
+
+	return (executeWith (4, valueAddressIX (parameters ()[2].value ())));
+}
+
+// ---
+_INST_IMPL (FZ80::U4BIT_4WithIndirectIndexIX)
+{
+	assert (parameters ().size () == 4);
+
+	return (executeWith (4, valueAddressIX (parameters ()[2].value ())));
+}
+
+// ---
+_INST_IMPL (FZ80::U5BIT_4WithIndirectIndexIX)
+{
+	assert (parameters ().size () == 4);
+
+	return (executeWith (4, valueAddressIX (parameters ()[2].value ())));
+}
+
+// ---
+_INST_IMPL (FZ80::U6BIT_4WithIndirectIndexIX)
+{
+	assert (parameters ().size () == 4);
+
+	return (executeWith (4, valueAddressIX (parameters ()[2].value ())));
+}
+
+// ---
+_INST_IMPL (FZ80::U7BIT_4WithIndirectIndexIX)
+{
+	assert (parameters ().size () == 4);
+
+	return (executeWith (4, valueAddressIX (parameters ()[2].value ())));
+}
+
+// ---
 _INST_IMPL (FZ80::BIT_4WithIndirectIndexIY)
 {
 	assert (parameters ().size () == 4);
 
 	// The parameter 3 is not used. It is the last code of the instruction actually
+
+	return (executeWith (4, valueAddressIY (parameters ()[2].value ())));
+}
+
+// ---
+_INST_IMPL (FZ80::U1BIT_4WithIndirectIndexIY)
+{
+	assert (parameters ().size () == 4);
+
+	return (executeWith (4, valueAddressIY (parameters ()[2].value ())));
+}
+
+// ---
+_INST_IMPL (FZ80::U2BIT_4WithIndirectIndexIY)
+{
+	assert (parameters ().size () == 4);
+
+	return (executeWith (4, valueAddressIY (parameters ()[2].value ())));
+}
+
+// ---
+_INST_IMPL (FZ80::U3BIT_4WithIndirectIndexIY)
+{
+	assert (parameters ().size () == 4);
+
+	return (executeWith (4, valueAddressIY (parameters ()[2].value ())));
+}
+
+// ---
+_INST_IMPL (FZ80::U4BIT_4WithIndirectIndexIY)
+{
+	assert (parameters ().size () == 4);
+
+	return (executeWith (4, valueAddressIY (parameters ()[2].value ())));
+}
+
+// ---
+_INST_IMPL (FZ80::U5BIT_4WithIndirectIndexIY)
+{
+	assert (parameters ().size () == 4);
+
+	return (executeWith (4, valueAddressIY (parameters ()[2].value ())));
+}
+
+// ---
+_INST_IMPL (FZ80::U6BIT_4WithIndirectIndexIY)
+{
+	assert (parameters ().size () == 4);
+
+	return (executeWith (4, valueAddressIY (parameters ()[2].value ())));
+}
+
+// ---
+_INST_IMPL (FZ80::U7BIT_4WithIndirectIndexIY)
+{
+	assert (parameters ().size () == 4);
 
 	return (executeWith (4, valueAddressIY (parameters ()[2].value ())));
 }
@@ -495,11 +1075,123 @@ _INST_IMPL (FZ80::BIT_5WithIndirectIndexIX)
 }
 
 // ---
+_INST_IMPL (FZ80::U1BIT_5WithIndirectIndexIX)
+{
+	assert (parameters ().size () == 4);
+
+	return (executeWith (5, valueAddressIX (parameters ()[2].value ())));
+}
+
+// ---
+_INST_IMPL (FZ80::U2BIT_5WithIndirectIndexIX)
+{
+	assert (parameters ().size () == 4);
+
+	return (executeWith (5, valueAddressIX (parameters ()[2].value ())));
+}
+
+// ---
+_INST_IMPL (FZ80::U3BIT_5WithIndirectIndexIX)
+{
+	assert (parameters ().size () == 4);
+
+	return (executeWith (5, valueAddressIX (parameters ()[2].value ())));
+}
+
+// ---
+_INST_IMPL (FZ80::U4BIT_5WithIndirectIndexIX)
+{
+	assert (parameters ().size () == 4);
+
+	return (executeWith (5, valueAddressIX (parameters ()[2].value ())));
+}
+
+// ---
+_INST_IMPL (FZ80::U5BIT_5WithIndirectIndexIX)
+{
+	assert (parameters ().size () == 4);
+
+	return (executeWith (5, valueAddressIX (parameters ()[2].value ())));
+}
+
+// ---
+_INST_IMPL (FZ80::U6BIT_5WithIndirectIndexIX)
+{
+	assert (parameters ().size () == 4);
+
+	return (executeWith (5, valueAddressIX (parameters ()[2].value ())));
+}
+
+// ---
+_INST_IMPL (FZ80::U7BIT_5WithIndirectIndexIX)
+{
+	assert (parameters ().size () == 4);
+
+	return (executeWith (5, valueAddressIX (parameters ()[2].value ())));
+}
+
+// ---
 _INST_IMPL (FZ80::BIT_5WithIndirectIndexIY)
 {
 	assert (parameters ().size () == 4);
 
 	// The parameter 3 is not used. It is the last code of the instruction actually
+
+	return (executeWith (5, valueAddressIY (parameters ()[2].value ())));
+}
+
+// ---
+_INST_IMPL (FZ80::U1BIT_5WithIndirectIndexIY)
+{
+	assert (parameters ().size () == 4);
+
+	return (executeWith (5, valueAddressIY (parameters ()[2].value ())));
+}
+
+// ---
+_INST_IMPL (FZ80::U2BIT_5WithIndirectIndexIY)
+{
+	assert (parameters ().size () == 4);
+
+	return (executeWith (5, valueAddressIY (parameters ()[2].value ())));
+}
+
+// ---
+_INST_IMPL (FZ80::U3BIT_5WithIndirectIndexIY)
+{
+	assert (parameters ().size () == 4);
+
+	return (executeWith (5, valueAddressIY (parameters ()[2].value ())));
+}
+
+// ---
+_INST_IMPL (FZ80::U4BIT_5WithIndirectIndexIY)
+{
+	assert (parameters ().size () == 4);
+
+	return (executeWith (5, valueAddressIY (parameters ()[2].value ())));
+}
+
+// ---
+_INST_IMPL (FZ80::U5BIT_5WithIndirectIndexIY)
+{
+	assert (parameters ().size () == 4);
+
+	return (executeWith (5, valueAddressIY (parameters ()[2].value ())));
+}
+
+// ---
+_INST_IMPL (FZ80::U6BIT_5WithIndirectIndexIY)
+{
+	assert (parameters ().size () == 4);
+
+	return (executeWith (5, valueAddressIY (parameters ()[2].value ())));
+}
+
+// ---
+_INST_IMPL (FZ80::U7BIT_5WithIndirectIndexIY)
+{
+	assert (parameters ().size () == 4);
 
 	return (executeWith (5, valueAddressIY (parameters ()[2].value ())));
 }
@@ -579,11 +1271,123 @@ _INST_IMPL (FZ80::BIT_6WithIndirectIndexIX)
 }
 
 // ---
+_INST_IMPL (FZ80::U1BIT_6WithIndirectIndexIX)
+{
+	assert (parameters ().size () == 4);
+
+	return (executeWith (6, valueAddressIX (parameters ()[2].value ())));
+}
+
+// ---
+_INST_IMPL (FZ80::U2BIT_6WithIndirectIndexIX)
+{
+	assert (parameters ().size () == 4);
+
+	return (executeWith (6, valueAddressIX (parameters ()[2].value ())));
+}
+
+// ---
+_INST_IMPL (FZ80::U3BIT_6WithIndirectIndexIX)
+{
+	assert (parameters ().size () == 4);
+
+	return (executeWith (6, valueAddressIX (parameters ()[2].value ())));
+}
+
+// ---
+_INST_IMPL (FZ80::U4BIT_6WithIndirectIndexIX)
+{
+	assert (parameters ().size () == 4);
+
+	return (executeWith (6, valueAddressIX (parameters ()[2].value ())));
+}
+
+// ---
+_INST_IMPL (FZ80::U5BIT_6WithIndirectIndexIX)
+{
+	assert (parameters ().size () == 4);
+
+	return (executeWith (6, valueAddressIX (parameters ()[2].value ())));
+}
+
+// ---
+_INST_IMPL (FZ80::U6BIT_6WithIndirectIndexIX)
+{
+	assert (parameters ().size () == 4);
+
+	return (executeWith (6, valueAddressIX (parameters ()[2].value ())));
+}
+
+// ---
+_INST_IMPL (FZ80::U7BIT_6WithIndirectIndexIX)
+{
+	assert (parameters ().size () == 4);
+
+	return (executeWith (6, valueAddressIX (parameters ()[2].value ())));
+}
+
+// ---
 _INST_IMPL (FZ80::BIT_6WithIndirectIndexIY)
 {
 	assert (parameters ().size () == 4);
 
 	// The parameter 3 is not used. It is the last code of the instruction actually
+
+	return (executeWith (6, valueAddressIY (parameters ()[2].value ())));
+}
+
+// ---
+_INST_IMPL (FZ80::U1BIT_6WithIndirectIndexIY)
+{
+	assert (parameters ().size () == 4);
+
+	return (executeWith (6, valueAddressIY (parameters ()[2].value ())));
+}
+
+// ---
+_INST_IMPL (FZ80::U2BIT_6WithIndirectIndexIY)
+{
+	assert (parameters ().size () == 4);
+
+	return (executeWith (6, valueAddressIY (parameters ()[2].value ())));
+}
+
+// ---
+_INST_IMPL (FZ80::U3BIT_6WithIndirectIndexIY)
+{
+	assert (parameters ().size () == 4);
+
+	return (executeWith (6, valueAddressIY (parameters ()[2].value ())));
+}
+
+// ---
+_INST_IMPL (FZ80::U4BIT_6WithIndirectIndexIY)
+{
+	assert (parameters ().size () == 4);
+
+	return (executeWith (6, valueAddressIY (parameters ()[2].value ())));
+}
+
+// ---
+_INST_IMPL (FZ80::U5BIT_6WithIndirectIndexIY)
+{
+	assert (parameters ().size () == 4);
+
+	return (executeWith (6, valueAddressIY (parameters ()[2].value ())));
+}
+
+// ---
+_INST_IMPL (FZ80::U6BIT_6WithIndirectIndexIY)
+{
+	assert (parameters ().size () == 4);
+
+	return (executeWith (6, valueAddressIY (parameters ()[2].value ())));
+}
+
+// ---
+_INST_IMPL (FZ80::U7BIT_6WithIndirectIndexIY)
+{
+	assert (parameters ().size () == 4);
 
 	return (executeWith (6, valueAddressIY (parameters ()[2].value ())));
 }
@@ -663,11 +1467,123 @@ _INST_IMPL (FZ80::BIT_7WithIndirectIndexIX)
 }
 
 // ---
+_INST_IMPL (FZ80::U1BIT_7WithIndirectIndexIX)
+{
+	assert (parameters ().size () == 4);
+
+	return (executeWith (7, valueAddressIX (parameters ()[2].value ())));
+}
+
+// ---
+_INST_IMPL (FZ80::U2BIT_7WithIndirectIndexIX)
+{
+	assert (parameters ().size () == 4);
+
+	return (executeWith (7, valueAddressIX (parameters ()[2].value ())));
+}
+
+// ---
+_INST_IMPL (FZ80::U3BIT_7WithIndirectIndexIX)
+{
+	assert (parameters ().size () == 4);
+
+	return (executeWith (7, valueAddressIX (parameters ()[2].value ())));
+}
+
+// ---
+_INST_IMPL (FZ80::U4BIT_7WithIndirectIndexIX)
+{
+	assert (parameters ().size () == 4);
+
+	return (executeWith (7, valueAddressIX (parameters ()[2].value ())));
+}
+
+// ---
+_INST_IMPL (FZ80::U5BIT_7WithIndirectIndexIX)
+{
+	assert (parameters ().size () == 4);
+
+	return (executeWith (7, valueAddressIX (parameters ()[2].value ())));
+}
+
+// ---
+_INST_IMPL (FZ80::U6BIT_7WithIndirectIndexIX)
+{
+	assert (parameters ().size () == 4);
+
+	return (executeWith (7, valueAddressIX (parameters ()[2].value ())));
+}
+
+// ---
+_INST_IMPL (FZ80::U7BIT_7WithIndirectIndexIX)
+{
+	assert (parameters ().size () == 4);
+
+	return (executeWith (7, valueAddressIX (parameters ()[2].value ())));
+}
+
+// ---
 _INST_IMPL (FZ80::BIT_7WithIndirectIndexIY)
 {
 	assert (parameters ().size () == 4);
 
 	// The parameter 3 is not used. It is the last code of the instruction actually
+
+	return (executeWith (7, valueAddressIY (parameters ()[2].value ())));
+}
+
+// ---
+_INST_IMPL (FZ80::U1BIT_7WithIndirectIndexIY)
+{
+	assert (parameters ().size () == 4);
+
+	return (executeWith (7, valueAddressIY (parameters ()[2].value ())));
+}
+
+// ---
+_INST_IMPL (FZ80::U2BIT_7WithIndirectIndexIY)
+{
+	assert (parameters ().size () == 4);
+
+	return (executeWith (7, valueAddressIY (parameters ()[2].value ())));
+}
+
+// ---
+_INST_IMPL (FZ80::U3BIT_7WithIndirectIndexIY)
+{
+	assert (parameters ().size () == 4);
+
+	return (executeWith (7, valueAddressIY (parameters ()[2].value ())));
+}
+
+// ---
+_INST_IMPL (FZ80::U4BIT_7WithIndirectIndexIY)
+{
+	assert (parameters ().size () == 4);
+
+	return (executeWith (7, valueAddressIY (parameters ()[2].value ())));
+}
+
+// ---
+_INST_IMPL (FZ80::U5BIT_7WithIndirectIndexIY)
+{
+	assert (parameters ().size () == 4);
+
+	return (executeWith (7, valueAddressIY (parameters ()[2].value ())));
+}
+
+// ---
+_INST_IMPL (FZ80::U6BIT_7WithIndirectIndexIY)
+{
+	assert (parameters ().size () == 4);
+
+	return (executeWith (7, valueAddressIY (parameters ()[2].value ())));
+}
+
+// ---
+_INST_IMPL (FZ80::U7BIT_7WithIndirectIndexIY)
+{
+	assert (parameters ().size () == 4);
 
 	return (executeWith (7, valueAddressIY (parameters ()[2].value ())));
 }

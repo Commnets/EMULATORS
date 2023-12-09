@@ -3,8 +3,23 @@
 // ---
 _INST_IMPL (FZ80::ADD_AWithA)
 {
-	assert (parameters ().size () == 1 ||parameters ().size () == 2);
-	// Because in the non documented instructions the instruction code is 2 bytes long
+	assert (parameters ().size () == 1);
+
+	return (executeWith (registerA ().values ()[0], false));
+}
+
+// ---
+_INST_IMPL (FZ80::U1ADD_AWithA)
+{
+	assert (parameters ().size () == 2);
+
+	return (executeWith (registerA ().values ()[0], false));
+}
+
+// ---
+_INST_IMPL (FZ80::U2ADD_AWithA)
+{
+	assert (parameters ().size () == 2);
 
 	return (executeWith (registerA ().values ()[0], false));
 }
@@ -12,8 +27,23 @@ _INST_IMPL (FZ80::ADD_AWithA)
 // ---
 _INST_IMPL (FZ80::ADD_AWithB)
 {
-	assert (parameters ().size () == 1 ||parameters ().size () == 2);
-	// Because in the non documented instructions the instruction code is 2 bytes long
+	assert (parameters ().size () == 1);
+
+	return (executeWith (registerB ().values ()[0], false));
+}
+
+// ---
+_INST_IMPL (FZ80::U1ADD_AWithB)
+{
+	assert (parameters ().size () == 2);
+
+	return (executeWith (registerB ().values ()[0], false));
+}
+
+// ---
+_INST_IMPL (FZ80::U2ADD_AWithB)
+{
+	assert (parameters ().size () == 2);
 
 	return (executeWith (registerB ().values ()[0], false));
 }
@@ -21,8 +51,23 @@ _INST_IMPL (FZ80::ADD_AWithB)
 // ---
 _INST_IMPL (FZ80::ADD_AWithC)
 {
-	assert (parameters ().size () == 1 ||parameters ().size () == 2);
-	// Because in the non documented instructions the instruction code is 2 bytes long
+	assert (parameters ().size () == 1);
+
+	return (executeWith (registerC ().values ()[0], false));
+}
+
+// ---
+_INST_IMPL (FZ80::U1ADD_AWithC)
+{
+	assert (parameters ().size () == 2);
+
+	return (executeWith (registerC ().values ()[0], false));
+}
+
+// ---
+_INST_IMPL (FZ80::U2ADD_AWithC)
+{
+	assert (parameters ().size () == 2);
 
 	return (executeWith (registerC ().values ()[0], false));
 }
@@ -30,8 +75,23 @@ _INST_IMPL (FZ80::ADD_AWithC)
 // ---
 _INST_IMPL (FZ80::ADD_AWithD)
 {
-	assert (parameters ().size () == 1 ||parameters ().size () == 2);
-	// Because in the non documented instructions the instruction code is 2 bytes long
+	assert (parameters ().size () == 1);
+
+	return (executeWith (registerD ().values ()[0], false));
+}
+
+// ---
+_INST_IMPL (FZ80::U1ADD_AWithD)
+{
+	assert (parameters ().size () == 2);
+
+	return (executeWith (registerD ().values ()[0], false));
+}
+
+// ---
+_INST_IMPL (FZ80::U2ADD_AWithD)
+{
+	assert (parameters ().size () == 2);
 
 	return (executeWith (registerD ().values ()[0], false));
 }
@@ -39,8 +99,23 @@ _INST_IMPL (FZ80::ADD_AWithD)
 // ---
 _INST_IMPL (FZ80::ADD_AWithE)
 {
-	assert (parameters ().size () == 1 ||parameters ().size () == 2);
-	// Because in the non documented instructions the instruction code is 2 bytes long
+	assert (parameters ().size () == 1);
+
+	return (executeWith (registerE ().values ()[0], false));
+}
+
+// ---
+_INST_IMPL (FZ80::U1ADD_AWithE)
+{
+	assert (parameters ().size () == 2);
+
+	return (executeWith (registerE ().values ()[0], false));
+}
+
+// ---
+_INST_IMPL (FZ80::U2ADD_AWithE)
+{
+	assert (parameters ().size () == 2);
 
 	return (executeWith (registerE ().values ()[0], false));
 }
@@ -230,9 +305,41 @@ _INST_IMPL (FZ80::ADC_AWithA)
 }
 
 // ---
+_INST_IMPL (FZ80::U1ADC_AWithA)
+{
+	assert (parameters ().size () == 2);
+
+	return (executeWith (registerA ().values ()[0], true));
+}
+
+// ---
+_INST_IMPL (FZ80::U2ADC_AWithA)
+{
+	assert (parameters ().size () == 2);
+
+	return (executeWith (registerA ().values ()[0], true));
+}
+
+// ---
 _INST_IMPL (FZ80::ADC_AWithB)
 {
 	assert (parameters ().size () == 1);
+
+	return (executeWith (registerB ().values ()[0], true));
+}
+
+// ---
+_INST_IMPL (FZ80::U1ADC_AWithB)
+{
+	assert (parameters ().size () == 2);
+
+	return (executeWith (registerB ().values ()[0], true));
+}
+
+// ---
+_INST_IMPL (FZ80::U2ADC_AWithB)
+{
+	assert (parameters ().size () == 2);
 
 	return (executeWith (registerB ().values ()[0], true));
 }
@@ -246,6 +353,22 @@ _INST_IMPL (FZ80::ADC_AWithC)
 }
 
 // ---
+_INST_IMPL (FZ80::U1ADC_AWithC)
+{
+	assert (parameters ().size () == 2);
+
+	return (executeWith (registerC ().values ()[0], true));
+}
+
+// ---
+_INST_IMPL (FZ80::U2ADC_AWithC)
+{
+	assert (parameters ().size () == 2);
+
+	return (executeWith (registerC ().values ()[0], true));
+}
+
+// ---
 _INST_IMPL (FZ80::ADC_AWithD)
 {
 	assert (parameters ().size () == 1);
@@ -254,9 +377,41 @@ _INST_IMPL (FZ80::ADC_AWithD)
 }
 
 // ---
+_INST_IMPL (FZ80::U1ADC_AWithD)
+{
+	assert (parameters ().size () == 2);
+
+	return (executeWith (registerD ().values ()[0], true));
+}
+
+// ---
+_INST_IMPL (FZ80::U2ADC_AWithD)
+{
+	assert (parameters ().size () == 2);
+
+	return (executeWith (registerD ().values ()[0], true));
+}
+
+// ---
 _INST_IMPL (FZ80::ADC_AWithE)
 {
 	assert (parameters ().size () == 1);
+
+	return (executeWith (registerE ().values ()[0], true));
+}
+
+// ---
+_INST_IMPL (FZ80::U1ADC_AWithE)
+{
+	assert (parameters ().size () == 2);
+
+	return (executeWith (registerE ().values ()[0], true));
+}
+
+// ---
+_INST_IMPL (FZ80::U2ADC_AWithE)
+{
+	assert (parameters ().size () == 2);
 
 	return (executeWith (registerE ().values ()[0], true));
 }
