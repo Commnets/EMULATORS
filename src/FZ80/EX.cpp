@@ -84,6 +84,7 @@ bool FZ80::InstBlock_General::executeMoveWith (int a)
 	MCHEmul::Register& rE		= registerE ();
 	MCHEmul::Register& rH		= registerH ();
 	MCHEmul::Register& rL		= registerL ();
+
 	MCHEmul::StatusRegister& st = cpu () -> statusRegister ();
 
 	// The data of those registers, and the way they have to be managed...
@@ -129,6 +130,7 @@ bool FZ80::InstBlock_General::executeCompareWith (int a)
 	MCHEmul::Register& rC		= registerC ();
 	MCHEmul::Register& rH		= registerH ();
 	MCHEmul::Register& rL		= registerL ();
+
 	MCHEmul::StatusRegister& st = cpu () -> statusRegister ();
 
 	// The data of those registers, and the way they have to be managed...

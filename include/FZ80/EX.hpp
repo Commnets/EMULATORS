@@ -75,7 +75,7 @@ namespace FZ80
 							{ }
 
 		protected:
-		/** The parameter a idicates the quantity to move up or down. \n
+		/** The parameter a indicates the quantity to move up or down. \n
 			It has to be -1 or 1. */
 		bool executeMoveWith (int a);
 		bool executeCompareWith (int a);
@@ -87,24 +87,24 @@ namespace FZ80
 		bool _bc0;
 	};
 
-	// (DE) <- (HL) & Next memory position
+	// (DE) <- (HL) & Next memory position (HL = HL + 1) & --Counter (BC = BC - 1)
 	_INST_FROM (0xEDA0,	2, 16, 16,	"LDI",					LDI, InstBlock_General);
-	// (DE) <- (HL) & Next memory position until BC == 0
+	// (DE) <- (HL) & Next memory position & Counter-- until BC == 0
 	// 21 Cycles when BC != 0 (_additionalCycles = 5). _FINISH = true when BC == 0
 	_INST_FROM (0xEDB0,	2, 16, 16,	"LDIR",					LDIR, InstBlock_General);
-	// (DE) <- (HL) & Previous memory position
+	// (DE) <- (HL) & Previous memory position (HL = HL - 1) & --Counter
 	_INST_FROM (0xEDA8,	2, 16, 16,	"LDD",					LDD, InstBlock_General);
 	// (DE) <- (HL) & Previous memory position until BC == 0
 	// 21 Cycles when BC != 0 (_additionalCycles = 5). _FINISH = true when BC == 0
 	_INST_FROM (0xEDB8,	2, 16, 16,	"LDDR",					LDDR, InstBlock_General);
-	// A compared with (HL) & Next memory position
+	// A compared with (HL) & Next memory position (HL = HL + 1) & --Counter (BC = BC - 1)
 	_INST_FROM (0xEDA1,	2, 16, 16,	"CPI",					CPI, InstBlock_General);
-	// A compared with (HL) & Next memory position until BC == 0
+	// A compared with (HL) & Next memory position & --Counter until BC == 0
 	// 21 Cycles when BC != 0 and A != (HL) (_additionalCycles = 5). _FINISH = true when BC == 0 or A == (HL)
 	_INST_FROM (0xEDB1,	2, 16, 16,	"CPIR",					CPIR, InstBlock_General);
-	// A compared with (HL) & Previous memory position
+	// A compared with (HL) & Previous memory position& --Counter
 	_INST_FROM (0xEDA9,	2, 16, 16,	"CPD",					CPD, InstBlock_General);
-	// A compared with (HL) & Previous memory position until BC == 0
+	// A compared with (HL) & Previous memory position & --Counter until BC == 0
 	// 21 Cycles when BC != 0 and A != (HL) (_additionalCycles = 5). _FINISH = true when BC == 0 or A == (HL)
 	_INST_FROM (0xEDB9,	2, 16, 16,	"CPDR",					CPDR, InstBlock_General);
 }

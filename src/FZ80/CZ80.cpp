@@ -1636,6 +1636,12 @@ MCHEmul::Instructions FZ80::CZ80::createInstructions ()
 	EDInstructions [0xED68]		= new FZ80::IN_LFromPort;
 	EDInstructions [0xED70]		= new FZ80::IN_FFromPort;					// Undocumented
 
+	// IN Block
+	EDInstructions [0xEDA2]		= new FZ80::INI;
+	EDInstructions [0xEDB2]		= new FZ80::INIR;	
+	EDInstructions [0xEDAA]		= new FZ80::IND;
+	EDInstructions [0xEDBA]		= new FZ80::INDR;	
+
 	// OUT: Move the value to a port!
 	result [0xD3]				= new FZ80::OUT_A;
 	EDInstructions [0xED79]		= new FZ80::OUT_AToPort;
@@ -1646,6 +1652,12 @@ MCHEmul::Instructions FZ80::CZ80::createInstructions ()
 	EDInstructions [0xED61]		= new FZ80::OUT_HToPort;
 	EDInstructions [0xED69]		= new FZ80::OUT_LToPort;
 	EDInstructions [0xED71]		= new FZ80::OUT_0ToPort;					// Undocumented
+
+	// OUT Block
+	EDInstructions [0xEDA3]		= new FZ80::OUTI;
+	EDInstructions [0xEDB3]		= new FZ80::OTIR;	
+	EDInstructions [0xEDAB]		= new FZ80::OUTD;
+	EDInstructions [0xEDBB]		= new FZ80::OTDR;	
 
 	// There are two levels of abstraction!
 	// Add the bit instruction groups into their parent groups...

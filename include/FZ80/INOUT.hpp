@@ -31,8 +31,7 @@ namespace FZ80
 
 		protected:
 		/** Just over A with a port value. Flags are not affected. */
-		bool executeAWith (unsigned char np)
-							{ registerA ().set ({ static_cast <CZ80*> (cpu ()) -> port (np) }); return (true); }
+		inline bool executeAWith (unsigned char np);
 		/** Over any register and affecting flags. */
 		inline bool executeWith (MCHEmul::Register& r, unsigned char np);
 		/** Just affecting flags. */
@@ -43,8 +42,21 @@ namespace FZ80
 	};
 
 	// ---
+	inline bool IN_General::executeAWith (unsigned char np)
+	{ 
+		// The value of the component BC is pushed into the address bus...
+		cpu () -> setAddressBusValues (MCHEmul::Address ({ registerA ().values ()[0], np }, true /** Already in big endian. */));
+		// ...because it migth be usefull when reading the port!
+		registerA ().set ({ static_cast <CZ80*> (cpu ()) -> port (np) }); 
+		
+		return (true); 
+	}
+
+	// ---
 	inline bool IN_General::executeWith (MCHEmul::Register& r, unsigned char np)
 	{
+		cpu () -> setAddressBusValues (MCHEmul::Address ({ registerA ().values ()[0], np }, true));
+
 		MCHEmul::UByte v;
 		r.set ({ v = static_cast <CZ80*> (cpu ()) -> port (np) });
 
@@ -56,6 +68,8 @@ namespace FZ80
 	// ---
 	inline bool IN_General::executeWith (unsigned char np)
 	{
+		cpu () -> setAddressBusValues (MCHEmul::Address ({ registerA ().values ()[0], np }, true));
+
 		affectFlags (static_cast <CZ80*> (cpu ()) -> port (np));
 
 		return (true);
@@ -89,6 +103,40 @@ namespace FZ80
 	// Just affecting the flags, but not loading anything in anyplace...
 	_INST_FROM (0xED70,		3, 12, 12,	"IN ([#1])",			IN_FFromPort, IN_General);		// Undocumented
 
+	/** IN as a block. */
+	class INBlock_General : public Instruction
+	{
+		public:
+		INBlock_General (unsigned int c, unsigned int mp, unsigned int cc, unsigned int rcc, 
+				const std::string& t)
+			: Instruction (c, mp, cc, rcc, t),
+			  _inExecution (false),
+			  _b0 (false)
+							{ }
+
+		protected:
+		/** The parameter a indicates the quantity to move up or down. \n
+			It has to be -1 or 1. */
+		bool executeWith (int a);
+
+		// Implementation
+		/** True when it is in execution. */
+		bool _inExecution;
+		/** True when _bc0. */
+		bool _b0;
+	};
+
+	// (HL) <- IN(BC) & Next memory position (HL = HL + 1) & --Counter (B = B - 1)
+	_INST_FROM (0xEDA2,		2, 16, 16,	"INI",				INI, INBlock_General);
+	// (HL) <- IN(BC) & Next memory position & --Counter until B = 0;
+	// 21 Cycles when B != 0 (_additionalCycles = 5). _FINISH = true when B == 0
+	_INST_FROM (0xEDB2,		2, 16, 16,	"INIR",				INIR, INBlock_General);	
+	// (HL) <- IN(BC) & Previous memory position (HL = HL - 1) & --Counter (B = B - 1)
+	_INST_FROM (0xEDAA,		2, 16, 16,	"IND",				IND, INBlock_General);
+	// (HL) <- IN(BC) & Previous memory position & --Counter until B = 0;
+	// 21 Cycles when B != 0 (_additionalCycles = 5). _FINISH = true when B == 0
+	_INST_FROM (0xEDBA,		2, 16, 16,	"INDR",				INDR, INBlock_General);	
+
 	/** OUT_General: To save any value to a port. \n
 		None affects the flags. */
 	class OUT_General : public Instruction
@@ -100,15 +148,43 @@ namespace FZ80
 							{ }
 
 		protected:
-		bool execute0With (unsigned char np)
-							{ static_cast <CZ80*> (cpu ()) -> setPort (np, MCHEmul::UByte::_0); return (true);  }
+		inline bool execute0With (unsigned char np);
 		/** Just from A to a port. */
-		bool executeAWith (unsigned char np)
-							{ static_cast <CZ80*> (cpu ()) -> setPort (np, registerA ().values ()[0].value ()); return (true); }
+		inline bool executeAWith (unsigned char np);
 		/** From any register to a port */
-		bool executeWith (MCHEmul::Register& r, unsigned char np)
-							{ static_cast <CZ80*> (cpu ()) -> setPort (np, r.values ()[0].value ()); return (true); }
+		inline bool executeWith (MCHEmul::Register& r, unsigned char np);
 	};
+
+	// ---
+	inline bool OUT_General::execute0With (unsigned char np)
+	{ 
+		// The value of the component BC is pushed into the address bus...
+		cpu () -> setAddressBusValues (MCHEmul::Address ({ registerA ().values ()[0], np }, true /** Already in big endian. */));
+		// ...because it migth be usefull when writting into the port!
+		static_cast <CZ80*> (cpu ()) -> setPort (np, MCHEmul::UByte::_0); 
+		
+		return (true);  
+	}
+
+	// ---
+	inline bool OUT_General::executeAWith (unsigned char np)
+	{ 
+		cpu () -> setAddressBusValues (MCHEmul::Address ({ registerA ().values ()[0], np }, true));
+
+		static_cast <CZ80*> (cpu ()) -> setPort (np, registerA ().values ()[0].value ()); 
+		
+		return (true);
+	}
+
+	// ---
+	inline bool OUT_General::executeWith (MCHEmul::Register& r, unsigned char np)
+	{ 
+		cpu () -> setAddressBusValues (MCHEmul::Address ({ registerA ().values ()[0], np }, true));
+
+		static_cast <CZ80*> (cpu ()) -> setPort (np, r.values ()[0].value ()); 
+		
+		return (true); 
+	}
 
 	// To A. Quicker...
 	_INST_FROM (0xD3,		2, 11, 11,	"OUT ([#1]),A",			OUT_A, OUT_General);
@@ -122,6 +198,40 @@ namespace FZ80
 	_INST_FROM (0xED69,		3, 12, 12,	"OUT ([#1]),L",			OUT_LToPort, OUT_General);
 	// Just 0 to a port
 	_INST_FROM (0xED71,		2, 12, 12,	"OUT ([#1]),0",			OUT_0ToPort, OUT_General);		// Undocumented
+
+	/** OUT as a block. */
+	class OUTBlock_General : public Instruction
+	{
+		public:
+		OUTBlock_General (unsigned int c, unsigned int mp, unsigned int cc, unsigned int rcc, 
+				const std::string& t)
+			: Instruction (c, mp, cc, rcc, t),
+			  _inExecution (false),
+			  _b0 (false)
+							{ }
+
+		protected:
+		/** The parameter a indicates the quantity to move up or down. \n
+			It has to be -1 or 1. */
+		bool executeWith (int a);
+
+		// Implementation
+		/** True when it is in execution. */
+		bool _inExecution;
+		/** True when _bc0. */
+		bool _b0;
+	};
+
+	// (HL) -> OUT(BC) & Next memory position (HL = HL + 1) & --Counter (B = B - 1)
+	_INST_FROM (0xEDA3,		2, 16, 16,	"OUTI",				OUTI, OUTBlock_General);
+	// (HL) -> OUT(BC) & Next memory position & --Counter until B = 0;
+	// 21 Cycles when B != 0 (_additionalCycles = 5). _FINISH = true when B == 0
+	_INST_FROM (0xEDB3,		2, 16, 16,	"OTIR",				OTIR, OUTBlock_General);	
+	// (HL) -> OUT(BC) & Previous memory position (HL = HL - 1) & --Counter (B = B - 1)
+	_INST_FROM (0xEDAB,		2, 16, 16,	"OUTD",				OUTD, OUTBlock_General);
+	// (HL) -> OUT(BC) & Previous memory position & --Counter until B = 0;
+	// 21 Cycles when B != 0 (_additionalCycles = 5). _FINISH = true when B == 0
+	_INST_FROM (0xEDBB,		2, 16, 16,	"OTDR",				OTDR, OUTBlock_General);	
 }
 
 #endif
