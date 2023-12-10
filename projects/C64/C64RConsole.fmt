@@ -1,0 +1,40 @@
+#Formats used for the C64 Emulation
+#(C) 2022 Ignacio Cea Fornies
+?./Commodore.fmt
+?./Standard.fmt
+#---
+;CIA1
+Id:@ID@
+@ATTRS?{key=YES,equal=:,empty=no attributes}\n@
+->Registers:
+@Registers>@
+->Timer A:
+@TimerA>@
+->Timer B:
+@TimerB>@
+-> Clock:
+@Clock>@
+-> Ports:
+A:@PortA@, B:@PortB@
+Dir A:@CIDDRA@, Dir B:@CIDDRB@
+-> SerialPort:
+@SerialPort>@
+#---
+#---
+;CIA2
+Id:@ID@
+@ATTRS?{key=YES,equal=:,empty=no attributes}\n@
+->Registers:
+@Registers>@
+->Timer A:
+@TimerA>@
+->Timer B:
+@TimerB>@
+-> Clock:
+@Clock>@
+-> Ports:
+A:@PortA@, B:@PortB@
+Dir A:@CIDDRA@, Dir B:@CIDDRB@
+-> SerialPort:
+@SerialPort>@
+#---

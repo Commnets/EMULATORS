@@ -1,0 +1,12 @@
+#VIC20 Console
+#When the command has an error an can't be executed
+Command can't be executed
+#When the command requeted doesn't exist
+Command does't exist
+#Command prompt
+?:
+#Welcome text
+Commodore VIC20 Console
+(C) By Ignacio Cea Fornies
+Introduce command after prompt
+QUIT/quit/q to exit

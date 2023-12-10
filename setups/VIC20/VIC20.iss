@@ -15,6 +15,8 @@ UninstallDisplayIcon={app}\VIC20Logo.ico
 
 [Files]
 Source: "VIC20EmulatorC.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "VIC20Emulator.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "RVIC20Console.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "6500Compiler.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Test6500.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "basic.901486-01.bin"; DestDir: "{app}"; Flags: ignoreversion

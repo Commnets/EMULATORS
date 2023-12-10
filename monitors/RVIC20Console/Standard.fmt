@@ -1,0 +1,304 @@
+#General Formats
+#Usually attached to Standard Commands
+#(C) 2022 Ignacio Cea Fornies
+?./Default.fmt
+#---
+;Author
+@NAME@
+From @CITY@ (@COUNTRY@) At @DATE@
+email:@EMAIL@
+I hope you like this emulator!
+What I really love is @LOVE@
+#---
+#---
+;Architecture
+@ATTRS?{key=YES,equal=:,empty=no attributes}\n@
+@NBYTES@ bytes, @NBITS@ bits, @NBYTESPERINST@ bytes per instruction
+Big Endian:@ENDIAN@
+#---
+#---
+;Interrupt
+Id:@ID@, In Execution:@EXECUTION@
+#---
+#---
+;CPU
+#The info about the Architecture here
+@Architecture>@
+@REGS?{key=NO,equal=:,empty=no registers},@
+@PC@
+@SR@
+->Interrupts:
+@INTERRUPTS?{fmter=.CLASS,empty=no interruptions}\n@
+#---
+#---
+;ClockFactor
+#---
+#---
+;PhysicalStorageSubset
+Id:@ID@, Address:$@ADDRESS@, Size:@SIZE@
+Active:@ACTIVE@, Read:@READ@
+@BYTES{blocksize=16,listsep=\,,tablesep=\ ,minsize=2}@
+#---
+#---
+;MemoryView
+@STORAGES?{key=NO,equal=:,empty=no storages}\n@
+#---
+#---
+;Memory
+@STORAGES?{key=NO,equal=:,empty=no storages}\n@
+#---
+#---
+;Stack
+@PhysicalStorageSubset>@
+From Back:@BACK@, Last Point:@LAST@
+Overflow:@OVERFLOW@
+Empty:@EMPTY@
+Position:@POSITION@
+#---
+#---
+;Chip
+Id:@ID@
+@ATTRS?\n@
+->Memory:
+@Memory>@
+#---
+;Computer
+@ATTRS?{key=YES,equal=:,empty=no attributes}\n@
+->CPU:
+@CPU>@
+->Chips:
+@CHIPS?{fmter=.CLASS,empty=no chips}\n---\n@
+->Devices:
+@DEVICES?{fmter=.CLASS,empty=no devices}\n---\n@
+#---
+#---
+;Peripheral
+Id:@ID@
+@ATTRS?{key=YES,equal=:,empty=no attributes}\n@
+#---
+#---
+;IODevice
+Id:@ID@
+@ATTRS?{key=YES,equal=:,empty=no attributes}\n@
+->Peripherals:
+@IOPERIPHERALS?{fmter=.CLASS,empty=no peripherals}\n@
+#---
+#---
+;IOSystem
+Id:@ID@
+@ATTRS?{key=YES,equal=:,empty=no attributes}\n@
+Joysticks:@JOYSTICKS@
+->Peripherals:
+@IOPERIPHERALS?{fmter=.CLASS,empty=no peripherals}\n@
+#---
+#---
+;Screen
+Id:@ID@
+@ATTRS?{key=YES,equal=:,empty=no attributes}\n@
+@NAME@(@HERTZS@Hz)@COLUMNS@x@ROWS@
+->Peripherals:
+@IOPERIPHERALS?{fmter=.CLASS,empty=no peripherals}\n@
+#---
+#---
+;SoundSystem
+Id:@ID@
+@ATTRS?{key=YES,equal=:,empty=no attributes}\n@
+Data Form:@TYPE@ Frequency:@FREQUENCY@kHz Channels:@CHANNELS@
+->Peripherals:
+@IOPERIPHERALS?{fmter=.CLASS,empty=no peripherals}\n@
+#---
+#---
+;SoundLibWrapper
+@ATTRS?{key=YES,equal=:,empty=no attributes}\n@
+#---
+#---
+;SoundVoice
+Active:@ACTIVE@
+ADSR:@ATTACK@/@DECAY@/@SUSTAIN@/@RELEASE@(@STATE@)
+@WAVES?{fmter=.CLASS,empty=no waves}\n@
+#---
+#---
+;SoundWave
+Active:@ACTIVE@, Type:@TYPE@, Frequency:@FREQUENCY@
+#---
+#---
+;SoundPulseWave
+Active:@ACTIVE@, Type:@TYPE@, Frequency:@FREQUENCY@(@PULSEUP@)
+#---
+#---
+;CRESTART
+#---
+#---
+;CAUTHOR
+@Author>@
+#---
+#---
+;CHELP
+@HELP?{key=YES,equal=:\n,empty=no help}\n@
+#---
+#---
+;CINTERRUPTS
+@INTERRUPTS?{fmter=.CLASS,empty=no interruptions}\n@
+#---
+#---
+;CIDEBUGON
+->Errors:
+@ERROR@
+#---
+#---
+;CIDEBUGOFF
+->Errors:
+@ERROR@
+#---
+#---
+;CSTATUS
+@SR@
+#---
+#---
+;CREGISTERS
+@REGS?{key=NO,equal=:,empty=no registers},@
+#---
+#---
+;CPC
+@PC@
+#---
+#---
+;CSETPC
+#---
+#---
+;CSTACK
+@Stack>@
+#---
+#---
+;CCPUSTATUS
+Last:@INST@
+@PC@
+@REGS?{key=NO,equal=:,empty=no registers},@
+@SR@
+->Stack:
+@Stack>@
+->Interrupts:
+@INTERRUPTS?{fmter=.CLASS,empty=no interruptions}\n@
+#---
+#---
+;CCPUSSTATUS
+Last:@INST@
+@PC@
+@REGS?{key=NO,equal=:,empty=no registers},@
+@SR@
+->Interrupts:
+@INTERRUPTS?{fmter=.CLASS,empty=no interruptions}\n@
+#---
+#---
+;CCPUINFO
+@CPU>@
+#---
+#---
+;CACTIVATEDEEPDEBUG
+->Errors:
+@ERROR@
+#---
+#---
+;CDESACTIVATEDEEPDEBUG
+->Errors:
+@ERROR@
+#---
+#---
+;CCLOCKFACTOR
+#---
+#---
+;CCHIPS
+@CHIPS?{key=YES,equal=:,empty=no chips}\n@
+#---
+#---
+;CMEMORY
+@BYTES{blocksize=16,listsep=\,,tablesep=\ ,minsize=2}@
+#---
+#---
+;CSTOP
+@PC@
+Last:@INST@
+@REGS?{key=NO,equal=:,empty=no registers},@
+@SR@
+#---
+#---
+;CRUN
+@PC@
+Current:@INST@
+@REGS?{key=NO,equal=:,empty=no registers},@
+@SR@
+#---
+#---
+;CNEXT
+#---
+#---
+;CSHOWNEXT
+@CODELINES?{key=NO,equal=:,empty=no code\n}\n@
+#---
+#---
+;CINST
+@INST@
+#---
+#---
+;CBREAKS
+@BREAKPOINTS@
+#---
+#---
+;CSETBREAK
+#---
+#---
+;CREMOVEBREAK
+#---
+#---
+;CREMOVEBREAKS
+#---
+#---
+;CSPEED
+CPU:@SPEED@ cycles/second
+Screen Speed:@HERTZS@ cycles/second
+#---
+#---
+;CLOADBIN
+Program loaded=@RESULT@
+#---
+#---
+;CSAVEBIN
+Program saved=@RESULT@
+#---
+#---
+;CDEVICES
+@DEVICES?{fmter=.CLASS,empty=no devices}\n---\n@
+#---
+#---
+;CPERIPHERALS
+@PERIPHERALS?{fmter=.CLASS,empty=no peripherals}\n---\n@
+#---
+#---
+;CPERCMD
+->Errors:
+@ERROR@
+#---
+#---
+;CASSIGNJ
+->Errors:
+@ERROR@
+#---
+#---
+;CSOUNDON
+#---
+#---
+;CSOUNDOFF
+#---
+#---
+;CCRTON
+#---
+#---
+;CCRTOFF
+#---
+#---
+;CANSWER
+@RESULT@
+#---
+#---
+;CMOVEPARAMS
+#---
