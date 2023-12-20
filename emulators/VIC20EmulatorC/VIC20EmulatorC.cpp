@@ -13,7 +13,7 @@ int _tmain (int argc, _TCHAR *argv [])
 	// Sets the formatter for << outputs for this emulation...
 	// This line of code has to be at the beginning of every emulation 
 	// as it fixes the way the internal ino of the important classes will be formatted
-	MCHEmul::FormatterBuilder::instance ({ "./C64.fmt" });
+	MCHEmul::FormatterBuilder::instance ({ "./VIC20.fmt" });
 
 	// Set up the emulator...
 	VIC20::VIC20Emulator myEmulator (MCHEmul::CommandLineArguments (argc, argv), nullptr /** no commuications from outside. */);

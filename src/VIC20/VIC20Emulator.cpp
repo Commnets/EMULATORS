@@ -15,7 +15,6 @@ void VIC20::VIC20Emulator::printOutParameters (std::ostream& o) const
 	o << "/b[COLOR]:\t" << "Draw a dark border in the drawable screen. Color optional" << std::endl;
 	o << "LANGUAGES allowed under command line /i:" << std::endl << 
 		 "ENG:\tEnglish" << std::endl <<
-		 "ESP:\tSpanish" << std::endl << 
 		 "JAP:\tJapanesse" << std::endl << 
 		 "SWE:\tSwedish" << std::endl <<
 		 "DKA:\tDanish" << std::endl;

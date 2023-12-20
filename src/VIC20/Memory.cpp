@@ -10,16 +10,15 @@ VIC20::Memory::Memory (const std::string& lang)
 
 	// The default ROMS...
 	// They might change depending on the language
-	std::string ROMFILE = "./basic.901226-01.bin";
-	std::string CHARROMFILE = "./characters.901225-01-ENG.bin";
-	std::string KERNELFILE = "./kernal.901227-03-ENG.bin";
+	std::string ROMFILE = "./basic.901486-01.bin";
+	std::string CHARROMFILE = "./characters.901460-03-ENG.bin";
+	std::string KERNELFILE = "./kernal.901486-07-ENG.bin";
 
 	// If the languaje selected is not ENG...
 	// then anither char rom file is selected!
-	if (lang == "ESP") { CHARROMFILE = "characters.325056-03-ESP.bin"; }
-	else if (lang == "JAP") { CHARROMFILE = "characters.906143-02-JAP.bin"; KERNELFILE = "kernal.906145-02-JAP.bin"; }
-	else if (lang == "SWE") { CHARROMFILE = "characters.325018-02-SWE.bin"; KERNELFILE = "kernal.325017-02-SWE.bin"; }
-	else if (lang == "DKA") { CHARROMFILE = "characters.901225-01-DKA.bin"; KERNELFILE = "kernal.901227-03-DKA.bin"; }
+	if (lang == "JAP") { CHARROMFILE = "characters.901460-02-JAP.bin"; KERNELFILE = "kernal.901486-02-JAP.bin"; }
+	else if (lang == "SWE") { CHARROMFILE = "characters.NecP22101-207-SWE.bin"; KERNELFILE = "kernal.NecP22081-206-SWE.bin"; }
+	else if (lang == "DKA") { CHARROMFILE = "characters.DK901460-03-DKK.bin"; KERNELFILE = "kernal.901486-07-DKK.bin"; }
 
 	bool ok = true;
 	if (!ok)
@@ -65,13 +64,17 @@ MCHEmul::Memory::Content VIC20::Memory::standardMemoryContent ()
 
 	// ...and finally the memory that is the result...
 	MCHEmul::Memory::Content result;
+
 	result._physicalStorages = storages;
-//	result._subsets = allsubsets;
-//	result._views = MCHEmul::MemoryViews (
-//		{
-//			{ _CPU_VIEW, CPUView },
-//			{ _VICII_VIEW, VICIIView }
-//		});
+	// TODO: Assignnement of the phisical memory...
+	/** 
+		result._subsets = allsubsets;
+		result._views = MCHEmul::MemoryViews (
+		{
+			{ _CPU_VIEW, CPUView },
+			{ _VICII_VIEW, VICIIView }
+		});
+	*/
 
 	return (result);
 }

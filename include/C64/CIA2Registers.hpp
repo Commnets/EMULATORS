@@ -7,7 +7,7 @@
  *	Framework: CPU Emulators library \n
  *	Author: Ignacio Cea Forniés (EMULATORS library) \n
  *	Creation Date: 15/05/2021 \n
- *	Description: C64 CIA 2 Registers Emultation
+ *	Description: C64 CIA 2 Registers Emulation
  *	Versions: 1.0 Initial
  */
 

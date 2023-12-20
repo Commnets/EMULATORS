@@ -3,7 +3,7 @@
 
 /**	
  *	@file	
- *	File: Screen.hpp \n
+ *	File: OSIO.hpp \n
  *	Framework: CPU Emulators library \n
  *	Author: Ignacio Cea Forniés (EMULATORS library) \n
  *	Creation Date: 11/06/2021 \n
@@ -56,7 +56,7 @@ namespace C64
 			That key will have an image in the status zone. \n
 			$DC01 (read)	Bit 7		 Bit 6	 Bit 5		 Bit 4			 Bit 3	 Bit 2	 Bit 1		 Bit 0 \n
 			$DC00 (select)	========================================================================================= \n
-			Byte 7			| STOP		| Q		| CLOGO		| SPACE			| 2		| CTRL	| LEFT		| 1			| \n
+			Byte 7			| RUNSTOP	| Q		| CLOGO		| SPACE			| 2		| CTRL	| LEFT		| 1			| \n
 			Byte 6			| /			| UP	| =			| RIGHTSHIFT	| HOME	| ;		| *			| POUND		| \n
 			Byte 5			| ,			| @		| :			| .				| -		| L		| P			| +			| \n
 			Byte 4			| N			| O		| K			| M				| 0		| J		| I			| 9			| \n

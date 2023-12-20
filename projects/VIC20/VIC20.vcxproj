@@ -157,18 +157,29 @@
     <ClCompile Include="..\..\src\VIC20\Commands.cpp" />
     <ClCompile Include="..\..\src\VIC20\IOPBuilder.cpp" />
     <ClCompile Include="..\..\src\VIC20\Memory.cpp" />
+    <ClCompile Include="..\..\src\VIC20\OSIO.cpp" />
     <ClCompile Include="..\..\src\VIC20\Screen.cpp" />
     <ClCompile Include="..\..\src\VIC20\Sound.cpp" />
+    <ClCompile Include="..\..\src\VIC20\VIA1.cpp" />
+    <ClCompile Include="..\..\src\VIC20\VIA1Registers.cpp" />
+    <ClCompile Include="..\..\src\VIC20\VIA2.cpp" />
+    <ClCompile Include="..\..\src\VIC20\VIA2Registers.cpp" />
     <ClCompile Include="..\..\src\VIC20\VIC20.cpp" />
     <ClCompile Include="..\..\src\VIC20\VIC20Emulator.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\include\VIC20\CommandBuilder.hpp" />
     <ClInclude Include="..\..\include\VIC20\Commands.hpp" />
+    <ClInclude Include="..\..\include\VIC20\incs.hpp" />
     <ClInclude Include="..\..\include\VIC20\IOPBuilder.hpp" />
     <ClInclude Include="..\..\include\VIC20\Memory.hpp" />
+    <ClInclude Include="..\..\include\VIC20\OSIO.hpp" />
     <ClInclude Include="..\..\include\VIC20\Screen.hpp" />
     <ClInclude Include="..\..\include\VIC20\Sound.hpp" />
+    <ClInclude Include="..\..\include\VIC20\VIA1.hpp" />
+    <ClInclude Include="..\..\include\VIC20\VIA1Registers.hpp" />
+    <ClInclude Include="..\..\include\VIC20\VIA2.hpp" />
+    <ClInclude Include="..\..\include\VIC20\VIA2Registers.hpp" />
     <ClInclude Include="..\..\include\VIC20\VIC20.hpp" />
     <ClInclude Include="..\..\include\VIC20\VIC20Emulator.hpp" />
   </ItemGroup>

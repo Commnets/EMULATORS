@@ -27,7 +27,7 @@ int _tmain (int argc, _TCHAR* argv[])
 	std::cout << "It can receive commands from external tools through a port" << std::endl;
 	std::cout << "/h\t\tJust for help" << std::endl; 
 	std::cout << "/o\t\tWhen the emulator wanted to hear instructions from outside" << std::endl; 
-	std::cout << "\t\tBy default NO allowed." << std::endl;
+	std::cout << "\t\tBy default NOT allowed." << std::endl;
 	std::cout << "/p[PORTNUMBER]\tPort where to listen external instructions (0 - 65535)" << std::endl; 
 	std::cout << "\t\tBy default 60000. Above 1000 recommended" << std::endl << std::endl;
 

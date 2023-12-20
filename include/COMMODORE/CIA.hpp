@@ -63,6 +63,11 @@ namespace COMMODORE
 		  *	TimerA		= InfoStructure: Info about the timer A. \n
 		  *	TimerB		= InfoStructure: Info about the timer B. \n
 		  *	Clock		= InfoStructure: Info about the clock. \n
+		  * SerialPort	= InfoStructure: Info about the serial port. \n
+		  * PortA		= Attribute:	 Info about the value at the port A. \n
+		  * PortB		= Attribute:	 Info about the value at the port B. \n
+		  * CIDDRA		= Attribute:	 The direction of the port A. \n
+		  * CIDDRB		= Attribute:	 The direction of the port B. \n
 		  */
 		virtual MCHEmul::InfoStructure getInfoStructure () const override;
 

@@ -3,7 +3,7 @@
 
 /**	
  *	@file	
- *	File: CIA2Registers.hpp \n
+ *	File: CIARegisters.hpp \n
  *	Framework: CPU Emulators library \n
  *	Author: Ignacio Cea Forniés (EMULATORS library) \n
  *	Creation Date: 15/05/2021 \n

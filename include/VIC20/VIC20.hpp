@@ -24,8 +24,10 @@ namespace VIC20
 		public:
 		enum class VisualSystem { _NTSC, _PAL };
 
-		/** Macros for the speed. */
-		static const unsigned int _PALCLOCK		= 985248; // 0.985 MHz
+		/** Macros for the speed. \n
+			In the original computer, 
+			the speed if defined by the VIC1 (Video & Sound) Chip. */
+		static const unsigned int _PALCLOCK		= 1108405; // 1.108 MHz
 		static const unsigned int _NTSCCLOCK	= 1022727; // 1.023 MHz
 
 		CommodoreVIC20 (VisualSystem vS, const std::string& lg);

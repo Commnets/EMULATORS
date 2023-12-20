@@ -15,7 +15,6 @@ COMMODORE::VICIIRegisters::VICIIRegisters (MCHEmul::PhysicalStorage* ps, size_t 
 	initializeInternalValues ();
 }
 
-
 // ---
 void COMMODORE::VICIIRegisters::initialize ()
 {

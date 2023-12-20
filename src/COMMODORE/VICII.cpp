@@ -21,7 +21,7 @@ COMMODORE::VICII::VICII (const MCHEmul::RasterData& vd, const MCHEmul::RasterDat
 	  _VICIIRegisters (nullptr), 
 	  _VICIIView (vV),
 	  _cyclesPerRasterLine (cRL),
-	  _incCyclesPerRasterLine (cRL - VICII_PAL::_CYCLESPERRASTERLINE),
+	  _incCyclesPerRasterLine (cRL - COMMODORE::VICII_PAL::_CYCLESPERRASTERLINE),
 	  _raster (vd, hd),
 	  _lastCPUCycles (0),
 	  _format (nullptr),
@@ -1261,7 +1261,7 @@ unsigned int COMMODORE::VICII_NTSC::treatRasterCycle ()
 // ---
 COMMODORE::VICII_PAL::VICII_PAL (int vV)
 	: COMMODORE::VICII (
-		 _VRASTERDATA, _HRASTERDATA, vV, 63,
+		 _VRASTERDATA, _HRASTERDATA, vV, COMMODORE::VICII_PAL::_CYCLESPERRASTERLINE,
 		 { { "Name", "VIC-II (PAL) Video Chip Interface II" },
 		   { "Code", "6569/8565/8566" },
 		   { "Manufacturer", "MOS Technology INC/Commodore Semiconductor Group (CBM)"},

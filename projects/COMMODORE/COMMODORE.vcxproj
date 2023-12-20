@@ -42,8 +42,12 @@
     <ClInclude Include="..\..\include\COMMODORE\SIDRegisters.hpp" />
     <ClInclude Include="..\..\include\COMMODORE\UserIOPeripherals.hpp" />
     <ClInclude Include="..\..\include\COMMODORE\UserPort.hpp" />
+    <ClInclude Include="..\..\include\COMMODORE\VIA.hpp" />
+    <ClInclude Include="..\..\include\COMMODORE\VIARegisters.hpp" />
+    <ClInclude Include="..\..\include\COMMODORE\VICI.hpp" />
     <ClInclude Include="..\..\include\COMMODORE\VICII.hpp" />
     <ClInclude Include="..\..\include\COMMODORE\VICIIRegisters.hpp" />
+    <ClInclude Include="..\..\include\COMMODORE\VICIRegisters.hpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Commodore.fmt">
@@ -79,8 +83,12 @@
     <ClCompile Include="..\..\src\COMMODORE\SIDLibWrapper.cpp" />
     <ClCompile Include="..\..\src\COMMODORE\SIDRegisters.cpp" />
     <ClCompile Include="..\..\src\COMMODORE\UserPort.cpp" />
+    <ClCompile Include="..\..\src\COMMODORE\VIA.cpp" />
+    <ClCompile Include="..\..\src\COMMODORE\VIARegisters.cpp" />
+    <ClCompile Include="..\..\src\COMMODORE\VICI.cpp" />
     <ClCompile Include="..\..\src\COMMODORE\VICII.cpp" />
     <ClCompile Include="..\..\src\COMMODORE\VICIIRegisters.cpp" />
+    <ClCompile Include="..\..\src\COMMODORE\VICIRegisters.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>

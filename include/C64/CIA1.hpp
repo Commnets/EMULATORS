@@ -7,7 +7,7 @@
  *	Framework: CPU Emulators library \n
  *	Author: Ignacio Cea Forniés (EMULATORS library) \n
  *	Creation Date: 22/05/2021 \n
- *	Description: The CIA1 Chip.
+ *	Description: The CIA1 Chip to communicate C64.
  *	Versions: 1.0 Initial
  */
 

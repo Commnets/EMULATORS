@@ -123,6 +123,18 @@
     <ClInclude Include="..\..\include\COMMODORE\SerialIOPeripherals.hpp">
       <Filter>Archivos de encabezado\IO</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\include\COMMODORE\VICI.hpp">
+      <Filter>Archivos de encabezado\Motherboard\Chips</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\COMMODORE\VICIRegisters.hpp">
+      <Filter>Archivos de encabezado\Motherboard\Chips</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\COMMODORE\VIA.hpp">
+      <Filter>Archivos de encabezado\Motherboard\Chips</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\COMMODORE\VIARegisters.hpp">
+      <Filter>Archivos de encabezado\Motherboard\Chips</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Commodore.fmt">
@@ -195,6 +207,18 @@
     </ClCompile>
     <ClCompile Include="..\..\src\COMMODORE\SerialPort.cpp">
       <Filter>Archivos de origen\IO</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\COMMODORE\VICIRegisters.cpp">
+      <Filter>Archivos de origen\Motherboard\Chips</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\COMMODORE\VICI.cpp">
+      <Filter>Archivos de origen\Motherboard\Chips</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\COMMODORE\VIA.cpp">
+      <Filter>Archivos de origen\Motherboard\Chips</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\COMMODORE\VIARegisters.cpp">
+      <Filter>Archivos de origen\Motherboard\Chips</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

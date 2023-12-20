@@ -25,7 +25,7 @@ namespace COMMODORE
 	class VICIIRegisters final : public MCHEmul::ChipRegisters
 	{
 		public:
-		static const int _VICREGS_SUBSET = 1040;
+		static const int _VICREGS_SUBSET = 1060;
 			
 		enum class GraphicMode
 		{
@@ -185,9 +185,24 @@ namespace COMMODORE
 		/**
 		  *	The name of the fields are: \n
 		  * The structure of Chipregisters plus:
-		  * MODE  = Attribute: The mode working in the VICII.
-		  *	40C   = Attribute: Whether there is 40 columns or not.
-		  * 25R   = Attribute: Whether there is 25 rows or not.
+		  * MODE			= Attribute: The mode working in the VICII. \n
+		  *	40C				= Attribute: Whether there is 40 columns or not. \n
+		  * 25R				= Attribute: Whether there is 25 rows or not. \n
+		  * SCROLLX			= Attribute; Value of the horizontal scroll. \n
+		  * SCROLLY			= Attribute; Value of the vertical scroll. \n
+		  * FORECOLOR		= Attribute; Main color. \n
+		  * BKCOLOR1		= Attribute; Background 1 color value. \n
+		  * BKCOLOR2		= Attribute; Background 2 color value. \n
+		  * BKCOLOR3		= Attribute; Background 3 color value. \n
+		  * BKCOLOR4		= Attribute; Background 4 color value. \n
+		  * IRQ				= Attribute; Whether the IRQ is or not requested. \n
+		  * IRQLINE			= Attribute; The number of scan line where the IRQ should be requested if on. \n
+		  * CHARADDRESS		= Attribute; The address of the characters definition. \n
+		  * SCREENADDRESS	= Attribute; The address of the video matrix. \n
+		  * BITMAPADDRESS	= Attribute; The address of the bit maps. \n
+		  * SPRITEADDRESS	= Attribute; The address of the pointers to sprites definition. \n
+		  * LIGHTPENX		= Attribute; Where the lightpen is in the horizontal space. \n
+		  * LIGHTPENY		= Attribute; Where the lightpen is in the vertical space. \n
 		  */
 		virtual MCHEmul::InfoStructure getInfoStructure () const override;
 

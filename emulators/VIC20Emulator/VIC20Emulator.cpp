@@ -27,14 +27,14 @@ int _tmain (int argc, _TCHAR* argv[])
 	std::cout << "It can receive commands from external tools through a port" << std::endl;
 	std::cout << "/h\t\tJust for help" << std::endl; 
 	std::cout << "/o\t\tWhen the emulator wanted to hear instructions from outside" << std::endl; 
-	std::cout << "\t\tBy default NO allowed." << std::endl;
+	std::cout << "\t\tBy default NOT allowed." << std::endl;
 	std::cout << "/p[PORTNUMBER]\tPort where to listen external instructions (0 - 65535)" << std::endl; 
 	std::cout << "\t\tBy default 60000. Above 1000 recommended" << std::endl << std::endl;
 
 	// Sets the formatter for << outputs for this emulation...
 	// This line of code has to be at the beginning of every emulation 
 	// as it fixes the way the internal ino of the important classes will be formatted
-	MCHEmul::FormatterBuilder::instance ({ "./C64.fmt" });
+	MCHEmul::FormatterBuilder::instance ({ "./VIC20.fmt" });
 
 	// Set up the emulator...
 	VIC20::VIC20Emulator myEmulator (

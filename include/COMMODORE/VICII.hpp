@@ -20,7 +20,8 @@
 
 namespace COMMODORE
 {
-	/** The chip that takes care of anything around the graphics in Commodore 64. 
+	/** The chip that takes care of anything around the graphics in computers like 
+		Commodore 64 or Commodore 128 when emulating CMB64.
 		@see GraphicalChip. */
 	class VICII : public MCHEmul::GraphicalChip
 	{
