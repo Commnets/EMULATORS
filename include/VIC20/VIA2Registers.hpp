@@ -7,7 +7,7 @@
  *	Framework: CPU Emulators library \n
  *	Author: Ignacio Cea Forniés (EMULATORS library) \n
  *	Creation Date: 17/12/2023 \n
- *	Description: VIC20 VIA 2 Registers Emulation
+ *	Description: VIC20 VIA 2 Registers Emulation-.
  *	Versions: 1.0 Initial
  */
 

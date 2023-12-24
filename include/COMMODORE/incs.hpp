@@ -17,6 +17,7 @@
 #include <F6500/incs.hpp>
 #include <EMULATORS/incs.hpp>
 #include <COMMODORE/VICIRegisters.hpp>
+#include <COMMODORE/VICISoundWrapper.hpp>
 #include <COMMODORE/VICI.hpp>
 #include <COMMODORE/VICIIRegisters.hpp>
 #include <COMMODORE/VICII.hpp>

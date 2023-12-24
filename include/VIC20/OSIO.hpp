@@ -57,12 +57,12 @@ namespace VIC20
 			$9121 (read)	Bit 7		 Bit 6	 Bit 5		 Bit 4			 Bit 3	 Bit 2	 Bit 1		 Bit 0 \n
 			$9120 (select)	========================================================================================= \n
 			Byte 7			| F7		| HOME		| -			| 0			| 8		| 6		| 4			| 2			| \n
-			Byte 6			| F5		| 			| @			| O			| U		| T		| E			| Q			| \n
+			Byte 6			| F5		| UP		| @			| O			| U		| T		| E			| Q			| \n
 			Byte 5			| F3		| =			| :			| K			| H		| F		| S			| CLOGO		| \n
 			Byte 4			| F1		| RIGHTSHIFT| .			| M			| B		| C		| Z			| SPACE		| \n
 			Byte 3			| LEFT/RIGHT| /			| ,			| N			| V		| X		| LEFTSHIFT	| RUNSTOP	| \n
 			Byte 2			| UP/DOWN	| ;			| L			| J			| G		| D		| A			| CTRL		| \n
-			Byte 1			| RETURN	| *			| P			| I			| Y		| R		| W			| 			| \n
+			Byte 1			| RETURN	| *			| P			| I			| Y		| R		| W			| LEFT		| \n
 			Byte 0			| DELETE	| POUND		| +			| 9			| 7		| 5		| 3			| 1			| \n
 							========================================================================================= \n
 			Take into account that the activity can be done in th eother way around...\n

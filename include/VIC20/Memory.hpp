@@ -7,7 +7,7 @@
  *	Framework: CPU Emulators library \n
  *	Author: Ignacio Cea Forniés (EMULATORS library) \n
  *	Creation Date: 09/12/2023 \n
- *	Description: VIC20 Memory
+ *	Description: VIC20 Memory.
  *	Versions: 1.0 Initial
  */
 
@@ -34,6 +34,7 @@ namespace VIC20
 
 		// Views
 		static const int _CPU_VIEW				= 0;
+		static const int _VICI_VIEW				= 1;
 
 		Memory (const std::string& lang = MCHEmul::_DEFAULTLANGUAGE);
 

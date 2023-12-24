@@ -3,7 +3,7 @@
 // ---
 void VIC20::Screen::drawAdditional ()
 {
-	COMMODORE::VICII* gC = static_cast <COMMODORE::VICII*> (_graphicalChip);
+	COMMODORE::VICI* gC = static_cast <COMMODORE::VICI*> (_graphicalChip);
 	if (_drawBorder)
 	{
 		unsigned short x1, y1, x2, y2;
@@ -31,23 +31,23 @@ void VIC20::Screen::drawAdditional ()
 
 // ---
 VIC20::ScreenNTSC::ScreenNTSC ()
-	: VIC20::Screen (59.940f, 
-		(int) COMMODORE::VICII_NTSC::_HRASTERDATA.visiblePositions (), 
-		(int) COMMODORE::VICII_NTSC::_VRASTERDATA.visiblePositions (),
+	: VIC20::Screen (60.03f, 
+		(int) COMMODORE::VICI_NTSC::_HRASTERDATA.visiblePositions (), 
+		(int) COMMODORE::VICI_NTSC::_VRASTERDATA.visiblePositions (),
 		{ { "Name", "Screen NTSC" },
 		  { "Type", "Output" },
-		  { "Frequency", "59.940Hz" } })
+		  { "Frequency", "60.03Hz" } })
 { 
 	// Nothing else to do...
 }
 
 VIC20::ScreenPAL::ScreenPAL ()
-	: VIC20::Screen (50.125f,
-		(int) COMMODORE::VICII_PAL::_HRASTERDATA.visiblePositions (), 
-		(int) COMMODORE::VICII_PAL::_VRASTERDATA.visiblePositions (),
+	: VIC20::Screen (50.04f,
+		(int) COMMODORE::VICI_PAL::_HRASTERDATA.visiblePositions (), 
+		(int) COMMODORE::VICI_PAL::_VRASTERDATA.visiblePositions (),
 		{ { "Name", "Screen PAL" },
 		  { "Type", "Output" },
-		  { "Frequency", "50.125Hz" } })
+		  { "Frequency", "50.04Hz" } })
 { 
 	// Nothing else to do
 }

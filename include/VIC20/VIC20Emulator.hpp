@@ -67,7 +67,6 @@ namespace VIC20
 							{ return (new MCHEmul::FileIO 
 								(MCHEmul::FileTypeIOList (
 									{ new COMMODORE::CRTFileTypeIO /** Cartridges. */,
-									  new COMMODORE::T64FileTypeIO /** Tapes. */,
 									  new COMMODORE::TAPFileTypeIO /** Tapes. */,
 									  new COMMODORE::RawFileTypeIO /** Row data. */ }))); }
 	};

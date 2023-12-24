@@ -14,6 +14,7 @@ COMMODORE::VICI::VICI (const MCHEmul::RasterData& vd, const MCHEmul::RasterData&
 		  { "Code", "6560 (NTSC), 6561/6561E/6561-101 (PAL)" },
 		  { "Manufacturer", "Commodore Business Machines CBM" },
 		  { "Year", "1977" } }),
+	  MCHEmul::SoundChip (_ID, { }, new COMMODORE::VICISoundLibWrapper),
 	  _VICIRegisters (nullptr),
 	  _VICIView (vV),
 	  _cyclesPerRasterLine (cRL),
@@ -25,7 +26,7 @@ COMMODORE::VICI::VICI (const MCHEmul::RasterData& vd, const MCHEmul::RasterData&
 {
 	assert (_cyclesPerRasterLine >= 65);
 
-	setClassName ("VICI");
+	MCHEmul::GraphicalChip::setClassName ("VICI");
 
 	_format = SDL_AllocFormat (SDL_PIXELFORMAT_ARGB8888);
 }
@@ -39,22 +40,24 @@ COMMODORE::VICI::~VICI ()
 // ---
 bool COMMODORE::VICI::initialize ()
 {
-	assert (memoryRef () != nullptr);
+	assert (MCHEmul::GraphicalChip::memoryRef () != nullptr);
 
 	if (!MCHEmul::GraphicalChip::initialize ())
 		return (false);
 
 	// Gets the memory block dedicated to the VICI
 	if (!(_VICIRegisters = 
-		dynamic_cast <COMMODORE::VICIRegisters*> (memoryRef () -> subset (COMMODORE::VICIRegisters::_VICREGS_SUBSET))))
+		dynamic_cast <COMMODORE::VICIRegisters*> 
+			(MCHEmul::GraphicalChip::memoryRef () -> subset (COMMODORE::VICIRegisters::_VICREGS_SUBSET))))
 	{
-		_error = MCHEmul::_INIT_ERROR;
+		MCHEmul::GraphicalChip::_error = MCHEmul::_INIT_ERROR;
 
 		return (false);
 	}
 
 	_raster.initialize ();
 
+	_VICIRegisters -> setSoundLibWrapper (soundWrapper ());
 	_VICIRegisters -> initialize ();
 
 	_lastCPUCycles = 0;
@@ -91,7 +94,49 @@ MCHEmul::InfoStructure COMMODORE::VICI::getInfoStructure () const
 // ---
 void COMMODORE::VICI::processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifier* n)
 {
-	// TODO
+	// To set the bank...
+	switch (evnt.id ())
+	{
+		case MCHEmul::InputOSSystem::_MOUSEMOVED:
+			{
+				unsigned short x = (unsigned short) 
+					std::dynamic_pointer_cast <MCHEmul::InputOSSystem::MouseMovementEvent> (evnt.data ()) -> _x;
+				unsigned short y = (unsigned short) 
+					std::dynamic_pointer_cast <MCHEmul::InputOSSystem::MouseMovementEvent> (evnt.data ()) -> _y;
+				setLightPenPosition ((x >= _raster.hData ().firstDisplayPosition () && 
+									  y <= _raster.hData ().lastDisplayPosition ()) 
+										? (x - _raster.hData ().firstDisplayPosition ()) : 0, 
+									 (y >= _raster.vData ().firstDisplayPosition () && 
+									  y <= _raster.vData ().lastDisplayPosition ()) 
+										? (y - _raster.vData ().firstDisplayPosition ()) : 0);
+			}
+
+			break;
+
+		// The lightpen actives when the right button of the mouse is pressed...
+		case MCHEmul::InputOSSystem::_MOUSEBUTTONPRESSED:
+			{
+				if (std::dynamic_pointer_cast <MCHEmul::InputOSSystem::MouseButtonEvent> 
+					(evnt.data ()) -> _buttonId == 0 /** Left. */)
+					setLightPenActive (true);
+			}
+			
+			break;
+
+		// ...and stop being active when released...
+		case MCHEmul::InputOSSystem::_MOUSEBUTTONRELEASED:
+			{
+				if (std::dynamic_pointer_cast <MCHEmul::InputOSSystem::MouseButtonEvent> 
+					(evnt.data ()) -> _buttonId == 0 /** Left. */)
+					setLightPenActive (false);
+			}
+
+			break;
+
+		default:
+			break;
+
+	}
 }
 
 // ---

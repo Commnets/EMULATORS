@@ -135,6 +135,9 @@
     <ClInclude Include="..\..\include\COMMODORE\VIARegisters.hpp">
       <Filter>Archivos de encabezado\Motherboard\Chips</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\include\COMMODORE\VICISoundWrapper.hpp">
+      <Filter>Archivos de encabezado\Motherboard\Chips</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Commodore.fmt">
@@ -218,6 +221,9 @@
       <Filter>Archivos de origen\Motherboard\Chips</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\COMMODORE\VIARegisters.cpp">
+      <Filter>Archivos de origen\Motherboard\Chips</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\COMMODORE\VICISoundWrapper.cpp">
       <Filter>Archivos de origen\Motherboard\Chips</Filter>
     </ClCompile>
   </ItemGroup>

@@ -219,9 +219,10 @@ namespace MCHEmul
 		public:
 		Raster () = delete;
 
-		Raster (const RasterData& vD, const RasterData& hD)
+		Raster (const RasterData& vD, const RasterData& hD, unsigned char st = 8)
 			: InfoClass ("Raster"),
-				_vRasterData (vD), _hRasterData (hD)
+				_vRasterData (vD), _hRasterData (hD),
+			    _step (st)
 						{ }
 
 		const RasterData& vData () const
@@ -232,6 +233,8 @@ namespace MCHEmul
 						{ return (_hRasterData); }
 		RasterData& hData ()
 						{ return (_hRasterData); }
+		unsigned char step () const
+						{ return (_step); }
 
 		unsigned short currentLine () const
 						{ return (_vRasterData.currentPosition ()); }
@@ -305,7 +308,7 @@ namespace MCHEmul
 			The Parameter is the number of cycles to move the raster. \n
 			The raster moves 8 pixels per cycle. */
 		bool moveCycles (unsigned short nC)
-						{ bool result = _hRasterData.add (nC * 8 /** columuns = piexels per cycle. */);
+						{ bool result = _hRasterData.add (nC * (unsigned short) _step /** columuns = piexels per cycle. */);
 						  if (result) _vRasterData.next (); 
 						  return (result); }
 
@@ -324,6 +327,7 @@ namespace MCHEmul
 
 		private:
 		RasterData _vRasterData, _hRasterData;
+		unsigned char _step;
 	};
 }
 

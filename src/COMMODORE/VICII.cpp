@@ -22,7 +22,7 @@ COMMODORE::VICII::VICII (const MCHEmul::RasterData& vd, const MCHEmul::RasterDat
 	  _VICIIView (vV),
 	  _cyclesPerRasterLine (cRL),
 	  _incCyclesPerRasterLine (cRL - COMMODORE::VICII_PAL::_CYCLESPERRASTERLINE),
-	  _raster (vd, hd),
+	  _raster (vd, hd, 8 /** step. */),
 	  _lastCPUCycles (0),
 	  _format (nullptr),
 	  _cycleInRasterLine (1),

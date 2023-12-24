@@ -48,6 +48,7 @@
     <ClInclude Include="..\..\include\COMMODORE\VICII.hpp" />
     <ClInclude Include="..\..\include\COMMODORE\VICIIRegisters.hpp" />
     <ClInclude Include="..\..\include\COMMODORE\VICIRegisters.hpp" />
+    <ClInclude Include="..\..\include\COMMODORE\VICISoundWrapper.hpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Commodore.fmt">
@@ -89,6 +90,7 @@
     <ClCompile Include="..\..\src\COMMODORE\VICII.cpp" />
     <ClCompile Include="..\..\src\COMMODORE\VICIIRegisters.cpp" />
     <ClCompile Include="..\..\src\COMMODORE\VICIRegisters.cpp" />
+    <ClCompile Include="..\..\src\COMMODORE\VICISoundWrapper.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>

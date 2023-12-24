@@ -54,17 +54,17 @@ namespace C64
 		/** 
 			How SDL keys are mapped into the chars map of the C64. \n
 			That key will have an image in the status zone. \n
-			$DC01 (read)	Bit 7		 Bit 6	 Bit 5		 Bit 4			 Bit 3	 Bit 2	 Bit 1		 Bit 0 \n
-			$DC00 (select)	========================================================================================= \n
-			Byte 7			| RUNSTOP	| Q		| CLOGO		| SPACE			| 2		| CTRL	| LEFT		| 1			| \n
-			Byte 6			| /			| UP	| =			| RIGHTSHIFT	| HOME	| ;		| *			| POUND		| \n
-			Byte 5			| ,			| @		| :			| .				| -		| L		| P			| +			| \n
-			Byte 4			| N			| O		| K			| M				| 0		| J		| I			| 9			| \n
-			Byte 3			| V			| U		| H			| B				| 8		| G		| Y			| 7			| \n
-			Byte 2			| X			| T		| F			| C				| 6		| D		| R			| 5			| \n
-			Byte 1			| LEFTSHIFT	| E		| S			| Z				| 4		| A		| W			| 3			| \n
-			Byte 0			| DOWN		| F5	| F3		| F1			| F7	| RIGHT	| RETURN	| DELETE	| \n
-							========================================================================================= \n
+			$DC01 (read)	Bit 7		 Bit 6	 Bit 5		 Bit 4			 Bit 3	 Bit 2			Bit 1		 Bit 0 \n
+			$DC00 (select)	================================================================================================= \n
+			Byte 7			| RUNSTOP	| Q		| CLOGO		| SPACE			| 2		| CTRL			| LEFT		| 1			| \n
+			Byte 6			| /			| UP	| =			| RIGHTSHIFT	| HOME	| ;				| *			| POUND		| \n
+			Byte 5			| ,			| @		| :			| .				| -		| L				| P			| +			| \n
+			Byte 4			| N			| O		| K			| M				| 0		| J				| I			| 9			| \n
+			Byte 3			| V			| U		| H			| B				| 8		| G				| Y			| 7			| \n
+			Byte 2			| X			| T		| F			| C				| 6		| D				| R			| 5			| \n
+			Byte 1			| LEFTSHIFT	| E		| S			| Z				| 4		| A				| W			| 3			| \n
+			Byte 0			| UP/DOWN	| F5	| F3		| F1			| F7	| LEFT/RIGHT	| RETURN	| DELETE	| \n
+							================================================================================================= \n
 			Take into account that the activity can be done in th eother way around...\n
 			The important C64 keys in a Win32 standard keyboard are: \n
 			LEFT CONTROL				= CTRL \n

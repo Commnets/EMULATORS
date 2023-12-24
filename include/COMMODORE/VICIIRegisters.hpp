@@ -215,7 +215,7 @@ namespace COMMODORE
 		void initializeInternalValues ();
 		/** Depending on how bits ar set, a no valid mode could be set. */
 		void setGraphicModeActive ();
-		/** Calculate the internal memroy positions. */
+		/** Calculate the internal memory positions. */
 		inline void calculateMemoryPositions ();
 
 		private:

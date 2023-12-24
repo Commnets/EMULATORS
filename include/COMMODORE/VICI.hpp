@@ -22,7 +22,7 @@ namespace COMMODORE
 {
 	/** The chip that takes care of anything around the graphics in computers like VIC20. 
 		@see GraphicalChip and @see SoundChip */
-	class VICI : public MCHEmul::GraphicalChip
+	class VICI : public MCHEmul::GraphicalChip, public MCHEmul::SoundChip
 	{
 		public:
 		static const unsigned int _ID = 106;
@@ -48,6 +48,19 @@ namespace COMMODORE
 		/** To get the raster info. */
 		const MCHEmul::Raster& raster () const
 							{ return (_raster); }
+
+		/** To set the position of the light - pen. \n
+			The position received must be relative within the display zone. */
+		void lightPenPosition (unsigned short& x, unsigned short& y) const
+							{ _VICIRegisters -> currentLightPenPosition (x, y); }
+		void setLightPenPosition (unsigned short x, unsigned short y)
+							{ _VICIRegisters -> setCurrentLightPenPosition (x, y); }
+
+		/** To know whether the light pen is active. */
+		bool lightPenActive () const
+							{ return (_VICIRegisters -> lightPenActive ()); }
+		void setLightPenActive (bool lP)
+							{ _VICIRegisters -> setLigthPenActive (lP); }
 
 		virtual bool initialize () override;
 
