@@ -44,7 +44,7 @@ namespace C64
 		virtual bool initialize (bool iM = true) override;
 
 		// To get direct access to the most important C64 chips...
-		// Other methids can be used at parent level to access other important chips.
+		// Other methods can be used at parent level to access other important chips.
 		const CIA1* cia1 () const
 							{ return (dynamic_cast <const CIA1*> ((* _chips.find (CIA1::_ID)).second)); }
 		CIA1* cia1 ()

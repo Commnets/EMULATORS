@@ -90,7 +90,7 @@ bool C64::Memory::initialize ()
 	if (!result)
 		return (false);
 
-	// The active view has to be initially the CPU vire...
+	// The active view has to be initially the CPU view...
 	setCPUView ();
 
 	// The initial basic configuration of the memory is the standard
@@ -162,7 +162,7 @@ MCHEmul::Memory::Content C64::Memory::standardMemoryContent ()
 	MCHEmul::PhysicalStorageSubset* PageZero = new MCHEmul::PhysicalStorageSubset 
 		(_PAGEZERO_SUBSET, RAM, 0x0002, MCHEmul::Address ({ 0x02, 0x00 }, false), 0x00fe);
 	// Stack
-	MCHEmul::Stack*  Stack = new MCHEmul::Stack 
+	MCHEmul::Stack* Stack = new MCHEmul::Stack 
 		(_STACK_SUBSET, RAM, 0x0100, MCHEmul::Address ({ 0x00, 0x01 }, false), 0x0100);
 	// Pure RAM. A piece used by BASIC (40k)
 	MCHEmul::PhysicalStorageSubset* RAM00 = new MCHEmul::PhysicalStorageSubset 
@@ -184,9 +184,9 @@ MCHEmul::Memory::Content C64::Memory::standardMemoryContent ()
 	MCHEmul::PhysicalStorageSubset* CharRAM = new MCHEmul::PhysicalStorageSubset
 		(_CHARRAM_SUBSET, RAM, 0xd000, MCHEmul::Address ({ 0x00, 0xd0 }, false), 0x1000);				// 4k behing the char ROM (initially desactivated)...
 	MCHEmul::PhysicalStorageSubset* VICIIRegisters = new COMMODORE::VICIIRegisters 
-		(/** id = C64::VICIIRegisters::_VICREGS_SUBSET */ RAM, 0xd000, MCHEmul::Address ({ 0x00, 0xd0 }, false), 0x0400);
+		(/** id = COMMODORE::VICIIRegisters::_VICREGS_SUBSET */ RAM, 0xd000, MCHEmul::Address ({ 0x00, 0xd0 }, false), 0x0400);
 	MCHEmul::PhysicalStorageSubset* SIDRegisters = new COMMODORE::SIDRegisters 
-		(/** id = C64::SIDRegisters::_SIDREGS_SUBSET */ RAM, 0xd400, MCHEmul::Address ({ 0x00, 0xd4 }, false), 0x0400);
+		(/** id = COMMODORE::SIDRegisters::_SIDREGS_SUBSET */ RAM, 0xd400, MCHEmul::Address ({ 0x00, 0xd4 }, false), 0x0400);
 	MCHEmul::PhysicalStorageSubset* ColorRAM = new C64::ColorRAMMemory (_COLOR_SUBSET, RAM); // at d800, 0x400 long bytes long
 	MCHEmul::PhysicalStorageSubset* CIA1 = new C64::CIA1Registers 
 		(/** id = C64::CIA1Registers::_CIA1_SUBSET */ RAM, 0xdc00, MCHEmul::Address ({ 0x00, 0xdc }, false), 0x0100);

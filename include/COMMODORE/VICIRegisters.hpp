@@ -27,13 +27,6 @@ namespace COMMODORE
 	{
 		public:
 		static const int _VICREGS_SUBSET = 1040;
-			
-		// The different types of graphics that the VICI is able to repreoduce...
-		enum class GraphicMode
-		{
-			_CHARMODE = 0,
-			_MULTICOLORCHARMODE,
-		};
 
 		VICIRegisters (MCHEmul::PhysicalStorage* ps, size_t pp, const MCHEmul::Address& a, size_t s);
 
@@ -94,11 +87,26 @@ namespace COMMODORE
 		bool inverseMode () const
 							{ return (_inverseMode); }
 
+		/** To knlow the different zones of the memory. */
+		const MCHEmul::Address& screenMemory () const
+							{ return (_screenMemory); }
+		const MCHEmul::Address& charDataMemory () const
+							{ return (_charDataMemory); }
+		const MCHEmul::Address& colourMemory () const
+							{ return (_colourMemory); }
+
 		virtual void initialize () override;
 
 		/**
 		  *	The name of the fields are: \n
-		  * TODO
+		  *	AUXCOLOR		= Attribute; Auxiliar color used in multocolor graphic mode.
+		  *	SCRCOLOR		= Attribute; Screen color used as a base of the writting zone.
+		  *	BRDCOLOR		= Attribute; Color used in the border.
+		  *	CHARADDRESS		= Attribute; The address of the characters definition. \n
+		  *	SCREENADDRESS	= Attribute; The address of the video matrix. \n
+		  *	COLOURADDRESS	= Attribute; The address of the colour map. \n
+		  *	LIGHTPENX		= Attribute; Where the light pen X position is. \n
+		  *	LIGHTPENY		= Attribute; Where the light pen Y position is.
 		  */
 		virtual MCHEmul::InfoStructure getInfoStructure () const override;
 

@@ -110,6 +110,8 @@ Data Form:@TYPE@ Frequency:@FREQUENCY@kHz Channels:@CHANNELS@
 #---
 ;SoundLibWrapper
 @ATTRS?{key=YES,equal=:,empty=no attributes}\n@
+->Voices:
+@VOICES?{fmter=.CLASS,empty=no voices}\n---\n@
 #---
 #---
 ;SoundVoice

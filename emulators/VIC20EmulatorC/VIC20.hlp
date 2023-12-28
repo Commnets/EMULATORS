@@ -1,3 +1,9 @@
 #VIC20 Local Console Commands
 ?./LocalConsole.hlp
 ?./Commodore.hlp
+;VIA1
+To know the status of the VIA1 chip.
+No parameters are needed.
+;VIA2
+To know the status of the VIA2 chip.
+No parameters are needed.

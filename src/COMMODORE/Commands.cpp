@@ -2,15 +2,28 @@
 #include <COMMODORE/Computer.hpp>
 #include <sstream>
 
-const std::string COMMODORE::VICStatusCommand::_NAME = "CVICII";
+const std::string COMMODORE::VICIStatusCommand::_NAME = "CVICI";
+const std::string COMMODORE::VICIIStatusCommand::_NAME = "CVICII";
+const std::string COMMODORE::VIAStatusCommand::_NAME = "CVIA";
 const std::string COMMODORE::CIAStatusCommand::_NAME = "CCIA";
 const std::string COMMODORE::SIDStatusCommand::_NAME = "CSID";
 const std::string COMMODORE::DatasetteStatusCommand::_NAME = "CDATASETTE";
 const std::string COMMODORE::SIDWrapperCommand::_NAME = "CSIDW";
 
+// ---
+void COMMODORE::VICIStatusCommand::executeImpl (MCHEmul::CommandExecuter* cE, MCHEmul::Computer* c, MCHEmul::InfoStructure& rst)
+{
+	// Only with a valid computer, but also a COMMODORE one. 
+	if (c == nullptr || 
+		dynamic_cast <COMMODORE::Computer*> (c) == nullptr ||
+		static_cast <COMMODORE::Computer*> (c) -> vicI () == nullptr)
+		return;
+
+	rst.add ("VICI", std::move (static_cast <COMMODORE::Computer*> (c) -> vicI () -> getInfoStructure ()));
+}
 
 // ---
-void COMMODORE::VICStatusCommand::executeImpl (MCHEmul::CommandExecuter* cE, MCHEmul::Computer* c, MCHEmul::InfoStructure& rst)
+void COMMODORE::VICIIStatusCommand::executeImpl (MCHEmul::CommandExecuter* cE, MCHEmul::Computer* c, MCHEmul::InfoStructure& rst)
 {
 	// Only with a valid computer, but also a COMMODORE one. 
 	if (c == nullptr || 
@@ -19,6 +32,18 @@ void COMMODORE::VICStatusCommand::executeImpl (MCHEmul::CommandExecuter* cE, MCH
 		return;
 
 	rst.add ("VICII", std::move (static_cast <COMMODORE::Computer*> (c) -> vicII () -> getInfoStructure ()));
+}
+
+// ---
+void COMMODORE::VIAStatusCommand::executeImpl (MCHEmul::CommandExecuter* cE, MCHEmul::Computer* c, MCHEmul::InfoStructure& rst)
+{
+	// Only with a valid computer, but also a COMMODORE one. 
+	if (c == nullptr || 
+		dynamic_cast <COMMODORE::Computer*> (c) == nullptr ||
+		static_cast <COMMODORE::Computer*> (c) -> via () == nullptr)
+		return;
+
+	rst.add ("VIA", std::move (static_cast <COMMODORE::Computer*> (c) -> via () -> getInfoStructure ()));
 }
 
 // ---
@@ -68,7 +93,7 @@ void COMMODORE::SIDWrapperCommand::executeImpl (MCHEmul::CommandExecuter* cE, MC
 
 		case 1:
 			{
-				wrapper = new COMMODORE::SoundSimpleWrapper 
+				wrapper = new COMMODORE::SoundSIDSimpleWrapper 
 					(c -> clock ().cyclesPerSecond (),
 					 static_cast <COMMODORE::Computer*> (c) -> sid () -> samplingFrecuency ());
 			}

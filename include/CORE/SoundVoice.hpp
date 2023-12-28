@@ -73,6 +73,7 @@ namespace MCHEmul
 						{ return (_release); }
 		void setRelease (unsigned short r)
 						{ _release = r; calculateVoiceSamplingData (); }
+		inline void setADR (unsigned short a, unsigned short d, unsigned short r);
 
 		/** The sustain volumen is a number between 0 and 1 indicating 
 			the %(1) over a "maximum value". */
@@ -200,6 +201,14 @@ namespace MCHEmul
 
 	// To facilitate the use of a set of these...
 	using SoundVoices = std::vector <SoundVoice*>;
+
+	// ---
+	inline void SoundVoice::setADR (unsigned short a, unsigned short d, unsigned short r)
+	{ 
+		setAttack (a); 
+		setDecay (d);
+		setRelease (r);
+	}
 }
 
 #endif

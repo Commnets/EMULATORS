@@ -2,3 +2,17 @@
 #(C) 2022 Ignacio Cea Fornies
 ?./Commodore.fmt
 ?./Standard.fmt
+#---
+;VIA1
+Id:@ID@
+@ATTRS?{key=YES,equal=:,empty=no attributes}\n@
+->Registers:
+@Registers>@
+#---
+#---
+;VIA2
+Id:@ID@
+@ATTRS?{key=YES,equal=:,empty=no attributes}\n@
+->Registers:
+@Registers>@
+#---

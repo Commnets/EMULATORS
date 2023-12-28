@@ -27,8 +27,8 @@ namespace COMMODORE
 	class SIDLibWrapper : public MCHEmul::SoundLibWrapper
 	{
 		public:
-		SIDLibWrapper ()
-			: MCHEmul::SoundLibWrapper (),
+		SIDLibWrapper (const MCHEmul::Attributes attrs = { })
+			: MCHEmul::SoundLibWrapper (attrs),
 			  _lastValueRead (MCHEmul::UByte::_0)
 							{ }
 
@@ -40,6 +40,8 @@ namespace COMMODORE
 		virtual const MCHEmul::UByte& peekValue (size_t p) const
 							{ return (readValue (p)); }
 
+		/** To get the full info of the wrapper, including the voices. */
+		virtual MCHEmul::InfoStructure getInfoStructure () const override;
 		/** To get information about the voices from then wrapper. \n
 			That infomation is not neccesary stored in the registers. */
 		virtual MCHEmul::InfoStructure getVoiceInfoStructure (unsigned char nV) const = 0;
@@ -60,7 +62,12 @@ namespace COMMODORE
 		  *	@param sF	Sampling frequency. This couldn't be less than 4000Hz.
 		  */
 		SoundRESIDWrapper (unsigned int cF, RESID::sampling_method sM, unsigned int sF)
-			: SIDLibWrapper (),
+			: SIDLibWrapper (
+				{
+					{ "Name", "RESID" },
+					{ "Programer", "Dag Lem" },
+					{ "Year", "2004" }
+				}),
 			  _chipFrequency (cF),
 			  _samplingFrequency (sF),
 			  _resid_sid ()
@@ -88,7 +95,7 @@ namespace COMMODORE
 	/** A very simple wrapper trying to emulate 
 		all voices in the simpliest way possible. \n
 		All programmed by ICF after reading several articles about!!! */
-	class SoundSimpleWrapper final : public SIDLibWrapper
+	class SoundSIDSimpleWrapper final : public SIDLibWrapper
 	{
 		public:
 		static unsigned short _ATTACKTIMES [0x10];  // In milliseconds
@@ -100,7 +107,7 @@ namespace COMMODORE
 		  *	@param cF	Chip frequency in clocks / second.
 		  * @param sF	Sampling frequency in samples / second. It cannot be 0.
 		  */
-		SoundSimpleWrapper (unsigned int cF, unsigned int sF);
+		SoundSIDSimpleWrapper (unsigned int cF, unsigned int sF);
 
 		/** The volumen is a number between 0 and 1. */
 		double volumen () const
@@ -128,7 +135,7 @@ namespace COMMODORE
 		class Voice final : public MCHEmul::SoundVoice
 		{
 			public:
-			friend SoundSimpleWrapper;
+			friend SoundSIDSimpleWrapper;
 
 			Voice (int id, unsigned int cF)
 				: MCHEmul::SoundVoice (id, cF,
@@ -188,7 +195,7 @@ namespace COMMODORE
 
 			virtual void initialize () override;
 
-			/** To suppomg the ring modulation. */
+			/** To support the ring modulation. */
 			virtual double data () const override;
 
 			/**

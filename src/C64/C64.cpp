@@ -100,7 +100,7 @@ MCHEmul::Chips C64::Commodore64::standardChips (C64::Commodore64::VisualSystem v
 	unsigned int cSpd = (vS == C64::Commodore64::VisualSystem::_NTSC) ? _NTSCCLOCK : _PALCLOCK;
 	MCHEmul::SoundLibWrapper* sLib = nullptr;
 	if (sS == "SID") sLib = new COMMODORE::SoundRESIDWrapper (cSpd, RESID::SAMPLE_FAST, COMMODORE::SID::_SOUNDSAMPLINGCLOCK);
-	else sLib = (MCHEmul::SoundLibWrapper*) new COMMODORE::SoundSimpleWrapper (cSpd, COMMODORE::SID::_SOUNDSAMPLINGCLOCK);
+	else sLib = (MCHEmul::SoundLibWrapper*) new COMMODORE::SoundSIDSimpleWrapper (cSpd, COMMODORE::SID::_SOUNDSAMPLINGCLOCK);
 	result.insert (MCHEmul::Chips::value_type (COMMODORE::SID::_ID, 
 		(MCHEmul::Chip*) new COMMODORE::SID (cSpd, sLib))); // The SID depends on the speed...
 

@@ -8,21 +8,22 @@ const MCHEmul::RasterData COMMODORE::VICI_PAL::_HRASTERDATA (404, 480, 24, 343, 
 
 // ---
 COMMODORE::VICI::VICI (const MCHEmul::RasterData& vd, const MCHEmul::RasterData& hd, 
-		int vV, unsigned short cRL, const MCHEmul::Attributes& attrs)
+		int vV, unsigned short cRL, MCHEmul::SoundLibWrapper* sW, const MCHEmul::Attributes& attrs)
 	: MCHEmul::GraphicalChip (_ID, 
 		{ { "Name", "VICI" },
 		  { "Code", "6560 (NTSC), 6561/6561E/6561-101 (PAL)" },
 		  { "Manufacturer", "Commodore Business Machines CBM" },
 		  { "Year", "1977" } }),
-	  MCHEmul::SoundChip (_ID, { }, new COMMODORE::VICISoundLibWrapper),
+	  _soundFunction (new COMMODORE::VICI::SoundFunction (sW)),
 	  _VICIRegisters (nullptr),
 	  _VICIView (vV),
 	  _cyclesPerRasterLine (cRL),
 	  _incCyclesPerRasterLine (cRL - COMMODORE::VICI_PAL::_CYCLESPERRASTERLINE),
-	  _raster (vd, hd),
+	  _raster (vd, hd, 4 /** The step is here 4 pixels */),
 	  _lastCPUCycles (0),
 	  _format (nullptr),
-	  _cycleInRasterLine (0)
+	  _cycleInRasterLine (0),
+	  _lastVBlankEntered (false)
 {
 	assert (_cyclesPerRasterLine >= 65);
 
@@ -34,6 +35,8 @@ COMMODORE::VICI::VICI (const MCHEmul::RasterData& vd, const MCHEmul::RasterData&
 // ---
 COMMODORE::VICI::~VICI ()
 {
+	delete (_soundFunction);
+
 	SDL_FreeFormat (_format);
 }
 
@@ -42,7 +45,8 @@ bool COMMODORE::VICI::initialize ()
 {
 	assert (MCHEmul::GraphicalChip::memoryRef () != nullptr);
 
-	if (!MCHEmul::GraphicalChip::initialize ())
+	if (!MCHEmul::GraphicalChip::initialize () ||
+		!_soundFunction -> initialize ())
 		return (false);
 
 	// Gets the memory block dedicated to the VICI
@@ -57,12 +61,14 @@ bool COMMODORE::VICI::initialize ()
 
 	_raster.initialize ();
 
-	_VICIRegisters -> setSoundLibWrapper (soundWrapper ());
+	_VICIRegisters -> setSoundLibWrapper (_soundFunction -> soundWrapper ());
 	_VICIRegisters -> initialize ();
 
 	_lastCPUCycles = 0;
 	
 	_cycleInRasterLine = 1;
+
+	_lastVBlankEntered = false;
 
 	return (true);
 }
@@ -70,11 +76,78 @@ bool COMMODORE::VICI::initialize ()
 // ---
 bool COMMODORE::VICI::simulate (MCHEmul::CPU* cpu)
 {
-	// TODO
+	// First time?
+	if (_lastCPUCycles == 0)
+	{ 
+		_lastCPUCycles = cpu -> clockCycles (); // Nothing to do...
+
+		return (true);
+	}
+
+	// Simulate the visulization...
+	for (unsigned int i = (cpu -> clockCycles  () - _lastCPUCycles); i > 0; i--)
+	{
+		if (MCHEmul::GraphicalChip::deepDebugActive ())
+		{
+			*MCHEmul::GraphicalChip::_deepDebugFile
+				// Where
+				<< "VICI\t" 
+				// When
+				<< std::to_string (cpu -> clockCycles () - i) << "\t" // clock cycles at that point
+				// What
+				<< "Info cycle\t\t"
+				// Data
+				<< "Raster:["
+				<< std::to_string (_raster.currentColumnAtBase0 ()) << "," 
+				<< std::to_string (_raster.currentLineAtBase0 ()) << ","
+				<< std::to_string (_cycleInRasterLine)
+				<< "], Memory:["
+				<< "SM=$" << MCHEmul::removeAll0 (_VICIRegisters -> screenMemory ().asString
+					(MCHEmul::UByte::OutputFormat::_HEXA, '\0', 2)) << ","
+				<< "CM=$" << MCHEmul::removeAll0 (_VICIRegisters -> charDataMemory ().asString
+					(MCHEmul::UByte::OutputFormat::_HEXA, '\0', 2)) << ","
+				<< "BM=$" << MCHEmul::removeAll0 (_VICIRegisters -> colourMemory ().asString
+					(MCHEmul::UByte::OutputFormat::_HEXA, '\0', 2)) << "]\n";
+		}
+
+		// Treat the right cycle...
+		unsigned int cS = 0;
+		if ((cS = treatRasterCycle ()) > 0)
+			cpu -> setStop (true, MCHEmul::Instruction::_CYCLEALL /** fully stopped. */, cpu -> clockCycles () - i, (int) cS);
+
+		// Draws the graphics & border if it has to do so...
+		if (_raster.isInVisibleZone ())
+			drawVisibleZone (cpu);
+
+		// Move to the next cycle...
+		_cycleInRasterLine++;
+
+		// Move 4 pixels right in the raster line and jump to other line is possible...
+		// Notice that the variable _isNewRasterLine becomes true when a new line comes...
+		if (_raster.moveCycles (1))
+			_cycleInRasterLine = 1;
+	}
+
+	// When the raster enters the non visible part of the screen,
+	// a notification is sent (to the Screen class usually) 
+	// just to draw the screen...
+	if (_raster.isInLastVBlank ())
+	{
+		if (!_lastVBlankEntered)
+		{
+			_lastVBlankEntered = true;
+
+			MCHEmul::GraphicalChip::notify (MCHEmul::Event (_GRAPHICSREADY)); 
+		}
+	}
+	else
+		_lastVBlankEntered = false;
+
+	_VICIRegisters -> setCurrentRasterLine (_raster.currentLine ()); 
 
 	_lastCPUCycles = cpu -> clockCycles ();
 
-	return (true);
+	return (_soundFunction -> simulate (cpu));
 }
 
 // ---
@@ -85,8 +158,7 @@ MCHEmul::InfoStructure COMMODORE::VICI::getInfoStructure () const
 	result.remove ("Memory"); // This info is not neccesary...
 	result.add ("VICIRegisters",	std::move (_VICIRegisters -> getInfoStructure ()));
 	result.add ("Raster",			std::move (_raster.getInfoStructure ()));
-
-	// TODO
+	result.add ("Sound",			std::move (_soundFunction -> getInfoStructure ()));
 
 	return (result);
 }
@@ -165,9 +237,37 @@ MCHEmul::ScreenMemory* COMMODORE::VICI::createScreenMemory ()
 }
 
 // ---
-COMMODORE::VICI_NTSC::VICI_NTSC (int vV)
+unsigned int COMMODORE::VICI::treatRasterCycle ()
+{
+	// TODO
+
+	return (0);
+}
+
+// ---
+void COMMODORE::VICI::drawVisibleZone (MCHEmul::CPU* cpu)
+{
+	// TODO
+}
+
+// ---
+COMMODORE::VICI::DrawResult COMMODORE::VICI::drawGraphics (const COMMODORE::VICI::DrawContext& dC)
+{
+	// TODO
+
+	return (COMMODORE::VICI::DrawResult ());
+}
+
+// ---
+void COMMODORE::VICI::drawResultToScreen (const COMMODORE::VICI::DrawResult& cT, const COMMODORE::VICI::DrawContext& dC)
+{
+	// TODO
+}
+
+// ---
+COMMODORE::VICI_NTSC::VICI_NTSC (int vV, MCHEmul::SoundLibWrapper* wS)
 	: COMMODORE::VICI (
-		 _VRASTERDATA, _HRASTERDATA, vV, 71,
+		 _VRASTERDATA, _HRASTERDATA, vV, 71, wS,
 		 { { "Name", "VIC-II (NTSC) Video Chip Interface II" },
 		   { "Code", "6560" },
 		   { "Manufacturer", "MOS Technology INC/Commodore Semiconductor Group (CBM)"},
@@ -177,13 +277,103 @@ COMMODORE::VICI_NTSC::VICI_NTSC (int vV)
 }
 
 // ---
-COMMODORE::VICI_PAL::VICI_PAL (int vV)
+unsigned int COMMODORE::VICI_NTSC::treatRasterCycle ()
+{
+	unsigned int result = COMMODORE::VICI::treatRasterCycle ();
+
+	// TODO
+
+	return (result);
+}
+
+// ---
+COMMODORE::VICI_PAL::VICI_PAL (int vV, MCHEmul::SoundLibWrapper* wS)
 	: COMMODORE::VICI (
-		 _VRASTERDATA, _HRASTERDATA, vV, COMMODORE::VICI_PAL::_CYCLESPERRASTERLINE,
+		 _VRASTERDATA, _HRASTERDATA, vV, COMMODORE::VICI_PAL::_CYCLESPERRASTERLINE, wS,
 		 { { "Name", "VIC-I (PAL) Video Chip Interface" },
 		   { "Code", "6561/6561E/6561-101" },
 		   { "Manufacturer", "MOS Technology INC/Commodore Semiconductor Group (CBM)"},
 		   { "Year", "1977" } })
 {
 	// Nothing else to do...
+}
+
+// ---
+unsigned int COMMODORE::VICI_PAL::treatRasterCycle ()
+{
+	unsigned int result = COMMODORE::VICI::treatRasterCycle ();
+
+	// TODO
+
+	return (result);
+}
+
+// ---
+COMMODORE::VICI::SoundFunction::SoundFunction (MCHEmul::SoundLibWrapper* sW)
+	: MCHEmul::SoundChip (_ID, 
+		{ { "Name", "SoundFunction" },
+		  { "Code", "Inside 6560 (NTSC), 6561/6561E/6561-101 (PAL)" },
+		  { "Manufacturer", "Commodore Business Machines CBM" },
+		  { "Year", "1977" } },
+		sW)
+{ 
+	// Take care that the sound emulation library was not null at all...
+	// ...and also belonging to the right type..
+	assert (dynamic_cast <COMMODORE::VICISoundLibWrapper*> (soundWrapper ()) != nullptr);
+
+	setClassName ("SoundFunction");
+}
+
+// ---
+bool COMMODORE::VICI::SoundFunction::initialize ()
+{
+	if (!MCHEmul::SoundChip::initialize ())
+		return (false);
+
+	_lastCPUCycles = 0;
+
+	return (true);
+}
+
+// ---
+bool COMMODORE::VICI::SoundFunction::simulate (MCHEmul::CPU* cpu)
+{
+	// First time?
+	if (_lastCPUCycles == 0)
+	{ 
+		_lastCPUCycles = cpu -> clockCycles (); // Nothing to do...
+
+		return (true);
+	}
+
+	if (soundWrapper () != nullptr)
+	{
+		for (unsigned int i = (cpu -> clockCycles () - _lastCPUCycles); i > 0 ; i--)
+		{
+			// The number of bytes that can come from the wrapper might not be fixed...
+			MCHEmul::UBytes data;
+			if (soundWrapper () -> getData (cpu, data))
+			{
+				for (size_t j = 0; j < data.size (); j++)
+				{
+					char dt = data [j].value ();
+					if (soundMemory () -> addSampleData (&dt, sizeof (char)))
+						MCHEmul::SoundChip::notify (MCHEmul::Event (_SOUNDREADY));
+				}
+			}
+		}
+	}
+
+	return (true);
+}
+
+// ---
+MCHEmul::InfoStructure COMMODORE::VICI::SoundFunction::getInfoStructure () const
+{
+	MCHEmul::InfoStructure result = std::move (MCHEmul::SoundChip::getInfoStructure ());
+
+	result.remove ("Memory"); // This info is not neccesary...
+	result.add ("SoundLibWrapper",	std::move (soundWrapper () -> getInfoStructure ())); // To know which library is behing...
+
+	return (result);
 }

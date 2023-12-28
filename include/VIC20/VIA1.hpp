@@ -1,4 +1,4 @@
-/** \ingroup C64 */
+/** \ingroup VIC20 */
 /*@{*/
 
 /**	
@@ -7,7 +7,7 @@
  *	Framework: CPU Emulators library \n
  *	Author: Ignacio Cea Forniés (EMULATORS library) \n
  *	Creation Date: 17/12/2023 \n
- *	Description: The VIA1 Chip.
+ *	Description: The VIA1 Chip within the VIC20.
  *	Versions: 1.0 Initial
  */
 
@@ -20,31 +20,21 @@
 
 namespace VIC20
 {
-	class InputOSSystem;
-
-	/** VIA1 is mainly to communicate VIC20 with external devices.
-		Additionaly it is also used to read the keyboard and the joysticks. */
+	/** The chip is to communicate the VIC20 with the environment. */
 	class VIA1 final : public COMMODORE::VIA
 	{
 		public:
-		friend InputOSSystem;
-
-		static const unsigned int _ID = 200;
+		static const unsigned int _ID = 210;
 
 		VIA1 ()
-			: VIA (_ID, VIA1Registers::_VIA1_SUBSET, F6500::IRQInterrupt::_ID),
+			: VIA (_ID, VIA1Registers::_VIA1_SUBSET, F6500::NMIInterrupt::_ID),
 			  _VIA1Registers (nullptr)
 							{ setClassName ("VIA1"); }
 
 		virtual bool initialize () override;
 
-		virtual bool simulate (MCHEmul::CPU* cpu) override;
-
 		private:
-		virtual void processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifier* n) override;
-
-		private:
-		VIC20::VIA1Registers* _VIA1Registers;
+		VIA1Registers* _VIA1Registers;
 	};
 }
 

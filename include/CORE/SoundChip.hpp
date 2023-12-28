@@ -62,7 +62,7 @@ namespace MCHEmul
 							  if ((_soundWrapper = w) != nullptr) 
 								  _soundWrapper -> initialize (); }
 
-		/** To know the characteristic of the soun chip. */
+		/** To know the characteristics of the sound chip. */
 		virtual SDL_AudioFormat type () const = 0;
 		virtual int maxFrequency () const = 0;
 		int samplingFrecuency () const

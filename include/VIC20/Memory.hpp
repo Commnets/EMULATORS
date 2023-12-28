@@ -18,10 +18,20 @@
 
 namespace VIC20
 {
-	/** The memory itself for the commodore 64... */
+	/** The memory itself for the VIC 20... */
 	class Memory final : public MCHEmul::Memory
 	{
 		public:
+		/** The different memory configurations. */
+		enum class Configuration
+		{
+			_NOEXPANDED		= 0,
+			_3KEXPANSION	= 1,
+			_8KEXPANSION	= 2,
+			_16KEXPANSION	= 3,
+			_24KEXPANSION	= 4,
+		};
+
 		// Phisical Storages
 		static const int _RAM					= 0;
 		static const int _BASICROM				= 1;
@@ -31,12 +41,29 @@ namespace VIC20
 		// Subsets
 		static const int _PAGEZERO_SUBSET		= 100;
 		static const int _STACK_SUBSET			= 101;
+		static const int _BANK0_SUBSET			= 102;
+		static const int _BANK1_SUBSET			= 103;
+		static const int _BANK2_SUBSET			= 104;
+		static const int _BANK3_SUBSET			= 105;
+		static const int _VICIRAFTER_SUBSET		= 106;
+		static const int _VIAAFTER_SUBSET		= 107;
+		static const int _CHARROM_SUBSET		= 108;
+		static const int _BANK4_SUBSET			= 109;
+		static const int _BANK5_SUBSET			= 110;
+		static const int _BASICROM_SUBSET		= 111;
+		static const int _KERNELROM_SUBSET		= 112;
 
 		// Views
 		static const int _CPU_VIEW				= 0;
-		static const int _VICI_VIEW				= 1;
 
-		Memory (const std::string& lang = MCHEmul::_DEFAULTLANGUAGE);
+		/** The constructor receives the posible memory configuration. */
+		Memory (Configuration cfg, 
+			const std::string& lang = MCHEmul::_DEFAULTLANGUAGE);
+
+		/** To get the configuration. \n
+			It has only be changed at initialization. */
+		Configuration configuration () const
+							{ return (_configuration); }
 
 		/** To activate the right subsets in the CPU view. */
 		virtual bool initialize () override;
@@ -47,7 +74,10 @@ namespace VIC20
 		virtual MCHEmul::MemoryView* lookForCPUView () override
 							{ return (view (_CPU_VIEW)); }
 
-		static MCHEmul::Memory::Content standardMemoryContent ();
+		static MCHEmul::Memory::Content standardMemoryContent (Configuration cfg);
+
+		private:
+		Configuration _configuration;
 	};
 }
 

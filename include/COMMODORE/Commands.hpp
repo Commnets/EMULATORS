@@ -18,14 +18,52 @@
 
 namespace COMMODORE
 {
-	/** To get the status of the VIC chip. */
-	class VICStatusCommand final : public MCHEmul::Command
+	/** To get the status of the VICI chip. */
+	class VICIStatusCommand final : public MCHEmul::Command
 	{
 		public:
 		static const int _ID = 100;
 		static const std::string _NAME;
 	
-		VICStatusCommand ()
+		VICIStatusCommand ()
+			: MCHEmul::Command (_ID, _NAME)
+							{ }
+
+		virtual bool canBeExecuted () const override
+							{ return (_parameters.size () == 0); }
+
+		private:
+		virtual void executeImpl (MCHEmul::CommandExecuter* cE, 
+			MCHEmul::Computer* c, MCHEmul::InfoStructure& rst) override;
+	};
+
+	/** To get the status of the VICII chip. */
+	class VICIIStatusCommand final : public MCHEmul::Command
+	{
+		public:
+		static const int _ID = 101;
+		static const std::string _NAME;
+	
+		VICIIStatusCommand ()
+			: MCHEmul::Command (_ID, _NAME)
+							{ }
+
+		virtual bool canBeExecuted () const override
+							{ return (_parameters.size () == 0); }
+
+		private:
+		virtual void executeImpl (MCHEmul::CommandExecuter* cE, 
+			MCHEmul::Computer* c, MCHEmul::InfoStructure& rst) override;
+	};
+
+	/** To get the status of the VIA chip. */
+	class VIAStatusCommand final : public MCHEmul::Command
+	{
+		public:
+		static const int _ID = 102;
+		static const std::string _NAME;
+
+		VIAStatusCommand ()
 			: MCHEmul::Command (_ID, _NAME)
 							{ }
 
@@ -41,7 +79,7 @@ namespace COMMODORE
 	class CIAStatusCommand final : public MCHEmul::Command
 	{
 		public:
-		static const int _ID = 101;
+		static const int _ID = 103;
 		static const std::string _NAME;
 
 		CIAStatusCommand ()
@@ -60,7 +98,7 @@ namespace COMMODORE
 	class SIDStatusCommand final : public MCHEmul::Command
 	{
 		public:
-		static const int _ID = 102;
+		static const int _ID = 104;
 		static const std::string _NAME;
 
 		SIDStatusCommand ()
@@ -79,7 +117,7 @@ namespace COMMODORE
 	class SIDWrapperCommand final : public MCHEmul::Command
 	{
 		public:
-		static const int _ID = 103;
+		static const int _ID = 104;
 		static const std::string _NAME;
 
 		SIDWrapperCommand ()
@@ -98,7 +136,7 @@ namespace COMMODORE
 	class DatasetteStatusCommand final : public MCHEmul::Command
 	{
 		public:
-		static const int _ID = 104;
+		static const int _ID = 105;
 		static const std::string _NAME;
 
 		DatasetteStatusCommand ()

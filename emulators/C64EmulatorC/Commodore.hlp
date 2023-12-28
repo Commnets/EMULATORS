@@ -1,7 +1,13 @@
 #Commands only valid over a Commodore64, local and remotly. 
 #(C) 2022 Ignacio Cea Fornies
+;VICI
+To know the status of the VICI chip, including raster and others.
+No parameters are needed.
 ;VICII
 To know the status of the VICII chip, including raster and others.
+No parameters are needed.
+;VIA
+To know the status of the VIA chip.
 No parameters are needed.
 ;CIA
 To know the status of the CIA chip.

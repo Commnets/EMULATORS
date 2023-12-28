@@ -15,7 +15,9 @@
 #define __COMMODORE_COMPUTER__
 
 #include <CORE/incs.hpp>
+#include <COMMODORE/VICI.hpp>
 #include <COMMODORE/VICII.hpp>
+#include <COMMODORE/VIA.hpp>
 #include <COMMODORE/CIA.hpp>
 #include <COMMODORE/SID.hpp>
 #include <COMMODORE/UserPort.hpp>
@@ -35,6 +37,20 @@ namespace COMMODORE
 
 		// To get direct access to the most important COMMODORE chips...
 		// Not all these chips have to exist in any COMMODORE computer, so the answer can be nullptr.
+		/** The VICI. */
+		bool existsVICI () const
+							{ return (_chips.find (COMMODORE::VICI::_ID) != _chips.end ()); }
+		const COMMODORE::VICI* vicI () const
+							{ return (existsVICI () 
+								? dynamic_cast <const COMMODORE::VICI*> 
+								  ((* _chips.find (COMMODORE::VICI::_ID)).second)
+								: nullptr); }
+		COMMODORE::VICI* vicI ()
+							{ return (existsVICI () 
+								? dynamic_cast <COMMODORE::VICI*> 
+								  ((* _chips.find (COMMODORE::VICI::_ID)).second)
+								: nullptr); }
+
 		/** The VICII. */
 		bool existsVICII () const
 							{ return (_chips.find (COMMODORE::VICII::_ID) != _chips.end ()); }
@@ -47,6 +63,20 @@ namespace COMMODORE
 							{ return (existsVICII () 
 								? dynamic_cast <COMMODORE::VICII*> 
 								  ((* _chips.find (COMMODORE::VICII::_ID)).second)
+								: nullptr); }
+
+		/** The VIA. */
+		bool existsVIA () const
+							{ return (_chips.find (COMMODORE::VIA::_ID) != _chips.end ()); }
+		const COMMODORE::VIA* via () const
+							{ return (existsVIA () 
+								? dynamic_cast <const COMMODORE::VIA*> 
+								  ((* _chips.find (COMMODORE::VIA::_ID)).second)
+								: nullptr); }
+		COMMODORE::VIA* via ()
+							{ return (existsVIA ()
+								? dynamic_cast <COMMODORE::VIA*> 
+								  ((* _chips.find (COMMODORE::VIA::_ID)).second)
 								: nullptr); }
 
 		/** The CIA. */

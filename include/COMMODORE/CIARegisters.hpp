@@ -73,7 +73,7 @@ namespace COMMODORE
 			dc00	dc02 (0 = input; 1 output)	Port effect \n
 			0		0							1 See that the effect in the ouput is by default nothing, then Hi - level!
 			0		1							0 \n
-			1		0							1 See that the effect in the otput is by default nothing, then Hi - level!
+			1		0							1 See that the effect in the output is by default nothing, then Hi - level!
 			1		1							1 \n
 			Port effect = !(!dc00 (_outputRegA) & dc02 (_dataPortADir)) = dc00 | !dc02 \n
 			The final value of the port is returned. \n

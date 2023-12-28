@@ -60,21 +60,22 @@ const C64::InputOSSystem::KeystrockesMap C64::InputOSSystem::_C64KEYS
 			{ SDL_SCANCODE_SPACE,			{ std::make_pair (7, 4) } },
 			{ SDL_SCANCODE_LSHIFT,			{ std::make_pair (1, 7) } },
 			{ SDL_SCANCODE_RSHIFT,			{ std::make_pair (6, 4) } },
-			{ SDL_SCANCODE_COMMA,			{ std::make_pair (5, 7) } },
+			{ SDL_SCANCODE_COMMA,			{ std::make_pair (5, 7) } }, // { in spanish keyboard
 			{ SDL_SCANCODE_PERIOD,			{ std::make_pair (5, 4) } },
-			{ SDL_SCANCODE_LEFTBRACKET,		{ std::make_pair (5, 0) } }, // + instead
-			{ SDL_SCANCODE_RIGHTBRACKET,	{ std::make_pair (6, 1) } }, // * instead
+			{ SDL_SCANCODE_LEFTBRACKET,		{ std::make_pair (5, 0) } }, // [, + instead
+			{ SDL_SCANCODE_RIGHTBRACKET,	{ std::make_pair (6, 1) } }, // ], * instead
 			{ SDL_SCANCODE_APOSTROPHE,		{ std::make_pair (5, 5) } }, // : instead 
-			{ SDL_SCANCODE_BACKSLASH,		{ std::make_pair (5, 6) } }, // @ instead
-			{ SDL_SCANCODE_MINUS,			{ std::make_pair (5, 3) } }, 
-			{ SDL_SCANCODE_SLASH,			{ std::make_pair (6, 7) } },
-			{ SDL_SCANCODE_SEMICOLON,		{ std::make_pair (6, 2) } },
-			{ SDL_SCANCODE_EQUALS,			{ std::make_pair (6, 5) } },
+			{ SDL_SCANCODE_BACKSLASH,		{ std::make_pair (5, 6) } }, // @ instead, } in spanish keyboard
+			{ SDL_SCANCODE_MINUS,			{ std::make_pair (5, 3) } }, // ' in spanish keyboard
+			{ SDL_SCANCODE_SLASH,			{ std::make_pair (6, 7) } }, // } in spanish keyboard
+			{ SDL_SCANCODE_SEMICOLON,		{ std::make_pair (6, 2) } }, // ñ in spanish keyboard
+			{ SDL_SCANCODE_EQUALS,			{ std::make_pair (6, 5) } }, // ¡ in spanish keyboard
 			{ SDL_SCANCODE_BACKSPACE,		{ std::make_pair (0, 0) } },
+			{ SDL_SCANCODE_DELETE,			{ std::make_pair (6, 6) } }, // The up arrow instead
 			{ SDL_SCANCODE_ESCAPE,			{ std::make_pair (7, 1) } }, // The arrow back instead
 			{ SDL_SCANCODE_INSERT,			{ std::make_pair (1, 7), std::make_pair (0, 0) } },
 			{ SDL_SCANCODE_HOME,			{ std::make_pair (6, 3) } },
-			{ SDL_SCANCODE_GRAVE,			{ std::make_pair (6, 0) } }, // The pound key instead
+			{ SDL_SCANCODE_GRAVE,			{ std::make_pair (6, 0) } }, // The pound key instead, º in spanish keyboard
 			/** Derivated. */
 			{ SDL_SCANCODE_F2,				{ std::make_pair (1, 7), std::make_pair (0, 4) } },
 			{ SDL_SCANCODE_F4,				{ std::make_pair (1, 7), std::make_pair (0, 5) } },

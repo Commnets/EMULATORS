@@ -49,14 +49,14 @@ namespace C64
 							{ return (cmdlineArguments ().existsArgument (_PARAMNTSC)); }
 
 		/** To know which is the library used for the SID simultion. */
-		std::string SIDEmulationLib () const
+		std::string SIDEmulationLib () const // My own (ICF) by default!
 							{ return (cmdlineArguments ().existsArgument (_PARAMSID) 
 								? cmdlineArguments ().argumentAsString (_PARAMSID) : "OWN" /** My own. */); }
 
 		/** To know whether the border has or not to be drawn. */
 		bool drawBorder () const
 							{ return (cmdlineArguments ().existsArgument (_PARAMBORDER)); }
-		unsigned int borderColor () const
+		unsigned int borderColor () const // Black by default!
 							{ return (drawBorder () ? cmdlineArguments ().argumentAsInt (_PARAMBORDER) : 0); }
 
 		/** To add the peripherals linked to the computer, according to the parameters. */

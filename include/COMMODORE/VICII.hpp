@@ -163,7 +163,7 @@ namespace COMMODORE
 			the CPU should be stopped. \n
 			The way the raster cycles are treated will depend (somehow) on the type of VICII chip. */
 		virtual unsigned int treatRasterCycle ();
-		/** Treat the viciel zone.
+		/** Treat the visible zone.
 			Draws the graphics, detect collions, and finally draw the border. */
 		void drawVisibleZone (MCHEmul::CPU* cpu);
 		/** Invoked from the previous one, just to draw and detect collisions. \n

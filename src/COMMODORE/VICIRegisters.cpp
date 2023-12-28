@@ -24,7 +24,14 @@ MCHEmul::InfoStructure COMMODORE::VICIRegisters::getInfoStructure () const
 {
 	MCHEmul::InfoStructure result = std::move (MCHEmul::ChipRegisters::getInfoStructure ());
 
-	// TODO
+	result.add ("AUXCOLOR",			_auxiliarColor);
+	result.add ("SCRCOLOR",			_screenColor);
+	result.add ("BRDCOLOR",			_borderColor);
+	result.add ("CHARADDRESS",		charDataMemory ());
+	result.add ("SCREENADDRESS",	screenMemory ());
+	result.add ("COLOURADDRESS",	colourMemory ());
+	result.add ("LIGHTPENX",		_currentLightPenHorizontalPosition);
+	result.add ("LIGHTPENY",		_currentLightPenVerticalPosition);
 
 	return (result);
 }
@@ -115,7 +122,7 @@ void COMMODORE::VICIRegisters::setValue (size_t p, const MCHEmul::UByte& v)
 		case 0x0c:
 		case 0x0d:
 			{
-				_soundWrapper -> setValue (p, v);
+				_soundWrapper -> setValue (pp, v);
 			}
 			
 			break;
@@ -125,7 +132,7 @@ void COMMODORE::VICIRegisters::setValue (size_t p, const MCHEmul::UByte& v)
 			{
 				_auxiliarColor = (v.value () & 0xf0) >> 4;
 
-				_soundWrapper -> setValue (p, v);
+				_soundWrapper -> setValue (pp, v);
 			}
 
 			break;
@@ -157,24 +164,14 @@ const MCHEmul::UByte& COMMODORE::VICIRegisters::readValue (size_t p) const
 
 	switch (pp)
 	{
+		// For this registers it is enough the info saved!
 		case 0x00:
-			{
-				result = (_interlaced ? 0x80 : 0x00) | (_offsetXScreen & 0x7f);
-			}
-
-			break;
-
 		case 0x01:
-			{
-				result = _offsetYScreen;
-			}
-
-			break;
-
 		case 0x02:
+		case 0x05:
+		case 0x0f:
 			{
-				result = (_charsWidthScreen & 0x7f) | 
-						 (((unsigned char) _b9ScreenColorMemory) << 7);
+				result = MCHEmul::ChipRegisters::readValue (pp);
 			}
 
 			break;
@@ -193,12 +190,6 @@ const MCHEmul::UByte& COMMODORE::VICIRegisters::readValue (size_t p) const
 
 			break;
 
-		case 0x05:
-			{
-				result = (unsigned char) (_b10to13CharDatamemory) |	
-						 (unsigned char) (_b10to13ScreenMemory << 4);
-			}
-
 		case 0x06:
 			{
 				result = _lightPenActive // Only when the lightpen is active...
@@ -216,11 +207,17 @@ const MCHEmul::UByte& COMMODORE::VICIRegisters::readValue (size_t p) const
 			break;
 
 		case 0x08:
-			// TODO
+			{
+				// TODO
+			}
+
 			break;
 
 		case 0x09:
-			// TODO
+			{
+				// TODO
+			}
+
 			break;
 
 		case 0x0a:
@@ -228,23 +225,14 @@ const MCHEmul::UByte& COMMODORE::VICIRegisters::readValue (size_t p) const
 		case 0x0c:
 		case 0x0d:
 			{
-				result = _soundWrapper -> readValue (p);
+				result = _soundWrapper -> readValue (pp);
 			}
 
 			break;
 
 		case 0x0e:
 			{
-				result = (_auxiliarColor << 4) | _soundWrapper -> readValue (0x0e).value ();
-			}
-
-			break;
-
-		case 0x0f:
-			{
-				result = (_screenColor << 4) |
-						 (_inverseMode ? 0x08 : 0x00) |
-						 (_borderColor & 0x07);
+				result = (_auxiliarColor << 4) | (_soundWrapper -> readValue (pp).value () & 0x0f);
 			}
 
 			break;

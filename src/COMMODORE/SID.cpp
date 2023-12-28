@@ -88,12 +88,5 @@ MCHEmul::InfoStructure COMMODORE::SID::getInfoStructure () const
 	result.add ("SoundLibWrapper",	
 		std::move (soundWrapper () -> getInfoStructure ())); // To know which library is behing...
 
-	// Information about the voices...
-	MCHEmul::InfoStructure vDt;
-	for (unsigned char i = 0; i < 3; i++)
-		vDt.add (std::to_string (i), 
-				 std::move (static_cast <const COMMODORE::SIDLibWrapper*> (soundWrapper ()) -> getVoiceInfoStructure (i)));
-	result.add ("VOICES", vDt);
-
 	return (result);
 }

@@ -27,6 +27,7 @@ namespace VIC20
 		/** The possible additional parameters of the VIC20 Emulator. */
 		static const unsigned char _PARAMNTSC;
 		static const unsigned char _PARAMBORDER;
+		static const unsigned char _PARAMCONFIGURATION;
 
 		/**
 		  * Constructor:
@@ -49,8 +50,14 @@ namespace VIC20
 		/** To know whether the border has or not to be drawn. */
 		bool drawBorder () const
 							{ return (cmdlineArguments ().existsArgument (_PARAMBORDER)); }
-		unsigned int borderColor () const
+		unsigned int borderColor () const // Black by default!
 							{ return (drawBorder () ? cmdlineArguments ().argumentAsInt (_PARAMBORDER) : 0); }
+	
+		/** To know the parameter related with the type of computer configuration. */
+		bool configuration () const
+							{ return (cmdlineArguments ().existsArgument (_PARAMCONFIGURATION)); }
+		unsigned int configurationMode () const // Not expanded by default!
+							{ return (configuration () ? cmdlineArguments ().argumentAsInt (_PARAMCONFIGURATION) : 0); }
 
 		/** To add the peripherals linked to the computer, according to the parameters. */
 		virtual bool initialize () override;
@@ -58,6 +65,7 @@ namespace VIC20
 		protected:
 		virtual MCHEmul::Computer* createComputer () const override
 							{ return (new VIC20::CommodoreVIC20 (
+								(Memory::Configuration) configurationMode (),
 								NTSCSystem () 
 									? VIC20::CommodoreVIC20::VisualSystem::_NTSC : VIC20::CommodoreVIC20::VisualSystem::_PAL,
 								computerLanguage ())); }

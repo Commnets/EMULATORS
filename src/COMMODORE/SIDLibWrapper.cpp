@@ -1,15 +1,15 @@
 #include <COMMODORE/SIDLibWrapper.hpp>
 
-unsigned short COMMODORE::SoundSimpleWrapper::_ATTACKTIMES [0x10] =
+unsigned short COMMODORE::SoundSIDSimpleWrapper::_ATTACKTIMES [0x10] =
 	{ 2, 8, 16, 24, 38, 56, 68, 80, 100, 250, 500, 800, 1000, 3000, 5000, 8000 };
-unsigned short COMMODORE::SoundSimpleWrapper::_DECAYTIMES [0x10] =
+unsigned short COMMODORE::SoundSIDSimpleWrapper::_DECAYTIMES [0x10] =
 	{ 6, 24, 48, 72, 114, 168, 204, 240, 300, 750, 1500, 2400, 3000, 9000, 15000, 24000 };
-unsigned short COMMODORE::SoundSimpleWrapper::_RELEASETIMES [0x10] =
+unsigned short COMMODORE::SoundSIDSimpleWrapper::_RELEASETIMES [0x10] =
 	{ 6, 24, 48, 72, 114, 168, 204, 240, 300, 750, 1500, 2400, 3000, 9000, 15000, 24000 };
 
 // Sampled from a 6581R4
 // When the triangle and sawtooth waves are mixed...
-const unsigned char COMMODORE::SoundSimpleWrapper::Voice::_SAWTRIWAVE_6581 [0x100] =
+const unsigned char COMMODORE::SoundSIDSimpleWrapper::Voice::_SAWTRIWAVE_6581 [0x100] =
 {
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -30,7 +30,7 @@ const unsigned char COMMODORE::SoundSimpleWrapper::Voice::_SAWTRIWAVE_6581 [0x10
 };
 
 // When the triangle and pulse waves are mixed...
-const unsigned char COMMODORE::SoundSimpleWrapper::Voice::_PULSETRIWAVE_6581 [0x100] = 
+const unsigned char COMMODORE::SoundSIDSimpleWrapper::Voice::_PULSETRIWAVE_6581 [0x100] = 
 {
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -50,7 +50,7 @@ const unsigned char COMMODORE::SoundSimpleWrapper::Voice::_PULSETRIWAVE_6581 [0x
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 };
 
-const unsigned char COMMODORE::SoundSimpleWrapper::Voice::_PULSESAWWAVE_6581 [0x100] = 
+const unsigned char COMMODORE::SoundSIDSimpleWrapper::Voice::_PULSESAWWAVE_6581 [0x100] = 
 {
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -70,7 +70,7 @@ const unsigned char COMMODORE::SoundSimpleWrapper::Voice::_PULSESAWWAVE_6581 [0x
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x78
 };
 
-const unsigned char COMMODORE::SoundSimpleWrapper::Voice::_PULSESAWTRIWAVE_6581 [0x100] = 
+const unsigned char COMMODORE::SoundSIDSimpleWrapper::Voice::_PULSESAWTRIWAVE_6581 [0x100] = 
 {
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -89,6 +89,19 @@ const unsigned char COMMODORE::SoundSimpleWrapper::Voice::_PULSESAWTRIWAVE_6581 
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x78
 };
+
+// ---
+MCHEmul::InfoStructure COMMODORE::SIDLibWrapper::getInfoStructure () const
+{
+	MCHEmul::InfoStructure result = std::move (MCHEmul::SoundLibWrapper::getInfoStructure ());
+
+	MCHEmul::InfoStructure vDt;
+	for (unsigned char i = 0; i < 3; i++)
+		vDt.add (std::to_string (i), std::move (getVoiceInfoStructure (i)));
+	result.add ("VOICES", vDt);
+
+	return (result);
+}
 
 // ---
 bool COMMODORE::SoundRESIDWrapper::getData (MCHEmul::CPU* cpu, MCHEmul::UBytes& dt)
@@ -116,12 +129,12 @@ MCHEmul::InfoStructure COMMODORE::SoundRESIDWrapper::getVoiceInfoStructure (unsi
 	result.add ("ID", nV);
 	result.add ("ACTIVE", (st.sid_register [iP + 4] & 0x01) != 0);
 	result.add ("ATTACK", 
-		COMMODORE::SoundSimpleWrapper::_ATTACKTIMES [(st.sid_register [iP + 5] & 0xf0) >> 4]);
+		COMMODORE::SoundSIDSimpleWrapper::_ATTACKTIMES [(st.sid_register [iP + 5] & 0xf0) >> 4]);
 	result.add ("DECAY", 
-		COMMODORE::SoundSimpleWrapper::_DECAYTIMES [st.sid_register [iP + 5] & 0x0f]);
+		COMMODORE::SoundSIDSimpleWrapper::_DECAYTIMES [st.sid_register [iP + 5] & 0x0f]);
 	result.add ("SUSTAIN", (st.sid_register [iP + 6] & 0xf0) >> 4);
 	result.add ("RELEASE", 
-		COMMODORE::SoundSimpleWrapper::_RELEASETIMES [st.sid_register [iP + 6] & 0x0f]);
+		COMMODORE::SoundSIDSimpleWrapper::_RELEASETIMES [st.sid_register [iP + 6] & 0x0f]);
 	result.add ("RINGMODULATION", (st.sid_register [iP + 4] & 0x04) != 0);
 	result.add ("VOICERELATED", (nV == 0) ? 2 : ((nV == 1) ? 0 : 1));
 	result.add ("SYNC", (st.sid_register [iP + 4] & 0x02) != 0);
@@ -139,29 +152,34 @@ MCHEmul::InfoStructure COMMODORE::SoundRESIDWrapper::getVoiceInfoStructure (unsi
 }
 
 // ---
-COMMODORE::SoundSimpleWrapper::SoundSimpleWrapper (unsigned int cF, unsigned int sF)
-	: SIDLibWrapper (),
+COMMODORE::SoundSIDSimpleWrapper::SoundSIDSimpleWrapper (unsigned int cF, unsigned int sF)
+	: COMMODORE::SIDLibWrapper (
+		{
+			{ "Name", "SimpleSID" },
+			{ "Programer", "Ignacio Cea" },
+			{ "Year", "2023" }
+		}),
 	  _chipFrequency (cF), _samplingFrequency (sF),
 	  _volumen (0.0f), // There is no volumen at the beginning...
 	  _voices (
-		{ new COMMODORE::SoundSimpleWrapper::Voice (0, cF), 
-		  new COMMODORE::SoundSimpleWrapper::Voice (1, cF), 
-		  new COMMODORE::SoundSimpleWrapper::Voice (2, cF) }),
+		{ new COMMODORE::SoundSIDSimpleWrapper::Voice (0, cF), 
+		  new COMMODORE::SoundSIDSimpleWrapper::Voice (1, cF), 
+		  new COMMODORE::SoundSIDSimpleWrapper::Voice (2, cF) }),
 	  _registers (std::vector <MCHEmul::UByte> (0x20, MCHEmul::UByte::_0)),
 	  _clocksPerSample ((unsigned int) ((double) cF / (double (sF)))),
 	  _counterClocksPerSample (0)
 { 
 	// Link the different voices to make complex effects when requested...
-	static_cast <COMMODORE::SoundSimpleWrapper::Voice*> (_voices [0]) -> 
-		setRelation (static_cast <COMMODORE::SoundSimpleWrapper::Voice*> (_voices [2]));
-	static_cast <COMMODORE::SoundSimpleWrapper::Voice*> (_voices [1]) -> 
-		setRelation (static_cast <COMMODORE::SoundSimpleWrapper::Voice*> (_voices [0]));
-	static_cast <COMMODORE::SoundSimpleWrapper::Voice*> (_voices [2]) -> 
-		setRelation (static_cast <COMMODORE::SoundSimpleWrapper::Voice*> (_voices [1]));
+	static_cast <COMMODORE::SoundSIDSimpleWrapper::Voice*> (_voices [0]) -> 
+		setRelation (static_cast <COMMODORE::SoundSIDSimpleWrapper::Voice*> (_voices [2]));
+	static_cast <COMMODORE::SoundSIDSimpleWrapper::Voice*> (_voices [1]) -> 
+		setRelation (static_cast <COMMODORE::SoundSIDSimpleWrapper::Voice*> (_voices [0]));
+	static_cast <COMMODORE::SoundSIDSimpleWrapper::Voice*> (_voices [2]) -> 
+		setRelation (static_cast <COMMODORE::SoundSIDSimpleWrapper::Voice*> (_voices [1]));
 }
 
 // ---
-void COMMODORE::SoundSimpleWrapper::setValue (size_t p, const MCHEmul::UByte& v)
+void COMMODORE::SoundSIDSimpleWrapper::setValue (size_t p, const MCHEmul::UByte& v)
 {
 	size_t pp = p % 0x20;
 
@@ -185,7 +203,7 @@ void COMMODORE::SoundSimpleWrapper::setValue (size_t p, const MCHEmul::UByte& v)
 		case 0x02:
 		case 0x03:
 			{
-				static_cast <COMMODORE::SoundSimpleWrapper::Voice*> (_voices [0]) -> setPulseUpPercentage
+				static_cast <COMMODORE::SoundSIDSimpleWrapper::Voice*> (_voices [0]) -> setPulseUpPercentage
 					((double) ((((unsigned short) _registers [0x03].value ()) << 8) + 
 								((unsigned short) _registers [0x02].value ())) / 4096.0f);
 			}
@@ -196,16 +214,16 @@ void COMMODORE::SoundSimpleWrapper::setValue (size_t p, const MCHEmul::UByte& v)
 		case 0x04:
 			{
 				_voices [0] -> setStart (v.bit (0));
-				static_cast <COMMODORE::SoundSimpleWrapper::Voice*> 
+				static_cast <COMMODORE::SoundSIDSimpleWrapper::Voice*> 
 					(_voices [0]) -> setSync (v.bit (1)); 
-				static_cast <COMMODORE::SoundSimpleWrapper::Voice*> 
+				static_cast <COMMODORE::SoundSIDSimpleWrapper::Voice*> 
 					(_voices [0]) -> setRingModulation (v.bit (2));
 				_voices [0] -> setActive (!v.bit (3));
 				_voices [0] -> wave (MCHEmul::SoundWave::Type::_TRIANGLE) -> setActive (v.bit (4));
 				_voices [0] -> wave (MCHEmul::SoundWave::Type::_SAWTOOTH) -> setActive (v.bit (5));
 				_voices [0] -> wave (MCHEmul::SoundWave::Type::_PULSE) -> setActive (v.bit (6));
 				_voices [0] -> wave (MCHEmul::SoundWave::Type::_NOISE) -> setActive (v.bit (7));
-				static_cast <COMMODORE::SoundSimpleWrapper::Voice*> 
+				static_cast <COMMODORE::SoundSIDSimpleWrapper::Voice*> 
 					(_voices [0]) -> setWavesActive (v.value () & 0xf0);
 			}
 
@@ -245,7 +263,7 @@ void COMMODORE::SoundSimpleWrapper::setValue (size_t p, const MCHEmul::UByte& v)
 		case 0x09:
 		case 0x0a:
 			{
-				static_cast <COMMODORE::SoundSimpleWrapper::Voice*> (_voices [1]) -> setPulseUpPercentage
+				static_cast <COMMODORE::SoundSIDSimpleWrapper::Voice*> (_voices [1]) -> setPulseUpPercentage
 						((double) ((((unsigned short) _registers [0x0a].value ()) << 8) + 
 								((unsigned short) _registers [0x09].value ())) / 4096.0f);
 			}
@@ -256,16 +274,16 @@ void COMMODORE::SoundSimpleWrapper::setValue (size_t p, const MCHEmul::UByte& v)
 		case 0x0b:
 			{
 				_voices [1] -> setStart (v.bit (0));
-				static_cast <COMMODORE::SoundSimpleWrapper::Voice*> 
+				static_cast <COMMODORE::SoundSIDSimpleWrapper::Voice*> 
 					(_voices [1]) -> setSync (v.bit (1)); 
-				static_cast <COMMODORE::SoundSimpleWrapper::Voice*> 
+				static_cast <COMMODORE::SoundSIDSimpleWrapper::Voice*> 
 					(_voices [1]) -> setRingModulation (v.bit (2));
 				_voices [1] -> setActive (!v.bit (3));
 				_voices [1] -> wave (MCHEmul::SoundWave::Type::_TRIANGLE) -> setActive (v.bit (4));
 				_voices [1] -> wave (MCHEmul::SoundWave::Type::_SAWTOOTH) -> setActive (v.bit (5));
 				_voices [1] -> wave (MCHEmul::SoundWave::Type::_PULSE) -> setActive (v.bit (6));
 				_voices [1] -> wave (MCHEmul::SoundWave::Type::_NOISE) -> setActive (v.bit (7));
-				static_cast <COMMODORE::SoundSimpleWrapper::Voice*> 
+				static_cast <COMMODORE::SoundSIDSimpleWrapper::Voice*> 
 					(_voices [1]) -> setWavesActive (v.value () & 0xf0);
 			}
 
@@ -305,7 +323,7 @@ void COMMODORE::SoundSimpleWrapper::setValue (size_t p, const MCHEmul::UByte& v)
 		case 0x10:
 		case 0x11:
 			{
-				static_cast <COMMODORE::SoundSimpleWrapper::Voice*> (_voices [2]) -> setPulseUpPercentage
+				static_cast <COMMODORE::SoundSIDSimpleWrapper::Voice*> (_voices [2]) -> setPulseUpPercentage
 					((double) ((((unsigned short) _registers [0x11].value ()) << 8) + 
 								((unsigned short) _registers [0x10].value ())) / 4096.0f);
 			}
@@ -316,16 +334,16 @@ void COMMODORE::SoundSimpleWrapper::setValue (size_t p, const MCHEmul::UByte& v)
 		case 0x12:
 			{
 				_voices [2] -> setStart (v.bit (0));
-				static_cast <COMMODORE::SoundSimpleWrapper::Voice*> 
+				static_cast <COMMODORE::SoundSIDSimpleWrapper::Voice*> 
 					(_voices [2]) -> setSync (v.bit (1)); 
-				static_cast <COMMODORE::SoundSimpleWrapper::Voice*> 
+				static_cast <COMMODORE::SoundSIDSimpleWrapper::Voice*> 
 					(_voices [2]) -> setRingModulation (v.bit (2));
 				_voices [2] -> setActive (!v.bit (3));
 				_voices [2] -> wave (MCHEmul::SoundWave::Type::_TRIANGLE) -> setActive (v.bit (4));
 				_voices [2] -> wave (MCHEmul::SoundWave::Type::_SAWTOOTH) -> setActive (v.bit (5));
 				_voices [2] -> wave (MCHEmul::SoundWave::Type::_PULSE) -> setActive (v.bit (6));
 				_voices [2] -> wave (MCHEmul::SoundWave::Type::_NOISE) -> setActive (v.bit (7));
-				static_cast <COMMODORE::SoundSimpleWrapper::Voice*> 
+				static_cast <COMMODORE::SoundSIDSimpleWrapper::Voice*> 
 					(_voices [2]) -> setWavesActive (v.value () & 0xf0);
 			}
 
@@ -388,7 +406,7 @@ void COMMODORE::SoundSimpleWrapper::setValue (size_t p, const MCHEmul::UByte& v)
 }
 
 // ---
-const MCHEmul::UByte& COMMODORE::SoundSimpleWrapper::readValue (size_t p) const
+const MCHEmul::UByte& COMMODORE::SoundSIDSimpleWrapper::readValue (size_t p) const
 { 
 	size_t pp = p % 0x20;
 
@@ -398,12 +416,12 @@ const MCHEmul::UByte& COMMODORE::SoundSimpleWrapper::readValue (size_t p) const
 	{
 		// Random number generator (oscillator 3): RANDOM
 		case 0x1b:
-			result = dynamic_cast <COMMODORE::SoundSimpleWrapper::Voice*> (_voices [2]) -> oscillatorValue ();
+			result = dynamic_cast <COMMODORE::SoundSIDSimpleWrapper::Voice*> (_voices [2]) -> oscillatorValue ();
 			break;
 
 		// Envelope generator 3: ENV3
 		case 0x1c:
-			result = dynamic_cast <COMMODORE::SoundSimpleWrapper::Voice*> (_voices [2]) -> envelopeValue ();
+			result = dynamic_cast <COMMODORE::SoundSIDSimpleWrapper::Voice*> (_voices [2]) -> envelopeValue ();
 			break;
 
 		// The rest of the registers are write only,
@@ -417,7 +435,7 @@ const MCHEmul::UByte& COMMODORE::SoundSimpleWrapper::readValue (size_t p) const
 }
 
 // ---
-void COMMODORE::SoundSimpleWrapper::initialize ()
+void COMMODORE::SoundSIDSimpleWrapper::initialize ()
 { 
 	SIDLibWrapper::initialize ();
 							  
@@ -434,7 +452,7 @@ void COMMODORE::SoundSimpleWrapper::initialize ()
 }
 
 // ---
-bool COMMODORE::SoundSimpleWrapper::getData (MCHEmul::CPU *cpu, MCHEmul::UBytes& dt)
+bool COMMODORE::SoundSIDSimpleWrapper::getData (MCHEmul::CPU *cpu, MCHEmul::UBytes& dt)
 {
 	bool result = false;
 
@@ -461,7 +479,7 @@ bool COMMODORE::SoundSimpleWrapper::getData (MCHEmul::CPU *cpu, MCHEmul::UBytes&
 }
 
 // ---
-void COMMODORE::SoundSimpleWrapper::Voice::initialize ()
+void COMMODORE::SoundSIDSimpleWrapper::Voice::initialize ()
 {
 	MCHEmul::SoundVoice::initialize ();
 
@@ -469,7 +487,7 @@ void COMMODORE::SoundSimpleWrapper::Voice::initialize ()
 }
 
 // ---
-double COMMODORE::SoundSimpleWrapper::Voice::data () const
+double COMMODORE::SoundSIDSimpleWrapper::Voice::data () const
 { 
 	// When the wave is active or is in test active and the selected wave is a pulse...
 	// ...the sound has to be produced
@@ -564,7 +582,7 @@ double COMMODORE::SoundSimpleWrapper::Voice::data () const
 }
 
 // ---
-MCHEmul::InfoStructure COMMODORE::SoundSimpleWrapper::Voice::getInfoStructure () const
+MCHEmul::InfoStructure COMMODORE::SoundSIDSimpleWrapper::Voice::getInfoStructure () const
 {
 	MCHEmul::InfoStructure result = std::move (MCHEmul::SoundVoice::getInfoStructure ());
 
