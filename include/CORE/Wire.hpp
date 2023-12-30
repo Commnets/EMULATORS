@@ -15,83 +15,75 @@
 #define __MCHEMUL_WIRE__
 
 #include <CORE/global.hpp>
+#include <CORE/NotifyObserver.hpp>
 
 namespace MCHEmul
 {
-	class Wire;
-
-	/** The element connected throught out a wire. */
-	class WiredElement
-	{
-		public:
-		friend Wire;
-	
-		virtual ~WiredElement () 
-								{ }
-							
-		protected:
-		/** The notification always ends up in this method.
-			It receives the value of the wire, and whether that value is rfelated with a climbing or falling edge. */ 
-		virtual void notified (bool b, bool uE, bool dE)
-								{ /** nothing by default. */ }
-	};
-
-	// Just to simplify the use of a set of those elements...
-	using WiredElements = std::vector <WiredElement*>;
+	class MotherboardElement;
+	using MotherboardElements = std::vector <MotherboardElement*>;
 
 	/** Replica of the physical wire connecting elements,
 		The different elements are pluged into the wire and any communication in it
 		is transmitted to all elements connected. */
-	class Wire final
+	class Wire final : public Notifier
 	{
 		public:
-		Wire ()
-			: _value (false),
-			  _downEdge (false), _upEdge (false),
-			  _elements ()
+		static const unsigned int _WIREDCHANGED = 111;
+
+		Wire (int id)
+			: _id (id),
+			  _value (false),
+			  _downEdge (false), _upEdge (false)
 								{ }
 		
 		/** The wire doesn't own ever none of the elements connected. */
 
-		/** connected a new element only if it was not connected before. */
-		void connectElement (WiredElement* wE)
-								{ if (std::find_if (_elements.begin (), _elements.end (), 
-									[=](WiredElement* e) { return (e == wE); }) == _elements.end ())
-									_elements.emplace_back (wE); }
-		void disconnectElement (WiredElement* wE)
-								{ _elements.erase (std::remove_if (
-									_elements.begin(), _elements.end(), 
-										[=](WiredElement* e) { return (e == wE); }), 
-									_elements.end()); }
+		int id () const
+								{ return (_id); }
+
+		/** Connect a new element only if it was not connected before. */
+		virtual void connectElement (MotherboardElement* mE);
+		/** Connect a set of motherboard elements to this wire. \n
+			The method can be overloaded because not all elements received might make sense to be connected to this wire. \n
+			Any overload of this method must take this into account. \n
+			By default all are connected. */
+		virtual void connectElements (const MotherboardElements& mbE)
+							{ for (auto& i : mbE) connectElement (i); }
+		virtual void disconnectElement (MotherboardElement* mE);
 		
 		bool value () const
 								{ return (_value); }
-		void setValue (bool b)
-								{ if (b != _value) 
-									{ _downEdge = _value && !b; _upEdge = !_value && b; _value = b;
-									  notify (); } } // the edges might be important in the behaviour of some wire elements...
+		inline void setValue (bool b);
+
 		bool downEdge () const
 								{ return (_downEdge); }
 		bool upEdge () const
 								{ return (_upEdge); }
 	
-		private:
-		/** Just setting a value a notification is transmitted to any element. */
-		void notify ()
-								{ for (auto i : _elements) 
-									i -> notified (_value, _upEdge, _downEdge); }
-	
 		protected:
+		/** An identification for the wire. */
+		int _id;
+		/** The current value of the wire. */
 		bool _value;
-		WiredElements _elements;
-	
-		// Implementation
+		/** When the signal comes from up to down. */
 		bool _downEdge;
+		/** When the signal comes from ddown to up. */
 		bool _upEdge;
 	};
 
-	// Just to simplify the use of a set of wires
-	using Wires = std::vector <Wire*>;
+	// ---
+	inline void Wire::setValue (bool b)
+	{ 
+		if (b != _value) 
+		{ 
+			_downEdge = _value && !b; 
+			_upEdge = !_value && b; 
+			
+			_value = b;
+			
+			notify (Event (_WIREDCHANGED)); 
+		} 
+	} 
 }
 
 #endif

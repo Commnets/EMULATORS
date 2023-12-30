@@ -9,11 +9,9 @@ std::shared_ptr <MCHEmul::IODeviceSystem> MCHEmul::IODeviceSystem::_theSystem =
 
 // ---
 MCHEmul::IODevice::IODevice (MCHEmul::IODevice::Type t, int id, const MCHEmul::Attributes& attrs)
-	: MCHEmul::InfoClass ("IODevice"),
+	: MCHEmul::MotherboardElement (id, "IODevice", attrs),
 	  _type (t), 
-	  _id (id), 
 	  _chips (), // None by default...
-	  _attributes (attrs),
 	  _peripherals (), // None by default...
 	  _deepDebugFile (nullptr),
 	  _error (MCHEmul::_NOERROR)
@@ -104,6 +102,9 @@ bool MCHEmul::IODevice::disconnectAllPeripherals ()
 // ---
 bool MCHEmul::IODevice::initialize ()
 {
+	if (!MCHEmul::MotherboardElement::initialize ())
+		return (false);
+
 	bool result = true;
 	for (const auto& i : _peripherals)
 		result &= i.second -> initialize ();
@@ -130,7 +131,7 @@ bool MCHEmul::IODevice::simulate (MCHEmul::CPU* cpu)
 // ---
 MCHEmul::InfoStructure MCHEmul::IODevice::getInfoStructure () const
 {
-	MCHEmul::InfoStructure result = std::move (MCHEmul::InfoClass::getInfoStructure ());
+	MCHEmul::InfoStructure result = std::move (MCHEmul::MotherboardElement::getInfoStructure ());
 
 	result.add ("ID",		_id);
 	result.add ("ATTRS",	_attributes);

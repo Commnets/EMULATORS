@@ -17,8 +17,7 @@
 #define __MCHEMUL_MEMORY__
 
 #include <CORE/global.hpp>
-#include <CORE/InfoClass.hpp>
-#include <CORE/NotifyObserver.hpp>
+#include <CORE/MBElement.hpp>
 #include <CORE/Address.hpp>
 #include <CORE/UByte.hpp>
 #include <CORE/UBytes.hpp>
@@ -94,7 +93,7 @@ namespace MCHEmul
 
 		/** Save the a number of bytes "nB" of the memory into a file, string from a position p. \n
 			If nothing is said the position choosen is the initial one. */
-		bool saveFrom (const std::string& fN, size_t nB, size_t p = 0);
+		bool saveFrom (const std::string& fN, size_t nB, size_t p = 0) const;
 
 		protected:
 		const int _id = -1; // Modified at construction level
@@ -509,7 +508,7 @@ namespace MCHEmul
 	  *	This gives the user the possible to have different "views" of the memory in different
 	  *	moments of the execution of the main cycle from, e.g. different elements in the CPU. \n
 	  */
-	class Memory : public InfoClass
+	class Memory : public MotherboardElement
 	{
 		public:
 		/** To content all together the elements a memory is made up of. */
@@ -556,7 +555,7 @@ namespace MCHEmul
 			MemoryView* firstView () const
 							{ return ((*_views.begin ()).second); }
 
-			bool initialize ();
+			virtual bool initialize ();
 
 			bool error () const
 							{ return (_error); }
@@ -574,7 +573,7 @@ namespace MCHEmul
 		using Contents = std::map <int, Content>;
 		using AdditionalSubsets = std::map <int, PhysicalStorageSubsets>;
 
-		Memory (const Content& cnt);
+		Memory (int id, const Content& cnt, const Attributes& attrs = { });
 
 		Memory (const Memory&) = delete;
 
@@ -667,7 +666,7 @@ namespace MCHEmul
 
 		/** It can be overloaded later, to set the specific content of specific zones. \n
 			By default only subsets have to be initialized, and all of them become active and also active for reading. */
-		virtual bool initialize ()
+		virtual bool initialize () override
 							{ return ((_error == MCHEmul::_NOERROR) ? _content.initialize () : false); }
 
 		/** Load info from a file into a memory using the active view. */

@@ -45,9 +45,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\include\VIC20\VIC20.hpp">
-      <Filter>Archivos de encabezado\Motherboard</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\include\VIC20\CommandBuilder.hpp">
       <Filter>Archivos de encabezado\Commands</Filter>
     </ClInclude>
@@ -87,6 +84,9 @@
     <ClInclude Include="..\..\include\VIC20\OSIO.hpp">
       <Filter>Archivos de encabezado\IO</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\include\VIC20\VIC20.hpp">
+      <Filter>Archivos de encabezado</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\VIC20\CommandBuilder.cpp">
@@ -110,9 +110,6 @@
     <ClCompile Include="..\..\src\VIC20\Sound.cpp">
       <Filter>Archivos de origen\IO</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\VIC20\VIC20.cpp">
-      <Filter>Archivos de origen\Motherboard</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\VIC20\VIA1.cpp">
       <Filter>Archivos de origen\Motherboard\Chips</Filter>
     </ClCompile>
@@ -127,6 +124,9 @@
     </ClCompile>
     <ClCompile Include="..\..\src\VIC20\OSIO.cpp">
       <Filter>Archivos de origen\IO</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\VIC20\VIC20.cpp">
+      <Filter>Archivos de origen</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

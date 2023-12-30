@@ -5,7 +5,7 @@
 // ---
 MCHEmul::InfoStructure MCHEmul::Chip::getInfoStructure () const
 {
-	MCHEmul::InfoStructure result = std::move (MCHEmul::InfoClass::getInfoStructure ());
+	MCHEmul::InfoStructure result = std::move (MCHEmul::MotherboardElement::getInfoStructure ());
 
 	result.add ("ID",		_id);
 	result.add ("ATTRS",	_attributes);

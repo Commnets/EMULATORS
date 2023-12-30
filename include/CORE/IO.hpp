@@ -15,7 +15,7 @@
 #define __MCHEMUL_IO__
 
 #include <CORE/Chip.hpp>
-#include <CORE/NotifyObserver.hpp>
+#include <CORE/MBElement.hpp>
 #include <CORE/IOPeripheral.hpp>
 
 namespace MCHEmul
@@ -32,7 +32,7 @@ namespace MCHEmul
 	  * The right way to create the relations among them is the method "linkChips" that is invoked in
 	  * the constructor of the computer (@see Computer) when all elements involved are received as parameter.
 	  */
-	class IODevice : public InfoClass, public Notifier, public Observer
+	class IODevice : public MotherboardElement, public Notifier
 	{
 		public:
 		enum class Type 
@@ -58,15 +58,6 @@ namespace MCHEmul
 
 		Type type () const
 							{ return (_type); }
-
-		int id () const
-							{ return (_id); }
-
-		const Attributes& attributes () const
-							{ return (_attributes); }
-		const std::string& attribute (const std::string& aN) const
-							{ Attributes::const_iterator i = _attributes.find (aN); 
-							  return ((i == _attributes.end ()) ? AttributedNotDefined : (*i).second); }
 
 		/** To link to the right chips. \n
 			The IO device never owns the chips. \n
@@ -99,7 +90,7 @@ namespace MCHEmul
 		bool disconnectAllPeripherals ();
 
 		/** To initialize the device. */
-		virtual bool initialize ();
+		virtual bool initialize () override;
 
 		/** To emulate the way it works. \n
 			Return true, if everything was ok. */
@@ -133,9 +124,7 @@ namespace MCHEmul
 
 		protected:
 		const Type _type; // Modified at constrution level
-		const int _id; // Idem
 		Chips _chips; // linked when computer instance is built!
-		const Attributes _attributes = { }; // Maybe modified at construction level
 		IOPeripherals _peripherals;
 
 		// To manage the debug info...

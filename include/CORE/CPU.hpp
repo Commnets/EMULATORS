@@ -15,8 +15,10 @@
 #define __MCHEMUL_CPU__
 
 #include <CORE/global.hpp>
+#include <CORE/MBElement.hpp>
 #include <CORE/DebugFile.hpp>
 #include <CORE/CPUArchitecture.hpp>
+#include <CORE/Bus.hpp>
 #include <CORE/Chip.hpp>
 #include <CORE/Memory.hpp>
 #include <CORE/Register.hpp>
@@ -50,7 +52,7 @@ namespace MCHEmul
 	  * and invokes the instruction if it is valid (otherwise it generates n error). \n
 	  * Any instruction is accountable to update both the data and the address bus if makes sense. \n
 	  */
-	class CPU : public InfoClass
+	class CPU : public MotherboardElement
 	{
 		public:
 		/** The possible different states of the CPU. 
@@ -65,8 +67,9 @@ namespace MCHEmul
 
 		/** The most important attribute is maybe the "set of instructions". \n
 			Define them very carefully. They are the CORE of the processor. */
-		CPU (const CPUArchitecture& a, 
-			const Registers& r, const StatusRegister& sR, const Instructions& ins);
+		CPU (int id, const CPUArchitecture& a, 
+			 const Registers& r, const StatusRegister& sR, const Instructions& ins,
+			 const Attributes& = { });
 
 		CPU (const CPU&) = delete;
 
@@ -148,7 +151,7 @@ namespace MCHEmul
 		/** To initialize the CPU. It could be overloaded later. \n
 			By default it just initialize registers and program counter to 0. \n
 			Returns true if everything was ok and false in any other case. */
-		virtual bool initialize ();
+		virtual bool initialize () override;
 
 		/** There is a possibility to restart the CPU. \n
 			Be really carefully when using this possibility. \n
@@ -177,16 +180,6 @@ namespace MCHEmul
 		/** To know whether there is a interrupt requested. -1 if not. */
 		int interruptRequested () const
 							{ return (_interruptRequested); }
-
-		// To access and set the address and data bus value.
-		const UBytes& dataBusValue () const
-							{ return (_dataBusValue); }
-		void setDataBusValue (const UBytes& d)
-							{ _dataBusValue = d; }
-		const Address& addressBusValue () const
-							{ return (_addressBusValue); }
-		void setAddressBusValues (const Address& a)
-							{ _addressBusValue = a; }
 
 		/** 
 		  *	The real CORE of the class. \n

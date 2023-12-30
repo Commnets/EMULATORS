@@ -5,8 +5,14 @@
 #include <sstream>
 
 // ---
-MCHEmul::Computer::Computer (MCHEmul::CPU* cpu, const MCHEmul::Chips& c, 
-		MCHEmul::Memory* m, const MCHEmul::IODevices& d, unsigned int cs, 
+MCHEmul::Computer::Computer (
+		MCHEmul::CPU* cpu, 
+		const MCHEmul::Chips& c, 
+		MCHEmul::Memory* m, 
+		const MCHEmul::IODevices& d, 
+		unsigned int cs,
+		const MCHEmul::Buses& bs,
+		const MCHEmul::Wires& ws,
 		const MCHEmul::Attributes& attrs, unsigned short sL)
 	: MCHEmul::InfoClass ("Computer"),
 	  _cpu (cpu), _chips (c), _memory (m), _devices (d), _attributes (attrs), 
@@ -24,10 +30,18 @@ MCHEmul::Computer::Computer (MCHEmul::CPU* cpu, const MCHEmul::Chips& c,
 	assert (_cpu != nullptr);
 	assert (_memory != nullptr && _memory -> stack () != nullptr);
 
+	// Let's put all MotherboardElements with a list of them...
+	// To add all of them to the buses and wires (if they accept!)...
+	MotherboardElements mbE;
+	
+	mbE.emplace_back (_memory);
+
 	_cpu -> setMemoryRef (_memory);
 
 	for (const auto& i : _chips)
 	{
+		mbE.emplace_back (i.second);
+
 		if (_graphicalChip == nullptr)
 			_graphicalChip = dynamic_cast <MCHEmul::GraphicalChip*> (i.second);
 
@@ -39,6 +53,8 @@ MCHEmul::Computer::Computer (MCHEmul::CPU* cpu, const MCHEmul::Chips& c,
 
 	for (const auto& i : _devices)
 	{
+		mbE.emplace_back (i.second);
+
 		if (_screen == nullptr) 
 			_screen = dynamic_cast <MCHEmul::Screen*> (i.second);
 		if (_sound == nullptr)
@@ -54,6 +70,12 @@ MCHEmul::Computer::Computer (MCHEmul::CPU* cpu, const MCHEmul::Chips& c,
 	// But the sound system is not mandatory (there are many old computers with no sound...really? but possible)
 	assert (_screen != nullptr && _inputOSSystem != nullptr);
 
+	// Connect the motherboard elements to both the buses and wires...
+	for (const auto& i : _buses)
+		i.second -> connectElements (mbE);
+	for (const auto& i : _wires)
+		i.second -> connectElements (mbE);
+
 	// Create the template of actions more common...
 	// More actions can be added in later instances of the class computer!
 	_templateActions =
@@ -68,6 +90,12 @@ MCHEmul::Computer::Computer (MCHEmul::CPU* cpu, const MCHEmul::Chips& c,
 // ---
 MCHEmul::Computer::~Computer ()
 { 
+	for (const auto& i : _buses)
+		delete (i.second);
+
+	for (const auto& i : _wires)
+		delete (i.second);
+
 	for (const auto& i : _devices)
 		delete (i.second);
 

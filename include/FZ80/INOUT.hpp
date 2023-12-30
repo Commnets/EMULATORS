@@ -45,7 +45,7 @@ namespace FZ80
 	inline bool IN_General::executeAWith (unsigned char np)
 	{ 
 		// The value of the component BC is pushed into the address bus...
-		cpu () -> setAddressBusValues (MCHEmul::Address ({ registerA ().values ()[0], np }, true /** Already in big endian. */));
+		_lastINOUTAddress = MCHEmul::Address ({ registerA ().values ()[0], np }, true /** Already in big endian. */);
 		// ...because it migth be usefull when reading the port!
 		registerA ().set ({ static_cast <CZ80*> (cpu ()) -> port (np) }); 
 		
@@ -55,7 +55,7 @@ namespace FZ80
 	// ---
 	inline bool IN_General::executeWith (MCHEmul::Register& r, unsigned char np)
 	{
-		cpu () -> setAddressBusValues (MCHEmul::Address ({ registerA ().values ()[0], np }, true));
+		_lastINOUTAddress = MCHEmul::Address ({ registerA ().values ()[0], np }, true);
 
 		MCHEmul::UByte v;
 		r.set ({ v = static_cast <CZ80*> (cpu ()) -> port (np) });
@@ -68,7 +68,7 @@ namespace FZ80
 	// ---
 	inline bool IN_General::executeWith (unsigned char np)
 	{
-		cpu () -> setAddressBusValues (MCHEmul::Address ({ registerA ().values ()[0], np }, true));
+		_lastINOUTAddress = MCHEmul::Address ({ registerA ().values ()[0], np }, true);
 
 		affectFlags (static_cast <CZ80*> (cpu ()) -> port (np));
 
@@ -159,7 +159,7 @@ namespace FZ80
 	inline bool OUT_General::execute0With (unsigned char np)
 	{ 
 		// The value of the component BC is pushed into the address bus...
-		cpu () -> setAddressBusValues (MCHEmul::Address ({ registerA ().values ()[0], np }, true /** Already in big endian. */));
+		_lastINOUTAddress = MCHEmul::Address ({ registerA ().values ()[0], np }, true /** Already in big endian. */);
 		// ...because it migth be usefull when writting into the port!
 		static_cast <CZ80*> (cpu ()) -> setPort (np, MCHEmul::UByte::_0); 
 		
@@ -169,7 +169,7 @@ namespace FZ80
 	// ---
 	inline bool OUT_General::executeAWith (unsigned char np)
 	{ 
-		cpu () -> setAddressBusValues (MCHEmul::Address ({ registerA ().values ()[0], np }, true));
+		_lastINOUTAddress = MCHEmul::Address ({ registerA ().values ()[0], np }, true);
 
 		static_cast <CZ80*> (cpu ()) -> setPort (np, registerA ().values ()[0].value ()); 
 		
@@ -179,7 +179,7 @@ namespace FZ80
 	// ---
 	inline bool OUT_General::executeWith (MCHEmul::Register& r, unsigned char np)
 	{ 
-		cpu () -> setAddressBusValues (MCHEmul::Address ({ registerA ().values ()[0], np }, true));
+		_lastINOUTAddress = MCHEmul::Address ({ registerA ().values ()[0], np }, true);
 
 		static_cast <CZ80*> (cpu ()) -> setPort (np, r.values ()[0].value ()); 
 		

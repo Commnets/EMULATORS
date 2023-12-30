@@ -23,6 +23,7 @@ Id:@ID@, In Execution:@EXECUTION@
 #---
 ;CPU
 #The info about the Architecture here
+@ATTRS?{key=YES,equal=:,empty=no attributes}\n@
 @Architecture>@
 @REGS?{key=NO,equal=:,empty=no registers},@
 @PC@

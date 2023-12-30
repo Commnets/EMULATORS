@@ -8,11 +8,12 @@
 VIC20::CommodoreVIC20::CommodoreVIC20 (VIC20::Memory::Configuration cfg, 
 		VIC20::CommodoreVIC20::VisualSystem vS, const std::string& lg)
 	: COMMODORE::Computer 
-		(new F6500::C6502 (),
+		(new F6500::C6502 (0 /** Only one micro. */),
 		 VIC20::CommodoreVIC20::standardChips (vS, lg),
 		 new VIC20::Memory (cfg, lg),
 		 VIC20::CommodoreVIC20::standardDevices (),
 		 vS == VIC20::CommodoreVIC20::VisualSystem::_PAL ? _PALCLOCK : _NTSCCLOCK,
+		 { }, { }, // The VIC20 emulation has been done without neither Buses nor Wires!
 		 { { "Name", "VIC20" },
 		   { "Manufacturer", "Commodore Business Machines CBM" },
 		   { "Year", "1980" }
@@ -47,7 +48,6 @@ void VIC20::CommodoreVIC20::setConfiguration (VIC20::Memory::Configuration cfg)
 {
 	// TODO
 }
-
 
 // ---
 MCHEmul::Chips VIC20::CommodoreVIC20::standardChips 

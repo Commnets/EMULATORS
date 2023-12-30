@@ -30,9 +30,15 @@ namespace COMMODORE
 	class Computer : public MCHEmul::Computer
 	{
 		public:
-		Computer (MCHEmul::CPU* cpu, const MCHEmul::Chips& c, 
-			MCHEmul::Memory* m, const MCHEmul::IODevices& d, unsigned int cs, const MCHEmul::Attributes& attrs)
-			: MCHEmul::Computer (cpu, c, m, d, cs, attrs)
+		Computer (MCHEmul::CPU* cpu, 
+				  const MCHEmul::Chips& c, 
+				  MCHEmul::Memory* m, 
+				  const MCHEmul::IODevices& d, 
+				  unsigned int cs, 
+				  const MCHEmul::Buses& bs,
+				  const MCHEmul::Wires& ws,
+				  const MCHEmul::Attributes& attrs)
+			: MCHEmul::Computer (cpu, c, m, d, cs, bs, ws, attrs)
 							{ }
 
 		// To get direct access to the most important COMMODORE chips...

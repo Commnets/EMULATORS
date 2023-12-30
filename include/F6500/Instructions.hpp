@@ -46,152 +46,170 @@ namespace F6500
 		protected:
 		// To interpret the parameters of the instruction as an address 
 		/** 2 parameters representing an address. */
-		inline MCHEmul::Address address_absolute ();
+		inline const MCHEmul::Address& address_absolute () const;
 		/** 1 parameter representing an address in the page 0. */
-		inline MCHEmul::Address address_zeroPage ();
+		inline const MCHEmul::Address& address_zeroPage () const;
 		/** 2 parameters representing a base address. 
 			The final one is got adding the X register to the base. */
-		inline MCHEmul::Address address_absoluteX ();
+		inline const MCHEmul::Address& address_absoluteX () const;
 		/** 2 parameters representing a base address. 
 			The final one is got adding the Y register to the base. */
-		inline MCHEmul::Address address_absoluteY ();
+		inline const MCHEmul::Address& address_absoluteY () const;
 		/** 1 parameter representing a base address in page 0. 
 			The final one is got adding the X register to the base. */
-		inline MCHEmul::Address address_zeroPageX ();
+		inline const MCHEmul::Address& address_zeroPageX () const;
 		/** 1 parameter representing a base address in page 0. 
 			The final one is got adding the Y register to the base. */
-		inline MCHEmul::Address address_zeroPageY ();
+		inline const MCHEmul::Address& address_zeroPageY () const;
 		/** 1 parameter representing a base address in page 0. 
 			The final one is got from the position in page 0 result of adding the X register to the base. */
-		inline MCHEmul::Address address_indirectZeroPageX ();
+		inline const MCHEmul::Address& address_indirectZeroPageX () const;
 		/** 1 parameter representing a base address in page 0. 
 			The final one is got from the position in page 0 result of adding the X register to position found in the base. */
-		inline MCHEmul::Address address_indirectZeroPageY ();
+		inline const MCHEmul::Address& address_indirectZeroPageY () const;
 		/** 2 parameters representint a base addreess. 
 			The final one is got at the position of that first base address. */
-		inline MCHEmul::Address address_indirect ();
+		inline const MCHEmul::Address& address_indirect () const;
 
 		// To interpret the parameters of the instruction as a a value
-		/** 1 parameter with the value. */
-		inline MCHEmul::UByte value_inmediate ();
-		MCHEmul::UByte value_absolute ()
-							{ return (memory () -> value (address_absolute ())); }
-		MCHEmul::UByte value_zeroPage ()
-							{ return (memory () -> value (address_zeroPage ())); }
-		MCHEmul::UByte value_absoluteX ()
-							{ return (memory () -> value (address_absoluteX ())); }
-		MCHEmul::UByte value_absoluteY ()
-							{ return (memory () -> value (address_absoluteY ())); }
-		/** 1 parameter that can be negative value. It us used in jumps. */
-		inline MCHEmul::UByte value_relative ();
-		MCHEmul::UByte value_zeroPageX ()
-							{ return (memory () -> value (address_zeroPageX ())); }
-		MCHEmul::UByte value_zeroPageY ()
-							{ return (memory () -> value (address_zeroPageY ())); }
-		MCHEmul::UByte value_indirectZeroPageX ()
-							{ return (memory () -> value (address_indirectZeroPageX ())); }
-		MCHEmul::UByte value_indirectZeroPageY ()
-							{ return (memory () -> value (address_indirectZeroPageY ())); }
+		/** Just 1 parameter with the value. */
+		inline const MCHEmul::UByte& value_inmediate () const;
+		const MCHEmul::UByte& value_absolute () const
+							{ return ((_lastINOUTData = 
+								MCHEmul::UBytes ({ memory () -> value (address_absolute ()) }))[0]); }
+		const MCHEmul::UByte& value_zeroPage () const
+							{ return ((_lastINOUTData = 
+								MCHEmul::UBytes ({ memory () -> value (address_zeroPage ()) }))[0]); }
+		const MCHEmul::UByte& value_absoluteX () const
+							{ return ((_lastINOUTData = 
+								MCHEmul::UBytes ({ memory () -> value (address_absoluteX ()) }))[0]); }
+		const MCHEmul::UByte& value_absoluteY () const
+							{ return ((_lastINOUTData = 
+								MCHEmul::UBytes ({ memory () -> value (address_absoluteY ()) }))[0]); }
+		/** Just 1 parameter that can be negative value. It us used in jumps. */
+		inline const MCHEmul::UByte& value_relative () const;
+		const MCHEmul::UByte& value_zeroPageX () const
+							{ return ((_lastINOUTData = 
+								MCHEmul::UBytes ({ memory () -> value (address_zeroPageX ()) }))[0]); }
+		const MCHEmul::UByte& value_zeroPageY () const
+							{ return ((_lastINOUTData = 
+								MCHEmul::UBytes ({ memory () -> value (address_zeroPageY ()) }))[0]); }
+		const MCHEmul::UByte& value_indirectZeroPageX () const
+							{ return ((_lastINOUTData = 
+								MCHEmul::UBytes ({ memory () -> value (address_indirectZeroPageX ()) }))[0]); }
+		const MCHEmul::UByte& value_indirectZeroPageY () const
+							{ return ((_lastINOUTData = 
+								MCHEmul::UBytes ({ memory () -> value (address_indirectZeroPageY ()) }))[0]); }
 
 		protected:
 		unsigned int _readingClockCycles;
 	};
 
 	// ---
-	inline MCHEmul::Address Instruction::address_absolute ()
+	inline const MCHEmul::Address& Instruction::address_absolute () const
 	{
 		assert (parameters ().size () == 3);
 
-		return (MCHEmul::Address ({ parameters ()[1], parameters ()[2] }, false));
+		return (_lastINOUTAddress = MCHEmul::Address ({ parameters ()[1], parameters ()[2] }, false));
 	}
 
 	// ---
-	inline MCHEmul::Address Instruction::address_zeroPage ()
+	inline const MCHEmul::Address& Instruction::address_zeroPage () const
 	{
 		assert (parameters ().size () == 2);
 
-		return (MCHEmul::Address ({ parameters ()[1] }));
+		return _lastINOUTAddress = (MCHEmul::Address ({ parameters ()[1] }));
 	}
 
 	// ---
-	inline MCHEmul::Address Instruction::address_absoluteX ()
+	inline const MCHEmul::Address& Instruction::address_absoluteX () const
 	{
 		assert (parameters ().size () == 3);
 
-		MCHEmul::Register& x = cpu () -> internalRegister (C6510::_XREGISTER);
+		const MCHEmul::Register& x = cpu () -> internalRegister (C6510::_XREGISTER);
 
 		MCHEmul::Address iA ({ parameters ()[1], parameters ()[2] }, false);
 		MCHEmul::Address fA = iA + (size_t) (x [0].value ());
-		if (iA [0] != fA [0]) _additionalCycles = 1; // Page jump in the address so one cycle more
-		return (fA);
+		if (iA [0] != fA [0]) 
+			_additionalCycles = 1; // Page jump in the address so one cycle more
+		
+		return (_lastINOUTAddress = fA);
 	}
 
 	// ---
-	inline MCHEmul::Address Instruction::address_absoluteY ()
+	inline const MCHEmul::Address& Instruction::address_absoluteY () const
 	{
 		assert (parameters ().size () == 3);
 
-		MCHEmul::Register& y = cpu () -> internalRegister (C6510::_YREGISTER);
+		const MCHEmul::Register& y = cpu () -> internalRegister (C6510::_YREGISTER);
 
 		MCHEmul::Address iA ({ parameters ()[1], parameters ()[2] }, false);
 		MCHEmul::Address fA = iA + (size_t) (y [0].value ());
-		if (iA [0] != fA [0]) _additionalCycles = 1; // Page jump in the address so one cycle more
-		return (fA);
+		if (iA [0] != fA [0]) 
+			_additionalCycles = 1; // Page jump in the address so one cycle more
+		
+		return (_lastINOUTAddress = fA);
 	}
 
 	// ---
-	inline MCHEmul::Address Instruction::address_zeroPageX ()
+	inline const MCHEmul::Address& Instruction::address_zeroPageX () const
 	{
 		assert (parameters ().size () == 2);
 
-		return (MCHEmul::Address ({ parameters ()[1] }) + 
-			(size_t) (cpu () -> internalRegister (C6510::_XREGISTER)[0].value ())); 
+		return (_lastINOUTAddress = 
+			MCHEmul::Address ({ parameters ()[1] }) + 
+				(size_t) (cpu () -> internalRegister (C6510::_XREGISTER)[0].value ())); 
 	}
 
 	// ---
-	inline MCHEmul::Address Instruction::address_zeroPageY ()
+	inline const MCHEmul::Address& Instruction::address_zeroPageY () const
 	{
 		assert (parameters ().size () == 2);
 
-		return (MCHEmul::Address ({ parameters ()[1] }) + 
-			(size_t) (cpu () -> internalRegister (C6510::_YREGISTER)[0].value ())); 
+		return (_lastINOUTAddress = 
+			MCHEmul::Address ({ parameters ()[1] }) + 
+				(size_t) (cpu () -> internalRegister (C6510::_YREGISTER)[0].value ())); 
 	}
 
 	// ---
-	inline MCHEmul::Address Instruction::address_indirectZeroPageX ()
+	inline const MCHEmul::Address& Instruction::address_indirectZeroPageX () const
 	{
 		assert (parameters ().size () == 2);
 
 		// Pre - indirect zero page addressing...
-		return (MCHEmul::Address (memory () -> values (MCHEmul::Address ({ parameters ()[1] }) + 
-			(size_t) (cpu () -> internalRegister (C6510::_XREGISTER)[0].value ()), 2), false)); 
+		return (_lastINOUTAddress = 
+			MCHEmul::Address (memory () -> values (MCHEmul::Address ({ parameters ()[1] }) + 
+				(size_t) (cpu () -> internalRegister (C6510::_XREGISTER)[0].value ()), 2), false)); 
 	}
 
 	// ---
-	inline MCHEmul::Address Instruction::address_indirectZeroPageY ()
+	inline const MCHEmul::Address& Instruction::address_indirectZeroPageY () const
 	{
 		assert (parameters ().size () == 2);
 
-		MCHEmul::Register& y = cpu () -> internalRegister (C6510::_YREGISTER);
+		const MCHEmul::Register& y = cpu () -> internalRegister (C6510::_YREGISTER);
 
 		// Post - indirect zero page addressing...
 		MCHEmul::Address iA (memory () -> values (MCHEmul::Address ({ parameters ()[1] }), 2), false);
 		MCHEmul::Address fA = iA + (size_t) (y [0].value ());
-		if (iA [0] != fA [0]) _additionalCycles = 1; // Page jump in the address so one cycle more
-		return (fA);
+		if (iA [0] != fA [0]) 
+			_additionalCycles = 1; // Page jump in the address so one cycle more
+
+		return (_lastINOUTAddress = fA);
 	}
 
 	// ---
-	inline MCHEmul::Address Instruction::address_indirect ()
+	inline const MCHEmul::Address& Instruction::address_indirect () const
 	{
 		assert (parameters ().size () == 3);
 
-		return (MCHEmul::Address (memory () -> values 
-			(MCHEmul::Address ({ parameters ()[1], parameters ()[2] }, false), 2), false));
+		return (_lastINOUTAddress = 
+			MCHEmul::Address (memory () -> values 
+				(MCHEmul::Address ({ parameters ()[1], parameters ()[2] }, false), 2), false));
 	}
 
 	// ---
-	inline MCHEmul::UByte Instruction::value_inmediate ()
+	inline const MCHEmul::UByte& Instruction::value_inmediate () const
 	{
 		assert (parameters ().size () == 2);
 
@@ -199,7 +217,7 @@ namespace F6500
 	}
 
 	// ---
-	inline MCHEmul::UByte Instruction::value_relative ()
+	inline const MCHEmul::UByte& Instruction::value_relative () const
 	{
 		assert (parameters ().size () == 2);
 
@@ -217,11 +235,11 @@ namespace F6500
 							{ }
 
 		protected:
-		inline bool executeWith (MCHEmul::UByte u);
+		inline bool executeWith (const MCHEmul::UByte& u);
 	};
 
 	// ---
-	inline bool ADC_General::executeWith (MCHEmul::UByte u)
+	inline bool ADC_General::executeWith (const MCHEmul::UByte& u)
 	{
 		MCHEmul::Register& a = cpu () -> internalRegister (C6510::_ACCUMULATOR);
 		MCHEmul::StatusRegister& st = cpu () -> statusRegister ();
@@ -264,11 +282,11 @@ namespace F6500
 							{ }
 
 		protected:
-		inline bool executeWith (MCHEmul::UByte u);
+		inline bool executeWith (const MCHEmul::UByte& u);
 	};
 
 	// ---
-	inline bool ALR_General::executeWith (MCHEmul::UByte u)
+	inline bool ALR_General::executeWith (const MCHEmul::UByte& u)
 	{
 		MCHEmul::Register& a = cpu () -> internalRegister (C6510::_ACCUMULATOR);
 		MCHEmul::StatusRegister& st = cpu () -> statusRegister ();
@@ -335,11 +353,11 @@ namespace F6500
 							{ }
 
 		protected:
-		inline bool executeWith (MCHEmul::UByte u);
+		inline bool executeWith (const MCHEmul::UByte& u);
 	};
 
 	// ---
-	inline bool AND_General::executeWith (MCHEmul::UByte u)
+	inline bool AND_General::executeWith (const MCHEmul::UByte& u)
 	{
 		MCHEmul::Register& a = cpu () -> internalRegister (C6510::_ACCUMULATOR);
 		MCHEmul::StatusRegister& st = cpu () -> statusRegister ();
@@ -378,11 +396,11 @@ namespace F6500
 							{ }
 
 		protected:
-		inline bool executeWith (MCHEmul::UByte u);
+		inline bool executeWith (const MCHEmul::UByte& u);
 	};
 
 	// ---
-	inline bool ARR_General::executeWith (MCHEmul::UByte u)
+	inline bool ARR_General::executeWith (const MCHEmul::UByte& u)
 	{
 		MCHEmul::Register& a = cpu () -> internalRegister (C6510::_ACCUMULATOR);
 		MCHEmul::StatusRegister& st = cpu () -> statusRegister ();
@@ -424,6 +442,7 @@ namespace F6500
 		MCHEmul::UByte v = memory () -> value (a); // 1 byte long always
 		bool c = v.shiftLeftC (false /** 0 is put into */, 1); // Keeps the status of the last bit to actualize later the carry flag
 		memory () -> set (a, { v });
+		_lastINOUTData = MCHEmul::UBytes ({ v });
 
 		// Time of the status register...
 		MCHEmul::StatusRegister& st = cpu () -> statusRegister ();
@@ -520,11 +539,11 @@ namespace F6500
 							{ }
 
 		protected:
-		inline bool executeWith (MCHEmul::UByte u);
+		inline bool executeWith (const MCHEmul::UByte& u);
 	};
 
 	// ---
-	inline bool CMP_General::executeWith (MCHEmul::UByte u)
+	inline bool CMP_General::executeWith (const MCHEmul::UByte& u)
 	{
 		// To compare is like to substract...
 		MCHEmul::UInt r = 
@@ -560,11 +579,11 @@ namespace F6500
 							{ }
 
 		protected:
-		inline bool executeWith (MCHEmul::UByte u);
+		inline bool executeWith (const MCHEmul::UByte& u);
 	};
 
 	// ---
-	inline bool CPX_General::executeWith (MCHEmul::UByte u)
+	inline bool CPX_General::executeWith (const MCHEmul::UByte& u)
 	{
 		// To compare is like to substract...
 		MCHEmul::UInt r = 
@@ -595,11 +614,11 @@ namespace F6500
 							{ }
 
 		protected:
-		inline bool executeWith (MCHEmul::UByte u);
+		inline bool executeWith (const MCHEmul::UByte& u);
 	};
 
 	// ---
-	inline bool CPY_General::executeWith (MCHEmul::UByte u)
+	inline bool CPY_General::executeWith (const MCHEmul::UByte& u)
 	{
 		// To compare is like to substract...
 		MCHEmul::UInt r = 
@@ -642,6 +661,8 @@ namespace F6500
 		MCHEmul::UInt v = MCHEmul::UInt ((memory () -> value (a))) /** 1 byte long always. */ - MCHEmul::UInt::_1; // DEC...
 		// A carry could be generated, but it will be ignored...
 		memory () -> set (a, v.bytes ()); // ...and stored back
+		_lastINOUTData = v.bytes ();
+
 		// To compare is like to substract...
 		MCHEmul::UInt r = 
 			MCHEmul::UInt (cpu () -> internalRegister (C6510::_ACCUMULATOR).values ()[0]) - v;  //...CMP
@@ -684,6 +705,7 @@ namespace F6500
 		MCHEmul::UInt v = MCHEmul::UInt ((memory () -> value (a))) - MCHEmul::UInt::_1;
 		// A carry could be generated, but it will be ignored...
 		memory () -> set (a, v.bytes ()); // 1 byte long always
+		_lastINOUTData = v.bytes ();
 
 		// Time of the status register...
 		MCHEmul::StatusRegister& st = cpu () -> statusRegister ();
@@ -715,11 +737,11 @@ namespace F6500
 							{ }
 
 		protected:
-		inline bool executeWith (MCHEmul::UByte u);
+		inline bool executeWith (const MCHEmul::UByte& u);
 	};
 
 	// ---
-	inline bool EOR_General::executeWith (MCHEmul::UByte u)
+	inline bool EOR_General::executeWith (const MCHEmul::UByte& u)
 	{
 		MCHEmul::Register& a = cpu () -> internalRegister (C6510::_ACCUMULATOR);
 		MCHEmul::StatusRegister& st = cpu () -> statusRegister ();
@@ -765,6 +787,7 @@ namespace F6500
 		MCHEmul::UInt v = MCHEmul::UInt ((memory () -> value (a))) + MCHEmul::UInt::_1;
 		// A carry could be generated, but it will be ignored...
 		memory () -> set (a, v.bytes ()); // 1 byte long always
+		_lastINOUTData = v.bytes ();
 
 		// Time of the status register...
 		MCHEmul::StatusRegister& st = cpu () -> statusRegister ();
@@ -811,6 +834,7 @@ namespace F6500
 		MCHEmul::UInt v = MCHEmul::UInt ((memory () -> value (a))) /** 1 bytelong. */ + MCHEmul::UInt::_1; // INC...
 		// A carry could be generated, but it will be ignored...
 		memory () -> set (a, v.bytes ());
+		_lastINOUTData = v.bytes ();
 
 		// ...and then the substract...
 		unsigned char ft = st.bitStatus (C6500::_DECIMALFLAG) 
@@ -865,11 +889,11 @@ namespace F6500
 							{ }
 
 		protected:
-		inline bool executeWith (MCHEmul::UByte u);
+		inline bool executeWith (const MCHEmul::UByte& u);
 	};
 
 	// ---
-	inline bool LDA_General::executeWith (MCHEmul::UByte u)
+	inline bool LDA_General::executeWith (const MCHEmul::UByte& u)
 	{
 		// Set the value...
 		cpu () -> internalRegister (C6510::_ACCUMULATOR).set ({ u });
@@ -914,6 +938,7 @@ namespace F6500
 		MCHEmul::UByte v = memory () -> value (a); // 1 byte long always...
 		cpu () -> internalRegister (C6510::_ACCUMULATOR).set ({ v }); 
 		cpu () -> internalRegister (C6510::_XREGISTER).set ({ v });
+		_lastINOUTData = MCHEmul::UBytes ({ v });
 
 		// Time of the status register...
 		MCHEmul::StatusRegister& st = cpu () -> statusRegister ();
@@ -941,11 +966,11 @@ namespace F6500
 							{ }
 
 		protected:
-		inline bool executeWith (MCHEmul::UByte u);
+		inline bool executeWith (const MCHEmul::UByte& u);
 	};
 
 	// ---
-	inline bool LDX_General::executeWith (MCHEmul::UByte u)
+	inline bool LDX_General::executeWith (const MCHEmul::UByte& u)
 	{
 		// Set the value...
 		cpu () -> internalRegister (C6510::_XREGISTER).set ({ u });
@@ -975,11 +1000,11 @@ namespace F6500
 							{ }
 
 		protected:
-		inline bool executeWith (MCHEmul::UByte u);
+		inline bool executeWith (const MCHEmul::UByte& u);
 	};
 
 	// ---
-	inline bool LDY_General::executeWith (MCHEmul::UByte u)
+	inline bool LDY_General::executeWith (const MCHEmul::UByte& u)
 	{
 		// Set the value...
 		cpu () -> internalRegister (C6510::_YREGISTER).set ({ u });
@@ -1019,6 +1044,7 @@ namespace F6500
 		MCHEmul::UByte v = memory () -> value (a); // 1 byte long always
 		bool c = v.shiftRightC (false /** 0 is put into */, 1); // Keeps the status of the last bit to actualize later the carry flag
 		memory () -> set (a, v);
+		_lastINOUTData = MCHEmul::UBytes ({ v });
 
 		// Time of the status register...
 		MCHEmul::StatusRegister& st = cpu () -> statusRegister ();
@@ -1047,11 +1073,11 @@ namespace F6500
 							{ }
 
 		protected:
-		inline bool executeWith (MCHEmul::UByte u);
+		inline bool executeWith (const MCHEmul::UByte& u);
 	};
 
 	// ---
-	inline bool NOP_General::executeWith (MCHEmul::UByte u)
+	inline bool NOP_General::executeWith (const MCHEmul::UByte& u)
 	{
 		// Nothing to do...
 
@@ -1079,11 +1105,11 @@ namespace F6500
 							{ }
 
 		protected:
-		inline bool executeWith (MCHEmul::UByte u);
+		inline bool executeWith (const MCHEmul::UByte& u);
 	};
 
 	// ---
-	inline bool ORA_General::executeWith (MCHEmul::UByte u)
+	inline bool ORA_General::executeWith (const MCHEmul::UByte& u)
 	{
 		MCHEmul::Register& a = cpu () -> internalRegister (C6510::_ACCUMULATOR);
 		MCHEmul::StatusRegister& st = cpu () -> statusRegister ();
@@ -1145,7 +1171,8 @@ namespace F6500
 		// The memory is affected...
 		MCHEmul::UByte v = memory () -> value (a); // 1 byte long always...
 		bool c = v.rotateLeftC (st.bitStatus (C6500::_CARRYFLAG), 1); // ROL...
-		memory () -> set (a, { v });
+		memory () -> set (a, v);
+		_lastINOUTData = MCHEmul::UBytes ({ v });
 
 		// ...and also the accumulator...
 		v = ac.values ()[0] & v; // ...AND
@@ -1191,6 +1218,7 @@ namespace F6500
 		MCHEmul::UByte v = memory () -> value (a); // 1 byte long always
 		c = v.rotateLeftC (c /** The carry is put into. */, 1); // Keeps the status of the last bit to actualize later the carry flag
 		memory () -> set (a, v);
+		_lastINOUTData = MCHEmul::UBytes ({ v });
 
 		// Time of the status register...
 		st.setBitStatus (C6500::_NEGATIVEFLAG, v [7]);
@@ -1230,6 +1258,7 @@ namespace F6500
 		MCHEmul::UByte v = memory () -> value (a); // 1 byte long always
 		c = v.rotateRightC (c /** The carry is put into. */, 1); // Keeps the status of the last bit to actualize later the carry flag
 		memory () -> set (a, v);
+		_lastINOUTData = MCHEmul::UBytes ({ v });
 
 		// Time of the status register...
 		st.setBitStatus (C6500::_NEGATIVEFLAG, v [7]);
@@ -1270,7 +1299,8 @@ namespace F6500
 		// The operation affects the memory...
 		MCHEmul::UByte v = memory () -> value (a); // Always 1 byte long...
 		bool c = v.rotateRightC (st.bitStatus (C6500::_CARRYFLAG), 1); // ROR...
-		memory () -> set (a, { v });
+		memory () -> set (a, v);
+		_lastINOUTData = MCHEmul::UBytes ({ v });
 
 		// ...and also the accumulator...
 		unsigned char ft = st.bitStatus (C6500::_DECIMALFLAG) 
@@ -1321,8 +1351,10 @@ namespace F6500
 	inline bool SAX_General::executeOn (const MCHEmul::Address& a)
 	{
 		// At the end the memory is stored with _ACCUMULATOR & _XREGISTER
-		memory () -> set (a, cpu () -> internalRegister (C6510::_ACCUMULATOR).values ()[0] &
-			cpu () -> internalRegister (C6510::_XREGISTER).values ()[0]); // Always 1 byte long...
+		MCHEmul::UByte dt = cpu () -> internalRegister (C6510::_ACCUMULATOR).values ()[0] &
+			cpu () -> internalRegister (C6510::_XREGISTER).values ()[0];
+		memory () -> set (a, dt); // Always 1 byte long...
+		_lastINOUTData = MCHEmul::UBytes ({ dt });
 
 		// ...with no impact in registers...
 
@@ -1345,11 +1377,11 @@ namespace F6500
 							{ }
 
 		protected:
-		inline bool executeWith (MCHEmul::UByte u);
+		inline bool executeWith (const MCHEmul::UByte& u);
 	};
 
 	// ---
-	inline bool SBC_General::executeWith (MCHEmul::UByte u)
+	inline bool SBC_General::executeWith (const MCHEmul::UByte& u)
 	{
 		MCHEmul::Register& a = cpu () -> internalRegister (C6510::_ACCUMULATOR);
 		MCHEmul::StatusRegister& st = cpu () -> statusRegister ();
@@ -1392,11 +1424,11 @@ namespace F6500
 							{ }
 
 		protected:
-		inline bool executeWith (MCHEmul::UByte u);
+		inline bool executeWith (const MCHEmul::UByte& u);
 	};
 
 	// ---
-	inline bool SBX_General::executeWith (MCHEmul::UByte u)
+	inline bool SBX_General::executeWith (const MCHEmul::UByte& u)
 	{
 		MCHEmul::Register& x = cpu () -> internalRegister (C6510::_XREGISTER);
 		MCHEmul::UInt v = MCHEmul::UInt (cpu () -> 
@@ -1445,10 +1477,12 @@ namespace F6500
 		MCHEmul::Register& ac = cpu () -> internalRegister (C6510::_ACCUMULATOR);
 		MCHEmul::StatusRegister& st = cpu () -> statusRegister ();
 
-		// The memory is affected
+		// The memory is affected...
 		MCHEmul::UByte v = memory () -> value (a); 
 		bool c = v.shiftLeftC (false /** 0 is put into */, 1); // ASL...
-		memory () -> set (a, { v });
+		memory () -> set (a, v);
+		_lastINOUTData = MCHEmul::UBytes ({ v });
+
 		// ...and also the accumulator...
 		v = ac.values ()[0] | v; // ...ORA
 		ac.set ({ v });
@@ -1494,7 +1528,9 @@ namespace F6500
 		// The operation affects the memory...
 		MCHEmul::UByte v = memory () -> value (a);
 		bool c = v.shiftRightC (false, 1); // LSR...
-		memory () -> set (a, { v });
+		memory () -> set (a, v);
+		_lastINOUTData = MCHEmul::UBytes ({ v });
+
 		// ...and also the accumulator...
 		v = ac.values ()[0] ^ v; // ...EOR
 		ac.set ({ v });
@@ -1533,7 +1569,8 @@ namespace F6500
 	inline bool STA_General::executeOn (const MCHEmul::Address& a)
 	{
 		// Set the value...
-		memory () -> set (a, cpu () -> internalRegister (C6510::_ACCUMULATOR).values ()); // 1 byte-length
+		memory () -> set (a, 
+			_lastINOUTData = cpu () -> internalRegister (C6510::_ACCUMULATOR).values ()); // 1 byte-length
 
 		return (true);
 	}
@@ -1564,7 +1601,8 @@ namespace F6500
 	inline bool STX_General::executeOn (const MCHEmul::Address& a)
 	{
 		// Set the value...
-		memory () -> set (a, cpu () -> internalRegister (C6510::_XREGISTER).values ()); // 1 byte-length
+		memory () -> set (a, 
+			_lastINOUTData = cpu () -> internalRegister (C6510::_XREGISTER).values ()); // 1 byte-length
 
 		return (true);
 	}
@@ -1591,7 +1629,8 @@ namespace F6500
 	inline bool STY_General::executeOn (const MCHEmul::Address& a)
 	{
 		// Set the value...
-		memory () -> set (a, cpu () -> internalRegister (C6510::_YREGISTER).values ()); // 1 byte-length
+		memory () -> set (a, 
+			_lastINOUTData = cpu () -> internalRegister (C6510::_YREGISTER).values ()); // 1 byte-length
 
 		return (true);
 	}

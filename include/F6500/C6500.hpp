@@ -60,7 +60,7 @@ namespace F6500
 			_INDIRECT_Y,	// The parameter is got from an address that is in other plus the register Y
 		};
 
-		C6500 (const MCHEmul::CPUArchitecture& a);
+		C6500 (int id, const MCHEmul::Attributes& attrs = { });
 
 		virtual MCHEmul::Address IRQVectorAddress () const
 							{ return (MCHEmul::Address ({ 0xfe, 0xff }, false /** Little - endian */)); }
@@ -94,6 +94,7 @@ namespace F6500
 
 		private:
 		// Implementation
+		static MCHEmul::CPUArchitecture createArchitecture ();
 		static MCHEmul::Registers createInternalRegisters ();
 		static MCHEmul::StatusRegister createStatusRegister ();
 		static MCHEmul::Instructions createInstructions ();

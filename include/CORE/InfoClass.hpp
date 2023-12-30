@@ -37,8 +37,7 @@ namespace MCHEmul
 							{ _className = cN; }
 
 		/** By default it returns the attribute .CLASSNAME with the name of the class. */
-		virtual InfoStructure getInfoStructure () const
-							{ InfoStructure r; r.add ("CLASSNAME", className ()); return (r); }
+		virtual InfoStructure getInfoStructure () const;
 
 		/** Generic print out method. */
 		friend std::ostream& operator << (std::ostream& o, const InfoClass& iC)

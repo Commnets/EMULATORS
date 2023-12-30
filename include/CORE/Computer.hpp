@@ -20,6 +20,9 @@
 #include <CORE/Chip.hpp>
 #include <CORE/GraphicalChip.hpp>
 #include <CORE/Memory.hpp>
+#include <CORE/Bus.hpp>
+#include <CORE/Wire.hpp>
+#include <CORE/MBElement.hpp>
 #include <CORE/Register.hpp>
 #include <CORE/Instruction.hpp>
 #include <CORE/IO.hpp>
@@ -137,22 +140,41 @@ namespace MCHEmul
 		using TemplateOfActions = std::map <unsigned int, Action*>;
 		using MapOfActions = std::map <MCHEmul::Address, unsigned int>;
 
-		/** The computer owns the different elements.
-			The devices mandatory are the screen and the InputOSDevice. 
-			This is verified at construction level. \n
-			@param cpu		A reference to the cpu used by the computer.
-			@param c		The list of the chips of the computer.
-			@param m		The memory accesible to the computer. \n
-							All blocks. Whether they are or not active is something to configure in the Memory itself. 
-			@param d		The devices connected to the computer. \n
-							There are two that are always mandatory: An screen and a Keyboard. \n
-							The chips and the devices are connected at construction time too, 
-							invoking the method "linkChips" of every Device.
-			@param cs		the number of cycles per second of the clock. 
-			@param attrs	Optional attributes defining the computer. 
-			@param sL		Number of stabilizatoion loops before starting to execute CPU instructions. */
-		Computer (CPU* cpu, const Chips& c, Memory* m, const IODevices& d, unsigned int cs, 
-			const Attributes& attrs = { }, unsigned short sL = 10);
+		/** 
+		  *	The computer owns the different elements.
+		  *	The devices mandatory are the screen and the InputOSDevice. 
+		  *	This is verified at construction level. \n
+		  *	@param cpu		A reference to the cpu used by the computer.
+		  *	@param c		The list of the chips of the computer.
+		  *	@param m		The memory accesible to the computer. \n
+		  *					All blocks. Whether they are or not active is something to configure in the Memory itself. 
+		  *	@param d		The devices connected to the computer. \n
+		  *					There are two that are always mandatory: An screen and a Keyboard. \n
+		  *					The chips and the devices are connected at construction time too, 
+		  *					invoking the method "linkChips" of every Device.
+		  *	@param cs		the number of cycles per second of the clock.
+		  *	@param bs		Buses being part of the motherboard of the computer.
+		  *	@param ws		Wires being part of the motherboard of the computer.
+		  *	@param attrs	Optional attributes defining the computer. 
+		  *	@param sL		Number of stabilization loops before starting to execute CPU instructions.
+		  * CPU, Memory, Chips and Devices are Motherboard Elements.
+		  * All of them are, somehow and depending on the computer, linked among them. \n
+		  * They can be linked directly or through the buses and wires of the computer. \n
+		  * The constructor invokes the method linkToChips to any IODevice present in the computer,
+		  * passing the list of Chips defined for the computer. \n
+		  * This is the most common way to connect chips and devices. \n
+		  * However they can also be connectes through the buses and wires if defined.
+		  * So the constructor also invokes the method connectElements to any bus and wire defined for the system.
+		  * Use one, the other or both. It is your choice.
+		  */
+		Computer (CPU* cpu,
+				  const Chips& c, 
+				  Memory* m, 
+				  const IODevices& d,
+				  unsigned int cs,
+				  const Buses& bs = { },
+				  const Wires& ws = { },
+				  const Attributes& attrs = { }, unsigned short sL = 10);
 
 		Computer (const Computer&) = delete;
 
@@ -174,6 +196,7 @@ namespace MCHEmul
 		CPU* cpu ()
 							{ return (_cpu); }
 
+		// Managing the chips...
 		const Chips& chips () const
 							{ return (_chips); }
 		bool existsChip (int id) const
@@ -193,7 +216,7 @@ namespace MCHEmul
 		Memory* memory ()
 							{ return (_memory); }
 
-		// Managing the devices
+		// Managing the devices...
 		const IODevices& devices () const
 							{ return (_devices); }
 		bool existsDevice (int id) const
@@ -202,6 +225,26 @@ namespace MCHEmul
 							{ return (existsDevice (id) ? (*_devices.find (id)).second : nullptr); }
 		IODevice* device (int id)
 							{ return (existsDevice (id) ? (*_devices.find (id)).second : nullptr); }
+
+		// Managing the buses...
+		const Buses& buses () const
+							{ return (_buses); }
+		bool existsBus (int id) const
+							{ return (_buses.find (id) != _buses.end ()); }
+		const Bus* bus (int id) const
+							{ return (existsBus (id) ? (*_buses.find (id)).second : nullptr); }
+		Bus* bus (int id)
+							{ return (existsBus (id) ? (*_buses.find (id)).second : nullptr); }
+
+		// Managing the wires...
+		const Wires& wires () const
+							{ return (_wires); }
+		bool existsWire (int id) const
+							{ return (_wires.find (id) != _wires.end ()); }
+		const Wire* wire (int id) const
+							{ return (existsWire (id) ? (*_wires.find (id)).second : nullptr); }
+		Wire* wire (int id)
+							{ return (existsWire (id) ? (*_wires.find (id)).second : nullptr); }
 
 		// Managing the peripherals
 		IOPeripherals peripherals () const;
@@ -405,6 +448,8 @@ namespace MCHEmul
 		Chips _chips; 
 		Memory* _memory;
 		IODevices _devices;
+		Buses _buses;
+		Wires _wires;
 		const Attributes _attributes = { }; // Maybe modified at construction level
 		TemplateOfActions _templateActions; // The templates are used to acclerate what to do!
 		MapOfActions _actionsAt;

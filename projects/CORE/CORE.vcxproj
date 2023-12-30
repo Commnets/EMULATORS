@@ -21,7 +21,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\CORE\ASCIIConverter.cpp" />
+    <ClCompile Include="..\..\src\CORE\Bus.cpp" />
     <ClCompile Include="..\..\src\CORE\ByteCodeLine.cpp" />
+    <ClCompile Include="..\..\src\CORE\MBElement.cpp" />
     <ClCompile Include="..\..\src\CORE\Chip.cpp" />
     <ClCompile Include="..\..\src\CORE\ChipRegisters.cpp" />
     <ClCompile Include="..\..\src\CORE\Clock.cpp" />
@@ -39,6 +41,7 @@
     <ClCompile Include="..\..\src\CORE\FmterBuilder.cpp" />
     <ClCompile Include="..\..\src\CORE\global.cpp" />
     <ClCompile Include="..\..\src\CORE\GraphicalChip.cpp" />
+    <ClCompile Include="..\..\src\CORE\InfoClass.cpp" />
     <ClCompile Include="..\..\src\CORE\InfoStructure.cpp" />
     <ClCompile Include="..\..\src\CORE\Instruction.cpp" />
     <ClCompile Include="..\..\src\CORE\IO.cpp" />
@@ -57,6 +60,7 @@
     <ClCompile Include="..\..\src\CORE\SoundMemory.cpp" />
     <ClCompile Include="..\..\src\CORE\SoundVoice.cpp" />
     <ClCompile Include="..\..\src\CORE\SoundWave.cpp" />
+    <ClCompile Include="..\..\src\CORE\Wire.cpp" />
     <ClCompile Include="..\..\src\CORE\Stack.cpp" />
     <ClCompile Include="..\..\src\CORE\StatusRegister.cpp" />
     <ClCompile Include="..\..\src\CORE\StdCommandBld.cpp" />
@@ -72,6 +76,7 @@
     <ClInclude Include="..\..\include\CORE\ASCIIConverter.hpp" />
     <ClInclude Include="..\..\include\CORE\Bus.hpp" />
     <ClInclude Include="..\..\include\CORE\ByteCodeLine.hpp" />
+    <ClInclude Include="..\..\include\CORE\MBElement.hpp" />
     <ClInclude Include="..\..\include\CORE\Chip.hpp" />
     <ClInclude Include="..\..\include\CORE\ChipRegisters.hpp" />
     <ClInclude Include="..\..\include\CORE\Clock.hpp" />
@@ -101,7 +106,6 @@
     <ClInclude Include="..\..\include\CORE\JSONFormatter.hpp" />
     <ClInclude Include="..\..\include\CORE\Latch.hpp" />
     <ClInclude Include="..\..\include\CORE\Memory.hpp" />
-    <ClInclude Include="..\..\include\CORE\MicroBus.hpp" />
     <ClInclude Include="..\..\include\CORE\NotifyObserver.hpp" />
     <ClInclude Include="..\..\include\CORE\OSIO.hpp" />
     <ClInclude Include="..\..\include\CORE\ProgramCounter.hpp" />

@@ -24,7 +24,7 @@ bool FZ80::INTInterrupt::executeOverImpl (MCHEmul::CPU* c, unsigned int cC)
 			{
 				_exeAddress = MCHEmul::Address (); // Not important!
 
-				MCHEmul::UByte nC = c -> dataBusValue ()[0];
+				MCHEmul::UByte nC = c -> lastInstruction () -> lastINOUTData ()[0];
 				if (!c -> existsInstruction ((unsigned int) nC.value ()))
 					result = false; // The instruction doesn't exist!
 				else

@@ -22,7 +22,8 @@ MCHEmul::Instruction::Instruction (unsigned int c, unsigned int mp, unsigned int
 	  _bigEndian (bE),
 	  _iTemplate (MCHEmul::noSpaces (MCHEmul::upper (t))),
 	  _iStructure (), // Assigned later...
-	  _lastParameters (), _cpu (nullptr), _memory (nullptr), _stack (nullptr)
+	  _lastParameters (), _lastINOUTAddress (), _lastINOUTData (),
+	  _cpu (nullptr), _memory (nullptr), _stack (nullptr)
 { 
 	assert (_memoryPositions > 0 && _clockCycles > 0); 
 	assert (_iTemplate != ""); 
@@ -326,6 +327,8 @@ bool MCHEmul::InstructionUndefined::execute (MCHEmul::CPU* c, MCHEmul::Memory* m
 		_lastInstruction = (dynamic_cast <MCHEmul::InstructionDefined*> (sI) != nullptr)
 			? static_cast <MCHEmul::InstructionDefined*> (sI)
 			: static_cast <MCHEmul::InstructionUndefined*> (sI) -> _lastInstruction;
+		_lastINOUTAddress   = _lastInstruction -> lastINOUTAddress ();
+		_lastINOUTData		= _lastInstruction -> lastINOUTData ();
 		_code				= _lastInstruction -> code ();
 		_codeLength			= _lastInstruction -> codeLength ();
 		_memoryPositions	= _lastInstruction -> memoryPositions ();

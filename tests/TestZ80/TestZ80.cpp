@@ -8,7 +8,7 @@ class MemoryTest final : public MCHEmul::Memory
 {
 	public:
 	MemoryTest ()
-		: MCHEmul::Memory (basicContent ())
+		: MCHEmul::Memory (0, basicContent ())
 							{ }
 
 	protected:
@@ -107,7 +107,7 @@ int _tmain (int argc, _TCHAR *argv [])
 	std::cout << "/o\t\tTo print out the status of the CPU after every test" << std::endl;
 	std::cout << "/m\t\tTo simulate the access to the memory." << std::endl << std::endl;
 
-	MCHEmul::TestCPUSpeed (new FZ80::CZ80, new MemoryTest).testAllInstructionSet (std::cout, nTimes, accessM, output);
+	MCHEmul::TestCPUSpeed (new FZ80::CZ80 (0), new MemoryTest).testAllInstructionSet (std::cout, nTimes, accessM, output);
 
 	std::string ex; std::cin >> ex;
 

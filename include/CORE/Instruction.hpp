@@ -16,6 +16,7 @@
 
 #include <CORE/global.hpp>
 #include <CORE/UBytes.hpp>
+#include <CORE/Address.hpp>
 
 namespace MCHEmul
 {
@@ -168,6 +169,14 @@ namespace MCHEmul
 		const UBytes parameters (size_t p, size_t nP = 1, bool bE = true) const;
 		std::string parametersAsString (size_t p, size_t nP = 1, bool bE = true) const; // The UBytes could grouped to get a parameter...
 
+		// Managing the last address and ata managed...
+		/** These two parameters are fully optional.
+			The execute method must assign them, otherwise they will have default values. */
+		const Address& lastINOUTAddress () const
+							{ return (_lastINOUTAddress); }
+		const UBytes& lastINOUTData () const
+							{ return (_lastINOUTData); }
+
 		/** This method is key when, i.e. compiling assembler code. \n
 			Given a set of data (or several sets) in the for of bytes, 
 			the method returns the bytes to complete the full instruction. \n
@@ -230,14 +239,16 @@ namespace MCHEmul
 		// The internal structure helps us later to deal better with the instruction...
 		Structure _iStructure; 
 
-		unsigned int _additionalCycles; // Sometimes, when executed, 
-										// an instruction could take more than expected... (@see additionalClockCylces method)
+		mutable unsigned int _additionalCycles; // Sometimes, when executed, 
+												// an instruction could take more than expected... (@see additionalClockCylces method)
 
 		protected:
-		MCHEmul::UBytes _lastParameters;
-		MCHEmul::CPU* _cpu;
-		MCHEmul::Memory* _memory;
-		MCHEmul::Stack* _stack;
+		UBytes _lastParameters;
+		mutable Address _lastINOUTAddress;
+		mutable UBytes _lastINOUTData;
+		CPU* _cpu;
+		Memory* _memory;
+		Stack* _stack;
 	};
 
 	// To simplify the way the instruction set is used...

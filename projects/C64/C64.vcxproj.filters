@@ -57,9 +57,6 @@
     <ClInclude Include="..\..\include\C64\Memory.hpp">
       <Filter>Archivos de encabezado\Motherboard</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\include\C64\C64.hpp">
-      <Filter>Archivos de encabezado\Motherboard</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\include\C64\OSIO.hpp">
       <Filter>Archivos de encabezado\IO</Filter>
     </ClInclude>
@@ -111,13 +108,13 @@
     <ClInclude Include="..\..\include\C64\IOExpansionMemory.hpp">
       <Filter>Archivos de encabezado\Motherboard</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\include\C64\C64.hpp">
+      <Filter>Archivos de encabezado</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\C64\Screen.cpp">
       <Filter>Archivos de origen\IO</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\C64\C64.cpp">
-      <Filter>Archivos de origen\Motherboard</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\C64\OSIO.cpp">
       <Filter>Archivos de origen\IO</Filter>
@@ -166,6 +163,9 @@
     </ClCompile>
     <ClCompile Include="..\..\src\C64\IOPBuilder.cpp">
       <Filter>Archivos de origen\IO</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\C64\C64.cpp">
+      <Filter>Archivos de origen</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

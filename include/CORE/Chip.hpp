@@ -15,7 +15,7 @@
 #define __MCHEMUL_CHIP__
 
 #include <CORE/global.hpp>
-#include <CORE/NotifyObserver.hpp>
+#include <CORE/MBElement.hpp>
 #include <CORE/Memory.hpp>
 #include <CORE/DebugFile.hpp>
 
@@ -27,12 +27,12 @@ namespace MCHEmul
 		All chips are set with the full memory accesible when the computer is initialized,
 		unless something specific is said initializing the chip itself!. \n
 		The chip is able to notify event to other element subscribed or receive event from tehm. */
-	class Chip : public InfoClass, public Notifier, public Observer
+	class Chip : public MotherboardElement, public Notifier
 	{
 		public:
 		Chip (int id, const Attributes& attrs = { })
-			: InfoClass ("Chip"),
-			  _id (id), _memory (nullptr), _attributes (attrs),
+			: MotherboardElement (id, "Chip", attrs),
+			  _memory (nullptr),
 			  _deepDebugFile (nullptr),
 			  _error (_NOERROR) // Memory accessed can be null, take care...
 							{ }
@@ -49,9 +49,6 @@ namespace MCHEmul
 
 		Chip& operator = (Chip&&) = delete;
 
-		int id () const
-							{ return (_id); }
-
 		/** The memory that the chip can access to. \n
 			This method is invoked from the Computer constructor. */
 		void setMemoryRef (Memory* m)
@@ -60,17 +57,6 @@ namespace MCHEmul
 							{ return (_memory); }
 		Memory* memoryRef ()
 							{ return (_memory); }
-
-		const Attributes& attributes () const
-							{ return (_attributes); }
-		const std::string& attribute (const std::string& aN) const
-							{ Attributes::const_iterator i = _attributes.find (aN); 
-							  return ((i == _attributes.end ()) ? AttributedNotDefined : (*i).second); }
-
-		/** To initialize the chip, when "the power is set up". \n 
-			It could be defined per chip. By default it does nothing. \n
-			Returns true, when verything was ok, and false in any other circusntance. */
-		virtual bool initialize () = 0;
 
 		/** To simulate th behaviour of the chip. It has to be defined per chip. \n
 			Returns true if everything was ok, and false in any other circunstance. \n 
@@ -104,9 +90,7 @@ namespace MCHEmul
 							{ return (_deepDebugFile); }
 
 		protected:
-		const int _id = -1; // Modified at construction level
 		Memory* _memory;
-		const Attributes _attributes = { }; // Maybe modified at construction level
 
 		// To manage the debug info...
 		DebugFile* _deepDebugFile;

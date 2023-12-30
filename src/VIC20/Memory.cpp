@@ -5,7 +5,7 @@
 
 // ---
 VIC20::Memory::Memory (VIC20::Memory::Configuration cfg, const std::string& lang)
-	: MCHEmul::Memory (VIC20::Memory::standardMemoryContent (cfg))
+	: MCHEmul::Memory (0, VIC20::Memory::standardMemoryContent (cfg), { })
 {
 	// In the content...
 	if (error () != MCHEmul::_NOERROR)

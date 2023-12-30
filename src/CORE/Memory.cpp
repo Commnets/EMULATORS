@@ -82,7 +82,7 @@ bool MCHEmul::PhysicalStorage::loadInto (const std::string& fN, size_t pB)
 }
 
 // ---
-bool MCHEmul::PhysicalStorage::saveFrom (const std::string& fN, size_t nB, size_t p)
+bool MCHEmul::PhysicalStorage::saveFrom (const std::string& fN, size_t nB, size_t p) const
 {
 	if (p /** Starts in 0. */ >= size () || (p + nB) > size ())
 		return (false); // It is not in the limits of the memory...
@@ -268,7 +268,7 @@ bool MCHEmul::Memory::removeAdditionalSubsets (int id, MCHEmul::MemoryView* v)
 	if (i != _additionalSubsets.end ())
 	{
 		std::vector <int> vId;
-		for (auto j : (*i).second) vId.emplace_back (j.second -> id ());
+		for (const auto& j : (*i).second) vId.emplace_back (j.second -> id ());
 		result = ((v == nullptr) ? _activeView : v) -> removeSubsets (vId);
 
 		_additionalSubsets.erase (i);
@@ -290,8 +290,8 @@ bool MCHEmul::Memory::Content::initialize ()
 }
 
 // ---
-MCHEmul::Memory::Memory (const Content& cnt)
-	: MCHEmul::InfoClass ("Memory"),
+MCHEmul::Memory::Memory (int id, const MCHEmul::Memory::Content& cnt, const MCHEmul::Attributes& attrs)
+	: MCHEmul::MotherboardElement (id, "Memory", attrs),
 	  _content (),
 	  _additionalSubsets (),
 	  _activeView (nullptr),

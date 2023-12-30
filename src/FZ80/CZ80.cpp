@@ -37,11 +37,14 @@ MCHEmul::InfoStructure FZ80::Z80Port::getInfoStructure () const
 }
 
 // ---
-FZ80::CZ80::CZ80 (const Z80PortsMap& pts, const MCHEmul::CPUArchitecture& a)
-	: MCHEmul::CPU (a,
+FZ80::CZ80::CZ80 (int id, const Z80PortsMap& pts, 
+		const MCHEmul::Attributes& attrs)
+	: MCHEmul::CPU (id,
+		FZ80::CZ80::createArchitecture (),
 		FZ80::CZ80::createInternalRegisters (), 
 		FZ80::CZ80::createStatusRegister (),
-		FZ80::CZ80::createInstructions ()),
+		FZ80::CZ80::createInstructions (),
+		attrs),
 	  _afRegister  ({ &aRegister   (), &fRegister   () }),
 	  _bcRegister  ({ &bRegister   (), &cRegister   () }),
 	  _deRegister  ({ &dRegister   (), &eRegister   () }),
@@ -101,10 +104,7 @@ MCHEmul::CPUArchitecture FZ80::CZ80::createArchitecture ()
 			(2 /** 2 bytes = 16 bites */, 
 			 1 /** bytes per instruction */, 
 			 false /** Little endian. */, 
-			 { { "Code", "Z80" },
-			   { "Manufacturer", "Zilog"},
-			   { "Year", "1976" },
-			   { "Speed Range", "2.5 - 10 MHz" } }));
+			 { { "Family", "Z80" } }));
 }
 
 // ---

@@ -7,7 +7,7 @@
  *	Framework: CPU Emulators library \n
  *	Author: Ignacio Cea Forniés (EMULATORS library) \n
  *	Creation Date: 14/04/2023 \n
- *	Description: Trying the emulate a "bus" of data connected to two different elements (usually chips).
+ *	Description: Trying the emulate a "bus" of data connected to two different computer elements within the mother board.
  *	Versions: 1.0 Initial
  */
 
@@ -15,73 +15,65 @@
 #define __MCHEMUL_BUS__
 
 #include <CORE/global.hpp>
+#include <CORE/NotifyObserver.hpp>
 #include <CORE/UBytes.hpp>
 
 namespace MCHEmul
 {
-	class Bus;
+	class MotherboardElement;
+	using MotherboardElements = std::vector <MotherboardElement*>;
 
-	/** The element connected throught out a bus. */
-	class BusElement
+	/** Replica of the physical Bus that connects several elements within a computer. \n
+		Connected to the Bus there are several Motherboard Elements, and UBytes are transmited throught it. \n
+		When a value in set in the bus, the different Motherboard elements connected are notified. */
+	class Bus final : public Notifier
 	{
 		public:
-		friend Bus;
-	
-		virtual ~BusElement () 
-								{ }
-							
-		protected:
-		/** The notification always ends up in this method.
-			It receives the value of the wire, and whether that value is rfelated with a climbing or falling edge. */ 
-		virtual void notified (const UBytes& b)
-								{ /** nothing by default. */ }
-	};
+		static const unsigned int _BUSACTUALIZED = 110;
 
-	// Just to simplify the use of a set of those elements...
-	using BusElements = std::vector <BusElement*>;
-
-	/** Replica of the physical bus connecting elements. */
-	class Bus final
-	{
-		public:
-		Bus (size_t nE)
-			: _value (UBytes (std::vector <UByte> (nE, UByte::_0))),
-			  _elements ()
+		Bus (int id, size_t nE)
+			: _id (id),
+			  _value (UBytes (std::vector <UByte> (nE, UByte::_0)))
 								{ }
 		
 		/** The bus doesn't own ever none of the elements connected. */
 
-		/** connected a new element only if it was not connected before. */
-		void connectElement (BusElement* wE)
-								{ if (std::find_if (_elements.begin (), _elements.end (), 
-									[=](BusElement* e) { return (e == wE); }) == _elements.end ())
-									_elements.emplace_back (wE); }
-		void disconnectElement (BusElement* wE)
-								{ _elements.erase (std::remove_if (
-									_elements.begin(), _elements.end(), 
-										[=](BusElement* e) { return (e == wE); }), 
-									_elements.end()); }
+		int id () const
+							{ return (_id); }
 		
 		const MCHEmul::UBytes& value () const
 								{ return (_value); }
-		void setValue (const UBytes& v)
-								{ if (v != _value && v.size () == _value.size ()) /** Always of the same size... */
-									{ _value = v;
-									  notify (); } }
+		inline void setValue (const UBytes& v);
+
+		/** Connect a new element only if it was not connected before. */
+		void connectElement (MotherboardElement* mE);
+		/** Connect a set of motherboard elements to this bus. \n
+			The method can be overloaded because not all elements received might make sense to be connected to this bus. \n
+			Any overload of this method must take this into account. \n
+			By default all are connected. */
+		virtual void connectElements (const MotherboardElements& mbE)
+							{ for (const auto& i : mbE) connectElement (i); }
+		void disconnectElement (MotherboardElement* mE);
 
 		Bus& operator = (const UBytes& v)
 								{ setValue (v); return (*this); }
 	
-		private:
-		/** Just setting a value a notification is transmitted to any element. */
-		void notify ()
-								{ for (auto i : _elements) 
-									i -> notified (_value); }
-	
 		protected:
+		int _id;
+		/** The valus kept in the bus. */
 		UBytes _value;
-		BusElements _elements;
 	};
+
+	// ---
+	inline void Bus::setValue (const UBytes& v)
+	{ 
+		if (v != _value && v.size () == _value.size ()) /** Always of the same size... */
+		{ 
+			_value = v;
+			
+			notify (Event (_BUSACTUALIZED)); 
+		} 
+	}
 }
 
 #endif

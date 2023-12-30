@@ -137,7 +137,12 @@ namespace FZ80
 			_BIT,					// The parameter is the bit of a register
 		};
 
-		CZ80 (const Z80PortsMap& pts = { }, const MCHEmul::CPUArchitecture& a = createArchitecture ());
+		CZ80 (int id, const Z80PortsMap& pts = { },	
+			const MCHEmul::Attributes& attrs = // By default...
+				{  { "Code", "Z80" },
+				   { "Manufacturer", "Zilog"},
+				   { "Year", "1976" },
+				   { "Speed Range", "2.5 - 10 MHz" } });
 
 		~CZ80 ();
 
@@ -153,7 +158,8 @@ namespace FZ80
 							{ return (MCHEmul::Address ({ 0x38, 0xff }, false /** Little - endian */)); }
 		/** In the case of the interrupt type 2, the address to jump to is deducted from the values in the dataBus and register I. */
 		MCHEmul::Address INT2VectorAddress () const
-							{ return (MCHEmul::Address ({ dataBusValue ()[0], iRegister ().values () [0] }, false /** Little - endian */)); }
+							{ return (MCHEmul::Address 
+								({ _lastInstruction -> lastINOUTData ()[0], iRegister ().values () [0] }, false /** Little - endian */)); }
 		MCHEmul::Address NMIVectorAddress () const
 							{ return (MCHEmul::Address ({ 0x66, 0x00 }, false /** Little - endian */)); }
 

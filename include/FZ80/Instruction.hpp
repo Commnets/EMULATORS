@@ -182,31 +182,37 @@ namespace FZ80
 
 		// To get the address pointed by the register...
 		MCHEmul::Address addressBC (size_t n = 0) const
-							{ return (MCHEmul::Address (valueRegisterBC (), true /** Addresses in Registers are big - endian. */) + n); }
+							{ return (_lastINOUTAddress =
+								(MCHEmul::Address (valueRegisterBC (), true /** Addresses in Registers are big - endian. */) + n)); }
 		MCHEmul::Address addressDE (size_t n = 0) const
-							{ return (MCHEmul::Address (valueRegisterDE (), true) + n); }
+							{ return (_lastINOUTAddress = 
+								MCHEmul::Address (valueRegisterDE (), true) + n); }
 		MCHEmul::Address addressHL (size_t n = 0) const
-							{ return (MCHEmul::Address (valueRegisterHL (), true) + n); }
+							{ return (_lastINOUTAddress = 
+								MCHEmul::Address (valueRegisterHL (), true) + n); }
 		MCHEmul::Address addressIX (size_t n = 0) const
-							{ return (MCHEmul::Address (valueRegisterIX (), true) + n); }
+							{ return (_lastINOUTAddress = 
+								MCHEmul::Address (valueRegisterIX (), true) + n); }
 		MCHEmul::Address addressIY (size_t n = 0) const
-							{ return (MCHEmul::Address (valueRegisterIY (), true) + n); }
+							{ return (_lastINOUTAddress = 
+								MCHEmul::Address (valueRegisterIY (), true) + n); }
 		MCHEmul::Address addressSP (size_t n = 0) const
-							{ return (MCHEmul::Address (valueRegisterSP (), true) + n); }
+							{ return (_lastINOUTAddress = 
+								MCHEmul::Address (valueRegisterSP (), true) + n); }
 
 		// To get the value pointed by the registers...
 		const MCHEmul::UByte& valueAddressBC (size_t n = 0) const
-							{ return (memory () -> value (addressBC (n))); }
+							{ return ((_lastINOUTData = MCHEmul::UBytes ({ memory () -> value (addressBC (n)) }))[0]); }
 		const MCHEmul::UByte& valueAddressDE (size_t n = 0) const
-							{ return (memory () -> value (addressDE (n))); }
+							{ return ((_lastINOUTData = MCHEmul::UBytes ({ memory () -> value (addressDE (n)) }))[0]); }
 		const MCHEmul::UByte& valueAddressHL (size_t n = 0) const
-							{ return (memory () -> value (addressHL (n))); }
+							{ return ((_lastINOUTData = MCHEmul::UBytes ({ memory () -> value (addressHL (n)) }))[0]); }
 		const MCHEmul::UByte& valueAddressIX (size_t n = 0) const
-							{ return (memory () -> value (addressIX (n))); }
+							{ return ((_lastINOUTData = MCHEmul::UBytes ({ memory () -> value (addressIX (n)) }))[0]); }
 		const MCHEmul::UByte& valueAddressIY (size_t n = 0) const
-							{ return (memory () -> value (addressIY (n))); }
+							{ return ((_lastINOUTData = MCHEmul::UBytes ({ memory () -> value (addressIY (n)) }))[0]); }
 		const MCHEmul::UByte& valueAddressSP (size_t n = 0) const
-							{ return (memory () -> value (addressSP (n))); }
+							{ return ((_lastINOUTData = MCHEmul::UBytes ({ memory () -> value (addressSP (n)) }))[0]); }
 	};
 
 	// ---

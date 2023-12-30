@@ -12,11 +12,13 @@ const std::string F6500::C6500::_OVERFLOWFLAGNAME = "V";
 const std::string F6500::C6500::_NEGATIVEFLAGNAME = "N";
 
 // ---
-F6500::C6500::C6500 (const MCHEmul::CPUArchitecture& a)
-	: MCHEmul::CPU (a,
+F6500::C6500::C6500 (int id,	const MCHEmul::Attributes& attrs)
+	: MCHEmul::CPU (id,
+		F6500::C6500::createArchitecture (),
 		F6500::C6500::createInternalRegisters (), 
 		F6500::C6500::createStatusRegister (),
-		F6500::C6500::createInstructions ())
+		F6500::C6500::createInstructions (),
+		attrs)
 {
 	// The reference to the memory has not set still here...
 	// It is linked to the CPU at computer (class) level!
@@ -41,6 +43,17 @@ bool F6500::C6500::initialize ()
 		(memoryRef () -> values (ResetVectorAddress (), 2), false /** Little - endian */));
 
 	return (true);
+}
+
+// ---
+MCHEmul::CPUArchitecture F6500::C6500::createArchitecture ()
+{
+	return (
+		MCHEmul::CPUArchitecture 
+			(2 /** 2 bytes = 16 bites */, 
+			 1 /** bytes per instruction */, 
+			 false /** Little endian. */,
+			 { { "Family", "6500" } }));
 }
 
 // ---

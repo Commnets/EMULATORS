@@ -17,7 +17,7 @@ const MCHEmul::Address C64::Memory::_KERNELROMEND_ADDRESS = MCHEmul::Address ({ 
 
 // ---
 C64::Memory::Memory (const std::string& lang)
-	: MCHEmul::Memory (C64::Memory::standardMemoryContent ()),
+	: MCHEmul::Memory (0, C64::Memory::standardMemoryContent (), { }),
 	  _VICIIView (nullptr),
 	  _cartridge (nullptr),
 	  _basicROM (nullptr),

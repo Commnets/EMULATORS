@@ -180,6 +180,18 @@
     <ClCompile Include="..\..\src\CORE\DebugFile.cpp">
       <Filter>Archivos de origen\Foundation</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\CORE\Bus.cpp">
+      <Filter>Archivos de origen\Motherboard</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\CORE\InfoClass.cpp">
+      <Filter>Archivos de origen\Foundation</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\CORE\MBElement.cpp">
+      <Filter>Archivos de origen\Motherboard</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\CORE\Wire.cpp">
+      <Filter>Archivos de origen\Motherboard</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\include\CORE\IO.hpp">
@@ -335,9 +347,6 @@
     <ClInclude Include="..\..\include\CORE\Bus.hpp">
       <Filter>Archivos de encabezado\Motherboard</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\include\CORE\MicroBus.hpp">
-      <Filter>Archivos de encabezado\Motherboard</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\include\CORE\SoundWave.hpp">
       <Filter>Archivos de encabezado\IO</Filter>
     </ClInclude>
@@ -351,6 +360,9 @@
       <Filter>Archivos de encabezado\Foundation</Filter>
     </ClInclude>
     <ClInclude Include="..\..\include\CORE\ComputerClock.hpp">
+      <Filter>Archivos de encabezado\Motherboard</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\CORE\MBElement.hpp">
       <Filter>Archivos de encabezado\Motherboard</Filter>
     </ClInclude>
   </ItemGroup>

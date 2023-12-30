@@ -6,9 +6,10 @@
 #include <iostream>
 
 // ---
-MCHEmul::CPU::CPU (const MCHEmul::CPUArchitecture& a, const MCHEmul::Registers& r, 
-	const MCHEmul::StatusRegister& sR, const MCHEmul::Instructions& ins)
-	: InfoClass ("CPU"),
+MCHEmul::CPU::CPU (int id, const MCHEmul::CPUArchitecture& a, 
+	const MCHEmul::Registers& r, const MCHEmul::StatusRegister& sR, const MCHEmul::Instructions& ins,
+	const MCHEmul::Attributes& attrs)
+	: MCHEmul::MotherboardElement (id, "CPU", attrs),
 	  _architecture (a), _registers (r), _statusRegister (sR), _instructions (ins),
 	  _programCounter (a.numberBytes ()), _memory (nullptr), _interrupts (),
 	  _state (MCHEmul::CPU::_EXECUTINGINSTRUCTION),
@@ -124,6 +125,9 @@ const MCHEmul::Instruction* MCHEmul::CPU::nextInstruction () const
 // ---
 bool MCHEmul::CPU::initialize ()
 {
+	if (! MCHEmul::MotherboardElement::initialize ())
+		return (false);
+
 	for (auto& i : _registers)
 		i.initialize ();
 
@@ -224,7 +228,7 @@ bool MCHEmul::CPU::executeNextCycle ()
 // ---
 MCHEmul::InfoStructure MCHEmul::CPU::getInfoStructure () const
 {
-	MCHEmul::InfoStructure result = std::move (MCHEmul::InfoClass::getInfoStructure ());
+	MCHEmul::InfoStructure result = std::move (MCHEmul::MotherboardElement::getInfoStructure ());
 
 	MCHEmul::InfoStructure intr;
 	for (const auto& i : _interrupts)

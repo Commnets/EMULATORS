@@ -22,13 +22,7 @@ namespace F6500
 	class C6510 : public C6500
 	{
 		public:
-		C6510 ()
-			: C6500 (createArchitecture ())
-							{ }
-
-		private:
-		// Implementation
-		static MCHEmul::CPUArchitecture createArchitecture ();
+		C6510 (int id);
 	};
 }
 
