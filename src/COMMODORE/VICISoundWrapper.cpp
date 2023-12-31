@@ -69,9 +69,9 @@ void COMMODORE::VICISoundSimpleLibWrapper::setValue (size_t p, const MCHEmul::UB
 		// Voice 0
 		case 0x0a:
 			{
-				_voices [0] -> setActive ((_registers [0x0a].value () & 0x80) != 0x00);
+				_voices [0] -> setActive ((v.value () & 0x80) != 0x00);
 				_voices [0] -> setFrequency ((unsigned short) (((double) _chipFrequency / 255.0f) / 
-					(double) (0x80 - (_registers [0x0a].value () & 0x7f)))); // Bass
+					(double) (0x80 - (v.value () & 0x7f)))); // Bass
 			}
 
 			break;
@@ -79,9 +79,9 @@ void COMMODORE::VICISoundSimpleLibWrapper::setValue (size_t p, const MCHEmul::UB
 		// Voice 1
 		case 0x0b:
 			{
-				_voices [1] -> setActive ((_registers [0x0b].value () & 0x80) != 0x00);
+				_voices [1] -> setActive ((v.value () & 0x80) != 0x00);
 				_voices [1] -> setFrequency ((unsigned short) (((double) _chipFrequency / 255.0f) / 
-					(double) (0x80 - (_registers [0x0b].value () & 0x7f))) << 1); // Alto
+					(double) (0x80 - (v.value () & 0x7f))) << 1); // Alto
 
 			}
 
@@ -90,9 +90,9 @@ void COMMODORE::VICISoundSimpleLibWrapper::setValue (size_t p, const MCHEmul::UB
 		// Voice 2
 		case 0x0c:
 			{
-				_voices [2] -> setActive ((_registers [0x0c].value () & 0x80) != 0x00);
+				_voices [2] -> setActive ((v.value () & 0x80) != 0x00);
 				_voices [2] -> setFrequency ((unsigned short) (((double) _chipFrequency / 255.0f) / 
-					(double) (0x80 - (_registers [0x0c].value () & 0x7f))) << 2); // Soprano
+					(double) (0x80 - (v.value () & 0x7f))) << 2); // Soprano
 			}
 
 			break;
@@ -100,10 +100,18 @@ void COMMODORE::VICISoundSimpleLibWrapper::setValue (size_t p, const MCHEmul::UB
 		// Voice 3 (noise)
 		case 0x0d:
 			{
-				_voices [3] -> setActive ((_registers [0x0d].value () & 0x80) != 0x00);
+				_voices [3] -> setActive ((v.value () & 0x80) != 0x00);
 				_voices [3] -> setFrequency ((unsigned short) (((double) _chipFrequency / 255.0f) / 
-					(double) (0x80 - (_registers [0x0d].value () & 0x7f))) << 3); // Pure noise
+					(double) (0x80 - (v.value () & 0x7f))) << 3); // Pure noise
 
+			}
+
+			break;
+
+		// The volumen
+		case 0x0e:
+			{
+				_volumen = v.value () & 0x0f;
 			}
 
 			break;
@@ -128,7 +136,12 @@ const MCHEmul::UByte& COMMODORE::VICISoundSimpleLibWrapper::readValue (size_t p)
 		case 0x0b:
 		case 0x0c:
 		case 0x0d:
-			result = _registers [pp];
+		case 0x0e:
+			{
+				result = _registers [pp];
+			}
+
+			break;
 
 		// The rest are not taken into account...
 		default:

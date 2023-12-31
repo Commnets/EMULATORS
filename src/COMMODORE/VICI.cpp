@@ -1,10 +1,82 @@
 #include <COMMODORE/VICI.hpp>
 
 // ---
-const MCHEmul::RasterData COMMODORE::VICI_NTSC::_VRASTERDATA (27, 41, 51, 250, 12, 26, 262, 4, 4);
-const MCHEmul::RasterData COMMODORE::VICI_NTSC::_HRASTERDATA (412, 488, 24, 343, 388, 411, 512, 7, 9);
-const MCHEmul::RasterData COMMODORE::VICI_PAL::_VRASTERDATA (0, 16, 51, 250, 299, 311, 312, 4, 4);
-const MCHEmul::RasterData COMMODORE::VICI_PAL::_HRASTERDATA (404, 480, 24, 343, 380, 403, 504, 7, 9);
+/** This values have been clculated from the info at: http://tinyvga.com/6561. */
+const MCHEmul::RasterData COMMODORE::VICI_PAL::_VRASTERDATA	(0, 28, 28, 311, 311, 311, 312, 0, 0);
+const MCHEmul::RasterData COMMODORE::VICI_PAL::_HRASTERDATA	(0, 24, 24, 256, 256, 283, 284, 0, 0);
+const MCHEmul::RasterData COMMODORE::VICI_NTSC::_VRASTERDATA (0, 28, 28, 260, 260, 260, 261, 0, 0);
+const MCHEmul::RasterData COMMODORE::VICI_NTSC::_HRASTERDATA (0, 0, 0, 209, 209, 259, 260, 0, 0);
+
+// ---
+COMMODORE::VICI::SoundFunction::SoundFunction (MCHEmul::SoundLibWrapper* sW)
+	: MCHEmul::SoundChip (_ID, 
+		{ { "Name", "SoundFunction" },
+		  { "Code", "Inside 6560 (NTSC), 6561/6561E/6561-101 (PAL)" },
+		  { "Manufacturer", "Commodore Business Machines CBM" },
+		  { "Year", "1977" } },
+		sW),
+	  _lastCPUCycles (0)
+{ 
+	// Take care that the sound emulation library was not null at all...
+	// ...and also belonging to the right type..
+	assert (dynamic_cast <COMMODORE::VICISoundLibWrapper*> (soundWrapper ()) != nullptr);
+
+	setClassName ("SoundFunction");
+}
+
+// ---
+bool COMMODORE::VICI::SoundFunction::initialize ()
+{
+	if (!MCHEmul::SoundChip::initialize ())
+		return (false);
+
+	_lastCPUCycles = 0;
+
+	return (true);
+}
+
+// ---
+bool COMMODORE::VICI::SoundFunction::simulate (MCHEmul::CPU* cpu)
+{
+	// First time?
+	if (_lastCPUCycles == 0)
+	{ 
+		_lastCPUCycles = cpu -> clockCycles (); // Nothing to do...
+
+		return (true);
+	}
+
+	if (soundWrapper () != nullptr)
+	{
+		for (unsigned int i = (cpu -> clockCycles () - _lastCPUCycles); i > 0 ; i--)
+		{
+			// The number of bytes that can come from the wrapper might not be fixed...
+			MCHEmul::UBytes data;
+			if (soundWrapper () -> getData (cpu, data))
+			{
+				for (size_t j = 0; j < data.size (); j++)
+				{
+					char dt = data [j].value ();
+					if (soundMemory () -> addSampleData (&dt, sizeof (char)))
+						MCHEmul::SoundChip::notify (MCHEmul::Event (_SOUNDREADY));
+				}
+			}
+		}
+	}
+
+	return (true);
+}
+
+// ---
+MCHEmul::InfoStructure COMMODORE::VICI::SoundFunction::getInfoStructure () const
+{
+	MCHEmul::InfoStructure result = std::move (MCHEmul::SoundChip::getInfoStructure ());
+
+	result.remove ("Memory"); // This info is not neccesary...
+	result.add ("SoundLibWrapper",	std::move (soundWrapper () -> getInfoStructure ())); // To know which library is behing...
+
+	return (result);
+}
 
 // ---
 COMMODORE::VICI::VICI (const MCHEmul::RasterData& vd, const MCHEmul::RasterData& hd, 
@@ -35,7 +107,11 @@ COMMODORE::VICI::VICI (const MCHEmul::RasterData& vd, const MCHEmul::RasterData&
 // ---
 COMMODORE::VICI::~VICI ()
 {
-	delete (_soundFunction);
+	/**
+		delete (_soundFunction);
+		It is not invoked, because the sound function is
+		managed as a different chip from the computer on regards simulation.
+		That chip is owned by the computer and then destroyed by it. */
 
 	SDL_FreeFormat (_format);
 }
@@ -45,8 +121,9 @@ bool COMMODORE::VICI::initialize ()
 {
 	assert (MCHEmul::GraphicalChip::memoryRef () != nullptr);
 
-	if (!MCHEmul::GraphicalChip::initialize () ||
-		!_soundFunction -> initialize ())
+	// The sound function is not initialized, because at Computer level
+	// it is treated as an independent chip, that will be also initialized!
+	if (!MCHEmul::GraphicalChip::initialize ())
 		return (false);
 
 	// Gets the memory block dedicated to the VICI
@@ -147,7 +224,11 @@ bool COMMODORE::VICI::simulate (MCHEmul::CPU* cpu)
 
 	_lastCPUCycles = cpu -> clockCycles ();
 
-	return (_soundFunction -> simulate (cpu));
+	return (true);
+
+	// Note that the _soundFunction is not simulated here...
+	// It is added like another different chip on regards simulation
+	// The framework need a sound chip always!
 }
 
 // ---
@@ -247,7 +328,80 @@ unsigned int COMMODORE::VICI::treatRasterCycle ()
 // ---
 void COMMODORE::VICI::drawVisibleZone (MCHEmul::CPU* cpu)
 {
-	// TODO
+	// These two variables are very key.
+	// They hold the position of the raster within the VISIBLE ZONE.
+	// It is the left up corner of the "computer screen" will be cv = 0 & rv = 0...
+	unsigned short cv, rv; 
+	_raster.currentVisiblePosition (cv, rv);
+	// The same value than cv, but adjusted to a multiple of 4.
+	unsigned short cav = (cv >> 2) << 2;
+
+	// In other case...
+	// Everyting is the color of the background initially...
+	// ..and it will be covered with the foreground (border) later if needed..
+	// This is how the VICII works...
+	screenMemory () -> setHorizontalLine ((size_t) cav, (size_t) rv,
+		(cav + 4) > _raster.visibleColumns () ? (_raster.visibleColumns () - cav) : 4, 
+			_VICIRegisters -> screenColor ());
+
+	// Now the information is drawn,...
+	drawGraphics (
+		{
+			/** _ICD */ _raster.hData ().firstDisplayPosition (),		// DISLAY: The original...
+			/** _ICS */ _raster.hData ().firstScreenPosition (),		// SCREEN: And the real one (after reduction size)
+			/** _LCD */ _raster.hData ().lastDisplayPosition (),		// DISPLAY: The original...
+			/** _LCS */ _raster.hData ().lastScreenPosition (),			// SCREEN: And the real one (after reduction size)
+			/** _RC	 */ cv,												// Where the horizontal raster is (not adjusted to 8) inside the window
+			/** _RCA */ cav,											// Where the horizontal raster is (adjusted to 8) inside the window
+			/** _IRD */ _raster.vData ().firstDisplayPosition (),		// DISPLAY: The original... 
+			/** _IRS */ _raster.vData ().firstScreenPosition (),		// SCREEN:  And the real one (after reduction size)
+			/** _LRD */ _raster.vData ().lastDisplayPosition (),		// DISPLAY: The original...
+			/** _LRS */ _raster.vData ().lastScreenPosition (),			// SCREEN: And the real one (after reduction size)
+			/** _RR	 */ rv												// Where the vertical raster is inside the window (it is not the chip raster line)
+		});
+
+	// If the raster is not in the very visible zone...
+	// it is time to cover with the border...
+	if (!_raster.isInScreenZone () ||
+		(_raster.isInScreenZone () && (cav + 4) > _raster.hData ().lastScreenPosition ()))
+	{
+		// This is the starting pixel to start to draw...
+		unsigned short stp = cav;
+		// ...and the number to draw by default...
+		unsigned short lbk = (cav + 4) > _raster.visibleColumns () 
+			? (_raster.visibleColumns () - cav) : 4;
+
+		// But when the raster line is in the "screen" part of the window,
+		// any of these two previous variables could change...
+		if (rv >= _raster.vData ().firstScreenPosition () &&
+			rv <= _raster.vData ().lastScreenPosition ())
+		{
+			// If the initial horizontal position is before the "screen" part...
+			// ...but not the final position, the number of pixels to draw have to be reduced 
+			if (cav < _raster.hData ().firstScreenPosition () &&
+				(cav + 4) >= _raster.hData ().firstScreenPosition ())
+				lbk = _raster.hData ().firstScreenPosition () - cav;
+
+			// If the initial horizontal position is still in the "screen" part...
+			// ...but not the final position, 
+			// ...both the starting pixel and the number of pixels to draw have to be reduced
+			if (cav < _raster.hData ().lastScreenPosition () && 
+				(cav + 4) > _raster.hData ().lastScreenPosition ())
+			{
+				stp = _raster.hData ().lastScreenPosition () + 1;
+				lbk = (cav + 4) - stp;
+			}
+		}
+
+		screenMemory () -> setHorizontalLine ((size_t) stp, (size_t) rv, lbk, 
+			_VICIRegisters -> borderColor ());
+	}
+
+	// The IRQ related with the lightpen is calculated...
+	unsigned short dx, dy;
+	_raster.currentDisplayPosition (dx, dy);
+	unsigned short lpx, lpy;
+	_VICIRegisters -> currentLightPenPosition (lpx, lpy);
 }
 
 // ---
@@ -261,29 +415,18 @@ COMMODORE::VICI::DrawResult COMMODORE::VICI::drawGraphics (const COMMODORE::VICI
 // ---
 void COMMODORE::VICI::drawResultToScreen (const COMMODORE::VICI::DrawResult& cT, const COMMODORE::VICI::DrawContext& dC)
 {
-	// TODO
-}
+	// The four pixels to draw...
+	for (size_t i = 0; i < 4; i++)
+	{
+		size_t pos = (size_t) dC._RCA + i;
 
-// ---
-COMMODORE::VICI_NTSC::VICI_NTSC (int vV, MCHEmul::SoundLibWrapper* wS)
-	: COMMODORE::VICI (
-		 _VRASTERDATA, _HRASTERDATA, vV, 71, wS,
-		 { { "Name", "VIC-II (NTSC) Video Chip Interface II" },
-		   { "Code", "6560" },
-		   { "Manufacturer", "MOS Technology INC/Commodore Semiconductor Group (CBM)"},
-		   { "Year", "1977" } })
-{
-	// Nothing else to do...
-}
-
-// ---
-unsigned int COMMODORE::VICI_NTSC::treatRasterCycle ()
-{
-	unsigned int result = COMMODORE::VICI::treatRasterCycle ();
-
-	// TODO
-
-	return (result);
+		// And then the background pixels...
+		if (cT._backgroundColorData [i] != ~0)
+			screenMemory () -> setPixel (pos, (size_t) dC._RR, cT._backgroundColorData [i]);
+		// and the foreground ones finally...
+		if (cT._foregroundColorData [i] != ~0)
+			screenMemory () -> setPixel (pos, (size_t) dC._RR, cT._foregroundColorData [i]);
+	}
 }
 
 // ---
@@ -309,71 +452,23 @@ unsigned int COMMODORE::VICI_PAL::treatRasterCycle ()
 }
 
 // ---
-COMMODORE::VICI::SoundFunction::SoundFunction (MCHEmul::SoundLibWrapper* sW)
-	: MCHEmul::SoundChip (_ID, 
-		{ { "Name", "SoundFunction" },
-		  { "Code", "Inside 6560 (NTSC), 6561/6561E/6561-101 (PAL)" },
-		  { "Manufacturer", "Commodore Business Machines CBM" },
-		  { "Year", "1977" } },
-		sW)
-{ 
-	// Take care that the sound emulation library was not null at all...
-	// ...and also belonging to the right type..
-	assert (dynamic_cast <COMMODORE::VICISoundLibWrapper*> (soundWrapper ()) != nullptr);
-
-	setClassName ("SoundFunction");
+COMMODORE::VICI_NTSC::VICI_NTSC (int vV, MCHEmul::SoundLibWrapper* wS)
+	: COMMODORE::VICI (
+		 _VRASTERDATA, _HRASTERDATA, vV, 71, wS,
+			{ { "Name", "VICI" },
+			  { "Code", "6560 (NTSC)" },
+			  { "Manufacturer", "Commodore Business Machines CBM" },
+			  { "Year", "1977" } })
+{
+	// Nothing else to do...
 }
 
 // ---
-bool COMMODORE::VICI::SoundFunction::initialize ()
+unsigned int COMMODORE::VICI_NTSC::treatRasterCycle ()
 {
-	if (!MCHEmul::SoundChip::initialize ())
-		return (false);
+	unsigned int result = COMMODORE::VICI::treatRasterCycle ();
 
-	_lastCPUCycles = 0;
-
-	return (true);
-}
-
-// ---
-bool COMMODORE::VICI::SoundFunction::simulate (MCHEmul::CPU* cpu)
-{
-	// First time?
-	if (_lastCPUCycles == 0)
-	{ 
-		_lastCPUCycles = cpu -> clockCycles (); // Nothing to do...
-
-		return (true);
-	}
-
-	if (soundWrapper () != nullptr)
-	{
-		for (unsigned int i = (cpu -> clockCycles () - _lastCPUCycles); i > 0 ; i--)
-		{
-			// The number of bytes that can come from the wrapper might not be fixed...
-			MCHEmul::UBytes data;
-			if (soundWrapper () -> getData (cpu, data))
-			{
-				for (size_t j = 0; j < data.size (); j++)
-				{
-					char dt = data [j].value ();
-					if (soundMemory () -> addSampleData (&dt, sizeof (char)))
-						MCHEmul::SoundChip::notify (MCHEmul::Event (_SOUNDREADY));
-				}
-			}
-		}
-	}
-
-	return (true);
-}
-
-// ---
-MCHEmul::InfoStructure COMMODORE::VICI::SoundFunction::getInfoStructure () const
-{
-	MCHEmul::InfoStructure result = std::move (MCHEmul::SoundChip::getInfoStructure ());
-
-	result.remove ("Memory"); // This info is not neccesary...
-	result.add ("SoundLibWrapper",	std::move (soundWrapper () -> getInfoStructure ())); // To know which library is behing...
+	// TODO
 
 	return (result);
 }

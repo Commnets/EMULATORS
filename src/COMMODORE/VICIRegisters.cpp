@@ -122,7 +122,8 @@ void COMMODORE::VICIRegisters::setValue (size_t p, const MCHEmul::UByte& v)
 		case 0x0c:
 		case 0x0d:
 			{
-				_soundWrapper -> setValue (pp, v);
+				if (_soundWrapper != nullptr)
+					_soundWrapper -> setValue (pp, v);
 			}
 			
 			break;
@@ -132,7 +133,8 @@ void COMMODORE::VICIRegisters::setValue (size_t p, const MCHEmul::UByte& v)
 			{
 				_auxiliarColor = (v.value () & 0xf0) >> 4;
 
-				_soundWrapper -> setValue (pp, v);
+				if (_soundWrapper != nullptr)
+					_soundWrapper -> setValue (pp, v);
 			}
 
 			break;
@@ -225,14 +227,17 @@ const MCHEmul::UByte& COMMODORE::VICIRegisters::readValue (size_t p) const
 		case 0x0c:
 		case 0x0d:
 			{
-				result = _soundWrapper -> readValue (pp);
+				if (_soundWrapper != nullptr)
+					result = _soundWrapper -> readValue (pp);
 			}
 
 			break;
 
 		case 0x0e:
 			{
-				result = (_auxiliarColor << 4) | (_soundWrapper -> readValue (pp).value () & 0x0f);
+				result = (_auxiliarColor << 4);
+				if (_soundWrapper != nullptr)
+					result |= (_soundWrapper -> readValue (pp).value () & 0x0f);
 			}
 
 			break;

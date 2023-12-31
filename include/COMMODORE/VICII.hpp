@@ -471,19 +471,6 @@ namespace COMMODORE
 		return (result);
 	}
 
-	/** The version para NTSC systems. */
-	class VICII_NTSC final : public VICII
-	{
-		public:
-		static const MCHEmul::RasterData _VRASTERDATA;
-		static const MCHEmul::RasterData _HRASTERDATA;
-
-		VICII_NTSC (int vV);
-
-		private:
-		virtual unsigned int treatRasterCycle () override;
-	};
-
 	/** The version para PAL systems. */
 	class VICII_PAL final : public VICII
 	{
@@ -494,6 +481,19 @@ namespace COMMODORE
 		static constexpr unsigned short _CYCLESPERRASTERLINE = 63;
 
 		VICII_PAL (int vV);
+
+		private:
+		virtual unsigned int treatRasterCycle () override;
+	};
+
+	/** The version para NTSC systems. */
+	class VICII_NTSC final : public VICII
+	{
+		public:
+		static const MCHEmul::RasterData _VRASTERDATA;
+		static const MCHEmul::RasterData _HRASTERDATA;
+
+		VICII_NTSC (int vV);
 
 		private:
 		virtual unsigned int treatRasterCycle () override;

@@ -26,7 +26,7 @@ namespace C64
 		static const int _ID = 200;
 		
 		Screen (double hz, int w, int h, const MCHEmul::Attributes& attrs)
-			: MCHEmul::Screen ("C64", _ID, w, h, 2, hz, attrs),
+			: MCHEmul::Screen ("C64", _ID, w, h, 2.0f, 2.0f, hz, attrs),
 			  _drawBorder (false), _borderColor (0)
 							{ }
 

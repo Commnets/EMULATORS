@@ -117,7 +117,7 @@ MCHEmul::IODevices C64::Commodore64::standardDevices (C64::Commodore64::VisualSy
 	MCHEmul::IODevices result;
 
 	// The very basic systems...
-	// They are really part of the system, with no simlated connections at all!
+	// They are really part of the system, with no simulated connections at all!
 	result.insert (MCHEmul::IODevices::value_type (C64::Screen::_ID, 
 		(MCHEmul::IODevice*) ((vS == C64::Commodore64::VisualSystem::_NTSC) 
 			? (C64::Screen*) new C64::ScreenNTSC : (C64::Screen*) new C64::ScreenPAL)));

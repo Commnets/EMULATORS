@@ -38,3 +38,10 @@ Dir A:@CIDDRA@, Dir B:@CIDDRB@
 -> SerialPort:
 @SerialPort>@
 #---
+;CCIA1
+@CIA1>@
+#---
+#---
+;CCIA2
+@CIA2>@
+#---

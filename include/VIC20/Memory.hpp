@@ -45,9 +45,9 @@ namespace VIC20
 		static const int _BANK1_SUBSET			= 103;
 		static const int _BANK2_SUBSET			= 104;
 		static const int _BANK3_SUBSET			= 105;
-		static const int _VICIRAFTER_SUBSET		= 106;
-		static const int _VIAAFTER_SUBSET		= 107;
-		static const int _CHARROM_SUBSET		= 108;
+		static const int _CHARROM_SUBSET		= 106;
+		static const int _VICIRAFTER_SUBSET		= 107;
+		static const int _VIAAFTER_SUBSET		= 108;
 		static const int _BANK4_SUBSET			= 109;
 		static const int _BANK5_SUBSET			= 110;
 		static const int _BASICROM_SUBSET		= 111;

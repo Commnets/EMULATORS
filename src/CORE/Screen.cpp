@@ -3,12 +3,12 @@
 
 // ---
 MCHEmul::Screen::Screen (const std::string& n, int id, 
-		unsigned int sc, unsigned int sr, unsigned int vF, double hz,
+		unsigned int sc, unsigned int sr, double vFX, double vFY, double hz,
 		const Attributes& attrs)
 	: MCHEmul::IODevice (MCHEmul::IODevice::Type::_OUTPUT, id, attrs),
 	  _CRTActive (false), // It is not active by default...
 	  _screenName (n), 
-	  _screenColumns (sc), _screenRows (sr), _visibilityFactor (vF), 
+	  _screenColumns (sc), _screenRows (sr), _visibilityFactorX (vFX), _visibilityFactorY (vFY),
 	  _hertzs (hz), _clock ((unsigned int) hz /** integer. */),
 	  _graphicalChip (nullptr),
 	  _window (nullptr), _renderer (nullptr), _texture (nullptr),
@@ -20,9 +20,9 @@ MCHEmul::Screen::Screen (const std::string& n, int id,
 		_screenName.c_str (),
 		SDL_WINDOWPOS_UNDEFINED,
 		SDL_WINDOWPOS_UNDEFINED,
-		_screenColumns * _visibilityFactor, 
+		(unsigned int) ((double) _screenColumns * _visibilityFactorX), 
 		// Maybe one point in certain condition can be represented as 2 and it would need more space...
-		_screenRows * _visibilityFactor,
+		(unsigned int) ((double) _screenRows * _visibilityFactorY),
 		SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE
 	);
 

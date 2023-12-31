@@ -37,8 +37,8 @@ Memory: Chars(@CHARADDRESS@), Screen(@SCREENADDRESS@), Colour(@COLOURADDRESS@)
 ;VICI
 Id:@ID@
 @ATTRS?{key=YES,equal=:,empty=no attributes}\n@
-->VICIIRegisters:
-@VICIIRegisters>@
+->VICIRegisters:
+@VICIRegisters>@
 @Raster>@
 #---
 #---
@@ -176,16 +176,20 @@ Id:@ID@
 Data:@DATA@
 #---
 #---
+;CVICI
+@VICI>@
+#---
+#---
 ;CVICII
 @VICII>@
 #---
 #---
-;CCIA1
-@CIA1>@
+;CVIA
+@VIA>@
 #---
 #---
-;CCIA2
-@CIA2>@
+;CCIA
+@CIA>@
 #---
 #---
 ;CSID

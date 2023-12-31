@@ -97,7 +97,7 @@ MCHEmul::Memory::Content VIC20::Memory::standardMemoryContent (VIC20::Memory::Co
 	// VICI, VIA1 and VIA2...
 	// Each of them has only 16 accesible registers, at the end of which there is a free memory that seem to mirror
 	// part of the registers of the chip, but only when poking and not when peeking (random value)...
-	MCHEmul::PhysicalStorageSubset* VICIRegisters = new COMMODORE::VICIIRegisters
+	MCHEmul::PhysicalStorageSubset* VICIRegisters = new COMMODORE::VICIRegisters
 		(/** id = COMMODORE::VICIRegisters::_VICREGS_SUBSET */ RAM, 0x9000, MCHEmul::Address ({ 0x00, 0x90 }, false), 0x010);
 	MCHEmul::PhysicalStorageSubset* VICIRegisters_After = new MCHEmul::PhysicalStorageSubset 
 		(_VICIRAFTER_SUBSET, RAM, 0x9010, MCHEmul::Address ({ 0x10, 0x90 }, false), 0x0100);

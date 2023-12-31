@@ -32,12 +32,13 @@ namespace MCHEmul
 		  * @param c	: The list of the chips related with this device.
 		  * @param sc	: The number of columns of the screen.
 		  * @param sr	: The number of rows of the screen.
-		  * @param vF	: The visibility factor. That is hw many visible pixels represents a pixel in the computer.
+		  * @param vFX	: The visibility factor. That is how many visible pixels represents a pixel in the computerm, in the X axis.
+		  * @param vFY	: The visibility factor. That is how many visible pixels represents a pixel in the computerm, in the Y axis.
 		  * @param nC	: The number of colors.
 		  * @param hz	: The speed of the refresh in Hz.
 		  */
 		Screen (const std::string& n, int id,
-			unsigned int sc, unsigned int sr, unsigned int vF, double hz,
+			unsigned int sc, unsigned int sr, double vFX, double vFY, double hz,
 			const Attributes& attrs = { });
 
 		virtual ~Screen () override;
@@ -60,8 +61,10 @@ namespace MCHEmul
 							{ return (_screenColumns); }
 		const unsigned int screenRows () const
 							{ return (_screenRows); }
-		const unsigned int visibilityFactor () const
-							{ return (_visibilityFactor); }
+		const double visibilityFactorX () const
+							{ return (_visibilityFactorX); }
+		const double visibilityFactorY () const
+							{ return (_visibilityFactorY); }
 		const double hertzs () const
 							{ return (_hertzs); }
 		unsigned int realHertzs () const
@@ -100,7 +103,8 @@ namespace MCHEmul
 		const std::string _screenName;
 		const unsigned int _screenColumns;
 		const unsigned int _screenRows;
-		const unsigned int _visibilityFactor;
+		const double _visibilityFactorX;
+		const double _visibilityFactorY;
 		const double _hertzs;
 		/** The clock to control the frenquency to print out the screen. */
 		Clock _clock;

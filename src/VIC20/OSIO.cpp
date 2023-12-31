@@ -119,5 +119,5 @@ void VIC20::InputOSSystem::linkToChips (const MCHEmul::Chips& c)
 	// The VIA 1 will receive the event related with the io system...
 	_via1 -> observe (this);
 	// And also the VICI...
-	_vicI -> MCHEmul::GraphicalChip::observe (this);
+	_vicI -> observe (this);
 }

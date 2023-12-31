@@ -3,10 +3,10 @@
 
 // ---
 const MCHEmul::Address COMMODORE::VICII::_COLORMEMORY ({ 0x00, 0xd8 }, false);
-const MCHEmul::RasterData COMMODORE::VICII_NTSC::_VRASTERDATA (27, 41, 51, 250, 12, 26, 262, 4, 4);
-const MCHEmul::RasterData COMMODORE::VICII_NTSC::_HRASTERDATA (412, 488, 24, 343, 388, 411, 512, 7, 9);
 const MCHEmul::RasterData COMMODORE::VICII_PAL::_VRASTERDATA (0, 16, 51, 250, 299, 311, 312, 4, 4);
 const MCHEmul::RasterData COMMODORE::VICII_PAL::_HRASTERDATA (404, 480, 24, 343, 380, 403, 504, 7, 9);
+const MCHEmul::RasterData COMMODORE::VICII_NTSC::_VRASTERDATA (27, 41, 51, 250, 12, 26, 262, 4, 4);
+const MCHEmul::RasterData COMMODORE::VICII_NTSC::_HRASTERDATA (412, 488, 24, 343, 388, 411, 512, 7, 9);
 const MCHEmul::Address COMMODORE::VICII::_MEMORYPOSIDLE1 = MCHEmul::Address ({ 0xff, 0x39 }, false);
 const MCHEmul::Address COMMODORE::VICII::_MEMORYPOSIDLE2 = MCHEmul::Address ({ 0xff, 0x3f }, false);
 
@@ -89,6 +89,14 @@ bool COMMODORE::VICII::initialize ()
 // ---
 bool COMMODORE::VICII::simulate (MCHEmul::CPU* cpu)
 {
+	// First time?
+	if (_lastCPUCycles == 0)
+	{ 
+		_lastCPUCycles = cpu -> clockCycles (); // Nothing to do...
+
+		return (true);
+	}
+
 	auto isNewBadLine = [&]() -> bool
 	{
 		bool result = 
@@ -1215,50 +1223,6 @@ void COMMODORE::VICII::detectCollisions (const MCHEmul::UByte& g, const std::vec
 }
 
 // ---
-COMMODORE::VICII_NTSC::VICII_NTSC (int vV)
-	: COMMODORE::VICII (
-		 _VRASTERDATA, _HRASTERDATA, vV, 64,
-		 { { "Name", "VIC-II (NTSC) Video Chip Interface II" },
-		   { "Code", "6567/8562/8564" },
-		   { "Manufacturer", "MOS Technology INC/Commodore Semiconductor Group (CBM)"},
-		   { "Year", "1980" } })
-{
-	// Nothing else to do...
-}
-
-// ---
-unsigned int COMMODORE::VICII_NTSC::treatRasterCycle ()
-{
-	unsigned int result = COMMODORE::VICII::treatRasterCycle ();
-
-	switch (_cycleInRasterLine)
-	{
-		// Read sprite 0 to 2 data?
-		case 59:
-		case 61:
-		case 63:
-			{
-				// Is there sprite info available?
-				if (readSpriteData ((_cycleInRasterLine - 59) >> 1) /** 0, 1 or 2. */)
-				{
-					result += 2;	// VICII has to read three bytes, Meaning 2 clock cycles stopped more... 
-
-					if (deepDebugActive ())
-						*_deepDebugFile
-							<< "\t\t\t\tReading info sprite:" << std::to_string ((_cycleInRasterLine - 59) >> 1) << "\n";
-				}
-			}
-
-			break;
-
-		default:
-			break;
-	}
-
-	return (result);
-}
-
-// ---
 COMMODORE::VICII_PAL::VICII_PAL (int vV)
 	: COMMODORE::VICII (
 		 _VRASTERDATA, _HRASTERDATA, vV, COMMODORE::VICII_PAL::_CYCLESPERRASTERLINE,
@@ -1290,6 +1254,50 @@ unsigned int COMMODORE::VICII_PAL::treatRasterCycle ()
 					if (deepDebugActive ())
 						*_deepDebugFile
 							<< "\t\t\t\tReading info sprite:" << std::to_string ((_cycleInRasterLine - 58) >> 1) << "\n";
+				}
+			}
+
+			break;
+
+		default:
+			break;
+	}
+
+	return (result);
+}
+
+// ---
+COMMODORE::VICII_NTSC::VICII_NTSC (int vV)
+	: COMMODORE::VICII (
+		 _VRASTERDATA, _HRASTERDATA, vV, 64,
+		 { { "Name", "VIC-II (NTSC) Video Chip Interface II" },
+		   { "Code", "6567/8562/8564" },
+		   { "Manufacturer", "MOS Technology INC/Commodore Semiconductor Group (CBM)"},
+		   { "Year", "1980" } })
+{
+	// Nothing else to do...
+}
+
+// ---
+unsigned int COMMODORE::VICII_NTSC::treatRasterCycle ()
+{
+	unsigned int result = COMMODORE::VICII::treatRasterCycle ();
+
+	switch (_cycleInRasterLine)
+	{
+		// Read sprite 0 to 2 data?
+		case 59:
+		case 61:
+		case 63:
+			{
+				// Is there sprite info available?
+				if (readSpriteData ((_cycleInRasterLine - 59) >> 1) /** 0, 1 or 2. */)
+				{
+					result += 2;	// VICII has to read three bytes, Meaning 2 clock cycles stopped more... 
+
+					if (deepDebugActive ())
+						*_deepDebugFile
+							<< "\t\t\t\tReading info sprite:" << std::to_string ((_cycleInRasterLine - 59) >> 1) << "\n";
 				}
 			}
 

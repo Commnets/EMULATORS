@@ -1,4 +1,4 @@
-#Formats used for the C64 Emulation
+#Formats used for the VIC20 Emulation
 #(C) 2022 Ignacio Cea Fornies
 ?./Commodore.fmt
 ?./LocalConsole.fmt
@@ -15,4 +15,11 @@ Id:@ID@
 @ATTRS?{key=YES,equal=:,empty=no attributes}\n@
 ->Registers:
 @Registers>@
+#---
+;CVIA1
+@VIA1>@
+#---
+#---
+;CVIA2
+@VIA2>@
 #---

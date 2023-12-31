@@ -40,6 +40,14 @@ bool COMMODORE::VIA::initialize ()
 // ---
 bool COMMODORE::VIA::simulate (MCHEmul::CPU* cpu)
 {
+	// First time?
+	if (_lastClockCycles == 0)
+	{ 
+		_lastClockCycles = cpu -> clockCycles (); // Nothing to do...
+
+		return (true);
+	}
+
 	for (unsigned int i = cpu -> clockCycles () - _lastClockCycles; i > 0; i--)
 	{
 		// TODO

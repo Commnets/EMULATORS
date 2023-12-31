@@ -57,7 +57,7 @@ namespace VIC20
 
 		// Implementation
 		static MCHEmul::Chips standardChips (CommodoreVIC20::VisualSystem vS, const std::string& sS);
-		static MCHEmul::IODevices standardDevices ();
+		static MCHEmul::IODevices standardDevices (CommodoreVIC20::VisualSystem vS);
 
 		protected:
 		/** The video system used by the commodore 64. */

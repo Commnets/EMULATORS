@@ -168,10 +168,10 @@ namespace COMMODORE
 	inline void VICIRegisters::calculateMemoryPositions ()
 	{ 
 		_screenMemory	= MCHEmul::Address ((_b9ScreenColorMemory << 9) + 
-			((_b10to13ScreenMemory & 0x07 /** The bit 4 is not considered. */) << 10));
-		_charDataMemory = MCHEmul::Address (((_b10to13CharDatamemory & 0x80) == 0x00 ? 32768 : 0) + 
-			((_b10to13CharDatamemory & 0x07 /** The bit 4 is used to determine the bank. */) << 10)); // This is how VIC20 sees the memory!...
-		_colourMemory	= MCHEmul::Address (_b9ScreenColorMemory == 0x00 ? 0x8014 : 0x9600 );
+			((_b10to13ScreenMemory & 0x07 /** The bit 3 is not considered. */) << 10));
+		_charDataMemory = MCHEmul::Address (((_b10to13CharDatamemory & 0x80) == 0x00 ? 0x8000 : 0x0000) + 
+			((_b10to13CharDatamemory & 0x07 /** The bit 3 is used to determine the bank. */) << 10)); // This is how VIC20 sees the memory!...
+		_colourMemory	= MCHEmul::Address (_b9ScreenColorMemory == 0x00 ? 0x9400 : 0x9600 );
 	}
 }
 
