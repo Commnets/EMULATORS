@@ -3,9 +3,11 @@
 // ---
 /** This values have been clculated from the info at: http://tinyvga.com/6561. */
 const MCHEmul::RasterData COMMODORE::VICI_PAL::_VRASTERDATA	(0, 28, 28, 311, 311, 311, 312, 0, 0);
-const MCHEmul::RasterData COMMODORE::VICI_PAL::_HRASTERDATA	(0, 24, 24, 256, 256, 283, 284, 0, 0);
+//const MCHEmul::RasterData COMMODORE::VICI_PAL::_HRASTERDATA	(0, 24, 24, 256, 256, 283, 284, 0, 0);
+const MCHEmul::RasterData COMMODORE::VICI_PAL::_HRASTERDATA	(0, 48, 48, 512, 512, 566, 567, 0, 0);
 const MCHEmul::RasterData COMMODORE::VICI_NTSC::_VRASTERDATA (0, 28, 28, 260, 260, 260, 261, 0, 0);
-const MCHEmul::RasterData COMMODORE::VICI_NTSC::_HRASTERDATA (0, 0, 0, 209, 209, 259, 260, 0, 0);
+//const MCHEmul::RasterData COMMODORE::VICI_NTSC::_HRASTERDATA (0, 0, 0, 209, 209, 259, 260, 0, 0);
+const MCHEmul::RasterData COMMODORE::VICI_NTSC::_HRASTERDATA (0, 0, 0, 418, 418, 518, 519, 0, 0);
 
 // ---
 COMMODORE::VICI::SoundFunction::SoundFunction (MCHEmul::SoundLibWrapper* sW)
@@ -64,6 +66,8 @@ bool COMMODORE::VICI::SoundFunction::simulate (MCHEmul::CPU* cpu)
 		}
 	}
 
+	_lastCPUCycles = cpu -> clockCycles ();
+
 	return (true);
 }
 
@@ -91,7 +95,7 @@ COMMODORE::VICI::VICI (const MCHEmul::RasterData& vd, const MCHEmul::RasterData&
 	  _VICIView (vV),
 	  _cyclesPerRasterLine (cRL),
 	  _incCyclesPerRasterLine (cRL - COMMODORE::VICI_PAL::_CYCLESPERRASTERLINE),
-	  _raster (vd, hd, 4 /** The step is here 4 pixels */),
+	  _raster (vd, hd, 8 /** The step is here 8 pixels */),
 	  _lastCPUCycles (0),
 	  _format (nullptr),
 	  _cycleInRasterLine (0),
@@ -208,7 +212,7 @@ bool COMMODORE::VICI::simulate (MCHEmul::CPU* cpu)
 	// When the raster enters the non visible part of the screen,
 	// a notification is sent (to the Screen class usually) 
 	// just to draw the screen...
-	if (_raster.isInLastVBlank ())
+	if (_raster.isInFirstVBlankZone ())
 	{
 		if (!_lastVBlankEntered)
 		{
@@ -334,14 +338,14 @@ void COMMODORE::VICI::drawVisibleZone (MCHEmul::CPU* cpu)
 	unsigned short cv, rv; 
 	_raster.currentVisiblePosition (cv, rv);
 	// The same value than cv, but adjusted to a multiple of 4.
-	unsigned short cav = (cv >> 2) << 2;
+	unsigned short cav = (cv >> 3) << 3;
 
 	// In other case...
 	// Everyting is the color of the background initially...
 	// ..and it will be covered with the foreground (border) later if needed..
 	// This is how the VICII works...
 	screenMemory () -> setHorizontalLine ((size_t) cav, (size_t) rv,
-		(cav + 4) > _raster.visibleColumns () ? (_raster.visibleColumns () - cav) : 4, 
+		(cav + 8) > _raster.visibleColumns () ? (_raster.visibleColumns () - cav) : 8, 
 			_VICIRegisters -> screenColor ());
 
 	// Now the information is drawn,...
@@ -363,13 +367,13 @@ void COMMODORE::VICI::drawVisibleZone (MCHEmul::CPU* cpu)
 	// If the raster is not in the very visible zone...
 	// it is time to cover with the border...
 	if (!_raster.isInScreenZone () ||
-		(_raster.isInScreenZone () && (cav + 4) > _raster.hData ().lastScreenPosition ()))
+		(_raster.isInScreenZone () && (cav + 8) > _raster.hData ().lastScreenPosition ()))
 	{
 		// This is the starting pixel to start to draw...
 		unsigned short stp = cav;
 		// ...and the number to draw by default...
-		unsigned short lbk = (cav + 4) > _raster.visibleColumns () 
-			? (_raster.visibleColumns () - cav) : 4;
+		unsigned short lbk = (cav + 8) > _raster.visibleColumns () 
+			? (_raster.visibleColumns () - cav) : 8;
 
 		// But when the raster line is in the "screen" part of the window,
 		// any of these two previous variables could change...
@@ -379,17 +383,17 @@ void COMMODORE::VICI::drawVisibleZone (MCHEmul::CPU* cpu)
 			// If the initial horizontal position is before the "screen" part...
 			// ...but not the final position, the number of pixels to draw have to be reduced 
 			if (cav < _raster.hData ().firstScreenPosition () &&
-				(cav + 4) >= _raster.hData ().firstScreenPosition ())
+				(cav + 8) >= _raster.hData ().firstScreenPosition ())
 				lbk = _raster.hData ().firstScreenPosition () - cav;
 
 			// If the initial horizontal position is still in the "screen" part...
 			// ...but not the final position, 
 			// ...both the starting pixel and the number of pixels to draw have to be reduced
 			if (cav < _raster.hData ().lastScreenPosition () && 
-				(cav + 4) > _raster.hData ().lastScreenPosition ())
+				(cav + 8) > _raster.hData ().lastScreenPosition ())
 			{
 				stp = _raster.hData ().lastScreenPosition () + 1;
-				lbk = (cav + 4) - stp;
+				lbk = (cav + 8) - stp;
 			}
 		}
 
@@ -416,7 +420,7 @@ COMMODORE::VICI::DrawResult COMMODORE::VICI::drawGraphics (const COMMODORE::VICI
 void COMMODORE::VICI::drawResultToScreen (const COMMODORE::VICI::DrawResult& cT, const COMMODORE::VICI::DrawContext& dC)
 {
 	// The four pixels to draw...
-	for (size_t i = 0; i < 4; i++)
+	for (size_t i = 0; i < 8; i++)
 	{
 		size_t pos = (size_t) dC._RCA + i;
 

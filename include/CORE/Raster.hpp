@@ -56,6 +56,9 @@ namespace MCHEmul
 										_currentPosition_0 < _firstVisiblePosition_0) ||
 								  (_currentPosition_0 > _lastVisiblePosition_0 && 
 										_currentPosition_0 <= _lastPosition_0)); }
+		bool isInFirstBlankZone () const
+						{ return (_currentPosition_0 >= _firstPosition_0 && 
+								  _currentPosition_0 < _firstVisiblePosition_0); }
 		bool isInLastBlankZone () const
 						{ return (_currentPosition_0 > _lastVisiblePosition_0 && 
 								  _currentPosition_0 <= _lastPosition_0); }
@@ -254,6 +257,8 @@ namespace MCHEmul
 		// Managing the blan zone
 		bool isInVBlank () const
 						{ return (_vRasterData.isInBlankZone ()); }
+		bool isInFirstVBlankZone () const
+						{ return (_vRasterData.isInFirstBlankZone ()); }
 		bool isInLastVBlank () const
 						{ return (_vRasterData.isInLastBlankZone ()); }
 
