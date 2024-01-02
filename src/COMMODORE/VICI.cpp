@@ -3,11 +3,15 @@
 // ---
 /** This values have been clculated from the info at: http://tinyvga.com/6561. */
 const MCHEmul::RasterData COMMODORE::VICI_PAL::_VRASTERDATA	(0, 28, 28, 311, 311, 311, 312, 0, 0);
-//const MCHEmul::RasterData COMMODORE::VICI_PAL::_HRASTERDATA	(0, 24, 24, 256, 256, 283, 284, 0, 0);
-const MCHEmul::RasterData COMMODORE::VICI_PAL::_HRASTERDATA	(0, 48, 48, 512, 512, 566, 567, 0, 0);
+/** Really the movement is half the vakues show, but they have been multiplied by two to maitain the proportion inthe screen. */
+const MCHEmul::RasterData COMMODORE::VICI_PAL::_HRASTERDATA	
+	(0, 40, 40, 504, 504, 567, 568 /** For everything to run well, it has to be a multiple of 8. */, 0, 0);
 const MCHEmul::RasterData COMMODORE::VICI_NTSC::_VRASTERDATA (0, 28, 28, 260, 260, 260, 261, 0, 0);
-//const MCHEmul::RasterData COMMODORE::VICI_NTSC::_HRASTERDATA (0, 0, 0, 209, 209, 259, 260, 0, 0);
-const MCHEmul::RasterData COMMODORE::VICI_NTSC::_HRASTERDATA (0, 0, 0, 418, 418, 518, 519, 0, 0);
+/** Really the movement is half the vakues show, but they have been multiplied by two to maitain the proportion inthe screen. */
+const MCHEmul::RasterData COMMODORE::VICI_NTSC::_HRASTERDATA 
+	(0, 0, 0, 415, 415, 519, 520 /** For everything to run well, it has to be a multiple of 8. */, 0, 0);
+// Memory where to read when there is no text window...
+const MCHEmul::Address COMMODORE::VICI::_MEMORYPOSOFF = MCHEmul::Address ({ 0x00, 0x1c }, true /* already in little - endian. */);
 
 // ---
 COMMODORE::VICI::SoundFunction::SoundFunction (MCHEmul::SoundLibWrapper* sW)
@@ -94,12 +98,12 @@ COMMODORE::VICI::VICI (const MCHEmul::RasterData& vd, const MCHEmul::RasterData&
 	  _VICIRegisters (nullptr),
 	  _VICIView (vV),
 	  _cyclesPerRasterLine (cRL),
-	  _incCyclesPerRasterLine (cRL - COMMODORE::VICI_PAL::_CYCLESPERRASTERLINE),
 	  _raster (vd, hd, 8 /** The step is here 8 pixels */),
 	  _lastCPUCycles (0),
 	  _format (nullptr),
 	  _cycleInRasterLine (0),
-	  _lastVBlankEntered (false)
+	  _lastVBlankEntered (false),
+	  _scrX1 (0), _scrY1 (0), _scrX2 (0), _scrY2 (0)
 {
 	assert (_cyclesPerRasterLine >= 65);
 
@@ -151,6 +155,10 @@ bool COMMODORE::VICI::initialize ()
 
 	_lastVBlankEntered = false;
 
+	_scrX1 = _scrY1 = _scrX2 = _scrY2 = 0;
+
+	_vicGraphicInfo.initialize (_VICIRegisters);
+
 	return (true);
 }
 
@@ -192,18 +200,14 @@ bool COMMODORE::VICI::simulate (MCHEmul::CPU* cpu)
 		}
 
 		// Treat the right cycle...
-		unsigned int cS = 0;
-		if ((cS = treatRasterCycle ()) > 0)
-			cpu -> setStop (true, MCHEmul::Instruction::_CYCLEALL /** fully stopped. */, cpu -> clockCycles () - i, (int) cS);
-
-		// Draws the graphics & border if it has to do so...
+		treatRasterCycle ();
+		// ..and draws the graphics & border if it has to do so...
 		if (_raster.isInVisibleZone ())
 			drawVisibleZone (cpu);
 
-		// Move to the next cycle...
+		// Then move to the next cycle...
 		_cycleInRasterLine++;
-
-		// Move 4 pixels right in the raster line and jump to other line is possible...
+		// and also move 8 pixels right in the raster line and jump to other line is possible...
 		// Notice that the variable _isNewRasterLine becomes true when a new line comes...
 		if (_raster.moveCycles (1))
 			_cycleInRasterLine = 1;
@@ -218,7 +222,9 @@ bool COMMODORE::VICI::simulate (MCHEmul::CPU* cpu)
 		{
 			_lastVBlankEntered = true;
 
-			MCHEmul::GraphicalChip::notify (MCHEmul::Event (_GRAPHICSREADY)); 
+			MCHEmul::GraphicalChip::notify (MCHEmul::Event (_GRAPHICSREADY));
+
+			_vicGraphicInfo.initialize (_VICIRegisters);
 		}
 	}
 	else
@@ -322,11 +328,23 @@ MCHEmul::ScreenMemory* COMMODORE::VICI::createScreenMemory ()
 }
 
 // ---
-unsigned int COMMODORE::VICI::treatRasterCycle ()
+void COMMODORE::VICI::treatRasterCycle ()
 {
-	// TODO
+	// Always the graphical info is read!
+	readVideoMatrixAndColorRAM ();
+	readGraphicalInfo ();
 
-	return (0);
+	// At the very last cycle, the row is moved...
+	if (_cycleInRasterLine == _cyclesPerRasterLine)
+		_vicGraphicInfo.nextVertical (_VICIRegisters);
+	else
+	// In any raster cycles, expect the last one, the column is then moved...
+	if (_cycleInRasterLine < _cyclesPerRasterLine)
+		_vicGraphicInfo.nextHorizontal (_VICIRegisters);
+
+	// Calculate the screen position, if it is needed...
+	// If the screen position has not been reached yet, the previous value is maintained...
+	calculateScreenPositions ();
 }
 
 // ---
@@ -337,71 +355,30 @@ void COMMODORE::VICI::drawVisibleZone (MCHEmul::CPU* cpu)
 	// It is the left up corner of the "computer screen" will be cv = 0 & rv = 0...
 	unsigned short cv, rv; 
 	_raster.currentVisiblePosition (cv, rv);
-	// The same value than cv, but adjusted to a multiple of 4.
+	// The same value than cv, but adjusted to a multiple of 8.
 	unsigned short cav = (cv >> 3) << 3;
 
 	// In other case...
-	// Everyting is the color of the background initially...
-	// ..and it will be covered with the foreground (border) later if needed..
-	// This is how the VICII works...
+	// Everyting is the color of the border initially...
+	// ..and it will be covered with the screen later if needed..
+	// This is how the VICI works...I guess!
 	screenMemory () -> setHorizontalLine ((size_t) cav, (size_t) rv,
 		(cav + 8) > _raster.visibleColumns () ? (_raster.visibleColumns () - cav) : 8, 
-			_VICIRegisters -> screenColor ());
+			_VICIRegisters -> borderColor ());
 
 	// Now the information is drawn,...
 	drawGraphics (
 		{
-			/** _ICD */ _raster.hData ().firstDisplayPosition (),		// DISLAY: The original...
-			/** _ICS */ _raster.hData ().firstScreenPosition (),		// SCREEN: And the real one (after reduction size)
-			/** _LCD */ _raster.hData ().lastDisplayPosition (),		// DISPLAY: The original...
-			/** _LCS */ _raster.hData ().lastScreenPosition (),			// SCREEN: And the real one (after reduction size)
-			/** _RC	 */ cv,												// Where the horizontal raster is (not adjusted to 8) inside the window
-			/** _RCA */ cav,											// Where the horizontal raster is (adjusted to 8) inside the window
-			/** _IRD */ _raster.vData ().firstDisplayPosition (),		// DISPLAY: The original... 
-			/** _IRS */ _raster.vData ().firstScreenPosition (),		// SCREEN:  And the real one (after reduction size)
-			/** _LRD */ _raster.vData ().lastDisplayPosition (),		// DISPLAY: The original...
-			/** _LRS */ _raster.vData ().lastScreenPosition (),			// SCREEN: And the real one (after reduction size)
-			/** _RR	 */ rv												// Where the vertical raster is inside the window (it is not the chip raster line)
+			/** _ICD */ _raster.hData ().firstDisplayPosition (),
+			/** _LCD */ _raster.hData ().lastDisplayPosition (),
+			/** _RC	 */ cv,		// Where the horizontal raster is (not adjusted to 8) inside the window
+			/** _RCA */ cav,	// Where the horizontal raster is (adjusted to 8) inside the window
+			/** _IRD */ _raster.vData ().firstDisplayPosition (),
+			/** _LRD */ _raster.vData ().lastDisplayPosition (),
+			/** _RR	 */ rv		// Where the vertical raster is inside the window (it is not the chip raster line)
 		});
 
-	// If the raster is not in the very visible zone...
-	// it is time to cover with the border...
-	if (!_raster.isInScreenZone () ||
-		(_raster.isInScreenZone () && (cav + 8) > _raster.hData ().lastScreenPosition ()))
-	{
-		// This is the starting pixel to start to draw...
-		unsigned short stp = cav;
-		// ...and the number to draw by default...
-		unsigned short lbk = (cav + 8) > _raster.visibleColumns () 
-			? (_raster.visibleColumns () - cav) : 8;
-
-		// But when the raster line is in the "screen" part of the window,
-		// any of these two previous variables could change...
-		if (rv >= _raster.vData ().firstScreenPosition () &&
-			rv <= _raster.vData ().lastScreenPosition ())
-		{
-			// If the initial horizontal position is before the "screen" part...
-			// ...but not the final position, the number of pixels to draw have to be reduced 
-			if (cav < _raster.hData ().firstScreenPosition () &&
-				(cav + 8) >= _raster.hData ().firstScreenPosition ())
-				lbk = _raster.hData ().firstScreenPosition () - cav;
-
-			// If the initial horizontal position is still in the "screen" part...
-			// ...but not the final position, 
-			// ...both the starting pixel and the number of pixels to draw have to be reduced
-			if (cav < _raster.hData ().lastScreenPosition () && 
-				(cav + 8) > _raster.hData ().lastScreenPosition ())
-			{
-				stp = _raster.hData ().lastScreenPosition () + 1;
-				lbk = (cav + 8) - stp;
-			}
-		}
-
-		screenMemory () -> setHorizontalLine ((size_t) stp, (size_t) rv, lbk, 
-			_VICIRegisters -> borderColor ());
-	}
-
-	// The IRQ related with the lightpen is calculated...
+	// The position related with the lightpen is calculated...
 	unsigned short dx, dy;
 	_raster.currentDisplayPosition (dx, dy);
 	unsigned short lpx, lpy;
@@ -411,7 +388,13 @@ void COMMODORE::VICI::drawVisibleZone (MCHEmul::CPU* cpu)
 // ---
 COMMODORE::VICI::DrawResult COMMODORE::VICI::drawGraphics (const COMMODORE::VICI::DrawContext& dC)
 {
-	// TODO
+	if (_vicGraphicInfo.draw ())
+	{
+		// First of all, the screen is drawn!...
+		screenMemory () -> setHorizontalLine ((size_t) dC._RCA, (size_t) dC._RR,
+			(dC._RCA + 8) > _raster.visibleColumns () ? (_raster.visibleColumns () - dC._RCA) : 8, 
+				_VICIRegisters -> screenColor ());
+	}
 
 	return (COMMODORE::VICI::DrawResult ());
 }
@@ -446,33 +429,13 @@ COMMODORE::VICI_PAL::VICI_PAL (int vV, MCHEmul::SoundLibWrapper* wS)
 }
 
 // ---
-unsigned int COMMODORE::VICI_PAL::treatRasterCycle ()
-{
-	unsigned int result = COMMODORE::VICI::treatRasterCycle ();
-
-	// TODO
-
-	return (result);
-}
-
-// ---
 COMMODORE::VICI_NTSC::VICI_NTSC (int vV, MCHEmul::SoundLibWrapper* wS)
 	: COMMODORE::VICI (
-		 _VRASTERDATA, _HRASTERDATA, vV, 71, wS,
+		 _VRASTERDATA, _HRASTERDATA, vV, _CYCLESPERRASTERLINE, wS,
 			{ { "Name", "VICI" },
 			  { "Code", "6560 (NTSC)" },
 			  { "Manufacturer", "Commodore Business Machines CBM" },
 			  { "Year", "1977" } })
 {
 	// Nothing else to do...
-}
-
-// ---
-unsigned int COMMODORE::VICI_NTSC::treatRasterCycle ()
-{
-	unsigned int result = COMMODORE::VICI::treatRasterCycle ();
-
-	// TODO
-
-	return (result);
 }

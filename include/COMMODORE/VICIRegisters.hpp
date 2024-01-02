@@ -44,7 +44,7 @@ namespace COMMODORE
 							{ return (_charsWidthScreen); }
 		unsigned char offsetYScreen () const
 							{ return (_offsetYScreen); }
-		unsigned char charHeightScreen () const
+		unsigned char charsHeightScreen () const
 							{ return (_charsHeightScreen); }
 
 		/** Chars expanded. */

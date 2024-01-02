@@ -253,13 +253,13 @@ const MCHEmul::UByte& COMMODORE::VICIRegisters::readValue (size_t p) const
 // ---
 void COMMODORE::VICIRegisters::initializeInternalValues ()
 {
-	setValue (0x00, 0x05); // No interlaced & horizontal adjust = 5 (for PAL systems)
-	setValue (0x01, 0x0e); // Vertical adjust = 14 (for both PAL & NTSC systems);
+	setValue (0x00, 0x0e); // No interlaced & horizontal adjust = 14 (for PAL systems)
+	setValue (0x01, 0x27); // Vertical adjust = 39 (for both PAL systems)
 	setValue (0x02, 0x96); // 9 bit screen (true) & color memory = true (color map l ocation = 0x9600) & 22 columns = 0x16 (see also 0x05)
 	setValue (0x03, 0x2e); // 23 rows, not exapnded
 	setValue (0x04, 0x00); // Has no effect...
-	setValue (0x05, 0xf0); // screen map location = this value (bot 13,12,11,10) + bit 7 0x02 (bit 9) = $1e00 (7680), 
-						   // colour map location = 0x9600
+	setValue (0x05, 0xf0); // Screen map location = this value (bot 13,12,11,10) + bit 7 0x02 (bit 9) = $1e00 (7680), 
+						   // Colour map location = 0x9600
 	setValue (0x06, 0x00); // No important...
 	setValue (0x07, 0x00); // No important...
 	setValue (0x08, 0xff); // No important...

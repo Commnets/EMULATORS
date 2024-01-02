@@ -9,7 +9,8 @@ void C64::Screen::drawAdditional ()
 		unsigned short x1, y1, x2, y2;
 
 		// Draws the border of the display!
-		gC -> raster ().displayPositions (x1, y1, x2, y2);
+		gC -> raster ().displayPositions (x1, y1, x2, y2); 
+		// as C64 behaves, these values can never be wrong neither in order nor in value...
 		gC -> screenMemory () -> setHorizontalLine ((size_t) x1 - 1, (size_t) y1 - 1, (size_t) x2 - x1 + 3, _borderColor);
 		gC -> screenMemory () -> setHorizontalLine ((size_t) x1 - 1, (size_t) y2 + 1, (size_t) x2 - x1 + 3, _borderColor);
 		gC -> screenMemory () -> setVerticalLine ((size_t) x1 - 1, (size_t) y1 - 1, (size_t) y2 - y1 + 3, _borderColor);
@@ -21,6 +22,7 @@ void C64::Screen::drawAdditional ()
 
 		// Draws the border of the screen!
 		gC -> raster ().screenPositions (x1, y1, x2, y2);
+		// as C64 behaves, these values can never be wrong neither in order nor in value...
 		unsigned int bC = ((_borderColor + 1) > 15) ? 0 : _borderColor + 1; 
 		gC -> screenMemory () -> setHorizontalLine ((size_t) x1 - 1, (size_t) y1 - 1, (size_t) x2 - x1 + 3, bC);
 		gC -> screenMemory () -> setHorizontalLine ((size_t) x1 - 1, (size_t) y2 + 1, (size_t) x2 - x1 + 3, bC);

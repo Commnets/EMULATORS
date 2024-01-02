@@ -4,9 +4,12 @@
 // ---
 const MCHEmul::Address COMMODORE::VICII::_COLORMEMORY ({ 0x00, 0xd8 }, false);
 const MCHEmul::RasterData COMMODORE::VICII_PAL::_VRASTERDATA (0, 16, 51, 250, 299, 311, 312, 4, 4);
-const MCHEmul::RasterData COMMODORE::VICII_PAL::_HRASTERDATA (404, 480, 24, 343, 380, 403, 504, 7, 9);
+const MCHEmul::RasterData COMMODORE::VICII_PAL::_HRASTERDATA 
+	(404, 480, 24, 343, 380, 403, 504 /** For everyting to run, it has to be divisible by 8. */, 7, 9);
 const MCHEmul::RasterData COMMODORE::VICII_NTSC::_VRASTERDATA (27, 41, 51, 250, 12, 26, 262, 4, 4);
-const MCHEmul::RasterData COMMODORE::VICII_NTSC::_HRASTERDATA (412, 488, 24, 343, 388, 411, 512, 7, 9);
+const MCHEmul::RasterData COMMODORE::VICII_NTSC::_HRASTERDATA 
+	(412, 488, 24, 343, 388, 411, 512 /** For everything to run, it has to be divisible by 8. */, 7, 9);
+// This two positions are fized...
 const MCHEmul::Address COMMODORE::VICII::_MEMORYPOSIDLE1 = MCHEmul::Address ({ 0xff, 0x39 }, false);
 const MCHEmul::Address COMMODORE::VICII::_MEMORYPOSIDLE2 = MCHEmul::Address ({ 0xff, 0x3f }, false);
 

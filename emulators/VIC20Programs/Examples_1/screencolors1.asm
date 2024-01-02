@@ -2,15 +2,14 @@
 ; By Ignacio Cea
 
 ; MACROS
-COLOR1	    = $27
-COLOR2	    = COLOR1 + 2
+COLOR	    = $27
 SCREENCOLOR = $900F
 
 ; Where the code starts
 * = $0400
 
 ; Code
-START:			LDA #COLOR1				; First color
+START:			LDA #COLOR				; First color
 				STA SCREENCOLOR
 FOREVER:		JMP FOREVER				; Infinite
 
