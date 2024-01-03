@@ -135,7 +135,6 @@ namespace COMMODORE
 			unsigned short _ICD;	// Initial Column of the Display (Not taken into account reductions in size).
 			unsigned short _LCD;	// Last Column of the Display 
 			unsigned short _RC;		// Raster X (from the beginning of the visible zone)
-			unsigned short _RCA;	// Raster X adjusted (Moves 8 by 8, so = Raster X >> 3 << 3)
 			unsigned short _IRD;	// Initial Row Display (Not taken into account reductions of the size)
 			unsigned short _LRD;	// Last Row of the Display 
 			unsigned short _RR;		// Raster Y (From the beginning of the visible zone.
@@ -161,15 +160,14 @@ namespace COMMODORE
 
 		// Invoked from the method "simulation"....
 		/** Different actions are taken attending the raster cycle. */
-		virtual void treatRasterCycle ();
-		/** Treat the visible zone.
-			Draws the graphics and finally draw the border. */
-		void drawVisibleZone (MCHEmul::CPU* cpu);
+		void treatRasterCycle ();
+		/** Read and draw the graphics. */
+		void readGraphicsAndDrawVisibleZone ();
 
-		// These all methods are invoked from the three ones above!
+		// These all methods are invoked from the two ones above!
 		// They are here just to structure better the code...
 		// Read screen data
-		// Methods linked to the raster line to the read the graphics...
+		// Methods linked to the treatRasterCycle method...
 		/** To read the video matrix and the RAM color. \n
 			Someting that happens during a badline. */
 		inline void readVideoMatrixAndColorRAM ();
@@ -177,21 +175,28 @@ namespace COMMODORE
 			This method is executed per raster cycles. */
 		inline void readGraphicalInfo ();
 
+		// Draw the screen
+		// Methods linked to the drawVisibleZone method...
+		/** Treat the visible zone.
+			Draws the graphics and finally draw the border. */
+		void drawVisibleZone ();
 		/** To draw any type of graphic \n
 			This method uses the ones below it \n
 			The method receives: \n
 			dC = other info about the raster used to finally draw. \n
 			They all return a instance of DrawResult (@see above). */
-		DrawResult drawGraphics (const DrawContext& dC);
-
-		// The last part...
+		void drawGraphics (const DrawContext& dC);
+		/** To draw the pixels in the high resolution mode. */
+		DrawResult drawHighResolutionMode (int cb);
+		/** To draw the pixels in the multicolor mode. */
+		DrawResult drawMulticolorMode (int cb);
 		/** To move the graphics drawn to the screen. \n
 			The info move is the text/bitmap info that has been already draw to the screen. */
 		void drawResultToScreen (const DrawResult& cT, const DrawContext& dC);
 
 		private:
 		/** Just to calculate the screen positions. \n
-			This method is invoked from treatRasterCycle. */
+			This method is invoked from treatRasterCycle, and always before actualizing the graphical info. */
 		inline void calculateScreenPositions ();
 
 		protected:
@@ -222,23 +227,26 @@ namespace COMMODORE
 
 		/** 
 		  *	Structure to control how the graphics are displayed in the screen. \n
-		  * http://tinyvga.com/6561 \n
-		  * The VICI considers all lines inthe screen as bad lines, 
-		  * that means that in all lines graphical information is read from the memory (char code, char data definition and colour info). */
+		  * based on the article: http://tinyvga.com/6561 \n
+		  * The VICI considers all lines in the screen as bad lines, 
+		  * which means that in all lines graphical information is read from the memory 
+		  * (char code, char data definition and colour info). \n
+		  * The text windo is something that can be reloacted within the visible zone. \n
+		  * The methods defined in this class flag when the initial position of this text window is detected. */
 		struct VICGraphicInfo
 		{
 			VICGraphicInfo ()
 				: _VBASE (0),
 				  _HC (0), _COL (0), _COLMAX (0), _FH (false),
-				  _VC (0), _ROW (0), _ROWMAX (0), _RC (0), _FV (false),
+				  _VC (0), _ROW (0), _ROWMAX (0), _FV (false),
+				  _RC (0), _DOUBLEHIGH (false), _RCF (false),
 				  _DRAW (false), _SCREENORIGINX (false), _SCREENORIGINY (false),
 				  _screenCodeData (MCHEmul::UByte::_0),
 				  _graphicData (MCHEmul::UByte::_0),
 				  _colorData (MCHEmul::UByte::_0)
 							{ }
 
-			inline void initializeHorizontal (VICIRegisters* r);
-			inline void initializeVertical (VICIRegisters* r);
+			/** Invoked onky from the VICI initialization method. */
 			inline void initialize (VICIRegisters* r);
 			inline void nextHorizontal (VICIRegisters* r);
 			inline void nextVertical (VICIRegisters* r);
@@ -248,8 +256,8 @@ namespace COMMODORE
 							{ return (_SCREENORIGINX && _SCREENORIGINY); }
 
 			/** The base of the screen matrix where to read the info
-				about colour and pointer to char definition. 
-				This would move in _COL once a full row (with 8 pixels height) is drawn. */
+				about the colour and the pointer to the definition of the char. 
+				This value will move into _COL, once a full row (with 8 pixels height) is drawn. */
 			unsigned short _VBASE;
 
 			// Horixontal...
@@ -262,39 +270,56 @@ namespace COMMODORE
 			/** The maximum value for the previous counter.
 				It is determined by the info in the VICI registers. */
 			unsigned char _COLMAX;
-			/** Flip flop to indicate whether the counter has or not to be increment. 
-				in the VIC every char ocuppies 2 raster cycles (because the raster cycle has been defined as 8 pixels long instead 4), 
-				so the counter moves every two raster cycles and this flip flop controls that. */
+			/** Flip flop to indicate whether the counter has or not to be increment. \n 
+				In the VIC every char is drawn using a minimun of 2 raster cycles,
+				so the counter (_COL) moves every two raster cycles and this flip flop is used to gurantee that. */
 			bool _FH;
 
 			// Vertical...
-			/** Delay to start to increment the base. 
-				Until this value reaches 0, the counter of rows dowsn't move. */
+			/** Delay to start to draw rows (and also _VBASE to be incremened). \n
+				Until this value reaches 0, the counter of rows (_ROW) doesn't move. */
 			unsigned char _VC;
-			/** Counter with current number of ROW. 
+			/** Counter with current number of row. \n
 				It is not used to locate the char and colour info, just to control how many rows must be drawn. */
 			unsigned char _ROW;
-			/** Max number of rows. */
+			/** Max number of rows, defined in the VICRegisters. */
 			unsigned char _ROWMAX;
-			/** The sensibility in starting to draw is 2, so this flip - flop control this. */
+			/** The sensibility in starting to draw is 2, so this flip - flop control this. \n
+				So this value is related with the change in the _VC. */
 			bool _FV;
-			/** Byte within the char & colour matrix info, where to read the info. */
-			unsigned char _RC;
 
-			/** Wether to draw or not. */
+			// Control the byte in the character size...
+			/** Byte within the char & colour matrix info read used to finally draw in the screen. */
+			unsigned char _RC;
+			/** When the characters can be double high this flag is set. */
+			bool _DOUBLEHIGH;
+			/** When that happens, then there is flip - flop tro control when exactly the _RC has to be incremented. */
+			bool _RCF;
+
+			/** Wether to draw or not. \n
+				This flag is set when _HC & _VC reached 0 and the _COL and _ROW are below the limits. 
+				That is, when the system is recognizing a text window. */
 			bool _DRAW;
-			/** Has the origin of the screen being detected in this cycle. */
+			/** Has the origin of the screen being detected in this cycle. \n
+				First time the first column or the first row of the text window is detected, these flags get set. \n
+				When both are true, the left up corner of the text window is detected. */
 			bool _SCREENORIGINX, _SCREENORIGINY;
 
 			// The graphics info read!
+			// It is only 1 byte length. No more is needed...
 			mutable MCHEmul::UByte _screenCodeData;
 			mutable MCHEmul::UByte _graphicData; 
 			mutable MCHEmul::UByte _colorData;
 
 			private:
-			inline void setDraw ()
+			void setDraw ()
 						{ _DRAW = (_HC == 0) && (_VC == 0) && 
 							(_COL < _COLMAX) && (_ROW < _ROWMAX); }
+			
+			inline void initializeHorizontal (VICIRegisters* r);
+			inline void initializeVertical (VICIRegisters* r);
+			inline void initializeHorizontalCounters ();
+			inline void initializeVerticalCounters ();
 		};
 
 		VICGraphicInfo _vicGraphicInfo;
@@ -306,6 +331,7 @@ namespace COMMODORE
 	// ---
 	inline void VICI::screenPositions (short& x1, short& y1, short& x2, short& y2)
 	{ 
+		// Extrract the info with the limits...
 		x1 = _scrX1; 
 		if (x1 < 0) x1 = 0;
 		if (x1 >= _raster.hData ().visiblePositions ()) x1 = _raster.hData ().visiblePositions () - 1;
@@ -323,6 +349,8 @@ namespace COMMODORE
 	// ---
 	inline void VICI::readVideoMatrixAndColorRAM ()
 	{
+		// When the system is not yet within the text window,
+		// the colour & char info is read from a fix position in memory!
 		if (!_vicGraphicInfo.draw ())
 		{
 			_vicGraphicInfo._screenCodeData = 
@@ -345,6 +373,13 @@ namespace COMMODORE
 		_vicGraphicInfo._graphicData = 
 			memoryRef () -> value (_VICIRegisters -> charDataMemory () + 
 				(size_t) ((_vicGraphicInfo._screenCodeData.value () << 3) + _vicGraphicInfo._RC));
+		
+		// The low nibble?
+		_vicGraphicInfo._graphicData =
+			_vicGraphicInfo._FH
+				? _vicGraphicInfo._graphicData.value () & 0x0f // low...
+				: ((_vicGraphicInfo._graphicData.value () & 0xf0) >> 4); // high...
+		// Every bit in the nibble has to be draw twice...(@see the drawinf routines)
 	}
 
 	// ---
@@ -356,41 +391,14 @@ namespace COMMODORE
 				(short) _raster.hData ().currentVisiblePosition ();
 			_scrX2 = // Can be longer that the width of the window...
 				(short) (_raster.hData ().currentVisiblePosition ()) + 
-				(short) (unsigned short (_VICIRegisters -> charsWidthScreen ()) << 4);
+				(short) (unsigned short (_VICIRegisters -> charsWidthScreen ()) << 4) - 1;
 
 			_scrY1 = // Can be negative...
 				(short) _raster.vData ().currentVisiblePosition ();
 			_scrY2 = // Can be longer than the height of the window...
 				(short) (_raster.vData ().currentVisiblePosition ()) + 
-				(short) (unsigned short (_VICIRegisters -> charsHeightScreen ()) << 3);
+				(short) (unsigned short ((_VICIRegisters -> charsHeightScreen ()) << (_VICIRegisters -> charsExpanded () ? 4 : 3)) - 1);
 		}
-	}
-
-	// ---
-	inline void VICI::VICGraphicInfo::initializeHorizontal (VICIRegisters* v)
-	{
-		_COLMAX		= v -> charsWidthScreen ();
-		_COL		= 0;
-		_HC			= v -> offsetXScreen ();
-		_FH			= false;
-
-		_SCREENORIGINX = false;
-
-		setDraw ();
-	}
-
-	// ---
-	inline void VICI::VICGraphicInfo::initializeVertical (VICIRegisters* v)
-	{
-		_ROWMAX		= v -> charsHeightScreen ();;
-		_ROW		= 0;
-		_VC			= v -> offsetYScreen ();
-		_FV			= false;
-		_RC			= 0;
-
-		_SCREENORIGINY = false;
-
-		setDraw ();
 	}
 
 	// ---
@@ -434,22 +442,66 @@ namespace COMMODORE
 		}
 		else
 		{
-			if (++_RC == 8)
+			if (!_DOUBLEHIGH ||
+				(_DOUBLEHIGH && !(_RCF = !_RCF)))
 			{
-				_RC = 0;
+				if (++_RC == 8)
+				{
+					_RC = 0;
 
-				_VBASE += (unsigned short) _COLMAX;
+					_VBASE += (unsigned short) _COLMAX;
 
-				if (_ROW < _ROWMAX)
-					_ROW++;
+					if (_ROW < _ROWMAX)
+						_ROW++;
+				}
 			}
 		}
 
 		_SCREENORIGINY = (_VC == 0 && VC_old != _VC);
 
 		initializeHorizontal (v);
+	}
+
+	// ---
+	inline void VICI::VICGraphicInfo::initializeHorizontal (VICIRegisters* v)
+	{
+		_COLMAX			= v -> charsWidthScreen ();
+		_HC				= v -> offsetXScreen ();
+
+		initializeHorizontalCounters ();
 
 		setDraw ();
+	}
+
+	// ---
+	inline void VICI::VICGraphicInfo::initializeVertical (VICIRegisters* v)
+	{
+		_ROWMAX			= v -> charsHeightScreen ();;
+		_VC				= v -> offsetYScreen ();
+		_DOUBLEHIGH		= v -> charsExpanded ();
+
+		initializeVerticalCounters ();
+
+		setDraw ();
+	}
+
+	inline void VICI::VICGraphicInfo::initializeHorizontalCounters ()
+	{
+		_COL			= 0;
+		_FH				= false;
+
+		_SCREENORIGINX	= (_HC == 0);
+	}
+
+	// --
+	inline void VICI::VICGraphicInfo::initializeVerticalCounters ()
+	{
+		_ROW			= 0;
+		_FV				= false;
+		_RC				= 0;
+		_RCF			= false;
+
+		_SCREENORIGINY	= (_VC == 0);
 	}
 
 	/** The version para PAL systems. */

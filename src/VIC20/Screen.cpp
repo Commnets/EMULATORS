@@ -11,11 +11,18 @@ void VIC20::Screen::drawAdditional ()
 		gC -> screenPositions (x1, y1, x2, y2);
 		if (x1 == 0 && y1 == 0 && x2 == 0 && y2 == 0)
 			return; // There is no border yet!...
-		unsigned int bC = ((_borderColor + 1) > 15) ? 0 : _borderColor + 1; 
-		gC -> screenMemory () -> setHorizontalLine ((size_t) x1, (size_t) y1, (size_t) (x2 - x1 + 1), bC);
-		gC -> screenMemory () -> setHorizontalLine ((size_t) x1, (size_t) y2, (size_t) (x2 - x1 + 1), bC);
-		gC -> screenMemory () -> setVerticalLine   ((size_t) x1, (size_t) y1, (size_t) (y2 - y1 + 1), bC);
-		gC -> screenMemory () -> setVerticalLine   ((size_t) x2, (size_t) y1, (size_t) (y2 - y1 + 1), bC);
+
+		short xl = x2 - x1 + 1;
+		short yl = y2 - y1 + 1;
+		if (x1 > 0) { x1--; xl++; }
+		if (x2 < (gC -> raster ().visibleColumns () - 1)) { x2++; xl++; }
+		if (y1 > 0) { y1--; yl++; }
+		if (y2 < (gC -> raster ().visibleLines () - 1)) { y2++; yl++; }
+		unsigned int bC = ((_borderColor) > 15) ? 0 : _borderColor; 
+		gC -> screenMemory () -> setHorizontalLine ((size_t) x1, (size_t) y1, (size_t) xl, bC);
+		gC -> screenMemory () -> setHorizontalLine ((size_t) x1, (size_t) y2, (size_t) xl, bC);
+		gC -> screenMemory () -> setVerticalLine   ((size_t) x1, (size_t) y1, (size_t) yl, bC);
+		gC -> screenMemory () -> setVerticalLine   ((size_t) x2, (size_t) y1, (size_t) yl, bC);
 	}
 }
 

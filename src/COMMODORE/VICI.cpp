@@ -199,36 +199,33 @@ bool COMMODORE::VICI::simulate (MCHEmul::CPU* cpu)
 					(MCHEmul::UByte::OutputFormat::_HEXA, '\0', 2)) << "]\n";
 		}
 
-		// Treat the right cycle...
+		// Read the graphics and draw the visible zone, 
+		// if it is the case...
+		readGraphicsAndDrawVisibleZone ();
+		// ...and then treat the current cycle...
 		treatRasterCycle ();
-		// ..and draws the graphics & border if it has to do so...
-		if (_raster.isInVisibleZone ())
-			drawVisibleZone (cpu);
-
-		// Then move to the next cycle...
-		_cycleInRasterLine++;
-		// and also move 8 pixels right in the raster line and jump to other line is possible...
+		// ...and also moves 8 pixels right in the raster line and jump to other line is possible...
 		// Notice that the variable _isNewRasterLine becomes true when a new line comes...
 		if (_raster.moveCycles (1))
 			_cycleInRasterLine = 1;
-	}
 
-	// When the raster enters the non visible part of the screen,
-	// a notification is sent (to the Screen class usually) 
-	// just to draw the screen...
-	if (_raster.isInFirstVBlankZone ())
-	{
-		if (!_lastVBlankEntered)
+		// When the raster enters the non visible part of the screen,
+		// a notification is sent (to the Screen class usually) 
+		// just to draw the screen...
+		if (_raster.isInFirstVBlankZone ())
 		{
-			_lastVBlankEntered = true;
+			if (!_lastVBlankEntered)
+			{
+				_lastVBlankEntered = true;
 
-			MCHEmul::GraphicalChip::notify (MCHEmul::Event (_GRAPHICSREADY));
+				MCHEmul::GraphicalChip::notify (MCHEmul::Event (_GRAPHICSREADY));
 
-			_vicGraphicInfo.initialize (_VICIRegisters);
+				_vicGraphicInfo.initialize (_VICIRegisters);
+			}
 		}
+		else
+			_lastVBlankEntered = false;
 	}
-	else
-		_lastVBlankEntered = false;
 
 	_VICIRegisters -> setCurrentRasterLine (_raster.currentLine ()); 
 
@@ -328,12 +325,24 @@ MCHEmul::ScreenMemory* COMMODORE::VICI::createScreenMemory ()
 }
 
 // ---
-void COMMODORE::VICI::treatRasterCycle ()
+void COMMODORE::VICI::readGraphicsAndDrawVisibleZone ()
 {
-	// Always the graphical info is read!
+	// The graphical info is always read!
 	readVideoMatrixAndColorRAM ();
 	readGraphicalInfo ();
 
+	// Calculate the screen position, if it is needed...
+	// If the screen position has not been reached yet, or it is already out of it, the previous value is maintained...
+	calculateScreenPositions ();
+
+	// ..and draws the graphics & border if it has to do so...
+	if (_raster.isInVisibleZone ())
+		drawVisibleZone ();
+}
+
+// ---
+void COMMODORE::VICI::treatRasterCycle ()
+{
 	// At the very last cycle, the row is moved...
 	if (_cycleInRasterLine == _cyclesPerRasterLine)
 		_vicGraphicInfo.nextVertical (_VICIRegisters);
@@ -342,41 +351,38 @@ void COMMODORE::VICI::treatRasterCycle ()
 	if (_cycleInRasterLine < _cyclesPerRasterLine)
 		_vicGraphicInfo.nextHorizontal (_VICIRegisters);
 
-	// Calculate the screen position, if it is needed...
-	// If the screen position has not been reached yet, the previous value is maintained...
-	calculateScreenPositions ();
+	// ...then finally moves to the next cycle...
+	_cycleInRasterLine++;
 }
 
 // ---
-void COMMODORE::VICI::drawVisibleZone (MCHEmul::CPU* cpu)
+void COMMODORE::VICI::drawVisibleZone ()
 {
 	// These two variables are very key.
 	// They hold the position of the raster within the VISIBLE ZONE.
 	// It is the left up corner of the "computer screen" will be cv = 0 & rv = 0...
 	unsigned short cv, rv; 
 	_raster.currentVisiblePosition (cv, rv);
-	// The same value than cv, but adjusted to a multiple of 8.
-	unsigned short cav = (cv >> 3) << 3;
 
 	// In other case...
 	// Everyting is the color of the border initially...
 	// ..and it will be covered with the screen later if needed..
 	// This is how the VICI works...I guess!
-	screenMemory () -> setHorizontalLine ((size_t) cav, (size_t) rv,
-		(cav + 8) > _raster.visibleColumns () ? (_raster.visibleColumns () - cav) : 8, 
+	screenMemory () -> setHorizontalLine ((size_t) cv, (size_t) rv,
+		(cv + 8) > _raster.visibleColumns () ? (_raster.visibleColumns () - cv) : 8, 
 			_VICIRegisters -> borderColor ());
 
-	// Now the information is drawn,...
-	drawGraphics (
-		{
-			/** _ICD */ _raster.hData ().firstDisplayPosition (),
-			/** _LCD */ _raster.hData ().lastDisplayPosition (),
-			/** _RC	 */ cv,		// Where the horizontal raster is (not adjusted to 8) inside the window
-			/** _RCA */ cav,	// Where the horizontal raster is (adjusted to 8) inside the window
-			/** _IRD */ _raster.vData ().firstDisplayPosition (),
-			/** _LRD */ _raster.vData ().lastDisplayPosition (),
-			/** _RR	 */ rv		// Where the vertical raster is inside the window (it is not the chip raster line)
-		});
+	// Now the information is drawn...
+	if (_vicGraphicInfo.draw ())
+		drawGraphics (
+			{
+				/** _ICD */ _raster.hData ().firstDisplayPosition (),
+				/** _LCD */ _raster.hData ().lastDisplayPosition (),
+				/** _RC	 */ cv,		// Where the horizontal raster is (not adjusted to 8) inside the window
+				/** _IRD */ _raster.vData ().firstDisplayPosition (),
+				/** _LRD */ _raster.vData ().lastDisplayPosition (),
+				/** _RR	 */ rv		// Where the vertical raster is inside the window (it is not the chip raster line)
+			});
 
 	// The position related with the lightpen is calculated...
 	unsigned short dx, dy;
@@ -386,17 +392,86 @@ void COMMODORE::VICI::drawVisibleZone (MCHEmul::CPU* cpu)
 }
 
 // ---
-COMMODORE::VICI::DrawResult COMMODORE::VICI::drawGraphics (const COMMODORE::VICI::DrawContext& dC)
+void COMMODORE::VICI::drawGraphics (const COMMODORE::VICI::DrawContext& dC)
 {
-	if (_vicGraphicInfo.draw ())
+	// First of all, the screen is drawn!...
+	screenMemory () -> setHorizontalLine ((size_t) dC._RC, (size_t) dC._RR,
+		(dC._RC + 8) > _raster.visibleColumns () ? (_raster.visibleColumns () - dC._RC) : 8, 
+			_VICIRegisters -> backgroundColor ());
+
+	// Multicolor mode?
+	// where the color of the pixels are determined by combination 
+	// of the pair of bits in the char data definition memory...
+	// or just high resolution one?
+	// where the color of the pixels is determined by any individual bit in
+	// in the char definition memory...
+	int cb = (int) dC._RC - (int) dC._ICD;
+	drawResultToScreen (
+		(((_vicGraphicInfo._colorData.value () & 0x08) == 0x00) // MSB low nibble on? = multicolorMode...
+			? drawHighResolutionMode (cb)
+			: drawMulticolorMode (cb)), dC);
+}
+
+// ---
+COMMODORE::VICI::DrawResult COMMODORE::VICI::drawHighResolutionMode (int cb)
+{
+	COMMODORE::VICI::DrawResult result;
+
+	for (unsigned short i = 0 ; 
+			i < 8 /** To paint always 8 pixels but in blocks of 2. */; i += 2)
 	{
-		// First of all, the screen is drawn!...
-		screenMemory () -> setHorizontalLine ((size_t) dC._RCA, (size_t) dC._RR,
-			(dC._RCA + 8) > _raster.visibleColumns () ? (_raster.visibleColumns () - dC._RCA) : 8, 
-				_VICIRegisters -> screenColor ());
+		if (_vicGraphicInfo._graphicData [3 - (i >> 1)])
+		{
+			// If the pixel is se and the inverse mode is not active...
+			// ...the color will be in the foreground...
+			if (!_VICIRegisters -> inverseMode ())
+			{
+				result._foregroundColorData [i] = 
+				result._foregroundColorData [i + 1] = _vicGraphicInfo._colorData.value () & 0x07;
+			}
+		}
+		else
+		{
+			// But if the pixels is off and the mode inverse is active...
+			// ...the color will be in the background...
+			if (_VICIRegisters -> inverseMode ())
+			{
+				result._backgroundColorData [i] = 
+				result._backgroundColorData [i + 1] = _vicGraphicInfo._colorData.value () & 0x07;
+			}
+		}
 	}
 
-	return (COMMODORE::VICI::DrawResult ());
+	return (result);
+}
+
+// ---
+COMMODORE::VICI::DrawResult COMMODORE::VICI::drawMulticolorMode (int cb)
+{
+	COMMODORE::VICI::DrawResult result;
+
+	for (unsigned short i = 0 ; 
+			i < 8 /** To paint always 8 pixels but in blocks of 2. */; i += 2)
+	{
+		unsigned char cs = 
+			(_vicGraphicInfo._graphicData.value () >> (2 - (i >> 2))) & 0x03; // 0, 1, 2, 3?
+		// The value 0 means background, and it has already been drawn!
+		if (cs == 0x00)
+			continue;
+
+		// Depending on the value of the par of bits, the rule will be one or another...
+		unsigned int fc = 
+			(cs == 0x01)
+				? _VICIRegisters -> borderColor ()
+				: ((cs == 0x10)
+					? _vicGraphicInfo._colorData.value () & 0x07
+					: _VICIRegisters -> auxiliarColor ());
+
+		result._foregroundColorData [i] = 
+		result._foregroundColorData [i + 1] = fc;
+	}
+
+	return (result);
 }
 
 // ---
@@ -405,7 +480,7 @@ void COMMODORE::VICI::drawResultToScreen (const COMMODORE::VICI::DrawResult& cT,
 	// The four pixels to draw...
 	for (size_t i = 0; i < 8; i++)
 	{
-		size_t pos = (size_t) dC._RCA + i;
+		size_t pos = (size_t) dC._RC + i;
 
 		// And then the background pixels...
 		if (cT._backgroundColorData [i] != ~0)

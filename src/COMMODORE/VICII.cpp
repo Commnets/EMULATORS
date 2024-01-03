@@ -697,7 +697,7 @@ COMMODORE::VICII::DrawResult COMMODORE::VICII::drawGraphics (const COMMODORE::VI
 	// When e.g. the raster is at the very first "screen "dislay" column, 
 	// there are no reductions is the screen (display == screen) and SCROLLX = 0x00
 	int cb = (int) dC._RCA - (int) dC._ICD - (int) dC._SC;
-	// To ddraw just only when there is a possibility of at least draw a pixel!
+	// To draw just only when there is a possibility of at least draw a pixel!
 	if (cb <= -8)
 		return (COMMODORE::VICII::DrawResult ());
 

@@ -80,8 +80,8 @@ namespace COMMODORE
 		/** Managing the colors... */
 		unsigned char auxiliarColor () const
 							{ return (_auxiliarColor); }
-		unsigned char screenColor () const
-							{ return (_screenColor); }
+		unsigned char backgroundColor () const
+							{ return (_backgroundColor); }
 		unsigned char borderColor () const
 							{ return (_borderColor); }
 		bool inverseMode () const
@@ -153,7 +153,7 @@ namespace COMMODORE
 		/** The sound wrapper. */
 		VICISoundLibWrapper* _soundWrapper;
 		/** Colors. */
-		unsigned char _auxiliarColor, _screenColor, _borderColor;
+		unsigned char _auxiliarColor, _backgroundColor, _borderColor;
 		/** To indicate wheter the system is managing the inverse mode or not. */
 		bool _inverseMode;
 

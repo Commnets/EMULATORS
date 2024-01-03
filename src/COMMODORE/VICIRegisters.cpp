@@ -25,7 +25,7 @@ MCHEmul::InfoStructure COMMODORE::VICIRegisters::getInfoStructure () const
 	MCHEmul::InfoStructure result = std::move (MCHEmul::ChipRegisters::getInfoStructure ());
 
 	result.add ("AUXCOLOR",			_auxiliarColor);
-	result.add ("SCRCOLOR",			_screenColor);
+	result.add ("BKCOLOR",			_backgroundColor);
 	result.add ("BRDCOLOR",			_borderColor);
 	result.add ("CHARADDRESS",		charDataMemory ());
 	result.add ("SCREENADDRESS",	screenMemory ());
@@ -142,9 +142,9 @@ void COMMODORE::VICIRegisters::setValue (size_t p, const MCHEmul::UByte& v)
 		// VICCRF
 		case 0x0f:
 			{
-				_screenColor = (v.value ()  & 0xf0) >> 4;
+				_backgroundColor = (v.value ()  & 0xf0) >> 4;
 
-				_inverseMode = (v.value () & 0x08) != 0x00;
+				_inverseMode = (v.value () & 0x08) == 0x00; // When bit 3 no active, the inverse mode is active!
 
 				_borderColor = (v.value () & 0x07);
 			}
@@ -184,6 +184,8 @@ const MCHEmul::UByte& COMMODORE::VICIRegisters::readValue (size_t p) const
 						 ((_charsHeightScreen << 1) & 0x7e) | 
 						 (_charsExpanded ? 0x01 : 0x00);
 			}
+
+			break;
 
 		case 0x04:
 			{
@@ -256,7 +258,7 @@ void COMMODORE::VICIRegisters::initializeInternalValues ()
 	setValue (0x00, 0x0e); // No interlaced & horizontal adjust = 14 (for PAL systems)
 	setValue (0x01, 0x27); // Vertical adjust = 39 (for both PAL systems)
 	setValue (0x02, 0x96); // 9 bit screen (true) & color memory = true (color map l ocation = 0x9600) & 22 columns = 0x16 (see also 0x05)
-	setValue (0x03, 0x2e); // 23 rows, not exapnded
+	setValue (0x03, 0x2e); // 23 rows, not exapanded
 	setValue (0x04, 0x00); // Has no effect...
 	setValue (0x05, 0xf0); // Screen map location = this value (bot 13,12,11,10) + bit 7 0x02 (bit 9) = $1e00 (7680), 
 						   // Colour map location = 0x9600

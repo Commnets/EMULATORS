@@ -106,7 +106,7 @@ MCHEmul::Memory::Content VIC20::Memory::standardMemoryContent (VIC20::Memory::Co
 	MCHEmul::PhysicalStorageSubset* VIA2Registers = new VIC20::VIA2Registers
 		(/** id = VIC20::VIA2Registers::_VIA2_SUBSET */ RAM, 0x9120, MCHEmul::Address ({ 0x20, 0x91 }, false), 0x010);
 	MCHEmul::PhysicalStorageSubset* VIARegisters_After = new MCHEmul::PhysicalStorageSubset 
-		(_VIAAFTER_SUBSET, RAM, 0x9130, MCHEmul::Address ({ 0x30, 0x91 }, false), 0x02d0);
+		(_VIAAFTER_SUBSET, RAM, 0x9130, MCHEmul::Address ({ 0x30, 0x91 }, false), 0x06d0);
 	// Block 4 of RAM, after the IO registers.
 	// This block is used by the system for the screen memory and for IO data...
 	// This piece is officially subdivided in two blocks of 1024 (0x0400) bytes each...
