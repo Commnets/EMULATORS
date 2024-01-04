@@ -1,5 +1,6 @@
 ; To make lines of color just in the border
-; Print like a hello un a VIC 20 not expanded.
+; Print like a hello in a VIC 20 3k expanded.
+; It would only work there!
 ; By Ignacio Cea
 
 ; MACROS

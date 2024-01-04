@@ -1,6 +1,7 @@
 #include <VIC20/VIC20Emulator.hpp>
 #include <VIC20/VIC20.hpp>
 #include <VIC20/Screen.hpp>
+#include <VIC20/Cartridge.hpp>
 
 // ---
 const unsigned char VIC20::VIC20Emulator::_PARAMNTSC = 'n';
@@ -27,7 +28,8 @@ void VIC20::VIC20Emulator::printOutParameters (std::ostream& o) const
 		 "3:\t16K expansion" << std::endl <<
 		 "4:\t24K expansion" << std::endl;
 	o << "DEVICES allowed to be connected under command CONNECTPER:" << std::endl <<
-		 std::to_string (COMMODORE::Datasette1530::_ID) << ":\tCasette 1530 / 1" << std::endl;
+		 std::to_string (COMMODORE::Datasette1530::_ID) << ":\tCasette 1530 / 1" << std::endl <<
+		 std::to_string (VIC20::Cartridge::_ID) << ":\tCartridge" << std::endl;
 }
 
 // ---

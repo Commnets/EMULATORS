@@ -4,6 +4,82 @@
 #include <COMMODORE/VICIRegisters.hpp>
 
 // ---
+void VIC20::VIA1VIA2RegistersReflection::setValue (size_t nB, const MCHEmul::UByte& d)
+{
+	// The structure repeats every 0x40 = 64 bytes...
+	size_t b  = nB % 0x40; // From 0 to 0x3f
+	size_t c  = b / 0x10;  // From 0 to 3...It defines the block within the structure...
+	size_t pp = c % 0x10;  // Which byte inside the block...
+
+	switch (c)
+	{
+		case 0:
+		case 2:
+			{
+				_via1Registers -> set (_via1Registers -> initialAddress () + pp, d);
+			}
+
+			break;
+
+		case 3:
+			{
+				_via2Registers -> set (_via2Registers -> initialAddress () + pp, d);
+			}
+
+			break;
+
+		case 1:
+			// Does nothing...
+			break;
+
+		default:
+			// It shouldn't be here...
+			assert (false);
+			break;
+	}
+}
+
+// ---
+const MCHEmul::UByte& VIC20::VIA1VIA2RegistersReflection::readValue (size_t nB) const
+{
+	MCHEmul::UByte result = MCHEmul::UByte::_0;
+
+	// The structure repeats every 0x40 = 64 bytes...
+	size_t b  = nB % 0x40; // From 0 to 0x3f
+	size_t c  = b / 0x10;  // From 0 to 3...It defines the block within the structure...
+	size_t pp = c % 0x10;  // Which byte inside the block...
+
+	switch (c)
+	{
+		case 0:
+		case 2:
+			{
+				result = _via1Registers -> value (_via1Registers -> initialAddress () + pp);
+			}
+
+			break;
+
+		case 3:
+			{
+				result = _via2Registers -> value (_via2Registers -> initialAddress () + pp);
+			}
+
+			break;
+
+		case 1:
+			// Does nothing...
+			break;
+
+		default:
+			// It shouldn't be here...
+			assert (false);
+			break;
+	}
+
+	return (_lastValue = result);
+}
+
+// ---
 VIC20::Memory::Memory (VIC20::Memory::Configuration cfg, const std::string& lang)
 	: MCHEmul::Memory (0, VIC20::Memory::standardMemoryContent (), { }),
 	  _configuration (cfg),
@@ -41,20 +117,26 @@ VIC20::Memory::Memory (VIC20::Memory::Configuration cfg, const std::string& lang
 		_error = MCHEmul::_INIT_ERROR;
 
 	// Gets a pointer to the main pieces of the memory that are actibable...
-	_BANK0		= subset (_BANK0_SUBSET);
-	_BANK0UC	= dynamic_cast <VIC20::NotConnectedPhysicalStorageSubset*> (subset (_BANK0UC_SUBSET));
-	_BANK1		= subset (_BANK1_SUBSET);
-	_BANK1UC	= dynamic_cast <VIC20::NotConnectedPhysicalStorageSubset*> (subset (_BANK1UC_SUBSET));
-	_BANK2		= subset (_BANK2_SUBSET);
-	_BANK2UC	= dynamic_cast <VIC20::NotConnectedPhysicalStorageSubset*> (subset (_BANK2UC_SUBSET));
-	_BANK3		= subset (_BANK3_SUBSET);
-	_BANK3UC	= dynamic_cast <VIC20::NotConnectedPhysicalStorageSubset*> (subset (_BANK3UC_SUBSET));
-	_BANK5		= subset (_BANK5_SUBSET);
-	_BANK5UC	= dynamic_cast <VIC20::NotConnectedPhysicalStorageSubset*> (subset (_BANK5UC_SUBSET));
+	_BANK0			= subset (_BANK0_SUBSET);
+	_BANK0UC		= dynamic_cast <VIC20::NotConnectedPhysicalStorageSubset*> (subset (_BANK0UC_SUBSET));
+	_BANK1			= subset (_BANK1_SUBSET);
+	_BANK1UC		= dynamic_cast <VIC20::NotConnectedPhysicalStorageSubset*> (subset (_BANK1UC_SUBSET));
+	_BANK2			= subset (_BANK2_SUBSET);
+	_BANK2UC		= dynamic_cast <VIC20::NotConnectedPhysicalStorageSubset*> (subset (_BANK2UC_SUBSET));
+	_BANK3			= subset (_BANK3_SUBSET);
+	_BANK3UC		= dynamic_cast <VIC20::NotConnectedPhysicalStorageSubset*> (subset (_BANK3UC_SUBSET));
+	_SCREENC1RAM	= subset (_SCREENC1RAM_SUBSET);
+	_SCREENC1RAMUC	= dynamic_cast <VIC20::RandomPhysicalStorageSubset*> (subset (_SCREENC1RAMUC_SUBSET));
+	_SCREENC2RAM	= subset (_SCREENC2RAM_SUBSET);
+	_SCREENC2RAMUC	= dynamic_cast <VIC20::RandomPhysicalStorageSubset*> (subset (_SCREENC2RAMUC_SUBSET));
+	_BANK5			= subset (_BANK5_SUBSET);
+	_BANK5UC		= dynamic_cast <VIC20::NotConnectedPhysicalStorageSubset*> (subset (_BANK5UC_SUBSET));
 	assert (_BANK0 != nullptr && _BANK0UC != nullptr &&
 			_BANK1 != nullptr && _BANK1UC != nullptr &&
 			_BANK2 != nullptr && _BANK2UC != nullptr &&
 			_BANK3 != nullptr && _BANK3UC != nullptr &&
+			_SCREENC1RAM != nullptr && _SCREENC1RAMUC != nullptr &&
+			_SCREENC2RAM != nullptr && _SCREENC2RAMUC != nullptr &&
 			_BANK5 != nullptr && _BANK5UC != nullptr); // None of the can be nullptr...
 
 	// Sets the configuration of the memory...
@@ -81,6 +163,12 @@ void VIC20::Memory::setConfiguration (Configuration cfg)
 				_BANK3UC		-> setActive (true);
 				_BANK5			-> setActive (false);
 				_BANK5UC		-> setActive (true);
+
+				// The screen memory is in the second possible position...
+				_SCREENC1RAM	-> setActive (false);
+				_SCREENC1RAMUC	-> setActive (true);
+				_SCREENC2RAM	-> setActive (true);
+				_SCREENC2RAMUC  -> setActive (false);
 			}
 
 			break;
@@ -99,6 +187,12 @@ void VIC20::Memory::setConfiguration (Configuration cfg)
 				_BANK3UC		-> setActive (true);
 				_BANK5			-> setActive (false);
 				_BANK5UC		-> setActive (true);
+
+				// The screen memory is in the second possible position...
+				_SCREENC1RAM	-> setActive (false);
+				_SCREENC1RAMUC	-> setActive (true);
+				_SCREENC2RAM	-> setActive (true);
+				_SCREENC2RAMUC  -> setActive (false);
 			}
 
 			break;
@@ -117,6 +211,12 @@ void VIC20::Memory::setConfiguration (Configuration cfg)
 				_BANK3UC		-> setActive (true);
 				_BANK5			-> setActive (false);
 				_BANK5UC		-> setActive (true);
+
+				// The screen memory is in the first possible position...
+				_SCREENC1RAM	-> setActive (true);
+				_SCREENC1RAMUC	-> setActive (false);
+				_SCREENC2RAM	-> setActive (false);
+				_SCREENC2RAMUC  -> setActive (true);
 			}
 
 			break;
@@ -135,6 +235,12 @@ void VIC20::Memory::setConfiguration (Configuration cfg)
 				_BANK3UC		-> setActive (true);
 				_BANK5			-> setActive (false);
 				_BANK5UC		-> setActive (true);
+
+				// The screen memory is in the first possible position...
+				_SCREENC1RAM	-> setActive (true);
+				_SCREENC1RAMUC	-> setActive (false);
+				_SCREENC2RAM	-> setActive (false);
+				_SCREENC2RAMUC  -> setActive (true);
 			}
 
 			break;
@@ -153,6 +259,12 @@ void VIC20::Memory::setConfiguration (Configuration cfg)
 
 				_BANK5			-> setActive (false);
 				_BANK5UC		-> setActive (true);
+
+				// The screen memory is in the first possible position...
+				_SCREENC1RAM	-> setActive (true);
+				_SCREENC1RAMUC	-> setActive (false);
+				_SCREENC2RAM	-> setActive (false);
+				_SCREENC2RAMUC  -> setActive (true);
 			}
 
 			break;
@@ -250,18 +362,27 @@ MCHEmul::Memory::Content VIC20::Memory::standardMemoryContent ()
 	// Each of them has only 16 accesible registers, at the end of which there is a free memory that seem to mirror
 	// part of the registers of the chip, but only when poking and not when peeking (random value)...
 	MCHEmul::PhysicalStorageSubset* VICIRegisters = new COMMODORE::VICIRegisters
-		(/** id = COMMODORE::VICIRegisters::_VICREGS_SUBSET */ RAM, 0x9000, MCHEmul::Address ({ 0x00, 0x90 }, false), 0x010);
-	MCHEmul::PhysicalStorageSubset* VICIRegisters_After = new MCHEmul::PhysicalStorageSubset 
-		(_VICIRAFTER_SUBSET, RAM, 0x9010, MCHEmul::Address ({ 0x10, 0x90 }, false), 0x0100);
-	MCHEmul::PhysicalStorageSubset* VIA1Registers = new VIC20::VIA1Registers
+		(/** id = COMMODORE::VICIRegisters::_VICREGS_SUBSET */ RAM, 0x9000, MCHEmul::Address ({ 0x00, 0x90 }, false), 0x100);
+	VIC20::RandomPhysicalStorageSubset* VICIRegisters_After = new VIC20::RandomPhysicalStorageSubset
+		(_VICIRAFTER_SUBSET, RAM, 0x9100, MCHEmul::Address ({ 0x00, 0x91 }, false), 0x0010); // The values are returned random...
+	VIC20::VIA1Registers* VIA1Registers = new VIC20::VIA1Registers
 		(/** id = VIC20::VIA1Registers::_VIA1_SUBSET */ RAM, 0x9110, MCHEmul::Address ({ 0x10, 0x91 }, false), 0x010);
-	MCHEmul::PhysicalStorageSubset* VIA2Registers = new VIC20::VIA2Registers
+	VIC20::VIA2Registers* VIA2Registers = new VIC20::VIA2Registers
 		(/** id = VIC20::VIA2Registers::_VIA2_SUBSET */ RAM, 0x9120, MCHEmul::Address ({ 0x20, 0x91 }, false), 0x010);
-	MCHEmul::PhysicalStorageSubset* VIARegisters_After = new MCHEmul::PhysicalStorageSubset 
-		(_VIAAFTER_SUBSET, RAM, 0x9130, MCHEmul::Address ({ 0x30, 0x91 }, false), 0x06d0);
-	
-	// Block 4 of RAM, after the IO registers.
-	// This block is used by the system for the screen memory and for IO data...
+	VIC20::VIA1VIA2RegistersReflection* VIARegisters_After = new VIC20::VIA1VIA2RegistersReflection 
+		(_VIAAFTER_SUBSET, VIA1Registers, VIA2Registers, RAM, 0x9130, MCHEmul::Address ({ 0x30, 0x91 }, false), 0x02d0); // Strange behaviour...
+
+	// Screen Color RAM, can be in several locations depending on the configuration...
+	MCHEmul::PhysicalStorageSubset* SCREENC1RAM = new MCHEmul::PhysicalStorageSubset 
+		(_SCREENC1RAM_SUBSET, RAM, 0x9400, MCHEmul::Address ({ 0x00, 0x94 }, false), 0x0200);
+	VIC20::RandomPhysicalStorageSubset* SCREENC1RAM_UC = new VIC20::RandomPhysicalStorageSubset
+		(_SCREENC1RAMUC_SUBSET, RAM, 0x9400, MCHEmul::Address ({ 0x00, 0x94 }, false), 0x0200); // The values are returned random...
+	MCHEmul::PhysicalStorageSubset* SCREENC2RAM = new MCHEmul::PhysicalStorageSubset 
+		(_SCREENC2RAM_SUBSET, RAM, 0x9600, MCHEmul::Address ({ 0x00, 0x96 }, false), 0x0200);
+	VIC20::RandomPhysicalStorageSubset* SCREENC2RAM_UC = new VIC20::RandomPhysicalStorageSubset
+		(_SCREENC2RAMUC_SUBSET, RAM, 0x9600, MCHEmul::Address ({ 0x00, 0x96 }, false), 0x0200); // The values are returned random...
+
+	// Block 4 of RAM (2k), initially useful for I/O...
 	// This piece is officially subdivided in two blocks of 1024 (0x0400) bytes each...
 	MCHEmul::PhysicalStorageSubset* BANK4 = new MCHEmul::PhysicalStorageSubset 
 		(_BANK4_SUBSET, RAM, 0x9800, MCHEmul::Address ({ 0x00, 0x98 }, false), 0x0800);
@@ -302,6 +423,10 @@ MCHEmul::Memory::Content VIC20::Memory::standardMemoryContent ()
 			{ VIC20::VIA1Registers::_VIA1_SUBSET,					VIA1Registers },
 			{ VIC20::VIA2Registers::_VIA2_SUBSET,					VIA2Registers },
 			{ _VIAAFTER_SUBSET,										VIARegisters_After },
+			{ _SCREENC1RAM_SUBSET,									SCREENC1RAM }, 
+			{ _SCREENC1RAMUC_SUBSET,								SCREENC1RAM_UC }, 
+			{ _SCREENC2RAM_SUBSET,									SCREENC2RAM }, 
+			{ _SCREENC2RAMUC_SUBSET,								SCREENC2RAM_UC }, 
 			{ _BANK4_SUBSET,										BANK4 }, 
 			{ _BANK5_SUBSET,										BANK5 }, 
 			{ _BANK5UC_SUBSET,										BANK5_UC }, 

@@ -18,11 +18,15 @@
 
 namespace VIC20
 {
+	class VIA1Registers;
+	class VIA2Registers;
+
 	/** When a VIC20 is not expanded, there are seveal memory zones not connected.
-		That zones, doesn't respond to poke and always return the same value when peeking.
+		That zones, doesn't respond to poke and always return the same value when peeking 
+		(at least it is as anothe emulators in the market now behave)
 		This is the way (i guess) VIC20 determines how much free memory the system has. 
 		So this class is to replicate that behaviour. */
-	class NotConnectedPhysicalStorageSubset : public MCHEmul::PhysicalStorageSubset
+	class NotConnectedPhysicalStorageSubset final : public MCHEmul::PhysicalStorageSubset
 	{
 		public:
 		NotConnectedPhysicalStorageSubset (int id, const MCHEmul::UByte& dV,
@@ -34,14 +38,59 @@ namespace VIC20
 		const MCHEmul::UByte& defaultValue () const
 							{ return (_defaultValue); }
 
-		protected:
-		virtual void setValue (size_t nB, const MCHEmul::UByte& d)
+		private:
+		virtual void setValue (size_t nB, const MCHEmul::UByte& d) override
 							{ /** Do nothing. */ }
-		virtual const MCHEmul::UByte& readValue (size_t nB) const
+		virtual const MCHEmul::UByte& readValue (size_t nB) const override
 							{ return (_defaultValue); }
 
-		protected:
+		private:
 		MCHEmul::UByte _defaultValue;
+	};
+
+	/** Some parts of the memory (usually behind the CIA/VIA registers)
+		seems to be part of them, but return very random numbers when peeking. \n
+		The don't respond either to the poke instructions. \n
+		This class is done to emulate that. */
+	class RandomPhysicalStorageSubset final : public MCHEmul::PhysicalStorageSubset
+	{
+		public:
+		RandomPhysicalStorageSubset (int id,
+				MCHEmul::PhysicalStorage* pS, size_t pp /** link a phisical */, const MCHEmul::Address& a, size_t s)
+			: MCHEmul::PhysicalStorageSubset (id, pS, pp, a, s)
+							{ }
+
+		private:
+		virtual void setValue (size_t nB, const MCHEmul::UByte& d) override
+							{ /** Do nothing. */ }
+		virtual const MCHEmul::UByte& readValue (size_t nB) const override
+							{ return (MCHEmul::UByte ((unsigned char) (std::rand () % 256))); }
+	};
+
+	/** The reflection of the VIA1/VIA2 registers is a little bit strange... \n
+		VIA1 registers seem to be reflected in address from $9130 to $93ff every $10 (= 16) bytes.
+		But VIA2 registers seem not be reflected and they always return 0, and they don't anser either to poke.
+		This class is just to replicate this behaviour. */
+	class VIA1VIA2RegistersReflection final : public MCHEmul::PhysicalStorageSubset
+	{
+		public:
+		VIA1VIA2RegistersReflection (int id, VIA1Registers* v1r, VIA2Registers* v2r,
+				MCHEmul::PhysicalStorage* pS, size_t pp /** link a phisical */, const MCHEmul::Address& a, size_t s)
+			: MCHEmul::PhysicalStorageSubset (id, pS, pp, a, s),
+			  _via1Registers (v1r), _via2Registers (v2r),
+			  _lastValue (MCHEmul::UByte::_0)
+							{ assert (_via1Registers != nullptr && _via2Registers != nullptr); }
+
+		private:
+		virtual void setValue (size_t nB, const MCHEmul::UByte& d) override;
+		virtual const MCHEmul::UByte& readValue (size_t nB) const override;
+
+		private:
+		/** References to the memory to replicate sometimes. */
+		VIA1Registers* _via1Registers;
+		VIA2Registers* _via2Registers;
+		/** The last value read. */
+		mutable MCHEmul::UByte _lastValue;
 	};
 
 	/** The memory itself for the VIC 20... */
@@ -80,11 +129,15 @@ namespace VIC20
 		static const int _CHARROM_SUBSET		= 112;
 		static const int _VICIRAFTER_SUBSET		= 113;
 		static const int _VIAAFTER_SUBSET		= 114;
-		static const int _BANK4_SUBSET			= 115;
-		static const int _BANK5_SUBSET			= 116;
-		static const int _BANK5UC_SUBSET		= 117;	// The not connected...
-		static const int _BASICROM_SUBSET		= 118;
-		static const int _KERNELROM_SUBSET		= 119;
+		static const int _SCREENC1RAM_SUBSET	= 115;
+		static const int _SCREENC1RAMUC_SUBSET	= 116;
+		static const int _SCREENC2RAM_SUBSET	= 117;
+		static const int _SCREENC2RAMUC_SUBSET	= 118;
+		static const int _BANK4_SUBSET			= 119;
+		static const int _BANK5_SUBSET			= 120;
+		static const int _BANK5UC_SUBSET		= 121;	// The not connected...
+		static const int _BASICROM_SUBSET		= 122;
+		static const int _KERNELROM_SUBSET		= 123;
 
 		// Views
 		static const int _CPU_VIEW				= 0;
@@ -123,6 +176,10 @@ namespace VIC20
 		NotConnectedPhysicalStorageSubset* _BANK2UC;
 		MCHEmul::PhysicalStorageSubset* _BANK3;
 		NotConnectedPhysicalStorageSubset* _BANK3UC;
+		MCHEmul::PhysicalStorageSubset* _SCREENC1RAM;
+		RandomPhysicalStorageSubset* _SCREENC1RAMUC;
+		MCHEmul::PhysicalStorageSubset* _SCREENC2RAM;
+		RandomPhysicalStorageSubset* _SCREENC2RAMUC;
 		MCHEmul::PhysicalStorageSubset* _BANK5;
 		NotConnectedPhysicalStorageSubset* _BANK5UC;
 	};
