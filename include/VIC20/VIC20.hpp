@@ -52,8 +52,14 @@ namespace VIC20
 		private:
 		virtual void processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifier* n) override;
 
-		/** Adapt the VIC20 to the memory configuration. */
-		void setConfiguration (Memory::Configuration cfg);
+		// Managing memory configuration...
+		/** To get the configuration. */
+		Memory::Configuration configuration () const
+							{ return (static_cast <const VIC20::Memory*> (memory ()) -> configuration ()); }
+		/** Adapt the VIC20 to the memory configuration. \n
+			The parameter rs indicates whether to restart the computer. ºn
+			By default it is true. */
+		void setConfiguration (Memory::Configuration cfg, bool rs = true);
 
 		// Implementation
 		static MCHEmul::Chips standardChips (CommodoreVIC20::VisualSystem vS, const std::string& sS);

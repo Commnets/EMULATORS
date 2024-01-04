@@ -50,14 +50,13 @@ namespace VIC20
 		/** To know whether the border has or not to be drawn. */
 		bool drawBorder () const
 							{ return (cmdlineArguments ().existsArgument (_PARAMBORDER)); }
-		unsigned int borderColor () const // Black by default!
+		unsigned int borderColor () const // Black by default!. From 0 to 4 max. Above 4 = 4
 							{ return (drawBorder () ? cmdlineArguments ().argumentAsInt (_PARAMBORDER) : 0); }
 	
 		/** To know the parameter related with the type of computer configuration. */
 		bool configuration () const
 							{ return (cmdlineArguments ().existsArgument (_PARAMCONFIGURATION)); }
-		unsigned int configurationMode () const // Not expanded by default!
-							{ return (configuration () ? cmdlineArguments ().argumentAsInt (_PARAMCONFIGURATION) : 0); }
+		inline unsigned int configurationMode () const; // Not expanded by default!
 
 		/** To add the peripherals linked to the computer, according to the parameters. */
 		virtual bool initialize () override;
@@ -78,6 +77,16 @@ namespace VIC20
 									  new COMMODORE::TAPFileTypeIO /** Tapes. */,
 									  new COMMODORE::RawFileTypeIO /** Row data. */ }))); }
 	};
+
+	// ---
+	inline unsigned int VIC20::VIC20Emulator::configurationMode () const
+	{ 
+		unsigned int result = 
+			configuration () 
+				? cmdlineArguments ().argumentAsInt (_PARAMCONFIGURATION) 
+				: 0; /** Not expanded. */
+		return ((result > 4) ? 4 : result); 
+	}
 }
 
 #endif

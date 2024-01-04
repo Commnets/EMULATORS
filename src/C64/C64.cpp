@@ -126,11 +126,11 @@ MCHEmul::IODevices C64::Commodore64::standardDevices (C64::Commodore64::VisualSy
 
 	// The different ports: 4!
 	// The port where usually the datasette is connected...
-	result.insert (MCHEmul::IODevices::value_type (C64::DatasetteIOPort::_ID, new C64::DatasetteIOPort));
+	result.insert (MCHEmul::IODevices::value_type (COMMODORE::DatasetteIOPort::_ID, new C64::DatasetteIOPort));
 	// The port where the floppy disk & printers are connected...
 	result.insert (MCHEmul::IODevices::value_type (COMMODORE::SerialIOPort::_ID, new COMMODORE::SerialIOPort));
 	// The port where the cartriges are connected...
-	result.insert (MCHEmul::IODevices::value_type (C64::ExpansionIOPort::_ID, new C64::ExpansionIOPort));
+	result.insert (MCHEmul::IODevices::value_type (COMMODORE::ExpansionIOPort::_ID, new C64::ExpansionIOPort));
 	// The port where very specific devices are connected...
 	result.insert (MCHEmul::IODevices::value_type (COMMODORE::UserIOPort::_ID, new COMMODORE::UserIOPort));
 

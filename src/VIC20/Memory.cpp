@@ -5,7 +5,13 @@
 
 // ---
 VIC20::Memory::Memory (VIC20::Memory::Configuration cfg, const std::string& lang)
-	: MCHEmul::Memory (0, VIC20::Memory::standardMemoryContent (cfg), { })
+	: MCHEmul::Memory (0, VIC20::Memory::standardMemoryContent (), { }),
+	  _configuration (cfg),
+	  _BANK0 (nullptr), _BANK0UC (nullptr),
+	  _BANK1 (nullptr), _BANK1UC (nullptr),
+	  _BANK2 (nullptr), _BANK2UC (nullptr),
+	  _BANK3 (nullptr), _BANK3UC (nullptr),
+	  _BANK5 (nullptr), _BANK5UC (nullptr)
 {
 	// In the content...
 	if (error () != MCHEmul::_NOERROR)
@@ -33,6 +39,131 @@ VIC20::Memory::Memory (VIC20::Memory::Configuration cfg, const std::string& lang
 
 	if (!ok)
 		_error = MCHEmul::_INIT_ERROR;
+
+	// Gets a pointer to the main pieces of the memory that are actibable...
+	_BANK0		= subset (_BANK0_SUBSET);
+	_BANK0UC	= dynamic_cast <VIC20::NotConnectedPhysicalStorageSubset*> (subset (_BANK0UC_SUBSET));
+	_BANK1		= subset (_BANK1_SUBSET);
+	_BANK1UC	= dynamic_cast <VIC20::NotConnectedPhysicalStorageSubset*> (subset (_BANK1UC_SUBSET));
+	_BANK2		= subset (_BANK2_SUBSET);
+	_BANK2UC	= dynamic_cast <VIC20::NotConnectedPhysicalStorageSubset*> (subset (_BANK2UC_SUBSET));
+	_BANK3		= subset (_BANK3_SUBSET);
+	_BANK3UC	= dynamic_cast <VIC20::NotConnectedPhysicalStorageSubset*> (subset (_BANK3UC_SUBSET));
+	_BANK5		= subset (_BANK5_SUBSET);
+	_BANK5UC	= dynamic_cast <VIC20::NotConnectedPhysicalStorageSubset*> (subset (_BANK5UC_SUBSET));
+	assert (_BANK0 != nullptr && _BANK0UC != nullptr &&
+			_BANK1 != nullptr && _BANK1UC != nullptr &&
+			_BANK2 != nullptr && _BANK2UC != nullptr &&
+			_BANK3 != nullptr && _BANK3UC != nullptr &&
+			_BANK5 != nullptr && _BANK5UC != nullptr); // None of the can be nullptr...
+
+	// Sets the configuration of the memory...
+	setConfiguration (_configuration);
+}
+
+// ---
+void VIC20::Memory::setConfiguration (Configuration cfg)
+{
+	// Attending to the configuration different options are active or not active!
+	switch (_configuration = cfg)
+	{
+		case VIC20::Memory::Configuration::_NOEXPANDED: 
+			{
+				// None of offical banks are active...
+				// BASIC space is very short...
+				_BANK0			-> setActive (false);
+				_BANK0UC		-> setActive (true);
+				_BANK1			-> setActive (false);
+				_BANK1UC		-> setActive (true);
+				_BANK2			-> setActive (false);
+				_BANK2UC		-> setActive (true);
+				_BANK3			-> setActive (false);
+				_BANK3UC		-> setActive (true);
+				_BANK5			-> setActive (false);
+				_BANK5UC		-> setActive (true);
+			}
+
+			break;
+
+		case VIC20::Memory::Configuration::_3KEXPANSION: 
+			{
+				// Only the first bank is active...
+				_BANK0			-> setActive (true);		// 3k, BASIC longer...
+				_BANK0UC		-> setActive (false);
+
+				_BANK1			-> setActive (false);
+				_BANK1UC		-> setActive (true);
+				_BANK2			-> setActive (false);
+				_BANK2UC		-> setActive (true);
+				_BANK3			-> setActive (false);
+				_BANK3UC		-> setActive (true);
+				_BANK5			-> setActive (false);
+				_BANK5UC		-> setActive (true);
+			}
+
+			break;
+
+		case VIC20::Memory::Configuration::_8KEXPANSION:
+			{
+				// The first two banks are active...
+				_BANK0			-> setActive (true);		// 3k, BASIC longer...
+				_BANK0UC		-> setActive (false);
+				_BANK1			-> setActive (true);		// 8k.
+				_BANK1UC		-> setActive (false);
+
+				_BANK2			-> setActive (false);
+				_BANK2UC		-> setActive (true);
+				_BANK3			-> setActive (false);
+				_BANK3UC		-> setActive (true);
+				_BANK5			-> setActive (false);
+				_BANK5UC		-> setActive (true);
+			}
+
+			break;
+
+		case VIC20::Memory::Configuration::_16KEXPANSION:
+			{
+				// 3 banks are active...
+				_BANK0			-> setActive (true);		// 3k, BASIC longer...
+				_BANK0UC		-> setActive (false);
+				_BANK1			-> setActive (true);		// 8k.
+				_BANK1UC		-> setActive (false);
+				_BANK2			-> setActive (true);		// 8k.
+				_BANK2UC		-> setActive (false);
+
+				_BANK3			-> setActive (false);
+				_BANK3UC		-> setActive (true);
+				_BANK5			-> setActive (false);
+				_BANK5UC		-> setActive (true);
+			}
+
+			break;
+
+		case VIC20::Memory::Configuration::_24KEXPANSION:
+			{
+				// The main 4 bank area actve...
+				_BANK0			-> setActive (true);		// 3k. BASIC longer
+				_BANK0UC		-> setActive (false);
+				_BANK1			-> setActive (true);		// 8k.
+				_BANK1UC		-> setActive (false);
+				_BANK2			-> setActive (true);		// 8k.
+				_BANK2UC		-> setActive (false);
+				_BANK3			-> setActive (true);		// 8k.
+				_BANK3UC		-> setActive (false);
+
+				_BANK5			-> setActive (false);
+				_BANK5UC		-> setActive (true);
+			}
+
+			break;
+
+		// The BANK5 is usually active when autorun cartridges 8k are introduced...
+
+		default:
+			// It shouldn't exist, but just in case...
+			assert (false);
+			break;
+	}
 }
 
 // ---
@@ -49,7 +180,7 @@ bool VIC20::Memory::initialize ()
 }
 
 // ---
-MCHEmul::Memory::Content VIC20::Memory::standardMemoryContent (VIC20::Memory::Configuration cfg)
+MCHEmul::Memory::Content VIC20::Memory::standardMemoryContent ()
 {
 	/** All dirs in Little - endian format. */
 
@@ -73,27 +204,48 @@ MCHEmul::Memory::Content VIC20::Memory::standardMemoryContent (VIC20::Memory::Co
 		});
 
 	// Subsets
-	// Page 0
+	// Page 0: The quickest possible access...
 	MCHEmul::PhysicalStorageSubset* PageZero = new MCHEmul::PhysicalStorageSubset 
 		(_PAGEZERO_SUBSET, RAM, 0x0000, MCHEmul::Address ({ 0x00, 0x00 }, false), 0x0100);
-	// Stack, Where the CPU stores info...
-	MCHEmul::Stack*  Stack = new MCHEmul::Stack 
+	// Page 1: Stack, Where the CPU stores info...
+	MCHEmul::Stack* Stack = new MCHEmul::Stack 
 		(_STACK_SUBSET, RAM, 0x0100, MCHEmul::Address ({ 0x00, 0x01 }, false), 0x0100);
-	// Block 0 of RAM = 8192 - 512 (page 0 + Stack)
+	// Page 2 & 3:
+	MCHEmul::PhysicalStorageSubset* Page2And3 = new MCHEmul::PhysicalStorageSubset 
+		(_PAGE2AND3_SUBSET, RAM, 0x0200, MCHEmul::Address ({ 0x00, 0x02 }, false), 0x0200);
+
+	// Block 0 of RAM. Expansion: 3 k. 
 	MCHEmul::PhysicalStorageSubset* BANK0 = new MCHEmul::PhysicalStorageSubset 
-		(_BANK0_SUBSET, RAM, 0x0200, MCHEmul::Address ({ 0x00, 0x02 }, false), 0x1e00);
-	// Block 1 of RAM
+		(_BANK0_SUBSET, RAM, 0x0400, MCHEmul::Address ({ 0x00, 0x04 }, false), 0x0c00);
+	VIC20::NotConnectedPhysicalStorageSubset* BANK0_UC = new VIC20::NotConnectedPhysicalStorageSubset
+		(_BANK0UC_SUBSET, MCHEmul::UByte (0x04), RAM, 0x0400, MCHEmul::Address ({ 0x00, 0x04 }, false), 0x0c00);
+
+	// Very BASIC RAM; Usually where the BASIC area is...and also the Screen RAM in not expanded systems (or 3k)
+	MCHEmul::PhysicalStorageSubset* BASICAREA = new MCHEmul::PhysicalStorageSubset 
+		(_BASICAREA_SUBSET, RAM, 0x1000, MCHEmul::Address ({ 0x00, 0x10 }, false), 0x1000);
+	
+	// Block 1 of RAM. Expansion: 8 k
 	MCHEmul::PhysicalStorageSubset* BANK1 = new MCHEmul::PhysicalStorageSubset 
-		(_BANK1_SUBSET, RAM, 0x2000, MCHEmul::Address ({ 0x00, 0x20 }, false), 0x2000);
-	// Block 2 of RAM
+		(_BANK1_SUBSET, RAM, 0x2000, MCHEmul::Address ({ 0x00, 0x20 }, false), 0x2000); // The connected one...
+	VIC20::NotConnectedPhysicalStorageSubset* BANK1_UC = new VIC20::NotConnectedPhysicalStorageSubset
+		(_BANK1UC_SUBSET, MCHEmul::UByte (0x20), RAM, 0x2000, MCHEmul::Address ({ 0x00, 0x20 }, false), 0x2000); // The not connected...
+	
+	// Block 2 of RAM. Expansion: 8 K
 	MCHEmul::PhysicalStorageSubset* BANK2 = new MCHEmul::PhysicalStorageSubset 
-		(_BANK2_SUBSET, RAM, 0x4000, MCHEmul::Address ({ 0x00, 0x40 }, false), 0x2000);
-	// Block 3 of RAM
+		(_BANK2_SUBSET, RAM, 0x4000, MCHEmul::Address ({ 0x00, 0x40 }, false), 0x2000); // The connected one...
+	VIC20::NotConnectedPhysicalStorageSubset* BANK2_UC = new VIC20::NotConnectedPhysicalStorageSubset
+		(_BANK2UC_SUBSET, MCHEmul::UByte (0x40), RAM, 0x4000, MCHEmul::Address ({ 0x00, 0x40 }, false), 0x2000); // The not connected...
+	
+	// Block 3 of RAM. Expansion: 8 k
 	MCHEmul::PhysicalStorageSubset* BANK3 = new MCHEmul::PhysicalStorageSubset 
-		(_BANK2_SUBSET, RAM, 0x6000, MCHEmul::Address ({ 0x00, 0x60 }, false), 0x2000);
+		(_BANK3_SUBSET, RAM, 0x6000, MCHEmul::Address ({ 0x00, 0x60 }, false), 0x2000); // The connected one...
+	VIC20::NotConnectedPhysicalStorageSubset* BANK3_UC = new VIC20::NotConnectedPhysicalStorageSubset
+		(_BANK3UC_SUBSET, MCHEmul::UByte (0x60), RAM, 0x6000, MCHEmul::Address ({ 0x00, 0x60 }, false), 0x2000); // The not connected...
+	
 	// Char ROM
 	MCHEmul::PhysicalStorageSubset* CharROM = new MCHEmul::PhysicalStorageSubset
 		(_CHARROM_SUBSET, CHARROM, 0x0000, MCHEmul::Address ({ 0x00, 0x80 }, false), 0x1000);
+	
 	// VICI, VIA1 and VIA2...
 	// Each of them has only 16 accesible registers, at the end of which there is a free memory that seem to mirror
 	// part of the registers of the chip, but only when poking and not when peeking (random value)...
@@ -107,15 +259,21 @@ MCHEmul::Memory::Content VIC20::Memory::standardMemoryContent (VIC20::Memory::Co
 		(/** id = VIC20::VIA2Registers::_VIA2_SUBSET */ RAM, 0x9120, MCHEmul::Address ({ 0x20, 0x91 }, false), 0x010);
 	MCHEmul::PhysicalStorageSubset* VIARegisters_After = new MCHEmul::PhysicalStorageSubset 
 		(_VIAAFTER_SUBSET, RAM, 0x9130, MCHEmul::Address ({ 0x30, 0x91 }, false), 0x06d0);
+	
 	// Block 4 of RAM, after the IO registers.
 	// This block is used by the system for the screen memory and for IO data...
 	// This piece is officially subdivided in two blocks of 1024 (0x0400) bytes each...
 	MCHEmul::PhysicalStorageSubset* BANK4 = new MCHEmul::PhysicalStorageSubset 
 		(_BANK4_SUBSET, RAM, 0x9800, MCHEmul::Address ({ 0x00, 0x98 }, false), 0x0800);
-	// Block 5 of RAM. 
+	
+	// Block 5 of RAM. Expansion: 8 k.
 	// Cartridges usually use this space to start...
 	MCHEmul::PhysicalStorageSubset* BANK5 = new MCHEmul::PhysicalStorageSubset 
-		(_BANK5_SUBSET, RAM, 0xa00, MCHEmul::Address ({ 0x00, 0xa0 }, false), 0x2000);
+		(_BANK5_SUBSET, RAM, 0xa000, MCHEmul::Address ({ 0x00, 0xa0 }, false), 0x2000); // The connected one...
+	VIC20::NotConnectedPhysicalStorageSubset* BANK5_UC = new VIC20::NotConnectedPhysicalStorageSubset 
+		(_BANK5UC_SUBSET, MCHEmul::UByte (0xa0), RAM, 0xa000, MCHEmul::Address ({ 0x00, 0xa0 }, false), 0x2000); // The not connected...
+	
+	// ROMS
 	// Basic ROM
 	MCHEmul::PhysicalStorageSubset* BasicROM = new MCHEmul::PhysicalStorageSubset
 		(_BASICROM_SUBSET, BASICROM, 0x0000, MCHEmul::Address ({ 0x00, 0xc0 }, false), 0x2000);	
@@ -128,10 +286,16 @@ MCHEmul::Memory::Content VIC20::Memory::standardMemoryContent (VIC20::Memory::Co
 		{
 			{ _PAGEZERO_SUBSET,										PageZero }, 
 			{ _STACK_SUBSET,										Stack }, 
+			{ _PAGE2AND3_SUBSET,									Page2And3}, 
 			{ _BANK0_SUBSET,										BANK0 }, 
+			{ _BANK0UC_SUBSET,										BANK0_UC }, 
+			{ _BASICAREA_SUBSET,									BASICAREA }, 
 			{ _BANK1_SUBSET,										BANK1 }, 
+			{ _BANK1UC_SUBSET,										BANK1_UC }, 
 			{ _BANK2_SUBSET,										BANK2 }, 
+			{ _BANK2UC_SUBSET,										BANK2_UC }, 
 			{ _BANK3_SUBSET,										BANK3 }, 
+			{ _BANK3UC_SUBSET,										BANK3_UC }, 
 			{ _CHARROM_SUBSET,										CharROM },
 			{ COMMODORE::VICIRegisters::_VICREGS_SUBSET,			VICIRegisters },
 			{ _VICIRAFTER_SUBSET,									VICIRegisters_After },
@@ -140,6 +304,7 @@ MCHEmul::Memory::Content VIC20::Memory::standardMemoryContent (VIC20::Memory::Co
 			{ _VIAAFTER_SUBSET,										VIARegisters_After },
 			{ _BANK4_SUBSET,										BANK4 }, 
 			{ _BANK5_SUBSET,										BANK5 }, 
+			{ _BANK5UC_SUBSET,										BANK5_UC }, 
 			{ _BASICROM_SUBSET,										BasicROM }, 
 			{ _KERNELROM_SUBSET,									KernelROM }, 
 		});

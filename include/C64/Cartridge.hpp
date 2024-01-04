@@ -117,7 +117,7 @@ namespace C64
 
 		/** Only the PINS 8 and 9 are used
 			No other functionlaity has been implemented so far. */
-		virtual bool PIN_UP (unsigned char nP) const;
+		virtual bool PIN_UP (unsigned char nP) const override;
 
 		/** To know the type of cartridge, if any. */
 		Type type () const

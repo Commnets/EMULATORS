@@ -7,7 +7,7 @@
  *	Framework: CPU Emulators library \n
  *	Author: Ignacio Cea Forniés (EMULATORS library) \n
  *	Creation Date: 22/01/2023 \n
- *	Description:	The DatasetteIOPOrt within the C64 is connected with some chips and memoty!
+ *	Description:	The DatasetteIOPOrt within the C64 is connected with some chips and memory!
  *	Versions: 1.0 Initial
  */
 
@@ -20,7 +20,7 @@ namespace C64
 {
 	class CIA1;
 
-	/** This class represents the UserIOPort. */
+	/** This class represents the DatasettePort. */
 	class DatasetteIOPort final : public COMMODORE::DatasetteIOPort
 	{
 		public:

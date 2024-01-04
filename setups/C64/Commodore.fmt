@@ -30,7 +30,7 @@ First:@FIRST@, Last:@LAST@
 ;VICIRegisters
 @BYTES{blocksize=16,listsep=\,,tablesep=\ ,minsize=2}@
 LIGHTPEN:@LIGHTPENX@,@LIGHTPENY@
-Colors:@AUXCOLOR@(@SCRCOLOR@,@BRDCOLOR@)
+Colors:@AUXCOLOR@(@BKCOLOR@,@BRDCOLOR@)
 Memory: Chars(@CHARADDRESS@), Screen(@SCREENADDRESS@), Colour(@COLOURADDRESS@)
 #---
 #---

@@ -4,6 +4,9 @@
 #include <VIC20/Screen.hpp>
 #include <VIC20/Sound.hpp>
 #include <VIC20/OSIO.hpp>
+#include <VIC20/DatasettePort.hpp>
+#include <VIC20/ExpansionPort.hpp>
+#include <VIC20/Cartridge.hpp>
 #include <COMMODORE/VICI.hpp>
 #include <F6500/C6502.hpp>
 
@@ -23,7 +26,7 @@ VIC20::CommodoreVIC20::CommodoreVIC20 (VIC20::Memory::Configuration cfg,
 		 }),
 	  _visualSystem (vS)
 {
-	// Nothing else to do...
+	setConfiguration (cfg, false /** Not restart at initialization. */);
 }
 
 // ---
@@ -35,7 +38,20 @@ bool VIC20::CommodoreVIC20::initialize (bool iM)
 
 	// Depending on the memory configuration, 
 	// the registers that point out to the char and color memory must be adapted!
-	setConfiguration (static_cast <VIC20::Memory*> (memory ()) -> configuration ());
+	setConfiguration (static_cast <VIC20::Memory*> (memory ()) -> configuration (), false /** Not restart. */);
+
+	// It is also needed to observe the expansion port...
+	// Events when it is disonnected and connected are sent and with many implications
+	// in the structure of the memory...
+	observe (dynamic_cast <COMMODORE::ExpansionIOPort*> (device (COMMODORE::ExpansionIOPort::_ID)));
+
+	// Check whether there is an expansion element inserted in the expansion port
+	// If it is, it's info is loaded if any...
+	VIC20::Cartridge* cT = 
+		dynamic_cast <VIC20::Cartridge*> (dynamic_cast <COMMODORE::ExpansionIOPort*> 
+			(device (COMMODORE::ExpansionIOPort::_ID)) -> expansionElement ());
+	if (cT != nullptr)
+		cT -> dumpDataInto (dynamic_cast <VIC20::Memory*> (memory ()), memory () -> activeView ());
 
 	return (true);
 }
@@ -43,13 +59,26 @@ bool VIC20::CommodoreVIC20::initialize (bool iM)
 // ---
 void VIC20::CommodoreVIC20::processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifier* n)
 {
-	// TODO
+	// When a expansion element is inserted, then everything has to restart...
+	if (evnt.id () == COMMODORE::ExpansionIOPort::_EXPANSIONELEMENTIN ||
+		evnt.id () == COMMODORE::ExpansionIOPort::_EXPANSIONELEMENTOUT)
+	{
+		setExit (true);
+		setRestartAfterExit (true, 9999 /** Big enough */);
+	}
 }
 
 // ---
-void VIC20::CommodoreVIC20::setConfiguration (VIC20::Memory::Configuration cfg)
+void VIC20::CommodoreVIC20::setConfiguration (VIC20::Memory::Configuration cfg, bool rs) 
 {
-	// TODO
+	static_cast <VIC20::Memory*> (memory ()) -> setConfiguration (cfg);
+
+	// Restart?
+	if (rs)
+	{
+		setExit (true);
+		setRestartAfterExit (true, 9999 /** Big enough */);
+	}
 }
 
 // ---
@@ -93,6 +122,16 @@ MCHEmul::IODevices VIC20::CommodoreVIC20::standardDevices (VIC20::CommodoreVIC20
 			? (VIC20::Screen*) new VIC20::ScreenNTSC : (VIC20::Screen*) new VIC20::ScreenPAL)));
 	result.insert (MCHEmul::IODevices::value_type (VIC20::SoundSystem::_ID, new VIC20::SoundSystem));
 	result.insert (MCHEmul::IODevices::value_type (VIC20::InputOSSystem::_ID, new VIC20::InputOSSystem));
+
+	// The different ports: 4!
+	// The port where usually the datasette is connected...
+	result.insert (MCHEmul::IODevices::value_type (COMMODORE::DatasetteIOPort::_ID, new VIC20::DatasetteIOPort));
+	// The port where the floppy disk & printers are connected...
+	result.insert (MCHEmul::IODevices::value_type (COMMODORE::SerialIOPort::_ID, new COMMODORE::SerialIOPort));
+	// The port where the cartriges are connected...
+	result.insert (MCHEmul::IODevices::value_type (COMMODORE::ExpansionIOPort::_ID, new VIC20::ExpansionIOPort));
+	// The port where very specific devices are connected...
+	result.insert (MCHEmul::IODevices::value_type (COMMODORE::UserIOPort::_ID, new COMMODORE::UserIOPort));
 
 	return (result);
 }

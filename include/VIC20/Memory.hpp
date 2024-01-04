@@ -18,6 +18,32 @@
 
 namespace VIC20
 {
+	/** When a VIC20 is not expanded, there are seveal memory zones not connected.
+		That zones, doesn't respond to poke and always return the same value when peeking.
+		This is the way (i guess) VIC20 determines how much free memory the system has. 
+		So this class is to replicate that behaviour. */
+	class NotConnectedPhysicalStorageSubset : public MCHEmul::PhysicalStorageSubset
+	{
+		public:
+		NotConnectedPhysicalStorageSubset (int id, const MCHEmul::UByte& dV,
+				MCHEmul::PhysicalStorage* pS, size_t pp /** link a phisical */, const MCHEmul::Address& a, size_t s)
+			: MCHEmul::PhysicalStorageSubset (id, pS, pp, a, s),
+			  _defaultValue (dV)
+							{ }
+
+		const MCHEmul::UByte& defaultValue () const
+							{ return (_defaultValue); }
+
+		protected:
+		virtual void setValue (size_t nB, const MCHEmul::UByte& d)
+							{ /** Do nothing. */ }
+		virtual const MCHEmul::UByte& readValue (size_t nB) const
+							{ return (_defaultValue); }
+
+		protected:
+		MCHEmul::UByte _defaultValue;
+	};
+
 	/** The memory itself for the VIC 20... */
 	class Memory final : public MCHEmul::Memory
 	{
@@ -41,17 +67,24 @@ namespace VIC20
 		// Subsets
 		static const int _PAGEZERO_SUBSET		= 100;
 		static const int _STACK_SUBSET			= 101;
-		static const int _BANK0_SUBSET			= 102;
-		static const int _BANK1_SUBSET			= 103;
-		static const int _BANK2_SUBSET			= 104;
-		static const int _BANK3_SUBSET			= 105;
-		static const int _CHARROM_SUBSET		= 106;
-		static const int _VICIRAFTER_SUBSET		= 107;
-		static const int _VIAAFTER_SUBSET		= 108;
-		static const int _BANK4_SUBSET			= 109;
-		static const int _BANK5_SUBSET			= 110;
-		static const int _BASICROM_SUBSET		= 111;
-		static const int _KERNELROM_SUBSET		= 112;
+		static const int _PAGE2AND3_SUBSET		= 102;
+		static const int _BANK0_SUBSET			= 103;
+		static const int _BANK0UC_SUBSET		= 104;	// The connected... (when not expanded)
+		static const int _BASICAREA_SUBSET		= 105;
+		static const int _BANK1_SUBSET			= 106;
+		static const int _BANK1UC_SUBSET		= 107;	// The connected... (when not expanded)
+		static const int _BANK2_SUBSET			= 108;
+		static const int _BANK2UC_SUBSET		= 109;	// The connected... (when not expanded)
+		static const int _BANK3_SUBSET			= 110;
+		static const int _BANK3UC_SUBSET		= 111;	// The connected... (when not expanded)
+		static const int _CHARROM_SUBSET		= 112;
+		static const int _VICIRAFTER_SUBSET		= 113;
+		static const int _VIAAFTER_SUBSET		= 114;
+		static const int _BANK4_SUBSET			= 115;
+		static const int _BANK5_SUBSET			= 116;
+		static const int _BANK5UC_SUBSET		= 117;	// The not connected...
+		static const int _BASICROM_SUBSET		= 118;
+		static const int _KERNELROM_SUBSET		= 119;
 
 		// Views
 		static const int _CPU_VIEW				= 0;
@@ -60,10 +93,11 @@ namespace VIC20
 		Memory (Configuration cfg, 
 			const std::string& lang = MCHEmul::_DEFAULTLANGUAGE);
 
-		/** To get the configuration. \n
-			It has only be changed at initialization. */
+		/** To get/set the configuration. \n
+			It show change only at at initialization, otherwise the consecuencues are not clear. */
 		Configuration configuration () const
 							{ return (_configuration); }
+		void setConfiguration (Configuration cfg);
 
 		/** To activate the right subsets in the CPU view. */
 		virtual bool initialize () override;
@@ -74,10 +108,23 @@ namespace VIC20
 		virtual MCHEmul::MemoryView* lookForCPUView () override
 							{ return (view (_CPU_VIEW)); }
 
-		static MCHEmul::Memory::Content standardMemoryContent (Configuration cfg);
+		static MCHEmul::Memory::Content standardMemoryContent ();
 
 		private:
 		Configuration _configuration;
+
+		// Implementation
+		// The banks of memory that are configurable...
+		MCHEmul::PhysicalStorageSubset* _BANK0;
+		NotConnectedPhysicalStorageSubset* _BANK0UC;
+		MCHEmul::PhysicalStorageSubset* _BANK1;
+		NotConnectedPhysicalStorageSubset* _BANK1UC;
+		MCHEmul::PhysicalStorageSubset* _BANK2;
+		NotConnectedPhysicalStorageSubset* _BANK2UC;
+		MCHEmul::PhysicalStorageSubset* _BANK3;
+		NotConnectedPhysicalStorageSubset* _BANK3UC;
+		MCHEmul::PhysicalStorageSubset* _BANK5;
+		NotConnectedPhysicalStorageSubset* _BANK5UC;
 	};
 }
 
