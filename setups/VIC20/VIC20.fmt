@@ -8,6 +8,20 @@ Id:@ID@
 @ATTRS?{key=YES,equal=:,empty=no attributes}\n@
 ->Registers:
 @Registers>@
+->Control lines:
+@VIACtrlA1>@
+@VIACtrlA2>@
+@VIACtrlB1>@
+@VIACtrlB2>@
+->Timer A:
+@VIATimerA>@
+->Timer B:
+@VIATimerB>@
+->ShiftRegister:
+@VIAShiftReg>@
+->Ports:
+A:@PortA@, B:@PortB@
+Dir A:@VIADDRA@, Dir B:@VIADDRB@
 #---
 #---
 ;VIA2
@@ -15,6 +29,20 @@ Id:@ID@
 @ATTRS?{key=YES,equal=:,empty=no attributes}\n@
 ->Registers:
 @Registers>@
+->Control lines:
+@VIACtrlA1>@
+@VIACtrlA2>@
+@VIACtrlB1>@
+@VIACtrlB2>@
+->Timer A:
+@VIATimerA>@
+->Timer B:
+@VIATimerB>@
+->ShiftRegister:
+@VIAShiftReg>@
+->Ports:
+A:@PortA@, B:@PortB@
+Dir A:@VIADDRA@, Dir B:@VIADDRB@
 #---
 ;CVIA1
 @VIA1>@

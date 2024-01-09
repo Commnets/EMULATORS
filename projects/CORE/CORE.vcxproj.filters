@@ -365,6 +365,12 @@
     <ClInclude Include="..\..\include\CORE\MBElement.hpp">
       <Filter>Archivos de encabezado\Motherboard</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\include\CORE\OBool.hpp">
+      <Filter>Archivos de encabezado\Foundation</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\CORE\Pulse.hpp">
+      <Filter>Archivos de encabezado\Foundation</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Default.fmt">

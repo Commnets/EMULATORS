@@ -20,12 +20,13 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\include\COMMODORE\1530Datasette.hpp" />
-    <ClInclude Include="..\..\include\COMMODORE\CIASerialPort.hpp" />
+    <ClInclude Include="..\..\include\COMMODORE\CIA\CIA.hpp" />
+    <ClInclude Include="..\..\include\COMMODORE\CIA\CIAClock.hpp" />
+    <ClInclude Include="..\..\include\COMMODORE\CIA\CIARegisters.hpp" />
+    <ClInclude Include="..\..\include\COMMODORE\CIA\CIASerialPort.hpp" />
+    <ClInclude Include="..\..\include\COMMODORE\CIA\CIATimer.hpp" />
+    <ClInclude Include="..\..\include\COMMODORE\CIA\incs.hpp" />
     <ClInclude Include="..\..\include\COMMODORE\DatasettePeripherals.hpp" />
-    <ClInclude Include="..\..\include\COMMODORE\CIA.hpp" />
-    <ClInclude Include="..\..\include\COMMODORE\CIAClock.hpp" />
-    <ClInclude Include="..\..\include\COMMODORE\CIARegisters.hpp" />
-    <ClInclude Include="..\..\include\COMMODORE\CIATimer.hpp" />
     <ClInclude Include="..\..\include\COMMODORE\CommandBuilder.hpp" />
     <ClInclude Include="..\..\include\COMMODORE\Commands.hpp" />
     <ClInclude Include="..\..\include\COMMODORE\Computer.hpp" />
@@ -37,18 +38,25 @@
     <ClInclude Include="..\..\include\COMMODORE\IOPBuilder.hpp" />
     <ClInclude Include="..\..\include\COMMODORE\SerialIOPeripherals.hpp" />
     <ClInclude Include="..\..\include\COMMODORE\SerialPort.hpp" />
-    <ClInclude Include="..\..\include\COMMODORE\SID.hpp" />
-    <ClInclude Include="..\..\include\COMMODORE\SIDLibWrapper.hpp" />
-    <ClInclude Include="..\..\include\COMMODORE\SIDRegisters.hpp" />
+    <ClInclude Include="..\..\include\COMMODORE\SID\incs.hpp" />
+    <ClInclude Include="..\..\include\COMMODORE\SID\SID.hpp" />
+    <ClInclude Include="..\..\include\COMMODORE\SID\SIDLibWrapper.hpp" />
+    <ClInclude Include="..\..\include\COMMODORE\SID\SIDRegisters.hpp" />
     <ClInclude Include="..\..\include\COMMODORE\UserIOPeripherals.hpp" />
     <ClInclude Include="..\..\include\COMMODORE\UserPort.hpp" />
-    <ClInclude Include="..\..\include\COMMODORE\VIA.hpp" />
-    <ClInclude Include="..\..\include\COMMODORE\VIARegisters.hpp" />
-    <ClInclude Include="..\..\include\COMMODORE\VICI.hpp" />
-    <ClInclude Include="..\..\include\COMMODORE\VICII.hpp" />
-    <ClInclude Include="..\..\include\COMMODORE\VICIIRegisters.hpp" />
-    <ClInclude Include="..\..\include\COMMODORE\VICIRegisters.hpp" />
-    <ClInclude Include="..\..\include\COMMODORE\VICISoundWrapper.hpp" />
+    <ClInclude Include="..\..\include\COMMODORE\VIA\incs.hpp" />
+    <ClInclude Include="..\..\include\COMMODORE\VIA\VIA.hpp" />
+    <ClInclude Include="..\..\include\COMMODORE\VIA\VIAControlLine.hpp" />
+    <ClInclude Include="..\..\include\COMMODORE\VIA\VIARegisters.hpp" />
+    <ClInclude Include="..\..\include\COMMODORE\VIA\VIAShiftRegister.hpp" />
+    <ClInclude Include="..\..\include\COMMODORE\VIA\VIATimer.hpp" />
+    <ClInclude Include="..\..\include\COMMODORE\VICII\incs.hpp" />
+    <ClInclude Include="..\..\include\COMMODORE\VICII\VICII.hpp" />
+    <ClInclude Include="..\..\include\COMMODORE\VICII\VICIIRegisters.hpp" />
+    <ClInclude Include="..\..\include\COMMODORE\VICI\incs.hpp" />
+    <ClInclude Include="..\..\include\COMMODORE\VICI\VICI.hpp" />
+    <ClInclude Include="..\..\include\COMMODORE\VICI\VICIRegisters.hpp" />
+    <ClInclude Include="..\..\include\COMMODORE\VICI\VICISoundWrapper.hpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Commodore.fmt">
@@ -66,11 +74,11 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\COMMODORE\1530Datasette.cpp" />
-    <ClCompile Include="..\..\src\COMMODORE\CIA.cpp" />
-    <ClCompile Include="..\..\src\COMMODORE\CIAClock.cpp" />
-    <ClCompile Include="..\..\src\COMMODORE\CIARegisters.cpp" />
-    <ClCompile Include="..\..\src\COMMODORE\CIASerialPort.cpp" />
-    <ClCompile Include="..\..\src\COMMODORE\CIATimer.cpp" />
+    <ClCompile Include="..\..\src\COMMODORE\CIA\CIA.cpp" />
+    <ClCompile Include="..\..\src\COMMODORE\CIA\CIAClock.cpp" />
+    <ClCompile Include="..\..\src\COMMODORE\CIA\CIARegisters.cpp" />
+    <ClCompile Include="..\..\src\COMMODORE\CIA\CIASerialPort.cpp" />
+    <ClCompile Include="..\..\src\COMMODORE\CIA\CIATimer.cpp" />
     <ClCompile Include="..\..\src\COMMODORE\CommandBuilder.cpp" />
     <ClCompile Include="..\..\src\COMMODORE\Commands.cpp" />
     <ClCompile Include="..\..\src\COMMODORE\DatasettePeripherals.cpp" />
@@ -80,17 +88,20 @@
     <ClCompile Include="..\..\src\COMMODORE\FileIO.cpp" />
     <ClCompile Include="..\..\src\COMMODORE\IOPBuilder.cpp" />
     <ClCompile Include="..\..\src\COMMODORE\SerialPort.cpp" />
-    <ClCompile Include="..\..\src\COMMODORE\SID.cpp" />
-    <ClCompile Include="..\..\src\COMMODORE\SIDLibWrapper.cpp" />
-    <ClCompile Include="..\..\src\COMMODORE\SIDRegisters.cpp" />
+    <ClCompile Include="..\..\src\COMMODORE\SID\SID.cpp" />
+    <ClCompile Include="..\..\src\COMMODORE\SID\SIDLibWrapper.cpp" />
+    <ClCompile Include="..\..\src\COMMODORE\SID\SIDRegisters.cpp" />
     <ClCompile Include="..\..\src\COMMODORE\UserPort.cpp" />
-    <ClCompile Include="..\..\src\COMMODORE\VIA.cpp" />
-    <ClCompile Include="..\..\src\COMMODORE\VIARegisters.cpp" />
-    <ClCompile Include="..\..\src\COMMODORE\VICI.cpp" />
-    <ClCompile Include="..\..\src\COMMODORE\VICII.cpp" />
-    <ClCompile Include="..\..\src\COMMODORE\VICIIRegisters.cpp" />
-    <ClCompile Include="..\..\src\COMMODORE\VICIRegisters.cpp" />
-    <ClCompile Include="..\..\src\COMMODORE\VICISoundWrapper.cpp" />
+    <ClCompile Include="..\..\src\COMMODORE\VIA\VIA.cpp" />
+    <ClCompile Include="..\..\src\COMMODORE\VIA\VIAControlLine.cpp" />
+    <ClCompile Include="..\..\src\COMMODORE\VIA\VIARegisters.cpp" />
+    <ClCompile Include="..\..\src\COMMODORE\VIA\VIAShiftRegister.cpp" />
+    <ClCompile Include="..\..\src\COMMODORE\VIA\VIATimer.cpp" />
+    <ClCompile Include="..\..\src\COMMODORE\VICII\VICII.cpp" />
+    <ClCompile Include="..\..\src\COMMODORE\VICII\VICIIRegisters.cpp" />
+    <ClCompile Include="..\..\src\COMMODORE\VICI\VICI.cpp" />
+    <ClCompile Include="..\..\src\COMMODORE\VICI\VICIRegisters.cpp" />
+    <ClCompile Include="..\..\src\COMMODORE\VICI\VICISoundWrapper.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>

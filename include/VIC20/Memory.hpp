@@ -64,7 +64,10 @@ namespace VIC20
 		virtual void setValue (size_t nB, const MCHEmul::UByte& d) override
 							{ /** Do nothing. */ }
 		virtual const MCHEmul::UByte& readValue (size_t nB) const override
-							{ return (MCHEmul::UByte ((unsigned char) (std::rand () % 256))); }
+							{ return (_lastValueRead = MCHEmul::UByte ((unsigned char) (std::rand () % 256))); }
+
+		private:
+		mutable MCHEmul::UByte _lastValueRead;
 	};
 
 	/** The reflection of the VIA1/VIA2 registers is a little bit strange... \n

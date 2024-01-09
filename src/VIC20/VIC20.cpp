@@ -7,7 +7,7 @@
 #include <VIC20/DatasettePort.hpp>
 #include <VIC20/ExpansionPort.hpp>
 #include <VIC20/Cartridge.hpp>
-#include <COMMODORE/VICI.hpp>
+#include <COMMODORE/VICI/VICI.hpp>
 #include <F6500/C6502.hpp>
 
 // ---

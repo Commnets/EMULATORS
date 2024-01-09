@@ -16,20 +16,11 @@
 
 #include <F6500/incs.hpp>
 #include <EMULATORS/incs.hpp>
-#include <COMMODORE/VICIRegisters.hpp>
-#include <COMMODORE/VICISoundWrapper.hpp>
-#include <COMMODORE/VICI.hpp>
-#include <COMMODORE/VICIIRegisters.hpp>
-#include <COMMODORE/VICII.hpp>
-#include <COMMODORE/CIARegisters.hpp>
-#include <COMMODORE/CIATimer.hpp>
-#include <COMMODORE/CIAClock.hpp>
-#include <COMMODORE/CIA.hpp>
-#include <COMMODORE/VIARegisters.hpp>
-#include <COMMODORE/VIA.hpp>
-#include <COMMODORE/SIDLibWrapper.hpp>
-#include <COMMODORE/SIDRegisters.hpp>
-#include <COMMODORE/SID.hpp>
+#include <COMMODORE/CIA/incs.hpp>
+#include <COMMODORE/VIA/incs.hpp>
+#include <COMMODORE/SID/incs.hpp>
+#include <COMMODORE/VICI/incs.hpp>
+#include <COMMODORE/VICII/incs.hpp>
 #include <COMMODORE/FileIO.hpp>
 #include <COMMODORE/IOPBuilder.hpp>
 #include <COMMODORE/DatasettePort.hpp>

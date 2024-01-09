@@ -1,4 +1,4 @@
-/** \ingroup C64 */
+/** \ingroup VIC20 */
 /*@{*/
 
 /**	

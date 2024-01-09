@@ -107,8 +107,10 @@
     <ClInclude Include="..\..\include\CORE\Latch.hpp" />
     <ClInclude Include="..\..\include\CORE\Memory.hpp" />
     <ClInclude Include="..\..\include\CORE\NotifyObserver.hpp" />
+    <ClInclude Include="..\..\include\CORE\OBool.hpp" />
     <ClInclude Include="..\..\include\CORE\OSIO.hpp" />
     <ClInclude Include="..\..\include\CORE\ProgramCounter.hpp" />
+    <ClInclude Include="..\..\include\CORE\Pulse.hpp" />
     <ClInclude Include="..\..\include\CORE\Raster.hpp" />
     <ClInclude Include="..\..\include\CORE\Register.hpp" />
     <ClInclude Include="..\..\include\CORE\Screen.hpp" />

@@ -15,6 +15,7 @@
 #define __MCHEMUL_WIRE__
 
 #include <CORE/global.hpp>
+#include <CORE/Pulse.hpp>
 #include <CORE/NotifyObserver.hpp>
 
 namespace MCHEmul
@@ -32,8 +33,7 @@ namespace MCHEmul
 
 		Wire (int id)
 			: _id (id),
-			  _value (false),
-			  _downEdge (false), _upEdge (false)
+			  _pulse (false)
 								{ }
 		
 		/** The wire doesn't own ever none of the elements connected. */
@@ -52,37 +52,39 @@ namespace MCHEmul
 		virtual void disconnectElement (MotherboardElement* mE);
 		
 		bool value () const
-								{ return (_value); }
-		inline void setValue (bool b);
+								{ return (_pulse.value ()); }
+		inline bool setValue (bool b);
 
-		bool downEdge () const
-								{ return (_downEdge); }
-		bool upEdge () const
-								{ return (_upEdge); }
+		/** This methods will move the status of the ede back to false = 0. */
+		bool positiveEdge () const
+								{ return (_pulse.positiveEdge ()); }
+		bool negativeEdge () const
+								{ return (_pulse.negativeEdge ()); }
+		bool transition () const
+								{ return (_pulse.transition ()); }
+		/** Same, but not changing its values. */
+		bool peekPositiveEdge () const
+								{ return (_pulse.peekPositiveEdge ()); }
+		bool peekNegativeEdge () const
+								{ return (_pulse.peekNegativeEdge ()); }
+		bool peekTransition () const
+								{ return (_pulse.transition ()); }
 	
 		protected:
 		/** An identification for the wire. */
 		int _id;
-		/** The current value of the wire. */
-		bool _value;
-		/** When the signal comes from up to down. */
-		bool _downEdge;
-		/** When the signal comes from ddown to up. */
-		bool _upEdge;
+		/** To control the pulse. */
+		Pulse _pulse;
 	};
 
 	// ---
-	inline void Wire::setValue (bool b)
+	inline bool Wire::setValue (bool b)
 	{ 
-		if (b != _value) 
-		{ 
-			_downEdge = _value && !b; 
-			_upEdge = !_value && b; 
-			
-			_value = b;
-			
+		bool result = _pulse.set (b);
+		if (result)
 			notify (Event (_WIREDCHANGED)); 
-		} 
+
+		return (result);
 	} 
 }
 

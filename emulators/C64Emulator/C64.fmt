@@ -9,16 +9,16 @@ Id:@ID@
 ->Registers:
 @Registers>@
 ->Timer A:
-@TimerA>@
+@CIATimerA>@
 ->Timer B:
-@TimerB>@
--> Clock:
-@Clock>@
--> Ports:
+@CIATimerB>@
+->Clock:
+@CIAClock>@
+->Ports:
 A:@PortA@, B:@PortB@
 Dir A:@CIDDRA@, Dir B:@CIDDRB@
--> SerialPort:
-@SerialPort>@
+->SerialPort:
+@CIASerialPort>@
 #---
 #---
 ;CIA2
@@ -27,16 +27,16 @@ Id:@ID@
 ->Registers:
 @Registers>@
 ->Timer A:
-@TimerA>@
+@CIATimerA>@
 ->Timer B:
-@TimerB>@
--> Clock:
-@Clock>@
--> Ports:
+@CIATimerB>@
+->Clock:
+@CIAClock>@
+->Ports:
 A:@PortA@, B:@PortB@
 Dir A:@CIDDRA@, Dir B:@CIDDRB@
--> SerialPort:
-@SerialPort>@
+->SerialPort:
+@CIASerialPort>@
 #---
 ;CCIA1
 @CIA1>@

@@ -1,5 +1,7 @@
 ; To make lines of color just in the border
 ; Print like a hello in a VIC 20 3k expanded.
+; The program load in the expanded memory, 
+; and the location of the screen and screen color as as it is defined in a 3k VIC20.
 ; It would only work there!
 ; By Ignacio Cea
 
@@ -12,6 +14,19 @@ BRDCOLOR	= $00						; From 0 to 7
 
 ; Code
 ; Preparing the system
+
+; VERY CAREFUL!
+; Set the location of the screen color memory
+				lda $9002
+				and #$7f
+				ora #$80					; with 0 at 37888 = ($9400) and with 1 at 38400 ($9600). The location of the scree matrix also changes
+				sta $9002
+; Set the location of the screen matrix
+				lda $9005
+				and #$0f
+				ora #$f0
+				sta $9005					; see documentation VIC1
+; VERY CAREFUL!
 
 ; Set the background and the border color as defined...
 				lda #BKCOLOR

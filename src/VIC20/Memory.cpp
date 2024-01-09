@@ -1,7 +1,7 @@
 #include <VIC20/Memory.hpp>
 #include <VIC20/VIA1Registers.hpp>
 #include <VIC20/VIA2Registers.hpp>
-#include <COMMODORE/VICIRegisters.hpp>
+#include <COMMODORE/VICI/VICIRegisters.hpp>
 
 // ---
 void VIC20::VIA1VIA2RegistersReflection::setValue (size_t nB, const MCHEmul::UByte& d)

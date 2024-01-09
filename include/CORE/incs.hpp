@@ -15,6 +15,8 @@
 #define __CORE_INCS__
 
 #include <CORE/global.hpp>
+#include <CORE/OBool.hpp>
+#include <CORE/Pulse.hpp>
 #include <CORE/NotifyObserver.hpp>
 #include <CORE/DebugFile.hpp>
 #include <CORE/Clock.hpp>

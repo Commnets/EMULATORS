@@ -15,11 +15,11 @@
 #define __COMMODORE_COMPUTER__
 
 #include <CORE/incs.hpp>
-#include <COMMODORE/VICI.hpp>
-#include <COMMODORE/VICII.hpp>
-#include <COMMODORE/VIA.hpp>
-#include <COMMODORE/CIA.hpp>
-#include <COMMODORE/SID.hpp>
+#include <COMMODORE/VICI/VICI.hpp>
+#include <COMMODORE/VICII/VICII.hpp>
+#include <COMMODORE/VIA/VIA.hpp>
+#include <COMMODORE/CIA/CIA.hpp>
+#include <COMMODORE/SID/SID.hpp>
 #include <COMMODORE/UserPort.hpp>
 #include <COMMODORE/DatasettePort.hpp>
 #include <COMMODORE/1530Datasette.hpp>

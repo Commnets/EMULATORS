@@ -46,34 +46,40 @@
     <Filter Include="Archivos de encabezado\Motherboard\Chips">
       <UniqueIdentifier>{db115a70-0313-4120-8877-d3760be107ca}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Archivos de encabezado\Motherboard\Chips\CIA">
+      <UniqueIdentifier>{d2347109-55cf-45f7-814d-35fbc6b38a6a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Archivos de encabezado\Motherboard\Chips\SID">
+      <UniqueIdentifier>{49dcf2d8-2788-4501-a1ca-f7c5cd6b721c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Archivos de encabezado\Motherboard\Chips\VIA">
+      <UniqueIdentifier>{772047cc-03d5-4917-bd99-9e6a06368220}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Archivos de encabezado\Motherboard\Chips\VICI">
+      <UniqueIdentifier>{340b959b-d007-4cd9-ac15-4591b6f988b4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Archivos de encabezado\Motherboard\Chips\VICII">
+      <UniqueIdentifier>{7b27cae5-8ca5-4ca7-ac27-8d9805484c9c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Archivos de origen\Motherboard\Chips\CIA">
+      <UniqueIdentifier>{2157900d-6656-4085-bb0f-9f4e40dbfd19}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Archivos de origen\Motherboard\Chips\SID">
+      <UniqueIdentifier>{26463078-007e-472a-bbbf-88820ee36176}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Archivos de origen\Motherboard\Chips\VIA">
+      <UniqueIdentifier>{7197ac40-5a3a-4fc8-bcee-a19d4be639db}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Archivos de origen\Motherboard\Chips\VICI">
+      <UniqueIdentifier>{95156479-0f54-4b20-a9fc-3e0d4f0bf976}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Archivos de origen\Motherboard\Chips\VICII">
+      <UniqueIdentifier>{2de77449-529c-4039-a6bf-96c1ec8de1dd}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\include\COMMODORE\incs.hpp">
       <Filter>Archivos de encabezado</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\include\COMMODORE\CIA.hpp">
-      <Filter>Archivos de encabezado\Motherboard\Chips</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\include\COMMODORE\CIAClock.hpp">
-      <Filter>Archivos de encabezado\Motherboard\Chips</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\include\COMMODORE\CIARegisters.hpp">
-      <Filter>Archivos de encabezado\Motherboard\Chips</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\include\COMMODORE\CIATimer.hpp">
-      <Filter>Archivos de encabezado\Motherboard\Chips</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\include\COMMODORE\SID.hpp">
-      <Filter>Archivos de encabezado\Motherboard\Chips</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\include\COMMODORE\SIDRegisters.hpp">
-      <Filter>Archivos de encabezado\Motherboard\Chips</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\include\COMMODORE\VICII.hpp">
-      <Filter>Archivos de encabezado\Motherboard\Chips</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\include\COMMODORE\VICIIRegisters.hpp">
-      <Filter>Archivos de encabezado\Motherboard\Chips</Filter>
     </ClInclude>
     <ClInclude Include="..\..\include\COMMODORE\Computer.hpp">
       <Filter>Archivos de encabezado\Motherboard</Filter>
@@ -111,32 +117,80 @@
     <ClInclude Include="..\..\include\COMMODORE\FileIO.hpp">
       <Filter>Archivos de encabezado\Emulators</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\include\COMMODORE\CIASerialPort.hpp">
-      <Filter>Archivos de encabezado\Motherboard\Chips</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\include\COMMODORE\SIDLibWrapper.hpp">
-      <Filter>Archivos de encabezado\Motherboard\Chips</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\include\COMMODORE\SerialPort.hpp">
       <Filter>Archivos de encabezado\IO</Filter>
     </ClInclude>
     <ClInclude Include="..\..\include\COMMODORE\SerialIOPeripherals.hpp">
       <Filter>Archivos de encabezado\IO</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\include\COMMODORE\VICI.hpp">
-      <Filter>Archivos de encabezado\Motherboard\Chips</Filter>
+    <ClInclude Include="..\..\include\COMMODORE\CIA\CIA.hpp">
+      <Filter>Archivos de encabezado\Motherboard\Chips\CIA</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\include\COMMODORE\VICIRegisters.hpp">
-      <Filter>Archivos de encabezado\Motherboard\Chips</Filter>
+    <ClInclude Include="..\..\include\COMMODORE\CIA\CIAClock.hpp">
+      <Filter>Archivos de encabezado\Motherboard\Chips\CIA</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\include\COMMODORE\VIA.hpp">
-      <Filter>Archivos de encabezado\Motherboard\Chips</Filter>
+    <ClInclude Include="..\..\include\COMMODORE\CIA\CIARegisters.hpp">
+      <Filter>Archivos de encabezado\Motherboard\Chips\CIA</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\include\COMMODORE\VIARegisters.hpp">
-      <Filter>Archivos de encabezado\Motherboard\Chips</Filter>
+    <ClInclude Include="..\..\include\COMMODORE\CIA\CIASerialPort.hpp">
+      <Filter>Archivos de encabezado\Motherboard\Chips\CIA</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\include\COMMODORE\VICISoundWrapper.hpp">
-      <Filter>Archivos de encabezado\Motherboard\Chips</Filter>
+    <ClInclude Include="..\..\include\COMMODORE\CIA\CIATimer.hpp">
+      <Filter>Archivos de encabezado\Motherboard\Chips\CIA</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\COMMODORE\SID\SID.hpp">
+      <Filter>Archivos de encabezado\Motherboard\Chips\SID</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\COMMODORE\SID\SIDLibWrapper.hpp">
+      <Filter>Archivos de encabezado\Motherboard\Chips\SID</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\COMMODORE\SID\SIDRegisters.hpp">
+      <Filter>Archivos de encabezado\Motherboard\Chips\SID</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\COMMODORE\VIA\VIA.hpp">
+      <Filter>Archivos de encabezado\Motherboard\Chips\VIA</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\COMMODORE\VIA\VIAControlLine.hpp">
+      <Filter>Archivos de encabezado\Motherboard\Chips\VIA</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\COMMODORE\VIA\VIARegisters.hpp">
+      <Filter>Archivos de encabezado\Motherboard\Chips\VIA</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\COMMODORE\VIA\VIAShiftRegister.hpp">
+      <Filter>Archivos de encabezado\Motherboard\Chips\VIA</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\COMMODORE\VIA\VIATimer.hpp">
+      <Filter>Archivos de encabezado\Motherboard\Chips\VIA</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\COMMODORE\VICI\VICI.hpp">
+      <Filter>Archivos de encabezado\Motherboard\Chips\VICI</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\COMMODORE\VICI\VICIRegisters.hpp">
+      <Filter>Archivos de encabezado\Motherboard\Chips\VICI</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\COMMODORE\VICI\VICISoundWrapper.hpp">
+      <Filter>Archivos de encabezado\Motherboard\Chips\VICI</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\COMMODORE\VICII\VICII.hpp">
+      <Filter>Archivos de encabezado\Motherboard\Chips\VICII</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\COMMODORE\VICII\VICIIRegisters.hpp">
+      <Filter>Archivos de encabezado\Motherboard\Chips\VICII</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\COMMODORE\CIA\incs.hpp">
+      <Filter>Archivos de encabezado\Motherboard\Chips\CIA</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\COMMODORE\SID\incs.hpp">
+      <Filter>Archivos de encabezado\Motherboard\Chips\SID</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\COMMODORE\VIA\incs.hpp">
+      <Filter>Archivos de encabezado\Motherboard\Chips\VIA</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\COMMODORE\VICI\incs.hpp">
+      <Filter>Archivos de encabezado\Motherboard\Chips\VICI</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\COMMODORE\VICII\incs.hpp">
+      <Filter>Archivos de encabezado\Motherboard\Chips\VICII</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -148,30 +202,6 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\src\COMMODORE\CIA.cpp">
-      <Filter>Archivos de origen\Motherboard\Chips</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\COMMODORE\CIAClock.cpp">
-      <Filter>Archivos de origen\Motherboard\Chips</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\COMMODORE\CIARegisters.cpp">
-      <Filter>Archivos de origen\Motherboard\Chips</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\COMMODORE\CIATimer.cpp">
-      <Filter>Archivos de origen\Motherboard\Chips</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\COMMODORE\SID.cpp">
-      <Filter>Archivos de origen\Motherboard\Chips</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\COMMODORE\SIDRegisters.cpp">
-      <Filter>Archivos de origen\Motherboard\Chips</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\COMMODORE\VICII.cpp">
-      <Filter>Archivos de origen\Motherboard\Chips</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\COMMODORE\VICIIRegisters.cpp">
-      <Filter>Archivos de origen\Motherboard\Chips</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\COMMODORE\CommandBuilder.cpp">
       <Filter>Archivos de origen\Commands</Filter>
     </ClCompile>
@@ -202,29 +232,62 @@
     <ClCompile Include="..\..\src\COMMODORE\ExpansionPeripherals.cpp">
       <Filter>Archivos de origen\IO</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\COMMODORE\CIASerialPort.cpp">
-      <Filter>Archivos de origen\Motherboard\Chips</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\COMMODORE\SIDLibWrapper.cpp">
-      <Filter>Archivos de origen\Motherboard\Chips</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\COMMODORE\SerialPort.cpp">
       <Filter>Archivos de origen\IO</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\COMMODORE\VICIRegisters.cpp">
-      <Filter>Archivos de origen\Motherboard\Chips</Filter>
+    <ClCompile Include="..\..\src\COMMODORE\CIA\CIA.cpp">
+      <Filter>Archivos de origen\Motherboard\Chips\CIA</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\COMMODORE\VICI.cpp">
-      <Filter>Archivos de origen\Motherboard\Chips</Filter>
+    <ClCompile Include="..\..\src\COMMODORE\CIA\CIAClock.cpp">
+      <Filter>Archivos de origen\Motherboard\Chips\CIA</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\COMMODORE\VIA.cpp">
-      <Filter>Archivos de origen\Motherboard\Chips</Filter>
+    <ClCompile Include="..\..\src\COMMODORE\CIA\CIARegisters.cpp">
+      <Filter>Archivos de origen\Motherboard\Chips\CIA</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\COMMODORE\VIARegisters.cpp">
-      <Filter>Archivos de origen\Motherboard\Chips</Filter>
+    <ClCompile Include="..\..\src\COMMODORE\CIA\CIASerialPort.cpp">
+      <Filter>Archivos de origen\Motherboard\Chips\CIA</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\COMMODORE\VICISoundWrapper.cpp">
-      <Filter>Archivos de origen\Motherboard\Chips</Filter>
+    <ClCompile Include="..\..\src\COMMODORE\CIA\CIATimer.cpp">
+      <Filter>Archivos de origen\Motherboard\Chips\CIA</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\COMMODORE\SID\SID.cpp">
+      <Filter>Archivos de origen\Motherboard\Chips\SID</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\COMMODORE\SID\SIDLibWrapper.cpp">
+      <Filter>Archivos de origen\Motherboard\Chips\SID</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\COMMODORE\SID\SIDRegisters.cpp">
+      <Filter>Archivos de origen\Motherboard\Chips\SID</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\COMMODORE\VIA\VIA.cpp">
+      <Filter>Archivos de origen\Motherboard\Chips\VIA</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\COMMODORE\VIA\VIAControlLine.cpp">
+      <Filter>Archivos de origen\Motherboard\Chips\VIA</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\COMMODORE\VIA\VIARegisters.cpp">
+      <Filter>Archivos de origen\Motherboard\Chips\VIA</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\COMMODORE\VIA\VIAShiftRegister.cpp">
+      <Filter>Archivos de origen\Motherboard\Chips\VIA</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\COMMODORE\VIA\VIATimer.cpp">
+      <Filter>Archivos de origen\Motherboard\Chips\VIA</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\COMMODORE\VICI\VICI.cpp">
+      <Filter>Archivos de origen\Motherboard\Chips\VICI</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\COMMODORE\VICI\VICIRegisters.cpp">
+      <Filter>Archivos de origen\Motherboard\Chips\VICI</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\COMMODORE\VICI\VICISoundWrapper.cpp">
+      <Filter>Archivos de origen\Motherboard\Chips\VICI</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\COMMODORE\VICII\VICII.cpp">
+      <Filter>Archivos de origen\Motherboard\Chips\VICII</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\COMMODORE\VICII\VICIIRegisters.cpp">
+      <Filter>Archivos de origen\Motherboard\Chips\VICII</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
