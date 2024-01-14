@@ -30,20 +30,20 @@ namespace COMMODORE
 		public:
 		friend VIA;
 
-		/** Which signal is used to shift the register in/out? 
-			How does the Shift REgister behaves? */
+		/** Which signal is used to shift the "ShiftRegister" in/out? 
+			How does the "ShiftRegister" behave? */
 		enum class ShiftMode
 		{
-			_DISABLE			= 0,		// None. The shift register is free for other purposes.
+			_DISABLE			= 0,		// None. The "ShiftRegister" is free for other purposes.
 
 			// IN
-			_INUNDERTIMER2		= 1,		// Shift - in (from CB2 to bit 0) every time Timer2 reaches0LSB = true.
-											// Every shift - in, CB1 changes (shift pulse).
-											// After 8 shift pulses in CB1 (or 8 shift - ins),
+			_INUNDERTIMER		= 1,		// Shift - in (from _CL2 value to bit 0) every time _T reaches0LSB = true.
+											// Every shift - in, _CL1 changes (shift pulse).
+											// After 8 shift pulses in _CL1 (or 8 shift - ins),
 											// the shift operation is disabled and the interrupt flag is set.
-			_INATCLOCK			= 2,		// Same than above but system clock pulses determine the shift - out pace instead Timer2.
-			_INUNDERSIGNALCB1	= 3,		// The input signal to shift is here the changes in the CB1 status.
-											// After 8 bits shifted - in, and flaging the interrupt, the counter starts back.
+			_INATCLOCK			= 2,		// Same than above but system clock pulses determine the shift - in pace instead _T.
+			_INUNDERSIGNALCL1	= 3,		// The input signal to shift is here the changes in the _CL1 status.
+											// After 8 bits shifted - in, and flagging the interrupt, the counter starts back.
 											// Writting or reading the "ShiftRegisters" puts back the counter to 0, 
 											// and clear the interrupt flag.
 
@@ -51,30 +51,19 @@ namespace COMMODORE
 			_OUTFREERUNNING		= 4,		// @see just below.
 											// But never stops.
 											// Continuous (bit 7 enters back bit 0). Shift counter makes no sense.
-			_OUTUNDERTIMER2		= 5,		// Shift - out (bit 7 to CB2) every time Timer2 reaches0 = true.
-											// Every shift - out, CB1 changes (shift pulse).
-											// After 8 shift pulses in CB1 (or 8 shift - outs),
+			_OUTUNDERTIMER		= 5,		// Shift - out (bit 7 to _CL2) every time _T reaches0 = true.
+											// Every shift - out, _CL1 changes (shift pulse).
+											// After 8 shift pulses in _CL1 (or 8 shift - outs),
 											// the shift operation is disabled, the interrupt flag is set,
-											// and CB2 goes to the status that PCR (VIA register 5) defines (bit 5).
+											// and _CL2 goes to the status that PCR (VIA Register 0x05) defines (bit 5).
 											// To start back the shift - out process, 
 											// data has be read/write from/into the "ShiftRegister".
 			_OUTATCLOCK			= 6,		// Same than above, 
-											// but system clock pulses determine the shift - out pace instead Timer2.
-			_OUTUNDERSIGNALCB1	= 7			// The input signal to shift is here the changes in CB1 status.
+											// but system clock pulses determine the shift - out pace instead _T.
+			_OUTUNDERSIGNALCL1	= 7			// The input signal to shift is here the changes in _CL1 status.
 		};
 
-		VIAShiftRegister (int id /** unique id in the CIA Chip. */, unsigned int iId)
-			: MCHEmul::InfoClass ("VIAShiftRegister"),
-			  _id (id), 
-			  _interruptId (iId),
-			  _mode (COMMODORE::VIAShiftRegister::ShiftMode::_DISABLE),
-			  _value (MCHEmul::UByte::_0),
-			  _timer2 (nullptr), // It has to be assigned later, before similating...
-			  _CB1 (nullptr), _CB2 (nullptr), // It has to be assigned later, before simulating...
-			  _interruptEnabled (false),
-			  _interruptRequested (false),
-			  _CB1Pulse (false)
-							{ initialize (); } // To assign the implementation variables...
+		VIAShiftRegister (int id);
 
 		ShiftMode mode () const
 							{ return (_mode); }
@@ -119,35 +108,32 @@ namespace COMMODORE
 
 		/** To link the shift register with the VIA chip. */
 		void lookAtTimer (VIATimer* t)
-							{ _timer2 = t; }
-		void lookAtControlLines (VIAControlLine* cb1, VIAControlLine* cb2)
-							{ _CB1 = cb1; _CB2 = cb2; }
+							{ _T = t; }
+		void lookAtControlLines (VIAControlLine* c1, VIAControlLine* c2)
+							{ _CL1 = c1; _CL2 = c2; }
 
 		private:
 		int _id;
-		unsigned int _interruptId;
 		ShiftMode _mode;
 		MCHEmul::UByte _value;
-		VIATimer* _timer2;
-		VIAControlLine* _CB1;
-		VIAControlLine* _CB2;
-		/** When the interrupt is enabled. */
 		bool _interruptEnabled;
+
+		// Other Elements the Shift Register has relation with...
+		VIATimer* _T;
+		VIAControlLine* _CL1;
+		VIAControlLine* _CL2;
 
 		// Implementation
 		/** How many bits have been already shifted in/out? */
 		mutable unsigned char _numberBits;
-		/** True when the shift register is not active. 
+		/** True when the "ShiftRegister" is not active. 
 			because the mode or because it has finished it job. */
 		mutable bool _disable;
-		/** True when the shift register has just read or written down.
+		/** True when the "ShiftRegister" has just read or written down.
 			Bear in mind that just reading or writting this variable puts its value to false. */
 		mutable bool _justReadOrWritten; 
-		unsigned int _lastCPUCycles;
 		/** When the interrupt has been requested. */
 		mutable MCHEmul::OBool _interruptRequested;
-		/** To track a pulse in CB1. */
-		mutable MCHEmul::Pulse _CB1Pulse;
 	};
 
 	// ---
@@ -167,8 +153,6 @@ namespace COMMODORE
 
 		_interruptRequested = false;
 
-		_CB1Pulse.set (false);
-
 		return (_value);
 	}
 
@@ -180,8 +164,6 @@ namespace COMMODORE
 		_justReadOrWritten = true;
 
 		_interruptRequested = false;
-
-		_CB1Pulse.set (false);
 
 		_value = v;
 	}

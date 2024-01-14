@@ -1,4 +1,15 @@
 #include <COMMODORE/VIA/VIATimer.hpp>
+#include <COMMODORE/VIA/VIAPort.hpp>
+
+// ---
+COMMODORE::VIATimer::VIATimer (int id)
+	: MCHEmul::InfoClass ("VIATimer"),
+	  _id (id),
+	  _interruptRequested (false),
+	  _P (nullptr)
+{ 
+	initialize (); /** To initialize the rest of the values. */ 
+}
 
 // ---
 void COMMODORE::VIATimer::initialize ()
@@ -7,18 +18,37 @@ void COMMODORE::VIATimer::initialize ()
 
 	_countMode = CountMode::_PROCESSORCYCLES;
 
-	_interruptEnabled = false;
-
 	_initialValue = 0x0000;
+
+	_interruptEnabled = false;
 
 	// The implementation values...
 	_counting = false;
 	_currentValue = 0x0000;
-	_lastClockCycles = 0;
 	_reaches0 = _reaches0LSB = _firstTimeReaches0 = _reachesHalf = _alreadyReachedHalf = false;
-	_PB7Situation = false;
-	_PB6Situation = false;
 	_interruptRequested = false;
+}
+
+// ---
+void COMMODORE::VIATimer::reset ()
+{ 
+	_currentValue = _initialValue; 
+		
+	_alreadyReachedHalf = false; 
+							  
+	_firstTimeReaches0 = false;
+		
+	_counting = true;
+
+	// When reset the PB7 is push down 
+	// if the mode is the right one...
+	if (_runMode == RunMode::_ONESHOOTSIGNAL ||
+		_runMode == RunMode::_CONTINUOUSSIGNAL)
+	{ 
+		assert (_P != nullptr);
+
+		_P -> setP7 (false);
+	}
 }
 
 // ---
@@ -26,63 +56,60 @@ bool COMMODORE::VIATimer::simulate (MCHEmul::CPU* cpu)
 {
 	assert (cpu != nullptr);
 
-	if (_lastClockCycles == 0)
+	if (_counting && 
+		countDown (cpu)) // Counting one at a time...
 	{
-		_lastClockCycles = cpu -> clockCycles (); // Just to set up in the first cycle...
-
-		return (true);
-	}
-
-	for (unsigned int i = cpu -> lastCPUClockCycles () - _lastClockCycles; i > 0; i--)
-	{
-		if (_counting && 
-			countDown (cpu)) // Counting one at a time...
+		switch (_runMode)
 		{
-			switch (_runMode)
-			{
-				case COMMODORE::VIATimer::RunMode::_ONESHOOT:
-				case COMMODORE::VIATimer::RunMode::_ONESHOOTSIGNAL:
-					{
-						if (!_firstTimeReaches0)
-						{ 
-							_firstTimeReaches0 = true;
+			case COMMODORE::VIATimer::RunMode::_ONESHOOT:
+			case COMMODORE::VIATimer::RunMode::_ONESHOOTSIGNAL:
+				{
+					if (!_firstTimeReaches0)
+					{ 
+						_firstTimeReaches0 = true;
 
-							_interruptRequested = true;
-
-							if (_runMode == COMMODORE::VIATimer::RunMode::_ONESHOOTSIGNAL)
-								_PB7Situation = true;
-						}
-						else
-							_PB7Situation = false;
-					}
-
-					break;
-
-				case COMMODORE::VIATimer::RunMode::_CONTINUOUS:
-				case COMMODORE::VIATimer::RunMode::_CONTINUOUSSIGNAL:
-					{
 						_interruptRequested = true;
 
-						// Starts back...
-						_currentValue = _initialValue;
+						if (_runMode == COMMODORE::VIATimer::RunMode::_ONESHOOTSIGNAL)
+						{ 
+							// just in case...
+							// Timer 2 has nothing to do with this mode and when defined,
+							// the timer 2 doesn't take a look of any timer, so this is just a protection...
+							assert (_P != nullptr);
 
-						_alreadyReachedHalf = false;
-
-						if (_runMode == COMMODORE::VIATimer::RunMode::_CONTINUOUSSIGNAL)
-							_PB7Situation = !_PB7Situation;
+							_P -> setP7 (true); // Pulse generated!
+						}
 					}
+				}
 
-					break;
+				break;
 
-				default:
-					// It shouldn't be here...
-					assert (false);
-					break;
-			}
+			case COMMODORE::VIATimer::RunMode::_CONTINUOUS:
+			case COMMODORE::VIATimer::RunMode::_CONTINUOUSSIGNAL:
+				{
+					_interruptRequested = true;
+
+					// Starts back...
+					_currentValue = _initialValue;
+
+					_alreadyReachedHalf = false;
+
+					if (_runMode == COMMODORE::VIATimer::RunMode::_CONTINUOUSSIGNAL)
+					{
+						assert (_P != nullptr);
+
+						_P -> changeP7 (); // Train of pulses!
+					}
+				}
+
+				break;
+
+			default:
+				// It shouldn't be here...
+				assert (false);
+				break;
 		}
 	}
-
-	_lastClockCycles = cpu -> clockCycles ();
 
 	return (true);
 }
@@ -115,7 +142,9 @@ bool COMMODORE::VIATimer::countDown (MCHEmul::CPU* cpu)
 
 		case COMMODORE::VIATimer::CountMode::_PULSERECEIVED:
 			{
-				if (_PB6Situation) // This is an OBool...becomes false always after this instruction...
+				assert (_P != nullptr);
+
+				if (_P -> peekP6Pulse ())
 					--_currentValue;
 			}
 

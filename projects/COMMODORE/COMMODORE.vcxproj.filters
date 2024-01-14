@@ -150,7 +150,7 @@
     <ClInclude Include="..\..\include\COMMODORE\VIA\VIA.hpp">
       <Filter>Archivos de encabezado\Motherboard\Chips\VIA</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\include\COMMODORE\VIA\VIAControlLine.hpp">
+    <ClInclude Include="..\..\include\COMMODORE\VIA\VIAControlLines.hpp">
       <Filter>Archivos de encabezado\Motherboard\Chips\VIA</Filter>
     </ClInclude>
     <ClInclude Include="..\..\include\COMMODORE\VIA\VIARegisters.hpp">
@@ -191,6 +191,9 @@
     </ClInclude>
     <ClInclude Include="..\..\include\COMMODORE\VICII\incs.hpp">
       <Filter>Archivos de encabezado\Motherboard\Chips\VICII</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\COMMODORE\VIA\VIAPort.hpp">
+      <Filter>Archivos de encabezado\Motherboard\Chips\VIA</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -262,7 +265,7 @@
     <ClCompile Include="..\..\src\COMMODORE\VIA\VIA.cpp">
       <Filter>Archivos de origen\Motherboard\Chips\VIA</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\COMMODORE\VIA\VIAControlLine.cpp">
+    <ClCompile Include="..\..\src\COMMODORE\VIA\VIAControlLines.cpp">
       <Filter>Archivos de origen\Motherboard\Chips\VIA</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\COMMODORE\VIA\VIARegisters.cpp">
@@ -288,6 +291,9 @@
     </ClCompile>
     <ClCompile Include="..\..\src\COMMODORE\VICII\VICIIRegisters.cpp">
       <Filter>Archivos de origen\Motherboard\Chips\VICII</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\COMMODORE\VIA\VIaPort.cpp">
+      <Filter>Archivos de origen\Motherboard\Chips\VIA</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

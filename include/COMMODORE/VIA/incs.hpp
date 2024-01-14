@@ -15,9 +15,10 @@
 #define __COMMODORE_VIAINCS__
 
 #include <COMMODORE/incs.hpp>
-#include <COMMODORE/VIA/VIAControlLine.hpp>
+#include <COMMODORE/VIA/VIAControlLines.hpp>
 #include <COMMODORE/VIA/VIATimer.hpp>
 #include <COMMODORE/VIA/VIAShiftRegister.hpp>
+#include <COMMODORE/VIA/VIAPort.hpp>
 #include <COMMODORE/VIA/VIARegisters.hpp>
 #include <COMMODORE/VIA/VIA.hpp>
 

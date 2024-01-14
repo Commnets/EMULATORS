@@ -10,9 +10,10 @@ COMMODORE::VIA::VIA (int id, int rId, unsigned int intId)
 	  _registersId (rId),
 	  _VIARegisters (nullptr),
 	  _interruptId (intId),
-	  _timer1 (0, intId /** they have to know the interruption id. */), _timer2 (1, intId),
-	  _shiftRegister (0, intId),
-	  _CA1 (10 /** id. */), _CA2 (11), _CB1 (20), _CB2 (21),
+	  _CA1 (0 /** id. */), _CA2 (1), _CB1 (2), _CB2 (3),
+	  _T1 (0), _T2 (1),
+	  _SR (0),
+	  _PA (0), _PB (1),
 	  _lastClockCycles (0)
 { 
 	setClassName ("VIA"); 
@@ -32,29 +33,49 @@ bool COMMODORE::VIA::initialize ()
 		return (false);
 	}
 
-	// Initialize the control line...
+	// Initialize the control lines...
+	_CA1.linkToPort (&_PA); // When interrupt flag is set, value at _PA is latched...
 	_CA1.initialize ();
+	_CA2.linkToControlLine (&_CA1); // In control line mode 4, transition in _CA1, sets _CA2 back to 1...
 	_CA2.initialize ();
+	_CB1.linkToPort (&_PB); // @see _CA1
 	_CB1.initialize ();
+	_CB2.linkToControlLine (&_CB1); // @see _CA2
 	_CB2.initialize ();
 
 	// ...then the timers...
-	_timer1.initialize ();
-	_timer2.initialize ();
+	/** In run modes = _ONESHOOTSIGNAL and _CONTINUOSSHOOTSIGNAL, 
+		PB7 changes when reaches0 = true... */
+	_T1.lookAtPort (&_PB); 
+	_T1.initialize ();
+	/** T2 has nothing to do with any port! */
+	_T2.initialize (); 
 
 	// ...now the shift register...
+	/** And also the wires, to know the signal or to output a new one. */
+	_SR.lookAtControlLines (&_CB1, &_CB2);
 	/** The shift register uses the timer B in some running modes,
 		for both output and input. */
-	_shiftRegister.lookAtTimer (&_timer2);
-	/** And also the wires, to know the signal or to output a new one. */
-	_shiftRegister.lookAtControlLines (&_CB1, &_CB2);
-	_shiftRegister.initialize ();
+	_SR.lookAtTimer (&_T2);
+	_SR.initialize ();
 
-	// ...and finally all register...
-	/** The registers need to access then timers, shift registers, and the control lines. */
+	// ..now the ports...
+	/** Read / write action might clear interrupt flag of the control lines linked (@see VIAControlLine)... */
+	_PA.linkAtControlLines (&_CA1, &_CA2); 
+	_PA.initialize ();
+	/** PB7 will impact in port output 
+		when T1 run modes = _ONESHOOTSIGNAL or _CONTINUOSSHOOTSIGNAL... */
+	_PB.linkAtTimer (&_T1); 
+	/** Read/write action might clear interrupt flag of the control lines linked (@see VIAControlLine)
+		It will depend on the configuration of the control lines. */
+	_PB.linkAtControlLines (&_CB1, &_CB2); 
+	_PB.initialize ();
+
+	// ...and finally all registers...
+	/** The registers need to access control lines, timers, shift register and ports. */
 	_VIARegisters -> lookAtControlLines (&_CA1, &_CA2, &_CB1, &_CB2);
-	_VIARegisters -> lookAtTimers (&_timer1, &_timer2);
-	_VIARegisters -> lookAtShiftRegister (&_shiftRegister);
+	_VIARegisters -> lookAtTimers (&_T1, &_T2);
+	_VIARegisters -> lookAtShiftRegister (&_SR);
 	_VIARegisters -> initialize ();
 
 	_lastClockCycles = 0;
@@ -78,21 +99,24 @@ bool COMMODORE::VIA::simulate (MCHEmul::CPU* cpu)
 			i > 0 && result == true; i--)
 	{
 		// Simulations...
-		// The control lines first...
+		// "ControlLines"
 		result &= _CA1.simulate (cpu);
 		result &= _CA2.simulate (cpu);
 		result &= _CB1.simulate (cpu);
 		result &= _CB2.simulate (cpu);
+		// "Timers"
+		result &= _T1.simulate (cpu);
+		result &= _T2.simulate (cpu);
+		// "ShiftRegister"
+		result &= _SR.simulate (cpu);
+		// "Ports"
+		result &= _PA.simulate (cpu);
+		result &= _PB.simulate (cpu);
 
-		// Then simulate the timer 1...
-		result &= _timer1.simulate (cpu);
-		// ...and the timer 2...
-		// Considering the changes (depending the execution mode) of the PB6...
-		_timer2.setPB6Situation (_VIARegisters -> lastPB6 ());
-		result &= _timer2.simulate (cpu);
-
-		// And, finally simulates the shift register...
-		result &= _shiftRegister.simulate (cpu);
+		// Clean up pulses control signals!
+		_CA1.transition (); _CA2.transition (); 
+		_CB1.transition (); _CB2.transition ();
+		_PA.p6Pulse (); _PB.p6Pulse ();
 
 		// After all that much, 
 		// any reason to launch an interruption?...
@@ -117,17 +141,15 @@ MCHEmul::InfoStructure COMMODORE::VIA::getInfoStructure () const
 
 	result.remove ("Memory"); // This is not neccesary...
 	result.add ("Registers",	std::move (_VIARegisters -> getInfoStructure ()));
-	result.add ("VIATimer1",	std::move (_timer1.getInfoStructure ()));
-	result.add ("VIATimer2",	std::move (_timer2.getInfoStructure ()));
-	result.add ("VIAShiftReg",	std::move (_shiftRegister.getInfoStructure ()));
-	result.add ("PortA",		_VIARegisters -> portA ());
-	result.add ("PortB",		_VIARegisters -> portB ()); // This is already a Ubyte...
+	result.add ("VIATimer1",	std::move (_T1.getInfoStructure ()));
+	result.add ("VIATimer2",	std::move (_T2.getInfoStructure ()));
+	result.add ("VIAShiftReg",	std::move (_SR.getInfoStructure ()));
+	result.add ("PortA",		std::move (_PA.getInfoStructure ()));
+	result.add ("PortB",		std::move (_PB.getInfoStructure ()));
 	result.add ("VIACtrlA1",	std::move (_CA1.getInfoStructure ()));
 	result.add ("VIACtrlA2",	std::move (_CA1.getInfoStructure ()));
 	result.add ("VIACtrlB1",	std::move (_CB1.getInfoStructure ()));
 	result.add ("VIACtrlB2",	std::move (_CB1.getInfoStructure ()));
-	result.add ("VIADDRA",		MCHEmul::UByte (_VIARegisters -> dataPortADir ())); // To write doen it in hexadecimal form...
-	result.add ("VIADDRB",		MCHEmul::UByte (_VIARegisters -> dataPortBDir ()));
 
 	return (result);
 }

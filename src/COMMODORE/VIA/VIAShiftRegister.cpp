@@ -1,6 +1,19 @@
 #include <COMMODORE/VIA/VIAShiftRegister.hpp>
-#include <COMMODORE/VIA/VIAControlLine.hpp>
+#include <COMMODORE/VIA/VIAControlLines.hpp>
 #include <COMMODORE/VIA/VIATimer.hpp>
+
+// ---
+COMMODORE::VIAShiftRegister::VIAShiftRegister (int id)
+	: MCHEmul::InfoClass ("VIAShiftRegister"),
+	  _id (id),
+	  _mode (COMMODORE::VIAShiftRegister::ShiftMode::_DISABLE),
+	  _value (MCHEmul::UByte::_0),
+	  _T (nullptr), _CL1 (nullptr), _CL2 (nullptr),
+	  _interruptEnabled (false),
+	  _interruptRequested (false)
+{ 
+	initialize (); // To assign the implementation variables...
+}
 
 // ---
 void COMMODORE::VIAShiftRegister::initialize ()
@@ -11,193 +24,190 @@ void COMMODORE::VIAShiftRegister::initialize ()
 
 	_interruptEnabled = _interruptRequested = false;
 
-	_lastCPUCycles = 0;
-
 	_numberBits = 0;
 
 	_disable = true;
 
 	_justReadOrWritten = false;
-
-	_CB1Pulse.set (false);
 }
 
 
 // ---
 bool COMMODORE::VIAShiftRegister::simulate (MCHEmul::CPU* cpu)
 {
-	if (_lastCPUCycles == 0)
+	switch (_mode)
 	{
-		_lastCPUCycles = cpu -> lastCPUClockCycles ();
+		case (COMMODORE::VIAShiftRegister::ShiftMode::_DISABLE):
+			break;
 
-		return (true);
-	}
+		case (COMMODORE::VIAShiftRegister::ShiftMode::_INUNDERTIMER):
+			{
+				assert (_T != nullptr &&
+						_CL1 != nullptr && _CL2 != nullptr);
 
-	for (unsigned int i = (cpu -> lastCPUClockCycles () - _lastCPUCycles); i > 0; i--)
-	{
-		switch (_mode)
-		{
-			case (COMMODORE::VIAShiftRegister::ShiftMode::_DISABLE):
-				break;
-
-			case (COMMODORE::VIAShiftRegister::ShiftMode::_INUNDERTIMER2):
+				if (!_disable &&
+					((_justReadOrWritten && 
+						_interruptRequested.peekValue () /** To not change its value. */) ||
+					(!_justReadOrWritten && _T -> reaches0LSB () /** Just the LSB. */)))
 				{
-					if (!_disable &&
-						(_justReadOrWritten && 
-							_interruptRequested.peekValue () /** To not change its value. */) ||
-						(!_justReadOrWritten && _timer2 -> reaches0LSB () /** Just the LSB. */))
-					{
-						// Inverse the value of CB1...
-						_CB1 -> setValue (!_CB1 -> value ()); 
+					// Inverse the value of CL1...
+					_CL1 -> setValue (!_CL1 -> value ()); 
 						
-						// Complete?
-						if (shiftIn (_CB2 -> value ())) 
-						{ 
-							_disable = true; // Stops...
+					// Complete?
+					if (shiftIn (_CL2 -> value ())) 
+					{ 
+						_disable = true; // Stops...
 
-							_interruptRequested = true; // ...and Interrupt requested...
-						}
+						_interruptRequested = true; // ...and Interrupt requested...
 					}
 				}
+			}
 
-				break;
+			break;
 
-			case (COMMODORE::VIAShiftRegister::ShiftMode::_INATCLOCK):
+		case (COMMODORE::VIAShiftRegister::ShiftMode::_INATCLOCK):
+			{
+				assert (_CL1 != nullptr && _CL2 != nullptr);
+
+				if (!_disable)
 				{
-					if (!_disable)
-					{
-						// Inverse the value of CB1...
-						_CB1 -> setValue (!_CB1 -> value ()); 
+					// Inverse the value of CL1...
+					_CL1 -> setValue (!_CL1 -> value ()); 
 						
-						// Complete?
-						if (shiftIn (_CB2 -> value ())) 
-						{ 
-							_disable = true; // Stops...
+					// Complete?
+					if (shiftIn (_CL2 -> value ())) 
+					{ 
+						_disable = true; // Stops...
 
-							_interruptRequested = true; // ...and interrupt requested...
-						}
+						_interruptRequested = true; // ...and interrupt requested...
 					}
 				}
+			}
 
-				break;
+			break;
 
-			case (COMMODORE::VIAShiftRegister::ShiftMode::_INUNDERSIGNALCB1):
+		case (COMMODORE::VIAShiftRegister::ShiftMode::_INUNDERSIGNALCL1):
+			{
+				assert (_CL1 != nullptr && _CL2 != nullptr);
+
+				if ((_justReadOrWritten && // Never stops (_disable is not used)
+						_interruptRequested.peekValue () /** To not change its value. */) ||
+					(!_justReadOrWritten && _CL1 -> peekTransition ()))
 				{
-					// To keep track of any potential pulse in _CB1 line...
-					_CB1Pulse.set (_CB1 -> value ());
-					if ((_justReadOrWritten && 
-							_interruptRequested.peekValue () /** To not change its value. */) ||
-						(!_justReadOrWritten && _CB1Pulse.transition () /** Clears the pusle. */))
-					{
-						// Complete?
-						if (shiftIn (_CB2 -> value ())) 
-							_interruptRequested = true; // Interrupt requested...
-					}
+					// Complete?
+					if (shiftIn (_CL2 -> value ())) 
+						_interruptRequested = true; // Interrupt requested...
 				}
+			}
 
-				break;
+			break;
 
-			case (COMMODORE::VIAShiftRegister::ShiftMode::_OUTFREERUNNING):
+		case (COMMODORE::VIAShiftRegister::ShiftMode::_OUTFREERUNNING):
+			{
+				assert (_T != nullptr && 
+						_CL1 != nullptr && _CL2 != nullptr);
+
+				if ((_justReadOrWritten && 
+						_interruptRequested.peekValue () /** To not change its value. */) ||
+					(!_justReadOrWritten && _T -> reaches0LSB () /** Just the LSB. */))
 				{
-					if ((_justReadOrWritten && 
-							_interruptRequested.peekValue () /** To not change its value. */) ||
-						(!_justReadOrWritten && _timer2 -> reaches0LSB () /** Just the LSB. */))
-					{
-						// Inverse the value of CB1...
-						_CB1 -> setValue (!_CB1 -> value ()); 
+					// Inverse the value of CL1...
+					_CL1 -> setValue (!_CL1 -> value ()); 
 
-						bool o;
-						bool r = shiftOut (o, true);
-						_CB2 -> setValue (o);
+					bool o;
+					bool r = shiftOut (o, true);
+					_CL2 -> setValue (o);
 
-						// Complete?
-						if (r)
-							_interruptRequested = true; // ...an interrupt requested...
-					}
+					// Complete?
+					if (r)
+						_interruptRequested = true; // ...an interrupt requested...
 				}
+			}
 
-				break;
+			break;
 
-			case (COMMODORE::VIAShiftRegister::ShiftMode::_OUTUNDERTIMER2):
+		case (COMMODORE::VIAShiftRegister::ShiftMode::_OUTUNDERTIMER):
+			{
+				assert (_T != nullptr && 
+						_CL1 != nullptr && _CL2 != nullptr);
+
+				if (!_disable &&
+					((_justReadOrWritten && 
+						_interruptRequested.peekValue () /** To not change its value. */) ||
+					(!_justReadOrWritten && _T -> reaches0LSB () /** Just the LSB. */)))
 				{
-					if (!_disable &&
-						(_justReadOrWritten && 
-							_interruptRequested.peekValue () /** To not change its value. */) ||
-						(!_justReadOrWritten && _timer2 -> reaches0LSB () /** Just the LSB. */))
-					{
-						// Inverse the value of CB1...
-						_CB1 -> setValue (!_CB1 -> value ()); 
+					// Inverse the value of CL1...
+					_CL1 -> setValue (_CL1 -> value ()); 
 
-						bool o;
-						bool r = shiftOut (o, false);
-						_CB2 -> setValue (o);
+					bool o;
+					bool r = shiftOut (o, false);
+					_CL2 -> setValue (o);
 
-						// Complete?
-						if (r)
-						{ 
-							_disable = true; // Stops...
+					// Complete?
+					if (r)
+					{ 
+						_disable = true; // Stops...
 
-							_interruptRequested = true; // ...and interrupt requested...
-						}
+						_interruptRequested = true; // ...and interrupt requested...
 					}
 				}
+			}
 
-				break;
+			break;
 
-			case (COMMODORE::VIAShiftRegister::ShiftMode::_OUTATCLOCK):
+		case (COMMODORE::VIAShiftRegister::ShiftMode::_OUTATCLOCK):
+			{
+				assert (_CL1 != nullptr && _CL2 != nullptr);
+
+				if (!_disable)
 				{
-					if (!_disable)
-					{
-						// Inverse the value of CB1...
-						_CB1 -> setValue (!_CB1 -> value ()); 
+					// Inverse the value of CB1...
+					_CL1 -> setValue (!_CL1 -> value ()); 
 
-						bool o;
-						bool r = shiftOut (o, false);
-						_CB2 -> setValue (o);
+					bool o;
+					bool r = shiftOut (o, false);
+					_CL2 -> setValue (o);
 
-						// Complete?
-						if (r)
-						{ 
-							_disable = true; // Stops...
+					// Complete?
+					if (r)
+					{ 
+						_disable = true; // Stops...
 
-							_interruptRequested = true; // ...and interrupt requested...
-						}
+						_interruptRequested = true; // ...and interrupt requested...
 					}
 				}
+			}
 
-				break;
+			break;
 
-			case (COMMODORE::VIAShiftRegister::ShiftMode::_OUTUNDERSIGNALCB1):
+		case (COMMODORE::VIAShiftRegister::ShiftMode::_OUTUNDERSIGNALCL1):
+			{
+				assert (_CL1 != nullptr && _CL2 != nullptr);
+
+				if ((_justReadOrWritten && // Never stops. _disable is not used.
+						_interruptRequested.peekValue () /** To not change its value. */) ||
+					(!_justReadOrWritten && _CL1 -> peekTransition ()))
 				{
-					// To keep track of any potential pulse in _CB1 line...
-					_CB1Pulse.set (_CB1 -> value ());
-					if ((_justReadOrWritten &&
-							_interruptRequested.peekValue () /** To not change its value. */) ||
-						(!_justReadOrWritten && _CB1Pulse.transition () /** Clears the pusle. */))
-					{
 
-						bool o;
-						bool r = shiftOut (o, false);
-						_CB2 -> setValue (o);
+					bool o;
+					bool r = shiftOut (o, false);
+					_CL2 -> setValue (o);
 
-						// Complete?
-						if (r)
-							_interruptRequested = true; // Interrupt requested...
-					}
+					// Complete?
+					if (r)
+						_interruptRequested = true; // Interrupt requested...
 				}
+			}
 
-				break;
+			break;
 
-			default:
-				// It shouldn't be here...
-				assert (false);
-				break;
-		}
+		default:
+			// It shouldn't be here...
+			assert (false);
+			break;
 	}
 
 	_justReadOrWritten = false;
-
-	_lastCPUCycles = cpu -> lastCPUClockCycles ();
 
 	return (true);
 }

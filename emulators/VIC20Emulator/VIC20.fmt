@@ -13,10 +13,10 @@ Id:@ID@
 @VIACtrlA2>@
 @VIACtrlB1>@
 @VIACtrlB2>@
-->Timer A:
-@VIATimerA>@
-->Timer B:
-@VIATimerB>@
+->Timer 1:
+@VIATimer1>@
+->Timer 2:
+@VIATimer2>@
 ->ShiftRegister:
 @VIAShiftReg>@
 ->Ports:
@@ -34,10 +34,10 @@ Id:@ID@
 @VIACtrlA2>@
 @VIACtrlB1>@
 @VIACtrlB2>@
-->Timer A:
-@VIATimerA>@
-->Timer B:
-@VIATimerB>@
+->Timer 1:
+@VIATimer1>@
+->Timer 2:
+@VIATimer2>@
 ->ShiftRegister:
 @VIAShiftReg>@
 ->Ports:

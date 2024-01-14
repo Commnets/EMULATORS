@@ -3,12 +3,23 @@
 #include <VIC20/OSIO.hpp>
 
 // ---
+VIC20::VIA2::VIA2 ()
+	: VIA (_ID, VIA2Registers::_VIA2_SUBSET, F6500::IRQInterrupt::_ID),
+	  _VIA2Registers (nullptr)
+{ 
+	setClassName ("VIA2"); 
+
+	_joystickStatus = 0xff; // No switches clicked, no fire buttons pressed...
+	for (size_t i = 0; i < 8; i++)
+		_keyboardStatusMatrix [i] = _rev_keyboardStatusMatrix [i] = MCHEmul::UByte::_FF; // No keys pressed...
+}
+
+// ---
 bool VIC20::VIA2::initialize ()
 {
 	assert (memoryRef () != nullptr);
 
-	// Gets the memory block dedicated to the VIA2
-	// That has special uses with the keyboard and joysticks...
+	// Gets the memory block dedicated to the CIA2
 	if (!(_VIA2Registers = 
 		dynamic_cast <VIC20::VIA2Registers*> (memoryRef () -> subset (_registersId))))
 	{
@@ -33,15 +44,38 @@ bool VIC20::VIA2::simulate (MCHEmul::CPU* cpu)
 			<< "Info cycle\t\t"
 			// Data
 			<< "PortA:["
-			<< std::to_string (_VIA2Registers -> outputRegisterA ()) << "," 
-			<< std::to_string (_VIA2Registers -> dataPortADir ()) << ","
-			<< _VIA2Registers -> portA ().asString (MCHEmul::UByte::OutputFormat::_HEXA, 0)
+			<< _PA.asString ()
 			<< "], PortB:["
-			<< std::to_string (_VIA2Registers -> outputRegisterB ()) << "," 
-			<< std::to_string (_VIA2Registers -> dataPortBDir ()) << ","
-			<< _VIA2Registers -> portB ().asString (MCHEmul::UByte::OutputFormat::_HEXA, 0) << "]\n";
+			<< _PB.asString () << "]\n";
 
-	return (COMMODORE::VIA::simulate (cpu));
+	// The standard simulation fails for VIA 2
+	// becaus ethe status of the keyboard and joystick are not taken into account...
+	bool result = COMMODORE::VIA::simulate (cpu);
+	// So if everything goes ok, redo that values...
+	if (!result)
+	{
+		unsigned char m = 0x01;
+		unsigned char dt = MCHEmul::UByte::_0;
+		MCHEmul::UByte o = _PB.OR ();
+		if (_T2.runMode () == COMMODORE::VIATimer::RunMode::_ONESHOOTSIGNAL ||
+			_T2.runMode () == COMMODORE::VIATimer::RunMode::_CONTINUOUSSIGNAL)
+			o.setBit (7, _PB.p7 ());
+		unsigned char msk = (o.value () | ~_PB.DDR ().value ());
+		for (size_t i = 0; i < 8; m <<= 1, i++)
+			if ((~msk & m) != 0x00)
+				dt |= ~_rev_keyboardStatusMatrix [i].value (); // 1 if clicked...
+		_PA.setPortValue ((_PA.OR ().value () | ~_PA.DDR ().value ()) & ~dt);
+
+		m = 0x01;
+		dt = MCHEmul::UByte::_0;
+		msk = (_PA.OR ().value () | ~_PA.DDR ().value ()) & _joystickStatus;
+		for (size_t i = 0; i < 8; m <<= 1, i++)
+			if ((~msk & m) != 0x00)
+				dt |= ~_keyboardStatusMatrix [i].value ();  // 1 if clicked...
+		_PB.setPortValue ((_PB.OR ().value () | ~_PB.DDR ().value ()) & ~dt);
+	}
+
+	return (result);
 }
 
 // ---
@@ -57,7 +91,7 @@ void VIC20::VIA2::processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifier* n
 					(std::static_pointer_cast <MCHEmul::InputOSSystem::KeyboardEvent> (evnt.data ()) -> _key);
 				if (!ks.empty ()) // The key has to be defined...
 					for (const auto& j : ks)
-						_VIA2Registers -> setKeyboardStatusMatrix (j.first, j.second, false);
+						setKeyboardStatusMatrix (j.first, j.second, false);
 			}
 
 			break;
@@ -68,7 +102,7 @@ void VIC20::VIA2::processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifier* n
 				(std::static_pointer_cast <MCHEmul::InputOSSystem::KeyboardEvent> (evnt.data ()) -> _key);
 				if (!ks.empty ()) // The key has to be defined...
 					for (const auto& j : ks)
-						_VIA2Registers -> setKeyboardStatusMatrix (j.first, j.second, true);
+						setKeyboardStatusMatrix (j.first, j.second, true);
 			}
 
 			break;
@@ -91,8 +125,8 @@ void VIC20::VIA2::processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifier* n
 					ct++;
 				}
 
-				_VIA2Registers -> setJoystick1Status 
-					((dr == 0x00) ? 0xff /** none connected. */ : _VIA2Registers -> joystick1Status () & ~dr);
+				setJoystickStatus 
+					((dr == 0x00) ? 0xff /** none connected. */ : joystickStatus () & ~dr);
 			}
 
 			break;
@@ -104,7 +138,7 @@ void VIC20::VIA2::processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifier* n
 				if (jb -> _joystickId != 0)
 					break; // Only joystick 0 is allowed!
 
-				_VIA2Registers -> setJoystick1Status (_VIA2Registers -> joystick1Status () & ~0x10);
+				setJoystickStatus (joystickStatus () & ~0x10);
 			}
 
 			break;
@@ -116,12 +150,10 @@ void VIC20::VIA2::processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifier* n
 				if (jb -> _joystickId != 0)
 					break; // Only joystick 0 is allowed!
 	
-				_VIA2Registers -> setJoystick1Status (_VIA2Registers -> joystick1Status () | 0x10);
+				setJoystickStatus (joystickStatus () | 0x10);
 			}
 
 			break;
-			
-		// TODO
 
 		default:
 			break;

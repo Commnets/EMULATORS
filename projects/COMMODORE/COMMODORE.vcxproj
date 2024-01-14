@@ -46,7 +46,8 @@
     <ClInclude Include="..\..\include\COMMODORE\UserPort.hpp" />
     <ClInclude Include="..\..\include\COMMODORE\VIA\incs.hpp" />
     <ClInclude Include="..\..\include\COMMODORE\VIA\VIA.hpp" />
-    <ClInclude Include="..\..\include\COMMODORE\VIA\VIAControlLine.hpp" />
+    <ClInclude Include="..\..\include\COMMODORE\VIA\VIAControlLines.hpp" />
+    <ClInclude Include="..\..\include\COMMODORE\VIA\VIAPort.hpp" />
     <ClInclude Include="..\..\include\COMMODORE\VIA\VIARegisters.hpp" />
     <ClInclude Include="..\..\include\COMMODORE\VIA\VIAShiftRegister.hpp" />
     <ClInclude Include="..\..\include\COMMODORE\VIA\VIATimer.hpp" />
@@ -93,7 +94,8 @@
     <ClCompile Include="..\..\src\COMMODORE\SID\SIDRegisters.cpp" />
     <ClCompile Include="..\..\src\COMMODORE\UserPort.cpp" />
     <ClCompile Include="..\..\src\COMMODORE\VIA\VIA.cpp" />
-    <ClCompile Include="..\..\src\COMMODORE\VIA\VIAControlLine.cpp" />
+    <ClCompile Include="..\..\src\COMMODORE\VIA\VIAControlLines.cpp" />
+    <ClCompile Include="..\..\src\COMMODORE\VIA\VIaPort.cpp" />
     <ClCompile Include="..\..\src\COMMODORE\VIA\VIARegisters.cpp" />
     <ClCompile Include="..\..\src\COMMODORE\VIA\VIAShiftRegister.cpp" />
     <ClCompile Include="..\..\src\COMMODORE\VIA\VIATimer.cpp" />

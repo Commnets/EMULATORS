@@ -17,9 +17,10 @@
 
 #include <CORE/incs.hpp>
 #include <COMMODORE/VIA/VIARegisters.hpp>
-#include <COMMODORE/VIA/VIAControlLine.hpp>
+#include <COMMODORE/VIA/VIAControlLines.hpp>
 #include <COMMODORE/VIA/VIATimer.hpp>
 #include <COMMODORE/VIA/VIAShiftRegister.hpp>
+#include <COMMODORE/VIA/VIAPort.hpp>
 
 namespace COMMODORE
 {
@@ -33,7 +34,7 @@ namespace COMMODORE
 			In a computer there could be many of these with little differences. */
 		VIA (int id, int rId, unsigned int intId);
 
-		/** To allow the external conexion. */
+		/** To allow the external conexions. */
 		const MCHEmul::Wire& CA1 () const
 							{ return (_CA1.wire ()); }
 		MCHEmul::Wire& CA1 ()
@@ -51,15 +52,15 @@ namespace COMMODORE
 		MCHEmul::Wire& CB2 ()
 							{ return (_CB2.wire ()); }
 
-		// Managing the ports...
-		const MCHEmul::UByte& portA () const
-							{ return (_VIARegisters -> portA ()); }
-		MCHEmul::UByte setPortA (const MCHEmul::UByte& v, bool f = false)
-							{ return (_VIARegisters -> setPortA (v, f)); }
-		const MCHEmul::UByte& portB () const
-							{ return (_VIARegisters -> portB ()); }
-		MCHEmul::UByte setPortB (const MCHEmul::UByte& v, bool f = false)
-							{ return (_VIARegisters -> setPortB (v, f)); }
+		/** To allow external conexions. */
+		const MCHEmul::Bus& portA () const
+							{ return (_PA.bus ()); }
+		MCHEmul::Bus& portA ()
+							{ return (_PA.bus ()); }
+		const MCHEmul::Bus& portB () const
+							{ return (_PB.bus ()); }
+		MCHEmul::Bus& portB ()
+							{ return (_PB.bus ()); }
 
 		virtual bool initialize () override;
 
@@ -89,9 +90,11 @@ namespace COMMODORE
 		VIARegisters* _VIARegisters;
 		unsigned int _interruptId;
 		// The different elements of the VIA Chip...
-		VIATimer _timer1, _timer2;
-		VIAControlLine _CA1, _CA2, _CB1, _CB2;
-		VIAShiftRegister _shiftRegister;
+		VIAControlLineType1 _CA1, _CB1;
+		VIAControlLineType2 _CA2, _CB2;
+		VIATimer _T1, _T2;
+		VIAShiftRegister _SR;
+		VIAPort _PA, _PB;
 
 		// Implementation
 		unsigned int _lastClockCycles;

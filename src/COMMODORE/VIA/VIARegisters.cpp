@@ -1,6 +1,7 @@
 #include <COMMODORE/VIA/VIARegisters.hpp>
 #include <COMMODORE/VIA/VIATimer.hpp>
 #include <COMMODORE/VIA/VIAShiftRegister.hpp>
+#include <COMMODORE/VIA/VIAPort.hpp>
 
 // ---
 COMMODORE::VIARegisters::VIARegisters (int id, MCHEmul::PhysicalStorage* ps, size_t pp, const MCHEmul::Address& a, size_t s)
@@ -26,6 +27,17 @@ void COMMODORE::VIARegisters::setValue (size_t p, const MCHEmul::UByte& v)
 {
 	MCHEmul::PhysicalStorageSubset::setValue (p, v);
 
+	if (_CA1 == nullptr ||
+		_CA2 == nullptr ||
+		_CB1 == nullptr ||
+		_CB2 == nullptr ||
+		_T1  == nullptr ||
+		_T2  == nullptr ||
+		_SR  == nullptr ||
+		_PA  == nullptr ||
+		_PB  == nullptr)
+		return;
+
 	size_t pp = p % 0x10;
 
 	switch (pp)
@@ -33,11 +45,7 @@ void COMMODORE::VIARegisters::setValue (size_t p, const MCHEmul::UByte& v)
 		// Data Port Register B: VIA?PB
 		case 0x00:
 			{
-				_outputRegB = v.value ();
-
-				// The value of the portB needs to be reset...
-				// If there were any previous value set in the portB, it will be overwritten...
-				setPortB (0xff, false);
+				_PB -> setValue (v.value ());
 			}
 
 			break;
@@ -48,11 +56,7 @@ void COMMODORE::VIARegisters::setValue (size_t p, const MCHEmul::UByte& v)
 		case 0x01:
 		case 0x0f:
 			{
-				_outputRegA = v.value ();
-
-				// The value of the portA needs to be reset...
-				// If there were any previous value set in the portA, it will be overwritten...
-				setPortA (0xff, false);
+				_PA -> setValue (v.value ());
 			}
 
 			break;
@@ -60,9 +64,7 @@ void COMMODORE::VIARegisters::setValue (size_t p, const MCHEmul::UByte& v)
 		// Data Direction Register B: VIA?DDRB
 		case 0x02:
 			{
-				_dataPortBDir = v.value ();
-
-				setPortB (0xff, false);
+				_PB -> setDDR (v.value ());
 			}
 
 			break;
@@ -70,9 +72,7 @@ void COMMODORE::VIARegisters::setValue (size_t p, const MCHEmul::UByte& v)
 		// Data Direction Register B: VIA?DDRA
 		case 0x03:
 			{
-				_dataPortADir = v.value ();
-
-				setPortA (0xff, false);
+				_PA -> setDDR (v.value ());
 			}
 
 			break;
@@ -83,8 +83,8 @@ void COMMODORE::VIARegisters::setValue (size_t p, const MCHEmul::UByte& v)
 		// Notice that setting this register or 0x06 the result is the same...
 		case 0x06: 
 			{
-				_timerA -> setInitialValue 
-					((_timerA -> initialValue () & 0xff00) | (unsigned short) v.value ());
+				_T1 -> setInitialValue 
+					((_T1 -> initialValue () & 0xff00) | (unsigned short) v.value ());
 			}
 
 			break;
@@ -92,17 +92,17 @@ void COMMODORE::VIARegisters::setValue (size_t p, const MCHEmul::UByte& v)
 		// MSB of the latch Timer A: VIA?T1CH
 		case 0x05:
 		// MSB of the latch Timer A: VIA1T1LH
-			// Notice that in this case, the behaciour is only partially equivalent!
+		// Notice that in this case, the behaviour is only partially equivalent!
 		case 0x07:
 			{
-				_timerA -> setInitialValue 
-					((_timerA -> initialValue () & 0x00ff) | (unsigned short) (v.value () << 8));
+				_T1 -> setInitialValue 
+					((_T1 -> initialValue () & 0x00ff) | (unsigned short) (v.value () << 8));
 
 				// The flag of the interruption associated to the timer is cleared...
-				_timerA -> interruptRequested (); // (obool) Just doing this is done...
+				_T1 -> interruptRequested (); // (obool) Just doing this is done...
 				// ...and also when the register accesed is the 0x05, the counter is initialized...
 				if (pp == 0x05)
-					_timerA -> reset ();
+					_T1 -> reset ();
 			}
 
 			break;
@@ -110,20 +110,20 @@ void COMMODORE::VIARegisters::setValue (size_t p, const MCHEmul::UByte& v)
 		// LSB of the latch Timer B: VIA?T2CL
 		case 0x08:
 			{
-				_timerB -> setInitialValue 
-					((_timerB -> initialValue () & 0xff00) | (unsigned short) v.value ());
+				_T2 -> setInitialValue 
+					((_T2 -> initialValue () & 0xff00) | (unsigned short) v.value ());
 			}
 
 		// MSB of the latch Timer B: VIA?T2CH
 		case 0x09:
 			{
-				_timerB -> setInitialValue 
-					((_timerB -> initialValue () & 0x00ff) | (unsigned short) (v.value () << 8));
+				_T2 -> setInitialValue 
+					((_T2 -> initialValue () & 0x00ff) | (unsigned short) (v.value () << 8));
 
 				// The flag of the interruption requested is cleared...
-				_timerB -> interruptRequested (); // Just doing this is done...
+				_T2 -> interruptRequested (); // Just doing this is done...
 				// ...and also the counter is initialized...
-				_timerB -> reset ();
+				_T2 -> reset ();
 			}
 
 			break;
@@ -133,7 +133,7 @@ void COMMODORE::VIARegisters::setValue (size_t p, const MCHEmul::UByte& v)
 			{
 				// What happens there will depen on the shifting mode...
 				// e.g if it disable won't happen nothing...
-				_shiftRegister -> setValue (v);
+				_SR -> setValue (v);
 			}
 
 			break;
@@ -142,8 +142,8 @@ void COMMODORE::VIARegisters::setValue (size_t p, const MCHEmul::UByte& v)
 		// Control timers & shift register behaviour and also whether CB1 and CA1 status reflects in the ports
 		case 0x0b:
 			{
-				_timerA -> setCountMode (COMMODORE::VIATimer::CountMode::_PROCESSORCYCLES); // Always...
-				_timerA -> setRunMode ((COMMODORE::VIATimer::RunMode) 
+				_T1 -> setCountMode (COMMODORE::VIATimer::CountMode::_PROCESSORCYCLES); // Always...
+				_T1 -> setRunMode ((COMMODORE::VIATimer::RunMode) 
 					((unsigned char) ((v.value () & 0xd0) >> 6))); // the bit 7 and 6 determines the RunMode...
 
 				// For the Timer B the behaviour will be different
@@ -151,27 +151,27 @@ void COMMODORE::VIARegisters::setValue (size_t p, const MCHEmul::UByte& v)
 				if (v.bit (5))
 				{ 
 					// Count pulse...
-					_timerB -> setCountMode 
+					_T2 -> setCountMode 
 						(COMMODORE::VIATimer::CountMode::_PULSERECEIVED);
-					_timerB -> setRunMode 
+					_T2 -> setRunMode 
 						(COMMODORE::VIATimer::RunMode::_CONTINUOUS);
 				}
 				else
 				{
 					// Like the basic behaviour of the timer A...
-					_timerB -> setCountMode 
+					_T2 -> setCountMode 
 						(COMMODORE::VIATimer::CountMode::_PROCESSORCYCLES);
-					_timerB -> setRunMode 
+					_T2 -> setRunMode 
 						(COMMODORE::VIATimer::RunMode::_ONESHOOT);
 				}
 
 				// The way the shift register works is controlled with bit 2 - 4
-				_shiftRegister -> setMode 
+				_SR -> setMode 
 					(COMMODORE::VIAShiftRegister::ShiftMode ((v.value () >> 2) && 0x07 /** bits 2, 3 and 4 */));
 
-				// The info of the ports might ot not be latched...
-				_latchBEnabled = v.bit (1);
-				_latchAEnabled = v.bit (0);
+				// The info of the ports might or not be latched...
+				_PB -> setLatchIR (v.bit (1));
+				_PA -> setLatchIR (v.bit (0));
 			}
 
 			break;
@@ -180,9 +180,9 @@ void COMMODORE::VIARegisters::setValue (size_t p, const MCHEmul::UByte& v)
 		// Optios to control CA1, CA2, CB1 y CB2 lines....
 		case 0x0c:
 			{
-				_CA1 -> setMode (v.bit (0) ? 1 : 0); // 1 or 0
-				_CA2 -> setMode ((v.value () & 0x0f /** bits 1,2,3 */) >> 1); // From 0 to 7
-				_CB1 -> setMode (v.bit (4) ? 1 : 0); // 1 or 0
+				_CA1 -> setMode (v.bit (0) ? 1 : 0); // 0 or 1
+				_CA2 -> setMode ((v.value () & 0x0f) >> 1); // From 0 to 7
+				_CB1 -> setMode (v.bit (4) ? 1 : 0); // 0 or 1
 				_CB2 -> setMode ((v.value () & 0xf0 /** bits 5,6,7 */) >> 5); // From 0 to 7
 			}
 
@@ -199,21 +199,21 @@ void COMMODORE::VIARegisters::setValue (size_t p, const MCHEmul::UByte& v)
 			{
 				if (v.bit (7)) 
 				{
-					if (v.bit (6)) _timerA -> setInterruptEnabled (true);
-					if (v.bit (5)) _timerB -> setInterruptEnabled (true);
+					if (v.bit (6)) _T1  -> setInterruptEnabled (true);
+					if (v.bit (5)) _T2  -> setInterruptEnabled (true);
 					if (v.bit (4)) _CB1 -> setInterruptEnabled (true);
 					if (v.bit (3)) _CB2 -> setInterruptEnabled (true);
-					if (v.bit (2)) _shiftRegister -> setInterruptEnabled (true);
+					if (v.bit (2)) _SR  -> setInterruptEnabled (true);
 					if (v.bit (1)) _CA1 -> setInterruptEnabled (true);
 					if (v.bit (0)) _CA2 -> setInterruptEnabled (true);
 				}
 				else
 				{
-					if (v.bit (6)) _timerA -> setInterruptEnabled (false);
-					if (v.bit (5)) _timerB -> setInterruptEnabled (false);
+					if (v.bit (6)) _T1  -> setInterruptEnabled (false);
+					if (v.bit (5)) _T2  -> setInterruptEnabled (false);
 					if (v.bit (4)) _CB1 -> setInterruptEnabled (false);
 					if (v.bit (3)) _CB2 -> setInterruptEnabled (false);
-					if (v.bit (2)) _shiftRegister -> setInterruptEnabled (false);
+					if (v.bit (2)) _SR  -> setInterruptEnabled (false);
 					if (v.bit (1)) _CA1 -> setInterruptEnabled (false);
 					if (v.bit (0)) _CA2 -> setInterruptEnabled (false);
 				}
@@ -231,36 +231,43 @@ const MCHEmul::UByte& COMMODORE::VIARegisters::readValue (size_t p) const
 {
 	MCHEmul::UByte result = MCHEmul::PhysicalStorage::_DEFAULTVALUE;
 
+	if (_CA1 == nullptr ||
+		_CA2 == nullptr ||
+		_CB1 == nullptr ||
+		_CB2 == nullptr ||
+		_T1  == nullptr ||
+		_T2  == nullptr ||
+		_SR  == nullptr ||
+		_PA  == nullptr ||
+		_PB  == nullptr)
+		return (_lastValueRead);
+
 	size_t pp = p % 0x10;
 
 	switch (pp)
 	{
 		case 0x00:
 			{
-				result = MCHEmul::UByte (_portB);
+				result = _PB -> value ();
 			}
 
 			break;
 
 		case 0x01:
-		// Reading this register the CA lines won't be reflected into the rasult...
-		case 0x0f:
 			{
-				result = MCHEmul::UByte (_portA);
+				result = _PA -> value ();
 			}
-
-			break;
 
 		case 0x02:
 			{
-				result = MCHEmul::UByte (_dataPortBDir);
+				result = _PB -> DDR ();
 			}
 
 			break;
 
 		case 0x03:
 			{
-				result = MCHEmul::UByte (_dataPortADir);
+				result = _PA -> DDR ();
 			}
 
 			break;
@@ -268,10 +275,10 @@ const MCHEmul::UByte& COMMODORE::VIARegisters::readValue (size_t p) const
 		case 0x04:
 			{
 				result = MCHEmul::UByte 
-					((unsigned char) (_timerA -> currentValue () & 0x00ff));
+					((unsigned char) (_T1 -> currentValue () & 0x00ff));
 
 				// The interrupt flag is also cleared when reading...
-				_timerA -> interruptRequested (); 
+				_T1 -> interruptRequested (); 
 			}
 
 			break;
@@ -279,7 +286,7 @@ const MCHEmul::UByte& COMMODORE::VIARegisters::readValue (size_t p) const
 		case 0x05:
 			{
 				result = MCHEmul::UByte 
-					((unsigned char) ((_timerA -> currentValue () & 0xff00) >> 8));
+					((unsigned char) ((_T1 -> currentValue () & 0xff00) >> 8));
 			}
 
 			break;
@@ -287,7 +294,7 @@ const MCHEmul::UByte& COMMODORE::VIARegisters::readValue (size_t p) const
 		case 0x06:
 			{
 				result = MCHEmul::UByte 
-					((unsigned char) (_timerA -> initialValue () & 0x00ff));
+					((unsigned char) (_T1 -> initialValue () & 0x00ff));
 			}
 
 			break;
@@ -295,7 +302,7 @@ const MCHEmul::UByte& COMMODORE::VIARegisters::readValue (size_t p) const
 		case 0x07:
 			{
 				result = MCHEmul::UByte 
-					((unsigned char) ((_timerA -> initialValue () & 0xff00) >> 8));
+					((unsigned char) ((_T1 -> initialValue () & 0xff00) >> 8));
 			}
 
 			break;
@@ -303,10 +310,10 @@ const MCHEmul::UByte& COMMODORE::VIARegisters::readValue (size_t p) const
 		case 0x08:
 			{
 				result = MCHEmul::UByte 
-					((unsigned char) (_timerB -> currentValue () & 0x00ff));
+					((unsigned char) (_T2 -> currentValue () & 0x00ff));
 
 				// The interrupt flag is also cleared when reading...
-				_timerB -> interruptRequested (); 
+				_T2 -> interruptRequested (); 
 			}
 
 			break;
@@ -314,14 +321,14 @@ const MCHEmul::UByte& COMMODORE::VIARegisters::readValue (size_t p) const
 		case 0x09:
 			{
 				result = MCHEmul::UByte 
-					((unsigned char) ((_timerB -> currentValue () & 0xff00) >> 8));
+					((unsigned char) ((_T2 -> currentValue () & 0xff00) >> 8));
 			}
 
 			break;
 
 		case 0x0a:
 			{
-				result = _shiftRegister -> value ();
+				result = _SR -> value ();
 			}
 
 			break;
@@ -329,11 +336,11 @@ const MCHEmul::UByte& COMMODORE::VIARegisters::readValue (size_t p) const
 		case 0x0b:
 			{
 				result = 
-					(((unsigned char) (_timerA -> runMode ())) << 6) | // Bits 7 & 6
-					((_timerB -> runMode () == COMMODORE::VIATimer::RunMode::_CONTINUOUS) ? 0x20 : 0x00) | // Bit 5
-					(((unsigned char) (_shiftRegister -> mode ())) << 2) | // Bits 4, 3, 2
-					(_latchBEnabled ? 0x02 : 0x00) | // Bit 1
-					(_latchAEnabled ? 0x01 : 0x00); // Bit 0
+					(((unsigned char) (_T1 -> runMode ())) << 6) | // Bits 7 & 6
+					((_T2 -> runMode () == COMMODORE::VIATimer::RunMode::_CONTINUOUS) ? 0x20 : 0x00) | // Bit 5
+					(((unsigned char) (_SR -> mode ())) << 2) | // Bits 4, 3, 2
+					(_PB -> latchIR () ? 0x02 : 0x00) | // Bit 1
+					(_PA -> latchIR () ? 0x01 : 0x00); // Bit 0
 			}
 
 			break;
@@ -341,7 +348,7 @@ const MCHEmul::UByte& COMMODORE::VIARegisters::readValue (size_t p) const
 		case 0x0c:
 			{
 				result = 
-					((_CA1 -> mode () == 1) ? 0x1 : 0x00) | // bit 0
+					((_CA1 -> mode () == 1 ) ? 0x1 : 0x00) | // bit 0
 					(_CA2 -> mode () << 1) | // bits 1,2,3
 					((_CB1 -> mode () == 1) ? 0x20 : 0x00) | // bit 4
 					(_CB2 -> mode () << 5); // bits 5,6,7
@@ -353,11 +360,11 @@ const MCHEmul::UByte& COMMODORE::VIARegisters::readValue (size_t p) const
 			{
 				result = MCHEmul::UByte::_0;
 				result.setBit (7, launchInterrupt ()); // Any Interrupt?
-				result.setBit (6, _timerA -> interruptRequested ()); // in Timer A?
-				result.setBit (5, _timerB -> interruptRequested ()); // in Timer B?
+				result.setBit (6, _T1  -> interruptRequested ()); // in Timer A?
+				result.setBit (5, _T2  -> interruptRequested ()); // in Timer B?
 				result.setBit (4, _CB1 -> interruptRequested ()); // CB1 transition?
 				result.setBit (3, _CB2 -> interruptRequested ()); // CB2 transition?
-				result.setBit (2, _shiftRegister -> interruptRequested ()); // In the shift register?
+				result.setBit (2, _SR  -> interruptRequested ()); // In the shift register?
 				result.setBit (1, _CA1 -> interruptRequested ()); // CA1 transition?
 				result.setBit (0, _CA2 -> interruptRequested ()); // CA2 transition?
 			}
@@ -365,13 +372,20 @@ const MCHEmul::UByte& COMMODORE::VIARegisters::readValue (size_t p) const
 		case 0x0e:
 			{
 				result = MCHEmul::UByte::_0;
-				result.setBit (6, _timerA -> interruptEnabled ());
-				result.setBit (5, _timerB -> interruptEnabled ());
+				result.setBit (6, _T1  -> interruptEnabled ());
+				result.setBit (5, _T2  -> interruptEnabled ());
 				result.setBit (4, _CB1 -> interruptEnabled ());
 				result.setBit (3, _CB2 -> interruptEnabled ());
-				result.setBit (2, _shiftRegister -> interruptEnabled ());
+				result.setBit (2, _SR  -> interruptEnabled ());
 				result.setBit (1, _CA1 -> interruptEnabled ());
 				result.setBit (0, _CA2 -> interruptEnabled ());
+			}
+
+			break;
+
+		case 0x0f:
+			{
+				result = _PA -> value (false); // Not to clear the control lines interrupt status...
 			}
 
 			break;
@@ -394,14 +408,14 @@ const MCHEmul::UByte& COMMODORE::VIARegisters::peekValue (size_t p) const
 	{
 		case 0x04:
 			{
-				result = MCHEmul::UByte ((unsigned char) (_timerA -> currentValue () & 0x00ff));
+				result = MCHEmul::UByte ((unsigned char) (_T1 -> currentValue () & 0x00ff));
 			}
 
 			break;
 
 		case 0x08:
 			{
-				result = MCHEmul::UByte ((unsigned char) (_timerB -> currentValue () & 0x00ff));
+				result = MCHEmul::UByte ((unsigned char) (_T2 -> currentValue () & 0x00ff));
 			}
 
 			break;
@@ -410,8 +424,8 @@ const MCHEmul::UByte& COMMODORE::VIARegisters::peekValue (size_t p) const
 			{
 				result = MCHEmul::UByte::_0;
 				result.setBit (7, launchInterrupt ());
-				result.setBit (6, _timerA -> peekInterruptRequested ());
-				result.setBit (5, _timerB -> peekInterruptRequested ());
+				result.setBit (6, _T1 -> peekInterruptRequested ());
+				result.setBit (5, _T2 -> peekInterruptRequested ());
 
 				// TODO
 			}
@@ -429,36 +443,31 @@ const MCHEmul::UByte& COMMODORE::VIARegisters::peekValue (size_t p) const
 // ---
 void COMMODORE::VIARegisters::initializeInternalValues ()
 {
-	//They have to be initialized in advanced as the value set depends also on the value at the beginning...
-	_portA = _portB = MCHEmul::UByte::_FF; // As described in the documentation they all have a pull up resistor...
-	// Same with the output registers
-	_outputRegA = _outputRegB = MCHEmul::UByte::_FF;
-
 	// The internal variables are initialized through the data in memory...
 
 	// The direction is first set up to set up accodingly the values of the ports A and B...
-	setValue (0x02, MCHEmul::UByte::_FF); // All lines output...
-	setValue (0x03, MCHEmul::UByte::_0);  // All lines input...
-	setValue (0x00, MCHEmul::UByte::_FF); // When they are no connected to nothing, the documentation sais that they are pulled up!
-	setValue (0x01, MCHEmul::UByte::_FF); // same than previous one...
-	setValue (0x04, MCHEmul::UByte::_0);
+	setValue (0x02, 0xff);	// All lines output...
+	setValue (0x03, 0x00);	// All lines input...
+	setValue (0x00, 0xff);	// When they are no connected to nothing, the documentation says that they are pulled up!
+	setValue (0x01, 0xff);	// same than previous one...
+	setValue (0x04, 0x00);  // T1 LSB
 	/**
-		This instruction can not be done, becuase it would start the Timer A! 
-		setValue (0x05, MCHEmul::UByte::_0);
+		T1 MSB
+		This instruction can not be done, becuase it would start the Timer 1! 
+		setValue (0x05, 0x00);
 	*/
-	setValue (0x06, MCHEmul::UByte::_0);
-	setValue (0x07, MCHEmul::UByte::_0);
-	setValue (0x08, MCHEmul::UByte::_0);
+	setValue (0x06, 0x00);	// T1 Latch LSB
+	setValue (0x07, 0x00);	// T1 Latch MSB
+	setValue (0x08, 0x00);	// T2 LSB and Latch LSB
 	/**
-		This instruction can not be done, becuase it would start the Timer A! 
-		setValue (0x09, MCHEmul::UByte::_0);
+		T2 MSB
+		This instruction can not be done, becuase it would start the Timer 2! 
+		setValue (0x09, 0x00);
 	*/
-	setValue (0x0a, MCHEmul::UByte::_0);
-	setValue (0x0b, MCHEmul::UByte::_0);
-	setValue (0x0c, MCHEmul::UByte::_0);
-	setValue (0x0d, MCHEmul::UByte::_0);
-	setValue (0x0e, MCHEmul::UByte::_0);
-	setValue (0x0f, MCHEmul::UByte::_0);
-
-	_portA = _portB = 0xff; // They are not initially connected against anything...
+	setValue (0x0a, 0x00);	// SR = 0
+	setValue (0x0b, 0x40);	// ACR (T1 = free running, T2 = single interval timing, SR disabled, PA and PB no latch)
+	setValue (0x0c, 0xde);  // PCR (CB2 = outpur mode, CB1 = interrup high to low transition, CA2 = input mode, CA1 = low to high transition)
+	setValue (0x0d, 0x00);	// IFR. No interrupts so far...
+	setValue (0x0e, 0x00);	// IER. No interrupts so far...
+	setValue (0x0f, 0x00);	// Has no impact when setting...
 }
