@@ -69,7 +69,7 @@ namespace COMMODORE
 		void lookAtShiftRegister (VIAShiftRegister* s)
 							{ _SR = s; }
 		/** Link to "Ports". */
-		void linkAtPort (VIAPort* pa, VIAPort* pb)
+		void lookAtPorts (VIAPort* pa, VIAPort* pb)
 							{ _PA = pa; _PB = pb; }
 
 		protected:

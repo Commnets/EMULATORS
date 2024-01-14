@@ -96,8 +96,14 @@ namespace COMMODORE
 							{ _initialValue = iV; _currentValue = _initialValue; }
 		unsigned short currentValue () const
 							{ return (_currentValue); }
-		/** The "Timer" is "forced" to start back. */
+		/** The "Timer" is "forced" to start back, but still stopped. */
 		void reset ();
+
+		/** To start/stop the counting process. */
+		void start () 
+							{ _counting = true; }
+		void stop ()
+							{ _counting = false; }
 
 		void initialize ();
 

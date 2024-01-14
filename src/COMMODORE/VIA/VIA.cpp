@@ -76,6 +76,7 @@ bool COMMODORE::VIA::initialize ()
 	_VIARegisters -> lookAtControlLines (&_CA1, &_CA2, &_CB1, &_CB2);
 	_VIARegisters -> lookAtTimers (&_T1, &_T2);
 	_VIARegisters -> lookAtShiftRegister (&_SR);
+	_VIARegisters -> lookAtPorts (&_PA, &_PB);
 	_VIARegisters -> initialize ();
 
 	_lastClockCycles = 0;
@@ -100,23 +101,30 @@ bool COMMODORE::VIA::simulate (MCHEmul::CPU* cpu)
 	{
 		// Simulations...
 		// "ControlLines"
+		// Clean up first the signals...
+		_CA1.transition (); _CA2.transition (); 
+		_CB1.transition (); _CB2.transition ();
 		result &= _CA1.simulate (cpu);
 		result &= _CA2.simulate (cpu);
 		result &= _CB1.simulate (cpu);
 		result &= _CB2.simulate (cpu);
+		// After this the signals can be up, and can be used by
+		// either "Timers", "SifthRegister" and "Port" in the rest of the cycle...
+
 		// "Timers"
 		result &= _T1.simulate (cpu);
 		result &= _T2.simulate (cpu);
+
 		// "ShiftRegister"
 		result &= _SR.simulate (cpu);
+
 		// "Ports"
+		// Clean up first the signals...
+		_PA.p6Pulse (); _PB.p6Pulse ();
 		result &= _PA.simulate (cpu);
 		result &= _PB.simulate (cpu);
-
-		// Clean up pulses control signals!
-		_CA1.transition (); _CA2.transition (); 
-		_CB1.transition (); _CB2.transition ();
-		_PA.p6Pulse (); _PB.p6Pulse ();
+		// After this the signals can be up, and can be used by
+		// either "ControlLines", "Timers" or "SifthRegister" in the next cycle...
 
 		// After all that much, 
 		// any reason to launch an interruption?...

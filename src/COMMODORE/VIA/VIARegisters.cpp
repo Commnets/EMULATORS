@@ -54,7 +54,6 @@ void COMMODORE::VIARegisters::setValue (size_t p, const MCHEmul::UByte& v)
 		// The behaviour is almost the same.
 		// The only difference is in the reflection of the CA? lines...
 		case 0x01:
-		case 0x0f:
 			{
 				_PA -> setValue (v.value ());
 			}
@@ -102,7 +101,10 @@ void COMMODORE::VIARegisters::setValue (size_t p, const MCHEmul::UByte& v)
 				_T1 -> interruptRequested (); // (obool) Just doing this is done...
 				// ...and also when the register accesed is the 0x05, the counter is initialized...
 				if (pp == 0x05)
+				{ 
 					_T1 -> reset ();
+					_T1 -> start ();
+				}
 			}
 
 			break;
@@ -114,6 +116,8 @@ void COMMODORE::VIARegisters::setValue (size_t p, const MCHEmul::UByte& v)
 					((_T2 -> initialValue () & 0xff00) | (unsigned short) v.value ());
 			}
 
+			break;
+
 		// MSB of the latch Timer B: VIA?T2CH
 		case 0x09:
 			{
@@ -124,6 +128,8 @@ void COMMODORE::VIARegisters::setValue (size_t p, const MCHEmul::UByte& v)
 				_T2 -> interruptRequested (); // Just doing this is done...
 				// ...and also the counter is initialized...
 				_T2 -> reset ();
+				// ...and start to count...
+				_T2 -> start ();
 			}
 
 			break;
@@ -220,6 +226,13 @@ void COMMODORE::VIARegisters::setValue (size_t p, const MCHEmul::UByte& v)
 			}
 
 			break;
+
+		// VIA1PA2
+		// Same tha 0x01, but not affecting the status of the "ControlLines"...
+		case 0x0f:
+			{
+				_PA -> setValue (v.value (), false /** Not to affect "ControlLines". */);
+			}
 
 		default:
 			break;
@@ -443,6 +456,17 @@ const MCHEmul::UByte& COMMODORE::VIARegisters::peekValue (size_t p) const
 // ---
 void COMMODORE::VIARegisters::initializeInternalValues ()
 {
+	if (_CA1 == nullptr ||
+		_CA2 == nullptr ||
+		_CB1 == nullptr ||
+		_CB2 == nullptr ||
+		_T1  == nullptr ||
+		_T2  == nullptr ||
+		_SR  == nullptr ||
+		_PA  == nullptr ||
+		_PB  == nullptr)
+		return;
+
 	// The internal variables are initialized through the data in memory...
 
 	// The direction is first set up to set up accodingly the values of the ports A and B...
@@ -470,4 +494,7 @@ void COMMODORE::VIARegisters::initializeInternalValues ()
 	setValue (0x0d, 0x00);	// IFR. No interrupts so far...
 	setValue (0x0e, 0x00);	// IER. No interrupts so far...
 	setValue (0x0f, 0x00);	// Has no impact when setting...
+
+	_T1 -> stop ();
+	_T2 -> stop ();
 }

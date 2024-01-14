@@ -38,7 +38,7 @@ void COMMODORE::VIATimer::reset ()
 							  
 	_firstTimeReaches0 = false;
 		
-	_counting = true;
+	_counting = false;
 
 	// When reset the PB7 is push down 
 	// if the mode is the right one...
