@@ -1,5 +1,5 @@
 #include <VIC20/OSIO.hpp>
-#include <VIC20/VIA1.hpp>
+#include <VIC20/VIA2.hpp>
 
 // ---
 const VIC20::InputOSSystem::KeystrockesMap VIC20::InputOSSystem::_VIC20KEYS
@@ -94,7 +94,7 @@ VIC20::InputOSSystem::InputOSSystem ()
 		{ { "Name", "IOSystem" },
 		  { "Type", "Input" },
 		  { "Frequency", "50.0Hz" } }),
-	  _via1 (nullptr),
+	  _via2 (nullptr),
 	  _vicI (nullptr)
 { 
 	// Nothing else to do...
@@ -105,19 +105,19 @@ void VIC20::InputOSSystem::linkToChips (const MCHEmul::Chips& c)
 {
 	for (MCHEmul::Chips::const_iterator i = c.begin (); i != c.end (); i++)
 	{
-		if (dynamic_cast <VIC20::VIA1*> ((*i).second) != nullptr)
-			_via1 = dynamic_cast <VIC20::VIA1*> ((*i).second);
+		if (dynamic_cast <VIC20::VIA2*> ((*i).second) != nullptr)
+			_via2 = dynamic_cast <VIC20::VIA2*> ((*i).second);
 		if (dynamic_cast <COMMODORE::VICI*> ((*i).second) != nullptr)
 			_vicI = dynamic_cast <COMMODORE::VICI*> ((*i).second);
 	}
 
 	// Can't be null after this method...
-	assert (_via1 != nullptr);
+	assert (_via2 != nullptr);
 	// This either...
 	assert (_vicI != nullptr);
 
 	// The VIA 1 will receive the event related with the io system...
-	_via1 -> observe (this);
+	_via2 -> observe (this);
 	// And also the VICI...
 	_vicI -> observe (this);
 }

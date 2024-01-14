@@ -172,6 +172,7 @@ namespace COMMODORE
 		VIAControlLine *_CL1, *_CL2;
 
 		// Implementation
+		MCHEmul::UByte _lastPortValue;
 		bool _p7;
 		MCHEmul::Pulse _p6;
 	};

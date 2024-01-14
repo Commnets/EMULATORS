@@ -18,7 +18,7 @@
 
 namespace VIC20
 {
-	class VIA1;
+	class VIA2;
 
 	/** The VIC20::InputOSSystem is very related with the chip VIA1. \n
 		The events that happen in the OS have to be transmitted to that chip 
@@ -48,7 +48,7 @@ namespace VIC20
 		inline const Keystrokes& keystrokesFor (SDL_Scancode sc) const;
 
 		private:
-		VIA1* _via1;
+		VIA2* _via2;
 		COMMODORE::VICI* _vicI;
 
 		/** 

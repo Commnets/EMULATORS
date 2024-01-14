@@ -50,9 +50,7 @@ void COMMODORE::VIARegisters::setValue (size_t p, const MCHEmul::UByte& v)
 
 			break;
 
-		// Data Port Register A: VIA?PA1 & VIA?PA2
-		// The behaviour is almost the same.
-		// The only difference is in the reflection of the CA? lines...
+		// Data Port Register A: VIA?PA1
 		case 0x01:
 			{
 				_PA -> setValue (v.value ());
@@ -227,7 +225,7 @@ void COMMODORE::VIARegisters::setValue (size_t p, const MCHEmul::UByte& v)
 
 			break;
 
-		// VIA1PA2
+		// VIA?PA2
 		// Same tha 0x01, but not affecting the status of the "ControlLines"...
 		case 0x0f:
 			{

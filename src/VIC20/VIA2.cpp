@@ -52,7 +52,7 @@ bool VIC20::VIA2::simulate (MCHEmul::CPU* cpu)
 	// becaus ethe status of the keyboard and joystick are not taken into account...
 	bool result = COMMODORE::VIA::simulate (cpu);
 	// So if everything goes ok, redo that values...
-	if (!result)
+	if (result)
 	{
 		unsigned char m = 0x01;
 		unsigned char dt = MCHEmul::UByte::_0;

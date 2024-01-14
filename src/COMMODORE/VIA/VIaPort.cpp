@@ -68,6 +68,7 @@ void COMMODORE::VIAPort::initialize ()
 	_IR  = MCHEmul::UByte::_0;
 
 	// The implementation values...
+	_lastPortValue = MCHEmul::UByte::_0;
 	_p7 = false;
 	_p6 = false;
 }
@@ -93,7 +94,11 @@ bool COMMODORE::VIAPort::simulate (MCHEmul::CPU* cpu)
 		(_T -> runMode () == VIATimer::RunMode::_ONESHOOTSIGNAL ||
 			_T -> runMode () == VIATimer::RunMode::_CONTINUOUSSIGNAL))
 		o.setBit (7, _p7); // _p7 always "above", is the timer run mode is the right one...
-	setPortValue ((o | ~_DDR) & _port.value () [0]);
+	{
+		MCHEmul::UByte r = (o.value () | ~_DDR.value ()) & _port.value ()[0].value ();
+		if (r != _lastPortValue)
+			setPortValue (_lastPortValue = r);
+	}
 	
 	// For pulse purposes, keep track of the value at bit 6...
 	// Depending on the instance of the port (A or B) this value 
