@@ -34,15 +34,15 @@ const MCHEmul::UByte& VIC20::VIA2Registers::readValue (size_t p) const
 			{
 				unsigned char m = 0x01;
 				unsigned char dt = MCHEmul::UByte::_0;
-				MCHEmul::UByte o = _PB -> OR ();
+				MCHEmul::UByte o = _PA -> OR ();
 				if (_T2 -> runMode () == COMMODORE::VIATimer::RunMode::_ONESHOOTSIGNAL ||
 					_T2 -> runMode () == COMMODORE::VIATimer::RunMode::_CONTINUOUSSIGNAL)
-					o.setBit (7, _PB -> p7 ());
-				unsigned char msk = (o.value () | ~_PB -> DDR ().value ());
+					o.setBit (7, _PA -> p7 ());
+				unsigned char msk = (o.value () | ~_PA -> DDR ().value ());
 				for (size_t i = 0; i < 8; m <<= 1, i++)
 					if ((~msk & m) != 0x00)
 						dt |= ~_rev_keyboardStatusMatrix [i].value (); // 1 if clicked...
-				_PA -> setPortValue (result = ((_PA -> OR ().value () | ~_PA -> DDR ().value ()) & ~dt));
+				_PB -> setPortValue (result = ((_PB -> OR ().value () | ~_PB -> DDR ().value ()) & ~dt));
 			}
 
 			break;
@@ -51,11 +51,11 @@ const MCHEmul::UByte& VIC20::VIA2Registers::readValue (size_t p) const
 			{
 				unsigned char m = 0x01;
 				unsigned char dt = MCHEmul::UByte::_0;
-				unsigned char msk = (_PA -> OR ().value () | ~_PA -> DDR ().value ()); // & _joystickStatus;
+				unsigned char msk = (_PB -> OR ().value () | ~_PB -> DDR ().value ()); // & _joystickStatus;
 				for (size_t i = 0; i < 8; m <<= 1, i++)
 					if ((~msk & m) != 0x00)
 						dt |= ~_keyboardStatusMatrix [i].value ();  // 1 if clicked...
-				_PB -> setPortValue (result = ((_PB -> OR ().value () | ~_PB -> DDR ().value ()) & ~dt));
+				_PA -> setPortValue (result = ((_PA -> OR ().value () | ~_PA -> DDR ().value ()) & ~dt));
 			}
 
 			break;
