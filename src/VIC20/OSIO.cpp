@@ -1,4 +1,5 @@
 #include <VIC20/OSIO.hpp>
+#include <VIC20/VIA1.hpp>
 #include <VIC20/VIA2.hpp>
 
 // ---
@@ -105,6 +106,8 @@ void VIC20::InputOSSystem::linkToChips (const MCHEmul::Chips& c)
 {
 	for (MCHEmul::Chips::const_iterator i = c.begin (); i != c.end (); i++)
 	{
+		if (dynamic_cast <VIC20::VIA1*> ((*i).second) != nullptr)
+			_via1 = dynamic_cast <VIC20::VIA1*> ((*i).second);
 		if (dynamic_cast <VIC20::VIA2*> ((*i).second) != nullptr)
 			_via2 = dynamic_cast <VIC20::VIA2*> ((*i).second);
 		if (dynamic_cast <COMMODORE::VICI*> ((*i).second) != nullptr)
@@ -116,7 +119,10 @@ void VIC20::InputOSSystem::linkToChips (const MCHEmul::Chips& c)
 	// This either...
 	assert (_vicI != nullptr);
 
-	// The VIA 1 will receive the event related with the io system...
+	// The VIA 1 & VIA 2 will receive the event related with the io system...
+	// VIA 1 will take care of the joystick except right switch...
+	// ...and VIA 2 will take care of the keyboard and right switch of the joystick.
+	_via1 -> observe (this);
 	_via2 -> observe (this);
 	// And also the VICI...
 	_vicI -> observe (this);

@@ -80,8 +80,8 @@ void VIC20::VIA2::processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifier* n
 				for (auto i : jm -> _axisValues)
 				{
 					dr |= (ct == 0) // The x axis first...
-						? ((i > 0) ? 8 /** right. */ : ((i < 0) ? 4 /** left. */ : 0))
-						: ((i > 0) ? 2 /** down. */ : ((i < 0) ? 1 /** up. */ : 0));
+						? ((i > 0) ? 0x80 /** right = bit 7 */ : ((i < 0) ? 0x10 /** left = bit 4 */ : 0))
+						: ((i > 0) ? 0x08 /** down = bit 3 */ : ((i < 0) ? 0x04 /** up = bit 2 */ : 0));
 
 					ct++;
 				}
@@ -99,7 +99,7 @@ void VIC20::VIA2::processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifier* n
 				if (jb -> _joystickId != 0)
 					break; // Only joystick 0 is allowed!
 
-				_VIA2Registers -> setJoystickStatus (_VIA2Registers -> joystickStatus () & ~0x10);
+				_VIA2Registers -> setJoystickStatus (_VIA2Registers -> joystickStatus () & ~0x20 /** bit 5. */);
 			}
 
 			break;
@@ -111,7 +111,7 @@ void VIC20::VIA2::processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifier* n
 				if (jb -> _joystickId != 0)
 					break; // Only joystick 0 is allowed!
 	
-				_VIA2Registers -> setJoystickStatus (_VIA2Registers -> joystickStatus () & ~0x10);
+				_VIA2Registers -> setJoystickStatus (_VIA2Registers -> joystickStatus () & ~0x20 /** bit 5. */);
 			}
 
 			break;

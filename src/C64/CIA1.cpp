@@ -86,8 +86,8 @@ void C64::CIA1::processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifier* n)
 				for (auto i : jm -> _axisValues)
 				{
 					dr |= (ct == 0) // The x axis first...
-						? ((i > 0) ? 8 /** right. */ : ((i < 0) ? 4 /** left. */ : 0))
-						: ((i > 0) ? 2 /** down. */ : ((i < 0) ? 1 /** up. */ : 0));
+						? ((i > 0) ? 0x08 /** right. */ : ((i < 0) ? 0x04 /** left. */ : 0x00))
+						: ((i > 0) ? 0x02 /** down. */ : ((i < 0) ? 0x01 /** up. */ : 0x00));
 
 					ct++;
 				}

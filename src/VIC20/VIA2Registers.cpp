@@ -38,24 +38,30 @@ const MCHEmul::UByte& VIC20::VIA2Registers::readValue (size_t p) const
 				if (_T2 -> runMode () == COMMODORE::VIATimer::RunMode::_ONESHOOTSIGNAL ||
 					_T2 -> runMode () == COMMODORE::VIATimer::RunMode::_CONTINUOUSSIGNAL)
 					o.setBit (7, _PA -> p7 ());
-				unsigned char msk = (o.value () | ~_PA -> DDR ().value ());
+				unsigned char msk = (o.value () | ~_PA -> DDR ().value ()) &
+					(_joystickStatus | 0x80 /** Bit 7 is not read in VIA2 so it should be set always. */);
 				for (size_t i = 0; i < 8; m <<= 1, i++)
 					if ((~msk & m) != 0x00)
 						dt |= ~_rev_keyboardStatusMatrix [i].value (); // 1 if clicked...
-				_PB -> setPortValue (result = ((_PB -> OR ().value () | ~_PB -> DDR ().value ()) & ~dt));
+				_PB -> setPortValue ((_PB -> OR ().value () | ~_PB -> DDR ().value ()) & ~dt);
+				// To considere the impact in the ControlLines when reading this record!
+				result = _PB -> value (true);
 			}
 
 			break;
 
 		case 0x01:
+		case 0x0f:
 			{
 				unsigned char m = 0x01;
 				unsigned char dt = MCHEmul::UByte::_0;
-				unsigned char msk = (_PB -> OR ().value () | ~_PB -> DDR ().value ()); // & _joystickStatus;
+				unsigned char msk = (_PB -> OR ().value () | ~_PB -> DDR ().value ());
 				for (size_t i = 0; i < 8; m <<= 1, i++)
 					if ((~msk & m) != 0x00)
 						dt |= ~_keyboardStatusMatrix [i].value ();  // 1 if clicked...
 				_PA -> setPortValue (result = ((_PA -> OR ().value () | ~_PA -> DDR ().value ()) & ~dt));
+				// To considere (or not) the impact in the ControlLines when reading this record!
+				result = _PA -> value (pp == 0x01);
 			}
 
 			break;

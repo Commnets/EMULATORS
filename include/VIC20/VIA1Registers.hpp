@@ -20,7 +20,8 @@ namespace VIC20
 {
 	class VIA1;
 
-	/** Just to identify this space of the memory in a different section. */
+	/** Just to identify this space of the memory in a different section. 
+		VIA2Registers is aimed to take care of the information about keyboard. */
 	class VIA1Registers final : public COMMODORE::VIARegisters
 	{
 		public:
@@ -29,6 +30,22 @@ namespace VIC20
 		static const int _VIA1_SUBSET = 2100;
 
 		VIA1Registers (MCHEmul::PhysicalStorage* ps, size_t pp, const MCHEmul::Address& a, size_t s);
+
+		/** To manage the status of the joystick. */
+		unsigned char joystickStatus ()
+							{ return (_joystickStatus); }
+		void setJoystickStatus (unsigned char js)
+							{ _joystickStatus = js; }
+
+		private:
+		virtual const MCHEmul::UByte& readValue (size_t p) const override;
+
+		// Implementation
+		virtual void initializeInternalValues () override;
+
+		private:
+		/** Status of the joystick. */
+		unsigned char _joystickStatus;
 	};
 }
 

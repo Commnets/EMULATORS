@@ -18,10 +18,12 @@
 
 namespace VIC20
 {
+	class VIA1;
 	class VIA2;
 
-	/** The VIC20::InputOSSystem is very related with the chip VIA1. \n
-		The events that happen in the OS have to be transmitted to that chip 
+	/** The VIC20::InputOSSystem 
+		is very related with the tow VIA chips: VIA1 (@see VIA1) & VIA2 (@see VIA2). \n
+		The events that happen in the OS have to be transmitted to those chips 
 		for them to be accesible for the rest of the computer elements. */
 	class InputOSSystem final : public MCHEmul::InputOSSystem
 	{
@@ -39,15 +41,35 @@ namespace VIC20
 		/** The ScanCode is based en where the key is localed in a standard US PC Keyboard. \n
 			So e.g, the ; is where the Ñ is in a spanish layout. \n
 			Important to know about how VIC20 keyboard layout matches PC Keyboard: \n
-			CBM Key = ALT GRAHICS (RIGHT). \n
-			STOP Key = ALT (LEFT). \n
-			Arrow (located at the left up corner of the VIC20 Keyboard) = ESC. \n
-			RESTORE = It is wired directly against the CPU, so the simulation comes through out other point. 
-			SHIFT LOCK = Same. 
-			POUND SYMBOL = */
+			LEFT CONTROL = CTRL \n
+			RIGHT CONTROL = CTRL \n
+			LEFT ALT = STOP \n
+			SHIFT + LEFT ALT = RUN \n
+			TAB = COMMODORE KEY \n
+			LEFT BRACKET = + \n
+			RIGHT BRACKET = * \n
+			APOSTROPHE = : \n
+			BACKSLASH = @ \n
+			ESCAPE = ARROW BACK \n
+			GRAVE = POUND \n
+			ACCENT = MINUS \n
+			OPEN EXCLAMATION = EQUAL \n
+			OPEN BRACKET = PLUS \n
+			CLOSE BRACKET = ASTERIC \n
+			OPEN PARENTHESIS = TWO POINTS \n
+			CLOSE PARENTEHEIS = ADDRESS \n
+			COMMA = COMMA \n
+			PERIOD = PERIOD \n
+			MINUS = SLASH \n
+			SHIFT COMMA = LESSER THAN \n
+			SHIFT PERIOD = GREATER THAN \n
+			SHIFT MINUS = QUESTION MARK \n
+			SUPR = UP ARROW \n
+			Ñ = POINT AND COMMA. */
 		inline const Keystrokes& keystrokesFor (SDL_Scancode sc) const;
 
 		private:
+		VIA1* _via1;
 		VIA2* _via2;
 		COMMODORE::VICI* _vicI;
 

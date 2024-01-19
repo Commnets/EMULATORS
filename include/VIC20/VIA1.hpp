@@ -20,7 +20,8 @@
 
 namespace VIC20
 {
-	/** The chip is to communicate the VIC20 with the environment. */
+	/** VIA1 in the VIC20,
+		takes care of the Serial Port and Expansdion Port. */
 	class VIA1 final : public COMMODORE::VIA
 	{
 		public:
@@ -32,6 +33,11 @@ namespace VIC20
 							{ setClassName ("VIA1"); }
 
 		virtual bool initialize () override;
+
+		virtual bool simulate (MCHEmul::CPU* cpu) override;
+
+		private:
+		virtual void processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifier* n) override;
 
 		private:
 		VIA1Registers* _VIA1Registers;

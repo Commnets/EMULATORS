@@ -22,6 +22,8 @@ namespace VIC20
 {
 	class InputOSSystem;
 
+	/** VIA 2 in VIC20, 
+		takes care of the keyboard and right joystick 1 switch. */
 	class VIA2 final : public COMMODORE::VIA
 	{
 		public:
