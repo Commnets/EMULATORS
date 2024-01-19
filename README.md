@@ -47,3 +47,4 @@ SHIFT COMMA          = LESSER THAN<br>
 SHIFT PERIOD         = GREATER THAN<br>
 SHIFT MINUS          = QUESTION MARK<br>
 Ñ                    = POINT AND COMMA<br>
+SUPR                 = UP ARROW<br>
