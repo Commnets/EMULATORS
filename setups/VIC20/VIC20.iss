@@ -19,6 +19,7 @@ Source: "VIC20Emulator.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "RVIC20Console.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "6500Compiler.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Test6500.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "VIC20CRTGenerator.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "basic.901486-01.bin"; DestDir: "{app}"; Flags: ignoreversion
 Source: "characters.901460-03-ENG.bin"; DestDir: "{app}"; Flags: ignoreversion
 Source: "kernal.901486-07-ENG.bin"; DestDir: "{app}"; Flags: ignoreversion

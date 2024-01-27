@@ -31,6 +31,8 @@ namespace MCHEmul
 
 	/** A vector of strings. */
 	using Strings = std::vector <std::string>;
+	/** The list of Strigs can be printed out. */
+	std::ostream& operator << (std::ostream& o, const Strings& strs);
 	/** Attributes ar used in many places. */
 	using Attributes = std::map <std::string, std::string>;
 	/** When a no defined attributes is requested, this is the value returned. */

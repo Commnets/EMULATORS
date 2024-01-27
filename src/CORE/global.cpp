@@ -10,6 +10,20 @@ MCHEmul::ClockTime MCHEmul::_NOW = std::chrono::time_point_cast <MCHEmul::ClockD
 MCHEmul::ClockDurationType MCHEmul::_MILLISECONDSPAST = ClockDurationType (0);
 
 // ---
+std::ostream& MCHEmul::operator << (std::ostream& o, const MCHEmul::Strings& strs)
+{
+	bool f = true;
+	for (const auto& i : strs)
+	{
+		if (!f)	o << std::endl;
+		o << i;
+		f = false;
+	}
+
+	return (o);
+}
+
+// ---
 std::ostream& MCHEmul::operator << (std::ostream& o, const MCHEmul::Attributes& attrs)
 { 
 	bool f = true;

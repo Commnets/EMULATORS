@@ -78,6 +78,8 @@ COPY .\exe\x86\VIC20EmulatorC.exe .\emulators\VIC20EmulatorC\ /Y
 COPY .\exe\x86\VIC20EmulatorCD.exe .\emulators\VIC20EmulatorC\ /Y
 COPY .\exe\x86\RVIC20Console.exe .\monitors\RVIC20Console\ /Y
 COPY .\exe\x86\RVIC20ConsoleD.exe .\monitors\RVIC20Console\ /Y
+COPY .\exe\x86\VIC20CRTGenerator.exe .\projects\VIC20CRTGenerator\ /Y
+COPY .\exe\x86\VIC20CRTGeneratorD.exe .\projects\VIC20CRTGenerator\ /Y
 Echo Configuration files...
 DEL  .\emulators\VIC20Emulator\*.fmt
 DEL  .\emulators\VIC20EmulatorC\*.fmt
@@ -163,6 +165,7 @@ COPY .\exe\x86\VIC20Emulator.exe .\setups\VIC20\ /Y
 COPY .\exe\x86\RVIC20Console.exe .\setups\VIC20\ /Y
 COPY .\exe\x86\6500Compiler.exe .\setups\VIC20\ /Y
 COPY .\exe\x86\Test6500.exe .\setups\VIC20\ /Y
+COPY .\exe\x86\VIC20CRTGenerator.exe .\setups\VIC20\ /Y
 COPY .\emulators\VIC20Commons\*.* .\setups\VIC20\ /Y
 COPY .\projects\VIC20\*.fmt .\setups\VIC20\ /Y
 COPY .\projects\VIC20\*.hlp .\setups\VIC20\ /Y
