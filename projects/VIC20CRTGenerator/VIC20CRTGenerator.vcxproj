@@ -168,6 +168,13 @@
     <ClInclude Include="CRTGenerator.hpp" />
     <ClInclude Include="Parameters.hpp" />
     <ClInclude Include="ParamTemplate.hpp" />
+    <ClInclude Include="resource.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="VIC20CRTGenerator.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="VIC20Logo.ico" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

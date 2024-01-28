@@ -157,6 +157,25 @@ namespace VIC20
 		protected:
 		const std::string _id;
 	};
+
+	/** A parameter for help. */
+	class h_ParameterTemplate final : public ParameterTemplate
+	{
+		public:
+		h_ParameterTemplate ()
+			: ParameterTemplate ("h")
+								{ }
+
+		// Nothing is allowed by this parameter...
+		virtual size_t numberMinValues () const override
+								{ return (0); }
+		virtual size_t numberMaxValues () const override
+								{ return (0); }
+		virtual bool validValue (const std::string& v) const
+								{ return (false); }
+
+		virtual std::ostream& printOutHelp (std::ostream& o) const;
+	};
 }
 
 #endif

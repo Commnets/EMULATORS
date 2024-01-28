@@ -10,7 +10,7 @@ int main (int ac, char** av)
 	std::cout << "VIC20 CRT file format generator" << std::endl
 			  << "Created by Ignacio Cea Fornies" << std::endl
 			  << "(C) 2023 - 2024" << std::endl
-			  << "-h for help" << std::endl << std::endl;
+			  << "/h for help" << std::endl << std::endl;
 
 	// Try to generate the file and... 
 	// ...if something is wrong with that, all errors are printed out...
@@ -20,7 +20,9 @@ int main (int ac, char** av)
 	if (!result) 
 		std::cout << "Errors:" << std::endl
 				  << generator.errorNames () << std::endl;
-	else std::cout << "File sucessfully generated" << std::endl;
+	else
+		std::cout << "Steps:" << std::endl
+				  << generator.steps () << std::endl;
 
 	return (result ? 0 : 1);
 }

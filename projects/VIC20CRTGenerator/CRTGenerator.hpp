@@ -29,6 +29,8 @@ namespace VIC20
 							{ return (_error); }
 		const MCHEmul::Strings& errorNames () const
 							{ return (_errorNames); }
+		const MCHEmul::Strings& steps () const
+							{ return (_steps); }
 
 		/** Every time this method is run,
 			error and errorNames are set back to initial values.
@@ -62,6 +64,7 @@ namespace VIC20
 		Parameters _parameters;
 		mutable bool _error;
 		mutable MCHEmul::Strings _errorNames;
+		mutable MCHEmul::Strings _steps;
 	};
 
 	// ---

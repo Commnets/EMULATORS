@@ -18,97 +18,201 @@
 #include "Parameters.hpp"
 #include <CORE/global.hpp>
 #include <CORE/UBytes.hpp>
+#include <CORE/UInt.hpp>
 #include <CORE/Address.hpp>
 #include <CORE/DtMemoryBlock.hpp>
 
 namespace VIC20
 {
-	/** To define te data kept into the file. \n
+	/** To define the data kept into the CRT file. \n
 		That data is made of a header and a set of data blocks. */
 	class CRTData final
 	{
 		public:
-		/** The header of the CRTFile. */
+		/** The header of the CRT file. */
 		class Header final
 		{
 			public:
 			static const size_t _SIGNATUREMAXLEN = 16;
+			static const size_t _NAMEMAXLEN = 32;
 
-			Header ()
-				: _CRTSignature ("VIC20 Cartridge"), // 16 length including the 0 at the end...
-				  _length (MCHEmul::UBytes ({ 0x00, 0x00, 0x00, 0x28 }, true)),
-				  _version (MCHEmul::UBytes ({ 0x20, 0x00 }, true)),
-				  _type (MCHEmul::UBytes ({ 0x00, 0x00 }, true))
-							{ }
+			Header ();
 
-			inline Header (const std::string& n,
-				const MCHEmul::UBytes& l = 
-					MCHEmul::UBytes ({ 0x00, 0x00, 0x00, 0x28 }, true /** high - low format. */) /** = 0x00000040 */,
-				const MCHEmul::UBytes& v = 
-					MCHEmul::UBytes ({ 0x20, 0x00 }, true /** high - low format */) /** = 20.00 */,
-				const MCHEmul::UBytes& t =
-					MCHEmul::UBytes ({ 0x00, 0x00 }, true /** high - low format */) /** = 0x00000 */);
+			Header (const std::string& s, const std::string& n, unsigned int l, unsigned short v, unsigned short t);
 
-			const std::string& CRTSignature () const
-							{ return (_CRTSignature); }
-			void setCRTSignature (const std::string& n)
-							{ _CRTSignature = // Always 20 characters. No more no less...
+			const std::string& signature () const
+							{ return (_signature); }
+			void setSignature (const std::string& n)
+							{ _signature = // Always 20 characters. No more no less...
 									(n.length () > _SIGNATUREMAXLEN
 										? n.substr (_SIGNATUREMAXLEN)
-										: n + std::string (20, '\0').substr (0, _SIGNATUREMAXLEN - n.length ())); }
+										: n + std::string (_SIGNATUREMAXLEN, '\0').substr (0, _SIGNATUREMAXLEN - n.length ())); }
+
+			const std::string& name () const
+							{ return (_name); }
+			void setName (const std::string& n)
+							{ _name = // Always 32 characters. No more no less...
+									(n.length () > _NAMEMAXLEN
+										? n.substr (_NAMEMAXLEN)
+										: n + std::string (_NAMEMAXLEN, '\0').substr (0, _NAMEMAXLEN - n.length ())); }
+			
 			const MCHEmul::UBytes& length () const
 							{ return (_length);	}
+			void setLength (unsigned int l)
+							{ setLength (MCHEmul::UInt::fromUnsignedInt (l).bytes ()); }
 			void setLength (const MCHEmul::UBytes& l)
-							{ _length = l; _length.setMinLength (4); }
+							{ _length = l; _length.setMinLength (4, false /** at the beginnig. */); }
+			
 			const MCHEmul::UBytes& version () const
 							{ return (_version); }
+			void setVersion (unsigned short v)
+							{ setVersion (MCHEmul::UInt::fromUnsignedInt (v).bytes ()); }
 			void setVersion (const MCHEmul::UBytes& v)
 							{ _version = v; _version.setMinLength (2); }
+			
 			const MCHEmul::UBytes& type () const
 							{ return (_type); }
+			void setType (unsigned short t)
+							{ setType (MCHEmul::UInt::fromUnsignedInt (t).bytes ()); }
 			void setType (const MCHEmul::UBytes& t)
 							{ _type = t; _type.setMinLength (2); }
 
-			// To get the header as vector of unsigned char...
-			std::vector <unsigned char> rowData () const;
+			// To get the header as UBytes...
+			MCHEmul::UBytes bytes () const;
 
 			private:
-			std::string _CRTSignature; /** 20 chars max long. */
+			std::string _signature, /** 20 chars max long. */ _name /** 32 chars max long. */; 
 			MCHEmul::UBytes _length /** 4 */, _version /** 2 */, _type /** 2*/;
 		};
 
-		CRTData ()
-			: _header (),
-			  _dataBlocks ({ })
+		/** Every block of data of the cartridge. */
+		class Chip final
+		{
+			public:
+			static const size_t _SIGNATUREMAXLEN = 4;
+
+			Chip ()
+				: _signature ("CHIP"), // 4 length...
+				  _length (MCHEmul::UBytes ({ 0x00, 0x00, 0x00, 0x10 }, true)), // 16 min...when there is no data...
+				  _type (MCHEmul::UBytes ({ 0x00, 0x00 }, true)),
+				  _bank (MCHEmul::UBytes ({ 0x00, 0x00 }, true)),
+				  _data ()
 							{ }
 
+			Chip (const std::string& n,
+				const MCHEmul::DataMemoryBlock& dt,
+				const MCHEmul::UBytes& l = 
+					MCHEmul::UBytes ({ 0x00, 0x00, 0x00, 0x10 }, true /** high - low format. */) /** = 0x00000016 */,
+				const MCHEmul::UBytes& t =
+					MCHEmul::UBytes ({ 0x00, 0x00 }, true /** high - low format */), /** = 0x00000 */
+				const MCHEmul::UBytes& b =
+					MCHEmul::UBytes ({ 0x00, 0x00 }, true /** high - low format */) /** = 0x00000 */);
+
+			Chip (const std::string& n,
+				MCHEmul::DataMemoryBlock&& dt,
+				const MCHEmul::UBytes& l = 
+					MCHEmul::UBytes ({ 0x00, 0x00, 0x00, 0x10 }, true /** high - low format. */) /** = 0x00000016 */,
+				const MCHEmul::UBytes& t =
+					MCHEmul::UBytes ({ 0x00, 0x00 }, true /** high - low format */), /** = 0x00000 */
+				const MCHEmul::UBytes& b =
+					MCHEmul::UBytes ({ 0x00, 0x00 }, true /** high - low format */) /** = 0x00000 */);
+
+			const std::string& signature () const
+							{ return (_signature); }
+			void setSignature (const std::string& n)
+							{ _signature = // Always 20 characters. No more no less...
+									(n.length () > _SIGNATUREMAXLEN
+										? n.substr (_SIGNATUREMAXLEN)
+										: n + std::string (_SIGNATUREMAXLEN, '\0').substr (0, _SIGNATUREMAXLEN - n.length ())); }
+
+			const MCHEmul::UBytes& length () const
+							{ return (_length);	}
+			void setLength (unsigned int l)
+							{ setLength (MCHEmul::UInt::fromUnsignedInt (l).bytes ()); }
+			void setLength (const MCHEmul::UBytes& l)
+							{ _length = l; _length.setMinLength (4, false /** at the beginning. */); }
+
+			const MCHEmul::UBytes& type () const
+							{ return (_type); }
+			void setType (unsigned short t)
+							{ setType (MCHEmul::UInt::fromUnsignedInt (t).bytes ()); }
+			void setType (const MCHEmul::UBytes& t)
+							{ _type = t; _type.setMinLength (2); }
+
+			const MCHEmul::UBytes& bank () const
+							{ return (_bank); }
+			void setBank (unsigned short b)
+							{ setBank (MCHEmul::UInt::fromUnsignedInt (b).bytes ()); }
+			void setBank (const MCHEmul::UBytes& b)
+							{ _bank = b; _bank.setMinLength (2); }
+			
+			const MCHEmul::DataMemoryBlock& data () const
+							{ return (_data); }
+			void setData (const MCHEmul::DataMemoryBlock& d)
+							{ _data = d; }
+
+			// To get the chip data as UBytes...
+			MCHEmul::UBytes bytes () const;
+
+			private:
+			std::string _signature;
+			MCHEmul::UBytes _length, _type, _bank;
+			MCHEmul::DataMemoryBlock _data;
+		};
+
+		using Chips = std::vector <Chip>;
+
+		CRTData ()
+			: _header (),
+			  _chips ({ })
+							{ }
+
+		const Header& header () const
+							{ return (_header); }
+		Header& header ()
+							{ return (_header); }
 		void setHeader (const Header& h)
 							{ _header = h; }
-		void addDataBlock (const MCHEmul::DataMemoryBlock& blk)
-							{ _dataBlocks.emplace_back (blk); }
-		void addDataBlock (MCHEmul::DataMemoryBlock&& blk)
-							{ _dataBlocks.emplace_back (std::move (blk)); }
+
+		size_t numberChips () const
+							{ return (_chips.size ()); }
+		const Chips& chips () const
+							{ return (_chips); }
+		const Chip& chip (size_t n) const
+							{ return (_chips [n]); }
+		void addChip (const Chip& c)
+							{ _chips.emplace_back (c); }
+		void addChip (Chip&& c)
+							{ _chips.emplace_back (std::move (c)); }
+		inline void addChipFrom (const MCHEmul::DataMemoryBlock& blk);
+		inline void addChipFrom (MCHEmul::DataMemoryBlock&& blk);
 
 		bool saveTo (const std::string& fN, const Parameters& prms, bool& e);
 
 		private:
 		Header _header;
-		MCHEmul::DataMemoryBlocks _dataBlocks;
+		Chips _chips;
 	};
 
 	// ---
-	inline CRTData::Header::Header (const std::string& n,
-			const MCHEmul::UBytes& l, const MCHEmul::UBytes& v,	const MCHEmul::UBytes& t)
-		: _CRTSignature (""), // Assign just after this...
-		  _length (l),
-		  _version (v),
-		  _type (t)
+	void CRTData::addChipFrom (const MCHEmul::DataMemoryBlock& blk)
 	{ 
-		setCRTSignature (n); 
-		
-		_length.setMinLength (4); 
-		_version.setMinLength (2); 
-		_type.setMinLength (2); 
+		MCHEmul::UInt l = MCHEmul::UInt::fromUnsignedInt 
+			((unsigned int) (blk.size () + 16 /** length of the header. */));
+		l.setMinLength (2 /** at the beginning. */);
+							  
+		addChip (Chip ("CHIP", blk, l.bytes ())); 
+		// The rest of data in the chip is left in default values!
+	}
+
+	// ---
+	void CRTData::addChipFrom (MCHEmul::DataMemoryBlock&& blk)
+	{ 
+		MCHEmul::UInt l = MCHEmul::UInt::fromUnsignedInt 
+			((unsigned int) (blk.size () + 16));
+		l.setMinLength (2);
+							  
+		addChip (Chip ("CHIP", std::move (blk), l.bytes ())); 
 	}
 }
 
