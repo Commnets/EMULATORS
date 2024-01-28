@@ -69,13 +69,18 @@ namespace VIC20
 							{ setVersion (MCHEmul::UInt::fromUnsignedInt (v).bytes ()); }
 			void setVersion (const MCHEmul::UBytes& v)
 							{ _version = v; _version.setMinLength (2); }
-			
+
+			// The type will reflect wich banks of memory are on!
+			// bit 1 = Block 1, bit 2 = block 2...
+			// so e.g. type = 13 => Block 1, 2 & 3 active.
+			// Usually autorun will have bit 5 on
+			// and there is no possible a type about >= 64! (bit 6 on...)
 			const MCHEmul::UBytes& type () const
 							{ return (_type); }
 			void setType (unsigned short t)
 							{ setType (MCHEmul::UInt::fromUnsignedInt (t).bytes ()); }
 			void setType (const MCHEmul::UBytes& t)
-							{ _type = t; _type.setMinLength (2); }
+							{ _type = t; _type.setMinLength (2, false /** at the beginning. */); }
 
 			// To get the header as UBytes...
 			MCHEmul::UBytes bytes () const;

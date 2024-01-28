@@ -62,9 +62,6 @@ namespace VIC20
 		bool dataDumped () const
 							{ bool r = _dataDumped; _dataDumped = false; return (r); }
 
-		/** To clean up the memory used. */
-		void cleanUpAdditionalSubsets ();
-
 		private:
 		// Implementation
 		mutable bool _dataDumped;
@@ -74,10 +71,6 @@ namespace VIC20
 			Other way around when the cartridge is unplugged. */
 		VIC20::Memory* _memoryRef;
 		MCHEmul::MemoryView* _memoryView;
-		MCHEmul::PhysicalStorages _storages;
-		MCHEmul::PhysicalStorageSubsets _subsets;
-		/** The physical storage. */
-		static const int _EXPANSIONROMBASE			= 4000; //The different chips of memory are created using this base...
 	};
 }
 

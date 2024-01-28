@@ -153,7 +153,12 @@ namespace VIC20
 			It show change only at at initialization, otherwise the consecuencues are not clear. */
 		Configuration configuration () const
 							{ return (_configuration); }
-		void setConfiguration (Configuration cfg);
+		/** a0 = true when 0xa000 must be active. 
+			It is false by default. */
+		void setConfiguration (Configuration cfg, bool a0 = false);
+		/** In this version every bit active will actibe a bank of expansion. 
+			bit 1 = Block 1, bit 2 = block 2,... */
+		void setConfiguration (unsigned char cfg);
 
 		/** To activate the right subsets in the CPU view. */
 		virtual bool initialize () override;

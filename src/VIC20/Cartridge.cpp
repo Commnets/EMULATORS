@@ -7,8 +7,7 @@ VIC20::Cartridge::Cartridge ()
 		{ { "Name", "Commodore VIC20 Cartridge" },
 		  { "Manufacturer", "Commodore Business Machines CBM" } }), // This parameters can be changed when connecting data...
 	  _dataDumped (false),
-	  _memoryRef (nullptr), _memoryView (nullptr),
-	  _storages (), _subsets ()
+	  _memoryRef (nullptr), _memoryView (nullptr)
 {
 	setClassName ("Cartridge");
 }
@@ -31,8 +30,6 @@ bool VIC20::Cartridge::connectData (MCHEmul::FileData* dt)
 // ---
 bool VIC20::Cartridge::finalize ()
 { 
-	cleanUpAdditionalSubsets (); // No memory...
-	
 	setData ({ }); // No data...
 	
 	return (true);
@@ -50,8 +47,6 @@ bool VIC20::Cartridge::simulate (MCHEmul::CPU* cpu)
 // ---
 void VIC20::Cartridge::dumpDataInto (VIC20::Memory* m, MCHEmul::MemoryView* mV)
 {
-	cleanUpAdditionalSubsets ();
-
 	_memoryRef = m;
 	_memoryView = mV;
 
@@ -61,41 +56,28 @@ void VIC20::Cartridge::dumpDataInto (VIC20::Memory* m, MCHEmul::MemoryView* mV)
 	// The structure of the memoy will depend on the type of cartridge...
 	switch (type ())
 	{
-		// TODO
-		
+		// The default support all formats!
 		default:
+			{
+				m -> setConfiguration ((unsigned char) 
+					std::atoi ((*data ()._attributes.find ("TYPE")).second.c_str ()));
+
+				// Dump the data into...
+				int trush = 0; // Not useful...
+				for (const auto& i : data ()._data)
+				{
+					size_t ct = 0;
+					MCHEmul::Address a = i.startAddress ();
+					for (const auto& j : i.bytes ())
+					{
+						MCHEmul::Address dA = a + ct++;
+						m -> set (dA, j, true /** force. */);
+					}
+				}
+			}
+
 			break;
 	}
 
-	// Add the subsets to the view...
-	_memoryRef -> addAdditionalSubsets (0 /** always 0. */, _subsets, _memoryView);
-
-	// The subsets are initially disactivated...
-	// They will be activated as needed...
-	for (const auto& i : _subsets)
-		i.second -> setActive (false);
-
 	_dataDumped = true;
-}
-
-// ---
-void VIC20::Cartridge::cleanUpAdditionalSubsets ()
-{
-	if (_memoryRef == nullptr)
-		return; // Nothing else to do...
-				// There is no data inside...
-
-	// The memory takes no longer into account the subset...
-	_memoryRef -> removeAdditionalSubsets (0 /** The same 0. */, _memoryView);
-
-	// Delete the subsets and the storages...
-	for (const auto& i : _subsets)
-		delete (i.second);
-	_subsets = { };
-	for (const auto& i : _storages)
-		delete (i.second);
-	_storages = { };
-
-	_memoryView = nullptr;
-	_memoryRef = nullptr;
 }

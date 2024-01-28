@@ -144,7 +144,7 @@ VIC20::Memory::Memory (VIC20::Memory::Configuration cfg, const std::string& lang
 }
 
 // ---
-void VIC20::Memory::setConfiguration (Configuration cfg)
+void VIC20::Memory::setConfiguration (VIC20::Memory::Configuration cfg, bool a0)
 {
 	// Attending to the configuration different options are active or not active!
 	switch (_configuration = cfg)
@@ -161,8 +161,8 @@ void VIC20::Memory::setConfiguration (Configuration cfg)
 				_BANK2UC		-> setActive (true);
 				_BANK3			-> setActive (false);
 				_BANK3UC		-> setActive (true);
-				_BANK5			-> setActive (false);
-				_BANK5UC		-> setActive (true);
+				_BANK5			-> setActive (a0);
+				_BANK5UC		-> setActive (!a0);
 
 				// The screen memory is in the second possible position...
 				_SCREENC1RAM	-> setActive (false);
@@ -185,8 +185,8 @@ void VIC20::Memory::setConfiguration (Configuration cfg)
 				_BANK2UC		-> setActive (true);
 				_BANK3			-> setActive (false);
 				_BANK3UC		-> setActive (true);
-				_BANK5			-> setActive (false);
-				_BANK5UC		-> setActive (true);
+				_BANK5			-> setActive (a0);
+				_BANK5UC		-> setActive (!a0);
 
 				// The screen memory is in the second possible position...
 				_SCREENC1RAM	-> setActive (false);
@@ -209,8 +209,8 @@ void VIC20::Memory::setConfiguration (Configuration cfg)
 				_BANK2UC		-> setActive (true);
 				_BANK3			-> setActive (false);
 				_BANK3UC		-> setActive (true);
-				_BANK5			-> setActive (false);
-				_BANK5UC		-> setActive (true);
+				_BANK5			-> setActive (a0);
+				_BANK5UC		-> setActive (!a0);
 
 				// The screen memory is in the first possible position...
 				_SCREENC1RAM	-> setActive (true);
@@ -233,8 +233,8 @@ void VIC20::Memory::setConfiguration (Configuration cfg)
 
 				_BANK3			-> setActive (false);
 				_BANK3UC		-> setActive (true);
-				_BANK5			-> setActive (false);
-				_BANK5UC		-> setActive (true);
+				_BANK5			-> setActive (a0);
+				_BANK5UC		-> setActive (!a0);
 
 				// The screen memory is in the first possible position...
 				_SCREENC1RAM	-> setActive (true);
@@ -257,8 +257,8 @@ void VIC20::Memory::setConfiguration (Configuration cfg)
 				_BANK3			-> setActive (true);		// 8k.
 				_BANK3UC		-> setActive (false);
 
-				_BANK5			-> setActive (false);
-				_BANK5UC		-> setActive (true);
+				_BANK5			-> setActive (a0);
+				_BANK5UC		-> setActive (!a0);
 
 				// The screen memory is in the first possible position...
 				_SCREENC1RAM	-> setActive (true);
@@ -270,11 +270,49 @@ void VIC20::Memory::setConfiguration (Configuration cfg)
 			break;
 
 		// The BANK5 is usually active when autorun cartridges 8k are introduced...
+		// so in that c ases the a0 parameter will be true when started!
 
 		default:
 			// It shouldn't exist, but just in case...
 			assert (false);
 			break;
+	}
+}
+
+// ---
+void VIC20::Memory::setConfiguration (unsigned char cfg)
+{
+	_BANK0	 -> setActive (true);					// 3k min always...
+	_BANK0UC -> setActive (false);
+
+	// Active the banks if the are requested...
+	_BANK1	 -> setActive ((cfg & 0x02) != 0x00);
+	_BANK1UC -> setActive ((cfg & 0x02) == 0x00);
+	_BANK2	 -> setActive ((cfg & 0x04) != 0x00);
+	_BANK2UC -> setActive ((cfg & 0x04) == 0x00);
+	_BANK3	 -> setActive ((cfg & 0x08) != 0x00);
+	_BANK3UC -> setActive ((cfg & 0x08) == 0x00);
+	_BANK5	 -> setActive ((cfg & 0x20) != 0x00);
+	_BANK5UC -> setActive ((cfg & 0x20) == 0x00);
+
+	// The screen memory will be in different place according with the banks active...
+	// In the moment there is some king of expansion, the screen memory changes its position!
+	if (_BANK1 -> active () ||
+		_BANK2 -> active () ||
+		_BANK3 -> active () ||
+		_BANK5 -> active ())
+	{
+		_SCREENC1RAM	-> setActive (true);
+		_SCREENC1RAMUC	-> setActive (false);
+		_SCREENC2RAM	-> setActive (false);
+		_SCREENC2RAMUC  -> setActive (true);
+	}
+	else
+	{
+		_SCREENC1RAM	-> setActive (false);
+		_SCREENC1RAMUC	-> setActive (true);
+		_SCREENC2RAM	-> setActive (true);
+		_SCREENC2RAMUC  -> setActive (false);
 	}
 }
 

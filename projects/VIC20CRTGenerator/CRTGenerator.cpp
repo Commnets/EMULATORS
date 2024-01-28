@@ -159,5 +159,11 @@ VIC20::CRTData VIC20::CRTGenerator::createCRTStructure () const
 	if (_parameters.exists ("n"))
 		result.header ().setName (_parameters.parameter ("n").values ()[0]);
 
+	// The type of the cartridge will be defined according which blovks of data are loaded...
+	unsigned short tp = 0;
+	for (const auto& i : result.chips ())
+		tp |= (1 << (i.data ().startAddress ().value () >> 13 /** address/8192 */));
+	result.header ().setType (tp);
+
 	return (result);
 }
