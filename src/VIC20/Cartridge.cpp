@@ -14,18 +14,6 @@ VIC20::Cartridge::Cartridge ()
 }
 
 // ---
-bool VIC20::Cartridge::PIN_UP (unsigned char nP) const
-{
-	bool result = true;
-	
-	// TODO
-	
-	result = COMMODORE::ExpansionPeripheral::PIN_UP (nP);
-
-	return (result);
-}
-
-// ---
 bool VIC20::Cartridge::connectData (MCHEmul::FileData* dt)
 { 
 	if (dynamic_cast <COMMODORE::CRTFileData*> (dt) == nullptr)

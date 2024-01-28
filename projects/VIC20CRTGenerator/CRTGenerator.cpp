@@ -132,7 +132,7 @@ void VIC20::CRTGenerator::readParametersFrom (int argc, char** argv)
 
 	// Before moving forward the consistency of the body is checked...
 	// Rules:a parameter i and a parameter o must be defined...
-	if (_error = (!existsParameter ("i") || !existsParameter ("o")))
+	if (_error |= (!existsParameter ("i") || !existsParameter ("o")))
 		_errorNames.emplace_back ("There is no either parameter i or parameter o defined. Mandatory");
 }
 
@@ -157,7 +157,7 @@ VIC20::CRTData VIC20::CRTGenerator::createCRTStructure () const
 	// if something were defined at configuration level (parameters)...
 	// A new name for the cartrige?
 	if (_parameters.exists ("n"))
-		result.header ().setSignature (_parameters.parameter ("n").values ()[0]);
+		result.header ().setName (_parameters.parameter ("n").values ()[0]);
 
 	return (result);
 }

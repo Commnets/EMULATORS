@@ -95,7 +95,6 @@ namespace VIC20
 				: _signature ("CHIP"), // 4 length...
 				  _length (MCHEmul::UBytes ({ 0x00, 0x00, 0x00, 0x10 }, true)), // 16 min...when there is no data...
 				  _type (MCHEmul::UBytes ({ 0x00, 0x00 }, true)),
-				  _bank (MCHEmul::UBytes ({ 0x00, 0x00 }, true)),
 				  _data ()
 							{ }
 
@@ -104,8 +103,6 @@ namespace VIC20
 				const MCHEmul::UBytes& l = 
 					MCHEmul::UBytes ({ 0x00, 0x00, 0x00, 0x10 }, true /** high - low format. */) /** = 0x00000016 */,
 				const MCHEmul::UBytes& t =
-					MCHEmul::UBytes ({ 0x00, 0x00 }, true /** high - low format */), /** = 0x00000 */
-				const MCHEmul::UBytes& b =
 					MCHEmul::UBytes ({ 0x00, 0x00 }, true /** high - low format */) /** = 0x00000 */);
 
 			Chip (const std::string& n,
@@ -113,8 +110,6 @@ namespace VIC20
 				const MCHEmul::UBytes& l = 
 					MCHEmul::UBytes ({ 0x00, 0x00, 0x00, 0x10 }, true /** high - low format. */) /** = 0x00000016 */,
 				const MCHEmul::UBytes& t =
-					MCHEmul::UBytes ({ 0x00, 0x00 }, true /** high - low format */), /** = 0x00000 */
-				const MCHEmul::UBytes& b =
 					MCHEmul::UBytes ({ 0x00, 0x00 }, true /** high - low format */) /** = 0x00000 */);
 
 			const std::string& signature () const
@@ -138,13 +133,6 @@ namespace VIC20
 							{ setType (MCHEmul::UInt::fromUnsignedInt (t).bytes ()); }
 			void setType (const MCHEmul::UBytes& t)
 							{ _type = t; _type.setMinLength (2); }
-
-			const MCHEmul::UBytes& bank () const
-							{ return (_bank); }
-			void setBank (unsigned short b)
-							{ setBank (MCHEmul::UInt::fromUnsignedInt (b).bytes ()); }
-			void setBank (const MCHEmul::UBytes& b)
-							{ _bank = b; _bank.setMinLength (2); }
 			
 			const MCHEmul::DataMemoryBlock& data () const
 							{ return (_data); }
@@ -156,7 +144,7 @@ namespace VIC20
 
 			private:
 			std::string _signature;
-			MCHEmul::UBytes _length, _type, _bank;
+			MCHEmul::UBytes _length, _type;
 			MCHEmul::DataMemoryBlock _data;
 		};
 

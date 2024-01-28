@@ -37,8 +37,6 @@ namespace VIC20
 
 		Cartridge ();
 
-		virtual bool PIN_UP (unsigned char nP) const;
-
 		/** To know the type of cartridge, if any. */
 		Type type () const
 							{ return (data ()._data.empty () 
