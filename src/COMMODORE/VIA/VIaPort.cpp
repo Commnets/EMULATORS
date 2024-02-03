@@ -8,7 +8,7 @@ COMMODORE::VIAPort::VIAPort (int id)
 	  _id (id), 
 	  _port (0, 1 /** 1 byte wide. */),
 	  _T (nullptr), _CL1 (nullptr), _CL2 (nullptr),
-	  _p6 (false)
+	  _p6 (false), _p7 (false)
 { 
 	initialize (); /** To initialize the rest of the values. */ 
 }
@@ -90,15 +90,14 @@ MCHEmul::InfoStructure COMMODORE::VIAPort::getInfoStructure () const
 bool COMMODORE::VIAPort::simulate (MCHEmul::CPU* cpu)
 {
 	MCHEmul::UByte o = _OR;
-	if (_T != nullptr &&
+	if ((_T != nullptr &&
 		(_T -> runMode () == VIATimer::RunMode::_ONESHOOTSIGNAL ||
-			_T -> runMode () == VIATimer::RunMode::_CONTINUOUSSIGNAL))
+		 _T -> runMode () == VIATimer::RunMode::_CONTINUOUSSIGNAL)) && _DDR.bit (7) /** as ouput. */) // The timer has priority over value...
 		o.setBit (7, _p7); // _p7 always "above", is the timer run mode is the right one...
-	{
-		MCHEmul::UByte r = (o.value () | ~_DDR.value ()) & _port.value ()[0].value ();
-		if (r != _lastPortValue)
-			setPortValue (_lastPortValue = r);
-	}
+
+	MCHEmul::UByte r = (o.value () | ~_DDR.value ()) & _port.value ()[0].value ();
+	if (r != _lastPortValue)
+		setPortValue (_lastPortValue = r);
 	
 	// For pulse purposes, keep track of the value at bit 6...
 	// Depending on the instance of the port (A or B) this value 

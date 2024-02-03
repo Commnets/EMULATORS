@@ -22,7 +22,7 @@ const VIC20::InputOSSystem::KeystrockesMap VIC20::InputOSSystem::_VIC20KEYS
 			{ SDL_SCANCODE_M,				{ std::make_pair (4, 4) } },
 			{ SDL_SCANCODE_N,				{ std::make_pair (3, 4) } },
 			{ SDL_SCANCODE_O,				{ std::make_pair (6, 4) } },
-			{ SDL_SCANCODE_P,				{ std::make_pair (1, 15) } },
+			{ SDL_SCANCODE_P,				{ std::make_pair (1, 5) } },
 			{ SDL_SCANCODE_Q,				{ std::make_pair (6, 0) } },
 			{ SDL_SCANCODE_R,				{ std::make_pair (1, 2) } },
 			{ SDL_SCANCODE_S,				{ std::make_pair (5, 1) } },
@@ -50,8 +50,8 @@ const VIC20::InputOSSystem::KeystrockesMap VIC20::InputOSSystem::_VIC20KEYS
 			{ SDL_SCANCODE_F5,				{ std::make_pair (6, 7) } },
 			{ SDL_SCANCODE_F7,				{ std::make_pair (7, 7) } },
 			/** the cursor/control keys */
-			{ SDL_SCANCODE_RIGHT,			{ std::make_pair (3, 7) } },
-			{ SDL_SCANCODE_DOWN,			{ std::make_pair (2, 7) } },
+			{ SDL_SCANCODE_RIGHT,			{ std::make_pair (2, 7) } },
+			{ SDL_SCANCODE_DOWN,			{ std::make_pair (3, 7) } },
 			{ SDL_SCANCODE_LCTRL,			{ std::make_pair (2, 0) } }, // Ctrl instead
 			{ SDL_SCANCODE_RCTRL,			{ std::make_pair (2, 0) } }, // Ctrl (the same assigned) instead
 			{ SDL_SCANCODE_LALT,			{ std::make_pair (3, 0) } }, // Stop instead (+ shift = Run)
@@ -82,8 +82,8 @@ const VIC20::InputOSSystem::KeystrockesMap VIC20::InputOSSystem::_VIC20KEYS
 			{ SDL_SCANCODE_F4,				{ std::make_pair (3, 1), std::make_pair (5, 7) } },
 			{ SDL_SCANCODE_F6,				{ std::make_pair (3, 1), std::make_pair (6, 7) } },
 			{ SDL_SCANCODE_F8,				{ std::make_pair (3, 1), std::make_pair (7, 7) } },
-			{ SDL_SCANCODE_LEFT,			{ std::make_pair (3, 1), std::make_pair (3, 7) } },
-			{ SDL_SCANCODE_UP,				{ std::make_pair (3, 1), std::make_pair (2, 7) } }
+			{ SDL_SCANCODE_LEFT,			{ std::make_pair (3, 1), std::make_pair (2, 7) } },
+			{ SDL_SCANCODE_UP,				{ std::make_pair (3, 1), std::make_pair (3, 7) } }
 		}
 	);
 

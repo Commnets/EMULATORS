@@ -30,21 +30,20 @@ const MCHEmul::UByte& VIC20::VIA2Registers::readValue (size_t p) const
 
 	switch (pp)
 	{
+		// Port B...
+		// Where the keyboard and the joystick right/east position is managed...
 		case 0x00:
 			{
 				unsigned char m = 0x01;
 				unsigned char dt = MCHEmul::UByte::_0;
-				MCHEmul::UByte o = _PA -> OR ();
-				if (_T2 -> runMode () == COMMODORE::VIATimer::RunMode::_ONESHOOTSIGNAL ||
-					_T2 -> runMode () == COMMODORE::VIATimer::RunMode::_CONTINUOUSSIGNAL)
-					o.setBit (7, _PA -> p7 ());
-				unsigned char msk = (o.value () | ~_PA -> DDR ().value ()) &
-					(_joystickStatus | 0x80 /** Bit 7 is not read in VIA2 so it should be set always. */);
+				unsigned char msk = (_PA -> OR ().value () | ~_PA -> DDR ().value ()) &
+					(_joystickStatus | 0x7f /** Only the bit 7 (right/east) is managed in this VIA, 
+												so the rest of the bits are considered as switched on. */);
 				for (size_t i = 0; i < 8; m <<= 1, i++)
 					if ((~msk & m) != 0x00)
 						dt |= ~_rev_keyboardStatusMatrix [i].value (); // 1 if clicked...
 				_PB -> setPortValue ((_PB -> OR ().value () | ~_PB -> DDR ().value ()) & ~dt);
-				// To considere the impact in the ControlLines when reading this record!
+				// To considere the impact in the "ControlLines" when reading this record!
 				result = _PB -> value (true);
 			}
 
@@ -53,14 +52,21 @@ const MCHEmul::UByte& VIC20::VIA2Registers::readValue (size_t p) const
 		case 0x01:
 		case 0x0f:
 			{
+				// First of all, treat to get what should be in the Port B,
+				// this is dt, that includes the usual value (considering the situation of the timer)
+				MCHEmul::UByte o = _PB -> OR ();
+				if ((_T2 -> runMode () == COMMODORE::VIATimer::RunMode::_ONESHOOTSIGNAL ||
+					 _T2 -> runMode () == COMMODORE::VIATimer::RunMode::_CONTINUOUSSIGNAL) &&
+					_PB -> DDR ().bit (7))
+					o.setBit (7, _PB -> p7 ());
+				unsigned char msk = (o.value () | ~_PB -> DDR ().value ());
 				unsigned char m = 0x01;
 				unsigned char dt = MCHEmul::UByte::_0;
-				unsigned char msk = (_PB -> OR ().value () | ~_PB -> DDR ().value ());
 				for (size_t i = 0; i < 8; m <<= 1, i++)
 					if ((~msk & m) != 0x00)
 						dt |= ~_keyboardStatusMatrix [i].value ();  // 1 if clicked...
 				_PA -> setPortValue (result = ((_PA -> OR ().value () | ~_PA -> DDR ().value ()) & ~dt));
-				// To considere (or not) the impact in the ControlLines when reading this record!
+				// To considere (or not) the impact in the "ControlLines" when reading this record!
 				result = _PA -> value (pp == 0x01);
 			}
 

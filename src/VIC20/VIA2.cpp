@@ -80,41 +80,21 @@ void VIC20::VIA2::processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifier* n
 				for (auto i : jm -> _axisValues)
 				{
 					dr |= (ct == 0) // The x axis first...
-						? ((i > 0) ? 0x80 /** right = bit 7 */ : ((i < 0) ? 0x10 /** left = bit 4 */ : 0))
-						: ((i > 0) ? 0x08 /** down = bit 3 */ : ((i < 0) ? 0x04 /** up = bit 2 */ : 0));
+						? ((i > 0) ? 0x80 /** right/east = bit 7 */ : ((i < 0) ? 0x10 /** left/west = bit 4 */ : 0))
+						: ((i > 0) ? 0x08 /** down/south = bit 3 */ : ((i < 0) ? 0x04 /** up/north = bit 2 */ : 0));
 
 					ct++;
 				}
 
+				/** Saves the full status of the joystick, 
+					but bear in mind that VIA2 only takes care of the right/east movement. */
 				_VIA2Registers -> setJoystickStatus 
 					((dr == 0x00) ? 0xff /** none connected. */ : _VIA2Registers -> joystickStatus () & ~dr);
 			}
 
 			break;
 
-		case MCHEmul::InputOSSystem::_JOYSTICKBUTTONPRESSED:
-			{
-				std::shared_ptr <MCHEmul::InputOSSystem::JoystickButtonEvent> jb = 
-					std::static_pointer_cast <MCHEmul::InputOSSystem::JoystickButtonEvent> (evnt.data ());
-				if (jb -> _joystickId != 0)
-					break; // Only joystick 0 is allowed!
-
-				_VIA2Registers -> setJoystickStatus (_VIA2Registers -> joystickStatus () & ~0x20 /** bit 5. */);
-			}
-
-			break;
-
-		case MCHEmul::InputOSSystem::_JOYSTICKBUTTONRELEASED:
-			{
-				std::shared_ptr <MCHEmul::InputOSSystem::JoystickButtonEvent> jb = 
-					std::static_pointer_cast <MCHEmul::InputOSSystem::JoystickButtonEvent> (evnt.data ());
-				if (jb -> _joystickId != 0)
-					break; // Only joystick 0 is allowed!
-	
-				_VIA2Registers -> setJoystickStatus (_VIA2Registers -> joystickStatus () & ~0x20 /** bit 5. */);
-			}
-
-			break;
+			// The rest of the movements of the joystick are managed throught out VIA1...
 
 		default:
 			break;

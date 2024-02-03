@@ -29,17 +29,27 @@ const MCHEmul::UByte& VIC20::VIA1Registers::readValue (size_t p) const
 
 	switch (pp)
 	{
-		case 0x00:
+		// The Port B is used for many other things not still implemented...
+
+		// Port A
+		case 0x01:
 			{
-				MCHEmul::UByte o = _PA -> OR ();
-				if (_T2 -> runMode () == COMMODORE::VIATimer::RunMode::_ONESHOOTSIGNAL ||
-					_T2 -> runMode () == COMMODORE::VIATimer::RunMode::_CONTINUOUSSIGNAL)
-					o.setBit (7, _PA -> p7 ());
-				unsigned char dt = (o.value () | ~_PA -> DDR ().value ()) &
-					(_joystickStatus | 0x7f /** Only bit 7 is read in this port, so the rest of the bits for joystick should be set. */);
-				_PB -> setPortValue ((_PB -> OR ().value () | ~_PB -> DDR ().value ()) & ~dt);
-				// To considere the impact in the ControlLines when reading this record!
-				result = _PB -> value (true);
+				// First of all, treat to get what should be in the Port B,
+				// this is dt, that includes the usual value (considering the situation of the timer)
+				// and also the situation of the joystick except the right/east position that is managed in VIA2...
+				MCHEmul::UByte o = _PB -> OR ();
+				if ((_T2 -> runMode () == COMMODORE::VIATimer::RunMode::_ONESHOOTSIGNAL ||
+					 _T2 -> runMode () == COMMODORE::VIATimer::RunMode::_CONTINUOUSSIGNAL) &&
+					_PB -> DDR ().bit (7))
+					o.setBit (7, _PB -> p7 ());
+				unsigned char dt = (o.value () | ~_PB -> DDR ().value ()) &
+					(_joystickStatus | 0x80	/** The bit 7 (right/east) is managed in VIA2, 
+												so here it is always considered switched on. */);
+				// The value in the portA...
+				_PA -> setPortValue ((_PA -> OR ().value () | ~_PA -> DDR ().value ()) & ~dt);
+				// This method is invoked, 
+				// to considere the impact in the ControlLines when reading this record!
+				result = _PA -> value (true);
 			}
 
 			break;

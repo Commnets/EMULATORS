@@ -69,6 +69,8 @@ namespace COMMODORE
 			A notification will be sent. */
 		void setPortValue (const MCHEmul::UByte& v)
 							{ _port.setValue (MCHEmul::UBytes ({ v })); } // A notification will be issued...
+		const MCHEmul::UByte& portValue () const
+							{ return (_port.value ()[0]); }
 
 		/** To get the value present in the "Port" (potentially to be moved into the data bus). \n
 			The value = pins when no latching. \n

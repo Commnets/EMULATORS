@@ -46,7 +46,7 @@ bool COMMODORE::VIAControlLineType1::simulate (MCHEmul::CPU* cpu)
 
 					_interruptRequested = true;
 
-					_P -> latchIR ();
+					_P -> setLatchIR (true);
 				}
 			}
 
@@ -60,7 +60,7 @@ bool COMMODORE::VIAControlLineType1::simulate (MCHEmul::CPU* cpu)
 
 					_interruptRequested = true;
 
-					_P -> latchIR ();
+					_P -> setLatchIR (true);
 				}
 			}
 
