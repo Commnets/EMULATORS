@@ -1,0 +1,132 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Archivos de origen">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Archivos de encabezado">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+    <Filter Include="Archivos de recursos">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Archivos de origen\Emulators">
+      <UniqueIdentifier>{a76f749f-222c-4538-9d08-67a1dc5d6b01}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Archivos de origen\IO">
+      <UniqueIdentifier>{c4156df5-15ef-446c-a3f3-f9ba8e9164c5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Archivos de origen\Motherboard">
+      <UniqueIdentifier>{64a64907-f4bc-4f44-a851-8e9017096920}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Archivos de encabezado\Commands">
+      <UniqueIdentifier>{cbadf6b6-d6dd-4071-b5d9-a07073576b3c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Archivos de encabezado\Emulators">
+      <UniqueIdentifier>{d97bdccc-957e-46fd-bd6c-87ec38a4c3b5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Archivos de encabezado\IO">
+      <UniqueIdentifier>{64de0dfb-f0aa-4a2a-887f-05c8f034cb33}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Archivos de encabezado\Motherboard">
+      <UniqueIdentifier>{d5bb9208-4a77-483a-9339-b02f19789e49}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Archivos de origen\Commands">
+      <UniqueIdentifier>{a13ef9ea-0d24-4025-8673-077afC264f666}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Archivos de encabezado\Motherboard\Chips">
+      <UniqueIdentifier>{2fa86a2d-5642-47a1-8cb0-41c36eb9713c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Archivos de origen\Motherboard\Chips">
+      <UniqueIdentifier>{35154440-936d-496d-acba-07d28a3eb703}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\src\C264\C264.cpp">
+      <Filter>Archivos de origen</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\C264\C264Emulator.cpp">
+      <Filter>Archivos de origen\Emulators</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\C264\Cartridge.cpp">
+      <Filter>Archivos de origen\IO</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\C264\CommandBuilder.cpp">
+      <Filter>Archivos de origen\Commands</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\C264\Commands.cpp">
+      <Filter>Archivos de origen\Commands</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\C264\DatasettePort.cpp">
+      <Filter>Archivos de origen\IO</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\C264\ExpansionPort.cpp">
+      <Filter>Archivos de origen\IO</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\C264\IOPBuilder.cpp">
+      <Filter>Archivos de origen\IO</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\C264\OSIO.cpp">
+      <Filter>Archivos de origen\IO</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\C264\Screen.cpp">
+      <Filter>Archivos de origen\IO</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\C264\Sound.cpp">
+      <Filter>Archivos de origen\IO</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\C264\Memory.cpp">
+      <Filter>Archivos de origen\Motherboard</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\C264\C6529B.cpp">
+      <Filter>Archivos de origen\Motherboard\Chips</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\include\C264\C264.hpp">
+      <Filter>Archivos de encabezado</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\C264\incs.hpp">
+      <Filter>Archivos de encabezado</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\C264\C264Emulator.hpp">
+      <Filter>Archivos de encabezado\Emulators</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\C264\Cartridge.hpp">
+      <Filter>Archivos de encabezado\IO</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\C264\CommandBuilder.hpp">
+      <Filter>Archivos de encabezado\Commands</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\C264\DatasettePort.hpp">
+      <Filter>Archivos de encabezado\IO</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\C264\ExpansionPort.hpp">
+      <Filter>Archivos de encabezado\IO</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\C264\IOPBuilder.hpp">
+      <Filter>Archivos de encabezado\IO</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\C264\OSIO.hpp">
+      <Filter>Archivos de encabezado\IO</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\C264\Screen.hpp">
+      <Filter>Archivos de encabezado\IO</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\C264\Sound.hpp">
+      <Filter>Archivos de encabezado\IO</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\C264\Memory.hpp">
+      <Filter>Archivos de encabezado\Motherboard</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\C264\Commands.hpp">
+      <Filter>Archivos de encabezado\Commands</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\C264\C6529B.hpp">
+      <Filter>Archivos de encabezado\Motherboard\Chips</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>

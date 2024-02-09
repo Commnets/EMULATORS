@@ -95,7 +95,7 @@ VIC20::InputOSSystem::InputOSSystem ()
 		{ { "Name", "IOSystem" },
 		  { "Type", "Input" },
 		  { "Frequency", "50.0Hz" } }),
-	  _via2 (nullptr),
+	  _via1 (nullptr), _via2 (nullptr),
 	  _vicI (nullptr)
 { 
 	// Nothing else to do...
@@ -115,7 +115,7 @@ void VIC20::InputOSSystem::linkToChips (const MCHEmul::Chips& c)
 	}
 
 	// Can't be null after this method...
-	assert (_via2 != nullptr);
+	assert (_via1 != nullptr && _via2 != nullptr);
 	// This either...
 	assert (_vicI != nullptr);
 

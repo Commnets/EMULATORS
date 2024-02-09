@@ -1,0 +1,78 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Archivos de origen">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Archivos de encabezado">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+    <Filter Include="Archivos de recursos">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Configuration">
+      <UniqueIdentifier>{ab218c4e-7d11-4a29-a96c-6118b057d315}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="C264Emulator.cpp">
+      <Filter>Archivos de origen</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="resource1.h">
+      <Filter>Archivos de encabezado</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="C264Emulator.rc">
+      <Filter>Archivos de recursos</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="C264Logo.ico">
+      <Filter>Archivos de recursos</Filter>
+    </Image>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Standard.hlp">
+      <Filter>Configuration</Filter>
+    </None>
+    <None Include="C264.fmt">
+      <Filter>Configuration</Filter>
+    </None>
+    <None Include="Commodore.fmt">
+      <Filter>Configuration</Filter>
+    </None>
+    <None Include="Default.fmt">
+      <Filter>Configuration</Filter>
+    </None>
+    <None Include="Standard.fmt">
+      <Filter>Configuration</Filter>
+    </None>
+    <None Include="3-plus-1.317053-01.bin">
+      <Filter>Configuration</Filter>
+    </None>
+    <None Include="3-plus-1.317054-01.bin">
+      <Filter>Configuration</Filter>
+    </None>
+    <None Include="basic.318006-01.bin">
+      <Filter>Configuration</Filter>
+    </None>
+    <None Include="kernal.318004-05-ENG.bin">
+      <Filter>Configuration</Filter>
+    </None>
+    <None Include="kernal.318005-05-FRA.bin">
+      <Filter>Configuration</Filter>
+    </None>
+    <None Include="kernal.318030-02-HUN.bin">
+      <Filter>Configuration</Filter>
+    </None>
+    <None Include="kernel.325155-03-SWE.bin">
+      <Filter>Configuration</Filter>
+    </None>
+  </ItemGroup>
+</Project>

@@ -307,6 +307,9 @@ MCHEmul::Instructions F6500::C6500::createInstructions ()
 	result [0x56] = new F6500::LSR_ZeroPageX;
 	result [0x5E] = new F6500::LSR_AbsoluteX;
 
+	// LXA is not created, very unestable...
+	// AB code...
+
 	// NOP
 	// The official one...
 	result [0xEA] = new F6500::NOP;
@@ -318,8 +321,10 @@ MCHEmul::Instructions F6500::C6500::createInstructions ()
 	result [0xDA] = new F6500::NOP;
 	result [0xFA] = new F6500::NOP;
 	result [0x80] = new F6500::NOP_Inmediate;
-	// The inestable versions are not created...
+	result [0x82] = new F6500::NOP_Inmediate;
 	result [0x89] = new F6500::NOP_Inmediate;
+	result [0xC2] = new F6500::NOP_Inmediate;
+	result [0xE2] = new F6500::NOP_Inmediate;
 	result [0x04] = new F6500::NOP_ZeroPage;
 	result [0x44] = new F6500::NOP_ZeroPage;
 	result [0x64] = new F6500::NOP_ZeroPage;
@@ -422,6 +427,13 @@ MCHEmul::Instructions F6500::C6500::createInstructions ()
 	// Instructions totally undocumented...
 	result [0xCB] = new F6500::SBX_Inmediate;
 
+	// SHA is not created, very unestable.
+	// Code 9F, 93
+	// SHX is not created, very unestable.
+	// Code 9E
+	// SHY is nor created, very unestable.
+	// Code 9C
+
 	// SEC
 	result [0x38] = new F6500::SEC;
 
@@ -469,6 +481,9 @@ MCHEmul::Instructions F6500::C6500::createInstructions ()
 	result [0x8C] = new F6500::STY_Absolute;
 	result [0x84] = new F6500::STY_ZeroPage;
 	result [0x94] = new F6500::STY_ZeroPageX;
+
+	// TAS not created, very unestable...
+	// Code 9B
 
 	// TAX
 	result [0xAA] = new F6500::TAX;

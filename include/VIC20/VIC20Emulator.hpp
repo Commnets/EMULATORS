@@ -33,8 +33,9 @@ namespace VIC20
 		  * Constructor:
 		  * @param argv		: The parameters in the form of Strings.\n
 		  *	The basic parameters for any VIC20 emulator are (apart of the ones defined by the parent: \n
-		  *	/n				: To indicate if the visualization system is NTSC. PAL by default.
-		  *	/b[COLOR]		: To draw a black box around the writable part of the screen. The color is optional.
+		  *	/n				: To indicate if the visualization system is NTSC. PAL by default. \n
+		  *	/b[COLOR]		: To draw a black box around the writable part of the screen. The color is optional. \n
+		  * /w[CONF]		: To define the configuration of the machine when starting. 0 (unexpanded), 1 (3k), 2 (8k) ,3 (16k) ,4 or more (24k). \n
 		  * @param cS		: A reference to the communication system. It can be nullptr if no required.
 		  */
 		VIC20Emulator (const MCHEmul::CommandLineArguments& args, MCHEmul::CommunicationSystem* cS = nullptr)

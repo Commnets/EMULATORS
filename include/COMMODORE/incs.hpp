@@ -19,6 +19,7 @@
 #include <COMMODORE/CIA/incs.hpp>
 #include <COMMODORE/VIA/incs.hpp>
 #include <COMMODORE/SID/incs.hpp>
+#include <COMMODORE/TED/incs.hpp>
 #include <COMMODORE/VICI/incs.hpp>
 #include <COMMODORE/VICII/incs.hpp>
 #include <COMMODORE/FileIO.hpp>

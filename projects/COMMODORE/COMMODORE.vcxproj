@@ -42,6 +42,9 @@
     <ClInclude Include="..\..\include\COMMODORE\SID\SID.hpp" />
     <ClInclude Include="..\..\include\COMMODORE\SID\SIDLibWrapper.hpp" />
     <ClInclude Include="..\..\include\COMMODORE\SID\SIDRegisters.hpp" />
+    <ClInclude Include="..\..\include\COMMODORE\TED\incs.hpp" />
+    <ClInclude Include="..\..\include\COMMODORE\TED\TED.hpp" />
+    <ClInclude Include="..\..\include\COMMODORE\TED\TEDRegisters.hpp" />
     <ClInclude Include="..\..\include\COMMODORE\UserIOPeripherals.hpp" />
     <ClInclude Include="..\..\include\COMMODORE\UserPort.hpp" />
     <ClInclude Include="..\..\include\COMMODORE\VIA\incs.hpp" />
@@ -92,6 +95,8 @@
     <ClCompile Include="..\..\src\COMMODORE\SID\SID.cpp" />
     <ClCompile Include="..\..\src\COMMODORE\SID\SIDLibWrapper.cpp" />
     <ClCompile Include="..\..\src\COMMODORE\SID\SIDRegisters.cpp" />
+    <ClCompile Include="..\..\src\COMMODORE\TED\TED.cpp" />
+    <ClCompile Include="..\..\src\COMMODORE\TED\TEDRegisters.cpp" />
     <ClCompile Include="..\..\src\COMMODORE\UserPort.cpp" />
     <ClCompile Include="..\..\src\COMMODORE\VIA\VIA.cpp" />
     <ClCompile Include="..\..\src\COMMODORE\VIA\VIAControlLines.cpp" />

@@ -48,6 +48,10 @@
  */
 
 /**
+ *	\defgroup	C264 Classes defining a C264 Computer
+ *	Classes and macros defining the characteristics of any C264 seriesComputer (C16, Cplus/4 and C116).
+ */
+/**
  *	\defgroup	EMULS Classes defining a template for any emulator.
  *	Classes and macros defining the common characteristics to any Emulator.
  */

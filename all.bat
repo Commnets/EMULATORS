@@ -39,6 +39,7 @@ Echo Configuration files...
 DEL  .\emulators\C64Emulator\*.fmt
 DEL  .\emulators\C64EmulatorC\*.fmt
 DEL  .\monitors\R64Console\*.fmt
+DEL  .\monitors\R64Console\*.def
 DEL  .\emulators\C64Emulator\*.hlp
 DEL  .\emulators\C64EmulatorC\*.hlp
 DEL  .\monitors\R64Console\*.hlp
@@ -49,6 +50,7 @@ DEL .\emulators\C64EmulatorC\C64RConsole.fmt
 COPY .\projects\C64\*.fmt .\monitors\R64Console\ /Y
 DEL .\monitors\R64Console\C64.fmt
 RENAME .\monitors\R64Console\C64RConsole.fmt C64.fmt
+COPY .\projects\C64\*.def .\monitors\R64Console\ /Y
 COPY .\projects\C64\*.hlp .\emulators\C64EmulatorC\ /Y
 DEL .\emulators\C64EmulatorC\C64RConsole.hlp
 COPY .\projects\C64\*.hlp .\monitors\R64Console\ /Y
@@ -84,6 +86,7 @@ Echo Configuration files...
 DEL  .\emulators\VIC20Emulator\*.fmt
 DEL  .\emulators\VIC20EmulatorC\*.fmt
 DEL  .\monitors\RVIC20Console\*.fmt
+DEL  .\monitors\RVIC20Console\*.def
 DEL  .\emulators\VIC20Emulator\*.hlp
 DEL  .\emulators\VIC20EmulatorC\*.hlp
 DEL  .\monitors\RVIC20Console\*.hlp
@@ -94,6 +97,7 @@ DEL .\emulators\VIC20EmulatorC\VIC20RConsole.fmt
 COPY .\projects\VIC20\*.fmt .\monitors\RVIC20Console\ /Y
 DEL .\monitors\RVIC20Console\VIC20.fmt
 RENAME .\monitors\RVIC20Console\VIC20RConsole.fmt VIC20.fmt
+COPY .\projects\VIC20\*.def .\emulators\VIC20EmulatorC\ /Y
 COPY .\projects\VIC20\*.hlp .\emulators\VIC20EmulatorC\ /Y
 DEL .\emulators\VIC20EmulatorC\VIC20RConsole.hlp
 COPY .\projects\VIC20\*.hlp .\monitors\RVIC20Console\ /Y
@@ -112,6 +116,51 @@ COPY .\projects\CORE\*.fmt .\monitors\RVIC20Console\ /Y
 COPY .\projects\CORE\*.hlp .\emulators\VIC20EmulatorC\ /Y
 COPY .\projects\CORE\*.hlp .\emulators\VIC20Emulator\ /Y
 COPY .\projects\CORE\*.hlp .\monitors\RVIC20Console\ /Y
+Echo ********************************************************************
+Echo ********************************************************************
+Echo 1.4: 264 Series
+Echo ********************************************************************
+Echo Exe files...
+COPY .\exe\x86\C264Emulator.exe .\emulators\C264Emulator\ /Y
+COPY .\exe\x86\C264EmulatorD.exe .\emulators\C264Emulator\ /Y
+COPY .\exe\x86\C264EmulatorC.exe .\emulators\C264EmulatorC\ /Y
+COPY .\exe\x86\C264EmulatorCD.exe .\emulators\C264EmulatorC\ /Y
+COPY .\exe\x86\RVIC20Console.exe .\monitors\R264Console\ /Y
+COPY .\exe\x86\RVIC20ConsoleD.exe .\monitors\R264Console\ /Y
+Echo Configuration files...
+DEL  .\emulators\C264Emulator\*.fmt
+DEL  .\emulators\C264EmulatorC\*.fmt
+DEL  .\monitors\R264Console\*.fmt
+DEL  .\monitors\R264Console\*.def
+DEL  .\emulators\C264Emulator\*.hlp
+DEL  .\emulators\C264EmulatorC\*.hlp
+DEL  .\monitors\R264Console\*.hlp
+COPY .\projects\C264\*.fmt .\emulators\C264Emulator\ /Y
+DEL .\emulators\C264Emulator\C264RConsole.fmt
+COPY .\projects\C264\*.fmt .\emulators\C264EmulatorC\ /Y
+DEL .\emulators\C264EmulatorC\C264RConsole.fmt
+COPY .\projects\C264\*.fmt .\monitors\R264Console\ /Y
+DEL .\monitors\R264Console\C264.fmt
+RENAME .\monitors\R264Console\C264RConsole.fmt C264.fmt
+COPY .\projects\C264\*.def .\emulators\C264EmulatorC\ /Y
+COPY .\projects\C264\*.hlp .\emulators\C264EmulatorC\ /Y
+DEL .\emulators\C264EmulatorC\C264RConsole.hlp
+COPY .\projects\C264\*.hlp .\monitors\R264Console\ /Y
+DEL .\monitors\R264Console\C264.hlp
+RENAME .\monitors\R264Console\C264RConsole.hlp C264.hlp
+COPY .\projects\COMMODORE\*.fmt .\emulators\C264EmulatorC\ /Y
+COPY .\projects\COMMODORE\*.fmt .\emulators\C264Emulator\ /Y
+COPY .\projects\COMMODORE\*.fmt .\monitors\R264Console\ /Y
+COPY .\projects\COMMODORE\*.hlp .\emulators\C264EmulatorC\ /Y
+COPY .\projects\COMMODORE\*.hlp .\monitors\R264Console\ /Y
+COPY .\projects\CONSOLE\*.fmt .\emulators\C264EmulatorC\ /Y
+COPY .\projects\CONSOLE\*.hlp .\emulators\C264EmulatorC\ /Y
+COPY .\projects\CORE\*.fmt .\emulators\C264EmulatorC\ /Y
+COPY .\projects\CORE\*.fmt .\emulators\C264Emulator\ /Y
+COPY .\projects\CORE\*.fmt .\monitors\R264Console\ /Y
+COPY .\projects\CORE\*.hlp .\emulators\C264EmulatorC\ /Y
+COPY .\projects\CORE\*.hlp .\emulators\C264Emulator\ /Y
+COPY .\projects\CORE\*.hlp .\monitors\R264Console\ /Y
 Echo ********************************************************************
 Echo
 Echo
@@ -149,6 +198,7 @@ COPY .\exe\x86\Test6500.exe .\setups\C64\ /Y
 COPY .\emulators\C64Commons\*.* .\setups\C64\ /Y
 COPY .\projects\C64\*.fmt .\setups\C64\ /Y
 COPY .\projects\C64\*.hlp .\setups\C64\ /Y
+COPY .\projects\C64\*.def .\setups\C64\ /Y
 COPY .\projects\COMMODORE\*.fmt .\setups\C64\ /Y
 COPY .\projects\COMMODORE\*.hlp .\setups\C64\ /Y
 COPY .\projects\CONSOLE\*.fmt .\setups\C64\ /Y
@@ -169,6 +219,7 @@ COPY .\exe\x86\VIC20CRTGenerator.exe .\setups\VIC20\ /Y
 COPY .\emulators\VIC20Commons\*.* .\setups\VIC20\ /Y
 COPY .\projects\VIC20\*.fmt .\setups\VIC20\ /Y
 COPY .\projects\VIC20\*.hlp .\setups\VIC20\ /Y
+COPY .\projects\VIC20\*.def .\setups\VIC20\ /Y
 COPY .\projects\COMMODORE\*.fmt .\setups\VIC20\ /Y
 COPY .\projects\COMMODORE\*.hlp .\setups\VIC20\ /Y
 COPY .\projects\CONSOLE\*.fmt .\setups\VIC20\ /Y
@@ -177,6 +228,27 @@ COPY .\projects\CORE\*.fmt .\setups\VIC20\ /Y
 COPY .\projects\CORE\*.hlp .\setups\VIC20\ /Y
 COPY .\projects\ASSEMBLER\*.fmt .\setups\VIC20\ /Y
 "C:\Program files (x86)\Inno Setup 6\iscc" ".\setups\VIC20\VIC20.iss"
+Echo ********************************************************************
+Echo ********************************************************************
+Echo 3.3: 264 Series
+Echo ********************************************************************
+COPY .\exe\x86\C264EmulatorC.exe .\setups\C264\ /Y
+COPY .\exe\x86\C264Emulator.exe .\setups\C264\ /Y
+COPY .\exe\x86\R264Console.exe .\setups\C264\ /Y
+COPY .\exe\x86\6500Compiler.exe .\setups\C264\ /Y
+COPY .\exe\x86\Test6500.exe .\setups\C264\ /Y
+COPY .\emulators\C264Commons\*.* .\setups\C264\ /Y
+COPY .\projects\C264\*.fmt .\setups\C264\ /Y
+COPY .\projects\C264\*.hlp .\setups\C264\ /Y
+COPY .\projects\C264\*.def .\setups\C264\ /Y
+COPY .\projects\COMMODORE\*.fmt .\setups\C264\ /Y
+COPY .\projects\COMMODORE\*.hlp .\setups\C264\ /Y
+COPY .\projects\CONSOLE\*.fmt .\setups\C264\ /Y
+COPY .\projects\CONSOLE\*.hlp .\setups\C264\ /Y
+COPY .\projects\CORE\*.fmt .\setups\C264\ /Y
+COPY .\projects\CORE\*.hlp .\setups\C264\ /Y
+COPY .\projects\ASSEMBLER\*.fmt .\setups\C264\ /Y
+"C:\Program files (x86)\Inno Setup 6\iscc" ".\setups\C264\C264.iss"
 Echo ********************************************************************
 Echo
 Echo

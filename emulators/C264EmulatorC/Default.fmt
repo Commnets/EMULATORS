@@ -1,0 +1,10 @@
+#Default Formats
+#Even when there are no commands this ones are used
+#(C) 2022 Ignacio Cea Fornies
+#---
+;JSON
+#---
+#---
+;DEBUGCPUINFO
+@PC@ @INST@ @REGS?{key=NO,equal=:},@ @SR@
+#---

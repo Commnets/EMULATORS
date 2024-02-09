@@ -84,32 +84,7 @@ namespace C64
 			Byte 1			| LEFTSHIFT	| E		| S			| Z				| 4		| A				| W			| 3			| \n
 			Byte 0			| UP/DOWN	| F5	| F3		| F1			| F7	| LEFT/RIGHT	| RETURN	| DELETE	| \n
 							================================================================================================= \n
-			Take into account that the activity can be done in th eother way around...\n
-			The important C64 keys in a Win32 standard keyboard are: \n
-			LEFT CONTROL				= CTRL \n
-			RIGHT CONTROL				= CTRL \n
-			LEFT ALT					= STOP \n
-			SHIFT + LEFT ALT			= RUN  \n
-			TAB							= COMMODORE KEY \n
-			LEFT BRACKET				= + \n
-			RIGHT BRACKET				= *	\n
-			APOSTROPHE					= :	\n
-			BACKSLASH					= @	\n
-			ESCAPE						= ARROW BACK \n
-			GRAVE						= POUND \n
-			ACCENT						= MINUS	\n
-			OPEN EXCLAMATION			= EQUAL	\n
-			OPEN BRACKET				= PLUS \n
-			CLOSE BRACKET				= ASTERISC \n
-			OPEN PARENTHESIS			= TWO POINTS \n
-			CLOSE PARENTEHEIS			= ADDRESS \n
-			COMMA						= COMMA \n
-			PERIOD						= PERIOD \n
-			MINUS						= SLASH \n
-			SHIFT COMMA					= LESSER THAN \n
-			SHIFT PERIOD				= GREATER THAN \n
-			SHIFT MINUS					= QUESTION MARK \n
-			Ñ							= POINT AND COMMA \n
+			Take into account that the activity can be done in the other way around...\n
 		*/
 		using KeystrockesMap = std::map <SDL_Scancode, Keystrokes>;
 		static const KeystrockesMap _C64KEYS;

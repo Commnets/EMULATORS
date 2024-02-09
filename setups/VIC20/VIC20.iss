@@ -21,8 +21,13 @@ Source: "6500Compiler.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Test6500.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "VIC20CRTGenerator.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "basic.901486-01.bin"; DestDir: "{app}"; Flags: ignoreversion
+Source: "characters.901460-02-JAP.bin"; DestDir: "{app}"; Flags: ignoreversion
 Source: "characters.901460-03-ENG.bin"; DestDir: "{app}"; Flags: ignoreversion
+Source: "characters.DK901460-03-DKK.bin"; DestDir: "{app}"; Flags: ignoreversion
+Source: "kernal.901486-02-JAP.bin"; DestDir: "{app}"; Flags: ignoreversion
+Source: "kernal.901486-07-DKK.bin"; DestDir: "{app}"; Flags: ignoreversion
 Source: "kernal.901486-07-ENG.bin"; DestDir: "{app}"; Flags: ignoreversion
+Source: "kernal.NecP22081-206-SWE.bin"; DestDir: "{app}"; Flags: ignoreversion
 Source: "VIC20.hlp"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Commodore.hlp"; DestDir: "{app}"; Flags: ignoreversion
 Source: "LocalConsole.hlp"; DestDir: "{app}"; Flags: ignoreversion

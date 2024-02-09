@@ -76,6 +76,12 @@
     <Filter Include="Archivos de origen\Motherboard\Chips\VICII">
       <UniqueIdentifier>{2de77449-529c-4039-a6bf-96c1ec8de1dd}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Archivos de origen\Motherboard\Chips\TED">
+      <UniqueIdentifier>{3b96a1c8-6db9-4a65-b928-f75aba78daf8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Archivos de encabezado\Motherboard\Chips\TED">
+      <UniqueIdentifier>{e66b874b-7565-4deb-b526-345b6e112d59}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\include\COMMODORE\incs.hpp">
@@ -195,6 +201,15 @@
     <ClInclude Include="..\..\include\COMMODORE\VIA\VIAPort.hpp">
       <Filter>Archivos de encabezado\Motherboard\Chips\VIA</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\include\COMMODORE\TED\incs.hpp">
+      <Filter>Archivos de encabezado\Motherboard\Chips\TED</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\COMMODORE\TED\TED.hpp">
+      <Filter>Archivos de encabezado\Motherboard\Chips\TED</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\COMMODORE\TED\TEDRegisters.hpp">
+      <Filter>Archivos de encabezado\Motherboard\Chips\TED</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Commodore.fmt">
@@ -294,6 +309,12 @@
     </ClCompile>
     <ClCompile Include="..\..\src\COMMODORE\VIA\VIaPort.cpp">
       <Filter>Archivos de origen\Motherboard\Chips\VIA</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\COMMODORE\TED\TED.cpp">
+      <Filter>Archivos de origen\Motherboard\Chips\TED</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\COMMODORE\TED\TEDRegisters.cpp">
+      <Filter>Archivos de origen\Motherboard\Chips\TED</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

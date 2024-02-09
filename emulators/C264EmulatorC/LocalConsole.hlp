@@ -1,0 +1,35 @@
+#Commands only executed from a local console
+#They can not be executed remotly
+#(C) 2022 Ignacio Cea Fornies
+?./Standard.hlp
+;LOADPRG PRG
+To load an assembler program.
+The program is loaded and compiled.
+Only the name of the program PRG (and path) to load is needed.
+;LOADBINARY PRG
+To load an assembler program.
+The program is loaded in the zone of the memory defined within the file (header)
+Only the name of the program PRG (and path) to load is needed.
+;LOADBLOCKS PRG
+To load an assembler program.
+The program is loaded by blocks in the zone of the memory defined within the file (header)
+Only the name of the program PRG (and path) to load is needed.
+;DECOMPILE ADDRESS BYTES
+To decompile a zone of the memory.
+The address where to start to decompile (ADDRESS) from and the number of bytes to decompile (BYTES) are requested.
+;CONNECTPER ID [ATTR1 ATTR2...]
+To connect a peripheral. 
+The parameters requested are the ID of the peripheral to connect, and an optional list of attributes for that.
+;DISCONNECTPERS ID1 [ID2...]
+To disconnect a set of peripherals.
+The parameters requested are the list of the ids of the peripherals to disconnect.
+At list one of them is mandatory.
+;LOADPERDATA PERID FILEDATA [DEBUG FILE]
+To load a peripheral with the data stored into a file with a specific format.
+The PERID of the peripheral and the name of the file (FILEDATA) where the data to load is located are needed.
+An additional parameter, DEBUG FILE, can be added. 
+In this case the system starts to debug when started, keeping the info in the file defined. Devices info is not saved.
+;SAVEPERDATA PERID FILEDATA
+To save the data from a peripheral into a file with a specific format.
+The format is decided by the peripheral.
+The PERID of the peripheral and the name of the file (FILEDATA) where to save the data are needed.

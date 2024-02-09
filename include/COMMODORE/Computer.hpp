@@ -15,6 +15,7 @@
 #define __COMMODORE_COMPUTER__
 
 #include <CORE/incs.hpp>
+#include <COMMODORE/TED/TED.hpp>
 #include <COMMODORE/VICI/VICI.hpp>
 #include <COMMODORE/VICII/VICII.hpp>
 #include <COMMODORE/VIA/VIA.hpp>
@@ -42,6 +43,20 @@ namespace COMMODORE
 							{ }
 
 		// To get direct access to the most important COMMODORE chips...
+		/** The TED. */
+		bool existsTED () const
+							{ return (_chips.find (COMMODORE::TED::_ID) != _chips.end ()); }
+		const COMMODORE::TED* ted () const
+							{ return (existsVICI () 
+								? dynamic_cast <const COMMODORE::TED*> 
+								  ((* _chips.find (COMMODORE::TED::_ID)).second)
+								: nullptr); }
+		COMMODORE::TED* ted ()
+							{ return (existsTED () 
+								? dynamic_cast <COMMODORE::TED*> 
+								  ((* _chips.find (COMMODORE::TED::_ID)).second)
+								: nullptr); }
+
 		// Not all these chips have to exist in any COMMODORE computer, so the answer can be nullptr.
 		/** The VICI. */
 		bool existsVICI () const

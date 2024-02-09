@@ -172,13 +172,13 @@ void MCHEmul::TestCPUSpeed::testInstructionSet (std::ostream& o, const MCHEmul::
 		// Store the outcome because it will managed later...
 		std::string instTxt = i.second -> asString () + 
 			"(code:" + std::to_string (i.second -> code ()) + ", " + std::to_string (i.first) + ")";
-		iT [i.second -> code ()] = instTxt;
+		iT [i.first] = instTxt;
 		double a = 0.0f; for (size_t ct = 0; ct < nt; a += (double) clks [ct++]); a /= (double) nt;
-		sPI [i.second -> code ()] = (unsigned int) (a / (cPI [i.second -> code () ] = i.second -> clockCycles ())); // Execs in a second...
+		sPI [i.first] = (unsigned int) (a / (cPI [i.first] = i.second -> clockCycles ())); // Execs in a second...
 		// Print out the just tested instruction...
 		o << instTxt << MCHEmul::_TABS.substr (0, 6 - (instTxt.length () >> 3)) 
-		  << sPI [i.second -> code ()] << " exec/s" 
-		  << " [" << (sPI [i.second -> code ()] * cPI [i.second -> code ()]) << " cycles/s]" << std::endl;
+		  << sPI [i.first] << " exec/s" 
+		  << " [" << (sPI [i.first] * cPI [i.first]) << " cycles/s]" << std::endl;
 
 		// ...and also the status of the CPU if requested...
 		if (pS)

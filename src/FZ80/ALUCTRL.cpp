@@ -5,7 +5,31 @@ _INST_IMPL (FZ80::DAA)
 {
 	assert (parameters ().size () == 1);
 
-	// TODO
+	MCHEmul::Register& r = registerA ();
+	MCHEmul::StatusRegister& st = cpu () -> statusRegister ();
+
+	// Into an int to make the operations right...
+	int aVal = (int) r.values ()[0].value ();
+	bool c = st.bitStatus (CZ80::_CARRYFLAG);
+	bool ac = aVal > 0x99;
+	int add = ((st.bitStatus (CZ80::_HALFCARRYFLAG) || ((aVal & 0x0f) > 9)) ? 0x06 : 0x00) /** The low nibble. */ +
+			  ((c || ac) ? 0x60 : 0x00) /** The high nibble. */;
+	aVal += st.bitStatus (CZ80::_HALFCARRYFLAG) ? -add : add;
+	aVal &= 0xff;
+	MCHEmul::UByte aValC ((unsigned char) aVal);
+
+	// How the flags are affected...
+	st.setBitStatus (CZ80::_CARRYFLAG, c || ac);
+	// The negative flag doesn't change...
+	st.setBitStatus (CZ80::_PARITYOVERFLOWFLAG, (aValC.numberBitsOn () % 2) == 0);  // If it is an even number then it is set...
+	st.setBitStatus (CZ80::_BIT3FLAG, aValC.bit (3)); // Undocumented...
+	st.setBitStatus (CZ80::_HALFCARRYFLAG, MCHEmul::UByte (aValC ^ r.values ()[0]).bit (4));
+	st.setBitStatus (CZ80::_BIT5FLAG, aValC.bit (5)); // Undocumented...
+	st.setBitStatus (CZ80::_ZEROFLAG, aValC == 0x00);
+	st.setBitStatus (CZ80::_SIGNFLAG, (aValC & 0x80) != 0x00);
+
+	// Set back the value into the accumulator
+	r.set ({ aValC });
 
 	return (true);
 }
@@ -31,7 +55,23 @@ _INST_IMPL (FZ80::NEG)
 {
 	assert (parameters ().size () == 2);
 
-	// TODO
+	MCHEmul::Register& r = registerA ();
+	MCHEmul::StatusRegister& st = cpu () -> statusRegister ();
+
+	// The operation...
+	MCHEmul::UInt rst  = MCHEmul::UInt (0).substract (MCHEmul::UInt (r.values ()[0]), true);
+	MCHEmul::UInt rstH = MCHEmul::UInt (0).substract (MCHEmul::UInt (r.values ()[0] & 0x0f), true); // Just to calculate the half borrow!
+	r.set (rst.values ()); // and stored back...
+
+	// How the flags are affected...
+	st.setBitStatus (CZ80::_CARRYFLAG, rst.carry ());
+	st.setBitStatus (CZ80::_NEGATIVEFLAG, true); // Always in substractions!
+	st.setBitStatus (CZ80::_PARITYOVERFLOWFLAG, rst.overflow ());
+	st.setBitStatus (CZ80::_BIT3FLAG, rst [0].bit (3)); // Undocumented...
+	st.setBitStatus (CZ80::_HALFCARRYFLAG, rstH [0].bit (4)); // When true, there will have been a half borrow!
+	st.setBitStatus (CZ80::_BIT5FLAG, rst [0].bit (5)); // Undocumented...
+	st.setBitStatus (CZ80::_ZEROFLAG, rst == MCHEmul::UInt::_0);
+	st.setBitStatus (CZ80::_SIGNFLAG, rst.negative ());
 
 	return (true);
 }

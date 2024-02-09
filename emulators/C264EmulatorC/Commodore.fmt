@@ -1,0 +1,251 @@
+#Formats Associated to Commodore Commands
+#(C) 2022 Ignacio Cea Fornies
+?./Standard.fmt
+#---
+;IRQInterrupt
+Type:IRQ, Id:@ID@, In Execution:@EXECUTION@, In Address:@ADDRESS@
+#---
+#---
+;NMIInterrupt
+Type:NMI, Id:@ID@, In Execution:@EXECUTION@, In Address:@ADDRESS@
+#---
+#---
+;Registers
+@BYTES{blocksize=16,listsep=\,,tablesep=\ ,minsize=2}@
+#---
+#---
+;RasterX
+Position:@POSITION@(@POSITION0@)
+First:@FIRST@, Last:@LAST@
+#---
+#---
+;RasterY
+Position:@POSITION@(@POSITION0@)
+First:@FIRST@, Last:@LAST@
+#---
+#---
+;Raster
+->Raster Horizontal:
+@RasterX>@
+->Raster Vertical:
+@RasterY>@
+#---
+#---
+;VICIRegisters
+@BYTES{blocksize=16,listsep=\,,tablesep=\ ,minsize=2}@
+LIGHTPEN:@LIGHTPENX@,@LIGHTPENY@
+Colors:@AUXCOLOR@(@BKCOLOR@,@BRDCOLOR@)
+Memory: Chars(@CHARADDRESS@), Screen(@SCREENADDRESS@), Colour(@COLOURADDRESS@)
+#---
+#---
+;VICI
+Id:@ID@
+@ATTRS?{key=YES,equal=:,empty=no attributes}\n@
+->VICIRegisters:
+@VICIRegisters>@
+@Raster>@
+#---
+#---
+;SpriteInfo
+(@ID@):\tEnabled:@ENABLED@\tX:@X@,Y:@Y@\tWidth:@DOUBLEW@,Height:@DOUBLEW@\tColor:@COLOR@(@MULTICOLOR@)\tPriority:@PRIORITY@
+#---
+#---
+;VICIIRegisters
+@BYTES{blocksize=16,listsep=\,,tablesep=\ ,minsize=2}@
+Graphic Mode:@MODE@
+40 Columns:@40C@, 25 Rows:@25R@
+ScrollX:@SCROLLX@, ScrollY:@SCROLLY@
+LIGHTPEN:@LIGHTPENX@,@LIGHTPENY@
+Colors:@FORECOLOR@(@BKCOLOR1@,@BKCOLOR2@,@BKCOLOR3@,@BKCOLOR4@)
+Memory: Chars(@CHARADDRESS@), Screen(@SCREENADDRESS@), Bitmap(@BITMAPADDRESS@), Sprites(@SPRITEADDRESS@)
+IRQ:@IRQ@(@IRQLINE@)
+->Sprites:
+@SPRITES?{fmter=.CLASS,empty=no sprites}\n@
+#---
+#---
+;VICII
+Id:@ID@
+@ATTRS?{key=YES,equal=:,empty=no attributes}\n@
+->VICIIRegisters:
+@VICIIRegisters>@
+@Raster>@
+#---
+#---
+;VIACtrlA1
+Value:@VALUE@ (PE:@POSEDGE@, NE:@NEGEDGE@)
+#---
+#---
+;VIACtrlA2
+Value:@VALUE@ (PE:@POSEDGE@, NE:@NEGEDGE@)
+#---
+#---
+;VIACtrlB1
+Value:@VALUE@ (PE:@POSEDGE@, NE:@NEGEDGE@)
+#---
+#---
+;VIACtrlB2
+Value:@VALUE@ (PE:@POSEDGE@, NE:@NEGEDGE@)
+#---
+#---
+;VIATimer1
+Run Mode:@RUN@, Count Mode:@COUNT@
+IRQ:@IRQ@
+Value:@VALUE@(@INITIALVALUE@)
+#---
+#---
+;VIATimer2
+Run Mode:@RUN@, Count Mode:@COUNT@
+IRQ:@IRQ@
+Value:@VALUE@(@INITIALVALUE@)
+#---
+#---
+;VIAShiftReg
+Mode:@MODE@
+Value:@VALUE@ (@NUMBERBITS@)
+#---
+#---
+;VIA
+Id:@ID@
+@ATTRS?{key=YES,equal=:,empty=no attributes}\n@
+->Registers:
+@Registers>@
+->Control lines:
+@VIACtrlA1>@
+@VIACtrlA2>@
+@VIACtrlB1>@
+@VIACtrlB2>@
+->Timer 1:
+@VIATimer1>@
+->Timer 2:
+@VIATimer2>@
+->ShiftRegister:
+@VIAShiftReg>@
+->Ports:
+A:@PortA@, B:@PortB@
+Dir A:@VIADDRA@, Dir B:@VIADDRB@
+#---
+#---
+;CIAClock
+IRQ:@Interrupt@
+@HOURS@:@MINUTES@:@SECONDS@:@TENTHSECONDS@ (@AHOURS@:@AMINUTES@:@ASECONDS@:@ATENTHSECONDS@)
+#---
+;CIATimerA
+Run Mode:@RUN@, Count Mode:@COUNT@
+Active:@STATUS@, IRQ:@IRQ@
+Value:@VALUE@(@INITIALVALUE@)
+#---
+#---
+;CIATimerB
+Run Mode:@RUN@, Count Mode:@COUNT@
+Active:@STATUS@, IRQ:@IRQ@
+Value:@VALUE@(@INITIALVALUE@)
+#---
+#---
+;CIASerialPort
+Status:@Status@
+Buffer:@Buffer@
+#---
+#---
+;CIA
+Id:@ID@
+@ATTRS?{key=YES,equal=:,empty=no attributes}\n@
+->Registers:
+@Registers>@
+->Timer A:
+@CIATimerA>@
+->Timer B:
+@CIATimerB>@
+->Clock:
+@CIAClock>@
+->Ports:
+A:@PortA@, B:@PortB@
+Dir A:@CIDDRA@, Dir B:@CIDDRB@
+->SerialPort:
+@CIASerialPort>@
+#---
+#---
+;SIDVoice
+Id:@ID@, Active:@ACTIVE@
+ADSR:@ATTACK@/@DECAY@/@SUSTAIN@/@RELEASE@
+Linked:@VOICERELATED@, Ring:@RINGMODULATION@, Sync:@SYNC@
+@WAVES?{fmter=.CLASS,empty=no waves}\n@
+#---
+#---
+;SID
+Id:@ID@
+@ATTRS?{key=YES,equal=:,empty=no attributes}\n@
+->Wrapper:
+@SoundLibWrapper>@
+->Registers:
+@Registers>@
+#---
+#---
+;PLA
+Id:@ID@
+@ATTRS?{key=YES,equal=:,empty=no attributes}\n@
+->Cartridge Entries:
+_GAME:@_GAME@, _EXROM:@_EXROM@
+->Memory Configuration:
+_LORAM:@_LORAM@, _HIRAM:@_HIRAM@, _CHAREN:@_CHAREN@
+#---
+#---
+;DatasetteData
+Id:@ID@(Size:@SIZE@)
+@BYTES{blocksize=32,listsep=\,,tablesep=\ ,minsize=2}@
+#---
+#---
+;Datasette
+Id:@ID@
+@ATTRS?{key=YES,equal=:,empty=no attributes}\n@
+Keys Pressed:@KEYS@
+Motor on:@MOTOR@
+->Data:
+Name:@DATANAME@
+Size:@DATASIZE@
+@DATA?{fmter=DatasetteData,empty=no data}\n---\n@
+#---
+#---
+;C2N1530
+Id:@ID@
+@ATTRS?{key=YES,equal=:,empty=no attributes}\n@
+Keys Pressed:@KEYS@
+Motor on:@MOTOR@
+Data Counter: @DATACOUNTER@
+->Data:
+Name:@DATANAME@
+Size:@DATASIZE@
+@DATA?{fmter=DatasetteData,empty=no data}\n---\n@
+#---
+#---
+;Cartridge
+Id:@ID@
+@ATTRS?{key=YES,equal=:,empty=no attributes}\n@
+Data:@DATA@
+#---
+#---
+;CVICI
+@VICI>@
+#---
+#---
+;CVICII
+@VICII>@
+#---
+#---
+;CVIA
+@VIA>@
+#---
+#---
+;CCIA
+@CIA>@
+#---
+#---
+;CSID
+@SID>@
+#---
+#---
+;CDATASETTE
+Id:@ID@
+@ATTRS?{key=YES,equal=:,empty=no attributes}\n@
+Keys Pressed:@KEYS@
+Motor on:@MOTOR@
+#---
