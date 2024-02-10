@@ -26,7 +26,46 @@ namespace COMMODORE
 	class TED : public MCHEmul::GraphicalChip
 	{
 		public:
+		public:
+		/** VICI is both a Graphical and a Sound Chip. \n
+			VICI should then inherit from both MCHEmul::GraphicalCip & MCHEmul::SoundChip,
+			but this could generate ambiguity when calling some parent methods, that will be the case. \n
+			The main function of the VICI is, however, the graphical one. \n
+			VICI will then inherit from MCHEmul::GraphicalChip only and it will use an object inside inheriting from MCHEmul::SoundChip. */
+		class SoundFunction final : public MCHEmul::SoundChip
+		{
+			public:
+			static const unsigned int _ID = 1060;
+
+			SoundFunction (MCHEmul::SoundLibWrapper* sW);
+
+			/** The main characteristics of the SoundChip. */
+			virtual SDL_AudioFormat type () const override
+								{ return (_SOUNDSAMPLINGFORMAT); }
+			virtual int maxFrequency () const override
+								{ return (_SOUNDSAMPLINGCLOCK >> 1); }
+			virtual unsigned char numberChannels () const override
+								{ return (_SOUNDCHANNELS); }
+
+			virtual bool initialize () override;
+
+			virtual bool simulate (MCHEmul::CPU* cpu) override;
+
+			virtual MCHEmul::InfoStructure getInfoStructure () const override;
+
+			// Implementation
+			/** The number of cycles the CPU was executed once the simulated method finishes. */
+			unsigned int _lastCPUCycles;
+		};
+
 		static const unsigned int _ID = 104;
+
+		// 44,1MHz (more or less standard in current sound cards)
+		static const unsigned int _SOUNDSAMPLINGCLOCK		= 44100;
+		// 8 bits sound data, very simple nothing complicated...
+		static const unsigned short _SOUNDSAMPLINGFORMAT	= AUDIO_U8;
+		// Number of channels..
+		static const unsigned char _SOUNDCHANNELS			= 1;
 
 		/** The position of the bad lines. */
 		static const unsigned short _FIRSTBADLINE	= 0x30;
@@ -41,14 +80,24 @@ namespace COMMODORE
 		/** Static address. The color memory can not be changed. */
 		static const MCHEmul::Address _COLORMEMORY;
 
+		// Raster Info...
+		static const MCHEmul::RasterData _PALVRASTERDATA;
+		static const MCHEmul::RasterData _PALHRASTERDATA;
+		static const MCHEmul::RasterData _NTSCVRASTERDATA;
+		static const MCHEmul::RasterData _NTSCHRASTERDATA;
+
 		/** Specific classes for PAL & NTSC have been created giving this data as default. \n
-			The VICII constructor receives info over the raster data, the memory view to use,
+			The TED constructor receives info over the raster data, the memory view to use,
 			The number of cycles of every raster line (different depending on the VICII version) 
 			and additional attributes. */
-		TED (const MCHEmul::RasterData& vd, const MCHEmul::RasterData& hd, 
-			int vV, unsigned short cRL, const MCHEmul::Attributes& attrs = { });
+		TED (int vV, MCHEmul::SoundLibWrapper* sW, const MCHEmul::Attributes& attrs = { });
 
 		virtual ~TED () override;
+
+		const SoundFunction* soundFunction () const
+							{ return (_soundFunction); }
+		SoundFunction* soundFunction ()
+							{ return (_soundFunction); }
 
 		virtual unsigned short numberColumns () const override
 							{ return (_raster.visibleColumns ()); }
@@ -204,6 +253,8 @@ namespace COMMODORE
 		void drawResultToScreen (const DrawResult& cT, const DrawContext& dC);
 
 		protected:
+		/** A reference to the sound part of the chip. */
+		SoundFunction* _soundFunction;
 		/** The memory is used also as the set of registers of the chip. */
 		COMMODORE::TEDRegisters* _TEDRegisters;
 		/** The number of the memory view used to read the data. */
@@ -330,34 +381,6 @@ namespace COMMODORE
 		
 		memoryRef () -> setCPUView ();
 	}
-
-	/** The version para PAL systems. */
-	class TED_PAL final : public TED
-	{
-		public:
-		static const MCHEmul::RasterData _VRASTERDATA;
-		static const MCHEmul::RasterData _HRASTERDATA;
-
-		static constexpr unsigned short _CYCLESPERRASTERLINE = 63;
-
-		TED_PAL (int vV);
-
-		private:
-		virtual unsigned int treatRasterCycle () override;
-	};
-
-	/** The version para NTSC systems. */
-	class TED_NTSC final : public TED
-	{
-		public:
-		static const MCHEmul::RasterData _VRASTERDATA;
-		static const MCHEmul::RasterData _HRASTERDATA;
-
-		TED_NTSC (int vV);
-
-		private:
-		virtual unsigned int treatRasterCycle () override;
-	};
 }
 
 #endif

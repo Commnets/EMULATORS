@@ -92,9 +92,9 @@ namespace C264
 			std::string mT = 
 				MCHEmul::upper (cmdlineArguments ().argumentAsString (_PARAMMACHINE));
 			result = (mT == "C16") 
-				? 0 
+				? 0
 				: ((mT == "C116") 
-					? 1 
+					? 0 // Notice that it is the same than C16...
 					: ((mT == "CP4") 
 						? 2 : 0 /** by default. */));
 		}

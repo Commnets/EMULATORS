@@ -1,5 +1,8 @@
 #Commands only valid over a Commodore64, local and remotly. 
 #(C) 2022 Ignacio Cea Fornies
+;TED
+To know the status of the TED chip, including raster and others.
+No parameters are needed.
 ;VICI
 To know the status of the VICI chip, including raster and others.
 No parameters are needed.

@@ -25,10 +25,7 @@ namespace C264
 		public:
 		static const int _ID = 200;
 		
-		Screen (const std::string& tt, double hz, int w, int h, const MCHEmul::Attributes& attrs)
-			: MCHEmul::Screen (tt, _ID, w, h, 2.0f, 2.0f, hz, attrs),
-			  _drawBorder (false), _borderColor (0)
-							{ }
+		Screen (const std::string& tt);
 
 		/** Managing the border. */
 		void setDrawBorder (bool dB, unsigned int c = 0)
@@ -40,20 +37,6 @@ namespace C264
 		protected:
 		bool _drawBorder;
 		unsigned int _borderColor;
-	};
-
-	/** Screen valid for NTSC systems. Used in USA. */
-	class ScreenNTSC final : public Screen
-	{
-		public:
-		ScreenNTSC (const std::string& tt);
-	};
-
-	/** Screen valid for PAL systems. Used in Europe. */
-	class ScreenPAL final : public Screen
-	{
-		public:
-		ScreenPAL (const std::string& tt);
 	};
 }
 

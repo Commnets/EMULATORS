@@ -31,6 +31,25 @@ First:@FIRST@, Last:@LAST@
 @RasterY>@
 #---
 #---
+;TEDRegisters
+@BYTES{blocksize=16,listsep=\,,tablesep=\ ,minsize=2}@
+Graphic Mode:@MODE@
+40 Columns:@40C@, 25 Rows:@25R@
+ScrollX:@SCROLLX@, ScrollY:@SCROLLY@
+LIGHTPEN:@LIGHTPENX@,@LIGHTPENY@
+Colors:@FORECOLOR@(@BKCOLOR1@,@BKCOLOR2@,@BKCOLOR3@,@BKCOLOR4@)
+Memory: Chars(@CHARADDRESS@), Screen(@SCREENADDRESS@), Bitmap(@BITMAPADDRESS@)
+IRQ:@IRQ@(@IRQLINE@)
+#---
+#---
+;TED
+Id:@ID@
+@ATTRS?{key=YES,equal=:,empty=no attributes}\n@
+->TEDRegisters:
+@TEDRegisters>@
+@Raster>@
+#---
+#---
 ;VICIRegisters
 @BYTES{blocksize=16,listsep=\,,tablesep=\ ,minsize=2}@
 LIGHTPEN:@LIGHTPENX@,@LIGHTPENY@

@@ -17,6 +17,7 @@
 #include <COMMODORE/incs.hpp>
 #include <COMMODORE/TED/TEDRegisters.hpp>
 #include <COMMODORE/TED/TED.hpp>
+#include <COMMODORE/TED/TEDSoundWrapper.hpp>
 
 #endif
 

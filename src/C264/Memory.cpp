@@ -1,9 +1,9 @@
 #include <C264/Memory.hpp>
 
 // ---
-C264::Memory::Memory (unsigned int cfg, const std::string& lang)
+C264::Memory::Memory (unsigned int mt, const std::string& lang)
 	: MCHEmul::Memory (0, C264::Memory::standardMemoryContent (), { }),
-	  _configuration (cfg)
+	  _machineType (mt)
 {
 	// In the content...
 	if (error () != MCHEmul::_NOERROR)
@@ -13,42 +13,39 @@ C264::Memory::Memory (unsigned int cfg, const std::string& lang)
 	_basicRAM			= subset (_BASICRAM_SUBSET);
 	_kernelROM			= subset (_KERNELROM_SUBSET);
 	_kernelRAM			= subset (_KERNELRAM_SUBSET);
-	_charROM			= subset (_CHARROM_SUBSET);
-	_charRAM			= subset (_CHARRAM_SUBSET);
 	// TODO
 
 	// The default ROMS...
 	// They might change depending on the language
-	std::string ROMFILE = "./basic.901486-01.bin";
-	std::string CHARROMFILE = "./characters.901460-03-ENG.bin";
-	std::string KERNELFILE = "./kernal.901486-07-ENG.bin";
+	// By default the English language is taken
+	std::string ROMFILE = "./basic.318006-01.bin";
+	std::string KERNELFILE = "./kernal.318004-05-ENG.bin";
 
 	// If the languaje selected is not ENG...
-	// then anither char rom file is selected!
-	if (lang == "JAP") { CHARROMFILE = "characters.901460-02-JAP.bin"; KERNELFILE = "kernal.901486-02-JAP.bin"; }
-	else if (lang == "SWE") { CHARROMFILE = "characters.NecP22101-207-SWE.bin"; KERNELFILE = "kernal.NecP22081-206-SWE.bin"; }
-	else if (lang == "DKA") { CHARROMFILE = "characters.DK901460-03-DKK.bin"; KERNELFILE = "kernal.901486-07-DKK.bin"; }
+	// then another char rom file is selected!
+	// The CHARROM here is part of the Kernal
+	if (lang == "FRA") { KERNELFILE = "kernal.318005-05-FRA.bin"; }
+	else if (lang == "HUN") { KERNELFILE = "kernal.318030-02-HUN.bin"; }
+	else if (lang == "SWE") { KERNELFILE = "kernel.325155-03-SWE.bin"; }
 
 	bool ok = true;
 	ok &= subset (_BASICROM_SUBSET) -> loadInto (ROMFILE);
 	subset (_BASICROM_SUBSET) -> fixDefaultValues (); // Fix the values for further initializations...
-	ok &= subset (_CHARROM_SUBSET) -> loadInto (CHARROMFILE);
-	subset (_CHARROM_SUBSET) -> fixDefaultValues ();
 	ok &= subset (_KERNELROM_SUBSET) -> loadInto (KERNELFILE);
 	subset (_KERNELROM_SUBSET) -> fixDefaultValues ();
 
 	if (!ok)
 		_error = MCHEmul::_INIT_ERROR;
 
-	// Sets the configuration of the memory...
-	setConfiguration (_configuration);
+	// Sets the configuration of the memory that will depend on the type of machine...
+	setMachineType (_machineType);
 }
 
 // ---
-void C264::Memory::setConfiguration (unsigned int cfg, bool a0)
+void C264::Memory::setMachineType (unsigned int mT)
 {
-	// Attending to the configuration different options are active or not active!
-	switch (_configuration = cfg)
+	// Attending to the type of machine different options are active or not active!
+	switch (_machineType = mT)
 	{
 		// TODO...
 
@@ -57,12 +54,6 @@ void C264::Memory::setConfiguration (unsigned int cfg, bool a0)
 			assert (false);
 			break;
 	}
-}
-
-// ---
-void C264::Memory::setConfiguration (unsigned char cfg)
-{
-	// TODO
 }
 
 // ---
@@ -86,18 +77,15 @@ MCHEmul::Memory::Content C264::Memory::standardMemoryContent ()
 	// Phisical storages
 	MCHEmul::PhysicalStorage* RAM = 
 		new MCHEmul::PhysicalStorage (_RAM, MCHEmul::PhysicalStorage::Type::_RAM, 0x10000);				// 64k
-	MCHEmul::PhysicalStorage* CHARROM = 
-		new MCHEmul::PhysicalStorage (_CHARROM, MCHEmul::PhysicalStorage::Type::_ROM, 0x1000);			// 4k
 	MCHEmul::PhysicalStorage* BASICROM = 
-		new MCHEmul::PhysicalStorage (_BASICROM, MCHEmul::PhysicalStorage::Type::_ROM, 0x2000);			// 8k
+		new MCHEmul::PhysicalStorage (_BASICROM, MCHEmul::PhysicalStorage::Type::_ROM, 0x4000);			// 16k
 	MCHEmul::PhysicalStorage* KERNELROM	= 
-		new MCHEmul::PhysicalStorage (_KERNELROM, MCHEmul::PhysicalStorage::Type::_ROM, 0x2000);		// 8k
+		new MCHEmul::PhysicalStorage (_KERNELROM, MCHEmul::PhysicalStorage::Type::_ROM, 0x4000);		// 16k
 
 	// The map of phisical storages, used later...
 	MCHEmul::PhysicalStorages storages (
 		{
 			{ _RAM, RAM },
-			{ _CHARROM, CHARROM },
 			{ _BASICROM, BASICROM },
 			{ _KERNELROM, KERNELROM }
 		});

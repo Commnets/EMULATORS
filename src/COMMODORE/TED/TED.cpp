@@ -1,31 +1,105 @@
 #include <COMMODORE/TED/TED.hpp>
+#include <COMMODORE/TED/TEDSoundWrapper.hpp>
 #include <F6500/IRQInterrupt.hpp>
 
 // ---
 const MCHEmul::Address COMMODORE::TED::_COLORMEMORY ({ 0x00, 0xd8 }, false);
-const MCHEmul::RasterData COMMODORE::TED_PAL::_VRASTERDATA (0, 16, 51, 250, 299, 311, 312, 4, 4);
-const MCHEmul::RasterData COMMODORE::TED_PAL::_HRASTERDATA 
+const MCHEmul::RasterData COMMODORE::TED::_PALVRASTERDATA (0, 16, 51, 250, 299, 311, 312, 4, 4);
+const MCHEmul::RasterData COMMODORE::TED::_PALHRASTERDATA 
 	(404, 480, 24, 343, 380, 403, 504 /** For everyting to run, it has to be divisible by 8. */, 7, 9);
-const MCHEmul::RasterData COMMODORE::TED_NTSC::_VRASTERDATA (27, 41, 51, 250, 12, 26, 262, 4, 4);
-const MCHEmul::RasterData COMMODORE::TED_NTSC::_HRASTERDATA 
+const MCHEmul::RasterData COMMODORE::TED::_NTSCVRASTERDATA (27, 41, 51, 250, 12, 26, 262, 4, 4);
+const MCHEmul::RasterData COMMODORE::TED::_NTSCHRASTERDATA 
 	(412, 488, 24, 343, 388, 411, 512 /** For everything to run, it has to be divisible by 8. */, 7, 9);
 // This two positions are fized...
 const MCHEmul::Address COMMODORE::TED::_MEMORYPOSIDLE1 = MCHEmul::Address ({ 0xff, 0x39 }, false);
 const MCHEmul::Address COMMODORE::TED::_MEMORYPOSIDLE2 = MCHEmul::Address ({ 0xff, 0x3f }, false);
 
 // ---
-COMMODORE::TED::TED (const MCHEmul::RasterData& vd, const MCHEmul::RasterData& hd, 
-		int vV, unsigned short cRL, const MCHEmul::Attributes& attrs)
+COMMODORE::TED::SoundFunction::SoundFunction (MCHEmul::SoundLibWrapper* sW)
+	: MCHEmul::SoundChip (_ID, 
+		{ { "Name", "SoundFunction" },
+		  { "Code", "Inside 6560 (NTSC), 6561/6561E/6561-101 (PAL)" },
+		  { "Manufacturer", "Commodore Business Machines CBM" },
+		  { "Year", "1977" } },
+		sW),
+	  _lastCPUCycles (0)
+{ 
+	// Take care that the sound emulation library was not null at all...
+	// ...and also belonging to the right type..
+	assert (dynamic_cast <COMMODORE::TEDSoundLibWrapper*> (soundWrapper ()) != nullptr);
+
+	setClassName ("SoundFunction");
+}
+
+// ---
+bool COMMODORE::TED::SoundFunction::initialize ()
+{
+	if (!MCHEmul::SoundChip::initialize ())
+		return (false);
+
+	_lastCPUCycles = 0;
+
+	return (true);
+}
+
+// ---
+bool COMMODORE::TED::SoundFunction::simulate (MCHEmul::CPU* cpu)
+{
+	// First time?
+	if (_lastCPUCycles == 0)
+	{ 
+		_lastCPUCycles = cpu -> clockCycles (); // Nothing to do...
+
+		return (true);
+	}
+
+	if (soundWrapper () != nullptr)
+	{
+		for (unsigned int i = (cpu -> clockCycles () - _lastCPUCycles); i > 0 ; i--)
+		{
+			// The number of bytes that can come from the wrapper might not be fixed...
+			MCHEmul::UBytes data;
+			if (soundWrapper () -> getData (cpu, data))
+			{
+				for (size_t j = 0; j < data.size (); j++)
+				{
+					char dt = data [j].value ();
+					if (soundMemory () -> addSampleData (&dt, sizeof (char)))
+						MCHEmul::SoundChip::notify (MCHEmul::Event (_SOUNDREADY));
+				}
+			}
+		}
+	}
+
+	_lastCPUCycles = cpu -> clockCycles ();
+
+	return (true);
+}
+
+// ---
+MCHEmul::InfoStructure COMMODORE::TED::SoundFunction::getInfoStructure () const
+{
+	MCHEmul::InfoStructure result = std::move (MCHEmul::SoundChip::getInfoStructure ());
+
+	result.remove ("Memory"); // This info is not neccesary...
+	result.add ("SoundLibWrapper",	std::move (soundWrapper () -> getInfoStructure ())); // To know which library is behing...
+
+	return (result);
+}
+
+// ---
+COMMODORE::TED::TED (int vV, MCHEmul::SoundLibWrapper* sW, const MCHEmul::Attributes& attrs)
 	: MCHEmul::GraphicalChip (_ID, 
 		{ { "Name", "TED" },
-		  { "Code", "6567/8562/8564 (NTSC), 6569/8565/8566 (PAL)" },
+		  { "Code", "7360/8360 Both for PAL & NTSC" },
 		  { "Manufacturer", "Commodore Business Machines CBM" },
-		  { "Year", "1983" } }),
+		  { "Year", "1984" } }),
+	  _soundFunction (new COMMODORE::TED::SoundFunction (sW)),
 	  _TEDRegisters (nullptr), 
 	  _TEDView (vV),
-	  _cyclesPerRasterLine (cRL),
-	  _incCyclesPerRasterLine (cRL - COMMODORE::TED_PAL::_CYCLESPERRASTERLINE),
-	  _raster (vd, hd, 8 /** step. */),
+	  _cyclesPerRasterLine (63),
+	  _incCyclesPerRasterLine (0),
+	  _raster (_PALVRASTERDATA, _PALHRASTERDATA, 8 /** step. */),
 	  _lastCPUCycles (0),
 	  _format (nullptr),
 	  _cycleInRasterLine (1),
@@ -44,6 +118,12 @@ COMMODORE::TED::TED (const MCHEmul::RasterData& vd, const MCHEmul::RasterData& h
 // ---
 COMMODORE::TED::~TED ()
 {
+	/**
+		delete (_soundFunction);
+		It is not invoked, because the sound function is
+		managed as a different chip from the computer on regards simulation.
+		That chip is owned by the computer and then destroyed by it. */
+
 	SDL_FreeFormat (_format);
 }
 
@@ -1005,60 +1085,4 @@ void COMMODORE::TED::drawResultToScreen (const COMMODORE::TED::DrawResult& cT, c
 		if (cT._foregroundColorData [i] != ~0)
 			screenMemory () -> setPixel (pos, (size_t) dC._RR, cT._foregroundColorData [i]);
 	}
-}
-
-// ---
-COMMODORE::TED_PAL::TED_PAL (int vV)
-	: COMMODORE::TED (
-		 _VRASTERDATA, _HRASTERDATA, vV, COMMODORE::TED_PAL::_CYCLESPERRASTERLINE,
-		 { { "Name", "VIC-II (PAL) Video Chip Interface II" },
-		   { "Code", "6569/8565/8566" },
-		   { "Manufacturer", "MOS Technology INC/Commodore Semiconductor Group (CBM)"},
-		   { "Year", "1980" } })
-{
-	// Nothing else to do...
-}
-
-// ---
-unsigned int COMMODORE::TED_PAL::treatRasterCycle ()
-{
-	unsigned int result = result = COMMODORE::TED::treatRasterCycle ();
-
-	switch (_cycleInRasterLine)
-	{
-		// TODO
-
-		default:
-			break;
-	}
-
-	return (result);
-}
-
-// ---
-COMMODORE::TED_NTSC::TED_NTSC (int vV)
-	: COMMODORE::TED (
-		 _VRASTERDATA, _HRASTERDATA, vV, 64,
-		 { { "Name", "VIC-II (NTSC) Video Chip Interface II" },
-		   { "Code", "6567/8562/8564" },
-		   { "Manufacturer", "MOS Technology INC/Commodore Semiconductor Group (CBM)"},
-		   { "Year", "1980" } })
-{
-	// Nothing else to do...
-}
-
-// ---
-unsigned int COMMODORE::TED_NTSC::treatRasterCycle ()
-{
-	unsigned int result = COMMODORE::TED::treatRasterCycle ();
-
-	switch (_cycleInRasterLine)
-	{
-		// TODO
-
-		default:
-			break;
-	}
-
-	return (result);
 }

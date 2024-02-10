@@ -18,10 +18,10 @@
 
 namespace C264
 {
-	/** When a C264 is not expanded, there are seveal memory zones not connected.
+	/** When a C264 series computer is not expanded, there are several memory zones not connected.
 		That zones, doesn't respond to poke and always return the same value when peeking 
 		(at least it is as anothe emulators in the market now behave)
-		This is the way (i guess) C264 determines how much free memory the system has. 
+		This is the way (i guess) C264 non expanded series computer determines how much free memory the system has.
 		So this class is to replicate that behaviour. */
 	class NotConnectedPhysicalStorageSubset final : public MCHEmul::PhysicalStorageSubset
 	{
@@ -45,7 +45,7 @@ namespace C264
 		MCHEmul::UByte _defaultValue;
 	};
 
-	/** The memory itself for the VIC 20... */
+	/** The memory itself for the C64 Series... */
 	class Memory final : public MCHEmul::Memory
 	{
 		public:
@@ -61,8 +61,6 @@ namespace C264
 		// TODO
 		static const int _BASICROM_SUBSET		= 104;
 		static const int _BASICRAM_SUBSET		= 105;
-		static const int _CHARROM_SUBSET		= 107;
-		static const int _CHARRAM_SUBSET		= 108;
 		static const int _KERNELROM_SUBSET		= 112;
 		static const int _KERNELRAM_SUBSET		= 113;
 		// TODO
@@ -70,20 +68,14 @@ namespace C264
 		// Views
 		static const int _CPU_VIEW				= 0;
 
-		/** The constructor receives the posible memory configuration. */
-		Memory (unsigned int cfg, 
+		/** The constructor receives the type of machine the memory is for. */
+		Memory (unsigned int mt, 
 			const std::string& lang = MCHEmul::_DEFAULTLANGUAGE);
 
-		/** To get/set the configuration. \n
-			It show change only at at initialization, otherwise the consecuencues are not clear. */
-		unsigned int configuration () const
-							{ return (_configuration); }
-		/** a0 = true when 0xa000 must be active. 
-			It is false by default. */
-		void setConfiguration (unsigned int cfg, bool a0 = false);
-		/** In this version every bit active will actibe a bank of expansion. 
-			bit 1 = Block 1, bit 2 = block 2,... */
-		void setConfiguration (unsigned char cfg);
+		/** To get/set the machine type. */
+		unsigned int machineType () const
+							{ return (_machineType); }
+		void setMachineType (unsigned int mT);
 
 		/** To activate the right subsets in the CPU view. */
 		virtual bool initialize () override;
@@ -97,15 +89,13 @@ namespace C264
 		static MCHEmul::Memory::Content standardMemoryContent ();
 
 		private:
-		unsigned int _configuration;
+		unsigned int _machineType;
 
 		// Implementation
 		MCHEmul::PhysicalStorageSubset* _basicROM;
 		MCHEmul::PhysicalStorageSubset* _basicRAM;
 		MCHEmul::PhysicalStorageSubset* _kernelROM;
 		MCHEmul::PhysicalStorageSubset* _kernelRAM;
-		MCHEmul::PhysicalStorageSubset* _charROM;
-		MCHEmul::PhysicalStorageSubset* _charRAM;
 		// TODO
 	};
 }

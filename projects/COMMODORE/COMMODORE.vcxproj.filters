@@ -316,5 +316,8 @@
     <ClCompile Include="..\..\src\COMMODORE\TED\TEDRegisters.cpp">
       <Filter>Archivos de origen\Motherboard\Chips\TED</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\COMMODORE\TED\TEDSoundWrapper.cpp">
+      <Filter>Archivos de origen\Motherboard\Chips\TED</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

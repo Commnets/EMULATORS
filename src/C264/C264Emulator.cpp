@@ -26,8 +26,7 @@ void C264::C264Emulator::printOutParameters (std::ostream& o) const
 	o << "CONFIGURATIONS allowed under command line /w:" << std::endl;
 	// TODO
 	o << "MACHINES allowed to be emulated under command line /m:" << std::endl <<
-		 "C16:\tCommodore 16 not expanded" << std::endl <<
-		 "C116:\tCommodore 116 not expanded" << std::endl <<
+		 "C16:\tCommodore 16/116 not expanded" << std::endl <<
 		 "CP4:\tCommodore Plus/4 not expanded" << std::endl;
 	o << "DEVICES allowed to be connected under command CONNECTPER:" << std::endl <<
 		 std::to_string (COMMODORE::Datasette1530::_ID) << ":\tCasette 1530 / 1" << std::endl <<
@@ -56,31 +55,12 @@ MCHEmul::Computer* C264::C264Emulator::createComputer () const
 	switch (emulattedComputer ())
 	{
 		case 1:
-			result = new C264::Commodore116 (
-				configuration (),
-				NTSCSystem () 
-					? C264::Commodore264::VisualSystem::_NTSC 
-					: C264::Commodore264::VisualSystem::_PAL,
-				computerLanguage ());
-			break;
-
-		case 2:
-			result = new C264::CommodorePlus4 (
-				configuration (),
-				NTSCSystem () 
-					? C264::Commodore264::VisualSystem::_NTSC 
-					: C264::Commodore264::VisualSystem::_PAL,
-				computerLanguage ());
+			result = new C264::CommodorePlus4 (computerLanguage ());
 			break;
 
 		case 0:
 		default:
-			result = new C264::Commodore16 (
-				configuration (),
-				NTSCSystem () 
-					? C264::Commodore264::VisualSystem::_NTSC 
-					: C264::Commodore264::VisualSystem::_PAL,
-				computerLanguage ());
+			result = new C264::Commodore16_116 (computerLanguage ());
 			break;
 	}
 

@@ -97,6 +97,7 @@
     <ClCompile Include="..\..\src\COMMODORE\SID\SIDRegisters.cpp" />
     <ClCompile Include="..\..\src\COMMODORE\TED\TED.cpp" />
     <ClCompile Include="..\..\src\COMMODORE\TED\TEDRegisters.cpp" />
+    <ClCompile Include="..\..\src\COMMODORE\TED\TEDSoundWrapper.cpp" />
     <ClCompile Include="..\..\src\COMMODORE\UserPort.cpp" />
     <ClCompile Include="..\..\src\COMMODORE\VIA\VIA.cpp" />
     <ClCompile Include="..\..\src\COMMODORE\VIA\VIAControlLines.cpp" />
