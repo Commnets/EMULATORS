@@ -1,6 +1,6 @@
 ; C64 Assembler framework.
 ; General elements common to any C64 Program.
-; By Ignacio Cea Forniés.
+; By Ignacio Cea Fornies.
 ; Copyright Community Networks 2022 - 2023.
 
 #../C64Programs/code/macros/MSCREEN.asm

@@ -5,7 +5,7 @@
  *	@file	
  *	File: C64Emulator.hpp \n
  *	Framework: CPU Emulators library \n
- *	Author: Ignacio Cea Forniés (EMULATORS library) \n
+ *	Author: Ignacio Cea Fornies (EMULATORS library) \n
  *	Creation Date: 17/04/2021 \n
  *	Description: The root class to define any C64 emulator.
  *	Versions: 1.0 Initial

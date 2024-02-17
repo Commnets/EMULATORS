@@ -5,7 +5,7 @@
  *	@file	
  *	File: ChipRegisters.hpp \n
  *	Framework: CPU Emulators library \n
- *	Author: Ignacio Cea Forniés (EMULATORS library) \n
+ *	Author: Ignacio Cea Fornies (EMULATORS library) \n
  *	Creation Date: 13/01/2023 \n
  *	Description: All Registers emulated inherit from this one.
  *	Versions: 1.0 Initial

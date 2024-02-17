@@ -5,7 +5,7 @@
  *	@file	
  *	File: TestCPUSpeed.hpp \n
  *	Framework: CPU Emulators library \n
- *	Author: Ignacio Cea Forniés (EMULATORS library) \n
+ *	Author: Ignacio Cea Fornies (EMULATORS library) \n
  *	Creation Date: 17/12/2021 \n
  *	Description: To test how quiick the CPU is.
  *	Versions: 1.0 Initial

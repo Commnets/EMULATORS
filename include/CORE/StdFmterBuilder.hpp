@@ -5,7 +5,7 @@
  *	@file
  *	File: StdFmterBuilder.hpp \n
  *	Framework: CPU Emulators library \n
- *	Author: Ignacio Cea Forniés (EMULATORS library) \n
+ *	Author: Ignacio Cea Fornies (EMULATORS library) \n
  *	Creation Date: 18/10/2022 \n
  *	Description: The standard formatter builder to create standard formatters.
  *	Versions: 1.0 Initial

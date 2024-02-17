@@ -5,7 +5,7 @@
  *	@file
  *	File: Formatter.hpp \n
  *	Framework: CPU Emulators library \n
- *	Author: Ignacio Cea Forniés (EMULATORS library) \n
+ *	Author: Ignacio Cea Fornies (EMULATORS library) \n
  *	Creation Date: 07/10/2022 \n
  *	Description: Defines an element to format fields and values into a string.
  *	Versions: 1.0 Initial

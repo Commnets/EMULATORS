@@ -5,7 +5,7 @@
  *	@file	
  *	File: Grammar.hpp \n
  *	Framework: CPU Emulators library \n
- *	Author: Ignacio Cea Forniés (EMULATORS library) \n
+ *	Author: Ignacio Cea Fornies (EMULATORS library) \n
  *	Creation Date: 04/06/2021 \n
  *	Description: The assembler language can always be defined in terms of semantic.
 				 Any language can be structured, gramatically speaking, into different elements. \n

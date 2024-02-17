@@ -5,7 +5,7 @@
  *	@file	
  *	File: OBool.hpp \n
  *	Framework: CPU Emulators library \n
- *	Author: Ignacio Cea Forniés (EMULATORS library) \n
+ *	Author: Ignacio Cea Fornies (EMULATORS library) \n
  *	Creation Date: 06/01/2024 \n
  *	Description: One time bool.
  *	Versions: 1.0 Initial

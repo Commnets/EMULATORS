@@ -5,7 +5,7 @@
  *	@file
  *	File: CommandBuilder.hpp \n
  *	Framework: CPU Emulators library \n
- *	Author: Ignacio Cea Forniés (EMULATORS library) \n
+ *	Author: Ignacio Cea Fornies (EMULATORS library) \n
  *	Creation Date: 09/12/2023 \n
  *	Description: To build specific command in a VIC20 environment.
  *	Versions: 1.0 Initial

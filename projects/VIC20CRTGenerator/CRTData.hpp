@@ -5,7 +5,7 @@
  *	@file	
  *	File: CRTData.hpp \n
  *	Framework: CPU Emulators library \n
- *	Author: Ignacio Cea Forniés (EMULATORS library) \n
+ *	Author: Ignacio Cea Fornies (EMULATORS library) \n
  *	Creation Date: 20/01/2024 \n
  *	Description: Represents the structure of the CRT file to generate.
  *	Versions: 1.0 Initial

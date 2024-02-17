@@ -5,7 +5,7 @@
  *	@file	
  *	File: FormulaParser.hpp \n
  *	Framework: CPU Emulators library \n
- *	Author: Ignacio Cea Forniés (EMULATORS library) \n
+ *	Author: Ignacio Cea Fornies (EMULATORS library) \n
  *	Creation Date: 15/11/2022 \n
  *	Description: The standard OperationParser. It supports the StdOperationElements (@see StdOperation.hpp file).
  *	Versions: 1.0 Initial

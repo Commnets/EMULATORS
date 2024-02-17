@@ -5,7 +5,7 @@
  *	@file
  *	File: StdCommandBld.hpp \n
  *	Framework: CPU Emulators library \n
- *	Author: Ignacio Cea Forniés (EMULATORS library) \n
+ *	Author: Ignacio Cea Fornies (EMULATORS library) \n
  *	Creation Date: 25/09/2022 \n
  *	Description: To build the very basic commands.
  *	Versions: 1.0 Initial

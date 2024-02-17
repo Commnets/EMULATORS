@@ -5,7 +5,7 @@
  *	@file	
  *	File: Czx80.hpp \n
  *	Framework: CPU Emulators library \n
- *	Author: Ignacio Cea Forniés (EMULATORS library) \n
+ *	Author: Ignacio Cea Fornies (EMULATORS library) \n
  *	Creation Date: 29/10/2023 \n
  *	Description: All CPUs type ZX80 inherits from this one.
  *	Versions: 1.0 Initial

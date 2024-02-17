@@ -5,7 +5,7 @@
  *	@file
  *	File: AnsSysCommand.hpp \n
  *	Framework: CPU Emulators library \n
- *	Author: Ignacio Cea Forniés (EMULATORS library) \n
+ *	Author: Ignacio Cea Fornies (EMULATORS library) \n
  *	Creation Date: 03/12/2022 \n
  *	Description:	Commands used to listen a communication!
  *					It is used in the consoles o similar sending commands to a remote emultation.

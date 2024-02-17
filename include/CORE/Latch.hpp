@@ -5,7 +5,7 @@
  *	@file	
  *	File: Latch.hpp \n
  *	Framework: CPU Emulators library \n
- *	Author: Ignacio Cea Forniés (EMULATORS library) \n
+ *	Author: Ignacio Cea Fornies (EMULATORS library) \n
  *	Creation Date: 18/03/2023 \n
  *	Description: Special type of Registers that behaves like a latch whent accesed.
  *	Versions: 1.0 Initial

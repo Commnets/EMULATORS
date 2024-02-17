@@ -210,6 +210,18 @@
     <ClInclude Include="..\..\include\COMMODORE\TED\TEDRegisters.hpp">
       <Filter>Archivos de encabezado\Motherboard\Chips\TED</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\include\COMMODORE\TED\TEDTimer.hpp">
+      <Filter>Archivos de encabezado\Motherboard\Chips\TED</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\COMMODORE\TED\C6529B.hpp">
+      <Filter>Archivos de encabezado\Motherboard\Chips\TED</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\COMMODORE\TED\C6529BRegisters.hpp">
+      <Filter>Archivos de encabezado\Motherboard\Chips\TED</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\COMMODORE\TED\TEDOSIO.hpp">
+      <Filter>Archivos de encabezado\Motherboard\Chips\TED</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Commodore.fmt">
@@ -317,6 +329,18 @@
       <Filter>Archivos de origen\Motherboard\Chips\TED</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\COMMODORE\TED\TEDSoundWrapper.cpp">
+      <Filter>Archivos de origen\Motherboard\Chips\TED</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\COMMODORE\TED\TEDTimer.cpp">
+      <Filter>Archivos de origen\Motherboard\Chips\TED</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\COMMODORE\TED\C2569BRegisters.cpp">
+      <Filter>Archivos de origen\Motherboard\Chips\TED</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\COMMODORE\TED\C6529B.cpp">
+      <Filter>Archivos de origen\Motherboard\Chips\TED</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\COMMODORE\TED\TEDOSIO.cpp">
       <Filter>Archivos de origen\Motherboard\Chips\TED</Filter>
     </ClCompile>
   </ItemGroup>

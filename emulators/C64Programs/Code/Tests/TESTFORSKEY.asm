@@ -1,6 +1,6 @@
 ; C64 Assembler framework.
 ; Wait until S is pressed
-; By Ignacio Cea Forniés.
+; By Ignacio Cea Fornies.
 ; Copyright Community Networks 2022 - 2023.
 
 ; The base has to be defined before doing anything...

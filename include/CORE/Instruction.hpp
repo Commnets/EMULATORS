@@ -5,7 +5,7 @@
  *	@file	
  *	File: Instruction.hpp \n
  *	Framework: CPU Emulators library \n
- *	Author: Ignacio Cea Forniés (EMULATORS library) \n
+ *	Author: Ignacio Cea Fornies (EMULATORS library) \n
  *	Creation Date: 03/04/2021 \n
  *	Description: Defines the set of instructions.
  *	Versions: 1.0 Initial

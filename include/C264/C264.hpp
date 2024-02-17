@@ -5,7 +5,7 @@
  *	@file	
  *	File: C264.hpp \n
  *	Framework: CPU Emulators library \n
- *	Author: Ignacio Cea Forniés (EMULATORS library) \n
+ *	Author: Ignacio Cea Fornies (EMULATORS library) \n
  *	Creation Date: 11/05/2023 \n
  *	Description: The global structure defining a C264 series machine.
  *				 Explanation of the history: https://www.zimmers.net/cbmpics/c264s.html

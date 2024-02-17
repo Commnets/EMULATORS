@@ -1,6 +1,6 @@
 ; C64 Assembler framework.
 ; To test whether an sprite is well drawn among the different graphical modes.
-; By Ignacio Cea Forniés.
+; By Ignacio Cea Fornies.
 ; Copyright Community Networks 2022 - 2023.
 
 ; The base has to be defined before doing anything...

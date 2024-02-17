@@ -5,7 +5,7 @@
  *	@file	
  *	File: SoundVoice.hpp \n
  *	Framework: CPU Emulators library \n
- *	Author: Ignacio Cea Forniés (EMULATORS library) \n
+ *	Author: Ignacio Cea Fornies (EMULATORS library) \n
  *	Creation Date: 13/01/2023 \n
  *	Description: Any sound produced is generated using voices.
 				 The voices group different types of sound waves.

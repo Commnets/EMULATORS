@@ -5,7 +5,7 @@
  *	@file	
  *	File: ExpansionPort.hpp \n
  *	Framework: CPU Emulators library \n
- *	Author: Ignacio Cea Forniés (EMULATORS library) \n
+ *	Author: Ignacio Cea Fornies (EMULATORS library) \n
  *	Creation Date: 04/02/2024 \n
  *	Description:	Just to give name to the different PINS of the ExpansionPort in the C264 series.
  *	Versions: 1.0 Initial

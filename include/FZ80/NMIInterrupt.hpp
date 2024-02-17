@@ -5,7 +5,7 @@
  *	@file	
  *	File: NMIInterrupt.hpp \n
  *	Framework: CPU Emulators library \n
- *	Author: Ignacio Cea Forniés (EMULATORS library) \n
+ *	Author: Ignacio Cea Fornies (EMULATORS library) \n
  *	Creation Date: 11/11/2023 \n
  *	Description: The NMI type of interrupt in FZ80.
  *	Versions: 1.0 Initial

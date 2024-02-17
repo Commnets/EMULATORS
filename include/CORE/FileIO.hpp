@@ -5,7 +5,7 @@
  *	@file	
  *	File: FileIO.hpp \n
  *	Framework: CPU Emulators library \n
- *	Author: Ignacio Cea Forniés (EMULATORS library) \n
+ *	Author: Ignacio Cea Fornies (EMULATORS library) \n
  *	Creation Date: 28/01/2023 \n
  *	Description:	To load specific types of files and convert them into data available for the computer. \n
  *					The type of files are things either linked to the computer or to the emulator. \n

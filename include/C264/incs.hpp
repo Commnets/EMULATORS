@@ -5,7 +5,7 @@
  *	@file	
  *	File: incs.hpp \n
  *	Framework: CPU Emulators library \n
- *	Author: Ignacio Cea Forniés (EMULATORS library) \n
+ *	Author: Ignacio Cea Fornies (EMULATORS library) \n
  *	Creation Date: 09/12/2023 \n
  *	Description: All includes neccesary for C264 librarry.
  *	Versions: 1.0 Initial
@@ -17,7 +17,6 @@
 #include <F6500/incs.hpp>
 #include <EMULATORS/incs.hpp>
 #include <COMMODORE/incs.hpp>
-#include <C264/C6529B.hpp>
 #include <C264/CommandBuilder.hpp>
 #include <C264/Commands.hpp>
 #include <C264/IOPBuilder.hpp>

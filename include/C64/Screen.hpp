@@ -5,7 +5,7 @@
  *	@file	
  *	File: Screen.hpp \n
  *	Framework: CPU Emulators library \n
- *	Author: Ignacio Cea Forniés (EMULATORS library) \n
+ *	Author: Ignacio Cea Fornies (EMULATORS library) \n
  *	Creation Date: 11/06/2021 \n
  *	Description: The screen linked to the C64.
  *	Versions: 1.0 Initial

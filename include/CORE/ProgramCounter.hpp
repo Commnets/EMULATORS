@@ -5,7 +5,7 @@
  *	@file	
  *	File: ProgramCounter.hpp \n
  *	Framework: CPU Emulators library \n
- *	Author: Ignacio Cea Forniés (EMULATORS library) \n
+ *	Author: Ignacio Cea Fornies (EMULATORS library) \n
  *	Creation Date: 10/04/2021 \n
  *	Description: Defines the behaviour of a program counter.
  *	Versions: 1.0 Initial

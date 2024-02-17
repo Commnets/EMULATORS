@@ -5,7 +5,7 @@
  *	@file	
  *	File: SerialIOPeripherals.hpp \n
  *	Framework: CPU Emulators library \n
- *	Author: Ignacio Cea Forniés (EMULATORS library) \n
+ *	Author: Ignacio Cea Fornies (EMULATORS library) \n
  *	Creation Date: 15/05/2023 \n
  *	Description: To emulate the behaviour of the elements connected to the SerialIO Port.
  *	Versions: 1.0 Initial

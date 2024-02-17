@@ -5,7 +5,7 @@
  *	@file	
  *	File: DatasettePort.hpp \n
  *	Framework: CPU Emulators library \n
- *	Author: Ignacio Cea Forniés (EMULATORS library) \n
+ *	Author: Ignacio Cea Fornies (EMULATORS library) \n
  *	Creation Date: 21/01/2023 \n
  *	Description:	To emulate the behaviour of the Datasette Port.
  *				 	Usually the 1530 Unit (or 1531) is connected here.

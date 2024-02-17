@@ -1,6 +1,6 @@
 ; C64 Assembler framework.
 ; To test the CIA 1 working.
-; By Ignacio Cea Forniés.
+; By Ignacio Cea Fornies.
 ; Copyright Community Networks 2022 - 2023.
 
 ; The base has to be defined before doing anything...

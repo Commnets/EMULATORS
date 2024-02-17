@@ -5,7 +5,7 @@
  *	@file
  *	File: StdFormatter.hpp \n
  *	Framework: CPU Emulators library \n
- *	Author: Ignacio Cea Forniés (EMULATORS library) \n
+ *	Author: Ignacio Cea Fornies (EMULATORS library) \n
  *	Creation Date: 18/10/2022 \n
  *	Description: Defines a formatter based of file definitions.
  *	Versions: 1.0 Initial

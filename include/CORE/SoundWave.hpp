@@ -5,7 +5,7 @@
  *	@file	
  *	File: SoundWave.hpp \n
  *	Framework: CPU Emulators library \n
- *	Author: Ignacio Cea Forniés (EMULATORS library) \n
+ *	Author: Ignacio Cea Fornies (EMULATORS library) \n
  *	Creation Date: 13/01/2023 \n
  *	Description: To define different types of waves than can ve used later to create sound.
  *	Versions: 1.0 Initial

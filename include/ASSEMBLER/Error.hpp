@@ -5,7 +5,7 @@
  *	@file	
  *	File: Error.hpp \n
  *	Framework: CPU Emulators library \n
- *	Author: Ignacio Cea Forniés (EMULATORS library) \n
+ *	Author: Ignacio Cea Fornies (EMULATORS library) \n
  *	Creation Date: 04/06/2021 \n
  *	Description: The type of error can be generated parsing a instructions file.
  *	Versions: 1.0 Initial

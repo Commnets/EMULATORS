@@ -5,7 +5,7 @@
  *	@file	
  *	File: C6502.hpp \n
  *	Framework: CPU Emulators library \n
- *	Author: Ignacio Cea Forniés (EMULATORS library) \n
+ *	Author: Ignacio Cea Fornies (EMULATORS library) \n
  *	Creation Date: 05/11/2023 \n
  *	Description: The main CPU of the VIC20.
  *	Versions: 1.0 Initial

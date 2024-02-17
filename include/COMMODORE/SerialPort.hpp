@@ -5,7 +5,7 @@
  *	@file	
  *	File: SerialPort.hpp \n
  *	Framework: CPU Emulators library \n
- *	Author: Ignacio Cea Forniés (EMULATORS library) \n
+ *	Author: Ignacio Cea Fornies (EMULATORS library) \n
  *	Creation Date: 15/05/2023 \n
  *	Description: To emulate the behaviour of the Serial Port. \n
  *				 Several types of User Peripherals can be connected to this port.

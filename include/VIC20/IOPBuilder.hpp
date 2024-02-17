@@ -5,7 +5,7 @@
  *	@file	
  *	File: IOPBuilder.hpp \n
  *	Framework: CPU Emulators library \n
- *	Author: Ignacio Cea Forniés (EMULATORS library) \n
+ *	Author: Ignacio Cea Fornies (EMULATORS library) \n
  *	Creation Date: 09/12/2023 \n
  *	Description: To build the specific peripherals connected to a VIC20 computer.
  *	Versions: 1.0 Initial

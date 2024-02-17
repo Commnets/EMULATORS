@@ -1,5 +1,4 @@
 #include <C264/OSIO.hpp>
-#include <C264/C6529B.hpp>
 
 // ---
 const C264::InputOSSystem::KeystrockesMap C264::InputOSSystem::_C264KEYS
@@ -84,34 +83,3 @@ const C264::InputOSSystem::KeystrockesMap C264::InputOSSystem::_C264KEYS
 	);
 
 const C264::InputOSSystem::Keystrokes C264::InputOSSystem::_NOKEYSTROKES = { };
-
-// ---
-C264::InputOSSystem::InputOSSystem ()
-	: MCHEmul::InputOSSystem (_ID, 
-		{ { "Name", "IOSystem" },
-		  { "Type", "Input" },
-		  { "Frequency", "50.0Hz" } })
-{ 
-	// Nothing else to do...
-}
-
-// ---
-void C264::InputOSSystem::linkToChips (const MCHEmul::Chips& c)
-{
-	for (MCHEmul::Chips::const_iterator i = c.begin (); i != c.end (); i++)
-	{
-		if (dynamic_cast <COMMODORE::TED*> ((*i).second) != nullptr)
-			_ted = dynamic_cast <COMMODORE::TED*> ((*i).second);
-		if (dynamic_cast <C264::C6529B*> ((*i).second) != nullptr)
-			_c6529b = dynamic_cast <C264::C6529B*> ((*i).second);
-	}
-
-	// Can't be null after this method...
-	assert (_ted != nullptr && 
-			_c6529b != nullptr);
-
-	// The TED will receive the event related with the io system...
-	_ted -> observe (this);
-	// ...and also the C6529...
-	_c6529b -> observe (this);
-}

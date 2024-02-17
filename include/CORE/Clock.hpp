@@ -5,7 +5,7 @@
 *	@file	
 *	File: Clock.hpp \n
 *	Framework: CPU Emulators library \n
-*	Author: Ignacio Cea Forniés (EMULATORS library) \n
+*	Author: Ignacio Cea Fornies (EMULATORS library) \n
 *	Creation Date: 21/12/2021 \n
 *	Description: To regulate or synchonize the speed of different things.
 *	Versions: 1.0 Initial

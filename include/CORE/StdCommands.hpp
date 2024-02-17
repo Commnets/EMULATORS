@@ -5,7 +5,7 @@
  *	@file
  *	File: StdCommands.hpp \n
  *	Framework: CPU Emulators library \n
- *	Author: Ignacio Cea Forniés (EMULATORS library) \n
+ *	Author: Ignacio Cea Fornies (EMULATORS library) \n
  *	Creation Date: 04/08/2022 \n
  *	Description:	The very basic commands to execute over a computer. \n
  *					Broadly speaking the structure of the names of name of any command is as follows: \n

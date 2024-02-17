@@ -5,7 +5,7 @@
  *	@file	
  *	File: IO6510Registers.hpp \n
  *	Framework: CPU Emulators library \n
- *	Author: Ignacio Cea Forniés (EMULATORS library) \n
+ *	Author: Ignacio Cea Fornies (EMULATORS library) \n
  *	Creation Date: 15/05/2021 \n
  *	Description: Memory locations 0 & 1.
  *	Versions: 1.0 Initial

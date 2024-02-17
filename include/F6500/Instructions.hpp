@@ -5,7 +5,7 @@
  *	@file	
  *	File: Instructions.hpp \n
  *	Framework: CPU Emulators library \n
- *	Author: Ignacio Cea Forniés (EMULATORS library) \n
+ *	Author: Ignacio Cea Fornies (EMULATORS library) \n
  *	Creation Date: 11/04/2021 \n
  *	Description: The list of instructions used by any F6500 family. \n
  *				 The no documented instructions have also been included. \n

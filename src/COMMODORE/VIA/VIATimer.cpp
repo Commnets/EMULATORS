@@ -119,7 +119,7 @@ MCHEmul::InfoStructure COMMODORE::VIATimer::getInfoStructure () const
 {
 	MCHEmul::InfoStructure result = MCHEmul::InfoClass::getInfoStructure ();
 
-	result.add ("RUN",			(unsigned int)_runMode);
+	result.add ("RUN",			(unsigned int) _runMode);
 	result.add ("COUNT",		(unsigned int) _countMode);
 	result.add ("IRQ",			_interruptEnabled);
 	result.add ("VALUE",		_currentValue);

@@ -5,7 +5,7 @@
  *	@file
  *	File: FmterBuilder.hpp \n
  *	Framework: CPU Emulators library \n
- *	Author: Ignacio Cea Forniés (EMULATORS library) \n
+ *	Author: Ignacio Cea Fornies (EMULATORS library) \n
  *	Creation Date: 07/10/2022 \n
  *	Description: A builder to create formatters. \n
  *				 The builder has been designed as a singleton in the framework. \n

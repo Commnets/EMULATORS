@@ -1,6 +1,6 @@
 ; C64 Assembler framework.
 ; Routine to draw a text in the screen.
-; By Ignacio Cea Forniés.
+; By Ignacio Cea Fornies.
 ; Copyright Community Networks 2022 - 2023.
 
 #../C64Programs/code/macros/MSCREEN.asm

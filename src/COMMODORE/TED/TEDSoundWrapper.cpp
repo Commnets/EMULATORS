@@ -23,11 +23,9 @@ COMMODORE::TEDSoundSimpleLibWrapper::TEDSoundSimpleLibWrapper (unsigned int cF, 
 		}),
 	  _chipFrequency (cF), _samplingFrequency (sF),
 	  _volumen (0.0f), // There is no volumen at the beginning...
-	  _voices (
+	  _voices ( // Two voices...
 		{ new COMMODORE::TEDSoundSimpleLibWrapper::Voice (0, cF), 
-		  new COMMODORE::TEDSoundSimpleLibWrapper::Voice (1, cF), 
-		  new COMMODORE::TEDSoundSimpleLibWrapper::Voice (2, cF), 
-		  new COMMODORE::TEDSoundSimpleLibWrapper::Voice (3, cF) }),
+		  new COMMODORE::TEDSoundSimpleLibWrapper::Voice (1, cF) }),
 	  _registers (std::vector <MCHEmul::UByte> (0x10, MCHEmul::UByte::_0)),
 	  _clocksPerSample ((unsigned int) ((double) cF / (double (sF)))),
 	  _counterClocksPerSample (0)
@@ -35,26 +33,14 @@ COMMODORE::TEDSoundSimpleLibWrapper::TEDSoundSimpleLibWrapper (unsigned int cF, 
 	// The voice 0...
 	COMMODORE::TEDSoundSimpleLibWrapper::Voice* v0 = 
 		static_cast <COMMODORE::TEDSoundSimpleLibWrapper::Voice*> (_voices [0]);
-	v0 -> setWavesActive (0); // Always a sawsmooth...
+	v0 -> setWavesActive (0); // Always a pulse wave...
 	v0 -> setADR (0, 0, 0); // No ADR effect....
 
 	// The voice 1...
 	COMMODORE::TEDSoundSimpleLibWrapper::Voice* v1 = 
 		static_cast <COMMODORE::TEDSoundSimpleLibWrapper::Voice*> (_voices [1]);
-	v1 -> setWavesActive (1); // Always a pulse wave...
+	v1 -> setWavesActive (1); // By defect a pulse wave, but it can be moved to noise!
 	v1 -> setADR (0, 0, 0); // No ADR effect....
-
-	// The voice 2...
-	COMMODORE::TEDSoundSimpleLibWrapper::Voice* v2 = 
-		static_cast <COMMODORE::TEDSoundSimpleLibWrapper::Voice*> (_voices [2]);
-	v2 -> setWavesActive (1); // Always a pulse wave...
-	v2 -> setADR (0, 0, 0); // No ADR effect....
-
-	// The voice 3...
-	COMMODORE::TEDSoundSimpleLibWrapper::Voice* v3 = 
-		static_cast <COMMODORE::TEDSoundSimpleLibWrapper::Voice*> (_voices [3]);
-	v3 -> setWavesActive (2); // Always a noise wave...
-	v3 -> setADR (0, 0, 0); // No ADR effect....
 }
 
 // ---
@@ -66,52 +52,83 @@ void COMMODORE::TEDSoundSimpleLibWrapper::setValue (size_t p, const MCHEmul::UBy
 
 	switch (pp)
 	{
-		// Voice 0
-		case 0x0a:
-			{
-				_voices [0] -> setActive ((v.value () & 0x80) != 0x00);
-				_voices [0] -> setFrequency ((unsigned short) (((double) _chipFrequency / 255.0f) / 
-					(double) (0x80 - (v.value () & 0x7f)))); // Bass
-			}
-
-			break;
-
-		// Voice 1
-		case 0x0b:
-			{
-				_voices [1] -> setActive ((v.value () & 0x80) != 0x00);
-				_voices [1] -> setFrequency ((unsigned short) (((double) _chipFrequency / 255.0f) / 
-					(double) (0x80 - (v.value () & 0x7f))) << 1); // Alto
-
-			}
-
-			break;
-
-		// Voice 2
-		case 0x0c:
-			{
-				_voices [2] -> setActive ((v.value () & 0x80) != 0x00);
-				_voices [2] -> setFrequency ((unsigned short) (((double) _chipFrequency / 255.0f) / 
-					(double) (0x80 - (v.value () & 0x7f))) << 2); // Soprano
-			}
-
-			break;
-
-		// Voice 3 (noise)
-		case 0x0d:
-			{
-				_voices [3] -> setActive ((v.value () & 0x80) != 0x00);
-				_voices [3] -> setFrequency ((unsigned short) (((double) _chipFrequency / 255.0f) / 
-					(double) (0x80 - (v.value () & 0x7f))) << 3); // Pure noise
-
-			}
-
-			break;
-
-		// The volumen
+		// Voice 0 LSB
 		case 0x0e:
 			{
-				_volumen = v.value () & 0x0f;
+				_voices [0] -> setFrequency 
+					(1023 - (unsigned short) (111860.78125f / (float) ((_voices [0] -> frequency () & 0xff00) | v.value ())));
+			}
+
+			break;
+
+		// Voice 1 LSB
+		case 0x0f:
+			{
+				_voices [1] -> setFrequency 
+					(1023 - (unsigned short) (111860.78125f / (float) ((_voices [1] -> frequency () & 0xff00) | v.value ())));
+			}
+
+			break;
+
+		// Voice 0 MSB (only two bits)
+		case 0x10:
+			{
+				_voices [0] -> setFrequency 
+					(1023 - (unsigned short) (111860.78125f / 
+						(float) ((_voices [0] -> frequency () & 0x00ff) | (((unsigned short) (v.value () & 0x03)) << 8))));
+			}
+
+			break;
+
+		// Sound Color Register
+		case 0x11:
+			{
+				setVolumen ((float) (v.value () & 0x0f) / 15.0f);
+				_voices [0] -> setActive (v.bit (4));
+				switch ((v.value () & 0x60 /** bits 5 y 6. */) >> 5) // 0, 1, 2, 3
+				{
+					case 0:
+						{
+							_voices [0] -> setActive (false);
+							_voices [1] -> setActive (false);
+						}
+						
+						break;
+
+					case 1:
+					case 3:
+						{
+							_voices [0] -> setActive (true);
+							static_cast <COMMODORE::TEDSoundSimpleLibWrapper::Voice*> (_voices [1]) -> 
+								setWavesActive (0); // The noise is selected...
+							_voices [1] -> setActive (false); // But it is not active...
+						}
+
+					case 2:
+						{
+							_voices [0] -> setActive (false);
+							static_cast <COMMODORE::TEDSoundSimpleLibWrapper::Voice*> (_voices [1]) -> 
+								setWavesActive (1);
+							_voices [1] -> setActive (true);
+						}
+
+						break;
+
+					default:
+						// It shouldn't be here...
+						assert (false);
+						break;
+				}
+			}
+
+			break;
+
+		// Voice 1 MSB (only two bits)
+		case 0x12:
+			{
+				_voices [1] -> setFrequency 
+					(1023 - (unsigned short) (111860.78125f / 
+						(float) ((_voices [1] -> frequency () & 0x00ff) | (((unsigned short) (v.value () & 0x03)) << 8))));
 			}
 
 			break;
@@ -132,11 +149,11 @@ const MCHEmul::UByte& COMMODORE::TEDSoundSimpleLibWrapper::readValue (size_t p) 
 
 	switch (pp)
 	{
-		case 0x0a:
-		case 0x0b:
-		case 0x0c:
-		case 0x0d:
 		case 0x0e:
+		case 0x0f:
+		case 0x10:
+		case 0x11:
+		case 0x12:
 			{
 				result = _registers [pp];
 			}

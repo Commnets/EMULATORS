@@ -5,7 +5,7 @@
  *	@file
  *	File: InfoClass.hpp \n
  *	Framework: CPU Emulators library \n
- *	Author: Ignacio Cea Forniés (EMULATORS library) \n
+ *	Author: Ignacio Cea Fornies (EMULATORS library) \n
  *	Creation Date: 15/11/2022 \n
  *	Description: Class to manage allow other to generate a InfoStructure element.
  *	Versions: 1.0 Initial

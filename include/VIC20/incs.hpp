@@ -5,7 +5,7 @@
  *	@file	
  *	File: incs.hpp \n
  *	Framework: CPU Emulators library \n
- *	Author: Ignacio Cea Forniés (EMULATORS library) \n
+ *	Author: Ignacio Cea Fornies (EMULATORS library) \n
  *	Creation Date: 09/12/2023 \n
  *	Description: All includes neccesary for VIC20 librarry.
  *	Versions: 1.0 Initial

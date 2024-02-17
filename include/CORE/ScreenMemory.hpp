@@ -5,7 +5,7 @@
  *	@file	
  *	File: ScreenMemory.hpp \n
  *	Framework: CPU Emulators library \n
- *	Author: Ignacio Cea Forniés (EMULATORS library) \n
+ *	Author: Ignacio Cea Fornies (EMULATORS library) \n
  *	Creation Date: 01/07/2022 \n
  *	Description: The screen buffer used by the Graphics Chips to draw (if needed).
  *	Versions: 1.0 Initial

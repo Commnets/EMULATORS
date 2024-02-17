@@ -5,7 +5,7 @@
  *	@file	
  *	File: ParamTemplate.hpp \n
  *	Framework: CPU Emulators library \n
- *	Author: Ignacio Cea Forniés (EMULATORS library) \n
+ *	Author: Ignacio Cea Fornies (EMULATORS library) \n
  *	Creation Date: 20/01/2024 \n
  *	Description: Every Parameter must belog to a Template.
  *				 That template determines the behaviour of the parameter. 

@@ -5,7 +5,7 @@
  *	@file	
  *	File: UserPort.hpp \n
  *	Framework: CPU Emulators library \n
- *	Author: Ignacio Cea Forniés (EMULATORS library) \n
+ *	Author: Ignacio Cea Fornies (EMULATORS library) \n
  *	Creation Date: 22/05/2021 \n
  *	Description: To emulate the behaviour of the User Port. \n
  *				 Several types of User Peripherals can be connected to this port.

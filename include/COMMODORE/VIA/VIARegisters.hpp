@@ -5,7 +5,7 @@
  *	@file	
  *	File: VIARegisters.hpp \n
  *	Framework: CPU Emulators library \n
- *	Author: Ignacio Cea Forniés (EMULATORS library) \n
+ *	Author: Ignacio Cea Fornies (EMULATORS library) \n
  *	Creation Date: 16/12/2023 \n
  *	Description: VIA Registers Emulation
  *	Versions: 1.0 Initial

@@ -5,7 +5,7 @@
  *	@file	
  *	File: OSIO.hpp \n
  *	Framework: CPU Emulators library \n
- *	Author: Ignacio Cea Forniés (EMULATORS library) \n
+ *	Author: Ignacio Cea Fornies (EMULATORS library) \n
  *	Creation Date: 04/02/2024 \n
  *	Description: The OSIO events in the C264 series computer are linked to two chips: 
  *				 TED (@see C264::TED) and C6529B (@see C264::C6529B) with no special nickname.
@@ -20,25 +20,20 @@
 namespace C264
 {
 	class TED;
-	class C6529B;
 
 	/** The C264::InputOSSystem 
 		is very related with the TED and 6529B chips. \n
 		When a value is written in the register 0 ($fd30 or copies of this) of the chip 6529B,
 		the result can be read in the register 8 ($ff08 or copies of this) of the chip TED. \n
 		So the events happened in this OSIO has to be transmited basically to both chips. */
-	class InputOSSystem final : public MCHEmul::InputOSSystem
+	class InputOSSystem final : public COMMODORE::TEDInputOSSystem
 	{
 		public:
 		static const unsigned int _ID = 201;
 
-		using Keystroke = 
-			std::pair <unsigned short /** bit at port A. */, unsigned short /** bit at port B. */>;
-		using Keystrokes = std::vector <Keystroke>;
-
-		InputOSSystem ();
-
-		virtual void linkToChips (const MCHEmul::Chips& c) override;
+		InputOSSystem ()
+			: COMMODORE::TEDInputOSSystem (_ID)
+							{ }
 
 		/** The ScanCode is based en where the key is localed in a standard US PC Keyboard. \n
 			So e.g, the ; is where the Ñ is in a spanish layout. \n
@@ -68,11 +63,16 @@ namespace C264
 			SHIFT MINUS = QUESTION MARK \n
 			SUPR = UP ARROW \n
 			Ñ = POINT AND COMMA. */
-		inline const Keystrokes& keystrokesFor (SDL_Scancode sc) const;
-
-		private:
-		COMMODORE::TED* _ted;
-		C6529B* _c6529b;
+		virtual const Keystrokes& keystrokesFor (SDL_Scancode sc) const override
+							{ KeystrockesMap::const_iterator i = _C264KEYS.find (sc);
+								return ((i == _C264KEYS.end ())
+									? InputOSSystem::_NOKEYSTROKES : (*i).second); }
+		virtual size_t bitForJoystickAxis (int jId, int aId, int aV) const override
+							{ return ((aId == 0) // x axis
+								? ((aV > 0) ? 0 : 1) /** 0 = right, 1 = left */
+								: ((aV > 0) ? 2 : 3)); /** 2 = down, 3 = up */ }
+		virtual size_t bitForJoystickButton (int jId, int bId) const override
+							{ return (4); /** Always the bit 4. */ }
 
 		/** 
 			How SDL keys are mapped into the chars map of the C264. \n
@@ -94,13 +94,6 @@ namespace C264
 		static const KeystrockesMap _C264KEYS;
 		static const Keystrokes _NOKEYSTROKES;
 	};
-
-	// ---
-	inline const InputOSSystem::Keystrokes& InputOSSystem::keystrokesFor (SDL_Scancode sc) const
-	{
-		KeystrockesMap::const_iterator i = _C264KEYS.find (sc);
-		return ((i == _C264KEYS.end ()) ? InputOSSystem::_NOKEYSTROKES : (*i).second);
-	}
 }
 
 #endif

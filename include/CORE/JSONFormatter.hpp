@@ -5,7 +5,7 @@
  *	@file
  *	File: JSONFormatter.hpp \n
  *	Framework: CPU Emulators library \n
- *	Author: Ignacio Cea Forniés (EMULATORS library) \n
+ *	Author: Ignacio Cea Fornies (EMULATORS library) \n
  *	Creation Date: 18/10/2022 \n
  *	Description: Defines a formatter to create JSON structures.
  *	Versions: 1.0 Initial

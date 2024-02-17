@@ -1,6 +1,6 @@
 ; C64 Assembler framework.
 ; Routines related with managing interrupts.
-; By Ignacio Cea Forniés.
+; By Ignacio Cea Fornies.
 ; Copyright Community Networks 2022 - 2023.
 
 #../C64Programs/code/macros/MVICII.asm

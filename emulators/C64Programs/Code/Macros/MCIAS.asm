@@ -1,6 +1,6 @@
 ; C64 Assembler framework.
 ; Macros related with the CIA1 and CIA2.
-; By Ignacio Cea Forniés.
+; By Ignacio Cea Fornies.
 ; Copyright Community Networks 2022 - 2023.
 
 ; ------------------------------

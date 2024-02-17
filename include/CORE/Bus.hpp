@@ -5,7 +5,7 @@
  *	@file	
  *	File: Bus.hpp \n
  *	Framework: CPU Emulators library \n
- *	Author: Ignacio Cea Forniés (EMULATORS library) \n
+ *	Author: Ignacio Cea Fornies (EMULATORS library) \n
  *	Creation Date: 14/04/2023 \n
  *	Description: Trying the emulate a "bus" of data connected to two different computer elements within the mother board.
  *	Versions: 1.0 Initial

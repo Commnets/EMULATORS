@@ -5,7 +5,7 @@
  *	@file	
  *	File: VIAControlLine.hpp \n
  *	Framework: CPU Emulators library \n
- *	Author: Ignacio Cea Forniés (EMULATORS library) \n
+ *	Author: Ignacio Cea Fornies (EMULATORS library) \n
  *	Creation Date: 07/01/2023 \n
  *	Description: The "ControlLines" of the VIA Chip (@see VIA for better understanding).
  *				 @see https://web.archive.org/web/20160108173129if_/http://archive.6502.org/datasheets/mos_6522_preliminary_nov_1977.pdf

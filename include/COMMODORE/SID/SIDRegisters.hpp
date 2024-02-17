@@ -5,7 +5,7 @@
  *	@file	
  *	File: SIDRegisters.hpp \n
  *	Framework: CPU Emulators library \n
- *	Author: Ignacio Cea Forniés (EMULATORS library) \n
+ *	Author: Ignacio Cea Fornies (EMULATORS library) \n
  *	Creation Date: 13/01/2023 \n
  *	Description: SID Registers Emulation.
  *	Versions: 1.0 Initial

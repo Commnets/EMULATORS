@@ -5,7 +5,7 @@
  *	@file	
  *	File: VIA2Registers.hpp \n
  *	Framework: CPU Emulators library \n
- *	Author: Ignacio Cea Forniés (EMULATORS library) \n
+ *	Author: Ignacio Cea Fornies (EMULATORS library) \n
  *	Creation Date: 17/12/2023 \n
  *	Description: VCI20 VIA 1 Registers Emulation
  *	Versions: 1.0 Initial

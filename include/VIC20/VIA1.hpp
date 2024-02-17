@@ -5,7 +5,7 @@
  *	@file	
  *	File: VIA1.hpp \n
  *	Framework: CPU Emulators library \n
- *	Author: Ignacio Cea Forniés (EMULATORS library) \n
+ *	Author: Ignacio Cea Fornies (EMULATORS library) \n
  *	Creation Date: 17/12/2023 \n
  *	Description: The VIA1 Chip within the VIC20.
  *	Versions: 1.0 Initial

@@ -5,7 +5,7 @@
 *	@file	
 *	File: ByteCodeLine.hpp \n
 *	Framework: CPU Emulators library \n
-*	Author: Ignacio Cea Forniés (EMULATORS library) \n
+*	Author: Ignacio Cea Fornies (EMULATORS library) \n
 *	Creation Date: 27/06/2021 \n
 *	Description: To manage a line of code.
 *	Versions: 1.0 Initial

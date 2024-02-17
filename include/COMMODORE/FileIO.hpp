@@ -5,7 +5,7 @@
  *	@file	
  *	File: FileIO.hpp \n
  *	Framework: CPU Emulators library \n
- *	Author: Ignacio Cea Forniés (EMULATORS library) \n
+ *	Author: Ignacio Cea Fornies (EMULATORS library) \n
  *	Creation Date: 31/01/2023 \n
  *	Description:	The specific file readers for commodore emulations.
  *	Versions: 1.0 Initial
@@ -19,7 +19,7 @@
 namespace COMMODORE
 {
 	/** Struct to content the casette raw data. \n
-		This structure is (C) Ignacio Cea Forniés. \n 
+		This structure is (C) Ignacio Cea Fornies. \n 
 		Using specific programs can be converted into other ones. 
 		It is quite similar to the standard format TAP with some simplifications. \n
 		16 bytes with the name, \n

@@ -5,7 +5,7 @@
 *	@file
 *	File: CommandBuilder.hpp \n
 *	Framework: CPU Emulators library \n
-*	Author: Ignacio Cea Forniés (EMULATORS library) \n
+*	Author: Ignacio Cea Fornies (EMULATORS library) \n
 *	Creation Date: 03/12/2022 \n
 *	Description:	To build only the command related with an answer!
 *					It is used in the consoles o similar sending commands to a remote emultation.

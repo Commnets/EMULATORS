@@ -5,7 +5,7 @@
  *	@file	
  *	File: StatusRegister.hpp \n
  *	Framework: CPU Emulators library \n
- *	Author: Ignacio Cea Forniés (EMULATORS library) \n
+ *	Author: Ignacio Cea Fornies (EMULATORS library) \n
  *	Creation Date: 11/04/2021 \n
  *	Description: The status register usd by almost any instruction.
  *	Versions: 1.0 Initial

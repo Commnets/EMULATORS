@@ -5,7 +5,7 @@
  *	@file	
  *	File: TED.hpp \n
  *	Framework: CPU Emulators library \n
- *	Author: Ignacio Cea Forniés (EMULATORS library) \n
+ *	Author: Ignacio Cea Fornies (EMULATORS library) \n
  *	Creation Date: 09/02/2024 \n
  *	Description: The TED Chip.
  *	Versions: 1.0 Initial
@@ -17,6 +17,7 @@
 
 #include <CORE/incs.hpp>
 #include <COMMODORE/TED/TEDRegisters.hpp>
+#include <COMMODORE/TED/TEDTimer.hpp>
 
 namespace COMMODORE
 {
@@ -26,16 +27,15 @@ namespace COMMODORE
 	class TED : public MCHEmul::GraphicalChip
 	{
 		public:
-		public:
-		/** VICI is both a Graphical and a Sound Chip. \n
-			VICI should then inherit from both MCHEmul::GraphicalCip & MCHEmul::SoundChip,
+		/** TED is both a Graphical and a Sound Chip. \n
+			TED should then inherit from both MCHEmul::GraphicalCip & MCHEmul::SoundChip,
 			but this could generate ambiguity when calling some parent methods, that will be the case. \n
-			The main function of the VICI is, however, the graphical one. \n
-			VICI will then inherit from MCHEmul::GraphicalChip only and it will use an object inside inheriting from MCHEmul::SoundChip. */
+			The main function of the TED is, however, the graphical one. \n
+			TED will then inherit from MCHEmul::GraphicalChip only and it will use an object inside inheriting from MCHEmul::SoundChip. */
 		class SoundFunction final : public MCHEmul::SoundChip
 		{
 			public:
-			static const unsigned int _ID = 1060;
+			static const unsigned int _ID = 1010;
 
 			SoundFunction (MCHEmul::SoundLibWrapper* sW);
 
@@ -58,7 +58,7 @@ namespace COMMODORE
 			unsigned int _lastCPUCycles;
 		};
 
-		static const unsigned int _ID = 104;
+		static const unsigned int _ID = 101;
 
 		// 44,1MHz (more or less standard in current sound cards)
 		static const unsigned int _SOUNDSAMPLINGCLOCK		= 44100;
@@ -77,7 +77,7 @@ namespace COMMODORE
 		static const unsigned short _GRAPHMAXBITMAPCOLUMNS	= 320;	// Not taking into account double coulors
 		static const unsigned short _GRAPHMAXBITMAPROWS		= 200;
 
-		/** Static address. The color memory can not be changed. */
+		/** Static address. The color memory can not be changed in TED */
 		static const MCHEmul::Address _COLORMEMORY;
 
 		// Raster Info...
@@ -108,26 +108,13 @@ namespace COMMODORE
 		unsigned short cyclesPerRasterLine () const
 							{ return (_cyclesPerRasterLine); }
 
-		/** To set the position of the light - pen. \n
-			The position received must be relative within the display zone. */
-		void lightPenPosition (unsigned short& x, unsigned short& y) const
-							{ _TEDRegisters -> currentLightPenPosition (x, y); }
-		void setLightPenPosition (unsigned short x, unsigned short y)
-							{ _TEDRegisters -> setCurrentLightPenPosition (x, y); }
-
-		/** To know whether the light pen is active. */
-		bool lightPenActive () const
-							{ return (_TEDRegisters -> lightPenActive ()); }
-		void setLightPenActive (bool lP)
-							{ _TEDRegisters -> setLigthPenActive (lP); }
-
 		/** To get the raster info. */
 		const MCHEmul::Raster& raster () const
 							{ return (_raster); }
 
 		virtual bool initialize () override;
 
-		/** Simulates cycles in the VICII. \n
+		/** Simulates cycles in the TED. \n
 			It draws the border AFTER once graphics info has been drawn within the display zone. \n
 			So sprites can be drawn behing the border and collisions could take place out of the visible zone. */
 		virtual bool simulate (MCHEmul::CPU* cpu) override;
@@ -143,10 +130,10 @@ namespace COMMODORE
 		virtual void processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifier* n) override;
 
 		/** Invoked from initialize to create the right screen memory. \n
-			It also creates the Palette used by CBM 64 (_format variable). */
+			It also creates the Palette used by a TED computer (_format variable). */
 		virtual MCHEmul::ScreenMemory* createScreenMemory () override;
 
-		// Draw the graphics & Sprites in detail...
+		// Draw the graphics in detail...
 		/** To simplify the use of some of the routines dedicated to draw graphics. */
 		struct DrawContext
 		{
@@ -172,8 +159,6 @@ namespace COMMODORE
 			their respective variable _colorData. */
 		struct DrawResult
 		{
-			/** The data used to detect the collisions. */
-			MCHEmul::UByte _collisionData;
 			/** The color of the each pixel considered as background. */
 			unsigned int _backgroundColorData [8];
 			/** The color of the each pixel considered as foreground. */
@@ -183,8 +168,7 @@ namespace COMMODORE
 			bool _invalid;
 
 			DrawResult (unsigned int bC = ~0 /** Meaning transparent (jumped later when moving info to screen). */)
-				: _collisionData (MCHEmul::UByte::_0),
-				  _backgroundColorData { bC, bC, bC, bC, bC, bC, bC, bC },
+				: _backgroundColorData { bC, bC, bC, bC, bC, bC, bC, bC },
 				  _foregroundColorData { bC, bC, bC, bC, bC, bC, bC, bC },
 				  _invalid (false)
 							{ }
@@ -199,10 +183,10 @@ namespace COMMODORE
 		/** Treat the visible zone.
 			Draws the graphics, detect collions, and finally draw the border. */
 		void drawVisibleZone (MCHEmul::CPU* cpu);
-		/** Invoked from the previous one, just to draw and detect collisions. \n
+		/** Invoked from the previous one, just to draw. \n
 		  *	The parameters are the context of the draw. \n
 		  *	@see also DrawContext and DrawResult structures. */
-		void drawGraphicsAndDetectCollisions (const DrawContext& dC);
+		void drawGraphicsAndMoveToScreen (const DrawContext& dC);
 
 		// These all methods are invoked from the three ones above!
 		// They are here just to structure better the code...
@@ -253,6 +237,8 @@ namespace COMMODORE
 		void drawResultToScreen (const DrawResult& cT, const DrawContext& dC);
 
 		protected:
+		/** There three timers within the TED. */
+		TEDTimer _T1, _T2, _T3;
 		/** A reference to the sound part of the chip. */
 		SoundFunction* _soundFunction;
 		/** The memory is used also as the set of registers of the chip. */

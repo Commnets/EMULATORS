@@ -5,7 +5,7 @@
  *	@file	
  *	File: SoundChip.hpp \n
  *	Framework: CPU Emulators library \n
- *	Author: Ignacio Cea Forniés (EMULATORS library) \n
+ *	Author: Ignacio Cea Fornies (EMULATORS library) \n
  *	Creation Date: 24/03/2023 \n
  *	Description: A special type of chip mamanging a sound memory.
  *	Versions: 1.0 Initial

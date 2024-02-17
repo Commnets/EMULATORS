@@ -5,7 +5,7 @@
  *	@file	
  *	File: Wire.hpp \n
  *	Framework: CPU Emulators library \n
- *	Author: Ignacio Cea Forniés (EMULATORS library) \n
+ *	Author: Ignacio Cea Fornies (EMULATORS library) \n
  *	Creation Date: 14/04/2023 \n
  *	Description: Trying the emulate a "wire" connected two or pins in different elements (usually chips).
  *	Versions: 1.0 Initial

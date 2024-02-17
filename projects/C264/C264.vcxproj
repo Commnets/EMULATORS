@@ -21,7 +21,6 @@
   <ItemGroup>
     <ClCompile Include="..\..\src\C264\C264.cpp" />
     <ClCompile Include="..\..\src\C264\C264Emulator.cpp" />
-    <ClCompile Include="..\..\src\C264\C6529B.cpp" />
     <ClCompile Include="..\..\src\C264\Cartridge.cpp" />
     <ClCompile Include="..\..\src\C264\CommandBuilder.cpp" />
     <ClCompile Include="..\..\src\C264\Commands.cpp" />
@@ -36,7 +35,6 @@
   <ItemGroup>
     <ClInclude Include="..\..\include\C264\C264.hpp" />
     <ClInclude Include="..\..\include\C264\C264Emulator.hpp" />
-    <ClInclude Include="..\..\include\C264\C6529B.hpp" />
     <ClInclude Include="..\..\include\C264\Cartridge.hpp" />
     <ClInclude Include="..\..\include\C264\CommandBuilder.hpp" />
     <ClInclude Include="..\..\include\C264\Commands.hpp" />

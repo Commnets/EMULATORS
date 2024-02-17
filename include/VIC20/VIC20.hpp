@@ -5,7 +5,7 @@
  *	@file	
  *	File: VIC20.hpp \n
  *	Framework: CPU Emulators library \n
- *	Author: Ignacio Cea Forniés (EMULATORS library) \n
+ *	Author: Ignacio Cea Fornies (EMULATORS library) \n
  *	Creation Date: 11/05/2023 \n
  *	Description: The global structure defining a VIC20 machine.
  *	Versions: 1.0 Initial

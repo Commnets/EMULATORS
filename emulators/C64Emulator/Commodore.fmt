@@ -31,6 +31,24 @@ First:@FIRST@, Last:@LAST@
 @RasterY>@
 #---
 #---
+;TEDTimer1
+Run Mode:@RUN@
+IRQ:@IRQ@
+Value:@VALUE@(@INITIALVALUE@)
+#---
+#---
+;TEDTimer2
+Run Mode:@RUN@
+IRQ:@IRQ@
+Value:@VALUE@(@INITIALVALUE@)
+#---
+#---
+;TEDTimer3
+Run Mode:@RUN@
+IRQ:@IRQ@
+Value:@VALUE@(@INITIALVALUE@)
+#---
+#---
 ;TEDRegisters
 @BYTES{blocksize=16,listsep=\,,tablesep=\ ,minsize=2}@
 Graphic Mode:@MODE@
@@ -48,6 +66,12 @@ Id:@ID@
 ->TEDRegisters:
 @TEDRegisters>@
 @Raster>@
+->Timer 1:
+@TEDTimer1>@
+->Timer 2:
+@TEDTimer2>@
+->Timer 3:
+@TEDTimer3>@
 #---
 #---
 ;VICIRegisters

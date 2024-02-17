@@ -5,7 +5,7 @@
  *	@file	
  *	File: NotifyObserver.hpp \n
  *	Framework: CPU Emulators library \n
- *	Author: Ignacio Cea Forniés (EMULATORS library) \n
+ *	Author: Ignacio Cea Fornies (EMULATORS library) \n
  *	Creation Date: 17/01/2023 \n
  *	Description: Define the interface to notify event between pieces in the emulation.
  *	Versions: 1.0 Initial

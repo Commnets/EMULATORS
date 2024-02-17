@@ -5,7 +5,7 @@
  *	@file	
  *	File: Parameters.hpp \n
  *	Framework: CPU Emulators library \n
- *	Author: Ignacio Cea Forniés (EMULATORS library) \n
+ *	Author: Ignacio Cea Fornies (EMULATORS library) \n
  *	Creation Date: 20/01/2024 \n
  *	Description: To manage the parameters of the command line.
  *	Versions: 1.0 Initial

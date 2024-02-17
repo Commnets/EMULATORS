@@ -5,7 +5,7 @@
  *	@file	
  *	File: IOPeripheral.hpp \n
  *	Framework: CPU Emulators library \n
- *	Author: Ignacio Cea Forniés (EMULATORS library) \n
+ *	Author: Ignacio Cea Fornies (EMULATORS library) \n
  *	Creation Date: 11/08/2022 \n
  *	Description: Emulating the peripherals (maybe) connected to a io device.
  *	Versions: 1.0 Initial

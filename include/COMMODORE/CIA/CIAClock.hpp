@@ -5,7 +5,7 @@
  *	@file	
  *	File: CIAClock.hpp \n
  *	Framework: CPU Emulators library \n
- *	Author: Ignacio Cea Forniés (EMULATORS library) \n
+ *	Author: Ignacio Cea Fornies (EMULATORS library) \n
  *	Creation Date: 07/08/2021 \n
  *	Description: CIA Chip manages a day clock.
  *	Versions: 1.0 Initial

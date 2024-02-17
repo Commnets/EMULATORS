@@ -5,7 +5,7 @@
  *	@file	
  *	File: CIASerialPort.hpp \n
  *	Framework: CPU Emulators library \n
- *	Author: Ignacio Cea Forniés (EMULATORS library) \n
+ *	Author: Ignacio Cea Fornies (EMULATORS library) \n
  *	Creation Date: 11/04/2023 \n
  *	Description: The CIA includes a Serial Port inside
  *	Versions: 1.0 Initial

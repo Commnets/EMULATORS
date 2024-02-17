@@ -5,7 +5,7 @@
  *	@file	
  *	File: Operation.hpp \n
  *	Framework: CPU Emulators library \n
- *	Author: Ignacio Cea Forniés (EMULATORS library) \n
+ *	Author: Ignacio Cea Fornies (EMULATORS library) \n
  *	Creation Date: 14/08/2022 \n
  *	Description: Many data can be represented as an Operation in an assembler program. \n
  *               The outcome after the execution of an Operation is here always an UInt object. \n

@@ -5,7 +5,7 @@
  *	@file	
  *	File: UInt.hpp \n
  *	Framework: CPU Emulators library \n
- *	Author: Ignacio Cea Forniés (EMULATORS library) \n
+ *	Author: Ignacio Cea Fornies (EMULATORS library) \n
  *	Creation Date: 26/04/2021 \n
  *	Description: Defining UInts (unsigned & signed), managed as set of UBytes.
  *	Versions: 1.0 Initial

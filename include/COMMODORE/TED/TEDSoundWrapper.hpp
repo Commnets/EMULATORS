@@ -5,7 +5,7 @@
  *	@file	
  *	File: TEDSoundWrapper.hpp \n
  *	Framework: CPU Emulators library \n
- *	Author: Ignacio Cea Forniés (EMULATORS library) \n
+ *	Author: Ignacio Cea Fornies (EMULATORS library) \n
  *	Creation Date: 09/02/2024 \n
  *	Description: TED Sound Wrapper Emulation.
  *	Versions: 1.0 Initial
@@ -89,7 +89,6 @@ namespace COMMODORE
 			Voice (int id, unsigned int cF)
 				: MCHEmul::SoundVoice (id, cF,
 					{
-						new MCHEmul::SawSmoothSoundWave (cF),
 						new MCHEmul::PulseSoundWave (cF),
 						new MCHEmul::NoiseSoundWave (cF)
 					}),

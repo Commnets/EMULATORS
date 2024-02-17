@@ -5,7 +5,7 @@
 *	@file	
 *	File: ASCIIConverter.hpp \n
 *	Framework: CPU Emulators library \n
-*	Author: Ignacio Cea Forniés (EMULATORS library) \n
+*	Author: Ignacio Cea Fornies (EMULATORS library) \n
 *	Creation Date: 29/12/2021 \n
 *	Description: To convert ASCII Codes into specific tables used by the computers (PET,...)
 *	Versions: 1.0 Initial

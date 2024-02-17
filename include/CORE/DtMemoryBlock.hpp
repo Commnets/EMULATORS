@@ -5,7 +5,7 @@
  *	@file	
  *	File: DtMemoryBlock.hpp \n
  *	Framework: CPU Emulators library \n
- *	Author: Ignacio Cea Forniés (EMULATORS library) \n
+ *	Author: Ignacio Cea Fornies (EMULATORS library) \n
  *	Creation Date: 01/11/2022 \n
  *	Description: Define the typical structure for a block memory.
  *	Versions: 1.0 Initial

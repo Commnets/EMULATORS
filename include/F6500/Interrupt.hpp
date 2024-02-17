@@ -5,7 +5,7 @@
  *	@file	
  *	File: Interrupt.hpp \n
  *	Framework: CPU Emulators library \n
- *	Author: Ignacio Cea Forniés (EMULATORS library) \n
+ *	Author: Ignacio Cea Fornies (EMULATORS library) \n
  *	Creation Date: 14/05/2021 \n
  *	Description: The generical definition of a interrupt in a 6500 processor.
  *	Versions: 1.0 Initial

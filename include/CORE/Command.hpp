@@ -5,7 +5,7 @@
  *	@file	
  *	File: Command.hpp \n
  *	Framework: CPU Emulators library \n
- *	Author: Ignacio Cea Forniés (EMULATORS library) \n
+ *	Author: Ignacio Cea Fornies (EMULATORS library) \n
  *	Creation Date: 04/08/2022 \n
  *	Description: Representing any command that can be sent to the emulation of a computer.
  *	Versions: 1.0 Initial

@@ -5,7 +5,7 @@
  *	@file	
  *	File: NMIInterrupt.hpp \n
  *	Framework: CPU Emulators library \n
- *	Author: Ignacio Cea Forniés (EMULATORS library) \n
+ *	Author: Ignacio Cea Fornies (EMULATORS library) \n
  *	Creation Date: 14/05/2021 \n
  *	Description: Th NMI type of interrupt in F6500.
  *	Versions: 1.0 Initial

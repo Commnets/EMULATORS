@@ -5,7 +5,7 @@
  *	@file	
  *	File: CIA.hpp \n
  *	Framework: CPU Emulators library \n
- *	Author: Ignacio Cea Forniés (EMULATORS library) \n
+ *	Author: Ignacio Cea Fornies (EMULATORS library) \n
  *	Creation Date: 14/01/2023 \n
  *	Description: The CIA Chip.
  *	Versions: 1.0 Initial

@@ -5,7 +5,7 @@
  *	@file	
  *	File: Address.hpp \n
  *	Framework: CPU Emulators library \n
- *	Author: Ignacio Cea Forniés (EMULATORS library) \n
+ *	Author: Ignacio Cea Fornies (EMULATORS library) \n
  *	Creation Date: 15/06/2021 \n
  *	Description: Define the ip address needed to locate any communication channel.
  *	Versions: 1.0 Initial

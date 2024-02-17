@@ -5,7 +5,7 @@
  *	@file	
  *	File: BIT.hpp \n
  *	Framework: CPU Emulators library \n
- *	Author: Ignacio Cea Forniés (EMULATORS library) \n
+ *	Author: Ignacio Cea Fornies (EMULATORS library) \n
  *	Creation Date: 01/11/2023 \n
  *	Description: The list of BIT type instructions used by any FZX80 family. \n
  *				 The no documented instructions have also been included.

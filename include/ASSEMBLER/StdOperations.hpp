@@ -5,7 +5,7 @@
  *	@file	
  *	File: StdOperations.hpp \n
  *	Framework: CPU Emulators library \n
- *	Author: Ignacio Cea Forniés (EMULATORS library) \n
+ *	Author: Ignacio Cea Fornies (EMULATORS library) \n
  *	Creation Date: 09/12/2022 \n
  *	Description: The standard operations. The most common ones have been included.
  *	Versions: 1.0 Initial

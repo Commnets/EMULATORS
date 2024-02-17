@@ -5,7 +5,7 @@
  *	@file	
  *	File: OperationParser.hpp \n
  *	Framework: CPU Emulators library \n
- *	Author: Ignacio Cea Forniés (EMULATORS library) \n
+ *	Author: Ignacio Cea Fornies (EMULATORS library) \n
  *	Creation Date: 15/11/2022 \n
  *	Description: To parser an Operation and creates the tree of OperationElements. 
  *	Versions: 1.0 Initial

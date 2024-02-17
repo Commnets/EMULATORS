@@ -5,7 +5,7 @@
 *	@file	
 *	File: CmdlineArgs.hpp \n
 *	Framework: CPU Emulators library \n
-*	Author: Ignacio Cea Forniés (EMULATORS library) \n
+*	Author: Ignacio Cea Fornies (EMULATORS library) \n
 *	Creation Date: 13/12/2022 \n
 *	Description: To read and store the command line arguments.
 *	Versions: 1.0 Initial

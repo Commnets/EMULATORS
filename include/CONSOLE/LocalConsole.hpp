@@ -5,7 +5,7 @@
 *	@file	
 *	File: LocalConsole.hpp \n
 *	Framework: CPU Emulators library \n
-*	Author: Ignacio Cea Forniés (EMULATORS library) \n
+*	Author: Ignacio Cea Fornies (EMULATORS library) \n
 *	Creation Date: 02/11/2022 \n
 *	Description: The console over a local emulation.
 *	Versions: 1.0 Initial

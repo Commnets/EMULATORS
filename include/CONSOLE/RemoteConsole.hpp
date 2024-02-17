@@ -5,7 +5,7 @@
 *	@file	
 *	File: RemoteConsole.hpp \n
 *	Framework: CPU Emulators library \n
-*	Author: Ignacio Cea Forniés (EMULATORS library) \n
+*	Author: Ignacio Cea Fornies (EMULATORS library) \n
 *	Creation Date: 02/11/2022 \n
 *	Description: A console that connects remotly against a emulation.
 *	Versions: 1.0 Initial

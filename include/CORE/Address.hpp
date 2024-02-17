@@ -5,7 +5,7 @@
  *	@file	
  *	File: Address.hpp \n
  *	Framework: CPU Emulators library \n
- *	Author: Ignacio Cea Forniés (EMULATORS library) \n
+ *	Author: Ignacio Cea Fornies (EMULATORS library) \n
  *	Creation Date: 11/04/2021 \n
  *	Description: Define the structure of an address in the emulation.
  *	Versions: 1.0 Initial

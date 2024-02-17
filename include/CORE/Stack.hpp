@@ -5,7 +5,7 @@
  *	@file	
  *	File: Stack.hpp \n
  *	Framework: CPU Emulators library \n
- *	Author: Ignacio Cea Forniés (EMULATORS library) \n
+ *	Author: Ignacio Cea Fornies (EMULATORS library) \n
  *	Creation Date: 11/04/2021 \n
  *	Description: Defines the behviour of the stack, that it is a special type of memory.
  *	Versions: 1.0 Initial

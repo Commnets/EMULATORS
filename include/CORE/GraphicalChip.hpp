@@ -5,7 +5,7 @@
  *	@file	
  *	File: GraphicalChip.hpp \n
  *	Framework: CPU Emulators library \n
- *	Author: Ignacio Cea Forniés (EMULATORS library) \n
+ *	Author: Ignacio Cea Fornies (EMULATORS library) \n
  *	Creation Date: 01/06/2022 \n
  *	Description: A special type of chip mamanging a screen memory.
  *	Versions: 1.0 Initial

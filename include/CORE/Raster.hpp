@@ -5,7 +5,7 @@
  *	@file	
  *	File: Raster.hpp \n
  *	Framework: CPU Emulators library \n
- *	Author: Ignacio Cea Forniés (EMULATORS library) \n
+ *	Author: Ignacio Cea Fornies (EMULATORS library) \n
  *	Creation Date: 13/01/2023 \n
  *	Description: The Raster info in a usually a cotodic ray screen.
  *	Versions: 1.0 Initial

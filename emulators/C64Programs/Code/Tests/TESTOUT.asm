@@ -1,6 +1,6 @@
 ; C64 Assembler framework.
 ; To test the Out routine.
-; By Ignacio Cea Forniés.
+; By Ignacio Cea Fornies.
 ; Copyright Community Networks 2022 - 2023.
 
 * = $cb00

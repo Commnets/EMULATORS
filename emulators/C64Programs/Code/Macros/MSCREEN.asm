@@ -1,6 +1,6 @@
 ; C64 Assembler framework.
 ; Macros related with the graphic system.
-; By Ignacio Cea Forniés.
+; By Ignacio Cea Fornies.
 ; Copyright Community Networks 2022 - 2023.
 
 ; ------------------------------

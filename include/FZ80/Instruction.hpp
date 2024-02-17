@@ -5,7 +5,7 @@
  *	@file	
  *	File: Instruction.hpp \n
  *	Framework: CPU Emulators library \n
- *	Author: Ignacio Cea Forniés (EMULATORS library) \n
+ *	Author: Ignacio Cea Fornies (EMULATORS library) \n
  *	Creation Date: 29/10/2023 \n
  *	Description:	The type of instruction used by FZ80 family.
  *	Versions: 1.0 Initial

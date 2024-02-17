@@ -5,7 +5,7 @@
  *	@file	
  *	File: ColorMemory.hpp \n
  *	Framework: CPU Emulators library \n
- *	Author: Ignacio Cea Forniés (EMULATORS library) \n
+ *	Author: Ignacio Cea Fornies (EMULATORS library) \n
  *	Creation Date: 15/05/2021 \n
  *	Description: C64 Color Memory. The MSB nibble is not connect and always return a random number
  *	Versions: 1.0 Initial

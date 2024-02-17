@@ -5,7 +5,7 @@
  *	@file	
  *	File: OSIO.hpp \n
  *	Framework: CPU Emulators library \n
- *	Author: Ignacio Cea Forniés (EMULATORS library) \n
+ *	Author: Ignacio Cea Fornies (EMULATORS library) \n
  *	Creation Date: 11/06/2021 \n
  *	Description: To gather and manage the events in the windows system where the emulation is happening.
  *	Versions: 1.0 Initial

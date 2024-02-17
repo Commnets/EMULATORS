@@ -5,7 +5,7 @@
  *	@file	
  *	File: VIATimer.hpp \n
  *	Framework: CPU Emulators library \n
- *	Author: Ignacio Cea Forniés (EMULATORS library) \n
+ *	Author: Ignacio Cea Fornies (EMULATORS library) \n
  *	Creation Date: 05/01/2023 \n
  *	Description: The "Timer" of the VIA Chip (@see VIA for better understanding).
  *				 @see https://web.archive.org/web/20160108173129if_/http://archive.6502.org/datasheets/mos_6522_preliminary_nov_1977.pdf
@@ -117,7 +117,6 @@ namespace COMMODORE
 		  * The ones comming from the parent class and: \n
 		  * RUN				= Attribute: Run mode of the timer. \n
 		  *	COUNT			= Attribute: Count mode of the timer. \n
-		  * STATUS			= Attribute: YES (1) if active and NO (0) in any other case. \n
 		  *	IRQ				= Attribute: YES (1) when IRQ are enabled and NO in other cas.
 		  *	VALUE			= Attribute: Current value of the timer.
 		  *	INITIALVALUE	= Attribute: Initial value of the timer.

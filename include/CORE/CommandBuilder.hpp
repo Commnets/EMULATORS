@@ -5,7 +5,7 @@
  *	@file	
  *	File: CommandBuilder.hpp \n
  *	Framework: CPU Emulators library \n
- *	Author: Ignacio Cea Forniés (EMULATORS library) \n
+ *	Author: Ignacio Cea Fornies (EMULATORS library) \n
  *	Creation Date: 17/09/2022 \n
  *	Description: To build the command to execute instruction over a computer.
  *	Versions: 1.0 Initial

@@ -5,7 +5,7 @@
  *	@file	
  *	File: DatasettePeripherals.hpp \n
  *	Framework: CPU Emulators library \n
- *	Author: Ignacio Cea Forniés (EMULATORS library) \n
+ *	Author: Ignacio Cea Fornies (EMULATORS library) \n
  *	Creation Date: 21/01/2023 \n
  *	Description: To emulate the behaviour of the the elements connected to the DatassettePort.
  *	Versions: 1.0 Initial

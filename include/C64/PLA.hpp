@@ -5,7 +5,7 @@
  *	@file	
  *	File: PLA.hpp \n
  *	Framework: CPU Emulators library \n
- *	Author: Ignacio Cea Forniés (EMULATORS library) \n
+ *	Author: Ignacio Cea Fornies (EMULATORS library) \n
  *	Creation Date: 04/03/2023 \n
  *	Description: To emulate the PLA chip. \n
  *				 This chip is not well know and documented, but is critical controling things

@@ -5,7 +5,7 @@
  *	@file	
  *	File: CPUArchitecture.hpp \n
  *	Framework: CPU Emulators library \n
- *	Author: Ignacio Cea Forniés (EMULATORS library) \n
+ *	Author: Ignacio Cea Fornies (EMULATORS library) \n
  *	Creation Date: 03/04/2021 \n
  *	Description: Defines common elemnts to any CPU Architcture.
  *	Versions: 1.0 Initial

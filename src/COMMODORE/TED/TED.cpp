@@ -1,5 +1,6 @@
 #include <COMMODORE/TED/TED.hpp>
 #include <COMMODORE/TED/TEDSoundWrapper.hpp>
+#include <COMMODORE/TED/TEDOSIO.hpp>
 #include <F6500/IRQInterrupt.hpp>
 
 // ---
@@ -18,9 +19,9 @@ const MCHEmul::Address COMMODORE::TED::_MEMORYPOSIDLE2 = MCHEmul::Address ({ 0xf
 COMMODORE::TED::SoundFunction::SoundFunction (MCHEmul::SoundLibWrapper* sW)
 	: MCHEmul::SoundChip (_ID, 
 		{ { "Name", "SoundFunction" },
-		  { "Code", "Inside 6560 (NTSC), 6561/6561E/6561-101 (PAL)" },
+		  { "Code", "Inside TED" },
 		  { "Manufacturer", "Commodore Business Machines CBM" },
-		  { "Year", "1977" } },
+		  { "Year", "1984" } },
 		sW),
 	  _lastCPUCycles (0)
 { 
@@ -94,6 +95,9 @@ COMMODORE::TED::TED (int vV, MCHEmul::SoundLibWrapper* sW, const MCHEmul::Attrib
 		  { "Code", "7360/8360 Both for PAL & NTSC" },
 		  { "Manufacturer", "Commodore Business Machines CBM" },
 		  { "Year", "1984" } }),
+	  _T1 (1, COMMODORE::TEDTimer::RunMode::_FROMINITIALVALUE),
+	  _T2 (2, COMMODORE::TEDTimer::RunMode::_CONTINUOUS),
+	  _T3 (3, COMMODORE::TEDTimer::RunMode::_CONTINUOUS),
 	  _soundFunction (new COMMODORE::TED::SoundFunction (sW)),
 	  _TEDRegisters (nullptr), 
 	  _TEDView (vV),
@@ -146,6 +150,13 @@ bool COMMODORE::TED::initialize ()
 
 	_raster.initialize ();
 
+	_soundFunction -> initialize ();
+	_T1.initialize (); 
+	_T2.initialize ();
+	_T3.initialize ();
+
+	_TEDRegisters -> lookAtTimers (&_T1, &_T2, &_T3);
+	_TEDRegisters -> lookAtSoundLibWrapper (_soundFunction -> soundWrapper ());
 	_TEDRegisters -> initialize ();
 
 	_lastCPUCycles = 0;
@@ -190,8 +201,8 @@ bool COMMODORE::TED::simulate (MCHEmul::CPU* cpu)
 		return (result);
 	};
 
-	// If the "video reset flag" is actived nothing is done...
-	if (_TEDRegisters -> videoResetActive ())
+	// If the "video is frozen" is actived nothing is done...
+	if (_TEDRegisters -> freezeActive ())
 		return (true);
 
 	// Adapt the size of the display zone to the parameters specificied in the register...
@@ -200,7 +211,8 @@ bool COMMODORE::TED::simulate (MCHEmul::CPU* cpu)
 		(!_TEDRegisters -> textDisplay25RowsActive (), !_TEDRegisters -> textDisplay40ColumnsActive ());
 
 	// The simulation has to be repeated as many time as cycles have spent since the last invocation...
-	for (unsigned int i = (cpu -> clockCycles  () - _lastCPUCycles); i > 0; i--)
+	bool r = true;
+	for (unsigned int i = (cpu -> clockCycles  () - _lastCPUCycles); i > 0 && r; i--)
 	{
 		if (deepDebugActive ())
 		{
@@ -219,7 +231,6 @@ bool COMMODORE::TED::simulate (MCHEmul::CPU* cpu)
 				<< "], Graphics:"
 				<< std::to_string ((int) _TEDRegisters -> graphicModeActive ())
 				<< ", Memory:["
-				<< "Bk=" << std::to_string ((int) 1) << ","
 				<< "SM=$" << MCHEmul::removeAll0 (_TEDRegisters -> screenMemory ().asString
 					(MCHEmul::UByte::OutputFormat::_HEXA, '\0', 2)) << ","
 				<< "CM=$" << MCHEmul::removeAll0 (_TEDRegisters -> charDataMemory ().asString
@@ -231,11 +242,8 @@ bool COMMODORE::TED::simulate (MCHEmul::CPU* cpu)
 			unsigned short lrt = 
 				_raster.lineInVisibleZone (_TEDRegisters -> IRQRasterLineAt ());
 			if (lrt <= _raster.vData ().lastVisiblePosition ())
-			{
-				unsigned char clrt = _TEDRegisters -> backgroundColor () == 15 
-					? 0 : _TEDRegisters -> backgroundColor () + 1; /** to be visible. */
-				screenMemory () -> setHorizontalLine (0, lrt, _raster.visibleColumns (), clrt);
-			}
+				screenMemory () -> setHorizontalLine (0, lrt, _raster.visibleColumns (), 
+					_TEDRegisters -> borderColor ().nextLuminance ().asChar ());
 		}
 
 		// Whether the video is active or not is only checked at the very first bad line...
@@ -256,7 +264,7 @@ bool COMMODORE::TED::simulate (MCHEmul::CPU* cpu)
 			_tedGraphicInfo._idleState = false; // No longer in "idle" state but in the "screen" one!
 		}
 
-		// When TED is about to read sprites or graphics info (bad line),
+		// When TED is about to read graphics info (bad line),
 		// the CPU has to stop 3 cycles in advance (just for READ activities) for those activities,
 		// unless it was stopped previously and that stop situation were still valid...
 		// In the case of graphics that stop only happens when the situation arise in the "screen cycles" (40)
@@ -317,6 +325,11 @@ bool COMMODORE::TED::simulate (MCHEmul::CPU* cpu)
 				cpu -> clockCycles  () - i, 
 				this,
 				cI);
+
+		// Simulate the timers!
+		r &= _T1.simulate (cpu);
+		r &= _T2.simulate (cpu);
+		r &= _T3.simulate (cpu);
 	}
 
 	// When the raster enters the non visible part of the screen,
@@ -334,11 +347,16 @@ bool COMMODORE::TED::simulate (MCHEmul::CPU* cpu)
 	else
 		_lastVBlankEntered = false;
 
-	_TEDRegisters -> setCurrentRasterLine (_raster.currentLine ()); 
+	_TEDRegisters -> setGraphicalInfo (COMMODORE::TEDRegisters::GraphicalInfo 
+		(_raster.currentLine (), _raster.currentColumn (), 0, 0, 0));
 
 	_lastCPUCycles = cpu -> clockCycles ();
 
 	return (true);
+
+	// Note that the _soundFunction is not simulated here...
+	// It is added like another different chip on regards simulation
+	// The framework need a sound chip always!
 }
 
 // ---
@@ -347,8 +365,12 @@ MCHEmul::InfoStructure COMMODORE::TED::getInfoStructure () const
 	MCHEmul::InfoStructure result = std::move (MCHEmul::GraphicalChip::getInfoStructure ());
 
 	result.remove ("Memory"); // This info is not neccesary...
-	result.add ("TEDRegisters",	std::move (_TEDRegisters -> getInfoStructure ()));
+	result.add ("TEDRegisters",		std::move (_TEDRegisters -> getInfoStructure ()));
 	result.add ("Raster",			std::move (_raster.getInfoStructure ()));
+	result.add ("Sound",			std::move (_soundFunction -> getInfoStructure ()));
+	result.add ("TEDTimer1",		std::move (_T1.getInfoStructure ()));
+	result.add ("TEDTimer2",		std::move (_T2.getInfoStructure ()));
+	result.add ("TEDTimer3",		std::move (_T3.getInfoStructure ()));
 
 	return (result);
 }
@@ -356,73 +378,141 @@ MCHEmul::InfoStructure COMMODORE::TED::getInfoStructure () const
 // ---
 void COMMODORE::TED::processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifier* n)
 {
-	// To set the bank...
 	switch (evnt.id ())
 	{
-		case MCHEmul::InputOSSystem::_MOUSEMOVED:
+		case MCHEmul::InputOSSystem::_KEYBOARDKEYPRESSED:
 			{
-				unsigned short x = (unsigned short) 
-					std::dynamic_pointer_cast <MCHEmul::InputOSSystem::MouseMovementEvent> (evnt.data ()) -> _x;
-				unsigned short y = (unsigned short) 
-					std::dynamic_pointer_cast <MCHEmul::InputOSSystem::MouseMovementEvent> (evnt.data ()) -> _y;
-				setLightPenPosition ((x >= _raster.hData ().firstDisplayPosition () && 
-									  y <= _raster.hData ().lastDisplayPosition ()) 
-										? (x - _raster.hData ().firstDisplayPosition ()) : 0, 
-									 (y >= _raster.vData ().firstDisplayPosition () && 
-									  y <= _raster.vData ().lastDisplayPosition ()) 
-										? (y - _raster.vData ().firstDisplayPosition ()) : 0);
+				const COMMODORE::TEDInputOSSystem::Keystrokes& ks = 
+					((COMMODORE::TEDInputOSSystem*) n) -> keystrokesFor // Will depend on the implementation...
+						(std::static_pointer_cast <MCHEmul::InputOSSystem::KeyboardEvent> (evnt.data ()) -> _key);
+				if (!ks.empty ()) // The key has to be defined...
+					for (const auto& j : ks)
+						_TEDRegisters -> setKeyboardStatusMatrix (j.first, j.second, false);
 			}
 
 			break;
 
-		// The lightpen actives when the right button of the mouse is pressed...
-		case MCHEmul::InputOSSystem::_MOUSEBUTTONPRESSED:
+		case MCHEmul::InputOSSystem::_KEYBOARDKEYRELEASED:
 			{
-				if (std::dynamic_pointer_cast <MCHEmul::InputOSSystem::MouseButtonEvent> 
-					(evnt.data ()) -> _buttonId == 0 /** Left. */)
-					setLightPenActive (true);
+				const COMMODORE::TEDInputOSSystem::Keystrokes& ks = 
+					((COMMODORE::TEDInputOSSystem*) n) -> keystrokesFor // Will depend on the implementation...
+						(std::static_pointer_cast <MCHEmul::InputOSSystem::KeyboardEvent> (evnt.data ()) -> _key);
+				if (!ks.empty ()) // The key has to be defined...
+					for (const auto& j : ks)
+						_TEDRegisters -> setKeyboardStatusMatrix (j.first, j.second, true);
 			}
-			
+
 			break;
 
-		// ...and stop being active when released...
-		case MCHEmul::InputOSSystem::_MOUSEBUTTONRELEASED:
+		case MCHEmul::InputOSSystem::_JOYSTICKMOVED:
 			{
-				if (std::dynamic_pointer_cast <MCHEmul::InputOSSystem::MouseButtonEvent> 
-					(evnt.data ()) -> _buttonId == 0 /** Left. */)
-					setLightPenActive (false);
+				std::shared_ptr <MCHEmul::InputOSSystem::JoystickMovementEvent> jm = 
+					std::static_pointer_cast <MCHEmul::InputOSSystem::JoystickMovementEvent> (evnt.data ());
+
+				size_t ct = 0; // Counts the axis...
+				unsigned char dr = 0;
+				for (size_t ct = 0; ct < jm ->_axisValues.size (); ct++)
+					dr |= 1 << ((COMMODORE::TEDInputOSSystem*) n) -> bitForJoystickAxis 
+						(jm -> _joystickId, ct, jm -> _axisValues [ct]);
+
+				/** Saves the full status of the joystick. */
+				_TEDRegisters -> setJoystickStatus 
+					(jm -> _joystickId, (dr == 0x00) 
+						? 0xff /** none connected. */ : _TEDRegisters -> joystickStatus (jm -> _joystickId) & ~dr);
+			}
+
+			break;
+
+		case MCHEmul::InputOSSystem::_JOYSTICKBUTTONPRESSED:
+			{
+				std::shared_ptr <MCHEmul::InputOSSystem::JoystickButtonEvent> jb = 
+					std::static_pointer_cast <MCHEmul::InputOSSystem::JoystickButtonEvent> (evnt.data ());
+
+				_TEDRegisters -> setJoystickStatus (jb -> _joystickId, 
+					_TEDRegisters -> joystickStatus (jb -> _joystickId) & 
+						(1 << ((COMMODORE::TEDInputOSSystem*) n) -> bitForJoystickButton (jb -> _joystickId, jb -> _buttonId)));
+			}
+
+			break;
+
+		case MCHEmul::InputOSSystem::_JOYSTICKBUTTONRELEASED:
+			{
+				std::shared_ptr <MCHEmul::InputOSSystem::JoystickButtonEvent> jb = 
+					std::static_pointer_cast <MCHEmul::InputOSSystem::JoystickButtonEvent> (evnt.data ());
+	
+				_TEDRegisters -> setJoystickStatus (jb -> _joystickId, 
+					_TEDRegisters -> joystickStatus (jb -> _joystickId) & 
+						~(1 << ((COMMODORE::TEDInputOSSystem*) n) -> bitForJoystickButton (jb -> _joystickId, jb -> _buttonId)));
 			}
 
 			break;
 
 		default:
 			break;
-
 	}
 }
 
 // ---
 MCHEmul::ScreenMemory* COMMODORE::TED::createScreenMemory ()
 {
-	unsigned int* cP = new unsigned int [16];
-	// The colors are partially transparents to allow the blending...
-	cP [0]  = SDL_MapRGBA (_format, 0x00, 0x00, 0x00, 0xe0); // Black
-	cP [1]  = SDL_MapRGBA (_format, 0xff, 0xff, 0xff, 0xe0); // White
-	cP [2]  = SDL_MapRGBA (_format, 0x92, 0x4a, 0x40, 0xe0); // Red
-	cP [3]  = SDL_MapRGBA (_format, 0x84, 0xc5, 0xcc, 0xe0); // Cyan
-	cP [4]  = SDL_MapRGBA (_format, 0x93, 0x51, 0xb6, 0xe0); // Violet
-	cP [5]  = SDL_MapRGBA (_format, 0x72, 0xb1, 0x4b, 0xe0); // Green
-	cP [6]  = SDL_MapRGBA (_format, 0x48, 0x3a, 0xaa, 0xe0); // Blue
-	cP [7]  = SDL_MapRGBA (_format, 0xd5, 0xdf, 0x7c, 0xe0); // Yellow
-	cP [8]  = SDL_MapRGBA (_format, 0x99, 0x69, 0x2d, 0xe0); // Brown
-	cP [9]  = SDL_MapRGBA (_format, 0x67, 0x52, 0x00, 0xe0); // Light Red
-	cP [10] = SDL_MapRGBA (_format, 0xc1, 0x81, 0x78, 0xe0); // Orange
-	cP [11] = SDL_MapRGBA (_format, 0x60, 0x60, 0x60, 0xe0); // Dark Grey
-	cP [12] = SDL_MapRGBA (_format, 0x8a, 0x8a, 0x8a, 0xe0); // Medium Grey
-	cP [13] = SDL_MapRGBA (_format, 0xb3, 0xec, 0x91, 0xe0); // Light Green
-	cP [14] = SDL_MapRGBA (_format, 0x86, 0x7a, 0xde, 0xe0); // Light Blue
-	cP [15] = SDL_MapRGBA (_format, 0xb3, 0xb3, 0xb3, 0xe0); // Light Grey
+	static struct RGBStr { unsigned int R,G,B; } _COLORS [128] =
+		{ 
+			// Black
+			{ 0x00,0x00,0x00 },{ 0x00,0x00,0x00 },{ 0x00,0x00,0x00 },{ 0x00,0x00,0x00 },
+			{ 0x00,0x00,0x00 },{ 0x00,0x00,0x00 },{ 0x00,0x00,0x00 },{ 0x00,0x00,0x00 },
+			// White
+			{ 0x20,0x20,0x20 },{ 0x40,0x40,0x40 },{ 0x60,0x60,0x60 },{ 0x80,0x80,0x80 },
+			{ 0x9f,0x9f,0x9f },{ 0xbf,0xbf,0xbf },{ 0xdf,0xdf,0xdf },{ 0xff,0xff,0xff },
+			// Red
+			{ 0x58,0x09,0x02 },{ 0x78,0x29,0x22 },{ 0x98,0x49,0x42 },{ 0xb8,0x69,0x62 },
+			{ 0xd8,0x88,0x82 },{ 0xf7,0xa8,0xa2 },{ 0xff,0xc8,0xc2 },{ 0xff,0xe8,0xe2 },
+			// Cyan
+			{ 0x00,0x37,0x3d },{ 0x08,0x57,0x5d },{ 0x27,0x77,0x7d },{ 0x47,0x96,0x9d },
+			{ 0x67,0xb6,0xbd },{ 0x87,0xd6,0xdd },{ 0xa7,0xf6,0xfd },{ 0xc7,0xff,0xff },
+			// Purple
+			{ 0x4b,0x00,0x56 },{ 0x6b,0x1f,0x76 },{ 0x8b,0x3f,0x96 },{ 0xaa,0x5f,0xb6 },
+			{ 0xca,0x7f,0xb6 },{ 0xea,0x9f,0xf6 },{ 0xff,0xbf,0xff },{ 0xff,0xdf,0xff },
+			// Green
+			{ 0x00,0x40,0x00 },{ 0x15,0x60,0x09 },{ 0x35,0x80,0x29 },{ 0x55,0xa0,0x49 },
+			{ 0x74,0xc0,0x69 },{ 0x94,0xe0,0x89 },{ 0xb4,0xff,0xa9 },{ 0xd4,0xff,0xc9 },
+			// Blue
+			{ 0x20,0x11,0x6d },{ 0x40,0x31,0x8d },{ 0x60,0x51,0xac },{ 0x80,0x71,0xcc },
+			{ 0x9f,0x90,0xec },{ 0xbf,0xb0,0xff },{ 0xdf,0xd0,0xff },{ 0xff,0xf0,0xff },
+			// Yellow
+			{ 0x20,0x2f,0x00 },{ 0x40,0x4f,0x00 },{ 0x60,0x6f,0x13 },{ 0x80,0x8e,0x33 },
+			{ 0x9f,0xae,0x53 },{ 0xbf,0xce,0x72 },{ 0xdf,0xee,0x92 },{ 0xff,0xff,0xb2 },
+			// Orange
+			{ 0x4b,0x15,0x00 },{ 0x6b,0x34,0x09 },{ 0x8b,0x54,0x29 },{ 0xaa,0x74,0x49 },
+			{ 0xca,0x94,0x69 },{ 0xea,0xb4,0x89 },{ 0xff,0xd4,0xa9 },{ 0xff,0xf4,0xc9 },
+			// Brown
+			{ 0x37,0x22,0x00 },{ 0x57,0x42,0x00 },{ 0x77,0x62,0x19 },{ 0x97,0x81,0x39 },
+			{ 0xb7,0xa1,0x58 },{ 0xd7,0xc1,0x78 },{ 0xf6,0xe1,0x98 },{ 0xff,0xff,0xb8 },
+			// Yellow - Green
+			{ 0x09,0x3a,0x00 },{ 0x28,0x59,0x00 },{ 0x48,0x79,0x19 },{ 0x68,0x99,0x39 },
+			{ 0x88,0xb9,0x58 },{ 0xa8,0xd9,0x78 },{ 0xc8,0xf9,0x98 },{ 0xe8,0xff,0xb8 },
+			// Pink
+			{ 0x5d,0x01,0x20 },{ 0x7d,0x21,0x40 },{ 0x9c,0x41,0x60 },{ 0xbc,0x61,0x80 },
+			{ 0xdc,0x80,0x9f },{ 0xfc,0xa0,0xbf },{ 0xff,0xc0,0xdf },{ 0xff,0xe0,0xff },
+			// Blue - Green
+			{ 0x00,0x3f,0x20 },{ 0x03,0x5f,0x40 },{ 0x23,0x7f,0x60 },{ 0x43,0x9e,0x80 },
+			{ 0x63,0xbe,0x9f },{ 0x82,0xde,0xbf },{ 0xa2,0xfe,0xdf },{ 0xc2,0xff,0xff },
+			// Light Blue
+			{ 0x00,0x2b,0x56 },{ 0x15,0x4b,0x76 },{ 0x35,0x6b,0x96 },{ 0x55,0x8b,0xb6 },
+			{ 0x74,0xab,0xd6 },{ 0x94,0xcb,0xf6 },{ 0xb4,0xea,0xff },{ 0xd4,0xff,0xff },
+			// Dark Blue
+			{ 0x37,0x06,0x67 },{ 0x57,0x26,0x87 },{ 0x77,0x46,0xa7 },{ 0x97,0x66,0xc6 },
+			{ 0xb7,0x86,0xe6 },{ 0xd7,0xa6,0xff },{ 0xf6,0xc5,0xff },{ 0xff,0xe5,0xff },
+			// Light Green
+			{ 0x00,0x42,0x02 },{ 0x08,0x62,0x22 },{ 0x27,0x82,0x42 },{ 0x47,0xa2,0x62 },
+			{ 0x67,0xc2,0x82 },{ 0x87,0xe2,0xa2 },{ 0xa7,0xff,0xc2 },{ 0xc7,0xff,0xe2 }
+		};
 
+	// From a structure based on positions, to a structure based on luminance...
+	unsigned int* cP = new unsigned int [128];
+	for (size_t i = 0; i < 16; i++)
+		for (size_t j = 0; i < 8; i++)
+			cP [i | (j << 4)] = SDL_MapRGBA (_format, 
+				_COLORS [(i << 3) + j].R, _COLORS [(i << 3) + j].G, _COLORS [(i << 3) + j].B, 0xe0);
 	return (new MCHEmul::ScreenMemory (numberColumns (), numberRows (), cP));
 }
 
@@ -435,17 +525,6 @@ unsigned int COMMODORE::TED::treatRasterCycle ()
 	bool rG = false;
 	switch (_cycleInRasterLine)
 	{
-		// Read the sprite 3 to 7 data?
-		case 1:
-		case 3:
-		case 5:
-		case 7:
-		case 9:
-			{
-			}
-
-			break;
-
 		// In raster cycle 14 the graphics information moves...
 		case 14:
 			{
@@ -454,16 +533,6 @@ unsigned int COMMODORE::TED::treatRasterCycle ()
 
 				if (_newBadLineCondition)
 					_tedGraphicInfo._RC = 0;
-			}
-
-			break;
-
-		// Between the raster cycle 15 and 55 the graphics are read...
-		// ...But in the cycle 15 also...
-		// After reading info of the sprites, cycles 58 - 62 (previos raster line) + 1 - 9 (this line),
-		// the information about the active sprites is actualized...
-		case 15:
-			{
 			}
 
 			break;
@@ -515,18 +584,6 @@ unsigned int COMMODORE::TED::treatRasterCycle ()
 
 			break;
 
-		// The raster cycle 55/56 (we have choosen 55) is very important for sprite behaviour.
-		// At this point the active sprites are defined.
-		// Notice that this identification is done before two events:
-		// The TED to decide whether it has or not to stop 3 cycles because sprite info is going to be read (first sprite at cycle 55),
-		// and the sprite info is actually read (first sprite at cycle 58)
-		// That the reason to choose 52, when in the real TED this happen at cycles 55/56.
-		case 52:
-			{
-			}
-
-			break;
-
 		// In cycle 58 again the graphical info is updated...
 		case 58:
 			{
@@ -543,6 +600,7 @@ unsigned int COMMODORE::TED::treatRasterCycle ()
 
 			break;
 
+		// By default it does nothing...
 		default:
 			break;
 	}
@@ -598,7 +656,7 @@ void COMMODORE::TED::drawVisibleZone (MCHEmul::CPU* cpu)
 	{
 		screenMemory () -> setHorizontalLine ((size_t) cav, (size_t) rv,
 			(cav + 8) > _raster.visibleColumns () ? (_raster.visibleColumns () - cav) : 8, 
-				_TEDRegisters -> foregroundColor ());
+				_TEDRegisters -> borderColor ().asChar ());
 
 		return;
 	}
@@ -609,11 +667,11 @@ void COMMODORE::TED::drawVisibleZone (MCHEmul::CPU* cpu)
 	// This is how the TED works...
 	screenMemory () -> setHorizontalLine ((size_t) cav, (size_t) rv,
 		(cav + 8) > _raster.visibleColumns () ? (_raster.visibleColumns () - cav) : 8, 
-			_TEDRegisters -> backgroundColor ());
+			_TEDRegisters -> backgroundColor ().asChar ());
 
 	// Now the information is drawn,...
 	// ...and also the collisions detected at the same time
-	drawGraphicsAndDetectCollisions (
+	drawGraphicsAndMoveToScreen (
 		{
 			/** _ICD */ _raster.hData ().firstDisplayPosition (),		// DISLAY: The original...
 			/** _ICS */ _raster.hData ().firstScreenPosition (),		// SCREEN: And the real one (after reduction size)
@@ -664,20 +722,16 @@ void COMMODORE::TED::drawVisibleZone (MCHEmul::CPU* cpu)
 		}
 
 		screenMemory () -> setHorizontalLine ((size_t) stp, (size_t) rv, lbk, 
-			_TEDRegisters -> foregroundColor ());
+			_TEDRegisters -> borderColor ().asChar ());
 	}
 
 	// The IRQ related with the lightpen is calculated...
 	unsigned short dx, dy;
 	_raster.currentDisplayPosition (dx, dy);
-	unsigned short lpx, lpy;
-	_TEDRegisters -> currentLightPenPosition (lpx, lpy);
-	if (dy == lpy && (lpx >= dx && lpx < (dx + 8))) // The beam moves every 8 pixels...
-		_TEDRegisters -> activateLightPenOnScreenIRQ ();
 }
 
 // ---
-void COMMODORE::TED::drawGraphicsAndDetectCollisions (const COMMODORE::TED::DrawContext& dC)
+void COMMODORE::TED::drawGraphicsAndMoveToScreen (const COMMODORE::TED::DrawContext& dC)
 {
 	// This varible keeps info about the text/graphics:
 	// Whether the 8 pixels to draw are foreground or background...
@@ -795,12 +849,9 @@ COMMODORE::TED::DrawResult COMMODORE::TED::drawMonoColorChar (int cb)
 		size_t iBt = 7 - (((size_t) pp) % 8); // From MSB to LSB...
 
 		if (_tedGraphicInfo._graphicData [iBy].bit (iBt))
-		{
-			result._collisionData.setBit (7 - i, true);
-
 			result._foregroundColorData [i] = 
 				(unsigned int) (_tedGraphicInfo._colorData [iBy].value () & 0x0f /** Useful nibble. */);
-		}
+
 		// When 0, it is background...
 		// Not necessary to specify neither collision information
 		// nor the color of the pixels as it will be always the basic background color,
@@ -865,8 +916,6 @@ COMMODORE::TED::DrawResult COMMODORE::TED::drawMultiColorChar (int cb, bool inv)
 
 				case 0x02:
 					{
-						result._collisionData.setBit (7 - i, true);
-
 						result._foregroundColorData [i] = fc;
 					}
 
@@ -874,9 +923,6 @@ COMMODORE::TED::DrawResult COMMODORE::TED::drawMultiColorChar (int cb, bool inv)
 
 				case 0x03:
 					{
-						result._collisionData.setBit (7 - i, true);
-						result._collisionData.setBit (6 - i, true);
-
 						result._foregroundColorData [i] = fc;
 						result._foregroundColorData [i + 1] = fc;
 					}
@@ -896,7 +942,7 @@ COMMODORE::TED::DrawResult COMMODORE::TED::drawMultiColorChar (int cb, bool inv)
 					? 0x00 
 					: (unsigned int) ((cs == 0x03) 
 						? (_tedGraphicInfo._colorData [iBy].value () & 0x07)
-						: _TEDRegisters -> backgroundColor (cs));
+						: _TEDRegisters -> backgroundColor (cs).asChar ());
 
 			// The combination "01" is also considered as part of the background...
 			// ...and are not taken into account to detect collision...
@@ -909,9 +955,6 @@ COMMODORE::TED::DrawResult COMMODORE::TED::drawMultiColorChar (int cb, bool inv)
 			// ..and also included in the collision info!
 			else
 			{
-				result._collisionData.setBit (7 - i, true);
-				result._collisionData.setBit (6 - i, true);
-
 				result._foregroundColorData [i] = fc;
 				result._foregroundColorData [i + 1] = fc;
 			}
@@ -945,12 +988,10 @@ COMMODORE::TED::DrawResult COMMODORE::TED::drawMultiColorExtendedChar (int cb)
 		unsigned int fc = 
 			bS 
 				? (_tedGraphicInfo._colorData [iBy].value () & 0x0f) 
-				: _TEDRegisters -> backgroundColor (cs);
+				: _TEDRegisters -> backgroundColor (cs).asChar ();
 
 		if (bS)
 		{
-			result._collisionData.setBit (7 - i, true);
-
 			result._foregroundColorData [i] = fc;
 		}
 		else
@@ -988,11 +1029,7 @@ COMMODORE::TED::DrawResult COMMODORE::TED::drawMonoColorBitMap (int cb, bool inv
 					: (_tedGraphicInfo._screenCodeData [iBy].value () & 0x0f);		// ...and for LSNibble if it is 0...
 
 		if (bS)
-		{
-			result._collisionData.setBit (7 - i, true);
-
 			result._foregroundColorData [i] = fc;
-		}
 		// The pixels 0 are treated as background...
 		// but they will have different color that the one defined in $d021 (and treated in the main loop)..
 		// but the one defined in the graphics data (2 nibbles)...
@@ -1054,9 +1091,6 @@ COMMODORE::TED::DrawResult COMMODORE::TED::drawMultiColorBitMap (int cb, bool in
 		// ...while the rest as managed as foreground...
 		else
 		{
-			result._collisionData.setBit (7 -i, true);
-			result._collisionData.setBit (6 -i, true);
-
 			result._foregroundColorData [i] = fc;
 			result._foregroundColorData [i + 1] = fc;
 		}

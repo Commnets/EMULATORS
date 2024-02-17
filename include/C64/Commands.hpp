@@ -5,7 +5,7 @@
  *	@file
  *	File: Commands.hpp \n
  *	Framework: CPU Emulators library \n
- *	Author: Ignacio Cea Forniés (EMULATORS library) \n
+ *	Author: Ignacio Cea Fornies (EMULATORS library) \n
  *	Creation Date: 01/10/2022 \n
  *	Description: Specific Commands for a C64 emulation.
  *	Versions: 1.0 Initial

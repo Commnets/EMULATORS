@@ -5,7 +5,7 @@
  *	@file	
  *	File: Console.hpp \n
  *	Framework: CPU Emulators library \n
- *	Author: Ignacio Cea Forniés (EMULATORS library) \n
+ *	Author: Ignacio Cea Fornies (EMULATORS library) \n
  *	Creation Date: 04/08/2022 \n
  *	Description: To manage the emulator from a console.
  *	Versions: 1.0 Initial

@@ -5,7 +5,7 @@
  *	@file	
  *	File: Interrupt.hpp \n
  *	Framework: CPU Emulators library \n
- *	Author: Ignacio Cea Forniés (EMULATORS library) \n
+ *	Author: Ignacio Cea Fornies (EMULATORS library) \n
  *	Creation Date: 11/11/2023 \n
  *	Description: The generical definition of a interrupt in a Z80 processor.
  *	Versions: 1.0 Initial

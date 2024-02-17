@@ -5,7 +5,7 @@
  *	@file	
  *	File: C264Emulator.hpp \n
  *	Framework: CPU Emulators library \n
- *	Author: Ignacio Cea Forniés (EMULATORS library) \n
+ *	Author: Ignacio Cea Fornies (EMULATORS library) \n
  *	Creation Date: 04/02/2023 \n
  *	Description: The root class to define any C264 series emulator.
  *	Versions: 1.0 Initial

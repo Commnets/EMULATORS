@@ -5,7 +5,7 @@
  *	@file	
  *	File: VICIIRegisters.hpp \n
  *	Framework: CPU Emulators library \n
- *	Author: Ignacio Cea Forniés (EMULATORS library) \n
+ *	Author: Ignacio Cea Fornies (EMULATORS library) \n
  *	Creation Date: 15/05/2021 \n
  *	Description: VICII Registers Emulation
  *	Versions: 1.0 Initial

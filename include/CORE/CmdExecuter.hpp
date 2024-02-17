@@ -5,7 +5,7 @@
  *	@file	
  *	File: CmdExecuter.hpp \n
  *	Framework: CPU Emulators library \n
- *	Author: Ignacio Cea Forniés (EMULATORS library) \n
+ *	Author: Ignacio Cea Fornies (EMULATORS library) \n
  *	Creation Date: 22/10/2022 \n
  *	Description: This class defines the root from any class able to execute commands, has to inherit from. 
  *	Versions: 1.0 Initial

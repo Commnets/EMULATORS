@@ -5,7 +5,7 @@
  *	@file	
  *	File: Cartridge.hpp \n
  *	Framework: CPU Emulators library \n
- *	Author: Ignacio Cea Forniés (EMULATORS library) \n
+ *	Author: Ignacio Cea Fornies (EMULATORS library) \n
  *	Creation Date: 27/01/2023 \n
  *	Description: To emulate the behaviour of a cartridge in the C64 computer
  *	Versions: 1.0 Initial
