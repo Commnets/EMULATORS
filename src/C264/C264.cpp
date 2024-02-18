@@ -114,6 +114,9 @@ MCHEmul::Chips C264::Commodore264::standardChips (const std::string& sS, C264::C
 	// However, he emulation needs to treat it as an independent chip...
 	result.insert (MCHEmul::Chips::value_type (COMMODORE::TED::SoundFunction::_ID, ted -> soundFunction ()));
 
+	// The RS232 communications chip, is also something common to the whole 264 series...
+	result.insert (MCHEmul::Chips::value_type (COMMODORE::ACIA::_ID, new COMMODORE::ACIA));
+
 	return (result);
 }
 

@@ -82,6 +82,18 @@
     <Filter Include="Archivos de encabezado\Motherboard\Chips\TED">
       <UniqueIdentifier>{e66b874b-7565-4deb-b526-345b6e112d59}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Archivos de origen\Motherboard\Chips\ACIA">
+      <UniqueIdentifier>{90ff2a96-d517-4ac5-90b5-a9d0db9c781a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Archivos de encabezado\Motherboard\Chips\ACIA">
+      <UniqueIdentifier>{7ae6c3b0-80a9-449e-b629-7db08bf0488b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Archivos de origen\Motherboard\Chips\TIA">
+      <UniqueIdentifier>{ee0f3cfd-3c90-4d58-95ce-9747fafa9623}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Archivos de encabezado\Motherboard\Chips\TIA">
+      <UniqueIdentifier>{cbf250b5-88ed-4de0-9093-2110b9dce22f}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\include\COMMODORE\incs.hpp">
@@ -222,6 +234,24 @@
     <ClInclude Include="..\..\include\COMMODORE\TED\TEDOSIO.hpp">
       <Filter>Archivos de encabezado\Motherboard\Chips\TED</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\include\COMMODORE\ACIA\ACIA.hpp">
+      <Filter>Archivos de encabezado\Motherboard\Chips\ACIA</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\COMMODORE\ACIA\ACIARegisters.hpp">
+      <Filter>Archivos de encabezado\Motherboard\Chips\ACIA</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\COMMODORE\ACIA\incs.hpp">
+      <Filter>Archivos de encabezado\Motherboard\Chips\ACIA</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\COMMODORE\TIA\incs.hpp">
+      <Filter>Archivos de encabezado\Motherboard\Chips\TIA</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\COMMODORE\TIA\TIA.hpp">
+      <Filter>Archivos de encabezado\Motherboard\Chips\TIA</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\COMMODORE\TIA\TIARegisters.hpp">
+      <Filter>Archivos de encabezado\Motherboard\Chips\TIA</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Commodore.fmt">
@@ -334,7 +364,7 @@
     <ClCompile Include="..\..\src\COMMODORE\TED\TEDTimer.cpp">
       <Filter>Archivos de origen\Motherboard\Chips\TED</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\COMMODORE\TED\C2569BRegisters.cpp">
+    <ClCompile Include="..\..\src\COMMODORE\TED\C6529BRegisters.cpp">
       <Filter>Archivos de origen\Motherboard\Chips\TED</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\COMMODORE\TED\C6529B.cpp">
@@ -342,6 +372,18 @@
     </ClCompile>
     <ClCompile Include="..\..\src\COMMODORE\TED\TEDOSIO.cpp">
       <Filter>Archivos de origen\Motherboard\Chips\TED</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\COMMODORE\ACIA\ACIA.cpp">
+      <Filter>Archivos de origen\Motherboard\Chips\ACIA</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\COMMODORE\ACIA\ACIARegisters.cpp">
+      <Filter>Archivos de origen\Motherboard\Chips\ACIA</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\COMMODORE\TIA\TIA.cpp">
+      <Filter>Archivos de origen\Motherboard\Chips\TIA</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\COMMODORE\TIA\TIARegisters.cpp">
+      <Filter>Archivos de origen\Motherboard\Chips\TIA</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

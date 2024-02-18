@@ -18,6 +18,8 @@
 #include <EMULATORS/incs.hpp>
 #include <COMMODORE/CIA/incs.hpp>
 #include <COMMODORE/VIA/incs.hpp>
+#include <COMMODORE/ACIA/incs.hpp>
+#include <COMMODORE/TIA/incs.hpp>
 #include <COMMODORE/SID/incs.hpp>
 #include <COMMODORE/TED/incs.hpp>
 #include <COMMODORE/VICI/incs.hpp>

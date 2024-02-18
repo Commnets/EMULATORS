@@ -14,7 +14,7 @@
 #ifndef __C264_MEMORY__
 #define __C264_MEMORY__
 
-#include <CORE/incs.hpp>
+#include <COMMODORE/incs.hpp>
 
 namespace C264
 {
@@ -45,7 +45,7 @@ namespace C264
 		MCHEmul::UByte _defaultValue;
 	};
 
-	/** The memory itself for the C64 Series... */
+	/** The memory itself for the C264 Series... */
 	class Memory final : public MCHEmul::Memory
 	{
 		public:
@@ -61,11 +61,10 @@ namespace C264
 		static const int _RAM2_SUBSET			= 103;
 		static const int _RAM3_SUBSET			= 104;
 		static const int _RAM4_SUBSET			= 105;
-		static const int _BASICROM_SUBSET		= 106;
-		static const int _BASICRAM_SUBSET		= 107;
-		static const int _KERNELROM_SUBSET		= 108;
-		static const int _KERNELRAM_SUBSET		= 109;
-		// TODO
+		static const int _RAM5_SUBSET			= 106;
+		static const int _BASICROM_SUBSET		= 107;
+		static const int _KERNELROM1_SUBSET		= 108;
+		static const int _KERNELROM2_SUBSET		= 109;
 
 		// Views
 		static const int _CPU_VIEW				= 0;
@@ -98,10 +97,10 @@ namespace C264
 		MCHEmul::PhysicalStorageSubset* _RAM2;
 		MCHEmul::PhysicalStorageSubset* _RAM3;
 		MCHEmul::PhysicalStorageSubset* _RAM4;
+		MCHEmul::PhysicalStorageSubset* _RAM5;
 		MCHEmul::PhysicalStorageSubset* _basicROM;
-		MCHEmul::PhysicalStorageSubset* _basicRAM;
-		MCHEmul::PhysicalStorageSubset* _kernelROM;
-		MCHEmul::PhysicalStorageSubset* _kernelRAM;
+		MCHEmul::PhysicalStorageSubset* _kernelROM1;
+		MCHEmul::PhysicalStorageSubset* _kernelROM2;
 	};
 }
 

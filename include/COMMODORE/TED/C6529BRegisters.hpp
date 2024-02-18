@@ -32,7 +32,7 @@ namespace COMMODORE
 
 		C6529BRegisters (MCHEmul::PhysicalStorage* ps, size_t pp, const MCHEmul::Address& a, size_t s)
 			: MCHEmul::ChipRegisters (_C6529BREGS_SUBSET, ps, pp, a, s)
-							{ setClassName ("C6529Registers"); }
+							{ setClassName ("6529Registers"); }
 
 		/** 16 registers that always behaves in the same way. */
 		virtual size_t numberRegisters () const override

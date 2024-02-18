@@ -20,6 +20,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\include\COMMODORE\1530Datasette.hpp" />
+    <ClInclude Include="..\..\include\COMMODORE\ACIA\ACIA.hpp" />
+    <ClInclude Include="..\..\include\COMMODORE\ACIA\ACIARegisters.hpp" />
+    <ClInclude Include="..\..\include\COMMODORE\ACIA\incs.hpp" />
     <ClInclude Include="..\..\include\COMMODORE\CIA\CIA.hpp" />
     <ClInclude Include="..\..\include\COMMODORE\CIA\CIAClock.hpp" />
     <ClInclude Include="..\..\include\COMMODORE\CIA\CIARegisters.hpp" />
@@ -49,6 +52,9 @@
     <ClInclude Include="..\..\include\COMMODORE\TED\TEDOSIO.hpp" />
     <ClInclude Include="..\..\include\COMMODORE\TED\TEDRegisters.hpp" />
     <ClInclude Include="..\..\include\COMMODORE\TED\TEDTimer.hpp" />
+    <ClInclude Include="..\..\include\COMMODORE\TIA\incs.hpp" />
+    <ClInclude Include="..\..\include\COMMODORE\TIA\TIA.hpp" />
+    <ClInclude Include="..\..\include\COMMODORE\TIA\TIARegisters.hpp" />
     <ClInclude Include="..\..\include\COMMODORE\UserIOPeripherals.hpp" />
     <ClInclude Include="..\..\include\COMMODORE\UserPort.hpp" />
     <ClInclude Include="..\..\include\COMMODORE\VIA\incs.hpp" />
@@ -82,6 +88,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\COMMODORE\1530Datasette.cpp" />
+    <ClCompile Include="..\..\src\COMMODORE\ACIA\ACIA.cpp" />
+    <ClCompile Include="..\..\src\COMMODORE\ACIA\ACIARegisters.cpp" />
     <ClCompile Include="..\..\src\COMMODORE\CIA\CIA.cpp" />
     <ClCompile Include="..\..\src\COMMODORE\CIA\CIAClock.cpp" />
     <ClCompile Include="..\..\src\COMMODORE\CIA\CIARegisters.cpp" />
@@ -99,13 +107,15 @@
     <ClCompile Include="..\..\src\COMMODORE\SID\SID.cpp" />
     <ClCompile Include="..\..\src\COMMODORE\SID\SIDLibWrapper.cpp" />
     <ClCompile Include="..\..\src\COMMODORE\SID\SIDRegisters.cpp" />
-    <ClCompile Include="..\..\src\COMMODORE\TED\C2569BRegisters.cpp" />
+    <ClCompile Include="..\..\src\COMMODORE\TED\C6529BRegisters.cpp" />
     <ClCompile Include="..\..\src\COMMODORE\TED\C6529B.cpp" />
     <ClCompile Include="..\..\src\COMMODORE\TED\TED.cpp" />
     <ClCompile Include="..\..\src\COMMODORE\TED\TEDOSIO.cpp" />
     <ClCompile Include="..\..\src\COMMODORE\TED\TEDRegisters.cpp" />
     <ClCompile Include="..\..\src\COMMODORE\TED\TEDSoundWrapper.cpp" />
     <ClCompile Include="..\..\src\COMMODORE\TED\TEDTimer.cpp" />
+    <ClCompile Include="..\..\src\COMMODORE\TIA\TIA.cpp" />
+    <ClCompile Include="..\..\src\COMMODORE\TIA\TIARegisters.cpp" />
     <ClCompile Include="..\..\src\COMMODORE\UserPort.cpp" />
     <ClCompile Include="..\..\src\COMMODORE\VIA\VIA.cpp" />
     <ClCompile Include="..\..\src\COMMODORE\VIA\VIAControlLines.cpp" />

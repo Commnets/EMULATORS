@@ -9,7 +9,7 @@ COMMODORE::C6529B::C6529B ()
 		  { "Year", "1984" } }),
 	  _C6529BRegisters (nullptr)
 {
-	// Nothing else to do...
+	setClassName ("6529B");
 }
 
 // ---
