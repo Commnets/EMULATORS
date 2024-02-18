@@ -52,30 +52,32 @@ namespace C264
 		// Phisical Storages
 		static const int _RAM					= 0;
 		static const int _BASICROM				= 1;
-		static const int _CHARROM				= 2;
-		static const int _KERNELROM				= 3;
+		static const int _KERNELROM				= 2;
 
 		// Subsets
 		static const int _PAGEZERO_SUBSET		= 100;
 		static const int _STACK_SUBSET			= 101;
-		// TODO
-		static const int _BASICROM_SUBSET		= 104;
-		static const int _BASICRAM_SUBSET		= 105;
-		static const int _KERNELROM_SUBSET		= 112;
-		static const int _KERNELRAM_SUBSET		= 113;
+		static const int _RAM1_SUBSET			= 102;
+		static const int _RAM2_SUBSET			= 103;
+		static const int _RAM3_SUBSET			= 104;
+		static const int _RAM4_SUBSET			= 105;
+		static const int _BASICROM_SUBSET		= 106;
+		static const int _BASICRAM_SUBSET		= 107;
+		static const int _KERNELROM_SUBSET		= 108;
+		static const int _KERNELRAM_SUBSET		= 109;
 		// TODO
 
 		// Views
 		static const int _CPU_VIEW				= 0;
 
-		/** The constructor receives the type of machine the memory is for. */
-		Memory (unsigned int mt, 
+		/** The constructor receives the configuration type. */
+		Memory (unsigned int cfg,
 			const std::string& lang = MCHEmul::_DEFAULTLANGUAGE);
 
-		/** To get/set the machine type. */
-		unsigned int machineType () const
-							{ return (_machineType); }
-		void setMachineType (unsigned int mT);
+		/** To get/set the configuration type. */
+		unsigned int configuration () const
+							{ return (_configuration); }
+		void setConfiguration (unsigned int cfg);
 
 		/** To activate the right subsets in the CPU view. */
 		virtual bool initialize () override;
@@ -89,14 +91,17 @@ namespace C264
 		static MCHEmul::Memory::Content standardMemoryContent ();
 
 		private:
-		unsigned int _machineType;
+		unsigned int _configuration;
 
 		// Implementation
+		MCHEmul::PhysicalStorageSubset* _RAM1;
+		MCHEmul::PhysicalStorageSubset* _RAM2;
+		MCHEmul::PhysicalStorageSubset* _RAM3;
+		MCHEmul::PhysicalStorageSubset* _RAM4;
 		MCHEmul::PhysicalStorageSubset* _basicROM;
 		MCHEmul::PhysicalStorageSubset* _basicRAM;
 		MCHEmul::PhysicalStorageSubset* _kernelROM;
 		MCHEmul::PhysicalStorageSubset* _kernelRAM;
-		// TODO
 	};
 }
 

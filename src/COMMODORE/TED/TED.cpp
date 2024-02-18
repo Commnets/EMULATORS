@@ -4,13 +4,12 @@
 #include <F6500/IRQInterrupt.hpp>
 
 // ---
-const MCHEmul::Address COMMODORE::TED::_COLORMEMORY ({ 0x00, 0xd8 }, false);
-const MCHEmul::RasterData COMMODORE::TED::_PALVRASTERDATA (0, 16, 51, 250, 299, 311, 312, 4, 4);
-const MCHEmul::RasterData COMMODORE::TED::_PALHRASTERDATA 
-	(404, 480, 24, 343, 380, 403, 504 /** For everyting to run, it has to be divisible by 8. */, 7, 9);
-const MCHEmul::RasterData COMMODORE::TED::_NTSCVRASTERDATA (27, 41, 51, 250, 12, 26, 262, 4, 4);
-const MCHEmul::RasterData COMMODORE::TED::_NTSCHRASTERDATA 
-	(412, 488, 24, 343, 388, 411, 512 /** For everything to run, it has to be divisible by 8. */, 7, 9);
+const MCHEmul::RasterData COMMODORE::TED_PAL::_VRASTERDATA (260, 274, 4, 203, 245, 259, 312, 4, 4);
+const MCHEmul::RasterData COMMODORE::TED_PAL::_HRASTERDATA 
+	(376, 384, 432, 295, 343, 375, 456 /** For everyting to run, it has to be divisible by 8. */, 7, 9);
+const MCHEmul::RasterData COMMODORE::TED_NTSC::_VRASTERDATA (235, 249, 4, 203, 220, 234, 262, 4, 4);
+const MCHEmul::RasterData COMMODORE::TED_NTSC::_HRASTERDATA 
+	(376, 384, 432, 295, 343, 375, 456 /** For everyting to run, it has to be divisible by 8. */, 7, 9);
 // This two positions are fized...
 const MCHEmul::Address COMMODORE::TED::_MEMORYPOSIDLE1 = MCHEmul::Address ({ 0xff, 0x39 }, false);
 const MCHEmul::Address COMMODORE::TED::_MEMORYPOSIDLE2 = MCHEmul::Address ({ 0xff, 0x3f }, false);
@@ -89,12 +88,9 @@ MCHEmul::InfoStructure COMMODORE::TED::SoundFunction::getInfoStructure () const
 }
 
 // ---
-COMMODORE::TED::TED (int vV, MCHEmul::SoundLibWrapper* sW, const MCHEmul::Attributes& attrs)
-	: MCHEmul::GraphicalChip (_ID, 
-		{ { "Name", "TED" },
-		  { "Code", "7360/8360 Both for PAL & NTSC" },
-		  { "Manufacturer", "Commodore Business Machines CBM" },
-		  { "Year", "1984" } }),
+COMMODORE::TED::TED (const MCHEmul::RasterData& vd, const MCHEmul::RasterData& hd,
+		int vV, MCHEmul::SoundLibWrapper* sW, const MCHEmul::Attributes& attrs)
+	: MCHEmul::GraphicalChip (_ID, attrs),
 	  _T1 (1, COMMODORE::TEDTimer::RunMode::_FROMINITIALVALUE),
 	  _T2 (2, COMMODORE::TEDTimer::RunMode::_CONTINUOUS),
 	  _T3 (3, COMMODORE::TEDTimer::RunMode::_CONTINUOUS),
@@ -103,7 +99,7 @@ COMMODORE::TED::TED (int vV, MCHEmul::SoundLibWrapper* sW, const MCHEmul::Attrib
 	  _TEDView (vV),
 	  _cyclesPerRasterLine (63),
 	  _incCyclesPerRasterLine (0),
-	  _raster (_PALVRASTERDATA, _PALHRASTERDATA, 8 /** step. */),
+	  _raster (vd, hd, 8 /** step. */),
 	  _lastCPUCycles (0),
 	  _format (nullptr),
 	  _cycleInRasterLine (1),
@@ -151,12 +147,13 @@ bool COMMODORE::TED::initialize ()
 	_raster.initialize ();
 
 	_soundFunction -> initialize ();
-	_T1.initialize (); 
+	_T1.initialize ();
 	_T2.initialize ();
 	_T3.initialize ();
 
 	_TEDRegisters -> lookAtTimers (&_T1, &_T2, &_T3);
 	_TEDRegisters -> lookAtSoundLibWrapper (_soundFunction -> soundWrapper ());
+	_TEDRegisters -> lookAtC2569B (_c6529B);
 	_TEDRegisters -> initialize ();
 
 	_lastCPUCycles = 0;
@@ -525,8 +522,8 @@ unsigned int COMMODORE::TED::treatRasterCycle ()
 	bool rG = false;
 	switch (_cycleInRasterLine)
 	{
-		// In raster cycle 14 the graphics information moves...
-		case 14:
+		// In raster cycle 5 (=396) the graphics information moves...
+		case 5:
 			{
 				_tedGraphicInfo._VC = _tedGraphicInfo._VCBASE;
 				_tedGraphicInfo._VLMI = 0;
@@ -538,6 +535,14 @@ unsigned int COMMODORE::TED::treatRasterCycle ()
 			break;
 
 		// Just read the graphics...
+		case 8:
+		case 9:
+		case 10:
+		case 11:
+		case 12:
+		case 13:
+		case 14:
+		case 15:
 		case 16:
 		case 17:
 		case 18:
@@ -570,27 +575,20 @@ unsigned int COMMODORE::TED::treatRasterCycle ()
 		case 45:
 		case 46:
 		case 47:
-		case 48:
-		case 49:
-		case 50:
-		case 51:
-		// 52 is a little bit special...
-		case 53:
-		case 54:
-		case 55:
 			{
 				rG = true;
 			}
 
 			break;
 
-		// In cycle 58 again the graphical info is updated...
-		case 58:
+		// In cycle 57 again the graphical info is updated...
+		case 57:
 			{
 				if (_tedGraphicInfo._RC == 7)
 				{
 					_tedGraphicInfo._VCBASE = _tedGraphicInfo._VC;
-					if (!_newBadLineCondition) // When RC gets 7 and there is no bad condition, then the idle state is set back...
+					if (!_newBadLineCondition) // When RC gets 7 and there is no bad condition...
+											   // ...then the idle state is set back...
 						_tedGraphicInfo._idleState = true;
 				}
 
@@ -850,12 +848,10 @@ COMMODORE::TED::DrawResult COMMODORE::TED::drawMonoColorChar (int cb)
 
 		if (_tedGraphicInfo._graphicData [iBy].bit (iBt))
 			result._foregroundColorData [i] = 
-				(unsigned int) (_tedGraphicInfo._colorData [iBy].value () & 0x0f /** Useful nibble. */);
+				(unsigned int) (_tedGraphicInfo._colorData [iBy].value ());
 
 		// When 0, it is background...
-		// Not necessary to specify neither collision information
-		// nor the color of the pixels as it will be always the basic background color,
-		// that has already been set to the value of $d021 in the main loop...
+		// Not necessary to the color of the pixels as it will be always the basic background color,
 	}
 
 	return (result);
@@ -896,12 +892,14 @@ COMMODORE::TED::DrawResult COMMODORE::TED::drawMultiColorChar (int cb, bool inv)
 		// The way the pixels are going to be drawn will depend on the information in the color memory
 		// If the most significant bit of the low significant nibble of the color memory is set to 1
 		// the data will be managed in a monocolor way...
+		// But only 8 colors are allowed (+ luminance)
 		if ((_tedGraphicInfo._colorData [iBy] & 0x08) == 0x00) 
 		{
 			unsigned int fc = 
 				inv 
 					? 0x00 // When invalid all pixels are black...
-					: _tedGraphicInfo._colorData [iBy].value () & 0x07;
+					: _tedGraphicInfo._colorData [iBy].value () & ~0x08 
+						/** Only the first 8 colors are allowed (the bit 3 is removed). */;
 
 			// ...and remember we are dealing with pairs of pixels...
 
@@ -909,7 +907,7 @@ COMMODORE::TED::DrawResult COMMODORE::TED::drawMultiColorChar (int cb, bool inv)
 			{
 				case 0x01:
 					{
-						result._backgroundColorData [i + 1] = fc;
+						result._foregroundColorData [i + 1] = fc;
 					}
 
 					break;
@@ -929,35 +927,26 @@ COMMODORE::TED::DrawResult COMMODORE::TED::drawMultiColorChar (int cb, bool inv)
 
 					break;
 
+				// Not possible to be here, just in case...
 				default:
 					break;
 			}
 		}
 		// But if it is 1, 
 		// then it will be draw as in the multicolor version...
+		// But only 8 colors are allowed (+ luminance)
 		else
 		{
 			unsigned int fc = 
 				inv 
 					? 0x00 
 					: (unsigned int) ((cs == 0x03) 
-						? (_tedGraphicInfo._colorData [iBy].value () & 0x07)
+						? (_tedGraphicInfo._colorData [iBy].value () & ~0x08
+							/** Only the first 7 colors are allowed (the bit 3 is removed). */)
 						: _TEDRegisters -> backgroundColor (cs).asChar ());
 
-			// The combination "01" is also considered as part of the background...
-			// ...and are not taken into account to detect collision...
-			if (cs == 0x01)
-			{
-				result._backgroundColorData [i] = fc;
-				result._backgroundColorData [i + 1] = fc;
-			}
-			// ..while the other two are part of the foreground...
-			// ..and also included in the collision info!
-			else
-			{
-				result._foregroundColorData [i] = fc;
-				result._foregroundColorData [i + 1] = fc;
-			}
+			result._foregroundColorData [i] = fc;
+			result._foregroundColorData [i + 1] = fc;
 		}
 	}
 
@@ -987,7 +976,7 @@ COMMODORE::TED::DrawResult COMMODORE::TED::drawMultiColorExtendedChar (int cb)
 		unsigned int cs = ((_tedGraphicInfo._screenCodeData [iBy].value () & 0xc0) >> 6) & 0x03; // 0, 1, 2, or 3
 		unsigned int fc = 
 			bS 
-				? (_tedGraphicInfo._colorData [iBy].value () & 0x0f) 
+				? (_tedGraphicInfo._colorData [iBy].value ()) 
 				: _TEDRegisters -> backgroundColor (cs).asChar ();
 
 		if (bS)
@@ -997,9 +986,9 @@ COMMODORE::TED::DrawResult COMMODORE::TED::drawMultiColorExtendedChar (int cb)
 		else
 		// ...all of them are treated as background...
 		// ...but with the possibility to have different colors!
-		// The value 0x00 has been already treated in the main loop...(drawn as $d021)
+		// The value 0x00 has been already treated in the main loop...
 		if (cs != 0x00)
-			result._backgroundColorData [i] = fc;
+			result._foregroundColorData [i] = fc;
 	}
 
 	return (result);
@@ -1025,16 +1014,12 @@ COMMODORE::TED::DrawResult COMMODORE::TED::drawMonoColorBitMap (int cb, bool inv
 			inv 
 				? 0x00 // When invalid, all pixels are black...
 				: bS 
-					? (_tedGraphicInfo._screenCodeData [iBy].value () & 0xf0) >> 4	// If the bit is 1, the color is determined by the MSNibble
-					: (_tedGraphicInfo._screenCodeData [iBy].value () & 0x0f);		// ...and for LSNibble if it is 0...
+					? (((_tedGraphicInfo._screenCodeData [iBy].value () & 0x70 /** bits 4, 5 & 6. */) >> 4 /** moved to color info. */)
+						| ((_tedGraphicInfo._colorData [iBy].value () & 0x07 /** bits 0, 1 & 2. */) << 4 /** moved to luminance info. */))
+					: ((_tedGraphicInfo._screenCodeData [iBy].value () & 0x07 /** bits 0, 1 & 2. */)
+						| (_tedGraphicInfo._colorData [iBy].value () & 0x70 /** bits 4, 5 & 6. */));
 
-		if (bS)
-			result._foregroundColorData [i] = fc;
-		// The pixels 0 are treated as background...
-		// but they will have different color that the one defined in $d021 (and treated in the main loop)..
-		// but the one defined in the graphics data (2 nibbles)...
-		else
-			result._backgroundColorData [i] = fc;
+		result._foregroundColorData [i] = fc;
 	}
 
 	return (result);
@@ -1075,25 +1060,16 @@ COMMODORE::TED::DrawResult COMMODORE::TED::drawMultiColorBitMap (int cb, bool in
 		unsigned fc = // The value 0x00 is not tested....
 				inv
 					? 0x00 // When invalid all pixels are black...
-					: (cs == 0x01) // The color is the defined in the video matrix, high nibble...
-						? (_tedGraphicInfo._screenCodeData [iBy].value () & 0xf0) >> 4
-						: ((cs == 0x02) // The color is defined in the video matrix, low nibble...
-							? (_tedGraphicInfo._screenCodeData [iBy].value () & 0x0f)
-							: (_tedGraphicInfo._colorData [iBy].value () & 0x0f)); // The color is defined in color matrix...
+					: (cs == 0x01) // The color is the defined in the video matrix (color) & color data (luminance)...
+						? (((_tedGraphicInfo._screenCodeData [iBy].value () & 0xf0 /** bits 4, 5, 6 & 7. */) >> 4) /** to color position. */
+							| (_tedGraphicInfo._colorData [iBy].value () & 0x70 /** bits 4, 5 & 6. */))
+						: ((cs == 0x02) // The color is defined in the video matrix (color) & color data (luminance)...
+							? ((_tedGraphicInfo._screenCodeData [iBy].value () & 0x0f /** bits 0, 1, 2 & 3 */)
+								| ((_tedGraphicInfo._colorData [iBy].value () & 0x07 /** bits 0, 1 & 2. */) << 4) /** to luminance position. */)
+							: (_TEDRegisters -> backgroundColor (0x01).asChar ()));
 
-		// The combination "01" is managed as background also...
-		// ...the 0x00 has already been jumped an then treated as background!
-		if (cs == 0x01)
-		{
-			result._backgroundColorData [i] = fc;
-			result._backgroundColorData [i + 1] = fc;
-		}
-		// ...while the rest as managed as foreground...
-		else
-		{
-			result._foregroundColorData [i] = fc;
-			result._foregroundColorData [i + 1] = fc;
-		}
+		result._foregroundColorData [i] = fc;
+		result._foregroundColorData [i + 1] = fc;
 	}
 
 	return (result);
@@ -1112,11 +1088,32 @@ void COMMODORE::TED::drawResultToScreen (const COMMODORE::TED::DrawResult& cT, c
 			// the pixel will be always black by default...
 			screenMemory () -> setPixel (pos, (size_t) dC._RR, 0x00 /** black. */);
 
-		// And then the background pixels...
-		if (cT._backgroundColorData [i] != ~0)
-			screenMemory () -> setPixel (pos, (size_t) dC._RR, cT._backgroundColorData [i]);
-		// and the foreground ones finally...
+		// ...and the foreground ones finally...
 		if (cT._foregroundColorData [i] != ~0)
 			screenMemory () -> setPixel (pos, (size_t) dC._RR, cT._foregroundColorData [i]);
 	}
+}
+
+// ---
+COMMODORE::TED_PAL::TED_PAL (int vV, MCHEmul::SoundLibWrapper* wS)
+	: COMMODORE::TED (
+		 _VRASTERDATA, _HRASTERDATA, vV, wS,
+		{ { "Name", "TED" },
+		  { "Code", "7360/8360 for PAL" },
+		  { "Manufacturer", "Commodore Business Machines CBM" },
+		  { "Year", "1984" } })
+{
+	// Nothing else to do...
+}
+
+// ---
+COMMODORE::TED_NTSC::TED_NTSC (int vV, MCHEmul::SoundLibWrapper* wS)
+	: COMMODORE::TED (
+		 _VRASTERDATA, _HRASTERDATA, vV, wS,
+		{ { "Name", "TED" },
+		  { "Code", "7360/8360 for NTSC" },
+		  { "Manufacturer", "Commodore Business Machines CBM" },
+		  { "Year", "1984" } })
+{
+	// Nothing else to do...
 }

@@ -14,7 +14,7 @@
 #ifndef __COMMODORE_C6529B__
 #define __COMMODORE_C6529B__
 
-#include <COMMODORE/incs.hpp>
+#include <COMMODORE/TED/C6529BRegisters.hpp>
 
 namespace COMMODORE
 {
@@ -26,7 +26,7 @@ namespace COMMODORE
 		public:
 		static const int _ID = 200;
 		
-		C6529B (int id);
+		C6529B ();
 
 		/** Any register is valid. */
 		const MCHEmul::UByte& latchValue () const

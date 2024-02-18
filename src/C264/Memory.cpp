@@ -1,9 +1,9 @@
 #include <C264/Memory.hpp>
 
 // ---
-C264::Memory::Memory (unsigned int mt, const std::string& lang)
+C264::Memory::Memory (unsigned int cfg, const std::string& lang)
 	: MCHEmul::Memory (0, C264::Memory::standardMemoryContent (), { }),
-	  _machineType (mt)
+	  _configuration (cfg)
 {
 	// In the content...
 	if (error () != MCHEmul::_NOERROR)
@@ -13,7 +13,10 @@ C264::Memory::Memory (unsigned int mt, const std::string& lang)
 	_basicRAM			= subset (_BASICRAM_SUBSET);
 	_kernelROM			= subset (_KERNELROM_SUBSET);
 	_kernelRAM			= subset (_KERNELRAM_SUBSET);
-	// TODO
+	_RAM1				= subset (_RAM1_SUBSET);
+	_RAM2				= subset (_RAM2_SUBSET);
+	_RAM3				= subset (_RAM3_SUBSET);
+	_RAM4				= subset (_RAM4_SUBSET);
 
 	// The default ROMS...
 	// They might change depending on the language
@@ -38,16 +41,58 @@ C264::Memory::Memory (unsigned int mt, const std::string& lang)
 		_error = MCHEmul::_INIT_ERROR;
 
 	// Sets the configuration of the memory that will depend on the type of machine...
-	setMachineType (_machineType);
+	setConfiguration (_configuration);
 }
 
 // ---
-void C264::Memory::setMachineType (unsigned int mT)
+void C264::Memory::setConfiguration (unsigned int cfg)
 {
 	// Attending to the type of machine different options are active or not active!
-	switch (_machineType = mT)
+	switch (_configuration = cfg)
 	{
-		// TODO...
+		// 16k
+		case 0:
+			{
+				_RAM1 -> setActive (true);
+				_RAM2 -> setActive (false);
+				_RAM3 -> setActive (false);
+				_RAM4 -> setActive (false);
+			}
+
+			break;
+
+		// 32k
+		case 1:
+			{
+				_RAM1 -> setActive (true);
+				_RAM2 -> setActive (true);
+				_RAM3 -> setActive (false);
+				_RAM4 -> setActive (false);
+			}
+
+			break;
+
+		// 48k
+		case 2:
+			{
+				_RAM1 -> setActive (true);
+				_RAM2 -> setActive (true);
+				_RAM3 -> setActive (true);
+				_RAM4 -> setActive (false);
+			}
+
+			break;
+
+		// 64k
+		case 3:
+			{
+				_RAM1 -> setActive (true);
+				_RAM2 -> setActive (true);
+				_RAM3 -> setActive (true);
+				_RAM4 -> setActive (true);
+			}
+
+			break;
 
 		default:
 			// It shouldn't exist, but just in case...
@@ -75,8 +120,10 @@ MCHEmul::Memory::Content C264::Memory::standardMemoryContent ()
 	/** All dirs in Little - endian format. */
 
 	// Phisical storages
+	// RAM...
 	MCHEmul::PhysicalStorage* RAM = 
-		new MCHEmul::PhysicalStorage (_RAM, MCHEmul::PhysicalStorage::Type::_RAM, 0x10000);				// 64k
+		new MCHEmul::PhysicalStorage (_RAM, MCHEmul::PhysicalStorage::Type::_RAM, 0x4000);				// 64k
+	// ROM...
 	MCHEmul::PhysicalStorage* BASICROM = 
 		new MCHEmul::PhysicalStorage (_BASICROM, MCHEmul::PhysicalStorage::Type::_ROM, 0x4000);			// 16k
 	MCHEmul::PhysicalStorage* KERNELROM	= 
@@ -97,16 +144,39 @@ MCHEmul::Memory::Content C264::Memory::standardMemoryContent ()
 	// Page 1: Stack, Where the CPU stores info...
 	MCHEmul::Stack* Stack = new MCHEmul::Stack 
 		(_STACK_SUBSET, RAM, 0x0100, MCHEmul::Address ({ 0x00, 0x01 }, false), 0x0100);
-
-	// TODO
+	// Rest is RAM...
+	MCHEmul::PhysicalStorageSubset* RAM1 = new MCHEmul::PhysicalStorageSubset 
+		(_RAM1_SUBSET, RAM, 0x0200, MCHEmul::Address ({ 0x00, 0x02 }, false), 0x3e00);				// 16k - 512 bytes...
+	MCHEmul::PhysicalStorageSubset* RAM2 = new MCHEmul::PhysicalStorageSubset 
+		(_RAM2_SUBSET, RAM, 0x4000, MCHEmul::Address ({ 0x00, 0x40 }, false), 0x4000);				// 16k
+	MCHEmul::PhysicalStorageSubset* RAM3 = new MCHEmul::PhysicalStorageSubset 
+		(_RAM3_SUBSET, RAM, 0x8000, MCHEmul::Address ({ 0x00, 0x80 }, false), 0x4000);				// 16k
+	MCHEmul::PhysicalStorageSubset* RAM4 = new MCHEmul::PhysicalStorageSubset 
+		(_RAM4_SUBSET, RAM, 0xc000, MCHEmul::Address ({ 0x00, 0xc0 }, false), 0x4000);				// 16k
+	// And ROM at the end, with RAM behind 
+	// that actives or not depending on the configuration of the machine...
+	MCHEmul::PhysicalStorageSubset* BasicROM = new MCHEmul::PhysicalStorageSubset 
+		(_BASICROM_SUBSET, BASICROM, 0x0000, MCHEmul::Address ({ 0x00, 0x80 }, false), 0x4000);		// 16k
+	MCHEmul::PhysicalStorageSubset* BasicRAM = new MCHEmul::PhysicalStorageSubset 
+		(_BASICRAM_SUBSET, RAM, 0x8000, MCHEmul::Address ({ 0x00, 0x80 }, false), 0x4000);			// 16k RAM behind...
+	MCHEmul::PhysicalStorageSubset* KernelROM = new MCHEmul::PhysicalStorageSubset 
+		(_KERNELROM_SUBSET, KERNELROM, 0x0000, MCHEmul::Address ({ 0x00, 0xc0 }, false), 0x4000);	// 16k
+	MCHEmul::PhysicalStorageSubset* KernelRAM = new MCHEmul::PhysicalStorageSubset 
+		(_KERNELRAM_SUBSET, RAM, 0xc000, MCHEmul::Address ({ 0x00, 0xc0 }, false), 0x4000);			// 16k RAM behind...
 
 	// A map with all the subsets possible...
 	MCHEmul::PhysicalStorageSubsets allsubsets (
 		{
-			{ _PAGEZERO_SUBSET,										PageZero }, 
-			{ _STACK_SUBSET,										Stack }
-
-			// TODO
+			{ _PAGEZERO_SUBSET,									PageZero }, 
+			{ _STACK_SUBSET,									Stack },
+			{ _RAM1_SUBSET,										RAM1 },
+			{ _RAM2_SUBSET,										RAM2 },
+			{ _RAM3_SUBSET,										RAM3 },
+			{ _RAM4_SUBSET,										RAM4 },
+			{ _BASICROM_SUBSET,									BasicROM },
+			{ _BASICRAM_SUBSET,									BasicRAM },
+			{ _KERNELROM_SUBSET,								KernelROM },
+			{ _KERNELRAM_SUBSET,								KernelRAM }
 		});
 
 	// Then the views...

@@ -28,36 +28,45 @@ namespace C264
 	class Commodore264 : public COMMODORE::Computer
 	{
 		public:
+		public:
+		enum class VisualSystem { _NTSC, _PAL };
+
 		/** Macros for the speed. \n
 			In the original series computer, 
 			the speed if defined by the TED (Video/Sound & IO) Chip. \n
 			The TED change speed depending on whether the raster is in a visible or nor visible zone of the screen.
 			and even if it has been configured to be PAL or NTSC! ºn
 			So the speed here is just a reference as an average. */
-		static const unsigned int _CLOCK = 886000;  // 0.886 MHz
+		static const unsigned int _PALCLOCK		= 889200; // 0.889 MHz
+		static const unsigned int _NTSCCLOCK	= 896040; // 0.896 MHz
 
-		Commodore264 (unsigned int cfg, const std::string& lg,
+		Commodore264 (unsigned int cfg, const std::string& lg, VisualSystem vS,
 			const MCHEmul::Chips& cps, const MCHEmul::IODevices& dvs);
 
 		virtual bool initialize (bool iM = true) override;
-
-		// TODO
 
 		protected:
 		virtual void processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifier* n) override;
 
 		// Managing memory configuration...
-		/** To get the type of machine. */
-		unsigned int machineType () const
-							{ return (static_cast <const Memory*> (memory ()) -> machineType ()); }
-		/** Change the type of machine. \n
+		/** To get the configuration of the memory. */
+		unsigned int configuration () const
+							{ return (static_cast <const Memory*> (memory ()) -> configuration ()); }
+		/** Change the configuration of the memory. \n
 			The parameter rs indicates whether to restart the computer. ºn
 			By default it is true. */
-		void setMachineType (unsigned int mT, bool rs = true);
+		void setConfiguration (unsigned int cfg, bool rs = true);
 
 		// Implementation
-		static MCHEmul::Chips standardChips (const std::string& sS);
-		static MCHEmul::IODevices standardDevices ();
+		static MCHEmul::Chips standardChips (const std::string& sS, VisualSystem vS);
+		static MCHEmul::IODevices standardDevices (VisualSystem vS);
+
+		protected:
+		/** The video system used by the C264 computer. */
+		VisualSystem _visualSystem;
+		/** The configuration mode of the computer. 
+			In some version couldn't make sense. */
+		unsigned int _configuration;
 	};
 
 	/** The Commodore 16_116 a specific element of the series 264. \n
@@ -66,14 +75,15 @@ namespace C264
 	class Commodore16_116 final : public Commodore264
 	{
 		public:
-		Commodore16_116 (const std::string& lg)
-			: Commodore264 (0, lg, standardChips (lg), standardDevices ())
+		Commodore16_116 (unsigned int cfg, const std::string& lg, VisualSystem vS)
+			: Commodore264 (cfg, lg, vS, 
+				standardChips (lg, vS), standardDevices (vS))
 							{ }
 
 		protected:
 		// Implementation
-		static MCHEmul::Chips standardChips (const std::string& sS);
-		static MCHEmul::IODevices standardDevices ();
+		static MCHEmul::Chips standardChips (const std::string& sS, VisualSystem vS);
+		static MCHEmul::IODevices standardDevices (VisualSystem vS);
 	};
 
 	/** Initially named C264. \n
@@ -81,14 +91,14 @@ namespace C264
 	class CommodorePlus4 final : public Commodore264
 	{
 		public:
-		CommodorePlus4 (const std::string& lg)
-			: Commodore264 (1, lg, standardChips (lg), standardDevices ())
+		CommodorePlus4 (const std::string& lg, VisualSystem vS)
+			: Commodore264 (3 /** always in mode 3 = 64k. */, lg, vS, standardChips (lg, vS), standardDevices (vS))
 							{ }
 
 		protected:
 		// Implementation
-		static MCHEmul::Chips standardChips (const std::string& sS);
-		static MCHEmul::IODevices standardDevices ();
+		static MCHEmul::Chips standardChips (const std::string& sS, VisualSystem vS);
+		static MCHEmul::IODevices standardDevices (VisualSystem vS);
 	};
 }
 

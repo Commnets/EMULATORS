@@ -66,7 +66,7 @@ namespace VIC20
 		static MCHEmul::IODevices standardDevices (CommodoreVIC20::VisualSystem vS);
 
 		protected:
-		/** The video system used by the commodore 64. */
+		/** The video system used by the commodore VIC20. */
 		VisualSystem _visualSystem;
 	};
 }

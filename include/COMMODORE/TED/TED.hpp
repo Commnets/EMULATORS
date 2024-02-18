@@ -16,13 +16,14 @@
 #define __COMMODORE_TED__
 
 #include <CORE/incs.hpp>
-#include <COMMODORE/TED/TEDRegisters.hpp>
+#include <COMMODORE/TED/C6529B.hpp>
 #include <COMMODORE/TED/TEDTimer.hpp>
+#include <COMMODORE/TED/TEDRegisters.hpp>
 
 namespace COMMODORE
 {
 	/** The chip that takes care of anything around the graphics in computers like 
-		Commodore 64 or Commodore 128 when emulating CMB64.
+		Commodore 16 or Commodore Plus 4 when emulating 116.
 		@see GraphicalChip. */
 	class TED : public MCHEmul::GraphicalChip
 	{
@@ -77,20 +78,12 @@ namespace COMMODORE
 		static const unsigned short _GRAPHMAXBITMAPCOLUMNS	= 320;	// Not taking into account double coulors
 		static const unsigned short _GRAPHMAXBITMAPROWS		= 200;
 
-		/** Static address. The color memory can not be changed in TED */
-		static const MCHEmul::Address _COLORMEMORY;
-
-		// Raster Info...
-		static const MCHEmul::RasterData _PALVRASTERDATA;
-		static const MCHEmul::RasterData _PALHRASTERDATA;
-		static const MCHEmul::RasterData _NTSCVRASTERDATA;
-		static const MCHEmul::RasterData _NTSCHRASTERDATA;
-
 		/** Specific classes for PAL & NTSC have been created giving this data as default. \n
 			The TED constructor receives info over the raster data, the memory view to use,
 			The number of cycles of every raster line (different depending on the VICII version) 
 			and additional attributes. */
-		TED (int vV, MCHEmul::SoundLibWrapper* sW, const MCHEmul::Attributes& attrs = { });
+		TED (const MCHEmul::RasterData& vd, const MCHEmul::RasterData& hd,
+			int vV, MCHEmul::SoundLibWrapper* sW, const MCHEmul::Attributes& attrs = { });
 
 		virtual ~TED () override;
 
@@ -98,6 +91,9 @@ namespace COMMODORE
 							{ return (_soundFunction); }
 		SoundFunction* soundFunction ()
 							{ return (_soundFunction); }
+
+		void lookAt6529B (C6529B* c)
+							{ _c6529B = c; }
 
 		virtual unsigned short numberColumns () const override
 							{ return (_raster.visibleColumns ()); }
@@ -159,8 +155,6 @@ namespace COMMODORE
 			their respective variable _colorData. */
 		struct DrawResult
 		{
-			/** The color of the each pixel considered as background. */
-			unsigned int _backgroundColorData [8];
 			/** The color of the each pixel considered as foreground. */
 			unsigned int _foregroundColorData [8];
 			/** To indicate whether it is or not consecuencia of a "bad mode",
@@ -168,8 +162,7 @@ namespace COMMODORE
 			bool _invalid;
 
 			DrawResult (unsigned int bC = ~0 /** Meaning transparent (jumped later when moving info to screen). */)
-				: _backgroundColorData { bC, bC, bC, bC, bC, bC, bC, bC },
-				  _foregroundColorData { bC, bC, bC, bC, bC, bC, bC, bC },
+				: _foregroundColorData { bC, bC, bC, bC, bC, bC, bC, bC },
 				  _invalid (false)
 							{ }
 		};
@@ -241,6 +234,8 @@ namespace COMMODORE
 		TEDTimer _T1, _T2, _T3;
 		/** A reference to the sound part of the chip. */
 		SoundFunction* _soundFunction;
+		/** A reference to the chip C6529B. */
+		C6529B* _c6529B;
 		/** The memory is used also as the set of registers of the chip. */
 		COMMODORE::TEDRegisters* _TEDRegisters;
 		/** The number of the memory view used to read the data. */
@@ -342,7 +337,7 @@ namespace COMMODORE
 		_tedGraphicInfo._screenCodeData [_tedGraphicInfo._VLMI] =
 			memoryRef () -> value (_TEDRegisters -> screenMemory () + (size_t) _tedGraphicInfo._VC); 
 		_tedGraphicInfo._colorData [_tedGraphicInfo._VLMI] = 
-			memoryRef () -> value (_COLORMEMORY + (size_t) _tedGraphicInfo._VC); 
+			memoryRef () -> value (_TEDRegisters -> attributeMemory () + (size_t) _tedGraphicInfo._VC);
 		
 		memoryRef () -> setCPUView ();
 	}
@@ -367,6 +362,30 @@ namespace COMMODORE
 		
 		memoryRef () -> setCPUView ();
 	}
+
+	/** The version para PAL systems. */
+	class TED_PAL final : public TED
+	{
+		public:
+		static const MCHEmul::RasterData _VRASTERDATA;
+		static const MCHEmul::RasterData _HRASTERDATA;
+
+		static constexpr unsigned short _CYCLESPERRASTERLINE = 71;
+
+		TED_PAL (int vV, MCHEmul::SoundLibWrapper* wS);
+	};
+
+	/** The version para NTSC systems. */
+	class TED_NTSC final : public TED
+	{
+		public:
+		static const MCHEmul::RasterData _VRASTERDATA;
+		static const MCHEmul::RasterData _HRASTERDATA;
+
+		static constexpr unsigned short _CYCLESPERRASTERLINE = 65;
+
+		TED_NTSC (int vV, MCHEmul::SoundLibWrapper* wS);
+	};
 }
 
 #endif

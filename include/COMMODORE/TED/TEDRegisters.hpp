@@ -200,6 +200,8 @@ namespace COMMODORE
 							{ return (_charDataMemory); }
 		const MCHEmul::Address& screenMemory () const 
 							{ return (_screenMemory); }
+		const MCHEmul::Address& attributeMemory () const 
+							{ return (_attributeMemory); }
 		const MCHEmul::Address& bitmapMemory () const 
 							{ return (_bitmapMemory); }
 
@@ -262,7 +264,7 @@ namespace COMMODORE
 							{ _soundWrapper = dynamic_cast <TEDSoundLibWrapper*> (w); }
 		void lookAtTimers (TEDTimer* t1, TEDTimer* t2, TEDTimer* t3)
 							{ _T1 = t1, _T2 = t2; _T3 = t3; }
-		void looAtC2569B (C6529B* c)
+		void lookAtC2569B (C6529B* c)
 							{ _c6529B = c; }
 
 		/** Just to initialize the internal values. */
@@ -322,7 +324,8 @@ namespace COMMODORE
 			Info calculated when the registers are accessed. */
 		bool _ROMSourceActive;
 		MCHEmul::Address _charDataMemory;	
-		MCHEmul::Address _screenMemory;		
+		MCHEmul::Address _screenMemory;
+		MCHEmul::Address _attributeMemory;
 		MCHEmul::Address _bitmapMemory;		
 
 		/** Status of the joystick. 

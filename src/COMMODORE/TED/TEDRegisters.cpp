@@ -250,7 +250,7 @@ void COMMODORE::TEDRegisters::setValue (size_t p, const MCHEmul::UByte& v)
 				_ROMSourceActive = v.bit (2);
 				_bitmapMemory = MCHEmul::Address (MCHEmul::UInt::fromUnsignedInt
 					((unsigned int) ((v.value () & 0x38 /** bits 3, 4 & 5. */) << 10 
-						/** 2 + 8 to become the bits 15, 14 & 13 of the address. */)));
+						/** 2 + 8 to become the bits 13, 14 & 15 of the address. */)));
 				/** bits 6 & 7 are not used. */
 			}
 
@@ -264,7 +264,7 @@ void COMMODORE::TEDRegisters::setValue (size_t p, const MCHEmul::UByte& v)
 				_singleClockModeActive = v.bit (1);
 				_charDataMemory = MCHEmul::Address (MCHEmul::UInt::fromUnsignedInt
 					((unsigned int) ((v.value () & 0xfc /** bits 2 - 7. */) << 8 
-						/** 8 to become the bits 15 - 10 of the address. */)));
+						/** 8 to become the bits 10 - 15 of the address. */)));
 			}
 
 			break;
@@ -275,7 +275,12 @@ void COMMODORE::TEDRegisters::setValue (size_t p, const MCHEmul::UByte& v)
 				/** Bits 0, 1 & 2 are not used. */
 				_screenMemory = MCHEmul::Address (MCHEmul::UInt::fromUnsignedInt
 					((unsigned int) ((v.value () & 0xf8 /** bits 3 - 7. */) << 8 
-						/** 8 to become the bits 15 - 10 of the address. */)));
+						/** 8 to become the bits 11 - 15 of the address. */) | 0x8000 /** The bit 10 is always set. */));
+				_attributeMemory = MCHEmul::Address (MCHEmul::UInt::fromUnsignedInt
+					((unsigned int) ((v.value () & 0xf8 /** bits 3 - 7. */) << 8 
+						/** 8 to become the bits 11 - 15 of the address. */)));
+				// The difference between the _screenMemory location and the _attributeMemory location
+				// is just the bit 10 is set in _screeMemory and off in _attributeMemory...
 			}
 
 			break;
@@ -520,7 +525,11 @@ const MCHEmul::UByte& COMMODORE::TEDRegisters::readValue (size_t p) const
 		// after executing setValue (0x08)...
 		case 0x08:
 			{
-				// TODO
+				unsigned char dt = 0;
+				for (size_t i = 0; i < 7; i++)
+					if (_c6529B -> latchValue ().bit (i))
+						dt |= _rev_keyboardStatusMatrix [i].value ();
+				result = dt;
 			}
 
 			break;

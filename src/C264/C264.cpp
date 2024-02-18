@@ -9,21 +9,23 @@
 #include <F6500/C6502.hpp>
 
 // ---
-C264::Commodore264::Commodore264 (unsigned int mT, const std::string& lg,
+C264::Commodore264::Commodore264 (unsigned int cfg, const std::string& lg, C264::Commodore264::VisualSystem vS,
 		const MCHEmul::Chips& cps, const MCHEmul::IODevices& dvs)
 	: COMMODORE::Computer 
 		(new F6500::C6502 (0 /** Only one micro. */),
 		 cps,
-		 new C264::Memory (mT, lg),
+		 new C264::Memory (cfg, lg),
 		 dvs,
-		 _CLOCK,
+		 (vS == C264::Commodore264::VisualSystem::_PAL) ? _PALCLOCK : _NTSCCLOCK,
 		 { }, { }, // The C264 series emulation has been done without neither Buses nor Wires!
 		 { { "Name", "C264 Series (C116/C16/CPlus4)" },
 		   { "Manufacturer", "Commodore Business Machines CBM" },
 		   { "Year", "1984" }
-		 })
+		 }),
+	  _visualSystem (vS),
+	  _configuration (cfg)
 {
-	setMachineType (mT, false /** Not restart at initialization. */);
+	setConfiguration (cfg);
 }
 
 // ---
@@ -33,9 +35,9 @@ bool C264::Commodore264::initialize (bool iM)
 	if (!result)
 		return (false);
 
-	// Depending on the type of machine different 
+	// Depending on the configuration of the memory 
 	// zones of the 64k memory will or not be available as RAM...
-	setMachineType (static_cast <C264::Memory*> (memory ()) -> machineType (), false /** Not restart. */);
+	setConfiguration (static_cast <C264::Memory*> (memory ()) -> configuration (), false /** Not restart. */);
 
 	// It is also needed to observe the expansion port...
 	// Events when it is disonnected and connected are sent and with many implications
@@ -66,9 +68,9 @@ void C264::Commodore264::processEvent (const MCHEmul::Event& evnt, MCHEmul::Noti
 }
 
 // ---
-void C264::Commodore264::setMachineType (unsigned int mT, bool rs) 
+void C264::Commodore264::setConfiguration (unsigned int cfg, bool rs) 
 {
-	static_cast <C264::Memory*> (memory ()) -> setMachineType (mT);
+	static_cast <C264::Memory*> (memory ()) -> setConfiguration (cfg);
 
 	// Restart?
 	if (rs)
@@ -79,15 +81,33 @@ void C264::Commodore264::setMachineType (unsigned int mT, bool rs)
 }
 
 // ---
-MCHEmul::Chips C264::Commodore264::standardChips (const std::string& sS)
+MCHEmul::Chips C264::Commodore264::standardChips (const std::string& sS, C264::Commodore264::VisualSystem vS)
 {
 	MCHEmul::Chips result;
 
 	// The TED...
-	COMMODORE::TED* ted = (COMMODORE::TED*) new COMMODORE::TED 
-			(C264::Memory::_CPU_VIEW, new COMMODORE::TEDSoundSimpleLibWrapper 
-				(C264::Commodore264::_CLOCK, COMMODORE::TED::_SOUNDSAMPLINGCLOCK));
+	// The one to create will depend on the type of visualization system...
+	// Notice that the sound chip frequency is multiplied by 16 in NTSC systems and by 20 in PAL systems
+	COMMODORE::TED* ted = 
+		vS == C264::Commodore264::VisualSystem::_PAL 
+			? (COMMODORE::TED*) new COMMODORE::TED_PAL 
+				(C264::Memory::_CPU_VIEW, new COMMODORE::TEDSoundSimpleLibWrapper 
+					((vS == C264::Commodore264::VisualSystem::_PAL) 
+						? (C264::Commodore264::_PALCLOCK * 20) : (C264::Commodore264::_NTSCCLOCK * 16),
+					 COMMODORE::TED::_SOUNDSAMPLINGCLOCK))
+			: (COMMODORE::TED*) new COMMODORE::TED_NTSC
+				(C264::Memory::_CPU_VIEW, new COMMODORE::TEDSoundSimpleLibWrapper 
+					((vS == C264::Commodore264::VisualSystem::_PAL) 
+						? (C264::Commodore264::_PALCLOCK * 20) : (C264::Commodore264::_NTSCCLOCK * 16), 
+					 COMMODORE::TED::_SOUNDSAMPLINGCLOCK));
 	result.insert (MCHEmul::Chips::value_type (COMMODORE::TED::_ID, (MCHEmul::Chip*) ted));
+
+	// This intermediate chip is just used to latch the value of the keyboard matrix...
+	COMMODORE::C6529B* c6529B = new COMMODORE::C6529B;
+	result.insert (MCHEmul::Chips::value_type (COMMODORE::C6529B::_ID, c6529B));
+	// ...and it has to be linked somehow with the TED...
+	ted -> lookAt6529B (c6529B);
+	// Notice that TED is not the owner of this chip, that it would be simulated like any other else...
 	
 	// The sound chip doesn't exist in C264 series. 
 	// It is part of the TED.
@@ -98,7 +118,7 @@ MCHEmul::Chips C264::Commodore264::standardChips (const std::string& sS)
 }
 
 // ---
-MCHEmul::IODevices C264::Commodore264::standardDevices ()
+MCHEmul::IODevices C264::Commodore264::standardDevices (C264::Commodore264::VisualSystem vS)
 {
 	MCHEmul::IODevices result;
 
@@ -121,10 +141,10 @@ MCHEmul::IODevices C264::Commodore264::standardDevices ()
 }
 
 // ---
-MCHEmul::Chips C264::Commodore16_116::standardChips (const std::string& sS)
+MCHEmul::Chips C264::Commodore16_116::standardChips (const std::string& sS, C264::Commodore264::VisualSystem vS)
 {
 	MCHEmul::Chips result = 
-		std::move (C264::Commodore264::standardChips (sS));
+		std::move (C264::Commodore264::standardChips (sS, vS));
 
 	// TODO
 
@@ -132,14 +152,16 @@ MCHEmul::Chips C264::Commodore16_116::standardChips (const std::string& sS)
 }
 
 // ---
-MCHEmul::IODevices C264::Commodore16_116::standardDevices ()
+MCHEmul::IODevices C264::Commodore16_116::standardDevices (C264::Commodore264::VisualSystem vS)
 {
 	MCHEmul::IODevices result =
-		std::move (C264::Commodore264::standardDevices ());
+		std::move (C264::Commodore264::standardDevices (vS));
 
-	// The screen with the C16 text...
+	// The screen with the C16/C116 text...
 	result.insert (MCHEmul::IODevices::value_type (C264::Screen::_ID, 
-		(MCHEmul::IODevice*) new C264::Screen ("C16/116")));
+		(vS == C264::Commodore264::VisualSystem::_PAL) 
+			? (MCHEmul::IODevice*) new C264::ScreenPAL ("C16/116") 
+			: (MCHEmul::IODevice*) new C264::ScreenNTSC ("C16/116")));
 
 	// TODO
 
@@ -147,10 +169,10 @@ MCHEmul::IODevices C264::Commodore16_116::standardDevices ()
 }
 
 // ---
-MCHEmul::Chips C264::CommodorePlus4::standardChips (const std::string& sS)
+MCHEmul::Chips C264::CommodorePlus4::standardChips (const std::string& sS, C264::Commodore264::VisualSystem vS)
 {
 	MCHEmul::Chips result = 
-		std::move (C264::Commodore264::standardChips (sS));
+		std::move (C264::Commodore264::standardChips (sS, vS));
 
 	// TODO
 
@@ -158,14 +180,16 @@ MCHEmul::Chips C264::CommodorePlus4::standardChips (const std::string& sS)
 }
 
 // ---
-MCHEmul::IODevices C264::CommodorePlus4::standardDevices ()
+MCHEmul::IODevices C264::CommodorePlus4::standardDevices (C264::Commodore264::VisualSystem vS)
 {
 	MCHEmul::IODevices result =
-		std::move (C264::Commodore264::standardDevices ());
+		std::move (C264::Commodore264::standardDevices (vS));
 
-	// The screen with the C116 text...
+	// The screen with the Plus/4 text...
 	result.insert (MCHEmul::IODevices::value_type (C264::Screen::_ID, 
-		(MCHEmul::IODevice*) new C264::Screen ("Plus/4")));
+		(vS == C264::Commodore264::VisualSystem::_PAL) 
+			? (MCHEmul::IODevice*) new C264::ScreenPAL ("Plus/4") 
+			: (MCHEmul::IODevice*) new C264::ScreenNTSC ("Plus/4")));
 
 	return (result);
 }

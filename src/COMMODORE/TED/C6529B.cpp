@@ -2,11 +2,12 @@
 #include <COMMODORE/TED/C6529BRegisters.hpp>
 
 // ---
-COMMODORE::C6529B::C6529B (int id)
+COMMODORE::C6529B::C6529B ()
 	: MCHEmul::Chip (_ID, 
 		{ { "Name", "6529B" },
 		  { "Manufacturer", "Commodore Business Machines CBM" },
-		  { "Year", "1984" } })
+		  { "Year", "1984" } }),
+	  _C6529BRegisters (nullptr)
 {
 	// Nothing else to do...
 }
