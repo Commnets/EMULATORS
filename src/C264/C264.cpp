@@ -10,11 +10,12 @@
 
 // ---
 C264::Commodore264::Commodore264 (unsigned int cfg, const std::string& lg, C264::Commodore264::VisualSystem vS,
+		MCHEmul::Memory* m,
 		const MCHEmul::Chips& cps, const MCHEmul::IODevices& dvs)
 	: COMMODORE::Computer 
 		(new F6500::C6502 (0 /** Only one micro. */),
 		 cps,
-		 new C264::Memory (cfg, lg),
+		 m,
 		 dvs,
 		 (vS == C264::Commodore264::VisualSystem::_PAL) ? _PALCLOCK : _NTSCCLOCK,
 		 { }, { }, // The C264 series emulation has been done without neither Buses nor Wires!
@@ -25,6 +26,8 @@ C264::Commodore264::Commodore264 (unsigned int cfg, const std::string& lg, C264:
 	  _visualSystem (vS),
 	  _configuration (cfg)
 {
+	assert (_memory != nullptr);
+
 	setConfiguration (cfg);
 }
 

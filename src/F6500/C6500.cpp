@@ -503,7 +503,7 @@ MCHEmul::Instructions F6500::C6500::createInstructions ()
 	// TYA
 	result [0x98] = new F6500::TYA;
 
-	assert (result.size () == 245); 
+	assert (result.size () == 248); 
 
 	return (result);
 }

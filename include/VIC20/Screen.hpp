@@ -25,10 +25,7 @@ namespace VIC20
 		public:
 		static const int _ID = 200;
 		
-		Screen (double hz, int w, int h, const MCHEmul::Attributes& attrs)
-			: MCHEmul::Screen ("VIC20", _ID, w, h, 2.0f, 2.0f, hz, attrs),
-			  _drawBorder (false), _borderColor (0)
-							{ }
+		Screen (double hz, int w, int h, const MCHEmul::Attributes& attrs);
 
 		/** Managing the border. */
 		void setDrawBorder (bool dB, unsigned int c = 0)
@@ -36,6 +33,10 @@ namespace VIC20
 
 		protected:
 		virtual void drawAdditional () override;
+
+		// The char code and the ASCII code ar quite similar!
+		virtual size_t charCodeFromASCII (unsigned char id) const override
+							{ return ((size_t) (id & ~0b0100000)); }
 
 		protected:
 		bool _drawBorder;

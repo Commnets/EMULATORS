@@ -410,7 +410,7 @@ void COMMODORE::TED::processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifier
 				unsigned char dr = 0;
 				for (size_t ct = 0; ct < jm ->_axisValues.size (); ct++)
 					dr |= 1 << ((COMMODORE::TEDInputOSSystem*) n) -> bitForJoystickAxis 
-						(jm -> _joystickId, ct, jm -> _axisValues [ct]);
+						(jm -> _joystickId, (int) ct, jm -> _axisValues [ct]);
 
 				/** Saves the full status of the joystick. */
 				_TEDRegisters -> setJoystickStatus 

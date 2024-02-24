@@ -41,6 +41,7 @@ namespace C264
 		static const unsigned int _NTSCCLOCK	= 896040; // 0.896 MHz
 
 		Commodore264 (unsigned int cfg, const std::string& lg, VisualSystem vS,
+			MCHEmul::Memory* m,
 			const MCHEmul::Chips& cps, const MCHEmul::IODevices& dvs);
 
 		virtual bool initialize (bool iM = true) override;
@@ -76,7 +77,8 @@ namespace C264
 	{
 		public:
 		Commodore16_116 (unsigned int cfg, const std::string& lg, VisualSystem vS)
-			: Commodore264 (cfg, lg, vS, 
+			: Commodore264 (cfg, lg, vS,
+				new C264::C16_116Memory (cfg, lg),
 				standardChips (lg, vS), standardDevices (vS))
 							{ }
 
@@ -91,8 +93,10 @@ namespace C264
 	class CommodorePlus4 final : public Commodore264
 	{
 		public:
-		CommodorePlus4 (const std::string& lg, VisualSystem vS)
-			: Commodore264 (3 /** always in mode 3 = 64k. */, lg, vS, standardChips (lg, vS), standardDevices (vS))
+		CommodorePlus4 (unsigned int cfg, const std::string& lg, VisualSystem vS)
+			: Commodore264 (cfg, lg, vS,
+				new C264::CPlus4Memory (cfg, lg),
+				standardChips (lg, vS), standardDevices (vS))
 							{ }
 
 		protected:

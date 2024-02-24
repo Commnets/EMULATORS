@@ -1,5 +1,28 @@
 #include <C64/Screen.hpp>
 
+C64::Screen::Screen (double hz, int w, int h, const MCHEmul::Attributes& attrs)
+	: MCHEmul::Screen ("C64", _ID, w, h, 2.0f, 2.0f, hz, attrs),
+		_drawBorder (false), _borderColor (0)
+{
+	bool e;
+	MCHEmul::DataMemoryBlock dt = MCHEmul::DataMemoryBlock::loadBinaryFile
+		("./characters.901225-01-ENG.bin", e, 0 /** no address, no needed */, true);
+	if (!e)
+	{
+		for (size_t i = 0; i < 512; i += 8)
+		{
+			std::vector <MCHEmul::UBytes> chrdt;
+			for (size_t j = 0; j < 8; j++)
+				chrdt.push_back (MCHEmul::UBytes ({ dt.byte ((i << 3) + j) }));
+			_graphicsDef.emplace_back (std::move (chrdt));
+		}
+	}
+
+	// Always the same...that is nothing!
+	_defaultGraphicDef = 
+		std::vector <MCHEmul::UBytes> (8, MCHEmul::UBytes ({ MCHEmul::UByte::_0 }));
+}
+
 // ---
 void C64::Screen::drawAdditional ()
 {
@@ -9,25 +32,21 @@ void C64::Screen::drawAdditional ()
 		unsigned short x1, y1, x2, y2;
 
 		// Draws the border of the display!
-		gC -> raster ().displayPositions (x1, y1, x2, y2); 
+		gC -> raster ().displayPositions (x1, y1, x2, y2);
 		// as C64 behaves, these values can never be wrong neither in order nor in value...
-		gC -> screenMemory () -> setHorizontalLine ((size_t) x1 - 1, (size_t) y1 - 1, (size_t) x2 - x1 + 3, _borderColor);
-		gC -> screenMemory () -> setHorizontalLine ((size_t) x1 - 1, (size_t) y2 + 1, (size_t) x2 - x1 + 3, _borderColor);
-		gC -> screenMemory () -> setVerticalLine ((size_t) x1 - 1, (size_t) y1 - 1, (size_t) y2 - y1 + 3, _borderColor);
-		gC -> screenMemory () -> setVerticalLine ((size_t) x2 + 1, (size_t) y1 - 1, (size_t) y2 - y1 + 3, _borderColor);
+		drawRectangle ((size_t) (x1 - 1), (size_t) (y1 - 1), (size_t) (x2 + 1), (size_t) (y2 + 1), _borderColor);
+
+		// Draw a cuadricula per line of chars...
 		for (unsigned short i = y1 + 8; i <= y2; i += 8)
-			gC -> screenMemory () -> setHorizontalLineStep ((size_t) x1 - 1, (size_t) i, (size_t) x2 - x1 + 3, _borderColor, 2);
+			drawHorizontalLineStep ((size_t) x1 - 1, (size_t) i, (size_t) x2 - x1 + 3, 2, _borderColor);
 		for (unsigned short i = x1 + 8; i <= x2; i += 8)
-			gC -> screenMemory () -> setVerticalLineStep ((size_t) i, (size_t) y1 - 1, (size_t) y2 - y1 + 3, _borderColor, 2);
+			drawVerticalLineStep ((size_t) i, (size_t) y1 - 1, (size_t) y2 - y1 + 3, 2, _borderColor);
 
 		// Draws the border of the screen!
 		gC -> raster ().screenPositions (x1, y1, x2, y2);
 		// as C64 behaves, these values can never be wrong neither in order nor in value...
 		unsigned int bC = ((_borderColor + 1) > 15) ? 0 : _borderColor + 1; 
-		gC -> screenMemory () -> setHorizontalLine ((size_t) x1 - 1, (size_t) y1 - 1, (size_t) x2 - x1 + 3, bC);
-		gC -> screenMemory () -> setHorizontalLine ((size_t) x1 - 1, (size_t) y2 + 1, (size_t) x2 - x1 + 3, bC);
-		gC -> screenMemory () -> setVerticalLine ((size_t) x1 - 1, (size_t) y1 - 1, (size_t) y2 - y1 + 3, bC);
-		gC -> screenMemory () -> setVerticalLine ((size_t) x2 + 1, (size_t) y1 - 1, (size_t) y2 - y1 + 3, bC);
+		drawRectangle ((size_t) (x1 - 1), (size_t) (y1 - 1), (size_t) (x2 + 1), (size_t) (y2 + 1), _borderColor);
 	}
 }
 

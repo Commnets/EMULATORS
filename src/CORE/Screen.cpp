@@ -12,7 +12,8 @@ MCHEmul::Screen::Screen (const std::string& n, int id,
 	  _hertzs (hz), _clock ((unsigned int) hz /** integer. */),
 	  _graphicalChip (nullptr),
 	  _window (nullptr), _renderer (nullptr), _texture (nullptr),
-	  _graphicsReady (false)
+	  _graphicsReady (false),
+	  _graphicsDef (), _defaultGraphicDef () // Must be defined in every screen emulation is needed...
 {
 	assert (_hertzs > 0);
 

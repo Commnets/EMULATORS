@@ -59,7 +59,7 @@ MCHEmul::Computer* C264::C264Emulator::createComputer () const
 	switch (emulattedComputer ())
 	{
 		case 1:
-			result = new C264::CommodorePlus4 (computerLanguage (), 
+			result = new C264::CommodorePlus4 (configurationMode (), computerLanguage (), 
 				NTSCSystem () ? C264::Commodore264::VisualSystem::_NTSC : C264::Commodore264::VisualSystem::_PAL);
 			break;
 

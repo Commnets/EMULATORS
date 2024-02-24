@@ -18,7 +18,8 @@
 
 namespace C264
 {
-	/** When a C264 series computer is not expanded, there are several memory zones not connected.
+	/** When a C264 series computer is not expanded (usually come configurations of C16/16), 
+		there are several memory zones not connected.
 		That zones, doesn't respond to poke and always return the same value when peeking 
 		(at least it is as anothe emulators in the market now behave)
 		This is the way (i guess) C264 non expanded series computer determines how much free memory the system has.
@@ -45,8 +46,11 @@ namespace C264
 		MCHEmul::UByte _defaultValue;
 	};
 
-	/** The memory itself for the C264 Series... */
-	class Memory final : public MCHEmul::Memory
+	/** The memory itself for the C264 Series... 
+		There will be some classes inheriting this, 
+		as the memory of the different machines is not the same, 
+		because they don't event have the same chips attached!.  */
+	class Memory : public MCHEmul::Memory
 	{
 		public:
 		// Phisical Storages
@@ -60,28 +64,35 @@ namespace C264
 		static const int _RAM1_SUBSET			= 102;
 		static const int _RAM2_SUBSET			= 103;
 		static const int _RAM3_SUBSET			= 104;
-		static const int _RAM4_SUBSET			= 105;
-		static const int _RAM5_SUBSET			= 106;
-		static const int _BASICROM_SUBSET		= 107;
-		static const int _KERNELROM1_SUBSET		= 108;
-		static const int _KERNELROM2_SUBSET		= 109;
+		static const int _BASICROM_SUBSET		= 105;
+		static const int _RAM4_SUBSET			= 106;
+		static const int _KERNELROM1_SUBSET		= 107;
+		static const int _IORAM0_SUBSET			= 108;
+		static const int _IORAM1_SUBSET			= 109;
+		static const int _IORAM2_SUBSET			= 110;
+		static const int _IORAM3_SUBSET			= 111;
+		static const int _IORAM4_SUBSET			= 112;
+		static const int _IORAM5_SUBSET			= 113;
+		static const int _RAM5_SUBSET			= 114;
+		static const int _KERNELROM2_SUBSET		= 115;
 
 		// Views
 		static const int _CPU_VIEW				= 0;
 
 		/** The constructor receives the configuration type. */
-		Memory (unsigned int cfg,
+		Memory (unsigned int cfg, const MCHEmul::Memory::Content& cnt,
 			const std::string& lang = MCHEmul::_DEFAULTLANGUAGE);
 
 		/** To get/set the configuration type. */
 		unsigned int configuration () const
 							{ return (_configuration); }
-		void setConfiguration (unsigned int cfg);
+		/** It can be overloaded for different types of memory. */
+		virtual void setConfiguration (unsigned int cfg) = 0;
 
 		/** To activate the right subsets in the CPU view. */
 		virtual bool initialize () override;
 
-		private:
+		protected:
 		virtual MCHEmul::Stack* lookForStack () override
 							{ return (dynamic_cast <MCHEmul::Stack*> (subset (_STACK_SUBSET))); }
 		virtual MCHEmul::MemoryView* lookForCPUView () override
@@ -89,7 +100,7 @@ namespace C264
 
 		static MCHEmul::Memory::Content standardMemoryContent ();
 
-		private:
+		protected:
 		unsigned int _configuration;
 
 		// Implementation
@@ -101,6 +112,40 @@ namespace C264
 		MCHEmul::PhysicalStorageSubset* _basicROM;
 		MCHEmul::PhysicalStorageSubset* _kernelROM1;
 		MCHEmul::PhysicalStorageSubset* _kernelROM2;
+	};
+
+	/** The memory for the C16/116. */
+	class C16_116Memory final : public Memory
+	{
+		public:
+		// Subsets...
+		static const int _IOACIARAM_SUBSET		= 200;
+		static const int _IO6529B1RAM_SUBSET	= 201;
+
+		C16_116Memory (unsigned int cfg,
+			const std::string& lang = MCHEmul::_DEFAULTLANGUAGE);
+
+		virtual void setConfiguration (unsigned int cfg) override;
+
+		private:
+		static MCHEmul::Memory::Content standardMemoryContent ();
+	};
+
+	/** And the one for the powerful machine C264. */
+	class CPlus4Memory final : public Memory
+	{
+		public:
+		CPlus4Memory (unsigned int cfg,
+			const std::string& lang = MCHEmul::_DEFAULTLANGUAGE);
+
+		virtual void setConfiguration (unsigned int cfg) override;
+
+		private:
+		static MCHEmul::Memory::Content standardMemoryContent ();
+
+		private:
+		MCHEmul::PhysicalStorageSubset* _code1;
+		MCHEmul::PhysicalStorageSubset* _code2;
 	};
 }
 

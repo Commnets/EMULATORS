@@ -55,6 +55,10 @@ namespace MCHEmul
 							{ return (_startAddress); }
 		const std::vector <UByte>& bytes () const
 							{ return (_bytes); }
+		const UByte& byte (size_t i) const // Take care, the limits are not checked...
+							{ return (_bytes [i]); }
+		UByte& byte (size_t i)
+							{ return (_bytes [i]); }
 		size_t size () const
 							{ return (_bytes.size ()); }
 		Address endAddress () const

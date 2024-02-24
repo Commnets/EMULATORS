@@ -39,8 +39,6 @@ namespace MCHEmul
 		/** The default value which is used to initialize the memory, can be changed. */
 		static UByte _DEFAULTVALUE;
 
-		friend PhysicalStorageSubset;
-
 		enum class Type 
 		{ 
 			_ROM, 
@@ -67,8 +65,7 @@ namespace MCHEmul
 		bool canBeWriten (bool f = false /** force the writting. */) const
 							{ return (_type == Type::_RAM || (_type == Type::_ROM && f)); }
 
-		protected:
-		// This methods can only be invoked from PhisicalMemorySubset class
+		// This methods should be only invoked from PhisicalMemorySubset class
 		// IMPORTANT NOTE: 
 		// They go direclty to the memory and can be dangerous for the stability of the system!
 
@@ -525,6 +522,8 @@ namespace MCHEmul
 
 			const PhysicalStorages& physicalStorages () const
 							{ return (_physicalStorages); }
+			PhysicalStorages& physicalStorages ()
+							{ return (_physicalStorages); }
 			bool existsPhysicalStorage (int id) const
 							{ return (_physicalStorages.find (id) != _physicalStorages.end ()); }
 			const PhysicalStorage* physicalStorage (int id) const
@@ -535,6 +534,8 @@ namespace MCHEmul
 
 			const PhysicalStorageSubsets& subsets ( ) const
 							{ return (_subsets); }
+			PhysicalStorageSubsets& subsets ( )
+							{ return (_subsets); }
 			bool existsSubset (int id) const
 							{ return (_subsets.find (id) != _subsets.end ()); }
 			const PhysicalStorageSubset* subset (int id) const
@@ -544,6 +545,8 @@ namespace MCHEmul
 								return ((i != _subsets.end ()) ? (*i).second : nullptr); }
 
 			const MemoryViews& views () const
+							{ return (_views); }
+			MemoryViews& views ()
 							{ return (_views); }
 			bool existsView (int id) const
 							{ return (_views.find (id) != _views.end ()); }
