@@ -33,7 +33,7 @@ namespace C264
 
 		// The char code and the ASCII code ar quite similar!
 		virtual size_t charCodeFromASCII (unsigned char id) const override
-							{ return ((size_t) (id & ~0b0100000)); }
+							{ return ((size_t) (id & ~0b01000000)); }
 
 		protected:
 		virtual void drawAdditional () override;

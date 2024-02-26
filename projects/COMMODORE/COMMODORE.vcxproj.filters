@@ -94,6 +94,12 @@
     <Filter Include="Archivos de encabezado\Motherboard\Chips\TIA">
       <UniqueIdentifier>{cbf250b5-88ed-4de0-9093-2110b9dce22f}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Archivos de origen\Motherboard\Chips\C6529B">
+      <UniqueIdentifier>{17d032d1-b7eb-4d5e-9f7e-300b323bd0c4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Archivos de encabezado\Motherboard\Chips\C6529B">
+      <UniqueIdentifier>{3e7da274-01f4-41ff-98a0-9e5859ea962a}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\include\COMMODORE\incs.hpp">
@@ -225,12 +231,6 @@
     <ClInclude Include="..\..\include\COMMODORE\TED\TEDTimer.hpp">
       <Filter>Archivos de encabezado\Motherboard\Chips\TED</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\include\COMMODORE\TED\C6529B.hpp">
-      <Filter>Archivos de encabezado\Motherboard\Chips\TED</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\include\COMMODORE\TED\C6529BRegisters.hpp">
-      <Filter>Archivos de encabezado\Motherboard\Chips\TED</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\include\COMMODORE\TED\TEDOSIO.hpp">
       <Filter>Archivos de encabezado\Motherboard\Chips\TED</Filter>
     </ClInclude>
@@ -251,6 +251,12 @@
     </ClInclude>
     <ClInclude Include="..\..\include\COMMODORE\TIA\TIARegisters.hpp">
       <Filter>Archivos de encabezado\Motherboard\Chips\TIA</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\COMMODORE\C6529B\C6529B.hpp">
+      <Filter>Archivos de encabezado\Motherboard\Chips\C6529B</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\COMMODORE\C6529B\C6529BRegisters.hpp">
+      <Filter>Archivos de encabezado\Motherboard\Chips\C6529B</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -364,12 +370,6 @@
     <ClCompile Include="..\..\src\COMMODORE\TED\TEDTimer.cpp">
       <Filter>Archivos de origen\Motherboard\Chips\TED</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\COMMODORE\TED\C6529BRegisters.cpp">
-      <Filter>Archivos de origen\Motherboard\Chips\TED</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\COMMODORE\TED\C6529B.cpp">
-      <Filter>Archivos de origen\Motherboard\Chips\TED</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\COMMODORE\TED\TEDOSIO.cpp">
       <Filter>Archivos de origen\Motherboard\Chips\TED</Filter>
     </ClCompile>
@@ -384,6 +384,12 @@
     </ClCompile>
     <ClCompile Include="..\..\src\COMMODORE\TIA\TIARegisters.cpp">
       <Filter>Archivos de origen\Motherboard\Chips\TIA</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\COMMODORE\C6529B\C6529B.cpp">
+      <Filter>Archivos de origen\Motherboard\Chips\C6529B</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\COMMODORE\C6529B\C6529BRegisters.cpp">
+      <Filter>Archivos de origen\Motherboard\Chips\C6529B</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

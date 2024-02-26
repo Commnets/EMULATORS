@@ -16,6 +16,7 @@
 
 #include <F6500/incs.hpp>
 #include <EMULATORS/incs.hpp>
+#include <COMMODORE/C6529B/incs.hpp>
 #include <COMMODORE/CIA/incs.hpp>
 #include <COMMODORE/VIA/incs.hpp>
 #include <COMMODORE/ACIA/incs.hpp>

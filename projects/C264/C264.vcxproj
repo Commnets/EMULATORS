@@ -35,6 +35,10 @@
   <ItemGroup>
     <ClInclude Include="..\..\include\C264\C264.hpp" />
     <ClInclude Include="..\..\include\C264\C264Emulator.hpp" />
+    <ClInclude Include="..\..\include\C264\C6529B1.hpp" />
+    <ClInclude Include="..\..\include\C264\C6529B1Registers.hpp" />
+    <ClInclude Include="..\..\include\C264\C6529B2.hpp" />
+    <ClInclude Include="..\..\include\C264\C6529B2Registers.hpp" />
     <ClInclude Include="..\..\include\C264\Cartridge.hpp" />
     <ClInclude Include="..\..\include\C264\CommandBuilder.hpp" />
     <ClInclude Include="..\..\include\C264\Commands.hpp" />

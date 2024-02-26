@@ -14,9 +14,6 @@
 #ifndef __COMMODORE_TEDINCS__
 #define __COMMODORE_TEDINCS__
 
-#include <COMMODORE/incs.hpp>
-#include <COMMODORE/TED/C6529BRegisters.hpp>
-#include <COMMODORE/TED/C6529B.hpp>
 #include <COMMODORE/TED/TEDOSIO.hpp>
 #include <COMMODORE/TED/TEDRegisters.hpp>
 #include <COMMODORE/TED/TEDSoundWrapper.hpp>

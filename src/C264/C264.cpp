@@ -4,9 +4,9 @@
 #include <C264/OSIO.hpp>
 #include <C264/DatasettePort.hpp>
 #include <C264/ExpansionPort.hpp>
+#include <C264/C6529B1.hpp>
+#include <C264/C6529B2.hpp>
 #include <C264/Cartridge.hpp>
-#include <COMMODORE/VICI/VICI.hpp>
-#include <F6500/C6502.hpp>
 
 // ---
 C264::Commodore264::Commodore264 (unsigned int cfg, const std::string& lg, C264::Commodore264::VisualSystem vS,
@@ -106,10 +106,10 @@ MCHEmul::Chips C264::Commodore264::standardChips (const std::string& sS, C264::C
 	result.insert (MCHEmul::Chips::value_type (COMMODORE::TED::_ID, (MCHEmul::Chip*) ted));
 
 	// This intermediate chip is just used to latch the value of the keyboard matrix...
-	COMMODORE::C6529B* c6529B = new COMMODORE::C6529B;
-	result.insert (MCHEmul::Chips::value_type (COMMODORE::C6529B::_ID, c6529B));
+	C264::C6529B1* c6529B1 = new C264::C6529B1;
+	result.insert (MCHEmul::Chips::value_type (C264::C6529B1::_ID, c6529B1));
 	// ...and it has to be linked somehow with the TED...
-	ted -> lookAt6529B (c6529B);
+	ted -> lookAt6529B (c6529B1);
 	// Notice that TED is not the owner of this chip, that it would be simulated like any other else...
 	
 	// The sound chip doesn't exist in C264 series. 
@@ -152,7 +152,10 @@ MCHEmul::Chips C264::Commodore16_116::standardChips (const std::string& sS, C264
 	MCHEmul::Chips result = 
 		std::move (C264::Commodore264::standardChips (sS, vS));
 
-	// TODO
+	// The ACIA...
+	result.insert (MCHEmul::Chips::value_type (COMMODORE::ACIA::_ID, new COMMODORE::ACIA));
+	// ...and the other C6529...
+	result.insert (MCHEmul::Chips::value_type (C264::C6529B2::_ID, new C264::C6529B2));
 
 	return (result);
 }

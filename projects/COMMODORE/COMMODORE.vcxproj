@@ -23,6 +23,8 @@
     <ClInclude Include="..\..\include\COMMODORE\ACIA\ACIA.hpp" />
     <ClInclude Include="..\..\include\COMMODORE\ACIA\ACIARegisters.hpp" />
     <ClInclude Include="..\..\include\COMMODORE\ACIA\incs.hpp" />
+    <ClInclude Include="..\..\include\COMMODORE\C6529B\C6529B.hpp" />
+    <ClInclude Include="..\..\include\COMMODORE\C6529B\C6529BRegisters.hpp" />
     <ClInclude Include="..\..\include\COMMODORE\CIA\CIA.hpp" />
     <ClInclude Include="..\..\include\COMMODORE\CIA\CIAClock.hpp" />
     <ClInclude Include="..\..\include\COMMODORE\CIA\CIARegisters.hpp" />
@@ -45,8 +47,6 @@
     <ClInclude Include="..\..\include\COMMODORE\SID\SID.hpp" />
     <ClInclude Include="..\..\include\COMMODORE\SID\SIDLibWrapper.hpp" />
     <ClInclude Include="..\..\include\COMMODORE\SID\SIDRegisters.hpp" />
-    <ClInclude Include="..\..\include\COMMODORE\TED\C6529B.hpp" />
-    <ClInclude Include="..\..\include\COMMODORE\TED\C6529BRegisters.hpp" />
     <ClInclude Include="..\..\include\COMMODORE\TED\incs.hpp" />
     <ClInclude Include="..\..\include\COMMODORE\TED\TED.hpp" />
     <ClInclude Include="..\..\include\COMMODORE\TED\TEDOSIO.hpp" />
@@ -90,6 +90,8 @@
     <ClCompile Include="..\..\src\COMMODORE\1530Datasette.cpp" />
     <ClCompile Include="..\..\src\COMMODORE\ACIA\ACIA.cpp" />
     <ClCompile Include="..\..\src\COMMODORE\ACIA\ACIARegisters.cpp" />
+    <ClCompile Include="..\..\src\COMMODORE\C6529B\C6529B.cpp" />
+    <ClCompile Include="..\..\src\COMMODORE\C6529B\C6529BRegisters.cpp" />
     <ClCompile Include="..\..\src\COMMODORE\CIA\CIA.cpp" />
     <ClCompile Include="..\..\src\COMMODORE\CIA\CIAClock.cpp" />
     <ClCompile Include="..\..\src\COMMODORE\CIA\CIARegisters.cpp" />
@@ -107,8 +109,6 @@
     <ClCompile Include="..\..\src\COMMODORE\SID\SID.cpp" />
     <ClCompile Include="..\..\src\COMMODORE\SID\SIDLibWrapper.cpp" />
     <ClCompile Include="..\..\src\COMMODORE\SID\SIDRegisters.cpp" />
-    <ClCompile Include="..\..\src\COMMODORE\TED\C6529BRegisters.cpp" />
-    <ClCompile Include="..\..\src\COMMODORE\TED\C6529B.cpp" />
     <ClCompile Include="..\..\src\COMMODORE\TED\TED.cpp" />
     <ClCompile Include="..\..\src\COMMODORE\TED\TEDOSIO.cpp" />
     <ClCompile Include="..\..\src\COMMODORE\TED\TEDRegisters.cpp" />

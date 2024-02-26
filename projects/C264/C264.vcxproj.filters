@@ -122,5 +122,17 @@
     <ClInclude Include="..\..\include\C264\Commands.hpp">
       <Filter>Archivos de encabezado\Commands</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\include\C264\C6529B1.hpp">
+      <Filter>Archivos de encabezado\Motherboard\Chips</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\C264\C6529B1Registers.hpp">
+      <Filter>Archivos de encabezado\Motherboard\Chips</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\C264\C6529B2.hpp">
+      <Filter>Archivos de encabezado\Motherboard\Chips</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\C264\C6529B2Registers.hpp">
+      <Filter>Archivos de encabezado\Motherboard\Chips</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

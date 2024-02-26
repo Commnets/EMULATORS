@@ -16,7 +16,7 @@
 #define __COMMODORE_TED__
 
 #include <CORE/incs.hpp>
-#include <COMMODORE/TED/C6529B.hpp>
+#include <COMMODORE/C6529B/C6529B.hpp>
 #include <COMMODORE/TED/TEDTimer.hpp>
 #include <COMMODORE/TED/TEDRegisters.hpp>
 

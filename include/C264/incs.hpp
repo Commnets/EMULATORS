@@ -17,6 +17,10 @@
 #include <F6500/incs.hpp>
 #include <EMULATORS/incs.hpp>
 #include <COMMODORE/incs.hpp>
+#include <C264/C6529B1.hpp>
+#include <C264/C6529B1Registers.hpp>
+#include <C264/C6529B2.hpp>
+#include <C264/C6529B2Registers.hpp>
 #include <C264/CommandBuilder.hpp>
 #include <C264/Commands.hpp>
 #include <C264/IOPBuilder.hpp>

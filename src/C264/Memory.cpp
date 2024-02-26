@@ -1,4 +1,6 @@
 #include <C264/Memory.hpp>
+#include <C264/C6529B1Registers.hpp>
+#include <C264/C6529B2Registers.hpp>
 
 // ---
 C264::Memory::Memory (unsigned int cfg, const MCHEmul::Memory::Content& cnt, const std::string& lang)
@@ -42,7 +44,7 @@ C264::Memory::Memory (unsigned int cfg, const MCHEmul::Memory::Content& cnt, con
 	bool ok = true;
 	ok &= physicalStorage (_BASICROM) -> loadInto (ROMFILE);
 	subset (_BASICROM_SUBSET) -> fixDefaultValues (); // Fix the values for further initializations...
-	ok &= subset (_KERNELROM) -> loadInto (KERNELFILE);
+	ok &= physicalStorage (_KERNELROM) -> loadInto (KERNELFILE);
 	subset (_KERNELROM1_SUBSET) -> fixDefaultValues ();
 	subset (_KERNELROM2_SUBSET) -> fixDefaultValues ();
 
@@ -125,7 +127,7 @@ MCHEmul::Memory::Content C264::Memory::standardMemoryContent ()
 	MCHEmul::PhysicalStorageSubset* IORAM0 = new MCHEmul::PhysicalStorageSubset 
 		(_IORAM0_SUBSET, RAM, 0xfd20, MCHEmul::Address ({ 0x20, 0xfd }, false), 0x10);				// 16 bytes
 	// From $fd30 to $fd3f (0x10) there is very simple chip connected to the keyboard matrix...
-	MCHEmul::PhysicalStorageSubset* IO6529B2 = new COMMODORE::C6529BRegisters
+	MCHEmul::PhysicalStorageSubset* IO6529B1 = new C264::C6529B1Registers
 		(RAM, 0x0f, MCHEmul::Address ({ 0x30, 0xfd }, false), 0x10);								// C6529B (2) ...for the keyboard! 16 bytes
 	// From $fd40 to $fdcf (0x90) it is not mapped!...What is the behaviour? = RAM...
 	MCHEmul::PhysicalStorageSubset* IORAM1 = new MCHEmul::PhysicalStorageSubset 
@@ -164,7 +166,7 @@ MCHEmul::Memory::Content C264::Memory::standardMemoryContent ()
 			{ _BASICROM_SUBSET,									BasicROM },
 			{ _RAM4_SUBSET,										RAM4 },
 			{ _KERNELROM1_SUBSET,								KernelROM1 },
-			{ COMMODORE::C6529BRegisters::_C6529BREGS_SUBSET,	IO6529B2 },
+			{ C264::C6529B1Registers::_C6529B1REGS_SUBSET,		IO6529B1 },
 			{ _IORAM1_SUBSET,									IORAM1 },
 			{ _IORAM2_SUBSET,									IORAM2 },
 			{ _IORAM3_SUBSET,									IORAM3 },
@@ -269,15 +271,17 @@ MCHEmul::Memory::Content C264::C16_116Memory::standardMemoryContent ()
 
 	// At the top of the IO section there is RAM
 	MCHEmul::PhysicalStorageSubset* IOACIARAM = new MCHEmul::PhysicalStorageSubset
-		(_IOACIARAM_SUBSET, result.physicalStorage (_RAM), 0xfd00, MCHEmul::Address ({ 0x00, 0xfd }, false), 0x10);
-	MCHEmul::PhysicalStorageSubset* IO6529B1RAM = new MCHEmul::PhysicalStorageSubset
-		(_IO6529B1RAM_SUBSET, result.physicalStorage (_RAM), 0xfd10, MCHEmul::Address ({ 0x10, 0xfd }, false), 0x10);
+		(COMMODORE::ACIARegisters::_ACIAREGS_SUBSET,
+			result.physicalStorage (_RAM), 0xfd00, MCHEmul::Address ({ 0x00, 0xfd }, false), 0x10);
+	MCHEmul::PhysicalStorageSubset* IO6529B2RAM = new MCHEmul::PhysicalStorageSubset
+		(C264::C6529B2Registers::_C6529B2REGS_SUBSET,
+			result.physicalStorage (_RAM), 0xfd10, MCHEmul::Address ({ 0x10, 0xfd }, false), 0x10);
 
 	// Add the new element to the subsets...
 	result.subsets ().insert 
-		(MCHEmul::PhysicalStorageSubsets::value_type (_IOACIARAM_SUBSET, IOACIARAM));
+		(MCHEmul::PhysicalStorageSubsets::value_type (COMMODORE::ACIARegisters::_ACIAREGS_SUBSET, IOACIARAM));
 	result.subsets ().insert 
-		(MCHEmul::PhysicalStorageSubsets::value_type (_IO6529B1RAM_SUBSET, IO6529B1RAM));
+		(MCHEmul::PhysicalStorageSubsets::value_type (C264::C6529B2Registers::_C6529B2REGS_SUBSET, IO6529B2RAM));
 
 	return (result);
 }
@@ -339,14 +343,14 @@ MCHEmul::Memory::Content C264::CPlus4Memory::standardMemoryContent ()
 	MCHEmul::PhysicalStorageSubset* IOACIA = new COMMODORE::ACIARegisters
 		(result.physicalStorage (_RAM), 0xfd00, MCHEmul::Address ({ 0x00, 0xfd }, false), 0x10);	// ACIA
 	// The 6529B is used as an user port, usually connected to the play key of the casette...
-	MCHEmul::PhysicalStorageSubset* IO6529B1 = new COMMODORE::C6529BRegisters
+	MCHEmul::PhysicalStorageSubset* IO6529B2 = new C264::C6529B2Registers
 		(result.physicalStorage (_RAM), 0xfd10, MCHEmul::Address ({ 0x10, 0xfd }, false), 0x10);	// C6529B (1)
 
 	// Add the new element to the subsets...
 	result.subsets ().insert 
 		(MCHEmul::PhysicalStorageSubsets::value_type (COMMODORE::ACIARegisters::_ACIAREGS_SUBSET, IOACIA));
 	result.subsets ().insert
-		(MCHEmul::PhysicalStorageSubsets::value_type (COMMODORE::C6529BRegisters::_C6529BREGS_SUBSET, IO6529B1));
+		(MCHEmul::PhysicalStorageSubsets::value_type (COMMODORE::C6529BRegisters::_C6529BREGS_SUBSET, IO6529B2));
 
 	return (result);
 }

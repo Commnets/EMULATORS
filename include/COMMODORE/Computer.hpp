@@ -18,6 +18,7 @@
 #include <COMMODORE/TED/TED.hpp>
 #include <COMMODORE/VICI/VICI.hpp>
 #include <COMMODORE/VICII/VICII.hpp>
+#include <COMMODORE/ACIA/ACIA.hpp>
 #include <COMMODORE/VIA/VIA.hpp>
 #include <COMMODORE/CIA/CIA.hpp>
 #include <COMMODORE/SID/SID.hpp>
@@ -84,6 +85,20 @@ namespace COMMODORE
 							{ return (existsVICII () 
 								? dynamic_cast <COMMODORE::VICII*> 
 								  ((* _chips.find (COMMODORE::VICII::_ID)).second)
+								: nullptr); }
+
+		/** The ACIA. */
+		bool existsACIA () const
+							{ return (_chips.find (COMMODORE::ACIA::_ID) != _chips.end ()); }
+		const COMMODORE::ACIA* acia () const
+							{ return (existsACIA () 
+								? dynamic_cast <const COMMODORE::ACIA*> 
+								  ((* _chips.find (COMMODORE::ACIA::_ID)).second)
+								: nullptr); }
+		COMMODORE::ACIA* acia ()
+							{ return (existsACIA ()
+								? dynamic_cast <COMMODORE::ACIA*> 
+								  ((* _chips.find (COMMODORE::ACIA::_ID)).second)
 								: nullptr); }
 
 		/** The VIA. */

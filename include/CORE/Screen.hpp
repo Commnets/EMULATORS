@@ -138,8 +138,8 @@ namespace MCHEmul
 		virtual size_t charCodeFromASCII (unsigned char id) const = 0;
 
 		/** To get the graphic data for a code or the default one if not possible. */
-		const std::vector <UBytes> graphicData (size_t id) const
-							{ return ((_graphicsDef.size () < id) ? _graphicsDef [id] : _defaultGraphicDef); }
+		const std::vector <UBytes>& graphicData (size_t id) const
+							{ return ((id < _graphicsDef.size ()) ? _graphicsDef [id] : _defaultGraphicDef); }
 
 		protected:
 		bool _CRTActive; // When CRT effect is visible...
@@ -261,7 +261,16 @@ namespace MCHEmul
 		{
 			int ji = (int) (i.sizeBits () - 1);
 			for (int j = ji; j >= 0; j--)
-				drawPoint (x + (ji - (size_t) j), pyi, i.bit ((size_t) j) ? cf : cb);
+			{
+				if (i.bit ((size_t) j))
+				{
+					drawPoint (x + (ji - (size_t) j), pyi, cf);
+				}
+				else
+				if (!t)
+					drawPoint (x + (ji - (size_t) j), pyi, cb);
+			}
+
 			pyi++;
 		}
 	}

@@ -359,9 +359,6 @@
     <ClInclude Include="..\..\include\CORE\DebugFile.hpp">
       <Filter>Archivos de encabezado\Foundation</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\include\CORE\ComputerClock.hpp">
-      <Filter>Archivos de encabezado\Motherboard</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\include\CORE\MBElement.hpp">
       <Filter>Archivos de encabezado\Motherboard</Filter>
     </ClInclude>

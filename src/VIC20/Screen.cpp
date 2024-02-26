@@ -10,11 +10,11 @@ VIC20::Screen::Screen (double hz, int w, int h, const MCHEmul::Attributes& attrs
 		("./characters.901460-03-ENG.bin", e, 0 /** no address, no needed */, true);
 	if (!e)
 	{
-		for (size_t i = 0; i < 512; i += 8)
+		for (size_t i = 0; i < 4096; i += 8)
 		{
 			std::vector <MCHEmul::UBytes> chrdt;
 			for (size_t j = 0; j < 8; j++)
-				chrdt.push_back (MCHEmul::UBytes ({ dt.byte ((i << 3) + j) }));
+				chrdt.push_back (MCHEmul::UBytes ({ dt.byte (i + j) }));
 			_graphicsDef.emplace_back (std::move (chrdt));
 		}
 	}
@@ -27,10 +27,13 @@ VIC20::Screen::Screen (double hz, int w, int h, const MCHEmul::Attributes& attrs
 // ---
 void VIC20::Screen::drawAdditional ()
 {
-	COMMODORE::VICI* gC = static_cast <COMMODORE::VICI*> (_graphicalChip);
+	// The color...
+	unsigned int bC = ((_borderColor + 1) > 15) ? 0 : _borderColor + 1;
+
 	if (_drawBorder)
 	{
 		// Where is the screen...
+		COMMODORE::VICI* gC = static_cast <COMMODORE::VICI*> (_graphicalChip);
 		short x1, y1, x2, y2;
 		gC -> screenPositions (x1, y1, x2, y2);
 		if (x1 == 0 && y1 == 0 && x2 == 0 && y2 == 0)
@@ -43,12 +46,18 @@ void VIC20::Screen::drawAdditional ()
 		if (x2 < (gC -> raster ().visibleColumns () - 1)) { x2++; xl++; }
 		if (y1 > 0) { y1--; yl++; }
 		if (y2 < (gC -> raster ().visibleLines () - 1)) { y2++; yl++; }
-		
-		// The color...
-		unsigned int bC = ((_borderColor) > 15) ? 0 : _borderColor;
 
 		// ...and finally draws the rectangle!
-		drawRectangle ((size_t) x1, (size_t) y1, (size_t) (x1 + xl), (size_t) (y2 + yl), bC);
+		drawRectangle ((size_t) x1, (size_t) y1, (size_t) (x1 + xl), (size_t) (y1 + yl), bC);
+
+		// ...and the reference lines...
+		for (unsigned short i = y1 + 8; i <= y2; i += 8)
+			drawHorizontalLineStep ((size_t) (x1 - 1), (size_t) i, (size_t) (x2 - x1 + 3), 2, bC);
+		for (unsigned short i = x1 + 8; i <= x2; i += 8)
+			drawVerticalLineStep ((size_t) i, (size_t) (y1 - 1), (size_t) (y2 - y1 + 3), 2, bC);
+
+		// Draws a reference to the owner to the simulator!
+		drawTextHorizontal (8, 8, "(C)ICF 2024", 0 /** not used. */, bC, true);
 	}
 }
 

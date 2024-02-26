@@ -25,7 +25,7 @@ namespace COMMODORE
 		public:
 		friend ACIA;
 
-		static const int _ACIAREGS_SUBSET = 2000;
+		static const int _ACIAREGS_SUBSET = 1030;
 
 		ACIARegisters (MCHEmul::PhysicalStorage* ps, size_t pp, const MCHEmul::Address& a, size_t s);
 

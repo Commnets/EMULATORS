@@ -1,6 +1,6 @@
 #include <COMMODORE/TED/TEDRegisters.hpp>
 #include <COMMODORE/TED/TEDTimer.hpp>
-#include <COMMODORE/TED/C6529B.hpp>
+#include <COMMODORE/C6529B/C6529B.hpp>
 
 // ---
 MCHEmul::InfoStructure COMMODORE::TEDRegisters::Color::getInfoStructure () const
@@ -76,9 +76,10 @@ MCHEmul::InfoStructure COMMODORE::TEDRegisters::getInfoStructure () const
 // ---
 void COMMODORE::TEDRegisters::setValue (size_t p, const MCHEmul::UByte& v)
 {
-	assert (_soundWrapper != nullptr &&
-			_T1 != nullptr &&
-			_T2 != nullptr);
+	if (_soundWrapper == nullptr ||
+		_T1 == nullptr ||
+		_T2 == nullptr)
+		return;
 
 	size_t pp = p % 0x40;
 
@@ -454,11 +455,12 @@ void COMMODORE::TEDRegisters::setValue (size_t p, const MCHEmul::UByte& v)
 // ---
 const MCHEmul::UByte& COMMODORE::TEDRegisters::readValue (size_t p) const
 {
-	assert (_soundWrapper != nullptr &&
-			_T1 != nullptr &&
-			_T2 != nullptr);
-
 	MCHEmul::UByte result = MCHEmul::PhysicalStorage::_DEFAULTVALUE;
+
+	if (_soundWrapper == nullptr ||
+		_T1 == nullptr ||
+		_T2 == nullptr)
+		return (result);
 
 	size_t pp = p % 0x40;
 
