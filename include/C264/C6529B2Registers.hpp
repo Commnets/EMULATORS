@@ -1,4 +1,4 @@
-/** \ingroup COMMODORE */
+/** \ingroup C264 */
 /*@{*/
 
 /**	
@@ -25,9 +25,14 @@ namespace C264
 
 		static const int _C6529B2REGS_SUBSET = 2010;
 
+		/** The positions where the C6529B2 chip is reachable are constant in C264 series. */
 		C6529B2Registers (MCHEmul::PhysicalStorage* ps, size_t pp, const MCHEmul::Address& a, size_t s)
 			: COMMODORE::C6529BRegisters (_C6529B2REGS_SUBSET, ps, pp, a, s)
 							{ }
+
+		/** This version of the latch is also reachable in 0x10 (= 16) positions. */
+		virtual size_t numberRegisters () const override
+							{ return (0x10); }
 	};
 }
 

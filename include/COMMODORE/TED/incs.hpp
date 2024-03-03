@@ -14,7 +14,6 @@
 #ifndef __COMMODORE_TEDINCS__
 #define __COMMODORE_TEDINCS__
 
-#include <COMMODORE/TED/TEDOSIO.hpp>
 #include <COMMODORE/TED/TEDRegisters.hpp>
 #include <COMMODORE/TED/TEDSoundWrapper.hpp>
 #include <COMMODORE/TED/TEDTimer.hpp>

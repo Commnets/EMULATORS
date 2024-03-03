@@ -32,7 +32,7 @@ VIC20::CommodoreVIC20::CommodoreVIC20 (VIC20::Memory::Configuration cfg,
 // ---
 bool VIC20::CommodoreVIC20::initialize (bool iM)
 {
-	bool result = MCHEmul::Computer::initialize (iM);
+	bool result = COMMODORE::Computer::initialize (iM);
 	if (!result)
 		return (false);
 

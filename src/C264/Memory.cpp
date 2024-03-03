@@ -1,6 +1,8 @@
 #include <C264/Memory.hpp>
 #include <C264/C6529B1Registers.hpp>
 #include <C264/C6529B2Registers.hpp>
+#include <C264/TED.hpp>
+#include <C264/TEDRegisters.hpp>
 
 // ---
 C264::Memory::Memory (unsigned int cfg, const MCHEmul::Memory::Content& cnt, const std::string& lang)
@@ -76,7 +78,7 @@ MCHEmul::Memory::Content C264::Memory::standardMemoryContent ()
 	// Phisical storages
 	// RAM...
 	MCHEmul::PhysicalStorage* RAM = 
-		new MCHEmul::PhysicalStorage (_RAM, MCHEmul::PhysicalStorage::Type::_RAM, 0x4000);				// 64k
+		new MCHEmul::PhysicalStorage (_RAM, MCHEmul::PhysicalStorage::Type::_RAM, 0x10000);				// 64k
 	// ROM...
 	MCHEmul::PhysicalStorage* BASICROM = 
 		new MCHEmul::PhysicalStorage (_BASICROM, MCHEmul::PhysicalStorage::Type::_ROM, 0x4000);			// 16k
@@ -92,9 +94,12 @@ MCHEmul::Memory::Content C264::Memory::standardMemoryContent ()
 		});
 
 	// Subsets
+	// The two registers of the IO Expansion port...
+	MCHEmul::PhysicalStorageSubset* IO7501Port = 
+		new F6500::IO7501PortRegisters (_IO7501PORT_SUBSET, RAM);
 	// Page 0: The quickest possible access...
 	MCHEmul::PhysicalStorageSubset* PageZero = new MCHEmul::PhysicalStorageSubset 
-		(_PAGEZERO_SUBSET, RAM, 0x0000, MCHEmul::Address ({ 0x00, 0x00 }, false), 0x0100);
+		(_PAGEZERO_SUBSET, RAM, 0x0002, MCHEmul::Address ({ 0x02, 0x00 }, false), 0xfe);
 	// Page 1: Stack, Where the CPU stores info...
 	MCHEmul::Stack* Stack = new MCHEmul::Stack 
 		(_STACK_SUBSET, RAM, 0x0100, MCHEmul::Address ({ 0x00, 0x01 }, false), 0x0100);
@@ -104,12 +109,13 @@ MCHEmul::Memory::Content C264::Memory::standardMemoryContent ()
 		(_RAM1_SUBSET, RAM, 0x0200, MCHEmul::Address ({ 0x00, 0x02 }, false), 0x3e00);				// 16k - 512 bytes...
 	MCHEmul::PhysicalStorageSubset* RAM2 = new MCHEmul::PhysicalStorageSubset 
 		(_RAM2_SUBSET, RAM, 0x4000, MCHEmul::Address ({ 0x00, 0x40 }, false), 0x4000);				// 16k
-	MCHEmul::PhysicalStorageSubset* RAM3 = new MCHEmul::PhysicalStorageSubset 
-		(_RAM2_SUBSET, RAM, 0x8000, MCHEmul::Address ({ 0x00, 0x80 }, false), 0x8000);				// 16k
 
 	// The Basic is set just after this empty zone...
 	MCHEmul::PhysicalStorageSubset* BasicROM = new MCHEmul::PhysicalStorageSubset 
 		(_BASICROM_SUBSET, BASICROM, 0x0000, MCHEmul::Address ({ 0x00, 0x80 }, false), 0x4000);		// 16k ROM
+	// But it can be also RAM
+	MCHEmul::PhysicalStorageSubset* RAM3 = new MCHEmul::PhysicalStorageSubset 
+		(_RAM2_SUBSET, RAM, 0x8000, MCHEmul::Address ({ 0x00, 0x80 }, false), 0x4000);				// 16k
 
 	// Where the BASIC expansions can be...
 	MCHEmul::PhysicalStorageSubset* RAM4 = new MCHEmul::PhysicalStorageSubset 
@@ -127,8 +133,8 @@ MCHEmul::Memory::Content C264::Memory::standardMemoryContent ()
 	MCHEmul::PhysicalStorageSubset* IORAM0 = new MCHEmul::PhysicalStorageSubset 
 		(_IORAM0_SUBSET, RAM, 0xfd20, MCHEmul::Address ({ 0x20, 0xfd }, false), 0x10);				// 16 bytes
 	// From $fd30 to $fd3f (0x10) there is very simple chip connected to the keyboard matrix...
-	MCHEmul::PhysicalStorageSubset* IO6529B1 = new C264::C6529B1Registers
-		(RAM, 0x0f, MCHEmul::Address ({ 0x30, 0xfd }, false), 0x10);								// C6529B (2) ...for the keyboard! 16 bytes
+	MCHEmul::PhysicalStorageSubset* IO6529B1 = new C264::C6529B1Registers 
+		(RAM, 0xfd30, MCHEmul::Address ({ 0x30, 0xfd }, false), 0x10);								// C6529B (1) ...for the keyboard! 16 bytes
 	// From $fd40 to $fdcf (0x90) it is not mapped!...What is the behaviour? = RAM...
 	MCHEmul::PhysicalStorageSubset* IORAM1 = new MCHEmul::PhysicalStorageSubset 
 		(_IORAM1_SUBSET, RAM, 0xfd40, MCHEmul::Address ({ 0x40, 0xfd }, false), 0x90);				// 144 bytes
@@ -144,9 +150,9 @@ MCHEmul::Memory::Content C264::Memory::standardMemoryContent ()
 	// The TIA2 registers (0xfee0 - 0xfeff) appear just only when the drivers are connected... In other case, It will be RAM space?
 	MCHEmul::PhysicalStorageSubset* IORAM5 = new MCHEmul::PhysicalStorageSubset 
 		(_IORAM5_SUBSET, RAM, 0xfee0, MCHEmul::Address ({ 0xe0, 0xfe }, false), 0x20);				// 32 bytes
-	// The TED!
-	MCHEmul::PhysicalStorageSubset* IOTED = new COMMODORE::TEDRegisters 
-		(RAM, 0x40, MCHEmul::Address ({ 0x00, 0xff }, false), 0x40);								// TED = 64 bytes
+	// The TED within the C264...it can access to more bytes of memory...
+	MCHEmul::PhysicalStorageSubset* IOTED = new C264::TEDRegisters 
+		(RAM, 0xff00, MCHEmul::Address ({ 0x00, 0xff }, false), 0x40);								// TED in C264 = 64 bytes
 
 	// The rest of the RAM...
 	MCHEmul::PhysicalStorageSubset* RAM5 = new MCHEmul::PhysicalStorageSubset 
@@ -158,6 +164,7 @@ MCHEmul::Memory::Content C264::Memory::standardMemoryContent ()
 	// A map with all the subsets possible...
 	MCHEmul::PhysicalStorageSubsets allsubsets (
 		{
+			{ _IO7501PORT_SUBSET,								IO7501Port }, 
 			{ _PAGEZERO_SUBSET,									PageZero }, 
 			{ _STACK_SUBSET,									Stack },
 			{ _RAM1_SUBSET,										RAM1 },
@@ -171,24 +178,20 @@ MCHEmul::Memory::Content C264::Memory::standardMemoryContent ()
 			{ _IORAM2_SUBSET,									IORAM2 },
 			{ _IORAM3_SUBSET,									IORAM3 },
 			{ _IORAM4_SUBSET,									IORAM4 },
-			{ _IORAM5_SUBSET,									IORAM4 },
+			{ _IORAM5_SUBSET,									IORAM5 },
 			{ COMMODORE::TEDRegisters::_TEDREGS_SUBSET,			IOTED },
 			{ _RAM5_SUBSET,										RAM5 },
 			{ _KERNELROM2_SUBSET,								KernelROM2 },
 		});
 
-	// Then the views...
-	// From any side...
-	MCHEmul::MemoryView* GlobalView = new MCHEmul::MemoryView (_CPU_VIEW, allsubsets);
+	// The views are not created...
+	// because when the view is created the memory positions are moved plain
+	// and at this point there might be some subsets pending to be created...
 
 	// ...and finally the memory that is the result...
 	MCHEmul::Memory::Content result;
 	result._physicalStorages = storages;
 	result._subsets = allsubsets;
-	result._views = MCHEmul::MemoryViews (
-		{
-			{ _CPU_VIEW, GlobalView },
-		});
 
 	return (result);
 }
@@ -198,8 +201,6 @@ C264::C16_116Memory::C16_116Memory (unsigned int cfg, const std::string& lang)
 	: C264::Memory (cfg, C264::C16_116Memory::standardMemoryContent (), lang)
 {
 	setConfiguration (_configuration);
-
-	// Nothing else to do...
 }
 
 // ---
@@ -211,11 +212,14 @@ void C264::C16_116Memory::setConfiguration (unsigned int cfg)
 		// 16k
 		case 0:
 			{
-				_RAM1 -> setActive (true);
-				_RAM2 -> setActive (false);
-				_RAM3 -> setActive (false);
-				_RAM4 -> setActive (false);
-				_RAM5 -> setActive (false);
+				_RAM1		-> setActive (true);
+				_RAM2		-> setActive (false);
+				_RAM3		-> setActive (false);
+				_RAM4		-> setActive (false);
+				_RAM5		-> setActive (false);
+				_basicROM	-> setActive (true);
+				_kernelROM1	-> setActive (true);
+				_kernelROM2	-> setActive (true);
 			}
 
 			break;
@@ -223,11 +227,14 @@ void C264::C16_116Memory::setConfiguration (unsigned int cfg)
 		// 32k
 		case 1:
 			{
-				_RAM1 -> setActive (true);
-				_RAM2 -> setActive (true);
-				_RAM3 -> setActive (false);
-				_RAM4 -> setActive (false);
-				_RAM5 -> setActive (false);
+				_RAM1		-> setActive (true);
+				_RAM2		-> setActive (true);
+				_RAM3		-> setActive (false);
+				_RAM4		-> setActive (false);
+				_RAM5		-> setActive (false);
+				_basicROM	-> setActive (true);
+				_kernelROM1	-> setActive (true);
+				_kernelROM2	-> setActive (true);
 			}
 
 			break;
@@ -235,11 +242,14 @@ void C264::C16_116Memory::setConfiguration (unsigned int cfg)
 		// 48k
 		case 2:
 			{
-				_RAM1 -> setActive (true);
-				_RAM2 -> setActive (true);
-				_RAM3 -> setActive (true);
-				_RAM4 -> setActive (false);
-				_RAM5 -> setActive (false);
+				_RAM1		-> setActive (true);
+				_RAM2		-> setActive (true);
+				_RAM3		-> setActive (true);
+				_RAM4		-> setActive (false);
+				_RAM5		-> setActive (false);
+				_basicROM	-> setActive (false);
+				_kernelROM1	-> setActive (true);
+				_kernelROM2	-> setActive (true);
 			}
 
 			break;
@@ -247,11 +257,14 @@ void C264::C16_116Memory::setConfiguration (unsigned int cfg)
 		// 64k
 		case 3:
 			{
-				_RAM1 -> setActive (true);
-				_RAM2 -> setActive (true);
-				_RAM3 -> setActive (true);
-				_RAM4 -> setActive (true);
-				_RAM5 -> setActive (true);
+				_RAM1		-> setActive (true);
+				_RAM2		-> setActive (true);
+				_RAM3		-> setActive (true);
+				_RAM4		-> setActive (true);
+				_RAM5		-> setActive (true);
+				_basicROM	-> setActive (false);
+				_kernelROM1	-> setActive (false);
+				_kernelROM2	-> setActive (false);
 			}
 
 			break;
@@ -269,19 +282,23 @@ MCHEmul::Memory::Content C264::C16_116Memory::standardMemoryContent ()
 	MCHEmul::Memory::Content result = 
 		std::move (C264::Memory::standardMemoryContent ());
 
-	// At the top of the IO section there is RAM
-	MCHEmul::PhysicalStorageSubset* IOACIARAM = new MCHEmul::PhysicalStorageSubset
-		(COMMODORE::ACIARegisters::_ACIAREGS_SUBSET,
-			result.physicalStorage (_RAM), 0xfd00, MCHEmul::Address ({ 0x00, 0xfd }, false), 0x10);
-	MCHEmul::PhysicalStorageSubset* IO6529B2RAM = new MCHEmul::PhysicalStorageSubset
-		(C264::C6529B2Registers::_C6529B2REGS_SUBSET,
-			result.physicalStorage (_RAM), 0xfd10, MCHEmul::Address ({ 0x10, 0xfd }, false), 0x10);
-
 	// Add the new element to the subsets...
-	result.subsets ().insert 
-		(MCHEmul::PhysicalStorageSubsets::value_type (COMMODORE::ACIARegisters::_ACIAREGS_SUBSET, IOACIARAM));
-	result.subsets ().insert 
-		(MCHEmul::PhysicalStorageSubsets::value_type (C264::C6529B2Registers::_C6529B2REGS_SUBSET, IO6529B2RAM));
+	result._subsets.insert 
+		(MCHEmul::PhysicalStorageSubsets::value_type 
+			(COMMODORE::ACIARegisters::_ACIAREGS_SUBSET, 
+				new MCHEmul::PhysicalStorageSubset (COMMODORE::ACIARegisters::_ACIAREGS_SUBSET, // RAM instead...
+					result.physicalStorage (_RAM), 0xfd00, MCHEmul::Address ({ 0x00, 0xfd }, false), 0x10)));
+	result._subsets.insert 
+		(MCHEmul::PhysicalStorageSubsets::value_type 
+			(C264::C6529B2Registers::_C6529B2REGS_SUBSET, 
+				new MCHEmul::PhysicalStorageSubset (C264::C6529B2Registers::_C6529B2REGS_SUBSET, // RAM instead...
+					result.physicalStorage (_RAM), 0xfd10, MCHEmul::Address ({ 0x10, 0xfd }, false), 0x10)));
+
+	// Then the views...
+	result._views = MCHEmul::MemoryViews (
+		{
+			{ _CPU_VIEW, new MCHEmul::MemoryView (_CPU_VIEW, result._subsets) }
+		});
 
 	return (result);
 }
@@ -325,11 +342,14 @@ void C264::CPlus4Memory::setConfiguration (unsigned int cfg)
 	// There is only 32K for memory, 
 	// the rest is ocuppied by the standard programs!
 
-	_RAM1 -> setActive (true);
-	_RAM2 -> setActive (true);
-	_RAM3 -> setActive (false);
-	_RAM4 -> setActive (false);
-	_RAM5 -> setActive (false);
+	_RAM1		-> setActive (true);
+	_RAM2		-> setActive (true);
+	_RAM3		-> setActive (false);
+	_RAM4		-> setActive (false);
+	_RAM5		-> setActive (false);
+	_basicROM	-> setActive (true);
+	_kernelROM1	-> setActive (true);
+	_kernelROM2	-> setActive (true);
 }
 
 // ---
@@ -338,19 +358,23 @@ MCHEmul::Memory::Content C264::CPlus4Memory::standardMemoryContent ()
 	MCHEmul::Memory::Content result = 
 		std::move (C264::Memory::standardMemoryContent ());
 
-	// At the toip of the IO section, there is two additional chips!
-	// The ACIA chip is for RS232 communications...
-	MCHEmul::PhysicalStorageSubset* IOACIA = new COMMODORE::ACIARegisters
-		(result.physicalStorage (_RAM), 0xfd00, MCHEmul::Address ({ 0x00, 0xfd }, false), 0x10);	// ACIA
-	// The 6529B is used as an user port, usually connected to the play key of the casette...
-	MCHEmul::PhysicalStorageSubset* IO6529B2 = new C264::C6529B2Registers
-		(result.physicalStorage (_RAM), 0xfd10, MCHEmul::Address ({ 0x10, 0xfd }, false), 0x10);	// C6529B (1)
-
 	// Add the new element to the subsets...
 	result.subsets ().insert 
-		(MCHEmul::PhysicalStorageSubsets::value_type (COMMODORE::ACIARegisters::_ACIAREGS_SUBSET, IOACIA));
+		(MCHEmul::PhysicalStorageSubsets::value_type 
+			(COMMODORE::ACIARegisters::_ACIAREGS_SUBSET, 
+				new COMMODORE::ACIARegisters (result.physicalStorage (_RAM), // The ACIA...
+					0xfd00, MCHEmul::Address ({ 0x00, 0xfd }, false), 0x10)));
 	result.subsets ().insert
-		(MCHEmul::PhysicalStorageSubsets::value_type (COMMODORE::C6529BRegisters::_C6529BREGS_SUBSET, IO6529B2));
+		(MCHEmul::PhysicalStorageSubsets::value_type 
+			(COMMODORE::C6529BRegisters::_C6529BREGS_SUBSET, 
+				new C264::C6529B2Registers (result.physicalStorage (_RAM), // And another latch chip...
+					0xfd10, MCHEmul::Address ({ 0x10, 0xfd }, false), 0x10)));
+
+	// Then the views...
+	result._views = MCHEmul::MemoryViews (
+		{
+			{ _CPU_VIEW, new MCHEmul::MemoryView (_CPU_VIEW, result._subsets) }
+		});
 
 	return (result);
 }

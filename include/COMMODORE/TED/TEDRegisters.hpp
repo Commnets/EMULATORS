@@ -22,12 +22,11 @@ namespace COMMODORE
 {
 	class TED;
 	class TEDTimer;
-	class C6529B;
 
 	/** In the TED Registers, 
 		there are a couple of records that behave different
 		when they are read that when they are written. */
-	class TEDRegisters final : public MCHEmul::ChipRegisters
+	class TEDRegisters : public MCHEmul::ChipRegisters
 	{
 		public:
 		friend TED;
@@ -113,7 +112,7 @@ namespace COMMODORE
 		TEDRegisters (MCHEmul::PhysicalStorage* ps, size_t pp, const MCHEmul::Address& a, size_t s);
 
 		virtual size_t numberRegisters () const override
-							{ return (0x40); }
+							{ return (0x20); }
 
 		// Clock mode
 		bool singleClockModeActive () const
@@ -187,6 +186,10 @@ namespace COMMODORE
 			There might be several reasons defined within the code. */
 		inline unsigned int reasonIRQCode () const;
 
+		/** To know whether the source of the bit dot or character data is in ROM or in RAM. */
+		bool ROMSourceActive () const
+							{ return (_ROMSourceActive); }
+
 		// Graphical info: Used from TED during the simulation...
 		const GraphicalInfo& graphicalInfo () const
 							{ return (_graphicalInfo); }
@@ -205,30 +208,14 @@ namespace COMMODORE
 		const MCHEmul::Address& bitmapMemory () const 
 							{ return (_bitmapMemory); }
 
-		// Related with the access to the memory...
-		bool hiromSelected () const
-							{ return (_HIROMSelected); }
-		// Any time the value above changes, this variable is set to true
-		// and when checked it goes back to false...
-		bool romAccessChanged () const
-							{ return (_ROMAccessChanged); }
-		bool peekROMAccessChanged () const
-							{ return (_ROMAccessChanged.peekValue ()); }
-
-		// Managing the status of the joystick and keyboard...
-		const MCHEmul::UByte& joystickStatus (size_t j)
-							{ return (_joystickStatus [j]); }
-		void setJoystickStatus (size_t j, const MCHEmul::UByte& js)
-							{ _joystickStatus [j] = js; }
-		/** and these ones are to manage the matrix of keys pressed...
-			...and also the inputs comming from the joystick 1... */
-		bool keyboardStatusMatrix (size_t r, size_t c) const
-							{ return (_keyboardStatusMatrix [r].bit (c)); }
-		const MCHEmul::UByte& keyboardStatusMatrix (size_t r) const
-							{ return (_keyboardStatusMatrix [r]); }
-		void setKeyboardStatusMatrix (size_t r, size_t c, bool s)
-							{ _keyboardStatusMatrix [r].setBit (c, s);
-							  _rev_keyboardStatusMatrix [c].setBit (r, s); }
+		// Related with the keyboard latch...
+		const MCHEmul::UByte& keyboardLatch () const
+							{ return (_keyboardLatch); }
+		// ...abd the value in the keyboard pins...
+		const MCHEmul::UByte& keyboardPins () const
+							{ return (_keyboardPins); }
+		void setKeyboardPins (const MCHEmul::UByte& kp)
+							{ _keyboardPins = kp; }
 
 		virtual void initialize () override;
 
@@ -254,7 +241,7 @@ namespace COMMODORE
 		  */
 		virtual MCHEmul::InfoStructure getInfoStructure () const override;
 
-		private:
+		protected:
 		virtual void setValue (size_t p, const MCHEmul::UByte& v) override;
 		virtual const MCHEmul::UByte& readValue (size_t p) const override;
 
@@ -264,23 +251,18 @@ namespace COMMODORE
 							{ _soundWrapper = dynamic_cast <TEDSoundLibWrapper*> (w); }
 		void lookAtTimers (TEDTimer* t1, TEDTimer* t2, TEDTimer* t3)
 							{ _T1 = t1, _T2 = t2; _T3 = t3; }
-		void lookAtC2569B (C6529B* c)
-							{ _c6529B = c; }
 
 		/** Just to initialize the internal values. */
 		void initializeInternalValues ();
 		/** Depending on how bits ar set, a no valid mode could be set. */
 		void setGraphicModeActive ();
 
-		private:
+		protected:
 		// Elements related with this one...
 		/** The sound wrapper. */
 		TEDSoundLibWrapper* _soundWrapper;
 		/** The timers. */
 		TEDTimer *_T1, *_T2, *_T3;
-		/** The C65219B Chip. 
-			Used to read the keyboard. */
-		C6529B* _c6529B;
 
 		// Info Registers
 		/** Related with clock cycle. */
@@ -316,9 +298,6 @@ namespace COMMODORE
 		bool _rasterIRQHappened;
 		/** Whether the lightpen is on the screen. */
 		bool _lightPenIRQHappened;
-		/** Whether the access to the HIROM has or not been selected. */
-		bool _HIROMSelected;
-		MCHEmul::OBool _ROMAccessChanged;
 
 		/** Location of the Graphical Memory. 
 			Info calculated when the registers are accessed. */
@@ -328,13 +307,10 @@ namespace COMMODORE
 		MCHEmul::Address _attributeMemory;
 		MCHEmul::Address _bitmapMemory;		
 
-		/** Status of the joystick. 
-			Initially the number of joysticks to be managed is not known. */
-		std::vector <MCHEmul::UByte> _joystickStatus;
-		/** 0 at the bit representing the part of the keyboard matrix pressed. 
-			In this case the matrix is always 8 * 8 = 64 positions. */
-		MCHEmul::UByte _keyboardStatusMatrix [8];
-		MCHEmul::UByte _rev_keyboardStatusMatrix [8];
+		/** The keyboard latch, 
+			and the info at the entrace of the keyboard pins. */
+		MCHEmul::UByte _keyboardLatch;
+		MCHEmul::UByte _keyboardPins;
 
 		// Implementation
 		mutable MCHEmul::UByte _lastValueRead;

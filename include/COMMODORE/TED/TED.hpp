@@ -92,9 +92,6 @@ namespace COMMODORE
 		SoundFunction* soundFunction ()
 							{ return (_soundFunction); }
 
-		void lookAt6529B (C6529B* c)
-							{ _c6529B = c; }
-
 		virtual unsigned short numberColumns () const override
 							{ return (_raster.visibleColumns ()); }
 		virtual unsigned short numberRows () const override
@@ -123,8 +120,6 @@ namespace COMMODORE
 		virtual MCHEmul::InfoStructure getInfoStructure () const override;
 
 		protected:
-		virtual void processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifier* n) override;
-
 		/** Invoked from initialize to create the right screen memory. \n
 			It also creates the Palette used by a TED computer (_format variable). */
 		virtual MCHEmul::ScreenMemory* createScreenMemory () override;
@@ -229,13 +224,18 @@ namespace COMMODORE
 			That text/bitmap info included the sprite data as well ordered. */
 		void drawResultToScreen (const DrawResult& cT, const DrawContext& dC);
 
+		// Very internal methods...
+		/** When the bit 2 at register 0x12 (= 18) is active, 
+			the fetch of dot or char data info has to be from ROM always. \n
+			The way the method are implemented will depend on the place where the chip is running. */
+		virtual bool ROMActiveToFetchCharData () const = 0;
+		virtual void activeROMtoFecthCharData (bool a) = 0;
+
 		protected:
 		/** There three timers within the TED. */
 		TEDTimer _T1, _T2, _T3;
 		/** A reference to the sound part of the chip. */
 		SoundFunction* _soundFunction;
-		/** A reference to the chip C6529B. */
-		C6529B* _c6529B;
 		/** The memory is used also as the set of registers of the chip. */
 		COMMODORE::TEDRegisters* _TEDRegisters;
 		/** The number of the memory view used to read the data. */
@@ -352,6 +352,12 @@ namespace COMMODORE
 			_TEDRegisters -> graphicExtendedColorTextModeActive () 
 				? memoryRef () -> value (_MEMORYPOSIDLE1) : memoryRef () -> value (_MEMORYPOSIDLE2);
 		else // ..in the other one the info will be read attending to the situation of the memory...
+		{	 // ...and from ROM or RAM...
+
+			bool aR = ROMActiveToFetchCharData ();
+			if (_TEDRegisters -> ROMSourceActive () && !aR)
+				activeROMtoFecthCharData (true); // Active ROM to read the data...
+
 			_tedGraphicInfo._graphicData [_tedGraphicInfo._VLMI] = _TEDRegisters -> textMode () 
 				? memoryRef () -> value (_TEDRegisters -> charDataMemory () + 
 					(((size_t) _tedGraphicInfo._screenCodeData [_tedGraphicInfo._VLMI].value () & 
@@ -359,6 +365,10 @@ namespace COMMODORE
 						/** In the extended graphics mode there is only 64 chars possible. */ << 3) + _tedGraphicInfo._RC)
 				: memoryRef () -> value (_TEDRegisters -> bitmapMemory () + 
 					(_tedGraphicInfo._VC << 3) + _tedGraphicInfo._RC);
+
+			if (_TEDRegisters -> ROMSourceActive () && !aR)
+				activeROMtoFecthCharData (false); // Activethe RAM to read the data...
+		}
 		
 		memoryRef () -> setCPUView ();
 	}

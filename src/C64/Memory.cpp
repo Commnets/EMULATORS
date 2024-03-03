@@ -67,16 +67,17 @@ C64::Memory::Memory (const std::string& lang)
 	else if (lang == "SWE") { CHARROMFILE = "./characters.325018-02-SWE.bin"; KERNELFILE = "./kernal.325017-02-SWE.bin"; }
 	else if (lang == "DKA") { CHARROMFILE = "./characters.901225-01-DKA.bin"; KERNELFILE = "./kernal.901227-03-DKA.bin"; }
 
+	// The info is load into the physical storage directly, 
+	// but fixed into the subset above!
+
 	bool ok = true;
-	ok &= subset (_BASICROM_SUBSET) -> loadInto (ROMFILE);
+	ok &= physicalStorage (_BASICROM) -> loadInto (ROMFILE);
 	subset (_BASICROM_SUBSET) -> fixDefaultValues (); // Fix the values for further initializations...
-	ok &= subset (_CHARROM_SUBSET) -> loadInto (CHARROMFILE);
+	ok &= physicalStorage (_CHARROM) -> loadInto (CHARROMFILE);
 	subset (_CHARROM_SUBSET) -> fixDefaultValues ();
-	ok &= subset (_BANK0CHARROM_SUBSET) -> loadInto (CHARROMFILE);
 	subset (_BANK0CHARROM_SUBSET) -> fixDefaultValues ();
-	ok &= subset (_BANK2CHARROM_SUBSET) -> loadInto (CHARROMFILE);
 	subset (_BANK2CHARROM_SUBSET) -> fixDefaultValues ();
-	ok &= subset (_KERNELROM_SUBSET) -> loadInto (KERNELFILE);
+	ok &= physicalStorage (_KERNELROM) -> loadInto (KERNELFILE);
 	subset (_KERNELROM_SUBSET) -> fixDefaultValues ();
 
 	if (!ok)

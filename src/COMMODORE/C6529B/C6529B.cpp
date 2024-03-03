@@ -20,9 +20,10 @@ bool COMMODORE::C6529B::initialize ()
 	if (!MCHEmul::Chip::initialize ())
 		return (false);
 
-	// Gets the memory block dedicated to the TED
+	// Gets the memory block dedicated to this register...
 	if (!(_C6529BRegisters = 
-		dynamic_cast <COMMODORE::C6529BRegisters*> (memoryRef () -> subset (COMMODORE::C6529BRegisters::_C6529BREGS_SUBSET))))
+		dynamic_cast <COMMODORE::C6529BRegisters*> 
+			(memoryRef () -> subset (COMMODORE::C6529BRegisters::_C6529BREGS_SUBSET))))
 	{
 		_error = MCHEmul::_INIT_ERROR;
 

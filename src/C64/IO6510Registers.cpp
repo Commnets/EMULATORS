@@ -28,7 +28,7 @@ void C64::IO6510Registers::processEvent (const MCHEmul::Event& evnt, MCHEmul::No
 	// The same bit in the memory position 0 hast to be defined as input (value = 0)
 	if (evnt.id () == COMMODORE::DatasetteIOPort::_KEYPRESSED ||
 		evnt.id () == COMMODORE::DatasetteIOPort::_NOKEYPRESSED)
-		setCasetteNoKeyPressed (evnt.id () == COMMODORE::DatasetteIOPort::_NOKEYPRESSED);
+		_casetteNoKeyPressed = evnt.id () == COMMODORE::DatasetteIOPort::_NOKEYPRESSED;
 }
 
 // ---

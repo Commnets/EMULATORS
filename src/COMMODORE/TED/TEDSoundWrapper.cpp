@@ -26,7 +26,7 @@ COMMODORE::TEDSoundSimpleLibWrapper::TEDSoundSimpleLibWrapper (unsigned int cF, 
 	  _voices ( // Two voices...
 		{ new COMMODORE::TEDSoundSimpleLibWrapper::Voice (0, cF), 
 		  new COMMODORE::TEDSoundSimpleLibWrapper::Voice (1, cF) }),
-	  _registers (std::vector <MCHEmul::UByte> (0x10, MCHEmul::UByte::_0)),
+	  _registers (std::vector <MCHEmul::UByte> (0x20, MCHEmul::UByte::_0)),
 	  _clocksPerSample ((unsigned int) ((double) cF / (double (sF)))),
 	  _counterClocksPerSample (0)
 {
@@ -46,7 +46,7 @@ COMMODORE::TEDSoundSimpleLibWrapper::TEDSoundSimpleLibWrapper (unsigned int cF, 
 // ---
 void COMMODORE::TEDSoundSimpleLibWrapper::setValue (size_t p, const MCHEmul::UByte& v)
 {
-	size_t pp = p % 0x10;
+	size_t pp = p % 0x20;
 
 	_registers [pp] = v;
 

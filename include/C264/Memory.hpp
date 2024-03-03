@@ -59,22 +59,23 @@ namespace C264
 		static const int _KERNELROM				= 2;
 
 		// Subsets
-		static const int _PAGEZERO_SUBSET		= 100;
-		static const int _STACK_SUBSET			= 101;
-		static const int _RAM1_SUBSET			= 102;
-		static const int _RAM2_SUBSET			= 103;
-		static const int _RAM3_SUBSET			= 104;
-		static const int _BASICROM_SUBSET		= 105;
-		static const int _RAM4_SUBSET			= 106;
-		static const int _KERNELROM1_SUBSET		= 107;
-		static const int _IORAM0_SUBSET			= 108;
-		static const int _IORAM1_SUBSET			= 109;
-		static const int _IORAM2_SUBSET			= 110;
-		static const int _IORAM3_SUBSET			= 111;
-		static const int _IORAM4_SUBSET			= 112;
-		static const int _IORAM5_SUBSET			= 113;
-		static const int _RAM5_SUBSET			= 114;
-		static const int _KERNELROM2_SUBSET		= 115;
+		static const int _IO7501PORT_SUBSET		= 100;
+		static const int _PAGEZERO_SUBSET		= 101;
+		static const int _STACK_SUBSET			= 102;
+		static const int _RAM1_SUBSET			= 103;
+		static const int _RAM2_SUBSET			= 104;
+		static const int _RAM3_SUBSET			= 105;
+		static const int _BASICROM_SUBSET		= 106;
+		static const int _RAM4_SUBSET			= 107;
+		static const int _KERNELROM1_SUBSET		= 108;
+		static const int _IORAM0_SUBSET			= 109;
+		static const int _IORAM1_SUBSET			= 110;
+		static const int _IORAM2_SUBSET			= 111;
+		static const int _IORAM3_SUBSET			= 112;
+		static const int _IORAM4_SUBSET			= 113;
+		static const int _IORAM5_SUBSET			= 114;
+		static const int _RAM5_SUBSET			= 115;
+		static const int _KERNELROM2_SUBSET		= 116;
 
 		// Views
 		static const int _CPU_VIEW				= 0;
@@ -88,6 +89,11 @@ namespace C264
 							{ return (_configuration); }
 		/** It can be overloaded for different types of memory. */
 		virtual void setConfiguration (unsigned int cfg) = 0;
+
+		/** To active or desactive the ROM. */
+		bool ROMActive () const
+							{ return (_basicROM -> active ()); }
+		inline void activeROM (bool a);
 
 		/** To activate the right subsets in the CPU view. */
 		virtual bool initialize () override;
@@ -113,6 +119,17 @@ namespace C264
 		MCHEmul::PhysicalStorageSubset* _kernelROM1;
 		MCHEmul::PhysicalStorageSubset* _kernelROM2;
 	};
+
+	// ---
+	inline void Memory::activeROM (bool a)
+	{
+		_RAM3		-> setActive (!a);
+		_RAM4		-> setActive (!a);
+		_RAM5		-> setActive (!a);
+		_basicROM	-> setActive (a);
+		_kernelROM1	-> setActive (a);
+		_kernelROM2	-> setActive (a);
+	}
 
 	/** The memory for the C16/116. */
 	class C16_116Memory final : public Memory

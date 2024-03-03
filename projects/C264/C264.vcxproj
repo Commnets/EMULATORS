@@ -21,6 +21,8 @@
   <ItemGroup>
     <ClCompile Include="..\..\src\C264\C264.cpp" />
     <ClCompile Include="..\..\src\C264\C264Emulator.cpp" />
+    <ClCompile Include="..\..\src\C264\C6529B1.cpp" />
+    <ClCompile Include="..\..\src\C264\C6529B2.cpp" />
     <ClCompile Include="..\..\src\C264\Cartridge.cpp" />
     <ClCompile Include="..\..\src\C264\CommandBuilder.cpp" />
     <ClCompile Include="..\..\src\C264\Commands.cpp" />
@@ -31,6 +33,8 @@
     <ClCompile Include="..\..\src\C264\OSIO.cpp" />
     <ClCompile Include="..\..\src\C264\Screen.cpp" />
     <ClCompile Include="..\..\src\C264\Sound.cpp" />
+    <ClCompile Include="..\..\src\C264\TED.cpp" />
+    <ClCompile Include="..\..\src\C264\TEDRegisters.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\include\C264\C264.hpp" />
@@ -50,6 +54,8 @@
     <ClInclude Include="..\..\include\C264\OSIO.hpp" />
     <ClInclude Include="..\..\include\C264\Screen.hpp" />
     <ClInclude Include="..\..\include\C264\Sound.hpp" />
+    <ClInclude Include="..\..\include\C264\TED.hpp" />
+    <ClInclude Include="..\..\include\C264\TEDRegisters.hpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>

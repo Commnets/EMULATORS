@@ -81,6 +81,18 @@
     <ClCompile Include="..\..\src\C264\Memory.cpp">
       <Filter>Archivos de origen\Motherboard</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\C264\C6529B1.cpp">
+      <Filter>Archivos de origen\Motherboard\Chips</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\C264\TED.cpp">
+      <Filter>Archivos de origen\Motherboard\Chips</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\C264\C6529B2.cpp">
+      <Filter>Archivos de origen\Motherboard\Chips</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\C264\TEDRegisters.cpp">
+      <Filter>Archivos de origen\Motherboard\Chips</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\include\C264\C264.hpp">
@@ -132,6 +144,12 @@
       <Filter>Archivos de encabezado\Motherboard\Chips</Filter>
     </ClInclude>
     <ClInclude Include="..\..\include\C264\C6529B2Registers.hpp">
+      <Filter>Archivos de encabezado\Motherboard\Chips</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\C264\TED.hpp">
+      <Filter>Archivos de encabezado\Motherboard\Chips</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\C264\TEDRegisters.hpp">
       <Filter>Archivos de encabezado\Motherboard\Chips</Filter>
     </ClInclude>
   </ItemGroup>

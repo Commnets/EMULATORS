@@ -105,12 +105,15 @@ VIC20::Memory::Memory (VIC20::Memory::Configuration cfg, const std::string& lang
 	else if (lang == "SWE") { CHARROMFILE = "characters.NecP22101-207-SWE.bin"; KERNELFILE = "kernal.NecP22081-206-SWE.bin"; }
 	else if (lang == "DKA") { CHARROMFILE = "characters.DK901460-03-DKK.bin"; KERNELFILE = "kernal.901486-07-DKK.bin"; }
 
+	// The info is load into the physical storage directly, 
+	// but fixed into the subset above!
+
 	bool ok = true;
-	ok &= subset (_BASICROM_SUBSET) -> loadInto (ROMFILE);
+	ok &= physicalStorage (_BASICROM) -> loadInto (ROMFILE);
 	subset (_BASICROM_SUBSET) -> fixDefaultValues (); // Fix the values for further initializations...
-	ok &= subset (_CHARROM_SUBSET) -> loadInto (CHARROMFILE);
+	ok &= physicalStorage (_CHARROM) -> loadInto (CHARROMFILE);
 	subset (_CHARROM_SUBSET) -> fixDefaultValues ();
-	ok &= subset (_KERNELROM_SUBSET) -> loadInto (KERNELFILE);
+	ok &= physicalStorage (_KERNELROM) -> loadInto (KERNELFILE);
 	subset (_KERNELROM_SUBSET) -> fixDefaultValues ();
 
 	if (!ok)

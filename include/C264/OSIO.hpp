@@ -19,21 +19,25 @@
 
 namespace C264
 {
-	class TED;
-
-	/** The C264::InputOSSystem 
-		is very related with the TED and 6529B chips. \n
-		When a value is written in the register 0 ($fd30 or copies of this) of the chip 6529B,
-		the result can be read in the register 8 ($ff08 or copies of this) of the chip TED. \n
-		So the events happened in this OSIO has to be transmited basically to both chips. */
-	class InputOSSystem final : public COMMODORE::TEDInputOSSystem
+	class C6529B1; 
+	/** The C264::InputOSSystem  \n
+		is very related with the 6529B1 chip (@see C6529B1). */
+	class InputOSSystem final : public MCHEmul::InputOSSystem
 	{
 		public:
+		using Keystroke = 
+			std::pair <unsigned short /** bit at port A. */, unsigned short /** bit at port B. */>;
+		using Keystrokes = std::vector <Keystroke>;
+
 		static const unsigned int _ID = 201;
 
 		InputOSSystem ()
-			: COMMODORE::TEDInputOSSystem (_ID)
+			: MCHEmul::InputOSSystem (_ID),
+			  _C6529B1 (nullptr)
 							{ }
+
+		/** link to C6529B1 chip. */
+		virtual void linkToChips (const MCHEmul::Chips& c) override;
 
 		/** The ScanCode is based en where the key is localed in a standard US PC Keyboard. \n
 			So e.g, the ; is where the Ñ is in a spanish layout. \n
@@ -63,17 +67,15 @@ namespace C264
 			SHIFT MINUS = QUESTION MARK \n
 			SUPR = UP ARROW \n
 			Ñ = POINT AND COMMA. */
-		virtual const Keystrokes& keystrokesFor (SDL_Scancode sc) const override
-							{ KeystrockesMap::const_iterator i = _C264KEYS.find (sc);
-								return ((i == _C264KEYS.end ())
-									? InputOSSystem::_NOKEYSTROKES : (*i).second); }
-		virtual size_t bitForJoystickAxis (int jId, int aId, int aV) const override
+		inline const Keystrokes& keystrokesFor (SDL_Scancode sc) const;
+		size_t bitForJoystickAxis (int jId, int aId, int aV) const
 							{ return ((aId == 0) // x axis
 								? ((aV > 0) ? 0 : 1) /** 0 = right, 1 = left */
 								: ((aV > 0) ? 2 : 3)); /** 2 = down, 3 = up */ }
-		virtual size_t bitForJoystickButton (int jId, int bId) const override
+		size_t bitForJoystickButton (int jId, int bId) const
 							{ return (4); /** Always the bit 4. */ }
 
+		private:
 		/** 
 			How SDL keys are mapped into the chars map of the C264. \n
 			That key will have an image in the status zone. \n
@@ -93,7 +95,20 @@ namespace C264
 		using KeystrockesMap = std::map <SDL_Scancode, Keystrokes>;
 		static const KeystrockesMap _C264KEYS;
 		static const Keystrokes _NOKEYSTROKES;
+
+		// Implementation
+		/** The linked chip. */
+		C6529B1* _C6529B1;
 	};
+
+	// ---
+	inline const InputOSSystem::Keystrokes& InputOSSystem::keystrokesFor (SDL_Scancode sc) const
+	{ 
+		KeystrockesMap::const_iterator i = _C264KEYS.find (sc);
+		
+		return ((i == _C264KEYS.end ())
+			? InputOSSystem::_NOKEYSTROKES : (*i).second); 
+	}
 }
 
 #endif

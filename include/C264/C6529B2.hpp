@@ -7,7 +7,8 @@
  *	Framework: CPU Emulators library \n
  *	Author: Ignacio Cea Fornies (EMULATORS library) \n
  *	Creation Date: 25/02/2024 \n
- *	Description: Specific implementation of the 6529 chip in C264 (the one taking care of the keyboard).
+ *	Description: Specific implementation of the 6529 chip in C264. \n
+ *				 It only exists in CPlus4 version, and takes care of the
  *	Versions: 1.0 Initial
  */
 
@@ -18,15 +19,26 @@
 
 namespace C264
 {
-	/** The important thing of this chip is just their registers (@see C6529Registers). */
+	class C6529B2Registers;
+
 	class C6529B2 final : public COMMODORE::C6529B
 	{
 		public:
 		static const int _ID = 201;
 		
 		C6529B2 ()
-			: COMMODORE::C6529B (_ID)
+			: COMMODORE::C6529B (_ID),
+			  _C6529B2Registers (nullptr)
 							{ }
+		
+		virtual bool initialize () override;
+
+		virtual bool simulate (MCHEmul::CPU* cpu) override;
+
+		private:
+		// Implementation
+		/** The memory is used also as the set of registers of the chip. */
+		C6529B2Registers* _C6529B2Registers;
 	};
 }
 

@@ -6,7 +6,7 @@ MCHEmul::InfoStructure COMMODORE::C6529BRegisters::getInfoStructure () const
 	MCHEmul::InfoStructure result = 
 		std::move (MCHEmul::ChipRegisters::getInfoStructure ());
 
-	result.add ("LATCH", _latchKeyboard);
+	result.add ("LATCH", _latchValue);
 
 	return (result);
 }

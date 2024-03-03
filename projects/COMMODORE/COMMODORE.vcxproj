@@ -49,7 +49,6 @@
     <ClInclude Include="..\..\include\COMMODORE\SID\SIDRegisters.hpp" />
     <ClInclude Include="..\..\include\COMMODORE\TED\incs.hpp" />
     <ClInclude Include="..\..\include\COMMODORE\TED\TED.hpp" />
-    <ClInclude Include="..\..\include\COMMODORE\TED\TEDOSIO.hpp" />
     <ClInclude Include="..\..\include\COMMODORE\TED\TEDRegisters.hpp" />
     <ClInclude Include="..\..\include\COMMODORE\TED\TEDTimer.hpp" />
     <ClInclude Include="..\..\include\COMMODORE\TIA\incs.hpp" />
@@ -110,7 +109,6 @@
     <ClCompile Include="..\..\src\COMMODORE\SID\SIDLibWrapper.cpp" />
     <ClCompile Include="..\..\src\COMMODORE\SID\SIDRegisters.cpp" />
     <ClCompile Include="..\..\src\COMMODORE\TED\TED.cpp" />
-    <ClCompile Include="..\..\src\COMMODORE\TED\TEDOSIO.cpp" />
     <ClCompile Include="..\..\src\COMMODORE\TED\TEDRegisters.cpp" />
     <ClCompile Include="..\..\src\COMMODORE\TED\TEDSoundWrapper.cpp" />
     <ClCompile Include="..\..\src\COMMODORE\TED\TEDTimer.cpp" />

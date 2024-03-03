@@ -23,6 +23,7 @@
 #include <C64/CIA2.hpp>
 #include <C64/CIA2Registers.hpp>
 #include <C64/IO6510Registers.hpp>
+#include <C64/IO6510PortRegisters.hpp>
 #include <C64/IOExpansionMemory.hpp>
 #include <C64/PLA.hpp>
 #include <C64/Screen.hpp>

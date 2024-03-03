@@ -25,6 +25,8 @@
     <ClInclude Include="..\..\include\F6500\C6510.hpp" />
     <ClInclude Include="..\..\include\F6500\incs.hpp" />
     <ClInclude Include="..\..\include\F6500\Instructions.hpp" />
+    <ClInclude Include="..\..\include\F6500\IO6510PortRegisters.hpp" />
+    <ClInclude Include="..\..\include\F6500\IO7501PortRegisters.hpp" />
     <ClInclude Include="..\..\include\F6500\IRQInterrupt.hpp" />
     <ClInclude Include="..\..\include\F6500\NMIInterrupt.hpp" />
   </ItemGroup>
@@ -34,8 +36,10 @@
     <ClCompile Include="..\..\src\F6500\ARR.cpp" />
     <ClCompile Include="..\..\src\F6500\C6500.cpp" />
     <ClCompile Include="..\..\src\F6500\C6502.cpp" />
+    <ClCompile Include="..\..\src\F6500\C7501.cpp" />
     <ClCompile Include="..\..\src\F6500\Interrupt.cpp" />
     <ClCompile Include="..\..\src\F6500\DCP.cpp" />
+    <ClCompile Include="..\..\src\F6500\IO6510PortRegisters.cpp" />
     <ClCompile Include="..\..\src\F6500\IRQInterrupt.cpp" />
     <ClCompile Include="..\..\src\F6500\ISC.cpp" />
     <ClCompile Include="..\..\src\F6500\JAM.cpp" />

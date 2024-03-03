@@ -7,7 +7,7 @@
  *	Framework: CPU Emulators library \n
  *	Author: Ignacio Cea Fornies (EMULATORS library) \n
  *	Creation Date: 09/12/2023 \n
- *	Description: Very simple chip that presents the info to read the keyboard (@see @TED).
+ *	Description: Very simple chip that acts like a lacth.
  *	Versions: 1.0 Initial
  */
 
@@ -18,22 +18,25 @@
 
 namespace COMMODORE
 {
-	/** The important thing of this chip is just their registers (@see C6529Registers). */
 	class C6529B : public MCHEmul::Chip
 	{
 		public:
 		static const int _ID = 108;
+
+		/** Some event than can be used when it is needed to notify the latched value. */
+		static const unsigned int _LACTCHEDVALUECHANGED = 230;
 		
 		C6529B (int id);
+		
+		virtual bool initialize () override;
 
 		/** Any register is valid. */
 		const MCHEmul::UByte& latchValue () const
 							{ return (_C6529BRegisters -> readValue (0)); }
 
-		virtual bool initialize () override;
-
-		virtual bool simulate (MCHEmul::CPU* cpu) override
-							{ return (true); }
+		// This method puts back _latchValue to false...
+		bool latchChanged () const
+							{ return (_C6529BRegisters -> latchChanged ()); }
 
 		/**
 		  *	The name of the fields are: \n
@@ -42,7 +45,7 @@ namespace COMMODORE
 		  */
 		virtual MCHEmul::InfoStructure getInfoStructure () const override;
 
-		private:
+		protected:
 		/** The memory is used also as the set of registers of the chip. */
 		C6529BRegisters* _C6529BRegisters;
 	};

@@ -30,8 +30,7 @@ MCHEmul::InfoStructure COMMODORE::TEDRegisters::GraphicalInfo::getInfoStructure 
 COMMODORE::TEDRegisters::TEDRegisters (MCHEmul::PhysicalStorage* ps, size_t pp, const MCHEmul::Address& a, size_t s)
 	: MCHEmul::ChipRegisters (_TEDREGS_SUBSET, ps, pp, a, s),
 	  _lastValueRead (MCHEmul::PhysicalStorage::_DEFAULTVALUE),
-	  _backgroundColor (4, { 0x00, 0x00 }),
-	  _ROMAccessChanged (false) // It is needed by default...
+	  _backgroundColor (4, { 0x00, 0x00 })
 	  // At this point the rest internal variables will have random values...
 	  // The vector are initialized just to given them a default size!
 {
@@ -81,7 +80,7 @@ void COMMODORE::TEDRegisters::setValue (size_t p, const MCHEmul::UByte& v)
 		_T2 == nullptr)
 		return;
 
-	size_t pp = p % 0x40;
+	size_t pp = p % 0x20;
 
 	// The 64 first bytes will keep the right value...
 	MCHEmul::PhysicalStorageSubset::setValue (p, v);
@@ -172,8 +171,12 @@ void COMMODORE::TEDRegisters::setValue (size_t p, const MCHEmul::UByte& v)
 			break;
 
 		// Scan Keyboard... 
-		// No action when writting, only when reading...
+		// When writting the value at the keyboard pins is latched...
 		case 0x08:
+			{
+				_keyboardLatch = _keyboardPins;
+			}
+
 			break;
 
 		// IRQ Status Register...
@@ -221,7 +224,7 @@ void COMMODORE::TEDRegisters::setValue (size_t p, const MCHEmul::UByte& v)
 
 			break;
 
-		// LSB Cursor Posirion
+		// LSB Cursor Position
 		case 0x0d:
 			{
 				_cursorPosition = (_cursorPosition & 0xff00) | ((unsigned short) v.value ());
@@ -250,8 +253,8 @@ void COMMODORE::TEDRegisters::setValue (size_t p, const MCHEmul::UByte& v)
 
 				_ROMSourceActive = v.bit (2);
 				_bitmapMemory = MCHEmul::Address (MCHEmul::UInt::fromUnsignedInt
-					((unsigned int) ((v.value () & 0x38 /** bits 3, 4 & 5. */) << 10 
-						/** 2 + 8 to become the bits 13, 14 & 15 of the address. */)));
+					((unsigned int) ((v.value () & 0x38 /** bits 3, 4 & 5. */) << 10
+						/** 3 + 10 to become the bits 13, 14 & 15 of the address. */)));
 				/** bits 6 & 7 are not used. */
 			}
 
@@ -265,7 +268,7 @@ void COMMODORE::TEDRegisters::setValue (size_t p, const MCHEmul::UByte& v)
 				_singleClockModeActive = v.bit (1);
 				_charDataMemory = MCHEmul::Address (MCHEmul::UInt::fromUnsignedInt
 					((unsigned int) ((v.value () & 0xfc /** bits 2 - 7. */) << 8 
-						/** 8 to become the bits 10 - 15 of the address. */)));
+						/** 2 + 8 to become the bits 10 - 15 of the address. */)));
 			}
 
 			break;
@@ -276,10 +279,10 @@ void COMMODORE::TEDRegisters::setValue (size_t p, const MCHEmul::UByte& v)
 				/** Bits 0, 1 & 2 are not used. */
 				_screenMemory = MCHEmul::Address (MCHEmul::UInt::fromUnsignedInt
 					((unsigned int) ((v.value () & 0xf8 /** bits 3 - 7. */) << 8 
-						/** 8 to become the bits 11 - 15 of the address. */) | 0x8000 /** The bit 10 is always set. */));
+						/** 3 + 8 to become the bits 11 - 15 of the address. */) | 0x8000 /** The bit 10 is always set. */));
 				_attributeMemory = MCHEmul::Address (MCHEmul::UInt::fromUnsignedInt
 					((unsigned int) ((v.value () & 0xf8 /** bits 3 - 7. */) << 8 
-						/** 8 to become the bits 11 - 15 of the address. */)));
+						/** 3 + 8 to become the bits 11 - 15 of the address. */)));
 				// The difference between the _screenMemory location and the _attributeMemory location
 				// is just the bit 10 is set in _screeMemory and off in _attributeMemory...
 			}
@@ -395,56 +398,6 @@ void COMMODORE::TEDRegisters::setValue (size_t p, const MCHEmul::UByte& v)
 
 			break;
 
-		// Empty registers, nothing special is done...
-		// They are treated as RAM positions!
-		case 0x20:
-		case 0x21:
-		case 0x22:
-		case 0x23:
-		case 0x24:
-		case 0x25:
-		case 0x26:
-		case 0x27:
-		case 0x28:
-		case 0x29:
-		case 0x2a:
-		case 0x2b:
-		case 0x2c:
-		case 0x2d:
-		case 0x2e:
-		case 0x2f:
-		case 0x30:
-		case 0x31:
-		case 0x32:
-		case 0x33:
-		case 0x34:
-		case 0x35:
-		case 0x36:
-		case 0x37:
-		case 0x38:
-		case 0x39:
-		case 0x3a:
-		case 0x3b:
-		case 0x3c:
-		case 0x3d:
-			break;
-
-		case 0x3e:
-			{
-				_HIROMSelected = true;
-				_ROMAccessChanged = true;
-			}
-
-			break;
-
-		case 0x3f:
-			{
-				_HIROMSelected = false;
-				_ROMAccessChanged = true;
-			}
-
-			break;
-
 		default:
 			// It should be here anyway
 			assert (false);
@@ -459,10 +412,11 @@ const MCHEmul::UByte& COMMODORE::TEDRegisters::readValue (size_t p) const
 
 	if (_soundWrapper == nullptr ||
 		_T1 == nullptr ||
-		_T2 == nullptr)
-		return (result);
+		_T2 == nullptr ||
+		_T3 == nullptr)
+		return (_lastValueRead = result);
 
-	size_t pp = p % 0x40;
+	size_t pp = p % 0x20;
 
 	switch (pp)
 	{
@@ -527,11 +481,7 @@ const MCHEmul::UByte& COMMODORE::TEDRegisters::readValue (size_t p) const
 		// after executing setValue (0x08)...
 		case 0x08:
 			{
-				unsigned char dt = 0;
-				for (size_t i = 0; i < 7; i++)
-					if (_c6529B -> latchValue ().bit (i))
-						dt |= _rev_keyboardStatusMatrix [i].value ();
-				result = dt;
+				result = _keyboardLatch;
 			}
 
 			break;
@@ -684,56 +634,6 @@ const MCHEmul::UByte& COMMODORE::TEDRegisters::readValue (size_t p) const
 
 			break;
 
-		case 0x20:
-		case 0x21:
-		case 0x22:
-		case 0x23:
-		case 0x24:
-		case 0x25:
-		case 0x26:
-		case 0x27:
-		case 0x28:
-		case 0x29:
-		case 0x2a:
-		case 0x2b:
-		case 0x2c:
-		case 0x2d:
-		case 0x2e:
-		case 0x2f:
-		case 0x30:
-		case 0x31:
-		case 0x32:
-		case 0x33:
-		case 0x34:
-		case 0x35:
-		case 0x36:
-		case 0x37:
-		case 0x38:
-		case 0x39:
-		case 0x3a:
-		case 0x3b:
-		case 0x3c:
-		case 0x3d:
-			{
-				result = MCHEmul::PhysicalStorageSubset::readValue (pp);
-			}
-
-			break;
-
-		case 0x3e:
-			{
-
-			}
-
-			break;
-
-		case 0x3f:
-			{
-
-			}
-
-			break;
-
 		// It shouldn't be here...
 		default:
 			assert (false);
@@ -758,21 +658,34 @@ void COMMODORE::TEDRegisters::initializeInternalValues ()
 	setValue (0x03, MCHEmul::UByte::_0);
 	setValue (0x04, MCHEmul::UByte::_0);
 	setValue (0x05, MCHEmul::UByte::_0);
-	setValue (0x06, 0x1b); // scroll y = 3, 25 rows, no blank screem normal graphic mode
-	setValue (0x07, 0x88); // scroll x = 0, 40 columns, no freeze, PAL, no reverse
-
-	// TODO
+	setValue (0x06, 0x1b);					// scroll y = 3, 25 rows, no blank screem normal graphic mode
+	setValue (0x07, 0x88);					// scroll x = 0, 40 columns, no freeze, PAL, no reverse
+	setValue (0x08, MCHEmul::UByte::_0);
+	setValue (0x09, MCHEmul::UByte::_FF);	// Clear up all interrupts...
+	setValue (0x0a, MCHEmul::UByte::_0);	// No interrups enabled.
+	setValue (0x0b, MCHEmul::UByte::_0);	// Raster IRQ, when any, at the beginning...
+	setValue (0x0c, MCHEmul::UByte::_0);
+	setValue (0x0d, MCHEmul::UByte::_0);	// Cursor at the beginning...
+	setValue (0x0e, MCHEmul::UByte::_0);
+	setValue (0x0f, MCHEmul::UByte::_0);
+	setValue (0x10, MCHEmul::UByte::_0);
+	setValue (0x11, MCHEmul::UByte::_0);	// No sound...
+	setValue (0x12, MCHEmul::UByte::_0);	// ROM as source for character information, and bitMemory at $000...
+	setValue (0x13, MCHEmul::UByte::_0);	// Single clock mode no active, and char data memory at $0000...
+	setValue (0x14, MCHEmul::UByte::_0);	// Screen memory and Attribute memory at $0000...
+	setValue (0x15, MCHEmul::UByte::_0);
+	setValue (0x16, MCHEmul::UByte::_0);
+	setValue (0x17, MCHEmul::UByte::_0);
+	setValue (0x18, MCHEmul::UByte::_0);
+	setValue (0x19, MCHEmul::UByte::_0);	// Background & foreground colors in black...
+	// From 0x1a to 0x1f control who screen behaves...
+	// better if nothing is written. Look at the next line instead...
 
 	// Managed direclty by the TED Chip...
 	_graphicalInfo = COMMODORE::TEDRegisters::GraphicalInfo ();
 	// Reasons for IRQ
 	_rasterIRQHappened = false;
 	_lightPenIRQHappened = false;
-
-	// The initial status of the keyboard and joystick...
-	_joystickStatus [0] = _joystickStatus [1] = MCHEmul::UByte::_FF; // No switches clicked, no fire buttons pressed...
-	for (size_t i = 0; i < 8; i++)
-		_keyboardStatusMatrix [i] = MCHEmul::UByte::_FF; // No keys pressed...
 }
 
 // ---

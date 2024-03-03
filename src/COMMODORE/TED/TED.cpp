@@ -1,6 +1,5 @@
 #include <COMMODORE/TED/TED.hpp>
 #include <COMMODORE/TED/TEDSoundWrapper.hpp>
-#include <COMMODORE/TED/TEDOSIO.hpp>
 #include <F6500/IRQInterrupt.hpp>
 
 // ---
@@ -146,14 +145,14 @@ bool COMMODORE::TED::initialize ()
 
 	_raster.initialize ();
 
-	_soundFunction -> initialize ();
 	_T1.initialize ();
 	_T2.initialize ();
 	_T3.initialize ();
 
+	// The sound function is initialized independly...
+
 	_TEDRegisters -> lookAtTimers (&_T1, &_T2, &_T3);
 	_TEDRegisters -> lookAtSoundLibWrapper (_soundFunction -> soundWrapper ());
-	_TEDRegisters -> lookAtC2569B (_c6529B);
 	_TEDRegisters -> initialize ();
 
 	_lastCPUCycles = 0;
@@ -370,83 +369,6 @@ MCHEmul::InfoStructure COMMODORE::TED::getInfoStructure () const
 	result.add ("TEDTimer3",		std::move (_T3.getInfoStructure ()));
 
 	return (result);
-}
-
-// ---
-void COMMODORE::TED::processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifier* n)
-{
-	switch (evnt.id ())
-	{
-		case MCHEmul::InputOSSystem::_KEYBOARDKEYPRESSED:
-			{
-				const COMMODORE::TEDInputOSSystem::Keystrokes& ks = 
-					((COMMODORE::TEDInputOSSystem*) n) -> keystrokesFor // Will depend on the implementation...
-						(std::static_pointer_cast <MCHEmul::InputOSSystem::KeyboardEvent> (evnt.data ()) -> _key);
-				if (!ks.empty ()) // The key has to be defined...
-					for (const auto& j : ks)
-						_TEDRegisters -> setKeyboardStatusMatrix (j.first, j.second, false);
-			}
-
-			break;
-
-		case MCHEmul::InputOSSystem::_KEYBOARDKEYRELEASED:
-			{
-				const COMMODORE::TEDInputOSSystem::Keystrokes& ks = 
-					((COMMODORE::TEDInputOSSystem*) n) -> keystrokesFor // Will depend on the implementation...
-						(std::static_pointer_cast <MCHEmul::InputOSSystem::KeyboardEvent> (evnt.data ()) -> _key);
-				if (!ks.empty ()) // The key has to be defined...
-					for (const auto& j : ks)
-						_TEDRegisters -> setKeyboardStatusMatrix (j.first, j.second, true);
-			}
-
-			break;
-
-		case MCHEmul::InputOSSystem::_JOYSTICKMOVED:
-			{
-				std::shared_ptr <MCHEmul::InputOSSystem::JoystickMovementEvent> jm = 
-					std::static_pointer_cast <MCHEmul::InputOSSystem::JoystickMovementEvent> (evnt.data ());
-
-				size_t ct = 0; // Counts the axis...
-				unsigned char dr = 0;
-				for (size_t ct = 0; ct < jm ->_axisValues.size (); ct++)
-					dr |= 1 << ((COMMODORE::TEDInputOSSystem*) n) -> bitForJoystickAxis 
-						(jm -> _joystickId, (int) ct, jm -> _axisValues [ct]);
-
-				/** Saves the full status of the joystick. */
-				_TEDRegisters -> setJoystickStatus 
-					(jm -> _joystickId, (dr == 0x00) 
-						? 0xff /** none connected. */ : _TEDRegisters -> joystickStatus (jm -> _joystickId) & ~dr);
-			}
-
-			break;
-
-		case MCHEmul::InputOSSystem::_JOYSTICKBUTTONPRESSED:
-			{
-				std::shared_ptr <MCHEmul::InputOSSystem::JoystickButtonEvent> jb = 
-					std::static_pointer_cast <MCHEmul::InputOSSystem::JoystickButtonEvent> (evnt.data ());
-
-				_TEDRegisters -> setJoystickStatus (jb -> _joystickId, 
-					_TEDRegisters -> joystickStatus (jb -> _joystickId) & 
-						(1 << ((COMMODORE::TEDInputOSSystem*) n) -> bitForJoystickButton (jb -> _joystickId, jb -> _buttonId)));
-			}
-
-			break;
-
-		case MCHEmul::InputOSSystem::_JOYSTICKBUTTONRELEASED:
-			{
-				std::shared_ptr <MCHEmul::InputOSSystem::JoystickButtonEvent> jb = 
-					std::static_pointer_cast <MCHEmul::InputOSSystem::JoystickButtonEvent> (evnt.data ());
-	
-				_TEDRegisters -> setJoystickStatus (jb -> _joystickId, 
-					_TEDRegisters -> joystickStatus (jb -> _joystickId) & 
-						~(1 << ((COMMODORE::TEDInputOSSystem*) n) -> bitForJoystickButton (jb -> _joystickId, jb -> _buttonId)));
-			}
-
-			break;
-
-		default:
-			break;
-	}
 }
 
 // ---

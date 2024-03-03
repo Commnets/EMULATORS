@@ -32,7 +32,7 @@ C64::Commodore64::Commodore64 (C64::Commodore64::VisualSystem vS, const std::str
 // ---
 bool C64::Commodore64::initialize (bool iM)
 {
-	bool result = MCHEmul::Computer::initialize (iM);
+	bool result = COMMODORE::Computer::initialize (iM);
 	if (!result)
 		return (false);
 

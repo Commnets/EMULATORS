@@ -6,6 +6,7 @@
 #include <C264/ExpansionPort.hpp>
 #include <C264/C6529B1.hpp>
 #include <C264/C6529B2.hpp>
+#include <C264/TED.hpp>
 #include <C264/Cartridge.hpp>
 
 // ---
@@ -13,7 +14,7 @@ C264::Commodore264::Commodore264 (unsigned int cfg, const std::string& lg, C264:
 		MCHEmul::Memory* m,
 		const MCHEmul::Chips& cps, const MCHEmul::IODevices& dvs)
 	: COMMODORE::Computer 
-		(new F6500::C6502 (0 /** Only one micro. */),
+		(new F6500::C7501 (0 /** Only one micro. */),
 		 cps,
 		 m,
 		 dvs,
@@ -28,13 +29,13 @@ C264::Commodore264::Commodore264 (unsigned int cfg, const std::string& lg, C264:
 {
 	assert (_memory != nullptr);
 
-	setConfiguration (cfg);
+	setConfiguration (cfg, false);
 }
 
 // ---
 bool C264::Commodore264::initialize (bool iM)
 {
-	bool result = MCHEmul::Computer::initialize (iM);
+	bool result = COMMODORE::Computer::initialize (iM);
 	if (!result)
 		return (false);
 
@@ -46,6 +47,13 @@ bool C264::Commodore264::initialize (bool iM)
 	// Events when it is disonnected and connected are sent and with many implications
 	// in the structure of the memory...
 	observe (dynamic_cast <COMMODORE::ExpansionIOPort*> (device (COMMODORE::ExpansionIOPort::_ID)));
+	// The ted has to observe the events comming from the C6521B1 chip on regards 
+	// changes in the keyboard matrix...
+	chip (COMMODORE::TED::_ID) -> observe (chip (C264::C6529B1::_ID));
+	// ...and the computer observes changes in the configuration of the RAM/ROM...
+	observe (chip (COMMODORE::TED::_ID));
+
+	// TODO: The IOPorRegister has to be observed...
 
 	// Check whether there is an expansion element inserted in the expansion port
 	// If it is, it's info is loaded if any...
@@ -68,6 +76,10 @@ void C264::Commodore264::processEvent (const MCHEmul::Event& evnt, MCHEmul::Noti
 		setExit (true);
 		setRestartAfterExit (true, 9999 /** Big enough */);
 	}
+	else
+	// Change the structure of the memory when it is requested...
+	if (evnt.id () == C264::TED::_ROMACCESSCHANGED)
+		static_cast <C264::Memory*> (memory ()) -> activeROM (evnt.id () == 1);
 }
 
 // ---
@@ -91,34 +103,27 @@ MCHEmul::Chips C264::Commodore264::standardChips (const std::string& sS, C264::C
 	// The TED...
 	// The one to create will depend on the type of visualization system...
 	// Notice that the sound chip frequency is multiplied by 16 in NTSC systems and by 20 in PAL systems
-	COMMODORE::TED* ted = 
+	C264::TED* ted = 
 		vS == C264::Commodore264::VisualSystem::_PAL 
-			? (COMMODORE::TED*) new COMMODORE::TED_PAL 
+			? (C264::TED*) new C264::TED_PAL 
 				(C264::Memory::_CPU_VIEW, new COMMODORE::TEDSoundSimpleLibWrapper 
 					((vS == C264::Commodore264::VisualSystem::_PAL) 
 						? (C264::Commodore264::_PALCLOCK * 20) : (C264::Commodore264::_NTSCCLOCK * 16),
 					 COMMODORE::TED::_SOUNDSAMPLINGCLOCK))
-			: (COMMODORE::TED*) new COMMODORE::TED_NTSC
+			: (C264::TED*) new C264::TED_NTSC
 				(C264::Memory::_CPU_VIEW, new COMMODORE::TEDSoundSimpleLibWrapper 
 					((vS == C264::Commodore264::VisualSystem::_PAL) 
 						? (C264::Commodore264::_PALCLOCK * 20) : (C264::Commodore264::_NTSCCLOCK * 16), 
 					 COMMODORE::TED::_SOUNDSAMPLINGCLOCK));
 	result.insert (MCHEmul::Chips::value_type (COMMODORE::TED::_ID, (MCHEmul::Chip*) ted));
-
-	// This intermediate chip is just used to latch the value of the keyboard matrix...
-	C264::C6529B1* c6529B1 = new C264::C6529B1;
-	result.insert (MCHEmul::Chips::value_type (C264::C6529B1::_ID, c6529B1));
-	// ...and it has to be linked somehow with the TED...
-	ted -> lookAt6529B (c6529B1);
-	// Notice that TED is not the owner of this chip, that it would be simulated like any other else...
 	
 	// The sound chip doesn't exist in C264 series. 
 	// It is part of the TED.
 	// However, he emulation needs to treat it as an independent chip...
 	result.insert (MCHEmul::Chips::value_type (COMMODORE::TED::SoundFunction::_ID, ted -> soundFunction ()));
 
-	// The RS232 communications chip, is also something common to the whole 264 series...
-	result.insert (MCHEmul::Chips::value_type (COMMODORE::ACIA::_ID, new COMMODORE::ACIA));
+	// This intermediate chip is just used to latch the value of the keyboard matrix...
+	result.insert (MCHEmul::Chips::value_type (C264::C6529B1::_ID, new C264::C6529B1));
 
 	return (result);
 }
@@ -152,11 +157,6 @@ MCHEmul::Chips C264::Commodore16_116::standardChips (const std::string& sS, C264
 	MCHEmul::Chips result = 
 		std::move (C264::Commodore264::standardChips (sS, vS));
 
-	// The ACIA...
-	result.insert (MCHEmul::Chips::value_type (COMMODORE::ACIA::_ID, new COMMODORE::ACIA));
-	// ...and the other C6529...
-	result.insert (MCHEmul::Chips::value_type (C264::C6529B2::_ID, new C264::C6529B2));
-
 	return (result);
 }
 
@@ -172,8 +172,6 @@ MCHEmul::IODevices C264::Commodore16_116::standardDevices (C264::Commodore264::V
 			? (MCHEmul::IODevice*) new C264::ScreenPAL ("C16/116") 
 			: (MCHEmul::IODevice*) new C264::ScreenNTSC ("C16/116")));
 
-	// TODO
-
 	return (result);
 }
 
@@ -183,7 +181,10 @@ MCHEmul::Chips C264::CommodorePlus4::standardChips (const std::string& sS, C264:
 	MCHEmul::Chips result = 
 		std::move (C264::Commodore264::standardChips (sS, vS));
 
-	// TODO
+	// The ACIA...
+	result.insert (MCHEmul::Chips::value_type (COMMODORE::ACIA::_ID, new COMMODORE::ACIA));
+	// ...and the other C6529...
+	result.insert (MCHEmul::Chips::value_type (C264::C6529B2::_ID, new C264::C6529B2));
 
 	return (result);
 }

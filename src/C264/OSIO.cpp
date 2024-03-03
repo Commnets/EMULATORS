@@ -1,4 +1,5 @@
 #include <C264/OSIO.hpp>
+#include <C264/C6529B1.hpp>
 
 // ---
 const C264::InputOSSystem::KeystrockesMap C264::InputOSSystem::_C264KEYS
@@ -83,3 +84,19 @@ const C264::InputOSSystem::KeystrockesMap C264::InputOSSystem::_C264KEYS
 	);
 
 const C264::InputOSSystem::Keystrokes C264::InputOSSystem::_NOKEYSTROKES = { };
+
+// ---
+void C264::InputOSSystem::linkToChips (const MCHEmul::Chips& c)
+{
+	for (MCHEmul::Chips::const_iterator i = c.begin (); i != c.end (); i++)
+	{
+		if (dynamic_cast <C264::C6529B1*> ((*i).second) != nullptr) 
+			_C6529B1 = dynamic_cast <C264::C6529B1*> ((*i).second);
+	}
+
+	// Can't be null after this method...
+	assert (_C6529B1 != nullptr);
+
+	// The C6529b1 will receive the event related with the io system...
+	_C6529B1 -> observe (this);
+}
