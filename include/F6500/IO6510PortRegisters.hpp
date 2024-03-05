@@ -43,6 +43,8 @@ namespace F6500
 			because they are force from the 6510 tristate TTL diodes. */
 		void setPortValue (const MCHEmul::UByte& pV)
 							{ _portValue = (~_dirValue & (pV | _mask)) | (_dirValue & _portValue); }
+		void setBitPortValue (size_t p, bool v)
+							{ MCHEmul::UByte pV = _portValue; pV.setBit (p, v); setPortValue (pV); }
 
 		virtual void initialize () override;
 
@@ -57,11 +59,11 @@ namespace F6500
 							{ _dirValue = _outputValue = _portValue = MCHEmul::UByte::_FF; }
 		
 		/** Method to notify changes in the port value. \n
-			Every bit of the parameter v defines whether the correspondent port pin has changed (true) or not (false). \n
+			Every bit of the parameter c defines whether the correspondent port pin has changed (true) or not (false). \n
 			What is notified (and the events used) finally should take this into account. \n
 			By default the change is communicate in a generic way, if there were any change! */
-		virtual void notifyPortChanges (const MCHEmul::UByte& v)
-							{ if (v != MCHEmul::UByte::_0) 
+		virtual void notifyPortChanges (const MCHEmul::UByte& c, const MCHEmul::UByte& v)
+							{ if (c != MCHEmul::UByte::_0) 
 								notify (MCHEmul::Event (_PORTVALUECHANGED, v.value ())); }
 		
 		protected:

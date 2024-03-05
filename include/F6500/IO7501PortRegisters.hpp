@@ -24,7 +24,7 @@ namespace F6500
 	{
 		public:
 		IO7501PortRegisters (int id, MCHEmul::PhysicalStorage* ps)
-			: IO6510PortRegisters (id, ps, 0b11111111 /** the 6 bits are used. */)
+			: IO6510PortRegisters (id, ps, 0b11111111 /** the 8 bits are used in this CPU port. */)
 							{ setClassName ("IO7501PortRegisters"); }
 	};
 }

@@ -45,7 +45,7 @@ void F6500::IO6510PortRegisters::setValue (size_t p, const MCHEmul::UByte& v)
 		case 0x01:
 			{
 				MCHEmul::UByte oPV = _portValue;
-				_outputValue = (v | _mask);
+				_outputValue = (v | _mask); // It is kept in the ocuput register...
 				
 				/** truth table. \n
 										in			out \n
@@ -58,11 +58,14 @@ void F6500::IO6510PortRegisters::setValue (size_t p, const MCHEmul::UByte& v)
 					1			0		1			0 \n
 					1			1		0			1 \n
 					1			1		1			1 */
+				// But what is in the port can be different, 
+				// attending to the way the data direction port is configured
 				_portValue = (~_dirValue & _portValue) | (_dirValue & _outputValue);
 				// If _dirValue.bit = 0 (read), nothing changes...
+				// But with 1, the value changes to what is define din the _outputValue (register)
 				
 				// Notify only potential changes in the value of the port...
-				notifyPortChanges (oPV ^ _portValue);
+				notifyPortChanges (oPV ^ _portValue, _portValue);
 			}
 
 			break;
