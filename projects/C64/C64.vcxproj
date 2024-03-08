@@ -39,7 +39,6 @@
     <ClInclude Include="..\..\include\C64\OSIO.hpp" />
     <ClInclude Include="..\..\include\C64\PLA.hpp" />
     <ClInclude Include="..\..\include\C64\Screen.hpp" />
-    <ClInclude Include="..\..\include\C64\IO6510Registers.hpp" />
     <ClInclude Include="..\..\include\C64\Sound.hpp" />
   </ItemGroup>
   <ItemGroup>
@@ -60,7 +59,6 @@
     <ClCompile Include="..\..\src\C64\OSIO.cpp" />
     <ClCompile Include="..\..\src\C64\PLA.cpp" />
     <ClCompile Include="..\..\src\C64\Screen.cpp" />
-    <ClCompile Include="..\..\src\C64\IO6510Registers.cpp" />
     <ClCompile Include="..\..\src\C64\Sound.cpp" />
   </ItemGroup>
   <ItemGroup>

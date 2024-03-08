@@ -15,7 +15,7 @@ void C64::IO6510PortRegisters::processEvent (const MCHEmul::Event& evnt, MCHEmul
 // ---
 void C64::IO6510PortRegisters::notifyPortChanges (const MCHEmul::UByte& c, const MCHEmul::UByte& v)
 {
-	// Send the notification when the C64 IO Port bits changes (Byte 1, bits 0. 1 or 2)
+	// Send the notification when the C64 IO Port bits changes (bits 0, 1 or 2)
 	if (c.value () & 0x07) // _LORAM, _HIRAM, _CHAREN
 		notify (MCHEmul::Event (_C64PORTIOBITSACTUALIZED, (unsigned int) (v.value () & 0x07)));
 	

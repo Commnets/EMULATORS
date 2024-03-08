@@ -1,7 +1,7 @@
 #include <C64/PLA.hpp>
 #include <C64/ExpansionPort.hpp>
 #include <C64/Memory.hpp>
-#include <C64/IO6510Registers.hpp>
+#include <C64/IO6510PortRegisters.hpp>
 
 // ---
 C64::PLA::PLA ()
@@ -31,6 +31,25 @@ bool C64::PLA::initialize ()
 bool C64::PLA::simulate (MCHEmul::CPU* cpu)
 {
 	if (statusAffected ())
+	{ 
+		// To take trace...
+		if (deepDebugActive ())
+		{
+			*_deepDebugFile
+				// Where
+				<< "PLA\t" 
+				// When
+				<< std::to_string (cpu -> clockCycles ()) << "\t" // clock cycles at that point
+				// What
+				<< "Status\t\t"
+				// Data
+				<< "_LORAM:"	<< (_LORAM ? "on" : "off")
+				<< "_HIRAM:"	<< (_HIRAM ? "on" : "off")
+				<< "_CHAREN:"	<< (_CHAREN ? "on" : "off")
+				<< "_GAME:"		<< (_GAME ? "on" : "off")
+				<< "_EXROM:"	<< (_EXROM ? "on" : "off") << "\n";
+		}
+
 		dynamic_cast <C64::Memory*> (memoryRef ()) -> configureMemoryStructure 
 			(/** BASIC		= */ (_LORAM && _HIRAM && _GAME) &&
 								 !(_HIRAM && !_GAME && !_EXROM), // and ROMH1 not connected...
@@ -45,6 +64,7 @@ bool C64::PLA::simulate (MCHEmul::CPU* cpu)
 			 /** ROMH1		= */ (_HIRAM && !_GAME && !_EXROM), // At the same location than BASIC ROM
 			 /** ROMH2		= */ (!_GAME && _EXROM) // At the same location than KERNEL ROM
 			);
+	}
 
 	return (true);
 }
@@ -52,7 +72,7 @@ bool C64::PLA::simulate (MCHEmul::CPU* cpu)
 // ---
 void C64::PLA::processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifier*)
 {
-	if (evnt.id () == C64::IO6510Registers::_C64PORTIOBITSACTUALIZED)
+	if (evnt.id () == C64::IO6510PortRegisters::_C64PORTIOBITSACTUALIZED)
 	{
 		_statusAffected = true;
 

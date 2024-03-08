@@ -1,6 +1,6 @@
 #include <C64/C64.hpp>
 #include <C64/Memory.hpp>
-#include <C64/IO6510Registers.hpp>
+#include <C64/IO6510PortRegisters.hpp>
 #include <C64/PLA.hpp>
 #include <C64/Screen.hpp>
 #include <C64/Sound.hpp>
@@ -46,12 +46,12 @@ bool C64::Commodore64::initialize (bool iM)
 
 	// The C64 IO Ports (Memory location 1, bit 0,1,2) and the PLA are linked...
 	// This link is used to determine whether the BASIC ROM, KERNEL or CHARROM is or nor visible.
-	chip (C64::PLA::_ID) -> observe (memory () -> subset (C64::IO6510Registers::_IO6510REGISTERS_SUBSET));
+	chip (C64::PLA::_ID) -> observe (memory () -> subset (C64::IO6510PortRegisters::_IO6510REGISTERS_SUBSET));
 	// But the bit 3 of the same position is where the info to send to the casette is writtem...
-	device (COMMODORE::DatasetteIOPort::_ID) -> observe (memory () -> subset (C64::IO6510Registers::_IO6510REGISTERS_SUBSET));
+	device (COMMODORE::DatasetteIOPort::_ID) -> observe (memory () -> subset (C64::IO6510PortRegisters::_IO6510REGISTERS_SUBSET));
 	// But also the bit 4 is where is possible to read whether any key in the datasette has been preseed 
 	// and where to know whether the motor is running or not...
-	memory () -> subset (C64::IO6510Registers::_IO6510REGISTERS_SUBSET) -> observe (device (COMMODORE::DatasetteIOPort::_ID));
+	memory () -> subset (C64::IO6510PortRegisters::_IO6510REGISTERS_SUBSET) -> observe (device (COMMODORE::DatasetteIOPort::_ID));
 
 	// It is also needed to observe the expansion port...
 	// Events when it is disonnected and connected are sent and with many implications

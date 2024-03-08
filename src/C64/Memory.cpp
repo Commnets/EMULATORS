@@ -1,6 +1,6 @@
 #include <C64/Memory.hpp>
 #include <C64/ColorMemory.hpp>
-#include <C64/IO6510Registers.hpp>
+#include <C64/IO6510PortRegisters.hpp>
 #include <C64/CIA1Registers.hpp>
 #include <C64/CIA2Registers.hpp>
 #include <C64/IOExpansionMemory.hpp>
@@ -156,9 +156,8 @@ MCHEmul::Memory::Content C64::Memory::standardMemoryContent ()
 	// Subsets
 	// ...Over the RAM and ROM as the CPU sees it
 	// First two bytes of the memory that are used by the 6510.
-	MCHEmul::PhysicalStorageSubset* IO6510 = new C64::IO6510Registers
-		(/** id = C64::IO6510Registers::_IO6510REGISTERS_SUBSET */ RAM, 
-			0x0000, MCHEmul::Address ( { 0x00, 0x00 }, false), 0x0002);
+	MCHEmul::PhysicalStorageSubset* IO6510 = new C64::IO6510PortRegisters
+		(/** id = C64::IO6510PortRegisters::_IO6510REGISTERS_SUBSET */ RAM);
 	// Page 0 (except the two first bytes)
 	MCHEmul::PhysicalStorageSubset* PageZero = new MCHEmul::PhysicalStorageSubset 
 		(_PAGEZERO_SUBSET, RAM, 0x0002, MCHEmul::Address ({ 0x02, 0x00 }, false), 0x00fe);
@@ -207,7 +206,7 @@ MCHEmul::Memory::Content C64::Memory::standardMemoryContent ()
 	// A map with the subsets swwn from the CPU perspective
 	MCHEmul::PhysicalStorageSubsets cpusubsets (
 		{
-			{ C64::IO6510Registers::_IO6510REGISTERS_SUBSET,		IO6510}, 
+			{ C64::IO6510PortRegisters::_IO6510REGISTERS_SUBSET,	IO6510}, 
 			{ _PAGEZERO_SUBSET,										PageZero }, 
 			{ _STACK_SUBSET,										Stack }, 
 			{ _RAM00_SUBSET,										RAM00 }, 
@@ -266,7 +265,7 @@ MCHEmul::Memory::Content C64::Memory::standardMemoryContent ()
 	// A map with all the subsets possible...
 	MCHEmul::PhysicalStorageSubsets allsubsets (
 		{
-			{ C64::IO6510Registers::_IO6510REGISTERS_SUBSET,		IO6510}, 
+			{ C64::IO6510PortRegisters::_IO6510REGISTERS_SUBSET,	IO6510}, 
 			{ _PAGEZERO_SUBSET,										PageZero }, 
 			{ _STACK_SUBSET,										Stack }, 
 			{ _RAM00_SUBSET,										RAM00 }, 
