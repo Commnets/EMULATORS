@@ -3,10 +3,10 @@
 #include <F6500/IRQInterrupt.hpp>
 
 // ---
-const MCHEmul::RasterData COMMODORE::TED_PAL::_VRASTERDATA (260, 274, 4, 203, 245, 259, 312, 4, 4);
+const MCHEmul::RasterData COMMODORE::TED_PAL::_VRASTERDATA (260, 274, 3, 202, 245, 259, 312, 4, 4);
 const MCHEmul::RasterData COMMODORE::TED_PAL::_HRASTERDATA 
 	(376, 384, 432, 295, 343, 375, 456 /** For everyting to run, it has to be divisible by 8. */, 7, 9);
-const MCHEmul::RasterData COMMODORE::TED_NTSC::_VRASTERDATA (235, 249, 4, 203, 220, 234, 262, 4, 4);
+const MCHEmul::RasterData COMMODORE::TED_NTSC::_VRASTERDATA (235, 249, 3, 202, 220, 234, 262, 4, 4);
 const MCHEmul::RasterData COMMODORE::TED_NTSC::_HRASTERDATA 
 	(376, 384, 432, 295, 343, 375, 456 /** For everyting to run, it has to be divisible by 8. */, 7, 9);
 // This two positions are fized...
@@ -96,8 +96,7 @@ COMMODORE::TED::TED (const MCHEmul::RasterData& vd, const MCHEmul::RasterData& h
 	  _soundFunction (new COMMODORE::TED::SoundFunction (sW)),
 	  _TEDRegisters (nullptr), 
 	  _TEDView (vV),
-	  _cyclesPerRasterLine (63),
-	  _incCyclesPerRasterLine (0),
+	  _cyclesPerRasterLine (57),
 	  _raster (vd, hd, 8 /** step. */),
 	  _lastCPUCycles (0),
 	  _format (nullptr),
@@ -107,8 +106,6 @@ COMMODORE::TED::TED (const MCHEmul::RasterData& vd, const MCHEmul::RasterData& h
 	  _lastBadLineScrollY (-1), _newBadLineCondition (false), _badLineStopCyclesAdded (false),
 	  _tedGraphicInfo ()
 {
-	assert (_cyclesPerRasterLine >= 63);
-
 	setClassName ("TED");
 
 	_format = SDL_AllocFormat (SDL_PIXELFORMAT_ARGB8888);
@@ -265,7 +262,7 @@ bool COMMODORE::TED::simulate (MCHEmul::CPU* cpu)
 		// unless it was stopped previously and that stop situation were still valid...
 		// In the case of graphics that stop only happens when the situation arise in the "screen cycles" (40)
 		if (!cpu -> stopped () && 
-				(_newBadLineCondition && (_cycleInRasterLine >= 12 && _cycleInRasterLine < 52)))
+				(_newBadLineCondition && (_cycleInRasterLine >= 4 && _cycleInRasterLine < 44)))
 			cpu -> setStop (true, MCHEmul::Instruction::_CYCLEREAD /** only read in not allowed. */, 
 				cpu -> clockCycles () - i, 3);
 
@@ -312,20 +309,20 @@ bool COMMODORE::TED::simulate (MCHEmul::CPU* cpu)
 				_TEDRegisters -> activateRasterIRQ (); // ...the interrupt is activated (but not necessary launched!)
 		}
 
+		// Simulate the timers!
+		r &= _T1.simulate (cpu);
+		r &= _T2.simulate (cpu);
+		r &= _T3.simulate (cpu);
+
 		// Per cycle, the IRQ condition is checked! 
 		// (many reasons during the cycle can unchain the IRQ interrupt)
 		int cI = -1;
-		if ((cI = (int)_TEDRegisters -> reasonIRQCode ()) != 0)
+		if ((cI = (int) _TEDRegisters -> reasonIRQCode ()) != 0)
 			cpu -> requestInterrupt (
 				F6500::IRQInterrupt::_ID, 
 				cpu -> clockCycles  () - i, 
 				this,
 				cI);
-
-		// Simulate the timers!
-		r &= _T1.simulate (cpu);
-		r &= _T2.simulate (cpu);
-		r &= _T3.simulate (cpu);
 	}
 
 	// When the raster enters the non visible part of the screen,
@@ -429,8 +426,8 @@ MCHEmul::ScreenMemory* COMMODORE::TED::createScreenMemory ()
 	// From a structure based on positions, to a structure based on luminance...
 	unsigned int* cP = new unsigned int [128];
 	for (size_t i = 0; i < 16; i++)
-		for (size_t j = 0; i < 8; i++)
-			cP [i | (j << 4)] = SDL_MapRGBA (_format, 
+		for (size_t j = 0; j < 8; j++)
+			cP [i + (j << 4)] = SDL_MapRGBA (_format, 
 				_COLORS [(i << 3) + j].R, _COLORS [(i << 3) + j].G, _COLORS [(i << 3) + j].B, 0xe0);
 	return (new MCHEmul::ScreenMemory (numberColumns (), numberRows (), cP));
 }
@@ -535,7 +532,7 @@ unsigned int COMMODORE::TED::treatRasterCycle ()
 				_badLineStopCyclesAdded = true;
 
 				// 40 cycles more (maximum) just for reading the chars...
-				result = 56 - _cycleInRasterLine;
+				result = 48 - _cycleInRasterLine;
 			}
 
 			if (deepDebugActive ())
@@ -644,10 +641,6 @@ void COMMODORE::TED::drawVisibleZone (MCHEmul::CPU* cpu)
 		screenMemory () -> setHorizontalLine ((size_t) stp, (size_t) rv, lbk, 
 			_TEDRegisters -> borderColor ().asChar ());
 	}
-
-	// The IRQ related with the lightpen is calculated...
-	unsigned short dx, dy;
-	_raster.currentDisplayPosition (dx, dy);
 }
 
 // ---

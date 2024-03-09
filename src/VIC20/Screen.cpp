@@ -40,21 +40,23 @@ void VIC20::Screen::drawAdditional ()
 			return; // The screen could be defined out of the visible zone...
 
 		// Adjust the rectangle to draw to the limits of the scren...
-		short xl = x2 - x1 + 1;
-		short yl = y2 - y1 + 1;
-		if (x1 > 0) { x1--; xl++; }
-		if (x2 < (gC -> raster ().visibleColumns () - 1)) { x2++; xl++; }
-		if (y1 > 0) { y1--; yl++; }
-		if (y2 < (gC -> raster ().visibleLines () - 1)) { y2++; yl++; }
-
+		if (x1 > 0) x1--;
+		if (x2 < (gC -> raster ().visibleColumns () - 1)) x2++;
+		if (y1 > 0) y1--;
+		if (y2 < (gC -> raster ().visibleLines () - 1)) y2++;
 		// ...and finally draws the rectangle!
-		drawRectangle ((size_t) x1, (size_t) y1, (size_t) (x1 + xl), (size_t) (y1 + yl), bC);
+		drawRectangle ((size_t) x1, (size_t) y1, (size_t) x2, (size_t) y2, bC);
 
-		// ...and the reference lines...
-		for (unsigned short i = y1 + 8; i <= y2; i += 8)
-			drawHorizontalLineStep ((size_t) (x1 - 1), (size_t) i, (size_t) (x2 - x1 + 3), 2, bC);
-		for (unsigned short i = x1 + 8; i <= x2; i += 8)
-			drawVerticalLineStep ((size_t) i, (size_t) (y1 - 1), (size_t) (y2 - y1 + 3), 2, bC);
+		// The reference line can not be drwa from the previous rectangle
+		// as the drawable zone could be out of the visible window and not be real boxes...
+		short x1p, y1p, x2p, y2p;
+		gC -> originalScreenPositions (x1p, y1p, x2p, y2p);
+		for (short i = y1p + 8; i <= y2p; i += 8)
+			if (i >= 0 && i < gC -> raster ().visibleLines ())
+				drawHorizontalLineStep ((size_t) x1, (size_t) i, (size_t) (x2 - x1 + 1), 2, bC);
+		for (short i = x1p + 8; i <= x2p; i += 8)
+			if (i >= 0 && i < gC -> raster ().visibleColumns ())
+				drawVerticalLineStep ((size_t) i, (size_t) y1, (size_t) (y2 - y1 + 1), 2, bC);
 
 		// Draws a reference to the owner to the simulator!
 		drawTextHorizontal (8, 8, "(C)ICF 2024", 0 /** not used. */, bC, true);

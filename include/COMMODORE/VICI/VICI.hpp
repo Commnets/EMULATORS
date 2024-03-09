@@ -87,6 +87,8 @@ namespace COMMODORE
 							{ return (_raster.visibleLines ()); }
 		/** Always with in the visible screen. */
 		inline void screenPositions (short& x1, short& y1, short& x2, short& y2);
+		/** The original ones. */
+		inline void originalScreenPositions (short& x1, short& y1, short& x2, short& y2);
 
 		/** To get the number of cycles per raster line used in this chip. */
 		unsigned short cyclesPerRasterLine () const
@@ -344,6 +346,16 @@ namespace COMMODORE
 		y2 = _scrY2;
 		if (y2 < 0) y2 = 0;
 		if (y2 >= _raster.vData ().visiblePositions ()) y2 = _raster.vData ().visiblePositions () - 1;
+	}
+
+	// ---
+	inline void VICI::originalScreenPositions (short& x1, short& y1, short& x2, short& y2)
+	{ 
+		// The original limits, the could be negative...
+		x1 = _scrX1; 
+		y1 = _scrY1;
+		x2 = _scrX2; 
+		y2 = _scrY2;
 	}
 
 	// ---

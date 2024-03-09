@@ -322,15 +322,15 @@ C264::CPlus4Memory::CPlus4Memory (unsigned int cfg, const std::string& lang)
 
 	// In this case there different options per languaje...
 
-	bool ok = true;
-	ok &= physicalStorage (_BASICROM) -> loadInto (CODE1FILE);
-	subset (_BASICROM_SUBSET) -> fixDefaultValues (); // Fix the values for further initializations...
-	ok &= subset (_KERNELROM) -> loadInto (CODE2FILE);
-	subset (_KERNELROM1_SUBSET) -> fixDefaultValues ();
-	subset (_KERNELROM2_SUBSET) -> fixDefaultValues ();
-
-	if (!ok)
-		_error = MCHEmul::_INIT_ERROR;
+//	bool ok = true;
+//	ok &= physicalStorage (_BASICROM) -> loadInto (CODE1FILE);
+//	subset (_BASICROM_SUBSET) -> fixDefaultValues (); // Fix the values for further initializations...
+//	ok &= physicalStorage (_KERNELROM) -> loadInto (CODE2FILE);
+//	subset (_KERNELROM1_SUBSET) -> fixDefaultValues ();
+//	subset (_KERNELROM2_SUBSET) -> fixDefaultValues ();
+//
+//	if (!ok)
+//		_error = MCHEmul::_INIT_ERROR;
 
 	setConfiguration (_configuration);
 }
@@ -359,14 +359,14 @@ MCHEmul::Memory::Content C264::CPlus4Memory::standardMemoryContent ()
 		std::move (C264::Memory::standardMemoryContent ());
 
 	// Add the new element to the subsets...
-	result.subsets ().insert 
+	result._subsets.insert 
 		(MCHEmul::PhysicalStorageSubsets::value_type 
 			(COMMODORE::ACIARegisters::_ACIAREGS_SUBSET, 
 				new COMMODORE::ACIARegisters (result.physicalStorage (_RAM), // The ACIA...
 					0xfd00, MCHEmul::Address ({ 0x00, 0xfd }, false), 0x10)));
-	result.subsets ().insert
+	result._subsets.insert
 		(MCHEmul::PhysicalStorageSubsets::value_type 
-			(COMMODORE::C6529BRegisters::_C6529BREGS_SUBSET, 
+			(C264::C6529B2Registers::_C6529B2REGS_SUBSET,
 				new C264::C6529B2Registers (result.physicalStorage (_RAM), // And another latch chip...
 					0xfd10, MCHEmul::Address ({ 0x10, 0xfd }, false), 0x10)));
 

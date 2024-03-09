@@ -17,11 +17,11 @@
 
 #include <CORE/incs.hpp>
 #include <COMMODORE/TED/TEDSoundWrapper.hpp>
+#include <COMMODORE/TED/TEDTimer.hpp>
 
 namespace COMMODORE
 {
 	class TED;
-	class TEDTimer;
 
 	/** In the TED Registers, 
 		there are a couple of records that behave different
@@ -320,6 +320,9 @@ namespace COMMODORE
 	inline bool TEDRegisters::launchIRQ () const
 	{ 
 		return ((_rasterIRQHappened && _rasterIRQActive) ||
+				_T1 -> launchInterrupt () ||
+				_T2 -> launchInterrupt () ||
+				_T3 -> launchInterrupt () ||
 				(_lightPenIRQHappened && _lightPenIRQActive)); 
 	}
 
@@ -327,7 +330,10 @@ namespace COMMODORE
 	inline unsigned int TEDRegisters::reasonIRQCode () const
 	{
 		return (((_rasterIRQHappened && _rasterIRQActive) ? 1 : 0) +
-				((_lightPenIRQHappened && _lightPenIRQActive) ? 2 : 0)); 
+				((_T1 -> peekInterruptRequested () && _T1 -> interruptEnabled ()) ? 2 : 0) +
+				((_T2 -> peekInterruptRequested () && _T2 -> interruptEnabled ()) ? 4 : 0) +
+				((_T3 -> peekInterruptRequested () && _T3 -> interruptEnabled ()) ? 8 : 0) +
+				((_lightPenIRQHappened && _lightPenIRQActive) ? 16 : 0)); 
 	}
 }
 

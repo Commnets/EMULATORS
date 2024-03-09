@@ -69,8 +69,8 @@ namespace COMMODORE
 		static const unsigned char _SOUNDCHANNELS			= 1;
 
 		/** The position of the bad lines. */
-		static const unsigned short _FIRSTBADLINE	= 0x30;
-		static const unsigned short _LASTBADLINE	= 0xf7;
+		static const unsigned short _FIRSTBADLINE	= 0x00;
+		static const unsigned short _LASTBADLINE	= 0xc8;
 
 		/** Data about the size of the screen */
 		static const unsigned short _GRAPHMAXCHARLINES		= 25;	// Not taking into account reductions in the size
@@ -242,8 +242,6 @@ namespace COMMODORE
 		int _TEDView;
 		/** The number of cycles per raster line as it depends on the type of Chip. */
 		unsigned short _cyclesPerRasterLine;
-		/** The difference with the PAL System. */
-		unsigned short _incCyclesPerRasterLine;
 		/** The raster. */
 		MCHEmul::Raster _raster;
 

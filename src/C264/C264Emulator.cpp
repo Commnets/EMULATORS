@@ -31,6 +31,7 @@ void C264::C264Emulator::printOutParameters (std::ostream& o) const
 		 "3: 64k RAM free" << std::endl;
 	o << "MACHINES allowed to be emulated under command line /m:" << std::endl <<
 		 "C16:\tCommodore 16/116 not expanded" << std::endl <<
+		 "C16:\tCommodore 16/116 not expanded" << std::endl <<
 		 "CP4:\tCommodore Plus/4 not expanded" << std::endl;
 	o << "DEVICES allowed to be connected under command CONNECTPER:" << std::endl <<
 		 std::to_string (COMMODORE::Datasette1530::_ID) << ":\tCasette 1530 / 1" << std::endl <<
@@ -58,12 +59,13 @@ MCHEmul::Computer* C264::C264Emulator::createComputer () const
 	// This emulation is able to replicate three types of computers!
 	switch (emulattedComputer ())
 	{
-		case 1:
+		case 2:
 			result = new C264::CommodorePlus4 (configurationMode (), computerLanguage (), 
 				NTSCSystem () ? C264::Commodore264::VisualSystem::_NTSC : C264::Commodore264::VisualSystem::_PAL);
 			break;
 
 		case 0:
+		case 1:
 		default:
 			result = new C264::Commodore16_116 (configurationMode (), computerLanguage (),
 				NTSCSystem () ? C264::Commodore264::VisualSystem::_NTSC : C264::Commodore264::VisualSystem::_PAL);

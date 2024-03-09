@@ -2,10 +2,10 @@
 #include <C264/TEDRegisters.hpp>
 
 // ---
-const MCHEmul::RasterData C264::TED_PAL::_VRASTERDATA (260, 274, 4, 203, 245, 259, 312, 4, 4);
+const MCHEmul::RasterData C264::TED_PAL::_VRASTERDATA (260, 274, 3, 202, 245, 259, 312, 4, 4);
 const MCHEmul::RasterData C264::TED_PAL::_HRASTERDATA 
 	(376, 384, 432, 295, 343, 375, 456 /** For everyting to run, it has to be divisible by 8. */, 7, 9);
-const MCHEmul::RasterData C264::TED_NTSC::_VRASTERDATA (235, 249, 4, 203, 220, 234, 262, 4, 4);
+const MCHEmul::RasterData C264::TED_NTSC::_VRASTERDATA (235, 249, 3, 202, 220, 234, 262, 4, 4);
 const MCHEmul::RasterData C264::TED_NTSC::_HRASTERDATA 
 	(376, 384, 432, 295, 343, 375, 456 /** For everyting to run, it has to be divisible by 8. */, 7, 9);
 

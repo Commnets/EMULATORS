@@ -7,15 +7,16 @@ C264::Screen::Screen (const std::string& tt, double hz, int w, int h, const MCHE
 { 
 	bool e;
 	MCHEmul::DataMemoryBlock dt = MCHEmul::DataMemoryBlock::loadBinaryFile 
-		("././kernal.318005-05-FRA.bin", e, 0 /** no address, no needed */, true);
-	// The file is longer than 4k, but the chars definition are at the beginning of the kernel file!
+		("./kernal.318004-05-ENG.bin", e, 0 /** no address, no needed */, true);
+	// The file is longer than 4k, 
+	// but the chars definition are from the posicion 0x1000 of the kernel file!
 	if (!e)
 	{
 		for (size_t i = 0; i < 4096; i += 8)
 		{
 			std::vector <MCHEmul::UBytes> chrdt;
 			for (size_t j = 0; j < 8; j++)
-				chrdt.push_back (MCHEmul::UBytes ({ dt.byte (i + j) }));
+				chrdt.push_back (MCHEmul::UBytes ({ dt.byte (0x1000 + i + j) }));
 			_graphicsDef.emplace_back (std::move (chrdt));
 		}
 	}
@@ -71,8 +72,8 @@ C264::ScreenNTSC::ScreenNTSC (const std::string& tt)
 // ---
 C264::ScreenPAL::ScreenPAL (const std::string& tt)
 	: C264::Screen (tt, 50.04f,
-		(int) COMMODORE::TED_NTSC::_HRASTERDATA.visiblePositions (), 
-		(int) COMMODORE::TED_NTSC::_VRASTERDATA.visiblePositions (),
+		(int) COMMODORE::TED_PAL::_HRASTERDATA.visiblePositions (), 
+		(int) COMMODORE::TED_PAL::_VRASTERDATA.visiblePositions (),
 		{ { "Name", "Screen PAL" },
 		  { "Type", "Output" },
 		  { "Frequency", "60.0Hz" } })

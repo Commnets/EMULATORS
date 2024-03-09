@@ -279,7 +279,7 @@ void COMMODORE::TEDRegisters::setValue (size_t p, const MCHEmul::UByte& v)
 				/** Bits 0, 1 & 2 are not used. */
 				_screenMemory = MCHEmul::Address (MCHEmul::UInt::fromUnsignedInt
 					((unsigned int) ((v.value () & 0xf8 /** bits 3 - 7. */) << 8 
-						/** 3 + 8 to become the bits 11 - 15 of the address. */) | 0x8000 /** The bit 10 is always set. */));
+						/** 3 + 8 to become the bits 11 - 15 of the address. */) | 0x400 /** The bit 10 is always set. */));
 				_attributeMemory = MCHEmul::Address (MCHEmul::UInt::fromUnsignedInt
 					((unsigned int) ((v.value () & 0xf8 /** bits 3 - 7. */) << 8 
 						/** 3 + 8 to become the bits 11 - 15 of the address. */)));
