@@ -79,7 +79,7 @@ void C264::Commodore264::processEvent (const MCHEmul::Event& evnt, MCHEmul::Noti
 	else
 	// Change the structure of the memory when it is requested...
 	if (evnt.id () == C264::TED::_ROMACCESSCHANGED)
-		static_cast <C264::Memory*> (memory ()) -> activeROM (evnt.id () == 1);
+		static_cast <C264::Memory*> (memory ()) -> activeROM (evnt.value () == 1);
 }
 
 // ---
