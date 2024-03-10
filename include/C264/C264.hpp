@@ -40,7 +40,7 @@ namespace C264
 		static const unsigned int _PALCLOCK		= 889200; // 0.889 MHz
 		static const unsigned int _NTSCCLOCK	= 896040; // 0.896 MHz
 
-		Commodore264 (unsigned int cfg, const std::string& lg, VisualSystem vS,
+		Commodore264 (const std::string& lg, VisualSystem vS,
 			MCHEmul::Memory* m,
 			const MCHEmul::Chips& cps, const MCHEmul::IODevices& dvs);
 
@@ -51,12 +51,12 @@ namespace C264
 
 		// Managing memory configuration...
 		/** To get the configuration of the memory. */
-		unsigned int configuration () const
+		const MCHEmul::UByte& configuration () const
 							{ return (static_cast <const Memory*> (memory ()) -> configuration ()); }
 		/** Change the configuration of the memory. \n
 			The parameter rs indicates whether to restart the computer. ºn
 			By default it is true. */
-		void setConfiguration (unsigned int cfg, bool rs = true);
+		void setConfiguration (const MCHEmul::UByte& cfg, bool rs = true);
 
 		// Implementation
 		static MCHEmul::Chips standardChips (const std::string& sS, VisualSystem vS);
@@ -67,7 +67,7 @@ namespace C264
 		VisualSystem _visualSystem;
 		/** The configuration mode of the computer. 
 			In some version couldn't make sense. */
-		unsigned int _configuration;
+		MCHEmul::UByte _configuration;
 	};
 
 	/** The Commodore 16_116 a specific element of the series 264. \n
@@ -76,9 +76,9 @@ namespace C264
 	class Commodore16_116 final : public Commodore264
 	{
 		public:
-		Commodore16_116 (unsigned int cfg, const std::string& lg, VisualSystem vS)
-			: Commodore264 (cfg, lg, vS,
-				new C264::C16_116Memory (cfg, lg),
+		Commodore16_116 (const std::string& lg, VisualSystem vS)
+			: Commodore264 (lg, vS,
+				new C264::C16_116Memory (lg),
 				standardChips (lg, vS), standardDevices (vS))
 							{ }
 
@@ -93,9 +93,9 @@ namespace C264
 	class CommodorePlus4 final : public Commodore264
 	{
 		public:
-		CommodorePlus4 (unsigned int cfg, const std::string& lg, VisualSystem vS)
-			: Commodore264 (cfg, lg, vS,
-				new C264::CPlus4Memory (cfg, lg),
+		CommodorePlus4 (const std::string& lg, VisualSystem vS)
+			: Commodore264 (lg, vS,
+				new C264::CPlus4Memory (lg),
 				standardChips (lg, vS), standardDevices (vS))
 							{ }
 

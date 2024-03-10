@@ -383,10 +383,9 @@ void MCHEmul::LastIntructionCPUCommand::executeImpl (MCHEmul::CommandExecuter* c
 	rst.add ("INST", c -> cpu () -> lastInstruction () == nullptr 
 		? "-" 
 		: MCHEmul::ByteCodeLine (
-			c -> cpu () -> programCounter ().asAddress () - 
-				(c -> cpu () -> lastInstruction () -> codeLength () + 1), // Before the execution
-			c -> cpu () -> lastInstruction () -> parameters ().bytes (),
-			"", /** No laberl recognized. */
+			c -> cpu () -> lastInstruction () -> lastProgramCounter ().asAddress (), // Before the execution
+			c -> cpu () -> lastInstruction () -> parameters ().bytes (), // The bytes of the instruction
+			"", /** No label recognized. */
 			c -> cpu () -> lastInstruction (), 
 			c -> action (c -> cpu () -> programCounter ().asAddress ())).
 				asString (MCHEmul::UByte::OutputFormat::_HEXA, ' ', 2));

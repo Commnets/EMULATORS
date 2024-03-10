@@ -31,6 +31,8 @@
     <ClCompile Include="..\..\src\C264\IOPBuilder.cpp" />
     <ClCompile Include="..\..\src\C264\Memory.cpp" />
     <ClCompile Include="..\..\src\C264\OSIO.cpp" />
+    <ClCompile Include="..\..\src\C264\ROMRAMSwitch.cpp" />
+    <ClCompile Include="..\..\src\C264\ROMRAMSwitchRegisters.cpp" />
     <ClCompile Include="..\..\src\C264\Screen.cpp" />
     <ClCompile Include="..\..\src\C264\Sound.cpp" />
     <ClCompile Include="..\..\src\C264\TED.cpp" />
@@ -52,6 +54,8 @@
     <ClInclude Include="..\..\include\C264\IOPBuilder.hpp" />
     <ClInclude Include="..\..\include\C264\Memory.hpp" />
     <ClInclude Include="..\..\include\C264\OSIO.hpp" />
+    <ClInclude Include="..\..\include\C264\ROMRAMSwitch.hpp" />
+    <ClInclude Include="..\..\include\C264\ROMRAMSwitchRegisters.hpp" />
     <ClInclude Include="..\..\include\C264\Screen.hpp" />
     <ClInclude Include="..\..\include\C264\Sound.hpp" />
     <ClInclude Include="..\..\include\C264\TED.hpp" />

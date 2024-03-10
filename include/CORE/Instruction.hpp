@@ -17,6 +17,7 @@
 #include <CORE/global.hpp>
 #include <CORE/UBytes.hpp>
 #include <CORE/Address.hpp>
+#include <CORE/ProgramCounter.hpp>
 
 namespace MCHEmul
 {
@@ -170,12 +171,14 @@ namespace MCHEmul
 		std::string parametersAsString (size_t p, size_t nP = 1, bool bE = true) const; // The UBytes could grouped to get a parameter...
 
 		// Managing the last address and ata managed...
-		/** These two parameters are fully optional.
+		/** These three parameters are fully optional.
 			The execute method must assign them, otherwise they will have default values. */
 		const Address& lastINOUTAddress () const
 							{ return (_lastINOUTAddress); }
 		const UBytes& lastINOUTData () const
 							{ return (_lastINOUTData); }
+		const ProgramCounter& lastProgramCounter () const
+							{ return (_lastProgramCounter); }
 
 		/** This method is key when, i.e. compiling assembler code. \n
 			Given a set of data (or several sets) in the for of bytes, 
@@ -246,6 +249,7 @@ namespace MCHEmul
 		UBytes _lastParameters;
 		mutable Address _lastINOUTAddress;
 		mutable UBytes _lastINOUTData;
+		mutable ProgramCounter _lastProgramCounter;
 		CPU* _cpu;
 		Memory* _memory;
 		Stack* _stack;

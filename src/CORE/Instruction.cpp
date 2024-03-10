@@ -22,7 +22,7 @@ MCHEmul::Instruction::Instruction (unsigned int c, unsigned int mp, unsigned int
 	  _bigEndian (bE),
 	  _iTemplate (MCHEmul::noSpaces (MCHEmul::upper (t))),
 	  _iStructure (), // Assigned later...
-	  _lastParameters (), _lastINOUTAddress (), _lastINOUTData (),
+	  _lastParameters (), _lastINOUTAddress (), _lastINOUTData (), _lastProgramCounter (1), // It will changed later...
 	  _cpu (nullptr), _memory (nullptr), _stack (nullptr)
 { 
 	assert (_memoryPositions > 0 && _clockCycles > 0); 
@@ -270,6 +270,9 @@ bool MCHEmul::InstructionDefined::execute (MCHEmul::CPU* c, MCHEmul::Memory* m, 
 	// before updating the Program Counter...
 	_lastParameters = 
 		_memory -> values (pc -> asAddress (), memoryPositions ());
+	// ...and also where the program counter was pointing...
+	// as it can be useful later!
+	_lastProgramCounter = *pc;
 	// Then, the Program Counter is moved to the next instruction...
 	// This is done in this way because the intruction itself could
 	// modify the value of the Program Counter (Jumps, returns,...)
@@ -329,6 +332,7 @@ bool MCHEmul::InstructionUndefined::execute (MCHEmul::CPU* c, MCHEmul::Memory* m
 			: static_cast <MCHEmul::InstructionUndefined*> (sI) -> _lastInstruction;
 		_lastINOUTAddress   = _lastInstruction -> lastINOUTAddress ();
 		_lastINOUTData		= _lastInstruction -> lastINOUTData ();
+		_lastProgramCounter	= _lastInstruction -> lastProgramCounter ();
 		_code				= _lastInstruction -> code ();
 		_codeLength			= _lastInstruction -> codeLength ();
 		_memoryPositions	= _lastInstruction -> memoryPositions ();

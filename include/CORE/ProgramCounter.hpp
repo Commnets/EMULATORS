@@ -78,7 +78,7 @@ namespace MCHEmul
 		size_t _size;
 
 		// Implementation
-		const unsigned int _maxValue = 0; // Adjusted at construction time...
+		unsigned int _maxValue; // Adjusted at construction time...
 		unsigned int _internalRepresentation;
 	};
 }

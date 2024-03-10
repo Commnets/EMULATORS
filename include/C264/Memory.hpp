@@ -8,6 +8,13 @@
  *	Author: Ignacio Cea Fornies (EMULATORS library) \n
  *	Creation Date: 04/02/2024 \n
  *	Description: C264 Memory.
+ *				 The memory is configured in C264 using a combination of PLA (7700-10) and
+ *				 a set of flip-flops (74LS175) and decodifiers (74LS139)
+ *				 I haven't found detail info about how they works, but "reading" the shematic-diagrams
+ *				 something can be programmed!
+ *				 see: https://myoldcomputer.nl/wp-content/uploads/2016/02/c16_251788_1.jpg
+ *				 see: https://pdf1.alldatasheet.es/datasheet-pdf/download/5674/MOTOROLA/74LS175.html
+ *				 see: https://pdf1.alldatasheet.com/datasheet-pdf/download/5657/MOTOROLA/74LS139.html
  *	Versions: 1.0 Initial
  */
 
@@ -18,12 +25,12 @@
 
 namespace C264
 {
-	/** When a C264 series computer is not expanded (usually come configurations of C16/16), 
-		there are several memory zones not connected.
-		That zones, doesn't respond to poke and always return the same value when peeking 
-		(at least it is as anothe emulators in the market now behave)
-		This is the way (i guess) C264 non expanded series computer determines how much free memory the system has.
-		So this class is to replicate that behaviour. */
+	class TED;
+
+	/** In a C264 series there are several memory zones "not connected". \n
+		As far I have tested in other simulators, that memory zones are not affecter by POKE instructions. \n
+		The usually returs when PEEK is executed. \n
+		This class admits a return value by configuration. */
 	class NotConnectedPhysicalStorageSubset final : public MCHEmul::PhysicalStorageSubset
 	{
 		public:
@@ -53,47 +60,56 @@ namespace C264
 	class Memory : public MCHEmul::Memory
 	{
 		public:
+		friend TED;
+
 		// Phisical Storages
 		static const int _RAM					= 0;
 		static const int _BASICROM				= 1;
 		static const int _KERNELROM				= 2;
 
-		// Subsets
+		// Subsets that exists from the beginning in ant type of machine...
 		static const int _IO7501PORT_SUBSET		= 100;
 		static const int _PAGEZERO_SUBSET		= 101;
 		static const int _STACK_SUBSET			= 102;
 		static const int _RAM1_SUBSET			= 103;
 		static const int _RAM2_SUBSET			= 104;
-		static const int _RAM3_SUBSET			= 105;
-		static const int _BASICROM_SUBSET		= 106;
-		static const int _RAM4_SUBSET			= 107;
-		static const int _KERNELROM1_SUBSET		= 108;
-		static const int _IORAM0_SUBSET			= 109;
-		static const int _IORAM1_SUBSET			= 110;
-		static const int _IORAM2_SUBSET			= 111;
-		static const int _IORAM3_SUBSET			= 112;
-		static const int _IORAM4_SUBSET			= 113;
-		static const int _IORAM5_SUBSET			= 114;
-		static const int _RAM5_SUBSET			= 115;
-		static const int _KERNELROM2_SUBSET		= 116;
+		static const int _BASICROM_SUBSET		= 105;
+		static const int _RAM3_SUBSET			= 106;
+		static const int _CARLOW1_SUBSET		= 107;	// Memory not connected...
+		static const int _CARLOW2_SUBSET		= 108;	// Memory not connected...
+		static const int _KERNELROM1_SUBSET		= 109;
+		static const int _KERNELROM2_SUBSET		= 110;
+		static const int _RAM4_SUBSET			= 111;
+		static const int _CARHIGH1_SUBSET		= 112;	// Memory not connected...
+		static const int _CARHIGH2_SUBSET		= 113;	// Memory not connected...
+		static const int _IORAM0_SUBSET			= 114;	// Memory not connected...
+		static const int _IORAM1_SUBSET			= 115;	// Memory not connected...
+		static const int _IORAM2_SUBSET			= 116;	// Memory not connected...
+		static const int _IORAM3_SUBSET			= 117;	// Memory not connected...
+		static const int _IORAM4_SUBSET			= 118;	// Memory not connected...
+		static const int _KERNELROM3_SUBSET		= 119;
+		static const int _RAM5_SUBSET			= 120;
+
+		// Subsets that should be used in case cartridges are connected 
+		// The configuration method uses this to llok for they to exist!
+		static const int _CARLOW1CON_SUBSET		= 150;
+		static const int _CARLOW2CON_SUBSET		= 151;
+		static const int _CARHIGH1CON_SUBSET	= 152;
+		static const int _CARHIGH2CON_SUBSET	= 153;
 
 		// Views
 		static const int _CPU_VIEW				= 0;
 
 		/** The constructor receives the configuration type. */
-		Memory (unsigned int cfg, const MCHEmul::Memory::Content& cnt,
+		Memory (const MCHEmul::Memory::Content& cnt,
 			const std::string& lang = MCHEmul::_DEFAULTLANGUAGE);
 
 		/** To get/set the configuration type. */
-		unsigned int configuration () const
+		const MCHEmul::UByte& configuration () const
 							{ return (_configuration); }
-		/** It can be overloaded for different types of memory. */
-		virtual void setConfiguration (unsigned int cfg) = 0;
-
-		/** To active or desactive the ROM. */
-		bool ROMActive () const
-							{ return (_basicROM -> active ()); }
-		inline void activeROM (bool a);
+		/** It can be overloaded for different types of memory. \n
+			There is implementation by default. */
+		virtual void setConfiguration (const MCHEmul::UByte& cfg);
 
 		/** To activate the right subsets in the CPU view. */
 		virtual bool initialize () override;
@@ -104,32 +120,34 @@ namespace C264
 		virtual MCHEmul::MemoryView* lookForCPUView () override
 							{ return (view (_CPU_VIEW)); }
 
+		/** Just to activate or desactivate the ROM. \n
+			TED chip might need this methods if it has been configured to always
+			look for char info in the ROM. */
+		bool kernelROMActive () const
+							{ return (_kernelROM1 -> active ()); }
+		void activeKernelROM (bool a) // This method 
+							{ _kernelROM1 -> setActive (a); }
+
 		static MCHEmul::Memory::Content standardMemoryContent ();
 
 		protected:
-		unsigned int _configuration;
+		MCHEmul::UByte _configuration;
 
 		// Implementation
 		MCHEmul::PhysicalStorageSubset* _RAM1;
 		MCHEmul::PhysicalStorageSubset* _RAM2;
-		MCHEmul::PhysicalStorageSubset* _RAM3;
-		MCHEmul::PhysicalStorageSubset* _RAM4;
-		MCHEmul::PhysicalStorageSubset* _RAM5;
 		MCHEmul::PhysicalStorageSubset* _basicROM;
+		MCHEmul::PhysicalStorageSubset* _RAM3;
+		MCHEmul::PhysicalStorageSubset* _carlow1;
+		MCHEmul::PhysicalStorageSubset* _carlow2;
 		MCHEmul::PhysicalStorageSubset* _kernelROM1;
 		MCHEmul::PhysicalStorageSubset* _kernelROM2;
+		MCHEmul::PhysicalStorageSubset* _RAM4;
+		MCHEmul::PhysicalStorageSubset* _carhigh1;
+		MCHEmul::PhysicalStorageSubset* _carhigh2;
+		MCHEmul::PhysicalStorageSubset* _kernelROM3;
+		MCHEmul::PhysicalStorageSubset* _RAM5;
 	};
-
-	// ---
-	inline void Memory::activeROM (bool a)
-	{
-		_RAM3		-> setActive (!a);
-		_RAM4		-> setActive (!a);
-		_RAM5		-> setActive (!a);
-		_basicROM	-> setActive (a);
-		_kernelROM1	-> setActive (a);
-		_kernelROM2	-> setActive (a);
-	}
 
 	/** The memory for the C16/116. */
 	class C16_116Memory final : public Memory
@@ -139,10 +157,7 @@ namespace C264
 		static const int _IOACIARAM_SUBSET		= 200;
 		static const int _IO6529B1RAM_SUBSET	= 201;
 
-		C16_116Memory (unsigned int cfg,
-			const std::string& lang = MCHEmul::_DEFAULTLANGUAGE);
-
-		virtual void setConfiguration (unsigned int cfg) override;
+		C16_116Memory (const std::string& lang = MCHEmul::_DEFAULTLANGUAGE);
 
 		private:
 		static MCHEmul::Memory::Content standardMemoryContent ();
@@ -152,17 +167,24 @@ namespace C264
 	class CPlus4Memory final : public Memory
 	{
 		public:
-		CPlus4Memory (unsigned int cfg,
-			const std::string& lang = MCHEmul::_DEFAULTLANGUAGE);
+		// More physical storage with a predefined code...
+		static const int _FUNCTIONLOW			= 3;
+		static const int _FUNCTIONHIGH			= 4;
 
-		virtual void setConfiguration (unsigned int cfg) override;
+		// The correspondant subsets...
+		static const int _FUNCTIONLOW_SUBSET	= 300;
+		static const int _FUNCTIONHIGH1_SUBSET	= 301;
+
+		CPlus4Memory (const std::string& lang = MCHEmul::_DEFAULTLANGUAGE);
+
+		virtual void setConfiguration (const MCHEmul::UByte& cfg) override;
 
 		private:
 		static MCHEmul::Memory::Content standardMemoryContent ();
 
 		private:
-		MCHEmul::PhysicalStorageSubset* _code1;
-		MCHEmul::PhysicalStorageSubset* _code2;
+		MCHEmul::PhysicalStorageSubset* _functionLow;
+		MCHEmul::PhysicalStorageSubset* _functionHigh1;
 	};
 }
 

@@ -31,7 +31,6 @@ namespace C264
 		static const unsigned char _PARAMNTSC;
 		static const unsigned char _PARAMBORDER;
 		static const unsigned char _PARAMMACHINE;
-		static const unsigned char _PARAMCONFIGURATION;
 
 		/**
 		  * Constructor:
@@ -40,7 +39,6 @@ namespace C264
 		  *	/n				: To indicate if the visualization system is NTSC. PAL by default. \n
 		  *	/b[COLOR]		: To draw a black box around the writable part of the screen. The color is optional. \n
 		  * /m[MACHINE]		: Type of machine to be emulated: C16, C116 or CP4 \n
-		  * /w[CONF]		: To define the configuration of the machine when starting, the meaning will depend on the machine created. \n
 		  * @param cS		: A reference to the communication system. It can be nullptr if no required.
 		  */
 		C264Emulator (const MCHEmul::CommandLineArguments& args, MCHEmul::CommunicationSystem* cS = nullptr)
@@ -61,11 +59,6 @@ namespace C264
 
 		/** To know which is the type of computer to be emulated: 0 = C16, 1 = C116, 2 = CPlus/4. */
 		inline unsigned int emulattedComputer () const;
-	
-		/** To know the parameter related with the type of computer configuration. */
-		bool configuration () const
-							{ return (cmdlineArguments ().existsArgument (_PARAMCONFIGURATION)); }
-		inline unsigned int configurationMode () const; // The meaning will depend on the type of computer emulated...
 
 		/** To add the peripherals linked to the computer, according to the parameters. */
 		virtual bool initialize () override;
@@ -100,16 +93,6 @@ namespace C264
 		}
 
 		return (result);
-	}
-
-	// ---
-	inline unsigned int C264::C264Emulator::configurationMode () const
-	{ 
-		unsigned int result = 
-			configuration () 
-				? cmdlineArguments ().argumentAsInt (_PARAMCONFIGURATION) 
-				: 0;
-		return ((result > 4) ? 4 : result); 
 	}
 }
 

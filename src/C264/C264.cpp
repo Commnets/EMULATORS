@@ -7,10 +7,11 @@
 #include <C264/C6529B1.hpp>
 #include <C264/C6529B2.hpp>
 #include <C264/TED.hpp>
+#include <C264/ROMRAMSwitch.hpp>
 #include <C264/Cartridge.hpp>
 
 // ---
-C264::Commodore264::Commodore264 (unsigned int cfg, const std::string& lg, C264::Commodore264::VisualSystem vS,
+C264::Commodore264::Commodore264 (const std::string& lg, C264::Commodore264::VisualSystem vS,
 		MCHEmul::Memory* m,
 		const MCHEmul::Chips& cps, const MCHEmul::IODevices& dvs)
 	: COMMODORE::Computer 
@@ -25,11 +26,11 @@ C264::Commodore264::Commodore264 (unsigned int cfg, const std::string& lg, C264:
 		   { "Year", "1984" }
 		 }),
 	  _visualSystem (vS),
-	  _configuration (cfg)
+	  _configuration (MCHEmul::UByte::_0)
 {
 	assert (_memory != nullptr);
 
-	setConfiguration (cfg, false);
+	setConfiguration (_configuration, false);
 }
 
 // ---
@@ -50,8 +51,10 @@ bool C264::Commodore264::initialize (bool iM)
 	// The ted has to observe the events comming from the C6521B1 chip on regards 
 	// changes in the keyboard matrix...
 	chip (COMMODORE::TED::_ID) -> observe (chip (C264::C6529B1::_ID));
-	// ...and the computer observes changes in the configuration of the RAM/ROM...
-	observe (chip (COMMODORE::TED::_ID));
+
+	// The ROMRAMSwitch observes the TED
+	// This chip is not the PLA but at the end groups all related functions of this!
+	chip (C264::ROMRAMSwitch::_ID) -> observe (chip (COMMODORE::TED::_ID));
 
 	// TODO: The IOPorRegister has to be observed...
 
@@ -76,14 +79,10 @@ void C264::Commodore264::processEvent (const MCHEmul::Event& evnt, MCHEmul::Noti
 		setExit (true);
 		setRestartAfterExit (true, 9999 /** Big enough */);
 	}
-	else
-	// Change the structure of the memory when it is requested...
-	if (evnt.id () == C264::TED::_ROMACCESSCHANGED)
-		static_cast <C264::Memory*> (memory ()) -> activeROM (evnt.value () == 1);
 }
 
 // ---
-void C264::Commodore264::setConfiguration (unsigned int cfg, bool rs) 
+void C264::Commodore264::setConfiguration (const MCHEmul::UByte& cfg, bool rs) 
 {
 	static_cast <C264::Memory*> (memory ()) -> setConfiguration (cfg);
 
@@ -124,6 +123,11 @@ MCHEmul::Chips C264::Commodore264::standardChips (const std::string& sS, C264::C
 
 	// This intermediate chip is just used to latch the value of the keyboard matrix...
 	result.insert (MCHEmul::Chips::value_type (C264::C6529B1::_ID, new C264::C6529B1));
+
+	// This chip is "virtual". It doesn't exist in the real C264 series. 
+	// Althought it could be understood as part of the PLA!
+	// It is to manage the changes in the ROM/RAM configuration
+	result.insert (MCHEmul::Chips::value_type (C264::ROMRAMSwitch::_ID, new C264::ROMRAMSwitch));
 
 	return (result);
 }

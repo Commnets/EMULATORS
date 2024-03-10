@@ -61,9 +61,9 @@ namespace C264
 		virtual void processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifier* n) override;
 
 		virtual bool ROMActiveToFetchCharData () const override // The memory is C264 type...
-							{ return (static_cast <const C264::Memory*> (memoryRef ()) -> ROMActive ()); }
+							{ return (static_cast <const C264::Memory*> (memoryRef ()) -> kernelROMActive ()); }
 		virtual void activeROMtoFecthCharData (bool a) override //The memory is C264 type...
-							{ static_cast <C264::Memory*> (memoryRef ()) -> activeROM (a); }
+							{ static_cast <C264::Memory*> (memoryRef ()) -> activeKernelROM (a); }
 
 		private:
 		TEDRegisters* _TEDRegisters;
