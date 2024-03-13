@@ -29,7 +29,7 @@ Take care using this command.
 ;INTERRUPTS
 To know the status of the interrups managed by the system.
 No parameters are needed.
-;DEEPON FILENAME [YES|NO] [ALLCHIP|C=CHIPID1 C=CHIPID2 C=CHIPID3...] [ALLIO|I=DEVICEID1 I=DEVICE2 I=DEVICE3...]
+;DEEPON FILENAME [YES|NO] [ALLCHIP|C:CHIPID1 C:CHIPID2 C:CHIPID3...] [ALLIO|I:DEVICEID1 I:DEVICEID2 I:DEVICEID3...]
 To activate the deep debugging of the Computer.
 In this state the CPU will trace every instruction executed including the status of the 
 registers and program counter into the file received as parameter after every execution.

@@ -55,6 +55,8 @@ bool C264::Commodore264::initialize (bool iM)
 	// The ROMRAMSwitch observes the TED
 	// This chip is not the PLA but at the end groups all related functions of this!
 	chip (C264::ROMRAMSwitch::_ID) -> observe (chip (COMMODORE::TED::_ID));
+	// and that "virtual" chip has to be set up for not changes...
+	dynamic_cast <C264::ROMRAMSwitch*> (chip (C264::ROMRAMSwitch::_ID)) -> setBasicROMAccessConfiguration ();
 
 	// TODO: The IOPorRegister has to be observed...
 

@@ -512,10 +512,10 @@ void MCHEmul::ActivateDeepDebugCommand::executeImpl
 				{
 					if (prm.length () > 2)
 					{
-						if (prm.substr (0, 2) == "C=" && 
+						if (prm.substr (0, 2) == "C:" && 
 							(cId.size () == 0 || (cId.size () != 0 && cId [0] != -1))) 	// When a -1 is already in the list, nothing else makes sense...
 							cId.emplace_back (std::atoi (prm.substr (2).c_str ()));
-						if (prm.substr (0, 2) == "I=" && 
+						if (prm.substr (0, 2) == "I:" && 
 							(iId.size () == 0 || (iId.size () != 0 && iId [0] != -1)))
 							iId.emplace_back (std::atoi (prm.substr (2).c_str ()));
 					}

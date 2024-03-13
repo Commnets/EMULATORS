@@ -28,11 +28,11 @@ namespace C264
 		public:
 		static const int _ID = 202;
 		
-		ROMRAMSwitch ()
-			: MCHEmul::Chip (_ID),
-			  _ROMRAMSwitchRegisters (nullptr)
-							{ }
+		ROMRAMSwitch ();
 		
+		// Sets the default ROM access configuration...
+		void setBasicROMAccessConfiguration ();
+
 		virtual bool initialize () override;
 
 		virtual bool simulate (MCHEmul::CPU* cpu) override;

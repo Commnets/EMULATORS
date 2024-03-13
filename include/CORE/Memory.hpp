@@ -514,7 +514,7 @@ namespace MCHEmul
 			public:
 			Content ()
 				: _physicalStorages (), _subsets (), _views (),
-				  _error (true)
+				  _error (false)
 							{ }
 
 			/** Unless this method is executed, the class is always in error (_error = true). */

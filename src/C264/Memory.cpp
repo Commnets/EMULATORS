@@ -72,11 +72,11 @@ C264::Memory::Memory (const MCHEmul::Memory::Content& cnt, const std::string& la
 // ---
 void C264::Memory::setConfiguration (const MCHEmul::UByte& cfg)
 {
-	// Nothing to do if nothing changes...
-	if (_configuration == cfg)
-		return;
-
 	_configuration = cfg;
+
+	// Always!
+	_RAM1		-> setActive (true);
+	_RAM2		-> setActive (true);
 
 	// Meaning RAM active...
 	if (_configuration == MCHEmul::UByte::_FF)
@@ -104,8 +104,6 @@ void C264::Memory::setConfiguration (const MCHEmul::UByte& cfg)
 			subset (_CARHIGH2CON_SUBSET) -> setActive (false);
 
 		// RAMs active!
-		_RAM1		-> setActive (true);	// Always...
-		_RAM2		-> setActive (true);	// Always...
 		_RAM3		-> setActive (true);
 		_RAM4		-> setActive (true);
 		_RAM5		-> setActive (true);
@@ -115,14 +113,11 @@ void C264::Memory::setConfiguration (const MCHEmul::UByte& cfg)
 
 	// Meaning ROMS active...
 	// But which one will actually depend on the configuration...
-	// low ROMS
+	// LOW ROMS
 	switch (_configuration.value () & 0x03)
 	{
-		// The "FUNCTION LOW" doesn't exist in C16/116
-		// This is the standard behviour...
-		// so case 0 and 1 behaves in the same way...
+		// LOROM = BASIC
 		case 0:
-		case 1:
 			{
 				// BASIC ROM active...
 				_basicROM -> setActive (true);
@@ -143,6 +138,27 @@ void C264::Memory::setConfiguration (const MCHEmul::UByte& cfg)
 
 			break;
 
+		// FUNCTION LOW not connected (in C16/C116)
+		case 1:
+			{
+				// BASIC ROM inactive...
+				_basicROM -> setActive (false);
+
+				// "Empty" cartridges active...
+				_carlow1 -> setActive (true);
+				if (existsSubset (_CARLOW1CON_SUBSET))
+					subset (_CARLOW1CON_SUBSET) -> setActive (false);
+				_carlow2 -> setActive (true);
+				if (existsSubset (_CARLOW2CON_SUBSET))
+					subset (_CARLOW2CON_SUBSET) -> setActive (false);
+				
+				// but also RAM behind inactive...
+				_RAM3 -> setActive (false);
+			}
+
+			break;
+
+		// LOROM = CARTRIDGE 1 LOW
 		case 2:
 			{
 				// BASIC ROM inactive
@@ -170,6 +186,7 @@ void C264::Memory::setConfiguration (const MCHEmul::UByte& cfg)
 
 			break;
 
+		// LOROM = CARTRIDGE 2 LOW
 		case 3:
 			{ 
 				// BASIC ROM inactive
@@ -202,14 +219,11 @@ void C264::Memory::setConfiguration (const MCHEmul::UByte& cfg)
 			break;
 	}
 
-	// Hi ROMS
-	switch ((_configuration.value () & 0x0d) >> 2)
+	// HI ROMS
+	switch ((_configuration.value () & 0x0c) >> 2)
 	{
-		// The "FUNCTION HI" doesn't exist in C16/116
-		// This is the standard behviour...
-		// so case 0 and 1 behaves in the same way...
+		// HIROM = KERNEL
 		case 0:
-		case 1:
 			{
 				// Kernel ROM active...
 				_kernelROM1 -> setActive (true);
@@ -233,6 +247,30 @@ void C264::Memory::setConfiguration (const MCHEmul::UByte& cfg)
 
 			break;
 
+		// FUNCTION HI not connected (in C16/C116) = KERNEL
+		case 1:
+			{
+				// Kernel ROM active...
+				_kernelROM1 -> setActive (false);
+				_kernelROM2 -> setActive (true); // Always...
+				_kernelROM3 -> setActive (false);
+
+				// "Empty" cartridges active...
+				_carhigh1 -> setActive (true);
+				if (existsSubset (_CARHIGH1CON_SUBSET))
+					subset (_CARHIGH1CON_SUBSET) -> setActive (false);
+				_carhigh2 -> setActive (true);
+				if (existsSubset (_CARHIGH2CON_SUBSET))
+					subset (_CARHIGH2CON_SUBSET) -> setActive (false);
+				
+				// RAM behind inactive...
+				_RAM4 -> setActive (false);
+				_RAM5 -> setActive (false);
+			}
+
+			break;
+
+		// HI ROM = CARTRIDGE 1 HI
 		case 2:
 			{
 				// Kernel ROM inactive
@@ -264,6 +302,7 @@ void C264::Memory::setConfiguration (const MCHEmul::UByte& cfg)
 
 			break;
 
+		// HO ROM = CARTRIDGE 2 HI
 		case 3:
 			{ 
 				// Kernel ROM inactive
@@ -359,7 +398,7 @@ MCHEmul::Memory::Content C264::Memory::standardMemoryContent ()
 		(_BASICROM_SUBSET, BASICROM, 0x0000, MCHEmul::Address ({ 0x00, 0x80 }, false), 0x4000);					// 16k ROM
 	// But it can be also RAM...
 	MCHEmul::PhysicalStorageSubset* RAM3 = new MCHEmul::PhysicalStorageSubset 
-		(_RAM2_SUBSET, RAM, 0x8000, MCHEmul::Address ({ 0x00, 0x80 }, false), 0x4000);							// 16k
+		(_RAM3_SUBSET, RAM, 0x8000, MCHEmul::Address ({ 0x00, 0x80 }, false), 0x4000);							// 16k
 	// ...and also place for cartridges (2!!), initially that possibility is off!
 	MCHEmul::PhysicalStorageSubset* CARLOW1 = new C264::NotConnectedPhysicalStorageSubset 
 		(_CARLOW1_SUBSET, MCHEmul::UByte::_0, RAM, 0x8000, MCHEmul::Address ({ 0x00, 0x80 }, false), 0x2000);	// 8k
@@ -533,10 +572,6 @@ C264::CPlus4Memory::CPlus4Memory (const std::string& lang)
 // ---
 void C264::CPlus4Memory::setConfiguration (const MCHEmul::UByte& cfg)
 {
-	// Nothing to do if nothing changes...
-	if (_configuration == cfg)
-		return;
-
 	// Meaning all RAM?
 	if (cfg == MCHEmul::UByte::_FF)
 	{
@@ -591,7 +626,7 @@ void C264::CPlus4Memory::setConfiguration (const MCHEmul::UByte& cfg)
 			break;
 	}
 
-	switch ((cfg.value () & 0x0d) >> 2)
+	switch ((cfg.value () & 0x0c) >> 2)
 	{
 		// In this case the high functions must be activated also!
 		case 1:
