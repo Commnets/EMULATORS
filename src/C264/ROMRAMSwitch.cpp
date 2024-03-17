@@ -60,11 +60,13 @@ bool C264::ROMRAMSwitch::simulate (MCHEmul::CPU* cpu)
 				<< "Info cycle\t\t"
 				// Data
 				<< "LOROM:"
-				<< std::to_string 
-					(_ROMRAMSwitchRegisters -> configurationROM ().value () & 0x03) << ", " 
+				<< ((_ROMRAMSwitchRegisters -> configurationROM ().value () != MCHEmul::UByte::_FF)
+						? std::to_string (_ROMRAMSwitchRegisters -> configurationROM ().value () & 0x03)
+						: "-") << ", "
 				<< "HIROM:"
-				<< std::to_string 
-					((_ROMRAMSwitchRegisters -> configurationROM ().value () & 0x0c) >> 2) << "\n";
+				<< ((_ROMRAMSwitchRegisters -> configurationROM ().value () != MCHEmul::UByte::_FF)
+						? std::to_string ((_ROMRAMSwitchRegisters -> configurationROM ().value () & 0x0c) >> 2) 
+						: "-") << "\n";
 
 			dynamic_cast <C264::Memory*> (memoryRef ()) -> 
 				setConfiguration (_ROMRAMSwitchRegisters -> configurationROM ().value ());

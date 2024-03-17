@@ -33,7 +33,7 @@ bool C264::TED::simulate (MCHEmul::CPU* cpu)
 
 	if (_TEDRegisters -> romAccessChanged ()) // Changes the value...
 		notify (MCHEmul::Event (_ROMACCESSCHANGED, 
-			(unsigned int) _TEDRegisters -> hiromSelected () ? 1 : 0));
+			_TEDRegisters -> hiromSelected () ? 1 : 0));
 
 	return (true);
 }

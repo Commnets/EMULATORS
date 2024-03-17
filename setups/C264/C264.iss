@@ -24,6 +24,8 @@ Source: "kernal.318004-05-ENG.bin"; DestDir: "{app}"; Flags: ignoreversion
 Source: "kernal.318005-05-FRA.bin"; DestDir: "{app}"; Flags: ignoreversion
 Source: "kernal.318030-02-HUN.bin"; DestDir: "{app}"; Flags: ignoreversion
 Source: "kernel.325155-03-SWE.bin"; DestDir: "{app}"; Flags: ignoreversion
+Source: ".\CP4\3-plus-1.317053-01.bin"; DestDir: "{app}"; Flags: ignoreversion
+Source: ".\CP4\3-plus-1.317054-01.bin"; DestDir: "{app}"; Flags: ignoreversion
 Source: "C264.hlp"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Commodore.hlp"; DestDir: "{app}"; Flags: ignoreversion
 Source: "LocalConsole.hlp"; DestDir: "{app}"; Flags: ignoreversion

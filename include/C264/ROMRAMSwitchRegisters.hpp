@@ -48,6 +48,8 @@ namespace C264
 		bool peekConfigurationChanged () const
 							{ return (_configurationChanged.peekValue ()); } // This one doesn't affect the value...
 
+		virtual void initialize () override;
+
 		/**
 		  *	The name of the fields are: \n
 		  * The structure of Chip Registers plus:
@@ -65,6 +67,7 @@ namespace C264
 		private:
 		bool _allowROMConfiguration;
 		MCHEmul::UByte _configurationROM;
+		MCHEmul::UByte _latchedConfigurationROM;
 		// Set when the latched valued chages...
 		MCHEmul::OBool _configurationChanged;
 	};

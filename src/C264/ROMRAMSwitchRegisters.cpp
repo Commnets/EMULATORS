@@ -5,10 +5,18 @@ void C264::ROMRAMSwitchRegisters::allowROMConfiguration (bool a)
 { 
 	_configurationROM = 
 		(_allowROMConfiguration = a) 
-			? MCHEmul::UByte::_0	// BASIC and Kernel until anything different is said...
-			: MCHEmul::UByte::_FF;	// Meaning nothing all RAMS active...
+			? _latchedConfigurationROM		// ..the last configuration latched...
+			: MCHEmul::UByte::_FF;			// Meaning nothing but all RAMS active...
 	
 	_configurationChanged = true;
+}
+
+// ---
+void C264::ROMRAMSwitchRegisters::initialize ()
+{
+	MCHEmul::ChipRegisters::initialize ();
+
+	initializeInternalValues ();
 }
 
 // ---
@@ -26,13 +34,17 @@ void C264::ROMRAMSwitchRegisters::setValue (size_t p, const MCHEmul::UByte& v)
 { 
 	MCHEmul::ChipRegisters::setValue (p, v); 
 
+	size_t pp =  p % 0x10;
+
 	// Only if it is allowed...
 	if (_allowROMConfiguration)
 	{
-		_configurationROM = (unsigned char) p;
+		_configurationROM = (unsigned char) pp;
 
 		_configurationChanged = true;
 	}
+
+	_latchedConfigurationROM = (unsigned char) pp;
 }
 
 // ---
@@ -40,7 +52,7 @@ void C264::ROMRAMSwitchRegisters::initializeInternalValues ()
 {
 	_allowROMConfiguration = true;
 
-	_configurationROM = 0; // Meaning BASIC and KERNEL active!
+	_latchedConfigurationROM = _configurationROM = 0; // Meaning BASIC and KERNEL active!
 
 	_configurationChanged = false; 
 }

@@ -333,12 +333,24 @@ bool MCHEmul::CPU::when_ExecutingInstruction ()
 
 		if (deepDebugActive ())
 		{
-			std::string lSt = ""; 
-			size_t lenI = (lSt = _lastInstruction -> asString ()).size ();
-			*_deepDebugFile 
+			std::string lSt = _lastInstruction -> asString (); 
+			std::string lStA = 
+				((_lastInstruction -> lastINOUTAddress ().value () != 0)
+					? "$" + MCHEmul::removeAll0 // Was there address?
+						(_lastInstruction -> lastINOUTAddress ().asString (MCHEmul::UByte::OutputFormat::_HEXA, '\0', 2))
+					: "");
+			std::string lStB = 
+				((_lastInstruction -> lastINOUTData ().size () != 0)
+					? "$" + MCHEmul::removeAll0 // Was there data used?
+						(_lastInstruction -> lastINOUTData ().asString (MCHEmul::UByte::OutputFormat::_HEXA, '\0', 2))
+					: "");
+			std::string lStAB = lStA + ((lStA == "") ? "" : ((lStB == "") ? "" : ",")) + lStB;
+			lStAB = ((lStAB != "") ? "(" : "") + lStAB + ((lStAB != "") ? ")" : "");
+			*_deepDebugFile
 					<< "\t\t\t\t"
 					<< sdd // ...The program counter and the stack position...
-					<< lSt << MCHEmul::_SPACES.substr (0, 15 - lenI) << "\t" // The last instruction...
+					<< lSt << MCHEmul::_SPACES.substr (0, 15 - lSt.length ()) << "\t" // The last instruction...
+					<< lStAB << MCHEmul::_SPACES.substr (0, 15 - lStAB.length ()) << "\t" // Address bus and Data bus ...if used!
 					<< _statusRegister.asString () << "\t"; // ...The status register...
 			for (const auto& i : _registers) 
 				*_deepDebugFile 

@@ -76,6 +76,8 @@ void C264::TEDRegisters::setValue (size_t p, const MCHEmul::UByte& v)
 		case 0x3d:
 			break;
 
+		// Setting this register it will be posssible to select different ROM configurations...
+		// in the way the FDD0 selection is done...
 		case 0x3e:
 			{
 				_HIROMSelected = true;
@@ -84,6 +86,7 @@ void C264::TEDRegisters::setValue (size_t p, const MCHEmul::UByte& v)
 
 			break;
 
+		// Setting this register it won't be possible to select different RAM configuration...
 		case 0x3f:
 			{
 				_HIROMSelected = false;
