@@ -138,6 +138,9 @@ namespace MCHEmul
 		/** To get the last instruction fully executed. */
 		const Instruction* lastInstruction () const
 							{ return (_lastInstruction); }
+		/** Tp get the instruction under executuion. */
+		const Instruction* currentInstruction () const
+							{ return (_currentInstruction); }
 
 		/** The CPU is not the owner of the memory, but the computer (just to keep all in the same place)
 			A reference is here given to simplify the execution of transactions. */
@@ -243,7 +246,8 @@ namespace MCHEmul
 		// Internal methods to simplify the comprension of the code.
 		// Invoke from executeNextInstruction
 		/** When the state is: _EXECUTINGINST. */
-		virtual bool when_ExecutingInstruction ();
+		virtual bool when_ExecutingInstruction_PerCycle (); // Cycle by cycle...
+		virtual bool when_ExecutingInstruction_Full (); // The full instruction
 		/** When the state is: _STOPPED. */
 		virtual bool when_Stopped ();
 
@@ -256,17 +260,23 @@ namespace MCHEmul
 		StatusRegister _statusRegister;
 		Memory* _memory; // A reference...
 		CPUInterrupts _interrupts;
+
+		// The current situation of the CPU...
 		/** The state. */
 		unsigned int _state;
-		/** The values in the data and address bus. */
-		UBytes _dataBusValue;
-		Address _addressBusValue;
 
 		// To manage the debug info...
 		DebugFile* _deepDebugFile;
 
 		// Implementation
 		unsigned int _error;
+		/** The instruction under execution. nullptr when nothing. */
+		Instruction* _currentInstruction;
+		/** The interruption under exection. nullptr when nothing. */
+		CPUInterrupt* _currentInterruption;
+		/** Cycles pending to be executed from either 
+			the current instruction or the current interruption. */
+		unsigned int _cyclesPendingExecution; // Only used in Per cycle...
 		/** The cycles that the CPU has executed since it started. 
 			This counter is put back to 0 when the CPU is restarted in any way. */
 		unsigned int _clockCycles;

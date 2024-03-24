@@ -255,6 +255,38 @@ std::string MCHEmul::replaceAll (const std::string& s, const std::string& o, con
 }
 
 // ---
+std::string MCHEmul::fixLenStr (const std::string& s, size_t sz, bool l, const std::string& as)
+{
+	std::string result;
+
+	// If the length of the string were bigger than the max size allowed...
+	// it would need to cut part of the string...
+	if (s.length () > sz)
+	{ 
+		// if that length of the string were bigger than 3
+		if (s.length () > 3)
+			result = s.substr (0, sz - 3) + "..."; // ...and indication of the cut is aded...
+		else
+			result = s.substr (0, sz); // ...otherwise it is not possible!
+	}
+	// But if it was smaller....
+	// ...it would need to add some chars...
+	else
+	{ 
+		// if the requested size were smaller than the max chars to add...
+		if (sz < as.length ())
+			result = l // ...add them either in the right or in the left, depend on the spefication...
+				? as.substr (0, sz - s.length ()) + s
+				: s + as.substr (0, sz - s.length ());
+		// ...if not, no action would be possible...
+		else
+			result = s;
+	}
+
+	return (result);
+}
+
+// ---
 MCHEmul::Strings MCHEmul::getElementsFrom (const std::string& txt, unsigned char ch, size_t nE)
 {
 	std::vector <std::string> result;

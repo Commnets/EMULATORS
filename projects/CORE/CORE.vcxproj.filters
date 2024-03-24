@@ -135,9 +135,6 @@
     <ClCompile Include="..\..\src\CORE\TestCPUSpeed.cpp">
       <Filter>Archivos de origen\Motherboard</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\CORE\Clock.cpp">
-      <Filter>Archivos de origen\Foundation</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\CORE\ByteCodeLine.cpp">
       <Filter>Archivos de origen\Foundation</Filter>
     </ClCompile>
@@ -366,6 +363,9 @@
       <Filter>Archivos de encabezado\Foundation</Filter>
     </ClInclude>
     <ClInclude Include="..\..\include\CORE\Pulse.hpp">
+      <Filter>Archivos de encabezado\Foundation</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\CORE\Ticks.hpp">
       <Filter>Archivos de encabezado\Foundation</Filter>
     </ClInclude>
   </ItemGroup>

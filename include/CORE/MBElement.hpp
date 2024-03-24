@@ -17,6 +17,7 @@
 #include <CORE/global.hpp>
 #include <CORE/InfoClass.hpp>
 #include <CORE/NotifyObserver.hpp>
+#include <CORE/Ticks.hpp>
 
 namespace MCHEmul
 {
@@ -25,6 +26,10 @@ namespace MCHEmul
 	class Wire;
 	using Wires = std::map <int, Wire*>;
 
+	/** Any element connected to the mother board. \n
+		It can be a CPU, a chip, a memory element or a device. 
+		The elements can be connected to busses or wires and the y can also have 
+		a external clock cobbected to it (defoned by a ticksDelayed element. */
 	class MotherboardElement : public InfoClass, public Observer
 	{
 		public:
@@ -32,12 +37,14 @@ namespace MCHEmul
 		friend Wire;
 
 		/** Every motherboard element is defined by a class name a set of attributes (optional). \n
-			The motherboard element can be linked to both buses ans wires. */
+			The motherboard element can be linked to both buses ans wires. \n
+			The class admits also a reference to a tick counter. */
 		MotherboardElement (int id, const std::string& n, const Attributes& attrs =  { })
 			: InfoClass (n),
 			  _id (id),
 			  _attributes (attrs),
-			  _buses (), _wires ()
+			  _buses (), _wires (),
+			  _ticksCounter (nullptr) // By default, but it can be changed
 							{ }
 
 		// Just in case...
@@ -50,29 +57,32 @@ namespace MCHEmul
 		// Accesing to the attributes...
 		const Attributes& attributes () const
 							{ return (_attributes); }
-		const std::string& attribute (const std::string& aN) const
-							{ Attributes::const_iterator i = _attributes.find (aN); 
-							  return ((i == _attributes.end ()) ? AttributedNotDefined : (*i).second); }
+		inline const std::string& attribute (const std::string& aN) const;
 
 		// Accesing to the buses connected...
 		const Buses& buses () const
 							{ return (_buses); }
 		bool connectedToBus (int id) const
 							{ return (_buses.find (id) != _buses.end ()); }
-		const Bus* bus (int id) const // The outcome will nullptr if the requested bus were not connected...
-							{ Buses::const_iterator i = _buses.find (id); return ((i != _buses.end ()) ? (*i).second : nullptr); }
-		Bus* bus (int id)
-							{ Buses::const_iterator i = _buses.find (id); return ((i != _buses.end ()) ? (*i).second : nullptr); }
+		inline const Bus* bus (int id) const; // The outcome will nullptr if the requested bus were not connected...
+		inline Bus* bus (int id);
 
 		// Accesing to the wires connected
 		const Wires& wires () const
 							{ return (_wires); }
 		bool connectedToWire (int id) const
 							{ return (_wires.find (id) != _wires.end ()); }
-		const Wire* wire (int id) const // The outcome will nullptr if the requested wire were not connected... 
-							{ Wires::const_iterator i = _wires.find (id); return ((i != _wires.end ()) ? (*i).second : nullptr); }
-		Wire* wires (int id) 
-							{ Wires::const_iterator i = _wires.find (id); return ((i != _wires.end ()) ? (*i).second : nullptr); }
+		inline const Wire* wire (int id) const; // The outcome will nullptr if the requested wire were not connected... 
+		inline Wire* wires (int id); 
+
+		// Assigning a tick counter...
+		/** It can be nullptr. */
+		void assignTicksCounter (TicksCounterDelayed& tc)
+							{ _ticksCounter = &tc; }
+		const TicksCounterDelayed* ticksCounter () const
+							{ return (_ticksCounter); }
+		TicksCounterDelayed* ticksCounter ()
+							{ return (_ticksCounter); }
 
 		virtual bool initialize ()
 							{ return (true); } // By default it does nothing...
@@ -91,10 +101,52 @@ namespace MCHEmul
 		Attributes _attributes;		
 		Buses _buses;
 		Wires _wires;
+		/** This can be nullptr, take care. */
+		TicksCounterDelayed* _ticksCounter;
 	};
 
 	// To simplify the use of list of elements...
 	using MotherboardElements = std::vector <MotherboardElement*>;
+
+	// ---
+	inline const std::string& MotherboardElement::attribute (const std::string& aN) const
+	{ 
+		Attributes::const_iterator i = _attributes.find (aN); 
+		
+		return ((i == _attributes.end ()) ? AttributedNotDefined : (*i).second); 
+	}
+
+	// ---
+	inline const Bus* MotherboardElement::bus (int id) const
+	{ 
+		Buses::const_iterator i = _buses.find (id); 
+		
+		return ((i != _buses.end ()) ? (*i).second : nullptr); 
+	}
+
+	// ---
+	inline Bus* MotherboardElement::bus (int id)
+	{ 
+		Buses::const_iterator i = _buses.find (id); 
+		
+		return ((i != _buses.end ()) ? (*i).second : nullptr); 
+	}
+
+	// ---
+	inline const Wire* MotherboardElement::wire (int id) const
+	{ 
+		Wires::const_iterator i = _wires.find (id); 
+		
+		return ((i != _wires.end ()) ? (*i).second : nullptr); 
+	}
+
+	// ---
+	inline Wire* MotherboardElement::wires (int id) 
+	{ 
+		Wires::const_iterator i = _wires.find (id); 
+		
+		return ((i != _wires.end ()) ? (*i).second : nullptr); 
+	}
 }
 
 #endif

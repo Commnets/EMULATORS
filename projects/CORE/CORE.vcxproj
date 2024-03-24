@@ -26,7 +26,6 @@
     <ClCompile Include="..\..\src\CORE\MBElement.cpp" />
     <ClCompile Include="..\..\src\CORE\Chip.cpp" />
     <ClCompile Include="..\..\src\CORE\ChipRegisters.cpp" />
-    <ClCompile Include="..\..\src\CORE\Clock.cpp" />
     <ClCompile Include="..\..\src\CORE\CmdExecuter.cpp" />
     <ClCompile Include="..\..\src\CORE\CmdlineArgs.cpp" />
     <ClCompile Include="..\..\src\CORE\Command.cpp" />
@@ -126,6 +125,7 @@
     <ClInclude Include="..\..\include\CORE\StdFmterBuilder.hpp" />
     <ClInclude Include="..\..\include\CORE\StdFormatter.hpp" />
     <ClInclude Include="..\..\include\CORE\TestCPUSpeed.hpp" />
+    <ClInclude Include="..\..\include\CORE\Ticks.hpp" />
     <ClInclude Include="..\..\include\CORE\UByte.hpp" />
     <ClInclude Include="..\..\include\CORE\UBytes.hpp" />
     <ClInclude Include="..\..\include\CORE\UInt.hpp" />

@@ -405,6 +405,34 @@ void testChrono ()
 	std::cout << ":"; std::cin >> a; 
 }
 
+void testClicks ()
+{
+	MCHEmul::_NOW = 
+		std::chrono::time_point_cast <MCHEmul::ClockDurationType> (MCHEmul::ClockType::now ());
+	MCHEmul::_MILLISECONDSPAST = MCHEmul::ClockDurationType (0);
+
+	// Ticks counter...
+	MCHEmul::TicksCounter t;
+	for (unsigned int i = 0; i < 1e6; i++)
+		t.count (1);
+	std::cout << t << std::endl;
+
+	// Ticks counter delayed
+	MCHEmul::TicksCounterDelayed td (3);
+	for (unsigned int i = 0; i < 1e6; i++)
+		td.count (4);
+	std::cout << td << std::endl;
+
+	MCHEmul::ClockTime n = 
+		std::chrono::time_point_cast <MCHEmul::ClockDurationType> (MCHEmul::ClockType::now ());
+	MCHEmul::_MILLISECONDSPAST = n - MCHEmul::_NOW;
+	std::cout << MCHEmul::_MILLISECONDSPAST.count () << std::endl;
+	MCHEmul::_NOW = n;
+
+	std::string a;
+	std::cout << ":"; std::cin >> a; 
+}
+
 int _tmain (int argc, _TCHAR *argv [])
 {
 //	testUByte ();
@@ -412,7 +440,8 @@ int _tmain (int argc, _TCHAR *argv [])
 //	testUInt ();
 //	testUIntBCD ();
 //	testAddress ();
-	testChrono ();
+//	testChrono ();
+	testClicks ();
 	
 	return (0);
 }

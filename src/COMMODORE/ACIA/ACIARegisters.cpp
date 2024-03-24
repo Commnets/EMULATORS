@@ -42,7 +42,7 @@ void COMMODORE::ACIARegisters::setValue (size_t p, const MCHEmul::UByte& v)
 
 		default:
 			// It shouldn't be here...
-			assert (false);
+//			assert (false);
 			break;
 	}
 } 
@@ -60,7 +60,7 @@ const MCHEmul::UByte& COMMODORE::ACIARegisters::readValue (size_t p) const
 
 		// It should be here, just in case...
 		default:
-			assert (false);
+//			assert (false);
 			break;
 	}
 

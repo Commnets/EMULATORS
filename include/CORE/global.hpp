@@ -90,6 +90,8 @@ namespace MCHEmul
 	std::string removeAllFrom (const std::string& s, const Strings& strs);
 	std::string removeAll0 (const std::string& s);
 	std::string replaceAll (const std::string& s, const std::string& o, const std::string& d);
+	std::string fixLenStr (const std::string& s, size_t sz, 
+		bool l, const std::string& as = _SPACES); // To return a fix in a fix length...
 	/** Every element got is trim-ed. */
 	Strings getElementsFrom (const std::string& txt, unsigned char ch, 
 		size_t nE = std::numeric_limits <size_t>::max ());
