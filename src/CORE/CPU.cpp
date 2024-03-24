@@ -207,21 +207,38 @@ bool MCHEmul::CPU::executeNextCycle ()
 
 	bool result = false;
 
-	switch (_state)
-	{
-		case MCHEmul::CPU::_EXECUTINGINSTRUCTION:
-			/** Either one or the other. */
-//			result = when_ExecutingInstruction_PerCycle ();
-			result = when_ExecutingInstruction_Full ();
-			break;
+	auto execFunction = [&](bool f) -> bool
+		{
+			switch (_state)
+			{
+				case MCHEmul::CPU::_EXECUTINGINSTRUCTION:
+					result = (f)
+						? when_ExecutingInstruction_Full ()
+						: when_ExecutingInstruction_PerCycle ();
+					break;
 		
-		case MCHEmul::CPU::_STOPPED:
-			result = when_Stopped ();
-			break;
+				case MCHEmul::CPU::_STOPPED:
+					result = when_Stopped ();
+					break;
 
-		default:
-			assert (0); // It shouldn't be here. It would mean that there are states with no treatment...
-			break;
+				default:
+					// It shouldn't be here. 
+					// It would mean that there are states with no treatment...
+					assert (0); 
+					break;
+			}
+
+			return (result);
+		};
+
+	if (ticksCounter () == nullptr)
+	{
+		execFunction (true);
+	}
+	else
+	{
+		for (unsigned int i = ticksCounter () -> elapsedTicks (); i > 0; i--)
+			execFunction (false);
 	}
 
 	return (result);
@@ -546,9 +563,9 @@ bool MCHEmul::CPU::when_Stopped ()
 	if (deepDebugActive ())
 		*_deepDebugFile 
 			// Where
-			<< "CPU\t\t"
+			<< "CPU\t"
 			// When
-			<< std::to_string (_clockCycles) << "\t"
+			<< MCHEmul::fixLenStr (std::to_string (_clockCycles), 12, false)
 			// What
 			<< "Stopped\t\t"
 			// Data

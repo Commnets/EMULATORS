@@ -336,7 +336,15 @@ namespace MCHEmul
 							{ _clock.start (); }
 
 		// Managing the cycles...
-		/** Execute one computer cycle (cpu + chips). */
+		/** 
+		  * Execute one computer cycle (cpu + chips). \n
+		  * This method is the core one. \n
+		  * This is where the clock is managed. \n
+		  * The number of cycles to wait (to maintain the speed)
+		  * will depend on whether the clock of the CPU is either internal or external. \n
+		  * If it is internal, the number of cycles of the last instruction will be taken into account,
+		  * If it is external, only 1 cycle will be taken into consideration.
+		  */
 		bool runComputerCycle (unsigned int a = 0 /** Meaning no action. */);
 		/** Execute the IO Cycle.
 			Returns true when ok, and false when no ok. */

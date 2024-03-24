@@ -33,7 +33,17 @@ namespace MCHEmul
 {
 	/** 
 	  * The center of any Machine. \n
-	  * Any CPU, as this library undestrood them, is made up of:
+	  * This is maybe the most important class in the emulator framework. \n
+	  * As any other mother board element (@see MCHEmul::MotherboardElement) its execution is controlled by a clock.
+	  * But in the case of the CPU the clock can also be internal. \n
+	  * When the clock is internal (_ticksCounter == nullptr), 
+	  * the whole computer (@see Computer) speed is then driven by the CPU instruction execution speed,
+	  * it is, that the CPU execute full instructions and computer clock ticks are updated by the last instruction cycles executed. \n
+	  * Whereas when the clock is external (_ticksCounter != nullptr) the computer speed is updated by 1 in each cycle. \n
+	  * In computers like C64, VIC20 or ZX81, all elements share the same clock, 
+	  * so it might be considered that the clock is CPU internal. \n
+	  * In others, like C264, the TED register is the one leading the computer and the CPU clock is part of the fule clock. \n
+	  * Any CPU, as this library understood them, is made up of:
 	  * Registers:			The number of these can vary and also the length in bits of each. \n
 	  *						Usually this length is never longer that the one defined by the architecture. \n
 	  * PC Counter:			An special register which length in bits is like the architecture,
@@ -42,15 +52,8 @@ namespace MCHEmul
 	  *						of the operations executed from the CPU. \n
 	  * Instructions:		A set of instructions with the length defined by the architecture each. \n
 	  * Interrupts:			A set of interrupts type that can be active or desactive from the CPU.
-	  * The CPU also accesses to an address bus (which length is the same than the program counter), 
-	  *	and to a data bus (which length may vary depeding on the CPU). \n
-	  * The method to execute one instruction is: executeNextCycle, than can be overlaoded. \n
-	  * The CPU can be eithe RUNNING or STOPPED. \n
-	  * When Running, and a cycle is executed, verifies whether there migth be a interrupt active and ready to execute first. \n
-	  * If not, execute the operation. \n
-	  * To do so reads the number of bytes that the architecture defines for an instruction, 
-	  * and invokes the instruction if it is valid (otherwise it generates n error). \n
-	  * Any instruction is accountable to update both the data and the address bus if makes sense. \n
+	  * The method to execute one instruction is: executeNextCycle (@see method executeNextCycle), 
+	  * than can be overlaoded (@see method).
 	  */
 	class CPU : public MotherboardElement
 	{
@@ -100,6 +103,7 @@ namespace MCHEmul
 		const CPUArchitecture& architecture () const
 							{ return (_architecture); }
 
+		// Info about the registers...
 		const Registers& internalRegisters () const
 							{ return (_registers); }
 		Registers& internalRegisters ()
@@ -113,16 +117,19 @@ namespace MCHEmul
 		void setInternalRegister (size_t nR, UBytes v)
 							{ if (existsInternalRegister (nR) && internalRegister (nR).accept (v)) internalRegister (nR).set (v); }
 
+		// Info about the program counter...
 		const ProgramCounter& programCounter () const
 							{ return (_programCounter); }
 		ProgramCounter& programCounter ()
 							{ return (_programCounter); }
 
+		// Info about the ststus register...
 		const StatusRegister& statusRegister () const
 							{ return (_statusRegister); }
 		StatusRegister& statusRegister ()
 							{ return (_statusRegister); }
 
+		// To access instructions...
 		bool existsInstruction (unsigned int i) const
 							{ return (_instructions.find (i) != _instructions.end ()); }
 		const Instructions& instructions () const
@@ -190,16 +197,16 @@ namespace MCHEmul
 		  *	However the definition has always to be by cycle, as the CPU manages cycles.
 		  *	The CPU can be in different states. By default 2 are supported: \n
 		  *	1.- _EXECUTINGINSTRUCTION:	To execute a new instruction. \n
-		  *								Increments the _clockCycles variable un the number of cycles that the last instruction finally took. \n
+		  *								if a external clock is defined (_ticksDelayed != nullptr) 
+		  *								the method (@see when_ExecutingInstruction_PerCycle) is executed. \n
+		  *								Only when _ticksCounter is updated! \n
+		  *								if not, the method (@see when_ExecutingInstruction_Full) is executed.
 		  *	2.-	_STOPPED:				Just passes a cycle until the maximum declared is reached. \n
 		  *								Increments the _clokcCycles variable is just 1.
-		  * The CPU by default is always executing the first state unless it was stopped for a number of cycles. \n
-		  * An interruption might be invoked to the CPU during the simulation of any other chip. \n
-		  * If it was the case, before executing a new transaction, this situation will be taken into account.
 		  */
 		virtual bool executeNextCycle ();
 
-		// Controlling the clock
+		// Controlling the INTERNAL clock
 		/** The number of clockcycles since restarting. */
 		unsigned int clockCycles () const
 							{ return (_clockCycles); }
@@ -245,9 +252,24 @@ namespace MCHEmul
 
 		// Internal methods to simplify the comprension of the code.
 		// Invoke from executeNextInstruction
-		/** When the state is: _EXECUTINGINST. */
-		virtual bool when_ExecutingInstruction_PerCycle (); // Cycle by cycle...
-		virtual bool when_ExecutingInstruction_Full (); // The full instruction
+		/** 
+		  * When the state is: _EXECUTINGINSTRUCTION.
+		  * The methods can be overloaded. \n
+		  * when_ExecutingInstruction_PerCycle: \n
+		  *			Execute the instruction per cycle. \n
+		  *			If a instruction takes e.g. 2 cycles, 
+		  *			only when the CPU has passed cycle 2 after loading the instruction this is executed. \n
+		  *			The computer's clock is incremented (@see Computer::runComputerCycle) in one cycle only. \n
+		  * when_ExecutingInstruction_Full: \n
+		  *			Execute the full instruction. \n
+		  *			The computer's clock is incremented (@see Computer::runComputerCycle)
+		  *			in the number of cycles the instruction took. \n
+		  * By default, the interruption has preference over the instruction,
+		  * but the instruction under execution has to finish before launching the execution of a interuption
+		  * and it is onky executed when it is possible (@see Interrupt::canBeExecuted).
+		  */
+		virtual bool when_ExecutingInstruction_PerCycle ();
+		virtual bool when_ExecutingInstruction_Full ();
 		/** When the state is: _STOPPED. */
 		virtual bool when_Stopped ();
 

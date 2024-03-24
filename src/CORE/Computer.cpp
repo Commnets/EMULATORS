@@ -301,7 +301,10 @@ bool MCHEmul::Computer::runComputerCycle (unsigned int a)
 		return (true); // The cycle was not executed, but everything went ok...
 	}
 
-	unsigned int cI = cpu () -> clockCycles ();
+	unsigned int cI = 
+		(cpu () -> ticksCounter () == nullptr) 
+			? cpu () -> clockCycles ()
+			: 0; // It doesn't matter... 
 
 	// Maybe there will be some to be execute at the point where the CPU is now stopped
 	// The action received in the loop is passed to the method to 
@@ -365,7 +368,12 @@ bool MCHEmul::Computer::runComputerCycle (unsigned int a)
 
 	// After excuting the cycle, 
 	// the number of speed cycles are counted...
-	_clock.countCycles (_cpu -> clockCycles () - cI);
+	_clock.countCycles ((_cpu -> ticksCounter () == nullptr) 
+		? _cpu -> clockCycles () - cI
+		: ((_cpu -> lastCPUClockCycles () == 0) 
+			? 1 : _cpu -> lastCPUClockCycles ())
+				/** When the clock is external to the CPU the incrementl in one by one (usually), or 
+					if the last instruction took more than 1 (is very strange). */);
 
 	return (true);
 }
