@@ -7,7 +7,7 @@
  *	Framework: CPU Emulators library \n
  *	Author: Ignacio Cea Fornies (EMULATORS library) \n
  *	Creation Date: 22/01/2023 \n
- *	Description:	To emulate the behaviour of the Expajsion Port.
+ *	Description:	To emulate the behaviour of the Expansion Port.
  *				 	Usually cartridges are connected here.
  *	Versions: 1.0 Initial
  */

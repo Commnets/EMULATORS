@@ -90,7 +90,7 @@ bool FZ80::INBlock_General::executeWith (int a)
 
 	MCHEmul::UByte vR = MCHEmul::UByte::_0;
 	// ...and then the value read from the port is pushed into the memory...
-	memory () -> set (addressHL (), vR = static_cast <CZ80*> (cpu ()) -> port (rC.values ()[0].value ()));
+	memory () -> set (addressHL (), vR = static_cast <CZ80*> (cpu ()) -> portValue (rC.values ()[0].value ()));
 	// The value of the component BC is pushed into the address bus...
 	_lastINOUTAddress = addressBC ();
 
@@ -253,7 +253,7 @@ bool FZ80::OUTBlock_General::executeWith (int a)
 
 	MCHEmul::UByte vR = MCHEmul::UByte::_0;
 	// ...and then the value read from the port is pushed into the memory...
-	static_cast <CZ80*> (cpu ()) -> setPort (rC.values ()[0].value (), vR = memory () -> value (addressHL ()));
+	static_cast <CZ80*> (cpu ()) -> setPortValue (rC.values ()[0].value (), vR = memory () -> value (addressHL ()));
 	// The value of the component BC is pushed into the address bus...
 	_lastINOUTAddress = addressBC ();
 

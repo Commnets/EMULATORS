@@ -22,7 +22,7 @@ namespace VIC20
 	class VIA2;
 
 	/** The VIC20::InputOSSystem 
-		is very related with the tow VIA chips: VIA1 (@see VIA1) & VIA2 (@see VIA2). \n
+		is very related with the two VIA chips: VIA1 (@see VIA1) & VIA2 (@see VIA2). \n
 		The events that happen in the OS have to be transmitted to those chips 
 		for them to be accesible for the rest of the computer elements. */
 	class InputOSSystem final : public MCHEmul::InputOSSystem

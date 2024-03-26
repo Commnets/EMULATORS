@@ -400,9 +400,9 @@ MCHEmul::Memory::Content C264::Memory::standardMemoryContent ()
 	MCHEmul::PhysicalStorageSubset* RAM3 = new MCHEmul::PhysicalStorageSubset 
 		(_RAM3_SUBSET, RAM, 0x8000, MCHEmul::Address ({ 0x00, 0x80 }, false), 0x4000);							// 16k
 	// ...and also place for cartridges (2!!), initially that possibility is off!
-	MCHEmul::PhysicalStorageSubset* CARLOW1 = new C264::NotConnectedPhysicalStorageSubset 
+	MCHEmul::PhysicalStorageSubset* CARLOW1 = new MCHEmul::EmptyPhysicalStorageSubset 
 		(_CARLOW1_SUBSET, MCHEmul::UByte::_0, RAM, 0x8000, MCHEmul::Address ({ 0x00, 0x80 }, false), 0x2000);	// 8k
-	MCHEmul::PhysicalStorageSubset* CARLOW2 = new C264::NotConnectedPhysicalStorageSubset 
+	MCHEmul::PhysicalStorageSubset* CARLOW2 = new MCHEmul::EmptyPhysicalStorageSubset 
 		(_CARLOW2_SUBSET, MCHEmul::UByte::_0, RAM, 0xa000, MCHEmul::Address ({ 0x00, 0xa0 }, false), 0x2000);	// 8k
 
 	// Where the Kernel ROM starts
@@ -417,9 +417,9 @@ MCHEmul::Memory::Content C264::Memory::standardMemoryContent ()
 	MCHEmul::PhysicalStorageSubset* RAM4 = new MCHEmul::PhysicalStorageSubset 
 		(_RAM4_SUBSET, RAM, 0xc000, MCHEmul::Address ({ 0x00, 0xc0 }, false), 0x3d00);							// 16k - 768 bytes...
 	// ...and also place for more cartridges (other 2!!), initially that possibility is also off!
-	MCHEmul::PhysicalStorageSubset* CARHIGH1 = new C264::NotConnectedPhysicalStorageSubset 
+	MCHEmul::PhysicalStorageSubset* CARHIGH1 = new MCHEmul::EmptyPhysicalStorageSubset 
 		(_CARHIGH1_SUBSET, MCHEmul::UByte::_0, RAM, 0xc000, MCHEmul::Address ({ 0x00, 0xc0 }, false), 0x2000);	// 8k
-	MCHEmul::PhysicalStorageSubset* CARHIGH2 = new C264::NotConnectedPhysicalStorageSubset 
+	MCHEmul::PhysicalStorageSubset* CARHIGH2 = new MCHEmul::EmptyPhysicalStorageSubset 
 		(_CARHIGH2_SUBSET, MCHEmul::UByte::_0, RAM, 0xe000, MCHEmul::Address ({ 0x00, 0xe0 }, false), 0x1c00);	// 8k - 1.024 bytes...
 
 	// The I/O Zone...
@@ -429,25 +429,25 @@ MCHEmul::Memory::Content C264::Memory::standardMemoryContent ()
 	// From $fd00 to $fd0f (0x10) could be either ACIA (in CPlus4) or ¿RAM? (in C16/116)
 	// From $fd10 to $fd1f (0x10) could be either C6529B1 (in CPlus4) or ¿RAM? (in C16/116)
 	// From $fd20 to $fd2f (0x10) it is not mapped!...What is the behaviour? = RAM...
-	MCHEmul::PhysicalStorageSubset* IORAM0 = new C264::NotConnectedPhysicalStorageSubset 
+	MCHEmul::PhysicalStorageSubset* IORAM0 = new MCHEmul::EmptyPhysicalStorageSubset 
 		(_IORAM0_SUBSET, MCHEmul::UByte::_0, RAM, 0xfd20, MCHEmul::Address ({ 0x20, 0xfd }, false), 0x10);	// 16 bytes
 	// From $fd30 to $fd3f (0x10) there is very simple chip connected to the keyboard matrix...
 	MCHEmul::PhysicalStorageSubset* IO6529B1 = new C264::C6529B1Registers 
 		(RAM, 0xfd30, MCHEmul::Address ({ 0x30, 0xfd }, false), 0x10);								// C6529B (1) ...for the keyboard! 16 bytes
 	// From $fd40 to $fdcf (0x90) it is not mapped!...What is the behaviour? = RAM...
-	MCHEmul::PhysicalStorageSubset* IORAM1 = new C264::NotConnectedPhysicalStorageSubset 
+	MCHEmul::PhysicalStorageSubset* IORAM1 = new MCHEmul::EmptyPhysicalStorageSubset 
 		(_IORAM1_SUBSET, MCHEmul::UByte::_0, RAM, 0xfd40, MCHEmul::Address ({ 0x40, 0xfd }, false), 0x90);	// 144 bytes
 	// From $fdd0 to $fddf (0x10) is clear to switch on/off the different ROM/RAMs of the computer...
 	MCHEmul::PhysicalStorageSubset* ROMRAMSWITCH = new C264::ROMRAMSwitchRegisters
 		(RAM, 0xfdd0, MCHEmul::Address ({ 0xd0, 0xfd }, false), 0x10);								// 16 bytes
 	// From $fde0 to $febf (0xe0) it is not mapped!.. What is the behaviour? = RAM...
-	MCHEmul::PhysicalStorageSubset* IORAM2 = new C264::NotConnectedPhysicalStorageSubset 
+	MCHEmul::PhysicalStorageSubset* IORAM2 = new MCHEmul::EmptyPhysicalStorageSubset 
 		(_IORAM2_SUBSET, MCHEmul::UByte::_0, RAM, 0xfde0, MCHEmul::Address ({ 0xe0, 0xfd }, false), 0xe0);	// 224 bytes
 	// The TIA1 registers (0xfec0 - 0xfedf) appear just only when the drivers are connected... In other case, It will be RAM space?
-	MCHEmul::PhysicalStorageSubset* IORAM3 = new C264::NotConnectedPhysicalStorageSubset 
+	MCHEmul::PhysicalStorageSubset* IORAM3 = new MCHEmul::EmptyPhysicalStorageSubset 
 		(_IORAM3_SUBSET, MCHEmul::UByte::_0, RAM, 0xfec0, MCHEmul::Address ({ 0xc0, 0xfe }, false), 0x20);	// 32 bytes
 	// The TIA2 registers (0xfee0 - 0xfeff) appear just only when the drivers are connected... In other case, It will be RAM space?
-	MCHEmul::PhysicalStorageSubset* IORAM4 = new C264::NotConnectedPhysicalStorageSubset 
+	MCHEmul::PhysicalStorageSubset* IORAM4 = new MCHEmul::EmptyPhysicalStorageSubset 
 		(_IORAM4_SUBSET, MCHEmul::UByte::_0, RAM, 0xfee0, MCHEmul::Address ({ 0xe0, 0xfe }, false), 0x20);	// 32 bytes
 	// The TED within the C264...it can access to more bytes of memory...
 	MCHEmul::PhysicalStorageSubset* IOTED = new C264::TEDRegisters 
@@ -519,14 +519,14 @@ MCHEmul::Memory::Content C264::C16_116Memory::standardMemoryContent ()
 	result._subsets.insert 
 		(MCHEmul::PhysicalStorageSubsets::value_type 
 			(COMMODORE::ACIARegisters::_ACIAREGS_SUBSET, 
-				new C264::NotConnectedPhysicalStorageSubset 
+				new MCHEmul::EmptyPhysicalStorageSubset 
 					(COMMODORE::ACIARegisters::_ACIAREGS_SUBSET, // RAM instead...
 						MCHEmul::UByte::_0, result.physicalStorage (_RAM), 0xfd00, MCHEmul::Address ({ 0x00, 0xfd }, false), 0x10)));
 	// It doesn't exist a second C6529 register so a no mapped place is created also instead...
 	result._subsets.insert 
 		(MCHEmul::PhysicalStorageSubsets::value_type 
 			(C264::C6529B2Registers::_C6529B2REGS_SUBSET, 
-				new C264::NotConnectedPhysicalStorageSubset 
+				new MCHEmul::EmptyPhysicalStorageSubset 
 					(C264::C6529B2Registers::_C6529B2REGS_SUBSET, // RAM instead...
 						MCHEmul::UByte::_0, result.physicalStorage (_RAM), 0xfd10, MCHEmul::Address ({ 0x10, 0xfd }, false), 0x10)));
 

@@ -62,8 +62,8 @@ namespace VIC20
 		void setConfiguration (Memory::Configuration cfg, bool rs = true);
 
 		// Implementation
-		static MCHEmul::Chips standardChips (CommodoreVIC20::VisualSystem vS, const std::string& sS);
-		static MCHEmul::IODevices standardDevices (CommodoreVIC20::VisualSystem vS);
+		static MCHEmul::Chips standardChips (VisualSystem vS, const std::string& sS);
+		static MCHEmul::IODevices standardDevices (VisualSystem vS);
 
 		protected:
 		/** The video system used by the commodore VIC20. */

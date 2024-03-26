@@ -69,7 +69,7 @@ namespace COMMODORE
 
 		/** Specific classes for PAL & NTSC have been created giving this data as default. \n
 			The VICI constructor receives info over the raster data, the memory view to use,
-			The number of cycles of every raster line (different depending on the VICII version) 
+			The number of cycles of every raster line (different depending on the VICI version) 
 			and additional attributes. */
 		VICI (const MCHEmul::RasterData& vd, const MCHEmul::RasterData& hd, 
 			int vV, unsigned short cRL, MCHEmul::SoundLibWrapper* sW, const MCHEmul::Attributes& attrs = { });

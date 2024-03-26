@@ -47,7 +47,7 @@ namespace FZ80
 		// The value of the component BC is pushed into the address bus...
 		_lastINOUTAddress = MCHEmul::Address ({ registerA ().values ()[0], np }, true /** Already in big endian. */);
 		// ...because it migth be usefull when reading the port!
-		registerA ().set ({ static_cast <CZ80*> (cpu ()) -> port (np) }); 
+		registerA ().set ({ static_cast <CZ80*> (cpu ()) -> portValue (np) }); 
 		
 		return (true); 
 	}
@@ -58,7 +58,7 @@ namespace FZ80
 		_lastINOUTAddress = MCHEmul::Address ({ registerA ().values ()[0], np }, true);
 
 		MCHEmul::UByte v;
-		r.set ({ v = static_cast <CZ80*> (cpu ()) -> port (np) });
+		r.set ({ v = static_cast <CZ80*> (cpu ()) -> portValue (np) });
 
 		affectFlags (v);
 
@@ -70,7 +70,7 @@ namespace FZ80
 	{
 		_lastINOUTAddress = MCHEmul::Address ({ registerA ().values ()[0], np }, true);
 
-		affectFlags (static_cast <CZ80*> (cpu ()) -> port (np));
+		affectFlags (static_cast <CZ80*> (cpu ()) -> portValue (np));
 
 		return (true);
 	}
@@ -161,7 +161,7 @@ namespace FZ80
 		// The value of the component BC is pushed into the address bus...
 		_lastINOUTAddress = MCHEmul::Address ({ registerA ().values ()[0], np }, true /** Already in big endian. */);
 		// ...because it migth be usefull when writting into the port!
-		static_cast <CZ80*> (cpu ()) -> setPort (np, MCHEmul::UByte::_0); 
+		static_cast <CZ80*> (cpu ()) -> setPortValue (np, MCHEmul::UByte::_0); 
 		
 		return (true);  
 	}
@@ -171,7 +171,7 @@ namespace FZ80
 	{ 
 		_lastINOUTAddress = MCHEmul::Address ({ registerA ().values ()[0], np }, true);
 
-		static_cast <CZ80*> (cpu ()) -> setPort (np, registerA ().values ()[0].value ()); 
+		static_cast <CZ80*> (cpu ()) -> setPortValue (np, registerA ().values ()[0].value ()); 
 		
 		return (true);
 	}
@@ -181,7 +181,7 @@ namespace FZ80
 	{ 
 		_lastINOUTAddress = MCHEmul::Address ({ registerA ().values ()[0], np }, true);
 
-		static_cast <CZ80*> (cpu ()) -> setPort (np, r.values ()[0].value ()); 
+		static_cast <CZ80*> (cpu ()) -> setPortValue (np, r.values ()[0].value ()); 
 		
 		return (true); 
 	}

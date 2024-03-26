@@ -27,32 +27,6 @@ namespace C264
 {
 	class TED;
 
-	/** In a C264 series there are several memory zones "not connected". \n
-		As far I have tested in other simulators, that memory zones are not affecter by POKE instructions. \n
-		The usually returs when PEEK is executed. \n
-		This class admits a return value by configuration. */
-	class NotConnectedPhysicalStorageSubset final : public MCHEmul::PhysicalStorageSubset
-	{
-		public:
-		NotConnectedPhysicalStorageSubset (int id, const MCHEmul::UByte& dV,
-				MCHEmul::PhysicalStorage* pS, size_t pp /** link a phisical */, const MCHEmul::Address& a, size_t s)
-			: MCHEmul::PhysicalStorageSubset (id, pS, pp, a, s),
-			  _defaultValue (dV)
-							{ }
-
-		const MCHEmul::UByte& defaultValue () const
-							{ return (_defaultValue); }
-
-		private:
-		virtual void setValue (size_t nB, const MCHEmul::UByte& d) override
-							{ /** Do nothing. */ }
-		virtual const MCHEmul::UByte& readValue (size_t nB) const override
-							{ return (_defaultValue); }
-
-		private:
-		MCHEmul::UByte _defaultValue;
-	};
-
 	/** The memory itself for the C264 Series... 
 		There will be some classes inheriting this, 
 		as the memory of the different machines is not the same, 

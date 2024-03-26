@@ -51,7 +51,7 @@ namespace VIC20
 		/** To know whether the border has or not to be drawn. */
 		bool drawBorder () const
 							{ return (cmdlineArguments ().existsArgument (_PARAMBORDER)); }
-		unsigned int borderColor () const // Black by default!. From 0 to 4 max. Above 4 = 4
+		unsigned int borderColor () const // Black by default!...
 							{ return (drawBorder () ? cmdlineArguments ().argumentAsInt (_PARAMBORDER) : 0); }
 	
 		/** To know the parameter related with the type of computer configuration. */

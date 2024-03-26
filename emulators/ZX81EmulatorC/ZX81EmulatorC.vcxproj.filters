@@ -1,0 +1,81 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Archivos de origen">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Archivos de encabezado">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+    <Filter Include="Archivos de recursos">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Configuration">
+      <UniqueIdentifier>{161d0bcc-e08f-4cd5-86f0-49103ebfb9f0}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="ZX81EmulatorC.cpp">
+      <Filter>Archivos de origen</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="resource1.h">
+      <Filter>Archivos de encabezado</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="ZX81EmulatorC.rc">
+      <Filter>Archivos de recursos</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="ZX81.ico">
+      <Filter>Archivos de recursos</Filter>
+    </Image>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="LocalConsole.hlp">
+      <Filter>Configuration</Filter>
+    </None>
+    <None Include="SINCLAIR.hlp">
+      <Filter>Configuration</Filter>
+    </None>
+    <None Include="Standard.hlp">
+      <Filter>Configuration</Filter>
+    </None>
+    <None Include="ZX81.hlp">
+      <Filter>Configuration</Filter>
+    </None>
+    <None Include="Default.fmt">
+      <Filter>Configuration</Filter>
+    </None>
+    <None Include="LocalConsole.fmt">
+      <Filter>Configuration</Filter>
+    </None>
+    <None Include="SINCLAIR.fmt">
+      <Filter>Configuration</Filter>
+    </None>
+    <None Include="Standard.fmt">
+      <Filter>Configuration</Filter>
+    </None>
+    <None Include="ZX81.fmt">
+      <Filter>Configuration</Filter>
+    </None>
+    <None Include="zx81_1.rom">
+      <Filter>Configuration</Filter>
+    </None>
+    <None Include="zx81_2.rom">
+      <Filter>Configuration</Filter>
+    </None>
+    <None Include="zx81_3.rom">
+      <Filter>Configuration</Filter>
+    </None>
+    <None Include="console.def">
+      <Filter>Configuration</Filter>
+    </None>
+  </ItemGroup>
+</Project>

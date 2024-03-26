@@ -23,9 +23,11 @@ namespace FZ80
 	/** The Z80 m anages many ports.
 		And the way they are understood will depend on the computer,
 		although there is a defaul implementation per each. */
-	class Z80Port
+	class Z80Port : public MCHEmul::Observer
 	{
 		public:
+		friend CZ80;
+
 		Z80Port (unsigned char id, const std::string& name)
 			: _id (id), _name (name),
 			  _cpu (nullptr)
@@ -35,6 +37,10 @@ namespace FZ80
 							{ return (_id); }
 		const std::string& name () const
 							{ return (_name); }
+		const CZ80* cpu () const
+							{ return (_cpu); }
+		CZ80* cpu ()
+							{ return (_cpu); }
 
 		/** To get & set the values.
 			They must be overloaded, depending on the computer that uses it. */
@@ -51,6 +57,7 @@ namespace FZ80
 		std::string _name;
 
 		// Implementation
+		/** It is adjusted at CPU initialization. */
 		CZ80* _cpu;
 	};
 
@@ -317,11 +324,19 @@ namespace FZ80
 							{ _IFF2 = v; }
 
 		// Managing the ports...
+		/** Get / Set ports. */
+		const Z80Port* port (unsigned char p) const
+							{ return (_portsRaw [(size_t) p]); }
+		Z80Port* port (unsigned char p)
+							{ return (_portsRaw [(size_t) p]); }
+		const Z80PortsMap& ports () const
+							{ return (_ports); }
+
 		/** The way that the port is read, can be changed depending on the computer. \n
 			i.e in ZX Spectrum, when reading port $FE the value of the register A is taken into account. */
-		MCHEmul::UByte port (unsigned char p) const
+		MCHEmul::UByte portValue (unsigned char p) const
 							{ return (_portsRaw [(size_t) p] -> value ()); }
-		void setPort (unsigned char p, const MCHEmul::UByte& v)
+		void setPortValue (unsigned char p, const MCHEmul::UByte& v)
 							{ _portsRaw [(size_t) p] -> setValue (v); }
 
 		virtual bool initialize () override;

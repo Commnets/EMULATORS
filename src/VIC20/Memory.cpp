@@ -119,21 +119,21 @@ VIC20::Memory::Memory (VIC20::Memory::Configuration cfg, const std::string& lang
 	if (!ok)
 		_error = MCHEmul::_INIT_ERROR;
 
-	// Gets a pointer to the main pieces of the memory that are actibable...
+	// Gets a pointer to the main pieces of the memory that are activable...
 	_BANK0			= subset (_BANK0_SUBSET);
-	_BANK0UC		= dynamic_cast <VIC20::NotConnectedPhysicalStorageSubset*> (subset (_BANK0UC_SUBSET));
+	_BANK0UC		= dynamic_cast <MCHEmul::EmptyPhysicalStorageSubset*> (subset (_BANK0UC_SUBSET));
 	_BANK1			= subset (_BANK1_SUBSET);
-	_BANK1UC		= dynamic_cast <VIC20::NotConnectedPhysicalStorageSubset*> (subset (_BANK1UC_SUBSET));
+	_BANK1UC		= dynamic_cast <MCHEmul::EmptyPhysicalStorageSubset*> (subset (_BANK1UC_SUBSET));
 	_BANK2			= subset (_BANK2_SUBSET);
-	_BANK2UC		= dynamic_cast <VIC20::NotConnectedPhysicalStorageSubset*> (subset (_BANK2UC_SUBSET));
+	_BANK2UC		= dynamic_cast <MCHEmul::EmptyPhysicalStorageSubset*> (subset (_BANK2UC_SUBSET));
 	_BANK3			= subset (_BANK3_SUBSET);
-	_BANK3UC		= dynamic_cast <VIC20::NotConnectedPhysicalStorageSubset*> (subset (_BANK3UC_SUBSET));
+	_BANK3UC		= dynamic_cast <MCHEmul::EmptyPhysicalStorageSubset*> (subset (_BANK3UC_SUBSET));
 	_SCREENC1RAM	= subset (_SCREENC1RAM_SUBSET);
-	_SCREENC1RAMUC	= dynamic_cast <VIC20::RandomPhysicalStorageSubset*> (subset (_SCREENC1RAMUC_SUBSET));
+	_SCREENC1RAMUC	= dynamic_cast <MCHEmul::RandomPhysicalStorageSubset*> (subset (_SCREENC1RAMUC_SUBSET));
 	_SCREENC2RAM	= subset (_SCREENC2RAM_SUBSET);
-	_SCREENC2RAMUC	= dynamic_cast <VIC20::RandomPhysicalStorageSubset*> (subset (_SCREENC2RAMUC_SUBSET));
+	_SCREENC2RAMUC	= dynamic_cast <MCHEmul::RandomPhysicalStorageSubset*> (subset (_SCREENC2RAMUC_SUBSET));
 	_BANK5			= subset (_BANK5_SUBSET);
-	_BANK5UC		= dynamic_cast <VIC20::NotConnectedPhysicalStorageSubset*> (subset (_BANK5UC_SUBSET));
+	_BANK5UC		= dynamic_cast <MCHEmul::EmptyPhysicalStorageSubset*> (subset (_BANK5UC_SUBSET));
 	assert (_BANK0 != nullptr && _BANK0UC != nullptr &&
 			_BANK1 != nullptr && _BANK1UC != nullptr &&
 			_BANK2 != nullptr && _BANK2UC != nullptr &&
@@ -370,7 +370,7 @@ MCHEmul::Memory::Content VIC20::Memory::standardMemoryContent ()
 	// Block 0 of RAM. Expansion: 3 k. 
 	MCHEmul::PhysicalStorageSubset* BANK0 = new MCHEmul::PhysicalStorageSubset 
 		(_BANK0_SUBSET, RAM, 0x0400, MCHEmul::Address ({ 0x00, 0x04 }, false), 0x0c00);
-	VIC20::NotConnectedPhysicalStorageSubset* BANK0_UC = new VIC20::NotConnectedPhysicalStorageSubset
+	MCHEmul::EmptyPhysicalStorageSubset* BANK0_UC = new MCHEmul::EmptyPhysicalStorageSubset
 		(_BANK0UC_SUBSET, MCHEmul::UByte (0x04), RAM, 0x0400, MCHEmul::Address ({ 0x00, 0x04 }, false), 0x0c00);
 
 	// Very BASIC RAM; Usually where the BASIC area is...and also the Screen RAM in not expanded systems (or 3k)
@@ -380,19 +380,19 @@ MCHEmul::Memory::Content VIC20::Memory::standardMemoryContent ()
 	// Block 1 of RAM. Expansion: 8 k
 	MCHEmul::PhysicalStorageSubset* BANK1 = new MCHEmul::PhysicalStorageSubset 
 		(_BANK1_SUBSET, RAM, 0x2000, MCHEmul::Address ({ 0x00, 0x20 }, false), 0x2000); // The connected one...
-	VIC20::NotConnectedPhysicalStorageSubset* BANK1_UC = new VIC20::NotConnectedPhysicalStorageSubset
+	MCHEmul::EmptyPhysicalStorageSubset* BANK1_UC = new MCHEmul::EmptyPhysicalStorageSubset
 		(_BANK1UC_SUBSET, MCHEmul::UByte (0x20), RAM, 0x2000, MCHEmul::Address ({ 0x00, 0x20 }, false), 0x2000); // The not connected...
 	
 	// Block 2 of RAM. Expansion: 8 K
 	MCHEmul::PhysicalStorageSubset* BANK2 = new MCHEmul::PhysicalStorageSubset 
 		(_BANK2_SUBSET, RAM, 0x4000, MCHEmul::Address ({ 0x00, 0x40 }, false), 0x2000); // The connected one...
-	VIC20::NotConnectedPhysicalStorageSubset* BANK2_UC = new VIC20::NotConnectedPhysicalStorageSubset
+	MCHEmul::EmptyPhysicalStorageSubset* BANK2_UC = new MCHEmul::EmptyPhysicalStorageSubset
 		(_BANK2UC_SUBSET, MCHEmul::UByte (0x40), RAM, 0x4000, MCHEmul::Address ({ 0x00, 0x40 }, false), 0x2000); // The not connected...
 	
 	// Block 3 of RAM. Expansion: 8 k
 	MCHEmul::PhysicalStorageSubset* BANK3 = new MCHEmul::PhysicalStorageSubset 
 		(_BANK3_SUBSET, RAM, 0x6000, MCHEmul::Address ({ 0x00, 0x60 }, false), 0x2000); // The connected one...
-	VIC20::NotConnectedPhysicalStorageSubset* BANK3_UC = new VIC20::NotConnectedPhysicalStorageSubset
+	MCHEmul::EmptyPhysicalStorageSubset* BANK3_UC = new MCHEmul::EmptyPhysicalStorageSubset
 		(_BANK3UC_SUBSET, MCHEmul::UByte (0x60), RAM, 0x6000, MCHEmul::Address ({ 0x00, 0x60 }, false), 0x2000); // The not connected...
 	
 	// Char ROM
@@ -404,7 +404,7 @@ MCHEmul::Memory::Content VIC20::Memory::standardMemoryContent ()
 	// part of the registers of the chip, but only when poking and not when peeking (random value)...
 	MCHEmul::PhysicalStorageSubset* VICIRegisters = new COMMODORE::VICIRegisters
 		(/** id = COMMODORE::VICIRegisters::_VICREGS_SUBSET */ RAM, 0x9000, MCHEmul::Address ({ 0x00, 0x90 }, false), 0x100);
-	VIC20::RandomPhysicalStorageSubset* VICIRegisters_After = new VIC20::RandomPhysicalStorageSubset
+	MCHEmul::RandomPhysicalStorageSubset* VICIRegisters_After = new MCHEmul::RandomPhysicalStorageSubset
 		(_VICIRAFTER_SUBSET, RAM, 0x9100, MCHEmul::Address ({ 0x00, 0x91 }, false), 0x0010); // The values are returned random...
 	VIC20::VIA1Registers* VIA1Registers = new VIC20::VIA1Registers
 		(/** id = VIC20::VIA1Registers::_VIA1_SUBSET */ RAM, 0x9110, MCHEmul::Address ({ 0x10, 0x91 }, false), 0x010);
@@ -416,11 +416,11 @@ MCHEmul::Memory::Content VIC20::Memory::standardMemoryContent ()
 	// Screen Color RAM, can be in several locations depending on the configuration...
 	MCHEmul::PhysicalStorageSubset* SCREENC1RAM = new MCHEmul::PhysicalStorageSubset 
 		(_SCREENC1RAM_SUBSET, RAM, 0x9400, MCHEmul::Address ({ 0x00, 0x94 }, false), 0x0200);
-	VIC20::RandomPhysicalStorageSubset* SCREENC1RAM_UC = new VIC20::RandomPhysicalStorageSubset
+	MCHEmul::RandomPhysicalStorageSubset* SCREENC1RAM_UC = new MCHEmul::RandomPhysicalStorageSubset
 		(_SCREENC1RAMUC_SUBSET, RAM, 0x9400, MCHEmul::Address ({ 0x00, 0x94 }, false), 0x0200); // The values are returned random...
 	MCHEmul::PhysicalStorageSubset* SCREENC2RAM = new MCHEmul::PhysicalStorageSubset 
 		(_SCREENC2RAM_SUBSET, RAM, 0x9600, MCHEmul::Address ({ 0x00, 0x96 }, false), 0x0200);
-	VIC20::RandomPhysicalStorageSubset* SCREENC2RAM_UC = new VIC20::RandomPhysicalStorageSubset
+	MCHEmul::RandomPhysicalStorageSubset* SCREENC2RAM_UC = new MCHEmul::RandomPhysicalStorageSubset
 		(_SCREENC2RAMUC_SUBSET, RAM, 0x9600, MCHEmul::Address ({ 0x00, 0x96 }, false), 0x0200); // The values are returned random...
 
 	// Block 4 of RAM (2k), initially useful for I/O...
@@ -432,7 +432,7 @@ MCHEmul::Memory::Content VIC20::Memory::standardMemoryContent ()
 	// Cartridges usually use this space to start...
 	MCHEmul::PhysicalStorageSubset* BANK5 = new MCHEmul::PhysicalStorageSubset 
 		(_BANK5_SUBSET, RAM, 0xa000, MCHEmul::Address ({ 0x00, 0xa0 }, false), 0x2000); // The connected one...
-	VIC20::NotConnectedPhysicalStorageSubset* BANK5_UC = new VIC20::NotConnectedPhysicalStorageSubset 
+	MCHEmul::EmptyPhysicalStorageSubset* BANK5_UC = new MCHEmul::EmptyPhysicalStorageSubset 
 		(_BANK5UC_SUBSET, MCHEmul::UByte (0xa0), RAM, 0xa000, MCHEmul::Address ({ 0x00, 0xa0 }, false), 0x2000); // The not connected...
 	
 	// ROMS
@@ -472,7 +472,7 @@ MCHEmul::Memory::Content VIC20::Memory::standardMemoryContent ()
 			{ _BANK5_SUBSET,										BANK5 }, 
 			{ _BANK5UC_SUBSET,										BANK5_UC }, 
 			{ _BASICROM_SUBSET,										BasicROM }, 
-			{ _KERNELROM_SUBSET,									KernelROM }, 
+			{ _KERNELROM_SUBSET,									KernelROM } 
 		});
 
 	// Then the views...

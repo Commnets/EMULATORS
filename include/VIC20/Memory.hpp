@@ -21,55 +21,6 @@ namespace VIC20
 	class VIA1Registers;
 	class VIA2Registers;
 
-	/** When a VIC20 is not expanded, there are seveal memory zones not connected.
-		That zones, doesn't respond to poke and always return the same value when peeking 
-		(at least it is as anothe emulators in the market now behave)
-		This is the way (i guess) VIC20 determines how much free memory the system has. 
-		So this class is to replicate that behaviour. */
-	class NotConnectedPhysicalStorageSubset final : public MCHEmul::PhysicalStorageSubset
-	{
-		public:
-		NotConnectedPhysicalStorageSubset (int id, const MCHEmul::UByte& dV,
-				MCHEmul::PhysicalStorage* pS, size_t pp /** link a phisical */, const MCHEmul::Address& a, size_t s)
-			: MCHEmul::PhysicalStorageSubset (id, pS, pp, a, s),
-			  _defaultValue (dV)
-							{ }
-
-		const MCHEmul::UByte& defaultValue () const
-							{ return (_defaultValue); }
-
-		private:
-		virtual void setValue (size_t nB, const MCHEmul::UByte& d) override
-							{ /** Do nothing. */ }
-		virtual const MCHEmul::UByte& readValue (size_t nB) const override
-							{ return (_defaultValue); }
-
-		private:
-		MCHEmul::UByte _defaultValue;
-	};
-
-	/** Some parts of the memory (usually behind the CIA/VIA registers)
-		seems to be part of them, but return very random numbers when peeking. \n
-		The don't respond either to the poke instructions. \n
-		This class is done to emulate that. */
-	class RandomPhysicalStorageSubset final : public MCHEmul::PhysicalStorageSubset
-	{
-		public:
-		RandomPhysicalStorageSubset (int id,
-				MCHEmul::PhysicalStorage* pS, size_t pp /** link a phisical */, const MCHEmul::Address& a, size_t s)
-			: MCHEmul::PhysicalStorageSubset (id, pS, pp, a, s)
-							{ }
-
-		private:
-		virtual void setValue (size_t nB, const MCHEmul::UByte& d) override
-							{ /** Do nothing. */ }
-		virtual const MCHEmul::UByte& readValue (size_t nB) const override
-							{ return (_lastValueRead = MCHEmul::UByte ((unsigned char) (std::rand () % 256))); }
-
-		private:
-		mutable MCHEmul::UByte _lastValueRead;
-	};
-
 	/** The reflection of the VIA1/VIA2 registers is a little bit strange... \n
 		VIA1 registers seem to be reflected in address from $9130 to $93ff every $10 (= 16) bytes.
 		But VIA2 registers seem not be reflected and they always return 0, and they don't anser either to poke.
@@ -177,19 +128,19 @@ namespace VIC20
 		// Implementation
 		// The banks of memory that are configurable...
 		MCHEmul::PhysicalStorageSubset* _BANK0;
-		NotConnectedPhysicalStorageSubset* _BANK0UC;
+		MCHEmul::EmptyPhysicalStorageSubset* _BANK0UC;
 		MCHEmul::PhysicalStorageSubset* _BANK1;
-		NotConnectedPhysicalStorageSubset* _BANK1UC;
+		MCHEmul::EmptyPhysicalStorageSubset* _BANK1UC;
 		MCHEmul::PhysicalStorageSubset* _BANK2;
-		NotConnectedPhysicalStorageSubset* _BANK2UC;
+		MCHEmul::EmptyPhysicalStorageSubset* _BANK2UC;
 		MCHEmul::PhysicalStorageSubset* _BANK3;
-		NotConnectedPhysicalStorageSubset* _BANK3UC;
+		MCHEmul::EmptyPhysicalStorageSubset* _BANK3UC;
 		MCHEmul::PhysicalStorageSubset* _SCREENC1RAM;
-		RandomPhysicalStorageSubset* _SCREENC1RAMUC;
+		MCHEmul::RandomPhysicalStorageSubset* _SCREENC1RAMUC;
 		MCHEmul::PhysicalStorageSubset* _SCREENC2RAM;
-		RandomPhysicalStorageSubset* _SCREENC2RAMUC;
+		MCHEmul::RandomPhysicalStorageSubset* _SCREENC2RAMUC;
 		MCHEmul::PhysicalStorageSubset* _BANK5;
-		NotConnectedPhysicalStorageSubset* _BANK5UC;
+		MCHEmul::EmptyPhysicalStorageSubset* _BANK5UC;
 	};
 }
 

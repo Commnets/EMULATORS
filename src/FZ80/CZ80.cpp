@@ -15,13 +15,13 @@ const std::string FZ80::CZ80::_SIGNFLAGNAME = "S";
 // ---
 MCHEmul::UByte FZ80::Z80Port::value () const
 {
-	return (_cpu -> port (_id));
+	return (_cpu -> portValue (_id));
 }
 
 // ---
 void FZ80::Z80Port::setValue (const MCHEmul::UByte& v)
 {
-	_cpu -> setPort (_id, v);
+	_cpu -> setPortValue (_id, v);
 }
 
 // ---
@@ -71,6 +71,7 @@ FZ80::CZ80::CZ80 (int id, const Z80PortsMap& pts,
 	for (unsigned short j = 0; j < 256; j++)
 		_portsRaw [(size_t) j] = ((i = _ports.find ((unsigned char) j)) == _ports.end ()) 
 			? new FZ80::Z80BasicPort ((unsigned char) j, "-") : (*i).second;
+	for (unsigned short j = 0; j < 256; _portsRaw [(size_t) j++] -> _cpu = this); // Assign the port to this object!
 }
 
 // ---

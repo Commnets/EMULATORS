@@ -23,6 +23,11 @@
  */
 
 /**
+ *	\defgroup	EMULS Classes defining a template for any emulator.
+ *	Classes and macros defining the common characteristics to any Emulator.
+ */
+
+/**
  *	\defgroup	F6500 Classes defining the 6500 chip family
  *	Classes and macros defining the characteristics of the Motorola 6500 chip family.
  */
@@ -33,7 +38,7 @@
  */
 
  /**
- *	\defgroup	COMMODORE Classes defining COMMODORE Chips
+ *	\defgroup	COMMODORE Classes defining COMMODORE Chips, devices, computers...
  *	Classes and macros defining the characteristics of Commodore Chips/Features.
  */
 
@@ -51,7 +56,18 @@
  *	\defgroup	C264 Classes defining a C264 Computer
  *	Classes and macros defining the characteristics of any C264 seriesComputer (C16, Cplus/4 and C116).
  */
+
+ /**
+ *	\defgroup	SINCLAIR Classes defining SINCLAIR Chips, devices, computers...
+ *	Classes and macros defining the characteristics of Commodore Chips/Features.
+ */
+
 /**
- *	\defgroup	EMULS Classes defining a template for any emulator.
- *	Classes and macros defining the common characteristics to any Emulator.
+ *	\defgroup	ZX81 Classes defining a ZX81 Computer
+ *	Classes and macros defining the characteristics of any ZX81 seriesComputer.
+ */
+
+/**
+ *	\defgroup	ZXSPECTRUM Classes defining a ZXSPECTRUM Computer
+ *	Classes and macros defining the characteristics of any ZXSPECTRUM seriesComputer.
  */

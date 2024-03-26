@@ -3,7 +3,7 @@
 // ---
 /** This values have been clculated from the info at: http://tinyvga.com/6561. */
 const MCHEmul::RasterData COMMODORE::VICI_PAL::_VRASTERDATA	(0, 28, 28, 311, 311, 311, 312, 0, 0);
-/** Really the movement is half the vakues show, but they have been multiplied by two to maitain the proportion inthe screen. */
+/** Really the movement is half the values show, but they have been multiplied by two to maitain the proportion inthe screen. */
 const MCHEmul::RasterData COMMODORE::VICI_PAL::_HRASTERDATA	
 	(0, 40, 40, 504, 504, 567, 568 /** For everything to run well, it has to be a multiple of 8. */, 0, 0);
 const MCHEmul::RasterData COMMODORE::VICI_NTSC::_VRASTERDATA (0, 28, 28, 260, 260, 260, 261, 0, 0);

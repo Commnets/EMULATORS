@@ -1,4 +1,4 @@
-#Commands only valid over a Commodore64, local and remotly. 
+#Commands only valid over a Commodore machine, local and remotly. 
 #(C) 2022 Ignacio Cea Fornies
 ;TED
 To know the status of the TED chip, including raster and others.

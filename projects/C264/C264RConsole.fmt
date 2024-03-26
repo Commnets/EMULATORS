@@ -1,4 +1,4 @@
 #Formats used for the C264 series Emulation
 #(C) 2024 Ignacio Cea Fornies
 ?./Commodore.fmt
-?./LocalConsole.fmt
+?./Standard.fmt

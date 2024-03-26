@@ -122,7 +122,7 @@ namespace MCHEmul
 			Otherwise the view will be have the same size than that. \n
 			The reference to the phisical storage can't be null at all. \n 
 			The subset is not the owner of the phisical storage. \n
-			THe phisical storage can be either active or inactive. */
+			The phisical storage can be either active or inactive. */
 		PhysicalStorageSubset (int id, PhysicalStorage* pS, size_t pp /** link a phisical */, const Address& a, size_t s);
 
 		PhysicalStorageSubset (const PhysicalStorageSubset&) = delete;
@@ -145,6 +145,8 @@ namespace MCHEmul
 							{ return (_physicalStorage); }
 		PhysicalStorage::Type type () const
 							{ return (_physicalStorage -> type ()); }
+		size_t initialPhysicalPosition () const
+							{ return (_initialPhisicalPosition);  }
 		const Address& initialAddress () const
 							{ return (_initialAddress); }
 		size_t size () const
@@ -280,6 +282,59 @@ namespace MCHEmul
 	/** To simplify the way a map of elements is managed. */
 	using PhysicalStorageSubsets = std::map <int, PhysicalStorageSubset*>;
 	using PhysicalStorageSubsetsList = std::vector <PhysicalStorageSubset*>;
+
+	/** Empty physical subset. \n
+		In come computers, there might be a partof the memory not connected 
+		that answers always with the same value and it is not affected by the poke. */
+	class EmptyPhysicalStorageSubset : public PhysicalStorageSubset
+	{
+		public:
+		EmptyPhysicalStorageSubset (int id, const UByte& val, 
+			PhysicalStorage* pS, size_t pp, const Address& a, size_t s)
+			: PhysicalStorageSubset (id, pS, pp, a, s),
+			  _fixValue (val)
+							{ }
+
+		const UByte& fixValue () const
+							{ return (_fixValue); }
+
+		protected:
+		virtual void setValue (size_t nB, const UByte& d) override
+							{ /** does nothing. */ }
+		virtual const UByte& readValue (size_t nB) const override
+							{ return (_fixValue); } // Always the same...
+
+		protected:
+		UByte _fixValue;
+	};
+
+	/** A physical subset that responds always random values. */
+	class RandomPhysicalStorageSubset : public PhysicalStorageSubset
+	{
+		public:
+		RandomPhysicalStorageSubset (int id,
+			PhysicalStorage* pS, size_t pp, const Address& a, size_t s)
+			: PhysicalStorageSubset (id, pS, pp, a, s)
+							{ }
+
+		protected:
+		virtual void setValue (size_t nB, const UByte& d) override
+							{ /** does nothing. */ }
+		virtual const UByte& readValue (size_t nB) const override
+							{ return (UByte ((unsigned char) (std::rand () % 256))); } 
+	};
+
+	/** A physicial subset that is a mirror of a previous one, 
+		but in another address! */
+	class MirrorPhysicalStorageSubset : public PhysicalStorageSubset
+	{
+		public:
+		MirrorPhysicalStorageSubset (int id, 
+			PhysicalStorageSubset* pSS, const Address& a)
+			: PhysicalStorageSubset (id, 
+				pSS -> physicalStorage (), pSS -> initialPhysicalPosition (), a, pSS -> size ())
+							{ assert (pSS != nullptr); } // maybe too late, but just in case...
+	};
 
 	/** A memory view represents a set of subsets over phisical storage (one or many). \n
 		The subsets can combine either RAM or ROM access and can also overlap each other. */

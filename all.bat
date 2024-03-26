@@ -19,9 +19,11 @@ COPY .\exe\x86\Z80Compiler.exe .\compilers\Z80Compiler\ /Y
 COPY .\exe\x86\Z80CompilerD.exe .\compilers\Z80Compiler\ /Y
 Echo Configuration files...
 DEL  .\compilers\6500Compiler\*.fmt
+DEL  .\compilers\Z80Compiler\*.fmt
 DEL  .\compilers\RConsole\*.fmt
 DEL  .\compilers\RConsole\*.hlp
 COPY .\projects\ASSEMBLER\*.fmt .\compilers\6500Compiler\ /Y
+COPY .\projects\ASSEMBLER\*.fmt .\compilers\Z80Compiler\ /Y
 COPY .\projects\CORE\*.fmt .\monitors\RConsole\ /Y
 COPY .\projects\CORE\*.hlp .\monitors\RConsole\ /Y
 Echo ********************************************************************
@@ -162,6 +164,53 @@ COPY .\projects\CORE\*.hlp .\emulators\C264EmulatorC\ /Y
 COPY .\projects\CORE\*.hlp .\emulators\C264Emulator\ /Y
 COPY .\projects\CORE\*.hlp .\monitors\R264Console\ /Y
 Echo ********************************************************************
+Echo ********************************************************************
+Echo 1.5: ZX81
+Echo ********************************************************************
+Echo Exe files...
+COPY .\exe\x86\ZX81Emulator.exe .\emulators\ZX81Emulator\ /Y
+COPY .\exe\x86\ZX81EmulatorD.exe .\emulators\ZX81Emulator\ /Y
+COPY .\exe\x86\ZX81EmulatorC.exe .\emulators\ZX81EmulatorC\ /Y
+COPY .\exe\x86\ZX81EmulatorCD.exe .\emulators\ZX81EmulatorC\ /Y
+COPY .\exe\x86\RZX81Console.exe .\monitors\RZX81Console\ /Y
+COPY .\exe\x86\RZX81ConsoleD.exe .\monitors\RZX81Console\ /Y
+COPY .\exe\x86\ZX81CRTGenerator.exe .\projects\ZX81CRTGenerator\ /Y
+COPY .\exe\x86\ZX81CRTGeneratorD.exe .\projects\ZX81CRTGenerator\ /Y
+Echo Configuration files...
+DEL  .\emulators\ZX81Emulator\*.fmt
+DEL  .\emulators\ZX81EmulatorC\*.fmt
+DEL  .\monitors\RZX81Console\*.fmt
+DEL  .\monitors\RZX81Console\*.def
+DEL  .\emulators\ZX81Emulator\*.hlp
+DEL  .\emulators\ZX81EmulatorC\*.hlp
+DEL  .\monitors\RZX81Console\*.hlp
+COPY .\projects\ZX81\*.fmt .\emulators\ZX81Emulator\ /Y
+DEL .\emulators\ZX81Emulator\ZX81RConsole.fmt
+COPY .\projects\ZX81\*.fmt .\emulators\ZX81EmulatorC\ /Y
+DEL .\emulators\ZX81EmulatorC\ZX81RConsole.fmt
+COPY .\projects\ZX81\*.fmt .\monitors\RZX81Console\ /Y
+DEL .\monitors\RZX81Console\ZX81.fmt
+RENAME .\monitors\RZX81Console\ZX81RConsole.fmt ZX81.fmt
+COPY .\projects\ZX81\*.def .\emulators\ZX81EmulatorC\ /Y
+COPY .\projects\ZX81\*.hlp .\emulators\ZX81EmulatorC\ /Y
+DEL .\emulators\ZX81EmulatorC\ZX81RConsole.hlp
+COPY .\projects\ZX81\*.hlp .\monitors\RZX81Console\ /Y
+DEL .\monitors\RZX81Console\ZX81.hlp
+RENAME .\monitors\RZX81Console\ZX81RConsole.hlp ZX81.hlp
+COPY .\projects\SINCLAIR\*.fmt .\emulators\ZX81EmulatorC\ /Y
+COPY .\projects\SINCLAIR\*.fmt .\emulators\ZX81Emulator\ /Y
+COPY .\projects\SINCLAIR\*.fmt .\monitors\RZX81Console\ /Y
+COPY .\projects\SINCLAIR\*.hlp .\emulators\ZX81EmulatorC\ /Y
+COPY .\projects\SINCLAIR\*.hlp .\monitors\RZX81Console\ /Y
+COPY .\projects\CONSOLE\*.fmt .\emulators\ZX81EmulatorC\ /Y
+COPY .\projects\CONSOLE\*.hlp .\emulators\ZX81EmulatorC\ /Y
+COPY .\projects\CORE\*.fmt .\emulators\ZX81EmulatorC\ /Y
+COPY .\projects\CORE\*.fmt .\emulators\ZX81Emulator\ /Y
+COPY .\projects\CORE\*.fmt .\monitors\RZX81Console\ /Y
+COPY .\projects\CORE\*.hlp .\emulators\ZX81EmulatorC\ /Y
+COPY .\projects\CORE\*.hlp .\emulators\ZX81Emulator\ /Y
+COPY .\projects\CORE\*.hlp .\monitors\RZX81Console\ /Y
+Echo ********************************************************************
 Echo
 Echo
 Echo --------------------------------------------------------------------
@@ -174,6 +223,7 @@ cd .\docs
 CALL doxygen "EMULATORS Doxy Configuration"
 CALL doxygen "EMULATORS Doxy Configuration No SRC"
 cd ..\
+Echo ********************************************************************
 Echo ********************************************************************
 Echo 2.2: Packageing DOCS
 Echo ********************************************************************
@@ -207,6 +257,7 @@ COPY .\projects\CORE\*.fmt .\setups\C64\ /Y
 COPY .\projects\CORE\*.hlp .\setups\C64\ /Y
 COPY .\projects\ASSEMBLER\*.fmt .\setups\C64\ /Y
 "C:\Program files (x86)\Inno Setup 6\iscc" ".\setups\C64\C64.iss"
+Echo ********************************************************************
 Echo ********************************************************************
 Echo 3.2: VIC20
 Echo ********************************************************************
@@ -249,6 +300,28 @@ COPY .\projects\CORE\*.fmt .\setups\C264\ /Y
 COPY .\projects\CORE\*.hlp .\setups\C264\ /Y
 COPY .\projects\ASSEMBLER\*.fmt .\setups\C264\ /Y
 "C:\Program files (x86)\Inno Setup 6\iscc" ".\setups\C264\C264.iss"
+Echo ********************************************************************
+Echo ********************************************************************
+Echo 3.4: ZX81
+Echo ********************************************************************
+COPY .\exe\x86\ZX81EmulatorC.exe .\setups\ZX81\ /Y
+COPY .\exe\x86\ZX81Emulator.exe .\setups\ZX81\ /Y
+COPY .\exe\x86\RZX81Console.exe .\setups\ZX81\ /Y
+COPY .\exe\x86\Z80Compiler.exe .\setups\ZX81\ /Y
+COPY .\exe\x86\TestZ80.exe .\setups\ZX81\ /Y
+COPY .\exe\x86\ZX81CRTGenerator.exe .\setups\ZX81\ /Y
+COPY .\emulators\ZX81Commons\*.* .\setups\ZX81\ /Y
+COPY .\projects\ZX81\*.fmt .\setups\ZX81\ /Y
+COPY .\projects\ZX81\*.hlp .\setups\ZX81\ /Y
+COPY .\projects\ZX81\*.def .\setups\ZX81\ /Y
+COPY .\projects\SINCLAIR\*.fmt .\setups\ZX81\ /Y
+COPY .\projects\SINCLAIR\*.hlp .\setups\ZX81\ /Y
+COPY .\projects\CONSOLE\*.fmt .\setups\ZX81\ /Y
+COPY .\projects\CONSOLE\*.hlp .\setups\ZX81\ /Y
+COPY .\projects\CORE\*.fmt .\setups\ZX81\ /Y
+COPY .\projects\CORE\*.hlp .\setups\ZX81\ /Y
+COPY .\projects\ASSEMBLER\*.fmt .\setups\ZX81\ /Y
+"C:\Program files (x86)\Inno Setup 6\iscc" ".\setups\ZX81\ZX81.iss"
 Echo ********************************************************************
 Echo
 Echo
