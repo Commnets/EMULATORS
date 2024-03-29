@@ -1,6 +1,17 @@
 #include <FZ80/Instruction.hpp>
 
 // ---
+bool FZ80::Instruction::execute (MCHEmul::CPU* c, MCHEmul::Memory* m,
+	MCHEmul::Stack* stk, MCHEmul::ProgramCounter* pc)
+{
+	bool result = MCHEmul::InstructionDefined::execute (c, m , stk, pc);
+
+	incrementRegisterR ();
+
+	return (result);
+}
+
+// ---
 FZ80::InstructionUndefined::InstructionUndefined (unsigned int c, const MCHEmul::Instructions& inst)
 	: MCHEmul::InstructionUndefined (c, inst),
 	  _rawInstructions ()
@@ -24,4 +35,17 @@ FZ80::InstructionUndefined::InstructionUndefined (unsigned int c, const MCHEmul:
 		_rawInstructions 
 			[size_t (i.first /** instead i.second -> code () because it might be duplicated instructions. */ & 0xff)] = i.second;
 	}
+}
+
+// ---
+bool FZ80::InstructionUndefined::execute (MCHEmul::CPU* c, MCHEmul::Memory* m,
+	MCHEmul::Stack* stk, MCHEmul::ProgramCounter* pc)
+{
+	bool result = MCHEmul::InstructionUndefined::execute (c, m, stk, pc);
+
+	/** In the pre - fixed instructions the increment of the R register is double. */
+	if (dynamic_cast <FZ80::Instruction*> (_lastInstruction) != nullptr)
+		static_cast <FZ80::Instruction*> (_lastInstruction) -> incrementRegisterR ();
+
+	return (result);
 }

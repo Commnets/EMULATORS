@@ -29,8 +29,10 @@ bool FZ80::INTInterrupt::executeOverImpl (MCHEmul::CPU* c, unsigned int cC)
 					result = false; // The instruction doesn't exist!
 				else
 				{
-					result = c -> instruction ((unsigned int) nC.value ()) -> execute 
+					MCHEmul::Instruction* inst = c -> instruction ((unsigned int) nC.value ());
+					result = inst -> execute 
 						(c, c -> memoryRef (), c -> memoryRef () -> stack (), &c -> programCounter ());
+					_cyclesAfterLaunch = inst -> clockCycles (); // The ones that the instruction took!
 				}
 			}
 

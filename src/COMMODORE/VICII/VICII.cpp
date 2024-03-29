@@ -1245,6 +1245,7 @@ unsigned int COMMODORE::VICII_PAL::treatRasterCycle ()
 	switch (_cycleInRasterLine)
 	{
 		// Read sprite 0 to 2 data?
+		// At the last cycles...
 		case 58:
 		case 60:
 		case 62:
@@ -1261,6 +1262,8 @@ unsigned int COMMODORE::VICII_PAL::treatRasterCycle ()
 			}
 
 			break;
+
+		// Cycle 63 is left...
 
 		default:
 			break;
@@ -1289,12 +1292,13 @@ unsigned int COMMODORE::VICII_NTSC::treatRasterCycle ()
 	switch (_cycleInRasterLine)
 	{
 		// Read sprite 0 to 2 data?
-		case 59:
-		case 61:
-		case 63:
+		// At the last cycles...
+		case 60:
+		case 62:
+		case 64:
 			{
 				// Is there sprite info available?
-				if (readSpriteData ((_cycleInRasterLine - 59) >> 1) /** 0, 1 or 2. */)
+				if (readSpriteData ((_cycleInRasterLine - 60) >> 1) /** 0, 1 or 2. */)
 				{
 					result += 2;	// VICII has to read three bytes, Meaning 2 clock cycles stopped more... 
 
@@ -1305,6 +1309,8 @@ unsigned int COMMODORE::VICII_NTSC::treatRasterCycle ()
 			}
 
 			break;
+
+		// Cycle 64 is left...
 
 		default:
 			break;

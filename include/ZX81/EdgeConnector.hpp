@@ -23,7 +23,7 @@ namespace ZX81
 	class EdgeConnector : public MCHEmul::IODevice
 	{
 		public:
-		static const int _ID = 102;
+		static const int _ID = 203;
 
 		// Different events.
 		/** When the data element of the expansion element is loaded, 

@@ -20,9 +20,23 @@
 
 namespace COMMODORE
 {
-	/** The chip that takes care of anything around the graphics in computers like 
-		Commodore 64 or Commodore 128 when emulating CMB64.
-		@see GraphicalChip. */
+	/** 
+		The chip that takes care of anything around the graphics in computers like 
+		Commodore 64 or Commodore 128 when emulating CMB64. \n
+		@see GraphicalChip. \n
+		How it works in detail can be found in: https://www.cebix.net/VIC-Article.txt. \n
+		\n
+		Any case: \n
+		Every horizontal raster line takes 64us (including horizontal retrace = 15us as PAL/NTSC standard definition). \n
+		1/985.248 = 1,01497us per cycle in PAL. 64us/1,01497 = 63 cycles per raster line in PAL. \n
+		1/1.023.000 = 0,977517us per cycle in NTSC. 64us/0,977517us = 65 cycles per raster line in NTSC. \n
+		VICII speed is = CPU speed. \n
+		So in every CPU cycle 8 pixels are drawn (if possible). \n
+		In every VICII cycle two actions are done: 
+		In low mode the byte is read, and in the high one the byte is drawn. \n
+		In VICII simulation, the cycles (that are different per type of VICII (PAL/NTSC)) 
+		x 8 are used to represent the resolution of the VICII.
+	  */
 	class VICII : public MCHEmul::GraphicalChip
 	{
 		public:

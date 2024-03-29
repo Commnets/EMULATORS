@@ -166,6 +166,7 @@ namespace FZ80
 							{ return (registerI ().values () [0]); }
 		const MCHEmul::UByte& valueRegisterR () const
 							{ return (registerR ().values () [0]); }
+		inline void incrementRegisterR ();
 
 		const MCHEmul::UByte& valueRegisterIXH () const
 							{ return (registerIXH ().values () [0]); }
@@ -213,7 +214,23 @@ namespace FZ80
 							{ return ((_lastINOUTData = MCHEmul::UBytes ({ memory () -> value (addressIY (n)) }))[0]); }
 		const MCHEmul::UByte& valueAddressSP (size_t n = 0) const
 							{ return ((_lastINOUTData = MCHEmul::UBytes ({ memory () -> value (addressSP (n)) }))[0]); }
+
+		/** In Z80, every opcode fecth (M1 cycle usually) increments the R register (7 bits). \n
+			It is done apparently to refresh RAM. */
+		virtual bool execute (MCHEmul::CPU* c, MCHEmul::Memory* m, 
+			MCHEmul::Stack* stk, MCHEmul::ProgramCounter* pc) final override;
 	};
+
+	// ---
+	inline void Instruction::incrementRegisterR ()
+	{
+		// @see https://www.zilog.com/docs/z80/um0080.pdf (pg. 17)
+		const MCHEmul::UByte& rVB = registerR ().values ()[0];
+		unsigned char rV = (rVB.value () & 0x07f) + 0x01; // Only the 7 MSB bits...
+		if (rV > 0x7f) rV = 0x00;
+		rV |= rVB.value () & 0x80; // ...but maintains what was programmed at the bit 8...
+		registerR ().set ({ rV }); // put it back into the register...
+	}
 
 	// ---
 	inline MCHEmul::UBytes Instruction::valueRegisterSP () const
@@ -231,6 +248,11 @@ namespace FZ80
 		public:
 		/** c = the code that all instructions shared. */
 		InstructionUndefined (unsigned int c, const MCHEmul::Instructions& inst);
+
+		/** In Z80, every opcode fecth (M1 cycle usually) increments the R register (7 bits). \n
+			It is done apparently to refresh RAM. */
+		virtual bool execute (MCHEmul::CPU* c, MCHEmul::Memory* m, 
+			MCHEmul::Stack* stk, MCHEmul::ProgramCounter* pc) final override;
 
 		protected:
 		// Implementation

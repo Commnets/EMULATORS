@@ -145,6 +145,12 @@ namespace MCHEmul
 							{ return (_clockCycles); }
 		unsigned int additionalClockCycles () const
 							{ return (_additionalCycles); }
+		/** Very rare. \n
+			In some chips the addicional cycles come from external circunstances. */
+		void addAdditionalClockCycles (unsigned int nc)
+							{ _additionalCycles += nc; }
+
+		// The internal structure...
 		const std::string iTemplate () const
 							{ return (_iTemplate); }
 		const Structure& internalStructure () const
@@ -272,9 +278,9 @@ namespace MCHEmul
 
 		/** Modifies the pc with the length of the instruction, before executed it. \n
 			Take this into account when defining jump instructions. 
-			This methid can not be longer extended. \n
-			The one to define the datail of the instruction is executeImpl. */
-		virtual bool execute (CPU* c, Memory* m, Stack* stk, ProgramCounter* pc) final override;
+			The one to define the datail of the instruction is executeImpl,
+			However this method can be extended. Really Carefully!!! */
+		virtual bool execute (CPU* c, Memory* m, Stack* stk, ProgramCounter* pc) override;
 
 		protected:
 		/** The implementation of the execution.

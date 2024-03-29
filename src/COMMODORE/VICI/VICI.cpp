@@ -3,11 +3,13 @@
 // ---
 /** This values have been clculated from the info at: http://tinyvga.com/6561. */
 const MCHEmul::RasterData COMMODORE::VICI_PAL::_VRASTERDATA	(0, 28, 28, 311, 311, 311, 312, 0, 0);
-/** Really the movement is half the values show, but they have been multiplied by two to maitain the proportion inthe screen. */
+/** Really the movement is half the values shown, 
+	but they have been multiplied by two to maitain the proportion inthe screen. */
 const MCHEmul::RasterData COMMODORE::VICI_PAL::_HRASTERDATA	
 	(0, 40, 40, 504, 504, 567, 568 /** For everything to run well, it has to be a multiple of 8. */, 0, 0);
 const MCHEmul::RasterData COMMODORE::VICI_NTSC::_VRASTERDATA (0, 28, 28, 260, 260, 260, 261, 0, 0);
-/** Really the movement is half the vakues show, but they have been multiplied by two to maitain the proportion inthe screen. */
+/** Really the movement is half the values shown, 
+	but they have been multiplied by two to maitain the proportion inthe screen. */
 const MCHEmul::RasterData COMMODORE::VICI_NTSC::_HRASTERDATA 
 	(0, 0, 0, 415, 415, 519, 520 /** For everything to run well, it has to be a multiple of 8. */, 0, 0);
 // Memory where to read when there is no text window...
@@ -107,7 +109,7 @@ COMMODORE::VICI::VICI (const MCHEmul::RasterData& vd, const MCHEmul::RasterData&
 {
 	assert (_cyclesPerRasterLine >= 65);
 
-	MCHEmul::GraphicalChip::setClassName ("VICI");
+	setClassName ("VICI");
 
 	_format = SDL_AllocFormat (SDL_PIXELFORMAT_ARGB8888);
 }
@@ -205,7 +207,6 @@ bool COMMODORE::VICI::simulate (MCHEmul::CPU* cpu)
 		// ...and then treat the current cycle...
 		treatRasterCycle ();
 		// ...and also moves 8 pixels right in the raster line and jump to other line is possible...
-		// Notice that the variable _isNewRasterLine becomes true when a new line comes...
 		if (_raster.moveCycles (1))
 			_cycleInRasterLine = 1;
 

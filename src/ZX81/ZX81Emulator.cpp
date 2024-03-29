@@ -24,8 +24,10 @@ void ZX81::ZX81Emulator::printOutParameters (std::ostream& o) const
 		 "0:\tNot expanded" << std::endl <<
 		 "1:\t16K expansion" << std::endl;
 	o << "MACHINE allowed under command line /m:" << std::endl << 
-		 "0:\tNot expanded" << std::endl <<
-		 "1:\t16K expansion" << std::endl;
+		 "ZX80:\tZX80" << std::endl <<
+		 "ZX811:\tZX81 old rom version" << std::endl <<
+		 "ZX812:\tZX81 rare rom version" << std::endl <<
+		 "ZX813:\tZX81 newest rom version" << std::endl;
 	o << "DEVICES allowed to be connected under command CONNECTPER:" << std::endl <<
 		 std::to_string (ZX81::Cartridge::_ID) << ":\tCartridge" << std::endl;
 }

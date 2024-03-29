@@ -117,6 +117,19 @@ namespace MCHEmul
 		void setInternalRegister (size_t nR, UBytes v)
 							{ if (existsInternalRegister (nR) && internalRegister (nR).accept (v)) internalRegister (nR).set (v); }
 
+		// About the memory and the address bus...
+		// The address and the data bus can be programmed as busses or wires,
+		// but in a very basic version of the code, it is possbile to maintain the 
+		// address bus and the data bus. The instructions execute this method...
+		const Address& lastINOUTAddress () const
+							{ return (_lastINOUTAddress); }
+		void setLastINOUTAddress (const Address& a)
+							{ _lastINOUTAddress = a; }
+		const UBytes& lastINOUTData () const
+							{ return (_lastINOUTData); }
+		void setLastINOUTData (const MCHEmul::UBytes& d)
+							{ _lastINOUTData = d; }
+
 		// Info about the program counter...
 		const ProgramCounter& programCounter () const
 							{ return (_programCounter); }
@@ -278,6 +291,8 @@ namespace MCHEmul
 			CPUArchitecture (2 /** 2 bytes arch. */, 1 /** 1 byte for instruction. */); // Adjusted at construction level
 		Registers _registers;
 		const Instructions _instructions = { }; // Adjusted at construction level
+		Address _lastINOUTAddress;
+		UBytes _lastINOUTData;
 		ProgramCounter _programCounter;
 		StatusRegister _statusRegister;
 		Memory* _memory; // A reference...

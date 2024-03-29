@@ -26,7 +26,7 @@ namespace FZ80
 		static const int _ID = 1;
 
 		NMIInterrupt ()
-			: Interrupt (_ID)
+			: Interrupt (_ID, 11 /** like a restart operation. */)
 							{ setClassName ("NMIInterrupt"); }
 
 		private:

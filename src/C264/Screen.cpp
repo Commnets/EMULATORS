@@ -7,7 +7,7 @@ C264::Screen::Screen (const std::string& tt, double hz, int w, int h, const MCHE
 { 
 	bool e;
 	MCHEmul::DataMemoryBlock dt = MCHEmul::DataMemoryBlock::loadBinaryFile 
-		("./kernal.318004-05-ENG.bin", e, 0 /** no address, no needed */, true);
+		("./kernal.318004-05-ENG.bin", e, 0 /** no address needed */, true);
 	// The file is longer than 4k, 
 	// but the chars definition are from the posicion 0x1000 of the kernel file!
 	if (!e)
@@ -29,10 +29,13 @@ C264::Screen::Screen (const std::string& tt, double hz, int w, int h, const MCHE
 // ---
 void C264::Screen::drawAdditional ()
 {
-	unsigned int bC = ((_borderColor + 1) > 15) ? 0 : _borderColor + 1; 
-
 	if (_drawBorder)
 	{
+		// The color...
+		// Only 128 are available...
+		unsigned int clr = (_borderColor > 128) ? 0 : _borderColor;
+		unsigned int bC = ((clr + 1) > 128) ? 0 : clr + 1; 
+
 		COMMODORE::TED* gC = static_cast <COMMODORE::TED*> (_graphicalChip);
 
 		unsigned short x1, y1, x2, y2;

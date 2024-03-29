@@ -18,6 +18,33 @@
 
 namespace ZX81
 {
+	/** 
+	  * The video info has to be set from D_FILE location.
+	  * The location D_FILE with the bit 7 on is where the CPU "executes" the video info.
+	  * D_FILE is usually at some position in the range 0x4000 - onwards.
+	  * This class is to mirror from C000 - onwards that previous position, 
+	  * but returning "0" (= NOP) always the bit 6 of the operation is not set.
+	  * When it is set the normal opcode is returned.
+	  * This mirror class will be only visible from the CPU. */
+	class MemoryVideoCode final : public MCHEmul::MirrorPhysicalStorageSubset
+	{
+		public:
+		MemoryVideoCode (int id, 
+			PhysicalStorageSubset* pSS, const MCHEmul::Address& a)
+			: MCHEmul::MirrorPhysicalStorageSubset (id, pSS, a),
+			  _lastValueRead (MCHEmul::UByte::_0)
+							{ }
+
+		private:
+		virtual void setValue (size_t nB, const MCHEmul::UByte& d) override
+							{ /** not for writtin anything. */ }
+		virtual const MCHEmul::UByte& readValue (size_t nB) const override;
+
+		private:
+		mutable MCHEmul::UByte _lastValueRead;
+	};
+
+
 	/** The memory itself for the ZX81. */
 	class Memory final : public MCHEmul::Memory
 	{
@@ -30,19 +57,27 @@ namespace ZX81
 		};
 
 		// Phisical Storages
-		static const int _RAM_SET				= 1;
-		static const int _ROM_SET				= 2;
+		static const int _RAM_SET					= 1;
+		static const int _ROM_SET					= 2;
 
 		// Subsets
-		static const int _STACK_SUBSET			= 100;	// By default the full RAM!
-		static const int _ROM_SUBSET			= 101;
-		static const int _ROMSHADOW_SUBSET		= 102;
-		static const int _RAM1K_SUBSET			= 103;
-		static const int _RAM1K_UC_SUBSET		= 104;
-		static const int _RAM16K_SUBSET			= 105;
+		static const int _ROM_SUBSET				= 101;
+		static const int _ROMSHADOW1_SUBSET			= 102;
+		static const int _RAM1K_SUBSET				= 103;
+		static const int _RAM15K_UC_SUBSET			= 104;
+		static const int _RAM16K_SUBSET				= 105;
+		static const int _ROMSHADOW2_SUBSET			= 106;
+		static const int _ROMSHADOW3_SUBSET			= 107;
+		static const int _RAM1KSHADOW_SUBSET		= 108;
+		static const int _RAM15KSHADOW_UC_SUBSET	= 109;
+		static const int _RAM16KSHADOW_SUBSET		= 110;
+		static const int _RAM1K_V_SUBSET			= 111;
+		static const int _RAM15K_V_SUBSET			= 112;
+		static const int _RAM16K_V_SUBSET			= 113;
 
 		// Views
-		static const int _CPU_VIEW				= 0;
+		static const int _CPU_VIEW					= 0;
+		static const int _ULA_VIEW					= 1;
 
 		/** The constructor receives the posible memory configuration
 			and also the type of machine (indicated by the type of ROM): \n
@@ -73,11 +108,21 @@ namespace ZX81
 
 		// Implementation
 		// The banks of memory that are configurable...
-		MCHEmul::PhysicalStorageSubset* _ROM;
-		MCHEmul::MirrorPhysicalStorageSubset* _ROMSHADOW;
-		MCHEmul::PhysicalStorageSubset* _RAM1K;
-		MCHEmul::EmptyPhysicalStorageSubset* _RAM1K_UC;
-		MCHEmul::PhysicalStorageSubset* _RAM16K;
+		MCHEmul::PhysicalStorageSubset* _ROM;	// To load the data...
+		// Either this 2... (and the equivalent in video zone)
+		MCHEmul::Stack* _RAM1K;
+		MCHEmul::MirrorPhysicalStorageSubset* _RAM1K_S;
+		ZX81::MemoryVideoCode* _RAM1K_V;
+		MCHEmul::EmptyPhysicalStorageSubset* _RAM15K_UC;
+		MCHEmul::MirrorPhysicalStorageSubset* _RAM15K_UC_S;
+		ZX81::MemoryVideoCode* _RAM15K_V;
+		// ...or this one (and the equivalent in the video zone)
+		MCHEmul::Stack* _RAM16K;
+		MCHEmul::MirrorPhysicalStorageSubset* _RAM16K_S;
+		ZX81::MemoryVideoCode* _RAM16K_V;
+		// The id of the subset used for the stack...
+		// that will depend on the configuration!
+		int _STACK_SUBSET;
 	};
 }
 

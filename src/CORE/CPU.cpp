@@ -11,6 +11,7 @@ MCHEmul::CPU::CPU (int id, const MCHEmul::CPUArchitecture& a,
 	const MCHEmul::Attributes& attrs)
 	: MCHEmul::MotherboardElement (id, "CPU", attrs),
 	  _architecture (a), _registers (r), _statusRegister (sR), _instructions (ins),
+	  _lastINOUTAddress (), _lastINOUTData (),
 	  _programCounter (a.numberBytes ()), _memory (nullptr), _interrupts (),
 	  _state (MCHEmul::CPU::_EXECUTINGINSTRUCTION),
 	  _deepDebugFile (nullptr),
@@ -130,6 +131,10 @@ bool MCHEmul::CPU::initialize ()
 
 	for (auto& i : _registers)
 		i.initialize ();
+
+	_lastINOUTAddress = MCHEmul::Address ();
+	
+	_lastINOUTData = { };
 
 	_statusRegister.initialize ();
 
@@ -350,8 +355,11 @@ bool MCHEmul::CPU::when_ExecutingInstruction_PerCycle ()
 				*_deepDebugFile << "\t\t\t\tInterrupt launched:" 
 								<< std::to_string (_currentInterruption -> id ()) << "\n";
 
-			result = _currentInterruption -> 
-				executeOver (this, _clyclesAtInterruption);
+			if (!(result = _currentInterruption -> 
+				executeOver (this, _clyclesAtInterruption)))
+				return (result);
+
+			_lastCPUClockCycles += _currentInterruption -> cycledAfterLaunch ();
 
 			_interruptRequested = -1; // No more requested...
 
@@ -382,8 +390,9 @@ bool MCHEmul::CPU::when_ExecutingInstruction_PerCycle ()
 				sdd = MCHEmul::removeAll0 (_programCounter.asString ()) + "(Stack "
 						+ std::to_string (memoryRef () -> stack () -> position ()) + ") ";
 
-			result = _currentInstruction -> 
-				execute (this, _memory, _memory -> stack (), &_programCounter);
+			if (!(result = _currentInstruction -> 
+				execute (this, _memory, _memory -> stack (), &_programCounter)))
+				return (result);
 
 			_lastCPUClockCycles += _currentInstruction -> additionalClockCycles (); // Just in case...
 
@@ -472,7 +481,13 @@ bool MCHEmul::CPU::when_ExecutingInstruction_Full ()
 
 		_interruptRequested = -1; // No longer valid...
 
-		return (_currentInterruption -> executeOver (this, _clyclesAtInterruption));
+		bool result = true;
+		if (result = _currentInterruption -> executeOver (this, _clyclesAtInterruption))
+			_lastCPUClockCycles += _currentInterruption -> cycledAfterLaunch ();
+
+		_currentInterruption = nullptr;
+	
+		return (result);
 	}
 	else
 	{

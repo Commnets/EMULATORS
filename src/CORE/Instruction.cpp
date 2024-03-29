@@ -282,8 +282,15 @@ bool MCHEmul::InstructionDefined::execute (MCHEmul::CPU* c, MCHEmul::Memory* m, 
 
 	bool f = true;
 	bool r = executeImpl (f);
-	if (r && !f)
-		pc -= memoryPositions ();
+	if (r)
+	{
+		if (!f)
+			pc -= memoryPositions ();
+
+		c -> setLastINOUTAddress (_lastINOUTAddress);
+
+		c -> setLastINOUTData (_lastINOUTData);
+	}
 
 	return (r);
 }

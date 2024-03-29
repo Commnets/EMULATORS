@@ -4,8 +4,8 @@
 // ---
 ZX81::Cartridge::Cartridge ()
 	: ZX81::EdgeConnectorPeripheral (_ID,
-		{ { "Name", "Commodore VIC20 Cartridge" },
-		  { "Manufacturer", "Commodore Business Machines CBM" } }), // This parameters can be changed when connecting data...
+		{ { "Name", "Sinclair ZX80 Cartridge" },
+		  { "Manufacturer", "Various" } }), // This parameters can be changed when connecting data...
 	  _dataDumped (false),
 	  _memoryRef (nullptr), _memoryView (nullptr)
 {
@@ -15,7 +15,8 @@ ZX81::Cartridge::Cartridge ()
 // ---
 bool ZX81::Cartridge::connectData (MCHEmul::FileData* dt)
 { 
-	// TODO: Check that the format is valid...
+	// TODO: 
+	// Check that the format is valid...
 
 	setData (std::move (dt -> asMemoryBlocks ())); 
 
@@ -56,6 +57,7 @@ void ZX81::Cartridge::dumpDataInto (ZX81::Memory* m, MCHEmul::MemoryView* mV)
 	switch (type ())
 	{
 		// TODO
+		// Possible to configure the memory accordinly...
 
 		default:
 			break;

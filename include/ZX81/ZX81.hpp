@@ -18,63 +18,11 @@
 #include <CORE/incs.hpp>
 #include <SINCLAIR/incs.hpp>
 #include <ZX81/Memory.hpp>
+#include <ZX81/ULA.hpp>
 
 namespace ZX81
 {
-	class ULA;
-
-	// Port used in the ZX81...
-	/**
-	  * PORT FE: \n
-	  * When reading: \n
-	  *		bits 0 - 4	= keyboard row status. \n
-	  *		bit 5		= not used. Always at true. \n
-	  *		bit 6		= Display refresh rate. 0 = 60Hz, 1 = 50Hz. \n
-	  *		bit 7		= Cassette input. 0 = normal. 1 = pulse. \n
-	  * When writting: \n
-	  *		Whatever value, enables NMI generator. \n
-	  *		NMIs (Non maskable interrupts) are used during SLOW mode vertical blanking
-	  *		periods to count the number of drawn blank scanlines.
-	  * Listen events from the OSIO (@see OSIO)
-	  */
-	class PortFE final : public FZ80::Z80Port
-	{
-		public:
-		friend ULA;
-
-		static const int _ID = 0xfe;
-		static const std::string _NAME;
-
-		PortFE (bool ntsc)
-			: FZ80::Z80Port (_ID, _NAME),
-			  _NTSC (ntsc),
-			  _keyboardStatus (8, MCHEmul::UByte::_0)
-							{ initializeInternalValues (); }
-
-		bool NTSC () const
-							{ return (_NTSC); }
-
-		virtual MCHEmul::UByte value () const override;
-		virtual void setValue (const MCHEmul::UByte& v) override;
-
-		virtual void initialize () override;
-
-		private:
-		/** Invoked from ULA. */
-		void setKeyboardStatus (size_t r, size_t c, bool v)
-							{ _keyboardStatus [r].setBit (c, v); }
-
-		// Implemtation
-		void initializeInternalValues ();
-
-		private:
-		bool _NTSC;
-
-		// Implemenetation
-		/** Where the status of the keyboard matrix is kept. */
-		std::vector <MCHEmul::UByte> _keyboardStatus;
-	};
-
+	/** The computer. */
 	class SinclairZX81 final : public SINCLAIR::Computer
 	{
 		public:
@@ -90,10 +38,19 @@ namespace ZX81
 		SinclairZX81 (Memory::Configuration cfg,
 			VisualSystem vS, unsigned char tc /** The configuration. */);
 
+		/** To get a reference to the ULA chip. */
+		const ULA* ula () const
+							{ return (static_cast <const ULA*> (chip (ULA::_ID))); }
+		ULA* ula ()
+							{ return (static_cast <ULA*> (chip (ULA::_ID))); }
+
 		virtual bool initialize (bool iM = true) override;
 
 		private:
 		virtual void processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifier* n) override;
+
+		/** In the ZX81 the A6 (address bus is connected with the INT. */
+		virtual void specificComputerCycle () override;
 
 		// Managing memory configuration...
 		/** To get the configuration. */
@@ -109,6 +66,8 @@ namespace ZX81
 		static MCHEmul::IODevices standardDevices (VisualSystem vS);
 
 		protected:
+		/** To control the status of the A6. */
+		MCHEmul::Pulse _A6;
 		/** The video system used by the commodore VIC20. */
 		VisualSystem _visualSystem;
 	};

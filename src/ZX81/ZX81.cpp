@@ -1,5 +1,5 @@
 #include <ZX81/ZX81.hpp>
-#include <ZX81/ULA.hpp>
+#include <ZX81/PortManager.hpp>
 #include <ZX81/Screen.hpp>
 #include <ZX81/OSIO.hpp>
 #include <ZX81/EdgeConnector.hpp>
@@ -7,65 +7,33 @@
 #include <FZ80/CZ80.hpp>
 #include <FZ80/NMIInterrupt.hpp>
 
-const std::string ZX81::PortFE::_NAME = "FE";
-
-// ---
-MCHEmul::UByte ZX81::PortFE::value () const
-{
-	MCHEmul::UByte result = 0b0010000 |		// But 5 is always set...
-		(_NTSC ? 0b00000000 : 0b01000000);	// Bit 6 set when 50Hz = PAL = !NTSC...
-
-	// What row to read is determined by the value of the register B!
-	MCHEmul::UByte bVal = 
-		static_cast <const FZ80::CZ80*> (cpu ()) -> bRegister ().values ()[0];
-	for (size_t i = 0; i < 7; i++) // Can be pressed simultaneously...
-		if (!bVal.bit (i)) result |= _keyboardStatus [i];
-
-	return (result);
-}
-
-// ---
-void ZX81::PortFE::setValue (const MCHEmul::UByte& v)
-{
-	static_cast <FZ80::CZ80*> 
-		(cpu ()) -> interrupt (FZ80::NMIInterrupt::_ID) -> setActive (true);
-}
-
-// ---
-void ZX81::PortFE::initialize ()
-{
-	FZ80::Z80Port::initialize ();
-
-	initializeInternalValues ();
-}
-
-// ---
-void ZX81::PortFE::initializeInternalValues ()
-{
-	for (size_t i = 0; i < 8;
-		_keyboardStatus [i++] = MCHEmul::UByte::_0);
-}
-
 // ---
 ZX81::SinclairZX81::SinclairZX81 (ZX81::Memory::Configuration cfg, 
 		ZX81::SinclairZX81::VisualSystem vS, unsigned char tc)
 	: SINCLAIR::Computer 
-		(new FZ80::CZ80 (0,
-			{ { ZX81::PortFE::_ID, new ZX81::PortFE (vS == ZX81::SinclairZX81::VisualSystem::_NTSC) } }),
+		(new FZ80::CZ80 (0, 
+			{ }), // Some other ports (the ones related with chips) are added later...
 		 ZX81::SinclairZX81::standardChips (vS),
 		 new ZX81::Memory (cfg, tc), // Depending on the configuration...
 		 ZX81::SinclairZX81::standardDevices (vS),
-		 vS == ZX81::SinclairZX81::VisualSystem::_PAL ? _PALCLOCK : _NTSCCLOCK,
+		 _CLOCK, // In ZX81 the speed is constant as the CPU is aimed also to draw!
 		 { }, { }, // The ZX81 emulation has been done without neither Buses nor Wires!
 		 { { "Name", "ZX81" },
-		   { "Manufacturer", "Sinclair Reserach/Timex Coporation" },
+		   { "Manufacturer", "Sinclair Research/Timex Coporation" },
 		   { "Year", "1981" }
 		 }),
+	  _A6 (false),
 	  _visualSystem (vS)
 {
-	// The ULA has to be "linked" to the PortFE...always...
-	static_cast <ZX81::ULA*> (chip (ZX81::ULA::_ID)) -> 
-		linkToPortFE (static_cast <ZX81::PortFE*> (static_cast <FZ80::CZ80*> (cpu ()) -> port (ZX81::PortFE::_ID)));
+	// Add the port manager for all ports!
+	ZX81::PortManager* pM = new PortManager;
+	FZ80::Z80PortsMap pMps;
+	for (unsigned short i = 0; i < 256; i++)
+		pMps.insert (FZ80::Z80PortsMap::value_type ((unsigned char) i, pM));
+	static_cast <FZ80::CZ80*> (cpu ()) -> addPorts (pMps);
+
+	// Assign the ULA to the PortManager...
+	pM -> linkToULA (static_cast <ZX81::ULA*> (chip (ZX81::ULA::_ID)));
 
 	setConfiguration (cfg, false /** Not restart at initialization. */);
 }
@@ -110,6 +78,15 @@ void ZX81::SinclairZX81::processEvent (const MCHEmul::Event& evnt, MCHEmul::Noti
 }
 
 // ---
+void ZX81::SinclairZX81::specificComputerCycle ()
+{
+	_A6.set ((cpu () -> lastINOUTAddress ().value () & 0b01000000) != 0);
+	if (_A6.negativeEdge ()) // From 1 to 0...
+		cpu () -> requestInterrupt
+			(FZ80::INTInterrupt::_ID, cpu () -> clockCycles (), nullptr, 2);
+}
+
+// ---
 void ZX81::SinclairZX81::setConfiguration (ZX81::Memory::Configuration cfg, bool rs) 
 {
 	static_cast <ZX81::Memory*> (memory ()) -> setConfiguration (cfg);
@@ -130,8 +107,8 @@ MCHEmul::Chips ZX81::SinclairZX81::standardChips (ZX81::SinclairZX81::VisualSyst
 	// The ULA
 	result.insert (MCHEmul::Chips::value_type (ZX81::ULA::_ID, 
 		(vS == ZX81::SinclairZX81::VisualSystem::_PAL) // Will depend on the type of screen...
-			? (ZX81::ULA*) new ZX81::ULA_PAL ()
-			: (ZX81::ULA*) new ZX81::ULA_NTSC ()));
+			? (ZX81::ULA*) new ZX81::ULA_PAL (ZX81::Memory::_ULA_VIEW)
+			: (ZX81::ULA*) new ZX81::ULA_NTSC (ZX81::Memory::_ULA_VIEW)));
 
 	return (result);
 }

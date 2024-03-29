@@ -13,25 +13,13 @@ const std::string FZ80::CZ80::_ZEROFLAGNAME = "Z";
 const std::string FZ80::CZ80::_SIGNFLAGNAME = "S";
 
 // ---
-MCHEmul::UByte FZ80::Z80Port::value () const
-{
-	return (_cpu -> portValue (_id));
-}
-
-// ---
-void FZ80::Z80Port::setValue (const MCHEmul::UByte& v)
-{
-	_cpu -> setPortValue (_id, v);
-}
-
-// ---
 MCHEmul::InfoStructure FZ80::Z80Port::getInfoStructure () const
 {
 	MCHEmul::InfoStructure result;
 
 	result.add ("ID", _id);
 	result.add ("NAME", _name);
-	result.add ("VALUE", value ());
+	result.add ("ATTRS", _attributes);
 
 	return (result);
 }
@@ -56,7 +44,7 @@ FZ80::CZ80::CZ80 (int id, const Z80PortsMap& pts,
 	  _ixRegister  ({ &ixhRegister (), &ixlRegister () }),
 	  _iyRegister  ({ &iyhRegister (), &iylRegister () }),
 	  _IFF1 (false), _IFF2 (false),
-	  _ports (pts), _portsRaw (256, nullptr)
+	  _ports (pts), _portsRaw (256, FZ80::Z80PortsPlainList ()) // None...
 {
 	// The reference to the memory has not set still here...
 	// It is linked to the CPU at computer (class) level!
@@ -65,20 +53,27 @@ FZ80::CZ80::CZ80 (int id, const Z80PortsMap& pts,
 	addInterrupt (new FZ80::INTInterrupt);
 	addInterrupt (new FZ80::NMIInterrupt);
 
-	// The map of ports is converted into a list (raw) of ports...
-	// The non defined ports will be set as Basic ones!
-	FZ80::Z80PortsMap::const_iterator i;
-	for (unsigned short j = 0; j < 256; j++)
-		_portsRaw [(size_t) j] = ((i = _ports.find ((unsigned char) j)) == _ports.end ()) 
-			? new FZ80::Z80BasicPort ((unsigned char) j, "-") : (*i).second;
-	for (unsigned short j = 0; j < 256; _portsRaw [(size_t) j++] -> _cpu = this); // Assign the port to this object!
+	assignPorts (pts);
 }
 
 // ---
-FZ80::CZ80::~CZ80 ()
+void FZ80::CZ80::addPorts (const FZ80::Z80PortsMap& pts)
 {
-	for (auto i : _portsRaw)
-		delete i;
+	for (const auto& i : pts)
+	{ 
+		Z80PortsPlainList& pR = _portsRaw [(size_t) i.first];
+		// If the port to add, didn't exist already at the position requested... 
+		if (std::find (pR.begin (), pR.end (), i.second) == pR.end ())
+		{ 
+			// ...it is added in the whole list...
+			_ports.insert (Z80PortsMap::value_type (i.first, i.second));
+			// ...and in the quicker access too!
+			pR.emplace_back (i.second);
+
+			// Dont forget to assign the CPU to the port...
+			i.second -> _cpu = this;
+		}
+	}
 }
 
 // ---
@@ -87,14 +82,76 @@ bool FZ80::CZ80::initialize ()
 	if (!MCHEmul::CPU::initialize ())
 		return (false);
 
-	_INTMode = 0;
-	_IFF1 = true;
+	setINTMode (0);
+	_IFF1 = false;
 	_IFF2 = false;
 
-	for (auto& i : _portsRaw)
-		i -> initialize ();
+	// The same behaviour could be initialized more than once!
+	for (auto& i : _ports)
+		i.second -> initialize ();
 
 	return (true);
+}
+
+// ---
+void FZ80::CZ80::requestInterrupt (int id, unsigned int nC, MCHEmul::Chip* src, int cR)
+{
+	if (_interruptRequested == -1 && id != -1 && _haltActive == true)
+		_haltActive = false; // When the interrupt is requested, 
+							 // the halt blocking situation is released!
+
+	// Do what iit has to do...
+	MCHEmul::CPU::requestInterrupt (id, nC, src, cR);
+}
+
+// ---
+MCHEmul::InfoStructure FZ80::CZ80::getInfoStructure () const
+{
+	MCHEmul::InfoStructure result = std::move (MCHEmul::CPU::getInfoStructure ());
+
+	// Add info about the ports managed by the CPU...
+	unsigned char ct = 0;
+	MCHEmul::InfoStructure pts;
+	for (const auto& i : _ports)
+		pts.add (std::to_string (ct++), i.second -> getInfoStructure ());
+	result.add ("Ports", pts);
+
+	return (result);
+}
+
+// ---
+void FZ80::CZ80::deletePorts ()
+{
+	// Creates a list of the Ports to delete with no repetition!
+	FZ80::Z80PortsPlainList pDel;
+	for (const auto& i : _ports)
+		if (std::find (pDel.begin (), pDel.end (), i.second) == pDel.end ())
+			pDel.emplace_back (i.second);
+	// ...and delete them!
+	for (const auto& i : pDel)
+		delete (i);
+}
+
+// ---
+inline void FZ80::CZ80::assignPorts (const Z80PortsMap& pm)
+{
+	deletePorts ();
+
+	_ports = pm;
+
+	// The map of ports is converted into a list (raw) of ports...
+	// There acn be more than 1 port per id!
+	for (unsigned short i = 0; i < 256; i++)
+	{ 
+		auto lP = pm.equal_range ((unsigned char) i); // To get all ports for that specific id!
+		for (FZ80::Z80PortsMap::const_iterator j = lP.first; j != lP.second; j++)
+			_portsRaw [(size_t) i].emplace_back (j -> second);
+	}
+
+	// All ports are assigned to this object...
+	for (unsigned short i = 0; i < 256; i++)
+		for (const auto& j : _portsRaw [(size_t) i])
+			j -> _cpu = this;
 }
 
 // ---

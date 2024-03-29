@@ -32,6 +32,7 @@ namespace MCHEmul
 			: InfoClass ("Interrupt"),
 			  _id (id),
 			  _cyclesToLaunch (cL),
+			  _cyclesAfterLaunch (0), // Usually set when executed, if needed!
 			  _active (true /** by default. */),
 			  _inExecution (false),
 			  _lastClockCyclesExecuted (0)
@@ -81,8 +82,13 @@ namespace MCHEmul
 		/** Receive the CPU the interrupts works for,
 			and the number of cycles when the execution takes place. */
 		bool executeOver (CPU* c, unsigned int cC);
+
+		/** To know the cycles that the interrupt takes. 
+			First variable is usually know before execution and the other, after execution. */
 		unsigned int cyclesToLaunch () const
 							{ return (_cyclesToLaunch); }
+		unsigned int cycledAfterLaunch () const
+							{ return (_cyclesAfterLaunch); }
 
 		/**
 		  *	The name of the fields are: \n
@@ -116,6 +122,7 @@ namespace MCHEmul
 		protected:
 		int _id;
 		unsigned int _cyclesToLaunch;
+		unsigned int _cyclesAfterLaunch; // Rare but, used in some cases...
 		bool _active;
 		bool _inExecution;
 		

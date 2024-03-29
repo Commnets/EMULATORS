@@ -6,7 +6,7 @@ ZX81::EdgeConnector::EdgeConnector ()
 	: MCHEmul::IODevice (MCHEmul::IODevice::Type::_INPUT, _ID, 
 		{ { "Name", "Expansion Port" },
 		  { "Type", "Input/Output" },
-		  { "Manufacturer", "Commodore Business Machines CBM" } }),
+		  { "Manufacturer", "Sinclair Research/Timex Coporation" } }),
 	  _expansionElement (nullptr),
 	  _expansionElementOut (false) // Only true when the expansion element is extracted...
 {

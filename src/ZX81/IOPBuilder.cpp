@@ -1,4 +1,5 @@
 #include <ZX81/IOPBuilder.hpp>
+#include <ZX81/Cartridge.hpp>
 
 // ---
 MCHEmul::IOPeripheral* ZX81::IOPeripheralBuilder::createPeripheral 
@@ -6,8 +7,10 @@ MCHEmul::IOPeripheral* ZX81::IOPeripheralBuilder::createPeripheral
 {
 	MCHEmul::IOPeripheral* result = nullptr;
 
-	// TODO
-	result = SINCLAIR::IOPeripheralBuilder::createPeripheral (id, c, prms);
+	if (id == ZX81::Cartridge::_ID)
+		result = new ZX81::Cartridge;
+	else
+		result = SINCLAIR::IOPeripheralBuilder::createPeripheral (id, c, prms);
 
 	// Take care, it could be null...
 	return (result);

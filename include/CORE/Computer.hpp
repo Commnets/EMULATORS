@@ -338,7 +338,7 @@ namespace MCHEmul
 		// Managing the cycles...
 		/** 
 		  * Execute one computer cycle (cpu + chips). \n
-		  * This method is the core one. \n
+		  * This method is the very core one. \n
 		  * This is where the clock is managed. \n
 		  * The number of cycles to wait (to maintain the speed)
 		  * will depend on whether the clock of the CPU is either internal or external. \n
@@ -438,6 +438,12 @@ namespace MCHEmul
 		virtual InfoStructure getInfoStructure () const override;
 
 		protected:
+		/** To run something specific in a computer cycle. \n 
+			Very rare, but just to allow an exit way per computer cycle. 
+			By default it does nothing. */
+		virtual void specificComputerCycle ()
+							{ }
+
 		/** In the method runComputerCycle, 
 			before executing the cycle related to the computer (cpu + chips), this method is invoked
 			just in case an action should be executed. \n

@@ -10,7 +10,7 @@ bool FZ80::NMIInterrupt::executeOverImpl (MCHEmul::CPU* c, unsigned int cC)
 
 	c -> memoryRef () -> stack () -> push ((_exeAddress = c -> programCounter ().asAddress ()).bytes ());
 	static_cast <FZ80::CZ80*> (c) -> setIFF2 (static_cast <FZ80::CZ80*> (c) -> IFF1 ()); // save IFF2
-	static_cast <FZ80::CZ80*> (c) -> setIFF1 (false);
+	static_cast <FZ80::CZ80*> (c) -> setIFF1 (false); // For not other interrupts to happen...
 	c -> programCounter ().setAddress (static_cast <FZ80::CZ80*> (c) -> NMIVectorAddress ());
 	
 	return (true);

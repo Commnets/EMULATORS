@@ -55,7 +55,7 @@ namespace FZ80
 	// ---
 	inline bool IN_General::executeWith (MCHEmul::Register& r, unsigned char np)
 	{
-		_lastINOUTAddress = MCHEmul::Address ({ registerA ().values ()[0], np }, true);
+		_lastINOUTAddress = MCHEmul::Address ({ registerB ().values ()[0], np }, true);
 
 		MCHEmul::UByte v;
 		r.set ({ v = static_cast <CZ80*> (cpu ()) -> portValue (np) });
@@ -179,7 +179,8 @@ namespace FZ80
 	// ---
 	inline bool OUT_General::executeWith (MCHEmul::Register& r, unsigned char np)
 	{ 
-		_lastINOUTAddress = MCHEmul::Address ({ registerA ().values ()[0], np }, true);
+		// With any other ergister, the B register is moved at the address bus...
+		_lastINOUTAddress = MCHEmul::Address ({ registerB ().values ()[0], np }, true);
 
 		static_cast <CZ80*> (cpu ()) -> setPortValue (np, r.values ()[0].value ()); 
 		

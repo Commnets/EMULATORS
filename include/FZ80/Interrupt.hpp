@@ -22,8 +22,8 @@ namespace FZ80
 	class Interrupt : public MCHEmul::CPUInterrupt
 	{
 		public:
-		Interrupt (int id)
-			: MCHEmul::CPUInterrupt (id, 7),
+		Interrupt (int id, unsigned int cL)
+			: MCHEmul::CPUInterrupt (id, cL),
 			  _exeAddress ()
 							{ }
 

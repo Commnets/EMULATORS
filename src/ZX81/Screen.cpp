@@ -8,7 +8,7 @@ ZX81::Screen::Screen (double hz, int w, int h, const MCHEmul::Attributes& attrs)
 {
 	bool e;
 	MCHEmul::DataMemoryBlock dt = MCHEmul::DataMemoryBlock::loadBinaryFile 
-		("./zx81_1.rom", e, 0 /** no address, no needed */, true);
+		("./zx81_1.rom", e, 0 /** no address needed */, true);
 	if (!e)
 	{
 		for (size_t i = 0x1e00; i < 0x2000; i += 8) // 64 characters (8 bytes each) = 512bytes
@@ -28,14 +28,15 @@ ZX81::Screen::Screen (double hz, int w, int h, const MCHEmul::Attributes& attrs)
 // ---
 void ZX81::Screen::drawAdditional ()
 {
-	// The color...
-	unsigned int bC = ((_borderColor + 1) > 15) ? 0 : _borderColor + 1;
-
 	if (_drawBorder)
 	{
+		// The color...
+		// Only 4 are available...
+		unsigned int bC = (_borderColor > 3) ? 0 : _borderColor;
+
 		// Where is the screen...
 		ZX81::ULA* gC = static_cast <ZX81::ULA*> (_graphicalChip);
-		short x1, y1, x2, y2;
+		unsigned short x1, y1, x2, y2;
 		gC -> screenPositions (x1, y1, x2, y2);
 
 		// Draws rectangles and reference lines...

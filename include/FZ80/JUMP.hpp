@@ -58,7 +58,7 @@ namespace FZ80
 
 		// The value can be negative meaning back jump!
 		// At this point the pc has already been incremened in two, as it is an IntructionDefined!
-		int jR = MCHEmul::UInt ({ parameters ()[1].value () }).asInt () - 2; 
+		int jR = MCHEmul::UInt ({ parameters ()[1] /** to use UByte constructor. */ }).asInt () - 2;
 		if (jR == 0)
 			return; // No need to continue...
 

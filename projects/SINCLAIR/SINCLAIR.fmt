@@ -1,3 +1,11 @@
 #Formats Associated to Sinclair Commands
 #(C) 2024 Ignacio Cea Fornies
 ?./Standard.fmt
+#---
+;INTInterrupt
+Type:INT, Id:@ID@, In Execution:@EXECUTION@, In Address:@ADDRESS@
+#---
+#---
+;NMIInterrupt
+Type:NMI, Id:@ID@, In Execution:@EXECUTION@, In Address:@ADDRESS@
+#---

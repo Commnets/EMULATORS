@@ -21,17 +21,30 @@
 namespace COMMODORE
 {
 	/** The chip that takes care of anything around the graphics in computers like VIC20. 
-		@see GraphicalChip and @see SoundChip 
-		The emulation has been built following: 
-		http://tinyvga.com/6561 */
+		@see GraphicalChip and @see SoundChip. \n
+		The emulation has been built following: http://tinyvga.com/6561.
+		\n
+		Any case: \n
+		This is Ignacio Cea estimation...
+		Every horizontal raster line takes 64us (including horizontal retrace = 15us as PAL/NTSC standard definition). \n
+		1/1.108.404 = 0,902198us per cycle in PAL. 64us/0,902198 = 71 cycles per raster line in PAL. \n
+		1/1.022.727 = 0,977778us per cycle in NTSC. 64us/0,977778us = 65 cycles per raster line in NTSC. \n
+		VICI clock speed input is * 14 clock CPU in NTSC (14,318MHz), and x 4 in PAL (4,433MHz). \n
+		PAL number of visible columns (defined) = 233 and NTSC = 210. \n
+		So for the border = (233 - (22 columns * 8 pixels)) / 2 = 28 + 29 pixels border (left/right) in PAL and 17 + 17 in NTSC. \n
+		The way they are distributed will depend of the valid values for screen position adjustment. \n
+		Cycles have been multiplied by 8 pixels but when read data for the screen any column is divided inlow and high nibble.
+	  */
 	class VICI : public MCHEmul::GraphicalChip
 	{
 		public:
-		/** VICI is both a Graphical and a Sound Chip. \n
+		/** 
+			VICI is both a Graphical and a Sound Chip. \n
 			VICI should then inherit from both MCHEmul::GraphicalCip & MCHEmul::SoundChip,
 			but this could generate ambiguity when calling some parent methods, that will be the case. \n
 			The main function of the VICI is, however, the graphical one. \n
-			VICI will then inherit from MCHEmul::GraphicalChip only and it will use an object inside inheriting from MCHEmul::SoundChip. */
+			VICI will then inherit from MCHEmul::GraphicalChip only and it will use an object inside inheriting from MCHEmul::SoundChip. 
+		  */
 		class SoundFunction final : public MCHEmul::SoundChip
 		{
 			public:
@@ -160,7 +173,7 @@ namespace COMMODORE
 							{ }
 		};
 
-		// Invoked from the method "simulation"....
+		// Invoked from the method "simulation"...
 		/** Different actions are taken attending the raster cycle. */
 		void treatRasterCycle ();
 		/** Read and draw the graphics. */

@@ -24,6 +24,7 @@
 #include <ZX81/Screen.hpp>
 #include <ZX81/OSIO.hpp>
 #include <ZX81/ULA.hpp>
+#include <ZX81/PortManager.hpp>
 #include <ZX81/ZX81.hpp>
 #include <ZX81/EdgeConnector.hpp>
 #include <ZX81/EdgeConnectorPeripherals.hpp>

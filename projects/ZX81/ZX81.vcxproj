@@ -161,8 +161,11 @@
     <ClInclude Include="..\..\include\ZX81\incs.hpp" />
     <ClInclude Include="..\..\include\ZX81\IOPBuilder.hpp" />
     <ClInclude Include="..\..\include\ZX81\Memory.hpp" />
+    <ClInclude Include="..\..\include\ZX81\OSIO.hpp" />
+    <ClInclude Include="..\..\include\ZX81\PortManager.hpp" />
     <ClInclude Include="..\..\include\ZX81\Screen.hpp" />
     <ClInclude Include="..\..\include\ZX81\ULA.hpp" />
+    <ClInclude Include="..\..\include\ZX81\ULARegisters.hpp" />
     <ClInclude Include="..\..\include\ZX81\ZX81.hpp" />
     <ClInclude Include="..\..\include\ZX81\ZX81Emulator.hpp" />
   </ItemGroup>
@@ -175,8 +178,10 @@
     <ClCompile Include="..\..\src\ZX81\IOPBuilder.cpp" />
     <ClCompile Include="..\..\src\ZX81\Memory.cpp" />
     <ClCompile Include="..\..\src\ZX81\OSIO.cpp" />
+    <ClCompile Include="..\..\src\ZX81\PortManager.cpp" />
     <ClCompile Include="..\..\src\ZX81\Screen.cpp" />
     <ClCompile Include="..\..\src\ZX81\ULA.cpp" />
+    <ClCompile Include="..\..\src\ZX81\ULARegisters.cpp" />
     <ClCompile Include="..\..\src\ZX81\ZX81.cpp" />
     <ClCompile Include="..\..\src\ZX81\ZX81Emulator.cpp" />
   </ItemGroup>

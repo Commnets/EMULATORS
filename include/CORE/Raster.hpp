@@ -50,6 +50,11 @@ namespace MCHEmul
 		unsigned short nextPositionAtBase0 () const
 						{ RasterData c = *this; c.add (1); return (c.currentPositionAtBase0 ()); }
 
+		/** To restart it. No calculus are done. */
+		void reset ()
+						{ _currentPosition = _firstPosition; 
+						 _currentPosition_0 = _firstPosition_0; }
+
 		// Managing the blank zone...
 		bool isInBlankZone () const
 						{ return ((_currentPosition_0 >= _firstPosition_0 && 
@@ -238,6 +243,10 @@ namespace MCHEmul
 						{ return (_hRasterData); }
 		unsigned char step () const
 						{ return (_step); }
+
+		/** Horizontal & Vertical positions are moved back to the beginning. */
+		void reset ()
+						{ _vRasterData.reset (); _hRasterData.reset (); }
 
 		unsigned short currentLine () const
 						{ return (_vRasterData.currentPosition ()); }

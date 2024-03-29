@@ -81,6 +81,15 @@
     <ClInclude Include="..\..\include\ZX81\ZX81Emulator.hpp">
       <Filter>Archivos de encabezado\Emulators</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\include\ZX81\ULARegisters.hpp">
+      <Filter>Archivos de encabezado\Motherboard\Chips</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\ZX81\PortManager.hpp">
+      <Filter>Archivos de encabezado\Motherboard</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\ZX81\OSIO.hpp">
+      <Filter>Archivos de encabezado\IO</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\ZX81\CommandBuilder.cpp">
@@ -118,6 +127,12 @@
     </ClCompile>
     <ClCompile Include="..\..\src\ZX81\ZX81Emulator.cpp">
       <Filter>Archivos de origen\Emulators</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\ZX81\ULARegisters.cpp">
+      <Filter>Archivos de origen\Motherboard\Chips</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\ZX81\PortManager.cpp">
+      <Filter>Archivos de origen\Motherboard</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

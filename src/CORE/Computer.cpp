@@ -340,6 +340,8 @@ bool MCHEmul::Computer::runComputerCycle (unsigned int a)
 
 			return (false); // Error...
 		}
+
+		specificComputerCycle ();
 	}
 	else
 		_stabilized = (++_currentStabilizationLoops >= _stabilizationLoops);

@@ -6,7 +6,7 @@ C64::Screen::Screen (double hz, int w, int h, const MCHEmul::Attributes& attrs)
 {
 	bool e;
 	MCHEmul::DataMemoryBlock dt = MCHEmul::DataMemoryBlock::loadBinaryFile
-		("./characters.901225-01-ENG.bin", e, 0 /** no address, no needed */, true);
+		("./characters.901225-01-ENG.bin", e, 0 /** no address needed */, true);
 	if (!e)
 	{
 		for (size_t i = 0; i < 4096; i += 8)
@@ -26,23 +26,26 @@ C64::Screen::Screen (double hz, int w, int h, const MCHEmul::Attributes& attrs)
 // ---
 void C64::Screen::drawAdditional ()
 {
-	unsigned int bC = ((_borderColor + 1) > 15) ? 0 : _borderColor + 1; 
-
 	if (_drawBorder)
 	{
+		// The color...
+		// Only 15 are available...
+		unsigned int clr = (_borderColor > 15) ? 0 : _borderColor;
+		unsigned int bC = ((clr + 1) > 15) ? 0 : clr + 1; 
+
 		COMMODORE::VICII* gC = static_cast <COMMODORE::VICII*> (_graphicalChip);
 
 		unsigned short x1, y1, x2, y2;
 		// Draws the border of the display!
 		gC -> raster ().displayPositions (x1, y1, x2, y2);
 		// as C64 behaves, these values can never be wrong neither in order nor in value...
-		drawRectangle ((size_t) (x1 - 1), (size_t) (y1 - 1), (size_t) (x2 + 1), (size_t) (y2 + 1), _borderColor);
+		drawRectangle ((size_t) (x1 - 1), (size_t) (y1 - 1), (size_t) (x2 + 1), (size_t) (y2 + 1), clr);
 
 		// Draw a cuadricula per line of chars...
 		for (unsigned short i = y1 + 8; i <= y2; i += 8)
-			drawHorizontalLineStep ((size_t) (x1 - 1), (size_t) i, (size_t) (x2 - x1 + 3), 2, _borderColor);
+			drawHorizontalLineStep ((size_t) (x1 - 1), (size_t) i, (size_t) (x2 - x1 + 3), 2, clr);
 		for (unsigned short i = x1 + 8; i <= x2; i += 8)
-			drawVerticalLineStep ((size_t) i, (size_t) (y1 - 1), (size_t) (y2 - y1 + 3), 2, _borderColor);
+			drawVerticalLineStep ((size_t) i, (size_t) (y1 - 1), (size_t) (y2 - y1 + 3), 2, clr);
 
 		// Draws the border of the screen!
 		gC -> raster ().screenPositions (x1, y1, x2, y2);

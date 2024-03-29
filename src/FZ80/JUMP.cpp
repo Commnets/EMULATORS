@@ -6,7 +6,9 @@ _INST_IMPL (FZ80::JP)
 	assert (parameters ().size () == 3);
 
 	cpu () -> programCounter ().
-		setAddress (MCHEmul::Address ({ parameters ()[2].value (), parameters ()[1].value () }, false)); // Little endian!
+		setAddress (MCHEmul::Address ({ parameters ()[2].value (), parameters ()[1].value () }, true)); 
+	// Little endian, but already done in the way the parameters are moved...
+	// So true instead false (this is quicker!)
 
 	return (true);
 }
@@ -18,7 +20,7 @@ _INST_IMPL (FZ80::JP_NZ)
 
 	if (!cpu () -> statusRegister ().bitStatus (FZ80::CZ80::_NEGATIVEFLAG))
 		cpu () -> programCounter ().
-			setAddress (MCHEmul::Address ({ parameters ()[2].value (), parameters ()[1].value () }, false)); // Litlle endian!
+			setAddress (MCHEmul::Address ({ parameters ()[2].value (), parameters ()[1].value () }, false)); 
 
 	return (true);
 }
@@ -30,7 +32,7 @@ _INST_IMPL (FZ80::JP_Z)
 
 	if (cpu () -> statusRegister ().bitStatus (FZ80::CZ80::_NEGATIVEFLAG))
 		cpu () -> programCounter ().
-			setAddress (MCHEmul::Address ({ parameters ()[2].value (), parameters ()[1].value () }, false)); // Litlle endian!
+			setAddress (MCHEmul::Address ({ parameters ()[2].value (), parameters ()[1].value () }, false)); 
 
 	return (true);
 }
@@ -42,7 +44,7 @@ _INST_IMPL (FZ80::JP_NC)
 
 	if (!cpu () -> statusRegister ().bitStatus (FZ80::CZ80::_CARRYFLAG))
 		cpu () -> programCounter ().
-			setAddress (MCHEmul::Address ({ parameters ()[2].value (), parameters ()[1].value () }, false)); // Litlle endian!
+			setAddress (MCHEmul::Address ({ parameters ()[2].value (), parameters ()[1].value () }, false)); 
 
 	return (true);
 }
@@ -54,7 +56,7 @@ _INST_IMPL (FZ80::JP_C)
 
 	if (cpu () -> statusRegister ().bitStatus (FZ80::CZ80::_CARRYFLAG))
 		cpu () -> programCounter ().
-			setAddress (MCHEmul::Address ({ parameters ()[2].value (), parameters ()[1].value () }, false)); // Litlle endian!
+			setAddress (MCHEmul::Address ({ parameters ()[2].value (), parameters ()[1].value () }, false)); 
 
 	return (true);
 }
@@ -66,7 +68,7 @@ _INST_IMPL (FZ80::JP_PO)
 
 	if (!cpu () -> statusRegister ().bitStatus (FZ80::CZ80::_PARITYOVERFLOWFLAG))
 		cpu () -> programCounter ().
-			setAddress (MCHEmul::Address ({ parameters ()[2].value (), parameters ()[1].value () }, false)); // Litlle endian!
+			setAddress (MCHEmul::Address ({ parameters ()[2].value (), parameters ()[1].value () }, false)); 
 
 	return (true);
 }
@@ -78,7 +80,7 @@ _INST_IMPL (FZ80::JP_PE)
 
 	if (cpu () -> statusRegister ().bitStatus (FZ80::CZ80::_PARITYOVERFLOWFLAG))
 		cpu () -> programCounter ().
-			setAddress (MCHEmul::Address ({ parameters ()[2].value (), parameters ()[1].value () }, false)); // Litlle endian!
+			setAddress (MCHEmul::Address ({ parameters ()[2].value (), parameters ()[1].value () }, false)); 
 
 	return (true);
 }
@@ -90,7 +92,7 @@ _INST_IMPL (FZ80::JP_P)
 
 	if (!cpu () -> statusRegister ().bitStatus (FZ80::CZ80::_SIGNFLAG))
 		cpu () -> programCounter ().
-			setAddress (MCHEmul::Address ({ parameters ()[2].value (), parameters ()[1].value () }, false)); // Litlle endian!
+			setAddress (MCHEmul::Address ({ parameters ()[2].value (), parameters ()[1].value () }, false)); 
 
 	return (true);
 }
@@ -102,7 +104,7 @@ _INST_IMPL (FZ80::JP_M)
 
 	if (cpu () -> statusRegister ().bitStatus (FZ80::CZ80::_SIGNFLAG))
 		cpu () -> programCounter ().
-			setAddress (MCHEmul::Address ({ parameters ()[2].value (), parameters ()[1].value () }, false)); // Litlle endian!
+			setAddress (MCHEmul::Address ({ parameters ()[2].value (), parameters ()[1].value () }, false)); 
 
 	return (true);
 }
@@ -152,7 +154,7 @@ _INST_IMPL (FZ80::JR_NZ)
 {
 	assert (parameters ().size () == 2);
 
-	if (!cpu () -> statusRegister ().bitStatus (FZ80::CZ80::_NEGATIVEFLAG))
+	if (!cpu () -> statusRegister ().bitStatus (FZ80::CZ80::_ZEROFLAG))
 		executeBranch ();
 
 	return (true);
@@ -163,7 +165,7 @@ _INST_IMPL (FZ80::JR_Z)
 {
 	assert (parameters ().size () == 2);
 
-	if (cpu () -> statusRegister ().bitStatus (FZ80::CZ80::_NEGATIVEFLAG))
+	if (cpu () -> statusRegister ().bitStatus (FZ80::CZ80::_ZEROFLAG))
 		executeBranch ();
 
 	return (true);

@@ -15,22 +15,27 @@
 #define __FZ80_CZX80__
 
 #include <CORE/incs.hpp>
+#include <FZ80/INTInterrupt.hpp>
 
 namespace FZ80
 {
 	class CZ80;
 
-	/** The Z80 m anages many ports.
-		And the way they are understood will depend on the computer,
-		although there is a defaul implementation per each. */
-	class Z80Port : public MCHEmul::Observer
+	/** The Z80 manages many ports (up to 256). \n
+		And the way they are "understood" will depend on the computer,
+		and even to the devices connected to them. */
+	class Z80Port : public MCHEmul::Observer, public MCHEmul::InfoClass
 	{
 		public:
 		friend CZ80;
 
-		Z80Port (unsigned char id, const std::string& name)
-			: _id (id), _name (name),
-			  _cpu (nullptr)
+		/** Always needed an id, a and name and an optional set of attributes. */
+		Z80Port (unsigned char id, const std::string& name, 
+					const MCHEmul::Attributes& attrs = { })
+			: MCHEmul::InfoClass ("Z80Port"),
+			  _id (id), _name (name),
+			  _cpu (nullptr),
+			  _attributes (attrs)
 							{ }
 
 		unsigned char id () const
@@ -41,49 +46,53 @@ namespace FZ80
 							{ return (_cpu); }
 		CZ80* cpu ()
 							{ return (_cpu); }
+		
+		const MCHEmul::Attributes& attributes () const
+							{ return (_attributes); }
+		inline const std::string& attribute (const std::string& atrN) const;
 
 		/** To get & set the values.
-			They must be overloaded, depending on the computer that uses it. */
-		virtual MCHEmul::UByte value () const = 0;
-		virtual void setValue (const MCHEmul::UByte& v) = 0;
+			They must be overloaded, depending on the computer that uses it. 
+			As the port can be connected to many id ports, the port id is also received itself. */
+		virtual MCHEmul::UByte value (unsigned char id) const = 0;
+		virtual MCHEmul::UByte peekValue (unsigned char id) const
+							{ return (value (id)); } // Same than previous but to avoid modify the status... equal by defautl
+		virtual void setValue (unsigned char id, const MCHEmul::UByte& v) = 0;
 
 		virtual void initialize ()
-							{ setValue (0); }
+							{ setValue (0, 0); }
 
-		virtual MCHEmul::InfoStructure getInfoStructure () const;
+		virtual MCHEmul::InfoStructure getInfoStructure () const override;
 
 		protected:
 		unsigned char _id;
 		std::string _name;
+		MCHEmul::Attributes _attributes;
 
 		// Implementation
 		/** It is adjusted at CPU initialization. */
 		CZ80* _cpu;
 	};
 
-	// To simplify the management of a list of ports!...
-	using Z80PortsList = std::vector <Z80Port*>;
-	using Z80PortsMap = std::map <unsigned char, Z80Port*>;
-
-	/** The basic port keeps its own value. */
-	class Z80BasicPort final : public Z80Port
-	{
-		public:
-		Z80BasicPort (unsigned char n, const std::string& name)
-			: Z80Port (n, name),
-			  _value (MCHEmul::UByte::_0)
-							{ }
-
-		virtual MCHEmul::UByte value () const override
-							{ return (_value); }
-		virtual void setValue (const MCHEmul::UByte& v) override
-							{ _value = v; }
+	// ---
+	inline const std::string& Z80Port::attribute (const std::string& aN) const
+	{ 
+		MCHEmul::Attributes::const_iterator i = _attributes.find (aN); 
 		
-		private:
-		MCHEmul::UByte _value;
-	};
+		return ((i == _attributes.end ()) 
+			? MCHEmul::AttributedNotDefined : (*i).second); 
+	}
 
-	/** The Chip CPU type ZX80 */
+	// To simplify the management of a set of ports!...
+	// A very simple list of ports...
+	using Z80PortsPlainList = std::vector <Z80Port*>;
+	// Because the same id can be used for several port behaviours!
+	using Z80PortsMap = std::multimap <unsigned char, Z80Port*>; 
+	// In the same position there could be a set of ports used...
+	using Z80PortsList = std::vector <Z80PortsPlainList>;
+
+	/** The Chip CPU type ZX80. \n
+		Ports in this type of CPY are quite important! */
 	class CZ80 : public MCHEmul::CPU
 	{
 		public:
@@ -144,25 +153,30 @@ namespace FZ80
 			_BIT,					// The parameter is the bit of a register
 		};
 
-		CZ80 (int id, const Z80PortsMap& pts = { },	
+		/** NOTE: \n
+			Take care with the ports map. \n
+			The same port behaviour with different id are allowed,
+			and also many ports under the same id are allowed. */
+		CZ80 (int id, const Z80PortsMap& pts = { },	// Can be assigned later, so they are not mandatory at this point...
 			const MCHEmul::Attributes& attrs = // By default...
 				{  { "Code", "Z80" },
 				   { "Manufacturer", "Zilog"},
 				   { "Year", "1976" },
 				   { "Speed Range", "2.5 - 10 MHz" } });
 
-		~CZ80 ();
+		virtual ~CZ80 ()
+						{ deletePorts (); }
 
 		unsigned char INTmode () const
-						{ return (_INTMode); }
+						{ return (static_cast <const INTInterrupt*> (interrupt (INTInterrupt::_ID)) -> INTMode ()); }
 		void setINTMode (unsigned char iM)
-						{ _INTMode = iM; }
+						{ static_cast <INTInterrupt*> (interrupt (INTInterrupt::_ID)) -> setINTMode (iM); }
 
 		/** In the case of the interrupt type 0, what the processor does is to execute the code of the instruction
 			that is in the data bus. */
 		/** The type of interrupt type 1 uses this address and it is constant. */
 		MCHEmul::Address INT1VectorAddress () const
-							{ return (MCHEmul::Address ({ 0x38, 0xff }, false /** Little - endian */)); }
+							{ return (MCHEmul::Address ({ 0x38, 0x00 }, false /** Little - endian */)); }
 		/** In the case of the interrupt type 2, the address to jump to is deducted from the values in the dataBus and register I. */
 		MCHEmul::Address INT2VectorAddress () const
 							{ return (MCHEmul::Address 
@@ -325,26 +339,51 @@ namespace FZ80
 
 		// Managing the ports...
 		/** Get / Set ports. */
-		const Z80Port* port (unsigned char p) const
+		const Z80PortsPlainList& port (unsigned char p) const // The list can be empty, but it won't ever be null!
 							{ return (_portsRaw [(size_t) p]); }
-		Z80Port* port (unsigned char p)
+		Z80PortsPlainList& port (unsigned char p) // The list returned can be empty, but it won't ever be null!
 							{ return (_portsRaw [(size_t) p]); }
 		const Z80PortsMap& ports () const
 							{ return (_ports); }
+		/** NOTE: \n
+			To replace the ports assigned. \n
+			Take care, all previous ones (if existed) will be deleted, 
+			so if some of the ports received as parameter existed already attached to the cpu,
+			a crash would be generated later when used! */
+		void setPorts (const Z80PortsMap& pts)
+							{ assignPorts (pts); }
+		/** NOTE: \n
+			Just to add a couple of ports. \n
+			If a port existed already at the same location than now is being tried, 
+			it wouldn't be added to avoid having the same port at the same id twice or more!. */
+		void addPorts (const Z80PortsMap& pts);
 
 		/** The way that the port is read, can be changed depending on the computer. \n
-			i.e in ZX Spectrum, when reading port $FE the value of the register A is taken into account. */
+			When the value of a port is read, just buy default the value of the first port associated to that number is returned. */
 		MCHEmul::UByte portValue (unsigned char p) const
-							{ return (_portsRaw [(size_t) p] -> value ()); }
+							{ return ((*(_portsRaw [(size_t) p]).begin ()) -> value (p)); }
 		void setPortValue (unsigned char p, const MCHEmul::UByte& v)
-							{ _portsRaw [(size_t) p] -> setValue (v); }
+							{ for (const auto& i : _portsRaw [(size_t) p]) i -> setValue (p, v); }
 
 		virtual bool initialize () override;
 
-		protected:
-		/** The type of interruption. */
-		unsigned char _INTMode;
+		/** When a interrupt is requested, 
+			and if it possible, the halt situation is unblocked (_haltUnblocked = true) */
+		virtual void requestInterrupt (int id, unsigned int nC, MCHEmul::Chip* src = nullptr, int cR = -1) override;
 
+		// Managing the HALT execution...
+		bool haltActive () const
+							{ return (_haltActive); }
+		void setHaltActive ()
+							{ _haltActive = true; }
+
+		virtual MCHEmul::InfoStructure getInfoStructure () const override;
+
+		private:
+		void deletePorts ();
+		void assignPorts (const Z80PortsMap& pm);
+
+		protected:
 		/** The registers that are made up of two. */
 		MCHEmul::RefRegisters _afRegister;  // A and F
 		MCHEmul::RefRegisters _bcRegister;
@@ -364,7 +403,12 @@ namespace FZ80
 		bool _IFF1;
 		bool _IFF2;
 
-		private:
+		// To manage the special situation when HALT is executed.
+		/** When a interrupt has been requested, 
+			the HALT has to stop, and it is reflected in this variable. */
+		bool _haltActive;
+
+		/** The list of the ports used in the Z80. */
 		Z80PortsList _portsRaw;
 
 		private:

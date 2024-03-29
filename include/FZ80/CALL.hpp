@@ -39,7 +39,9 @@ namespace FZ80
 
 		MCHEmul::ProgramCounter& pc = cpu () -> programCounter ();
 		stack () -> push (pc.asAddress ().values ());
-		pc.setAddress (MCHEmul::Address ({ parameters ()[2].value (), parameters ()[1].value () }, false)); // Little endian!
+		pc.setAddress (MCHEmul::Address ({ parameters ()[2].value (), parameters ()[1].value () }, true)); 
+		// Little endian, but the interchage of the bytes has already been done in the code, 
+		// That's why the value true, instead false! (it is quicker)...
 	}
 
 	// Absolute...

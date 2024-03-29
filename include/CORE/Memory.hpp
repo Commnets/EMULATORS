@@ -314,14 +314,18 @@ namespace MCHEmul
 		public:
 		RandomPhysicalStorageSubset (int id,
 			PhysicalStorage* pS, size_t pp, const Address& a, size_t s)
-			: PhysicalStorageSubset (id, pS, pp, a, s)
+			: PhysicalStorageSubset (id, pS, pp, a, s),
+			  _lastValueRead (MCHEmul::UByte::_0)
 							{ }
 
 		protected:
 		virtual void setValue (size_t nB, const UByte& d) override
 							{ /** does nothing. */ }
 		virtual const UByte& readValue (size_t nB) const override
-							{ return (UByte ((unsigned char) (std::rand () % 256))); } 
+							{ return (_lastValueRead = UByte ((unsigned char) (std::rand () % 256))); } 
+
+		private:
+		mutable UByte _lastValueRead;
 	};
 
 	/** A physicial subset that is a mirror of a previous one, 

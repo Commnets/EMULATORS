@@ -41,11 +41,13 @@ namespace FZ80
 							{ r [0] -> set ({ u [1] }); r [1] -> set ({ u [0] }); return (true); }
 		/** To load a memory position with the value of a byte. */
 		bool executeWith (const MCHEmul::Address& a, const MCHEmul::UByte& u)
-							{ memory () -> set (a, { u }); return (true); }
+							{ memory () -> set (_lastINOUTAddress = a, 
+								_lastINOUTData = MCHEmul::UBytes ({ u })); return (true); }
 		/** To load a memory position with two bytes. \n
 			It is supossed that the bytes come as they are in memory, so that's it in litlee endian order. */
 		bool executeWith (const MCHEmul::Address& a, const MCHEmul::UBytes& u)
-							{ memory () -> set (a, { u [1], u [0] }); return (true); }
+							{ memory () -> set (_lastINOUTAddress = a, 
+								_lastINOUTData = MCHEmul::UBytes ({ u [1], u [0] })); return (true); }
 	};
 
 	// Target Main Registers

@@ -122,9 +122,17 @@ _INST_IMPL (FZ80::HALT)
 {
 	assert (parameters ().size () == 1);
 
-	// Execute the NOP instruction (does nothing) 
-	// until the request for an interruption arrives!
-	_FINISH = (cpu () -> interruptRequested () != -1);
+	FZ80::CZ80* cpuZ80 = dynamic_cast <FZ80::CZ80*> (cpu ());
+	assert (cpuZ80 != nullptr); // It shouldn't...but just in case!
+	if (!cpuZ80 -> stopped ()) // First time?
+	{ 
+		cpuZ80 -> setStop (true, MCHEmul::Instruction::_CYCLEALL, 
+			cpu () -> clockCycles ()); // Stops for ever...
+		cpuZ80 -> setHaltActive (); // ...and marks this special situation in the CPU....
+	}
+
+	// Until unblocked by a INT execution... (@see CZ80::requestInterrupt)
+	_FINISH = !cpuZ80 -> haltActive (); 
 
 	return (true);
 }
