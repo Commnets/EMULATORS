@@ -31,7 +31,7 @@ namespace FZ80
 
 		private:
 		virtual bool isTime (MCHEmul::CPU* c, unsigned int cC) const override
-							{ return (!inExecution ()); }
+							{ return (true); } // The NMI Interruptions are always accepted!
 		virtual bool executeOverImpl (MCHEmul::CPU* c, unsigned int cC) override;
 	};
 }

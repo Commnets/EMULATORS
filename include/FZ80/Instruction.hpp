@@ -166,6 +166,8 @@ namespace FZ80
 							{ return (registerI ().values () [0]); }
 		const MCHEmul::UByte& valueRegisterR () const
 							{ return (registerR ().values () [0]); }
+		MCHEmul::UBytes valueRegisterIR () const
+							{ return (MCHEmul::UBytes ({ valueRegisterI (), valueRegisterR () })); }
 		inline void incrementRegisterR ();
 
 		const MCHEmul::UByte& valueRegisterIXH () const
@@ -200,6 +202,9 @@ namespace FZ80
 		MCHEmul::Address addressSP (size_t n = 0) const
 							{ return (_lastINOUTAddress = 
 								MCHEmul::Address (valueRegisterSP (), true) + n); }
+		MCHEmul::Address addressIR (size_t n = 0) const
+							{ return (_lastINOUTAddress = 
+								MCHEmul::Address (valueRegisterIR (), true) + n); }
 
 		// To get the value pointed by the registers...
 		const MCHEmul::UByte& valueAddressBC (size_t n = 0) const

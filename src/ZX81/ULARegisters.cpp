@@ -35,9 +35,10 @@ void ZX81::ULARegisters::initializeInternalValues ()
 
 	_NTSC = false;
 
-	_VSYNCPulse;
+	_videoSignalClamped = true;
 
 	_LINECNTRL = 0;
+	_LINECNTRLBlocked = true;
 
 	for (size_t i = 0; i < 8; 
 		_keyboardStatus [i++] = MCHEmul::UByte::_0);

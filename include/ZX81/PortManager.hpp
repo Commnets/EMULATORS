@@ -63,6 +63,8 @@ namespace ZX81
 		/** To link to the different elements. */
 		void linkToULA (ULA* ula);
 
+		virtual void initialize () override;
+
 		private:
 		/** ms = true when is is wanted to modify the internal status. */
 		MCHEmul::UByte getValue (unsigned char id, bool ms = false) const;

@@ -41,14 +41,14 @@ void ZX81::Screen::drawAdditional ()
 
 		// Draws rectangles and reference lines...
 		drawRectangle ((size_t) (x1 - 1), (size_t) (y1 - 1), 
-			(size_t) (x2 - 1), (size_t) (y2 - 1), 3);
+			(size_t) (x2 + 1), (size_t) (y2 + 1), 3);
 		for (short i = y1 + 8; i <= y2; i += 8)
 			drawHorizontalLineStep ((size_t) x1, (size_t) i, (size_t) (x2 - x1 + 1), 2, bC);
 		for (short i = x1 + 8; i <= x2; i += 8)
 			drawVerticalLineStep ((size_t) i, (size_t) y1, (size_t) (y2 - y1 + 1), 2, bC);
 
 		// Draws a reference to the owner to the simulator!
-		drawTextHorizontal (8, 8, "(C)ICF 2024", 0 /** not used. */, bC, true);
+		drawTextHorizontal (8, 8, "ICF 2024", 0 /** not used. */, bC, true);
 	}
 }
 

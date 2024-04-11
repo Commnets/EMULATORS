@@ -48,17 +48,18 @@ namespace FZ80
 							{ }
 
 		protected:
-		inline void executeBranch (); // Using the parameter 1 always!
+		inline void executeBranch (bool a); // Using the parameter 1 always!
 	};
 
 	// ---
-	inline void JR_General::executeBranch ()
+	inline void JR_General::executeBranch (bool a)
 	{
-		_additionalCycles = 5; // Always 5 cycles more when the condition is true!
+		if (a)
+			_additionalCycles = 5;
 
 		// The value can be negative meaning back jump!
 		// At this point the pc has already been incremened in two, as it is an IntructionDefined!
-		int jR = MCHEmul::UInt ({ parameters ()[1] /** to use UByte constructor. */ }).asInt () - 2;
+		int jR = MCHEmul::UInt ({ parameters ()[1] /** to use UByte constructor. */ }).asInt ();
 		if (jR == 0)
 			return; // No need to continue...
 
@@ -71,13 +72,13 @@ namespace FZ80
 	_INST_FROM (0x18,		2, 12, 12,	"JR [%1]",				JR, JR_General);
 	
 	// JR Depending on the value of the flags...
-	_INST_FROM (0x20,		2, 7, 7,	"JR NZ,[%1]",			JR_NZ, JR_General);			// 5 cycles more when the conditiion is true
-	_INST_FROM (0x28,		2, 7, 7,	"JR Z,[%1]",			JR_Z, JR_General);			// 5 cycles more when the conditiion is true
-	_INST_FROM (0x30,		2, 7, 7,	"JR NC,[%1]",			JR_NC, JR_General);			// 5 cycles more when the conditiion is true
-	_INST_FROM (0x38,		2, 7, 7,	"JR C,[%1]",			JR_C, JR_General);			// 5 cycles more when the conditiion is true
+	_INST_FROM (0x20,		2, 7, 7,	"JR NZ,[%1]",			JR_NZ, JR_General);			// 5 cycles more when the condition is true
+	_INST_FROM (0x28,		2, 7, 7,	"JR Z,[%1]",			JR_Z, JR_General);			// 5 cycles more when the condition is true
+	_INST_FROM (0x30,		2, 7, 7,	"JR NC,[%1]",			JR_NC, JR_General);			// 5 cycles more when the condition is true
+	_INST_FROM (0x38,		2, 7, 7,	"JR C,[%1]",			JR_C, JR_General);			// 5 cycles more when the condition is true
 	
 	// DJNZ
-	_INST_FROM (0x10,		2, 8, 8,	"DJNZ",					DJNZ, JR_General);			// 5 cycles more when the conditiion is true
+	_INST_FROM (0x10,		2, 8, 8,	"DJNZ",					DJNZ, JR_General);			// 5 cycles more when the condition is true
 }
 
 #endif

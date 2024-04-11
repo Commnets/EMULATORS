@@ -43,6 +43,7 @@ FZ80::CZ80::CZ80 (int id, const Z80PortsMap& pts,
 	  _hlpRegister ({ &hpRegister  (), &lpRegister  () }),
 	  _ixRegister  ({ &ixhRegister (), &ixlRegister () }),
 	  _iyRegister  ({ &iyhRegister (), &iylRegister () }),
+	  _irRegister  ({ &iRegister   (), &rRegister   () }),
 	  _IFF1 (false), _IFF2 (false),
 	  _ports (pts), _portsRaw (256, FZ80::Z80PortsPlainList ()) // None...
 {

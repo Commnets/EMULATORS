@@ -20,7 +20,7 @@ _INST_IMPL (FZ80::JP_NZ)
 
 	if (!cpu () -> statusRegister ().bitStatus (FZ80::CZ80::_NEGATIVEFLAG))
 		cpu () -> programCounter ().
-			setAddress (MCHEmul::Address ({ parameters ()[2].value (), parameters ()[1].value () }, false)); 
+			setAddress (MCHEmul::Address ({ parameters ()[2].value (), parameters ()[1].value () }, true)); 
 
 	return (true);
 }
@@ -32,7 +32,7 @@ _INST_IMPL (FZ80::JP_Z)
 
 	if (cpu () -> statusRegister ().bitStatus (FZ80::CZ80::_NEGATIVEFLAG))
 		cpu () -> programCounter ().
-			setAddress (MCHEmul::Address ({ parameters ()[2].value (), parameters ()[1].value () }, false)); 
+			setAddress (MCHEmul::Address ({ parameters ()[2].value (), parameters ()[1].value () }, true)); 
 
 	return (true);
 }
@@ -44,7 +44,7 @@ _INST_IMPL (FZ80::JP_NC)
 
 	if (!cpu () -> statusRegister ().bitStatus (FZ80::CZ80::_CARRYFLAG))
 		cpu () -> programCounter ().
-			setAddress (MCHEmul::Address ({ parameters ()[2].value (), parameters ()[1].value () }, false)); 
+			setAddress (MCHEmul::Address ({ parameters ()[2].value (), parameters ()[1].value () }, true)); 
 
 	return (true);
 }
@@ -56,7 +56,7 @@ _INST_IMPL (FZ80::JP_C)
 
 	if (cpu () -> statusRegister ().bitStatus (FZ80::CZ80::_CARRYFLAG))
 		cpu () -> programCounter ().
-			setAddress (MCHEmul::Address ({ parameters ()[2].value (), parameters ()[1].value () }, false)); 
+			setAddress (MCHEmul::Address ({ parameters ()[2].value (), parameters ()[1].value () }, true)); 
 
 	return (true);
 }
@@ -68,7 +68,7 @@ _INST_IMPL (FZ80::JP_PO)
 
 	if (!cpu () -> statusRegister ().bitStatus (FZ80::CZ80::_PARITYOVERFLOWFLAG))
 		cpu () -> programCounter ().
-			setAddress (MCHEmul::Address ({ parameters ()[2].value (), parameters ()[1].value () }, false)); 
+			setAddress (MCHEmul::Address ({ parameters ()[2].value (), parameters ()[1].value () }, true)); 
 
 	return (true);
 }
@@ -80,7 +80,7 @@ _INST_IMPL (FZ80::JP_PE)
 
 	if (cpu () -> statusRegister ().bitStatus (FZ80::CZ80::_PARITYOVERFLOWFLAG))
 		cpu () -> programCounter ().
-			setAddress (MCHEmul::Address ({ parameters ()[2].value (), parameters ()[1].value () }, false)); 
+			setAddress (MCHEmul::Address ({ parameters ()[2].value (), parameters ()[1].value () }, true)); 
 
 	return (true);
 }
@@ -92,7 +92,7 @@ _INST_IMPL (FZ80::JP_P)
 
 	if (!cpu () -> statusRegister ().bitStatus (FZ80::CZ80::_SIGNFLAG))
 		cpu () -> programCounter ().
-			setAddress (MCHEmul::Address ({ parameters ()[2].value (), parameters ()[1].value () }, false)); 
+			setAddress (MCHEmul::Address ({ parameters ()[2].value (), parameters ()[1].value () }, true)); 
 
 	return (true);
 }
@@ -104,7 +104,7 @@ _INST_IMPL (FZ80::JP_M)
 
 	if (cpu () -> statusRegister ().bitStatus (FZ80::CZ80::_SIGNFLAG))
 		cpu () -> programCounter ().
-			setAddress (MCHEmul::Address ({ parameters ()[2].value (), parameters ()[1].value () }, false)); 
+			setAddress (MCHEmul::Address ({ parameters ()[2].value (), parameters ()[1].value () }, true)); 
 
 	return (true);
 }
@@ -144,7 +144,7 @@ _INST_IMPL (FZ80::JR)
 {
 	assert (parameters ().size () == 2);
 
-	executeBranch ();
+	executeBranch (false);
 
 	return (true);
 }
@@ -155,7 +155,7 @@ _INST_IMPL (FZ80::JR_NZ)
 	assert (parameters ().size () == 2);
 
 	if (!cpu () -> statusRegister ().bitStatus (FZ80::CZ80::_ZEROFLAG))
-		executeBranch ();
+		executeBranch (true);
 
 	return (true);
 }
@@ -166,7 +166,7 @@ _INST_IMPL (FZ80::JR_Z)
 	assert (parameters ().size () == 2);
 
 	if (cpu () -> statusRegister ().bitStatus (FZ80::CZ80::_ZEROFLAG))
-		executeBranch ();
+		executeBranch (true);
 
 	return (true);
 }
@@ -177,7 +177,7 @@ _INST_IMPL (FZ80::JR_NC)
 	assert (parameters ().size () == 2);
 
 	if (!cpu () -> statusRegister ().bitStatus (FZ80::CZ80::_CARRYFLAG))
-		executeBranch ();
+		executeBranch (true);
 
 	return (true);
 }
@@ -188,7 +188,7 @@ _INST_IMPL (FZ80::JR_C)
 	assert (parameters ().size () == 2);
 
 	if (cpu () -> statusRegister ().bitStatus (FZ80::CZ80::_CARRYFLAG))
-		executeBranch ();
+		executeBranch (true);
 
 	return (true);
 }
@@ -199,10 +199,10 @@ _INST_IMPL (FZ80::DJNZ)
 	assert (parameters ().size () == 2);
 
 	unsigned char r = registerB ().values ()[0].value ();
-	bool c = (r == MCHEmul::UByte::_1);
-	registerB ().set ({ r - MCHEmul::UByte::_1 });
-	if (c)
-		executeBranch ();
+	bool c = ((r -= 1) == MCHEmul::UByte::_0);
+	registerB ().set ({ r }); // decrement 1 in the register B...
+	if (!c)
+		executeBranch (true);
 
 	return (true);
 }

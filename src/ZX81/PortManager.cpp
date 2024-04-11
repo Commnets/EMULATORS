@@ -20,19 +20,24 @@ ZX81::PortManager::PortManager ()
 // ---
 void ZX81::PortManager::setValue (unsigned char id, const MCHEmul::UByte& v)
 {
-	// The VSYNC pukse is released...
-	// ...and the LNCTRL will start to be incremented...
-	_ULARegisters -> setVSYNCPulse (false);
-	// ...and the casette signal is put back into high...
+	// Any out really does this set of actions...
+	// As it is defined in the ZX81 ports documentation!:
+
+	// First of all, when VYSNC situation happens, a read to the port FE is done.
+	// When this is done, the video signal is un - clamped and the LINECTRLN counter is un - blocked.
+	// During this period, the ZX81 reads the keyboard for a maximm of 400us.
+	// After that period the video signal is unclamped, and same with the LINECTRLN counter.
+	_ULARegisters -> clampVideoSignal (false);
+	_ULARegisters -> setLINECTRLNBlocked (false);
 	_ULARegisters -> setCasetteSignal (true);
 
-	// specific behaviour by specific ports!
-	// Desactive the generation of NMI interrupts!
-	if (id == 0xfd)
-		_ULARegisters -> setNMIGenerator (false);
-	// Active the generation of NMI interrupts!
+	// If the port id has the bit 1 off (FD is the normal ZX81 but many others will behave equal)...
+	if ((id & 0b00000010) == 0x00)
+		_ULARegisters -> setNMIGenerator (false); // the NMI gneerator is disconnected...
+
+	// If the port id has the bit 0 off (FE is the normal ZX81, but many others will behave in the same way)...
 	if (id == 0xfe)
-		_ULARegisters -> setNMIGenerator (true);
+		_ULARegisters -> setNMIGenerator (true); // The NMI generator is connected...
 }
 
 // ---
@@ -45,15 +50,24 @@ void ZX81::PortManager::linkToULA (ZX81::ULA* ula)
 }
 
 // ---
+void ZX81::PortManager::initialize ()
+{
+	_ULARegisters -> clampVideoSignal (true);
+	_ULARegisters -> setLINECNTRL (0);
+	_ULARegisters -> setLINECTRLNBlocked (true);
+	_ULARegisters -> setCasetteSignal (false);
+}
+
+// ---
 MCHEmul::UByte ZX81::PortManager::getValue (unsigned char id, bool ms) const
 {
 	MCHEmul::UByte result = MCHEmul::UByte::_0;
 
-	// Any port with A0 = 0... (portFE to read the port)
+	// Any port with A0 = 0... (FE is the ZX81 common one, but many others will behave similar)...
 	if ((id & 0b00000001) == 0b00000000)
 	{ 
-		result = 0b0010000 |		// But 5 is always set...
-			(_ULARegisters -> NTSC () ? 0b00000000 : 0b01000000);	// Bit 6 set when 50Hz = PAL = !NTSC...
+		result = 0b0010000 | // Bit 5 is always set...
+			(_ULARegisters -> NTSC () ? 0b00000000 : 0b01000000); // Bit 6 set when 50Hz = PAL = !NTSC...
 
 		// What row to read is determined by the value of the register B...
 		MCHEmul::UByte bVal = 
@@ -65,13 +79,11 @@ MCHEmul::UByte ZX81::PortManager::getValue (unsigned char id, bool ms) const
 		if (ms && // ...and it is wanted to modify the status...
 			!_ULARegisters -> NMIGenerator ())
 		{ 
-			// ...and the vertical sync as well...
-			_ULARegisters -> setVSYNCPulse (true);
-			// ...the vertical line counter is restarted,
-			// ...but it wouldn't increment if VSYNC were on!
-			_ULARegisters -> setLINECNTRL (0);
-			// ...and the casette signal is moved into low...
-			_ULARegisters -> setCasetteSignal (false);
+			// This is to enter the VSYNC routine...
+			_ULARegisters -> clampVideoSignal (true);		// Clamps the video signal...
+			_ULARegisters -> setLINECNTRL (0);				// puts the counter to 0
+			_ULARegisters -> setLINECTRLNBlocked (true);	// and also block it
+			_ULARegisters -> setCasetteSignal (false);		// ...and finally the casette signal is down!
 		}
 	}
 

@@ -471,7 +471,6 @@ bool MCHEmul::CPU::when_ExecutingInstruction_Full ()
 		(_currentInterruption = _rowInterrupts [(size_t) _interruptRequested]) != nullptr && // It has to exist...
 		_currentInterruption -> canBeExecutedOver (this, _clyclesAtInterruption)) // ...and the execution can depend on internal state of the CPU...
 	{
-
 		if (deepDebugActive ())
 			*_deepDebugFile << "\t\t\t\tInterrupt launched:" 
 							<< std::to_string (_currentInterruption -> id ()) << "\n";

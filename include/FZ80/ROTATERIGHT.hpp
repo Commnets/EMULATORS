@@ -50,8 +50,7 @@ namespace FZ80
 		MCHEmul::StatusRegister& st = cpu () -> statusRegister ();
 
 		MCHEmul::UByte v = r.values ()[0];
-		bool c = v.bit (7);
-		v.shiftRightC (crr ? st.bitStatus (CZ80::_CARRYFLAG) : c);
+		bool c = v.shiftRightC (crr ? st.bitStatus (CZ80::_CARRYFLAG) : v.bit (0));
 		r.set ({ v });
 
 		// When the register affect is A and is the documented version, 
@@ -80,8 +79,7 @@ namespace FZ80
 		MCHEmul::StatusRegister& st = cpu () -> statusRegister ();
 
 		MCHEmul::UByte v = memory () -> value (a);
-		bool c = v.bit (7);
-		v.shiftRightC (crr ? st.bitStatus (CZ80::_CARRYFLAG) : c);
+		bool c = v.shiftRightC (crr ? st.bitStatus (CZ80::_CARRYFLAG) : v.bit (0));
 		memory () -> set (a, v); // Set back the value...
 
 		affectFlagsWith (v, c);
@@ -95,8 +93,7 @@ namespace FZ80
 		MCHEmul::StatusRegister& st = cpu () -> statusRegister ();
 
 		MCHEmul::UByte v = memory () -> value (a);
-		bool c = v.bit (7);
-		v.shiftRightC (crr ? st.bitStatus (CZ80::_CARRYFLAG) : c);
+		bool c = v.shiftRightC (crr ? st.bitStatus (CZ80::_CARRYFLAG) : v.bit (0));
 		memory () -> set (a, v); // Set back the value...
 		r.set ({ v }); // And store it in the register...
 

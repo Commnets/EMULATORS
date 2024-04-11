@@ -168,6 +168,7 @@ MCHEmul::InfoStructure MCHEmul::Stack::getInfoStructure () const
 	result.add ("OVERFLOW",					_overflow );
 	result.add ("EMPTY",					_notUsed );
 	result.add ("POSITION",					_position);
+	result.add ("ADDRESS",					_initialAddress + _position);
 
 	return (result);
 }

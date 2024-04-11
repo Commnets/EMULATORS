@@ -78,6 +78,14 @@ bool ZX81::ULA::simulate (MCHEmul::CPU* cpu)
 		return (true);
 	}
 
+	// If the video signal is clamped, there is no need to continue...
+	if (_ULARegisters -> videoSignalClamped ())
+	{
+		_lastCPUCycles = cpu -> clockCycles ();
+
+		return (true);
+	}
+
 	// Simulate the visulization...
 	for (unsigned int i = ((cpu -> clockCycles  () - _lastCPUCycles) * 2 /** ULA cycles = 2 * CPU Cycles. */); 
 			i > 0; i--)
@@ -195,8 +203,8 @@ MCHEmul::ScreenMemory* ZX81::ULA::createScreenMemory ()
 	cP [0]  = SDL_MapRGBA (_format, 0x00, 0x00, 0x00, 0xe0); // Black
 	cP [1]  = SDL_MapRGBA (_format, 0xff, 0xff, 0xff, 0xe0); // White
 	// Tese other two colors doesn't exist in ZX81, but are used to draw borders...
-	cP [2]  = SDL_MapRGBA (_format, 0x48, 0x3a, 0xaa, 0xe0); // Blue
-	cP [3]  = SDL_MapRGBA (_format, 0xd5, 0xdf, 0x7c, 0xe0); // Yellow
+	cP [2]  = SDL_MapRGBA (_format, 0x92, 0x4a, 0x40, 0xe0); // Red
+	cP [3]  = SDL_MapRGBA (_format, 0x72, 0xb1, 0x4b, 0xe0); // Green
 
 	return (new MCHEmul::ScreenMemory (numberColumns (), numberRows (), cP));
 }

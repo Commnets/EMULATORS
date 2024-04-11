@@ -74,7 +74,7 @@ namespace FZ80
 		// The operation...
 		MCHEmul::UInt rst  = MCHEmul::UInt ({ r [0] -> values ()[0], r [1] -> values ()[0] }).
 			substract (MCHEmul::UInt ({ v [0], v [1] }, st.bitStatus (CZ80::_CARRYFLAG)));
-		MCHEmul::UInt rstH = MCHEmul::UInt ({ r [0] -> values ()[0] & 0x0f, r [1] -> values ()[1] }).
+		MCHEmul::UInt rstH = MCHEmul::UInt ({ r [0] -> values ()[0] & 0x0f, r [1] -> values ()[0] }).
 			substract (MCHEmul::UInt ({ v [0] & 0x0f, v [1] }, st.bitStatus (CZ80::_CARRYFLAG))); // half carry from bit 11 to 12?
 		r [0] -> set ({ rst.values ()[0] }); r [1] -> set ({ rst.values ()[1] }); 
 

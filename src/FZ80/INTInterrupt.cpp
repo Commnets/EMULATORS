@@ -16,6 +16,10 @@ bool FZ80::INTInterrupt::executeOverImpl (MCHEmul::CPU* c, unsigned int cC)
 
 	bool result = true;
 
+	// To avoid further INTs until it was defined by the programmer...
+	static_cast <FZ80::CZ80*> (c) -> setIFF2 (false); 
+	static_cast <FZ80::CZ80*> (c) -> setIFF1 (false); 
+
 	switch (static_cast <FZ80::CZ80*> (c) -> INTmode ())
 	{
 		// In the type 0, the instruction with the code of the value in the data bus, is executed...

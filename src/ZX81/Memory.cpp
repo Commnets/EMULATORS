@@ -89,6 +89,11 @@ ZX81::Memory::Memory (ZX81::Memory::Configuration cfg, unsigned int m)
 // ---
 void ZX81::Memory::setConfiguration (ZX81::Memory::Configuration cfg)
 {
+	// In any of the configurations, 
+	// the stack will behave as already used from the aerly beginning...
+	_RAM1K -> setNotUsed (false);
+	_RAM16K -> setNotUsed (false);
+
 	// Attending to the configuration different options are active or not active!
 	switch (_configuration = cfg)
 	{
@@ -157,9 +162,9 @@ MCHEmul::Memory::Content ZX81::Memory::standardMemoryContent ()
 
 	// Phisical storages
 	MCHEmul::PhysicalStorage* RAM = 
-		new MCHEmul::PhysicalStorage (_RAM_SET, MCHEmul::PhysicalStorage::Type::_RAM, 0x10000);			// 64k
+		new MCHEmul::PhysicalStorage (_RAM_SET, MCHEmul::PhysicalStorage::Type::_RAM, 0x10000);				// 64k
 	MCHEmul::PhysicalStorage* ROM = 
-		new MCHEmul::PhysicalStorage (_ROM_SET, MCHEmul::PhysicalStorage::Type::_ROM, 0x2000);			// 8k
+		new MCHEmul::PhysicalStorage (_ROM_SET, MCHEmul::PhysicalStorage::Type::_ROM, 0x2000);				// 8k
 
 	// The map of phisical storages, used later...
 	MCHEmul::PhysicalStorages storages (
@@ -176,49 +181,51 @@ MCHEmul::Memory::Content ZX81::Memory::standardMemoryContent ()
 	// Subsets
 	// The ROM
 	MCHEmul::PhysicalStorageSubset* ROMS = new MCHEmul::PhysicalStorageSubset 
-		(_ROM_SUBSET, ROM, 0x0000, MCHEmul::Address ({ 0x00, 0x00 }, false), 0x2000);				// 8k
+		(_ROM_SUBSET, ROM, 0x0000, MCHEmul::Address ({ 0x00, 0x00 }, false), 0x2000);					// 8k
 	MCHEmul::MirrorPhysicalStorageSubset* ROMS_S1 = new MCHEmul::MirrorPhysicalStorageSubset
-		(_ROMSHADOW1_SUBSET, ROMS, MCHEmul::Address ({ 0x00, 0x20 }, false));						// 8k. It is a mirror of ROMS
+		(_ROMSHADOW1_SUBSET, ROMS, MCHEmul::Address ({ 0x00, 0x20 }, false));							// 8k. It is a mirror of ROMS
 	// ----- 16k
 
 	// The RAM, that can also behave as a stack...
 	// The basic one...
+	// As Z80 documentation describes, the stack behaves like point to not an empty place
+	// because before keeping something decrement the pointer of the stack and then keeps the value...
 	MCHEmul::Stack* RAM1S = new MCHEmul::Stack
-		(_RAM1K_SUBSET, RAM, 0x4000, MCHEmul::Address ({ 0x00, 0x40 }, false), 0x0400);				// 1k that can behave as Stack...
+		(_RAM1K_SUBSET, RAM, 0x4000, MCHEmul::Address ({ 0x00, 0x40 }, false), 0x0400, true, false);	// 1k that can behave as Stack...
 	// The rest (up to 16k) is not accesible...
 	MCHEmul::EmptyPhysicalStorageSubset* RAM15S_UC = new MCHEmul::EmptyPhysicalStorageSubset
 		(_RAM15K_UC_SUBSET, MCHEmul::UByte::_0 /** Important. */, RAM, 
-			0x4400, MCHEmul::Address ({ 0x00, 0x44 }, false), 0x3c00);								// 15k of nothing...
+			0x4400, MCHEmul::Address ({ 0x00, 0x44 }, false), 0x3c00);									// 15k of nothing...
 	// ...but both can be replaced by a module of 16K
 	MCHEmul::Stack* RAM16S = new MCHEmul::Stack
-		(_RAM16K_SUBSET, RAM, 0x4000, MCHEmul::Address ({ 0x00, 0x40 }, false), 0x4000);			// 16k (When expansion), 
-																									// ...that can behave as stack...
-																									// One or another...
+		(_RAM16K_SUBSET, RAM, 0x4000, MCHEmul::Address ({ 0x00, 0x40 }, false), 0x4000, true, false);	// 16k (When expansion), 
+																										// ...that can behave as stack...
+																										// One or another...
 	// ----- 16k
 	// 
 	// Then two mirrors of the ROM again...
 	MCHEmul::MirrorPhysicalStorageSubset* ROMS_S2 = new MCHEmul::MirrorPhysicalStorageSubset
-		(_ROMSHADOW2_SUBSET, ROMS, MCHEmul::Address ({ 0x00, 0x80 }, false));						// 8k. It is a mirror of ROMS
+		(_ROMSHADOW2_SUBSET, ROMS, MCHEmul::Address ({ 0x00, 0x80 }, false));							// 8k. It is a mirror of ROMS
 	MCHEmul::MirrorPhysicalStorageSubset* ROMS_S3 = new MCHEmul::MirrorPhysicalStorageSubset
-		(_ROMSHADOW3_SUBSET, ROMS, MCHEmul::Address ({ 0x00, 0xa0 }, false));						// 8k. It is a mirror of ROMS
+		(_ROMSHADOW3_SUBSET, ROMS, MCHEmul::Address ({ 0x00, 0xa0 }, false));							// 8k. It is a mirror of ROMS
 	// ----- 16k
 
 	// The rest is a mirror of the 1k + 15 or 16k RAM from the ULA perspective...
 	MCHEmul::MirrorPhysicalStorageSubset* RAM1S_S1 = new MCHEmul::MirrorPhysicalStorageSubset
-		(_RAM1KSHADOW_SUBSET, RAM1S, MCHEmul::Address ({ 0x00, 0xc0 }, false));						// 1k. It is a mirror of RAM1S
+		(_RAM1KSHADOW_SUBSET, RAM1S, MCHEmul::Address ({ 0x00, 0xc0 }, false));							// 1k. It is a mirror of RAM1S
 	MCHEmul::MirrorPhysicalStorageSubset* RAM15S_UC_S1 = new MCHEmul::MirrorPhysicalStorageSubset
-		(_RAM15KSHADOW_UC_SUBSET, RAM15S_UC, MCHEmul::Address ({ 0x00, 0xc4 }, false));				// 15k. It is a mirror of RAM15S
+		(_RAM15KSHADOW_UC_SUBSET, RAM15S_UC, MCHEmul::Address ({ 0x00, 0xc4 }, false));					// 15k. It is a mirror of RAM15S
 	MCHEmul::MirrorPhysicalStorageSubset* RAM16S_S1 = new MCHEmul::MirrorPhysicalStorageSubset
-		(_RAM16KSHADOW_SUBSET, RAM16S, MCHEmul::Address ({ 0x00, 0xc0 }, false));					// 16k. It is a mirror of RAM16S
+		(_RAM16KSHADOW_SUBSET, RAM16S, MCHEmul::Address ({ 0x00, 0xc0 }, false));						// 16k. It is a mirror of RAM16S
 	// But it exists for the CPU, and it is the video code RAM!
 	// With 1 k + 15 of nothing...
 	ZX81::MemoryVideoCode* RAM1S_V = new ZX81::MemoryVideoCode
-		(_RAM1K_V_SUBSET, RAM1S, MCHEmul::Address ({ 0x00, 0xc0 }, false));							// 1k. It is a mirror of RAM1S
+		(_RAM1K_V_SUBSET, RAM1S, MCHEmul::Address ({ 0x00, 0xc0 }, false));								// 1k. It is a mirror of RAM1S
 	ZX81::MemoryVideoCode* RAM15S_V = new ZX81::MemoryVideoCode
-		(_RAM15K_V_SUBSET, RAM15S_UC, MCHEmul::Address ({ 0x00, 0xc4 }, false));					// 15k. It is a mirror of RAM1S_UC
+		(_RAM15K_V_SUBSET, RAM15S_UC, MCHEmul::Address ({ 0x00, 0xc4 }, false));						// 15k. It is a mirror of RAM1S_UC
 	// ...or 16k!
 	ZX81::MemoryVideoCode* RAM16S_V = new ZX81::MemoryVideoCode
-		(_RAM16K_V_SUBSET, RAM16S, MCHEmul::Address ({ 0x00, 0xc0 }, false));						// 16k. It is a mirror of RAM16S
+		(_RAM16K_V_SUBSET, RAM16S, MCHEmul::Address ({ 0x00, 0xc0 }, false));							// 16k. It is a mirror of RAM16S
 	// ----- 16k
 
 	// A map with all the subsets possible...

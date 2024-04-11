@@ -2019,7 +2019,8 @@ _INST_IMPL (FZ80::LD_SP)
 	// The position loaded is the ones located at the address pointer by the parameters,
 	// that is kept in litlee - endian format and ocuppies two bytes...
 	memory () -> stack () -> setPosition 
-		(MCHEmul::Address ({ parameters ()[1].value (), parameters ()[2].value () }, false /** little - endian. */).value ());
+		(MCHEmul::Address ({ parameters ()[1].value (), parameters ()[2].value () }, false /** little - endian. */).value (), 
+			false /** Absolute position. */);
 	return (true);
 }
 
@@ -2031,7 +2032,7 @@ _INST_IMPL (FZ80::LD_SPFromHL)
 	memory () -> stack () -> setPosition 
 		(MCHEmul::Address ({ 
 			registerH ().values ()[0].value (), 
-			registerL ().values ()[0].value () }, true).value ());
+			registerL ().values ()[0].value () }, true).value (), false /** Absolute position. */);
 	return (true);
 }
 
@@ -2043,7 +2044,7 @@ _INST_IMPL (FZ80::LD_SPFromIX)
 	memory () -> stack () -> setPosition 
 		(MCHEmul::Address ({ 
 			registerIXH ().values ()[0].value (), 
-			registerIXL ().values ()[0].value () }, true).value ());
+			registerIXL ().values ()[0].value () }, true).value (), false /** Absolute position. */);
 	return (true);
 }
 
@@ -2055,7 +2056,7 @@ _INST_IMPL (FZ80::LD_SPFromIY)
 	memory () -> stack () -> setPosition 
 		(MCHEmul::Address ({ 
 			registerIYH ().values ()[0].value (), 
-			registerIYL ().values ()[0].value () }, true).value ());
+			registerIYL ().values ()[0].value () }, true).value (), false /** Absolute position. */);
 	return (true);
 }
 
@@ -2068,6 +2069,8 @@ _INST_IMPL (FZ80::LD_SPFromAddress)
 	// that is kept in little - endian format, and ocuppies 2 bytes...
 	memory () -> stack () -> setPosition 
 		(MCHEmul::Address (memory () -> values (MCHEmul::Address 
-			({ parameters ()[2].value (), parameters ()[3].value () }, false /** little - endian. */), 2), false /** little - endian. */).value ());
+			({ parameters ()[2].value (), parameters ()[3].value () }, 
+				false /** little - endian. */), 2), false /** little - endian. */).value (), 
+					false /** Absolute position. */);
 	return (true);
 }

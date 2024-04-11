@@ -29,13 +29,14 @@ namespace FZ80
 							{ }
 
 		protected:
-		inline void executeBranch (); // Using the parameter 1 and 2 always!
+		inline void executeBranch (bool a); // Using the parameter 1 and 2 always!
 	};
 
 	// ---
-	inline void CALL_General::executeBranch ()
+	inline void CALL_General::executeBranch (bool a)
 	{
-		_additionalCycles = 7; // Always 7 cycles more when the condition is found!
+		if (a)
+			_additionalCycles = 7; // Always 7 cycles more when the condition is found!
 
 		MCHEmul::ProgramCounter& pc = cpu () -> programCounter ();
 		stack () -> push (pc.asAddress ().values ());
@@ -119,7 +120,7 @@ namespace FZ80
 	inline void RET_General::executeReturn (bool a)
 	{
 		if (a) 
-			_additionalCycles = 6; 
+			_additionalCycles = 5; 
 
 		cpu () -> programCounter ().setAddress (MCHEmul::Address (stack () -> pull (2), false)); // Little endian!
 	}
@@ -127,14 +128,14 @@ namespace FZ80
 	// Absolute
 	_INST_FROM (0xC9,		1, 10, 10,	"RET",					RET, RET_General);
 	// RET Depending on the value of the flags...
-	_INST_FROM (0xC0,		1, 5, 5,	"RET NZ",				RET_NZ, RET_General);			// 6 cycles more when the conditiion is true
-	_INST_FROM (0xC8,		1, 5, 5,	"RET Z",				RET_Z, RET_General);			// 6 cycles more when the conditiion is true
-	_INST_FROM (0xD0,		1, 5, 5,	"RET NC",				RET_NC, RET_General);			// 6 cycles more when the conditiion is true
-	_INST_FROM (0xD8,		1, 5, 5,	"RET C",				RET_C, RET_General);			// 6 cycles more when the conditiion is true
-	_INST_FROM (0xE0,		1, 5, 5,	"RET PO",				RET_PO, RET_General);			// 6 cycles more when the conditiion is true
-	_INST_FROM (0xE8,		1, 5, 5,	"RET PE",				RET_PE, RET_General);			// 6 cycles more when the conditiion is true
-	_INST_FROM (0xF0,		1, 5, 5,	"RET P",				RET_P, RET_General);			// 6 cycles more when the conditiion is true
-	_INST_FROM (0xF8,		1, 5, 5,	"RET M",				RET_M, RET_General);			// 6 cycles more when the conditiion is true
+	_INST_FROM (0xC0,		1, 5, 5,	"RET NZ",				RET_NZ, RET_General);			// 5 cycles more when the conditiion is true
+	_INST_FROM (0xC8,		1, 5, 5,	"RET Z",				RET_Z, RET_General);			// 5 cycles more when the conditiion is true
+	_INST_FROM (0xD0,		1, 5, 5,	"RET NC",				RET_NC, RET_General);			// 5 cycles more when the conditiion is true
+	_INST_FROM (0xD8,		1, 5, 5,	"RET C",				RET_C, RET_General);			// 5 cycles more when the conditiion is true
+	_INST_FROM (0xE0,		1, 5, 5,	"RET PO",				RET_PO, RET_General);			// 5 cycles more when the conditiion is true
+	_INST_FROM (0xE8,		1, 5, 5,	"RET PE",				RET_PE, RET_General);			// 5 cycles more when the conditiion is true
+	_INST_FROM (0xF0,		1, 5, 5,	"RET P",				RET_P, RET_General);			// 5 cycles more when the conditiion is true
+	_INST_FROM (0xF8,		1, 5, 5,	"RET M",				RET_M, RET_General);			// 5 cycles more when the conditiion is true
 	// From interrupt!
 	// Maskarable...
 	_INST_FROM (0xED4D,		2, 14, 14,	"RETI",					RET_I, RET_General);

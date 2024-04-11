@@ -4,9 +4,20 @@
 bool FZ80::Instruction::execute (MCHEmul::CPU* c, MCHEmul::Memory* m,
 	MCHEmul::Stack* stk, MCHEmul::ProgramCounter* pc)
 {
+	_lastINOUTAddress = MCHEmul::Address ();
+
 	bool result = MCHEmul::InstructionDefined::execute (c, m , stk, pc);
 
+	// Any fetch operation increment the register R (@see incrementRegisterR)
 	incrementRegisterR ();
+
+	// At T4 of the M1 cycle (first machine cycle) 
+	// the IR is put value into the address bus.
+	// Later (other cycles), the bus can be used for other purposes...
+	// But if after those other uses, the _lastINOUTAddress is still nothing...
+	// it would mean that the info to be sent to the address bus is the IR!
+	if (_lastINOUTAddress.value () == 0)
+		addressIR (); // This instruction already move the value into the _lastINOUTAddress...
 
 	return (result);
 }

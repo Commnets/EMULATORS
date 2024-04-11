@@ -40,16 +40,22 @@ namespace ZX81
 		void setNTSC(bool n)
 							{ _NTSC = n; }
 
-		// Control of the raster...
-		bool VSYNCPulse () const
-							{ return (_VSYNCPulse); }
-		void setVSYNCPulse (bool vs)
-							{ _VSYNCPulse = vs; }
+		// To conrol how the video signal is issued...
+		bool videoSignalClamped () const
+							{ return (_videoSignalClamped); }
+		void clampVideoSignal (bool vs)
+							{ _videoSignalClamped = vs; }
 		unsigned char LINECNTRL () const // From 0 to 8...
 							{ return (_LINECNTRL); }
 		void setLINECNTRL (unsigned char lc)
 							{ _LINECNTRL = lc; }
-		inline unsigned char incLINECTRL ();
+		bool LINECTRLBlocked () const
+							{ return (_LINECNTRLBlocked); }
+		void setLINECTRLNBlocked (bool lb)
+							{ _LINECNTRLBlocked = lb; }
+		inline unsigned char incLINECTRL (); // From 0 to 7 always...
+
+		// Control of the raster...
 		unsigned short currentRasterLine () const
 							{ return (_currentRasterLine); }
 		void setCurrentRasterLine (unsigned short rL)
@@ -82,12 +88,18 @@ namespace ZX81
 		private:
 		/** The NMI Generator can be active or not. */
 		bool _NMIGenerator;
-		/** NTSC. */
+		/** NTSC. This variable is set when starting. */
 		bool _NTSC;
-		/** Whether the VSYNC pulse is detected. */
-		bool _VSYNCPulse;
-		/** Vertical Line Counter. */
+		/** The ULA "clamps" the video signal to 0, avoiding the raster to progress
+			when start to read the keyboard (IN ($FE)).
+			The keyboard reading process will take 400us.
+			After those, the video signal is unclamped and the raster starts to move. */
+		bool _videoSignalClamped;
+		/** Something similar is done withe this 3 bits (0-7) internal counter,
+			that is used to determine which line of the character has to be ddrawn
+			and increments every HSYNC event. */
 		unsigned char _LINECNTRL;
+		bool _LINECNTRLBlocked;
 		/** The casette signal and the signal to indicate whether it has changed. \n
 			When read it becomes back to false. */
 		bool _casetteSignal;
@@ -103,7 +115,7 @@ namespace ZX81
 	// ---
 	inline unsigned char ULARegisters::incLINECTRL ()
 	{
-		if (!_VSYNCPulse && (++_LINECNTRL > 7))
+		if (!_LINECNTRLBlocked && (++_LINECNTRL > 7))
 			_LINECNTRL = 0;
 		return (_LINECNTRL);
 	}

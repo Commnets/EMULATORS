@@ -37,9 +37,14 @@ namespace MCHEmul
 		int position () const
 							{ return (_position); }
 		/** Take care using this method. No checks are done on regards to the speed. 
-			And it is not the same a back-stack than a foward one. */
-		void setPosition (int p)
-							{ _position = p; }
+			And it is not the same a back-stack than a foward one. \n
+			The r parameter is very important:
+			In some processor the stack can be located in any place in the memory 
+			and there are instructions to set where the stack pointer is pointing to. 
+			In that computers the value p received will be absolute and the r must be FALSE. 
+			This is because _position is always managed internally as a relative value. */
+		void setPosition (int p, bool r = true)
+							{ _position = (r) ? p : p - initialAddress ().value (); }
 		/** To move to the beginning. */
 		void reset ();
 
@@ -59,6 +64,15 @@ namespace MCHEmul
 		/** To simplify the way the stack status is enquired. */
 		bool operator ! () const
 							{ return (_overflow); }
+
+		/** To know whether it has ben already used or not. */
+		bool notUsed () const
+							{ return (_notUsed); }
+		/** This is a very rare method. Use carefully. \n
+			The default behaviour of a non-pointing-to-empty stack when it hasn't been used ever,
+			but this behaviour is not the good one in some implementations, like Z80. */
+		void setNotUsed (bool nU)
+							{ _notUsed = nU; }
 
 		/**
 		  *	The name of the fields are: \n

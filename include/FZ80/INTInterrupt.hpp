@@ -26,7 +26,8 @@ namespace FZ80
 		static const unsigned int _ID = 0;
 
 		INTInterrupt ()
-			: Interrupt (_ID, 0 /** It will decided any time the INTMode is fixed. (@see below) */)
+			: Interrupt (_ID, 0 /** It will decided any time the INTMode is fixed. (@see below) */),
+			  _INTMode (0) // The basic one by default...
 							{ setClassName ("INTInterrupt"); }
 
 		/** To manage the mode of the interruption. */
@@ -39,7 +40,10 @@ namespace FZ80
 		virtual bool executeOverImpl (MCHEmul::CPU* c, unsigned int cC) override;
 
 		private:
-		/** The type of interruption. */
+		/** The type of interruption:
+			0:	The interruption executes as instruction the next value in the data bus.
+			1:	The interruption executes the routine in a specific memory address. 
+			2:	The interruption executes the routine through out a table. */
 		unsigned char _INTMode;
 	};
 
