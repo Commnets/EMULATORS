@@ -32,10 +32,10 @@ namespace FZ80
 		protected:
 		/** Just over A with a port value. Flags are not affected. */
 		inline bool executeAWith (unsigned char np);
-		/** Over any register and affecting flags. */
-		inline bool executeWith (MCHEmul::Register& r, unsigned char np);
+		/** Over any register but from the value of the register C. */
+		inline bool executeWithFromC (MCHEmul::Register& r);
 		/** Just affecting flags. */
-		inline bool executeWith (unsigned char np);
+		inline bool execute0FromC ();
 
 		private:
 		inline void affectFlags (const MCHEmul::UByte& v);
@@ -45,31 +45,37 @@ namespace FZ80
 	inline bool IN_General::executeAWith (unsigned char np)
 	{ 
 		// The value of the component BC is pushed into the address bus...
+		// ...because it migth be usefull when reading the port! (and it is the behaviour defined)
 		_lastINOUTAddress = MCHEmul::Address ({ registerA ().values ()[0], np }, true /** Already in big endian. */);
-		// ...because it migth be usefull when reading the port!
+
 		registerA ().set ({ static_cast <CZ80*> (cpu ()) -> portValue (np) }); 
+		// No flags affection...
 		
 		return (true); 
 	}
 
 	// ---
-	inline bool IN_General::executeWith (MCHEmul::Register& r, unsigned char np)
+	inline bool IN_General::executeWithFromC (MCHEmul::Register& r)
 	{
+		unsigned char np = registerC ().values ()[0].value ();
+
 		_lastINOUTAddress = MCHEmul::Address ({ registerB ().values ()[0], np }, true);
 
 		MCHEmul::UByte v;
 		r.set ({ v = static_cast <CZ80*> (cpu ()) -> portValue (np) });
-
 		affectFlags (v);
 
 		return (true);
 	}
 
 	// ---
-	inline bool IN_General::executeWith (unsigned char np)
+	inline bool IN_General::execute0FromC ()
 	{
-		_lastINOUTAddress = MCHEmul::Address ({ registerA ().values ()[0], np }, true);
+		unsigned char np = registerC ().values ()[0].value ();
 
+		_lastINOUTAddress = MCHEmul::Address ({ registerB ().values ()[0], np }, true);
+
+		// The value is not kept anywhere...(lost)
 		affectFlags (static_cast <CZ80*> (cpu ()) -> portValue (np));
 
 		return (true);
@@ -93,15 +99,16 @@ namespace FZ80
 	// With the register A from a value, quicker!
 	_INST_FROM (0xDB,		2, 11, 11,	"IN A,([#1])",			IN_A, IN_General);
 	// With a register from a port
-	_INST_FROM (0xED78,		3, 12, 12,	"IN A,([#1])",			IN_AFromPort, IN_General);
-	_INST_FROM (0xED40,		3, 12, 12,	"IN B,([#1])",			IN_BFromPort, IN_General);
-	_INST_FROM (0xED48,		3, 12, 12,	"IN C,([#1])",			IN_CFromPort, IN_General);
-	_INST_FROM (0xED50,		3, 12, 12,	"IN D,([#1])",			IN_DFromPort, IN_General);
-	_INST_FROM (0xED58,		3, 12, 12,	"IN E,([#1])",			IN_EFromPort, IN_General);
-	_INST_FROM (0xED60,		3, 12, 12,	"IN H,([#1])",			IN_HFromPort, IN_General);
-	_INST_FROM (0xED68,		3, 12, 12,	"IN H,([#1])",			IN_LFromPort, IN_General);
+	_INST_FROM (0xED78,		2, 12, 12,	"IN A,(C)",				IN_AFromC, IN_General);
+	_INST_FROM (0xED40,		2, 12, 12,	"IN B,(C)",				IN_BFromC, IN_General);
+	_INST_FROM (0xED48,		2, 12, 12,	"IN C,(C)",				IN_CFromC, IN_General);
+	_INST_FROM (0xED50,		2, 12, 12,	"IN D,(C)",				IN_DFromC, IN_General);
+	_INST_FROM (0xED58,		2, 12, 12,	"IN E,(C)",				IN_EFromC, IN_General);
+	_INST_FROM (0xED60,		2, 12, 12,	"IN H,(C)",				IN_HFromC, IN_General);
+	_INST_FROM (0xED68,		2, 12, 12,	"IN L,(C)",				IN_LFromC, IN_General);
 	// Just affecting the flags, but not loading anything in anyplace...
-	_INST_FROM (0xED70,		3, 12, 12,	"IN ([#1])",			IN_FFromPort, IN_General);		// Undocumented
+	_INST_FROM (0xED70,		2, 12, 12,	"IN F,(C)",				IN_FFromC, IN_General);		// Undocumented 
+																							// (other representation is IN (C))
 
 	/** IN as a block. */
 	class INBlock_General : public Instruction
@@ -148,57 +155,69 @@ namespace FZ80
 							{ }
 
 		protected:
-		inline bool execute0With (unsigned char np);
 		/** Just from A to a port. */
 		inline bool executeAWith (unsigned char np);
-		/** From any register to a port */
-		inline bool executeWith (MCHEmul::Register& r, unsigned char np);
+		/** From any register to the port indicated in register C. */
+		inline bool executeWithToC (MCHEmul::Register& r);
+		/** Put 0 in the port pointed by C. */
+		inline bool execute0WithToC ();
 	};
-
-	// ---
-	inline bool OUT_General::execute0With (unsigned char np)
-	{ 
-		// The value of the component BC is pushed into the address bus...
-		_lastINOUTAddress = MCHEmul::Address ({ registerA ().values ()[0], np }, true /** Already in big endian. */);
-		// ...because it migth be usefull when writting into the port!
-		static_cast <CZ80*> (cpu ()) -> setPortValue (np, MCHEmul::UByte::_0); 
-		
-		return (true);  
-	}
 
 	// ---
 	inline bool OUT_General::executeAWith (unsigned char np)
 	{ 
+		// In the case of using the OUT A, (n)...
+		// ...the address bus is kept with An
 		_lastINOUTAddress = MCHEmul::Address ({ registerA ().values ()[0], np }, true);
 
 		static_cast <CZ80*> (cpu ()) -> setPortValue (np, registerA ().values ()[0].value ()); 
+		// No flags impact!
 		
 		return (true);
 	}
 
 	// ---
-	inline bool OUT_General::executeWith (MCHEmul::Register& r, unsigned char np)
-	{ 
-		// With any other ergister, the B register is moved at the address bus...
-		_lastINOUTAddress = MCHEmul::Address ({ registerB ().values ()[0], np }, true);
+	inline bool OUT_General::executeWithToC (MCHEmul::Register& r)
+	{
+		unsigned char v = registerC ().values ()[0].value ();
 
-		static_cast <CZ80*> (cpu ()) -> setPortValue (np, r.values ()[0].value ()); 
+		// In the case of using the OUT r, (C)...
+		// ...the address bus is kept with Bn
+		_lastINOUTAddress = MCHEmul::Address ({ registerB ().values ()[0], v }, true);
+
+		static_cast <CZ80*> (cpu ()) -> setPortValue (v, r.values () [0].value ());
+		// No flags impact...
 		
 		return (true); 
+	}
+
+	// ---
+	inline bool OUT_General::execute0WithToC ()
+	{ 
+		unsigned char v = registerC ().values ()[0].value ();
+
+		_lastINOUTAddress = MCHEmul::Address ({ registerB ().values ()[0], v }, true /** Already in big endian. */);
+
+		// Same behaviour that IN r,(C)
+		// But nothing is written instead...
+		static_cast <CZ80*> (cpu ()) -> setPortValue (v, MCHEmul::UByte::_0); 
+		// ..and no impact in flags either!
+		
+		return (true);  
 	}
 
 	// To A. Quicker...
 	_INST_FROM (0xD3,		2, 11, 11,	"OUT ([#1]),A",			OUT_A, OUT_General);
 	// From a register to a Port...
-	_INST_FROM (0xED79,		3, 12, 12,	"OUT ([#1]),A",			OUT_AToPort, OUT_General);
-	_INST_FROM (0xED41,		3, 12, 12,	"OUT ([#1]),B",			OUT_BToPort, OUT_General);
-	_INST_FROM (0xED49,		3, 12, 12,	"OUT ([#1]),C",			OUT_CToPort, OUT_General);
-	_INST_FROM (0xED51,		3, 12, 12,	"OUT ([#1]),D",			OUT_DToPort, OUT_General);
-	_INST_FROM (0xED59,		3, 12, 12,	"OUT ([#1]),E",			OUT_EToPort, OUT_General);
-	_INST_FROM (0xED61,		3, 12, 12,	"OUT ([#1]),H",			OUT_HToPort, OUT_General);
-	_INST_FROM (0xED69,		3, 12, 12,	"OUT ([#1]),L",			OUT_LToPort, OUT_General);
+	_INST_FROM (0xED79,		2, 12, 12,	"OUT (C),A",			OUT_AToC, OUT_General);
+	_INST_FROM (0xED41,		2, 12, 12,	"OUT (C),B",			OUT_BToC, OUT_General);
+	_INST_FROM (0xED49,		2, 12, 12,	"OUT (C),C",			OUT_CToC, OUT_General);
+	_INST_FROM (0xED51,		2, 12, 12,	"OUT (C),D",			OUT_DToC, OUT_General);
+	_INST_FROM (0xED59,		2, 12, 12,	"OUT (C),E",			OUT_EToC, OUT_General);
+	_INST_FROM (0xED61,		2, 12, 12,	"OUT (C),H",			OUT_HToC, OUT_General);
+	_INST_FROM (0xED69,		2, 12, 12,	"OUT (C),L",			OUT_LToC, OUT_General);
 	// Just 0 to a port
-	_INST_FROM (0xED71,		2, 12, 12,	"OUT ([#1]),0",			OUT_0ToPort, OUT_General);		// Undocumented
+	_INST_FROM (0xED71,		2, 12, 12,	"OUT (C),0",			OUT_0ToC, OUT_General);		// Undocumented
 
 	/** OUT as a block. */
 	class OUTBlock_General : public Instruction

@@ -1686,14 +1686,14 @@ MCHEmul::Instructions FZ80::CZ80::createInstructions ()
 
 	// IN: Read the value from a port!
 	result [0xDB]				= new FZ80::IN_A;
-	EDInstructions [0xED78]		= new FZ80::IN_AFromPort;
-	EDInstructions [0xED40]		= new FZ80::IN_BFromPort;
-	EDInstructions [0xED48]		= new FZ80::IN_CFromPort;
-	EDInstructions [0xED50]		= new FZ80::IN_DFromPort;
-	EDInstructions [0xED58]		= new FZ80::IN_EFromPort;
-	EDInstructions [0xED60]		= new FZ80::IN_HFromPort;
-	EDInstructions [0xED68]		= new FZ80::IN_LFromPort;
-	EDInstructions [0xED70]		= new FZ80::IN_FFromPort;					// Undocumented
+	EDInstructions [0xED78]		= new FZ80::IN_AFromC;
+	EDInstructions [0xED40]		= new FZ80::IN_BFromC;
+	EDInstructions [0xED48]		= new FZ80::IN_CFromC;
+	EDInstructions [0xED50]		= new FZ80::IN_DFromC;
+	EDInstructions [0xED58]		= new FZ80::IN_EFromC;
+	EDInstructions [0xED60]		= new FZ80::IN_HFromC;
+	EDInstructions [0xED68]		= new FZ80::IN_LFromC;
+	EDInstructions [0xED70]		= new FZ80::IN_FFromC;					// Undocumented
 
 	// IN Block
 	EDInstructions [0xEDA2]		= new FZ80::INI;
@@ -1703,14 +1703,14 @@ MCHEmul::Instructions FZ80::CZ80::createInstructions ()
 
 	// OUT: Move the value to a port!
 	result [0xD3]				= new FZ80::OUT_A;
-	EDInstructions [0xED79]		= new FZ80::OUT_AToPort;
-	EDInstructions [0xED41]		= new FZ80::OUT_BToPort;
-	EDInstructions [0xED49]		= new FZ80::OUT_CToPort;
-	EDInstructions [0xED51]		= new FZ80::OUT_DToPort;
-	EDInstructions [0xED59]		= new FZ80::OUT_EToPort;
-	EDInstructions [0xED61]		= new FZ80::OUT_HToPort;
-	EDInstructions [0xED69]		= new FZ80::OUT_LToPort;
-	EDInstructions [0xED71]		= new FZ80::OUT_0ToPort;					// Undocumented
+	EDInstructions [0xED79]		= new FZ80::OUT_AToC;
+	EDInstructions [0xED41]		= new FZ80::OUT_BToC;
+	EDInstructions [0xED49]		= new FZ80::OUT_CToC;
+	EDInstructions [0xED51]		= new FZ80::OUT_DToC;
+	EDInstructions [0xED59]		= new FZ80::OUT_EToC;
+	EDInstructions [0xED61]		= new FZ80::OUT_HToC;
+	EDInstructions [0xED69]		= new FZ80::OUT_LToC;
+	EDInstructions [0xED71]		= new FZ80::OUT_0ToC;					// Undocumented
 
 	// OUT Block
 	EDInstructions [0xEDA3]		= new FZ80::OUTI;

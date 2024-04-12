@@ -9,67 +9,67 @@ _INST_IMPL (FZ80::IN_A)
 }
 
 // ---
-_INST_IMPL (FZ80::IN_AFromPort)
+_INST_IMPL (FZ80::IN_AFromC)
 {
-	assert (parameters ().size () == 3);
+	assert (parameters ().size () == 2);
 
-	return (executeWith (registerA (), parameters ()[2].value ()));
+	return (executeWithFromC (registerA ()));
 }
 
 // ---
-_INST_IMPL (FZ80::IN_BFromPort)
+_INST_IMPL (FZ80::IN_BFromC)
 {
-	assert (parameters ().size () == 3);
+	assert (parameters ().size () == 2);
 
-	return (executeWith (registerB (), parameters ()[2].value ()));
+	return (executeWithFromC (registerB ()));
 }
 
 // ---
-_INST_IMPL (FZ80::IN_CFromPort)
+_INST_IMPL (FZ80::IN_CFromC)
 {
-	assert (parameters ().size () == 3);
+	assert (parameters ().size () == 2);
 
-	return (executeWith (registerC (), parameters ()[2].value ()));
+	return (executeWithFromC (registerC ()));
 }
 
 // ---
-_INST_IMPL (FZ80::IN_DFromPort)
+_INST_IMPL (FZ80::IN_DFromC)
 {
-	assert (parameters ().size () == 3);
+	assert (parameters ().size () == 2);
 
-	return (executeWith (registerD (), parameters ()[2].value ()));
+	return (executeWithFromC (registerD ()));
 }
 
 // ---
-_INST_IMPL (FZ80::IN_EFromPort)
+_INST_IMPL (FZ80::IN_EFromC)
 {
-	assert (parameters ().size () == 3);
+	assert (parameters ().size () == 2);
 
-	return (executeWith (registerE (), parameters ()[2].value ()));
+	return (executeWithFromC (registerE ()));
 }
 
 // ---
-_INST_IMPL (FZ80::IN_HFromPort)
+_INST_IMPL (FZ80::IN_HFromC)
 {
-	assert (parameters ().size () == 3);
+	assert (parameters ().size () == 2);
 
-	return (executeWith (registerH (), parameters ()[2].value ()));
+	return (executeWithFromC (registerH ()));
 }
 
 // ---
-_INST_IMPL (FZ80::IN_LFromPort)
+_INST_IMPL (FZ80::IN_LFromC)
 {
-	assert (parameters ().size () == 3);
+	assert (parameters ().size () == 2);
 
-	return (executeWith (registerL (), parameters ()[3].value ()));
+	return (executeWithFromC (registerL ()));
 }
 
 // ---
-_INST_IMPL (FZ80::IN_FFromPort)
+_INST_IMPL (FZ80::IN_FFromC)
 {
-	assert (parameters ().size () == 3);
+	assert (parameters ().size () == 2);
 
-	return (executeWith (parameters ()[2].value ()));
+	return (execute0FromC ());
 }
 
 // ---
@@ -172,67 +172,67 @@ _INST_IMPL (FZ80::OUT_A)
 }
 
 // ---
-_INST_IMPL (FZ80::OUT_AToPort)
-{
-	assert (parameters ().size () == 3);
-
-	return (executeWith (registerA (), parameters ()[2].value ()));
-}
-
-// ---
-_INST_IMPL (FZ80::OUT_BToPort)
-{
-	assert (parameters ().size () == 3);
-
-	return (executeWith (registerB (), parameters ()[2].value ()));
-}
-
-// ---
-_INST_IMPL (FZ80::OUT_CToPort)
-{
-	assert (parameters ().size () == 3);
-
-	return (executeWith (registerC (), parameters ()[2].value ()));
-}
-
-// ---
-_INST_IMPL (FZ80::OUT_DToPort)
-{
-	assert (parameters ().size () == 3);
-
-	return (executeWith (registerD (), parameters ()[2].value ()));
-}
-
-// ---
-_INST_IMPL (FZ80::OUT_EToPort)
-{
-	assert (parameters ().size () == 3);
-
-	return (executeWith (registerE (), parameters ()[2].value ()));
-}
-
-// ---
-_INST_IMPL (FZ80::OUT_HToPort)
-{
-	assert (parameters ().size () == 3);
-
-	return (executeWith (registerH (), parameters ()[2].value ()));
-}
-
-// ---
-_INST_IMPL (FZ80::OUT_LToPort)
-{
-	assert (parameters ().size () == 3);
-
-	return (executeWith (registerL (), parameters ()[2].value ()));
-}
-
-// ---
-_INST_IMPL (FZ80::OUT_0ToPort)
+_INST_IMPL (FZ80::OUT_AToC)
 {
 	assert (parameters ().size () == 2);
 
-	return (execute0With (0));
+	return (executeWithToC (registerA ()));
+}
+
+// ---
+_INST_IMPL (FZ80::OUT_BToC)
+{
+	assert (parameters ().size () == 2);
+
+	return (executeWithToC (registerB ()));
+}
+
+// ---
+_INST_IMPL (FZ80::OUT_CToC)
+{
+	assert (parameters ().size () == 2);
+
+	return (executeWithToC (registerC ()));
+}
+
+// ---
+_INST_IMPL (FZ80::OUT_DToC)
+{
+	assert (parameters ().size () == 2);
+
+	return (executeWithToC (registerD ()));
+}
+
+// ---
+_INST_IMPL (FZ80::OUT_EToC)
+{
+	assert (parameters ().size () == 2);
+
+	return (executeWithToC (registerE ()));
+}
+
+// ---
+_INST_IMPL (FZ80::OUT_HToC)
+{
+	assert (parameters ().size () == 2);
+
+	return (executeWithToC (registerH ()));
+}
+
+// ---
+_INST_IMPL (FZ80::OUT_LToC)
+{
+	assert (parameters ().size () == 2);
+
+	return (executeWithToC (registerL ()));
+}
+
+// ---
+_INST_IMPL (FZ80::OUT_0ToC)
+{
+	assert (parameters ().size () == 2);
+
+	return (execute0WithToC ());
 }
 
 // ---

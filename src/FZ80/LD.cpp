@@ -1580,13 +1580,13 @@ _INST_IMPL (FZ80::U3LD_AddressFromHL)
 // ---
 _INST_IMPL (FZ80::LD_AddressFromBC)
 {
-	assert (parameters ().size () == 3);
+	assert (parameters ().size () == 4);
 
 	/** Addresses in memory are kept little - endian. */
 	return (executeWith (
 		MCHEmul::Address ({ 
-			parameters ()[1].value (), 
-			parameters ()[2].value () }, false /** Little - endian. */), valueRegisterBC ()));
+			parameters ()[2].value (), 
+			parameters ()[3].value () }, false /** Little - endian. */), valueRegisterBC ()));
 }
 
 // ---
