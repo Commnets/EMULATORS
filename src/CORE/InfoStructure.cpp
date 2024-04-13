@@ -106,18 +106,34 @@ void MCHEmul::InfoStructure::remove (const std::string& an)
 
 // ---
 std::string MCHEmul::InfoStructure::asString (const std::string& s, const std::string& sa, 
-	const std::string& bI, const std::string& bF, bool pF, const std::string& wE) const
+	const std::string& bI, const std::string& bF, bool pF, const std::string& wE, int bS) const
 {
 	if (_attributes.empty () && _infoStructures.empty ())
 		return (wE); // Where the is no info to print out, a default message is sent!
 
 	std::string result = "";
 
+	// To count the size of the block...
+	int cB = 0; 
+	// To identify the first element in the list of attributes...
 	size_t ct = 0;
+	// To simplify the following code...
+	auto addBlockSeparatorIfNeeded = [&]() -> void
+		{
+			if (bS != -1 && ++cB == bS)
+			{ // Not always...
+				cB = ct = 0;
+				result += '\n';
+			}
+		};
+
+	// First the attributes...
 	for (const auto& i : _attributes)
-		result += ((ct++ == 0) ? "" : s) + (pF ? (i.first + sa) : "") + i.second;
+		{ result += ((ct++ == 0) ? "" : s) + (pF ? (i.first + sa) : "") + i.second; addBlockSeparatorIfNeeded (); }
+	// ...and then the other infostructures...
 	for (const auto& i : _infoStructures)
-		result += ((ct++ == 0) ? "" : s) + bI + (pF ? (i.first + sa) : "") + i.second.asString (s, sa, bI, bF, pF) + bF;
+		{ result += ((ct++ == 0) ? "" : s) + bI + (pF ? (i.first + sa) : "") + 
+			i.second.asString (s, sa, bI, bF, pF, wE, bS) + bF; addBlockSeparatorIfNeeded (); }
 
 	return (result);
 }

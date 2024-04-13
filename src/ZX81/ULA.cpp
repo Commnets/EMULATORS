@@ -78,14 +78,6 @@ bool ZX81::ULA::simulate (MCHEmul::CPU* cpu)
 		return (true);
 	}
 
-	// If the video signal is clamped, there is no need to continue...
-	if (_ULARegisters -> videoSignalClamped ())
-	{
-		_lastCPUCycles = cpu -> clockCycles ();
-
-		return (true);
-	}
-
 	// Simulate the visulization...
 	for (unsigned int i = ((cpu -> clockCycles  () - _lastCPUCycles) * 2 /** ULA cycles = 2 * CPU Cycles. */); 
 			i > 0; i--)
@@ -242,8 +234,9 @@ void ZX81::ULA::readGraphicsAndDrawVisibleZone (MCHEmul::CPU* cpu)
 		// Draws the background first...
 		// ...that is always at color 1 (white)....
 		_screenMemory -> setPixel (x, y, 1);
-		// Then draws the character...
-		if (_raster.isInDisplayZone ())
+		// Then draws the character, if it is allowed!
+		if (_raster.isInDisplayZone () &&
+			!_ULARegisters -> videoSignalClamped ())
 		{
 			if (!chrCode.bit (6)) // It has to be NOP!
 			{

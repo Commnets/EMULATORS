@@ -117,7 +117,8 @@ std::string MCHEmul::StdFormatter::format (const MCHEmul::InfoStructure& iS) con
 
 	// If no piece has been defined...
 	if (_pieces.empty ())
-		result = iS.asString (_defSeparator, _defEqual, "", "", _printFirst, _whenEmpty); // a very basic conversion is defined...
+		result = iS.asString (_defSeparator, _defEqual, "", "", 
+			_printFirst, _whenEmpty, _blockSize); // a very basic conversion is defined...
 	// Otherwise it has to be treaten piece by piece...
 	else
 		for (const auto& i : _pieces)
@@ -196,7 +197,12 @@ std::string MCHEmul::StdFormatter::ArrayPiece::format (const MCHEmul::InfoStruct
 			if (dF != nullptr)
 			{ 
 				dF -> setDefFormatElements 
-					(_post, attribute ("equal"), attribute ("key") == MCHEmul::_YES, attribute ("empty"));
+					(_post, 
+					 attribute ("equal"), 
+					 attribute ("key") == MCHEmul::_YES, 
+					 attribute ("empty"),
+					 existAttribute ("blocksize") 
+						? std::atoi (attribute ("blocksize").c_str ()) : -1); // The size of the block can be defined...
 
 				r = dF -> format (iS);
 			}

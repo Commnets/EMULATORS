@@ -40,21 +40,21 @@ namespace MCHEmul
 		StdFormatter (const Strings& l)
 			: Formatter (l),
 			  _pieces (),
-			  _defSeparator ("\n"), _defEqual ("="), _printFirst (true), _whenEmpty ("none")
+			  _defSeparator ("\n"), _defEqual ("="), _printFirst (true), _whenEmpty ("none"), _blockSize (-1)
 							{ }
 
 		StdFormatter (Strings&& l)
 			: Formatter (std::move (l)),
 			  _pieces (),
-			  _defSeparator ("\n"), _defEqual ("="), _printFirst (true), _whenEmpty ("none")
+			  _defSeparator ("\n"), _defEqual ("="), _printFirst (true), _whenEmpty ("none"), _blockSize (-1)
 							{ }
 
 		virtual ~StdFormatter () override
 							{ for (auto& i : _pieces) delete (i); }
 
 		/** To change the elements used to format things when a no piece is defined for that. */
-		void setDefFormatElements (const std::string& s, const std::string& e, bool pF, const std::string& wE)
-							{ _defSeparator = s; _defEqual = e; _printFirst = pF; _whenEmpty = wE; }
+		void setDefFormatElements (const std::string& s, const std::string& e, bool pF, const std::string& wE, int bS)
+							{ _defSeparator = s; _defEqual = e; _printFirst = pF; _whenEmpty = wE; _blockSize = bS; }
 
 		/** To initialize the formatter. 
 			This method create all pieces and invokes the factiry method: createPiece. */
@@ -112,6 +112,8 @@ namespace MCHEmul
 							{ return (_name); }
 			const Attributes& attributes () const
 							{ return (_attributes); }
+			bool existAttribute (const std::string& aN) const
+							{ return (_attributes.find (aN) != _attributes.end ()); }
 			std::string attribute (const std::string& aN) const
 							{ MCHEmul::Attributes::const_iterator i = _attributes.find (aN); 
 							  return ((i == _attributes.end ()) ? "" : (*i).second); }
@@ -224,6 +226,7 @@ namespace MCHEmul
 		std::string _defSeparator, _defEqual;
 		bool _printFirst;
 		std::string _whenEmpty;
+		int _blockSize;
 	};
 }
 

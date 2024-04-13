@@ -108,10 +108,13 @@ namespace MCHEmul
 		  * @param bF	Character ro include at the end of those.
 		  * @param pF	Wheher the name (the value is always included) has to be included as part of the result.
 		  * @param wE	Text to consider when there is no data to include.
+		  * @param bS	Every this number of registers printed out a carry return is added. \n
+		  *				-1 if nothing has to be added, what is the default configuration.
 		  */
 		std::string asString (const std::string& s = "|", 
 			const std::string& se = ":", const std::string& bI = "[", const std::string& bF = "]", bool pF = true, 
-			const std::string& wE = "none" /** What to generate when the info structure is empty. */) const;
+			const std::string& wE = "none" /** What to generate when the info structure is empty. */,
+			int bs = -1) const;
 
 		/** The opposite action. */
 		static InfoStructure fromStr (const std::string& str,

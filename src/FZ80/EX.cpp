@@ -21,10 +21,12 @@ _INST_IMPL (FZ80::EX_X)
 {
 	assert (parameters ().size () == 1);
 
-	return (
-		executeWith (registerBC (), registerBCP ()) ||
-		executeWith (registerDE (), registerDEP ()) ||
-		executeWith (registerHL (), registerHLP ()));
+	bool result = true;
+	result &= executeWith (registerBC (), registerBCP ()); 
+	// Couldn't link in the same instruction just one false finishes...
+	result &= executeWith (registerDE (), registerDEP ());
+	result &= executeWith (registerHL (), registerHLP ());
+	return (result);
 }
 
 // ---

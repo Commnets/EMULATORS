@@ -160,7 +160,7 @@ Active:@ACTIVE@, Type:@TYPE@, Frequency:@FREQUENCY@(@PULSEUP@)
 #---
 #---
 ;CREGISTERS
-@REGS?{key=NO,equal=:,empty=no registers},@
+@REGS?{key=NO,equal=:,empty=no registers,blocksize=4}\t@
 #---
 #---
 ;CPC
