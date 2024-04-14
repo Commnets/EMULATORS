@@ -173,7 +173,7 @@ _INST_IMPL (FZ80::SUB_AWithIXH)
 {
 	assert (parameters ().size () == 2);
 
-	return (executeWith (registerIXH ().values ()[0], true));
+	return (executeWith (registerIXH ().values ()[0], false));
 }
 
 // ---
@@ -181,7 +181,7 @@ _INST_IMPL (FZ80::SUB_AWithIXL)
 {
 	assert (parameters ().size () == 2);
 
-	return (executeWith (registerIXL ().values ()[0], true));
+	return (executeWith (registerIXL ().values ()[0], false));
 }
 
 // ---
@@ -189,7 +189,7 @@ _INST_IMPL (FZ80::SUB_AWithIYH)
 {
 	assert (parameters ().size () == 2);
 
-	return (executeWith (registerIYH ().values ()[0], true));
+	return (executeWith (registerIYH ().values ()[0], false));
 }
 
 // ---
@@ -197,7 +197,7 @@ _INST_IMPL (FZ80::SUB_AWithIYL)
 {
 	assert (parameters ().size () == 2);
 
-	return (executeWith (registerIYL ().values ()[0], true));
+	return (executeWith (registerIYL ().values ()[0], false));
 }
 
 // ---
@@ -373,7 +373,7 @@ _INST_IMPL (FZ80::SBC_HLWithBC)
 {
 	assert (parameters ().size () == 2);
 
-	return (executeWith (valueRegisterBC ()));
+	return (executeWithToHL (valueRegisterBC ()));
 }
 
 // ---
@@ -381,7 +381,7 @@ _INST_IMPL (FZ80::SBC_HLWithDE)
 {
 	assert (parameters ().size () == 2);
 
-	return (executeWith (valueRegisterDE ()));
+	return (executeWithToHL (valueRegisterDE ()));
 }
 
 // ---
@@ -389,7 +389,7 @@ _INST_IMPL (FZ80::SBC_HLWithHL)
 {
 	assert (parameters ().size () == 2);
 
-	return (executeWith (valueRegisterHL ()));
+	return (executeWithToHL (valueRegisterHL ()));
 }
 
 // ---
@@ -397,7 +397,7 @@ _INST_IMPL (FZ80::SBC_HLWithSP)
 {
 	assert (parameters ().size () == 2);
 
-	return (executeWith (valueRegisterSP ()));
+	return (executeWithToHL (valueRegisterSP ()));
 }
 
 // ---

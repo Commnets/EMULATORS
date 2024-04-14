@@ -122,7 +122,8 @@ std::string MCHEmul::InfoStructure::asString (const std::string& s, const std::s
 		{
 			if (bS != -1 && ++cB == bS)
 			{ // Not always...
-				cB = ct = 0;
+				cB = 0;
+				ct = 0;
 				result += '\n';
 			}
 		};

@@ -37,7 +37,7 @@ namespace FZ80
 		/** With a complex register and a value. 
 			All 16 bit operations are SBC type, so carry has to be taken into account. \n
 			All 16 bit operations have HL register as destination. */
-		inline bool executeWith (const MCHEmul::UBytes& v);
+		inline bool executeWithToHL (const MCHEmul::UBytes& v);
 	};
 
 	// ---
@@ -47,17 +47,20 @@ namespace FZ80
 		MCHEmul::StatusRegister& st = cpu () -> statusRegister ();
 
 		// The operation...
-		bool a = c ? (st.bitStatus (CZ80::_CARRYFLAG) ? true : false) : false;
-		MCHEmul::UInt rst  = MCHEmul::UInt (r.values ()[0]).substract (MCHEmul::UInt (v), a);
-		MCHEmul::UInt rstH = MCHEmul::UInt (r.values ()[0] & 0x0f).substract (MCHEmul::UInt (v & 0x0f), a); // Just to calculate the half borrow!
+		MCHEmul::UInt rst  = MCHEmul::UInt (r.values ()[0]) - MCHEmul::UInt (v);
+		// To calculate the half borrow...
+		MCHEmul::UInt rstH = MCHEmul::UInt (r.values ()[0] & 0x0f) - MCHEmul::UInt (v & 0x0f); 
+		if (c && st.bitStatus (FZ80::CZ80::_CARRYFLAG) )
+			{ rst -= MCHEmul::UInt::_1; rstH -= MCHEmul::UInt::_1; }
+
 		r.set (rst.values ()); // and stored back...
 
 		// How the flags are affected...
-		st.setBitStatus (CZ80::_CARRYFLAG, rst.carry ());
+		st.setBitStatus (CZ80::_CARRYFLAG, !rst.carry ()); // Borrow = !carry
 		st.setBitStatus (CZ80::_NEGATIVEFLAG, true); // Always in substractions!
 		st.setBitStatus (CZ80::_PARITYOVERFLOWFLAG, rst.overflow ());
 		st.setBitStatus (CZ80::_BIT3FLAG, rst [0].bit (3)); // Undocumented...
-		st.setBitStatus (CZ80::_HALFCARRYFLAG, rstH [0].bit (4)); // When true, there will have been a half borrow!
+		st.setBitStatus (CZ80::_HALFCARRYFLAG, !rstH.carry ()); // Half borrow!
 		st.setBitStatus (CZ80::_BIT5FLAG, rst [0].bit (5)); // Undocumented...
 		st.setBitStatus (CZ80::_ZEROFLAG, rst == MCHEmul::UInt::_0);
 		st.setBitStatus (CZ80::_SIGNFLAG, rst.negative ());
@@ -66,24 +69,28 @@ namespace FZ80
 	}
 
 	// ---
-	inline bool SUB_General::executeWith (const MCHEmul::UBytes& v)
+	inline bool SUB_General::executeWithToHL (const MCHEmul::UBytes& v)
 	{
 		MCHEmul::RefRegisters& r = registerHL ();
 		MCHEmul::StatusRegister& st = cpu () -> statusRegister ();
 
 		// The operation...
-		MCHEmul::UInt rst  = MCHEmul::UInt ({ r [0] -> values ()[0], r [1] -> values ()[0] }).
-			substract (MCHEmul::UInt ({ v [0], v [1] }, st.bitStatus (CZ80::_CARRYFLAG)));
-		MCHEmul::UInt rstH = MCHEmul::UInt ({ r [0] -> values ()[0] & 0x0f, r [1] -> values ()[0] }).
-			substract (MCHEmul::UInt ({ v [0] & 0x0f, v [1] }, st.bitStatus (CZ80::_CARRYFLAG))); // half carry from bit 11 to 12?
+		MCHEmul::UInt rst  = MCHEmul::UInt ({ r [0] -> values ()[0], r [1] -> values ()[0] }) -
+			MCHEmul::UInt ({ v [0], v [1] });
+		// To calculate the half borrow in the upper byte...
+		MCHEmul::UInt rstH = MCHEmul::UInt ({ r [0] -> values ()[0] & 0x0f, r [1] -> values ()[0] }) -
+			MCHEmul::UInt ({ v [0] & 0x0f, v [1] });
+		if (st.bitStatus (FZ80::CZ80::_CARRYFLAG)) 
+			{ rst -= MCHEmul::UInt::_1; rstH -= MCHEmul::UInt::_1; }
+
 		r [0] -> set ({ rst.values ()[0] }); r [1] -> set ({ rst.values ()[1] }); 
 
 		// How the flags are affected...
-		st.setBitStatus (CZ80::_CARRYFLAG, rst.carry ());
+		st.setBitStatus (CZ80::_CARRYFLAG, !rst.carry ()); // Borrow is = !carry
 		st.setBitStatus (CZ80::_NEGATIVEFLAG, true); // Always! 
 		st.setBitStatus (CZ80::_PARITYOVERFLOWFLAG, rst.overflow ());
 		st.setBitStatus (CZ80::_BIT3FLAG, rst [0].bit (3)); // a copy of the status of the bit 3... but undocumented!
-		st.setBitStatus (CZ80::_HALFCARRYFLAG, rstH [0].bit (4 /** Bit 12 within the total. */)); 
+		st.setBitStatus (CZ80::_HALFCARRYFLAG, !rstH.carry ());  // Half borrow!
 		st.setBitStatus (CZ80::_BIT5FLAG, rst [0].bit (5)); // a copy of the status of the bit 3... but undocumented!
 		st.setBitStatus (CZ80::_ZEROFLAG, rst == MCHEmul::UInt::_0);
 		st.setBitStatus (CZ80::_SIGNFLAG, rst.negative ());

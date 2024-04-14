@@ -189,7 +189,7 @@ namespace MCHEmul
 							{ return (_values.sizeBits ()); }
 
 		bool negative () const
-							{ return (_values [0][UByte::sizeBits () - 1]); }
+							{ return (_values [0][UByte::sizeBits () - 1]); } // Highest byte always...
 		bool positive () const
 							{ return (!_values [0][UByte::sizeBits () - 1]); }
 

@@ -41,14 +41,15 @@ namespace FZ80
 
 		// The operation...
 		MCHEmul::UInt rst  = MCHEmul::UInt (r.values ()[0]) - MCHEmul::UInt (v);
-		MCHEmul::UInt rstH = MCHEmul::UInt (r.values ()[0] & 0x0f) - MCHEmul::UInt (v & 0x0f); // Just to calculate the half borrow!
+		// Just to calculate the half borrow!
+		MCHEmul::UInt rstH = MCHEmul::UInt (r.values ()[0] & 0x0f) - MCHEmul::UInt (v & 0x0f); 
 
 		// How the flags are affected...
-		st.setBitStatus (CZ80::_CARRYFLAG, rst.carry ());
+		st.setBitStatus (CZ80::_CARRYFLAG, !rst.carry ()); // When borrow, and borrow = !carry 
 		st.setBitStatus (CZ80::_NEGATIVEFLAG, true); // Always!
 		st.setBitStatus (CZ80::_PARITYOVERFLOWFLAG, rst.overflow ());
 		st.setBitStatus (CZ80::_BIT3FLAG, v.bit (3)); // Undocuented... Not from A - s but from s!
-		st.setBitStatus (CZ80::_HALFCARRYFLAG, rstH [0].bit (4)); // When true, there will have been a half borrow!
+		st.setBitStatus (CZ80::_HALFCARRYFLAG, !rstH.carry ()); // When true, there will have been a half borrow!
 		st.setBitStatus (CZ80::_BIT5FLAG, v.bit (5)); // Undocumented...Not from A - s but from s!
 		st.setBitStatus (CZ80::_ZEROFLAG, rst == MCHEmul::UInt::_0);
 		st.setBitStatus (CZ80::_SIGNFLAG, rst.negative ());
