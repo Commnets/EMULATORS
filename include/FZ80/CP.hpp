@@ -44,6 +44,8 @@ namespace FZ80
 		// Just to calculate the half borrow!
 		MCHEmul::UInt rstH = MCHEmul::UInt (r.values ()[0] & 0x0f) - MCHEmul::UInt (v & 0x0f); 
 
+		// The result is not kept in any place...
+
 		// How the flags are affected...
 		st.setBitStatus (CZ80::_CARRYFLAG, !rst.carry ()); // When borrow, and borrow = !carry 
 		st.setBitStatus (CZ80::_NEGATIVEFLAG, true); // Always!

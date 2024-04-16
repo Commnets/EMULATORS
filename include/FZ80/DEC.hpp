@@ -65,10 +65,12 @@ namespace FZ80
 	inline bool DEC_General::executeWith (MCHEmul::RefRegisters& r)
 	{
 		MCHEmul::UInt v  ({ r [0] -> values ()[0], r [1] -> values ()[0] });
-		v  -= MCHEmul::UInt::_1; // Decrement
+		v -= MCHEmul::UInt::_1; // Decrement
 
 		r [0] -> set ({ v [0] }); // Put the info back...
 		r [1] -> set ({ v [1] });
+
+		// With double registers (16 bits operation) there is no impact in the flags
 
 		return (true);
 	}

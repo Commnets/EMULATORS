@@ -44,7 +44,8 @@ namespace FZ80
 		MCHEmul::UInt vH (r.values ()[0] & 0x0f);
 		v  += MCHEmul::UInt::_1; // INCrement...
 		// ..just to see whether there is half carry!
-		vH += MCHEmul::UInt::_1; 
+		vH += MCHEmul::UInt::_1;
+
 		r.set (v.bytes ()); // Put back the info
 
 		// How the flags are affected...
@@ -65,11 +66,12 @@ namespace FZ80
 	{
 		// The operation...
 		MCHEmul::UInt v	({ r [0] -> values ()[0], r [1] -> values ()[0] });
-		v  += MCHEmul::UInt::_1; // Increment...
+		v += MCHEmul::UInt::_1; // Increment...
+
 		r [0] -> set ({ v [0] }); // Put back the info
 		r [1] -> set ({ v [1] });
 
-		// No flags affected
+		// With double registers (16 bits operation) there is no impact in the flags
 
 		return (true);
 	}
@@ -83,14 +85,15 @@ namespace FZ80
 		MCHEmul::UByte vD;
 		MCHEmul::UInt v (vD = memory () -> value (a));
 		MCHEmul::UInt vH (vD & 0x0f);
-		v += 1; // INCrement...
+		v  += MCHEmul::UInt::_1; // INCrement...
 		// Just to calculate the borrow...
-		vH += 1;
+		vH += MCHEmul::UInt::_1;
 
 		// Put is back in the memory...
 		memory () -> set (a, v.values ()[0]);
 
 		// How the flags are affected...
+		// Carry flag is not modified...
 		st.setBitStatus (CZ80::_NEGATIVEFLAG, false); // Just on when the last instruction is a substract!
 		st.setBitStatus (CZ80::_PARITYOVERFLOWFLAG, v.overflow ());
 		st.setBitStatus (CZ80::_BIT3FLAG, v [0].bit (3)); // Undocumented...

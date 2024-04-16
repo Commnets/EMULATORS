@@ -41,11 +41,17 @@ _INST_IMPL (FZ80::CPL)
 
 	MCHEmul::StatusRegister& st = cpu () -> statusRegister ();
 
-	registerA ().set ({ ~registerA ().values ()[0] });
+	MCHEmul::Register& rA = registerA ();
+	rA.set ({ ~registerA ().values ()[0] });
 
 	// How the flags are affected...
+	// Carry flag is not affected
 	st.setBitStatus (FZ80::CZ80::_NEGATIVEFLAG, true);  // Always!
+	// Parity flag is not affected...
+	st.setBitStatus (FZ80::CZ80::_BIT3FLAG, rA.values ().bit (3)); // Undocumented...
 	st.setBitStatus (FZ80::CZ80::_HALFCARRYFLAG, true); // Always!
+	st.setBitStatus (FZ80::CZ80::_BIT5FLAG, rA.values ().bit (5)); // Undocumented...
+	// Sign and Zero flags are not affected...
 
 	return (true);
 }
@@ -82,13 +88,18 @@ _INST_IMPL (FZ80::CCF)
 {
 	assert (parameters ().size () == 1);
 
+	MCHEmul::Register& rA = registerA ();
 	MCHEmul::StatusRegister& st = cpu () -> statusRegister ();
 	bool pC = st.bitStatus (FZ80::CZ80::_CARRYFLAG);
 
 	// How the flags are affected...
 	st.setBitStatus (FZ80::CZ80::_CARRYFLAG, !pC);
 	st.setBitStatus (FZ80::CZ80::_NEGATIVEFLAG, false);  // Always!
-	st.setBitStatus (FZ80::CZ80::_HALFCARRYFLAG, pC);
+	// Parity / Overflow flag is not affected...
+	st.setBitStatus (FZ80::CZ80::_BIT3FLAG, rA.values ()[0].bit (3)); // Undocumented. From register A
+	st.setBitStatus (FZ80::CZ80::_HALFCARRYFLAG, pC); // Undocumented. Like before the operation...
+	st.setBitStatus (FZ80::CZ80::_BIT5FLAG, rA.values ()[0].bit (5)); // Undocumented. From register A
+	// Zero and Sign flag are not affected...
 
 	return (true);
 }
@@ -98,12 +109,17 @@ _INST_IMPL (FZ80::SCF)
 {
 	assert (parameters ().size () == 1);
 
+	MCHEmul::Register& rA = registerA ();
 	MCHEmul::StatusRegister& st = cpu () -> statusRegister ();
 
 	// How the flags are affected...
 	st.setBitStatus (FZ80::CZ80::_CARRYFLAG, true);
 	st.setBitStatus (FZ80::CZ80::_NEGATIVEFLAG, false);  // Always!
+	// Parity / Overflow flag is not affected...
+	st.setBitStatus (FZ80::CZ80::_BIT3FLAG, rA.values ()[0].bit (3)); // Undocumented. From register A
 	st.setBitStatus (FZ80::CZ80::_HALFCARRYFLAG, false); // Always!
+	st.setBitStatus (FZ80::CZ80::_BIT5FLAG, rA.values ()[0].bit (5)); // Undocumented. From register A
+	// Zero and Sign flag are not affected...
 
 	return (true);
 }

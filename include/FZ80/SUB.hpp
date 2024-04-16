@@ -83,15 +83,17 @@ namespace FZ80
 		if (st.bitStatus (FZ80::CZ80::_CARRYFLAG)) 
 			{ rst -= MCHEmul::UInt::_1; rstH -= MCHEmul::UInt::_1; }
 
-		r [0] -> set ({ rst.values ()[0] }); r [1] -> set ({ rst.values ()[1] }); 
+		// Put back the value...
+		r [0] -> set ({ rst.values ()[0] }); 
+		r [1] -> set ({ rst.values ()[1] }); 
 
 		// How the flags are affected...
 		st.setBitStatus (CZ80::_CARRYFLAG, !rst.carry ()); // Borrow is = !carry
 		st.setBitStatus (CZ80::_NEGATIVEFLAG, true); // Always! 
 		st.setBitStatus (CZ80::_PARITYOVERFLOWFLAG, rst.overflow ());
-		st.setBitStatus (CZ80::_BIT3FLAG, rst [0].bit (3)); // a copy of the status of the bit 3... but undocumented!
+		st.setBitStatus (CZ80::_BIT3FLAG, rst [0].bit (3)); // a copy of the status of the bit 3 of the MSB... but undocumented!
 		st.setBitStatus (CZ80::_HALFCARRYFLAG, !rstH.carry ());  // Half borrow!
-		st.setBitStatus (CZ80::_BIT5FLAG, rst [0].bit (5)); // a copy of the status of the bit 3... but undocumented!
+		st.setBitStatus (CZ80::_BIT5FLAG, rst [0].bit (5)); // a copy of the status of the bit 5 of the MSB... but undocumented!
 		st.setBitStatus (CZ80::_ZEROFLAG, rst == MCHEmul::UInt::_0);
 		st.setBitStatus (CZ80::_SIGNFLAG, rst.negative ());
 
