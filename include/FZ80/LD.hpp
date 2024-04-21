@@ -41,13 +41,13 @@ namespace FZ80
 							{ r [0] -> set ({ u [1] }); r [1] -> set ({ u [0] }); return (true); }
 		/** To load a memory position with the value of a byte. */
 		bool executeWith (const MCHEmul::Address& a, const MCHEmul::UByte& u)
-							{ memory () -> set (_lastINOUTAddress = a, 
-								_lastINOUTData = MCHEmul::UBytes ({ u })); return (true); }
+							{ memory () -> set (_lastExecutionData._INOUTAddress = a, 
+								_lastExecutionData._INOUTData = MCHEmul::UBytes ({ u })); return (true); }
 		/** To load a memory position with two bytes. \n
 			It is supossed that the bytes come as they are in memory, so that's it in litlee endian order. */
 		bool executeWith (const MCHEmul::Address& a, const MCHEmul::UBytes& u)
-							{ memory () -> set (_lastINOUTAddress = a, 
-								_lastINOUTData = MCHEmul::UBytes ({ u [1], u [0] })); return (true); }
+							{ memory () -> set (_lastExecutionData._INOUTAddress = a, 
+								_lastExecutionData._INOUTData = MCHEmul::UBytes ({ u [1], u [0] })); return (true); }
 	};
 
 	// Target Main Registers
@@ -264,14 +264,14 @@ namespace FZ80
 	_INST_FROM (0xFD75,	3, 19, 19,	"LD (IY+[#1]),L",		LD_IndirectIndexIYFromL, LD_General);
 
 	// Target (Address)
-	_INST_FROM (0x32,	3, 13, 13,	"LD ([#2]),A",			LD_AddressFromA, LD_General);
-	_INST_FROM (0x22,	3, 16, 16,	"LD ([#2]),HL",			LD_AddressFromHL, LD_General);
-	_INST_FROM (0xED63,	4, 20, 20,	"U3LD ([#2]),HL",		U3LD_AddressFromHL, LD_General);		// Undocumented
-	_INST_FROM (0xDD22,	4, 20, 20,	"LD ([#2]),IX",			LD_AddressFromIX, LD_General);
-	_INST_FROM (0xFD22,	4, 20, 20,	"LD ([#2]),IY",			LD_AddressFromIY, LD_General);
-	_INST_FROM (0xED43,	4, 20, 20,	"LD ([#2]),BC",			LD_AddressFromBC, LD_General);
-	_INST_FROM (0xED53,	4, 20, 20,	"LD ([#2]),DE",			LD_AddressFromDE, LD_General);
-	_INST_FROM (0xED73,	4, 20, 20,	"LD ([#2]),SP",			LD_AddressFromSP, LD_General);
+	_INST_FROM (0x32,	3, 13, 13,	"LD ([$2]),A",			LD_AddressFromA, LD_General);
+	_INST_FROM (0x22,	3, 16, 16,	"LD ([$2]),HL",			LD_AddressFromHL, LD_General);
+	_INST_FROM (0xED63,	4, 20, 20,	"U3LD ([$2]),HL",		U3LD_AddressFromHL, LD_General);		// Undocumented
+	_INST_FROM (0xDD22,	4, 20, 20,	"LD ([$2]),IX",			LD_AddressFromIX, LD_General);
+	_INST_FROM (0xFD22,	4, 20, 20,	"LD ([$2]),IY",			LD_AddressFromIY, LD_General);
+	_INST_FROM (0xED43,	4, 20, 20,	"LD ([$2]),BC",			LD_AddressFromBC, LD_General);
+	_INST_FROM (0xED53,	4, 20, 20,	"LD ([$2]),DE",			LD_AddressFromDE, LD_General);
+	_INST_FROM (0xED73,	4, 20, 20,	"LD ([$2]),SP",			LD_AddressFromSP, LD_General);
 
 	// Target I
 	_INST_FROM (0xED47,	2, 9, 9,	"LD I,A",				LD_IFromA, LD_General);
@@ -280,20 +280,20 @@ namespace FZ80
 	_INST_FROM (0xED4F,	2, 9, 9,	"LD R,A",				LD_RFromA, LD_General);
 
 	// Target BC
-	_INST_FROM (0x01,	3, 10, 10,	"LD BC,[#2]",			LD_BC, LD_General);
+	_INST_FROM (0x01,	3, 10, 10,	"LD BC,[$2]",			LD_BC, LD_General);
 	_INST_FROM (0xED4B,	4, 20, 20,	"LD BC,([$2])",			LD_BCFromAddress, LD_General);
 
 	// Target DE
-	_INST_FROM (0x11,	3, 10, 10,	"LD DE,[#2]",			LD_DE, LD_General);
+	_INST_FROM (0x11,	3, 10, 10,	"LD DE,[$2]",			LD_DE, LD_General);
 	_INST_FROM (0xED5B,	4, 20, 20,	"LD DE,([$2])",			LD_DEFromAddress, LD_General);
 
 	// Target HL
-	_INST_FROM (0x21,	3, 10, 10,	"LD HL,[#2]",			LD_HL, LD_General);
+	_INST_FROM (0x21,	3, 10, 10,	"LD HL,[$2]",			LD_HL, LD_General);
 	_INST_FROM (0x2A,	3, 16, 16,	"LD HL,([$2])",			LD_HLFromAddress, LD_General);
 	_INST_FROM (0xED6B,	4, 20, 20,	"U3LD HL,([$2])",		U3LD_HLFromAddress, LD_General);		// Undocumented
 
 	// Target IX
-	_INST_FROM (0xDD21,	4, 14, 14,	"LD IX,[#2]",			LD_IX, LD_General);
+	_INST_FROM (0xDD21,	4, 14, 14,	"LD IX,[$2]",			LD_IX, LD_General);
 	_INST_FROM (0xDD2A,	4, 20, 20,	"LD IX,([$2])",			LD_IXFromAddress, LD_General);
 	_INST_FROM (0xDD26,	3, 11, 11,	"LD IXH,[#1]",			LD_IXH, LD_General);					// Undocumented
 	_INST_FROM (0xDD67,	2, 8, 8,	"LD IXH,A",				LD_IXHFromA, LD_General);				// Undocumented
@@ -313,7 +313,7 @@ namespace FZ80
 	_INST_FROM (0xDD6D,	2, 8, 8,	"LD IXL,IXL",			LD_IXLFromIXL, LD_General);				// Undocumented
 
 	// Target IY
-	_INST_FROM (0xFD21,	4, 14, 14,	"LD IY,[#2]",			LD_IY, LD_General);
+	_INST_FROM (0xFD21,	4, 14, 14,	"LD IY,[$2]",			LD_IY, LD_General);
 	_INST_FROM (0xFD2A,	4, 20, 20,	"LD IY,([$2])",			LD_IYFromAddress, LD_General);
 	_INST_FROM (0xFD26,	3, 11, 11,	"LD IYH,[#1]",			LD_IYH, LD_General);					// Undocumented
 	_INST_FROM (0xFD67,	2, 8, 8,	"LD IYH,A",				LD_IYHFromA, LD_General);				// Undocumented
@@ -333,7 +333,7 @@ namespace FZ80
 	_INST_FROM (0xFD6D,	2, 8, 8,	"LD IYL,IYL",			LD_IYLFromIYL, LD_General);				// Undocumented
 
 	// Target SP
-	_INST_FROM (0x31,	3, 10, 10,	"LD SP,[#2]",			LD_SP, LD_General);
+	_INST_FROM (0x31,	3, 10, 10,	"LD SP,[$2]",			LD_SP, LD_General);
 	_INST_FROM (0xF9,	1, 6, 6,	"LD SP,HL",				LD_SPFromHL, LD_General);
 	_INST_FROM (0xDDF9,	2, 10, 10,	"LD SP,IX",				LD_SPFromIX, LD_General);
 	_INST_FROM (0xFDF9,	2, 10, 10,	"LD SP,IY",				LD_SPFromIY, LD_General);

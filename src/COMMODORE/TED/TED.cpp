@@ -263,14 +263,14 @@ bool COMMODORE::TED::simulate (MCHEmul::CPU* cpu)
 		// In the case of graphics that stop only happens when the situation arise in the "screen cycles" (40)
 		if (!cpu -> stopped () && 
 				(_newBadLineCondition && (_cycleInRasterLine >= 4 && _cycleInRasterLine < 44)))
-			cpu -> setStop (true, MCHEmul::Instruction::_CYCLEREAD /** only read in not allowed. */, 
+			cpu -> setStop (true, MCHEmul::InstructionDefined::_CYCLEREAD /** only read in not allowed. */, 
 				cpu -> clockCycles () - i, 3);
 
 		// Treat the right cycle...
 		// ...and as a consequence the CPU can be also stopped...
 		unsigned int cS = 0;
 		if ((cS = treatRasterCycle ()) > 0)
-			cpu -> setStop (true, MCHEmul::Instruction::_CYCLEALL /** fully stopped. */, cpu -> clockCycles () - i, (int) cS);
+			cpu -> setStop (true, MCHEmul::InstructionDefined::_CYCLEALL /** fully stopped. */, cpu -> clockCycles () - i, (int) cS);
 
 		// Draws the graphics & border if it has to do so...
 		if (_raster.isInVisibleZone ())

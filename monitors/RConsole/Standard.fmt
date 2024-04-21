@@ -25,7 +25,7 @@ Id:@ID@, In Execution:@EXECUTION@
 #The info about the Architecture here
 @ATTRS?{key=YES,equal=:,empty=no attributes}\n@
 @Architecture>@
-@REGS?{key=NO,equal=:,empty=no registers},@
+@REGS?{key=NO,equal=:,empty=no registers,blocksize=4}\t@
 @PC@
 @SR@
 ->Interrupts:
@@ -177,7 +177,7 @@ Active:@ACTIVE@, Type:@TYPE@, Frequency:@FREQUENCY@(@PULSEUP@)
 ;CCPUSTATUS
 Last:@INST@
 @PC@
-@REGS?{key=NO,equal=:,empty=no registers},@
+@REGS?{key=NO,equal=:,empty=no registers,blocksize=4}\t@
 @SR@
 ->Stack:
 @Stack>@
@@ -188,7 +188,7 @@ Last:@INST@
 ;CCPUSSTATUS
 Last:@INST@
 @PC@
-@REGS?{key=NO,equal=:,empty=no registers},@
+@REGS?{key=NO,equal=:,empty=no registers,blocksize=4}\t@
 @SR@
 ->Interrupts:
 @INTERRUPTS?{fmter=.CLASS,empty=no interruptions}\n@
@@ -222,14 +222,14 @@ Last:@INST@
 ;CSTOP
 @PC@
 Last:@INST@
-@REGS?{key=NO,equal=:,empty=no registers},@
+@REGS?{key=NO,equal=:,empty=no registers,blocksize=4}\t@
 @SR@
 #---
 #---
 ;CRUN
 @PC@
 Current:@INST@
-@REGS?{key=NO,equal=:,empty=no registers},@
+@REGS?{key=NO,equal=:,empty=no registers,blocksize=4}\t@
 @SR@
 #---
 #---

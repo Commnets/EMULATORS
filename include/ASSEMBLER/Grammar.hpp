@@ -308,9 +308,9 @@ namespace MCHEmul
 
 			virtual size_t size (const Semantic* s, const OperationParser* oP) const override;
 
-			std::vector <Instruction*> _possibleInstructions;
+			std::vector <InstructionDefined*> _possibleInstructions;
 			std::vector <Strings> _possibleParameters;
-			mutable Instruction* _selectedInstruction;
+			mutable InstructionDefined* _selectedInstruction;
 
 			private:
 			/** The bytes of the first possible instruction taking into account the size of the parameters,
@@ -319,7 +319,7 @@ namespace MCHEmul
 
 			// Implementation
 			std::vector <UByte> calculateCodeBytesForInstruction 
-				(const Instruction* inst, const Strings& prms, const Semantic* s, bool bE, const OperationParser* oP) const;
+				(const InstructionDefined* inst, const Strings& prms, const Semantic* s, bool bE, const OperationParser* oP) const;
 		};
 
 		/** @see explanation at the beggining of the file. */

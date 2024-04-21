@@ -3,7 +3,7 @@
 ?./Standard.fmt
 #---
 ;INTInterrupt
-Type:INT, Id:@ID@, In Execution:@EXECUTION@, In Address:@ADDRESS@
+Type:INT, Id:@ID@, In Execution:@EXECUTION@, In Address:@ADDRESS@, Mode:@MODE@
 #---
 #---
 ;NMIInterrupt

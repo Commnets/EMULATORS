@@ -46,7 +46,8 @@ namespace FZ80
 	{ 
 		// The value of the component BC is pushed into the address bus...
 		// ...because it migth be usefull when reading the port! (and it is the behaviour defined)
-		_lastINOUTAddress = MCHEmul::Address ({ registerA ().values ()[0], np }, true /** Already in big endian. */);
+		_lastExecutionData._INOUTAddress = 
+			MCHEmul::Address ({ registerA ().values ()[0], np }, true /** Already in big endian. */);
 
 		registerA ().set ({ static_cast <CZ80*> (cpu ()) -> portValue (np) }); 
 		// No flags affection...
@@ -59,7 +60,7 @@ namespace FZ80
 	{
 		unsigned char np = registerC ().values ()[0].value ();
 
-		_lastINOUTAddress = MCHEmul::Address ({ registerB ().values ()[0], np }, true);
+		_lastExecutionData._INOUTAddress = MCHEmul::Address ({ registerB ().values ()[0], np }, true);
 
 		MCHEmul::UByte v;
 		r.set ({ v = static_cast <CZ80*> (cpu ()) -> portValue (np) });
@@ -73,7 +74,7 @@ namespace FZ80
 	{
 		unsigned char np = registerC ().values ()[0].value ();
 
-		_lastINOUTAddress = MCHEmul::Address ({ registerB ().values ()[0], np }, true);
+		_lastExecutionData._INOUTAddress = MCHEmul::Address ({ registerB ().values ()[0], np }, true);
 
 		// The value is not kept anywhere...(lost)
 		affectFlags (static_cast <CZ80*> (cpu ()) -> portValue (np));
@@ -168,7 +169,7 @@ namespace FZ80
 	{ 
 		// In the case of using the OUT A, (n)...
 		// ...the address bus is kept with An
-		_lastINOUTAddress = MCHEmul::Address ({ registerA ().values ()[0], np }, true);
+		_lastExecutionData._INOUTAddress = MCHEmul::Address ({ registerA ().values ()[0], np }, true);
 
 		static_cast <CZ80*> (cpu ()) -> setPortValue (np, registerA ().values ()[0].value ()); 
 		// No flags impact!
@@ -183,7 +184,7 @@ namespace FZ80
 
 		// In the case of using the OUT r, (C)...
 		// ...the address bus is kept with Bn
-		_lastINOUTAddress = MCHEmul::Address ({ registerB ().values ()[0], v }, true);
+		_lastExecutionData._INOUTAddress = MCHEmul::Address ({ registerB ().values ()[0], v }, true);
 
 		static_cast <CZ80*> (cpu ()) -> setPortValue (v, r.values () [0].value ());
 		// No flags impact...
@@ -196,7 +197,7 @@ namespace FZ80
 	{ 
 		unsigned char v = registerC ().values ()[0].value ();
 
-		_lastINOUTAddress = MCHEmul::Address ({ registerB ().values ()[0], v }, true /** Already in big endian. */);
+		_lastExecutionData._INOUTAddress = MCHEmul::Address ({ registerB ().values ()[0], v }, true /** Already in big endian. */);
 
 		// Same behaviour that IN r,(C)
 		// But nothing is written instead...

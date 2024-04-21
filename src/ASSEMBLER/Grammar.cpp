@@ -349,11 +349,11 @@ size_t MCHEmul::Assembler::InstructionElement::size (const Semantic* s, const MC
 			unsigned short nJS = 0;
 			for (auto i : _possibleInstructions)
 			{
-				for (std::vector <MCHEmul::Instruction::Structure::Parameter>::const_iterator j = 
+				for (std::vector <MCHEmul::InstructionDefined::Structure::Parameter>::const_iterator j = 
 						i -> internalStructure ()._parameters.begin (); 
 						j != i -> internalStructure ()._parameters.end () && !jS; j++)
-					jS = ((*j)._type == MCHEmul::Instruction::Structure::Parameter::Type::_RELJUMP ||
-						  (*j)._type == MCHEmul::Instruction::Structure::Parameter::Type::_ABSJUMP);
+					jS = ((*j)._type == MCHEmul::InstructionDefined::Structure::Parameter::Type::_RELJUMP ||
+						  (*j)._type == MCHEmul::InstructionDefined::Structure::Parameter::Type::_ABSJUMP);
 
 				if (jS) nJS++;
 			}
@@ -432,7 +432,7 @@ std::vector <MCHEmul::UByte> MCHEmul::Assembler::InstructionElement::calculateCo
 
 // ---
 std::vector <MCHEmul::UByte> MCHEmul::Assembler::InstructionElement::calculateCodeBytesForInstruction 
-	(const MCHEmul::Instruction* inst, const MCHEmul::Strings& prms, 
+	(const MCHEmul::InstructionDefined* inst, const MCHEmul::Strings& prms, 
 	 const MCHEmul::Assembler::Semantic* s, bool bE, const MCHEmul::Assembler::OperationParser* oP) const
 {
 	std::vector <MCHEmul::UByte> result;
@@ -447,16 +447,16 @@ std::vector <MCHEmul::UByte> MCHEmul::Assembler::InstructionElement::calculateCo
 		std::vector <MCHEmul::UByte> bt;
 		switch (inst -> internalStructure ()._parameters [i]._type)
 		{
-			case MCHEmul::Instruction::Structure::Parameter::Type::_DATA:
-			case MCHEmul::Instruction::Structure::Parameter::Type::_DIR:
+			case MCHEmul::InstructionDefined::Structure::Parameter::Type::_DATA:
+			case MCHEmul::InstructionDefined::Structure::Parameter::Type::_DIR:
 			{
 				bt = MCHEmul::UBytes (bytesFromExpression (prms [i], s -> macros (), e, oP), bE).bytes ();
 			}
 
 			break;
 
-			case MCHEmul::Instruction::Structure::Parameter::Type::_RELJUMP:
-			case MCHEmul::Instruction::Structure::Parameter::Type::_ABSJUMP:
+			case MCHEmul::InstructionDefined::Structure::Parameter::Type::_RELJUMP:
+			case MCHEmul::InstructionDefined::Structure::Parameter::Type::_ABSJUMP:
 			{
 				if (MCHEmul::validLabel (prms [i]))
 				{
@@ -467,7 +467,7 @@ std::vector <MCHEmul::UByte> MCHEmul::Assembler::InstructionElement::calculateCo
 					if (lbsP != lbs.end ())
 					{
 						if (inst -> internalStructure ()._parameters [i]._type == 
-								MCHEmul::Instruction::Structure::Parameter::Type::_RELJUMP)
+								MCHEmul::InstructionDefined::Structure::Parameter::Type::_RELJUMP)
 						{
 							MCHEmul::Address iA = address (s, oP) + inst -> memoryPositions ();
 							bt = MCHEmul::UInt::fromInt (iA.distanceWith ((*lbsP) -> address (s, oP))).bytes ();

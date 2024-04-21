@@ -4,7 +4,7 @@
 bool FZ80::Instruction::execute (MCHEmul::CPU* c, MCHEmul::Memory* m,
 	MCHEmul::Stack* stk, MCHEmul::ProgramCounter* pc)
 {
-	_lastINOUTAddress = MCHEmul::Address ();
+	_lastExecutionData._INOUTAddress = MCHEmul::Address ();
 
 	bool result = MCHEmul::InstructionDefined::execute (c, m , stk, pc);
 
@@ -16,7 +16,7 @@ bool FZ80::Instruction::execute (MCHEmul::CPU* c, MCHEmul::Memory* m,
 	// Later (other cycles), the bus can be used for other purposes...
 	// But if after those other uses, the _lastINOUTAddress is still nothing...
 	// it would mean that the info to be sent to the address bus is the IR!
-	if (_lastINOUTAddress.value () == 0)
+	if (_lastExecutionData._INOUTAddress.value () == 0)
 		addressIR (); // This instruction already move the value into the _lastINOUTAddress...
 
 	return (result);

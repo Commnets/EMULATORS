@@ -2,33 +2,59 @@
 #include <CORE/CPU.hpp>
 
 // ---
-static std::map <unsigned char, MCHEmul::Instruction::Structure::Parameter::Type> _TYPES
+static std::map <unsigned char, MCHEmul::InstructionDefined::Structure::Parameter::Type> _TYPES
 	({ 
-		{'#', MCHEmul::Instruction::Structure::Parameter::Type::_DATA},
-		{'$', MCHEmul::Instruction::Structure::Parameter::Type::_DIR},
-		{'&', MCHEmul::Instruction::Structure::Parameter::Type::_RELJUMP}, 
-		{'%', MCHEmul::Instruction::Structure::Parameter::Type::_ABSJUMP} 
+		{'#', MCHEmul::InstructionDefined::Structure::Parameter::Type::_DATA},
+		{'$', MCHEmul::InstructionDefined::Structure::Parameter::Type::_DIR},
+		{'&', MCHEmul::InstructionDefined::Structure::Parameter::Type::_RELJUMP}, 
+		{'%', MCHEmul::InstructionDefined::Structure::Parameter::Type::_ABSJUMP} 
 	});
 
 // ---
-MCHEmul::Instruction::Instruction (unsigned int c, unsigned int mp, unsigned int cc, 
+const MCHEmul::UBytes MCHEmul::Instruction::ExecutionData::parameters (size_t p, size_t nP, bool bE) const
+{
+	if ((p + nP - 1) >= _parameters.size ())
+		return (MCHEmul::UBytes::_E);
+
+	std::vector <MCHEmul::UByte> ub;
+	for (size_t i = 0; i < nP; ub.push_back (_parameters [p + i++]));
+	return (MCHEmul::UBytes (ub, bE));
+}
+
+// ---
+std::string MCHEmul::Instruction::ExecutionData::parametersAsString (size_t p, size_t nP, bool bE) const
+{ 
+	MCHEmul::UBytes ub = parameters (p, nP, bE);
+
+	std::string result = "";
+	for (size_t i = 0; i < ub.size (); i++)
+		result += ((i == 0) ? "$" : "") + ub [i].asString (MCHEmul::UByte::OutputFormat::_HEXA, 2);
+	return (result);
+}
+
+// ---
+MCHEmul::Instruction::Instruction (unsigned int c, bool bE)
+	: _code (c),
+	  _codeLength (((size_t) c < ((size_t) 1 << MCHEmul::UByte::sizeBits ()))
+		? 1 : ((size_t) c < ((size_t) 1 << (MCHEmul::UByte::sizeBits () * 2)))
+		? 2 : ((size_t) c < ((size_t) 1 << (MCHEmul::UByte::sizeBits () * 3))) ? 3 : 4), // No more than 4...
+	  _bigEndian (bE),
+	  _lastExecutionData ()
+{
+	// Nothing else to do...
+}
+
+// ---
+MCHEmul::InstructionDefined::InstructionDefined (unsigned int c, unsigned int mp, unsigned int cc, 
 		const std::string& t, bool bE)
-	: _code (c), 
-	  _codeLength (((size_t) c < ((size_t) 1 << MCHEmul::UByte::sizeBits ())) 
-			? 1 : ((size_t) c < ((size_t) 1 << (MCHEmul::UByte::sizeBits () * 2))) 
-				? 2 : ((size_t) c < ((size_t) 1 << (MCHEmul::UByte::sizeBits () * 3))) ? 3 : 4), // No more than 4...
+	: MCHEmul::Instruction (c, bE),
 	  _memoryPositions (mp), 
 	  _clockCycles (cc),
-	  _bigEndian (bE),
-	  _iTemplate (MCHEmul::noSpaces (MCHEmul::upper (t))),
-	  _iStructure (), // Assigned later...
-	  _lastParameters (), _lastINOUTAddress (), _lastINOUTData (), _lastProgramCounter (1), // It will changed later...
-	  _cpu (nullptr), _memory (nullptr), _stack (nullptr)
+	  _iTemplate (MCHEmul::noSpaces (MCHEmul::upper (t))), // The template if stored in uppercase and with no spaces...
+	  _iStructure ()
 { 
 	assert (_memoryPositions > 0 && _clockCycles > 0); 
 	assert (_iTemplate != ""); 
-
-	// The template if stored in uppercase and with no spaces...
 
 	_iStructure = analyzeInstruction ();
 	if (_iStructure._error)
@@ -36,10 +62,11 @@ MCHEmul::Instruction::Instruction (unsigned int c, unsigned int mp, unsigned int
 }
 
 // ---
-bool MCHEmul::Instruction::matchesWith (const std::string& i, MCHEmul::Strings& prms)
+MCHEmul::InstructionDefined* MCHEmul::InstructionDefined::matchesWith 
+	(const std::string& i, MCHEmul::Strings& prms)
 {
 	if (_iStructure._error)
-		return (false);
+		return (nullptr); // No match...
 
 	std::string inst = _iStructure._templateWithNoParameters;
 
@@ -49,11 +76,11 @@ bool MCHEmul::Instruction::matchesWith (const std::string& i, MCHEmul::Strings& 
 
 	// The one received can't be shorter than the template never
 	if (iL.length () < inst.length ())
-		return (false); // if it is, we are speaking about another opcode...
+		return (nullptr); // if it is, we are speaking about another opcode...
 
 	// If they don't start by the same symbol, thre woldn't be any possibility for them to match
 	if (iL [0] != inst [0])
-		return (false);
+		return (nullptr);
 
 	// It is time to review whether 
 	// the structure of the received instruction could match with this...
@@ -91,7 +118,7 @@ bool MCHEmul::Instruction::matchesWith (const std::string& i, MCHEmul::Strings& 
 	// If the global aspect doesn't match
 	// It is not worth to continue...
 	if (!result)
-		return (false);
+		return (nullptr);
 
 	// If the instruction recevived hasn't been compared until its end,
 	// It could mean there is parameters still pending to add...
@@ -106,40 +133,29 @@ bool MCHEmul::Instruction::matchesWith (const std::string& i, MCHEmul::Strings& 
 			pW += '?';
 		}
 		else // In other case, it is not something that matches!
-			return (false);
+			return (nullptr);
 	}
 
 	// The number of extracted parameters has to match the number of the ones defined...
 	// ...and also the watermark!
-	return (_iStructure._waterMark == MCHEmul::onlyAlphanumeric (MCHEmul::removeAllFrom (iL, prms)) /** Basic structure. */ &&
-			_iStructure._waterMarkPlus == pW && /** But also the extended version. */
-			prms.size () == _iStructure._parameters.size () /** and for sure the paramete4rs. */);
+	return ((_iStructure._waterMark == MCHEmul::onlyAlphanumeric (MCHEmul::removeAllFrom (iL, prms)) /** Basic structure. */ &&
+			 _iStructure._waterMarkPlus == pW && /** But also the extended version. */
+			 prms.size () == _iStructure._parameters.size () /** and for sure the paramete4rs. */) ? this : nullptr);
 }
 
 // ---
-const MCHEmul::UBytes MCHEmul::Instruction::parameters (size_t p, size_t nP, bool bE) const
+bool MCHEmul::InstructionDefined::defineInstructionFrom
+	(MCHEmul::Memory* m, const MCHEmul::Address& addr)
 {
-	if ((p + nP - 1) >= _lastParameters.size ())
-		return (MCHEmul::UBytes::_E);
+	assert (m != nullptr);
 
-	std::vector <MCHEmul::UByte> ub;
-	for (size_t i = 0; i < nP; ub.push_back (_lastParameters [p + i++]));
-	return (MCHEmul::UBytes (ub, bE));
+	_lastExecutionData._parameters = m -> values (addr, _memoryPositions /** fix number. */);
+
+	return (true);
 }
 
 // ---
-std::string MCHEmul::Instruction::parametersAsString (size_t p, size_t nP, bool bE) const
-{ 
-	MCHEmul::UBytes ub = parameters (p, nP, bE);
-
-	std::string result = "";
-	for (size_t i = 0; i < ub.size (); i++)
-		result += ((i == 0) ? "$" : "") + ub [i].asString (MCHEmul::UByte::OutputFormat::_HEXA, 2);
-	return (result);
-}
-
-// ---
-std::vector <MCHEmul::UByte> MCHEmul::Instruction::shapeCodeWithData
+std::vector <MCHEmul::UByte> MCHEmul::InstructionDefined::shapeCodeWithData
 	(const std::vector <std::vector <MCHEmul::UByte>>& b, bool& e) const
 {
 	// Build the instruction...
@@ -152,13 +168,13 @@ std::vector <MCHEmul::UByte> MCHEmul::Instruction::shapeCodeWithData
 	// If not it was because either the number of parameters was wrong
 	// or the code of the instruction was longer that expected
 	// There might happen however that with both mistakes at the same time the length was ok!
-	e = (result.size () != memoryPositions ());
+	e = (result.size () != _memoryPositions);
 
 	return (result);
 }
 
 // ---
-std::string MCHEmul::Instruction::asString () const
+std::string MCHEmul::InstructionDefined::asString () const
 {
 	if (internalStructure ()._error)
 		return (_iTemplate); // Nothing else is possible...
@@ -188,7 +204,8 @@ std::string MCHEmul::Instruction::asString () const
 					(*iPrm).second == Structure::Parameter::Type::_ABSJUMP) ? _bigEndian : true)
 				: true;
 
-			toPrint += t.substr (lP, iPP - lP) + parametersAsString (nPrm, bPrm, bE);
+			toPrint += t.substr (lP, iPP - lP) + 
+				_lastExecutionData.parametersAsString (nPrm, bPrm, bE);
 
 			nPrm += bPrm;
 			lP = fPP + 1;
@@ -205,11 +222,61 @@ std::string MCHEmul::Instruction::asString () const
 }
 
 // ---
-MCHEmul::Instruction::Structure MCHEmul::Instruction::analyzeInstruction () const
+bool MCHEmul::InstructionDefined::execute (MCHEmul::CPU* c, MCHEmul::Memory* m, MCHEmul::Stack* stk, 
+	MCHEmul::ProgramCounter* pc)
 {
-	MCHEmul::Instruction::Structure result;
+	// It can not be executed unless the references are not nullptr...
+	assert (c != nullptr && 
+			m != nullptr && 
+			stk != nullptr &&
+			pc != nullptr);
 
-	std::string inst = iTemplate ();
+	_lastExecutionData._cpu	= c;
+	_lastExecutionData._memory = m;
+	_lastExecutionData._stack = stk;
+
+	// Gets the data that the instruction occupies
+	// before updating the Program Counter...
+	_lastExecutionData._parameters = 
+		_lastExecutionData._memory -> values (pc -> asAddress (), _memoryPositions);
+	_lastExecutionData._programCounter = *pc;
+
+	// Then, the Program Counter is moved to the next instruction...
+	// This is done in this way because the intruction itself could
+	// modify the value of the Program Counter (Jumps, returns,...)
+	// Some CPU modify the program counter as they execute the instruction...
+	// take care codifying the right behaviour per instruction...
+	*pc += (size_t) _memoryPositions;
+
+	_additionalCycles = 0; // executeImpl could add additional cycles...
+
+	bool f = true;
+	bool r = executeImpl (f);
+	if (r)
+	{
+		if (!f)
+			pc -= _memoryPositions;
+
+		_lastExecutionData._clockCycles = _clockCycles;
+
+		_lastExecutionData._additionalClockCycles = _additionalCycles;
+
+		_lastExecutionData._memoryPositions = _memoryPositions;
+
+		c -> setLastINOUTAddress (_lastExecutionData._INOUTAddress);
+
+		c -> setLastINOUTData (_lastExecutionData._INOUTData);
+	}
+
+	return (r);
+}
+
+// ---
+MCHEmul::InstructionDefined::Structure MCHEmul::InstructionDefined::analyzeInstruction () const
+{
+	MCHEmul::InstructionDefined::Structure result;
+
+	std::string inst = _iTemplate;
 	std::string wmak = inst;
 
 	size_t iP = inst.find ('[');
@@ -253,102 +320,54 @@ MCHEmul::Instruction::Structure MCHEmul::Instruction::analyzeInstruction () cons
 	return (result);
 }
 
-bool MCHEmul::InstructionDefined::execute (MCHEmul::CPU* c, MCHEmul::Memory* m, MCHEmul::Stack* stk, 
-	MCHEmul::ProgramCounter* pc)
-{
-	// It can not be executed unless the references are not nullptr...
-	assert (c != nullptr && 
-			m != nullptr && 
-			stk != nullptr &&
-			pc != nullptr);
-
-	_cpu = c;
-	_memory = m;
-	_stack = stk;
-
-	// Gets the data that the instruction occupies
-	// before updating the Program Counter...
-	_lastParameters = 
-		_memory -> values (pc -> asAddress (), memoryPositions ());
-	// ...and also where the program counter was pointing...
-	// as it can be useful later!
-	_lastProgramCounter = *pc;
-	// Then, the Program Counter is moved to the next instruction...
-	// This is done in this way because the intruction itself could
-	// modify the value of the Program Counter (Jumps, returns,...)
-	*pc += (size_t) memoryPositions ();
-
-	_additionalCycles = 0; // executeImpl could add additional cycles...
-
-	bool f = true;
-	bool r = executeImpl (f);
-	if (r)
-	{
-		if (!f)
-			pc -= memoryPositions ();
-
-		c -> setLastINOUTAddress (_lastINOUTAddress);
-
-		c -> setLastINOUTData (_lastINOUTData);
-	}
-
-	return (r);
-}
-
 // ---
 MCHEmul::InstructionUndefined::InstructionUndefined (unsigned int c, const MCHEmul::Instructions& inst)
-	: MCHEmul::Instruction (c, 1 /** adjusted later. */, 1 /** adjusted later. */, "UNDEFINED", true),
+	: MCHEmul::Instruction (c, true),
 	  _instructions (inst),
 	  _lastInstruction (nullptr)
 {
 	assert (_instructions.size () != 0);
+}
 
-	// By default, the internal execution values...
-	// are the ones from the first instruction in the lis!
-	MCHEmul::Instruction* fInst = (*_instructions.begin ()).second;
-	_code				= fInst -> code ();
-	_codeLength			= fInst -> codeLength ();
-	_memoryPositions	= fInst -> memoryPositions ();
-	_clockCycles		= fInst -> clockCycles ();
-	_bigEndian			= fInst -> bigEndian ();
-	_iTemplate			= fInst -> iTemplate ();
-	_additionalCycles	= fInst -> additionalClockCycles ();
-	_iStructure			= fInst -> internalStructure ();
+// ---
+MCHEmul::InstructionDefined* MCHEmul::InstructionUndefined::matchesWith (const std::string& i, MCHEmul::Strings& prms)
+{
+	MCHEmul::InstructionDefined* result = nullptr;
+
+	for (MCHEmul::Instructions::const_iterator j = _instructions.begin (); 
+		j != _instructions.end () && result == nullptr; j++)
+			result = (*j).second -> matchesWith (i, prms);
+
+	return (result);
+}
+
+// ---
+bool MCHEmul::InstructionUndefined::defineInstructionFrom (MCHEmul::Memory* m, const MCHEmul::Address& addr)
+{
+	assert (m != nullptr);
+
+	// First select the instructions...
+	if ((_lastInstruction = 
+		const_cast <MCHEmul::Instruction*> (selectInstruction (m, addr))) == nullptr)
+		return (false);
+
+	// Then define the details...and drag the parameters defined!
+	bool result = false;
+	if ((result = _lastInstruction -> defineInstructionFrom (m, addr)))
+		_lastExecutionData = _lastInstruction -> lastExecutionData (); 
+
+	return (result);
 }
 
 // ---
 bool MCHEmul::InstructionUndefined::execute (MCHEmul::CPU* c, MCHEmul::Memory* m, MCHEmul::Stack* stk, 
 	MCHEmul::ProgramCounter* pc)
 {
-	// It can not be executed unless the references are not nullptr...
-	assert (c != nullptr && 
-			m != nullptr && 
-			stk != nullptr &&
-			pc != nullptr);
-
-	_cpu = c;
-	_memory = m;
-	_stack = stk;
-
 	bool result = false; // By default...
-	MCHEmul::Instruction* sI = selectInstruction (c, m, stk, pc); // To select the instruction...
+	MCHEmul::Instruction* sI = 
+		const_cast <MCHEmul::Instruction*> (selectInstruction (m, pc -> asAddress ())); // To select the instruction...
 	if (sI != nullptr && (result = sI -> execute (c, m, stk, pc)))
-	{
-		_lastInstruction = (dynamic_cast <MCHEmul::InstructionDefined*> (sI) != nullptr)
-			? static_cast <MCHEmul::InstructionDefined*> (sI)
-			: static_cast <MCHEmul::InstructionUndefined*> (sI) -> _lastInstruction;
-		_lastINOUTAddress   = _lastInstruction -> lastINOUTAddress ();
-		_lastINOUTData		= _lastInstruction -> lastINOUTData ();
-		_lastProgramCounter	= _lastInstruction -> lastProgramCounter ();
-		_code				= _lastInstruction -> code ();
-		_codeLength			= _lastInstruction -> codeLength ();
-		_memoryPositions	= _lastInstruction -> memoryPositions ();
-		_clockCycles		= _lastInstruction -> clockCycles ();
-		_bigEndian			= _lastInstruction -> bigEndian ();
-		_iTemplate			= _lastInstruction -> iTemplate ();
-		_additionalCycles	= _lastInstruction -> additionalClockCycles ();
-		_iStructure			= _lastInstruction -> internalStructure ();
-	}
+		_lastExecutionData = (_lastInstruction = sI) -> lastExecutionData ();
 
 	return (result);
 }

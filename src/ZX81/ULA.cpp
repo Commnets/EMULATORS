@@ -217,7 +217,7 @@ void ZX81::ULA::readGraphicsAndDrawVisibleZone (MCHEmul::CPU* cpu)
 	// Remember that the way that the ULA sees the memory is different than the way CPU does...
 	memoryRef () -> setActiveView (_ULAView);
 	MCHEmul::UByte chrCode = 
-		memoryRef () -> value (cpu -> lastInstruction () -> lastINOUTAddress ());
+		memoryRef () -> value (cpu -> lastInstruction () -> INOUTAddress ());
 	MCHEmul::UByte chrData = memoryRef () -> value 
 		(MCHEmul::Address (2, 
 			(unsigned int (static_cast <FZ80::CZ80*> (cpu) -> iRegister ().values ()[0].value ()) << 9) |

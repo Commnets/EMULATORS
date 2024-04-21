@@ -185,40 +185,46 @@ namespace FZ80
 
 		// To get the address pointed by the register...
 		MCHEmul::Address addressBC (size_t n = 0) const
-							{ return (_lastINOUTAddress =
+							{ return (_lastExecutionData._INOUTAddress =
 								(MCHEmul::Address (valueRegisterBC (), true /** Addresses in Registers are big - endian. */) + n)); }
 		MCHEmul::Address addressDE (size_t n = 0) const
-							{ return (_lastINOUTAddress = 
+							{ return (_lastExecutionData._INOUTAddress = 
 								MCHEmul::Address (valueRegisterDE (), true) + n); }
 		MCHEmul::Address addressHL (size_t n = 0) const
-							{ return (_lastINOUTAddress = 
+							{ return (_lastExecutionData._INOUTAddress = 
 								MCHEmul::Address (valueRegisterHL (), true) + n); }
 		MCHEmul::Address addressIX (size_t n = 0) const
-							{ return (_lastINOUTAddress = 
+							{ return (_lastExecutionData._INOUTAddress = 
 								MCHEmul::Address (valueRegisterIX (), true) + n); }
 		MCHEmul::Address addressIY (size_t n = 0) const
-							{ return (_lastINOUTAddress = 
+							{ return (_lastExecutionData._INOUTAddress = 
 								MCHEmul::Address (valueRegisterIY (), true) + n); }
 		MCHEmul::Address addressSP (size_t n = 0) const
-							{ return (_lastINOUTAddress = 
+							{ return (_lastExecutionData._INOUTAddress = 
 								MCHEmul::Address (valueRegisterSP (), true) + n); }
 		MCHEmul::Address addressIR (size_t n = 0) const
-							{ return (_lastINOUTAddress = 
+							{ return (_lastExecutionData._INOUTAddress = 
 								MCHEmul::Address (valueRegisterIR (), true) + n); }
 
 		// To get the value pointed by the registers...
 		const MCHEmul::UByte& valueAddressBC (size_t n = 0) const
-							{ return ((_lastINOUTData = MCHEmul::UBytes ({ memory () -> value (addressBC (n)) }))[0]); }
+							{ return ((_lastExecutionData._INOUTData = 
+								MCHEmul::UBytes ({ memory () -> value (addressBC (n)) }))[0]); }
 		const MCHEmul::UByte& valueAddressDE (size_t n = 0) const
-							{ return ((_lastINOUTData = MCHEmul::UBytes ({ memory () -> value (addressDE (n)) }))[0]); }
+							{ return ((_lastExecutionData._INOUTData = 
+								MCHEmul::UBytes ({ memory () -> value (addressDE (n)) }))[0]); }
 		const MCHEmul::UByte& valueAddressHL (size_t n = 0) const
-							{ return ((_lastINOUTData = MCHEmul::UBytes ({ memory () -> value (addressHL (n)) }))[0]); }
+							{ return ((_lastExecutionData._INOUTData = 
+								MCHEmul::UBytes ({ memory () -> value (addressHL (n)) }))[0]); }
 		const MCHEmul::UByte& valueAddressIX (size_t n = 0) const
-							{ return ((_lastINOUTData = MCHEmul::UBytes ({ memory () -> value (addressIX (n)) }))[0]); }
+							{ return ((_lastExecutionData._INOUTData = 
+								MCHEmul::UBytes ({ memory () -> value (addressIX (n)) }))[0]); }
 		const MCHEmul::UByte& valueAddressIY (size_t n = 0) const
-							{ return ((_lastINOUTData = MCHEmul::UBytes ({ memory () -> value (addressIY (n)) }))[0]); }
+							{ return ((_lastExecutionData._INOUTData = 
+								MCHEmul::UBytes ({ memory () -> value (addressIY (n)) }))[0]); }
 		const MCHEmul::UByte& valueAddressSP (size_t n = 0) const
-							{ return ((_lastINOUTData = MCHEmul::UBytes ({ memory () -> value (addressSP (n)) }))[0]); }
+							{ return ((_lastExecutionData._INOUTData = 
+								MCHEmul::UBytes ({ memory () -> value (addressSP (n)) }))[0]); }
 
 		/** In Z80, every opcode fecth (M1 cycle usually) increments the R register (7 bits). \n
 			It is done apparently to refresh RAM. */
@@ -273,12 +279,15 @@ namespace FZ80
 		Byte2InstructionCode (unsigned int c, const MCHEmul::Instructions& inst)
 			: InstructionUndefined (c, inst)
 							{ }
+		
+		virtual std::string asString () const override
+							{ return (_rawInstructions [size_t (_lastExecutionData._parameters [1].value ())] -> asString ()); }
 
 		private:
-		virtual MCHEmul::Instruction* selectInstruction (MCHEmul::CPU* c, MCHEmul::Memory* m, 
-			MCHEmul::Stack* stk, MCHEmul::ProgramCounter* pc) override
+		virtual const MCHEmul::Instruction* selectInstruction (MCHEmul::Memory* m, 
+			const MCHEmul::Address& addr) const override
 							{ // The code is given by the second byte next to program counter in the memory...
-							  return (_rawInstructions [size_t (m -> values (pc -> asAddress (), 2)[1].value ())]); }
+							  return (_rawInstructions [size_t (m -> values (addr, 2)[1].value ())]); }
 	};
 
 	/** Instruction code in the fourth byte in memory next to program counter location. 
@@ -289,12 +298,15 @@ namespace FZ80
 		Byte4InstructionCode (unsigned int c, const MCHEmul::Instructions& inst)
 			: InstructionUndefined (c, inst)
 							{ }
+		
+		virtual std::string asString () const override
+							{ return (_rawInstructions [size_t (_lastExecutionData._parameters [3].value ())] -> asString ()); }
 
 		private:
-		virtual MCHEmul::Instruction* selectInstruction (MCHEmul::CPU* c, MCHEmul::Memory* m, 
-			MCHEmul::Stack* stk, MCHEmul::ProgramCounter* pc) override
+		virtual MCHEmul::Instruction* selectInstruction (MCHEmul::Memory* m, 
+			const MCHEmul::Address& addr) const override
 							{ // The code is given by the second byte next to program counter in the memory...
-							  return (_rawInstructions [size_t (m -> values (pc -> asAddress (), 4)[3].value ())]); }
+							  return (_rawInstructions [size_t (m -> values (addr, 4)[3].value ())]); }
 	};
 }
 

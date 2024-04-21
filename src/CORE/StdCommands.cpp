@@ -364,7 +364,8 @@ void MCHEmul::ShowNextInstructionCommand::executeImpl
 			MCHEmul::ByteCodeLine (pCA, nI -> parameters ().bytes (), "", nI, c -> action (pCA)).asString
 				(MCHEmul::UByte::OutputFormat::_HEXA, ' ', 2));
 		
-		pC.increment (nI -> memoryPositions ());
+		pC.increment (nI -> memoryPositions (c -> memory (), pCA)); // as it hasn't been executed, 
+																	// memoryPositionsExecuted can not be used...
 	}
 
 	rst.add ("CODELINES", std::move (iS));
@@ -383,7 +384,7 @@ void MCHEmul::LastIntructionCPUCommand::executeImpl (MCHEmul::CommandExecuter* c
 	rst.add ("INST", c -> cpu () -> lastInstruction () == nullptr 
 		? "-" 
 		: MCHEmul::ByteCodeLine (
-			c -> cpu () -> lastInstruction () -> lastProgramCounter ().asAddress (), // Before the execution
+			c -> cpu () -> lastInstruction () -> programCounter ().asAddress (), // Before the execution
 			c -> cpu () -> lastInstruction () -> parameters ().bytes (), // The bytes of the instruction
 			"", /** No label recognized. */
 			c -> cpu () -> lastInstruction (), 

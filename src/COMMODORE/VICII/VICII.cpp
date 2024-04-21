@@ -202,14 +202,14 @@ bool COMMODORE::VICII::simulate (MCHEmul::CPU* cpu)
 		if (!cpu -> stopped () && 
 			(isAboutToReadSpriteInfo () || 
 				(_newBadLineCondition && (_cycleInRasterLine >= 12 && _cycleInRasterLine < 52))))
-			cpu -> setStop (true, MCHEmul::Instruction::_CYCLEREAD /** only read in not allowed. */, 
+			cpu -> setStop (true, MCHEmul::InstructionDefined::_CYCLEREAD /** only read in not allowed. */, 
 				cpu -> clockCycles () - i, 3);
 
 		// Treat the right cycle...
 		// ...and as a consequence the CPU can be also stopped...
 		unsigned int cS = 0;
 		if ((cS = treatRasterCycle ()) > 0)
-			cpu -> setStop (true, MCHEmul::Instruction::_CYCLEALL /** fully stopped. */, cpu -> clockCycles () - i, (int) cS);
+			cpu -> setStop (true, MCHEmul::InstructionDefined::_CYCLEALL /** fully stopped. */, cpu -> clockCycles () - i, (int) cS);
 
 		// Draws the graphics & border if it has to do so...
 		if (_raster.isInVisibleZone ())

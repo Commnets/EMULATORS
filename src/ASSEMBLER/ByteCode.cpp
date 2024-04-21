@@ -152,15 +152,16 @@ MCHEmul::Assembler::ByteCode MCHEmul::Assembler::ByteCode::createFromMemory
 	{
 		MCHEmul::Instructions::const_iterator pi =
 			c -> cpu () ->instructions ().find (MCHEmul::UInt
-			(m -> values (a + i, c -> cpu () ->architecture ().instructionLength ()).bytes ()).asUnsignedInt ());
+				(m -> values (a + i, c -> cpu () -> architecture ().instructionLength ()).bytes ()).asUnsignedInt ());
 		if (pi == c -> cpu () -> instructions ().end ())
 			break; // No sense to continue...the instruction doesn't exist...
 
+		unsigned int mP = 0;
 		const MCHEmul::Instruction* inst = (*pi).second;
 		result._lines.emplace_back (MCHEmul::ByteCodeLine 
-			(a + i, m -> values (a + i, inst -> memoryPositions ()).bytes (), 
+			(a + i, m -> values (a + i, mP = inst -> memoryPositions (m, a)).bytes (), 
 				"" /** no label ever. */, inst, c -> action (a + i)));
-		i += inst -> memoryPositions ();
+		i += mP;
 	}
 
 	return (result);

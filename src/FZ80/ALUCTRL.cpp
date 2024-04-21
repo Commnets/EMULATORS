@@ -143,7 +143,7 @@ _INST_IMPL (FZ80::HALT)
 	assert (cpuZ80 != nullptr); // It shouldn't...but just in case!
 	if (!cpuZ80 -> stopped ()) // First time?
 	{ 
-		cpuZ80 -> setStop (true, MCHEmul::Instruction::_CYCLEALL, 
+		cpuZ80 -> setStop (true, MCHEmul::InstructionDefined::_CYCLEALL, 
 			cpu () -> clockCycles ()); // Stops for ever...
 		cpuZ80 -> setHaltActive (); // ...and marks this special situation in the CPU....
 	}

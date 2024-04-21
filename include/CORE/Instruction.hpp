@@ -25,15 +25,191 @@ namespace MCHEmul
 	class Memory;
 	class Stack;
 	class ProgramCounter;
+	class InstructionDefined;
 
-	/** Represents a instruction executed by a CPU. \n
-		To process a instruction several CPU cycles are consumed. \n 
-		Depending on the type of processor implementing a instruction, the type of cycles can vary. \n
-		However, although they list can be extended later, three basic types are provided by default: \n
-		Internal (_CYCLEINTERNAL, the default one), \n
-		to read data from memory (_CYCLEREAD), 
-		and to write data to memory (_CYCLEWRITE). */
+	/** 
+		Represents a instruction executed by a CPU. \n
+		To define a instruction a code is needed. \n
+		The code is an unsigned integer number (no more than 4 bytes). \n
+		The information with in the instruction (following in memory the code) 
+		can be organized in little or big endian, so this parameter is also needed at construction time. \n
+		The instruction is used in many ocasion an it is the central block of execution code 
+		in the CPU class (@see MCHEmul::CPU). There can be different types of instructions.
+	  */
 	class Instruction
+	{
+		public:
+		// When the instruction is executed this data has to be saved!
+		struct ExecutionData
+		{
+			ExecutionData ()
+				: _cpu (nullptr), _memory (nullptr), _stack (nullptr),
+				  _INOUTAddress (Address ()),
+				  _INOUTData (),
+				  _programCounter (0),
+				  _parameters (),
+				  _clockCycles (0), _additionalClockCycles (0),
+				  _memoryPositions (0)
+							{ }
+
+			/** To get the parameters info from a specific byte. 
+				@param p :	The number of ubytes to execlude. 
+				@param nP:	The number of parameters to include. 
+				@param bE:	Whether the data to return is in be or little endian. */
+			const UBytes parameters (size_t p, size_t nP = 1, bool bE = true) const;
+			std::string parametersAsString (size_t p, size_t nP = 1, bool bE = true) const; 
+			
+			CPU* _cpu;
+			Memory* _memory;
+			Stack* _stack;
+
+			mutable Address _INOUTAddress;
+			mutable UBytes _INOUTData;
+			mutable ProgramCounter _programCounter;
+			mutable UBytes _parameters;
+			mutable unsigned int _clockCycles;
+			mutable unsigned int _additionalClockCycles;
+			mutable unsigned int _memoryPositions;
+		};
+
+		Instruction () = delete;
+
+		/** 
+		  *	Constructor.
+		  * @param c	:	The internal code of the instruction.
+		  *	@param bE	:	Indicate whether the info contained is managed big or little endian.
+		  */
+		Instruction (unsigned int c, bool bE = true);
+
+		Instruction (const Instruction&) = delete;
+
+		Instruction (Instruction&&) = delete;
+
+		Instruction& operator = (const Instruction&) = delete;
+
+		Instruction& operator = (Instruction&&) = delete;
+
+		virtual ~Instruction ()
+							{ }
+
+		unsigned int code () const
+							{ return (_code); }
+		size_t codeLength () const
+							{ return (_codeLength); }
+		bool bigEndian () const
+							{ return (_bigEndian); }
+
+		/** This method is really important,
+			as it returns the number of bytes that the instruction will finally ocuppy in memory. \n
+			This final number will depend on the type of instruction.
+			e.g. A "defined instruction" will take the same positions in the memory always, 
+			whilst a "not defined" one could vary depending on the final form that the instruction takes when executed
+			in a specific zone of the memory. */
+		// Used more from parser (@see MCHEmul::Parser) and decompiling the memory (MCHEmul::Commads).
+		// ...and when a instruction is executed cycle by clycle (@see CPU).
+		virtual unsigned int memoryPositions (Memory* m, const Address& a) const = 0;
+		/** Similar methods with the clock cyles. */
+		virtual unsigned int clockCycles (Memory* m, const Address& a) const = 0;
+
+		// Used in parsers!
+		/** 
+			To know whether the instruction template matches of not with the example received. \n
+			It has to return a reference to the instruction that matched to (when matches), 
+			and nullptr when it doesn't. \n
+			@param i	The Template to verify whether it maches...
+			NOTE: When matches the parameter prms received must also filled. \n
+				  When doesn't the parameter prms will have trash!. 
+		  */
+		virtual InstructionDefined* matchesWith (const std::string& i, Strings& prms) = 0;
+
+		/** Using from the decompilers. \n
+			To define the instruction with its parameters considering the info from memory position. \n
+			Returns true when everything ok, and false in other case. */
+		virtual bool defineInstructionFrom (Memory* m, const Address& addr) = 0;
+
+		/**	
+		  *	To execute the instruction. \n
+		  * It can be redefined, because the way the instruction is executed will depend on the type of it.
+		  * @param	c	:	A reference to the CPU asking for the execution.
+		  * @param	m	:	A reference to the memory used in the execution.
+		  * @param	stk :	Same for the stack.
+		  * @param	pc	:	A reference to the program counter, that will be affected depending on the instruction.
+		  *	It returns true if everything is ok.
+		  */
+		virtual bool execute (CPU* c, Memory* m, Stack* stk, ProgramCounter* pc) = 0;
+
+		// Info about the current/last execution...
+		const ExecutionData& lastExecutionData () const
+							{ return (_lastExecutionData); }
+		// Info extracted from the previous structure 
+		// To simplify to recover data of it from other classes...
+		// Very used in the method that execute the instructions
+		const CPU* cpu () const
+							{ return (_lastExecutionData._cpu); }
+		CPU* cpu ()
+							{ return (_lastExecutionData._cpu); }
+		const Memory* memory () const
+							{ return (_lastExecutionData._memory); }
+		Memory* memory ()
+							{ return (_lastExecutionData._memory); }
+		const Stack* stack () const
+							{ return (_lastExecutionData._stack); }
+		Stack* stack ()
+							{ return (_lastExecutionData._stack); }
+		const ProgramCounter& programCounter () const
+							{ return (_lastExecutionData._programCounter); }
+		const UBytes& parameters () const
+							{ return (_lastExecutionData._parameters); }
+		/** Very rare. Used from ByCodeLine. */
+		void setParameters (const UBytes& prms) const
+							{ _lastExecutionData._parameters = prms;}
+		const Address& INOUTAddress () const
+							{ return (_lastExecutionData._INOUTAddress); }
+		const UBytes& INOUTData () const
+							{ return (_lastExecutionData._INOUTData); }
+		// Very very important method used at CPU level (@see CPU)
+		unsigned int clockCyclesExecuted () const
+							{ return (_lastExecutionData._clockCycles); }
+		unsigned int additionalClockCyclesExecuted () const
+							{ return (_lastExecutionData._additionalClockCycles); }
+		unsigned int memoryPositionsExecuted () const
+							{ return (_lastExecutionData._memoryPositions); }
+		
+		// Used in run time (when debugging)
+		/** 
+			To get the instruction as an string. \n
+			The last execution info mst be used, however the final implementation will rely
+			on the specific type of instruction. 
+		  */
+		virtual std::string asString () const = 0;
+
+		friend std::ostream& operator << (std::ostream& o, const Instruction& i)
+							{ return (o << i.asString ()); }
+
+		protected:
+		unsigned int _code;
+		size_t _codeLength; // Derivated fromn the previous one...
+		bool _bigEndian;	// Should be common to the full set of instructions"!
+
+		protected:
+		/** Actualize when running. */
+		ExecutionData _lastExecutionData;
+	};
+
+	// To simplify the way the instruction set is used...
+	using Instructions = std::map <unsigned int, Instruction*>;
+	using ListOfInstructions = std::vector <Instruction*>;
+
+	/** 
+		The most common type of instruction. \n
+		This type of instruction is fully defined at construction time. \n
+		That's it: The number of cycles it takes, the bytes in memory it occupies, etc. All are defined at construction time. \n
+		This is actually the only type of transaction really executed! \n
+		The execution of the instruction passes thought several steps called cycles. \n
+		The type of the cycles depends on the CPU implementing a set of instructions.
+		Three are defined by defect, but many can be added later: _INTERAL, _READ, _WRITE.
+	  */
+	class InstructionDefined : public Instruction
 	{
 		public:
 		/** Represents the internal structure of a instruction.
@@ -50,8 +226,10 @@ namespace MCHEmul
 					_ABSJUMP 
 				};
 
-				/** To link a char with the type. 
-					It used in many places into the code. */
+				/** To link a char with the type. \n
+					It used in many places into the code. \n
+					Important in the codification of the instructions: \n
+					# = DATA, $ = DIR, & = RELJUMP, % = ABSJUMP. */
 				static std::map <unsigned char, Type> _TYPES;
 
 				Parameter () 
@@ -100,8 +278,6 @@ namespace MCHEmul
 		/** All at the same time. */
 		static const unsigned int _CYCLEALL = std::numeric_limits <unsigned int>::max ();
 
-		Instruction () = delete;
-
 		/** 
 		  *	Constructor.
 		  * @param c	:	The internal code of the instruction.
@@ -116,39 +292,8 @@ namespace MCHEmul
 		  *					Regarding the type: # means number, $ means address and & means relative jump (@see type of parameter).
 		  *	@param bE	:	Indicate whether the info contained is managed big or little endian.
 		  */
-		Instruction (unsigned int c, unsigned int mp, unsigned int cc, 
+		InstructionDefined (unsigned int c, unsigned int mp, unsigned int cc, 
 			const std::string& t, bool bE = true);
-
-		Instruction (const Instruction&) = delete;
-
-		Instruction& operator = (const Instruction&) = delete;
-
-		virtual ~Instruction ()
-							{ }
-
-		Instruction (Instruction&&) = delete;
-
-		Instruction& operator = (Instruction&&) = delete;
-
-		unsigned int code () const
-							{ return (_code); }
-		size_t codeLength () const
-							{ return (_codeLength); }
-		unsigned int memoryPositions () const
-							{ return (_memoryPositions); }
-		bool bigEndian () const
-							{ return (_bigEndian); }
-
-		// Related with the cycles of the operation...
-		/** The total, without any additional one after its execuction. */
-		unsigned int clockCycles () const
-							{ return (_clockCycles); }
-		unsigned int additionalClockCycles () const
-							{ return (_additionalCycles); }
-		/** Very rare. \n
-			In some chips the addicional cycles come from external circunstances. */
-		void addAdditionalClockCycles (unsigned int nc)
-							{ _additionalCycles += nc; }
 
 		// The internal structure...
 		const std::string iTemplate () const
@@ -156,92 +301,61 @@ namespace MCHEmul
 		const Structure& internalStructure () const
 							{ return (_iStructure); }
 
+		unsigned int memoryPositions () const
+							{ return (_memoryPositions); }
+		virtual unsigned int memoryPositions (Memory*, const Address&) const override
+							{ return (_memoryPositions); } // it is the same always...
+		unsigned int clockCycles () const
+							{ return (_clockCycles); }
+		virtual unsigned int clockCycles (Memory* m, const Address& a) const override
+							{ return (_clockCycles); } // The ones defined at construction time...
+
 		/** To get the type of the cycle. \n
 			This operation can be overloaded later depending on the set of instructions. 
 			From 0 to _clockCycles - 1. */
 		virtual unsigned int typeOfCycle (unsigned int c) const
-							{ return (_CYCLEINTERNAL); }
+							{ return (_CYCLEINTERNAL); } // All cycles by default are internal...
 
-		/** To know whether the instruction template matches of not with the example received. \n
-			Returns true when matches, and false when it doesn't. \n
-			When matches the parameter prms received is also filled. \n
-			When doesn't the parameter prms will have trash!. */
-		bool matchesWith (const std::string& i, Strings& prms);
+		virtual InstructionDefined* matchesWith (const std::string& i, Strings& prms) override;
 
-		// Managing the parameters...
-		const UBytes& parameters () const
-							{ return (_lastParameters); }
-		void setParameters (const UBytes& prms) // rarely used...
-							{ _lastParameters = prms; }
-		const UBytes parameters (size_t p, size_t nP = 1, bool bE = true) const;
-		std::string parametersAsString (size_t p, size_t nP = 1, bool bE = true) const; // The UBytes could grouped to get a parameter...
+		virtual bool defineInstructionFrom (Memory* m, const Address& addr) override;
 
-		// Managing the last address and ata managed...
-		/** These three parameters are fully optional.
-			The execute method must assign them, otherwise they will have default values. */
-		const Address& lastINOUTAddress () const
-							{ return (_lastINOUTAddress); }
-		const UBytes& lastINOUTData () const
-							{ return (_lastINOUTData); }
-		const ProgramCounter& lastProgramCounter () const
-							{ return (_lastProgramCounter); }
-
-		/** This method is key when, i.e. compiling assembler code. \n
-			Given a set of data (or several sets) in the for of bytes, 
-			the method returns the bytes to complete the full instruction. \n
-			The data is already provided in the right order that the instruction defines (i.e. so the big endian effect, if any, is included). \n
-			Usually the code is written at the beginning of the data. This is the default behaviour. \n
-			If might not be possible to build the instruction, the e variable would get set. 
-			The method can be overloaded. */
+		/** This method is key when, compiling assembler code. \n
+			When a instruction is finally detected (@see matchesWith) the way the different
+			bytes of the instruction are lined up depends on the CPU and the set of instructions.
+			Usually (the default behaviour) the main code (o codes) is (are) first and then the different parameters,
+			that the instruction uses, but in some CPU this can change. \n
+			e.g. in a Z80 the instruction SET 7,xx is made of 4 bits:
+			1st, 2nd and 4th are the ones describing the instruction and the 3rd is the parameter. 
+			Don't forget to overload this method if the standard way doesn't work. */
 		virtual std::vector <UByte> shapeCodeWithData (const std::vector <std::vector <UByte>>& b, bool& e) const;
 		
-		/** To get the instruction as an string using the parameters of the last execution inside. \n
-			If no parameters has been set "blankk" will be written instead. */
-		virtual std::string asString () const;
+		virtual std::string asString () const override;
 
-		/**	
-		  *	To execute the instruction. \n
-		  * It can be redefined, because the way the instruction is executed will depend on the type of it.
-		  * @param	c	:	A reference to the CPU asking for the execution.
-		  * @param	m	:	A reference to the memory used in the execution.
-		  * @param	stk :	Same for the stack.
-		  * @param	pc	:	A reference to the program counter, that will be affected depending on the instruction.
-		  *	It returns true if everything is ok.
-		  */
-		virtual bool execute (CPU* c, Memory* m, Stack* stk, ProgramCounter* pc) = 0;
+		virtual bool execute (CPU* c, Memory* m, Stack* stk, ProgramCounter* pc) override;
 
-		friend std::ostream& operator << (std::ostream& o, const Instruction& i)
-							{ return (o << i.asString ()); }
+		/** Some times, when a instruction is executed the final cycles taken. */
+		unsigned int additionalClockCycles () const
+							{ return (_additionalCycles); }
+		/** Very rare. \n
+			In some chips the addicional cycles come from external circunstances. */
+		void addAdditionalClockCycles (unsigned int nc)
+							{ _additionalCycles += nc; }
 
 		protected:
 		/** To analyze the structure of the instruction. */
 		Structure analyzeInstruction () const;
 
-		// Implementation
-		const CPU* cpu () const
-							{ return (_cpu); }
-		CPU* cpu ()
-							{ return (_cpu); }
-		const Memory* memory () const
-							{ return (_memory); }
-		Memory* memory () 
-							{ return (_memory); }
-		const Stack* stack () const
-							{ return (_stack); }
-		Stack* stack ()
-							{ return (_stack); }
+		/** The implementation of the execution.
+			It has to be redefined when the instruction was implemented.
+			@return		true if the execution was ok, and false in other situation. 
+			The parameter f must be set to false whether the execution didin't finish
+			and the next CPU cycle has to considere it back. */
+		virtual bool executeImpl (bool &f) = 0;
 
 		protected:
-		// Once they assigned at construction level they couldn't be modified...
-		// IMPORTANT NOTE:
-		// Most of these attributes are usually modified! (there is no method for so)
-		// So they could be defined as const.
-		// However the InstructionUndefined does when executing, take this into account!
-		unsigned int _code;
-		size_t _codeLength;
 		unsigned int _memoryPositions; 
 		unsigned int _clockCycles;
-		bool _bigEndian;
 		std::string _iTemplate;
 
 		// Implementation
@@ -253,42 +367,6 @@ namespace MCHEmul
 
 		protected:
 		UBytes _lastParameters;
-		mutable Address _lastINOUTAddress;
-		mutable UBytes _lastINOUTData;
-		mutable ProgramCounter _lastProgramCounter;
-		CPU* _cpu;
-		Memory* _memory;
-		Stack* _stack;
-	};
-
-	// To simplify the way the instruction set is used...
-	using Instructions = std::map <unsigned int, Instruction*>;
-	using ListOfInstructions = std::vector <Instruction*>;
-
-	/** The most common type of instruction. \n
-		This type of instruction is fully defined at costruction time. \n
-		That's it, the number of cycles it takes, the bytes in memory it occupies, etc. is defined at construction time. */
-	class InstructionDefined : public Instruction
-	{
-		public:
-		InstructionDefined (unsigned int c, unsigned int mp, unsigned int cc, 
-			const std::string& t, bool bE = true)
-			: Instruction (c, mp, cc, t, bE)
-							{ }
-
-		/** Modifies the pc with the length of the instruction, before executed it. \n
-			Take this into account when defining jump instructions. 
-			The one to define the datail of the instruction is executeImpl,
-			However this method can be extended. Really Carefully!!! */
-		virtual bool execute (CPU* c, Memory* m, Stack* stk, ProgramCounter* pc) override;
-
-		protected:
-		/** The implementation of the execution.
-			It has to be redefined when the instruction was implemented.
-			@return		true if the execution was ok, and false in other situation. 
-			The parameter f must be set to false whether the execution didin't finish
-			and the next CPU cycle has to considere it back. */
-		virtual bool executeImpl (bool &f) = 0;
 	};
 
 	/** This type of instruction is defined as it is processed. \n
@@ -308,27 +386,44 @@ namespace MCHEmul
 		Instructions& instructions ()
 							{ return (_instructions); }
 
-		const InstructionDefined* lastInstruction () const
-							{ return (_lastInstruction); }
-		InstructionDefined* lasInstruction ()
-							{ return (_lastInstruction); }
+		/** Only valid when something has been executed... */
+		virtual unsigned int memoryPositions (Memory* m, const Address& a) const override
+							{ return (selectInstruction (m, a) -> memoryPositions (m, a)); }
+		virtual unsigned int clockCycles (Memory* m, const Address& a) const override
+							{ return (selectInstruction (m, a) -> clockCycles (m, a)); }
+
+		virtual InstructionDefined* matchesWith (const std::string& i, Strings& prms) override;
+
+		virtual bool defineInstructionFrom (Memory* m, const Address& addr) override;
 
 		/** The final instruction executed should be always a defined one,
 			and is is dragged up to the first level. */
 		virtual bool execute (CPU* c, Memory* m, Stack* stk, ProgramCounter* pc) override;
 
+		// Info just useful when "executing" the instruction...
+		const Instruction* lastInstruction () const
+							{ return (_lastInstruction); }
+		Instruction* lasInstruction ()
+							{ return (_lastInstruction); }
+
+		// By default the asString method is based in the last instruction executed, 
+		// ...but it should be based more in the parameters, as they can be set using external calls.
+		// e.g. @see ByCodeLine class uses setParameters to set the parameters of the instruction before invoking it!
+		virtual std::string asString () const override
+							{ return ((_lastInstruction == nullptr) ? "" : _lastInstruction -> asString ()); }
+
 		protected:
 		/** As the instruction is undefined, 
 			it is needed to select first the right instruction to execute. \n 
 			This method has to be redefined to follow the right processes of the CPU emulated. */
-		virtual Instruction* selectInstruction (CPU* c, Memory* m, Stack* stk, ProgramCounter* pc) = 0;
+		virtual const Instruction* selectInstruction (Memory* m, const Address& a) const = 0;
 
 		protected:
 		Instructions _instructions;
 
 		// Implementation
-		/** The last defined instruction executed inside finally. */
-		InstructionDefined* _lastInstruction;
+		/** The last instruction executed inside finally. */
+		Instruction* _lastInstruction;
 	};
 }
 

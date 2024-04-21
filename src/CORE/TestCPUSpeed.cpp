@@ -53,7 +53,7 @@ unsigned int MCHEmul::TestCPUSpeed::clocksInASecondExcutingInstruction (const MC
 				b.size () - _cpu -> architecture ().instructionLength ()); // Simulate and access to the memory...
 		// ...and then execute the instruction...
 		inst -> execute (_cpu, _memory, _memory -> stack (), &_cpu -> programCounter ());
-		clks += (inst -> clockCycles () + inst -> additionalClockCycles ());
+		clks += (inst -> clockCyclesExecuted () + inst -> additionalClockCyclesExecuted ());
 
 		// Repeat during a second...
 		e = (std::chrono::steady_clock ().now () - clk).count () >= 1e9; 
@@ -137,6 +137,10 @@ void MCHEmul::TestCPUSpeed::testInstructionSet (std::ostream& o, const MCHEmul::
 			continue;
 		}
 
+		// From this point onwards the instructions is defined...
+		MCHEmul::InstructionDefined* iD = 
+			static_cast <MCHEmul::InstructionDefined*> (i.second);
+
 		// if it is not a group, but a single instruction...
 		// ...the test is done...
 		// Before testing the instruction the register is set...
@@ -155,12 +159,12 @@ void MCHEmul::TestCPUSpeed::testInstructionSet (std::ostream& o, const MCHEmul::
 			// Shape the instruction with data!
 			bool e = false;
 			std::vector <MCHEmul::UByte> byInst =
-				MCHEmul::UInt::fromUnsignedInt (i.second -> code (), MCHEmul::UInt::_BINARY).bytes ();
-			std::vector <MCHEmul::UByte> byDt = 
-				i.second -> shapeCodeWithData ({ randomVector (i.second -> memoryPositions () - byInst.size ()) }, e);
+				MCHEmul::UInt::fromUnsignedInt (iD -> code (), MCHEmul::UInt::_BINARY).bytes ();
+			std::vector <MCHEmul::UByte> byDt = iD -> shapeCodeWithData 
+					({ randomVector (iD -> memoryPositions () - byInst.size ()) }, e);
 			if (e)
 			{
-				std::cout << "Instruction " << i.second -> iTemplate () << " bad defined" << std::endl;
+				std::cout << "Instruction " << iD -> iTemplate () << " bad defined" << std::endl;
 
 				continue;
 			}
@@ -170,11 +174,11 @@ void MCHEmul::TestCPUSpeed::testInstructionSet (std::ostream& o, const MCHEmul::
 		}
 
 		// Store the outcome because it will managed later...
-		std::string instTxt = i.second -> asString () + 
-			"(code:" + std::to_string (i.second -> code ()) + ", " + std::to_string (i.first) + ")";
+		std::string instTxt = iD -> asString () + 
+			"(code:" + std::to_string (iD -> code ()) + ", " + std::to_string (i.first) + ")";
 		iT [i.first] = instTxt;
 		double a = 0.0f; for (size_t ct = 0; ct < nt; a += (double) clks [ct++]); a /= (double) nt;
-		sPI [i.first] = (unsigned int) (a / (cPI [i.first] = i.second -> clockCycles ())); // Execs in a second...
+		sPI [i.first] = (unsigned int) (a / (cPI [i.first] = iD -> clockCycles ())); // Execs in a second...
 		// Print out the just tested instruction...
 		o << instTxt << MCHEmul::_TABS.substr (0, 6 - (instTxt.length () >> 3)) 
 		  << sPI [i.first] << " exec/s" 

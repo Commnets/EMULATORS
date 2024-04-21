@@ -25,16 +25,19 @@ namespace MCHEmul
 		public:
 		using BitNames = std::map <std::string, size_t>;
 
-		StatusRegister (size_t nB, const BitNames& bN)
-			: Register (-2 /** always */, "ST", UBytes (std::vector <UByte> (nB, UByte::_0))), 
-			  _bitNames (bN)
-							{ }
+		StatusRegister (size_t nB, const BitNames& bN);
 
+		// To get info (name & position) about the different bit status...
 		const BitNames& bitNames () const
 							{ return (_bitNames); }
+		const std::string& bitName (size_t p) const
+							{ return (p < (size () * MCHEmul::UByte::sizeBits ())
+								? (*_bitPosName.find (p)).second : AttributedNotDefined); }
 		bool existsBitStatus (const std::string& bN) const
 							{ return (_bitNames.find (bN) != _bitNames.end ()); }
-		/** Take care using these methods, no check about the name used are don for speed reasons. */
+
+		// To get/set the status of the different bits...
+		/** Take care using these methods, no check about the name used are done for speed reasons. */
 		bool bitStatus (const std::string& bN) const
 							{ return (_values.bit ((*_bitNames.find (bN)).second)); }
 		bool bitStatus (size_t bP) const
@@ -54,6 +57,11 @@ namespace MCHEmul
 
 		private:
 		const BitNames _bitNames;
+
+		// Implementation
+		/** Created at construction time to simplify 
+			later the way the info is printed out. */
+		std::map <size_t, std::string> _bitPosName;
 	};
 }
 

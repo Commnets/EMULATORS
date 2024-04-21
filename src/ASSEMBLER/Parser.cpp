@@ -368,7 +368,7 @@ bool MCHEmul::Assembler::InstructionCommandParser::canParse (MCHEmul::Assembler:
 
 	MCHEmul::Strings prms;
 	for (const auto& i : cpu () -> instructions ())
-		if (i.second -> matchesWith (cL, prms /** not used here. */))
+		if (i.second -> matchesWith (cL, prms /** not used here. */) != nullptr)
 			return (true); /** At least 1 matching. */
 
 	return (false);
@@ -393,11 +393,14 @@ void MCHEmul::Assembler::InstructionCommandParser::parse (MCHEmul::Assembler::Pa
 	nE -> _line = pC -> _currentLineNumber;
 	MCHEmul::Strings prms;
 	for (MCHEmul::Instructions::const_iterator i = cpu () -> instructions ().begin ();
-			i != cpu () -> instructions ().end (); i++)
+			i != cpu () -> instructions ().end (); i++) // Can be thousands!
 	{
-		if ((*i).second -> matchesWith (cL, prms)) // One option minimum will match this (as it can be parsed)
+		MCHEmul::InstructionDefined* pI = nullptr;
+		if ((pI = (*i).second -> matchesWith (cL, prms)) != nullptr) 
+		// One option minimum will match this (as it can be parsed)
 		{
-			nE -> _possibleInstructions.push_back ((*i).second);
+			nE -> _possibleInstructions.push_back (pI); 
+			// In complex instructions the one returned can not be the one that passed...
 			nE -> _possibleParameters.emplace_back (prms);
 		}
 	}

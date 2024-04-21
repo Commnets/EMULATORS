@@ -1,6 +1,9 @@
 ; A very simple test Z80 compiler program
 
 * = $C000
-
-LD A,B
-LD A,($CB00)
+MAIN:	LD HL,$0010
+LOOP:	LD (HL),$02
+		SET 7,(HL)
+		DEC	HL
+		CP	H
+		JR	NZ,LOOP

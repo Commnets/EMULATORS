@@ -257,8 +257,8 @@ _INST_IMPL (FZ80::LD_AFromAddress)
 
 	/** Addresses in memory are kept little - endian. */
 	return (executeWith (registerA (), 
-		_lastINOUTData [0] = memory () -> value
-			(_lastINOUTAddress = MCHEmul::Address 
+		_lastExecutionData._INOUTData [0] = memory () -> value
+			(_lastExecutionData._INOUTAddress = MCHEmul::Address 
 				({ parameters ()[1].value (), parameters ()[2].value () }, false /** little - endian */))));
 }
 
@@ -1549,7 +1549,7 @@ _INST_IMPL (FZ80::LD_AddressFromA)
 
 	/** Addresses in memory are kept little - endian. */
 	return (executeWith (
-		_lastINOUTAddress = 
+		_lastExecutionData._INOUTAddress = 
 			MCHEmul::Address ({ 
 				parameters ()[1].value (), 
 				parameters ()[2].value () }, false /** Little - endian. */), valueRegisterA ()));
@@ -1562,7 +1562,7 @@ _INST_IMPL (FZ80::LD_AddressFromHL)
 
 	/** Addresses in memory are kept little - endian. */
 	return (executeWith (
-		_lastINOUTAddress =
+		_lastExecutionData._INOUTAddress =
 			MCHEmul::Address ({ 
 				parameters ()[1].value (), 
 				parameters ()[2].value () }, false /** Little - endian. */), valueRegisterHL ()));
@@ -1575,7 +1575,7 @@ _INST_IMPL (FZ80::U3LD_AddressFromHL)
 
 	/** Addresses in memory are kept little - endian. */
 	return (executeWith (
-		_lastINOUTAddress =
+		_lastExecutionData._INOUTAddress =
 			MCHEmul::Address ({ 
 				parameters ()[2].value (), 
 				parameters ()[3].value () }, false /** Little - endian. */), valueRegisterHL ()));
@@ -1588,7 +1588,7 @@ _INST_IMPL (FZ80::LD_AddressFromBC)
 
 	/** Addresses in memory are kept little - endian. */
 	return (executeWith (
-		_lastINOUTAddress = 
+		_lastExecutionData._INOUTAddress = 
 			MCHEmul::Address ({ 
 				parameters ()[2].value (), 
 				parameters ()[3].value () }, false /** Little - endian. */), valueRegisterBC ()));
@@ -1601,7 +1601,7 @@ _INST_IMPL (FZ80::LD_AddressFromIX)
 
 	/** Addresses in memory are kept little - endian. */
 	return (executeWith (
-		_lastINOUTAddress = 
+		_lastExecutionData._INOUTAddress = 
 			MCHEmul::Address ({ 
 				parameters ()[2].value (), 
 				parameters ()[3].value () }, false /** Little - endian. */), valueRegisterIX ()));
@@ -1614,7 +1614,7 @@ _INST_IMPL (FZ80::LD_AddressFromIY)
 
 	/** Addresses in memory are kept little - endian. */
 	return (executeWith (
-		_lastINOUTAddress =
+		_lastExecutionData._INOUTAddress =
 			MCHEmul::Address ({ 
 				parameters ()[1].value (), 
 				parameters ()[2].value () }, false /** Little - endian. */), valueRegisterIY ()));
@@ -1627,7 +1627,7 @@ _INST_IMPL (FZ80::LD_AddressFromDE)
 
 	/** Addresses in memory are kept little - endian. */
 	return (executeWith (
-		_lastINOUTAddress =
+		_lastExecutionData._INOUTAddress =
 			MCHEmul::Address ({ 
 				parameters ()[1].value (), 
 				parameters ()[2].value () }, false /** Little - endian. */), valueRegisterDE ()));
@@ -1642,7 +1642,7 @@ _INST_IMPL (FZ80::LD_AddressFromSP)
 	MCHEmul::UInt v = MCHEmul::UInt::fromUnsignedInt (memory () -> stack () -> position ());
 	v.setMinLength (2); // It has always to be 2 bytes long...
 	return (executeWith (
-		_lastINOUTAddress =
+		_lastExecutionData._INOUTAddress =
 			MCHEmul::Address ({ 
 				parameters ()[1].value (), 
 				parameters ()[2].value () }, false /** Little - endian. */), v.values ()));
@@ -1670,7 +1670,7 @@ _INST_IMPL (FZ80::LD_BC)
 	assert (parameters ().size () == 3);
 
 	return (executeWith (registerBC (), 
-		MCHEmul::UBytes ({ parameters ()[1].value (), parameters ()[2].value () })));
+		MCHEmul::UBytes ({ parameters ()[1].value (), parameters ()[2].value () }, false))); // little - endian, like an address...
 }
 
 // ---
@@ -1679,8 +1679,8 @@ _INST_IMPL (FZ80::LD_BCFromAddress)
 	assert (parameters ().size () == 4);
 
 	return (executeWith (registerBC (), 
-		_lastINOUTData = 
-			memory () -> values (_lastINOUTAddress =
+		_lastExecutionData._INOUTData = 
+			memory () -> values (_lastExecutionData._INOUTAddress =
 				MCHEmul::Address ({ parameters ()[2].value (), parameters ()[3].value () }, false /** little - endian. */), 2)));
 }
 
@@ -1690,7 +1690,7 @@ _INST_IMPL (FZ80::LD_DE)
 	assert (parameters ().size () == 3);
 
 	return (executeWith (registerDE (), 
-		MCHEmul::UBytes ({ parameters ()[1].value (), parameters ()[2].value () })));
+		MCHEmul::UBytes ({ parameters ()[1].value (), parameters ()[2].value () }, false))); // little - endian, like an address...
 }
 
 // ---
@@ -1700,8 +1700,8 @@ _INST_IMPL (FZ80::LD_DEFromAddress)
 
 	/** Addresses in memory are kept little - endian. */
 	return (executeWith (registerDE (), 
-		_lastINOUTData =
-			memory () -> values (_lastINOUTAddress =
+		_lastExecutionData._INOUTData =
+			memory () -> values (_lastExecutionData._INOUTAddress =
 				MCHEmul::Address ({ parameters ()[2].value (), parameters ()[3].value () }, false /** little - endian. */), 2)));
 }
 
@@ -1711,7 +1711,7 @@ _INST_IMPL (FZ80::LD_HL)
 	assert (parameters ().size () == 3);
 
 	return (executeWith (registerHL (), 
-		MCHEmul::UBytes ({ parameters ()[1].value (), parameters ()[2].value () })));
+		MCHEmul::UBytes ({ parameters ()[1].value (), parameters ()[2].value () }, false))); // little - endian, like an address...
 }
 
 // ---
@@ -1720,8 +1720,8 @@ _INST_IMPL (FZ80::LD_HLFromAddress)
 	assert (parameters ().size () == 3);
 
 	return (executeWith (registerHL (), 
-		_lastINOUTData =
-			memory () -> values (_lastINOUTAddress =
+		_lastExecutionData._INOUTData =
+			memory () -> values (_lastExecutionData._INOUTAddress =
 				MCHEmul::Address ({ parameters ()[1].value (), parameters ()[2].value () }, false /** little - endian. */), 2)));
 }
 
@@ -1731,8 +1731,8 @@ _INST_IMPL (FZ80::U3LD_HLFromAddress)
 	assert (parameters ().size () == 4);
 
 	return (executeWith (registerHL (), 
-		_lastINOUTData =
-			memory () -> values (_lastINOUTAddress =
+		_lastExecutionData._INOUTData =
+			memory () -> values (_lastExecutionData._INOUTAddress =
 				MCHEmul::Address ({ parameters ()[2].value (), parameters ()[3].value () }, false /** little - endian. */), 2)));
 }
 
@@ -1742,7 +1742,7 @@ _INST_IMPL (FZ80::LD_IX)
 	assert (parameters ().size () == 4);
 
 	return (executeWith (registerIX (), 
-		MCHEmul::UBytes ({ parameters ()[2].value (), parameters ()[3].value () })));
+		MCHEmul::UBytes ({ parameters ()[2].value (), parameters ()[3].value () }, false))); // little - endian, like an address...
 }
 
 // ---
@@ -1751,8 +1751,8 @@ _INST_IMPL (FZ80::LD_IXFromAddress)
 	assert (parameters ().size () == 4);
 
 	return (executeWith (registerIX (), 
-		_lastINOUTData =
-			memory () -> values (_lastINOUTAddress =
+		_lastExecutionData._INOUTData =
+			memory () -> values (_lastExecutionData._INOUTAddress =
 				MCHEmul::Address ({ parameters ()[2].value (), parameters ()[3].value () }, false /** little - endian. */), 2)));
 }
 
@@ -1890,7 +1890,7 @@ _INST_IMPL (FZ80::LD_IY)
 	assert (parameters ().size () == 4);
 
 	return (executeWith (registerIY (), 
-		MCHEmul::UBytes ({ parameters ()[2].value (), parameters ()[3].value () })));
+		MCHEmul::UBytes ({ parameters ()[2].value (), parameters ()[3].value () }, false))); // little - endian, like an address...
 }
 
 // ---
@@ -1899,8 +1899,8 @@ _INST_IMPL (FZ80::LD_IYFromAddress)
 	assert (parameters ().size () == 4);
 
 	return (executeWith (registerIY (), 
-		_lastINOUTData =
-			memory () -> values (_lastINOUTAddress =
+		_lastExecutionData._INOUTData =
+			memory () -> values (_lastExecutionData._INOUTAddress =
 				MCHEmul::Address ({ parameters ()[2].value (), parameters ()[3].value () }, false /** little - endian. */), 2)));
 }
 
@@ -2089,8 +2089,8 @@ _INST_IMPL (FZ80::LD_SPFromAddress)
 	// The position loaded is the one located at the address pointer by the parameters,
 	// that is kept in little - endian format, and ocuppies 2 bytes...
 	memory () -> stack () -> setPosition 
-		(MCHEmul::Address (_lastINOUTData = 
-			memory () -> values (_lastINOUTAddress =
+		(MCHEmul::Address (_lastExecutionData._INOUTData = 
+			memory () -> values (_lastExecutionData._INOUTAddress =
 				MCHEmul::Address 
 					({ parameters ()[2].value (), parameters ()[3].value () }, 
 						false /** little - endian. */), 2), false /** little - endian. */).value (), 

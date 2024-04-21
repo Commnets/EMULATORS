@@ -6,7 +6,7 @@ _INST_IMPL (F6500::PHA)
 {
 	assert (parameters ().size () == 1);
 
-	stack () -> push (_lastINOUTData = 
+	stack () -> push (_lastExecutionData._INOUTData = 
 		cpu () -> internalRegister (F6500::C6510::_ACCUMULATOR).values ()); // 1 byte long...
 
 	return (!stack () -> overflow ());
@@ -17,7 +17,7 @@ _INST_IMPL (F6500::PHP)
 {
 	assert (parameters ().size () == 1);
 
-	stack () -> push (_lastINOUTData = 
+	stack () -> push (_lastExecutionData._INOUTData = 
 		cpu () -> statusRegister ().values ()); // 1 byte long...
 
 	return (!stack () -> overflow ());

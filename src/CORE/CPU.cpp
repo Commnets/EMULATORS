@@ -101,29 +101,6 @@ void MCHEmul::CPU::setStop (bool s, unsigned int tC, unsigned int cC, int nC)
 }
 
 // ---
-const MCHEmul::Instruction* MCHEmul::CPU::nextInstruction () const
-{
-	// Access the next instruction...
-	// Using the row description of the instructions!
-	MCHEmul::Instruction* inst = nullptr;
-	unsigned int nInst = 
-		MCHEmul::UInt (
-			_memory -> values (
-				programCounter ().asAddress (), architecture ().instructionLength ()), 
-			architecture ().bigEndian ()).asUnsignedInt ();
-	if (nInst >= _rowInstructions.size () ||
-		(inst = _rowInstructions [nInst]) == nullptr)
-		return (nullptr); // Not possible to execute the instruction...
-
-	// Gets the data that the instruction occupies
-	MCHEmul::UBytes dt = _memory -> values (programCounter ().asAddress (), inst -> memoryPositions ());
-
-	inst -> setParameters (dt);
-
-	return (inst);
-}
-
-// ---
 bool MCHEmul::CPU::initialize ()
 {
 	if (! MCHEmul::MotherboardElement::initialize ())
@@ -237,14 +214,10 @@ bool MCHEmul::CPU::executeNextCycle ()
 		};
 
 	if (ticksCounter () == nullptr)
-	{
 		execFunction (true);
-	}
 	else
-	{
 		for (unsigned int i = ticksCounter () -> elapsedTicks (); i > 0; i--)
 			execFunction (false);
-	}
 
 	return (result);
 }
@@ -323,8 +296,11 @@ bool MCHEmul::CPU::when_ExecutingInstruction_PerCycle ()
 					architecture ().bigEndian ()).asUnsignedInt ();
 			if (nInst < _rowInstructions.size () && 
 				(_currentInstruction = _rowInstructions [nInst]) != nullptr)
+				// The initial ones, 
+				// but there might be some additional cycles after execution...
+				// The cycles are decided according with the right instruction...
 				_cyclesPendingExecution = 
-					_currentInstruction -> clockCycles (); // There might be some additional cycles after execution...
+					_currentInstruction -> clockCycles (_memory, _programCounter.asAddress ()); // virtual!
 		}
 	}
 
@@ -359,7 +335,7 @@ bool MCHEmul::CPU::when_ExecutingInstruction_PerCycle ()
 				executeOver (this, _clyclesAtInterruption)))
 				return (result);
 
-			_lastCPUClockCycles += _currentInterruption -> cycledAfterLaunch ();
+			_lastCPUClockCycles += _currentInterruption -> cycledAfterLaunch (); // Most of the times = 0
 
 			_interruptRequested = -1; // No more requested...
 
@@ -394,9 +370,9 @@ bool MCHEmul::CPU::when_ExecutingInstruction_PerCycle ()
 				execute (this, _memory, _memory -> stack (), &_programCounter)))
 				return (result);
 
-			_lastCPUClockCycles += _currentInstruction -> additionalClockCycles (); // Just in case...
+			_lastCPUClockCycles += _currentInstruction -> additionalClockCyclesExecuted (); // Just in case...
 
-			_clockCycles += _currentInstruction -> additionalClockCycles (); // Just in case...
+			_clockCycles += _lastCPUClockCycles; 
 
 			_lastInstruction = _currentInstruction;
 
@@ -406,14 +382,14 @@ bool MCHEmul::CPU::when_ExecutingInstruction_PerCycle ()
 			{
 				std::string lSt = _lastInstruction -> asString (); 
 				std::string lStA = 
-					((_lastInstruction -> lastINOUTAddress ().value () != 0)
+					((_lastInstruction -> INOUTAddress ().value () != 0)
 						? "$" + MCHEmul::removeAll0 // Was there address?
-							(_lastInstruction -> lastINOUTAddress ().asString (MCHEmul::UByte::OutputFormat::_HEXA, '\0', 2))
+							(_lastInstruction -> INOUTAddress ().asString (MCHEmul::UByte::OutputFormat::_HEXA, '\0', 2))
 						: "");
 				std::string lStB = 
-					((_lastInstruction -> lastINOUTData ().size () != 0)
+					((_lastInstruction -> INOUTData ().size () != 0)
 						? "$" + MCHEmul::removeAll0 // Was there data used?
-							(_lastInstruction -> lastINOUTData ().asString (MCHEmul::UByte::OutputFormat::_HEXA, '\0', 2))
+							(_lastInstruction -> INOUTData ().asString (MCHEmul::UByte::OutputFormat::_HEXA, '\0', 2))
 						: "");
 				std::string lStAB = lStA + ((lStA == "") ? "" : ((lStB == "") ? "" : ",")) + lStB;
 				lStAB = ((lStAB != "") ? "(" : "") + lStAB + ((lStAB != "") ? ")" : "");
@@ -461,7 +437,8 @@ bool MCHEmul::CPU::when_ExecutingInstruction_Full ()
 			// What
 			<< "Info Cycle\t\t"
 			// Data
-			<< "Last:" + ((_lastInstruction == nullptr) ? "0" : std::to_string (_lastInstruction -> clockCycles ())) + " cycles\n";
+			<< "Last:" + ((_lastInstruction == nullptr) 
+				? "0" : std::to_string (_lastInstruction -> clockCyclesExecuted ())) + " cycles\n";
 
 	// The activation of the interruptions has priority over the execution of the code
 	// But to execute, the last instruction must finish, 
@@ -522,8 +499,8 @@ bool MCHEmul::CPU::when_ExecutingInstruction_Full ()
 	if (result = _currentInstruction -> execute (this, _memory, _memory -> stack (), &_programCounter))
 	{
 		// Actualize the clock cycles used by the last instruction...
-		_lastCPUClockCycles = (_currentInstruction -> clockCycles () + 
-			_currentInstruction -> additionalClockCycles ());
+		_lastCPUClockCycles = (_currentInstruction -> clockCyclesExecuted () + 
+			_currentInstruction -> additionalClockCyclesExecuted ());
 		// The total clock is also actualized...
 		_clockCycles += _lastCPUClockCycles;
 		// ...and finally saves the instruction executed...
@@ -533,14 +510,14 @@ bool MCHEmul::CPU::when_ExecutingInstruction_Full ()
 		{
 			std::string lSt = _lastInstruction -> asString (); 
 			std::string lStA = 
-				((_lastInstruction -> lastINOUTAddress ().value () != 0)
+				((_lastInstruction -> INOUTAddress ().value () != 0)
 					? "$" + MCHEmul::removeAll0 // Was there address?
-						(_lastInstruction -> lastINOUTAddress ().asString (MCHEmul::UByte::OutputFormat::_HEXA, '\0', 2))
+						(_lastInstruction -> INOUTAddress ().asString (MCHEmul::UByte::OutputFormat::_HEXA, '\0', 2))
 					: "");
 			std::string lStB = 
-				((_lastInstruction -> lastINOUTData ().size () != 0)
+				((_lastInstruction -> INOUTData ().size () != 0)
 					? "$" + MCHEmul::removeAll0 // Was there data used?
-						(_lastInstruction -> lastINOUTData ().asString (MCHEmul::UByte::OutputFormat::_HEXA, '\0', 2))
+						(_lastInstruction -> INOUTData ().asString (MCHEmul::UByte::OutputFormat::_HEXA, '\0', 2))
 					: "");
 			std::string lStAB = lStA + ((lStA == "") ? "" : ((lStB == "") ? "" : ",")) + lStB;
 			lStAB = ((lStAB != "") ? "(" : "") + lStAB + ((lStAB != "") ? ")" : "");
@@ -601,4 +578,24 @@ bool MCHEmul::CPU::when_Stopped ()
 	_clockCycles++;
 
 	return (true);
+}
+
+// ---
+MCHEmul::Instruction* MCHEmul::CPU::instructionAt 
+	(MCHEmul::Memory* m, const MCHEmul::Address& addr, MCHEmul::CPU* c)
+{
+	assert (c != nullptr &&
+			m != nullptr);
+
+	MCHEmul::Instruction* inst = nullptr;
+	unsigned int nInst = 
+		MCHEmul::UInt (
+			m -> values (
+				addr, c -> architecture ().instructionLength ()), 
+			c -> architecture ().bigEndian ()).asUnsignedInt ();
+	if (nInst >= c -> _rowInstructions.size () ||
+		(inst = c -> _rowInstructions [nInst]) == nullptr)
+		return (nullptr); // Not possible to define the instruction...
+
+	return ((inst -> defineInstructionFrom (m, addr)) ? inst : nullptr);
 }

@@ -25,8 +25,8 @@ std::string MCHEmul::ByteCodeLine::asString
 	if (_instruction != nullptr)
 	{ 
 		MCHEmul::ByteCodeLine cL = *this; // A copy to put the parameters into...
-		((MCHEmul::Instruction*) _instruction) -> setParameters (_bytes);
-		result += ((_instruction != nullptr) ? _instruction -> asString () : "");
+		cL._instruction -> setParameters (_bytes);
+		result += cL._instruction -> asString ();
 	}
 
 	return (result);

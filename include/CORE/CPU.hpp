@@ -85,7 +85,7 @@ namespace MCHEmul
 		CPU& operator = (CPU&&) = delete; 
 
 		/** Is the CPU stopped? The type of cycles the CPU is stopped is optional. */
-		bool stopped (unsigned int tC = Instruction::_CYCLEALL) const
+		bool stopped (unsigned int tC = InstructionDefined::_CYCLEALL) const
 							{ return (_state == _STOPPED && ((_typeCycleStopped & tC) != 0)); }
 		/** 
 		  *	By default: \n
@@ -154,7 +154,9 @@ namespace MCHEmul
 
 		/** To get the next instruction (if any) attending to the location of the Program Counter. 
 			This method is not invoked but only from debugging reasons. */
-		const Instruction* nextInstruction () const;
+		const Instruction* nextInstruction () const
+							{ return (CPU::instructionAt 
+								(_memory, _programCounter.asAddress (), const_cast <CPU*> (this))); }
 		/** To get the last instruction fully executed. */
 		const Instruction* lastInstruction () const
 							{ return (_lastInstruction); }
@@ -285,6 +287,10 @@ namespace MCHEmul
 		virtual bool when_ExecutingInstruction_Full ();
 		/** When the state is: _STOPPED. */
 		virtual bool when_Stopped ();
+
+		/** To get the instruction from a specific position of the memory. 
+			If the instruction can not be created, a nullptr is returned. */
+		static Instruction* instructionAt (Memory* m, const Address& addr, CPU* c);
 
 		protected:
 		const CPUArchitecture _architecture = 

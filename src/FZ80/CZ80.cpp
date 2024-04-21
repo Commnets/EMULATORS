@@ -6,9 +6,9 @@
 const std::string FZ80::CZ80::_CARRYFLAGNAME = "C";
 const std::string FZ80::CZ80::_NEGATIVEFLAGNAME = "N";
 const std::string FZ80::CZ80::_PARITYOVERFLOWFLAGNAME = "PO";
-const std::string FZ80::CZ80::_BIT3FLAGNAME = "B3";
+const std::string FZ80::CZ80::_BIT3FLAGNAME = "X";
 const std::string FZ80::CZ80::_HALFCARRYFLAGNAME = "H";
-const std::string FZ80::CZ80::_BIT5FLAGNAME = "B5";
+const std::string FZ80::CZ80::_BIT5FLAGNAME = "Y";
 const std::string FZ80::CZ80::_ZEROFLAGNAME = "Z";
 const std::string FZ80::CZ80::_SIGNFLAGNAME = "S";
 
@@ -209,9 +209,9 @@ MCHEmul::StatusRegister FZ80::CZ80::createStatusRegister ()
 				{ { _CARRYFLAGNAME, _CARRYFLAG /** bit number */ },			// Carry flag
 				  { _NEGATIVEFLAGNAME, _NEGATIVEFLAG },						// Negative flag
 				  { _PARITYOVERFLOWFLAGNAME, _PARITYOVERFLOWFLAG },			// Parity Overflow flag
-				  { "-", 3 },												// Not used...
+				  { _BIT3FLAGNAME, 3 },										// Not used... unless in undocumented
 				  { _HALFCARRYFLAGNAME, _HALFCARRYFLAG },					// Half Carry flag
-				  { "-", 5 },												// Not used...
+				  { _BIT5FLAGNAME, 5 },										// Not used... unless in undocumented
 				  { _ZEROFLAGNAME, _ZEROFLAG },								// Zero flag
 				  { _SIGNFLAGNAME, _SIGNFLAG } }));							// Sign flag
 }
@@ -1040,9 +1040,9 @@ MCHEmul::Instructions FZ80::CZ80::createInstructions ()
 	FDCBInstructions [0xFDCB38] = new FZ80::SRL_IndirectIndexIYCopyB;		// Undocumented
 	FDCBInstructions [0xFDCB39] = new FZ80::SRL_IndirectIndexIYCopyC;		// Undocumented
 	FDCBInstructions [0xFDCB3A] = new FZ80::SRL_IndirectIndexIYCopyD;		// Undocumented
-	FDCBInstructions [0xFDCB3A] = new FZ80::SRL_IndirectIndexIYCopyE;		// Undocumented
-	FDCBInstructions [0xFDCB3B] = new FZ80::SRL_IndirectIndexIYCopyH;		// Undocumented
-	FDCBInstructions [0xFDCB3C] = new FZ80::SRL_IndirectIndexIYCopyL;		// Undocumented
+	FDCBInstructions [0xFDCB3B] = new FZ80::SRL_IndirectIndexIYCopyE;		// Undocumented
+	FDCBInstructions [0xFDCB3C] = new FZ80::SRL_IndirectIndexIYCopyH;		// Undocumented
+	FDCBInstructions [0xFDCB3D] = new FZ80::SRL_IndirectIndexIYCopyL;		// Undocumented
 
 	// BIT
 	CBInstructions [0xCB47]		= new FZ80::BIT_0WithA;

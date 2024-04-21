@@ -35,6 +35,13 @@ namespace FZ80
 							{ return (_INTMode); }
 		inline void setINTMode (unsigned char iM); // To set also the number of cycles to lunch...
 
+		/**
+		  *	The name of the fields are: \n
+		  *	The ones from the FZ80::Interrupt +
+		  *	MODE			= The mode of execution of the interruption.
+		  */
+		virtual MCHEmul::InfoStructure getInfoStructure () const override;
+
 		private:
 		virtual bool isTime (MCHEmul::CPU* c, unsigned int cC) const override;
 		virtual bool executeOverImpl (MCHEmul::CPU* c, unsigned int cC) override;

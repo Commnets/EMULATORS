@@ -2,6 +2,16 @@
 #include <FZ80/CZ80.hpp>
 
 // ---
+MCHEmul::InfoStructure FZ80::INTInterrupt::getInfoStructure () const
+{
+	MCHEmul::InfoStructure result = std::move (FZ80::Interrupt::getInfoStructure ());
+
+	result.add ("MODE", _INTMode);
+
+	return (result);
+}
+
+// ---
 bool FZ80::INTInterrupt::isTime (MCHEmul::CPU* c, unsigned int cC) const
 { 
 	return (static_cast <CZ80*> (c) -> IFF1 ()); 
@@ -20,7 +30,7 @@ bool FZ80::INTInterrupt::executeOverImpl (MCHEmul::CPU* c, unsigned int cC)
 	static_cast <FZ80::CZ80*> (c) -> setIFF2 (false); 
 	static_cast <FZ80::CZ80*> (c) -> setIFF1 (false); 
 
-	switch (static_cast <FZ80::CZ80*> (c) -> INTmode ())
+	switch (_INTMode)
 	{
 		// In the type 0, the instruction with the code of the value in the data bus, is executed...
 		// If it didn't exist, the method would return false...
@@ -28,7 +38,7 @@ bool FZ80::INTInterrupt::executeOverImpl (MCHEmul::CPU* c, unsigned int cC)
 			{
 				_exeAddress = MCHEmul::Address (); // Not important!
 
-				MCHEmul::UByte nC = c -> lastInstruction () -> lastINOUTData ()[0];
+				MCHEmul::UByte nC = c -> lastInstruction () -> INOUTData ()[0];
 				if (!c -> existsInstruction ((unsigned int) nC.value ()))
 					result = false; // The instruction doesn't exist!
 				else
@@ -36,7 +46,7 @@ bool FZ80::INTInterrupt::executeOverImpl (MCHEmul::CPU* c, unsigned int cC)
 					MCHEmul::Instruction* inst = c -> instruction ((unsigned int) nC.value ());
 					result = inst -> execute 
 						(c, c -> memoryRef (), c -> memoryRef () -> stack (), &c -> programCounter ());
-					_cyclesAfterLaunch = inst -> clockCycles (); // The ones that the instruction took!
+					_cyclesAfterLaunch = inst -> clockCyclesExecuted (); // The ones that the instruction took!
 				}
 			}
 
