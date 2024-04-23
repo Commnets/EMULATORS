@@ -18,7 +18,14 @@
 
 namespace MCHEmul
 {
-	/** The instruction can be grotup in a line of bytes with info around. */
+	/** The ByCodeLine defines an assembler instruction as it can be needed for many pruposes: \n
+	 	execution, printed it out, saving in a file in different formats....
+	  	Any ByterCodeLine object is made up of: \n
+	 	_address	: Position of the memory where the definition of the instruction starts. \n
+		_bytes		: The bytes of info needed to fully create the instruction. \n
+		_label		: The position of the memory can be defined using a label. \n
+		_instruction: A reference to the instruction, what can be either defined or undefined. \n
+		_actionOn	: There might be an action defined over the position of the memory where the instruction is defined. */
 	struct ByteCodeLine final
 	{
 		ByteCodeLine ()

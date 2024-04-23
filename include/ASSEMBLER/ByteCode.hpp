@@ -22,7 +22,7 @@ namespace MCHEmul
 	{
 		/** To manage the set of bytecode lines. \n
 			The ByteCode structure is what the many actions over the memory produces. \n
-			It can be load into the memory and saved into files with the two basic formats supported
+			It can be load from the memory and also saved into files with the two basic formats supported
 			by the emulation: Binary and Set of Blocks. */
 		struct ByteCode final
 		{
@@ -55,6 +55,8 @@ namespace MCHEmul
 			/** Save its data blocks as per defined in formatter block file. */
 			bool saveAsBlocksFormatter (const std::string& fN, const std::string& fF = ".\\blkFormatter.fmt") const;
 
+			/** To create an object from the memory. \n 
+			 	It is really to decompile the memory! (@see MCHEmul::Instruction). */
 			static ByteCode createFromMemory (const Address& a, unsigned int b, Memory* m, Computer* cpu);
 
 			std::vector <ByteCodeLine> _lines;

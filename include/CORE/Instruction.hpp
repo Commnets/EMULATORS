@@ -27,19 +27,21 @@ namespace MCHEmul
 	class ProgramCounter;
 	class InstructionDefined;
 
-	/** 
-		Represents a instruction executed by a CPU. \n
-		To define a instruction a code is needed. \n
+	/** Represents a instruction executed by a CPU. \n
+		To define an instruction a "code" is needed. \n
 		The code is an unsigned integer number (no more than 4 bytes). \n
-		The information with in the instruction (following in memory the code) 
+		The information within the instruction (following to the code in the memory), 
 		can be organized in little or big endian, so this parameter is also needed at construction time. \n
-		The instruction is used in many ocasion an it is the central block of execution code 
-		in the CPU class (@see MCHEmul::CPU). There can be different types of instructions.
-	  */
+		The instruction is used in many ocasions and it is the central block of execution code 
+		in the CPU class (@see MCHEmul::CPU). \n
+		There can be two types of instructions: Defined & Undefined (@see below). */
 	class Instruction
 	{
 		public:
-		// When the instruction is executed this data has to be saved!
+		/** When the instruction is executed this data has to be updated. \n
+		 	The attribute "parameters" has to contain the data that builts up thefull  definition of the instruction. \n
+		 	This attribute must be set up when e4xecuting the transaction, 
+			but it can also been set up in other moment, e.g. when decompiling code. */
 		struct ExecutionData
 		{
 			ExecutionData ()
@@ -52,11 +54,11 @@ namespace MCHEmul
 				  _memoryPositions (0)
 							{ }
 
-			/** To get the parameters info from a specific byte. 
-				@param p :	The number of ubytes to execlude. 
-				@param nP:	The number of parameters to include. 
-				@param bE:	Whether the data to return is in be or little endian. */
-			const UBytes parameters (size_t p, size_t nP = 1, bool bE = true) const;
+			/** To get a setr of the parameteres:
+				@param p :	The number of ubytes to exclude (since the first one).
+				@param nP:	The number of parameters to include (excluding the first p of them).
+				@param bE:	Whether the data to return is in big or little endian format. */
+			UBytes parameters (size_t p, size_t nP = 1, bool bE = true) const;
 			std::string parametersAsString (size_t p, size_t nP = 1, bool bE = true) const; 
 			
 			CPU* _cpu;
@@ -101,24 +103,24 @@ namespace MCHEmul
 
 		/** This method is really important,
 			as it returns the number of bytes that the instruction will finally ocuppy in memory. \n
-			This final number will depend on the type of instruction.
-			e.g. A "defined instruction" will take the same positions in the memory always, 
+			This final number will depend on the type of instruction. \n
+			e.g. A "defined instruction" will take the same positions in the memory always,
 			whilst a "not defined" one could vary depending on the final form that the instruction takes when executed
 			in a specific zone of the memory. */
 		// Used more from parser (@see MCHEmul::Parser) and decompiling the memory (MCHEmul::Commads).
 		// ...and when a instruction is executed cycle by clycle (@see CPU).
 		virtual unsigned int memoryPositions (Memory* m, const Address& a) const = 0;
-		/** Similar methods with the clock cyles. */
+		/** Similar meaning with the clock cyles. */
 		virtual unsigned int clockCycles (Memory* m, const Address& a) const = 0;
 
 		// Used in parsers!
 		/** 
-			To know whether the instruction template matches of not with the example received. \n
-			It has to return a reference to the instruction that matched to (when matches), 
-			and nullptr when it doesn't. \n
-			@param i	The Template to verify whether it maches...
-			NOTE: When matches the parameter prms received must also filled. \n
-				  When doesn't the parameter prms will have trash!. 
+		  *	To know whether the instruction template matches of not with the template received. \n
+		  *	It has to return a reference to the instruction that matched to (when matches), 
+		  *	and nullptr when it doesn't. \n
+		  *	@param i	The template to verify whether it maches with...
+		  *	NOTE: When matches the parameter prms received must also be filled. \n
+		  *		  When doesn't the parameter prms will have trash!.
 		  */
 		virtual InstructionDefined* matchesWith (const std::string& i, Strings& prms) = 0;
 
@@ -176,11 +178,9 @@ namespace MCHEmul
 							{ return (_lastExecutionData._memoryPositions); }
 		
 		// Used in run time (when debugging)
-		/** 
-			To get the instruction as an string. \n
-			The last execution info mst be used, however the final implementation will rely
-			on the specific type of instruction. 
-		  */
+		/** To get the instruction as an string. \n
+			Whatever the imlementation is, the ExecutionData can be used. \n
+			Remember that its attribute "parameters" can be filled out from outside. */
 		virtual std::string asString () const = 0;
 
 		friend std::ostream& operator << (std::ostream& o, const Instruction& i)
@@ -200,15 +200,13 @@ namespace MCHEmul
 	using Instructions = std::map <unsigned int, Instruction*>;
 	using ListOfInstructions = std::vector <Instruction*>;
 
-	/** 
-		The most common type of instruction. \n
+	/** The most common type of instruction. \n
 		This type of instruction is fully defined at construction time. \n
 		That's it: The number of cycles it takes, the bytes in memory it occupies, etc. All are defined at construction time. \n
-		This is actually the only type of transaction really executed! \n
-		The execution of the instruction passes thought several steps called cycles. \n
-		The type of the cycles depends on the CPU implementing a set of instructions.
-		Three are defined by defect, but many can be added later: _INTERAL, _READ, _WRITE.
-	  */
+		This is actually the only type of transaction that can be really "executed"! \n
+		The execution of a instruction passes thought several steps called cycles. \n
+		The type of each cycle depends on the CPU implementing this instruction (usually common for of instructions). \n
+		Three types are defined by defect, but many others can be added later: _INTERAL, _READ, _WRITE. */
 	class InstructionDefined : public Instruction
 	{
 		public:
@@ -320,14 +318,15 @@ namespace MCHEmul
 
 		virtual bool defineInstructionFrom (Memory* m, const Address& addr) override;
 
-		/** This method is key when, compiling assembler code. \n
+		/** This method is key when, e.g, compiling assembler code. \n
 			When a instruction is finally detected (@see matchesWith) the way the different
-			bytes of the instruction are lined up depends on the CPU and the set of instructions.
+			bytes of the instruction are lined up might depend on the CPU and the instruction itself.
 			Usually (the default behaviour) the main code (o codes) is (are) first and then the different parameters,
 			that the instruction uses, but in some CPU this can change. \n
-			e.g. in a Z80 the instruction SET 7,xx is made of 4 bits:
-			1st, 2nd and 4th are the ones describing the instruction and the 3rd is the parameter. 
-			Don't forget to overload this method if the standard way doesn't work. */
+			e.g. in a Z80 the instruction SET 7,xx is made of 4 bits: \n
+			1st, 2nd and 4th are the ones describing the instruction and the 3rd is the parameter. \n
+			Don't forget to overload this method if the standard way doesn't work. \n
+			If something is wrong with the execution e mut be filled up. */
 		virtual std::vector <UByte> shapeCodeWithData (const std::vector <std::vector <UByte>>& b, bool& e) const;
 		
 		virtual std::string asString () const override;
@@ -343,14 +342,17 @@ namespace MCHEmul
 							{ _additionalCycles += nc; }
 
 		protected:
-		/** To analyze the structure of the instruction. */
+		/** To analyze the structure of the instruction. \n
+		 	Colled from the constructor. */
 		Structure analyzeInstruction () const;
 
-		/** The implementation of the execution.
-			It has to be redefined when the instruction was implemented.
-			@return		true if the execution was ok, and false in other situation. 
-			The parameter f must be set to false whether the execution didin't finish
-			and the next CPU cycle has to considere it back. */
+		/** 
+		  * The implementation of the execution.
+		  *	It has to be redefined when the instruction was implemented.
+		  *	@return		true if the execution was ok, and false in other situation. 
+		  *	The parameter f must be set to false whether the execution didin't finish
+		  *	and the next CPU cycle has to considere it back. 
+		  */
 		virtual bool executeImpl (bool &f) = 0;
 
 		protected:
@@ -360,23 +362,19 @@ namespace MCHEmul
 
 		// Implementation
 		// The internal structure helps us later to deal better with the instruction...
-		Structure _iStructure; 
-
-		mutable unsigned int _additionalCycles; // Sometimes, when executed, 
-												// an instruction could take more than expected... (@see additionalClockCylces method)
-
-		protected:
-		UBytes _lastParameters;
+		Structure _iStructure;
+		mutable unsigned int _additionalCycles;
 	};
 
 	/** This type of instruction is defined as it is processed. \n
 		The instruction needs a list of different possibilities to choose. \n 
-		The one to execute finally can depend on, e.g, other bytes read from the memory. */
+		The one to execute finally can depend on, e.g, other bytes read from the memory (@see method selectInstruction). */
 	class InstructionUndefined : public Instruction
 	{
 		public:
 		/** 
-		  * @param	c	:	A generic code for the Undefined Instruction.
+		  * Constructor. \n
+		  * @param	c	:	A generic code for the Undefined Instruction (to group all instructions iside)
 		  * @param	inst:	The list of instruction where to select the right one to finally execute. 
 		  */
 		InstructionUndefined (unsigned int c, const Instructions& inst);

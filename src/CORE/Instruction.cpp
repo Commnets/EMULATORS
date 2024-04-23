@@ -11,7 +11,7 @@ static std::map <unsigned char, MCHEmul::InstructionDefined::Structure::Paramete
 	});
 
 // ---
-const MCHEmul::UBytes MCHEmul::Instruction::ExecutionData::parameters (size_t p, size_t nP, bool bE) const
+MCHEmul::UBytes MCHEmul::Instruction::ExecutionData::parameters (size_t p, size_t nP, bool bE) const
 {
 	if ((p + nP - 1) >= _parameters.size ())
 		return (MCHEmul::UBytes::_E);
@@ -51,7 +51,8 @@ MCHEmul::InstructionDefined::InstructionDefined (unsigned int c, unsigned int mp
 	  _memoryPositions (mp), 
 	  _clockCycles (cc),
 	  _iTemplate (MCHEmul::noSpaces (MCHEmul::upper (t))), // The template if stored in uppercase and with no spaces...
-	  _iStructure ()
+	  _iStructure (),
+	  _additionalCycles (0)
 { 
 	assert (_memoryPositions > 0 && _clockCycles > 0); 
 	assert (_iTemplate != ""); 
@@ -248,7 +249,7 @@ bool MCHEmul::InstructionDefined::execute (MCHEmul::CPU* c, MCHEmul::Memory* m, 
 	// take care codifying the right behaviour per instruction...
 	*pc += (size_t) _memoryPositions;
 
-	_additionalCycles = 0; // executeImpl could add additional cycles...
+	_lastExecutionData._additionalClockCycles = 0; // executeImpl could add additional cycles...
 
 	bool f = true;
 	bool r = executeImpl (f);
@@ -354,7 +355,7 @@ bool MCHEmul::InstructionUndefined::defineInstructionFrom (MCHEmul::Memory* m, c
 	// Then define the details...and drag the parameters defined!
 	bool result = false;
 	if ((result = _lastInstruction -> defineInstructionFrom (m, addr)))
-		_lastExecutionData = _lastInstruction -> lastExecutionData (); 
+		_lastExecutionData = _lastInstruction -> lastExecutionData (); // Not std::move because info can be used in other levels...
 
 	return (result);
 }
@@ -367,7 +368,7 @@ bool MCHEmul::InstructionUndefined::execute (MCHEmul::CPU* c, MCHEmul::Memory* m
 	MCHEmul::Instruction* sI = 
 		const_cast <MCHEmul::Instruction*> (selectInstruction (m, pc -> asAddress ())); // To select the instruction...
 	if (sI != nullptr && (result = sI -> execute (c, m, stk, pc)))
-		_lastExecutionData = (_lastInstruction = sI) -> lastExecutionData ();
+		_lastExecutionData = (_lastInstruction = sI) -> lastExecutionData (); // Not std::move because info can be used in other levels...
 
 	return (result);
 }

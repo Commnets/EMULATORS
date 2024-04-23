@@ -151,7 +151,7 @@ MCHEmul::Assembler::ByteCode MCHEmul::Assembler::ByteCode::createFromMemory
 	while (i < b)
 	{
 		MCHEmul::Instructions::const_iterator pi =
-			c -> cpu () ->instructions ().find (MCHEmul::UInt
+			c -> cpu () -> instructions ().find (MCHEmul::UInt
 				(m -> values (a + i, c -> cpu () -> architecture ().instructionLength ()).bytes ()).asUnsignedInt ());
 		if (pi == c -> cpu () -> instructions ().end ())
 			break; // No sense to continue...the instruction doesn't exist...
