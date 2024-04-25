@@ -256,10 +256,11 @@ _INST_IMPL (FZ80::LD_AFromAddress)
 	assert (parameters ().size () == 3);
 
 	/** Addresses in memory are kept little - endian. */
-	return (executeWith (registerA (), 
-		_lastExecutionData._INOUTData [0] = memory () -> value
-			(_lastExecutionData._INOUTAddress = MCHEmul::Address 
-				({ parameters ()[1].value (), parameters ()[2].value () }, false /** little - endian */))));
+	const MCHEmul::UByte& dt = memory () -> value
+		(_lastExecutionData._INOUTAddress = MCHEmul::Address 
+			({ parameters ()[1].value (), parameters ()[2].value () }, false /** little - endian */));
+	_lastExecutionData._INOUTData = MCHEmul::UBytes ({ dt });
+	return (executeWith (registerA (), dt));
 }
 
 // ---
