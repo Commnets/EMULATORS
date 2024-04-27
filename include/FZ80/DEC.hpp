@@ -40,11 +40,13 @@ namespace FZ80
 		MCHEmul::StatusRegister& st = cpu () -> statusRegister ();
 
 		// The operation...
-		MCHEmul::UInt v  (r.values ()[0]);
-		MCHEmul::UInt vH (r.values ()[0] & 0x0f); // Just half byte!
-		v  -= MCHEmul::UInt::_1; // DECrement...
-		// ..just to see whether there is half borrow!
-		vH -= MCHEmul::UInt::_1; 
+		MCHEmul::UByte rD;
+		MCHEmul::UInt v (rD = r.values ()[0]);
+		v -= MCHEmul::UInt::_1; // DECrement...
+		// To calculate the half borrow...
+		int rV = (int) rD.value ();
+		int cr = rV ^ 0x01 ^ (rV - 0x01); // It is a int operation, 
+										  // so - it is already always with carry
 
 		r.set (v.bytes ()); // Put back the info
 
@@ -53,7 +55,7 @@ namespace FZ80
 		st.setBitStatus (CZ80::_NEGATIVEFLAG, true); // as the last instruction has been a substract!
 		st.setBitStatus (CZ80::_PARITYOVERFLOWFLAG, v.overflow ());
 		st.setBitStatus (CZ80::_BIT3FLAG, v [0].bit (3)); // Undocumented...
-		st.setBitStatus (CZ80::_HALFCARRYFLAG, !vH.carry ()); // borrow = !carry
+		st.setBitStatus (CZ80::_HALFCARRYFLAG, (cr & 0x10) != 0x00);
 		st.setBitStatus (CZ80::_BIT5FLAG, v [0].bit (5)); // Undocumented...
 		st.setBitStatus (CZ80::_ZEROFLAG, v == MCHEmul::UByte::_0);
 		st.setBitStatus (CZ80::_SIGNFLAG, v.negative ());
@@ -83,10 +85,11 @@ namespace FZ80
 		// The operation...
 		MCHEmul::UByte vD;
 		MCHEmul::UInt v (vD = memory () -> value (a));
-		MCHEmul::UInt vH (vD & 0x0f);
-		v  -= 1; // DECrement...
-		// Just to calculate the half borrow...
-		vH -= 1;
+		v -= 1; // DECrement...
+		// To calculate the half borrow...
+		int vV = (int) vD.value ();
+		int cr = vV ^ 0x01 ^ (vV - 0x01); // It is a int operation, 
+										  // so - it is already always with carry
 
 		memory () -> set (a, v.values ()[0]);
 
@@ -95,7 +98,7 @@ namespace FZ80
 		st.setBitStatus (CZ80::_NEGATIVEFLAG, true);
 		st.setBitStatus (CZ80::_PARITYOVERFLOWFLAG, v.overflow ());
 		st.setBitStatus (CZ80::_BIT3FLAG, v [0].bit (3)); // Undocumented...
-		st.setBitStatus (CZ80::_HALFCARRYFLAG, !vH.carry ()); // borrow = !carry...
+		st.setBitStatus (CZ80::_HALFCARRYFLAG, (cr & 0x10) != 0x00);
 		st.setBitStatus (CZ80::_BIT5FLAG, v [0].bit (5)); // Undocumented...
 		st.setBitStatus (CZ80::_ZEROFLAG, v == MCHEmul::UByte::_0);
 		st.setBitStatus (CZ80::_SIGNFLAG, v.negative ());

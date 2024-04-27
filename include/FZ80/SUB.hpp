@@ -47,11 +47,13 @@ namespace FZ80
 		MCHEmul::StatusRegister& st = cpu () -> statusRegister ();
 
 		// The operation...
-		MCHEmul::UInt rst  = MCHEmul::UInt (r.values ()[0]) - MCHEmul::UInt (v);
+		bool a = c && st.bitStatus (FZ80::CZ80::_CARRYFLAG);
+		MCHEmul::UInt rst = MCHEmul::UInt (r.values ()[0]) - MCHEmul::UInt (v); // Always with carry...
+		if (a) rst -= MCHEmul::UInt::_1; // that can be removed or not...
 		// To calculate the half borrow...
-		MCHEmul::UInt rstH = MCHEmul::UInt (r.values ()[0] & 0x0f) - MCHEmul::UInt (v & 0x0f); 
-		if (c && st.bitStatus (FZ80::CZ80::_CARRYFLAG) )
-			{ rst -= MCHEmul::UInt::_1; rstH -= MCHEmul::UInt::_1; }
+		int rV = (int) r.values ()[0].value ();
+		int cr = rV ^ ((int) v.value ()) ^ (rV - ((int) v.value ()) - (a ? 1 : 0)); // It is a int operation, 
+																					// so - it is already always with carry
 
 		r.set (rst.values ()); // and stored back...
 
@@ -60,7 +62,7 @@ namespace FZ80
 		st.setBitStatus (CZ80::_NEGATIVEFLAG, true); // Always in substractions!
 		st.setBitStatus (CZ80::_PARITYOVERFLOWFLAG, rst.overflow ());
 		st.setBitStatus (CZ80::_BIT3FLAG, rst [0].bit (3)); // Undocumented...
-		st.setBitStatus (CZ80::_HALFCARRYFLAG, !rstH.carry ()); // Half borrow!
+		st.setBitStatus (CZ80::_HALFCARRYFLAG, (cr & 0x10) != 0x00);
 		st.setBitStatus (CZ80::_BIT5FLAG, rst [0].bit (5)); // Undocumented...
 		st.setBitStatus (CZ80::_ZEROFLAG, rst == MCHEmul::UInt::_0);
 		st.setBitStatus (CZ80::_SIGNFLAG, rst.negative ());
@@ -75,13 +77,16 @@ namespace FZ80
 		MCHEmul::StatusRegister& st = cpu () -> statusRegister ();
 
 		// The operation...
-		MCHEmul::UInt rst  = MCHEmul::UInt ({ r [0] -> values ()[0], r [1] -> values ()[0] }) -
-			MCHEmul::UInt ({ v [0], v [1] });
+		bool a = st.bitStatus (FZ80::CZ80::_CARRYFLAG); 
+		// Takes into account the carry flag! (it is always a SBC instruction)
+		MCHEmul::UInt rV = MCHEmul::UInt ({ r [0] -> values ()[0], r [1] -> values ()[0] }); 
+		MCHEmul::UInt vV = MCHEmul::UInt ({ v [0], v [1] });
+		MCHEmul::UInt rst  = rV - vV; // Always with carry..
+		if (a) rst -= MCHEmul::UInt::_1; // That can be removed if selected...
 		// To calculate the half borrow in the upper byte...
-		MCHEmul::UInt rstH = MCHEmul::UInt ({ r [0] -> values ()[0] & 0x0f, r [1] -> values ()[0] }) -
-			MCHEmul::UInt ({ v [0] & 0x0f, v [1] });
-		if (st.bitStatus (FZ80::CZ80::_CARRYFLAG)) 
-			{ rst -= MCHEmul::UInt::_1; rstH -= MCHEmul::UInt::_1; }
+		int rVI = rV.asInt (); int vVI = vV.asInt ();
+		int cr = rVI ^ vVI ^ (rVI - vVI - (a ? 1 : 0)); // It is an int operation,
+														// so - is always with carry, that has to be removed later.
 
 		// Put back the value...
 		r [0] -> set ({ rst.values ()[0] }); 
@@ -92,7 +97,7 @@ namespace FZ80
 		st.setBitStatus (CZ80::_NEGATIVEFLAG, true); // Always! 
 		st.setBitStatus (CZ80::_PARITYOVERFLOWFLAG, rst.overflow ());
 		st.setBitStatus (CZ80::_BIT3FLAG, rst [0].bit (3)); // a copy of the status of the bit 3 of the MSB... but undocumented!
-		st.setBitStatus (CZ80::_HALFCARRYFLAG, !rstH.carry ());  // Half borrow!
+		st.setBitStatus (CZ80::_HALFCARRYFLAG, (cr & 0x1000) != 0x0000);
 		st.setBitStatus (CZ80::_BIT5FLAG, rst [0].bit (5)); // a copy of the status of the bit 5 of the MSB... but undocumented!
 		st.setBitStatus (CZ80::_ZEROFLAG, rst == MCHEmul::UInt::_0);
 		st.setBitStatus (CZ80::_SIGNFLAG, rst.negative ());

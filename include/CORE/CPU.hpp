@@ -246,7 +246,8 @@ namespace MCHEmul
 		  * ARCHITECURE = InfoStructure: Architecture info. \n
 		  *	REGS		= InfoStructure: Registers info. \n
 		  * PC			= Attribute: Value of the program counter. \n
-		  *	SR			= Attribute: Value of the status register.
+		  *	SR			= Attribute: Value of the status register. \n
+		  * CLK			= Attribute: Value of the internal clock cycle (could be o if it is external).
 		  */
 		virtual InfoStructure getInfoStructure () const override;
 

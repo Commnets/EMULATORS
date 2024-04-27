@@ -64,16 +64,16 @@ namespace ZX81
 		static const int _ROM_SUBSET				= 101;
 		static const int _ROMSHADOW1_SUBSET			= 102;
 		static const int _RAM1K_SUBSET				= 103;
-		static const int _RAM15K_UC_SUBSET			= 104;
-		static const int _RAM16K_SUBSET				= 105;
-		static const int _ROMSHADOW2_SUBSET			= 106;
-		static const int _ROMSHADOW3_SUBSET			= 107;
-		static const int _RAM1KSHADOW_SUBSET		= 108;
-		static const int _RAM15KSHADOW_UC_SUBSET	= 109;
-		static const int _RAM16KSHADOW_SUBSET		= 110;
-		static const int _RAM1K_V_SUBSET			= 111;
-		static const int _RAM15K_V_SUBSET			= 112;
-		static const int _RAM16K_V_SUBSET			= 113;
+		static const int _RAM1K_S_SUBSET			= 104; // From 104 to 118
+		static const int _RAM16K_SUBSET				= 119;
+		static const int _ROMSHADOW2_SUBSET			= 120;
+		static const int _ROMSHADOW3_SUBSET			= 121;
+		static const int _RAM1KSHADOW_SUBSET		= 122;
+		static const int _RAM1KSHADOW_S_SUBSET		= 123; // From 123 to 137
+		static const int _RAM16KSHADOW_SUBSET		= 138;
+		static const int _RAM1K_V_SUBSET			= 139;
+		static const int _RAM1K_V_S_SUBSET			= 140; // From 140 to 154
+		static const int _RAM16K_V_SUBSET			= 155;
 
 		// Views
 		static const int _CPU_VIEW					= 0;
@@ -113,9 +113,9 @@ namespace ZX81
 		MCHEmul::Stack* _RAM1K;
 		MCHEmul::MirrorPhysicalStorageSubset* _RAM1K_S;
 		ZX81::MemoryVideoCode* _RAM1K_V;
-		MCHEmul::EmptyPhysicalStorageSubset* _RAM15K_UC;
-		MCHEmul::MirrorPhysicalStorageSubset* _RAM15K_UC_S;
-		ZX81::MemoryVideoCode* _RAM15K_V;
+		std::vector <MCHEmul::MirrorPhysicalStorageSubset*> _RAM15K_UC;
+		std::vector <MCHEmul::MirrorPhysicalStorageSubset*> _RAM15K_UC_S;
+		std::vector <ZX81::MemoryVideoCode*> _RAM15K_V;
 		// ...or this one (and the equivalent in the video zone)
 		MCHEmul::Stack* _RAM16K;
 		MCHEmul::MirrorPhysicalStorageSubset* _RAM16K_S;

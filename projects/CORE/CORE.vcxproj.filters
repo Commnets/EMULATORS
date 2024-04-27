@@ -189,6 +189,9 @@
     <ClCompile Include="..\..\src\CORE\Wire.cpp">
       <Filter>Archivos de origen\Motherboard</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\CORE\Clock.cpp">
+      <Filter>Archivos de origen\Foundation</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\include\CORE\IO.hpp">

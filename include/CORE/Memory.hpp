@@ -188,6 +188,9 @@ namespace MCHEmul
 		std::vector <UByte> bytes () const
 							{ return (bytes (initialAddress (), size ())); }
 		inline void set (const Address& a, const std::vector <UByte>& v, bool f = false);
+			/** To fill the memory with a value. */
+		void fillWith (const MCHEmul::UByte& b)
+							{ for (size_t i = 0; i < _size; i++) setValue (i, b); }
 
 		/** To init the memory. It might be overloaded. By default the "defaultData" value is assigned. 
 			It doesn't matter whether the subset is or not active. */

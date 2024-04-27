@@ -438,6 +438,7 @@ MCHEmul::InfoStructure MCHEmul::Computer::getInfoStructure () const
 
 	result.add ("ATTRS",	_attributes);
 	result.add ("CPU",		std::move (_cpu -> getInfoStructure ()));
+	result.add ("CLK",		std::move (_clock.asString ()));
 
 	MCHEmul::InfoStructure chps;
 	for (const auto& i : _chips)

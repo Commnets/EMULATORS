@@ -47,10 +47,11 @@ namespace FZ80
 		MCHEmul::StatusRegister& st = cpu () -> statusRegister ();
 
 		// The operation...
-		bool a = c ? (st.bitStatus (CZ80::_CARRYFLAG) ? true : false) : false;
-		MCHEmul::UInt rst  = MCHEmul::UInt (r.values ()[0]).add (MCHEmul::UInt (v), a);
-		// Just to calculate the half carry! (from 3 to 4)
-		MCHEmul::UInt rstH = MCHEmul::UInt (r.values ()[0] & 0x0f).add (MCHEmul::UInt (v & 0x0f), a);
+		bool a = c && st.bitStatus (CZ80::_CARRYFLAG);
+		MCHEmul::UInt rst = MCHEmul::UInt (r.values ()[0]).add (MCHEmul::UInt (v), a);
+		// Just to calculate the half carry!
+		int rV = (int) r.values ()[0].value ();
+		int cr = rV ^ ((int) v.value ()) ^ (rV + ((int) v.value ()) + (a ? 1 : 0)) ;
 
 		r.set (rst.values ()); // and stored back...
 
@@ -59,7 +60,7 @@ namespace FZ80
 		st.setBitStatus (CZ80::_NEGATIVEFLAG, false); // Always in additions!
 		st.setBitStatus (CZ80::_PARITYOVERFLOWFLAG, rst.overflow ());
 		st.setBitStatus (CZ80::_BIT3FLAG, rst [0].bit (3)); // Undocumented...
-		st.setBitStatus (CZ80::_HALFCARRYFLAG, rstH [0].bit (4)); // When true, there will have been a half carry from bit 3 to 4!
+		st.setBitStatus (CZ80::_HALFCARRYFLAG, (cr & 0x10) != 0x00);
 		st.setBitStatus (CZ80::_BIT5FLAG, rst [0].bit (5)); // Undocumented...
 		st.setBitStatus (CZ80::_ZEROFLAG, rst == MCHEmul::UInt::_0);
 		st.setBitStatus (CZ80::_SIGNFLAG, rst.negative ());
@@ -73,12 +74,13 @@ namespace FZ80
 		MCHEmul::StatusRegister& st = cpu () -> statusRegister ();
 
 		// The operation...
-		bool a = c ? (st.bitStatus (CZ80::_CARRYFLAG) ? true : false) : false;
-		MCHEmul::UInt rst  = MCHEmul::UInt ({ r [0] -> values ()[0], r [1] -> values ()[0] }).
-			add (MCHEmul::UInt ({ v [0], v [1] }), a);
-		// Just to calculate the half carry in bit 11 to 12!
-		MCHEmul::UInt rstH = MCHEmul::UInt ({ r [0] -> values ()[0] & 0x0f, r [1] -> values ()[0] }).
-			add (MCHEmul::UInt ({ v [0] & 0x0f, v [1] }), a); 
+		bool a = c && st.bitStatus (CZ80::_CARRYFLAG);
+		MCHEmul::UInt rV = MCHEmul::UInt ({ r [0] -> values ()[0], r [1] -> values ()[0] }); 
+		MCHEmul::UInt vV = MCHEmul::UInt ({ v [0], v [1] });
+		MCHEmul::UInt rst = rV.add (vV, a); // The carry is taking into account...
+		// Just to calculate the half carry!
+		int rVI = rV.asInt (); int vVI = vV.asInt ();
+		int cr = rVI ^ vVI ^ (rVI + vVI + (a ? 1 : 0));
 
 		// Put the result back...		
 		r [0] -> set ({ rst.values ()[0] }); 
@@ -90,12 +92,12 @@ namespace FZ80
 		st.setBitStatus (CZ80::_NEGATIVEFLAG, false); // Always! (only true when the last operation was a substraction)
 		// Bit parity is initially not affected...
 		st.setBitStatus (CZ80::_BIT3FLAG, rst [0].bit (3)); // Undocumented, but only with the MSB byte...
-		st.setBitStatus (CZ80::_HALFCARRYFLAG, rstH [0].bit (4 /** Bit 12 within the total. */)); 
+		st.setBitStatus (CZ80::_HALFCARRYFLAG, (cr & 0x1000) != 0x000); // Between bit 11 & 12
 		st.setBitStatus (CZ80::_BIT5FLAG, rst [0].bit (5)); // Undocumented, but only with the MSB byte...
 		// ZERO and SIGN flag are not initially affected...
 
-		// But if the operation is with carry!
-		if (c) 
+		// But if the operation takes into account the carry! (ADC instead ADD type)
+		if (c)
 		{
 			st.setBitStatus (CZ80::_PARITYOVERFLOWFLAG, rst.overflow ());
 			st.setBitStatus (CZ80::_ZEROFLAG, rst == MCHEmul::UInt::_0);

@@ -147,7 +147,7 @@ MCHEmul::InfoStructure ZX81::ULA::getInfoStructure () const
 	MCHEmul::InfoStructure result = std::move (MCHEmul::GraphicalChip::getInfoStructure ());
 
 	result.remove ("Memory"); // This info is not neccesary...
-	result.add ("Registers",	std::move (_ULARegisters -> getInfoStructure ()));
+	result.add ("ULARegisters",	std::move (_ULARegisters -> getInfoStructure ()));
 	result.add ("Raster",		std::move (_raster.getInfoStructure ()));
 
 	return (result);
@@ -236,7 +236,7 @@ void ZX81::ULA::readGraphicsAndDrawVisibleZone (MCHEmul::CPU* cpu)
 		_screenMemory -> setPixel (x, y, 1);
 		// Then draws the character, if it is allowed!
 		if (_raster.isInDisplayZone () &&
-			!_ULARegisters -> videoSignalClamped ())
+			!_ULARegisters -> syncOutputWhite ())
 		{
 			if (!chrCode.bit (6)) // It has to be NOP!
 			{

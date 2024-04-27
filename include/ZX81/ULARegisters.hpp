@@ -40,11 +40,11 @@ namespace ZX81
 		void setNTSC(bool n)
 							{ _NTSC = n; }
 
-		// To conrol how the video signal is issued...
-		bool videoSignalClamped () const
-							{ return (_videoSignalClamped); }
-		void clampVideoSignal (bool vs)
-							{ _videoSignalClamped = vs; }
+		// To control how the video signal is issued...
+		bool syncOutputWhite () const
+							{ return (_syncOutputWhite); }
+		void setSyncOutputWhite (bool w)
+							{ _syncOutputWhite = w; }
 		unsigned char LINECNTRL () const // From 0 to 8...
 							{ return (_LINECNTRL); }
 		void setLINECNTRL (unsigned char lc)
@@ -80,6 +80,15 @@ namespace ZX81
 
 		void initialize ();
 
+		/**
+		  *	The name of the fields are: \n
+		  * The ones from the parent class +
+		  * NTSC			= Attribute: NTSC or PAL?.
+		  * NMIGEN			= Attribute: Whether the NMI generator is or not active. \n
+		  * SYNCWHITE		= Attribute: The ULA is generating a white noise? \n
+		  * LINECNTRL		= Attribute: In which line (every 8) the raster line is in? \n
+		  * CASETTE			= Attribute: The last signal sent to the casette.
+		  */
 		virtual MCHEmul::InfoStructure getInfoStructure () const override;
 
 		private:
@@ -90,11 +99,9 @@ namespace ZX81
 		bool _NMIGenerator;
 		/** NTSC. This variable is set when starting. */
 		bool _NTSC;
-		/** The ULA "clamps" the video signal to 0, avoiding the raster to progress
-			when start to read the keyboard (IN ($FE)).
-			The keyboard reading process will take 400us.
-			After those, the video signal is unclamped and the raster starts to move. */
-		bool _videoSignalClamped;
+		/** When the ULA is in the first zone of the memory a whote nouse is generated,
+			once it enter in the slow / fast zone, the video can be generated. */
+		bool _syncOutputWhite;
 		/** Something similar is done withe this 3 bits (0-7) internal counter,
 			that is used to determine which line of the character has to be ddrawn
 			and increments every HSYNC event. */

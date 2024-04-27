@@ -20,10 +20,11 @@ MCHEmul::InfoStructure ZX81::ULARegisters::getInfoStructure () const
 {
 	MCHEmul::InfoStructure result = std::move (MCHEmul::InfoClass::getInfoStructure ());
 
-	result.add ("NMIGenerator",	_NMIGenerator);
 	result.add ("NTSC",			_NTSC);
+	result.add ("NMIGEN",		_NMIGenerator);
+	result.add ("SYNCWHITE",	_syncOutputWhite);
 	result.add ("LINECNTRL",	_LINECNTRL);
-	result.add ("Casette",		_casetteSignal);
+	result.add ("CASETTE",		_casetteSignal);
 
 	return (result);
 }
@@ -35,7 +36,7 @@ void ZX81::ULARegisters::initializeInternalValues ()
 
 	_NTSC = false;
 
-	_videoSignalClamped = true;
+	_syncOutputWhite = true;
 
 	_LINECNTRL = 0;
 	_LINECNTRLBlocked = true;

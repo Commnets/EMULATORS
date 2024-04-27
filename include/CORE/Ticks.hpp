@@ -58,6 +58,11 @@ namespace MCHEmul
 		
 		operator unsigned int () const
 							{ return (_ticks); }
+
+		/** To get the info of the ticks counter as a string. */
+		std::string asString () const
+							{ return (std::to_string (_ticks) + 
+								(_countingTemporal ? ("(" + std::to_string (_latchedTicks) + ")") : "")); }
 		
 		private:
 		unsigned int _ticks;
@@ -152,6 +157,10 @@ namespace MCHEmul
 		
 		operator unsigned int () const
 							{ return (_ticks); }
+
+		std::string asString () const
+							{ return (_ticks.asString () + "," + 
+								std::to_string (_numberRequestsToWait)); }
 							
 		private:
 		unsigned short _numberRequestsToWait;

@@ -40,9 +40,11 @@ namespace FZ80
 		MCHEmul::StatusRegister& st = cpu () -> statusRegister ();
 
 		// The operation...
-		MCHEmul::UInt rst  = MCHEmul::UInt (r.values ()[0]) - MCHEmul::UInt (v);
+		MCHEmul::UInt rst = MCHEmul::UInt (r.values ()[0]) - MCHEmul::UInt (v); // Always with carry...
 		// Just to calculate the half borrow!
-		MCHEmul::UInt rstH = MCHEmul::UInt (r.values ()[0] & 0x0f) - MCHEmul::UInt (v & 0x0f); 
+		int bf = (int) r.values ()[0].value ();
+		int cr = bf ^ ((int) v.value ()) ^ (bf - ((int) v.value ())); // With no carry...
+																	  // ...because it is already signed as int operation!
 
 		// The result is not kept in any place...
 
@@ -51,7 +53,7 @@ namespace FZ80
 		st.setBitStatus (CZ80::_NEGATIVEFLAG, true); // Always!
 		st.setBitStatus (CZ80::_PARITYOVERFLOWFLAG, rst.overflow ());
 		st.setBitStatus (CZ80::_BIT3FLAG, v.bit (3)); // Undocuented... Not from A - s but from s!
-		st.setBitStatus (CZ80::_HALFCARRYFLAG, !rstH.carry ()); // When true, there will have been a half borrow!
+		st.setBitStatus (CZ80::_HALFCARRYFLAG, (cr & 0x10) != 0x00);
 		st.setBitStatus (CZ80::_BIT5FLAG, v.bit (5)); // Undocumented...Not from A - s but from s!
 		st.setBitStatus (CZ80::_ZEROFLAG, rst == MCHEmul::UInt::_0);
 		st.setBitStatus (CZ80::_SIGNFLAG, rst.negative ());

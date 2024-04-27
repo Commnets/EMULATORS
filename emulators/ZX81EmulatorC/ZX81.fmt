@@ -2,3 +2,22 @@
 #(C) 2024 Ignacio Cea Fornies
 ?./SINCLAIR.fmt
 ?./LocalConsole.fmt
+#---
+;ULARegisters
+NTSC:@NTSC@
+NMIGenerator:@NMIGEN@, SYNCWhite:@SYNCWHITE@, LineCtrl:@LINECNTRL@
+Casette:@CASETTE@
+#---
+#---
+;ULA
+Id:@ID@
+@ATTRS?{key=YES,equal=:,empty=no attributes}\n@
+->Registers:
+@ULARegisters>@
+->Control lines:
+@Raster>@
+#---
+#---
+;CULA
+@ULA>@
+#---

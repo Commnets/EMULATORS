@@ -239,8 +239,9 @@ MCHEmul::InfoStructure MCHEmul::CPU::getInfoStructure () const
 		regs.add (i.name (), std::move (i.asString ()));
 	result.add ("REGS",	std::move (regs));
 
-	result.add ("PC", std::move (programCounter ().asString ()));
-	result.add ("SR", std::move (statusRegister ().asString ()));
+	result.add ("PC",  std::move (programCounter ().asString ()));
+	result.add ("SR",  std::move (statusRegister ().asString ()));
+	result.add ("CLK", std::move (std::to_string (_clockCycles)));
 
 	return (result);
 }

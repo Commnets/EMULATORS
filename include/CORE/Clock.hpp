@@ -78,6 +78,9 @@ namespace MCHEmul
 		/** Just to calculate the speed. */
 		void countCycles (unsigned int cC);
 
+		/** To get the clock info as an string. */
+		std::string asString () const;
+
 		private:
 		unsigned int _cyclesPerSecond;
 		unsigned int _realCyclesPerSecond;

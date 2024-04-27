@@ -27,7 +27,7 @@ void ZX81::PortManager::setValue (unsigned char id, const MCHEmul::UByte& v)
 	// When this is done, the video signal is un - clamped and the LINECTRLN counter is un - blocked.
 	// During this period, the ZX81 reads the keyboard for a maximm of 400us.
 	// After that period the video signal is unclamped, and same with the LINECTRLN counter.
-	_ULARegisters -> clampVideoSignal (false);
+	_ULARegisters -> setSyncOutputWhite (true);
 	_ULARegisters -> setLINECTRLNBlocked (false);
 	_ULARegisters -> setCasetteSignal (true);
 
@@ -52,7 +52,7 @@ void ZX81::PortManager::linkToULA (ZX81::ULA* ula)
 // ---
 void ZX81::PortManager::initialize ()
 {
-	_ULARegisters -> clampVideoSignal (true);
+	_ULARegisters -> setSyncOutputWhite (true);
 	_ULARegisters -> setLINECNTRL (0);
 	_ULARegisters -> setLINECTRLNBlocked (true);
 	_ULARegisters -> setCasetteSignal (false);
@@ -80,7 +80,7 @@ MCHEmul::UByte ZX81::PortManager::getValue (unsigned char id, bool ms) const
 			!_ULARegisters -> NMIGenerator ())
 		{ 
 			// This is to enter the VSYNC routine...
-			_ULARegisters -> clampVideoSignal (true);		// Clamps the video signal...
+			_ULARegisters -> setSyncOutputWhite (false);	// un clamp the video signal...
 			_ULARegisters -> setLINECNTRL (0);				// puts the counter to 0
 			_ULARegisters -> setLINECTRLNBlocked (true);	// and also block it
 			_ULARegisters -> setCasetteSignal (false);		// ...and finally the casette signal is down!

@@ -23,6 +23,7 @@
     <ClCompile Include="..\..\src\CORE\ASCIIConverter.cpp" />
     <ClCompile Include="..\..\src\CORE\Bus.cpp" />
     <ClCompile Include="..\..\src\CORE\ByteCodeLine.cpp" />
+    <ClCompile Include="..\..\src\CORE\Clock.cpp" />
     <ClCompile Include="..\..\src\CORE\MBElement.cpp" />
     <ClCompile Include="..\..\src\CORE\Chip.cpp" />
     <ClCompile Include="..\..\src\CORE\ChipRegisters.cpp" />

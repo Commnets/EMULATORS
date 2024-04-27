@@ -28,6 +28,7 @@ Id:@ID@, In Execution:@EXECUTION@
 @REGS?{key=NO,equal=:,empty=no registers,blocksize=4}\t@
 @PC@
 @SR@
+CLK:@CLK@ ticks
 ->Interrupts:
 @INTERRUPTS?{fmter=.CLASS,empty=no interruptions}\n@
 #---
