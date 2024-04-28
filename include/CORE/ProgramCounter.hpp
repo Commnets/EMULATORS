@@ -70,6 +70,13 @@ namespace MCHEmul
 		friend std::ostream& operator << (std::ostream& o, const ProgramCounter& pc)
 							{ return (o << pc.asString ()); }
 
+		/** The very internal values. 
+			Very rare used! */
+		unsigned int maxValue () const
+							{ return (_maxValue); }
+		unsigned int internalRepresentation () const
+							{ return (_internalRepresentation); }
+
 		private:
 		void adjust ()
 							{ if (_internalRepresentation >= _maxValue) _internalRepresentation -= _maxValue; }

@@ -249,7 +249,8 @@ bool MCHEmul::InstructionDefined::execute (MCHEmul::CPU* c, MCHEmul::Memory* m, 
 	// take care codifying the right behaviour per instruction...
 	*pc += (size_t) _memoryPositions;
 
-	_lastExecutionData._additionalClockCycles = 0; // executeImpl could add additional cycles...
+	// executeImpl could add additional cycles...
+	_additionalCycles = _lastExecutionData._additionalClockCycles = 0; 
 
 	bool f = true;
 	bool r = executeImpl (f);

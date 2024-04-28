@@ -40,10 +40,24 @@ namespace F6500
 							{ assert (_readingClockCycles <= clockCycles ()); }
 		
 		virtual unsigned int typeOfCycle (unsigned int nC) const override
-						{ return ((nC < _readingClockCycles)
-							? MCHEmul::InstructionDefined::_CYCLEREAD : MCHEmul::InstructionDefined::_CYCLEWRITE); }
+							{ return ((nC < _readingClockCycles)
+								? MCHEmul::InstructionDefined::_CYCLEREAD : MCHEmul::InstructionDefined::_CYCLEWRITE); }
 	
 		protected:
+		/** To access the different registers. */
+		const MCHEmul::Register& registerA () const
+							{ return (cpu () -> internalRegister (C6510::_ACCUMULATOR)); }
+		MCHEmul::Register& registerA ()
+							{ return (cpu () -> internalRegister (C6510::_ACCUMULATOR)); }
+		const MCHEmul::Register& registerX () const
+							{ return (cpu () -> internalRegister (C6510::_XREGISTER)); }
+		MCHEmul::Register& registerX ()
+							{ return (cpu () -> internalRegister (C6510::_XREGISTER)); }
+		const MCHEmul::Register& registerY () const
+							{ return (cpu () -> internalRegister (C6510::_XREGISTER)); }
+		MCHEmul::Register& registerY ()
+							{ return (cpu () -> internalRegister (C6510::_XREGISTER)); }
+
 		// To interpret the parameters of the instruction as an address 
 		/** 2 parameters representing an address. */
 		inline const MCHEmul::Address& address_absolute () const;
@@ -476,14 +490,22 @@ namespace F6500
 	// ---
 	inline void BXX_General::executeBranch ()
 	{
+		// When the branch is executed an additional cycle is taken...
+		_additionalCycles = 1;
+
 		int jR = MCHEmul::UInt ({ value_relative () }).asInt (); // The value can be negative meaning back jump!
 
 		if (jR == 0)
 			return; // No need to continue...
 
 		MCHEmul::ProgramCounter& pc = cpu () -> programCounter ();
+		unsigned int oPC = pc.internalRepresentation (); // To check whether it crosees the page!
 		if (jR > 0) pc.increment ((size_t) jR);
 		else pc.decrement ((size_t) -jR); // Parameter to "decrement" always positive...
+
+		// Does the program counter crosses the page?
+		if ((oPC >> 8) != (pc.internalRepresentation () >> 8))
+			_additionalCycles++;
 	}
 
 	// BCC 

@@ -65,11 +65,11 @@ ZX81::Memory::Memory (ZX81::Memory::Configuration cfg, unsigned int m)
 	_RAM1K_S			= dynamic_cast <MCHEmul::MirrorPhysicalStorageSubset*> (subset (_RAM1KSHADOW_SUBSET));
 	_RAM1K_V			= dynamic_cast <ZX81::MemoryVideoCode*> (subset (_RAM1K_V_SUBSET));
 	for (size_t i = 1; i <= 15; i++)
-		_RAM15K_UC.emplace_back (dynamic_cast <MCHEmul::MirrorPhysicalStorageSubset*> (subset (_RAM1K_SUBSET + i)));
+		_RAM15K_UC.emplace_back (dynamic_cast <MCHEmul::MirrorPhysicalStorageSubset*> (subset (_RAM1K_SUBSET + (int) i)));
 	for (size_t i = 1; i <= 15; i++)
-		_RAM15K_UC_S.emplace_back (dynamic_cast <MCHEmul::MirrorPhysicalStorageSubset*> (subset (_RAM1KSHADOW_SUBSET + i)));
+		_RAM15K_UC_S.emplace_back (dynamic_cast <MCHEmul::MirrorPhysicalStorageSubset*> (subset (_RAM1KSHADOW_SUBSET + (int) i)));
 	for (size_t i = 1; i <= 15; i++)
-		_RAM15K_V.emplace_back (dynamic_cast <ZX81::MemoryVideoCode*> (subset (_RAM1K_V_SUBSET + i)));
+		_RAM15K_V.emplace_back (dynamic_cast <ZX81::MemoryVideoCode*> (subset (_RAM1K_V_SUBSET + (int) i)));
 	_RAM16K				= dynamic_cast <MCHEmul::Stack*> (subset (_RAM16K_SUBSET));
 	_RAM16K_S			= dynamic_cast <MCHEmul::MirrorPhysicalStorageSubset*> (subset (_RAM16KSHADOW_SUBSET));
 	_RAM16K_V			= dynamic_cast <ZX81::MemoryVideoCode*> (subset (_RAM16K_V_SUBSET));
