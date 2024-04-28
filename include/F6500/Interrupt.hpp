@@ -24,11 +24,19 @@ namespace F6500
 		public:
 		Interrupt (int id)
 			: MCHEmul::CPUInterrupt (id, 7),
-			  _instChecked (false)
+			  _instChecked (false),
+			  _exeAddress ()
 							{ }
 
 		unsigned int readingCyclesTolaunch () const
 							{ return (4); }
+
+		/**
+		  *	The name of the fields are: \n
+		  *	The ones from the CPUInterrupt +
+		  *	ADDRESS			= The address where the NMI should start the execution from.
+		  */
+		virtual MCHEmul::InfoStructure getInfoStructure () const override;
 
 		protected:
 		/** As the code is designed, the interrupt is invoked after the execution of one instruction,
@@ -40,6 +48,9 @@ namespace F6500
 		virtual bool executeOverImpl (MCHEmul::CPU* c, unsigned int cC) override
 							{ _instChecked = false; /** Just in case. */ 
 							  return (true); /** Not relevant. */ }
+
+		protected:
+		MCHEmul::Address _exeAddress;
 
 		private:
 		// Implementation

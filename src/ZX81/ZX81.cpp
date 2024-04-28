@@ -48,6 +48,10 @@ bool ZX81::SinclairZX81::initialize (bool iM)
 	setConfiguration (static_cast <ZX81::Memory*> 
 		(memory ()) -> configuration (), false /** Not restart. */);
 
+	/** This memory has to know where the CPU is on to return
+		either a value of other. */
+	ZX81::MemoryVideoCode::_programCounter = &cpu () -> programCounter ();
+
 	// It is also needed to observe the edge connector...
 	// Events when it is disonnected and connected are sent and with many implications
 	// in the structure of the memory, and in the content of this...

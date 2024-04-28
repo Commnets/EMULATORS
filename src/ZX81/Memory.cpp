@@ -1,10 +1,18 @@
 #include <ZX81/Memory.hpp>
 
+MCHEmul::ProgramCounter* ZX81::MemoryVideoCode::_programCounter = nullptr;
+
 // ---
 const MCHEmul::UByte& ZX81::MemoryVideoCode::readValue (size_t nB) const
 { 
-	if (!(_lastValueRead = MCHEmul::MirrorPhysicalStorageSubset::readValue (nB)).bit (6))
-		_lastValueRead = MCHEmul::UByte::_0; // To emulate the video code = 0...
+	_lastValueRead = MCHEmul::MirrorPhysicalStorageSubset::readValue (nB);
+	
+	if (_programCounter != nullptr && 
+		_programCounter -> internalRepresentation () >= 0xc000 &&
+		!_lastValueRead.bit (6)) // When the counter is above 0xc00 and the info read has not the bit 6 set, 
+								 // it is transalated into a HALT
+		_lastValueRead = MCHEmul::UByte::_0;
+
 	return (_lastValueRead);
 } 
 

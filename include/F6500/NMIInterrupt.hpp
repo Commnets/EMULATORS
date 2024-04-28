@@ -26,23 +26,11 @@ namespace F6500
 		static const int _ID = 1;
 
 		NMIInterrupt ()
-			: Interrupt (_ID),
-			  _exeAddress ()
+			: Interrupt (_ID)
 							{ setClassName ("NMIInterrupt"); }
-
-		/**
-		  *	The name of the fields are: \n
-		  *	The ones from the CPUInterrupt +
-		  *	ADDRESS			= The address where the NMI should start the execution from.
-		  */
-		virtual MCHEmul::InfoStructure getInfoStructure () const override;
 
 		private:
 		virtual bool executeOverImpl (MCHEmul::CPU* c, unsigned int cC) override;
-
-		private:
-		// Implementation
-		MCHEmul::Address _exeAddress;
 	};
 }
 

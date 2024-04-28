@@ -65,11 +65,13 @@ namespace ZX81
 		static MCHEmul::Chips standardChips (VisualSystem vS);
 		static MCHEmul::IODevices standardDevices (VisualSystem vS);
 
-		protected:
-		/** To control the status of the A6. */
-		MCHEmul::Pulse _A6;
+		private:
 		/** The video system used by the commodore VIC20. */
 		VisualSystem _visualSystem;
+
+		// Implementation
+		/** To control the status of the A6. */
+		MCHEmul::Pulse _A6;
 	};
 }
 

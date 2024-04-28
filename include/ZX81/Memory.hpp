@@ -18,6 +18,8 @@
 
 namespace ZX81
 {
+	class SinclairZX81;
+
 	/** 
 	  * The video info has to be set from D_FILE location.
 	  * The location D_FILE with the bit 7 on is where the CPU "executes" the video info.
@@ -29,6 +31,8 @@ namespace ZX81
 	class MemoryVideoCode final : public MCHEmul::MirrorPhysicalStorageSubset
 	{
 		public:
+		friend SinclairZX81;
+
 		MemoryVideoCode (int id, 
 			PhysicalStorageSubset* pSS, const MCHEmul::Address& a)
 			: MCHEmul::MirrorPhysicalStorageSubset (id, pSS, a),
@@ -36,12 +40,13 @@ namespace ZX81
 							{ }
 
 		private:
-		virtual void setValue (size_t nB, const MCHEmul::UByte& d) override
-							{ /** not for writtin anything. */ }
 		virtual const MCHEmul::UByte& readValue (size_t nB) const override;
 
 		private:
 		mutable MCHEmul::UByte _lastValueRead;
+
+		/** Very internal. Modified from the SinclairZX81. */
+		static MCHEmul::ProgramCounter* _programCounter;
 	};
 
 

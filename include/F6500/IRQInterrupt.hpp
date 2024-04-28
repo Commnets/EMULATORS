@@ -26,25 +26,13 @@ namespace F6500
 		static const unsigned int _ID = 0;
 
 		IRQInterrupt ()
-			: Interrupt (_ID),
-			  _exeAddress ()
+			: Interrupt (_ID)
 							{ setClassName ("IRQInterrupt"); }
-
-		/**
-		  *	The name of the fields are: \n
-		  *	The ones from the CPUInterrupt +
-		  *	ADDRESS			= The address where the IRQ should start the execution from.
-		  */
-		virtual MCHEmul::InfoStructure getInfoStructure () const override;
 
 		private:
 		/** Only when the status flag B allows it. It is a Maskarable Interrupt. */
 		virtual bool isTime (MCHEmul::CPU* c, unsigned int cC) const override; 
 		virtual bool executeOverImpl (MCHEmul::CPU* c, unsigned int cC) override;
-
-		private:
-		// Implementation
-		MCHEmul::Address _exeAddress;
 	};
 }
 

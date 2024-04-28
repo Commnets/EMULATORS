@@ -2,16 +2,6 @@
 #include <F6500/C6510.hpp>
 
 // ---
-MCHEmul::InfoStructure F6500::NMIInterrupt::getInfoStructure () const
-{
-	MCHEmul::InfoStructure result = std::move (MCHEmul::CPUInterrupt::getInfoStructure ());
-
-	result.add ("ADDRESS", _exeAddress);
-
-	return (result);
-}
-
-// ---
 bool F6500::NMIInterrupt::executeOverImpl (MCHEmul::CPU* c, unsigned int cC)
 {
 	F6500::Interrupt::executeOverImpl (c, cC);
