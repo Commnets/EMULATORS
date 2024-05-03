@@ -193,7 +193,7 @@ _INST_IMPL (FZ80::RET_NZ)
 {
 	assert (parameters ().size () == 1);
 
-	if (!cpu () -> statusRegister ().bitStatus (FZ80::CZ80::_NEGATIVEFLAG))
+	if (!cpu () -> statusRegister ().bitStatus (FZ80::CZ80::_ZEROFLAG))
 		executeReturn (true);
 
 	return (true);
@@ -204,7 +204,7 @@ _INST_IMPL (FZ80::RET_Z)
 {
 	assert (parameters ().size () == 1);
 
-	if (cpu () -> statusRegister ().bitStatus (FZ80::CZ80::_NEGATIVEFLAG))
+	if (cpu () -> statusRegister ().bitStatus (FZ80::CZ80::_ZEROFLAG))
 		executeReturn (true);
 
 	return (true);

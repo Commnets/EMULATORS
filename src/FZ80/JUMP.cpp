@@ -18,7 +18,7 @@ _INST_IMPL (FZ80::JP_NZ)
 {
 	assert (parameters ().size () == 3);
 
-	if (!cpu () -> statusRegister ().bitStatus (FZ80::CZ80::_NEGATIVEFLAG))
+	if (!cpu () -> statusRegister ().bitStatus (FZ80::CZ80::_ZEROFLAG))
 		cpu () -> programCounter ().
 			setAddress (MCHEmul::Address ({ parameters ()[2].value (), parameters ()[1].value () }, true)); 
 
@@ -30,7 +30,7 @@ _INST_IMPL (FZ80::JP_Z)
 {
 	assert (parameters ().size () == 3);
 
-	if (cpu () -> statusRegister ().bitStatus (FZ80::CZ80::_NEGATIVEFLAG))
+	if (cpu () -> statusRegister ().bitStatus (FZ80::CZ80::_ZEROFLAG))
 		cpu () -> programCounter ().
 			setAddress (MCHEmul::Address ({ parameters ()[2].value (), parameters ()[1].value () }, true)); 
 

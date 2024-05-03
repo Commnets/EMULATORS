@@ -80,10 +80,10 @@ MCHEmul::Computer::Computer (
 	// More actions can be added in later instances of the class computer!
 	_templateActions =
 		{ 
-			{  _ACTIONNOTHING,	new MCHEmul::Computer::NoAction }, 
-			{  _ACTIONCONTINUE,	new MCHEmul::Computer::ContinueAction }, 
-			{  _ACTIONSTOP,		new MCHEmul::Computer::StopAction }, 
-			{  _ACTIONNEXT,		new MCHEmul::Computer::NextCommandAction}
+			{ _ACTIONNOTHING,	new MCHEmul::Computer::NoAction }, 
+			{ _ACTIONCONTINUE,	new MCHEmul::Computer::ContinueAction }, 
+			{ _ACTIONSTOP,		new MCHEmul::Computer::StopAction }, 
+			{ _ACTIONNEXT,		new MCHEmul::Computer::NextCommandAction}
 		};
 }
 

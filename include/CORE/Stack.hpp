@@ -45,6 +45,9 @@ namespace MCHEmul
 			This is because _position is always managed internally as a relative value. */
 		void setPosition (int p, bool r = true)
 							{ _position = (r) ? p : p - initialAddress ().value (); }
+		/** To get where the stack is now pointing. */
+		Address currentAddress () const
+							{ return (_initialAddress + _position); }
 		/** To move to the beginning. */
 		void reset ();
 

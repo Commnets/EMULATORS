@@ -165,13 +165,13 @@ _INST_IMPL (FZ80::LD_AFromI)
 {
 	assert (parameters ().size () == 2);
 
-	bool result = executeWith (registerA (), valueRegisterI ());
+	MCHEmul::UByte v;
+	bool result = executeWith (registerA (), v = valueRegisterI ());
 	if (result)
 	{
 		MCHEmul::StatusRegister& st = cpu () -> statusRegister ();
 
 		// How the flags are affected...
-		const MCHEmul::UByte& v = registerA ().values ()[0];
 		// The carry flag is not affected!
 		st.setBitStatus (FZ80::CZ80::_NEGATIVEFLAG, false);
 		st.setBitStatus (FZ80::CZ80::_PARITYOVERFLOWFLAG, static_cast <FZ80::CZ80*> (cpu ()) -> IFF2 ());
@@ -190,7 +190,8 @@ _INST_IMPL (FZ80::LD_AFromR)
 {
 	assert (parameters ().size () == 2);
 
-	bool result = executeWith (registerA (), valueRegisterR ());
+	MCHEmul::UByte v;
+	bool result = executeWith (registerA (), v = valueRegisterR ());
 	if (result)
 	{
 		MCHEmul::StatusRegister& st = cpu () -> statusRegister ();
@@ -199,10 +200,9 @@ _INST_IMPL (FZ80::LD_AFromR)
 		// The carry flag is not affected!
 		st.setBitStatus (FZ80::CZ80::_NEGATIVEFLAG, false);
 		st.setBitStatus (FZ80::CZ80::_PARITYOVERFLOWFLAG, static_cast <FZ80::CZ80*> (cpu ()) -> IFF2 ());
-		// Bit 3 = X undetermined...
+		st.setBitStatus (FZ80::CZ80::_BIT3FLAG, v.bit (3));
 		st.setBitStatus (FZ80::CZ80::_HALFCARRYFLAG, false);
-		// Bit 5 = Y undetermined...
-		const MCHEmul::UByte& v = registerA ().values ()[0];
+		st.setBitStatus (FZ80::CZ80::_BIT3FLAG, v.bit (5));
 		st.setBitStatus (FZ80::CZ80::_ZEROFLAG, v == MCHEmul::UByte::_0);
 		st.setBitStatus (FZ80::CZ80::_SIGNFLAG, v.bit (7));
 	}
@@ -876,7 +876,7 @@ _INST_IMPL (FZ80::LD_DFromH)
 {
 	assert (parameters ().size () == 1);
 
-	return (executeWith (registerD (), valueRegisterF ()));
+	return (executeWith (registerD (), valueRegisterH ()));
 }
 
 // ---

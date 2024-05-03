@@ -86,6 +86,11 @@ namespace FZ80
 		/** The last part of the code is at the end of the byte codes. */
 		virtual std::vector <MCHEmul::UByte> shapeCodeWithData 
 			(const std::vector <std::vector <MCHEmul::UByte>>& b, bool& e) const override;
+
+		protected:
+		/** The parameter should start at position 3 but it is really at position 2 instead. */
+		virtual size_t byteParameter (size_t nP) const override
+							{ return ((nP == 3) ? 2 : nP); }
 	};
 
 	// Bit 0

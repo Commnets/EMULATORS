@@ -168,7 +168,10 @@ namespace FZ80
 							{ return (registerR ().values () [0]); }
 		MCHEmul::UBytes valueRegisterIR () const
 							{ return (MCHEmul::UBytes ({ valueRegisterI (), valueRegisterR () })); }
-		inline void incrementRegisterR ();
+		/** This method is usually invoked before the _lastExecutionData is set (what is done in 
+			the the default implementation of the method execute (@see Instruction). \n
+			And the metjod needs a cpu reference to find out the R Register. */
+		inline void incrementRegisterR (CZ80* c);
 
 		const MCHEmul::UByte& valueRegisterIXH () const
 							{ return (registerIXH ().values () [0]); }
@@ -233,14 +236,17 @@ namespace FZ80
 	};
 
 	// ---
-	inline void Instruction::incrementRegisterR ()
+	inline void Instruction::incrementRegisterR (CZ80* c)
 	{
+		assert (c != nullptr);
+
 		// @see https://www.zilog.com/docs/z80/um0080.pdf (pg. 17)
-		const MCHEmul::UByte& rVB = registerR ().values ()[0];
+		MCHEmul::Register& rR = c -> rRegister ();
+		const MCHEmul::UByte& rVB = rR.values () [0];
 		unsigned char rV = (rVB.value () & 0x07f) + 0x01; // Only the 7 MSB bits...
 		if (rV > 0x7f) rV = 0x00;
 		rV |= rVB.value () & 0x80; // ...but maintains what was programmed at the bit 8...
-		registerR ().set ({ rV }); // put it back into the register...
+		rR.set ({ rV }); // put it back into the register...
 	}
 
 	// ---

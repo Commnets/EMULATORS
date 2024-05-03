@@ -6,10 +6,10 @@ bool FZ80::Instruction::execute (MCHEmul::CPU* c, MCHEmul::Memory* m,
 {
 	_lastExecutionData._INOUTAddress = MCHEmul::Address ();
 
-	bool result = MCHEmul::InstructionDefined::execute (c, m , stk, pc);
-
 	// Any fetch operation increment the register R (@see incrementRegisterR)
-	incrementRegisterR ();
+	incrementRegisterR (static_cast <FZ80::CZ80*> (c));
+
+	bool result = MCHEmul::InstructionDefined::execute (c, m , stk, pc);
 
 	// At T4 of the M1 cycle (first machine cycle) 
 	// the IR is put value into the address bus.
@@ -17,7 +17,7 @@ bool FZ80::Instruction::execute (MCHEmul::CPU* c, MCHEmul::Memory* m,
 	// But if after those other uses, the _lastINOUTAddress is still nothing...
 	// it would mean that the info to be sent to the address bus is the IR!
 	if (_lastExecutionData._INOUTAddress.value () == 0)
-		addressIR (); // This instruction already move the value into the _lastINOUTAddress...
+		cpu () -> setLastINOUTAddress (addressIR ()); // This instruction already move the value into the _lastINOUTAddress...
 
 	return (result);
 }
@@ -52,11 +52,11 @@ FZ80::InstructionUndefined::InstructionUndefined (unsigned int c, const MCHEmul:
 bool FZ80::InstructionUndefined::execute (MCHEmul::CPU* c, MCHEmul::Memory* m,
 	MCHEmul::Stack* stk, MCHEmul::ProgramCounter* pc)
 {
-	bool result = MCHEmul::InstructionUndefined::execute (c, m, stk, pc);
-
 	/** In the pre - fixed instructions the increment of the R register is double. */
 	if (dynamic_cast <FZ80::Instruction*> (_lastInstruction) != nullptr)
-		static_cast <FZ80::Instruction*> (_lastInstruction) -> incrementRegisterR ();
+		static_cast <FZ80::Instruction*> (_lastInstruction) -> incrementRegisterR (static_cast <FZ80::CZ80*> (c));
+
+	bool result = MCHEmul::InstructionUndefined::execute (c, m, stk, pc);
 
 	return (result);
 }

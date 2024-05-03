@@ -206,7 +206,7 @@ std::string MCHEmul::InstructionDefined::asString () const
 				: true;
 
 			toPrint += t.substr (lP, iPP - lP) + 
-				_lastExecutionData.parametersAsString (nPrm, bPrm, bE);
+				_lastExecutionData.parametersAsString (byteParameter (nPrm), bPrm, bE);
 
 			nPrm += bPrm;
 			lP = fPP + 1;
@@ -257,7 +257,7 @@ bool MCHEmul::InstructionDefined::execute (MCHEmul::CPU* c, MCHEmul::Memory* m, 
 	if (r)
 	{
 		if (!f)
-			pc -= _memoryPositions;
+			*pc -= (size_t) _memoryPositions; // Back to the beginning...
 
 		_lastExecutionData._clockCycles = _clockCycles;
 

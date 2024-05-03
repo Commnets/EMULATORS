@@ -100,7 +100,7 @@ namespace FZ80
 		if (c)
 		{
 			st.setBitStatus (CZ80::_PARITYOVERFLOWFLAG, rst.overflow ());
-			st.setBitStatus (CZ80::_ZEROFLAG, rst == MCHEmul::UInt::_0);
+			st.setBitStatus (CZ80::_ZEROFLAG, rst == MCHEmul::UInt ({ 0, 0 }) /** It has always 2 bytes. */);
 			st.setBitStatus (CZ80::_SIGNFLAG, rst.negative ());
 		}
 

@@ -139,17 +139,14 @@ _INST_IMPL (FZ80::HALT)
 {
 	assert (parameters ().size () == 1);
 
-	FZ80::CZ80* cpuZ80 = dynamic_cast <FZ80::CZ80*> (cpu ());
-	assert (cpuZ80 != nullptr); // It shouldn't...but just in case!
-	if (!cpuZ80 -> stopped ()) // First time?
-	{ 
-		cpuZ80 -> setStop (true, MCHEmul::InstructionDefined::_CYCLEALL, 
-			cpu () -> clockCycles ()); // Stops for ever...
-		cpuZ80 -> setHaltActive (); // ...and marks this special situation in the CPU....
-	}
-
-	// Until unblocked by a INT execution... (@see CZ80::requestInterrupt)
-	_FINISH = !cpuZ80 -> haltActive (); 
+	// it has to be always a Z80...
+	// No test is done to verify the opposite...
+	static_cast <FZ80::CZ80*> (cpu ()) -> setHaltActive (true);
+	
+	// Always un - finished.
+	// This is because when the halt situation is unlocked, the program counter is incremented in 1!
+	// To guarantee that the return is done at the specific place!
+	_FINISH = false;
 
 	return (true);
 }

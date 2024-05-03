@@ -378,8 +378,8 @@ namespace FZ80
 		// Managing the HALT execution...
 		bool haltActive () const
 							{ return (_haltActive); }
-		void setHaltActive ()
-							{ _haltActive = true; }
+		void setHaltActive (bool a) // What ever the previous situation is, the status is modified...
+							{ _haltActive = a; }
 
 		virtual MCHEmul::InfoStructure getInfoStructure () const override;
 
@@ -409,8 +409,8 @@ namespace FZ80
 		bool _IFF2;
 
 		// To manage the special situation when HALT is executed.
-		/** When a interrupt has been requested, 
-			the HALT has to stop, and it is reflected in this variable. */
+		/** When HALT instruction is executed, this variable is activated,
+			and when an interrupt comes later, HALT has to finish. */
 		bool _haltActive;
 
 		/** The list of the ports used in the Z80. */

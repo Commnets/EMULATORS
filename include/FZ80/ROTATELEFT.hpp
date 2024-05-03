@@ -64,7 +64,7 @@ namespace FZ80
 			st.setBitStatus (CZ80::_BIT3FLAG, v.bit (3)); // Undocumented...
 			st.setBitStatus (CZ80::_HALFCARRYFLAG, false);
 			st.setBitStatus (CZ80::_BIT5FLAG, v.bit (5)); // Undocumented...
-			// Flag Negative not affected...
+			// Flag Zero not affected...
 			// Flag Sign not affected...
 		}
 		else
@@ -113,7 +113,7 @@ namespace FZ80
 		st.setBitStatus (CZ80::_BIT3FLAG, v.bit (3)); // Undocumented...
 		st.setBitStatus (CZ80::_HALFCARRYFLAG, false);
 		st.setBitStatus (CZ80::_BIT5FLAG, v.bit (5)); // Undocumented...
-		st.setBitStatus (CZ80::_NEGATIVEFLAG, v == MCHEmul::UByte::_0);
+		st.setBitStatus (CZ80::_ZEROFLAG, v == MCHEmul::UByte::_0);
 		st.setBitStatus (CZ80::_SIGNFLAG, v.bit (7));
 	}
 
@@ -129,6 +129,11 @@ namespace FZ80
 		/** The last part of the code is at the end of the byte codes. */
 		virtual std::vector <MCHEmul::UByte> shapeCodeWithData 
 			(const std::vector <std::vector <MCHEmul::UByte>>& b, bool& e) const override;
+
+		protected:
+		/** The parameter should start at position 3 but it is really at position 2 instead. */
+		virtual size_t byteParameter (size_t nP) const override
+							{ return ((nP == 3) ? 2 : nP); }
 	};
 
 	// Rotate with bit 7...

@@ -346,6 +346,15 @@ namespace MCHEmul
 		 	Colled from the constructor. */
 		Structure analyzeInstruction () const;
 
+		/** Used in "asString" method (the default implementation). \n
+			That method fills up the template in order. 
+			It is: when the template defines a parameter takes the next byte/bytes in the list
+			of _lastParameters to complete. \n
+			But in some CPUS (Z80 e.g) this is not the case and when a bye is requested another
+			byte is returned instead. By default this method doesn't do anything. */
+		virtual size_t byteParameter (size_t nP) const
+							{ return (nP); }
+
 		/** 
 		  * The implementation of the execution.
 		  *	It has to be redefined when the instruction was implemented.

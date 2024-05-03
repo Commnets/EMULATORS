@@ -44,7 +44,7 @@ FZ80::CZ80::CZ80 (int id, const Z80PortsMap& pts,
 	  _ixRegister  ({ &ixhRegister (), &ixlRegister () }),
 	  _iyRegister  ({ &iyhRegister (), &iylRegister () }),
 	  _irRegister  ({ &iRegister   (), &rRegister   () }),
-	  _IFF1 (false), _IFF2 (false),
+	  _IFF1 (false), _IFF2 (false), _haltActive (false),
 	  _ports (pts), _portsRaw (256, FZ80::Z80PortsPlainList ()) // None...
 {
 	// The reference to the memory has not set still here...
@@ -86,6 +86,7 @@ bool FZ80::CZ80::initialize ()
 	setINTMode (0);
 	_IFF1 = false;
 	_IFF2 = false;
+	_haltActive = false;
 
 	// The same behaviour could be initialized more than once!
 	for (auto& i : _ports)
@@ -97,11 +98,14 @@ bool FZ80::CZ80::initialize ()
 // ---
 void FZ80::CZ80::requestInterrupt (int id, unsigned int nC, MCHEmul::Chip* src, int cR)
 {
-	if (_interruptRequested == -1 && id != -1 && _haltActive == true)
-		_haltActive = false; // When the interrupt is requested, 
-							 // the halt blocking situation is released!
+	if (_haltActive)
+	{ 
+		programCounter ().increment (1); // to go to the next instruction!...
 
-	// Do what iit has to do...
+		_haltActive =false;
+	}
+
+	// Do what it has to do...
 	MCHEmul::CPU::requestInterrupt (id, nC, src, cR);
 }
 

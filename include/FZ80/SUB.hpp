@@ -99,7 +99,7 @@ namespace FZ80
 		st.setBitStatus (CZ80::_BIT3FLAG, rst [0].bit (3)); // a copy of the status of the bit 3 of the MSB... but undocumented!
 		st.setBitStatus (CZ80::_HALFCARRYFLAG, (cr & 0x1000) != 0x0000);
 		st.setBitStatus (CZ80::_BIT5FLAG, rst [0].bit (5)); // a copy of the status of the bit 5 of the MSB... but undocumented!
-		st.setBitStatus (CZ80::_ZEROFLAG, rst == MCHEmul::UInt::_0);
+		st.setBitStatus (CZ80::_ZEROFLAG, rst == MCHEmul::UInt ({ 0, 0 }) /** has always two bytes. */);
 		st.setBitStatus (CZ80::_SIGNFLAG, rst.negative ());
 
 		return (true);
