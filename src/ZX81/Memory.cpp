@@ -101,7 +101,7 @@ ZX81::Memory::Memory (ZX81::Memory::Configuration cfg, unsigned int m)
 void ZX81::Memory::setConfiguration (ZX81::Memory::Configuration cfg)
 {
 	// In any of the configurations, 
-	// the stack will behave as already used from the aerly beginning...
+	// the stack will behave as already used from the early beginning...
 	_RAM1K -> setNotUsed (false);
 	_RAM16K -> setNotUsed (false);
 

@@ -340,6 +340,15 @@ namespace FZ80
 							{ return (_IFF2); }
 		void setIFF2 (bool v)
 							{ _IFF2 = v; }
+		/** During and just after the execution of the EI instruction,
+			it is not possible to launch a INT. \n
+			So it is needed to control that situation. */
+		void setEIExecuted ()
+							{ _instAfterEIToLaunchINT = 3; } // the EI counts as 1...
+		void setInstructionExecuted ()
+							{ if (_instAfterEIToLaunchINT > 0) _instAfterEIToLaunchINT--; }
+		unsigned char instAfterEIToLaunchINT () const
+							{ return (_instAfterEIToLaunchINT); }
 
 		// Managing the ports...
 		/** Get / Set ports. */
@@ -371,10 +380,6 @@ namespace FZ80
 
 		virtual bool initialize () override;
 
-		/** When a interrupt is requested, 
-			and if it possible, the halt situation is unblocked (_haltUnblocked = true) */
-		virtual void requestInterrupt (int id, unsigned int nC, MCHEmul::Chip* src = nullptr, int cR = -1) override;
-
 		// Managing the HALT execution...
 		bool haltActive () const
 							{ return (_haltActive); }
@@ -404,9 +409,13 @@ namespace FZ80
 		/** The ports value. */
 		Z80PortsMap _ports;
 
-		// The flipflop register in Z80 help to control the status of the interrupts!
+		/** The flipflop register in Z80 help to control the status of the interrupts! */
 		bool _IFF1;
 		bool _IFF2;
+		/** When the EI is executed, a temporal counter is set to 2,
+			and every time a instruction is executed it is reduced in 1 up to 0. \n
+			The INT can only be launched when the counter is 0. */
+		unsigned char _instAfterEIToLaunchINT;
 
 		// To manage the special situation when HALT is executed.
 		/** When HALT instruction is executed, this variable is activated,

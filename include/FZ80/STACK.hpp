@@ -39,7 +39,9 @@ namespace FZ80
 	inline bool PUSH_General::executeWith (MCHEmul::RefRegisters& r)
 	{
 		// The values are kept in the same order that they appear...
-		stack () -> push (MCHEmul::UBytes ({ r [0] -> values ()[0], r [1]  -> values ()[0] })); // 2 bytes always...
+		stack () -> push (_lastExecutionData._INOUTData = 
+			MCHEmul::UBytes ({ r [0] -> values ()[0], r [1]  -> values ()[0] })); // 2 bytes always...
+		_lastExecutionData._INOUTAddress = stack () -> currentAddress ();
 
 		return (!stack () -> overflow ());
 	}
@@ -78,9 +80,10 @@ namespace FZ80
 	inline bool POP_General::executeWith (MCHEmul::RefRegisters& r)
 	{
 		// The bystes are extracted in the other way around...
-		MCHEmul::UBytes dt = stack () -> pull (2); // 2 bytes always...
-		r [1] -> set ({ dt [0].value () });
-		r [0] -> set ({ dt [1].value () });
+		_lastExecutionData._INOUTData = stack () -> pull (2); // 2 bytes always...
+		r [1] -> set ({ _lastExecutionData._INOUTData [0].value () });
+		r [0] -> set ({ _lastExecutionData._INOUTData [1].value () });
+		_lastExecutionData._INOUTAddress = stack () -> currentAddress ();
 
 		return (!stack () -> overflow ());
 	}

@@ -18,6 +18,8 @@
 
 namespace FZ80
 {
+	class CZ80;
+
 	/** The way they are launched is special. */
 	class Interrupt : public MCHEmul::CPUInterrupt
 	{
@@ -33,6 +35,11 @@ namespace FZ80
 		  *	ADDRESS			= The address where the FZ80 Interrupt should start the execution from.
 		  */
 		virtual MCHEmul::InfoStructure getInfoStructure () const override;
+
+		protected:
+		/** This method has to be invoked before executeImpl body. 
+			If the cpu were halted it would be unlocked first and the programCounter incremented in 1. */
+		void resetHalt (CZ80* c);
 
 		protected:
 		// Implementation

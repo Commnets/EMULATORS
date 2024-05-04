@@ -44,7 +44,8 @@ FZ80::CZ80::CZ80 (int id, const Z80PortsMap& pts,
 	  _ixRegister  ({ &ixhRegister (), &ixlRegister () }),
 	  _iyRegister  ({ &iyhRegister (), &iylRegister () }),
 	  _irRegister  ({ &iRegister   (), &rRegister   () }),
-	  _IFF1 (false), _IFF2 (false), _haltActive (false),
+	  _IFF1 (false), _IFF2 (false), _instAfterEIToLaunchINT (0),
+	  _haltActive (false),
 	  _ports (pts), _portsRaw (256, FZ80::Z80PortsPlainList ()) // None...
 {
 	// The reference to the memory has not set still here...
@@ -96,23 +97,14 @@ bool FZ80::CZ80::initialize ()
 }
 
 // ---
-void FZ80::CZ80::requestInterrupt (int id, unsigned int nC, MCHEmul::Chip* src, int cR)
-{
-	if (_haltActive)
-	{ 
-		programCounter ().increment (1); // to go to the next instruction!...
-
-		_haltActive =false;
-	}
-
-	// Do what it has to do...
-	MCHEmul::CPU::requestInterrupt (id, nC, src, cR);
-}
-
-// ---
 MCHEmul::InfoStructure FZ80::CZ80::getInfoStructure () const
 {
 	MCHEmul::InfoStructure result = std::move (MCHEmul::CPU::getInfoStructure ());
+
+	// Add info about the status of special variables in the Z80..
+	result.add ("IFF1",		_IFF1);
+	result.add ("IFF2",		_IFF2);
+	result.add ("HALT",		_haltActive);
 
 	// Add info about the ports managed by the CPU...
 	unsigned char ct = 0;

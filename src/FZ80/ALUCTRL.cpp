@@ -167,8 +167,10 @@ _INST_IMPL (FZ80::EI)
 {
 	assert (parameters ().size () == 1);
 
-	static_cast <FZ80::CZ80*> (cpu ()) -> setIFF1 (true);
-	static_cast <FZ80::CZ80*> (cpu ()) -> setIFF2 (true);
+	FZ80::CZ80* z80 = static_cast <FZ80::CZ80*> (cpu ());
+	z80 -> setIFF1 (true);
+	z80 -> setIFF2 (true);
+	z80 -> setEIExecuted ();
 
 	return (true);
 }

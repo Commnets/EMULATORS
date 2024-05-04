@@ -14,7 +14,10 @@ MCHEmul::InfoStructure FZ80::INTInterrupt::getInfoStructure () const
 // ---
 bool FZ80::INTInterrupt::isTime (MCHEmul::CPU* c, unsigned int cC) const
 { 
-	return (static_cast <CZ80*> (c) -> IFF1 ()); 
+	FZ80::CZ80* z80 = static_cast <FZ80::CZ80*> (c);
+
+	return (z80 -> IFF1 () && 
+		    (z80 -> instAfterEIToLaunchINT () == 0));
 }
 
 // ---
@@ -23,13 +26,14 @@ bool FZ80::INTInterrupt::executeOverImpl (MCHEmul::CPU* c, unsigned int cC)
 	assert (c != nullptr);
 	assert (c -> memoryRef () != nullptr);
 	assert (c -> memoryRef () -> stack () != nullptr);
+	
+	FZ80::CZ80* c80 = static_cast <FZ80::CZ80*> (c);
 
 	bool result = true;
-
-	// To avoid further INTs until it was defined by the programmer...
-	static_cast <FZ80::CZ80*> (c) -> setIFF2 (false); 
-	static_cast <FZ80::CZ80*> (c) -> setIFF1 (false); 
-
+	resetHalt (c80);
+	// To avoid further INTs until other thing was defined by the programmer...
+	c80 -> setIFF2 (false); 
+	c80 -> setIFF1 (false); 
 	switch (_INTMode)
 	{
 		// In the type 0, the instruction with the code of the value in the data bus, is executed...
@@ -55,9 +59,10 @@ bool FZ80::INTInterrupt::executeOverImpl (MCHEmul::CPU* c, unsigned int cC)
 		// In the type 1, the program jumps always to the same position
 		case 1:
 			{
-				c -> memoryRef () -> stack () -> push ((_exeAddress = c -> programCounter ().asAddress ()).bytes ());
+				c -> memoryRef () -> stack () -> 
+					push ((_exeAddress = c -> programCounter ().asAddress ()).bytes ());
 	
-				c -> programCounter ().setAddress (static_cast <FZ80::CZ80*> (c) -> INT1VectorAddress ());
+				c -> programCounter ().setAddress (c80 -> INT1VectorAddress ());
 			}
 
 			break;
@@ -66,9 +71,10 @@ bool FZ80::INTInterrupt::executeOverImpl (MCHEmul::CPU* c, unsigned int cC)
 		// by the value of the register I (high) and the value in the data bus (low)
 		case 2:
 			{
-				c -> memoryRef () -> stack () -> push ((_exeAddress = c -> programCounter ().asAddress ()).bytes ());
+				c -> memoryRef () -> stack () -> 
+					push ((_exeAddress = c -> programCounter ().asAddress ()).bytes ());
 	
-				c -> programCounter ().setAddress (static_cast <FZ80::CZ80*> (c) -> INT2VectorAddress ());
+				c -> programCounter ().setAddress (c80 -> INT2VectorAddress ());
 			}
 
 			break;

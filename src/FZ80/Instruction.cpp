@@ -10,6 +10,7 @@ bool FZ80::Instruction::execute (MCHEmul::CPU* c, MCHEmul::Memory* m,
 	incrementRegisterR (static_cast <FZ80::CZ80*> (c));
 
 	bool result = MCHEmul::InstructionDefined::execute (c, m , stk, pc);
+	static_cast <FZ80::CZ80*> (c) -> setInstructionExecuted (); // Just for the EI...
 
 	// At T4 of the M1 cycle (first machine cycle) 
 	// the IR is put value into the address bus.
