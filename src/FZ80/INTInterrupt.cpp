@@ -29,8 +29,10 @@ bool FZ80::INTInterrupt::executeOverImpl (MCHEmul::CPU* c, unsigned int cC)
 	
 	FZ80::CZ80* c80 = static_cast <FZ80::CZ80*> (c);
 
+	c80 -> resetHalt ();
+	c80 -> incrementRegisterR (); // Accepting a INT interruption increments the R register in 1 too...
+
 	bool result = true;
-	resetHalt (c80);
 	// To avoid further INTs until other thing was defined by the programmer...
 	c80 -> setIFF2 (false); 
 	c80 -> setIFF1 (false); 

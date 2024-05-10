@@ -164,6 +164,11 @@ Active:@ACTIVE@, Type:@TYPE@, Frequency:@FREQUENCY@(@PULSEUP@)
 @REGS?{key=NO,equal=:,empty=no registers,blocksize=4}\t@
 #---
 #---
+;CCHANGEREG
+->Errors:
+@ERROR@
+#---
+#---
 ;CPC
 @PC@
 #---

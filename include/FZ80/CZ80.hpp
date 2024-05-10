@@ -324,6 +324,9 @@ namespace FZ80
 							{ return (internalRegister (_IREGISTER)); }
 		MCHEmul::Register& rRegister ()
 							{ return (internalRegister (_RREGISTER)); }
+		/** This method is usually invoked anytime a fetch is done, 
+			In the instructions type DD, CB, ED... it is onvoked twice, and so on so forth. */
+		inline void incrementRegisterR ();
 		const MCHEmul::Register& rRegister () const
 							{ return (internalRegister (_RREGISTER)); }
 		MCHEmul::RefRegisters& irRegister ()
@@ -383,8 +386,11 @@ namespace FZ80
 		// Managing the HALT execution...
 		bool haltActive () const
 							{ return (_haltActive); }
-		void setHaltActive (bool a) // What ever the previous situation is, the status is modified...
-							{ _haltActive = a; }
+		/** This method is usually invoked from HALT instruction. */
+		void setHalt () 
+							{ _haltActive = true; }
+		/** This method is usually involked when an interrupt is accepted. */
+		inline void resetHalt ();
 
 		virtual MCHEmul::InfoStructure getInfoStructure () const override;
 
@@ -432,6 +438,29 @@ namespace FZ80
 		static MCHEmul::StatusRegister createStatusRegister ();
 		static MCHEmul::Instructions createInstructions ();
 	};
+
+	// ---
+	inline void CZ80::incrementRegisterR ()
+	{
+		// @see https://www.zilog.com/docs/z80/um0080.pdf (pg. 17)
+		MCHEmul::Register& rR = rRegister ();
+		const MCHEmul::UByte& rVB = rR.values () [0];
+		unsigned char rV = (rVB.value () & 0x07f) + 0x01; // Only the 7 MSB bits...
+		if (rV > 0x7f) rV = 0x00;
+		rV |= rVB.value () & 0x80; // ...but maintains what was programmed at the bit 8...
+		rR.set ({ rV }); // put it back into the register...
+	}
+
+	// ---
+	inline void CZ80::resetHalt ()
+	{
+		if (_haltActive)
+		{
+			_haltActive = false;
+
+			programCounter ().increment ();
+		}
+	}
 }
 
 #endif

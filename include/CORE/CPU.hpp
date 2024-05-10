@@ -110,10 +110,27 @@ namespace MCHEmul
 							{ return (_registers); }
 		bool existsInternalRegister (size_t nR) const
 							{ return (nR < _registers.size ()); }
+		/** In command this instruction can be usefull. \
+			Never in main loop because it is very slow. */
+		bool existsInternalRegister (const std::string& rn) const
+							{ return (std::find_if (_registers.begin (), _registers.end (), 
+								[&](const Register& r) -> bool { return (r.name () == rn); }) != _registers.end ()); }
 		const Register& internalRegister (size_t nR) const
 							{ return (existsInternalRegister (nR) ? _registers [nR] : NoRegister); }
+		/** To get it by name. \n
+			Never used it in the main loop, because it is very slow. */
+		const Register& internalRegister (const std::string& rn) const
+							{ return (existsInternalRegister (rn)
+								? *(std::find_if (_registers.begin (), _registers.end (), 
+									[&](const Register& r) -> bool { return (r.name () == rn); }))
+								: TrashRegister); }
 		Register& internalRegister (size_t nR)
 							{ return (existsInternalRegister (nR) ? _registers [nR] : TrashRegister); }
+		Register& internalRegister (const std::string& rn)
+							{ return (existsInternalRegister (rn)
+								? *(std::find_if (_registers.begin (), _registers.end (), 
+									[&](Register r) -> bool { return (r.name () == rn); }))
+								: TrashRegister); }
 		void setInternalRegister (size_t nR, UBytes v)
 							{ if (existsInternalRegister (nR) && internalRegister (nR).accept (v)) internalRegister (nR).set (v); }
 

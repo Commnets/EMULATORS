@@ -11,7 +11,9 @@ bool FZ80::NMIInterrupt::executeOverImpl (MCHEmul::CPU* c, unsigned int cC)
 	FZ80::CZ80* c80 = static_cast <FZ80::CZ80*> (c);
 	assert (c80 != nullptr); // Just in case...
 
-	resetHalt (c80);
+	c80 -> resetHalt ();
+	c80 -> incrementRegisterR (); // Accepting a NMI interruption increments the R register in 1 too...
+
 	c80 -> setIFF2 (c80-> IFF1 ()); // save IFF2
 	c80 -> setIFF1 (false); // For not other interrupts to happen...
 	c -> memoryRef () -> stack () -> push 

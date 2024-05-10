@@ -16,6 +16,8 @@ MCHEmul::Command* MCHEmul::StandardCommandBuilder::createEmptyCommand (const std
 		result = new MCHEmul::ProgramCounterStatusCommand;
 	else if (cmdName == "REGISTERS" || cmdName == MCHEmul::RegistersStatusCommand::_NAME)
 		result = new MCHEmul::RegistersStatusCommand;
+	else if (cmdName == "CHANGEREG" || cmdName == MCHEmul::RegisterChangeCommand::_NAME)
+		result = new MCHEmul::RegisterChangeCommand;
 	else if (cmdName == "STACK" || cmdName == MCHEmul::StackStatusCommand::_NAME)
 		result = new MCHEmul::StackStatusCommand;
 	else if (cmdName == "CPUSTATUS" || cmdName == MCHEmul::CPUStatusCommand::_NAME)

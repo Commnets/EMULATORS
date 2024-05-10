@@ -39,18 +39,20 @@ _INST_IMPL (FZ80::CPL)
 {
 	assert (parameters ().size () == 1);
 
+	MCHEmul::Register& rA = registerA ();
 	MCHEmul::StatusRegister& st = cpu () -> statusRegister ();
 
-	MCHEmul::Register& rA = registerA ();
-	rA.set ({ ~registerA ().values ()[0] });
+	// The inverse!
+	MCHEmul::UByte rst = ~rA.values ()[0];
+	rA.set ({ rst});
 
 	// How the flags are affected...
-	// Carry flag is not affected
+	// Carry flag is not affected...
 	st.setBitStatus (FZ80::CZ80::_NEGATIVEFLAG, true);  // Always!
 	// Parity flag is not affected...
-	st.setBitStatus (FZ80::CZ80::_BIT3FLAG, rA.values ().bit (3)); // Undocumented...
+	st.setBitStatus (FZ80::CZ80::_BIT3FLAG, rst.bit (3)); // Undocumented...
 	st.setBitStatus (FZ80::CZ80::_HALFCARRYFLAG, true); // Always!
-	st.setBitStatus (FZ80::CZ80::_BIT5FLAG, rA.values ().bit (5)); // Undocumented...
+	st.setBitStatus (FZ80::CZ80::_BIT5FLAG, rst.bit (5)); // Undocumented...
 	// Sign and Zero flags are not affected...
 
 	return (true);
@@ -62,20 +64,24 @@ _INST_IMPL (FZ80::NEG)
 	assert (parameters ().size () == 2);
 
 	MCHEmul::Register& r = registerA ();
-	MCHEmul::UByte rA = r.values ()[0];
 	MCHEmul::StatusRegister& st = cpu () -> statusRegister ();
 
 	// The operation...
-	MCHEmul::UInt rst  = MCHEmul::UInt (0).substract (MCHEmul::UInt (r.values ()[0]), true);
-	MCHEmul::UInt rstH = MCHEmul::UInt (0).substract (MCHEmul::UInt (r.values ()[0] & 0x0f), true); // Just to calculate the half borrow!
+	const MCHEmul::UByte& rB = r.values ()[0];
+	MCHEmul::UInt rst = MCHEmul::UInt (0).substract (MCHEmul::UInt (rB), true); // 1 byte long...
+	// To be used later in the half carry...
+	int rV = (int) rB.value ();
+	int cr = 0 ^ rV ^ (-rV); // With no carry...
+							 // ...because it is already signed as int operation!
+
 	r.set (rst.values ()); // and stored back...
 
 	// How the flags are affected...
-	st.setBitStatus (CZ80::_CARRYFLAG, rA != MCHEmul::UByte::_0); // As defined...
+	st.setBitStatus (CZ80::_CARRYFLAG, !rst.carry ()); // As defined...
 	st.setBitStatus (CZ80::_NEGATIVEFLAG, true); // Always in substractions!
-	st.setBitStatus (CZ80::_PARITYOVERFLOWFLAG, rA == MCHEmul::UByte::_80);
+	st.setBitStatus (CZ80::_PARITYOVERFLOWFLAG, rst.overflow ());
 	st.setBitStatus (CZ80::_BIT3FLAG, rst [0].bit (3)); // Undocumented...
-	st.setBitStatus (CZ80::_HALFCARRYFLAG, !rstH.carry ()); // When borrow from bit 3 to 4...
+	st.setBitStatus (CZ80::_HALFCARRYFLAG, (cr & 0x10) != 0x00);
 	st.setBitStatus (CZ80::_BIT5FLAG, rst [0].bit (5)); // Undocumented...
 	st.setBitStatus (CZ80::_ZEROFLAG, rst == MCHEmul::UInt::_0);
 	st.setBitStatus (CZ80::_SIGNFLAG, rst.negative ());
@@ -141,11 +147,12 @@ _INST_IMPL (FZ80::HALT)
 
 	// it has to be always a Z80...
 	// No test is done to verify the opposite...
-	static_cast <FZ80::CZ80*> (cpu ()) -> setHaltActive (true);
+	static_cast <FZ80::CZ80*> (cpu ()) -> setHalt ();
 	
-	// Always un - finished.
+	// Always unfinished.
 	// This is because when the halt situation is unlocked, the program counter is incremented in 1!
 	// To guarantee that the return is done at the specific place!
+	// (@see @FZ80::Instruction)
 	_FINISH = false;
 
 	return (true);

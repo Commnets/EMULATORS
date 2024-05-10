@@ -19,6 +19,10 @@ No parameters are needed.
 ;REGISTERS
 Get the status of every register defined in the CPU.
 No parameters are needed.
+;CHANGEREG [REGNAME] [VALUE]
+Change the value of a register.
+The parameters are the name of the register and the value.
+The value can be in decimal (nothing previous), binary (z), octal (o) or hex ($).
 ;PC
 Get the status of the Program Counter.
 No parameters are needed.

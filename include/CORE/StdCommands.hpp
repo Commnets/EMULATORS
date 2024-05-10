@@ -100,7 +100,7 @@ namespace MCHEmul
 	};
 
 	/** To get the status of every register defined in the cpu of any computer. \n
-		Command line: STATUS */ 
+		Command line: REGISTERS */ 
 	class RegistersStatusCommand final : public Command
 	{
 		public:
@@ -117,6 +117,25 @@ namespace MCHEmul
 		private:
 		/** The fields returned are: \n
 			REGS	= InfoStructure: Info about the registers. */
+		virtual void executeImpl (CommandExecuter* cE, Computer* c, InfoStructure& rst) override;
+	};
+
+	/** To change the value of a register. \n
+		Command line: CHANGEREG [REGNAME] [VALUE]. */
+	class RegisterChangeCommand final : public Command
+	{
+		public:
+		static const int _ID = 38;
+		static const std::string _NAME;
+	
+		RegisterChangeCommand ()
+			: Command (_ID, _NAME)
+							{ }
+
+		virtual bool canBeExecuted () const override
+							{ return (_parameters.size () == 2); }
+
+		private:
 		virtual void executeImpl (CommandExecuter* cE, Computer* c, InfoStructure& rst) override;
 	};
 

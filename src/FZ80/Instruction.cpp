@@ -6,8 +6,8 @@ bool FZ80::Instruction::execute (MCHEmul::CPU* c, MCHEmul::Memory* m,
 {
 	_lastExecutionData._INOUTAddress = MCHEmul::Address ();
 
-	// Any fetch operation increment the register R (@see incrementRegisterR)
-	incrementRegisterR (static_cast <FZ80::CZ80*> (c));
+	// Any fetch operation increment the register R (@see FZ80::CZ80::incrementRegisterR)
+	static_cast <FZ80::CZ80*> (c) -> incrementRegisterR ();
 
 	bool result = MCHEmul::InstructionDefined::execute (c, m , stk, pc);
 	static_cast <FZ80::CZ80*> (c) -> setInstructionExecuted (); // Just for the EI...
@@ -50,14 +50,11 @@ FZ80::InstructionUndefined::InstructionUndefined (unsigned int c, const MCHEmul:
 }
 
 // ---
-bool FZ80::InstructionUndefined::execute (MCHEmul::CPU* c, MCHEmul::Memory* m,
+bool FZ80::Byte2InstructionCode::execute (MCHEmul::CPU* c, MCHEmul::Memory* m,
 	MCHEmul::Stack* stk, MCHEmul::ProgramCounter* pc)
 {
-	/** In the pre - fixed instructions the increment of the R register is double. */
-	if (dynamic_cast <FZ80::Instruction*> (_lastInstruction) != nullptr)
-		static_cast <FZ80::Instruction*> (_lastInstruction) -> incrementRegisterR (static_cast <FZ80::CZ80*> (c));
+	// Any fetch operation increment the register R (@see FZ80::CZ80::incrementRegisterR)
+	static_cast <FZ80::CZ80*> (c) -> incrementRegisterR ();
 
-	bool result = MCHEmul::InstructionUndefined::execute (c, m, stk, pc);
-
-	return (result);
+	return (MCHEmul::InstructionUndefined::execute (c, m, stk, pc));
 }

@@ -11,6 +11,7 @@ const std::string MCHEmul::HelpCommand::_NAME = "CHELP";
 const std::string MCHEmul::AuthorInfoCommand::_NAME = "CAUTHOR";
 const std::string MCHEmul::StatusRegisterStatusCommand::_NAME =  "CSTATUS";
 const std::string MCHEmul::RegistersStatusCommand::_NAME = "CREGISTERS";
+const std::string MCHEmul::RegisterChangeCommand::_NAME = "CCHANGEREG";
 const std::string MCHEmul::ProgramCounterStatusCommand::_NAME = "CPC";
 const std::string MCHEmul::StackStatusCommand::_NAME = "CSTACK";
 const std::string MCHEmul::CPUStatusCommand::_NAME = "CCPUSTATUS";
@@ -173,6 +174,28 @@ void MCHEmul::RegistersStatusCommand::executeImpl (MCHEmul::CommandExecuter* cE,
 		return;
 
 	rst.add ("REGS", c -> cpu () -> getInfoStructure ().infoStructure ("REGS"));
+}
+
+// ---
+void MCHEmul::RegisterChangeCommand::executeImpl (MCHEmul::CommandExecuter* cE, MCHEmul::Computer* c, MCHEmul::InfoStructure& rst)
+{
+	if (c == nullptr)
+		return;
+
+	// First of all, the register has to exists...
+	if (c -> cpu () -> existsInternalRegister (parameter ("00")))
+	{ 
+		std::string nR = parameter ("00");
+		MCHEmul::UBytes by = MCHEmul::UInt::fromStr (parameter ("01")).bytes ();
+		// ...but it also has to accept the bytes (size mainly) as parameter...
+		if (c -> cpu () -> internalRegister (nR).accept (by))
+			c -> cpu () -> internalRegister (nR).set (by);
+		else
+			rst.add ("ERROR", std::string ("The register doesn't accept the bytes"));
+	}
+	else
+		rst.add ("ERROR", std::string ("The register doesn't exist"));
+	// If hansn't (any of both conditions) and error is recordered...
 }
 
 // ---

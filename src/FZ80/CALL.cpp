@@ -15,7 +15,7 @@ _INST_IMPL (FZ80::CALL_NZ)
 {
 	assert (parameters ().size () == 3);
 
-	if (!cpu () -> statusRegister ().bitStatus (FZ80::CZ80::_NEGATIVEFLAG))
+	if (!cpu () -> statusRegister ().bitStatus (FZ80::CZ80::_ZEROFLAG))
 		executeBranch (true);
 
 	return (true);
@@ -26,7 +26,7 @@ _INST_IMPL (FZ80::CALL_Z)
 {
 	assert (parameters ().size () == 3);
 
-	if (cpu () -> statusRegister ().bitStatus (FZ80::CZ80::_NEGATIVEFLAG))
+	if (cpu () -> statusRegister ().bitStatus (FZ80::CZ80::_ZEROFLAG))
 		executeBranch (true);
 
 	return (true);

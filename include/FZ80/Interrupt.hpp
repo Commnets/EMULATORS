@@ -37,11 +37,6 @@ namespace FZ80
 		virtual MCHEmul::InfoStructure getInfoStructure () const override;
 
 		protected:
-		/** This method has to be invoked before executeImpl body. 
-			If the cpu were halted it would be unlocked first and the programCounter incremented in 1. */
-		void resetHalt (CZ80* c);
-
-		protected:
 		// Implementation
 		MCHEmul::Address _exeAddress;
 	};

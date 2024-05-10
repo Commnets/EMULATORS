@@ -11,16 +11,3 @@ MCHEmul::InfoStructure FZ80::Interrupt::getInfoStructure () const
 
 	return (result);
 }
-
-// ---
-void FZ80::Interrupt::resetHalt (FZ80::CZ80* c)
-{
-	assert (c != nullptr);
-
-	if (c -> haltActive ())
-	{
-		c -> setHaltActive (false);
-
-		c -> programCounter ().increment ();
-	}
-}

@@ -168,10 +168,6 @@ namespace FZ80
 							{ return (registerR ().values () [0]); }
 		MCHEmul::UBytes valueRegisterIR () const
 							{ return (MCHEmul::UBytes ({ valueRegisterI (), valueRegisterR () })); }
-		/** This method is usually invoked before the _lastExecutionData is set (what is done in 
-			the the default implementation of the method execute (@see Instruction). \n
-			And the metjod needs a cpu reference to find out the R Register. */
-		inline void incrementRegisterR (CZ80* c);
 
 		const MCHEmul::UByte& valueRegisterIXH () const
 							{ return (registerIXH ().values () [0]); }
@@ -236,20 +232,6 @@ namespace FZ80
 	};
 
 	// ---
-	inline void Instruction::incrementRegisterR (CZ80* c)
-	{
-		assert (c != nullptr);
-
-		// @see https://www.zilog.com/docs/z80/um0080.pdf (pg. 17)
-		MCHEmul::Register& rR = c -> rRegister ();
-		const MCHEmul::UByte& rVB = rR.values () [0];
-		unsigned char rV = (rVB.value () & 0x07f) + 0x01; // Only the 7 MSB bits...
-		if (rV > 0x7f) rV = 0x00;
-		rV |= rVB.value () & 0x80; // ...but maintains what was programmed at the bit 8...
-		rR.set ({ rV }); // put it back into the register...
-	}
-
-	// ---
 	inline MCHEmul::UBytes Instruction::valueRegisterSP () const
 	{ 
 		MCHEmul::UInt spP = MCHEmul::UInt::fromInt (memory () -> stack () -> position ());
@@ -266,11 +248,6 @@ namespace FZ80
 		/** c = the code that all instructions shared. */
 		InstructionUndefined (unsigned int c, const MCHEmul::Instructions& inst);
 
-		/** In Z80, every opcode fecth (M1 cycle usually) increments the R register (7 bits). \n
-			It is done apparently to refresh RAM. */
-		virtual bool execute (MCHEmul::CPU* c, MCHEmul::Memory* m, 
-			MCHEmul::Stack* stk, MCHEmul::ProgramCounter* pc) final override;
-
 		protected:
 		// Implementation
 		/** To speed up the access to the list of instructions later. */
@@ -285,7 +262,11 @@ namespace FZ80
 		Byte2InstructionCode (unsigned int c, const MCHEmul::Instructions& inst)
 			: InstructionUndefined (c, inst)
 							{ }
-		
+
+		/** This type of instructions increments the Register R in one cycle more. */
+		virtual bool execute (MCHEmul::CPU* c, MCHEmul::Memory* m, 
+			MCHEmul::Stack* stk, MCHEmul::ProgramCounter* pc) final override;
+	
 		virtual std::string asString () const override
 							{ return (_rawInstructions [size_t (_lastExecutionData._parameters [1].value ())] -> asString ()); }
 
@@ -305,6 +286,9 @@ namespace FZ80
 			: InstructionUndefined (c, inst)
 							{ }
 		
+		// The byte 4 instructions that inherits from 2 byte instructions
+		// doesn't increment more the R register!
+
 		virtual std::string asString () const override
 							{ return (_rawInstructions [size_t (_lastExecutionData._parameters [3].value ())] -> asString ()); }
 
