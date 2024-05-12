@@ -153,6 +153,9 @@ namespace ZX81
 		/** Read and draw the graphics. */
 		void readGraphicsAndDrawVisibleZone (MCHEmul::CPU* cpu);
 
+		/** To draw a debug info. */
+		void drawDebug (size_t x, size_t y, MCHEmul::CPU* cpu);
+
 		protected:
 		/** A reference to the ULA registers. */
 		ULARegisters* _ULARegisters;

@@ -190,13 +190,25 @@ void ZX81::ULA::processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifier* n)
 // ---
 MCHEmul::ScreenMemory* ZX81::ULA::createScreenMemory ()
 {
-	unsigned int* cP = new unsigned int [4];
+	unsigned int* cP = new unsigned int [16];
 	// The colors are partially transparents to allow the blending...
 	cP [0]  = SDL_MapRGBA (_format, 0x00, 0x00, 0x00, 0xe0); // Black
 	cP [1]  = SDL_MapRGBA (_format, 0xff, 0xff, 0xff, 0xe0); // White
-	// Tese other two colors doesn't exist in ZX81, but are used to draw borders...
+	// These other colors doesn't exist in ZX81, but are used to draw borders, bebug information, etc...
 	cP [2]  = SDL_MapRGBA (_format, 0x92, 0x4a, 0x40, 0xe0); // Red
-	cP [3]  = SDL_MapRGBA (_format, 0x72, 0xb1, 0x4b, 0xe0); // Green
+	cP [3]  = SDL_MapRGBA (_format, 0x84, 0xc5, 0xcc, 0xe0); // Cyan
+	cP [4]  = SDL_MapRGBA (_format, 0x93, 0x51, 0xb6, 0xe0); // Violet
+	cP [5]  = SDL_MapRGBA (_format, 0x72, 0xb1, 0x4b, 0xe0); // Green
+	cP [6]  = SDL_MapRGBA (_format, 0x48, 0x3a, 0xaa, 0xe0); // Blue
+	cP [7]  = SDL_MapRGBA (_format, 0xd5, 0xdf, 0x7c, 0xe0); // Yellow
+	cP [8]  = SDL_MapRGBA (_format, 0x99, 0x69, 0x2d, 0xe0); // Brown
+	cP [9]  = SDL_MapRGBA (_format, 0x67, 0x52, 0x00, 0xe0); // Light Red
+	cP [10] = SDL_MapRGBA (_format, 0xc1, 0x81, 0x78, 0xe0); // Orange
+	cP [11] = SDL_MapRGBA (_format, 0x60, 0x60, 0x60, 0xe0); // Dark Grey
+	cP [12] = SDL_MapRGBA (_format, 0x8a, 0x8a, 0x8a, 0xe0); // Medium Grey
+	cP [13] = SDL_MapRGBA (_format, 0xb3, 0xec, 0x91, 0xe0); // Light Green
+	cP [14] = SDL_MapRGBA (_format, 0x86, 0x7a, 0xde, 0xe0); // Light Blue
+	cP [15] = SDL_MapRGBA (_format, 0xb3, 0xb3, 0xb3, 0xe0); // Light Grey
 
 	return (new MCHEmul::ScreenMemory (numberColumns (), numberRows (), cP));
 }
@@ -234,6 +246,10 @@ void ZX81::ULA::readGraphicsAndDrawVisibleZone (MCHEmul::CPU* cpu)
 		// Draws the background first...
 		// ...that is always at color 1 (white)....
 		_screenMemory -> setPixel (x, y, 1);
+
+		if (cpu -> lastInstruction () != nullptr)
+			drawDebug (x, y, cpu);
+
 		// Then draws the character, if it is allowed!
 		if (_raster.isInDisplayZone () &&
 			!_ULARegisters -> syncOutputWhite ())
@@ -247,6 +263,20 @@ void ZX81::ULA::readGraphicsAndDrawVisibleZone (MCHEmul::CPU* cpu)
 			}
 		}
 	}
+}
+
+// ---
+void ZX81::ULA::drawDebug (size_t x, size_t y, MCHEmul::CPU* cpu)
+{
+	// When the processor is waiting for the end of the visible part...
+	if (cpu -> lastInstruction () -> code () == 0x076)
+		_screenMemory -> setPixel (x, y, 12);
+	// When a NMI interrupt is about to be executed...
+	if (cpu -> programCounter ().internalRepresentation () == 0x066)
+		_screenMemory -> setPixel (x, y, 2);
+	// When a INT interrupt is about to be executed...
+	if (cpu -> programCounter ().internalRepresentation () == 0x038)
+		_screenMemory -> setPixel (x, y, 7);
 }
 
 // ---

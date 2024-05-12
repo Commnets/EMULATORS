@@ -28,7 +28,8 @@ namespace FZ80
 		INTInterrupt ()
 			: Interrupt (_ID, 0 /** It will decided any time the INTMode is fixed. (@see below) */),
 			  _INTMode (0) // The basic one by default...
-							{ setClassName ("INTInterrupt"); }
+							{ _cyclesToLaunch = 2; // By default...
+							  setClassName ("INTInterrupt"); }
 
 		/** To manage the mode of the interruption. */
 		unsigned char INTMode () const

@@ -425,7 +425,8 @@ void MCHEmul::ListOfBreakPointsCommand::executeImpl (MCHEmul::CommandExecuter* c
 	std::string lst;
 	for (const auto& i : c -> actions ())
 		if (i.second == MCHEmul::Computer::_ACTIONSTOP) // Only if stopped...
-			lst += ((ct++ != 0) ? "," : "\0") + i.first.asString (MCHEmul::UByte::OutputFormat::_HEXA, '\0', 2);
+			lst += ((ct++ != 0) ? "," : "\0") + std::string ("$") + 
+				i.first.asString (MCHEmul::UByte::OutputFormat::_HEXA, '\0', 2);
 	lst = MCHEmul::removeAll0 (lst);
 
 	rst.add ("BREAKPOINTS", std::move (lst));

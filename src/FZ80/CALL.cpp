@@ -1,4 +1,5 @@
 #include <FZ80/CALL.hpp>
+#include <FZ80/NMIInterrupt.hpp>
 
 // ---
 _INST_IMPL (FZ80::CALL)
@@ -284,6 +285,8 @@ _INST_IMPL (FZ80::RET_I)
 	// Undocumented!
 	static_cast <FZ80::CZ80*> (cpu ()) -> setIFF1 (static_cast <FZ80::CZ80*> (cpu ()) -> IFF2 ());
 
+	cpu () -> interrupt (FZ80::INTInterrupt::_ID) -> setInExecution (false);
+
 	executeReturn (false);
 
 	return (true);
@@ -295,6 +298,8 @@ _INST_IMPL (FZ80::RET_N)
 	assert (parameters ().size () == 2);
 
 	static_cast <FZ80::CZ80*> (cpu ()) -> setIFF1 (static_cast <FZ80::CZ80*> (cpu ()) -> IFF2 ());
+
+	cpu () -> interrupt (FZ80::NMIInterrupt::_ID) -> setInExecution (false);
 
 	executeReturn (false);
 
