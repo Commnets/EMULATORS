@@ -22,8 +22,9 @@ ZX81::SinclairZX81::SinclairZX81 (ZX81::Memory::Configuration cfg,
 		   { "Manufacturer", "Sinclair Research/Timex Coporation" },
 		   { "Year", "1981" }
 		 }),
-	  _A6 (false),
-	  _visualSystem (vS)
+	  _visualSystem (vS),
+	  _ula (nullptr),
+	  _A6 (false)
 {
 	// Add the port manager for all ports!
 	ZX81::PortManager* pM = new PortManager;
@@ -32,8 +33,11 @@ ZX81::SinclairZX81::SinclairZX81 (ZX81::Memory::Configuration cfg,
 		pMps.insert (FZ80::Z80PortsMap::value_type ((unsigned char) i, pM));
 	static_cast <FZ80::CZ80*> (cpu ()) -> addPorts (pMps);
 
+	_ula = dynamic_cast <ULA*> (chip (ULA::_ID));
+	assert (_ula != nullptr);
+
 	// Assign the ULA to the PortManager...
-	pM -> linkToULA (static_cast <ZX81::ULA*> (chip (ZX81::ULA::_ID)));
+	pM -> linkToULA (_ula);
 
 	setConfiguration (cfg, false /** Not restart at initialization. */);
 }
@@ -86,8 +90,20 @@ void ZX81::SinclairZX81::specificComputerCycle ()
 {
 	_A6.set ((cpu () -> lastINOUTAddress ().value () & 0b01000000) != 0);
 	if (_A6.negativeEdge ()) // From 1 to 0...
+	{ 
+		// The INT is requested...
 		cpu () -> requestInterrupt
 			(FZ80::INTInterrupt::_ID, cpu () -> clockCycles (), nullptr, 2);
+
+		// But if it were about to be recognized the ULA would have to know it!
+		// somehow we are advancing what is about to happen...
+		// The reason is that this method is executer from the Computer after CPU cycle and before chips.
+		// ULA simulation moves the counter and executes the HSYNC but it als happens also
+		// when this interrupt is launched...
+		if (cpu () -> interrupt (FZ80::INTInterrupt::_ID) -> 
+				canBeExecutedOver (cpu (), cpu () -> clockCycles ()))
+			_ula -> setINTack ();
+	}
 }
 
 // ---

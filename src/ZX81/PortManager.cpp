@@ -23,12 +23,10 @@ void ZX81::PortManager::setValue (unsigned char id, const MCHEmul::UByte& v)
 	// Any out really does this set of actions...
 	// As it is defined in the ZX81 ports documentation!:
 
-	// First of all, when VYSNC situation happens, a read to the port FE is done.
-	// When this is done, the video signal is un - clamped and the LINECTRLN counter is un - blocked.
-	// During this period, the ZX81 reads the keyboard for a maximm of 400us.
-	// After that period the video signal is unclamped, and same with the LINECTRLN counter.
-	_ULARegisters -> setSyncOutputWhite (true);
-	_ULARegisters -> setLINECTRLNBlocked (false);
+	// Any time an output is done...
+	// The Vsync finishes...
+	_ULARegisters -> setVSync (false);
+	// ...and the a positive signal is sent to the cassette...
 	_ULARegisters -> setCasetteSignal (true);
 
 	// If the port id has the bit 1 off (FD is the normal ZX81 but many others will behave equal)...
@@ -38,24 +36,6 @@ void ZX81::PortManager::setValue (unsigned char id, const MCHEmul::UByte& v)
 	// If the port id has the bit 0 off (FE is the normal ZX81, but many others will behave in the same way)...
 	if ((id & 0b00000001) == 0x00)
 		_ULARegisters -> setNMIGenerator (true); // The NMI generator is connected...
-}
-
-// ---
-void ZX81::PortManager::linkToULA (ZX81::ULA* ula)
-{
-	assert (ula != nullptr);
-
-	_ULA = ula;
-	_ULARegisters = _ULA -> registers ();
-}
-
-// ---
-void ZX81::PortManager::initialize ()
-{
-	_ULARegisters -> setSyncOutputWhite (true);
-	_ULARegisters -> setLINECNTRL (0);
-	_ULARegisters -> setLINECTRLNBlocked (true);
-	_ULARegisters -> setCasetteSignal (false);
 }
 
 // ---
@@ -85,14 +65,39 @@ MCHEmul::UByte ZX81::PortManager::getValue (unsigned char id, bool ms) const
 		// If the NMI generator is off...
 		if (ms && // ...and it is wanted to modify the status...
 			!_ULARegisters -> NMIGenerator ())
-		{ 
-			// This is to enter the VSYNC routine...
-			_ULARegisters -> setSyncOutputWhite (false);	// un clamp the video signal...
-			_ULARegisters -> setLINECNTRL (0);				// puts the counter to 0
-			_ULARegisters -> setLINECTRLNBlocked (true);	// and also block it
-			_ULARegisters -> setCasetteSignal (false);		// ...and finally the casette signal is down!
+		{
+			// ...the VSYNC starts, if it didn't before...
+			if (!_ULARegisters -> inVSync ())
+			{ 
+				_ULARegisters -> setVSync (true);
+
+				_ULA -> raster ().vData ().initialize ();
+			}
+
+			// ...and also the casette signal will be down!
+			_ULARegisters -> setCasetteSignal (false);		
 		}
 	}
 
 	return (result);
+}
+
+// ---
+void ZX81::PortManager::linkToULA (ZX81::ULA* ula)
+{
+	assert (ula != nullptr);
+
+	_ULA = ula;
+	_ULARegisters = _ULA -> registers ();
+}
+
+// ---
+void ZX81::PortManager::initialize ()
+{
+	_ULARegisters -> setSyncOutputWhite (true);
+	_ULARegisters -> setNMIGenerator (false);
+	_ULARegisters -> setLINECNTRL (0);
+	_ULARegisters -> setLINECTRLNBlocked (true);
+	_ULARegisters -> setSHIFTRegister (MCHEmul::UByte::_0);
+	_ULARegisters -> setCasetteSignal (false);
 }

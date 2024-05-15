@@ -17,20 +17,20 @@
 #define __ZX81_ULA__
 
 #include <CORE/incs.hpp>
+#include <ZX81/ULARegisters.hpp>
 
 namespace ZX81
 {
-	class SinclairZX81;
-	class ULARegisters;
-
 	/** 
 		The chip that takes care of anything around the graphics in ZX81. \n
 		It is also accountable for reading the status of the keyboard. \n
 		@see GraphicalChip. \n
 		\n
 		How it works! (read carefully) \n
-		Based on https://problemkaputt.de/zxdocs.htm#zx80zx81ioports (ZX80/ZX81 Video Display Times). \n
-		and on https://8bit-museum.de/heimcomputer-2/sinclair/sinclair-scans/scans-zx81-video-display-system/ \n
+		Based on: https://problemkaputt.de/zxdocs.htm#zx80zx81ioports (ZX80/ZX81 Video Display Times). \n
+		and on: https://8bit-museum.de/heimcomputer-2/sinclair/sinclair-scans/scans-zx81-video-display-system/ \n
+		and on: http://blog.tynemouthsoftware.co.uk/2023/10/how-the-zx80-generates-video.html \n
+		and on: http://blog.tynemouthsoftware.co.uk/2023/10/how-the-zx81-generates-video.html \n
 		\n
 		General concepts: \n
 		The CPU/ULA speed is the same for either a PAL or a NTSC system. \n
@@ -40,61 +40,73 @@ namespace ZX81
 		64us per raster line including Horizontal retrace = 416 cycles ULA (64/0,153846) or 208 cycles CPU (64/0,307692). \n
 		Every ULA cycle a pixel is drawn. \n
 		So 2 pixels are drawn in visible zone per CPU cycle. \n
-		And 8 pixels are drawn in 4 CPU cycles (8 cycles ULA), that it is what a NOP execution takes. \n
+		And 8 pixels are drawn in 4 CPU cycles (8 cycles ULA), that it is what a NOP/HALT execution takes. \n
 		\n
-		I register holds 0x1E from the beginning (important to determine where to read the cahr info). \n
-		The char definition is from 0x1E00 onwards located. \n
-		There is a 3 bits internal counter (0 - 7) in ULA (LNCTRL) than is moved any time HSYNC is detected.
+		Phases:
+		1.- VSYC: \n
+		Increments the frame counter. \n
+		Reads the keyboard. \n
+		First time the keyboard is read (IN FE,A), the VSYNC signal is sent to the TV. \n
+		Until VSYNC finishes no other intruction to read the keyboard will launch VSYNC again. \n
+		This instruction also put LNCTRL = 0, clamps the video output signal to 0 (drawing always in white), and
+		put the NMI internal ULA generator = false (No NMI generation). \n
+		The internal counter for horizontal cycles (ICFHC) is working (counting from 0 to 207 including = 208). \n
+		... \n
+		Executes OUT FF,A \n
+		release LNCTRL reset. \n
+		put video output signal to normal. \n
+		NMI internal ULA generator = true (NMI generation after internal line counter = 208). \n
+		ICFHC still works...
+		A' will have the base number of blank lines...
 		\n
-		The program to draw the screen passes throught out 4 different blocks: \n
-		1.- Block 1: VSYNC + frame count + keyboard read. \n
-			NMI generator off. \n
-			0 - 5 (6) ray trace lines (let's say out of the visible screen). \n
-			(64us ray trace per line * 6) + 15us (retrace) = 399us ray trace spends in this zone. \n
-			CPU in 400us = 1.300 (400/0,307692) instruction cycles. \n
-		2.- Block 2: Top blank lines / Application code: \n
-			NMI generator on. \n
-			6 - 61 (56) ray trace lines (in PAL visible screen). \n
-			At the end of every line, a NMI interrupt is generated to count the lines. \n
-			Is the ULA the one generating the interrupt when detects HSYNC. \n
-			The application code is executed but is is interrupted by the NMI. \n
-			54 out of 56 (PAL) lines available for execution = 3456us = 11.232 instruction cycles. \n
-			1 line waiting for the first HALT, and the other generating a collapsed DFILE. \n
-		3.- Display zone: \n
-			NMI generator off. \n
-			INT type 1 on (executed always at 0x0038 position). \n
-			62 - 253 (192 = 24 lines * 8) ray trace lines (in display). \n
-			Register R is loaded with FC (bit 6 - 0 = 125). \n
-			Program jumps to (DFILE) and start to "execute". \n
+		2.- TOP Blank lines / App Code: \n
+		When ICFHC = 208 a HSYNC pulse is generated and sent to the TV. \n
+		Also a NMI interrupt is launched and the application code is then executed.
+		The NMI increments a blank line counter (A').
+		When the A' counter = 0, starts the VIDEO DIPLAY routine, and stops the ULA internal NMI generator = false.
 		\n
-			CPU starts to read the opcode (whatever), M1 signal is marked as up. \n
-			ULA also does it, and if bit 6 = false, put down all bits in data bus, and then CPU read NOP actually. \n
-			But if bit 6 were not 0, ULA wouldn't do anything, and CPU then would read the normal code. \n
-			It then should be 0x76 (HALT) that will stops the CPU. Otherwise a crash will be likely generated. \n
-			The HALT instruction is unblocked when INT comes. \n
-			From this point onwards ULA draws blank. \n
+		3.- VIDEO DISPLAY:
+		The register I = 1e (A9 - A12 of the address of char data fixed).
+		The register R = e0...see why later!
+		INT interrupts are allowed (type 1).
+		BC to count down 192 lines (in two blocks B from 24 to 0 = 25 lines, and C from 8 to 1 = 8 per line).
+		Z80 jumps to C0D2 location.
+		How it works: \n
 		\n
-			The R register is incremented anytime a NOP or the HALT instruction is executed. \n
-			At T4 of execution the IR value is moved into the address bus. \n
-			The ULA overrides the address bus, using the IR info that is already in, to look for the char info (@see balow). \n
-			The A6 is wired with INT (R counts from 0 to 127. A6 = 0). \n
-			With A6 passes from 1 to 0 (negative edge) INT is launched. \n
-			INT actualice the counter line (LNCTRL). \n
-		4.- Bottom blank line: \n
-			Idem that Top blank lines. \n
-		\n
-		How char info is read: \n
-		1.- The Address of the char info is made up of: I register (A15 - A9) + Char code (A8 - A3) + LNCTRL. \n
-		2.- The bit 7 of the Char code determine whether it is drawn in inverse mode. \n
+		1 loop:
+		CPU read the opcode (whatever), M1 signal is marked as up. \n
+		ULA also does it, and if bit 6 of the opcode = false, put down all bits in data bus, and then CPU read NOP actually. \n
+		But, if bit 6 were not 0, ULA wouldn't do anything, and CPU then would read the normal code. \n
+		the NOP instruction takes 4 cycles. \n
+		In cycles 3 CPU put IR register on the address bus. \n
+		In cycle 4 the ULA forms the address to look for char info = I + OpCode (6 bits) + LNCTRL. \n
+		Bit 7 of the Opcode is to determine whether it will draw as it is or in reverse mode. \n
+		Put the value in the address bus and read the char info. \n
+		The value read is put into the SHIFT REGISTER. \n
+		Register R is incremented (after executing any instruction, and NOP is one of them). \n
+		Move to following OpCode. \n
+		2 loop: \n
+		The value is the SHIFT REGISTER is out in 4 CPU cycles, (ULA cycles at double speed remember!). \n
+		Repeat what was told in loop 1. \n
+		So chars are drawn from loop 2 to 33 (32 at a maximum). \n
+		... \n
+		34 loop (or maybe before). \n
+		HALT is found. \n
+		The SHIFT REGISTER is put to 0, and the video output signal is clapped = 0,
+		R register increments and reaches 82. At this point A6 = 0 and INT is launched. \n
+		INT decrements C and aldo B every 8. \n
+		When INT is launched a HSYNC is also launched, video output signal is then free. \n
+		When B reaches 0 the ULA NMI internal generator = true, and jumps to do the same than TOP blank lines, 
+		but at the BOTTOM. \n
+		... \n
+		4.- BOTTOM Blank lines / App Code: \n
+		Same than above... \n
+		When finishes swiches back NMI = false and back to TOP. \n
 	*/
 	class ULA : public MCHEmul::GraphicalChip
 	{
 		public:
-		friend SinclairZX81;
-
 		static const unsigned int _ID = 210;
-
-		static constexpr unsigned short _CYCLESPERRASTERLINE = 414;
 
 		/** Specific classes for PAL & NTSC have been created giving this data as default. \n
 			The ULA constructor receives info over the raster data, the memory view to use,
@@ -102,7 +114,7 @@ namespace ZX81
 			a reference to the portFE that is used to read the keyboard,
 			and additional attributes. */
 		ULA (const MCHEmul::RasterData& vd, const MCHEmul::RasterData& hd, 
-			int vV, unsigned short cRL, const MCHEmul::Attributes& attrs = { });
+			int vV, const MCHEmul::Attributes& attrs = { });
 
 		virtual ~ULA () override;
 
@@ -121,13 +133,16 @@ namespace ZX81
 		inline void screenPositions (unsigned short& x1, unsigned short& y1, 
 			unsigned short& x2, unsigned short& y2);
 
-		/** To get the number of cycles per raster line used in this chip. */
-		unsigned short cyclesPerRasterLine () const
-							{ return (_cyclesPerRasterLine); }
-
 		/** To get the raster info. */
 		const MCHEmul::Raster& raster () const
 							{ return (_raster); }
+		MCHEmul::Raster& raster ()
+							{ return (_raster); }
+
+		/** To inform about the INT ack. \n
+			see @ZX81::ZX81Computer for more details. */
+		void setINTack ()
+							{ _ULARegisters -> setINTack (); }
 
 		virtual bool initialize () override;
 
@@ -136,8 +151,8 @@ namespace ZX81
 
 		/**
 		  *	The name of the fields are: \n
+		  * ULARegisters	= InfoStructire: Info about the registers.
 		  * Raster			= InfoStructure: Info about the raster.
-		  * Sound			= InfoStructire: Info about the sound.
 		  */
 		virtual MCHEmul::InfoStructure getInfoStructure () const override;
 
@@ -148,8 +163,6 @@ namespace ZX81
 		virtual MCHEmul::ScreenMemory* createScreenMemory () override;
 
 		// Invoked from the method "simulation"...
-		/** Different actions are taken attending the raster cycle. */
-		void treatRasterCycle ();
 		/** Read and draw the graphics. */
 		void readGraphicsAndDrawVisibleZone (MCHEmul::CPU* cpu);
 
@@ -161,8 +174,6 @@ namespace ZX81
 		ULARegisters* _ULARegisters;
 		/** The number of the memory view used to read the data. */
 		int _ULAView;
-		/** The number of cycles per raster line as it depends on the type of Chip. */
-		unsigned short _cyclesPerRasterLine;
 		/** The raster. */
 		MCHEmul::Raster _raster;
 
@@ -172,11 +183,8 @@ namespace ZX81
 		/** The format used to draw. 
 			It has to be the same that is used by the Screen object. */
 		SDL_PixelFormat* _format;
-		/** When a raster line is processed, it is necessary to know which cycle is being processed. 
-			The number of max cycles is get from the method (@see) "_cyclesPerRasterLine". */
-		unsigned short _cycleInRasterLine;
-		/** Whether the vertical raster has entered the last VBlank zone already. */
-		bool _lastVBlankEntered;
+		/** Whether the vertical raster has entered the first VBlank zone already. */
+		bool _firstVBlankEntered;
 	};
 
 	// ---

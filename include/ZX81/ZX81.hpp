@@ -30,8 +30,8 @@ namespace ZX81
 
 		/** Macros for the speed.
 			The ZX80/ZX81 manages the video using the CPU, so this is the average speed,
-			because the processor always work at 3.5 MHz. */
-		static const unsigned int _CLOCK		= 3500000;	// 3.5 MHz
+			because the processor always work at 3.25 MHz. */
+		static const unsigned int _CLOCK		= 3250000;	// 3.25 MHz
 		static const unsigned int _PALCLOCK		= 804600;	// 0.804 MHz
 		static const unsigned int _NTSCCLOCK	= 536400;	// 0.536 MHz
 
@@ -40,9 +40,9 @@ namespace ZX81
 
 		/** To get a reference to the ULA chip. */
 		const ULA* ula () const
-							{ return (static_cast <const ULA*> (chip (ULA::_ID))); }
+							{ return (_ula); }
 		ULA* ula ()
-							{ return (static_cast <ULA*> (chip (ULA::_ID))); }
+							{ return (_ula); }
 
 		virtual bool initialize (bool iM = true) override;
 
@@ -70,6 +70,8 @@ namespace ZX81
 		VisualSystem _visualSystem;
 
 		// Implementation
+		/** A reference to the ULA chip. */
+		ULA* _ula;
 		/** To control the status of the A6. */
 		MCHEmul::Pulse _A6;
 	};

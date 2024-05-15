@@ -4,7 +4,8 @@
 ZX81::ULARegisters::ULARegisters ()
 	: MCHEmul::InfoClass ("ULARegisters"),
 	  _keyboardStatus (8, MCHEmul::UByte::_0),
-	  _casetteSignalChanged (false)
+	  _casetteSignalChanged (false),
+	 _INTack (false)
 { 
 	initializeInternalValues ();
 }
@@ -36,13 +37,16 @@ void ZX81::ULARegisters::initializeInternalValues ()
 
 	_NTSC = false;
 
+	_inVSync = true;
 	_syncOutputWhite = true;
+
+	_INTack = false;
 
 	_LINECNTRL = 0;
 	_LINECNTRLBlocked = true;
 
+	_SHIFTR = 0;
+
 	for (size_t i = 0; i < 8; 
 		_keyboardStatus [i++] = MCHEmul::UByte::_0);
-
-	_currentRasterLine = 0;
 }

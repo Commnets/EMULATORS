@@ -41,10 +41,23 @@ namespace ZX81
 							{ _NTSC = n; }
 
 		// To control how the video signal is issued...
+		bool inVSync () const
+							{ return (_inVSync); }
+		void setInVSync (bool i)
+							{ _inVSync = i; }
+		inline void setVSync (bool s);
 		bool syncOutputWhite () const
 							{ return (_syncOutputWhite); }
 		void setSyncOutputWhite (bool w)
 							{ _syncOutputWhite = w; }
+
+		// When INT interrupt has been acknowledged...
+		void setINTack ()
+							{ _INTack = true; }
+		bool INTack () const
+							{ return (_INTack); }
+
+		// Counting internally from 0 to 7 every HSYNC...
 		unsigned char LINECNTRL () const // From 0 to 8...
 							{ return (_LINECNTRL); }
 		void setLINECNTRL (unsigned char lc)
@@ -55,11 +68,15 @@ namespace ZX81
 							{ _LINECNTRLBlocked = lb; }
 		inline unsigned char incLINECTRL (); // From 0 to 7 always...
 
-		// Control of the raster...
-		unsigned short currentRasterLine () const
-							{ return (_currentRasterLine); }
-		void setCurrentRasterLine (unsigned short rL)
-							{ _currentRasterLine = rL; }
+		// Working with the SHIFT Register...
+		const MCHEmul::UByte& SHIFTRegister () const
+							{ return (_SHIFTR); }
+		const MCHEmul::UByte& originalSHIFTRegister () const
+							{ return (_originalSHIFTR); }
+		void setSHIFTRegister (const MCHEmul::UByte& sr) // with 0 restart it...
+							{ _SHIFTR = _originalSHIFTR = sr; }
+		bool shiftOutData ()
+							{ return (_SHIFTR.shiftLeftC ()); }
 
 		// The casette signal...
 		bool casetteSignal () const
@@ -99,25 +116,51 @@ namespace ZX81
 		bool _NMIGenerator;
 		/** NTSC. This variable is set when starting. */
 		bool _NTSC;
+		/** Whether the ULA is or nor doing a VSync. */
+		bool _inVSync;
 		/** When the ULA is in the first zone of the memory a whote nouse is generated,
 			once it enter in the slow / fast zone, the video can be generated. */
 		bool _syncOutputWhite;
+		/** The INT ack. Once it is checked becomes false. */
+		MCHEmul::OBool _INTack;
 		/** Something similar is done withe this 3 bits (0-7) internal counter,
 			that is used to determine which line of the character has to be ddrawn
 			and increments every HSYNC event. */
 		unsigned char _LINECNTRL;
 		bool _LINECNTRLBlocked;
+		/** The SHIFT Register. */
+		MCHEmul::UByte _SHIFTR, _originalSHIFTR;
 		/** The casette signal and the signal to indicate whether it has changed. \n
 			When read it becomes back to false. */
 		bool _casetteSignal;
 		MCHEmul::OBool _casetteSignalChanged;
 		/** Where the status of the keyboard matrix is kept. */
 		std::vector <MCHEmul::UByte> _keyboardStatus;
-
-		// Implmentation
-		/** The current raster line managed from the ULA. */
-		unsigned short _currentRasterLine;
 	};
+
+	// ---
+	inline void ULARegisters::setVSync (bool s)
+	{
+		// When the systems enters in the VSync...
+		if (s)
+		{
+			_inVSync = true; 
+			// no output signal...
+			_syncOutputWhite = false;
+			// and no counting LINES (from 0 to 7)...
+			_LINECNTRL = 0;
+			_LINECNTRLBlocked = true;
+		}
+		// When it is not...
+		else
+		{
+			_inVSync = false;
+			// output signal allowed...
+			_syncOutputWhite = true;
+			// ans starts to count LINECTRL...
+			_LINECNTRLBlocked = false;
+		}
+	}
 
 	// ---
 	inline unsigned char ULARegisters::incLINECTRL ()

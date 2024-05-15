@@ -168,7 +168,9 @@ void MCHEmul::CPU::removeInterrrupt (int id)
 // ---
 void MCHEmul::CPU::requestInterrupt (int id, unsigned int nC, MCHEmul::Chip* src, int cR)
 { 
-	if (_interruptRequested == -1)
+	// If the requested id is not what it has been requested before...
+	// ...just to avoid an excess of the code!
+	if (_interruptRequested != id) 
 	{ 
 		_interruptRequested = id; 
 		
@@ -454,13 +456,14 @@ bool MCHEmul::CPU::when_ExecutingInstruction_Full ()
 							<< std::to_string (_currentInterruption -> id ()) << "\n";
 
 		_lastCPUClockCycles = _currentInterruption -> cyclesToLaunch ();
-		_clockCycles += _lastCPUClockCycles;
-
-		_interruptRequested = -1; // No longer valid...
 
 		bool result = true;
 		if (result = _currentInterruption -> executeOver (this, _clyclesAtInterruption))
 			_lastCPUClockCycles += _currentInterruption -> cycledAfterLaunch ();
+
+		_clockCycles += _lastCPUClockCycles;
+
+		_interruptRequested = -1; // No longer valid...
 
 		_currentInterruption = nullptr;
 	
