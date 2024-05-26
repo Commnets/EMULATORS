@@ -1,6 +1,14 @@
 #include <F6500/Interrupt.hpp>
 
 // ---
+void F6500::Interrupt::initialize ()
+{ 
+	MCHEmul::CPUInterrupt::initialize (); 
+							  
+	_instChecked = false; 
+}
+
+// ---
 MCHEmul::InfoStructure F6500::Interrupt::getInfoStructure () const
 {
 	MCHEmul::InfoStructure result = std::move (MCHEmul::CPUInterrupt::getInfoStructure ());
@@ -12,7 +20,7 @@ MCHEmul::InfoStructure F6500::Interrupt::getInfoStructure () const
 }
 
 // ---
-bool F6500::Interrupt::isTime (MCHEmul::CPU* c, unsigned int cC) const
+unsigned int F6500::Interrupt::isTime (MCHEmul::CPU* c, unsigned int cC) const
 {
 	// If a previous instruction was checked,
 	// the interrupt has to be launched, because even if the last one had only 2 cycles
@@ -22,17 +30,17 @@ bool F6500::Interrupt::isTime (MCHEmul::CPU* c, unsigned int cC) const
 		// ...ready for a new consult...
 		_instChecked = false;
 
-		return (true);
+		return (MCHEmul::CPUInterrupt::_EXECUTIONALLOWED);
 	}
 	else
 	{
 		if ((c -> clockCycles () - cC) > 2)
-			return (true);
+			return (MCHEmul::CPUInterrupt::_EXECUTIONALLOWED);
 		else
 		{ 
 			_instChecked = true;
 
-			return (false);
+			return (MCHEmul::CPUInterrupt::_EXECUTIONTOWAIT);
 		}
 	}
 }

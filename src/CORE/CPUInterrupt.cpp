@@ -20,7 +20,8 @@ void MCHEmul::CPUInterrupt::setInExecution (bool i)
 		if (_debug && 
 			!_computer -> deepDebug ())
 		{
-			if (_computer -> activateDeepDebug (_debugFileName, { -1 }, { -1 }, _addDebugInfo)) // ...activate the deep debug, and if there is no error...
+			if (_computer -> activateDeepDebug 
+				(_debugFileName, { -1 }, { -1 }, _addDebugInfo)) // ...activate the deep debug, and if there is no error...
 			{ 
 				*_computer -> deepDebugFile () <<
 					"\n" << "****************************************" << "\n" <<
@@ -78,6 +79,7 @@ MCHEmul::InfoStructure MCHEmul::CPUInterrupt::getInfoStructure () const
 	MCHEmul::InfoStructure result = std::move (MCHEmul::InfoClass::getInfoStructure ());
 
 	result.add ("ID",			_id);
+	result.add ("ACTIVE",		_active);
 	result.add ("EXECUTION",	std::string (_inExecution ? "YES" : "NO"));
 
 	return (result);

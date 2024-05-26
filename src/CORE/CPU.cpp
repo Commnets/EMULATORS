@@ -5,25 +5,40 @@
 #include <CORE/ProgramCounter.hpp>
 #include <iostream>
 
+// Only the first parameter cares...the rest don't!
+const MCHEmul::CPU::InterruptRequest MCHEmul::CPU::_NOINTREQUEST = 
+	{ -1 /** not use this id ever for a real transaction type */, 0, nullptr, -1 }; 
+
 // ---
 MCHEmul::CPU::CPU (int id, const MCHEmul::CPUArchitecture& a, 
 	const MCHEmul::Registers& r, const MCHEmul::StatusRegister& sR, const MCHEmul::Instructions& ins,
 	const MCHEmul::Attributes& attrs)
 	: MCHEmul::MotherboardElement (id, "CPU", attrs),
-	  _architecture (a), _registers (r), _statusRegister (sR), _instructions (ins),
+	  // Basic definition of the CPU...
+	  _architecture (a), 
+	  _registers (r), 
+	  _statusRegister (sR), 
+	  _instructions (ins),
+	  _programCounter (a.numberBytes ()), 
+	  _memory (nullptr), 
+	  _interrupts (),
+	  // When neither buses nor wires are used, these variable must be set from instruction execution!
 	  _lastINOUTAddress (), _lastINOUTData (),
-	  _programCounter (a.numberBytes ()), _memory (nullptr), _interrupts (),
+	  // Info while running!
 	  _state (MCHEmul::CPU::_EXECUTINGINSTRUCTION),
-	  _deepDebugFile (nullptr),
-	  _error (_NOERROR), 
-	  _currentInstruction (nullptr), _currentInterruption (nullptr), _cyclesPendingExecution (0),
 	  _clockCycles (0), _lastCPUClockCycles (0),
 	  _lastState (MCHEmul::CPU::_EXECUTINGINSTRUCTION),
 	  _lastInstruction (nullptr),
+	  _deepDebugFile (nullptr),
+	  _error (_NOERROR),
+	  // Only when executing a instruction/interrupt per cycle...
+	  _currentInstruction (nullptr), _currentInterruptRequest (_NOINTREQUEST), 
+	  _currentInterrupt (nullptr), _cyclesPendingExecution (0), 
+	  // When the CPU is stopped...
 	  _typeCycleStopped (0 /** nothing. */), _cyclesStopped (0), _cyclesAtStop (0), _counterCyclesStopped (0),
-	  _interruptRequested (-1), _clyclesAtInterruption (0),
-	  _rowInstructions (), // It will be fulfilled later!
-	  _rowInterrupts () // Idem
+	  // For performance reasons...
+	  _rowInstructions (), // It will be fulfilled below!
+	  _rowInterrupts () // Just to be completed using @see makeInterruptionRowData after filling up _interrupts
 { 
 	assert (_registers.size () > 0 && _instructions.size () > 0); 
 
@@ -109,10 +124,6 @@ bool MCHEmul::CPU::initialize ()
 	for (auto& i : _registers)
 		i.initialize ();
 
-	_lastINOUTAddress = MCHEmul::Address ();
-	
-	_lastINOUTData = { };
-
 	_statusRegister.initialize ();
 
 	_programCounter.initialize ();
@@ -120,22 +131,29 @@ bool MCHEmul::CPU::initialize ()
 	for (auto& i : _interrupts)
 		i.second -> initialize ();
 
-	_error = _NOERROR;
-
-	_currentInterruption = nullptr;
-	_currentInstruction = nullptr;
-
-	_clockCycles = _lastCPUClockCycles = _cyclesPendingExecution = 0;
+	_lastINOUTAddress = MCHEmul::Address ();
+	
+	_lastINOUTData = { };
 
 	_state = _lastState = MCHEmul::CPU::_EXECUTINGINSTRUCTION;
+
+	_clockCycles = _lastCPUClockCycles = 0;
+
+	_error = _NOERROR;
+
+	// When executed per cycle...
+	_currentInterrupt = nullptr;
+	_currentInterruptRequest = MCHEmul::CPU::_NOINTREQUEST;
+	_currentInstruction = nullptr;
+	_cyclesPendingExecution = 0;
 
 	// Related with the internal states...
 	_lastInstruction = nullptr;
 	_typeCycleStopped = 0; // Meaning none
 	_cyclesStopped = 0;
 	_cyclesAtStop = _counterCyclesStopped = 0;
-	_interruptRequested = -1; // Meaning none...
-	_clyclesAtInterruption = 0;
+
+	_interruptsRequested = { };
 
 	return (true);
 }
@@ -166,21 +184,16 @@ void MCHEmul::CPU::removeInterrrupt (int id)
 }
 
 // ---
-void MCHEmul::CPU::requestInterrupt (int id, unsigned int nC, MCHEmul::Chip* src, int cR)
+void MCHEmul::CPU::requestInterrupt (const MCHEmul::CPU::InterruptRequest& iR)
 { 
-	// If the requested id is not what it has been requested before...
-	// ...just to avoid an excess of the code!
-	if (_interruptRequested != id) 
+	// Only one interrupt at the same type is allowed!
+	if (_interruptsRequested.empty ())
 	{ 
-		_interruptRequested = id; 
-		
-		_clyclesAtInterruption = nC; 
+		_interruptsRequested.emplace_back (iR);
 
 		if (deepDebugActive ())
-			*_deepDebugFile 
-				<< "\t\t\t\tInterrupt CPU requested:" << std::to_string (id) 
-				<< " from:" << ((src == nullptr) ? "-" : std::to_string (src -> id ())) 
-				<< " reason: " << std::to_string (cR) << "\n";
+			*_deepDebugFile << "\t\t\t\tInterrupt CPU requested:" 
+							<< iR.toString () << "\n";
 	} 
 }
 
@@ -189,37 +202,23 @@ bool MCHEmul::CPU::executeNextCycle ()
 {
 	memoryRef () -> setCPUView (); // Always...
 
-	bool result = false;
-
-	auto execFunction = [&](bool f) -> bool
-		{
-			switch (_state)
-			{
-				case MCHEmul::CPU::_EXECUTINGINSTRUCTION:
-					result = (f)
-						? when_ExecutingInstruction_Full ()
-						: when_ExecutingInstruction_PerCycle ();
-					break;
+	bool result;
+	switch (_state)
+	{
+		case MCHEmul::CPU::_EXECUTINGINSTRUCTION:
+			result = when_ExecutingInstruction ();
+			break;
 		
-				case MCHEmul::CPU::_STOPPED:
-					result = when_Stopped ();
-					break;
+		case MCHEmul::CPU::_STOPPED:
+			result = when_Stopped ();
+			break;
 
-				default:
-					// It shouldn't be here. 
-					// It would mean that there are states with no treatment...
-					assert (0); 
-					break;
-			}
-
-			return (result);
-		};
-
-	if (ticksCounter () == nullptr)
-		execFunction (true);
-	else
-		for (unsigned int i = ticksCounter () -> elapsedTicks (); i > 0; i--)
-			execFunction (false);
+		default:
+			// It shouldn't be here. 
+			// It would mean that there are states with no treatment...
+			assert (0); 
+			break;
+	}
 
 	return (result);
 }
@@ -261,105 +260,313 @@ void MCHEmul::CPU::makeInterruptionRowData ()
 }
 
 // ---
-bool MCHEmul::CPU::when_ExecutingInstruction_PerCycle ()
+bool MCHEmul::CPU::when_ExecutingInstruction ()
 {
 	assert (_state == MCHEmul::CPU::_EXECUTINGINSTRUCTION);
 
-	// What to execute: Interrupt or Instruction?
+	if (deepDebugActive ())
+		*_deepDebugFile
+		// Where
+		<< "CPU\t"
+		// When
+		<< MCHEmul::fixLenStr (std::to_string (_clockCycles), 12, false)
+		// What
+		<< "Info Cycle\t\t"
+		// Data
+		<< "Last:" + ((_lastInstruction == nullptr)
+			? "0" : std::to_string (_lastInstruction -> clockCyclesExecuted ())) + " cycles\n";
 
-	// If there is no any instruction already under execution...
-	if (_currentInstruction == nullptr)
-	{
-		bool eInt = (_currentInterruption != nullptr);
-		// ...and there is no any interruption under launching...
-		if (!eInt)
+	auto execFunction = [&](bool f) -> bool
 		{
-			// ...look for the possibility of launching an interruption...
-			if (eInt = 
-				(_interruptRequested != -1 && 
-				 (_currentInterruption = _rowInterrupts [(size_t) _interruptRequested]) -> 
-					canBeExecutedOver (this, _clyclesAtInterruption)))
-				_cyclesPendingExecution = _currentInterruption -> cyclesToLaunch ();
+			_lastCPUClockCycles = f ? 0 /** the full execution will decide. */ : 1 /** minimu step. */;
+	
+			bool result = false;
+			// The activation of the interruptions has priority over the execution of the instructions...
+			if (f ? executeNextInterruptRequest_Full (_error) 
+				  : executeNextInstruction_PerCycle (_error)) // ...if any!
+				result = (_error != MCHEmul::_NOERROR)
+					? false /** Meaning a mistake in the execution. */ : true /** all right. */;
 			else
 			{ 
-				_interruptRequested = -1; // it can be requested later another time...
+				// If no interrupt was executed...
+				// ...it is time for the instructions, just if there was no previous error (even not executing)...
+				if (_error != MCHEmul::_NOERROR)
+					result = false;
+				else
+				{
+					if (f ? executeNextInstruction_Full (_error) 
+						  : executeNextInstruction_PerCycle (_error))
+						result = (_error != MCHEmul::_NOERROR) 
+							? false /** Meaning a error in the "no" execution. */ : true /** all right. */;
+					// But if no instruction could be executed either...the CPU has a big issue!
+					// Because at this moment there wouldn't be neither instruction not interrupt to execute
+					// and the CPU is the mode EXECUTING!...
+					else
+					{
+						_error = MCHEmul::_CPU_ERROR;
 
-				_currentInterruption = nullptr;
+						result = false; 
+					}
+				}
 			}
-		}
 
-		// but if even looking for an interruption it is not possible...
-		if (!eInt)
-		{
-			// ...look for the next instruction to be executed...
-			unsigned int nInst = 
-				MCHEmul::UInt (
-					_memory -> values (
-						programCounter ().asAddress (), architecture ().instructionLength ()), 
-					architecture ().bigEndian ()).asUnsignedInt ();
-			if (nInst < _rowInstructions.size () && 
-				(_currentInstruction = _rowInstructions [nInst]) != nullptr)
-				// The initial ones, 
-				// but there might be some additional cycles after execution...
-				// The cycles are decided according with the right instruction...
-				_cyclesPendingExecution = 
-					_currentInstruction -> clockCycles (_memory, _programCounter.asAddress ()); // virtual!
-		}
+			// The total clock is also actualized...
+			// according with what happend within the methods...
+			_clockCycles += _lastCPUClockCycles;
+
+			return (result);
+		};
+
+	bool result = false;
+	if (ticksCounter () == nullptr)
+		result = execFunction (true); // Full...
+	else
+		for (unsigned int i = ticksCounter () -> elapsedTicks (); i > 0; i--)
+			result = execFunction (false); // Per cycle...
+
+	return (result);
+}
+
+// ---
+bool MCHEmul::CPU::when_Stopped ()
+{
+	assert (_state == MCHEmul::CPU::_STOPPED);
+
+	if (deepDebugActive ())
+		*_deepDebugFile
+		// Where
+		<< "CPU\t"
+		// When
+		<< MCHEmul::fixLenStr (std::to_string (_clockCycles), 12, false)
+		// What
+		<< "Stopped\t\t"
+		// Data
+		<< ((_cyclesStopped == -1) ? "-" : std::to_string (_counterCyclesStopped)) << " cycle\n";
+
+	if (_cyclesStopped != -1 &&
+		(++_counterCyclesStopped == (unsigned int) _cyclesStopped))
+	{
+		unsigned int iS = _state;
+
+		_state = _lastState;
+
+		_lastState = iS;
 	}
 
-	// At this point there must be either 
-	// a interrupt or a instruction to be executed or under execution...
-	// if not there is error in the CPU!
-	if (_currentInterruption == nullptr && 
-		_currentInstruction == nullptr)
-	{ 
-		_error = MCHEmul::_CPU_ERROR;
-
-		return (false);
-	}
-
-	_lastCPUClockCycles = 1;
+	// No other value of this status is changed, because everything has to continue 
+	// at the situation it had when stopped, 
+	// either running a instruction or launching a interruption...
 
 	_clockCycles++;
 
-	// Now, what to execute?
-	// The interrupt, if defined, has priority over the instruction!
-	bool result = true;
-	if (_currentInterruption != nullptr)
+	return (true);
+}
+
+// ---
+bool MCHEmul::CPU::executeNextInterruptRequest_PerCycle (unsigned int& e)
+{
+	if (_currentInstruction != nullptr)
+		return (false); // It is the the turn of the instructions instead!
+						// Why is this here?...
+
+	// ...processed if nothing against were indicated later...
+	bool result = true; 
+	// Is there any interrupt already being processed?
+	if (_currentInterrupt != nullptr)
 	{
-		// ...but only when the cycles pending to launch are 0!...
-		if (--_cyclesPendingExecution == 0)
+		_lastCPUClockCycles++;
+		if (--_cyclesPendingExecution == 0) // Time to launch it?
+		{
+			if (deepDebugActive ())
+				*_deepDebugFile << "\t\t\t\tInterrupt launched:"
+				<< std::to_string (_currentInterrupt -> id ()) << "\n";
+
+			if (_currentInterrupt ->
+				executeOver (this, _currentInterruptRequest._cycles /** at the moment if was requested. */))
+			{
+				_lastCPUClockCycles += _currentInterrupt -> cycledAfterLaunch (); // Most of the times = 0
+	
+				removeInterruptRequest (_currentInterruptRequest); // Done...
+
+				_currentInterruptRequest = MCHEmul::CPU::_NOINTREQUEST; // ..no longer valid...
+
+				_currentInterrupt -> initialize (); // Get ready for the next interrupt...
+
+				_currentInterrupt = nullptr; // No longer valid...
+			}
+			else
+				e = MCHEmul::_INTERRUPT_ERROR; // ...error although it's been executed...
+		}
+	}
+	else
+	{
+		const MCHEmul::CPU::InterruptRequest& iR = getNextInterruptRequest ();
+		assert (iR._type == -1 || (size_t) iR._type < _rowInterrupts.size ());
+		if (iR._type == -1)
+			result = false; // not processed, 
+							// but with no errors, maybe time for the instructions...
+		else
+		{
+			switch (iR._type)
+			{
+				case CPUInterrupt::_EXECUTIONNOTALLOWED:
+				{
+					if (deepDebugActive ())
+						*_deepDebugFile << "\t\t\t\tInterrupt not allowed:" 
+										<< std::to_string (_currentInterrupt -> id ()) << "\n";
+
+					removeInterruptRequest (iR);
+
+					result = false; // not executed, but with no errors...
+				}
+			
+				break;
+
+				case CPUInterrupt::_EXECUTIONTOWAIT:
+				{
+					if (deepDebugActive ())
+						*_deepDebugFile << "\t\t\t\tInterrupt to wait:" 
+										<< std::to_string (_currentInterrupt -> id ()) << "\n";
+
+					// It is not removed from the pending list...
+					// Because it is valid but not still the time to be executed!
+					// So in the next loop the request will be still there...
+
+					result = false; // not executed, but with no errors...
+				}
+
+				break;
+
+				case CPUInterrupt::_EXECUTIONALLOWED:
+				{
+					if (deepDebugActive ())
+						*_deepDebugFile << "\t\t\t\tInterrupt launched:" 
+										<< std::to_string (_currentInterrupt -> id ()) << "\n";
+
+					// The acknowledge has to be issued!
+					aknowledgeInterrupt ();
+
+					_currentInterruptRequest = iR;
+
+					_currentInterrupt = _rowInterrupts [(size_t) _currentInterruptRequest._type];
+
+					_cyclesPendingExecution = _currentInterrupt -> cyclesToLaunch ();
+		
+					// The request will be deleted once the interrupt was executed (see above)...
+
+					//... to start the execution with no errors...
+					// ...they might come later!! (when the real execution happens)
+				}
+
+				break;
+
+				// It shouldn't be here, just in case...
+				default:
+					assert (false);
+					break;
+			}
+		}
+	}
+
+	return (result);
+}
+
+// ---
+bool MCHEmul::CPU::executeNextInterruptRequest_Full (unsigned int& e)
+{
+	const MCHEmul::CPU::InterruptRequest& iR = getNextInterruptRequest ();
+	assert (iR._type == -1 || (size_t) iR._type < _rowInterrupts.size ());
+	if (iR._type == -1)
+		return (false); // not executed, it might by time for the instruction...
+
+	// Notice that _currentInterrupt is not used but i instead (on purpose!)...
+	// ...as there is no needed to maintain the status between cpu loops...
+
+	// To indicate whether the transaction is executed or not...
+	// Nothing to do with the value of the variable e (error), received as a reference!
+	bool result = true; // ...executed if nothing is said against later...
+	MCHEmul::CPUInterrupt* i = _rowInterrupts [iR._type];
+	switch (i -> canBeExecutedOver (this, iR._cycles))
+	{
+		// The interrupt can not be executed...
+		case CPUInterrupt::_EXECUTIONNOTALLOWED:
+		{
+			if (deepDebugActive ())
+				*_deepDebugFile << "\t\t\t\tInterrupt not allowed:" 
+								<< std::to_string (i -> id ()) << "\n";
+
+			removeInterruptRequest (iR); // No longer valid...
+
+			result = false; // ...not executed, but with no errors...
+		}
+
+		break;
+
+		// The interrupt is valid but has to wait to another interation
+		// This can happen when the CPU takes certain time to recognize the interrupt.
+		// For example in 6500 family the no interrupt can be launched in the last instruction took less than 2 cycles
+		case CPUInterrupt::_EXECUTIONTOWAIT:
+		{
+			if (deepDebugActive ())
+				*_deepDebugFile << "\t\t\t\tInterrupt to wait:" 
+								<< std::to_string (i -> id ()) << "\n";
+
+			// The request is not removed as it is still valid...
+			// But not in this moment, in the next loop the CPU will get it back!
+
+			result = false; // no errors, no executed...
+		}
+
+		break;
+
+		// Time to execute the transaction...
+		case CPUInterrupt::_EXECUTIONALLOWED:
 		{
 			if (deepDebugActive ())
 				*_deepDebugFile << "\t\t\t\tInterrupt launched:" 
-								<< std::to_string (_currentInterruption -> id ()) << "\n";
+								<< std::to_string (i -> id ()) << "\n";
 
-			if (!(result = _currentInterruption -> 
-				executeOver (this, _clyclesAtInterruption)))
-				return (result);
+			// The acknowledge has to be issued!
+			aknowledgeInterrupt ();
 
-			_lastCPUClockCycles += _currentInterruption -> cycledAfterLaunch (); // Most of the times = 0
+			_lastCPUClockCycles = i -> cyclesToLaunch ();
+			if (i -> executeOver (this, iR._cycles)) // Thismethod returns true when ok, and false with errors...
+				_lastCPUClockCycles += i -> cycledAfterLaunch ();
+			else
+				_error = MCHEmul::_INTERRUPT_ERROR; // and error happended...
 
-			_interruptRequested = -1; // No more requested...
+			i -> initialize (); // Get ready for the next interrupt...
 
-			_currentInterruption = nullptr; // ...already executed...
+			removeInterruptRequest (iR); // Done!
+
+			// executed (return = true)...but with errors? (see above)
 		}
-		else
-		{
-			if (deepDebugActive ())
-				*_deepDebugFile
-					// Where
-					<< "CPU\t"
-					// When
-					<< MCHEmul::fixLenStr (std::to_string (_clockCycles), 12, false)
-					// What
-					<< "Info Cycle\t\t"
-					// Data
-					<< "Interrupt in:" + std::to_string (_cyclesPendingExecution) + " cycles\n";
-		}
+
+		break;
+
+		default:
+			// It shouldn't be here, just in case...
+			assert (false);
+			break;
 	}
-	// if not, then the instruction has to be executed...
-	else
+
+	return (result);
+}
+
+// ---
+bool MCHEmul::CPU::executeNextInstruction_PerCycle (unsigned int& e)
+{
+	if (_currentInterrupt != nullptr)
+		return (false); // I guess this is going to generate a big issue!! 
+						// (becuase this situation shouldn't happen)
+
+	assert (_memory != nullptr);
+
+	// By default, 
+	// the instruction cycle should be processed always at this point!
+	// ...but with errors? (see below)
+
+	if (_currentInstruction != nullptr)
 	{
 		// ...but only when the cycles pending are 0!
 		if (--_cyclesPendingExecution == 0)
@@ -369,17 +576,19 @@ bool MCHEmul::CPU::when_ExecutingInstruction_PerCycle ()
 				sdd = MCHEmul::removeAll0 (_programCounter.asString ()) + "(Stack "
 						+ std::to_string (memoryRef () -> stack () -> position ()) + ") ";
 
-			if (!(result = _currentInstruction -> 
-				execute (this, _memory, _memory -> stack (), &_programCounter)))
-				return (result);
+			// This method returns true 
+			// when everything ok and false if not...
+			if (_currentInstruction -> 
+				execute (this, _memory, _memory -> stack (), &_programCounter)) 
+				_error = MCHEmul::_INSTRUCTION_ERROR; // ...error executing...
 
 			_lastCPUClockCycles += _currentInstruction -> additionalClockCyclesExecuted (); // Just in case...
 
-			_clockCycles += _lastCPUClockCycles; 
+			_lastInstruction = _currentInstruction; // save the last instruction executed...
 
-			_lastInstruction = _currentInstruction;
+			_currentInstruction = nullptr; // another one is needed...
 
-			_currentInstruction = nullptr; // Another one is needed...
+			// executed (return = true)...but with error? (see above)
 
 			if (deepDebugActive ())
 			{
@@ -422,59 +631,39 @@ bool MCHEmul::CPU::when_ExecutingInstruction_PerCycle ()
 					<< "Instruction in:" + std::to_string (_cyclesPendingExecution) + " cycles\n";
 		}
 	}
+	else
+	{
+		// ...look for the next instruction to be executed...
+		unsigned int nInst = 
+			MCHEmul::UInt (
+				_memory -> values (
+					programCounter ().asAddress (), architecture ().instructionLength ()), 
+				architecture ().bigEndian ()).asUnsignedInt ();
+		if (nInst < _rowInstructions.size () && 
+			(_currentInstruction = _rowInstructions [nInst]) != nullptr)
+			// The initial ones, 
+			// but there might be some additional cycles after execution...
+			// The cycles are decided according with the right instruction...
+			_cyclesPendingExecution = 
+				_currentInstruction -> clockCycles (_memory, _programCounter.asAddress ()); // virtual!
+		else
+			_error = MCHEmul::_INSTRUCTION_ERROR; // executed but with an error, the instruction is not found...
+	}
 
-	return (result);
+	return (true);
 }
 
 // ---
-bool MCHEmul::CPU::when_ExecutingInstruction_Full ()
+bool MCHEmul::CPU::executeNextInstruction_Full (unsigned int &e)
 {
-	assert (_state == MCHEmul::CPU::_EXECUTINGINSTRUCTION);
+	if (_currentInterrupt != nullptr)
+		return (false); // The interrupt has priority...
 
-	if (deepDebugActive ())
-		*_deepDebugFile
-			// Where
-			<< "CPU\t"
-			// When
-			<< MCHEmul::fixLenStr (std::to_string (_clockCycles), 12, false)
-			// What
-			<< "Info Cycle\t\t"
-			// Data
-			<< "Last:" + ((_lastInstruction == nullptr) 
-				? "0" : std::to_string (_lastInstruction -> clockCyclesExecuted ())) + " cycles\n";
+	assert (_memory != nullptr);
 
-	// The activation of the interruptions has priority over the execution of the code
-	// But to execute, the last instruction must finish, 
-	// otherwise the execution is not possible...
-	if (_currentInstruction == nullptr && // No instruction under execution...
-		_interruptRequested != -1 && // It has be required...
-		(_currentInterruption = _rowInterrupts [(size_t) _interruptRequested]) != nullptr && // It has to exist...
-		_currentInterruption -> canBeExecutedOver (this, _clyclesAtInterruption)) // ...and the execution can depend on internal state of the CPU...
-	{
-		if (deepDebugActive ())
-			*_deepDebugFile << "\t\t\t\tInterrupt launched:" 
-							<< std::to_string (_currentInterruption -> id ()) << "\n";
-
-		_lastCPUClockCycles = _currentInterruption -> cyclesToLaunch ();
-
-		bool result = true;
-		if (result = _currentInterruption -> executeOver (this, _clyclesAtInterruption))
-			_lastCPUClockCycles += _currentInterruption -> cycledAfterLaunch ();
-
-		_clockCycles += _lastCPUClockCycles;
-
-		_interruptRequested = -1; // No longer valid...
-
-		_currentInterruption = nullptr;
-	
-		return (result);
-	}
-	else
-	{
-		_interruptRequested = -1;
-
-		_currentInterruption = nullptr;
-	}
+	// By default, 
+	// the instruction cycle should be processed always at this point!
+	// ...but with errors? (see below)
 
 	// Access the next instruction...
 	// Using the row description of the instructions!
@@ -485,12 +674,13 @@ bool MCHEmul::CPU::when_ExecutingInstruction_Full ()
 			architecture ().bigEndian ()).asUnsignedInt ();
 	// If the instruction doesn't exist according with what is indicated in the memory of 
 	// the computer, and an error is generated...
+	MCHEmul::Instruction* inst = nullptr;
 	if (nInst >= _rowInstructions.size () || 
-		(_currentInstruction = _rowInstructions [nInst]) == nullptr)
-	{ 
-		_error = MCHEmul::_CPU_ERROR;
+		(inst = _rowInstructions [nInst]) == nullptr)
+	{
+		e = MCHEmul::_INSTRUCTION_ERROR;
 
-		return (false);
+		return (true); // ...executed but with errors!
 	}
 
 	std::string sdd = "";
@@ -498,17 +688,13 @@ bool MCHEmul::CPU::when_ExecutingInstruction_Full ()
 		sdd = MCHEmul::removeAll0 (_programCounter.asString ()) + "(Stack "
 				+ std::to_string (memoryRef () -> stack () -> position ()) + ") ";
 
-	// Then, the instruction is executed and if everything went ok...
-	bool result = true;
-	if (result = _currentInstruction -> execute (this, _memory, _memory -> stack (), &_programCounter))
+	if (inst -> execute (this, _memory, _memory -> stack (), &_programCounter))
 	{
 		// Actualize the clock cycles used by the last instruction...
-		_lastCPUClockCycles = (_currentInstruction -> clockCyclesExecuted () + 
-			_currentInstruction -> additionalClockCyclesExecuted ());
-		// The total clock is also actualized...
-		_clockCycles += _lastCPUClockCycles;
+		_lastCPUClockCycles = inst -> clockCyclesExecuted () + 
+							  inst -> additionalClockCyclesExecuted ();
 		// ...and finally saves the instruction executed...
-		_lastInstruction = _currentInstruction;
+		_lastInstruction = inst;
 
 		if (deepDebugActive ())
 		{
@@ -539,47 +725,7 @@ bool MCHEmul::CPU::when_ExecutingInstruction_Full ()
 	}
 	// ...otherwise again an error is generated...
 	else
-	{ 
-		_error = MCHEmul::_CPU_ERROR;
-
-		result = false;
-	}
-
-	_currentInstruction = nullptr;
-
-	return (result);
-}
-
-// ---
-bool MCHEmul::CPU::when_Stopped ()
-{
-	assert (_state == MCHEmul::CPU::_STOPPED);
-
-	if (deepDebugActive ())
-		*_deepDebugFile 
-			// Where
-			<< "CPU\t"
-			// When
-			<< MCHEmul::fixLenStr (std::to_string (_clockCycles), 12, false)
-			// What
-			<< "Stopped\t\t"
-			// Data
-			<< ((_cyclesStopped == -1) ? "-" : std::to_string (_counterCyclesStopped)) << " cycle\n";
-
-	if (_cyclesStopped != -1 &&
-		(++_counterCyclesStopped == (unsigned int) _cyclesStopped))
-	{ 
-		unsigned int iS = _state;
-			
-		_state = _lastState;
-			
-		_lastState = iS;
-	}
-	// No other value of this status is changed, because evrything has to continue 
-	// at the situation it had when stopped, 
-	// either running a instruction or launching a interruption...
-
-	_clockCycles++;
+		e = MCHEmul::_INSTRUCTION_ERROR;
 
 	return (true);
 }

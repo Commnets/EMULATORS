@@ -397,7 +397,7 @@ MCHEmul::Instructions FZ80::CZ80::createInstructions ()
 	result [0x71]				= new FZ80::LD_IndirectHLFromC;
 	result [0x72]				= new FZ80::LD_IndirectHLFromD;
 	result [0x73]				= new FZ80::LD_IndirectHLFromE;
-	result [0x74]				= new FZ80::LD_IndirectHLFromF;
+	result [0x74]				= new FZ80::LD_IndirectHLFromH;
 	result [0x75]				= new FZ80::LD_IndirectHLFromL;
 	result [0x02]				= new FZ80::LD_IndirectBCFromA;
 	result [0x12]				= new FZ80::LD_IndirectDEFromA;
@@ -938,7 +938,7 @@ MCHEmul::Instructions FZ80::CZ80::createInstructions ()
 	CBInstructions [0xCB09]		= new FZ80::RRC_C;
 	CBInstructions [0xCB0A]		= new FZ80::RRC_D;
 	CBInstructions [0xCB0B]		= new FZ80::RRC_E;
-	CBInstructions [0xCB0C]		= new FZ80::RRC_F;
+	CBInstructions [0xCB0C]		= new FZ80::RRC_H;
 	CBInstructions [0xCB0D]		= new FZ80::RRC_L;
 	CBInstructions [0xCB0E]		= new FZ80::RRC_IndirectHL;
 	DDCBInstructions [0xDDCB0E] = new FZ80::RRC_IndirectIndexIX;
@@ -965,7 +965,7 @@ MCHEmul::Instructions FZ80::CZ80::createInstructions ()
 	CBInstructions [0xCB19]		= new FZ80::RR_C;
 	CBInstructions [0xCB1A]		= new FZ80::RR_D;
 	CBInstructions [0xCB1B]		= new FZ80::RR_E;
-	CBInstructions [0xCB1C]		= new FZ80::RR_F;
+	CBInstructions [0xCB1C]		= new FZ80::RR_H;
 	CBInstructions [0xCB1D]		= new FZ80::RR_L;
 	CBInstructions [0xCB1E]		= new FZ80::RR_IndirectHL;
 	DDCBInstructions [0xDDCB1E] = new FZ80::RR_IndirectIndexIX;

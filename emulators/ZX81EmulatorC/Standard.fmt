@@ -18,7 +18,7 @@ Big Endian:@ENDIAN@
 #---
 #---
 ;Interrupt
-Id:@ID@, In Execution:@EXECUTION@
+Id:@ID@, Active:@ACTIVE@, In Execution:@EXECUTION@
 #---
 #---
 ;CPU
@@ -145,6 +145,11 @@ Active:@ACTIVE@, Type:@TYPE@, Frequency:@FREQUENCY@(@PULSEUP@)
 ;CINTERRUPTS
 @INTERRUPTS?{fmter=.CLASS,empty=no interruptions}\n@
 #---
+#---
+#---
+;CINTSET
+->Errors:
+@ERROR@
 #---
 ;CIDEBUGON
 ->Errors:

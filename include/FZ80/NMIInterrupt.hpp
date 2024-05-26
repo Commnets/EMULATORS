@@ -30,8 +30,8 @@ namespace FZ80
 							{ setClassName ("NMIInterrupt"); }
 
 		private:
-		virtual bool isTime (MCHEmul::CPU* c, unsigned int cC) const override
-							{ return (true); } // The NMI Interruptions are always accepted!
+		virtual unsigned int isTime (MCHEmul::CPU* c, unsigned int cC) const override
+							{ return (MCHEmul::CPUInterrupt::_EXECUTIONALLOWED); } // The NMI Interruptions are always accepted!
 		virtual bool executeOverImpl (MCHEmul::CPU* c, unsigned int cC) override;
 	};
 }

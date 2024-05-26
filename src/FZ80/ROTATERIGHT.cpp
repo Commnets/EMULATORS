@@ -69,11 +69,11 @@ _INST_IMPL (FZ80::RRC_E)
 }
 
 // ---
-_INST_IMPL (FZ80::RRC_F)
+_INST_IMPL (FZ80::RRC_H)
 {
 	assert (parameters ().size () == 2);
 
-	return (executeWith (registerF (), false));
+	return (executeWith (registerH (), false));
 }
 
 // ---
@@ -301,11 +301,11 @@ _INST_IMPL (FZ80::RR_E)
 }
 
 // ---
-_INST_IMPL (FZ80::RR_F)
+_INST_IMPL (FZ80::RR_H)
 {
 	assert (parameters ().size () == 2);
 
-	return (executeWith (registerF (), true));
+	return (executeWith (registerH (), true));
 }
 
 // ---

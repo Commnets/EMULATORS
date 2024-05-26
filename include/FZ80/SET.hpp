@@ -127,8 +127,8 @@ namespace FZ80
 	_INST_FROM (0xCBCB,		2, 8, 8,	"SET 1,E",				SET_1WithE, SET_General);
 	_INST_FROM (0xCBCC,		2, 8, 8,	"SET 1,H",				SET_1WithH, SET_General);
 	_INST_FROM (0xCBCD,		2, 8, 8,	"SET 1,L",				SET_1WithL, SET_General);
-	_INST_FROM (0xCBCE,		2, 12, 12,	"SET 1,(HL)",			SET_1WithIndirectHL, SET_General);
-	_INST_FROM (0xDDCBCE,	4, 20, 20,	"SET 1,(IX+[#1])",		SET_1WithIndirectIndexIX, SET_Index);
+	_INST_FROM (0xCBCE,		2, 15, 15,	"SET 1,(HL)",			SET_1WithIndirectHL, SET_General);
+	_INST_FROM (0xDDCBCE,	4, 23, 23,	"SET 1,(IX+[#1])",		SET_1WithIndirectIndexIX, SET_Index);
 	_INST_FROM (0xDDCBCF,	4, 23, 23,	"SET 1,(IX+[#1]),A",	SET_1WithIndirectIndexIXCopyA, SET_Index);		// Undocumented
 	_INST_FROM (0xDDCBC8,	4, 23, 23,	"SET 1,(IX+[#1]),B",	SET_1WithIndirectIndexIXCopyB, SET_Index);		// Undocumented
 	_INST_FROM (0xDDCBC9,	4, 23, 23,	"SET 1,(IX+[#1]),C",	SET_1WithIndirectIndexIXCopyC, SET_Index);		// Undocumented
@@ -136,7 +136,7 @@ namespace FZ80
 	_INST_FROM (0xDDCBCB,	4, 23, 23,	"SET 1,(IX+[#1]),E",	SET_1WithIndirectIndexIXCopyE, SET_Index);		// Undocumented
 	_INST_FROM (0xDDCBCC,	4, 23, 23,	"SET 1,(IX+[#1]),H",	SET_1WithIndirectIndexIXCopyH, SET_Index);		// Undocumented
 	_INST_FROM (0xDDCBCD,	4, 23, 23,	"SET 1,(IX+[#1]),L",	SET_1WithIndirectIndexIXCopyL, SET_Index);		// Undocumented
-	_INST_FROM (0xFDCBCE,	4, 20, 20,	"SET 1,(IY+[#1])",		SET_1WithIndirectIndexIY, SET_Index);
+	_INST_FROM (0xFDCBCE,	4, 23, 23,	"SET 1,(IY+[#1])",		SET_1WithIndirectIndexIY, SET_Index);
 	_INST_FROM (0xFDCBCF,	4, 23, 23,	"SET 1,(IY+[#1]),A",	SET_1WithIndirectIndexIYCopyA, SET_Index);		// Undocumented
 	_INST_FROM (0xFDCBC8,	4, 23, 23,	"SET 1,(IY+[#1]),B",	SET_1WithIndirectIndexIYCopyB, SET_Index);		// Undocumented
 	_INST_FROM (0xFDCBC9,	4, 23, 23,	"SET 1,(IY+[#1]),C",	SET_1WithIndirectIndexIYCopyC, SET_Index);		// Undocumented
@@ -153,8 +153,8 @@ namespace FZ80
 	_INST_FROM (0xCBD3,		2, 8, 8,	"SET 2,E",				SET_2WithE, SET_General);
 	_INST_FROM (0xCBD4,		2, 8, 8,	"SET 2,H",				SET_2WithH, SET_General);
 	_INST_FROM (0xCBD5,		2, 8, 8,	"SET 2,L",				SET_2WithL, SET_General);
-	_INST_FROM (0xCBD6,		2, 12, 12,	"SET 2,(HL)",			SET_2WithIndirectHL, SET_General);
-	_INST_FROM (0xDDCBD6,	4, 20, 20,	"SET 2,(IX+[#1])",		SET_2WithIndirectIndexIX, SET_Index);
+	_INST_FROM (0xCBD6,		2, 15, 15,	"SET 2,(HL)",			SET_2WithIndirectHL, SET_General);
+	_INST_FROM (0xDDCBD6,	4, 23, 23,	"SET 2,(IX+[#1])",		SET_2WithIndirectIndexIX, SET_Index);
 	_INST_FROM (0xDDCBD7,	4, 23, 23,	"SET 2,(IX+[#1]),A",	SET_2WithIndirectIndexIXCopyA, SET_Index);		// Undocumented
 	_INST_FROM (0xDDCBD0,	4, 23, 23,	"SET 2,(IX+[#1]),B",	SET_2WithIndirectIndexIXCopyB, SET_Index);		// Undocumented
 	_INST_FROM (0xDDCBD1,	4, 23, 23,	"SET 2,(IX+[#1]),C",	SET_2WithIndirectIndexIXCopyC, SET_Index);		// Undocumented
@@ -179,8 +179,8 @@ namespace FZ80
 	_INST_FROM (0xCBDB,		2, 8, 8,	"SET 3,E",				SET_3WithE, SET_General);
 	_INST_FROM (0xCBDC,		2, 8, 8,	"SET 3,H",				SET_3WithH, SET_General);
 	_INST_FROM (0xCBDD,		2, 8, 8,	"SET 3,L",				SET_3WithL, SET_General);
-	_INST_FROM (0xCBDE,		2, 12, 12,	"SET 3,(HL)",			SET_3WithIndirectHL, SET_General);
-	_INST_FROM (0xDDCBDE,	4, 20, 20,	"SET 3,(IX+[#1])",		SET_3WithIndirectIndexIX, SET_Index);
+	_INST_FROM (0xCBDE,		2, 15, 15,	"SET 3,(HL)",			SET_3WithIndirectHL, SET_General);
+	_INST_FROM (0xDDCBDE,	4, 23, 23,	"SET 3,(IX+[#1])",		SET_3WithIndirectIndexIX, SET_Index);
 	_INST_FROM (0xDDCBDF,	4, 23, 23,	"SET 3,(IX+[#1]),A",	SET_3WithIndirectIndexIXCopyA, SET_Index);		// Undocumented
 	_INST_FROM (0xDDCBD8,	4, 23, 23,	"SET 3,(IX+[#1]),B",	SET_3WithIndirectIndexIXCopyB, SET_Index);		// Undocumented
 	_INST_FROM (0xDDCBD9,	4, 23, 23,	"SET 3,(IX+[#1]),C",	SET_3WithIndirectIndexIXCopyC, SET_Index);		// Undocumented
@@ -188,7 +188,7 @@ namespace FZ80
 	_INST_FROM (0xDDCBDB,	4, 23, 23,	"SET 3,(IX+[#1]),E",	SET_3WithIndirectIndexIXCopyE, SET_Index);		// Undocumented
 	_INST_FROM (0xDDCBDC,	4, 23, 23,	"SET 3,(IX+[#1]),H",	SET_3WithIndirectIndexIXCopyH, SET_Index);		// Undocumented
 	_INST_FROM (0xDDCBDD,	4, 23, 23,	"SET 3,(IX+[#1]),L",	SET_3WithIndirectIndexIXCopyL, SET_Index);		// Undocumented
-	_INST_FROM (0xFDCBDE,	4, 20, 20,	"SET 3,(IY+[#1])",		SET_3WithIndirectIndexIY, SET_Index);
+	_INST_FROM (0xFDCBDE,	4, 23, 23,	"SET 3,(IY+[#1])",		SET_3WithIndirectIndexIY, SET_Index);
 	_INST_FROM (0xFDCBDF,	4, 23, 23,	"SET 3,(IY+[#1]),A",	SET_3WithIndirectIndexIYCopyA, SET_Index);		// Undocumented
 	_INST_FROM (0xFDCBD8,	4, 23, 23,	"SET 3,(IY+[#1]),B",	SET_3WithIndirectIndexIYCopyB, SET_Index);		// Undocumented
 	_INST_FROM (0xFDCBD9,	4, 23, 23,	"SET 3,(IY+[#1]),C",	SET_3WithIndirectIndexIYCopyC, SET_Index);		// Undocumented
@@ -205,8 +205,8 @@ namespace FZ80
 	_INST_FROM (0xCBE3,		2, 8, 8,	"SET 4,E",				SET_4WithE, SET_General);
 	_INST_FROM (0xCBE4,		2, 8, 8,	"SET 4,H",				SET_4WithH, SET_General);
 	_INST_FROM (0xCBE5,		2, 8, 8,	"SET 4,L",				SET_4WithL, SET_General);
-	_INST_FROM (0xCBE6,		2, 12, 12,	"SET 4,(HL)",			SET_4WithIndirectHL, SET_General);
-	_INST_FROM (0xDDCBE6,	4, 20, 20,	"SET 4,(IX+[#1])",		SET_4WithIndirectIndexIX, SET_Index);
+	_INST_FROM (0xCBE6,		2, 15, 15,	"SET 4,(HL)",			SET_4WithIndirectHL, SET_General);
+	_INST_FROM (0xDDCBE6,	4, 23, 23,	"SET 4,(IX+[#1])",		SET_4WithIndirectIndexIX, SET_Index);
 	_INST_FROM (0xDDCBE7,	4, 23, 23,	"SET 4,(IX+[#1]),A",	SET_4WithIndirectIndexIXCopyA, SET_Index);		// Undocumented
 	_INST_FROM (0xDDCBE0,	4, 23, 23,	"SET 4,(IX+[#1]),B",	SET_4WithIndirectIndexIXCopyB, SET_Index);		// Undocumented
 	_INST_FROM (0xDDCBE1,	4, 23, 23,	"SET 4,(IX+[#1]),C",	SET_4WithIndirectIndexIXCopyC, SET_Index);		// Undocumented
@@ -214,7 +214,7 @@ namespace FZ80
 	_INST_FROM (0xDDCBE3,	4, 23, 23,	"SET 4,(IX+[#1]),E",	SET_4WithIndirectIndexIXCopyE, SET_Index);		// Undocumented
 	_INST_FROM (0xDDCBE4,	4, 23, 23,	"SET 4,(IX+[#1]),H",	SET_4WithIndirectIndexIXCopyH, SET_Index);		// Undocumented
 	_INST_FROM (0xDDCBE5,	4, 23, 23,	"SET 4,(IX+[#1]),L",	SET_4WithIndirectIndexIXCopyL, SET_Index);		// Undocumented
-	_INST_FROM (0xFDCBE6,	4, 20, 20,	"SET 4,(IY+[#1])",		SET_4WithIndirectIndexIY, SET_Index);
+	_INST_FROM (0xFDCBE6,	4, 23, 23,	"SET 4,(IY+[#1])",		SET_4WithIndirectIndexIY, SET_Index);
 	_INST_FROM (0xFDCBE7,	4, 23, 23,	"SET 4,(IY+[#1]),A",	SET_4WithIndirectIndexIYCopyA, SET_Index);		// Undocumented
 	_INST_FROM (0xFDCBE0,	4, 23, 23,	"SET 4,(IY+[#1]),B",	SET_4WithIndirectIndexIYCopyB, SET_Index);		// Undocumented
 	_INST_FROM (0xFDCBE1,	4, 23, 23,	"SET 4,(IY+[#1]),C",	SET_4WithIndirectIndexIYCopyC, SET_Index);		// Undocumented
@@ -231,8 +231,8 @@ namespace FZ80
 	_INST_FROM (0xCBEB,		2, 8, 8,	"SET 5,E",				SET_5WithE, SET_General);
 	_INST_FROM (0xCBEC,		2, 8, 8,	"SET 5,H",				SET_5WithH, SET_General);
 	_INST_FROM (0xCBED,		2, 8, 8,	"SET 5,L",				SET_5WithL, SET_General);
-	_INST_FROM (0xCBEE,		2, 12, 12,	"SET 5,(HL)",			SET_5WithIndirectHL, SET_General);
-	_INST_FROM (0xDDCBEE,	4, 20, 20,	"SET 5,(IX+[#1])",		SET_5WithIndirectIndexIX, SET_Index);
+	_INST_FROM (0xCBEE,		2, 15, 15,	"SET 5,(HL)",			SET_5WithIndirectHL, SET_General);
+	_INST_FROM (0xDDCBEE,	4, 23, 23,	"SET 5,(IX+[#1])",		SET_5WithIndirectIndexIX, SET_Index);
 	_INST_FROM (0xDDCBEF,	4, 23, 23,	"SET 5,(IX+[#1]),A",	SET_5WithIndirectIndexIXCopyA, SET_Index);		// Undocumented
 	_INST_FROM (0xDDCBE8,	4, 23, 23,	"SET 5,(IX+[#1]),B",	SET_5WithIndirectIndexIXCopyB, SET_Index);		// Undocumented
 	_INST_FROM (0xDDCBE9,	4, 23, 23,	"SET 5,(IX+[#1]),C",	SET_5WithIndirectIndexIXCopyC, SET_Index);		// Undocumented
@@ -240,7 +240,7 @@ namespace FZ80
 	_INST_FROM (0xDDCBEB,	4, 23, 23,	"SET 5,(IX+[#1]),E",	SET_5WithIndirectIndexIXCopyE, SET_Index);		// Undocumented
 	_INST_FROM (0xDDCBEC,	4, 23, 23,	"SET 5,(IX+[#1]),H",	SET_5WithIndirectIndexIXCopyH, SET_Index);		// Undocumented
 	_INST_FROM (0xDDCBED,	4, 23, 23,	"SET 5,(IX+[#1]),L",	SET_5WithIndirectIndexIXCopyL, SET_Index);		// Undocumented
-	_INST_FROM (0xFDCBEE,	4, 20, 20,	"SET 5,(IY+[#1])",		SET_5WithIndirectIndexIY, SET_Index);
+	_INST_FROM (0xFDCBEE,	4, 23, 23,	"SET 5,(IY+[#1])",		SET_5WithIndirectIndexIY, SET_Index);
 	_INST_FROM (0xFDCBEF,	4, 23, 23,	"SET 5,(IY+[#1]),A",	SET_5WithIndirectIndexIYCopyA, SET_Index);		// Undocumented
 	_INST_FROM (0xFDCBE8,	4, 23, 23,	"SET 5,(IY+[#1]),B",	SET_5WithIndirectIndexIYCopyB, SET_Index);		// Undocumented
 	_INST_FROM (0xFDCBE9,	4, 23, 23,	"SET 5,(IY+[#1]),C",	SET_5WithIndirectIndexIYCopyC, SET_Index);		// Undocumented
@@ -257,8 +257,8 @@ namespace FZ80
 	_INST_FROM (0xCBF3,		2, 8, 8,	"SET 6,E",				SET_6WithE, SET_General);
 	_INST_FROM (0xCBF4,		2, 8, 8,	"SET 6,H",				SET_6WithH, SET_General);
 	_INST_FROM (0xCBF5,		2, 8, 8,	"SET 6,L",				SET_6WithL, SET_General);
-	_INST_FROM (0xCBF6,		2, 12, 12,	"SET 6,(HL)",			SET_6WithIndirectHL, SET_General);
-	_INST_FROM (0xDDCBF6,	4, 20, 20,	"SET 6,(IX+[#1])",		SET_6WithIndirectIndexIX, SET_Index);
+	_INST_FROM (0xCBF6,		2, 15, 15,	"SET 6,(HL)",			SET_6WithIndirectHL, SET_General);
+	_INST_FROM (0xDDCBF6,	4, 23, 23,	"SET 6,(IX+[#1])",		SET_6WithIndirectIndexIX, SET_Index);
 	_INST_FROM (0xDDCBF7,	4, 23, 23,	"SET 6,(IX+[#1]),A",	SET_6WithIndirectIndexIXCopyA, SET_Index);		// Undocumented
 	_INST_FROM (0xDDCBF0,	4, 23, 23,	"SET 6,(IX+[#1]),B",	SET_6WithIndirectIndexIXCopyB, SET_Index);		// Undocumented
 	_INST_FROM (0xDDCBF1,	4, 23, 23,	"SET 6,(IX+[#1]),C",	SET_6WithIndirectIndexIXCopyC, SET_Index);		// Undocumented
@@ -266,7 +266,7 @@ namespace FZ80
 	_INST_FROM (0xDDCBF3,	4, 23, 23,	"SET 6,(IX+[#1]),E",	SET_6WithIndirectIndexIXCopyE, SET_Index);		// Undocumented
 	_INST_FROM (0xDDCBF4,	4, 23, 23,	"SET 6,(IX+[#1]),H",	SET_6WithIndirectIndexIXCopyH, SET_Index);		// Undocumented
 	_INST_FROM (0xDDCBF5,	4, 23, 23,	"SET 6,(IX+[#1]),L",	SET_6WithIndirectIndexIXCopyL, SET_Index);		// Undocumented
-	_INST_FROM (0xFDCBF6,	4, 20, 20,	"SET 6,(IY+[#1])",		SET_6WithIndirectIndexIY, SET_Index);
+	_INST_FROM (0xFDCBF6,	4, 23, 23,	"SET 6,(IY+[#1])",		SET_6WithIndirectIndexIY, SET_Index);
 	_INST_FROM (0xFDCBF7,	4, 23, 23,	"SET 6,(IY+[#1]),A",	SET_6WithIndirectIndexIYCopyA, SET_Index);		// Undocumented
 	_INST_FROM (0xFDCBF0,	4, 23, 23,	"SET 6,(IY+[#1]),B",	SET_6WithIndirectIndexIYCopyB, SET_Index);		// Undocumented
 	_INST_FROM (0xFDCBF1,	4, 23, 23,	"SET 6,(IY+[#1]),C",	SET_6WithIndirectIndexIYCopyC, SET_Index);		// Undocumented

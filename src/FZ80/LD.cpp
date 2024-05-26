@@ -1384,11 +1384,11 @@ _INST_IMPL (FZ80::LD_IndirectHLFromE)
 }
 
 // ---
-_INST_IMPL (FZ80::LD_IndirectHLFromF)
+_INST_IMPL (FZ80::LD_IndirectHLFromH)
 {
 	assert (parameters ().size () == 1);
 
-	return (executeWith (addressHL (), valueRegisterF ()));
+	return (executeWith (addressHL (), valueRegisterH ()));
 }
 
 // ---
@@ -1611,33 +1611,33 @@ _INST_IMPL (FZ80::LD_AddressFromIX)
 // ---
 _INST_IMPL (FZ80::LD_AddressFromIY)
 {
-	assert (parameters ().size () == 3);
+	assert (parameters ().size () == 4);
 
 	/** Addresses in memory are kept little - endian. */
 	return (executeWith (
 		_lastExecutionData._INOUTAddress =
 			MCHEmul::Address ({ 
-				parameters ()[1].value (), 
-				parameters ()[2].value () }, false /** Little - endian. */), valueRegisterIY ()));
+				parameters ()[2].value (), 
+				parameters ()[3].value () }, false /** Little - endian. */), valueRegisterIY ()));
 }
 
 // ---
 _INST_IMPL (FZ80::LD_AddressFromDE)
 {
-	assert (parameters ().size () == 3);
+	assert (parameters ().size () == 4);
 
 	/** Addresses in memory are kept little - endian. */
 	return (executeWith (
 		_lastExecutionData._INOUTAddress =
 			MCHEmul::Address ({ 
-				parameters ()[1].value (), 
-				parameters ()[2].value () }, false /** Little - endian. */), valueRegisterDE ()));
+				parameters ()[2].value (), 
+				parameters ()[3].value () }, false /** Little - endian. */), valueRegisterDE ()));
 }
 
 // ---
 _INST_IMPL (FZ80::LD_AddressFromSP)
 {
-	assert (parameters ().size () == 3);
+	assert (parameters ().size () == 4);
 
 	/** Addresses in memory are kept little - endian. */
 	MCHEmul::UInt v = MCHEmul::UInt::fromUnsignedInt (memory () -> stack () -> position ());
@@ -1645,8 +1645,8 @@ _INST_IMPL (FZ80::LD_AddressFromSP)
 	return (executeWith (
 		_lastExecutionData._INOUTAddress =
 			MCHEmul::Address ({ 
-				parameters ()[1].value (), 
-				parameters ()[2].value () }, false /** Little - endian. */), v.values ()));
+				parameters ()[2].value (), 
+				parameters ()[3].value () }, false /** Little - endian. */), v.values ()));
 }
 
 // ---

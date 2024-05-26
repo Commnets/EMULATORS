@@ -120,7 +120,7 @@ namespace FZ80
 	inline void RET_General::executeReturn (bool a)
 	{
 		if (a) 
-			_additionalCycles = 5; 
+			_additionalCycles = 6; 
 
 		cpu () -> programCounter ().setAddress (MCHEmul::Address (stack () -> pull (2), false)); // Little endian!
 	}

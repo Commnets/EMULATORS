@@ -12,12 +12,12 @@ MCHEmul::InfoStructure FZ80::INTInterrupt::getInfoStructure () const
 }
 
 // ---
-bool FZ80::INTInterrupt::isTime (MCHEmul::CPU* c, unsigned int cC) const
+unsigned int FZ80::INTInterrupt::isTime (MCHEmul::CPU* c, unsigned int cC) const
 { 
 	FZ80::CZ80* z80 = static_cast <FZ80::CZ80*> (c);
 
-	return (z80 -> IFF1 () && 
-		    (z80 -> instAfterEIToLaunchINT () == 0));
+	return ((z80 -> IFF1 () && (z80 -> instAfterEIToLaunchINT () == 0)) 
+		? MCHEmul::CPUInterrupt::_EXECUTIONALLOWED : MCHEmul::CPUInterrupt::_EXECUTIONNOTALLOWED);
 }
 
 // ---

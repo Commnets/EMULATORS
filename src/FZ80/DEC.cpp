@@ -173,7 +173,7 @@ _INST_IMPL (FZ80::DEC_DE)
 {
 	assert (parameters ().size () == 1);
 
-	return (executeWith (registerBC ()));
+	return (executeWith (registerDE ()));
 }
 
 // ---

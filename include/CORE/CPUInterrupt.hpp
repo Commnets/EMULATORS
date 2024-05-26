@@ -26,6 +26,10 @@ namespace MCHEmul
 	class CPUInterrupt : public InfoClass
 	{
 		public:
+		static const unsigned int _EXECUTIONNOTALLOWED = 0;
+		static const unsigned int _EXECUTIONTOWAIT = 1;
+		static const unsigned int _EXECUTIONALLOWED = 2;
+
 		CPUInterrupt () = delete;
 
 		CPUInterrupt (int id, unsigned int cL)
@@ -68,7 +72,7 @@ namespace MCHEmul
 
 		/** The defult intialization of the interrupt leaves it inactive. */
 		virtual void initialize ()
-							{ _active = true; _lastClockCyclesExecuted = 0; }
+							{ _lastClockCyclesExecuted = 0; } // Active or not is manage donly externally!
 
 		// Managin the interrupt itself...
 		/** To define whether the interrupt can or not be executed. 
@@ -76,9 +80,7 @@ namespace MCHEmul
 			that is invoked from this one. \n
 			The method receives a reference to the CPU where it has to be executed, 
 			and the CPU cycles when the interrupt happened. */
-		bool canBeExecutedOver (CPU* c, unsigned int cC)
-							{ assert (c != nullptr);
-							  return (active () && isTime (c, cC)); }
+		inline unsigned int canBeExecutedOver (CPU* c, unsigned int cC);
 		/** Receive the CPU the interrupts works for,
 			and the number of cycles when the execution takes place. */
 		bool executeOver (CPU* c, unsigned int cC);
@@ -112,8 +114,9 @@ namespace MCHEmul
 
 		protected:
 		// These methods are invoked by executeOver (defined above);
-		/** To determine whether it is the time to execute the interruption. */
-		virtual bool isTime (CPU* c, unsigned int cC) const = 0;
+		/** To determine whether it is the time to execute the interruption. \n
+			The method returns a possibility. See the reasons above although more can be defined. */
+		virtual unsigned int isTime (CPU* c, unsigned int cC) const = 0;
 		/** To really execute the interrupt. \n 
 			This must be overloaded by the real interrupt. \n
 			Returns when everything ok. */
@@ -137,6 +140,14 @@ namespace MCHEmul
 		static bool _debugOffWhenFinishes;
 
 	};
+
+	// ---
+	inline unsigned int CPUInterrupt::canBeExecutedOver (CPU* c, unsigned int cC)
+	{ 
+		assert (c != nullptr);
+						
+		return (!active () ? MCHEmul::CPUInterrupt::_EXECUTIONNOTALLOWED : isTime (c, cC)); 
+	}
 
 	/** A map of interrupts. */
 	using CPUInterrupts = std::map <int, CPUInterrupt*>;

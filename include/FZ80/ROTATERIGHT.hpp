@@ -150,7 +150,7 @@ namespace FZ80
 	// Within E
 	_INST_FROM (0xCB0B,		2, 8, 8,	"RRC E",			RRC_E, ROTATERight_General);
 	// Within F
-	_INST_FROM (0xCB0C,		2, 8, 8,	"RRC F",			RRC_F, ROTATERight_General);
+	_INST_FROM (0xCB0C,		2, 8, 8,	"RRC H",			RRC_H, ROTATERight_General);
 	// Within L
 	_INST_FROM (0xCB0D,		2, 8, 8,	"RRC L",			RRC_L, ROTATERight_General);
 	// Within (HL)
@@ -192,7 +192,7 @@ namespace FZ80
 	// Within E
 	_INST_FROM (0xCB1B,		2, 8, 8,	"RR E",				RR_E, ROTATERight_General);
 	// Within F
-	_INST_FROM (0xCB1C,		2, 8, 8,	"RR F",				RR_F, ROTATERight_General);
+	_INST_FROM (0xCB1C,		2, 8, 8,	"RR H",				RR_H, ROTATERight_General);
 	// Within L
 	_INST_FROM (0xCB1D,		2, 8, 8,	"RR L",				RR_L, ROTATERight_General);
 	// Within (HL)

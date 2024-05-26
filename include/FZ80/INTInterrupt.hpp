@@ -44,7 +44,7 @@ namespace FZ80
 		virtual MCHEmul::InfoStructure getInfoStructure () const override;
 
 		private:
-		virtual bool isTime (MCHEmul::CPU* c, unsigned int cC) const override;
+		virtual unsigned int isTime (MCHEmul::CPU* c, unsigned int cC) const override;
 		virtual bool executeOverImpl (MCHEmul::CPU* c, unsigned int cC) override;
 
 		private:

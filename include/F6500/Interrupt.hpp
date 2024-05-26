@@ -31,6 +31,8 @@ namespace F6500
 		unsigned int readingCyclesTolaunch () const
 							{ return (4); }
 
+		virtual void initialize () override;
+
 		/**
 		  *	The name of the fields are: \n
 		  *	The ones from the CPUInterrupt +
@@ -43,7 +45,7 @@ namespace F6500
 			when the _lockCycles of the CPU have been actualized, 
 			but it should have been launched at cC cycles (the chip decides when). \n
 			In the 6500 family a interrupt can not be launched never before 2 cycles the end of the last instruction. */
-		virtual bool isTime (MCHEmul::CPU* c, unsigned int cC) const override;
+		virtual unsigned int isTime (MCHEmul::CPU* c, unsigned int cC) const override;
 		/** Just to put back the counter to 0. */
 		virtual bool executeOverImpl (MCHEmul::CPU* c, unsigned int cC) override
 							{ _instChecked = false; /** Just in case. */ 

@@ -234,7 +234,7 @@ namespace FZ80
 	// ---
 	inline MCHEmul::UBytes Instruction::valueRegisterSP () const
 	{ 
-		MCHEmul::UInt spP = MCHEmul::UInt::fromInt (memory () -> stack () -> position ());
+		MCHEmul::UInt spP = MCHEmul::UInt::fromUnsignedInt (memory () -> stack () -> position ());
 		spP.setMinLength (2); 
 							 
 		return (spP.bytes ()); 

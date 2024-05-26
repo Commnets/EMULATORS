@@ -127,8 +127,8 @@ namespace FZ80
 	_INST_FROM (0xCB8B,		2, 8, 8,	"RES 1,E",				RES_1WithE, RES_General);
 	_INST_FROM (0xCB8C,		2, 8, 8,	"RES 1,H",				RES_1WithH, RES_General);
 	_INST_FROM (0xCB8D,		2, 8, 8,	"RES 1,L",				RES_1WithL, RES_General);
-	_INST_FROM (0xCB8E,		2, 12, 12,	"RES 1,(HL)",			RES_1WithIndirectHL, RES_General);
-	_INST_FROM (0xDDCB8E,	4, 20, 20,	"RES 1,(IX+[#1])",		RES_1WithIndirectIndexIX, RES_Index);
+	_INST_FROM (0xCB8E,		2, 15, 15,	"RES 1,(HL)",			RES_1WithIndirectHL, RES_General);
+	_INST_FROM (0xDDCB8E,	4, 23, 23,	"RES 1,(IX+[#1])",		RES_1WithIndirectIndexIX, RES_Index);
 	_INST_FROM (0xDDCB8F,	4, 23, 23,	"RES 1,(IX+[#1]),A",	RES_1WithIndirectIndexIXCopyA, RES_Index);		// Undocumented
 	_INST_FROM (0xDDCB88,	4, 23, 23,	"RES 1,(IX+[#1]),B",	RES_1WithIndirectIndexIXCopyB, RES_Index);		// Undocumented
 	_INST_FROM (0xDDCB89,	4, 23, 23,	"RES 1,(IX+[#1]),C",	RES_1WithIndirectIndexIXCopyC, RES_Index);		// Undocumented
@@ -136,7 +136,7 @@ namespace FZ80
 	_INST_FROM (0xDDCB8B,	4, 23, 23,	"RES 1,(IX+[#1]),E",	RES_1WithIndirectIndexIXCopyE, RES_Index);		// Undocumented
 	_INST_FROM (0xDDCB8C,	4, 23, 23,	"RES 1,(IX+[#1]),H",	RES_1WithIndirectIndexIXCopyH, RES_Index);		// Undocumented
 	_INST_FROM (0xDDCB8D,	4, 23, 23,	"RES 1,(IX+[#1]),L",	RES_1WithIndirectIndexIXCopyL, RES_Index);		// Undocumented
-	_INST_FROM (0xFDCB8E,	4, 20, 20,	"RES 1,(IY+[#1])",		RES_1WithIndirectIndexIY, RES_Index);
+	_INST_FROM (0xFDCB8E,	4, 23, 23,	"RES 1,(IY+[#1])",		RES_1WithIndirectIndexIY, RES_Index);
 	_INST_FROM (0xFDCB8F,	4, 23, 23,	"RES 1,(IY+[#1]),A",	RES_1WithIndirectIndexIYCopyA, RES_Index);		// Undocumented
 	_INST_FROM (0xFDCB88,	4, 23, 23,	"RES 1,(IY+[#1]),B",	RES_1WithIndirectIndexIYCopyB, RES_Index);		// Undocumented
 	_INST_FROM (0xFDCB89,	4, 23, 23,	"RES 1,(IY+[#1]),C",	RES_1WithIndirectIndexIYCopyC, RES_Index);		// Undocumented
@@ -153,8 +153,8 @@ namespace FZ80
 	_INST_FROM (0xCB93,		2, 8, 8,	"RES 2,E",				RES_2WithE, RES_General);
 	_INST_FROM (0xCB94,		2, 8, 8,	"RES 2,H",				RES_2WithH, RES_General);
 	_INST_FROM (0xCB95,		2, 8, 8,	"RES 2,L",				RES_2WithL, RES_General);
-	_INST_FROM (0xCB96,		2, 12, 12,	"RES 2,(HL)",			RES_2WithIndirectHL, RES_General);
-	_INST_FROM (0xDDCB96,	4, 20, 20,	"RES 2,(IX+[#1])",		RES_2WithIndirectIndexIX, RES_Index);
+	_INST_FROM (0xCB96,		2, 15, 15,	"RES 2,(HL)",			RES_2WithIndirectHL, RES_General);
+	_INST_FROM (0xDDCB96,	4, 23, 23,	"RES 2,(IX+[#1])",		RES_2WithIndirectIndexIX, RES_Index);
 	_INST_FROM (0xDDCB97,	4, 23, 23,	"RES 2,(IX+[#1]),A",	RES_2WithIndirectIndexIXCopyA, RES_Index);		// Undocumented
 	_INST_FROM (0xDDCB90,	4, 23, 23,	"RES 2,(IX+[#1]),B",	RES_2WithIndirectIndexIXCopyB, RES_Index);		// Undocumented
 	_INST_FROM (0xDDCB91,	4, 23, 23,	"RES 2,(IX+[#1]),C",	RES_2WithIndirectIndexIXCopyC, RES_Index);		// Undocumented
@@ -162,7 +162,7 @@ namespace FZ80
 	_INST_FROM (0xDDCB93,	4, 23, 23,	"RES 2,(IX+[#1]),E",	RES_2WithIndirectIndexIXCopyE, RES_Index);		// Undocumented
 	_INST_FROM (0xDDCB94,	4, 23, 23,	"RES 2,(IX+[#1]),H",	RES_2WithIndirectIndexIXCopyH, RES_Index);		// Undocumented
 	_INST_FROM (0xDDCB95,	4, 23, 23,	"RES 2,(IX+[#1]),L",	RES_2WithIndirectIndexIXCopyL, RES_Index);		// Undocumented
-	_INST_FROM (0xFDCB96,	4, 20, 20,	"RES 2,(IY+[#1])",		RES_2WithIndirectIndexIY, RES_Index);
+	_INST_FROM (0xFDCB96,	4, 23, 23,	"RES 2,(IY+[#1])",		RES_2WithIndirectIndexIY, RES_Index);
 	_INST_FROM (0xFDCB97,	4, 23, 23,	"RES 2,(IY+[#1]),A",	RES_2WithIndirectIndexIYCopyA, RES_Index);		// Undocumented
 	_INST_FROM (0xFDCB90,	4, 23, 23,	"RES 2,(IY+[#1]),B",	RES_2WithIndirectIndexIYCopyB, RES_Index);		// Undocumented
 	_INST_FROM (0xFDCB91,	4, 23, 23,	"RES 2,(IY+[#1]),C",	RES_2WithIndirectIndexIYCopyC, RES_Index);		// Undocumented
@@ -179,8 +179,8 @@ namespace FZ80
 	_INST_FROM (0xCB9B,		2, 8, 8,	"RES 3,E",				RES_3WithE, RES_General);
 	_INST_FROM (0xCB9C,		2, 8, 8,	"RES 3,H",				RES_3WithH, RES_General);
 	_INST_FROM (0xCB9D,		2, 8, 8,	"RES 3,L",				RES_3WithL, RES_General);
-	_INST_FROM (0xCB9E,		2, 12, 12,	"RES 3,(HL)",			RES_3WithIndirectHL, RES_General);
-	_INST_FROM (0xDDCB9E,	4, 20, 20,	"RES 3,(IX+[#1])",		RES_3WithIndirectIndexIX, RES_Index);
+	_INST_FROM (0xCB9E,		2, 15, 15,	"RES 3,(HL)",			RES_3WithIndirectHL, RES_General);
+	_INST_FROM (0xDDCB9E,	4, 23, 23,	"RES 3,(IX+[#1])",		RES_3WithIndirectIndexIX, RES_Index);
 	_INST_FROM (0xDDCB9F,	4, 23, 23,	"RES 3,(IX+[#1]),A",	RES_3WithIndirectIndexIXCopyA, RES_Index);		// Undocumented
 	_INST_FROM (0xDDCB98,	4, 23, 23,	"RES 3,(IX+[#1]),B",	RES_3WithIndirectIndexIXCopyB, RES_Index);		// Undocumented
 	_INST_FROM (0xDDCB99,	4, 23, 23,	"RES 3,(IX+[#1]),C",	RES_3WithIndirectIndexIXCopyC, RES_Index);		// Undocumented
@@ -188,7 +188,7 @@ namespace FZ80
 	_INST_FROM (0xDDCB9B,	4, 23, 23,	"RES 3,(IX+[#1]),E",	RES_3WithIndirectIndexIXCopyE, RES_Index);		// Undocumented
 	_INST_FROM (0xDDCB9C,	4, 23, 23,	"RES 3,(IX+[#1]),H",	RES_3WithIndirectIndexIXCopyH, RES_Index);		// Undocumented
 	_INST_FROM (0xDDCB9D,	4, 23, 23,	"RES 3,(IX+[#1]),L",	RES_3WithIndirectIndexIXCopyL, RES_Index);		// Undocumented
-	_INST_FROM (0xFDCB9E,	4, 20, 20,	"RES 3,(IY+[#1])",		RES_3WithIndirectIndexIY, RES_Index);
+	_INST_FROM (0xFDCB9E,	4, 23, 23,	"RES 3,(IY+[#1])",		RES_3WithIndirectIndexIY, RES_Index);
 	_INST_FROM (0xFDCB9F,	4, 23, 23,	"RES 3,(IY+[#1]),A",	RES_3WithIndirectIndexIYCopyA, RES_Index);		// Undocumented
 	_INST_FROM (0xFDCB98,	4, 23, 23,	"RES 3,(IY+[#1]),B",	RES_3WithIndirectIndexIYCopyB, RES_Index);		// Undocumented
 	_INST_FROM (0xFDCB99,	4, 23, 23,	"RES 3,(IY+[#1]),C",	RES_3WithIndirectIndexIYCopyC, RES_Index);		// Undocumented
@@ -205,8 +205,8 @@ namespace FZ80
 	_INST_FROM (0xCBA3,		2, 8, 8,	"RES 4,E",				RES_4WithE, RES_General);
 	_INST_FROM (0xCBA4,		2, 8, 8,	"RES 4,H",				RES_4WithH, RES_General);
 	_INST_FROM (0xCBA5,		2, 8, 8,	"RES 4,L",				RES_4WithL, RES_General);
-	_INST_FROM (0xCBA6,		2, 12, 12,	"RES 4,(HL)",			RES_4WithIndirectHL, RES_General);
-	_INST_FROM (0xDDCBA6,	4, 20, 20,	"RES 4,(IX+[#1])",		RES_4WithIndirectIndexIX, RES_Index);
+	_INST_FROM (0xCBA6,		2, 15, 15,	"RES 4,(HL)",			RES_4WithIndirectHL, RES_General);
+	_INST_FROM (0xDDCBA6,	4, 23, 23,	"RES 4,(IX+[#1])",		RES_4WithIndirectIndexIX, RES_Index);
 	_INST_FROM (0xDDCBA7,	4, 23, 23,	"RES 4,(IX+[#1]),A",	RES_4WithIndirectIndexIXCopyA, RES_Index);		// Undocumented
 	_INST_FROM (0xDDCBA0,	4, 23, 23,	"RES 4,(IX+[#1]),B",	RES_4WithIndirectIndexIXCopyB, RES_Index);		// Undocumented
 	_INST_FROM (0xDDCBA1,	4, 23, 23,	"RES 4,(IX+[#1]),C",	RES_4WithIndirectIndexIXCopyC, RES_Index);		// Undocumented
@@ -214,7 +214,7 @@ namespace FZ80
 	_INST_FROM (0xDDCBA3,	4, 23, 23,	"RES 4,(IX+[#1]),E",	RES_4WithIndirectIndexIXCopyE, RES_Index);		// Undocumented
 	_INST_FROM (0xDDCBA4,	4, 23, 23,	"RES 4,(IX+[#1]),H",	RES_4WithIndirectIndexIXCopyH, RES_Index);		// Undocumented
 	_INST_FROM (0xDDCBA5,	4, 23, 23,	"RES 4,(IX+[#1]),L",	RES_4WithIndirectIndexIXCopyL, RES_Index);		// Undocumented
-	_INST_FROM (0xFDCBA6,	4, 20, 20,	"RES 4,(IY+[#1])",		RES_4WithIndirectIndexIY, RES_Index);
+	_INST_FROM (0xFDCBA6,	4, 23, 23,	"RES 4,(IY+[#1])",		RES_4WithIndirectIndexIY, RES_Index);
 	_INST_FROM (0xFDCBA7,	4, 23, 23,	"RES 4,(IY+[#1]),A",	RES_4WithIndirectIndexIYCopyA, RES_Index);		// Undocumented
 	_INST_FROM (0xFDCBA0,	4, 23, 23,	"RES 4,(IY+[#1]),B",	RES_4WithIndirectIndexIYCopyB, RES_Index);		// Undocumented
 	_INST_FROM (0xFDCBA1,	4, 23, 23,	"RES 4,(IY+[#1]),C",	RES_4WithIndirectIndexIYCopyC, RES_Index);		// Undocumented
@@ -231,8 +231,8 @@ namespace FZ80
 	_INST_FROM (0xCBAB,		2, 8, 8,	"RES 5,E",				RES_5WithE, RES_General);
 	_INST_FROM (0xCBAC,		2, 8, 8,	"RES 5,H",				RES_5WithH, RES_General);
 	_INST_FROM (0xCBAD,		2, 8, 8,	"RES 5,L",				RES_5WithL, RES_General);
-	_INST_FROM (0xCBAE,		2, 12, 12,	"RES 5,(HL)",			RES_5WithIndirectHL, RES_General);
-	_INST_FROM (0xDDCBAE,	4, 20, 20,	"RES 5,(IX+[#1])",		RES_5WithIndirectIndexIX, RES_Index);
+	_INST_FROM (0xCBAE,		2, 15, 15,	"RES 5,(HL)",			RES_5WithIndirectHL, RES_General);
+	_INST_FROM (0xDDCBAE,	4, 23, 23,	"RES 5,(IX+[#1])",		RES_5WithIndirectIndexIX, RES_Index);
 	_INST_FROM (0xDDCBAF,	4, 23, 23,	"RES 5,(IX+[#1]),A",	RES_5WithIndirectIndexIXCopyA, RES_Index);		// Undocumented
 	_INST_FROM (0xDDCBA8,	4, 23, 23,	"RES 5,(IX+[#1]),B",	RES_5WithIndirectIndexIXCopyB, RES_Index);		// Undocumented
 	_INST_FROM (0xDDCBA9,	4, 23, 23,	"RES 5,(IX+[#1]),C",	RES_5WithIndirectIndexIXCopyC, RES_Index);		// Undocumented
@@ -240,7 +240,7 @@ namespace FZ80
 	_INST_FROM (0xDDCBAB,	4, 23, 23,	"RES 5,(IX+[#1]),E",	RES_5WithIndirectIndexIXCopyE, RES_Index);		// Undocumented
 	_INST_FROM (0xDDCBAC,	4, 23, 23,	"RES 5,(IX+[#1]),H",	RES_5WithIndirectIndexIXCopyH, RES_Index);		// Undocumented
 	_INST_FROM (0xDDCBAD,	4, 23, 23,	"RES 5,(IX+[#1]),L",	RES_5WithIndirectIndexIXCopyL, RES_Index);		// Undocumented
-	_INST_FROM (0xFDCBAE,	4, 20, 20,	"RES 5,(IY+[#1])",		RES_5WithIndirectIndexIY, RES_Index);
+	_INST_FROM (0xFDCBAE,	4, 23, 23,	"RES 5,(IY+[#1])",		RES_5WithIndirectIndexIY, RES_Index);
 	_INST_FROM (0xFDCBAF,	4, 23, 23,	"RES 5,(IY+[#1]),A",	RES_5WithIndirectIndexIYCopyA, RES_Index);		// Undocumented
 	_INST_FROM (0xFDCBA8,	4, 23, 23,	"RES 5,(IY+[#1]),B",	RES_5WithIndirectIndexIYCopyB, RES_Index);		// Undocumented
 	_INST_FROM (0xFDCBA9,	4, 23, 23,	"RES 5,(IY+[#1]),C",	RES_5WithIndirectIndexIYCopyC, RES_Index);		// Undocumented
@@ -257,8 +257,8 @@ namespace FZ80
 	_INST_FROM (0xCBB3,		2, 8, 8,	"RES 6,E",				RES_6WithE, RES_General);
 	_INST_FROM (0xCBB4,		2, 8, 8,	"RES 6,H",				RES_6WithH, RES_General);
 	_INST_FROM (0xCBB5,		2, 8, 8,	"RES 6,L",				RES_6WithL, RES_General);
-	_INST_FROM (0xCBB6,		2, 12, 12,	"RES 6,(HL)",			RES_6WithIndirectHL, RES_General);
-	_INST_FROM (0xDDCBB6,	4, 20, 20,	"RES 6,(IX+[#1])",		RES_6WithIndirectIndexIX, RES_Index);
+	_INST_FROM (0xCBB6,		2, 15, 15,	"RES 6,(HL)",			RES_6WithIndirectHL, RES_General);
+	_INST_FROM (0xDDCBB6,	4, 23, 23,	"RES 6,(IX+[#1])",		RES_6WithIndirectIndexIX, RES_Index);
 	_INST_FROM (0xDDCBB7,	4, 23, 23,	"RES 6,(IX+[#1]),A",	RES_6WithIndirectIndexIXCopyA, RES_Index);		// Undocumented
 	_INST_FROM (0xDDCBB0,	4, 23, 23,	"RES 6,(IX+[#1]),B",	RES_6WithIndirectIndexIXCopyB, RES_Index);		// Undocumented
 	_INST_FROM (0xDDCBB1,	4, 23, 23,	"RES 6,(IX+[#1]),C",	RES_6WithIndirectIndexIXCopyC, RES_Index);		// Undocumented
@@ -266,7 +266,7 @@ namespace FZ80
 	_INST_FROM (0xDDCBB3,	4, 23, 23,	"RES 6,(IX+[#1]),E",	RES_6WithIndirectIndexIXCopyE, RES_Index);		// Undocumented
 	_INST_FROM (0xDDCBB4,	4, 23, 23,	"RES 6,(IX+[#1]),H",	RES_6WithIndirectIndexIXCopyH, RES_Index);		// Undocumented
 	_INST_FROM (0xDDCBB5,	4, 23, 23,	"RES 6,(IX+[#1]),L",	RES_6WithIndirectIndexIXCopyL, RES_Index);		// Undocumented
-	_INST_FROM (0xFDCBB6,	4, 20, 20,	"RES 6,(IY+[#1])",		RES_6WithIndirectIndexIY, RES_Index);
+	_INST_FROM (0xFDCBB6,	4, 23, 23,	"RES 6,(IY+[#1])",		RES_6WithIndirectIndexIY, RES_Index);
 	_INST_FROM (0xFDCBB7,	4, 23, 23,	"RES 6,(IY+[#1]),A",	RES_6WithIndirectIndexIYCopyA, RES_Index);		// Undocumented
 	_INST_FROM (0xFDCBB0,	4, 23, 23,	"RES 6,(IY+[#1]),B",	RES_6WithIndirectIndexIYCopyB, RES_Index);		// Undocumented
 	_INST_FROM (0xFDCBB1,	4, 23, 23,	"RES 6,(IY+[#1]),C",	RES_6WithIndirectIndexIYCopyC, RES_Index);		// Undocumented

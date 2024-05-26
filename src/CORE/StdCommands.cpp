@@ -44,6 +44,7 @@ const std::string MCHEmul::ChangeCPUClockCommand::_NAME = "CCLOCKFACTOR";
 const std::string MCHEmul::SoundOnCommand::_NAME = "CSOUNDON";
 const std::string MCHEmul::SoundOffCommand::_NAME = "CSOUNDOFF";
 const std::string MCHEmul::InterruptsCommand::_NAME = "CINTERRUPTS";
+const std::string MCHEmul::InterruptSetCommand::_NAME = "CINTSET";
 const std::string MCHEmul::InterruptDebugOnCommand::_NAME = "CIDEBUGON";
 const std::string MCHEmul::InterruptDebugOffCommand::_NAME = "CIDEBUGOFF";
 const std::string MCHEmul::ChipsListCommand::_NAME = "CCHIPS";
@@ -702,6 +703,38 @@ void MCHEmul::InterruptsCommand::executeImpl
 	for (const auto& i : c -> cpu () -> interrupts ())
 		intr.add (std::to_string (i.second -> id ()), std::move (i.second -> getInfoStructure ()));
 	rst.add ("INTERRUPTS", std::move (intr));
+}
+
+// ---
+void MCHEmul::InterruptSetCommand::executeImpl
+	(MCHEmul::CommandExecuter* cE, MCHEmul::Computer* c, MCHEmul::InfoStructure& rst)
+{
+	if (c == nullptr)
+		return; // Nothing to do...
+
+	// Gets the interrupt id/ids affected...
+	// ...and checj whether there is an error or not
+	bool e = false;
+	std::vector <int> iIds;
+	if (parameter ("00") == "ALL")
+		for (const auto& i : c -> cpu () -> interrupts ())
+			iIds.emplace_back (i.first); 
+			// The id of the interrupt...and it is sure that all of them will exist!
+	else
+	{
+		int iId = std::atoi (parameter ("00").c_str ());
+		if (!(e = !c -> cpu () -> existsInterrupt (iId)))
+			iIds.emplace_back (iId);
+	}
+
+	if (!e)
+	{
+		bool acc = (parameter ("01") == "ON") ? true : false;
+		for (const auto& i : iIds)
+			c -> cpu () -> interrupt (i) -> setActive (acc);
+	}
+	else
+		rst.add ("ERROR", std::string ("Interrupt doesn't exist"));
 }
 
 // ---

@@ -28,6 +28,7 @@
 #include <CORE/Instruction.hpp>
 #include <CORE/CPUInterrupt.hpp>
 #include <fstream>
+#include <vector>
 
 namespace MCHEmul
 {
@@ -41,8 +42,9 @@ namespace MCHEmul
 	  * it is, that the CPU execute full instructions and computer clock ticks are updated by the last instruction cycles executed. \n
 	  * Whereas when the clock is external (_ticksCounter != nullptr) the computer speed is updated by 1 in each cycle. \n
 	  * In computers like C64, VIC20 or ZX81, all elements share the same clock, 
-	  * so it might be considered that the clock is CPU internal. \n
-	  * In others, like C264, the TED register is the one leading the computer and the CPU clock is part of the fule clock. \n
+	  * so it might considered that the clock is CPU internal. \n
+	  * In others, like C264, the TED register (video chip) is the one leading the computer 
+	  *	and the CPU clock is derivated from the TED's clock. \n
 	  * Any CPU, as this library understood them, is made up of:
 	  * Registers:			The number of these can vary and also the length in bits of each. \n
 	  *						Usually this length is never longer that the one defined by the architecture. \n
@@ -58,6 +60,39 @@ namespace MCHEmul
 	class CPU : public MotherboardElement
 	{
 		public:
+		/** When a interrupt type is requested, 
+			this is the info to be provided from any external element. 
+			The struct can be initialised usign intilizator list. \n
+			None of the are mandatory. So it is an open structure. */
+		struct InterruptRequest
+		{
+			/** Type. 
+				Must match the type of instructions (see @_rowInterrupts) 
+				but no double check is done when used (for performance reasons). */
+			int _type;
+			/** The machine cycles when the interrupt was requested. */
+			unsigned int _cycles;
+			/** Who is launching the request. */
+			MCHEmul::Chip* _from;
+			/** Reason to invoke it. */
+			int _reason;
+
+			std::string toString () const
+							{ return (std::to_string (_type)
+								+ " from:" + ((_from == nullptr) ? "-" : std::to_string (_from -> id ())) 
+								+ " reason: " + std::to_string (_reason)); }
+
+			friend std::ostream& operator << (std::ostream& o, const InterruptRequest& iR)
+							{ return (o << iR.toString ()); }
+		};
+
+		// To simplify the use of a list of requests...
+		using InterruptRequests = std::vector <InterruptRequest>;
+
+		/** This static const member is to refer to a no interrupt request. */
+		static const InterruptRequest _NOINTREQUEST;
+
+		// States of the CPU
 		/** The possible different states of the CPU. 
 			As the CPU can be overloaded, additional states could be added later. */
 		/** When a instruction is being executed... \n
@@ -67,9 +102,14 @@ namespace MCHEmul
 		/** When the CPU is stopped because it has been requested (i.e) from other chip of the motherboard.
 			The CPU can be stopped for a number of cycles or "forever" (until someone unstops it). */
 		static const unsigned int _STOPPED = 1;
+		// Many other states can be added but these a re the default ones
+		// These states are managed in the method @see executeNextCycle, that is the core of the CPU
+		// So if more states were added the method would have to be overloaded too...
 
 		/** The most important attribute is maybe the "set of instructions". \n
-			Define them very carefully. They are the CORE of the processor. */
+			Define them very carefully. They are the CORE of the processor. 
+			Notice that no list of interrupt is given at construction time. 
+			They must be added (if any) in the body of the inheriting constructor. */
 		CPU (int id, const CPUArchitecture& a, 
 			 const Registers& r, const StatusRegister& sR, const Instructions& ins,
 			 const Attributes& = { });
@@ -84,24 +124,26 @@ namespace MCHEmul
 
 		CPU& operator = (CPU&&) = delete; 
 
-		/** Is the CPU stopped? The type of cycles the CPU is stopped is optional. */
+		const CPUArchitecture& architecture () const
+							{ return (_architecture); }
+
+		/** Is the CPU stopped for any reason? 
+			The type of cycles why the CPU is stopped for is optional (all as default). */
 		bool stopped (unsigned int tC = InstructionDefined::_CYCLEALL) const
 							{ return (_state == _STOPPED && ((_typeCycleStopped & tC) != 0)); }
 		/** 
 		  *	By default: \n
 		  *	Only possible to stop (s = true) if it was either executing an instruction or starting an interruption. \n
-		  *	Only possible to restart back (s = false) when it was previouly stopped.
-		  * Once the CPU resumes the execution of what it was doing previoulsy.
-		  * The stop can be partial. It is for a specific type of cycle (of the transaction under execution).
+		  *	Only possible to restart back (s = false) when it was previouly stopped. \n
+		  * The stop can be partial.
+		  * It can be for a specific type of cycle (of the transaction under execution), and number of those (nC).
+		  * By default the CPU is stopped forever! \n
 		  * This behaviour can be overloaded later.
 		  */
 		virtual void setStop (bool s /** true when stop, 0 when run. */, 
 			unsigned int tC, /** Type of cycle affected when stop. 0 means none, than might be contradictory with s value. */
 			unsigned int cC, /** Number of cycles of the microprocessor when the the stop was requested. */
 			int nC = -1 /** how many cycles when s = true. -1 will mean forever. */);
-
-		const CPUArchitecture& architecture () const
-							{ return (_architecture); }
 
 		// Info about the registers...
 		const Registers& internalRegisters () const
@@ -110,8 +152,8 @@ namespace MCHEmul
 							{ return (_registers); }
 		bool existsInternalRegister (size_t nR) const
 							{ return (nR < _registers.size ()); }
-		/** In command this instruction can be usefull. \
-			Never in main loop because it is very slow. */
+		/** In commands this instruction can be usefull. \
+			Never use it in main loop because it is really slow. */
 		bool existsInternalRegister (const std::string& rn) const
 							{ return (std::find_if (_registers.begin (), _registers.end (), 
 								[&](const Register& r) -> bool { return (r.name () == rn); }) != _registers.end ()); }
@@ -132,12 +174,14 @@ namespace MCHEmul
 									[&](Register r) -> bool { return (r.name () == rn); }))
 								: TrashRegister); }
 		void setInternalRegister (size_t nR, UBytes v)
-							{ if (existsInternalRegister (nR) && internalRegister (nR).accept (v)) internalRegister (nR).set (v); }
+							{ if (existsInternalRegister (nR) && internalRegister (nR).accept (v)) 
+								internalRegister (nR).set (v); }
 
-		// About the memory and the address bus...
-		// The address and the data bus can be programmed as busses or wires,
-		// but in a very basic version of the code, it is possbile to maintain the 
-		// address bus and the data bus. The instructions execute this method...
+		/** About the memory and the address bus...
+			The address and the data bus can be programmed as busses or wires,
+			but in a very basic version of the code, it is possbile to maintain the 
+			address bus and the data bus. 
+			The instructions has to actualize this content if it is decides to follow this way. */
 		const Address& lastINOUTAddress () const
 							{ return (_lastINOUTAddress); }
 		void setLastINOUTAddress (const Address& a)
@@ -170,14 +214,16 @@ namespace MCHEmul
 							{ return ((*_instructions.find (i)).second); }
 
 		/** To get the next instruction (if any) attending to the location of the Program Counter. 
-			This method is not invoked but only from debugging reasons. */
+			This method is not invoked often but maybe from debugging situations. */
 		const Instruction* nextInstruction () const
 							{ return (CPU::instructionAt 
 								(_memory, _programCounter.asAddress (), const_cast <CPU*> (this))); }
 		/** To get the last instruction fully executed. */
 		const Instruction* lastInstruction () const
 							{ return (_lastInstruction); }
-		/** Tp get the instruction under executuion. */
+		/** To get the instruction under executuion. 
+			When the clock is internal and a instruction is in each loop the value of this variable 
+			is always the same than the previous one, except when a interrupt happens. */
 		const Instruction* currentInstruction () const
 							{ return (_currentInstruction); }
 
@@ -214,14 +260,35 @@ namespace MCHEmul
 							{ return ((*_interrupts.find (id)).second); }
 		void addInterrupt (CPUInterrupt* in);
 		void removeInterrrupt (int id);
-		/** And to request an interrupt. \n
+
+		// Managing the requests of interrutps...
+		/** To request an interrupt. \n
 			Receives the id of the interruption requested, the clockCycle where it has happened,
-			the sender (optional), and a code for the reason (also optional, -1 = not defined. \n
-			It can be overloaded, but by default just only one interruption at the same time can be invoked. */
-		virtual void requestInterrupt (int id, unsigned int nC, Chip* src = nullptr, int cR = -1);
-		/** To know whether there is a interrupt requested. -1 if not. */
-		int interruptRequested () const
-							{ return (_interruptRequested); }
+			the sender (optional), and a code for the reason (also optional, -1 = not defined. */
+		void requestInterrupt (int id, unsigned int nC, Chip* src = nullptr, int cR = -1)
+							{ requestInterrupt (InterruptRequest ({ id, nC, src, cR })); }
+		/** Same than previous, but receiving a InterruptRequest as parameter. \n
+			This one can be overloaded. \n
+			By default a unique element is allowed in the list of pendings. */
+		virtual void requestInterrupt (const InterruptRequest& iR);
+		/** To know whether the interrupt requests pending. Empty object if none. */
+		const InterruptRequests& interruptsRequested () const
+							{ return (_interruptsRequested); }
+		/** To get the next interrupt in the list of those. \n 
+			The way the interrupt is choosen can be changed by the user. \n
+			The default behaviour is to keep just one, so the first is brought back!. 
+			If there weren't be any, _NOINTREQUEST const object reference is returned. */
+		virtual const InterruptRequest& getNextInterruptRequest ()
+							{ return (_interruptsRequested.empty () 
+								? _NOINTREQUEST : *_interruptsRequested.begin ()); }
+		/** Once a interrupt request is procesed must be removed from the list of the pending ones. \n
+			As the default behaviour is keeping just one, all list is deleted (quicker). */
+		virtual void removeInterruptRequest (const InterruptRequest& iR)
+							{ _interruptsRequested = { }; }
+		/** To recognize the interrupt. \n 
+		 	By default, it does nothing, but it can be overloaded. \n
+			This method is invoked from the previous one. */
+		virtual void aknowledgeInterrupt ()	{ }
 
 		/** 
 		  *	The real CORE of the class. \n
@@ -229,12 +296,11 @@ namespace MCHEmul
 		  *	However the definition has always to be by cycle, as the CPU manages cycles.
 		  *	The CPU can be in different states. By default 2 are supported: \n
 		  *	1.- _EXECUTINGINSTRUCTION:	To execute a new instruction. \n
-		  *								if a external clock is defined (_ticksDelayed != nullptr) 
-		  *								the method (@see when_ExecutingInstruction_PerCycle) is executed. \n
-		  *								Only when _ticksCounter is updated! \n
-		  *								if not, the method (@see when_ExecutingInstruction_Full) is executed.
+		  *								Incrementes the _clockCycles variable in the number of clocks of the 
+		  *								instruction/interrupt executed. \n
 		  *	2.-	_STOPPED:				Just passes a cycle until the maximum declared is reached. \n
 		  *								Increments the _clokcCycles variable is just 1.
+		  * However new states can be supported extending the class.
 		  */
 		virtual bool executeNextCycle ();
 
@@ -280,31 +346,53 @@ namespace MCHEmul
 							{ return (_deepDebugFile); }
 
 		protected:
-		/** To make a row data with the interruptions. */
+		/** To make a row data with the interruptions. \n
+			This method is called from the constructor and instantiate the variable _rowInterrupts,
+			and also at any time an interrupt is added or removed. */
 		void makeInterruptionRowData ();
 
 		// Internal methods to simplify the comprension of the code.
+		// However they can be overloaded...
 		// Invoke from executeNextInstruction
 		/** 
 		  * When the state is: _EXECUTINGINSTRUCTION.
-		  * The methods can be overloaded. \n
-		  * when_ExecutingInstruction_PerCycle: \n
-		  *			Execute the instruction per cycle. \n
-		  *			If a instruction takes e.g. 2 cycles, 
-		  *			only when the CPU has passed cycle 2 after loading the instruction this is executed. \n
-		  *			The computer's clock is incremented (@see Computer::runComputerCycle) in one cycle only. \n
-		  * when_ExecutingInstruction_Full: \n
-		  *			Execute the full instruction. \n
-		  *			The computer's clock is incremented (@see Computer::runComputerCycle)
-		  *			in the number of cycles the instruction took. \n
-		  * By default, the interruption has preference over the instruction,
-		  * but the instruction under execution has to finish before launching the execution of a interuption
-		  * and it is onky executed when it is possible (@see Interrupt::canBeExecuted).
+		  * The method can be overloaded. \n
+		  *	Execute the next either instruction or interrupt. \n
+		  *	The execution can be done either by cycle or by full instruction/instruct. \n
+		  * Per cycle: \n
+		  *	If a instruction takes e.g. 2 cycles, 
+		  *	only when the CPU has passed cycle 2 after loading the instruction this is executed. \n
+		  *	The computer's clock is incremented in one cycle only each loop (@see MCHEmul::Computer::runComputerCycle method). \n
+		  * In this case invokes the methods @see executeNextInterruptRequest_PerCycle 
+		  *	and @executeNextInstruction_PerCycle. \n
+		  * Full: \n
+		  *	Execute the full instruction/interrupt launch. \n
+		  *	The computer's clock is incremented in the number of cycles the instruction took. \n
+		  * In this case invokes the methods @see executeNextInterruptRequest_Full and @executeNextInstruction_Full. \n
+		  * \n
+		  * By default, the interrupt has preference over the instruction.
+		  * but the instruction under execution has to finish before launching the execution of a interrupt
+		  * and it is only executed when it is possible (@see MCHEmul::CPUInterrupt::canBeExecuted method).
+		  * NOTE: The method returns true if everything was ok, and false when wasn't.
 		  */
-		virtual bool when_ExecutingInstruction_PerCycle ();
-		virtual bool when_ExecutingInstruction_Full ();
-		/** When the state is: _STOPPED. */
+		virtual bool when_ExecutingInstruction ();
+		/** When the state is: _STOPPED. \n
+			NOTE: The method returns true if everything was ok, and false when not. */
 		virtual bool when_Stopped ();
+
+		// Implementation
+		/** To execute the next interrupt. \n 
+		 	NOTE: It returns true if a interrupt was finally "executed" and false if not. \n 
+			The variable "e" holds whether there were or nor an error executing the interrupt (if any).  \n
+			Methods invoked from @see when_ExecutingInstruction. */
+		virtual bool executeNextInterruptRequest_PerCycle (unsigned int& e);
+		virtual bool executeNextInterruptRequest_Full (unsigned int& e);
+		/** ...and finally execute the instruction.
+		 	NOTE: It returns true if a instruction was finally "executed" and false if not. \n 
+			The variable "e" holds whether there were or nor an error executing the instruction (if any). \n
+			Methods invoked from @see when_ExecutingInstruction. */
+		virtual bool executeNextInstruction_PerCycle (unsigned int &e);
+		virtual bool executeNextInstruction_Full (unsigned int &e);
 
 		/** To get the instruction from a specific position of the memory. 
 			If the instruction can not be created, a nullptr is returned. */
@@ -315,29 +403,18 @@ namespace MCHEmul
 			CPUArchitecture (2 /** 2 bytes arch. */, 1 /** 1 byte for instruction. */); // Adjusted at construction level
 		Registers _registers;
 		const Instructions _instructions = { }; // Adjusted at construction level
-		Address _lastINOUTAddress;
-		UBytes _lastINOUTData;
 		ProgramCounter _programCounter;
 		StatusRegister _statusRegister;
 		Memory* _memory; // A reference...
 		CPUInterrupts _interrupts;
 
 		// The current situation of the CPU...
+		/** Last INOUT data used. 
+			It is not mandatory, but if used, instructions have to set the values. */
+		Address _lastINOUTAddress;
+		UBytes _lastINOUTData;
 		/** The state. */
 		unsigned int _state;
-
-		// To manage the debug info...
-		DebugFile* _deepDebugFile;
-
-		// Implementation
-		unsigned int _error;
-		/** The instruction under execution. nullptr when nothing. */
-		Instruction* _currentInstruction;
-		/** The interruption under exection. nullptr when nothing. */
-		CPUInterrupt* _currentInterruption;
-		/** Cycles pending to be executed from either 
-			the current instruction or the current interruption. */
-		unsigned int _cyclesPendingExecution; // Only used in Per cycle...
 		/** The cycles that the CPU has executed since it started. 
 			This counter is put back to 0 when the CPU is restarted in any way. */
 		unsigned int _clockCycles;
@@ -347,6 +424,25 @@ namespace MCHEmul
 		unsigned int _lastCPUClockCycles;
 		/** The last state. */
 		unsigned int _lastState;
+
+		// To manage the debug info...
+		DebugFile* _deepDebugFile;
+
+		// Implementation
+		unsigned int _error;
+
+		// When things are executed by cycle...
+		// In full instructions this is also used to avoid more interim variables, 
+		// but makes no much more sense!
+		/** The request under execution. */
+		InterruptRequest _currentInterruptRequest;
+		/** The interruption under exection. nullptr when nothing. */
+		CPUInterrupt* _currentInterrupt;
+		/** The instruction under execution. nullptr when nothing. */
+		Instruction* _currentInstruction;
+		/** Cycles pending to be executed from either 
+			the current instruction or the current interruption. */
+		unsigned int _cyclesPendingExecution; 
 
 		// Parameters related with the differet states of the CPU...
 		// When _EXECUTINGINST:
@@ -369,9 +465,7 @@ namespace MCHEmul
 			It the CPU were stopped, first of all the CPU would have to run back 
 			and then finish the instruction that could be running when it was stopped. \n
 			The parameter has the id of the interrupt requested. -1 means none. */
-		int _interruptRequested;
-		/** In some CPU is important to know there the clock was when the interruption was requested. */
-		unsigned int _clyclesAtInterruption;
+		InterruptRequests _interruptsRequested;
 
 		/** The instructions will be moved into an array at construction time,
 			to speed up their access in the executeNextInstruction method. */

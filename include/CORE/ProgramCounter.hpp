@@ -79,7 +79,8 @@ namespace MCHEmul
 
 		private:
 		void adjust ()
-							{ if (_internalRepresentation >= _maxValue) _internalRepresentation -= _maxValue; }
+							{ if (_internalRepresentation >= _maxValue) 
+								_internalRepresentation = _internalRepresentation % _maxValue; }
 
 		private:
 		size_t _size;

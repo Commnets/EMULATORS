@@ -3,11 +3,11 @@
 ?./Standard.fmt
 #---
 ;IRQInterrupt
-Type:IRQ, Id:@ID@, In Execution:@EXECUTION@, In Address:@ADDRESS@
+Type:IRQ, Id:@ID@, Active:@ACTIVE@, In Execution:@EXECUTION@, In Address:@ADDRESS@
 #---
 #---
 ;NMIInterrupt
-Type:NMI, Id:@ID@, In Execution:@EXECUTION@, In Address:@ADDRESS@
+Type:NMI, Id:@ID@, Active:@ACTIVE@, In Execution:@EXECUTION@, In Address:@ADDRESS@
 #---
 #---
 ;Registers

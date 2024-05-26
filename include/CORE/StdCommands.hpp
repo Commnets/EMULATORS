@@ -762,7 +762,8 @@ namespace MCHEmul
 		virtual void executeImpl (CommandExecuter* cE, Computer* c, InfoStructure& rst) override;
 	};
 
-	/** Interrpts */
+	/** To get info about the situation of the Interrupts. 
+		Command line: INTERRUPTS */
 	class InterruptsCommand final : public Command
 	{
 		public:
@@ -776,6 +777,28 @@ namespace MCHEmul
 		/** The only parameter has to be the factor. */
 		virtual bool canBeExecuted () const override
 							{ return (_parameters.size () == 0); }
+
+		private:
+		/** The fields returned are: \n
+			@see INTERUPTS = Attribute: a list with the situation of all interrupts. */
+		virtual void executeImpl (CommandExecuter* cE, Computer* c, InfoStructure& rst) override;
+	};
+
+	/** To actove or desactive the interrupts. 
+		Command line: INTSET (INTID|ALL) (ON|OFF) */
+	class InterruptSetCommand : public Command
+	{
+		public:
+		static const int _ID = 39;
+		static const std::string _NAME;
+
+		InterruptSetCommand ()
+			: Command (_ID, _NAME)
+							{ }
+
+		/** The only parameter has to be the factor. */
+		virtual bool canBeExecuted () const override
+							{ return (_parameters.size () == 2); }
 
 		private:
 		virtual void executeImpl (CommandExecuter* cE, Computer* c, InfoStructure& rst) override;

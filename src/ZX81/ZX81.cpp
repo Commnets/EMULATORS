@@ -89,20 +89,26 @@ void ZX81::SinclairZX81::processEvent (const MCHEmul::Event& evnt, MCHEmul::Noti
 void ZX81::SinclairZX81::specificComputerCycle ()
 {
 	_A6.set ((cpu () -> lastINOUTAddress ().value () & 0b01000000) != 0);
-	if (_A6.negativeEdge ()) // From 1 to 0...
+
+	// If the bit 6 of the address went from 1 to 0...
+	// the INT line of the Z80 should be up (interrupt requested).
+	// However at this point the ULA cycle han't been executed yet,
+	// and there a NMI request could be generated and with more priority that this
+	// So the INT is only requeted if the ULA were not about to do so!
+	// In the definition of the ZX81 (machine) is possbile to have INT and NMI at the same time...
+	// It is guaranteed by the code!...
+	if (_A6.negativeEdge () &&	// From 1 to 0...
+		cpu () -> interrupt (FZ80::INTInterrupt::_ID) -> 
+			canBeExecutedOver (cpu (), cpu () -> clockCycles ()) &&
+		!_ula -> registers () -> NMIGenerator ())
 	{ 
 		// The INT is requested...
 		cpu () -> requestInterrupt
 			(FZ80::INTInterrupt::_ID, cpu () -> clockCycles (), nullptr, 2);
 
-		// But if it were about to be recognized the ULA would have to know it!
-		// somehow we are advancing what is about to happen...
-		// The reason is that this method is executer from the Computer after CPU cycle and before chips.
-		// ULA simulation moves the counter and executes the HSYNC but it als happens also
-		// when this interrupt is launched...
-		if (cpu () -> interrupt (FZ80::INTInterrupt::_ID) -> 
-				canBeExecutedOver (cpu (), cpu () -> clockCycles ()))
-			_ula -> setINTack ();
+		// The ULA has to know that the INT is requested, 
+		// because the counter of horizontal lines has to be updated when that happen...
+		_ula -> setINTack ();
 	}
 }
 

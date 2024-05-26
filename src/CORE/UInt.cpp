@@ -84,7 +84,8 @@ MCHEmul::UInt MCHEmul::UInt::BinaryFormatManager::fromUnsignedInt (unsigned int 
 		// This is like the previous situation but with a generic number of bytes...
 		// The algorithm is done thinking in reducing the number of multiplications and change them into additions,
 		// and also for not to use signed numbers!
-		size_t nB = 1; unsigned int r = n; while ((r = (r >> MCHEmul::UByte::sizeBits ())) != 0) nB++;
+		size_t nB = 1; unsigned int r = n; 
+		while ((r = (r >> MCHEmul::UByte::sizeBits ())) != 0) nB++;
 		size_t sft = (nB - 1) * MCHEmul::UByte::sizeBits (); // The only multiplication...
 		for (size_t i = nB - 1; i > 0; i--, sft -= MCHEmul::UByte::sizeBits ())
 			dt.emplace_back (MCHEmul::UByte ((unsigned char) (n >> sft)));
@@ -116,7 +117,8 @@ MCHEmul::UInt MCHEmul::UInt::BinaryFormatManager::fromInt (int n)
 		// This is like the previous situation but with a generic number of bytes...
 		// The algorithm is done thinking in reducing the number of multiplications and change them into additions,
 		// and also for not to use signed numbers!
-		size_t nB = 2; unsigned r1 = r;  while ((r1 = (r1 >> MCHEmul::UByte::sizeBits ())) != 0) nB++;
+		size_t nB = 2; unsigned r1 = r; 
+		while ((r1 = (r1 >> MCHEmul::UByte::sizeBits ())) != 0) nB++;
 		size_t sft = (nB - 1) * MCHEmul::UByte::sizeBits (); // The only multiplication...
 		for (size_t i = nB - 1; i > 0; i--, sft -= MCHEmul::UByte::sizeBits ())
 			dt.emplace_back (MCHEmul::UByte ((unsigned char) (r >> sft)));
