@@ -187,10 +187,14 @@ void Test::runTest (FZ80::CZ80* cpu, MCHEmul::Memory* m)
 		// If after all testings, there is no error...
 		if (!(eI1 && eI21 && eI3 && eI4 && eI5 && eI6 && eI7 && eI8))
 		{
+			std::cout << "Error:" << (*i).first + "(" + instAsString (nIs, "; ") + ")" << std::endl;
 			if (!eI1) _errors.emplace_back 
 				("Error in test:" + (*i).first + " in Registers [" + instAsString (nIs, "; ") + "]");
 			if (!eI21) _errors.emplace_back 
-				("Error in test:" + (*i).first + " in Status Register [" + instAsString (nIs, "; ") + "]");
+				("Error in test:" + (*i).first + " in Status Register(" + 
+					std::to_string ((int) cpu -> statusRegister ().values ()[0].value ()) + " vs " + 
+					std::to_string ((int) ((unsigned char) (tOut._status._AF & 0x00ff))) + 
+					") [" + instAsString (nIs, "; ") + "]");
 			if (!eI3) _errors.emplace_back 
 				("Error in test:" + (*i).first + " in IR Registers [" + instAsString (nIs, "; ") + "]");
 			if (!eI4) _errors.emplace_back 

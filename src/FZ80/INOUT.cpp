@@ -81,41 +81,44 @@ bool FZ80::INBlock_General::executeWith (int a)
 	MCHEmul::Register& rB		= registerB ();
 	unsigned char rBA			= rB.values ()[0].value ();
 	MCHEmul::Register& rC		= registerC ();
-	unsigned char rCA			= rC.values ()[0].value ();
+	unsigned short rCA			= (unsigned short) rC.values ()[0].value ();
 	MCHEmul::Register& rH		= registerH ();
 	MCHEmul::Register& rL		= registerL ();
 
 	MCHEmul::StatusRegister& st = cpu () -> statusRegister ();
 
-	MCHEmul::Address hlA (MCHEmul::UBytes ({ rH.values ()[0], rL.values ()[0] })); // Target...
-
+	MCHEmul::Address hlA = addressHL (); // Target...
 	MCHEmul::UByte vR = MCHEmul::UByte::_0;
 	// The value of the component BC is pushed into the address bus...
 	_lastExecutionData._INOUTAddress = addressBC ();
 	// ...and then the value read from the port is pushed into the memory...
 	memory () -> set (addressHL (), vR = static_cast <CZ80*> (cpu ()) -> portValue 
-		((unsigned short) _lastExecutionData._INOUTAddress.value (), rCA));
+		((unsigned short) _lastExecutionData._INOUTAddress.value (), (unsigned char) rCA));
+	// The internal register RW used later in BIT instructions...
+	static_cast <FZ80::CZ80*> (cpu ()) -> setRWInternalRegister 
+		((unsigned char) (((unsigned short) (_lastExecutionData._INOUTAddress.value () + 1)) >> 8));
 
 	// Moves to the next position 
 	// or the previous (depending on the value of a...
-	hlA += a; 
+	hlA = (a > 0) ? (hlA + 1) : (hlA - 1);
 	// The number of elements to move is decremented into 1, 
 	// and _b becomes true if data data is 0
-	_b0 = (rBA -= 1) == 0; 
+	_b0 = (rBA -= 1) == 0;
+	rCA = (a > 0) ? (rCA + 1) : (rCA - 1);
 
 	// How the flags are affected...
 	// http://www.z80.info/zip/z80-documented.pdf (section 4.3)
-	rCA = (a > 0) ? (rCA + 1) : (rCA - 1);
-	bool ec = ((hlA.value () + rCA) & 0xff) > 0xff;
-	bool pc = (((hlA.value () + rCA) & 0xff) & 0x07) ^ rB.values ()[0].value ();
+	bool ec = ((rCA & 0x00ff) + (unsigned short) vR.value ()) > 0x00ff;
+	unsigned char pc = (unsigned char) ((((rCA & 0x00ff) + 
+		(unsigned short) vR.value ()) & 0x0007) ^ (unsigned short) rBA);
 	st.setBitStatus (FZ80::CZ80::_CARRYFLAG, ec);
 	st.setBitStatus (FZ80::CZ80::_NEGATIVEFLAG, vR.bit (7));
-	st.setBitStatus (FZ80::CZ80::_PARITYOVERFLOWFLAG, pc);
+	st.setBitStatus (FZ80::CZ80::_PARITYOVERFLOWFLAG, (MCHEmul::UByte (pc).numberBitsOn () % 2) == 0x00);
 	st.setBitStatus (FZ80::CZ80::_BIT3FLAG, MCHEmul::UByte (rBA).bit (3));
 	st.setBitStatus (FZ80::CZ80::_HALFCARRYFLAG, ec);
 	st.setBitStatus (FZ80::CZ80::_BIT5FLAG, MCHEmul::UByte (rBA).bit (5));
 	st.setBitStatus (FZ80::CZ80::_ZEROFLAG, rBA == 0);
-	st.setBitStatus (FZ80::CZ80::_SIGNFLAG, MCHEmul::UByte (rBA).bit (3));
+	st.setBitStatus (FZ80::CZ80::_SIGNFLAG, MCHEmul::UByte (rBA).bit (7));
 	
 	// Restore the new content into the registers...
 	rB.set ({ rBA });
@@ -250,18 +253,21 @@ bool FZ80::OUTBlock_General::executeWith (int a)
 	unsigned char rCA			= rC.values ()[0].value ();
 	MCHEmul::Register& rH		= registerH ();
 	MCHEmul::Register& rL		= registerL ();
-	unsigned char rLA			= rL.values ()[0].value ();
+	unsigned short rLA			= rL.values ()[0].value ();
 
 	MCHEmul::StatusRegister& st = cpu () -> statusRegister ();
 
-	MCHEmul::Address hlA = addressHL (); // Target...
 	MCHEmul::UByte vR = MCHEmul::UByte::_0;
 	// The number of elements to move is decremented into 1, 
 	// and _b becomes true if data data is 0
 	_b0 = (--rBA) == 0; 
 	// The value of the component BC is pushed into the address bus...
 	_lastExecutionData._INOUTAddress = MCHEmul::Address ({ rBA, rCA });
+	// The internal register RW used later in BIT instructions...
+	static_cast <FZ80::CZ80*> (cpu ()) -> setRWInternalRegister 
+		((unsigned char) (((unsigned short) (_lastExecutionData._INOUTAddress.value () + 1)) >> 8));
 	// ...and then the value read from the port is pushed into the memory...
+	MCHEmul::Address hlA = addressHL (); // Target...
 	static_cast <CZ80*> (cpu ()) -> setPortValue 
 		((unsigned short) _lastExecutionData._INOUTAddress.value (), rCA, vR = memory () -> value (hlA));
 
@@ -272,11 +278,12 @@ bool FZ80::OUTBlock_General::executeWith (int a)
 
 	// How the flags are affected...
 	// http://www.z80.info/zip/z80-documented.pdf (section 4.3)
-	bool ec = (vR.value () + rLA) > 0xff;
-	bool pc = ((vR.value () + rLA) & 0x07) ^ rBA;
+	bool ec = ((rLA & 0x00ff) + (unsigned short) vR.value ()) > 0x00ff;
+	unsigned char pc = (unsigned char) ((((rLA & 0x00ff) + 
+		(unsigned short) vR.value ()) & 0x0007) ^ (unsigned short) rBA);
 	st.setBitStatus (FZ80::CZ80::_CARRYFLAG, ec);
 	st.setBitStatus (FZ80::CZ80::_NEGATIVEFLAG, vR.bit (7));
-	st.setBitStatus (FZ80::CZ80::_PARITYOVERFLOWFLAG, pc);
+	st.setBitStatus (FZ80::CZ80::_PARITYOVERFLOWFLAG, (MCHEmul::UByte (pc).numberBitsOn () % 2) == 0x00);
 	st.setBitStatus (FZ80::CZ80::_BIT3FLAG, MCHEmul::UByte (rBA).bit (3));
 	st.setBitStatus (FZ80::CZ80::_HALFCARRYFLAG, ec);
 	st.setBitStatus (FZ80::CZ80::_BIT5FLAG, MCHEmul::UByte (rBA).bit (5));
