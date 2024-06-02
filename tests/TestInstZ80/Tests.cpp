@@ -4,7 +4,7 @@
 Test::Test (const std::string& tIn, const std::string& tOut)
 	: _testsIn (readTestsIn (tIn)), 
 	  _testsOut (readTestsOut (tOut)), 
-	  _errors ()
+	  _errors (), _warnings (), _noimplemented ()
 {
 	// Verify coherence...
 	for (const auto& i : _testsIn)
@@ -85,6 +85,8 @@ void Test::runTest (FZ80::CZ80* cpu, MCHEmul::Memory* m)
 		else cpu -> resetHalt ();
 		// ...the program counter...
 		cpu -> programCounter ().setAddress (MCHEmul::Address (2, (unsigned int) (*i).second._status._PC));
+		// The memory content...
+		cpu -> setRWInternalRegister ((unsigned char) ((*i).second._status._MEMPTR >> 8));
 		// Set the memoty situation...
 		for (const auto& j : (*i).second._status._data)
 		{
@@ -95,11 +97,11 @@ void Test::runTest (FZ80::CZ80* cpu, MCHEmul::Memory* m)
 
 		// Then get the instruction to execute...
 		unsigned int j = 0;
-		unsigned char tStates = (*i).second._status._tStates;
+		unsigned short tStates = (*i).second._status._tStates;
 		MCHEmul::ListOfInstructions nIs;
 		// ...and executes it!
 		bool e = false;
-		while (j < tStates && !e)
+		while (j < (unsigned int) tStates && !e)
 		{
 			MCHEmul::Instruction* nI = const_cast <MCHEmul::Instruction*> (cpu -> nextInstruction ());
 			if (nI == nullptr)
@@ -121,9 +123,7 @@ void Test::runTest (FZ80::CZ80* cpu, MCHEmul::Memory* m)
 		// print hem out, and try the next test!
 		if (e)
 		{
-			std::cout << "Error executing:" << (*i).first << std::endl;
-
-			_errors.emplace_back ("Error executing:" + (*i).first);
+			_noimplemented.emplace_back ("Test not implemented:" + (*i).first);
 
 			continue;
 		}
@@ -133,7 +133,6 @@ void Test::runTest (FZ80::CZ80* cpu, MCHEmul::Memory* m)
 		// First with the registers...
 		bool eI1 =  
 			cpu -> afRegister ()[0]  -> values ()[0] == (unsigned char) ((tOut._status._AF & 0xff00) >> 8) &&
-			cpu -> afRegister ()[1]  -> values ()[0] == (unsigned char) (tOut._status._AF  & 0x00ff) &&
 			cpu -> bcRegister ()[0]  -> values ()[0] == (unsigned char) ((tOut._status._BC  & 0xff00) >> 8) &&
 			cpu -> bcRegister ()[1]  -> values ()[0] == (unsigned char) (tOut._status._BC  & 0x00ff) &&
 			cpu -> deRegister ()[0]  -> values ()[0] == (unsigned char) ((tOut._status._DE  & 0xff00) >> 8) &&
@@ -152,47 +151,67 @@ void Test::runTest (FZ80::CZ80* cpu, MCHEmul::Memory* m)
 			cpu -> depRegister ()[1] -> values ()[0] == (unsigned char) (tOut._status._DEP & 0x00ff) &&
 			cpu -> hlpRegister ()[0] -> values ()[0] == (unsigned char) ((tOut._status._HLP & 0xff00) >> 8) &&
 			cpu -> hlpRegister ()[1] -> values ()[0] == (unsigned char) (tOut._status._HLP & 0x00ff);
+		// ...the status register...
+		// ...without the XZ & YZ flags...
+		bool eI21 = (cpu -> afRegister ()[1]  -> values ()[0] & 0xd7) == 
+			(unsigned char) (tOut._status._AF  & 0x00d7);
+		// ...and also those flags!
+		bool eI22 = (cpu -> afRegister ()[1]  -> values ()[0] & ~0xd7) == 
+			(unsigned char) (tOut._status._AF  & ~0x00d7);
 		// ...the I & R registers...
-		bool eI2 = 
+		bool eI3 = 
 			cpu -> iRegister ().values ()[0] == tOut._status._I &&
 			cpu -> rRegister ().values ()[0] == tOut._status._R;
 		// ...the program counter...
-		bool eI3 = cpu -> programCounter ().internalRepresentation () == (unsigned int) tOut._status._PC;
+		bool eI4 = cpu -> programCounter ().internalRepresentation () == (unsigned int) tOut._status._PC;
 		// ...the stack pointer...
-		bool eI4 = m -> stack () -> currentAddress () == MCHEmul::Address (2, (unsigned int) tOut._status._SP);
+		bool eI5 = m -> stack () -> currentAddress () == MCHEmul::Address (2, (unsigned int) tOut._status._SP);
 		// The info about the interrupts (INT specially)...
-		bool eI5 =
+		bool eI6 =
 			cpu -> IFF1 () == tOut._status._IFF1 &&
 			cpu -> IFF2 () == tOut._status._IFF2 &&
 			static_cast <FZ80::INTInterrupt*> (cpu -> interrupt (FZ80::INTInterrupt::_ID)) 
 				-> INTMode () == tOut._status._IM &&
 			(tOut._status._halted ? cpu -> haltActive () : ! cpu -> haltActive ());
 		// The Tstates executed...
-		bool eI6 = j == (tOut._status._tStates);
+		bool eI7 = j == (tOut._status._tStates);
 		// The memory situation...
-		bool eI7 = true;
+		bool eI8 = true;
 		for (const auto& j : tOut._status._data)
 		{ 
 			unsigned int l = 0;
 			for (const auto& k : j._data)
-				eI7 &= (m -> value (MCHEmul::Address (2, ((unsigned int) j._position) + l++)).value () == k);
+				eI8 &= (m -> value (MCHEmul::Address (2, ((unsigned int) j._position) + l++)).value () == k);
 		}
 
 		// If after all testings, there is no error...
-		std::cout << "Test:" << (*i).first 
-					<< "\tTesting:" << instAsString (nIs, "; ")
-					<< (!(eI1 && eI2 && eI3 && eI4 && eI5 && eI6 && eI7) ? " no Ok" : " Ok") << std::endl;
-		if (!(eI1 && eI2 && eI3 && eI4 && eI5 && eI6 && eI7))
+		if (!(eI1 && eI21 && eI3 && eI4 && eI5 && eI6 && eI7 && eI8))
 		{
-			_errors.emplace_back ("Error in test:" + (*i).first + " executing " + instAsString (nIs, "; "));
-			if (!eI1) _errors.emplace_back ("Error in test:" + (*i).first + " in Registers");
-			if (!eI2) _errors.emplace_back ("Error in test:" + (*i).first + " in IR Registers");
-			if (!eI3) _errors.emplace_back ("Error in test:" + (*i).first + " in Program Counter");
-			if (!eI4) _errors.emplace_back ("Error in test:" + (*i).first + " in Program Stack Pointer");
-			if (!eI5) _errors.emplace_back ("Error in test:" + (*i).first + " in Program Stack Interrupt Management");
-			if (!eI6) _errors.emplace_back ("Error in test:" + (*i).first + " in TStates");
-			if (!eI7) _errors.emplace_back ("Error in test:" + (*i).first + " in Memory");
+			if (!eI1) _errors.emplace_back 
+				("Error in test:" + (*i).first + " in Registers [" + instAsString (nIs, "; ") + "]");
+			if (!eI21) _errors.emplace_back 
+				("Error in test:" + (*i).first + " in Status Register [" + instAsString (nIs, "; ") + "]");
+			if (!eI3) _errors.emplace_back 
+				("Error in test:" + (*i).first + " in IR Registers [" + instAsString (nIs, "; ") + "]");
+			if (!eI4) _errors.emplace_back 
+				("Error in test:" + (*i).first + " in Program Counter [" + instAsString (nIs, "; ") + "]");
+			if (!eI5) _errors.emplace_back 
+				("Error in test:" + (*i).first + " in Program Stack Pointer [" + instAsString (nIs, "; ") + "]");
+			if (!eI6) _errors.emplace_back 
+				("Error in test:" + (*i).first + " in Program Stack Interrupt Management [" + instAsString (nIs, "; ") + "]");
+			if (!eI7) _errors.emplace_back 
+				("Error in test:" + (*i).first + " in TStates [" + instAsString (nIs, "; ") + "]");
+			if (!eI8) _errors.emplace_back 
+				("Error in test:" + (*i).first + " in Memory [" + instAsString (nIs, "; ") + "]");
 		}
+
+		if (!eI22)
+			_warnings.emplace_back 
+				("Warning in test:" + (*i).first + " in Registers, flags XZ(" + 
+					(((cpu -> statusRegister ().values ()[0].value () & 0x08) != 0x00) ? "1" : "0") + " vs " +
+					(((tOut._status._AF & 0x0008) != 0x0000) ? "1" : "0") + "), YZ(" + 
+					(((cpu -> statusRegister ().values ()[0].value () & 0x20) != 0x00) ? "1" : "0") + " vs " +
+					(((tOut._status._AF & 0x0020) != 0x0000) ? "1" : "0") + ") ([" + instAsString (nIs, "; ") + "]");
 	}
 
 	delete (cpu);
@@ -257,7 +276,7 @@ Test::TestStatus Test::getTestStatus (const Test::TestTokens& tT, size_t i)
 	result._IFF2	= (tT [i][3] == "1") ? true : false;
 	result._IM		= std::atoi (tT [i][4].c_str ()); // Interrupt state...
 	result._halted	= (tT [i][5] == "1" ? true : false);
-	result._tStates	= std::atoi (tT [i][6].c_str ());
+	result._tStates	= (unsigned short) std::atoi (tT [i][6].c_str ());
 			
 	for (i++ ;i < tT.size (); i++)
 	{

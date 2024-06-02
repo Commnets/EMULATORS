@@ -18,7 +18,7 @@ ZX81::PortManager::PortManager ()
 }
 
 // ---
-void ZX81::PortManager::setValue (unsigned char id, const MCHEmul::UByte& v)
+void ZX81::PortManager::setValue (unsigned short ab, unsigned char id, const MCHEmul::UByte& v)
 {
 	// Any out really does this set of actions...
 	// As it is defined in the ZX81 ports documentation!:
@@ -39,7 +39,7 @@ void ZX81::PortManager::setValue (unsigned char id, const MCHEmul::UByte& v)
 }
 
 // ---
-MCHEmul::UByte ZX81::PortManager::getValue (unsigned char id, bool ms) const
+MCHEmul::UByte ZX81::PortManager::getValue (unsigned short ab, unsigned char id, bool ms) const
 {
 	MCHEmul::UByte result = MCHEmul::UByte::_0;
 
@@ -50,8 +50,7 @@ MCHEmul::UByte ZX81::PortManager::getValue (unsigned char id, bool ms) const
 			(_ULARegisters -> NTSC () ? 0b00000000 : 0b01000000); // Bit 6 set when 50Hz = PAL = !NTSC...
 
 		// What row to read is determined by the value of the register B...
-		MCHEmul::UByte bVal = 
-			static_cast <const FZ80::CZ80*> (cpu ()) -> bRegister ().values ()[0];
+		MCHEmul::UByte bVal = (unsigned char) ((ab & 0xff00) >> 8);
 		// If no row is selected...
 		if (bVal.value () == MCHEmul::UByte::_FF)
 			result |= 0b00011111; // ...nothing has to be analysed!

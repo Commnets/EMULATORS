@@ -92,7 +92,7 @@ namespace FZ80
 		st.setBitStatus (CZ80::_BIT3FLAG, v.bit (3)); // Undocumented...
 		st.setBitStatus (CZ80::_HALFCARRYFLAG, false);
 		st.setBitStatus (CZ80::_BIT5FLAG, v.bit (5)); // Undocumented...
-		st.setBitStatus (CZ80::_NEGATIVEFLAG, v == MCHEmul::UByte::_0);
+		st.setBitStatus (CZ80::_ZEROFLAG, v == MCHEmul::UByte::_0);
 		st.setBitStatus (CZ80::_SIGNFLAG, v.bit (7));
 	}
 

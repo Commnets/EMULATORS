@@ -149,7 +149,7 @@ _INST_IMPL (FZ80::DEC_IndirectIndexIX)
 {
 	assert (parameters ().size () == 3);
 
-	return (executeWith (addressIX (parameters ()[2].value ())));
+	return (executeWith (addressIX ((char) parameters ()[2].value ())));
 }
 
 // ---
@@ -157,7 +157,7 @@ _INST_IMPL (FZ80::DEC_IndirectIndexIY)
 {
 	assert (parameters ().size () == 3);
 
-	return (executeWith (addressIY (parameters ()[2].value ())));
+	return (executeWith (addressIY ((char) parameters ()[2].value ())));
 }
 
 // ---

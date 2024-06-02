@@ -66,6 +66,10 @@ namespace FZ80
 		MCHEmul::ProgramCounter& pc = cpu () -> programCounter ();
 		if (jR > 0) pc.increment ((size_t) jR);
 		else pc.decrement ((size_t) -jR); // Parameter to "decrement" always positive...
+
+		/** Used later in BIT (IX...) instructions. */
+		static_cast <FZ80::CZ80*> (_lastExecutionData._cpu) -> 
+			setRWInternalRegister (pc.asAddress ()[0]);
 	}
 
 	// Relative

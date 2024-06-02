@@ -133,7 +133,8 @@ namespace FZ80
 		// http://www.z80.info/zip/z80-documented.pdf (section 4.2)
 		MCHEmul::UByte n ((unsigned char) (vc [0].value () + registerA ().values ()[0].value ())); // Possible carry is not taken into account
 		// The positions target and destination are moved according to "a" (that can be either 1 or -1)
-		deA += a; hlA += a; 
+		deA = (a > 0) ? (deA + 1) : (deA - 1); 
+		hlA = (a > 0) ? (hlA + 1) : (hlA - 1); 
 		// The counter is decremented into 1, and _bc0 becomes true if data data is 0 doing so...
 		_bc0 = ((bcI -= 1).asUnsignedInt () == (unsigned int) 0); 
 	
@@ -183,7 +184,7 @@ namespace FZ80
 			(st.bitStatus (FZ80::CZ80::_HALFCARRYFLAG) ? MCHEmul::UInt::_1 : MCHEmul::UInt::_0); 
 
 		// The next position is moved according to "a"
-		hlA += a; 
+		hlA = (a > 0) ? (hlA + 1) : (hlA - 1); 
 		// The number of elements to move is decremented into 1, 
 		// and _bc= becomes true if data data is 0
 		_bc0 = ((bcI -= 1).asUnsignedInt () == (unsigned int) 0); 
@@ -196,9 +197,9 @@ namespace FZ80
 		// Carry flag is not affected...
 		st.setBitStatus (FZ80::CZ80::_NEGATIVEFLAG, true);
 		st.setBitStatus (FZ80::CZ80::_PARITYOVERFLOWFLAG, !_bc0);
-		st.setBitStatus (FZ80::CZ80::_BIT3FLAG, n [0].bit (3)); // Undocumented...
+		st.setBitStatus (FZ80::CZ80::_BIT3FLAG, rst [0].bit (3)); // Undocumented...
 		st.setBitStatus (FZ80::CZ80::_HALFCARRYFLAG, (cr & 0x10) != 0x00);
-		st.setBitStatus (FZ80::CZ80::_BIT5FLAG, n [0].bit (1)); // Undocumented...
+		st.setBitStatus (FZ80::CZ80::_BIT5FLAG, rst [0].bit (1)); // Undocumented...
 		st.setBitStatus (FZ80::CZ80::_ZEROFLAG, rst == MCHEmul::UInt::_0);
 		st.setBitStatus (FZ80::CZ80::_SIGNFLAG, rst.negative ());
 		// The rest of the flags are not affected...

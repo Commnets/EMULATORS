@@ -12,9 +12,9 @@ class PortTest : public FZ80::Z80Port
 		: FZ80::Z80Port (0, "test")
 						{ }
 
-	virtual MCHEmul::UByte value (unsigned char id) const override
-							{ return (MCHEmul::UByte ((unsigned char) (std::rand () % 256))); }
-	virtual void setValue (unsigned char id, const MCHEmul::UByte& v) override
+	virtual MCHEmul::UByte value (unsigned short ab, unsigned char id) const override
+							{ return (MCHEmul::UByte ((unsigned char) ((ab & 0xff00) >> 8))); }
+	virtual void setValue (unsigned short ab, unsigned char id, const MCHEmul::UByte& v) override
 							{ /** does nothing. */ }
 };
 
@@ -89,11 +89,34 @@ int _tmain (int argc, _TCHAR *argv [])
 		test.runTest (cpu, new MemoryTest);
 	}
 
-	if (!test.errors ().empty ())
+	if (!test.errors ().empty () || 
+		!test.warnings ().empty () || 
+		!test.noimplemented ().empty ())
 	{
-		printErrors (test.errors ());
+		std::cout << std::endl << std::endl;
 
-		std::cout << std::endl << test.errors ().size () << std::endl;
+		size_t nT = 0;
+		std::cout << "Total Test:" << test.totalTests () << std::endl;
+
+		std::cout << "Not implemented:" << std::endl;
+		printErrors (test.noimplemented ());
+		std::cout << "Total: " << test.noimplemented ().size () << std::endl;
+		std::cout << "----------" << std::endl;
+		nT += test.noimplemented ().size ();
+
+		std::cout << "Errors:" << std::endl;
+		printErrors (test.errors ());
+		std::cout << "Total:" << test.errors ().size () << std::endl;
+		std::cout << "----------" << std::endl;
+		nT += test.errors ().size ();
+
+		std::cout << "Warnings:" << std::endl;
+		printErrors (test.warnings ());
+		std::cout << "Total:" << test.warnings ().size () << std::endl;
+		std::cout << "----------" << std::endl;
+		nT += test.warnings().size ();
+
+		std::cout << "Ok:" << (test.totalTests () - nT) << std::endl;
 	}
 
 	return (test.errors ().empty () ? 0 : 1);

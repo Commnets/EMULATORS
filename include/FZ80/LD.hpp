@@ -337,7 +337,7 @@ namespace FZ80
 	_INST_FROM (0xF9,	1, 6, 6,	"LD SP,HL",				LD_SPFromHL, LD_General);
 	_INST_FROM (0xDDF9,	2, 10, 10,	"LD SP,IX",				LD_SPFromIX, LD_General);
 	_INST_FROM (0xFDF9,	2, 10, 10,	"LD SP,IY",				LD_SPFromIY, LD_General);
-	_INST_FROM (0xED7B,	4, 10, 10,	"LD SP,([$2])",			LD_SPFromAddress, LD_General);
+	_INST_FROM (0xED7B,	4, 20, 20,	"LD SP,([$2])",			LD_SPFromAddress, LD_General);
 }
 
 #endif

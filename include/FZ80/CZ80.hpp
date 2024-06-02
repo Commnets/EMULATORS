@@ -53,14 +53,15 @@ namespace FZ80
 
 		/** To get & set the values.
 			They must be overloaded, depending on the computer that uses it. 
-			As the port can be connected to many id ports, the port id is also received itself. */
-		virtual MCHEmul::UByte value (unsigned char id) const = 0;
-		virtual MCHEmul::UByte peekValue (unsigned char id) const
-							{ return (value (id)); } // Same than previous but to avoid modify the status... equal by defautl
-		virtual void setValue (unsigned char id, const MCHEmul::UByte& v) = 0;
+			As the port can be connected to many id ports, the port id is also received itself. 
+			And also the value of the address bus (ab). */
+		virtual MCHEmul::UByte value (unsigned short ab, unsigned char id) const = 0;
+		virtual MCHEmul::UByte peekValue (unsigned short ab, unsigned char id) const
+							{ return (value (ab, id)); } // Same than previous but to avoid modify the status... equal by defautl
+		virtual void setValue (unsigned short ab, unsigned char id, const MCHEmul::UByte& v) = 0;
 
 		virtual void initialize ()
-							{ setValue (0, 0); }
+							{ setValue (0, 0, 0); }
 
 		virtual MCHEmul::InfoStructure getInfoStructure () const override;
 
@@ -334,6 +335,14 @@ namespace FZ80
 		const MCHEmul::RefRegisters& irRegister () const
 							{ return (_irRegister); }
 
+		/** To manage the very internal register...
+			Some instructions uses this register: ADD HL,xx; LD r,(IX + d); JR d
+			Some other doesn't change the register... LR r,r' doesn change it e.g. */
+		const MCHEmul::UByte& RWInternalRegister () const
+							{ return (_RWInternalRegister); }
+		void setRWInternalRegister (const MCHEmul::UByte& v)
+							{ _RWInternalRegister = v; }
+
 		// Managing the status of the flipflop registers...
 		bool IFF1 () const
 							{ return (_IFF1); }
@@ -375,11 +384,12 @@ namespace FZ80
 		void addPorts (const Z80PortsMap& pts);
 
 		/** The way that the port is read, can be changed depending on the computer. \n
-			When the value of a port is read, just buy default the value of the first port associated to that number is returned. */
-		MCHEmul::UByte portValue (unsigned char p) const
-							{ return ((*(_portsRaw [(size_t) p]).begin ()) -> value (p)); }
-		void setPortValue (unsigned char p, const MCHEmul::UByte& v)
-							{ for (const auto& i : _portsRaw [(size_t) p]) i -> setValue (p, v); }
+			When the value of a port is read, just buy default the value of the first port associated to that number is returned. 
+			The method receives also the address bus. */
+		MCHEmul::UByte portValue (unsigned short ab, unsigned char p) const
+							{ return ((*(_portsRaw [(size_t) p]).begin ()) -> value (ab, p)); }
+		void setPortValue (unsigned short ab, unsigned char p, const MCHEmul::UByte& v)
+							{ for (const auto& i : _portsRaw [(size_t) p]) i -> setValue (ab, p, v); }
 
 		virtual bool initialize () override;
 
@@ -411,6 +421,9 @@ namespace FZ80
 		MCHEmul::RefRegisters _ixRegister;
 		MCHEmul::RefRegisters _iyRegister;
 		MCHEmul::RefRegisters _irRegister;
+		/** There are a couple of instructions that uses (seems) and internal register.
+			This register is then later used in the bit instructions (HL). */
+		MCHEmul::UByte _RWInternalRegister;
 
 		/** The ports value. */
 		Z80PortsMap _ports;

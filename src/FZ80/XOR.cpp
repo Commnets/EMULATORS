@@ -149,7 +149,7 @@ _INST_IMPL (FZ80::XOR_IndirectIndexIX)
 {
 	assert (parameters ().size () == 3);
 
-	return (executeWith (valueAddressIX (parameters ()[2].value ())));
+	return (executeWith (valueAddressIX ((char) parameters ()[2].value ())));
 }
 
 // ---
@@ -157,7 +157,7 @@ _INST_IMPL (FZ80::XOR_IndirectIndexIY)
 {
 	assert (parameters ().size () == 3);
 
-	return (executeWith (valueAddressIY (parameters ()[2].value ())));
+	return (executeWith (valueAddressIY ((char) parameters ()[2].value ())));
 }
 
 // ---

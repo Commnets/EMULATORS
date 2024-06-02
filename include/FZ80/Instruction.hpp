@@ -183,45 +183,52 @@ namespace FZ80
 							{ return (MCHEmul::UBytes ({ valueRegisterIYH (), valueRegisterIYL () })); }
 
 		// To get the address pointed by the register...
-		MCHEmul::Address addressBC (size_t n = 0) const
-							{ return (_lastExecutionData._INOUTAddress =
-								(MCHEmul::Address (valueRegisterBC (), true /** Addresses in Registers are big - endian. */) + n)); }
-		MCHEmul::Address addressDE (size_t n = 0) const
-							{ return (_lastExecutionData._INOUTAddress = 
-								MCHEmul::Address (valueRegisterDE (), true) + n); }
-		MCHEmul::Address addressHL (size_t n = 0) const
-							{ return (_lastExecutionData._INOUTAddress = 
-								MCHEmul::Address (valueRegisterHL (), true) + n); }
-		MCHEmul::Address addressIX (size_t n = 0) const
-							{ return (_lastExecutionData._INOUTAddress = 
-								MCHEmul::Address (valueRegisterIX (), true) + n); }
-		MCHEmul::Address addressIY (size_t n = 0) const
-							{ return (_lastExecutionData._INOUTAddress = 
-								MCHEmul::Address (valueRegisterIY (), true) + n); }
-		MCHEmul::Address addressSP (size_t n = 0) const
-							{ return (_lastExecutionData._INOUTAddress = 
-								MCHEmul::Address (valueRegisterSP (), true) + n); }
-		MCHEmul::Address addressIR (size_t n = 0) const
-							{ return (_lastExecutionData._INOUTAddress = 
-								MCHEmul::Address (valueRegisterIR (), true) + n); }
+		MCHEmul::Address addressBC (char n = 0) const // It can be negative!
+							{ return (_lastExecutionData._INOUTAddress = (n >= 0)
+								? (MCHEmul::Address (valueRegisterBC (), true) + (size_t) n)
+								: (MCHEmul::Address (valueRegisterBC (), true) - (size_t) (-n))); }
+		MCHEmul::Address addressDE (char n = 0) const
+							{ return (_lastExecutionData._INOUTAddress = (n >= 0)
+								? (MCHEmul::Address (valueRegisterDE (), true) + (size_t) n)
+								: (MCHEmul::Address (valueRegisterDE (), true) - (size_t) (-n))); } 
+		MCHEmul::Address addressHL (char n = 0) const
+							{ return (_lastExecutionData._INOUTAddress = (n >= 0)
+								? (MCHEmul::Address (valueRegisterHL (), true) + (size_t) n)
+								: (MCHEmul::Address (valueRegisterHL (), true) - (size_t) (-n))); }
+		MCHEmul::Address addressIX (char n = 0) const
+							{ return (_lastExecutionData._INOUTAddress = (n >= 0)
+								? (MCHEmul::Address (valueRegisterIX (), true) + (size_t) n)
+								: (MCHEmul::Address (valueRegisterIX (), true) - (size_t) (-n))); }
+		MCHEmul::Address addressIY (char n = 0) const
+							{ return (_lastExecutionData._INOUTAddress = (n >= 0)
+								? (MCHEmul::Address (valueRegisterIY (), true) + (size_t) n)
+								: (MCHEmul::Address (valueRegisterIY (), true) - (size_t) (-n))); }
+		MCHEmul::Address addressSP (char n = 0) const
+							{ return (_lastExecutionData._INOUTAddress = (n >= 0)
+								? (MCHEmul::Address (valueRegisterSP (), true) + (size_t) n)
+								: (MCHEmul::Address (valueRegisterSP (), true) - (size_t) (-n))); }
+		MCHEmul::Address addressIR (char n = 0) const
+							{ return (_lastExecutionData._INOUTAddress = (n >= 0)
+								? (MCHEmul::Address (valueRegisterIR (), true) + (size_t) n)
+								: (MCHEmul::Address (valueRegisterIR (), true) + (size_t) (-n))); }
 
 		// To get the value pointed by the registers...
-		const MCHEmul::UByte& valueAddressBC (size_t n = 0) const
+		const MCHEmul::UByte& valueAddressBC (char n = 0) const
 							{ return ((_lastExecutionData._INOUTData = 
 								MCHEmul::UBytes ({ memory () -> value (addressBC (n)) }))[0]); }
-		const MCHEmul::UByte& valueAddressDE (size_t n = 0) const
+		const MCHEmul::UByte& valueAddressDE (char n = 0) const
 							{ return ((_lastExecutionData._INOUTData = 
 								MCHEmul::UBytes ({ memory () -> value (addressDE (n)) }))[0]); }
-		const MCHEmul::UByte& valueAddressHL (size_t n = 0) const
+		const MCHEmul::UByte& valueAddressHL (char n = 0) const
 							{ return ((_lastExecutionData._INOUTData = 
 								MCHEmul::UBytes ({ memory () -> value (addressHL (n)) }))[0]); }
-		const MCHEmul::UByte& valueAddressIX (size_t n = 0) const
+		const MCHEmul::UByte& valueAddressIX (char n = 0) const
 							{ return ((_lastExecutionData._INOUTData = 
 								MCHEmul::UBytes ({ memory () -> value (addressIX (n)) }))[0]); }
-		const MCHEmul::UByte& valueAddressIY (size_t n = 0) const
+		const MCHEmul::UByte& valueAddressIY (char n = 0) const
 							{ return ((_lastExecutionData._INOUTData = 
 								MCHEmul::UBytes ({ memory () -> value (addressIY (n)) }))[0]); }
-		const MCHEmul::UByte& valueAddressSP (size_t n = 0) const
+		const MCHEmul::UByte& valueAddressSP (char n = 0) const
 							{ return ((_lastExecutionData._INOUTData = 
 								MCHEmul::UBytes ({ memory () -> value (addressSP (n)) }))[0]); }
 

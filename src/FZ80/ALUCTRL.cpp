@@ -14,7 +14,7 @@ _INST_IMPL (FZ80::DAA)
 	bool ac = aVal > 0x99;
 	int add = ((st.bitStatus (CZ80::_HALFCARRYFLAG) || ((aVal & 0x0f) > 9)) ? 0x06 : 0x00) /** The low nibble. */ +
 			  ((c || ac) ? 0x60 : 0x00) /** The high nibble. */;
-	aVal += st.bitStatus (CZ80::_HALFCARRYFLAG) ? -add : add;
+	aVal += st.bitStatus (CZ80::_NEGATIVEFLAG) ? -add : add;
 	aVal &= 0xff;
 	MCHEmul::UByte aValC ((unsigned char) aVal);
 

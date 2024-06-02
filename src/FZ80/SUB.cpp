@@ -149,7 +149,7 @@ _INST_IMPL (FZ80::SUB_AWithIndirectIndexIX)
 {
 	assert (parameters ().size () == 3);
 
-	return (executeWith (valueAddressIX (parameters ()[2].value ()), false));
+	return (executeWith (valueAddressIX ((char) parameters ()[2].value ()), false));
 }
 
 // ---
@@ -157,7 +157,7 @@ _INST_IMPL (FZ80::SUB_AWithIndirectIndexIY)
 {
 	assert (parameters ().size () == 3);
 
-	return (executeWith (valueAddressIY (parameters ()[2].value ()), false));
+	return (executeWith (valueAddressIY ((char) parameters ()[2].value ()), false));
 }
 
 // ---
@@ -349,7 +349,7 @@ _INST_IMPL (FZ80::SBC_AWithIndirectIndexIX)
 {
 	assert (parameters ().size () == 3);
 
-	return (executeWith (valueAddressIX (parameters ()[2].value ()), true));
+	return (executeWith (valueAddressIX ((char) parameters ()[2].value ()), true));
 }
 
 // ---
@@ -357,7 +357,7 @@ _INST_IMPL (FZ80::SBC_AWithIndirectIndexIY)
 {
 	assert (parameters ().size () == 3);
 
-	return (executeWith (valueAddressIY (parameters ()[2].value ()), true));
+	return (executeWith (valueAddressIY ((char) parameters ()[2].value ()), true));
 }
 
 // ---

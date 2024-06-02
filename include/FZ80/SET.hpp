@@ -162,7 +162,7 @@ namespace FZ80
 	_INST_FROM (0xDDCBD3,	4, 23, 23,	"SET 2,(IX+[#1]),E",	SET_2WithIndirectIndexIXCopyE, SET_Index);		// Undocumented
 	_INST_FROM (0xDDCBD4,	4, 23, 23,	"SET 2,(IX+[#1]),H",	SET_2WithIndirectIndexIXCopyH, SET_Index);		// Undocumented
 	_INST_FROM (0xDDCBD5,	4, 23, 23,	"SET 2,(IX+[#1]),L",	SET_2WithIndirectIndexIXCopyL, SET_Index);		// Undocumented
-	_INST_FROM (0xFDCBD6,	4, 20, 20,	"SET 2,(IY+[#1])",		SET_2WithIndirectIndexIY, SET_Index);
+	_INST_FROM (0xFDCBD6,	4, 23, 23,	"SET 2,(IY+[#1])",		SET_2WithIndirectIndexIY, SET_Index);
 	_INST_FROM (0xFDCBD7,	4, 23, 23,	"SET 2,(IY+[#1]),A",	SET_2WithIndirectIndexIYCopyA, SET_Index);		// Undocumented
 	_INST_FROM (0xFDCBD0,	4, 23, 23,	"SET 2,(IY+[#1]),B",	SET_2WithIndirectIndexIYCopyB, SET_Index);		// Undocumented
 	_INST_FROM (0xFDCBD1,	4, 23, 23,	"SET 2,(IY+[#1]),C",	SET_2WithIndirectIndexIYCopyC, SET_Index);		// Undocumented

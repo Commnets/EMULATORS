@@ -149,7 +149,7 @@ _INST_IMPL (FZ80::ADD_AWithIndirectIndexIX)
 {
 	assert (parameters ().size () == 3);
 
-	return (executeWith (valueAddressIX (parameters ()[2].value ()), false));
+	return (executeWith (valueAddressIX ((char) parameters ()[2].value ()), false));
 }
 
 // ---
@@ -157,7 +157,7 @@ _INST_IMPL (FZ80::ADD_AWithIndirectIndexIY)
 {
 	assert (parameters ().size () == 3);
 
-	return (executeWith (valueAddressIY (parameters ()[2].value ()), false));
+	return (executeWith (valueAddressIY ((char) parameters ()[2].value ()), false));
 }
 
 // ---
@@ -173,6 +173,10 @@ _INST_IMPL (FZ80::ADD_HLWithBC)
 {
 	assert (parameters ().size () == 1);
 
+	// Used maybe later in BIT instructions...
+	static_cast <FZ80::CZ80*> (_lastExecutionData._cpu) -> 
+		setRWInternalRegister (registerHL ()[0] -> values ()[0]);
+
 	return (executeWith (registerHL (), valueRegisterBC (), false));
 }
 
@@ -180,6 +184,9 @@ _INST_IMPL (FZ80::ADD_HLWithBC)
 _INST_IMPL (FZ80::ADD_HLWithDE)
 {
 	assert (parameters ().size () == 1);
+
+	static_cast <FZ80::CZ80*> (_lastExecutionData._cpu) -> 
+		setRWInternalRegister (registerHL ()[0] -> values ()[0]);
 
 	return (executeWith (registerHL (), valueRegisterDE (), false));
 }
@@ -189,6 +196,9 @@ _INST_IMPL (FZ80::ADD_HLWithHL)
 {
 	assert (parameters ().size () == 1);
 
+	static_cast <FZ80::CZ80*> (_lastExecutionData._cpu) -> 
+		setRWInternalRegister (registerHL ()[0] -> values ()[0]);
+
 	return (executeWith (registerHL (), valueRegisterHL (), false));
 }
 
@@ -196,6 +206,9 @@ _INST_IMPL (FZ80::ADD_HLWithHL)
 _INST_IMPL (FZ80::ADD_HLWithSP)
 {
 	assert (parameters ().size () == 1);
+
+	static_cast <FZ80::CZ80*> (_lastExecutionData._cpu) -> 
+		setRWInternalRegister (registerHL ()[0] -> values ()[0]);
 
 	return (executeWith (registerHL (), valueRegisterSP (), false));
 }
@@ -285,7 +298,7 @@ _INST_IMPL (FZ80::ADD_IYWithIY)
 {
 	assert (parameters ().size () == 2);
 
-	return (executeWith (registerIY (), valueRegisterIX (), false));
+	return (executeWith (registerIY (), valueRegisterIY (), false));
 }
 
 // ---
@@ -445,7 +458,7 @@ _INST_IMPL (FZ80::ADC_AWithIndirectIndexIX)
 {
 	assert (parameters ().size () == 3);
 
-	return (executeWith (valueAddressIX (parameters ()[2].value ()), true));
+	return (executeWith (valueAddressIX ((char) parameters ()[2].value ()), true));
 }
 
 // ---
@@ -453,7 +466,7 @@ _INST_IMPL (FZ80::ADC_AWithIndirectIndexIY)
 {
 	assert (parameters ().size () == 3);
 
-	return (executeWith (valueAddressIY (parameters ()[2].value ()), true));
+	return (executeWith (valueAddressIY ((char) parameters ()[2].value ()), true));
 }
 
 // ---
@@ -469,6 +482,9 @@ _INST_IMPL (FZ80::ADC_HLWithBC)
 {
 	assert (parameters ().size () == 2);
 
+	static_cast <FZ80::CZ80*> (_lastExecutionData._cpu) -> 
+		setRWInternalRegister (registerHL ()[0] -> values ()[0]);
+
 	return (executeWith (registerHL (), valueRegisterBC (), true));
 }
 
@@ -476,6 +492,9 @@ _INST_IMPL (FZ80::ADC_HLWithBC)
 _INST_IMPL (FZ80::ADC_HLWithDE)
 {
 	assert (parameters ().size () == 2);
+
+	static_cast <FZ80::CZ80*> (_lastExecutionData._cpu) -> 
+		setRWInternalRegister (registerHL ()[0] -> values ()[0]);
 
 	return (executeWith (registerHL (), valueRegisterDE (), true));
 }
@@ -485,6 +504,9 @@ _INST_IMPL (FZ80::ADC_HLWithHL)
 {
 	assert (parameters ().size () == 2);
 
+	static_cast <FZ80::CZ80*> (_lastExecutionData._cpu) -> 
+		setRWInternalRegister (registerHL ()[0] -> values ()[0]);
+
 	return (executeWith (registerHL (), valueRegisterHL (), true));
 }
 
@@ -492,6 +514,9 @@ _INST_IMPL (FZ80::ADC_HLWithHL)
 _INST_IMPL (FZ80::ADC_HLWithSP)
 {
 	assert (parameters ().size () == 2);
+
+	static_cast <FZ80::CZ80*> (_lastExecutionData._cpu) -> 
+		setRWInternalRegister (registerHL ()[0] -> values ()[0]);
 
 	return (executeWith (registerHL (), valueRegisterSP (), true));
 }

@@ -16,6 +16,13 @@ class Test
 
 	const std::vector <std::string>& errors () const
 							{ return (_errors); }
+	const std::vector <std::string>& warnings () const
+							{ return (_warnings); }
+	const std::vector <std::string>& noimplemented () const
+							{ return (_noimplemented); }
+
+	size_t totalTests () const
+							{ return (_testsIn.size ()); }
 
 	/** To run the test. */
 	void runTest (FZ80::CZ80* cpu, MCHEmul::Memory* m);
@@ -54,7 +61,7 @@ class Test
 		unsigned char _I, _R, _IM;
 		bool _IFF1, _IFF2;
 		bool _halted;
-		unsigned char _tStates;
+		unsigned short _tStates;
 		unsigned int _memoryStart;
 		std::vector <Memory> _data;
 	};
@@ -114,5 +121,7 @@ class Test
 
 	// Implementation
 	std::vector <std::string> _errors;
+	std::vector <std::string> _warnings;
+	std::vector <std::string> _noimplemented;
 };
 

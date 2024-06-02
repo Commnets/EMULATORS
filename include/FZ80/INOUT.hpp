@@ -49,7 +49,8 @@ namespace FZ80
 		_lastExecutionData._INOUTAddress = 
 			MCHEmul::Address ({ registerA ().values ()[0], np }, true /** Already in big endian. */);
 
-		registerA ().set ({ static_cast <CZ80*> (cpu ()) -> portValue (np) }); 
+		registerA ().set ({ static_cast <CZ80*> (cpu ()) -> portValue 
+			((unsigned short) _lastExecutionData._INOUTAddress.value (), np) }); 
 		// No flags affection...
 		
 		return (true); 
@@ -63,7 +64,8 @@ namespace FZ80
 		_lastExecutionData._INOUTAddress = MCHEmul::Address ({ registerB ().values ()[0], np }, true);
 
 		MCHEmul::UByte v;
-		r.set ({ v = static_cast <CZ80*> (cpu ()) -> portValue (np) });
+		r.set ({ v = static_cast <CZ80*> (cpu ()) -> portValue 
+			((unsigned short) _lastExecutionData._INOUTAddress.value (), np) });
 		affectFlags (v);
 
 		return (true);
@@ -77,7 +79,8 @@ namespace FZ80
 		_lastExecutionData._INOUTAddress = MCHEmul::Address ({ registerB ().values ()[0], np }, true);
 
 		// The value is not kept anywhere...(lost)
-		affectFlags (static_cast <CZ80*> (cpu ()) -> portValue (np));
+		affectFlags (static_cast <CZ80*> (cpu ()) -> portValue 
+			((unsigned short) _lastExecutionData._INOUTAddress.value (), np));
 
 		return (true);
 	}
@@ -171,7 +174,8 @@ namespace FZ80
 		// ...the address bus is kept with An
 		_lastExecutionData._INOUTAddress = MCHEmul::Address ({ registerA ().values ()[0], np }, true);
 
-		static_cast <CZ80*> (cpu ()) -> setPortValue (np, registerA ().values ()[0].value ()); 
+		static_cast <CZ80*> (cpu ()) -> setPortValue 
+			((unsigned short) _lastExecutionData._INOUTAddress.value (), np, registerA ().values ()[0].value ()); 
 		// No flags impact!
 		
 		return (true);
@@ -186,7 +190,8 @@ namespace FZ80
 		// ...the address bus is kept with Bn
 		_lastExecutionData._INOUTAddress = MCHEmul::Address ({ registerB ().values ()[0], v }, true);
 
-		static_cast <CZ80*> (cpu ()) -> setPortValue (v, r.values () [0].value ());
+		static_cast <CZ80*> (cpu ()) -> setPortValue 
+			((unsigned short) _lastExecutionData._INOUTAddress.value (), v, r.values () [0].value ());
 		// No flags impact...
 		
 		return (true); 
@@ -201,7 +206,8 @@ namespace FZ80
 
 		// Same behaviour that IN r,(C)
 		// But nothing is written instead...
-		static_cast <CZ80*> (cpu ()) -> setPortValue (v, MCHEmul::UByte::_0); 
+		static_cast <CZ80*> (cpu ()) -> setPortValue 
+			((unsigned short) _lastExecutionData._INOUTAddress.value (), v, MCHEmul::UByte::_0); 
 		// ..and no impact in flags either!
 		
 		return (true);  

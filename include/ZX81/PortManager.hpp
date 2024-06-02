@@ -54,11 +54,11 @@ namespace ZX81
 		// See that the constructor is private
 		// because it can only be invoked from ULA
 
-		virtual MCHEmul::UByte value (unsigned char id) const override
-							{ return (getValue (id, true)); }
-		virtual MCHEmul::UByte peekValue (unsigned char id) const override
-							{ return (getValue (id, false)); }
-		virtual void setValue (unsigned char id, const MCHEmul::UByte& v) override;
+		virtual MCHEmul::UByte value (unsigned short ab, unsigned char id) const override
+							{ return (getValue (ab, id, true)); }
+		virtual MCHEmul::UByte peekValue (unsigned short ab, unsigned char id) const override
+							{ return (getValue (ab, id, false)); }
+		virtual void setValue (unsigned short ab, unsigned char id, const MCHEmul::UByte& v) override;
 
 		/** To link to the different elements. */
 		void linkToULA (ULA* ula);
@@ -67,7 +67,7 @@ namespace ZX81
 
 		private:
 		/** ms = true when is is wanted to modify the internal status. */
-		MCHEmul::UByte getValue (unsigned char id, bool ms = false) const;
+		MCHEmul::UByte getValue (unsigned short ab, unsigned char id, bool ms = false) const;
 
 		private:
 		ULA* _ULA;

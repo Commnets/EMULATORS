@@ -202,7 +202,7 @@ _INST_IMPL (FZ80::LD_AFromR)
 		st.setBitStatus (FZ80::CZ80::_PARITYOVERFLOWFLAG, static_cast <FZ80::CZ80*> (cpu ()) -> IFF2 ());
 		st.setBitStatus (FZ80::CZ80::_BIT3FLAG, v.bit (3));
 		st.setBitStatus (FZ80::CZ80::_HALFCARRYFLAG, false);
-		st.setBitStatus (FZ80::CZ80::_BIT3FLAG, v.bit (5));
+		st.setBitStatus (FZ80::CZ80::_BIT5FLAG, v.bit (5));
 		st.setBitStatus (FZ80::CZ80::_ZEROFLAG, v == MCHEmul::UByte::_0);
 		st.setBitStatus (FZ80::CZ80::_SIGNFLAG, v.bit (7));
 	}
@@ -239,7 +239,13 @@ _INST_IMPL (FZ80::LD_AFromAddressIndexIX)
 {
 	assert (parameters ().size () == 3);
 
-	return (executeWith (registerA (), valueAddressIX ((size_t) parameters ()[2].value ())));
+	char n = (char) parameters ()[2].value ();
+	static_cast <FZ80::CZ80*> (_lastExecutionData._cpu) -> 
+		setRWInternalRegister ((n >= 0) 
+			? (MCHEmul::Address (valueRegisterIX (), true) + (size_t) n)[0]
+			: (MCHEmul::Address (valueRegisterIX (), true) - (size_t) (-n))[0]);
+
+	return (executeWith (registerA (), valueAddressIX (n)));
 }
 
 // ---
@@ -247,7 +253,13 @@ _INST_IMPL (FZ80::LD_AFromAddressIndexIY)
 {
 	assert (parameters ().size () == 3);
 
-	return (executeWith (registerA (), valueAddressIY ((size_t) parameters ()[2].value ())));
+	char n = (char) parameters ()[2].value ();
+	static_cast <FZ80::CZ80*> (_lastExecutionData._cpu) -> 
+		setRWInternalRegister ((n >= 0) 
+			? (MCHEmul::Address (valueRegisterIY (), true) + (size_t) n)[0]
+			: (MCHEmul::Address (valueRegisterIY (), true) - (size_t) (-n))[0]);
+
+	return (executeWith (registerA (), valueAddressIY (n)));
 }
 
 // ---
@@ -468,7 +480,13 @@ _INST_IMPL (FZ80::LD_BFromAddressIndexIX)
 {
 	assert (parameters ().size () == 3);
 
-	return (executeWith (registerB (), valueAddressIX ((size_t) parameters ()[2].value ())));
+	char n = (char) parameters ()[2].value ();
+	static_cast <FZ80::CZ80*> (_lastExecutionData._cpu) -> 
+		setRWInternalRegister ((n >= 0) 
+			? (MCHEmul::Address (valueRegisterIX (), true) + (size_t) n)[0]
+			: (MCHEmul::Address (valueRegisterIX (), true) - (size_t) (-n))[0]);
+
+	return (executeWith (registerB (), valueAddressIX (n)));
 }
 
 // ---
@@ -476,7 +494,13 @@ _INST_IMPL (FZ80::LD_BFromAddressIndexIY)
 {
 	assert (parameters ().size () == 3);
 
-	return (executeWith (registerB (), valueAddressIY ((size_t) parameters ()[2].value ())));
+	char n = (char) parameters ()[2].value ();
+	static_cast <FZ80::CZ80*> (_lastExecutionData._cpu) -> 
+		setRWInternalRegister ((n >= 0) 
+			? (MCHEmul::Address (valueRegisterIY (), true) + (size_t) n)[0]
+			: (MCHEmul::Address (valueRegisterIY (), true) - (size_t) (-n))[0]);
+
+	return (executeWith (registerB (), valueAddressIY (n)));
 }
 
 // ---
@@ -684,7 +708,13 @@ _INST_IMPL (FZ80::LD_CFromAddressIndexIX)
 {
 	assert (parameters ().size () == 3);
 
-	return (executeWith (registerC (), valueAddressIX ((size_t) parameters ()[2].value ())));
+	char n = (char) parameters ()[2].value ();
+	static_cast <FZ80::CZ80*> (_lastExecutionData._cpu) -> 
+		setRWInternalRegister ((n >= 0) 
+			? (MCHEmul::Address (valueRegisterIX (), true) + (size_t) n)[0]
+			: (MCHEmul::Address (valueRegisterIX (), true) - (size_t) (-n))[0]);
+
+	return (executeWith (registerC (), valueAddressIX (n)));
 }
 
 // ---
@@ -692,7 +722,13 @@ _INST_IMPL (FZ80::LD_CFromAddressIndexIY)
 {
 	assert (parameters ().size () == 3);
 
-	return (executeWith (registerC (), valueAddressIY ((size_t) parameters ()[2].value ())));
+	char n = (char) parameters ()[2].value ();
+	static_cast <FZ80::CZ80*> (_lastExecutionData._cpu) -> 
+		setRWInternalRegister ((n >= 0) 
+			? (MCHEmul::Address (valueRegisterIY (), true) + (size_t) n)[0]
+			: (MCHEmul::Address (valueRegisterIY (), true) - (size_t) (-n))[0]);
+
+	return (executeWith (registerC (), valueAddressIY (n)));
 }
 
 // ---
@@ -900,7 +936,13 @@ _INST_IMPL (FZ80::LD_DFromAddressIndexIX)
 {
 	assert (parameters ().size () == 3);
 
-	return (executeWith (registerD (), valueAddressIX ((size_t) parameters ()[2].value ())));
+	char n = (char) parameters ()[2].value ();
+	static_cast <FZ80::CZ80*> (_lastExecutionData._cpu) -> 
+		setRWInternalRegister ((n >= 0) 
+			? (MCHEmul::Address (valueRegisterIX (), true) + (size_t) n)[0]
+			: (MCHEmul::Address (valueRegisterIX (), true) - (size_t) (-n))[0]);
+
+	return (executeWith (registerD (), valueAddressIX (n)));
 }
 
 // ---
@@ -908,7 +950,13 @@ _INST_IMPL (FZ80::LD_DFromAddressIndexIY)
 {
 	assert (parameters ().size () == 3);
 
-	return (executeWith (registerD (), valueAddressIY ((size_t) parameters ()[2].value ())));
+	char n = (char) parameters ()[2].value ();
+	static_cast <FZ80::CZ80*> (_lastExecutionData._cpu) -> 
+		setRWInternalRegister ((n >= 0) 
+			? (MCHEmul::Address (valueRegisterIY (), true) + (size_t) n)[0]
+			: (MCHEmul::Address (valueRegisterIY (), true) - (size_t) (-n))[0]);
+
+	return (executeWith (registerD (), valueAddressIY (n)));
 }
 
 // ---
@@ -1116,7 +1164,13 @@ _INST_IMPL (FZ80::LD_EFromAddressIndexIX)
 {
 	assert (parameters ().size () == 3);
 
-	return (executeWith (registerE (), valueAddressIX ((size_t) (parameters ()[2].value ()))));
+	char n = (char) parameters ()[2].value ();
+	static_cast <FZ80::CZ80*> (_lastExecutionData._cpu) -> 
+		setRWInternalRegister ((n >= 0) 
+			? (MCHEmul::Address (valueRegisterIX (), true) + (size_t) n)[0]
+			: (MCHEmul::Address (valueRegisterIX (), true) - (size_t) (-n))[0]);
+
+	return (executeWith (registerE (), valueAddressIX (n)));
 }
 
 // ---
@@ -1124,7 +1178,13 @@ _INST_IMPL (FZ80::LD_EFromAddressIndexIY)
 {
 	assert (parameters ().size () == 3);
 
-	return (executeWith (registerE (), valueAddressIY ((size_t) (parameters ()[2].value ()))));
+	char n = (char) parameters ()[2].value ();
+	static_cast <FZ80::CZ80*> (_lastExecutionData._cpu) -> 
+		setRWInternalRegister ((n >= 0) 
+			? (MCHEmul::Address (valueRegisterIY (), true) + (size_t) n)[0]
+			: (MCHEmul::Address (valueRegisterIY (), true) - (size_t) (-n))[0]);
+
+	return (executeWith (registerE (), valueAddressIY (n)));
 }
 
 // ---
@@ -1236,7 +1296,13 @@ _INST_IMPL (FZ80::LD_HFromAddressIndexIX)
 {
 	assert (parameters ().size () == 3);
 
-	return (executeWith (registerH (), valueAddressIX ((size_t) (parameters ()[2].value ()))));
+	char n = (char) parameters ()[2].value ();
+	static_cast <FZ80::CZ80*> (_lastExecutionData._cpu) -> 
+		setRWInternalRegister ((n >= 0) 
+			? (MCHEmul::Address (valueRegisterIX (), true) + (size_t) n)[0]
+			: (MCHEmul::Address (valueRegisterIX (), true) - (size_t) (-n))[0]);
+
+	return (executeWith (registerH (), valueAddressIX (n)));
 }
 
 // ---
@@ -1244,7 +1310,13 @@ _INST_IMPL (FZ80::LD_HFromAddressIndexIY)
 {
 	assert (parameters ().size () == 3);
 
-	return (executeWith (registerH (), valueAddressIY ((size_t) (parameters ()[2].value ()))));
+	char n = (char) parameters ()[2].value ();
+	static_cast <FZ80::CZ80*> (_lastExecutionData._cpu) -> 
+		setRWInternalRegister ((n >= 0) 
+			? (MCHEmul::Address (valueRegisterIY (), true) + (size_t) n)[0]
+			: (MCHEmul::Address (valueRegisterIY (), true) - (size_t) (-n))[0]);
+
+	return (executeWith (registerH (), valueAddressIY (n)));
 }
 
 // ---
@@ -1324,7 +1396,13 @@ _INST_IMPL (FZ80::LD_LFromAddressIndexIX)
 {
 	assert (parameters ().size () == 3);
 
-	return (executeWith (registerL (), valueAddressIX ((size_t) (parameters ()[2].value ()))));
+	char n = (char) parameters ()[2].value ();
+	static_cast <FZ80::CZ80*> (_lastExecutionData._cpu) -> 
+		setRWInternalRegister ((n >= 0) 
+			? (MCHEmul::Address (valueRegisterIX (), true) + (size_t) n)[0]
+			: (MCHEmul::Address (valueRegisterIX (), true) - (size_t) (-n))[0]);
+
+	return (executeWith (registerL (), valueAddressIX (n)));
 }
 
 // ---
@@ -1332,7 +1410,13 @@ _INST_IMPL (FZ80::LD_LFromAddressIndexIY)
 {
 	assert (parameters ().size () == 3);
 
-	return (executeWith (registerL (), valueAddressIX ((size_t) (parameters ()[2].value ()))));
+	char n = (char) parameters ()[2].value ();
+	static_cast <FZ80::CZ80*> (_lastExecutionData._cpu) -> 
+		setRWInternalRegister ((n >= 0) 
+			? (MCHEmul::Address (valueRegisterIY (), true) + (size_t) n)[0]
+			: (MCHEmul::Address (valueRegisterIY (), true) - (size_t) (-n))[0]);
+
+	return (executeWith (registerL (), valueAddressIY (n)));
 }
 
 // ---
@@ -1420,7 +1504,7 @@ _INST_IMPL (FZ80::LD_IndirectIndexIX)
 {
 	assert (parameters ().size () == 4);
 
-	return (executeWith (addressIX ((size_t) parameters ()[2].value ()), parameters ()[3].value ()));
+	return (executeWith (addressIX ((char) parameters ()[2].value ()), parameters ()[3].value ()));
 }
 
 // ---
@@ -1428,7 +1512,7 @@ _INST_IMPL (FZ80::LD_IndirectIndexIXFromA)
 {
 	assert (parameters ().size () == 3);
 
-	return (executeWith (addressIX ((size_t) parameters ()[2].value ()), valueRegisterA ()));
+	return (executeWith (addressIX ((char) parameters ()[2].value ()), valueRegisterA ()));
 }
 
 // ---
@@ -1436,7 +1520,7 @@ _INST_IMPL (FZ80::LD_IndirectIndexIXFromB)
 {
 	assert (parameters ().size () == 3);
 
-	return (executeWith (addressIX ((size_t) parameters ()[2].value ()), valueRegisterB ()));
+	return (executeWith (addressIX ((char) parameters ()[2].value ()), valueRegisterB ()));
 }
 
 // ---
@@ -1444,7 +1528,7 @@ _INST_IMPL (FZ80::LD_IndirectIndexIXFromC)
 {
 	assert (parameters ().size () == 3);
 
-	return (executeWith (addressIX ((size_t) parameters ()[2].value ()), valueRegisterC ()));
+	return (executeWith (addressIX ((char) parameters ()[2].value ()), valueRegisterC ()));
 }
 
 // ---
@@ -1452,7 +1536,7 @@ _INST_IMPL (FZ80::LD_IndirectIndexIXFromD)
 {
 	assert (parameters ().size () == 3);
 
-	return (executeWith (addressIX ((size_t) parameters ()[2].value ()), valueRegisterD ()));
+	return (executeWith (addressIX ((char) parameters ()[2].value ()), valueRegisterD ()));
 }
 
 // ---
@@ -1460,7 +1544,7 @@ _INST_IMPL (FZ80::LD_IndirectIndexIXFromE)
 {
 	assert (parameters ().size () == 3);
 
-	return (executeWith (addressIX ((size_t) parameters ()[2].value ()), valueRegisterE ()));
+	return (executeWith (addressIX ((char) parameters ()[2].value ()), valueRegisterE ()));
 }
 
 // ---
@@ -1468,7 +1552,7 @@ _INST_IMPL (FZ80::LD_IndirectIndexIXFromH)
 {
 	assert (parameters ().size () == 3);
 
-	return (executeWith (addressIX ((size_t) parameters ()[2].value ()), valueRegisterH ()));
+	return (executeWith (addressIX ((char) parameters ()[2].value ()), valueRegisterH ()));
 }
 
 // ---
@@ -1476,7 +1560,7 @@ _INST_IMPL (FZ80::LD_IndirectIndexIXFromL)
 {
 	assert (parameters ().size () == 3);
 
-	return (executeWith (addressIX ((size_t) parameters ()[2].value ()), valueRegisterL ()));
+	return (executeWith (addressIX ((char) parameters ()[2].value ()), valueRegisterL ()));
 }
 
 // ---
@@ -1484,7 +1568,7 @@ _INST_IMPL (FZ80::LD_IndirectIndexIY)
 {
 	assert (parameters ().size () == 4);
 
-	return (executeWith (addressIY ((size_t) parameters ()[2].value ()), parameters ()[3].value ()));
+	return (executeWith (addressIY ((char) parameters ()[2].value ()), parameters ()[3].value ()));
 }
 
 // ---
@@ -1492,7 +1576,7 @@ _INST_IMPL (FZ80::LD_IndirectIndexIYFromA)
 {
 	assert (parameters ().size () == 3);
 
-	return (executeWith (addressIY ((size_t) parameters ()[2].value ()), valueRegisterA ()));
+	return (executeWith (addressIY ((char) parameters ()[2].value ()), valueRegisterA ()));
 }
 
 // ---
@@ -1500,7 +1584,7 @@ _INST_IMPL (FZ80::LD_IndirectIndexIYFromB)
 {
 	assert (parameters ().size () == 3);
 
-	return (executeWith (addressIY ((size_t) parameters ()[2].value ()), valueRegisterB ()));
+	return (executeWith (addressIY ((char) parameters ()[2].value ()), valueRegisterB ()));
 }
 
 // ---
@@ -1508,7 +1592,7 @@ _INST_IMPL (FZ80::LD_IndirectIndexIYFromC)
 {
 	assert (parameters ().size () == 3);
 
-	return (executeWith (addressIY ((size_t) parameters ()[2].value ()), valueRegisterC ()));
+	return (executeWith (addressIY ((char) parameters ()[2].value ()), valueRegisterC ()));
 }
 
 // ---
@@ -1516,7 +1600,7 @@ _INST_IMPL (FZ80::LD_IndirectIndexIYFromD)
 {
 	assert (parameters ().size () == 3);
 
-	return (executeWith (addressIY ((size_t) parameters ()[2].value ()), valueRegisterD ()));
+	return (executeWith (addressIY ((char) parameters ()[2].value ()), valueRegisterD ()));
 }
 
 // ---
@@ -1524,7 +1608,7 @@ _INST_IMPL (FZ80::LD_IndirectIndexIYFromE)
 {
 	assert (parameters ().size () == 3);
 
-	return (executeWith (addressIY ((size_t) parameters ()[2].value ()), valueRegisterE ()));
+	return (executeWith (addressIY ((char) parameters ()[2].value ()), valueRegisterE ()));
 }
 
 // ---
@@ -1532,7 +1616,7 @@ _INST_IMPL (FZ80::LD_IndirectIndexIYFromH)
 {
 	assert (parameters ().size () == 3);
 
-	return (executeWith (addressIY ((size_t) parameters ()[2].value ()), valueRegisterH ()));
+	return (executeWith (addressIY ((char) parameters ()[2].value ()), valueRegisterH ()));
 }
 
 // ---
@@ -1540,7 +1624,7 @@ _INST_IMPL (FZ80::LD_IndirectIndexIYFromL)
 {
 	assert (parameters ().size () == 3);
 
-	return (executeWith (addressIY ((size_t) parameters ()[2].value ()), valueRegisterL ()));
+	return (executeWith (addressIY ((char) parameters ()[2].value ()), valueRegisterL ()));
 }
 
 // ---

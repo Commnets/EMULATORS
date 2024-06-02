@@ -31,6 +31,12 @@ namespace FZ80
 		protected:
 		/** With the tested bit. */
 		inline bool executeWith (size_t nb, const MCHEmul::UByte& d);
+		/** For the HL the behaviour is a little bit different in the YF and ZF. */
+		inline bool executeWithHL (size_t nb);
+		/** For the indirect address the behaviour is a little bit different
+			in the YF and ZF. */
+		inline bool executeWithIndirectIX (size_t nb, char p);
+		inline bool executeWithIndirectIY (size_t nb, char p);
 	};
 
 	// ---
@@ -47,7 +53,73 @@ namespace FZ80
 		st.setBitStatus (CZ80::_HALFCARRYFLAG, true); // Always...
 		st.setBitStatus (CZ80::_BIT5FLAG, d.bit (5)); // Undocumented...
 		st.setBitStatus (CZ80::_ZEROFLAG, !v); // The real result!!
-		st.setBitStatus (CZ80::_SIGNFLAG, nb == 7 && d.bit (7)); // Undocumented...
+		st.setBitStatus (CZ80::_SIGNFLAG, nb == 7 && v); // Undocumented...
+
+		return (true);
+	}
+
+	// ---
+	inline bool BIT_General::executeWithHL (size_t nb)
+	{
+		MCHEmul::UByte d = valueAddressHL ();
+
+		MCHEmul::StatusRegister& st = cpu () -> statusRegister ();
+
+		// How the flags are affected...
+		// Carry flag doesn't change...
+		bool v = d.bit (nb);
+		const MCHEmul::UByte& rw = static_cast <CZ80*> (cpu ()) -> RWInternalRegister ();
+		st.setBitStatus (CZ80::_NEGATIVEFLAG, false); // Always
+		st.setBitStatus (CZ80::_PARITYOVERFLOWFLAG, !v); // Undocumented...
+		st.setBitStatus (CZ80::_BIT3FLAG, rw.bit (3)); // Undocumented...
+		st.setBitStatus (CZ80::_HALFCARRYFLAG, true); // Always...
+		st.setBitStatus (CZ80::_BIT5FLAG, rw.bit (5)); // Undocumented...
+		st.setBitStatus (CZ80::_ZEROFLAG, !v); // The real result!!
+		st.setBitStatus (CZ80::_SIGNFLAG, nb == 7 && v); // Undocumented...
+
+		return (true);
+	}
+
+	// ---
+	inline bool BIT_General::executeWithIndirectIX (size_t nb, char p)
+	{
+		MCHEmul::StatusRegister& st = cpu () -> statusRegister ();
+
+		const MCHEmul::Address& addr = addressIX (p);
+		const MCHEmul::UByte& d = valueAddressIX (p);
+
+		// How the flags are affected...
+		// Carry flag doesn't change...
+		bool v = d.bit (nb);
+		st.setBitStatus (CZ80::_NEGATIVEFLAG, false); // Always
+		st.setBitStatus (CZ80::_PARITYOVERFLOWFLAG, !v); // Undocumented...
+		st.setBitStatus (CZ80::_BIT3FLAG, addr [0].bit (3)); // Undocumented...
+		st.setBitStatus (CZ80::_HALFCARRYFLAG, true); // Always...
+		st.setBitStatus (CZ80::_BIT5FLAG, addr [0].bit (5)); // Undocumented...
+		st.setBitStatus (CZ80::_ZEROFLAG, !v); // The real result!!
+		st.setBitStatus (CZ80::_SIGNFLAG, nb == 7 && v); // Undocumented...
+
+		return (true);
+	}
+
+	// ---
+	inline bool BIT_General::executeWithIndirectIY (size_t nb, char p)
+	{
+		MCHEmul::StatusRegister& st = cpu () -> statusRegister ();
+
+		const MCHEmul::Address& addr = addressIY (p);
+		const MCHEmul::UByte& d = valueAddressIY (p);
+
+		// How the flags are affected...
+		// Carry flag doesn't change...
+		bool v = d.bit (nb);
+		st.setBitStatus (CZ80::_NEGATIVEFLAG, false); // Always
+		st.setBitStatus (CZ80::_PARITYOVERFLOWFLAG, !v); // Undocumented...
+		st.setBitStatus (CZ80::_BIT3FLAG, addr [0].bit (3)); // Undocumented...
+		st.setBitStatus (CZ80::_HALFCARRYFLAG, true); // Always...
+		st.setBitStatus (CZ80::_BIT5FLAG, addr [0].bit (5)); // Undocumented...
+		st.setBitStatus (CZ80::_ZEROFLAG, !v); // The real result!!
+		st.setBitStatus (CZ80::_SIGNFLAG, nb == 7 && v); // Undocumented...
 
 		return (true);
 	}

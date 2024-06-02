@@ -150,7 +150,7 @@ _INST_IMPL (FZ80::CP_WithIndirectIndexIX)
 {
 	assert (parameters ().size () == 3);
 
-	return (executeWith (valueAddressIX (parameters ()[2].value ())));
+	return (executeWith (valueAddressIX ((char) parameters ()[2].value ())));
 }
 
 // ---
@@ -158,7 +158,7 @@ _INST_IMPL (FZ80::CP_WithIndirectIndexIY)
 {
 	assert (parameters ().size () == 3);
 
-	return (executeWith (valueAddressIY (parameters ()[2].value ())));
+	return (executeWith (valueAddressIY ((char) parameters ()[2].value ())));
 }
 
 // ---

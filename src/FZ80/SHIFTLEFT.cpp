@@ -91,7 +91,7 @@ _INST_IMPL (FZ80::SLA_IndirectIndexIX)
 
 	// The parameter 3rd is not used...
 
-	return (executeWith (addressIX (parameters ()[3].value ()), false));
+	return (executeWith (addressIX ((char) parameters ()[2].value ()), false));
 }
 
 // ---
@@ -101,7 +101,7 @@ _INST_IMPL (FZ80::SLA_IndirectIndexIXCopyA)
 
 	// The parameter 3rd is not used...
 
-	return (executeWith (addressIX (parameters ()[3].value ()), registerA (), false));
+	return (executeWith (addressIX ((char) parameters ()[2].value ()), registerA (), false));
 }
 
 // ---
@@ -111,7 +111,7 @@ _INST_IMPL (FZ80::SLA_IndirectIndexIXCopyB)
 
 	// The parameter 3rd is not used...
 
-	return (executeWith (addressIX (parameters ()[3].value ()), registerB (), false));
+	return (executeWith (addressIX ((char) parameters ()[2].value ()), registerB (), false));
 }
 
 // ---
@@ -121,7 +121,7 @@ _INST_IMPL (FZ80::SLA_IndirectIndexIXCopyC)
 
 	// The parameter 3rd is not used...
 
-	return (executeWith (addressIX (parameters ()[3].value ()), registerC (), false));
+	return (executeWith (addressIX ((char) parameters ()[2].value ()), registerC (), false));
 }
 
 // ---
@@ -131,7 +131,7 @@ _INST_IMPL (FZ80::SLA_IndirectIndexIXCopyD)
 
 	// The parameter 3rd is not used...
 
-	return (executeWith (addressIX (parameters ()[3].value ()), registerD (), false));
+	return (executeWith (addressIX ((char) parameters ()[2].value ()), registerD (), false));
 }
 
 // ---
@@ -141,7 +141,7 @@ _INST_IMPL (FZ80::SLA_IndirectIndexIXCopyE)
 
 	// The parameter 3rd is not used...
 
-	return (executeWith (addressIX (parameters ()[3].value ()), registerE (), false));
+	return (executeWith (addressIX ((char) parameters ()[2].value ()), registerE (), false));
 }
 
 // ---
@@ -151,7 +151,7 @@ _INST_IMPL (FZ80::SLA_IndirectIndexIXCopyH)
 
 	// The parameter 3rd is not used...
 
-	return (executeWith (addressIX (parameters ()[3].value ()), registerH (), false));
+	return (executeWith (addressIX ((char) parameters ()[2].value ()), registerH (), false));
 }
 
 // ---
@@ -161,7 +161,7 @@ _INST_IMPL (FZ80::SLA_IndirectIndexIXCopyL)
 
 	// The parameter 3rd is not used...
 
-	return (executeWith (addressIX (parameters ()[3].value ()), registerL (), false));
+	return (executeWith (addressIX ((char) parameters ()[2].value ()), registerL (), false));
 }
 
 // ---
@@ -171,7 +171,7 @@ _INST_IMPL (FZ80::SLA_IndirectIndexIY)
 
 	// The parameter 3rd is not used...
 
-	return (executeWith (addressIY (parameters ()[3].value ()), false));
+	return (executeWith (addressIY ((char) parameters ()[2].value ()), false));
 }
 
 // ---
@@ -181,7 +181,7 @@ _INST_IMPL (FZ80::SLA_IndirectIndexIYCopyA)
 
 	// The parameter 3rd is not used...
 
-	return (executeWith (addressIY (parameters ()[3].value ()), registerA (), false));
+	return (executeWith (addressIY ((char) parameters ()[2].value ()), registerA (), false));
 }
 
 // ---
@@ -191,7 +191,7 @@ _INST_IMPL (FZ80::SLA_IndirectIndexIYCopyB)
 
 	// The parameter 3rd is not used...
 
-	return (executeWith (addressIY (parameters ()[3].value ()), registerB (), false));
+	return (executeWith (addressIY ((char) parameters ()[2].value ()), registerB (), false));
 }
 
 // ---
@@ -201,7 +201,7 @@ _INST_IMPL (FZ80::SLA_IndirectIndexIYCopyC)
 
 	// The parameter 3rd is not used...
 
-	return (executeWith (addressIY (parameters ()[3].value ()), registerC (), false));
+	return (executeWith (addressIY ((char) parameters ()[2].value ()), registerC (), false));
 }
 
 // ---
@@ -211,7 +211,7 @@ _INST_IMPL (FZ80::SLA_IndirectIndexIYCopyD)
 
 	// The parameter 3rd is not used...
 
-	return (executeWith (addressIY (parameters ()[3].value ()), registerD (), false));
+	return (executeWith (addressIY ((char) parameters ()[2].value ()), registerD (), false));
 }
 
 // ---
@@ -221,7 +221,7 @@ _INST_IMPL (FZ80::SLA_IndirectIndexIYCopyE)
 
 	// The parameter 3rd is not used...
 
-	return (executeWith (addressIY (parameters ()[3].value ()), registerE (), false));
+	return (executeWith (addressIY ((char) parameters ()[2].value ()), registerE (), false));
 }
 
 // ---
@@ -231,7 +231,7 @@ _INST_IMPL (FZ80::SLA_IndirectIndexIYCopyH)
 
 	// The parameter 3rd is not used...
 
-	return (executeWith (addressIY (parameters ()[3].value ()), registerH (), false));
+	return (executeWith (addressIY ((char) parameters ()[2].value ()), registerH (), false));
 }
 
 // ---
@@ -241,7 +241,7 @@ _INST_IMPL (FZ80::SLA_IndirectIndexIYCopyL)
 
 	// The parameter 3rd is not used...
 
-	return (executeWith (addressIY (parameters ()[3].value ()), registerL (), false));
+	return (executeWith (addressIY ((char) parameters ()[2].value ()), registerL (), false));
 }
 
 // ---
@@ -315,7 +315,7 @@ _INST_IMPL (FZ80::SLL_IndirectIndexIX)
 
 	// The parameter 3rd is not used...
 
-	return (executeWith (addressIX (parameters ()[3].value ()), true));
+	return (executeWith (addressIX ((char) parameters ()[2].value ()), true));
 }
 
 // ---
@@ -325,7 +325,7 @@ _INST_IMPL (FZ80::SLL_IndirectIndexIXCopyA)
 
 	// The parameter 3rd is not used...
 
-	return (executeWith (addressIX (parameters ()[3].value ()), registerA (), true));
+	return (executeWith (addressIX ((char) parameters ()[2].value ()), registerA (), true));
 }
 
 // ---
@@ -335,7 +335,7 @@ _INST_IMPL (FZ80::SLL_IndirectIndexIXCopyB)
 
 	// The parameter 3rd is not used...
 
-	return (executeWith (addressIX (parameters ()[3].value ()), registerB (), true));
+	return (executeWith (addressIX ((char) parameters ()[2].value ()), registerB (), true));
 }
 
 // ---
@@ -345,7 +345,7 @@ _INST_IMPL (FZ80::SLL_IndirectIndexIXCopyC)
 
 	// The parameter 3rd is not used...
 
-	return (executeWith (addressIX (parameters ()[3].value ()), registerC (), true));
+	return (executeWith (addressIX ((char) parameters ()[2].value ()), registerC (), true));
 }
 
 // ---
@@ -355,7 +355,7 @@ _INST_IMPL (FZ80::SLL_IndirectIndexIXCopyD)
 
 	// The parameter 3rd is not used...
 
-	return (executeWith (addressIX (parameters ()[3].value ()), registerD (), true));
+	return (executeWith (addressIX ((char) parameters ()[2].value ()), registerD (), true));
 }
 
 // ---
@@ -365,7 +365,7 @@ _INST_IMPL (FZ80::SLL_IndirectIndexIXCopyE)
 
 	// The parameter 3rd is not used...
 
-	return (executeWith (addressIX (parameters ()[3].value ()), registerE (), true));
+	return (executeWith (addressIX ((char) parameters ()[2].value ()), registerE (), true));
 }
 
 // ---
@@ -375,7 +375,7 @@ _INST_IMPL (FZ80::SLL_IndirectIndexIXCopyH)
 
 	// The parameter 3rd is not used...
 
-	return (executeWith (addressIX (parameters ()[3].value ()), registerH (), true));
+	return (executeWith (addressIX ((char) parameters ()[2].value ()), registerH (), true));
 }
 
 // ---
@@ -385,7 +385,7 @@ _INST_IMPL (FZ80::SLL_IndirectIndexIXCopyL)
 
 	// The parameter 3rd is not used...
 
-	return (executeWith (addressIX (parameters ()[3].value ()), registerL (), true));
+	return (executeWith (addressIX ((char) parameters ()[2].value ()), registerL (), true));
 }
 
 // ---
@@ -395,7 +395,7 @@ _INST_IMPL (FZ80::SLL_IndirectIndexIY)
 
 	// The parameter 3rd is not used...
 
-	return (executeWith (addressIY (parameters ()[3].value ()), true));
+	return (executeWith (addressIY ((char) parameters ()[2].value ()), true));
 }
 
 // ---
@@ -405,7 +405,7 @@ _INST_IMPL (FZ80::SLL_IndirectIndexIYCopyA)
 
 	// The parameter 3rd is not used...
 
-	return (executeWith (addressIY (parameters ()[3].value ()), registerA (), true));
+	return (executeWith (addressIY ((char) parameters ()[2].value ()), registerA (), true));
 }
 
 // ---
@@ -415,7 +415,7 @@ _INST_IMPL (FZ80::SLL_IndirectIndexIYCopyB)
 
 	// The parameter 3rd is not used...
 
-	return (executeWith (addressIY (parameters ()[3].value ()), registerB (), true));
+	return (executeWith (addressIY ((char) parameters ()[2].value ()), registerB (), true));
 }
 
 // ---
@@ -425,7 +425,7 @@ _INST_IMPL (FZ80::SLL_IndirectIndexIYCopyC)
 
 	// The parameter 3rd is not used...
 
-	return (executeWith (addressIY (parameters ()[3].value ()), registerC (), true));
+	return (executeWith (addressIY ((char) parameters ()[2].value ()), registerC (), true));
 }
 
 // ---
@@ -435,7 +435,7 @@ _INST_IMPL (FZ80::SLL_IndirectIndexIYCopyD)
 
 	// The parameter 3rd is not used...
 
-	return (executeWith (addressIY (parameters ()[3].value ()), registerD (), true));
+	return (executeWith (addressIY ((char) parameters ()[2].value ()), registerD (), true));
 }
 
 // ---
@@ -445,7 +445,7 @@ _INST_IMPL (FZ80::SLL_IndirectIndexIYCopyE)
 
 	// The parameter 3rd is not used...
 
-	return (executeWith (addressIY (parameters ()[3].value ()), registerE (), true));
+	return (executeWith (addressIY ((char) parameters ()[2].value ()), registerE (), true));
 }
 
 // ---
@@ -455,7 +455,7 @@ _INST_IMPL (FZ80::SLL_IndirectIndexIYCopyH)
 
 	// The parameter 3rd is not used...
 
-	return (executeWith (addressIY (parameters ()[3].value ()), registerH (), true));
+	return (executeWith (addressIY ((char) parameters ()[2].value ()), registerH (), true));
 }
 
 // ---
@@ -465,5 +465,5 @@ _INST_IMPL (FZ80::SLL_IndirectIndexIYCopyL)
 
 	// The parameter 3rd is not used...
 
-	return (executeWith (addressIY (parameters ()[3].value ()), registerL (), true));
+	return (executeWith (addressIY ((char) parameters ()[2].value ()), registerL (), true));
 }

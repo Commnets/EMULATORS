@@ -91,7 +91,7 @@ _INST_IMPL (FZ80::RES_0WithIndirectIndexIX)
 
 	// The parameter 3 is not used. It is the last code of the instruction actually
 
-	return (executeWith (0, addressIX (parameters ()[2].value ())));
+	return (executeWith (0, addressIX ((char) parameters ()[2].value ())));
 }
 
 // ---
@@ -101,7 +101,7 @@ _INST_IMPL (FZ80::RES_0WithIndirectIndexIXCopyA)
 
 	// The parameter 3 is not used. It is the last code of the instruction actually
 
-	return (executeWith (0, addressIY (parameters ()[2].value ()), registerA ()));
+	return (executeWith (0, addressIX ((char) parameters ()[2].value ()), registerA ()));
 }
 
 // ---
@@ -111,7 +111,7 @@ _INST_IMPL (FZ80::RES_0WithIndirectIndexIXCopyB)
 
 	// The parameter 3 is not used. It is the last code of the instruction actually
 
-	return (executeWith (0, addressIY (parameters ()[2].value ()), registerB ()));
+	return (executeWith (0, addressIX ((char) parameters ()[2].value ()), registerB ()));
 }
 
 // ---
@@ -121,7 +121,7 @@ _INST_IMPL (FZ80::RES_0WithIndirectIndexIXCopyC)
 
 	// The parameter 3 is not used. It is the last code of the instruction actually
 
-	return (executeWith (0, addressIY (parameters ()[2].value ()), registerC ()));
+	return (executeWith (0, addressIX ((char) parameters ()[2].value ()), registerC ()));
 }
 
 // ---
@@ -131,7 +131,7 @@ _INST_IMPL (FZ80::RES_0WithIndirectIndexIXCopyD)
 
 	// The parameter 3 is not used. It is the last code of the instruction actually
 
-	return (executeWith (0, addressIY (parameters ()[2].value ()), registerD ()));
+	return (executeWith (0, addressIX ((char) parameters ()[2].value ()), registerD ()));
 }
 
 // ---
@@ -141,7 +141,7 @@ _INST_IMPL (FZ80::RES_0WithIndirectIndexIXCopyE)
 
 	// The parameter 3 is not used. It is the last code of the instruction actually
 
-	return (executeWith (0, addressIY (parameters ()[2].value ()), registerE ()));
+	return (executeWith (0, addressIX ((char) parameters ()[2].value ()), registerE ()));
 }
 
 // ---
@@ -151,7 +151,7 @@ _INST_IMPL (FZ80::RES_0WithIndirectIndexIXCopyH)
 
 	// The parameter 3 is not used. It is the last code of the instruction actually
 
-	return (executeWith (0, addressIY (parameters ()[2].value ()), registerH ()));
+	return (executeWith (0, addressIX ((char) parameters ()[2].value ()), registerH ()));
 }
 
 // ---
@@ -161,7 +161,7 @@ _INST_IMPL (FZ80::RES_0WithIndirectIndexIXCopyL)
 
 	// The parameter 3 is not used. It is the last code of the instruction actually
 
-	return (executeWith (0, addressIY (parameters ()[2].value ()), registerL ()));
+	return (executeWith (0, addressIX ((char) parameters ()[2].value ()), registerL ()));
 }
 
 // ---
@@ -171,7 +171,7 @@ _INST_IMPL (FZ80::RES_0WithIndirectIndexIY)
 
 	// The parameter 3 is not used. It is the last code of the instruction actually
 
-	return (executeWith (0, addressIY (parameters ()[2].value ())));
+	return (executeWith (0, addressIY ((char) parameters ()[2].value ())));
 }
 
 // ---
@@ -181,7 +181,7 @@ _INST_IMPL (FZ80::RES_0WithIndirectIndexIYCopyA)
 
 	// The parameter 3 is not used. It is the last code of the instruction actually
 
-	return (executeWith (0, addressIY (parameters ()[2].value ()), registerA ()));
+	return (executeWith (0, addressIY ((char) parameters ()[2].value ()), registerA ()));
 }
 
 // ---
@@ -191,7 +191,7 @@ _INST_IMPL (FZ80::RES_0WithIndirectIndexIYCopyB)
 
 	// The parameter 3 is not used. It is the last code of the instruction actually
 
-	return (executeWith (0, addressIY (parameters ()[2].value ()), registerB ()));
+	return (executeWith (0, addressIY ((char) parameters ()[2].value ()), registerB ()));
 }
 
 // ---
@@ -201,7 +201,7 @@ _INST_IMPL (FZ80::RES_0WithIndirectIndexIYCopyC)
 
 	// The parameter 3 is not used. It is the last code of the instruction actually
 
-	return (executeWith (0, addressIY (parameters ()[2].value ()), registerC ()));
+	return (executeWith (0, addressIY ((char) parameters ()[2].value ()), registerC ()));
 }
 
 // ---
@@ -211,7 +211,7 @@ _INST_IMPL (FZ80::RES_0WithIndirectIndexIYCopyD)
 
 	// The parameter 3 is not used. It is the last code of the instruction actually
 
-	return (executeWith (0, addressIY (parameters ()[2].value ()), registerD ()));
+	return (executeWith (0, addressIY ((char) parameters ()[2].value ()), registerD ()));
 }
 
 // ---
@@ -221,7 +221,7 @@ _INST_IMPL (FZ80::RES_0WithIndirectIndexIYCopyE)
 
 	// The parameter 3 is not used. It is the last code of the instruction actually
 
-	return (executeWith (0, addressIY (parameters ()[2].value ()), registerE ()));
+	return (executeWith (0, addressIY ((char) parameters ()[2].value ()), registerE ()));
 }
 
 // ---
@@ -231,7 +231,7 @@ _INST_IMPL (FZ80::RES_0WithIndirectIndexIYCopyH)
 
 	// The parameter 3 is not used. It is the last code of the instruction actually
 
-	return (executeWith (0, addressIY (parameters ()[2].value ()), registerH ()));
+	return (executeWith (0, addressIY ((char) parameters ()[2].value ()), registerH ()));
 }
 
 // ---
@@ -241,7 +241,7 @@ _INST_IMPL (FZ80::RES_0WithIndirectIndexIYCopyL)
 
 	// The parameter 3 is not used. It is the last code of the instruction actually
 
-	return (executeWith (0, addressIY (parameters ()[2].value ()), registerL ()));
+	return (executeWith (0, addressIY ((char) parameters ()[2].value ()), registerL ()));
 }
 
 // ---
@@ -315,7 +315,7 @@ _INST_IMPL (FZ80::RES_1WithIndirectIndexIX)
 
 	// The parameter 3 is not used. It is the last code of the instruction actually
 
-	return (executeWith (1, addressIX (parameters ()[2].value ())));
+	return (executeWith (1, addressIX ((char) parameters ()[2].value ())));
 }
 
 // ---
@@ -325,7 +325,7 @@ _INST_IMPL (FZ80::RES_1WithIndirectIndexIXCopyA)
 
 	// The parameter 3 is not used. It is the last code of the instruction actually
 
-	return (executeWith (1, addressIY (parameters ()[2].value ()), registerA ()));
+	return (executeWith (1, addressIX ((char) parameters ()[2].value ()), registerA ()));
 }
 
 // ---
@@ -335,7 +335,7 @@ _INST_IMPL (FZ80::RES_1WithIndirectIndexIXCopyB)
 
 	// The parameter 3 is not used. It is the last code of the instruction actually
 
-	return (executeWith (1, addressIY (parameters ()[2].value ()), registerB ()));
+	return (executeWith (1, addressIX ((char) parameters ()[2].value ()), registerB ()));
 }
 
 // ---
@@ -345,7 +345,7 @@ _INST_IMPL (FZ80::RES_1WithIndirectIndexIXCopyC)
 
 	// The parameter 3 is not used. It is the last code of the instruction actually
 
-	return (executeWith (1, addressIY (parameters ()[2].value ()), registerC ()));
+	return (executeWith (1, addressIX ((char) parameters ()[2].value ()), registerC ()));
 }
 
 // ---
@@ -355,7 +355,7 @@ _INST_IMPL (FZ80::RES_1WithIndirectIndexIXCopyD)
 
 	// The parameter 3 is not used. It is the last code of the instruction actually
 
-	return (executeWith (1, addressIY (parameters ()[2].value ()), registerD ()));
+	return (executeWith (1, addressIX ((char) parameters ()[2].value ()), registerD ()));
 }
 
 // ---
@@ -365,7 +365,7 @@ _INST_IMPL (FZ80::RES_1WithIndirectIndexIXCopyE)
 
 	// The parameter 3 is not used. It is the last code of the instruction actually
 
-	return (executeWith (1, addressIY (parameters ()[2].value ()), registerE ()));
+	return (executeWith (1, addressIX ((char) parameters ()[2].value ()), registerE ()));
 }
 
 // ---
@@ -375,7 +375,7 @@ _INST_IMPL (FZ80::RES_1WithIndirectIndexIXCopyH)
 
 	// The parameter 3 is not used. It is the last code of the instruction actually
 
-	return (executeWith (1, addressIY (parameters ()[2].value ()), registerH ()));
+	return (executeWith (1, addressIX ((char) parameters ()[2].value ()), registerH ()));
 }
 
 // ---
@@ -385,7 +385,7 @@ _INST_IMPL (FZ80::RES_1WithIndirectIndexIXCopyL)
 
 	// The parameter 3 is not used. It is the last code of the instruction actually
 
-	return (executeWith (1, addressIY (parameters ()[2].value ()), registerL ()));
+	return (executeWith (1, addressIX ((char) parameters ()[2].value ()), registerL ()));
 }
 
 // ---
@@ -395,7 +395,7 @@ _INST_IMPL (FZ80::RES_1WithIndirectIndexIY)
 
 	// The parameter 3 is not used. It is the last code of the instruction actually
 
-	return (executeWith (1, addressIY (parameters ()[2].value ())));
+	return (executeWith (1, addressIY ((char) parameters ()[2].value ())));
 }
 
 // ---
@@ -405,7 +405,7 @@ _INST_IMPL (FZ80::RES_1WithIndirectIndexIYCopyA)
 
 	// The parameter 3 is not used. It is the last code of the instruction actually
 
-	return (executeWith (1, addressIY (parameters ()[2].value ()), registerA ()));
+	return (executeWith (1, addressIY ((char) parameters ()[2].value ()), registerA ()));
 }
 
 // ---
@@ -415,7 +415,7 @@ _INST_IMPL (FZ80::RES_1WithIndirectIndexIYCopyB)
 
 	// The parameter 3 is not used. It is the last code of the instruction actually
 
-	return (executeWith (1, addressIY (parameters ()[2].value ()), registerB ()));
+	return (executeWith (1, addressIY ((char) parameters ()[2].value ()), registerB ()));
 }
 
 // ---
@@ -425,7 +425,7 @@ _INST_IMPL (FZ80::RES_1WithIndirectIndexIYCopyC)
 
 	// The parameter 3 is not used. It is the last code of the instruction actually
 
-	return (executeWith (1, addressIY (parameters ()[2].value ()), registerC ()));
+	return (executeWith (1, addressIY ((char) parameters ()[2].value ()), registerC ()));
 }
 
 // ---
@@ -435,7 +435,7 @@ _INST_IMPL (FZ80::RES_1WithIndirectIndexIYCopyD)
 
 	// The parameter 3 is not used. It is the last code of the instruction actually
 
-	return (executeWith (1, addressIY (parameters ()[2].value ()), registerD ()));
+	return (executeWith (1, addressIY ((char) parameters ()[2].value ()), registerD ()));
 }
 
 // ---
@@ -445,7 +445,7 @@ _INST_IMPL (FZ80::RES_1WithIndirectIndexIYCopyE)
 
 	// The parameter 3 is not used. It is the last code of the instruction actually
 
-	return (executeWith (1, addressIY (parameters ()[2].value ()), registerE ()));
+	return (executeWith (1, addressIY ((char) parameters ()[2].value ()), registerE ()));
 }
 
 // ---
@@ -455,7 +455,7 @@ _INST_IMPL (FZ80::RES_1WithIndirectIndexIYCopyH)
 
 	// The parameter 3 is not used. It is the last code of the instruction actually
 
-	return (executeWith (1, addressIY (parameters ()[2].value ()), registerH ()));
+	return (executeWith (1, addressIY ((char) parameters ()[2].value ()), registerH ()));
 }
 
 // ---
@@ -465,7 +465,7 @@ _INST_IMPL (FZ80::RES_1WithIndirectIndexIYCopyL)
 
 	// The parameter 3 is not used. It is the last code of the instruction actually
 
-	return (executeWith (1, addressIY (parameters ()[2].value ()), registerL ()));
+	return (executeWith (1, addressIY ((char) parameters ()[2].value ()), registerL ()));
 }
 
 // ---
@@ -539,7 +539,7 @@ _INST_IMPL (FZ80::RES_2WithIndirectIndexIX)
 
 	// The parameter 3 is not used. It is the last code of the instruction actually
 
-	return (executeWith (2, addressIX (parameters ()[2].value ())));
+	return (executeWith (2, addressIX ((char) parameters ()[2].value ())));
 }
 
 // ---
@@ -549,7 +549,7 @@ _INST_IMPL (FZ80::RES_2WithIndirectIndexIXCopyA)
 
 	// The parameter 3 is not used. It is the last code of the instruction actually
 
-	return (executeWith (2, addressIY (parameters ()[2].value ()), registerA ()));
+	return (executeWith (2, addressIX ((char) parameters ()[2].value ()), registerA ()));
 }
 
 // ---
@@ -559,7 +559,7 @@ _INST_IMPL (FZ80::RES_2WithIndirectIndexIXCopyB)
 
 	// The parameter 3 is not used. It is the last code of the instruction actually
 
-	return (executeWith (2, addressIY (parameters ()[2].value ()), registerB ()));
+	return (executeWith (2, addressIX ((char) parameters ()[2].value ()), registerB ()));
 }
 
 // ---
@@ -569,7 +569,7 @@ _INST_IMPL (FZ80::RES_2WithIndirectIndexIXCopyC)
 
 	// The parameter 3 is not used. It is the last code of the instruction actually
 
-	return (executeWith (2, addressIY (parameters ()[2].value ()), registerC ()));
+	return (executeWith (2, addressIX ((char) parameters ()[2].value ()), registerC ()));
 }
 
 // ---
@@ -579,7 +579,7 @@ _INST_IMPL (FZ80::RES_2WithIndirectIndexIXCopyD)
 
 	// The parameter 3 is not used. It is the last code of the instruction actually
 
-	return (executeWith (2, addressIY (parameters ()[2].value ()), registerD ()));
+	return (executeWith (2, addressIX ((char) parameters ()[2].value ()), registerD ()));
 }
 
 // ---
@@ -589,7 +589,7 @@ _INST_IMPL (FZ80::RES_2WithIndirectIndexIXCopyE)
 
 	// The parameter 3 is not used. It is the last code of the instruction actually
 
-	return (executeWith (2, addressIY (parameters ()[2].value ()), registerE ()));
+	return (executeWith (2, addressIX ((char) parameters ()[2].value ()), registerE ()));
 }
 
 // ---
@@ -599,7 +599,7 @@ _INST_IMPL (FZ80::RES_2WithIndirectIndexIXCopyH)
 
 	// The parameter 3 is not used. It is the last code of the instruction actually
 
-	return (executeWith (2, addressIY (parameters ()[2].value ()), registerH ()));
+	return (executeWith (2, addressIX ((char) parameters ()[2].value ()), registerH ()));
 }
 
 // ---
@@ -609,7 +609,7 @@ _INST_IMPL (FZ80::RES_2WithIndirectIndexIXCopyL)
 
 	// The parameter 3 is not used. It is the last code of the instruction actually
 
-	return (executeWith (2, addressIY (parameters ()[2].value ()), registerL ()));
+	return (executeWith (2, addressIX ((char) parameters ()[2].value ()), registerL ()));
 }
 
 // ---
@@ -619,7 +619,7 @@ _INST_IMPL (FZ80::RES_2WithIndirectIndexIY)
 
 	// The parameter 3 is not used. It is the last code of the instruction actually
 
-	return (executeWith (2, addressIY (parameters ()[2].value ())));
+	return (executeWith (2, addressIY ((char) parameters ()[2].value ())));
 }
 
 // ---
@@ -629,7 +629,7 @@ _INST_IMPL (FZ80::RES_2WithIndirectIndexIYCopyA)
 
 	// The parameter 3 is not used. It is the last code of the instruction actually
 
-	return (executeWith (2, addressIY (parameters ()[2].value ()), registerA ()));
+	return (executeWith (2, addressIY ((char) parameters ()[2].value ()), registerA ()));
 }
 
 // ---
@@ -639,7 +639,7 @@ _INST_IMPL (FZ80::RES_2WithIndirectIndexIYCopyB)
 
 	// The parameter 3 is not used. It is the last code of the instruction actually
 
-	return (executeWith (2, addressIY (parameters ()[2].value ()), registerB ()));
+	return (executeWith (2, addressIY ((char) parameters ()[2].value ()), registerB ()));
 }
 
 // ---
@@ -649,7 +649,7 @@ _INST_IMPL (FZ80::RES_2WithIndirectIndexIYCopyC)
 
 	// The parameter 3 is not used. It is the last code of the instruction actually
 
-	return (executeWith (2, addressIY (parameters ()[2].value ()), registerC ()));
+	return (executeWith (2, addressIY ((char) parameters ()[2].value ()), registerC ()));
 }
 
 // ---
@@ -659,7 +659,7 @@ _INST_IMPL (FZ80::RES_2WithIndirectIndexIYCopyD)
 
 	// The parameter 3 is not used. It is the last code of the instruction actually
 
-	return (executeWith (2, addressIY (parameters ()[2].value ()), registerD ()));
+	return (executeWith (2, addressIY ((char) parameters ()[2].value ()), registerD ()));
 }
 
 // ---
@@ -669,7 +669,7 @@ _INST_IMPL (FZ80::RES_2WithIndirectIndexIYCopyE)
 
 	// The parameter 3 is not used. It is the last code of the instruction actually
 
-	return (executeWith (2, addressIY (parameters ()[2].value ()), registerE ()));
+	return (executeWith (2, addressIY ((char) parameters ()[2].value ()), registerE ()));
 }
 
 // ---
@@ -679,7 +679,7 @@ _INST_IMPL (FZ80::RES_2WithIndirectIndexIYCopyH)
 
 	// The parameter 3 is not used. It is the last code of the instruction actually
 
-	return (executeWith (2, addressIY (parameters ()[2].value ()), registerH ()));
+	return (executeWith (2, addressIY ((char) parameters ()[2].value ()), registerH ()));
 }
 
 // ---
@@ -689,7 +689,7 @@ _INST_IMPL (FZ80::RES_2WithIndirectIndexIYCopyL)
 
 	// The parameter 3 is not used. It is the last code of the instruction actually
 
-	return (executeWith (2, addressIY (parameters ()[2].value ()), registerL ()));
+	return (executeWith (2, addressIY ((char) parameters ()[2].value ()), registerL ()));
 }
 
 // ---
@@ -763,7 +763,7 @@ _INST_IMPL (FZ80::RES_3WithIndirectIndexIX)
 
 	// The parameter 3 is not used. It is the last code of the instruction actually
 
-	return (executeWith (3, addressIX (parameters ()[2].value ())));
+	return (executeWith (3, addressIX ((char) parameters ()[2].value ())));
 }
 
 // ---
@@ -773,7 +773,7 @@ _INST_IMPL (FZ80::RES_3WithIndirectIndexIXCopyA)
 
 	// The parameter 3 is not used. It is the last code of the instruction actually
 
-	return (executeWith (3, addressIY (parameters ()[2].value ()), registerA ()));
+	return (executeWith (3, addressIX ((char) parameters ()[2].value ()), registerA ()));
 }
 
 // ---
@@ -783,7 +783,7 @@ _INST_IMPL (FZ80::RES_3WithIndirectIndexIXCopyB)
 
 	// The parameter 3 is not used. It is the last code of the instruction actually
 
-	return (executeWith (3, addressIY (parameters ()[2].value ()), registerB ()));
+	return (executeWith (3, addressIX ((char) parameters ()[2].value ()), registerB ()));
 }
 
 // ---
@@ -793,7 +793,7 @@ _INST_IMPL (FZ80::RES_3WithIndirectIndexIXCopyC)
 
 	// The parameter 3 is not used. It is the last code of the instruction actually
 
-	return (executeWith (3, addressIY (parameters ()[2].value ()), registerC ()));
+	return (executeWith (3, addressIX ((char) parameters ()[2].value ()), registerC ()));
 }
 
 // ---
@@ -803,7 +803,7 @@ _INST_IMPL (FZ80::RES_3WithIndirectIndexIXCopyD)
 
 	// The parameter 3 is not used. It is the last code of the instruction actually
 
-	return (executeWith (3, addressIY (parameters ()[2].value ()), registerD ()));
+	return (executeWith (3, addressIX ((char) parameters ()[2].value ()), registerD ()));
 }
 
 // ---
@@ -813,7 +813,7 @@ _INST_IMPL (FZ80::RES_3WithIndirectIndexIXCopyE)
 
 	// The parameter 3 is not used. It is the last code of the instruction actually
 
-	return (executeWith (3, addressIY (parameters ()[2].value ()), registerE ()));
+	return (executeWith (3, addressIX ((char) parameters ()[2].value ()), registerE ()));
 }
 
 // ---
@@ -823,7 +823,7 @@ _INST_IMPL (FZ80::RES_3WithIndirectIndexIXCopyH)
 
 	// The parameter 3 is not used. It is the last code of the instruction actually
 
-	return (executeWith (3, addressIY (parameters ()[2].value ()), registerH ()));
+	return (executeWith (3, addressIX ((char) parameters ()[2].value ()), registerH ()));
 }
 
 // ---
@@ -833,7 +833,7 @@ _INST_IMPL (FZ80::RES_3WithIndirectIndexIXCopyL)
 
 	// The parameter 3 is not used. It is the last code of the instruction actually
 
-	return (executeWith (3, addressIY (parameters ()[2].value ()), registerL ()));
+	return (executeWith (3, addressIX ((char) parameters ()[2].value ()), registerL ()));
 }
 
 // ---
@@ -843,7 +843,7 @@ _INST_IMPL (FZ80::RES_3WithIndirectIndexIY)
 
 	// The parameter 3 is not used. It is the last code of the instruction actually
 
-	return (executeWith (3, addressIY (parameters ()[2].value ())));
+	return (executeWith (3, addressIY ((char) parameters ()[2].value ())));
 }
 
 // ---
@@ -853,7 +853,7 @@ _INST_IMPL (FZ80::RES_3WithIndirectIndexIYCopyA)
 
 	// The parameter 3 is not used. It is the last code of the instruction actually
 
-	return (executeWith (3, addressIY (parameters ()[2].value ()), registerA ()));
+	return (executeWith (3, addressIY ((char) parameters ()[2].value ()), registerA ()));
 }
 
 // ---
@@ -863,7 +863,7 @@ _INST_IMPL (FZ80::RES_3WithIndirectIndexIYCopyB)
 
 	// The parameter 3 is not used. It is the last code of the instruction actually
 
-	return (executeWith (3, addressIY (parameters ()[2].value ()), registerB ()));
+	return (executeWith (3, addressIY ((char) parameters ()[2].value ()), registerB ()));
 }
 
 // ---
@@ -873,7 +873,7 @@ _INST_IMPL (FZ80::RES_3WithIndirectIndexIYCopyC)
 
 	// The parameter 3 is not used. It is the last code of the instruction actually
 
-	return (executeWith (3, addressIY (parameters ()[2].value ()), registerC ()));
+	return (executeWith (3, addressIY ((char) parameters ()[2].value ()), registerC ()));
 }
 
 // ---
@@ -883,7 +883,7 @@ _INST_IMPL (FZ80::RES_3WithIndirectIndexIYCopyD)
 
 	// The parameter 3 is not used. It is the last code of the instruction actually
 
-	return (executeWith (3, addressIY (parameters ()[2].value ()), registerD ()));
+	return (executeWith (3, addressIY ((char) parameters ()[2].value ()), registerD ()));
 }
 
 // ---
@@ -893,7 +893,7 @@ _INST_IMPL (FZ80::RES_3WithIndirectIndexIYCopyE)
 
 	// The parameter 3 is not used. It is the last code of the instruction actually
 
-	return (executeWith (3, addressIY (parameters ()[2].value ()), registerE ()));
+	return (executeWith (3, addressIY ((char) parameters ()[2].value ()), registerE ()));
 }
 
 // ---
@@ -903,7 +903,7 @@ _INST_IMPL (FZ80::RES_3WithIndirectIndexIYCopyH)
 
 	// The parameter 3 is not used. It is the last code of the instruction actually
 
-	return (executeWith (3, addressIY (parameters ()[2].value ()), registerH ()));
+	return (executeWith (3, addressIY ((char) parameters ()[2].value ()), registerH ()));
 }
 
 // ---
@@ -913,7 +913,7 @@ _INST_IMPL (FZ80::RES_3WithIndirectIndexIYCopyL)
 
 	// The parameter 3 is not used. It is the last code of the instruction actually
 
-	return (executeWith (3, addressIY (parameters ()[2].value ()), registerL ()));
+	return (executeWith (3, addressIY ((char) parameters ()[2].value ()), registerL ()));
 }
 
 // ---
@@ -987,7 +987,7 @@ _INST_IMPL (FZ80::RES_4WithIndirectIndexIX)
 
 	// The parameter 3 is not used. It is the last code of the instruction actually
 
-	return (executeWith (4, addressIX (parameters ()[2].value ())));
+	return (executeWith (4, addressIX ((char) parameters ()[2].value ())));
 }
 
 // ---
@@ -997,7 +997,7 @@ _INST_IMPL (FZ80::RES_4WithIndirectIndexIXCopyA)
 
 	// The parameter 3 is not used. It is the last code of the instruction actually
 
-	return (executeWith (4, addressIY (parameters ()[2].value ()), registerA ()));
+	return (executeWith (4, addressIX ((char) parameters ()[2].value ()), registerA ()));
 }
 
 // ---
@@ -1007,7 +1007,7 @@ _INST_IMPL (FZ80::RES_4WithIndirectIndexIXCopyB)
 
 	// The parameter 3 is not used. It is the last code of the instruction actually
 
-	return (executeWith (4, addressIY (parameters ()[2].value ()), registerB ()));
+	return (executeWith (4, addressIX ((char) parameters ()[2].value ()), registerB ()));
 }
 
 // ---
@@ -1017,7 +1017,7 @@ _INST_IMPL (FZ80::RES_4WithIndirectIndexIXCopyC)
 
 	// The parameter 3 is not used. It is the last code of the instruction actually
 
-	return (executeWith (4, addressIY (parameters ()[2].value ()), registerC ()));
+	return (executeWith (4, addressIX ((char) parameters ()[2].value ()), registerC ()));
 }
 
 // ---
@@ -1027,7 +1027,7 @@ _INST_IMPL (FZ80::RES_4WithIndirectIndexIXCopyD)
 
 	// The parameter 3 is not used. It is the last code of the instruction actually
 
-	return (executeWith (4, addressIY (parameters ()[2].value ()), registerD ()));
+	return (executeWith (4, addressIX ((char) parameters ()[2].value ()), registerD ()));
 }
 
 // ---
@@ -1037,7 +1037,7 @@ _INST_IMPL (FZ80::RES_4WithIndirectIndexIXCopyE)
 
 	// The parameter 3 is not used. It is the last code of the instruction actually
 
-	return (executeWith (4, addressIY (parameters ()[2].value ()), registerE ()));
+	return (executeWith (4, addressIX ((char) parameters ()[2].value ()), registerE ()));
 }
 
 // ---
@@ -1047,7 +1047,7 @@ _INST_IMPL (FZ80::RES_4WithIndirectIndexIXCopyH)
 
 	// The parameter 3 is not used. It is the last code of the instruction actually
 
-	return (executeWith (4, addressIY (parameters ()[2].value ()), registerH ()));
+	return (executeWith (4, addressIX ((char) parameters ()[2].value ()), registerH ()));
 }
 
 // ---
@@ -1057,7 +1057,7 @@ _INST_IMPL (FZ80::RES_4WithIndirectIndexIXCopyL)
 
 	// The parameter 3 is not used. It is the last code of the instruction actually
 
-	return (executeWith (4, addressIY (parameters ()[2].value ()), registerL ()));
+	return (executeWith (4, addressIX ((char) parameters ()[2].value ()), registerL ()));
 }
 
 // ---
@@ -1067,7 +1067,7 @@ _INST_IMPL (FZ80::RES_4WithIndirectIndexIY)
 
 	// The parameter 3 is not used. It is the last code of the instruction actually
 
-	return (executeWith (4, addressIY (parameters ()[2].value ())));
+	return (executeWith (4, addressIY ((char) parameters ()[2].value ())));
 }
 
 // ---
@@ -1077,7 +1077,7 @@ _INST_IMPL (FZ80::RES_4WithIndirectIndexIYCopyA)
 
 	// The parameter 3 is not used. It is the last code of the instruction actually
 
-	return (executeWith (4, addressIY (parameters ()[2].value ()), registerA ()));
+	return (executeWith (4, addressIY ((char) parameters ()[2].value ()), registerA ()));
 }
 
 // ---
@@ -1087,7 +1087,7 @@ _INST_IMPL (FZ80::RES_4WithIndirectIndexIYCopyB)
 
 	// The parameter 3 is not used. It is the last code of the instruction actually
 
-	return (executeWith (4, addressIY (parameters ()[2].value ()), registerB ()));
+	return (executeWith (4, addressIY ((char) parameters ()[2].value ()), registerB ()));
 }
 
 // ---
@@ -1097,7 +1097,7 @@ _INST_IMPL (FZ80::RES_4WithIndirectIndexIYCopyC)
 
 	// The parameter 3 is not used. It is the last code of the instruction actually
 
-	return (executeWith (4, addressIY (parameters ()[2].value ()), registerC ()));
+	return (executeWith (4, addressIY ((char) parameters ()[2].value ()), registerC ()));
 }
 
 // ---
@@ -1107,7 +1107,7 @@ _INST_IMPL (FZ80::RES_4WithIndirectIndexIYCopyD)
 
 	// The parameter 3 is not used. It is the last code of the instruction actually
 
-	return (executeWith (4, addressIY (parameters ()[2].value ()), registerD ()));
+	return (executeWith (4, addressIY ((char) parameters ()[2].value ()), registerD ()));
 }
 
 // ---
@@ -1117,7 +1117,7 @@ _INST_IMPL (FZ80::RES_4WithIndirectIndexIYCopyE)
 
 	// The parameter 3 is not used. It is the last code of the instruction actually
 
-	return (executeWith (4, addressIY (parameters ()[2].value ()), registerE ()));
+	return (executeWith (4, addressIY ((char) parameters ()[2].value ()), registerE ()));
 }
 
 // ---
@@ -1127,7 +1127,7 @@ _INST_IMPL (FZ80::RES_4WithIndirectIndexIYCopyH)
 
 	// The parameter 3 is not used. It is the last code of the instruction actually
 
-	return (executeWith (4, addressIY (parameters ()[2].value ()), registerH ()));
+	return (executeWith (4, addressIY ((char) parameters ()[2].value ()), registerH ()));
 }
 
 // ---
@@ -1137,7 +1137,7 @@ _INST_IMPL (FZ80::RES_4WithIndirectIndexIYCopyL)
 
 	// The parameter 3 is not used. It is the last code of the instruction actually
 
-	return (executeWith (4, addressIY (parameters ()[2].value ()), registerL ()));
+	return (executeWith (4, addressIY ((char) parameters ()[2].value ()), registerL ()));
 }
 
 // ---
@@ -1211,7 +1211,7 @@ _INST_IMPL (FZ80::RES_5WithIndirectIndexIX)
 
 	// The parameter 3 is not used. It is the last code of the instruction actually
 
-	return (executeWith (5, addressIX (parameters ()[2].value ())));
+	return (executeWith (5, addressIX ((char) parameters ()[2].value ())));
 }
 
 // ---
@@ -1221,7 +1221,7 @@ _INST_IMPL (FZ80::RES_5WithIndirectIndexIXCopyA)
 
 	// The parameter 3 is not used. It is the last code of the instruction actually
 
-	return (executeWith (5, addressIY (parameters ()[2].value ()), registerA ()));
+	return (executeWith (5, addressIX ((char) parameters ()[2].value ()), registerA ()));
 }
 
 // ---
@@ -1231,7 +1231,7 @@ _INST_IMPL (FZ80::RES_5WithIndirectIndexIXCopyB)
 
 	// The parameter 3 is not used. It is the last code of the instruction actually
 
-	return (executeWith (5, addressIY (parameters ()[2].value ()), registerB ()));
+	return (executeWith (5, addressIX ((char) parameters ()[2].value ()), registerB ()));
 }
 
 // ---
@@ -1241,7 +1241,7 @@ _INST_IMPL (FZ80::RES_5WithIndirectIndexIXCopyC)
 
 	// The parameter 3 is not used. It is the last code of the instruction actually
 
-	return (executeWith (5, addressIY (parameters ()[2].value ()), registerC ()));
+	return (executeWith (5, addressIX ((char) parameters ()[2].value ()), registerC ()));
 }
 
 // ---
@@ -1251,7 +1251,7 @@ _INST_IMPL (FZ80::RES_5WithIndirectIndexIXCopyD)
 
 	// The parameter 3 is not used. It is the last code of the instruction actually
 
-	return (executeWith (5, addressIY (parameters ()[2].value ()), registerD ()));
+	return (executeWith (5, addressIX ((char) parameters ()[2].value ()), registerD ()));
 }
 
 // ---
@@ -1261,7 +1261,7 @@ _INST_IMPL (FZ80::RES_5WithIndirectIndexIXCopyE)
 
 	// The parameter 3 is not used. It is the last code of the instruction actually
 
-	return (executeWith (5, addressIY (parameters ()[2].value ()), registerE ()));
+	return (executeWith (5, addressIX ((char) parameters ()[2].value ()), registerE ()));
 }
 
 // ---
@@ -1271,7 +1271,7 @@ _INST_IMPL (FZ80::RES_5WithIndirectIndexIXCopyH)
 
 	// The parameter 3 is not used. It is the last code of the instruction actually
 
-	return (executeWith (5, addressIY (parameters ()[2].value ()), registerH ()));
+	return (executeWith (5, addressIX ((char) parameters ()[2].value ()), registerH ()));
 }
 
 // ---
@@ -1281,7 +1281,7 @@ _INST_IMPL (FZ80::RES_5WithIndirectIndexIXCopyL)
 
 	// The parameter 3 is not used. It is the last code of the instruction actually
 
-	return (executeWith (5, addressIY (parameters ()[2].value ()), registerL ()));
+	return (executeWith (5, addressIX ((char) parameters ()[2].value ()), registerL ()));
 }
 
 // ---
@@ -1291,7 +1291,7 @@ _INST_IMPL (FZ80::RES_5WithIndirectIndexIY)
 
 	// The parameter 3 is not used. It is the last code of the instruction actually
 
-	return (executeWith (5, addressIY (parameters ()[2].value ())));
+	return (executeWith (5, addressIY ((char) parameters ()[2].value ())));
 }
 
 // ---
@@ -1301,7 +1301,7 @@ _INST_IMPL (FZ80::RES_5WithIndirectIndexIYCopyA)
 
 	// The parameter 3 is not used. It is the last code of the instruction actually
 
-	return (executeWith (5, addressIY (parameters ()[2].value ()), registerA ()));
+	return (executeWith (5, addressIY ((char) parameters ()[2].value ()), registerA ()));
 }
 
 // ---
@@ -1311,7 +1311,7 @@ _INST_IMPL (FZ80::RES_5WithIndirectIndexIYCopyB)
 
 	// The parameter 3 is not used. It is the last code of the instruction actually
 
-	return (executeWith (5, addressIY (parameters ()[2].value ()), registerB ()));
+	return (executeWith (5, addressIY ((char) parameters ()[2].value ()), registerB ()));
 }
 
 // ---
@@ -1321,7 +1321,7 @@ _INST_IMPL (FZ80::RES_5WithIndirectIndexIYCopyC)
 
 	// The parameter 3 is not used. It is the last code of the instruction actually
 
-	return (executeWith (5, addressIY (parameters ()[2].value ()), registerC ()));
+	return (executeWith (5, addressIY ((char) parameters ()[2].value ()), registerC ()));
 }
 
 // ---
@@ -1331,7 +1331,7 @@ _INST_IMPL (FZ80::RES_5WithIndirectIndexIYCopyD)
 
 	// The parameter 3 is not used. It is the last code of the instruction actually
 
-	return (executeWith (5, addressIY (parameters ()[2].value ()), registerD ()));
+	return (executeWith (5, addressIY ((char) parameters ()[2].value ()), registerD ()));
 }
 
 // ---
@@ -1341,7 +1341,7 @@ _INST_IMPL (FZ80::RES_5WithIndirectIndexIYCopyE)
 
 	// The parameter 3 is not used. It is the last code of the instruction actually
 
-	return (executeWith (5, addressIY (parameters ()[2].value ()), registerE ()));
+	return (executeWith (5, addressIY ((char) parameters ()[2].value ()), registerE ()));
 }
 
 // ---
@@ -1351,7 +1351,7 @@ _INST_IMPL (FZ80::RES_5WithIndirectIndexIYCopyH)
 
 	// The parameter 3 is not used. It is the last code of the instruction actually
 
-	return (executeWith (5, addressIY (parameters ()[2].value ()), registerH ()));
+	return (executeWith (5, addressIY ((char) parameters ()[2].value ()), registerH ()));
 }
 
 // ---
@@ -1361,7 +1361,7 @@ _INST_IMPL (FZ80::RES_5WithIndirectIndexIYCopyL)
 
 	// The parameter 3 is not used. It is the last code of the instruction actually
 
-	return (executeWith (5, addressIY (parameters ()[2].value ()), registerL ()));
+	return (executeWith (5, addressIY ((char) parameters ()[2].value ()), registerL ()));
 }
 
 // ---
@@ -1435,7 +1435,7 @@ _INST_IMPL (FZ80::RES_6WithIndirectIndexIX)
 
 	// The parameter 3 is not used. It is the last code of the instruction actually
 
-	return (executeWith (6, addressIX (parameters ()[2].value ())));
+	return (executeWith (6, addressIX ((char) parameters ()[2].value ())));
 }
 
 // ---
@@ -1445,7 +1445,7 @@ _INST_IMPL (FZ80::RES_6WithIndirectIndexIXCopyA)
 
 	// The parameter 3 is not used. It is the last code of the instruction actually
 
-	return (executeWith (6, addressIY (parameters ()[2].value ()), registerA ()));
+	return (executeWith (6, addressIX ((char) parameters ()[2].value ()), registerA ()));
 }
 
 // ---
@@ -1455,7 +1455,7 @@ _INST_IMPL (FZ80::RES_6WithIndirectIndexIXCopyB)
 
 	// The parameter 3 is not used. It is the last code of the instruction actually
 
-	return (executeWith (6, addressIY (parameters ()[2].value ()), registerB ()));
+	return (executeWith (6, addressIX ((char) parameters ()[2].value ()), registerB ()));
 }
 
 // ---
@@ -1465,7 +1465,7 @@ _INST_IMPL (FZ80::RES_6WithIndirectIndexIXCopyC)
 
 	// The parameter 3 is not used. It is the last code of the instruction actually
 
-	return (executeWith (6, addressIY (parameters ()[2].value ()), registerC ()));
+	return (executeWith (6, addressIX ((char) parameters ()[2].value ()), registerC ()));
 }
 
 // ---
@@ -1475,7 +1475,7 @@ _INST_IMPL (FZ80::RES_6WithIndirectIndexIXCopyD)
 
 	// The parameter 3 is not used. It is the last code of the instruction actually
 
-	return (executeWith (6, addressIY (parameters ()[2].value ()), registerD ()));
+	return (executeWith (6, addressIX ((char) parameters ()[2].value ()), registerD ()));
 }
 
 // ---
@@ -1485,7 +1485,7 @@ _INST_IMPL (FZ80::RES_6WithIndirectIndexIXCopyE)
 
 	// The parameter 3 is not used. It is the last code of the instruction actually
 
-	return (executeWith (6, addressIY (parameters ()[2].value ()), registerE ()));
+	return (executeWith (6, addressIX ((char) parameters ()[2].value ()), registerE ()));
 }
 
 // ---
@@ -1495,7 +1495,7 @@ _INST_IMPL (FZ80::RES_6WithIndirectIndexIXCopyH)
 
 	// The parameter 3 is not used. It is the last code of the instruction actually
 
-	return (executeWith (6, addressIY (parameters ()[2].value ()), registerH ()));
+	return (executeWith (6, addressIX ((char) parameters ()[2].value ()), registerH ()));
 }
 
 // ---
@@ -1505,7 +1505,7 @@ _INST_IMPL (FZ80::RES_6WithIndirectIndexIXCopyL)
 
 	// The parameter 3 is not used. It is the last code of the instruction actually
 
-	return (executeWith (6, addressIY (parameters ()[2].value ()), registerL ()));
+	return (executeWith (6, addressIX ((char) parameters ()[2].value ()), registerL ()));
 }
 
 // ---
@@ -1515,7 +1515,7 @@ _INST_IMPL (FZ80::RES_6WithIndirectIndexIY)
 
 	// The parameter 3 is not used. It is the last code of the instruction actually
 
-	return (executeWith (6, addressIY (parameters ()[2].value ())));
+	return (executeWith (6, addressIY ((char) parameters ()[2].value ())));
 }
 
 // ---
@@ -1525,7 +1525,7 @@ _INST_IMPL (FZ80::RES_6WithIndirectIndexIYCopyA)
 
 	// The parameter 3 is not used. It is the last code of the instruction actually
 
-	return (executeWith (6, addressIY (parameters ()[2].value ()), registerA ()));
+	return (executeWith (6, addressIY ((char) parameters ()[2].value ()), registerA ()));
 }
 
 // ---
@@ -1535,7 +1535,7 @@ _INST_IMPL (FZ80::RES_6WithIndirectIndexIYCopyB)
 
 	// The parameter 3 is not used. It is the last code of the instruction actually
 
-	return (executeWith (6, addressIY (parameters ()[2].value ()), registerB ()));
+	return (executeWith (6, addressIY ((char) parameters ()[2].value ()), registerB ()));
 }
 
 // ---
@@ -1545,7 +1545,7 @@ _INST_IMPL (FZ80::RES_6WithIndirectIndexIYCopyC)
 
 	// The parameter 3 is not used. It is the last code of the instruction actually
 
-	return (executeWith (6, addressIY (parameters ()[2].value ()), registerC ()));
+	return (executeWith (6, addressIY ((char) parameters ()[2].value ()), registerC ()));
 }
 
 // ---
@@ -1555,7 +1555,7 @@ _INST_IMPL (FZ80::RES_6WithIndirectIndexIYCopyD)
 
 	// The parameter 3 is not used. It is the last code of the instruction actually
 
-	return (executeWith (6, addressIY (parameters ()[2].value ()), registerD ()));
+	return (executeWith (6, addressIY ((char) parameters ()[2].value ()), registerD ()));
 }
 
 // ---
@@ -1565,7 +1565,7 @@ _INST_IMPL (FZ80::RES_6WithIndirectIndexIYCopyE)
 
 	// The parameter 3 is not used. It is the last code of the instruction actually
 
-	return (executeWith (6, addressIY (parameters ()[2].value ()), registerE ()));
+	return (executeWith (6, addressIY ((char) parameters ()[2].value ()), registerE ()));
 }
 
 // ---
@@ -1575,7 +1575,7 @@ _INST_IMPL (FZ80::RES_6WithIndirectIndexIYCopyH)
 
 	// The parameter 3 is not used. It is the last code of the instruction actually
 
-	return (executeWith (6, addressIY (parameters ()[2].value ()), registerH ()));
+	return (executeWith (6, addressIY ((char) parameters ()[2].value ()), registerH ()));
 }
 
 // ---
@@ -1585,7 +1585,7 @@ _INST_IMPL (FZ80::RES_6WithIndirectIndexIYCopyL)
 
 	// The parameter 3 is not used. It is the last code of the instruction actually
 
-	return (executeWith (6, addressIY (parameters ()[2].value ()), registerL ()));
+	return (executeWith (6, addressIY ((char) parameters ()[2].value ()), registerL ()));
 }
 
 // ---
@@ -1659,7 +1659,7 @@ _INST_IMPL (FZ80::RES_7WithIndirectIndexIX)
 
 	// The parameter 3 is not used. It is the last code of the instruction actually
 
-	return (executeWith (7, addressIX (parameters ()[2].value ())));
+	return (executeWith (7, addressIX ((char) parameters ()[2].value ())));
 }
 
 // ---
@@ -1669,7 +1669,7 @@ _INST_IMPL (FZ80::RES_7WithIndirectIndexIXCopyA)
 
 	// The parameter 3 is not used. It is the last code of the instruction actually
 
-	return (executeWith (7, addressIY (parameters ()[2].value ()), registerA ()));
+	return (executeWith (7, addressIX ((char) parameters ()[2].value ()), registerA ()));
 }
 
 // ---
@@ -1679,7 +1679,7 @@ _INST_IMPL (FZ80::RES_7WithIndirectIndexIXCopyB)
 
 	// The parameter 3 is not used. It is the last code of the instruction actually
 
-	return (executeWith (7, addressIY (parameters ()[2].value ()), registerB ()));
+	return (executeWith (7, addressIX ((char) parameters ()[2].value ()), registerB ()));
 }
 
 // ---
@@ -1689,7 +1689,7 @@ _INST_IMPL (FZ80::RES_7WithIndirectIndexIXCopyC)
 
 	// The parameter 3 is not used. It is the last code of the instruction actually
 
-	return (executeWith (7, addressIY (parameters ()[2].value ()), registerC ()));
+	return (executeWith (7, addressIX ((char) parameters ()[2].value ()), registerC ()));
 }
 
 // ---
@@ -1699,7 +1699,7 @@ _INST_IMPL (FZ80::RES_7WithIndirectIndexIXCopyD)
 
 	// The parameter 3 is not used. It is the last code of the instruction actually
 
-	return (executeWith (7, addressIY (parameters ()[2].value ()), registerD ()));
+	return (executeWith (7, addressIX ((char) parameters ()[2].value ()), registerD ()));
 }
 
 // ---
@@ -1709,7 +1709,7 @@ _INST_IMPL (FZ80::RES_7WithIndirectIndexIXCopyE)
 
 	// The parameter 3 is not used. It is the last code of the instruction actually
 
-	return (executeWith (7, addressIY (parameters ()[2].value ()), registerE ()));
+	return (executeWith (7, addressIX ((char) parameters ()[2].value ()), registerE ()));
 }
 
 // ---
@@ -1719,7 +1719,7 @@ _INST_IMPL (FZ80::RES_7WithIndirectIndexIXCopyH)
 
 	// The parameter 3 is not used. It is the last code of the instruction actually
 
-	return (executeWith (7, addressIY (parameters ()[2].value ()), registerH ()));
+	return (executeWith (7, addressIX ((char) parameters ()[2].value ()), registerH ()));
 }
 
 // ---
@@ -1729,7 +1729,7 @@ _INST_IMPL (FZ80::RES_7WithIndirectIndexIXCopyL)
 
 	// The parameter 3 is not used. It is the last code of the instruction actually
 
-	return (executeWith (7, addressIY (parameters ()[2].value ()), registerL ()));
+	return (executeWith (7, addressIX ((char) parameters ()[2].value ()), registerL ()));
 }
 
 // ---
@@ -1739,7 +1739,7 @@ _INST_IMPL (FZ80::RES_7WithIndirectIndexIY)
 
 	// The parameter 3 is not used. It is the last code of the instruction actually
 
-	return (executeWith (7, addressIY (parameters ()[2].value ())));
+	return (executeWith (7, addressIY ((char) parameters ()[2].value ())));
 }
 
 // ---
@@ -1749,7 +1749,7 @@ _INST_IMPL (FZ80::RES_7WithIndirectIndexIYCopyA)
 
 	// The parameter 3 is not used. It is the last code of the instruction actually
 
-	return (executeWith (7, addressIY (parameters ()[2].value ()), registerA ()));
+	return (executeWith (7, addressIY ((char) parameters ()[2].value ()), registerA ()));
 }
 
 // ---
@@ -1759,7 +1759,7 @@ _INST_IMPL (FZ80::RES_7WithIndirectIndexIYCopyB)
 
 	// The parameter 3 is not used. It is the last code of the instruction actually
 
-	return (executeWith (7, addressIY (parameters ()[2].value ()), registerB ()));
+	return (executeWith (7, addressIY ((char) parameters ()[2].value ()), registerB ()));
 }
 
 // ---
@@ -1769,7 +1769,7 @@ _INST_IMPL (FZ80::RES_7WithIndirectIndexIYCopyC)
 
 	// The parameter 3 is not used. It is the last code of the instruction actually
 
-	return (executeWith (7, addressIY (parameters ()[2].value ()), registerC ()));
+	return (executeWith (7, addressIY ((char) parameters ()[2].value ()), registerC ()));
 }
 
 // ---
@@ -1779,7 +1779,7 @@ _INST_IMPL (FZ80::RES_7WithIndirectIndexIYCopyD)
 
 	// The parameter 3 is not used. It is the last code of the instruction actually
 
-	return (executeWith (7, addressIY (parameters ()[2].value ()), registerD ()));
+	return (executeWith (7, addressIY ((char) parameters ()[2].value ()), registerD ()));
 }
 
 // ---
@@ -1789,7 +1789,7 @@ _INST_IMPL (FZ80::RES_7WithIndirectIndexIYCopyE)
 
 	// The parameter 3 is not used. It is the last code of the instruction actually
 
-	return (executeWith (7, addressIY (parameters ()[2].value ()), registerE ()));
+	return (executeWith (7, addressIY ((char) parameters ()[2].value ()), registerE ()));
 }
 
 // ---
@@ -1799,7 +1799,7 @@ _INST_IMPL (FZ80::RES_7WithIndirectIndexIYCopyH)
 
 	// The parameter 3 is not used. It is the last code of the instruction actually
 
-	return (executeWith (7, addressIY (parameters ()[2].value ()), registerH ()));
+	return (executeWith (7, addressIY ((char) parameters ()[2].value ()), registerH ()));
 }
 
 // ---
@@ -1809,5 +1809,5 @@ _INST_IMPL (FZ80::RES_7WithIndirectIndexIYCopyL)
 
 	// The parameter 3 is not used. It is the last code of the instruction actually
 
-	return (executeWith (7, addressIY (parameters ()[2].value ()), registerL ()));
+	return (executeWith (7, addressIY ((char) parameters ()[2].value ()), registerL ()));
 }
