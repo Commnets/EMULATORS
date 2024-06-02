@@ -3,7 +3,7 @@
 
 /**	
  *	@file	
- *	File: Czx80.hpp \n
+ *	File: CZ80.hpp \n
  *	Framework: CPU Emulators library \n
  *	Author: Ignacio Cea Fornies (EMULATORS library) \n
  *	Creation Date: 29/10/2023 \n

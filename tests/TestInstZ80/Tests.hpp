@@ -24,8 +24,10 @@ class Test
 	size_t totalTests () const
 							{ return (_testsIn.size ()); }
 
-	/** To run the test. */
-	void runTest (FZ80::CZ80* cpu, MCHEmul::Memory* m);
+	/** To run the test.
+		The CPU is destroyed when finishes. 
+		A memory has to be attached to the CPU. */
+	void runTest (FZ80::CZ80* cpu);
 
 	bool operator ! () const
 							{ return (!_errors.empty ()); }

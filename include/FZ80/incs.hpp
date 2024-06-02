@@ -17,6 +17,7 @@
 #include <CORE/incs.hpp>
 #include <FZ80/CZ80.hpp>
 #include <FZ80/Instructions.hpp>
+#include <FZ80/TestElements.hpp>
 
 #endif
 

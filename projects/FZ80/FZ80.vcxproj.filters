@@ -102,6 +102,9 @@
     <ClCompile Include="..\..\src\FZ80\INOUT.cpp">
       <Filter>Archivos de origen\Instructions</Filter>
     </ClCompile>
+    <ClCompile Include="TestElements.cpp">
+      <Filter>Archivos de origen</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\include\FZ80\CZ80.hpp">
@@ -190,6 +193,9 @@
     </ClInclude>
     <ClInclude Include="..\..\include\FZ80\INOUT.hpp">
       <Filter>Archivos de encabezado\Instructions</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\FZ80\TestElements.hpp">
+      <Filter>Archivos de encabezado</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

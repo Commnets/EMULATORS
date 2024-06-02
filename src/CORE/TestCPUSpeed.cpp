@@ -1,18 +1,9 @@
 #include <CORE/TestCPUSpeed.hpp>
-#include <CORE/CPU.hpp>
 #include <CORE/Memory.hpp>
 #include <CORE/Stack.hpp>
 #include <CORE/StdCommands.hpp>
 #include <chrono>
 #include <random>
-
-// ---
-MCHEmul::TestCPUSpeed::~TestCPUSpeed ()
-{ 
-	delete (_cpu); 
-	
-	delete (_memory); 
-}
 
 // ---
 unsigned int MCHEmul::TestCPUSpeed::clocksInASecondExcutingInstruction (const MCHEmul::UBytes& b, bool sM) const
@@ -37,22 +28,22 @@ unsigned int MCHEmul::TestCPUSpeed::clocksInASecondExcutingInstruction (const MC
 	while (!e)
 	{
 		// Reset the environment of the execution to avoid overflows...
-		_memory -> setActiveView (0);
+		_cpu -> memoryRef () -> setActiveView (0);
 		// The program counter is set to an address in the middle of the memory...
-		_cpu -> programCounter ().setAddress (_memory -> activeView () -> middleMemoryAddress ());
+		_cpu -> programCounter ().setAddress (_cpu -> memoryRef () -> activeView () -> middleMemoryAddress ());
 		// ...and the memory is filled up with the bytes received...
-		_memory -> set (_cpu -> programCounter ().asAddress (), b);
+		_cpu -> memoryRef () -> set (_cpu -> programCounter ().asAddress (), b);
 		// The stack is reset 
-		_memory -> stack () -> reset (); 
+		_cpu -> memoryRef () -> stack () -> reset (); 
 		// ...and located in the middle.
-		_memory -> stack () -> setPosition (_memory -> stack () -> position () / 2);
+		_cpu -> memoryRef () -> stack () -> setPosition (_cpu -> memoryRef () -> stack () -> position () / 2);
 
 		// Simulate read in memory (if asked for), like the emulation of the CPU does...
 		if (sM)
-			_memory -> bytes (MCHEmul::Address (randomVector (_cpu -> architecture ().numberBytes ())), 
+			_cpu -> memoryRef () -> bytes (MCHEmul::Address (randomVector (_cpu -> architecture ().numberBytes ())), 
 				b.size () - _cpu -> architecture ().instructionLength ()); // Simulate and access to the memory...
 		// ...and then execute the instruction...
-		inst -> execute (_cpu, _memory, _memory -> stack (), &_cpu -> programCounter ());
+		inst -> execute (_cpu, _cpu -> memoryRef (), _cpu -> memoryRef () -> stack (), &_cpu -> programCounter ());
 		clks += (inst -> clockCyclesExecuted () + inst -> additionalClockCyclesExecuted ());
 
 		// Repeat during a second...
@@ -71,15 +62,15 @@ void MCHEmul::TestCPUSpeed::testAllInstructionSet (std::ostream& o, unsigned int
 	// Formatters for the messages received mainly...
 	MCHEmul::FormatterBuilder::instance ({ "./testformatters.fmt" });
 
-	_cpu -> setMemoryRef (_memory);
-	_memory -> initialize ();
-	_memory -> stack (); // Just to initialize the pointer...
+	_cpu -> setMemoryRef (_cpu -> memoryRef ());
+	_cpu -> memoryRef () -> initialize ();
+	_cpu -> memoryRef () -> stack (); // Just to initialize the pointer...
 	_cpu -> initialize ();
 
 	// Fill up the memory with random values...
-	for (size_t i = 0; i < _memory -> size (); 
-		_memory -> set (MCHEmul::Address (_cpu -> architecture ().instructionLength (), (unsigned int) i++), std::rand () % 256));
-	_memory -> stack () -> initialize (); // To put it back to 0!
+	for (size_t i = 0; i < _cpu -> memoryRef () -> size (); 
+		_cpu -> memoryRef () -> set (MCHEmul::Address (_cpu -> architecture ().instructionLength (), (unsigned int) i++), std::rand () % 256));
+	_cpu -> memoryRef () -> stack () -> initialize (); // To put it back to 0!
 
 	std::map <unsigned int, unsigned int> _execInstructions;
 	std::map <unsigned int, unsigned int> _clockInstructions;
@@ -207,7 +198,7 @@ void MCHEmul::TestCPUSpeed::setRandomRegisters ()
 	// Then the status register...
 	_cpu -> statusRegister ().set (randomVector (_cpu -> statusRegister ().size ()));
 	// ...and finally the stack pointer, to any random position in memory...
-	_memory -> stack () -> setPosition (std::rand () % ((1 << _cpu -> architecture ().numberBytes ()) - 1));
+	_cpu -> memoryRef () -> stack () -> setPosition (std::rand () % ((1 << _cpu -> architecture ().numberBytes ()) - 1));
 }
 
 // ---
@@ -215,7 +206,7 @@ void MCHEmul::TestCPUSpeed::printOutCPUStatus (std::ostream& o) const
 {
 	MCHEmul::InfoStructure rst;
 	rst.add ("CPU", _cpu -> getInfoStructure ());
-	rst.add ("Stack", _memory -> stack () -> getInfoStructure ());
+	rst.add ("Stack", _cpu -> memoryRef () -> stack () -> getInfoStructure ());
 	o << MCHEmul::FormatterBuilder::instance () ->
 		formatter ("TESTCPUSTATUS") -> format (rst) << std::endl;
 	o << "----------" << std::endl;

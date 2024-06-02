@@ -24,6 +24,7 @@
 #include <F6500/IRQInterrupt.hpp>
 #include <F6500/NMIInterrupt.hpp>
 #include <F6500/Instructions.hpp>
+#include <F6500/TestElements.hpp>
 
 #endif
 

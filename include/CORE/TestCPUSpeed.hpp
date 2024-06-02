@@ -16,25 +16,31 @@
 
 #include <CORE/UBytes.hpp>
 #include <CORE/Instruction.hpp>
+#include <CORE/CPU.hpp>
 
 namespace MCHEmul
 {
 	class CPU;
 	class Memory;
+
+	/** The Test class own the CPU, 
+		and the CPU has to be sent with a memory already attached. */
 	class TestCPUSpeed final
 	{
 		public:
 		TestCPUSpeed () = delete;
 
-		TestCPUSpeed (CPU* cpu, Memory* mem)
-			: _cpu (cpu), _memory (mem)
-							{ assert (_cpu != nullptr && _memory != nullptr); }
+		TestCPUSpeed (CPU* cpu)
+			: _cpu (cpu)
+							{ assert (_cpu != nullptr && 
+									  _cpu -> memoryRef () != nullptr); }
 
 		TestCPUSpeed (const TestCPUSpeed&) = delete;
 
 		TestCPUSpeed& operator = (const TestCPUSpeed&) = delete; 
 
-		~TestCPUSpeed ();
+		~TestCPUSpeed ()
+							{ delete (_cpu); }
 
 		TestCPUSpeed (TestCPUSpeed&&) = delete;
 
@@ -74,7 +80,6 @@ namespace MCHEmul
 
 		private:
 		CPU* _cpu;
-		Memory *_memory;
 	};
 }
 

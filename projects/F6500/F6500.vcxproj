@@ -29,6 +29,7 @@
     <ClInclude Include="..\..\include\F6500\IO7501PortRegisters.hpp" />
     <ClInclude Include="..\..\include\F6500\IRQInterrupt.hpp" />
     <ClInclude Include="..\..\include\F6500\NMIInterrupt.hpp" />
+    <ClInclude Include="..\..\include\F6500\TestElements.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\F6500\ALR.cpp" />
@@ -52,6 +53,7 @@
     <ClCompile Include="..\..\src\F6500\SBX.cpp" />
     <ClCompile Include="..\..\src\F6500\SLO.cpp" />
     <ClCompile Include="..\..\src\F6500\SRE.cpp" />
+    <ClCompile Include="..\..\src\F6500\TestElements.cpp" />
     <ClCompile Include="..\..\src\F6500\TRANSFERS.cpp" />
     <ClCompile Include="..\..\src\F6500\ADC.cpp" />
     <ClCompile Include="..\..\src\F6500\AND.cpp" />

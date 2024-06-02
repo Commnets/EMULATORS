@@ -15,9 +15,10 @@ Test::Test (const std::string& tIn, const std::string& tOut)
 			_errors.emplace_back ("Output " + i.first + " has no test");
 }
 
-void Test::runTest (FZ80::CZ80* cpu, MCHEmul::Memory* m)
+void Test::runTest (FZ80::CZ80* cpu)
 {
-	assert (cpu != nullptr && m != nullptr);
+	assert (cpu != nullptr && 
+			cpu -> memoryRef () != nullptr);
 
 	auto instAsString = [](const MCHEmul::ListOfInstructions& inst, 
 			const std::string& sp = "\n") -> std::string
@@ -41,8 +42,6 @@ void Test::runTest (FZ80::CZ80* cpu, MCHEmul::Memory* m)
 
 			return (result);
 		};
-
-	cpu -> setMemoryRef (m);
 
 	// If there is coherence...
 	// Then the test starts!...
@@ -74,8 +73,8 @@ void Test::runTest (FZ80::CZ80* cpu, MCHEmul::Memory* m)
 		cpu -> iRegister ().set ({ (*i).second._status._I });
 		cpu -> rRegister ().set ({ (*i).second._status._R });
 		// ...the stack pointer...
-		m -> stack () -> setPosition ((int) (*i).second._status._SP);
-		m -> stack () -> setNotUsed (false); // it is considered already used!
+		cpu -> memoryRef () -> stack () -> setPosition ((int) (*i).second._status._SP);
+		cpu -> memoryRef () -> stack () -> setNotUsed (false); // it is considered already used!
 		// ..the info about the interrupts (INT specially)...
 		cpu -> setIFF1 ((*i).second._status._IFF1);
 		cpu -> setIFF2 ((*i).second._status._IFF2);
@@ -92,7 +91,7 @@ void Test::runTest (FZ80::CZ80* cpu, MCHEmul::Memory* m)
 		{
 			unsigned int l = 0;
 			for (const auto& k : j._data)
-				m -> set (MCHEmul::Address (2, ((unsigned int) j._position) + l++), k);
+				cpu -> memoryRef () -> set (MCHEmul::Address (2, ((unsigned int) j._position) + l++), k);
 		}
 
 		// Then get the instruction to execute...
@@ -111,7 +110,8 @@ void Test::runTest (FZ80::CZ80* cpu, MCHEmul::Memory* m)
 				continue;
 			}
 
-			e = !nI -> execute (cpu, m, m -> stack (), &cpu -> programCounter ());
+			e = !nI -> execute (cpu, cpu -> memoryRef (), 
+				cpu -> memoryRef () -> stack (), &cpu -> programCounter ());
 			
 			j += nI -> clockCyclesExecuted () + nI -> additionalClockCyclesExecuted ();
 
@@ -165,7 +165,7 @@ void Test::runTest (FZ80::CZ80* cpu, MCHEmul::Memory* m)
 		// ...the program counter...
 		bool eI4 = cpu -> programCounter ().internalRepresentation () == (unsigned int) tOut._status._PC;
 		// ...the stack pointer...
-		bool eI5 = m -> stack () -> currentAddress () == MCHEmul::Address (2, (unsigned int) tOut._status._SP);
+		bool eI5 = cpu -> memoryRef () -> stack () -> currentAddress () == MCHEmul::Address (2, (unsigned int) tOut._status._SP);
 		// The info about the interrupts (INT specially)...
 		bool eI6 =
 			cpu -> IFF1 () == tOut._status._IFF1 &&
@@ -181,7 +181,7 @@ void Test::runTest (FZ80::CZ80* cpu, MCHEmul::Memory* m)
 		{ 
 			unsigned int l = 0;
 			for (const auto& k : j._data)
-				eI8 &= (m -> value (MCHEmul::Address (2, ((unsigned int) j._position) + l++)).value () == k);
+				eI8 &= (cpu -> memoryRef () -> value (MCHEmul::Address (2, ((unsigned int) j._position) + l++)).value () == k);
 		}
 
 		// If after all testings, there is no error...
@@ -219,7 +219,6 @@ void Test::runTest (FZ80::CZ80* cpu, MCHEmul::Memory* m)
 	}
 
 	delete (cpu);
-	delete (m);
 }
 
 unsigned short Test::fromHexa (const std::string& str)

@@ -51,6 +51,9 @@
     <ClInclude Include="..\..\include\F6500\IO7501PortRegisters.hpp">
       <Filter>Archivos de encabezado</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\include\F6500\TestElements.hpp">
+      <Filter>Archivos de encabezado</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\F6500\C6510.cpp">
@@ -198,6 +201,9 @@
       <Filter>Archivos de origen</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\F6500\IO6510PortRegisters.cpp">
+      <Filter>Archivos de origen</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\F6500\TestElements.cpp">
       <Filter>Archivos de origen</Filter>
     </ClCompile>
   </ItemGroup>
