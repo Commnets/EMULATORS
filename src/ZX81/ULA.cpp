@@ -8,13 +8,14 @@
 const MCHEmul::RasterData ZX81::ULA_PAL::_VRASTERDATA
 	(0, 6 /** 6 VSYNC. */, 62 /** 56 top border. */, 253 /** 192 draw. */, 309 /** 56 bottom. */, 309, 310, 0, 0);
 /** In terms of ULA cycles, there would be double:
-	CPU cycles = (0, 20, 50, 177, 207, 208, 0, 0); */
+	CPU cycles = (0, 45, 75, 202, 232, 232, 233, 0, 0); */
 const MCHEmul::RasterData ZX81::ULA_PAL::_HRASTERDATA
-	(0, 40 /** 20 HSYNC. */, 100 /** 30 left border. */, 355 /** 128 draw. */, 415 /** 30 right border. */, 415, 416, 0, 0);
-const MCHEmul::RasterData ZX81::ULA_NTSC::_VRASTERDATA
-	(0, 6 /** 6 VSYNC. */, 38 /** 32 top border. */, 229 /** 192 draw. */, 261 /** 32 bottom. */, 261, 262, 0, 0);
-const MCHEmul::RasterData ZX81::ULA_NTSC::_HRASTERDATA
-	(0, 40 /** 20 HSYNC. */, 100 /** 30 left border. */, 355 /** 128 draw. */, 415 /** 30 right border. */, 415, 416, 0, 0);
+	(0, 90 /** Including 20 (*2) HSYNC + part INT routine execution */, 
+		150 /** 30 (*2) left border. */, 405 /** 128 (32 chars * 4 ULA cycles * 2) draw. */, 
+		465 /** 30 right border. */, 465 /** When the INT is issued. */, 466, 0, 0);
+// NTSC is explained in similar terms than PAL...
+const MCHEmul::RasterData ZX81::ULA_NTSC::_VRASTERDATA (0, 6, 38, 229, 261, 261, 262, 0, 0);
+const MCHEmul::RasterData ZX81::ULA_NTSC::_HRASTERDATA (0, 90, 150, 405, 465, 465, 466, 0, 0);
 
 // ---
 ZX81::ULA::ULA (const MCHEmul::RasterData& vd, const MCHEmul::RasterData& hd, 
@@ -29,7 +30,8 @@ ZX81::ULA::ULA (const MCHEmul::RasterData& vd, const MCHEmul::RasterData& hd,
 	  _raster (vd, hd, 1 /** The step is 1 pixel. */),
 	  _lastCPUCycles (0),
 	  _format (nullptr),
-	  _firstVBlankEntered (false)
+	  _firstVBlankEntered (false),
+	  _INTActive (false), _NMIActive (false), _HALTActive (false)
 {
 	setClassName ("ULA");
 
@@ -94,6 +96,20 @@ bool ZX81::ULA::simulate (MCHEmul::CPU* cpu)
 				<< (_ULARegisters -> NMIGenerator () ? "NMI_ON" : "NMI_OFF") << ","
 				<< (_ULARegisters -> syncOutputWhite () ? "WHITE" : "BLACK") << ","
 				<< "LNCTRL:" << std::to_string (_ULARegisters -> LINECNTRL ()) << "]\n";
+
+			// Keep track of different situations to be drawn later if needed...
+			// When a INT interrupt is in execution...
+			if (!_INTActive.peekValue () && 
+				cpu -> programCounter ().internalRepresentation () == 0x038)
+				_INTActive = true;
+			// When a NMI interrupt is in execution...
+			if (!_NMIActive.peekValue () &&
+				cpu -> programCounter ().internalRepresentation () == 0x066)
+				_NMIActive = true;
+			// When the HALT situation is active...
+			if (!_HALTActive.peekValue () &&
+				cpu -> lastInstruction () -> code () == 0x076)
+				_HALTActive = true;
 		}
 
 		// Read the graphics and draw the visible zone, 
@@ -106,7 +122,7 @@ bool ZX81::ULA::simulate (MCHEmul::CPU* cpu)
 			_ULARegisters -> INTack ()) // ...or a INT has been launched externally...
 		{
 			// the HSYNC happens...
-			_raster.vData ().add (1);
+			_raster.vData ().add (1); _raster.hData ().reset ();
 			// ...and also the line of control is incremented...
 			_ULARegisters -> incLINECTRL ();
 			
@@ -220,17 +236,19 @@ void ZX81::ULA::readGraphicsAndDrawVisibleZone (MCHEmul::CPU* cpu)
 	// Hopefully when the code reaches this position, 
 	// an OUT FF,A instruction will have been executed already and the VSYNC has finished!
 
-	unsigned short x, y;
+	unsigned short x = 0, y = 0;
 	_raster.currentVisiblePosition (x, y);
-
-	// As Z80 is used to draw, the link between ULA and CPU is huge
-	// so debug info about what the CPU is now doing has been added...
-	if (cpu -> lastInstruction () != nullptr)
-		drawDebug (x, y, cpu);
 
 	// Draws the background first...
 	// ...that is always at color 1 (white)....
 	_screenMemory -> setPixel (x, y, 1);
+
+	if (MCHEmul::GraphicalChip::deepDebugActive ())
+	{
+		if (_HALTActive) _screenMemory -> setPixel (x, y, 12);
+		if (_INTActive) _screenMemory -> setPixel (x, y, 2);
+		if (_NMIActive) _screenMemory -> setPixel (x, y, 7);
+	}
 
 	bool px = true;
 	// When x is a multiple of 8...
@@ -241,41 +259,25 @@ void ZX81::ULA::readGraphicsAndDrawVisibleZone (MCHEmul::CPU* cpu)
 		// Remember that the way that the ULA sees the memory is different than the way CPU does...
 		memoryRef () -> setActiveView (_ULAView);
 		MCHEmul::UByte chrCode = 
-			memoryRef () -> value (cpu -> lastInstruction () -> INOUTAddress ());
-		_ULARegisters -> setSHIFTRegister (memoryRef () -> value 
-			(MCHEmul::Address (2, 
-				(unsigned int (static_cast <FZ80::CZ80*> (cpu) -> iRegister ().values ()[0].value ()) << 9) |
-				(unsigned int ((chrCode & 0b00111111).value ()) << 3) |
+			memoryRef () -> value (cpu -> programCounter ().asAddress ());
+		_ULARegisters -> setReverseVideo (chrCode.bit (7));
+		_ULARegisters -> setSHIFTRegister (chrCode.bit (6) 
+			? 0x00 // It is an special c0de and has to be treated as an space from the graphical perspective!
+			: memoryRef () -> value (MCHEmul::Address (2, 
+				(unsigned int (static_cast <FZ80::CZ80*> (cpu) -> iRegister ().values ()[0].value ()) << 8) |
+				(unsigned int ((chrCode.value () & 0b00111111) << 3)) |
 				(unsigned int) _ULARegisters -> LINECNTRL ())));
 		memoryRef () -> setCPUView ();
 	}
 
+	// Shift the data to draw...
 	px = _ULARegisters -> shiftOutData ();
 
-	// Then draws the character, if it is allowed!
+	// and then draws the character, if it is allowed!
 	if (_raster.isInDisplayZone () &&
-		_ULARegisters -> syncOutputWhite ())
-	{
-		const MCHEmul::UByte& osr = _ULARegisters -> originalSHIFTRegister ();
-		if (!osr.bit (6) && // It has to be NOP and...
-			((!osr.bit (7) && px) || // normal video and pixel on?
-				(osr.bit (7) && !px))) // or inverse video and pixels off?
-				_screenMemory -> setPixel (x,y, 0); // ...then put it in black...
-	}
-}
-
-// ---
-void ZX81::ULA::drawDebug (size_t x, size_t y, MCHEmul::CPU* cpu)
-{
-	// When the processor is waiting for the end of the visible part...
-	if (cpu -> lastInstruction () -> code () == 0x076)
-		_screenMemory -> setPixel (x, y, 12);
-	// When a NMI interrupt is about to be executed...
-	if (cpu -> programCounter ().internalRepresentation () == 0x066)
-		_screenMemory -> setPixel (x, y, 2);
-	// When a INT interrupt is about to be executed...
-	if (cpu -> programCounter ().internalRepresentation () == 0x038)
-		_screenMemory -> setPixel (x, y, 7);
+		_ULARegisters -> syncOutputWhite () &&
+		(_ULARegisters -> reverseVideo () ^ px)) // normal video and pixel on?, or inverse video and pixels off?
+			_screenMemory -> setPixel (x, y, 0); // ...then put it in black...
 }
 
 // ---

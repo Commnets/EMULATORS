@@ -45,6 +45,8 @@ void ZX81::ULARegisters::initializeInternalValues ()
 	_LINECNTRL = 0;
 	_LINECNTRLBlocked = true;
 
+	_reverseVideo = false;
+
 	_SHIFTR = 0;
 
 	for (size_t i = 0; i < 8; 

@@ -1723,14 +1723,14 @@ _INST_IMPL (FZ80::LD_AddressFromSP)
 {
 	assert (parameters ().size () == 4);
 
-	/** Addresses in memory are kept little - endian. */
-	MCHEmul::UInt v = MCHEmul::UInt::fromUnsignedInt (memory () -> stack () -> position ());
+	/** Addresses in memory are kept big - endian. */
+	MCHEmul::UBytes v = memory () -> stack () -> currentAddress ().bytes ();
 	v.setMinLength (2); // It has always to be 2 bytes long...
 	return (executeWith (
 		_lastExecutionData._INOUTAddress =
 			MCHEmul::Address ({ 
 				parameters ()[2].value (), 
-				parameters ()[3].value () }, false /** Little - endian. */), v.values ()));
+				parameters ()[3].value () }, false /** Little - endian. */), v));
 }
 
 // ---

@@ -241,10 +241,10 @@ namespace FZ80
 	// ---
 	inline MCHEmul::UBytes Instruction::valueRegisterSP () const
 	{ 
-		MCHEmul::UInt spP = MCHEmul::UInt::fromUnsignedInt (memory () -> stack () -> position ());
-		spP.setMinLength (2); 
-							 
-		return (spP.bytes ()); 
+		// After this instruction they will be in big endian...
+		MCHEmul::UBytes result = memory () -> stack () -> currentAddress ().bytes ();
+		result.setMinLength (2);
+		return (result);
 	}
 
 	/** In Z80 there are instructions that are undefined reading the first byte.

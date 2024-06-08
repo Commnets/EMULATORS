@@ -68,6 +68,12 @@ namespace ZX81
 							{ _LINECNTRLBlocked = lb; }
 		inline unsigned char incLINECTRL (); // From 0 to 7 always...
 
+		// Working with the CHAR Register...
+		bool reverseVideo () const
+							{ return (_reverseVideo); }
+		void setReverseVideo (bool rV)
+							{ _reverseVideo = rV; }
+
 		// Working with the SHIFT Register...
 		const MCHEmul::UByte& SHIFTRegister () const
 							{ return (_SHIFTR); }
@@ -128,6 +134,8 @@ namespace ZX81
 			and increments every HSYNC event. */
 		unsigned char _LINECNTRL;
 		bool _LINECNTRLBlocked;
+		/** Video inverse or not?. */
+		bool _reverseVideo;
 		/** The SHIFT Register. */
 		MCHEmul::UByte _SHIFTR, _originalSHIFTR;
 		/** The casette signal and the signal to indicate whether it has changed. \n
