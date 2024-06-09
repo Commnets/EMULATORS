@@ -36,6 +36,28 @@ namespace ZX81
 		virtual void executeImpl (MCHEmul::CommandExecuter* cE, 
 			MCHEmul::Computer* c, MCHEmul::InfoStructure& rst) override;
 	};
+
+	/** To activate the visualization of the important events
+		in the relation between CPU and the Screen. */
+	class ULAShowEventsCommand final : public MCHEmul::Command
+	{
+		public:
+		static const int _ID = 201;
+		static const std::string _NAME;
+
+		ULAShowEventsCommand ()
+			: MCHEmul::Command (_ID, _NAME)
+							{ }
+
+		/** The parameter can be ON or OFF. */
+		virtual bool canBeExecuted () const override
+							{ return (_parameters.size () == 1); }
+
+		private:
+		virtual void executeImpl (MCHEmul::CommandExecuter* cE, 
+			MCHEmul::Computer* c, MCHEmul::InfoStructure& rst) override;
+	};
+
 }
 
 #endif

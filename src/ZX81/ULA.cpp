@@ -54,6 +54,8 @@ bool ZX81::ULA::initialize ()
 
 	_raster.initialize ();
 
+	_showEvents = false;
+
 	_ULARegisters -> initialize ();
 
 	_lastCPUCycles = 0;
@@ -96,7 +98,10 @@ bool ZX81::ULA::simulate (MCHEmul::CPU* cpu)
 				<< (_ULARegisters -> NMIGenerator () ? "NMI_ON" : "NMI_OFF") << ","
 				<< (_ULARegisters -> syncOutputWhite () ? "WHITE" : "BLACK") << ","
 				<< "LNCTRL:" << std::to_string (_ULARegisters -> LINECNTRL ()) << "]\n";
+		}
 
+		if (_showEvents)
+		{
 			// Keep track of different situations to be drawn later if needed...
 			// When a INT interrupt is in execution...
 			if (!_INTActive.peekValue () && 
@@ -243,7 +248,7 @@ void ZX81::ULA::readGraphicsAndDrawVisibleZone (MCHEmul::CPU* cpu)
 	// ...that is always at color 1 (white)....
 	_screenMemory -> setPixel (x, y, 1);
 
-	if (MCHEmul::GraphicalChip::deepDebugActive ())
+	if (_showEvents)
 	{
 		if (_HALTActive) _screenMemory -> setPixel (x, y, 12);
 		if (_INTActive) _screenMemory -> setPixel (x, y, 2);

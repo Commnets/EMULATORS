@@ -139,6 +139,10 @@ namespace ZX81
 		MCHEmul::Raster& raster ()
 							{ return (_raster); }
 
+		/** To activate or desactivate the visualization of events. */
+		void setShowEvents (bool sE)
+							{ _showEvents = sE; }
+
 		/** To inform about the INT ack. \n
 			see @ZX81::ZX81Computer for more details. */
 		void setINTack ()
@@ -173,6 +177,8 @@ namespace ZX81
 		int _ULAView;
 		/** The raster. */
 		MCHEmul::Raster _raster;
+		/** To show or no the main events that affects the visualization. */
+		bool _showEvents;
 
 		// Implementation
 		/** The number of cycles the CPU was executed once the simulated method finishes. */

@@ -10,6 +10,8 @@ MCHEmul::Command* ZX81::CommandBuilder::createEmptyCommand (const std::string& c
 		result = new MCHEmul::HelpCommand ("./ZX81.hlp"); // Adding the commands for a ZX81...
 	else if (cmdName == "ULA" || cmdName == ZX81::ULAStatusCommand::_NAME)
 		result = new ZX81::ULAStatusCommand;
+	else if (cmdName == "ULAEVENTS" || cmdName == ZX81::ULAShowEventsCommand::_NAME)
+		result = new ZX81::ULAShowEventsCommand;
 
 	return (result);
 }
