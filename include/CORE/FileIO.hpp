@@ -121,6 +121,62 @@ namespace MCHEmul
 		/** The data read per name of file. */
 		mutable std::map <std::string, FileData*> _fileData;
 	};
+
+	/** Struct to content a very basic raw data. \n
+		This structure is (C) Ignacio Cea Fornies. \n 
+		Using specific programs can be converted into other ones. 
+		It is quite similar to the standard format TAP with some simplifications. \n
+		16 bytes with the name, \n
+		4 bytes with the size, \n
+		bytes with tha data (that can be empty). */
+	struct RawFileData final : public FileData
+	{
+		struct Block
+		{
+			Block ()
+				: _name (""),
+				  _dataSize (0),
+				  _bytes ()
+							{ }
+
+			std::string _name;
+			unsigned int _dataSize;
+			UBytes _bytes;
+		};
+
+		RawFileData ()
+			: _signature (""),
+			  _dataBlocks (0),
+			  _blocks ()
+							{ }
+
+		virtual ExtendedDataMemoryBlocks asMemoryBlocks () const override;
+
+		virtual std::string asString () const override
+							{ return (_signature + 
+								"(Blocks: " + std::to_string (_blocks.size ()) + ")"); }
+
+		std::string _signature;
+		unsigned int _dataBlocks;
+		std::vector <Block> _blocks;
+	};
+
+	/** To read/write raw data. \n
+		As it is created from the OS. */
+	class RawFileTypeIO final : public FileTypeIO
+	{
+		public:
+		RawFileTypeIO ()
+			: FileTypeIO ()
+									{ }
+
+		virtual bool canRead (const std::string& fN) const override;
+		virtual FileData* readFile (const std::string& fN, bool bE = true) const override;
+
+		virtual bool canWrite (FileData* fD) const override
+							{ return (dynamic_cast <RawFileData*> (fD) != nullptr); }
+		virtual bool writeFile (FileData* fD, const std::string& fN, bool bE = true) const override;
+	};
 }
 
 #endif

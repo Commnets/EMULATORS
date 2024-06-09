@@ -15,6 +15,7 @@
 #define __ZX81_COMMANDS__
 
 #include <CORE/incs.hpp>
+#include <SINCLAIR/incs.hpp>
 
 namespace ZX81
 {
@@ -58,6 +59,25 @@ namespace ZX81
 			MCHEmul::Computer* c, MCHEmul::InfoStructure& rst) override;
 	};
 
+	/** To load a file into the memory. */
+	class LoadPAnd81FileCommand final : public MCHEmul::Command
+	{
+		public:
+		static const int _ID = 202;
+		static const std::string _NAME;
+
+		LoadPAnd81FileCommand ()
+			: MCHEmul::Command (_ID, _NAME)
+							{ }
+
+		/** The parameter is the name of the file to load. */
+		virtual bool canBeExecuted () const override
+							{ return (_parameters.size () == 1); }
+
+		private:
+		virtual void executeImpl (MCHEmul::CommandExecuter* cE, 
+			MCHEmul::Computer* c, MCHEmul::InfoStructure& rst) override;
+	};
 }
 
 #endif

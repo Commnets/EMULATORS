@@ -77,7 +77,7 @@ namespace C64
 									{ new COMMODORE::CRTFileTypeIO /** Cartridges. */,
 									  new COMMODORE::T64FileTypeIO /** Tapes. */,
 									  new COMMODORE::TAPFileTypeIO /** Tapes. */,
-									  new COMMODORE::RawFileTypeIO /** Row data. */ }))); }
+									  new MCHEmul::RawFileTypeIO /** Row data. */ }))); }
 	};
 }
 

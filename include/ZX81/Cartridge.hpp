@@ -23,7 +23,6 @@ namespace ZX81
 	class Memory;
 	class MemoryView;
 
-	/** Ultramax Cartridge is not still supported. */
 	class Cartridge final : public EdgeConnectorPeripheral
 	{
 		public:

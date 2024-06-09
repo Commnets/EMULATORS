@@ -138,9 +138,6 @@
     <ClInclude Include="..\..\include\COMMODORE\ExpansionPort.hpp">
       <Filter>Archivos de encabezado\IO</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\include\COMMODORE\FileIO.hpp">
-      <Filter>Archivos de encabezado\Emulators</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\include\COMMODORE\SerialPort.hpp">
       <Filter>Archivos de encabezado\IO</Filter>
     </ClInclude>
@@ -255,6 +252,9 @@
     <ClInclude Include="..\..\include\COMMODORE\C6529B\C6529BRegisters.hpp">
       <Filter>Archivos de encabezado\Motherboard\Chips\C6529B</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\include\COMMODORE\FileIO.hpp">
+      <Filter>Archivos de encabezado\IO</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Commodore.fmt">
@@ -285,9 +285,6 @@
     </ClCompile>
     <ClCompile Include="..\..\src\COMMODORE\ExpansionPort.cpp">
       <Filter>Archivos de origen\IO</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\COMMODORE\FileIO.cpp">
-      <Filter>Archivos de origen\Emulators</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\COMMODORE\DatasettePeripherals.cpp">
       <Filter>Archivos de origen\IO</Filter>
@@ -384,6 +381,9 @@
     </ClCompile>
     <ClCompile Include="..\..\src\COMMODORE\C6529B\C6529BRegisters.cpp">
       <Filter>Archivos de origen\Motherboard\Chips\C6529B</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\COMMODORE\FileIO.cpp">
+      <Filter>Archivos de origen\IO</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

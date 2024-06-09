@@ -18,62 +18,6 @@
 
 namespace COMMODORE
 {
-	/** Struct to content the casette raw data. \n
-		This structure is (C) Ignacio Cea Fornies. \n 
-		Using specific programs can be converted into other ones. 
-		It is quite similar to the standard format TAP with some simplifications. \n
-		16 bytes with the name, \n
-		4 bytes with the size, \n
-		bytes with tha data (that can be empty). */
-	struct RawFileData final : public MCHEmul::FileData
-	{
-		struct Block
-		{
-			Block ()
-				: _name (""),
-				  _dataSize (0),
-				  _bytes ()
-							{ }
-
-			std::string _name;
-			unsigned int _dataSize;
-			MCHEmul::UBytes _bytes;
-		};
-
-		RawFileData ()
-			: _signature (""),
-			  _dataBlocks (0),
-			  _blocks ()
-							{ }
-
-		virtual MCHEmul::ExtendedDataMemoryBlocks asMemoryBlocks () const override;
-
-		virtual std::string asString () const override
-							{ return (_signature + 
-								"(Blocks: " + std::to_string (_blocks.size ()) + ")"); }
-
-		std::string _signature;
-		unsigned int _dataBlocks;
-		std::vector <Block> _blocks;
-	};
-
-	/** To read/write raw data. \n
-		As it is created from the OS. */
-	class RawFileTypeIO final : public MCHEmul::FileTypeIO
-	{
-		public:
-		RawFileTypeIO ()
-			: MCHEmul::FileTypeIO ()
-									{ }
-
-		virtual bool canRead (const std::string& fN) const override;
-		virtual MCHEmul::FileData* readFile (const std::string& fN, bool bE = true) const override;
-
-		virtual bool canWrite (MCHEmul::FileData* fD) const override
-							{ return (dynamic_cast <RawFileData*> (fD) != nullptr); }
-		virtual bool writeFile (MCHEmul::FileData* fD, const std::string& fN, bool bE = true) const override;
-	};
-
 	/** Struct to conect tap info.
 	  *	It has been extracted from:
 	  * https://vice-emu.sourceforge.io/vice_17.html

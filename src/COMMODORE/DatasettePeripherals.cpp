@@ -46,7 +46,7 @@ bool COMMODORE::DatasettePeripheral::connectData (MCHEmul::FileData* dt)
 { 
 	if (dynamic_cast <COMMODORE::T64FileData*> (dt) == nullptr &&
 		dynamic_cast <COMMODORE::TAPFileData*> (dt) == nullptr &&
-		dynamic_cast <COMMODORE::RawFileData*> (dt) == nullptr)
+		dynamic_cast <MCHEmul::RawFileData*> (dt) == nullptr)
 		return (false); // That type of info is not valid from the datasette...
 
 	_data = std::move (dt -> asMemoryBlocks ());
@@ -58,8 +58,8 @@ bool COMMODORE::DatasettePeripheral::connectData (MCHEmul::FileData* dt)
 MCHEmul::FileData* COMMODORE::DatasettePeripheral::retrieveData () const
 {
 	// The format understood by this retrive methos is just raw...
-	MCHEmul::FileData* result = new COMMODORE::RawFileData; 
-	COMMODORE::RawFileData* tap = dynamic_cast <COMMODORE::RawFileData*> (result);
+	MCHEmul::FileData* result = new MCHEmul::RawFileData; 
+	MCHEmul::RawFileData* tap = dynamic_cast <MCHEmul::RawFileData*> (result);
 
 	// Later, when saving if any, the size in the name will be limited...
 	tap -> _signature = _data._name;
@@ -68,7 +68,7 @@ MCHEmul::FileData* COMMODORE::DatasettePeripheral::retrieveData () const
 	// ...and the data...
 	for (const auto& i : _data._data)
 	{
-		COMMODORE::RawFileData::Block dB;
+		MCHEmul::RawFileData::Block dB;
 		dB._name = "";
 		dB._dataSize = (unsigned int) i.size ();
 		dB._bytes = i.bytes ();

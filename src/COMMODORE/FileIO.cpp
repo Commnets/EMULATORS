@@ -1,158 +1,6 @@
 #include <COMMODORE/FileIO.hpp>
 
 // ---
-MCHEmul::ExtendedDataMemoryBlocks COMMODORE::RawFileData::asMemoryBlocks () const
-{
-	MCHEmul::ExtendedDataMemoryBlocks result;
-
-	result._name = std::string ("COMMTYNETS");
-	result._attributes = MCHEmul::Attributes ();
-	for (auto& i : _blocks)
-	{ 
-		MCHEmul::DataMemoryBlock dMB (MCHEmul::Address (), i._bytes.bytes ()); 
-		dMB.setName (i._name); // No more attributes per block...
-		result._data.emplace_back (std::move (dMB));
-	}
-
-	return (result);
-}
-
-// ---
-bool COMMODORE::RawFileTypeIO::canRead (const std::string& fN) const
-{
-	if (fN.size () < 4 || 
-		MCHEmul::upper (fN.substr (fN.length () - 3, 3)) != "RAW")
-		return (false); // The right extension...
-
-	std::ifstream f (fN, std::ios::in || std::ios::binary);
-	if (!f)
-		return (false); // Possible to be open...
-
-	f.seekg (0, std::ios::end);
-	std::streamoff s = f.tellg ();
-	f.close ();
-	if (s < (std::streamoff) (0x14 /** Header = 16 bytes with the signature + 4 bytes with the number of blocks. */))
-		return (false); // The length of the file is less than expected...
-
-	return (true);
-}
-
-// ---
-MCHEmul::FileData* COMMODORE::RawFileTypeIO::readFile (const std::string& fN, bool bE) const
-{
-	std::ifstream f (fN, std::ios::in | std::ios::binary);
-	if (!f)
-		return (nullptr); // Possible to be open... At this point it shouldn't happen but just in case...
-
-	char data [256] = { };
-	MCHEmul::FileData* result = new COMMODORE::RawFileData;
-	COMMODORE::RawFileData* tap = 
-		static_cast <COMMODORE::RawFileData*> (result); // To better manipulation...
-
-	// The header
-	// First of all, the name of the data...
-	f.read (data, 16); data [16] = 0; // End of char...
-	tap -> _signature = std::string (data);
-	// The number of blocks the data is made up of...
-	f.read (data, 4);
-	tap -> _dataBlocks = (unsigned int) 
-		(data [3] << 24) + (data [2] << 16) + (data [1] << 8) + data [0];
-
-	// Now to read the blocks info...
-	for (unsigned int i = 0; i < tap -> _dataBlocks; i++)
-	{
-		COMMODORE::RawFileData::Block dB;
-
-		// The header of the block
-		// First of all, the size of this block
-		f.read (data, 4);
-		dB._dataSize = (unsigned int)
-			((data [3] << 24) + (data [2] << 16) + (data [1] << 8) + data [0]);
-		
-		// ..the name of the block, made up of 16 chars...
-		f.read (data, 16); data [16] = 0; // End of char...
-		dB._name = std::string (data);
-
-		// ...and the data
-		if (dB._dataSize > 0)
-		{
-			char* romData = new char [(size_t) dB._dataSize];
-			f.read (romData, (std::streamsize) dB._dataSize);
-			std::vector <MCHEmul::UByte> romBytes;
-			for (size_t j = 0; j < (size_t) dB._dataSize; 
-				romBytes.emplace_back (romData [j++]));
-			dB._bytes = MCHEmul::UBytes (romBytes);
-			delete [] romData;
-		}
-
-		tap -> _blocks.emplace_back (std::move (dB));
-	}
-
-	f.close ();
-
-	return (result);
-}
-
-// ---
-bool COMMODORE::RawFileTypeIO::writeFile (MCHEmul::FileData* fD, const std::string& fN, bool bE) const
-{
-	COMMODORE::RawFileData* tap = 
-		static_cast <COMMODORE::RawFileData*> (fD); // To better manipulation...
-	if (tap == nullptr)
-		return (false);
-
-	std::ofstream f (fN, std::ios::out | std::ios::binary);
-	if (!f)
-		return (false); // Possible to be open...
-
-	char data [256] = { };
-
-	// The signature...
-	size_t i = 0;
-	for (; i < tap -> _signature.size () && i < 15; i++)
-		data [i] = tap -> _signature [i];
-	for (; i < 16; data [i++] = 0);
-	f.write (data, 16);
-
-	// The number of blocks...
-	data [3] = (char) ((tap -> _dataBlocks & 0xff000000) >> 24);
-	data [2] = (char) ((tap -> _dataBlocks & 0x00ff0000) >> 16);
-	data [1] = (char) ((tap -> _dataBlocks & 0x0000ff00) >> 8);
-	data [0] = (char)  (tap -> _dataBlocks & 0x000000ff);
-	f.write (data, 4);
-
-	// Every block...
-	for (auto& i : tap -> _blocks)
-	{
-		// The size of the block in bytes
-		// including 16 positions with the name of the block...
-		data [3] = (char) ((i._dataSize & 0xff000000) >> 24);
-		data [2] = (char) ((i._dataSize & 0x00ff0000) >> 16);
-		data [1] = (char) ((i._dataSize & 0x0000ff00) >> 8);
-		data [0] = (char)  (i._dataSize & 0x000000ff);
-		f.write (data, 4);
-
-		// ...the name of the block...
-		size_t j = 0;
-		for (; j < i._name.size () && j < 15; j++)
-			data [j] = i._name [j];
-		for (; j < 16; data [j++] = 0);
-		f.write (data, 16);
-
-		// ...and finally the block data...
-		char* prgData = new char [(size_t) i._dataSize];
-		for (size_t j = 0; j < (size_t) i._dataSize; j++)
-			prgData [j] = i._bytes.bytes ()[j].value ();
-		f.write (prgData, (std::streamsize) i._dataSize);
-		delete [] prgData;
-	}
-
-	f.close ();
-
-	return (true);
-}
-
-// ---
 MCHEmul::ExtendedDataMemoryBlocks COMMODORE::TAPFileData::asMemoryBlocks() const
 {
 	MCHEmul::ExtendedDataMemoryBlocks result;
@@ -171,19 +19,27 @@ MCHEmul::ExtendedDataMemoryBlocks COMMODORE::TAPFileData::asMemoryBlocks() const
 // ---
 bool COMMODORE::TAPFileTypeIO::canRead (const std::string& fN) const
 {
-	if (fN.size () < 4 || 
-		MCHEmul::upper (fN.substr (fN.length () - 3, 3)) != "TAP")
-		return (false); // The right extension...
+	// Extension?
+	size_t pp = fN.find_last_of ('.');
+	if (pp == std::string::npos || pp == fN.length ())
+		return (false); // ...no
 
+	// The right extension?
+	std::string ext = MCHEmul::upper (fN.substr (pp + 1));
+	if (ext != "TAP")
+		return (false); // ...no
+
+	// Possible to open?
 	std::ifstream f (fN, std::ios::in || std::ios::binary);
 	if (!f)
-		return (false); // Possible to be open...
+		return (false); // ...no
 
+	// The right length?
 	f.seekg (0, std::ios::end);
 	std::streamoff s = (std::streamoff) f.tellg ();
 	f.close ();
 	if (s < (std::streamoff) (0x14 /** Header. */ + 0x1 /** At least one byte. */))
-		return (false); // The length of the file is less than expected...
+		return (false); // ...no. The length of the file is less than expected. It has to be minimum 0x15!
 
 	return (true);
 }
@@ -193,7 +49,8 @@ MCHEmul::FileData* COMMODORE::TAPFileTypeIO::readFile (const std::string& fN, bo
 {
 	std::ifstream f (fN, std::ios::in | std::ios::binary);
 	if (!f)
-		return (nullptr); // Possible to be open... At this point it shouldn't happen but just in case...
+		return (nullptr); // Impossible to be open... 
+						  // At this point it shouldn't happen but just in case...
 
 	char data [256] = { };
 	MCHEmul::FileData* result = new COMMODORE::TAPFileData;
@@ -239,13 +96,13 @@ MCHEmul::FileData* COMMODORE::TAPFileTypeIO::readFile (const std::string& fN, bo
 bool COMMODORE::TAPFileTypeIO::writeFile (MCHEmul::FileData* fD, const std::string& fN, bool bE) const
 {
 	COMMODORE::TAPFileData* tap = 
-		static_cast <COMMODORE::TAPFileData*> (fD); // To better manipulation...
+		dynamic_cast <COMMODORE::TAPFileData*> (fD); // To better manipulation...
 	if (tap == nullptr)
-		return (false);
+		return (false); // it is not really a tap structure!
 
 	std::ofstream f (fN, std::ios::out | std::ios::binary);
 	if (!f)
-		return (false); // Possible to be open...
+		return (false); // Impossible to be opened...
 
 	char data [256] = { };
 
@@ -300,19 +157,27 @@ MCHEmul::ExtendedDataMemoryBlocks COMMODORE::T64FileData::asMemoryBlocks () cons
 // ---
 bool COMMODORE::T64FileTypeIO::canRead (const std::string& fN) const
 {
-	if (fN.size () < 4 || 
-		MCHEmul::upper (fN.substr (fN.length () - 3, 3)) != "T64")
-		return (false); // The right extension...
+	// Extension?
+	size_t pp = fN.find_last_of ('.');
+	if (pp == std::string::npos || pp == fN.length ())
+		return (false); // ...no
 
+	// The right extension?
+	std::string ext = MCHEmul::upper (fN.substr (pp + 1));
+	if (ext != "T64")
+		return (false); // ...no
+
+	// Possible to open?
 	std::ifstream f (fN, std::ios::in || std::ios::binary);
 	if (!f)
-		return (false); // Possible to be open...
+		return (false); // ...no
 
+	// Has it the right length?
 	f.seekg (0, std::ios::end);
 	std::streamoff s = (std::streamoff) f.tellg ();
 	f.close ();
 	if (s < (std::streamoff) (0x64 /** Header. */ + 0x32 /** Tap Header. */ + 0x1 /** At least one byte. */))
-		return (false); // The length of the file is less than expected...
+		return (false); // ...no. The length in the file has to be at least 0x97
 
 	return (true);
 }
@@ -322,7 +187,8 @@ MCHEmul::FileData* COMMODORE::T64FileTypeIO::readFile (const std::string& fN, bo
 {
 	std::ifstream f (fN, std::ios::in | std::ios::binary);
 	if (!f)
-		return (nullptr); // Possible to be open... At this point it shouldn't happen but just in case...
+		return (nullptr); // Impossible to be open... 
+						  // At this point it shouldn't happen but just in case...
 
 	char data [256] = { };
 	MCHEmul::FileData* result = new COMMODORE::T64FileData;
@@ -409,19 +275,27 @@ MCHEmul::ExtendedDataMemoryBlocks COMMODORE::CRTFileData::asMemoryBlocks () cons
 // ---
 bool COMMODORE::CRTFileTypeIO::canRead (const std::string& fN) const
 {
-	if (fN.size () < 4 || 
-		MCHEmul::upper (fN.substr (fN.length () - 3, 3)) != "CRT")
-		return (false); // The right extension...
+	// Extension?
+	size_t pp = fN.find_last_of ('.');
+	if (pp == std::string::npos || pp == fN.length ())
+		return (false); // ...no
 
+	// The right extension?
+	std::string ext = MCHEmul::upper (fN.substr (pp + 1));
+	if (ext != "CRT")
+		return (false); // ...no
+
+	// Can it be opened?
 	std::ifstream f (fN, std::ios::in || std::ios::binary);
 	if (!f)
-		return (false); // Possible to be open...
+		return (false); // ...no
 
+	// Has it the right length?
 	f.seekg (0, std::ios::end);
 	std::streamoff s = (std::streamoff) f.tellg ();
 	f.close ();
 	if (s < (std::streamoff) (0x40 /** Header. */ + 0x10 /** Chip Header. */ + 0x1000 /** 4k = Minimum data length. */))
-		return (false); // The length of the file is less than expected...
+		return (false); // ...no. The length has to be minimum 0x1050 bytes. */
 
 	return (true);
 }
@@ -431,7 +305,8 @@ MCHEmul::FileData* COMMODORE::CRTFileTypeIO::readFile (const std::string& fN, bo
 {
 	std::ifstream f (fN, std::ios::in | std::ios::binary);
 	if (!f)
-		return (nullptr); // Possible to be open... At this point it shouldn't happen but just in case...
+		return (nullptr); // Impossible to be open... 
+						  // At this point it shouldn't happen but just in case...
 
 	char data [256] = { };
 	MCHEmul::FileData* result = new COMMODORE::CRTFileData;

@@ -7,3 +7,6 @@ To know the info about the situation of the ULA.
 No parameters needed.
 ;ULAEVENTS [ON|OFF]
 To activate or desactivate the visualization of ULA events.
+;LOADPAND81 [FILE]
+To load a file into the memory with a .P or .81 extension
+The parameter is the name (with the path) of the file.

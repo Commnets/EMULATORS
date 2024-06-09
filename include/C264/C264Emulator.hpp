@@ -72,7 +72,7 @@ namespace C264
 								(MCHEmul::FileTypeIOList (
 									{ new COMMODORE::CRTFileTypeIO /** Cartridges. */,
 									  new COMMODORE::TAPFileTypeIO /** Tapes. */,
-									  new COMMODORE::RawFileTypeIO /** Row data. */ }))); }
+									  new MCHEmul::RawFileTypeIO /** Row data. */ }))); }
 	};
 
 	// ---

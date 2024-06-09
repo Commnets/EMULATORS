@@ -79,9 +79,8 @@ namespace ZX81
 		virtual MCHEmul::FileIO* createFileReader () const override
 							{ return (new MCHEmul::FileIO 
 								(MCHEmul::FileTypeIOList (
-									{ 
-										// TODO
-									}))); }
+									{	new SINCLAIR::Pand81FileTypeIO, /** P & 81 extensions. */
+										new MCHEmul::RawFileTypeIO /** Row data. */ }))); }
 	};
 
 	// ---

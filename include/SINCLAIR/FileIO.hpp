@@ -1,4 +1,4 @@
-/** \ingroup COMMODORE */
+/** \ingroup SINCLAIR */
 /*@{*/
 
 /**	
@@ -18,7 +18,40 @@
 
 namespace SINCLAIR
 {
-	// TODO
+	/** Format .P and .81. */
+	struct Pand81FileData final : public MCHEmul::FileData
+	{
+		Pand81FileData ()
+			: _extension (),
+			  _dataBlock ()
+							{ }
+
+		virtual MCHEmul::ExtendedDataMemoryBlocks asMemoryBlocks () const override;
+
+		virtual std::string asString () const override
+							{ return ("Type:" + _extension + 
+								"(Blocksize: " + std::to_string (_dataBlock.size ()) + ")"); }
+
+		std::string _extension;
+		MCHEmul::UBytes _dataBlock;
+	};
+
+	/** To read/write raw data. \n
+		As it is created from the OS. */
+	class Pand81FileTypeIO final : public MCHEmul::FileTypeIO
+	{
+		public:
+		Pand81FileTypeIO ()
+			: MCHEmul::FileTypeIO ()
+									{ }
+
+		virtual bool canRead (const std::string& fN) const override;
+		virtual MCHEmul::FileData* readFile (const std::string& fN, bool bE = true) const override;
+
+		virtual bool canWrite (MCHEmul::FileData* fD) const override
+							{ return (dynamic_cast <Pand81FileData*> (fD) != nullptr); }
+		virtual bool writeFile (MCHEmul::FileData* fD, const std::string& fN, bool bE = true) const override;
+	};
 }
 
 #endif
