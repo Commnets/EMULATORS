@@ -105,6 +105,16 @@ MCHEmul::InfoStructure MCHEmul::DatasettePeripheral::getInfoStructure () const
 }
 
 // ---
+MCHEmul::InfoStructure MCHEmul::StandardDatasette::IOSimulation::getInfoStructure () const
+{
+	MCHEmul::InfoStructure result = std::move (MCHEmul::InfoClass::getInfoStructure ());
+
+	result.add ("IOCOMMANDS", MCHEmul::concatenateStrings (commandDescriptions (), ", "));
+
+	return (result);
+}
+
+// ---
 void MCHEmul::StandardDatasette::IOCPULinkedSimulation::initialize ()
 {
 	_firstCycleSimulation = true;
@@ -150,6 +160,17 @@ bool MCHEmul::StandardDatasette::IOCPULinkedSimulation::executeCommand
 }
 
 // ---
+MCHEmul::InfoStructure MCHEmul::StandardDatasette::IOCPULinkedSimulation::getInfoStructure () const
+{
+	MCHEmul::InfoStructure result = 
+		std::move (MCHEmul::StandardDatasette::IOSimulation::getInfoStructure ());
+
+	result.add ("SPEED", _runningSpeed);
+
+	return (result);
+}
+
+// ---
 bool MCHEmul::StandardDatasette::IOParallelSimulation::io (MCHEmul::StandardDatasette& dS, MCHEmul::CPU* cpu)
 {
 	if (_process != nullptr)
@@ -177,8 +198,6 @@ void MCHEmul::StandardDatasette::IOParallelSimulation::stop ()
 }
 
 // ---
-
-// ---
 bool MCHEmul::StandardDatasette::IOParallelSimulation::executeCommand
 	(int id, const MCHEmul::Strings& prms)
 {
@@ -189,19 +208,27 @@ bool MCHEmul::StandardDatasette::IOParallelSimulation::executeCommand
 }
 
 // ---
+MCHEmul::InfoStructure MCHEmul::StandardDatasette::IOParallelSimulation::getInfoStructure () const
+{
+	MCHEmul::InfoStructure result = 
+		std::move (MCHEmul::StandardDatasette::IOSimulation::getInfoStructure ());
+
+	result.add ("SPEED", _motorSpeed);
+
+	return (result);
+}
+
+// ---
 MCHEmul::StandardDatasette::StandardDatasette 
-		(int id, MCHEmul::StandardDatasette::IOSimulation* s, const MCHEmul::Attributes& attrs)
+		(int id, MCHEmul::StandardDatasette::IOSimulation* s, bool mI, const MCHEmul::Attributes& attrs)
 	: MCHEmul::DatasettePeripheral (id, attrs),
 	  _ioSimulation (s),
+	  _motorControlledInternally (mI),
 	  _status (Status::_STOPPED),
 	  _dataCounter (0), 
 	  _elementCounter (0)
 {
 	assert (_ioSimulation != nullptr);
-
-	// Add the commands form the io simulation object!
-	(*(const_cast <MCHEmul::Attributes*> (& _attributes))).insert
-		(_ioSimulation -> attributes ().begin (), _ioSimulation -> attributes ().end ());
 
 	setClassName ("StdDatasette");
 }
@@ -286,6 +313,10 @@ bool MCHEmul::StandardDatasette::executeCommand (int id, const MCHEmul::Strings&
 
 					_ioSimulation -> initialize ();
 
+					// If there is no any further internal signal expected to start...
+					if (!_motorControlledInternally)
+						setMotorOff (false); // The motor starts...
+
 					setNoKeyPressed (false);
 				}
 			}
@@ -309,6 +340,10 @@ bool MCHEmul::StandardDatasette::executeCommand (int id, const MCHEmul::Strings&
 					_data._data [_dataCounter].clear ();
 
 					_ioSimulation -> initialize ();
+
+					// If there is no any further internal signal expected to start...
+					if (!_motorControlledInternally)
+						setMotorOff (false); // The motor starts...
 
 					setNoKeyPressed (false);
 				}
@@ -335,28 +370,14 @@ bool MCHEmul::StandardDatasette::executeCommand (int id, const MCHEmul::Strings&
 
 			break;
 
-		// These are instructions reserved for the IOSimulation pieces
-		case (_KEYIOBASE + 0):
-		case (_KEYIOBASE + 1):
-		case (_KEYIOBASE + 2):
-		case (_KEYIOBASE + 3):
-		case (_KEYIOBASE + 4):
-		case (_KEYIOBASE + 5):
-		case (_KEYIOBASE + 6):
-		case (_KEYIOBASE + 7):
-		case (_KEYIOBASE + 8):
-		case (_KEYIOBASE + 9):
-			{
-				_ioSimulation -> executeCommand (id, prms);
-			}
-
-			break;
-
 		// Command not valid, but the status doesn't change...
 		default:
 			result = false; 
 			break;
 	}
+
+	// The simulation can also been affected!
+	_ioSimulation -> executeCommand (id, prms);
 
 	return (result);
 }
@@ -399,6 +420,7 @@ MCHEmul::InfoStructure MCHEmul::StandardDatasette::getInfoStructure () const
 {
 	MCHEmul::InfoStructure result = std::move (MCHEmul::DatasettePeripheral::getInfoStructure ());
 
+	result.add ("IO", std::move (_ioSimulation -> getInfoStructure ()));
 	result.add ("DATACOUNTER", _dataCounter);
 
 	return (result);

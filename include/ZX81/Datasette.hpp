@@ -22,7 +22,7 @@ namespace ZX81
 	class Datasette final : public MCHEmul::BasicDatasette
 	{
 		public:
-		static const int _ID = 200;
+		static const int _ID = 100;
 
 		Datasette (unsigned int rS);
 	};
@@ -31,7 +31,7 @@ namespace ZX81
 	class DatasetteP final : public MCHEmul::BasicDatasetteP
 	{
 		public:
-		static const int _ID = 200;
+		static const int _ID = 1000;
 
 		DatasetteP (unsigned int rS);
 	};

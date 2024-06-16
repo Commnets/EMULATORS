@@ -162,11 +162,12 @@ namespace MCHEmul
 		/** The way the datasetee emulation simulates storing or 
 			retrieving data to/from file can vary. \n
 			It e.g. might be either linked to the clock cpu or not!. */
-		class IOSimulation
+		class IOSimulation : public InfoClass
 		{
 			public:
 			IOSimulation (const Attributes& attrs = { })
-				: _attributes (attrs)
+				: InfoClass ("IOSimulation"),
+				  _attributes (attrs)
 							{ }
 
 			virtual ~IOSimulation ()
@@ -182,8 +183,12 @@ namespace MCHEmul
 			/** When datasette is paused, this method must is invoked (@see method simulate from main class). */
 			virtual void stop () = 0;
 
-			// When there ois command dedicated to the simulation!
+			// When there is commands dedicated to the simulation!
 			virtual bool executeCommand (int id, const MCHEmul::Strings& prms) = 0;
+			// ...and the method to get their description...
+			virtual Strings commandDescriptions () const = 0;
+
+			virtual InfoStructure getInfoStructure () const override;
 
 			protected:
 			Attributes _attributes;
@@ -195,12 +200,11 @@ namespace MCHEmul
 		{
 			public:
 			/** The number of cycles to wait before writting or reading is received. */
-			IOCPULinkedSimulation (unsigned int rS, 
-					const Attributes& attrs = { { "+Commands", "64 [SPEED]: Change CPU linked speed" } })
+			IOCPULinkedSimulation (unsigned int rS, const Attributes& attrs = { })
 				: IOSimulation (attrs),
 				  _runningSpeed (rS),
 				  _firstCycleSimulation (false), _lastCPUCycles (0), _clockCycles (0)
-							{ }
+							{ setClassName ("IOCPULinkedSimualtion"); }
 
 			/** Get/Change the running speed. */
 			unsigned int runningSpeed () const
@@ -215,6 +219,10 @@ namespace MCHEmul
 							{ /** Nothing specific to do. */ }
 
 			virtual bool executeCommand (int id, const MCHEmul::Strings& prms) override;
+			virtual Strings commandDescriptions () const override
+							{ return (Strings ({ "64 [SPEED]: Change CPU linked speed" })); }
+
+			virtual InfoStructure getInfoStructure () const override;
 
 			private:
 			unsigned int _runningSpeed;
@@ -264,13 +272,13 @@ namespace MCHEmul
 
 			/** What is received is the "motor speed" (the time every which the process is executed in microseconds).
 				I am afraid this value has to be adjusted litlle by little in any simulation!. */
-			IOParallelSimulation (unsigned int mS,
-					const Attributes& attrs = { { "+Commands", "64 [SPEED]: Change motor speed" } })
+			IOParallelSimulation (unsigned int mS, const Attributes& attrs = { })
 				: IOSimulation (attrs),
 				  _motorSpeed (mS),
 				  _process (nullptr),
 				  _thread ()
-							{ }
+							{ setClassName ("IOCPUParallelSimulation"); }
+
 			~IOParallelSimulation ()
 							{ stop (); /** Just in case. */ }
 
@@ -286,6 +294,10 @@ namespace MCHEmul
 			virtual void stop () override;
 
 			virtual bool executeCommand (int id, const MCHEmul::Strings& prms) override;
+			virtual Strings commandDescriptions () const override
+							{ return (Strings ({ "64 [SPEED]: Change CPU motor speed" })); }
+
+			virtual InfoStructure getInfoStructure () const override;
 
 			private:
 			unsigned int _motorSpeed;
@@ -308,8 +320,9 @@ namespace MCHEmul
 		/** The key EJECT has no value. */
 
 		/** The constructor receives the way to simulate the io activity, 
-			that is the way to read or write info into the datasette (cannot be null). */
-		StandardDatasette (int id, IOSimulation* s, const Attributes& attrs = { });
+			that is the way to read or write info into the datasette (cannot be null). \n
+			mE defines whether the motor is controlled from internal signals (true) or just pressing the buttons (false). */
+		StandardDatasette (int id, IOSimulation* s, bool mI, const Attributes& attrs = { });
 
 		~StandardDatasette ()
 							{ delete (_ioSimulation); }
@@ -322,6 +335,9 @@ namespace MCHEmul
 		virtual bool initialize () override;
 
 		virtual bool executeCommand (int id, const MCHEmul::Strings& prms) override;
+		virtual Strings commandDescriptions () const override
+							{ return (Strings (
+								{ "1:FORWARD", "2:REWIND", "4:STOP", "8:PLAY", "24:PLAY + RECORD", "32:EJECT(and clear data)" })); }
 
 		virtual bool simulate (MCHEmul::CPU* cpu) override;
 
@@ -352,6 +368,7 @@ namespace MCHEmul
 
 		protected:
 		IOSimulation* _ioSimulation;
+		bool _motorControlledInternally;
 
 		/** The different status that this peripheral can be in. \n
 			At creating this datasette is stopped. */
@@ -423,8 +440,8 @@ namespace MCHEmul
 	class BasicDatasette : public StandardDatasette
 	{
 		public:
-		BasicDatasette (int id, unsigned int rS, const Attributes& attrs)
-			: StandardDatasette (id, new StandardDatasette::IOCPULinkedSimulation (rS), attrs)
+		BasicDatasette (int id, unsigned int rS, bool mI, const Attributes& attrs)
+			: StandardDatasette (id, new StandardDatasette::IOCPULinkedSimulation (rS), mI, attrs)
 							{ }
 
 		unsigned int runningSpeed () const
@@ -439,8 +456,8 @@ namespace MCHEmul
 	class BasicDatasetteP : public StandardDatasette
 	{
 		public:
-		BasicDatasetteP (int id, unsigned int mS, const Attributes& attrs)
-			: StandardDatasette (id, new StandardDatasette::IOParallelSimulation (mS), attrs)
+		BasicDatasetteP (int id, unsigned int mS, bool mI, const Attributes& attrs)
+			: StandardDatasette (id, new StandardDatasette::IOParallelSimulation (mS), mI, attrs)
 							{ }
 
 		unsigned int motorSpeed () const

@@ -13,7 +13,7 @@ MCHEmul::IOPeripheral* ZX81::IOPeripheralBuilder::createPeripheral
 	else if (id == ZX81::Datasette::_ID)
 		result = new ZX81::Datasette (3100);
 	else if (id == ZX81::DatasetteP::_ID)
-		result = new ZX81::Datasette (3100);
+		result = new ZX81::DatasetteP (100);
 	else
 		result = SINCLAIR::IOPeripheralBuilder::createPeripheral (id, c, prms);
 

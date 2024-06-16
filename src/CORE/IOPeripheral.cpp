@@ -9,6 +9,7 @@ MCHEmul::InfoStructure MCHEmul::IOPeripheral::getInfoStructure () const
 
 	result.add ("ID",		_id);
 	result.add ("ATTRS",	_attributes);
+	result.add ("COMMANDS", MCHEmul::concatenateStrings (commandDescriptions (), ", "));
 
 	return (result);
 }

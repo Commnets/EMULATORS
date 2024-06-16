@@ -90,6 +90,9 @@ namespace MCHEmul
 			By default no command is accepted. */
 		virtual bool executeCommand (int cId, const Strings& prms)
 							{ return (false); }
+		/** To get the commands to manage the device, if any. */
+		virtual Strings commandDescriptions () const
+							{ return { }; }
 
 		/** To emulate the way it works. \n
 			Should return true if everything was ok. */

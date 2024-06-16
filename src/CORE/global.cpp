@@ -348,6 +348,21 @@ MCHEmul::Strings MCHEmul::convertIntoStrings (int n, wchar_t** dt)
 }
 
 // ---
+std::string MCHEmul::concatenateStrings (const Strings& strs, const std::string& c)
+{
+	bool f = true;
+	std::string result = "";
+	for (const auto& i : strs)
+	{
+		result += ((!f) ? c : "") + i;
+
+		f = false;
+	}
+
+	return (result);
+}
+
+// ---
 bool MCHEmul::validLabel (const std::string& s)
 {
 	return (s.length () >= 1 && 

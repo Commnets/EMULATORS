@@ -157,8 +157,8 @@ MCHEmul::IODevices ZX81::SinclairZX81::standardDevices (ZX81::SinclairZX81::Visu
 
 	// The Edge Connector
 	result.insert (MCHEmul::IODevices::value_type (ZX81::EdgeConnector::_ID, new ZX81::EdgeConnector));
-
-	// TODO
+	// The IO port
+	result.insert (MCHEmul::IODevices::value_type (ZX81::DatasetteIOPort::_ID, new ZX81::DatasetteIOPort));
 
 	return (result);
 }

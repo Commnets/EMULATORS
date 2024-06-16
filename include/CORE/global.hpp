@@ -103,6 +103,7 @@ namespace MCHEmul
 	/** Used in the main function, mainly! */
 	Strings convertIntoStrings (int n, char** dt);
 	Strings convertIntoStrings (int n, wchar_t** dt); // Unicode...
+	std::string concatenateStrings (const Strings& strs, const std::string& c);
 
 	/** General functions to determine whether a string is or not valid
 		from a specific perspective. */
