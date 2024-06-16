@@ -156,6 +156,8 @@
     <ClInclude Include="..\..\include\ZX81\Cartridge.hpp" />
     <ClInclude Include="..\..\include\ZX81\CommandBuilder.hpp" />
     <ClInclude Include="..\..\include\ZX81\Commands.hpp" />
+    <ClInclude Include="..\..\include\ZX81\Datasette.hpp" />
+    <ClInclude Include="..\..\include\ZX81\DatasettePort.hpp" />
     <ClInclude Include="..\..\include\ZX81\EdgeConnectorPeripherals.hpp" />
     <ClInclude Include="..\..\include\ZX81\EdgeConnector.hpp" />
     <ClInclude Include="..\..\include\ZX81\incs.hpp" />
@@ -173,6 +175,8 @@
     <ClCompile Include="..\..\src\ZX81\Cartridge.cpp" />
     <ClCompile Include="..\..\src\ZX81\CommandBuilder.cpp" />
     <ClCompile Include="..\..\src\ZX81\Commands.cpp" />
+    <ClCompile Include="..\..\src\ZX81\Datasette.cpp" />
+    <ClCompile Include="..\..\src\ZX81\DatasettePort.cpp" />
     <ClCompile Include="..\..\src\ZX81\EdgeConnectorPeripherals.cpp" />
     <ClCompile Include="..\..\src\ZX81\EdgeConnector.cpp" />
     <ClCompile Include="..\..\src\ZX81\IOPBuilder.cpp" />

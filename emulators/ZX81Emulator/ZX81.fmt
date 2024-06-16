@@ -29,3 +29,15 @@ Id:@ID@
 ->Errors:
 @ERROR@
 #---
+#---
+;ZX81Datasette
+Id:@ID@
+@ATTRS?{key=YES,equal=:,empty=no attributes}\n@
+Keys Pressed:@KEYS@
+Motor on:@MOTOR@
+Data Counter: @DATACOUNTER@
+->Data:
+Name:@DATANAME@
+Size:@DATASIZE@
+@DATA?{fmter=DatasetteData,empty=no data}\n---\n@
+#---

@@ -15,7 +15,6 @@
 #define __COMMODORE_1530DATASETTE__
 
 #include <CORE/incs.hpp>
-#include <COMMODORE/DatasettePeripherals.hpp>
 
 namespace COMMODORE
 {
@@ -32,84 +31,29 @@ namespace COMMODORE
 		Every cycle lasts different depending whether it represents a leader bit (174 us), 
 		a 0 data bit (169 us), a 1 data bit (247 us) or a word market bit (332 us).
 		https://archive.org/details/COMPUTEs_VIC-20_and_Commodore_64_Tool_Kit_Kernal_1985_COMPUTE_Publications_a (page 275).
+		However the one managing that stuff is the ROM emulation, the duty of this class is to have the right 
+		speed of the motor at construction time.
 		*/
-	class Datasette1530 final : public DatasettePeripheral
+	class Datasette1530 final : public MCHEmul::BasicDatasette
 	{
 		public:
 		static const int _ID = 100;
 
-		/** The commands accepted by this peripheral. \n
-			They refer mainly to keys that can be pressed. \n
-			Notice that combinations are possible. */
-		static const int _KEYFOWARD = 1;
-		static const int _KEYREWIND = 2;
-		static const int _KEYSTOP   = 4;
-		static const int _KEYPLAY   = 8;
-		static const int _KEYRECORD = 16;
-		static const int _KEYEJECT	= 32; // To clean up the data loaded, or to simulate a new castte is inserted...
-		/** The key EJECT has no value. */
-
-		Datasette1530 ();
-
-		virtual bool initialize () override;
-
-		virtual bool executeCommand (int id, const MCHEmul::Strings& prms) override;
-
-		virtual bool simulate (MCHEmul::CPU* cpu) override;
-
-		virtual bool connectData (MCHEmul::FileData* dt) override;
-
-		/**
-		  *	The name of the fields are: \n
-		  * The ones in the parent class. \n
-		  *	ATTRS	= InfoStructure: Attributes defining the Peripheral. \n
-		  */
-		virtual MCHEmul::InfoStructure getInfoStructure () const override;
-
-		private:
-		/** According with the phase the things to store will be one or another. \n
-			The can be overloaded to simulate different types of storage, if needed. \n
-			But by default they implemented the commodore standard. */
-		inline bool getNextDataBit ();
-		inline void storeNextDataBit (bool s);
-
-		private:
-		/** The different status that this peripheral can be in. \n
-			At creating this datasette is stopped. */
-		enum class Status
-		{
-			_STOPPED = 0,
-			_READING = 1,
-			_SAVING = 2
-		};
-
-		// Immplementation
-		mutable Status _status;
-		
-		// Counting which the info to write or read!
-		mutable size_t _dataCounter; 
-		mutable unsigned short _elementCounter;
-
-		// Managing the clockcycles...
-		bool _firstCycleSimulation;
-		unsigned int _lastCPUCycles;
-		unsigned int _clockCycles;
+		/** The running speed is still a parameter. */
+		Datasette1530 (unsigned int rS);
 	};
 
-	// ---
-	inline bool Datasette1530::getNextDataBit ()
+	/** This is identical to the previous one, 
+		but with the motor running in parallel. The internal name of the lass is the same. */
+	class Datasette1530P final : public MCHEmul::BasicDatasetteP
 	{
-		return (_data._data [_dataCounter].bytes ()[_elementCounter++] == MCHEmul::UByte::_1);
-	}
+		public:
+		static const int _ID = 1000;
 
-	// ---
-	inline void Datasette1530::storeNextDataBit (bool s)
-	{
-		_data._data [_dataCounter].addByte 
-			(s ? MCHEmul::UByte::_1 /** cycle 1. */ : MCHEmul::UByte::_0 /** cycle 0. */);
-
-		_elementCounter++;
-	}
+		/** The "speed of the motor" is still a parameter. 
+			It is really the time in millisecond between two io actions in the datasette. */
+		Datasette1530P (unsigned int mS);
+	};
 }
 
 #endif

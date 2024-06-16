@@ -905,6 +905,24 @@ namespace MCHEmul
 		private:
 		virtual void executeImpl (CommandExecuter* cE, Computer* c, InfoStructure& rst) override;
 	};
+
+	/** To get the status of the Datasette. */
+	class DatasetteStatusCommand final : public Command
+	{
+		public:
+		static const int _ID = 105;
+		static const std::string _NAME;
+
+		DatasetteStatusCommand ()
+			: MCHEmul::Command (_ID, _NAME)
+							{ }
+
+		virtual bool canBeExecuted () const override
+							{ return (_parameters.size () == 0); }
+
+		private:
+		virtual void executeImpl (CommandExecuter* cE, Computer* c, InfoStructure& rst) override;
+	};
 }
 
 #endif

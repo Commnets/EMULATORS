@@ -114,9 +114,6 @@
     <ClInclude Include="..\..\include\COMMODORE\Commands.hpp">
       <Filter>Archivos de encabezado\Commands</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\include\COMMODORE\DatasettePeripherals.hpp">
-      <Filter>Archivos de encabezado\IO</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\include\COMMODORE\DatasettePort.hpp">
       <Filter>Archivos de encabezado\IO</Filter>
     </ClInclude>
@@ -284,9 +281,6 @@
       <Filter>Archivos de origen\IO</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\COMMODORE\ExpansionPort.cpp">
-      <Filter>Archivos de origen\IO</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\COMMODORE\DatasettePeripherals.cpp">
       <Filter>Archivos de origen\IO</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\COMMODORE\ExpansionPeripherals.cpp">

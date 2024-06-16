@@ -41,6 +41,9 @@ namespace C64
 			const std::string& sS = "SID", /** Sound Emulation Library used is initially SID. */
 			const std::string& lang = MCHEmul::_DEFAULTLANGUAGE /** English language used behind. */);
 
+		VisualSystem visualSystem () const
+							{ return (_visualSystem); }
+
 		virtual bool initialize (bool iM = true) override;
 
 		// To get direct access to the most important C64 chips...

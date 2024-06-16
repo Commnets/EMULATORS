@@ -7,7 +7,6 @@ const std::string COMMODORE::VICIIStatusCommand::_NAME = "CVICII";
 const std::string COMMODORE::VIAStatusCommand::_NAME = "CVIA";
 const std::string COMMODORE::CIAStatusCommand::_NAME = "CCIA";
 const std::string COMMODORE::SIDStatusCommand::_NAME = "CSID";
-const std::string COMMODORE::DatasetteStatusCommand::_NAME = "CDATASETTE";
 const std::string COMMODORE::SIDWrapperCommand::_NAME = "CSIDW";
 
 // ---
@@ -108,20 +107,4 @@ void COMMODORE::SIDWrapperCommand::executeImpl (MCHEmul::CommandExecuter* cE, MC
 		rst.add ("ERRORS", std::string ("Wrapper not defined"));
 	else
 		static_cast <COMMODORE::Computer*> (c) -> sid () -> setSoundWrapper (wrapper);
-}
-
-// ---
-void COMMODORE::DatasetteStatusCommand::executeImpl (MCHEmul::CommandExecuter* cE, MCHEmul::Computer* c, MCHEmul::InfoStructure& rst)
-{
-	if (c == nullptr)
-		return;
-
-	// Look for the datasette if any...
-	MCHEmul::IOPeripherals prhs = std::move (c -> peripherals ()); // The list has been built up...
-	COMMODORE::DatasettePeripheral* ds = nullptr;
-	for (MCHEmul::IOPeripherals::const_iterator i = prhs.begin (); 
-			i != prhs.end () && ds == nullptr; i++)
-		ds = dynamic_cast <COMMODORE::DatasettePeripheral*> ((*i).second);
-
-	if (ds != nullptr) rst = ds -> getInfoStructure ();
 }

@@ -31,7 +31,6 @@
     <ClInclude Include="..\..\include\COMMODORE\CIA\CIASerialPort.hpp" />
     <ClInclude Include="..\..\include\COMMODORE\CIA\CIATimer.hpp" />
     <ClInclude Include="..\..\include\COMMODORE\CIA\incs.hpp" />
-    <ClInclude Include="..\..\include\COMMODORE\DatasettePeripherals.hpp" />
     <ClInclude Include="..\..\include\COMMODORE\CommandBuilder.hpp" />
     <ClInclude Include="..\..\include\COMMODORE\Commands.hpp" />
     <ClInclude Include="..\..\include\COMMODORE\Computer.hpp" />
@@ -98,7 +97,6 @@
     <ClCompile Include="..\..\src\COMMODORE\CIA\CIATimer.cpp" />
     <ClCompile Include="..\..\src\COMMODORE\CommandBuilder.cpp" />
     <ClCompile Include="..\..\src\COMMODORE\Commands.cpp" />
-    <ClCompile Include="..\..\src\COMMODORE\DatasettePeripherals.cpp" />
     <ClCompile Include="..\..\src\COMMODORE\DatasettePort.cpp" />
     <ClCompile Include="..\..\src\COMMODORE\ExpansionPeripherals.cpp" />
     <ClCompile Include="..\..\src\COMMODORE\ExpansionPort.cpp" />

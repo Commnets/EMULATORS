@@ -29,6 +29,8 @@
 #include <ZX81/EdgeConnector.hpp>
 #include <ZX81/EdgeConnectorPeripherals.hpp>
 #include <ZX81/Cartridge.hpp>
+#include <ZX81/DatasettePort.hpp>
+#include <ZX81/Datasette.hpp>
 #include <ZX81/ZX81Emulator.hpp>
 
 #endif

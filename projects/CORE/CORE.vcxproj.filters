@@ -192,6 +192,12 @@
     <ClCompile Include="..\..\src\CORE\FileIO.cpp">
       <Filter>Archivos de origen\IO</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\CORE\DatasettePeripherals.cpp">
+      <Filter>Archivos de origen\IO</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\CORE\DatasettePort.cpp">
+      <Filter>Archivos de origen\IO</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\include\CORE\IO.hpp">
@@ -369,6 +375,12 @@
       <Filter>Archivos de encabezado\Foundation</Filter>
     </ClInclude>
     <ClInclude Include="..\..\include\CORE\FileIO.hpp">
+      <Filter>Archivos de encabezado\IO</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\CORE\DatasettePeripherals.hpp">
+      <Filter>Archivos de encabezado\IO</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\CORE\DatasettePort.hpp">
       <Filter>Archivos de encabezado\IO</Filter>
     </ClInclude>
   </ItemGroup>

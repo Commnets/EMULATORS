@@ -49,7 +49,11 @@ void ZX81::LoadPAnd81FileCommand::executeImpl (MCHEmul::CommandExecuter* cE,
 		SINCLAIR::Pand81FileData* d = 
 			dynamic_cast <SINCLAIR::Pand81FileData*> (f.readFile (fN, c -> cpu () -> architecture ().bigEndian ()));
 		if (!(e = (d == nullptr)))
+		{
 			c -> memory () -> set (d -> asMemoryBlocks ()._data);
+
+			c -> cpu () -> programCounter ().setAddress (MCHEmul::Address ({ 0xe5, 0x03 }, false));
+		}
 	}
 	else
 		e = true;

@@ -7,9 +7,9 @@ void C64::IO6510PortRegisters::processEvent (const MCHEmul::Event& evnt, MCHEmul
 	// Bit 4 reflects whether some key has been pressed on the dataette...
 	// When something has been pressed this bit is set to 0, 1 in the other situation.
 	// The same bit in the memory position 0 hast to be defined as input (value = 0)
-	if (evnt.id () == COMMODORE::DatasetteIOPort::_KEYPRESSED ||
-		evnt.id () == COMMODORE::DatasetteIOPort::_NOKEYPRESSED)
-		setBitPortValue (4, evnt.id () == COMMODORE::DatasetteIOPort::_NOKEYPRESSED);
+	if (evnt.id () == MCHEmul::DatasetteIOPort::_KEYPRESSED ||
+		evnt.id () == MCHEmul::DatasetteIOPort::_NOKEYPRESSED)
+		setBitPortValue (4, evnt.id () == MCHEmul::DatasetteIOPort::_NOKEYPRESSED);
 }
 
 // ---
@@ -21,14 +21,14 @@ void C64::IO6510PortRegisters::notifyPortChanges (const MCHEmul::UByte& c, const
 	
 	// Send the data to the casette port, if something changed!
 	if (c.bit (3))
-		notify (MCHEmul::Event (COMMODORE::DatasetteIOPort::_WRITE, v.bit (3) ? 1 : 0));
+		notify (MCHEmul::Event (MCHEmul::DatasetteIOPort::_WRITE, v.bit (3) ? 1 : 0));
 	
 	// The bit 4 is for know whwther there is a keyboard pressed in the casette...
 	
 	// Modify the status of the motor of the casette, if something changed!
 	if (c.bit (5))
 		notify (MCHEmul::Event (v.bit (5)
-			? COMMODORE::DatasetteIOPort::_MOTORSTOPPED : COMMODORE::DatasetteIOPort::_MOTORRUNNING));
+			? MCHEmul::DatasetteIOPort::_MOTORSTOPPED : MCHEmul::DatasetteIOPort::_MOTORRUNNING));
 }
 
 // ---

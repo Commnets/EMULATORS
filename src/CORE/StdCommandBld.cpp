@@ -90,6 +90,8 @@ MCHEmul::Command* MCHEmul::StandardCommandBuilder::createEmptyCommand (const std
 		result = new MCHEmul::CRTEffectOnCommand;
 	else if (cmdName == "CRTOFF" || cmdName == MCHEmul::CRTEffectOffCommand::_NAME)
 		result = new MCHEmul::CRTEffectOffCommand;
+	else if (cmdName == "DATASETTE" || cmdName == MCHEmul::DatasetteStatusCommand::_NAME)
+		result = new MCHEmul::DatasetteStatusCommand;
 	else if (cmdName == MCHEmul::MoveParametersToAnswerCommand::_NAME)
 		result = new MCHEmul::MoveParametersToAnswerCommand;
 

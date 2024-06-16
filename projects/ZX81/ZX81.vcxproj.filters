@@ -90,6 +90,12 @@
     <ClInclude Include="..\..\include\ZX81\OSIO.hpp">
       <Filter>Archivos de encabezado\IO</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\include\ZX81\Datasette.hpp">
+      <Filter>Archivos de encabezado\IO</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\ZX81\DatasettePort.hpp">
+      <Filter>Archivos de encabezado\IO</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\ZX81\CommandBuilder.cpp">
@@ -133,6 +139,12 @@
     </ClCompile>
     <ClCompile Include="..\..\src\ZX81\PortManager.cpp">
       <Filter>Archivos de origen\Motherboard</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\ZX81\Datasette.cpp">
+      <Filter>Archivos de origen\IO</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\ZX81\DatasettePort.cpp">
+      <Filter>Archivos de origen\IO</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

@@ -28,6 +28,7 @@ ZX81::ULA::ULA (const MCHEmul::RasterData& vd, const MCHEmul::RasterData& hd,
 	  _ULARegisters (new ZX81::ULARegisters),
 	  _ULAView (vV),
 	  _raster (vd, hd, 1 /** The step is 1 pixel. */),
+	  _showEvents (false),
 	  _lastCPUCycles (0),
 	  _format (nullptr),
 	  _firstVBlankEntered (false),
@@ -154,6 +155,11 @@ bool ZX81::ULA::simulate (MCHEmul::CPU* cpu)
 		}
 		else
 			_firstVBlankEntered = false;
+
+		// If the status of the casette signal has changed, it has to be notified...
+		if (_ULARegisters -> casetteSignalChanged ())
+			notify (MCHEmul::Event (MCHEmul::DatasetteIOPort::_WRITE, 
+				_ULARegisters -> casetteSignal () ? 1 : 0));
 	}
 
 	_lastCPUCycles = cpu -> clockCycles ();
@@ -267,7 +273,7 @@ void ZX81::ULA::readGraphicsAndDrawVisibleZone (MCHEmul::CPU* cpu)
 			memoryRef () -> value (cpu -> programCounter ().asAddress ());
 		_ULARegisters -> setReverseVideo (chrCode.bit (7));
 		_ULARegisters -> setSHIFTRegister (chrCode.bit (6) 
-			? 0x00 // It is an special c0de and has to be treated as an space from the graphical perspective!
+			? 0x00 // It is an special code and has to be treated as an space from the graphical perspective!
 			: memoryRef () -> value (MCHEmul::Address (2, 
 				(unsigned int (static_cast <FZ80::CZ80*> (cpu) -> iRegister ().values ()[0].value ()) << 8) |
 				(unsigned int ((chrCode.value () & 0b00111111) << 3)) |

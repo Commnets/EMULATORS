@@ -1,4 +1,4 @@
-#include <CORE/soundChip.hpp>
+#include <CORE/SoundChip.hpp>
 
 // ---
 bool MCHEmul::SoundChip::initialize ()

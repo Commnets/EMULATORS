@@ -66,19 +66,27 @@ namespace ZX81
 		static const int _ROM_SET					= 2;
 
 		// Subsets
+		// Block 1: ROM
 		static const int _ROM_SUBSET				= 101;
 		static const int _ROMSHADOW1_SUBSET			= 102;
-		static const int _RAM1K_SUBSET				= 103;
-		static const int _RAM1K_S_SUBSET			= 104; // From 104 to 118
-		static const int _RAM16K_SUBSET				= 119;
-		static const int _ROMSHADOW2_SUBSET			= 120;
-		static const int _ROMSHADOW3_SUBSET			= 121;
-		static const int _RAM1KSHADOW_SUBSET		= 122;
-		static const int _RAM1KSHADOW_S_SUBSET		= 123; // From 123 to 137
-		static const int _RAM16KSHADOW_SUBSET		= 138;
-		static const int _RAM1K_V_SUBSET			= 139;
-		static const int _RAM1K_V_S_SUBSET			= 140; // From 140 to 154
-		static const int _RAM16K_V_SUBSET			= 155;
+		static const int _ROMCS1_SUBSET				= 103;
+		// Block 2: RAM
+		static const int _RAM1K_SUBSET				= 104;
+		static const int _RAM1K_S_SUBSET			= 105; // From 105 to 119
+		static const int _RAM16KCS1_SUBSET			= 120;
+		// Block 3: ROM
+		static const int _ROMSHADOW2_SUBSET			= 121;
+		static const int _ROMSHADOW3_SUBSET			= 122;
+		static const int _ROMCS2_SUBSET				= 123;
+		// Block 4: RAM (ULA/CPU) point of view
+		// ULA...
+		static const int _RAM1KSHADOW_SUBSET		= 124;
+		static const int _RAM1KSHADOW_S_SUBSET		= 125; // From 125 to 139
+		static const int _RAM16KSHADOW_SUBSET		= 140; // It is also _RAM16KCS2_SUBSET
+		// CPU...
+		static const int _RAM1K_V_SUBSET			= 141;
+		static const int _RAM1K_V_S_SUBSET			= 142; // From 142 to 156
+		static const int _RAM16K_V_SUBSET			= 157;
 
 		// Views
 		static const int _CPU_VIEW					= 0;
@@ -112,19 +120,27 @@ namespace ZX81
 		Configuration _configuration;
 
 		// Implementation
+		// Block 1: ROM
 		// The banks of memory that are configurable...
-		MCHEmul::PhysicalStorageSubset* _ROM;	// To load the data...
-		// Either this 2... (and the equivalent in video zone)
+		MCHEmul::PhysicalStorageSubset* _ROM;		// To load the data...
+		MCHEmul::MirrorPhysicalStorageSubset* _ROM_S1;
+		MCHEmul::PhysicalStorageSubset* _ROMCS1	;	// When ROM_CS1 == 0
+		// Block 2/4: RAM
+		// Either this 2... (and their equivalents in the video zone)
 		MCHEmul::Stack* _RAM1K;
 		MCHEmul::MirrorPhysicalStorageSubset* _RAM1K_S;
 		ZX81::MemoryVideoCode* _RAM1K_V;
 		std::vector <MCHEmul::MirrorPhysicalStorageSubset*> _RAM15K_UC;
 		std::vector <MCHEmul::MirrorPhysicalStorageSubset*> _RAM15K_UC_S;
+		MCHEmul::Stack* _RAM16K_CS1; // Same, but when RAM_CS == 0
 		std::vector <ZX81::MemoryVideoCode*> _RAM15K_V;
-		// ...or this one (and the equivalent in the video zone)
-		MCHEmul::Stack* _RAM16K;
+		// ...or this one (and their equivalents in the video zone)
 		MCHEmul::MirrorPhysicalStorageSubset* _RAM16K_S;
 		ZX81::MemoryVideoCode* _RAM16K_V;
+		// Block 3: ROM
+		MCHEmul::MirrorPhysicalStorageSubset* _ROM_S2;
+		MCHEmul::MirrorPhysicalStorageSubset* _ROM_S3;
+		MCHEmul::PhysicalStorageSubset* _ROMCS2; // When ROM_CS == 0
 		// The id of the subset used for the stack...
 		// that will depend on the configuration!
 		int _STACK_SUBSET;

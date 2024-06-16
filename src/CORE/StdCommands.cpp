@@ -50,6 +50,7 @@ const std::string MCHEmul::InterruptDebugOffCommand::_NAME = "CIDEBUGOFF";
 const std::string MCHEmul::ChipsListCommand::_NAME = "CCHIPS";
 const std::string MCHEmul::CRTEffectOnCommand::_NAME = "CCRTON";
 const std::string MCHEmul::CRTEffectOffCommand::_NAME = "CCRTOFF";
+const std::string MCHEmul::DatasetteStatusCommand::_NAME = "CDATASETTE";
 
 // ---
 MCHEmul::HelpCommand::HelpCommand (const std::string& hF)
@@ -809,4 +810,22 @@ void MCHEmul::CRTEffectOffCommand::executeImpl
 		return;
 
 	c -> screen () -> setCRTEffect (false);
+}
+
+// ---
+void MCHEmul::DatasetteStatusCommand::executeImpl 
+	(MCHEmul::CommandExecuter* cE, MCHEmul::Computer* c, MCHEmul::InfoStructure& rst)
+{
+	if (c == nullptr)
+		return;
+
+	// Look for the datasette if any...
+	MCHEmul::IOPeripherals prhs = std::move (c -> peripherals ()); // The list has been built up...
+	MCHEmul::DatasettePeripheral* ds = nullptr;
+	for (MCHEmul::IOPeripherals::const_iterator i = prhs.begin (); 
+			i != prhs.end () && ds == nullptr; i++)
+		ds = dynamic_cast <MCHEmul::DatasettePeripheral*> ((*i).second);
+
+	if (ds != nullptr) 
+		rst.add ("StdDatasette", std::move (ds -> getInfoStructure ()));
 }

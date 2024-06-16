@@ -4,6 +4,7 @@
 #include <ZX81/OSIO.hpp>
 #include <ZX81/EdgeConnector.hpp>
 #include <ZX81/Cartridge.hpp>
+#include <ZX81/DatasettePort.hpp>
 #include <FZ80/CZ80.hpp>
 #include <FZ80/NMIInterrupt.hpp>
 
@@ -60,6 +61,9 @@ bool ZX81::SinclairZX81::initialize (bool iM)
 	// Events when it is disonnected and connected are sent and with many implications
 	// in the structure of the memory, and in the content of this...
 	observe (dynamic_cast <ZX81::EdgeConnector*> (device (ZX81::EdgeConnector::_ID)));
+	// Connect the casette port to the ULA
+	// as the ULA (ports) generates also the signal that goes to the casette throught out the IN/OUT port...
+	device (ZX81::DatasetteIOPort::_ID) -> observe (_ula);
 
 	// Check whether there is an expansion element inserted in the edge connector port
 	// If it is, it's info is loaded...

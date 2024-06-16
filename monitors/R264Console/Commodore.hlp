@@ -22,6 +22,3 @@ No parameters are needed.
 To change the sound wrapper used.
 The only parameter needed is the number of the library (LIBID) to use.
 Where 0 is the standard RESID library and 1 is an very basic simulation made by Ignacio Cea.
-;Datasette
-To know the status of the datasette if connected
-No parameters are needed.

@@ -28,7 +28,6 @@
 #include <COMMODORE/FileIO.hpp>
 #include <COMMODORE/IOPBuilder.hpp>
 #include <COMMODORE/DatasettePort.hpp>
-#include <COMMODORE/DatasettePeripherals.hpp>
 #include <COMMODORE/1530Datasette.hpp>
 #include <COMMODORE/UserPort.hpp>
 #include <COMMODORE/UserIOPeripherals.hpp>

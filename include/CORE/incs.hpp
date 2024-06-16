@@ -65,7 +65,9 @@
 #include <CORE/SoundVoice.hpp>
 #include <CORE/SoundMemory.hpp>
 #include <CORE/SoundLibWrapper.hpp>
+#include <CORE/DatasettePort.hpp>
 #include <CORE/IOPeripheral.hpp>
+#include <CORE/DatasettePeripherals.hpp>
 #include <CORE/IOPBuilder.hpp>
 #include <CORE/Command.hpp>
 #include <CORE/CommandBuilder.hpp>
