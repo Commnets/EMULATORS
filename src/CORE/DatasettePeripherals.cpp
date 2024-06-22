@@ -115,7 +115,7 @@ MCHEmul::InfoStructure MCHEmul::StandardDatasette::IOSimulation::getInfoStructur
 }
 
 // ---
-void MCHEmul::StandardDatasette::IOCPULinkedSimulation::initialize ()
+void MCHEmul::StandardDatasette::IOSynchronous::initialize ()
 {
 	_firstCycleSimulation = true;
 
@@ -123,7 +123,7 @@ void MCHEmul::StandardDatasette::IOCPULinkedSimulation::initialize ()
 }
 
 // ---
-bool MCHEmul::StandardDatasette::IOCPULinkedSimulation::io (MCHEmul::StandardDatasette& dS, MCHEmul::CPU* cpu)
+bool MCHEmul::StandardDatasette::IOSynchronous::io (MCHEmul::StandardDatasette& dS, MCHEmul::CPU* cpu)
 {
 	if (_firstCycleSimulation)
 	{
@@ -150,7 +150,7 @@ bool MCHEmul::StandardDatasette::IOCPULinkedSimulation::io (MCHEmul::StandardDat
 }
 
 // ---
-bool MCHEmul::StandardDatasette::IOCPULinkedSimulation::executeCommand
+bool MCHEmul::StandardDatasette::IOSynchronous::executeCommand
 	(int id, const MCHEmul::Strings& prms)
 {
 	if (id == _KEYIOBASE)
@@ -160,7 +160,7 @@ bool MCHEmul::StandardDatasette::IOCPULinkedSimulation::executeCommand
 }
 
 // ---
-MCHEmul::InfoStructure MCHEmul::StandardDatasette::IOCPULinkedSimulation::getInfoStructure () const
+MCHEmul::InfoStructure MCHEmul::StandardDatasette::IOSynchronous::getInfoStructure () const
 {
 	MCHEmul::InfoStructure result = 
 		std::move (MCHEmul::StandardDatasette::IOSimulation::getInfoStructure ());
@@ -171,34 +171,37 @@ MCHEmul::InfoStructure MCHEmul::StandardDatasette::IOCPULinkedSimulation::getInf
 }
 
 // ---
-bool MCHEmul::StandardDatasette::IOParallelSimulation::io (MCHEmul::StandardDatasette& dS, MCHEmul::CPU* cpu)
+bool MCHEmul::StandardDatasette::IOASynchronous::io (MCHEmul::StandardDatasette& dS, MCHEmul::CPU* cpu)
 {
 	if (_process != nullptr)
 		return (true);
 
 	// If there was no process already running, 
 	// creates and on and start the simulation in paralell...
-	_thread = std::thread (&MCHEmul::StandardDatasette::IOParallelSimulation::Process::run, 
-		_process = new MCHEmul::StandardDatasette::IOParallelSimulation::Process (dS, _motorSpeed));
+	_thread = std::thread (&MCHEmul::StandardDatasette::IOASynchronous::Process::run, 
+		_process = new MCHEmul::StandardDatasette::IOASynchronous::Process (dS, _motorSpeed));
 	// The process continues because the thread variable is persistent!
 
 	return (true);
 }
 
 // ---
-void MCHEmul::StandardDatasette::IOParallelSimulation::stop ()
+void MCHEmul::StandardDatasette::IOASynchronous::stop ()
 {
 	if (_process != nullptr)
 	{
 		_process -> finish (); // The process finishes...
+		
 		_thread.join (); // The current thread (main), waits for the operation really finishes...
+		
 		delete (_process); // Now is safe to delete the process...
+		
 		_process = nullptr; // ...and prepare the system for the next!
 	}
 }
 
 // ---
-bool MCHEmul::StandardDatasette::IOParallelSimulation::executeCommand
+bool MCHEmul::StandardDatasette::IOASynchronous::executeCommand
 	(int id, const MCHEmul::Strings& prms)
 {
 	if (id == _KEYIOBASE)
@@ -208,7 +211,7 @@ bool MCHEmul::StandardDatasette::IOParallelSimulation::executeCommand
 }
 
 // ---
-MCHEmul::InfoStructure MCHEmul::StandardDatasette::IOParallelSimulation::getInfoStructure () const
+MCHEmul::InfoStructure MCHEmul::StandardDatasette::IOASynchronous::getInfoStructure () const
 {
 	MCHEmul::InfoStructure result = 
 		std::move (MCHEmul::StandardDatasette::IOSimulation::getInfoStructure ());
@@ -220,15 +223,17 @@ MCHEmul::InfoStructure MCHEmul::StandardDatasette::IOParallelSimulation::getInfo
 
 // ---
 MCHEmul::StandardDatasette::StandardDatasette 
-		(int id, MCHEmul::StandardDatasette::IOSimulation* s, bool mI, const MCHEmul::Attributes& attrs)
+		(int id, MCHEmul::StandardDatasette::IOSimulation* s, 
+		 MCHEmul::StandardDatasette::IOEncoderDecoder* e, bool mI, const MCHEmul::Attributes& attrs)
 	: MCHEmul::DatasettePeripheral (id, attrs),
 	  _ioSimulation (s),
+	  _ioEncoderDecoder (e),
 	  _motorControlledInternally (mI),
 	  _status (Status::_STOPPED),
 	  _dataCounter (0), 
 	  _elementCounter (0)
 {
-	assert (_ioSimulation != nullptr);
+	assert (_ioSimulation != nullptr && _ioEncoderDecoder != nullptr);
 
 	setClassName ("StdDatasette");
 }

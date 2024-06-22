@@ -17,6 +17,7 @@
 
 #include <CORE/incs.hpp>
 #include <SINCLAIR/incs.hpp>
+#include <ZX81/Type.hpp>
 #include <ZX81/Memory.hpp>
 #include <ZX81/ULA.hpp>
 
@@ -35,8 +36,13 @@ namespace ZX81
 		static const unsigned int _PALCLOCK		= 804600;	// 0.804 MHz
 		static const unsigned int _NTSCCLOCK	= 536400;	// 0.536 MHz
 
-		SinclairZX81 (Memory::Configuration cfg,
-			VisualSystem vS, unsigned char tc /** The configuration. */);
+		SinclairZX81 (Memory::Configuration cfg, VisualSystem vS, Type t);
+
+		VisualSystem visualSystem () const
+							{ return (_visualSystem); }
+
+		Type type () const
+							{ return (_type); }
 
 		/** To get a reference to the ULA chip. */
 		const ULA* ula () const
@@ -66,8 +72,10 @@ namespace ZX81
 		static MCHEmul::IODevices standardDevices (VisualSystem vS);
 
 		private:
-		/** The video system used by the commodore VIC20. */
+		/** The video system used by ZX81 emulation. */
 		VisualSystem _visualSystem;
+		/** Which computer is being emulated indeed. */
+		Type _type;
 
 		// Implementation
 		/** A reference to the ULA chip. */

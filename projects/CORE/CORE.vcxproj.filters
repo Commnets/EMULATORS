@@ -383,6 +383,9 @@
     <ClInclude Include="..\..\include\CORE\DatasettePort.hpp">
       <Filter>Archivos de encabezado\IO</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\include\CORE\CPUHook.hpp">
+      <Filter>Archivos de encabezado\Motherboard</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Default.fmt">

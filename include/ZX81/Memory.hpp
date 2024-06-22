@@ -15,6 +15,7 @@
 #define __ZX81_MEMORY__
 
 #include <CORE/incs.hpp>
+#include <ZX81/Type.hpp>
 
 namespace ZX81
 {
@@ -97,7 +98,7 @@ namespace ZX81
 			0 = ZX81 type 0 (with the error SQR (25)). \n
 			1 = ZX81 type 1 (without the error SQR (25)). very rare. \n
 			2 = ZX81 type 2 (the newest). */
-		Memory (Configuration cfg, unsigned int m = 0);
+		Memory (Configuration cfg, Type t);
 
 		/** To get/set the configuration. \n
 			It shows change only at initialization, otherwise the consecuencues are not clear. */

@@ -121,8 +121,8 @@ MCHEmul::FileData* MCHEmul::RawFileTypeIO::readFile (const std::string& fN, bool
 	tap -> _signature = std::string (data);
 	// The number of blocks the data is made up of...
 	f.read (data, 4);
-	tap -> _dataBlocks = (unsigned int) 
-		(data [3] << 24) + (data [2] << 16) + (data [1] << 8) + data [0];
+	tap -> _dataBlocks = (unsigned int) (((unsigned char) data [3] << 24) + 
+		((unsigned char) data [2] << 16) + ((unsigned char) data [1] << 8) + ((unsigned char) data [0]));
 
 	// Now to read the blocks info...
 	for (unsigned int i = 0; i < tap -> _dataBlocks; i++)
@@ -132,8 +132,8 @@ MCHEmul::FileData* MCHEmul::RawFileTypeIO::readFile (const std::string& fN, bool
 		// The header of the block
 		// First of all, the size of this block
 		f.read (data, 4);
-		dB._dataSize = (unsigned int)
-			((data [3] << 24) + (data [2] << 16) + (data [1] << 8) + data [0]);
+		dB._dataSize = (unsigned int) (((unsigned char) data [3] << 24) + 
+			((unsigned char) data [2] << 16) + ((unsigned char) data [1] << 8) + ((unsigned char) data [0]));
 		
 		// ..the name of the block, made up of 16 chars...
 		f.read (data, 16); data [16] = 0; // End of char...

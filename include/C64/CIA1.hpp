@@ -45,6 +45,9 @@ namespace C64
 
 		private:
 		C64::CIA1Registers* _CIA1Registers;
+
+		// Implementation
+		unsigned int _lastDatasetteRead;
 	};
 }
 

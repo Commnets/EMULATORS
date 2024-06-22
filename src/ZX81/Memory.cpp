@@ -17,7 +17,7 @@ const MCHEmul::UByte& ZX81::MemoryVideoCode::readValue (size_t nB) const
 } 
 
 // ---
-ZX81::Memory::Memory (ZX81::Memory::Configuration cfg, unsigned int m)
+ZX81::Memory::Memory (ZX81::Memory::Configuration cfg, ZX81::Type t)
 	: MCHEmul::Memory (0, ZX81::Memory::standardMemoryContent (), { }),
 	  _configuration (cfg),
 	  _ROM (nullptr), 
@@ -43,29 +43,29 @@ ZX81::Memory::Memory (ZX81::Memory::Configuration cfg, unsigned int m)
 
 	// The ROM to load can be configurable...
 	std::string ROMFILE = "./zx81_1.rom";
-	switch (m)
+	switch (t)
 	{
-		case 0: 
+		case ZX81::Type::_ZX80: 
 			ROMFILE = "./zx80.rom"; 
 			break;
 
-		case 1: 
+		case ZX81::Type::_ZX811: 
 			ROMFILE = "./zx81_1.rom"; 
 			break;
 
-		case 2:
+		case ZX81::Type::_ZX812:
 			ROMFILE = "./zx81_2.rom";
 			break;
 
-		case 3: 
+		case ZX81::Type::_ZX813: 
 			ROMFILE = "./zx81_3.rom"; 
 			break;
 	}
 
 	bool ok = true;
 	ok &= physicalStorage (_ROM_SET) -> loadInto (ROMFILE);
-	// In a ZX81 the ROM it is only 4 k, but it shadowed in the same why later...
-	if (m == 0) physicalStorage (_ROM_SET) -> loadInto (ROMFILE, 0x1000); 
+	// In a ZX80 the ROM it is only 4 k, but it shadowed in the same why later...
+	if (t == ZX81::Type::_ZX80) physicalStorage (_ROM_SET) -> loadInto (ROMFILE, 0x1000); 
 	subset (_ROM_SUBSET) -> fixDefaultValues (); // Fix the values for further initializations...
 	subset (_ROMSHADOW1_SUBSET) -> fixDefaultValues ();
 	subset (_ROMSHADOW2_SUBSET) -> fixDefaultValues ();

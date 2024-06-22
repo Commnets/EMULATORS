@@ -15,6 +15,7 @@
 #define __ZX81_DATASETTE__
 
 #include <SINCLAIR/incs.hpp>
+#include <ZX81/Type.hpp>
 
 namespace ZX81
 {
@@ -34,6 +35,29 @@ namespace ZX81
 		static const int _ID = 1000;
 
 		DatasetteP (unsigned int rS);
+	};
+
+	/** This type of datasette "injects" the infomation into the memory when it is simulated. 
+		The way it is done, will depend on the type of structure prepared for that, 
+		and also on the type of computer that is being simulated. */
+	class DatasetteInjection final : public MCHEmul::DatasettePeripheral
+	{
+		public:
+		static const int _ID = 101;
+
+		/** The parameters are the point in the execution where the code has to be injected, and
+			the point where to return once the injection has been done. */
+		DatasetteInjection (Type t);
+
+		virtual bool simulate (MCHEmul::CPU* cpu) override;
+
+		virtual bool connectData (MCHEmul::FileData* dt) override;
+
+		protected:
+		Type _type;
+
+		// Implementation...
+		const MCHEmul::Address _addressIn, _addressOut;
 	};
 }
 

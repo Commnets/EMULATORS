@@ -126,11 +126,9 @@ namespace MCHEmul
 	// ---
 	inline void DatasettePeripheral::setRead (bool v)
 	{ 
-		// It is detected when the signal moves from 0 to 1...
-		// Depeding how long the pulse took...
-		if (v && !_valueRead) 
+		if (_valueRead != v) 
 			_readChangeValueRequest = true;
-		_valueRead = v; 
+		_valueRead = v;
 	}
 
 	/** Represents nothing connected. */
@@ -149,19 +147,56 @@ namespace MCHEmul
 	
 	/** 
 	  *	Represents a standard datasette. \n
-	  *	In any casette what is actually constant is the speed which the motor turns at!. \n
-	  *	Computers' in/out ports convert then 1 and 0 into wave forms using one method or another,
-	  *	either moduling the amplitud or the length of the wave. \n
-	  *	It means that, at a constant speed of the datasette motor, 
-	  * the quicker the bits from the CPU are sent to the port, the more info is kept per second in the datasette,
-	  *	so the bauds (bits/second) of the datasette depends on the speed of the computer sending bits!.
+	  * \n
+	  *	In any casette, what is actually constant is usually the speed which the motor turns at!. \n
+	  *	Computers' in/out "port" (or sometimes the electronic of the device itself) ,
+	  * converts the 1s and 0s signals received from the computer into wave forms (1 or more cycles) 
+	  * using different methods (sin, squared,...), and
+	  *	either moduling the amplitud or the length of the wave or even both. \n
+	  * \n
+	  *	At a constant speed of the datasette motor,
+	  * the quicker the signals from the computer are sent thorugh out the port, 
+	  * the more info is kept per second in the datasette. \n
+	  *	So the bauds (bits/second) of the datasette depends on the speed of the computer sending signals!. \n
+	  * \n
+	  * Additionally every memory info to be saved into the datasette could be translated into
+	  * different patterns of 1s and 0s before sending them to the port.. \n
+	  * These two behaviours "together" are modelled in class "IOEncoderDecoder". \n
+	  * \n
+	  * In the other hand, the simulation of the datasette can either work synchonized with the rest of the emulator,
+	  * (so based on the cpu cycles) or totally independent (in parallel). \n
+	  * This behaviour is modelled in the class "IOSimulation" that is also part of the datasette definition.
+	  * \n
+	  * So a Datasette standard follows a simulation way (IOSimulation) and uses an encoder (IOEncoder).
 	  */
 	class StandardDatasette : public DatasettePeripheral
 	{
 		public:
+		/** The way the bits are transalated into info to be kept into the 
+			final representation of the datasette. */
+		class IOEncoderDecoder
+		{
+			public:
+			virtual unsigned char encode (bool s) const = 0;
+			virtual bool decode (unsigned char s) const = 0;
+		};
+
+		/** Very very simple,
+			It will generate at the end a square wave in the datasette. */
+		class IOBasicEncoderDecoder final : public IOEncoderDecoder
+		{
+			public:
+			virtual unsigned char encode (bool s) const override
+							{ return (s ? 1 : 0); }
+
+			virtual bool decode (unsigned char s) const override
+							{ return ((s == 1) ? true : false); }
+		};
+
 		/** The way the datasetee emulation simulates storing or 
 			retrieving data to/from file can vary. \n
-			It e.g. might be either linked to the clock cpu or not!. */
+			It e.g. might be either linked to the clock cpu or not!. \n
+			The simulation might accept commands. */
 		class IOSimulation : public InfoClass
 		{
 			public:
@@ -176,18 +211,24 @@ namespace MCHEmul
 			const Attributes& attributes () const
 							{ return (_attributes); }
 
+			// Invoked from "initialize" method in the main class...
 			virtual void initialize () = 0;
 
-			/** When writting/reading this method is invoked (@see method simulate from main class). */
+			// Invoked from the "simulate" method in main class.
+			/** When writting or reading 
+				this method must is invoked (@see method simulate from main class). */
 			virtual bool io (StandardDatasette& dS, CPU* cpu) = 0;
-			/** When datasette is paused, this method must is invoked (@see method simulate from main class). */
+			/** When datasette is paused, 
+				this method must is invoked (@see method simulate from main class). */
 			virtual void stop () = 0;
 
-			// When there is commands dedicated to the simulation!
+			// Invoked from "executeCommand" metod in main class.
+			/** When there is commands dedicated to the simulation! */
 			virtual bool executeCommand (int id, const MCHEmul::Strings& prms) = 0;
-			// ...and the method to get their description...
+			/** ...and the method to get their description... */
 			virtual Strings commandDescriptions () const = 0;
 
+			// Invoked from the "getInfoestructure" method in the main class.
 			virtual InfoStructure getInfoStructure () const override;
 
 			protected:
@@ -196,11 +237,12 @@ namespace MCHEmul
 
 		/** The basic simulation happens when the activities to write or to read
 			are linked to the speed of the CPU. */
-		class IOCPULinkedSimulation final : public IOSimulation
+		class IOSynchronous final : public IOSimulation
 		{
 			public:
-			/** The number of cycles to wait before writting or reading is received. */
-			IOCPULinkedSimulation (unsigned int rS, const Attributes& attrs = { })
+			/** The number of cycles to wait 
+				before writting or reading is received as parameter. */
+			IOSynchronous (unsigned int rS, const Attributes& attrs = { })
 				: IOSimulation (attrs),
 				  _runningSpeed (rS),
 				  _firstCycleSimulation (false), _lastCPUCycles (0), _clockCycles (0)
@@ -216,7 +258,7 @@ namespace MCHEmul
 
 			virtual bool io (StandardDatasette& dS, CPU* cpu) override;
 			virtual void stop () override
-							{ /** Nothing specific to do. */ }
+							{ /** Nothing specific to do here. */ }
 
 			virtual bool executeCommand (int id, const MCHEmul::Strings& prms) override;
 			virtual Strings commandDescriptions () const override
@@ -233,11 +275,44 @@ namespace MCHEmul
 			unsigned int _clockCycles;
 		};
 
-		/** When the activities to read or to write have nothing to do with the spedd of the CPU
+		/** When the activities to read or to write have nothing to do with the speed of the CPU
 			and happens completly in parallel. */
-		class IOParallelSimulation final : public IOSimulation
+		class IOASynchronous final : public IOSimulation
 		{
 			public:
+			/** What is received is the "motor speed" (the time every which the process is executed in microseconds).
+				I am afraid this value has to be adjusted litlle by little in any simulation!. */
+			IOASynchronous (unsigned int mS, const Attributes& attrs = { })
+				: IOSimulation (attrs),
+				  _motorSpeed (mS),
+				  _process (nullptr),
+				  _thread ()
+							{ setClassName ("IOCPUParallelSimulation"); }
+
+			~IOASynchronous ()
+							{ stop (); /** Just in case. */ }
+
+			unsigned int motorSpeed () const
+							{ return (_motorSpeed); }
+			void setMotorSpeed (unsigned int mS)
+							{ _motorSpeed = mS; }
+
+			virtual void initialize () override
+							{ /** There is nothing to do. */ }
+
+			virtual bool io (StandardDatasette& dS, CPU* cpu) override;
+			virtual void stop () override;
+
+			virtual bool executeCommand (int id, const MCHEmul::Strings& prms) override;
+			virtual Strings commandDescriptions () const override
+							{ return (Strings ({ "64 [SPEED]: Change CPU motor speed" })); }
+
+			virtual InfoStructure getInfoStructure () const override;
+
+			private:
+			unsigned int _motorSpeed;
+
+			/** The process really running in parallel. */
 			class Process final
 			{
 				public:
@@ -270,38 +345,6 @@ namespace MCHEmul
 				std::atomic <bool> _end;
 			};
 
-			/** What is received is the "motor speed" (the time every which the process is executed in microseconds).
-				I am afraid this value has to be adjusted litlle by little in any simulation!. */
-			IOParallelSimulation (unsigned int mS, const Attributes& attrs = { })
-				: IOSimulation (attrs),
-				  _motorSpeed (mS),
-				  _process (nullptr),
-				  _thread ()
-							{ setClassName ("IOCPUParallelSimulation"); }
-
-			~IOParallelSimulation ()
-							{ stop (); /** Just in case. */ }
-
-			unsigned int motorSpeed () const
-							{ return (_motorSpeed); }
-			void setMotorSpeed (unsigned int mS)
-							{ _motorSpeed = mS; }
-
-			virtual void initialize () override
-							{ /** There is nothing to do. */ }
-
-			virtual bool io (StandardDatasette& dS, CPU* cpu) override;
-			virtual void stop () override;
-
-			virtual bool executeCommand (int id, const MCHEmul::Strings& prms) override;
-			virtual Strings commandDescriptions () const override
-							{ return (Strings ({ "64 [SPEED]: Change CPU motor speed" })); }
-
-			virtual InfoStructure getInfoStructure () const override;
-
-			private:
-			unsigned int _motorSpeed;
-
 			// Implementation
 			Process* _process;
 			std::thread _thread;
@@ -322,7 +365,8 @@ namespace MCHEmul
 		/** The constructor receives the way to simulate the io activity, 
 			that is the way to read or write info into the datasette (cannot be null). \n
 			mE defines whether the motor is controlled from internal signals (true) or just pressing the buttons (false). */
-		StandardDatasette (int id, IOSimulation* s, bool mI, const Attributes& attrs = { });
+		StandardDatasette (int id, IOSimulation* s, IOEncoderDecoder* e, 
+			bool mI, const Attributes& attrs = { });
 
 		~StandardDatasette ()
 							{ delete (_ioSimulation); }
@@ -331,6 +375,11 @@ namespace MCHEmul
 							{ return (_ioSimulation); }
 		IOSimulation* ioSimulation ()
 							{ return (_ioSimulation); }
+
+		const IOEncoderDecoder* ioEncoderDecoder () const
+							{ return (_ioEncoderDecoder); }
+		IOEncoderDecoder* ioEncoderDecoder ()
+							{ return (_ioEncoderDecoder); }
 
 		virtual bool initialize () override;
 
@@ -368,6 +417,7 @@ namespace MCHEmul
 
 		protected:
 		IOSimulation* _ioSimulation;
+		IOEncoderDecoder* _ioEncoderDecoder;
 		bool _motorControlledInternally;
 
 		/** The different status that this peripheral can be in. \n
@@ -388,7 +438,7 @@ namespace MCHEmul
 	};
 
 	// ---
-	inline void StandardDatasette::IOParallelSimulation::Process::io 
+	inline void StandardDatasette::IOASynchronous::Process::io 
 		(StandardDatasette& dS, CPU*)
 	{ 
 		while (!hasFinished ()) // Excusive access to _end variable!
@@ -403,8 +453,10 @@ namespace MCHEmul
 	// ---
 	inline void StandardDatasette::io ()
 	{
-		if (_status == Status::_READING) getNextDataBit ();
-		else storeNextDataBit ();
+		if (_status == Status::_READING) 
+			getNextDataBit ();
+		else 
+			storeNextDataBit ();
 	}
 
 	// ---
@@ -424,47 +476,49 @@ namespace MCHEmul
 		}
 
 		if (r)
-			setRead (_data._data [_dataCounter].bytes ()[_elementCounter++] == MCHEmul::UByte::_1);
+			setRead (_ioEncoderDecoder -> decode 
+				(_data._data [_dataCounter].bytes ()[_elementCounter++].value ()));
 	}
 
 	// ---
 	inline void StandardDatasette::storeNextDataBit ()
 	{
-		_data._data [_dataCounter].addByte 
-			(_valueToWrite ? MCHEmul::UByte::_1 /** cycle 1. */ : MCHEmul::UByte::_0 /** cycle 0. */);
+		_data._data [_dataCounter].addByte (_ioEncoderDecoder -> encode (_valueToWrite));
 
 		_elementCounter++;
 	}
 
-	/** A very basic datasette. */
+	/** The simpliest datasette possible is synchronous and with a very simple encoder. */
 	class BasicDatasette : public StandardDatasette
 	{
 		public:
 		BasicDatasette (int id, unsigned int rS, bool mI, const Attributes& attrs)
-			: StandardDatasette (id, new StandardDatasette::IOCPULinkedSimulation (rS), mI, attrs)
+			: StandardDatasette (id, new StandardDatasette::IOSynchronous (rS), 
+				new StandardDatasette::IOBasicEncoderDecoder, mI, attrs)
 							{ }
 
 		unsigned int runningSpeed () const
-							{ return (static_cast <const StandardDatasette::IOCPULinkedSimulation*> 
+							{ return (static_cast <const StandardDatasette::IOSynchronous*> 
 								(ioSimulation ()) -> runningSpeed ()); }
 		void setRunningSpeed (unsigned int rS)
-							{ return (static_cast <StandardDatasette::IOCPULinkedSimulation*> 
+							{ return (static_cast <StandardDatasette::IOSynchronous*> 
 								(ioSimulation ()) -> setRunningSpeed (rS)); }
 	};
 
-	/** And the same verion but in parallel. */
+	/** The other version is in paralell. */
 	class BasicDatasetteP : public StandardDatasette
 	{
 		public:
 		BasicDatasetteP (int id, unsigned int mS, bool mI, const Attributes& attrs)
-			: StandardDatasette (id, new StandardDatasette::IOParallelSimulation (mS), mI, attrs)
+			: StandardDatasette (id, new StandardDatasette::IOASynchronous (mS), 
+				new StandardDatasette::IOBasicEncoderDecoder, mI, attrs)
 							{ }
 
 		unsigned int motorSpeed () const
-							{ return (static_cast <const StandardDatasette::IOParallelSimulation*> 
+							{ return (static_cast <const StandardDatasette::IOASynchronous*> 
 								(ioSimulation ()) -> motorSpeed ()); }
 		void setMotorSpeed (unsigned int rS)
-							{ return (static_cast <StandardDatasette::IOParallelSimulation*> 
+							{ return (static_cast <StandardDatasette::IOASynchronous*> 
 								(ioSimulation ()) -> setMotorSpeed (rS)); }
 	};
 }

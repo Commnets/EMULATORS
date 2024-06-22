@@ -2,7 +2,6 @@
 #include <CORE/FmterBuilder.hpp>
 #include <CORE/Formatter.hpp>
 #include <CORE/Stack.hpp>
-#include <CORE/ProgramCounter.hpp>
 #include <iostream>
 
 // Only the first parameter cares...the rest don't!
@@ -22,6 +21,7 @@ MCHEmul::CPU::CPU (int id, const MCHEmul::CPUArchitecture& a,
 	  _programCounter (a.numberBytes ()), 
 	  _memory (nullptr), 
 	  _interrupts (),
+	  _hooks (),
 	  // When neither buses nor wires are used, these variable must be set from instruction execution!
 	  _lastINOUTAddress (), _lastINOUTData (),
 	  // Info while running!
@@ -56,6 +56,9 @@ MCHEmul::CPU::~CPU ()
 		delete (i.second);
 
 	for (const auto& i : _interrupts)
+		delete (i.second);
+
+	for (const auto& i : _hooks)
 		delete (i.second);
 }
 
@@ -633,6 +636,12 @@ bool MCHEmul::CPU::executeNextInstruction_PerCycle (unsigned int& e)
 	}
 	else
 	{
+		// Any hook at this position?
+		MCHEmul::CPUHook* hk = executeHookIfAny ();
+		if (hk != nullptr && deepDebugActive ())
+			*_deepDebugFile
+					<< "\t\t\t\t" << hk -> asString () << "\n";
+
 		// ...look for the next instruction to be executed...
 		unsigned int nInst = 
 			MCHEmul::UInt (
@@ -664,6 +673,12 @@ bool MCHEmul::CPU::executeNextInstruction_Full (unsigned int &e)
 	// By default, 
 	// the instruction cycle should be processed always at this point!
 	// ...but with errors? (see below)
+
+	// Any hook at this position?
+	MCHEmul::CPUHook* hk = executeHookIfAny ();
+	if (hk != nullptr && deepDebugActive ()) // if debug print it out!
+		*_deepDebugFile
+				<< "\t\t\t\t" << hk -> asString () << "\n";
 
 	// Access the next instruction...
 	// Using the row description of the instructions!

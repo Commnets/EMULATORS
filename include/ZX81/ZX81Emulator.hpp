@@ -17,6 +17,7 @@
 #include <EMULATORS/Emulator.hpp>
 #include <SINCLAIR/incs.hpp>
 #include <ZX81/ZX81.hpp>
+#include <ZX81/FileIO.hpp>
 #include <ZX81/IOPBuilder.hpp>
 
 namespace ZX81
@@ -61,8 +62,9 @@ namespace ZX81
 							{ return (cmdlineArguments ().existsArgument (_PARAMCONFIGURATION)); }
 		inline unsigned int configurationMode () const; // Not expanded by default!
 
-		/** To know which is the type of computer to be emulated: 0 = ZX81(1), 1 = ZX81(2), 2 = ZX81(3). */
-		inline unsigned int emulattedComputer () const;
+		/** To know which is the type of computer to be emulated: 
+			0 = ZX81(1), 1 = ZX81(2), 2 = ZX81(3). */
+		inline Type emulattedComputer () const;
 
 		/** To add the peripherals linked to the computer, according to the parameters. */
 		virtual bool initialize () override;
@@ -79,7 +81,7 @@ namespace ZX81
 		virtual MCHEmul::FileIO* createFileReader () const override
 							{ return (new MCHEmul::FileIO 
 								(MCHEmul::FileTypeIOList (
-									{	new SINCLAIR::Pand81FileTypeIO, /** P & 81 extensions. */
+									{	new ZX81::OAndPFileTypeIO, /** O, 80, P, 81 and P81 extensions. */
 										new MCHEmul::RawFileTypeIO /** Row data. */ }))); }
 	};
 
@@ -103,22 +105,21 @@ namespace ZX81
 	}
 
 	// ---
-	inline unsigned int ZX81Emulator::emulattedComputer () const
+	inline Type ZX81Emulator::emulattedComputer () const
 	{ 
-		unsigned int result = 0;
-		
+		ZX81::Type result = ZX81::Type::_ZX80;
 		if (cmdlineArguments ().existsArgument (_PARAMMACHINE))
 		{
 			std::string mT = 
 				MCHEmul::upper (cmdlineArguments ().argumentAsString (_PARAMMACHINE));
 			result = (mT == "ZX80") 
-				? 0
+				? ZX81::Type::_ZX80
 				: ((mT == "ZX811") 
-					? 1 
+					? ZX81::Type::_ZX811
 					: ((mT == "ZX812") 
-						? 2 
+						? ZX81::Type::_ZX812 
 						: ((mT == "ZX813")
-							? 3 : 0 /** by default, the very basic one. */)));
+							? ZX81::Type::_ZX813 : ZX81::Type::_ZX80 /** by default, the very basic one. */)));
 		}
 
 		return (result);

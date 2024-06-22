@@ -12,8 +12,6 @@ MCHEmul::Command* ZX81::CommandBuilder::createEmptyCommand (const std::string& c
 		result = new ZX81::ULAStatusCommand;
 	else if (cmdName == "ULAEVENTS" || cmdName == ZX81::ULAShowEventsCommand::_NAME)
 		result = new ZX81::ULAShowEventsCommand;
-	else if (cmdName == "LOADPAND81" || cmdName == ZX81::LoadPAnd81FileCommand::_NAME)
-		result = new ZX81::LoadPAnd81FileCommand;
 
 	return (result);
 }

@@ -15,6 +15,7 @@
 #define __MCHEMUL_CPU__
 
 #include <CORE/global.hpp>
+#include <CORE/CPUHook.hpp>
 #include <CORE/MBElement.hpp>
 #include <CORE/DebugFile.hpp>
 #include <CORE/CPUArchitecture.hpp>
@@ -290,6 +291,11 @@ namespace MCHEmul
 			This method is invoked from the previous one. */
 		virtual void aknowledgeInterrupt ()	{ }
 
+		// Managing hooks...
+		/** Adding a hook/hooks */
+		inline void addHook (unsigned long a, CPUHook* h);
+		inline void addHooks (const CPUHooks& hs);
+
 		/** 
 		  *	The real CORE of the class. \n
 		  *	The behaviour can be changed and adapted to different types of CPUs, overloading this method. \n
@@ -398,6 +404,9 @@ namespace MCHEmul
 			If the instruction can not be created, a nullptr is returned. */
 		static Instruction* instructionAt (Memory* m, const Address& addr, CPU* c);
 
+		/** To execute the hook if any at the position where the PC is now. */
+		inline CPUHook* executeHookIfAny ();
+
 		protected:
 		const CPUArchitecture _architecture = 
 			CPUArchitecture (2 /** 2 bytes arch. */, 1 /** 1 byte for instruction. */); // Adjusted at construction level
@@ -407,6 +416,7 @@ namespace MCHEmul
 		StatusRegister _statusRegister;
 		Memory* _memory; // A reference...
 		CPUInterrupts _interrupts;
+		CPUHooks _hooks;
 
 		// The current situation of the CPU...
 		/** Last INOUT data used. 
@@ -473,6 +483,36 @@ namespace MCHEmul
 		/** Also a row vector with the interruptions. */
 		CPUListOfInterrupts _rowInterrupts;
 	};
+
+	// ---
+	inline void CPU::addHook (unsigned long a, CPUHook* h)
+	{
+		MCHEmul::CPUHooks::const_iterator i = _hooks.find (a);
+		if (i == _hooks.end ())
+			_hooks.insert (MCHEmul::CPUHooks::value_type (a, h));
+	}
+
+	// ---
+	inline void CPU::addHooks (const CPUHooks& hs)
+	{
+		for (const auto& i : _hooks)
+			delete (i.second);
+
+		_hooks = hs;
+	}
+
+	// ---
+	inline MCHEmul::CPUHook* CPU::executeHookIfAny ()
+	{
+		MCHEmul::CPUHook* result = nullptr;
+
+		MCHEmul::CPUHooks::const_iterator i = 
+			_hooks.find (_programCounter.internalRepresentation ());
+		if (i != _hooks.end ())
+			(result = (*i).second) -> hook (this);
+
+		return (result);
+	}
 }
 
 #endif

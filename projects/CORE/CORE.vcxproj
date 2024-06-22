@@ -78,6 +78,7 @@
     <ClInclude Include="..\..\include\CORE\ASCIIConverter.hpp" />
     <ClInclude Include="..\..\include\CORE\Bus.hpp" />
     <ClInclude Include="..\..\include\CORE\ByteCodeLine.hpp" />
+    <ClInclude Include="..\..\include\CORE\CPUHook.hpp" />
     <ClInclude Include="..\..\include\CORE\DatasettePeripherals.hpp" />
     <ClInclude Include="..\..\include\CORE\DatasettePort.hpp" />
     <ClInclude Include="..\..\include\CORE\MBElement.hpp" />

@@ -18,6 +18,8 @@ bool C64::CIA1::initialize ()
 		return (false);
 	}
 
+	_lastDatasetteRead = 0;
+
 	return (COMMODORE::CIA::initialize ());
 }
 
@@ -135,11 +137,15 @@ void C64::CIA1::processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifier* n)
 
 		case C64::DatasetteIOPort::_READ:
 			// When this signal is received from the casette...
-			// ...it means that a variation from negative to positive in the wave cyle has happened.
-			// Whether it is a 0 or a 1 will depend on the time lasted from the previous one!
-			// And it is something that the routines must interpret.
-			// So it is not important the value notified...
-			_CIA1Registers -> setFlagLineInterruptRequested (true);
+			// It is needed to check whether the signal moves from 1 to 0...
+			// ...and in this case a interrupt is flagged!
+			if (_lastDatasetteRead == 1 && evnt.value () == 0)
+			{
+				_CIA1Registers -> setFlagLineInterruptRequested (true);
+
+				_lastDatasetteRead = 0;
+			}
+
 			break;
 
 		default:

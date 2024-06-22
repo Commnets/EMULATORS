@@ -15,7 +15,6 @@
 #define __SINCLAIR_INCS__
 
 #include <FZ80/incs.hpp>
-#include <SINCLAIR/FileIO.hpp>
 #include <SINCLAIR/CommandBuilder.hpp>
 #include <SINCLAIR/Commands.hpp>
 #include <SINCLAIR/IOPBuilder.hpp>

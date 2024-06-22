@@ -10,12 +10,12 @@
 
 // ---
 ZX81::SinclairZX81::SinclairZX81 (ZX81::Memory::Configuration cfg, 
-		ZX81::SinclairZX81::VisualSystem vS, unsigned char tc)
+		ZX81::SinclairZX81::VisualSystem vS, ZX81::Type t)
 	: SINCLAIR::Computer 
 		(new FZ80::CZ80 (0, 
 			{ }), // Some other ports (the ones related with chips) are added later...
 		 ZX81::SinclairZX81::standardChips (vS),
-		 new ZX81::Memory (cfg, tc), // Depending on the configuration...
+		 new ZX81::Memory (cfg, t), // Depending on the configuration...
 		 ZX81::SinclairZX81::standardDevices (vS),
 		 _CLOCK, // In ZX81 the speed is constant as the CPU is aimed also to draw!
 		 { }, { }, // The ZX81 emulation has been done without neither Buses nor Wires!
@@ -24,6 +24,7 @@ ZX81::SinclairZX81::SinclairZX81 (ZX81::Memory::Configuration cfg,
 		   { "Year", "1981" }
 		 }),
 	  _visualSystem (vS),
+	  _type (t),
 	  _ula (nullptr),
 	  _A6 (false)
 {

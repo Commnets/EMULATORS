@@ -19,6 +19,7 @@
 #include <SINCLAIR/incs.hpp>
 #include <ZX81/CommandBuilder.hpp>
 #include <ZX81/Commands.hpp>
+#include <ZX81/FileIO.hpp>
 #include <ZX81/IOPBuilder.hpp>
 #include <ZX81/Memory.hpp>
 #include <ZX81/Screen.hpp>

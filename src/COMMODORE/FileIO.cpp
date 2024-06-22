@@ -68,8 +68,8 @@ MCHEmul::FileData* COMMODORE::TAPFileTypeIO::readFile (const std::string& fN, bo
 	tap -> _videoVersion = (COMMODORE::TAPFileData::VideoVersion) data [0];
 	f.read (data, 1); // 1 byte free for future expansion...
 	f.read (data, 4);
-	tap -> _dataSize = (unsigned int)
-		((data [3] << 24) + (data [2] << 16) + (data [1] << 8) + data [0]);
+	tap -> _dataSize = (unsigned int) (((unsigned char) data [3] << 24) + 
+		((unsigned char) data [2] << 16) + ((unsigned char) data [1] << 8) + ((unsigned char) data [0]));
 	f.read (data, (std::streamsize) tap -> _dataSize); 
 
 	// The data...
@@ -207,7 +207,7 @@ MCHEmul::FileData* COMMODORE::T64FileTypeIO::readFile (const std::string& fN, bo
 	f.read (data, 2);
 	rT64 -> _tapeRecord._entries = (data [1] << 8) + data [0];
 	f.read (data, 2);
-	rT64 -> _tapeRecord._usedEntries = (data [1] << 8) + data [0];
+	rT64 -> _tapeRecord._usedEntries = (unsigned short) (((unsigned char) data [1] << 8) + ((unsigned char) data [0]));
 	f.read (data, 2); // 2 bytes free...
 	f.read (data, 24); data [24] = 0;
 	rT64 -> _tapeRecord._userDescriptor = std::string (data);
@@ -228,8 +228,8 @@ MCHEmul::FileData* COMMODORE::T64FileTypeIO::readFile (const std::string& fN, bo
 		fR._endLoadAddress = MCHEmul::Address ({ data [0], data [1] }, true);
 		f.read (data, 2); // 2 bytes free...
 		f.read (data, 4);
-		fR._offset = (unsigned int) 
-			((data [3] << 24) + (data [2] << 16) + (data [1] << 8) + data [0]);
+		fR._offset = (unsigned int) (((unsigned char) data [3] << 24) + 
+			((unsigned char) data [2] << 16) + ((unsigned char) data [1] << 8) + ((unsigned char) data [0]));
 		f.read (data, 4); // 4 bytes free...
 		f.read (data, 24); data [24] = 0;
 		fR._fileName = std::string (data);
@@ -317,12 +317,12 @@ MCHEmul::FileData* COMMODORE::CRTFileTypeIO::readFile (const std::string& fN, bo
 	f.read (data, 16); data [16] = 0; // End of char...
 	rCRT -> _signature = std::string (data);
 	f.read (data, 4);
-	rCRT -> _headerSize = 
-		(unsigned int) ((data [0] << 24) + (data [1] << 16) + (data [2] << 8) + data [3]);
+	rCRT -> _headerSize = (unsigned int) (((unsigned char) data [0] << 24) + 
+		((unsigned char) data [1] << 16) + ((unsigned char) data [2] << 8) + ((unsigned char) data [3]));
 	f.read (data, 2);
-	rCRT -> _cartridgeVersion = (unsigned short) ((data [0] << 8) + data [1]);
+	rCRT -> _cartridgeVersion = (unsigned short) (((unsigned char) data [0] << 8) + ((unsigned char) data [1]));
 	f.read (data, 2);
-	rCRT -> _cartridgeType = (unsigned short) ((data [0] << 8) + data [1]);
+	rCRT -> _cartridgeType = (unsigned short) (((unsigned char) data [0] << 8) + ((unsigned char) data [1]));
 	f.read (data, 1);
 	rCRT -> _EXROMActive = (data [0] == 0) ? false : true;  
 	f.read (data, 1);
@@ -341,16 +341,16 @@ MCHEmul::FileData* COMMODORE::CRTFileTypeIO::readFile (const std::string& fN, bo
 		if (f.eof ()) continue;
 		cD._signature = std::string (data);
 		f.read (data, 4);
-		cD._packageSize = (unsigned int) 
-			((data [0] << 24) + (data [1] << 16) + (data [2] << 8) + data [3]);
+		cD._packageSize = (unsigned int) (((unsigned char) data [0] << 24) + 
+			((unsigned char) data [1] << 16) + ((unsigned char) data [2] << 8) + ((unsigned char) data [3]));
 		f.read (data, 2);
-		cD._type = (unsigned short) ((data [0] << 8) + data [1]);
+		cD._type = (unsigned short) (((unsigned char) data [0] << 8) + ((unsigned char) data [1]));
 		f.read (data, 2);
-		cD._bankNumber = (unsigned short) ((data [0] << 8) + data [1]);
+		cD._bankNumber = (unsigned short) (((unsigned char) data [0] << 8) + ((unsigned char) data [1]));
 		f.read (data, 2);
 		cD._startingLoadAddress = MCHEmul::Address ({ data [0], data [1] }, true);
 		f.read (data, 2);
-		cD._romSize = (unsigned short) ((data [0] << 8) + data [1]);
+		cD._romSize = (unsigned short) (((unsigned char) data [0] << 8) + ((unsigned char) data [1]));
 		
 		// The data...
 		char* romData = new char [(size_t) cD._romSize];

@@ -36,6 +36,9 @@ namespace VIC20
 		CommodoreVIC20 (Memory::Configuration cfg, 
 			VisualSystem vS, const std::string& lg);
 
+		VisualSystem visualSystem () const
+							{ return (_visualSystem); }
+
 		virtual bool initialize (bool iM = true) override;
 
 		// To get direct access to the most important VIC20 chips...

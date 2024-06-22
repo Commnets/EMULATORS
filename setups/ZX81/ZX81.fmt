@@ -25,11 +25,6 @@ Id:@ID@
 ;CULAEVENTS
 #---
 #---
-;CLOADPAND81
-->Errors:
-@ERROR@
-#---
-#---
 ;ZX81Datasette
 Id:@ID@
 @ATTRS?{key=YES,equal=:,empty=no attributes}\n@

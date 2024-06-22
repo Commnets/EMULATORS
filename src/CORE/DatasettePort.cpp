@@ -34,7 +34,7 @@ bool MCHEmul::DatasetteIOPort::simulate (MCHEmul::CPU* cpu)
 		if (_datasette -> keysChangedStatusRequested ())
 			notify (MCHEmul::Event (_datasette -> noKeyPressed () ? _NOKEYPRESSED : _KEYPRESSED));
 		if (_datasette -> readChangeValueRequested ())
-			notify (MCHEmul::Event (_READ)); // There is no parameter needed, just the transition is notified...
+			notify (MCHEmul::Event (_READ, _datasette -> read () ? 1 : 0)); 
 	}
 
 	// The standard simulation is invoked to
