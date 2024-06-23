@@ -1,0 +1,32 @@
+Mine Field.
+-----------
+Written by Andy Rea.
+
+start date 30/12/2006
+
+end date 30/12/2006
+
+Revisions : NONE
+
+what is it ?
+
+Game Written in ZX81 basic.
+
+how to play. 
+
+move your man '*' from bottom to top of screen
+using 5,6,7,8 to move as per zx81 arrows.
+
+avoid landmines by combination of logic
+and luck.
+
+user selctable level 1-9 easy-hard
+
+thats it have fun.
+
+
+files included in this zip.
+
+mfield.p   - (the program ZX81 16K)
+mfield.jpg - (screen shot of opening screen)
+mfield.txt - (this text file)

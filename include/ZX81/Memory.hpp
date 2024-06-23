@@ -100,6 +100,10 @@ namespace ZX81
 			2 = ZX81 type 2 (the newest). */
 		Memory (Configuration cfg, Type t);
 
+		/** Gets the type. */
+		Type type () const
+							{ return (_type); }
+
 		/** To get/set the configuration. \n
 			It shows change only at initialization, otherwise the consecuencues are not clear. */
 		Configuration configuration () const
@@ -118,6 +122,7 @@ namespace ZX81
 		static MCHEmul::Memory::Content standardMemoryContent ();
 
 		private:
+		Type _type;
 		Configuration _configuration;
 
 		// Implementation

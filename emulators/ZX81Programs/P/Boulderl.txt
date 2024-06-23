@@ -1,0 +1,40 @@
+BOULDER LOGIC
+
+
+Bradford Walker-Smythe needs to find the perfect engagement ring to win the heart of his true love Tania when he asks for her hand in marriage.  And so, to prove his devotion, he sets off to the Cornish mines in search of the perfect diamond...
+
+
+HOW TO PLAY
+
+You need to collect enough diamonds on each level to unlock the exit and progress onto the next level.  Diamonds, and boulders, will both fall if there is nothing beneath, but don't let them fall on you!  Certain monsters roam the levels - some of which will can be destroyed by a falling object, or confined by boulders, and might turn into diamonds to help you reach your target.  Keys might also be found, and can be used to gain access to other parts of the level.
+
+
+CONTROLS
+
+5 - Move left.
+8 - Move right.
+7 - Move up.
+6 - Move down.
+0 - Push boulder/collect object.
+P - Pause the game.
+R - Restart the current level.
+Q - Quit the game.
+
+All keys can be redefined.
+
+
+A levelcode will be displayed at the start of each level, and also when paused, which can be used to gain direct access to that level again.  Whilst playing a level, the following information will be displayed along the top of the screen: - The number of diamonds still to be collected, number of keys held, the ime remaining in which to exit the level, and your current score.
+
+
+CREDITS
+
+Game programming & graphics by Bob Smith.
+
+
+http://www.bobs-stuff.co.uk/
+http://www.facebook.com/bobs.stuff
+http://www.cronosoft.co.uk/
+http://www.rwapsoftware.co.uk/
+
+
+Bob Smith - 2011.

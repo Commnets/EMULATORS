@@ -19,6 +19,7 @@ const MCHEmul::UByte& ZX81::MemoryVideoCode::readValue (size_t nB) const
 // ---
 ZX81::Memory::Memory (ZX81::Memory::Configuration cfg, ZX81::Type t)
 	: MCHEmul::Memory (0, ZX81::Memory::standardMemoryContent (), { }),
+	  _type (t),
 	  _configuration (cfg),
 	  _ROM (nullptr), 
 	  _ROM_S1 (nullptr),
@@ -43,7 +44,7 @@ ZX81::Memory::Memory (ZX81::Memory::Configuration cfg, ZX81::Type t)
 
 	// The ROM to load can be configurable...
 	std::string ROMFILE = "./zx81_1.rom";
-	switch (t)
+	switch (_type)
 	{
 		case ZX81::Type::_ZX80: 
 			ROMFILE = "./zx80.rom"; 
