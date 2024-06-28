@@ -54,6 +54,69 @@ namespace COMMODORE
 			It is really the time in millisecond between two io actions in the datasette. */
 		Datasette1530P (unsigned int mS);
 	};
+
+	/** This unit is just to jump over the routines aimed for this task in the kernel. 
+		The info needed to "trap" the right position will depend on the final computer emulated. */
+	class Datasette1530Injection : public MCHEmul::StandardDatasette
+	{
+		public:
+		struct Trap final
+		{
+			int _id;								// For a quicker identification...
+			std::string _name;						// Name of the trap (to recognize)
+			MCHEmul::Address _addressIn;			// PC where the trap has to enter...
+			MCHEmul::Address _addressOut;			// PC where the trap has to finishes!...
+
+			/** Just to simplify the representation of the Trap in logs of info structures. */
+			std::string asString () const
+							{ return (std::to_string (_id) + ":" + _name + "(" +
+								_addressIn.asString (MCHEmul::UByte::OutputFormat::_HEXA, '\0') + "," +
+								_addressOut.asString (MCHEmul::UByte::OutputFormat::_HEXA, '\0') + ")"); }
+		};
+
+		using Traps = std::vector <Trap>;
+
+		struct Definition final
+		{
+			public:
+			MCHEmul::Address _bufferAddr;			// Where the tape buffer starts...
+			MCHEmul::Address _statusAddr;			// to keep tract of the status of the datasette...
+			MCHEmul::Address _verifyFlagAddr;		// The same loading routines in CBM kernal can be used for loading or verifying...
+			MCHEmul::Address _irqTmpAddr;	
+			unsigned short _irqVal;
+			MCHEmul::Address _startProgramAddr;		// Init of the RAM where program is loaded...
+			MCHEmul::Address _endProgramAddr;		// End of the RAM where program is loaded...
+			MCHEmul::Address _keyboardBufferAddr;	// Where the keyboard buffer starts (to simulate later "autorun")...
+			MCHEmul::Address _keyboardPendingAddr;	// Number of keys ending to be read in the keyboard buffer...
+			const Traps _traps;						// The traps (see above for definition)
+
+			MCHEmul::InfoStructure getInfoStructure () const;
+		};
+
+		static const int _ID = 101;
+
+		// Use these following ids to identify the two traps that this class
+		// understood by default...
+		static const int _FINDHEADERTRAP = 0;
+		static const int _RECEIVEDATATRAP = 1;
+
+		Datasette1530Injection (const Definition& dt);
+
+		virtual bool simulate (MCHEmul::CPU* cpu) override;
+
+		virtual bool connectData (MCHEmul::FileData* dt) override;
+
+		virtual MCHEmul::InfoStructure getInfoStructure () const override;
+
+		protected:
+		/** Invoked from simulate. It can be overloaded, 
+			but a couple of basic traps are understood: "Header" & "Retrieve".
+			Define them when construct the object because the address In/Out can vary per type of COMMODORE machine. */
+		virtual bool executeTrap (const Trap& t, MCHEmul::CPU* cpu);
+
+		protected:
+		Definition _definition;
+	};
 }
 
 #endif

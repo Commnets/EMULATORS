@@ -39,7 +39,8 @@ namespace ZX81
 
 	/** This type of datasette "injects" the infomation into the memory when it is simulated. 
 		The way it is done, will depend on the type of structure prepared for that, 
-		and also on the type of computer that is being simulated. */
+		and also on the type of computer that is being simulated. \n
+		No need of keys as the file that can be uploaded has only 1 data file inside. */
 	class DatasetteInjection final : public MCHEmul::DatasettePeripheral
 	{
 		public:
@@ -53,7 +54,7 @@ namespace ZX81
 
 		virtual bool connectData (MCHEmul::FileData* dt) override;
 
-		protected:
+		private:
 		Type _type;
 
 		// Implementation...

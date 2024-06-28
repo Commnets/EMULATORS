@@ -81,12 +81,44 @@ namespace COMMODORE
 		virtual bool writeFile (MCHEmul::FileData* fD, const std::string& fN, bool bE = true) const override;
 	};
 
+	/** The most simple type of info for COMMODORE computers,
+		That is the PRG format. */
+	struct PRGFileData final : public MCHEmul::FileData
+	{
+		MCHEmul::Address _address;
+		MCHEmul::UBytes _bytes;
+
+		virtual MCHEmul::ExtendedDataMemoryBlocks asMemoryBlocks () const override;
+
+		virtual std::string asString () const override
+							{ return (_address.asString (MCHEmul::UByte::OutputFormat::_HEXA, '\0') +
+								" (Size: " + std::to_string (_bytes.size ()) + ")"); }
+	};
+
+	/** The loader for PRG. */
+	class PRGFileTypeIO final : public MCHEmul::FileTypeIO
+	{
+		public:
+		PRGFileTypeIO ()
+			: MCHEmul::FileTypeIO ()
+							{ }
+
+		virtual bool canRead (const std::string& fN) const override;
+		virtual MCHEmul::FileData* readFile (const std::string& fN, bool bE = true) const override;
+
+		virtual bool canWrite (MCHEmul::FileData* fD) const override
+							{ return (dynamic_cast <PRGFileData*> (fD) != nullptr); }
+		virtual bool writeFile (MCHEmul::FileData* fD, const std::string& fN, bool bE = true) const override;
+	};
+
 	/**	Struct to content the cartridge info...
 	  *	It has been extracted from:
 	  * https://vice-emu.sourceforge.io/vice_17.html
 	  */
 	struct T64FileData final : public MCHEmul::FileData
 	{
+		/** The header of the file.
+			Of if this elements per file. */
 		struct TapeRecord
 		{
 			TapeRecord ()
@@ -97,23 +129,25 @@ namespace COMMODORE
 				  _userDescriptor ("")
 							{ }
 
-			std::string _descriptor;				// $00 - $20 : DOS tape descriptor.
-			unsigned short _version;				// $20 - $21 : Tape version ($2000).
-			unsigned short _entries;				// $22 - $23 : Number of directory entries.
-			unsigned short _usedEntries;			// $23 - $24 : Number of used entries.
-			std::string _userDescriptor;			// $24 - $39 : User descriptor displayed in the tape menu.
+			std::string _descriptor;				// $00 - $20 : 32 bytes. DOS tape descriptor. Internal.
+			unsigned short _version;				// $20 - $21 : 2 bytes. Tape version ($0200 e.g.).
+			unsigned short _entries;				// $22 - $23 : 2 bytes. Number of directory entries (potentially).
+			unsigned short _usedEntries;			// $24 - $25 : 2 bytes. Number of used entries (the ones really used).
+			// $26 - $27 : 2 bytes. Free for future uses.
+			std::string _userDescriptor;			// $28 - $39 : 40 bytes. User descriptor displayed in the tape menu.
 		};
 
+		/** Per each different entry there will be one of these elements. */
 		struct FileRecord
 		{
 			enum EntryType
 			{
 				_FREE = 0,
-				_NORMAL,
-				_WITHHEADER,
-				_SNAPSHOT,
-				_TAPEBLOCK,
-				_DIGITALIZED
+				_NORMAL = 1,
+				_WITHHEADER = 2,
+				_SNAPSHOT = 3,
+				_TAPEBLOCK = 4,
+				_DIGITALIZED = 5
 			};
 
 			FileRecord ()
@@ -125,13 +159,14 @@ namespace COMMODORE
 				  _fileName ("")
 							{ }
 
-			EntryType _entryType;					// $00 - $00 : Entry type.
-			char _fileType;							// $01 - $01 : File type.
-			MCHEmul::Address _startLoadAddress;		// $02 - $03 : Where to start to load the data.
-			MCHEmul::Address _endLoadAddress;		// $04 - $05 : Where to finish.
-			// $06 - $07 Free for future uses...
-			unsigned int _offset;					// $08 - $0c : offset.
-			// $0c - $0f Free for future uses...
+			EntryType _entryType;					// $00 - $00 : 1 bytes. Entry type (@see above).
+			char _fileType;							// $01 - $01 : 1 byte. File type.
+			MCHEmul::Address _startLoadAddress;		// $02 - $03 : 2 bytes. Where to start to load the data in memory.
+			MCHEmul::Address _endLoadAddress;		// $04 - $05 : 2 bytes. Where to finish that loading.
+			// $06 - $07: 2 bytes. Free for future uses...
+			unsigned int _offset;					// $08 - $0c : offset. Where the content tp load really starts in this data file
+													// It has to be counted from the beginning of the file, inclusing the header.
+			// $0c - $0f 2 bytes. Free for future uses...
 			std::string _fileName;					// $10 - $1f : Name of the file.
 		};
 

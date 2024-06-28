@@ -21,7 +21,7 @@ ZX81::DatasetteP::DatasetteP (unsigned int mS)
 
 // ---
 ZX81::DatasetteInjection::DatasetteInjection (ZX81::Type t)
-	: MCHEmul::DatasettePeripheral (_ID,
+	: MCHEmul::DatasettePeripheral (_ID, 
 		{ { "Name", "Datasette Injection ZX81" },
 		  { "Manufacturer", "ICF to inject the code directly into the memory" } }),
 	  _type (t),
@@ -32,7 +32,7 @@ ZX81::DatasetteInjection::DatasetteInjection (ZX81::Type t)
 		  ? MCHEmul::Address ({ 0x03, 0x02 }, false)
 		  : MCHEmul::Address ({ 0x07, 0x02 }, false))
 {
-	setClassName ("ZX81Datasette");
+	setClassName ("ZX81DatasetteI");
 }
 
 // ---
@@ -41,6 +41,9 @@ bool ZX81::DatasetteInjection::simulate (MCHEmul::CPU* cpu)
 	if ((cpu -> programCounter ().internalRepresentation () == _addressIn.value ()) &&
 		!_data._data.empty ()) // there must be data inside...
 	{
+		// The only type of data recognized is so far, OAndPFileData
+		// This type of data is made up of only 1 program, so 
+		// the data as a whole might be loaded!
 		cpu -> memoryRef () -> set (_data._data);
 
 		// To simulate the return from the routine...

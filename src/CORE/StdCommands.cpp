@@ -827,5 +827,5 @@ void MCHEmul::DatasetteStatusCommand::executeImpl
 		ds = dynamic_cast <MCHEmul::DatasettePeripheral*> ((*i).second);
 
 	if (ds != nullptr) 
-		rst.add ("StdDatasette", std::move (ds -> getInfoStructure ()));
+		rst.add ("Datasette", std::move (ds -> getInfoStructure ()));
 }

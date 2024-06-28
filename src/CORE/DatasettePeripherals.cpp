@@ -230,12 +230,21 @@ MCHEmul::StandardDatasette::StandardDatasette
 	  _ioEncoderDecoder (e),
 	  _motorControlledInternally (mI),
 	  _status (Status::_STOPPED),
-	  _dataCounter (0), 
+	  _dataCounter (std::numeric_limits <size_t>::max ()), 
 	  _elementCounter (0)
 {
-	assert (_ioSimulation != nullptr && _ioEncoderDecoder != nullptr);
+	assert (_ioSimulation != nullptr && 
+			_ioEncoderDecoder != nullptr);
 
 	setClassName ("StdDatasette");
+}
+
+// ---
+MCHEmul::StandardDatasette::~StandardDatasette ()
+{
+	delete (_ioSimulation);
+
+	delete (_ioEncoderDecoder);
 }
 
 // ---
@@ -243,7 +252,7 @@ bool MCHEmul::StandardDatasette::initialize ()
 {
 	_status = Status::_STOPPED;
 
-	_dataCounter = 0;
+	_dataCounter = (std::numeric_limits <size_t>::max ()); // No data loaded at the beginning (@see parent class method)
 	_elementCounter = 0;
 
 	_ioSimulation -> initialize ();
@@ -263,7 +272,8 @@ bool MCHEmul::StandardDatasette::executeCommand (int id, const MCHEmul::Strings&
 		// FORWARD...
 		case _KEYFOWARD:
 			{
-				if (_status == Status::_STOPPED)
+				if (_status == Status::_STOPPED && 
+					!_data._data.empty ()) // There must be data inside...
 				{
 					// ...move the pointer to the next element in the list...
 					if (++_dataCounter > _data._data.size ())
@@ -281,7 +291,8 @@ bool MCHEmul::StandardDatasette::executeCommand (int id, const MCHEmul::Strings&
 		// REWIND...
 		case _KEYREWIND:
 			{
-				if (_status == Status::_STOPPED)
+				if (_status == Status::_STOPPED &&
+					!_data._data.empty ())
 				{
 					// ...move the pointer to the previous element in the list...
 					if (--_dataCounter > _data._data.size ()) // it is an unsigned short...
@@ -296,6 +307,7 @@ bool MCHEmul::StandardDatasette::executeCommand (int id, const MCHEmul::Strings&
 		// STOPPED...
 		case _KEYSTOP:
 			{
+				// If it was saving data, the counter is moved one position...
 				if (_status == Status::_SAVING)
 					_dataCounter++;
 
@@ -310,7 +322,7 @@ bool MCHEmul::StandardDatasette::executeCommand (int id, const MCHEmul::Strings&
 		case _KEYPLAY:
 			{
 				if (_status == Status::_STOPPED &&
-					_dataCounter < _data._data.size () /** Only possible when the data is not at the end. */)
+					_dataCounter < _data._data.size ())
 				{
 					_elementCounter = 0;
 
@@ -339,9 +351,15 @@ bool MCHEmul::StandardDatasette::executeCommand (int id, const MCHEmul::Strings&
 					_status = Status::_SAVING;
 
 					// If the counter is pointing at the end, a null data element is added...
-					if (_dataCounter >= _data._data.size ())
+					if (_dataCounter > _data._data.size ())
+					{ 
 						_data._data.push_back (MCHEmul::DataMemoryBlock ());
+
+						_dataCounter = _data._data.size () -1;
+					}
+
 					// ...and, any case, the element affected is fully clearead...
+					// There shouldn't be here anything, but just in case!
 					_data._data [_dataCounter].clear ();
 
 					_ioSimulation -> initialize ();
@@ -366,7 +384,7 @@ bool MCHEmul::StandardDatasette::executeCommand (int id, const MCHEmul::Strings&
 				_status = Status::_STOPPED;
 
 				// and starts back from the beginning...
-				_dataCounter = 0;
+				_dataCounter = std::numeric_limits <size_t>::max ();
 
 				_elementCounter = 0;
 
@@ -415,7 +433,9 @@ bool MCHEmul::StandardDatasette::connectData (MCHEmul::FileData* dt)
 	bool result = MCHEmul::DatasettePeripheral::connectData (dt);
 
 	if (result)
-		_dataCounter = 0; // at the beginning...
+		_dataCounter = 
+			(_data._data.empty () ? std::numeric_limits <size_t>::max () : 0); 
+	// at the beginning or pointing to nowhere if there is no data finally loaded...
 
 	return (result);
 }
@@ -425,7 +445,8 @@ MCHEmul::InfoStructure MCHEmul::StandardDatasette::getInfoStructure () const
 {
 	MCHEmul::InfoStructure result = std::move (MCHEmul::DatasettePeripheral::getInfoStructure ());
 
-	result.add ("IO", std::move (_ioSimulation -> getInfoStructure ()));
+	result.add ("IOEMULATION", // All attributes together...
+		std::move (_ioSimulation -> getInfoStructure ().asString ()));
 	result.add ("DATACOUNTER", _dataCounter);
 
 	return (result);

@@ -147,11 +147,131 @@ bool COMMODORE::TAPFileTypeIO::writeFile (MCHEmul::FileData* fD, const std::stri
 }
 
 // ---
+MCHEmul::ExtendedDataMemoryBlocks COMMODORE::PRGFileData::asMemoryBlocks () const
+{
+	MCHEmul::ExtendedDataMemoryBlocks result;
+
+	MCHEmul::DataMemoryBlock mB (_address, _bytes.bytes ());
+	mB.setAttribute ("TYPE", "1");
+	result._data = { mB }; // Just the data...
+
+	return (result);
+}
+
+// ---
+bool COMMODORE::PRGFileTypeIO::canRead (const std::string& fN) const
+{
+	// Extension?
+	size_t pp = fN.find_last_of ('.');
+	if (pp == std::string::npos || pp == fN.length ())
+		return (false); // ...no
+
+	// The right extension?
+	std::string ext = MCHEmul::upper (fN.substr (pp + 1));
+	if (ext != "PRG")
+		return (false); // ...no
+
+	// Possible to open?
+	std::ifstream f (fN, std::ios::in || std::ios::binary);
+	if (!f)
+		return (false); // ...no
+
+	// The right length?
+	f.seekg (0, std::ios::end);
+	std::streamoff s = (std::streamoff) f.tellg ();
+	f.close ();
+	if (s < (std::streamoff) (0x02 /** Header = start address */ + 0x1 /** At least one byte. */))
+		return (false); // ...no. The length of the file is less than expected. It has to be minimum 0x03!
+
+	return (true);
+}
+
+// ---
+MCHEmul::FileData* COMMODORE::PRGFileTypeIO::readFile (const std::string& fN, bool bE) const
+{
+	std::ifstream f (fN, std::ios::in | std::ios::binary);
+	if (!f)
+		return (nullptr); // Impossible to be open... 
+						  // At this point it shouldn't happen but just in case...
+
+	char data [256] = { };
+	MCHEmul::FileData* result = new COMMODORE::PRGFileData;
+	COMMODORE::PRGFileData* prg = 
+		static_cast <COMMODORE::PRGFileData*> (result); // To better manipulation...
+
+	// The length of the file.
+	f.seekg (0, std::ios::end);
+	std::streamoff s = (std::streamoff) f.tellg ();
+	f.seekg (0, std::ios::beg);
+
+	// The header = starting address
+	f.read (data, 2);
+	prg -> _address = MCHEmul::Address ({ (unsigned char) data [0], (unsigned char) data [1] }, false);
+	// The data...
+	char* romData = new char [(size_t) (s - 2)];
+	f.read (romData, (std::streamsize) (s - 2));
+	std::vector <MCHEmul::UByte> romBytes;
+	for (size_t i = 0; i < (size_t) (s - 2);
+		romBytes.emplace_back (romData [i++]));
+	prg -> _bytes = MCHEmul::UBytes (romBytes);
+	delete [] romData;
+
+	f.close ();
+
+	return (result);
+}
+
+// ---
+bool COMMODORE::PRGFileTypeIO::writeFile (MCHEmul::FileData* fD, const std::string& fN, bool bE) const
+{
+	COMMODORE::PRGFileData* prg = 
+		dynamic_cast <COMMODORE::PRGFileData*> (fD); // To better manipulation...
+	if (prg == nullptr)
+		return (false); // it is not really a tap structure!
+
+	std::ofstream f (fN, std::ios::out | std::ios::binary);
+	if (!f)
+		return (false); // Impossible to be opened...
+
+	char data [256] = { };
+
+	// The header = address
+	std::vector <MCHEmul::UByte> by = prg -> _address.bytes ();
+	data [0] = (char) by [1].value (); data [1] = (char) by [0].value ();
+	f.write (data, 2);
+	
+	// The data
+	char* prgData = new char [(size_t) prg -> _bytes.size ()];
+	for (size_t i = 0; i < (size_t) prg -> _bytes.size (); i++)
+		prgData [i] = (char) prg -> _bytes.bytes ()[i].value ();
+	f.write (prgData, (std::streamsize) prg -> _bytes.size ());
+	delete [] prgData;
+
+	f.close ();
+
+	return (true);
+}
+
+// ---
 MCHEmul::ExtendedDataMemoryBlocks COMMODORE::T64FileData::asMemoryBlocks () const
 {
-	// TODO
+	MCHEmul::ExtendedDataMemoryBlocks result;
 
-	return (MCHEmul::ExtendedDataMemoryBlocks ());
+	result._name = _tapeRecord._userDescriptor;
+	result._attributes ["VERSION"]	= std::to_string (_tapeRecord._version);
+	result._attributes ["ENTRIES"]	= std::to_string (_tapeRecord._usedEntries);
+
+	for (unsigned short i = 0; i < _tapeRecord._usedEntries; i++)
+	{
+		MCHEmul::DataMemoryBlock mB (_fileRecords [i]._startLoadAddress, 
+			_content.subset ((size_t) (_fileRecords [i]._offset - 0x40 - (0x20 * _tapeRecord._usedEntries)), 
+				(size_t) (_fileRecords [i]._endLoadAddress - _fileRecords [i]._startLoadAddress + 1)).bytes ());
+		mB.setName (_fileRecords [i]._fileName);
+		mB.setAttribute ("TYPE", std::to_string (_fileRecords [i]._entryType)); // Important later in header verification e.g.
+		result._data.emplace_back (std::move (mB));
+	}
+
+	return (result);
 }
 
 // ---
@@ -172,12 +292,12 @@ bool COMMODORE::T64FileTypeIO::canRead (const std::string& fN) const
 	if (!f)
 		return (false); // ...no
 
-	// Has it the right length?
+	// Has it the right (minimum) length?
 	f.seekg (0, std::ios::end);
 	std::streamoff s = (std::streamoff) f.tellg ();
 	f.close ();
-	if (s < (std::streamoff) (0x64 /** Header. */ + 0x32 /** Tap Header. */ + 0x1 /** At least one byte. */))
-		return (false); // ...no. The length in the file has to be at least 0x97
+	if (s < (std::streamoff) (0x40 /** Header. */ + 0x20 /** At east 1 File Record. */ + 0x01 /** At least one byte. */))
+		return (false); // ...no. The length in the file has to be at least 0x61 (= 97)
 
 	return (true);
 }
@@ -203,9 +323,9 @@ MCHEmul::FileData* COMMODORE::T64FileTypeIO::readFile (const std::string& fN, bo
 	f.read (data, 32); data [32] = 0; // End of char...
 	rT64 -> _tapeRecord._descriptor = std::string (data);
 	f.read (data, 2);
-	rT64 -> _tapeRecord._version = (data [1] << 8) + data [0];
+	rT64 -> _tapeRecord._version = (unsigned short) ((unsigned char) data [1] << 8) + ((unsigned char) data [0]);
 	f.read (data, 2);
-	rT64 -> _tapeRecord._entries = (data [1] << 8) + data [0];
+	rT64 -> _tapeRecord._entries = (unsigned short) ((unsigned char) data [1] << 8) + ((unsigned char) data [0]);
 	f.read (data, 2);
 	rT64 -> _tapeRecord._usedEntries = (unsigned short) (((unsigned char) data [1] << 8) + ((unsigned char) data [0]));
 	f.read (data, 2); // 2 bytes free...
@@ -223,9 +343,9 @@ MCHEmul::FileData* COMMODORE::T64FileTypeIO::readFile (const std::string& fN, bo
 		f.read (data, 1);
 		fR._fileType = data [0];
 		f.read (data, 2);
-		fR._startLoadAddress = MCHEmul::Address ({ data [0], data [1] }, true);
+		fR._startLoadAddress = MCHEmul::Address ({ (unsigned char) data [0], (unsigned char) data [1] }, true);
 		f.read (data, 2);
-		fR._endLoadAddress = MCHEmul::Address ({ data [0], data [1] }, true);
+		fR._endLoadAddress = MCHEmul::Address ({ (unsigned char) data [0], (unsigned char) data [1] }, true);
 		f.read (data, 2); // 2 bytes free...
 		f.read (data, 4);
 		fR._offset = (unsigned int) (((unsigned char) data [3] << 24) + 

@@ -181,6 +181,17 @@ namespace MCHEmul
 			virtual bool decode (unsigned char s) const = 0;
 		};
 
+		/** When the encoder is useless, because the simulate method is being rebuilt. */
+		class IOEmptyEncoder final : public IOEncoderDecoder
+		{
+			public:
+			virtual unsigned char encode (bool s) const override
+							{ return (1); }
+
+			virtual bool decode (unsigned char s) const override
+							{ return (true); }
+		};
+
 		/** Very very simple,
 			It will generate at the end a square wave in the datasette. */
 		class IOBasicEncoderDecoder final : public IOEncoderDecoder
@@ -233,6 +244,32 @@ namespace MCHEmul
 
 			protected:
 			Attributes _attributes;
+		};
+
+		/** When the simulation itself is not needed,
+			because the simulation method is overloaded. \n 
+			This might happen (e.g) when the standard datasette is needed (becuase the commands e.g), 
+			but the simulation method is fully rebuilt 
+			(e.g when datasette is implemented as a trap of a kernel routine). */
+		class IONilSimulation final : public IOSimulation
+		{
+			public:
+			IONilSimulation ()
+				: IOSimulation (Attributes ())
+							{ setClassName ("IOEmpty"); }
+
+			virtual void initialize () override
+							{ }
+
+			virtual bool io (StandardDatasette&, CPU*) override
+							{ return (true); }
+			virtual void stop () override
+							{ }
+
+			virtual bool executeCommand (int, const MCHEmul::Strings&) override
+							{ return (true); }
+			virtual Strings commandDescriptions () const override
+							{ return (Strings ({ })); }
 		};
 
 		/** The basic simulation happens when the activities to write or to read
@@ -368,8 +405,7 @@ namespace MCHEmul
 		StandardDatasette (int id, IOSimulation* s, IOEncoderDecoder* e, 
 			bool mI, const Attributes& attrs = { });
 
-		~StandardDatasette ()
-							{ delete (_ioSimulation); }
+		~StandardDatasette ();
 
 		const IOSimulation* ioSimulation () const
 							{ return (_ioSimulation); }
@@ -433,6 +469,7 @@ namespace MCHEmul
 		mutable Status _status;
 		
 		// Counting which the info to write or read!
+		/** value = max size_t means that there is no data pointed. */
 		mutable size_t _dataCounter; 
 		mutable unsigned short _elementCounter;
 	};

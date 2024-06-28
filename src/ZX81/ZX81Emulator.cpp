@@ -2,6 +2,7 @@
 #include <ZX81/ZX81.hpp>
 #include <ZX81/Screen.hpp>
 #include <ZX81/Cartridge.hpp>
+#include <ZX81/Datasette.hpp>
 
 // ---
 const unsigned char ZX81::ZX81Emulator::_PARAMNTSC = 'n';
@@ -29,6 +30,9 @@ void ZX81::ZX81Emulator::printOutParameters (std::ostream& o) const
 		 "ZX812:\tZX81 rare rom version" << std::endl <<
 		 "ZX813:\tZX81 newest rom version" << std::endl;
 	o << "DEVICES allowed to be connected under command CONNECTPER:" << std::endl <<
+		 std::to_string (ZX81::Datasette::_ID) << ":\tSynchronous datasette" << std::endl <<
+		 std::to_string (ZX81::DatasetteP::_ID) << ":\tASynchronous datasette" << std::endl <<
+		 std::to_string (ZX81::DatasetteInjection::_ID) << ":\tDirect injection into memory" << std::endl <<
 		 std::to_string (ZX81::Cartridge::_ID) << ":\tCartridge" << std::endl;
 }
 

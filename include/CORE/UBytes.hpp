@@ -60,6 +60,9 @@ namespace MCHEmul
 		UBytes MSUBytes (size_t p) const
 							{ return (UBytes (((p >= size ()) ? bytes () 
 								: std::vector <UByte> (bytes ().begin (), bytes ().begin () + p)))); }
+		UBytes subset (size_t i, size_t nb) const
+							{ return (UBytes (((i >= size ()) ? bytes () 
+								: std::vector <UByte> (bytes ().begin () + i, bytes ().begin () + i + nb)))); }
 
 		/** If you requested for a bit bigger than sizeBits, the crash is guaranteed.
 			No checks are done to increase the speed. */
