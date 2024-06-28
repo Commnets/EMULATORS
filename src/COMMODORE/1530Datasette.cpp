@@ -149,9 +149,9 @@ bool COMMODORE::Datasette1530Injection::executeTrap
 				// Storing the header of the info found in the casette buffer...
 				MCHEmul::DataMemoryBlock& dtM = _data._data [_dataCounter];
 				cpu -> memoryRef () -> set (ctteBuffer, 0x01 /** Machine type default value. */);
-				cpu -> memoryRef () -> set (ctteBuffer, MCHEmul::UBytes (dtM.startAddress ().bytes (), 
+				cpu -> memoryRef () -> set (ctteBuffer + 1, MCHEmul::UBytes (dtM.startAddress ().bytes (), 
 					false /** little - endian. */).bytes ());
-				cpu -> memoryRef () -> set (ctteBuffer, MCHEmul::UBytes (dtM.endAddress ().bytes (), false).bytes ());
+				cpu -> memoryRef () -> set (ctteBuffer + 3, MCHEmul::UBytes (dtM.endAddress ().bytes (), false).bytes ());
 				for (size_t i = 0; i < 16 /** No more than 16 bytes. */; i++)
 					cpu -> memoryRef () -> set (ctteBuffer + 5 + i, 
 						(i < dtM.name ().size ()) ? dtM.name ()[i] : MCHEmul::UByte::_0);
@@ -194,7 +194,6 @@ bool COMMODORE::Datasette1530Injection::executeTrap
 		{
 			MCHEmul::Address start (cpu -> memoryRef () -> values (_definition._startProgramAddr, 2).reverse ());
 			MCHEmul::Address end (cpu -> memoryRef () -> values (_definition._endProgramAddr, 2).reverse ());
-			MCHEmul::Address ctteBuffer (cpu -> memoryRef () -> values (_definition._bufferAddr, 2).reverse ());
 
 			switch (static_cast <F6500::C6500*> (cpu) -> xRegister ().values () [0].value ())
 			{
@@ -212,7 +211,8 @@ bool COMMODORE::Datasette1530Injection::executeTrap
 					{ (unsigned char) (_definition._irqVal & 0x00ff), 
 					  (unsigned char) ((_definition._irqVal & 0xff00) >> 8) } /** Already in little - endian. */);
 
-			cpu -> memoryRef () -> set (ctteBuffer, 0x40 /** EOF. */);
+			cpu -> memoryRef () -> set (_definition._statusAddr, 
+				cpu -> memoryRef () -> value (_definition._statusAddr) | 0x40 /** EOF. */);
 
 			cpu -> statusRegister ().setBitStatus (F6500::C6500::_CARRYFLAG, false);
 			cpu -> statusRegister ().setBitStatus (F6500::C6500::_IRQFLAG, false);
