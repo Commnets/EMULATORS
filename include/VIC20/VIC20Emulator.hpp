@@ -76,6 +76,7 @@ namespace VIC20
 								(MCHEmul::FileTypeIOList (
 									{ new COMMODORE::CRTFileTypeIO /** Cartridges. */,
 									  new COMMODORE::TAPFileTypeIO /** Tapes. */,
+									  new COMMODORE::PRGFileTypeIO /** Very simple PRG files. */,
 									  new MCHEmul::RawFileTypeIO /** Row data. */ }))); }
 	};
 
