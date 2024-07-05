@@ -85,6 +85,10 @@ namespace F6500
 
 		virtual bool initialize () override;
 
+		virtual void restartPC () override
+							{ programCounter ().setAddress (MCHEmul::Address 
+								(memoryRef () -> values (ResetVectorAddress (), 2), false /** little - endian */)); }
+
 		/** Just set the program counter with the address where the cpu
 			holds the vector address needed to restart the cpu. */
 		virtual bool restart () override

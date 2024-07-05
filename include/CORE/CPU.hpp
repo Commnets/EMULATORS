@@ -242,6 +242,11 @@ namespace MCHEmul
 			Returns true if everything was ok and false in any other case. */
 		virtual bool initialize () override;
 
+		/** Restart the PC, by default it does nothing, 
+			but it can be overloaded. */
+		virtual void restartPC ()
+						{ programCounter ().initialize (); }
+
 		/** There is a possibility to restart the CPU. \n
 			Be really carefully when using this possibility. \n
 			By default it does nothing. \n

@@ -125,7 +125,13 @@ void C64::Cartridge::dumpDataInto (C64::Memory* m, MCHEmul::MemoryView* mV)
 								MCHEmul::Address ({ 0x00, 0xe0 }, false), 0x2000) }
 					 });
 
+				// Is it an ULTIMAX cartridge?
+				bool ultimax = 
+					(attribute ("_EXROM") == "YES") &&
+					(attribute ("_GAME") == "NO");
+
 				// Dump the data into...
+				MCHEmul::Address ultimaxChrAdrBase ({ 0x00, 0x20 }, false);
 				int trush = 0; // Not useful...
 				for (const auto& i : data ()._data)
 				{
@@ -133,9 +139,20 @@ void C64::Cartridge::dumpDataInto (C64::Memory* m, MCHEmul::MemoryView* mV)
 					MCHEmul::Address a = i.startAddress ();
 					for (const auto& j : i.bytes ())
 					{
-						MCHEmul::Address dA = a + ct++;
+						MCHEmul::Address dA = a + ct;
 						for (const auto& k : _subsets)
 							k.second -> set (dA, j, true /** force. */);
+
+						// Is it a ULTIMAX cartridge?
+						// The info of the high part of the memory has to be copied in the RAM
+						// that the CPU sees...
+						if (ultimax && 
+							((a.value () == 0xf000) && (ct < 4096 /** Only the first 4096 byes. */)))
+						{
+							m -> set (ultimaxChrAdrBase + ct, j);
+						}
+
+						ct++;
 					}
 				}
 			}

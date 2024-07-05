@@ -258,8 +258,11 @@ namespace COMMODORE
 
 		virtual std::string asString () const override
 							{ return (_name + 
-									  " (Type:" + std::to_string (_cartridgeType) + 
-									  ",Version:" + std::to_string (_cartridgeVersion) + ")"); }
+									  " (Type:" + std::to_string (_cartridgeType) +
+									  ", EXROM:" + (_EXROMActive ? "YES" : "NO") +
+									  ", GAME:" + (_GAMEActive ? "YES" : "NO") +
+									  ", ULTIMAX:" + ((_EXROMActive && !_GAMEActive) ? "YES" : "NO") +
+									  ", Version:" + std::to_string (_cartridgeVersion) + ")"); }
 
 		std::string _signature;						// $00 - $0f :	No more than 16 chars...
 		unsigned int _headerSize;					// $10 - $13 :	Usually $40 = 64.

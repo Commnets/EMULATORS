@@ -344,7 +344,12 @@ bool MCHEmul::Computer::runComputerCycle (unsigned int a)
 		specificComputerCycle ();
 	}
 	else
-		_stabilized = (++_currentStabilizationLoops >= _stabilizationLoops);
+		// While the computer start the configuration of the memory could even change
+		// As the simulation is not a pure realtime emulation, the stabilization could take time
+		// let's say a couple of cyles. Once the stabiliation finishes, the better is to reload the program counter
+		// that will take into account the new configuration of the memory if changes happened!
+		if (_stabilized = (++_currentStabilizationLoops >= _stabilizationLoops))
+			_cpu -> restartPC (); // Once the computer is stabilized, the program counter starts back!
 
 	if (_debugLevel >= MCHEmul::_DEBUGALL)
 	{

@@ -39,8 +39,7 @@ bool F6500::C6500::initialize ()
 	// Initially the interruptions are disabled!
 	statusRegister ().setBitStatus (F6500::C6500::_IRQFLAG, false);
 	// Sets the point where the execution starts!
-	programCounter ().setAddress (MCHEmul::Address 
-		(memoryRef () -> values (ResetVectorAddress (), 2), false /** Little - endian */));
+	restartPC ();
 
 	return (true);
 }
