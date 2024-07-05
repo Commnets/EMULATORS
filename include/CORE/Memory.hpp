@@ -110,6 +110,19 @@ namespace MCHEmul
 	/** To simplify the way a map of elements is managed. */
 	using PhysicalStorages = std::map <int, PhysicalStorage*>;
 
+	/** To DUMP the content (partially) of a subset of memory. */
+	struct PhysicalStorageSubsetDUMP final
+	{
+		int _id;
+		bool _RAM; // Or ROM?
+		bool _active;
+		bool _activeForReading;
+		Address _from, _to;
+		UBytes _bytes;
+
+		InfoStructure getInfoStructure () const;
+	};
+
 	/** Represents a subset of the physical storage. \n
 		Many subsets can be created over the same physical location. \n
 		This class can send and receive events. */
@@ -191,6 +204,9 @@ namespace MCHEmul
 			/** To fill the memory with a value. */
 		void fillWith (const MCHEmul::UByte& b)
 							{ for (size_t i = 0; i < _size; i++) setValue (i, b); }
+
+		/** To get a DUMP. */
+		PhysicalStorageSubsetDUMP dump (const Address& f, const Address& t) const;
 
 		/** To init the memory. It might be overloaded. By default the "defaultData" value is assigned. 
 			It doesn't matter whether the subset is or not active. */
@@ -343,6 +359,15 @@ namespace MCHEmul
 							{ assert (pSS != nullptr); } // maybe too late, but just in case...
 	};
 
+	/** To DUMP the content of a memory view */
+	struct MemoryViewDUMP final
+	{
+		int _id; // of the view...
+		std::vector <PhysicalStorageSubsetDUMP> _data;
+
+		InfoStructure getInfoStructure () const;
+	};
+
 	/** A memory view represents a set of subsets over phisical storage (one or many). \n
 		The subsets can combine either RAM or ROM access and can also overlap each other. */
 	class MemoryView : public InfoClass
@@ -394,18 +419,21 @@ namespace MCHEmul
 		Address middleMemoryAddress () const
 							{ return (_minAddress + (_numPositions / 2)); }
 
-		/** If there had been several subsets behind, the write operation would happen 
-			on the first writtable subset possible. */
-		inline void set (const Address& a, const UByte& d, bool f = false);
 		/** If there had been several subsets behind, the read operation would happen 
 			on the first readable subset possible. */
 		inline const UByte& value (const Address& a) const;
+		/** If there had been several subsets behind, the write operation would happen 
+			on the first writtable subset possible. */
+		inline void set (const Address& a, const UByte& d, bool f = false);
 		UBytes values (const Address& a, size_t nB) const
 							{ return (UBytes (bytes (a, nB))); }
-		inline std::vector <UByte> bytes (const Address& a, size_t nB) const;
 		void set (const Address& a, const UBytes& v, bool f = false)
 							{ set (a, v.bytes (), f); }
+		inline std::vector <UByte> bytes (const Address& a, size_t nB) const;
 		inline void set (const Address& a, const std::vector <UByte>& v, bool f = false);
+
+		/** To get a DUMP from all memories actives at some positions. */
+		MemoryViewDUMP dump (const Address& f, const Address& t) const;
 
 		/** To init the memory view. 
 			It might be overloaded. By default the "defaultData" value is assigned. */
@@ -497,6 +525,22 @@ namespace MCHEmul
 	}
 
 	// ---
+	inline void MemoryView::set (const Address& a, const UByte& d, bool f)
+	{
+		int dtT = _minAddress.distanceWith (a);
+		if (dtT >= 0 && (size_t) dtT <= _numPositions)
+		{
+			PhysicalStorageSubset* fS = nullptr;
+			const PhysicalStorageSubsetsList& pL = _memPositions [dtT]._storages;
+			for (size_t i = 0; i < pL.size () && fS == nullptr; i++)
+				if (pL [i] -> active () && pL [i] -> canBeWriten (f)) fS = pL [i];
+
+			if (fS != nullptr)
+				fS -> setValue (a - fS -> initialAddress (), d);
+		}
+	}
+
+	// ---
 	inline std::vector <UByte> MemoryView::bytes (const Address& a, size_t nB) const
 	{
 		std::vector <UByte> result;
@@ -522,22 +566,6 @@ namespace MCHEmul
 	}
 
 	// ---
-	inline void MemoryView::set (const Address& a, const UByte& d, bool f)
-	{
-		int dtT = _minAddress.distanceWith (a);
-		if (dtT >= 0 && (size_t) dtT <= _numPositions)
-		{
-			PhysicalStorageSubset* fS = nullptr;
-			const PhysicalStorageSubsetsList& pL = _memPositions [dtT]._storages;
-			for (size_t i = 0; i < pL.size () && fS == nullptr; i++)
-				if (pL [i] -> active () && pL [i] -> canBeWriten (f)) fS = pL [i];
-
-			if (fS != nullptr)
-				fS -> setValue (a - fS -> initialAddress (), d);
-		}
-	}
-
-	// ---
 	inline void MemoryView::set (const Address& a, const std::vector <UByte>& v, bool f)
 	{ 
 		// If there are more bytes to set than max available nothing is done...
@@ -559,6 +587,15 @@ namespace MCHEmul
 
 	/** To simplify the way a map of elements is managed. */
 	using MemoryViews = std::map <int, MemoryView*>;
+
+	/** To DUMP the content of the memory. */
+	struct MemoryDUMP final
+	{
+		int _id; // of the view...
+		std::vector <MemoryViewDUMP> _data;
+
+		InfoStructure getInfoStructure () const;
+	};
 
 	/** 
 	  * A memory is just an agregation of eveytthing above: phisical storages, subsets and views. \n
@@ -730,6 +767,11 @@ namespace MCHEmul
 							{ set (mb.startAddress (), mb.bytes (), f); }
 		void set (const DataMemoryBlocks& mb, bool f = false)
 							{ for (const auto& i : mb) set (i, f); }
+
+		/** To get a DUMP from all memories actives at some positions. */
+		MemoryDUMP dumpActive (const Address& f, const Address& t) const
+							{ return (MemoryDUMP { _id, { _activeView -> dump (f, t) } }); }
+		MemoryDUMP dump (const Address& f, const Address& t) const;
 
 		/** It can be overloaded later, to set the specific content of specific zones. \n
 			By default only subsets have to be initialized, and all of them become active and also active for reading. */

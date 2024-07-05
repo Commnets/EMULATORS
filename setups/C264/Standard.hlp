@@ -102,6 +102,9 @@ No parameters are needed.
 To get the content of a memory position.
 One parameter minimum is required (INITIAL) that is the position of the memory.
 If a second parameter is given then the content between the two locations is returned.
+;DUMPMEMORY INITIAL FINAL
+To get a dump of the memory between two positions.
+All regions possible, RAM or ROM, active or inactive, from any view, will be shown.
 ;SETMEMORY INITIAL [FINAL] VALUE
 To set the value of the memory with a value.
 Two parameters minimum are required that are tha memory position to set (INITAL) and the value (VALUE).

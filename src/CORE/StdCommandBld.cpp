@@ -28,6 +28,8 @@ MCHEmul::Command* MCHEmul::StandardCommandBuilder::createEmptyCommand (const std
 		result = new MCHEmul::CPUInfoCommand;
 	else if (cmdName == "MEMORY" || cmdName == MCHEmul::MemoryStatusCommand::_NAME)
 		result = new MCHEmul::MemoryStatusCommand;
+	else if (cmdName == "MEMORYDUMP" || cmdName == MCHEmul::DUMPMemoryStatusCommand::_NAME)
+		result = new MCHEmul::DUMPMemoryStatusCommand;
 	else if (cmdName == "SETMEMORY" || cmdName == MCHEmul::SetMemoryValueCommand::_NAME)
 		result = new MCHEmul::SetMemoryValueCommand;
 	else if (cmdName == "STOP" || cmdName == MCHEmul::StopCPUCommand::_NAME)

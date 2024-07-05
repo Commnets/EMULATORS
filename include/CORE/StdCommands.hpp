@@ -244,7 +244,8 @@ namespace MCHEmul
 		The command must have 1 parameter at least with the direction which value is requested. \n
 		A second parameter might be provided, and the the content between those two memory locations is got. \n
 		The address can be in octal, hexadecimal or decimal. \n
-		Command line: MEMORY ADDRESS (OTHER ADDRESS) */
+		Command line: MEMORY ADDRESS (OTHER ADDRESS) 
+		The values got at from the activeView and considering the current active memory regions only. */
 	class MemoryStatusCommand final : public Command
 	{
 		public:
@@ -261,6 +262,31 @@ namespace MCHEmul
 		private:
 		/** The fields returned are: \n
 			BYTES = Attributes: The bytes in the locations requested. */
+		virtual void executeImpl (CommandExecuter* cE, Computer* c, InfoStructure& rst) override;
+	};
+
+	/** In some memory configuration,
+		some chips can be switched on/off a the value of a memory position could vary. \n
+		At the same time, the same memory location could be seen in different ways from those differemt chips. \n
+		All that complexity is managed by Memory clasess (@see Memory.hpp). \n
+		A method to get that info is needed. \n
+		Command line: FMEMORY ADDRESS1 ADDRESS2. */ 
+	class DUMPMemoryStatusCommand final : public Command
+	{
+		public:
+		static const int _ID = 40;
+		static const std::string _NAME;
+
+		DUMPMemoryStatusCommand ()
+			: Command (_ID, _NAME)
+							{ }
+
+		virtual bool canBeExecuted () const override
+							{ return (_parameters.size () == 2); }
+
+		private:
+		/** The fields returned are: \n
+			a list of DUMPMemoryStatus. */
 		virtual void executeImpl (CommandExecuter* cE, Computer* c, InfoStructure& rst) override;
 	};
 

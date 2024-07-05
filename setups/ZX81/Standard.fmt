@@ -36,14 +36,34 @@ CLK:@CLK@ ticks
 ;ClockFactor
 #---
 #---
+;PhysicalStorageSubsetDUMP
+Storage Id:@ID@
+RAM:@RAM@
+From:$@FROM@, To:@TO@
+Active:@ACTIVE@, Read:@READ@
+@BYTES{blocksize=16,listsep=\,,tablesep=\ ,minsize=2}@
+#---
+#---
 ;PhysicalStorageSubset
 Id:@ID@, Address:$@ADDRESS@, Size:@SIZE@
 Active:@ACTIVE@, Read:@READ@
 @BYTES{blocksize=16,listsep=\,,tablesep=\ ,minsize=2}@
 #---
 #---
+;MemoryViewDUMP
+View Id:@ID@
+->Storages:
+@DATA?{fmter=.CLASS,empty=no data}\n---\n@
+#---
+#---
 ;MemoryView
-@STORAGES?{key=NO,equal=:,empty=no storages}\n@
+@STORAGES?{key=NO,equal=:,empty=no storages}\n---\n@
+#---
+#---
+;MemoryDUMP
+Memory Id:@ID@
+->Views:
+@DATA?{fmter=.CLASS,empty=no data}\n---\n@
 #---
 #---
 ;Memory
@@ -259,6 +279,10 @@ Last:@INST@
 #---
 ;CMEMORY
 @BYTES{blocksize=16,listsep=\,,tablesep=\ ,minsize=2}@
+#---
+#---
+;CMEMORYDUMP
+@MemoryDUMP>@
 #---
 #---
 ;CSTOP

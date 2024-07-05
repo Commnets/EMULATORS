@@ -18,6 +18,7 @@ const std::string MCHEmul::CPUStatusCommand::_NAME = "CCPUSTATUS";
 const std::string MCHEmul::CPUSimpleStatusCommand::_NAME = "CCPUSSTATUS";
 const std::string MCHEmul::CPUInfoCommand::_NAME = "CCPUINFO";
 const std::string MCHEmul::MemoryStatusCommand::_NAME = "CMEMORY";
+const std::string MCHEmul::DUMPMemoryStatusCommand::_NAME = "CMEMORYDUMP";
 const std::string MCHEmul::SetMemoryValueCommand::_NAME = "CSETMEMORY";
 const std::string MCHEmul::StopCPUCommand::_NAME = "CSTOP";
 const std::string MCHEmul::RunCPUCommand::_NAME = "CRUN";
@@ -281,6 +282,23 @@ void MCHEmul::MemoryStatusCommand::executeImpl (MCHEmul::CommandExecuter* cE, MC
 	}
 	else
 		rst.add ("BYTES", c -> cpu () -> memoryRef () -> value (a1).asString (MCHEmul::UByte::OutputFormat::_HEXA, 2));
+}
+
+// ---
+void MCHEmul::DUMPMemoryStatusCommand::executeImpl 
+	(MCHEmul::CommandExecuter* cE, MCHEmul::Computer* c, MCHEmul::InfoStructure& rst)
+{
+	if (c == nullptr)
+		return;
+
+	MCHEmul::Address a1 = MCHEmul::Address::fromStr (parameter ("00"));
+	MCHEmul::Address a2 = MCHEmul::Address::fromStr (parameter ("01"));
+	if (a1 > c -> cpu () -> architecture ().longestAddressPossible () || 
+		a2 > c -> cpu () -> architecture ().longestAddressPossible ())
+		return;
+
+	rst.add ("MemoryDUMP", std::move (c -> cpu () -> memoryRef () -> 
+		dump ((a1 <= a2) ? a1 : a2, (a1 <= a2) ? a2 : a1).getInfoStructure ()));
 }
 
 // ---

@@ -6,6 +6,49 @@
 MCHEmul::UByte MCHEmul::PhysicalStorage::_DEFAULTVALUE (MCHEmul::UByte::_0);
 
 // ---
+bool MCHEmul::PhysicalStorage::loadInto (const std::string& fN, size_t pB)
+{
+	if (pB /** Starts in 0. */ >= size ())
+		return (false);
+
+	bool e = false;
+	std::vector <MCHEmul::UByte> by = MCHEmul::UBytes::loadBytesFrom (fN, e);
+	if (e || by.size () > (size () - pB))
+		return (false); // It can not be loaded...
+
+	set (pB, by);
+
+	return (true);
+}
+
+// ---
+bool MCHEmul::PhysicalStorage::saveFrom (const std::string& fN, size_t nB, size_t p) const
+{
+	if (p /** Starts in 0. */ >= size () || (p + nB) > size ())
+		return (false); // It is not in the limits of the memory...
+
+	return (MCHEmul::UBytes::saveBytesTo 
+		(fN, std::vector <MCHEmul::UByte> (_data.begin () + p, _data.begin () + p + nB - 1)));
+}
+
+// ---
+MCHEmul::InfoStructure MCHEmul::PhysicalStorageSubsetDUMP::getInfoStructure () const
+{
+	MCHEmul::InfoStructure result;
+
+	result.add ("CLASSNAME",	std::string ("PhysicalStorageSubsetDUMP"));
+	result.add ("ID",			_id);
+	result.add ("RAM",			_RAM);
+	result.add ("ACTIVE",		_active);
+	result.add ("READ",			_activeForReading);
+	result.add ("FROM",			_from);
+	result.add ("TO",			_to);
+	result.add ("BYTES",		_bytes);
+
+	return (result);
+}
+
+// ---
 MCHEmul::PhysicalStorageSubset::PhysicalStorageSubset 
 		(int id, MCHEmul::PhysicalStorage* pS, size_t pp, const MCHEmul::Address& a, size_t s)
 	: MCHEmul::InfoClass ("PhysicalStorageSubset"),
@@ -26,6 +69,36 @@ MCHEmul::PhysicalStorageSubset::PhysicalStorageSubset
 
 		_defaultData = std::vector <MCHEmul::UByte> (_size, MCHEmul::UByte::_0);
 	}
+}
+
+// ---
+MCHEmul::PhysicalStorageSubsetDUMP MCHEmul::PhysicalStorageSubset::dump 
+	(const MCHEmul::Address& f, const MCHEmul::Address& t) const
+{
+	MCHEmul::PhysicalStorageSubsetDUMP result 
+		({ _id, 
+			type () == MCHEmul::PhysicalStorage::Type::_RAM,
+			_active,
+			_activeForReading,
+			f, t, { }
+			});
+
+	// The last position has to be after the first!
+	if (t >= f) 
+	{
+		MCHEmul::Address fst = (f >= _initialAddress) ? f : _initialAddress;
+		MCHEmul::Address lst = (t <= lastAddress ()) ? t : lastAddress ();
+		if (fst <= lst)
+		{
+			result._from = fst; result._to = lst;
+			std::vector <MCHEmul::UByte> dt;
+			for (size_t i = 0; i < (size_t) (lst - fst); i++)
+				dt.push_back (value (fst + i));
+			result._bytes = dt;
+		}
+	}
+
+	return (result);
 }
 
 // ---
@@ -66,32 +139,6 @@ bool MCHEmul::PhysicalStorageSubset::save (const std::string& fN, size_t sA, boo
 }
 
 // ---
-bool MCHEmul::PhysicalStorage::loadInto (const std::string& fN, size_t pB)
-{
-	if (pB /** Starts in 0. */ >= size ())
-		return (false);
-
-	bool e = false;
-	std::vector <MCHEmul::UByte> by = MCHEmul::UBytes::loadBytesFrom (fN, e);
-	if (e || by.size () > (size () - pB))
-		return (false); // It can not be loaded...
-
-	set (pB, by);
-
-	return (true);
-}
-
-// ---
-bool MCHEmul::PhysicalStorage::saveFrom (const std::string& fN, size_t nB, size_t p) const
-{
-	if (p /** Starts in 0. */ >= size () || (p + nB) > size ())
-		return (false); // It is not in the limits of the memory...
-
-	return (MCHEmul::UBytes::saveBytesTo 
-		(fN, std::vector <MCHEmul::UByte> (_data.begin () + p, _data.begin () + p + nB - 1)));
-}
-
-// ---
 MCHEmul::InfoStructure MCHEmul::PhysicalStorageSubset::getInfoStructure () const
 {
 	MCHEmul::InfoStructure result = std::move (MCHEmul::InfoClass::getInfoStructure ());
@@ -102,6 +149,23 @@ MCHEmul::InfoStructure MCHEmul::PhysicalStorageSubset::getInfoStructure () const
 	result.add ("ACTIVE",	_active);
 	result.add ("READ",		_activeForReading);
 	result.add ("BYTES",	std::move (bytes ()));
+
+	return (result);
+}
+
+// ---
+MCHEmul::InfoStructure MCHEmul::MemoryViewDUMP::getInfoStructure () const
+{
+	MCHEmul::InfoStructure result;
+
+	result.add ("CLASSNAME",	std::string ("MemoryViewDUMP"));
+	result.add ("ID",			_id);
+
+	int ct = 0;
+	MCHEmul::InfoStructure dt;
+	for (const auto& i : _data)
+		dt.add (std::to_string (ct++), std::move (i.getInfoStructure ()));
+	result.add ("DATA", std::move (dt));
 
 	return (result);
 }
@@ -144,6 +208,20 @@ bool MCHEmul::MemoryView::removeSubSet (int id)
 	}
 	
 	return (result); 
+}
+
+// ---
+MCHEmul::MemoryViewDUMP MCHEmul::MemoryView::dump (const MCHEmul::Address& f, const MCHEmul::Address& t) const
+{
+	MCHEmul::MemoryViewDUMP result { _id, { } };
+
+	int dt;
+	if (t >= f && // The first position has to belong to the storage...
+		(dt = (f - _minAddress)) > 0)
+		for (const auto& i : _memPositions [(size_t) dt]._storages)
+			result._data.emplace_back (std::move (i -> dump (f, t)));
+
+	return (result);
 }
 
 // ---
@@ -224,6 +302,23 @@ void MCHEmul::MemoryView::plainMemory ()
 }
 
 // ---
+MCHEmul::InfoStructure MCHEmul::MemoryDUMP::getInfoStructure () const
+{
+	MCHEmul::InfoStructure result;
+
+	result.add ("CLASSNAME", std::string ("MemoryDUMP"));
+	result.add ("ID",_id);
+
+	int ct = 0;
+	MCHEmul::InfoStructure dt;
+	for (const auto& i : _data)
+		dt.add (std::to_string (ct++), std::move (i.getInfoStructure ()));
+	result.add ("DATA", std::move (dt));
+
+	return (result);
+}
+
+// ---
 bool MCHEmul::Memory::Content::verifyCoherence () const
 {
 	_error = _physicalStorages.empty () || _subsets.empty () || _views.empty ();
@@ -241,40 +336,6 @@ bool MCHEmul::Memory::Content::verifyCoherence () const
 	}
 
 	return (_error);
-}
-
-// ---
-bool MCHEmul::Memory::addAdditionalSubsets (int id, const MCHEmul::PhysicalStorageSubsets& ss, MCHEmul::MemoryView* v)
-{
-	bool result = false;
-
-	MCHEmul::Memory::AdditionalSubsets::const_iterator i = _additionalSubsets.find (id);
-	if (i == _additionalSubsets.end ())
-	{
-		_additionalSubsets.insert (MCHEmul::Memory::AdditionalSubsets::value_type (id, ss));
-
-		result = ((v == nullptr) ? _activeView : v) -> addSubSets (ss);
-	}
-
-	return (result);
-}
-
-// ---
-bool MCHEmul::Memory::removeAdditionalSubsets (int id, MCHEmul::MemoryView* v)
-{
-	bool result = false;
-
-	MCHEmul::Memory::AdditionalSubsets::const_iterator i = _additionalSubsets.find (id);
-	if (i != _additionalSubsets.end ())
-	{
-		std::vector <int> vId;
-		for (const auto& j : (*i).second) vId.emplace_back (j.second -> id ());
-		result = ((v == nullptr) ? _activeView : v) -> removeSubsets (vId);
-
-		_additionalSubsets.erase (i);
-	}
-
-	return (result);
 }
 
 // ---
@@ -324,4 +385,49 @@ MCHEmul::Memory::~Memory ()
 
 	for (const auto& i : _content._views) 
 		delete (i.second); 
+}
+
+// ---
+bool MCHEmul::Memory::addAdditionalSubsets (int id, const MCHEmul::PhysicalStorageSubsets& ss, MCHEmul::MemoryView* v)
+{
+	bool result = false;
+
+	MCHEmul::Memory::AdditionalSubsets::const_iterator i = _additionalSubsets.find (id);
+	if (i == _additionalSubsets.end ())
+	{
+		_additionalSubsets.insert (MCHEmul::Memory::AdditionalSubsets::value_type (id, ss));
+
+		result = ((v == nullptr) ? _activeView : v) -> addSubSets (ss);
+	}
+
+	return (result);
+}
+
+// ---
+bool MCHEmul::Memory::removeAdditionalSubsets (int id, MCHEmul::MemoryView* v)
+{
+	bool result = false;
+
+	MCHEmul::Memory::AdditionalSubsets::const_iterator i = _additionalSubsets.find (id);
+	if (i != _additionalSubsets.end ())
+	{
+		std::vector <int> vId;
+		for (const auto& j : (*i).second) vId.emplace_back (j.second -> id ());
+		result = ((v == nullptr) ? _activeView : v) -> removeSubsets (vId);
+
+		_additionalSubsets.erase (i);
+	}
+
+	return (result);
+}
+
+// ---
+MCHEmul::MemoryDUMP MCHEmul::Memory::dump (const MCHEmul::Address& f, const MCHEmul::Address& t) const
+{
+	MCHEmul::MemoryDUMP result { _id, { } };
+
+	for (const auto& i : _content._views)
+		result._data.emplace_back (std::move (i.second -> dump (f, t)));
+
+	return (result);
 }
