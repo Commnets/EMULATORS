@@ -39,7 +39,7 @@ CLK:@CLK@ ticks
 ;PhysicalStorageSubsetDUMP
 Storage Id:@ID@
 RAM:@RAM@
-From:$@FROM@, To:@TO@
+From:$@FROM@, To:$@TO@
 Active:@ACTIVE@, Read:@READ@
 @BYTES{blocksize=16,listsep=\,,tablesep=\ ,minsize=2}@
 #---
