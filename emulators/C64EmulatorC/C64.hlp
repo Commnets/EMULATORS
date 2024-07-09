@@ -8,3 +8,27 @@ No parameters are needed.
 ;CIA2
 To know the status of the CIA2 chip.
 No parameters are needed.
+;SCREENDUMP
+To know the content of the screen.
+No parameters are needed.
+The data is shown in hexadecimal format (but with no symbol at the beginning).
+;COLORDUMP
+To know the content of the screen.
+No parameters are needed.
+The data is shown in hexadecimal format (but with no symbol at the beginning).
+;BITMAPDUMP
+To know the content of the screen.
+No parameters are needed.
+The data is shown in hexadecimal format (but with no symbol at the beginning).
+;SPRITESDUMP [n1 n2 n3...]
+To know the sprites data.
+No parameters or the list of sprites to visualize from 1 to 8.
+The parameters could be repeated, but just one instace of every value is accepted.
+;SPRITESDRAW [n1 n2 n3...]
+To print out the sprites data.
+No parameters or the list of sprites to visualize from 1 to 8.
+The parameters could be repeated, but just one instace of every value is accepted.
+;CHARSDRAW [c1 c2 c3...]
+To print out the characters data.
+No parameters of the list of characters to visualize from 0 to 255 in decimal format.
+The parameters could be repeated, but just one instace of every value is accepted.

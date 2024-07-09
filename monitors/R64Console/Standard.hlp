@@ -94,6 +94,7 @@ Additional parameters can be provided whether the command needs more info.
 Get the status of the stack.
 Can be invoked with or without the parameter ALL.
 ALL will get you info also about the content of the stack.
+The content of the stack is shown in hexadecimal but with no symbol at the beggining.
 ;CPUINFO
 To get info about the CPU.
 Very complex info returned. 
@@ -102,9 +103,13 @@ No parameters are needed.
 To get the content of a memory position.
 One parameter minimum is required (INITIAL) that is the position of the memory.
 If a second parameter is given then the content between the two locations is returned.
+The value of the initial and final memory can be given in decimal, hexadecimal ($), octal (o) or binary (z).
+The value of the memories is given in hexadecimal format but with no symbol at the beginning.
 ;DUMPMEMORY INITIAL FINAL
 To get a dump of the memory between two positions.
 All regions possible, RAM or ROM, active or inactive, from any view, will be shown.
+The value of the initial and final memory can be given in decimal, hexadecimal ($), octal (o) or binary (z).
+The value of the memories is given in hexadecimal format but with no symbol at the beginning.
 ;SETMEMORY INITIAL [FINAL] VALUE
 To set the value of the memory with a value.
 Two parameters minimum are required that are tha memory position to set (INITAL) and the value (VALUE).
@@ -112,6 +117,7 @@ An optional second memory position can be given meaning that the value
 will be set among those two positions.
 Be really careful using this method. It can generate a crash in the computer simulation.
 If the value is more than 1 byte length, the memory steps will be equal to that length.
+The value of the initial and final memory can be given in decimal, hexadecimal ($), octal (o) or binary (z).
 ;ASSIGNJOY ID NEWID
 To change the identification number assigned to a joystick.
 It requires two parameters: The ID of the joystick to change and the NEWID assigned.
@@ -135,6 +141,7 @@ To keep CPU running.
 An optional parameter allows us to start the execution from another position (ADDRESS).
 Take care using this command only because Program Counter is changed before starting to run.
 R can also be used instead.
+The value of the address can be given in decimal, hexadecimal ($), octal (o) or binary (z).
 ;NEXT
 To execute the next instruction after being stopped.
 N can also be used instead.
@@ -149,14 +156,15 @@ No parameters are needed.
 ;BREAKS
 To know the list of break points defined in the computer.
 No parameters are needed.
+The break positions are given in hexadecimal but with no symbol at the beginning.
 ;SETBREAK ADDR1 [ADDR2 ADDR3...]
 To set a new break point.
 It is needed at leat one address, but many others can be also provided separated by an space.
-The address can be passed in any format possible: HEX($), OCT(0), DECIMAL
+The value of the addresses can be given in decimal, hexadecimal ($), octal (o) or binary (z).
 ;REMOVEBREAK ADDR1 [ADDR2 ADDR3...]
 To remove a break point.
 It is needed at leat one address, but many other can be also provided separated by space.
-The address can be passed in any format possible: HEX($), OCT(0), DECIMAL
+The value of the addresses can be given in decimal, hexadecimal ($), octal (o) or binary (z).
 ;REMOVEBREAKS
 To remove all break points.
 No parameters are needed.

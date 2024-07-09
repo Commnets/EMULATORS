@@ -366,6 +366,10 @@ namespace MCHEmul
 		void setDebugLevel (unsigned int dL)
 							{ _debugLevel = dL; }
 
+		/** To set a restart address different tha the estandard defined by the CPU. */
+		void setStartingAddress (const Address& sA)
+							{ _startAtSpecificAddress = true; _startingAddress = sA; }
+
 		// Managing the deep debugging...
 		/** To knwow whether the debug file is or not active. */
 		bool deepDebug () const
@@ -489,6 +493,11 @@ namespace MCHEmul
 			It implies that no transaction is executed in the meantime for a couple of loops.
 			The number of loops to wait is defined at construction time. */
 		unsigned short _stabilizationLoops;
+
+		/** When the computer has to start a specific address 
+			it has been usually defined when the emulation starts. */
+		bool _startAtSpecificAddress;
+		Address _startingAddress;
 
 		// Implementation
 		mutable unsigned int _error;

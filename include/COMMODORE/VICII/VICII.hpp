@@ -120,6 +120,27 @@ namespace COMMODORE
 		  */
 		virtual MCHEmul::InfoStructure getInfoStructure () const override;
 
+		// To get snapshots of the memory...
+		// They are used in some commands...
+		/** content of the screen. */
+		MCHEmul::UBytes screenMemorySnapShot (MCHEmul::CPU* cpu) const;
+		/** The content of the color memory (always in the same position). */
+		MCHEmul::UBytes colorMemorySnapShot (MCHEmul::CPU* cpu) const;
+		/** The content of the bitmap memory. */
+		MCHEmul::UBytes bitmapMemorySnapShot (MCHEmul::CPU* cpu) const;
+		/** The data of the sprites memory. */
+		MCHEmul::UBytes spritesMemorySnapShot (MCHEmul::CPU* cpu, 
+			const std::vector <size_t>& sprs = { }) const;
+
+		// To print out the form of the different graphic elements
+		// taking into account the graphic mode active
+		/** The sprites. */
+		MCHEmul::Strings spritesDrawSnapshot (MCHEmul::CPU* cpu, 
+			const std::vector <size_t>& sprs = { }) const;
+		/** The characters. */
+		MCHEmul::Strings charsDrawSnapshot (MCHEmul::CPU* cpu, 
+			const std::vector <size_t>& chrs = { }) const;
+
 		protected:
 		virtual void processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifier* n) override;
 
@@ -335,7 +356,10 @@ namespace COMMODORE
 				  _idleState (true),
 				  _screenCodeData (std::vector <MCHEmul::UByte> (40, MCHEmul::UByte::_0)),
 				  _graphicData (std::vector <MCHEmul::UByte> (40, MCHEmul::UByte::_0)),
-				  _colorData (std::vector <MCHEmul::UByte> (40, MCHEmul::UByte::_0))
+				  _colorData (std::vector <MCHEmul::UByte> (40, MCHEmul::UByte::_0)),
+				  _lastScreenCodeDataRead (MCHEmul::UByte::_0),
+				  _lastGraphicDataRead (MCHEmul::UByte::_0),
+				  _lastColorDataRead (MCHEmul::UByte::_0)
 							{ }
 
 			void emptyVideoMatrixAndColorRAMData ()
@@ -351,6 +375,12 @@ namespace COMMODORE
 			mutable MCHEmul::UBytes _screenCodeData;
 			mutable MCHEmul::UBytes _graphicData; 
 			mutable MCHEmul::UBytes _colorData;
+
+			// Implementation...
+			/** The last info read. */
+			mutable MCHEmul::UByte _lastScreenCodeDataRead;
+			mutable MCHEmul::UByte _lastGraphicDataRead;
+			mutable MCHEmul::UByte _lastColorDataRead;
 		};
 
 		VICGraphicInfo _vicGraphicInfo;
@@ -412,14 +442,17 @@ namespace COMMODORE
 		static const MCHEmul::Address _MEMORYPOSIDLE1, _MEMORYPOSIDLE2;
 	};
 
+	// ---
 	inline void VICII::readVideoMatrixAndColorRAM ()
 	{
 		memoryRef () -> setActiveView (_VICIIView);
 		
-		_vicGraphicInfo._screenCodeData [_vicGraphicInfo._VLMI] =
-			memoryRef () -> value (_VICIIRegisters -> screenMemory () + (size_t) _vicGraphicInfo._VC); 
-		_vicGraphicInfo._colorData [_vicGraphicInfo._VLMI] = 
-			memoryRef () -> value (_COLORMEMORY + (size_t) _vicGraphicInfo._VC); 
+		_vicGraphicInfo._lastScreenCodeDataRead =
+			_vicGraphicInfo._screenCodeData [_vicGraphicInfo._VLMI] =
+				memoryRef () -> value (_VICIIRegisters -> screenMemory () + (size_t) _vicGraphicInfo._VC); 
+		_vicGraphicInfo._lastColorDataRead =
+			_vicGraphicInfo._colorData [_vicGraphicInfo._VLMI] = 
+				memoryRef () -> value (_COLORMEMORY + (size_t) _vicGraphicInfo._VC); 
 		
 		memoryRef () -> setCPUView ();
 	}
@@ -430,17 +463,19 @@ namespace COMMODORE
 		memoryRef () -> setActiveView (_VICIIView);
 
 		if (_vicGraphicInfo._idleState) // In this state the info is read from a specific place of the memory...
-			_vicGraphicInfo._graphicData [_vicGraphicInfo._VLMI] = 
-			_VICIIRegisters -> graphicExtendedColorTextModeActive () 
-				? memoryRef () -> value (_MEMORYPOSIDLE1) : memoryRef () -> value (_MEMORYPOSIDLE2);
+			_vicGraphicInfo._lastGraphicDataRead =
+				_vicGraphicInfo._graphicData [_vicGraphicInfo._VLMI] = 
+					_VICIIRegisters -> graphicExtendedColorTextModeActive () 
+						? memoryRef () -> value (_MEMORYPOSIDLE1) : memoryRef () -> value (_MEMORYPOSIDLE2);
 		else // ..in the other one the info will be read attending to the situation of the memory...
-			_vicGraphicInfo._graphicData [_vicGraphicInfo._VLMI] = _VICIIRegisters -> textMode () 
-				? memoryRef () -> value (_VICIIRegisters -> charDataMemory () + 
-					(((size_t) _vicGraphicInfo._screenCodeData [_vicGraphicInfo._VLMI].value () & 
-						(_VICIIRegisters -> graphicExtendedColorTextModeActive () ? 0x3f : 0xff)) 
-						/** In the extended graphics mode there is only 64 chars possible. */ << 3) + _vicGraphicInfo._RC)
-				: memoryRef () -> value (_VICIIRegisters -> bitmapMemory () + 
-					(_vicGraphicInfo._VC << 3) + _vicGraphicInfo._RC);
+			_vicGraphicInfo._lastGraphicDataRead =
+				_vicGraphicInfo._graphicData [_vicGraphicInfo._VLMI] = _VICIIRegisters -> textMode () 
+					? memoryRef () -> value (_VICIIRegisters -> charDataMemory () + 
+						(((size_t) _vicGraphicInfo._screenCodeData [_vicGraphicInfo._VLMI].value () & 
+							(_VICIIRegisters -> graphicExtendedColorTextModeActive () ? 0x3f : 0xff)) 
+							/** In the extended graphics mode there is only 64 chars possible. */ << 3) + _vicGraphicInfo._RC)
+					: memoryRef () -> value (_VICIIRegisters -> bitmapMemory () + 
+						(_vicGraphicInfo._VC << 3) + _vicGraphicInfo._RC);
 		
 		memoryRef () -> setCPUView ();
 	}

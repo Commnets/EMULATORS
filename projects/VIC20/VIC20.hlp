@@ -8,3 +8,9 @@ No parameters are needed.
 ;VIA2
 To know the status of the VIA2 chip.
 No parameters are needed.
+;SCREENDUMP
+To know the content of the screen.
+No parameters are needed.
+;COLORDUMP
+To know the content of the screen.
+No parameters are needed.

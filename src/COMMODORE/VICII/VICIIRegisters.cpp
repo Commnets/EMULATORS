@@ -40,6 +40,7 @@ MCHEmul::InfoStructure COMMODORE::VICIIRegisters::getInfoStructure () const
 	result.add ("BKCOLOR4",			_backgroundColor [3]);
 	result.add ("IRQ",				_rasterIRQActive);
 	result.add ("IRQLINE",			_IRQRasterLineAt);
+	result.add ("BANK",				_bank);
 	result.add ("CHARADDRESS",		charDataMemory ());
 	result.add ("SCREENADDRESS",	screenMemory ());
 	result.add ("BITMAPADDRESS",	bitmapMemory ());
@@ -179,14 +180,14 @@ void COMMODORE::VICIIRegisters::setValue (size_t p, const MCHEmul::UByte& v)
 		case 0x18:
 			{
 				/* bits ----xxx- */
-				_charDataMemory = MCHEmul::Address (MCHEmul::UInt::fromUnsignedInt 
-					(((unsigned int) (v.value () & 0x0e)) << 10 /** multiply 1024 */));
+				_charDataMemory = MCHEmul::Address (2, // always 2 bytes long...
+					((unsigned int) (v.value () & 0x0e)) << 10 /** multiply 1024 */);
 				/* bits xxxx---- */
-				_screenMemory = MCHEmul::Address (MCHEmul::UInt::fromUnsignedInt 
-					(((unsigned int) (v.value () & 0xf0)) << 6 /** to make it simpler. Really >> 4 << 10 = multiply by 1024 */));
+				_screenMemory = MCHEmul::Address (2,
+					((unsigned int) (v.value () & 0xf0)) << 6 /** to make it simpler. Really >> 4 << 10 = multiply by 1024 */);
 				/* bit ----x--- (also used above) */
-				_bitmapMemory = MCHEmul::Address (MCHEmul::UInt::fromUnsignedInt 
-					(((unsigned int) (v.value () & 0x08)) << 10 /** multiple by 1024. */));
+				_bitmapMemory = MCHEmul::Address (2,
+					((unsigned int) (v.value () & 0x08)) << 10 /** multiple by 1024. */);
 				/** bit 0 is not used. */
 
 				calculateMemoryPositions ();

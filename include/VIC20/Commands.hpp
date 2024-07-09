@@ -55,6 +55,44 @@ namespace VIC20
 		virtual void executeImpl (MCHEmul::CommandExecuter* cE, 
 			MCHEmul::Computer* c, MCHEmul::InfoStructure& rst) override;
 	};
+
+	/** To get a status of the screen memory. */
+	class ScreenMemoryDUMPCommand final : public MCHEmul::Command
+	{
+		public:
+		static const int _ID = 202;
+		static const std::string _NAME;
+
+		ScreenMemoryDUMPCommand ()
+			: MCHEmul::Command (_ID, _NAME)
+							{ }
+
+		virtual bool canBeExecuted () const override
+							{ return (_parameters.size () == 0); }
+
+		private:
+		virtual void executeImpl (MCHEmul::CommandExecuter* cE, 
+			MCHEmul::Computer* c, MCHEmul::InfoStructure& rst) override;
+	};
+
+	/** To get a status of the color memory. */
+	class ColorMemoryDUMPCommand final : public MCHEmul::Command
+	{
+		public:
+		static const int _ID = 203;
+		static const std::string _NAME;
+
+		ColorMemoryDUMPCommand ()
+			: MCHEmul::Command (_ID, _NAME)
+							{ }
+
+		virtual bool canBeExecuted () const override
+							{ return (_parameters.size () == 0); }
+
+		private:
+		virtual void executeImpl (MCHEmul::CommandExecuter* cE, 
+			MCHEmul::Computer* c, MCHEmul::InfoStructure& rst) override;
+	};
 }
 
 #endif

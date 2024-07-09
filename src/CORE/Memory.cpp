@@ -92,7 +92,7 @@ MCHEmul::PhysicalStorageSubsetDUMP MCHEmul::PhysicalStorageSubset::dump
 		{
 			result._from = fst; result._to = lst;
 			std::vector <MCHEmul::UByte> dt;
-			for (size_t i = 0; i < (size_t) (lst - fst); i++)
+			for (size_t i = 0; i <= (size_t) (lst - fst); i++)
 				dt.push_back (value (fst + i));
 			result._bytes = dt;
 		}

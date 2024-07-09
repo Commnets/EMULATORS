@@ -3,11 +3,11 @@
 ?./Standard.fmt
 #---
 ;IRQInterrupt
-Type:IRQ, Id:@ID@, Active:@ACTIVE@, In Execution:@EXECUTION@, In Address:@ADDRESS@
+Type:IRQ, Id:@ID@, Active:@ACTIVE@, In Execution:@EXECUTION@, In Address:$@ADDRESS@
 #---
 #---
 ;NMIInterrupt
-Type:NMI, Id:@ID@, Active:@ACTIVE@, In Execution:@EXECUTION@, In Address:@ADDRESS@
+Type:NMI, Id:@ID@, Active:@ACTIVE@, In Execution:@EXECUTION@, In Address:$@ADDRESS@
 #---
 #---
 ;Registers
@@ -56,7 +56,7 @@ Graphic Mode:@MODE@
 ScrollX:@SCROLLX@, ScrollY:@SCROLLY@
 LIGHTPEN:@LIGHTPENX@,@LIGHTPENY@
 Colors:@FORECOLOR@(@BKCOLOR1@,@BKCOLOR2@,@BKCOLOR3@,@BKCOLOR4@)
-Memory: Chars(@CHARADDRESS@), Screen(@SCREENADDRESS@), Bitmap(@BITMAPADDRESS@)
+Memory: Chars($@CHARADDRESS@), Screen($@SCREENADDRESS@), Bitmap($@BITMAPADDRESS@)
 IRQ:@IRQ@(@IRQLINE@)
 #---
 #---
@@ -78,7 +78,7 @@ Id:@ID@
 @BYTES{blocksize=16,listsep=\,,tablesep=\ ,minsize=2}@
 LIGHTPEN:@LIGHTPENX@,@LIGHTPENY@
 Colors:@AUXCOLOR@(@BKCOLOR@,@BRDCOLOR@)
-Memory: Chars(@CHARADDRESS@), Screen(@SCREENADDRESS@), Colour(@COLOURADDRESS@)
+Memory: Chars($@CHARADDRESS@), Screen($@SCREENADDRESS@), Colour($@COLOURADDRESS@)
 #---
 #---
 ;VICI
@@ -100,7 +100,8 @@ Graphic Mode:@MODE@
 ScrollX:@SCROLLX@, ScrollY:@SCROLLY@
 LIGHTPEN:@LIGHTPENX@,@LIGHTPENY@
 Colors:@FORECOLOR@(@BKCOLOR1@,@BKCOLOR2@,@BKCOLOR3@,@BKCOLOR4@)
-Memory: Chars(@CHARADDRESS@), Screen(@SCREENADDRESS@), Bitmap(@BITMAPADDRESS@), Sprites(@SPRITEADDRESS@)
+Bank:@BANK@
+Memory: Chars($@CHARADDRESS@), Screen($@SCREENADDRESS@), Bitmap($@BITMAPADDRESS@), Sprites($@SPRITEADDRESS@)
 IRQ:@IRQ@(@IRQLINE@)
 ->Sprites:
 @SPRITES?{fmter=.CLASS,empty=no sprites}\n@

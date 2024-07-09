@@ -81,7 +81,7 @@ namespace MCHEmul
 			std::string toString () const
 							{ return (std::to_string (_type)
 								+ " from:" + ((_from == nullptr) ? "-" : std::to_string (_from -> id ())) 
-								+ " reason: " + std::to_string (_reason)); }
+								+ " reason:" + std::to_string (_reason)); }
 
 			friend std::ostream& operator << (std::ostream& o, const InterruptRequest& iR)
 							{ return (o << iR.toString ()); }

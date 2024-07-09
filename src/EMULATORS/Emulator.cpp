@@ -349,7 +349,7 @@ bool MCHEmul::Emulator::initialize ()
 
 	// The address where to start the executed if fixed if defined...
 	if (startingAddress () != MCHEmul::Address ())
-		_computer -> cpu () -> programCounter ().setAddress (startingAddress ());
+		_computer -> setStartingAddress (startingAddress ());
 
 	// Same with the stop points...
 	MCHEmul::Addresses adrs;

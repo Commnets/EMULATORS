@@ -12,12 +12,12 @@ Id:@ID@
 @TimerA>@
 ->Timer B:
 @TimerB>@
--> Clock:
+->Clock:
 @Clock>@
--> Ports:
+->Ports:
 A:@PortA@, B:@PortB@
 Dir A:@CIDDRA@, Dir B:@CIDDRB@
--> SerialPort:
+->SerialPort:
 @SerialPort>@
 #---
 #---
@@ -30,11 +30,30 @@ Id:@ID@
 @TimerA>@
 ->Timer B:
 @TimerB>@
--> Clock:
+->Clock:
 @Clock>@
--> Ports:
+->Ports:
 A:@PortA@, B:@PortB@
 Dir A:@CIDDRA@, Dir B:@CIDDRB@
--> SerialPort:
+->SerialPort:
 @SerialPort>@
+#---
+#---
+;CSCREENDUMP
+@BYTES{blocksize=40,listsep=\,,tablesep=\ ,minsize=2}@
+#---
+#---
+;CCOLORDUMP
+@BYTES{blocksize=40,listsep=\,,tablesep=\ ,minsize=2}@
+#---
+#---
+;CBITMAPDUMP
+@BYTES{blocksize=40,listsep=\,,tablesep=\ ,minsize=2}@
+#---
+;CSPRITESDUMP
+@BYTES{blocksize=3,listsep=\,,tablesep=\ ,minsize=2}@
+#---
+#---
+;CCHARSDRAW
+@DRAW@
 #---

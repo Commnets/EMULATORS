@@ -99,9 +99,9 @@ namespace COMMODORE
 		virtual unsigned short numberRows () const override
 							{ return (_raster.visibleLines ()); }
 		/** Always with in the visible screen. */
-		inline void screenPositions (short& x1, short& y1, short& x2, short& y2);
+		inline void screenPositions (short& x1, short& y1, short& x2, short& y2) const;
 		/** The original ones. */
-		inline void originalScreenPositions (short& x1, short& y1, short& x2, short& y2);
+		inline void originalScreenPositions (short& x1, short& y1, short& x2, short& y2) const;
 
 		/** To get the number of cycles per raster line used in this chip. */
 		unsigned short cyclesPerRasterLine () const
@@ -136,6 +136,16 @@ namespace COMMODORE
 		  * Sound			= InfoStructire: Info about the sound.
 		  */
 		virtual MCHEmul::InfoStructure getInfoStructure () const override;
+
+		// To get snapshots of the memory...
+		// They are used in some commands...
+		/** content of the screen. */
+		MCHEmul::UBytes screenMemorySnapShot (MCHEmul::CPU* cpu) const
+							{ return (cpu -> memoryRef () -> values 
+								(_VICIRegisters -> screenMemory (), 0x01fa /** 506 positions = 22 x 23. */)); }
+		MCHEmul::UBytes colorMemorySnapShot (MCHEmul::CPU* cpu) const
+							{ return (cpu -> memoryRef () -> values 
+								(_VICIRegisters -> colourMemory (), 0x01fa /** 506 positions = 22 x 23. */)); }
 
 		protected:
 		virtual void processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifier* n) override;
@@ -344,7 +354,7 @@ namespace COMMODORE
 	};
 
 	// ---
-	inline void VICI::screenPositions (short& x1, short& y1, short& x2, short& y2)
+	inline void VICI::screenPositions (short& x1, short& y1, short& x2, short& y2) const
 	{ 
 		// Extrract the info with the limits...
 		x1 = _scrX1; 
@@ -362,7 +372,7 @@ namespace COMMODORE
 	}
 
 	// ---
-	inline void VICI::originalScreenPositions (short& x1, short& y1, short& x2, short& y2)
+	inline void VICI::originalScreenPositions (short& x1, short& y1, short& x2, short& y2) const
 	{ 
 		// The original limits, the could be negative...
 		x1 = _scrX1; 

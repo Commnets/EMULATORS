@@ -31,8 +31,8 @@ Id:@ID@
 COMMANDS:@COMMANDS@
 Keys Pressed:@KEYS@
 Motor on:@MOTOR@
-Data Counter: @DATACOUNTER@
-IO Emulation: @IOEMULATION@
+Data Counter:@DATACOUNTER@
+IO Emulation:@IOEMULATION@
 ->Data:
 Name:@DATANAME@
 Size:@DATASIZE@

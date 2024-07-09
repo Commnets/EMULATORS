@@ -294,6 +294,191 @@ MCHEmul::InfoStructure COMMODORE::VICII::getInfoStructure () const
 }
 
 // ---
+MCHEmul::UBytes COMMODORE::VICII::screenMemorySnapShot (MCHEmul::CPU* cpu) const
+{ 	
+	// Usually in this point the active view should be the CPU one, 
+	// but just in case, it is checked and guranteed....
+	// Same in the rest
+	int aVID = cpu -> memoryRef () -> activeView () -> id ();
+	if (aVID != _VICIIView)
+		cpu -> memoryRef () -> setActiveView (_VICIIView);
+
+	MCHEmul::UBytes result = cpu -> memoryRef () -> values 
+		(_VICIIRegisters -> screenMemory (), 0x03e8 /** 1000 positions = 40 x 25. */);
+
+	cpu -> memoryRef () -> setActiveView (aVID);
+
+	return (result);
+}
+
+// ---
+MCHEmul::UBytes COMMODORE::VICII::colorMemorySnapShot (MCHEmul::CPU* cpu) const
+{ 
+	int aVID = cpu -> memoryRef () -> activeView () -> id ();
+	if (aVID != _VICIIView)
+		cpu -> memoryRef () -> setActiveView (_VICIIView);
+
+	MCHEmul::UBytes result = cpu -> memoryRef () -> values 
+		(_COLORMEMORY, 0x03e8 /** 1000 positions = 40 x 25. */); 
+
+	cpu -> memoryRef () -> setActiveView (aVID);
+
+	return (result);
+}
+
+// ---
+MCHEmul::UBytes COMMODORE::VICII::bitmapMemorySnapShot (MCHEmul::CPU* cpu) const
+{ 
+	int aVID = cpu -> memoryRef () -> activeView () -> id ();
+	if (aVID != _VICIIView)
+		cpu -> memoryRef () -> setActiveView (_VICIIView);
+
+	MCHEmul::UBytes result = cpu -> memoryRef () -> values 
+		(_VICIIRegisters -> bitmapMemory (), 0x1f40 /** 8000 positions = 40 x 25 x 8. */); 
+
+	cpu -> memoryRef () -> setActiveView (aVID);
+
+	return (result);
+}
+
+// ---
+MCHEmul::UBytes COMMODORE::VICII::spritesMemorySnapShot (MCHEmul::CPU* cpu, 
+	const std::vector <size_t>& sprs) const
+{
+	int aVID = cpu -> memoryRef () -> activeView () -> id ();
+	if (aVID != _VICIIView)
+		cpu -> memoryRef () -> setActiveView (_VICIIView);
+
+	std::vector <MCHEmul::UByte> result;
+	for (size_t i = 0; i < 8; i++)
+	{
+		if (!sprs.empty () && 
+			std::find (sprs.begin (), sprs.end (), (i + 1)) == sprs.end ())
+			continue;
+
+		MCHEmul::UBytes sprDt = cpu -> memoryRef () -> values (_VICIIRegisters -> initAddressBank () + 
+			((size_t) memoryRef () -> value (_VICIIRegisters -> spritePointersMemory () + i).value () << 6), 0x3f);
+		result.insert (result.end (), sprDt.bytes ().begin (), sprDt.bytes ().end ());
+	}
+
+	cpu -> memoryRef () -> setActiveView (aVID);
+
+	return (MCHEmul::UBytes (result));
+}
+
+// ---
+MCHEmul::Strings COMMODORE::VICII::spritesDrawSnapshot (MCHEmul::CPU* cpu, 
+	const std::vector <size_t>& sprs) const
+{
+	int aVID = cpu -> memoryRef () -> activeView () -> id ();
+	if (aVID != _VICIIView)
+		cpu -> memoryRef () -> setActiveView (_VICIIView);
+
+	MCHEmul::Strings result;
+	for (size_t i = 0; i < 8; i++)
+	{
+		if (!sprs.empty () && 
+			std::find (sprs.begin (), sprs.end (), (i + 1)) == sprs.end ())
+			continue;
+
+		MCHEmul::Address sprAdd = _VICIIRegisters -> initAddressBank () + 
+			((size_t) memoryRef () -> value (_VICIIRegisters -> spritePointersMemory () + i).value () << 6);
+		std::string dt = std::to_string (i + 1) + "---\n$" +
+			MCHEmul::removeAll0 (sprAdd.asString (MCHEmul::UByte::OutputFormat::_HEXA, '\0', 2)) + "\n";
+		MCHEmul::UBytes sprDt = cpu -> memoryRef () -> values (sprAdd, 0x3f);
+		for (size_t j = 0; j < 21; j++) // 21 lines per sprite...
+		{
+			if (j != 0)
+				dt += "\n";
+
+			for (size_t k = 0; k < 3; k++) // 3 bytes per line...
+			{
+				if (_VICIIRegisters -> spriteMulticolorMode (i)) // Can be monocolor or multicolor...
+				{
+					for (size_t l = 0; l < 8; l += 2)
+					{
+						switch ((sprDt [(j * 3) + k].value () & (0x03 << (6 - l))) >> (6 - l))
+						{
+							case 0x00: dt += " "; break;
+							case 0x01: dt += "O"; break;
+							case 0x02: dt += "X"; break;
+							case 0x03: dt += "#"; break;
+							default: assert (false); break; // It should be here, but just in case...
+						}
+					}
+				}
+				else
+					for (size_t l = 0; l < 8; l++)
+						dt += ((sprDt [(j * 3) + k].value () & (1 << (7 - l))) != 0x00) ? "#" : " ";
+			}
+		}
+
+		result.emplace_back (std::move (dt));
+	}
+
+	result.emplace_back ("---");
+
+	cpu -> memoryRef () -> setActiveView (aVID);
+
+	return (result);
+}
+
+// ---
+MCHEmul::Strings COMMODORE::VICII::charsDrawSnapshot (MCHEmul::CPU* cpu,
+	const std::vector <size_t>& chrs) const
+{
+	int aVID = cpu -> memoryRef () -> activeView () -> id ();
+	if (aVID != _VICIIView)
+		cpu -> memoryRef () -> setActiveView (_VICIIView);
+
+	MCHEmul::Strings result;
+	for (size_t i = 0; i < 256; i++)
+	{
+		if (!chrs.empty () && 
+			std::find (chrs.begin (), chrs.end (), i) == chrs.end ())
+			continue;
+
+		MCHEmul::Address chrAdd = _VICIIRegisters -> charDataMemory () + (i << 3);
+		std::string dt = std::to_string (i) + "---\n$" +
+			MCHEmul::removeAll0 (chrAdd.asString (MCHEmul::UByte::OutputFormat::_HEXA, '\0', 2)) + "\n";
+		MCHEmul::UBytes chrDt = cpu -> memoryRef () -> values (chrAdd, 0x08);
+		for (size_t j = 0; j < 8; j++) // 8 lines per character...
+		{
+			if (j != 0)
+				dt += "\n";
+
+			if (_VICIIRegisters -> graphicMulticolorTextModeActive ())
+			{
+				for (size_t l = 0; l < 8; l += 2)
+				{ 
+					switch ((chrDt [j].value () & (0x03 << (6 - l))) >> (6 - l))
+					{
+						case 0x00: dt += " "; break;
+						case 0x01: dt += "O"; break;
+						case 0x02: dt += "X"; break;
+						case 0x03: dt += "#"; break;
+						default: assert (false); break; // It should be here, but just in case...
+					}
+				}
+			}
+			else // Including extended (in terms of definition)...
+			{
+				for (size_t l = 0; l < 8; l++)
+					dt += ((chrDt [j].value () & (1 << (7 - l))) != 0x00) ? "#" : " ";
+			}
+		}
+
+		result.emplace_back (std::move (dt));
+	}
+
+	result.emplace_back ("---");
+
+	cpu -> memoryRef () -> setActiveView (aVID);
+
+	return (result);
+}
+
+// ---
 void COMMODORE::VICII::processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifier* n)
 {
 	// To set the bank...
@@ -393,13 +578,17 @@ unsigned int COMMODORE::VICII::treatRasterCycle ()
 		case 9:
 			{
 				// Is there sprite info avaliable?
-				if (readSpriteData (((_cycleInRasterLine - 1) >> 1) + 3) /** 3, 4, 5, 6 or 7. */)
+				unsigned short nSR = (((_cycleInRasterLine - 1) >> 1) + 3); // 3, 4, 5, 6 or 7
+				if (readSpriteData (nSR))
 				{ 
 					result = 2;	// VICII has to read three bytes, meaning 2 clock cycles stopped more... 
 
 					if (deepDebugActive ())
 						*_deepDebugFile
-							<< "\t\t\t\tReading info sprite:" << std::to_string ((_cycleInRasterLine >> 1) + 3) << "\n";
+							<< "\t\t\t\tReading info sprite:" << std::to_string (nSR + 1)
+							<< " [" << _vicSpriteInfo [nSR]._graphicsLineSprites.asString 
+								(MCHEmul::UByte::OutputFormat::_HEXA, ' ') << "]"
+							<< "\n";
 				}
 			}
 
@@ -541,18 +730,23 @@ unsigned int COMMODORE::VICII::treatRasterCycle ()
 				result = 56 - _cycleInRasterLine;
 			}
 
+			readVideoMatrixAndColorRAM ();
+
 			if (deepDebugActive ())
 				*_deepDebugFile
-					<< "\t\t\t\tReading Video Matrix & Color RAM" << "\n";
-
-			readVideoMatrixAndColorRAM ();
+					<< "\t\t\t\tReading Video Matrix & Color RAM" 
+					<< " [" << _vicGraphicInfo._lastScreenCodeDataRead.asString (MCHEmul::UByte::OutputFormat::_HEXA) 
+					<< ", " << _vicGraphicInfo._lastColorDataRead.asString (MCHEmul::UByte::OutputFormat::_HEXA) << "]"
+					<< "\n";
 		}
+
+		readGraphicalInfo ();
 
 		if (deepDebugActive ())
 			*_deepDebugFile
-				<< "\t\t\t\tReading Graphics" << "\n";
-
-		readGraphicalInfo ();
+				<< "\t\t\t\tReading Graphics"
+				<< " [" << _vicGraphicInfo._lastGraphicDataRead.asString (MCHEmul::UByte::OutputFormat::_HEXA) << "]"
+				<< "\n";
 
 		if (!_vicGraphicInfo._idleState)
 			_vicGraphicInfo._VC++;	
@@ -668,18 +862,20 @@ void COMMODORE::VICII::drawGraphicsSpritesAndDetectCollisions (const COMMODORE::
 
 	// The sprites are draw over the _background or the _foreground data
 	// ...attending on how they are configured...
-	// The info has also to be calculated wven when the raste is not in the visible zone yet!
+	// The info has also to be calculated when the raster is not in the visible zone yet!
 	std::vector <MCHEmul::UByte> sprCollData (8, MCHEmul::UByte::_0);
+	bool dOF = false;
 	for (int i = 7; i >= 0; i--)
 	{
-		if (_vicSpriteInfo [(size_t) i]._active)
-			sprCollData [(size_t) i] =
-				_VICIIRegisters -> spriteToForegroundPriority ((size_t) i)
-					? drawSpriteOver (i, colGraphics._backgroundColorData)
-					: drawSpriteOver (i, colGraphics._foregroundColorData);
+		if (!dOF)
+			dOF = _vicSpriteInfo [(size_t) i]._active &&
+				  !_VICIIRegisters -> spriteToForegroundPriority ((size_t) i);
+		sprCollData [(size_t) i] =
+			dOF ? drawSpriteOver (i, colGraphics._foregroundColorData)
+				: drawSpriteOver (i, colGraphics._backgroundColorData);
 	}
 
-	// The the graphical info is moved to the screen...
+	// The graphical info is moved to the screen...
 	drawResultToScreen (colGraphics, dC);
 	// ...and the collisions are also detected...
 	detectCollisions (colGraphics._collisionData, sprCollData);
@@ -1251,13 +1447,17 @@ unsigned int COMMODORE::VICII_PAL::treatRasterCycle ()
 		case 62:
 			{
 				// Is there sprite info available?
-				if (readSpriteData ((_cycleInRasterLine - 58) >> 1) /** 0, 1 or 2. */)
+				unsigned short nSR = ((_cycleInRasterLine - 58) >> 1); // 0, 1 or 2
+				if (readSpriteData (nSR))
 				{
 					result += 2; // VICII has to read three bytes, Meaning 2 clock cycles stopped more... 
 
 					if (deepDebugActive ())
 						*_deepDebugFile
-							<< "\t\t\t\tReading info sprite:" << std::to_string ((_cycleInRasterLine - 58) >> 1) << "\n";
+							<< "\t\t\t\tReading info sprite:" << std::to_string (nSR + 1)
+							<< " [" << _vicSpriteInfo [nSR]._graphicsLineSprites.asString 
+								(MCHEmul::UByte::OutputFormat::_HEXA, ' ') << "]"
+							<< "\n";
 				}
 			}
 
@@ -1298,13 +1498,17 @@ unsigned int COMMODORE::VICII_NTSC::treatRasterCycle ()
 		case 64:
 			{
 				// Is there sprite info available?
-				if (readSpriteData ((_cycleInRasterLine - 60) >> 1) /** 0, 1 or 2. */)
+				unsigned short nSR = ((_cycleInRasterLine - 60) >> 1); // 0, 1 or 2
+				if (readSpriteData (nSR))
 				{
 					result += 2;	// VICII has to read three bytes, Meaning 2 clock cycles stopped more... 
 
 					if (deepDebugActive ())
 						*_deepDebugFile
-							<< "\t\t\t\tReading info sprite:" << std::to_string ((_cycleInRasterLine - 59) >> 1) << "\n";
+							<< "\t\t\t\tReading info sprite:" << std::to_string (nSR + 1) 
+							<< " [" << _vicSpriteInfo [nSR]._graphicsLineSprites.asString 
+								(MCHEmul::UByte::OutputFormat::_HEXA, ' ') << "]"
+							<< "\n";
 				}
 			}
 

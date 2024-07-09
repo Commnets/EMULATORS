@@ -51,3 +51,11 @@ Dir A:@VIADDRA@, Dir B:@VIADDRB@
 ;CVIA2
 @VIA2>@
 #---
+#---
+;CSCREENDUMP
+@BYTES{blocksize=40,listsep=\,,tablesep=\ ,minsize=2}@
+#---
+#---
+;CCOLORDUMP
+@BYTES{blocksize=40,listsep=\,,tablesep=\ ,minsize=2}@
+#---

@@ -131,7 +131,6 @@ void C64::Cartridge::dumpDataInto (C64::Memory* m, MCHEmul::MemoryView* mV)
 					(attribute ("_GAME") == "NO");
 
 				// Dump the data into...
-				MCHEmul::Address ultimaxChrAdrBase ({ 0x00, 0x20 }, false);
 				int trush = 0; // Not useful...
 				for (const auto& i : data ()._data)
 				{
@@ -147,9 +146,11 @@ void C64::Cartridge::dumpDataInto (C64::Memory* m, MCHEmul::MemoryView* mV)
 						// The info of the high part of the memory has to be copied in the RAM
 						// that the CPU sees...
 						if (ultimax && 
-							((a.value () == 0xf000) && (ct < 4096 /** Only the first 4096 byes. */)))
+							((a.value () == 0xe000) && (ct < 0x1000 /** Only the first 4096 byes. */)))
 						{
-							m -> set (ultimaxChrAdrBase + ct, j);
+							m -> set (MCHEmul::Address ({ 0x00, 0x30 }, false) + ct, j);
+							m -> set (MCHEmul::Address ({ 0x00, 0x70 }, false) + ct, j);
+							m -> set (MCHEmul::Address ({ 0x00, 0xb0 }, false) + ct, j);
 						}
 
 						ct++;

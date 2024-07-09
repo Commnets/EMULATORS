@@ -167,11 +167,11 @@ namespace COMMODORE
 	// ---
 	inline void VICIRegisters::calculateMemoryPositions ()
 	{ 
-		_screenMemory	= MCHEmul::Address ((_b9ScreenColorMemory << 9) + 
+		_screenMemory	= MCHEmul::Address (2, (_b9ScreenColorMemory << 9) + // 2 bytes long always...
 			((_b10to13ScreenMemory & 0x07 /** The bit 3 is not considered. */) << 10));
-		_charDataMemory = MCHEmul::Address (((_b10to13CharDatamemory & 0x80) == 0x00 ? 0x8000 : 0x0000) + 
+		_charDataMemory = MCHEmul::Address (2, ((_b10to13CharDatamemory & 0x80) == 0x00 ? 0x8000 : 0x0000) + 
 			((_b10to13CharDatamemory & 0x07 /** The bit 3 is used to determine the bank. */) << 10)); // This is how VIC20 sees the memory!...
-		_colourMemory	= MCHEmul::Address (_b9ScreenColorMemory == 0x00 ? 0x9400 : 0x9600 );
+		_colourMemory	= MCHEmul::Address (2, _b9ScreenColorMemory == 0x00 ? 0x9400 : 0x9600 );
 	}
 }
 

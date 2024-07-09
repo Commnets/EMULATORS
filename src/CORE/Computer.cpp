@@ -21,11 +21,13 @@ MCHEmul::Computer::Computer (
 	  _exit (false), _restartAfterExit (false), _restartLevel (0), // Meaning full!
 	  _debugLevel (MCHEmul::_DEBUGNOTHING),
 	  _stabilizationLoops (sL),
+	  _startAtSpecificAddress (false), _startingAddress (), // By default the one defined by the CPU...
 	  _error (MCHEmul::_NOERROR),
 	  _screen (nullptr), _sound (nullptr), _inputOSSystem (nullptr), _graphicalChip (nullptr),
 	  _clock (cs), 
 	  _lastAction (_ACTIONNOTHING),
-	  _stabilized (false), _currentStabilizationLoops (0)
+	  _stabilized (false), _currentStabilizationLoops (0),
+	  _templateListActions ()
 { 
 	assert (_cpu != nullptr);
 	assert (_memory != nullptr && _memory -> stack () != nullptr);
@@ -344,12 +346,19 @@ bool MCHEmul::Computer::runComputerCycle (unsigned int a)
 		specificComputerCycle ();
 	}
 	else
+	{
 		// While the computer start the configuration of the memory could even change
 		// As the simulation is not a pure realtime emulation, the stabilization could take time
 		// let's say a couple of cyles. Once the stabiliation finishes, the better is to reload the program counter
 		// that will take into account the new configuration of the memory if changes happened!
 		if (_stabilized = (++_currentStabilizationLoops >= _stabilizationLoops))
-			_cpu -> restartPC (); // Once the computer is stabilized, the program counter starts back!
+		{
+			if (_startAtSpecificAddress)
+				_cpu -> programCounter ().setAddress (_startingAddress);
+			else
+				_cpu -> restartPC (); 
+		}
+	}
 
 	if (_debugLevel >= MCHEmul::_DEBUGALL)
 	{

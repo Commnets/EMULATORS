@@ -12,6 +12,18 @@ MCHEmul::Command* C64::CommandBuilder::createEmptyCommand (const std::string& cm
 		result = new C64::CIA1StatusCommand;
 	else if (cmdName == "CIA2" || cmdName == C64::CIA2StatusCommand::_NAME)
 		result = new C64::CIA2StatusCommand;
+	else if (cmdName == "SCREENDUMP" || cmdName == C64::ScreenMemoryDUMPCommand::_NAME)
+		result = new C64::ScreenMemoryDUMPCommand;
+	else if (cmdName == "COLORDUMP" || cmdName == C64::ColorMemoryDUMPCommand::_NAME)
+		result = new C64::ColorMemoryDUMPCommand;
+	else if (cmdName == "BITMAPDUMP" || cmdName == C64::BitmapMemoryDUMPCommand::_NAME)
+		result = new C64::BitmapMemoryDUMPCommand;
+	else if (cmdName == "SPRITESDUMP" || cmdName == C64::SpritesMemoryDUMPCommand::_NAME)
+		result = new C64::SpritesMemoryDUMPCommand;
+	else if (cmdName == "SPRITESDRAW" || cmdName == C64::SpritesDrawCommand::_NAME)
+		result = new C64::SpritesDrawCommand;
+	else if (cmdName == "CHARSDRAW" || cmdName == C64::CharactersDrawCommand::_NAME)
+		result = new C64::CharactersDrawCommand;
 
 	return (result);
 }
