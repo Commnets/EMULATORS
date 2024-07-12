@@ -857,23 +857,14 @@ void COMMODORE::VICII::drawGraphicsSpritesAndDetectCollisions (const COMMODORE::
 	// This varible keeps info about the text/graphics:
 	// Whether the 8 pixels to draw are foreground or background...
 	// ...and the color of the ones that are not finally background!
-	// ...and also info to control later the collision with sprites!
-	COMMODORE::VICII::DrawResult colGraphics = drawGraphics (dC);
+	// And also info to control later the collision with sprites!
+	COMMODORE::VICII::DrawResult colGraphics = std::move (drawGraphics (dC));
 
-	// The sprites are draw over the _background or the _foreground data
-	// ...attending on how they are configured...
-	// The info has also to be calculated when the raster is not in the visible zone yet!
+	// The info about the sprites is moved into this variable too...
 	std::vector <MCHEmul::UByte> sprCollData (8, MCHEmul::UByte::_0);
-	bool dOF = false;
-	for (int i = 7; i >= 0; i--)
-	{
-		if (!dOF)
-			dOF = _vicSpriteInfo [(size_t) i]._active &&
-				  !_VICIIRegisters -> spriteToForegroundPriority ((size_t) i);
-		sprCollData [(size_t) i] =
-			dOF ? drawSpriteOver (i, colGraphics._foregroundColorData)
-				: drawSpriteOver (i, colGraphics._backgroundColorData);
-	}
+	for (size_t i = 0; i < 8; i++)
+		if (_vicSpriteInfo [i]._active)
+			sprCollData [i] = std::move (drawSpriteOver (i, colGraphics._spriteColor [i]));
 
 	// The graphical info is moved to the screen...
 	drawResultToScreen (colGraphics, dC);
@@ -1371,22 +1362,49 @@ MCHEmul::UByte COMMODORE::VICII::drawMultiColorSpriteOver (unsigned short c, uns
 // ---
 void COMMODORE::VICII::drawResultToScreen (const COMMODORE::VICII::DrawResult& cT, const COMMODORE::VICII::DrawContext& dC)
 {
-	// The eight pixels to draw...
+	// Pixel by pixel..
 	for (size_t i = 0; i < 8; i++)
 	{
 		size_t pos = (size_t) dC._RCA + i;
 
 		// If the graphic mode was invalid...
 		if (cT._invalid)
+		{
 			// the pixel will be always black by default...
 			screenMemory () -> setPixel (pos, (size_t) dC._RR, 0x00 /** black. */);
 
-		// And then the background pixels...
-		if (cT._backgroundColorData [i] != ~0)
+			continue;
+		}
+
+		// The background is drawn...
+		// Although the background was already drawn in the main loop
+		// as a consequence of managing graphics pixels other than 0 (in multicolor modes e.g.) might also 
+		// be part of the background...
+		if (cT._backgroundColorData [i] != _U0)
 			screenMemory () -> setPixel (pos, (size_t) dC._RR, cT._backgroundColorData [i]);
-		// and the foreground ones finally...
-		if (cT._foregroundColorData [i] != ~0)
-			screenMemory () -> setPixel (pos, (size_t) dC._RR, cT._foregroundColorData [i]);
+
+		// Looks for the most priority sprite to draw, if any...
+		size_t nSpr = 0;
+		while (nSpr != 8 && cT._spriteColor [nSpr][i] == _U0) nSpr++;
+		// If that sprite didn't exist...
+		if (nSpr == 8)
+		{
+			// ...and there were a foreground not transparent on top, 
+			// the sprite pixel would be drawn!
+			if (cT._foregroundColorData [i] != _U0)
+				screenMemory () -> setPixel (pos, (size_t) dC._RR, cT._foregroundColorData [i]);
+		}
+		// But, if the sprite existed...
+		else
+		{
+			// ...the sprite would be drawn...
+			screenMemory () -> setPixel (pos, (size_t) dC._RR, cT._spriteColor [nSpr][i]);
+			// ..and if it had less priority than the foreground, 
+			// the foreground is drawn on top...
+			if (_VICIIRegisters -> spriteToForegroundPriority (nSpr) &&
+				cT._foregroundColorData [i] != _U0)
+					screenMemory () -> setPixel (pos, (size_t) dC._RR, cT._foregroundColorData [i]);
+		}
 	}
 }
 

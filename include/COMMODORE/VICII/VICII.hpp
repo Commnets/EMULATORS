@@ -180,14 +180,28 @@ namespace COMMODORE
 			unsigned int _backgroundColorData [8];
 			/** The color of the each pixel considered as foreground. */
 			unsigned int _foregroundColorData [8];
+			/** The color of each sprite pixel. */
+			unsigned int _spriteColor [8][8];
 			/** To indicate whether it is or not consecuencia of a "bad mode",
 				and the has to be everything draw in black, but taking into account the real graphics behaind. */
 			bool _invalid;
 
-			DrawResult (unsigned int bC = ~0 /** Meaning transparent (jumped later when moving info to screen). */)
+			#define _U0 (unsigned int) ~0 
+			DrawResult ()
 				: _collisionData (MCHEmul::UByte::_0),
-				  _backgroundColorData { bC, bC, bC, bC, bC, bC, bC, bC },
-				  _foregroundColorData { bC, bC, bC, bC, bC, bC, bC, bC },
+				  _backgroundColorData 
+						{ _U0, _U0, _U0, _U0, _U0, _U0, _U0, _U0 },
+				  _foregroundColorData 
+						{ _U0, _U0, _U0, _U0, _U0, _U0, _U0, _U0 },
+				  _spriteColor { 
+						{ _U0, _U0, _U0, _U0, _U0, _U0, _U0, _U0 },
+						{ _U0, _U0, _U0, _U0, _U0, _U0, _U0, _U0 },
+						{ _U0, _U0, _U0, _U0, _U0, _U0, _U0, _U0 },
+						{ _U0, _U0, _U0, _U0, _U0, _U0, _U0, _U0 },
+						{ _U0, _U0, _U0, _U0, _U0, _U0, _U0, _U0 },
+						{ _U0, _U0, _U0, _U0, _U0, _U0, _U0, _U0 },
+						{ _U0, _U0, _U0, _U0, _U0, _U0, _U0, _U0 },
+						{ _U0, _U0, _U0, _U0, _U0, _U0, _U0, _U0 } },
 				  _invalid (false)
 							{ }
 		};
