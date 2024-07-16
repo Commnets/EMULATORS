@@ -366,9 +366,14 @@ namespace MCHEmul
 		void setDebugLevel (unsigned int dL)
 							{ _debugLevel = dL; }
 
+		// Important when restarting...
 		/** To set a restart address different tha the estandard defined by the CPU. */
 		void setStartingAddress (const Address& sA)
 							{ _startAtSpecificAddress = true; _startingAddress = sA; }
+		/** To set the restart stopped. \n
+			This method can be invoked after computer initialization, so the act*/
+		void setNextStartStopped (bool s)
+							{ _startStopped = s; }
 
 		// Managing the deep debugging...
 		/** To knwow whether the debug file is or not active. */
@@ -498,6 +503,8 @@ namespace MCHEmul
 			it has been usually defined when the emulation starts. */
 		bool _startAtSpecificAddress;
 		Address _startingAddress;
+		/** When the computer starts stopped. */
+		bool _startStopped;
 
 		// Implementation
 		mutable unsigned int _error;

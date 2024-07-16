@@ -36,26 +36,36 @@ namespace C64
 		// Fom CPU
 		static const int _PAGEZERO_SUBSET		= 100;
 		static const int _STACK_SUBSET			= 101;
-		static const int _RAM00_SUBSET			= 102;
-		static const int _RAM01_SUBSET			= 103;
-		static const int _BASICROM_SUBSET		= 104;
-		static const int _BASICRAM_SUBSET		= 105;
-		static const int _RAM1_SUBSET			= 106;
-		static const int _CHARROM_SUBSET		= 107;
-		static const int _CHARRAM_SUBSET		= 108;
-		static const int _COLOR_SUBSET			= 109;
-		static const int _KERNELROM_SUBSET		= 112;
-		static const int _KERNELRAM_SUBSET		= 113;
+		static const int _RAM00A_SUBSET			= 102;
+		static const int _RAM00B_SUBSET			= 103;
+		static const int _RAM00B_D_SUBSET		= 10300;
+		static const int _RAM01_SUBSET			= 104;
+		static const int _BASICROM_SUBSET		= 105;
+		static const int _BASICRAM_SUBSET		= 106;
+		static const int _BASICRAM_D_SUBSET		= 10600;
+		static const int _RAM1_SUBSET			= 107;
+		static const int _RAM1_D_SUBSET			= 10700;
+		static const int _CHARROM_SUBSET		= 108;
+		static const int _CHARRAM_SUBSET		= 109;
+		static const int _COLOR_SUBSET			= 110;
+		static const int _KERNELROM_SUBSET		= 111;
+		static const int _KERNELRAM_SUBSET		= 112;
 		/** The id for the registers VICII, SID, IO Expansion,... are defined in those. */
 		// From VICII
 		static const int _BANK0RAM0_SUBSET		= 200;
 		static const int _BANK0CHARROM_SUBSET	= 201;
+		static const int _BANK0CHARRAM_SUBSET	= 20100;
 		static const int _BANK0RAM1_SUBSET		= 202;
-		static const int _BANK1RAM_SUBSET		= 203;
-		static const int _BANK2RAM0_SUBSET		= 204;
-		static const int _BANK2CHARROM_SUBSET	= 205;
-		static const int _BANK2RAM1_SUBSET		= 206;
-		static const int _BANK3RAM_SUBSET		= 207;
+		static const int _BANK0RAM2_SUBSET		= 203;
+		static const int _BANK1RAM_SUBSET		= 204;
+		static const int _BANK1BRAM_SUBSET		= 205;
+		static const int _BANK2RAM0_SUBSET		= 206;
+		static const int _BANK2CHARROM_SUBSET	= 207;
+		static const int _BANK2CHARRAM_SUBSET	= 20700;
+		static const int _BANK2RAM1_SUBSET		= 208;
+		static const int _BANK2RAM2_SUBSET		= 209;
+		static const int _BANK3RAM_SUBSET		= 210;
+		static const int _BANK3BRAM_SUBSET		= 211;
 
 		// Memory locations for important areas of the memory...
 		static const MCHEmul::Address _POS0_ADDRESS;
@@ -109,15 +119,20 @@ namespace C64
 							{ _cartridge = c; }
 
 		private:
-		MCHEmul::MemoryView* _VICIIView;
 		Cartridge* _cartridge;
 
 		// Implementation
 		/** To speed up the access to the different zones of the memory. */
 		// The expansion elements in the C64 affects the way the memory is configured
 		// ..activating or desactivating the different parts of it...
+		MCHEmul::PhysicalStorageSubset* _ram00b;
+		MCHEmul::EmptyPhysicalStorageSubset* _ram00b_d;
+		MCHEmul::PhysicalStorageSubset* _expansionRAMLO;
 		MCHEmul::PhysicalStorageSubset* _basicROM;
 		MCHEmul::PhysicalStorageSubset* _basicRAM;
+		MCHEmul::EmptyPhysicalStorageSubset* _basicRAM_d;
+		MCHEmul::PhysicalStorageSubset* _ram1;
+		MCHEmul::EmptyPhysicalStorageSubset* _ram1_d;
 		MCHEmul::PhysicalStorageSubset* _kernelROM;
 		MCHEmul::PhysicalStorageSubset* _kernelRAM;
 		MCHEmul::PhysicalStorageSubset* _charROM;
@@ -126,10 +141,19 @@ namespace C64
 		MCHEmul::PhysicalStorageSubset* _sidRegisters;
 		MCHEmul::PhysicalStorageSubset* _colorRAM;
 		MCHEmul::PhysicalStorageSubset* _cia1Registers;
-		MCHEmul::PhysicalStorageSubset* _cia2registers;
+		MCHEmul::PhysicalStorageSubset* _cia2Registers;
 		MCHEmul::PhysicalStorageSubset* _io1Registers;
-		MCHEmul::PhysicalStorageSubset* _io2registers;
-		MCHEmul::PhysicalStorageSubset* _expansionRAMLO;
+		MCHEmul::PhysicalStorageSubset* _io2Registers;
+
+		// Similar thing from the VICII
+		MCHEmul::PhysicalStorageSubset* _bank0CharROM;
+		MCHEmul::PhysicalStorageSubset* _bank0CharRAM;
+		MCHEmul::PhysicalStorageSubset* _bank0RAM2;
+		MCHEmul::PhysicalStorageSubset* _bank1BRAM;
+		MCHEmul::PhysicalStorageSubset* _bank2CharROM;
+		MCHEmul::PhysicalStorageSubset* _bank2CharRAM;
+		MCHEmul::PhysicalStorageSubset* _bank2RAM2;
+		MCHEmul::PhysicalStorageSubset* _bank3BRAM;
 	};
 }
 

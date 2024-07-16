@@ -114,6 +114,7 @@ namespace MCHEmul
 	struct PhysicalStorageSubsetDUMP final
 	{
 		int _id;
+		std::string _name;
 		bool _RAM; // Or ROM?
 		bool _active;
 		bool _activeForReading;
@@ -152,6 +153,11 @@ namespace MCHEmul
 		/** Id for the view. It is diiferent than the id of the phisical storage behind. */
 		int id () const
 							{ return (_id); }
+		/** The name is optional. */
+		const std::string name () const
+							{ return (_name); }
+		void setName (const std::string& n)
+							{ _name = n; }
 		const PhysicalStorage* physicalStorage () const
 							{ return (_physicalStorage); }
 		PhysicalStorage* physicalStorage ()
@@ -258,6 +264,8 @@ namespace MCHEmul
 
 		protected:
 		const int _id = -1; 
+		/** It is optional. */
+		std::string _name;
 		PhysicalStorage* _physicalStorage;
 		/** The position on the phisical storage, this subset is connected to. */
 		size_t _initialPhisicalPosition;

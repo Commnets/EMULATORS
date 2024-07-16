@@ -64,7 +64,8 @@ bool C64::Commodore64::initialize (bool iM)
 		dynamic_cast <C64::Cartridge*> (dynamic_cast <COMMODORE::ExpansionIOPort*> 
 			(device (COMMODORE::ExpansionIOPort::_ID)) -> expansionElement ());
 	if (cT != nullptr)
-		cT -> dumpDataInto (dynamic_cast <C64::Memory*> (memory ()), memory () -> activeView ());
+		cT -> dumpDataInto (dynamic_cast <C64::Memory*> (memory ()), 
+			memory () -> activeView (), memory () -> view (C64::Memory::_VICII_VIEW));
 
 	return (true);
 }

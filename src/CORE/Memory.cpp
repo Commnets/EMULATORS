@@ -38,6 +38,7 @@ MCHEmul::InfoStructure MCHEmul::PhysicalStorageSubsetDUMP::getInfoStructure () c
 
 	result.add ("CLASSNAME",	std::string ("PhysicalStorageSubsetDUMP"));
 	result.add ("ID",			_id);
+	result.add ("NAME",			_name);
 	result.add ("RAM",			_RAM);
 	result.add ("ACTIVE",		_active);
 	result.add ("READ",			_activeForReading);
@@ -52,7 +53,8 @@ MCHEmul::InfoStructure MCHEmul::PhysicalStorageSubsetDUMP::getInfoStructure () c
 MCHEmul::PhysicalStorageSubset::PhysicalStorageSubset 
 		(int id, MCHEmul::PhysicalStorage* pS, size_t pp, const MCHEmul::Address& a, size_t s)
 	: MCHEmul::InfoClass ("PhysicalStorageSubset"),
-	  _id (id), _physicalStorage (pS), _initialPhisicalPosition (pp), _initialAddress (a), _size (s),
+	  _id (id), _name (""),
+	  _physicalStorage (pS), _initialPhisicalPosition (pp), _initialAddress (a), _size (s),
 	  _active (true), // By default all are active
 	  _activeForReading (true), // It can be switched off
 	  _defaultData (_size, MCHEmul::UByte::_0) // The default data is initially = _0;
@@ -76,7 +78,7 @@ MCHEmul::PhysicalStorageSubsetDUMP MCHEmul::PhysicalStorageSubset::dump
 	(const MCHEmul::Address& f, const MCHEmul::Address& t) const
 {
 	MCHEmul::PhysicalStorageSubsetDUMP result 
-		({ _id, 
+		({ _id, _name,
 			type () == MCHEmul::PhysicalStorage::Type::_RAM,
 			_active,
 			_activeForReading,
@@ -93,7 +95,7 @@ MCHEmul::PhysicalStorageSubsetDUMP MCHEmul::PhysicalStorageSubset::dump
 			result._from = fst; result._to = lst;
 			std::vector <MCHEmul::UByte> dt;
 			for (size_t i = 0; i <= (size_t) (lst - fst); i++)
-				dt.push_back (value (fst + i));
+				dt.push_back (value (fst + i)); // If the data didn't belong to the set, the default value would be added...
 			result._bytes = dt;
 		}
 	}
@@ -144,6 +146,7 @@ MCHEmul::InfoStructure MCHEmul::PhysicalStorageSubset::getInfoStructure () const
 	MCHEmul::InfoStructure result = std::move (MCHEmul::InfoClass::getInfoStructure ());
 
 	result.add ("ID",		_id);
+	result.add ("NAME",		_name);
 	result.add ("ADDRESS",	_initialAddress);
 	result.add ("SIZE",		_size);
 	result.add ("ACTIVE",	_active);
@@ -217,7 +220,7 @@ MCHEmul::MemoryViewDUMP MCHEmul::MemoryView::dump (const MCHEmul::Address& f, co
 
 	int dt;
 	if (t >= f && // The first position has to belong to the storage...
-		(dt = (f - _minAddress)) > 0)
+		(dt = (f - _minAddress)) >= 0)
 		for (const auto& i : _memPositions [(size_t) dt]._storages)
 			result._data.emplace_back (std::move (i -> dump (f, t)));
 

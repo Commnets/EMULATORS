@@ -55,13 +55,13 @@ bool C64::PLA::simulate (MCHEmul::CPU* cpu)
 								 !(_HIRAM && !_GAME && !_EXROM), // and ROMH1 not connected...
 			 /** KERNEL		= */ ((_HIRAM && _GAME) || 
 								 (_HIRAM && !_GAME && !_EXROM)) && 
-								 !(!_GAME && _EXROM), // and ROMH2 not connected (ULTIMAX)
+								 !(!_GAME && _EXROM), // and ROMH2 not connected which happens in ULTIMAX cartridges...
 			 /** CHARROM	= */ (_HIRAM && !_CHAREN && _GAME) || 
 								 (_LORAM && !_CHAREN && _GAME) || 
 								 (_HIRAM && !_CHAREN && !_GAME && !_EXROM),
 			 /** ROML		= */ (_LORAM && _HIRAM && !_EXROM) ||
-								 (!_GAME && _EXROM),
-			 /** ROMH1		= */ (_HIRAM && !_GAME && !_EXROM), // At the same location than BASIC ROM
+								 (!_GAME && _EXROM), // This also active in ULTIMAX situation...
+			 /** ROMH1		= */ (_HIRAM && !_GAME && !_EXROM), // At the same location than BASIC ROM...
 			 /** ROMH2		= */ (!_GAME && _EXROM) // At the same location than KERNEL ROM. This is ULTIMAX situation!
 			);
 	}

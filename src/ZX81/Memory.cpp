@@ -423,6 +423,7 @@ MCHEmul::Memory::Content ZX81::Memory::standardMemoryContent ()
 			  { _RAM1K_V_S_SUBSET + 13,			RAM1S_V_S [13] },
 			  { _RAM1K_V_S_SUBSET + 14,			RAM1S_V_S [14] },
 			  { _RAM16K_V_SUBSET,				RAM16S_V } });
+
 	// ...and the view from the ULA...
 	MCHEmul::MemoryView* ulaView = new MCHEmul::MemoryView 
 		(_ULA_VIEW, 

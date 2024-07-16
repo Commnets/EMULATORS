@@ -73,6 +73,7 @@ void MCHEmul::Emulator::printOutParameters (std::ostream& o) const
 	o << "/r[YES/NO]:\t" << "To activate or desactivate the sound when started. ON if no parameter" << std::endl; 
 	o << "\t\tBy default it is activated" << std::endl;
 	o << "/s:\t\t" << "Start the emulation stopped" << std::endl;
+	o << "\t\tIf active, anytime the emulation starts it will do it stopped" << std::endl;
 	o << "/g[YES/NO]:\t" << "To activate or desactivate the CRT effect in the screen. OFF if no parameter" << std::endl;
 }
 
@@ -256,6 +257,11 @@ bool MCHEmul::Emulator::initialize ()
 	// The most important line: The computer is created!...
 	computer ();
 
+	// Before initializing it is needed to define whether...
+	// ...the computer has or not to start stopped
+	if (stoppedAtStarting ())
+		_computer -> setNextStartStopped (true);
+
 	/** If help is needed then no other action is executed. */
 	if (helpNeeded ())
 	{ 
@@ -360,10 +366,6 @@ bool MCHEmul::Emulator::initialize ()
 			acts.insert (MCHEmul::Computer::MapOfActions::value_type (i, MCHEmul::Computer::_ACTIONSTOP));
 		_computer -> addActions (acts);
 	}
-
-	// There is an option to start the programm stooped...
-	if (stoppedAtStarting ())
-		_computer -> setActionForNextCycle (MCHEmul::Computer::_ACTIONSTOP);
 
 	// There is another option to activate (by default) or desactivate the sound when starting...
 	if (!soundAtStarting () && _computer -> sound () != nullptr)

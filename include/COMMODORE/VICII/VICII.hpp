@@ -174,34 +174,35 @@ namespace COMMODORE
 			their respective variable _colorData. */
 		struct DrawResult
 		{
-			/** The data used to detect the collisions. */
-			MCHEmul::UByte _collisionData;
+			/** The data used to detect the collisions with the graphics. */
+			MCHEmul::UByte _collisionGraphicData;
+			/** The data used to detect collisions with the sprites. */
+			std::vector <MCHEmul::UByte> _collisionSpritesData;
 			/** The color of the each pixel considered as background. */
 			unsigned int _backgroundColorData [8];
 			/** The color of the each pixel considered as foreground. */
 			unsigned int _foregroundColorData [8];
-			/** The color of each sprite pixel. */
-			unsigned int _spriteColor [8][8];
+			/** The color of each pixel if there was sprites behind!,
+				and who is the owner (sprite number) of that pixel! */
+			unsigned int _spriteColor [8];
+			size_t _spriteColorOwner [8];
 			/** To indicate whether it is or not consecuencia of a "bad mode",
 				and the has to be everything draw in black, but taking into account the real graphics behaind. */
 			bool _invalid;
 
 			#define _U0 (unsigned int) ~0 
+			#define	_S0 (size_t) ~0
 			DrawResult ()
-				: _collisionData (MCHEmul::UByte::_0),
+				: _collisionGraphicData (MCHEmul::UByte::_0),
+				  _collisionSpritesData (8, MCHEmul::UByte::_0),
 				  _backgroundColorData 
 						{ _U0, _U0, _U0, _U0, _U0, _U0, _U0, _U0 },
 				  _foregroundColorData 
 						{ _U0, _U0, _U0, _U0, _U0, _U0, _U0, _U0 },
-				  _spriteColor { 
+				  _spriteColor
 						{ _U0, _U0, _U0, _U0, _U0, _U0, _U0, _U0 },
-						{ _U0, _U0, _U0, _U0, _U0, _U0, _U0, _U0 },
-						{ _U0, _U0, _U0, _U0, _U0, _U0, _U0, _U0 },
-						{ _U0, _U0, _U0, _U0, _U0, _U0, _U0, _U0 },
-						{ _U0, _U0, _U0, _U0, _U0, _U0, _U0, _U0 },
-						{ _U0, _U0, _U0, _U0, _U0, _U0, _U0, _U0 },
-						{ _U0, _U0, _U0, _U0, _U0, _U0, _U0, _U0 },
-						{ _U0, _U0, _U0, _U0, _U0, _U0, _U0, _U0 } },
+				  _spriteColorOwner
+						{ _S0, _S0, _S0, _S0, _S0, _S0, _S0, _S0 },
 				  _invalid (false)
 							{ }
 		};
@@ -278,26 +279,25 @@ namespace COMMODORE
 		  *	c = raster column where to start to draw 8 pixels. \n
 		  *	r = raster line where to draw. \n
 		  *	spr = the number of sprite to draw. \n
-		  *	The reference to the array where to store the color info is also passed. \n
-		  *	This array comes from the outcome of drawing the text/bitmaps! \n
+		  *	References to the arrays where to store the color info are also passed. \n
 		  *	Info to detect collisions later is also returned.
 		  */
-		MCHEmul::UByte drawSpriteOver (size_t spr, unsigned int* d);
+		MCHEmul::UByte drawSpriteOver (size_t spr, unsigned int* d, size_t* dO);
 		/** Draws a monocolor sprite line. */
 		MCHEmul::UByte drawMonoColorSpriteOver (unsigned short c, unsigned short r, 
-			size_t spr, unsigned int* d);
+			size_t spr, unsigned int* d, size_t* dO);
 		/** Draws a multicolor sprite line. */
 		MCHEmul::UByte drawMultiColorSpriteOver (unsigned short c, unsigned short r, 
-			size_t spr, unsigned int* d);
+			size_t spr, unsigned int* d, size_t* dO);
 
 		// The last part...
 		/** To move the graphics drawn to the screen. \n
 			The info move is the text/bitmap info that has been already draw to the screen. \n
 			That text/bitmap info included the sprite data as well ordered. */
 		void drawResultToScreen (const DrawResult& cT, const DrawContext& dC);
-		/** Detect the collision between graphics and sprites info
+		/** Detect the collisions between graphics and sprites info
 			affecting the right registers in the VICII. */
-		void detectCollisions (const MCHEmul::UByte& g, const std::vector <MCHEmul::UByte>& s);
+		void detectCollisions (const DrawResult& cT);
 
 		protected:
 		/** The memory is used also as the set of registers of the chip. */

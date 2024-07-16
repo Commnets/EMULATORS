@@ -7,9 +7,12 @@ C64::Cartridge::Cartridge ()
 	: COMMODORE::ExpansionPeripheral (_ID,
 		{ { "Name", "Commodore 64 Cartridge" },
 		  { "Manufacturer", "Commodore Business Machines CBM" } }), // This parameters can be changed when connecting data...
+	  _ultimax (true),
 	  _dataDumped (false),
-	  _memoryRef (nullptr), _memoryView (nullptr),
-	  _storages (), _subsets ()
+	  _memoryRef (nullptr), 
+	  _memoryCPUView (nullptr), _memoryVICIIView (nullptr),
+	  _storages (), 
+	  _cpuSubsets (), _viciiSubsets ()
 {
 	setClassName ("Cartridge");
 }
@@ -24,13 +27,31 @@ void C64::Cartridge::configureMemoryStructure (bool ROML, bool ROMH1, bool ROMH2
 	switch (type ())
 	{
 		default:
-			assert (_subsets.size () == 3);
-			_subsets [_EXPANSIONROMBASE + 0] -> setActive (true);
-			_subsets [_EXPANSIONROMBASE + 0] -> setActiveForReading (ROML);
-			_subsets [_EXPANSIONROMBASE + 1] -> setActive (true);
-			_subsets [_EXPANSIONROMBASE + 1] -> setActiveForReading (ROMH1);
-			_subsets [_EXPANSIONROMBASE + 2] -> setActive (true);
-			_subsets [_EXPANSIONROMBASE + 2] -> setActiveForReading (ROMH2);
+			{
+				assert (_cpuSubsets.size () == 4);
+				_cpuSubsets [_EXPANSIONROMBASE_SUBSET + 0] -> setActive (true);
+				_cpuSubsets [_EXPANSIONROMBASE_SUBSET + 0] -> setActiveForReading (ROML);
+				_cpuSubsets [_EXPANSIONROMBASE_SUBSET + 1] -> setActive (true);
+				_cpuSubsets [_EXPANSIONROMBASE_SUBSET + 1] -> setActiveForReading (ROMH1);
+				_cpuSubsets [_EXPANSIONROMBASE_SUBSET + 2] -> setActive (true);
+				_cpuSubsets [_EXPANSIONROMBASE_SUBSET + 2] -> setActiveForReading (ROMH2);
+				_cpuSubsets [_EXPANSIONROMBASE_SUBSET + 3] -> setActive (true);
+				_cpuSubsets [_EXPANSIONROMBASE_SUBSET + 3] -> setActiveForReading (ROMH2);
+
+				assert (_ultimax == ROMH2); // Just in case
+				if (_ultimax)
+				{
+					_viciiSubsets [_EXPANSIONROMBASEI_SUBSET + 0] -> setActive (true);
+					_viciiSubsets [_EXPANSIONROMBASEI_SUBSET + 0] -> setActiveForReading (true);
+					_viciiSubsets [_EXPANSIONROMBASEI_SUBSET + 1] -> setActive (true);
+					_viciiSubsets [_EXPANSIONROMBASEI_SUBSET + 1] -> setActiveForReading (true);
+					_viciiSubsets [_EXPANSIONROMBASEI_SUBSET + 2] -> setActive (true);
+					_viciiSubsets [_EXPANSIONROMBASEI_SUBSET + 2] -> setActiveForReading (true);
+					_viciiSubsets [_EXPANSIONROMBASEI_SUBSET + 3] -> setActive (true);
+					_viciiSubsets [_EXPANSIONROMBASEI_SUBSET + 3] -> setActiveForReading (true);
+				}
+			}
+
 			break;
 	}
 }
@@ -61,6 +82,9 @@ bool C64::Cartridge::connectData (MCHEmul::FileData* dt)
 		return (false); // This type of data can not come from the cartridge...
 
 	setData (std::move (dt -> asMemoryBlocks ())); 
+	_ultimax = 
+		(*_data._attributes.find ("_EXROM")).second == "YES" &&
+		(*_data._attributes.find ("_GAME")).second == "NO"; // ultimax data?
 
 	setDataJustLoaded ();
 
@@ -89,12 +113,14 @@ bool C64::Cartridge::simulate (MCHEmul::CPU* cpu)
 }
 
 // ---
-void C64::Cartridge::dumpDataInto (C64::Memory* m, MCHEmul::MemoryView* mV)
+void C64::Cartridge::dumpDataInto (C64::Memory* m, 
+	MCHEmul::MemoryView* cV, MCHEmul::MemoryView* vV)
 {
 	cleanUpAdditionalSubsets ();
 
 	_memoryRef = m;
-	_memoryView = mV;
+	_memoryCPUView = cV;
+	_memoryVICIIView = vV;
 
 	if (data ()._data.empty ())
 		return; // Makes no sense to continue...
@@ -113,47 +139,60 @@ void C64::Cartridge::dumpDataInto (C64::Memory* m, MCHEmul::MemoryView* mV)
 							(_EXPANSIONROMBASE + 2, MCHEmul::PhysicalStorage::Type::_ROM, 0x2000) }
 					 });
 	
-				_subsets = MCHEmul::PhysicalStorageSubsets
-					({ { _EXPANSIONROMBASE + 0, new MCHEmul::PhysicalStorageSubset	
-							(_EXPANSIONROMBASE + 0, _storages [_EXPANSIONROMBASE + 0], 0x0000, 
+				MCHEmul::PhysicalStorageSubset *ss0, *ss1, *ss2, *ss3;
+				_cpuSubsets = MCHEmul::PhysicalStorageSubsets
+					({ { _EXPANSIONROMBASE_SUBSET + 0, ss0 = new MCHEmul::PhysicalStorageSubset	
+							(_EXPANSIONROMBASE_SUBSET + 0, _storages [_EXPANSIONROMBASE + 0], 0x0000, 
 								MCHEmul::Address ({ 0x00, 0x80 }, false), 0x2000) },
-					   { _EXPANSIONROMBASE + 1, new MCHEmul::PhysicalStorageSubset
-							(_EXPANSIONROMBASE + 1, _storages [_EXPANSIONROMBASE + 1], 0x0000, 
+					   { _EXPANSIONROMBASE_SUBSET + 1, ss1 = new MCHEmul::PhysicalStorageSubset
+							(_EXPANSIONROMBASE_SUBSET + 1, _storages [_EXPANSIONROMBASE + 1], 0x0000, 
 								MCHEmul::Address ({ 0x00, 0xa0 }, false), 0x2000) },
-					   { _EXPANSIONROMBASE + 2, new MCHEmul::PhysicalStorageSubset
-							(_EXPANSIONROMBASE + 2, _storages [_EXPANSIONROMBASE + 2], 0x0000, 
-								MCHEmul::Address ({ 0x00, 0xe0 }, false), 0x2000) }
+					   { _EXPANSIONROMBASE_SUBSET + 2, ss2 = new MCHEmul::PhysicalStorageSubset
+							(_EXPANSIONROMBASE_SUBSET + 2, _storages [_EXPANSIONROMBASE + 2], 0x0000, 
+								MCHEmul::Address ({ 0x00, 0xe0 }, false), 0x1000) },
+					   { _EXPANSIONROMBASE_SUBSET + 3, ss3 = new MCHEmul::PhysicalStorageSubset
+							(_EXPANSIONROMBASE_SUBSET + 3, _storages [_EXPANSIONROMBASE + 2], 0x1000, 
+								MCHEmul::Address ({ 0x00, 0xf0 }, false), 0x1000) }
 					 });
 
+				// To set them with a name
+				ss0 -> setName ("ROM LO");
+				ss1 -> setName ("ROM HI1");
+				ss2 -> setName ("ROM HI2A");
+				ss3 -> setName ("ROM HI2B");
+
 				// Is it an ULTIMAX cartridge?
-				bool ultimax = 
-					(attribute ("_EXROM") == "YES") &&
-					(attribute ("_GAME") == "NO");
+				if (_ultimax)
+				{
+					MCHEmul::PhysicalStorageSubset *sv0, *sv1, *sv2, *sv3;
+					_viciiSubsets = MCHEmul::PhysicalStorageSubsets
+						({ { _EXPANSIONROMBASEI_SUBSET + 0, sv0 = new MCHEmul::MirrorPhysicalStorageSubset
+								(_EXPANSIONROMBASEI_SUBSET + 0, ss3, MCHEmul::Address ({ 0x00, 0x30 }, false)) },
+						   { _EXPANSIONROMBASEI_SUBSET + 1, sv1 = new MCHEmul::MirrorPhysicalStorageSubset
+								(_EXPANSIONROMBASEI_SUBSET + 1, ss3, MCHEmul::Address ({ 0x00, 0x70 }, false)) },
+						   { _EXPANSIONROMBASEI_SUBSET + 2, sv2 = new MCHEmul::MirrorPhysicalStorageSubset
+								(_EXPANSIONROMBASEI_SUBSET + 2, ss3, MCHEmul::Address ({ 0x00, 0xb0 }, false)) },
+						   { _EXPANSIONROMBASEI_SUBSET + 3, sv3 = new MCHEmul::MirrorPhysicalStorageSubset
+								(_EXPANSIONROMBASEI_SUBSET + 3, ss3, MCHEmul::Address ({ 0x00, 0xf0 }, false)) }
+						});
+
+					// To set them with a name
+					sv0 -> setName ("Bank 0 HI1 Image Ultimax");
+					sv1 -> setName ("Bank 1 HI1 Image Ultimax");
+					sv2 -> setName ("Bank 2 HI1 Image Ultimax");
+					sv3 -> setName ("Bank 3 HI1 Image Ultimax");
+				}
 
 				// Dump the data into...
-				int trush = 0; // Not useful...
 				for (const auto& i : data ()._data)
 				{
 					size_t ct = 0;
 					MCHEmul::Address a = i.startAddress ();
 					for (const auto& j : i.bytes ())
 					{
-						MCHEmul::Address dA = a + ct;
-						for (const auto& k : _subsets)
+						MCHEmul::Address dA = a + ct++;
+						for (const auto& k : _cpuSubsets)
 							k.second -> set (dA, j, true /** force. */);
-
-						// Is it a ULTIMAX cartridge?
-						// The info of the high part of the memory has to be copied in the RAM
-						// that the CPU sees...
-						if (ultimax && 
-							((a.value () == 0xe000) && (ct < 0x1000 /** Only the first 4096 byes. */)))
-						{
-							m -> set (MCHEmul::Address ({ 0x00, 0x30 }, false) + ct, j);
-							m -> set (MCHEmul::Address ({ 0x00, 0x70 }, false) + ct, j);
-							m -> set (MCHEmul::Address ({ 0x00, 0xb0 }, false) + ct, j);
-						}
-
-						ct++;
 					}
 				}
 			}
@@ -162,11 +201,14 @@ void C64::Cartridge::dumpDataInto (C64::Memory* m, MCHEmul::MemoryView* mV)
 	}
 
 	// Add the subsets to the view...
-	_memoryRef -> addAdditionalSubsets (0 /** always 0. */, _subsets, _memoryView);
+	_memoryRef -> addAdditionalSubsets (0, _cpuSubsets, _memoryCPUView);
+	_memoryRef -> addAdditionalSubsets (1, _viciiSubsets, _memoryVICIIView);
 
 	// The subsets are initially disactivated...
-	// They will be activated as needed...
-	for (const auto& i : _subsets)
+	// They will be activated as needed, when PLA determines the configuration...
+	for (const auto& i : _cpuSubsets)
+		i.second -> setActive (false);
+	for (const auto& i : _viciiSubsets)
 		i.second -> setActive (false);
 
 	// The memory is informed that there is now an extension...
@@ -183,12 +225,16 @@ void C64::Cartridge::cleanUpAdditionalSubsets ()
 				// There is no data inside...
 
 	// The memory takes no longer into account the subset...
-	_memoryRef -> removeAdditionalSubsets (0 /** The same 0. */, _memoryView);
+	_memoryRef -> removeAdditionalSubsets (0, _memoryCPUView);
+	_memoryRef -> removeAdditionalSubsets (1, _memoryVICIIView);
 
 	// Delete the subsets and the storages...
-	for (const auto& i : _subsets)
+	for (const auto& i : _cpuSubsets)
 		delete (i.second);
-	_subsets = { };
+	_cpuSubsets = { };
+	for (const auto& i : _viciiSubsets)
+		delete (i.second);
+	_viciiSubsets = { };
 	for (const auto& i : _storages)
 		delete (i.second);
 	_storages = { };
@@ -196,6 +242,7 @@ void C64::Cartridge::cleanUpAdditionalSubsets ()
 	// The memory has no longer a cartridge...
 	_memoryRef -> setExtensionAt (nullptr);
 
-	_memoryView = nullptr;
+	_memoryCPUView = nullptr;
+	_memoryVICIIView = nullptr;
 	_memoryRef = nullptr;
 }

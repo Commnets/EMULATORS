@@ -124,6 +124,9 @@ namespace C64
 							{ return (data ()._data.empty () 
 								? Type::_NOTDEFINED 
 								: (Type) (std::atoi (((*_data._attributes.find ("TYPE")).second).c_str ()))); }
+		/** To know whether it is or not a ULTIMAX cartridge. */
+		bool ultimax () const
+							{ return (_ultimax); }
 
 		/** When data os connected attending to the type of cartridge (info in the data received)
 			the additional subset of information is created. */
@@ -138,7 +141,7 @@ namespace C64
 
 		/** To dump the data of the cartridge into the memory. \n
 			The configuartion of the memory is changed. */
-		void dumpDataInto (C64::Memory* m, MCHEmul::MemoryView* mV);
+		void dumpDataInto (C64::Memory* m, MCHEmul::MemoryView* cV, MCHEmul::MemoryView* vV);
 
 		private:
 		bool dataDumped () const
@@ -148,6 +151,9 @@ namespace C64
 		void cleanUpAdditionalSubsets ();
 
 		private:
+		/** When the cartridge is ultimax. */
+		bool _ultimax;
+
 		// Implementation
 		mutable bool _dataDumped;
 
@@ -155,11 +161,15 @@ namespace C64
 			and additional subsets of memory are added. \n
 			Other way around when the cartridge is unplugged. */
 		C64::Memory* _memoryRef;
-		MCHEmul::MemoryView* _memoryView;
+		MCHEmul::MemoryView* _memoryCPUView;
+		MCHEmul::MemoryView* _memoryVICIIView;
 		MCHEmul::PhysicalStorages _storages;
-		MCHEmul::PhysicalStorageSubsets _subsets;
+		MCHEmul::PhysicalStorageSubsets _cpuSubsets;
+		MCHEmul::PhysicalStorageSubsets _viciiSubsets;
 		/** The physical storage. */
-		static const int _EXPANSIONROMBASE			= 4000; //The different chips of memory are created using this base...
+		static const int _EXPANSIONROMBASE			= 4000; // The different chips of memory are created using this base...
+		static const int _EXPANSIONROMBASE_SUBSET	= 4000; // For the CPU View...
+		static const int _EXPANSIONROMBASEI_SUBSET	= 5000; // For the VICII view...
 	};
 }
 

@@ -271,13 +271,13 @@ namespace MCHEmul
 		All that complexity is managed by Memory clasess (@see Memory.hpp). \n
 		A method to get that info is needed. \n
 		Command line: FMEMORY ADDRESS1 ADDRESS2. */ 
-	class DUMPMemoryStatusCommand final : public Command
+	class MemoryDumpCommand final : public Command
 	{
 		public:
 		static const int _ID = 40;
 		static const std::string _NAME;
 
-		DUMPMemoryStatusCommand ()
+		MemoryDumpCommand ()
 			: Command (_ID, _NAME)
 							{ }
 
@@ -628,7 +628,11 @@ namespace MCHEmul
 	};
 
 	/** Comand to restart the computer. \n
-		No parameters are needed. */
+		The parameters required are whether it has to restart stopped or not
+		and optionally the type of restart (simple be default = 0). \n
+		The command is: \n
+		RESTART YES|NO [LEVEL]
+		*/
 	class RestartComputerCommand final : public Command
 	{
 		public:
@@ -642,7 +646,7 @@ namespace MCHEmul
 		/** It could have an optional parameter with the "level" of the restart. \n
 			By default it will be 0. */
 		virtual bool canBeExecuted () const override
-							{ return (_parameters.size () == 0 || _parameters.size () == 1); }
+							{ return (_parameters.size () == 1 || _parameters.size () == 2); }
 
 		private:
 		virtual void executeImpl (CommandExecuter* cE, Computer* c, InfoStructure& rst) override;

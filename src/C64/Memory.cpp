@@ -18,10 +18,15 @@ const MCHEmul::Address C64::Memory::_KERNELROMEND_ADDRESS = MCHEmul::Address ({ 
 // ---
 C64::Memory::Memory (const std::string& lang)
 	: MCHEmul::Memory (0, C64::Memory::standardMemoryContent (), { }),
-	  _VICIIView (nullptr),
 	  _cartridge (nullptr),
+	  _ram00b (nullptr),
+	  _ram00b_d (nullptr),
+	  _expansionRAMLO (nullptr),
 	  _basicROM (nullptr),
 	  _basicRAM (nullptr),
+	  _basicRAM_d (nullptr),
+	  _ram1 (nullptr),
+	  _ram1_d (nullptr),
 	  _kernelROM (nullptr),
 	  _kernelRAM (nullptr),
 	  _charROM (nullptr),
@@ -30,17 +35,30 @@ C64::Memory::Memory (const std::string& lang)
 	  _sidRegisters (nullptr),
 	  _colorRAM (nullptr),
 	  _cia1Registers (nullptr),
-	  _cia2registers (nullptr),
+	  _cia2Registers (nullptr),
 	  _io1Registers (nullptr),
-	  _io2registers (nullptr),
-	  _expansionRAMLO (nullptr)
+	  _io2Registers (nullptr),
+	  _bank0CharROM (nullptr),
+	  _bank0CharRAM (nullptr),
+	  _bank0RAM2 (nullptr),
+	  _bank1BRAM (nullptr),
+	  _bank2CharROM (nullptr),
+	  _bank2CharRAM (nullptr),
+	  _bank2RAM2 (nullptr),
+	  _bank3BRAM (nullptr)
 {
 	// In the content...
 	if (error () != MCHEmul::_NOERROR)
 		return;
 
+	_ram00b				= subset (_RAM00B_SUBSET);
+	_ram00b_d			= dynamic_cast <MCHEmul::EmptyPhysicalStorageSubset*> (subset (_RAM00B_D_SUBSET));
+	_expansionRAMLO		= subset (_RAM01_SUBSET);
 	_basicROM			= subset (_BASICROM_SUBSET);
 	_basicRAM			= subset (_BASICRAM_SUBSET);
+	_basicRAM_d			= dynamic_cast <MCHEmul::EmptyPhysicalStorageSubset*> (subset (_BASICRAM_D_SUBSET));
+	_ram1				= subset (_RAM1_SUBSET);
+	_ram1_d				= dynamic_cast <MCHEmul::EmptyPhysicalStorageSubset*> (subset (_RAM1_D_SUBSET));
 	_kernelROM			= subset (_KERNELROM_SUBSET);
 	_kernelRAM			= subset (_KERNELRAM_SUBSET);
 	_charROM			= subset (_CHARROM_SUBSET);
@@ -49,10 +67,48 @@ C64::Memory::Memory (const std::string& lang)
 	_sidRegisters		= subset (COMMODORE::SIDRegisters::_SIDREGS_SUBSET);
 	_colorRAM			= subset (_COLOR_SUBSET);
 	_cia1Registers		= subset (C64::CIA1Registers::_CIA1_SUBSET);
-	_cia2registers		= subset (C64::CIA2Registers::_CIA2_SUBSET);
+	_cia2Registers		= subset (C64::CIA2Registers::_CIA2_SUBSET);
 	_io1Registers		= subset (C64::IOExpansionMemoryI::_IO1_SUBSET);
-	_io2registers		= subset (C64::IOExpansionMemoryII::_IO2_SUBSET);
-	_expansionRAMLO		= subset (_RAM01_SUBSET);
+	_io2Registers		= subset (C64::IOExpansionMemoryII::_IO2_SUBSET);
+
+	_bank0CharROM		= subset (_BANK0CHARROM_SUBSET);
+	_bank0CharRAM		= subset (_BANK0CHARRAM_SUBSET);
+	_bank0RAM2			= subset (_BANK0RAM2_SUBSET);
+	_bank1BRAM			= subset (_BANK1BRAM_SUBSET);
+	_bank2CharROM		= subset (_BANK2CHARROM_SUBSET);
+	_bank2CharRAM		= subset (_BANK2CHARRAM_SUBSET);
+	_bank2RAM2			= subset (_BANK2RAM2_SUBSET);
+	_bank3BRAM			= subset (_BANK3BRAM_SUBSET);
+
+	// Just in case...
+	assert (_ram00b			!= nullptr &&
+			_ram00b_d		!= nullptr &&
+			_expansionRAMLO != nullptr &&
+			_basicROM		!= nullptr &&
+			_basicRAM		!= nullptr &&
+			_basicRAM_d		!= nullptr &&
+			_ram1			!= nullptr &&
+			_ram1_d			!= nullptr &&
+			_kernelROM		!= nullptr &&
+			_kernelRAM		!= nullptr &&
+			_charROM		!= nullptr &&
+			_charRAM		!= nullptr &&
+			_vicIIRegisters != nullptr &&
+			_sidRegisters	!= nullptr &&
+			_colorRAM		!= nullptr &&
+			_cia1Registers	!= nullptr &&
+			_cia2Registers	!= nullptr &&
+			_io1Registers	!= nullptr &&
+			_io2Registers	!= nullptr);
+
+	assert (_bank0CharROM	!= nullptr &&
+			_bank0CharRAM	!= nullptr &&
+			_bank0RAM2		!= nullptr &&
+			_bank1BRAM		!= nullptr &&
+			_bank2CharROM	!= nullptr &&
+			_bank2CharRAM	!= nullptr &&
+			_bank2RAM2		!= nullptr &&
+			_bank3BRAM		!= nullptr);
 
 	// The default ROMS...
 	// They might change depending on the language
@@ -105,6 +161,77 @@ bool C64::Memory::initialize ()
 void C64::Memory::configureMemoryStructure (bool BASIC, bool KERNEL, bool CHARROM, 
 	bool ROML, bool ROMH1, bool ROMH2)
 {
+	// Ultimax?
+	// From CPU perspective
+	// /$0000 - $0fff) 04k ULTIMAX: only ram active.
+	// ($1000 - $7fff) 28k ULTIMAX: RAM no active, simulated as "Empty".
+	// ($8000 - $9fff) 08k ULTIMAX: RAM no active, and a ROML instead (@see cartridge)
+	// ($a000 - $bfff) 08k ULTIMAX: RAM no active, simulated as "Empty".
+	// ($a000 - $bfff) 08k ULTIMAX: BASIC no active, simulated as "Empty".
+	// ($c000 - $cfff) 04k ULTIMAX: RAM no active, simulated as "Empty".
+	// ($d000 - $dfff) 04k ULTIMAX: only IO active. CHARROM no active. RAM no active.
+	// ($e000 - $ffff) 08k ULTIMAX: KERNEL no active. RAM no active. Only a ROMH2 instead.
+	// Form VICII perspective
+	// All banks are quite similar, with the las 4K out of the 16k per bank pointing to ROMH.
+	if (!ROMH2)
+	{
+		// From CPU
+		// IO 6510 ports, Page 0 and Page 1 active by default...
+		// The fist 4k are active always also by default...(under any configuration)
+		_ram00b				-> setActive (true);
+		_ram00b_d			-> setActive (false);
+		_expansionRAMLO		-> setActive (true);
+		_basicROM			-> setActive (true);
+		_basicRAM			-> setActive (true);
+		_basicRAM_d			-> setActive (false);
+		_ram1				-> setActive (true);
+		_ram1_d				-> setActive (false);
+		_charROM			-> setActive (true);
+		_charRAM			-> setActive (true);
+		// all IO are active by default always... (under any configuration)
+		_kernelROM			-> setActive (true);
+		_kernelRAM			-> setActive (true);
+
+		// From VICII
+		_bank0CharROM		-> setActive (true);
+		_bank0CharRAM		-> setActive (false);
+		_bank0RAM2			-> setActive (true);
+		_bank1BRAM			-> setActive (true);
+		_bank2CharROM		-> setActive (true);
+		_bank2CharRAM		-> setActive (false);
+		_bank2RAM2			-> setActive (true);
+		_bank3BRAM			-> setActive (true);
+	}
+	else
+	{
+		// From CPU
+		// IO 6510 ports, Page 0 and Page 1 active by default...
+		// The fist 4k are active always also by default...(under any configuration)
+		_ram00b				-> setActive (false);
+		_ram00b_d			-> setActive (true);
+		_expansionRAMLO		-> setActive (false); // ROML instead...
+		_basicROM			-> setActive (false);
+		_basicRAM			-> setActive (false);
+		_basicRAM_d			-> setActive (true);
+		_ram1				-> setActive (false);
+		_ram1_d				-> setActive (true);
+		_charROM			-> setActive (false);
+		_charRAM			-> setActive (false); // Only IO
+		// all IO are active by default always... (under any configuration)
+		_kernelROM			-> setActive (false);
+		_kernelRAM			-> setActive (false); // ROMH instead...
+
+		// From VICII
+		_bank0CharROM		-> setActive (false);
+		_bank0CharRAM		-> setActive (true);
+		_bank0RAM2			-> setActive (false); // Reference to ROMH instead...
+		_bank1BRAM			-> setActive (false); // Reference to ROMH instead...
+		_bank2CharROM		-> setActive (false);
+		_bank2CharRAM		-> setActive (true);
+		_bank2RAM2			-> setActive (false); // Reference to ROMH instead...
+		_bank3BRAM			-> setActive (false); // Reference to ROMH instead...
+	}
+
 	_expansionRAMLO		-> setActiveForReading (!ROML);
 
 	_basicROM			-> setActiveForReading (BASIC);
@@ -119,9 +246,9 @@ void C64::Memory::configureMemoryStructure (bool BASIC, bool KERNEL, bool CHARRO
 	_sidRegisters		-> setActive (!CHARROM);
 	_colorRAM			-> setActive (!CHARROM);
 	_cia1Registers		-> setActive (!CHARROM);
-	_cia2registers		-> setActive (!CHARROM);
+	_cia2Registers		-> setActive (!CHARROM);
 	_io1Registers		-> setActive (!CHARROM);
-	_io2registers		-> setActive (!CHARROM);
+	_io2Registers		-> setActive (!CHARROM);
 	// ...and when RAM active, never for reading...just for writting...
 	_charRAM			-> setActiveForReading (!CHARROM);
 
@@ -154,35 +281,61 @@ MCHEmul::Memory::Content C64::Memory::standardMemoryContent ()
 		});
 
 	// Subsets
+	// The view from the CPU
+	// ------
 	// ...Over the RAM and ROM as the CPU sees it
-	// First two bytes of the memory that are used by the 6510.
+	// First two bytes of the memory that are used by the 6510
 	MCHEmul::PhysicalStorageSubset* IO6510 = new C64::IO6510PortRegisters
 		(/** id = C64::IO6510PortRegisters::_IO6510REGISTERS_SUBSET */ RAM);
-	// Page 0 (except the two first bytes)
+	
+	// 0.25K: Page 0 (except the two first bytes).
 	MCHEmul::PhysicalStorageSubset* PageZero = new MCHEmul::PhysicalStorageSubset 
 		(_PAGEZERO_SUBSET, RAM, 0x0002, MCHEmul::Address ({ 0x02, 0x00 }, false), 0x00fe);
-	// Stack
+	
+	// 0.25K: Stack
 	MCHEmul::Stack* Stack = new MCHEmul::Stack 
 		(_STACK_SUBSET, RAM, 0x0100, MCHEmul::Address ({ 0x00, 0x01 }, false), 0x0100);
-	// Pure RAM. A piece used by BASIC (40k)
-	MCHEmul::PhysicalStorageSubset* RAM00 = new MCHEmul::PhysicalStorageSubset 
-		(_RAM00_SUBSET, RAM, 0x0200, MCHEmul::Address ({ 0x00, 0x02 }, false), 0x7e00); 				// 31,5k pure (a bit used by BASIC)
-	// In the last part of the RAM a 8k Expansion ROM is located (no active unless a expansion element uses it)
+	
+	// 39.5k: RAM
+	// Pure RAM. A piece used by BASIC
+	// This piece is divided in two: The rest of the page 1 up to the first 4k (3.5k) and from 4k to 32k...
+	// This is because in mode ULTIMAX the only accesible RAM is the first 4k, so the rest must be disconnected...
+	MCHEmul::PhysicalStorageSubset* RAM00A = new MCHEmul::PhysicalStorageSubset 
+		(_RAM00A_SUBSET, RAM, 0x0200, MCHEmul::Address ({ 0x00, 0x02 }, false), 0x0e00); 				// 3,5k pure (a bit used by BASIC)
+	MCHEmul::PhysicalStorageSubset* RAM00B = new MCHEmul::PhysicalStorageSubset 
+		(_RAM00B_SUBSET, RAM, 0x1000, MCHEmul::Address ({ 0x00, 0x10 }, false), 0x7000); 				// 28k pure (a bit used by BASIC)
+	MCHEmul::EmptyPhysicalStorageSubset* RAM00B_D = new MCHEmul::EmptyPhysicalStorageSubset
+		(_RAM00B_D_SUBSET, MCHEmul::UByte::_0, RAM, 0x1000, MCHEmul::Address ({ 0x00, 0x10 }, false), 0x7000); 	// The version of that previous 28k in ULTIMAX
+	// The next 8k of RAM can be shared with an expansion element (ROML) when active...
 	MCHEmul::PhysicalStorageSubset* RAM01 = new MCHEmul::PhysicalStorageSubset
-		(_RAM01_SUBSET, RAM, 0x8000, MCHEmul::Address ({ 0x00, 0x80 }, false), 0x2000);					// 8k pure a (a bit used by basic, but can be shared with expansion port)
-	// Where the basic is can be either ROM or RAM (depends on bits in position 1 of the page 0) or EXPANSION ROM (when uses it)
+		(_RAM01_SUBSET, RAM, 0x8000, MCHEmul::Address ({ 0x00, 0x80 }, false), 0x2000);					// 8k
+
+	// 8k: BASIC
+	// Where the basic is can be either ROM or RAM also (depends on bits in position 1 of the page 0) or even
+	// being ocuppied by a expansion rom (when uses it. @see cartridge)
 	MCHEmul::PhysicalStorageSubset* BasicROM = new MCHEmul::PhysicalStorageSubset
 		(_BASICROM_SUBSET, BASICROM, 0x0000, MCHEmul::Address ({ 0x00, 0xa0 }, false), 0x2000);	
 	MCHEmul::PhysicalStorageSubset* BasicRAM = new MCHEmul::PhysicalStorageSubset
 		(_BASICRAM_SUBSET, RAM, 0x0a000, MCHEmul::Address ({ 0x00, 0xa0 }, false), 0x2000);				// 8k (over Basic ROM)
-	// 	Pure RAM (4k)
+	// And this portion of the ram can be disconnected when the Ultimax mode is active (@see Cartridge)
+	MCHEmul::EmptyPhysicalStorageSubset* BasicRAM_D = new MCHEmul::EmptyPhysicalStorageSubset
+		(_BASICRAM_D_SUBSET, MCHEmul::UByte::_0, RAM, 0x0a000, MCHEmul::Address ({ 0x00, 0xa0 }, false), 0x2000);
+
+	// 4k: RAM
 	MCHEmul::PhysicalStorageSubset* RAM1 = new MCHEmul::PhysicalStorageSubset
 		(_RAM1_SUBSET, RAM, 0x0c000, MCHEmul::Address ({ 0x00, 0xc0 }, false), 0x1000);					// 4k
+	// The same 4k but disconnected when the Ultimax mode is active (@see Cartridge)
+	MCHEmul::EmptyPhysicalStorageSubset* RAM1_D = new MCHEmul::EmptyPhysicalStorageSubset
+		(_RAM1_D_SUBSET, MCHEmul::UByte::_0, RAM, 0x0c000, MCHEmul::Address ({ 0x00, 0xc0 }, false), 0x1000);
+
+	// 4k: CHARROM
 	// Where the CharROM is defined we have also the access to the chips (VIC, SID,...)
 	MCHEmul::PhysicalStorageSubset* CharROM = new MCHEmul::PhysicalStorageSubset
 		(_CHARROM_SUBSET, CHARROM, 0x0000, MCHEmul::Address ({ 0x00, 0xd0 }, false), 0x1000);
 	MCHEmul::PhysicalStorageSubset* CharRAM = new MCHEmul::PhysicalStorageSubset
 		(_CHARRAM_SUBSET, RAM, 0xd000, MCHEmul::Address ({ 0x00, 0xd0 }, false), 0x1000);				// 4k behing the char ROM (initially desactivated)...
+
+	// 4k: IO Zone
 	MCHEmul::PhysicalStorageSubset* VICIIRegisters = new COMMODORE::VICIIRegisters 
 		(/** id = COMMODORE::VICIIRegisters::_VICREGS_SUBSET */ RAM, 0xd000, MCHEmul::Address ({ 0x00, 0xd0 }, false), 0x0400);
 	MCHEmul::PhysicalStorageSubset* SIDRegisters = new COMMODORE::SIDRegisters 
@@ -197,23 +350,56 @@ MCHEmul::Memory::Content C64::Memory::standardMemoryContent ()
 		(/** id = C64::IOExpansionMemoryI::_IO1_SUBSET */ RAM, 0xde00, MCHEmul::Address ({ 0x00, 0xde }, false), 0x0100);
 	MCHEmul::PhysicalStorageSubset* IO2 = new C64::IOExpansionMemoryII
 		(/** id = C64::IOExpansionMemoryII::_IO2_SUBSET */ RAM, 0xdf00, MCHEmul::Address ({ 0x00, 0xdf }, false), 0x0100);
+
+	// 8k: KERNEL
 	// Where the kernel is defined can be either RAM or ROM (depending on the bits 0, 1, 2 at 0x01 position)
+	// And also this positions can be replaced by an external expansion (@see Cartridge)
 	MCHEmul::PhysicalStorageSubset* KernelROM = new MCHEmul::PhysicalStorageSubset 
 		(_KERNELROM_SUBSET, KERNELROM, 0x0000, MCHEmul::Address ({ 0x00, 0xe0 }, false), 0x2000);
 	MCHEmul::PhysicalStorageSubset* KernelRAM = new MCHEmul::PhysicalStorageSubset 
 		(_KERNELRAM_SUBSET, RAM, 0xe000, MCHEmul::Address ({ 0x00, 0xe0 }, false), 0x2000);				// 8k (over Kernel ROM)
+	// ------
 
-	// A map with the subsets swwn from the CPU perspective
+	// To set the names of the different memory zones...
+	IO6510			-> setName ("6510 Ports");
+	PageZero		-> setName ("Page Zero");
+	Stack			-> setName ("Stack");
+	RAM00A			-> setName ("RAM Rest up to first 4k");
+	RAM00B			-> setName ("RAM from 4k to 32k");
+	RAM00B_D		-> setName ("Hole from 4k to 32k Ultimax");
+	RAM01			-> setName ("RAM from 32k to 40k");
+	BasicROM		-> setName ("Basic ROM");
+	BasicRAM		-> setName ("Basic RAM");
+	BasicRAM_D		-> setName ("Hole Basic RAM Ultimax");
+	RAM1			-> setName ("RAM from 48k to 52k");
+	RAM1_D			-> setName ("Hole from 48k to 52 Ultimax");
+	CharROM			-> setName ("Character ROM");
+	CharRAM			-> setName ("Character RAM");
+	VICIIRegisters	-> setName ("VICII");
+	SIDRegisters	-> setName ("SID");
+	ColorRAM		-> setName ("Color RAM");
+	CIA1			-> setName ("CIA1");
+	CIA2			-> setName ("CIA2");
+	IO1				-> setName ("IO1");
+	IO2				-> setName ("IO2");
+	KernelROM		-> setName ("Kernel ROM");
+	KernelRAM		-> setName ("Kernel RAM");
+
+	// A map with the subsets from the CPU perspective
 	MCHEmul::PhysicalStorageSubsets cpusubsets (
 		{
 			{ C64::IO6510PortRegisters::_IO6510REGISTERS_SUBSET,	IO6510}, 
 			{ _PAGEZERO_SUBSET,										PageZero }, 
 			{ _STACK_SUBSET,										Stack }, 
-			{ _RAM00_SUBSET,										RAM00 }, 
+			{ _RAM00A_SUBSET,										RAM00A }, 
+			{ _RAM00B_SUBSET,										RAM00B }, 
+			{ _RAM00B_D_SUBSET,										RAM00B_D }, 
 			{ _RAM01_SUBSET,										RAM01 }, 
 			{ _BASICROM_SUBSET,										BasicROM }, 
 			{ _BASICRAM_SUBSET,										BasicRAM }, 
+			{ _BASICRAM_D_SUBSET,									BasicRAM_D }, 
 			{ _RAM1_SUBSET,											RAM1 }, 
+			{ _RAM1_D_SUBSET,										RAM1_D }, 
 			{ _CHARROM_SUBSET,										CharROM }, 
 			{ _CHARRAM_SUBSET,										CharRAM }, 
 			{ COMMODORE::VICIIRegisters::_VICREGS_SUBSET,			VICIIRegisters }, 
@@ -227,39 +413,80 @@ MCHEmul::Memory::Content C64::Memory::standardMemoryContent ()
 			{ _KERNELRAM_SUBSET,									KernelRAM }
 		});
 
+	// ------
 	// And same like the VICII chips sees it...
 	// Bank 0
 	MCHEmul::PhysicalStorageSubset* Bank0RAM0 = new MCHEmul::PhysicalStorageSubset 
 		(_BANK0RAM0_SUBSET, RAM, 0x0000, MCHEmul::Address ({ 0x00, 0x00 }, false), 0x1000);
 	MCHEmul::PhysicalStorageSubset* Bank0CharROM = new MCHEmul::PhysicalStorageSubset 
-		(_BANK0CHARROM_SUBSET, CHARROM, 0x0000, MCHEmul::Address ({ 0x00, 0x10 }, false), 0x1000); // 2048 bytes per char set...
+		(_BANK0CHARROM_SUBSET, CHARROM, 0x0000, MCHEmul::Address ({ 0x00, 0x10 }, false), 0x1000); // 2k per char set...
+	// When the Ultimax video is set, the previous subset is off and this one is on...
+	MCHEmul::PhysicalStorageSubset* Bank0CharRAM = new MCHEmul::PhysicalStorageSubset
+		(_BANK0CHARRAM_SUBSET, RAM, 0x1000, MCHEmul::Address ({ 0x00, 0x10 }, false), 0x1000);
 	MCHEmul::PhysicalStorageSubset* Bank0RAM1 = new MCHEmul::PhysicalStorageSubset 
-		(_BANK0RAM1_SUBSET, RAM, 0x2000, MCHEmul::Address ({ 0x00, 0x20 }, false), 0x2000);
+		(_BANK0RAM1_SUBSET, RAM, 0x2000, MCHEmul::Address ({ 0x00, 0x20 }, false), 0x1000);
+	MCHEmul::PhysicalStorageSubset* Bank0RAM2 = new MCHEmul::PhysicalStorageSubset 
+		(_BANK0RAM2_SUBSET, RAM, 0x3000, MCHEmul::Address ({ 0x00, 0x30 }, false), 0x1000);
+
 	// Bank 1
 	MCHEmul::PhysicalStorageSubset* Bank1RAM = new MCHEmul::PhysicalStorageSubset 
-		(_BANK1RAM_SUBSET, RAM, 0x4000, MCHEmul::Address ({ 0x00, 0x40 }, false), 0x4000);
+		(_BANK1RAM_SUBSET, RAM, 0x4000, MCHEmul::Address ({ 0x00, 0x40 }, false), 0x3000);
+	MCHEmul::PhysicalStorageSubset* Bank1BRAM = new MCHEmul::PhysicalStorageSubset 
+		(_BANK1BRAM_SUBSET, RAM, 0x7000, MCHEmul::Address ({ 0x00, 0x70 }, false), 0x1000);
+
 	// Bank 2
 	MCHEmul::PhysicalStorageSubset* Bank2RAM0 = new MCHEmul::PhysicalStorageSubset 
 		(_BANK2RAM0_SUBSET, RAM, 0x8000, MCHEmul::Address ({ 0x00, 0x80 }, false), 0x1000);
 	MCHEmul::PhysicalStorageSubset* Bank2CharROM = new MCHEmul::PhysicalStorageSubset 
-		(_BANK2CHARROM_SUBSET, CHARROM, 0x0000, MCHEmul::Address ({ 0x00, 0x90 }, false), 0x1000); // 2048 bytes per char set...
+		(_BANK2CHARROM_SUBSET, CHARROM, 0x0000, MCHEmul::Address ({ 0x00, 0x90 }, false), 0x1000); // 2K per char set...
+	// When the Ultimax video is set, the previous subset is off and this one is on...
+	MCHEmul::PhysicalStorageSubset* Bank2CharRAM = new MCHEmul::PhysicalStorageSubset
+		(_BANK2CHARRAM_SUBSET, RAM, 0x9000, MCHEmul::Address ({ 0x00, 0x90 }, false), 0x1000);
 	MCHEmul::PhysicalStorageSubset* Bank2RAM1 = new MCHEmul::PhysicalStorageSubset 
-		(_BANK2RAM1_SUBSET, RAM, 0xa000, MCHEmul::Address ({ 0x00, 0xa0 }, false), 0x2000);
+		(_BANK2RAM1_SUBSET, RAM, 0xa000, MCHEmul::Address ({ 0x00, 0xa0 }, false), 0x1000);
+	MCHEmul::PhysicalStorageSubset* Bank2RAM2 = new MCHEmul::PhysicalStorageSubset 
+		(_BANK2RAM2_SUBSET, RAM, 0xb000, MCHEmul::Address ({ 0x00, 0xb0 }, false), 0x1000);
+
 	// Bank 3
 	MCHEmul::PhysicalStorageSubset* Bank3RAM = new MCHEmul::PhysicalStorageSubset 
-		(_BANK3RAM_SUBSET, RAM, 0xc000, MCHEmul::Address ({ 0x00, 0xc0 }, false), 0x4000);
+		(_BANK3RAM_SUBSET, RAM, 0xc000, MCHEmul::Address ({ 0x00, 0xc0 }, false), 0x3000);
+	MCHEmul::PhysicalStorageSubset* Bank3BRAM = new MCHEmul::PhysicalStorageSubset 
+		(_BANK3BRAM_SUBSET, RAM, 0xf000, MCHEmul::Address ({ 0x00, 0xf0 }, false), 0x1000);
+	// ------
+
+	// To set the names of the different memory zones
+	Bank0RAM0		-> setName ("Bank 0 RAM from 0k to 4k");
+	Bank0CharROM	-> setName ("Bank 0 Character ROM");
+	Bank0CharRAM	-> setName ("Bank 0 RAM from 4k to 8k Ultimax");
+	Bank0RAM1		-> setName ("Bank 0 RAM from 8k to 12k");
+	Bank0RAM2		-> setName ("Bank 0 RAM from 12k to 16k");
+	Bank1RAM		-> setName ("Bank 1 RAM from 0k to 12k");
+	Bank1BRAM		-> setName ("Bank 1 RAM from 12k to 16k");
+	Bank2RAM0		-> setName ("Bank 2 RAM from 0k to 4k");
+	Bank2CharROM	-> setName ("Bank 2 Character ROM");
+	Bank2CharRAM	-> setName ("Bank 2 RAM from 4k to 8k");
+	Bank2RAM1		-> setName ("Bank 2 RAM from 8k to 12k");
+	Bank2RAM2		-> setName ("Bank 2 RAM from 12k to 16k");
+	Bank3RAM		-> setName ("Bank 1 RAM from 0k to 12k");
+	Bank3BRAM		-> setName ("Bank 1 RAM from 12k to 16k");
 
 	// The map with the subsets from the VICII perspective
 	MCHEmul::PhysicalStorageSubsets vicIIsubsets (
 		{
 			{ _BANK0RAM0_SUBSET,	Bank0RAM0 },
-			{ _BANK0CHARROM_SUBSET,	Bank0CharROM},
+			{ _BANK0CHARROM_SUBSET,	Bank0CharROM },
+			{ _BANK0CHARRAM_SUBSET,	Bank0CharRAM },
 			{ _BANK0RAM1_SUBSET,	Bank0RAM1 },
+			{ _BANK0RAM2_SUBSET,	Bank0RAM2 },
 			{ _BANK1RAM_SUBSET,		Bank1RAM },
+			{ _BANK1BRAM_SUBSET,	Bank1BRAM },
 			{ _BANK2RAM0_SUBSET,	Bank2RAM0 },
-			{ _BANK2CHARROM_SUBSET,	Bank2CharROM},
+			{ _BANK2CHARROM_SUBSET,	Bank2CharROM },
+			{ _BANK2CHARRAM_SUBSET,	Bank2CharRAM },
 			{ _BANK2RAM1_SUBSET,	Bank2RAM1 },
-			{ _BANK3RAM_SUBSET,		Bank3RAM }
+			{ _BANK2RAM2_SUBSET,	Bank2RAM2 },
+			{ _BANK3RAM_SUBSET,		Bank3RAM },
+			{ _BANK3BRAM_SUBSET,	Bank3BRAM }
 		});
 
 	// A map with all the subsets possible...
@@ -268,11 +495,15 @@ MCHEmul::Memory::Content C64::Memory::standardMemoryContent ()
 			{ C64::IO6510PortRegisters::_IO6510REGISTERS_SUBSET,	IO6510}, 
 			{ _PAGEZERO_SUBSET,										PageZero }, 
 			{ _STACK_SUBSET,										Stack }, 
-			{ _RAM00_SUBSET,										RAM00 }, 
+			{ _RAM00A_SUBSET,										RAM00A }, 
+			{ _RAM00B_SUBSET,										RAM00B }, 
+			{ _RAM00B_D_SUBSET,										RAM00B_D }, 
 			{ _RAM01_SUBSET,										RAM01 }, 
 			{ _BASICROM_SUBSET,										BasicROM }, 
 			{ _BASICRAM_SUBSET,										BasicRAM }, 
+			{ _BASICRAM_D_SUBSET,									BasicRAM_D }, 
 			{ _RAM1_SUBSET,											RAM1 }, 
+			{ _RAM1_D_SUBSET,										RAM1_D }, 
 			{ _CHARROM_SUBSET,										CharROM }, 
 			{ _CHARRAM_SUBSET,										CharRAM }, 
 			{ COMMODORE::VICIIRegisters::_VICREGS_SUBSET,			VICIIRegisters }, 
@@ -286,12 +517,18 @@ MCHEmul::Memory::Content C64::Memory::standardMemoryContent ()
 			{ _KERNELRAM_SUBSET,									KernelRAM },
 			{ _BANK0RAM0_SUBSET,									Bank0RAM0 },
 			{ _BANK0CHARROM_SUBSET,									Bank0CharROM},
+			{ _BANK0CHARRAM_SUBSET,									Bank0CharRAM},
 			{ _BANK0RAM1_SUBSET,									Bank0RAM1 },
+			{ _BANK0RAM2_SUBSET,									Bank0RAM2 },
 			{ _BANK1RAM_SUBSET,										Bank1RAM },
+			{ _BANK1BRAM_SUBSET,									Bank1BRAM },
 			{ _BANK2RAM0_SUBSET,									Bank2RAM0 },
 			{ _BANK2CHARROM_SUBSET,									Bank2CharROM},
+			{ _BANK2CHARRAM_SUBSET,									Bank2CharRAM},
 			{ _BANK2RAM1_SUBSET,									Bank2RAM1 },
-			{ _BANK3RAM_SUBSET,										Bank3RAM }
+			{ _BANK2RAM2_SUBSET,									Bank2RAM2 },
+			{ _BANK3RAM_SUBSET,										Bank3RAM },
+			{ _BANK3BRAM_SUBSET,									Bank3BRAM }
 		});
 
 	// Then the views...

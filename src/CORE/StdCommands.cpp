@@ -18,7 +18,7 @@ const std::string MCHEmul::CPUStatusCommand::_NAME = "CCPUSTATUS";
 const std::string MCHEmul::CPUSimpleStatusCommand::_NAME = "CCPUSSTATUS";
 const std::string MCHEmul::CPUInfoCommand::_NAME = "CCPUINFO";
 const std::string MCHEmul::MemoryStatusCommand::_NAME = "CMEMORY";
-const std::string MCHEmul::DUMPMemoryStatusCommand::_NAME = "CMEMORYDUMP";
+const std::string MCHEmul::MemoryDumpCommand::_NAME = "CMEMORYDUMP";
 const std::string MCHEmul::SetMemoryValueCommand::_NAME = "CSETMEMORY";
 const std::string MCHEmul::StopCPUCommand::_NAME = "CSTOP";
 const std::string MCHEmul::RunCPUCommand::_NAME = "CRUN";
@@ -285,7 +285,7 @@ void MCHEmul::MemoryStatusCommand::executeImpl (MCHEmul::CommandExecuter* cE, MC
 }
 
 // ---
-void MCHEmul::DUMPMemoryStatusCommand::executeImpl 
+void MCHEmul::MemoryDumpCommand::executeImpl 
 	(MCHEmul::CommandExecuter* cE, MCHEmul::Computer* c, MCHEmul::InfoStructure& rst)
 {
 	if (c == nullptr)
@@ -598,8 +598,10 @@ void MCHEmul::RestartComputerCommand::executeImpl
 	if (c == nullptr)
 		return;
 
-	unsigned int level = (_parameters.size () == 1) ? std::atoi (parameter ("00").c_str ()) : 0;
-
+	// How to restart?
+	c -> setNextStartStopped ((parameter ("00") == "YES") ? true : false);
+	// The level of the restarting. 0 = mild.
+	unsigned int level = (_parameters.size () == 2) ? std::atoi (parameter ("01").c_str ()) : 0;
 	// Ends the main loop...
 	c -> setExit (true);
 	// but starts back...

@@ -22,6 +22,7 @@ MCHEmul::Computer::Computer (
 	  _debugLevel (MCHEmul::_DEBUGNOTHING),
 	  _stabilizationLoops (sL),
 	  _startAtSpecificAddress (false), _startingAddress (), // By default the one defined by the CPU...
+	  _startStopped (false),
 	  _error (MCHEmul::_NOERROR),
 	  _screen (nullptr), _sound (nullptr), _inputOSSystem (nullptr), _graphicalChip (nullptr),
 	  _clock (cs), 
@@ -231,6 +232,10 @@ bool MCHEmul::Computer::initialize (bool iM)
 	_templateListActions = std::vector <MCHEmul::Computer::Action*> (maxTAId + 1, nullptr);
 	for (auto& i : _templateActions)
 		_templateListActions [i.second -> id ()] = i.second;
+
+	// Does the computer have to start stopped?
+	if (_startStopped)
+		_actionForNextCycle = MCHEmul::Computer::_ACTIONSTOP;
 
 	return (true);
 }

@@ -861,15 +861,16 @@ void COMMODORE::VICII::drawGraphicsSpritesAndDetectCollisions (const COMMODORE::
 	COMMODORE::VICII::DrawResult colGraphics = std::move (drawGraphics (dC));
 
 	// The info about the sprites is moved into this variable too...
-	std::vector <MCHEmul::UByte> sprCollData (8, MCHEmul::UByte::_0);
-	for (size_t i = 0; i < 8; i++)
-		if (_vicSpriteInfo [i]._active)
-			sprCollData [i] = std::move (drawSpriteOver (i, colGraphics._spriteColor [i]));
+	for (int i = 7; i >= 0; i--)
+		if (_vicSpriteInfo [(size_t) i]._active)
+			colGraphics._collisionSpritesData [(size_t) i] = 
+				std::move (drawSpriteOver ((size_t) i, colGraphics._spriteColor, 
+					colGraphics._spriteColorOwner));
 
 	// The graphical info is moved to the screen...
 	drawResultToScreen (colGraphics, dC);
 	// ...and the collisions are also detected...
-	detectCollisions (colGraphics._collisionData, sprCollData);
+	detectCollisions (colGraphics);
 }
 
 // ---
@@ -979,7 +980,7 @@ COMMODORE::VICII::DrawResult COMMODORE::VICII::drawMonoColorChar (int cb)
 
 		if (_vicGraphicInfo._graphicData [iBy].bit (iBt))
 		{
-			result._collisionData.setBit (7 - i, true);
+			result._collisionGraphicData.setBit (7 - i, true);
 
 			result._foregroundColorData [i] = 
 				(unsigned int) (_vicGraphicInfo._colorData [iBy].value () & 0x0f /** Useful nibble. */);
@@ -1048,7 +1049,7 @@ COMMODORE::VICII::DrawResult COMMODORE::VICII::drawMultiColorChar (int cb, bool 
 
 				case 0x02:
 					{
-						result._collisionData.setBit (7 - i, true);
+						result._collisionGraphicData.setBit (7 - i, true);
 
 						result._foregroundColorData [i] = fc;
 					}
@@ -1057,8 +1058,8 @@ COMMODORE::VICII::DrawResult COMMODORE::VICII::drawMultiColorChar (int cb, bool 
 
 				case 0x03:
 					{
-						result._collisionData.setBit (7 - i, true);
-						result._collisionData.setBit (6 - i, true);
+						result._collisionGraphicData.setBit (7 - i, true);
+						result._collisionGraphicData.setBit (6 - i, true);
 
 						result._foregroundColorData [i] = fc;
 						result._foregroundColorData [i + 1] = fc;
@@ -1092,8 +1093,8 @@ COMMODORE::VICII::DrawResult COMMODORE::VICII::drawMultiColorChar (int cb, bool 
 			// ..and also included in the collision info!
 			else
 			{
-				result._collisionData.setBit (7 - i, true);
-				result._collisionData.setBit (6 - i, true);
+				result._collisionGraphicData.setBit (7 - i, true);
+				result._collisionGraphicData.setBit (6 - i, true);
 
 				result._foregroundColorData [i] = fc;
 				result._foregroundColorData [i + 1] = fc;
@@ -1132,7 +1133,7 @@ COMMODORE::VICII::DrawResult COMMODORE::VICII::drawMultiColorExtendedChar (int c
 
 		if (bS)
 		{
-			result._collisionData.setBit (7 - i, true);
+			result._collisionGraphicData.setBit (7 - i, true);
 
 			result._foregroundColorData [i] = fc;
 		}
@@ -1172,7 +1173,7 @@ COMMODORE::VICII::DrawResult COMMODORE::VICII::drawMonoColorBitMap (int cb, bool
 
 		if (bS)
 		{
-			result._collisionData.setBit (7 - i, true);
+			result._collisionGraphicData.setBit (7 - i, true);
 
 			result._foregroundColorData [i] = fc;
 		}
@@ -1237,8 +1238,8 @@ COMMODORE::VICII::DrawResult COMMODORE::VICII::drawMultiColorBitMap (int cb, boo
 		// ...while the rest as managed as foreground...
 		else
 		{
-			result._collisionData.setBit (7 -i, true);
-			result._collisionData.setBit (6 -i, true);
+			result._collisionGraphicData.setBit (7 -i, true);
+			result._collisionGraphicData.setBit (6 -i, true);
 
 			result._foregroundColorData [i] = fc;
 			result._foregroundColorData [i + 1] = fc;
@@ -1249,17 +1250,18 @@ COMMODORE::VICII::DrawResult COMMODORE::VICII::drawMultiColorBitMap (int cb, boo
 }
 
 // ---
-MCHEmul::UByte COMMODORE::VICII::drawSpriteOver (size_t spr, unsigned int* d)
+MCHEmul::UByte COMMODORE::VICII::drawSpriteOver (size_t spr, unsigned int* d, size_t* dO)
 {
 	return ((_vicSpriteInfo [spr]._graphicsLineSprites.size () == 0)
 		? MCHEmul::UByte::_0
 		: (_VICIIRegisters -> spriteMulticolorMode (spr)
-			? drawMultiColorSpriteOver (_raster.currentColumn (), _raster.currentLine (), spr, d)
-			: drawMonoColorSpriteOver (_raster.currentColumn (), _raster.currentLine (), spr, d)));
+			? drawMultiColorSpriteOver (_raster.currentColumn (), _raster.currentLine (), spr, d, dO)
+			: drawMonoColorSpriteOver (_raster.currentColumn (), _raster.currentLine (), spr, d, dO)));
 }
 
 // ---
-MCHEmul::UByte COMMODORE::VICII::drawMonoColorSpriteOver (unsigned short c, unsigned short r, size_t spr, unsigned int* d)
+MCHEmul::UByte COMMODORE::VICII::drawMonoColorSpriteOver (unsigned short c, unsigned short r, size_t spr, 
+	unsigned int* d, size_t* dO)
 {
 	MCHEmul::UByte result = MCHEmul::UByte::_0;
 
@@ -1300,6 +1302,7 @@ MCHEmul::UByte COMMODORE::VICII::drawMonoColorSpriteOver (unsigned short c, unsi
 			result.setBit (7 - (i + j), true);
 
 			d [i + j] = _VICIIRegisters -> spriteColor (spr);
+			dO [i + j] = spr;
 		}
 	}
 
@@ -1307,7 +1310,8 @@ MCHEmul::UByte COMMODORE::VICII::drawMonoColorSpriteOver (unsigned short c, unsi
 }
 
 // ---
-MCHEmul::UByte COMMODORE::VICII::drawMultiColorSpriteOver (unsigned short c, unsigned short r, size_t spr, unsigned int* d)
+MCHEmul::UByte COMMODORE::VICII::drawMultiColorSpriteOver (unsigned short c, unsigned short r, size_t spr, 
+	unsigned int* d, size_t* dO)
 {
 	MCHEmul::UByte result = MCHEmul::UByte::_0;
 
@@ -1353,6 +1357,7 @@ MCHEmul::UByte COMMODORE::VICII::drawMultiColorSpriteOver (unsigned short c, uns
 			result.setBit (7 - (i + j), true);
 
 			d [i + j] = fc;
+			dO [i + j] = spr;
 		}
 	}
 
@@ -1383,11 +1388,8 @@ void COMMODORE::VICII::drawResultToScreen (const COMMODORE::VICII::DrawResult& c
 		if (cT._backgroundColorData [i] != _U0)
 			screenMemory () -> setPixel (pos, (size_t) dC._RR, cT._backgroundColorData [i]);
 
-		// Looks for the most priority sprite to draw, if any...
-		size_t nSpr = 0;
-		while (nSpr != 8 && cT._spriteColor [nSpr][i] == _U0) nSpr++;
-		// If that sprite didn't exist...
-		if (nSpr == 8)
+		// If that sprite didn't exist at that pixel..
+		if (cT._spriteColorOwner [i] == _S0)
 		{
 			// ...and there were a foreground not transparent on top, 
 			// the sprite pixel would be drawn!
@@ -1398,10 +1400,10 @@ void COMMODORE::VICII::drawResultToScreen (const COMMODORE::VICII::DrawResult& c
 		else
 		{
 			// ...the sprite would be drawn...
-			screenMemory () -> setPixel (pos, (size_t) dC._RR, cT._spriteColor [nSpr][i]);
+			screenMemory () -> setPixel (pos, (size_t) dC._RR, cT._spriteColor [i]);
 			// ..and if it had less priority than the foreground, 
 			// the foreground is drawn on top...
-			if (_VICIIRegisters -> spriteToForegroundPriority (nSpr) &&
+			if (_VICIIRegisters -> spriteToForegroundPriority (cT._spriteColorOwner [i]) &&
 				cT._foregroundColorData [i] != _U0)
 					screenMemory () -> setPixel (pos, (size_t) dC._RR, cT._foregroundColorData [i]);
 		}
@@ -1409,25 +1411,27 @@ void COMMODORE::VICII::drawResultToScreen (const COMMODORE::VICII::DrawResult& c
 }
 
 // ---
-void COMMODORE::VICII::detectCollisions (const MCHEmul::UByte& g, const std::vector <MCHEmul::UByte>& s)
+void COMMODORE::VICII::detectCollisions (const DrawResult& cT)
 {
 	// Now it is time to detect collisions...
 	// First among the graphics and the sprites
 	bool cGS = false;
-	for (size_t i = 0; i < s.size () && !cGS; i++)
-		if ((cGS = (s [i].value () & g.value ()) != 0x00)) // ...at the first collision detected, the check stops...
+	for (size_t i = 0; i < cT._collisionSpritesData.size () && !cGS; i++)
+		// ...at the first collision detected, the check stops...
+		if ((cGS = (cT._collisionSpritesData [i].value () & cT._collisionGraphicData.value ()) != 0x00)) 
 			_VICIIRegisters -> setSpriteCollisionWithDataHappened (i);
 	if (cGS) 
 		_VICIIRegisters -> activateSpriteCollisionWithDataIRQ ();
 	
 	// ...and among sprites...
 	bool cSS = false;
-	for (size_t i = 0; i < s.size (); i++)
+	for (size_t i = 0; i < cT._collisionSpritesData.size (); i++)
 	{
-		for (size_t j = i + 1; j < s.size (); j++)
+		for (size_t j = i + 1; j < cT._collisionSpritesData.size (); j++)
 		{
 			if ((cSS = 
-					((s [i].value () & s [j].value ()) != 0x00)))
+					((cT._collisionSpritesData [i].value () & 
+					  cT._collisionSpritesData [j].value ()) != 0x00)))
 			{ 
 				_VICIIRegisters -> setSpriteCollision (i);
 				_VICIIRegisters -> setSpriteCollision (j);
