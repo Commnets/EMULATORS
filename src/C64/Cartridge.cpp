@@ -7,7 +7,7 @@ C64::Cartridge::Cartridge ()
 	: COMMODORE::ExpansionPeripheral (_ID,
 		{ { "Name", "Commodore 64 Cartridge" },
 		  { "Manufacturer", "Commodore Business Machines CBM" } }), // This parameters can be changed when connecting data...
-	  _ultimax (true),
+	  _ultimax (false),
 	  _dataDumped (false),
 	  _memoryRef (nullptr), 
 	  _memoryCPUView (nullptr), _memoryVICIIView (nullptr),
@@ -38,8 +38,8 @@ void C64::Cartridge::configureMemoryStructure (bool ROML, bool ROMH1, bool ROMH2
 				_cpuSubsets [_EXPANSIONROMBASE_SUBSET + 3] -> setActive (true);
 				_cpuSubsets [_EXPANSIONROMBASE_SUBSET + 3] -> setActiveForReading (ROMH2);
 
-				assert (_ultimax == ROMH2); // Just in case
-				if (_ultimax)
+				if (_ultimax && 
+					!_viciiSubsets.empty ())
 				{
 					_viciiSubsets [_EXPANSIONROMBASEI_SUBSET + 0] -> setActive (true);
 					_viciiSubsets [_EXPANSIONROMBASEI_SUBSET + 0] -> setActiveForReading (true);
