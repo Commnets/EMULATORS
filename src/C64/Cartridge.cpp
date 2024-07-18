@@ -99,6 +99,8 @@ bool C64::Cartridge::finalize ()
 	cleanUpAdditionalSubsets (); // No memory...
 	
 	setData ({ }); // No data...
+
+	_ultimax = false;
 	
 	return (true);
 }
