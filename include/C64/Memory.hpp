@@ -20,7 +20,9 @@ namespace C64
 {
 	class Cartridge;
 
-	/** The memory itself for the commodore 64... */
+	/** The memory itself for the commodore 64... \n
+		Ultimax schema also emulated, following the definitions at:
+		https://www.zimmers.net/anonftp/pub/cbm/c64/html/ultimax.html */
 	class Memory final : public MCHEmul::Memory
 	{
 		public:
