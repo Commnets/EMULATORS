@@ -66,6 +66,12 @@ Memory Id:@ID@
 @DATA?{fmter=.CLASS,empty=no data}\n---\n@
 #---
 #---
+;MemoryStructure
+Memory Id:@ID@
+->Views:
+@DATA?{fmter=.CLASS,empty=}\n---\n@
+#---
+#---
 ;Memory
 @STORAGES?{key=NO,equal=:,empty=no storages}\n@
 #---
@@ -283,6 +289,10 @@ Last:@INST@
 #---
 ;CMEMORYDUMP
 @MemoryDUMP>@
+#---
+#---
+;CMEMORYSTR
+@MemoryStructure>@
 #---
 #---
 ;CSTOP

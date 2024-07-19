@@ -290,6 +290,29 @@ namespace MCHEmul
 		virtual void executeImpl (CommandExecuter* cE, Computer* c, InfoStructure& rst) override;
 	};
 
+	/** To get the structure of the memory (for all views).
+		Display all memory zones active or not depending on the parameter
+		The Command line is: \n
+		MEMORYSTR [ALL] */
+	class MemoryStructureCommand final : public Command
+	{
+		public:
+		static const int _ID = 41;
+		static const std::string _NAME;
+
+		MemoryStructureCommand ()
+			: Command (_ID, _NAME)
+							{ }
+
+		virtual bool canBeExecuted () const override
+							{ return (_parameters.size () == 0 || _parameters.size () == 1); }
+
+		private:
+		/** The fields returned are: \n
+			a list of DUMPMemoryStatus. */
+		virtual void executeImpl (CommandExecuter* cE, Computer* c, InfoStructure& rst) override;
+	};
+
 	/** To change the value of a memory location. 
 		The command is usefull to set only one location of a set of them with the same value. \n
 		So 3 parameters could be provided. \n

@@ -111,6 +111,9 @@ To get a dump of the memory between two positions.
 All regions possible, RAM or ROM, active or inactive, from any view, will be shown.
 The value of the initial and final memory can be given in decimal, hexadecimal ($), octal (o) or binary (z).
 The value of the memories is given in hexadecimal format but with no symbol at the beginning.
+;MEMORYSTR [ALL]
+To get the structure of the memory.
+The parameter indicates to show all parts of the memory (active and inactive) or just the active ones.
 ;SETMEMORY INITIAL [FINAL] VALUE
 To set the value of the memory with a value.
 Two parameters minimum are required that are tha memory position to set (INITAL) and the value (VALUE).

@@ -296,7 +296,8 @@ bool COMMODORE::T64FileTypeIO::canRead (const std::string& fN) const
 	f.seekg (0, std::ios::end);
 	std::streamoff s = (std::streamoff) f.tellg ();
 	f.close ();
-	if (s < (std::streamoff) (0x40 /** Header. */ + 0x20 /** At east 1 File Record. */ + 0x01 /** At least one byte. */))
+	if (s < (std::streamoff) (0x40 /** 64 bytes = Header. */ + 
+			0x20 /** 32 bytes = At east 1 File Record. */ + 0x01 /** At least one byte. */))
 		return (false); // ...no. The length in the file has to be at least 0x61 (= 97)
 
 	return (true);
@@ -333,7 +334,7 @@ MCHEmul::FileData* COMMODORE::T64FileTypeIO::readFile (const std::string& fN, bo
 	rT64 -> _tapeRecord._userDescriptor = std::string (data);
 
 	// Per entry in the file, tipically it will be just one...
-	for (unsigned int i = 0; i < rT64 -> _tapeRecord._entries; i++)
+	for (unsigned int i = 0; i < rT64 -> _tapeRecord._usedEntries; i++)
 	{
 		COMMODORE::T64FileData::FileRecord fR;
 
@@ -343,15 +344,15 @@ MCHEmul::FileData* COMMODORE::T64FileTypeIO::readFile (const std::string& fN, bo
 		f.read (data, 1);
 		fR._fileType = data [0];
 		f.read (data, 2);
-		fR._startLoadAddress = MCHEmul::Address ({ (unsigned char) data [0], (unsigned char) data [1] }, true);
+		fR._startLoadAddress = MCHEmul::Address ({ (unsigned char) data [0], (unsigned char) data [1] }, false);
 		f.read (data, 2);
-		fR._endLoadAddress = MCHEmul::Address ({ (unsigned char) data [0], (unsigned char) data [1] }, true);
+		fR._endLoadAddress = MCHEmul::Address ({ (unsigned char) data [0], (unsigned char) data [1] }, false);
 		f.read (data, 2); // 2 bytes free...
 		f.read (data, 4);
 		fR._offset = (unsigned int) (((unsigned char) data [3] << 24) + 
 			((unsigned char) data [2] << 16) + ((unsigned char) data [1] << 8) + ((unsigned char) data [0]));
 		f.read (data, 4); // 4 bytes free...
-		f.read (data, 24); data [24] = 0;
+		f.read (data, 16); data [16] = 0;
 		fR._fileName = std::string (data);
 
 		rT64 -> _fileRecords.emplace_back (std::move (fR));
@@ -359,7 +360,7 @@ MCHEmul::FileData* COMMODORE::T64FileTypeIO::readFile (const std::string& fN, bo
 
 	// The data...
 	unsigned int dSize = (unsigned int) size - 
-		64 - (32 * (unsigned int) rT64 -> _tapeRecord._entries);
+		64 - (32 * (unsigned int) rT64 -> _tapeRecord._entries) + 1;
 	char* romData = new char [dSize];
 	f.read (romData, (std::streamsize) dSize);
 	std::vector <MCHEmul::UByte> romBytes;

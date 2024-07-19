@@ -228,6 +228,41 @@ MCHEmul::MemoryViewDUMP MCHEmul::MemoryView::dump (const MCHEmul::Address& f, co
 }
 
 // ---
+MCHEmul::MemoryViewDUMP MCHEmul::MemoryView::dumpStructure (bool a)
+{
+	MCHEmul::MemoryViewDUMP result { _id, { } };
+
+	PhysicalStorageSubsetsList ssR;
+	for (size_t i = 0; i < _memPositions.size (); i++)
+	{
+		PhysicalStorageSubsetsList ss = _memPositions [i]._storages;
+		for (const auto& j : ss)
+		{
+			if (std::find (ssR.begin (), ssR.end (), j) == ssR.end () &&
+				((!a && j -> active ()) || (a))) // If it wasn't visited before and has been requested to be included...
+			{
+				result._data.emplace_back 
+					(MCHEmul::PhysicalStorageSubsetDUMP { 
+						j -> id (),
+						j -> name (),
+						j -> canBeWriten (false), // if can be written with no forcing...it is a RAM
+						j -> active (),
+						j -> activeForReading (),
+						j -> initialAddress (),
+						j -> lastAddress (),
+						{ }, // With no bytes included in this case...
+					 });
+
+				ssR.push_back (j);
+			}
+		}
+	}
+
+	return (result);
+}
+
+
+// ---
 bool MCHEmul::MemoryView::loadInto (const std::string& fN, const MCHEmul::Address& a)
 {
 	int dt = 0;
@@ -431,6 +466,17 @@ MCHEmul::MemoryDUMP MCHEmul::Memory::dump (const MCHEmul::Address& f, const MCHE
 
 	for (const auto& i : _content._views)
 		result._data.emplace_back (std::move (i.second -> dump (f, t)));
+
+	return (result);
+}
+
+// ---
+MCHEmul::MemoryDUMP MCHEmul::Memory::dumpStructure (bool a)
+{
+	MCHEmul::MemoryDUMP result { _id, { } };
+
+	for (const auto& i : _content._views)
+		result._data.emplace_back (std::move (i.second -> dumpStructure (a)));
 
 	return (result);
 }

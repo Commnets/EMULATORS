@@ -19,6 +19,7 @@ const std::string MCHEmul::CPUSimpleStatusCommand::_NAME = "CCPUSSTATUS";
 const std::string MCHEmul::CPUInfoCommand::_NAME = "CCPUINFO";
 const std::string MCHEmul::MemoryStatusCommand::_NAME = "CMEMORY";
 const std::string MCHEmul::MemoryDumpCommand::_NAME = "CMEMORYDUMP";
+const std::string MCHEmul::MemoryStructureCommand::_NAME = "CMEMORYSTR";
 const std::string MCHEmul::SetMemoryValueCommand::_NAME = "CSETMEMORY";
 const std::string MCHEmul::StopCPUCommand::_NAME = "CSTOP";
 const std::string MCHEmul::RunCPUCommand::_NAME = "CRUN";
@@ -299,6 +300,17 @@ void MCHEmul::MemoryDumpCommand::executeImpl
 
 	rst.add ("MemoryDUMP", std::move (c -> cpu () -> memoryRef () -> 
 		dump ((a1 <= a2) ? a1 : a2, (a1 <= a2) ? a2 : a1).getInfoStructure ()));
+}
+
+// ---
+void MCHEmul::MemoryStructureCommand::executeImpl
+	(MCHEmul::CommandExecuter* cE, MCHEmul::Computer* c, MCHEmul::InfoStructure& rst)
+{
+	if (c == nullptr)
+		return;
+
+	rst.add ("MemoryStructure", std::move (c -> cpu () -> memoryRef () -> dumpStructure 
+		(existParameter ("00") && parameter ("00") == "ALL").getInfoStructure ()));
 }
 
 // ---

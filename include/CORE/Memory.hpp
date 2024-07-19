@@ -442,6 +442,9 @@ namespace MCHEmul
 
 		/** To get a DUMP from all memories actives at some positions. */
 		MemoryViewDUMP dump (const Address& f, const Address& t) const;
+		/** Dump the structure of the memory view, considering all locations (by default = true)
+			and only the active ones (parameter = false). */
+		MemoryViewDUMP dumpStructure (bool a = true);
 
 		/** To init the memory view. 
 			It might be overloaded. By default the "defaultData" value is assigned. */
@@ -776,10 +779,19 @@ namespace MCHEmul
 		void set (const DataMemoryBlocks& mb, bool f = false)
 							{ for (const auto& i : mb) set (i, f); }
 
-		/** To get a DUMP from all memories actives at some positions. */
+		/** To get a DUMP from all active "memories" between two positions. */
+		// Only for the active view...
 		MemoryDUMP dumpActive (const Address& f, const Address& t) const
 							{ return (MemoryDUMP { _id, { _activeView -> dump (f, t) } }); }
+		// For all views...
 		MemoryDUMP dump (const Address& f, const Address& t) const;
+		/** To get the structure of the memory,
+			considering all (a = true) or only the active physical storages (a = false). */
+		// Only for the active view...
+		MemoryDUMP dumpStructureActive (bool a = true)
+							{ return (MemoryDUMP { _id, { _activeView -> dumpStructure (a) } }); }
+		// In all views...
+		MemoryDUMP dumpStructure (bool a = true);
 
 		/** It can be overloaded later, to set the specific content of specific zones. \n
 			By default only subsets have to be initialized, and all of them become active and also active for reading. */
