@@ -66,10 +66,20 @@ Memory Id:@ID@
 @DATA?{fmter=.CLASS,empty=no data}\n---\n@
 #---
 #---
+;MemoryStrStorage
+Storage Id:@ID@ (@NAME@) RAM:@RAM@ From:$@FROM@ To:$@TO@ Active:@ACTIVE@ Read:@READ@
+#---
+#---
+;MemoryStrView
+View Id:@ID@
+->Storages:
+@DATA?{fmter=MemoryStrStorage,empty=no storages}\n@
+#---
+#---
 ;MemoryStructure
 Memory Id:@ID@
 ->Views:
-@DATA?{fmter=.CLASS,empty=}\n---\n@
+@DATA?{fmter=MemoryStrView,empty=no storages}\n---\n@
 #---
 #---
 ;Memory
