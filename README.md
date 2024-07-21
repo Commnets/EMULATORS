@@ -46,11 +46,11 @@ SUPR                 = UP ARROW<br>
 <h1><b>VIC20 emulator</b></h1>
 The implementation of the framework for VIC20 has been included.<br>
 Execute VIC20EmulatorC or VIC20Emulator /h to see the different options at starting, and the command HELP in the console to manipulate later the emulation.<br>
-The different configurations of the VIC20 can be simulated using the parameter /w at command line (0=default,1=3k expansion,2=8k expansion,4=all).<br>
-<img src="./docs/VIC20Data/Picture1.png"/><br>
+The different configurations of the VIC20 can be simulated using the parameter /w at command line (0=default,1=3k expansion,2=8k expansion,4=all).<br><br>
+<img src="./docs/VIC20Data/Picture1.png"/>
 
 <h1><b>ZX81 emulator</b></h1>
 The implementation of the framework for ZX81 has been included.<br>
 Execute ZX81EmulatorC or ZX81Emulator /h to see the different options at starting, and the command HELP in the console to manipulate later the emulation.<br>
-The different configurations of the ZX81 can be simulated using the parameter /m to indicate the ROM (ZX811, ZX812, ZX812, or ZX80) and /w (0 = default and 1=16k expansion) at command line.<br>
-<img src="./docs/ZX81Data/Picture1.png"/><br>
+The different configurations of the ZX81 can be simulated using the parameter /m to indicate the ROM (ZX811, ZX812, ZX812, or ZX80) and /w (0 = default and 1=16k expansion) at command line.<br><br>
+<img src="./docs/ZX81Data/Picture1.png"/>
