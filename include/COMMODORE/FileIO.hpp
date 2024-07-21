@@ -181,9 +181,7 @@ namespace COMMODORE
 
 		virtual MCHEmul::ExtendedDataMemoryBlocks asMemoryBlocks () const override;
 
-		virtual std::string asString () const override
-							{ return (_tapeRecord._userDescriptor + 
-									  " (Version:" + std::to_string (_tapeRecord._version) + ")"); }
+		virtual std::string asString () const override;
 
 		TapeRecord _tapeRecord;
 		FileRecords _fileRecords;

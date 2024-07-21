@@ -167,7 +167,8 @@ MCHEmul::InfoStructure MCHEmul::MemoryViewDUMP::getInfoStructure () const
 	int ct = 0;
 	MCHEmul::InfoStructure dt;
 	for (const auto& i : _data)
-		dt.add (std::to_string (ct++), std::move (i.getInfoStructure ()));
+		dt.add (MCHEmul::fixLenStr (std::to_string (ct++), 5, true, MCHEmul::_CEROS), 
+			std::move (i.getInfoStructure ()));
 	result.add ("DATA", std::move (dt));
 
 	return (result);
@@ -350,7 +351,8 @@ MCHEmul::InfoStructure MCHEmul::MemoryDUMP::getInfoStructure () const
 	int ct = 0;
 	MCHEmul::InfoStructure dt;
 	for (const auto& i : _data)
-		dt.add (std::to_string (ct++), std::move (i.getInfoStructure ()));
+		dt.add (MCHEmul::fixLenStr (std::to_string (ct++), 5, true, MCHEmul::_CEROS), // To have it ordered...
+			std::move (i.getInfoStructure ()));
 	result.add ("DATA", std::move (dt));
 
 	return (result);

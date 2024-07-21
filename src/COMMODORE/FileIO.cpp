@@ -275,6 +275,22 @@ MCHEmul::ExtendedDataMemoryBlocks COMMODORE::T64FileData::asMemoryBlocks () cons
 }
 
 // ---
+std::string COMMODORE::T64FileData::asString () const
+{ 
+	std::string result;
+
+	bool f = true;
+	for (const auto& i : _fileRecords)
+	{
+		result += (!f ? "," : "") + i._fileName;
+		f = false;
+	}
+
+	return (_tapeRecord._userDescriptor + ":" + result +
+		" (Version:" + std::to_string (_tapeRecord._version) + ")"); 
+}
+
+// ---
 bool COMMODORE::T64FileTypeIO::canRead (const std::string& fN) const
 {
 	// Extension?
@@ -329,6 +345,8 @@ MCHEmul::FileData* COMMODORE::T64FileTypeIO::readFile (const std::string& fN, bo
 	rT64 -> _tapeRecord._entries = (unsigned short) ((unsigned char) data [1] << 8) + ((unsigned char) data [0]);
 	f.read (data, 2);
 	rT64 -> _tapeRecord._usedEntries = (unsigned short) (((unsigned char) data [1] << 8) + ((unsigned char) data [0]));
+	if (rT64 -> _tapeRecord._usedEntries == 0) 
+		rT64->_tapeRecord._usedEntries = 1; // It cannot be 0, 1 at least...
 	f.read (data, 2); // 2 bytes free...
 	f.read (data, 24); data [24] = 0;
 	rT64 -> _tapeRecord._userDescriptor = std::string (data);
@@ -360,7 +378,7 @@ MCHEmul::FileData* COMMODORE::T64FileTypeIO::readFile (const std::string& fN, bo
 
 	// The data...
 	unsigned int dSize = (unsigned int) size - 
-		64 - (32 * (unsigned int) rT64 -> _tapeRecord._entries) + 1;
+		64 - (32 * (unsigned int) rT64 -> _tapeRecord._usedEntries) + 1;
 	char* romData = new char [dSize];
 	f.read (romData, (std::streamsize) dSize);
 	std::vector <MCHEmul::UByte> romBytes;

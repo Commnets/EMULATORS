@@ -24,7 +24,7 @@ namespace MCHEmul
 {
 	/** Just to get info about all commands that can be executed. \n
 		That info is extracted from a file. \n
-		Command line: HELP (COMMAND) \n
+		Command line: HELP COMMAND \n
 		The structure of the file should be as follows: \n
 		# Line of comments. Ignored. \n
 		; Line to define that the info for a command starts. 
@@ -57,8 +57,8 @@ namespace MCHEmul
 		HelpInfo _helpInfo;
 	};
 
-	/** Just to know the name of the author. 
-		AUTHOR */
+	/** Just to know the name of the author. \n
+		Command line: AUTHOR */
 	class AuthorInfoCommand final : public Command
 	{
 		public:
@@ -121,7 +121,7 @@ namespace MCHEmul
 	};
 
 	/** To change the value of a register. \n
-		Command line: CHANGEREG [REGNAME] [VALUE]. */
+		Command line: CHANGEREG REGNAME VALUE. */
 	class RegisterChangeCommand final : public Command
 	{
 		public:
@@ -160,8 +160,8 @@ namespace MCHEmul
 		virtual void executeImpl (CommandExecuter* cE, Computer* c, InfoStructure& rst) override;
 	};
 
-	/** To get the status of the stack.
-		The command can be invoked in two different ways:
+	/** To get the status of the stack. \n
+		The command can be invoked in two different ways: \n
 		One very simple way with no parameters to get just basic information about the stack,
 		and other with the paremeter "ALL" to get even the content of the stack itself. 
 		Command line: STACK */
@@ -244,7 +244,7 @@ namespace MCHEmul
 		The command must have 1 parameter at least with the direction which value is requested. \n
 		A second parameter might be provided, and the the content between those two memory locations is got. \n
 		The address can be in octal, hexadecimal or decimal. \n
-		Command line: MEMORY ADDRESS (OTHER ADDRESS) 
+		Command line: MEMORY ADDRESS [OTHER ADDRESS] 
 		The values got at from the activeView and considering the current active memory regions only. */
 	class MemoryStatusCommand final : public Command
 	{
@@ -266,11 +266,11 @@ namespace MCHEmul
 	};
 
 	/** In some memory configuration,
-		some chips can be switched on/off a the value of a memory position could vary. \n
+		some chips can be switched on/off a the value of a memory position could vary as a consequence. \n
 		At the same time, the same memory location could be seen in different ways from those differemt chips. \n
 		All that complexity is managed by Memory clasess (@see Memory.hpp). \n
-		A method to get that info is needed. \n
-		Command line: FMEMORY ADDRESS1 ADDRESS2. */ 
+		A method to get that situation is needed. \n
+		Command line: MEMORYDUMP ADDRESS1 ADDRESS2. */ 
 	class MemoryDumpCommand final : public Command
 	{
 		public:
@@ -290,10 +290,9 @@ namespace MCHEmul
 		virtual void executeImpl (CommandExecuter* cE, Computer* c, InfoStructure& rst) override;
 	};
 
-	/** To get the structure of the memory (for all views).
-		Display all memory zones active or not depending on the parameter
-		The Command line is: \n
-		MEMORYSTR [ALL] */
+	/** To get the structure of the memory (from all views).  \
+		Display all memory zones active or not depending on the parameter. \n
+		Command line is: MEMORYSTR [ALL] */
 	class MemoryStructureCommand final : public Command
 	{
 		public:
@@ -313,10 +312,10 @@ namespace MCHEmul
 		virtual void executeImpl (CommandExecuter* cE, Computer* c, InfoStructure& rst) override;
 	};
 
-	/** To change the value of a memory location. 
+	/** To change the value of a memory location. \n
 		The command is usefull to set only one location of a set of them with the same value. \n
 		So 3 parameters could be provided. \n
-		Command line: SETMEMORY ADDRESS (FINAL ADDRESS) VALUE */
+		Command line: SETMEMORY ADDRESS [FINAL ADDRESS] VALUE */
 	class SetMemoryValueCommand final : public Command
 	{
 		public:
@@ -357,7 +356,7 @@ namespace MCHEmul
 
 	/** To run the cpu, usually after a stop command has been executed. \n
 		The run can start from another location passed optionally as parameter. \n
-		Command line: RUN (ADDRESS) */
+		Command line: RUN [ADDRESS] */
 	class RunCPUCommand final : public Command
 	{
 		public:
@@ -375,7 +374,8 @@ namespace MCHEmul
 		virtual void executeImpl (CommandExecuter* cE, Computer* c, InfoStructure& rst) override;
 	};
 
-	/** Just to change the value of the Proram Counter. */
+	/** Just to change the value of the Proram Counter. \n
+		Command line: SETPC ADDRESS. */
 	class SetProgramCounterCommand final : public Command
 	{
 		public:
@@ -412,7 +412,8 @@ namespace MCHEmul
 		virtual void executeImpl (CommandExecuter* cE, Computer* c, InfoStructure& rst) override;
 	};
 
-	/** To know what the next/nexts instruction/s will be. */
+	/** To know what the next/nexts instruction/s will be. \n
+		Command line: SHOWNEXT [N] */
 	class ShowNextInstructionCommand final : public Command
 	{
 		public:
@@ -474,7 +475,7 @@ namespace MCHEmul
 	};
 
 	/** To set a break point (or a set of them) in the code. \n
-		Command line: SETBREAK ADDRESS1 (ADDRESS2 ...) */
+		Command line: SETBREAK ADDRESS1 [ADDRESS2 ...] */
 	class SetBreakPointCommand final : public Command
 	{
 		public:
@@ -494,7 +495,7 @@ namespace MCHEmul
 
 	/** To remove a break point (or a set of them) in the code. \n
 		If the solicited address hadn't have any break point defined, nothing will happen. \n
-		Command line: REMOVEBREAK ADDRESS1 (ADDRESS2 ...) */
+		Command line: REMOVEBREAK ADDRESS1 [ADDRESS2 ...] */
 	class RemoveBreakPointCommand final : public Command
 	{
 		public:
@@ -607,12 +608,13 @@ namespace MCHEmul
 		virtual void executeImpl (CommandExecuter* cE, Computer* c, InfoStructure& rst) override;
 	};
 
-	/** Comand to activate the deep debug.
-		The parameter needed is the name of the file,
-		whether every execution has to be added at the end or not. \n
-		By default it is false (meaning not to add, but new file) and
-		additional elements indicating the chips to include in the deep debug.
-		By default none is included and ALL will mean all chips. */
+	/** Comand to activate the deep debug. \n
+		The mandatory parameters needed are the name of the file where to keep the info 
+		and whether to save or not CPU info. Other parameters are optional. \n
+		3rd to indicate whether the info must be saved at the end of a previous existing file (YES) or in a new one (NO). By default. \n
+		4rd to indicate whether the info of the CHIPS must be output. ALLCHIP, or the id of the chips preceded by C: \n
+		5rd same but with the info of the devices. ALLIO, or the id of the IO elements preceded by I: \n
+		DEEPON FILE YES|NO [YES|NO] [ALLCHIP] [ALLIO]. */
 	class ActivateDeepDebugCommand final : public Command
 	{
 		public:
@@ -624,7 +626,7 @@ namespace MCHEmul
 							{ }
 
 		virtual bool canBeExecuted () const override
-							{ return (_parameters.size () >= 1); }
+							{ return (_parameters.size () >= 2); }
 
 		private:
 		virtual void executeImpl (CommandExecuter* cE, Computer* c, InfoStructure& rst) override;
@@ -632,7 +634,8 @@ namespace MCHEmul
 
 	/** Comand to desactivate the deep debug. \n
 		No parameters are needed. \n
-		If the debug of only interruptions were activated the command wouldn't work. */
+		If the debug of only interruptions were activated the command wouldn't work. \n 
+		Comman line: DEEPOFF */
 	class DesactivateDeepDebugCommand final : public Command
 	{
 		public:
@@ -653,8 +656,7 @@ namespace MCHEmul
 	/** Comand to restart the computer. \n
 		The parameters required are whether it has to restart stopped or not
 		and optionally the type of restart (simple be default = 0). \n
-		The command is: \n
-		RESTART YES|NO [LEVEL]
+		Command line: RESTART YES|NO [LEVEL]
 		*/
 	class RestartComputerCommand final : public Command
 	{
@@ -677,7 +679,8 @@ namespace MCHEmul
 
 	/** Comand to list infomation about the io devices connected to the computer. \n
 		Never get wrong the io devices with the peripherals connected to each, that other command is used. \n
-		No parameters are needed. */
+		No parameters are needed. \n
+		Command line: IODEVICES */
 	class IODevicesCommand final : public Command
 	{
 		public:
@@ -698,7 +701,8 @@ namespace MCHEmul
 	/** Command to know the peripehrals connected to the computer. \n
 		The command allows to know the peripherals connected to a specific io device or all of them. \n
 		So the commnand gets 0 parameters (all peripherals) or 1 with the name of the io device which
-		peripherals is nneded to know. */
+		peripherals is nneded to know. \n
+		Command line: PERIPHERALS */
 	class PeripheralsCommand final : public Command
 	{
 		public:
@@ -719,7 +723,8 @@ namespace MCHEmul
 	/** Command to send an instruction to one peripheral. \n
 		The instruction / command has to be understood by the peripheral. \n
 		The command needs minimum two parameters: The id of the peripheral and the number of the command to execute. \n
-		But also additional parameters can be added. */
+		But also additional parameters can be added. \n
+		Command line: PERCOMMAND ID COMMAND */
 	class PeripheralInstructionCommand final : public Command
 	{
 		public:
@@ -739,7 +744,8 @@ namespace MCHEmul
 
 	/** Command to assign a different number to a given joystick. \n
 		E.g. When there is only one joystick the "system" assigns the number 0 to it, but
-		we might want it to act as joystick number 1. so an assigment from 0 to 1 would be needed. */
+		we might want it to act as joystick number 1. so an assigment from 0 to 1 would be needed. \n
+		Command line: ASSIGNJOY IDFROM IDTO */
 	class AssignJoystickNameCommand final : public Command
 	{
 		public:
@@ -758,7 +764,8 @@ namespace MCHEmul
 		virtual void executeImpl (CommandExecuter* cE, Computer* c, InfoStructure& rst) override;
 	};
 
-	/** Command to change the factor affecting the speed of the CPU clock. */
+	/** Command to change the factor affecting the speed of the CPU clock. \n
+		Command line: CLOCKFACTOR VAL */
 	class ChangeCPUClockCommand final : public Command
 	{
 		public:
@@ -777,7 +784,8 @@ namespace MCHEmul
 		virtual void executeImpl (CommandExecuter* cE, Computer* c, InfoStructure& rst) override;
 	};
 
-	/** Command to turn on the sound */
+	/** Command to turn on the sound. \n
+		Command line: SOUNDON */
 	class SoundOnCommand final : public Command
 	{
 		public:
@@ -796,7 +804,8 @@ namespace MCHEmul
 		virtual void executeImpl (CommandExecuter* cE, Computer* c, InfoStructure& rst) override;
 	};
 
-	/** Command to turn off the sound */
+	/** Command to turn off the sound. \n
+		Command line: SOUND OFF */
 	class SoundOffCommand final : public Command
 	{
 		public:
@@ -815,7 +824,7 @@ namespace MCHEmul
 		virtual void executeImpl (CommandExecuter* cE, Computer* c, InfoStructure& rst) override;
 	};
 
-	/** To get info about the situation of the Interrupts. 
+	/** To get info about the situation of the Interrupts. \n 
 		Command line: INTERRUPTS */
 	class InterruptsCommand final : public Command
 	{
@@ -837,8 +846,8 @@ namespace MCHEmul
 		virtual void executeImpl (CommandExecuter* cE, Computer* c, InfoStructure& rst) override;
 	};
 
-	/** To actove or desactive the interrupts. 
-		Command line: INTSET (INTID|ALL) (ON|OFF) */
+	/** To actove or desactive the interrupts. \n 
+		Command line: INTSET INTID|ALL ON|OFF */
 	class InterruptSetCommand : public Command
 	{
 		public:
@@ -858,7 +867,9 @@ namespace MCHEmul
 	};
 
 	/** To activate debug for an interruption. \n
-		No parameters are needed because the debug is activated for all interruptions. */
+		The paremeters needed are the name of the file where to keep the info 
+		and whether that info has or not to be added to the end of a previous existing file. 
+		Command line: IDEBUGON FILENAME [YES|NO] */
 	class InterruptDebugOnCommand final : public Command
 	{
 		public:
@@ -880,7 +891,8 @@ namespace MCHEmul
 	};
 
 	/** To desactivate debug for an interruption. \n
-		No parameters are need. */
+		No parameters are need. \n
+		Command line: IDEBUGOFF */
 	class InterruptDebugOffCommand final : public Command
 	{
 		public:
@@ -900,7 +912,8 @@ namespace MCHEmul
 	};
 
 	/** To get a list of the chips connected to the computer. \n
-		No parameters are needed. */
+		No parameters are needed. \n
+		Command line: CHIPS */
 	class ChipsListCommand final : public Command
 	{
 		public:
@@ -920,7 +933,8 @@ namespace MCHEmul
 	};
 
 	/** To activate the CRT effect. \n
-		No parameters are needed. */
+		No parameters are needed. \n
+		Command line: CRTON */
 	class CRTEffectOnCommand final : public Command
 	{
 		public:
@@ -940,7 +954,8 @@ namespace MCHEmul
 	};
 
 	/** To desactivate the CRT effect. \n
-		No parameters are needed. */
+		No parameters are needed. \n
+		Command line: CRTOFF */
 	class CRTEffectOffCommand final : public Command
 	{
 		public:
@@ -959,7 +974,9 @@ namespace MCHEmul
 		virtual void executeImpl (CommandExecuter* cE, Computer* c, InfoStructure& rst) override;
 	};
 
-	/** To get the status of the Datasette. */
+	/** To get the status of the Datasette. \n
+		No parameters are needed. \n
+		Command line: DATASETTE */
 	class DatasetteStatusCommand final : public Command
 	{
 		public:

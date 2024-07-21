@@ -546,16 +546,17 @@ void MCHEmul::ActivateDeepDebugCommand::executeImpl
 		return;
 
 	std::string fN = parameter ("00");	// The name of the file is always mandatory...
+	bool cpud = (parameter ("01") == "YES") ? true : false; // Whether to add or not CPU debug info is mandatory
 	std::vector <int> cId = { };		// None by default...
 	std::vector <int> iId = { };		// None by default...
 	bool a = false;						// Not to add by default...
-	if (parameters ().size () >= 2)
+	if (parameters ().size () >= 3)
 	{
-		a = (parameter ("01") == "YES") ? true : false;
+		a = (parameter ("02") == "YES") ? true : false;
 
-		if (parameters ().size () >= 3)
+		if (parameters ().size () >= 4)
 		{
-			int nP = 2;
+			int nP = 3;
 			std::string nPStr = ((nP < 10) ? "0" : "") + std::to_string (nP);
 			while (existParameter (nPStr))
 			{
@@ -585,7 +586,7 @@ void MCHEmul::ActivateDeepDebugCommand::executeImpl
 	}
 
 	rst.add ("ERROR", 
-		c -> activateDeepDebug (fN, cId, iId, a)
+		c -> activateDeepDebug (fN, cpud, cId, iId, a)
 				? std::string ("No errors")
 				: std::string ("Deep debugging activation error"));
 }
