@@ -43,4 +43,7 @@ SHIFT MINUS          = QUESTION MARK<br>
 SUPR                 = UP ARROW<br>
 
 <h1><b>VIC20 emulator</b></h1>
+<img src="./docs/VIC20Data/Picture1.png"/><br>
 
+<h1><b>ZX81 emulator</b></h1>
+<img src="./docs/ZX81Data/Picture1.png"/><br>
