@@ -13,6 +13,9 @@ Execute C64EmulatorC or C64Emulator /h to see the different options at starting,
 In that case, the behaviour of the VICII has been emulated following the fantastic article by Christian Bauer that can be found at: <a href="http://www.zimmers.net/cbmpics/cbm/c64/vic-ii.txt">Zimmers.net</a>.<br>
 The implementation of the SID chip has been based on the resid libry found at: <a href="http://www.zimmers.net/anonftp/pub/cbm/crossplatform/emulators/resid/index.html">Resid library</a>.<br><br><br>
 <img src="./docs/C64Data/Picture1.png"/><br>
+<img src="./docs/C64Data/Picture2.png"/><br>
+<img src="./docs/C64Data/Picture3.png"/><br>
+<img src="./docs/C64Data/Picture4.png"/><br>
 
 It has been an intention to emulate the location of the keys as they are inthe original keyboard.<br>
 For this reason the position of the different key can be a little bit "strange"<br>
@@ -47,10 +50,14 @@ SUPR                 = UP ARROW<br>
 The implementation of the framework for VIC20 has been included.<br>
 Execute VIC20EmulatorC or VIC20Emulator /h to see the different options at starting, and the command HELP in the console to manipulate later the emulation.<br>
 The different configurations of the VIC20 can be simulated using the parameter /w at command line (0=default,1=3k expansion,2=8k expansion,4=all).<br><br>
-<img src="./docs/VIC20Data/Picture1.png"/>
+<img src="./docs/VIC20Data/Picture1.png"/><br>
+<img src="./docs/VIC20Data/Picture2.png"/><br>
+<img src="./docs/VIC20Data/Picture3.png"/>
 
 <h1><b>ZX81 emulator</b></h1>
 The implementation of the framework for ZX81 has been included.<br>
 Execute ZX81EmulatorC or ZX81Emulator /h to see the different options at starting, and the command HELP in the console to manipulate later the emulation.<br>
 The different configurations of the ZX81 can be simulated using the parameter /m to indicate the ROM (ZX811, ZX812, ZX812, or ZX80) and /w (0 = default and 1=16k expansion) at command line.<br><br>
-<img src="./docs/ZX81Data/Picture1.png"/>
+<img src="./docs/ZX81Data/Picture1.png"/><br>
+<img src="./docs/ZX81Data/Picture2.png"/><br>
+<img src="./docs/ZX81Data/Picture3.png"/>
