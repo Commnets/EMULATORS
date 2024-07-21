@@ -12,7 +12,7 @@ The implementation of the framework for Commodore 64 has been included.<br>
 Execute C64EmulatorC or C64Emulator /h to see the different options at starting, and the command HELP in the console to manipulate later the emulation.<br>
 In that case, the behaviour of the VICII has been emulated following the fantastic article by Christian Bauer that can be found at: <a href="http://www.zimmers.net/cbmpics/cbm/c64/vic-ii.txt">Zimmers.net</a>.<br>
 The implementation of the SID chip has been based on the resid libry found at: <a href="http://www.zimmers.net/anonftp/pub/cbm/crossplatform/emulators/resid/index.html">Resid library</a>.<br><br><br>
-<img src="./docs/C64Data/Picture1.png"/><br>
+<img src="./docs/C64Data/Picture2.png"/><br>
 <img src="./docs/C64Data/Picture2.png"/><br>
 <img src="./docs/C64Data/Picture3.png"/><br>
 <img src="./docs/C64Data/Picture4.png"/><br>
