@@ -11,8 +11,8 @@ To compile the framework, Visual Studio compiler is needed and also the <a href=
 The implementation of the framework for Commodore 64 has been included.<br>
 In that case, the behaviour of the VICII has been emulated following the fantastic article by Christian Bauer that can be found at: <a href="http://www.zimmers.net/cbmpics/cbm/c64/vic-ii.txt">Zimmers.net</a><br>
 The implementation of the SID chip has been based on the resid libry found at: <a href="http://www.zimmers.net/anonftp/pub/cbm/crossplatform/emulators/resid/index.html">Resid library</a><br><br><br>
-<img src="./docs/C64Data/Picture1.png"/> 
-https://github.com/Commnets/EMULATORS/assets/5286165/20ed0a48-3744-45fd-8665-de1879c963ae<br>
+<img src="./docs/C64Data/Picture1.png"/><br>
+
 It has been an intention to emulate the location of the keys as they are inthe original keyboard.<br>
 For this reason the position of the different key can be a little bit "strange"<br>
 The important C64 keys in a Win32 standard <b>Spanish</b> keyboard are:<br>
