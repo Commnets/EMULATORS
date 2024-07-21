@@ -1,4 +1,4 @@
-<h1><b>Framework for Classic EMULATORS</b></h1><br>
+<h1><b>Framework for Classic EMULATORS (C64, VIC20, Plus4, ZX81...)</b></h1><br>
 Develop By <b>Ignacio Cea Forniés</b>. Copyright (C) 2023.<br>
 Used allowed under GPL license.<br>
 The framework has been developed fully in C++ (version 20) using <a href="https://visualstudio.microsoft.com/es/vs/">Visual Studio Community 2022 (64bits)</a>.<br><br>
