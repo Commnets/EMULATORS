@@ -103,6 +103,8 @@ Id:@ID@
 #---
 ;Computer
 @ATTRS?{key=YES,equal=:,empty=no attributes}\n@
+->Memory Structure:
+@MemoryStructure>@
 ->CPU:
 @CPU>@
 ->Chips:

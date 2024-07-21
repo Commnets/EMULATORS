@@ -228,6 +228,12 @@ MCHEmul::InfoStructure MCHEmul::LocalConsole::connectPeripheral (const std::stri
 	MCHEmul::InfoStructure result;
 
 	MCHEmul::Strings prmsL = parametersListFrom (prms);
+	if (prmsL.size () == 0)
+	{ 
+		result.add (std::string ("ERROR"), std::string ("Insuficient numberof arguments"));
+
+		return (result);
+	}
 
 	int prhId = std::atoi (prmsL [0].c_str ());
 	MCHEmul::Attributes prhAttrs;
@@ -252,6 +258,12 @@ MCHEmul::InfoStructure MCHEmul::LocalConsole::disconnectPeripherals (const std::
 	MCHEmul::InfoStructure result;
 
 	MCHEmul::Strings prmsL = parametersListFrom (prms);
+	if (prmsL.size () == 0)
+	{ 
+		result.add (std::string ("ERROR"), std::string ("Insuficient numberof arguments"));
+
+		return (result);
+	}
 
 	bool e = true;
 	for (const auto& i : prmsL)
