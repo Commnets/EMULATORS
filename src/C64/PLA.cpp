@@ -44,10 +44,10 @@ bool C64::PLA::simulate (MCHEmul::CPU* cpu)
 				<< "Status\t\t"
 				// Data
 				<< "_LORAM:"	<< (_LORAM ? "on" : "off")
-				<< "_HIRAM:"	<< (_HIRAM ? "on" : "off")
-				<< "_CHAREN:"	<< (_CHAREN ? "on" : "off")
-				<< "_GAME:"		<< (_GAME ? "on" : "off")
-				<< "_EXROM:"	<< (_EXROM ? "on" : "off") << "\n";
+				<< " _HIRAM:"	<< (_HIRAM ? "on" : "off")
+				<< " _CHAREN:"	<< (_CHAREN ? "on" : "off")
+				<< " _GAME:"	<< (_GAME ? "on" : "off")
+				<< " _EXROM:"	<< (_EXROM ? "on" : "off") << "\n";
 		}
 
 		dynamic_cast <C64::Memory*> (memoryRef ()) -> configureMemoryStructure 
