@@ -9,6 +9,7 @@ To compile the framework, Visual Studio compiler is needed and also the <a href=
 
 <h1><b>Commodore 64 emulator</b></h1>
 The implementation of the framework for Commodore 64 has been included.<br>
+Execute C64EmulatorC or C64Emulator /h to see the different options at starting, and the command HELP in the console to manipulate later the emulation.<br>
 In that case, the behaviour of the VICII has been emulated following the fantastic article by Christian Bauer that can be found at: <a href="http://www.zimmers.net/cbmpics/cbm/c64/vic-ii.txt">Zimmers.net</a>.<br>
 The implementation of the SID chip has been based on the resid libry found at: <a href="http://www.zimmers.net/anonftp/pub/cbm/crossplatform/emulators/resid/index.html">Resid library</a>.<br><br><br>
 <img src="./docs/C64Data/Picture1.png"/><br>
@@ -43,7 +44,13 @@ SHIFT MINUS          = QUESTION MARK<br>
 SUPR                 = UP ARROW<br>
 
 <h1><b>VIC20 emulator</b></h1>
+The implementation of the framework for VIC20 has been included.<br>
+Execute VIC20EmulatorC or VIC20Emulator /h to see the different options at starting, and the command HELP in the console to manipulate later the emulation.<br>
+The different configurations of the VIC20 can be simulated using the parameter /w at command line (0=default,1=3k expansion,2=8k expansion,4=all).<br>
 <img src="./docs/VIC20Data/Picture1.png"/><br>
 
 <h1><b>ZX81 emulator</b></h1>
+The implementation of the framework for ZX81 has been included.<br>
+Execute ZX81EmulatorC or ZX81Emulator /h to see the different options at starting, and the command HELP in the console to manipulate later the emulation.<br>
+The different configurations of the ZX81 can be simulated using the parameter /m to indicate the ROM (ZX811, ZX812, ZX812, or ZX80) and /w (0 = default and 1=16k expansion) at command line.<br>
 <img src="./docs/ZX81Data/Picture1.png"/><br>
