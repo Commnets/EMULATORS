@@ -107,6 +107,8 @@ namespace C64
 		  */
 		void configureMemoryStructure (bool BASIC, bool KERNEL, bool CHARROM, 
 			bool ROML, bool ROMH1, bool ROMH2);
+		void configureMemoryStructure (bool bCA, bool kCA, bool cRCA, bool cRVA, bool ioCA, 
+			bool rLCA, bool rH1CA, bool rH2CA, bool rH2VA, bool rCA);
 
 		private:
 		virtual MCHEmul::Stack* lookForStack () override

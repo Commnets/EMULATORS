@@ -114,6 +114,7 @@ namespace C64
 		Cartridge ();
 
 		void configureMemoryStructure (bool ROML, bool ROMH1, bool ROMH2);
+		void configureMemoryStructure (bool rLCA, bool rH1CA, bool rH2CA, bool rH2VA);
 
 		/** Only the PINS 8 and 9 are used
 			No other functionlaity has been implemented so far. */

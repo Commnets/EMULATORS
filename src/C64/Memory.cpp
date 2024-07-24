@@ -217,6 +217,90 @@ void C64::Memory::configureMemoryStructure (bool BASIC, bool KERNEL, bool CHARRO
 }
 
 // ---
+void C64::Memory::configureMemoryStructure (bool bCA, bool kCA, bool cRCA, bool cRVA, bool ioCA,
+	bool rLCA, bool rH1CA, bool rH2CA, bool rH2VA, bool rCA)
+{
+	// ULTIMAX situation when ROMH2 = true
+	// https://www.zimmers.net/anonftp/pub/cbm/c64/html/ultimax.html
+
+	// ---
+	// From the CPU perspective!
+	// $0000 - $0001: 6510 IOPorts always on, nothing to activate or desactivate...
+	// $0002 - $0fff: up to 4k RAM always on, nothing to activate or desactivate...
+	// $1000 - $7fff: 28k RAM on when Ultimax is not active
+	_ram00b				-> setActive (rCA); // CASRAM active!
+	_ram00b				-> setActiveForReading (rCA); // CASRAM active!
+	// $1000 - $7fff: 28k "disconnected" when the Ultimax mode is active
+	_ram00b_d			-> setActive (!rCA); // CASRAM no active!
+	_ram00b_d			-> setActiveForReading (!rCA); // CASRAM no active!
+	// $8000 - $9fff: 8k RAM on when Ultimax mode is not active 
+	_expansionRAMLO		-> setActive (rCA);
+	_expansionRAMLO		-> setActiveForReading (!rLCA); // But it is accesible in reading when the no cartrodge is connected there!
+	// A cartridge (ROML) could be connected here instead (@see cartridge)
+	// $a000 - $bfff: 8k BASIC. 
+	//				  Bear in mind that BASIC is on when no cartridge or 8k cartridge is in, 
+	//				  otherwise BASIC is off and either c16K cartridge is on or ultimax mode is active
+	_basicROM			-> setActive (bCA);
+	_basicROM			-> setActiveForReading (bCA);
+	// $a000 - $bfff: 8k RAM on when Ultimax is not active
+	_basicRAM			-> setActive (rCA);
+	_basicRAM			-> setActiveForReading (!bCA); // ..but only accesible when the ROM is not in...
+	// $a000 - $bfff: 8k "disconnected" when the Ultimax mode is active
+	_basicRAM_d			-> setActive (!rCA);
+	_basicRAM_d			-> setActiveForReading (!rCA);
+	// $c000 - $cfff: 4k RAM on when Ultimax mode is active
+	_ram1				-> setActive (rCA);
+	_ram1				-> setActiveForReading (rCA);
+	// $c000 - $cfff: 4k "disconnected" when Ultimax mode is not active
+	_ram1_d				-> setActive (!rCA);
+	_ram1_d				-> setActiveForReading (!rCA);
+	// $d000 - $dfff: 4k CHARROM
+	_charROM			-> setActive (cRCA);
+	_charROM			-> setActiveForReading (cRCA);
+	// $d000 - $dfff: 4k RAM on when Ultimax mode is not active
+	_charRAM			-> setActive (rCA);
+	_charRAM			-> setActiveForReading (false); // ...but it can never be reached from the CPU but not from VICII
+	// $d000 - $dfff: 4K IO
+	//				  Bear in mind than when cRCA is on ioCA is off and viceversa
+	_vicIIRegisters		-> setActive (ioCA);
+	_vicIIRegisters		-> setActiveForReading (ioCA);
+	_sidRegisters		-> setActive (ioCA);
+	_sidRegisters		-> setActiveForReading (ioCA);
+	_colorRAM			-> setActive (ioCA);
+	_colorRAM			-> setActiveForReading (ioCA);
+	_cia1Registers		-> setActive (ioCA);
+	_cia1Registers		-> setActiveForReading (ioCA);
+	_cia2Registers		-> setActive (ioCA);
+	_cia2Registers		-> setActiveForReading (ioCA);
+	_io1Registers		-> setActive (ioCA);
+	_io1Registers		-> setActiveForReading (ioCA);
+	_io2Registers		-> setActive (ioCA);
+	_io2Registers		-> setActiveForReading (ioCA);
+	// $e000 - $ffff: 8k KERNEL
+	_kernelROM			-> setActive (kCA);
+	_kernelROM			-> setActiveForReading (kCA);
+	// $e000 - $ffff: 8k RAM on when Ultimax mode is not active
+	_kernelRAM			-> setActive (!kCA);
+	_kernelRAM			-> setActiveForReading (!kCA);
+	// ---
+
+	// ---
+	// From VICII perspective!
+//	_bank0CharROM		-> setActive (!ROMH2);
+//	_bank0CharRAM		-> setActive (ROMH2);
+//	_bank0RAM2			-> setActive (!ROMH2); // Reference to ROMH instead...
+//	_bank1BRAM			-> setActive (!ROMH2); // Reference to ROMH instead...
+//	_bank2CharROM		-> setActive (!ROMH2);
+//	_bank2CharRAM		-> setActive (ROMH2);
+//	_bank2RAM2			-> setActive (!ROMH2); // Reference to ROMH instead...
+//	_bank3BRAM			-> setActive (!ROMH2); // Reference to ROMH instead...
+	// ---
+
+	if (_cartridge != nullptr)
+		_cartridge -> configureMemoryStructure (rLCA, rH1CA, rH2CA, rH2VA);
+}
+
+// ---
 MCHEmul::Memory::Content C64::Memory::standardMemoryContent ()
 {
 	/** All dirs in Little - endian format. */

@@ -57,6 +57,45 @@ void C64::Cartridge::configureMemoryStructure (bool ROML, bool ROMH1, bool ROMH2
 }
 
 // ---
+void C64::Cartridge::configureMemoryStructure (bool rLCA, bool rH1CA, bool rH2CA, bool rH2VA)
+{
+	// Just in case...
+	if (data ()._data.empty ())
+		return;
+
+	switch (type ())
+	{
+		default:
+			{
+				assert (_cpuSubsets.size () == 4);
+				_cpuSubsets [_EXPANSIONROMBASE_SUBSET + 0] -> setActive (rLCA);
+				_cpuSubsets [_EXPANSIONROMBASE_SUBSET + 0] -> setActiveForReading (rLCA);
+				_cpuSubsets [_EXPANSIONROMBASE_SUBSET + 1] -> setActive (rH1CA);
+				_cpuSubsets [_EXPANSIONROMBASE_SUBSET + 1] -> setActiveForReading (rH1CA);
+				_cpuSubsets [_EXPANSIONROMBASE_SUBSET + 2] -> setActive (rH2CA);
+				_cpuSubsets [_EXPANSIONROMBASE_SUBSET + 2] -> setActiveForReading (rH2CA);
+				_cpuSubsets [_EXPANSIONROMBASE_SUBSET + 3] -> setActive (rH2CA);
+				_cpuSubsets [_EXPANSIONROMBASE_SUBSET + 3] -> setActiveForReading (rH2CA);
+
+				if (_ultimax && 
+					!_viciiSubsets.empty ())
+				{
+					_viciiSubsets [_EXPANSIONROMBASEI_SUBSET + 0] -> setActive (rH2VA);
+					_viciiSubsets [_EXPANSIONROMBASEI_SUBSET + 0] -> setActiveForReading (rH2VA);
+					_viciiSubsets [_EXPANSIONROMBASEI_SUBSET + 1] -> setActive (rH2VA);
+					_viciiSubsets [_EXPANSIONROMBASEI_SUBSET + 1] -> setActiveForReading (rH2VA);
+					_viciiSubsets [_EXPANSIONROMBASEI_SUBSET + 2] -> setActive (rH2VA);
+					_viciiSubsets [_EXPANSIONROMBASEI_SUBSET + 2] -> setActiveForReading (rH2VA);
+					_viciiSubsets [_EXPANSIONROMBASEI_SUBSET + 3] -> setActive (rH2VA);
+					_viciiSubsets [_EXPANSIONROMBASEI_SUBSET + 3] -> setActiveForReading (rH2VA);
+				}
+			}
+
+			break;
+	}
+}
+
+// ---
 bool C64::Cartridge::PIN_UP (unsigned char nP) const
 {
 	bool result = true;
@@ -64,11 +103,11 @@ bool C64::Cartridge::PIN_UP (unsigned char nP) const
 	if (nP == C64::ExpansionIOPort::_GAME)
 		result = data ()._data.empty () 
 			? true // When there is no data in the cartridge...
-			: MCHEmul::upper ((*data ()._attributes.find ("_GAME")).second) == "YES"; // When it is true, then goes low...
+			: MCHEmul::upper ((*data ()._attributes.find ("_GAME")).second) == "YES"; // When active, _GAME = false...
 	else if (nP == C64::ExpansionIOPort::_EXROM)
 		result = data ()._data.empty () 
 			? true // When there is no data in the cartridge...
-			: MCHEmul::upper ((*data ()._attributes.find ("_EXROM")).second) == "YES"; // When it is true, then goes low...
+			: MCHEmul::upper ((*data ()._attributes.find ("_EXROM")).second) == "YES"; // When active, _EXROM = false...
 	else 
 		result = COMMODORE::ExpansionPeripheral::PIN_UP (nP);
 
