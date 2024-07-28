@@ -412,6 +412,30 @@ MCHEmul::ExtendedDataMemoryBlocks COMMODORE::CRTFileData::asMemoryBlocks () cons
 }
 
 // ---
+std::string COMMODORE::CRTFileData::asString () const
+{ 
+	std::string cD;
+
+	size_t ct = 0;
+	for (const auto& i : _chipsData)
+	{
+		cD += ((ct != 0) ? "," : "") + 
+			MCHEmul::removeAll0 (i._startingLoadAddress.asString (MCHEmul::UByte::OutputFormat::_HEXA, '\0', 2)) +
+				" " + std::to_string (i._romSize) + " bytes";
+
+		ct++;
+	}
+
+	return (_name + 
+		" (Type:" + std::to_string (_cartridgeType) +
+		", EXROM:" + (_EXROMActive ? "YES" : "NO") +
+		", GAME:" + (_GAMEActive ? "YES" : "NO") +
+		", ULTIMAX:" + ((_EXROMActive && !_GAMEActive) ? "YES" : "NO") +
+		", Version:" + std::to_string (_cartridgeVersion) + 
+		", Chips:" + cD + ")"); 
+}
+
+// ---
 bool COMMODORE::CRTFileTypeIO::canRead (const std::string& fN) const
 {
 	// Extension?

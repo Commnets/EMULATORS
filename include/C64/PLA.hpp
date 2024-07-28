@@ -40,6 +40,8 @@ namespace C64
 
 		virtual bool simulate (MCHEmul::CPU* cpu) override;
 
+		virtual MCHEmul::InfoStructure getInfoStructure () const override;
+
 		private:
 		void processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifier*) override;
 
@@ -50,8 +52,6 @@ namespace C64
 		bool statusAffected () const
 							{ bool r = _statusAffected; _statusAffected = false; return (r); }
 
-		virtual MCHEmul::InfoStructure getInfoStructure () const override;
-
 		private:
 		// Inputs to the PLA...
 		/** From the C64 IO Port (Byte 0x011m bites 0,1,2). */
@@ -60,6 +60,9 @@ namespace C64
 
 		// Implementation
 		mutable bool _statusAffected;
+		bool _noneOrC8k, _c16k, _c8Or16k, _ultimax;
+		bool _basicActive, _kernelActive, _charromActive_cpu, _charromActive_vicII, _ioActive_cpu;
+		bool _romlActive, _romh1Active_cpu, _romh2Active_cpu, _romh2Active_vicII;
 	};
 }
 

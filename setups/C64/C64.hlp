@@ -8,6 +8,9 @@ No parameters are needed.
 ;CIA2
 To know the status of the CIA2 chip.
 No parameters are needed.
+;PLA
+To know the status of the PLA chip.
+No parameters are needed.
 ;SCREENDUMP
 To know the content of the screen.
 No parameters are needed.

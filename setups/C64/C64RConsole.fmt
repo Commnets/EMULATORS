@@ -18,7 +18,7 @@ Id:@ID@
 A:@PortA@, B:@PortB@
 Dir A:@CIDDRA@, Dir B:@CIDDRB@
 ->SerialPort:
-@SerialPort>@
+@CIASerialPort>@
 #---
 #---
 ;CIA2
@@ -36,7 +36,32 @@ Id:@ID@
 A:@PortA@, B:@PortB@
 Dir A:@CIDDRA@, Dir B:@CIDDRB@
 ->SerialPort:
-@SerialPort>@
+@CIASerialPort>@
+#---
+#---
+;PLA
+Id:@ID@
+@ATTRS?{key=YES,equal=:,empty=no attributes}\n@
+->Internal IO:
+_LORAM:@_LORAM@, _HIRAM:@_HIRAM@, _CHAREN:@_CHAREN@
+->Cartridge lines:
+_GAME:@_GAME@, _EXROM:@_EXROM@
+->Internal configuration:
+NONEORC8K:@NONEORC8K@, C16K:@C16K@, C8OR16K:@C8OR16K@, ULTIMAX:@ULTIMAX@
+BASIC:@BASIC@, KERNEL:@KERNEL@, CHRROMCPU:@CHARROMCPU@, CHRROMVICII:@CHARROMVICII@, IO:@IO@
+ROML:@ROML@, ROMH1:@ROMH1@, ROMH2CPU:@ROMH2CPU@, ROMH2VICII:@ROMH2VICII@
+#---
+#---
+;CCIA1
+@CIA1>@
+#---
+#---
+;CCIA2
+@CIA2>@
+#---
+#---
+;CPLA
+@PLA>@
 #---
 #---
 ;CSCREENDUMP

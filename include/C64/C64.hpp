@@ -19,6 +19,7 @@
 #include <C64/Screen.hpp>
 #include <C64/CIA1.hpp>
 #include <C64/CIA2.hpp>
+#include <C64/PLA.hpp>
 
 namespace C64
 {
@@ -56,6 +57,8 @@ namespace C64
 							{ return (dynamic_cast <const CIA2*> ((*_chips.find (CIA2::_ID)).second)); }
 		CIA2* cia2 ()
 							{ return (dynamic_cast <CIA2*> ((*_chips.find (CIA2::_ID)).second)); }
+		PLA* pla ()
+							{ return (dynamic_cast <PLA*> ((*_chips.find (PLA::_ID)).second)); }
 
 		private:
 		virtual void processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifier* n) override;

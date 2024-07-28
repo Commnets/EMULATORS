@@ -18,7 +18,7 @@ C64::Cartridge::Cartridge ()
 }
 
 // ---
-void C64::Cartridge::configureMemoryStructure (bool ROML, bool ROMH1, bool ROMH2)
+void C64::Cartridge::configureMemoryStructure (bool romL, bool romH1, bool romH2CPU, bool romH2VIC)
 {
 	// Just in case...
 	if (data ()._data.empty ())
@@ -29,65 +29,26 @@ void C64::Cartridge::configureMemoryStructure (bool ROML, bool ROMH1, bool ROMH2
 		default:
 			{
 				assert (_cpuSubsets.size () == 4);
-				_cpuSubsets [_EXPANSIONROMBASE_SUBSET + 0] -> setActive (true);
-				_cpuSubsets [_EXPANSIONROMBASE_SUBSET + 0] -> setActiveForReading (ROML);
-				_cpuSubsets [_EXPANSIONROMBASE_SUBSET + 1] -> setActive (true);
-				_cpuSubsets [_EXPANSIONROMBASE_SUBSET + 1] -> setActiveForReading (ROMH1);
-				_cpuSubsets [_EXPANSIONROMBASE_SUBSET + 2] -> setActive (true);
-				_cpuSubsets [_EXPANSIONROMBASE_SUBSET + 2] -> setActiveForReading (ROMH2);
-				_cpuSubsets [_EXPANSIONROMBASE_SUBSET + 3] -> setActive (true);
-				_cpuSubsets [_EXPANSIONROMBASE_SUBSET + 3] -> setActiveForReading (ROMH2);
+				_cpuSubsets [_EXPANSIONROMBASE_SUBSET + 0] -> setActive (romL);
+				_cpuSubsets [_EXPANSIONROMBASE_SUBSET + 0] -> setActiveForReading (romL);
+				_cpuSubsets [_EXPANSIONROMBASE_SUBSET + 1] -> setActive (romH1);
+				_cpuSubsets [_EXPANSIONROMBASE_SUBSET + 1] -> setActiveForReading (romH1);
+				_cpuSubsets [_EXPANSIONROMBASE_SUBSET + 2] -> setActive (romH2CPU);
+				_cpuSubsets [_EXPANSIONROMBASE_SUBSET + 2] -> setActiveForReading (romH2CPU);
+				_cpuSubsets [_EXPANSIONROMBASE_SUBSET + 3] -> setActive (romH2CPU);
+				_cpuSubsets [_EXPANSIONROMBASE_SUBSET + 3] -> setActiveForReading (romH2CPU);
 
-				if (_ultimax && 
+				if (_ultimax && // double check...
 					!_viciiSubsets.empty ())
 				{
-					_viciiSubsets [_EXPANSIONROMBASEI_SUBSET + 0] -> setActive (true);
-					_viciiSubsets [_EXPANSIONROMBASEI_SUBSET + 0] -> setActiveForReading (true);
-					_viciiSubsets [_EXPANSIONROMBASEI_SUBSET + 1] -> setActive (true);
-					_viciiSubsets [_EXPANSIONROMBASEI_SUBSET + 1] -> setActiveForReading (true);
-					_viciiSubsets [_EXPANSIONROMBASEI_SUBSET + 2] -> setActive (true);
-					_viciiSubsets [_EXPANSIONROMBASEI_SUBSET + 2] -> setActiveForReading (true);
-					_viciiSubsets [_EXPANSIONROMBASEI_SUBSET + 3] -> setActive (true);
-					_viciiSubsets [_EXPANSIONROMBASEI_SUBSET + 3] -> setActiveForReading (true);
-				}
-			}
-
-			break;
-	}
-}
-
-// ---
-void C64::Cartridge::configureMemoryStructure (bool rLCA, bool rH1CA, bool rH2CA, bool rH2VA)
-{
-	// Just in case...
-	if (data ()._data.empty ())
-		return;
-
-	switch (type ())
-	{
-		default:
-			{
-				assert (_cpuSubsets.size () == 4);
-				_cpuSubsets [_EXPANSIONROMBASE_SUBSET + 0] -> setActive (rLCA);
-				_cpuSubsets [_EXPANSIONROMBASE_SUBSET + 0] -> setActiveForReading (rLCA);
-				_cpuSubsets [_EXPANSIONROMBASE_SUBSET + 1] -> setActive (rH1CA);
-				_cpuSubsets [_EXPANSIONROMBASE_SUBSET + 1] -> setActiveForReading (rH1CA);
-				_cpuSubsets [_EXPANSIONROMBASE_SUBSET + 2] -> setActive (rH2CA);
-				_cpuSubsets [_EXPANSIONROMBASE_SUBSET + 2] -> setActiveForReading (rH2CA);
-				_cpuSubsets [_EXPANSIONROMBASE_SUBSET + 3] -> setActive (rH2CA);
-				_cpuSubsets [_EXPANSIONROMBASE_SUBSET + 3] -> setActiveForReading (rH2CA);
-
-				if (_ultimax && 
-					!_viciiSubsets.empty ())
-				{
-					_viciiSubsets [_EXPANSIONROMBASEI_SUBSET + 0] -> setActive (rH2VA);
-					_viciiSubsets [_EXPANSIONROMBASEI_SUBSET + 0] -> setActiveForReading (rH2VA);
-					_viciiSubsets [_EXPANSIONROMBASEI_SUBSET + 1] -> setActive (rH2VA);
-					_viciiSubsets [_EXPANSIONROMBASEI_SUBSET + 1] -> setActiveForReading (rH2VA);
-					_viciiSubsets [_EXPANSIONROMBASEI_SUBSET + 2] -> setActive (rH2VA);
-					_viciiSubsets [_EXPANSIONROMBASEI_SUBSET + 2] -> setActiveForReading (rH2VA);
-					_viciiSubsets [_EXPANSIONROMBASEI_SUBSET + 3] -> setActive (rH2VA);
-					_viciiSubsets [_EXPANSIONROMBASEI_SUBSET + 3] -> setActiveForReading (rH2VA);
+					_viciiSubsets [_EXPANSIONROMBASEI_SUBSET + 0] -> setActive (romH2VIC);
+					_viciiSubsets [_EXPANSIONROMBASEI_SUBSET + 0] -> setActiveForReading (romH2VIC);
+					_viciiSubsets [_EXPANSIONROMBASEI_SUBSET + 1] -> setActive (romH2VIC);
+					_viciiSubsets [_EXPANSIONROMBASEI_SUBSET + 1] -> setActiveForReading (romH2VIC);
+					_viciiSubsets [_EXPANSIONROMBASEI_SUBSET + 2] -> setActive (romH2VIC);
+					_viciiSubsets [_EXPANSIONROMBASEI_SUBSET + 2] -> setActiveForReading (romH2VIC);
+					_viciiSubsets [_EXPANSIONROMBASEI_SUBSET + 3] -> setActive (romH2VIC);
+					_viciiSubsets [_EXPANSIONROMBASEI_SUBSET + 3] -> setActiveForReading (romH2VIC);
 				}
 			}
 

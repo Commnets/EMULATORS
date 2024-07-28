@@ -56,11 +56,30 @@ namespace C64
 			MCHEmul::Computer* c, MCHEmul::InfoStructure& rst) override;
 	};
 
+	/** To get the status of the PLA chip. */
+	class PLAStatusCommand final : public MCHEmul::Command
+	{
+		public:
+		static const int _ID = 202;
+		static const std::string _NAME;
+
+		PLAStatusCommand ()
+			: MCHEmul::Command (_ID, _NAME)
+							{ }
+
+		virtual bool canBeExecuted () const override
+							{ return (_parameters.size () == 0); }
+
+		private:
+		virtual void executeImpl (MCHEmul::CommandExecuter* cE, 
+			MCHEmul::Computer* c, MCHEmul::InfoStructure& rst) override;
+	};
+
 	/** To get a status of the screen memory. */
 	class ScreenMemoryDUMPCommand final : public MCHEmul::Command
 	{
 		public:
-		static const int _ID = 202;
+		static const int _ID = 203;
 		static const std::string _NAME;
 
 		ScreenMemoryDUMPCommand ()
@@ -79,7 +98,7 @@ namespace C64
 	class ColorMemoryDUMPCommand final : public MCHEmul::Command
 	{
 		public:
-		static const int _ID = 203;
+		static const int _ID = 204;
 		static const std::string _NAME;
 
 		ColorMemoryDUMPCommand ()
@@ -98,7 +117,7 @@ namespace C64
 	class BitmapMemoryDUMPCommand final : public MCHEmul::Command
 	{
 		public:
-		static const int _ID = 204;
+		static const int _ID = 205;
 		static const std::string _NAME;
 
 		BitmapMemoryDUMPCommand ()
@@ -121,7 +140,7 @@ namespace C64
 	class SpritesMemoryDUMPCommand final : public MCHEmul::Command
 	{
 		public:
-		static const int _ID = 205;
+		static const int _ID = 206;
 		static const std::string _NAME;
 
 		SpritesMemoryDUMPCommand ()
@@ -144,7 +163,7 @@ namespace C64
 	class SpritesDrawCommand final : public MCHEmul::Command
 	{
 		public:
-		static const int _ID = 206;
+		static const int _ID = 207;
 		static const std::string _NAME;
 
 		SpritesDrawCommand ()
@@ -167,7 +186,7 @@ namespace C64
 	class CharactersDrawCommand final : public MCHEmul::Command
 	{
 		public:
-		static const int _ID = 206;
+		static const int _ID = 208;
 		static const std::string _NAME;
 
 		CharactersDrawCommand ()

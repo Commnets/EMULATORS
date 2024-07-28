@@ -12,6 +12,8 @@ MCHEmul::Command* C64::CommandBuilder::createEmptyCommand (const std::string& cm
 		result = new C64::CIA1StatusCommand;
 	else if (cmdName == "CIA2" || cmdName == C64::CIA2StatusCommand::_NAME)
 		result = new C64::CIA2StatusCommand;
+	else if (cmdName == "PLA" || cmdName == C64::PLAStatusCommand::_NAME)
+		result = new C64::PLAStatusCommand;
 	else if (cmdName == "SCREENDUMP" || cmdName == C64::ScreenMemoryDUMPCommand::_NAME)
 		result = new C64::ScreenMemoryDUMPCommand;
 	else if (cmdName == "COLORDUMP" || cmdName == C64::ColorMemoryDUMPCommand::_NAME)

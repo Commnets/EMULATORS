@@ -92,23 +92,19 @@ namespace C64
 		  *	In C64 memory several parts can be defined as RAM or ROM (from the CPU view). \n
 		  *	This method is to switch on / off the different options. \n
 		  *	The paremeters are:
-		  * @param BASIC	:	True when the BASIC ROM is on.
-		  * @param KERNEL	:	True when the KERNEL ROM is on.
-		  * @param CHARROM	:	True when the CHARACTER SET ROM is on.
-		  * @param ROML		:	True when the EXPANSION PORT ROML is on.
-		  * @param ROMH1	:	True when the EXPANSION PORT ROMH1 (zone at BASIC ROM) is on.
-		  * @param ROMH2	:	True when the EXPANSION PORT ROMH2 (zone at KERNEL ROM) is on.
-		  * To determine whether the RAM in those places is on or off,
-		  * some logic has to be applied:
-		  * RAM at $8000 = !ROML
-		  * RAM at $a000 = !ROMH1 AND !BASIC
-		  * RAM at $e000 = !ROMH2 AND !KERNEL
+		  * @param basic	:	True when the BASIC ROM is on.
+		  * @param kernel	:	True when the KERNEL ROM is on.
+		  * @param chrRomCPU:	True when the CHARACTER SET ROM is on from the CPU perspective.
+		  * @param chrRomVIC:	True when the CHARACTER SET ROM is on from the VIC perspective.
+		  * @param io		:	True when the IO access is on.
+		  * @param romL		:	True when the EXPANSION PORT ROML is on.
+		  * @param romH1	:	True when the EXPANSION PORT ROMH1 (zone at BASIC ROM) is on.
+		  * @param romH2CPU	:	True when the EXPANSION PORT ROMH2 (zone at KERNEL ROM first 4k) is on from the CPU perspective.
+		  * @param romH2VIC	:	True when the EXPANSION PORT ROMH2 (zone at KERNEL ROM second 4k) is on from the VIC perspective.
 		  *	https://www.c64-wiki.com/wiki/Bank_Switching (very important to know all combinations possible)
 		  */
-		void configureMemoryStructure (bool BASIC, bool KERNEL, bool CHARROM, 
-			bool ROML, bool ROMH1, bool ROMH2);
-		void configureMemoryStructure (bool bCA, bool kCA, bool cRCA, bool cRVA, bool ioCA, 
-			bool rLCA, bool rH1CA, bool rH2CA, bool rH2VA, bool rCA);
+		void configureMemoryStructure (bool basic, bool kernel, bool chrRomCPU, bool chrRomVIC, bool io, 
+			bool romL, bool romH1, bool romH2CPU, bool romH2VIC, bool uM);
 
 		private:
 		virtual MCHEmul::Stack* lookForStack () override

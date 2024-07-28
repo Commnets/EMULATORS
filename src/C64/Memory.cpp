@@ -152,152 +152,102 @@ bool C64::Memory::initialize ()
 
 	// The initial basic configuration of the memory is the standard
 	// BASIC, KERNEL connected, CHARROM not connected, and no cartridge extension...
-	configureMemoryStructure (true, true, false, false, false, false);
+	configureMemoryStructure (true, true, false, true, true, false, false, false, false, false);
 
 	return (true);
 }
 
 // ---
-void C64::Memory::configureMemoryStructure (bool BASIC, bool KERNEL, bool CHARROM, 
-	bool ROML, bool ROMH1, bool ROMH2)
-{
-	// ULTIMAX situation when ROMH2 = true
-	// https://www.zimmers.net/anonftp/pub/cbm/c64/html/ultimax.html
-
-	// From the CPU perspective!
-	// $0000 - $0001: 6510 IOPorts always on...
-	// $0002 - $0fff: up to 4k RAM always on...
-	// $1000 - $7fff: 28k RAM on when Ultimax not connected (_ram00b_d)
-	_ram00b				-> setActive (!ROMH2);
-	_ram00b_d			-> setActive (ROMH2);
-	// $8000 - $9fff: either RAM, or ROML (a cartridge should be connected instead, @see Catridge). 
-	// Ultimax also uses these position as ROML.
-	_expansionRAMLO		-> setActive (!ROMH2); // ROML instead...
-	_expansionRAMLO		-> setActiveForReading (!ROML);
-	// $a000 - $bfff: either basic ROM, or RAM or not connected in Ultimax mode (_basicRAM_d)
-	_basicROM			-> setActive (!ROMH2);
-	_basicROM			-> setActiveForReading (BASIC);
-	_basicRAM			-> setActive (!ROMH2);
-	_basicRAM			-> setActiveForReading (!ROMH1 && !BASIC);
-	_basicRAM_d			-> setActive (ROMH2);
-	// $c000 - $cfff: either RAM or not connected in Ultimax mode (_ram1_d)
-	_ram1				-> setActive (!ROMH2);
-	_ram1_d				-> setActive (ROMH2);
-	// $d000 - $dfff: either RAM, char ROM or IO settings
-	_charROM			-> setActive (!ROMH2);
-	_charROM			-> setActiveForReading (CHARROM);
-	_charRAM			-> setActive (!ROMH2);
-	_charRAM			-> setActive (CHARROM);
-	_charRAM			-> setActiveForReading (!CHARROM);
-	_vicIIRegisters		-> setActive (!CHARROM);
-	_sidRegisters		-> setActive (!CHARROM);
-	_colorRAM			-> setActive (!CHARROM);
-	_cia1Registers		-> setActive (!CHARROM);
-	_cia2Registers		-> setActive (!CHARROM);
-	_io1Registers		-> setActive (!CHARROM);
-	_io2Registers		-> setActive (!CHARROM);
-	// $e000 - $ffff: either RAM or ROM
-	_kernelROM			-> setActive (!ROMH2);
-	_kernelROM			-> setActiveForReading (KERNEL);
-	_kernelRAM			-> setActive (!ROMH2); // ROMH instead...
-	_kernelRAM			-> setActiveForReading (!ROMH2 && !KERNEL);
-
-	// From VICII perspective!
-	_bank0CharROM		-> setActive (!ROMH2);
-	_bank0CharRAM		-> setActive (ROMH2);
-	_bank0RAM2			-> setActive (!ROMH2); // Reference to ROMH instead...
-	_bank1BRAM			-> setActive (!ROMH2); // Reference to ROMH instead...
-	_bank2CharROM		-> setActive (!ROMH2);
-	_bank2CharRAM		-> setActive (ROMH2);
-	_bank2RAM2			-> setActive (!ROMH2); // Reference to ROMH instead...
-	_bank3BRAM			-> setActive (!ROMH2); // Reference to ROMH instead...
-
-	if (_cartridge != nullptr)
-		_cartridge -> configureMemoryStructure (ROML, ROMH1, ROMH2);
-}
-
-// ---
-void C64::Memory::configureMemoryStructure (bool bCA, bool kCA, bool cRCA, bool cRVA, bool ioCA,
-	bool rLCA, bool rH1CA, bool rH2CA, bool rH2VA, bool rCA)
+void C64::Memory::configureMemoryStructure (bool basic, bool kernel, bool chrRomCPU, bool chrRomVIC, bool io, 
+	bool romL, bool romH1, bool romH2CPU, bool romH2VIC, bool uM)
 {
 	// ULTIMAX situation when ROMH2 = true
 	// https://www.zimmers.net/anonftp/pub/cbm/c64/html/ultimax.html
 
 	// ---
-	// From the CPU perspective!
-	// $0000 - $0001: 6510 IOPorts always on, nothing to activate or desactivate...
-	// $0002 - $0fff: up to 4k RAM always on, nothing to activate or desactivate...
-	// $1000 - $7fff: 28k RAM on when Ultimax is not active
-	_ram00b				-> setActive (rCA); // CASRAM active!
-	_ram00b				-> setActiveForReading (rCA); // CASRAM active!
-	// $1000 - $7fff: 28k "disconnected" when the Ultimax mode is active
-	_ram00b_d			-> setActive (!rCA); // CASRAM no active!
-	_ram00b_d			-> setActiveForReading (!rCA); // CASRAM no active!
-	// $8000 - $9fff: 8k RAM on when Ultimax mode is not active 
-	_expansionRAMLO		-> setActive (rCA);
-	_expansionRAMLO		-> setActiveForReading (!rLCA); // But it is accesible in reading when the no cartrodge is connected there!
-	// A cartridge (ROML) could be connected here instead (@see cartridge)
-	// $a000 - $bfff: 8k BASIC. 
-	//				  Bear in mind that BASIC is on when no cartridge or 8k cartridge is in, 
-	//				  otherwise BASIC is off and either c16K cartridge is on or ultimax mode is active
-	_basicROM			-> setActive (bCA);
-	_basicROM			-> setActiveForReading (bCA);
-	// $a000 - $bfff: 8k RAM on when Ultimax is not active
-	_basicRAM			-> setActive (rCA);
-	_basicRAM			-> setActiveForReading (!bCA); // ..but only accesible when the ROM is not in...
-	// $a000 - $bfff: 8k "disconnected" when the Ultimax mode is active
-	_basicRAM_d			-> setActive (!rCA);
-	_basicRAM_d			-> setActiveForReading (!rCA);
-	// $c000 - $cfff: 4k RAM on when Ultimax mode is active
-	_ram1				-> setActive (rCA);
-	_ram1				-> setActiveForReading (rCA);
-	// $c000 - $cfff: 4k "disconnected" when Ultimax mode is not active
-	_ram1_d				-> setActive (!rCA);
-	_ram1_d				-> setActiveForReading (!rCA);
-	// $d000 - $dfff: 4k CHARROM
-	_charROM			-> setActive (cRCA);
-	_charROM			-> setActiveForReading (cRCA);
-	// $d000 - $dfff: 4k RAM on when Ultimax mode is not active
-	_charRAM			-> setActive (rCA);
-	_charRAM			-> setActiveForReading (false); // ...but it can never be reached from the CPU but not from VICII
-	// $d000 - $dfff: 4K IO
-	//				  Bear in mind than when cRCA is on ioCA is off and viceversa
-	_vicIIRegisters		-> setActive (ioCA);
-	_vicIIRegisters		-> setActiveForReading (ioCA);
-	_sidRegisters		-> setActive (ioCA);
-	_sidRegisters		-> setActiveForReading (ioCA);
-	_colorRAM			-> setActive (ioCA);
-	_colorRAM			-> setActiveForReading (ioCA);
-	_cia1Registers		-> setActive (ioCA);
-	_cia1Registers		-> setActiveForReading (ioCA);
-	_cia2Registers		-> setActive (ioCA);
-	_cia2Registers		-> setActiveForReading (ioCA);
-	_io1Registers		-> setActive (ioCA);
-	_io1Registers		-> setActiveForReading (ioCA);
-	_io2Registers		-> setActive (ioCA);
-	_io2Registers		-> setActiveForReading (ioCA);
-	// $e000 - $ffff: 8k KERNEL
-	_kernelROM			-> setActive (kCA);
-	_kernelROM			-> setActiveForReading (kCA);
-	// $e000 - $ffff: 8k RAM on when Ultimax mode is not active
-	_kernelRAM			-> setActive (!kCA);
-	_kernelRAM			-> setActiveForReading (!kCA);
+	// From the CPU perspective
+	// $0000 - $0001: 6510 IOPorts always on, nothing to activate or desactivate.
+	// $0002 - $0fff: up to 4k RAM always on, nothing to activate or desactivate.
+	// $1000 - $7fff: 28k RAM, active and accesible when no Ultimax...
+	_ram00b				-> setActive (!uM);
+	_ram00b				-> setActiveForReading (!uM);
+	// $1000 - $7fff: 28k "disconnected", active and accesible when Ultimax...
+	_ram00b_d			-> setActive (uM);
+	_ram00b_d			-> setActiveForReading (uM);
+	// $8000 - $9fff: 8k RAM, active when no Ultimax...
+	_expansionRAMLO		-> setActive (!uM);
+	_expansionRAMLO		-> setActiveForReading (!uM && !romL); // ...and accesible when there is not 8k cartridge connected either...
+	// A cartridge (ROML = true) could be connected here instead (@see cartridge)
+	// $a000 - $bfff: 8k BASIC.
+	//				  Bear in mind that BASIC is "on" when no cartridge or 8k cartridge is in, 
+	//				  otherwise BASIC is off and either c16K cartridge is on or ultimax mode is active...
+	_basicROM			-> setActive (basic);
+	_basicROM			-> setActiveForReading (basic);
+	// $a000 - $bfff: 8k RAM, active when no Ultimax...
+	_basicRAM			-> setActive (!uM);
+	_basicRAM			-> setActiveForReading (!uM && !basic && !romH1); // ...and accesible when basic is off and no 16k cartridge is connected there...
+	// $a000 - $bfff: 8k "disconnected", active and accesible in Ultimax mode...
+	_basicRAM_d			-> setActive (uM);
+	_basicRAM_d			-> setActiveForReading (uM);
+	// $c000 - $cfff: 4k RAM, active and accesible when no Ultimax...
+	_ram1				-> setActive (!uM);
+	_ram1				-> setActiveForReading (!uM);
+	// $c000 - $cfff: 4k "disconnected", active in Ultimax mode...
+	_ram1_d				-> setActive (uM);
+	_ram1_d				-> setActiveForReading (uM);
+	// $d000 - $dfff: 4k CHARROM.
+	_charROM			-> setActive (chrRomCPU);
+	_charROM			-> setActiveForReading (chrRomCPU);
+	// $d000 - $dfff: 4K IO.
+	//				  Bear in mind than when charROM is on io is off and viceversa...
+	//				  But there might be "circunstances" where both are off and the RAM behind y full accesible!
+	_vicIIRegisters		-> setActive (io);
+	_vicIIRegisters		-> setActiveForReading (io);
+	_sidRegisters		-> setActive (io);
+	_sidRegisters		-> setActiveForReading (io);
+	_colorRAM			-> setActive (io);
+	_colorRAM			-> setActiveForReading (io);
+	_cia1Registers		-> setActive (io);
+	_cia1Registers		-> setActiveForReading (io);
+	_cia2Registers		-> setActive (io);
+	_cia2Registers		-> setActiveForReading (io);
+	_io1Registers		-> setActive (io);
+	_io1Registers		-> setActiveForReading (io);
+	_io2Registers		-> setActive (io);
+	_io2Registers		-> setActiveForReading (io);
+	// $d000 - $dfff: 4k RAM, active when no io is accesible (it is RAM too with major priority)
+	_charRAM			-> setActive (!uM && !io);
+	_charRAM			-> setActiveForReading (!uM && !chrRomCPU && !io); // ...and accesible when no charROM and io is accesible either...
+	// $e000 - $ffff: 8k KERNEL.
+	_kernelROM			-> setActive (kernel);
+	_kernelROM			-> setActiveForReading (kernel);
+	// $e000 - $ffff: 8k RAM, active when no Ultimax mode...
+	_kernelRAM			-> setActive (!uM);
+	_kernelRAM			-> setActiveForReading (!uM && !kernel && !romH2CPU); // ...and accesible when no cartridge connected there either...
 	// ---
 
 	// ---
-	// From VICII perspective!
-//	_bank0CharROM		-> setActive (!ROMH2);
-//	_bank0CharRAM		-> setActive (ROMH2);
-//	_bank0RAM2			-> setActive (!ROMH2); // Reference to ROMH instead...
-//	_bank1BRAM			-> setActive (!ROMH2); // Reference to ROMH instead...
-//	_bank2CharROM		-> setActive (!ROMH2);
-//	_bank2CharRAM		-> setActive (ROMH2);
-//	_bank2RAM2			-> setActive (!ROMH2); // Reference to ROMH instead...
-//	_bank3BRAM			-> setActive (!ROMH2); // Reference to ROMH instead...
+	// From VICII perspective
+	_bank0CharROM		-> setActive (chrRomVIC);
+	_bank0CharROM		-> setActiveForReading (chrRomVIC);
+	_bank0CharRAM		-> setActive (!chrRomVIC);
+	_bank0CharRAM		-> setActiveForReading (!chrRomVIC);
+	_bank0RAM2			-> setActive (!romH2VIC); // Reference to ROMH instead...
+	_bank0RAM2			-> setActiveForReading (!romH2VIC);
+	_bank1BRAM			-> setActive (!romH2VIC); // Reference to ROMH instead...
+	_bank1BRAM			-> setActiveForReading (!romH2VIC);
+	_bank2CharROM		-> setActive (chrRomVIC);
+	_bank2CharROM		-> setActiveForReading (chrRomVIC);
+	_bank2CharRAM		-> setActive (!chrRomVIC);
+	_bank2CharRAM		-> setActiveForReading (!chrRomVIC);
+	_bank2RAM2			-> setActive (!romH2VIC); // Reference to ROMH instead...
+	_bank2RAM2			-> setActiveForReading (!romH2VIC);
+	_bank3BRAM			-> setActive (!romH2VIC); // Reference to ROMH instead...
+	_bank3BRAM			-> setActiveForReading (!romH2VIC);
 	// ---
 
 	if (_cartridge != nullptr)
-		_cartridge -> configureMemoryStructure (rLCA, rH1CA, rH2CA, rH2VA);
+		_cartridge -> configureMemoryStructure (romL, romH1, romH2CPU, romH2VIC);
 }
 
 // ---
