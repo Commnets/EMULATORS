@@ -37,7 +37,7 @@ To activate or desactivate the execution of interrupts.
 The first parameter is either the ID of the interrupt to operate or the word ALL to refer to all of them.
 The second parameter is the action to execute over the selected interruts. ON to activate them, OFF to desactivate them.
 If the requested interrupt didn't exist, and error would be generated. 
-;DEEPON FILENAME YES|NO [YES|NO] [ALLCHIP|C:CHIPID1 C:CHIPID2 C:CHIPID3...] [ALLIO|I:DEVICEID1 I:DEVICEID2 I:DEVICEID3...]
+;DEEPON FILENAME YES|NO [YES|NO] [ALLCHIP|C:CHIPID1 C:CHIPID2 ...] [ALLIO|I:DEVICEID1 I:DEVICEID2 ...] [ALLMEM|M:MEMID1 M:MEMID2 ...]
 To activate the deep debugging of the Computer.
 In this state the CPU will trace every instruction executed including the status of the 
 registers and program counter into the file received as parameter after every execution.
@@ -48,8 +48,9 @@ NO will delete any previous file with the same name and will create a new one.
 Additionally the list of the chips id where to actiavte to the deep info can be provided.
 ALLCHIP will indicate to include all Chips.
 The same rational could be applied to a list of Devices.
-When the list of either chips or devices id is provided it is important to link 
-either a C: or a I: to the id itself and without spaces in between
+The same rational could be applied to a list of Physical Storages.
+When the list of either chips or devices or memeory ids is provided it is important to link 
+either a C: or a I: or a M: to the id itself and without spaces in between.
 If the debug for interruptions were activated, the command wouldn't work.
 ;DEEPOFF
 To desactivate the deep debugging.

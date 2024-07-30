@@ -612,9 +612,10 @@ namespace MCHEmul
 		The mandatory parameters needed are the name of the file where to keep the info 
 		and whether to save or not CPU info. Other parameters are optional. \n
 		3rd to indicate whether the info must be saved at the end of a previous existing file (YES) or in a new one (NO). By default. \n
-		4rd to indicate whether the info of the CHIPS must be output. ALLCHIP, or the id of the chips preceded by C: \n
-		5rd same but with the info of the devices. ALLIO, or the id of the IO elements preceded by I: \n
-		DEEPON FILE YES|NO [YES|NO] [ALLCHIP] [ALLIO]. */
+		4th to indicate whether the info of the CHIPS must be output. ALLCHIP, or the id of the chips preceded by C: \n
+		5th same but with the info of the devices. ALLIO, or the id of the IO elements preceded by I: \n
+		6th same but with the info of the memory locations. ALLMEM, or the id of the MEM elements preceded by M: \n
+		DEEPON FILE YES|NO [YES|NO] [ALLCHIP|C:id1 C::id2 ...] [ALLIO|I:id1 I:id2 ...] [ALLMEM|M:id1 M:id2...] */
 	class ActivateDeepDebugCommand final : public Command
 	{
 		public:

@@ -51,7 +51,7 @@ bool C64::PLA::simulate (MCHEmul::CPU* cpu)
 				// When
 				<< std::to_string (cpu -> clockCycles ()) << "\t" // clock cycles at that point
 				// What
-				<< "Status\t\t"
+				<< "Status\t\t\t"
 				// Data
 				<< "_LORAM:"	<< (_LORAM ? "on" : "off")
 				<< " _HIRAM:"	<< (_HIRAM ? "on" : "off")

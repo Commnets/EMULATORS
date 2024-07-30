@@ -20,8 +20,9 @@ void MCHEmul::CPUInterrupt::setInExecution (bool i)
 		if (_debug && 
 			!_computer -> deepDebug ())
 		{
-			if (_computer -> activateDeepDebug 
-				(_debugFileName, true, { -1 }, { -1 }, _addDebugInfo)) // ...activate the deep debug, and if there is no error...
+			if (_computer -> activateDeepDebug // ...activate the deep debug, and if there is no error...
+				(_debugFileName, true, 
+					{ -1 } /* all chips. */, { -1 } /* all io. */, { -1 } /** all memory. */, _addDebugInfo))
 			{ 
 				*_computer -> deepDebugFile () <<
 					"\n" << "****************************************" << "\n" <<

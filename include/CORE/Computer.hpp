@@ -386,14 +386,17 @@ namespace MCHEmul
 			The deep debug is activated at CPU level minimum if activated, 
 			but optionally a list of chips id can be passed as parameter (a single parameter = -1 will mean all). \n
 			Also a list of devices where to trace can be passed as parameter (a single parameter = -1 will al so mean all). \n
+			Also a list of memory physical storages to trace if any. The standard physical storage don't trace anything.
+			The user should redefine their own ones, to trace what wanted. \n
 			Finally another optional parameter is whether the info generated has to be added to the file if it exists
 			or a new one should be created. */
-		inline bool activateDeepDebug (const std::string& fN,
+		bool activateDeepDebug (const std::string& fN,
 			bool cpud = true, // Meaning that the cpu info must be activated...
 			const std::vector <int>& cId = { -1 }, // Menaing all chips included...
 			const std::vector <int>& iId = { -1 }, // Meaning all devices included...
+			const std::vector <int>& mId = { -1 }, // Meaning all physical storages included...
 			bool a = false /** meaning not adding the info at the end, but new file. */);
-		inline bool desactivateDeepDebug ();
+		bool desactivateDeepDebug ();
 		const DebugFile* deepDebugFile () const
 							{ return (&_deepDebug); }
 		DebugFile* deepDebugFile ()
@@ -574,64 +577,6 @@ namespace MCHEmul
 		c -> _status = _STATUSRUNNING;
 
 		return (true);
-	}
-
-	// ---
-	inline bool Computer::activateDeepDebug 
-		(const std::string& fN, bool cpud, const std::vector <int>& cId, const std::vector <int>& iId, bool a)
-	{ 
-		bool result = _deepDebug.activate (fN, a);
-
-		if (result)
-		{ 
-			if (cpud) 
-				cpu () -> setDeepDebugFile (&_deepDebug); /** Minimum the CPU is activated. */
-
-			// For the chips...
-			// if there is only one element in the list and it is a -1, means all!
-			if (cId.size () == 1 && cId [0] == -1)
-			{
-				for (auto& i : _chips)
-					i.second -> setDeepDebugFile (&_deepDebug);
-			}
-			else
-			{
-				for (auto i : cId)
-					if (existsChip (i))
-						chip (i) -> setDeepDebugFile (&_deepDebug);
-			}
-
-			// For the peripherals...
-			// if there is only one element in the list and it is a -1, means all!
-			if (iId.size () == 1 && iId [0] == -1)
-			{
-				for (auto& i : _devices)
-					i.second -> setDeepDebugFile (&_deepDebug);
-			}
-			else
-			{
-				for (auto i : iId)
-					if (existsDevice (i))
-						device (i) -> setDeepDebugFile (&_deepDebug);
-			}
-		}
-
-		return (result); 
-	}
-
-	// ---
-	inline bool Computer::desactivateDeepDebug ()
-	{ 
-		bool result = _deepDebug.desactivate ();
-
-		if (result)
-		{ 
-			cpu () -> setDeepDebugFile (nullptr);
-			for (auto& i : _chips)
-				i.second -> setDeepDebugFile (nullptr);
-		}
-
-		return (result); 
 	}
 }
 

@@ -423,6 +423,75 @@ bool MCHEmul::Computer::runIOCycle ()
 }
 
 // ---
+bool MCHEmul::Computer::activateDeepDebug 
+	(const std::string& fN, bool cpud, const std::vector <int>& cId, 
+		const std::vector <int>& iId, const std::vector <int>& mId, bool a)
+{ 
+	bool result = _deepDebug.activate (fN, a);
+
+	if (result)
+	{ 
+		if (cpud) 
+			cpu () -> setDeepDebugFile (&_deepDebug); /** Minimum the CPU is activated. */
+
+		// For the chips...
+		// if there is only one element in the list and it is a -1, means all!
+		if (cId.size () == 1 && cId [0] == -1)
+		{
+			for (auto& i : _chips)
+				i.second -> setDeepDebugFile (&_deepDebug);
+		}
+		else
+		{
+			for (auto i : cId)
+				if (existsChip (i))
+					chip (i) -> setDeepDebugFile (&_deepDebug);
+		}
+
+		// For the peripherals...
+		// if there is only one element in the list and it is a -1, means all!
+		if (iId.size () == 1 && iId [0] == -1)
+		{
+			for (auto& i : _devices)
+				i.second -> setDeepDebugFile (&_deepDebug);
+		}
+		else
+		{
+			for (auto i : iId)
+				if (existsDevice (i))
+					device (i) -> setDeepDebugFile (&_deepDebug);
+		}
+
+		// For the memory...
+		// if there is only one element in the list and it is a -1, means all!
+		_memory -> setDeepDebugFile (&_deepDebug, mId);
+	}
+
+	return (result); 
+}
+
+// ---
+bool MCHEmul::Computer::desactivateDeepDebug ()
+{ 
+	bool result = _deepDebug.desactivate ();
+
+	if (result)
+	{ 
+		cpu () -> setDeepDebugFile (nullptr);
+			
+		for (auto& i : _chips)
+			i.second -> setDeepDebugFile (nullptr);
+			
+		for (auto& i : _devices)
+			i.second -> setDeepDebugFile (nullptr);
+
+		_memory -> setDeepDebugFile (nullptr, { });
+	}
+
+	return (result); 
+}
+
+// ---
 void MCHEmul::Computer::addAction (const MCHEmul::Address& at, unsigned int a)
 {
 	MCHEmul::Computer::MapOfActions::iterator i = _actionsAt.find (at);

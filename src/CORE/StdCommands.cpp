@@ -549,6 +549,7 @@ void MCHEmul::ActivateDeepDebugCommand::executeImpl
 	bool cpud = (parameter ("01") == "YES") ? true : false; // Whether to add or not CPU debug info is mandatory
 	std::vector <int> cId = { };		// None by default...
 	std::vector <int> iId = { };		// None by default...
+	std::vector <int> mId = { };		// None by default...
 	bool a = false;						// Not to add by default...
 	if (parameters ().size () >= 3)
 	{
@@ -567,15 +568,23 @@ void MCHEmul::ActivateDeepDebugCommand::executeImpl
 				if (prm == "ALLIO")
 					iId = { -1 };
 				else
+				if (prm == "ALLMEM")
+					mId = { -1 }; 
+				else
 				{
 					if (prm.length () > 2)
 					{
+						// When a -1 is already in the list, nothing else makes sense...
+
 						if (prm.substr (0, 2) == "C:" && 
-							(cId.size () == 0 || (cId.size () != 0 && cId [0] != -1))) 	// When a -1 is already in the list, nothing else makes sense...
+							(cId.size () == 0 || (cId.size () != 0 && cId [0] != -1))) 	
 							cId.emplace_back (std::atoi (prm.substr (2).c_str ()));
 						if (prm.substr (0, 2) == "I:" && 
 							(iId.size () == 0 || (iId.size () != 0 && iId [0] != -1)))
 							iId.emplace_back (std::atoi (prm.substr (2).c_str ()));
+						if (prm.substr (0, 2) == "M:" && 
+							(iId.size () == 0 || (iId.size () != 0 && iId [0] != -1)))
+							mId.emplace_back (std::atoi (prm.substr (2).c_str ()));
 					}
 				}
 
@@ -586,7 +595,7 @@ void MCHEmul::ActivateDeepDebugCommand::executeImpl
 	}
 
 	rst.add ("ERROR", 
-		c -> activateDeepDebug (fN, cpud, cId, iId, a)
+		c -> activateDeepDebug (fN, cpud, cId, iId, mId, a)
 				? std::string ("No errors")
 				: std::string ("Deep debugging activation error"));
 }

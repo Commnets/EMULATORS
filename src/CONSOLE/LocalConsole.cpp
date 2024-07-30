@@ -296,7 +296,7 @@ MCHEmul::InfoStructure MCHEmul::LocalConsole::loadPeripheralData (const std::str
 
 	// If there were a third parameter it could be the file were to trace...
 	if (dt != nullptr && prmsL.size () == 3)
-		_emulator -> computer () -> activateDeepDebug (prmsL [2], true, { }, { }, true);
+		_emulator -> computer () -> activateDeepDebug (prmsL [2], true, { }, { }, { }, true);
 
 	return (result);
 }

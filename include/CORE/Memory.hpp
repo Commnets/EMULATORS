@@ -22,6 +22,7 @@
 #include <CORE/UByte.hpp>
 #include <CORE/UBytes.hpp>
 #include <CORE/DtMemoryBlock.hpp>
+#include <CORE/DebugFile.hpp>
 
 namespace MCHEmul
 {
@@ -252,6 +253,17 @@ namespace MCHEmul
 		  */
 		virtual InfoStructure getInfoStructure () const override;
 
+		/** Manages the deep debug file. \n
+			Take care it can be set back to a nullptr. */
+		bool deepDebugActive () const
+							{ return (_deepDebugFile != nullptr && _deepDebugFile -> active ()); }
+		void setDeepDebugFile (DebugFile* dF)
+							{ _deepDebugFile = dF; }
+		const DebugFile* deepDebugFile () const
+							{ return (_deepDebugFile); }
+		DebugFile* deepDebugFile ()
+							{ return (_deepDebugFile); }
+
 		protected:
 		/** They could be overeloaded for specific subsets: Chips registers,... 
 			By default, the instructions are transmitted to the physical storage.
@@ -273,6 +285,9 @@ namespace MCHEmul
 		Address _initialAddress;
 		/** How many bytes of info does this subset represent? */
 		size_t _size;
+
+		// To manage the debug info...
+		DebugFile* _deepDebugFile;
 
 		// Implementation
 		bool _active;
@@ -816,6 +831,16 @@ namespace MCHEmul
 		virtual InfoStructure getInfoStructure () const override
 							{ return (_activeView -> getInfoStructure ()); }
 
+		/** Manages the deep debug file. \n
+			Take care it can be set back to a nullptr. */
+		bool deepDebugActive () const
+							{ return (_deepDebugFile != nullptr && _deepDebugFile -> active ()); }
+		void setDeepDebugFile (DebugFile* dF, const std::vector <int>& mId);
+		const DebugFile* deepDebugFile () const
+							{ return (_deepDebugFile); }
+		DebugFile* deepDebugFile ()
+							{ return (_deepDebugFile); }
+
 		protected:
 		virtual Stack* lookForStack () = 0;
 		virtual MemoryView* lookForCPUView () = 0;
@@ -823,6 +848,9 @@ namespace MCHEmul
 		protected:
 		Content _content;
 		AdditionalSubsets _additionalSubsets;
+
+		// To manage the debug info...
+		DebugFile* _deepDebugFile;
 
 		// Implementation
 		MemoryView* _activeView;

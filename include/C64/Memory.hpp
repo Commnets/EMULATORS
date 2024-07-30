@@ -154,6 +154,12 @@ namespace C64
 		MCHEmul::PhysicalStorageSubset* _bank2CharRAM;
 		MCHEmul::PhysicalStorageSubset* _bank2RAM2;
 		MCHEmul::PhysicalStorageSubset* _bank3BRAM;
+
+		// Used when debugging...
+		// All that possibilities together...
+		MCHEmul::PhysicalStorageSubsetsList _memStrList;
+		// ...and with their names...
+		MCHEmul::Strings _memStrNamesList;
 	};
 }
 

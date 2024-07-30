@@ -55,6 +55,7 @@ MCHEmul::PhysicalStorageSubset::PhysicalStorageSubset
 	: MCHEmul::InfoClass ("PhysicalStorageSubset"),
 	  _id (id), _name (""),
 	  _physicalStorage (pS), _initialPhisicalPosition (pp), _initialAddress (a), _size (s),
+	  _deepDebugFile (nullptr),
 	  _active (true), // By default all are active
 	  _activeForReading (true), // It can be switched off
 	  _defaultData (_size, MCHEmul::UByte::_0) // The default data is initially = _0;
@@ -395,6 +396,7 @@ MCHEmul::Memory::Memory (int id, const MCHEmul::Memory::Content& cnt, const MCHE
 	: MCHEmul::MotherboardElement (id, "Memory", attrs),
 	  _content (),
 	  _additionalSubsets (),
+	  _deepDebugFile (nullptr),
 	  _activeView (nullptr),
 	  _stack (nullptr), 
 	  _cpuView (nullptr), 
@@ -481,4 +483,31 @@ MCHEmul::MemoryDUMP MCHEmul::Memory::dumpStructure (bool a)
 		result._data.emplace_back (std::move (i.second -> dumpStructure (a)));
 
 	return (result);
+}
+
+// ---
+void MCHEmul::Memory::setDeepDebugFile (MCHEmul::DebugFile* dF, const std::vector <int>& mId)
+{
+	if ((_deepDebugFile = dF) == nullptr)
+	{
+		for (const auto& i : _content._subsets)
+			i.second -> setDeepDebugFile (nullptr);
+	}
+	else
+	{
+		if (!mId.empty ())
+		{
+			if (mId [0] == -1) // All?
+			{
+				for (const auto& i : _content._subsets)
+					i.second -> setDeepDebugFile (_deepDebugFile);
+			}
+			else // No, just the selected ones....
+			{
+				for (const auto& i : mId)
+					if (_content.existsSubset (i))
+						_content.subset (i) -> setDeepDebugFile (_deepDebugFile);
+			}
+		}
+	}
 }

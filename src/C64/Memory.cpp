@@ -45,7 +45,9 @@ C64::Memory::Memory (const std::string& lang)
 	  _bank2CharROM (nullptr),
 	  _bank2CharRAM (nullptr),
 	  _bank2RAM2 (nullptr),
-	  _bank3BRAM (nullptr)
+	  _bank3BRAM (nullptr),
+	  _memStrList (),
+	  _memStrNamesList ()
 {
 	// In the content...
 	if (error () != MCHEmul::_NOERROR)
@@ -109,6 +111,64 @@ C64::Memory::Memory (const std::string& lang)
 			_bank2CharRAM	!= nullptr &&
 			_bank2RAM2		!= nullptr &&
 			_bank3BRAM		!= nullptr);
+
+	_memStrList = {
+		_ram00b,
+		_ram00b_d,
+		_expansionRAMLO,
+		_basicROM,
+		_basicRAM,
+		_basicRAM_d,
+		_ram1,	
+		_ram1_d,
+		_kernelROM,
+		_kernelRAM,		
+		_charROM,	
+		_charRAM,		
+		_vicIIRegisters,
+		_sidRegisters,
+		_colorRAM,
+		_cia1Registers,
+		_cia2Registers,
+		_io1Registers,
+		_io2Registers,	
+		_bank0CharROM,	
+		_bank0CharRAM,	
+		_bank0RAM2,
+		_bank1BRAM,
+		_bank2CharROM,
+		_bank2CharRAM,
+		_bank2RAM2,
+		_bank3BRAM	};
+
+	_memStrNamesList = {
+		"_ram00b",
+		"_ram00b_d",
+		"_expansionRAMLO",
+		"_basicROM",
+		"_basicRAM",
+		"_basicRAM_d",
+		"_ram1",	
+		"_ram1_d",
+		"_kernelROM",
+		"_kernelRAM",		
+		"_charROM",	
+		"_charRAM",		
+		"_vicIIRegisters",
+		"_sidRegisters",
+		"_colorRAM",
+		"_cia1Registers",
+		"_cia2Registers",
+		"_io1Registers",
+		"_io2Registers",	
+		"_bank0CharROM",	
+		"_bank0CharRAM",	
+		"_bank0RAM2",
+		"_bank1BRAM",
+		"_bank2CharROM",
+		"_bank2CharRAM",
+		"_bank2RAM2",
+		"_bank3BRAM" };
 
 	// The default ROMS...
 	// They might change depending on the language
@@ -248,6 +308,41 @@ void C64::Memory::configureMemoryStructure (bool basic, bool kernel, bool chrRom
 
 	if (_cartridge != nullptr)
 		_cartridge -> configureMemoryStructure (romL, romH1, romH2CPU, romH2VIC);
+
+	// Print out the status of the configuration if debug active...
+	if (deepDebugActive ())
+	{
+		auto bN =  [](bool st) -> std::string 
+			{ return (st ? "YES" : "NO"); };
+		auto mSts = [=](MCHEmul::PhysicalStorageSubset* p) -> std::string 
+			{ return ("(" + bN (p -> active ()) + "," + bN (p -> activeForReading ()) + ")"); };
+
+		bool fl = true;
+		std::string sts;
+		for (size_t i = 0; i < _memStrList.size (); i++)
+		{
+			if (((i % 4) == 0))
+			{
+				sts += "\n\t\t\t\t"; // Every 4 change the line but maintain the indent...
+
+				fl = true;
+			}
+
+			sts += (!fl ? "," : "") + _memStrNamesList [i] + mSts (_memStrList [i]);
+
+			fl = false;
+		}
+
+		*_deepDebugFile
+			// Where
+			<< "C64 Memory\t" 
+			// When
+			<< "-" << "\t" // clock cycles at that point
+			// What
+			<< "Change Configuration\t\t"
+			// Data
+			<< sts << "\n";
+	}
 }
 
 // ---
