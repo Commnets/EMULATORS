@@ -14,6 +14,10 @@ bool MCHEmul::Win32ConsoleKeys::readKey (char& chr) const
 
 		switch (k)
 		{
+			case 27:
+				chr = _ESCAPEKEY;
+				break;
+
 			case 299:
 				chr = _LEFTKEY;
 				break;

@@ -26,6 +26,10 @@ MCHEmul::Command* C64::CommandBuilder::createEmptyCommand (const std::string& cm
 		result = new C64::SpritesDrawCommand;
 	else if (cmdName == "CHARSDRAW" || cmdName == C64::CharactersDrawCommand::_NAME)
 		result = new C64::CharactersDrawCommand;
+	else if (cmdName == "GRIDON" || cmdName == C64::GridOnCommand::_NAME)
+		result = new C64::GridOnCommand;
+	else if (cmdName == "GRIDOFF" || cmdName == C64::GridOffCommand::_NAME)
+		result = new C64::GridOffCommand;
 
 	return (result);
 }

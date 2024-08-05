@@ -44,6 +44,7 @@ namespace MCHEmul
 		static const char _BACKKEY = -7; // Del the char before the selected position and move into that
 		static const char _ENDKEY = -8; // Go to the end of the line
 		static const char _BEGINKEY = -9; // Go to the beginning of the line
+		static const char _ESCAPEKEY = -10; // Delete the content of the line
 
 		/** The way a character is read from the console is different depending on the OS. \n
 		The method returns true when a char is read and false in other case. \n

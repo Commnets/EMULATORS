@@ -22,3 +22,9 @@ No parameters are needed.
 To change the sound wrapper used.
 The only parameter needed is the number of the library (LIBID) to use.
 Where 0 is the standard RESID library and 1 is an very basic simulation made by Ignacio Cea.
+;GRIDON COLOR
+To switch on the grid.
+The parameter needed is the color of the grid.
+;GRIDOFF
+To switch off the grid.
+No parameters are needed.

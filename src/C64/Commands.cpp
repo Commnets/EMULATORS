@@ -11,6 +11,8 @@ const std::string C64::BitmapMemoryDUMPCommand::_NAME = "CBITMAPDUMP";
 const std::string C64::SpritesMemoryDUMPCommand::_NAME = "CSPRITESDUMP";
 const std::string C64::SpritesDrawCommand::_NAME = "CSPRITESDRAW";
 const std::string C64::CharactersDrawCommand::_NAME = "CCHARSDRAW";
+const std::string C64::GridOnCommand::_NAME = "CGRIDON";
+const std::string C64::GridOffCommand::_NAME = "CGRIDOFF";
 
 // ---
 void C64::CIA1StatusCommand::executeImpl (MCHEmul::CommandExecuter* cE, MCHEmul::Computer* c, MCHEmul::InfoStructure& rst)
@@ -151,4 +153,27 @@ void C64::CharactersDrawCommand::executeImpl (MCHEmul::CommandExecuter* cE,
 
 	rst.add ("DRAW", MCHEmul::concatenateStrings 
 		(static_cast <C64::Commodore64*> (c) -> vicII () -> charsDrawSnapshot (c -> cpu (), chrs), "\n"));
+}
+
+// ---
+void C64::GridOnCommand::executeImpl (MCHEmul::CommandExecuter* cE,
+	MCHEmul::Computer* c, MCHEmul::InfoStructure& rst)
+{
+	if (c == nullptr || 
+		dynamic_cast <C64::Commodore64*> (c) == nullptr)
+		return;
+
+	dynamic_cast <C64::Screen*> (c -> device (C64::Screen::_ID)) -> 
+		setDrawBorder (true, std::atoi (parameter ("00").c_str ()));
+}
+
+// ---
+void C64::GridOffCommand::executeImpl (MCHEmul::CommandExecuter* cE,
+	MCHEmul::Computer* c, MCHEmul::InfoStructure& rst)
+{
+	if (c == nullptr || 
+		dynamic_cast <C64::Commodore64*> (c) == nullptr)
+		return;
+
+	dynamic_cast <C64::Screen*> (c -> device (C64::Screen::_ID)) -> setDrawBorder (false, 0 /** It is not usefull. */);
 }

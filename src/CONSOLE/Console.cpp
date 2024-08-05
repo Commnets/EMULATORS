@@ -191,14 +191,29 @@ bool MCHEmul::Console::readCommand ()
 
 		switch (chr)
 		{
+			case MCHEmul::ConsoleKeys::_ESCAPEKEY:
+				{
+					delCurrentCommand ();
+					_command = "";
+					_cursorPosition = 0;
+				}
+
+				break;
+
 			case MCHEmul::ConsoleKeys::_LEFTKEY:
-				if (_cursorPosition != 0) 
-					_cursorPosition--;
+				{
+					if (_cursorPosition != 0) 
+						_cursorPosition--;
+				}
+
 				break;
 
 			case MCHEmul::ConsoleKeys::_RIGHTKEY:
-				if (_cursorPosition < _command.length ()) 
-					_cursorPosition++;
+				{ 
+					if (_cursorPosition < _command.length ()) 
+						_cursorPosition++;
+				}
+
 				break;
 
 			case MCHEmul::ConsoleKeys::_UPKEY:
@@ -232,31 +247,45 @@ bool MCHEmul::Console::readCommand ()
 				break;
 
 			case MCHEmul::ConsoleKeys::_DELETEKEY:
-				if (_cursorPosition != _command.length ())
-					_command = _command.substr (0, _cursorPosition) + _command.substr (_cursorPosition + 1);
+				{
+					if (_cursorPosition != _command.length ())
+						_command = _command.substr (0, _cursorPosition) + _command.substr (_cursorPosition + 1);
+				}
+
 				break;
 
 			case MCHEmul::ConsoleKeys::_ENTERKEY:
-				result = true;
+				{
+					result = true;
+				}
+
 				break;
 
 			case MCHEmul::ConsoleKeys::_BEGINKEY:
-				_cursorPosition = 0;
+				{
+					_cursorPosition = 0;
+				}
+
 				break;
 
 			case MCHEmul::ConsoleKeys::_ENDKEY:
-				_cursorPosition = _command.length ();
+				{
+					_cursorPosition = _command.length ();
+				}
+
 				break;
 
 			default:
-				if (chr >= 0 && 
-					(std::isalnum ((int)chr) || alKey.find (chr) != std::string::npos))
 				{
-					if (_cursorPosition == _command.length ()) _command += chr;
-					else if (_cursorPosition == 0) _command = chr + _command;
-					else _command = _command.substr (0, _cursorPosition) + chr + _command.substr (_cursorPosition);
+					if (chr >= 0 && 
+						(std::isalnum ((int)chr) || alKey.find (chr) != std::string::npos))
+					{
+						if (_cursorPosition == _command.length ()) _command += chr;
+						else if (_cursorPosition == 0) _command = chr + _command;
+						else _command = _command.substr (0, _cursorPosition) + chr + _command.substr (_cursorPosition);
 
-					_cursorPosition++;
+						_cursorPosition++;
+					}
 				}
 
 				break;
