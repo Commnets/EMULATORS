@@ -52,9 +52,6 @@ namespace COMMODORE
 		static const unsigned short _GRAPHMAXBITMAPCOLUMNS	= 320;	// Not taking into account double coulors
 		static const unsigned short _GRAPHMAXBITMAPROWS		= 200;
 
-		/** Static address. The color memory can not be changed. */
-		static const MCHEmul::Address _COLORMEMORY;
-
 		// Some events.
 		/** As the VICII only addresses 16k and some computers where it might be connected to, admits up to 64k,
 			there is the possibility to change the bank. \n
@@ -66,13 +63,27 @@ namespace COMMODORE
 		static const unsigned int _BANK3SET = 203;
 
 		/** Specific classes for PAL & NTSC have been created giving this data as default. \n
-			The VICII constructor receives info over the raster data, the memory view to use,
+			The VICII constructor receives a refeence to the the Color RAM, to simulate the access to the 
+			color at the same time it acceses to the char info. \n
+			The VICII constructor receives also info over the raster data, the memory view to use,
 			The number of cycles of every raster line (different depending on the VICII version) 
 			and additional attributes. */
-		VICII (const MCHEmul::RasterData& vd, const MCHEmul::RasterData& hd, 
+		VICII (MCHEmul::PhysicalStorageSubset* cR, const MCHEmul::Address& cRA,
+			const MCHEmul::RasterData& vd, const MCHEmul::RasterData& hd, 
 			int vV, unsigned short cRL, const MCHEmul::Attributes& attrs = { });
 
 		virtual ~VICII () override;
+
+		/** To assign or to know the color RAM. 
+			The VICII needs to know where the color RAM is, to access the nibbles with the color. */
+		const MCHEmul::PhysicalStorageSubset* colorRAM () const
+							{ return (_colorRAM); }
+		MCHEmul::PhysicalStorageSubset* colorRAM ()
+							{ return (_colorRAM); }
+		const MCHEmul::Address& colorRAMAddreess () const
+							{ return (_colorRAMAddress); }
+		void setColorRAM (MCHEmul::PhysicalStorageSubset* cR, const MCHEmul::Address& cRA)
+							{ _colorRAM = cR; _colorRAMAddress = cRA; }
 
 		virtual unsigned short numberColumns () const override
 							{ return (_raster.visibleColumns ()); }
@@ -300,6 +311,10 @@ namespace COMMODORE
 		void detectCollisions (const DrawResult& cT);
 
 		protected:
+		/** A reference to the color RAM. */
+		MCHEmul::PhysicalStorageSubset* _colorRAM;
+		/** With the address it belongs to. */
+		MCHEmul::Address _colorRAMAddress;
 		/** The memory is used also as the set of registers of the chip. */
 		COMMODORE::VICIIRegisters* _VICIIRegisters;
 		/** The number of the memory view used to read the data. */
@@ -466,7 +481,7 @@ namespace COMMODORE
 				memoryRef () -> value (_VICIIRegisters -> screenMemory () + (size_t) _vicGraphicInfo._VC); 
 		_vicGraphicInfo._lastColorDataRead =
 			_vicGraphicInfo._colorData [_vicGraphicInfo._VLMI] = 
-				memoryRef () -> value (_COLORMEMORY + (size_t) _vicGraphicInfo._VC); 
+				_colorRAM -> value (_colorRAMAddress + (size_t) _vicGraphicInfo._VC); 
 		
 		memoryRef () -> setCPUView ();
 	}
@@ -543,7 +558,8 @@ namespace COMMODORE
 
 		static constexpr unsigned short _CYCLESPERRASTERLINE = 63;
 
-		VICII_PAL (int vV);
+		VICII_PAL (MCHEmul::PhysicalStorageSubset* cR, const MCHEmul::Address& cRA,
+			int vV);
 
 		private:
 		virtual unsigned int treatRasterCycle () override;
@@ -556,7 +572,8 @@ namespace COMMODORE
 		static const MCHEmul::RasterData _VRASTERDATA;
 		static const MCHEmul::RasterData _HRASTERDATA;
 
-		VICII_NTSC (int vV);
+		VICII_NTSC (MCHEmul::PhysicalStorageSubset* cR, const MCHEmul::Address& cRA,
+			int vV);
 
 		private:
 		virtual unsigned int treatRasterCycle () override;

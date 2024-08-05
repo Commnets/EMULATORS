@@ -26,7 +26,9 @@ C64::Commodore64::Commodore64 (C64::Commodore64::VisualSystem vS, const std::str
 		 }),
 	  _visualSystem (vS)
 {
-	// Nothing else to do...
+	// Assign the color RAM to the VICII and also the address where it starts...
+	static_cast <COMMODORE::VICII*> (chip (COMMODORE::VICII::_ID)) -> setColorRAM 
+		(static_cast <C64::Memory*> (memory ()) -> colorRAM (), C64::Memory::_COLORMEMORY_ADDRESS);
 }
 
 // ---
@@ -95,8 +97,10 @@ MCHEmul::Chips C64::Commodore64::standardChips (C64::Commodore64::VisualSystem v
 	// Some how it is also controlled by CIA II and Special Control Chip
 	result.insert (MCHEmul::Chips::value_type (COMMODORE::VICII::_ID, 
 		(MCHEmul::Chip*) ((vS == C64::Commodore64::VisualSystem::_NTSC) 
-			? (C64::VICII*) new COMMODORE::VICII_NTSC (C64::Memory::_VICII_VIEW) 
-			: (C64::VICII*) new COMMODORE::VICII_PAL (C64::Memory::_VICII_VIEW))));
+			? (C64::VICII*) new COMMODORE::VICII_NTSC (nullptr, MCHEmul::Address (), 
+				C64::Memory::_VICII_VIEW) // The color RAM will be assigned later...
+			: (C64::VICII*) new COMMODORE::VICII_PAL (nullptr, MCHEmul::Address (), 
+				C64::Memory::_VICII_VIEW))));
 
 	// The SID...
 	unsigned int cSpd = (vS == C64::Commodore64::VisualSystem::_NTSC) ? _NTSCCLOCK : _PALCLOCK;

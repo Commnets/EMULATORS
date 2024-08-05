@@ -2,7 +2,6 @@
 #include <F6500/IRQInterrupt.hpp>
 
 // ---
-const MCHEmul::Address COMMODORE::VICII::_COLORMEMORY ({ 0x00, 0xd8 }, false);
 const MCHEmul::RasterData COMMODORE::VICII_PAL::_VRASTERDATA (0, 16, 51, 250, 299, 311, 312, 4, 4);
 const MCHEmul::RasterData COMMODORE::VICII_PAL::_HRASTERDATA 
 	(404, 480, 24, 343, 380, 403, 504 /** For everyting to run, it has to be divisible by 8. */, 7, 9);
@@ -14,13 +13,15 @@ const MCHEmul::Address COMMODORE::VICII::_MEMORYPOSIDLE1 = MCHEmul::Address ({ 0
 const MCHEmul::Address COMMODORE::VICII::_MEMORYPOSIDLE2 = MCHEmul::Address ({ 0xff, 0x3f }, false);
 
 // ---
-COMMODORE::VICII::VICII (const MCHEmul::RasterData& vd, const MCHEmul::RasterData& hd, 
+COMMODORE::VICII::VICII (MCHEmul::PhysicalStorageSubset* cR, const MCHEmul::Address& cRA,
+		const MCHEmul::RasterData& vd, const MCHEmul::RasterData& hd, 
 		int vV, unsigned short cRL, const MCHEmul::Attributes& attrs)
 	: MCHEmul::GraphicalChip (_ID, 
 		{ { "Name", "VICII" },
 		  { "Code", "6567/8562/8564 (NTSC), 6569/8565/8566 (PAL)" },
 		  { "Manufacturer", "Commodore Business Machines CBM" },
 		  { "Year", "1983" } }),
+	  _colorRAM (cR), _colorRAMAddress (cRA),
 	  _VICIIRegisters (nullptr), 
 	  _VICIIView (vV),
 	  _cyclesPerRasterLine (cRL),
@@ -35,6 +36,9 @@ COMMODORE::VICII::VICII (const MCHEmul::RasterData& vd, const MCHEmul::RasterDat
 	  _vicGraphicInfo (),
 	  _vicSpriteInfo ()
 {
+	// At this point the color RAM can be nullptr, 
+	// but never when the VIC starts to work!
+
 	assert (_cyclesPerRasterLine >= 63);
 
 	setClassName ("VICII");
@@ -54,6 +58,8 @@ COMMODORE::VICII::~VICII ()
 bool COMMODORE::VICII::initialize ()
 {
 	assert (memoryRef () != nullptr);
+
+	assert (_colorRAM != nullptr); // It must have a reference...
 
 	if (!MCHEmul::GraphicalChip::initialize ())
 		return (false);
@@ -319,7 +325,7 @@ MCHEmul::UBytes COMMODORE::VICII::colorMemorySnapShot (MCHEmul::CPU* cpu) const
 		cpu -> memoryRef () -> setActiveView (_VICIIView);
 
 	MCHEmul::UBytes result = cpu -> memoryRef () -> values 
-		(_COLORMEMORY, 0x03e8 /** 1000 positions = 40 x 25. */); 
+		(_colorRAMAddress, 0x03e8 /** 1000 positions = 40 x 25. */); 
 
 	cpu -> memoryRef () -> setActiveView (aVID);
 
@@ -1444,8 +1450,9 @@ void COMMODORE::VICII::detectCollisions (const DrawResult& cT)
 }
 
 // ---
-COMMODORE::VICII_PAL::VICII_PAL (int vV)
-	: COMMODORE::VICII (
+COMMODORE::VICII_PAL::VICII_PAL (MCHEmul::PhysicalStorageSubset* cR, const MCHEmul::Address& cRA,
+		int vV)
+	: COMMODORE::VICII (cR, cRA,
 		 _VRASTERDATA, _HRASTERDATA, vV, COMMODORE::VICII_PAL::_CYCLESPERRASTERLINE,
 		 { { "Name", "VIC-II (PAL) Video Chip Interface II" },
 		   { "Code", "6569/8565/8566" },
@@ -1495,8 +1502,9 @@ unsigned int COMMODORE::VICII_PAL::treatRasterCycle ()
 }
 
 // ---
-COMMODORE::VICII_NTSC::VICII_NTSC (int vV)
-	: COMMODORE::VICII (
+COMMODORE::VICII_NTSC::VICII_NTSC (MCHEmul::PhysicalStorageSubset* cR, const MCHEmul::Address& cRA,
+	int vV)
+	: COMMODORE::VICII (cR, cRA,
 		 _VRASTERDATA, _HRASTERDATA, vV, 64,
 		 { { "Name", "VIC-II (NTSC) Video Chip Interface II" },
 		   { "Code", "6567/8562/8564" },

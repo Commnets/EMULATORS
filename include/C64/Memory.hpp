@@ -33,6 +33,7 @@ namespace C64
 		static const int _BASICROM				= 1;
 		static const int _CHARROM				= 2;
 		static const int _KERNELROM				= 3;
+		static const int _IORAM					= 4;
 
 		// Subsets
 		// Fom CPU
@@ -49,7 +50,6 @@ namespace C64
 		static const int _RAM1_D_SUBSET			= 10700;
 		static const int _CHARROM_SUBSET		= 108;
 		static const int _CHARRAM_SUBSET		= 109;
-		static const int _COLOR_SUBSET			= 110;
 		static const int _KERNELROM_SUBSET		= 111;
 		static const int _KERNELRAM_SUBSET		= 112;
 		/** The id for the registers VICII, SID, IO Expansion,... are defined in those. */
@@ -79,11 +79,20 @@ namespace C64
 		static const MCHEmul::Address _KERNELROMINIT_ADDRESS;
 		static const MCHEmul::Address _KERNELROMEND_ADDRESS;
 
+		/** Static address. The color memory can not be changed. */
+		static const MCHEmul::Address _COLORMEMORY_ADDRESS;
+
 		// Views
 		static const int _CPU_VIEW				= 0;
 		static const int _VICII_VIEW			= 1;
 
 		Memory (const std::string& lang = MCHEmul::_DEFAULTLANGUAGE);
+
+		/** To get a reference to teh color RAM. */
+		const MCHEmul::PhysicalStorageSubset* colorRAM () const
+							{ return (_colorRAM); }
+		MCHEmul::PhysicalStorageSubset* colorRAM ()
+							{ return (_colorRAM); }
 
 		/** To activate the right subsets in the CPU view. */
 		virtual bool initialize () override;

@@ -14,6 +14,7 @@ const MCHEmul::Address C64::Memory::_CHARROMINIT_ADDRESS = MCHEmul::Address ({ 0
 const MCHEmul::Address C64::Memory::_CHARROMEND_ADDRESS = MCHEmul::Address ({ 0xff, 0xdf }, false);
 const MCHEmul::Address C64::Memory::_KERNELROMINIT_ADDRESS = MCHEmul::Address ({ 0x00, 0xe0 }, false);
 const MCHEmul::Address C64::Memory::_KERNELROMEND_ADDRESS = MCHEmul::Address ({ 0xff, 0xff }, false);
+const MCHEmul::Address C64::Memory::_COLORMEMORY_ADDRESS ({ 0x00, 0xd8 }, false);
 
 // ---
 C64::Memory::Memory (const std::string& lang)
@@ -67,7 +68,7 @@ C64::Memory::Memory (const std::string& lang)
 	_charRAM			= subset (_CHARRAM_SUBSET);
 	_vicIIRegisters		= subset (COMMODORE::VICIIRegisters::_VICREGS_SUBSET);
 	_sidRegisters		= subset (COMMODORE::SIDRegisters::_SIDREGS_SUBSET);
-	_colorRAM			= subset (_COLOR_SUBSET);
+	_colorRAM			= subset (C64::ColorRAMMemory::_COLOR_SUBSET);
 	_cia1Registers		= subset (C64::CIA1Registers::_CIA1_SUBSET);
 	_cia2Registers		= subset (C64::CIA2Registers::_CIA2_SUBSET);
 	_io1Registers		= subset (C64::IOExpansionMemoryI::_IO1_SUBSET);
@@ -359,6 +360,8 @@ MCHEmul::Memory::Content C64::Memory::standardMemoryContent ()
 		new MCHEmul::PhysicalStorage (_CHARROM, MCHEmul::PhysicalStorage::Type::_ROM, 0x1000);			// 4k
 	MCHEmul::PhysicalStorage* KERNELROM	= 
 		new MCHEmul::PhysicalStorage (_KERNELROM, MCHEmul::PhysicalStorage::Type::_ROM, 0x2000);		// 8k
+	MCHEmul::PhysicalStorage* IORAM =
+		new MCHEmul::PhysicalStorage (_IORAM, MCHEmul::PhysicalStorage::Type::_RAM, 0x1000);			// 4k
 
 	// The map of phisical storages, used later...
 	MCHEmul::PhysicalStorages storages (
@@ -366,7 +369,8 @@ MCHEmul::Memory::Content C64::Memory::standardMemoryContent ()
 			{ _RAM, RAM },
 			{ _BASICROM, BASICROM },
 			{ _CHARROM, CHARROM },
-			{ _KERNELROM, KERNELROM }
+			{ _KERNELROM, KERNELROM },
+			{ _IORAM, IORAM }
 		});
 
 	// Subsets
@@ -426,19 +430,20 @@ MCHEmul::Memory::Content C64::Memory::standardMemoryContent ()
 
 	// 4k: IO Zone
 	MCHEmul::PhysicalStorageSubset* VICIIRegisters = new COMMODORE::VICIIRegisters 
-		(/** id = COMMODORE::VICIIRegisters::_VICREGS_SUBSET */ RAM, 0xd000, MCHEmul::Address ({ 0x00, 0xd0 }, false), 0x0400);
+		(/** id = COMMODORE::VICIIRegisters::_VICREGS_SUBSET */ IORAM, 0x0000, MCHEmul::Address ({ 0x00, 0xd0 }, false), 0x0400);
 	MCHEmul::PhysicalStorageSubset* SIDRegisters = new COMMODORE::SIDRegisters 
-		(/** id = COMMODORE::SIDRegisters::_SIDREGS_SUBSET */ RAM, 0xd400, MCHEmul::Address ({ 0x00, 0xd4 }, false), 0x0400);
-	MCHEmul::PhysicalStorageSubset* ColorRAM = new C64::ColorRAMMemory (_COLOR_SUBSET, RAM); // at d800, 0x400 long bytes long
+		(/** id = COMMODORE::SIDRegisters::_SIDREGS_SUBSET */ IORAM, 0x0400, MCHEmul::Address ({ 0x00, 0xd4 }, false), 0x0400);
+	MCHEmul::PhysicalStorageSubset* ColorRAM = new C64::ColorRAMMemory 
+		(/** id = C64::ColorRam::_COLOR_SUBSET */ IORAM, 0x0800, MCHEmul::Address ({ 0x00, 0xd8 }, false), 0x0400);
 	MCHEmul::PhysicalStorageSubset* CIA1 = new C64::CIA1Registers 
-		(/** id = C64::CIA1Registers::_CIA1_SUBSET */ RAM, 0xdc00, MCHEmul::Address ({ 0x00, 0xdc }, false), 0x0100);
+		(/** id = C64::CIA1Registers::_CIA1_SUBSET */ IORAM, 0x0c00, MCHEmul::Address ({ 0x00, 0xdc }, false), 0x0100);
 	MCHEmul::PhysicalStorageSubset* CIA2 = new C64::CIA2Registers 
-		(/** id = C64::CIA2Registers::_CIA2_SUBSET */ RAM, 0xdd00, MCHEmul::Address ({ 0x00, 0xdd }, false), 0x0100);
+		(/** id = C64::CIA2Registers::_CIA2_SUBSET */ IORAM, 0x0d00, MCHEmul::Address ({ 0x00, 0xdd }, false), 0x0100);
 	// Used by the expansion cartridges...
 	MCHEmul::PhysicalStorageSubset* IO1 = new C64::IOExpansionMemoryI
-		(/** id = C64::IOExpansionMemoryI::_IO1_SUBSET */ RAM, 0xde00, MCHEmul::Address ({ 0x00, 0xde }, false), 0x0100);
+		(/** id = C64::IOExpansionMemoryI::_IO1_SUBSET */ IORAM, 0x0e00, MCHEmul::Address ({ 0x00, 0xde }, false), 0x0100);
 	MCHEmul::PhysicalStorageSubset* IO2 = new C64::IOExpansionMemoryII
-		(/** id = C64::IOExpansionMemoryII::_IO2_SUBSET */ RAM, 0xdf00, MCHEmul::Address ({ 0x00, 0xdf }, false), 0x0100);
+		(/** id = C64::IOExpansionMemoryII::_IO2_SUBSET */ IORAM, 0x0f00, MCHEmul::Address ({ 0x00, 0xdf }, false), 0x0100);
 
 	// 8k: KERNEL
 	// Where the kernel is defined can be either RAM or ROM (depending on the bits 0, 1, 2 at 0x01 position)
@@ -493,7 +498,7 @@ MCHEmul::Memory::Content C64::Memory::standardMemoryContent ()
 			{ _CHARRAM_SUBSET,										CharRAM }, 
 			{ COMMODORE::VICIIRegisters::_VICREGS_SUBSET,			VICIIRegisters }, 
 			{ COMMODORE::SIDRegisters::_SIDREGS_SUBSET,				SIDRegisters }, 
-			{ _COLOR_SUBSET,										ColorRAM }, 
+			{ C64::ColorRAMMemory::_COLOR_SUBSET,					ColorRAM }, 
 			{ C64::CIA1Registers::_CIA1_SUBSET,						CIA1 }, 
 			{ C64::CIA2Registers::_CIA2_SUBSET,						CIA2 }, 
 			{ C64::IOExpansionMemoryI::_IO1_SUBSET,					IO1}, 
@@ -597,7 +602,7 @@ MCHEmul::Memory::Content C64::Memory::standardMemoryContent ()
 			{ _CHARRAM_SUBSET,										CharRAM }, 
 			{ COMMODORE::VICIIRegisters::_VICREGS_SUBSET,			VICIIRegisters }, 
 			{ COMMODORE::SIDRegisters::_SIDREGS_SUBSET,				SIDRegisters }, 
-			{ _COLOR_SUBSET,										ColorRAM }, 
+			{ C64::ColorRAMMemory::_COLOR_SUBSET,					ColorRAM }, 
 			{ C64::CIA1Registers::_CIA1_SUBSET,						CIA1 }, 
 			{ C64::CIA2Registers::_CIA2_SUBSET,						CIA2 }, 
 			{ C64::IOExpansionMemoryI::_IO1_SUBSET,					IO1}, 

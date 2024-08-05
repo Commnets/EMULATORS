@@ -22,8 +22,11 @@ namespace C64
 	class ColorRAMMemory final : public MCHEmul::PhysicalStorageSubset
 	{
 		public:
-		ColorRAMMemory (int id, MCHEmul::PhysicalStorage* ps)
-			: MCHEmul::PhysicalStorageSubset (id, ps, 0xd800, MCHEmul::Address ({ 0x00, 0xd8 }, false), 0x0400),
+		static const int _COLOR_SUBSET = 1100;
+
+		ColorRAMMemory (MCHEmul::PhysicalStorage* ps,
+				size_t pp, const MCHEmul::Address& a, size_t s)
+			: MCHEmul::PhysicalStorageSubset (_COLOR_SUBSET, ps, pp, a, s),
 			  _lastValue (MCHEmul::PhysicalStorage::_DEFAULTVALUE)
 							{ }
 
