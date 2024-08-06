@@ -347,6 +347,33 @@ void C64::Memory::configureMemoryStructure (bool basic, bool kernel, bool chrRom
 }
 
 // ---
+void C64::Memory::loadDataBlockInRAM (const MCHEmul::DataMemoryBlock& dB)
+{
+	// Keep what the situation of the memory is now...
+	std::vector <bool> aM, aRM;
+	for (const auto& i : _memStrList)
+	{
+		aM.push_back (i -> active ());
+
+		aRM.push_back (i -> activeForReading ());
+	}
+
+	// All RAM open...
+	configureMemoryStructure (false, false, false, true, false, false, false, false, false, false);
+
+	// Load the information...
+	set (dB);
+
+	// Restore the previous situation...
+	for (size_t i = 0; i < aM.size (); i++)
+	{
+		_memStrList [i] -> setActive (aM [i]);
+
+		_memStrList [i] -> setActiveForReading (aRM [i]);
+	}
+}
+
+// ---
 MCHEmul::Memory::Content C64::Memory::standardMemoryContent ()
 {
 	/** All dirs in Little - endian format. */

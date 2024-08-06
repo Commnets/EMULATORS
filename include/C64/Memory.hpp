@@ -115,6 +115,11 @@ namespace C64
 		void configureMemoryStructure (bool basic, bool kernel, bool chrRomCPU, bool chrRomVIC, bool io, 
 			bool romL, bool romH1, bool romH2CPU, bool romH2VIC, bool uM);
 
+		/** Load in memory RAM a data block. \n
+			In C64 the memory can be configured to have some RAM zones no directly accesible in writting like IO. \n
+			This method is to load a data block just in the memory RAM. */
+		void loadDataBlockInRAM (const MCHEmul::DataMemoryBlock& dB);
+
 		private:
 		virtual MCHEmul::Stack* lookForStack () override
 							{ return (dynamic_cast <MCHEmul::Stack*> (subset (_STACK_SUBSET))); }

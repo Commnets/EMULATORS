@@ -198,7 +198,7 @@ bool COMMODORE::Datasette1530Injection::executeTrap
 			switch (static_cast <F6500::C6500*> (cpu) -> xRegister ().values () [0].value ())
 			{
 				case 0x0e:
-					cpu -> memoryRef () -> set (_data._data [_dataCounter]);
+					loadDataBlockInRAM (_data._data [_dataCounter], cpu);
 					break;
 
 				default:

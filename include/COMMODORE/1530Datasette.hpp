@@ -34,7 +34,7 @@ namespace COMMODORE
 		However the one managing that stuff is the ROM emulation, the duty of this class is to have the right 
 		speed of the motor at construction time.
 		*/
-	class Datasette1530 final : public MCHEmul::BasicDatasette
+	class Datasette1530 : public MCHEmul::BasicDatasette
 	{
 		public:
 		static const int _ID = 100;
@@ -113,6 +113,11 @@ namespace COMMODORE
 			but a couple of basic traps are understood: "Header" & "Retrieve".
 			Define them when construct the object because the address In/Out can vary per type of COMMODORE machine. */
 		virtual bool executeTrap (const Trap& t, MCHEmul::CPU* cpu);
+
+		/** To load the program into the memory. \n
+			In some COMMODORE computers (like C64) the whole RAM memory is not directly accesible. */
+		virtual void loadDataBlockInRAM (const MCHEmul::DataMemoryBlock& dB, MCHEmul::CPU* cpu)
+							{ cpu -> memoryRef () -> set (_data._data [_dataCounter]); }
 
 		protected:
 		Definition _definition;

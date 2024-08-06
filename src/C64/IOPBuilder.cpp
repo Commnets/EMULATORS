@@ -1,5 +1,6 @@
 #include <C64/IOPBuilder.hpp>
 #include <C64/Cartridge.hpp>
+#include <C64/1530Datasette.hpp>
 #include <C64/C64.hpp>
 
 // ---
@@ -23,7 +24,7 @@ MCHEmul::IOPeripheral* C64::IOPeripheralBuilder::createPeripheral
 				C64::Commodore64::VisualSystem::_PAL ? 182 : 176);
 	else if (id == COMMODORE::Datasette1530Injection::_ID)
 		/** When the routines of the kernal are "overpassed". */
-		result = new COMMODORE::Datasette1530Injection
+		result = new C64::Datasette1530Injection
 			(
 				{	
 					// General definitions for the injection (@see Datasette1530Injection class too)...

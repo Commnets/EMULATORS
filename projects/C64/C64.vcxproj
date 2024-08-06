@@ -19,6 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\include\C64\1530Datasette.hpp" />
     <ClInclude Include="..\..\include\C64\C64.hpp" />
     <ClInclude Include="..\..\include\C64\C64Emulator.hpp" />
     <ClInclude Include="..\..\include\C64\Cartridge.hpp" />
