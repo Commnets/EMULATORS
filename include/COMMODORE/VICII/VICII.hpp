@@ -74,6 +74,10 @@ namespace COMMODORE
 
 		virtual ~VICII () override;
 
+		/** To draw or not to draw raster interrupt positions. */
+		void setDrawRasterInterruptPositions (bool d)
+							{ _drawRasterInterruptPositions = d; }
+
 		/** To assign or to know the color RAM. 
 			The VICII needs to know where the color RAM is, to access the nibbles with the color. */
 		const MCHEmul::PhysicalStorageSubset* colorRAM () const
@@ -310,6 +314,9 @@ namespace COMMODORE
 			affecting the right registers in the VICII. */
 		void detectCollisions (const DrawResult& cT);
 
+		/** To draw lines at the position where the raster interruptions are generated. */
+		void drawRasterInterruptPositions ();
+
 		protected:
 		/** A reference to the color RAM. */
 		MCHEmul::PhysicalStorageSubset* _colorRAM;
@@ -325,6 +332,8 @@ namespace COMMODORE
 		unsigned short _incCyclesPerRasterLine;
 		/** The raster. */
 		MCHEmul::Raster _raster;
+		/** To draw or not to draw lines at the positions where the raster interruptions are generated. */
+		bool _drawRasterInterruptPositions;
 
 		// Implementation
 		/** When the CPU is not stopped (sometimes the VIC requires to stop it). \n 

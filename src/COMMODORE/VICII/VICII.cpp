@@ -171,17 +171,10 @@ bool COMMODORE::VICII::simulate (MCHEmul::CPU* cpu)
 					(MCHEmul::UByte::OutputFormat::_HEXA, '\0', 2)) << ","
 				<< "BM=$" << MCHEmul::removeAll0 (_VICIIRegisters -> bitmapMemory ().asString
 					(MCHEmul::UByte::OutputFormat::_HEXA, '\0', 2)) << "]\n";
-
-			// Draws lines where there is a IRQ interruption...
-			unsigned short lrt = 
-				_raster.lineInVisibleZone (_VICIIRegisters -> IRQRasterLineAt ());
-			if (lrt <= _raster.vData ().lastVisiblePosition ())
-			{
-				unsigned char clrt = _VICIIRegisters -> backgroundColor () == 15 
-					? 0 : _VICIIRegisters -> backgroundColor () + 1; /** to be visible. */
-				screenMemory () -> setHorizontalLine (0, lrt, _raster.visibleColumns (), clrt);
-			}
 		}
+
+		if (_drawRasterInterruptPositions)
+			drawRasterInterruptPositions ();
 
 		// Whether the video is active or not is only checked at the very first bad line...
 		_videoActive = (_raster.currentLine () == _FIRSTBADLINE) 
@@ -1447,6 +1440,20 @@ void COMMODORE::VICII::detectCollisions (const DrawResult& cT)
 
 	if (cSS) 
 		_VICIIRegisters -> activateSpriteCollisionIRQ ();
+}
+
+// ---
+void COMMODORE::VICII::drawRasterInterruptPositions ()
+{
+	// Draws lines where there is a IRQ interruption...
+	unsigned short lrt = 
+		_raster.lineInVisibleZone (_VICIIRegisters -> IRQRasterLineAt ());
+	if (lrt <= _raster.vData ().lastVisiblePosition ())
+	{
+		unsigned char clrt = _VICIIRegisters -> backgroundColor () == 15 
+			? 0 : _VICIIRegisters -> backgroundColor () + 1; /** to be visible. */
+		screenMemory () -> setHorizontalLine (0, lrt, _raster.visibleColumns (), clrt);
+	}
 }
 
 // ---
