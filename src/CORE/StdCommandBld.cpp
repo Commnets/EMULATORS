@@ -96,6 +96,10 @@ MCHEmul::Command* MCHEmul::StandardCommandBuilder::createEmptyCommand (const std
 		result = new MCHEmul::CRTEffectOffCommand;
 	else if (cmdName == "DATASETTE" || cmdName == MCHEmul::DatasetteStatusCommand::_NAME)
 		result = new MCHEmul::DatasetteStatusCommand;
+	else if (cmdName == "GRIDON" || cmdName == MCHEmul::GridOnCommand::_NAME)
+		result = new MCHEmul::GridOnCommand;
+	else if (cmdName == "GRIDOFF" || cmdName == MCHEmul::GridOffCommand::_NAME)
+		result = new MCHEmul::GridOffCommand;
 	else if (cmdName == MCHEmul::MoveParametersToAnswerCommand::_NAME)
 		result = new MCHEmul::MoveParametersToAnswerCommand;
 

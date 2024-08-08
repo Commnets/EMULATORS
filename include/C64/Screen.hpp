@@ -27,20 +27,12 @@ namespace C64
 		
 		Screen (double hz, int w, int h, const MCHEmul::Attributes& attrs);
 
-		/** Managing the border. */
-		void setDrawBorder (bool dB, unsigned int c = 0)
-							{ _drawBorder = dB; _borderColor = c; }
-
 		protected:
 		virtual void drawAdditional () override;
 
 		// The char code and the ASCII code ar quite similar!
 		virtual size_t charCodeFromASCII (unsigned char id) const override
 							{ return ((size_t) (id & ~0b01000000)); }
-
-		protected:
-		bool _drawBorder;
-		unsigned int _borderColor;
 	};
 
 	/** Screen valid for NTSC systems. Used in USA. */

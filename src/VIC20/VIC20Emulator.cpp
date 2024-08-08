@@ -14,7 +14,7 @@ void VIC20::VIC20Emulator::printOutParameters (std::ostream& o) const
 	MCHEmul::Emulator::printOutParameters (o);
 
 	o << "/n:\t\t" << "Emulation using NTSC parameters and screen size" << std::endl;
-	o << "/b[COLOR]:\t" << "Draw a dark border in the drawable screen. Color optional" << std::endl;
+	o << "/b[COLOR]:\t" << "Draw a dark grid in the drawable screen. Color optional" << std::endl;
 	o << "/w[CONFIGURATION]:\t" << "Starts in a different memory configuration. It is is optional" << std::endl;
 	o << "LANGUAGES allowed under command line /i:" << std::endl << 
 		 "ENG:\tEnglish" << std::endl <<
@@ -42,7 +42,7 @@ bool VIC20::VIC20Emulator::initialize ()
 
 	// Draw border, Which color?
 	dynamic_cast <VIC20::Screen*> (dynamic_cast <VIC20::CommodoreVIC20*> (computer ()) -> 
-		device (VIC20::Screen::_ID)) -> setDrawBorder (drawBorder (), borderColor ());
+		device (VIC20::Screen::_ID)) -> setDrawGrid (drawBorder (), borderColor ());
 
 	return (true);
 }

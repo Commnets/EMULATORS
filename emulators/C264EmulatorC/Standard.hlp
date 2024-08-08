@@ -193,3 +193,9 @@ the last one is the address (ADDRESS) where to save that info from.
 ;DATASETTE
 To know the status of the datasette if connected and exists for this type of computer.
 No parameters are needed.
+;GRIDON COLOR
+To activate to draw a grid in the screen of the computer.
+The only parameter needed is the color of the grid.
+;GRIDOFF
+To switch off to draw a grid in the screen of the compurter.
+No parameters are needed.

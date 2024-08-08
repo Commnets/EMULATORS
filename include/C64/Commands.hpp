@@ -202,8 +202,10 @@ namespace C64
 	};
 
 	/** To set border and grid. \n
-		The comamand is:
-		GRIDON COLOR */
+		The comamand is: \n
+		GRIDON COLOR \n
+		This method overload the one defined at CORE level because it also activates to draw
+		the line where the raster interruptions are generated in the screen. */
 	class GridOnCommand final : public MCHEmul::Command
 	{
 		public:
@@ -224,8 +226,10 @@ namespace C64
 	};
 
 	/** To unset border and grid. \n
-		The comamand is:
-		GRIDOFF */
+		The comamand is: \n
+		GRIDOFF \n
+		This one overload the one defined at CORE level because it also desactivate 
+		to draw the position where the raster interrupts are generated. */
 	class GridOffCommand final : public MCHEmul::Command
 	{
 		public:

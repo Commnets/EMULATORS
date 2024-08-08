@@ -13,7 +13,7 @@ void C64::C64Emulator::printOutParameters (std::ostream& o) const
 	MCHEmul::Emulator::printOutParameters (o);
 
 	o << "/n:\t\t" << "Emulation using NTSC parameters and screen size" << std::endl;
-	o << "/b[COLOR]:\t" << "Draw a dark border in the drawable screen. Color optional" << std::endl;
+	o << "/b[COLOR]:\t" << "Draw a dark grid in the drawable screen. Color optional" << std::endl;
 	o << "/w[SID]:\t" << "Select the emulation used for the SID chip" << std::endl;
 	o << "\t\tSID for an emulation based on RESID library" << std::endl;
 	o << "\t\tOWN or nothing for and emulation based on ICF library" << std::endl;
@@ -38,7 +38,7 @@ bool C64::C64Emulator::initialize ()
 
 	// Draw border, Which color?
 	dynamic_cast <C64::Screen*> (dynamic_cast <C64::Commodore64*> (computer ()) -> 
-		device (C64::Screen::_ID)) -> setDrawBorder (drawBorder (), borderColor ());
+		device (C64::Screen::_ID)) -> setDrawGrid (drawBorder (), borderColor ());
 
 	return (true);
 }

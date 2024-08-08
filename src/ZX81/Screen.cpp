@@ -3,8 +3,7 @@
 
 // ---
 ZX81::Screen::Screen (double hz, int w, int h, const MCHEmul::Attributes& attrs)
-	: MCHEmul::Screen ("ZX81", _ID, w, h, 2.0f, 2.0f, hz, attrs),
-	  _drawBorder (false), _borderColor (0)
+	: MCHEmul::Screen ("ZX81", _ID, w, h, 2.0f, 2.0f, hz, attrs)
 {
 	bool e;
 	MCHEmul::DataMemoryBlock dt = MCHEmul::DataMemoryBlock::loadBinaryFile 
@@ -28,11 +27,11 @@ ZX81::Screen::Screen (double hz, int w, int h, const MCHEmul::Attributes& attrs)
 // ---
 void ZX81::Screen::drawAdditional ()
 {
-	if (_drawBorder)
+	if (drawGrid ())
 	{
 		// The color...
 		// Only 4 are available...
-		unsigned int bC = (_borderColor > 3) ? 0 : _borderColor;
+		unsigned int bC = (gridColor () > 3) ? 0 : gridColor ();
 
 		// Where is the screen...
 		ZX81::ULA* gC = static_cast <ZX81::ULA*> (_graphicalChip);

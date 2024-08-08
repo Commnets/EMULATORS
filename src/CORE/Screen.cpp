@@ -7,6 +7,7 @@ MCHEmul::Screen::Screen (const std::string& n, int id,
 		const Attributes& attrs)
 	: MCHEmul::IODevice (MCHEmul::IODevice::Type::_OUTPUT, id, attrs),
 	  _CRTActive (false), // It is not active by default...
+	  _drawGrid (false), _gridColor (0),
 	  _screenName (n), 
 	  _screenColumns (sc), _screenRows (sr), _visibilityFactorX (vFX), _visibilityFactorY (vFY),
 	  _hertzs (hz), _clock ((unsigned int) hz /** integer. */),

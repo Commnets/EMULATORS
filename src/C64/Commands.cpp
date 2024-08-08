@@ -159,13 +159,15 @@ void C64::CharactersDrawCommand::executeImpl (MCHEmul::CommandExecuter* cE,
 void C64::GridOnCommand::executeImpl (MCHEmul::CommandExecuter* cE,
 	MCHEmul::Computer* c, MCHEmul::InfoStructure& rst)
 {
-	if (c == nullptr || 
-		dynamic_cast <C64::Commodore64*> (c) == nullptr ||
+	if (c == nullptr)
+		return;
+
+	c -> screen () -> setDrawGrid (true, std::atoi (parameter ("00").c_str ()));
+
+	if (dynamic_cast <C64::Commodore64*> (c) == nullptr ||
 		static_cast <C64::Commodore64*> (c) -> vicII () == nullptr)
 		return;
 
-	static_cast <C64::Screen*> (c -> device (C64::Screen::_ID)) -> 
-		setDrawBorder (true, std::atoi (parameter ("00").c_str ()));
 	static_cast <COMMODORE::VICII*> (static_cast <C64::Commodore64*> (c) -> vicII ()) -> 
 		setDrawRasterInterruptPositions (true);
 }
@@ -174,13 +176,15 @@ void C64::GridOnCommand::executeImpl (MCHEmul::CommandExecuter* cE,
 void C64::GridOffCommand::executeImpl (MCHEmul::CommandExecuter* cE,
 	MCHEmul::Computer* c, MCHEmul::InfoStructure& rst)
 {
-	if (c == nullptr || 
-		dynamic_cast <C64::Commodore64*> (c) == nullptr ||
+	if (c == nullptr)
+		return;
+
+	c -> screen () -> setDrawGrid (false, 0 /** It doesn't matter. */);
+
+	if (dynamic_cast <C64::Commodore64*> (c) == nullptr ||
 		static_cast <C64::Commodore64*> (c) -> vicII () == nullptr)
 		return;
 
-	dynamic_cast <C64::Screen*> (c -> device (C64::Screen::_ID)) -> 
-		setDrawBorder (false, 0 /** It is not usefull. */);
 	static_cast <COMMODORE::VICII*> (static_cast <C64::Commodore64*> (c) -> vicII ()) -> 
 		setDrawRasterInterruptPositions (false);
 }

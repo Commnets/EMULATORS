@@ -994,6 +994,49 @@ namespace MCHEmul
 		private:
 		virtual void executeImpl (CommandExecuter* cE, Computer* c, InfoStructure& rst) override;
 	};
+
+	/** To set to draw a grid. \n
+		The comamand is: \n
+		GRIDON COLOR */
+	class GridOnCommand final : public MCHEmul::Command
+	{
+		public:
+		static const int _ID = 106;
+		static const std::string _NAME;
+
+		GridOnCommand ()
+			: MCHEmul::Command (_ID, _NAME)
+							{ }
+
+		/** The parameter is the clor of the grid. */
+		virtual bool canBeExecuted () const override
+							{ return (_parameters.size () == 1); }
+
+		private:
+		virtual void executeImpl (MCHEmul::CommandExecuter* cE, 
+			MCHEmul::Computer* c, MCHEmul::InfoStructure& rst) override;
+	};
+
+	/** To unset border and grid. \n
+		The comamand is: \n
+		GRIDOFF */
+	class GridOffCommand final : public MCHEmul::Command
+	{
+		public:
+		static const int _ID = 107;
+		static const std::string _NAME;
+
+		GridOffCommand ()
+			: MCHEmul::Command (_ID, _NAME)
+							{ }
+
+		virtual bool canBeExecuted () const override
+							{ return (_parameters.size () == 0); }
+
+		private:
+		virtual void executeImpl (MCHEmul::CommandExecuter* cE, 
+			MCHEmul::Computer* c, MCHEmul::InfoStructure& rst) override;
+	};
 }
 
 #endif

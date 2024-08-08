@@ -35,3 +35,11 @@ The parameters could be repeated, but just one instace of every value is accepte
 To print out the characters data.
 No parameters of the list of characters to visualize from 0 to 255 in decimal format.
 The parameters could be repeated, but just one instace of every value is accepted.
+;GRIDON COLOR
+To activate to draw a grid in the screen of the computer.
+The command activates also to draw the position where the raster interrupts happen.
+The only parameter needed is the color of the grid.
+;GRIDOFF
+To switch off to draw a grid in the screen of the compurter.
+The command desactivates also to draw the position where the raster interrupts happen.
+No parameters are needed.

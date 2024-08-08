@@ -2,8 +2,7 @@
 
 // ---
 VIC20::Screen::Screen (double hz, int w, int h, const MCHEmul::Attributes& attrs)
-	: MCHEmul::Screen ("VIC20", _ID, w, h, 2.0f, 2.0f, hz, attrs),
-	  _drawBorder (false), _borderColor (0)
+	: MCHEmul::Screen ("VIC20", _ID, w, h, 2.0f, 2.0f, hz, attrs)
 {
 	bool e;
 	MCHEmul::DataMemoryBlock dt = MCHEmul::DataMemoryBlock::loadBinaryFile 
@@ -27,11 +26,11 @@ VIC20::Screen::Screen (double hz, int w, int h, const MCHEmul::Attributes& attrs
 // ---
 void VIC20::Screen::drawAdditional ()
 {
-	if (_drawBorder)
+	if (drawGrid ())
 	{
 		// The color...
 		// Only 15 are available...
-		unsigned int bC = (_borderColor > 15) ? 0 : _borderColor;
+		unsigned int bC = (gridColor () > 15) ? 0 : gridColor ();
 
 		// Where is the screen...
 		COMMODORE::VICI* gC = static_cast <COMMODORE::VICI*> (_graphicalChip);

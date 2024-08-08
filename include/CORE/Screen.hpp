@@ -21,7 +21,11 @@
 
 namespace MCHEmul
 {
-	/** Represents the very typical output device of any computer: The Screen. */
+	/** Represents the very typical output device of any computer: The Screen. ºn
+		The screen can be drawn (or not) with a border. \n
+		The way the border is drwan must be implemented in very simulatuion in the method "drawAdditional". \n
+		At this generic class there is onky a method to activat eor desactivate that possibility what 
+		allows a global command to exist. */
 	class Screen : public IODevice
 	{
 		public:
@@ -45,6 +49,15 @@ namespace MCHEmul
 
 		/** Activate or desactivate the CRT mode. */
 		void setCRTEffect (bool a);
+
+		/** To activate or desactivate to draw a possible grid.
+			That grid can be in many differenty ways which is something to be decided in the implementation. */
+		void setDrawGrid (bool dB, unsigned int c = 0)
+							{ _drawGrid = dB; _gridColor = c; }
+		bool drawGrid () const
+							{ return (_drawGrid); }
+		unsigned int gridColor () const // Must be within the max number of colors managed by the computer emulation...
+							{ return (_gridColor); }
 
 		virtual void linkToChips (const Chips& c) override;
 
@@ -151,6 +164,11 @@ namespace MCHEmul
 		const double _hertzs;
 		/** The clock to control the frenquency to print out the screen. */
 		Clock _clock;
+	
+		// To draw or not to draw a grid...
+		// The way the grid is finbally draw will depend on the screen implemented....
+		bool _drawGrid;
+		unsigned int _gridColor;
 
 		// Implementation
 		/** Set when initialize after assigning the chips.

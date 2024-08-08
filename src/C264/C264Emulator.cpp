@@ -14,7 +14,7 @@ void C264::C264Emulator::printOutParameters (std::ostream& o) const
 	MCHEmul::Emulator::printOutParameters (o);
 
 	o << "/n:\t\t" << "Emulation using NTSC parameters and screen size" << std::endl;
-	o << "/b[COLOR]:\t" << "Draw a dark border in the drawable screen. Color optional" << std::endl;
+	o << "/b[COLOR]:\t" << "Draw a dark grid in the drawable screen. Color optional" << std::endl;
 	o << "/m[MACHINE]:\t" << "To select the type of machine of the series to be instantiated. C16 by default" << std::endl;
 	o << "LANGUAGES allowed under command line /i:" << std::endl << 
 		 "ENG:\tEnglish" << std::endl <<
@@ -38,7 +38,7 @@ bool C264::C264Emulator::initialize ()
 
 	// Draw border, Which color?
 	dynamic_cast <C264::Screen*> (dynamic_cast <C264::Commodore264*> (computer ()) -> 
-		device (C264::Screen::_ID)) -> setDrawBorder (drawBorder (), borderColor ());
+		device (C264::Screen::_ID)) -> setDrawGrid (drawBorder (), borderColor ());
 
 	return (true);
 }

@@ -27,6 +27,7 @@ COMMODORE::VICII::VICII (MCHEmul::PhysicalStorageSubset* cR, const MCHEmul::Addr
 	  _cyclesPerRasterLine (cRL),
 	  _incCyclesPerRasterLine (cRL - COMMODORE::VICII_PAL::_CYCLESPERRASTERLINE),
 	  _raster (vd, hd, 8 /** step. */),
+	  _drawRasterInterruptPositions (false),
 	  _lastCPUCycles (0),
 	  _format (nullptr),
 	  _cycleInRasterLine (1),
@@ -172,9 +173,6 @@ bool COMMODORE::VICII::simulate (MCHEmul::CPU* cpu)
 				<< "BM=$" << MCHEmul::removeAll0 (_VICIIRegisters -> bitmapMemory ().asString
 					(MCHEmul::UByte::OutputFormat::_HEXA, '\0', 2)) << "]\n";
 		}
-
-		if (_drawRasterInterruptPositions)
-			drawRasterInterruptPositions ();
 
 		// Whether the video is active or not is only checked at the very first bad line...
 		_videoActive = (_raster.currentLine () == _FIRSTBADLINE) 
@@ -789,18 +787,9 @@ void COMMODORE::VICII::drawVisibleZone (MCHEmul::CPU* cpu)
 	// ...and also the collisions detected at the same time
 	drawGraphicsSpritesAndDetectCollisions (
 		{
-			/** _ICD */ _raster.hData ().firstDisplayPosition (),		// DISLAY: The original...
-			/** _ICS */ _raster.hData ().firstScreenPosition (),		// SCREEN: And the real one (after reduction size)
-			/** _LCD */ _raster.hData ().lastDisplayPosition (),		// DISPLAY: The original...
-			/** _LCS */ _raster.hData ().lastScreenPosition (),			// SCREEN: And the real one (after reduction size)
+			/** _ICD */ _raster.hData ().firstDisplayPosition (),		// DISPLAY: The original...
 			/** _SC	 */ _VICIIRegisters -> horizontalScrollPosition (),	// From 0 - 7 
-			/** _RC	 */ cv,												// Where the horizontal raster is (not adjusted to 8) inside the window
 			/** _RCA */ cav,											// Where the horizontal raster is (adjusted to 8) inside the window
-			/** _IRD */ _raster.vData ().firstDisplayPosition (),		// DISPLAY: The original... 
-			/** _IRS */ _raster.vData ().firstScreenPosition (),		// SCREEN:  And the real one (after reduction size)
-			/** _LRD */ _raster.vData ().lastDisplayPosition (),		// DISPLAY: The original...
-			/** _LRS */ _raster.vData ().lastScreenPosition (),			// SCREEN: And the real one (after reduction size)
-			/** _SR	 */ _VICIIRegisters -> verticalScrollPosition (),	// From 0 - 7 (taken into account in bad lines)
 			/** _RR	 */ rv												// Where the vertical raster is inside the window (it is not the chip raster line)
 		});
 
@@ -839,6 +828,20 @@ void COMMODORE::VICII::drawVisibleZone (MCHEmul::CPU* cpu)
 
 		screenMemory () -> setHorizontalLine ((size_t) stp, (size_t) rv, lbk, 
 			_VICIIRegisters -> foregroundColor ());
+	}
+
+	// If there were requested to draw the position where the Raster Interrupt is generated...
+	// All draw are replace by a line with a color different of the background!
+	// The line is only drawn if that position where within the visible zone!
+	if (_drawRasterInterruptPositions)
+	{
+		unsigned short lrt = 
+			_raster.lineInVisibleZone (_VICIIRegisters -> IRQRasterLineAt ());
+		if (lrt <= _raster.vData ().lastVisiblePosition ())
+			screenMemory () -> setHorizontalLine ((size_t) cav, (size_t) lrt,
+				(cav + 8) > _raster.visibleColumns () ? (_raster.visibleColumns () - cav) : 8, 
+					_VICIIRegisters -> backgroundColor () == 15 
+						? 0 : _VICIIRegisters -> backgroundColor () + 1 /** to be visible. */);
 	}
 
 	// The IRQ related with the lightpen is calculated...
@@ -1440,20 +1443,6 @@ void COMMODORE::VICII::detectCollisions (const DrawResult& cT)
 
 	if (cSS) 
 		_VICIIRegisters -> activateSpriteCollisionIRQ ();
-}
-
-// ---
-void COMMODORE::VICII::drawRasterInterruptPositions ()
-{
-	// Draws lines where there is a IRQ interruption...
-	unsigned short lrt = 
-		_raster.lineInVisibleZone (_VICIIRegisters -> IRQRasterLineAt ());
-	if (lrt <= _raster.vData ().lastVisiblePosition ())
-	{
-		unsigned char clrt = _VICIIRegisters -> backgroundColor () == 15 
-			? 0 : _VICIIRegisters -> backgroundColor () + 1; /** to be visible. */
-		screenMemory () -> setHorizontalLine (0, lrt, _raster.visibleColumns (), clrt);
-	}
 }
 
 // ---

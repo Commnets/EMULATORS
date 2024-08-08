@@ -1,8 +1,7 @@
 #include <C64/Screen.hpp>
 
 C64::Screen::Screen (double hz, int w, int h, const MCHEmul::Attributes& attrs)
-	: MCHEmul::Screen ("C64", _ID, w, h, 2.0f, 2.0f, hz, attrs),
-		_drawBorder (false), _borderColor (0)
+	: MCHEmul::Screen ("C64", _ID, w, h, 2.0f, 2.0f, hz, attrs)
 {
 	bool e;
 	MCHEmul::DataMemoryBlock dt = MCHEmul::DataMemoryBlock::loadBinaryFile
@@ -26,11 +25,11 @@ C64::Screen::Screen (double hz, int w, int h, const MCHEmul::Attributes& attrs)
 // ---
 void C64::Screen::drawAdditional ()
 {
-	if (_drawBorder)
+	if (drawGrid ())
 	{
 		// The color...
 		// Only 15 are available...
-		unsigned int clr = (_borderColor > 15) ? 0 : _borderColor;
+		unsigned int clr = (gridColor () > 15) ? 0 : gridColor ();
 		unsigned int bC = ((clr + 1) > 15) ? 0 : clr + 1; 
 
 		COMMODORE::VICII* gC = static_cast <COMMODORE::VICII*> (_graphicalChip);

@@ -2,8 +2,7 @@
 
 // ---
 C264::Screen::Screen (const std::string& tt, double hz, int w, int h, const MCHEmul::Attributes& attrs)
-	: MCHEmul::Screen (tt, _ID, w, h, 2.0f, 2.0f, hz, attrs),
-	  _drawBorder (false), _borderColor (0)
+	: MCHEmul::Screen (tt, _ID, w, h, 2.0f, 2.0f, hz, attrs)
 { 
 	bool e;
 	MCHEmul::DataMemoryBlock dt = MCHEmul::DataMemoryBlock::loadBinaryFile 
@@ -29,11 +28,11 @@ C264::Screen::Screen (const std::string& tt, double hz, int w, int h, const MCHE
 // ---
 void C264::Screen::drawAdditional ()
 {
-	if (_drawBorder)
+	if (gridColor ())
 	{
 		// The color...
 		// Only 128 are available...
-		unsigned int clr = (_borderColor > 128) ? 0 : _borderColor;
+		unsigned int clr = (gridColor () > 128) ? 0 : gridColor ();
 		unsigned int bC = ((clr + 1) > 128) ? 0 : clr + 1; 
 
 		COMMODORE::TED* gC = static_cast <COMMODORE::TED*> (_graphicalChip);
@@ -42,13 +41,13 @@ void C264::Screen::drawAdditional ()
 		// Draws the border of the display!
 		gC -> raster ().displayPositions (x1, y1, x2, y2);
 		// as C64 behaves, these values can never be wrong neither in order nor in value...
-		drawRectangle ((size_t) (x1 - 1), (size_t) (y1 - 1), (size_t) (x2 + 1), (size_t) (y2 + 1), _borderColor);
+		drawRectangle ((size_t) (x1 - 1), (size_t) (y1 - 1), (size_t) (x2 + 1), (size_t) (y2 + 1), clr);
 
 		// Draw a cuadricula per line of chars...
 		for (unsigned short i = y1 + 8; i <= y2; i += 8)
-			drawHorizontalLineStep ((size_t) (x1 - 1), (size_t) i, (size_t) (x2 - x1 + 3), 2, _borderColor);
+			drawHorizontalLineStep ((size_t) (x1 - 1), (size_t) i, (size_t) (x2 - x1 + 3), 2, clr);
 		for (unsigned short i = x1 + 8; i <= x2; i += 8)
-			drawVerticalLineStep ((size_t) i, (size_t) (y1 - 1), (size_t) (y2 - y1 + 3), 2, _borderColor);
+			drawVerticalLineStep ((size_t) i, (size_t) (y1 - 1), (size_t) (y2 - y1 + 3), 2, clr);
 
 		// Draws the border of the screen!
 		gC -> raster ().screenPositions (x1, y1, x2, y2);

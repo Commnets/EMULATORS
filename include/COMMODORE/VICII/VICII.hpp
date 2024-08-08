@@ -164,23 +164,15 @@ namespace COMMODORE
 		virtual MCHEmul::ScreenMemory* createScreenMemory () override;
 
 		// Draw the graphics & Sprites in detail...
-		/** To simplify the use of some of the routines dedicated to draw graphics. */
+		/** A couple of variables defining the drawing context. \n
+			Tjose are to simplify the use of some of the routines dedicated to draw graphics. */
 		struct DrawContext
 		{
 			unsigned short _ICD;	// Initial Column of the Display (Not taken into account reductions in size).
-			unsigned short _ICS;	// Initial Column Screen (Screen = Display with reductions in the size considered).
-			unsigned short _LCD;	// Last Column of the Display 
-			unsigned short _LCS;	// Last Column of the Screen
 			unsigned short _SC;		// Scroll X
-			unsigned short _RC;		// Raster X (from the beginning of the visible zone)
-			unsigned short _RCA;	// Raster X adjusted (Moves 8 by 8, so = Raster X >> 3 << 3)
-			unsigned short _IRD;	// Initial Row Display (Not taken into account reductions of the size)
-			unsigned short _IRS;	// Initial Row Screen (Screen = Display with reductions of size taken into account).
-			unsigned short _LRD;	// Last Row of the Display 
-			unsigned short _LRS;	// Last Row of the Screen
-			unsigned short _SR;		// Scroll Y
+			unsigned short _RCA;	// Raster X position adjusted (Moves 8 by 8, so = Raster X >> 3 << 3)
 			unsigned short _RR;		// Raster Y (From the beginning of the visible zone.
-									// Moves 1 by 1. No adjusted needed)
+									// Moves 1 by 1. No adjusted needed because how the C64 screen is defined...
 		};
 
 		/** To simplify the way the result of a drawing text/bitmaps routines are managed. \n
@@ -313,9 +305,6 @@ namespace COMMODORE
 		/** Detect the collisions between graphics and sprites info
 			affecting the right registers in the VICII. */
 		void detectCollisions (const DrawResult& cT);
-
-		/** To draw lines at the position where the raster interruptions are generated. */
-		void drawRasterInterruptPositions ();
 
 		protected:
 		/** A reference to the color RAM. */

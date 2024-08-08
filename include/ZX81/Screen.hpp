@@ -26,10 +26,6 @@ namespace ZX81
 		
 		Screen (double hz, int w, int h, const MCHEmul::Attributes& attrs);
 
-		/** Managing the border. */
-		void setDrawBorder (bool dB, unsigned int c = 0)
-							{ _drawBorder = dB; _borderColor = c; }
-
 		protected:
 		virtual void drawAdditional () override;
 
@@ -38,10 +34,6 @@ namespace ZX81
 							{ return (std::isalnum ((int) id) // Only alphanumeric are represented...
 								? (std::isdigit ((int) id) ? (id - 20) : (id - 27))
 								: 0); }
-
-		protected:
-		bool _drawBorder;
-		unsigned int _borderColor;
 	};
 
 	/** Screen valid for NTSC systems. Used in USA. */

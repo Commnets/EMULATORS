@@ -53,6 +53,8 @@ const std::string MCHEmul::ChipsListCommand::_NAME = "CCHIPS";
 const std::string MCHEmul::CRTEffectOnCommand::_NAME = "CCRTON";
 const std::string MCHEmul::CRTEffectOffCommand::_NAME = "CCRTOFF";
 const std::string MCHEmul::DatasetteStatusCommand::_NAME = "CDATASETTE";
+const std::string MCHEmul::GridOnCommand::_NAME = "CGRIDON";
+const std::string MCHEmul::GridOffCommand::_NAME = "CGRIDOFF";
 
 // ---
 MCHEmul::HelpCommand::HelpCommand (const std::string& hF)
@@ -870,4 +872,24 @@ void MCHEmul::DatasetteStatusCommand::executeImpl
 
 	if (ds != nullptr) 
 		rst.add ("Datasette", std::move (ds -> getInfoStructure ()));
+}
+
+// ---
+void MCHEmul::GridOnCommand::executeImpl (MCHEmul::CommandExecuter* cE,
+	MCHEmul::Computer* c, MCHEmul::InfoStructure& rst)
+{
+	if (c == nullptr)
+		return;
+
+	c -> screen () -> setDrawGrid (true, std::atoi (parameter ("00").c_str ()));
+}
+
+// ---
+void MCHEmul::GridOffCommand::executeImpl (MCHEmul::CommandExecuter* cE,
+	MCHEmul::Computer* c, MCHEmul::InfoStructure& rst)
+{
+	if (c == nullptr)
+		return;
+
+	c -> screen () -> setDrawGrid (false, 0 /** It doesn't matter. */);
 }
