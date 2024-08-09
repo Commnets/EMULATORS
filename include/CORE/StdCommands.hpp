@@ -680,8 +680,9 @@ namespace MCHEmul
 
 	/** Comand to list infomation about the io devices connected to the computer. \n
 		Never get wrong the io devices with the peripherals connected to each, that other command is used. \n
-		No parameters are needed. \n
-		Command line: IODEVICES */
+		A list of the devices to list could be provided. \n
+		If no pareteres were provided all devices will be listed. \n
+		Command line: IODEVICES [ID1 ID2 ...] */
 	class IODevicesCommand final : public Command
 	{
 		public:
@@ -693,17 +694,16 @@ namespace MCHEmul
 							{ }
 
 		virtual bool canBeExecuted () const override
-							{ return (_parameters.size () == 0); }
+							{ return (true); }
 
 		private:
 		virtual void executeImpl (CommandExecuter* cE, Computer* c, InfoStructure& rst) override;
 	};
 
 	/** Command to know the peripehrals connected to the computer. \n
-		The command allows to know the peripherals connected to a specific io device or all of them. \n
-		So the commnand gets 0 parameters (all peripherals) or 1 with the name of the io device which
-		peripherals is nneded to know. \n
-		Command line: PERIPHERALS */
+		A list of the id peripherals to show could be listed. \n
+		If no parameters were provided all peripehrals will be listed. \n
+		Command line: PERIPHERALS [ID1 AD2 ...] */
 	class PeripheralsCommand final : public Command
 	{
 		public:
@@ -715,7 +715,7 @@ namespace MCHEmul
 							{ }
 
 		virtual bool canBeExecuted () const override
-							{ return (_parameters.size () == 0 || _parameters.size () == 1); }
+							{ return (true); }
 
 		private:
 		virtual void executeImpl (CommandExecuter* cE, Computer* c, InfoStructure& rst) override;

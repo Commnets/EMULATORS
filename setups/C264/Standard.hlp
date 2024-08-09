@@ -77,14 +77,15 @@ No parameters are needed.
 ;CLOCKFACTOR VALUE
 To change the speed factor of the CPU.
 1 will refer to normal speed.
-;DEVICES
-Get the info about all devices connected to the computer.
-The Devices are not the peripherals that connect to the devices.
-See PERIPHERALS command for more info.
-No parameters are needed.
-;PERIPHERALS
-Get the info about all peripherals connected to the different devices of the computer.
-No parameters are needed.
+;DEVICES [ID1 ID2 ...]
+Get the info about all devices connected to the computer 
+and also the peripherals connected to those devices.
+If no parameters were provided all devices connected will be listed.
+But a list of the id devices to show could be provided.
+;PERIPHERALS [ID1 ID2 ...]
+Get the info about the peripherals connected to the different devices of the computer.
+If no parameters were provided all peripherals connected will be listed.
+But a list of the id peripherals to show could be provided.
 ;PERCOMMAND PERID CMDID [ATTRS]
 To send a command/instruction to a device.
 The peripheral has to understand the instruction itself and react according to it.

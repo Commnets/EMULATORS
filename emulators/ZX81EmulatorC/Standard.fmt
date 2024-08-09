@@ -122,6 +122,8 @@ COMMANDS:@COMMANDS@
 ;DatasetteData
 Id:@ID@(Size:@SIZE@)
 @BYTES{blocksize=32,listsep=\,,tablesep=\ ,minsize=2}@
+#@FBYTES{blocksize=32,listsep=\,,tablesep=\ ,minsize=2}@
+#Include the command above to show all data when the size is bigger than 256 bytes...
 #---
 #---
 ;Datasette
@@ -133,6 +135,8 @@ Motor on:@MOTOR@
 Name:@DATANAME@
 Size:@DATASIZE@
 @DATA?{fmter=DatasetteData,empty=no data}\n---\n@
+NOTE: Only the first 256 bytes are shown
+NOTE: Change to FBYTES attribute in DatasetteData structure instead
 #---
 #---
 ;StdDatasette
@@ -147,6 +151,8 @@ IO Emulation: @IOEMULATION@
 Name:@DATANAME@
 Size:@DATASIZE@
 @DATA?{fmter=DatasetteData,empty=no data}\n---\n@
+NOTE: Only the first 256 bytes are shown
+NOTE: Change to FBYTES attribute in DatasetteData structure instead
 #---
 #---
 ;IODevice

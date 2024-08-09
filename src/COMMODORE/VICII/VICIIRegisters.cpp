@@ -28,6 +28,8 @@ MCHEmul::InfoStructure COMMODORE::VICIIRegisters::getInfoStructure () const
 {
 	MCHEmul::InfoStructure result = std::move (MCHEmul::ChipRegisters::getInfoStructure ());
 
+	result.add ("ACTIVE",			!_videoResetActive);
+	result.add ("BLANK",			_blankEntireScreen);
 	result.add ("MODE",				(unsigned int) _graphicModeActive);
 	result.add ("40C",				_textDisplay40ColumnsActive);
 	result.add ("25R",				_textDisplay25RowsActive);

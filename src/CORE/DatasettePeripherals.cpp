@@ -86,7 +86,7 @@ MCHEmul::InfoStructure MCHEmul::DatasettePeripheral::getInfoStructure () const
 
 	result.add ("KEYS",		!_noKeyPressed);
 	result.add ("MOTOR",	!_motorOff);
-	result.add ("DATANAME",	_data._name);
+	result.add ("DATANAME", (_data._name == "") ? "-" : _data._name);
 	result.add ("DATASIZE", _data._data.size ());
 
 	MCHEmul::InfoStructure dS;
@@ -95,7 +95,14 @@ MCHEmul::InfoStructure MCHEmul::DatasettePeripheral::getInfoStructure () const
 		MCHEmul::InfoStructure dSA;
 		dSA.add ("ID",		i); // The id...
 		dSA.add ("SIZE",	_data._data [i].size ());
-		dSA.add ("BYTES",	_data._data [i].bytes () /** It has to be a copy. */);
+		if (_data._data [i].bytes ().size () > 256)
+		{
+			dSA.add ("FBYTES", _data._data [i].bytes ()); // All bytes...
+			dSA.add ("BYTES", std::vector <MCHEmul::UByte> 
+				(_data._data [i].bytes ().begin (), _data._data [i].bytes ().begin () + 256));
+		}
+		else // This way because the type of method used varies...
+			dSA.add ("BYTES", _data._data [i].bytes ());
 		dS.add (std::to_string (i), std::move (dSA));
 	}
 

@@ -95,6 +95,8 @@ Id:@ID@
 #---
 ;VICIIRegisters
 @BYTES{blocksize=16,listsep=\,,tablesep=\ ,minsize=2}@
+Active:@ACTIVE@
+Blank:@BLANK@
 Graphic Mode:@MODE@
 40 Columns:@40C@, 25 Rows:@25R@
 ScrollX:@SCROLLX@, ScrollY:@SCROLLY@
@@ -236,6 +238,8 @@ IO Emulation: @IOEMULATION@
 Name:@DATANAME@
 Size:@DATASIZE@
 @DATA?{fmter=DatasetteData,empty=no data}\n---\n@
+NOTE: Only the first 256 bytes are shown
+NOTE: Change to FBYTES attribute in DatasetteData structure instead
 #---
 #---
 ;Cartridge

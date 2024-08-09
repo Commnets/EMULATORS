@@ -644,9 +644,21 @@ void MCHEmul::IODevicesCommand::executeImpl
 	if (c == nullptr)
 		return;
 
+	// There can be a list of device ids to show...
+	int ct = 0;
+	std::string prmId = "00";
+	std::vector <int> ids;
+	while (existParameter (prmId))
+	{
+		ids.push_back (std::atoi (parameter (prmId).c_str ()));
+		prmId = MCHEmul::fixLenStr (std::to_string (ct++), 2, true, MCHEmul::_CEROS);
+	}
+
 	MCHEmul::InfoStructure dvcs;
 	for (const auto& i : c -> devices ())
-		dvcs.add (std::to_string (i.first), std::move (i.second -> getInfoStructure ()));
+		if (ids.empty () ||
+			(!ids.empty () && (std::find (ids.begin (), ids.end (), i.second -> id ()) != ids.end ())))
+			dvcs.add (std::to_string (i.first), std::move (i.second -> getInfoStructure ()));
 	rst.add ("DEVICES", std::move (dvcs));
 }
 
@@ -657,10 +669,22 @@ void MCHEmul::PeripheralsCommand::executeImpl
 	if (c == nullptr)
 		return;
 
+	// There can be a list of peripheral ids to show...
+	int ct = 0;
+	std::string prmId = "00";
+	std::vector <int> ids;
+	while (existParameter (prmId))
+	{
+		ids.push_back (std::atoi (parameter (prmId).c_str ()));
+		prmId = MCHEmul::fixLenStr (std::to_string (ct++), 2, true, MCHEmul::_CEROS);
+	}
+
 	MCHEmul::InfoStructure prhsD;
 	MCHEmul::IOPeripherals prhs = std::move (c -> peripherals ()); // The list has been built up...
 	for (const auto& i : prhs)
-		prhsD.add (std::to_string (i.first), std::move (i.second -> getInfoStructure ()));
+		if (ids.empty () ||
+			(!ids.empty () && (std::find (ids.begin (), ids.end (), i.second -> id ()) != ids.end ())))
+			prhsD.add (std::to_string (i.first), std::move (i.second -> getInfoStructure ()));
 	rst.add ("PERIPHERALS", std::move (prhsD));
 }
 
