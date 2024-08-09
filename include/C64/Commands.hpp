@@ -218,7 +218,7 @@ namespace C64
 
 		/** The parameter is the clor of the grid. */
 		virtual bool canBeExecuted () const override
-							{ return (_parameters.size () == 1); }
+							{ return (_parameters.size () == 1 || _parameters.size () == 2); }
 
 		private:
 		virtual void executeImpl (MCHEmul::CommandExecuter* cE, 

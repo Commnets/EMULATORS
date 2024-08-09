@@ -80,6 +80,11 @@ MCHEmul::HelpCommand::HelpCommand (const std::string& hF)
 			// ...and then insert the rest of the instructions associated
 			while (i != hls.end () && (*i)[0] != ';')
 				hI.push_back ((*i++));
+
+			// If the help command existed it would be replaced by the new one...
+			MCHEmul::HelpCommand::HelpInfo::const_iterator j;
+			if ((j = _helpInfo.find (cNS)) != _helpInfo.end ())
+				_helpInfo.erase (j); // ...simulating overloaded...
 			_helpInfo.insert (std::pair <std::string, MCHEmul::Strings> (cNS, hI));
 		}
 	}

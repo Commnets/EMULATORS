@@ -164,8 +164,10 @@ void C64::GridOnCommand::executeImpl (MCHEmul::CommandExecuter* cE,
 
 	c -> screen () -> setDrawGrid (true, std::atoi (parameter ("00").c_str ()));
 
-	if (dynamic_cast <C64::Commodore64*> (c) == nullptr ||
-		static_cast <C64::Commodore64*> (c) -> vicII () == nullptr)
+	if (!existParameter ("01") ||
+		(existParameter ("01") &&
+		 (dynamic_cast <C64::Commodore64*> (c) == nullptr ||
+		  static_cast <C64::Commodore64*> (c) -> vicII () == nullptr)))
 		return;
 
 	static_cast <COMMODORE::VICII*> (static_cast <C64::Commodore64*> (c) -> vicII ()) -> 
