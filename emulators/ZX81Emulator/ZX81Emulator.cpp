@@ -34,7 +34,7 @@ int _tmain (int argc, _TCHAR* argv[])
 	// Sets the formatter for << outputs for this emulation...
 	// This line of code has to be at the beginning of every emulation 
 	// as it fixes the way the internal ino of the important classes will be formatted
-	MCHEmul::FormatterBuilder::instance ({ "./VIC20.fmt" });
+	MCHEmul::FormatterBuilder::instance ({ "./ZX81.fmt" });
 
 	// Set up the emulator...
 	ZX81::ZX81Emulator myEmulator (

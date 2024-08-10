@@ -213,6 +213,53 @@ COPY .\projects\CORE\*.hlp .\emulators\ZX81EmulatorC\ /Y
 COPY .\projects\CORE\*.hlp .\emulators\ZX81Emulator\ /Y
 COPY .\projects\CORE\*.hlp .\monitors\RZX81Console\ /Y
 Echo ********************************************************************
+Echo ********************************************************************
+Echo 1.6: ZXSpectrum
+Echo ********************************************************************
+Echo Exe files...
+COPY .\exe\x86\ZXSpectrumEmulator.exe .\emulators\ZXSpectrumEmulator\ /Y
+COPY .\exe\x86\ZXSpectrumEmulatorD.exe .\emulators\ZXSpectrumEmulator\ /Y
+COPY .\exe\x86\ZXSpectrumEmulatorC.exe .\emulators\ZXSpectrumEmulatorC\ /Y
+COPY .\exe\x86\ZXSpectrumEmulatorCD.exe .\emulators\ZXSpectrumEmulatorC\ /Y
+COPY .\exe\x86\RZXSpectrumConsole.exe .\monitors\RZXSpectrumConsole\ /Y
+COPY .\exe\x86\RZXSpectrumConsoleD.exe .\monitors\RZXSpectrumConsole\ /Y
+COPY .\exe\x86\ZXSpectrumCRTGenerator.exe .\projects\ZXSpectrumCRTGenerator\ /Y
+COPY .\exe\x86\ZXSpectrumCRTGeneratorD.exe .\projects\ZXSpectrumCRTGenerator\ /Y
+Echo Configuration files...
+DEL  .\emulators\ZXSpectrumEmulator\*.fmt
+DEL  .\emulators\ZXSpectrumEmulatorC\*.fmt
+DEL  .\monitors\RZXSpectrumConsole\*.fmt
+DEL  .\monitors\RZXSpectrumConsole\*.def
+DEL  .\emulators\ZXSpectrumEmulator\*.hlp
+DEL  .\emulators\ZXSpectrumEmulatorC\*.hlp
+DEL  .\monitors\RZXSpectrumConsole\*.hlp
+COPY .\projects\ZXSpectrum\*.fmt .\emulators\ZXSpectrumEmulator\ /Y
+DEL .\emulators\ZXSpectrumEmulator\ZXSpectrumRConsole.fmt
+COPY .\projects\ZXSpectrum\*.fmt .\emulators\ZXSpectrumEmulatorC\ /Y
+DEL .\emulators\ZXSpectrumEmulatorC\ZXSpectrumRConsole.fmt
+COPY .\projects\ZXSpectrum\*.fmt .\monitors\RZXSpectrumConsole\ /Y
+DEL .\monitors\RZXSpectrumConsole\ZXSpectrum.fmt
+RENAME .\monitors\RZXSpectrumConsole\ZXSpectrumRConsole.fmt ZXSpectrum.fmt
+COPY .\projects\ZXSpectrum\*.def .\emulators\ZXSpectrumEmulatorC\ /Y
+COPY .\projects\ZXSpectrum\*.hlp .\emulators\ZXSpectrumEmulatorC\ /Y
+DEL .\emulators\ZXSpectrumEmulatorC\ZXSpectrumRConsole.hlp
+COPY .\projects\ZXSpectrum\*.hlp .\monitors\RZXSpectrumConsole\ /Y
+DEL .\monitors\RZXSpectrumConsole\ZXSpectrum.hlp
+RENAME .\monitors\RZXSpectrumConsole\ZXSpectrumRConsole.hlp ZXSpectrum.hlp
+COPY .\projects\SINCLAIR\*.fmt .\emulators\ZXSpectrumEmulatorC\ /Y
+COPY .\projects\SINCLAIR\*.fmt .\emulators\ZXSpectrumEmulator\ /Y
+COPY .\projects\SINCLAIR\*.fmt .\monitors\RZXSpectrumConsole\ /Y
+COPY .\projects\SINCLAIR\*.hlp .\emulators\ZXSpectrumEmulatorC\ /Y
+COPY .\projects\SINCLAIR\*.hlp .\monitors\RZXSpectrumConsole\ /Y
+COPY .\projects\CONSOLE\*.fmt .\emulators\ZXSpectrumEmulatorC\ /Y
+COPY .\projects\CONSOLE\*.hlp .\emulators\ZXSpectrumEmulatorC\ /Y
+COPY .\projects\CORE\*.fmt .\emulators\ZXSpectrumEmulatorC\ /Y
+COPY .\projects\CORE\*.fmt .\emulators\ZXSpectrumEmulator\ /Y
+COPY .\projects\CORE\*.fmt .\monitors\RZXSpectrumConsole\ /Y
+COPY .\projects\CORE\*.hlp .\emulators\ZXSpectrumEmulatorC\ /Y
+COPY .\projects\CORE\*.hlp .\emulators\ZXSpectrumEmulator\ /Y
+COPY .\projects\CORE\*.hlp .\monitors\RZXSpectrumConsole\ /Y
+Echo ********************************************************************
 Echo
 Echo
 Echo --------------------------------------------------------------------
@@ -324,6 +371,28 @@ COPY .\projects\CORE\*.fmt .\setups\ZX81\ /Y
 COPY .\projects\CORE\*.hlp .\setups\ZX81\ /Y
 COPY .\projects\ASSEMBLER\*.fmt .\setups\ZX81\ /Y
 "C:\Program files (x86)\Inno Setup 6\iscc" ".\setups\ZX81\ZX81.iss"
+Echo ********************************************************************
+Echo ********************************************************************
+Echo 3.5: ZXSpectrum
+Echo ********************************************************************
+COPY .\exe\x86\ZXSpectrumEmulatorC.exe .\setups\ZXSpectrum\ /Y
+COPY .\exe\x86\ZXSpectrumEmulator.exe .\setups\ZXSpectrum\ /Y
+COPY .\exe\x86\RZXSpectrumConsole.exe .\setups\ZXSpectrum\ /Y
+COPY .\exe\x86\Z80Compiler.exe .\setups\ZXSpectrum\ /Y
+COPY .\exe\x86\TestZ80.exe .\setups\ZXSpectrum\ /Y
+COPY .\exe\x86\ZXSpectrumCRTGenerator.exe .\setups\ZXSpectrum\ /Y
+COPY .\emulators\ZXSpectrumCommons\*.* .\setups\ZXSpectrum\ /Y
+COPY .\projects\ZXSpectrum\*.fmt .\setups\ZXSpectrum\ /Y
+COPY .\projects\ZXSpectrum\*.hlp .\setups\ZXSpectrum\ /Y
+COPY .\projects\ZXSpectrum\*.def .\setups\ZXSpectrum\ /Y
+COPY .\projects\SINCLAIR\*.fmt .\setups\ZXSpectrum\ /Y
+COPY .\projects\SINCLAIR\*.hlp .\setups\ZXSpectrum\ /Y
+COPY .\projects\CONSOLE\*.fmt .\setups\ZXSpectrum\ /Y
+COPY .\projects\CONSOLE\*.hlp .\setups\ZXSpectrum\ /Y
+COPY .\projects\CORE\*.fmt .\setups\ZXSpectrum\ /Y
+COPY .\projects\CORE\*.hlp .\setups\ZXSpectrum\ /Y
+COPY .\projects\ASSEMBLER\*.fmt .\setups\ZXSpectrum\ /Y
+"C:\Program files (x86)\Inno Setup 6\iscc" ".\setups\ZXSpectrum\ZXSpectrum.iss"
 Echo ********************************************************************
 Echo
 Echo

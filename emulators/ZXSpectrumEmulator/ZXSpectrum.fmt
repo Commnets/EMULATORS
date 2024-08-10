@@ -1,0 +1,52 @@
+#Formats used for the ZXSpectrum Emulation
+#(C) 2024 Ignacio Cea Fornies
+?./SINCLAIR.fmt
+?./LocalConsole.fmt
+#---
+;ULARegisters
+NTSC:@NTSC@
+NMIGenerator:@NMIGEN@, SYNCWhite:@SYNCWHITE@, LineCtrl:@LINECNTRL@
+Casette:@CASETTE@
+#---
+#---
+;ULA
+Id:@ID@
+@ATTRS?{key=YES,equal=:,empty=no attributes}\n@
+->Registers:
+@ULARegisters>@
+->Control lines:
+@Raster>@
+#---
+#---
+;CULA
+@ULA>@
+#---
+#---
+;CULAEVENTS
+#---
+#---
+;ZXSpectrumDatasette
+Id:@ID@
+@ATTRS?{key=YES,equal=:,empty=no attributes}\n@
+COMMANDS:@COMMANDS@
+Keys Pressed:@KEYS@
+Motor on:@MOTOR@
+Data Counter:@DATACOUNTER@
+IO Emulation:@IOEMULATION@
+->Data:
+Name:@DATANAME@
+Size:@DATASIZE@
+@DATA?{fmter=DatasetteData,empty=no data}\n---\n@
+#---
+#---
+;ZXSpectrumDatasetteI
+Id:@ID@
+@ATTRS?{key=YES,equal=:,empty=no attributes}\n@
+COMMANDS:@COMMANDS@
+Keys Pressed:@KEYS@
+Motor on:@MOTOR@
+->Data:
+Name:@DATANAME@
+Size:@DATASIZE@
+@DATA?{fmter=DatasetteData,empty=no data}\n---\n@
+#---

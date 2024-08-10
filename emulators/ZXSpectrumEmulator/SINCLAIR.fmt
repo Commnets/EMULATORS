@@ -1,0 +1,28 @@
+#Formats Associated to Sinclair Commands
+#(C) 2024 Ignacio Cea Fornies
+?./Standard.fmt
+#---
+;INTInterrupt
+Type:INT, Id:@ID@, Active:@ACTIVE@, In Execution:@EXECUTION@, In Address:$@ADDRESS@, Mode:@MODE@
+#---
+#---
+;NMIInterrupt
+Type:NMI, Id:@ID@, Active:@ACTIVE@, In Execution:@EXECUTION@, In Address:$@ADDRESS@
+#---
+#---
+;RasterX
+Position:@POSITION@(@POSITION0@)
+First:@FIRST@, Last:@LAST@
+#---
+#---
+;RasterY
+Position:@POSITION@(@POSITION0@)
+First:@FIRST@, Last:@LAST@
+#---
+#---
+;Raster
+->Raster Horizontal:
+@RasterX>@
+->Raster Vertical:
+@RasterY>@
+#---

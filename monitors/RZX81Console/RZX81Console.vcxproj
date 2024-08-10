@@ -158,6 +158,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="RZX81Console.cpp" />
+    <ClCompile Include="stdafx.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource1.h" />

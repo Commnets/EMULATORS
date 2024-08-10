@@ -1,0 +1,9 @@
+#ZXSpectrum Local Console Commands
+#(C) 2024 Ignacio Cea Fornies
+?./LocalConsole.hlp
+?./SINCLAIR.hlp
+;ULA
+To know the info about the situation of the ULA.
+No parameters needed.
+;ULAEVENTS [ON|OFF]
+To activate or desactivate the visualization of ULA events.

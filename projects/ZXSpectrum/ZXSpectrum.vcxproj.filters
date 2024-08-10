@@ -1,0 +1,159 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Archivos de origen">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Archivos de encabezado">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+    <Filter Include="Archivos de recursos">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Archivos de encabezado\Commands">
+      <UniqueIdentifier>{2960d254-2594-4d57-afde-9b1c62d3ca67}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Archivos de encabezado\Emulators">
+      <UniqueIdentifier>{28c88413-dca1-4173-a565-2b7f25767cb4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Archivos de encabezado\IO">
+      <UniqueIdentifier>{7bc47341-ffe1-4819-933d-59eaacdea62f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Archivos de encabezado\Motherboard">
+      <UniqueIdentifier>{a907e4fd-2cba-4a07-8c98-ab56c64dcad1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Archivos de encabezado\Motherboard\Chips">
+      <UniqueIdentifier>{9dbf7ad1-ccd7-4264-a4c7-3c3df08494ed}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Archivos de origen\Commands">
+      <UniqueIdentifier>{7801d746-02f7-4348-9738-4fc9fbb1ccbe}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Archivos de origen\Emulators">
+      <UniqueIdentifier>{6dac12e7-1721-4c77-9a1e-c7c94750b0c0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Archivos de origen\IO">
+      <UniqueIdentifier>{18eb0d02-a18c-43f1-955e-d33756e39cd5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Archivos de origen\Motherboard">
+      <UniqueIdentifier>{f42ad46c-078a-427a-8b14-f9bd981ca4c8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Archivos de origen\Motherboard\Chips">
+      <UniqueIdentifier>{9b550418-eedd-4db8-9e63-3642e8a5e02b}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\include\ZXSpectrum\incs.hpp">
+      <Filter>Archivos de encabezado</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\ZXSpectrum\Type.hpp">
+      <Filter>Archivos de encabezado</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\ZXSpectrum\Cartridge.hpp">
+      <Filter>Archivos de encabezado\IO</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\ZXSpectrum\CommandBuilder.hpp">
+      <Filter>Archivos de encabezado\Commands</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\ZXSpectrum\Commands.hpp">
+      <Filter>Archivos de encabezado\Commands</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\ZXSpectrum\Datasette.hpp">
+      <Filter>Archivos de encabezado\IO</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\ZXSpectrum\DatasettePort.hpp">
+      <Filter>Archivos de encabezado\IO</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\ZXSpectrum\EdgeConnector.hpp">
+      <Filter>Archivos de encabezado\IO</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\ZXSpectrum\EdgeConnectorPeripherals.hpp">
+      <Filter>Archivos de encabezado\IO</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\ZXSpectrum\FileIO.hpp">
+      <Filter>Archivos de encabezado\IO</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\ZXSpectrum\IOPBuilder.hpp">
+      <Filter>Archivos de encabezado\IO</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\ZXSpectrum\Memory.hpp">
+      <Filter>Archivos de encabezado\Motherboard</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\ZXSpectrum\OSIO.hpp">
+      <Filter>Archivos de encabezado\IO</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\ZXSpectrum\PortManager.hpp">
+      <Filter>Archivos de encabezado\Motherboard</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\ZXSpectrum\Screen.hpp">
+      <Filter>Archivos de encabezado\IO</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\ZXSpectrum\ULA.hpp">
+      <Filter>Archivos de encabezado\Motherboard\Chips</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\ZXSpectrum\ULARegisters.hpp">
+      <Filter>Archivos de encabezado\Motherboard\Chips</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\ZXSpectrum\ZXSpectrum.hpp">
+      <Filter>Archivos de encabezado\Motherboard</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\ZXSpectrum\ZXSpectrumEmulator.hpp">
+      <Filter>Archivos de encabezado\Emulators</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\src\ZXSpectrum\Memory.cpp">
+      <Filter>Archivos de origen\Motherboard</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\ZXSpectrum\ZXSpectrum.cpp">
+      <Filter>Archivos de origen\Motherboard</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\ZXSpectrum\OSIO.cpp">
+      <Filter>Archivos de origen\IO</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\ZXSpectrum\Screen.cpp">
+      <Filter>Archivos de origen\IO</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\ZXSpectrum\PortManager.cpp">
+      <Filter>Archivos de origen\Motherboard</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\ZXSpectrum\CommandBuilder.cpp">
+      <Filter>Archivos de origen\Commands</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\ZXSpectrum\Commands.cpp">
+      <Filter>Archivos de origen\Commands</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\ZXSpectrum\ZXSpectrumEmulator.cpp">
+      <Filter>Archivos de origen\Emulators</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\ZXSpectrum\FileIO.cpp">
+      <Filter>Archivos de origen\IO</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\ZXSpectrum\IOPBuilder.cpp">
+      <Filter>Archivos de origen\IO</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\ZXSpectrum\Datasette.cpp">
+      <Filter>Archivos de origen\IO</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\ZXSpectrum\DatasettePort.cpp">
+      <Filter>Archivos de origen\IO</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\ZXSpectrum\EdgeConnector.cpp">
+      <Filter>Archivos de origen\IO</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\ZXSpectrum\EdgeConnectorPeripherals.cpp">
+      <Filter>Archivos de origen\IO</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\ZXSpectrum\Cartridge.cpp">
+      <Filter>Archivos de origen\IO</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\ZXSpectrum\ULA.cpp">
+      <Filter>Archivos de origen\Motherboard\Chips</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\ZXSpectrum\ULARegisters.cpp">
+      <Filter>Archivos de origen\Motherboard\Chips</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>

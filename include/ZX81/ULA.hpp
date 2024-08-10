@@ -124,7 +124,7 @@ namespace ZX81
 		ULARegisters* registers ()
 							{ return (_ULARegisters); }
 
-		// Size & position of the scren...
+		// Size & position of the screen...
 		virtual unsigned short numberColumns () const override
 							{ return (_raster.visibleColumns ()); }
 		virtual unsigned short numberRows () const override
@@ -150,7 +150,7 @@ namespace ZX81
 
 		virtual bool initialize () override;
 
-		/** Simulates cycles in the VICI. */
+		/** Simulates cycles in the ULA. */
 		virtual bool simulate (MCHEmul::CPU* cpu) override;
 
 		/**

@@ -1,0 +1,80 @@
+/** \ingroup ZXSPECTRUM */
+/*@{*/
+
+/**	
+ *	@file	
+ *	File: Cartridge.hpp \n
+ *	Framework: CPU Emulators library \n
+ *	Author: Ignacio Cea Fornies (EMULATORS library) \n
+ *	Creation Date: 09/08/2024 \n
+ *	Description: To emulate the behaviour of a cartridge in the ZXSpectrum computer
+ *	Versions: 1.0 Initial
+ */
+
+#ifndef __ZXSPECTRUM_CARTRIDGE__
+#define __ZXSPECTRUM_CARTRIDGE__
+
+#include <SINCLAIR/incs.hpp>
+#include <ZXSpectrum/Memory.hpp>
+#include <ZXSpectrum/EdgeConnectorPeripherals.hpp>
+
+namespace ZXSPECTRUM
+{
+	class Memory;
+	class MemoryView;
+
+	class Cartridge final : public EdgeConnectorPeripheral
+	{
+		public:
+		enum class Type
+		{
+			_NOTDEFINED = 0
+
+			// TODO
+		};
+
+		static const int _ID = 201;
+
+		Cartridge ();
+
+		/** To know the type of cartridge, if any. */
+		Type type () const
+							{ return (data ()._data.empty () 
+								? Type::_NOTDEFINED 
+								: (Type) (std::atoi (((*_data._attributes.find ("TYPE")).second).c_str ()))); }
+
+		/** When data os connected attending to the type of cartridge (info in the data received)
+			the additional subset of information is created. */
+		virtual bool connectData (MCHEmul::FileData* dt) override;
+
+		virtual bool initialize () override
+							{ return (true); }
+		/** When finish, the additional memory created has to taken off from the memory and destroyed. */
+		virtual bool finalize () override;
+
+		virtual bool simulate (MCHEmul::CPU* cpu) override;
+
+		/** To dump the data of the cartridge into the memory. \n
+			The configuartion of the memory is changed. */
+		void dumpDataInto (ZXSPECTRUM::Memory* m, MCHEmul::MemoryView* mV);
+
+		private:
+		bool dataDumped () const
+							{ bool r = _dataDumped; _dataDumped = false; return (r); }
+
+		private:
+		// Implementation
+		mutable bool _dataDumped;
+
+		/** When inserting a cartridge the structure of the memory is changed,
+			and additional subsets of memory are added. \n
+			Other way around when the cartridge is unplugged. */
+		ZXSPECTRUM::Memory* _memoryRef;
+		MCHEmul::MemoryView* _memoryView;
+	};
+}
+
+#endif
+  
+// End of the file
+/*@}*/

@@ -1,0 +1,202 @@
+#General Commands
+#They can be executed local and remotly
+#(C) 2022 Ignacio Cea Fornies
+#My info
+;AUTHOR
+To know info about the author.
+No parameters needed.
+;RESTART YES|NO [LEVEL]
+Just to restart the computer.
+Whether to restart stopped or not is a mandatory parameter.
+A level can be passed also as parameter.
+The way the levels are managed depends on the computer implementation.
+By default: 0 restart just the CPU, 1 restart the computer but not affecting the memory content and 
+any other value restart the computer (initialize) fully.
+;STATUS
+Get the situation of the Status Register.
+No parameters are needed.
+;REGISTERS
+Get the status of every register defined in the CPU.
+No parameters are needed.
+;CHANGEREG REGNAME VALUE
+Change the value of a register.
+The parameters are the name of the register and the value.
+The value can be in decimal (nothing previous), binary (z), octal (o) or hex ($).
+;PC
+Get the status of the Program Counter.
+No parameters are needed.
+;SETPC PC
+To change the program counter.
+Only the paremeter with the new address is needed.
+Take care using this command. It could break the simulation.
+;INTERRUPTS
+To know the status of the interrups managed by the system.
+No parameters are needed.
+;INTSET ID|ALL ON|OFF
+To activate or desactivate the execution of interrupts.
+The first parameter is either the ID of the interrupt to operate or the word ALL to refer to all of them.
+The second parameter is the action to execute over the selected interruts. ON to activate them, OFF to desactivate them.
+If the requested interrupt didn't exist, and error would be generated. 
+;DEEPON FILENAME YES|NO [YES|NO] [ALLCHIP|C:CHIPID1 C:CHIPID2 ...] [ALLIO|I:DEVICEID1 I:DEVICEID2 ...] [ALLMEM|M:MEMID1 M:MEMID2 ...]
+To activate the deep debugging of the Computer.
+In this state the CPU will trace every instruction executed including the status of the 
+registers and program counter into the file received as parameter after every execution.
+The name (and path) of the file where to write the info is then needed.
+The second parameter is also mandatory to say whether the info of the CPU must be or not traced.
+Additionally other YES will indicate that the info will be added to the file if it existed already.
+NO will delete any previous file with the same name and will create a new one.
+Additionally the list of the chips id where to actiavte to the deep info can be provided.
+ALLCHIP will indicate to include all Chips.
+The same rational could be applied to a list of Devices.
+The same rational could be applied to a list of Physical Storages.
+When the list of either chips or devices or memeory ids is provided it is important to link 
+either a C: or a I: or a M: to the id itself and without spaces in between.
+If the debug for interruptions were activated, the command wouldn't work.
+;DEEPOFF
+To desactivate the deep debugging.
+No parameters are needed.
+If the debug for interruptions were activated, the command wouldn't work.
+;IDEBUGON FILENAME [YES|NO]
+To debug the code of the interruptions only.
+If deep debug were activated the command wouldn't work.
+The name (and path) of the file where to write the info is then needed.
+Optionally YES will add the info to the indicated file if it already existed.
+It will output also deep info of the chips after the execution of each.
+;IDEBUGOFF
+To stop to debug the code of the interruptions only.
+If deep debug were activated the command wouldn't work.
+No parameters are needed.
+;CPUSTATUS
+To get the current status of the CPU.
+Including: Status Register (STATUS), Registers (REGISTERS), 
+Program Counter (PC) and Stack (STACK).
+No parameters are needed.
+;CPUSSTATUS
+Similar to command CPUSTATUS but not including info about the stack.
+No parameters are needed.
+;CLOCKFACTOR VALUE
+To change the speed factor of the CPU.
+1 will refer to normal speed.
+;DEVICES [ID1 ID2 ...]
+Get the info about all devices connected to the computer 
+and also the peripherals connected to those devices.
+If no parameters were provided all devices connected will be listed.
+But a list of the id devices to show could be provided.
+;PERIPHERALS [ID1 ID2 ...]
+Get the info about the peripherals connected to the different devices of the computer.
+If no parameters were provided all peripherals connected will be listed.
+But a list of the id peripherals to show could be provided.
+;PERCOMMAND PERID CMDID [ATTRS]
+To send a command/instruction to a device.
+The peripheral has to understand the instruction itself and react according to it.
+The parameters needed are a minimum of two: 
+The PERID of the peripheral and the CMDID of the command/instruction.
+Additional parameters can be provided whether the command needs more info.
+;STACK [ALL]
+Get the status of the stack.
+Can be invoked with or without the parameter ALL.
+ALL will get you info also about the content of the stack.
+The content of the stack is shown in hexadecimal but with no symbol at the beggining.
+;CPUINFO
+To get info about the CPU.
+Very complex info returned. 
+No parameters are needed.
+;MEMORY INITIAL [FINAL]
+To get the content of a memory position.
+One parameter minimum is required (INITIAL) that is the position of the memory.
+If a second parameter is given then the content between the two locations is returned.
+The value of the initial and final memory can be given in decimal, hexadecimal ($), octal (o) or binary (z).
+The value of the memories is given in hexadecimal format but with no symbol at the beginning.
+;MEMORYDUMP INITIAL FINAL
+To get a dump of the memory between two positions.
+All regions possible, RAM or ROM, active or inactive, from any view, will be shown.
+The value of the initial and final memory can be given in decimal, hexadecimal ($), octal (o) or binary (z).
+The value of the memories is given in hexadecimal format but with no symbol at the beginning.
+;MEMORYSTR [ALL]
+To get the structure of the memory.
+The parameter indicates to show all parts of the memory (active and inactive) or just the active ones.
+;SETMEMORY INITIAL [FINAL] VALUE
+To set the value of the memory with a value.
+Two parameters minimum are required that are tha memory position to set (INITAL) and the value (VALUE).
+An optional second memory position can be given meaning that the value
+will be set among those two positions.
+Be really careful using this method. It can generate a crash in the computer simulation.
+If the value is more than 1 byte length, the memory steps will be equal to that length.
+The value of the initial and final memory can be given in decimal, hexadecimal ($), octal (o) or binary (z).
+;ASSIGNJOY ID NEWID
+To change the identification number assigned to a joystick.
+It requires two parameters: The ID of the joystick to change and the NEWID assigned.
+;SOUNDON
+To activate the sound.
+No parameters are needed.
+;SOUNDOFF
+To desactivate the sound.
+No parameters are needed.
+;CRTON
+To activate the CRT Effect in the screen.
+No parameters are needed.
+;CRTOFF
+To desactivate the CRT Effect in the screen.
+No parameters are needed.
+;STOP
+To stop the cpu.
+No parameters are needed.
+;RUN [ADDRESS]
+To keep CPU running.
+An optional parameter allows us to start the execution from another position (ADDRESS).
+Take care using this command only because Program Counter is changed before starting to run.
+R can also be used instead.
+The value of the address can be given in decimal, hexadecimal ($), octal (o) or binary (z).
+;NEXT
+To execute the next instruction after being stopped.
+N can also be used instead.
+No parameters are needed.
+;SHOWNEXT [NUMBER]
+Just to show the instruction about to be executed.
+SN can also be used instead.
+There can be an optional parameter with the number of next lines to show (NUMBER).
+;INST
+To know the last instruction executed by the CPU.
+No parameters are needed.
+;BREAKS
+To know the list of break points defined in the computer.
+No parameters are needed.
+The break positions are given in hexadecimal but with no symbol at the beginning.
+;SETBREAK ADDR1 [ADDR2 ADDR3...]
+To set a new break point.
+It is needed at leat one address, but many others can be also provided separated by an space.
+The value of the addresses can be given in decimal, hexadecimal ($), octal (o) or binary (z).
+;REMOVEBREAK ADDR1 [ADDR2 ADDR3...]
+To remove a break point.
+It is needed at leat one address, but many other can be also provided separated by space.
+The value of the addresses can be given in decimal, hexadecimal ($), octal (o) or binary (z).
+;REMOVEBREAKS
+To remove all break points.
+No parameters are needed.
+;SPEED
+To know the real speed of the processor.
+No parameters are needed.
+It shows also the speed of the Screen IO Device.
+# Commands to load and save files with info
+;LOADPRG PRG
+Load into memory a program given by the parameter.
+Take care using this command. A crash can be generated.
+Start the execution back using RUN ADDRESS. 
+;LOADBIN PRG ADDRESS
+To load a binary set of data from a file into an address.
+Two parameters are needed. The first is the file to load (PRG),
+and the other one is the address (ADDRESS) where to load that info.
+;SAVEBIN FILE SIZE ADDRESS
+To save the content of the memory into a binary file.
+Three parameters are needed. The first is the file to load (FILE), 
+the second is the number of bytes to save (SIZE) and 
+the last one is the address (ADDRESS) where to save that info from.
+;DATASETTE
+To know the status of the datasette if connected and exists for this type of computer.
+No parameters are needed.
+;GRIDON COLOR
+To activate to draw a grid in the screen of the computer.
+The only parameter needed is the color of the grid.
+;GRIDOFF
+To switch off to draw a grid in the screen of the compurter.
+No parameters are needed.

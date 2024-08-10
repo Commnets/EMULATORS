@@ -10,7 +10,7 @@ ZX81::Screen::Screen (double hz, int w, int h, const MCHEmul::Attributes& attrs)
 		("./zx81_1.rom", e, 0 /** no address needed */, true);
 	if (!e)
 	{
-		for (size_t i = 0x1e00; i < 0x2000; i += 8) // 64 characters (8 bytes each) = 512bytes
+		for (size_t i = 0x1e00; i < 0x0200; i += 8) // 64 characters (8 bytes each) = 512bytes
 		{
 			std::vector <MCHEmul::UBytes> chrdt;
 			for (size_t j = 0; j < 8; j++)
