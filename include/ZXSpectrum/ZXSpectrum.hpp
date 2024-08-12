@@ -30,9 +30,10 @@ namespace ZXSPECTRUM
 		enum class VisualSystem { _NTSC, _PAL };
 
 		// The speed of the processor...
-		static const unsigned int _CLOCK		= 3250000;	// 3.25 MHz
+		static const unsigned int _CLOCK		= 3500000;	// 3.5 MHz
 
-		SinclairZXSpectrum (Memory::Configuration cfg, VisualSystem vS, Type t);
+		SinclairZXSpectrum (Memory::Configuration cfg, VisualSystem vS, 
+			Type t, const std::string& lang = "ENG");
 
 		VisualSystem visualSystem () const
 							{ return (_visualSystem); }

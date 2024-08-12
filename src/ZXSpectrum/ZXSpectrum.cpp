@@ -11,12 +11,13 @@
 
 // ---
 ZXSPECTRUM::SinclairZXSpectrum::SinclairZXSpectrum (ZXSPECTRUM::Memory::Configuration cfg, 
-		ZXSPECTRUM::SinclairZXSpectrum::VisualSystem vS, ZXSPECTRUM::Type t)
+		ZXSPECTRUM::SinclairZXSpectrum::VisualSystem vS, 
+		ZXSPECTRUM::Type t, const std::string& lang)
 	: SINCLAIR::Computer 
 		(new FZ80::CZ80 (0, 
 			{ }), // Some other ports (the ones related with chips) are added later...
 		 ZXSPECTRUM::SinclairZXSpectrum::standardChips (vS),
-		 new ZXSPECTRUM::Memory (cfg, t), // Depending on the configuration...
+		 new ZXSPECTRUM::Memory (cfg, t, lang), // Depending on the configuration, the type, and the languaje!
 		 ZXSPECTRUM::SinclairZXSpectrum::standardDevices (vS),
 		 _CLOCK, // In ZX81 the speed is constant as the CPU is aimed also to draw!
 		 { }, { }, // The ZX81 emulation has been done without neither Buses nor Wires!

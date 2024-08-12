@@ -9,6 +9,7 @@
  *	Creation Date: 09/08/2024 \n
  *	Description: The OSIO events any ZXSpectrum (like) Computer.
  *	Versions: 1.0 Initial
+ *	based on: http://www.breakintoprogram.co.uk/hardware/computers/zx-spectrum/keyboard
  */
 
 #ifndef __ZXSPECTRUM_OSIO__

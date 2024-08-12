@@ -22,6 +22,20 @@ namespace C64
 	class IOExpansionMemory : public MCHEmul::PhysicalStorageSubset
 	{
 		public:
+		struct EventData : public MCHEmul::Event::Data
+		{
+			EventData ()
+				: _position (0), _value (MCHEmul::UByte::_0)
+							{ }
+
+			EventData (size_t p, const MCHEmul::UByte& v)
+				: _position (p), _value (v)
+							{ }
+
+			size_t _position;
+			MCHEmul::UByte _value;
+		};
+
 		// Different events.
 		/** When this part of the memory is accesed usually the cartridge should do something. */
 		static const unsigned int _SET		= 310;
@@ -33,15 +47,9 @@ namespace C64
 
 		private:
 		/** Just to send a notification when set happens. */
-		virtual void setValue (size_t p, const MCHEmul::UByte& v) override
-							{ MCHEmul::PhysicalStorageSubset::setValue (p, v); 
-							  notify (MCHEmul::Event (_SET, (unsigned int) p)); }
-
+		virtual void setValue (size_t p, const MCHEmul::UByte& v) override;
 		/** Just to send a notification when read happens. */
-		virtual const MCHEmul::UByte& readValue (size_t p) const override
-							{ const MCHEmul::UByte& r = MCHEmul::PhysicalStorageSubset::readValue (p); 
-							  (const_cast <IOExpansionMemory*> (this)) -> notify (MCHEmul::Event (_READ, (unsigned int) p));
-							  return (r); }
+		virtual const MCHEmul::UByte& readValue (size_t p) const override;
 	};
 
 	/** And it has to versions. 

@@ -20,15 +20,17 @@ namespace C64
 {
 	class Memory;
 	class MemoryView;
+	class IOExpansionMemory;
 
-	/** Ultramax Cartridge is not still supported. */
+	/** Ultimax Cartridge is not still supported. 
+		It is a normal cartrige with expecial configuration in lines _EXROm and _GAME. */
 	class Cartridge final : public COMMODORE::ExpansionPeripheral
 	{
 		public:
 		enum class Type
 		{
 			_NOTDEFINED = -1,
-			_GENERIC = 0,
+			_GENERIC = 0,						// Including the Ultimax...
 			_ACTIONREPLAY = 1,
 			_KCS = 2,
 			_FINALCARTRIDGEIII = 3,
@@ -143,6 +145,13 @@ namespace C64
 			The configuartion of the memory is changed. */
 		void dumpDataInto (C64::Memory* m, MCHEmul::MemoryView* cV, MCHEmul::MemoryView* vV);
 
+		// It could affect to the behaviour of the cartridges...
+		/** When the expansion memory zone is read. 
+			The parameters are the position of the memory expansion written/read and the value written/read. */
+		void expansionMemorySet (IOExpansionMemory* eM, size_t p, const MCHEmul::UByte& v);
+		/** ...and when it is read. */
+		void expansionMemoryRead (IOExpansionMemory* eM, size_t p, const MCHEmul::UByte& v);
+
 		private:
 		bool dataDumped () const
 							{ bool r = _dataDumped; _dataDumped = false; return (r); }
@@ -166,7 +175,12 @@ namespace C64
 		MCHEmul::PhysicalStorages _storages;
 		MCHEmul::PhysicalStorageSubsets _cpuSubsets;
 		MCHEmul::PhysicalStorageSubsets _viciiSubsets;
-		/** The physical storage. */
+		/** In OCEAN's type it is needed to track what subset (bank) is active, 
+			and also to the last configuration of the ROM active! */
+		size_t _activeBank;
+		bool _bankActive;
+
+		/** The physical storage data (it is very internal). */
 		static const int _EXPANSIONROMBASE			= 4000; // The different chips of memory are created using this base...
 		static const int _EXPANSIONROMBASE_SUBSET	= 4000; // For the CPU View...
 		static const int _EXPANSIONROMBASEI_SUBSET	= 5000; // For the VICII view...

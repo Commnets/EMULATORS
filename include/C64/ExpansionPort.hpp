@@ -46,6 +46,9 @@ namespace C64
 			and not only a change in the data loaded that is what happened at parent level only. */
 		virtual bool simulate (MCHEmul::CPU* cpu) override;
 
+		/** Events comming from the memory. */
+		virtual void processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifier* ntfier) override;
+
 		private:
 		PLA* _pla;
 	};

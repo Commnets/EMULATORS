@@ -1,6 +1,7 @@
 #include <C64/Cartridge.hpp>
 #include <C64/ExpansionPort.hpp>
 #include <C64/Memory.hpp>
+#include <C64/IOExpansionMemory.hpp>
 
 // ---
 C64::Cartridge::Cartridge ()
@@ -12,7 +13,8 @@ C64::Cartridge::Cartridge ()
 	  _memoryRef (nullptr), 
 	  _memoryCPUView (nullptr), _memoryVICIIView (nullptr),
 	  _storages (), 
-	  _cpuSubsets (), _viciiSubsets ()
+	  _cpuSubsets (), _viciiSubsets (),
+	  _activeBank (0), _bankActive (false)
 {
 	setClassName ("Cartridge");
 }
@@ -26,9 +28,11 @@ void C64::Cartridge::configureMemoryStructure (bool romL, bool romH1, bool romH2
 
 	switch (type ())
 	{
-		default:
+		// Normal type (incuding ULTIMAX)
+		case C64::Cartridge::Type::_GENERIC:
 			{
 				assert (_cpuSubsets.size () == 4);
+
 				_cpuSubsets [_EXPANSIONROMBASE_SUBSET + 0] -> setActive (romL);
 				_cpuSubsets [_EXPANSIONROMBASE_SUBSET + 0] -> setActiveForReading (romL);
 				_cpuSubsets [_EXPANSIONROMBASE_SUBSET + 1] -> setActive (romH1);
@@ -52,6 +56,39 @@ void C64::Cartridge::configureMemoryStructure (bool romL, bool romH1, bool romH2
 				}
 			}
 
+			break;
+
+		// The SIMON's basic type
+		case C64::Cartridge::Type::_SIMONSBASIC:
+			{
+				// TODO
+
+				assert (false); // Not supported so far...
+			}
+
+			break;
+
+		// The OCEAN's type
+		case C64::Cartridge::Type::_OCEANTYPE1:
+			{
+
+				assert (_data._data.size () == _cpuSubsets.size () &&
+						_data._data.size () == 16 || 
+						_data._data.size () == 32 ||
+						_data._data.size () == 64 /** Terminator 2. */);
+
+				// Initially only the first one will be active...
+				// Remember that writting into the position $de00 will change the bank that is or not active...
+				// To be really active the right ROML or ROMH1 has to be also active!...
+				bool rH = _activeBank >= 16 && _cpuSubsets.size () != 64 /** Terminator 2. */;
+				_cpuSubsets [size_t (_EXPANSIONROMBASE_SUBSET + (int) _activeBank)] -> setActive (_bankActive = (rH ? romH1 : romL));
+				_cpuSubsets [size_t (_EXPANSIONROMBASE_SUBSET + (int) _activeBank)] -> setActiveForReading (_bankActive);
+			}
+
+			break;
+
+		default:
+			assert (false); // It shouldn't be here...
 			break;
 	}
 }
@@ -130,7 +167,8 @@ void C64::Cartridge::dumpDataInto (C64::Memory* m,
 	// The structure of the memoy will depend on the type of cartridge...
 	switch (type ())
 	{
-		default:
+		// The normal cartridge, including the ULTIMAX format...
+		case C64::Cartridge::Type::_GENERIC:
 			{
 				_storages = MCHEmul::PhysicalStorages 
 					({ { _EXPANSIONROMBASE + 0, new MCHEmul::PhysicalStorage 
@@ -200,6 +238,62 @@ void C64::Cartridge::dumpDataInto (C64::Memory* m,
 			}
 
 			break;
+
+		// The SIMON's basic type
+		// SIMON's basic is defined (in terms of _EXROM and _GAME signals) 
+		// as a 8K GENERIC cartridge (_EXROM = false, _GAME = true), but _BASIC is disactive!
+		case C64::Cartridge::Type::_SIMONSBASIC:
+			{
+				// TODO
+
+				assert (false); // Not supported so far...
+			}
+
+			break;
+
+		// The OCEAN's type
+		// This type is a little bit complex.
+		// It is like a 16k GENERIC Cartridge but different memory zones can be banked in and out
+		// making possiblie to simulate sizes of up to 512 kByte!
+		// To change the bank it is needed to wirte at the position $de00:
+		// The lowest 6 bits is the number of the bank and the bit 8 must be always set to true
+		// Banks from 0 to 15 are banked between $8000 and $9fff
+		// Banks from 16 to 31 are banked between $a000 and $bfff
+		// Except Terminator 2 witch banks everything between $a000 and $bfff, but the length is 512k!
+		case C64::Cartridge::Type::_OCEANTYPE1:
+			{
+				// To create the banks...
+					// They can vary attending to the type of cartriodge connected!
+				for (size_t i = 0; i < _data._data.size (); i++)
+				{
+					MCHEmul::PhysicalStorage* fS = nullptr;
+					_storages.insert (MCHEmul::PhysicalStorages::value_type 
+						(_EXPANSIONROMBASE + (int) i, fS = new MCHEmul::PhysicalStorage 
+							(_EXPANSIONROMBASE + (int) i, MCHEmul::PhysicalStorage::Type::_ROM, 0x2000)));
+
+					MCHEmul::PhysicalStorageSubset* fSS = nullptr;
+					_cpuSubsets.insert (MCHEmul::PhysicalStorageSubsets::value_type
+						(_EXPANSIONROMBASE_SUBSET + (int) i, fSS = new MCHEmul::PhysicalStorageSubset
+							(_EXPANSIONROMBASE_SUBSET + (int) i, fS, 0x2000, 
+								MCHEmul::Address ({ 0x00, (i >= 16 && i != 64 /** Terminator 2. */) ? 0xa0 : 0x80 }, false), 0x2000)));
+					fSS -> setName ("Bank" + MCHEmul::fixLenStr (std::to_string (i), 2, true, MCHEmul::_CEROS));
+				}
+
+				// To load them with the right info...
+				for (size_t i = 0; i < _data._data.size (); i++)
+					_cpuSubsets [size_t (_EXPANSIONROMBASE_SUBSET + 
+						std::atoi (_data._data [i].attribute ("BANK").c_str ()))] -> set 
+						(_data._data [i].startAddress (), _data._data [i].bytes (), true /** force. */);
+
+				_activeBank = 0;
+				_bankActive = false;
+			}
+
+			break;
+
+		default:
+			assert (false); // It shouldn't be here...
+			break;
 	}
 
 	// Add the subsets to the view...
@@ -217,6 +311,45 @@ void C64::Cartridge::dumpDataInto (C64::Memory* m,
 	_memoryRef -> setExtensionAt (this);
 
 	_dataDumped = true;
+}
+
+// ---
+void C64::Cartridge::expansionMemorySet (C64::IOExpansionMemory* eM, size_t p, const MCHEmul::UByte& v)
+{
+	// Makes only sense with certain types of cartridges...
+	switch (type ())
+	{
+		case C64::Cartridge::Type::_OCEANTYPE1:
+			{
+				assert (eM != nullptr); // There must be a valid notifier...
+
+				if (_cpuSubsets.size () == 0)
+					break; // Not still initialized!
+
+				if (eM -> id () == C64::IOExpansionMemoryI::_IO1_SUBSET &&
+					p == 0) // Only in the position 0x00!
+				{
+					// Desactive the one currently active...
+					_cpuSubsets [size_t (_EXPANSIONROMBASE_SUBSET + (int) _activeBank)] -> setActive (false);
+					_cpuSubsets [size_t (_EXPANSIONROMBASE_SUBSET + (int) _activeBank)] -> setActiveForReading (false);
+					// ...and active the new one requested...
+					_activeBank = size_t (v.value () & 0x3f); // Never bigger than 64...
+					_cpuSubsets [size_t (_EXPANSIONROMBASE_SUBSET + (int) _activeBank)] -> setActive (_bankActive);
+					_cpuSubsets [size_t (_EXPANSIONROMBASE_SUBSET + (int) _activeBank)] -> setActiveForReading (_bankActive);
+				}
+			}
+
+			break;
+
+		default:
+			break; // Does nothing...
+	}
+}
+
+// ---
+void C64::Cartridge::expansionMemoryRead (C64::IOExpansionMemory* eM, size_t p, const MCHEmul::UByte& v)
+{
+	// TODO
 }
 
 // ---
@@ -240,6 +373,9 @@ void C64::Cartridge::cleanUpAdditionalSubsets ()
 	for (const auto& i : _storages)
 		delete (i.second);
 	_storages = { };
+
+	_activeBank = 0;
+	_bankActive = false;
 
 	// The memory has no longer a cartridge...
 	_memoryRef -> setExtensionAt (nullptr);

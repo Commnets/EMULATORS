@@ -101,7 +101,9 @@ namespace ZX81
 			configuration () 
 				? cmdlineArguments ().argumentAsInt (_PARAMCONFIGURATION) 
 				: 0; /** Not expanded. */
-		return ((result > 4) ? 4 : result); 
+
+		// No more than 2 configurations are allowed...
+		return ((result > 2) ? 2 : result); 
 	}
 
 	// ---
@@ -119,7 +121,8 @@ namespace ZX81
 					: ((mT == "ZX812") 
 						? ZX81::Type::_ZX812 
 						: ((mT == "ZX813")
-							? ZX81::Type::_ZX813 : ZX81::Type::_ZX80 /** by default, the very basic one. */)));
+							? ZX81::Type::_ZX813 
+							: ZX81::Type::_ZX80 /** by default, the very basic one. */)));
 		}
 
 		return (result);

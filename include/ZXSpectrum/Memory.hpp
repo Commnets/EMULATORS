@@ -28,21 +28,30 @@ namespace ZXSPECTRUM
 		/** The different memory configurations. */
 		enum class Configuration
 		{
+			_16K	= 0,
+			_48K	= 1
 		};
 
 		// Phisical Storages
-		static const int _RAM_SET					= 1;
-		static const int _ROM_SET					= 2;
+		static const int _ROM48KBASIC_SET			= 1;
+		static const int _RAMBANK5_SET				= 2;
+		static const int _RAMBANK2_SET				= 3;
+		static const int _RAMBANK0_SET				= 4;
 
 		// Subsets
-		// TODO...
+		static const int _ROM48KBASIC_SUBSET		= 100;
+		static const int _RAMBANK5_SUBSET			= 101;
+		static const int _RAMBANK2_SUBSET			= 102;
+		static const int _RAMBANK2_SUBSET_E			= 103;
+		static const int _RAMBANK0_SUBSET			= 104;
+		static const int _RAMBANK0_SUBSET_E			= 105;
 
 		// Views
 		static const int _CPU_VIEW					= 0;
 		static const int _ULA_VIEW					= 1;
 
 		/** */
-		Memory (Configuration cfg, Type t);
+		Memory (Configuration cfg, Type t, const std::string& lang);
 
 		/** Gets the type. */
 		Type type () const
@@ -70,7 +79,13 @@ namespace ZXSPECTRUM
 		Configuration _configuration;
 
 		// Implementation
-		// TODO...
+		MCHEmul::PhysicalStorageSubset* _ROM;
+		MCHEmul::PhysicalStorageSubset* _RAMBANK5;
+		MCHEmul::PhysicalStorageSubset* _RAMBANK2;
+		MCHEmul::EmptyPhysicalStorageSubset* _RAMBANK2_E;
+		MCHEmul::PhysicalStorageSubset* _RAMBANK0;
+		MCHEmul::EmptyPhysicalStorageSubset* _RAMBANK0_E;
+
 		// The id of the subset used for the stack...
 		// that will depend on the configuration!
 		int _STACK_SUBSET;

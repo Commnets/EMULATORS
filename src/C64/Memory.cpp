@@ -209,8 +209,21 @@ bool C64::Memory::initialize ()
 		return (false);
 
 	// The active view has to be initially the CPU view...
+	// ...and fill it up with initial information...
+	// The ROM is not filled it up (because written is blocked using fillWith command)...
 	setCPUView ();
+	// In this configuration, neither the IO zone nor the CharROM are active but the RAM behind instead...
+	configureMemoryStructure (false, false, false, true, false, false, false, false, false, false);
+	// Just to fillup all RAM with the initial value!
+	for (size_t i = 0; i < 0x10000; i += 0x40)
+		fillWith (MCHEmul::Address ({ 0x00, 0x00 }) + i, 
+			(((i / 0x40) % 2) == 0) ? MCHEmul::UByte::_0 : MCHEmul::UByte::_FF, 0x40);
+	// In this other configuration only the IO zone is active, 
+	// ...to be initialized using the 0!
+	configureMemoryStructure (false, false, false, true, true, false, false, false, false, false);
+	fillWith (MCHEmul::Address ({ 0x00, 0xd0 }, false), MCHEmul::UByte::_0, 0x1000);
 
+	// Once the initialization is done, it is time to set up the right initial configuration...
 	// The initial basic configuration of the memory is the standard
 	// BASIC, KERNEL connected, CHARROM not connected, and no cartridge extension...
 	configureMemoryStructure (true, true, false, true, true, false, false, false, false, false);

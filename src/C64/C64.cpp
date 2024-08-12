@@ -8,6 +8,7 @@
 #include <C64/DatasettePort.hpp>
 #include <C64/ExpansionPort.hpp>
 #include <C64/Cartridge.hpp>
+#include <C64/IOExpansionMemory.hpp>
 #include <COMMODORE/UserPort.hpp>
 #include <F6500/C6510.hpp>
 
@@ -55,6 +56,13 @@ bool C64::Commodore64::initialize (bool iM)
 	// and where to know whether the motor is running or not...
 	memory () -> subset (C64::IO6510PortRegisters::_IO6510REGISTERS_SUBSET) -> observe (device (COMMODORE::DatasetteIOPort::_ID));
 
+	// The expansion memory is observed by the expansion port
+	// which can do different actions attending to the type of peripheral connected...
+	device (COMMODORE::ExpansionIOPort::_ID) -> observe 
+		(memory () -> subset (C64::IOExpansionMemoryI::_IO1_SUBSET));
+	device (COMMODORE::ExpansionIOPort::_ID) -> observe 
+		(memory () -> subset (C64::IOExpansionMemoryII::_IO2_SUBSET));
+
 	// It is also needed to observe the expansion port...
 	// Events when it is disonnected and connected are sent and with many implications
 	// in the structure of the memory...
@@ -62,7 +70,7 @@ bool C64::Commodore64::initialize (bool iM)
 
 	// Check whether there is an expansion element inserted in the expansion port
 	// If it is, it's info is loaded if any...
-	C64::Cartridge* cT = 
+	C64::Cartridge* cT =
 		dynamic_cast <C64::Cartridge*> (dynamic_cast <COMMODORE::ExpansionIOPort*> 
 			(device (COMMODORE::ExpansionIOPort::_ID)) -> expansionElement ());
 	if (cT != nullptr)

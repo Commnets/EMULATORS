@@ -19,13 +19,14 @@ void ZXSPECTRUM::ZXSpectrumEmulator::printOutParameters (std::ostream& o) const
 	o << "/b[COLOR]:\t" << "Draw a dark grid in the drawable screen. Color optional" << std::endl;
 	o << "/w[CONFIGURATION]:\t" << "Starts in a different memory configuration. It is is optional" << std::endl;
 	o << "/m[MACHINE]:\t" << "Define the type of ROM loaded" << std::endl;
-	o << "LANGUAGES allowed under command line /i:" << std::endl << 
-		 "ENG:\tEnglish" << std::endl;
-	o << "CONFIGURATIONS allowed under command line /w:" << std::endl << 
+	o << "LANGUAGES allowed under command line /i (not all languages are available for all models):" << std::endl << 
+		 "ENG:\tEnglish" << std::endl <<
+		 "ESP:\tSpanish" << std::endl;
+	o << "CONFIGURATIONS (depends on type of machine) allowed under command line /w:" << std::endl << 
 		 "0:\tNot expanded. 16k" << std::endl <<
 		 "1:\t48K expansion" << std::endl;
 	o << "MACHINE allowed under command line /m:" << std::endl << 
-		 "ZXSTRUM:\t16k/48k ZX Spectrum" << std::endl;
+		 "STD:\t16k/48k ZX Spectrum" << std::endl;
 	o << "DEVICES allowed to be connected under command CONNECTPER:" << std::endl <<
 		 std::to_string (ZXSPECTRUM::Datasette::_ID) << ":\tSynchronous datasette" << std::endl <<
 		 std::to_string (ZXSPECTRUM::DatasetteP::_ID) << ":\tASynchronous datasette" << std::endl <<

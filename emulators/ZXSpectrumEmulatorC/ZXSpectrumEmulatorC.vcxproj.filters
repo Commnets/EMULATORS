@@ -77,5 +77,11 @@
     <None Include="console.def">
       <Filter>Configuration</Filter>
     </None>
+    <None Include="48Standard-ENG.rom">
+      <Filter>Configuration</Filter>
+    </None>
+    <None Include="48Standard-ESP.rom">
+      <Filter>Configuration</Filter>
+    </None>
   </ItemGroup>
 </Project>

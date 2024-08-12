@@ -6,25 +6,27 @@
 
 // ---
 const MCHEmul::RasterData ZXSPECTRUM::ULA_PAL::_VRASTERDATA
-	(0, 6 /** 6 VSYNC. */, 62 /** 56 top border. */, 253 /** 192 draw. */, 309 /** 56 bottom. */, 309, 310, 0, 0);
-/** In terms of ULA cycles, there would be double:
-	CPU cycles = (0, 45, 75, 202, 232, 232, 233, 0, 0); */
+	(248, 256 /** 8 VSYNC. */, 312 /** 56 top border. */, 191 /** 192 draw. */, 247 /** 56 bottom. */, 247, 312, 0, 0);
 const MCHEmul::RasterData ZXSPECTRUM::ULA_PAL::_HRASTERDATA
-	(0, 90 /** Including 20 (*2) HSYNC + part INT routine execution */, 
-		146 /** 28 (*2) left border. */, 401 /** 128 (32 chars * 4 ULA cycles * 2) draw. */, 
-		465 /** 32 right border. */, 465 /** When the INT is issued. */, 466, 0, 0);
+	(320, 416 /** 96 = Blanking Period + HSYNC (different in 5C, happens before, than in 6C) */, 
+	 448 /** 32 left border. */, 255 /** 256 (32 chars * 8 ULA cycles or 4 CPU cycles) draw. */, 
+	 319 /** 64 right border. */, 319, 448, 0, 0);
 // NTSC is explained in similar terms than PAL...
-const MCHEmul::RasterData ZXSPECTRUM::ULA_NTSC::_VRASTERDATA (0, 6, 38, 229, 261, 261, 262, 0, 0);
-const MCHEmul::RasterData ZXSPECTRUM::ULA_NTSC::_HRASTERDATA (0, 90, 146, 401, 465, 465, 466, 0, 0);
+const MCHEmul::RasterData ZXSPECTRUM::ULA_NTSC::_VRASTERDATA (216, 224, 264, 191, 215, 215, 264, 0, 0);
+const MCHEmul::RasterData ZXSPECTRUM::ULA_NTSC::_HRASTERDATA (320, 416, 448, 255, 319, 319, 448, 0, 0);
 
 // ---
 ZXSPECTRUM::ULA::ULA (const MCHEmul::RasterData& vd, const MCHEmul::RasterData& hd, 
 		int vV, const MCHEmul::Attributes& attrs)
 	: MCHEmul::GraphicalChip (_ID, 
 		{ { "Name", "ULA" },
-		  { "Code", "2C184E" },
+		  // https://www.spectrumforeveryone.com/technical/zx-spectrum-ula-types/
+		  // There were many types of ULA during Spectrum life period....
+		  // The differences are not, in principle, interesting to be applicable to this simulation...
+		  // However they are highlighted in futher descriptions...
+		  { "Code", "5C102E, 5C112E, 5C112E-2, 5C112E-3, 6C001E-5, 6C001E-6, 6C001E-7, 7K010E-5 ULA / Amstrad 40056, +2A/+3 Gate Array" },
 		  { "Manufacturer", "Ferranti" },
-		  { "Year", "1980" } }),
+		  { "Year", "1982-1985" } }),
 	  _ULARegisters (new ZXSPECTRUM::ULARegisters),
 	  _ULAView (vV),
 	  _raster (vd, hd, 1 /** The step is 1 pixel. */),
@@ -94,7 +96,7 @@ bool ZXSPECTRUM::ULA::simulate (MCHEmul::CPU* cpu)
 				<< "Raster:["
 				<< std::to_string (_raster.currentColumnAtBase0 ()) << "," 
 				<< std::to_string (_raster.currentLineAtBase0 ()) 
-				<< "], Internal:[" << "]\n"; // TODO
+				<< "]\n";
 		}
 
 		if (_showEvents)
@@ -130,11 +132,6 @@ bool ZXSPECTRUM::ULA::simulate (MCHEmul::CPU* cpu)
 		}
 		else
 			_firstVBlankEntered = false;
-
-		// If the status of the casette signal has changed, it has to be notified...
-		if (_ULARegisters -> casetteSignalChanged ())
-			notify (MCHEmul::Event (MCHEmul::DatasetteIOPort::_WRITE, 
-				_ULARegisters -> casetteSignal () ? 1 : 0));
 	}
 
 	_lastCPUCycles = cpu -> clockCycles ();
@@ -194,21 +191,21 @@ MCHEmul::ScreenMemory* ZXSPECTRUM::ULA::createScreenMemory ()
 	unsigned int* cP = new unsigned int [16];
 	// The colors are partially transparents to allow the blending...
 	cP [0]  = SDL_MapRGBA (_format, 0x00, 0x00, 0x00, 0xe0); // Black
-	cP [1]  = SDL_MapRGBA (_format, 0xff, 0xff, 0xff, 0xe0); // White
-	cP [2]  = SDL_MapRGBA (_format, 0x92, 0x4a, 0x40, 0xe0); // Red
-	cP [3]  = SDL_MapRGBA (_format, 0x84, 0xc5, 0xcc, 0xe0); // Cyan
-	cP [4]  = SDL_MapRGBA (_format, 0x93, 0x51, 0xb6, 0xe0); // Violet
-	cP [5]  = SDL_MapRGBA (_format, 0x72, 0xb1, 0x4b, 0xe0); // Green
-	cP [6]  = SDL_MapRGBA (_format, 0x48, 0x3a, 0xaa, 0xe0); // Blue
-	cP [7]  = SDL_MapRGBA (_format, 0xd5, 0xdf, 0x7c, 0xe0); // Yellow
-	cP [8]  = SDL_MapRGBA (_format, 0x99, 0x69, 0x2d, 0xe0); // Brown
-	cP [9]  = SDL_MapRGBA (_format, 0x67, 0x52, 0x00, 0xe0); // Light Red
-	cP [10] = SDL_MapRGBA (_format, 0xc1, 0x81, 0x78, 0xe0); // Orange
-	cP [11] = SDL_MapRGBA (_format, 0x60, 0x60, 0x60, 0xe0); // Dark Grey
-	cP [12] = SDL_MapRGBA (_format, 0x8a, 0x8a, 0x8a, 0xe0); // Medium Grey
-	cP [13] = SDL_MapRGBA (_format, 0xb3, 0xec, 0x91, 0xe0); // Light Green
-	cP [14] = SDL_MapRGBA (_format, 0x86, 0x7a, 0xde, 0xe0); // Light Blue
-	cP [15] = SDL_MapRGBA (_format, 0xb3, 0xb3, 0xb3, 0xe0); // Light Grey
+	cP [1]  = SDL_MapRGBA (_format, 0x01, 0x00, 0xce, 0xe0); // Blue
+	cP [2]  = SDL_MapRGBA (_format, 0xcf, 0x01, 0x00, 0xe0); // Red
+	cP [3]  = SDL_MapRGBA (_format, 0xcf, 0x01, 0xce, 0xe0); // Magenta
+	cP [4]  = SDL_MapRGBA (_format, 0x00, 0xcf, 0x15, 0xe0); // Green
+	cP [5]  = SDL_MapRGBA (_format, 0x01, 0xcf, 0xcf, 0xe0); // Cyan
+	cP [6]  = SDL_MapRGBA (_format, 0xcf, 0xcf, 0x15, 0xe0); // Yellow
+	cP [7]  = SDL_MapRGBA (_format, 0xcf, 0xcf, 0xcf, 0xe0); // White
+	cP [8]  = SDL_MapRGBA (_format, 0x00, 0x00, 0x00, 0xe0); // Bright Black
+	cP [9]  = SDL_MapRGBA (_format, 0x02, 0x00, 0xfd, 0xe0); // Bright Blue
+	cP [10] = SDL_MapRGBA (_format, 0xff, 0x02, 0x01, 0xe0); // Bright Red
+	cP [11] = SDL_MapRGBA (_format, 0xff, 0x02, 0xfd, 0xe0); // Bright Magenta
+	cP [12] = SDL_MapRGBA (_format, 0x00, 0xff, 0x1c, 0xe0); // Bright Green
+	cP [13] = SDL_MapRGBA (_format, 0x02, 0xff, 0xff, 0xe0); // Bright Cyan
+	cP [14] = SDL_MapRGBA (_format, 0xff, 0xff, 0x1d, 0xe0); // Bright Yellow
+	cP [15] = SDL_MapRGBA (_format, 0xff, 0xff, 0xff, 0xe0); // Bright White
 
 	return (new MCHEmul::ScreenMemory (numberColumns (), numberRows (), cP));
 }
@@ -247,20 +244,20 @@ void ZXSPECTRUM::ULA::readGraphicsAndDrawVisibleZone (MCHEmul::CPU* cpu)
 ZXSPECTRUM::ULA_PAL::ULA_PAL (int vV)
 	: ZXSPECTRUM::ULA (_VRASTERDATA, _HRASTERDATA, vV,
 		 { { "Name", "ULA" },
-		   { "Code", "2C184E (PAL)" },
-		   { "Manufacturer", "Ferranti"},
-		   { "Year", "1980" } })
+		  { "Code", "5C102E, 5C112E, 5C112E-2, 5C112E-3, 6C001E-5, 6C001E-6, 6C001E-7, 7K010E-5 ULA / Amstrad 40056, +2A/+3 Gate Array" },
+		  { "Manufacturer", "Ferranti" },
+		  { "Year", "1982-1985" } })
 {
-	_ULARegisters -> setNTSC (false);
+	// Nothing else...
 }
 
 // ---
 ZXSPECTRUM::ULA_NTSC::ULA_NTSC (int vV)
 	: ZXSPECTRUM::ULA (_VRASTERDATA, _HRASTERDATA, vV,
 		 { { "Name", "ULA" },
-		   { "Code", "2C184E (PAL)" },
-		   { "Manufacturer", "Ferranti"},
-		   { "Year", "1980" } })
+		  { "Code", "5C102E, 5C112E, 5C112E-2, 5C112E-3, 6C001E-5, 6C001E-6, 6C001E-7, 7K010E-5 ULA / Amstrad 40056, +2A/+3 Gate Array" },
+		  { "Manufacturer", "Ferranti" },
+		  { "Year", "1982-1985" } })
 {
-	_ULARegisters -> setNTSC (true);
+	// Nothing else...
 }

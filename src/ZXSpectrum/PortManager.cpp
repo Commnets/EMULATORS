@@ -20,7 +20,19 @@ ZXSPECTRUM::PortManager::PortManager ()
 // ---
 void ZXSPECTRUM::PortManager::setValue (unsigned short ab, unsigned char id, const MCHEmul::UByte& v)
 {
-	// TODO
+	// Any port with A0 = 0 is ULA
+	// However, 0xfe is the ZXSpectrum common one, but many others will behave similar...
+	if ((id & 0b00000001) == 0b00000000) 
+	{
+		// The three lowest significant bits defines the border color
+		// Bear in mind than in ZXSpectrum the border can not have bright!
+		_ULARegisters -> setBorderColor (v.value () & 0x07);
+
+		// The bit 3 activates the MIC socket...
+		_ULARegisters -> setMICSignal (!v.bit (3));
+		// ...and the 4 activates the EAR one and also the internal speaker...
+		_ULARegisters -> setEARSignal (!v.bit (4));
+	}
 }
 
 // ---
@@ -28,7 +40,29 @@ MCHEmul::UByte ZXSPECTRUM::PortManager::getValue (unsigned short ab, unsigned ch
 {
 	MCHEmul::UByte result = MCHEmul::UByte::_0;
 
-	// TODO
+	// Any port with A0 = 0 is ULA
+	// However, 0xfe is the ZXSpectrum common one, but many others will behave similar...
+	if ((id & 0b00000001) == 0b00000000)
+	{ 
+		MCHEmul::UByte pR = MCHEmul::UByte::_FF;
+		// What row to read is determined by the value of the register B...
+		MCHEmul::UByte bVal = (unsigned char) ((ab & 0xff00) >> 8);
+		// If no row is selected...
+		if (bVal.value () == MCHEmul::UByte::_FF)
+			result |= 0b00011111; // ...nothing has to be analysed!
+		else
+			for (size_t i = 0; i < 8; i++) // Several keys can be pressed simultaneously...
+				if (!bVal.bit (i)) 
+					pR &= ~_ULARegisters -> keyboardStatus (i); // ...and all of them are added!
+		result |= pR & 0x1f; // but at the end only the lowest 5 bits are important!
+
+		// The bit 6 of the final result will be the value in the EAR socket...
+		/** The EAR signal can be used to identify which is the ZXSpectrum issue (1,2 or 3),
+			as it is described in: http://fizyka.umk.pl/~jacek/zx/faq/reference/48kreference.htm \n
+			However it is not important for an emulator, so the first signal the port will read will be always false, 
+			genarting a final result 0f 0x1f with no keys pressed. */
+		result.setBit (6, _ULARegisters -> EARSignal ());
+	}
 
 	return (result);
 }
@@ -45,7 +79,5 @@ void ZXSPECTRUM::PortManager::linkToULA (ZXSPECTRUM::ULA* ula)
 // ---
 void ZXSPECTRUM::PortManager::initialize ()
 {
-	// TODO
-
-	_ULARegisters -> setCasetteSignal (false);
+	_ULARegisters -> initialize ();
 }

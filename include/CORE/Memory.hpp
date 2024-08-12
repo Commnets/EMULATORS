@@ -208,9 +208,10 @@ namespace MCHEmul
 		std::vector <UByte> bytes () const
 							{ return (bytes (initialAddress (), size ())); }
 		inline void set (const Address& a, const std::vector <UByte>& v, bool f = false);
-			/** To fill the memory with a value. */
+		/** To fill the memory with value/values. */
 		void fillWith (const MCHEmul::UByte& b)
 							{ for (size_t i = 0; i < _size; i++) setValue (i, b); }
+		inline void fillWith (const MCHEmul::Address& addr, const MCHEmul::UByte& b, size_t nB);
 
 		/** To get a DUMP. */
 		PhysicalStorageSubsetDUMP dump (const Address& f, const Address& t) const;
@@ -316,9 +317,17 @@ namespace MCHEmul
 
 		int dt; 
 		if (_active && _physicalStorage -> canBeWriten (f) &&
-			v.size () < _size && (a >= _initialAddress && (dt = _initialAddress.distanceWith (a)) <= (int) (_size - v.size ())))
+			v.size () <= _size && (a >= _initialAddress && (dt = _initialAddress.distanceWith (a)) <= (int) (_size - v.size ())))
 			for (size_t i = 0; i < v.size (); i++)
 				setValue (dt + i, v [i]);
+	}
+
+	// ---
+	inline void PhysicalStorageSubset::fillWith (const MCHEmul::Address& addr, const MCHEmul::UByte& b, size_t nB)
+	{ 
+		if (addr > _initialAddress) // Only if the requested address is bigger than the initial position...
+			for (size_t i = (addr - _initialAddress); i < _size; i++) 
+				setValue (i, b); 
 	}
 
 	/** To simplify the way a map of elements is managed. */
@@ -454,6 +463,11 @@ namespace MCHEmul
 							{ set (a, v.bytes (), f); }
 		inline std::vector <UByte> bytes (const Address& a, size_t nB) const;
 		inline void set (const Address& a, const std::vector <UByte>& v, bool f = false);
+		/** To fill the memory with value/values. */
+		void fillWith (const MCHEmul::UByte& b)
+							{ for (size_t i = 0; i < _numPositions; i++) set (_minAddress + i, b); }
+		void fillWith (const MCHEmul::Address& addr, const MCHEmul::UByte& b, size_t nB)
+							{ for (size_t i = 0; i < nB; i++) set (addr + i, b); }
 
 		/** To get a DUMP from all memories actives at some positions. */
 		MemoryViewDUMP dump (const Address& f, const Address& t) const;
@@ -793,6 +807,11 @@ namespace MCHEmul
 							{ set (mb.startAddress (), mb.bytes (), f); }
 		void set (const DataMemoryBlocks& mb, bool f = false)
 							{ for (const auto& i : mb) set (i, f); }
+		/** To fill the memory with value/values. */
+		void fillWith (const MCHEmul::UByte& b)
+							{ _activeView -> fillWith (b); }
+		void fillWith (const MCHEmul::Address& addr, const MCHEmul::UByte& b, size_t nB)
+							{ _activeView -> fillWith (addr, b, nB); }
 
 		/** To get a DUMP from all active "memories" between two positions. */
 		// Only for the active view...

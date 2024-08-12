@@ -10,6 +10,7 @@
  *	Description: The "ULA" Chip.
  *				 This chip is used to produce the video signal, the sound, and also to read the keyboard.
  *	Versions: 1.0 Initial
+ *	Based on: https://pdfcoffee.com/the-zx-spectrum-ula-how-to-design-a-micro-chris-smith-pdf-free.html
  */
 
 #ifndef __ZXSPECTRUM_ULA__
@@ -20,6 +21,11 @@
 
 namespace ZXSPECTRUM
 {
+	/** The ULA is loaded with a 7MHz clock. \n
+		In the PAL/NTSC mode, the horizontal raster takes 64us to go through a line, which is 448 7MH clock cycles. \n
+		In the PAL mode, the vertical raster go through 312 lines to produce images 50 per second, 
+		whilst in NTSC does 264 lines to produce images 60 per second. \n
+		The ULA generates the clock for the CPU reducing the speed half, so the CPU is loaded with a 3.5 MHz clock. */
 	class ULA : public MCHEmul::GraphicalChip
 	{
 		public:

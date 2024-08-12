@@ -76,7 +76,8 @@ namespace ZXSPECTRUM
 								NTSCSystem () 
 									? ZXSPECTRUM::SinclairZXSpectrum::VisualSystem::_NTSC 
 									: ZXSPECTRUM::SinclairZXSpectrum::VisualSystem::_PAL,
-								emulattedComputer ())); }
+								emulattedComputer (),
+								computerLanguage ())); }
 		virtual MCHEmul::IOPeripheralBuilder* createPeripheralBuilder () const override
 							{ return (new IOPeripheralBuilder); }
 		virtual MCHEmul::FileIO* createFileReader () const override
@@ -102,18 +103,32 @@ namespace ZXSPECTRUM
 			configuration () 
 				? cmdlineArguments ().argumentAsInt (_PARAMCONFIGURATION) 
 				: 0; /** Not expanded. */
-		return ((result > 4) ? 4 : result); 
+
+		switch (emulattedComputer ())
+		{
+			case ZXSPECTRUM::Type::_STANDARD:
+				if (result > 2) result = 2; // No more than 2 configurations are allowed: 16k/48k...
+				break;
+
+			default:
+				assert (false); // It shouldn't be here...
+				break;
+		}
+
+		return (result);
 	}
 
 	// ---
 	inline Type ZXSpectrumEmulator::emulattedComputer () const
 	{ 
-		ZXSPECTRUM::Type result = ZXSPECTRUM::Type::_ZXSTRUM;
+		ZXSPECTRUM::Type result = ZXSPECTRUM::Type::_STANDARD;
 		if (cmdlineArguments ().existsArgument (_PARAMMACHINE))
 		{
 			std::string mT = 
 				MCHEmul::upper (cmdlineArguments ().argumentAsString (_PARAMMACHINE));
-			// TODO
+			result = (mT == "ZXSTD") 
+				? ZXSPECTRUM::Type::_STANDARD
+				: ZXSPECTRUM::Type::_STANDARD /** The very basic one. */;
 		}
 
 		return (result);
