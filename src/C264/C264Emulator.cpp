@@ -52,15 +52,21 @@ MCHEmul::Computer* C264::C264Emulator::createComputer () const
 	switch (emulattedComputer ())
 	{
 		case 2:
-			result = new C264::CommodorePlus4 (computerLanguage (), 
-				NTSCSystem () ? C264::Commodore264::VisualSystem::_NTSC : C264::Commodore264::VisualSystem::_PAL);
+			result = new C264::CommodorePlus4 (
+				NTSCSystem () 
+					? C264::Commodore264::VisualSystem::_NTSC 
+					: C264::Commodore264::VisualSystem::_PAL, 
+				computerLanguage ());
 			break;
 
 		case 0:
 		case 1:
 		default:
-			result = new C264::Commodore16_116 (computerLanguage (),
-				NTSCSystem () ? C264::Commodore264::VisualSystem::_NTSC : C264::Commodore264::VisualSystem::_PAL);
+			result = new C264::Commodore16_116 (
+				NTSCSystem () 
+					? C264::Commodore264::VisualSystem::_NTSC 
+					: C264::Commodore264::VisualSystem::_PAL,
+				computerLanguage ());
 			break;
 	}
 

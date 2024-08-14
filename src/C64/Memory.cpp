@@ -414,8 +414,8 @@ MCHEmul::Memory::Content C64::Memory::standardMemoryContent ()
 		});
 
 	// Subsets
-	// The view from the CPU
 	// ------
+	// The view from the CPU
 	// ...Over the RAM and ROM as the CPU sees it
 	// First two bytes of the memory that are used by the 6510
 	MCHEmul::PhysicalStorageSubset* IO6510 = new C64::IO6510PortRegisters

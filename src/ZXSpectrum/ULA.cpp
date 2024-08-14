@@ -31,6 +31,7 @@ ZXSPECTRUM::ULA::ULA (const MCHEmul::RasterData& vd, const MCHEmul::RasterData& 
 	  _ULAView (vV),
 	  _raster (vd, hd, 1 /** The step is 1 pixel. */),
 	  _showEvents (false),
+	  _videoSignalData (),
 	  _lastCPUCycles (0),
 	  _format (nullptr),
 	  _firstVBlankEntered (false)
@@ -59,6 +60,8 @@ bool ZXSPECTRUM::ULA::initialize ()
 	_showEvents = false;
 
 	_ULARegisters -> initialize ();
+
+	_videoSignalData = ZXSPECTRUM::ULA::VideoSignalData ();
 
 	_lastCPUCycles = 0;
 
@@ -107,16 +110,7 @@ bool ZXSPECTRUM::ULA::simulate (MCHEmul::CPU* cpu)
 		// Read the graphics and draw the visible zone, 
 		// if it is the case...
 		if (_raster.isInVisibleZone ())
-			readGraphicsAndDrawVisibleZone (cpu);
-
-		// Moves the internal cycles counter 1...(from 0 to 415)
-		if (_raster.hData ().add (1)) // ...and if reaches the end...
-		{
-			// the HSYNC happens...
-			_raster.vData ().add (1); _raster.hData ().reset ();
-
-			// TODO...
-		}
+			readGraphicInfoAndDrawVisibleZone (cpu);
 
 		// When the raster enters the non visible part of the screen,
 		// a notification is sent (to the Screen class usually) 
@@ -132,6 +126,22 @@ bool ZXSPECTRUM::ULA::simulate (MCHEmul::CPU* cpu)
 		}
 		else
 			_firstVBlankEntered = false;
+
+		// Moves the internal cycles counter 1...
+		if (_raster.moveCycles (1))
+		{
+			// The flash attribute has to be updated!
+			if (++_videoSignalData._flashCounter == 50)
+			{
+				_videoSignalData._flashCounter = 0;
+
+				_videoSignalData._flash = !_videoSignalData._flash;
+			}
+
+			// An interrupt is generated any time the 
+			cpu -> requestInterrupt 
+				(FZ80::NMIInterrupt::_ID, i, this, 0 /** The reason is that the Screen is complete. */);
+		}
 	}
 
 	_lastCPUCycles = cpu -> clockCycles ();
@@ -211,33 +221,64 @@ MCHEmul::ScreenMemory* ZXSPECTRUM::ULA::createScreenMemory ()
 }
 
 // --
-void ZXSPECTRUM::ULA::readGraphicsAndDrawVisibleZone (MCHEmul::CPU* cpu)
+void ZXSPECTRUM::ULA::readGraphicInfoAndDrawVisibleZone (MCHEmul::CPU* cpu)
 {
+	// Gets the position with in the visible zone...
+	// That position will take into account the birder (top and left)...
 	unsigned short x = 0, y = 0;
 	_raster.currentVisiblePosition (x, y);
 
-	// Draws the background first...
-	// ...that is always at color 1 (white)....
-	_screenMemory -> setPixel (x, y, 1);
+	// Draws a point with the background first
+	// Unless the raster were in a display zone, it will be the only thing to be drawn...
+	_screenMemory -> setPixel (x, y, _ULARegisters -> borderColor () & 0x07); // The bright has no effect in the border...
+
+	// When the raster enters the display zone
+	// all the info to control it, is reinitilized...
+	if (_raster.vData ().currentPosition () == 0 && 
+		_raster.hData ().currentPosition () == 0)
+		_videoSignalData.initializeDisplayZone (); // ..everything except the flash info...
+
+	// When the raster enters vertically the display zone...
+	if (_raster.vData ().currentPosition () >= 0 && 
+		_raster.vData ().currentPosition () < 192)
+	{
+		// This varianle only is true when the position is between 0 and 255...
+		_videoSignalData._vidEN = 
+			((_raster.hData ().currentPosition () >> 8) & 0x00ff) == 0x0000;
+		// ...and in that case...
+		if (_videoSignalData._vidEN.value ())
+		{
+			// load graphical and attribute data when it is the frist time
+			// that variable comes from 0 to 1 or every 8 shifts...
+			if ((_videoSignalData._vidEN.positiveEdge () | _videoSignalData.clock ()) == true)
+			{
+				_memory -> setActiveView (_ULAView);
+
+				_videoSignalData._dataLatch = 
+					_memory -> value (MCHEmul::Address 
+						(2, (unsigned int) ((_raster.vData ().currentPosition () << 5) | (_raster.hData ().currentPosition () >> 3))));
+				_videoSignalData._attributeLatch =
+					_memory -> value (MCHEmul::Address ({ 0x00, 0x18 }, false) + 
+						(_raster.vData ().currentPosition () >> 3) + (_raster.hData ().currentPosition () >> 3));
+
+				_memory -> setCPUView ();
+			}
+
+			// But always draw the content of the poixels shifted...
+			// but taking into account the flash attribute (1 every 32 frames)....
+			// In this case for both PAPER and INK the bright attribute is taking into account...
+			unsigned char brightVal = (_videoSignalData._attribute.value () & 0x40) ? 0x80 : 0x00;
+			_screenMemory -> setPixel (x, y, unsigned int // To be adapted to the right estructure...
+				((_videoSignalData._lastBitShifted ^ _videoSignalData._flash)
+					? (_videoSignalData._attribute.value () & 0x07 | brightVal)
+					: ((_videoSignalData._attribute.value () & 0x38) >> 3) | brightVal));
+		}
+	}
 
 	if (_showEvents)
 	{
 		// TODO
 	}
-
-	bool px = true;
-	// When x is a multiple of 8...
-	if (x % 8 == 0)
-	{
-		// ...reads the char code to draw...
-		// ...and how to draw that char code...
-		// Remember that the way that the ULA sees the memory is different than the way CPU does...
-		memoryRef () -> setActiveView (_ULAView);
-
-		// TODO...
-	}
-
-	// TODO...
 }
 
 // ---

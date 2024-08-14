@@ -54,7 +54,8 @@ namespace ZXSPECTRUM
 							{ return (_raster.visibleLines ()); }
 		/** Always with in the visible screen. */
 		inline void screenPositions (unsigned short& x1, unsigned short& y1, 
-			unsigned short& x2, unsigned short& y2);
+			unsigned short& x2, unsigned short& y2)
+							{ _raster.displayPositions (x1, y1, x2, y2); }
 
 		/** To get the raster info. */
 		const MCHEmul::Raster& raster () const
@@ -85,8 +86,8 @@ namespace ZXSPECTRUM
 		virtual MCHEmul::ScreenMemory* createScreenMemory () override;
 
 		// Invoked from the method "simulation"...
-		/** Read and draw the graphics. */
-		void readGraphicsAndDrawVisibleZone (MCHEmul::CPU* cpu);
+		/** Read the graphical info (when needed) and draw the graphics. */
+		void readGraphicInfoAndDrawVisibleZone (MCHEmul::CPU* cpu);
 
 		protected:
 		/** A reference to the ULA registers. */
@@ -99,6 +100,56 @@ namespace ZXSPECTRUM
 		bool _showEvents;
 
 		// Implementation
+		/** To control the status of the video display. 
+			This structure respresents internal registerrs of the ULA to generate the video signal. */
+		struct VideoSignalData
+		{
+			VideoSignalData ()
+				: _vidEN (false),
+				  _dataLatch (MCHEmul::UByte::_0), 
+				  _shiftRegister (MCHEmul::UByte::_0), 
+				  _shiftCounter (0), 
+				  _lastBitShifted (false),
+				  _attributeLatch (MCHEmul::UByte::_0), 
+				  _attribute (MCHEmul::UByte::_0),
+				  _flash (false), 
+				  _flashCounter (0)
+							{ }
+
+			/** Anytime the raster enters the display zone the varibale holding 
+				all info this stuff has to be reinilized. */
+			inline void initializeDisplayZone ();
+
+			/** Invoked in every ULA clock. \n
+				Returns true when a new data has to be loaded.
+				and false in other circusntance. */
+			inline bool clock ();
+
+			/** True when the pixel display zone is being generated, false in other case. */
+			MCHEmul::Pulse _vidEN;
+			/** The data with the video info latched from the memory. */
+			MCHEmul::UByte _dataLatch;
+			/** Contains the video information transfer from the previous latch 
+				to be displayed and it is shifed in every ULA clock cycle. 
+				This register is loaded from _dataLatch every 8 ULA clocks (at the beginning of the clock 0). */
+			MCHEmul::UByte _shiftRegister;
+			/** From 0 to 7. When 0, reload the info from _dataLatch. */
+			unsigned char _shiftCounter;
+			/** Last bit shifted. */
+			bool _lastBitShifted;
+			/** The fata with the attribute info latched from the memory. */
+			MCHEmul::UByte _attributeLatch;
+			/** Contains the attribute of the pixels shifted. */
+			MCHEmul::UByte _attribute;
+
+			/** The information for the Flash. */
+			bool _flash;
+			/** Every 32 frames the flas changes. */
+			unsigned char _flashCounter;
+		};
+
+		/** The video signal data. */
+		VideoSignalData _videoSignalData;
 		/** The number of cycles the CPU was executed once the simulated method finishes. */
 		unsigned int _lastCPUCycles;
 		/** The format used to draw. 
@@ -109,10 +160,37 @@ namespace ZXSPECTRUM
 	};
 
 	// ---
-	inline void ULA::screenPositions (unsigned short& x1, unsigned short& y1, 
-		unsigned short& x2, unsigned short& y2)
+	inline void ULA::VideoSignalData::initializeDisplayZone ()
 	{
-		_raster.displayPositions (x1, y1, x2, y2);
+		_vidEN = false;
+		_dataLatch = MCHEmul::UByte::_0;
+		_shiftRegister = MCHEmul::UByte::_0;
+		_shiftCounter = 0;
+		_lastBitShifted = false;
+		_attributeLatch = MCHEmul::UByte::_0;
+		_attribute = MCHEmul::UByte::_0;
+		_flash = false;
+		_flashCounter = 0;
+	}
+
+	// ---
+	inline bool ULA::VideoSignalData::clock ()
+	{
+		bool result = false;
+
+		if (_shiftCounter == 0)
+		{
+			_shiftRegister = _dataLatch;
+
+			_attribute = _attributeLatch;
+		}
+
+		if (result = (++_shiftCounter == 8))
+			_shiftCounter = 0;
+
+		_lastBitShifted = _shiftRegister.shiftLeftC (false, 1);
+
+		return (result);
 	}
 
 	/** The version para PAL systems. */

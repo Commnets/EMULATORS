@@ -34,7 +34,7 @@ namespace VIC20
 		static const unsigned int _NTSCCLOCK	= 1022727; // 1.023 MHz
 
 		CommodoreVIC20 (Memory::Configuration cfg, 
-			VisualSystem vS, const std::string& lg);
+			VisualSystem vS, const std::string& lg = MCHEmul::_DEFAULTLANGUAGE);
 
 		VisualSystem visualSystem () const
 							{ return (_visualSystem); }

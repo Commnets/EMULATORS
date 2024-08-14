@@ -10,7 +10,7 @@ ZXSPECTRUM::Screen::Screen (double hz, int w, int h, const MCHEmul::Attributes& 
 		("./48Standard-ENG.rom", e, 0 /** no address needed */, true);
 	if (!e)
 	{
-		for (size_t i = 0x3d00; i < 0x0800; i += 8) // 256 characters (8 bytes each) = 2.048 bytes = 0x800 bytes
+		for (size_t i = 0x3d00; i < 0x4000; i += 8) // 96 characters (8 bytes each) = 768 bytes = 0x0300 bytes
 		{
 			std::vector <MCHEmul::UBytes> chrdt;
 			for (size_t j = 0; j < 8; j++)
@@ -31,7 +31,7 @@ void ZXSPECTRUM::Screen::drawAdditional ()
 	{
 		// The color...
 		// Only 4 are available...
-		unsigned int bC = (gridColor () > 3) ? 0 : gridColor ();
+		unsigned int bC = (gridColor () > 15) ? 0 : gridColor ();
 
 		// Where is the screen...
 		ZXSPECTRUM::ULA* gC = static_cast <ZXSPECTRUM::ULA*> (_graphicalChip);

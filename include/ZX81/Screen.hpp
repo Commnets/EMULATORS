@@ -29,7 +29,7 @@ namespace ZX81
 		protected:
 		virtual void drawAdditional () override;
 
-		// The char code and the ASCII code ar quite similar!
+		// The char code and the ASCII code are quite similar!
 		virtual size_t charCodeFromASCII (unsigned char id) const override
 							{ return (std::isalnum ((int) id) // Only alphanumeric are represented...
 								? (std::isdigit ((int) id) ? (id - 20) : (id - 27))

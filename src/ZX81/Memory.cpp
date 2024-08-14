@@ -154,6 +154,7 @@ void ZX81::Memory::setConfiguration (ZX81::Memory::Configuration cfg)
 
 				// The stack is in the 1k zone...
 				_STACK_SUBSET = _RAM1K -> id ();
+				_stack = nullptr; // To reload the stack...
 			}
 
 			break;
@@ -183,6 +184,7 @@ void ZX81::Memory::setConfiguration (ZX81::Memory::Configuration cfg)
 
 				// The stack is in the 16k zone
 				_STACK_SUBSET = _RAM16K_CS1 -> id ();
+				_stack = nullptr; // To reload the stack!
 			}
 
 			break;

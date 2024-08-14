@@ -40,9 +40,8 @@ namespace C264
 		static const unsigned int _PALCLOCK		= 889200; // 0.889 MHz
 		static const unsigned int _NTSCCLOCK	= 896040; // 0.896 MHz
 
-		Commodore264 (const std::string& lg, VisualSystem vS,
-			MCHEmul::Memory* m,
-			const MCHEmul::Chips& cps, const MCHEmul::IODevices& dvs);
+		Commodore264 (const MCHEmul::Chips& cps, MCHEmul::Memory* m, const MCHEmul::IODevices& dvs, 
+			VisualSystem vS, const std::string& lng = MCHEmul::_DEFAULTLANGUAGE);
 
 		virtual bool initialize (bool iM = true) override;
 
@@ -76,10 +75,8 @@ namespace C264
 	class Commodore16_116 final : public Commodore264
 	{
 		public:
-		Commodore16_116 (const std::string& lg, VisualSystem vS)
-			: Commodore264 (lg, vS,
-				new C264::C16_116Memory (lg),
-				standardChips (lg, vS), standardDevices (vS))
+		Commodore16_116 (VisualSystem vS, const std::string& lg = MCHEmul::_DEFAULTLANGUAGE)
+			: Commodore264 (standardChips (lg, vS), new C264::C16_116Memory (lg), standardDevices (vS), vS, lg)
 							{ }
 
 		protected:
@@ -93,10 +90,8 @@ namespace C264
 	class CommodorePlus4 final : public Commodore264
 	{
 		public:
-		CommodorePlus4 (const std::string& lg, VisualSystem vS)
-			: Commodore264 (lg, vS,
-				new C264::CPlus4Memory (lg),
-				standardChips (lg, vS), standardDevices (vS))
+		CommodorePlus4 (VisualSystem vS, const std::string& lg = MCHEmul::_DEFAULTLANGUAGE)
+			: Commodore264 (standardChips (lg, vS), new C264::CPlus4Memory (lg), standardDevices (vS), vS, lg)
 							{ }
 
 		protected:

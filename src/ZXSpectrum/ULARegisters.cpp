@@ -3,9 +3,9 @@
 // ---
 ZXSPECTRUM::ULARegisters::ULARegisters ()
 	: MCHEmul::InfoClass ("ULARegisters"),
-	  _MICSignalChanged (false),
-	  _EARSignalChanged (false),
-	  _keyboardStatus (8, MCHEmul::UByte::_0)
+	  _MICSignalChanged (false), // It is an OBool...
+	  _EARSignalChanged (false), // It is an OBool...
+	  _keyboardStatus (8, MCHEmul::UByte::_0) // To define the initial size...
 { 
 	initializeInternalValues ();
 }

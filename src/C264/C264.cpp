@@ -11,9 +11,8 @@
 #include <C264/Cartridge.hpp>
 
 // ---
-C264::Commodore264::Commodore264 (const std::string& lg, C264::Commodore264::VisualSystem vS,
-		MCHEmul::Memory* m,
-		const MCHEmul::Chips& cps, const MCHEmul::IODevices& dvs)
+C264::Commodore264::Commodore264 (const MCHEmul::Chips& cps, MCHEmul::Memory* m, const MCHEmul::IODevices& dvs, 
+		C264::Commodore264::VisualSystem vS, const std::string& lng)
 	: COMMODORE::Computer 
 		(new F6500::C7501 (0 /** Only one micro. */),
 		 cps,

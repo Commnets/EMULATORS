@@ -19,16 +19,15 @@ ZXSPECTRUM::SinclairZXSpectrum::SinclairZXSpectrum (ZXSPECTRUM::Memory::Configur
 		 ZXSPECTRUM::SinclairZXSpectrum::standardChips (vS),
 		 new ZXSPECTRUM::Memory (cfg, t, lang), // Depending on the configuration, the type, and the languaje!
 		 ZXSPECTRUM::SinclairZXSpectrum::standardDevices (vS),
-		 _CLOCK, // In ZX81 the speed is constant as the CPU is aimed also to draw!
-		 { }, { }, // The ZX81 emulation has been done without neither Buses nor Wires!
+		 _CLOCK,
+		 { }, { }, // The ZXSpectrum, emulation has been done without neither Buses nor Wires!
 		 { { "Name", "ZXSpectrum" },
 		   { "Manufacturer", "Sinclair Research/Timex Coporation" },
 		   { "Year", "1982" }
 		 }),
 	  _visualSystem (vS),
 	  _type (t),
-	  _ula (nullptr),
-	  _A6 (false)
+	  _ula (nullptr)
 {
 	// Add the port manager for all ports!
 	ZXSPECTRUM::PortManager* pM = new PortManager;
@@ -60,8 +59,8 @@ bool ZXSPECTRUM::SinclairZXSpectrum::initialize (bool iM)
 	// Events when it is disonnected and connected are sent and with many implications
 	// in the structure of the memory, and in the content of this...
 	observe (dynamic_cast <ZXSPECTRUM::EdgeConnector*> (device (ZXSPECTRUM::EdgeConnector::_ID)));
-	// Connect the casette port to the ULA
-	// as the ULA (ports) generates also the signal that goes to the casette throught out the IN/OUT port...
+	// Connect the casette port to the ULA...
+	// ...as the ULA (ports) generates also the signal that goes to the casette throught out the IN/OUT port...
 	device (ZXSPECTRUM::DatasetteIOPort::_ID) -> observe (_ula);
 
 	// Check whether there is an expansion element inserted in the edge connector port

@@ -33,18 +33,18 @@ namespace ZXSPECTRUM
 		};
 
 		// Phisical Storages
-		static const int _ROM48KBASIC_SET			= 1;
-		static const int _RAMBANK5_SET				= 2;
-		static const int _RAMBANK2_SET				= 3;
-		static const int _RAMBANK0_SET				= 4;
+		static const int _ROM_SET					= 1;
+		static const int _RAM_SET					= 2;
 
 		// Subsets
+		// From the CPU view...
 		static const int _ROM48KBASIC_SUBSET		= 100;
-		static const int _RAMBANK5_SUBSET			= 101;
-		static const int _RAMBANK2_SUBSET			= 102;
-		static const int _RAMBANK2_SUBSET_E			= 103;
-		static const int _RAMBANK0_SUBSET			= 104;
-		static const int _RAMBANK0_SUBSET_E			= 105;
+		static const int _RAM16K_SUBSET				= 101;
+		static const int _RAM32KE_SUBSET			= 102;
+		static const int _RAM48K_SUBSET				= 103;
+		// From the ULA view...
+		static const int _RAM16KULA_SUBSET			= 110;
+		static const int _RAM48KULA_SUBSET			= 111;
 
 		// Views
 		static const int _CPU_VIEW					= 0;
@@ -79,13 +79,15 @@ namespace ZXSPECTRUM
 		Configuration _configuration;
 
 		// Implementation
-		MCHEmul::PhysicalStorageSubset* _ROM;
-		MCHEmul::PhysicalStorageSubset* _RAMBANK5;
-		MCHEmul::PhysicalStorageSubset* _RAMBANK2;
-		MCHEmul::EmptyPhysicalStorageSubset* _RAMBANK2_E;
-		MCHEmul::PhysicalStorageSubset* _RAMBANK0;
-		MCHEmul::EmptyPhysicalStorageSubset* _RAMBANK0_E;
-
+		// From the CPU view...
+		MCHEmul::PhysicalStorageSubset* _ROMBasic;
+		MCHEmul::Stack* _RAM16k;
+		MCHEmul::EmptyPhysicalStorageSubset* _RAM32k_E;
+		MCHEmul::Stack* _RAM48k;
+		// From the ULA view...
+		MCHEmul::PhysicalStorageSubset* _RAM16kULA;
+		MCHEmul::PhysicalStorageSubset* _RAM48kULA;
+	
 		// The id of the subset used for the stack...
 		// that will depend on the configuration!
 		int _STACK_SUBSET;

@@ -29,11 +29,9 @@ namespace ZXSPECTRUM
 		protected:
 		virtual void drawAdditional () override;
 
-		// The char code and the ASCII code ar quite similar!
+		// The char code and the ASCII code are in the same order!
 		virtual size_t charCodeFromASCII (unsigned char id) const override
-							{ return (std::isalnum ((int) id) // Only alphanumeric are represented...
-								? (std::isdigit ((int) id) ? (id - 20) : (id - 27))
-								: 0); }
+							{ return (std::isalnum ((int) id) ? (id - 0x20) : 0); }
 	};
 
 	/** Screen valid for NTSC systems. Used in USA. */

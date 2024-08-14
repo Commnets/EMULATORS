@@ -33,7 +33,7 @@ namespace ZXSPECTRUM
 		static const unsigned int _CLOCK		= 3500000;	// 3.5 MHz
 
 		SinclairZXSpectrum (Memory::Configuration cfg, VisualSystem vS, 
-			Type t, const std::string& lang = "ENG");
+			Type t, const std::string& lang = MCHEmul::_DEFAULTLANGUAGE);
 
 		VisualSystem visualSystem () const
 							{ return (_visualSystem); }
@@ -74,8 +74,6 @@ namespace ZXSPECTRUM
 		// Implementation
 		/** A reference to the ULA chip. */
 		ULA* _ula;
-		/** To control the status of the A6. */
-		MCHEmul::Pulse _A6;
 	};
 }
 
