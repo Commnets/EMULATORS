@@ -35,7 +35,8 @@ COMMODORE::VICII::VICII (MCHEmul::PhysicalStorageSubset* cR, const MCHEmul::Addr
 	  _lastVBlankEntered (false),
 	  _lastBadLineScrollY (-1), _newBadLineCondition (false), _badLineStopCyclesAdded (false),
 	  _vicGraphicInfo (),
-	  _vicSpriteInfo ()
+	  _vicSpriteInfo (),
+	  _eventStatus { false, false }
 {
 	// At this point the color RAM can be nullptr, 
 	// but never when the VIC starts to work!
@@ -212,15 +213,13 @@ bool COMMODORE::VICII::simulate (MCHEmul::CPU* cpu)
 		if (_raster.isInVisibleZone ())
 			drawVisibleZone (cpu);
 
-		// Move to the next cycle...
-		_cycleInRasterLine++;
-
 		// Move 8 pixels right in the raster line and jump to other line is possible...
 		// Notice that the variable _isNewRasterLine becomes true when a new line comes...
 		// Always when there is a new line the Raster IRQ has to be checked, 
 		// and the situation is flagged into the register if true...
 		// Whether finally a IRQ is or not actually launched is something that is determined later per cycle
 		// just to take into account other issuing possibilities like two sprites collision analized later.
+		_cycleInRasterLine++; // First move to the next raster cycle...
 		if (_raster.moveCycles (1))
 		{
 			_cycleInRasterLine = 1;
@@ -559,6 +558,72 @@ MCHEmul::ScreenMemory* COMMODORE::VICII::createScreenMemory ()
 }
 
 // ---
+void COMMODORE::VICII::actualizeMainBorderStatus_new (unsigned short cav, unsigned short rv)
+{
+	_vicGraphicInfo._ffMBorderBegin = cav;
+	_vicGraphicInfo._ffMBorderPixels = (cav + 8) > _raster.visibleColumns () 
+		? (_raster.visibleColumns () - cav) : 8;
+
+	// Only if it is in the screen position...
+	// Looking at the right limit...
+	if (cav == (_raster.hData ().lastScreenPosition () + 1))
+		_vicGraphicInfo._ffMBorder = true;
+	if (cav < _raster.hData ().lastScreenPosition () && 
+			((cav + 7) > _raster.hData ().lastScreenPosition ()))
+	{
+		_vicGraphicInfo._ffMBorder = true;
+		_vicGraphicInfo._ffMBorderBegin = _raster.hData ().lastScreenPosition () + 1;
+		_vicGraphicInfo._ffMBorderPixels = (cav + 8) - _vicGraphicInfo._ffMBorderBegin;
+	}
+		
+	// Inly if it is at the left limit---
+	// atLeft variable will mark whether the raster getting the left side...
+	// and if it is, _vicGraphicInfo._ffMBorderPixels will hold the number of pixels to draw... 8 by default (or the limit of the visible zone)!
+	bool atLeft = false;
+	if (cav < _raster.hData ().firstScreenPosition () &&
+			((cav + 8) >= _raster.hData ().firstScreenPosition ()))
+	{
+		atLeft = true;
+		_vicGraphicInfo._ffMBorderPixels = 
+			_raster.hData ().firstScreenPosition () - cav;
+	}
+		
+	// When the raster is getting the left position...
+	// ...and it is also in the bottom visible limit...
+	if (atLeft &&
+		(_raster.vData ().currentPosition () == _VICIIRegisters -> maxRasterV ()))
+		_vicGraphicInfo._ffVBorder = true; // ... the vertical border should appear...
+	// ...but if it is in the top limit and the screen hasn't been declared as blank...
+	if (atLeft &&
+		(_raster.vData ().currentPosition () == _VICIIRegisters -> minRasterV () &&
+			!_VICIIRegisters -> blankEntireScreen ()))
+		_vicGraphicInfo._ffVBorder = false; // ... the vertical border should disappear...
+	
+	// ...and if after all previous checks, the vertical flip flip is off...
+	if (atLeft && !_vicGraphicInfo._ffVBorder)
+		_vicGraphicInfo._ffLBorder = true; // ...this one is temporal, 
+											// ...and when it is used, the main one will become false...
+
+	// This is used later to draw events...if active!
+	_eventStatus._ffMBorderChange.set (_vicGraphicInfo._ffMBorder);
+}
+
+// ---
+void COMMODORE::VICII::actualizeVerticalBorderStatus_new ()
+{
+	// The border appears when the first vertical raster border position is reached...
+	if (_raster.vData ().currentPosition () == _VICIIRegisters -> maxRasterV ()) 
+			_vicGraphicInfo._ffVBorder = true;
+	// ...and disappears when the first vertical raster visible position is reached...
+	if (_raster.vData ().currentPosition () == _VICIIRegisters -> minRasterV () &&
+			!_VICIIRegisters -> blankEntireScreen ())
+			_vicGraphicInfo._ffVBorder = false;
+
+	// This is used later to draw events...if active!
+	_eventStatus._ffVBorderChange.set (_vicGraphicInfo._ffVBorder);
+}
+
+// ---
 unsigned int COMMODORE::VICII::treatRasterCycle ()
 {
 	unsigned int result = 0;
@@ -764,6 +829,9 @@ void COMMODORE::VICII::drawVisibleZone (MCHEmul::CPU* cpu)
 	// The same value than cv, but adjusted to a multiple of 8.
 	unsigned short cav = (cv >> 3) << 3;
 
+//	actualizeMainBorderStatus (cav, rv);
+	actualizeMainBorderStatus_new (cav, rv);
+
 	// If the video is not active, 
 	// then everything will have the border color...
 	if (!_videoActive)
@@ -795,39 +863,13 @@ void COMMODORE::VICII::drawVisibleZone (MCHEmul::CPU* cpu)
 
 	// If the raster is not in the very visible zone...
 	// it is time to cover with the border...
-	if (!_raster.isInScreenZone () ||
-		(_raster.isInScreenZone () && (cav + 8) > _raster.hData ().lastScreenPosition ()))
+	if (_vicGraphicInfo._ffMBorder || 
+		_vicGraphicInfo._ffLBorder /** The temporal one. */)
 	{
-		// This is the starting pixel to start to draw...
-		unsigned short stp = cav;
-		// ...and the number to draw by default...
-		unsigned short lbk = (cav + 8) > _raster.visibleColumns () 
-			? (_raster.visibleColumns () - cav) : 8;
-
-		// But when the raster line is in the "screen" part of the window,
-		// any of these two previous variables could change...
-		if (rv >= _raster.vData ().firstScreenPosition () &&
-			rv <= _raster.vData ().lastScreenPosition ())
-		{
-			// If the initial horizontal position is before the "screen" part...
-			// ...but not the final position, the number of pixels to draw have to be reduced 
-			if (cav < _raster.hData ().firstScreenPosition () &&
-				(cav + 8) >= _raster.hData ().firstScreenPosition ())
-				lbk = _raster.hData ().firstScreenPosition () - cav;
-
-			// If the initial horizontal position is still in the "screen" part...
-			// ...but not the final position, 
-			// ...both the starting pixel and the number of pixels to draw have to be reduced
-			if (cav < _raster.hData ().lastScreenPosition () && 
-				(cav + 8) > _raster.hData ().lastScreenPosition ())
-			{
-				stp = _raster.hData ().lastScreenPosition () + 1;
-				lbk = (cav + 8) - stp;
-			}
-		}
-
-		screenMemory () -> setHorizontalLine ((size_t) stp, (size_t) rv, lbk, 
-			_VICIIRegisters -> foregroundColor ());
+		screenMemory () -> setHorizontalLine ((size_t) _vicGraphicInfo._ffMBorderBegin, 
+			(size_t) rv, (size_t) _vicGraphicInfo._ffMBorderPixels, _VICIIRegisters -> foregroundColor ());
+		if (_vicGraphicInfo._ffLBorder) 
+			{ _vicGraphicInfo._ffLBorder = false; _vicGraphicInfo._ffMBorder = false; }
 	}
 
 	// If there were requested to draw the position where the Raster Interrupt is generated...
@@ -843,6 +885,10 @@ void COMMODORE::VICII::drawVisibleZone (MCHEmul::CPU* cpu)
 					_VICIIRegisters -> backgroundColor () == 15 
 						? 0 : _VICIIRegisters -> backgroundColor () + 1 /** to be visible. */);
 	}
+
+	// If it activated to draw other events that happen during the interation of the VICII...
+	if (_drawOtherEvents)
+		drawOtherEvents ();
 
 	// The IRQ related with the lightpen is calculated...
 	unsigned short dx, dy;
@@ -873,6 +919,24 @@ void COMMODORE::VICII::drawGraphicsSpritesAndDetectCollisions (const COMMODORE::
 	drawResultToScreen (colGraphics, dC);
 	// ...and the collisions are also detected...
 	detectCollisions (colGraphics);
+}
+
+// ---
+void COMMODORE::VICII::drawOtherEvents ()
+{
+	unsigned int cEvent = std::numeric_limits <unsigned int>::max ();
+	if (_eventStatus._ffVBorderChange.positiveEdge ()) 
+		cEvent = 8; // Auxiliar...
+	if (_eventStatus._ffVBorderChange.negativeEdge ()) 
+		cEvent = 9; // Auxiliar...
+	if (_eventStatus._ffMBorderChange.positiveEdge ())
+		cEvent = 1; // The main indication for the border...
+	if (_eventStatus._ffMBorderChange.negativeEdge ())
+		cEvent = 3; // The main indication for the border...
+
+	if (cEvent != std::numeric_limits <unsigned int>::max ())
+		screenMemory () -> setHorizontalLine 
+			(_vicGraphicInfo._ffMBorderBegin, _raster.vData ().currentVisiblePosition (), 2, cEvent);
 }
 
 // ---
@@ -1488,7 +1552,14 @@ unsigned int COMMODORE::VICII_PAL::treatRasterCycle ()
 
 			break;
 
-		// Cycle 63 is left...
+		// Manages the situation of the border...
+		case 63:
+			{ 
+//				actualizeVerticalBorderStatus ();
+				actualizeVerticalBorderStatus_new ();
+			}
+
+			break;
 
 		default:
 			break;
@@ -1536,11 +1607,13 @@ unsigned int COMMODORE::VICII_NTSC::treatRasterCycle ()
 								(MCHEmul::UByte::OutputFormat::_HEXA, ' ') << "]"
 							<< "\n";
 				}
+
+				// Manages the situation of the border...
+//				actualizeVerticalBorderStatus ();
+				actualizeVerticalBorderStatus_new ();
 			}
 
 			break;
-
-		// Cycle 64 is left...
 
 		default:
 			break;

@@ -87,29 +87,40 @@ namespace MCHEmul
 		bool isInDisplayZone () const
 						{ return (_currentPosition_0 >= _originalFirstDisplayPosition_0 && 
 								  _currentPosition_0 <= _originalLastDisplayPosition_0); }
+		// Respect the origin of the display position...
+		// It might be enourmous if _currentPosition < _originalFirstDisplayPosition
 		unsigned short currentDisplayPosition () const 
-						{ return (_currentPosition_0 - _firstDisplayPosition_0); }
-		unsigned short firstDisplayPosition () const
+						{ return (_currentPosition_0 - _originalFirstDisplayPosition_0); }
+		// Respect the origin of the visible position...
+		unsigned short firstDisplayPosition () const 
 						{ return (_originalFirstDisplayPosition_0 - _firstVisiblePosition_0); }
 		unsigned short lastDisplayPosition () const
 						{ return (_originalLastDisplayPosition_0 - _firstVisiblePosition_0); }
+		// Absolute value...
 		unsigned short displayPositions () const
 						{ return (_originalLastDisplayPosition_0 - _originalFirstDisplayPosition_0 + 1); }
+		// Respect the origin of the display position...
+		// It might be enourmous if p (in base 0) < _originalFirstDisplayPosition
 		unsigned short positionInDisplayZone (unsigned short p) const
-						{ return (toBase0 (p) - _firstDisplayPosition_0); }
+						{ return (toBase0 (p) - _originalFirstDisplayPosition_0); }
 
 		// Managing the screen
 		/** The SCREEN is the zone where the drawing can happen but taking
 			into account potential reductions either in the columns on in the rows. */
+		// Applu the same rational to this values than to display's ones...
 		bool isInScreenZone () const
 						{ return (_currentPosition_0 >= _firstDisplayPosition_0 &&
 								  _currentPosition_0 <= _lastDisplayPosition_0); }
+		unsigned short currentScreenPosition () const 
+						{ return (_currentPosition_0 - _firstDisplayPosition_0); }
 		unsigned short firstScreenPosition () const
 						{ return (_firstDisplayPosition_0 - _firstVisiblePosition_0); }
 		unsigned short lastScreenPosition () const
 						{ return (_lastDisplayPosition_0 - _firstVisiblePosition_0); }
 		unsigned short screenPositions () const
 						{ return (_lastDisplayPosition_0 - _firstDisplayPosition_0 + 1); }
+		unsigned short positionInScreenZone (unsigned short p) const
+						{ return (toBase0 (p) - _firstDisplayPosition_0); }
 
 		/** Returns true when the limit of the raster is reached. 
 			The parameter is the number of positions to increment the rasterData. */

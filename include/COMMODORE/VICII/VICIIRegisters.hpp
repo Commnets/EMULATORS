@@ -79,6 +79,10 @@ namespace COMMODORE
 
 		bool textDisplay25RowsActive () const
 							{ return (_textDisplay25RowsActive); }
+		unsigned short minRasterV () const
+							{ return (_minRasterV); }
+		unsigned short maxRasterV () const
+							{ return (_maxRasterV); }
 		bool textDisplay40ColumnsActive () const
 							{ return (_textDisplay40ColumnsActive); }
 		bool blankEntireScreen () const
@@ -315,6 +319,7 @@ namespace COMMODORE
 		MCHEmul::Address _screenMemoryPos;
 		MCHEmul::Address _bitmapMemoryPos;
 		MCHEmul::Address _spritePointerMemoryPos;
+		unsigned short _minRasterV, _maxRasterV; // To control where the limits of the raster are...
 	};
 
 	// ---

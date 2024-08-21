@@ -138,7 +138,8 @@ void COMMODORE::VICIIRegisters::setValue (size_t p, const MCHEmul::UByte& v)
 		case 0x11:
 			{
 				_verticalScrollPosition = v.value () & 0x07; // 3 LSBits
-				_textDisplay25RowsActive = v.bit (3);
+				if ((_textDisplay25RowsActive = v.bit (3))) { _minRasterV = 51; _maxRasterV = 251; }
+				else { _minRasterV = 55; _maxRasterV = 247; }
 				_blankEntireScreen = !v.bit (4);
 				_graphicBitModeActive = v.bit (5);
 				_graphicExtendedColorTextModeActive = v.bit (6);
