@@ -172,8 +172,6 @@ void C64::GridOnCommand::executeImpl (MCHEmul::CommandExecuter* cE,
 
 	static_cast <COMMODORE::VICII*> (static_cast <C64::Commodore64*> (c) -> vicII ()) -> 
 		setDrawRasterInterruptPositions (true);
-	static_cast <COMMODORE::VICII*> (static_cast <C64::Commodore64*> (c) -> vicII ()) -> 
-		setDrawOtherEvents (true);
 }
 
 // ---
@@ -191,6 +189,4 @@ void C64::GridOffCommand::executeImpl (MCHEmul::CommandExecuter* cE,
 
 	static_cast <COMMODORE::VICII*> (static_cast <C64::Commodore64*> (c) -> vicII ()) -> 
 		setDrawRasterInterruptPositions (false);
-	static_cast <COMMODORE::VICII*> (static_cast <C64::Commodore64*> (c) -> vicII ()) -> 
-		setDrawOtherEvents (false);
 }

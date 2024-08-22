@@ -21,14 +21,24 @@ MCHEmul::RasterData::RasterData (
 				  _currentPosition (fp),
 				  _displayZoneReduced (false)
 {
-	_firstPosition_0				= toBase0 (_firstPosition);
-	_firstVisiblePosition_0			= toBase0 (_firstVisiblePosition);
-	_firstDisplayPosition_0			= toBase0 (_firstDisplayPosition);
-	_originalFirstDisplayPosition_0 = toBase0 (_firstDisplayPosition);
-	_lastDisplayPosition_0			= toBase0 (_lastDisplayPosition);
-	_originalLastDisplayPosition_0	= toBase0 (_lastDisplayPosition);
-	_lastVisiblePosition_0			= toBase0 (_lastVisiblePosition);
-	_lastPosition_0					= toBase0 (_lastPosition);
+	_firstPosition_0					= toBase0 (_firstPosition);
+	_firstVisiblePosition_0				= toBase0 (_firstVisiblePosition);
+	_firstDisplayPosition_0				= toBase0 (_firstDisplayPosition);
+	_originalFirstDisplayPosition_0		= toBase0 (_firstDisplayPosition);
+	_lastDisplayPosition_0				= toBase0 (_lastDisplayPosition);
+	_originalLastDisplayPosition_0		= toBase0 (_lastDisplayPosition);
+	_lastVisiblePosition_0				= toBase0 (_lastVisiblePosition);
+	_lastPosition_0						= toBase0 (_lastPosition);
+
+	// This data is requested very often...
+	_firstDisplayPosition_inVisibleZone	= 
+		_originalFirstDisplayPosition_0 - _firstVisiblePosition_0;
+	_lastDisplayPosition_inVisibleZone	= 
+		_originalLastDisplayPosition_0 - _firstVisiblePosition_0;
+	_firstScreenPosition_inVisibleZone	= 
+		_firstDisplayPosition_0 - _firstVisiblePosition_0;
+	_lastScreenPosition_inVisibleZone	= 
+		_lastDisplayPosition_0 - _firstVisiblePosition_0;
 
 	_currentPosition_0				= toBase0 (_currentPosition_0);
 

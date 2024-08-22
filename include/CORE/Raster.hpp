@@ -93,9 +93,9 @@ namespace MCHEmul
 						{ return (_currentPosition_0 - _originalFirstDisplayPosition_0); }
 		// Respect the origin of the visible position...
 		unsigned short firstDisplayPosition () const 
-						{ return (_originalFirstDisplayPosition_0 - _firstVisiblePosition_0); }
+						{ return (_firstDisplayPosition_inVisibleZone); }
 		unsigned short lastDisplayPosition () const
-						{ return (_originalLastDisplayPosition_0 - _firstVisiblePosition_0); }
+						{ return (_lastDisplayPosition_inVisibleZone); }
 		// Absolute value...
 		unsigned short displayPositions () const
 						{ return (_originalLastDisplayPosition_0 - _originalFirstDisplayPosition_0 + 1); }
@@ -114,9 +114,9 @@ namespace MCHEmul
 		unsigned short currentScreenPosition () const 
 						{ return (_currentPosition_0 - _firstDisplayPosition_0); }
 		unsigned short firstScreenPosition () const
-						{ return (_firstDisplayPosition_0 - _firstVisiblePosition_0); }
+						{ return (_firstScreenPosition_inVisibleZone); }
 		unsigned short lastScreenPosition () const
-						{ return (_lastDisplayPosition_0 - _firstVisiblePosition_0); }
+						{ return (_lastScreenPosition_inVisibleZone); }
 		unsigned short screenPositions () const
 						{ return (_lastDisplayPosition_0 - _firstDisplayPosition_0 + 1); }
 		unsigned short positionInScreenZone (unsigned short p) const
@@ -177,6 +177,11 @@ namespace MCHEmul
 		unsigned short _originalLastDisplayPosition_0; 
 		unsigned short _lastVisiblePosition_0;
 		unsigned short _lastPosition_0;
+		// To speed up even more...
+		unsigned short _firstDisplayPosition_inVisibleZone;
+		unsigned short _lastDisplayPosition_inVisibleZone;
+		unsigned short _firstScreenPosition_inVisibleZone;
+		unsigned short _lastScreenPosition_inVisibleZone;
 
 		// Implementation
 		unsigned short _currentPosition;
@@ -229,6 +234,16 @@ namespace MCHEmul
 			_lastDisplayPosition	+= _positionsToReduce2;
 			_lastDisplayPosition_0	+= _positionsToReduce2;
 		}
+
+		// Recalculate the very basic numbers...
+		_firstDisplayPosition_inVisibleZone	= 
+			_originalFirstDisplayPosition_0 - _firstVisiblePosition_0;
+		_lastDisplayPosition_inVisibleZone	= 
+			_originalLastDisplayPosition_0 - _firstVisiblePosition_0;
+		_firstScreenPosition_inVisibleZone	= 
+			_firstDisplayPosition_0 - _firstVisiblePosition_0;
+		_lastScreenPosition_inVisibleZone	= 
+			_lastDisplayPosition_0 - _firstVisiblePosition_0;
 	}
 
 	/** The Raster simulates the set of sequential horizontal lines that, 

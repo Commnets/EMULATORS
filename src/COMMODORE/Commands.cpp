@@ -4,6 +4,7 @@
 
 const std::string COMMODORE::VICIStatusCommand::_NAME = "CVICI";
 const std::string COMMODORE::VICIIStatusCommand::_NAME = "CVICII";
+const std::string COMMODORE::VICIIShowEventsCommand::_NAME = "CVICIIEVENTS";
 const std::string COMMODORE::VIAStatusCommand::_NAME = "CVIA";
 const std::string COMMODORE::CIAStatusCommand::_NAME = "CCIA";
 const std::string COMMODORE::SIDStatusCommand::_NAME = "CSID";
@@ -31,6 +32,19 @@ void COMMODORE::VICIIStatusCommand::executeImpl (MCHEmul::CommandExecuter* cE, M
 		return;
 
 	rst.add ("VICII", std::move (static_cast <COMMODORE::Computer*> (c) -> vicII () -> getInfoStructure ()));
+}
+
+// ---
+void COMMODORE::VICIIShowEventsCommand::executeImpl (MCHEmul::CommandExecuter* cE,
+	MCHEmul::Computer* c, MCHEmul::InfoStructure& rst)
+{
+	// Only with a valid computer, but also a ZX81 one. 
+	if (c == nullptr || 
+		dynamic_cast <COMMODORE::Computer*> (c) == nullptr ||
+		static_cast <COMMODORE::Computer*> (c) -> vicII () == nullptr) // Just in case...
+		return;
+
+	static_cast <COMMODORE::Computer*> (c) -> vicII () -> setDrawOtherEvents ((parameter ("00") == "ON"));
 }
 
 // ---

@@ -9,6 +9,8 @@ No parameters are needed.
 ;VICII
 To know the status of the VICII chip, including raster and others.
 No parameters are needed.
+;VICIIEVENTS ON|OFF
+To activate or desactivate the visualization of VICII events.
 ;VIA
 To know the status of the VIA chip.
 No parameters are needed.

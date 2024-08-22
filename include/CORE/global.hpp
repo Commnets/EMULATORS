@@ -28,6 +28,9 @@ namespace MCHEmul
 	static const std::string _YES = "YES";
 	static const std::string _NO = "NO";
 	static const std::string _DEFAULTLANGUAGE = "ENG";
+	// Used in simulations, sometimes...
+	static const unsigned int _U0 = (unsigned int) ~0;
+	static const size_t _S0 = (size_t) ~0;
 
 	/** A vector of strings. */
 	using Strings = std::vector <std::string>;
