@@ -23,10 +23,11 @@ void ZXSPECTRUM::ZXSpectrumEmulator::printOutParameters (std::ostream& o) const
 		 "ENG:\tEnglish" << std::endl <<
 		 "ESP:\tSpanish" << std::endl;
 	o << "CONFIGURATIONS (depends on type of machine) allowed under command line /w:" << std::endl << 
+		 "When ZXSTD:" << std::endl <<
 		 "0:\tNot expanded. 16k" << std::endl <<
 		 "1:\t48K expansion" << std::endl;
 	o << "MACHINE allowed under command line /m:" << std::endl << 
-		 "STD:\t16k/48k ZX Spectrum" << std::endl;
+		 "ZXSTD:\t16k/48k ZX Spectrum" << std::endl;
 	o << "DEVICES allowed to be connected under command CONNECTPER:" << std::endl <<
 		 std::to_string (ZXSPECTRUM::Datasette::_ID) << ":\tSynchronous datasette" << std::endl <<
 		 std::to_string (ZXSPECTRUM::DatasetteP::_ID) << ":\tASynchronous datasette" << std::endl <<

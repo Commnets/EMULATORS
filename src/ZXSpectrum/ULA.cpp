@@ -6,14 +6,14 @@
 
 // ---
 const MCHEmul::RasterData ZXSPECTRUM::ULA_PAL::_VRASTERDATA
-	(248, 256 /** 8 VSYNC. */, 312 /** 56 top border. */, 191 /** 192 draw. */, 247 /** 56 bottom. */, 247, 312, 0, 0);
+	(248, 256 /** 8 VSYNC. */, 0 /** 56 top border. */, 191 /** 192 draw. */, 247 /** 56 bottom. */, 247, 312, 0, 0);
 const MCHEmul::RasterData ZXSPECTRUM::ULA_PAL::_HRASTERDATA
 	(320, 416 /** 96 = Blanking Period + HSYNC (different in 5C, happens before, than in 6C) */, 
-	 448 /** 32 left border. */, 255 /** 256 (32 chars * 8 ULA cycles or 4 CPU cycles) draw. */, 
+	 0 /** 32 left border. */, 255 /** 256 (32 chars * 8 ULA cycles or 4 CPU cycles) draw. */, 
 	 319 /** 64 right border. */, 319, 448, 0, 0);
 // NTSC is explained in similar terms than PAL...
-const MCHEmul::RasterData ZXSPECTRUM::ULA_NTSC::_VRASTERDATA (216, 224, 264, 191, 215, 215, 264, 0, 0);
-const MCHEmul::RasterData ZXSPECTRUM::ULA_NTSC::_HRASTERDATA (320, 416, 448, 255, 319, 319, 448, 0, 0);
+const MCHEmul::RasterData ZXSPECTRUM::ULA_NTSC::_VRASTERDATA (216, 224, 0, 191, 215, 215, 264, 0, 0);
+const MCHEmul::RasterData ZXSPECTRUM::ULA_NTSC::_HRASTERDATA (320, 416, 0, 255, 319, 319, 448, 0, 0);
 
 // ---
 ZXSPECTRUM::ULA::ULA (const MCHEmul::RasterData& vd, const MCHEmul::RasterData& hd, 
@@ -102,15 +102,14 @@ bool ZXSPECTRUM::ULA::simulate (MCHEmul::CPU* cpu)
 				<< "]\n";
 		}
 
-		if (_showEvents)
-		{
-			// TODO
-		}
-
 		// Read the graphics and draw the visible zone, 
 		// if it is the case...
 		if (_raster.isInVisibleZone ())
+		{
 			readGraphicInfoAndDrawVisibleZone (cpu);
+			if (_showEvents)
+				drawEvents ();
+		}
 
 		// When the raster enters the non visible part of the screen,
 		// a notification is sent (to the Screen class usually) 
@@ -140,7 +139,7 @@ bool ZXSPECTRUM::ULA::simulate (MCHEmul::CPU* cpu)
 
 			// An interrupt is generated any time the 
 			cpu -> requestInterrupt 
-				(FZ80::NMIInterrupt::_ID, i, this, 0 /** The reason is that the Screen is complete. */);
+				(FZ80::INTInterrupt::_ID, i, this, 0 /** The reason is that the Screen is complete. */);
 		}
 	}
 
@@ -223,62 +222,73 @@ MCHEmul::ScreenMemory* ZXSPECTRUM::ULA::createScreenMemory ()
 // --
 void ZXSPECTRUM::ULA::readGraphicInfoAndDrawVisibleZone (MCHEmul::CPU* cpu)
 {
+	// Here it is sure that the raster in the visible zone...
+
 	// Gets the position with in the visible zone...
 	// That position will take into account the birder (top and left)...
 	unsigned short x = 0, y = 0;
 	_raster.currentVisiblePosition (x, y);
 
-	// Draws a point with the background first
+	// Draws a point with the background first...
 	// Unless the raster were in a display zone, it will be the only thing to be drawn...
-	_screenMemory -> setPixel (x, y, _ULARegisters -> borderColor () & 0x07); // The bright has no effect in the border...
+	_screenMemory -> setPixel 
+		(x, y, _ULARegisters -> borderColor () & 0x07); // The bright has no effect in the border...
 
-	// When the raster enters the display zone
-	// all the info to control it, is reinitilized...
+	// When the raster zone is not in the pure visible zone...
+	// Theer is nothing else to do...
+	if (!_raster.vData ().isInScreenZone ())
+		return; // The visible part happens when raster is between 0 and 191 (as per definition at the top)....
+
+	// _vidEn is active only when the horizontal raster position is between 0 and 255, that is, the high bit is 0
+	// additioanlly a positive pulse is generated when that bit passes from 0 to 1 
+	// and a negative one when goes from 1 to 0...
+	_videoSignalData._vidEN.set (_raster.hData ().isInScreenZone ());
+	// ...and it is not, there is nothing else to do...
+	if (!_videoSignalData._vidEN.value ())
+		return;
+
+	// From here onwards, the raster is really in the display part...
+
+	// When the raster is at the beginning everything is again started...
 	if (_raster.vData ().currentPosition () == 0 && 
 		_raster.hData ().currentPosition () == 0)
-		_videoSignalData.initializeDisplayZone (); // ..everything except the flash info...
+		_videoSignalData.initializeDisplayZone (); // ..everything except the flash situation and _vidEn situation...
 
-	// When the raster enters vertically the display zone...
-	if (_raster.vData ().currentPosition () >= 0 && 
-		_raster.vData ().currentPosition () < 192)
-	{
-		// This varianle only is true when the position is between 0 and 255...
-		_videoSignalData._vidEN = 
-			((_raster.hData ().currentPosition () >> 8) & 0x00ff) == 0x0000;
-		// ...and in that case...
-		if (_videoSignalData._vidEN.value ())
-		{
-			// load graphical and attribute data when it is the frist time
-			// that variable comes from 0 to 1 or every 8 shifts...
-			if ((_videoSignalData._vidEN.positiveEdge () | _videoSignalData.clock ()) == true)
-			{
-				_memory -> setActiveView (_ULAView);
-
-				_videoSignalData._dataLatch = 
-					_memory -> value (MCHEmul::Address 
-						(2, (unsigned int) ((_raster.vData ().currentPosition () << 5) | (_raster.hData ().currentPosition () >> 3))));
-				_videoSignalData._attributeLatch =
-					_memory -> value (MCHEmul::Address ({ 0x00, 0x18 }, false) + 
-						(_raster.vData ().currentPosition () >> 3) + (_raster.hData ().currentPosition () >> 3));
-
-				_memory -> setCPUView ();
-			}
-
-			// But always draw the content of the poixels shifted...
-			// but taking into account the flash attribute (1 every 32 frames)....
-			// In this case for both PAPER and INK the bright attribute is taking into account...
-			unsigned char brightVal = (_videoSignalData._attribute.value () & 0x40) ? 0x80 : 0x00;
-			_screenMemory -> setPixel (x, y, unsigned int // To be adapted to the right estructure...
-				((_videoSignalData._lastBitShifted ^ _videoSignalData._flash)
-					? (_videoSignalData._attribute.value () & 0x07 | brightVal)
-					: ((_videoSignalData._attribute.value () & 0x38) >> 3) | brightVal));
-		}
+	// The _vidEn generates a positive pulse that indicates that the data has to be read...
+	// Calculates the location within the screen zone...
+	// But 0,0 will be the left up corner in the screen zone
+	// This values are used only to read the memory if needed...
+	unsigned short xS = x - _raster.hData ().firstScreenPosition ();
+	unsigned short yS = y - _raster.vData ().firstScreenPosition ();
+	if (_videoSignalData._vidEN.positiveEdge ()) 
+		readGraphicInfo (xS, yS);
+	// In this way, because the clock has always to be done with right data already loaded...
+	if (_videoSignalData.clock ())
+	{ 
+		// At this point the memory read has to be the next one...
+		if (++xS >= _raster.hData ().screenPositions ()) 
+			{ xS = 0; if (++yS >= _raster.vData ().screenPositions ()) yS = 0; }
+		readGraphicInfo (xS, yS);
 	}
 
-	if (_showEvents)
-	{
-		// TODO
-	}
+	// But always draw the content of the poixels shifted...
+	// but taking into account the flash attribute (1 every 32 frames)....
+	// In this case for both PAPER and INK the bright attribute is taking into account...
+	unsigned char brightVal = (_videoSignalData._attribute.value () & 0x40) ? 0x80 : 0x00;
+	// But also whether the pixels has or not to flash...
+	bool fl = _videoSignalData._attribute.value () & 0x80 /** Flash? */ 
+		&& _videoSignalData._flash /** Invert? */;
+	// to finally draw the pixel...
+	_screenMemory -> setPixel (x, y, unsigned int // To be adapted to the right estructure...
+		(_videoSignalData._lastBitShifted ^ fl
+			? (_videoSignalData._attribute.value () & 0x07 | brightVal)
+			: ((_videoSignalData._attribute.value () & 0x38) >> 3) | brightVal));
+}
+
+// ---
+void ZXSPECTRUM::ULA::drawEvents ()
+{
+	// TODO
 }
 
 // ---

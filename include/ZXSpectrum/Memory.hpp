@@ -43,8 +43,7 @@ namespace ZXSPECTRUM
 		static const int _RAM32KE_SUBSET			= 102;
 		static const int _RAM48K_SUBSET				= 103;
 		// From the ULA view...
-		static const int _RAM16KULA_SUBSET			= 110;
-		static const int _RAM48KULA_SUBSET			= 111;
+		static const int _RAMULA_SUBSET				= 110;
 
 		// Views
 		static const int _CPU_VIEW					= 0;
@@ -85,8 +84,7 @@ namespace ZXSPECTRUM
 		MCHEmul::EmptyPhysicalStorageSubset* _RAM32k_E;
 		MCHEmul::Stack* _RAM48k;
 		// From the ULA view...
-		MCHEmul::PhysicalStorageSubset* _RAM16kULA;
-		MCHEmul::PhysicalStorageSubset* _RAM48kULA;
+		MCHEmul::PhysicalStorageSubset* _RAMULA;
 	
 		// The id of the subset used for the stack...
 		// that will depend on the configuration!

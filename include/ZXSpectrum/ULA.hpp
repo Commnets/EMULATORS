@@ -88,6 +88,10 @@ namespace ZXSPECTRUM
 		// Invoked from the method "simulation"...
 		/** Read the graphical info (when needed) and draw the graphics. */
 		void readGraphicInfoAndDrawVisibleZone (MCHEmul::CPU* cpu);
+		/** Read the memory with new data. */
+		inline void readGraphicInfo (unsigned short x, unsigned short y);
+		/** Draw the important events, in case this option is set. */
+		void drawEvents ();
 
 		protected:
 		/** A reference to the ULA registers. */
@@ -160,17 +164,29 @@ namespace ZXSPECTRUM
 	};
 
 	// ---
+	inline void ULA::readGraphicInfo (unsigned short x, unsigned short y)
+	{
+		_memory -> setActiveView (_ULAView);
+
+		unsigned short vP = ((y & 0x38) << 2) + ((y & 0x07) << 8) + ((y & 0xc0) << 5) + ((x >> 3) & 0x1f);
+		_videoSignalData._dataLatch = _memory -> value (MCHEmul::Address (2, (unsigned int) vP));
+		_videoSignalData._attributeLatch = _memory -> value (MCHEmul::Address ({ 0x00, 0x18 }, false) + 
+				(unsigned int) (vP >> 3 /** 8 times less. */));
+
+		_memory -> setCPUView ();
+	}
+
+	// ---
 	inline void ULA::VideoSignalData::initializeDisplayZone ()
 	{
-		_vidEN = false;
 		_dataLatch = MCHEmul::UByte::_0;
 		_shiftRegister = MCHEmul::UByte::_0;
 		_shiftCounter = 0;
 		_lastBitShifted = false;
 		_attributeLatch = MCHEmul::UByte::_0;
 		_attribute = MCHEmul::UByte::_0;
-		_flash = false;
-		_flashCounter = 0;
+
+		// The status of the flash is not initialized...
 	}
 
 	// ---

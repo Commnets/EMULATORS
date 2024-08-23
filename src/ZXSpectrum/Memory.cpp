@@ -10,8 +10,7 @@ ZXSPECTRUM::Memory::Memory (ZXSPECTRUM::Memory::Configuration cfg,
 	  _RAM16k (nullptr),
 	  _RAM32k_E (nullptr), 
 	  _RAM48k (nullptr),
-	  _RAM16kULA (nullptr),
-	  _RAM48kULA (nullptr),
+	  _RAMULA (nullptr),
 	  _STACK_SUBSET (_RAM16K_SUBSET) // Initially the version not expanded...
 {
 	// In the content...
@@ -35,16 +34,14 @@ ZXSPECTRUM::Memory::Memory (ZXSPECTRUM::Memory::Configuration cfg,
 	_RAM16k = dynamic_cast <MCHEmul::Stack*> (subset (_RAM16K_SUBSET));
 	_RAM32k_E = dynamic_cast <MCHEmul::EmptyPhysicalStorageSubset*> (subset (_RAM32KE_SUBSET));
 	_RAM48k = dynamic_cast <MCHEmul::Stack*> (subset (_RAM48K_SUBSET));
-	_RAM16kULA = subset (_RAM16KULA_SUBSET);
-	_RAM48kULA = subset (_RAM48KULA_SUBSET);
+	_RAMULA = subset (_RAMULA_SUBSET);
 
 	// None of them can be null...
 	assert (_ROMBasic != nullptr &&
 			_RAM16k != nullptr &&
 			_RAM32k_E != nullptr &&
 			_RAM48k != nullptr &&
-			_RAM16kULA != nullptr &&
-			_RAM48kULA != nullptr);
+			_RAMULA != nullptr);
 
 	// Sets the configuration of the memory...
 	setConfiguration (_configuration);
@@ -53,6 +50,10 @@ ZXSPECTRUM::Memory::Memory (ZXSPECTRUM::Memory::Configuration cfg,
 // ---
 void ZXSPECTRUM::Memory::setConfiguration (ZXSPECTRUM::Memory::Configuration cfg)
 {
+	// The ULA is always active...
+	_RAMULA -> setActive (true);
+	_RAMULA -> setActiveForReading (true);
+
 	switch (_type)
 	{
 		// The very classic ZXSpectrum!...
@@ -70,11 +71,6 @@ void ZXSPECTRUM::Memory::setConfiguration (ZXSPECTRUM::Memory::Configuration cfg
 							_RAM48k -> setActive (false);
 							_RAM48k -> setActiveForReading (false);
 
-							_RAM16kULA -> setActive (true);
-							_RAM16kULA -> setActiveForReading (true);
-							_RAM48kULA -> setActive (false);
-							_RAM48kULA -> setActiveForReading (false);
-
 							_STACK_SUBSET = _RAM16k -> id ();
 							_stack = nullptr; // To reload the stack!
 						}
@@ -90,11 +86,6 @@ void ZXSPECTRUM::Memory::setConfiguration (ZXSPECTRUM::Memory::Configuration cfg
 							_RAM32k_E -> setActiveForReading (false);
 							_RAM48k -> setActive (true);
 							_RAM48k -> setActiveForReading (true);
-
-							_RAM16kULA -> setActive (false);
-							_RAM16kULA -> setActiveForReading (false);
-							_RAM48kULA -> setActive (true);
-							_RAM48kULA -> setActiveForReading (true);
 
 							_STACK_SUBSET = _RAM48k -> id ();
 							_stack = nullptr; // To reaload the stack!
@@ -186,19 +177,17 @@ MCHEmul::Memory::Content ZXSPECTRUM::Memory::standardMemoryContent ()
 
 	// ------
 	// The same info from the ULA perspetive...
-	// The ULA only sees the RAM, and from the initial position...
-	MCHEmul::PhysicalStorageSubset* RAM16K_ULA =new MCHEmul::PhysicalStorageSubset 
-		(_RAM16KULA_SUBSET, RAM, 0x0000, MCHEmul::Address ({ 0x00, 0x00 }, false), 0x4000);
-	MCHEmul::PhysicalStorageSubset* RAM48K_ULA =new MCHEmul::PhysicalStorageSubset 
-		(_RAM48KULA_SUBSET, RAM, 0x0000, MCHEmul::Address ({ 0x00, 0x00 }, false), 0xc000);
+	// The ULA only sees part of the RAM, and from the initial position...
+	MCHEmul::PhysicalStorageSubset* RAMULA =new MCHEmul::PhysicalStorageSubset 
+		(_RAMULA_SUBSET, RAM, 0x4000, MCHEmul::Address ({ 0x00, 0x00 }, false), 
+			0x1b00 /** $1800 screen memory + $0300 color data. */);
 	// ------
 
 	// ...and the view from the ULA...
 	MCHEmul::MemoryView* ulaView = new MCHEmul::MemoryView 
 		(_ULA_VIEW, 
 			{
-				{ _RAM16KULA_SUBSET, RAM16K_ULA },
-				{ _RAM48KULA_SUBSET, RAM48K_ULA }
+				{ _RAMULA_SUBSET, RAMULA }
 			});
 
 	// A map with all the subsets possible...
@@ -208,8 +197,7 @@ MCHEmul::Memory::Content ZXSPECTRUM::Memory::standardMemoryContent ()
 			{ _RAM16K_SUBSET, RAM16k },
 			{ _RAM32KE_SUBSET, RAM32k_E },
 			{ _RAM48K_SUBSET, RAM48k },
-			{ _RAM16KULA_SUBSET, RAM16K_ULA },
-			{ _RAM48KULA_SUBSET, RAM48K_ULA }
+			{ _RAMULA_SUBSET, RAMULA }
 		});
 
 	// ...and finally the memory that is the result...
