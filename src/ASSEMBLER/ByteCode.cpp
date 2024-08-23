@@ -158,6 +158,9 @@ MCHEmul::Assembler::ByteCode MCHEmul::Assembler::ByteCode::createFromMemory
 
 		unsigned int mP = 0;
 		const MCHEmul::Instruction* inst = (*pi).second;
+		// If the instruction couldn't be defined from the info in the memory...
+		// better to break the decompilation...
+		if (!const_cast <MCHEmul::Instruction*> (inst) -> defineInstructionFrom (m, a)) break;
 		result._lines.emplace_back (MCHEmul::ByteCodeLine 
 			(a + i, m -> values (a + i, mP = inst -> memoryPositions (m, a)).bytes (), 
 				"" /** no label ever. */, inst, c -> action (a + i)));

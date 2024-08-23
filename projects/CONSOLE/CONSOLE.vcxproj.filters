@@ -55,5 +55,6 @@
     <None Include="LocalConsole.hlp">
       <Filter>Configuration</Filter>
     </None>
+    <None Include="ClassDiagram.cd" />
   </ItemGroup>
 </Project>

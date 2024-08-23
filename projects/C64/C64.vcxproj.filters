@@ -181,5 +181,6 @@
     <None Include="C64.hlp">
       <Filter>Configuration</Filter>
     </None>
+    <None Include="ClassDiagram.cd" />
   </ItemGroup>
 </Project>

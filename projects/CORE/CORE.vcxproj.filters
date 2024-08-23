@@ -397,5 +397,6 @@
     <None Include="Standard.hlp">
       <Filter>Configuration</Filter>
     </None>
+    <None Include="ClassDiagram.cd" />
   </ItemGroup>
 </Project>

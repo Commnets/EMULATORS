@@ -1,0 +1,158 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1">
+  <Class Name="VIC20::Memory" Collapsed="true">
+    <Position X="5.75" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AABACIAADIAFAIUIAAEAAAAAAACBYCAAIhEAIBCAgQQ=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\VIC20\Memory.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="VIC20::Cartridge" Collapsed="true">
+    <Position X="0.5" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAgAAAAAAAiAAAAECAAAAAQBBAAEAAIAAAAAEAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\VIC20\Cartridge.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="VIC20::VIA1" Collapsed="true">
+    <Position X="7.5" Y="2.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAACAAAAAAAAEAAAQAAQAAAAAAAAAAAAAGAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\VIC20\VIA1.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="VIC20::DatasetteIOPort" Collapsed="true">
+    <Position X="7.5" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEACAAAAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\VIC20\DatasettePort.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="VIC20::ExpansionIOPort" Collapsed="true">
+    <Position X="0.5" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAgAAgAQAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\VIC20\ExpansionPort.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="VIC20::IOPeripheralBuilder" Collapsed="true">
+    <Position X="4" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAACAAAAAAAAACAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\VIC20\IOPBuilder.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="VIC20::VIA2" Collapsed="true">
+    <Position X="5.75" Y="3.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAACAAAAAAAAEAAAgAAQAAAAAAAAAAEAAEAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\VIC20\VIA2.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="VIC20::InputOSSystem" Collapsed="true">
+    <Position X="2.25" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AQAAAAAAAAABAAAAAAAQACAAIAAAAAAAAAABCAAECAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\VIC20\OSIO.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="VIC20::Screen" Collapsed="true">
+    <Position X="7.5" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAABAAAABAAAAAAAAAAAAAAEAAAAAAAEAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\VIC20\Screen.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="VIC20::ScreenNTSC" Collapsed="true">
+    <Position X="2.25" Y="2.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAACAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\VIC20\Screen.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="VIC20::ScreenPAL" Collapsed="true">
+    <Position X="4" Y="2.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIAAAAAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\VIC20\Screen.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="VIC20::SoundSystem" Collapsed="true">
+    <Position X="5.75" Y="2.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAEAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\VIC20\Sound.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="VIC20::CommandBuilder" Collapsed="true">
+    <Position X="4" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAEAAAAAAAAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\VIC20\CommandBuilder.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="VIC20::VIA1StatusCommand" Collapsed="true">
+    <Position X="2.25" Y="3.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAACACAAAABAAAAAAAAAAAAAAAEACA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\VIC20\Commands.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="VIC20::VIA2StatusCommand" Collapsed="true">
+    <Position X="0.5" Y="4.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAgAAAAAAAAAAAAACACAAAAAAAAAAAAAAAAAAAAEACA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\VIC20\Commands.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="VIC20::ScreenMemoryDUMPCommand" Collapsed="true">
+    <Position X="0.5" Y="2.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>CAAAAAAAAAAAAAAACACAAAAAAAAAAAAAAAAAAAAEACA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\VIC20\Commands.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="VIC20::ColorMemoryDUMPCommand" Collapsed="true">
+    <Position X="2.25" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAABAACACAAAAAAAAAAAAAAAAAAAAEACA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\VIC20\Commands.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="VIC20::VIC20Emulator" Collapsed="true">
+    <Position X="2.25" Y="4.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAgIAAAAIAAAAAAAAMBAAAAAACwAAAAMAAAAAAgAgE=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\VIC20\VIC20Emulator.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="VIC20::VIA1Registers" Collapsed="true">
+    <Position X="0.5" Y="3.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAEAAAAAAAAAgAQAgAgAAAAAAAAAAAAAAAEAAAAACA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\VIC20\VIA1Registers.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="VIC20::VIA2Registers" Collapsed="true">
+    <Position X="7.5" Y="3.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAUAAAACAAAAgAQAgABCAEAAEAAAAAAAAAEAAAAACA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\VIC20\VIA2Registers.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="VIC20::VIA1VIA2RegistersReflection" Collapsed="true">
+    <Position X="4" Y="3.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AACAABAAAAAAAAAAAAIAAAAAAEAAAAAAAAAEAQAAAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\VIC20\Memory.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="VIC20::CommodoreVIC20" Collapsed="true">
+    <Position X="5.75" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAEAQCAAAAAAAAEAYAQEAACAIAAAQIAAAAAAgAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\VIC20\VIC20.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Font Name="Segoe UI" Size="9" />
+</ClassDiagram>

@@ -1,0 +1,249 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1">
+  <Class Name="C64::Datasette1530Injection" Collapsed="true">
+    <Position X="8.75" Y="2.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAEAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\C64\1530Datasette.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="C64::Cartridge" Collapsed="true">
+    <Position X="8.75" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>ABQAggAAAEKACCIQAEGCAAAgAQBBAAkAAIAAAAIEgEA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\C64\Cartridge.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="C64::CIA1" Collapsed="true">
+    <Position X="12.25" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AEAAAAAAACAAIAAAAAEEAAAAAQAAAAAAAAAAAAAEAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\C64\CIA1.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="C64::DatasetteIOPort" Collapsed="true">
+    <Position X="10.5" Y="2.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AQAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAEAAAAAAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\C64\DatasettePort.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="C64::PLA" Collapsed="true">
+    <Position X="14" Y="3.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>CBAAVMAQACBAAQAAAEEIEAAAAQAEAIAAAAABAQAEAAQ=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\C64\PLA.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="C64::ExpansionIOPort" Collapsed="true">
+    <Position X="12.25" Y="2.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AQAABAAAACAAAAAAEAAIAAAgAQAAAAAAAAAAAAAAABA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\C64\ExpansionPort.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="C64::IOPeripheralBuilder" Collapsed="true">
+    <Position X="10.5" Y="3.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAACAAAAAAAAACAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\C64\IOPBuilder.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="C64::InputOSSystem" Collapsed="true">
+    <Position X="7" Y="3.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AQAAAAAAAAAAAAAAAAAQACBAAAAAAAAAAAAJAAAECAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\C64\OSIO.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="C64::Screen" Collapsed="true">
+    <Position X="1.75" Y="3.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAABAAAABAAAAAAAAAAAAAAEAAAAAAAEAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\C64\Screen.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="C64::ScreenNTSC" Collapsed="true">
+    <Position X="0.5" Y="5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAACAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\C64\Screen.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="C64::ScreenPAL" Collapsed="true">
+    <Position X="2.75" Y="5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIAAAAAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\C64\Screen.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="C64::SoundSystem" Collapsed="true">
+    <Position X="8.75" Y="4.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAEAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\C64\Sound.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="C64::CommandBuilder" Collapsed="true">
+    <Position X="5.25" Y="2.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAEAAAAAAAAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\C64\CommandBuilder.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="C64::CIA1StatusCommand" Collapsed="true">
+    <Position X="5.25" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAgAAAAAAAAAAAAACACAAAAAAAAAAAAAAAAAAAAEACA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\C64\Commands.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="C64::CIA2StatusCommand" Collapsed="true">
+    <Position X="10.5" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAACACAAAAEAAAAAAAAAAAAAAAEACA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\C64\Commands.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="C64::PLAStatusCommand" Collapsed="true">
+    <Position X="5.25" Y="4.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAACACAAAAAAAAAAAAAAAAAAAAEQCA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\C64\Commands.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="C64::ScreenMemoryDUMPCommand" Collapsed="true">
+    <Position X="7" Y="4.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>CAAAAAAAAAAAAAAACACAAAAAAAAAAAAAAAAAAAAEACA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\C64\Commands.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="C64::ColorMemoryDUMPCommand" Collapsed="true">
+    <Position X="12.25" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAABAACACAAAAAAAAAAAAAAAAAAAAEACA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\C64\Commands.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="C64::BitmapMemoryDUMPCommand" Collapsed="true">
+    <Position X="5.25" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAACACAAAAAAAEAAAAAAAAAAAAEACA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\C64\Commands.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="C64::SpritesMemoryDUMPCommand" Collapsed="true">
+    <Position X="12.25" Y="4.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAACgCAAAAAAAAAAAAAAAAAAAAEACA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\C64\Commands.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="C64::SpritesDrawCommand" Collapsed="true">
+    <Position X="10.5" Y="4.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAEAAAAAAAAAAAAACACAAAAAAAAAAAAAAAAAAAAEACA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\C64\Commands.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="C64::CharactersDrawCommand" Collapsed="true">
+    <Position X="10.5" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAACAAAAACACAAAAAAAAAAAAAAAAAAAAEACA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\C64\Commands.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="C64::GridOnCommand" Collapsed="true">
+    <Position X="5.25" Y="3.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAASACAAAAAAAAAAAAAAAAAAAAEACA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\C64\Commands.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="C64::GridOffCommand" Collapsed="true">
+    <Position X="14" Y="2.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAACACAAAAAAAAAAAAAAAAAAAgEACA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\C64\Commands.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="C64::C64Emulator" Collapsed="true">
+    <Position X="7" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAgIAAAAIAAAAAAAAMAAAAAAIAwEAABEAAAAAAgAAE=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\C64\C64Emulator.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="C64::Commodore64" Collapsed="true">
+    <Position X="7" Y="2.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAEASSAAAAAAAAEAAAQEAAAAAAAAAIAAQAAAgIA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\C64\C64.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="C64::CIA2" Collapsed="true">
+    <Position X="7" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAgAAAAAAAEAAAEAAAAAAAAAAAAAAAAAAAAEAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\C64\CIA2.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="C64::CIA2Registers" Collapsed="true">
+    <Position X="8.75" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AEAEAMAAAAAAQAAAAAIAAIAAAAAAQAAAAAAEAAAAAgA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\C64\CIA2Registers.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="C64::CIA1Registers" Collapsed="true">
+    <Position X="14" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAUAAAACAABAAAQAAAAAAEAAEAUAAIABAAEAAIAAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\C64\CIA1Registers.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="C64::IO6510PortRegisters" Collapsed="true">
+    <Position X="8.75" Y="3.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAMAAAAACAAgAAAAAAAAABAAAAAAAAIAAAAAAAAAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\C64\IO6510PortRegisters.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="C64::ColorRAMMemory" Collapsed="true">
+    <Position X="14" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAQAAAAAAAAAAAAAEAAAAAAABAEAAAAAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\C64\ColorMemory.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="C64::IOExpansionMemory" Collapsed="true">
+    <Position X="1.75" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAIAFAAAAIAAAAAAAAAEAAAAAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\C64\IOExpansionMemory.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="C64::IOExpansionMemoryI" Collapsed="true">
+    <Position X="0.5" Y="2" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAIAAAAAAAAAQAAAAAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\C64\IOExpansionMemory.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="C64::IOExpansionMemoryII" Collapsed="true">
+    <Position X="2.75" Y="2" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAAAAAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\C64\IOExpansionMemory.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="C64::Memory" Collapsed="true">
+    <Position X="12.25" Y="3.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>KARFgGwBIoABAEQpBRmCBCBACIEBGBgmIoDAbECghyY=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\C64\Memory.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Font Name="Segoe UI" Size="9" />
+</ClassDiagram>

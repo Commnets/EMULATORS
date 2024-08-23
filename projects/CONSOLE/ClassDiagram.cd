@@ -1,0 +1,39 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1">
+  <Class Name="MCHEmul::Console" Collapsed="true">
+    <Position X="1.75" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>BADgAwAAAwAACIAQAAQAgIBAECAIUAiBAAAgAFAEAIA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\CONSOLE\Console.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::ConsoleKeys" Collapsed="true">
+    <Position X="0.5" Y="3.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAgAAAQEAAFAAggAICAAAAACAAgAAAAAAAAghAAAAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\CONSOLE\ConsoleKeys.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::Win32ConsoleKeys" Collapsed="true">
+    <Position X="0.5" Y="4.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAAAAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\CONSOLE\ConsoleKeys.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::LocalConsole" Collapsed="true">
+    <Position X="0.5" Y="2" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAwAAAAAQCAgAAAAAAIAACAAgAAIAAASAAAgBAEA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\CONSOLE\LocalConsole.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::RemoteConsole" Collapsed="true">
+    <Position X="2.75" Y="2" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAwAAAAAACAAAAAAAAAAAAgACAAAAAACAAAAAAgA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\CONSOLE\RemoteConsole.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Font Name="Segoe UI" Size="9" />
+</ClassDiagram>

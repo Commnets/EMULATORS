@@ -83,6 +83,9 @@
     <ClCompile Include="..\..\src\F6500\STX.cpp" />
     <ClCompile Include="..\..\src\F6500\STY.cpp" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="ClassDiagram.cd" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>
     <ProjectGuid>{0B49D3E7-F82E-486A-8212-5DA19CA5F3E8}</ProjectGuid>

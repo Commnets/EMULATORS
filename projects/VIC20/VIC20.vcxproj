@@ -189,6 +189,9 @@
     <ClInclude Include="..\..\include\VIC20\VIC20.hpp" />
     <ClInclude Include="..\..\include\VIC20\VIC20Emulator.hpp" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="ClassDiagram.cd" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

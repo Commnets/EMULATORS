@@ -1,0 +1,326 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1">
+  <Class Name="F6500::C6500" Collapsed="true">
+    <Position X="3" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAgIAFAEAAAQCAAIAEEBAiAyQAIQoQoAAgAggAoAAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\F6500\C6500.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="F6500::C6502" Collapsed="true">
+    <Position X="0.75" Y="2" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIAAAAAAAAAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\F6500\C6502.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="F6500::Interrupt" Collapsed="true">
+    <Position X="1.75" Y="3.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAEAAAAAAACEAAAAAAEAAAAAAAAAAEAAAAAQAQACAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\F6500\Interrupt.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="F6500::C6510" Collapsed="true">
+    <Position X="3" Y="2" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAEAAAAAAEAAAAAAAAAAAAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\F6500\C6510.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="F6500::Instruction" Collapsed="true">
+    <Position X="9.75" Y="2.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAJAIAAAAQwBCABEAAACCAAAQIAIAAgQAAAAAEAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\F6500\Instructions.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="F6500::ADC_General" Collapsed="true">
+    <Position X="8" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AgAAAAAAAAAAAAAIAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\F6500\Instructions.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="F6500::ALR_General" Collapsed="true">
+    <Position X="9.75" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAIAAAAAAAAAAAAAAAAAACAAAAAAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\F6500\Instructions.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="F6500::ANC_General" Collapsed="true">
+    <Position X="11.5" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAIAAAAAAAAAAAAAAAAACAAAAAAAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\F6500\Instructions.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="F6500::AND_General" Collapsed="true">
+    <Position X="13.25" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAIAAAAAAAAAAAAAAAAACAAAAAAAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\F6500\Instructions.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="F6500::ARR_General" Collapsed="true">
+    <Position X="15" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAgAAAAAIAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\F6500\Instructions.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="F6500::ASL_General" Collapsed="true">
+    <Position X="16.75" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAQAAAAAAAAAAAAAAIAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\F6500\Instructions.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="F6500::BXX_General" Collapsed="true">
+    <Position X="18.5" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAAAAAAAAAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\F6500\Instructions.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="F6500::CMP_General" Collapsed="true">
+    <Position X="8" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAIAAAAAAAAAAAAAAAAAAAQAAAAAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\F6500\Instructions.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="F6500::CPX_General" Collapsed="true">
+    <Position X="9.75" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAIAAAAIAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\F6500\Instructions.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="F6500::CPY_General" Collapsed="true">
+    <Position X="11.5" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAIAAAAIAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\F6500\Instructions.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="F6500::DCP_General" Collapsed="true">
+    <Position X="13.25" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAACAAAAAAAIAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\F6500\Instructions.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="F6500::DEC_General" Collapsed="true">
+    <Position X="15" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAACAAAAAAAAAAIAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\F6500\Instructions.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="F6500::EOR_General" Collapsed="true">
+    <Position X="16.75" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAIAAAAAAAAAAAAAAAAAAAAAAAAABA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\F6500\Instructions.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="F6500::INC_General" Collapsed="true">
+    <Position X="8" Y="2.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAIAAAAAAAAAAAAAAAAgAAAAAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\F6500\Instructions.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="F6500::ISC_General" Collapsed="true">
+    <Position X="11.5" Y="2.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>ABAAAAAAAAAAAAAAAAIAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\F6500\Instructions.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="F6500::LDA_General" Collapsed="true">
+    <Position X="15" Y="2.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAIAAAAAAAAAAAAAAAAAAAAEAAAAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\F6500\Instructions.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="F6500::LAX_General" Collapsed="true">
+    <Position X="13.25" Y="2.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAIAAAAAAAAAIAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\F6500\Instructions.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="F6500::LDX_General" Collapsed="true">
+    <Position X="16.75" Y="2.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAIAAAAAAAAAAAAAAAAAAAAEAAAAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\F6500\Instructions.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="F6500::LDY_General" Collapsed="true">
+    <Position X="18.5" Y="2.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAIAAAAAAAAAAAAAAAAAAAAEAAAAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\F6500\Instructions.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="F6500::LSR_General" Collapsed="true">
+    <Position X="8" Y="3.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAIAAAAAAAAAAAAAAAAAAACAAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\F6500\Instructions.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="F6500::NOP_General" Collapsed="true">
+    <Position X="9.75" Y="3.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAACAAAAAAAAAAAIAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\F6500\Instructions.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="F6500::ORA_General" Collapsed="true">
+    <Position X="11.5" Y="3.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAIAAAAAAAAAAAAAAAAAAAAAAAAgAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\F6500\Instructions.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="F6500::RLA_General" Collapsed="true">
+    <Position X="15" Y="3.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAIAAAAAAAAABAAAAAAAAAAAAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\F6500\Instructions.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="F6500::ROL_General" Collapsed="true">
+    <Position X="16.75" Y="3.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAIAAAAAAAAgAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\F6500\Instructions.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="F6500::ROR_General" Collapsed="true">
+    <Position X="18.5" Y="3.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAIAAAAAAAAgAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\F6500\Instructions.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="F6500::RRA_General" Collapsed="true">
+    <Position X="8" Y="4.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>EAAAAAAAAAAAAAAAAAIAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\F6500\Instructions.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="F6500::SAX_General" Collapsed="true">
+    <Position X="9.75" Y="4.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAABAAAAAAAAAAIAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\F6500\Instructions.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="F6500::SBC_General" Collapsed="true">
+    <Position X="11.5" Y="4.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAIAAAAAAAAAAAAAAAAAAAAAAAgAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\F6500\Instructions.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="F6500::SBX_General" Collapsed="true">
+    <Position X="13.25" Y="4.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAIAAAAAAAAAAAAAAAAAAAAAAAgAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\F6500\Instructions.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="F6500::SLO_General" Collapsed="true">
+    <Position X="15" Y="4.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAIAAAAAAAAAAAAAAAIAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\F6500\Instructions.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="F6500::SRE_General" Collapsed="true">
+    <Position X="16.75" Y="4.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAACAIAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\F6500\Instructions.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="F6500::STA_General" Collapsed="true">
+    <Position X="18.5" Y="4.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAIAgAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\F6500\Instructions.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="F6500::STX_General" Collapsed="true">
+    <Position X="8" Y="5.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAIAgAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\F6500\Instructions.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="F6500::STY_General" Collapsed="true">
+    <Position X="9.75" Y="5.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAIAgAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\F6500\Instructions.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="F6500::IO6510PortRegisters" Collapsed="true">
+    <Position X="5.5" Y="3.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>QAAMAAAIAAAAoAAAAAMCEAAgAAQAAAQAABAEAAAAAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\F6500\IO6510PortRegisters.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="F6500::IO7501PortRegisters" Collapsed="true">
+    <Position X="5.5" Y="5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\F6500\IO7501PortRegisters.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="F6500::IRQInterrupt" Collapsed="true">
+    <Position X="2.75" Y="5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAACAAAAQAAAAAAAAAAAAAAAAAAAQAAAEAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\F6500\IRQInterrupt.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="F6500::NMIInterrupt" Collapsed="true">
+    <Position X="0.5" Y="5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAASAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\F6500\NMIInterrupt.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="F6500::PlainMemoryTest" Collapsed="true">
+    <Position X="13.25" Y="3.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAABAAAAAAAAAAAAAAIAAAAAAAAAAAAAAIAAAAAQ=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\F6500\TestElements.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="F6500::FragmentatedMemoryTest" Collapsed="true">
+    <Position X="18.5" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>gAAAAAAAAAAAAAAAAAAAAIAAAAAAAAAAAAAAIAAAAAQ=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\F6500\TestElements.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="F6500::Test6500" Collapsed="true">
+    <Position X="5.25" Y="2" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAgAAAAAAQAAAAAAAAAAAAAAAAAAAAAAgAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\F6500\TestElements.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Font Name="Segoe UI" Size="9" />
+</ClassDiagram>

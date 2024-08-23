@@ -1,0 +1,494 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1">
+  <Class Name="COMMODORE::Datasette1530" Collapsed="true">
+    <Position X="21.5" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAIAAAAAAAAAAAAAAAAAAEAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\COMMODORE\1530Datasette.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="COMMODORE::Datasette1530P" Collapsed="true">
+    <Position X="12.75" Y="2.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAAAAAEAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\COMMODORE\1530Datasette.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="COMMODORE::Datasette1530Injection" Collapsed="true">
+    <Position X="11" Y="2.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAACEAgAAAAAAAAAAAAAAAAAAQBAEBAAAAAAgQAEAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\COMMODORE\1530Datasette.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="COMMODORE::DatasetteIOPort" Collapsed="true">
+    <Position X="14.5" Y="2.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAEAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\COMMODORE\DatasettePort.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="COMMODORE::ExpansionPeripheral" Collapsed="true">
+    <Position X="3.5" Y="9.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAEAAAAABACAAAEAIgIgAAAAEAAAAAAAAAAQASCAAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\COMMODORE\ExpansionPeripherals.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="COMMODORE::NoExpansionPeripheral" Collapsed="true">
+    <Position X="3.5" Y="11" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAgEAAAAAAQAAAAAAAIAAAAAEAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\COMMODORE\ExpansionPeripherals.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="COMMODORE::ExpansionIOPort" Collapsed="true">
+    <Position X="16.25" Y="2.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAQAAAAAgACAAgAgIAAAAAEgAQAAAAIAAAAAAAAEAEA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\COMMODORE\ExpansionPort.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="COMMODORE::TAPFileTypeIO" Collapsed="true">
+    <Position X="19.75" Y="3.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAABAAAAAAAACAAAAABAAAAAAAAAAAAgAAAAAAAg=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\COMMODORE\FileIO.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="COMMODORE::PRGFileTypeIO" Collapsed="true">
+    <Position X="19.75" Y="2.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAABAAAAAABAAAAAAABAAAAAAAAAAAAgAAAAAAAg=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\COMMODORE\FileIO.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="COMMODORE::T64FileTypeIO" Collapsed="true">
+    <Position X="18" Y="3.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAABAAAAAAAAAEAAAABAAAAAAAAAAAAgAAAAAAAg=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\COMMODORE\FileIO.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="COMMODORE::CRTFileTypeIO" Collapsed="true">
+    <Position X="19.75" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAABAAAAAAAAAAAAAABAAAAAgAAAAAAgAAAAAAAg=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\COMMODORE\FileIO.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="COMMODORE::IOPeripheralBuilder" Collapsed="true">
+    <Position X="18" Y="2.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAACAAAAAAAAACAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\COMMODORE\IOPBuilder.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="COMMODORE::SerialIOPeripheral" Collapsed="true">
+    <Position X="0.5" Y="9.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\COMMODORE\SerialIOPeripherals.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="COMMODORE::NoSerialIOPeripheral" Collapsed="true">
+    <Position X="0.5" Y="11" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAEAAAAAAQAAgAAAAIAAAAAEAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\COMMODORE\SerialIOPeripherals.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="COMMODORE::SerialIOPort" Collapsed="true">
+    <Position X="21.5" Y="2.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAACAAAAAAAAAAAAAAAAAEAEA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\COMMODORE\SerialPort.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="COMMODORE::UserIOPeripheral" Collapsed="true">
+    <Position X="8.5" Y="6.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\COMMODORE\UserIOPeripherals.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="COMMODORE::NoUserIOPeripheral" Collapsed="true">
+    <Position X="8.5" Y="8" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAEAAAgAAQAAAAAAAIAAAAAEAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\COMMODORE\UserIOPeripherals.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="COMMODORE::UserIOPort" Collapsed="true">
+    <Position X="16.25" Y="4.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAEAEA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\COMMODORE\UserPort.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="COMMODORE::CommandBuilder" Collapsed="true">
+    <Position X="16.25" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAEAAAAAAAAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\COMMODORE\CommandBuilder.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="COMMODORE::VICIStatusCommand" Collapsed="true">
+    <Position X="11" Y="6.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAACACAAAAAAAAAAAAAAAAAAAAEASA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\COMMODORE\Commands.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="COMMODORE::VICIIStatusCommand" Collapsed="true">
+    <Position X="19.75" Y="5.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAACAAAAACACAAAAAAAAAAAAAAAAAAAAEACA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\COMMODORE\Commands.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="COMMODORE::VICIIShowEventsCommand" Collapsed="true">
+    <Position X="18" Y="5.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAACACAAAAAAAAAAAAAAAAAAACEACA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\COMMODORE\Commands.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="COMMODORE::VIAStatusCommand" Collapsed="true">
+    <Position X="12.75" Y="5.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAIAAACACAAAAAAAAAAAAAAAAAAAAEACA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\COMMODORE\Commands.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="COMMODORE::CIAStatusCommand" Collapsed="true">
+    <Position X="12.75" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAACACAAAAAAAQAAAAAAAAAAAAEACA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\COMMODORE\Commands.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="COMMODORE::SIDStatusCommand" Collapsed="true">
+    <Position X="14.5" Y="3.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAACACAAAAAAAAABAAAAAAAAAAEACA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\COMMODORE\Commands.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="COMMODORE::SIDWrapperCommand" Collapsed="true">
+    <Position X="16.25" Y="3.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAQAAAAAAAACACAAAAAAAAAAAAAAAAAAAAEACA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\COMMODORE\Commands.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="COMMODORE::CIA" Collapsed="true">
+    <Position X="18" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAACAMAwAiEAAAAAAAMIIAAAAQEAQAAAAAAAAQgEkEA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\COMMODORE\CIA\CIA.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="COMMODORE::CIAClock" Collapsed="true">
+    <Position X="19.75" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>sGCKJBAKEgBgIAACCAXBAQBEEQAABQAAgIApAQiCAxA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\COMMODORE\CIA\CIAClock.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="COMMODORE::CIATimer" Collapsed="true">
+    <Position X="14.5" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>kgASgAAMAgBLQhAACAHIAABAEUAABAQQwEQkgUCAwwg=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\COMMODORE\CIA\CIATimer.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="COMMODORE::CIASerialPort" Collapsed="true">
+    <Position X="11" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>kFQQIAAMAggAAAQAAQdAAABAAQgABHQAwAAxAQAAEAg=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\COMMODORE\CIA\CIASerialPort.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="COMMODORE::CIARegisters" Collapsed="true">
+    <Position X="21.5" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AACEWsMgAAkAACgAiAMWoEgEQAEDwAQABRAkEACAAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\COMMODORE\CIA\CIARegisters.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="COMMODORE::SID" Collapsed="true">
+    <Position X="11" Y="3.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAACAAAAAAAAAEAAAAEAAAAAAQABAAAAQIEAAQBEAwA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\COMMODORE\SID\SID.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="COMMODORE::SIDLibWrapper" Collapsed="true">
+    <Position X="1.75" Y="6.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAKCgAAAAAAAAAAAAAAEAQAABAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\COMMODORE\SID\SIDLibWrapper.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="COMMODORE::SoundRESIDWrapper" Collapsed="true">
+    <Position X="0.5" Y="8" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>IAAYIAAAAAAAAAAAAAOAAAAAAAAAAABAAAAEAAAAAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\COMMODORE\SID\SIDLibWrapper.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="COMMODORE::SoundSIDSimpleWrapper" Collapsed="true">
+    <Position X="2.75" Y="8" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAgQIAAAQAAABAMAAAOAACIQAAgAAABAAAAEAAIAEAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\COMMODORE\SID\SIDLibWrapper.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="COMMODORE::SIDRegisters" Collapsed="true">
+    <Position X="12.75" Y="3.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAEABACAAAAAAAAQAMCgAAAAAAAAAEAABAEAAAAAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\COMMODORE\SID\SIDRegisters.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="COMMODORE::VIA" Collapsed="true">
+    <Position X="18" Y="4.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>EAECAEAAggQAAAAAAAMAAAAAAQEIAAAAAAAAAQAEkgA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\COMMODORE\VIA\VIA.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="COMMODORE::VIAPort" Collapsed="true">
+    <Position X="19.75" Y="4.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>SBIAEAECgAZBEAgEAANIgQAAAyQKACAAAAAMAUAEAgE=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\COMMODORE\VIA\VIAPort.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="COMMODORE::VIAControlLine" Collapsed="true">
+    <Position X="6.75" Y="3.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>kAAAAEAIAAYAAQCAAgMAAgBAIQIoBCAA5gAIAUAACgA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\COMMODORE\VIA\VIAControlLines.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="COMMODORE::VIAControlLineType1" Collapsed="true">
+    <Position X="5.5" Y="5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAEAAAAAABAAAAAAAAAAAAQAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\COMMODORE\VIA\VIAControlLines.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="COMMODORE::VIAControlLineType2" Collapsed="true">
+    <Position X="7.75" Y="5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAEAAAAAACAAAAAEAAAABAQAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\COMMODORE\VIA\VIAControlLines.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="COMMODORE::VIATimer" Collapsed="true">
+    <Position X="14.5" Y="5.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>kgAAgAAMAABLQjAwAAFAAABAIUAoBAAAgAQEEUCAwgQ=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\COMMODORE\VIA\VIATimer.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="COMMODORE::VIAShiftRegister" Collapsed="true">
+    <Position X="11" Y="5.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>kBAAAAAIgAQAAADACgNACABAIQCABCAAgAACAUBAAgA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\COMMODORE\VIA\VIAShiftRegister.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="COMMODORE::VIARegisters" Collapsed="true">
+    <Position X="21.5" Y="4.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAEEAIAAgAQACAAACAMCgAAAIACIAAAAAJAEAABAAgA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\COMMODORE\VIA\VIARegisters.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="COMMODORE::TED" Collapsed="true">
+    <Position X="6.75" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAwwIhEAQAEQkMoBEBEAAQkAI4oAAAIoAIQAAQKUD0A=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\COMMODORE\TED\TED.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="COMMODORE::TED_PAL" Collapsed="true">
+    <Position X="5.5" Y="2" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AQAAAAAAACAAQAAAAAAAAAAAgAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\COMMODORE\TED\TED.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="COMMODORE::TED_NTSC" Collapsed="true">
+    <Position X="7.75" Y="2" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AQAAQAAAACAAAAAAAAAAAAAAgAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\COMMODORE\TED\TED.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="COMMODORE::TEDRegisters" Collapsed="true">
+    <Position X="21.5" Y="3.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>CxAOKRlCLgIADoDCGMMGAIQRJoIDAClBQBQkCUUYAoE=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\COMMODORE\TED\TEDRegisters.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="COMMODORE::TEDTimer" Collapsed="true">
+    <Position X="11" Y="4.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>kgAAggAMAABLQhAgAAFAAABAIUAgBAAAgAQAEUAAQgA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\COMMODORE\TED\TEDTimer.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="COMMODORE::TIARegisters" Collapsed="true">
+    <Position X="14.5" Y="4.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAIEAAAAAAAAAAAAAAMCEAAAAAAAAAAAABAEAQAAAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\COMMODORE\TIA\TIARegisters.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="COMMODORE::TIA" Collapsed="true">
+    <Position X="12.75" Y="4.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAEAAAAAAQAAAAAAAAAAAQAECAQ=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\COMMODORE\TIA\TIA.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="COMMODORE::VICI" Collapsed="true">
+    <Position X="1.75" Y="3.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AHwAAAAQQCEQEEgBAAEAAAlAIYAEAAokAIwBAQBEHdg=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\COMMODORE\VICI\VICI.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="COMMODORE::VICI_PAL" Collapsed="true">
+    <Position X="0.5" Y="5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AQBAAAAAACAAAAAAAAAAAAAAgAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\COMMODORE\VICI\VICI.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="COMMODORE::VICI_NTSC" Collapsed="true">
+    <Position X="2.75" Y="5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AQAAAAAABCAAAAAAAAAAAAAAgAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\COMMODORE\VICI\VICI.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="COMMODORE::VICIRegisters" Collapsed="true">
+    <Position X="21.5" Y="5.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>TAIGBlABUCEAIAAAIAOCBSgAmCICkCgCAlgcEUAIEIA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\COMMODORE\VICI\VICIRegisters.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="COMMODORE::VICISoundLibWrapper" Collapsed="true">
+    <Position X="5.5" Y="6.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAKCgAAAAAAAAQAAAAAEAQAAAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\COMMODORE\VICI\VICISoundWrapper.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="COMMODORE::VICISoundSimpleLibWrapper" Collapsed="true">
+    <Position X="5.5" Y="8" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAgRIAAAQAAAAAMAAAOAACAAAAgAAABAAAAEAAIAAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\COMMODORE\VICI\VICISoundWrapper.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="COMMODORE::ACIARegisters" Collapsed="true">
+    <Position X="12.75" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAEAAAAAAAAAAAgAAMCAAAAAAAAAAAAABIEAQAAAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\COMMODORE\ACIA\ACIARegisters.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="COMMODORE::ACIA" Collapsed="true">
+    <Position X="11" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAIAAAAAAAAAAAAAEAAAAAAQAAAAAAAAAAAQAEAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\COMMODORE\ACIA\ACIA.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="COMMODORE::VICII" Collapsed="true">
+    <Position X="1.75" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>EDwQYhkAQDUAMQgBEYERARkEO8gIEAosSIyhAQrUnVE=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\COMMODORE\VICII\VICII.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="COMMODORE::VICII_PAL" Collapsed="true">
+    <Position X="0.5" Y="2" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AQAAQAAAACAAAAgAAAAAAAAAgAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\COMMODORE\VICII\VICII.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="COMMODORE::VICII_NTSC" Collapsed="true">
+    <Position X="2.75" Y="2" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAACAAAAgAAAAAAAAAgAAAAAAAAAAAAAAAEAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\COMMODORE\VICII\VICII.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="COMMODORE::VICIIRegisters" Collapsed="true">
+    <Position X="16.25" Y="5.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>TSAODikDfxYQJoCCAMOCDUURpKIDqbhBwBYEqxVP0gA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\COMMODORE\VICII\VICIIRegisters.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="COMMODORE::C6529B" Collapsed="true">
+    <Position X="14.5" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAIAAAAAgAAAEAAAAAAAAAAAAEAgAEAQAEAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\COMMODORE\C6529B\C6529B.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="COMMODORE::C6529BRegisters" Collapsed="true">
+    <Position X="16.25" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AQAAAAAAAAAAAAgAAAIAAAAACQAAAAAACAAEAQAAAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\COMMODORE\C6529B\C6529BRegisters.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="COMMODORE::Computer" Collapsed="true">
+    <Position X="18" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAICEAAQAEgAQAAIQQAAAgABQgABggAAAAAgAAQAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\COMMODORE\Computer.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Struct Name="COMMODORE::TAPFileData" Collapsed="true">
+    <Position X="16.25" Y="7.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAIEAAAAAAAAJAAAACAIAAAAAAAAAgAAAAAAAQgAAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\COMMODORE\FileIO.hpp</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Struct Name="COMMODORE::PRGFileData" Collapsed="true">
+    <Position X="12.75" Y="7.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAABAAAAAAIAAAAAAAAAAAAAAAAAUAAAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\COMMODORE\FileIO.hpp</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Struct Name="COMMODORE::T64FileData" Collapsed="true">
+    <Position X="14.5" Y="7.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAABAAAIAABAABAAAIAAAAAAAAAAAAAAAAAEAAAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\COMMODORE\FileIO.hpp</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Struct Name="COMMODORE::CRTFileData" Collapsed="true">
+    <Position X="11" Y="7.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAMAIAAAQAAABAAABCAIAABCAAAAAAAAAAABAAAAAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\COMMODORE\FileIO.hpp</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Font Name="Segoe UI" Size="9" />
+</ClassDiagram>

@@ -214,6 +214,9 @@
     <ClInclude Include="..\..\include\FZ80\TestElements.hpp" />
     <ClInclude Include="..\..\include\FZ80\XOR.hpp" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="ClassDiagram.cd" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

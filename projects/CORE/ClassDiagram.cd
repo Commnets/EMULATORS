@@ -1,0 +1,984 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1">
+  <Class Name="MCHEmul::DatasettePeripheral" Collapsed="true">
+    <Position X="40.5" Y="6.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>QCAQAAIBRBKAAACBRCEAAQAAQABAgJEAAIQQAQHAJAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\CORE\DatasettePeripherals.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::NoDatasettePeripheral" Collapsed="true">
+    <Position X="38.25" Y="7.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAgEAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\CORE\DatasettePeripherals.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::StandardDatasette" Collapsed="true">
+    <Position X="41.75" Y="7.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>KEAAIAAABAAAAAgIAIEAQEAACQBhQgAEhgAEAQCAgAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\CORE\DatasettePeripherals.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::BasicDatasette" Collapsed="true">
+    <Position X="40.5" Y="9.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAgAAAABAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\CORE\DatasettePeripherals.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::BasicDatasetteP" Collapsed="true">
+    <Position X="42.75" Y="9.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAxAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\CORE\DatasettePeripherals.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::DatasetteIOPort" Collapsed="true">
+    <Position X="30.5" Y="10" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>CAAAgAAAACAAgQAAEAAABAAAAQAAAAEAAAEAAAAABEA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\CORE\DatasettePort.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::FileTypeIO" Collapsed="true">
+    <Position X="0.5" Y="9.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAABAAAAAAAAAAAQAABAAAAAAAAAAAQggEAAAAAg=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\CORE\FileIO.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::FileIO" Collapsed="true">
+    <Position X="121" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAABAAAgAAAAAAAACAAAEAAAEAAAAAAAAAAIAAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\CORE\FileIO.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::RawFileTypeIO" Collapsed="true">
+    <Position X="0.5" Y="10.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAABAAAAAAgAAAAAAABAAAAAAAAAAAAgAAAAAAAg=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\CORE\FileIO.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::IODevice" Collapsed="true">
+    <Position X="33.75" Y="8.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AQAAAAAAEECAEAQAAgEAAAAAQQABoAIBAAAggQACQEA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\CORE\IO.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::IODeviceSystem" Collapsed="true">
+    <Position X="114" Y="2.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAGEAAAAgIAAAAAAAEAAAIAgAAACAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\CORE\IO.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::Computer" Collapsed="true">
+    <Position X="33.75" Y="4.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>sGQCBhBCF0qCBKHSGgUAIA0J6wAtcnYBMIC6kyJDScg=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\CORE\Computer.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::IOPeripheralBuilder" Collapsed="true">
+    <Position X="115.75" Y="2.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAQABAACAAAAAgAAACAIA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\CORE\IOPBuilder.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::CPU" Collapsed="true">
+    <Position X="48" Y="8.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>QcMJChgAWwoAGAmSUAdLzGGQEUBQoIgTCBI4kYKGBhQ=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\CORE\CPU.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::IOPeripheral" Collapsed="true">
+    <Position X="40.5" Y="4.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AQAAAAACAAAAAAACAgFAAAAAAUBAkAAAAIQkAQCAAgA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\CORE\IOPeripheral.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::InputOSSystem" Collapsed="true">
+    <Position X="36.75" Y="10" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>BQADAoACAAhAABAEAAEwAiAAAQAASGEAABCQQQAAAEI=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\CORE\OSIO.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::RasterData" Collapsed="true">
+    <Position X="45" Y="4.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AqSwAwAUSMlAEgAiogGACADKABIQgATQADQQA0IOAJg=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\CORE\Raster.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::Raster" Collapsed="true">
+    <Position X="58.5" Y="4.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>gKAAIBAEAEEEAAAhkAUIAAAAABAghIRUICgDAwAYEAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\CORE\Raster.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::Screen" Collapsed="true">
+    <Position X="28" Y="10" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>QRAgAQAAB6ABAACwBIkABCAAEQ4hQQBECAAAiQIQCkA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\CORE\Screen.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::ScreenMemory" Collapsed="true">
+    <Position X="115.75" Y="3.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>EAAAIQAAAAAACACAAABBAAACAAAAIQRACAAgAAAAAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\CORE\ScreenMemory.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::SoundSystem" Collapsed="true">
+    <Position X="45.25" Y="10" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>IQAAIAAABCAAIAQAADEQAAAAAQgBAAABCAEABQICAEA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\CORE\Sound.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::SoundMemory" Collapsed="true">
+    <Position X="117.5" Y="3.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>CAAAAAAAAgAJAIABAIUAAAAAAQAAEAAAAAAgAAAAAAQ=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\CORE\SoundMemory.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::SoundVoice" Collapsed="true">
+    <Position X="20.25" Y="4.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>kCAAAKACAAAoCAAFAAFACAiAYIAAAgDAAghSIQIIIkA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\CORE\SoundVoice.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::SoundWave" Collapsed="true">
+    <Position X="28.25" Y="4.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>gAAAAAAEAAAIAAQEgCECKAIAAACBAALAAAASIYAAAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\CORE\SoundWave.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::TriangleSoundWave" Collapsed="true">
+    <Position X="24.75" Y="6.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAQAAAAAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\CORE\SoundWave.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::SawSmoothSoundWave" Collapsed="true">
+    <Position X="27" Y="6.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAQAAAAAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\CORE\SoundWave.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::PulseSoundWave" Collapsed="true">
+    <Position X="29.25" Y="6.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>IAABAAAAAAAAAAAEAQEIIAIAQAAAAQAAAAASAQKIAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\CORE\SoundWave.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::NoiseSoundWave" Collapsed="true">
+    <Position X="31.5" Y="6.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAAAACAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\CORE\SoundWave.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::Command" Collapsed="true">
+    <Position X="58.5" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAQAIAAAAAAEAAAASADEBAAAAAAMAAAAEAAoAACAAgA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\CORE\Command.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::CommandExecuter" Collapsed="true">
+    <Position X="119.25" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAABAAEAAACBAAIBAACACAgAAAAAgABCgAgA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\CORE\CmdExecuter.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::ComplexCommand" Collapsed="true">
+    <Position X="83.25" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAIAAAAAAAAEAAAACAAEAAAAAAAAAAAAAAAAABAAAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\CORE\Command.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::CommandBuilder" Collapsed="true">
+    <Position X="6.5" Y="6.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAABAEAAAAAQAAAAAEAAwARBAAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\CORE\CommandBuilder.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::StandardCommandBuilder" Collapsed="true">
+    <Position X="6.5" Y="7.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAIAAAAAAAAAAEAAAAAAAAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\CORE\StdCommandBld.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::HelpCommand" Collapsed="true">
+    <Position X="5.75" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAQAAAAAACACAAAAAAAAAAAAAAAAAgAQEACA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\CORE\StdCommands.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::AuthorInfoCommand" Collapsed="true">
+    <Position X="14.75" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAACACAAAAAAAAAAAAAAAABAAAEACA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\CORE\StdCommands.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::StatusRegisterStatusCommand" Collapsed="true">
+    <Position X="23.75" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAACACAAAAAAAAAAAABAAAAAAAEACA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\CORE\StdCommands.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::RegistersStatusCommand" Collapsed="true">
+    <Position X="32.75" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAQAAAACACAAAAAAAAAAAAAAAAAAAAEACA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\CORE\StdCommands.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::RegisterChangeCommand" Collapsed="true">
+    <Position X="41.75" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAEAAAAACACAAAAAAAAAAAAAAAAAAAAEACA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\CORE\StdCommands.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::ProgramCounterStatusCommand" Collapsed="true">
+    <Position X="50.75" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAACACAAAAAAAAAAAAAAAAAAAAEgCA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\CORE\StdCommands.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::StackStatusCommand" Collapsed="true">
+    <Position X="59.75" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAACICAAAAAAAAAAAAAAAAAAAAEACA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\CORE\StdCommands.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::CPUStatusCommand" Collapsed="true">
+    <Position X="82.25" Y="3.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAACAAAAACAAAAAAAAAAAAAAEACA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\CORE\StdCommands.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::CPUSimpleStatusCommand" Collapsed="true">
+    <Position X="84.5" Y="3.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAgAACAAAAAAAAAAAAAAAAAAAAEACA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\CORE\StdCommands.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::CPUInfoCommand" Collapsed="true">
+    <Position X="86.75" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAACACAAAAAAAEAAAAAAAAAAAAEACA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\CORE\StdCommands.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::MemoryStatusCommand" Collapsed="true">
+    <Position X="95.75" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAKACAAAAAAAAAAAAAAAAAAAAEACA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\CORE\StdCommands.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::MemoryDumpCommand" Collapsed="true">
+    <Position X="104.75" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAACACAAAAAAAAAAAAAAIAAAAAEACA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\CORE\StdCommands.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::MemoryStructureCommand" Collapsed="true">
+    <Position X="8" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAACACAAAAAAAAgAAAAAAAAAAAEACA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\CORE\StdCommands.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::SetMemoryValueCommand" Collapsed="true">
+    <Position X="17" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAACACAAAAAAAAAAAAAAAAAAAAGACA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\CORE\StdCommands.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::StopCPUCommand" Collapsed="true">
+    <Position X="26" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAABAAAAAAAACACAAAAAAAAAAAAAAAAAAAAEACA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\CORE\StdCommands.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::RunCPUCommand" Collapsed="true">
+    <Position X="35" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAACACAAAAAAAAQAAAAAAAAAAAEACA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\CORE\StdCommands.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::SetProgramCounterCommand" Collapsed="true">
+    <Position X="44" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAEAAAACACAAAAAAAAAAAAAAAAAAAAEACA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\CORE\StdCommands.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::NextInstructionCommand" Collapsed="true">
+    <Position X="53" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAACACgAAAAAAAAAAAAAAAAAAAEACA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\CORE\StdCommands.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::ShowNextInstructionCommand" Collapsed="true">
+    <Position X="62" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAACADAAAAAAAAAAAAAAAAAAAAEACA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\CORE\StdCommands.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::LastIntructionCPUCommand" Collapsed="true">
+    <Position X="68.75" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAACACAAAAAAAQAAAAAAAAAAAAEACA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\CORE\StdCommands.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::ListOfBreakPointsCommand" Collapsed="true">
+    <Position X="75.5" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAACACAAAAAAAAAAAAAAAAAAAAEACQ=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\CORE\StdCommands.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::SetBreakPointCommand" Collapsed="true">
+    <Position X="89" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAIACACAAAAAAAAAAAAAAAAAAAAEACA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\CORE\StdCommands.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::RemoveBreakPointCommand" Collapsed="true">
+    <Position X="98" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAACACAAAAAAAAAAAAAAAAAAAAEAKA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\CORE\StdCommands.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::RemoveAllBreakPointsCommand" Collapsed="true">
+    <Position X="107" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAACAAAAAAAAAAAACACAAAAAAAAAAAAAAAAAAAAEACA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\CORE\StdCommands.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::CPUSpeedCommand" Collapsed="true">
+    <Position X="10.25" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAACAGAAAAAAAAAAAAAAAAAAAAEACA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\CORE\StdCommands.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::LoadBinCommand" Collapsed="true">
+    <Position X="19.25" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AABAAAAAAAAAAAAACACAAAAAAAAAAAAAAAAAAAAEACA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\CORE\StdCommands.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::SaveBinCommand" Collapsed="true">
+    <Position X="28.25" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAACACAAAAAAABAAAAAAAAAAAAEACA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\CORE\StdCommands.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::MoveParametersToAnswerCommand" Collapsed="true">
+    <Position X="37.25" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAACACAAAAAAAAAAAAAAAAAAAAEACg=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\CORE\StdCommands.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::ActivateDeepDebugCommand" Collapsed="true">
+    <Position X="46.25" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAEAAAAACACAAAAAAAAAAAAAAAAAAAAEACA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\CORE\StdCommands.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::DesactivateDeepDebugCommand" Collapsed="true">
+    <Position X="55.25" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAACAACACAAAAAAAAAAAAAAAAAAAAEACA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\CORE\StdCommands.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::RestartComputerCommand" Collapsed="true">
+    <Position X="64.25" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAACACAAAAAAAAAAAAAAAAAAAIEACA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\CORE\StdCommands.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::IODevicesCommand" Collapsed="true">
+    <Position X="71" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAACACIAAAAAAAAAAAAAAAAAAAEACA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\CORE\StdCommands.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::PeripheralsCommand" Collapsed="true">
+    <Position X="77.75" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAACACAAAAAAAAAAAAAAAAgAAAEACA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\CORE\StdCommands.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::PeripheralInstructionCommand" Collapsed="true">
+    <Position X="91.25" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAACACAgAAAAAAAAAAAAAAAAAAEACA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\CORE\StdCommands.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::AssignJoystickNameCommand" Collapsed="true">
+    <Position X="100.25" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAABAAAAACACAAAAAAAAAAAAAAAAAAAAEACA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\CORE\StdCommands.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::ChangeCPUClockCommand" Collapsed="true">
+    <Position X="109.25" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAACAAAAAAAAAAACACAAAAAAAAAAAAAAAAAAAAEACA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\CORE\StdCommands.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::SoundOnCommand" Collapsed="true">
+    <Position X="12.5" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAACACAAAAAAAAAAgAAAAAAAAAEACA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\CORE\StdCommands.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::SoundOffCommand" Collapsed="true">
+    <Position X="21.5" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAACACAAAAAAAAAAAAAgAAAAAAEACA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\CORE\StdCommands.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::InterruptsCommand" Collapsed="true">
+    <Position X="30.5" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAACACAAAAAAAAAAAAAIAAAAAAEACA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\CORE\StdCommands.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::InterruptSetCommand" Collapsed="true">
+    <Position X="39.5" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAACAAAAAAAAACACAAAAAAAAAAAAAAAAAAAAEACA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\CORE\StdCommands.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::InterruptDebugOnCommand" Collapsed="true">
+    <Position X="48.5" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>IAAAAAAAAAAAAAAACACAAAAAAAAAAAAAAAAAAAAEACA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\CORE\StdCommands.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::InterruptDebugOffCommand" Collapsed="true">
+    <Position X="57.5" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAACAAACACAAAAAAAAAAAAAAAAAAAAEACA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\CORE\StdCommands.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::ChipsListCommand" Collapsed="true">
+    <Position X="66.5" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAACACAAAAAAAAAAAAAAAAAEAAEACA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\CORE\StdCommands.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::CRTEffectOnCommand" Collapsed="true">
+    <Position X="73.25" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAACACAAAAAAAAEAAAAAAAAAAAEACA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\CORE\StdCommands.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::CRTEffectOffCommand" Collapsed="true">
+    <Position X="80" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAgAAAACACAAAAAAAAAAAAAAAAAAAAEACA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\CORE\StdCommands.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::DatasetteStatusCommand" Collapsed="true">
+    <Position X="93.5" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAACACAAAAAAAAAAAAAAAAAAAAMACA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\CORE\StdCommands.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::GridOnCommand" Collapsed="true">
+    <Position X="102.5" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAASACAAAAAAAAAAAAAAAAAAAAEACA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\CORE\StdCommands.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::GridOffCommand" Collapsed="true">
+    <Position X="111.5" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAACACAAAAAAAAAAAAAAAAAAAgEACA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\CORE\StdCommands.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::Address" Collapsed="true">
+    <Position X="114" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAIMJQQACAAEAACgCAAAgAAIAAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\CORE\Address.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::ASCIIConverter" Collapsed="true">
+    <Position X="115.75" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAACAAgAAAAAAAAAAAgAAAAAAAAAAgAAAAAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\CORE\ASCIIConverter.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::Clock" Collapsed="true">
+    <Position X="117.5" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>gAAAiABAAAAAQEFgAAAIAAAIAAAAIFACABAIJAgAAgA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\CORE\Clock.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::CommandLineArguments" Collapsed="true">
+    <Position X="121" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>DACAAAEgAAgAAACAAAAAAAAgAAAAgAAAQAAAAAAAACA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\CORE\CmdlineArgs.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::DebugFile" Collapsed="true">
+    <Position X="117.5" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAgAAAAgBwAAAAAQAAAAAAEAAAABEAQIiAAEEA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\CORE\DebugFile.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::DataMemoryBlock" Collapsed="true">
+    <Position X="114" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AEAQIBCAAACAAAACYoAEAAIAAABkAAhAAAAAAQQBAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\CORE\DtMemoryBlock.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::DataMemoryBlockTextFormatter" Collapsed="true">
+    <Position X="115.75" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AQIAAAgAAAAAAAAAAAAACAAAAAABAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\CORE\DtMemoryBlock.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::FormatterBuilder" Collapsed="true">
+    <Position X="3.5" Y="6.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AQAESAEAAAAAIEAAIAEACAgABgBAIACKAAAgAAAAAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\CORE\FmterBuilder.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::Formatter" Collapsed="true">
+    <Position X="1.75" Y="3.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAABAAAAAIEBCAAAAAAAAAAAAAAgAAIAAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\CORE\Formatter.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::InfoClass" Collapsed="true">
+    <Position X="33.75" Y="3.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AgAAAIAAAAAAAIAAAAAAAAAAAAAAAAAAABAAAQAAAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\CORE\InfoClass.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::InfoStructure" Collapsed="true">
+    <Position X="122.75" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAIAAAAGAgAJAAAKAAEAEAABAACAAEACAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\CORE\InfoStructure.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::JSONFormatter" Collapsed="true">
+    <Position X="0.5" Y="4.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAQAQEAAAAAAAAAAEACABAAAAAAAAAAAAAAAIAAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\CORE\JSONFormatter.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::Notifier" Collapsed="true">
+    <Position X="30.75" Y="3.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAASAQAgAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\CORE\NotifyObserver.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::Observer" Collapsed="true">
+    <Position X="37" Y="3.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAACCAAAAAEAAABAAAAAACAAgAAAAAAAAAAAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\CORE\NotifyObserver.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::Event" Collapsed="true">
+    <Position X="119.25" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>ABAAAAAABAAAAAAAAABAAAAAAgAAACAAAAAQAAAAAgA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\CORE\NotifyObserver.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::OBool" Collapsed="true">
+    <Position X="119.25" Y="2.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>ABAAAAAAAAAAAAAEAAAAgAAAAAAAACAQAAAAAAAAAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\CORE\OBool.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::Pulse" Collapsed="true">
+    <Position X="114" Y="3.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>ABAAAAAAAAZAAAAEAAQAAAAQAAAgACIAQgAAAEAAAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\CORE\Pulse.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::StdFormatterBuilder" Collapsed="true">
+    <Position X="3.5" Y="7.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AQAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\CORE\StdFmterBuilder.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::StdFormatter" Collapsed="true">
+    <Position X="2.75" Y="4.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAUIAAAABAAACAAAEACAAAIAEAAAAAEAAAAAYAAAQ=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\CORE\StdFormatter.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::TicksCounter" Collapsed="true">
+    <Position X="121" Y="3.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAACAEEABAAIAAABAAIAAAKAAAAEAQgAAABACAAAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\CORE\Ticks.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::TicksCounterDelayed" Collapsed="true">
+    <Position X="122.75" Y="3.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAiAEEABAAAAAABAAIAAAIAAAAECAAAIABgCAAAEA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\CORE\Ticks.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::UByte" Collapsed="true">
+    <Position X="114" Y="4.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>ARAgIAQCAKRMACAAAqCI5wADBAkEAiABGAAgAIAAAwI=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\CORE\UByte.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::UBytes" Collapsed="true">
+    <Position X="115.75" Y="4.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAIAACCABMACAMAKKI4wgABA0AAC4BAAAAAACBAyA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\CORE\UBytes.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::UInt" Collapsed="true">
+    <Position X="117.5" Y="4.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>QIAAAACAAAAEAQEAA4ApCQAQAQeEECgJCBggBoADAGw=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\CORE\UInt.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::MotherboardElement" Collapsed="true">
+    <Position X="33.75" Y="6.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>gAAiEAACAAAAACACAgFAAQgAAAAAUAAAIBAJARABGgA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\CORE\MBElement.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::Bus" Collapsed="true">
+    <Position X="30.5" Y="4.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>ABIAAAAAAAAAAAAAAAJgAAAAAAAABCAAAAAgAAAAAgA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\CORE\Bus.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::ProgramCounter" Collapsed="true">
+    <Position X="122.75" Y="2.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAgAAAAAAEIASAiAgAAICAAAAggACIEAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\CORE\ProgramCounter.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::CPUHook" Collapsed="true">
+    <Position X="122.75" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>QAAAAAAAAAAAAAAAAAAIAAAAAAAAAAABAAAAAAAAAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\CORE\CPUHook.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::Wire" Collapsed="true">
+    <Position X="25.75" Y="4.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAYAAAAAAAJgAAAAAAAgBDACQgAIAEAAAgA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\CORE\Wire.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::Chip" Collapsed="true">
+    <Position X="33.75" Y="10.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAggBEAAAAAEAAAEAAQAAoIABAAAggQAAAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\CORE\Chip.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::NoChip" Collapsed="true">
+    <Position X="36" Y="12" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAEAAAAAAQAAAAAAAEAAAAAAAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\CORE\Chip.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::ChipRegisters" Collapsed="true">
+    <Position X="36" Y="6.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAgAAAAAAAAAACABgAAQAAAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\CORE\ChipRegisters.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::CPUArchitecture" Collapsed="true">
+    <Position X="63" Y="4.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>EACAAAAAAAAAgAAGAyKAAEAABEAQEAEAAAIAAQAAAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\CORE\CPUArchitecture.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::CPUInterrupt" Collapsed="true">
+    <Position X="65.25" Y="4.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>gBAAECAACACAQIQAAAPAAQYAAAAAAAAQhlAwMQAAEgA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\CORE\CPUInterrupt.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::GraphicalChip" Collapsed="true">
+    <Position X="31.5" Y="12" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAQAAIAAAAAAEAAAAAAIoBAAAAAAAAAAAICQA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\CORE\GraphicalChip.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::Memory" Collapsed="true">
+    <Position X="45.75" Y="8.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>QAAAAAAABQoEECCBAJUBAAAAAAADoKwBA4kspQIGAJQ=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\CORE\Memory.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::Stack" Collapsed="true">
+    <Position X="46.75" Y="6.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AACIAAAEAAAAAAAAAgEAIIACoAQBACAAAACogQAAAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\CORE\Stack.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::InstructionDefined" Collapsed="true">
+    <Position X="0.5" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>BQJCBAAIgAAAAAAAEADMAAAEAIAAJBAARIAECAAIABA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\CORE\Instruction.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::Instruction" Collapsed="true">
+    <Position X="1.75" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAgAAIAAAAAQAAAQAOEEAAJAAIIJAAAIEsAAKlAgE=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\CORE\Instruction.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::InstructionUndefined" Collapsed="true">
+    <Position X="2.75" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAACAAIAAAAAAAAAABMAAAAAAgAIJAADAAEAAAIAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\CORE\Instruction.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::Latch" Collapsed="true">
+    <Position X="117.5" Y="2.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAACKACAAAQAAAAAAIVIAQAAAAEEACgAAAAAAAAEAiA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\CORE\Latch.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::PhysicalStorageSubset" Collapsed="true">
+    <Position X="36.75" Y="4.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>gAAAIAAABsKAEQDAAIdBAQQiAACFgChBAAA2pQIgAgA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\CORE\Memory.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::MemoryView" Collapsed="true">
+    <Position X="60.75" Y="4.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>ABAQAhABAQYAAgCAAIVBAAAAAAACACwACAAihQAEAgA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\CORE\Memory.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::PhysicalStorage" Collapsed="true">
+    <Position X="121" Y="2.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAABgIAAAQAAIRQAAAAAAABACgAAAAwAAAAAgA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\CORE\Memory.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::EmptyPhysicalStorageSubset" Collapsed="true">
+    <Position X="49.25" Y="6.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>BAAAAAAABAAAAAAAAAIAAAAAAAAAAQAAAAAEAAAAAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\CORE\Memory.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::RandomPhysicalStorageSubset" Collapsed="true">
+    <Position X="22.25" Y="6.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAICBAAAAAAAAAAAAAAEAAAAAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\CORE\Memory.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::MirrorPhysicalStorageSubset" Collapsed="true">
+    <Position X="44.5" Y="6.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAAAAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\CORE\Memory.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::Register" Collapsed="true">
+    <Position X="0.5" Y="6.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>BAAAKQKAAAAAECgAAIVIAQACAAEFACgEAAAAAAAEAiA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\CORE\Register.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::SoundChip" Collapsed="true">
+    <Position X="33.75" Y="12" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>ACAAAJAAAAAAIAIAAAkAAAAgAAABAAAAABEAhAAQAgE=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\CORE\SoundChip.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::StatusRegister" Collapsed="true">
+    <Position X="0.5" Y="7.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AgAAAAAgABgAAAEIBAAIABAAAIAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\CORE\StatusRegister.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::TestCPUSpeed" Collapsed="true">
+    <Position X="119.25" Y="3.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAIAAIAAAAAAAAASAAAAgAABAAhAAAAIEA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\CORE\TestCPUSpeed.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Struct Name="MCHEmul::FileData" Collapsed="true">
+    <Position X="6.75" Y="3.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAABAAAAAAIAAAAAAAAAAAAAAAAAAAAAQA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\CORE\FileIO.hpp</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Struct Name="MCHEmul::StadardFileData" Collapsed="true">
+    <Position X="5.5" Y="4.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\CORE\FileIO.hpp</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Struct Name="MCHEmul::RawFileData" Collapsed="true">
+    <Position X="7.75" Y="4.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAEAAAAAAAAABAAAACAIAAAAAAAAAAAAAAAABAAAIAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\CORE\FileIO.hpp</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Struct Name="MCHEmul::ByteCodeLine" Collapsed="true">
+    <Position X="114" Y="5.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAEAAABAIAAAAAAIAAAAAACAAAUAAAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\CORE\ByteCodeLine.hpp</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Struct Name="MCHEmul::ExtendedDataMemoryBlocks" Collapsed="true">
+    <Position X="115.75" Y="5.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAIAAABAAAAAACAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\CORE\DtMemoryBlock.hpp</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Struct Name="MCHEmul::PhysicalStorageSubsetDUMP" Collapsed="true">
+    <Position X="121" Y="5.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AABAIAAAAAAAAQAAAABAAAAAAgAAAAAAAAAQASAAAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\CORE\Memory.hpp</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Struct Name="MCHEmul::MemoryViewDUMP" Collapsed="true">
+    <Position X="119.25" Y="5.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAABAAAAAAAAABAAAAAAAAAAAAAAAAAAQAAAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\CORE\Memory.hpp</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Struct Name="MCHEmul::MemoryDUMP" Collapsed="true">
+    <Position X="117.5" Y="5.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAABAAAAAAAAABAAAAAAAAAAAAAAAAAAQAAAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\CORE\Memory.hpp</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Font Name="Segoe UI" Size="9" />
+</ClassDiagram>

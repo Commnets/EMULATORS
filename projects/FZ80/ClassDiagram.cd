@@ -1,0 +1,340 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1">
+  <Class Name="FZ80::ADD_General" Collapsed="true">
+    <Position X="12" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AgAAAAAAAAAAAAAIAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\FZ80\ADD.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FZ80::AND_General" Collapsed="true">
+    <Position X="13.75" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAIAAAAAAAAAAAAAAAAACAAAAAAAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\FZ80\AND.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FZ80::BIT_General" Collapsed="true">
+    <Position X="0.5" Y="9.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAgAAAAAIAgAAAAAAAAAAACAAAAAAAAAAAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\FZ80\BIT.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FZ80::BIT_Index" Collapsed="true">
+    <Position X="0.5" Y="11" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>BAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAABA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\FZ80\BIT.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FZ80::CALL_General" Collapsed="true">
+    <Position X="19" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAACAAAAAAAAAAAAAAAAgAAAAAAAAAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\FZ80\CALL.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FZ80::RST_General" Collapsed="true">
+    <Position X="12" Y="4.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAACAAAAAAAAAAAAAAAAAAAgAAAAAAAAAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\FZ80\CALL.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FZ80::RET_General" Collapsed="true">
+    <Position X="20.75" Y="3.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAACAAAAAAAAIAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\FZ80\CALL.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FZ80::CP_General" Collapsed="true">
+    <Position X="20.75" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAABAAAAAAAAIAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\FZ80\CP.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FZ80::DEC_General" Collapsed="true">
+    <Position X="12" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAACAAAAAAAIAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\FZ80\DEC.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FZ80::EX_General" Collapsed="true">
+    <Position X="13.75" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAgAAAAAAAAAAAIAAAAAAAAAAAAAAAAAQAAAAAAAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\FZ80\EX.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FZ80::InstBlock_General" Collapsed="true">
+    <Position X="12" Y="2.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAACAAAAAAAAAAAAAAIAAgAEAAAAAAAAAACAAAAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\FZ80\EX.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FZ80::INC_General" Collapsed="true">
+    <Position X="20.75" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAIAAAAAAAAAAAAAAAAAAAgAAAAAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\FZ80\INC.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FZ80::IN_General" Collapsed="true">
+    <Position X="17.25" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AABAAAAAAAABAAAAAAAAACAAAAAgAAQAAAAAAAAAAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\FZ80\INOUT.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FZ80::INBlock_General" Collapsed="true">
+    <Position X="19" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAACEAAAAAAAAIAAAAIAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\FZ80\INOUT.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FZ80::OUT_General" Collapsed="true">
+    <Position X="12" Y="3.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAIABAAAAAAAAAAAAAAAAAAAAAAQBAAAAAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\FZ80\INOUT.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FZ80::OUTBlock_General" Collapsed="true">
+    <Position X="13.75" Y="3.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAACAAAAAAAAAIAAAAKAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\FZ80\INOUT.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FZ80::JR_General" Collapsed="true">
+    <Position X="17.25" Y="2.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAgAAAAAAAAAAAAAgAAAAAAAAAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\FZ80\JUMP.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FZ80::LD_General" Collapsed="true">
+    <Position X="19" Y="2.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAIAAAAAAAIAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\FZ80\LD.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FZ80::OR_General" Collapsed="true">
+    <Position X="20.75" Y="2.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAIAAAAABAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\FZ80\OR.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FZ80::RES_General" Collapsed="true">
+    <Position X="9.5" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAIAAAIAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\FZ80\RES.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FZ80::RES_Index" Collapsed="true">
+    <Position X="9.5" Y="2" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>BAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAABA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\FZ80\RES.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FZ80::ROTATELeft_General" Collapsed="true">
+    <Position X="6.5" Y="6.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AQAAAAAAAAAAAAAIAAAAAAAAAQAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\FZ80\ROTATELEFT.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FZ80::ROTATELeft_Index" Collapsed="true">
+    <Position X="6.5" Y="8" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>BAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABE=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\FZ80\ROTATELEFT.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FZ80::ROTATERight_General" Collapsed="true">
+    <Position X="3.5" Y="6.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AQAAAAAAAAAAAAAIAAAAAAAAAAAAAAAAAAAAAAAAAAQ=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\FZ80\ROTATERIGHT.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FZ80::ROTATERight_Index" Collapsed="true">
+    <Position X="3.5" Y="8" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>BAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACABA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\FZ80\ROTATERIGHT.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FZ80::SET_General" Collapsed="true">
+    <Position X="6.5" Y="3.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAQAAAAAAAAAAAIAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\FZ80\SET.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FZ80::SET_Index" Collapsed="true">
+    <Position X="6.5" Y="5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>BAAAAAAAAAAAAgAAAAAAAAAAAAAAAAAAAAAAAAAAABA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\FZ80\SET.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FZ80::SHIFTLeft_General" Collapsed="true">
+    <Position X="0.5" Y="6.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AQAAAAAAAAAAAAAIAAAAAAAAAABAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\FZ80\SHIFTLEFT.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FZ80::SHIFTLeft_Index" Collapsed="true">
+    <Position X="0.5" Y="8" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>BAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAAAAAAAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\FZ80\SHIFTLEFT.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FZ80::SHIFTRight_General" Collapsed="true">
+    <Position X="6.5" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AQAAAAAAAAAAAAAIAAAAAAAAAAAAAAAAAQAAAAAAAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\FZ80\SHIFTRIGHT.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FZ80::SHIFTRight_Index" Collapsed="true">
+    <Position X="6.5" Y="2" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>BAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\FZ80\SHIFTRIGHT.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FZ80::PUSH_General" Collapsed="true">
+    <Position X="19" Y="3.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAIAAAAAAAAAAAAAEAAAAAAAAAAAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\FZ80\STACK.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FZ80::POP_General" Collapsed="true">
+    <Position X="17.25" Y="3.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAIAAAAAAAAAAAAAAAAAAAAAIAAAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\FZ80\STACK.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FZ80::SUB_General" Collapsed="true">
+    <Position X="13.75" Y="4.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAABAAAAAIAAAAAAAAAAAAAAAAAAAAAAABAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\FZ80\SUB.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FZ80::XOR_General" Collapsed="true">
+    <Position X="15.5" Y="4.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAIAAAAAAAAAAAAAAAAAAAAgAAAAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\FZ80\XOR.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FZ80::CZ80" Collapsed="true">
+    <Position X="0.5" Y="3.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>RLgCkQhvBCgUyY0aqHkpQQIB0+7FJSqCA4EooypwFlQ=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\FZ80\CZ80.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FZ80::Z80Port" Collapsed="true">
+    <Position X="3.5" Y="3.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAIAAAAAAAAAACAgNAgAAICAAEECAAAIAAAQAAAgA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\FZ80\CZ80.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FZ80::Instruction" Collapsed="true">
+    <Position X="13.75" Y="2.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>BECBAEABAIiAASAwDGA+ghAAAACIAANAAUACIFgRgAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\FZ80\Instruction.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FZ80::InstructionUndefined" Collapsed="true">
+    <Position X="15.5" Y="2.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\FZ80\Instruction.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FZ80::Byte2InstructionCode" Collapsed="true">
+    <Position X="15.5" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAgAAAAAAAAAAAAMAAAAAAgAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\FZ80\Instruction.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FZ80::Byte4InstructionCode" Collapsed="true">
+    <Position X="17.25" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>IAAAAAAAAAAAAAAAAAAIAAAAAAgAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\FZ80\Instruction.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FZ80::Interrupt" Collapsed="true">
+    <Position X="1.75" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQACAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\FZ80\Interrupt.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FZ80::INTInterrupt" Collapsed="true">
+    <Position X="0.5" Y="2" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAEAAAAAAACAAAARAAAAQAAAAAAAAAAAAAAQAQAEAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\FZ80\INTInterrupt.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FZ80::NMIInterrupt" Collapsed="true">
+    <Position X="2.75" Y="2" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAASAAAAAAAAAAAAAAAAAAAAAAAAQAAAEAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\FZ80\NMIInterrupt.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FZ80::PortTest" Collapsed="true">
+    <Position X="3.5" Y="5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAQAAAAAAIAAAAAAAAAACAAAAAAAAAAAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\FZ80\TestElements.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FZ80::PlainMemoryTest" Collapsed="true">
+    <Position X="15.5" Y="3.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAABAAAAAAAAAAAAAAIAAAAAAAAAAAAAAIAAAAAQ=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\FZ80\TestElements.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FZ80::FragmentatedMemoryTest" Collapsed="true">
+    <Position X="15.5" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>gAAAAAAAAAAAAAAAAAAAAIAAAAAAAAAAAAAAIAAAAAQ=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\FZ80\TestElements.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FZ80::TestZ80" Collapsed="true">
+    <Position X="0.5" Y="5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAgAAAAACAAAAAAAAAAAAAAAAAAAAAAAAgAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\FZ80\TestElements.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Font Name="Segoe UI" Size="9" />
+</ClassDiagram>

@@ -260,6 +260,7 @@
     <None Include="Commodore.hlp">
       <Filter>Configuration</Filter>
     </None>
+    <None Include="ClassDiagram.cd" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\COMMODORE\CommandBuilder.cpp">
