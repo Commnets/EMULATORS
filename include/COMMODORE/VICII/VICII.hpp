@@ -36,6 +36,11 @@ namespace COMMODORE
 		In low mode the byte is read, and in the high one the byte is drawn. \n
 		In VICII simulation, the cycles (that are different per type of VICII (PAL/NTSC)) 
 		x 8 are used to represent the resolution of the VICII.
+		\n
+		LightPen is simulated using the mouse. \n
+		The mouse can be moved within the visible zone of the screen. \n
+		Anytime the mouse button is pressed (and also the fire button of the joystick in game port 1)
+		the current position of the raster beam is latched into the registers $d013 and $d014.
 	  */
 	class VICII : public MCHEmul::GraphicalChip
 	{
@@ -106,19 +111,6 @@ namespace COMMODORE
 							{ return (_VICIIRegisters -> bank ()); }
 		void setBank (unsigned char bk)
 							{ _VICIIRegisters -> setBank (bk); }
-
-		/** To set the position of the light - pen. \n
-			The position received must be relative within the display zone. */
-		void lightPenPosition (unsigned short& x, unsigned short& y) const
-							{ _VICIIRegisters -> currentLightPenPosition (x, y); }
-		void setLightPenPosition (unsigned short x, unsigned short y)
-							{ _VICIIRegisters -> setCurrentLightPenPosition (x, y); }
-
-		/** To know whether the light pen is active. */
-		bool lightPenActive () const
-							{ return (_VICIIRegisters -> lightPenActive ()); }
-		void setLightPenActive (bool lP)
-							{ _VICIIRegisters -> setLigthPenActive (lP); }
 
 		/** To get the raster info. */
 		const MCHEmul::Raster& raster () const
@@ -316,6 +308,11 @@ namespace COMMODORE
 		/** Detect the collisions between graphics and sprites info
 			affecting the right registers in the VICII. */
 		void detectCollisions (const DrawResult& cT);
+
+		// Related with the lightpen...
+		/** latched the position of the mouse (simulating the light pen) when it is with in the window. */
+		inline void latchLightPenPosition () const;
+		inline void fixLightPenPosition ();
 
 		protected:
 		/** A reference to the color RAM. */
@@ -627,6 +624,33 @@ namespace COMMODORE
 			_vicSpriteInfo [i]._graphicsLineSprites = MCHEmul::UBytes::_E;
 			// ...and update the info if the sprite is active...
 			readSpriteData (i); 
+		}
+	}
+
+	// ---
+	inline void VICII::latchLightPenPosition () const
+	{
+		if (_VICIIRegisters -> isMouseInVisibleZone () && 
+			_raster.isInVisibleZone ())
+		{
+			if (_VICIIRegisters -> mousePositionY () == _raster.vData ().currentVisiblePosition () &&
+				(_VICIIRegisters -> mousePositionX () >= _raster.hData ().currentVisiblePosition () &&
+					_VICIIRegisters -> mousePositionX () < (_raster.hData ().currentVisiblePosition () + 8)))
+				_VICIIRegisters -> latchLightPenPositionFromRaster 
+					((unsigned char) (_raster.hData ().currentPosition () >> 1), // Every 2 pixels...
+						(unsigned char) (_raster.vData ().currentPosition ()));
+		}
+	}
+
+	// ---
+	inline void VICII::fixLightPenPosition ()
+	{
+		if (_VICIIRegisters -> lightPenPositionLatched () &&
+			_VICIIRegisters -> lightPenActive ())
+		{
+			_VICIIRegisters -> fixPenPositionFromLatch ();
+
+			_VICIIRegisters -> activateLightPenOnScreenIRQ ();
 		}
 	}
 

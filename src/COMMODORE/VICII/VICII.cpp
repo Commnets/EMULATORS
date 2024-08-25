@@ -27,7 +27,7 @@ COMMODORE::VICII::VICII (MCHEmul::PhysicalStorageSubset* cR, const MCHEmul::Addr
 	  _cyclesPerRasterLine (cRL),
 	  _incCyclesPerRasterLine (cRL - COMMODORE::VICII_PAL::_CYCLESPERRASTERLINE),
 	  _raster (vd, hd, 8 /** step. */),
-	  _drawRasterInterruptPositions (false),
+	  _drawRasterInterruptPositions (false), _drawOtherEvents (false),
 	  _lastCPUCycles (0),
 	  _format (nullptr),
 	  _cycleInRasterLine (1),
@@ -137,9 +137,28 @@ bool COMMODORE::VICII::simulate (MCHEmul::CPU* cpu)
 			(_cycleInRasterLine == (63 + _incCyclesPerRasterLine)	&& _vicSpriteInfo [4]._active));
 	};
 
-	// If the "video reset flag" is actived nothing is done...
+	// If the "video reset flag" is actived nothing should be done...
+	// This is a very strange bit "RES" at the register $d016 of the VIC.
+	// There is no too much documentation about it.
+	// In "Mapping the C64" says this bit "disconnect" the full operation of the VICII, 
+	// and that in some old C64s the screen is also turn in black...
+	// However seems that something is anyway done...
+	// and what it is done without any doubt is to actualize the raster 
+	// because it is a signal comming from the TV not from the VICII....
+	// So far just the condition is logged...
 	if (_VICIIRegisters -> videoResetActive ())
-		return (true);
+	{ 
+		if (deepDebugActive ())
+		{
+			*_deepDebugFile
+				// Where
+				<< "VICII\t" 
+				// When
+				<< std::to_string (cpu -> clockCycles ()) << "\t" // clock cycles at that point
+				// What
+				<< "Disconnected\n";
+		}
+	}
 
 	// Adapt the size of the display zone to the parameters specificied in the register...
 	// The zone where sprites and texts are finally visible is call the "screen zone"
@@ -228,11 +247,18 @@ bool COMMODORE::VICII::simulate (MCHEmul::CPU* cpu)
 			_newBadLineCondition = false;
 			_badLineStopCyclesAdded = false;
 
-			// The graphics counters are set back to initial values at line 0!
+			// At the beginning of the counter....
 			if (_raster.currentLine () == 0)
 			{ 
+				// The internal variables counting the lines, etc...
+				// are set back to 0...
 				_vicGraphicInfo._VCBASE = _vicGraphicInfo._VC = 0;
 				_vicGraphicInfo._RC = 0;
+
+				// ...but also the position of the light pen is "fixed"...
+				// ...and a interruption is also launched at that position related with the light pen!...
+				// ...is the lightpen is active for sure!
+				fixLightPenPosition ();
 			}
 			// In any other line number, VC start back to count from the value in VCBASE.
 			// VCBASE is actualized only then RC reaches 8. @see rasterCycle 58 treatment.
@@ -243,6 +269,10 @@ bool COMMODORE::VICII::simulate (MCHEmul::CPU* cpu)
 			if (_raster.currentLine () == _VICIIRegisters -> IRQRasterLineAt ())
 				_VICIIRegisters -> activateRasterIRQ (); // ...the interrupt is activated (but not necessary launched!)
 		}
+
+		// Latch the light pen position (reading the mouse)
+		// if it is within the window...
+		latchLightPenPosition ();
 
 		// Per cycle, the IRQ condition is checked! 
 		// (many reasons during the cycle can unchain the IRQ interrupt)
@@ -490,18 +520,25 @@ void COMMODORE::VICII::processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifi
 
 			break;
 
+		// If the mouse is moved, keep track of its position
+		// it will be used later to simulate dthe light pen!
+		// @see "simulate" method in in this class...
 		case MCHEmul::InputOSSystem::_MOUSEMOVED:
 			{
-				unsigned short x = (unsigned short) 
-					std::dynamic_pointer_cast <MCHEmul::InputOSSystem::MouseMovementEvent> (evnt.data ()) -> _x;
-				unsigned short y = (unsigned short) 
-					std::dynamic_pointer_cast <MCHEmul::InputOSSystem::MouseMovementEvent> (evnt.data ()) -> _y;
-				setLightPenPosition ((x >= _raster.hData ().firstDisplayPosition () && 
-									  y <= _raster.hData ().lastDisplayPosition ()) 
-										? (x - _raster.hData ().firstDisplayPosition ()) : 0, 
-									 (y >= _raster.vData ().firstDisplayPosition () && 
-									  y <= _raster.vData ().lastDisplayPosition ()) 
-										? (y - _raster.vData ().firstDisplayPosition ()) : 0);
+				// Where is the mouse?
+				int x = std::dynamic_pointer_cast <MCHEmul::InputOSSystem::MouseMovementEvent> 
+					(evnt.data ()) -> _x;
+				int y = std::dynamic_pointer_cast <MCHEmul::InputOSSystem::MouseMovementEvent> 
+					(evnt.data ()) -> _y;
+
+				// Is the mouse in the window?
+				if (x == 0 || 
+					y == 0 ||
+					(unsigned short) x >= _raster.visibleColumns () ||
+					(unsigned short) y >= _raster.visibleLines ())
+					_VICIIRegisters -> setMousePosition (-1, -1); // No in the window...
+				else
+					_VICIIRegisters -> setMousePosition (x, y);
 			}
 
 			break;
@@ -510,8 +547,8 @@ void COMMODORE::VICII::processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifi
 		case MCHEmul::InputOSSystem::_MOUSEBUTTONPRESSED:
 			{
 				if (std::dynamic_pointer_cast <MCHEmul::InputOSSystem::MouseButtonEvent> 
-					(evnt.data ()) -> _buttonId == 0 /** Left. */)
-					setLightPenActive (true);
+					(evnt.data ()) -> _buttonId == 1 /** Left. Right would be 3. */)
+					_VICIIRegisters -> setLigthPenActive (true);
 			}
 			
 			break;
@@ -520,8 +557,29 @@ void COMMODORE::VICII::processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifi
 		case MCHEmul::InputOSSystem::_MOUSEBUTTONRELEASED:
 			{
 				if (std::dynamic_pointer_cast <MCHEmul::InputOSSystem::MouseButtonEvent> 
-					(evnt.data ()) -> _buttonId == 0 /** Left. */)
-					setLightPenActive (false);
+					(evnt.data ()) -> _buttonId == 1 /** Left. */)
+					_VICIIRegisters -> setLigthPenActive (false);
+			}
+
+			break;
+
+		// The light pen is also active when the fire button is pressed in the joystick 1!
+		// The LP signal (one of the pins of the VICII) is connected to the game port 1 pin 4 also...
+		case MCHEmul::InputOSSystem::_JOYSTICKBUTTONPRESSED:
+			{
+				if (std::static_pointer_cast <MCHEmul::InputOSSystem::JoystickButtonEvent> 
+						(evnt.data ()) -> _joystickId == 1)
+					_VICIIRegisters -> setLigthPenActive (true);
+			}
+
+			break;
+
+		// ...and disactive in the opposite situation!
+		case MCHEmul::InputOSSystem::_JOYSTICKBUTTONRELEASED:
+			{
+				if (std::static_pointer_cast <MCHEmul::InputOSSystem::JoystickButtonEvent> 
+						(evnt.data ()) -> _joystickId == 1)
+					_VICIIRegisters -> setLigthPenActive (false);
 			}
 
 			break;
@@ -825,14 +883,6 @@ void COMMODORE::VICII::drawVisibleZone (MCHEmul::CPU* cpu)
 	// If it activated to draw other events that happen during the interation of the VICII...
 	if (_drawOtherEvents)
 		drawOtherEvents ();
-
-	// The IRQ related with the lightpen is calculated...
-	unsigned short dx, dy;
-	_raster.currentDisplayPosition (dx, dy);
-	unsigned short lpx, lpy;
-	_VICIIRegisters -> currentLightPenPosition (lpx, lpy);
-	if (dy == lpy && (lpx >= dx && lpx < (dx + 8))) // The beam moves every 8 pixels...
-		_VICIIRegisters -> activateLightPenOnScreenIRQ ();
 }
 
 // ---

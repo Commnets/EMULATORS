@@ -156,12 +156,32 @@ namespace COMMODORE
 							{ return (_currentLightPenVerticalPosition); }
 		void currentLightPenPosition (unsigned short& x, unsigned short& y) const
 							{ x = _currentLightPenHorizontalPosition; y = _currentLightPenVerticalPosition; }
-		void setCurrentLightPenPosition (unsigned short x, unsigned short y)
-							{ _currentLightPenHorizontalPosition = x; _currentLightPenVerticalPosition = y; }
+		void latchLightPenPositionFromRaster (unsigned char x, unsigned char y)
+							{ _latchLighPenHorizontalPosition = x; 
+							  _latchLightPenVerticalPosition = y; 
+							  _lightPenLatched = true;}
+		void lightPenPosLatched (unsigned char* x, unsigned char* y)
+							{ *x = _latchLighPenHorizontalPosition; *y = _latchLightPenVerticalPosition; }
+		bool lightPenPositionLatched () const
+							{ return (_lightPenLatched); } // The value is restored when checked!
+		void fixPenPositionFromLatch ()
+							{ _currentLightPenHorizontalPosition = _latchLighPenHorizontalPosition;
+							  _currentLightPenVerticalPosition = _latchLightPenVerticalPosition;
+							  _lightPenLatched = false; }
 		bool lightPenActive () const
 							{ return (_lightPenActive); }
 		void setLigthPenActive (bool lP)
 							{ _lightPenActive = lP; }
+		/** To know where the mouse is within the visible zone, if is is.
+			When it is not there the variables returned -1. */
+		int mousePositionX () const
+							{ return (_mousePositionX); }
+		int mousePositionY () const
+							{ return (_mousePositionY); }
+		void setMousePosition (int x, int y)
+							{ _mousePositionX = x; _mousePositionY = y; }
+		bool isMouseInVisibleZone () const
+							{ return (_mousePositionX != -1 && _mousePositionY != -1); }
 
 		// Memory address for the different elements managed from VICII...
 		// These methods are invoked from the VIC mainly when reading elements...
@@ -289,7 +309,11 @@ namespace COMMODORE
 		// Some of this variables are set by the emulation of the VICII
 		// The VICII chip also uses this object as a temporary storage
 		unsigned short _currentRasterLine; // Where the raster is now...
-		unsigned short _currentLightPenHorizontalPosition, _currentLightPenVerticalPosition; // Where the light pen is...
+		/** Where the lightpen has been detected. */
+		unsigned char _latchLighPenHorizontalPosition, _currentLightPenHorizontalPosition;
+		/** The position is consolidated once per frame. */
+		unsigned char _latchLightPenVerticalPosition, _currentLightPenVerticalPosition;
+		bool _lightPenLatched; // When a value has been latched...
 		bool _lightPenActive;
 		/** Whether the raster line has reached the one defined to generate an IRQ. */
 		bool _rasterIRQHappened;
@@ -319,7 +343,10 @@ namespace COMMODORE
 		MCHEmul::Address _screenMemoryPos;
 		MCHEmul::Address _bitmapMemoryPos;
 		MCHEmul::Address _spritePointerMemoryPos;
-		unsigned short _minRasterV, _maxRasterV; // To control where the limits of the raster are...
+		// To control where the limits of the raster are (as defined). Used for drawing the border...
+		unsigned short _minRasterV, _maxRasterV; 
+		/** Where the mouse is. -1 when it is out of the visible zone. */
+		int _mousePositionX, _mousePositionY;
 	};
 
 	// ---

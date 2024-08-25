@@ -54,6 +54,8 @@ namespace C64
 		As the port B is where the info is read, the status created by it can be confused with keys,
 		which is not the case for joystick 2.
 		https://c64os.com/post/howthekeyboardworks
+		The CIA1 also controls the paddles that are read, and in that case the way the 
+		info is read from the data ports of the CIA 1 is different, as only the fire button of the paddle would affect.
 		*/
 	class CIA1Registers final : public COMMODORE::CIARegisters
 	{
@@ -90,6 +92,25 @@ namespace C64
 							{ _keyboardStatusMatrix [r].setBit (c, s);
 							  _rev_keyboardStatusMatrix [c].setBit (r, s); }
 
+		/** The way the paddles are managed.
+			There can be 2 paddles connecter per game port, 
+			that produces 2 positions (continuous, from 0 - 255) in 2 SID registers. \n
+			In CIA1 there is selected the paddles to read at SID level. */
+		bool isPaddleConnected () const
+							{ return (_paddleConnected != 0); }
+		int paddleConnected () const
+							{ return (_paddleConnected); }
+		/** = 0 means none, and common joysticks instead. 
+			  The value can be either 0, 1 or 2. */
+		void setPaddleConnected (int p)
+							{ if (p == 0 || p == 1 || p == 2) _paddleConnected = p; }
+		/** Status of the fire buttons of the paddles.
+			No bounday check is done, so be careful when using them. */
+		void setPaddleFireButtonStatus (size_t p, size_t bt, bool st)
+							{ _paddleFireButtonStatus [p][bt] = st; }
+		bool paddleFireButtonStatus (size_t p, size_t bt) const
+							{ return (_paddleFireButtonStatus [p][bt]); }
+
 		private:
 		virtual const MCHEmul::UByte& readValue (size_t p) const override;
 
@@ -106,6 +127,11 @@ namespace C64
 		MCHEmul::UByte _keyboardStatusMatrix [8];
 		/** The opposite. */
 		MCHEmul::UByte _rev_keyboardStatusMatrix [8];
+		/** The paddel connected if any. 
+			When 0 no paddle connected and joystick instead. */
+		int _paddleConnected;
+		/** The status of the fire buttons. */
+		bool _paddleFireButtonStatus [2][2];
 	};
 }
 

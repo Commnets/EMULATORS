@@ -136,7 +136,7 @@ namespace COMMODORE
 		/** To knwo the value affecting. */
 		bool timerAValueAtPortDataB () const
 							{ return (_timerAValueAtPortDataB); }
-		/** In case that the timer is affecting, to know whic is the value affecting. */
+		/** In case that the timer is affecting, to know which is the value affecting. */
 		void setReflectTimerAAtPortDataB (bool r, bool v = false /** it is not taken into account when r == false. */)
 							{ if (_reflectTimerAAtPortDataB = r) 
 								setValue (0x01, readValue (0x01)); // Reflects the value if needed a notification can also happen...

@@ -403,7 +403,7 @@ const MCHEmul::UByte& COMMODORE::VICIIRegisters::readValue (size_t p) const
 		case 0x13:
 			{
 				result = _lightPenActive // Only when the lightpen is active...
-					? MCHEmul::UByte ((unsigned char) (_currentLightPenHorizontalPosition >> 1)) : 0;
+					? MCHEmul::UByte (_currentLightPenHorizontalPosition) : 0;
 			}
 
 			break;
@@ -413,7 +413,7 @@ const MCHEmul::UByte& COMMODORE::VICIIRegisters::readValue (size_t p) const
 		case 0x14:
 			{
 				result = _lightPenActive // only when the lightpen is active...
-					? MCHEmul::UByte ((unsigned char) (_currentLightPenVerticalPosition >> 1)) : 0;
+					? MCHEmul::UByte (_currentLightPenVerticalPosition) : 0;
 			}
 
 			break;
@@ -630,9 +630,9 @@ void COMMODORE::VICIIRegisters::initializeInternalValues ()
 
 	// Managed direclty by the VICII Chip...
 	_currentRasterLine = 0x0000;
-	_currentLightPenHorizontalPosition = 0x0000;
-	_currentLightPenVerticalPosition = 0x0000;
-	_lightPenActive = false;
+	_currentLightPenHorizontalPosition = _latchLighPenHorizontalPosition = 0x00;
+	_currentLightPenVerticalPosition = _latchLightPenVerticalPosition = 0x00;
+	_lightPenLatched = false; _lightPenActive = false;
 	_spriteCollisionWithDataHappened = std::vector <bool> (8, false), 
 	_spriteCollisionHappened = std::vector <bool> (8, false);
 	// Reasons for IRQ
