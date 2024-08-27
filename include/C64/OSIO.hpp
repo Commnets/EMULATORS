@@ -69,6 +69,7 @@ namespace C64
 		private:
 		CIA1* _cia1;
 		COMMODORE::VICII* _vicII;
+		COMMODORE::SID* _sid;
 
 		/** 
 			How SDL keys are mapped into the chars map of the C64. \n

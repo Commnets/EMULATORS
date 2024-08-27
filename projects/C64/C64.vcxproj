@@ -62,6 +62,7 @@
     <ClCompile Include="..\..\src\C64\PLA.cpp" />
     <ClCompile Include="..\..\src\C64\Screen.cpp" />
     <ClCompile Include="..\..\src\C64\Sound.cpp" />
+    <ClCompile Include="..\..\src\C64\VICII.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="C64.fmt" />

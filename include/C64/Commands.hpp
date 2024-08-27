@@ -247,6 +247,30 @@ namespace C64
 		virtual void executeImpl (MCHEmul::CommandExecuter* cE, 
 			MCHEmul::Computer* c, MCHEmul::InfoStructure& rst) override;
 	};
+
+	/** Command to active or disactivate the Joysticks 
+		"connecting" paddles (that could also act as potenciomaters in the POTX and POTY variables of the SID) instead. 
+		The command is: \n
+		PADDLE ON|OFF [PORTID1, PORTID2...] \n
+		When there is no paddle id the ON|OFF will be applicable to all. 
+		PortId is the game port number where the paddle should be plugged in (0 or 1). */
+	class ManagePaddlesCommand final : public MCHEmul::Command
+	{
+		public:
+		static const int _ID = 211;
+		static const std::string _NAME;
+
+		ManagePaddlesCommand ()
+			: MCHEmul::Command (_ID, _NAME)
+							{ }
+
+		virtual bool canBeExecuted () const override
+							{ return (_parameters.size () >= 1); }
+
+		private:
+		virtual void executeImpl (MCHEmul::CommandExecuter* cE, 
+			MCHEmul::Computer* c, MCHEmul::InfoStructure& rst) override;
+	};
 }
 
 #endif

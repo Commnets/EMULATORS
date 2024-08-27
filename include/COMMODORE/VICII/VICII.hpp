@@ -37,11 +37,11 @@ namespace COMMODORE
 		In VICII simulation, the cycles (that are different per type of VICII (PAL/NTSC)) 
 		x 8 are used to represent the resolution of the VICII.
 		\n
-		LightPen is simulated using the mouse. \n
-		The mouse can be moved within the visible zone of the screen. \n
-		Anytime the mouse button is pressed (and also the fire button of the joystick in game port 1)
-		the current position of the raster beam is latched into the registers $d013 and $d014.
-	  */
+		VICII has a PIN (number 09) that when active (on negative edge) 
+		"gathers" the position of raster beam. Once per frame. \n
+		The VICII simulator understand the movement of the mouse over the visual screen 
+		with the left button pushed (at the same time) as the simulation of the light pen. \n
+		The position is then stored into the registers $013 and $014 of the VICII. */
 	class VICII : public MCHEmul::GraphicalChip
 	{
 		public:
@@ -682,8 +682,9 @@ namespace COMMODORE
 		return (result);
 	}
 
-	/** The version para PAL systems. */
-	class VICII_PAL final : public VICII
+	/** The version for PAL systems. 
+		It couldn't be final. */
+	class VICII_PAL : public VICII
 	{
 		public:
 		static const MCHEmul::RasterData _VRASTERDATA;
@@ -698,8 +699,9 @@ namespace COMMODORE
 		virtual unsigned int treatRasterCycle () override;
 	};
 
-	/** The version para NTSC systems. */
-	class VICII_NTSC final : public VICII
+	/** The version for NTSC systems. \n
+		It couldn't be final. */
+	class VICII_NTSC : public VICII
 	{
 		public:
 		static const MCHEmul::RasterData _VRASTERDATA;

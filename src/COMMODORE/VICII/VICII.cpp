@@ -563,30 +563,8 @@ void COMMODORE::VICII::processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifi
 
 			break;
 
-		// The light pen is also active when the fire button is pressed in the joystick 1!
-		// The LP signal (one of the pins of the VICII) is connected to the game port 1 pin 4 also...
-		case MCHEmul::InputOSSystem::_JOYSTICKBUTTONPRESSED:
-			{
-				if (std::static_pointer_cast <MCHEmul::InputOSSystem::JoystickButtonEvent> 
-						(evnt.data ()) -> _joystickId == 1)
-					_VICIIRegisters -> setLigthPenActive (true);
-			}
-
-			break;
-
-		// ...and disactive in the opposite situation!
-		case MCHEmul::InputOSSystem::_JOYSTICKBUTTONRELEASED:
-			{
-				if (std::static_pointer_cast <MCHEmul::InputOSSystem::JoystickButtonEvent> 
-						(evnt.data ()) -> _joystickId == 1)
-					_VICIIRegisters -> setLigthPenActive (false);
-			}
-
-			break;
-
 		default:
 			break;
-
 	}
 }
 

@@ -90,3 +90,33 @@ MCHEmul::InfoStructure COMMODORE::SID::getInfoStructure () const
 
 	return (result);
 }
+
+// ---
+void COMMODORE::SID::processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifier* n)
+{
+	switch (evnt.id ())
+	{
+		// The movement of the joystick can simulate a potenciometer!
+		case MCHEmul::InputOSSystem::_JOYSTICKMOVED:
+			{
+				if (_SIDRegisters -> potenciometerGroupActive () == MCHEmul::_S0)
+					break; // No sense to spend time in reading something that is not "connected"...
+
+				std::shared_ptr <MCHEmul::InputOSSystem::JoystickMovementEvent> jm = 
+					std::static_pointer_cast <MCHEmul::InputOSSystem::JoystickMovementEvent> (evnt.data ());
+				if ((jm -> _joystickId != 0 && jm -> _joystickId != 1) || jm -> _axisValues.size () > 2)
+					break; // Only joysticks 0 y 1 are allowed and never more than 2 axis each!
+						   // This matched what is defined in SIDRegisters! (@see SIDRegisters)
+
+				for (auto i : jm -> _axisValues)
+					_SIDRegisters -> setPotenciometerValue // To 0 when reach 255...
+						((size_t) jm -> _joystickId, (size_t) i, 
+							_SIDRegisters -> potenciometerValue ((size_t) jm -> _joystickId, (size_t) i) + 1);
+			}
+
+		default:
+			break;
+
+		break;
+	}
+}

@@ -38,6 +38,20 @@ namespace C64
 
 		virtual bool initialize () override;
 
+		// Managing the paddles/jiysticks...
+		bool isPaddleConnectedAtPort (unsigned char p) const
+							{ return (_CIA1Registers -> isPaddleConnectedAtPort (p)); }
+		bool arePaddlesConnected () const
+							{ return (_CIA1Registers -> arePaddlesConnected ()); }
+		void connectPaddleAtPort (size_t p)
+							{ _CIA1Registers -> connectPaddleAtPort (p); }
+		void connectAllPaddles ()
+							{ _CIA1Registers -> connectAllPaddles (); }
+		void disconnectPaddleAtPort (size_t p)
+							{ _CIA1Registers -> disconnectPaddle (p); }
+		void disconnectAllPaddles ()
+							{ _CIA1Registers -> disconnectAllPaddles (); }
+
 		virtual bool simulate (MCHEmul::CPU* cpu) override;
 
 		private:

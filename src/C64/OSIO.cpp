@@ -95,7 +95,8 @@ C64::InputOSSystem::InputOSSystem ()
 		  { "Type", "Input" },
 		  { "Frequency", "50.0Hz" } }),
 	  _cia1 (nullptr),
-	  _vicII (nullptr)
+	  _vicII (nullptr),
+	  _sid (nullptr)
 { 
 	// Nothing else to do...
 }
@@ -109,15 +110,21 @@ void C64::InputOSSystem::linkToChips (const MCHEmul::Chips& c)
 			_cia1 = dynamic_cast <C64::CIA1*> ((*i).second);
 		if (dynamic_cast <COMMODORE::VICII*> ((*i).second) != nullptr)
 			_vicII = dynamic_cast <COMMODORE::VICII*> ((*i).second);
+		if (dynamic_cast <COMMODORE::SID*> ((*i).second) != nullptr)
+			_sid = dynamic_cast <COMMODORE::SID*> ((*i).second);
 	}
 
 	// Can't be null after this method...
 	assert (_cia1 != nullptr);
 	// This either...
 	assert (_vicII != nullptr);
+	// This also...
+	assert (_sid != nullptr);
 
 	// The CIA 1 will receive the event related with the io system...
 	_cia1 -> observe (this);
-	// And also the VICII, the events related with the paddle...
+	// And also the VICII, the events related with the lightpen...
 	_vicII -> observe (this);
+	// And also the SID, related with events in the joystick simulating the potenciometer...
+	_sid -> observe (this);
 }

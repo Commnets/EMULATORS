@@ -1,6 +1,7 @@
 #include <C64/C64.hpp>
 #include <C64/Memory.hpp>
 #include <C64/IO6510PortRegisters.hpp>
+#include <C64/VICII.hpp>
 #include <C64/PLA.hpp>
 #include <C64/Screen.hpp>
 #include <C64/Sound.hpp>
@@ -105,9 +106,9 @@ MCHEmul::Chips C64::Commodore64::standardChips (C64::Commodore64::VisualSystem v
 	// Some how it is also controlled by CIA II and Special Control Chip
 	result.insert (MCHEmul::Chips::value_type (COMMODORE::VICII::_ID, 
 		(MCHEmul::Chip*) ((vS == C64::Commodore64::VisualSystem::_NTSC) 
-			? (C64::VICII*) new COMMODORE::VICII_NTSC (nullptr, MCHEmul::Address (), 
+			? (COMMODORE::VICII*) new C64::VICII_NTSC (nullptr, MCHEmul::Address (), 
 				C64::Memory::_VICII_VIEW) // The color RAM will be assigned later...
-			: (C64::VICII*) new COMMODORE::VICII_PAL (nullptr, MCHEmul::Address (), 
+			: (COMMODORE::VICII*) new C64::VICII_PAL (nullptr, MCHEmul::Address (), 
 				C64::Memory::_VICII_VIEW))));
 
 	// The SID...

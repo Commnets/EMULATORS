@@ -30,6 +30,8 @@ MCHEmul::Command* C64::CommandBuilder::createEmptyCommand (const std::string& cm
 		result = new C64::GridOnCommand;
 	else if (cmdName == "GRIDOFF" || cmdName == C64::GridOffCommand::_NAME)
 		result = new C64::GridOffCommand;
+	else if (cmdName == "PADDLE" || cmdName == C64::ManagePaddlesCommand::_NAME)
+		result = new C64::ManagePaddlesCommand;
 
 	return (result);
 }

@@ -25,25 +25,26 @@ namespace C64
 		The keyboard matrix is a matrix of 8x8 "cables" not connected to anything in one extreme.
 		and to the the ports of the CIA in the other. \n
 		Any of the 64 keys of the keyboard is a switch located in each of the intersection of those 2 groups of cables. \n
-					C0	C1	C2	C3	C4	C5	C6	C7	
-					|	|	|	|	|	|	|	|     
-			  R0----+---+---+---+---+---+---+---+----C
-			    	|	|	|	|	|	|	|	|	 o
-			  R1----+---+---+---+---+---+---+---+----n
-			    	|	|	|	|	|	|	|	|	 n
-			  R2----+---+---+---+---+---+---+---+----e
-			    	|	|	|	|	|	|	|	|	 c
-			  R3----+---+---+---+---+---+---+---+----t
-			    	|	|	|	|	|	|	|	|	 e
-			  R4----+---+---+---+---+---+---+---+----d
-			    	|	|	|	|	|	|	|	|	 
-			  R5----+---+---+---+---+---+---+---+----P
-			    	|	|	|	|	|	|	|	|	 o
-			  R6----+---+---+---+---+---+---+---+----r
-			    	|	|	|	|	|	|	|	|	 t
-			  R7----+---+---+---+---+---+---+---+----B
-					|	|	|	|	|	|	|	|	
-					Connected PortA
+					C0	C1	C2	C3	C4	C5	C6	C7				\n
+					|	|	|	|	|	|	|	|				\n
+			  R0----+---+---+---+---+---+---+---+----C			\n
+			    	|	|	|	|	|	|	|	|	 o			\n
+			  R1----+---+---+---+---+---+---+---+----n			\n
+			    	|	|	|	|	|	|	|	|	 n			\n
+			  R2----+---+---+---+---+---+---+---+----e			\n
+			    	|	|	|	|	|	|	|	|	 c			\n
+			  R3----+---+---+---+---+---+---+---+----t			\n
+			    	|	|	|	|	|	|	|	|	 e			\n
+			  R4----+---+---+---+---+---+---+---+----d			\n
+			    	|	|	|	|	|	|	|	|	 			\n
+			  R5----+---+---+---+---+---+---+---+----P			\n
+			    	|	|	|	|	|	|	|	|	 o			\n
+			  R6----+---+---+---+---+---+---+---+----r			\n
+			    	|	|	|	|	|	|	|	|	 t			\n
+			  R7----+---+---+---+---+---+---+---+----B			\n
+					|	|	|	|	|	|	|	|				\n
+					Connected PortA								\n
+		\n
 		The switch only allow the flow of the current in one way (using a diode). \n
 		When a key is pressed the status of one line is transmited to the other. \n
 		The diode allows to transmite the status of the Column to the Row.
@@ -54,8 +55,18 @@ namespace C64
 		As the port B is where the info is read, the status created by it can be confused with keys,
 		which is not the case for joystick 2.
 		https://c64os.com/post/howthekeyboardworks
-		The CIA1 also controls the paddles that are read, and in that case the way the 
-		info is read from the data ports of the CIA 1 is different, as only the fire button of the paddle would affect.
+		\n
+		The CIA1 can manage either joysticks or paddles, connected wither to the game port 1. \n
+		By default it is configured to manage joysticks and "understand" the events comming from them. \n
+		In a single game port (let's say game port 1, tracked in the register $01 = $dc01) there might be connected two paddles. \n
+		So a total of 4 paddles can be simultaneosly overseen from the CIA1. \n
+		But CIA1 only oversees the situation of the buttons of those paddles. \n
+		The position is tracked from the SID register, throught two pins (@see SID anyway): POTX (pin 21) and POTY (pin 22).
+		However 2 pins for 2 paddles. sp how to track the position of the 4? It is not possible simultaneously!
+		To select the game port to read the register $00 (= $dc00) of the CIA1 is used. \n
+		The bits 6 and 7 are used to determine that (00 = nothing to read, 10 = read paddle position on port 1, 01 = on port 2). \n
+		Paddles are simulated with joysticks as well. \n
+		So there must be possible to tell the CIA which type of device to understand.
 		*/
 	class CIA1Registers final : public COMMODORE::CIARegisters
 	{
@@ -67,16 +78,18 @@ namespace C64
 
 		CIA1Registers (MCHEmul::PhysicalStorage* ps, size_t pp, const MCHEmul::Address& a, size_t s);
 
+		/** The CIA has a link with the SID,
+			as in register 0 is possible to tell SID the paddle position to read. 
+			The method is used when C64 is initilized. */
+		void linkToSID (COMMODORE::SID* sid);
+
 		// This methods are invoked from CIA chip...
-		unsigned char joystick1Status () const
-							{ return (_joystick1Status); }
-		void setJoystick1Status (unsigned char js)
-							{ _joystick1Status = js; }
-		/** These to manage the joystick 2... */
-		unsigned char joystick2Status () const
-							{ return (_joystick2Status); }
-		void setJoystick2Status (unsigned char js)
-							{ _joystick2Status = js; }
+		/** The boundaries are not controlled at all, 
+			so be cerefull when using these methods. */
+		unsigned char joystickStatusAtPort (size_t p) const
+							{ return (_joystickStatus [p]); }
+		void setJoystickStatusAtPort (size_t p, unsigned char js)
+							{ _joystickStatus [p] = js; }
 
 		/** and these ones are to manage the matrix of keys pressed...
 			...and also the inputs comming from the joystick 1... */
@@ -92,47 +105,69 @@ namespace C64
 							{ _keyboardStatusMatrix [r].setBit (c, s);
 							  _rev_keyboardStatusMatrix [c].setBit (r, s); }
 
-		/** The way the paddles are managed.
-			There can be 2 paddles connecter per game port, 
-			that produces 2 positions (continuous, from 0 - 255) in 2 SID registers. \n
-			In CIA1 there is selected the paddles to read at SID level. */
-		bool isPaddleConnected () const
-							{ return (_paddleConnected != 0); }
-		int paddleConnected () const
-							{ return (_paddleConnected); }
-		/** = 0 means none, and common joysticks instead. 
-			  The value can be either 0, 1 or 2. */
-		void setPaddleConnected (int p)
-							{ if (p == 0 || p == 1 || p == 2) _paddleConnected = p; }
-		/** Status of the fire buttons of the paddles.
-			No bounday check is done, so be careful when using them. */
+		/** To know whether there is or not a paddle connected,
+			When there is, the port will be managed in that sense, when there is not as joystick. 
+			The parameter is the number of the port (either 0 or 1).
+			No boundaries checks are, so take care when using any of the following methods. */
+		bool isPaddleConnectedAtPort (size_t p) const
+							{ return (_paddleConnected [p]); } // No boundary checks are done...
+		bool arePaddlesConnected () const
+							{ return (_paddleConnected [0] || _paddleConnected [1]); }
+		void connectPaddleAtPort (size_t p)
+							{ _paddleConnected [p] = true; }
+		void connectAllPaddles () // One in each port...
+							{ _paddleConnected [0] = _paddleConnected [1] = true; }
+		inline void disconnectPaddle (size_t p);
+		inline void disconnectAllPaddles ();
+		/** In CIA1 only the status of the fire buttons are checked.
+			Status of the fire buttons of the paddles.
+			No bounday check is done, so be careful when using them. 
+			No checked either whether the paddle is or not active. */
 		void setPaddleFireButtonStatus (size_t p, size_t bt, bool st)
 							{ _paddleFireButtonStatus [p][bt] = st; }
 		bool paddleFireButtonStatus (size_t p, size_t bt) const
 							{ return (_paddleFireButtonStatus [p][bt]); }
 
 		private:
+		/** To manage to activate which paddle position (if any) the SID would have to read. @see SID. */
+		virtual void setValue (size_t p, const MCHEmul::UByte& v) override;
+		/** To read the status of the keyboard, joysticks and paddles. */
 		virtual const MCHEmul::UByte& readValue (size_t p) const override;
 
 		// Implementation
 		virtual void initializeInternalValues () override;
 
 		private:
-		/** The joystick 1 status. */
-		unsigned char _joystick1Status;
-		/** The joystick 2 status. */
-		unsigned char _joystick2Status;
+		/** The SID linked. */
+		COMMODORE::SID* _sid;
+		/** The joystick status /** two ports. */
+		unsigned char _joystickStatus [2];
 		/** The data ports A y B are actually a matrix of info: ( bytes with (bytes each). 
 			And it is used to know both the keyboard pressed and also the status of the jiystick 1. */
 		MCHEmul::UByte _keyboardStatusMatrix [8];
 		/** The opposite. */
 		MCHEmul::UByte _rev_keyboardStatusMatrix [8];
-		/** The paddel connected if any. 
-			When 0 no paddle connected and joystick instead. */
-		int _paddleConnected;
+		/** The paddel connected if any in every port.
+			When boths are 0, no paddle connected, which is the value by default. */
+		bool _paddleConnected [2];
 		/** The status of the fire buttons. */
 		bool _paddleFireButtonStatus [2][2];
 	};
+
+	// ---
+	inline void CIA1Registers::disconnectPaddle (size_t p)
+	{ 
+		_paddleConnected [p] = false; 
+		_paddleFireButtonStatus [p][0] = _paddleFireButtonStatus [p][1] = false; 
+	}
+
+	// ---
+	inline void CIA1Registers::disconnectAllPaddles ()
+	{
+		_paddleConnected [0] = _paddleConnected [1] = false;
+		_paddleFireButtonStatus [0][0] = _paddleFireButtonStatus [0][1] = 
+		_paddleFireButtonStatus [1][0] = _paddleFireButtonStatus [1][1] = false; // Quicker than a loop...
+	}
 }
 
 #endif

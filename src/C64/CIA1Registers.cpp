@@ -2,12 +2,37 @@
 
 // ---
 C64::CIA1Registers::CIA1Registers (MCHEmul::PhysicalStorage* ps, size_t pp, const MCHEmul::Address& a, size_t s)
-	: COMMODORE::CIARegisters (_CIA1_SUBSET, ps, pp, a, s)
+	: COMMODORE::CIARegisters (_CIA1_SUBSET, ps, pp, a, s),
+	  _sid (nullptr)
 	  // At this point all internal variables will have random values...
 { 
 	setClassName ("CIA1Registers");
 
 	initializeInternalValues (); 
+}
+
+// ---
+void C64::CIA1Registers::linkToSID (COMMODORE::SID* sid)
+{ 
+	assert (sid != nullptr); 
+	
+	_sid = sid;
+}
+
+// ---
+void C64::CIA1Registers::setValue (size_t p, const MCHEmul::UByte& v)
+{
+	// Normal way...
+	COMMODORE::CIARegisters::setValue (p, v);
+
+	// ..but when the register accesed is the 0...
+	if (_sid != nullptr && (p % 0x10) == 0x00)
+		_sid -> setPotenciometerGroupActive 
+		((v.bit (7) && !v.bit (6)) 
+			? 1 
+			: ((v.bit (6) && !v.bit (7)) 
+				? 0
+				: MCHEmul::_S0)); // ..selects which info to read from SID!
 }
 
 // ---
@@ -28,17 +53,17 @@ const MCHEmul::UByte& C64::CIA1Registers::readValue (size_t p) const
 				// determining what is shown there...
 				unsigned char dtA = MCHEmul::UByte::_0;
 				unsigned char msk = (_outputRegB | ~_dataPortBDir) & 
-					((_paddleConnected == 0) 
-						? _joystick1Status 
-						: ((_paddleFireButtonStatus [0][0] ? 0x04 : 0x00) | (_paddleFireButtonStatus [0][1] ? 0x08 : 0x00)));
+					((_paddleConnected [0]) // Paddle connected?
+						? ((_paddleFireButtonStatus [0][0] ? 0x04 : 0x00) | (_paddleFireButtonStatus [0][1] ? 0x08 : 0x00))
+						: _joystickStatus [0]);
 				unsigned char m = 0x01;
 				for (size_t i = 0; i < 8; m <<= 1, i++)
 					if ((~msk & m) != 0x00)
 						dtA |= ~_rev_keyboardStatusMatrix [i].value (); // 1 if clicked...
 				_portA = (_outputRegA | ~_dataPortADir) /** What it should go to portA as internal configuration determines. */ & 
-					(~dtA & ((_paddleConnected == 0) 
-						? _joystick2Status 
-						: ((_paddleFireButtonStatus [1][0] ? 0x04 : 0x00) | (_paddleFireButtonStatus [1][1] ? 0x08 : 0x00))));
+					(~dtA & ((_paddleConnected [1]) // Paddle connected?
+						? ((_paddleFireButtonStatus [1][0] ? 0x04 : 0x00) | (_paddleFireButtonStatus [1][1] ? 0x08 : 0x00))
+						: _joystickStatus [1]));
 					/** but affected by the keys and joystick switches pressed 
 						(or paddle buttons if paddles are connected instead. */;
 				result = MCHEmul::UByte (_portA);
@@ -52,17 +77,17 @@ const MCHEmul::UByte& C64::CIA1Registers::readValue (size_t p) const
 				// @see above
 				unsigned char dtB = MCHEmul::UByte::_0;
 				unsigned char msk = (_outputRegA | ~_dataPortADir) &
-					((_paddleConnected == 0) 
-						? _joystick2Status 
-						: ((_paddleFireButtonStatus [1][0] ? 0x04 : 0x00) | (_paddleFireButtonStatus [1][1] ? 0x08 : 0x00)));
+					((_paddleConnected [1]) // Paddle connected?
+						? ((_paddleFireButtonStatus [1][0] ? 0x04 : 0x00) | (_paddleFireButtonStatus [1][1] ? 0x08 : 0x00))
+						: _joystickStatus [1]);
 				unsigned char m = 0x01;
 				for (size_t i = 0; i < 8; m <<= 1, i++)
 					if ((~msk & m) != 0x00)
 						dtB |= ~_keyboardStatusMatrix [i].value ();  // 1 if clicked...
 				_portB = (_outputRegB | ~_dataPortBDir) & 
-					(~dtB & ((_paddleConnected == 0) 
-						? _joystick1Status 
-						: ((_paddleFireButtonStatus [0][0] ? 0x04 : 0x00) | (_paddleFireButtonStatus [0][1] ? 0x08 : 0x00))));
+					(~dtB & ((_paddleConnected [0])
+						? ((_paddleFireButtonStatus [0][0] ? 0x04 : 0x00) | (_paddleFireButtonStatus [0][1] ? 0x08 : 0x00))
+						: _joystickStatus [0]));
 				result = MCHEmul::UByte (_portB);
 			}
 
@@ -90,12 +115,9 @@ void C64::CIA1Registers::initializeInternalValues ()
 	setValue (0x03, MCHEmul::UByte::_0);
 	// Just to be able to read well the keyboard...
 
-	_joystick1Status = 0xff; // No switches clicked, no fire buttons pressed...
-	_joystick2Status = 0xff; // No switches clicked, no fire buttons pressed...
+	// The status of the different controls managed from the CIA1...
+	_joystickStatus [0] = _joystickStatus [1] = 0xff; // No switches clicked, no fire buttons pressed...
 	for (size_t i = 0; i < 8; i++)
 		_keyboardStatusMatrix [i] = _rev_keyboardStatusMatrix [i] = MCHEmul::UByte::_FF; // No keys pressed...
-	
-	_paddleConnected = 0; // No paddles connected, joysticks instead (by default)...
-	for (size_t i = 0; i < 2; i++)
-		_paddleFireButtonStatus [i][0] = _paddleFireButtonStatus [i][1] = false; // Not connected...
+	disconnectAllPaddles ();
 }

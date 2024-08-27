@@ -94,12 +94,10 @@ void C64::CIA1::processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifier* n)
 					ct++;
 				}
 
-				if (jm -> _joystickId == 0)
-					_CIA1Registers -> setJoystick1Status 
-						((dr == 0x00) ? 0xff /** none connected. */ : _CIA1Registers -> joystick1Status () & ~dr);
-				else
-					_CIA1Registers -> setJoystick2Status 
-						((dr == 0x00) ? 0xff : _CIA1Registers -> joystick2Status () & ~dr);
+				_CIA1Registers -> setJoystickStatusAtPort ((size_t) jm -> _joystickId,
+					((dr == 0x00) 
+						? 0xff /** none connected. */ 
+						: _CIA1Registers -> joystickStatusAtPort ((size_t) jm -> _joystickId) & ~dr));
 			}
 
 			break;
@@ -111,16 +109,15 @@ void C64::CIA1::processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifier* n)
 				if (jb -> _joystickId != 0 && jb -> _joystickId != 1)
 					break; // Only joysticks 0 y 1 are allowed!
 
-				if (_CIA1Registers -> isPaddleConnected ())
-					_CIA1Registers -> setPaddleFireButtonStatus 
-						(_CIA1Registers -> paddleConnected (), jb -> _buttonId % 2 /** 0 or 1. */, true);
+				if (_CIA1Registers -> isPaddleConnectedAtPort ((size_t) jb -> _joystickId))
+					// Buttons 0 and 1 don't do the same action in paddle view!
+					// But the boundary is converted to a limit less than 2...
+					_CIA1Registers -> setPaddleFireButtonStatus
+						((size_t) jb -> _joystickId, (size_t) jb -> _buttonId % 2 /** 0 or 1. */, true);
 				else
-				{
-					if (jb -> _joystickId == 0)
-						_CIA1Registers -> setJoystick1Status (_CIA1Registers -> joystick1Status () & ~0x10);
-					else
-						_CIA1Registers -> setJoystick2Status (_CIA1Registers -> joystick2Status () & ~0x10);
-				}
+					// Any button does the same action in joystick view!
+					_CIA1Registers -> setJoystickStatusAtPort ((size_t) jb -> _joystickId, 
+						_CIA1Registers -> joystickStatusAtPort ((size_t) jb -> _joystickId) & ~0x10);
 			}
 
 			break;
@@ -130,18 +127,14 @@ void C64::CIA1::processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifier* n)
 				std::shared_ptr <MCHEmul::InputOSSystem::JoystickButtonEvent> jb = 
 					std::static_pointer_cast <MCHEmul::InputOSSystem::JoystickButtonEvent> (evnt.data ());
 				if (jb -> _joystickId != 0 && jb -> _joystickId != 1)
-					break; // Only joysticks 0 y 1 are allowed!
+					break; // Only joysticks 0 y 1 are allowed, but button number is not controlled!
 	
-				if (_CIA1Registers -> isPaddleConnected ())
+				if (_CIA1Registers -> isPaddleConnectedAtPort ((size_t) jb -> _joystickId))
 					_CIA1Registers -> setPaddleFireButtonStatus 
-						(_CIA1Registers -> paddleConnected (), jb -> _buttonId % 2 /** 0 or 1. */, false);
+						((size_t) jb -> _joystickId, (size_t) jb -> _buttonId % 2 /** 0 or 1. */, false);
 				else
-				{
-					if (jb -> _joystickId == 0)
-						_CIA1Registers -> setJoystick1Status (_CIA1Registers -> joystick1Status () | 0x10);
-					else
-						_CIA1Registers -> setJoystick2Status (_CIA1Registers -> joystick2Status () | 0x10);
-				}
+					_CIA1Registers -> setJoystickStatusAtPort ((size_t) jb -> _joystickId,
+						_CIA1Registers -> joystickStatusAtPort ((size_t) jb -> _joystickId) | 0x10);
 			}
 
 			break;

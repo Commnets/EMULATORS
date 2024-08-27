@@ -13,6 +13,7 @@ const std::string C64::SpritesDrawCommand::_NAME = "CSPRITESDRAW";
 const std::string C64::CharactersDrawCommand::_NAME = "CCHARSDRAW";
 const std::string C64::GridOnCommand::_NAME = "CGRIDON";
 const std::string C64::GridOffCommand::_NAME = "CGRIDOFF";
+const std::string C64::ManagePaddlesCommand::_NAME = "CPADDLE";
 
 // ---
 void C64::CIA1StatusCommand::executeImpl (MCHEmul::CommandExecuter* cE, MCHEmul::Computer* c, MCHEmul::InfoStructure& rst)
@@ -189,4 +190,46 @@ void C64::GridOffCommand::executeImpl (MCHEmul::CommandExecuter* cE,
 
 	static_cast <COMMODORE::VICII*> (static_cast <C64::Commodore64*> (c) -> vicII ()) -> 
 		setDrawRasterInterruptPositions (false);
+}
+
+// ---
+void C64::ManagePaddlesCommand::executeImpl (MCHEmul::CommandExecuter* cE,
+	MCHEmul::Computer* c, MCHEmul::InfoStructure& rst)
+{
+	if (c == nullptr)
+		return;
+
+	if (dynamic_cast <C64::Commodore64*> (c) == nullptr ||
+		static_cast <C64::Commodore64*> (c) -> cia1 () == nullptr)
+		return;
+
+	C64::CIA1* cia1 = static_cast <C64::Commodore64*> (c) -> cia1 ();
+	bool act = parameter ("00") == "ON"; // Active?
+	std::vector <size_t> portsId; // In which ports?
+	if (parameters ().size () > 1)
+	{
+		size_t i = 1;
+		std::string pIdS = MCHEmul::fixLenStr (std::to_string (i), 2, true, MCHEmul::_CEROS);
+		while (existParameter (pIdS))
+		{
+			size_t pId = (size_t) std::atoi (parameter (pIdS).c_str ());
+			if (pId == 0 || pId == 1) // The ids can only be for port 0 or 1...
+				portsId.emplace_back (pId);
+		}
+	}
+
+	// Action for all id or just for a coupe (no more than 2)
+	if (portsId.empty ())
+	{
+		if (act) cia1 -> connectAllPaddles ();
+		else cia1 -> disconnectAllPaddles ();
+	}
+	else
+	{
+		for (auto i : portsId)
+		{
+			if (act) cia1 -> connectPaddleAtPort (i);
+			else cia1 -> disconnectPaddleAtPort (i);
+		}
+	}
 }
