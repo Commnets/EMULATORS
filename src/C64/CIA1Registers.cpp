@@ -28,11 +28,11 @@ void C64::CIA1Registers::setValue (size_t p, const MCHEmul::UByte& v)
 	// ..but when the register accesed is the 0...
 	if (_sid != nullptr && (p % 0x10) == 0x00)
 		_sid -> setPotenciometerGroupActive 
-		((v.bit (7) && !v.bit (6)) 
-			? 1 
-			: ((v.bit (6) && !v.bit (7)) 
-				? 0
-				: MCHEmul::_S0)); // ..selects which info to read from SID!
+		((v.value () & 0xc0) == 0x80 // bit 7 on and bit 6 off...
+			? (size_t) 1 
+			: ((v.value () & 0xc0) == 0x40 // bit 7 off and bit 6 on...
+				? (size_t) 0
+				: MCHEmul::_S0));
 }
 
 // ---

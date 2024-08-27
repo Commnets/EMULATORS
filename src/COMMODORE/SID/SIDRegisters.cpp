@@ -52,12 +52,14 @@ const MCHEmul::UByte& COMMODORE::SIDRegisters::readValue (size_t p) const
 		{
 			// POTX
 			case 0x19:
-				result = _potenciometerValues [_potenciometerGroupActive][0];
+				if (_potenciometerGroupActive != MCHEmul::_S0) // A potenciometer has to be defined...
+					result = _potenciometerValues [_potenciometerGroupActive][0];
 				break;
 
 			// POTY
 			case 0x1a:
-				result = _potenciometerValues [_potenciometerGroupActive][1];
+				if (_potenciometerGroupActive != MCHEmul::_S0) // A potenciometer has to be defined...
+					result = _potenciometerValues [_potenciometerGroupActive][1];
 				break;
 
 			default:
