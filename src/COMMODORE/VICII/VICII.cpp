@@ -1446,7 +1446,7 @@ void COMMODORE::VICII::detectCollisions (const DrawResult& cT)
 	// Now it is time to detect collisions...
 	// First among the graphics and the sprites
 	bool cGS = false;
-	for (size_t i = 0; i < cT._collisionSpritesData.size () && !cGS; i++)
+	for (size_t i = 0; i < 8 && !cGS; i++)
 		// ...at the first collision detected, the check stops...
 		if ((cGS = (cT._collisionSpritesData [i].value () & cT._collisionGraphicData.value ()) != 0x00)) 
 			_VICIIRegisters -> setSpriteCollisionWithDataHappened (i);
@@ -1455,9 +1455,9 @@ void COMMODORE::VICII::detectCollisions (const DrawResult& cT)
 	
 	// ...and among sprites...
 	bool cSS = false;
-	for (size_t i = 0; i < cT._collisionSpritesData.size (); i++)
+	for (size_t i = 0; i < 8; i++)
 	{
-		for (size_t j = i + 1; j < cT._collisionSpritesData.size (); j++)
+		for (size_t j = i + 1; j < 8; j++)
 		{
 			if ((cSS = 
 					((cT._collisionSpritesData [i].value () & 

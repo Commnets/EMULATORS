@@ -16,6 +16,9 @@
     <Filter Include="Configuration">
       <UniqueIdentifier>{e7bd5653-8620-455d-9224-1d9ccc39d5d4}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Analysis">
+      <UniqueIdentifier>{a4834dc4-154c-4222-86cd-8b9708fc986d}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="C64EmulatorC.cpp">
@@ -106,6 +109,15 @@
     </None>
     <None Include="Standard.fmt">
       <Filter>Configuration</Filter>
+    </None>
+    <None Include="..\..\Informe 20240809-1708.diagsession">
+      <Filter>Analysis</Filter>
+    </None>
+    <None Include="..\..\Informe 20240827-1351.diagsession">
+      <Filter>Analysis</Filter>
+    </None>
+    <None Include="..\..\Informe 20240827-1635.diagsession">
+      <Filter>Analysis</Filter>
     </None>
   </ItemGroup>
 </Project>

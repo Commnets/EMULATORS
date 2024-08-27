@@ -179,7 +179,7 @@ namespace COMMODORE
 			/** The data used to detect the collisions with the graphics. */
 			MCHEmul::UByte _collisionGraphicData;
 			/** The data used to detect collisions with the sprites. */
-			std::vector <MCHEmul::UByte> _collisionSpritesData;
+			MCHEmul::UByte _collisionSpritesData [8];
 			/** The color of the each pixel considered as background. */
 			unsigned int _backgroundColorData [8];
 			/** The color of the each pixel considered as foreground. */
@@ -194,7 +194,9 @@ namespace COMMODORE
 
 			DrawResult ()
 				: _collisionGraphicData (MCHEmul::UByte::_0),
-				  _collisionSpritesData (8, MCHEmul::UByte::_0),
+				  _collisionSpritesData
+						{ MCHEmul::UByte::_0, MCHEmul::UByte::_0, MCHEmul::UByte::_0, MCHEmul::UByte::_0, 
+						  MCHEmul::UByte::_0, MCHEmul::UByte::_0, MCHEmul::UByte::_0, MCHEmul::UByte::_0 },
 				  _backgroundColorData 
 						{ MCHEmul::_U0, MCHEmul::_U0, MCHEmul::_U0, MCHEmul::_U0, 
 						  MCHEmul::_U0, MCHEmul::_U0, MCHEmul::_U0, MCHEmul::_U0 },
