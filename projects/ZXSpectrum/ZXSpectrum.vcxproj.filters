@@ -43,6 +43,9 @@
     <Filter Include="Archivos de origen\Motherboard\Chips">
       <UniqueIdentifier>{9b550418-eedd-4db8-9e63-3642e8a5e02b}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Configuration">
+      <UniqueIdentifier>{7a1bfd2d-795e-4316-8ed6-a72059062b34}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\include\ZXSpectrum\incs.hpp">
@@ -155,5 +158,22 @@
     <ClCompile Include="..\..\src\ZXSpectrum\ULARegisters.cpp">
       <Filter>Archivos de origen\Motherboard\Chips</Filter>
     </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="console.def">
+      <Filter>Configuration</Filter>
+    </None>
+    <None Include="ZXSpectrum.fmt">
+      <Filter>Configuration</Filter>
+    </None>
+    <None Include="ZXSpectrum.hlp">
+      <Filter>Configuration</Filter>
+    </None>
+    <None Include="ZXSpectrumRConsole.fmt">
+      <Filter>Configuration</Filter>
+    </None>
+    <None Include="ZXSpectrumRConsole.hlp">
+      <Filter>Configuration</Filter>
+    </None>
   </ItemGroup>
 </Project>

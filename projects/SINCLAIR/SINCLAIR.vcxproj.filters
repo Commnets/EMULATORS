@@ -40,6 +40,9 @@
     <Filter Include="Archivos de origen\Motherboard\Chips">
       <UniqueIdentifier>{31b36511-803a-41f8-b243-4a9af7e61c3e}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Configuration">
+      <UniqueIdentifier>{f0484d5e-30c1-49f2-9df4-cc0e44ba9e8d}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\include\SINCLAIR\incs.hpp">
@@ -71,5 +74,11 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="ClassDiagram.cd" />
+    <None Include="SINCLAIR.fmt">
+      <Filter>Configuration</Filter>
+    </None>
+    <None Include="SINCLAIR.hlp">
+      <Filter>Configuration</Filter>
+    </None>
   </ItemGroup>
 </Project>

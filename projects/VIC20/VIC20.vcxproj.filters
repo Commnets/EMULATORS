@@ -43,6 +43,9 @@
     <Filter Include="Archivos de origen\Motherboard\Chips">
       <UniqueIdentifier>{d565d91b-5d89-4a5c-a334-076f7396bb61}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Configuration">
+      <UniqueIdentifier>{05bea259-52aa-4004-8a69-b49bdea75153}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\include\VIC20\CommandBuilder.hpp">
@@ -149,5 +152,20 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="ClassDiagram.cd" />
+    <None Include="console.def">
+      <Filter>Configuration</Filter>
+    </None>
+    <None Include="VIC20.fmt">
+      <Filter>Configuration</Filter>
+    </None>
+    <None Include="VIC20.hlp">
+      <Filter>Configuration</Filter>
+    </None>
+    <None Include="VIC20RConsole.fmt">
+      <Filter>Configuration</Filter>
+    </None>
+    <None Include="VIC20RConsole.hlp">
+      <Filter>Configuration</Filter>
+    </None>
   </ItemGroup>
 </Project>

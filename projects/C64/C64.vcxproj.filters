@@ -185,5 +185,14 @@
       <Filter>Configuration</Filter>
     </None>
     <None Include="ClassDiagram.cd" />
+    <None Include="C64RConsole.fmt">
+      <Filter>Configuration</Filter>
+    </None>
+    <None Include="C64RConsole.hlp">
+      <Filter>Configuration</Filter>
+    </None>
+    <None Include="console.def">
+      <Filter>Configuration</Filter>
+    </None>
   </ItemGroup>
 </Project>

@@ -43,6 +43,9 @@
     <Filter Include="Archivos de origen\Motherboard\Chips">
       <UniqueIdentifier>{35154440-936d-496d-acba-07d28a3eb703}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Configuration">
+      <UniqueIdentifier>{d9512acb-e9f1-4e12-847a-2dd8c58848ff}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\C264\C264.cpp">
@@ -164,5 +167,22 @@
     <ClInclude Include="..\..\include\C264\ROMRAMSwitchRegisters.hpp">
       <Filter>Archivos de encabezado\Motherboard\Chips</Filter>
     </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="C264.fmt">
+      <Filter>Configuration</Filter>
+    </None>
+    <None Include="C264.hlp">
+      <Filter>Configuration</Filter>
+    </None>
+    <None Include="C264RConsole.fmt">
+      <Filter>Configuration</Filter>
+    </None>
+    <None Include="C264RConsole.hlp">
+      <Filter>Configuration</Filter>
+    </None>
+    <None Include="console.def">
+      <Filter>Configuration</Filter>
+    </None>
   </ItemGroup>
 </Project>

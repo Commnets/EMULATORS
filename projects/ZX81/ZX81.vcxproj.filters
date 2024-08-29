@@ -43,6 +43,9 @@
     <Filter Include="Archivos de origen\Motherboard\Chips">
       <UniqueIdentifier>{fb0bf70f-63cf-4892-ae76-645af045fc7c}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Configuration">
+      <UniqueIdentifier>{1863b633-ddc8-4d76-b3cf-d652095d9602}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\include\ZX81\incs.hpp">
@@ -155,5 +158,22 @@
     <ClCompile Include="..\..\src\ZX81\FileIO.cpp">
       <Filter>Archivos de origen\IO</Filter>
     </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="console.def">
+      <Filter>Configuration</Filter>
+    </None>
+    <None Include="ZX81.fmt">
+      <Filter>Configuration</Filter>
+    </None>
+    <None Include="ZX81.hlp">
+      <Filter>Configuration</Filter>
+    </None>
+    <None Include="ZX81RConsole.fmt">
+      <Filter>Configuration</Filter>
+    </None>
+    <None Include="ZX81RConsole.hlp">
+      <Filter>Configuration</Filter>
+    </None>
   </ItemGroup>
 </Project>
