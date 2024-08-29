@@ -62,6 +62,7 @@
     <ClCompile Include="..\..\src\CORE\SoundMemory.cpp" />
     <ClCompile Include="..\..\src\CORE\SoundVoice.cpp" />
     <ClCompile Include="..\..\src\CORE\SoundWave.cpp" />
+    <ClCompile Include="..\..\src\CORE\Trap.cpp" />
     <ClCompile Include="..\..\src\CORE\Wire.cpp" />
     <ClCompile Include="..\..\src\CORE\Stack.cpp" />
     <ClCompile Include="..\..\src\CORE\StatusRegister.cpp" />
@@ -132,6 +133,7 @@
     <ClInclude Include="..\..\include\CORE\StdFormatter.hpp" />
     <ClInclude Include="..\..\include\CORE\TestCPUSpeed.hpp" />
     <ClInclude Include="..\..\include\CORE\Ticks.hpp" />
+    <ClInclude Include="..\..\include\CORE\Trap.hpp" />
     <ClInclude Include="..\..\include\CORE\UByte.hpp" />
     <ClInclude Include="..\..\include\CORE\UBytes.hpp" />
     <ClInclude Include="..\..\include\CORE\UInt.hpp" />

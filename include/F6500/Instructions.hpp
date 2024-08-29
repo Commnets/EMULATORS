@@ -54,9 +54,13 @@ namespace F6500
 		MCHEmul::Register& registerX ()
 							{ return (cpu () -> internalRegister (C6510::_XREGISTER)); }
 		const MCHEmul::Register& registerY () const
-							{ return (cpu () -> internalRegister (C6510::_XREGISTER)); }
+							{ return (cpu () -> internalRegister (C6510::_YREGISTER)); }
 		MCHEmul::Register& registerY ()
-							{ return (cpu () -> internalRegister (C6510::_XREGISTER)); }
+							{ return (cpu () -> internalRegister (C6510::_YREGISTER)); }
+		const MCHEmul::StatusRegister& statusRegister () const
+							{ return (cpu () -> statusRegister ()); }
+		MCHEmul::StatusRegister& statusRegister ()
+							{ return (cpu () -> statusRegister ()); }
 
 		// To interpret the parameters of the instruction as an address 
 		/** 2 parameters representing an address. */
@@ -141,7 +145,7 @@ namespace F6500
 	{
 		assert (parameters ().size () == 3);
 
-		const MCHEmul::Register& x = cpu () -> internalRegister (C6510::_XREGISTER);
+		const MCHEmul::Register& x = registerX ();
 
 		MCHEmul::Address iA ({ parameters ()[1], parameters ()[2] }, false);
 		MCHEmul::Address fA = iA + (size_t) (x [0].value ());
@@ -156,7 +160,7 @@ namespace F6500
 	{
 		assert (parameters ().size () == 3);
 
-		const MCHEmul::Register& y = cpu () -> internalRegister (C6510::_YREGISTER);
+		const MCHEmul::Register& y = registerY ();
 
 		MCHEmul::Address iA ({ parameters ()[1], parameters ()[2] }, false);
 		MCHEmul::Address fA = iA + (size_t) (y [0].value ());
@@ -173,7 +177,7 @@ namespace F6500
 
 		return (_lastExecutionData._INOUTAddress = 
 			MCHEmul::Address ({ parameters ()[1] }) + 
-				(size_t) (cpu () -> internalRegister (C6510::_XREGISTER)[0].value ())); 
+				(size_t) (registerX ()[0].value ())); 
 	}
 
 	// ---
@@ -183,7 +187,7 @@ namespace F6500
 
 		return (_lastExecutionData._INOUTAddress = 
 			MCHEmul::Address ({ parameters ()[1] }) + 
-				(size_t) (cpu () -> internalRegister (C6510::_YREGISTER)[0].value ())); 
+				(size_t) (registerY ()[0].value ())); 
 	}
 
 	// ---
@@ -194,7 +198,7 @@ namespace F6500
 		// Pre - indirect zero page addressing...
 		return (_lastExecutionData._INOUTAddress = 
 			MCHEmul::Address (memory () -> values (MCHEmul::Address ({ parameters ()[1] }) + 
-				(size_t) (cpu () -> internalRegister (C6510::_XREGISTER)[0].value ()), 2), false)); 
+				(size_t) (registerX ()[0].value ()), 2), false)); 
 	}
 
 	// ---
@@ -202,7 +206,7 @@ namespace F6500
 	{
 		assert (parameters ().size () == 2);
 
-		const MCHEmul::Register& y = cpu () -> internalRegister (C6510::_YREGISTER);
+		const MCHEmul::Register& y = registerY ();
 
 		// Post - indirect zero page addressing...
 		MCHEmul::Address iA (memory () -> values (MCHEmul::Address ({ parameters ()[1] }), 2), false);
@@ -256,8 +260,8 @@ namespace F6500
 	// ---
 	inline bool ADC_General::executeWith (const MCHEmul::UByte& u)
 	{
-		MCHEmul::Register& a = cpu () -> internalRegister (C6510::_ACCUMULATOR);
-		MCHEmul::StatusRegister& st = cpu () -> statusRegister ();
+		MCHEmul::Register& a = registerA ();
+		MCHEmul::StatusRegister& st = statusRegister ();
 	
 		// Calculate the addition...
 		unsigned char ft = st.bitStatus (C6500::_DECIMALFLAG) 
@@ -303,8 +307,8 @@ namespace F6500
 	// ---
 	inline bool ALR_General::executeWith (const MCHEmul::UByte& u)
 	{
-		MCHEmul::Register& a = cpu () -> internalRegister (C6510::_ACCUMULATOR);
-		MCHEmul::StatusRegister& st = cpu () -> statusRegister ();
+		MCHEmul::Register& a = registerA ();
+		MCHEmul::StatusRegister& st = statusRegister ();
 	
 		// Makes the operation...
 		MCHEmul::UByte r = (a.values ()[0] & u); // AND...
@@ -340,8 +344,8 @@ namespace F6500
 	// ---
 	inline bool ANC_General::executeWith (MCHEmul::UByte u)
 	{
-		MCHEmul::Register& a = cpu () -> internalRegister (C6510::_ACCUMULATOR);
-		MCHEmul::StatusRegister& st = cpu () -> statusRegister ();
+		MCHEmul::Register& a = registerA ();
+		MCHEmul::StatusRegister& st = statusRegister ();
 	
 		// Set the value...
 		MCHEmul::UByte r = a.values ()[0] /** 1 byte long. */ & u; // AND...
@@ -374,8 +378,8 @@ namespace F6500
 	// ---
 	inline bool AND_General::executeWith (const MCHEmul::UByte& u)
 	{
-		MCHEmul::Register& a = cpu () -> internalRegister (C6510::_ACCUMULATOR);
-		MCHEmul::StatusRegister& st = cpu () -> statusRegister ();
+		MCHEmul::Register& a = registerA ();
+		MCHEmul::StatusRegister& st = statusRegister ();
 	
 		// Set the value...
 		// The register is always 1 byte long...
@@ -417,8 +421,8 @@ namespace F6500
 	// ---
 	inline bool ARR_General::executeWith (const MCHEmul::UByte& u)
 	{
-		MCHEmul::Register& a = cpu () -> internalRegister (C6510::_ACCUMULATOR);
-		MCHEmul::StatusRegister& st = cpu () -> statusRegister ();
+		MCHEmul::Register& a = registerA ();
+		MCHEmul::StatusRegister& st = statusRegister ();
 	
 		MCHEmul::UByte r = (a.values ()[0] & u); // AND...
 		bool o = r [7] ^ r [6]; // The overflow flag is calculated different...
@@ -460,7 +464,7 @@ namespace F6500
 		_lastExecutionData._INOUTData = MCHEmul::UBytes ({ v });
 
 		// Time of the status register...
-		MCHEmul::StatusRegister& st = cpu () -> statusRegister ();
+		MCHEmul::StatusRegister& st = statusRegister ();
 		st.setBitStatus (C6500::_NEGATIVEFLAG, v [7]);
 		st.setBitStatus (C6500::_ZEROFLAG, v == MCHEmul::UByte::_0);
 		st.setBitStatus (C6500::_CARRYFLAG, c);
@@ -570,11 +574,11 @@ namespace F6500
 	{
 		// To compare is like to substract...
 		MCHEmul::UInt r = 
-			MCHEmul::UInt (cpu () -> internalRegister (C6510::_ACCUMULATOR).values ()[0]) - 
+			MCHEmul::UInt (registerA ().values ()[0]) - 
 			MCHEmul::UInt (u);  // Never longer that 1 byte, but the result could be negative...
 
 		// Time of the status register...
-		MCHEmul::StatusRegister& st = cpu () -> statusRegister ();
+		MCHEmul::StatusRegister& st = statusRegister ();
 		st.setBitStatus (C6500::_NEGATIVEFLAG, r.negative ());
 		st.setBitStatus (C6500::_ZEROFLAG, r == MCHEmul::UInt::_0);
 		st.setBitStatus (C6500::_CARRYFLAG, r.carry ()); // When the result is positive (a >= u)
@@ -610,11 +614,11 @@ namespace F6500
 	{
 		// To compare is like to substract...
 		MCHEmul::UInt r = 
-			MCHEmul::UInt (cpu () -> internalRegister (C6510::_XREGISTER).values ()[0]) - 
+			MCHEmul::UInt (registerX ().values ()[0]) - 
 			MCHEmul::UInt (u);  // Never longer that 1 byte, but the result could be negative...
 
 		// Time of the status register...
-		MCHEmul::StatusRegister& st = cpu () -> statusRegister ();
+		MCHEmul::StatusRegister& st = statusRegister ();
 		st.setBitStatus (C6500::_NEGATIVEFLAG, r.negative ());
 		st.setBitStatus (C6500::_ZEROFLAG, r [0] == MCHEmul::UByte::_0);
 		st.setBitStatus (C6500::_CARRYFLAG, r.carry ()); // When the result is positive (a >= u)
@@ -645,11 +649,11 @@ namespace F6500
 	{
 		// To compare is like to substract...
 		MCHEmul::UInt r = 
-			MCHEmul::UInt (cpu () -> internalRegister (C6510::_YREGISTER).values ()[0]) -
+			MCHEmul::UInt (registerY ().values ()[0]) -
 			MCHEmul::UInt (u);  // Never longer that 1 byte, but the result could be negative...
 
 		// Time of the status register...
-		MCHEmul::StatusRegister& st = cpu () -> statusRegister ();
+		MCHEmul::StatusRegister& st = statusRegister ();
 		st.setBitStatus (C6500::_NEGATIVEFLAG, r.negative ());
 		st.setBitStatus (C6500::_ZEROFLAG, r [0] == MCHEmul::UByte::_0);
 		st.setBitStatus (C6500::_CARRYFLAG, r.carry ()); // When the result is positive (a >= u)
@@ -688,10 +692,10 @@ namespace F6500
 
 		// To compare is like to substract...
 		MCHEmul::UInt r = 
-			MCHEmul::UInt (cpu () -> internalRegister (C6510::_ACCUMULATOR).values ()[0]) - v;  //...CMP
+			MCHEmul::UInt (registerA ().values ()[0]) - v;  //...CMP
 
 		// Time of the status register...
-		MCHEmul::StatusRegister& st = cpu () -> statusRegister ();
+		MCHEmul::StatusRegister& st = statusRegister ();
 		st.setBitStatus (C6500::_NEGATIVEFLAG, r.negative ());
 		st.setBitStatus (C6500::_ZEROFLAG, r == MCHEmul::UInt::_0);
 		st.setBitStatus (C6500::_CARRYFLAG, r.carry ()); // When the result is positive (a >= u)
@@ -731,7 +735,7 @@ namespace F6500
 		_lastExecutionData._INOUTData = v.bytes ();
 
 		// Time of the status register...
-		MCHEmul::StatusRegister& st = cpu () -> statusRegister ();
+		MCHEmul::StatusRegister& st = statusRegister ();
 		st.setBitStatus (C6500::_NEGATIVEFLAG, v.negative ());
 		st.setBitStatus (C6500::_ZEROFLAG, v == MCHEmul::UInt::_0);
 
@@ -766,8 +770,8 @@ namespace F6500
 	// ---
 	inline bool EOR_General::executeWith (const MCHEmul::UByte& u)
 	{
-		MCHEmul::Register& a = cpu () -> internalRegister (C6510::_ACCUMULATOR);
-		MCHEmul::StatusRegister& st = cpu () -> statusRegister ();
+		MCHEmul::Register& a = registerA ();
+		MCHEmul::StatusRegister& st = statusRegister ();
 	
 		// Read the value, makes the operation and sets it back...
 		MCHEmul::UByte r = a.values ()[0] ^ u;
@@ -813,7 +817,7 @@ namespace F6500
 		_lastExecutionData._INOUTData = v.bytes ();
 
 		// Time of the status register...
-		MCHEmul::StatusRegister& st = cpu () -> statusRegister ();
+		MCHEmul::StatusRegister& st = statusRegister ();
 		st.setBitStatus (C6500::_NEGATIVEFLAG, v.negative ());
 		st.setBitStatus (C6500::_ZEROFLAG, v == MCHEmul::UInt::_0);
 
@@ -850,8 +854,8 @@ namespace F6500
 	// ---
 	inline bool ISC_General::executeOn (const MCHEmul::Address& a)
 	{
-		MCHEmul::Register& ac = cpu () -> internalRegister (C6510::_ACCUMULATOR);
-		MCHEmul::StatusRegister& st = cpu () -> statusRegister ();
+		MCHEmul::Register& ac = registerA ();
+		MCHEmul::StatusRegister& st = statusRegister ();
 
 		// Read the value, makes the operation and sets it back...
 		MCHEmul::UInt v = MCHEmul::UInt ((memory () -> value (a))) /** 1 bytelong. */ + MCHEmul::UInt::_1; // INC...
@@ -919,10 +923,10 @@ namespace F6500
 	inline bool LDA_General::executeWith (const MCHEmul::UByte& u)
 	{
 		// Set the value...
-		cpu () -> internalRegister (C6510::_ACCUMULATOR).set ({ u });
+		registerA ().set ({ u });
 
 		// Time of the status register...
-		MCHEmul::StatusRegister& st = cpu () -> statusRegister ();
+		MCHEmul::StatusRegister& st = statusRegister ();
 		st.setBitStatus (C6500::_NEGATIVEFLAG, u [7]);
 		st.setBitStatus (C6500::_ZEROFLAG, u == MCHEmul::UByte::_0);
 
@@ -959,12 +963,12 @@ namespace F6500
 	{
 		// The memory location is copied into both _ACCUMULATOR & _XREGISTER
 		MCHEmul::UByte v = memory () -> value (a); // 1 byte long always...
-		cpu () -> internalRegister (C6510::_ACCUMULATOR).set ({ v }); 
-		cpu () -> internalRegister (C6510::_XREGISTER).set ({ v });
+		registerA ().set ({ v }); 
+		registerX ().set ({ v });
 		_lastExecutionData._INOUTData = MCHEmul::UBytes ({ v });
 
 		// Time of the status register...
-		MCHEmul::StatusRegister& st = cpu () -> statusRegister ();
+		MCHEmul::StatusRegister& st = statusRegister ();
 		st.setBitStatus (C6500::_NEGATIVEFLAG, v.bit (7));
 		st.setBitStatus (C6500::_ZEROFLAG, v == MCHEmul::UByte::_0);
 
@@ -996,10 +1000,10 @@ namespace F6500
 	inline bool LDX_General::executeWith (const MCHEmul::UByte& u)
 	{
 		// Set the value...
-		cpu () -> internalRegister (C6510::_XREGISTER).set ({ u });
+		registerX ().set ({ u });
 
 		// Time of the status register...
-		MCHEmul::StatusRegister& st = cpu () -> statusRegister ();
+		MCHEmul::StatusRegister& st = statusRegister ();
 		st.setBitStatus (C6500::_NEGATIVEFLAG, u [7]);
 		st.setBitStatus (C6500::_ZEROFLAG, u == MCHEmul::UByte::_0);
 
@@ -1030,10 +1034,10 @@ namespace F6500
 	inline bool LDY_General::executeWith (const MCHEmul::UByte& u)
 	{
 		// Set the value...
-		cpu () -> internalRegister (C6510::_YREGISTER).set ({ u });
+		registerY ().set ({ u });
 
 		// Time of the status register...
-		MCHEmul::StatusRegister& st = cpu () -> statusRegister ();
+		MCHEmul::StatusRegister& st = statusRegister ();
 		st.setBitStatus (C6500::_NEGATIVEFLAG, u [7]);
 		st.setBitStatus (C6500::_ZEROFLAG, u == MCHEmul::UByte::_0);
 
@@ -1070,7 +1074,7 @@ namespace F6500
 		_lastExecutionData._INOUTData = MCHEmul::UBytes ({ v });
 
 		// Time of the status register...
-		MCHEmul::StatusRegister& st = cpu () -> statusRegister ();
+		MCHEmul::StatusRegister& st = statusRegister ();
 		st.setBitStatus (C6500::_NEGATIVEFLAG, v [7]);
 		st.setBitStatus (C6500::_ZEROFLAG, v == MCHEmul::UByte::_0);
 		st.setBitStatus (C6500::_CARRYFLAG, c);
@@ -1134,8 +1138,8 @@ namespace F6500
 	// ---
 	inline bool ORA_General::executeWith (const MCHEmul::UByte& u)
 	{
-		MCHEmul::Register& a = cpu () -> internalRegister (C6510::_ACCUMULATOR);
-		MCHEmul::StatusRegister& st = cpu () -> statusRegister ();
+		MCHEmul::Register& a = registerA ();
+		MCHEmul::StatusRegister& st = statusRegister ();
 	
 		// Read the value, makes the operation and sets it back...
 		MCHEmul::UByte r = a.values ()[0] | u;
@@ -1188,8 +1192,8 @@ namespace F6500
 	// ---
 	inline bool RLA_General::executeOn (const MCHEmul::Address& a)
 	{
-		MCHEmul::Register& ac = cpu () -> internalRegister (C6510::_ACCUMULATOR);
-		MCHEmul::StatusRegister& st = cpu () -> statusRegister ();
+		MCHEmul::Register& ac = registerA ();
+		MCHEmul::StatusRegister& st = statusRegister ();
 
 		// The memory is affected...
 		MCHEmul::UByte v = memory () -> value (a); // 1 byte long always...
@@ -1234,7 +1238,7 @@ namespace F6500
 	// ---
 	inline bool ROL_General::executeOn (const MCHEmul::Address& a)
 	{
-		MCHEmul::StatusRegister& st = cpu () -> statusRegister ();
+		MCHEmul::StatusRegister& st = statusRegister ();
 		bool c = st.bitStatus (C6500::_CARRYFLAG); 
 
 		// Read the value, makes the operation and set it back!
@@ -1274,7 +1278,7 @@ namespace F6500
 	// ---
 	inline bool ROR_General::executeOn (const MCHEmul::Address& a)
 	{
-		MCHEmul::StatusRegister& st = cpu () -> statusRegister ();
+		MCHEmul::StatusRegister& st = statusRegister ();
 		bool c = st.bitStatus (C6500::_CARRYFLAG); 
 
 		// Read the value, makes the operation and set it back!
@@ -1316,8 +1320,8 @@ namespace F6500
 	// ---
 	inline bool RRA_General::executeOn (const MCHEmul::Address& a)
 	{
-		MCHEmul::Register& ac = cpu () -> internalRegister (C6510::_ACCUMULATOR);
-		MCHEmul::StatusRegister& st = cpu () -> statusRegister ();
+		MCHEmul::Register& ac = registerA ();
+		MCHEmul::StatusRegister& st = statusRegister ();
 
 		// The operation affects the memory...
 		MCHEmul::UByte v = memory () -> value (a); // Always 1 byte long...
@@ -1374,8 +1378,8 @@ namespace F6500
 	inline bool SAX_General::executeOn (const MCHEmul::Address& a)
 	{
 		// At the end the memory is stored with _ACCUMULATOR & _XREGISTER
-		MCHEmul::UByte dt = cpu () -> internalRegister (C6510::_ACCUMULATOR).values ()[0] &
-			cpu () -> internalRegister (C6510::_XREGISTER).values ()[0];
+		MCHEmul::UByte dt = registerA ().values ()[0] &
+			registerX ().values ()[0];
 		memory () -> set (a, dt); // Always 1 byte long...
 		_lastExecutionData._INOUTData = MCHEmul::UBytes ({ dt });
 
@@ -1406,8 +1410,8 @@ namespace F6500
 	// ---
 	inline bool SBC_General::executeWith (const MCHEmul::UByte& u)
 	{
-		MCHEmul::Register& a = cpu () -> internalRegister (C6510::_ACCUMULATOR);
-		MCHEmul::StatusRegister& st = cpu () -> statusRegister ();
+		MCHEmul::Register& a = registerA ();
+		MCHEmul::StatusRegister& st = statusRegister ();
 
 		// Read the value, makes the operation and set it back!
 		unsigned char ft = st.bitStatus (C6500::_DECIMALFLAG) 
@@ -1453,13 +1457,13 @@ namespace F6500
 	// ---
 	inline bool SBX_General::executeWith (const MCHEmul::UByte& u)
 	{
-		MCHEmul::Register& x = cpu () -> internalRegister (C6510::_XREGISTER);
+		MCHEmul::Register& x = registerX ();
 		MCHEmul::UInt v = MCHEmul::UInt (cpu () -> 
 			internalRegister (C6510::_ACCUMULATOR).values ()[0] & x.values ()[0]) - MCHEmul::UInt ({ u });
 		x.set (v.values ()); // But always 1 byte long...
 
 		// Time of the status register...
-		MCHEmul::StatusRegister& st = cpu () -> statusRegister ();
+		MCHEmul::StatusRegister& st = statusRegister ();
 		st.setBitStatus (C6500::_NEGATIVEFLAG, v.negative ());
 		st.setBitStatus (C6500::_ZEROFLAG, v == MCHEmul::UInt::_0);
 		st.setBitStatus (C6500::_CARRYFLAG, v.carry ());
@@ -1497,8 +1501,8 @@ namespace F6500
 	// ---
 	inline bool SLO_General::executeOn (const MCHEmul::Address& a)
 	{
-		MCHEmul::Register& ac = cpu () -> internalRegister (C6510::_ACCUMULATOR);
-		MCHEmul::StatusRegister& st = cpu () -> statusRegister ();
+		MCHEmul::Register& ac = registerA ();
+		MCHEmul::StatusRegister& st = statusRegister ();
 
 		// The memory is affected...
 		MCHEmul::UByte v = memory () -> value (a); 
@@ -1545,8 +1549,8 @@ namespace F6500
 	// ---
 	inline bool SRE_General::executeOn (const MCHEmul::Address& a)
 	{
-		MCHEmul::Register& ac = cpu () -> internalRegister (C6510::_ACCUMULATOR);
-		MCHEmul::StatusRegister& st = cpu () -> statusRegister ();
+		MCHEmul::Register& ac = registerA ();
+		MCHEmul::StatusRegister& st = statusRegister ();
 
 		// The operation affects the memory...
 		MCHEmul::UByte v = memory () -> value (a);
@@ -1593,7 +1597,7 @@ namespace F6500
 	{
 		// Set the value...
 		memory () -> set (a, 
-			_lastExecutionData._INOUTData = cpu () -> internalRegister (C6510::_ACCUMULATOR).values ()); // 1 byte-length
+			_lastExecutionData._INOUTData = registerA ().values ()); // 1 byte-length
 
 		return (true);
 	}
@@ -1625,7 +1629,7 @@ namespace F6500
 	{
 		// Set the value...
 		memory () -> set (a, 
-			_lastExecutionData._INOUTData = cpu () -> internalRegister (C6510::_XREGISTER).values ()); // 1 byte-length
+			_lastExecutionData._INOUTData = registerX ().values ()); // 1 byte-length
 
 		return (true);
 	}
@@ -1653,7 +1657,7 @@ namespace F6500
 	{
 		// Set the value...
 		memory () -> set (a, 
-			_lastExecutionData._INOUTData = cpu () -> internalRegister (C6510::_YREGISTER).values ()); // 1 byte-length
+			_lastExecutionData._INOUTData = registerY ().values ()); // 1 byte-length
 
 		return (true);
 	}

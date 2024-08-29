@@ -33,6 +33,7 @@
 #include <CORE/MBElement.hpp>
 #include <CORE/Bus.hpp>
 #include <CORE/Wire.hpp>
+#include <CORE/Trap.hpp>
 #include <CORE/Chip.hpp>
 #include <CORE/GraphicalChip.hpp>
 #include <CORE/SoundChip.hpp>

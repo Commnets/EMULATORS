@@ -58,7 +58,7 @@ namespace ZX81
 		Type _type;
 
 		// Implementation...
-		const MCHEmul::Address _addressIn, _addressOut;
+		const MCHEmul::Trap _loadTrap;
 	};
 }
 

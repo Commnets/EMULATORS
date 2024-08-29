@@ -49,9 +49,9 @@ namespace COMMODORE
 		/** To set the "position" of the a potenciometer (a) within a group (np). \n
 			No boundaries checks are done to speed up code in production, 
 			so take care when using this method. */
-		void setPotenciometerValue (size_t np, size_t a, unsigned char v)
+		void setPotenciometerValue (size_t np, size_t a, float v)
 							{ _potenciometerValues [np][a] = v; }
-		unsigned char potenciometerValue (size_t np, size_t a) const
+		float potenciometerValue (size_t np, size_t a) const
 							{ return (_potenciometerValues [np][a]); }
 
 		virtual void initialize () override;
@@ -73,9 +73,10 @@ namespace COMMODORE
 		size_t _potenciometerGroupActive;
 		/** The position of the joysticks, and their different axis are simulated as potenciometers. \n
 			The memory structure is initialized at construction and initialized in initializeInternalvalues (). 
-			As the number of joysticks is not know and depends on a parameter 
-			there must be quicker to use pointers instead e.g. vectors. */
-		unsigned char** _potenciometerValues;
+			The number of groups of potentiometers supported are 2. \n
+			The values of the float can vary between 0 and 255. This is the maximum value of a byte. \n
+			This is to allow the portentiometer to move little by little. */
+		float** _potenciometerValues;
 		/** A reference to SID Lib Wrapper. */
 		SIDLibWrapper* _sidWrapper;
 

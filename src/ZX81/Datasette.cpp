@@ -25,12 +25,17 @@ ZX81::DatasetteInjection::DatasetteInjection (ZX81::Type t)
 		{ { "Name", "Datasette Injection ZX81" },
 		  { "Manufacturer", "ICF to inject the code directly into the memory" } }),
 	  _type (t),
-	  _addressIn ((t == ZX81::Type::_ZX80) 
+	  _loadTrap { 
+		0, 
+		"LOAD", 
+		(t == ZX81::Type::_ZX80) 
 		  ? MCHEmul::Address ({ 0x22, 0x02 }, false)
-		  : MCHEmul::Address ({ 0x56, 0x03 }, false)),
-	  _addressOut ((t == ZX81::Type::_ZX80) 
+		  : MCHEmul::Address ({ 0x56, 0x03 }, false),
+		(t == ZX81::Type::_ZX80) 
 		  ? MCHEmul::Address ({ 0x03, 0x02 }, false)
-		  : MCHEmul::Address ({ 0x07, 0x02 }, false))
+		  : MCHEmul::Address ({ 0x07, 0x02 }, false),
+		{  }
+			}
 {
 	setClassName ("ZX81DatasetteI");
 }
@@ -38,7 +43,7 @@ ZX81::DatasetteInjection::DatasetteInjection (ZX81::Type t)
 // ---
 bool ZX81::DatasetteInjection::simulate (MCHEmul::CPU* cpu)
 {
-	if ((cpu -> programCounter ().internalRepresentation () == _addressIn.value ()) &&
+	if ((cpu -> programCounter ().internalRepresentation () == _loadTrap._addressIn.value ()) &&
 		!_data._data.empty ()) // there must be data inside...
 	{
 		// The only type of data recognized is so far, OAndPFileData
@@ -49,7 +54,7 @@ bool ZX81::DatasetteInjection::simulate (MCHEmul::CPU* cpu)
 		// To simulate the return from the routine...
 		cpu -> memoryRef () -> stack () -> pull (2);
 
-		cpu -> programCounter ().setAddress (_addressOut);
+		cpu -> programCounter ().setAddress (_loadTrap._addressOut);
 	}
 
 	return (true);

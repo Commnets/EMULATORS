@@ -108,10 +108,16 @@ void COMMODORE::SID::processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifier
 					break; // Only joysticks 0 y 1 are allowed and never more than 2 axis each!
 						   // This matched what is defined in SIDRegisters! (@see SIDRegisters)
 
+				size_t ct = 0; // The number of axis managed...
 				for (auto i : jm -> _axisValues)
+				{
+					float tadd = (i > 0) ? 0.25f : ((i < 0) ? -0.25f : 0.0f);
 					_SIDRegisters -> setPotenciometerValue // To 0 when reach 255...
 						((size_t) jm -> _joystickId, (size_t) i, 
-							_SIDRegisters -> potenciometerValue ((size_t) jm -> _joystickId, (size_t) i) + 1);
+							_SIDRegisters -> potenciometerValue ((size_t) jm -> _joystickId, (size_t) ct) + tadd);
+
+					ct++;
+				}
 			}
 
 		default:

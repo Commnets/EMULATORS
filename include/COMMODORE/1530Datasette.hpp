@@ -60,22 +60,6 @@ namespace COMMODORE
 	class Datasette1530Injection : public MCHEmul::StandardDatasette
 	{
 		public:
-		struct Trap final
-		{
-			int _id;								// For a quicker identification...
-			std::string _name;						// Name of the trap (to recognize)
-			MCHEmul::Address _addressIn;			// PC where the trap has to enter...
-			MCHEmul::Address _addressOut;			// PC where the trap has to finishes!...
-
-			/** Just to simplify the representation of the Trap in logs of info structures. */
-			std::string asString () const
-							{ return (std::to_string (_id) + ":" + _name + "(" +
-								_addressIn.asString (MCHEmul::UByte::OutputFormat::_HEXA, '\0') + "," +
-								_addressOut.asString (MCHEmul::UByte::OutputFormat::_HEXA, '\0') + ")"); }
-		};
-
-		using Traps = std::vector <Trap>;
-
 		struct Definition final
 		{
 			public:
@@ -88,7 +72,7 @@ namespace COMMODORE
 			MCHEmul::Address _endProgramAddr;		// End of the RAM where program is loaded...
 			MCHEmul::Address _keyboardBufferAddr;	// Where the keyboard buffer starts (to simulate later "autorun")...
 			MCHEmul::Address _keyboardPendingAddr;	// Number of keys ending to be read in the keyboard buffer...
-			const Traps _traps;						// The traps (see above for definition)
+			const MCHEmul::Traps _traps;			// The traps...
 
 			MCHEmul::InfoStructure getInfoStructure () const;
 		};
@@ -112,7 +96,7 @@ namespace COMMODORE
 		/** Invoked from simulate. It can be overloaded, 
 			but a couple of basic traps are understood: "Header" & "Retrieve".
 			Define them when construct the object because the address In/Out can vary per type of COMMODORE machine. */
-		virtual bool executeTrap (const Trap& t, MCHEmul::CPU* cpu);
+		virtual bool executeTrap (const MCHEmul::Trap& t, MCHEmul::CPU* cpu);
 
 		/** To load the program into the memory. \n
 			In some COMMODORE computers (like C64) the whole RAM memory is not directly accesible. */

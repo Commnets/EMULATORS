@@ -198,6 +198,9 @@
     <ClCompile Include="..\..\src\CORE\DatasettePort.cpp">
       <Filter>Archivos de origen\IO</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\CORE\Trap.cpp">
+      <Filter>Archivos de origen\Motherboard</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\include\CORE\IO.hpp">
@@ -384,6 +387,9 @@
       <Filter>Archivos de encabezado\IO</Filter>
     </ClInclude>
     <ClInclude Include="..\..\include\CORE\CPUHook.hpp">
+      <Filter>Archivos de encabezado\Motherboard</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\CORE\Trap.hpp">
       <Filter>Archivos de encabezado\Motherboard</Filter>
     </ClInclude>
   </ItemGroup>

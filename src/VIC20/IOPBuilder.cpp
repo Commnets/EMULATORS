@@ -39,11 +39,17 @@ MCHEmul::IOPeripheral* VIC20::IOPeripheralBuilder::createPeripheral
 					MCHEmul::Address ({ 0xc6, 0x00 }, false), // Number of characters in the keyboard buffer... (to simulate "run")
 					// Traps...
 					{	// Trap to the routine finding the right header (when "load" is done by name)...
-						{ COMMODORE::Datasette1530Injection::_FINDHEADERTRAP, "Find Header", 
-							MCHEmul::Address ({ 0xb2, 0xf7 }, false), MCHEmul::Address ({ 0xb5, 0xf7 }, false) },
+						{ COMMODORE::Datasette1530Injection::_FINDHEADERTRAP, 
+						  "Find Header", 
+						  MCHEmul::Address ({ 0xb2, 0xf7 }, false), 
+						  MCHEmul::Address ({ 0xb5, 0xf7 }, false),
+						  { 0x20, 0xc0, 0xf8 } },
 						// Traps to the routine to get the content of the file once it has been found...
-						{ COMMODORE::Datasette1530Injection::_RECEIVEDATATRAP, "Receive",
-							MCHEmul::Address ({ 0x0b, 0xf9 }, false), MCHEmul::Address ({ 0xcf, 0xfc }, false) } 
+						{ COMMODORE::Datasette1530Injection::_RECEIVEDATATRAP, 
+						  "Receive",
+						  MCHEmul::Address ({ 0x0b, 0xf9 }, false), 
+						  MCHEmul::Address ({ 0xcf, 0xfc }, false),
+						  { 0x20, 0xfb, 0xfc } }
 					}
 				}
 			);

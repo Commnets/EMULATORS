@@ -33,10 +33,17 @@ namespace C64
 
 		CIA1 ()
 			: CIA (_ID, CIA1Registers::_CIA1_SUBSET, F6500::IRQInterrupt::_ID),
-			  _CIA1Registers (nullptr)
+			  _CIA1Registers (nullptr),
+			  _sid (nullptr),
+			  _lastDatasetteRead (0)
 							{ setClassName ("CIA1"); }
 
 		virtual bool initialize () override;
+
+		/** Before using this method the chip has to be initialized,
+			otherwise the variable _CIARegisters will be nullpr and erything will crash. */
+		void linkToSID (COMMODORE::SID* sid)
+							{ _sid = sid; _CIA1Registers -> linkToSID (sid); }
 
 		// Managing the paddles/jiysticks...
 		bool isPaddleConnectedAtPort (unsigned char p) const
@@ -59,6 +66,8 @@ namespace C64
 
 		private:
 		C64::CIA1Registers* _CIA1Registers;
+		/** The SID linked. */
+		COMMODORE::SID* _sid;
 
 		// Implementation
 		unsigned int _lastDatasetteRead;

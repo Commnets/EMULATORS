@@ -9,9 +9,9 @@ COMMODORE::SIDRegisters::SIDRegisters (MCHEmul::PhysicalStorage* ps, size_t pp, 
 	setClassName ("SIDRegisters");
 
 	// The info about the potenciomater's values!
-	_potenciometerValues = new unsigned char* [2]; // Two "groups" (joysticks)
+	_potenciometerValues = new float* [2]; // Two "groups" (joysticks)
 	for (size_t i = 0; i < 2; 
-		_potenciometerValues [i++] = new unsigned char [2]); // To different movements each (axis in the joystick)
+		_potenciometerValues [i++] = new float [2]); // To different movements each (axis in the joystick)
 
 	initializeInternalValues ();
 }
@@ -53,13 +53,13 @@ const MCHEmul::UByte& COMMODORE::SIDRegisters::readValue (size_t p) const
 			// POTX
 			case 0x19:
 				if (_potenciometerGroupActive != MCHEmul::_S0) // A potenciometer has to be defined...
-					result = _potenciometerValues [_potenciometerGroupActive][0];
+					result = MCHEmul::UByte ((unsigned char) _potenciometerValues [_potenciometerGroupActive][0]);
 				break;
 
 			// POTY
 			case 0x1a:
 				if (_potenciometerGroupActive != MCHEmul::_S0) // A potenciometer has to be defined...
-					result = _potenciometerValues [_potenciometerGroupActive][1];
+					result = MCHEmul::UByte ((unsigned char) _potenciometerValues [_potenciometerGroupActive][1]);
 				break;
 
 			default:
@@ -135,5 +135,5 @@ void COMMODORE::SIDRegisters::initializeInternalValues ()
 	// All potenciometer positions to 0. */
 	_potenciometerGroupActive = MCHEmul::_S0; // None...
 	for (size_t i = 0; i < 2; i++)
-		_potenciometerValues [i][0] = _potenciometerValues [i][1] = (unsigned char) 0;
+		_potenciometerValues [i][0] = _potenciometerValues [i][1] = 0.0f;
 }

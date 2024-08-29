@@ -62,10 +62,11 @@ bool COMMODORE::Datasette1530Injection::simulate (MCHEmul::CPU* cpu)
 	// Detect first whether the simulation is or not in one of them and then execute the right thing...
 	// There can not be more than 1 trap with the same name
 	bool nF = false;
-	for (COMMODORE::Datasette1530Injection::Traps::const_iterator i = _definition._traps.begin ();
+	for (MCHEmul::Traps::const_iterator i = _definition._traps.begin ();
 		i != _definition._traps.end () && !nF; i++)
 	{
-		if (nF = (cpu -> programCounter ().internalRepresentation () == (*i)._addressIn.value ()))
+		if (nF = (cpu -> programCounter ().internalRepresentation () == (*i)._addressIn.value () && 
+			(*i).verifyFingerTipAgainst (cpu -> memoryRef ()))) // The fingertip has to be also "found"...
 		{
 			// Execute the trap...
 			result = executeTrap ((*i), cpu);
@@ -103,8 +104,7 @@ MCHEmul::InfoStructure COMMODORE::Datasette1530Injection::getInfoStructure () co
 }
 
 // ---
-bool COMMODORE::Datasette1530Injection::executeTrap 
-	(const COMMODORE::Datasette1530Injection::Trap& t, MCHEmul::CPU* cpu)
+bool COMMODORE::Datasette1530Injection::executeTrap (const MCHEmul::Trap& t, MCHEmul::CPU* cpu)
 {
 	bool result = true;
 
