@@ -81,8 +81,10 @@ void C64::Cartridge::configureMemoryStructure (bool romL, bool romH1, bool romH2
 				// Remember that writting into the position $de00 will change the bank that is or not active...
 				// To be really active the right ROML or ROMH1 has to be also active!...
 				bool rH = _activeBank >= 16 && _cpuSubsets.size () != 64 /** Terminator 2. */;
-				_cpuSubsets [size_t (_EXPANSIONROMBASE_SUBSET + (int) _activeBank)] -> setActive (_bankActive = (rH ? romH1 : romL));
-				_cpuSubsets [size_t (_EXPANSIONROMBASE_SUBSET + (int) _activeBank)] -> setActiveForReading (_bankActive);
+				_cpuSubsets [size_t (_EXPANSIONROMBASE_SUBSET + (int) _activeBank)] -> 
+					setActive (_bankActive = (rH ? romH1 : romL));
+				_cpuSubsets [size_t (_EXPANSIONROMBASE_SUBSET + (int) _activeBank)] -> 
+					setActiveForReading (_bankActive);
 			}
 
 			break;
@@ -255,35 +257,39 @@ void C64::Cartridge::dumpDataInto (C64::Memory* m,
 		// This type is a little bit complex.
 		// It is like a 16k GENERIC Cartridge but different memory zones can be banked in and out
 		// making possiblie to simulate sizes of up to 512 kByte!
-		// To change the bank it is needed to wirte at the position $de00:
-		// The lowest 6 bits is the number of the bank and the bit 8 must be always set to true
-		// Banks from 0 to 15 are banked between $8000 and $9fff
-		// Banks from 16 to 31 are banked between $a000 and $bfff
+		// To change the bank it is needed to write at the position $de00:
+		// The lowest 6 bits would hold the number of the bank and the bit 8 must be always set to true.
+		// Banks from 0 to 15 are banked between $8000 and $9fff.
+		// Banks from 16 to 31 are banked between $a000 and $bfff.
 		// Except Terminator 2 witch banks everything between $a000 and $bfff, but the length is 512k!
+		// However it doesn't care here...
 		case C64::Cartridge::Type::_OCEANTYPE1:
 			{
-				// To create the banks...
-					// They can vary attending to the type of cartriodge connected!
 				for (size_t i = 0; i < _data._data.size (); i++)
 				{
+					// Use the data info received, just in case...
+					std::string bkS = _data._data [i].attribute ("BANK");
+					int bk = std::atoi (bkS.c_str ());
+					size_t nB = _data._data [i].bytes ().size ();
+
+					// First of all, the physical storage is created...
 					MCHEmul::PhysicalStorage* fS = nullptr;
 					_storages.insert (MCHEmul::PhysicalStorages::value_type 
-						(_EXPANSIONROMBASE + (int) i, fS = new MCHEmul::PhysicalStorage 
-							(_EXPANSIONROMBASE + (int) i, MCHEmul::PhysicalStorage::Type::_ROM, 0x2000)));
+						(_EXPANSIONROMBASE + (int) bk, fS = new MCHEmul::PhysicalStorage 
+							(_EXPANSIONROMBASE + (int) bk, MCHEmul::PhysicalStorage::Type::_ROM, nB)));
 
+					// ...then the logical access...
 					MCHEmul::PhysicalStorageSubset* fSS = nullptr;
 					_cpuSubsets.insert (MCHEmul::PhysicalStorageSubsets::value_type
-						(_EXPANSIONROMBASE_SUBSET + (int) i, fSS = new MCHEmul::PhysicalStorageSubset
-							(_EXPANSIONROMBASE_SUBSET + (int) i, fS, 0x2000, 
-								MCHEmul::Address ({ 0x00, (i >= 16 && i != 64 /** Terminator 2. */) ? 0xa0 : 0x80 }, false), 0x2000)));
-					fSS -> setName ("Bank" + MCHEmul::fixLenStr (std::to_string (i), 2, true, MCHEmul::_CEROS));
-				}
+						(_EXPANSIONROMBASE_SUBSET + (int) bk, fSS = new MCHEmul::PhysicalStorageSubset
+							(_EXPANSIONROMBASE_SUBSET + (int) bk, fS, 0x0000, _data._data [i].startAddress (), nB)));
 
-				// To load them with the right info...
-				for (size_t i = 0; i < _data._data.size (); i++)
-					_cpuSubsets [size_t (_EXPANSIONROMBASE_SUBSET + 
-						std::atoi (_data._data [i].attribute ("BANK").c_str ()))] -> set 
-						(_data._data [i].startAddress (), _data._data [i].bytes (), true /** force. */);
+					// ..load the data into it...
+					fSS -> set (_data._data [i].startAddress (), _data._data [i].bytes (), true /** force. */);
+					
+					// ...and set a name to recognize it later...
+					fSS -> setName ("Ocean1 Bank " + bkS);
+				}
 
 				_activeBank = 0;
 				_bankActive = false;

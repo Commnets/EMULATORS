@@ -421,7 +421,7 @@ std::string COMMODORE::CRTFileData::asString () const
 	{
 		cD += ((ct != 0) ? "," : "") + 
 			MCHEmul::removeAll0 (i._startingLoadAddress.asString (MCHEmul::UByte::OutputFormat::_HEXA, '\0', 2)) +
-				" " + std::to_string (i._romSize) + " bytes";
+				" " + std::to_string (i._romSize) + " bytes (bk:" + std::to_string (i._bankNumber) + ")";
 
 		ct++;
 	}

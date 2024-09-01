@@ -874,10 +874,12 @@ void COMMODORE::VICII::drawGraphicsSpritesAndDetectCollisions (const COMMODORE::
 
 	// The info about the sprites is moved into this variable too...
 	for (int i = 7; i >= 0; i--)
+	{
 		if (_vicSpriteInfo [(size_t) i]._active)
 			colGraphics._collisionSpritesData [(size_t) i] = 
 				std::move (drawSpriteOver ((size_t) i, colGraphics._spriteColor, 
 					colGraphics._spriteColorOwner));
+	}
 
 	// The graphical info is moved to the screen...
 	drawResultToScreen (colGraphics, dC);
@@ -1324,6 +1326,12 @@ MCHEmul::UByte COMMODORE::VICII::drawMonoColorSpriteOver (unsigned short c, unsi
 		size_t iBy = (size_t) ((pp - x) / dW8);
 		size_t iBt = (size_t) (7 - (((pp - x) % dW8) / dW));
 		bool dP = _vicSpriteInfo [spr]._graphicsLineSprites [iBy].bit (iBt);
+
+		// Once the bit has been used, it is put back to false...
+		// ..simulating the behaviour of the shift register used by the VIC
+		// ...to select the bit to paint...
+		_vicSpriteInfo [spr]._graphicsLineSprites [iBy].setBit (iBt, false);
+
 		if (!dP)
 			continue; // The point is not visible...
 
@@ -1372,6 +1380,13 @@ MCHEmul::UByte COMMODORE::VICII::drawMultiColorSpriteOver (unsigned short c, uns
 		size_t iBy = (size_t) ((pp - x) / dW8);
 		size_t iBt = (size_t) (3 - (((pp - x) % dW8) / (2 * dW)));
 		unsigned char cs = (_vicSpriteInfo [spr]._graphicsLineSprites [iBy].value () >> (iBt << 1)) & 0x03;
+
+		// Once the bits have been used, it is put back to false...
+		// ..simulating the behaviour of the shift register...
+		// ...used within the VIC to paint...
+		_vicSpriteInfo [spr]._graphicsLineSprites [iBy].setBit ((iBt << 1), false);
+		_vicSpriteInfo [spr]._graphicsLineSprites [iBy].setBit ((iBt << 1) + 1, false);
+
 		if (cs == 0)
 			continue; // The point has no color...
 

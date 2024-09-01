@@ -215,9 +215,10 @@ bool C64::Memory::initialize ()
 	// In this configuration, neither the IO zone nor the CharROM are active but the RAM behind instead...
 	configureMemoryStructure (false, false, false, true, false, false, false, false, false, false);
 	// Just to fillup all RAM with the initial value!
-	for (size_t i = 0; i < 0x10000; i += 0x40)
-		fillWith (MCHEmul::Address ({ 0x00, 0x00 }) + i, 
-			(((i / 0x40) % 2) == 0) ? MCHEmul::UByte::_0 : MCHEmul::UByte::_FF, 0x40);
+	for (size_t i = 0X000; i < 0x10000; i += 0x40)
+		if (i != 0x0000 && i != 0x0001) // The positions 0 and 1 are not touched because they are 6150 IO ports and already configured...
+			fillWith (MCHEmul::Address ({ 0x00, 0x00 }) + i, 
+				(((i / 0x40) % 2) == 0) ? MCHEmul::UByte::_0 : MCHEmul::UByte::_FF, 0x40);
 	// In this other configuration only the IO zone is active, 
 	// ...to be initialized using the 0!
 	configureMemoryStructure (false, false, false, true, true, false, false, false, false, false);
