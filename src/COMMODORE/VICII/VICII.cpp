@@ -2,12 +2,14 @@
 #include <F6500/IRQInterrupt.hpp>
 
 // ---
-const MCHEmul::RasterData COMMODORE::VICII_PAL::_VRASTERDATA (0, 16, 51, 250, 299, 311, 312, 4, 4);
+const MCHEmul::RasterData COMMODORE::VICII_PAL::_VRASTERDATA 
+	(0, 16, 51, 250, 289, 311, 312, 4, 4);
 const MCHEmul::RasterData COMMODORE::VICII_PAL::_HRASTERDATA 
-	(404, 480, 24, 343, 380, 403, 504 /** For everyting to run, it has to be divisible by 8. */, 7, 9);
-const MCHEmul::RasterData COMMODORE::VICII_NTSC::_VRASTERDATA (27, 41, 51, 250, 12, 26, 262, 4, 4);
+	(404, 496, 24, 343, 375, 403, 504 /** For everyting to run, it has to be divisible by 8. */, 7, 9);
+const MCHEmul::RasterData COMMODORE::VICII_NTSC::_VRASTERDATA 
+	(27, 41, 51, 250, 2, 26, 262, 4, 4);
 const MCHEmul::RasterData COMMODORE::VICII_NTSC::_HRASTERDATA 
-	(412, 488, 24, 343, 388, 411, 512 /** For everything to run, it has to be divisible by 8. */, 7, 9);
+	(412, 504, 24, 343, 375, 411, 512 /** For everything to run, it has to be divisible by 8. */, 7, 9);
 // This two positions are fized...
 const MCHEmul::Address COMMODORE::VICII::_MEMORYPOSIDLE1 = MCHEmul::Address ({ 0xff, 0x39 }, false);
 const MCHEmul::Address COMMODORE::VICII::_MEMORYPOSIDLE2 = MCHEmul::Address ({ 0xff, 0x3f }, false);
@@ -210,6 +212,10 @@ bool COMMODORE::VICII::simulate (MCHEmul::CPU* cpu)
 			_badLineStopCyclesAdded = false;	// ...the cycles have to be added...
 
 			_vicGraphicInfo._idleState = false; // No longer in "idle" state but in the "screen" one!
+
+			// To keep track of the event later, if needed...
+			_eventStatus._badLine = 
+				_raster.vData ().currentVisiblePosition ();
 		}
 
 		// When VICII is about to read sprites or graphics info (bad line),
@@ -571,7 +577,8 @@ void COMMODORE::VICII::processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifi
 // ---
 MCHEmul::ScreenMemory* COMMODORE::VICII::createScreenMemory ()
 {
-	unsigned int* cP = new unsigned int [16];
+	unsigned int* cP = new unsigned int [37];
+
 	// The colors are partially transparents to allow the blending...
 	cP [0]  = SDL_MapRGBA (_format, 0x00, 0x00, 0x00, 0xe0); // Black
 	cP [1]  = SDL_MapRGBA (_format, 0xff, 0xff, 0xff, 0xe0); // White
@@ -589,6 +596,32 @@ MCHEmul::ScreenMemory* COMMODORE::VICII::createScreenMemory ()
 	cP [13] = SDL_MapRGBA (_format, 0xb3, 0xec, 0x91, 0xe0); // Light Green
 	cP [14] = SDL_MapRGBA (_format, 0x86, 0x7a, 0xde, 0xe0); // Light Blue
 	cP [15] = SDL_MapRGBA (_format, 0xb3, 0xb3, 0xb3, 0xe0); // Light Grey
+
+	// Colors used for the borders and so! (16)
+	// Same than the original ones, but with full light!
+	cP [16] = SDL_MapRGBA (_format, 0x00, 0x00, 0x00, 0xff); // Black
+	cP [17] = SDL_MapRGBA (_format, 0xff, 0xff, 0xff, 0xff); // White
+	cP [18] = SDL_MapRGBA (_format, 0x92, 0x4a, 0x40, 0xff); // Red
+	cP [19] = SDL_MapRGBA (_format, 0x84, 0xc5, 0xcc, 0xff); // Cyan
+	cP [20] = SDL_MapRGBA (_format, 0x93, 0x51, 0xb6, 0xff); // Violet
+	cP [21] = SDL_MapRGBA (_format, 0x72, 0xb1, 0x4b, 0xff); // Green
+	cP [22] = SDL_MapRGBA (_format, 0x48, 0x3a, 0xaa, 0xff); // Blue
+	cP [23] = SDL_MapRGBA (_format, 0xd5, 0xdf, 0x7c, 0xff); // Yellow
+	cP [24] = SDL_MapRGBA (_format, 0x99, 0x69, 0x2d, 0xff); // Brown
+	cP [25] = SDL_MapRGBA (_format, 0x67, 0x52, 0x00, 0xff); // Light Red
+	cP [26] = SDL_MapRGBA (_format, 0xc1, 0x81, 0x78, 0xff); // Orange
+	cP [27] = SDL_MapRGBA (_format, 0x60, 0x60, 0x60, 0xff); // Dark Grey
+	cP [28] = SDL_MapRGBA (_format, 0x8a, 0x8a, 0x8a, 0xff); // Medium Grey
+	cP [29] = SDL_MapRGBA (_format, 0xb3, 0xec, 0x91, 0xff); // Light Green
+	cP [30] = SDL_MapRGBA (_format, 0x86, 0x7a, 0xde, 0xff); // Light Blue
+	cP [31] = SDL_MapRGBA (_format, 0xb3, 0xb3, 0xb3, 0xff); // Light Grey
+
+	// Colors used for events!
+	cP [32] = SDL_MapRGBA (_format, 0X00, 0Xf5, 0xff, 0xff); // light Cyan
+	cP [33] = SDL_MapRGBA (_format, 0Xfc, 0Xe7, 0x00, 0xff); // light yellow
+	cP [34] = SDL_MapRGBA (_format, 0Xff, 0X6d, 0x28, 0xff); // light orange
+	cP [35] = SDL_MapRGBA (_format, 0Xea, 0X04, 0x7e, 0xff); // light purple
+	cP [36] = SDL_MapRGBA (_format, 0X3e, 0Xc7, 0x0b, 0xff); // light green
 
 	return (new MCHEmul::ScreenMemory (numberColumns (), numberRows (), cP));
 }
@@ -807,7 +840,7 @@ void COMMODORE::VICII::drawVisibleZone (MCHEmul::CPU* cpu)
 	if (!_videoActive)
 	{
 		screenMemory () -> setHorizontalLine ((size_t) cav, (size_t) rv,
-			(cav + 8) > _raster.visibleColumns () ? (_raster.visibleColumns () - cav) : 8, 
+			(cav + 8) >= _raster.visibleColumns () ? (_raster.visibleColumns () - cav) : 8, 
 				_VICIIRegisters -> foregroundColor ());
 
 		return;
@@ -818,7 +851,7 @@ void COMMODORE::VICII::drawVisibleZone (MCHEmul::CPU* cpu)
 	// ..and it will be covered with the foreground (border) later if needed..
 	// This is how the VICII works...
 	screenMemory () -> setHorizontalLine ((size_t) cav, (size_t) rv,
-		(cav + 8) > _raster.visibleColumns () ? (_raster.visibleColumns () - cav) : 8, 
+		(cav + 8) >= _raster.visibleColumns () ? (_raster.visibleColumns () - cav) : 8, 
 			_VICIIRegisters -> backgroundColor ());
 
 	// Now the information is drawn,...
@@ -890,19 +923,30 @@ void COMMODORE::VICII::drawGraphicsSpritesAndDetectCollisions (const COMMODORE::
 // ---
 void COMMODORE::VICII::drawOtherEvents ()
 {
+	// Draw the border events...
 	unsigned int cEvent = std::numeric_limits <unsigned int>::max ();
 	if (_eventStatus._ffVBorderChange.positiveEdge ()) 
-		cEvent = 8; // Auxiliar...
+		cEvent = 32; // Auxiliar...
 	if (_eventStatus._ffVBorderChange.negativeEdge ()) 
-		cEvent = 9; // Auxiliar...
+		cEvent = 33; // Auxiliar...
 	if (_eventStatus._ffMBorderChange.positiveEdge ())
-		cEvent = 1; // The main indication for the border...
+		cEvent = 34; // The main indication for the border...
 	if (_eventStatus._ffMBorderChange.negativeEdge ())
-		cEvent = 3; // The main indication for the border...
-
+		cEvent = 35; // The main indication for the border...
 	if (cEvent != std::numeric_limits <unsigned int>::max ())
 		screenMemory () -> setHorizontalLine 
 			(_vicGraphicInfo._ffMBorderBegin, _raster.vData ().currentVisiblePosition (), 2, cEvent);
+
+	// Draw the bad line event...
+	// From the moment the condition is identified and a full line!
+	if (_eventStatus._badLine != std::numeric_limits <unsigned short>::max ())
+	{ 
+		if (_raster.vData ().currentVisiblePosition () == _eventStatus._badLine)
+			screenMemory () -> setHorizontalLine 
+				(_raster.hData ().currentVisiblePosition (), _eventStatus._badLine, 2, 36); // in points and draw in auxiliar color...
+		else
+			_eventStatus._badLine = std::numeric_limits <unsigned short>::max ();
+	}
 }
 
 // ---

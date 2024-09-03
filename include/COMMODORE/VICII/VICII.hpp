@@ -500,6 +500,7 @@ namespace COMMODORE
 			/** When the internal variable to indicate the status of the main border, changes. */
 			MCHEmul::Pulse _ffVBorderChange;
 			MCHEmul::Pulse _ffMBorderChange;
+			unsigned short _badLine;
 		};
 
 		mutable EventsStatus _eventStatus;

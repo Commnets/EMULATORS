@@ -29,8 +29,8 @@ void C64::Screen::drawAdditional ()
 	{
 		// The color...
 		// Only 15 are available...
-		unsigned int clr = (gridColor () > 15) ? 0 : gridColor ();
-		unsigned int bC = ((clr + 1) > 15) ? 0 : clr + 1; 
+		unsigned int clr = ((gridColor () > 15) ? 0 : gridColor ()) + 16;
+		unsigned int bC = (((clr + 1) > 32) ? 0 : clr + 1); 
 
 		COMMODORE::VICII* gC = static_cast <COMMODORE::VICII*> (_graphicalChip);
 

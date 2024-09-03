@@ -34,7 +34,7 @@ unsigned int F6500::Interrupt::isTime (MCHEmul::CPU* c, unsigned int cC) const
 	}
 	else
 	{
-		if ((c -> clockCycles () - cC) > 2)
+		if ((c -> clockCycles () - cC) > 1)
 			return (MCHEmul::CPUInterrupt::_EXECUTIONALLOWED);
 		else
 		{ 

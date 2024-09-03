@@ -27,12 +27,13 @@ void MCHEmul::CPUInterrupt::setInExecution (bool i)
 				*_computer -> deepDebugFile () <<
 					"\n" << "****************************************" << "\n" <<
 					"Starting Interrupt Debugging" << "\n" <<
-					"CPU STATUS" << "\n\n";
-				*_computer -> deepDebugFile () <<
+					"CPU STATUS" << "\n\n" <<
 					MCHEmul::removeAll0 (
 						MCHEmul::FormatterBuilder::instance () -> formatter ("Computer") -> 
-						format (_computer -> getInfoStructure ())) << "\n"; // ...and prints out the status of the computer...
-				*_computer -> deepDebugFile () << "\n";
+						format (_computer -> getInfoStructure ())) << "\n\n" << // ...and prints out the status of the computer...
+					"Last instruction executed before Interrupt:" << "\n" << // ..and the info about the last instruction executed...
+					_computer -> cpu () -> programCounter ().asString () << ":" <<
+					_computer -> cpu () -> lastInstruction () -> asString () << "\n\n";
 			}
 		}
 	}
