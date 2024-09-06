@@ -113,8 +113,8 @@ void COMMODORE::SID::processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifier
 				{
 					float tadd = (i > 0) ? 0.25f : ((i < 0) ? -0.25f : 0.0f);
 					_SIDRegisters -> setPotenciometerValue // To 0 when reach 255...
-						((size_t) jm -> _joystickId, (size_t) i, 
-							_SIDRegisters -> potenciometerValue ((size_t) jm -> _joystickId, (size_t) ct) + tadd);
+						((size_t) jm -> _joystickId, ct, 
+							_SIDRegisters -> potenciometerValue ((size_t) jm -> _joystickId, ct) + tadd);
 
 					ct++;
 				}

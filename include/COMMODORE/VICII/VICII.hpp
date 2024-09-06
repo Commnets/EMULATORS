@@ -41,7 +41,18 @@ namespace COMMODORE
 		"gathers" the position of raster beam. Once per frame. \n
 		The VICII simulator understand the movement of the mouse over the visual screen 
 		with the left button pushed (at the same time) as the simulation of the light pen. \n
-		The position is then stored into the registers $013 and $014 of the VICII. */
+		The position is then stored into the registers $013 and $014 of the VICII. \n
+		\n
+		Very important to bear in mind is how simulation is run: \n
+		the "CPU" executes fully an operation and then the VICII simulation enters. \n
+		That simulation draws mainly the pixels. \n
+		If the command executed were a change in the "colors" (e.g) used to draw, 
+		the VICII smulation would start to use it from the first pixel drawn, when that doesn't happen actually. \n
+		in the real C64 the value used in a STA instruction will not be ready until it very last cycle!. \n
+		To solve this issue in the simulation a buffer system is used. 
+		"Setting" a value (set) will first buffer it and then will move to the real. \n
+		@see VICIIRegister bufferRegisterSet and freeBufferedSet methods.
+		*/
 	class VICII : public MCHEmul::GraphicalChip
 	{
 		public:
@@ -78,6 +89,14 @@ namespace COMMODORE
 			int vV, unsigned short cRL, const MCHEmul::Attributes& attrs = { });
 
 		virtual ~VICII () override;
+
+		// Managing how to buffer record modifications... 
+		/** To buffer or not to buffer modifications to the buffers. \n
+			Take care when you invoke this method as _VICIIRegisters might still be nullptr. */
+		bool bufferRegisters () const
+							{ return (_VICIIRegisters -> bufferRegisters ()); }
+		void setBufferRegisters (bool bR)
+							{ _VICIIRegisters -> setBufferRegisters (bR); }
 
 		/** To draw or not to draw raster interrupt positions. */
 		void setDrawRasterInterruptPositions (bool d)
@@ -395,8 +414,9 @@ namespace COMMODORE
 				  _idleState (true),
 				  _ffVBorder (false),
 				  _ffMBorder (false),
-				  _ffMBorderBegin (0), _ffMBorderPixels (0),
 				  _ffLBorder (false), _ffRBorder (false),
+				  _ffMBorderBegin (0), _ffMBorderPixels (0),
+				  _xCoord (0), _yCoord (0),
 				  _screenCodeData (std::vector <MCHEmul::UByte> (40, MCHEmul::UByte::_0)),
 				  _graphicData (std::vector <MCHEmul::UByte> (40, MCHEmul::UByte::_0)),
 				  _colorData (std::vector <MCHEmul::UByte> (40, MCHEmul::UByte::_0)),
@@ -425,6 +445,8 @@ namespace COMMODORE
 			bool _ffLBorder, _ffRBorder;
 			unsigned short _ffMBorderBegin;
 			unsigned char _ffMBorderPixels;
+			/** Where the draw activity is now, within the visible zone. */
+			unsigned short _xCoord, _yCoord;
 			// This one doesn't actually exist "in" the VICII chip, 
 			// but is used when he left border has to be partially drawn.
 			// After doing so, the _ffMBorder will become false...

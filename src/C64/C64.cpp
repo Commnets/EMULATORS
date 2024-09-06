@@ -36,6 +36,12 @@ C64::Commodore64::Commodore64 (C64::Commodore64::VisualSystem vS, const std::str
 // ---
 bool C64::Commodore64::initialize (bool iM)
 {
+	// Not to buffer modifications when the memory/chips are initialized!
+	// The instruction goes directly to the memory instead through the chip
+	// because at this point the registers are not still linked to the chip
+	// This is something that happens later when the VICII is initialized...
+	static_cast <C64::Memory*> (memory ()) -> vicIIRegisters () -> setBufferRegisters (false);
+
 	bool result = COMMODORE::Computer::initialize (iM);
 	if (!result)
 		return (false);
@@ -83,6 +89,9 @@ bool C64::Commodore64::initialize (bool iM)
 	if (cT != nullptr)
 		cT -> dumpDataInto (dynamic_cast <C64::Memory*> (memory ()), 
 			memory () -> activeView (), memory () -> view (C64::Memory::_VICII_VIEW));
+
+	// From now onwards, the VICII buffer the modifications!
+	static_cast <C64::Memory*> (memory ()) -> vicIIRegisters () -> setBufferRegisters (true);
 
 	return (true);
 }

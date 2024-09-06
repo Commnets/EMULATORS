@@ -19,12 +19,20 @@
 
 namespace COMMODORE
 {
+	class VICII;
+
 	/** In the VICII Registers, 
 		there are a couple of records that behave different
-		when they are read that when they are written. */
+		when they are read that when they are written. \n
+		A modification to the record might be buffered invoking the method setBufferRegisters. 
+		It means that if the setValue method was invoked the modification wouldn't be applied actually until 
+		the next invocation to the simulationMethod in VICII class (@see VICII). \n
+		The way the VICII works is very complicated (@see also in VICII the reasons way). */
 	class VICIIRegisters final : public MCHEmul::ChipRegisters
 	{
 		public:
+		friend VICII; // To unbuffer data...
+
 		static const int _VICREGS_SUBSET = 1060;
 			
 		enum class GraphicMode
@@ -43,6 +51,13 @@ namespace COMMODORE
 
 		virtual size_t numberRegisters () const override
 							{ return (0x40); }
+
+		// Managing how to buffer record modifications... 
+		/** To buffer or not to buffer modifications to the buffers. */
+		bool bufferRegisters () const
+							{ return (_bufferRegisters); }
+		void setBufferRegisters (bool bR)
+							{ _bufferRegisters = bR; }
 
 		// Managing the different attributes of the elements managed by VICII
 		// Foreground (border) & background.
@@ -241,6 +256,10 @@ namespace COMMODORE
 		void setGraphicModeActive ();
 		/** Calculate the internal memory positions. */
 		inline void calculateMemoryPositions ();
+		
+		/** To buffer/unbuffer a value. */
+		inline void bufferRegisterSet (unsigned char r, const MCHEmul::UByte& v);
+		void freeBufferedSet ();
 
 		private:
 		struct SpriteInfo : public MCHEmul::InfoClass
@@ -278,6 +297,10 @@ namespace COMMODORE
 			bool _spriteDoubleWidth, _spriteDoubleHeight;
 			bool _spriteToForegroundPriority;
 		};
+
+		/** Whether to buffer or not to buffer the record 
+			modifciations before being applied. */
+		bool _bufferRegisters;
 
 		// The VICII registers
 		/** Screen related variables. */
@@ -347,6 +370,11 @@ namespace COMMODORE
 		unsigned short _minRasterV, _maxRasterV; 
 		/** Where the mouse is. -1 when it is out of the visible zone. */
 		int _mousePositionX, _mousePositionY;
+
+		/** Information buffered. */
+		bool _registerBuffered;
+		unsigned char _registerIdBuffered;
+		MCHEmul::UByte _valueBuffered;
 	};
 
 	// ---
@@ -377,6 +405,14 @@ namespace COMMODORE
 		_charDataMemoryPos			= _charDataMemory + ((size_t) 0x4000 * _bank); 
 		_bitmapMemoryPos			= _bitmapMemory + ((size_t) 0x4000 * _bank);
 		_spritePointerMemoryPos		= _screenMemoryPos + (size_t) 0x03f8; /** The last 8 bytes of the screen memory. */
+	}
+
+	// ---
+	inline void VICIIRegisters::bufferRegisterSet (unsigned char r, const MCHEmul::UByte& v)
+	{ 
+		_registerBuffered = true;
+		_registerIdBuffered = r;
+		_valueBuffered = v; 
 	}
 }
 

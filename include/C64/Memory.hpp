@@ -14,7 +14,8 @@
 #ifndef __C64_MEMORY__
 #define __C64_MEMORY__
 
-#include <CORE/incs.hpp>
+#include <COMMODORE/incs.hpp>
+#include <C64/ColorMemory.hpp>
 
 namespace C64
 {
@@ -88,11 +89,23 @@ namespace C64
 
 		Memory (const std::string& lang = MCHEmul::_DEFAULTLANGUAGE);
 
-		/** To get a reference to teh color RAM. */
-		const MCHEmul::PhysicalStorageSubset* colorRAM () const
+		/** To get a reference to the color RAM. */
+		const ColorRAMMemory* colorRAM () const
 							{ return (_colorRAM); }
-		MCHEmul::PhysicalStorageSubset* colorRAM ()
+		ColorRAMMemory* colorRAM ()
 							{ return (_colorRAM); }
+
+		/** To get a reference to the VICII Registers. */
+		const COMMODORE::VICIIRegisters* vicIIRegisters () const
+							{ return (_vicIIRegisters); }
+		COMMODORE::VICIIRegisters* vicIIRegisters ()
+							{ return (_vicIIRegisters); }
+
+		/** To get a reference to the SID Registers. */
+		const COMMODORE::SIDRegisters* sidRegisters () const
+							{ return (_sidRegisters); }
+		COMMODORE::SIDRegisters* sidRegisters ()
+							{ return (_sidRegisters); }
 
 		/** To activate the right subsets in the CPU view. */
 		virtual bool initialize () override;
@@ -151,9 +164,9 @@ namespace C64
 		MCHEmul::PhysicalStorageSubset* _kernelRAM;
 		MCHEmul::PhysicalStorageSubset* _charROM;
 		MCHEmul::PhysicalStorageSubset* _charRAM;
-		MCHEmul::PhysicalStorageSubset* _vicIIRegisters;
-		MCHEmul::PhysicalStorageSubset* _sidRegisters;
-		MCHEmul::PhysicalStorageSubset* _colorRAM;
+		COMMODORE::VICIIRegisters* _vicIIRegisters;
+		COMMODORE::SIDRegisters* _sidRegisters;
+		ColorRAMMemory* _colorRAM;
 		MCHEmul::PhysicalStorageSubset* _cia1Registers;
 		MCHEmul::PhysicalStorageSubset* _cia2Registers;
 		MCHEmul::PhysicalStorageSubset* _io1Registers;

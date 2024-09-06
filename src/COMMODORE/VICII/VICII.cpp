@@ -291,6 +291,13 @@ bool COMMODORE::VICII::simulate (MCHEmul::CPU* cpu)
 				cI);
 	}
 
+	// A modification in any VICII register happens actually in the last cycle of the instruction
+	// So the VICII uses the old values of those registers whilst it draws.
+	// At the end, the modification are confirmed, using this method!
+	// If the CPU were running by cycle instead of by instruction, this method will still be valid
+	// because in that mode the instruction is really executed at the last cycle.
+	_VICIIRegisters -> freeBufferedSet ();
+
 	// When the raster enters the non visible part of the screen,
 	// a notification is sent (to the Screen class usually) 
 	// just to draw the screen...

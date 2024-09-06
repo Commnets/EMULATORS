@@ -1,5 +1,4 @@
 #include <C64/Memory.hpp>
-#include <C64/ColorMemory.hpp>
 #include <C64/IO6510PortRegisters.hpp>
 #include <C64/CIA1Registers.hpp>
 #include <C64/CIA2Registers.hpp>
@@ -66,9 +65,9 @@ C64::Memory::Memory (const std::string& lang)
 	_kernelRAM			= subset (_KERNELRAM_SUBSET);
 	_charROM			= subset (_CHARROM_SUBSET);
 	_charRAM			= subset (_CHARRAM_SUBSET);
-	_vicIIRegisters		= subset (COMMODORE::VICIIRegisters::_VICREGS_SUBSET);
-	_sidRegisters		= subset (COMMODORE::SIDRegisters::_SIDREGS_SUBSET);
-	_colorRAM			= subset (C64::ColorRAMMemory::_COLOR_SUBSET);
+	_vicIIRegisters		= dynamic_cast <COMMODORE::VICIIRegisters*> (subset (COMMODORE::VICIIRegisters::_VICREGS_SUBSET));
+	_sidRegisters		= dynamic_cast <COMMODORE::SIDRegisters*> (subset (COMMODORE::SIDRegisters::_SIDREGS_SUBSET));
+	_colorRAM			= dynamic_cast <C64::ColorRAMMemory*> (subset (C64::ColorRAMMemory::_COLOR_SUBSET));
 	_cia1Registers		= subset (C64::CIA1Registers::_CIA1_SUBSET);
 	_cia2Registers		= subset (C64::CIA2Registers::_CIA2_SUBSET);
 	_io1Registers		= subset (C64::IOExpansionMemoryI::_IO1_SUBSET);
