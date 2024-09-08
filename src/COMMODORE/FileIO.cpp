@@ -419,9 +419,9 @@ std::string COMMODORE::CRTFileData::asString () const
 	size_t ct = 0;
 	for (const auto& i : _chipsData)
 	{
-		cD += ((ct != 0) ? "," : "") + 
+		cD += ((ct != 0) ? "," : "") + std::string ("$") +
 			MCHEmul::removeAll0 (i._startingLoadAddress.asString (MCHEmul::UByte::OutputFormat::_HEXA, '\0', 2)) +
-				" " + std::to_string (i._romSize) + " bytes (bk:" + std::to_string (i._bankNumber) + ")";
+				" " + std::to_string (i._romSize) + " bytes (bank:" + std::to_string (i._bankNumber) + ")";
 
 		ct++;
 	}

@@ -290,11 +290,11 @@ namespace MCHEmul
 						{ return (_hRasterData.currentPositionAtBase0 ()); }
 
 		// Managing the blan zone
-		bool isInVBlank () const
+		bool isInVBlankZone () const
 						{ return (_vRasterData.isInBlankZone ()); }
 		bool isInFirstVBlankZone () const
 						{ return (_vRasterData.isInFirstBlankZone ()); }
-		bool isInLastVBlank () const
+		bool isInLastVBlankZone () const
 						{ return (_vRasterData.isInLastBlankZone ()); }
 
 		// Managing the visible zone

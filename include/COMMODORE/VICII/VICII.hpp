@@ -610,9 +610,9 @@ namespace COMMODORE
 		_vicGraphicInfo._lastScreenCodeDataRead =
 			_vicGraphicInfo._screenCodeData [_vicGraphicInfo._VLMI] =
 				memoryRef () -> value (_VICIIRegisters -> screenMemory () + (size_t) _vicGraphicInfo._VC); 
-		_vicGraphicInfo._lastColorDataRead =
+		_vicGraphicInfo._lastColorDataRead = // The color RAM is read not taken into account whether is ready or not for reading!
 			_vicGraphicInfo._colorData [_vicGraphicInfo._VLMI] = 
-				_colorRAM -> value (_colorRAMAddress + (size_t) _vicGraphicInfo._VC); 
+				_colorRAM -> valueDirect (_colorRAMAddress + (size_t) _vicGraphicInfo._VC); 
 		
 		memoryRef () -> setCPUView ();
 	}

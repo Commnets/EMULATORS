@@ -270,11 +270,12 @@ bool COMMODORE::VICII::simulate (MCHEmul::CPU* cpu)
 			// VCBASE is actualized only then RC reaches 8. @see rasterCycle 58 treatment.
 			else 
 				_vicGraphicInfo._VC = _vicGraphicInfo._VCBASE;
-
-			// If the current line is where a IR has been set...
-			if (_raster.currentLine () == _VICIIRegisters -> IRQRasterLineAt ())
-				_VICIIRegisters -> activateRasterIRQ (); // ...the interrupt is activated (but not necessary launched!)
 		}
+
+		// If the current line is where a IR has been set...
+		if (_raster.currentLine () == _VICIIRegisters -> IRQRasterLineAt () && 
+			_raster.hData ().currentPosition () == 404)
+			_VICIIRegisters -> activateRasterIRQ (); // ...the interrupt is activated (but not necessary launched!)
 
 		// Latch the light pen position (reading the mouse)
 		// if it is within the window...
@@ -301,7 +302,7 @@ bool COMMODORE::VICII::simulate (MCHEmul::CPU* cpu)
 	// When the raster enters the non visible part of the screen,
 	// a notification is sent (to the Screen class usually) 
 	// just to draw the screen...
-	if (_raster.isInLastVBlank ())
+	if (_raster.isInFirstVBlankZone ())
 	{
 		if (!_lastVBlankEntered)
 		{
@@ -336,8 +337,7 @@ MCHEmul::InfoStructure COMMODORE::VICII::getInfoStructure () const
 MCHEmul::UBytes COMMODORE::VICII::screenMemorySnapShot (MCHEmul::CPU* cpu) const
 { 	
 	// Usually in this point the active view should be the CPU one, 
-	// but just in case, it is checked and guranteed....
-	// Same in the rest
+	// But the one needed is the VICII, so it is changed if neded...
 	int aVID = cpu -> memoryRef () -> activeView () -> id ();
 	if (aVID != _VICIIView)
 		cpu -> memoryRef () -> setActiveView (_VICIIView);
@@ -353,12 +353,22 @@ MCHEmul::UBytes COMMODORE::VICII::screenMemorySnapShot (MCHEmul::CPU* cpu) const
 // ---
 MCHEmul::UBytes COMMODORE::VICII::colorMemorySnapShot (MCHEmul::CPU* cpu) const
 { 
+	// Remember that VICII has no a direct view of the color RAM
+	// Because it access directly to it when access the memory to get a char instead...
+	// So the only way to see that part of the memory is through out the CPU view
+	// The position of the ColorRAM is fixed in the CPU view and it is received as parameter
+	// when the VICII chip is built!
 	int aVID = cpu -> memoryRef () -> activeView () -> id ();
-	if (aVID != _VICIIView)
-		cpu -> memoryRef () -> setActiveView (_VICIIView);
+	if (aVID == _VICIIView)
+		cpu -> memoryRef () -> setCPUView (); // Change to the main one...
 
+	// Gets the data from the memory directly...
 	MCHEmul::UBytes result = cpu -> memoryRef () -> values 
 		(_colorRAMAddress, 0x03e8 /** 1000 positions = 40 x 25. */); 
+	// ...but in each byte of the color RAM only the low nibble cares,
+	// ...the upper one is a random value, so it must be "eliminated" for the clarity of the user...
+	for (size_t i = 0; i < result.size (); i++)
+		result [i] = result [i] & 0x0f;
 
 	cpu -> memoryRef () -> setActiveView (aVID);
 
@@ -846,6 +856,10 @@ void COMMODORE::VICII::drawVisibleZone (MCHEmul::CPU* cpu)
 	// then everything will have the border color...
 	if (!_videoActive)
 	{
+		if (deepDebugActive ())
+			*_deepDebugFile
+				<< "\t\t\t\tVideo no active at pixel:" << std::to_string (cav) << "\n";
+
 		screenMemory () -> setHorizontalLine ((size_t) cav, (size_t) rv,
 			(cav + 8) >= _raster.visibleColumns () ? (_raster.visibleColumns () - cav) : 8, 
 				_VICIIRegisters -> foregroundColor ());
@@ -975,6 +989,10 @@ COMMODORE::VICII::DrawResult COMMODORE::VICII::drawGraphics (const COMMODORE::VI
 	// At this point rc positive for sure, and cb could be negative...
 	// Never invoke the methods within the swith case statements direcly
 	// a crash might be generated...
+
+	if (deepDebugActive ())
+		*_deepDebugFile
+			<< "\t\t\t\tDrawing pixels at:" << std::to_string (cb) << "\n";
 
 	COMMODORE::VICII::DrawResult result;
 	switch (_VICIIRegisters -> graphicModeActive ())

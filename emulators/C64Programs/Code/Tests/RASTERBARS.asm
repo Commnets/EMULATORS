@@ -19,7 +19,7 @@ main:		ldy #$7a		;load $7a into Y. this is the line where our rasterbar will sta
 loop: 		lda colors,x	;load value at label 'colors' plus x into a. if we don't add x, only the first 
 							;value from our color-table will be read.
 
-test:		cpy $d012 		;ComPare current value in Y with the current rasterposition.
+test:		cpy $d012 		;Compare current value in Y with the current rasterposition.
 			bne test   		;is the value of Y not equal to current rasterposition? then jump back 3 bytes (to cpy).
 			
 			sta $d020		;if it IS equal, store the current value of A (a color of our rasterbar)

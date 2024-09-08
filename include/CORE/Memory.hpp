@@ -199,6 +199,11 @@ namespace MCHEmul
 		const UByte& value (const Address& a) const
 							{ int dt = 0; return (_activeForReading && (isIn (a, dt)) 
 								? readValue (dt) : PhysicalStorage::_DEFAULTVALUE); }
+		/** Somethimes is needed to read directly the value 
+			not taken into account whether it is active for reading. */
+		const UByte& valueDirect (const Address& a) const
+							{ int dt = 0; return ((a >= _initialAddress && (dt = _initialAddress.distanceWith (a)) < (int) _size)
+								? readValue (dt) : PhysicalStorage::_DEFAULTVALUE); }
 		UBytes values (const Address& a, size_t nB) const
 							{ return (UBytes (bytes (a, nB))); }
 		void set (const Address& a, const UBytes& v, bool f = false)

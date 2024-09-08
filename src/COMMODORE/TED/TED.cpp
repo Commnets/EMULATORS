@@ -328,7 +328,7 @@ bool COMMODORE::TED::simulate (MCHEmul::CPU* cpu)
 	// When the raster enters the non visible part of the screen,
 	// a notification is sent (to the Screen class usually) 
 	// just to draw the screen...
-	if (_raster.isInLastVBlank ())
+	if (_raster.isInLastVBlankZone ())
 	{
 		if (!_lastVBlankEntered)
 		{
