@@ -277,7 +277,9 @@ bool MCHEmul::CPU::when_ExecutingInstruction ()
 		<< "Info Cycle\t\t"
 		// Data
 		<< "Last:" + ((_lastInstruction == nullptr)
-			? "0" : std::to_string (_lastInstruction -> clockCyclesExecuted ())) + " cycles\n";
+			? "0" : std::to_string 
+				(_lastInstruction -> clockCyclesExecuted () + 
+				 _lastInstruction -> additionalClockCyclesExecuted ())) + " cycles\n";
 
 	auto execFunction = [&](bool f) -> bool
 		{
@@ -286,7 +288,7 @@ bool MCHEmul::CPU::when_ExecutingInstruction ()
 			bool result = false;
 			// The activation of the interruptions has priority over the execution of the instructions...
 			if (f ? executeNextInterruptRequest_Full (_error) 
-				  : executeNextInstruction_PerCycle (_error)) // ...if any!
+				  : executeNextInterruptRequest_PerCycle (_error)) // ...if any!
 				result = (_error != MCHEmul::_NOERROR)
 					? false /** Meaning a mistake in the execution. */ : true /** all right. */;
 			else
@@ -581,6 +583,8 @@ bool MCHEmul::CPU::executeNextInstruction_PerCycle (unsigned int& e)
 
 			// This method returns true 
 			// when everything ok and false if not...
+			notify (MCHEmul::Event (_CPUTOEXECUTEINSTRUCTION, 0 /** No sense. */,
+				std::shared_ptr <MCHEmul::Event::Data> (new MCHEmul::CPU::EventData (_currentInstruction))));
 			if (_currentInstruction -> 
 				execute (this, _memory, _memory -> stack (), &_programCounter)) 
 				_error = MCHEmul::_INSTRUCTION_ERROR; // ...error executing...
@@ -703,6 +707,9 @@ bool MCHEmul::CPU::executeNextInstruction_Full (unsigned int &e)
 		sdd = MCHEmul::removeAll0 (_programCounter.asString ()) + "(Stack "
 				+ std::to_string (memoryRef () -> stack () -> position ()) + ") ";
 
+	// The execution of the instruction is notified...
+	notify (MCHEmul::Event (_CPUTOEXECUTEINSTRUCTION, 0 /** No sense. */,
+		std::shared_ptr <MCHEmul::Event::Data> (new MCHEmul::CPU::EventData (inst))));
 	if (inst -> execute (this, _memory, _memory -> stack (), &_programCounter))
 	{
 		// Actualize the clock cycles used by the last instruction...

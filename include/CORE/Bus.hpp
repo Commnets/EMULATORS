@@ -29,6 +29,8 @@ namespace MCHEmul
 	class Bus final : public Notifier
 	{
 		public:
+		// Different events
+		/** When the bus is actualized. */
 		static const unsigned int _BUSACTUALIZED = 110;
 
 		Bus (int id, size_t nE)

@@ -4,10 +4,12 @@
 COMMODORE::VICIIRegisters::VICIIRegisters (MCHEmul::PhysicalStorage* ps, size_t pp, const MCHEmul::Address& a, size_t s)
 	: MCHEmul::ChipRegisters (_VICREGS_SUBSET, ps, pp, a, s),
 	  _bufferRegisters (false), // Not buffer registers by default...
+	  _numberPositionsNextInstruction (0),
 	  _backgroundColor (4, 0x00),
 	  _spriteInfo (8, COMMODORE::VICIIRegisters::SpriteInfo ()),
 	  _spriteSharedColor (2, 0x00),
 	  _lastValueRead (MCHEmul::PhysicalStorage::_DEFAULTVALUE),
+	  _raster (nullptr), // It is initialized later...
 	  _registerBuffered (false), _registerIdBuffered (0x00), _valueBuffered (MCHEmul::UByte::_0)
 	  // At this point the rest internal variables will have random values...
 	  // The vector are initialized just to given them a default size!
@@ -21,6 +23,8 @@ COMMODORE::VICIIRegisters::VICIIRegisters (MCHEmul::PhysicalStorage* ps, size_t 
 void COMMODORE::VICIIRegisters::initialize ()
 {
 	MCHEmul::PhysicalStorageSubset::initialize ();
+
+	assert (_raster != nullptr);
 
 	initializeInternalValues ();
 
@@ -141,9 +145,11 @@ const MCHEmul::UByte& COMMODORE::VICIIRegisters::readValue (size_t p) const
 		// Just to consider that when reading the raster MSB bit shows where the raster is now
 		case 0x11:
 			{
+				unsigned short rL = currentRasterLine ();
+				if (_raster -> simulateMoveCycles (_numberPositionsNextInstruction)) rL++;
 				result = MCHEmul::UByte 
 					((MCHEmul::PhysicalStorageSubset::readValue (pp).value () & 0x7f) | 
-					  (((_currentRasterLine & 0xff00) != 0) ? 0x80 : 0x00));
+					  (((rL & 0xff00) != 0) ? 0x80 : 0x00));
 			}
 
 			break;
@@ -151,7 +157,13 @@ const MCHEmul::UByte& COMMODORE::VICIIRegisters::readValue (size_t p) const
 		// RASTER: When reading get the current raster postion (except the MSB that is in the previous)
 		case 0x12:
 			{
-				result = MCHEmul::UByte ((unsigned char) _currentRasterLine & 0x00ff);
+				// The real "read" happens in the very last cycle of the instruction
+				// The same is with any other register but this one might be the very important one (and $d011)
+				// So if is necessary to know whether the execution of the instruction will imply a 
+				// change in the position of the raster or not!
+				unsigned short rL = currentRasterLine ();
+				if (_raster -> simulateMoveCycles (_numberPositionsNextInstruction)) rL++;
+				result = MCHEmul::UByte ((unsigned char) (rL & 0x00ff));
 			}
 
 			break;
@@ -388,7 +400,6 @@ void COMMODORE::VICIIRegisters::initializeInternalValues ()
 	setValue (0x2e, MCHEmul::UByte::_0); // Duplicated, because buffer...
 
 	// Managed direclty by the VICII Chip...
-	_currentRasterLine = 0x0000;
 	_currentLightPenHorizontalPosition = _latchLighPenHorizontalPosition = 0x00;
 	_currentLightPenVerticalPosition = _latchLightPenVerticalPosition = 0x00;
 	_lightPenLatched = false; _lightPenActive = false;

@@ -79,7 +79,8 @@ bool COMMODORE::VICII::initialize ()
 
 	_raster.initialize ();
 
-	_VICIIRegisters -> initialize ();
+	_VICIIRegisters -> linkToRaster (&_raster);
+	_VICIIRegisters -> initialize (); // The raster is not reinitialized there...
 
 	_lastCPUCycles = 0;
 	
@@ -270,12 +271,11 @@ bool COMMODORE::VICII::simulate (MCHEmul::CPU* cpu)
 			// VCBASE is actualized only then RC reaches 8. @see rasterCycle 58 treatment.
 			else 
 				_vicGraphicInfo._VC = _vicGraphicInfo._VCBASE;
-		}
 
-		// If the current line is where a IR has been set...
-		if (_raster.currentLine () == _VICIIRegisters -> IRQRasterLineAt () && 
-			_raster.hData ().currentPosition () == 404)
-			_VICIIRegisters -> activateRasterIRQ (); // ...the interrupt is activated (but not necessary launched!)
+			// If the current line is where a IR has been set...
+			if (_raster.currentLine () == _VICIIRegisters -> IRQRasterLineAt ())
+				_VICIIRegisters -> activateRasterIRQ (); // ...the interrupt is activated (but not necessary launched!)
+		}
 
 		// Latch the light pen position (reading the mouse)
 		// if it is within the window...
@@ -298,6 +298,9 @@ bool COMMODORE::VICII::simulate (MCHEmul::CPU* cpu)
 	// If the CPU were running by cycle instead of by instruction, this method will still be valid
 	// because in that mode the instruction is really executed at the last cycle.
 	_VICIIRegisters -> freeBufferedSet ();
+	if (deepDebugActive ())
+		*_deepDebugFile
+			<< "\t\t\t\tNew VICII Registers value set" << "\n";
 
 	// When the raster enters the non visible part of the screen,
 	// a notification is sent (to the Screen class usually) 
@@ -313,8 +316,6 @@ bool COMMODORE::VICII::simulate (MCHEmul::CPU* cpu)
 	}
 	else
 		_lastVBlankEntered = false;
-
-	_VICIIRegisters -> setCurrentRasterLine (_raster.currentLine ()); 
 
 	_lastCPUCycles = cpu -> clockCycles ();
 
@@ -858,7 +859,8 @@ void COMMODORE::VICII::drawVisibleZone (MCHEmul::CPU* cpu)
 	{
 		if (deepDebugActive ())
 			*_deepDebugFile
-				<< "\t\t\t\tVideo no active at pixel:" << std::to_string (cav) << "\n";
+				<< "\t\t\t\tVideo no active at pixel:" << std::to_string (cav) 
+				<< ", color:" << std::to_string ((unsigned int) _VICIIRegisters -> foregroundColor ()) << "\n";
 
 		screenMemory () -> setHorizontalLine ((size_t) cav, (size_t) rv,
 			(cav + 8) >= _raster.visibleColumns () ? (_raster.visibleColumns () - cav) : 8, 
@@ -992,7 +994,8 @@ COMMODORE::VICII::DrawResult COMMODORE::VICII::drawGraphics (const COMMODORE::VI
 
 	if (deepDebugActive ())
 		*_deepDebugFile
-			<< "\t\t\t\tDrawing pixels at:" << std::to_string (cb) << "\n";
+			<< "\t\t\t\tDrawing pixels at:" << std::to_string (cb) 
+			<< ", background:" << std::to_string ((unsigned int) _VICIIRegisters -> backgroundColor ()) << "\n";
 
 	COMMODORE::VICII::DrawResult result;
 	switch (_VICIIRegisters -> graphicModeActive ())

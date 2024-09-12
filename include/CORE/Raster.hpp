@@ -7,7 +7,7 @@
  *	Framework: CPU Emulators library \n
  *	Author: Ignacio Cea Fornies (EMULATORS library) \n
  *	Creation Date: 13/01/2023 \n
- *	Description: The Raster info in a usually a cotodic ray screen.
+ *	Description: The Raster info in a usually a catodic ray screen.
  *	Versions: 1.0 Initial
  *	Based on https://www.cebix.net/VIC-Article.txt.
  */
@@ -68,7 +68,7 @@ namespace MCHEmul
 						{ return (_currentPosition_0 > _lastVisiblePosition_0 && 
 								  _currentPosition_0 <= _lastPosition_0); }
 
-		// Managin the visible zone...
+		// Managing the visible zone...
 		bool isInVisibleZone () const 
 						{ return ((_currentPosition_0 >= _firstVisiblePosition_0 && 
 								   _currentPosition_0 <= _lastVisiblePosition_0)); }
@@ -100,7 +100,7 @@ namespace MCHEmul
 		unsigned short displayPositions () const
 						{ return (_originalLastDisplayPosition_0 - _originalFirstDisplayPosition_0 + 1); }
 		// Respect the origin of the display position...
-		// It might be enourmous if p (in base 0) < _originalFirstDisplayPosition
+		// It might be enormous if p (in base 0) < _originalFirstDisplayPosition
 		unsigned short positionInDisplayZone (unsigned short p) const
 						{ return (toBase0 (p) - _originalFirstDisplayPosition_0); }
 
@@ -127,6 +127,9 @@ namespace MCHEmul
 		inline bool add (int i);
 		bool next ()
 						{ return (add (1)); }
+		/** It does a simulation of how many positions will overpass the limit when adding i more. 
+			If no overpass were calculated the number returned will be -1. */
+		inline int simulateAdd (int i);
 
 		/** The display zone will reduced in both sides by half of the _positionsToReduce value. */
 		inline void reduceDisplayZone (bool s);
@@ -215,6 +218,18 @@ namespace MCHEmul
 	}
 
 	// ---
+	inline int RasterData::simulateAdd (int i)
+	{
+		int result = -1;
+
+		int cP = (int) _currentPosition_0 + i;
+		if ((cP >= (int) _maxPositions))
+			result = _maxPositions - cP;
+
+		return (result);
+	}
+
+	// ---
 	inline void RasterData::reduceDisplayZone (bool s)
 	{
 		if (_displayZoneReduced == s)
@@ -298,8 +313,6 @@ namespace MCHEmul
 						{ return (_vRasterData.isInLastBlankZone ()); }
 
 		// Managing the visible zone
-		/** The visible zone is the complete c64 sreen. 
-			The size will be different in PAL and in NTSC. */
 		bool isInVisibleZone () const
 						{ return (_vRasterData.isInVisibleZone () && _hRasterData.isInVisibleZone ()); }
 		unsigned short visibleLines () const
@@ -346,11 +359,12 @@ namespace MCHEmul
 			
 		/** Returns true when the raster goes to the next line. \n
 			The Parameter is the number of cycles to move the raster. \n
-			The raster moves 8 pixels per cycle. */
-		bool moveCycles (unsigned short nC)
-						{ bool result = _hRasterData.add (nC * (unsigned short) _step /** columuns = piexels per cycle. */);
-						  if (result) _vRasterData.next (); 
-						  return (result); }
+			The raster moves _step pixels per cycle. */
+		inline bool moveCycles (unsigned short nC);
+		/** Similates whether the raster moves to the next line after adding nC cycles. 
+			Returns true when the raster should move to another line, and false if not. */
+		bool simulateMoveCycles (unsigned short nC)
+						{ return (_hRasterData.simulateAdd (nC * _step) != -1); }
 
 		void initialize ()
 						{ _vRasterData.initialize (); _hRasterData.initialize (); }
@@ -369,6 +383,14 @@ namespace MCHEmul
 		RasterData _vRasterData, _hRasterData;
 		unsigned char _step;
 	};
+
+	// ---
+	inline bool Raster::moveCycles (unsigned short nC)
+	{ 
+		bool result = _hRasterData.add (nC * (unsigned short) _step /** columuns = piexels per cycle. */);
+		if (result) _vRasterData.next (); 
+		return (result); 
+	}
 }
 
 #endif

@@ -58,9 +58,22 @@ namespace MCHEmul
 	  * The method to execute one instruction is: executeNextCycle (@see method executeNextCycle), 
 	  * than can be overlaoded (@see method).
 	  */
-	class CPU : public MotherboardElement
+	class CPU : public MotherboardElement, public Notifier
 	{
 		public:
+		/** Structure for notification.
+			There are many things that can be notified, so the data is very generic. 
+			One thing is when it is about to execute an instruction. */
+		struct EventData final : public Event::Data
+		{
+			EventData (void* d)
+				: _data (d)
+							{ }
+
+			// It will be one thing ot another attending to the type of event launched!
+			void* _data;
+		};
+
 		/** When a interrupt type is requested, 
 			this is the info to be provided from any external element. 
 			The struct can be initialised usign intilizator list. \n
@@ -92,6 +105,11 @@ namespace MCHEmul
 
 		/** This static const member is to refer to a no interrupt request. */
 		static const InterruptRequest _NOINTREQUEST;
+
+		/** An event when the system is about to execute a instruction.
+			Sometimes the executiom of a specific instruction could affect other parts of the computer,
+			like chips (specifically or devices. */
+		static const unsigned int _CPUTOEXECUTEINSTRUCTION = 130;
 
 		// States of the CPU
 		/** The possible different states of the CPU. 

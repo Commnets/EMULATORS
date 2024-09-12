@@ -22,6 +22,7 @@
 namespace MCHEmul
 {
 	class CPU;
+	class Instruction;
 
 	/** A chip is a specialized element within the computer (different that the CPU). \n
 		All chips are set with the full memory accesible when the computer is initialized,
@@ -58,6 +59,12 @@ namespace MCHEmul
 		Memory* memoryRef ()
 							{ return (_memory); }
 
+		// Related with the simulation
+		/** The CPU is emulated either by instruction or by cycle. \n
+			The simulation of the chip, whenever it is executed, can be affected by the instruction that is 
+			about to be executed. This method is to inform the chip about that possibility. */
+		virtual void CPUAboutToExecute (CPU*, Instruction*)
+							{ /** Nothing is done by default. */ }
 		/** To simulate th behaviour of the chip. It has to be defined per chip. \n
 			Returns true if everything was ok, and false in any other circunstance. \n 
 			The last error could be recovered from the variable _error in that case. \n

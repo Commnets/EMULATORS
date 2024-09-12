@@ -29,6 +29,8 @@ namespace MCHEmul
 	class Wire final : public Notifier
 	{
 		public:
+		// Different events
+		/** When the wire is actualized. */
 		static const unsigned int _WIREDCHANGED = 111;
 
 		Wire (int id)

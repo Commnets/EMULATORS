@@ -49,17 +49,22 @@ bool C64::Commodore64::initialize (bool iM)
 	// The connections among chips and devices are set in the method "linkToChips" of the IODevice class
 	// Any other type of connetion has to be done at C64 level...
 
+	// The CPU is observed by C64
+	// This is because when a instruction is about to be executed,
+	// the VICII has to be aware about the number of cycles that the instruction will take
+	// in order to manage what $D012 result must returns properly!
+	observe (_cpu);
+
 	// Links between chips...
 	// Both chips CIAII and VICII are link somehow
 	// Because the banks connected at VICII are determined in CIA chip...
 	// In the real C64 the communciation happens through the PLA, but here it has been simplified...
-	chip (COMMODORE::VICII::_ID) -> observe (memory () -> subset (C64::CIA2Registers::_CIA2_SUBSET));
+	vicII () -> observe (memory () -> subset (C64::CIA2Registers::_CIA2_SUBSET));
 	// The C64 IO Ports (Memory location 1, bit 0,1,2) and the PLA are linked...
 	// This link is used to determine whether the BASIC ROM, KERNEL or CHARROM is or nor visible.
-	chip (C64::PLA::_ID) -> observe (memory () -> subset (C64::IO6510PortRegisters::_IO6510REGISTERS_SUBSET));
+	pla () -> observe (memory () -> subset (C64::IO6510PortRegisters::_IO6510REGISTERS_SUBSET));
 	// THe CIA1 controls the information of the potentiometers that the SID must reflect!
-	static_cast <C64::CIA1*> (chip (C64::CIA1::_ID)) -> 
-		linkToSID (static_cast <COMMODORE::SID*> (chip (COMMODORE::SID::_ID)));
+	cia1 () -> linkToSID (sid ());
 
 	// Limks between memory and devices...
 	// But the bit 3 of the same position is where the info to send to the casette is writtem...
@@ -90,7 +95,7 @@ bool C64::Commodore64::initialize (bool iM)
 		cT -> dumpDataInto (dynamic_cast <C64::Memory*> (memory ()), 
 			memory () -> activeView (), memory () -> view (C64::Memory::_VICII_VIEW));
 
-	// From now onwards, the VICII buffer the modifications!
+	// From now onwards, the VICII buffer the modifications!...and also obeserve the execution of instructions
 	static_cast <C64::Memory*> (memory ()) -> vicIIRegisters () -> setBufferRegisters (true);
 
 	return (true);
@@ -105,6 +110,12 @@ void C64::Commodore64::processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifi
 	{
 		setExit (true);
 		setRestartAfterExit (true, 9999 /** Big enough */);
+	}
+	else
+	if (evnt.id () == MCHEmul::CPU::_CPUTOEXECUTEINSTRUCTION)
+	{
+		static_cast <COMMODORE::VICII*> (chip (COMMODORE::VICII::_ID)) -> CPUAboutToExecute
+			(_cpu, (MCHEmul::Instruction*) (static_cast <MCHEmul::CPU::EventData*> (evnt.data ().get ()) -> _data));
 	}
 }
 

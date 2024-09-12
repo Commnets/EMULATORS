@@ -25,6 +25,7 @@ MCHEmul::Computer::Computer (
 	  _startStopped (false),
 	  _error (MCHEmul::_NOERROR),
 	  _screen (nullptr), _sound (nullptr), _inputOSSystem (nullptr), _graphicalChip (nullptr),
+	  _plainChips (nullptr), _plainDevices (nullptr),
 	  _clock (cs), 
 	  _lastAction (_ACTIONNOTHING),
 	  _stabilized (false), _currentStabilizationLoops (0),
@@ -88,6 +89,14 @@ MCHEmul::Computer::Computer (
 			{ _ACTIONSTOP,		new MCHEmul::Computer::StopAction }, 
 			{ _ACTIONNEXT,		new MCHEmul::Computer::NextCommandAction}
 		};
+
+	// Generate the plain vision of both chips and devices
+	// just to speed up the executio of the code...
+	// The plain version is used within the methods runXXX
+	_plainChips = new MCHEmul::Chip* [_chips.size ()];
+	size_t nC = 0; for (const auto& i : _chips) _plainChips [nC++] = i.second;
+	_plainDevices = new MCHEmul::IODevice* [_devices.size ()];
+	size_t nD = 0; for (const auto& i : _devices) _plainDevices [nD++] = i.second;
 }
 
 // ---
@@ -111,6 +120,12 @@ MCHEmul::Computer::~Computer ()
 	delete (_cpu); 
 
 	delete (_memory);
+
+	// See that [] is not used in the delete
+	// as the members will haven been already destroyed at this point...
+	// We want just to delete the array!
+	delete _plainChips;
+	delete _plainDevices;
 }
 
 // ---
@@ -372,16 +387,16 @@ bool MCHEmul::Computer::runComputerCycle (unsigned int a)
 		std::cout << MCHEmul::FormatterBuilder::instance () -> formatter ("DEBUGCPUINFO") -> format (rst) << std::endl;
 	}
 
-	for (const auto& i : _chips)
+	for (size_t i = 0; i < _chips.size (); i++)
 	{
-		if (!i.second -> simulate (_cpu))
+		if (!_plainChips [i] -> simulate (_cpu))
 		{
 			_exit = true;
 
 			_error = MCHEmul::_CHIP_ERROR;
 
 			if (_debugLevel >= MCHEmul::_DEBUGERRORS)
-				std::cout << "Error simulating chip: " << std::endl << *(i.second) << std::endl;
+				std::cout << "Error simulating chip: " << std::endl << *_plainChips [i] << std::endl;
 
 			return (false); // Error...
 		}
@@ -402,16 +417,16 @@ bool MCHEmul::Computer::runComputerCycle (unsigned int a)
 // ---
 bool MCHEmul::Computer::runIOCycle ()
 {
-	for (const auto& i : _devices)
+	for (size_t i = 0; i < _devices.size (); i++)
 	{
-		if (!i.second -> simulate (_cpu))
+		if (!_plainDevices [i] -> simulate (_cpu))
 		{
 			_exit = true;
 
 			_error = MCHEmul::_DEVICE_ERROR;
 
 			if (_debugLevel >= MCHEmul::_DEBUGERRORS)
-				std::cout << "Error in IO device:" << std::endl << *(i.second) << std::endl;
+				std::cout << "Error in IO device:" << std::endl << *_plainDevices [i] << std::endl;
 
 			return (false); // Error...
 		}

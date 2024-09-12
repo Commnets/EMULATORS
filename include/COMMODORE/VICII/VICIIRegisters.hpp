@@ -159,34 +159,36 @@ namespace COMMODORE
 			There might be several reasons defined within the code. */
 		inline unsigned int reasonIRQCode () const;
 
-		// Temporal variables to know, when an raster or lightpen IRQ happened, where was the element that generated that.
-		// This temporal variables are set from the VICII directly...
+		// Managing the raster
+		// The raster info is in the VICII chip actually.
+		// However its info is needed when checking some registers...
+		void linkToRaster (MCHEmul::Raster* r)
+							{ _raster = r; }
 		unsigned short currentRasterLine () const
-							{ return (_currentRasterLine); }
-		void setCurrentRasterLine (unsigned short rL)
-							{ _currentRasterLine = rL; }
+							{ return (_raster -> vData ().currentPosition ()); }
+		unsigned short currentRasterPositionInLine () const
+							{ return (_raster -> hData ().currentPosition ()); }
+
+		// Knowing info about the lightpen...
+		/** The lightpen is simulated using the mouse. */
 		unsigned short currentLightPenHorizontalPosition () const
 							{ return (_currentLightPenHorizontalPosition); }
 		unsigned short currentLightPenVerticalPosition () const
 							{ return (_currentLightPenVerticalPosition); }
 		void currentLightPenPosition (unsigned short& x, unsigned short& y) const
 							{ x = _currentLightPenHorizontalPosition; y = _currentLightPenVerticalPosition; }
-		void latchLightPenPositionFromRaster (unsigned char x, unsigned char y)
-							{ _latchLighPenHorizontalPosition = x; 
-							  _latchLightPenVerticalPosition = y; 
-							  _lightPenLatched = true;}
+		inline void latchLightPenPositionFromRaster (unsigned char x, unsigned char y);
 		void lightPenPosLatched (unsigned char* x, unsigned char* y)
 							{ *x = _latchLighPenHorizontalPosition; *y = _latchLightPenVerticalPosition; }
 		bool lightPenPositionLatched () const
 							{ return (_lightPenLatched); } // The value is restored when checked!
-		void fixPenPositionFromLatch ()
-							{ _currentLightPenHorizontalPosition = _latchLighPenHorizontalPosition;
-							  _currentLightPenVerticalPosition = _latchLightPenVerticalPosition;
-							  _lightPenLatched = false; }
+		inline void fixPenPositionFromLatch ();
 		bool lightPenActive () const
 							{ return (_lightPenActive); }
 		void setLigthPenActive (bool lP)
 							{ _lightPenActive = lP; }
+
+		// Managing the info about the mouse, that is used to similate the ligthtPen
 		/** To know where the mouse is within the visible zone, if is is.
 			When it is not there the variables returned -1. */
 		int mousePositionX () const
@@ -257,6 +259,9 @@ namespace COMMODORE
 		/** Calculate the internal memory positions. */
 		inline void calculateMemoryPositions ();
 		
+		/** To set the number of positions that the next instruction will take. */
+		void setNumberPositionsNextInstruction (unsigned int nP)
+							{ _numberPositionsNextInstruction = nP; }
 		/** To buffer/unbuffer a value. */
 		inline void bufferRegisterSet (unsigned char r, const MCHEmul::UByte& v);
 		void freeBufferedSet ();
@@ -301,6 +306,8 @@ namespace COMMODORE
 		/** Whether to buffer or not to buffer the record 
 			modifciations before being applied. */
 		bool _bufferRegisters;
+		/** The number of cycle that the next instruction to be executed in the CPU will take. */
+		unsigned int _numberPositionsNextInstruction;
 
 		// The VICII registers
 		/** Screen related variables. */
@@ -331,7 +338,8 @@ namespace COMMODORE
 
 		// Some of this variables are set by the emulation of the VICII
 		// The VICII chip also uses this object as a temporary storage
-		unsigned short _currentRasterLine; // Where the raster is now...
+		/** Where the raster line is. */
+		MCHEmul::Raster* _raster;
 		/** Where the lightpen has been detected. */
 		unsigned char _latchLighPenHorizontalPosition, _currentLightPenHorizontalPosition;
 		/** The position is consolidated once per frame. */
@@ -393,6 +401,22 @@ namespace COMMODORE
 				((_spriteCollisionWithDataIRQHappened && _spriteCollisionWithDataIRQActive) ? 2 : 0) +
 				((_spriteCollisionsIRQHappened && _spriteCollisionsIRQActive) ? 4 : 0) +
 				((_lightPenIRQHappened && _lightPenIRQActive) ? 8 : 0)); 
+	}
+
+	// ---
+	inline void VICIIRegisters::latchLightPenPositionFromRaster (unsigned char x, unsigned char y)
+	{ 
+		_latchLighPenHorizontalPosition = x; 
+		_latchLightPenVerticalPosition = y; 
+		_lightPenLatched = true;
+	}
+
+	// ---
+	inline void VICIIRegisters::fixPenPositionFromLatch ()
+	{ 
+		_currentLightPenHorizontalPosition = _latchLighPenHorizontalPosition;
+		_currentLightPenVerticalPosition = _latchLightPenVerticalPosition;
+		_lightPenLatched = false; 
 	}
 
 	// ---

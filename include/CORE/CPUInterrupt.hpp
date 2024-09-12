@@ -26,6 +26,8 @@ namespace MCHEmul
 	class CPUInterrupt : public InfoClass
 	{
 		public:
+		// Different initial status of the interrupt
+		// Many more can be added as the class is extended...
 		static const unsigned int _EXECUTIONNOTALLOWED = 0;
 		static const unsigned int _EXECUTIONTOWAIT = 1;
 		static const unsigned int _EXECUTIONALLOWED = 2;
