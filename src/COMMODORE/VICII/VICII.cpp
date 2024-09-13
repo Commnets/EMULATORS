@@ -27,6 +27,7 @@ COMMODORE::VICII::VICII (MCHEmul::PhysicalStorageSubset* cR, const MCHEmul::Addr
 	  _VICIIRegisters (nullptr), 
 	  _VICIIView (vV),
 	  _cyclesPerRasterLine (cRL),
+	  _IRQrasterPosition (0), // Assigned within the constructor of the specific version of the VICII...
 	  _incCyclesPerRasterLine (cRL - COMMODORE::VICII_PAL::_CYCLESPERRASTERLINE),
 	  _raster (vd, hd, 8 /** step. */),
 	  _drawRasterInterruptPositions (false), _drawOtherEvents (false),
@@ -271,11 +272,13 @@ bool COMMODORE::VICII::simulate (MCHEmul::CPU* cpu)
 			// VCBASE is actualized only then RC reaches 8. @see rasterCycle 58 treatment.
 			else 
 				_vicGraphicInfo._VC = _vicGraphicInfo._VCBASE;
-
-			// If the current line is where a IR has been set...
-			if (_raster.currentLine () == _VICIIRegisters -> IRQRasterLineAt ())
-				_VICIIRegisters -> activateRasterIRQ (); // ...the interrupt is activated (but not necessary launched!)
 		}
+
+		// If the current line is where a IRQ has been set...
+		// ..and also the column of the raster is where it should be launched...
+		if (_raster.currentLine () == _VICIIRegisters -> IRQRasterLineAt () &&
+			_raster.currentColumn () == _IRQrasterPosition)
+			_VICIIRegisters -> activateRasterIRQ (); // ...the interrupt is activated (but not necessary launched!)
 
 		// Latch the light pen position (reading the mouse)
 		// if it is within the window...
@@ -1570,7 +1573,8 @@ COMMODORE::VICII_PAL::VICII_PAL (MCHEmul::PhysicalStorageSubset* cR, const MCHEm
 		   { "Manufacturer", "MOS Technology INC/Commodore Semiconductor Group (CBM)"},
 		   { "Year", "1980" } })
 {
-	// Nothing else to do...
+	// This value - the initial position in the row divided by 8 must have a rest of 0
+	_IRQrasterPosition = 404;
 }
 
 // ---
@@ -1628,7 +1632,8 @@ COMMODORE::VICII_NTSC::VICII_NTSC (MCHEmul::PhysicalStorageSubset* cR, const MCH
 		   { "Manufacturer", "MOS Technology INC/Commodore Semiconductor Group (CBM)"},
 		   { "Year", "1980" } })
 {
-	// Nothing else to do...
+	// This value - the initial position in the row divided by 8 must have a rest of 0
+	_IRQrasterPosition = 412;
 }
 
 // ---

@@ -224,7 +224,7 @@ namespace MCHEmul
 
 		int cP = (int) _currentPosition_0 + i;
 		if ((cP >= (int) _maxPositions))
-			result = _maxPositions - cP;
+			result = cP - _maxPositions;
 
 		return (result);
 	}

@@ -354,6 +354,9 @@ namespace COMMODORE
 		int _VICIIView;
 		/** The number of cycles per raster line as it depends on the type of Chip. */
 		unsigned short _cyclesPerRasterLine;
+		/** The position in the line when the IRQ should be launched in case it is active. 
+			Depends on the implementation of the VICII. */
+		unsigned short _IRQrasterPosition;
 		/** The difference with the PAL System. */
 		unsigned short _incCyclesPerRasterLine;
 		/** The raster. */
