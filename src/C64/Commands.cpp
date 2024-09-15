@@ -171,8 +171,12 @@ void C64::GridOnCommand::executeImpl (MCHEmul::CommandExecuter* cE,
 		  static_cast <C64::Commodore64*> (c) -> vicII () == nullptr)))
 		return;
 
+	// Draw the position of the raster interrupt...
 	static_cast <COMMODORE::VICII*> (static_cast <C64::Commodore64*> (c) -> vicII ()) -> 
 		setDrawRasterInterruptPositions (true);
+	// Draw the position of the sprites...
+	static_cast <COMMODORE::VICII*> (static_cast <C64::Commodore64*> (c) -> vicII ()) ->
+		setDrawSpritesBorder (true);
 }
 
 // ---
@@ -190,6 +194,8 @@ void C64::GridOffCommand::executeImpl (MCHEmul::CommandExecuter* cE,
 
 	static_cast <COMMODORE::VICII*> (static_cast <C64::Commodore64*> (c) -> vicII ()) -> 
 		setDrawRasterInterruptPositions (false);
+	static_cast <COMMODORE::VICII*> (static_cast <C64::Commodore64*> (c) -> vicII ()) ->
+		setDrawSpritesBorder (false);
 }
 
 // ---

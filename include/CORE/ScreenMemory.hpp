@@ -56,12 +56,22 @@ namespace MCHEmul
 							{ for (unsigned int i = 0; i < nP; setPixel (x, y + i++, color)); }
 		void setVerticalLineStep (size_t x, size_t y, size_t nP, unsigned int color, unsigned int s)
 							{ for (unsigned int i = 0; i < (nP - s); setPixel (x, y + (i += s), color)); }
+		inline void setBox (size_t x1, size_t y1, size_t nPX, size_t nPY, unsigned int color);
 
 		private:
 		unsigned int* _frameData;
 		size_t _columns, _rows;
 		unsigned int* _colorPalette;
 	};
+
+	// ---
+	inline void ScreenMemory::setBox (size_t x1, size_t y1, size_t nPX, size_t nPY, unsigned int color)
+	{
+		setHorizontalLine (x1, y1, nPX, color);
+		setHorizontalLine (x1, y1 + nPY - 1, nPX, color);
+		setVerticalLine (x1, y1, nPY, color);
+		setVerticalLine (x1 + nPX - 1, y1, nPY, color);
+	}
 }
 
 #endif

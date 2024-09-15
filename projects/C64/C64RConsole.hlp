@@ -38,8 +38,9 @@ The parameters could be repeated, but just one instace of every value is accepte
 ;GRIDON COLOR [ON]
 To activate to draw a grid in the screen of the computer.
 A color for the grid is mandatory.
-Optionally, the command could also activate drawing the position where the raster interrupts happen, 
-defining the "ON" parameter. The color used will be one more than the color used in the background.
+Optionally, the command could also activate drawing the position where the raster interrupts happen
+and a tiny border around the sprites for those to be easily identified just defining the "ON" parameter. 
+The color used for the raster line is the same than the background + 1, and the color around the sprites will be light cyan.
 ;GRIDOFF
 To switch off to draw a grid in the screen of the compurter.
 The command desactivates also to draw the position where the raster interrupts happen if it was activated previously

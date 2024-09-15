@@ -20,6 +20,11 @@ F6500::C6500::C6500 (int id,	const MCHEmul::Attributes& attrs)
 		F6500::C6500::createInstructions (),
 		attrs)
 {
+	// The non used bit (5) is usually true!
+	// ...and this is the way it is managed in this simulation!
+	statusRegister ().setBitStatus (5, true);
+	// There is no instruction that changes its value...
+
 	// The reference to the memory has not set still here...
 	// It is linked to the CPU at computer (class) level!
 

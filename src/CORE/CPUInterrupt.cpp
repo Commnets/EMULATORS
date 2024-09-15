@@ -32,7 +32,7 @@ void MCHEmul::CPUInterrupt::setInExecution (bool i)
 						MCHEmul::FormatterBuilder::instance () -> formatter ("Computer") -> 
 						format (_computer -> getInfoStructure ())) << "\n\n" << // ...and prints out the status of the computer...
 					"Last instruction executed before Interrupt:" << "\n" << // ..and the info about the last instruction executed...
-					_computer -> cpu () -> programCounter ().asString () << ":" <<
+					MCHEmul::removeAll0 (_computer -> cpu () -> programCounter ().asString ()) << ":" <<
 					_computer -> cpu () -> lastInstruction () -> asString () << "\n\n";
 			}
 		}

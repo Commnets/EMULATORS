@@ -340,7 +340,7 @@ bool MCHEmul::CPU::when_Stopped ()
 	if (deepDebugActive ())
 		*_deepDebugFile
 		// Where
-		<< "CPU\t"
+		<< "CPU\t\t"
 		// When
 		<< MCHEmul::fixLenStr (std::to_string (_clockCycles), 12, false)
 		// What

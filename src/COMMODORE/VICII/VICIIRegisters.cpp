@@ -24,8 +24,6 @@ void COMMODORE::VICIIRegisters::initialize ()
 {
 	MCHEmul::PhysicalStorageSubset::initialize ();
 
-	assert (_raster != nullptr);
-
 	initializeInternalValues ();
 
 	freeBufferedSet ();
@@ -146,7 +144,7 @@ const MCHEmul::UByte& COMMODORE::VICIIRegisters::readValue (size_t p) const
 		case 0x11:
 			{
 				unsigned short rL = currentRasterLine ();
-				if (_raster -> simulateMoveCycles (_numberPositionsNextInstruction + 1)) rL++;
+				if (_raster -> simulateMoveCycles (_numberPositionsNextInstruction)) rL++;
 				result = MCHEmul::UByte 
 					((MCHEmul::PhysicalStorageSubset::readValue (pp).value () & 0x7f) | 
 					  (((rL & 0xff00) != 0) ? 0x80 : 0x00));
@@ -162,7 +160,7 @@ const MCHEmul::UByte& COMMODORE::VICIIRegisters::readValue (size_t p) const
 				// So if is necessary to know whether the execution of the instruction will imply a 
 				// change in the position of the raster or not!
 				unsigned short rL = currentRasterLine ();
-				if (_raster -> simulateMoveCycles (_numberPositionsNextInstruction + 1)) rL++;
+				if (_raster -> simulateMoveCycles (_numberPositionsNextInstruction)) rL++;
 				result = MCHEmul::UByte ((unsigned char) (rL & 0x00ff));
 			}
 

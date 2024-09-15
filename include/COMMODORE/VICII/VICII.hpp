@@ -101,7 +101,12 @@ namespace COMMODORE
 		/** To draw or not to draw raster interrupt positions. */
 		void setDrawRasterInterruptPositions (bool d)
 							{ _drawRasterInterruptPositions = d; }
-		/** Whether to draw other events related with the VICII. */
+		/** To draw or not to draw an square rounding the sprites. 
+			It is drawn when the sprite is active in the raster line where the VICII is. */
+		void setDrawSpritesBorder (bool d)
+							{ _drawSpritesBorder = d; }
+		/** Whether to draw other events related with the raster of VICII. 
+			Borders, bad lines mainly. */
 		void setDrawOtherEvents (bool d)
 							{ _drawOtherEvents = d; }
 
@@ -363,6 +368,8 @@ namespace COMMODORE
 		MCHEmul::Raster _raster;
 		/** To draw or not to draw lines at the positions where the raster interruptions are generated. */
 		bool _drawRasterInterruptPositions;
+		/** To draw or not to draw a border around the sprites active at the line where the raster is in. */
+		bool _drawSpritesBorder;
 		/** To draw or not other different events. */
 		bool _drawOtherEvents;
 
@@ -505,6 +512,9 @@ namespace COMMODORE
 		{
 			VICSpriteInfo ()
 				: _active (false), _line (0), _expansionY (false),
+				  _spriteBaseAddress ({ 0x00, 0x00 }, true), // it is the same than using false and quicker...
+				  _graphicsLineSprites (MCHEmul::UBytes::_E),
+				  _drawing (false), _xS (0),
 				  _ff (false)
 							{ }
 
@@ -512,6 +522,7 @@ namespace COMMODORE
 				: _active (a), _line (l), _expansionY (e),
 				  _spriteBaseAddress ({ 0x00, 0x00 }, true), // it is the same than using false and quicker...
 				  _graphicsLineSprites (MCHEmul::UBytes::_E),
+				  _drawing (false), _xS (0),
 				  _ff (false)
 							{ }
 
@@ -520,6 +531,9 @@ namespace COMMODORE
 			bool _expansionY; // True when the sprite is expanded in the Y axis
 			mutable MCHEmul::Address _spriteBaseAddress;
 			mutable MCHEmul::UBytes _graphicsLineSprites; // 3 bytes line info each
+			/** Once the sprite reaches the coordinate x, the draw action continues until everyting is done. */
+			bool _drawing; // Is the sprite being drawn?
+			unsigned short _xS; // x coordinate from which the sprite is drawn!
 
 			// Implementation
 			bool _ff; // Used in controlling how _line is incremented (per line)
@@ -527,12 +541,15 @@ namespace COMMODORE
 
 		VICSpriteInfo _vicSpriteInfo [8];
 
-		/** The events that can be drawn. */
+		/** The events that can be drawn
+			associated to the movement of the raster line. */
 		struct EventsStatus
 		{
 			/** When the internal variable to indicate the status of the main border, changes. */
 			MCHEmul::Pulse _ffVBorderChange;
+			/** Same when what change is an auxiliar variable to support changes in the border. */
 			MCHEmul::Pulse _ffMBorderChange;
+			/** The bad line to hightlight. */
 			unsigned short _badLine;
 		};
 
@@ -707,6 +724,10 @@ namespace COMMODORE
 			_vicSpriteInfo [nS]._graphicsLineSprites = 
 				std::move (MCHEmul::UBytes (memoryRef () -> bytes (_vicSpriteInfo [nS]._spriteBaseAddress + 
 					(_vicSpriteInfo [nS]._line * 3) /** bytes per line. */, 3)));
+
+			// When new info of the sprite is read, the "draw" condition starts back!
+			_vicSpriteInfo [nS]._drawing = false;
+			// The value of the _xS doesn't really cares!
 
 			result = true;
 		}

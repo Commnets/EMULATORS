@@ -30,7 +30,7 @@ COMMODORE::VICII::VICII (MCHEmul::PhysicalStorageSubset* cR, const MCHEmul::Addr
 	  _IRQrasterPosition (0), // Assigned within the constructor of the specific version of the VICII...
 	  _incCyclesPerRasterLine (cRL - COMMODORE::VICII_PAL::_CYCLESPERRASTERLINE),
 	  _raster (vd, hd, 8 /** step. */),
-	  _drawRasterInterruptPositions (false), _drawOtherEvents (false),
+	  _drawRasterInterruptPositions (false), _drawSpritesBorder (false), _drawOtherEvents (false),
 	  _lastCPUCycles (0),
 	  _format (nullptr),
 	  _cycleInRasterLine (1),
@@ -703,7 +703,7 @@ unsigned int COMMODORE::VICII::treatRasterCycle ()
 					if (_vicSpriteInfo [i]._active &&
 						((_vicSpriteInfo [i]._expansionY && 
 							(!(_vicSpriteInfo [i]._ff = !_vicSpriteInfo [i]._ff))) || 
-							// Note that when expansion is on, the line attribute is incremented very two raster lines...
+							// Note that when expansion is on, the line attribute is incremented every two raster lines...
 						(!_vicSpriteInfo [i]._expansionY)))
 					{ 
 						// When the line treated of the sprite is the last one, the sprite is desactivated...
@@ -917,6 +917,8 @@ void COMMODORE::VICII::drawVisibleZone (MCHEmul::CPU* cpu)
 						? 0 : _VICIIRegisters -> backgroundColor () + 1 /** to be visible. */);
 	}
 
+	// The draw around the sprites is drawn as part of the sprite draw routine...
+
 	// If it activated to draw other events that happen during the interation of the VICII...
 	if (_drawOtherEvents)
 		drawOtherEvents ();
@@ -1078,9 +1080,9 @@ COMMODORE::VICII::DrawResult COMMODORE::VICII::drawMonoColorChar (int cb)
 	{
 		int pp = cb + i;
 		if (pp < 0)
-			continue;
+			continue; // The pixel is not still visible...
 		if (pp >= 320)
-			break;
+			break; // No more pixels to draw...
 
 		size_t iBy = ((size_t) pp) >> 3; // To determine the byte...
 		size_t iBt = 7 - (((size_t) pp) % 8); // From MSB to LSB...
@@ -1106,27 +1108,18 @@ COMMODORE::VICII::DrawResult COMMODORE::VICII::drawMultiColorChar (int cb, bool 
 {
 	COMMODORE::VICII::DrawResult result;
 
-	for (unsigned short i = 0 ; i < 8 /** To paint always 8 pixels but in blocks of 2. */; i += 2)
+	for (unsigned short i = 0 ; i < 8 /** To paint always 8 pixels. */; i++)
 	{
 		int pp = cb + i;
-		if (pp < -1)
-			continue;
+		if (pp < 0)
+			continue; // The pixel is not still visible...
 		if (pp >= 320)
-			break;
-
-		// After this pp can be -1...
+			break; // No more pixels to draw...
 
 		size_t iBy = 0;
-		unsigned char cs = 0;
-		if (pp >= 0)
-		{
-			iBy = ((size_t) pp) >> 3; 
-			size_t iBt = 3 - ((((size_t) pp) % 8) >> 1);
-			cs = (_vicGraphicInfo._graphicData [iBy].value () >> (iBt << 1)) & 0x03; // 0, 1, 2 or 3
-		}
-		// This is the case when pp == -1...
-		else
-			cs = (_vicGraphicInfo._graphicData [0].value () >> 6) & 0x03; // 0, 1, 2 or 3
+		iBy = ((size_t) pp) >> 3; 
+		size_t iBt = 3 - ((((size_t) pp) % 8) >> 1);
+		unsigned char cs = (_vicGraphicInfo._graphicData [iBy].value () >> (iBt << 1)) & 0x03; // 0, 1, 2 or 3
 
 		// If 0, the pixel should be drawn (and considered) as background 
 		// and it is already the default status tha comes from the parent method...
@@ -1149,16 +1142,20 @@ COMMODORE::VICII::DrawResult COMMODORE::VICII::drawMultiColorChar (int cb, bool 
 			{
 				case 0x01:
 					{
-						result._backgroundColorData [i + 1] = fc;
+						if ((pp % 2) == 1) // El pixel to be drawn has to be odd...
+							result._backgroundColorData [i] = fc;
 					}
 
 					break;
 
 				case 0x02:
 					{
-						result._collisionGraphicData.setBit (7 - i, true);
+						if ((pp % 2) == 0) // El pixel to be draw has to be even...
+						{
+							result._collisionGraphicData.setBit (7 - i, true);
 
-						result._foregroundColorData [i] = fc;
+							result._foregroundColorData [i] = fc;
+						}
 					}
 
 					break;
@@ -1166,10 +1163,8 @@ COMMODORE::VICII::DrawResult COMMODORE::VICII::drawMultiColorChar (int cb, bool 
 				case 0x03:
 					{
 						result._collisionGraphicData.setBit (7 - i, true);
-						result._collisionGraphicData.setBit (6 - i, true);
 
 						result._foregroundColorData [i] = fc;
-						result._foregroundColorData [i + 1] = fc;
 					}
 
 					break;
@@ -1192,19 +1187,14 @@ COMMODORE::VICII::DrawResult COMMODORE::VICII::drawMultiColorChar (int cb, bool 
 			// The combination "01" is also considered as part of the background...
 			// ...and are not taken into account to detect collision...
 			if (cs == 0x01)
-			{
 				result._backgroundColorData [i] = fc;
-				result._backgroundColorData [i + 1] = fc;
-			}
 			// ..while the other two are part of the foreground...
 			// ..and also included in the collision info!
 			else
 			{
 				result._collisionGraphicData.setBit (7 - i, true);
-				result._collisionGraphicData.setBit (6 - i, true);
 
 				result._foregroundColorData [i] = fc;
-				result._foregroundColorData [i + 1] = fc;
 			}
 		}
 	}
@@ -1224,9 +1214,9 @@ COMMODORE::VICII::DrawResult COMMODORE::VICII::drawMultiColorExtendedChar (int c
 	{
 		int pp = cb + i;
 		if (pp < 0)
-			continue;
+			continue; // The pixel is not still visible...
 		if (pp >= 320)
-			break;
+			break; // No more pixels to draw...
 
 		size_t iBy = ((size_t) pp) >> 3 /** To determine the byte. */;
 		size_t iBt = 7 - (((size_t) pp) % 8); /** From MSB to LSB. */
@@ -1264,9 +1254,9 @@ COMMODORE::VICII::DrawResult COMMODORE::VICII::drawMonoColorBitMap (int cb, bool
 	{
 		int pp = cb + i;
 		if (pp < 0)
-			continue;
+			continue; // The pixel is not still visible...
 		if (pp >= 320)
-			break;
+			break; // No more pixels to draw...
 
 		size_t iBy = ((size_t) pp) >> 3; // To determine the byte...
 		size_t iBt = 7 - (((size_t) pp) % 8); // From MSB to LSB...
@@ -1299,27 +1289,18 @@ COMMODORE::VICII::DrawResult COMMODORE::VICII::drawMultiColorBitMap (int cb, boo
 {
 	COMMODORE::VICII::DrawResult result;
 
-	for (unsigned short i = 0 ; i < 8 /** To paint always 8 pixels but in blocks of 2. */; i += 2)
+	for (unsigned short i = 0 ; i < 8 /** To paint always 8 pixels. */; i++)
 	{
 		int pp = cb + i;
-		if (pp < -1)
+		if (pp < 0) // The pixel is not still visible...
 			continue;
 		if (pp >= 320)
-			break;
-
-		// After this point pp can be -1
+			break; // No more pixels to draw...
 
 		size_t iBy = 0;
-		unsigned char cs = 0;
-		if (pp >= 0)
-		{
-			iBy = ((size_t) pp) >> 3; 
-			size_t iBt = 3 - ((((size_t) pp) % 8) >> 1);
-			cs = (_vicGraphicInfo._graphicData [iBy].value () >> (iBt << 1)) & 0x03; // 0, 1, 2 or 3
-		}
-		// This is the case when pp == -1...
-		else
-			cs = (_vicGraphicInfo._graphicData [0].value () >> 6) & 0x03; // 0, 1, 2 or 3
+		iBy = ((size_t) pp) >> 3; 
+		size_t iBt = 3 - ((((size_t) pp) % 8) >> 1);
+		unsigned char cs = (_vicGraphicInfo._graphicData [iBy].value () >> (iBt << 1)) & 0x03; // 0, 1, 2 or 3
 
 		// If 0, the pixel should be drawn (and considered) as background 
 		// and it is already the default status tha comes from the parent method...
@@ -1338,18 +1319,13 @@ COMMODORE::VICII::DrawResult COMMODORE::VICII::drawMultiColorBitMap (int cb, boo
 		// The combination "01" is managed as background also...
 		// ...the 0x00 has already been jumped an then treated as background!
 		if (cs == 0x01)
-		{
 			result._backgroundColorData [i] = fc;
-			result._backgroundColorData [i + 1] = fc;
-		}
 		// ...while the rest as managed as foreground...
 		else
 		{
 			result._collisionGraphicData.setBit (7 -i, true);
-			result._collisionGraphicData.setBit (6 -i, true);
 
 			result._foregroundColorData [i] = fc;
-			result._foregroundColorData [i + 1] = fc;
 		}
 	}
 
@@ -1374,49 +1350,61 @@ MCHEmul::UByte COMMODORE::VICII::drawMonoColorSpriteOver (unsigned short c, unsi
 
 	// Horizontal info about the sprite
 	unsigned short dW	= _VICIIRegisters -> spriteDoubleWidth (spr) ? 2 : 1;
-	unsigned short x	= _VICIIRegisters -> spriteXCoord (spr) + 4;
+	unsigned short x	= (_vicSpriteInfo [spr]._drawing) 
+		? _vicSpriteInfo [spr]._xS : _VICIIRegisters -> spriteXCoord (spr) + 4;
 	unsigned short wX	= 24 /** normal width in pixels. */ * dW;
-	unsigned short dW8	= 8 * dW; // 8 or 16
+	unsigned short dW8	= dW << 3; // 8 or 16
 	// Vertical info about the sprite
 	/** Because the position 50 correspond at the raster line position 51. */
 	unsigned short y	= _VICIIRegisters -> spriteYCoord (spr) + 1;
-	unsigned short wY	= _VICIIRegisters -> spriteDoubleHeight (spr) ? 42 : 21;
+	unsigned short wY	= _vicSpriteInfo [spr]._expansionY ? 42 : 21;
 
 	if (r < y || r >= (y + wY))
 		return (result); // Not visible in the vertical zone...
 	if ((c + 8 /** pixels */) < x || c >= (x + wX))
 		return (result); // Not visible in the horizontal zone...
 
-	for (unsigned short i = 0; 
-			i < 8 /** always to draw 8 pixels */; i += dW /** the size of the pixels block. */)
+	for (unsigned short i = 0; i < 8 /** always to draw 8 pixels */; i++)
 	{
-		unsigned short pp = (c + i);
+		unsigned short pp = (c + i); // The exact pixel to draw...
 		if (pp < x)
 			continue; // Not visible...
 		if (pp >= (x + wX))
 			break; // No more draws...
 
+		// The sprite starts to be drawn...
+		// ...if it isn0't already before...
+		if (!_vicSpriteInfo [spr]._drawing)
+			{ _vicSpriteInfo [spr]._drawing = true; _vicSpriteInfo [spr]._xS = x; }
+
 		// To determine the initial byte (iBy) and bit (iBt) with the info about the sprite...
 		// The bit moves from 7 to 0, and the byte increases...
 		size_t iBy = (size_t) ((pp - x) / dW8);
 		size_t iBt = (size_t) (7 - (((pp - x) % dW8) / dW));
-		bool dP = _vicSpriteInfo [spr]._graphicsLineSprites [iBy].bit (iBt);
 
 		// Once the bit has been used, it is put back to false...
 		// ..simulating the behaviour of the shift register used by the VIC
 		// ...to select the bit to paint...
-		_vicSpriteInfo [spr]._graphicsLineSprites [iBy].setBit (iBt, false);
+		int iByA = (int) iBy;
+		int iBtA = ((int) iBt) + 1;
+		if (iBtA >= 8) { iBtA = 0; iByA--; }
+		if (iBtA > 0)
+			_vicSpriteInfo [spr]._graphicsLineSprites [(size_t) iByA].
+				setBit ((size_t) iBtA, false);
 
-		if (!dP)
+		// Draw the border if needed...
+		// The border is drawn before the pixel itself to appreciate the sprite fully!
+		if (_drawSpritesBorder) 
+			if ((pp == x || pp == (x + wX - 1)) || 
+				(r == y || r == (y + wY - 1)))
+					{ d [i] = 32 /** cyan. */; dO [i] = spr; }
+
+		if (!_vicSpriteInfo [spr]._graphicsLineSprites [iBy].bit (iBt))
 			continue; // The point is not visible...
 
-		for (size_t j = 0; j < (size_t) dW; j++)
-		{
-			result.setBit (7 - (i + j), true);
-
-			d [i + j] = _VICIIRegisters -> spriteColor (spr);
-			dO [i + j] = spr;
-		}
+		result.setBit (7 - i, true);
+		d [i] = _VICIIRegisters -> spriteColor (spr);
+		dO [i] = spr;
 	}
 
 	return (result);
@@ -1430,55 +1418,74 @@ MCHEmul::UByte COMMODORE::VICII::drawMultiColorSpriteOver (unsigned short c, uns
 
 	// Horizontal info about the sprite
 	unsigned short dW	= _VICIIRegisters -> spriteDoubleWidth (spr) ? 2 : 1;
-	unsigned short x	= _VICIIRegisters -> spriteXCoord (spr) + 4;
+	unsigned short x	= (_vicSpriteInfo [spr]._drawing) 
+		? _vicSpriteInfo [spr]._xS : _VICIIRegisters -> spriteXCoord (spr) + 4;
 	unsigned short wX	= 24 /** normal width in pixels. */ * dW;
-	unsigned short dW8	= 8 * dW; // 8 or 16
+	unsigned short dW8	= dW << 3; // 8 or 16
+	unsigned short dW2  = dW << 1; // 4 or 2
 	// Vertical info about the sprite
 	unsigned short y	= _VICIIRegisters -> spriteYCoord (spr) + 1;
-	unsigned short wY	= _VICIIRegisters -> spriteDoubleHeight (spr) ? 42 : 21;
+	unsigned short wY	= _vicSpriteInfo [spr]._expansionY ? 42 : 21;
 
 	if (r < y || r >= (y + wY))
 		return (result); // Not visible in the vertical zone...
 	if ((c + 8 /** pixels */) < x || c >= (x + wX))
 		return (result); // Not visible in the horizontal zone...
 
-	for (unsigned short i = 0; i < 8 /** pixels. */; i += (2 * dW))
+	for (unsigned short i = 0; i < 8 /** always to draw 8 pixels. */; i++)
 	{
-		unsigned short pp = (c + i);
+		unsigned short pp = (c + i); // The exact pixels to draw...
 		if (pp < x)
 			continue; // Not visible...
 		if (pp >= (x + wX))
 			break; // No more draws...
 
+		// The sprite starts to be drawn...
+		// ...if it isn0't already before...
+		if (!_vicSpriteInfo [spr]._drawing)
+			{ _vicSpriteInfo [spr]._drawing = true; _vicSpriteInfo [spr]._xS = x; }
+
 		// To determine the initial byte (iBy) and bit (iBt) with the info about the sprite...
 		// The bit to select moves from 0 to 3, represeting the pair of bits (0,1), (2,3), (4,5), (6,7)
 		size_t iBy = (size_t) ((pp - x) / dW8);
-		size_t iBt = (size_t) (3 - (((pp - x) % dW8) / (2 * dW)));
-		unsigned char cs = (_vicSpriteInfo [spr]._graphicsLineSprites [iBy].value () >> (iBt << 1)) & 0x03;
+		size_t iBt = (size_t) (3 - (((pp - x) % dW8) / dW2));
 
 		// Once the bits have been used, it is put back to false...
 		// ..simulating the behaviour of the shift register...
 		// ...used within the VIC to paint...
-		_vicSpriteInfo [spr]._graphicsLineSprites [iBy].setBit ((iBt << 1), false);
-		_vicSpriteInfo [spr]._graphicsLineSprites [iBy].setBit ((iBt << 1) + 1, false);
+		int iByA = (int) iBy;
+		int iBtA = ((int) iBt) + 1;
+		if (iBtA >= 4) { iBtA = 0; iByA--; }
+		if (iBtA > 0)
+		{
+			_vicSpriteInfo [spr]._graphicsLineSprites [(size_t) iByA].
+				setBit (((size_t) iBtA << 1), false);
+			_vicSpriteInfo [spr]._graphicsLineSprites [(size_t) iByA].
+				setBit (((size_t) iBtA << 1) + 1, false);
+		}
 
+		// Draw the border if needed...
+		// The border is drawn before the pixel itself to appreciate the sprite fully!
+		if (_drawSpritesBorder)
+			if ((pp == x || pp == (x + wX - 1)) ||
+				(r == y || r == (y + wY - 1)))
+					{ d [i] = 32 /** cyan. */; dO [i] = spr; }
+
+		unsigned char cs = 
+			(_vicSpriteInfo [spr]._graphicsLineSprites [iBy].value () >> (iBt << 1)) & 0x03;
 		if (cs == 0)
 			continue; // The point has no color...
 
-		unsigned int fc = 
+		result.setBit (7 - i, true);
+
+		d [i] = 
 			(unsigned int) ((cs == 0x01) 
 				? _VICIIRegisters -> spriteSharedColor (0)
 				: ((cs == 0x02) 
 					? _VICIIRegisters -> spriteColor (spr)
 					: _VICIIRegisters -> spriteSharedColor (1)));
-
-		for (size_t j = 0; j < (size_t) (2 * dW); j++)
-		{ 
-			result.setBit (7 - (i + j), true);
-
-			d [i + j] = fc;
-			dO [i + j] = spr;
-		}
+;
+		dO [i] = spr;
 	}
 
 	return (result);
