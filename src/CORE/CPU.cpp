@@ -70,7 +70,7 @@ void MCHEmul::CPU::setStop (bool s, unsigned int tC, unsigned int cC, int nC)
 	{
 		if (deepDebugActive ())
 			*_deepDebugFile 
-				<< "\t\t\t\tStop CPU requested:" << std::to_string (nC) 
+				<< "\t\t\t\t\tStop CPU requested:" << std::to_string (nC) 
 				<< " cycles(" << ((tC == std::numeric_limits <unsigned int>::max ()) ? "-" : std::to_string (tC)) << " type)\n";
 
 		// If the CPU was already stopped...
@@ -195,7 +195,7 @@ void MCHEmul::CPU::requestInterrupt (const MCHEmul::CPU::InterruptRequest& iR)
 		_interruptsRequested.emplace_back (iR);
 
 		if (deepDebugActive ())
-			*_deepDebugFile << "\t\t\t\tInterrupt CPU requested:" 
+			*_deepDebugFile << "\t\t\t\t\tInterrupt CPU requested:" 
 							<< iR.toString () << "\n";
 	} 
 }
@@ -270,7 +270,7 @@ bool MCHEmul::CPU::when_ExecutingInstruction ()
 	if (deepDebugActive ())
 		*_deepDebugFile
 		// Where
-		<< "CPU\t"
+		<< "CPU\t\t"
 		// When
 		<< MCHEmul::fixLenStr (std::to_string (_clockCycles), 12, false)
 		// What
@@ -383,7 +383,7 @@ bool MCHEmul::CPU::executeNextInterruptRequest_PerCycle (unsigned int& e)
 		if (--_cyclesPendingExecution == 0) // Time to launch it?
 		{
 			if (deepDebugActive ())
-				*_deepDebugFile << "\t\t\t\tInterrupt launched:"
+				*_deepDebugFile << "\t\t\t\t\tInterrupt launched:"
 				<< std::to_string (_currentInterrupt -> id ()) << "\n";
 
 			if (_currentInterrupt ->
@@ -417,7 +417,7 @@ bool MCHEmul::CPU::executeNextInterruptRequest_PerCycle (unsigned int& e)
 				case CPUInterrupt::_EXECUTIONNOTALLOWED:
 				{
 					if (deepDebugActive ())
-						*_deepDebugFile << "\t\t\t\tInterrupt not allowed:" 
+						*_deepDebugFile << "\t\t\t\t\tInterrupt not allowed:" 
 										<< std::to_string (_currentInterrupt -> id ()) << "\n";
 
 					removeInterruptRequest (iR);
@@ -430,7 +430,7 @@ bool MCHEmul::CPU::executeNextInterruptRequest_PerCycle (unsigned int& e)
 				case CPUInterrupt::_EXECUTIONTOWAIT:
 				{
 					if (deepDebugActive ())
-						*_deepDebugFile << "\t\t\t\tInterrupt to wait:" 
+						*_deepDebugFile << "\t\t\t\t\tInterrupt to wait:" 
 										<< std::to_string (_currentInterrupt -> id ()) << "\n";
 
 					// It is not removed from the pending list...
@@ -445,7 +445,7 @@ bool MCHEmul::CPU::executeNextInterruptRequest_PerCycle (unsigned int& e)
 				case CPUInterrupt::_EXECUTIONALLOWED:
 				{
 					if (deepDebugActive ())
-						*_deepDebugFile << "\t\t\t\tInterrupt launched:" 
+						*_deepDebugFile << "\t\t\t\t\tInterrupt launched:" 
 										<< std::to_string (_currentInterrupt -> id ()) << "\n";
 
 					// The acknowledge has to be issued!
@@ -497,7 +497,7 @@ bool MCHEmul::CPU::executeNextInterruptRequest_Full (unsigned int& e)
 		case CPUInterrupt::_EXECUTIONNOTALLOWED:
 		{
 			if (deepDebugActive ())
-				*_deepDebugFile << "\t\t\t\tInterrupt not allowed:" 
+				*_deepDebugFile << "\t\t\t\t\tInterrupt not allowed:" 
 								<< std::to_string (i -> id ()) << "\n";
 
 			removeInterruptRequest (iR); // No longer valid...
@@ -513,7 +513,7 @@ bool MCHEmul::CPU::executeNextInterruptRequest_Full (unsigned int& e)
 		case CPUInterrupt::_EXECUTIONTOWAIT:
 		{
 			if (deepDebugActive ())
-				*_deepDebugFile << "\t\t\t\tInterrupt to wait:" 
+				*_deepDebugFile << "\t\t\t\t\tInterrupt to wait:" 
 								<< std::to_string (i -> id ()) << "\n";
 
 			// The request is not removed as it is still valid...
@@ -528,7 +528,7 @@ bool MCHEmul::CPU::executeNextInterruptRequest_Full (unsigned int& e)
 		case CPUInterrupt::_EXECUTIONALLOWED:
 		{
 			if (deepDebugActive ())
-				*_deepDebugFile << "\t\t\t\tInterrupt launched:" 
+				*_deepDebugFile << "\t\t\t\t\tInterrupt launched:" 
 								<< std::to_string (i -> id ()) << "\n";
 
 			// The acknowledge has to be issued!
@@ -613,7 +613,7 @@ bool MCHEmul::CPU::executeNextInstruction_PerCycle (unsigned int& e)
 				std::string lStAB = lStA + ((lStA == "") ? "" : ((lStB == "") ? "" : ",")) + lStB;
 				lStAB = ((lStAB != "") ? "(" : "") + lStAB + ((lStAB != "") ? ")" : "");
 				*_deepDebugFile
-						<< "\t\t\t\t"
+						<< "\t\t\t\t\t"
 						<< sdd // ...The program counter and the stack position...
 						<< lSt << MCHEmul::_SPACES.substr (0, 15 - lSt.length ()) << "\t" // The last instruction...
 						<< lStAB << MCHEmul::_SPACES.substr (0, 15 - lStAB.length ()) << "\t" // Address bus and Data bus ...if used!
@@ -629,7 +629,7 @@ bool MCHEmul::CPU::executeNextInstruction_PerCycle (unsigned int& e)
 			if (deepDebugActive ())
 				*_deepDebugFile
 					// Where
-					<< "CPU\t"
+					<< "CPU\t\t"
 					// When
 					<< MCHEmul::fixLenStr (std::to_string (_clockCycles), 12, false)
 					// What
@@ -644,7 +644,7 @@ bool MCHEmul::CPU::executeNextInstruction_PerCycle (unsigned int& e)
 		MCHEmul::CPUHook* hk = executeHookIfAny ();
 		if (hk != nullptr && deepDebugActive ())
 			*_deepDebugFile
-					<< "\t\t\t\t" << hk -> asString () << "\n";
+					<< "\t\t\t\t\t" << hk -> asString () << "\n";
 
 		// ...look for the next instruction to be executed...
 		unsigned int nInst = 
@@ -682,7 +682,7 @@ bool MCHEmul::CPU::executeNextInstruction_Full (unsigned int &e)
 	MCHEmul::CPUHook* hk = executeHookIfAny ();
 	if (hk != nullptr && deepDebugActive ()) // if debug print it out!
 		*_deepDebugFile
-				<< "\t\t\t\t" << hk -> asString () << "\n";
+				<< "\t\t\t\t\t" << hk -> asString () << "\n";
 
 	// Access the next instruction...
 	// Using the row description of the instructions!
@@ -734,7 +734,7 @@ bool MCHEmul::CPU::executeNextInstruction_Full (unsigned int &e)
 			std::string lStAB = lStA + ((lStA == "") ? "" : ((lStB == "") ? "" : ",")) + lStB;
 			lStAB = ((lStAB != "") ? "(" : "") + lStAB + ((lStAB != "") ? ")" : "");
 			*_deepDebugFile
-					<< "\t\t\t\t"
+					<< "\t\t\t\t\t"
 					<< sdd // ...The program counter and the stack position...
 					<< lSt << MCHEmul::_SPACES.substr (0, 15 - lSt.length ()) << "\t" // The last instruction...
 					<< lStAB << MCHEmul::_SPACES.substr (0, 15 - lStAB.length ()) << "\t" // Address bus and Data bus ...if used!

@@ -411,6 +411,10 @@ bool MCHEmul::Computer::runComputerCycle (unsigned int a)
 				/** When the clock is external to the CPU the incrementl in one by one (usually), or 
 					if the last instruction took more than 1 (is very strange). */);
 
+	// Every cycle is separated with a +....
+	if (deepDebug ())
+		_deepDebug << "+\n";
+
 	return (true);
 }
 

@@ -208,7 +208,7 @@ bool COMMODORE::VICII::simulate (MCHEmul::CPU* cpu)
 		if (isNewBadLine ())
 		{
 			if (deepDebugActive ())
-				*_deepDebugFile << "\t\t\t\tBad line situation\n";
+				*_deepDebugFile << "\t\t\t\t\tBad line situation\n";
 
 			_newBadLineCondition = true;		// latched...
 			_badLineStopCyclesAdded = false;	// ...the cycles have to be added...
@@ -303,7 +303,7 @@ bool COMMODORE::VICII::simulate (MCHEmul::CPU* cpu)
 	_VICIIRegisters -> freeBufferedSet ();
 	if (deepDebugActive ())
 		*_deepDebugFile
-			<< "\t\t\t\tNew VICII Registers value set" << "\n";
+			<< "\t\t\t\t\tNew VICII Registers value set" << "\n";
 
 	// When the raster enters the non visible part of the screen,
 	// a notification is sent (to the Screen class usually) 
@@ -452,10 +452,10 @@ MCHEmul::Strings COMMODORE::VICII::spritesDrawSnapshot (MCHEmul::CPU* cpu,
 					{
 						switch ((sprDt [(j * 3) + k].value () & (0x03 << (6 - l))) >> (6 - l))
 						{
-							case 0x00: dt += " "; break;
-							case 0x01: dt += "O"; break;
-							case 0x02: dt += "X"; break;
-							case 0x03: dt += "#"; break;
+							case 0x00: dt += "  "; break;
+							case 0x01: dt += "OO"; break;
+							case 0x02: dt += "XX"; break;
+							case 0x03: dt += "##"; break;
 							default: assert (false); break; // It should be here, but just in case...
 						}
 					}
@@ -506,10 +506,10 @@ MCHEmul::Strings COMMODORE::VICII::charsDrawSnapshot (MCHEmul::CPU* cpu,
 				{ 
 					switch ((chrDt [j].value () & (0x03 << (6 - l))) >> (6 - l))
 					{
-						case 0x00: dt += " "; break;
-						case 0x01: dt += "O"; break;
-						case 0x02: dt += "X"; break;
-						case 0x03: dt += "#"; break;
+						case 0x00: dt += "  "; break;
+						case 0x01: dt += "OO"; break;
+						case 0x02: dt += "XX"; break;
+						case 0x03: dt += "##"; break;
 						default: assert (false); break; // It should be here, but just in case...
 					}
 				}
@@ -671,7 +671,7 @@ unsigned int COMMODORE::VICII::treatRasterCycle ()
 
 					if (deepDebugActive ())
 						*_deepDebugFile
-							<< "\t\t\t\tReading info sprite:" << std::to_string (nSR + 1)
+							<< "\t\t\t\t\tReading info sprite:" << std::to_string (nSR + 1)
 							<< " [" << _vicSpriteInfo [nSR]._graphicsLineSprites.asString 
 								(MCHEmul::UByte::OutputFormat::_HEXA, ' ') << "]"
 							<< "\n";
@@ -700,16 +700,28 @@ unsigned int COMMODORE::VICII::treatRasterCycle ()
 			{
 				for (size_t i = 0; i < 8; i++)
 				{
-					if (_vicSpriteInfo [i]._active &&
-						((_vicSpriteInfo [i]._expansionY && 
-							(!(_vicSpriteInfo [i]._ff = !_vicSpriteInfo [i]._ff))) || 
-							// Note that when expansion is on, the line attribute is incremented every two raster lines...
-						(!_vicSpriteInfo [i]._expansionY)))
-					{ 
-						// When the line treated of the sprite is the last one, the sprite is desactivated...
-						if (_vicSpriteInfo [i]._line++ == 21)
-							_vicSpriteInfo [i] = VICSpriteInfo (); // Starts back...
+					// This cycle happens at the beginning of every raster line...
+					// From 0 to 20 (21 lines)...
+					if (_vicSpriteInfo [i]._line == 21)
+					{
+						_vicSpriteInfo [i]._active = false;
+
+						if (deepDebugActive ())
+							*_deepDebugFile
+								<< "\t\t\t\t\tSprite draw finishes:" << std::to_string (i) << "\n";
 					}
+
+					// Read also cycle 55 onwards info
+					// because if expansion flip - flop hadn't active, 
+					// the "line" will increment every two raster lines...
+					if (_VICIIRegisters -> expansionYFlipFlop (i))
+						_vicSpriteInfo [i]._line++;
+
+
+					// When this last instruction is executed and finally the sprite becomes no active
+					// the value of the flip flop is always "true":
+					// When the sprite is not expanded, it will remain as true from the beginning...
+					// When the sprite is expanded, it start as false (@see cycle 55) and finished in true...
 				}
 			}
 
@@ -772,10 +784,32 @@ unsigned int COMMODORE::VICII::treatRasterCycle ()
 			{
 				for (size_t i = 0; i < 8; i++)
 				{
+					// As the documentacion describes:
+					// DMA activation is one thing and Sprite activation is another different one.
+					// In the cycle 55 the DMA is created if it wasn't before.
+					// In the cycle 55/56/58 (in PAL VICII) if the DMA is active, the sprite associated is activated too.
+					// So when DMA is "created" the sprite is active, and also in the other sense...
+
+					// Simulation of the cycle 55...
+					if (_VICIIRegisters -> spriteDoubleHeight (i))
+						_VICIIRegisters -> invertExpansionYFlipFlop (i); 
+					// The flip flop is inverted if at this point the sprite has still double height...
+
+					// Simulation of the cycle 55/56/58...
 					if (_VICIIRegisters -> spriteEnable (i) &&
 						_raster.currentLine () == (unsigned short) _VICIIRegisters -> spriteYCoord (i))
-						_vicSpriteInfo [i] = VICSpriteInfo (true /** active. */, 0 /** first line. */, 
-							_VICIIRegisters -> spriteDoubleHeight (i) /** double height? */);
+					{
+						_vicSpriteInfo [i]._active = true;
+						_vicSpriteInfo [i]._line = 0;
+						_vicSpriteInfo [i]._drawing = false; _vicSpriteInfo [i]._xS = 0;
+						// _expansionY attribute is used later to draw and know what the exactly height is...
+						if (_vicSpriteInfo [i]._expansionY = _VICIIRegisters -> spriteDoubleHeight (i))
+							_VICIIRegisters -> setExpansionYFlipFlop (i, false);
+
+						if (deepDebugActive ())
+							*_deepDebugFile
+								<< "\t\t\t\t\tSprite active to be drawn:" << std::to_string (i) << "\n";
+					}
 				}
 
 				rG = true;
@@ -820,7 +854,7 @@ unsigned int COMMODORE::VICII::treatRasterCycle ()
 
 			if (deepDebugActive ())
 				*_deepDebugFile
-					<< "\t\t\t\tReading Video Matrix & Color RAM" 
+					<< "\t\t\t\t\tReading Video Matrix & Color RAM" 
 					<< " [" << _vicGraphicInfo._lastScreenCodeDataRead.asString (MCHEmul::UByte::OutputFormat::_HEXA) 
 					<< ", " << _vicGraphicInfo._lastColorDataRead.asString (MCHEmul::UByte::OutputFormat::_HEXA) << "]"
 					<< "\n";
@@ -830,7 +864,7 @@ unsigned int COMMODORE::VICII::treatRasterCycle ()
 
 		if (deepDebugActive ())
 			*_deepDebugFile
-				<< "\t\t\t\tReading Graphics"
+				<< "\t\t\t\t\tReading Graphics"
 				<< " [" << _vicGraphicInfo._lastGraphicDataRead.asString (MCHEmul::UByte::OutputFormat::_HEXA) << "]"
 				<< "\n";
 
@@ -862,7 +896,7 @@ void COMMODORE::VICII::drawVisibleZone (MCHEmul::CPU* cpu)
 	{
 		if (deepDebugActive ())
 			*_deepDebugFile
-				<< "\t\t\t\tVideo no active at pixel:" << std::to_string (cav) 
+				<< "\t\t\t\t\tVideo no active at pixel:" << std::to_string (cav) 
 				<< ", color:" << std::to_string ((unsigned int) _VICIIRegisters -> foregroundColor ()) << "\n";
 
 		screenMemory () -> setHorizontalLine ((size_t) cav, (size_t) rv,
@@ -999,7 +1033,7 @@ COMMODORE::VICII::DrawResult COMMODORE::VICII::drawGraphics (const COMMODORE::VI
 
 	if (deepDebugActive ())
 		*_deepDebugFile
-			<< "\t\t\t\tDrawing pixels at:" << std::to_string (cb) 
+			<< "\t\t\t\t\tDrawing pixels at:" << std::to_string (cb) 
 			<< ", background:" << std::to_string ((unsigned int) _VICIIRegisters -> backgroundColor ()) << "\n";
 
 	COMMODORE::VICII::DrawResult result;
@@ -1351,16 +1385,14 @@ MCHEmul::UByte COMMODORE::VICII::drawMonoColorSpriteOver (unsigned short c, unsi
 	// Horizontal info about the sprite
 	unsigned short dW	= _VICIIRegisters -> spriteDoubleWidth (spr) ? 2 : 1;
 	unsigned short x	= (_vicSpriteInfo [spr]._drawing) 
-		? _vicSpriteInfo [spr]._xS : _VICIIRegisters -> spriteXCoord (spr) + 4;
+		? _vicSpriteInfo [spr]._xS : (_VICIIRegisters -> spriteXCoord (spr) + 4);
 	unsigned short wX	= 24 /** normal width in pixels. */ * dW;
 	unsigned short dW8	= dW << 3; // 8 or 16
-	// Vertical info about the sprite
-	/** Because the position 50 correspond at the raster line position 51. */
-	unsigned short y	= _VICIIRegisters -> spriteYCoord (spr) + 1;
 	unsigned short wY	= _vicSpriteInfo [spr]._expansionY ? 42 : 21;
 
-	if (r < y || r >= (y + wY))
-		return (result); // Not visible in the vertical zone...
+	// When the code reaches this position _vicSpriteInfo._active is true
+	// Which means the bits have to be shifted from the composition register
+	// No need to check whether the y position is within or not the limits
 	if ((c + 8 /** pixels */) < x || c >= (x + wX))
 		return (result); // Not visible in the horizontal zone...
 
@@ -1375,7 +1407,13 @@ MCHEmul::UByte COMMODORE::VICII::drawMonoColorSpriteOver (unsigned short c, unsi
 		// The sprite starts to be drawn...
 		// ...if it isn0't already before...
 		if (!_vicSpriteInfo [spr]._drawing)
-			{ _vicSpriteInfo [spr]._drawing = true; _vicSpriteInfo [spr]._xS = x; }
+		{
+			_vicSpriteInfo [spr]._drawing = true; _vicSpriteInfo [spr]._xS = x; 
+			if (deepDebugActive ())
+				*_deepDebugFile
+					<< "\t\t\t\t\tDrawing sprite:" << std::to_string (spr) 
+					<< ", at: [" << std::to_string (x) << "," << std::to_string (r) << "]\n";
+		}
 
 		// To determine the initial byte (iBy) and bit (iBt) with the info about the sprite...
 		// The bit moves from 7 to 0, and the byte increases...
@@ -1395,9 +1433,13 @@ MCHEmul::UByte COMMODORE::VICII::drawMonoColorSpriteOver (unsigned short c, unsi
 		// Draw the border if needed...
 		// The border is drawn before the pixel itself to appreciate the sprite fully!
 		if (_drawSpritesBorder) 
+		{
+			// Because the position 50 correspond at the raster line position 51...
+			unsigned short y = _VICIIRegisters -> spriteYCoord (spr) + 1;
 			if ((pp == x || pp == (x + wX - 1)) || 
 				(r == y || r == (y + wY - 1)))
 					{ d [i] = 32 /** cyan. */; dO [i] = spr; }
+		}
 
 		if (!_vicSpriteInfo [spr]._graphicsLineSprites [iBy].bit (iBt))
 			continue; // The point is not visible...
@@ -1423,12 +1465,11 @@ MCHEmul::UByte COMMODORE::VICII::drawMultiColorSpriteOver (unsigned short c, uns
 	unsigned short wX	= 24 /** normal width in pixels. */ * dW;
 	unsigned short dW8	= dW << 3; // 8 or 16
 	unsigned short dW2  = dW << 1; // 4 or 2
-	// Vertical info about the sprite
-	unsigned short y	= _VICIIRegisters -> spriteYCoord (spr) + 1;
 	unsigned short wY	= _vicSpriteInfo [spr]._expansionY ? 42 : 21;
 
-	if (r < y || r >= (y + wY))
-		return (result); // Not visible in the vertical zone...
+	// When the code reaches this position _vicSpriteInfo._active is true
+	// Which means the bits have to be shifted from the composition register
+	// No need to check whether the y position is within or not the limits
 	if ((c + 8 /** pixels */) < x || c >= (x + wX))
 		return (result); // Not visible in the horizontal zone...
 
@@ -1443,7 +1484,13 @@ MCHEmul::UByte COMMODORE::VICII::drawMultiColorSpriteOver (unsigned short c, uns
 		// The sprite starts to be drawn...
 		// ...if it isn0't already before...
 		if (!_vicSpriteInfo [spr]._drawing)
-			{ _vicSpriteInfo [spr]._drawing = true; _vicSpriteInfo [spr]._xS = x; }
+		{ 
+			_vicSpriteInfo [spr]._drawing = true; _vicSpriteInfo [spr]._xS = x; 
+			if (deepDebugActive ())
+				*_deepDebugFile
+					<< "\t\t\t\t\tDrawing sprite:" << std::to_string (spr) 
+					<< ", at: [" << std::to_string (x) << "," << std::to_string (r) << "]\n";
+		}
 
 		// To determine the initial byte (iBy) and bit (iBt) with the info about the sprite...
 		// The bit to select moves from 0 to 3, represeting the pair of bits (0,1), (2,3), (4,5), (6,7)
@@ -1467,9 +1514,13 @@ MCHEmul::UByte COMMODORE::VICII::drawMultiColorSpriteOver (unsigned short c, uns
 		// Draw the border if needed...
 		// The border is drawn before the pixel itself to appreciate the sprite fully!
 		if (_drawSpritesBorder)
+		{
+			// Because the position 50 correspond at the raster line position 51...
+			unsigned short y = _VICIIRegisters -> spriteYCoord (spr) + 1;
 			if ((pp == x || pp == (x + wX - 1)) ||
 				(r == y || r == (y + wY - 1)))
 					{ d [i] = 32 /** cyan. */; dO [i] = spr; }
+		}
 
 		unsigned char cs = 
 			(_vicSpriteInfo [spr]._graphicsLineSprites [iBy].value () >> (iBt << 1)) & 0x03;
@@ -1605,7 +1656,7 @@ unsigned int COMMODORE::VICII_PAL::treatRasterCycle ()
 
 					if (deepDebugActive ())
 						*_deepDebugFile
-							<< "\t\t\t\tReading info sprite:" << std::to_string (nSR + 1)
+							<< "\t\t\t\t\tReading info sprite:" << std::to_string (nSR + 1)
 							<< " [" << _vicSpriteInfo [nSR]._graphicsLineSprites.asString 
 								(MCHEmul::UByte::OutputFormat::_HEXA, ' ') << "]"
 							<< "\n";
@@ -1664,7 +1715,7 @@ unsigned int COMMODORE::VICII_NTSC::treatRasterCycle ()
 
 					if (deepDebugActive ())
 						*_deepDebugFile
-							<< "\t\t\t\tReading info sprite:" << std::to_string (nSR + 1) 
+							<< "\t\t\t\t\tReading info sprite:" << std::to_string (nSR + 1) 
 							<< " [" << _vicSpriteInfo [nSR]._graphicsLineSprites.asString 
 								(MCHEmul::UByte::OutputFormat::_HEXA, ' ') << "]"
 							<< "\n";

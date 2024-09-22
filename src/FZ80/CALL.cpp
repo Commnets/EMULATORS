@@ -285,6 +285,8 @@ _INST_IMPL (FZ80::RET_I)
 	// Undocumented!
 	static_cast <FZ80::CZ80*> (cpu ()) -> setIFF1 (static_cast <FZ80::CZ80*> (cpu ()) -> IFF2 ());
 
+	if (cpu () -> deepDebugActive ())
+		*cpu () -> deepDebugFile () << "<-Interrupt code about to finish\n";
 	cpu () -> interrupt (FZ80::INTInterrupt::_ID) -> setInExecution (false);
 
 	executeReturn (false);
@@ -297,6 +299,8 @@ _INST_IMPL (FZ80::RET_N)
 {
 	assert (parameters ().size () == 2);
 
+	if (cpu () -> deepDebugActive ())
+		*cpu () -> deepDebugFile () << "<-Interrupt code about to finish\n";
 	static_cast <FZ80::CZ80*> (cpu ()) -> setIFF1 (static_cast <FZ80::CZ80*> (cpu ()) -> IFF2 ());
 
 	cpu () -> interrupt (FZ80::NMIInterrupt::_ID) -> setInExecution (false);

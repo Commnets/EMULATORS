@@ -16,7 +16,11 @@ void MCHEmul::CPUInterrupt::setInExecution (bool i)
 
 	if ((_inExecution = i))
 	{
-		// Debugging...and first time to pass over this point?
+		if (_computer == nullptr)
+			return;
+
+		// Debugging...
+		// and first time to pass over this point?
 		if (_debug && 
 			!_computer -> deepDebug ())
 		{
@@ -39,6 +43,9 @@ void MCHEmul::CPUInterrupt::setInExecution (bool i)
 	}
 	else
 	{
+		if (_computer == nullptr)
+			return;
+
 		// Debugging...and first time to pass over this point?
 		if (_debug && 
 			_computer -> deepDebug ())
@@ -64,6 +71,9 @@ bool MCHEmul::CPUInterrupt::executeOver (MCHEmul::CPU* c, unsigned int cC)
 {
 	assert (c != nullptr);
 
+	// Mark that the interrupt is starting...
+	if (c -> deepDebugActive ())
+		*c -> deepDebugFile () << "->Interrupt code about to start:\n";
 	setInExecution (true);
 
 	_lastClockCyclesExecuted = c -> clockCycles ();

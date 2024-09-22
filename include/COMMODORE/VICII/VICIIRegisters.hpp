@@ -266,6 +266,15 @@ namespace COMMODORE
 		inline void bufferRegisterSet (unsigned char r, const MCHEmul::UByte& v);
 		void freeBufferedSet ();
 
+		// Very important flag that is used to draw sprites...
+		// see how VICII uses it!
+		bool expansionYFlipFlop (size_t spr) const
+							{ return (_expansionYFlipFlop [spr]); }
+		void setExpansionYFlipFlop (size_t spr, bool e)
+							{ _expansionYFlipFlop [spr] = e; }
+		void invertExpansionYFlipFlop (size_t spr)
+							{ _expansionYFlipFlop [spr] = !_expansionYFlipFlop [spr]; }
+
 		private:
 		struct SpriteInfo : public MCHEmul::InfoClass
 		{
@@ -378,6 +387,9 @@ namespace COMMODORE
 		unsigned short _minRasterV, _maxRasterV; 
 		/** Where the mouse is. -1 when it is out of the visible zone. */
 		int _mousePositionX, _mousePositionY;
+		/** The expansion flip flop in the Y axis.
+			There are as many as sprites, all initially at false. */
+		bool _expansionYFlipFlop [8];
 
 		/** Information buffered. */
 		bool _registerBuffered;

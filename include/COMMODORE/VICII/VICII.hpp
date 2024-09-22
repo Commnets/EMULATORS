@@ -514,29 +514,26 @@ namespace COMMODORE
 				: _active (false), _line (0), _expansionY (false),
 				  _spriteBaseAddress ({ 0x00, 0x00 }, true), // it is the same than using false and quicker...
 				  _graphicsLineSprites (MCHEmul::UBytes::_E),
-				  _drawing (false), _xS (0),
-				  _ff (false)
+				  _drawing (false), _xS (0)
 							{ }
 
 			VICSpriteInfo (bool a, unsigned char l, bool e)
 				: _active (a), _line (l), _expansionY (e),
 				  _spriteBaseAddress ({ 0x00, 0x00 }, true), // it is the same than using false and quicker...
 				  _graphicsLineSprites (MCHEmul::UBytes::_E),
-				  _drawing (false), _xS (0),
-				  _ff (false)
+				  _drawing (false), _xS (0)
 							{ }
 
 			bool _active; // True when the sprite is active in the current raster line
-			unsigned char _line; // Line of the sprite to be drawn (from 0 to 21)
+			unsigned char _line; // Line of the sprite to be drawn (from 0 to 21). 
+			// This is like MCBASE in the documentation. MC is not simulated, 
+			// because the read of the info is done 3 mytes simultaneosuly....
 			bool _expansionY; // True when the sprite is expanded in the Y axis
 			mutable MCHEmul::Address _spriteBaseAddress;
 			mutable MCHEmul::UBytes _graphicsLineSprites; // 3 bytes line info each
 			/** Once the sprite reaches the coordinate x, the draw action continues until everyting is done. */
 			bool _drawing; // Is the sprite being drawn?
 			unsigned short _xS; // x coordinate from which the sprite is drawn!
-
-			// Implementation
-			bool _ff; // Used in controlling how _line is incremented (per line)
 		};
 
 		VICSpriteInfo _vicSpriteInfo [8];
@@ -589,7 +586,13 @@ namespace COMMODORE
 		bool atLeft = false;
 		if (cav < _raster.hData ().firstScreenPosition () &&
 				((cav + 8) >= _raster.hData ().firstScreenPosition ()))
+		{
 			atLeft = true;
+			if (_raster.vData ().currentPosition () >= _VICIIRegisters -> minRasterV () &&
+				_raster.vData ().currentPosition () <= _VICIIRegisters -> maxRasterV ())
+				_vicGraphicInfo._ffMBorderPixels = 
+					_raster.hData ().firstScreenPosition () - cav;
+		}
 		
 		// When the raster is getting the left position...
 		// ...and it is also in the bottom visible limit...
@@ -600,11 +603,7 @@ namespace COMMODORE
 		if (atLeft &&
 			(_raster.vData ().currentPosition () == _VICIIRegisters -> minRasterV () &&
 			 !_VICIIRegisters -> blankEntireScreen ()))
-		{
 			_vicGraphicInfo._ffVBorder = false; // ... the vertical border should disappear...
-			_vicGraphicInfo._ffMBorderPixels = 
-				_raster.hData ().firstScreenPosition () - cav + 1;
-		}
 	
 		// ...and if after all previous checks, the vertical flip flip is off...
 		if (atLeft && !_vicGraphicInfo._ffVBorder)

@@ -155,6 +155,8 @@ LOADSPRITES:				lda #$20							; Initial block (definition) for of the sprite 0.
 							bne LOADSPRITES
 							lda #$00							; All sprites have the same priority level (over the foreground)
 							sta SPRITEPRIORITY
+							lda #$00
+							sta SPRITEDHEIGHT
 
 							lda #$00
 							sta TEMP03_DATA

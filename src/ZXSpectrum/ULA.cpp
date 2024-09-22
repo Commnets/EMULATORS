@@ -90,7 +90,7 @@ bool ZXSPECTRUM::ULA::simulate (MCHEmul::CPU* cpu)
 		{
 			*MCHEmul::GraphicalChip::_deepDebugFile
 				// Where
-				<< "ULA\t" 
+				<< "ULA\t\t" 
 				// When
 				<< std::to_string (cpu -> clockCycles () - (i >> 1)) << "\t" // CPU clock cycles at that point
 				// What

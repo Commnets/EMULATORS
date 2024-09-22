@@ -67,7 +67,7 @@ MCHEmul::InfoStructure COMMODORE::VICIIRegisters::getInfoStructure () const
 		sInfo.add (std::to_string (i), std::move (sInfoD));
 	}
 
-	result.add ("SPRITES",		std::move (sInfo));
+	result.add ("SPRITES", std::move (sInfo));
 
 	return (result);
 }
@@ -412,6 +412,10 @@ void COMMODORE::VICIIRegisters::initializeInternalValues ()
 	// This variable will be set from CIA2 Registers...
 	_bank = 0;
 
+	// The status of the expansion Y flip flop is true...
+	// Meaning that, initially drawing the sprite will happen every raster line...
+	for (size_t i = 0; i < 8; _expansionYFlipFlop [i++] = true);
+
 	// Notice that the status of the register value buffering is not set
 	// This is because is is managed using other methods!
 }
@@ -569,7 +573,9 @@ void COMMODORE::VICIIRegisters::freeBufferedSet ()
 		case 0x17:
 			{
 				for (size_t i = 0; i < 8; i++)
-					_spriteInfo [i]._spriteDoubleHeight = _valueBuffered.bit (i);
+					if (!(_spriteInfo [i]._spriteDoubleHeight = _valueBuffered.bit (i)))
+						_expansionYFlipFlop [i] = true; // As long as YXEXPAND is cleared, the expansion flip flop is set...
+					
 			}
 
 			break;

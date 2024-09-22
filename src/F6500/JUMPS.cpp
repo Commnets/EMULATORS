@@ -70,6 +70,8 @@ _INST_IMPL (F6500::RTI)
 
 	// The interruption is no longer under execution but...which one?
 	// Just in case both are set off...
+	if (cpu () -> deepDebugActive ())
+		*cpu () -> deepDebugFile () << "<-Interrupt code about to finish\n";
 	cpu () -> interrupt (F6500::IRQInterrupt::_ID) -> setInExecution (false);
 	if (cpu () -> existsInterrupt (F6500::NMIInterrupt::_ID)) // Some versions of the 6500 doesn't have this type of interrupt...
 		cpu () -> interrupt (F6500::NMIInterrupt::_ID) -> setInExecution (false);

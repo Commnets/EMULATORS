@@ -211,7 +211,7 @@ bool COMMODORE::TED::simulate (MCHEmul::CPU* cpu)
 		{
 			*_deepDebugFile
 				// Where
-				<< "TED\t" 
+				<< "TED\t\t" 
 				// When
 				<< std::to_string (cpu -> clockCycles () - i) << "\t" // clock cycles at that point
 				// What
@@ -249,7 +249,7 @@ bool COMMODORE::TED::simulate (MCHEmul::CPU* cpu)
 		if (isNewBadLine ())
 		{
 			if (deepDebugActive ())
-				*_deepDebugFile << "\t\t\t\tBad line situation\n";
+				*_deepDebugFile << "\t\t\t\t\tBad line situation\n";
 
 			_newBadLineCondition = true;		// latched...
 			_badLineStopCyclesAdded = false;	// ...the cycles have to be added...
@@ -537,14 +537,14 @@ unsigned int COMMODORE::TED::treatRasterCycle ()
 
 			if (deepDebugActive ())
 				*_deepDebugFile
-					<< "\t\t\t\tReading Video Matrix & Color RAM" << "\n";
+					<< "\t\t\t\t\tReading Video Matrix & Color RAM" << "\n";
 
 			readVideoMatrixAndColorRAM ();
 		}
 
 		if (deepDebugActive ())
 			*_deepDebugFile
-				<< "\t\t\t\tReading Graphics" << "\n";
+				<< "\t\t\t\t\tReading Graphics" << "\n";
 
 		readGraphicalInfo ();
 
