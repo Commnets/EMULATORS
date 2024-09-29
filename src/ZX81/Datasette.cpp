@@ -49,7 +49,7 @@ bool ZX81::DatasetteInjection::simulate (MCHEmul::CPU* cpu)
 		// The only type of data recognized is so far, OAndPFileData
 		// This type of data is made up of only 1 program, so 
 		// the data as a whole might be loaded!
-		cpu -> memoryRef () -> set (_data._data);
+		cpu -> memoryRef () -> put (_data._data);
 
 		// To simulate the return from the routine...
 		cpu -> memoryRef () -> stack () -> pull (2);

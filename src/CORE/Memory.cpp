@@ -75,6 +75,50 @@ MCHEmul::PhysicalStorageSubset::PhysicalStorageSubset
 }
 
 // ---
+std::vector <MCHEmul::UByte> MCHEmul::PhysicalStorageSubset::bytes (const MCHEmul::Address& a, size_t nB) const
+{
+	std::vector <MCHEmul::UByte> result;
+
+	int dt;
+	if (_active && _activeForReading &&
+		nB <= _size && (a >= _initialAddress && (dt = _initialAddress.distanceWith (a)) <= (int) (_size - nB))) 
+		for (size_t i = 0; i < nB; i++)
+			result.emplace_back (readValue (dt + i)); 
+
+	return (result);
+}
+
+// ---
+void MCHEmul::PhysicalStorageSubset::set 
+	(const MCHEmul::Address& a, const std::vector <MCHEmul::UByte>& v, bool f)
+{
+	int dt; 
+	if (_active && _physicalStorage -> canBeWriten (f) &&
+		v.size () <= _size && (a >= _initialAddress && (dt = _initialAddress.distanceWith (a)) <= (int) (_size - v.size ())))
+		for (size_t i = 0; i < v.size (); i++)
+			setValue (dt + i, v [i]);
+}
+
+// ---
+void MCHEmul::PhysicalStorageSubset::put 
+	(const MCHEmul::Address& a, const std::vector <MCHEmul::UByte>& v, bool f)
+{
+	int dt; 
+	if (_active && _physicalStorage -> canBeWriten (f) &&
+		v.size () <= _size && (a >= _initialAddress && (dt = _initialAddress.distanceWith (a)) <= (int) (_size - v.size ())))
+		for (size_t i = 0; i < v.size (); i++)
+			setValue (dt + i, v [i]);
+}
+
+// ---
+void MCHEmul::PhysicalStorageSubset::fillWith (const MCHEmul::Address& addr, const MCHEmul::UByte& b, size_t nB)
+{ 
+	if (addr > _initialAddress) // Only if the requested address is bigger than the initial position...
+		for (size_t i = (addr - _initialAddress); i < _size; i++) 
+			setValue (i, b); 
+}
+
+// ---
 MCHEmul::PhysicalStorageSubsetDUMP MCHEmul::PhysicalStorageSubset::dump 
 	(const MCHEmul::Address& f, const MCHEmul::Address& t) const
 {
@@ -119,7 +163,7 @@ bool MCHEmul::PhysicalStorageSubset::load (const std::string& fN, size_t sA, boo
 		return (false); // The data doesn't fit the limits of the memory, so not possible to load!
 
 	// Sets the memory...
-	set (iA, bys.LSUBytes (bys.size () - sA));
+	put (iA, bys.LSUBytes (bys.size () - sA));
 
 	return (true);
 }
@@ -213,6 +257,127 @@ bool MCHEmul::MemoryView::removeSubSet (int id)
 	}
 	
 	return (result); 
+}
+
+// ---
+const MCHEmul::UByte& MCHEmul::MemoryView::value (const MCHEmul::Address& a) const
+{
+	UByte& result = MCHEmul::PhysicalStorage::_DEFAULTVALUE;
+
+	int dtT = _minAddress.distanceWith (a);
+	if (dtT >= 0 && (size_t) dtT <= _numPositions)
+	{
+		MCHEmul::PhysicalStorageSubset* fS = nullptr;
+		const MCHEmul::PhysicalStorageSubsetsList& pL = _memPositions [dtT]._storages;
+		for (size_t i = 0; i < pL.size () && fS == nullptr; i++)
+			if (pL [i] -> active () && pL [i] -> activeForReading ()) 
+				fS = pL [i];
+
+		// If a valid storage has been found under the address requested...
+		if (fS != nullptr)
+			result = fS -> readValue (a - fS -> initialAddress ()); // ...the value is got!
+	}
+
+	return (result);
+}
+
+// ---
+void MCHEmul::MemoryView::set (const MCHEmul::Address& a, const MCHEmul::UByte& d, bool f)
+{
+	int dtT = _minAddress.distanceWith (a);
+	if (dtT >= 0 && (size_t) dtT <= _numPositions)
+	{
+		MCHEmul::PhysicalStorageSubset* fS = nullptr;
+		const MCHEmul::PhysicalStorageSubsetsList& pL = _memPositions [dtT]._storages;
+		for (size_t i = 0; i < pL.size () && fS == nullptr; i++)
+			if (pL [i] -> active () && pL [i] -> canBeWriten (f)) fS = pL [i];
+
+		// If a valid storage is under the position requested...
+		if (fS != nullptr)
+			fS -> setValue (a - fS -> initialAddress (), d); // ...save the value...
+	}
+}
+
+// ---
+std::vector <MCHEmul::UByte> MCHEmul::MemoryView::bytes (const MCHEmul::Address& a, size_t nB) const
+{
+	std::vector <MCHEmul::UByte> result;
+
+	// If more bytes are required than max available nothing is returned...
+	int dtT = _minAddress.distanceWith (a);
+	if (dtT >= 0 && (size_t) dtT <= (_numPositions - nB))
+	{
+		for (size_t i = 0; i < nB; i++)
+		{ 
+			MCHEmul::PhysicalStorageSubset* fS = nullptr;
+			const MCHEmul::PhysicalStorageSubsetsList& pL = _memPositions [dtT + i]._storages;
+			for (size_t j = 0; j < pL.size () && fS == nullptr; j++)
+				if (pL [j] -> active () && pL [j] -> activeForReading ()) 
+					fS = pL [j];
+
+			result.emplace_back ((fS != nullptr) // Only if the storage behind is valid a valis value is got...
+				? fS -> readValue (a - fS -> initialAddress () + i) : PhysicalStorage::_DEFAULTVALUE);
+		}
+	}
+			
+	return (result);
+}
+
+// ---
+void MCHEmul::MemoryView::set (const MCHEmul::Address& a, const std::vector <MCHEmul::UByte>& v, bool f)
+{ 
+	// If there are more bytes to set than max available nothing is done...
+	int dtT = _minAddress.distanceWith (a);
+	if (dtT >= 0 && (size_t) dtT <= (_numPositions - v.size ()))
+	{
+		for (size_t i = 0; i < v.size (); i++)
+		{
+			MCHEmul::PhysicalStorageSubset* fS = nullptr;
+			const MCHEmul::PhysicalStorageSubsetsList& pL = _memPositions [dtT + i]._storages;
+			for (size_t j = 0; j < pL.size () && fS == nullptr; j++)
+				if (pL [j] -> active () && pL [j] -> canBeWriten (f)) fS = pL [j];
+
+			if (fS != nullptr)
+				fS -> setValue (a - fS -> initialAddress () + i, v [i]);
+		}
+	}
+}
+
+// ---
+void MCHEmul::MemoryView::put (const MCHEmul::Address& a, const MCHEmul::UByte& d, bool f)
+{
+	int dtT = _minAddress.distanceWith (a);
+	if (dtT >= 0 && (size_t) dtT <= _numPositions)
+	{
+		MCHEmul::PhysicalStorageSubset* fS = nullptr;
+		const MCHEmul::PhysicalStorageSubsetsList& pL = _memPositions [dtT]._storages;
+		for (size_t i = 0; i < pL.size () && fS == nullptr; i++)
+			if (pL [i] -> active () && pL [i] -> canBeWriten (f)) fS = pL [i];
+
+		// If a valid storage is under the position requested...
+		if (fS != nullptr)
+			fS -> setValue (a - fS -> initialAddress (), d); // ...save the value...
+	}
+}
+
+// ---
+void MCHEmul::MemoryView::put (const MCHEmul::Address& a, const std::vector <MCHEmul::UByte>& v, bool f)
+{ 
+	// If there are more bytes to set than max available nothing is done...
+	int dtT = _minAddress.distanceWith (a);
+	if (dtT >= 0 && (size_t) dtT <= (_numPositions - v.size ()))
+	{
+		for (size_t i = 0; i < v.size (); i++)
+		{
+			MCHEmul::PhysicalStorageSubset* fS = nullptr;
+			const MCHEmul::PhysicalStorageSubsetsList& pL = _memPositions [dtT + i]._storages;
+			for (size_t j = 0; j < pL.size () && fS == nullptr; j++)
+				if (pL [j] -> active () && pL [j] -> canBeWriten (f)) fS = pL [j];
+
+			if (fS != nullptr)
+				fS -> setValue (a - fS -> initialAddress () + i, v [i]);
+		}
+	}
 }
 
 // ---

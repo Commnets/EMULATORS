@@ -195,7 +195,7 @@ MCHEmul::DataMemoryBlock MCHEmul::Emulator::loadBinaryFile (const std::string& f
 			_computer -> cpu () -> architecture ().bigEndian ());
 
 	if (!e)
-		_computer -> memory () -> set ({ result });
+		_computer -> memory () -> put ({ result });
 
 	return (result);
 }
@@ -212,7 +212,7 @@ MCHEmul::Assembler::ByteCode MCHEmul::Emulator::loadProgram (const std::string& 
 	{
 		e = { };
 
-		_computer -> memory () -> set (cL.asDataMemoryBlocks ());
+		_computer -> memory () -> put (cL.asDataMemoryBlocks ());
 		_computer -> addActions (cL.listOfActions ());
 	}
 
@@ -228,7 +228,7 @@ MCHEmul::DataMemoryBlocks MCHEmul::Emulator::loadBlocksFile (const std::string& 
 			_computer -> cpu () -> architecture ().bigEndian ());
 
 	if (!e)
-		_computer -> memory () -> set (result);
+		_computer -> memory () -> put (result);
 
 	return (result);
 }

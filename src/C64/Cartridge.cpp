@@ -234,7 +234,7 @@ void C64::Cartridge::dumpDataInto (C64::Memory* m,
 					{
 						MCHEmul::Address dA = a + ct++;
 						for (const auto& k : _cpuSubsets)
-							k.second -> set (dA, j, true /** force. */);
+							k.second -> put (dA, j, true /** force. */);
 					}
 				}
 			}
@@ -285,7 +285,7 @@ void C64::Cartridge::dumpDataInto (C64::Memory* m,
 							(_EXPANSIONROMBASE_SUBSET + (int) bk, fS, 0x0000, _data._data [i].startAddress (), nB)));
 
 					// ..load the data into it...
-					fSS -> set (_data._data [i].startAddress (), _data._data [i].bytes (), true /** force. */);
+					fSS -> put (_data._data [i].startAddress (), _data._data [i].bytes (), true /** force. */);
 					
 					// ...and set a name to recognize it later...
 					fSS -> setName ("Ocean1 Bank " + bkS);

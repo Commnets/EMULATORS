@@ -375,7 +375,7 @@ void C64::Memory::loadDataBlockInRAM (const MCHEmul::DataMemoryBlock& dB)
 	configureMemoryStructure (false, false, false, true, false, false, false, false, false, false);
 
 	// Load the information...
-	set (dB);
+	put (dB);
 
 	// Restore the previous situation...
 	for (size_t i = 0; i < aM.size (); i++)

@@ -96,7 +96,7 @@ void MCHEmul::Assembler::ByteCode::loadIntoMemory (MCHEmul::Memory* m)
 	assert (m != nullptr);
 
 	for (const auto& i : _lines)
-		m -> set (i._address, i._bytes);
+		m -> put (i._address, i._bytes);
 }
 
 // ---

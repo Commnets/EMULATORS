@@ -73,6 +73,9 @@ namespace MCHEmul
 		/** Managing the content of the memory. \n
 			Take into account that whether it is a RAM or a ROM is not controlled here. \n
 			It is something that has to be guarantteed by the subsets built on top of this. */
+		// Take care using it direclty because the boundaries are not controlled!
+		// It is not controlled either whether to write is not possible!. 
+		// It is controlled only throught out the @see PhysicalStorageSubset class!
 		void set (size_t pB, const UByte& d)
 							{ _data [pB] = d; /** The very real write type access. */}
 		const UByte& value (size_t pB) const
@@ -86,11 +89,14 @@ namespace MCHEmul
 							{ for (size_t i = 0; i < v.size (); i++) set (pB + i, v [i]); }
 
 		/** Load the info, as many bytes as possible, from a specific byte of the memory. \n
-			If nothing is said, the info is load from the very first byte. */
+			If nothing is said, the info is load from the very first byte. \n
+			If the info couldn't be loaded, because it were over the boundaries, 
+			the method would return false. True in other circunstances. */
 		bool loadInto (const std::string& fN, size_t p = 0);
 
 		/** Save the a number of bytes "nB" of the memory into a file, string from a position p. \n
-			If nothing is said the position choosen is the initial one. */
+			If nothing is said the position choosen is the initial one. \n
+			If the info couldn't be saved, the method would return false. True in other circunstances. */
 		bool saveFrom (const std::string& fN, size_t nB, size_t p = 0) const;
 
 		protected:
@@ -127,17 +133,17 @@ namespace MCHEmul
 
 	/** Represents a subset of the physical storage. \n
 		Many subsets can be created over the same physical location. \n
-		This class can send and receive events. */
+		This class might send and receive events to be connected to other elements of the computer. */
 	class PhysicalStorageSubset : public InfoClass, public Observer, public Notifier
 	{
 		public:
 		friend MemoryView;
 
-		/** It is guarantteed that it must a subset within the boundaries of the phisical storage behind. \n
+		/** It is guarantteed that the subset is always within the boundaries of the phisical storage behind. \n
 			Otherwise the view will be have the same size than that. \n
 			The reference to the phisical storage can't be null at all. \n 
 			The subset is not the owner of the phisical storage. \n
-			The phisical storage can be either active or inactive. */
+			The physical storage can be either active or inactive. */
 		PhysicalStorageSubset (int id, PhysicalStorage* pS, size_t pp /** link a phisical */, const Address& a, size_t s);
 
 		PhysicalStorageSubset (const PhysicalStorageSubset&) = delete;
@@ -151,7 +157,8 @@ namespace MCHEmul
 
 		PhysicalStorageSubset& operator = (PhysicalStorageSubset&&) = delete;
 
-		/** Id for the view. It is diiferent than the id of the phisical storage behind. */
+		/** Id for the view. 
+			It is diiferent than the id of the phisical storage behind. */
 		int id () const
 							{ return (_id); }
 		/** The name is optional. */
@@ -190,16 +197,17 @@ namespace MCHEmul
 		bool isIn (const Address& a, int& dt) const
 							{ return (_active && (a >= _initialAddress && (dt = _initialAddress.distanceWith (a)) < (int) _size)); }
 
-		/** The internal method "setValue" is invoked when possible. 
+		// Manages the memory...
+		/** The internal method "setValue" is invoked when possible. \n
 			When the address requested is not "in" the subset, nothing happens. */
 		void set (const Address& a, const UByte& d, bool f = false)
 							{ int dt = 0; if (_physicalStorage -> canBeWriten (f) && isIn (a, dt)) setValue (dt, d); }
-		/** The internal method "readValue" is invoked when possible. 
-			When the address requested is not "in" the subset, -0 is returned. */
+		/** The internal method "readValue" is invoked when possible. \n
+			When the address requested is not "in" the subset, _DEFUALTVALUE is returned. */
 		const UByte& value (const Address& a) const
 							{ int dt = 0; return (_activeForReading && (isIn (a, dt)) 
 								? readValue (dt) : PhysicalStorage::_DEFAULTVALUE); }
-		/** Somethimes is needed to read directly the value 
+		/** Sometimes is needed to read directly the value 
 			not taken into account whether it is active for reading. */
 		const UByte& valueDirect (const Address& a) const
 							{ int dt = 0; return ((a >= _initialAddress && (dt = _initialAddress.distanceWith (a)) < (int) _size)
@@ -209,32 +217,48 @@ namespace MCHEmul
 		void set (const Address& a, const UBytes& v, bool f = false)
 							{ set (a, v.bytes (), f); }
 		/** When some of the requested position is out the boundaries, an empty map is returned. */
-		inline std::vector <UByte> bytes (const Address& a, size_t nB) const;
+		std::vector <UByte> bytes (const Address& a, size_t nB) const;
 		std::vector <UByte> bytes () const
 							{ return (bytes (initialAddress (), size ())); }
-		inline void set (const Address& a, const std::vector <UByte>& v, bool f = false);
+		void set (const Address& a, const std::vector <UByte>& v, bool f = false);
+
+		// To put a value/values in the memory...
+		// They are like "set" (see above), but not taking into account buffering behaviour if any!
+		void put (const Address& a, const UByte& d, bool f = false)
+							{ int dt = 0; if (_physicalStorage -> canBeWriten (f) && isIn (a, dt)) setValue (dt, d); }
+		void put (const Address& a, const UBytes& v, bool f = false)
+							{ put (a, v.bytes (), f); }
+		void put (const Address& a, const std::vector <UByte>& v, bool f = false);
+		void put (const DataMemoryBlock& mb, bool f = false)
+							{ put (mb.startAddress (), mb.bytes (), f); }
+		void put (const DataMemoryBlocks& mb, bool f = false)
+							{ for (const auto& i : mb) put (i, f); }
+
+		// To fill up the memory with values...
 		/** To fill the memory with value/values. */
-		void fillWith (const MCHEmul::UByte& b)
+		void fillWith (const UByte& b)
 							{ for (size_t i = 0; i < _size; i++) setValue (i, b); }
-		inline void fillWith (const MCHEmul::Address& addr, const MCHEmul::UByte& b, size_t nB);
+		void fillWith (const Address& addr, const UByte& b, size_t nB);
 
 		/** To get a DUMP. */
 		PhysicalStorageSubsetDUMP dump (const Address& f, const Address& t) const;
 
-		/** To init the memory. It might be overloaded. By default the "defaultData" value is assigned. 
+		/** To init the memory. \n
+			It might be overloaded. By default the "defaultData" value is assigned. \n
+			Uses method "fixDefaultValues" to chage the info that is used to initilized the memory in further ocassions. \n
 			It doesn't matter whether the subset is or not active. */
 		virtual void initialize ()
 							{ for (size_t i = 0; i < _size; i++) setValue (i, _defaultData [i]); }
 
-		/** First "sA" bytes of the file defining the address where to load the bytes. 
+		/** First "sA" bytes of the file defining the address where to load the bytes. \n
 			It is also necessary to define whether that address is or not big endian. */
 		bool load (const std::string& fN, size_t sA, bool bE = true);
-		/** Everything from the memory position received. */
+		/** Everything the file fN to the memory position parameter. */
 		bool loadInto (const std::string& fN, const Address& a)
 							{ return ((a >= _initialAddress) 
 								? _physicalStorage -> loadInto (fN, _initialAddress.distanceWith (a)) : false); }
 		/** The address where to load things into is always the initial address of the memory. */
-		bool loadInto (const std::string& fN)
+		bool loadInto (const std::string& fN) // So it invoked the previous one...
 							{ return (loadInto (fN, initialAddress ())); }
 
 		/** Save the content of full PhysycalStorageSubset into a file. 
@@ -244,13 +268,14 @@ namespace MCHEmul
 							{ return ((a >= _initialAddress && (a + nB) < lastAddress ()) 
 								? _physicalStorage -> saveFrom (fN, _initialAddress.distanceWith (a), nB) : false); }
 
-		/** To keep the values for fither initialization. */
+		/** To keep the values for further initialization. */
 		void fixDefaultValues ()
 							{ _defaultData = _physicalStorage -> values (_initialPhisicalPosition, _size).bytes (); }
 
 		/**
 		  *	The name of the fields are: \n
 		  *	ID			= Attribute: Id of the memory. \n
+		  * NAME		= Attribute: Name of the memory. \n
 		  *	ADDRESS		= Attribute: Address where the storage starts. \n
 		  *	SIZE		= Attribute: Size in bytes. \n
 		  * ACTIVE		= Attribute: YES when access operations are possible and NO in other case. \n
@@ -273,8 +298,9 @@ namespace MCHEmul
 		protected:
 		/** They could be overeloaded for specific subsets: Chips registers,... 
 			By default, the instructions are transmitted to the physical storage.
-			At this point there is guaranteed that the byte requested exist in the phisical storage. 
-			The number of register (relative) with in the phisical storage is received. */
+			At this point it must be guaranteed that the byte requested exist in the phisical storage. 
+			The number of register (relative) with in the phisical storage is received. \n
+			The @see MemoryView can access directly to this method but it also guarantee that the position is within the limits. */
 		virtual void setValue (size_t nB, const UByte& d)
 							{ _physicalStorage -> set (nB + _initialPhisicalPosition, d); }
 		virtual const UByte& readValue (size_t nB) const
@@ -301,47 +327,13 @@ namespace MCHEmul
 		std::vector <MCHEmul::UByte> _defaultData;
 	};
 
-	// ---
-	inline std::vector <UByte> PhysicalStorageSubset::bytes (const Address& a, size_t nB) const
-	{
-		std::vector <UByte> result;
-
-		int dt;
-		if (_active && _activeForReading &&
-			nB <= _size && (a >= _initialAddress && (dt = _initialAddress.distanceWith (a)) <= (int) (_size - nB))) 
-			for (size_t i = 0; i < nB; i++)
-				result.emplace_back (readValue (dt + i)); 
-
-		return (result);
-	}
-
-	// ---
-	inline void PhysicalStorageSubset::set (const Address& a, const std::vector <UByte>& v, bool f)
-	{
-		std::vector <MCHEmul::UByte> result;
-
-		int dt; 
-		if (_active && _physicalStorage -> canBeWriten (f) &&
-			v.size () <= _size && (a >= _initialAddress && (dt = _initialAddress.distanceWith (a)) <= (int) (_size - v.size ())))
-			for (size_t i = 0; i < v.size (); i++)
-				setValue (dt + i, v [i]);
-	}
-
-	// ---
-	inline void PhysicalStorageSubset::fillWith (const MCHEmul::Address& addr, const MCHEmul::UByte& b, size_t nB)
-	{ 
-		if (addr > _initialAddress) // Only if the requested address is bigger than the initial position...
-			for (size_t i = (addr - _initialAddress); i < _size; i++) 
-				setValue (i, b); 
-	}
-
 	/** To simplify the way a map of elements is managed. */
 	using PhysicalStorageSubsets = std::map <int, PhysicalStorageSubset*>;
 	using PhysicalStorageSubsetsList = std::vector <PhysicalStorageSubset*>;
 
 	/** Empty physical subset. \n
-		In come computers, there might be a partof the memory not connected 
-		that answers always with the same value and it is not affected by the poke. */
+		In some computers, there might be a part of the memory "not connected"
+		that answers always with the same value and it is not affected by "set" command. */
 	class EmptyPhysicalStorageSubset : public PhysicalStorageSubset
 	{
 		public:
@@ -439,9 +431,9 @@ namespace MCHEmul
 		PhysicalStorageSubset* subset (int id)
 							{ PhysicalStorageSubsets::const_iterator i = _subsets.find (id); 
 								return ((i != _subsets.end ()) ? (*i).second : nullptr); }
-		/** Returns true when the element was added. */
+		/** Returns true when the element was added right. */
 		bool addSubset (PhysicalStorageSubset* s);
-		/** Returns true when all have been sucessfully added. */
+		/** Returns true when all subsets have been sucessfully added. */
 		bool addSubSets (const PhysicalStorageSubsets& ss)
 							{ bool r = true; for (const auto& i : ss) r &= addSubset (i.second); return (r); }
 		/** Returns true when the element was extracted. \n
@@ -451,28 +443,47 @@ namespace MCHEmul
 		bool removeSubsets (const std::vector <int>& ss)
 							{ bool r = true; for (auto i : ss) r &= removeSubSet (i); return (r); }
 		
-		inline bool isIn (const Address& a, int & dt) const;
+		/** Returns true when the address is in the physical storage.
+			The attribute dt is filled up with the distance of the address to the initial position of the physical subset. */
+		inline bool isIn (const Address& a, int& dt) const;
 
+		/** Returns the address at in the middle of the physical subset. */
 		Address middleMemoryAddress () const
 							{ return (_minAddress + (_numPositions / 2)); }
 
-		/** If there had been several subsets behind, the read operation would happen 
-			on the first readable subset possible. */
-		inline const UByte& value (const Address& a) const;
-		/** If there had been several subsets behind, the write operation would happen 
-			on the first writtable subset possible. */
-		inline void set (const Address& a, const UByte& d, bool f = false);
+		// Manage the memory...
+		// Many methods cannot be inline because they use "setValue/readValue" (PhysicalStorageSubset) that are defined as virtual
+		/** If there had been several subsets behind, the read/set operation would always happen 
+			on the first readable/writtable subset possible. \n
+			This applies to all methods below... */
+		const UByte& value (const Address& a) const;
+		void set (const Address& a, const UByte& d, bool f = false); 
 		UBytes values (const Address& a, size_t nB) const
 							{ return (UBytes (bytes (a, nB))); }
 		void set (const Address& a, const UBytes& v, bool f = false)
 							{ set (a, v.bytes (), f); }
-		inline std::vector <UByte> bytes (const Address& a, size_t nB) const;
-		inline void set (const Address& a, const std::vector <UByte>& v, bool f = false);
-		/** To fill the memory with value/values. */
-		void fillWith (const MCHEmul::UByte& b)
-							{ for (size_t i = 0; i < _numPositions; i++) set (_minAddress + i, b); }
-		void fillWith (const MCHEmul::Address& addr, const MCHEmul::UByte& b, size_t nB)
-							{ for (size_t i = 0; i < nB; i++) set (addr + i, b); }
+		std::vector <UByte> bytes (const Address& a, size_t nB) const;
+		void set (const Address& a, const std::vector <UByte>& v, bool f = false);
+
+		// To put a value/values in the memory...
+		// They are like "set" (see above), but not taking into account buffering behaviour if any!
+		void put (const Address& a, const UByte& d, bool f = false); 
+		void put (const Address& a, const UBytes& v, bool f = false)
+							{ put (a, v.bytes (), f); }
+		void put (const Address& a, const std::vector <UByte>& v, bool f = false);
+		void put (const DataMemoryBlock& mb, bool f = false)
+							{ put (mb.startAddress (), mb.bytes (), f); }
+		void put (const DataMemoryBlocks& mb, bool f = false)
+							{ for (const auto& i : mb) put (i, f); }
+
+		// Fill up the memory...
+		// They all use the put method of the class to avoid buffering behaviour if any!
+		/** With a value. */
+		void fillWith (const MCHEmul::UByte& b, bool f = false)
+							{ for (size_t i = 0; i < _numPositions; i++) put (_minAddress + i, b, f); }
+		/** Just a piece of the memory. */
+		void fillWith (const MCHEmul::Address& addr, const MCHEmul::UByte& b, size_t nB, bool f = false)
+							{ for (size_t i = 0; i < nB; i++) put (addr + i, b, f); }
 
 		/** To get a DUMP from all memories actives at some positions. */
 		MemoryViewDUMP dump (const Address& f, const Address& t) const;
@@ -485,10 +496,10 @@ namespace MCHEmul
 		virtual void initialize () 
 							{ for (const auto& i : _subsets) i.second -> initialize (); }
 
-		/** Load into the first subset holding the address parameter. */
+		/** Load the file info into the first subset holding the address parameter. */
 		bool loadInto (const std::string& fN, const Address& a);
 
-		/** Save "nB" of memory of the first subset matching the address parameter. */
+		/** Save "nB" bytes of memory of the first subset matching the address parameter. */
 		bool saveFrom (const std::string& fN, size_t nB,const Address& a);
 
 		/**
@@ -525,9 +536,6 @@ namespace MCHEmul
 		Address _minAddress, _maxAddress;
 		size_t _numPositions;
 		MemoryPositions _memPositions;
-
-		// Buffer for set commands...
-		PhysicalStorageSubset* _lastSubsetUsedForSetAccess;
 	};
 
 	// ---
@@ -551,88 +559,6 @@ namespace MCHEmul
 		return (result);
 	}
 
-	// ---
-	inline const UByte& MemoryView::value (const Address& a) const
-	{
-		UByte& result = PhysicalStorage::_DEFAULTVALUE;
-
-		int dtT = _minAddress.distanceWith (a);
-		if (dtT >= 0 && (size_t) dtT <= _numPositions)
-		{
-			PhysicalStorageSubset* fS = nullptr;
-			const PhysicalStorageSubsetsList& pL = _memPositions [dtT]._storages;
-			for (size_t i = 0; i < pL.size () && fS == nullptr; i++)
-				if (pL [i] -> active () && pL [i] -> activeForReading ()) 
-					fS = pL [i];
-
-			if (fS != nullptr)
-				result = fS -> readValue (a - fS -> initialAddress ());
-		}
-
-		return (result);
-	}
-
-	// ---
-	inline void MemoryView::set (const Address& a, const UByte& d, bool f)
-	{
-		int dtT = _minAddress.distanceWith (a);
-		if (dtT >= 0 && (size_t) dtT <= _numPositions)
-		{
-			PhysicalStorageSubset* fS = nullptr;
-			const PhysicalStorageSubsetsList& pL = _memPositions [dtT]._storages;
-			for (size_t i = 0; i < pL.size () && fS == nullptr; i++)
-				if (pL [i] -> active () && pL [i] -> canBeWriten (f)) fS = pL [i];
-
-			if (fS != nullptr)
-				fS -> setValue (a - fS -> initialAddress (), d);
-		}
-	}
-
-	// ---
-	inline std::vector <UByte> MemoryView::bytes (const Address& a, size_t nB) const
-	{
-		std::vector <UByte> result;
-
-		// If more bytes are required than max available nothing is returned...
-		int dtT = _minAddress.distanceWith (a);
-		if (dtT >= 0 && (size_t) dtT <= (_numPositions - nB))
-		{
-			for (size_t i = 0; i < nB; i++)
-			{ 
-				PhysicalStorageSubset* fS = nullptr;
-				const PhysicalStorageSubsetsList& pL = _memPositions [dtT + i]._storages;
-				for (size_t j = 0; j < pL.size () && fS == nullptr; j++)
-					if (pL [j] -> active () && pL [j] -> activeForReading ()) 
-						fS = pL [j];
-
-				result.emplace_back ((fS != nullptr) 
-					? fS -> readValue (a - fS -> initialAddress () + i) : PhysicalStorage::_DEFAULTVALUE);
-			}
-		}
-			
-		return (result);
-	}
-
-	// ---
-	inline void MemoryView::set (const Address& a, const std::vector <UByte>& v, bool f)
-	{ 
-		// If there are more bytes to set than max available nothing is done...
-		int dtT = _minAddress.distanceWith (a);
-		if (dtT >= 0 && (size_t) dtT <= (_numPositions - v.size ()))
-		{
-			for (size_t i = 0; i < v.size (); i++)
-			{
-				PhysicalStorageSubset* fS = nullptr;
-				const PhysicalStorageSubsetsList& pL = _memPositions [dtT + i]._storages;
-				for (size_t j = 0; j < pL.size () && fS == nullptr; j++)
-					if (pL [j] -> active () && pL [j] -> canBeWriten (f)) fS = pL [j];
-
-				if (fS != nullptr)
-					fS -> setValue (a - fS -> initialAddress () + i, v [i]);
-			}
-		}
-	}
-
 	/** To simplify the way a map of elements is managed. */
 	using MemoryViews = std::map <int, MemoryView*>;
 
@@ -650,8 +576,7 @@ namespace MCHEmul
 	  *	A view has to de declared as the active one. \n
 	  *	All accesses will be done throught out that active view. \n
 	  *	This gives the user the possible to have different "views" of the memory in different
-	  *	moments of the execution of the main cycle from, e.g. different elements in the CPU. \n
-	  */
+	  *	moments of the execution of the main cycle from, e.g. different elements in the CPU. */
 	class Memory : public MotherboardElement
 	{
 		public:
@@ -664,7 +589,9 @@ namespace MCHEmul
 				  _error (false)
 							{ }
 
-			/** Unless this method is executed, the class is always in error (_error = true). */
+			/** Unless this method is executed, 
+				the class is always in error (_error = true). \n
+				The constructor of Memory executes it. */
 			bool verifyCoherence () const;
 
 			const PhysicalStorages& physicalStorages () const
@@ -772,7 +699,7 @@ namespace MCHEmul
 
 		/** This method is quite important for changing dinamically the configuration of the memory.
 			Additional subsets can be added and taken off from the active view. 
-			Memory view where to add all in is optional. If none the active one is used. \n
+			Memory view where to add all in is optional. If none is defined, the active one is used. \n
 			Returns false when either a set of subsets with the same id already exists (adding),
 			or no set of subsets exists with that id. \n
 			After that firs verification returns also false if the elements of the set of subsets 
@@ -798,9 +725,11 @@ namespace MCHEmul
 		void setCPUView ()
 							{ _activeView = (_cpuView == nullptr) ? (_cpuView = lookForCPUView ()) : _cpuView; }
 
+		// Manage the memory...
+		/** The _activeView might not be nullptr ever, or a crahs is generated. */
 		const UByte& value (const Address& a) const
 							{ return (_activeView -> value (a)); }
-		void set (const Address& a, const UByte& v, bool f = false /** To force even when it is a rom. */)
+		void set (const Address& a, const UByte& v, bool f = false /** To force even when it is a ROM. */)
 							{ _activeView -> set (a, v, f); }
 		UBytes values (const Address& a, size_t nB) const
 							{ return (_activeView -> values (a, nB)); }
@@ -810,16 +739,27 @@ namespace MCHEmul
 							{ return (_activeView -> bytes (a, nB)); }
 		void set (const Address& a, const std::vector <UByte>& v, bool f = false)
 							{ _activeView -> set (a, v, f); }
-		/** To set a vector of codeblocks. */
-		void set (const DataMemoryBlock& mb, bool f = false)
-							{ set (mb.startAddress (), mb.bytes (), f); }
-		void set (const DataMemoryBlocks& mb, bool f = false)
-							{ for (const auto& i : mb) set (i, f); }
-		/** To fill the memory with value/values. */
-		void fillWith (const MCHEmul::UByte& b)
-							{ _activeView -> fillWith (b); }
-		void fillWith (const MCHEmul::Address& addr, const MCHEmul::UByte& b, size_t nB)
-							{ _activeView -> fillWith (addr, b, nB); }
+
+		// To put a value/values in the memory...
+		// The methods use put method of the MemoryView (@see MemotyView) to avoid buffering behaviour if any...
+		void put (const Address& a, const UByte& d, bool f = false)
+							{ _activeView -> put (a, d, f); }
+		void put (const Address& a, const UBytes& v, bool f = false)
+							{ _activeView -> put (a, v.bytes (), f); }
+		void put (const Address& a, const std::vector <UByte>& v, bool f = false)
+							{ _activeView -> put (a, v, f); }
+		void put (const DataMemoryBlock& mb, bool f = false)
+							{ put (mb.startAddress (), mb.bytes (), f); }
+		void put (const DataMemoryBlocks& mb, bool f = false)
+							{ for (const auto& i : mb) put (i, f); }
+
+		// Fill up the memory...
+		/** To fill the all memory with value/values. */
+		void fillWith (const MCHEmul::UByte& b, bool f = false)
+							{ _activeView -> fillWith (b, f); }
+		/** To fill a zone of the memory with a value. */
+		void fillWith (const MCHEmul::Address& addr, const MCHEmul::UByte& b, size_t nB, bool f = false)
+							{ _activeView -> fillWith (addr, b, nB, f); }
 
 		/** To get a DUMP from all active "memories" between two positions. */
 		// Only for the active view...

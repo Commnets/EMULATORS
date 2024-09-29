@@ -101,7 +101,7 @@ namespace COMMODORE
 		/** To load the program into the memory. \n
 			In some COMMODORE computers (like C64) the whole RAM memory is not directly accesible. */
 		virtual void loadDataBlockInRAM (const MCHEmul::DataMemoryBlock& dB, MCHEmul::CPU* cpu)
-							{ cpu -> memoryRef () -> set (_data._data [_dataCounter]); }
+							{ cpu -> memoryRef () -> put (_data._data [_dataCounter]); }
 
 		protected:
 		Definition _definition;
