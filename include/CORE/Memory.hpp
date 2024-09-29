@@ -525,6 +525,9 @@ namespace MCHEmul
 		Address _minAddress, _maxAddress;
 		size_t _numPositions;
 		MemoryPositions _memPositions;
+
+		// Buffer for set commands...
+		PhysicalStorageSubset* _lastSubsetUsedForSetAccess;
 	};
 
 	// ---
