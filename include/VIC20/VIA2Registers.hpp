@@ -19,7 +19,7 @@
 namespace VIC20
 {
 	class VIA2;
-
+	class VIA1VIA2RegistersReflection;
 
 	/** This specific type of port is connected
 		to the different elements of OSIO of the VICII: Keyboard and Joystick. \n
@@ -58,6 +58,7 @@ namespace VIC20
 	{
 		public:
 		friend VIA2;
+		friend VIA1VIA2RegistersReflection;
 
 		/** A name when this register is a subset in the main memory. */
 		static const int _VIA2_SUBSET = 2110;

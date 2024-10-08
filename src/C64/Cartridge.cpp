@@ -329,6 +329,8 @@ void C64::Cartridge::expansionMemorySet (C64::IOExpansionMemory* eM, size_t p, c
 			{
 				assert (eM != nullptr); // There must be a valid notifier...
 
+				size_t oB = _activeBank;
+
 				if (_cpuSubsets.size () == 0)
 					break; // Not still initialized!
 
@@ -342,6 +344,19 @@ void C64::Cartridge::expansionMemorySet (C64::IOExpansionMemory* eM, size_t p, c
 					_activeBank = size_t (v.value () & 0x3f); // Never bigger than 64...
 					_cpuSubsets [size_t (_EXPANSIONROMBASE_SUBSET + (int) _activeBank)] -> setActive (_bankActive);
 					_cpuSubsets [size_t (_EXPANSIONROMBASE_SUBSET + (int) _activeBank)] -> setActiveForReading (_bankActive);
+				}
+
+				if (deepDebugActive ())
+				{
+					*_deepDebugFile
+						// Where
+						<< "Cartridge Ocean1" 
+						// When
+						<< "-" << "\t\t"
+						// What
+						<< "Change bank (" << (_bankActive ? "ON" : "OFF") 
+						<< ") from " << std::to_string (oB) 
+						<< " to " << std::to_string (_activeBank) << "\n";
 				}
 			}
 

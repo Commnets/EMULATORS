@@ -16,14 +16,14 @@ void VIC20::VIA1VIA2RegistersReflection::setValue (size_t nB, const MCHEmul::UBy
 		case 0:
 		case 2:
 			{
-				_via1Registers -> set (_via1Registers -> initialAddress () + pp, d);
+				_via1Registers -> setValue (pp, d);
 			}
 
 			break;
 
 		case 3:
 			{
-				_via2Registers -> set (_via2Registers -> initialAddress () + pp, d);
+				_via2Registers -> setValue (pp, d);
 			}
 
 			break;
@@ -54,14 +54,14 @@ const MCHEmul::UByte& VIC20::VIA1VIA2RegistersReflection::readValue (size_t nB) 
 		case 0:
 		case 2:
 			{
-				result = _via1Registers -> value (_via1Registers -> initialAddress () + pp);
+				result = _via1Registers -> readValue (pp);
 			}
 
 			break;
 
 		case 3:
 			{
-				result = _via2Registers -> value (_via2Registers -> initialAddress () + pp);
+				result = _via2Registers -> readValue (pp);
 			}
 
 			break;

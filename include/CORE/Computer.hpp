@@ -581,6 +581,9 @@ namespace MCHEmul
 	{
 		c -> _status = _STATUSRUNNING;
 
+		// Flush the memory, if needed...
+		c -> memory () -> configuration ().executeMemorySetCommandsBuffered ();
+
 		return (true);
 	}
 }

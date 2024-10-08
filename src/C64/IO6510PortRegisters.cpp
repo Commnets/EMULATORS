@@ -2,6 +2,17 @@
 #include <COMMODORE/incs.hpp>
 
 // ---
+C64::IO6510PortRegisters::IO6510PortRegisters (MCHEmul::PhysicalStorage* ps)
+	: F6500::IO6510PortRegisters (_IO6510REGISTERS_SUBSET, ps)
+{
+	// The actions over this registers are not buffered, 
+	// and the consequence in PLA must be inmediate...
+	setBufferMemorySetCommands (false);
+
+	initializeInternalValues (); 
+}
+
+// ---
 void C64::IO6510PortRegisters::processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifier* ntier)
 {
 	// Bit 4 reflects whether some key has been pressed on the dataette...

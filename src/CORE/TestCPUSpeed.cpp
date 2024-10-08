@@ -32,7 +32,7 @@ unsigned int MCHEmul::TestCPUSpeed::clocksInASecondExcutingInstruction (const MC
 		// The program counter is set to an address in the middle of the memory...
 		_cpu -> programCounter ().setAddress (_cpu -> memoryRef () -> activeView () -> middleMemoryAddress ());
 		// ...and the memory is filled up with the bytes received...
-		_cpu -> memoryRef () -> set (_cpu -> programCounter ().asAddress (), b);
+		_cpu -> memoryRef () -> put (_cpu -> programCounter ().asAddress (), b);
 		// The stack is reset 
 		_cpu -> memoryRef () -> stack () -> reset (); 
 		// ...and located in the middle.
@@ -69,7 +69,7 @@ void MCHEmul::TestCPUSpeed::testAllInstructionSet (std::ostream& o, unsigned int
 
 	// Fill up the memory with random values...
 	for (size_t i = 0; i < _cpu -> memoryRef () -> size (); 
-		_cpu -> memoryRef () -> set (MCHEmul::Address (_cpu -> architecture ().instructionLength (), (unsigned int) i++), std::rand () % 256));
+		_cpu -> memoryRef () -> put (MCHEmul::Address (_cpu -> architecture ().instructionLength (), (unsigned int) i++), std::rand () % 256));
 	_cpu -> memoryRef () -> stack () -> initialize (); // To put it back to 0!
 
 	std::map <unsigned int, unsigned int> _execInstructions;

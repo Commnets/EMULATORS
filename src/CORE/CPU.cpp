@@ -581,6 +581,9 @@ bool MCHEmul::CPU::executeNextInstruction_PerCycle (unsigned int& e)
 				sdd = MCHEmul::removeAll0 (_programCounter.asString ()) + "(Stack "
 						+ std::to_string (memoryRef () -> stack () -> position ()) + ") ";
 
+			// If the memory access were buffered, this instruction would free all accesses...
+			MCHEmul::Memory::configuration ().executeMemorySetCommandsBuffered ();
+
 			// The execution of the instruction is notified
 			// just in case any other part of the computer needed to prepare something...
 			notify (MCHEmul::Event (_CPUTOEXECUTEINSTRUCTION, 0 /** No sense. */,
@@ -709,6 +712,9 @@ bool MCHEmul::CPU::executeNextInstruction_Full (unsigned int &e)
 	if (deepDebugActive ())
 		sdd = MCHEmul::removeAll0 (_programCounter.asString ()) + "(Stack "
 				+ std::to_string (memoryRef () -> stack () -> position ()) + ") ";
+
+	// If the memory access were buffered, this instruction would free all accesses...
+	MCHEmul::Memory::configuration ().executeMemorySetCommandsBuffered ();
 
 	// The execution of the instruction is notified
 	// just in case any other part of the computer needed to prepare something...

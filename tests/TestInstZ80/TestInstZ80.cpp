@@ -7,6 +7,9 @@
 // The main...
 int _tmain (int argc, _TCHAR *argv [])
 {
+	// Notice that the simulation is executed not taking into account any buffering behaviour...
+	// The buffering for the set command at memory level is not activated...
+
 	auto printErrors = [&](const std::vector <std::string>& e) -> void
 		{
 			for (const auto& i : e)

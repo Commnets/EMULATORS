@@ -295,16 +295,6 @@ bool COMMODORE::VICII::simulate (MCHEmul::CPU* cpu)
 				cI);
 	}
 
-	// A modification in any VICII register happens actually in the last cycle of the instruction
-	// So the VICII uses the old values of those registers whilst it draws.
-	// At the end, the modification are confirmed, using this method!
-	// If the CPU were running by cycle instead of by instruction, this method will still be valid
-	// because in that mode the instruction is really executed at the last cycle.
-	_VICIIRegisters -> freeBufferedSet ();
-	if (deepDebugActive ())
-		*_deepDebugFile
-			<< "\t\t\t\t\tNew VICII Registers value set" << "\n";
-
 	// When the raster enters the non visible part of the screen,
 	// a notification is sent (to the Screen class usually) 
 	// just to draw the screen...
@@ -716,7 +706,6 @@ unsigned int COMMODORE::VICII::treatRasterCycle ()
 					// the "line" will increment every two raster lines...
 					if (_VICIIRegisters -> expansionYFlipFlop (i))
 						_vicSpriteInfo [i]._line++;
-
 
 					// When this last instruction is executed and finally the sprite becomes no active
 					// the value of the flip flop is always "true":

@@ -71,7 +71,7 @@ void VIC20::Cartridge::dumpDataInto (VIC20::Memory* m, MCHEmul::MemoryView* mV)
 					for (const auto& j : i.bytes ())
 					{
 						MCHEmul::Address dA = a + ct++;
-						m -> set (dA, j, true /** force. */);
+						m -> put (dA, j, true /** force. */);
 					}
 				}
 			}

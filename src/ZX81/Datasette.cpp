@@ -46,6 +46,22 @@ bool ZX81::DatasetteInjection::simulate (MCHEmul::CPU* cpu)
 	if ((cpu -> programCounter ().internalRepresentation () == _loadTrap._addressIn.value ()) &&
 		!_data._data.empty ()) // there must be data inside...
 	{
+		if (deepDebugActive ())
+		{
+			*_deepDebugFile
+				// Where
+				<< "ZX81DN\t" 
+				// When
+				<< std::to_string (cpu -> clockCycles ()) << "\t" // clock cycles at that point
+				// What
+				<< "Datsette trap executed:\n";
+		}
+
+		// Empty any pending set action...
+		// Because a trap is breaking the normal flow of the code...
+		// so no set commands pendings can be left!
+		MCHEmul::Memory::configuration ().executeMemorySetCommandsBuffered ();
+
 		// The only type of data recognized is so far, OAndPFileData
 		// This type of data is made up of only 1 program, so 
 		// the data as a whole might be loaded!

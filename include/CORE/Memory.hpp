@@ -28,6 +28,7 @@ namespace MCHEmul
 {
 	class PhysicalStorageSubset;
 	class MemoryView;
+	class SetMemoryCommand;
 	class Stack;
 
 	/** Represents what phisically speaking the memoy is: \n
@@ -138,6 +139,7 @@ namespace MCHEmul
 	{
 		public:
 		friend MemoryView;
+		friend SetMemoryCommand;
 
 		/** It is guarantteed that the subset is always within the boundaries of the phisical storage behind. \n
 			Otherwise the view will be have the same size than that. \n
@@ -193,6 +195,13 @@ namespace MCHEmul
 		bool canBeWriten (bool f) const
 							{ return (_active && _physicalStorage -> canBeWriten (f)); }
 
+		// The subset could be excluded from buffering the set commands
+		// in case this action were active. If weren't this group of methods is useless...
+		bool bufferMemorySetCommands () const
+							{ return (_bufferMemorySetCommands); }
+		void setBufferMemorySetCommands (bool bS)
+							{ _bufferMemorySetCommands = bS; }
+
 		/** The address may only be "in" when the subset is active. */
 		bool isIn (const Address& a, int& dt) const
 							{ return (_active && (a >= _initialAddress && (dt = _initialAddress.distanceWith (a)) < (int) _size)); }
@@ -200,18 +209,13 @@ namespace MCHEmul
 		// Manages the memory...
 		/** The internal method "setValue" is invoked when possible. \n
 			When the address requested is not "in" the subset, nothing happens. */
-		void set (const Address& a, const UByte& d, bool f = false)
-							{ int dt = 0; if (_physicalStorage -> canBeWriten (f) && isIn (a, dt)) setValue (dt, d); }
+		void set (const Address& a, const UByte& d, bool f = false);
 		/** The internal method "readValue" is invoked when possible. \n
 			When the address requested is not "in" the subset, _DEFUALTVALUE is returned. */
-		const UByte& value (const Address& a) const
-							{ int dt = 0; return (_activeForReading && (isIn (a, dt)) 
-								? readValue (dt) : PhysicalStorage::_DEFAULTVALUE); }
+		const UByte& value (const Address& a) const;
 		/** Sometimes is needed to read directly the value 
 			not taken into account whether it is active for reading. */
-		const UByte& valueDirect (const Address& a) const
-							{ int dt = 0; return ((a >= _initialAddress && (dt = _initialAddress.distanceWith (a)) < (int) _size)
-								? readValue (dt) : PhysicalStorage::_DEFAULTVALUE); }
+		const UByte& valueDirect (const Address& a) const;
 		UBytes values (const Address& a, size_t nB) const
 							{ return (UBytes (bytes (a, nB))); }
 		void set (const Address& a, const UBytes& v, bool f = false)
@@ -324,6 +328,7 @@ namespace MCHEmul
 		// Implementation
 		bool _active;
 		bool _activeForReading;
+		bool _bufferMemorySetCommands;
 		std::vector <MCHEmul::UByte> _defaultData;
 	};
 
@@ -387,6 +392,29 @@ namespace MCHEmul
 				pSS -> physicalStorage (), pSS -> initialPhysicalPosition (), a, pSS -> size ())
 							{ assert (pSS != nullptr); } // maybe too late, but just in case...
 	};
+
+	/** A SetMemoryOrder is to buffer the execution of a "set" command. \n
+		When under the class Configuration is configured to buffer the "set" commands,
+		any time a "set" command is executed an object of this class is created and stored under the configuration unique object. */
+	class SetMemoryCommand final
+	{
+		public:
+		SetMemoryCommand (PhysicalStorageSubset* s, size_t p, const UByte& v)
+			: _subset (s), _position (p), _value (v)
+						{ assert (_subset != nullptr); }
+
+		/** Execute finally the setValue command, but add info in the debug file
+			if it was active. */
+		void execute ();
+
+		private:
+		PhysicalStorageSubset* _subset;
+		size_t _position;
+		UByte _value;
+	};
+
+	/** To simplify the management of list of commands. */
+	using SetMemoryCommands = std::vector <SetMemoryCommand>;
 
 	/** To DUMP the content of a memory view */
 	struct MemoryViewDUMP final
@@ -580,6 +608,34 @@ namespace MCHEmul
 	class Memory : public MotherboardElement
 	{
 		public:
+		/** To configure general parameters of the memory behaviour. */
+		class Configuration final 
+		{
+			public:
+			Configuration ()
+				: _bufferMemorySetCommands (false),
+				  _memorySetCommands ()
+							{ }
+
+			// Managing the set commands...
+			/** Should the set commands be buffered? */
+			bool bufferMemorySetCommands (PhysicalStorageSubset* pS) const
+							{ return (_bufferMemorySetCommands && pS -> bufferMemorySetCommands ()); }
+			void setBufferMemorySetCommands (bool a)
+							{ if (!(_bufferMemorySetCommands = a)) executeMemorySetCommandsBuffered (); }
+			void addMemorySetCommand (const SetMemoryCommand& o)
+							{ _memorySetCommands.emplace_back (o); }
+			void addMemorySetCommand (SetMemoryCommand&& o)
+							{ _memorySetCommands.emplace_back (std::move (o)); }
+			/** Execute all set memory commands buffered if that configuration is active.
+				Bear in mind that when that configuration is disconnected, this method will also be executed. */
+			inline void executeMemorySetCommandsBuffered ();
+
+			private:
+			bool _bufferMemorySetCommands;
+			SetMemoryCommands _memorySetCommands;
+		};
+
 		/** To content all together the elements a memory is made up of. */
 		class Content final
 		{
@@ -661,6 +717,9 @@ namespace MCHEmul
 		Memory (Memory&&) = delete;
 
 		Memory& operator = (Memory&&) = delete;
+
+		static Configuration& configuration ()
+							{ return (_CONFIGURATION); }
 
 		const PhysicalStorages& physicalStorages () const
 							{ return (_content.physicalStorages ()); }
@@ -815,6 +874,7 @@ namespace MCHEmul
 		protected:
 		Content _content;
 		AdditionalSubsets _additionalSubsets;
+		static Configuration _CONFIGURATION;
 
 		// To manage the debug info...
 		DebugFile* _deepDebugFile;
@@ -825,6 +885,18 @@ namespace MCHEmul
 		mutable MemoryView* _cpuView;
 		mutable unsigned int _error;
 	};
+
+	// ---
+	inline void Memory::Configuration::executeMemorySetCommandsBuffered ()
+	{ 
+		if (_bufferMemorySetCommands)
+		{
+			for (auto& i : _memorySetCommands) 
+				i.execute (); 
+					
+			_memorySetCommands.clear ();
+		}
+	}
 }
 
 #endif

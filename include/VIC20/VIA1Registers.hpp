@@ -19,6 +19,7 @@
 namespace VIC20
 {
 	class VIA1;
+	class VIA1VIA2RegistersReflection;
 
 	/** Just to identify this space of the memory in a different section. 
 		VIA2Registers is aimed to take care of the information about keyboard. */
@@ -26,6 +27,7 @@ namespace VIC20
 	{
 		public:
 		friend VIA1;
+		friend VIA1VIA2RegistersReflection;
 
 		static const int _VIA1_SUBSET = 2100;
 

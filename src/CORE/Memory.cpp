@@ -2,6 +2,9 @@
 #include <CORE/FmterBuilder.hpp>
 #include <CORE/Formatter.hpp>
 
+MCHEmul::Memory::Configuration MCHEmul::Memory::_CONFIGURATION = 
+	MCHEmul::Memory::Configuration ();
+
 // ---
 MCHEmul::UByte MCHEmul::PhysicalStorage::_DEFAULTVALUE (MCHEmul::UByte::_0);
 
@@ -58,6 +61,7 @@ MCHEmul::PhysicalStorageSubset::PhysicalStorageSubset
 	  _deepDebugFile (nullptr),
 	  _active (true), // By default all are active
 	  _activeForReading (true), // It can be switched off
+	  _bufferMemorySetCommands (true), // By default the storage is active for buffering set commands if the option were active
 	  _defaultData (_size, MCHEmul::UByte::_0) // The default data is initially = _0;
 { 
 	assert (_physicalStorage != nullptr);
@@ -72,6 +76,39 @@ MCHEmul::PhysicalStorageSubset::PhysicalStorageSubset
 
 		_defaultData = std::vector <MCHEmul::UByte> (_size, MCHEmul::UByte::_0);
 	}
+}
+
+// ---
+void MCHEmul::PhysicalStorageSubset::set
+	(const MCHEmul::Address& a, const MCHEmul::UByte& d, bool f)
+{ 
+	int dt = 0; 
+
+	if (_physicalStorage -> canBeWriten (f) && isIn (a, dt))
+	{
+		if (MCHEmul::Memory::configuration ().bufferMemorySetCommands (this))
+			MCHEmul::Memory::configuration ().addMemorySetCommand (MCHEmul::SetMemoryCommand (this, dt, d));
+		else
+			setValue (dt, d); 
+	}
+}
+
+// ---
+const MCHEmul::UByte& MCHEmul::PhysicalStorageSubset::value (const MCHEmul::Address& a) const
+{ 
+	int dt = 0; 
+	
+	return (_activeForReading && (isIn (a, dt)) 
+		? readValue (dt) : MCHEmul::PhysicalStorage::_DEFAULTVALUE); 
+}
+
+// ---
+const MCHEmul::UByte& MCHEmul::PhysicalStorageSubset::valueDirect (const Address& a) const
+{ 
+	int dt = 0; 
+	
+	return ((a >= _initialAddress && (dt = _initialAddress.distanceWith (a)) < (int) _size)
+		? readValue (dt) : MCHEmul::PhysicalStorage::_DEFAULTVALUE); 
 }
 
 // ---
@@ -95,8 +132,15 @@ void MCHEmul::PhysicalStorageSubset::set
 	int dt; 
 	if (_active && _physicalStorage -> canBeWriten (f) &&
 		v.size () <= _size && (a >= _initialAddress && (dt = _initialAddress.distanceWith (a)) <= (int) (_size - v.size ())))
+	{
 		for (size_t i = 0; i < v.size (); i++)
-			setValue (dt + i, v [i]);
+		{
+			if (MCHEmul::Memory::configuration ().bufferMemorySetCommands (this))
+				MCHEmul::Memory::configuration ().addMemorySetCommand (MCHEmul::SetMemoryCommand (this, dt + i, v [i]));
+			else
+				setValue (dt + i, v [i]);
+		}
+	}
 }
 
 // ---
@@ -202,6 +246,30 @@ MCHEmul::InfoStructure MCHEmul::PhysicalStorageSubset::getInfoStructure () const
 }
 
 // ---
+void MCHEmul::SetMemoryCommand::execute ()
+{ 
+	if (_subset -> deepDebugActive ())
+	{
+		*_subset -> _deepDebugFile
+			// Where
+			<< (_subset -> name ().length () > 8 
+				? _subset -> name ().substr (8) : MCHEmul::fixLenStr (_subset -> name (), 8, false))
+			// When
+			<< "-" << "\t\t\t" // clock cycles at that point
+			// What
+			<< "Applied Set\t\t\t"
+			// Data
+			<< "Address:$"
+			<< MCHEmul::removeAll0 ((_subset -> initialAddress () + _position).
+				asString (MCHEmul::UByte::OutputFormat::_HEXA, '\0', 2)) << ","
+			<< "Value:$"
+			<< _value.asString (MCHEmul::UByte::OutputFormat::_HEXA, 2) << "\n";
+	}
+
+	_subset -> setValue (_position, _value); 
+}
+
+// ---
 MCHEmul::InfoStructure MCHEmul::MemoryViewDUMP::getInfoStructure () const
 {
 	MCHEmul::InfoStructure result;
@@ -294,7 +362,13 @@ void MCHEmul::MemoryView::set (const MCHEmul::Address& a, const MCHEmul::UByte& 
 
 		// If a valid storage is under the position requested...
 		if (fS != nullptr)
-			fS -> setValue (a - fS -> initialAddress (), d); // ...save the value...
+		{
+			if (MCHEmul::Memory::configuration ().bufferMemorySetCommands (fS))
+				MCHEmul::Memory::configuration ().addMemorySetCommand 
+					(MCHEmul::SetMemoryCommand (fS, a - fS -> initialAddress (), d));
+			else
+				fS -> setValue (a - fS -> initialAddress (), d); // ...save the value...
+		}
 	}
 }
 
@@ -338,7 +412,13 @@ void MCHEmul::MemoryView::set (const MCHEmul::Address& a, const std::vector <MCH
 				if (pL [j] -> active () && pL [j] -> canBeWriten (f)) fS = pL [j];
 
 			if (fS != nullptr)
-				fS -> setValue (a - fS -> initialAddress () + i, v [i]);
+			{
+				if (MCHEmul::Memory::configuration ().bufferMemorySetCommands (fS))
+					MCHEmul::Memory::configuration ().addMemorySetCommand 
+						(MCHEmul::SetMemoryCommand (fS, a - fS -> initialAddress () + i, v [i]));
+				else
+					fS -> setValue (a - fS -> initialAddress () + i, v [i]);
+			}
 		}
 	}
 }

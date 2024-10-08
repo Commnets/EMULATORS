@@ -78,7 +78,9 @@ bool MCHEmul::IODevice::disconnectPeripheral (int id)
 			result = false;
 		}
 
-		(*i).second -> _device = nullptr;
+		(*i).second -> setDeepDebugFile (nullptr); // No deep debug file assigned, just in case...
+
+		(*i).second -> _device = nullptr; // No device to be linked to...
 
 		_peripherals.erase (i); // unlink it...
 	}

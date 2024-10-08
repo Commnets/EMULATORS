@@ -17,6 +17,7 @@
 #include <CORE/global.hpp>
 #include <CORE/InfoClass.hpp>
 #include <CORE/FileIO.hpp>
+#include <CORE/DebugFile.hpp>
 
 namespace MCHEmul
 {
@@ -36,7 +37,8 @@ namespace MCHEmul
 
 		IOPeripheral (int id, const Attributes& attrs = { })
 			: InfoClass ("IOPeripheral"),
-			  _id (id), _attributes (attrs), _device (nullptr) /** Set when attached. */
+			  _id (id), _attributes (attrs), _device (nullptr), /** Set when attached. */
+			  _deepDebugFile (nullptr)
 							{ }
 
 		IOPeripheral (const IOPeripheral&) = delete;
@@ -108,11 +110,25 @@ namespace MCHEmul
 		friend std::ostream& operator << (std::ostream& o, const IOPeripheral& d)
 							{ return (o << (*(dynamic_cast <const InfoClass*> (&d)))); }
 
+		/** Manages the deep debug file. \n
+			Take care it can be set back to a nullptr. */
+		bool deepDebugActive () const
+							{ return (_deepDebugFile != nullptr && _deepDebugFile -> active ()); }
+		void setDeepDebugFile (DebugFile* dF)
+							{ _deepDebugFile = dF; }
+		const DebugFile* deepDebugFile () const
+							{ return (_deepDebugFile); }
+		DebugFile* deepDebugFile ()
+							{ return (_deepDebugFile); }
+
 		protected:
 		const int _id; // Adjusted at construction level
 		const Attributes _attributes = { }; // Maybe modified at construction level
 		/** Accesed from IODevice when a peripherial is added! */
 		IODevice* _device;
+
+		// To manage the debug info...
+		DebugFile* _deepDebugFile;
 	};
 
 	/** To simplify the management of a set of peripherals. */

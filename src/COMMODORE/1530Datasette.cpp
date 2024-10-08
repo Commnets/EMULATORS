@@ -68,6 +68,22 @@ bool COMMODORE::Datasette1530Injection::simulate (MCHEmul::CPU* cpu)
 		if (nF = (cpu -> programCounter ().internalRepresentation () == (*i)._addressIn.value () && 
 			(*i).verifyFingerTipAgainst (cpu -> memoryRef ()))) // The fingertip has to be also "found"...
 		{
+			if (deepDebugActive ())
+			{
+				*_deepDebugFile
+					// Where
+					<< "1530DN\t" 
+					// When
+					<< std::to_string (cpu -> clockCycles ()) << "\t" // clock cycles at that point
+					// What
+					<< "Trap executed:" << (*i).asString () << "\n";
+			}
+
+			// Empty any pending set action...
+			// Because a trap is breaking the normal flow of the code...
+			// so no set commands pendings can be left!
+			MCHEmul::Memory::configuration ().executeMemorySetCommandsBuffered ();
+
 			// Execute the trap...
 			result = executeTrap ((*i), cpu);
 

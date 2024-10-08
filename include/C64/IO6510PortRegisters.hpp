@@ -36,9 +36,17 @@ namespace C64
 			This even is sent when the bits 0,1,2 are modified at the register 0x01. */
 		static const unsigned int _C64PORTIOBITSACTUALIZED = 300;
 
-		IO6510PortRegisters (MCHEmul::PhysicalStorage* ps)
-			: F6500::IO6510PortRegisters (_IO6510REGISTERS_SUBSET, ps)
-							{ initializeInternalValues (); }
+		/** The set commands are not buffered in this case. \n
+			The IO6510Ports are connected to the PLA. \n
+			When a change happens it is notified to the PLA and 
+			the chip is ready to change the configuration of the memory. \n
+			But it doesn't happen actually until the its simulated method is invoked. \n
+			That PLA simulation happens just after CPU simulation, so the change in the configuration is almost inmediate. \n
+			So if the next CPU instruction (after writting in the port) used the new memory configuration, everything would go ok.
+			But if the set command were buffered instead, this wouldn't happen until the next simulation cycle
+			and a crash could be issued. For this reason the set commands are not buffered. \n
+			If the memory were not configured to buffer set commands alld the explanation above is useless. */
+		IO6510PortRegisters (MCHEmul::PhysicalStorage* ps);
 							
 		private:
 		virtual void processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifier* ntier) override;

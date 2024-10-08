@@ -6,6 +6,9 @@
 
 int _tmain (int argc, _TCHAR *argv [])
 {
+	// Notice that the simulation is executed not taking into account any buffering behaviour...
+	// The buffering for the set command at memory level is not activated...
+
 	MCHEmul::CommandLineArguments cmdArgs (argc, argv);
 	unsigned int nTimes = (cmdArgs.existsArgument ('t')) ? cmdArgs.argumentAsInt ('t') : 1;
 	bool output = (cmdArgs.existsArgument ('o')) ? cmdArgs.argumentAsBool ('o') : false;

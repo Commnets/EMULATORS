@@ -84,6 +84,12 @@ bool FZ80::CZ80::initialize ()
 	if (!MCHEmul::CPU::initialize ())
 		return (false);
 
+	// The Z80 execute every instruction in several Machine Instructions.
+	// Every Machine Cycle is divided in different T Cycles.
+	// Usually the machine cycle that actualized the memory is the last one.
+	// So the set access to the memory has been declared to be buffered..
+	MCHEmul::Memory::configuration ().setBufferMemorySetCommands (true);
+
 	setINTMode (0);
 	_IFF1 = false;
 	_IFF2 = false;

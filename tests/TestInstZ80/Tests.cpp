@@ -91,7 +91,7 @@ void Test::runTest (FZ80::CZ80* cpu)
 		{
 			unsigned int l = 0;
 			for (const auto& k : j._data)
-				cpu -> memoryRef () -> set (MCHEmul::Address (2, ((unsigned int) j._position) + l++), k);
+				cpu -> memoryRef () -> put (MCHEmul::Address (2, ((unsigned int) j._position) + l++), k);
 		}
 
 		// Then get the instruction to execute...

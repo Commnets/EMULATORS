@@ -115,8 +115,7 @@ namespace MCHEmul
 			Take care it can be set back to a nullptr. */
 		bool deepDebugActive () const
 							{ return (_deepDebugFile != nullptr && _deepDebugFile -> active ()); }
-		void setDeepDebugFile (DebugFile* dF)
-							{ _deepDebugFile = dF; }
+		inline void setDeepDebugFile (DebugFile* dF);
 		const DebugFile* deepDebugFile () const
 							{ return (_deepDebugFile); }
 		DebugFile* deepDebugFile ()
@@ -136,6 +135,14 @@ namespace MCHEmul
 
 	/** To simplify the management of a list of devices. */
 	using IODevices = std::map <int, IODevice*>;
+
+	// ---
+	inline void IODevice::setDeepDebugFile (DebugFile* dF)
+	{ 
+		_deepDebugFile = dF;
+		for (const auto& i : _peripherals) // It is transmited to the peripherals connected!...
+			i.second -> setDeepDebugFile (dF);
+	}
 
 	/** All devices must be managed under a common system. \n
 		That system has to be initialized. \n

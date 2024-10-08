@@ -589,4 +589,3 @@ bool MCHEmul::Computer::executeActionAtPC (unsigned int a)
 	
 	return (result);
 }
-

@@ -39,6 +39,11 @@ bool F6500::C6500::initialize ()
 	if (!MCHEmul::CPU::initialize ())
 		return (false);
 
+	// The 6500 family execute every instruction in several cycles.
+	// Usually the cycle that actualized the memory is the last one.
+	// So the set access to the memory has been declared to be buffered..
+	MCHEmul::Memory::configuration ().setBufferMemorySetCommands (true);
+
 	// After 6 clock sycles, everything starts!
 	addClockCycles (6);
 	// Initially the interruptions are disabled!
