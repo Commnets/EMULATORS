@@ -26,7 +26,7 @@ namespace F6500
 		static const unsigned int _ID = 0;
 
 		IRQInterrupt ()
-			: Interrupt (_ID)
+			: Interrupt (_ID, 0) // The lowest priority...
 							{ setClassName ("IRQInterrupt"); }
 
 		private:

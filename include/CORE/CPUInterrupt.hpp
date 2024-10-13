@@ -22,7 +22,9 @@ namespace MCHEmul
 	class CPU;
 	class Computer;
 
-	/** A CPU Interrupt is something that is able to stop the normal progress of the CPU execution. */
+	/** A CPU Interrupt is something that is able to stop the normal progress of the CPU execution. \n
+		The different Interrupts of a system can have different levels of prority.
+		By default, all have the same and equal 0. The smaller number the lower priority. */
 	class CPUInterrupt : public InfoClass
 	{
 		public:
@@ -34,10 +36,11 @@ namespace MCHEmul
 
 		CPUInterrupt () = delete;
 
-		CPUInterrupt (int id, unsigned int cL)
+		CPUInterrupt (int id, unsigned int cL, int pr = 0)
 			: InfoClass ("Interrupt"),
 			  _id (id),
 			  _cyclesToLaunch (cL),
+			  _priority (pr),
 			  _cyclesAfterLaunch (0), // Usually set when executed, if needed!
 			  _active (true /** by default. */),
 			  _inExecution (false),
@@ -58,6 +61,9 @@ namespace MCHEmul
 		int id () const
 							{ return (_id); }
 
+		int priority () const
+							{ return (_priority); }
+
 		/** When the interrupt is active. */
 		bool active () const
 							{ return (_active); }
@@ -75,6 +81,19 @@ namespace MCHEmul
 		/** The defult intialization of the interrupt leaves it inactive. */
 		virtual void initialize ()
 							{ _lastClockCyclesExecuted = 0; } // Active or not is manage donly externally!
+
+		// Managing the status of the enter line...
+		/** Before any interrupt is admitted to the queue of the pending ones,
+			it is needed to check whether this is possible. @see CPU::requestInterrupt. \n
+			It could be said that this variable is aligned the meaning of how the CPU 
+			considers the status of the interrupt PIN
+			before considering to execute or not (admitting) a interrupt. \n
+			By default a new interrupt request is always admitted (considered). \n
+			However this behavior can be changed. */
+		virtual bool admitNewInterruptRequest () const
+							{ return (true); }
+		virtual void setNewInterruptRequestAdmitted (bool)
+							{ }
 
 		// Managin the interrupt itself...
 		/** To define whether the interrupt can or not be executed. 
@@ -115,7 +134,7 @@ namespace MCHEmul
 		static bool desactivateDebug (Computer* c);
 
 		protected:
-		// These methods are invoked by executeOver (defined above);
+		// These methods are invoked by canBeExecutedOver and executeOver (both defined above);
 		/** To determine whether it is the time to execute the interruption. \n
 			The method returns a possibility. See the reasons above although more can be defined. */
 		virtual unsigned int isTime (CPU* c, unsigned int cC) const = 0;
@@ -126,6 +145,7 @@ namespace MCHEmul
 
 		protected:
 		int _id;
+		int _priority;
 		unsigned int _cyclesToLaunch;
 		unsigned int _cyclesAfterLaunch; // Rare but, used in some cases...
 		bool _active;

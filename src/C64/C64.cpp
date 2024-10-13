@@ -48,6 +48,9 @@ bool C64::Commodore64::initialize (bool iM)
 	// the VICII has to be aware about the number of cycles that the instruction will take
 	// in order to manage what $D012 result must returns properly!
 	observe (_cpu);
+	// The CPU also observe the Input System, because when the RESTORE key is pressed
+	// a NMI interrupt is generated...
+	observe (const_cast <MCHEmul::InputOSSystem*> (inputOSSystem ()));
 
 	// Links between chips...
 	// Both chips CIAII and VICII are link somehow
@@ -108,6 +111,10 @@ void C64::Commodore64::processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifi
 		static_cast <COMMODORE::VICII*> (chip (COMMODORE::VICII::_ID)) -> CPUAboutToExecute
 			(_cpu, (MCHEmul::Instruction*) (static_cast <MCHEmul::CPU::EventData*> (evnt.data ().get ()) -> _data));
 	}
+	else
+	if (evnt.id () == MCHEmul::InputOSSystem::_KEYBOARDKEYPRESSED &&
+		(std::static_pointer_cast <MCHEmul::InputOSSystem::KeyboardEvent> (evnt.data ()) -> _key) == C64::InputOSSystem::_RESTOREKEY)
+			cpu () -> requestInterrupt (F6500::NMIInterrupt::_ID, cpu () -> clockCycles (), nullptr /** No chip */, 100);
 }
 
 // ---

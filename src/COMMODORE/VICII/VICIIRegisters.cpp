@@ -8,7 +8,8 @@ COMMODORE::VICIIRegisters::VICIIRegisters (MCHEmul::PhysicalStorage* ps, size_t 
 	  _spriteInfo (8, COMMODORE::VICIIRegisters::SpriteInfo ()),
 	  _spriteSharedColor (2, 0x00),
 	  _lastValueRead (MCHEmul::PhysicalStorage::_DEFAULTVALUE),
-	  _raster (nullptr) // It is initialized later...
+	  _raster (nullptr), // It is initialized later...
+	  _interruptsEnabledBack (false)
 	  // At this point the rest internal variables will have random values...
 	  // The vector are initialized just to given them a default size!
 {
@@ -229,6 +230,7 @@ void COMMODORE::VICIIRegisters::setValue (size_t p, const MCHEmul::UByte& v)
 				if (v.bit (2)) _spriteCollisionsIRQHappened = false;
 				if (v.bit (3)) _lightPenIRQHappened = false;
 				/** bits from 4 to 7 are not used. */
+				_interruptsEnabledBack = true;
 			}
 
 			break;
@@ -661,8 +663,7 @@ void COMMODORE::VICIIRegisters::initializeInternalValues ()
 	// Meaning that, initially drawing the sprite will happen every raster line...
 	for (size_t i = 0; i < 8; _expansionYFlipFlop [i++] = true);
 
-	// Notice that the status of the register value buffering is not set
-	// This is because is is managed using other methods!
+	_interruptsEnabledBack = false;
 }
 
 // ---

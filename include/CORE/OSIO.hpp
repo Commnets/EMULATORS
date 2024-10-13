@@ -132,6 +132,11 @@ namespace MCHEmul
 		  */
 		virtual InfoStructure getInfoStructure () const override;
 
+		/** To know which is the name of a scan code. 
+			It can be usefull in debug functions. */
+		static std::string nameOfkey (SDL_Scancode sc)
+							{ return (std::string (SDL_GetScancodeName (sc))); }
+
 		protected:
 		// To manage events related with the keyboard...
 		/** What to do when a key has been pressed. */

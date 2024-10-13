@@ -31,12 +31,7 @@ namespace C64
 
 		static const unsigned int _ID = 200;
 
-		CIA1 ()
-			: CIA (_ID, CIA1Registers::_CIA1_SUBSET, F6500::IRQInterrupt::_ID),
-			  _CIA1Registers (nullptr),
-			  _sid (nullptr),
-			  _lastDatasetteRead (0)
-							{ setClassName ("CIA1"); }
+		CIA1 ();
 
 		virtual bool initialize () override;
 
@@ -71,6 +66,9 @@ namespace C64
 
 		// Implementation
 		unsigned int _lastDatasetteRead;
+		/** The last key pressed/released. \n
+			used when debugging. */
+		std::string _lastKeyPressed, _lastKeyReleased;
 	};
 }
 

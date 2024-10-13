@@ -28,6 +28,9 @@ namespace C64
 		public:
 		static const unsigned int _ID = 201;
 
+		// The Code for the RESTORE Key
+		static const SDL_Scancode _RESTOREKEY = SDL_SCANCODE_F12;
+
 		using Keystroke = 
 			std::pair <unsigned short /** bit at port A. */, unsigned short /** bit at port B. */>;
 		using Keystrokes = std::vector <Keystroke>;

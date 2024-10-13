@@ -22,8 +22,8 @@ namespace F6500
 	class Interrupt : public MCHEmul::CPUInterrupt
 	{
 		public:
-		Interrupt (int id)
-			: MCHEmul::CPUInterrupt (id, 7),
+		Interrupt (int id, int pr)
+			: MCHEmul::CPUInterrupt (id, 7, pr),
 			  _instChecked (false),
 			  _exeAddress ()
 							{ }

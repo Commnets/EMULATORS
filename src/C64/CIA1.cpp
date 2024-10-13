@@ -4,6 +4,17 @@
 #include <C64/DatasettePort.hpp>
 
 // ---
+C64::CIA1::CIA1 ()
+	: CIA (_ID, CIA1Registers::_CIA1_SUBSET, F6500::IRQInterrupt::_ID),
+	  _CIA1Registers (nullptr),
+	  _sid (nullptr),
+	  _lastDatasetteRead (0),
+	  _lastKeyPressed (""), _lastKeyReleased ("")
+{ 
+	setClassName ("CIA1"); 
+}
+
+// ---
 bool C64::CIA1::initialize ()
 {
 	assert (memoryRef () != nullptr);
@@ -26,25 +37,25 @@ bool C64::CIA1::initialize ()
 // ---
 bool C64::CIA1::simulate (MCHEmul::CPU* cpu)
 {
+	bool result = COMMODORE::CIA::simulate (cpu);
+
+	// Additional data when debugging...
 	if (deepDebugActive ())
 		*_deepDebugFile
 			// Where
-			<< "CIA1\t" 
+			<< "CIA" << std::to_string (id ()) << "\t" 
 			// When
 			<< std::to_string (_lastClockCycles) << "\t" // clock cycles at that point
 			// What
 			<< "Info cycle\t\t"
-			// Data
-			<< "PortA:["
-			<< std::to_string (_CIA1Registers -> outputRegisterA ()) << "," 
-			<< std::to_string (_CIA1Registers -> dataPortADir ()) << ","
-			<< _CIA1Registers -> portA ().asString (MCHEmul::UByte::OutputFormat::_HEXA, 0)
-			<< "], PortB:["
-			<< std::to_string (_CIA1Registers -> outputRegisterB ()) << "," 
-			<< std::to_string (_CIA1Registers -> dataPortBDir ()) << ","
-			<< _CIA1Registers -> portB ().asString (MCHEmul::UByte::OutputFormat::_HEXA, 0) << "]\n";
+			// Addtional Data
+			<< "Keys:[" 
+			<< _CIA1Registers -> keyboardMatrixAsString ()
+			<< "] -> P:" << _lastKeyPressed << ",R:" << _lastKeyReleased
+			<< "\n\t\t\t\t\t\t\t\t\tJoys: [" 
+			<< _CIA1Registers -> joystickStatusAsString () << "]\n";
 
-	return (COMMODORE::CIA::simulate (cpu));
+	return (result);
 }
 
 // ---
@@ -56,6 +67,10 @@ void C64::CIA1::processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifier* n)
 	{
 		case MCHEmul::InputOSSystem::_KEYBOARDKEYPRESSED:
 			{
+				if (deepDebugActive ())
+					_lastKeyPressed = MCHEmul::InputOSSystem::nameOfkey 
+						(std::static_pointer_cast <MCHEmul::InputOSSystem::KeyboardEvent> (evnt.data ()) -> _key);
+
 				const C64::InputOSSystem::Keystrokes& ks = ((C64::InputOSSystem*) n) -> keystrokesFor
 					(std::static_pointer_cast <MCHEmul::InputOSSystem::KeyboardEvent> (evnt.data ()) -> _key);
 				if (!ks.empty ()) // The key has to be defined...
@@ -67,6 +82,10 @@ void C64::CIA1::processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifier* n)
 
 		case MCHEmul::InputOSSystem::_KEYBOARDKEYRELEASED:
 			{
+				if (deepDebugActive ())
+					_lastKeyReleased = MCHEmul::InputOSSystem::nameOfkey 
+						(std::static_pointer_cast <MCHEmul::InputOSSystem::KeyboardEvent> (evnt.data ()) -> _key);
+
 				const C64::InputOSSystem::Keystrokes& ks = ((C64::InputOSSystem*) n) -> keystrokesFor
 				(std::static_pointer_cast <MCHEmul::InputOSSystem::KeyboardEvent> (evnt.data ()) -> _key);
 				if (!ks.empty ()) // The key has to be defined...

@@ -137,6 +137,13 @@ namespace C64
 		// Implementation
 		virtual void initializeInternalValues () override;
 
+		// Very internal...
+		/** To get the status of keyboard matrix and joystick matrix
+			in a way that could be understood by the debug system. */
+		inline std::string keyboardMatrixAsString ();
+		inline std::string revkeyboardMatrixAsString ();
+		inline std::string joystickStatusAsString ();
+
 		private:
 		/** The SID linked. */
 		COMMODORE::SID* _sid;
@@ -167,6 +174,47 @@ namespace C64
 		_paddleConnected [0] = _paddleConnected [1] = false;
 		_paddleFireButtonStatus [0][0] = _paddleFireButtonStatus [0][1] = 
 		_paddleFireButtonStatus [1][0] = _paddleFireButtonStatus [1][1] = false; // Quicker than a loop...
+	}
+
+	// ---
+	inline std::string CIA1Registers::keyboardMatrixAsString ()
+	{
+		bool f = true;
+		std::string result = "";
+		for (const auto& i : _keyboardStatusMatrix)
+		{
+			result += (f ? "" : ",") + 
+				std::string ("$") + i.asString (MCHEmul::UByte::OutputFormat::_HEXA);
+			f = false;
+		}
+
+		return (result);
+	}
+
+	// ---
+	inline std::string CIA1Registers::revkeyboardMatrixAsString ()
+	{
+		bool f = true;
+		std::string result = "";
+		for (const auto& i : _rev_keyboardStatusMatrix)
+		{
+			result += (f ? "" : ",") + 
+				std::string ("$") + i.asString (MCHEmul::UByte::OutputFormat::_HEXA);
+			f = false;
+		}
+
+		return (result);
+	}
+
+	// ---
+	inline std::string CIA1Registers::joystickStatusAsString ()
+	{
+		std::string result = "";
+
+		result += "$" + MCHEmul::UByte (_joystickStatus [0]).asString (MCHEmul::UByte::OutputFormat::_HEXA);
+		result += ",$" + MCHEmul::UByte (_joystickStatus [1]).asString (MCHEmul::UByte::OutputFormat::_HEXA);
+
+		return (result);
 	}
 }
 

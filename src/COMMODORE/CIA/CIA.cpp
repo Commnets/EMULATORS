@@ -69,8 +69,42 @@ bool COMMODORE::CIA::simulate (MCHEmul::CPU* cpu)
 		return (true);
 	}
 
+	// If the right register has been modified....
+	if (_CIARegisters -> interruptsEnabledBack ())
+		cpu -> interrupt (_interruptId) -> setNewInterruptRequestAdmitted (false); // ...the interrupts are admitted again...
+	// Depends on the type of interrupt connected to this CIA what the final effect will be...
+	// By example if the interrupt is a IRQ no real effect will happen,
+	// but if it is a NMI the affect wil be that a new interrupt could be admitted...
+	// It is needed to check it only once because the cycles later will take into account!
+
 	for (unsigned int i = cpu -> clockCycles () - _lastClockCycles; i > 0; i--)
 	{
+		if (deepDebugActive ())
+			*_deepDebugFile
+				// Where
+				<< "CIA" << std::to_string (id ()) << "\t" 
+				// When
+				<< std::to_string (_lastClockCycles) << "\t" // clock cycles at that point
+				// What
+				<< "Info cycle\t\t"
+				// Data
+				<< "PortA:["
+				<< std::to_string (_CIARegisters -> outputRegisterA ()) << "," 
+				<< std::to_string (_CIARegisters -> dataPortADir ()) << ","
+				<< _CIARegisters -> portA ().asString (MCHEmul::UByte::OutputFormat::_HEXA, 0) << "]"
+				<< "\n\t\t\t\t\t\t\t\t\tPortB:["
+				<< std::to_string (_CIARegisters -> outputRegisterB ()) << "," 
+				<< std::to_string (_CIARegisters -> dataPortBDir ()) << ","
+				<< _CIARegisters -> portB ().asString (MCHEmul::UByte::OutputFormat::_HEXA, 0) << "]"
+				<< "\n\t\t\t\t\t\t\t\t\tTimerA:[" << (_CIARegisters -> _timerA -> enabled () ? "ON" : "OFF") << ","
+				<< std::to_string ((unsigned int) _CIARegisters -> _timerA -> countMode ()) << ","
+				<< std::to_string (_CIARegisters -> _timerA -> initialValue ()) << ","
+				<< std::to_string (_CIARegisters -> _timerA -> currentValue ()) << "]"
+				<< "\n\t\t\t\t\t\t\t\t\tTimerB:[" << (_CIARegisters -> _timerB -> enabled () ? "ON" : "OFF") << ","
+				<< std::to_string ((unsigned int) _CIARegisters -> _timerB -> countMode ()) << ","
+				<< std::to_string (_CIARegisters -> _timerB -> initialValue ()) << ","
+				<< std::to_string (_CIARegisters -> _timerB -> currentValue ()) << "]\n";
+
 		// Simulate the Timers...
 		// After that the timer can reach 0
 		// If so (apart of launching a interrupt if configured) the result can be reflected

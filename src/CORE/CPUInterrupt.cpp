@@ -91,6 +91,7 @@ MCHEmul::InfoStructure MCHEmul::CPUInterrupt::getInfoStructure () const
 	MCHEmul::InfoStructure result = std::move (MCHEmul::InfoClass::getInfoStructure ());
 
 	result.add ("ID",			_id);
+	result.add ("PRIORITY",		_priority);
 	result.add ("ACTIVE",		_active);
 	result.add ("EXECUTION",	std::string (_inExecution ? "YES" : "NO"));
 

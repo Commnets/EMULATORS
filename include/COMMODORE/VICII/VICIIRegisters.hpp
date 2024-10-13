@@ -259,6 +259,10 @@ namespace COMMODORE
 		void invertExpansionYFlipFlop (size_t spr)
 							{ _expansionYFlipFlop [spr] = !_expansionYFlipFlop [spr]; }
 
+		/** Invoked from VICII to know whether the register to allow back the interrupts has been modified. */
+		bool interruptsEnabledBack () const
+							{ return (_interruptsEnabledBack); }
+
 		private:
 		struct SpriteInfo : public MCHEmul::InfoClass
 		{
@@ -371,6 +375,7 @@ namespace COMMODORE
 		/** The expansion flip flop in the Y axis.
 			There are as many as sprites, all initially at false. */
 		bool _expansionYFlipFlop [8];
+		MCHEmul::OBool _interruptsEnabledBack;
 	};
 
 	// ---

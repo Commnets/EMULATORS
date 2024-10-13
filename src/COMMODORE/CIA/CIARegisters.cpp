@@ -4,7 +4,8 @@
 COMMODORE::CIARegisters::CIARegisters (int id, MCHEmul::PhysicalStorage* ps, size_t pp, const MCHEmul::Address& a, size_t s)
 	: MCHEmul::ChipRegisters (id, ps, pp, a, s),
 	  _timerA (nullptr), _timerB (nullptr), _clock (nullptr),
-	  _lastValueRead (MCHEmul::PhysicalStorage::_DEFAULTVALUE)
+	  _lastValueRead (MCHEmul::PhysicalStorage::_DEFAULTVALUE),
+	  _interruptsEnabledBack (false)
 	  // At this point all internal variables will have random values...
 { 
 	setClassName ("CIARegisters");
@@ -357,6 +358,7 @@ const MCHEmul::UByte& COMMODORE::CIARegisters::readValue (size_t p) const
 				result.setBit (2, _clock -> interruptRequested ()); // in Clock?
 				result.setBit (3, _serialPort -> interruptRequested ()); // in Serial Port?
 				result.setBit (4, flagLineInterruptRequested ()); // In the Flag Line?
+				_interruptsEnabledBack = true; // The interrupts are allowed back!
 			}
 
 			break;
@@ -513,4 +515,6 @@ void COMMODORE::CIARegisters::initializeInternalValues ()
 	_reflectTimerAAtPortDataB = _reflectTimerBAtPortDataB = false; // Do not do anything...
 
 	_timerAValueAtPortDataB = _timerBValueAtPortDataB = false; // It is the same, but just in case...
+
+	_interruptsEnabledBack = false;
 }

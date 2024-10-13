@@ -8,18 +8,17 @@ _INST_IMPL (F6500::BRK)
 {
 	assert (parameters ().size () == 1);
 
+	// It is like NMI...
 	MCHEmul::ProgramCounter& pc = cpu () -> programCounter ();
 	MCHEmul::StatusRegister& st = cpu () -> statusRegister ();
-
 	stack () -> push (pc.asAddress ().bytes ());
 	stack () -> push (st.values ());
-
 	st.setBitStatus (F6500::C6500::_IRQFLAG, true); // No more interruptions so far...
 	st.setBitStatus (F6500::C6500::_BREAKFLAG, true);
 
-	// Jump to the IRQ vector...
+	// Jump to the NMI vector...
 	pc.setAddress (MCHEmul::Address (memory () -> values 
-		(static_cast <F6500::C6500*> (cpu ()) -> IRQVectorAddress (), 2), false /** Little - endian. */));
+		(static_cast <F6500::C6500*> (cpu ()) -> NMIVectorAddress (), 2), false /** Little - endian. */));
 
 	return (!stack () -> overflow ());
 }

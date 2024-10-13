@@ -26,7 +26,7 @@ namespace FZ80
 		static const unsigned int _ID = 0;
 
 		INTInterrupt ()
-			: Interrupt (_ID, 0 /** It will decided any time the INTMode is fixed. (@see below) */),
+			: Interrupt (_ID, 0 /** It will decided any time the INTMode is fixed. (@see below) */, 0 /** The lowest priority. */),
 			  _INTMode (0) // The basic one by default...
 							{ _cyclesToLaunch = 2; // By default...
 							  setClassName ("INTInterrupt"); }

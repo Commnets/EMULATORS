@@ -189,10 +189,21 @@ void MCHEmul::CPU::removeInterrrupt (int id)
 // ---
 void MCHEmul::CPU::requestInterrupt (const MCHEmul::CPU::InterruptRequest& iR)
 { 
-	// Only one interrupt at the same type is allowed!
-	if (_interruptsRequested.empty ())
+	// Only one interrupt at the same time...
+	// or with more priority that the one that could be already pending to be processed...
+	if ((_interruptsRequested.empty () || 
+		 (!_interruptsRequested.empty () && 
+			 _rowInterrupts [iR._type] -> priority () > 
+			 _rowInterrupts [(*_interruptsRequested.begin ())._type] -> priority ())) &&
+	// ...and also wether to admit a new interrupt of the same type is possible...
+		_rowInterrupts [iR._type] -> admitNewInterruptRequest ()) 
 	{ 
-		_interruptsRequested.emplace_back (iR);
+		// Insert the new one at the beginning of the vector always...
+		// But if any other interrupt were already in with lower priority it would be maintained...
+		_interruptsRequested.insert (_interruptsRequested.begin (), iR);
+
+		// The new interrupt has been admittted...
+		_rowInterrupts [iR._type] -> setNewInterruptRequestAdmitted (true);
 
 		if (deepDebugActive ())
 			*_deepDebugFile << "\t\t\t\t\tInterrupt CPU requested:" 

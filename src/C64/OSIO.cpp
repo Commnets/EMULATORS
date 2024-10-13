@@ -83,6 +83,8 @@ const C64::InputOSSystem::KeystrockesMap C64::InputOSSystem::_C64KEYS
 			{ SDL_SCANCODE_F8,				{ std::make_pair (1, 7), std::make_pair (0, 3) } },
 			{ SDL_SCANCODE_LEFT,			{ std::make_pair (1, 7), std::make_pair (0, 2) } },
 			{ SDL_SCANCODE_UP,				{ std::make_pair (1, 7), std::make_pair (0, 7) } }
+			/** The restore key is special as it generates a NMI interruption over the CPU directly. \n
+				So it is not defined in this matrix. */
 		}
 	);
 

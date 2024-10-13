@@ -170,6 +170,10 @@ namespace COMMODORE
 		void lookAtSerialPort (CIASerialPort* sp)
 							{ _serialPort = sp; }
 
+		/** Invoked from CIA to know whether the register to allow back the interrupts has been modified. */
+		bool interruptsEnabledBack () const
+							{ return (_interruptsEnabledBack); }
+
 		protected:
 		/** Ports used by the CIA. */
 		mutable unsigned char _portA, _portB;
@@ -193,6 +197,7 @@ namespace COMMODORE
 		mutable MCHEmul::UByte _lastValueRead;
 		bool _reflectTimerAAtPortDataB, _timerAValueAtPortDataB;
 		bool _reflectTimerBAtPortDataB, _timerBValueAtPortDataB;
+		mutable MCHEmul::OBool _interruptsEnabledBack;
 	};
 
 	// ---
