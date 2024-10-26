@@ -262,7 +262,7 @@ namespace MCHEmul
 		// Managing the requests of interrutps...
 		// This block delegates everything in the interrupt system acting as a Facade design pattern...
 		void requestInterrupt (int id, unsigned int nC, Chip* src = nullptr, int cR = -1)
-							{ interruptSystem () -> requestInterrupt (CPUInterruptRequest (id, nC, src, cR)); }
+							{ requestInterrupt (CPUInterruptRequest (id, nC, src, cR)); }
 		void requestInterrupt (const CPUInterruptRequest& iR);
 		const CPUInterruptRequests& interruptsRequested () const
 							{ return (interruptSystem () -> interruptsRequested ()); }

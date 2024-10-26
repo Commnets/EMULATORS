@@ -74,23 +74,6 @@ void COMMODORE::VICIIRegisters::setValue (size_t p, const MCHEmul::UByte& v)
 {
 	size_t pp = p % 0x40;
 
-	if (deepDebugActive ())
-	{
-		*_deepDebugFile
-			// Where
-			<< "VICII Regs\t" 
-			// When
-			<< "-" << "\t" // clock cycles at that point
-			// What
-			<< "Set Register\t"
-			// Data
-			<< "Register:$d0"
-			<< MCHEmul::removeAll0 (MCHEmul::UInt::fromUnsignedInt 
-				((unsigned int) pp).asString (MCHEmul::UByte::OutputFormat::_HEXA, '\0', 2)) << ","
-			<< "Value:$"
-			<< v.asString (MCHEmul::UByte::OutputFormat::_HEXA, 2) << "\n";
-	}
-
 	// The 64 first bytes will keep the right value...
 	MCHEmul::PhysicalStorageSubset::setValue (pp, v);
 
