@@ -29,11 +29,11 @@ namespace FZ80
 							{ }
 
 		protected:
-		inline void executeBranch (bool a); // Using the parameter 1 and 2 always!
+		inline bool executeBranch (bool a); // Using the parameter 1 and 2 always!
 	};
 
 	// ---
-	inline void CALL_General::executeBranch (bool a)
+	inline bool CALL_General::executeBranch (bool a)
 	{
 		if (a)
 			_additionalCycles = 7; // Always 7 cycles more when the condition is found!
@@ -43,6 +43,8 @@ namespace FZ80
 		pc.setAddress (MCHEmul::Address ({ parameters ()[2].value (), parameters ()[1].value () }, true)); 
 		// Little endian, but the interchage of the bytes has already been done in the code, 
 		// That's why the value true, instead false! (it is quicker)...
+
+		return (!stack () -> overflow ());
 	}
 
 	// Absolute...
@@ -69,11 +71,11 @@ namespace FZ80
 
 		protected:
 		// Using the parameter t as an index to the address...
-		inline void executeBranch (char t);
+		inline bool executeBranch (char t);
 	};
 
 	// ---
-	inline void RST_General::executeBranch (char t)
+	inline bool RST_General::executeBranch (char t)
 	{
 		static const std::vector <MCHEmul::Address> _DIRS =
 			{
@@ -90,6 +92,8 @@ namespace FZ80
 		MCHEmul::ProgramCounter& pc = cpu () -> programCounter ();
 		stack () -> push (pc.asAddress ().values ());
 		pc.setAddress (_DIRS [(size_t) t]);
+
+		return (!stack () -> overflow ());
 	}
 
 	// Absolute...
@@ -113,16 +117,18 @@ namespace FZ80
 
 		protected:
 		// a = true when additional cycles mut taken into account. true by default!
-		inline void executeReturn (bool a = true); // Using the parameter 1 always!
+		inline bool executeReturn (bool a = true); // Using the parameter 1 always!
 	};
 
 	// ---
-	inline void RET_General::executeReturn (bool a)
+	inline bool RET_General::executeReturn (bool a)
 	{
 		if (a) 
 			_additionalCycles = 6; 
 
 		cpu () -> programCounter ().setAddress (MCHEmul::Address (stack () -> pull (2), false)); // Little endian!
+
+		return (!stack () -> overflow ());
 	}
 
 	// Absolute

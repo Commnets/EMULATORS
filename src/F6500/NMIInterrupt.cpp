@@ -4,7 +4,8 @@
 // ---
 bool F6500::NMIInterrupt::executeOverImpl (MCHEmul::CPU* c, unsigned int cC)
 {
-	F6500::Interrupt::executeOverImpl (c, cC);
+	if (!F6500::Interrupt::executeOverImpl (c, cC))
+		return (false);
 
 	assert (c != nullptr);
 	assert (c -> memoryRef () != nullptr);

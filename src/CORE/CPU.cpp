@@ -348,7 +348,13 @@ bool MCHEmul::CPU::executeNextInterruptRequest_PerCycle (unsigned int& e)
 				_currentInterrupt = nullptr; // No longer valid...
 			}
 			else
+			{
 				e = MCHEmul::_INTERRUPT_ERROR; // ...error although it's been executed...
+
+				if (deepDebugActive ())
+					*_deepDebugFile << "\t\t\t\t\tError launching Interrupt:" 
+									<< std::to_string (_currentInterrupt -> id ()) << "\n";
+			}
 		}
 	}
 	else
@@ -482,7 +488,13 @@ bool MCHEmul::CPU::executeNextInterruptRequest_Full (unsigned int& e)
 			if (i -> executeOver (this, iR.cycles ())) // Thismethod returns true when ok, and false with errors...
 				_lastCPUClockCycles += i -> cycledAfterLaunch ();
 			else
+			{ 
 				_error = MCHEmul::_INTERRUPT_ERROR; // and error happended...
+
+				if (deepDebugActive ())
+					*_deepDebugFile << "\t\t\t\t\tError launching Interrupt:" 
+									<< std::to_string (i -> id ()) << "\n";
+			}
 
 			i -> initialize (); // Get ready for the next interrupt...
 
@@ -535,9 +547,15 @@ bool MCHEmul::CPU::executeNextInstruction_PerCycle (unsigned int& e)
 
 			// Finally executed the instruction...
 			// This method returns true when everything ok and false if not...
-			if (_currentInstruction -> 
-				execute (this, _memory, _memory -> stack (), &_programCounter)) 
+			if (!_currentInstruction -> 
+				execute (this, _memory, _memory -> stack (), &_programCounter))
+			{
 				_error = MCHEmul::_INSTRUCTION_ERROR; // ...error executing...
+
+				if (deepDebugActive ())
+					*_deepDebugFile << "\t\t\t\t\tError executing instruction:" 
+									<< _currentInstruction -> asString () << "\n";
+			}
 
 			_lastCPUClockCycles += _currentInstruction -> additionalClockCyclesExecuted (); // Just in case...
 
@@ -610,7 +628,13 @@ bool MCHEmul::CPU::executeNextInstruction_PerCycle (unsigned int& e)
 			_cyclesPendingExecution = 
 				_currentInstruction -> clockCycles (_memory, _programCounter.asAddress ()); // virtual!
 		else
+		{
 			_error = MCHEmul::_INSTRUCTION_ERROR; // executed but with an error, the instruction is not found...
+
+			if (deepDebugActive ())
+				*_deepDebugFile << "\t\t\t\t\tInstruction doesn't exist:" 
+								<< std::to_string (nInst) << "\n";
+		}
 	}
 
 	return (true);
@@ -645,6 +669,10 @@ bool MCHEmul::CPU::executeNextInstruction_Full (unsigned int &e)
 		(inst = _rowInstructions [nInst]) == nullptr)
 	{
 		e = MCHEmul::_INSTRUCTION_ERROR;
+
+		if (deepDebugActive ())
+			*_deepDebugFile << "\t\t\t\t\tInstruction doesn't exist:" 
+							<< std::to_string (nInst) << "\n";
 
 		return (true); // ...executed but with errors!
 	}
@@ -701,7 +729,13 @@ bool MCHEmul::CPU::executeNextInstruction_Full (unsigned int &e)
 	}
 	// ...otherwise again an error is generated...
 	else
+	{
 		e = MCHEmul::_INSTRUCTION_ERROR;
+
+		if (deepDebugActive ())
+			*_deepDebugFile << "\t\t\t\t\tError executing instruction:" 
+							<< inst -> asString () << "\n";
+	}
 
 	return (true);
 }

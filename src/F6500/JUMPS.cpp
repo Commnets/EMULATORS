@@ -55,7 +55,7 @@ _INST_IMPL (F6500::JSR_Absolute)
 
 	pc.setAddress (address_absolute ());
 
-	return (true);
+	return (!stack () -> overflow ());
 }
 
 // ---
