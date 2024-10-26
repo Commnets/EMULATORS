@@ -9,5 +9,5 @@ F6500::C7501::C7501 (int id)
 		{ "Year", "1984" },
 		{ "Speed Range", "0.985(PAL) - 1.023(NTSC) MHz" } })
 { 
-	removeInterrrupt (F6500::NMIInterrupt::_ID);
+	// Nothing else to do...
 }

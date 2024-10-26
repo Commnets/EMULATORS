@@ -29,6 +29,11 @@ namespace F6500
 
 		virtual MCHEmul::PhysicalStorageSubset* createPortRegistersOn (int id, MCHEmul::PhysicalStorage* ps) override
 							{ return (new F6500::IO7501PortRegisters (id, ps)); }
+
+		protected:
+		virtual MCHEmul::CPUInterruptSystem* createInterruptSystem () const override
+							{ return (new MCHEmul::StandardCPUInterruptSystem 
+								({ { F6500::IRQInterrupt::_ID, new F6500::IRQInterrupt } })); }
 	};
 }
 

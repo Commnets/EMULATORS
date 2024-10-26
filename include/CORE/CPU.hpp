@@ -74,38 +74,6 @@ namespace MCHEmul
 			void* _data;
 		};
 
-		/** When a interrupt type is requested, 
-			this is the info to be provided from any external element. 
-			The struct can be initialised usign intilizator list. \n
-			None of the are mandatory. So it is an open structure. */
-		struct InterruptRequest
-		{
-			/** Type. 
-				Must match the type of instructions (see @_rowInterrupts) 
-				but no double check is done when used (for performance reasons). */
-			int _type;
-			/** The machine cycles when the interrupt was requested. */
-			unsigned int _cycles;
-			/** Who is launching the request. */
-			MCHEmul::Chip* _from;
-			/** Reason to invoke it. */
-			int _reason;
-
-			std::string toString () const
-							{ return (std::to_string (_type)
-								+ " from:" + ((_from == nullptr) ? "-" : std::to_string (_from -> id ())) 
-								+ " reason:" + std::to_string (_reason)); }
-
-			friend std::ostream& operator << (std::ostream& o, const InterruptRequest& iR)
-							{ return (o << iR.toString ()); }
-		};
-
-		// To simplify the use of a list of requests...
-		using InterruptRequests = std::vector <InterruptRequest>;
-
-		/** This static const member is to refer to a no interrupt request. */
-		static const InterruptRequest _NOINTREQUEST;
-
 		/** An event when the system is about to execute a instruction.
 			Sometimes the executiom of a specific instruction could affect other parts of the computer,
 			like chips (specifically or devices. */
@@ -272,47 +240,40 @@ namespace MCHEmul
 		virtual bool restart ()
 							{ return (true); }
 
-		// Managing interruptions
-		/** To add and remove interrupts. */
-		const CPUInterrupts& interrupts () const
-							{ return (_interrupts); }
+		// Managing the interrupt system...
+		/** To get the CPU Interrupt System. @see createInterruptSystem method. \n
+			The system has to be created in the method createInterruptSystem that must be overloaded 
+			for this purpose when defining every CPU in detail (by default it is virtual). 
+			The rest of the methods are Facade of the the interruptSystem. */
+		const CPUInterruptSystem* interruptSystem () const
+							{ return ((_interruptSystem == nullptr) 
+								? (_interruptSystem = createInterruptSystem ()) : _interruptSystem); }
+		CPUInterruptSystem* interruptSystem ()
+							{ return (const_cast <CPUInterruptSystem*> ((const_cast <const CPU*> (this)) -> interruptSystem ())); }
 		bool existsInterrupt (int id) const
-							{ return (_interrupts.find (id) != _interrupts.end ()); }
+							{ return (interruptSystem () -> existsInterrupt (id)); }
+		const CPUInterrupts& interrupts () const
+							{ return (interruptSystem () -> interrupts ()); }
 		const CPUInterrupt* interrupt (int id) const
-							{ return ((*_interrupts.find (id)).second); }
+							{ return (interruptSystem () -> interrupt (id)); }
 		CPUInterrupt* interrupt (int id)
-							{ return ((*_interrupts.find (id)).second); }
-		void addInterrupt (CPUInterrupt* in);
-		void removeInterrrupt (int id);
+							{ return (interruptSystem () -> interrupt (id)); }
 
 		// Managing the requests of interrutps...
-		/** To request an interrupt. \n
-			Receives the id of the interruption requested, the clockCycle where it has happened,
-			the sender (optional), and a code for the reason (also optional, -1 = not defined. */
+		// This block delegates everything in the interrupt system acting as a Facade design pattern...
 		void requestInterrupt (int id, unsigned int nC, Chip* src = nullptr, int cR = -1)
-							{ requestInterrupt (InterruptRequest ({ id, nC, src, cR })); }
-		/** Same than previous, but receiving a InterruptRequest as parameter. \n
-			This one can be overloaded. \n
-			By default a unique element is allowed in the list of pendings. */
-		virtual void requestInterrupt (const InterruptRequest& iR);
-		/** To know whether the interrupt requests pending. Empty object if none. */
-		const InterruptRequests& interruptsRequested () const
-							{ return (_interruptsRequested); }
-		/** To get the next interrupt in the list of those. \n 
-			The way the interrupt is choosen can be changed by the user. \n
-			The default behaviour is to keep just one, so the first is brought back!. 
-			If there weren't be any, _NOINTREQUEST const object reference is returned. */
-		virtual const InterruptRequest& getNextInterruptRequest ()
-							{ return (_interruptsRequested.empty () 
-								? _NOINTREQUEST : *_interruptsRequested.begin ()); }
-		/** Once a interrupt request is procesed must be removed from the list of the pending ones. \n
-			As the default behaviour is keeping just one, all list is deleted (quicker). */
-		virtual void removeInterruptRequest (const InterruptRequest& iR)
-							{ _interruptsRequested = { }; }
-		/** To recognize the interrupt. \n 
-		 	By default, it does nothing, but it can be overloaded. \n
-			This method is invoked from the previous one. */
-		virtual void aknowledgeInterrupt ()	{ }
+							{ interruptSystem () -> requestInterrupt (CPUInterruptRequest (id, nC, src, cR)); }
+		void requestInterrupt (const CPUInterruptRequest& iR);
+		const CPUInterruptRequests& interruptsRequested () const
+							{ return (interruptSystem () -> interruptsRequested ()); }
+		const CPUInterruptRequest& getNextInterruptRequest ()
+							{ return (interruptSystem () -> getNextInterruptRequest ()); }
+		const CPUInterrupt* getInterruptForRequest (const CPUInterruptRequest& iR) const
+							{ return (interruptSystem () -> getInterruptForRequest (iR)); }
+		CPUInterrupt* getInterruptForRequest (const CPUInterruptRequest& iR)
+							{ return (interruptSystem () -> getInterruptForRequest (iR)); }
+		void removeInterruptRequest (const CPUInterruptRequest& iR)
+							{ interruptSystem () -> removeInterruptRequest (iR); }
 
 		// Managing hooks...
 		/** Adding a hook/hooks */
@@ -355,6 +316,7 @@ namespace MCHEmul
 
 		/**
 		  *	The name of the fields are: \n
+		  * INTERRUPTS	= InfoStructure: Information about the interrupts of the CPU
 		  * ARCHITECURE = InfoStructure: Architecture info. \n
 		  *	REGS		= InfoStructure: Registers info. \n
 		  * PC			= Attribute: Value of the program counter. \n
@@ -375,11 +337,6 @@ namespace MCHEmul
 							{ return (_deepDebugFile); }
 
 		protected:
-		/** To make a row data with the interruptions. \n
-			This method is called from the constructor and instantiate the variable _rowInterrupts,
-			and also at any time an interrupt is added or removed. */
-		void makeInterruptionRowData ();
-
 		// Internal methods to simplify the comprension of the code.
 		// However they can be overloaded...
 		// Invoke from executeNextInstruction
@@ -416,6 +373,10 @@ namespace MCHEmul
 			Methods invoked from @see when_ExecutingInstruction. */
 		virtual bool executeNextInterruptRequest_PerCycle (unsigned int& e);
 		virtual bool executeNextInterruptRequest_Full (unsigned int& e);
+		/** To recognize the execution interrupt. \n 
+		 	By default, it does nothing, but it can be overloaded. \n
+			This method is invoked from the methods above. */
+		virtual void aknowledgeInterrupt ()	{ }
 		/** ...and finally execute the instruction.
 		 	NOTE: It returns true if a instruction was finally "executed" and false if not. \n 
 			The variable "e" holds whether there were or nor an error executing the instruction (if any). \n
@@ -430,6 +391,10 @@ namespace MCHEmul
 		/** To execute the hook if any at the position where the PC is now. */
 		inline CPUHook* executeHookIfAny ();
 
+		/** To create the interrupt system. \n
+			It must be redefined depeing on the type of CPU. */
+		virtual CPUInterruptSystem* createInterruptSystem () const = 0;
+
 		protected:
 		const CPUArchitecture _architecture = 
 			CPUArchitecture (2 /** 2 bytes arch. */, 1 /** 1 byte for instruction. */); // Adjusted at construction level
@@ -438,8 +403,10 @@ namespace MCHEmul
 		ProgramCounter _programCounter;
 		StatusRegister _statusRegister;
 		Memory* _memory; // A reference...
-		CPUInterrupts _interrupts;
 		CPUHooks _hooks;
+		/** The Interrupt System. 
+			Defined as mutable because it could be created in a const method. */
+		mutable CPUInterruptSystem* _interruptSystem;
 
 		// The current situation of the CPU...
 		/** Last INOUT data used. 
@@ -468,7 +435,7 @@ namespace MCHEmul
 		// In full instructions this is also used to avoid more interim variables, 
 		// but makes no much more sense!
 		/** The request under execution. */
-		InterruptRequest _currentInterruptRequest;
+		CPUInterruptRequest _currentInterruptRequest;
 		/** The interruption under exection. nullptr when nothing. */
 		CPUInterrupt* _currentInterrupt;
 		/** The instruction under execution. nullptr when nothing. */
@@ -493,18 +460,9 @@ namespace MCHEmul
 			obviously when it is the situation and it is nor forever. */
 		unsigned int _counterCyclesStopped;
 
-		/** When the CPU is executing a transaction, and a interruption is requested,
-			the current instruction has to finish first, and the the interruption is invoked. \n
-			It the CPU were stopped, first of all the CPU would have to run back 
-			and then finish the instruction that could be running when it was stopped. \n
-			The parameter has the id of the interrupt requested. -1 means none. */
-		InterruptRequests _interruptsRequested;
-
 		/** The instructions will be moved into an array at construction time,
 			to speed up their access in the executeNextInstruction method. */
 		ListOfInstructions _rowInstructions;
-		/** Also a row vector with the interruptions. */
-		CPUListOfInterrupts _rowInterrupts;
 	};
 
 	// ---

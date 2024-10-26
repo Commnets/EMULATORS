@@ -59,6 +59,9 @@ namespace VIC20
 			_8KEXPANSION	= 2,
 			_16KEXPANSION	= 3,
 			_24KEXPANSION	= 4,
+			_11KEXPANSION	= 5,
+			_19KEXPANSION	= 6,
+			_27KEXPANSION	= 7,
 		};
 
 		// Phisical Storages

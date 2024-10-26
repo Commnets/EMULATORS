@@ -15,6 +15,8 @@
 #define __F6500_C6500__
 
 #include <CORE/incs.hpp>
+#include <F6500/IRQInterrupt.hpp>
+#include <F6500/NMIInterrupt.hpp>
 
 namespace F6500
 {
@@ -95,6 +97,12 @@ namespace F6500
 							{ programCounter ().setAddress 
 								(MCHEmul::Address (memoryRef () -> bytes (ResetVectorAddress (), 2), false)); 
 							  return (true); }
+
+		protected:
+		virtual MCHEmul::CPUInterruptSystem* createInterruptSystem () const override
+							{ return (new MCHEmul::StandardCPUInterruptSystem 
+								({ { F6500::IRQInterrupt::_ID, new F6500::IRQInterrupt }, 
+								   { F6500::NMIInterrupt::_ID, new F6500::NMIInterrupt } })); }
 
 		private:
 		// Implementation

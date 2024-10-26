@@ -21,6 +21,10 @@ Big Endian:@ENDIAN@
 Id:@ID@, Active:@ACTIVE@, In Execution:@EXECUTION@
 #---
 #---
+;CPUInterruptSystem
+@INTERRUPTS?{fmter=.CLASS,empty=no interruptions}\n@
+#---
+#---
 ;CPU
 #The info about the Architecture here
 @ATTRS?{key=YES,equal=:,empty=no attributes}\n@
@@ -30,7 +34,7 @@ Id:@ID@, Active:@ACTIVE@, In Execution:@EXECUTION@
 @SR@
 CLK:@CLK@ ticks
 ->Interrupts:
-@INTERRUPTS?{fmter=.CLASS,empty=no interruptions}\n@
+@CPUInterruptSystem>@
 #---
 #---
 ;ClockFactor

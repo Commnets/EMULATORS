@@ -1,7 +1,5 @@
 #include <F6500/C6500.hpp>
 #include <F6500/Instructions.hpp>
-#include <F6500/IRQInterrupt.hpp>
-#include <F6500/NMIInterrupt.hpp>
 
 const std::string F6500::C6500::_CARRYFLAGNAME = "C";
 const std::string F6500::C6500::_ZEROFLAGNAME = "Z";
@@ -12,7 +10,7 @@ const std::string F6500::C6500::_OVERFLOWFLAGNAME = "V";
 const std::string F6500::C6500::_NEGATIVEFLAGNAME = "N";
 
 // ---
-F6500::C6500::C6500 (int id,	const MCHEmul::Attributes& attrs)
+F6500::C6500::C6500 (int id, const MCHEmul::Attributes& attrs)
 	: MCHEmul::CPU (id,
 		F6500::C6500::createArchitecture (),
 		F6500::C6500::createInternalRegisters (), 
@@ -27,10 +25,6 @@ F6500::C6500::C6500 (int id,	const MCHEmul::Attributes& attrs)
 
 	// The reference to the memory has not set still here...
 	// It is linked to the CPU at computer (class) level!
-
-	//This type of CPU admites two types of interruptions...
-	addInterrupt (new F6500::IRQInterrupt);
-	addInterrupt (new F6500::NMIInterrupt);
 }
 
 // ---

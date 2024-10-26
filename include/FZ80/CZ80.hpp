@@ -16,6 +16,7 @@
 
 #include <CORE/incs.hpp>
 #include <FZ80/INTInterrupt.hpp>
+#include <FZ80/NMIInterrupt.hpp>
 
 namespace FZ80
 {
@@ -169,7 +170,8 @@ namespace FZ80
 						{ deletePorts (); }
 
 		unsigned char INTmode () const
-						{ return (static_cast <const INTInterrupt*> (interrupt (INTInterrupt::_ID)) -> INTMode ()); }
+						{ return (static_cast <const INTInterrupt*> 
+							(interrupt (INTInterrupt::_ID)) -> INTMode ()); }
 		void setINTMode (unsigned char iM)
 						{ static_cast <INTInterrupt*> (interrupt (INTInterrupt::_ID)) -> setINTMode (iM); }
 
@@ -404,7 +406,13 @@ namespace FZ80
 
 		virtual MCHEmul::InfoStructure getInfoStructure () const override;
 
-		private:
+		protected:
+		virtual MCHEmul::CPUInterruptSystem* createInterruptSystem () const override
+							{ return (new MCHEmul::StandardCPUInterruptSystem 
+								({ { FZ80::INTInterrupt::_ID, new FZ80::INTInterrupt }, 
+								   { FZ80::NMIInterrupt::_ID, new FZ80::NMIInterrupt } })); }
+
+		// Implementation...
 		void deletePorts ();
 		void assignPorts (const Z80PortsMap& pm);
 

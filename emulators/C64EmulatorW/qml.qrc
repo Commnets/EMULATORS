@@ -1,5 +1,0 @@
-<RCC>
-    <qresource prefix="/qt/qml/c64emulatorw">
-        <file>main.qml</file>
-    </qresource>
-</RCC>

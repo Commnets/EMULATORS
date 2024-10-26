@@ -252,12 +252,12 @@ void MCHEmul::SetMemoryCommand::execute ()
 	{
 		*_subset -> _deepDebugFile
 			// Where
-			<< (_subset -> name ().length () > 8 
-				? _subset -> name ().substr (8) : MCHEmul::fixLenStr (_subset -> name (), 8, false))
+			<< (_subset -> name ().length () > 8
+				? _subset -> name ().substr (0, 8) : MCHEmul::fixLenStr (_subset -> name (), 8, false))
 			// When
 			<< "-" << "\t\t\t" // clock cycles at that point
 			// What
-			<< "Applied Set\t\t\t"
+			<< "Applied Set\t\t"
 			// Data
 			<< "Address:$"
 			<< MCHEmul::removeAll0 ((_subset -> initialAddress () + _position).

@@ -181,7 +181,6 @@ void VIC20::Memory::setConfiguration (VIC20::Memory::Configuration cfg, bool a0)
 				// Only the first bank is active...
 				_BANK0			-> setActive (true);		// 3k, BASIC longer...
 				_BANK0UC		-> setActive (false);
-
 				_BANK1			-> setActive (false);
 				_BANK1UC		-> setActive (true);
 				_BANK2			-> setActive (false);
@@ -203,11 +202,10 @@ void VIC20::Memory::setConfiguration (VIC20::Memory::Configuration cfg, bool a0)
 		case VIC20::Memory::Configuration::_8KEXPANSION:
 			{
 				// The first two banks are active...
-				_BANK0			-> setActive (true);		// 3k, BASIC longer...
-				_BANK0UC		-> setActive (false);
+				_BANK0			-> setActive (false);
+				_BANK0UC		-> setActive (true);
 				_BANK1			-> setActive (true);		// 8k.
 				_BANK1UC		-> setActive (false);
-
 				_BANK2			-> setActive (false);
 				_BANK2UC		-> setActive (true);
 				_BANK3			-> setActive (false);
@@ -227,13 +225,12 @@ void VIC20::Memory::setConfiguration (VIC20::Memory::Configuration cfg, bool a0)
 		case VIC20::Memory::Configuration::_16KEXPANSION:
 			{
 				// 3 banks are active...
-				_BANK0			-> setActive (true);		// 3k, BASIC longer...
-				_BANK0UC		-> setActive (false);
+				_BANK0			-> setActive (false);
+				_BANK0UC		-> setActive (true);
 				_BANK1			-> setActive (true);		// 8k.
 				_BANK1UC		-> setActive (false);
 				_BANK2			-> setActive (true);		// 8k.
 				_BANK2UC		-> setActive (false);
-
 				_BANK3			-> setActive (false);
 				_BANK3UC		-> setActive (true);
 				_BANK5			-> setActive (a0);
@@ -251,7 +248,76 @@ void VIC20::Memory::setConfiguration (VIC20::Memory::Configuration cfg, bool a0)
 		case VIC20::Memory::Configuration::_24KEXPANSION:
 			{
 				// The main 4 bank area actve...
-				_BANK0			-> setActive (true);		// 3k. BASIC longer
+				_BANK0			-> setActive (false);
+				_BANK0UC		-> setActive (true);
+				_BANK1			-> setActive (true);		// 8k.
+				_BANK1UC		-> setActive (false);
+				_BANK2			-> setActive (true);		// 8k.
+				_BANK2UC		-> setActive (false);
+				_BANK3			-> setActive (true);		// 8k.
+				_BANK3UC		-> setActive (false);
+				_BANK5			-> setActive (a0);
+				_BANK5UC		-> setActive (!a0);
+
+				// The screen memory is in the first possible position...
+				_SCREENC1RAM	-> setActive (true);
+				_SCREENC1RAMUC	-> setActive (false);
+				_SCREENC2RAM	-> setActive (false);
+				_SCREENC2RAMUC  -> setActive (true);
+			}
+
+			break;
+
+		case VIC20::Memory::Configuration::_11KEXPANSION:
+			{
+				// The first two banks are active...
+				_BANK0			-> setActive (true);		// 3k more...
+				_BANK0UC		-> setActive (false);
+				_BANK1			-> setActive (true);		// 8k.
+				_BANK1UC		-> setActive (false);
+				_BANK2			-> setActive (false);
+				_BANK2UC		-> setActive (true);
+				_BANK3			-> setActive (false);
+				_BANK3UC		-> setActive (true);
+				_BANK5			-> setActive (a0);
+				_BANK5UC		-> setActive (!a0);
+
+				// The screen memory is in the first possible position...
+				_SCREENC1RAM	-> setActive (true);
+				_SCREENC1RAMUC	-> setActive (false);
+				_SCREENC2RAM	-> setActive (false);
+				_SCREENC2RAMUC  -> setActive (true);
+			}
+
+			break;
+
+		case VIC20::Memory::Configuration::_19KEXPANSION:
+			{
+				// 3 banks are active...
+				_BANK0			-> setActive (true);		// 3k more...
+				_BANK0UC		-> setActive (false);
+				_BANK1			-> setActive (true);		// 8k.
+				_BANK1UC		-> setActive (false);
+				_BANK2			-> setActive (true);		// 8k.
+				_BANK2UC		-> setActive (false);
+				_BANK3			-> setActive (false);
+				_BANK3UC		-> setActive (true);
+				_BANK5			-> setActive (a0);
+				_BANK5UC		-> setActive (!a0);
+
+				// The screen memory is in the first possible position...
+				_SCREENC1RAM	-> setActive (true);
+				_SCREENC1RAMUC	-> setActive (false);
+				_SCREENC2RAM	-> setActive (false);
+				_SCREENC2RAMUC  -> setActive (true);
+			}
+
+			break;
+
+		case VIC20::Memory::Configuration::_27KEXPANSION:
+			{
+				// The main 4 bank area actve...
+				_BANK0			-> setActive (true);		// 3k more...
 				_BANK0UC		-> setActive (false);
 				_BANK1			-> setActive (true);		// 8k.
 				_BANK1UC		-> setActive (false);
@@ -259,7 +325,6 @@ void VIC20::Memory::setConfiguration (VIC20::Memory::Configuration cfg, bool a0)
 				_BANK2UC		-> setActive (false);
 				_BANK3			-> setActive (true);		// 8k.
 				_BANK3UC		-> setActive (false);
-
 				_BANK5			-> setActive (a0);
 				_BANK5UC		-> setActive (!a0);
 
@@ -442,6 +507,34 @@ MCHEmul::Memory::Content VIC20::Memory::standardMemoryContent ()
 	// Kernel ROM
 	MCHEmul::PhysicalStorageSubset* KernelROM = new MCHEmul::PhysicalStorageSubset 
 		(_KERNELROM_SUBSET, KERNELROM, 0x0000, MCHEmul::Address ({ 0x00, 0xe0 }, false), 0x2000);
+
+	// To set the names of the different memory zones...
+	PageZero			-> setName ("Page Zero");
+	Stack				-> setName ("Stack");
+	Page2And3			-> setName ("Page 2 & 3");
+	BANK0				-> setName ("Bank 0");
+	BANK0_UC			-> setName ("Bank 0 Empty");
+	BANK1				-> setName ("Bank 1");
+	BANK1_UC			-> setName ("Bank 1 Empty");
+	BANK2				-> setName ("Bank 2");
+	BANK2_UC			-> setName ("Bank 2 Empty");
+	BANK3				-> setName ("Bank 3");
+	BANK3_UC			-> setName ("Bank 3 Empty");
+	CharROM				-> setName ("Character ROM");
+	VICIRegisters		-> setName ("VICI Registers");
+	VICIRegisters_After	-> setName ("VICI Registers After");
+	VIA1Registers		-> setName ("VIA1 Registers");
+	VIA2Registers		-> setName ("VIA2 Registers");
+	VIARegisters_After	-> setName ("VIA Registers After");
+	SCREENC1RAM			-> setName ("Screen 1");
+	SCREENC1RAM_UC		-> setName ("Screen 1 Empty");
+	SCREENC2RAM			-> setName ("Screen 2");
+	SCREENC2RAM_UC		-> setName ("Screen 2 Empty");
+	BANK4				-> setName ("Bank 4");
+	BANK5				-> setName ("Bank 5");
+	BANK5_UC			-> setName ("Bank 5 Empty");
+	BasicROM			-> setName ("Basic ROM");
+	KernelROM			-> setName ("Kernel ROM");
 
 	// A map with all the subsets possible...
 	MCHEmul::PhysicalStorageSubsets allsubsets (

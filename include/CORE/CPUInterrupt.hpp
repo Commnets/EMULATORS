@@ -20,6 +20,7 @@
 namespace MCHEmul
 {
 	class CPU;
+	class Chip;
 	class Computer;
 
 	/** A CPU Interrupt is something that is able to stop the normal progress of the CPU execution. \n
@@ -175,6 +176,174 @@ namespace MCHEmul
 	using CPUInterrupts = std::map <int, CPUInterrupt*>;
 	/** A list of instructions. */
 	using CPUListOfInterrupts = std::vector <CPUInterrupt*>;
+
+	/** When a is requested from any point in the system, 
+		this class must be used. \n
+		Every request has an id that is assigned automatically every time a new object is created. */
+	class CPUInterruptRequest final
+	{
+		public:
+		/** This static const member is to refer to a "no" interrupt request. 
+			It is usually used when the queue of pendings-requests is empty. */
+		static const CPUInterruptRequest _NOINTREQUEST;
+
+		CPUInterruptRequest ()
+			: _number (_COUNTER++),
+			  _type (-1) /** like _NOINTREQUEST. */, _cycles (0), _from (nullptr), _reason (0)
+							{ }
+
+		CPUInterruptRequest (int t, unsigned int c, Chip* f, int r)
+			: _number (_COUNTER++),
+			  _type (t), _cycles (c), _from (f), _reason (r)
+							{ }
+
+		unsigned long number () const
+							{ return (_number); }
+		int type () const
+							{ return (_type); }
+		unsigned int cycles () const
+							{ return (_cycles); }
+		const Chip* from () const
+							{ return (_from); }
+		Chip* from ()
+							{ return (_from); }
+		int reason () const
+							{ return (_reason); }
+
+		std::string toString () const;
+
+		friend std::ostream& operator << (std::ostream& o, const CPUInterruptRequest& iR)
+						{ return (o << iR.toString ()); }
+
+		private:
+		unsigned long _number; // Asigned automatically...
+		/** Type. */
+		int _type;
+		/** The machine cycles (if possible to know) at the moment the interrupt was requested. */
+		unsigned int _cycles;
+		/** Who is launching the request? */
+		Chip* _from;
+		/** Reason to invoke it. */
+		int _reason;
+
+		// Implementation
+		static unsigned long _COUNTER;
+	};
+
+	// To simplify the use of a list of requests...
+	using CPUInterruptRequests = std::vector <CPUInterruptRequest>;
+
+	/** This class is to manage how the interrupts are or not accepted by the CPU,
+		and it is made up initially of a list of all possible type of Interrupts defined for a processor. */
+	class CPUInterruptSystem : public InfoClass
+	{
+		public:
+		CPUInterruptSystem (const CPUInterrupts& irr);
+
+		~CPUInterruptSystem ();
+
+		// Managing interrupts...
+		/** Adding, removing or getting interrupts. */
+		const CPUInterrupts& interrupts () const
+							{ return (_interrupts); }
+		bool existsInterrupt (int id) const
+							{ return (_interrupts.find (id) != _interrupts.end ()); }
+		const CPUInterrupt* interrupt (int id) const
+							{ return ((*_interrupts.find (id)).second); }
+		CPUInterrupt* interrupt (int id)
+							{ return ((*_interrupts.find (id)).second); }
+		void addInterrupt (CPUInterrupt* in);
+		void removeInterrrupt (int id);
+
+		// Managing the requests of interrutps...
+		/** To request an interrupt. \n
+			It receives the id of the interrupt requested, the clockCycle status when it happened,
+			the sender (optional), and a code indicating the reason (also optional, -1 = not defined). */
+		void requestInterrupt (int id, unsigned int nC, Chip* src = nullptr, int cR = -1)
+							{ requestInterrupt (CPUInterruptRequest ({ id, nC, src, cR })); }
+		/** Important method: \n
+			Same than previous, but receiving a CPUInterruptRequest as parameter. \n
+			This is the one that can be overloaded. \n
+			To accept or not a interrupt to be processed will actually depend on many aspect but mainly on the type of CPU (@see CPU) */
+		virtual bool requestInterrupt (const CPUInterruptRequest& iR) = 0;
+		/** To know whether the interrupt requests pending. \n
+			Empty list if none. */
+		const CPUInterruptRequests& interruptsRequested () const
+							{ return (_interruptsRequested); }
+		/** Important method:\n
+			To get the next interrupt in the list of those to be processed. \n 
+			The way the interrupt is choosen can be changed also by the user. */
+		virtual const CPUInterruptRequest& getNextInterruptRequest () const = 0;
+		inline const CPUInterrupt* getNextInterrupt () const;
+		CPUInterrupt* getNextInterrupt ()
+							{ return (const_cast <CPUInterrupt*> 
+								((const_cast <const CPUInterruptSystem*> (this)) -> getNextInterrupt ())); }
+		// Be carefull with the two following method. No boundary check is done
+		// so the consequences could be a crash!
+		const CPUInterrupt* getInterruptForRequest (const CPUInterruptRequest& iR) const
+							{ return (_rowInterrupts [iR.type ()]); }
+		CPUInterrupt* getInterruptForRequest (const CPUInterruptRequest& iR)
+							{ return (_rowInterrupts [iR.type ()]); }
+		/** Once a interrupt is processed it has to be removed from the list of pendings ones. */
+		void removeInterruptRequest (const CPUInterruptRequest& iR)
+							{ _interruptsRequested.erase (std::find_if (_interruptsRequested.begin (), _interruptsRequested.end (), 
+								[&](const CPUInterruptRequest& i) -> bool { return (i.number () == iR.number ()); })); }
+
+		/** Invoked to initialize the system.
+			By default the requests pending are cleared. */
+		virtual void initialize () 
+							{ _interruptsRequested = { }; }
+
+		virtual InfoStructure getInfoStructure () const override;
+
+		protected:
+		/** To make a row data with the interruptions. \n
+			This method is called from the constructor and instantiate the variable _rowInterrupts,
+			and also at any time an interrupt is added or removed. */
+		void makeInterruptionRowData ();
+
+		protected:
+		CPUInterrupts _interrupts;
+		/** When the CPU is executing a transaction, and a interruption is requested,
+			the current instruction has to finish first, and the the interruption is invoked. \n
+			It the CPU were stopped, first of all the CPU would have to run back 
+			and then finish the instruction that could be running when it was stopped. \n
+			The parameter has the id of the interrupt requested. -1 means none. */
+		CPUInterruptRequests _interruptsRequested;
+
+		// Implementation
+		/** Also a row vector with the interruptions. */
+		CPUListOfInterrupts _rowInterrupts;
+	};
+
+	// ---
+	inline const CPUInterrupt* CPUInterruptSystem::getNextInterrupt () const
+	{
+		const CPUInterruptRequest& iR = getNextInterruptRequest ();
+		return ((iR.type () == CPUInterruptRequest::_NOINTREQUEST.type ())
+			? nullptr 
+			: _rowInterrupts [iR.type ()]);
+	}
+
+	/** The standard CPU Interrupt System. \n
+		Valid for most of the CPU types implemented in the frameowrk. */
+	class StandardCPUInterruptSystem : public CPUInterruptSystem
+	{
+		public:
+		// The name of the class is not changed because there is no more additional 
+		// info to show than the one that is shown at parent level
+		StandardCPUInterruptSystem (const CPUInterrupts& irr)
+			: CPUInterruptSystem (irr)
+							{ /** Nothing else... */ }
+		
+		/** The pending-requests queue admits only one request at the same time with the same priority.
+			If the requested one had majot priority it would be added at the top of the pending-requests list. */
+		virtual bool requestInterrupt (const CPUInterruptRequest& iR) override;
+		/** It returns the first one in the queue. */
+		virtual const CPUInterruptRequest& getNextInterruptRequest () const override
+							{ return (_interruptsRequested.empty () 
+								? CPUInterruptRequest::_NOINTREQUEST : *_interruptsRequested.begin ()); }
+	};
 }
 
 #endif

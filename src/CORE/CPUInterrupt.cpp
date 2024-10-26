@@ -7,6 +7,10 @@ std::string MCHEmul::CPUInterrupt::_debugFileName = "";
 bool MCHEmul::CPUInterrupt::_addDebugInfo = true; // Adding info by default...
 MCHEmul::Computer* MCHEmul::CPUInterrupt::_computer = nullptr;
 bool MCHEmul::CPUInterrupt::_debugOffWhenFinishes = false;
+unsigned long MCHEmul::CPUInterruptRequest::_COUNTER = 0;
+// Only the first parameter cares...the rest don't!
+const MCHEmul::CPUInterruptRequest MCHEmul::CPUInterruptRequest::_NOINTREQUEST = 
+	{ -1 /** not use this id ever for a real transaction type */, 0, nullptr, -1 }; 
 
 // ---
 void MCHEmul::CPUInterrupt::setInExecution (bool i)
@@ -147,4 +151,106 @@ bool MCHEmul::CPUInterrupt::desactivateDebug (MCHEmul::Computer* c)
 	}
 
 	return (true);
+}
+
+std::string MCHEmul::CPUInterruptRequest::toString () const
+{ 
+	return (std::to_string (_type)
+		+ " from:" + ((_from == nullptr) ? "-" : std::to_string (_from -> id ())) 
+		+ " reason:" + std::to_string (_reason));
+}
+
+// ---
+MCHEmul::CPUInterruptSystem::CPUInterruptSystem (const MCHEmul::CPUInterrupts& irr)
+	: MCHEmul::InfoClass ("CPUInterruptSystem"),
+	  _interrupts (irr),
+	  _rowInterrupts ()
+{ 
+	makeInterruptionRowData (); 
+}
+
+// --
+MCHEmul::CPUInterruptSystem::~CPUInterruptSystem ()
+{
+	for (const auto& i : _interrupts)
+		delete (i.second);
+}
+
+// ---
+void MCHEmul::CPUInterruptSystem::addInterrupt (MCHEmul::CPUInterrupt* in)
+{
+	assert (in != nullptr);
+
+	if (_interrupts.find (in -> id ()) != _interrupts.end ())
+		return; // Only one with the the same id...
+
+	_interrupts.insert (MCHEmul::CPUInterrupts::value_type (in -> id (), in));
+
+	makeInterruptionRowData ();
+}
+
+// ---
+void MCHEmul::CPUInterruptSystem::removeInterrrupt (int id)
+{
+	MCHEmul::CPUInterrupts::const_iterator i;
+	if ((i = _interrupts.find (id)) == _interrupts.end ())
+		return;
+
+	_interrupts.erase (i);
+
+	makeInterruptionRowData ();
+}
+
+// ---
+MCHEmul::InfoStructure MCHEmul::CPUInterruptSystem::getInfoStructure () const
+{
+	MCHEmul::InfoStructure result = std::move (MCHEmul::InfoClass::getInfoStructure ());
+
+	MCHEmul::InfoStructure intrr;
+	for (const auto& i : _interrupts)
+		intrr.add (std::to_string (i.second -> id ()), std::move (i.second -> getInfoStructure ()));
+	result.add ("INTERRUPTS", intrr);
+
+	return (result);
+}
+
+// ---
+void MCHEmul::CPUInterruptSystem::makeInterruptionRowData ()
+{
+	_rowInterrupts.clear ();
+
+	// Put the interruptions in an array to speed up things later...
+	_rowInterrupts = MCHEmul::CPUListOfInterrupts
+		((*_interrupts.rbegin ()).second -> id () + 1 /** the last code plus 1. */, nullptr);
+	for (const auto& i : _interrupts)
+	{	
+		// Just to be sure that the boundaries of the list are overlapped...
+		assert ((size_t) i.second -> id () < _rowInterrupts.size ());
+		_rowInterrupts [i.second -> id ()] = i.second;
+	}
+}
+
+// ---
+bool MCHEmul::StandardCPUInterruptSystem::requestInterrupt (const MCHEmul::CPUInterruptRequest& iR)
+{ 
+	// Only one interrupt at the same time...
+	// or with more priority that the one that could be already pending to be processed...
+	bool result = 
+		(_interruptsRequested.empty () || 
+		 (!_interruptsRequested.empty () && 
+			 _rowInterrupts [iR.type ()] -> priority () >
+			 _rowInterrupts [(*_interruptsRequested.begin ()).type ()] -> priority ())) &&
+	// ...and also wether to admit a new interrupt of the same type is possible...
+		_rowInterrupts [iR.type ()] -> admitNewInterruptRequest ();
+
+	if (result)
+	{ 
+		// Insert the new one at the beginning of the vector always...
+		// But if any other interrupt were already in with lower priority it would be maintained...
+		_interruptsRequested.insert (_interruptsRequested.begin (), iR);
+		// The new interrupt has been admittted...
+		_rowInterrupts [iR.type ()] -> setNewInterruptRequestAdmitted (true);
+	}
+
+	return (result);
 }

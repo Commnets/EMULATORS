@@ -51,8 +51,8 @@ bool C64::CIA1::simulate (MCHEmul::CPU* cpu)
 			// Addtional Data
 			<< "Keys:[" 
 			<< _CIA1Registers -> keyboardMatrixAsString ()
-			<< "] -> P:" << _lastKeyPressed << ",R:" << _lastKeyReleased
-			<< "\n\t\t\t\t\t\t\t\t\tJoys: [" 
+			<< "] -> P:" << _lastKeyPressed << ",R:" << _lastKeyReleased << " "
+			<< "Joys: [" 
 			<< _CIA1Registers -> joystickStatusAsString () << "]\n";
 
 	return (result);

@@ -23,7 +23,7 @@ namespace FZ80
 	class INTInterrupt final : public Interrupt
 	{
 		public:
-		static const unsigned int _ID = 0;
+		static const int _ID = 0;
 
 		INTInterrupt ()
 			: Interrupt (_ID, 0 /** It will decided any time the INTMode is fixed. (@see below) */, 0 /** The lowest priority. */),

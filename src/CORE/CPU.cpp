@@ -4,10 +4,6 @@
 #include <CORE/Stack.hpp>
 #include <iostream>
 
-// Only the first parameter cares...the rest don't!
-const MCHEmul::CPU::InterruptRequest MCHEmul::CPU::_NOINTREQUEST = 
-	{ -1 /** not use this id ever for a real transaction type */, 0, nullptr, -1 }; 
-
 // ---
 MCHEmul::CPU::CPU (int id, const MCHEmul::CPUArchitecture& a, 
 	const MCHEmul::Registers& r, const MCHEmul::StatusRegister& sR, const MCHEmul::Instructions& ins,
@@ -20,8 +16,8 @@ MCHEmul::CPU::CPU (int id, const MCHEmul::CPUArchitecture& a,
 	  _instructions (ins),
 	  _programCounter (a.numberBytes ()), 
 	  _memory (nullptr), 
-	  _interrupts (),
 	  _hooks (),
+	  _interruptSystem (nullptr),
 	  // When neither buses nor wires are used, these variable must be set from instruction execution!
 	  _lastINOUTAddress (), _lastINOUTData (),
 	  // Info while running!
@@ -32,13 +28,14 @@ MCHEmul::CPU::CPU (int id, const MCHEmul::CPUArchitecture& a,
 	  _deepDebugFile (nullptr),
 	  _error (_NOERROR),
 	  // Only when executing a instruction/interrupt per cycle...
-	  _currentInstruction (nullptr), _currentInterruptRequest (_NOINTREQUEST), 
-	  _currentInterrupt (nullptr), _cyclesPendingExecution (0), 
+	  _currentInstruction (nullptr),
+	  _currentInterruptRequest (CPUInterruptRequest::_NOINTREQUEST), 
+	  _currentInterrupt (nullptr), 
+	  _cyclesPendingExecution (0), 
 	  // When the CPU is stopped...
 	  _typeCycleStopped (0 /** nothing. */), _cyclesStopped (0), _cyclesAtStop (0), _counterCyclesStopped (0),
 	  // For performance reasons...
-	  _rowInstructions (), // It will be fulfilled below!
-	  _rowInterrupts () // Just to be completed using @see makeInterruptionRowData after filling up _interrupts
+	  _rowInstructions () // It will be fulfilled below!
 { 
 	assert (_registers.size () > 0 && _instructions.size () > 0); 
 
@@ -55,11 +52,10 @@ MCHEmul::CPU::~CPU ()
 	for (const auto& i : _instructions)
 		delete (i.second);
 
-	for (const auto& i : _interrupts)
-		delete (i.second);
-
 	for (const auto& i : _hooks)
 		delete (i.second);
+
+	delete (_interruptSystem);
 }
 
 // ---
@@ -131,8 +127,8 @@ bool MCHEmul::CPU::initialize ()
 
 	_programCounter.initialize ();
 
-	for (auto& i : _interrupts)
-		i.second -> initialize ();
+	// The interrupts are loaded here if they didn't before...
+	interruptSystem () -> initialize ();
 
 	_lastINOUTAddress = MCHEmul::Address ();
 	
@@ -146,7 +142,7 @@ bool MCHEmul::CPU::initialize ()
 
 	// When executed per cycle...
 	_currentInterrupt = nullptr;
-	_currentInterruptRequest = MCHEmul::CPU::_NOINTREQUEST;
+	_currentInterruptRequest = MCHEmul::CPUInterruptRequest::_NOINTREQUEST;
 	_currentInstruction = nullptr;
 	_cyclesPendingExecution = 0;
 
@@ -156,59 +152,16 @@ bool MCHEmul::CPU::initialize ()
 	_cyclesStopped = 0;
 	_cyclesAtStop = _counterCyclesStopped = 0;
 
-	_interruptsRequested = { };
-
 	return (true);
 }
 
 // ---
-void MCHEmul::CPU::addInterrupt (MCHEmul::CPUInterrupt* in)
-{
-	assert (in != nullptr);
-
-	if (_interrupts.find (in -> id ()) != _interrupts.end ())
-		return; // Only one with the the same id...
-
-	_interrupts.insert (MCHEmul::CPUInterrupts::value_type (in -> id (), in));
-
-	makeInterruptionRowData ();
-}
-
-// ---
-void MCHEmul::CPU::removeInterrrupt (int id)
-{
-	MCHEmul::CPUInterrupts::const_iterator i;
-	if ((i = _interrupts.find (id)) == _interrupts.end ())
-		return;
-
-	_interrupts.erase (i);
-
-	makeInterruptionRowData ();
-}
-
-// ---
-void MCHEmul::CPU::requestInterrupt (const MCHEmul::CPU::InterruptRequest& iR)
+void MCHEmul::CPU::requestInterrupt (const MCHEmul::CPUInterruptRequest& iR)
 { 
-	// Only one interrupt at the same time...
-	// or with more priority that the one that could be already pending to be processed...
-	if ((_interruptsRequested.empty () || 
-		 (!_interruptsRequested.empty () && 
-			 _rowInterrupts [iR._type] -> priority () > 
-			 _rowInterrupts [(*_interruptsRequested.begin ())._type] -> priority ())) &&
-	// ...and also wether to admit a new interrupt of the same type is possible...
-		_rowInterrupts [iR._type] -> admitNewInterruptRequest ()) 
-	{ 
-		// Insert the new one at the beginning of the vector always...
-		// But if any other interrupt were already in with lower priority it would be maintained...
-		_interruptsRequested.insert (_interruptsRequested.begin (), iR);
-
-		// The new interrupt has been admittted...
-		_rowInterrupts [iR._type] -> setNewInterruptRequestAdmitted (true);
-
-		if (deepDebugActive ())
-			*_deepDebugFile << "\t\t\t\t\tInterrupt CPU requested:" 
-							<< iR.toString () << "\n";
-	} 
+	if (interruptSystem () -> requestInterrupt (iR) &&
+		deepDebugActive ())
+		*_deepDebugFile << "\t\t\t\t\tInterrupt CPU requested:" 
+						<< iR.toString () << "\n";
 }
 
 // ---
@@ -242,11 +195,7 @@ MCHEmul::InfoStructure MCHEmul::CPU::getInfoStructure () const
 {
 	MCHEmul::InfoStructure result = std::move (MCHEmul::MotherboardElement::getInfoStructure ());
 
-	MCHEmul::InfoStructure intr;
-	for (const auto& i : _interrupts)
-		intr.add (std::to_string (i.second -> id ()), std::move (i.second -> getInfoStructure ()));
-	result.add ("INTERRUPTS", std::move (intr));
-
+	result.add ("CPUInterruptSystem", std::move (interruptSystem () -> getInfoStructure ()));
 	result.add ("Architecture", std::move (_architecture.getInfoStructure ()));
 
 	MCHEmul::InfoStructure regs;
@@ -259,18 +208,6 @@ MCHEmul::InfoStructure MCHEmul::CPU::getInfoStructure () const
 	result.add ("CLK", std::move (std::to_string (_clockCycles)));
 
 	return (result);
-}
-
-// ---
-void MCHEmul::CPU::makeInterruptionRowData ()
-{
-	_rowInterrupts.clear ();
-
-	// Put the interruptions in an array to speed up things later...
-	_rowInterrupts = MCHEmul::CPUListOfInterrupts
-		((*_interrupts.rbegin ()).second -> id () + 1 /** the last code plus 1. */, nullptr);
-	for (const auto& i : _interrupts)
-		_rowInterrupts [i.second -> id ()] = i.second;
 }
 
 // ---
@@ -398,13 +335,13 @@ bool MCHEmul::CPU::executeNextInterruptRequest_PerCycle (unsigned int& e)
 				<< std::to_string (_currentInterrupt -> id ()) << "\n";
 
 			if (_currentInterrupt ->
-				executeOver (this, _currentInterruptRequest._cycles /** at the moment if was requested. */))
+				executeOver (this, _currentInterruptRequest.cycles () /** at the moment if was requested. */))
 			{
 				_lastCPUClockCycles += _currentInterrupt -> cycledAfterLaunch (); // Most of the times = 0
 	
 				removeInterruptRequest (_currentInterruptRequest); // Done...
 
-				_currentInterruptRequest = MCHEmul::CPU::_NOINTREQUEST; // ..no longer valid...
+				_currentInterruptRequest = MCHEmul::CPUInterruptRequest::_NOINTREQUEST; // ..no longer valid...
 
 				_currentInterrupt -> initialize (); // Get ready for the next interrupt...
 
@@ -416,14 +353,13 @@ bool MCHEmul::CPU::executeNextInterruptRequest_PerCycle (unsigned int& e)
 	}
 	else
 	{
-		const MCHEmul::CPU::InterruptRequest& iR = getNextInterruptRequest ();
-		assert (iR._type == -1 || (size_t) iR._type < _rowInterrupts.size ());
-		if (iR._type == -1)
+		const MCHEmul::CPUInterruptRequest& iR = getNextInterruptRequest ();
+		if (iR.type () == CPUInterruptRequest::_NOINTREQUEST.type ())
 			result = false; // not processed, 
 							// but with no errors, maybe time for the instructions...
 		else
 		{
-			switch (iR._type)
+			switch (iR.type ())
 			{
 				case CPUInterrupt::_EXECUTIONNOTALLOWED:
 				{
@@ -462,9 +398,7 @@ bool MCHEmul::CPU::executeNextInterruptRequest_PerCycle (unsigned int& e)
 					// The acknowledge has to be issued!
 					aknowledgeInterrupt ();
 
-					_currentInterruptRequest = iR;
-
-					_currentInterrupt = _rowInterrupts [(size_t) _currentInterruptRequest._type];
+					_currentInterrupt = getInterruptForRequest (_currentInterruptRequest = iR);
 
 					_cyclesPendingExecution = _currentInterrupt -> cyclesToLaunch ();
 		
@@ -490,9 +424,8 @@ bool MCHEmul::CPU::executeNextInterruptRequest_PerCycle (unsigned int& e)
 // ---
 bool MCHEmul::CPU::executeNextInterruptRequest_Full (unsigned int& e)
 {
-	const MCHEmul::CPU::InterruptRequest& iR = getNextInterruptRequest ();
-	assert (iR._type == -1 || (size_t) iR._type < _rowInterrupts.size ());
-	if (iR._type == -1)
+	const MCHEmul::CPUInterruptRequest& iR = getNextInterruptRequest ();
+	if (iR.type () == CPUInterruptRequest::_NOINTREQUEST.type ())
 		return (false); // not executed, it might by time for the instruction...
 
 	// Notice that _currentInterrupt is not used but i instead (on purpose!)...
@@ -501,8 +434,8 @@ bool MCHEmul::CPU::executeNextInterruptRequest_Full (unsigned int& e)
 	// To indicate whether the transaction is executed or not...
 	// Nothing to do with the value of the variable e (error), received as a reference!
 	bool result = true; // ...executed if nothing is said against later...
-	MCHEmul::CPUInterrupt* i = _rowInterrupts [iR._type];
-	switch (i -> canBeExecutedOver (this, iR._cycles))
+	MCHEmul::CPUInterrupt* i = getInterruptForRequest (iR);
+	switch (i -> canBeExecutedOver (this, iR.cycles ()))
 	{
 		// The interrupt can not be executed...
 		case CPUInterrupt::_EXECUTIONNOTALLOWED:
@@ -546,7 +479,7 @@ bool MCHEmul::CPU::executeNextInterruptRequest_Full (unsigned int& e)
 			aknowledgeInterrupt ();
 
 			_lastCPUClockCycles = i -> cyclesToLaunch ();
-			if (i -> executeOver (this, iR._cycles)) // Thismethod returns true when ok, and false with errors...
+			if (i -> executeOver (this, iR.cycles ())) // Thismethod returns true when ok, and false with errors...
 				_lastCPUClockCycles += i -> cycledAfterLaunch ();
 			else
 				_error = MCHEmul::_INTERRUPT_ERROR; // and error happended...
@@ -686,9 +619,6 @@ bool MCHEmul::CPU::executeNextInstruction_PerCycle (unsigned int& e)
 // ---
 bool MCHEmul::CPU::executeNextInstruction_Full (unsigned int &e)
 {
-	if (_currentInterrupt != nullptr)
-		return (false); // The interrupt has priority...
-
 	assert (_memory != nullptr);
 
 	// By default, 

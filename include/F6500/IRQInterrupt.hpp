@@ -23,7 +23,7 @@ namespace F6500
 	class IRQInterrupt final : public Interrupt
 	{
 		public:
-		static const unsigned int _ID = 0;
+		static const int _ID = 0;
 
 		IRQInterrupt ()
 			: Interrupt (_ID, 0) // The lowest priority...

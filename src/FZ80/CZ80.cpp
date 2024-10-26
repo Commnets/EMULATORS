@@ -1,7 +1,5 @@
 #include <FZ80/CZ80.hpp>
 #include <FZ80/Instructions.hpp>
-#include <FZ80/INTInterrupt.hpp>
-#include <FZ80/NMIInterrupt.hpp>
 
 const std::string FZ80::CZ80::_CARRYFLAGNAME = "C";
 const std::string FZ80::CZ80::_NEGATIVEFLAGNAME = "N";
@@ -50,10 +48,6 @@ FZ80::CZ80::CZ80 (int id, const Z80PortsMap& pts,
 {
 	// The reference to the memory has not set still here...
 	// It is linked to the CPU at computer (class) level!
-
-	//This type of CPU admites two types of interruptions...
-	addInterrupt (new FZ80::INTInterrupt);
-	addInterrupt (new FZ80::NMIInterrupt);
 
 	assignPorts (pts);
 }
