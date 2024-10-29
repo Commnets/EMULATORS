@@ -59,6 +59,14 @@ namespace C64
 		private:
 		virtual void processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifier* n) override;
 
+		// -----
+		// Different debug methods to simplify the internal code
+		// and to make simplier the modification in case it is needed...
+		/** Debug special situations...
+			Take care using this instructions _deepDebugFile could be == nullptr... */
+		void debugCIA1Cycle ();
+		// -----
+
 		private:
 		C64::CIA1Registers* _CIA1Registers;
 		/** The SID linked. */

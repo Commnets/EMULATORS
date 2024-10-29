@@ -74,6 +74,14 @@ namespace COMMODORE
 		protected:
 		virtual void processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifier* n) override;
 
+		// -----
+		// Different debug methods to simplify the internal code
+		// and to make simplier the modification in case it is needed...
+		/** Debug special situations...
+			Take care using this instructions _deepDebugFile could be == nullptr... */
+		void debugCIACycle (MCHEmul::CPU* cpu, unsigned int i);
+		// -----
+
 		protected:
 		const int _registersId;
 		CIARegisters* _CIARegisters;

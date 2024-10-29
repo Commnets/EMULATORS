@@ -39,21 +39,7 @@ bool C64::CIA1::simulate (MCHEmul::CPU* cpu)
 {
 	bool result = COMMODORE::CIA::simulate (cpu);
 
-	// Additional data when debugging...
-	if (deepDebugActive ())
-		*_deepDebugFile
-			// Where
-			<< "CIA" << std::to_string (id ()) << "\t" 
-			// When
-			<< std::to_string (_lastClockCycles) << "\t" // clock cycles at that point
-			// What
-			<< "Info cycle\t\t"
-			// Addtional Data
-			<< "Keys:[" 
-			<< _CIA1Registers -> keyboardMatrixAsString ()
-			<< "] -> P:" << _lastKeyPressed << ",R:" << _lastKeyReleased << " "
-			<< "Joys: [" 
-			<< _CIA1Registers -> joystickStatusAsString () << "]\n";
+	_IFDEBUG debugCIA1Cycle ();
 
 	return (result);
 }
@@ -174,4 +160,17 @@ void C64::CIA1::processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifier* n)
 		default:
 			break;
 	}
+}
+
+// ---
+void C64::CIA1::debugCIA1Cycle ()
+{
+	assert (_deepDebugFile != nullptr);
+
+	_deepDebugFile -> writeCompleteLine ("CIA", _lastClockCycles, "InfoCycle",
+		{ { "Key matrix", 
+			_CIA1Registers -> keyboardMatrixAsString () + " [P:" +
+			_lastKeyPressed + ",R:" + _lastKeyReleased + "]" },
+		  { "Joystick registers", 
+			_CIA1Registers -> joystickStatusAsString () } });
 }

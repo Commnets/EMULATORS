@@ -58,7 +58,7 @@ namespace MCHEmul
 	  * The method to execute one instruction is: executeNextCycle (@see method executeNextCycle), 
 	  * than can be overlaoded (@see method).
 	  */
-	class CPU : public MotherboardElement, public Notifier
+	class CPU : public MotherboardElement, public Notifier, public DebugableClass
 	{
 		public:
 		/** Structure for notification.
@@ -263,7 +263,9 @@ namespace MCHEmul
 		// This block delegates everything in the interrupt system acting as a Facade design pattern...
 		void requestInterrupt (int id, unsigned int nC, Chip* src = nullptr, int cR = -1)
 							{ requestInterrupt (CPUInterruptRequest (id, nC, src, cR)); }
-		void requestInterrupt (const CPUInterruptRequest& iR);
+		void requestInterrupt (const CPUInterruptRequest& iR)
+							{ if (interruptSystem () -> requestInterrupt (iR)) 
+								_IFDEBUG debugInterruptRequest (iR); }
 		const CPUInterruptRequests& interruptsRequested () const
 							{ return (interruptSystem () -> interruptsRequested ()); }
 		const CPUInterruptRequest& getNextInterruptRequest ()
@@ -325,17 +327,6 @@ namespace MCHEmul
 		  */
 		virtual InfoStructure getInfoStructure () const override;
 
-		/** Manages the deep debug file. \n
-			Take care: it can be set back to a nullptr. */
-		bool deepDebugActive () const
-							{ return (_deepDebugFile != nullptr && _deepDebugFile -> active ()); }
-		void setDeepDebugFile (DebugFile* dF)
-							{ _deepDebugFile = dF; }
-		const DebugFile* deepDebugFile () const
-							{ return (_deepDebugFile); }
-		DebugFile* deepDebugFile ()
-							{ return (_deepDebugFile); }
-
 		protected:
 		// Internal methods to simplify the comprension of the code.
 		// However they can be overloaded...
@@ -395,6 +386,27 @@ namespace MCHEmul
 			It must be redefined depeing on the type of CPU. */
 		virtual CPUInterruptSystem* createInterruptSystem () const = 0;
 
+		private:
+		// -----
+		// Different debug methods to simplify the internal code
+		// and to make simplier the modification in case it is needed...
+		/** Debug special situations...
+			Take care using this instructions _deepDebugFile could be == nullptr... */
+		void debugStopRequest (unsigned int tC, int nC) const; // tC = type of stop cycles, nC = number cycles to stop (== -1 forever)
+		void debugInterruptRequest (const CPUInterruptRequest& iR) const;
+		void debugLastExecutionData () const; // Using information in _lastInstruction...
+		void debugStopSituation () const; // Using information in CPU abour stop situation (@see below)
+		void debugInterruptLaunched () const; // Using the information in _currentInterrupt...
+		void debugInterruptFails () const; // Using the information in _currentInterrupt...
+		void debugInterruptRequestNotAllowed (const CPUInterruptRequest& iR) const;
+		void debugInterruptRequestToWait (const CPUInterruptRequest& iR) const;
+		void debugInstructionFails () const; // Using the information in _currentInstruction...
+		void debugInstructionExecuted (const std::string& sdd) const; // ...plus then info in _currentInstruction...
+		void debugInstructionWaiting () const; // Using the information in _currentInstruction...
+		void debugInstructionNoExists (unsigned int nI);
+		void debugHookInfo (CPUHook* hk);
+		// -----
+
 		protected:
 		const CPUArchitecture _architecture = 
 			CPUArchitecture (2 /** 2 bytes arch. */, 1 /** 1 byte for instruction. */); // Adjusted at construction level
@@ -424,9 +436,6 @@ namespace MCHEmul
 		unsigned int _lastCPUClockCycles;
 		/** The last state. */
 		unsigned int _lastState;
-
-		// To manage the debug info...
-		DebugFile* _deepDebugFile;
 
 		// Implementation
 		unsigned int _error;
@@ -483,11 +492,11 @@ namespace MCHEmul
 	}
 
 	// ---
-	inline MCHEmul::CPUHook* CPU::executeHookIfAny ()
+	inline CPUHook* CPU::executeHookIfAny ()
 	{
-		MCHEmul::CPUHook* result = nullptr;
+		CPUHook* result = nullptr;
 
-		MCHEmul::CPUHooks::const_iterator i = 
+		CPUHooks::const_iterator i = 
 			_hooks.find (_programCounter.internalRepresentation ());
 		if (i != _hooks.end ())
 			(result = (*i).second) -> hook (this);

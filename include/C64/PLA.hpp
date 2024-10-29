@@ -52,6 +52,14 @@ namespace C64
 		bool statusAffected () const
 							{ bool r = _statusAffected; _statusAffected = false; return (r); }
 
+		// -----
+		// Different debug methods to simplify the internal code
+		// and to make simplier the modification in case it is needed...
+		/** Debug special situations...
+			Take care using this instructions _deepDebugFile could be == nullptr... */
+		void debugPLACycle (MCHEmul::CPU* cpu);
+		// -----
+
 		private:
 		// Inputs to the PLA...
 		/** From the C64 IO Port (Byte 0x011m bites 0,1,2). */

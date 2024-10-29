@@ -250,20 +250,12 @@ void MCHEmul::SetMemoryCommand::execute ()
 { 
 	if (_subset -> deepDebugActive ())
 	{
-		*_subset -> _deepDebugFile
-			// Where
-			<< (_subset -> name ().length () > 8
-				? _subset -> name ().substr (0, 8) : MCHEmul::fixLenStr (_subset -> name (), 8, false))
-			// When
-			<< "-" << "\t\t\t" // clock cycles at that point
-			// What
-			<< "Applied Set\t\t"
-			// Data
-			<< "Address:$"
-			<< MCHEmul::removeAll0 ((_subset -> initialAddress () + _position).
-				asString (MCHEmul::UByte::OutputFormat::_HEXA, '\0', 2)) << ","
-			<< "Value:$"
-			<< _value.asString (MCHEmul::UByte::OutputFormat::_HEXA, 2) << "\n";
+		_subset -> _deepDebugFile -> writeCompleteLine
+			(_subset -> name (), std::numeric_limits <unsigned int>::max (), 
+				"Applied Set\t\t\t:Address=$" +
+				MCHEmul::removeAll0 ((_subset -> initialAddress () + _position).
+					asString (MCHEmul::UByte::OutputFormat::_HEXA, '\0', 2)) + "," +
+				"Value=$" + _value.asString (MCHEmul::UByte::OutputFormat::_HEXA, 2));
 	}
 
 	_subset -> setValue (_position, _value); 

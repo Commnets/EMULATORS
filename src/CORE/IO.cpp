@@ -13,7 +13,6 @@ MCHEmul::IODevice::IODevice (MCHEmul::IODevice::Type t, int id, const MCHEmul::A
 	  _type (t), 
 	  _chips (), // None by default...
 	  _peripherals (), // None by default...
-	  _deepDebugFile (nullptr),
 	  _error (MCHEmul::_NOERROR)
 {
 	MCHEmul::IODeviceSystem::system () -> add (this);
@@ -144,6 +143,14 @@ MCHEmul::InfoStructure MCHEmul::IODevice::getInfoStructure () const
 	result.add ("IOPERIPHERALS", std::move (pers));
 
 	return (result);
+}
+
+// ---
+void MCHEmul::IODevice::setDeepDebugFile (MCHEmul::DebugFile* dF)
+{ 
+	_deepDebugFile = dF;
+	for (const auto& i : _peripherals) // It is transmited to the peripherals connected!...
+		i.second -> setDeepDebugFile (dF);
 }
 
 // ---

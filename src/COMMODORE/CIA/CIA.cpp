@@ -79,31 +79,7 @@ bool COMMODORE::CIA::simulate (MCHEmul::CPU* cpu)
 
 	for (unsigned int i = cpu -> clockCycles () - _lastClockCycles; i > 0; i--)
 	{
-		if (deepDebugActive ())
-			*_deepDebugFile
-				// Where
-				<< "CIA" << std::to_string (id ()) << "\t" 
-				// When
-				<< std::to_string (_lastClockCycles) << "\t" // clock cycles at that point
-				// What
-				<< "Info cycle\t\t"
-				// Data
-				<< "PortA:["
-				<< std::to_string (_CIARegisters -> outputRegisterA ()) << "," 
-				<< std::to_string (_CIARegisters -> dataPortADir ()) << ","
-				<< _CIARegisters -> portA ().asString (MCHEmul::UByte::OutputFormat::_HEXA, 0) << "] "
-				<< "PortB:["
-				<< std::to_string (_CIARegisters -> outputRegisterB ()) << "," 
-				<< std::to_string (_CIARegisters -> dataPortBDir ()) << ","
-				<< _CIARegisters -> portB ().asString (MCHEmul::UByte::OutputFormat::_HEXA, 0) << "] "
-				<< "TimerA:[" << (_CIARegisters -> _timerA -> enabled () ? "ON" : "OFF") << ","
-				<< std::to_string ((unsigned int) _CIARegisters -> _timerA -> countMode ()) << ","
-				<< std::to_string (_CIARegisters -> _timerA -> initialValue ()) << ","
-				<< std::to_string (_CIARegisters -> _timerA -> currentValue ()) << "] "
-				<< "TimerB:[" << (_CIARegisters -> _timerB -> enabled () ? "ON" : "OFF") << ","
-				<< std::to_string ((unsigned int) _CIARegisters -> _timerB -> countMode ()) << ","
-				<< std::to_string (_CIARegisters -> _timerB -> initialValue ()) << ","
-				<< std::to_string (_CIARegisters -> _timerB -> currentValue ()) << "]\n";
+		_IFDEBUG debugCIACycle (cpu, i);
 
 		// Simulate the Timers...
 		// After that the timer can reach 0
@@ -205,4 +181,30 @@ void COMMODORE::CIA::processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifier
 	else
 	if (evnt.id () == _SPSIGNAL)
 		_serialPort.setSPSignal (evnt.value () == 1);
+}
+
+// ---
+void COMMODORE::CIA::debugCIACycle (MCHEmul::CPU* cpu, unsigned int i)
+{
+	assert (_deepDebugFile != nullptr);
+
+	_deepDebugFile -> writeCompleteLine ("CIA", cpu -> clockCycles () - i, "Info Cycle",
+		{ { "Port A status",
+			std::to_string (_CIARegisters -> outputRegisterA ()) + "," +
+			std::to_string (_CIARegisters -> dataPortADir ()) + "," +
+			_CIARegisters -> portA ().asString (MCHEmul::UByte::OutputFormat::_HEXA, 0) },
+		  { "Port B status",
+			std::to_string (_CIARegisters -> outputRegisterB ()) + "," +
+			std::to_string (_CIARegisters -> dataPortBDir ()) + "," +
+			_CIARegisters -> portB ().asString (MCHEmul::UByte::OutputFormat::_HEXA, 0) },
+		  { "Timer A status",
+			std::string (_CIARegisters -> _timerA -> enabled () ? "ON" : "OFF") + "," +
+			std::to_string ((unsigned int) _CIARegisters -> _timerA -> countMode ()) + "," +
+			std::to_string (_CIARegisters -> _timerA -> initialValue ()) + "," +
+			std::to_string (_CIARegisters -> _timerA -> currentValue ()) },
+		  { "Timer B status",
+			std::string (_CIARegisters -> _timerB -> enabled () ? "ON" : "OFF") + "," +
+			std::to_string ((unsigned int) _CIARegisters -> _timerB -> countMode ()) + "," +
+			std::to_string (_CIARegisters -> _timerB -> initialValue ()) + "," +
+			std::to_string (_CIARegisters -> _timerB -> currentValue ()) } });
 }

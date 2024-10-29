@@ -413,7 +413,7 @@ bool MCHEmul::Computer::runComputerCycle (unsigned int a)
 
 	// Every cycle is separated with a +....
 	if (deepDebug ())
-		_deepDebug << "+\n";
+		_deepDebug.writeSimpleLine ("+");
 
 	return (true);
 }

@@ -28,7 +28,7 @@ namespace MCHEmul
 		For some IODevices the number and type (and manufacturers) of elements that can be connected might be wide and different. \n
 		And the simulation of each can even be very different. \n
 		This is the reason to represent them in a separate class. */
-	class IOPeripheral : public InfoClass
+	class IOPeripheral : public InfoClass, public DebugableClass
 	{
 		public:
 		friend IODevice;
@@ -37,8 +37,7 @@ namespace MCHEmul
 
 		IOPeripheral (int id, const Attributes& attrs = { })
 			: InfoClass ("IOPeripheral"),
-			  _id (id), _attributes (attrs), _device (nullptr), /** Set when attached. */
-			  _deepDebugFile (nullptr)
+			  _id (id), _attributes (attrs), _device (nullptr) /** Set when attached. */
 							{ }
 
 		IOPeripheral (const IOPeripheral&) = delete;
@@ -110,25 +109,11 @@ namespace MCHEmul
 		friend std::ostream& operator << (std::ostream& o, const IOPeripheral& d)
 							{ return (o << (*(dynamic_cast <const InfoClass*> (&d)))); }
 
-		/** Manages the deep debug file. \n
-			Take care it can be set back to a nullptr. */
-		bool deepDebugActive () const
-							{ return (_deepDebugFile != nullptr && _deepDebugFile -> active ()); }
-		void setDeepDebugFile (DebugFile* dF)
-							{ _deepDebugFile = dF; }
-		const DebugFile* deepDebugFile () const
-							{ return (_deepDebugFile); }
-		DebugFile* deepDebugFile ()
-							{ return (_deepDebugFile); }
-
 		protected:
 		const int _id; // Adjusted at construction level
 		const Attributes _attributes = { }; // Maybe modified at construction level
 		/** Accesed from IODevice when a peripherial is added! */
 		IODevice* _device;
-
-		// To manage the debug info...
-		DebugFile* _deepDebugFile;
 	};
 
 	/** To simplify the management of a set of peripherals. */

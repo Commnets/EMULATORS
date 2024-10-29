@@ -32,7 +32,7 @@ namespace MCHEmul
 	  * The right way to create the relations among them is the method "linkChips" that is invoked in
 	  * the constructor of the computer (@see Computer) when all elements involved are received as parameter.
 	  */
-	class IODevice : public MotherboardElement, public Notifier
+	class IODevice : public MotherboardElement, public Notifier, public DebugableClass
 	{
 		public:
 		enum class Type 
@@ -111,23 +111,12 @@ namespace MCHEmul
 		friend std::ostream& operator << (std::ostream& o, const IODevice& d)
 							{ return (o << (*(dynamic_cast <const InfoClass*> (&d)))); }
 
-		/** Manages the deep debug file. \n
-			Take care it can be set back to a nullptr. */
-		bool deepDebugActive () const
-							{ return (_deepDebugFile != nullptr && _deepDebugFile -> active ()); }
-		inline void setDeepDebugFile (DebugFile* dF);
-		const DebugFile* deepDebugFile () const
-							{ return (_deepDebugFile); }
-		DebugFile* deepDebugFile ()
-							{ return (_deepDebugFile); }
+		virtual void setDeepDebugFile (DebugFile* dF) override;
 
 		protected:
 		const Type _type; // Modified at constrution level
 		Chips _chips; // linked when computer instance is built!
 		IOPeripherals _peripherals;
-
-		// To manage the debug info...
-		DebugFile* _deepDebugFile;
 
 		// Implementation
 		mutable unsigned int _error;
@@ -135,14 +124,6 @@ namespace MCHEmul
 
 	/** To simplify the management of a list of devices. */
 	using IODevices = std::map <int, IODevice*>;
-
-	// ---
-	inline void IODevice::setDeepDebugFile (DebugFile* dF)
-	{ 
-		_deepDebugFile = dF;
-		for (const auto& i : _peripherals) // It is transmited to the peripherals connected!...
-			i.second -> setDeepDebugFile (dF);
-	}
 
 	/** All devices must be managed under a common system. \n
 		That system has to be initialized. \n

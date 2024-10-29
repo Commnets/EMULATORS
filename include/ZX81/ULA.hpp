@@ -170,6 +170,14 @@ namespace ZX81
 		/** Read and draw the graphics. */
 		void readGraphicsAndDrawVisibleZone (MCHEmul::CPU* cpu);
 
+		// -----
+		// Different debug methods to simplify the internal code
+		// and to make simplier the modification in case it is needed...
+		/** Debug special situations...
+			Take care using this instructions _deepDebugFile could be == nullptr... */
+		void debugULACycle (MCHEmul::CPU* cpu, unsigned int i);
+		// -----
+
 		protected:
 		/** A reference to the ULA registers. */
 		ULARegisters* _ULARegisters;

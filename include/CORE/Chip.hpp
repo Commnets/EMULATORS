@@ -28,13 +28,12 @@ namespace MCHEmul
 		All chips are set with the full memory accesible when the computer is initialized,
 		unless something specific is said initializing the chip itself!. \n
 		The chip is able to notify event to other element subscribed or receive event from tehm. */
-	class Chip : public MotherboardElement, public Notifier
+	class Chip : public MotherboardElement, public Notifier, public DebugableClass
 	{
 		public:
 		Chip (int id, const Attributes& attrs = { })
 			: MotherboardElement (id, "Chip", attrs),
 			  _memory (nullptr),
-			  _deepDebugFile (nullptr),
 			  _error (_NOERROR) // Memory accessed can be null, take care...
 							{ }
 
@@ -85,22 +84,8 @@ namespace MCHEmul
 		  */
 		virtual InfoStructure getInfoStructure () const override;
 
-		/** Manages the deep debug file. \n
-			Take care it can be set back to a nullptr. */
-		bool deepDebugActive () const
-							{ return (_deepDebugFile != nullptr && _deepDebugFile -> active ()); }
-		void setDeepDebugFile (DebugFile* dF)
-							{ _deepDebugFile = dF; }
-		const DebugFile* deepDebugFile () const
-							{ return (_deepDebugFile); }
-		DebugFile* deepDebugFile ()
-							{ return (_deepDebugFile); }
-
 		protected:
 		Memory* _memory;
-
-		// To manage the debug info...
-		DebugFile* _deepDebugFile;
 
 		// Implementation
 		mutable unsigned int _error;

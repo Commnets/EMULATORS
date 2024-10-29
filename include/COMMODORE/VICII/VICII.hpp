@@ -330,6 +330,24 @@ namespace COMMODORE
 		inline void latchLightPenPosition () const;
 		inline void fixLightPenPosition ();
 
+		// -----
+		// Different debug methods to simplify the internal code
+		// and to make simplier the modification in case it is needed...
+		/** Debug special situations...
+			Take care using this instructions _deepDebugFile could be == nullptr... */
+		void debugDisconnected (MCHEmul::CPU* cpu);
+		void debugVICIICycle (MCHEmul::CPU* cpu, unsigned int i);
+		void debugBadLine ();
+		void debugReadingSpriteInfo (size_t nS);
+		void debugSpriteDrawFinishes (size_t nS);
+		void debugSpriteDrawToStart (size_t nS);
+		void debugReadingVideoMatrix ();
+		void debugReadingGraphics ();
+		void debugVideoNoActiveAt (unsigned short cav);
+		void debugDrawPixelAt (unsigned short cav);
+		void debugDrawSpriteAt (size_t nS, unsigned short x, unsigned short r);
+		// -----
+
 		protected:
 		/** A reference to the color RAM. */
 		MCHEmul::PhysicalStorageSubset* _colorRAM;

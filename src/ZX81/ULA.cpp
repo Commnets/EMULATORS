@@ -82,24 +82,7 @@ bool ZX81::ULA::simulate (MCHEmul::CPU* cpu)
 			((cpu -> clockCycles  () - _lastCPUCycles) << 1 /** ULA cycles = 2 * CPU Cycles. */); 
 			i > 0; i--)
 	{
-		if (MCHEmul::GraphicalChip::deepDebugActive ())
-		{
-			*MCHEmul::GraphicalChip::_deepDebugFile
-				// Where
-				<< "ULA\t\t" 
-				// When
-				<< std::to_string (cpu -> clockCycles () - (i >> 1)) << "\t" // CPU clock cycles at that point
-				// What
-				<< "Info cycle\t\t"
-				// Data
-				<< "Raster:["
-				<< std::to_string (_raster.currentColumnAtBase0 ()) << "," 
-				<< std::to_string (_raster.currentLineAtBase0 ()) 
-				<< "], Internal:["
-				<< (_ULARegisters -> NMIGenerator () ? "NMI_ON" : "NMI_OFF") << ","
-				<< (_ULARegisters -> syncOutputWhite () ? "WHITE" : "BLACK") << ","
-				<< "LNCTRL:" << std::to_string (_ULARegisters -> LINECNTRL ()) << "]\n";
-		}
+		_IFDEBUG debugULACycle (cpu, i);
 
 		if (_showEvents)
 		{
@@ -289,6 +272,21 @@ void ZX81::ULA::readGraphicsAndDrawVisibleZone (MCHEmul::CPU* cpu)
 		_ULARegisters -> syncOutputWhite () &&
 		(_ULARegisters -> reverseVideo () ^ px)) // normal video and pixel on?, or inverse video and pixels off?
 			_screenMemory -> setPixel (x, y, 0); // ...then put it in black...
+}
+
+// ---
+void ZX81::ULA::debugULACycle (MCHEmul::CPU* cpu, unsigned int i)
+{
+	assert (_deepDebugFile != nullptr);
+
+	_deepDebugFile -> writeCompleteLine ("ULA", cpu -> clockCycles () - (i >> 1), "Info Cycle",
+		{ { "Raster position",
+			std::to_string (_raster.currentColumnAtBase0 ()) + "," +
+			std::to_string (_raster.currentLineAtBase0 ()) },
+		  { "Internal status",
+			"NMI=" + std::string ((_ULARegisters -> NMIGenerator () ? "NMI_ON" : "NMI_OFF")) + "," +
+			"ZONE=" + std::string ((_ULARegisters -> syncOutputWhite () ? "WHITE" : "BLACK")) + "," + 
+			"LNCTRL=" +	std::to_string (_ULARegisters -> LINECNTRL ()) } });
 }
 
 // ---

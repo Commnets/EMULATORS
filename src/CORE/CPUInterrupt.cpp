@@ -31,18 +31,7 @@ void MCHEmul::CPUInterrupt::setInExecution (bool i)
 			if (_computer -> activateDeepDebug // ...activate the deep debug, and if there is no error...
 				(_debugFileName, true, 
 					{ -1 } /* all chips. */, { -1 } /* all io. */, { -1 } /** all memory. */, _addDebugInfo))
-			{ 
-				*_computer -> deepDebugFile () <<
-					"\n" << "****************************************" << "\n" <<
-					"Starting Interrupt Debugging" << "\n" <<
-					"CPU STATUS" << "\n\n" <<
-					MCHEmul::removeAll0 (
-						MCHEmul::FormatterBuilder::instance () -> formatter ("Computer") -> 
-						format (_computer -> getInfoStructure ())) << "\n\n" << // ...and prints out the status of the computer...
-					"Last instruction executed before Interrupt:" << "\n" << // ..and the info about the last instruction executed...
-					MCHEmul::removeAll0 (_computer -> cpu () -> programCounter ().asString ()) << ":" <<
-					_computer -> cpu () -> lastInstruction () -> asString () << "\n\n";
-			}
+				debugStartingToDebugInterrupt ();
 		}
 	}
 	else
@@ -76,8 +65,8 @@ bool MCHEmul::CPUInterrupt::executeOver (MCHEmul::CPU* c, unsigned int cC)
 	assert (c != nullptr);
 
 	// Mark that the interrupt is starting...
-	if (c -> deepDebugActive ())
-		*c -> deepDebugFile () << "->Interrupt code about to start:\n";
+	_IFDEBUGINELEMENT(c) debugInterruptToStart (c);
+
 	setInExecution (true);
 
 	_lastClockCyclesExecuted = c -> clockCycles ();
@@ -153,11 +142,37 @@ bool MCHEmul::CPUInterrupt::desactivateDebug (MCHEmul::Computer* c)
 	return (true);
 }
 
+// ---
+void MCHEmul::CPUInterrupt::debugStartingToDebugInterrupt ()
+{
+	assert (_computer != nullptr);
+
+	_computer -> deepDebugFile () -> writeSimpleLine ("\n****************************************");
+	_computer -> deepDebugFile () -> writeSimpleLine ("Starting Interrupt Debugging");
+	_computer -> deepDebugFile () -> writeSimpleLine ("CPU STATUS:");
+	_computer -> deepDebugFile () -> writeSimpleLine (MCHEmul::removeAll0 (
+		MCHEmul::FormatterBuilder::instance () -> formatter ("Computer") -> 
+			format (_computer -> getInfoStructure ())));
+	_computer -> deepDebugFile () -> writeSimpleLine ("Last instruction executed before Interrupt:");
+	_computer -> deepDebugFile () -> writeSimpleLine (
+		MCHEmul::removeAll0 (_computer -> cpu () -> programCounter ().asString ()) + ":" +
+			_computer -> cpu () -> lastInstruction () -> asString ());
+}
+
+// ---
+void MCHEmul::CPUInterrupt::debugInterruptToStart (MCHEmul::CPU* c)
+{
+	assert (c != nullptr);
+
+	c -> deepDebugFile () -> writeSimpleLine ("->Interrupt code about to start:");
+}
+
 std::string MCHEmul::CPUInterruptRequest::toString () const
 { 
-	return (std::to_string (_type)
-		+ " from:" + ((_from == nullptr) ? "-" : std::to_string (_from -> id ())) 
-		+ " reason:" + std::to_string (_reason));
+	return (
+		"type " +	std::to_string (_type) + "," +
+		"from " + ((_from == nullptr) ? " - " : std::to_string (_from -> id ())) + "," +
+		"reason " + std::to_string (_reason));
 }
 
 // ---

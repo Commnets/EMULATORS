@@ -151,18 +151,7 @@ bool COMMODORE::VICII::simulate (MCHEmul::CPU* cpu)
 	// because it is a signal comming from the TV not from the VICII....
 	// So far just the condition is logged...
 	if (_VICIIRegisters -> videoResetActive ())
-	{ 
-		if (deepDebugActive ())
-		{
-			*_deepDebugFile
-				// Where
-				<< "VICII\t" 
-				// When
-				<< std::to_string (cpu -> clockCycles ()) << "\t" // clock cycles at that point
-				// What
-				<< "Disconnected\n";
-		}
-	}
+		_IFDEBUG debugDisconnected (cpu);
 
 	// Adapt the size of the display zone to the parameters specificied in the register...
 	// The zone where sprites and texts are finally visible is call the "screen zone"
@@ -177,31 +166,7 @@ bool COMMODORE::VICII::simulate (MCHEmul::CPU* cpu)
 	// The simulation has to be repeated as many time as cycles have spent since the last invocation...
 	for (unsigned int i = (cpu -> clockCycles  () - _lastCPUCycles); i > 0; i--)
 	{
-		if (deepDebugActive ())
-		{
-			*_deepDebugFile
-				// Where
-				<< "VICII\t" 
-				// When
-				<< std::to_string (cpu -> clockCycles () - i) << "\t" // clock cycles at that point
-				// What
-				<< "Info cycle\t\t"
-				// Data
-				<< "Raster:["
-				<< std::to_string (_raster.currentColumnAtBase0 ()) << "," 
-				<< std::to_string (_raster.currentLineAtBase0 ()) << ","
-				<< std::to_string (_cycleInRasterLine)
-				<< "], Graphics:"
-				<< std::to_string ((int) _VICIIRegisters -> graphicModeActive ())
-				<< ", Memory:["
-				<< "Bk=" << std::to_string ((int) _VICIIRegisters -> bank ()) << ","
-				<< "SM=$" << MCHEmul::removeAll0 (_VICIIRegisters -> screenMemory ().asString
-					(MCHEmul::UByte::OutputFormat::_HEXA, '\0', 2)) << ","
-				<< "CM=$" << MCHEmul::removeAll0 (_VICIIRegisters -> charDataMemory ().asString
-					(MCHEmul::UByte::OutputFormat::_HEXA, '\0', 2)) << ","
-				<< "BM=$" << MCHEmul::removeAll0 (_VICIIRegisters -> bitmapMemory ().asString
-					(MCHEmul::UByte::OutputFormat::_HEXA, '\0', 2)) << "]\n";
-		}
+		_IFDEBUG debugVICIICycle (cpu, i);
 
 		// Whether the video is active or not is only checked at the very first bad line...
 		_videoActive = (_raster.currentLine () == _FIRSTBADLINE) 
@@ -212,8 +177,7 @@ bool COMMODORE::VICII::simulate (MCHEmul::CPU* cpu)
 		// When happened, the graphics are read and the situation is latched because maybe additional stop cycles could be needed.
 		if (isNewBadLine ())
 		{
-			if (deepDebugActive ())
-				*_deepDebugFile << "\t\t\t\t\tBad line situation\n";
+			_IFDEBUG debugBadLine ();
 
 			_newBadLineCondition = true;		// latched...
 			_badLineStopCyclesAdded = false;	// ...the cycles have to be added...
@@ -664,12 +628,7 @@ unsigned int COMMODORE::VICII::treatRasterCycle ()
 				{ 
 					result = 2;	// VICII has to read three bytes, meaning 2 clock cycles stopped more... 
 
-					if (deepDebugActive ())
-						*_deepDebugFile
-							<< "\t\t\t\t\tReading info sprite:" << std::to_string (nSR + 1)
-							<< " [" << _vicSpriteInfo [nSR]._graphicsLineSprites.asString 
-								(MCHEmul::UByte::OutputFormat::_HEXA, ' ') << "]"
-							<< "\n";
+					_IFDEBUG debugReadingSpriteInfo (nSR);
 				}
 			}
 
@@ -701,9 +660,7 @@ unsigned int COMMODORE::VICII::treatRasterCycle ()
 					{
 						_vicSpriteInfo [i]._active = false;
 
-						if (deepDebugActive ())
-							*_deepDebugFile
-								<< "\t\t\t\t\tSprite draw finishes:" << std::to_string (i) << "\n";
+						_IFDEBUG debugSpriteDrawFinishes (i);
 					}
 
 					// Read also cycle 55 onwards info
@@ -800,9 +757,7 @@ unsigned int COMMODORE::VICII::treatRasterCycle ()
 						if (_vicSpriteInfo [i]._expansionY = _VICIIRegisters -> spriteDoubleHeight (i))
 							_VICIIRegisters -> setExpansionYFlipFlop (i, false);
 
-						if (deepDebugActive ())
-							*_deepDebugFile
-								<< "\t\t\t\t\tSprite active to be drawn:" << std::to_string (i) << "\n";
+						_IFDEBUG debugSpriteDrawToStart (i);
 					}
 				}
 
@@ -846,21 +801,12 @@ unsigned int COMMODORE::VICII::treatRasterCycle ()
 
 			readVideoMatrixAndColorRAM ();
 
-			if (deepDebugActive ())
-				*_deepDebugFile
-					<< "\t\t\t\t\tReading Video Matrix & Color RAM" 
-					<< " [" << _vicGraphicInfo._lastScreenCodeDataRead.asString (MCHEmul::UByte::OutputFormat::_HEXA) 
-					<< ", " << _vicGraphicInfo._lastColorDataRead.asString (MCHEmul::UByte::OutputFormat::_HEXA) << "]"
-					<< "\n";
+			_IFDEBUG debugReadingVideoMatrix ();
 		}
 
 		readGraphicalInfo ();
 
-		if (deepDebugActive ())
-			*_deepDebugFile
-				<< "\t\t\t\t\tReading Graphics"
-				<< " [" << _vicGraphicInfo._lastGraphicDataRead.asString (MCHEmul::UByte::OutputFormat::_HEXA) << "]"
-				<< "\n";
+		_IFDEBUG debugReadingGraphics ();
 
 		if (!_vicGraphicInfo._idleState)
 			_vicGraphicInfo._VC++;	
@@ -888,10 +834,7 @@ void COMMODORE::VICII::drawVisibleZone (MCHEmul::CPU* cpu)
 	// then everything will have the border color...
 	if (!_videoActive)
 	{
-		if (deepDebugActive ())
-			*_deepDebugFile
-				<< "\t\t\t\t\tVideo no active at pixel:" << std::to_string (cav) 
-				<< ", color:" << std::to_string ((unsigned int) _VICIIRegisters -> foregroundColor ()) << "\n";
+		_IFDEBUG debugVideoNoActiveAt (cav);
 
 		screenMemory () -> setHorizontalLine ((size_t) cav, (size_t) rv,
 			(cav + 8) >= _raster.visibleColumns () ? (_raster.visibleColumns () - cav) : 8, 
@@ -1025,10 +968,7 @@ COMMODORE::VICII::DrawResult COMMODORE::VICII::drawGraphics (const COMMODORE::VI
 	// Never invoke the methods within the swith case statements direcly
 	// a crash might be generated...
 
-	if (deepDebugActive ())
-		*_deepDebugFile
-			<< "\t\t\t\t\tDrawing pixels at:" << std::to_string (cb) 
-			<< ", background:" << std::to_string ((unsigned int) _VICIIRegisters -> backgroundColor ()) << "\n";
+	_IFDEBUG debugDrawPixelAt (cb);
 
 	COMMODORE::VICII::DrawResult result;
 	switch (_VICIIRegisters -> graphicModeActive ())
@@ -1403,10 +1343,8 @@ MCHEmul::UByte COMMODORE::VICII::drawMonoColorSpriteOver (unsigned short c, unsi
 		if (!_vicSpriteInfo [spr]._drawing)
 		{
 			_vicSpriteInfo [spr]._drawing = true; _vicSpriteInfo [spr]._xS = x; 
-			if (deepDebugActive ())
-				*_deepDebugFile
-					<< "\t\t\t\t\tDrawing sprite:" << std::to_string (spr) 
-					<< ", at: [" << std::to_string (x) << "," << std::to_string (r) << "]\n";
+
+			_IFDEBUG debugDrawSpriteAt (spr, x, r);
 		}
 
 		// To determine the initial byte (iBy) and bit (iBt) with the info about the sprite...
@@ -1480,10 +1418,8 @@ MCHEmul::UByte COMMODORE::VICII::drawMultiColorSpriteOver (unsigned short c, uns
 		if (!_vicSpriteInfo [spr]._drawing)
 		{ 
 			_vicSpriteInfo [spr]._drawing = true; _vicSpriteInfo [spr]._xS = x; 
-			if (deepDebugActive ())
-				*_deepDebugFile
-					<< "\t\t\t\t\tDrawing sprite:" << std::to_string (spr) 
-					<< ", at: [" << std::to_string (x) << "," << std::to_string (r) << "]\n";
+
+			_IFDEBUG debugDrawSpriteAt (spr, x, r);
 		}
 
 		// To determine the initial byte (iBy) and bit (iBt) with the info about the sprite...
@@ -1648,12 +1584,7 @@ unsigned int COMMODORE::VICII_PAL::treatRasterCycle ()
 				{
 					result += 2; // VICII has to read three bytes, Meaning 2 clock cycles stopped more... 
 
-					if (deepDebugActive ())
-						*_deepDebugFile
-							<< "\t\t\t\t\tReading info sprite:" << std::to_string (nSR + 1)
-							<< " [" << _vicSpriteInfo [nSR]._graphicsLineSprites.asString 
-								(MCHEmul::UByte::OutputFormat::_HEXA, ' ') << "]"
-							<< "\n";
+					_IFDEBUG debugReadingSpriteInfo (nSR);
 				}
 			}
 
@@ -1707,12 +1638,7 @@ unsigned int COMMODORE::VICII_NTSC::treatRasterCycle ()
 				{
 					result += 2;	// VICII has to read three bytes, Meaning 2 clock cycles stopped more... 
 
-					if (deepDebugActive ())
-						*_deepDebugFile
-							<< "\t\t\t\t\tReading info sprite:" << std::to_string (nSR + 1) 
-							<< " [" << _vicSpriteInfo [nSR]._graphicsLineSprites.asString 
-								(MCHEmul::UByte::OutputFormat::_HEXA, ' ') << "]"
-							<< "\n";
+					_IFDEBUG debugReadingSpriteInfo (nSR);
 				}
 
 				// Manages the situation of the border...
@@ -1726,4 +1652,114 @@ unsigned int COMMODORE::VICII_NTSC::treatRasterCycle ()
 	}
 
 	return (result);
+}
+
+// ---
+void COMMODORE::VICII::debugDisconnected (MCHEmul::CPU* cpu)
+{
+	assert (_deepDebugFile != nullptr);
+
+	_deepDebugFile -> writeCompleteLine ("VICII", cpu -> clockCycles (), "Disconnected");
+}
+
+// ---
+void COMMODORE::VICII::debugVICIICycle (MCHEmul::CPU* cpu, unsigned int i)
+{
+	assert (_deepDebugFile != nullptr);
+
+	_deepDebugFile -> writeCompleteLine ("VICII", cpu -> clockCycles () - i, "Info Cycle", 
+		{ { "Raster position",
+			std::to_string (_raster.currentColumnAtBase0 ()) + "," +
+			std::to_string (_raster.currentLineAtBase0 ()) + "," +
+			std::to_string (_cycleInRasterLine) },
+		  { "Graphics mode",
+			std::to_string ((int) _VICIIRegisters -> graphicModeActive ()) },
+		  { "Memory location", 
+			"Bank=" + std::to_string ((int) _VICIIRegisters -> bank ()) + "," +
+			"Screen=$" + MCHEmul::removeAll0 (_VICIIRegisters -> screenMemory ().asString
+				(MCHEmul::UByte::OutputFormat::_HEXA, '\0', 2)) + "," +
+			"Characters=$" + MCHEmul::removeAll0 (_VICIIRegisters -> charDataMemory ().asString
+				(MCHEmul::UByte::OutputFormat::_HEXA, '\0', 2)) + "," +
+			"Bitmap=$" + MCHEmul::removeAll0 (_VICIIRegisters -> bitmapMemory ().asString
+				(MCHEmul::UByte::OutputFormat::_HEXA, '\0', 2)) } });
+}
+
+// ---
+void COMMODORE::VICII::debugBadLine ()
+{
+	assert (_deepDebugFile != nullptr);
+
+	_deepDebugFile -> writeLineData ("Bad line situation");
+}
+
+// ---
+void COMMODORE::VICII::debugReadingSpriteInfo (size_t nS)
+{
+	assert (_deepDebugFile != nullptr);
+
+	_deepDebugFile -> writeLineData ("Reading info sprite " + 
+		std::to_string (nS) + "[" + _vicSpriteInfo [nS]._graphicsLineSprites.asString 
+			(MCHEmul::UByte::OutputFormat::_HEXA, ' ') + "]");
+}
+
+// ---
+void COMMODORE::VICII::debugSpriteDrawFinishes (size_t nS)
+{
+	assert (_deepDebugFile != nullptr);
+
+	_deepDebugFile -> writeLineData ("Sprite draw finishes " + std::to_string (nS));
+}
+
+// ---
+void COMMODORE::VICII::debugSpriteDrawToStart (size_t nS)
+{
+	assert (_deepDebugFile != nullptr);
+
+	_deepDebugFile -> writeLineData ("Sprite active to be drawn " + std::to_string (nS));
+}
+
+// ---
+void COMMODORE::VICII::debugReadingVideoMatrix ()
+{
+	assert (_deepDebugFile != nullptr);
+
+	_deepDebugFile -> writeLineData ("Reading Video Matrix & Color RAM [" +
+					_vicGraphicInfo._lastScreenCodeDataRead.asString (MCHEmul::UByte::OutputFormat::_HEXA) + ", " +
+					_vicGraphicInfo._lastColorDataRead.asString (MCHEmul::UByte::OutputFormat::_HEXA) + "]");
+}
+
+// ---
+void COMMODORE::VICII::debugReadingGraphics ()
+{
+	assert (_deepDebugFile != nullptr);
+	
+	_deepDebugFile -> writeLineData ("Reading Graphics [" + 
+		_vicGraphicInfo._lastGraphicDataRead.asString (MCHEmul::UByte::OutputFormat::_HEXA) + "]");
+}
+
+// ---
+void COMMODORE::VICII::debugVideoNoActiveAt (unsigned short cav)
+{
+	assert (_deepDebugFile != nullptr);
+	
+	_deepDebugFile -> writeLineData ("Video no active at pixel " + std::to_string (cav) +
+		", foreground color " + std::to_string ((unsigned int) _VICIIRegisters -> foregroundColor ()));
+}
+
+// ---
+void COMMODORE::VICII::debugDrawPixelAt (unsigned short cb)
+{
+	assert (_deepDebugFile != nullptr);
+
+	_deepDebugFile -> writeLineData ("Drawing pixels at " + std::to_string (cb) +
+		", background color " + std::to_string ((unsigned int) _VICIIRegisters -> backgroundColor ()));
+}
+
+// ---
+void COMMODORE::VICII::debugDrawSpriteAt (size_t nS, unsigned short x, unsigned short r)
+{
+	assert (_deepDebugFile != nullptr);
+
+	_deepDebugFile -> writeLineData ("Drawing sprite " + std::to_string (nS) +
+		" at " + std::to_string (x) + "," + std::to_string (r));
 }
