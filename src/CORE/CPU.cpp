@@ -2,7 +2,7 @@
 #include <CORE/FmterBuilder.hpp>
 #include <CORE/Formatter.hpp>
 #include <CORE/Stack.hpp>
-#include <iostream>
+#include <CORE/LogChannel.hpp>
 
 // ---
 MCHEmul::CPU::CPU (int id, const MCHEmul::CPUArchitecture& a, 
@@ -332,51 +332,56 @@ bool MCHEmul::CPU::executeNextInterruptRequest_PerCycle (unsigned int& e)
 			switch (iR.type ())
 			{
 				case CPUInterrupt::_EXECUTIONNOTALLOWED:
-				{
-					_IFDEBUG debugInterruptRequestNotAllowed (iR);
+					{
+						_IFDEBUG debugInterruptRequestNotAllowed (iR);
 
-					removeInterruptRequest (iR);
+						removeInterruptRequest (iR);
 
-					result = false; // not executed, but with no errors...
-				}
+						result = false; // not executed, but with no errors...
+					}
 			
-				break;
+					break;
 
 				case CPUInterrupt::_EXECUTIONTOWAIT:
-				{
-					_IFDEBUG debugInterruptRequestToWait (iR);
+					{
+						_IFDEBUG debugInterruptRequestToWait (iR);
 
-					// It is not removed from the pending list...
-					// Because it is valid but not still the time to be executed!
-					// So in the next loop the request will be still there...
+						// It is not removed from the pending list...
+						// Because it is valid but not still the time to be executed!
+						// So in the next loop the request will be still there...
 
-					result = false; // not executed, but with no errors...
-				}
+						result = false; // not executed, but with no errors...
+					}
 
-				break;
+					break;
 
 				case CPUInterrupt::_EXECUTIONALLOWED:
-				{
-					// The acknowledge has to be issued!
-					aknowledgeInterrupt ();
+					{
+						// The acknowledge has to be issued!
+						aknowledgeInterrupt ();
 
-					_currentInterrupt = getInterruptForRequest (_currentInterruptRequest = iR);
+						_currentInterrupt = getInterruptForRequest (_currentInterruptRequest = iR);
 
-					_IFDEBUG debugInterruptLaunched ();
+						_IFDEBUG debugInterruptLaunched ();
 
-					_cyclesPendingExecution = _currentInterrupt -> cyclesToLaunch ();
+						_cyclesPendingExecution = _currentInterrupt -> cyclesToLaunch ();
 		
-					// The request will be deleted once the interrupt was executed (see above)...
+						// The request will be deleted once the interrupt was executed (see above)...
 
-					//... to start the execution with no errors...
-					// ...they might come later!! (when the real execution happens)
-				}
+						//... to start the execution with no errors...
+						// ...they might come later!! (when the real execution happens)
+					}
 
-				break;
+					break;
 
 				// It shouldn't be here, just in case...
 				default:
-					assert (false);
+					{
+						_LOG ("CPU Interrupt status not supported:" + 
+							std::to_string (iR.type ()));
+						assert (false);
+					}
+
 					break;
 			}
 		}
@@ -400,62 +405,65 @@ bool MCHEmul::CPU::executeNextInterruptRequest_Full (unsigned int& e)
 	{
 		// The interrupt can not be executed...
 		case CPUInterrupt::_EXECUTIONNOTALLOWED:
-		{
-			_IFDEBUG debugInterruptRequestNotAllowed (iR);
+			{
+				_IFDEBUG debugInterruptRequestNotAllowed (iR);
 
-			removeInterruptRequest (iR); // No longer valid...
+				removeInterruptRequest (iR); // No longer valid...
 
-			result = false; // ...not executed, but with no errors...
-		}
+				result = false; // ...not executed, but with no errors...
+			}
 
-		break;
+			break;
 
 		// The interrupt is valid but has to wait to another interation
 		// This can happen when the CPU takes certain time to recognize the interrupt.
 		// For example in 6500 family the no interrupt can be launched in the last instruction took less than 2 cycles
 		case CPUInterrupt::_EXECUTIONTOWAIT:
-		{
-			_IFDEBUG debugInterruptRequestToWait (iR);
+			{
+				_IFDEBUG debugInterruptRequestToWait (iR);
 
-			// The request is not removed as it is still valid...
-			// But not in this moment, in the next loop the CPU will get it back!
+				// The request is not removed as it is still valid...
+				// But not in this moment, in the next loop the CPU will get it back!
 
-			result = false; // no errors, no executed...
-		}
+				result = false; // no errors, no executed...
+			}
 
-		break;
+			break;
 
 		// Time to execute the interrupt...
 		case CPUInterrupt::_EXECUTIONALLOWED:
-		{
-			_IFDEBUG debugInterruptLaunched ();
+			{
+				_IFDEBUG debugInterruptLaunched ();
 
-			// The acknowledge has to be issued!
-			aknowledgeInterrupt ();
+				// The acknowledge has to be issued!
+				aknowledgeInterrupt ();
 
-			_lastCPUClockCycles = _currentInterrupt -> cyclesToLaunch ();
-			if (_currentInterrupt -> executeOver (this, iR.cycles ())) // Thismethod returns true when ok, and false with errors...
-				_lastCPUClockCycles += _currentInterrupt -> cycledAfterLaunch ();
-			else
-			{ 
-				_error = MCHEmul::_INTERRUPT_ERROR; // and error happended...
+				_lastCPUClockCycles = _currentInterrupt -> cyclesToLaunch ();
+				if (_currentInterrupt -> executeOver (this, iR.cycles ())) // Thismethod returns true when ok, and false with errors...
+					_lastCPUClockCycles += _currentInterrupt -> cycledAfterLaunch ();
+				else
+				{ 
+					_error = MCHEmul::_INTERRUPT_ERROR; // and error happended...
 
-				_IFDEBUG debugInterruptFails ();
+					_IFDEBUG debugInterruptFails ();
+				}
+
+				_currentInterrupt -> initialize (); // Get ready for the next interrupt...
+				_currentInterrupt = nullptr;
+
+				removeInterruptRequest (iR); // Done!
+
+				// executed (return = true)...but with errors? (see above)
 			}
 
-			_currentInterrupt -> initialize (); // Get ready for the next interrupt...
-			_currentInterrupt = nullptr;
-
-			removeInterruptRequest (iR); // Done!
-
-			// executed (return = true)...but with errors? (see above)
-		}
-
-		break;
+			break;
 
 		default:
-			// It shouldn't be here, just in case...
-			assert (false);
+			{
+				_LOG ("CPU Interrupt status not supported");
+				assert (false);
+			}
+
 			break;
 	}
 

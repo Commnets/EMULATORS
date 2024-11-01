@@ -111,6 +111,8 @@ Id:@ID@
 @MemoryStructure>@
 ->CPU:
 @CPU>@
+->Stack:
+@Stack>@
 ->Chips:
 @CHIPS?{fmter=.CLASS,empty=no chips}\n---\n@
 ->Devices:

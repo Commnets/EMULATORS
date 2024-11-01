@@ -105,8 +105,13 @@ bool COMMODORE::VIATimer::simulate (MCHEmul::CPU* cpu)
 				break;
 
 			default:
-				// It shouldn't be here...
-				assert (false);
+				{ 
+					// It shouldn't be here
+					_LOG ("Via Timer Run mode not supported:" + 
+						std::to_string ((int) _runMode));
+					assert (false); // Just when compiling under DEBUG mode...
+				}
+
 				break;
 		}
 	}

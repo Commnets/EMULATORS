@@ -1,4 +1,5 @@
 #include <CORE/Sound.hpp>
+#include <CORE/LogChannel.hpp>
 
 // ---
 MCHEmul::SoundSystem::SoundSystem (int id, 
@@ -32,7 +33,7 @@ MCHEmul::SoundSystem::SoundSystem (int id,
 	if (_audioSpec.format != _type) { _type = _audioSpec.format; changed = true; }
 	if (_audioSpec.channels != _numberChannels) { _numberChannels = _audioSpec.channels; changed = true; }
 	if (changed)
-		std::cout << "Original sound format has been changed" << std::endl;
+		_LOG ("Original sound format has been changed");
 
 	SDL_PauseAudioDevice (_deviceId, 0); // 0 to start...
 }

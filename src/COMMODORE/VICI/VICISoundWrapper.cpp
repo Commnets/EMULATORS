@@ -118,7 +118,6 @@ void COMMODORE::VICISoundSimpleLibWrapper::setValue (size_t p, const MCHEmul::UB
 
 		// The rest are nor taken into account...
 		default:
-			assert (false); //.. but the code should not pass over this point...
 			break;
 	}
 }
@@ -145,7 +144,6 @@ const MCHEmul::UByte& COMMODORE::VICISoundSimpleLibWrapper::readValue (size_t p)
 
 		// The rest are not taken into account...
 		default:
-			assert (false); // ..but the code should not be here...
 			break;
 	}
 

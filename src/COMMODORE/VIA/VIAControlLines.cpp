@@ -67,8 +67,14 @@ bool COMMODORE::VIAControlLineType1::simulate (MCHEmul::CPU* cpu)
 			break;
 
 		default:
-			// It shouldn't be here...
-			assert (false);
+			{ 
+				// It shouldn't be here...
+				_LOG ("VIA Control Type 1 mode not supported:" + 
+					std::to_string ((int) _mode));
+				assert (false); // Just when compiling under debug mode...
+			}
+
+			break;
 	}
 
 	return (true);
@@ -118,8 +124,13 @@ void COMMODORE::VIAControlLineType2::whenReadWritePort (bool r)
 			break;
 
 		default:
-			// If should be here...
-			assert (false);
+			{ 
+				// It shouldn't be here...
+				_LOG ("VIA Control Type 2 mode not supported:" + 
+					std::to_string ((int) _mode));
+				assert (false); // Just when compiling under debug mode...
+			}
+
 			break;
 	}
 }
@@ -188,8 +199,13 @@ bool COMMODORE::VIAControlLineType2::simulate (MCHEmul::CPU* cpu)
 			break;
 
 		default:
-			// It shouldn't be here...
-			assert (false);
+			{ 
+				// It shouldn't be here...
+				_LOG ("VIA Control Type 2 mode not supported:" + 
+					std::to_string ((int) _mode));
+				assert (false); // Just when compiling under debug mode...
+			}
+
 			break;
 	}
 

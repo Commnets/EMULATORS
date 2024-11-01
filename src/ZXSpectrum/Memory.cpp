@@ -94,16 +94,27 @@ void ZXSPECTRUM::Memory::setConfiguration (ZXSPECTRUM::Memory::Configuration cfg
 						break;
 
 					default:
-						assert (false); // If shouldn't be here...
-						break;
+						{ 
+							// It shouldn't exist, but just in case...
+							_LOG ("ZXSpectrum Configuration mode not supported:" +
+								std::to_string ((int) _configuration));
+							assert (false); // Just when running under debug mode...
+						}
 
+						break;
 				}
 			}
 
 			break;
 
 		default:
-			assert (false); // It should be here...
+			{ 
+				// It shouldn't exist, but just in case...
+				_LOG ("ZXSpectrum Machine type not supported:" +
+					std::to_string ((int) _type));
+				assert (false); // Just when running under debug mode...
+			}
+
 			break;
 	}
 }

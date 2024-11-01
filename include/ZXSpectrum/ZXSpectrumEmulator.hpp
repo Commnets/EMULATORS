@@ -111,7 +111,13 @@ namespace ZXSPECTRUM
 				break;
 
 			default:
-				assert (false); // It shouldn't be here...
+				{
+					// It shouldn't be here...
+					_LOG ("Model not emulated:" + 
+						std::to_string ((int) emulattedComputer ()));
+					assert (false); // For the debug mode...
+				}
+
 				break;
 		}
 

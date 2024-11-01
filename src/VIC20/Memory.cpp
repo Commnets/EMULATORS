@@ -32,9 +32,8 @@ void VIC20::VIA1VIA2RegistersReflection::setValue (size_t nB, const MCHEmul::UBy
 			// Does nothing...
 			break;
 
+		// This situation can not happen...
 		default:
-			// It shouldn't be here...
-			assert (false);
 			break;
 	}
 }
@@ -70,9 +69,8 @@ const MCHEmul::UByte& VIC20::VIA1VIA2RegistersReflection::readValue (size_t nB) 
 			// Does nothing...
 			break;
 
+		// This situation can not happen...
 		default:
-			// It shouldn't be here...
-			assert (false);
 			break;
 	}
 
@@ -341,8 +339,13 @@ void VIC20::Memory::setConfiguration (VIC20::Memory::Configuration cfg, bool a0)
 		// so in that c ases the a0 parameter will be true when started!
 
 		default:
-			// It shouldn't exist, but just in case...
-			assert (false);
+			{ 
+				// It shouldn't exist, but just in case...
+				_LOG ("VIC 20 Configuration mode not supported:" +
+					std::to_string ((int) _configuration));
+				assert (false);
+			}
+
 			break;
 	}
 }

@@ -18,6 +18,7 @@
 #include <CORE/OBool.hpp>
 #include <CORE/Pulse.hpp>
 #include <CORE/NotifyObserver.hpp>
+#include <CORE/LogChannel.hpp>
 #include <CORE/DebugFile.hpp>
 #include <CORE/Ticks.hpp>
 #include <CORE/Clock.hpp>

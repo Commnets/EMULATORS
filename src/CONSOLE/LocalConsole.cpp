@@ -25,8 +25,8 @@ void MCHEmul::LocalConsole::run ()
 	// or the right debug level was selected...
 	if (_emulator -> debugLevel () >= MCHEmul::_DUMPATEXIT || 
 		_emulator -> computer () -> error () != MCHEmul::_NOERROR)
-		outputStream () << MCHEmul::FormatterBuilder::instance () -> 
-			formatter ("Computer") -> format (_emulator -> computer () -> getInfoStructure ()) << std::endl;
+		_LOG (MCHEmul::removeAll0 (MCHEmul::FormatterBuilder::instance () -> // To the log file when there is a big error...
+			formatter ("Computer") -> format (_emulator -> computer () -> getInfoStructure ())));
 }
 
 // ---

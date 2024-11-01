@@ -202,8 +202,13 @@ bool COMMODORE::VIAShiftRegister::simulate (MCHEmul::CPU* cpu)
 			break;
 
 		default:
-			// It shouldn't be here...
-			assert (false);
+			{ 
+				// It shouldn't be here...
+				_LOG ("VIA VIAShiftRegister mode not supported:" + 
+					std::to_string ((int) _mode));
+				assert (false); // Just when compiling under debug mode...
+			}
+
 			break;
 	}
 

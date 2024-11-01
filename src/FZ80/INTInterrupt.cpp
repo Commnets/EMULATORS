@@ -82,8 +82,12 @@ bool FZ80::INTInterrupt::executeOverImpl (MCHEmul::CPU* c, unsigned int cC)
 			break;
 
 		default:
-			assert (false);
-			// It should be here!
+			{ 
+				// It should be here!
+				_LOG ("Z80 INTerrupt mode not supported:" + 
+					std::to_string ((int) _INTMode));
+				assert (false); // Just when running in a debug compilation...
+			}
 	}
 	
 	return (result);

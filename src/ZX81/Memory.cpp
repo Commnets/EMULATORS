@@ -190,8 +190,13 @@ void ZX81::Memory::setConfiguration (ZX81::Memory::Configuration cfg)
 			break;
 
 		default:
-			// It shouldn't exist, but just in case...
-			assert (false);
+			{ 
+				// It shouldn't exist, but just in case...
+				_LOG ("ZX81 Configuration mode not supported:" +
+					std::to_string ((int) _configuration));
+				assert (false);
+			}
+
 			break;
 	}
 }

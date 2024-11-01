@@ -398,9 +398,8 @@ void COMMODORE::TEDRegisters::setValue (size_t p, const MCHEmul::UByte& v)
 
 			break;
 
+		// This sutation never happens...
 		default:
-			// It should be here anyway
-			assert (false);
 			break;
 	}
 }       
@@ -634,9 +633,8 @@ const MCHEmul::UByte& COMMODORE::TEDRegisters::readValue (size_t p) const
 
 			break;
 
-		// It shouldn't be here...
+		// This sutation never happens...
 		default:
-			assert (false);
 			break;
 	}
 

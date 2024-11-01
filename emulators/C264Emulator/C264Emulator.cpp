@@ -17,6 +17,11 @@ extern C_LINKAGE int main(int argc, char* argv[])
 int _tmain (int argc, _TCHAR* argv[])
 #endif /* _CONSOLE */
 {
+	// Log to a file...
+	MCHEmul::LogSystem::_LOGSYSTEM -> addLogChannel 
+		(new MCHEmul::LogFileChannel (0, "./C264E.log", 10000 /** events max. */));
+	MCHEmul::LogSystem::_LOGSYSTEM -> setDefaultChannelId (0);
+
 	// Read the parameters of the command line...
 	MCHEmul::CommandLineArguments cmdArgs (argc, argv);
 	bool eOpen = (cmdArgs.existsArgument ('o')) ? cmdArgs.argumentAsBool ('o') : false;

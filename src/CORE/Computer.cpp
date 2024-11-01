@@ -2,6 +2,8 @@
 #include <CORE/StdCommands.hpp>
 #include <CORE/FmterBuilder.hpp>
 #include <CORE/Formatter.hpp>
+#include <CORE/LogChannel.hpp>
+#include <CORE/Stack.hpp>
 #include <sstream>
 
 // ---
@@ -358,7 +360,7 @@ bool MCHEmul::Computer::runComputerCycle (unsigned int a)
 			_error = _cpu -> error ();
 
 			if (_debugLevel >= MCHEmul::_DEBUGERRORS)
-				std::cout << "Error executing CPU Cycle:" << _error << std::endl;
+				_LOG ("Error executing CPU Cycle (Intruction or Interrupt)");
 
 			return (false); // Error...
 		}
@@ -384,7 +386,8 @@ bool MCHEmul::Computer::runComputerCycle (unsigned int a)
 	{
 		MCHEmul::InfoStructure rst;
 		MCHEmul::CPUSimpleStatusCommand stCmd; stCmd.execute (nullptr, this, rst);
-		std::cout << MCHEmul::FormatterBuilder::instance () -> formatter ("DEBUGCPUINFO") -> format (rst) << std::endl;
+		_LOG ("\n+\n" + // Every instruction executed is debugged...
+			MCHEmul::FormatterBuilder::instance () -> formatter ("DEBUGCPUINFO") -> format (rst));
 	}
 
 	for (size_t i = 0; i < _chips.size (); i++)
@@ -396,7 +399,8 @@ bool MCHEmul::Computer::runComputerCycle (unsigned int a)
 			_error = MCHEmul::_CHIP_ERROR;
 
 			if (_debugLevel >= MCHEmul::_DEBUGERRORS)
-				std::cout << "Error simulating chip: " << std::endl << *_plainChips [i] << std::endl;
+				_LOG ("Error simulating chip:\n" + 
+						_plainChips [i] -> getInfoStructure ().asString ());
 
 			return (false); // Error...
 		}
@@ -430,7 +434,8 @@ bool MCHEmul::Computer::runIOCycle ()
 			_error = MCHEmul::_DEVICE_ERROR;
 
 			if (_debugLevel >= MCHEmul::_DEBUGERRORS)
-				std::cout << "Error in IO device:" << std::endl << *_plainDevices [i] << std::endl;
+				_LOG ("Error in IO device:\n" + 
+					_plainDevices [i] -> getInfoStructure ().asString ());
 
 			return (false); // Error...
 		}
@@ -547,6 +552,7 @@ MCHEmul::InfoStructure MCHEmul::Computer::getInfoStructure () const
 	result.add ("CPU",				std::move (_cpu -> getInfoStructure ()));
 	result.add ("CLK",				std::move (_clock.asString ()));
 	result.add ("MemoryStructure",	std::move (_cpu -> memoryRef () -> dumpStructure ().getInfoStructure ()));
+	result.add ("Stack",			std::move (_cpu -> memoryRef () -> stack () -> getInfoStructure ()));
 
 	MCHEmul::InfoStructure chps;
 	for (const auto& i : _chips)

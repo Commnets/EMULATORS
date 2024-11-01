@@ -114,9 +114,8 @@ void COMMODORE::TEDSoundSimpleLibWrapper::setValue (size_t p, const MCHEmul::UBy
 
 						break;
 
+					// This sutation never happens...
 					default:
-						// It shouldn't be here...
-						assert (false);
 						break;
 				}
 			}
@@ -135,7 +134,6 @@ void COMMODORE::TEDSoundSimpleLibWrapper::setValue (size_t p, const MCHEmul::UBy
 
 		// The rest are nor taken into account...
 		default:
-			assert (false); //.. but the code should not pass over this point...
 			break;
 	}
 }
@@ -162,7 +160,6 @@ const MCHEmul::UByte& COMMODORE::TEDSoundSimpleLibWrapper::readValue (size_t p) 
 
 		// The rest are not taken into account...
 		default:
-			assert (false); // ..but the code should not be here...
 			break;
 	}
 

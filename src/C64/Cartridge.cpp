@@ -61,6 +61,8 @@ void C64::Cartridge::configureMemoryStructure (bool romL, bool romH1, bool romH2
 		// The SIMON's basic type
 		case C64::Cartridge::Type::_SIMONSBASIC:
 			{
+				_LOG ("Simons' basic not supported yet. Under construction");
+
 				// TODO
 
 				assert (false); // Not supported so far...
@@ -90,7 +92,13 @@ void C64::Cartridge::configureMemoryStructure (bool romL, bool romH1, bool romH2
 			break;
 
 		default:
-			assert (false); // It shouldn't be here...
+			{
+				// It shouldn't be here...
+				_LOG ("Type of cartridge not supported:" + 
+					std::to_string ((int) type ()));
+				assert (false); // When compiling under debug mode...
+			}
+
 			break;
 	}
 }
@@ -246,6 +254,8 @@ void C64::Cartridge::dumpDataInto (C64::Memory* m,
 		// as a 8K GENERIC cartridge (_EXROM = false, _GAME = true), but _BASIC is disactive!
 		case C64::Cartridge::Type::_SIMONSBASIC:
 			{
+				_LOG ("Simons' basic not supported yet. Under construction");
+
 				// TODO
 
 				assert (false); // Not supported so far...
@@ -298,7 +308,13 @@ void C64::Cartridge::dumpDataInto (C64::Memory* m,
 			break;
 
 		default:
-			assert (false); // It shouldn't be here...
+			{
+				// It shouldn't be here...
+				_LOG ("Type of cartridge not supported:" + 
+					std::to_string ((int) type ()));
+				assert (false); // When compiling under debug mode...
+			}
+
 			break;
 	}
 

@@ -41,8 +41,6 @@ void COMMODORE::TIARegisters::setValue (size_t p, const MCHEmul::UByte& v)
 		// TODO
 
 		default:
-			// It shouldn't be here...
-			assert (false);
 			break;
 	}
 } 
@@ -58,9 +56,7 @@ const MCHEmul::UByte& COMMODORE::TIARegisters::readValue (size_t p) const
 	{
 		// TODO
 
-		// It should be here, just in case...
 		default:
-			assert (false);
 			break;
 	}
 

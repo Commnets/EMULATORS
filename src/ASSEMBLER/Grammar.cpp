@@ -449,43 +449,50 @@ std::vector <MCHEmul::UByte> MCHEmul::Assembler::InstructionElement::calculateCo
 		{
 			case MCHEmul::InstructionDefined::Structure::Parameter::Type::_DATA:
 			case MCHEmul::InstructionDefined::Structure::Parameter::Type::_DIR:
-			{
-				bt = MCHEmul::UBytes (bytesFromExpression (prms [i], s -> macros (), e, oP), bE).bytes ();
-			}
+				{
+					bt = MCHEmul::UBytes (bytesFromExpression (prms [i], s -> macros (), e, oP), bE).bytes ();
+				}
 
-			break;
+				break;
 
 			case MCHEmul::InstructionDefined::Structure::Parameter::Type::_RELJUMP:
 			case MCHEmul::InstructionDefined::Structure::Parameter::Type::_ABSJUMP:
-			{
-				if (MCHEmul::validLabel (prms [i]))
 				{
-					std::vector <const MCHEmul::Assembler::LabelElement*> lbs = s -> labels ();
-					std::vector <const MCHEmul::Assembler::LabelElement*>::const_iterator lbsP = 
-						std::find_if (lbs.begin (), lbs.end (), 
-							[=](const MCHEmul::Assembler::LabelElement* lb) -> bool { return (lb -> _name == prms [i]); });
-					if (lbsP != lbs.end ())
+					if (MCHEmul::validLabel (prms [i]))
 					{
-						if (inst -> internalStructure ()._parameters [i]._type == 
-								MCHEmul::InstructionDefined::Structure::Parameter::Type::_RELJUMP)
+						std::vector <const MCHEmul::Assembler::LabelElement*> lbs = s -> labels ();
+						std::vector <const MCHEmul::Assembler::LabelElement*>::const_iterator lbsP = 
+							std::find_if (lbs.begin (), lbs.end (), 
+								[=](const MCHEmul::Assembler::LabelElement* lb) -> bool { return (lb -> _name == prms [i]); });
+						if (lbsP != lbs.end ())
 						{
-							MCHEmul::Address iA = address (s, oP) + inst -> memoryPositions ();
-							bt = MCHEmul::UInt::fromInt (iA.distanceWith ((*lbsP) -> address (s, oP))).bytes ();
+							if (inst -> internalStructure ()._parameters [i]._type == 
+									MCHEmul::InstructionDefined::Structure::Parameter::Type::_RELJUMP)
+							{
+								MCHEmul::Address iA = address (s, oP) + inst -> memoryPositions ();
+								bt = MCHEmul::UInt::fromInt (iA.distanceWith ((*lbsP) -> address (s, oP))).bytes ();
+							}
+							else
+								bt = MCHEmul::UBytes ((*lbsP) -> address (s, oP).bytes (), bE).bytes ();
 						}
-						else
-							bt = MCHEmul::UBytes ((*lbsP) -> address (s, oP).bytes (), bE).bytes ();
+						else // It is a macro and translate direcly into bytes...
+							bt = MCHEmul::UBytes (bytesFromExpression (prms [i], s -> macros (), e, oP), bE).bytes ();
 					}
-					else // It is a macro and translate direcly into bytes...
+					else
 						bt = MCHEmul::UBytes (bytesFromExpression (prms [i], s -> macros (), e, oP), bE).bytes ();
 				}
-				else
-					bt = MCHEmul::UBytes (bytesFromExpression (prms [i], s -> macros (), e, oP), bE).bytes ();
-			}
 
-			break;
+				break;
 
 			default:
-				assert (false); // Just in case...
+				{ 
+					// It shouldn't be here...
+					_LOG ("Type of parameter not supported:" + 
+						std::to_string ((int) inst -> internalStructure ()._parameters [i]._type));
+					assert (false); // Just in case...
+				}
+
+				break;
 		}
 
 		// If there haven't been errors building the data...

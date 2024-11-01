@@ -239,7 +239,7 @@ bool MCHEmul::Emulator::initialize ()
 	// No initialization possible with errors...
 	if (_error != MCHEmul::_NOERROR)
 	{
-		std::cout << "The emulator was not well created" << std::endl;
+		_LOG ("The emulator was not well created");
 
 		return (false);
 	}
@@ -249,7 +249,7 @@ bool MCHEmul::Emulator::initialize ()
 	// it would mean that the initialization was already executed
 	if (_computer != nullptr)
 	{
-		std::cout << "The emulator was was already initialized" << std::endl;
+		_LOG ("The emulator was was already initialized");
 
 		return (false);
 	}
@@ -276,7 +276,7 @@ bool MCHEmul::Emulator::initialize ()
 	if (!_computer -> initialize ()) 
 	{
 		if (_debugLevel >= MCHEmul::_DEBUGERRORS)
-			std::cout << "Error initializing computer" << std::endl;
+			_LOG ("Error initializing computer");
 
 		return (false);
 	}
@@ -285,13 +285,14 @@ bool MCHEmul::Emulator::initialize ()
 	if (_communicationSystem != nullptr && !_communicationSystem -> initialize ())
 	{
 		if (_debugLevel >= MCHEmul::_DEBUGERRORS)
-			std::cout << "Error initializing communications" << std::endl;
+			_LOG ("Error initializing communications");
 
 		return (false);
 	}
 
 	if (_debugLevel >= MCHEmul::_DEBUGTRACEINTERNALS)
-		std::cout << *computer () << std::endl;
+		_LOG (MCHEmul::FormatterBuilder::instance () -> 
+			formatter ("Computer") -> format (computer () -> getInfoStructure ()));
 
 	// Connect the peripherals defined...
 	std::vector <int> phs; 
@@ -301,7 +302,7 @@ bool MCHEmul::Emulator::initialize ()
 		for (int i : phs)
 			e &= connectPeripheral (i, { });
 		if (!e && _debugLevel >= MCHEmul::_DEBUGERRORS)
-			std::cout << "There are peripherals not connected. Verify" << std::endl;
+			_LOG ("There are peripherals not connected. Verify");
 	}
 
 	// Load a byte file if defined...
@@ -312,7 +313,7 @@ bool MCHEmul::Emulator::initialize ()
 		if (e)
 		{
 			if (_debugLevel >= MCHEmul::_DEBUGERRORS)
-				std::cout << "Error loading file: " << byteFileName () << std::endl;
+				_LOG ("Error loading file:" + byteFileName ());
 
 			return (false);
 		}
@@ -327,7 +328,7 @@ bool MCHEmul::Emulator::initialize ()
 		{
 			if (_debugLevel >= MCHEmul::_DEBUGERRORS)
 				for (const auto& i : e)
-					std::cout << i << std::endl;
+					_LOG (i.asString ());
 
 			return (false);
 		}
@@ -335,7 +336,7 @@ bool MCHEmul::Emulator::initialize ()
 		{
 			if (_debugLevel >= MCHEmul::_DEBUGALL)
 				for (const auto& i : cL._lines)
-					std::cout << i << std::endl;
+					_LOG (MCHEmul::removeAll0 (i.asString (MCHEmul::UByte::OutputFormat::_HEXA, '\0')));
 		}
 	}
 
@@ -347,7 +348,7 @@ bool MCHEmul::Emulator::initialize ()
 		if (e)
 		{
 			if (_debugLevel >= MCHEmul::_DEBUGERRORS)
-				std::cout << "Error loading file: " << blockFileName () << std::endl;
+				_LOG ("Error loading file:" + blockFileName ());
 
 			return (false);
 		}
@@ -412,8 +413,8 @@ bool MCHEmul::Emulator::run ()
 	// or the right debug level was selected...
 	bool result = (_computer -> error () != MCHEmul::_NOERROR);
 	if (_debugLevel >= MCHEmul::_DUMPATEXIT || !result)
-		std::cout << MCHEmul::FormatterBuilder::instance () -> 
-			formatter ("Computer") -> format (_computer -> getInfoStructure ()) << std::endl;
+		_LOG (MCHEmul::removeAll0 (MCHEmul::FormatterBuilder::instance () -> 
+			formatter ("Computer") -> format (_computer -> getInfoStructure ())));
 	return (result);
 }
 
@@ -426,7 +427,7 @@ bool MCHEmul::Emulator::runCycle (unsigned int a)
 	{
 		if (!_communicationSystem -> processMessagesOn (computer ()) &&
 			_debugLevel >= MCHEmul::_DEBUGERRORS)
-				std::cout << "Error Processing Messages" << std::endl;
+				_LOG ("Error Processing Messages");
 	}
 
 	result &= computer () -> runComputerCycle (a);

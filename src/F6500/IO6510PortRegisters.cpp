@@ -70,9 +70,8 @@ void F6500::IO6510PortRegisters::setValue (size_t p, const MCHEmul::UByte& v)
 
 			break;
 			
+		// This situation can not happen...
 		default:
-			// It should be here...
-			assert (false);
 			break;
 	}
 }
@@ -100,9 +99,8 @@ const MCHEmul::UByte& F6500::IO6510PortRegisters::readValue (size_t p) const
 
 			break;
 			
+		// This situation can not happen...
 		default:
-			// It shouldn't be here...
-			assert (false);
 			break;
 	}
 

@@ -151,9 +151,9 @@ void COMMODORE::VICIRegisters::setValue (size_t p, const MCHEmul::UByte& v)
 
 			break;
 
+		// This situation doesn't happen...
 		default:
-			// It shouldn't be here...
-			assert (false);
+			break;
 	}
 }       
 
@@ -244,9 +244,9 @@ const MCHEmul::UByte& COMMODORE::VICIRegisters::readValue (size_t p) const
 
 			break;
 
+		// This situation doesn't happen...
 		default:
-			// It shouldn't be here...
-			assert (false);
+			break;
 	}
 
 	return (_lastValueRead = result);

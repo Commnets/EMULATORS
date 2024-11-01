@@ -215,7 +215,7 @@ void C264::Memory::setConfiguration (const MCHEmul::UByte& cfg)
 			break;
 
 		default:
-			assert (false); // It cannot hhapen, but just in case...
+			// This stiation will never happen (the first instruction is &0x03)
 			break;
 	}
 
@@ -335,7 +335,7 @@ void C264::Memory::setConfiguration (const MCHEmul::UByte& cfg)
 			break;
 
 		default:
-			assert (false); // It cannot hhapen, but just in case...
+			// This situation will never happen...
 			break;
 	}
 }

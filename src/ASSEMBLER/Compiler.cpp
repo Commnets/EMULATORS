@@ -64,34 +64,40 @@ MCHEmul::Assembler::ByteCode MCHEmul::Assembler::Compiler::compile (const std::s
 			switch (gE -> _type)
 			{
 				case MCHEmul::Assembler::GrammaticalElement::_LABEL:
-				{
-					lL = static_cast <MCHEmul::Assembler::LabelElement*> (gE) -> _name;
-				}
+					{
+						lL = static_cast <MCHEmul::Assembler::LabelElement*> (gE) -> _name;
+					}
 
-				break;
+					break;
 
 				case MCHEmul::Assembler::GrammaticalElement::_BYTESINMEMORY:
 				case MCHEmul::Assembler::GrammaticalElement::_INSTRUCTION:
-				{
-					std::vector <MCHEmul::UByte> b = 
-						gE -> codeBytes (smt, cpu () -> architecture ().bigEndian (), operationParser ());
-					if (!*gE)
-						_errors.emplace_back (MCHEmul::Assembler::Error (gE -> _error, gE -> _file, gE -> _line, 0));
-					else
-						result._lines.emplace_back (MCHEmul::ByteCodeLine (spa, b, lL, 
-							(gE -> _type == MCHEmul::Assembler::GrammaticalElement::_INSTRUCTION) 
-								? (static_cast <MCHEmul::Assembler::InstructionElement*> (gE)) -> _selectedInstruction : nullptr, 
-							 gE -> _actionOn /** Action affecting the code bytes. */));
+					{
+						std::vector <MCHEmul::UByte> b = 
+							gE -> codeBytes (smt, cpu () -> architecture ().bigEndian (), operationParser ());
+						if (!*gE)
+							_errors.emplace_back (MCHEmul::Assembler::Error (gE -> _error, gE -> _file, gE -> _line, 0));
+						else
+							result._lines.emplace_back (MCHEmul::ByteCodeLine (spa, b, lL, 
+								(gE -> _type == MCHEmul::Assembler::GrammaticalElement::_INSTRUCTION) 
+									? (static_cast <MCHEmul::Assembler::InstructionElement*> (gE)) -> _selectedInstruction : nullptr, 
+								 gE -> _actionOn /** Action affecting the code bytes. */));
 
-					spa += b.size (); // To the next...
-					lL = "";
-				}
+						spa += b.size (); // To the next...
+						lL = "";
+					}
 
-				break;
+					break;
 
 				default:
-					// It should be here...
-					assert (false);
+					{
+						// It should be here...
+						_LOG ("Gramatical element not supported:" + 
+							std::to_string ((int) gE -> _type));
+						assert (false); // Just for the debug mode...
+					}
+
+					break;
 			}
 		}
 	}

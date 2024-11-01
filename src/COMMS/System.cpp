@@ -1,6 +1,7 @@
 #include <COMMS/System.hpp>
 #include <COMMS/IPAddress.hpp>
 #include <COMMS/AnsSysCommand.hpp>
+#include <CORE/LogChannel.hpp>
 
 // ---
 bool MCHEmul::CommunicationSystem::initialize ()
@@ -63,7 +64,7 @@ void MCHEmul::CommunicationSystem::manageAnswer (MCHEmul::Command* c, const MCHE
 			_commandExecuterForAnswers -> manageAnswer ((oC != nullptr) ? oC : c, rst);
 		}
 		else
-			std::cout << rst << std::endl; // A very last type of exit...
+			_LOG (rst.asString ()); // A very last type of exit, but it shouldn't happen...
 	}
 	else
 	{

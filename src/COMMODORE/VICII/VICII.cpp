@@ -415,7 +415,8 @@ MCHEmul::Strings COMMODORE::VICII::spritesDrawSnapshot (MCHEmul::CPU* cpu,
 							case 0x01: dt += "OO"; break;
 							case 0x02: dt += "XX"; break;
 							case 0x03: dt += "##"; break;
-							default: assert (false); break; // It should be here, but just in case...
+							// This situation doesn't happen...
+							default: break;
 						}
 					}
 				}
@@ -469,7 +470,8 @@ MCHEmul::Strings COMMODORE::VICII::charsDrawSnapshot (MCHEmul::CPU* cpu,
 						case 0x01: dt += "OO"; break;
 						case 0x02: dt += "XX"; break;
 						case 0x03: dt += "##"; break;
-						default: assert (false); break; // It should be here, but just in case...
+						// This situation doesn't happen...
+						default: break;
 					}
 				}
 			}

@@ -131,113 +131,124 @@ bool COMMODORE::Datasette1530Injection::executeTrap (const MCHEmul::Trap& t, MCH
 	{
 		// When the loader is lloking for a header...
 		case _FINDHEADERTRAP:
-		{
-			int e = 0;
-
-			// Gets with the buffer is really located...(
-			// using and indirect address mode...
-			// This info will be used many times later...
-			MCHEmul::Address ctteBuffer (cpu -> memoryRef () -> values (_definition._bufferAddr, 2).reverse ());
-
-			// If there is no data, makes no sense to progress...
-			if (_data._data.empty ())
-				e = 1;
-			else
 			{
-				// Or if there is no any type of data of the type
-				// that this traps needs...
-				while (_data._data [_dataCounter].attribute ("TYPE") != "1" /** File record normal = 1 */
-					&& _dataCounter < _data._data.size ())
-					_dataCounter++;
-				if (_dataCounter > _data._data.size ())
-				{
-					_dataCounter = 0; // Start back next time...
+				int e = 0;
 
+				// Gets with the buffer is really located...(
+				// using and indirect address mode...
+				// This info will be used many times later...
+				MCHEmul::Address ctteBuffer (cpu -> memoryRef () -> values (_definition._bufferAddr, 2).reverse ());
+
+				// If there is no data, makes no sense to progress...
+				if (_data._data.empty ())
 					e = 1;
-
-					break;
-				}
-			}
-
-			// Only if something usefull was found, the method continues...
-			if (e == 0)
-			{
-				// Storing the header of the info found in the casette buffer...
-				MCHEmul::DataMemoryBlock& dtM = _data._data [_dataCounter];
-				cpu -> memoryRef () -> put (ctteBuffer, 0x01 /** Machine type default value. */);
-				cpu -> memoryRef () -> put (ctteBuffer + 1, MCHEmul::UBytes (dtM.startAddress ().bytes (), 
-					false /** little - endian. */).bytes ());
-				cpu -> memoryRef () -> put (ctteBuffer + 3, MCHEmul::UBytes (dtM.endAddress ().bytes (), false).bytes ());
-				for (size_t i = 0; i < 16 /** No more than 16 bytes. */; i++)
-					cpu -> memoryRef () -> put (ctteBuffer + 5 + i, 
-						(i < dtM.name ().size ()) ? dtM.name ()[i] : MCHEmul::UByte::_0);
-			}
-			else
-				cpu -> memoryRef () -> put (ctteBuffer, 0x05 /** End of casette. */);
-
-			// Cleans up everthing...
-			cpu -> memoryRef () -> put (_definition._statusAddr, MCHEmul::UByte::_0);
-			cpu -> memoryRef () -> put (_definition._verifyFlagAddr, MCHEmul::UByte::_0);
-			if (_definition._irqTmpAddr != MCHEmul::Address ())
-				cpu -> memoryRef () -> put (_definition._irqTmpAddr, 
-					{ (unsigned char) (_definition._irqVal & 0x00ff), 
-					  (unsigned char) ((_definition._irqVal & 0xff00) >> 8) } /** Already in little - endian. */);
-
-			// Before finishing, check whether STOP key was or not pressed
-			// before this trap wwas reached...
-			// If it was, the carry flag of the cpu is set to true, otherwise it is false...
-			cpu -> statusRegister ().setBitStatus (F6500::C6500::_CARRYFLAG, false);
-			for (unsigned char i = cpu -> memoryRef () ->
-				value (_definition._keyboardPendingAddr).value (); i > 0; i--)
-			{
-				if (cpu -> memoryRef () -> value (_definition._keyboardBufferAddr + i - 1) == 0x03)
+				else
 				{
-					cpu -> statusRegister ().setBitStatus (F6500::C6500::_CARRYFLAG, true);
+					// Or if there is no any type of data of the type
+					// that this traps needs...
+					while (_data._data [_dataCounter].attribute ("TYPE") != "1" /** File record normal = 1 */
+						&& _dataCounter < _data._data.size ())
+						_dataCounter++;
+					if (_dataCounter > _data._data.size ())
+					{
+						_dataCounter = 0; // Start back next time...
 
-					break;
+						e = 1;
+
+						break;
+					}
 				}
+
+				// Only if something usefull was found, the method continues...
+				if (e == 0)
+				{
+					// Storing the header of the info found in the casette buffer...
+					MCHEmul::DataMemoryBlock& dtM = _data._data [_dataCounter];
+					cpu -> memoryRef () -> put (ctteBuffer, 0x01 /** Machine type default value. */);
+					cpu -> memoryRef () -> put (ctteBuffer + 1, MCHEmul::UBytes (dtM.startAddress ().bytes (), 
+						false /** little - endian. */).bytes ());
+					cpu -> memoryRef () -> put (ctteBuffer + 3, MCHEmul::UBytes (dtM.endAddress ().bytes (), false).bytes ());
+					for (size_t i = 0; i < 16 /** No more than 16 bytes. */; i++)
+						cpu -> memoryRef () -> put (ctteBuffer + 5 + i, 
+							(i < dtM.name ().size ()) ? dtM.name ()[i] : MCHEmul::UByte::_0);
+				}
+				else
+					cpu -> memoryRef () -> put (ctteBuffer, 0x05 /** End of casette. */);
+
+				// Cleans up everthing...
+				cpu -> memoryRef () -> put (_definition._statusAddr, MCHEmul::UByte::_0);
+				cpu -> memoryRef () -> put (_definition._verifyFlagAddr, MCHEmul::UByte::_0);
+				if (_definition._irqTmpAddr != MCHEmul::Address ())
+					cpu -> memoryRef () -> put (_definition._irqTmpAddr, 
+						{ (unsigned char) (_definition._irqVal & 0x00ff), 
+						  (unsigned char) ((_definition._irqVal & 0xff00) >> 8) } /** Already in little - endian. */);
+
+				// Before finishing, check whether STOP key was or not pressed
+				// before this trap wwas reached...
+				// If it was, the carry flag of the cpu is set to true, otherwise it is false...
+				cpu -> statusRegister ().setBitStatus (F6500::C6500::_CARRYFLAG, false);
+				for (unsigned char i = cpu -> memoryRef () ->
+					value (_definition._keyboardPendingAddr).value (); i > 0; i--)
+				{
+					if (cpu -> memoryRef () -> value (_definition._keyboardBufferAddr + i - 1) == 0x03)
+					{
+						cpu -> statusRegister ().setBitStatus (F6500::C6500::_CARRYFLAG, true);
+
+						break;
+					}
+				}
+
+				// Finally the ZERO flag is set to true...
+				// It is how the original kernal routine worked!
+				cpu -> statusRegister ().setBitStatus (F6500::C6500::_ZEROFLAG, true);
 			}
 
-			// Finally the ZERO flag is set to true...
-			// It is how the original kernal routine worked!
-			cpu -> statusRegister ().setBitStatus (F6500::C6500::_ZEROFLAG, true);
-		}
-
-		break;
+			break;
 
 		// When there is data about to be loaded...
 		case _RECEIVEDATATRAP:
-		{
-			MCHEmul::Address start (cpu -> memoryRef () -> values (_definition._startProgramAddr, 2).reverse ());
-			MCHEmul::Address end (cpu -> memoryRef () -> values (_definition._endProgramAddr, 2).reverse ());
-
-			switch (static_cast <F6500::C6500*> (cpu) -> xRegister ().values () [0].value ())
 			{
-				case 0x0e:
-					loadDataBlockInRAM (_data._data [_dataCounter], cpu);
-					break;
+				MCHEmul::Address start (cpu -> memoryRef () -> 
+					values (_definition._startProgramAddr, 2).reverse ());
+				MCHEmul::Address end (cpu -> memoryRef () -> 
+					values (_definition._endProgramAddr, 2).reverse ());
 
-				default:
-					assert (false); // Funtion not supported!
-					break;
+				switch (static_cast <F6500::C6500*> (cpu) -> xRegister ().values () [0].value ())
+				{
+					case 0x0e:
+						loadDataBlockInRAM (_data._data [_dataCounter], cpu);
+						break;
+
+					default:
+						{
+							_LOG ("Trap function type not supported yet:" + 
+								std::to_string ((int) static_cast <F6500::C6500*> (cpu) -> xRegister ().values () [0].value ()));
+							assert (false); // Just for compiling with debug on...
+						}
+
+						break;
+				}
+
+				if (_definition._irqTmpAddr != MCHEmul::Address ())
+					cpu -> memoryRef () -> put (_definition._irqTmpAddr, 
+						{ (unsigned char) (_definition._irqVal & 0x00ff), 
+						  (unsigned char) ((_definition._irqVal & 0xff00) >> 8) } /** Already in little - endian. */);
+
+				cpu -> memoryRef () -> put (_definition._statusAddr, 
+					cpu -> memoryRef () -> value (_definition._statusAddr) | 0x40 /** EOF. */);
+
+				cpu -> statusRegister ().setBitStatus (F6500::C6500::_CARRYFLAG, false);
+				cpu -> statusRegister ().setBitStatus (F6500::C6500::_IRQFLAG, false);
 			}
 
-			if (_definition._irqTmpAddr != MCHEmul::Address ())
-				cpu -> memoryRef () -> put (_definition._irqTmpAddr, 
-					{ (unsigned char) (_definition._irqVal & 0x00ff), 
-					  (unsigned char) ((_definition._irqVal & 0xff00) >> 8) } /** Already in little - endian. */);
-
-			cpu -> memoryRef () -> put (_definition._statusAddr, 
-				cpu -> memoryRef () -> value (_definition._statusAddr) | 0x40 /** EOF. */);
-
-			cpu -> statusRegister ().setBitStatus (F6500::C6500::_CARRYFLAG, false);
-			cpu -> statusRegister ().setBitStatus (F6500::C6500::_IRQFLAG, false);
-		}
-
-		break;
+			break;
 
 		default:
-			assert (false); // It shouldn't be here anyway...just in case!
+			{
+				_LOG ("Trap type not supported yet:" + std::to_string (t._id));
+				assert (false); // Just for compiling with debug on...
+			}
+
 			break;
 	}
 

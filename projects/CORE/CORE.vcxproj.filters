@@ -201,6 +201,9 @@
     <ClCompile Include="..\..\src\CORE\Trap.cpp">
       <Filter>Archivos de origen\Motherboard</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\CORE\LogChannel.cpp">
+      <Filter>Archivos de origen\Foundation</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\include\CORE\IO.hpp">
@@ -391,6 +394,9 @@
     </ClInclude>
     <ClInclude Include="..\..\include\CORE\Trap.hpp">
       <Filter>Archivos de encabezado\Motherboard</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\CORE\LogChannel.hpp">
+      <Filter>Archivos de encabezado\Foundation</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

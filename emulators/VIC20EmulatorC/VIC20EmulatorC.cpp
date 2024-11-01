@@ -5,6 +5,11 @@
 
 int _tmain (int argc, _TCHAR *argv [])
 {
+	// Log to a file...
+	MCHEmul::LogSystem::_LOGSYSTEM -> addLogChannel 
+		(new MCHEmul::LogFileChannel (0, "./VIC20E.log", 10000 /** events max. */));
+	MCHEmul::LogSystem::_LOGSYSTEM -> setDefaultChannelId (0);
+
 	std::cout << "VIC20Emulator with Console" << std::endl;
 	std::cout << "Copyright (C) 2022 by Ignacio Cea" << std::endl;
 	std::cout << "The console controls directly the execution" << std::endl;
