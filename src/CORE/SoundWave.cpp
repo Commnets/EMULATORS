@@ -20,6 +20,8 @@ MCHEmul::InfoStructure MCHEmul::SoundWave::getInfoStructure () const
 	result.add ("ACTIVE", _active);
 	result.add ("TYPE", (int) _type);
 	result.add ("FREQUENCY", _frequency);
+	result.add ("TYPEANDFREQUENCY", std::to_string ((int) _type) + "(" + 
+		std::to_string (_frequency) + ")"); // like a summary used sometimes...
 
 	return (result);
 }

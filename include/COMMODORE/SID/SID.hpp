@@ -78,6 +78,14 @@ namespace COMMODORE
 			How many paddles there can be will depend on how the SID has been built into the computer. */
 		virtual void processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifier* n) override;
 
+		// -----
+		// Different debug methods to simplify the internal code
+		// and to make simplier the modification in case it is needed...
+		/** Debug special situations...
+			Take care using this instructions _deepDebugFile could be == nullptr... */
+		void debugSIDCycle (MCHEmul::CPU* cpu, unsigned int i);
+		// -----
+
 		private:
 		SIDRegisters* _SIDRegisters;
 

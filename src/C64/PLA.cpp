@@ -221,7 +221,7 @@ void C64::PLA::debugPLACycle (MCHEmul::CPU* cpu)
 {
 	assert (_deepDebugFile != nullptr);
 
-	_deepDebugFile -> writeCompleteLine ("PLA", cpu -> clockCycles (), "Status",
+	_deepDebugFile -> writeCompleteLine (className (), cpu -> clockCycles (), "Info Cycle",
 		{ "_LORAM:"	 + std::string ((_LORAM ? "on" : "off")),
 		  "_HIRAM:"	 + std::string ((_HIRAM ? "on" : "off")),
 		  "_CHAREN:" + std::string ((_CHAREN ? "on" : "off")),

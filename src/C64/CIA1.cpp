@@ -167,7 +167,7 @@ void C64::CIA1::debugCIA1Cycle ()
 {
 	assert (_deepDebugFile != nullptr);
 
-	_deepDebugFile -> writeCompleteLine ("CIA", _lastClockCycles, "InfoCycle",
+	_deepDebugFile -> writeCompleteLine (className (), _lastClockCycles, "Additional Info",
 		{ { "Key matrix", 
 			_CIA1Registers -> keyboardMatrixAsString () + " [P:" +
 			_lastKeyPressed + ",R:" + _lastKeyReleased + "]" },

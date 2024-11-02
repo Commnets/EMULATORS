@@ -58,6 +58,8 @@ bool COMMODORE::VICI::SoundFunction::simulate (MCHEmul::CPU* cpu)
 	{
 		for (unsigned int i = (cpu -> clockCycles () - _lastCPUCycles); i > 0 ; i--)
 		{
+			_IFDEBUG debugVICISoundCycle (cpu, i);
+
 			// The number of bytes that can come from the wrapper might not be fixed...
 			MCHEmul::UBytes data;
 			if (soundWrapper () -> getData (cpu, data))
@@ -86,6 +88,31 @@ MCHEmul::InfoStructure COMMODORE::VICI::SoundFunction::getInfoStructure () const
 	result.add ("SoundLibWrapper",	std::move (soundWrapper () -> getInfoStructure ())); // To know which library is behing...
 
 	return (result);
+}
+
+// ---
+void COMMODORE::VICI::SoundFunction::debugVICISoundCycle (MCHEmul::CPU* cpu, unsigned int i)
+{
+	assert (_deepDebugFile != nullptr);
+
+	MCHEmul::InfoStructure sidStr = std::move (soundWrapper () -> getInfoStructure ());
+	MCHEmul::InfoStructure voicesStr = std::move (sidStr.infoStructure ("VOICES"));
+	
+	// Create the structure of attributes...
+	MCHEmul::Attributes voicesAttrs;
+	for (const auto& e : voicesStr.infoStructures ())
+	{ 
+		std::string w;
+		MCHEmul::InfoStructure wStr = std::move (e.second.infoStructure ("WAVES"));
+		for (size_t ct = 0; ct < 3; ct++)
+			w += ((ct != 0) ? "," : "") + std::string ("Wave ") + std::to_string (ct) + "=" +
+				wStr.infoStructure (std::to_string (ct)).attribute ("TYPEANDFREQUENCY");
+		std::string v = e.second.attribute ("ADSR");
+		voicesAttrs.insert (MCHEmul::Attributes::value_type ("Voice " + e.first, v + "," + w));
+	}
+
+	_deepDebugFile -> writeCompleteLine (className (), 
+		cpu -> clockCycles () - i, "Info Cycle", voicesAttrs);
 }
 
 // ---
@@ -139,7 +166,7 @@ bool COMMODORE::VICI::initialize ()
 	// Gets the memory block dedicated to the VICI
 	if (!(_VICIRegisters = 
 		dynamic_cast <COMMODORE::VICIRegisters*> 
-			(MCHEmul::GraphicalChip::memoryRef () -> subset (COMMODORE::VICIRegisters::_VICREGS_SUBSET))))
+			(memoryRef () -> subset (COMMODORE::VICIRegisters::_VICREGS_SUBSET))))
 	{
 		MCHEmul::GraphicalChip::_error = MCHEmul::_INIT_ERROR;
 
@@ -178,28 +205,7 @@ bool COMMODORE::VICI::simulate (MCHEmul::CPU* cpu)
 	// Simulate the visulization...
 	for (unsigned int i = (cpu -> clockCycles  () - _lastCPUCycles); i > 0; i--)
 	{
-		if (MCHEmul::GraphicalChip::deepDebugActive ())
-		{
-			*MCHEmul::GraphicalChip::_deepDebugFile
-				// Where
-				<< "VICI\t" 
-				// When
-				<< std::to_string (cpu -> clockCycles () - i) << "\t" // clock cycles at that point
-				// What
-				<< "Info cycle\t\t"
-				// Data
-				<< "Raster:["
-				<< std::to_string (_raster.currentColumnAtBase0 ()) << "," 
-				<< std::to_string (_raster.currentLineAtBase0 ()) << ","
-				<< std::to_string (_cycleInRasterLine)
-				<< "], Memory:["
-				<< "SM=$" << MCHEmul::removeAll0 (_VICIRegisters -> screenMemory ().asString
-					(MCHEmul::UByte::OutputFormat::_HEXA, '\0', 2)) << ","
-				<< "CM=$" << MCHEmul::removeAll0 (_VICIRegisters -> charDataMemory ().asString
-					(MCHEmul::UByte::OutputFormat::_HEXA, '\0', 2)) << ","
-				<< "BM=$" << MCHEmul::removeAll0 (_VICIRegisters -> colourMemory ().asString
-					(MCHEmul::UByte::OutputFormat::_HEXA, '\0', 2)) << "]\n";
-		}
+		_IFDEBUG debugVICICycle (cpu, i);
 
 		// Read the graphics and draw the visible zone, 
 		// if it is the case...
@@ -490,6 +496,25 @@ void COMMODORE::VICI::drawResultToScreen (const COMMODORE::VICI::DrawResult& cT,
 		if (cT._foregroundColorData [i] != ~0)
 			screenMemory () -> setPixel (pos, (size_t) dC._RR, cT._foregroundColorData [i]);
 	}
+}
+
+// ---
+void COMMODORE::VICI::debugVICICycle (MCHEmul::CPU* cpu, unsigned int i)
+{
+	assert (_deepDebugFile != nullptr);
+
+	_deepDebugFile -> writeCompleteLine (className (), i, "Info Cycle",
+		{ { "Raster", 
+				std::to_string (_raster.currentColumnAtBase0 ()) + "," +
+				std::to_string (_raster.currentLineAtBase0 ()) + "," +
+				std::to_string (_cycleInRasterLine) },
+		  { "Memory",
+				"Screen=$" + MCHEmul::removeAll0 (_VICIRegisters -> screenMemory ().asString
+					(MCHEmul::UByte::OutputFormat::_HEXA, '\0', 2)) + "," +
+				"Characters=$" + MCHEmul::removeAll0 (_VICIRegisters -> charDataMemory ().asString
+					(MCHEmul::UByte::OutputFormat::_HEXA, '\0', 2)) + "," +
+				"Color=$" + MCHEmul::removeAll0 (_VICIRegisters -> colourMemory ().asString
+				(MCHEmul::UByte::OutputFormat::_HEXA, '\0', 2)) } });
 }
 
 // ---

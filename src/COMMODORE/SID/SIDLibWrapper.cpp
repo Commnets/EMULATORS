@@ -124,27 +124,37 @@ MCHEmul::InfoStructure COMMODORE::SoundRESIDWrapper::getVoiceInfoStructure (unsi
 	RESID::SID::State st = (*(const_cast <RESID::SID*> (&_resid_sid))).read_state ();
 
 	// All voices have the same structured info in the register...
+
+	int at, dc, sn, rl;
 	size_t iP = nV * 7;
 	result.add ("CLASSNAME", std::string ("SIDVoice"));
 	result.add ("ID", nV);
 	result.add ("ACTIVE", (st.sid_register [iP + 4] & 0x01) != 0);
 	result.add ("ATTACK", 
-		COMMODORE::SoundSIDSimpleWrapper::_ATTACKTIMES [(st.sid_register [iP + 5] & 0xf0) >> 4]);
+		at = (int) (COMMODORE::SoundSIDSimpleWrapper::_ATTACKTIMES [(st.sid_register [iP + 5] & 0xf0) >> 4]));
 	result.add ("DECAY", 
-		COMMODORE::SoundSIDSimpleWrapper::_DECAYTIMES [st.sid_register [iP + 5] & 0x0f]);
-	result.add ("SUSTAIN", (st.sid_register [iP + 6] & 0xf0) >> 4);
+		dc = (int) (COMMODORE::SoundSIDSimpleWrapper::_DECAYTIMES [st.sid_register [iP + 5] & 0x0f]));
+	result.add ("SUSTAIN", 
+		sn = (int) ((st.sid_register [iP + 6] & 0xf0) >> 4));
 	result.add ("RELEASE", 
-		COMMODORE::SoundSIDSimpleWrapper::_RELEASETIMES [st.sid_register [iP + 6] & 0x0f]);
+		rl = (int) (COMMODORE::SoundSIDSimpleWrapper::_RELEASETIMES [st.sid_register [iP + 6] & 0x0f]));
+	result.add ("ADSR", "+" + std::to_string (at) + "," +
+						"-" + std::to_string (dc) + "," +
+						"=" + std::to_string (sn) + "," +
+						"--" + std::to_string (rl)); // A summary...
 	result.add ("RINGMODULATION", (st.sid_register [iP + 4] & 0x04) != 0);
 	result.add ("VOICERELATED", (nV == 0) ? 2 : ((nV == 1) ? 0 : 1));
 	result.add ("SYNC", (st.sid_register [iP + 4] & 0x02) != 0);
 
+	int tp;
+	int fq;
 	MCHEmul::InfoStructure wDt, wDt1;
 	wDt1.add ("CLASSNAME", std::string ("SoundWave"));
 	wDt1.add ("ACTIVE", true);
-	wDt1.add ("TYPE", (int) ((st.sid_register [iP + 4] & 0xf0) >> 4));
+	wDt1.add ("TYPE", tp = ((int) ((st.sid_register [iP + 4] & 0xf0) >> 4)));
 	wDt1.add ("FREQUENCY", 
-		int (double (st.sid_register [1] * 256 + st.sid_register [0]) * (double) _chipFrequency / 16777216.0f));
+		fq = (int (double (st.sid_register [iP + 1] * 256 + st.sid_register [iP + 0]) * (double) _chipFrequency / 16777216.0f)));
+	wDt1.add ("TYPEANDFREQUENCY", std::to_string (tp) + "(" + std::to_string (fq) + ")");
 	wDt.add ("0", std::move (wDt1));
 	result.add ("WAVES", wDt);
 

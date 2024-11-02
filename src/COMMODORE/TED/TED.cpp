@@ -207,37 +207,7 @@ bool COMMODORE::TED::simulate (MCHEmul::CPU* cpu)
 	bool r = true;
 	for (unsigned int i = (cpu -> clockCycles  () - _lastCPUCycles); i > 0 && r; i--)
 	{
-		if (deepDebugActive ())
-		{
-			*_deepDebugFile
-				// Where
-				<< "TED\t\t" 
-				// When
-				<< std::to_string (cpu -> clockCycles () - i) << "\t" // clock cycles at that point
-				// What
-				<< "Info cycle\t\t"
-				// Data
-				<< "Raster:["
-				<< std::to_string (_raster.currentColumnAtBase0 ()) << "," 
-				<< std::to_string (_raster.currentLineAtBase0 ()) << ","
-				<< std::to_string (_cycleInRasterLine)
-				<< "], Graphics:"
-				<< std::to_string ((int) _TEDRegisters -> graphicModeActive ())
-				<< ", Memory:["
-				<< "SM=$" << MCHEmul::removeAll0 (_TEDRegisters -> screenMemory ().asString
-					(MCHEmul::UByte::OutputFormat::_HEXA, '\0', 2)) << ","
-				<< "CM=$" << MCHEmul::removeAll0 (_TEDRegisters -> charDataMemory ().asString
-					(MCHEmul::UByte::OutputFormat::_HEXA, '\0', 2)) << ","
-				<< "BM=$" << MCHEmul::removeAll0 (_TEDRegisters -> bitmapMemory ().asString
-					(MCHEmul::UByte::OutputFormat::_HEXA, '\0', 2)) << "]\n";
-
-			// Draws lines where there is a IRQ interruption...
-			unsigned short lrt = 
-				_raster.lineInVisibleZone (_TEDRegisters -> IRQRasterLineAt ());
-			if (lrt <= _raster.vData ().lastVisiblePosition ())
-				screenMemory () -> setHorizontalLine (0, lrt, _raster.visibleColumns (), 
-					_TEDRegisters -> borderColor ().nextLuminance ().asChar ());
-		}
+		_IFDEBUG debugTEDCycle (cpu, i);
 
 		// Whether the video is active or not is only checked at the very first bad line...
 		_videoActive = (_raster.currentLine () == _FIRSTBADLINE) 
@@ -1007,6 +977,34 @@ void COMMODORE::TED::drawResultToScreen (const COMMODORE::TED::DrawResult& cT, c
 		if (cT._foregroundColorData [i] != ~0)
 			screenMemory () -> setPixel (pos, (size_t) dC._RR, cT._foregroundColorData [i]);
 	}
+}
+
+// ---
+void COMMODORE::TED::debugTEDCycle (MCHEmul::CPU* cpu, unsigned int i)
+{
+	assert (_deepDebugFile != nullptr);
+
+	_deepDebugFile -> writeCompleteLine (className (), i , "Info Cycle", 
+		{ { "Raster",
+				std::to_string (_raster.currentColumnAtBase0 ()) + "," +
+				std::to_string (_raster.currentLineAtBase0 ()) + "," +
+				std::to_string (_cycleInRasterLine) },
+		  { "Graphics mode",
+				std::to_string ((int) _TEDRegisters -> graphicModeActive ()) },
+		  { "Memory",
+				"Screen=$" + MCHEmul::removeAll0 (_TEDRegisters -> screenMemory ().asString
+					(MCHEmul::UByte::OutputFormat::_HEXA, '\0', 2)) + "," +
+				"Characters=$" + MCHEmul::removeAll0 (_TEDRegisters -> charDataMemory ().asString
+					(MCHEmul::UByte::OutputFormat::_HEXA, '\0', 2)) + "," +
+				"Bitmap=$" + MCHEmul::removeAll0 (_TEDRegisters -> bitmapMemory ().asString
+				(MCHEmul::UByte::OutputFormat::_HEXA, '\0', 2)) } });
+
+	// Draws lines where there is a IRQ interruption...
+	unsigned short lrt = 
+		_raster.lineInVisibleZone (_TEDRegisters -> IRQRasterLineAt ());
+	if (lrt <= _raster.vData ().lastVisiblePosition ())
+		screenMemory () -> setHorizontalLine (0, lrt, _raster.visibleColumns (), 
+			_TEDRegisters -> borderColor ().nextLuminance ().asChar ());
 }
 
 // ---

@@ -329,7 +329,8 @@ bool MCHEmul::CPU::executeNextInterruptRequest_PerCycle (unsigned int& e)
 							// but with no errors, maybe time for the instructions...
 		else
 		{
-			switch (iR.type ())
+			CPUInterrupt* interr = getInterruptForRequest (iR);
+			switch (interr -> canBeExecutedOver (this, iR.cycles ()))
 			{
 				case CPUInterrupt::_EXECUTIONNOTALLOWED:
 					{
@@ -360,7 +361,8 @@ bool MCHEmul::CPU::executeNextInterruptRequest_PerCycle (unsigned int& e)
 						// The acknowledge has to be issued!
 						aknowledgeInterrupt ();
 
-						_currentInterrupt = getInterruptForRequest (_currentInterruptRequest = iR);
+						_currentInterruptRequest = iR;
+						_currentInterrupt = interr;
 
 						_IFDEBUG debugInterruptLaunched ();
 

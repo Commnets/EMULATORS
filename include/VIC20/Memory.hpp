@@ -59,9 +59,11 @@ namespace VIC20
 			_8KEXPANSION	= 2,
 			_16KEXPANSION	= 3,
 			_24KEXPANSION	= 4,
-			_11KEXPANSION	= 5,
-			_19KEXPANSION	= 6,
-			_27KEXPANSION	= 7,
+			_32KEXPANSION	= 5, // BANK 5 (located after the IO registers)
+			_11KEXPANSION	= 6,
+			_19KEXPANSION	= 7,
+			_27KEXPANSION	= 8,
+			_35KEXPANSION	= 9,
 		};
 
 		// Phisical Storages
@@ -107,9 +109,7 @@ namespace VIC20
 			It show change only at at initialization, otherwise the consecuencues are not clear. */
 		Configuration configuration () const
 							{ return (_configuration); }
-		/** a0 = true when 0xa000 must be active. 
-			It is false by default. */
-		void setConfiguration (Configuration cfg, bool a0 = false);
+		void setConfiguration (Configuration cfg);
 		/** In this version every bit active will actibe a bank of expansion. 
 			bit 1 = Block 1, bit 2 = block 2,... */
 		void setConfiguration (unsigned char cfg);

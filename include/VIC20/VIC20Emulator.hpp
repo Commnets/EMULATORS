@@ -87,7 +87,7 @@ namespace VIC20
 			configuration () 
 				? cmdlineArguments ().argumentAsInt (_PARAMCONFIGURATION) 
 				: 0; /** Not expanded. */
-		return ((result > 4) ? 4 : result); 
+		return ((result > 9) ? 9 : result); 
 	}
 }
 

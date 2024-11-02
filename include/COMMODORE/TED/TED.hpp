@@ -231,6 +231,14 @@ namespace COMMODORE
 		virtual bool ROMActiveToFetchCharData () const = 0;
 		virtual void activeROMtoFecthCharData (bool a) = 0;
 
+		// -----
+		// Different debug methods to simplify the internal code
+		// and to make simplier the modification in case it is needed...
+		/** Debug special situations...
+			Take care using this instructions _deepDebugFile could be == nullptr... */
+		void debugTEDCycle (MCHEmul::CPU* cpu, unsigned int i);
+		// -----
+
 		protected:
 		/** There three timers within the TED. */
 		TEDTimer _T1, _T2, _T3;

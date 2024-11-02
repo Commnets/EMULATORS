@@ -85,6 +85,10 @@ MCHEmul::InfoStructure MCHEmul::SoundVoice::getInfoStructure () const
 	result.add ("DECAY", _decay);
 	result.add ("RELEASE", _release);
 	result.add ("SUSTAIN", _sustainVolumen);
+	result.add ("ADSR", "+" + std::to_string (_attack) + "," +
+						"-" + std::to_string (_decay) + "," +
+						"=" + std::to_string (_sustainVolumen) + "," +
+						"--" + std::to_string (_release)); // Like a resume used sometimes...
 
 	unsigned char ct = 0;
 	MCHEmul::InfoStructure wDt;

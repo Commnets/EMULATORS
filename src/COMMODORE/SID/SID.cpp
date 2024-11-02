@@ -58,6 +58,8 @@ bool COMMODORE::SID::simulate (MCHEmul::CPU* cpu)
 	{
 		for (unsigned int i = (cpu -> clockCycles () - _lastClockCycles); i > 0 ; i--)
 		{
+			_IFDEBUG debugSIDCycle (cpu, i);
+
 			// The number of bytes that can come from the wrapper might not be fixed...
 			MCHEmul::UBytes data;
 			if (soundWrapper () -> getData (cpu, data))
@@ -125,4 +127,29 @@ void COMMODORE::SID::processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifier
 
 		break;
 	}
+}
+
+// ---
+void COMMODORE::SID::debugSIDCycle (MCHEmul::CPU* cpu, unsigned int i)
+{
+	assert (_deepDebugFile != nullptr);
+
+	MCHEmul::InfoStructure sidStr = std::move (soundWrapper () -> getInfoStructure ());
+	MCHEmul::InfoStructure voicesStr = std::move (sidStr.infoStructure ("VOICES"));
+	
+	// Create the structure of attributes...
+	MCHEmul::Attributes voicesAttrs;
+	for (const auto& e : voicesStr.infoStructures ())
+	{ 
+		std::string w;
+		MCHEmul::InfoStructure wStr = std::move (e.second.infoStructure ("WAVES"));
+		for (size_t ct = 0; ct < 3; ct++)
+			w += ((ct != 0) ? "," : "") + std::string ("Wave ") + std::to_string (ct) + "=" +
+				wStr.infoStructure (std::to_string (ct)).attribute ("TYPEANDFREQUENCY");
+		std::string v = e.second.attribute ("ADSR");
+		voicesAttrs.insert (MCHEmul::Attributes::value_type ("Voice " + e.first, v + "," + w));
+	}
+
+	_deepDebugFile -> writeCompleteLine (className (), 
+		cpu -> clockCycles () - i, "Info Cycle", voicesAttrs);
 }

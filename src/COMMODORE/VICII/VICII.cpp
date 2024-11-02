@@ -1669,7 +1669,7 @@ void COMMODORE::VICII::debugVICIICycle (MCHEmul::CPU* cpu, unsigned int i)
 {
 	assert (_deepDebugFile != nullptr);
 
-	_deepDebugFile -> writeCompleteLine ("VICII", cpu -> clockCycles () - i, "Info Cycle", 
+	_deepDebugFile -> writeCompleteLine (className (), cpu -> clockCycles () - i, "Info Cycle",
 		{ { "Raster position",
 			std::to_string (_raster.currentColumnAtBase0 ()) + "," +
 			std::to_string (_raster.currentLineAtBase0 ()) + "," +

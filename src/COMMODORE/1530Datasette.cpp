@@ -245,7 +245,8 @@ bool COMMODORE::Datasette1530Injection::executeTrap (const MCHEmul::Trap& t, MCH
 
 		default:
 			{
-				_LOG ("Trap type not supported yet:" + std::to_string (t._id));
+				_LOG ("Trap type not supported yet:" + 
+					std::to_string (t._id));
 				assert (false); // Just for compiling with debug on...
 			}
 

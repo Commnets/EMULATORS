@@ -188,7 +188,7 @@ void COMMODORE::CIA::debugCIACycle (MCHEmul::CPU* cpu, unsigned int i)
 {
 	assert (_deepDebugFile != nullptr);
 
-	_deepDebugFile -> writeCompleteLine ("CIA", cpu -> clockCycles () - i, "Info Cycle",
+	_deepDebugFile -> writeCompleteLine (className (), cpu -> clockCycles () - i, "Info Cycle",
 		{ { "Port A status",
 			std::to_string (_CIARegisters -> outputRegisterA ()) + "," +
 			std::to_string (_CIARegisters -> dataPortADir ()) + "," +

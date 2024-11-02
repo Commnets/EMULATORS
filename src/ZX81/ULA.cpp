@@ -279,7 +279,7 @@ void ZX81::ULA::debugULACycle (MCHEmul::CPU* cpu, unsigned int i)
 {
 	assert (_deepDebugFile != nullptr);
 
-	_deepDebugFile -> writeCompleteLine ("ULA", cpu -> clockCycles () - (i >> 1), "Info Cycle",
+	_deepDebugFile -> writeCompleteLine (className (), cpu -> clockCycles () - (i >> 1), "Info Cycle",
 		{ { "Raster position",
 			std::to_string (_raster.currentColumnAtBase0 ()) + "," +
 			std::to_string (_raster.currentLineAtBase0 ()) },

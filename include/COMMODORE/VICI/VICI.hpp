@@ -66,6 +66,16 @@ namespace COMMODORE
 
 			virtual MCHEmul::InfoStructure getInfoStructure () const override;
 
+			private:
+			// -----
+			// Different debug methods to simplify the internal code
+			// and to make simplier the modification in case it is needed...
+			/** Debug special situations...
+				Take care using this instructions _deepDebugFile could be == nullptr... */
+			void debugVICISoundCycle (MCHEmul::CPU* cpu, unsigned int i);
+			// -----
+
+			private:
 			// Implementation
 			/** The number of cycles the CPU was executed once the simulated method finishes. */
 			unsigned int _lastCPUCycles;
@@ -218,6 +228,14 @@ namespace COMMODORE
 		/** To move the graphics drawn to the screen. \n
 			The info move is the text/bitmap info that has been already draw to the screen. */
 		void drawResultToScreen (const DrawResult& cT, const DrawContext& dC);
+
+		// -----
+		// Different debug methods to simplify the internal code
+		// and to make simplier the modification in case it is needed...
+		/** Debug special situations...
+			Take care using this instructions _deepDebugFile could be == nullptr... */
+		void debugVICICycle (MCHEmul::CPU* cpu, unsigned int i);
+		// -----
 
 		private:
 		/** Just to calculate the screen positions. \n
