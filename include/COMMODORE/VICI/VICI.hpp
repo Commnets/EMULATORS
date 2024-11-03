@@ -33,7 +33,9 @@ namespace COMMODORE
 		PAL number of visible columns (defined) = 233 and NTSC = 210. \n
 		So for the border = (233 - (22 columns * 8 pixels)) / 2 = 28 + 29 pixels border (left/right) in PAL and 17 + 17 in NTSC. \n
 		The way they are distributed will depend of the valid values for screen position adjustment. \n
-		Cycles have been multiplied by 8 pixels but when read data for the screen any column is divided inlow and high nibble.
+		Cycles have been multiplied by 8 pixels but when read data for the screen any column is divided inlow and high nibble. \n
+		\n
+		Notice that VICI doesn't launch any type of interruption.
 	  */
 	class VICI : public MCHEmul::GraphicalChip
 	{

@@ -74,7 +74,7 @@ namespace COMMODORE
 			The VICII constructor receives also info over the raster data, the memory view to use,
 			The number of cycles of every raster line (different depending on the VICII version) 
 			and additional attributes. */
-		VICII (MCHEmul::PhysicalStorageSubset* cR, const MCHEmul::Address& cRA,
+		VICII (int intId, MCHEmul::PhysicalStorageSubset* cR, const MCHEmul::Address& cRA,
 			const MCHEmul::RasterData& vd, const MCHEmul::RasterData& hd, 
 			int vV, unsigned short cRL, const MCHEmul::Attributes& attrs = { });
 
@@ -349,6 +349,8 @@ namespace COMMODORE
 		// -----
 
 		protected:
+		/** The type of interrupt that are launched from this chip. */
+		int _interruptId;
 		/** A reference to the color RAM. */
 		MCHEmul::PhysicalStorageSubset* _colorRAM;
 		/** With the address it belongs to. */
@@ -748,8 +750,8 @@ namespace COMMODORE
 
 		static constexpr unsigned short _CYCLESPERRASTERLINE = 63;
 
-		VICII_PAL (MCHEmul::PhysicalStorageSubset* cR, const MCHEmul::Address& cRA,
-			int vV);
+		VICII_PAL (int intId, MCHEmul::PhysicalStorageSubset* cR, 
+			const MCHEmul::Address& cRA, int vV);
 
 		private:
 		virtual unsigned int treatRasterCycle () override;
@@ -763,8 +765,8 @@ namespace COMMODORE
 		static const MCHEmul::RasterData _VRASTERDATA;
 		static const MCHEmul::RasterData _HRASTERDATA;
 
-		VICII_NTSC (MCHEmul::PhysicalStorageSubset* cR, const MCHEmul::Address& cRA,
-			int vV);
+		VICII_NTSC (int intId, MCHEmul::PhysicalStorageSubset* cR, 
+			const MCHEmul::Address& cRA, int vV);
 
 		private:
 		virtual unsigned int treatRasterCycle () override;

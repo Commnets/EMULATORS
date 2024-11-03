@@ -20,27 +20,6 @@ bool VIC20::VIA1::initialize ()
 }
 
 // ---
-bool VIC20::VIA1::simulate (MCHEmul::CPU* cpu)
-{
-	if (deepDebugActive ())
-		*_deepDebugFile
-			// Where
-			<< "VIA1\t" 
-			// When
-			<< std::to_string (_lastClockCycles) << "\t" // clock cycles at that point
-			// What
-			<< "Info cycle\t\t"
-			// Data
-			<< "PortA:["
-			<< _PA.asString ()
-			<< "], PortB:["
-			<< _PB.asString () << "]\n";
-
-	// When this method is executed the vlue 
-	return (COMMODORE::VIA::simulate (cpu));
-}
-
-// ---
 void VIC20::VIA1::processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifier* n)
 {
 	COMMODORE::VIA::processEvent (evnt, n);

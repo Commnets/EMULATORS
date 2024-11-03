@@ -157,14 +157,14 @@ double MCHEmul::PulseSoundWave::data () const
 // ---
 void MCHEmul::PulseSoundWave::calculateWaveSamplingData ()
 {
+	MCHEmul::SoundWave::calculateWaveSamplingData ();
+
 	// How many cycles within the cyclesPerWave is the pulse up?
 	_cyclesPulseUp = (int) ((double) _cyclesPerWave * (double) _pulseUpPercentage);
 	// ...and down..simple:
 	_cyclesPulseDown = _cyclesPerWave - _cyclesPulseUp;
 
 	_pulseUp = false;
-
-	MCHEmul::SoundWave::calculateWaveSamplingData ();
 }
 
 // ---

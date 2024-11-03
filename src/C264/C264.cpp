@@ -106,12 +106,12 @@ MCHEmul::Chips C264::Commodore264::standardChips (const std::string& sS, C264::C
 	C264::TED* ted = 
 		vS == C264::Commodore264::VisualSystem::_PAL 
 			? (C264::TED*) new C264::TED_PAL 
-				(C264::Memory::_CPU_VIEW, new COMMODORE::TEDSoundSimpleLibWrapper 
+				(F6500::IRQInterrupt::_ID, C264::Memory::_CPU_VIEW, new COMMODORE::TEDSoundSimpleLibWrapper 
 					((vS == C264::Commodore264::VisualSystem::_PAL) 
 						? (C264::Commodore264::_PALCLOCK * 20) : (C264::Commodore264::_NTSCCLOCK * 16),
 					 COMMODORE::TED::_SOUNDSAMPLINGCLOCK))
 			: (C264::TED*) new C264::TED_NTSC
-				(C264::Memory::_CPU_VIEW, new COMMODORE::TEDSoundSimpleLibWrapper 
+				(F6500::IRQInterrupt::_ID, C264::Memory::_CPU_VIEW, new COMMODORE::TEDSoundSimpleLibWrapper 
 					((vS == C264::Commodore264::VisualSystem::_PAL) 
 						? (C264::Commodore264::_PALCLOCK * 20) : (C264::Commodore264::_NTSCCLOCK * 16), 
 					 COMMODORE::TED::_SOUNDSAMPLINGCLOCK));

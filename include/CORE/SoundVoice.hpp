@@ -34,6 +34,7 @@ namespace MCHEmul
 			  _attack (0), _decay (0), _release (0),
 			  _sustainVolumen (0.0f),
 			  _waves (sw),
+			  _ADSRActive (true), 
 			  _state (State::_ATTACK),
 			  _stateCounters (5 /** The five internal states of the wave = ADSR+Idle */, StateCounters ()) // All to 0...
 						{ calculateVoiceSamplingData (); }
@@ -61,6 +62,10 @@ namespace MCHEmul
 
 		// ADSR values...
 		/** The values are given and returned in milliseconds. */
+		bool ADSRActive () const
+						{ return (_ADSRActive); }
+		void setADSRActive (bool a)
+						{ _ADSRActive = a; }
 		unsigned short attack () const
 						{ return (_attack); }
 		void setAttack (unsigned short a)
@@ -163,6 +168,9 @@ namespace MCHEmul
 		double _sustainVolumen;
 		/** All possible waves. */
 		MCHEmul::SoundWaves _waves;
+		/** To define whether there is or not ADSR active. 
+			By default it is. */
+		bool _ADSRActive;
 
 		// Implementation
 		/** The status in which the wave is in. */

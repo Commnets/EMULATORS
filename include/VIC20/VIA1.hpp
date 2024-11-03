@@ -34,8 +34,6 @@ namespace VIC20
 
 		virtual bool initialize () override;
 
-		virtual bool simulate (MCHEmul::CPU* cpu) override;
-
 		private:
 		virtual void processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifier* n) override;
 

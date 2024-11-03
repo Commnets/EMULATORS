@@ -49,9 +49,9 @@ namespace C64
 	class VICII_PAL final : public COMMODORE::VICII_PAL, public VICII_JoystickEvent
 	{
 		public:
-		VICII_PAL (MCHEmul::PhysicalStorageSubset* cR, 
+		VICII_PAL (int intId, MCHEmul::PhysicalStorageSubset* cR, 
 			const MCHEmul::Address& cRA, int vV)
-			: COMMODORE::VICII_PAL (cR, cRA, vV),
+			: COMMODORE::VICII_PAL (intId, cR, cRA, vV),
 			  VICII_JoystickEvent ()
 							{ }
 							
@@ -64,9 +64,9 @@ namespace C64
 	class VICII_NTSC final : public COMMODORE::VICII_NTSC, public VICII_JoystickEvent
 	{
 		public:
-		VICII_NTSC (MCHEmul::PhysicalStorageSubset* cR, 
+		VICII_NTSC (int intId, MCHEmul::PhysicalStorageSubset* cR, 
 			const MCHEmul::Address& cRA, int vV)
-			: COMMODORE::VICII_NTSC (cR, cRA, vV)
+			: COMMODORE::VICII_NTSC (intId, cR, cRA, vV)
 							{ }
 							
 		virtual bool initialize () override;

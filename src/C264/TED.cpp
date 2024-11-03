@@ -76,8 +76,8 @@ void C264::TED::processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifier* n)
 }
 
 // ---
-C264::TED_PAL::TED_PAL (int vV, MCHEmul::SoundLibWrapper* wS)
-	: C264::TED (
+C264::TED_PAL::TED_PAL (int intId, int vV, MCHEmul::SoundLibWrapper* wS)
+	: C264::TED (intId,
 		 _VRASTERDATA, _HRASTERDATA, vV, wS,
 		{ { "Name", "TED" },
 		  { "Code", "7360/8360 for PAL" },
@@ -88,8 +88,8 @@ C264::TED_PAL::TED_PAL (int vV, MCHEmul::SoundLibWrapper* wS)
 }
 
 // ---
-C264::TED_NTSC::TED_NTSC (int vV, MCHEmul::SoundLibWrapper* wS)
-	: C264::TED (
+C264::TED_NTSC::TED_NTSC (int intId, int vV, MCHEmul::SoundLibWrapper* wS)
+	: C264::TED (intId,
 		 _VRASTERDATA, _HRASTERDATA, vV, wS,
 		{ { "Name", "TED" },
 		  { "Code", "7360/8360 for NTSC" },

@@ -72,7 +72,7 @@ namespace COMMODORE
 		virtual bool getData (MCHEmul::CPU *cpu, MCHEmul::UBytes& dt) override;
 
 		virtual MCHEmul::InfoStructure getVoiceInfoStructure (unsigned char nV) const override
-						{ return ((nV < 3) ? _voices [nV] -> getInfoStructure () : MCHEmul::InfoStructure ()); }
+						{ return ((nV < 4) ? _voices [nV] -> getInfoStructure () : MCHEmul::InfoStructure ()); }
 
 		private:
 		unsigned int _chipFrequency;
@@ -89,6 +89,9 @@ namespace COMMODORE
 			Voice (int id, unsigned int cF)
 				: MCHEmul::SoundVoice (id, cF,
 					{
+						// There must be the fourth types...
+						// ...although just Pulse and Noise are used (because there is a direct acces to the array)
+						new MCHEmul::TriangleSoundWave (cF),
 						new MCHEmul::SawSmoothSoundWave (cF),
 						new MCHEmul::PulseSoundWave (cF),
 						new MCHEmul::NoiseSoundWave (cF)

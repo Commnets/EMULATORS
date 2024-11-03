@@ -86,21 +86,7 @@ bool ZXSPECTRUM::ULA::simulate (MCHEmul::CPU* cpu)
 			((cpu -> clockCycles  () - _lastCPUCycles) << 1 /** ULA cycles = 2 * CPU Cycles. */); 
 			i > 0; i--)
 	{
-		if (MCHEmul::GraphicalChip::deepDebugActive ())
-		{
-			*MCHEmul::GraphicalChip::_deepDebugFile
-				// Where
-				<< "ULA\t\t" 
-				// When
-				<< std::to_string (cpu -> clockCycles () - (i >> 1)) << "\t" // CPU clock cycles at that point
-				// What
-				<< "Info cycle\t\t"
-				// Data
-				<< "Raster:["
-				<< std::to_string (_raster.currentColumnAtBase0 ()) << "," 
-				<< std::to_string (_raster.currentLineAtBase0 ()) 
-				<< "]\n";
-		}
+		_IFDEBUG debugULACycle (cpu, i);
 
 		// Read the graphics and draw the visible zone, 
 		// if it is the case...
@@ -137,9 +123,9 @@ bool ZXSPECTRUM::ULA::simulate (MCHEmul::CPU* cpu)
 				_videoSignalData._flash = !_videoSignalData._flash;
 			}
 
-			// An interrupt is generated any time the 
+			// An interrupt is generated any time the raster reaches the end of the scren...
 			cpu -> requestInterrupt 
-				(FZ80::INTInterrupt::_ID, i, this, 0 /** The reason is that the Screen is complete. */);
+				(FZ80::INTInterrupt::_ID, i, this, 0 /** The reason is that the screen is complete. */);
 		}
 	}
 
@@ -289,6 +275,18 @@ void ZXSPECTRUM::ULA::readGraphicInfoAndDrawVisibleZone (MCHEmul::CPU* cpu)
 void ZXSPECTRUM::ULA::drawEvents ()
 {
 	// TODO
+}
+
+// ---
+void ZXSPECTRUM::ULA::debugULACycle (MCHEmul::CPU* cpu, unsigned int i)
+{
+	assert (_deepDebugFile != nullptr);
+
+	_deepDebugFile -> writeCompleteLine (className (), cpu -> clockCycles () - (i >> 1), "Info Cyle", 
+		MCHEmul::Attributes ({ 
+			{ "Raster",
+				std::to_string (_raster.currentColumnAtBase0 ()) + "," +
+				std::to_string (_raster.currentLineAtBase0 ()) } }));
 }
 
 // ---

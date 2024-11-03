@@ -24,7 +24,7 @@ void MCHEmul::SoundVoice::clock (unsigned int nC)
 		return;
 
 	for (auto i : _waves)
-		i -> clock (nC); 
+		i -> clock (nC);
 
 	if (_state == State::_SUSTAIN)
 		return;
@@ -131,6 +131,10 @@ double MCHEmul::SoundVoice::wavesData () const
 double MCHEmul::SoundVoice::ADSRData () const
 {
 	double result = 1.0f;
+
+	if (!_ADSRActive)
+		return (result);
+
 	MCHEmul::SoundVoice::StateCounters& sC = _stateCounters [(int) _state];
 	switch (_state)
 	{

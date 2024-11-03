@@ -15,7 +15,7 @@ const MCHEmul::Address COMMODORE::VICII::_MEMORYPOSIDLE1 = MCHEmul::Address ({ 0
 const MCHEmul::Address COMMODORE::VICII::_MEMORYPOSIDLE2 = MCHEmul::Address ({ 0xff, 0x3f }, false);
 
 // ---
-COMMODORE::VICII::VICII (MCHEmul::PhysicalStorageSubset* cR, const MCHEmul::Address& cRA,
+COMMODORE::VICII::VICII (int intId, MCHEmul::PhysicalStorageSubset* cR, const MCHEmul::Address& cRA,
 		const MCHEmul::RasterData& vd, const MCHEmul::RasterData& hd, 
 		int vV, unsigned short cRL, const MCHEmul::Attributes& attrs)
 	: MCHEmul::GraphicalChip (_ID, 
@@ -23,6 +23,7 @@ COMMODORE::VICII::VICII (MCHEmul::PhysicalStorageSubset* cR, const MCHEmul::Addr
 		  { "Code", "6567/8562/8564 (NTSC), 6569/8565/8566 (PAL)" },
 		  { "Manufacturer", "Commodore Business Machines CBM" },
 		  { "Year", "1983" } }),
+	  _interruptId (intId),
 	  _colorRAM (cR), _colorRAMAddress (cRA),
 	  _VICIIRegisters (nullptr), 
 	  _VICIIView (vV),
@@ -160,7 +161,7 @@ bool COMMODORE::VICII::simulate (MCHEmul::CPU* cpu)
 
 	// If the right register has been modified....
 	if (_VICIIRegisters -> interruptsEnabledBack ())
-		cpu -> interrupt (F6500::IRQInterrupt::_ID) -> 
+		cpu -> interrupt (_interruptId) -> 
 			setNewInterruptRequestAdmitted (false); // ...the interrupts are admitted again...
 
 	// The simulation has to be repeated as many time as cycles have spent since the last invocation...
@@ -258,7 +259,7 @@ bool COMMODORE::VICII::simulate (MCHEmul::CPU* cpu)
 		int cI = -1;
 		if ((cI = (int)_VICIIRegisters -> reasonIRQCode ()) != 0)
 			cpu -> requestInterrupt (
-				F6500::IRQInterrupt::_ID, 
+				_interruptId,
 				cpu -> clockCycles  () - i, 
 				this,
 				cI);
@@ -1554,9 +1555,9 @@ void COMMODORE::VICII::detectCollisions (const DrawResult& cT)
 }
 
 // ---
-COMMODORE::VICII_PAL::VICII_PAL (MCHEmul::PhysicalStorageSubset* cR, const MCHEmul::Address& cRA,
-		int vV)
-	: COMMODORE::VICII (cR, cRA,
+COMMODORE::VICII_PAL::VICII_PAL (int intId, MCHEmul::PhysicalStorageSubset* cR, 
+		const MCHEmul::Address& cRA, int vV)
+	: COMMODORE::VICII (intId, cR, cRA,
 		 _VRASTERDATA, _HRASTERDATA, vV, COMMODORE::VICII_PAL::_CYCLESPERRASTERLINE,
 		 { { "Name", "VIC-II (PAL) Video Chip Interface II" },
 		   { "Code", "6569/8565/8566" },
@@ -1608,9 +1609,9 @@ unsigned int COMMODORE::VICII_PAL::treatRasterCycle ()
 }
 
 // ---
-COMMODORE::VICII_NTSC::VICII_NTSC (MCHEmul::PhysicalStorageSubset* cR, const MCHEmul::Address& cRA,
-	int vV)
-	: COMMODORE::VICII (cR, cRA,
+COMMODORE::VICII_NTSC::VICII_NTSC (int intId, MCHEmul::PhysicalStorageSubset* cR,
+		const MCHEmul::Address& cRA, int vV)
+	: COMMODORE::VICII (intId, cR, cRA,
 		 _VRASTERDATA, _HRASTERDATA, vV, 64,
 		 { { "Name", "VIC-II (NTSC) Video Chip Interface II" },
 		   { "Code", "6567/8562/8564" },

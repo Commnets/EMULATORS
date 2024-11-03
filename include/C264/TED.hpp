@@ -45,9 +45,9 @@ namespace C264
 		public:
 		static const unsigned int _ROMACCESSCHANGED = 300;
 
-		TED (const MCHEmul::RasterData& vd, const MCHEmul::RasterData& hd,
+		TED (int intId, const MCHEmul::RasterData& vd, const MCHEmul::RasterData& hd,
 			int vV, MCHEmul::SoundLibWrapper* sW, const MCHEmul::Attributes& attrs = { })
-			: COMMODORE::TED (vd, hd, vV, sW, attrs),
+			: COMMODORE::TED (intId, vd, hd, vV, sW, attrs),
 			  _TEDRegisters (nullptr)
 							{ }
 
@@ -76,7 +76,7 @@ namespace C264
 		static const MCHEmul::RasterData _VRASTERDATA;
 		static const MCHEmul::RasterData _HRASTERDATA;
 
-		TED_PAL (int vV, MCHEmul::SoundLibWrapper* wS);
+		TED_PAL (int intId, int vV, MCHEmul::SoundLibWrapper* wS);
 	};
 
 	/** The version para NTSC systems. */
@@ -86,7 +86,7 @@ namespace C264
 		static const MCHEmul::RasterData _VRASTERDATA;
 		static const MCHEmul::RasterData _HRASTERDATA;
 
-		TED_NTSC (int vV, MCHEmul::SoundLibWrapper* wS);
+		TED_NTSC (int intId, int vV, MCHEmul::SoundLibWrapper* wS);
 	};
 }
 

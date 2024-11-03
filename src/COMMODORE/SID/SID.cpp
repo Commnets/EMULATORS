@@ -147,7 +147,8 @@ void COMMODORE::SID::debugSIDCycle (MCHEmul::CPU* cpu, unsigned int i)
 			w += ((ct != 0) ? "," : "") + std::string ("Wave ") + std::to_string (ct) + "=" +
 				wStr.infoStructure (std::to_string (ct)).attribute ("TYPEANDFREQUENCY");
 		std::string v = e.second.attribute ("ADSR");
-		voicesAttrs.insert (MCHEmul::Attributes::value_type ("Voice " + e.first, v + "," + w));
+		voicesAttrs.insert (MCHEmul::Attributes::value_type ("Voice " + e.first, 
+			e.second.attribute ("ACTIVE") + "," + v + "," + w));
 	}
 
 	_deepDebugFile -> writeCompleteLine (className (), 

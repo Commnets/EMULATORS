@@ -82,7 +82,7 @@ namespace COMMODORE
 			The TED constructor receives info over the raster data, the memory view to use,
 			The number of cycles of every raster line (different depending on the VICII version) 
 			and additional attributes. */
-		TED (const MCHEmul::RasterData& vd, const MCHEmul::RasterData& hd,
+		TED (int intId, const MCHEmul::RasterData& vd, const MCHEmul::RasterData& hd,
 			int vV, MCHEmul::SoundLibWrapper* sW, const MCHEmul::Attributes& attrs = { });
 
 		virtual ~TED () override;
@@ -240,6 +240,8 @@ namespace COMMODORE
 		// -----
 
 		protected:
+		/** The type of interrupt launched from the TED. */
+		int _interruptId;
 		/** There three timers within the TED. */
 		TEDTimer _T1, _T2, _T3;
 		/** A reference to the sound part of the chip. */
@@ -388,7 +390,7 @@ namespace COMMODORE
 
 		static constexpr unsigned short _CYCLESPERRASTERLINE = 71;
 
-		TED_PAL (int vV, MCHEmul::SoundLibWrapper* wS);
+		TED_PAL (int intId, int vV, MCHEmul::SoundLibWrapper* wS);
 	};
 
 	/** The version para NTSC systems. */
@@ -400,7 +402,7 @@ namespace COMMODORE
 
 		static constexpr unsigned short _CYCLESPERRASTERLINE = 65;
 
-		TED_NTSC (int vV, MCHEmul::SoundLibWrapper* wS);
+		TED_NTSC (int intId, int vV, MCHEmul::SoundLibWrapper* wS);
 	};
 }
 

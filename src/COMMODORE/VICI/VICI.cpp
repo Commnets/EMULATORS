@@ -29,7 +29,7 @@ COMMODORE::VICI::SoundFunction::SoundFunction (MCHEmul::SoundLibWrapper* sW)
 	// ...and also belonging to the right type..
 	assert (dynamic_cast <COMMODORE::VICISoundLibWrapper*> (soundWrapper ()) != nullptr);
 
-	setClassName ("SoundFunction");
+	setClassName ("VICISoundFunction");
 }
 
 // ---
@@ -108,7 +108,8 @@ void COMMODORE::VICI::SoundFunction::debugVICISoundCycle (MCHEmul::CPU* cpu, uns
 			w += ((ct != 0) ? "," : "") + std::string ("Wave ") + std::to_string (ct) + "=" +
 				wStr.infoStructure (std::to_string (ct)).attribute ("TYPEANDFREQUENCY");
 		std::string v = e.second.attribute ("ADSR");
-		voicesAttrs.insert (MCHEmul::Attributes::value_type ("Voice " + e.first, v + "," + w));
+		voicesAttrs.insert (MCHEmul::Attributes::value_type ("Voice " + e.first, 
+			e.second.attribute ("ACTIVE") + "," + v + "," + w));
 	}
 
 	_deepDebugFile -> writeCompleteLine (className (), 
@@ -225,7 +226,7 @@ bool COMMODORE::VICI::simulate (MCHEmul::CPU* cpu)
 			{
 				_lastVBlankEntered = true;
 
-				MCHEmul::GraphicalChip::notify (MCHEmul::Event (_GRAPHICSREADY));
+				notify (MCHEmul::Event (_GRAPHICSREADY));
 
 				_vicGraphicInfo.initialize (_VICIRegisters);
 			}
@@ -251,9 +252,9 @@ MCHEmul::InfoStructure COMMODORE::VICI::getInfoStructure () const
 	MCHEmul::InfoStructure result = std::move (MCHEmul::GraphicalChip::getInfoStructure ());
 
 	result.remove ("Memory"); // This info is not neccesary...
-	result.add ("VICIRegisters",	std::move (_VICIRegisters -> getInfoStructure ()));
-	result.add ("Raster",			std::move (_raster.getInfoStructure ()));
-	result.add ("Sound",			std::move (_soundFunction -> getInfoStructure ()));
+	result.add ("VICIRegisters",		std::move (_VICIRegisters -> getInfoStructure ()));
+	result.add ("Raster",				std::move (_raster.getInfoStructure ()));
+	result.add ("VICISoundFunction",	std::move (_soundFunction -> getInfoStructure ()));
 
 	return (result);
 }
@@ -503,7 +504,7 @@ void COMMODORE::VICI::debugVICICycle (MCHEmul::CPU* cpu, unsigned int i)
 {
 	assert (_deepDebugFile != nullptr);
 
-	_deepDebugFile -> writeCompleteLine (className (), i, "Info Cycle",
+	_deepDebugFile -> writeCompleteLine (className (), cpu -> clockCycles () - i, "Info Cycle",
 		{ { "Raster", 
 				std::to_string (_raster.currentColumnAtBase0 ()) + "," +
 				std::to_string (_raster.currentLineAtBase0 ()) + "," +

@@ -87,9 +87,10 @@ MCHEmul::InfoStructure COMMODORE::TED::SoundFunction::getInfoStructure () const
 }
 
 // ---
-COMMODORE::TED::TED (const MCHEmul::RasterData& vd, const MCHEmul::RasterData& hd,
+COMMODORE::TED::TED (int intId, const MCHEmul::RasterData& vd, const MCHEmul::RasterData& hd,
 		int vV, MCHEmul::SoundLibWrapper* sW, const MCHEmul::Attributes& attrs)
 	: MCHEmul::GraphicalChip (_ID, attrs),
+	  _interruptId (intId),
 	  _T1 (1, COMMODORE::TEDTimer::RunMode::_FROMINITIALVALUE),
 	  _T2 (2, COMMODORE::TEDTimer::RunMode::_CONTINUOUS),
 	  _T3 (3, COMMODORE::TEDTimer::RunMode::_CONTINUOUS),
@@ -1008,8 +1009,8 @@ void COMMODORE::TED::debugTEDCycle (MCHEmul::CPU* cpu, unsigned int i)
 }
 
 // ---
-COMMODORE::TED_PAL::TED_PAL (int vV, MCHEmul::SoundLibWrapper* wS)
-	: COMMODORE::TED (
+COMMODORE::TED_PAL::TED_PAL (int intId, int vV, MCHEmul::SoundLibWrapper* wS)
+	: COMMODORE::TED (intId,
 		 _VRASTERDATA, _HRASTERDATA, vV, wS,
 		{ { "Name", "TED" },
 		  { "Code", "7360/8360 for PAL" },
@@ -1020,8 +1021,8 @@ COMMODORE::TED_PAL::TED_PAL (int vV, MCHEmul::SoundLibWrapper* wS)
 }
 
 // ---
-COMMODORE::TED_NTSC::TED_NTSC (int vV, MCHEmul::SoundLibWrapper* wS)
-	: COMMODORE::TED (
+COMMODORE::TED_NTSC::TED_NTSC (int intId, int vV, MCHEmul::SoundLibWrapper* wS)
+	: COMMODORE::TED (intId,
 		 _VRASTERDATA, _HRASTERDATA, vV, wS,
 		{ { "Name", "TED" },
 		  { "Code", "7360/8360 for NTSC" },

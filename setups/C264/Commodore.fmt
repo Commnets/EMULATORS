@@ -74,6 +74,15 @@ Id:@ID@
 @TEDTimer3>@
 #---
 #---
+;VICIVoice
+Id:@ID@, Active:@ACTIVE@
+@WAVES?{fmter=.CLASS,empty=no waves}\n@
+#---
+#---
+;VICISoundFunction
+@SoundLibWrapper>@
+#---
+#---
 ;VICIRegisters
 @BYTES{blocksize=16,listsep=\,,tablesep=\ ,minsize=2}@
 LIGHTPEN:@LIGHTPENX@,@LIGHTPENY@
@@ -87,6 +96,8 @@ Id:@ID@
 ->VICIRegisters:
 @VICIRegisters>@
 @Raster>@
+->Sound:
+@VICISoundFunction>@
 #---
 #---
 ;SpriteInfo

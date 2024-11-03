@@ -99,6 +99,8 @@ bool COMMODORE::VIA::simulate (MCHEmul::CPU* cpu)
 	for (unsigned int i = cpu -> clockCycles () - _lastClockCycles; 
 			i > 0 && result == true; i--)
 	{
+		_IFDEBUG debugVIACycle (cpu, i);
+
 		// Simulations...
 		// "ControlLines"
 		// Clean up first the signals...
@@ -160,4 +162,14 @@ MCHEmul::InfoStructure COMMODORE::VIA::getInfoStructure () const
 	result.add ("VIACtrlB2",	std::move (_CB1.getInfoStructure ()));
 
 	return (result);
+}
+
+// ---
+void COMMODORE::VIA::debugVIACycle (MCHEmul::CPU* cpu, unsigned int i)
+{
+	assert (_deepDebugFile != nullptr);
+
+	_deepDebugFile -> writeCompleteLine (className (), cpu -> clockCycles () - i, "Info Cycle",
+		{ { "PortA", _PA.asString () },
+		  { "PortB", _PB.asString () } });
 }
