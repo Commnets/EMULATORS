@@ -40,6 +40,11 @@ bool VIC20::CommodoreVIC20::initialize (bool iM)
 	// the registers that point out to the char and color memory must be adapted!
 	setConfiguration (static_cast <VIC20::Memory*> (memory ()) -> configuration (), false /** Not restart. */);
 
+	// The CPU is observed by VIC20
+	// This is because when a instruction is about to be executed,
+	// the VICII has to be aware about the number of cycles that the instruction will take
+	// in order to manage what $D012 result must returns properly!
+	observe (_cpu);
 	// It is also needed to observe the expansion port...
 	// Events when it is disonnected and connected are sent and with many implications
 	// in the structure of the memory...
@@ -65,6 +70,12 @@ void VIC20::CommodoreVIC20::processEvent (const MCHEmul::Event& evnt, MCHEmul::N
 	{
 		setExit (true);
 		setRestartAfterExit (true, 9999 /** Big enough */);
+	}
+	else
+	if (evnt.id () == MCHEmul::CPU::_CPUTOEXECUTEINSTRUCTION)
+	{
+		static_cast <COMMODORE::VICI*> (chip (COMMODORE::VICI::_ID)) -> CPUAboutToExecute
+			(_cpu, (MCHEmul::Instruction*) (static_cast <MCHEmul::CPU::EventData*> (evnt.data ().get ()) -> _data));
 	}
 }
 

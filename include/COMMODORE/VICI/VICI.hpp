@@ -138,6 +138,15 @@ namespace COMMODORE
 
 		virtual bool initialize () override;
 
+		/** The raster is a critical thing in the behaviour of the VICI.
+			The content of the register 0x04 (and the 0x14 bacause it contains low bit) is "real time".
+			Any read instruction could read different values depending on the position of the raster 
+			when that instruction happens. */
+		virtual void CPUAboutToExecute (MCHEmul::CPU* cpu, MCHEmul::Instruction* inst) override
+							{ _VICIRegisters -> setNumberPositionsNextInstruction 
+								(inst -> memoryPositions
+									(cpu -> memoryRef (), cpu -> programCounter ().asAddress ())); }
+
 		/** Simulates cycles in the VICI. */
 		virtual bool simulate (MCHEmul::CPU* cpu) override;
 
@@ -158,6 +167,10 @@ namespace COMMODORE
 		MCHEmul::UBytes colorMemorySnapShot (MCHEmul::CPU* cpu) const
 							{ return (cpu -> memoryRef () -> values 
 								(_VICIRegisters -> colourMemory (), 0x01fa /** 506 positions = 22 x 23. */)); }
+
+		/** The characters. */
+		MCHEmul::Strings charsDrawSnapshot (MCHEmul::CPU* cpu, 
+			const std::vector <size_t>& chrs = { }) const;
 
 		protected:
 		virtual void processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifier* n) override;
@@ -257,6 +270,9 @@ namespace COMMODORE
 		MCHEmul::Raster _raster;
 
 		// Implementation
+		/** The max X coordinate visible. 
+			Defined at construction time, but used when drawing. */
+		unsigned short _maxXVisible;
 		/** The number of cycles the CPU was executed once the simulated method finishes. */
 		unsigned int _lastCPUCycles;
 		/** The format used to draw. 
@@ -276,7 +292,7 @@ namespace COMMODORE
 		  * The VICI considers all lines in the screen as bad lines, 
 		  * which means that in all lines graphical information is read from the memory 
 		  * (char code, char data definition and colour info). \n
-		  * The text windo is something that can be reloacted within the visible zone. \n
+		  * The text window is something that can be relocated within the visible zone. \n
 		  * The methods defined in this class flag when the initial position of this text window is detected. */
 		struct VICGraphicInfo
 		{
@@ -291,7 +307,7 @@ namespace COMMODORE
 				  _colorData (MCHEmul::UByte::_0)
 							{ }
 
-			/** Invoked onky from the VICI initialization method. */
+			/** Invoked only from the VICI initialization method. */
 			inline void initialize (VICIRegisters* r);
 			inline void nextHorizontal (VICIRegisters* r);
 			inline void nextVertical (VICIRegisters* r);

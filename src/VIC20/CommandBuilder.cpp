@@ -16,6 +16,8 @@ MCHEmul::Command* VIC20::CommandBuilder::createEmptyCommand (const std::string& 
 		result = new VIC20::ScreenMemoryDUMPCommand;
 	else if (cmdName == "COLORDUMP" || cmdName == VIC20::ColorMemoryDUMPCommand::_NAME)
 		result = new VIC20::ColorMemoryDUMPCommand;
+	else if (cmdName == "CHARSDRAW" || cmdName == VIC20::CharactersDrawCommand::_NAME)
+		result = new VIC20::CharactersDrawCommand;
 
 	return (result);
 }

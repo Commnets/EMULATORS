@@ -34,10 +34,8 @@ bool F6500::C6500::initialize ()
 		return (false);
 
 	// The interrupts are initialized to be admitted again...
-	interrupt (F6500::IRQInterrupt::_ID) -> 
-		setNewInterruptRequestAdmitted (false);
-	interrupt (F6500::NMIInterrupt::_ID) -> 
-		setNewInterruptRequestAdmitted (false);
+	for (const auto& i : interrupts ())
+		i.second -> setNewInterruptRequestAdmitted (false);
 
 	// The 6500 family execute every instruction in several cycles.
 	// Usually the cycle that actualized the memory is the last one.

@@ -14,3 +14,7 @@ No parameters are needed.
 ;COLORDUMP
 To know the content of the screen.
 No parameters are needed.
+;CHARSDRAW [c1 c2 c3...]
+To print out the characters data.
+No parameters of the list of characters to visualize from 0 to 255 in decimal format.
+The parameters could be repeated, but just one instace of every value is accepted.

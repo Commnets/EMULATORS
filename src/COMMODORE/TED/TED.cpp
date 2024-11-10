@@ -3,12 +3,12 @@
 #include <F6500/IRQInterrupt.hpp>
 
 // ---
-const MCHEmul::RasterData COMMODORE::TED_PAL::_VRASTERDATA (260, 274, 3, 202, 245, 259, 312, 4, 4);
+const MCHEmul::RasterData COMMODORE::TED_PAL::_VRASTERDATA (260, 274, 3, 202, 245, 259, 259, 312, 4, 4);
 const MCHEmul::RasterData COMMODORE::TED_PAL::_HRASTERDATA 
-	(376, 384, 432, 295, 343, 375, 456 /** For everyting to run, it has to be divisible by 8. */, 7, 9);
-const MCHEmul::RasterData COMMODORE::TED_NTSC::_VRASTERDATA (235, 249, 3, 202, 220, 234, 262, 4, 4);
+	(376, 384, 432, 295, 343, 375, 375, 456 /** For everyting to run, it has to be divisible by 8. */, 7, 9);
+const MCHEmul::RasterData COMMODORE::TED_NTSC::_VRASTERDATA (235, 249, 3, 202, 220, 234, 234, 262, 4, 4);
 const MCHEmul::RasterData COMMODORE::TED_NTSC::_HRASTERDATA 
-	(376, 384, 432, 295, 343, 375, 456 /** For everyting to run, it has to be divisible by 8. */, 7, 9);
+	(376, 384, 432, 295, 343, 375, 375, 456 /** For everyting to run, it has to be divisible by 8. */, 7, 9);
 // This two positions are fized...
 const MCHEmul::Address COMMODORE::TED::_MEMORYPOSIDLE1 = MCHEmul::Address ({ 0xff, 0x39 }, false);
 const MCHEmul::Address COMMODORE::TED::_MEMORYPOSIDLE2 = MCHEmul::Address ({ 0xff, 0x3f }, false);

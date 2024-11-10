@@ -20,18 +20,26 @@
 
 namespace COMMODORE
 {
+	class VICI;
+
 	/** In the VICI Registers, 
 		there are a couple of records that behave different
 		when they are read that when they are written. */
 	class VICIRegisters final : public MCHEmul::ChipRegisters
 	{
 		public:
+		friend VICI;
+
 		static const int _VICREGS_SUBSET = 1040;
 
 		VICIRegisters (MCHEmul::PhysicalStorage* ps, size_t pp, const MCHEmul::Address& a, size_t s);
 
 		virtual size_t numberRegisters () const override
 							{ return (0x10); }
+		
+		/** To set the number of positions that the next instruction will take. */
+		void setNumberPositionsNextInstruction (unsigned int nP)
+							{ _numberPositionsNextInstruction = nP; }
 
 		/** To know whether the status of the interlaced mode. */
 		bool interlacedActive () const
@@ -51,11 +59,15 @@ namespace COMMODORE
 		bool charsExpanded () const
 							{ return (_charsExpanded); }
 
-		/** The raster line. */
+		// Managing the raster
+		// The raster info is in the VICI chip actually.
+		// However its info is needed when checking some registers...
+		void linkToRaster (MCHEmul::Raster* r)
+							{ _raster = r; }
 		unsigned short currentRasterLine () const
-							{ return (_currentRasterLine); }
-		void setCurrentRasterLine (unsigned short rL)
-							{ _currentRasterLine = rL; }
+							{ return (_raster -> vData ().currentPosition ()); }
+		unsigned short currentRasterPositionInLine () const
+							{ return (_raster -> hData ().currentPosition ()); }
 
 		/** To manage the light pen. \n
 			This temporal variables are set from the VICI directly. */
@@ -121,6 +133,8 @@ namespace COMMODORE
 		inline void calculateMemoryPositions ();
 
 		private:
+		/** The number of cycle that the next instruction to be executed in the CPU will take. */
+		unsigned int _numberPositionsNextInstruction;
 		/** Interlaced? */
 		bool _interlaced;
 		/** Offset X of the screen. \n
@@ -143,8 +157,6 @@ namespace COMMODORE
 		unsigned char _charsHeightScreen;
 		/** chars expanded?. */
 		bool _charsExpanded;
-		/** The raster line. */
-		unsigned short _currentRasterLine;
 		/** Memory numbers. */
 		unsigned int _b9ScreenColorMemory, _b10to13ScreenMemory, _b10to13CharDatamemory;
 		/** Related with the pigh pen. */
@@ -157,6 +169,11 @@ namespace COMMODORE
 		/** To indicate wheter the system is managing the inverse mode or not. */
 		bool _inverseMode;
 
+		// Some of this variables are set by the emulation of the VICII
+		// The VICI chip also uses this object as a temporary storage
+		/** Where the raster line is. */
+		MCHEmul::Raster* _raster;
+
 		// Implementation...
 		mutable MCHEmul::UByte _lastValueRead;
 		MCHEmul::Address _screenMemory;
@@ -168,7 +185,8 @@ namespace COMMODORE
 	inline void VICIRegisters::calculateMemoryPositions ()
 	{ 
 		_screenMemory	= MCHEmul::Address (2, (_b9ScreenColorMemory << 9) + // 2 bytes long always...
-			((_b10to13ScreenMemory & 0x07 /** The bit 3 is not considered. */) << 10));
+			((_b10to13ScreenMemory & 0x07 /** The bit 3 is considered... */ + 
+				(((_b10to13ScreenMemory & 0x80) == 0x00) ? 0x80 : 0x00) /** ...but in the other sense. */) << 10));
 		_charDataMemory = MCHEmul::Address (2, ((_b10to13CharDatamemory & 0x80) == 0x00 ? 0x8000 : 0x0000) + 
 			((_b10to13CharDatamemory & 0x07 /** The bit 3 is used to determine the bank. */) << 10)); // This is how VIC20 sees the memory!...
 		_colourMemory	= MCHEmul::Address (2, _b9ScreenColorMemory == 0x00 ? 0x9400 : 0x9600 );

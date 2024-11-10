@@ -1,18 +1,118 @@
 #include <COMMODORE/VICI/VICI.hpp>
 
 // ---
-/** This values have been clculated from the info at: http://tinyvga.com/6561. */
-const MCHEmul::RasterData COMMODORE::VICI_PAL::_VRASTERDATA	(0, 28, 28, 311, 311, 311, 312, 0, 0);
-/** Really the movement is half the values shown, 
-	but they have been multiplied by two to maitain the proportion inthe screen. */
-const MCHEmul::RasterData COMMODORE::VICI_PAL::_HRASTERDATA	
-	(0, 40, 40, 504, 504, 567, 568 /** For everything to run well, it has to be a multiple of 8. */, 0, 0);
-const MCHEmul::RasterData COMMODORE::VICI_NTSC::_VRASTERDATA (0, 28, 28, 260, 260, 260, 261, 0, 0);
-/** Really the movement is half the values shown, 
-	but they have been multiplied by two to maitain the proportion inthe screen. */
-const MCHEmul::RasterData COMMODORE::VICI_NTSC::_HRASTERDATA 
-	(0, 0, 0, 415, 415, 519, 520 /** For everything to run well, it has to be a multiple of 8. */, 0, 0);
-// Memory where to read when there is no text window...
+/** This values have been calculated from the info at: http://tinyvga.com/6561. */
+// PAL SYSTEM
+/** VERTICAL RASTER: \n
+	---------------- \n
+	312 lines in total (as it is in the documentation). \n
+	284 visible lines (also in the documentation), so 28 invisible lines (312 - 284 = 28). \n
+	8 * 22 = 176 screen lines in total. \n
+	The granularity of the vertical movement of the screen is 2 pixels. \n
+	When $01 = 14 the first line of the screen is visible (at the second visible line), 
+	so all invisible lines are at the top. \n
+	And when it is 155 only 1 pixel of the first row is visible,
+	so it there will have moved = (155 - 14 + 1) * 2 = 284 pixels down. \n
+	The usual value of the register $01 is 38, so the up margin is = ((38-14+1)*2)-1(the one visible before)=49pixels. \n
+	And the down margin = 284 - (49 + 176) = 59. \n
+	And the rest up tpo 312 is not visible = 312 - (28 + 49 + 176 + 59) = 0!
+	So: 0,28,77,252,311,311. Total 312. \n
+	\n
+=>	However as the drawing is controlled by internal counters, 
+	the only thing that matters actually is is total visible positions = 312 - 28 = 284 
+	and the size of the non visible zone. = 28
+	So: 0,28,28,311,311,311. Total 312. \n
+	\n
+	HORIZONTAL RASTER:\n
+	------------------\n
+	In one side:
+	The VICI is connected to a clock at 4.433.618Hz. \n
+	It reduces the speed and set CPU Clock at /4 speed = 1.108.404Hz. \n
+	It is said that the screen is 233 pixels width (visible part). \n
+	We could initially suppose than the screen has then (233 - (23 * 8)) / 2 = 24,5 
+	pixels border per side in average. Or 23 and 25 each it was centered.
+	\n
+	In the other side:
+	Every line takes 71 CPU cycles. \n
+	The sensibility of the screen movement (looking registers $00 e.g) is 4 pixels. \n
+	So in each CPU cycle only 4 pixels should be drawn. \n
+	It is said (in the documentation) that when the value of the register $00 is $00, and the number of columns is 22,
+	the first visible pixel of the display is the 4th pixel of the 3rd column. \n
+	When that value is 5, the first pixel seen is the first pixel of the first column.
+	If the screen started to be drawn at the very first cycle in each line,
+	we could say that there would be 20 pixels hidden. and because the usual value of this register is 12, 
+	the size of the left border would be = 32 pixels (12 - 5 + 1) * 4. \n
+	This number doesn't match with the one that roughly was calculated above (24). 
+	The number of pixels of the usual screen are in this case 176 pixels (22 * 8).
+	So the right margin is: 233 - (32 + 176) = 25 pixels.
+	\n
+	Finally: \n
+	(71 * 4) - (20 HIDDEN LEFT + 32 MARGIN + 176 SCREEN + 25 MARGIN) = 31 hidden on the right... \n
+	I would like to "duplicate" the size of the horizontal screen, so: \n
+	(71 * 8) - (40 + 64 + 352 + 50) = 62 hidden on the right... \n
+	Or: 0,40,104,455,505,567. Total 568.
+	\n
+=>	However, as the drawing is controlled by internal counters, 
+	the only thing that matters actually is is total visible positions = 233 * 2 = 466 
+	and the size of the non visible zone. = 40
+	So: 0,40,40,506,506,567. Total 568. */
+const MCHEmul::RasterData COMMODORE::VICI_PAL::_VRASTERDATA	(0, 28, 28, 311, 311, 311, 311, 312, 0, 0);
+const MCHEmul::RasterData COMMODORE::VICI_PAL::_HRASTERDATA	(0, 40, 40, 506, 506, 567, 567, 568, 0, 0);
+// NTSC SYSTEM
+/** VERTICAL RASTER: \n
+	---------------- \n
+	261 lines in total (as it is in the documentation). \n
+	233 visible lines (also in the documentation), so 28 invisible lines (312 - 284 = 28). \n
+	8 * 22 = 176 screen lines in total. \n
+	The granularity of the vertical movement of the screen is 2 pixels. \n
+	When $01 = 14 the first line of the screen is visible (at the second visible line), 
+	so all invisible lines are at the top. \n
+	And when it is 130 only 1 pixel of the first row is visible,
+	so it there will have moved = (130 - 14 + 1) * 2 = 234 pixels down. \n
+	The usual value of the register $01 is 38, so the up margin is = ((38-14+1)*2)-1(the one visible before)=49pixels. \n
+	And the down margin = 233 - (49 + 176) = 8. \n
+	And the rest up too 261 is not visible = 261 - (28 + 49 + 176 + 8) = 0!
+	So: 0,28,77,252,260,260 \n
+	\n
+=>	However as the drawing is controlled by internal counters, 
+	the only thing that matters actually is is total visible positions = 261 - 28 = 233 
+	and the size of the non visible zone. = 28
+	So: 0,28,28,260,260,260. 
+	\n
+	HORIZONTAL RASTER:\n
+	------------------\n
+	In one side:
+	The VICI is connected to a clock at 14.318.181Hz. \n
+	It reduces the speed and set CPU Clock at /14 speed = 1.020.000Hz. \n
+	It is said that the screen is 210 pixels width (visible part). \n
+	We could initially suppose than the screen has then (210 - (23 * 8)) / 2 = 13 pixels border per side.
+	\n
+	In the other side:
+	Every line takes 65 CPU cycles. \n
+	The sensinility of the screen movement (looking registers $00 e.g) is 4 pixels. \n
+	So in each CPU cycle only 4 pixels should be drawn. \n
+	It is said (in the documentation) that when the value of the register $00 is $00, and the number of columns is 22,
+	the first visible pixel of the display is the 4th pixel of the 1st column. \n
+	When that value is 1, the first pixel seen is the first pixel of the first column.
+	If the screen started to be drawn at the very first cycle in each line,
+	we could say that there would be 4 pixels hidden and, because the usual value of this register is 6,
+	the size of the left border would be = 16 pixels (5 - 1 + 1) * 4 \n
+	This number doesn't match with the one that roughly was calculated above (13). 
+	The number of pixels of the usual screen are in this case 176 pixels (22 * 8).
+	So the right margin is: 210 - (16 + 176) = 18 pixels.
+	\n
+	Finally: \n
+	(65 * 4) - (4 HIDDEN LEFT + 16 MARGIN + 176 SCREEN + 18 MARGIN) = 46 hidden on the right... \n
+	I would like to "duplicate" the size of the horizontal screen, so: \n
+	(65 * 8) - (8 + 32 + 352 + 36) = 92 hidden on the right... \n
+	Or: 0,8,40,391,427,519.
+	\n
+=>	However, as the drawing is controlled by internal counters, 
+	the only thing that matters actually is is total visible positions = 210 * 2 = 420 
+	and the size of the non visible zone. = 8
+	So: 0,8,8,427,427,519. */
+const MCHEmul::RasterData COMMODORE::VICI_NTSC::_VRASTERDATA (0, 28, 28, 260, 260, 260, 260, 261, 0, 0);
+const MCHEmul::RasterData COMMODORE::VICI_NTSC::_HRASTERDATA (0, 8, 8, 427, 427, 519, 519, 520, 0, 0);
 const MCHEmul::Address COMMODORE::VICI::_MEMORYPOSOFF = MCHEmul::Address ({ 0x00, 0x1c }, true /* already in little - endian. */);
 
 // ---
@@ -129,6 +229,7 @@ COMMODORE::VICI::VICI (const MCHEmul::RasterData& vd, const MCHEmul::RasterData&
 	  _VICIView (vV),
 	  _cyclesPerRasterLine (cRL),
 	  _raster (vd, hd, 8 /** The step is here 8 pixels */),
+	  _maxXVisible (0), // Defined better later...
 	  _lastCPUCycles (0),
 	  _format (nullptr),
 	  _cycleInRasterLine (0),
@@ -140,6 +241,10 @@ COMMODORE::VICI::VICI (const MCHEmul::RasterData& vd, const MCHEmul::RasterData&
 	setClassName ("VICI");
 
 	_format = SDL_AllocFormat (SDL_PIXELFORMAT_ARGB8888);
+
+	unsigned short x1, y1, x2, y2;
+	_raster.screenPositions (x1, y1, x2, y2);
+	_maxXVisible = (x2 - x1);
 }
 
 // ---
@@ -177,6 +282,7 @@ bool COMMODORE::VICI::initialize ()
 	_raster.initialize ();
 
 	_VICIRegisters -> setSoundLibWrapper (_soundFunction -> soundWrapper ());
+	_VICIRegisters -> linkToRaster (&_raster);
 	_VICIRegisters -> initialize ();
 
 	_lastCPUCycles = 0;
@@ -235,8 +341,6 @@ bool COMMODORE::VICI::simulate (MCHEmul::CPU* cpu)
 			_lastVBlankEntered = false;
 	}
 
-	_VICIRegisters -> setCurrentRasterLine (_raster.currentLine ()); 
-
 	_lastCPUCycles = cpu -> clockCycles ();
 
 	return (true);
@@ -255,6 +359,38 @@ MCHEmul::InfoStructure COMMODORE::VICI::getInfoStructure () const
 	result.add ("VICIRegisters",		std::move (_VICIRegisters -> getInfoStructure ()));
 	result.add ("Raster",				std::move (_raster.getInfoStructure ()));
 	result.add ("VICISoundFunction",	std::move (_soundFunction -> getInfoStructure ()));
+
+	return (result);
+}
+
+// ---
+MCHEmul::Strings COMMODORE::VICI::charsDrawSnapshot (MCHEmul::CPU* cpu,
+	const std::vector <size_t>& chrs) const
+{
+	MCHEmul::Strings result;
+	for (size_t i = 0; i < 256; i++)
+	{
+		if (!chrs.empty () && 
+			std::find (chrs.begin (), chrs.end (), i) == chrs.end ())
+			continue;
+
+		MCHEmul::Address chrAdd = _VICIRegisters -> charDataMemory () + (i << 3);
+		std::string dt = std::to_string (i) + "---\n$" +
+			MCHEmul::removeAll0 (chrAdd.asString (MCHEmul::UByte::OutputFormat::_HEXA, '\0', 2)) + "\n";
+		MCHEmul::UBytes chrDt = cpu -> memoryRef () -> values (chrAdd, 0x08);
+		for (size_t j = 0; j < 8; j++) // 8 lines per character...
+		{
+			if (j != 0)
+				dt += "\n";
+
+			for (size_t l = 0; l < 8; l++)
+				dt += ((chrDt [j].value () & (1 << (7 - l))) != 0x00) ? "#" : " ";
+		}
+
+		result.emplace_back (std::move (dt));
+	}
+
+	result.emplace_back ("---");
 
 	return (result);
 }
@@ -428,9 +564,12 @@ COMMODORE::VICI::DrawResult COMMODORE::VICI::drawHighResolutionMode (int cb)
 	for (unsigned short i = 0 ; 
 			i < 8 /** To paint always 8 pixels but in blocks of 2. */; i += 2)
 	{
+		if ((cb + i) > _maxXVisible)
+			break;
+
 		if (_vicGraphicInfo._graphicData [3 - (i >> 1)])
 		{
-			// If the pixel is se and the inverse mode is not active...
+			// If the pixel is set and the inverse mode is not active...
 			// ...the color will be in the foreground...
 			if (!_VICIRegisters -> inverseMode ())
 			{
@@ -461,6 +600,9 @@ COMMODORE::VICI::DrawResult COMMODORE::VICI::drawMulticolorMode (int cb)
 	for (unsigned short i = 0 ; 
 			i < 8 /** To paint always 8 pixels but in blocks of 2. */; i += 2)
 	{
+		if ((cb + i) > _maxXVisible)
+			break;
+
 		unsigned char cs = 
 			(_vicGraphicInfo._graphicData.value () >> (2 - (i >> 2))) & 0x03; // 0, 1, 2, 3?
 		// The value 0 means background, and it has already been drawn!

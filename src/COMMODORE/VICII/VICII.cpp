@@ -2,14 +2,19 @@
 #include <F6500/IRQInterrupt.hpp>
 
 // ---
+/** At the information is in https://www.cebix.net/VIC-Article.txt. \n
+	To simplify how everything works the horizontal beams moves at a pace of 8 pixels per CPU cycle.
+	In the real VICII every CPU cycle uses 2 cycles in VICII clock and in every VICII cycle 4 pixels are drawn. \n
+	For this reason the way the lightpen is detected is less accurate than in the real VICII. */
 const MCHEmul::RasterData COMMODORE::VICII_PAL::_VRASTERDATA 
-	(0, 16, 51, 250, 289, 311, 312, 4, 4);
+	(0, 16, 51, 250, 289, 311 /** When the line changes. */, 311 /** When the VICII started to count a new screen. */, 312, 4, 4);
 const MCHEmul::RasterData COMMODORE::VICII_PAL::_HRASTERDATA 
-	(404, 496, 24, 343, 375, 403, 504 /** For everyting to run, it has to be divisible by 8. */, 7, 9);
+	(404, 496, 24, 343, 375, 403 /** When the line changes. */, 403 /** When the VICII starts to count the cycles in the line. */, 
+		504 /** For everyting to run, it has to be divisible by 8. */, 7, 9);
 const MCHEmul::RasterData COMMODORE::VICII_NTSC::_VRASTERDATA 
-	(27, 41, 51, 250, 2, 26, 262, 4, 4);
+	(27, 41, 51, 250, 2, 26, 26, 262, 4, 4);
 const MCHEmul::RasterData COMMODORE::VICII_NTSC::_HRASTERDATA 
-	(412, 504, 24, 343, 375, 411, 512 /** For everything to run, it has to be divisible by 8. */, 7, 9);
+	(412, 504, 24, 343, 375, 411, 411, 512 /** For everything to run, it has to be divisible by 8. */, 7, 9);
 // This two positions are fized...
 const MCHEmul::Address COMMODORE::VICII::_MEMORYPOSIDLE1 = MCHEmul::Address ({ 0xff, 0x39 }, false);
 const MCHEmul::Address COMMODORE::VICII::_MEMORYPOSIDLE2 = MCHEmul::Address ({ 0xff, 0x3f }, false);
@@ -30,7 +35,7 @@ COMMODORE::VICII::VICII (int intId, MCHEmul::PhysicalStorageSubset* cR, const MC
 	  _cyclesPerRasterLine (cRL),
 	  _IRQrasterPosition (0), // Assigned within the constructor of the specific version of the VICII...
 	  _incCyclesPerRasterLine (cRL - COMMODORE::VICII_PAL::_CYCLESPERRASTERLINE),
-	  _raster (vd, hd, 8 /** step. */),
+	  _raster (vd, hd, 8 /** @see above. This is the step. */),
 	  _drawRasterInterruptPositions (false), _drawSpritesBorder (false), _drawOtherEvents (false),
 	  _lastCPUCycles (0),
 	  _format (nullptr),

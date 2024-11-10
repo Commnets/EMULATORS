@@ -373,11 +373,12 @@ const MCHEmul::UByte& COMMODORE::VICIIRegisters::readValue (size_t p) const
 		// Just to consider that when reading the raster MSB bit shows where the raster is now
 		case 0x11:
 			{
+				bool oP = false;
 				unsigned short rL = currentRasterLine ();
-				if (_raster -> simulateMoveCycles (_numberPositionsNextInstruction)) rL++;
-				result = MCHEmul::UByte 
-					((MCHEmul::PhysicalStorageSubset::readValue (pp).value () & 0x7f) | 
-					  (((rL & 0xff00) != 0) ? 0x80 : 0x00));
+				_raster -> simulateMoveCycles (_numberPositionsNextInstruction, oP);
+				if (oP) rL++;
+				result = (MCHEmul::PhysicalStorageSubset::readValue (pp).value () & 0x7f) | 
+					(((rL & 0xff00) != 0) ? 0x80 : 0x00);
 			}
 
 			break;
@@ -389,8 +390,10 @@ const MCHEmul::UByte& COMMODORE::VICIIRegisters::readValue (size_t p) const
 				// The same is with any other register but this one might be the very important one (and $d011)
 				// So if is necessary to know whether the execution of the instruction will imply a 
 				// change in the position of the raster or not!
+				bool oP = false;
 				unsigned short rL = currentRasterLine ();
-				if (_raster -> simulateMoveCycles (_numberPositionsNextInstruction)) rL++;
+				_raster -> simulateMoveCycles (_numberPositionsNextInstruction, oP); 
+				if (oP) rL++;
 				result = MCHEmul::UByte ((unsigned char) (rL & 0x00ff));
 			}
 

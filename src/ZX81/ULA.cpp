@@ -6,16 +6,16 @@
 
 // ---
 const MCHEmul::RasterData ZX81::ULA_PAL::_VRASTERDATA
-	(0, 6 /** 6 VSYNC. */, 62 /** 56 top border. */, 253 /** 192 draw. */, 309 /** 56 bottom. */, 309, 310, 0, 0);
+	(0, 6 /** 6 VSYNC. */, 62 /** 56 top border. */, 253 /** 192 draw. */, 309 /** 56 bottom. */, 309, 309, 310, 0, 0);
 /** In terms of ULA cycles, there would be double:
 	CPU cycles = (0, 45, 75, 202, 232, 232, 233, 0, 0); */
 const MCHEmul::RasterData ZX81::ULA_PAL::_HRASTERDATA
 	(0, 90 /** Including 20 (*2) HSYNC + part INT routine execution */, 
 		146 /** 28 (*2) left border. */, 401 /** 128 (32 chars * 4 ULA cycles * 2) draw. */, 
-		465 /** 32 right border. */, 465 /** When the INT is issued. */, 466, 0, 0);
+		465 /** 32 right border. */, 465 /** When the INT is issued. */, 465, 466, 0, 0);
 // NTSC is explained in similar terms than PAL...
-const MCHEmul::RasterData ZX81::ULA_NTSC::_VRASTERDATA (0, 6, 38, 229, 261, 261, 262, 0, 0);
-const MCHEmul::RasterData ZX81::ULA_NTSC::_HRASTERDATA (0, 90, 146, 401, 465, 465, 466, 0, 0);
+const MCHEmul::RasterData ZX81::ULA_NTSC::_VRASTERDATA (0, 6, 38, 229, 261, 261, 261, 262, 0, 0);
+const MCHEmul::RasterData ZX81::ULA_NTSC::_HRASTERDATA (0, 90, 146, 401, 465, 465, 465, 466, 0, 0);
 
 // ---
 ZX81::ULA::ULA (const MCHEmul::RasterData& vd, const MCHEmul::RasterData& hd, 

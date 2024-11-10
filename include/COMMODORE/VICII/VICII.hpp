@@ -125,13 +125,14 @@ namespace COMMODORE
 		virtual bool initialize () override;
 
 		/** The raster is a critical thing in the behaviour of the VICII.
-			The content of the register 0x12 is "real time".
+			The content of the register 0x12 (and the 0x11 bacause it contains high bit) is "real time".
 			Any read instruction could read different values depending on the position of the raster 
 			when that instruction happens. */
 		virtual void CPUAboutToExecute (MCHEmul::CPU* cpu, MCHEmul::Instruction* inst) override
 							{ _VICIIRegisters -> setNumberPositionsNextInstruction 
 								(inst -> memoryPositions
 									(cpu -> memoryRef (), cpu -> programCounter ().asAddress ())); }
+
 		/** Simulates cycles in the VICII. \n
 			It draws the border AFTER once graphics info has been drawn within the display zone. \n
 			So sprites can be drawn behing the border and collisions could take place out of the visible zone. */

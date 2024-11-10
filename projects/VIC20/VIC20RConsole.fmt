@@ -54,9 +54,13 @@ Dir A:@VIADDRA@, Dir B:@VIADDRB@
 #---
 #---
 ;CSCREENDUMP
-@BYTES{blocksize=40,listsep=\,,tablesep=\ ,minsize=2}@
+@BYTES{blocksize=23,listsep=\,,tablesep=\ ,minsize=2}@
 #---
 #---
 ;CCOLORDUMP
-@BYTES{blocksize=40,listsep=\,,tablesep=\ ,minsize=2}@
+@BYTES{blocksize=23,listsep=\,,tablesep=\ ,minsize=2}@
+#---
+#---
+;CCHARSDRAW
+@DRAW@
 #---

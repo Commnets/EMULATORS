@@ -31,7 +31,8 @@ namespace MCHEmul
 					unsigned short fdp,		// First Display position
 					unsigned short ldp,		// Last Display position
 					unsigned short lvp,		// Last Visible position
-					unsigned short lp,		// Last position
+					unsigned short rp,		// Retrace position
+					unsigned short lp,		// Last position...The next one will be the first position...
 					unsigned short mp,		// Maximum positions
 					unsigned short pr1,		// Positions to reduce in the visible zone 1 & 2
 					unsigned short pr2
@@ -53,7 +54,7 @@ namespace MCHEmul
 		/** To restart it. No calculus are done. */
 		void reset ()
 						{ _currentPosition = _firstPosition; 
-						 _currentPosition_0 = _firstPosition_0; }
+						  _currentPosition_0 = _firstPosition_0; }
 
 		// Managing the blank zone...
 		bool isInBlankZone () const
@@ -128,16 +129,19 @@ namespace MCHEmul
 		bool next ()
 						{ return (add (1)); }
 		/** It does a simulation of how many positions will overpass the limit when adding i more. 
-			If no overpass were calculated the number returned will be -1. */
-		inline int simulateAdd (int i);
+			If no overpass were calculated the number returned will be -1. 
+			The variable rP is set to true when the retrace position is overpassed. */
+		inline int simulateAdd (int i, bool& rP);
+		/** To check whether as a result of the last add instruction the retrace position was overpassed. */
+		bool retraceJustOverPassed () const
+						{ return (_retraceJustOverPassed); }
 
 		/** The display zone will reduced in both sides by half of the _positionsToReduce value. */
 		inline void reduceDisplayZone (bool s);
 		bool isDisplayZoneReduced () const
 						{ return (_displayZoneReduced); }
 
-		void initialize ()
-						{ _currentPosition = _firstPosition; _currentPosition_0 = _firstPosition_0; }
+		inline void initialize ();
 
 		/**
 		  *	The name of the fields are: \n
@@ -165,6 +169,7 @@ namespace MCHEmul
 		unsigned short _lastDisplayPosition;
 		const unsigned short _originalLastDisplayPosition;
 		const unsigned short _lastVisiblePosition;
+		const unsigned short _retracePosition;
 		const unsigned short _lastPosition;
 		const unsigned short _maxPositions;
 		const unsigned short _positionsToReduce1;
@@ -179,6 +184,7 @@ namespace MCHEmul
 		unsigned short _lastDisplayPosition_0;
 		unsigned short _originalLastDisplayPosition_0; 
 		unsigned short _lastVisiblePosition_0;
+		unsigned short _retracePosition_0;
 		unsigned short _lastPosition_0;
 		// To speed up even more...
 		unsigned short _firstDisplayPosition_inVisibleZone;
@@ -190,12 +196,19 @@ namespace MCHEmul
 		unsigned short _currentPosition;
 		unsigned short _currentPosition_0;
 		bool _displayZoneReduced;
+		/** When adding cycles, 
+			this variable becomes true when the retrace position is overpassed. \n
+			It has to be checkid before the next adding as the previous result will be lost. */
+		bool _retraceJustOverPassed;
 	};
 
 	// ---
 	inline bool RasterData::add (int i)
 	{
 		bool result = false;
+
+		// Whas over the retrace position before executing this method....
+		bool oV = _currentPosition_0 > _retracePosition_0;
 
 		// Move to the next or previous position 
 		// and adjust it to the limits if needed...
@@ -214,17 +227,28 @@ namespace MCHEmul
 			cP -= (int) _maxPositions;
 		_currentPosition = (unsigned short) cP;
 
+		// If after executing the method the retrace is overpassed and it wasn't before...
+		// ...the situation is marked as overpassed...
+		_retraceJustOverPassed = 
+			((_currentPosition_0 > _retracePosition_0) && !oV) ||
+			result;
+
 		return (result);
 	}
 
 	// ---
-	inline int RasterData::simulateAdd (int i)
+	inline int RasterData::simulateAdd (int i, bool& rP)
 	{
 		int result = -1;
+		bool oRP = _currentPosition_0 > _retracePosition_0;
 
 		int cP = (int) _currentPosition_0 + i;
 		if ((cP >= (int) _maxPositions))
 			result = cP - _maxPositions;
+
+		// True when additionally the retrace position is overpassed....
+		rP = ((_currentPosition_0 > _retracePosition_0) && !oRP) || 
+			 (result != -1);
 
 		return (result);
 	}
@@ -261,8 +285,17 @@ namespace MCHEmul
 			_lastDisplayPosition_0 - _firstVisiblePosition_0;
 	}
 
+	// ---
+	inline void RasterData::initialize ()
+	{ 
+		_currentPosition = _firstPosition; 
+		_currentPosition_0 = _firstPosition_0; 
+		_retraceJustOverPassed = false; 
+	}
+
 	/** The Raster simulates the set of sequential horizontal lines that, 
-		in a CRT monitor, draws an image in the screen. */
+		in a CRT monitor, draws an image in the screen. \n
+		When the raster beams reaches the last position of the screen it moves back to the first one. */
 	class Raster final : public InfoClass
 	{
 		public:
@@ -358,13 +391,15 @@ namespace MCHEmul
 						  x2 = _hRasterData.lastScreenPosition (); y2 = _vRasterData.lastScreenPosition (); }
 			
 		/** Returns true when the raster goes to the next line. \n
-			The Parameter is the number of cycles to move the raster. \n
+			The raster moves to the next line when the retracePosition is overpassed. \n
+			The parameter is the number of cycles to move the raster. \n
 			The raster moves _step pixels per cycle. */
 		inline bool moveCycles (unsigned short nC);
-		/** Similates whether the raster moves to the next line after adding nC cycles. 
-			Returns true when the raster should move to another line, and false if not. */
-		bool simulateMoveCycles (unsigned short nC)
-						{ return (_hRasterData.simulateAdd (nC * _step) != -1); }
+		/** Similates whether the raster moves to the next line after adding nC cycles. \n
+			Returns true when the raster should move to another line, and false if not. \n
+			The internal variable rP is true when the retracePosition is overpassed. */
+		bool simulateMoveCycles (unsigned short nC, bool& rP)
+						{ return (_hRasterData.simulateAdd (nC * _step, rP) != -1); }
 
 		void initialize ()
 						{ _vRasterData.initialize (); _hRasterData.initialize (); }
@@ -387,9 +422,10 @@ namespace MCHEmul
 	// ---
 	inline bool Raster::moveCycles (unsigned short nC)
 	{ 
-		bool result = _hRasterData.add (nC * (unsigned short) _step /** columuns = piexels per cycle. */);
-		if (result) _vRasterData.next (); 
-		return (result); 
+		_hRasterData.add (nC * (unsigned short) _step /** columuns = pixels per cycle. */);
+		bool result = _hRasterData.retraceJustOverPassed (); // Passed over the retrace?
+		if (result) _vRasterData.next (); // ...so go to the next row...
+		return (result); // ...and also returns that situation...
 	}
 }
 

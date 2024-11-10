@@ -29,7 +29,8 @@ _INST_IMPL (F6500::PLA)
 	assert (parameters ().size () == 1);
 
 	MCHEmul::UBytes u = stack () -> pull (1 /** 1 byte long. */);
-	cpu () -> internalRegister (F6500::C6510::_ACCUMULATOR).set (u);
+	cpu () -> internalRegister (F6500::C6510::_ACCUMULATOR).set 
+		(_lastExecutionData._INOUTData = u);
 
 	MCHEmul::StatusRegister& st = cpu () -> statusRegister ();
 	st.setBitStatus (F6500::C6500::_NEGATIVEFLAG, u [0][7]);
@@ -43,7 +44,8 @@ _INST_IMPL (F6500::PLP)
 {
 	assert (parameters ().size () == 1);
 
-	cpu () -> statusRegister ().set (stack () -> pull (1 /** 1 byte long. */));
+	cpu () -> statusRegister ().set 
+		(_lastExecutionData._INOUTData = stack () -> pull (1 /** 1 byte long. */));
 
 	return (!stack () -> overflow ());
 }

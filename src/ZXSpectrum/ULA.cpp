@@ -6,14 +6,14 @@
 
 // ---
 const MCHEmul::RasterData ZXSPECTRUM::ULA_PAL::_VRASTERDATA
-	(248, 256 /** 8 VSYNC. */, 0 /** 56 top border. */, 191 /** 192 draw. */, 247 /** 56 bottom. */, 247, 312, 0, 0);
+	(248, 256 /** 8 VSYNC. */, 0 /** 56 top border. */, 191 /** 192 draw. */, 247 /** 56 bottom. */, 247, 247, 312, 0, 0);
 const MCHEmul::RasterData ZXSPECTRUM::ULA_PAL::_HRASTERDATA
 	(320, 416 /** 96 = Blanking Period + HSYNC (different in 5C, happens before, than in 6C) */, 
 	 0 /** 32 left border. */, 255 /** 256 (32 chars * 8 ULA cycles or 4 CPU cycles) draw. */, 
-	 319 /** 64 right border. */, 319, 448, 0, 0);
+	 319 /** 64 right border. */, 319, 319, 448, 0, 0);
 // NTSC is explained in similar terms than PAL...
-const MCHEmul::RasterData ZXSPECTRUM::ULA_NTSC::_VRASTERDATA (216, 224, 0, 191, 215, 215, 264, 0, 0);
-const MCHEmul::RasterData ZXSPECTRUM::ULA_NTSC::_HRASTERDATA (320, 416, 0, 255, 319, 319, 448, 0, 0);
+const MCHEmul::RasterData ZXSPECTRUM::ULA_NTSC::_VRASTERDATA (216, 224, 0, 191, 215, 215, 215, 264, 0, 0);
+const MCHEmul::RasterData ZXSPECTRUM::ULA_NTSC::_HRASTERDATA (320, 416, 0, 255, 319, 319, 319, 448, 0, 0);
 
 // ---
 ZXSPECTRUM::ULA::ULA (const MCHEmul::RasterData& vd, const MCHEmul::RasterData& hd, 

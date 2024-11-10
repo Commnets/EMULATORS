@@ -3,6 +3,7 @@
 // ---
 COMMODORE::VICIRegisters::VICIRegisters (MCHEmul::PhysicalStorage* ps, size_t pp, const MCHEmul::Address& a, size_t s)
 	: MCHEmul::ChipRegisters (_VICREGS_SUBSET, ps, pp, a, s),
+	  _numberPositionsNextInstruction (0),
 	  _lastValueRead (MCHEmul::PhysicalStorage::_DEFAULTVALUE),
 	  _soundWrapper (nullptr)
 {
@@ -180,16 +181,24 @@ const MCHEmul::UByte& COMMODORE::VICIRegisters::readValue (size_t p) const
 
 		case 0x03:
 			{
-				result = (((_currentRasterLine & 0x0f00) != 0x00) ? 0x80 : 0x00) |
-						 ((_charsHeightScreen << 1) & 0x7e) | 
-						 (_charsExpanded ? 0x01 : 0x00);
+				bool oP = false;
+				unsigned short rL = currentRasterLine ();
+				_raster -> simulateMoveCycles (_numberPositionsNextInstruction, oP);
+				if (oP) rL++;
+				result = MCHEmul::UByte ((((rL & 0x0f00) != 0x00) ? 0x80 : 0x00) |
+					((_charsHeightScreen << 1) & 0x7e) | 
+					(_charsExpanded ? 0x01 : 0x00));
 			}
 
 			break;
 
 		case 0x04:
 			{
-				result = (unsigned char) (_currentRasterLine & 0x00ff);
+				bool oP = false;
+				unsigned short rL = currentRasterLine ();
+				_raster -> simulateMoveCycles (_numberPositionsNextInstruction, oP);
+				if (oP) rL++;
+				result = MCHEmul::UByte ((unsigned char) (rL & 0x00ff));
 			}
 
 			break;

@@ -69,23 +69,17 @@ namespace C264
 		TEDRegisters* _TEDRegisters;
 	};
 
-	/** The version para PAL systems. */
+	/** The version para PAL systems for C264. */
 	class TED_PAL final : public TED
 	{
 		public:
-		static const MCHEmul::RasterData _VRASTERDATA;
-		static const MCHEmul::RasterData _HRASTERDATA;
-
 		TED_PAL (int intId, int vV, MCHEmul::SoundLibWrapper* wS);
 	};
 
-	/** The version para NTSC systems. */
+	/** The version para NTSC systems for C264. */
 	class TED_NTSC final : public TED
 	{
 		public:
-		static const MCHEmul::RasterData _VRASTERDATA;
-		static const MCHEmul::RasterData _HRASTERDATA;
-
 		TED_NTSC (int intId, int vV, MCHEmul::SoundLibWrapper* wS);
 	};
 }
