@@ -430,14 +430,15 @@ namespace COMMODORE
 		struct VICGraphicInfo
 		{
 			VICGraphicInfo ()
-				: _VCBASE (0), _VC (0), _VLMI (0),
+				: _VCBASE (0), _VC (0),
 				  _RC (0),
+				  _ROW (0), // This is the row where the raster is once it has been recognized by the VICII
+				  _VLMI (0),
 				  _idleState (true),
 				  _ffVBorder (false),
 				  _ffMBorder (false),
 				  _ffLBorder (false), _ffRBorder (false),
 				  _ffMBorderBegin (0), _ffMBorderPixels (0),
-				  _xCoord (0), _yCoord (0),
 				  _screenCodeData (std::vector <MCHEmul::UByte> (40, MCHEmul::UByte::_0)),
 				  _graphicData (std::vector <MCHEmul::UByte> (40, MCHEmul::UByte::_0)),
 				  _colorData (std::vector <MCHEmul::UByte> (40, MCHEmul::UByte::_0)),
@@ -453,8 +454,12 @@ namespace COMMODORE
 			void emptyGraphicData ()
 							{ _graphicData		= std::vector <MCHEmul::UByte> (40, MCHEmul::UByte::_0); }
 
-			unsigned short _VCBASE, _VC, _VLMI;
+			MCHEmul::InfoStructure getInfoStructure () const;
+
+			unsigned short _VCBASE, _VC;
 			unsigned char _RC;
+			unsigned short _ROW;
+			unsigned short _VLMI;
 			bool _idleState; 
 			// Related with the border...
 			bool _ffVBorder; 
@@ -466,8 +471,6 @@ namespace COMMODORE
 			bool _ffLBorder, _ffRBorder;
 			unsigned short _ffMBorderBegin;
 			unsigned char _ffMBorderPixels;
-			/** Where the draw activity is now, within the visible zone. */
-			unsigned short _xCoord, _yCoord;
 			// This one doesn't actually exist "in" the VICII chip, 
 			// but is used when he left border has to be partially drawn.
 			// After doing so, the _ffMBorder will become false...

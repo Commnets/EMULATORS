@@ -1,4 +1,5 @@
 #include <ASSEMBLER/ByteCode.hpp>
+#include <algorithm>
 
 // ---
 std::vector <MCHEmul::UByte> MCHEmul::Assembler::ByteCode::asSetOfBytes (MCHEmul::Address& iA) const

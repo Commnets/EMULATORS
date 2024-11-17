@@ -120,12 +120,18 @@ IRQ:@IRQ@(@IRQLINE@)
 @SPRITES?{fmter=.CLASS,empty=no sprites}\n@
 #---
 #---
+;VICIIInternal
+VCBASE:@VCBASE@, VC:@VC@, RC:@RC@, ROW:@ROW@
+#---
+#---
 ;VICII
 Id:@ID@
 @ATTRS?{key=YES,equal=:,empty=no attributes}\n@
 ->VICIIRegisters:
 @VICIIRegisters>@
 @Raster>@
+Line Cycle:@Cycle@
+@VICIIInternal>@
 #---
 #---
 ;VIACtrlA1

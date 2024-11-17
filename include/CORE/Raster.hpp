@@ -230,8 +230,15 @@ namespace MCHEmul
 		// If after executing the method the retrace is overpassed and it wasn't before...
 		// ...the situation is marked as overpassed...
 		_retraceJustOverPassed = 
-			((_currentPosition_0 > _retracePosition_0) && !oV) ||
-			result;
+			// When the retrace position is defined in the limit...
+			// ...the retrace is overpassed when the raster is over... 
+			((_retracePosition_0 == _maxPositions) && result) || 
+			// But when it is not, the retrace is overpassed when...
+			// ...the position is now over the retrace position and it wasn't at the beginning of this method...
+			// ...or if it now below the retrace position and a restart of the raster has happened.
+			((_retracePosition_0 < _maxPositions) && 
+				(((_currentPosition_0 > _retracePosition_0) && !oV) || 
+				  (_currentPosition_0 < _retracePosition_0) && result && !oV));
 
 		return (result);
 	}
@@ -244,11 +251,13 @@ namespace MCHEmul
 
 		int cP = (int) _currentPosition_0 + i;
 		if ((cP >= (int) _maxPositions))
-			result = cP - _maxPositions;
+			cP = result = cP - (int) _maxPositions; 
 
-		// True when additionally the retrace position is overpassed....
-		rP = ((_currentPosition_0 > _retracePosition_0) && !oRP) || 
-			 (result != -1);
+		rP = 
+			((_retracePosition_0 == _maxPositions) && (result != -1)) ||
+			((_retracePosition_0 < _maxPositions) && 
+				(((cP > _retracePosition_0) && !oRP) || 
+				  (cP < _retracePosition_0) && (result != -1) && !oRP));
 
 		return (result);
 	}

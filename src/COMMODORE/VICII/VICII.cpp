@@ -7,15 +7,16 @@
 	In the real VICII every CPU cycle uses 2 cycles in VICII clock and in every VICII cycle 4 pixels are drawn. \n
 	For this reason the way the lightpen is detected is less accurate than in the real VICII. */
 const MCHEmul::RasterData COMMODORE::VICII_PAL::_VRASTERDATA 
-	(0, 16, 51, 250, 289, 311 /** When the line changes. */, 311 /** When the VICII started to count a new screen. */, 312, 4, 4);
+	(0, 16, 51, 250, 289, 311 /** When the reatrace starts. */, 311 /** When the retrace finishes. */, 312, 4, 4);
 const MCHEmul::RasterData COMMODORE::VICII_PAL::_HRASTERDATA 
-	(404, 496, 24, 343, 375, 403 /** When the line changes. */, 403 /** When the VICII starts to count the cycles in the line. */, 
+	(404, 496, 24, 343, 375, 379 /** When the retrace starts. */, 403 /** When the retrace finishes. */, 
 		504 /** For everyting to run, it has to be divisible by 8. */, 7, 9);
 const MCHEmul::RasterData COMMODORE::VICII_NTSC::_VRASTERDATA 
-	(27, 41, 51, 250, 2, 26, 26, 262, 4, 4);
+	(27, 41, 51, 250, 2, 26, 26, 262, 4, 4); // Same meaning than in the case of the PAL system...
 const MCHEmul::RasterData COMMODORE::VICII_NTSC::_HRASTERDATA 
-	(412, 504, 24, 343, 375, 411, 411, 512 /** For everything to run, it has to be divisible by 8. */, 7, 9);
+	(412, 504, 24, 343, 375, 379, 411, 512 , 7, 9); // Same meaning than in the case of the PAL system...
 // This two positions are fized...
+// are the ones where the VICII reads information from when it is not in the visible part!
 const MCHEmul::Address COMMODORE::VICII::_MEMORYPOSIDLE1 = MCHEmul::Address ({ 0xff, 0x39 }, false);
 const MCHEmul::Address COMMODORE::VICII::_MEMORYPOSIDLE2 = MCHEmul::Address ({ 0xff, 0x3f }, false);
 
@@ -122,9 +123,9 @@ bool COMMODORE::VICII::simulate (MCHEmul::CPU* cpu)
 	{
 		bool result = 
 			_videoActive && // Bad lines only possible when the video is active...
-			_raster.currentLine () >= _FIRSTBADLINE && 
-			_raster.currentLine () <= _LASTBADLINE &&
-			(unsigned char) (_raster.currentLine () & 0x07) /** The three last bits. */ == 
+			_vicGraphicInfo._ROW >= _FIRSTBADLINE && 
+			_vicGraphicInfo._ROW <= _LASTBADLINE &&
+			(unsigned char) (_vicGraphicInfo._ROW & 0x07) /** The three last bits. */ == 
 				_VICIIRegisters -> verticalScrollPosition () && // aligned with the scrollY
 			_lastBadLineScrollY != (int) _VICIIRegisters -> verticalScrollPosition (); //..and obvious if that situation in the scroll changed
 		
@@ -175,7 +176,7 @@ bool COMMODORE::VICII::simulate (MCHEmul::CPU* cpu)
 		_IFDEBUG debugVICIICycle (cpu, i);
 
 		// Whether the video is active or not is only checked at the very first bad line...
-		_videoActive = (_raster.currentLine () == _FIRSTBADLINE) 
+		_videoActive = (_vicGraphicInfo._ROW == _FIRSTBADLINE) 
 			? !_VICIIRegisters -> blankEntireScreen () : _videoActive; // The value can change at any cycle of this first bad line...
 
 		// Is there a bad line situation?
@@ -222,7 +223,14 @@ bool COMMODORE::VICII::simulate (MCHEmul::CPU* cpu)
 		// Whether finally a IRQ is or not actually launched is something that is determined later per cycle
 		// just to take into account other issuing possibilities like two sprites collision analized later.
 		_cycleInRasterLine++; // First move to the next raster cycle...
-		if (_raster.moveCycles (1))
+
+		// Moves the horizontal raster...
+		bool cLine = _raster.hData ().add (1 * _raster.step ());
+		// Does the raster reached the retrace start position...
+		if (_raster.hData ().retraceJustOverPassed ())
+			_raster.vData ().next (); // ...in this case, the row has to be changed...
+		// ...and has it reached the last position defined (that is when the retrace finishes)?
+		if (cLine)
 		{
 			_cycleInRasterLine = 1;
 
@@ -231,7 +239,8 @@ bool COMMODORE::VICII::simulate (MCHEmul::CPU* cpu)
 			_badLineStopCyclesAdded = false;
 
 			// At the beginning of the counter....
-			if (_raster.currentLine () == 0)
+			_vicGraphicInfo._ROW = _raster.currentLine ();
+			if (_vicGraphicInfo._ROW == 0)
 			{ 
 				// The internal variables counting the lines, etc...
 				// are set back to 0...
@@ -251,7 +260,7 @@ bool COMMODORE::VICII::simulate (MCHEmul::CPU* cpu)
 
 		// If the current line is where a IRQ has been set...
 		// ..and also the column of the raster is where it should be launched...
-		if (_raster.currentLine () == _VICIIRegisters -> IRQRasterLineAt () &&
+		if (_vicGraphicInfo._ROW == _VICIIRegisters -> IRQRasterLineAt () &&
 			_raster.currentColumn () == _IRQrasterPosition)
 			_VICIIRegisters -> activateRasterIRQ (); // ...the interrupt is activated (but not necessary launched!)
 
@@ -298,6 +307,8 @@ MCHEmul::InfoStructure COMMODORE::VICII::getInfoStructure () const
 	result.remove ("Memory"); // This info is not neccesary...
 	result.add ("VICIIRegisters",	std::move (_VICIIRegisters -> getInfoStructure ()));
 	result.add ("Raster",			std::move (_raster.getInfoStructure ()));
+	result.add ("VICIIInternal",	std::move (_vicGraphicInfo.getInfoStructure ()));
+	result.add ("Cycle",			_cycleInRasterLine);
 
 	return (result);
 }
@@ -756,7 +767,7 @@ unsigned int COMMODORE::VICII::treatRasterCycle ()
 
 					// Simulation of the cycle 55/56/58...
 					if (_VICIIRegisters -> spriteEnable (i) &&
-						_raster.currentLine () == (unsigned short) _VICIIRegisters -> spriteYCoord (i))
+						_vicGraphicInfo._ROW == (unsigned short) _VICIIRegisters -> spriteYCoord (i))
 					{
 						_vicSpriteInfo [i]._active = true;
 						_vicSpriteInfo [i]._line = 0;
@@ -1314,8 +1325,8 @@ MCHEmul::UByte COMMODORE::VICII::drawSpriteOver (size_t spr, unsigned int* d, si
 	return ((_vicSpriteInfo [spr]._graphicsLineSprites.size () == 0)
 		? MCHEmul::UByte::_0
 		: (_VICIIRegisters -> spriteMulticolorMode (spr)
-			? drawMultiColorSpriteOver (_raster.currentColumn (), _raster.currentLine (), spr, d, dO)
-			: drawMonoColorSpriteOver (_raster.currentColumn (), _raster.currentLine (), spr, d, dO)));
+			? drawMultiColorSpriteOver (_raster.currentColumn (), _vicGraphicInfo._ROW, spr, d, dO)
+			: drawMonoColorSpriteOver (_raster.currentColumn (), _vicGraphicInfo._ROW, spr, d, dO)));
 }
 
 // ---
@@ -1677,9 +1688,17 @@ void COMMODORE::VICII::debugVICIICycle (MCHEmul::CPU* cpu, unsigned int i)
 
 	_deepDebugFile -> writeCompleteLine (className (), cpu -> clockCycles () - i, "Info Cycle",
 		{ { "Raster position",
-			std::to_string (_raster.currentColumnAtBase0 ()) + "," +
-			std::to_string (_raster.currentLineAtBase0 ()) + "," +
-			std::to_string (_cycleInRasterLine) },
+			"Column=" + std::to_string (_raster.currentColumn ()) + "(" + 
+				std::to_string (_raster.currentColumnAtBase0 ()) + ")," +
+			"Row=" + std::to_string (_raster.currentLine ()) + "(" + 
+				std::to_string (_raster.currentLineAtBase0 ()) + ")," },
+		  { "Internal",
+			"VCBASE=" + std::to_string (_vicGraphicInfo._VCBASE) + "," +
+			"VC=" + std::to_string (_vicGraphicInfo._VC) + "," +
+			"VLMI=" + std::to_string (_vicGraphicInfo._VLMI) + "," +
+			"RC=" + std::to_string (_vicGraphicInfo._RC) + "," +
+			"ROW=" + std::to_string (_vicGraphicInfo._ROW) + "," +
+			"Cycle=" + std::to_string (_cycleInRasterLine) },
 		  { "Graphics mode",
 			std::to_string ((int) _VICIIRegisters -> graphicModeActive ()) },
 		  { "Memory location", 
@@ -1770,4 +1789,18 @@ void COMMODORE::VICII::debugDrawSpriteAt (size_t nS, unsigned short x, unsigned 
 
 	_deepDebugFile -> writeLineData ("Drawing sprite " + std::to_string (nS) +
 		" at " + std::to_string (x) + "," + std::to_string (r));
+}
+
+// ---
+MCHEmul::InfoStructure COMMODORE::VICII::VICGraphicInfo::getInfoStructure () const
+{
+	MCHEmul::InfoStructure result;
+
+	result.add ("VCBASE",	_VCBASE);
+	result.add ("VC",		_VC);
+	result.add ("RC",		_RC);
+	result.add ("VLMI",		_VLMI);
+	result.add ("ROW",		_ROW);
+
+	return (result);
 }
