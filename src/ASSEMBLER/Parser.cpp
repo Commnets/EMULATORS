@@ -564,7 +564,7 @@ void MCHEmul::Assembler::Parser::parseLines (MCHEmul::Assembler::ParserContext* 
 			oC << MCHEmul::_SPACES.substr (0, _lastLinePrintedOut.length ()) 
 			   << MCHEmul::_BACKS.substr (0, _lastLinePrintedOut.length ()); // Delete the previous...
 			_lastLinePrintedOut = "(" + std::to_string (pC -> _currentLineNumber * 100 / pC -> _lines.size ()) + 
-				"%) Parsing file:" + pC -> _file + " line:" + std::to_string (pC -> _currentLineNumber); // With % in the current file...
+				"%) Parsing file:" + pC -> _file + " line:" + std::to_string (pC -> _currentLineNumber + 1 /** Staring from 1. */); // With % in the current file...
 			if (_lastLinePrintedOut.length () > MCHEmul::_BACKS.length ()) // No more than the limit...
 				_lastLinePrintedOut = _lastLinePrintedOut.substr (0, MCHEmul::_BACKS.length ());
 			oC << _lastLinePrintedOut << MCHEmul::_BACKS.substr (0, _lastLinePrintedOut.length ()); // Print the new one...
@@ -587,13 +587,13 @@ void MCHEmul::Assembler::Parser::parseLines (MCHEmul::Assembler::ParserContext* 
 					MCHEmul::Assembler::ErrorType et = MCHEmul::Assembler::ErrorType::_NOERROR;
 					// If the error happens with in a code template, the line of the error is recorded...
 					_errors.emplace_back (MCHEmul::Assembler::Error 
-						(et = pC -> _semantic -> error (), pC -> _file, pC -> _currentLineNumber, col,
+						(et = pC -> _semantic -> error (), pC -> _file, pC -> _currentLineNumber + 1 /** Starting from 1. */, col,
 							(pC -> _templateLinesNumber != 0 ? std::to_string (pC -> _templateLinesNumber): "")));
 					// An error in the last element added...more info including the error in the semantic!
 					if (et == MCHEmul::Assembler::ErrorType::_SEMANTICERROR)
 						_errors.emplace_back (MCHEmul::Assembler::Error 
 							(pC -> _semantic -> lastGrammaticalElementAdded () -> error (), 
-								pC -> _file, pC -> _currentLineNumber, col));
+								pC -> _file, pC -> _currentLineNumber + 1 /** Starting from 1. */, col));
 				}
 				else
 				// adds the action defined (if a grammatical element was added)
@@ -606,7 +606,7 @@ void MCHEmul::Assembler::Parser::parseLines (MCHEmul::Assembler::ParserContext* 
 				pC -> _currentLine = ""; // The line is considered as treated...
 
 				_errors.emplace_back (MCHEmul::Assembler::Error 
-					(MCHEmul::Assembler::ErrorType::_PARSERNOTFOUND, pC -> _file, pC -> _currentLineNumber, col));
+					(MCHEmul::Assembler::ErrorType::_PARSERNOTFOUND, pC -> _file, pC -> _currentLineNumber + 1 /** Starting from 1. */, col));
 			}
 		}
 

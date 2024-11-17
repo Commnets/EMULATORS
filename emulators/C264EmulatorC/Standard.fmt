@@ -260,6 +260,8 @@ Active:@ACTIVE@, Type:@TYPE@, Frequency:@FREQUENCY@(@PULSEUP@)
 #---
 #---
 ;CSETPC
+->Errors:
+@ERROR@
 #---
 #---
 ;CSTACK
@@ -311,6 +313,11 @@ Last:@INST@
 @BYTES{blocksize=16,listsep=\,,tablesep=\ ,minsize=2}@
 #---
 #---
+;CSETMEMORY
+->Errors:
+@ERROR@
+#---
+#---
 ;CMEMORYDUMP
 @MemoryDUMP>@
 #---
@@ -349,9 +356,13 @@ Current:@INST@
 #---
 #---
 ;CSETBREAK
+->Errors:
+@ERROR@
 #---
 #---
 ;CREMOVEBREAK
+->Errors:
+@ERROR@
 #---
 #---
 ;CREMOVEBREAKS

@@ -200,7 +200,11 @@ void MCHEmul::RegisterChangeCommand::executeImpl (MCHEmul::CommandExecuter* cE, 
 		MCHEmul::UBytes by = MCHEmul::UInt::fromStr (parameter ("01")).bytes ();
 		// ...but it also has to accept the bytes (size mainly) as parameter...
 		if (c -> cpu () -> internalRegister (nR).accept (by))
+		{ 
+			rst.add ("ERROR", std::string ("No errors"));
+
 			c -> cpu () -> internalRegister (nR).set (by);
+		}
 		else
 			rst.add ("ERROR", std::string ("The register doesn't accept the bytes"));
 	}
@@ -278,6 +282,7 @@ void MCHEmul::MemoryStatusCommand::executeImpl (MCHEmul::CommandExecuter* cE, MC
 	MCHEmul::Address a1 = MCHEmul::Address::fromStr (parameter ("00"));
 	if (a1 > c -> cpu () -> architecture ().longestAddressPossible ()) 
 		return;
+
 	if (_parameters.size () == 2)
 	{
 		MCHEmul::Address a2 = MCHEmul::Address::fromStr (parameter ("01"));
@@ -286,7 +291,7 @@ void MCHEmul::MemoryStatusCommand::executeImpl (MCHEmul::CommandExecuter* cE, MC
 
 		MCHEmul::Address iA = ((a1 <= a2) ? a1 : a2);
 		rst.add ("BYTES", c -> cpu () -> memoryRef () -> values (iA, (((a2 >= a1) ? a2 : a1) - iA) + 1).
-				asString (MCHEmul::UByte::OutputFormat::_HEXA, ',', 2));
+			asString (MCHEmul::UByte::OutputFormat::_HEXA, ',', 2));
 	}
 	else
 		rst.add ("BYTES", c -> cpu () -> memoryRef () -> value (a1).asString (MCHEmul::UByte::OutputFormat::_HEXA, 2));
@@ -327,8 +332,12 @@ void MCHEmul::SetMemoryValueCommand::executeImpl (MCHEmul::CommandExecuter* cE, 
 		return;
 
 	MCHEmul::Address a1 = MCHEmul::Address::fromStr (parameter ("00"));
-	if (a1 > c -> cpu () -> architecture ().longestAddressPossible ()) 
+	if (a1 > c -> cpu () -> architecture ().longestAddressPossible ())
+	{ 
+		rst.add ("ERROR", std::string ("Address out of limits"));
+
 		return;
+	}
 	
 	MCHEmul::Address a2 = a1;
 	std::vector <MCHEmul::UByte> v;
@@ -336,7 +345,11 @@ void MCHEmul::SetMemoryValueCommand::executeImpl (MCHEmul::CommandExecuter* cE, 
 	{
 		a2 = MCHEmul::Address::fromStr (parameter ("01"));
 		if (a2 > c -> cpu () -> architecture ().longestAddressPossible ())
+		{
+			rst.add ("ERROR", std::string ("Address out of limits"));
+
 			return;
+		}
 
 		v = MCHEmul::UInt::fromStr (parameter ("02")).bytes ();
 	}
@@ -347,6 +360,7 @@ void MCHEmul::SetMemoryValueCommand::executeImpl (MCHEmul::CommandExecuter* cE, 
 	MCHEmul::Address fA = (a2 >= a1) ? a2 : a1;
 	for (size_t i = 0; i <= (size_t) (fA - iA); i += v.size ())
 		c -> cpu () -> memoryRef () -> put (iA + i, v); // Without force it!
+	rst.add ("ERROR", std::string ("No errors"));
 }
 
 // ---
@@ -381,7 +395,16 @@ void MCHEmul::SetProgramCounterCommand::executeImpl
 	if (c == nullptr)
 		return;
 
+	MCHEmul::Address addrs = MCHEmul::Address::fromStr (parameter ("00"));
+	if (addrs > c ->cpu () -> architecture ().longestAddressPossible ())
+	{
+		rst.add ("ERROR", std::string ("Address out of limits"));
+
+		return;
+	}
+
 	c -> cpu () -> programCounter ().setAddress (MCHEmul::Address::fromStr (parameter ("00")));
+	rst.add ("ERROR", std::string ("No errors"));
 }
 
 // ---
@@ -477,8 +500,26 @@ void MCHEmul::SetBreakPointCommand::executeImpl (MCHEmul::CommandExecuter* cE, M
 	if (c == nullptr)
 		return;
 
+	MCHEmul::Strings aE;
 	for (const auto& i : _parameters)
-		c -> addAction (MCHEmul::Address::fromStr (i.second), MCHEmul::Computer::_ACTIONSTOP);
+	{
+		MCHEmul::Address addrs = MCHEmul::Address::fromStr (i.second);
+		if (addrs <= c -> cpu () -> architecture ().longestAddressPossible ())
+			c -> addAction (addrs, MCHEmul::Computer::_ACTIONSTOP);
+		else
+			aE.emplace_back (MCHEmul::removeAll0 
+				(addrs.asString (MCHEmul::UByte::OutputFormat::_HEXA, '\0')));
+	}
+
+	if (aE.empty ())
+	{
+		std::string tE;
+		for (size_t i = 0; i < aE.size (); i++)
+			tE += ((i != 0) ? "," : "") + aE [i];
+		rst.add ("ERROR", "Breaks no correct:" + tE);
+	}
+	else
+		rst.add ("ERROR", std::string ("No errors"));
 }
 
 // ---
@@ -487,12 +528,29 @@ void MCHEmul::RemoveBreakPointCommand::executeImpl (MCHEmul::CommandExecuter* cE
 	if (c == nullptr)
 		return;
 
+	MCHEmul::Strings aE;
 	for (const auto& i : _parameters)
 	{
 		MCHEmul::Address bP = MCHEmul::Address::fromStr (i.second);
-		if (c -> action (bP) == MCHEmul::Computer::_ACTIONSTOP) // Only if stopped...
-			c -> addAction (bP, MCHEmul::Computer::_ACTIONNOTHING);
+		if (bP <= c -> cpu () -> architecture ().longestAddressPossible ())
+		{
+			if (c -> action (bP) == MCHEmul::Computer::_ACTIONSTOP) // Only if stopped...
+				c -> addAction (bP, MCHEmul::Computer::_ACTIONNOTHING);
+		}
+		else
+			aE.emplace_back (MCHEmul::removeAll0 
+				(bP.asString (MCHEmul::UByte::OutputFormat::_HEXA, '\0')));
 	}
+
+	if (aE.empty ())
+	{
+		std::string tE;
+		for (size_t i = 0; i < aE.size (); i++)
+			tE += ((i != 0) ? "," : "") + aE [i];
+		rst.add ("ERROR", "Breaks no correct:" + tE);
+	}
+	else
+		rst.add ("ERROR", std::string ("No errors"));
 }
 
 // ---
@@ -787,7 +845,7 @@ void MCHEmul::InterruptSetCommand::executeImpl
 		return; // Nothing to do...
 
 	// Gets the interrupt id/ids affected...
-	// ...and checj whether there is an error or not
+	// ...and check whether there is an error or not
 	bool e = false;
 	std::vector <int> iIds;
 	if (parameter ("00") == "ALL")
