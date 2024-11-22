@@ -31,7 +31,7 @@ MCHEmul::Assembler::ByteCode MCHEmul::Assembler::Compiler::compile (const std::s
 		(*i).second.value (smt -> macros (), operationParser ()); // Try to calculate the value (but it would be used)...
 		if (!(*i).second)
 			_errors.emplace_back (MCHEmul::Assembler::Error ((*i).second.error (), 
-				(*i).second.definitionFile (), (*i).second.definitionLine (), 0, (*i).second.name ()));
+				(*i).second.definitionFile (), (*i).second.definitionLine () + 1, 0, (*i).second.name ()));
 	}
 
 	// If there were any error calculating the value of the macros
@@ -52,7 +52,7 @@ MCHEmul::Assembler::ByteCode MCHEmul::Assembler::Compiler::compile (const std::s
 		MCHEmul::Address spa (i -> codeBytes (smt, cpu () -> architecture ().bigEndian (), operationParser ()));
 		if (!*i)
 		{
-			_errors.emplace_back (MCHEmul::Assembler::Error (i -> _error, i -> _file, i -> _line, 0));
+			_errors.emplace_back (MCHEmul::Assembler::Error (i -> _error, i -> _file, i -> _line + 1, 0));
 
 			continue;
 		}
@@ -76,7 +76,7 @@ MCHEmul::Assembler::ByteCode MCHEmul::Assembler::Compiler::compile (const std::s
 						std::vector <MCHEmul::UByte> b = 
 							gE -> codeBytes (smt, cpu () -> architecture ().bigEndian (), operationParser ());
 						if (!*gE)
-							_errors.emplace_back (MCHEmul::Assembler::Error (gE -> _error, gE -> _file, gE -> _line, 0));
+							_errors.emplace_back (MCHEmul::Assembler::Error (gE -> _error, gE -> _file, gE -> _line + 1, 0));
 						else
 							result._lines.emplace_back (MCHEmul::ByteCodeLine (spa, b, lL, 
 								(gE -> _type == MCHEmul::Assembler::GrammaticalElement::_INSTRUCTION) 
