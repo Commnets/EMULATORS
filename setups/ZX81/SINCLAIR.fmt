@@ -3,11 +3,11 @@
 ?./Standard.fmt
 #---
 ;INTInterrupt
-Type:INT, Id:@ID@, Active:@ACTIVE@, In Execution:@EXECUTION@, In Address:$@ADDRESS@, Mode:@MODE@
+Type:INT, Id:@ID@, Active:@ACTIVE@, In Execution:@EXECUTION@, At Address:$@ADDRESS@, Mode:@MODE@
 #---
 #---
 ;NMIInterrupt
-Type:NMI, Id:@ID@, Active:@ACTIVE@, In Execution:@EXECUTION@, In Address:$@ADDRESS@
+Type:NMI, Id:@ID@, Active:@ACTIVE@, In Execution:@EXECUTION@, At Address:$@ADDRESS@
 #---
 #---
 ;RasterX

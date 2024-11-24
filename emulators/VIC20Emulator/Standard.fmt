@@ -26,15 +26,15 @@ Id:@ID@, Active:@ACTIVE@, In Execution:@EXECUTION@
 #---
 #---
 ;CPU
-#The info about the Architecture here
 @ATTRS?{key=YES,equal=:,empty=no attributes}\n@
 @Architecture>@
 @REGS?{key=NO,equal=:,empty=no registers,blocksize=4}\t@
 @PC@
 @SR@
-CLK:@CLK@ ticks
 ->Interrupts:
 @CPUInterruptSystem>@
+CLK:@CLK@ ticks
+State:@STATE@ (Cycles Stopped:@CLKSTOP@)
 #---
 #---
 ;ClockFactor
@@ -269,6 +269,7 @@ Active:@ACTIVE@, Type:@TYPE@, Frequency:@FREQUENCY@(@PULSEUP@)
 #---
 #---
 ;CCPUSTATUS
+State:@STATE@ (Cycles Stopped:@CLKSTOP@)
 Last:@INST@
 @PC@
 @REGS?{key=NO,equal=:,empty=no registers,blocksize=4}\t@
@@ -280,6 +281,7 @@ Last:@INST@
 #---
 #---
 ;CCPUSSTATUS
+State:@STATE@ (Cycles Stopped:@CLKSTOP@)
 Last:@INST@
 @PC@
 @REGS?{key=NO,equal=:,empty=no registers,blocksize=4}\t@
@@ -349,6 +351,7 @@ Current:@INST@
 #---
 ;CINST
 @INST@
+@CYCLES@ Cycles (Clock at:@CLK@)
 #---
 #---
 ;CBREAKS

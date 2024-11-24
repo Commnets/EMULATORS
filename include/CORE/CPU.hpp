@@ -323,7 +323,9 @@ namespace MCHEmul
 		  *	REGS		= InfoStructure: Registers info. \n
 		  * PC			= Attribute: Value of the program counter. \n
 		  *	SR			= Attribute: Value of the status register. \n
-		  * CLK			= Attribute: Value of the internal clock cycle (could be o if it is external).
+		  * CLK			= Attribute: Value of the internal clock cycle (could be o if it is external). \n
+		  * STATE		= Attribute: State of execution. \n
+		  * CLKSTOP		= Attribute: Number of cycles pending in stop situation
 		  */
 		virtual InfoStructure getInfoStructure () const override;
 

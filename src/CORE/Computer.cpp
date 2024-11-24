@@ -18,7 +18,8 @@ MCHEmul::Computer::Computer (
 		const MCHEmul::Attributes& attrs, unsigned short sL)
 	: MCHEmul::InfoClass ("Computer"),
 	  _cpu (cpu), _chips (c), _memory (m), _devices (d), _attributes (attrs), 
-	  _templateActions (), _actionsAt (), _status (_STATUSRUNNING), _actionForNextCycle (_ACTIONNOTHING),
+	  _templateActions (), _actionsAt (), 
+	  _status (MCHEmul::Computer::_STATUSRUNNING), _actionForNextCycle (MCHEmul::Computer::_ACTIONNOTHING),
 	  _deepDebug (), // No active at all...
 	  _exit (false), _restartAfterExit (false), _restartLevel (0), // Meaning full!
 	  _debugLevel (MCHEmul::_DEBUGNOTHING),
@@ -29,7 +30,7 @@ MCHEmul::Computer::Computer (
 	  _screen (nullptr), _sound (nullptr), _inputOSSystem (nullptr), _graphicalChip (nullptr),
 	  _plainChips (nullptr), _plainDevices (nullptr),
 	  _clock (cs), 
-	  _lastAction (_ACTIONNOTHING),
+	  _lastAction (MCHEmul::Computer::_ACTIONNOTHING),
 	  _stabilized (false), _currentStabilizationLoops (0),
 	  _templateListActions ()
 { 
@@ -86,10 +87,10 @@ MCHEmul::Computer::Computer (
 	// More actions can be added in later instances of the class computer!
 	_templateActions =
 		{ 
-			{ _ACTIONNOTHING,	new MCHEmul::Computer::NoAction }, 
-			{ _ACTIONCONTINUE,	new MCHEmul::Computer::ContinueAction }, 
-			{ _ACTIONSTOP,		new MCHEmul::Computer::StopAction }, 
-			{ _ACTIONNEXT,		new MCHEmul::Computer::NextCommandAction}
+			{ MCHEmul::Computer::_ACTIONNOTHING,	new MCHEmul::Computer::NoAction }, 
+			{ MCHEmul::Computer::_ACTIONCONTINUE,	new MCHEmul::Computer::ContinueAction }, 
+			{ MCHEmul::Computer::_ACTIONSTOP,		new MCHEmul::Computer::StopAction }, 
+			{ MCHEmul::Computer::_ACTIONNEXT,		new MCHEmul::Computer::NextCommandAction}
 		};
 
 	// Generate the plain vision of both chips and devices
@@ -232,8 +233,8 @@ bool MCHEmul::Computer::initialize (bool iM)
 	}
 
 	_status = _STATUSRUNNING;
-	_actionForNextCycle = _ACTIONNOTHING;
-	_lastAction = _ACTIONNOTHING;
+	_actionForNextCycle = MCHEmul::Computer::_ACTIONNOTHING;
+	_lastAction = MCHEmul::Computer::_ACTIONNOTHING;
 
 	_clock.start ();
 
@@ -289,8 +290,8 @@ bool MCHEmul::Computer::run ()
 
 		_error = MCHEmul::_NOERROR;
 		_status = _STATUSRUNNING;
-		_actionForNextCycle = _ACTIONNOTHING;
-		_lastAction = _ACTIONNOTHING;
+		_actionForNextCycle = MCHEmul::Computer::_ACTIONNOTHING;
+		_lastAction = MCHEmul::Computer::_ACTIONNOTHING;
 
 		_clock.start ();
 
@@ -335,12 +336,12 @@ bool MCHEmul::Computer::runComputerCycle (unsigned int a)
 	// be considered in the decision in case of conflict!
 	if (!executeActionAtPC (a))
 	{
-		_actionForNextCycle = _ACTIONNOTHING;
+		_actionForNextCycle = MCHEmul::Computer::_ACTIONNOTHING;
 
 		return (true); // It has decided not to execute the cycle...
 	}
 
-	_actionForNextCycle = _ACTIONNOTHING;
+	_actionForNextCycle = MCHEmul::Computer::_ACTIONNOTHING;
 
 	// The CPU is executed only when the computer is stable...
 	if (_stabilized)
@@ -574,13 +575,13 @@ bool MCHEmul::Computer::executeActionAtPC (unsigned int a)
 	MCHEmul::Computer::MapOfActions::const_iterator at =
 		_actionsAt.find (cpu () -> programCounter ().asAddress ());
 	// Internal actions received has priority over the external ones...
-	unsigned int na = (_actionForNextCycle != _ACTIONNOTHING) ? _actionForNextCycle : a;
+	unsigned int na = (_actionForNextCycle != MCHEmul::Computer::_ACTIONNOTHING) ? _actionForNextCycle : a;
 	// ..and even over the ones defined at one specific point...
 	unsigned int act = 
-		(na != _ACTIONNOTHING)
+		(na != MCHEmul::Computer::_ACTIONNOTHING)
 			? na
 			: (at == _actionsAt.end ()) 
-				? _ACTIONNOTHING
+				? MCHEmul::Computer::_ACTIONNOTHING
 				: (*at).second;
 
 	// Get the action from the template...

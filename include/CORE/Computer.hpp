@@ -98,7 +98,7 @@ namespace MCHEmul
 		{
 			public:
 			NoAction ()
-				: Action (_ACTIONNOTHING)
+				: Action (Computer::_ACTIONNOTHING)
 							{ }
 			
 			virtual inline bool execute (Computer*) override;
@@ -109,7 +109,7 @@ namespace MCHEmul
 		{
 			public:
 			StopAction ()
-				: Action (_ACTIONSTOP)
+				: Action (Computer::_ACTIONSTOP)
 							{ }
 
 			virtual inline bool execute (Computer* c) override;
@@ -120,7 +120,7 @@ namespace MCHEmul
 		{
 			public:
 			ContinueAction ()
-				: Action (_ACTIONCONTINUE)
+				: Action (Computer::_ACTIONCONTINUE)
 							{ }
 
 			virtual inline bool execute (Computer* c) override;
@@ -131,7 +131,7 @@ namespace MCHEmul
 		{
 			public:
 			NextCommandAction ()
-				: Action (_ACTIONNEXT)
+				: Action (Computer::_ACTIONNEXT)
 							{ }
 
 			virtual inline bool execute (Computer* c) override;
@@ -543,27 +543,27 @@ namespace MCHEmul
 		// What to do now will depend on was the last action was...
 		switch (c -> _lastAction)
 		{
-			case _ACTIONNOTHING:
+			case Computer::_ACTIONNOTHING:
 				// The status doesn't change as there is nothing else to do...
 				break;
 
-			case _ACTIONSTOP:
-			case _ACTIONNEXT:
-				c -> _status = _STATUSSTOPPED;
+			case Computer::_ACTIONSTOP:
+			case Computer::_ACTIONNEXT:
+				c -> _status = Computer::_STATUSSTOPPED;
 				break;
 
-			case _ACTIONCONTINUE:
-				c -> _status = _STATUSRUNNING;
+			case Computer::_ACTIONCONTINUE:
+				c -> _status = Computer::_STATUSRUNNING;
 				break;
 		}
 
-		return (c -> _status == _STATUSRUNNING);
+		return (c -> _status == Computer::_STATUSRUNNING);
 	}
 
 	// ---
 	inline bool Computer::StopAction::execute (Computer* c)
 	{
-		c -> _status = _STATUSSTOPPED;
+		c -> _status = Computer::_STATUSSTOPPED;
 
 		return (false);
 	}
@@ -571,7 +571,7 @@ namespace MCHEmul
 	// ---
 	inline bool Computer::ContinueAction::execute (Computer* c)
 	{
-		c -> _status = _STATUSRUNNING;
+		c -> _status = Computer::_STATUSRUNNING;
 
 		return (true);
 	}
@@ -579,7 +579,7 @@ namespace MCHEmul
 	// ---
 	inline bool Computer::NextCommandAction::execute (Computer* c)
 	{
-		c -> _status = _STATUSRUNNING;
+		c -> _status = Computer::_STATUSRUNNING;
 
 		// Flush the memory, if needed...
 		c -> memory () -> configuration ().executeMemorySetCommandsBuffered ();

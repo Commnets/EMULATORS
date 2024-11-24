@@ -11,26 +11,6 @@ main:
 clearSpriteArea:
 				RTS
 
-*=$c198
-init:
-				SEI							;no interrupts allowed
-				JSR clearSpriteArea	 		;clear sprite area
-				JSR initVIC					;init VIC
-				LDA #$BF					;set up IRQ in C1BF
-				LDX #$C1
-				STA $0314
-				STX $0315
-				LDA #$1B
-				STA $D011					;rows = 25 & scrollY = 3 (normal setup configuration)
-				LDA #$F7
-				STA $D012					;raster line IRQ at = 247 (-51 / 8 = 24,5... that's it at the middle of the last text line)
-				LDA #$01
-				STA $D01A					;enable raster line IRQ
-				LDA #$7F
-				STA $DC0D					;no interrupts realted with CIA1
-				CLI							;interrupts allowed again
-				RTS
-
 ;----------------------------------
 ;init VIC
 *=$c148
@@ -80,21 +60,66 @@ BYTES $00 $F7 $30 $F7 $60 $F7 $90 $F7
 BYTES $C0 $F7 $F0 $F7 $20 $F7 $50 $F7
 
 ;----------------------------------
+;from where to start the execution of the program
+;write in basic "sys 49560" to start
+*=$c198
+init:
+				SEI							;no interrupts allowed
+				JSR clearSpriteArea	 		;clear sprite area
+				JSR initVIC					;init VIC
+				LDA #$00					;set up IRQ in C200
+				LDX #$C2
+				STA $0314
+				STX $0315
+				LDA #$1B
+				STA $D011					;rows = 25 & scrollY = 3 (normal setup configuration)
+				LDA #$F7
+				STA $D012					;raster line IRQ at = 247 (-51 / 8 = 24,5... that's it at the middle of the last text line)
+				LDA #$01
+				STA $D01A					;enable raster line IRQ
+				LDA #$7F
+				STA $DC0D					;no interrupts realted with CIA1
+				LDA #$01
+				STA $D019					;no pending interrupts related with the VICII
+				CLI							;interrupts allowed again
+				RTS							;a interrupt could happen just after CLI and just before RTS...which wouldn't be good!
+
+;----------------------------------
 ;main IRQ routine
-*=$c1bf
+*=$c200
+;how many cycles from this point onwards?
+;+cycles to finish the instruction under execution
+;+7:cycles used to start the IRQ
+;+3:PHA					; save A
+;+2:TXA					; copy X
+;+3:PHA					; save X
+;+2:TYA					; copy Y
+;+3:PHA					; save Y
+;+2:TSX					; copy stack pointer
+;+4:LDA	LAB_0100+4,X	; get stacked status register
+;+2:AND	#$10			; mask BRK flag
+;+3:BEQ	LAB_FF58		; branch if not BRK, that it will be the case...
+;+0:JMP	(LAB_0316)		; else do BRK vector (iBRK), because this instruction is not taken...
+;LAB_FF58:
+;+5:JMP	(LAB_0314)		; do IRQ vector (iIRQ)
+;=36 cycles minimum
 irq:
-				LDX #$08
+				LDX #$08					;+2
+;so up to now 2 additional cycles
 loopWait:
-				DEX
-				BNE loopWait
-				LDX #$28					;40 or so lines
-				NOP							;"timing"
-				NOP
+				DEX							;+2
+				BNE loopWait				;+3,+2
+;so up to now 41 additional cycles = 2 + (5 cyles * 8 times - 1)
+				LDX #$28					;+2: 40 or so lines
+				NOP							;+2
+				NOP							;+2
+;so up to now 47 additional cycles = 41 + 6
+;total = 83 cycles minimum...so raster is already in line $f8 and at at cycle 19 minimum...
 loopLine:
-				NOP
-				NOP
-				DEC $D016					;fiddle register
-				INC $D016					;I don't know what this is for yet...
+				NOP							;+2
+				NOP							;+2
+				DEC $D016					;+6: fiddle register
+				INC $D016					;+6: I don't know what this is for yet...
 				LDY $D012					;loads where the raster is (in Y register): from F7 onwards.
 				DEY							;decrease it by one...
 				NOP				
@@ -103,8 +128,8 @@ loopLine:
 				ORA #$18					;set bits 3 and 4
 				STA $D011					;and store final value back into D011 (25 rows and screen switched on)...to avoid bad line?
 				BIT $EA						;+3 cycles
-				NOP							;+1 cycles
-				NOP							;+1 cycles
+				NOP							;+2 cycles
+				NOP							;+2 cycles
 				DEX				
 				BPL loopLine				;repeat next line
 				LDA #$1B					;sets the right value in the size of the screen (25 rows) and the position of scrollX

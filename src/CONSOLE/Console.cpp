@@ -69,7 +69,7 @@ void MCHEmul::Console::run ()
 		if (lCH)
 		{
 			lCH = false;
-			// First time after being hold, the promt hast to be shown!...
+			// First time after being hold, the prompt has to be shown!...
 
 			_outputStream << std::endl;
 
@@ -184,10 +184,10 @@ bool MCHEmul::Console::readCommand ()
 		size_t oPos = _cursorPosition;
 
 		auto delCurrentCommand = [&]() -> void
-			{	std::cout << MCHEmul::_BACKS.substr (0, _cursorPosition) // From the current position...
+			{ std::cout << MCHEmul::_BACKS.substr (0, _cursorPosition) // From the current position...
 						  << MCHEmul::_SPACES.substr (0, _command.length ()) 
 						  << MCHEmul::_BACKS.substr (0, _command.length ());
-				oPos = 0; };
+			  oPos = 0; };
 
 		switch (chr)
 		{

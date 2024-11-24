@@ -170,9 +170,13 @@ bool MCHEmul::CPU::executeNextCycle ()
 			break;
 
 		default:
-			// It shouldn't be here. 
-			// It would mean that there are states with no treatment...
-			assert (0); 
+			{ 
+				// It shouldn't be here. 
+				// It would mean that there are states with no treatment...
+				_LOG ("CPU State not allowed");
+				assert (false); 
+			}
+
 			break;
 	}
 
@@ -192,9 +196,11 @@ MCHEmul::InfoStructure MCHEmul::CPU::getInfoStructure () const
 		regs.add (i.name (), std::move (i.asString ()));
 	result.add ("REGS",	std::move (regs));
 
-	result.add ("PC",  std::move (programCounter ().asString ()));
-	result.add ("SR",  std::move (statusRegister ().asString ()));
-	result.add ("CLK", std::move (std::to_string (_clockCycles)));
+	result.add ("PC",		std::move (programCounter ().asString ()));
+	result.add ("SR",		std::move (statusRegister ().asString ()));
+	result.add ("CLK",		std::move (std::to_string (_clockCycles)));
+	result.add ("STATE",	std::to_string ((int) _state));
+	result.add ("CLKSTOP",	std::to_string (_cyclesStopped));
 
 	return (result);
 }

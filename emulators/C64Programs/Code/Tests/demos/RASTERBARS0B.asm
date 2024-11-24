@@ -1,7 +1,6 @@
 ; flasher
-;
-; this program causes the border to flash 60 times per second
-;
+; This program causes the border to flash 60 times per second
+; It has to be executed directy
 
 * = $c000
 main:

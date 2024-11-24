@@ -25,7 +25,8 @@ namespace F6500
 		Interrupt (int id, int pr)
 			: MCHEmul::CPUInterrupt (id, 7, pr),
 			  _instChecked (false),
-			  _exeAddress ()
+			  _exeAddress (),
+			  _requestClock (0), _execClock (0)
 							{ }
 
 		unsigned int readingCyclesTolaunch () const
@@ -36,7 +37,9 @@ namespace F6500
 		/**
 		  *	The name of the fields are: \n
 		  *	The ones from the CPUInterrupt +
-		  *	ADDRESS			= The address where the NMI should start the execution from.
+		  *	REQCLOCK		= Attribute: The clock when the interrupt was requested. \n
+		  * EXECCLOCK		= Attribute: The clock when the interrupt was executed. \n
+		  *	ADDRESS			= Attribute: The address where the NMI should start the execution from.
 		  */
 		virtual MCHEmul::InfoStructure getInfoStructure () const override;
 
@@ -52,7 +55,11 @@ namespace F6500
 							  return (true); /** Not relevant. */ }
 
 		protected:
+		// Implementation
+		/** Data about the moment of the execution. */
 		MCHEmul::Address _exeAddress;
+		mutable unsigned int _requestClock;
+		mutable unsigned int _execClock;
 
 		private:
 		// Implementation

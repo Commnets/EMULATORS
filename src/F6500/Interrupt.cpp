@@ -13,6 +13,8 @@ MCHEmul::InfoStructure F6500::Interrupt::getInfoStructure () const
 {
 	MCHEmul::InfoStructure result = std::move (MCHEmul::CPUInterrupt::getInfoStructure ());
 
+	result.add ("REQCLOCK", _requestClock);
+	result.add ("EXECCLOCK", _execClock);
 	result.add ("ADDRESS", (_exeAddress == MCHEmul::Address ()) 
 		? "-" : _exeAddress.asString (MCHEmul::UByte::OutputFormat::_HEXA, '\0', 0));
 
@@ -30,15 +32,23 @@ unsigned int F6500::Interrupt::isTime (MCHEmul::CPU* c, unsigned int cC) const
 		// ...ready for a new consult...
 		_instChecked = false;
 
+		_execClock = c -> clockCycles ();
+
 		return (MCHEmul::CPUInterrupt::_EXECUTIONALLOWED);	
 	}
 	else
 	{
 		if ((c -> clockCycles () - cC) > 1)
+		{
+			_requestClock = _execClock = c -> clockCycles ();
+
 			return (MCHEmul::CPUInterrupt::_EXECUTIONALLOWED);
+		}
 		else
 		{ 
 			_instChecked = true;
+
+			_requestClock = c -> clockCycles ();
 
 			return (MCHEmul::CPUInterrupt::_EXECUTIONTOWAIT);
 		}

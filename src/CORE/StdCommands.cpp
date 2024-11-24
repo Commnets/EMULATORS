@@ -465,7 +465,9 @@ void MCHEmul::LastIntructionCPUCommand::executeImpl (MCHEmul::CommandExecuter* c
 	if (c == nullptr)
 		return;
 
-	/** The instruction is added in the format o a bye code line. */
+	rst.add ("CYCLES", c -> cpu () -> lastInstruction () -> totalClockCyclesExecuted ());
+	rst.add ("CLK", c -> cpu () -> clockCycles ());
+	/** The instruction is added in the format of a byte code line. */
 	rst.add ("INST", c -> cpu () -> lastInstruction () == nullptr 
 		? "-" 
 		: MCHEmul::ByteCodeLine (
@@ -511,7 +513,7 @@ void MCHEmul::SetBreakPointCommand::executeImpl (MCHEmul::CommandExecuter* cE, M
 				(addrs.asString (MCHEmul::UByte::OutputFormat::_HEXA, '\0')));
 	}
 
-	if (aE.empty ())
+	if (!aE.empty ())
 	{
 		std::string tE;
 		for (size_t i = 0; i < aE.size (); i++)
@@ -542,7 +544,7 @@ void MCHEmul::RemoveBreakPointCommand::executeImpl (MCHEmul::CommandExecuter* cE
 				(bP.asString (MCHEmul::UByte::OutputFormat::_HEXA, '\0')));
 	}
 
-	if (aE.empty ())
+	if (!aE.empty ())
 	{
 		std::string tE;
 		for (size_t i = 0; i < aE.size (); i++)

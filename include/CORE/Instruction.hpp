@@ -174,6 +174,8 @@ namespace MCHEmul
 							{ return (_lastExecutionData._clockCycles); }
 		unsigned int additionalClockCyclesExecuted () const
 							{ return (_lastExecutionData._additionalClockCycles); }
+		unsigned int totalClockCyclesExecuted () const
+							{ return (clockCyclesExecuted () + additionalClockCyclesExecuted ()); }
 		unsigned int memoryPositionsExecuted () const
 							{ return (_lastExecutionData._memoryPositions); }
 		
