@@ -114,6 +114,10 @@ namespace MCHEmul
 		const CPUArchitecture& architecture () const
 							{ return (_architecture); }
 
+		unsigned int state () const
+							{ return (_state); }
+
+		// Related with the stae stopped...
 		/** Is the CPU stopped for any reason? 
 			The type of cycles why the CPU is stopped for is optional (all as default). */
 		bool stopped (unsigned int tC = InstructionDefined::_CYCLEALL) const
@@ -131,6 +135,10 @@ namespace MCHEmul
 			unsigned int tC, /** Type of cycle affected when stop. 0 means none, than might be contradictory with s value. */
 			unsigned int cC, /** Number of cycles of the microprocessor when the the stop was requested. */
 			int nC = -1 /** how many cycles when s = true. -1 will mean forever. */);
+		/** To know how many cycles the cpu will remain still stopped.
+			= 0 if nothing ot if the state is = _RUNNING. */
+		unsigned int cyclesRemainStopped () const
+							{ return ((_state == _STOPPED) ? (_cyclesStopped - _counterCyclesStopped) : 0); }
 
 		// Info about the registers...
 		const Registers& internalRegisters () const

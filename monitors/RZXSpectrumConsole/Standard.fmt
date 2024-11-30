@@ -290,6 +290,10 @@ Last:@INST@
 @INTERRUPTS?{fmter=.CLASS,empty=no interruptions}\n@
 #---
 #---
+;CCPUSTATE
+State:@STATE@ (Cycles Stopped:@CLKSTOP@)
+#---
+#---
 ;CCPUINFO
 @CPU>@
 #---

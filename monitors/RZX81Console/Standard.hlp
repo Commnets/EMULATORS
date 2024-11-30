@@ -74,6 +74,9 @@ No parameters are needed.
 ;CPUSSTATUS
 Similar to command CPUSTATUS but not including info about the stack.
 No parameters are needed.
+;CPUSTATE
+To know which is the state of the CPU and some additional data of each.
+No parameters are needed.
 ;CLOCKFACTOR VALUE
 To change the speed factor of the CPU.
 1 will refer to normal speed.

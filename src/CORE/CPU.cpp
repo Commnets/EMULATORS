@@ -200,7 +200,7 @@ MCHEmul::InfoStructure MCHEmul::CPU::getInfoStructure () const
 	result.add ("SR",		std::move (statusRegister ().asString ()));
 	result.add ("CLK",		std::move (std::to_string (_clockCycles)));
 	result.add ("STATE",	std::to_string ((int) _state));
-	result.add ("CLKSTOP",	std::to_string (_cyclesStopped));
+	result.add ("CLKSTOP",	std::to_string (cyclesRemainStopped ()));
 
 	return (result);
 }

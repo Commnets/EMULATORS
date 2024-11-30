@@ -574,7 +574,7 @@ namespace COMMODORE
 		if (cav == (_raster.hData ().lastScreenPosition () + 1))
 			_vicGraphicInfo._ffMBorder = true;
 		if (cav < _raster.hData ().lastScreenPosition () && 
-				((cav + 7) > _raster.hData ().lastScreenPosition ()))
+				((cav + 8) >= _raster.hData ().lastScreenPosition ()))
 		{
 			_vicGraphicInfo._ffRBorder = true;
 			// When out of the screen zone, the number of pixels to draw is complete...

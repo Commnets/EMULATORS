@@ -24,6 +24,8 @@ MCHEmul::Command* MCHEmul::StandardCommandBuilder::createEmptyCommand (const std
 		result = new MCHEmul::CPUStatusCommand;
 	else if (cmdName == "CPUSSTATUS" || cmdName == MCHEmul::CPUSimpleStatusCommand::_NAME)
 		result = new MCHEmul::CPUSimpleStatusCommand;
+	else if (cmdName == "CPUSTATE" || cmdName == MCHEmul::CPUStateCommand::_NAME)
+		result = new MCHEmul::CPUStateCommand;
 	else if (cmdName == "CPUINFO" || cmdName == MCHEmul::CPUInfoCommand::_NAME)
 		result = new MCHEmul::CPUInfoCommand;
 	else if (cmdName == "MEMORY" || cmdName == MCHEmul::MemoryStatusCommand::_NAME)

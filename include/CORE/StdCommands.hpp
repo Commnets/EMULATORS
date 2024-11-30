@@ -219,6 +219,25 @@ namespace MCHEmul
 							{ /** Nothing special to do. */ }
 	};
 
+	/** To get info about the state of cpu. \n
+		Command line: CPUSTATE */
+	class CPUStateCommand final : public Command
+	{
+		public:
+		static const int _ID = 108;
+		static const std::string _NAME;
+
+		CPUStateCommand ()
+			: Command (_ID, _NAME)
+							{ }
+
+		virtual bool canBeExecuted () const override
+							{ return (_parameters.size () == 0); }
+
+		private:
+		virtual void executeImpl (CommandExecuter* cE, Computer* c, InfoStructure& rst) override;
+	};
+
 	/** To get info about the cpu. \n
 		Command line: CPUINFO */
 	class CPUInfoCommand final : public Command

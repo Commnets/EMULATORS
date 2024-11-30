@@ -7,14 +7,27 @@ main:
 
 ;----------------------------------
 ;clear Sprite zone
-*=$c12e
+*=$c100
 clearSpriteArea:
+				LDA #$AA
+				LDX #$3F
+loopClear:
+				STA $3E00,X
+				STA $3E40,X
+				STA $3E80,X
+				STA $3EC0,X
+				STA $3F00,X
+				STA $3F40,X
+				STA $3F80,X
+				STA $3FC0,X
+				DEX
+				BPL loopClear
 				RTS
 
 ;----------------------------------
 ;init VIC
-*=$c148
-initVIC=$c148
+*=$c200
+initVIC=$c200
 initVIC:
 				LDX #$00
 loopSpritesPosition:
@@ -41,10 +54,12 @@ loopSpriteForm:
 				INX
 				CPX #$08
 				BNE loopSpriteForm
-				LDA #$0E
+				LDA #$00
 				LDX #$00
 loopSpriteColor:
 				STA $D027,X					;sets sprite color to white ($0e)
+				CLC
+				ADC #$01
 				INX
 				CPX #$08
 				BNE loopSpriteColor
@@ -54,21 +69,21 @@ loopSpriteColor:
 ;data set into VIC registers
 ;defines the position of the sprites in the screen
 ;all of them above F7 that is where the raster IRQ starts
-*=$c188
-vicIIValues=$c188
+*=$c300
+vicIIValues=$c300
 BYTES $00 $F7 $30 $F7 $60 $F7 $90 $F7
 BYTES $C0 $F7 $F0 $F7 $20 $F7 $50 $F7
 
 ;----------------------------------
 ;from where to start the execution of the program
 ;write in basic "sys 49560" to start
-*=$c198
+*=$c400
 init:
 				SEI							;no interrupts allowed
 				JSR clearSpriteArea	 		;clear sprite area
 				JSR initVIC					;init VIC
 				LDA #$00					;set up IRQ in C200
-				LDX #$C2
+				LDX #$C5
 				STA $0314
 				STX $0315
 				LDA #$1B
@@ -86,7 +101,7 @@ init:
 
 ;----------------------------------
 ;main IRQ routine
-*=$c200
+*=$c500
 ;how many cycles from this point onwards?
 ;+cycles to finish the instruction under execution
 ;+7:cycles used to start the IRQ
@@ -110,6 +125,10 @@ loopWait:
 				DEX							;+2
 				BNE loopWait				;+3,+2
 ;so up to now 41 additional cycles = 2 + (5 cyles * 8 times - 1)
+;let's divide in 2 phases: 
+;when the cycle 62 is reached and sprite info started to be read, and the rest
+;the first phase is reached when the: 38/41 + (5 cycles * x times) = 62; x = 4,8...so in the middle of the cycle 4 or 5
+;then the raster jumps to the next line $f8 and it finishes when the internal VIC cycle is 14.
 				LDX #$28					;+2: 40 or so lines
 				NOP							;+2
 				NOP							;+2
@@ -125,7 +144,7 @@ loopLine:
 				NOP				
 				TYA							;transfer to A register
 				AND #$07					;keeps only bits 0,1 and 2
-				ORA #$18					;set bits 3 and 4
+				ORA #$10					;set bits 3 and 4
 				STA $D011					;and store final value back into D011 (25 rows and screen switched on)...to avoid bad line?
 				BIT $EA						;+3 cycles
 				NOP							;+2 cycles

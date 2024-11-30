@@ -16,6 +16,7 @@ const std::string MCHEmul::ProgramCounterStatusCommand::_NAME = "CPC";
 const std::string MCHEmul::StackStatusCommand::_NAME = "CSTACK";
 const std::string MCHEmul::CPUStatusCommand::_NAME = "CCPUSTATUS";
 const std::string MCHEmul::CPUSimpleStatusCommand::_NAME = "CCPUSSTATUS";
+const std::string MCHEmul::CPUStateCommand::_NAME = "CCPUSTATE";
 const std::string MCHEmul::CPUInfoCommand::_NAME = "CCPUINFO";
 const std::string MCHEmul::MemoryStatusCommand::_NAME = "CMEMORY";
 const std::string MCHEmul::MemoryDumpCommand::_NAME = "CMEMORYDUMP";
@@ -244,6 +245,7 @@ MCHEmul::CPUStatusCommand::CPUStatusCommand ()
 				  new ProgramCounterStatusCommand,
 				  new LastIntructionCPUCommand,
 				  new StackStatusCommand,
+				  new CPUStateCommand,
 				  new InterruptsCommand
 				}))
 {
@@ -258,10 +260,21 @@ MCHEmul::CPUSimpleStatusCommand::CPUSimpleStatusCommand ()
 				  new RegistersStatusCommand,
 				  new ProgramCounterStatusCommand,
 				  new LastIntructionCPUCommand,
+				  new CPUStateCommand,
 				  new InterruptsCommand
 				}))
 {
 	// Nothing else...
+}
+
+// ---
+void MCHEmul::CPUStateCommand::executeImpl (MCHEmul::CommandExecuter* cE, MCHEmul::Computer* c, MCHEmul::InfoStructure& rst)
+{
+	if (c == nullptr)
+		return;
+
+	rst.add ("STATE",	std::to_string (c -> cpu () -> state ()));
+	rst.add ("CLKSTOP", std::to_string (c -> cpu () -> cyclesRemainStopped ()));
 }
 
 // ---
