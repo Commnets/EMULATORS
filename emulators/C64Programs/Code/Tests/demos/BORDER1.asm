@@ -103,7 +103,7 @@ init:
 ;main IRQ routine
 *=$c500
 ;how many cycles from this point onwards?
-;+cycles to finish the instruction under execution
+;+up to 3 cycles to finish the instruction under execution
 ;+7:cycles used to start the IRQ
 ;+3:PHA					; save A
 ;+2:TXA					; copy X
@@ -117,7 +117,8 @@ init:
 ;+0:JMP	(LAB_0316)		; else do BRK vector (iBRK), because this instruction is not taken...
 ;LAB_FF58:
 ;+5:JMP	(LAB_0314)		; do IRQ vector (iIRQ)
-;=36 cycles minimum
+;from 36 uo to 39 cycles
+;so VICII internal cycle = 36/39
 irq:
 				LDX #$08					;+2
 ;so up to now 2 additional cycles
@@ -125,15 +126,16 @@ loopWait:
 				DEX							;+2
 				BNE loopWait				;+3,+2
 ;so up to now 41 additional cycles = 2 + (5 cyles * 8 times - 1)
-;let's divide in 2 phases: 
-;when the cycle 62 is reached and sprite info started to be read, and the rest
-;the first phase is reached when the: 38/41 + (5 cycles * x times) = 62; x = 4,8...so in the middle of the cycle 4 or 5
-;then the raster jumps to the next line $f8 and it finishes when the internal VIC cycle is 14.
+;let's divide this loop in 2 phases: 
+;when the VICII internal cycle 62 is reached, and sprite info started to be read, and the rest
+;the first phase is reached when the: 38/41 + (5 cycles * x times) = 62; x = in the middle of the loop 4th...
+;As there are 8 sprites info to read, the CPU stops until the cycle 14th is reached in the next line...
+;and then there would be between 15 and 18 additional cycles spend in the rest of the loop.
+;so after the loop the VICII internal cycle would be = 14 + 19/14 + 22 = 33/36, that is in the middle of the line $f8...
 				LDX #$28					;+2: 40 or so lines
 				NOP							;+2
 				NOP							;+2
-;so up to now 47 additional cycles = 41 + 6
-;total = 83 cycles minimum...so raster is already in line $f8 and at at cycle 19 minimum...
+;at this point the VICII internal cycle would be = 39/42
 loopLine:
 				NOP							;+2
 				NOP							;+2

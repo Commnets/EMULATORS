@@ -2,19 +2,25 @@
 #include <F6500/IRQInterrupt.hpp>
 
 // ---
-/** At the information is in https://www.cebix.net/VIC-Article.txt. \n
-	To simplify how everything works the horizontal beams moves at a pace of 8 pixels per CPU cycle.
-	In the real VICII every CPU cycle uses 2 cycles in VICII clock and in every VICII cycle 4 pixels are drawn. \n
-	For this reason the way the lightpen is detected is less accurate than in the real VICII. */
+/** At the information is in https://www.cebix.net/VIC-Article.txt. */
 const MCHEmul::RasterData COMMODORE::VICII_PAL::_VRASTERDATA 
 	(0, 16, 51, 250, 289, 311 /** When the reatrace starts. */, 311 /** When the retrace finishes. */, 312, 4, 4);
+/** The real VICII does actions in both phases of the clock (it really uses a clock running at double speed and creates the CPU clock from that) \n
+	When the raster beam is in the visible zone 4 pixels are drawn in each phase of the cycle, so 8 pixels per CPU cycle.
+	As the documentation describes, the graphics are read from cycle 15 onwards (in a badline). \n
+	The first char code is actually read at the 2nd phase (up) of the cycle 15 and the graphic data is read at the 1st phase of the cycle 16. \n
+	The simulation doesn't manage a clock with two phases, so both actions are programmed to happen at cycle 16 (see below). That is from cycle 16 to cycle 55 (40).
+	At the beginning of that cycle 16 the raster will haved moved: (16 - 1) * 8 = 120 "pixels" since the counter of cycles started.
+	Drawing of the content should start at position (as defined): 24, that's 124 "pixels" since the counter of cycles started (504 - 404 + 24). */
 const MCHEmul::RasterData COMMODORE::VICII_PAL::_HRASTERDATA 
-	(404, 496, 24, 343, 375, 379 /** When the retrace starts. */, 403 /** When the retrace finishes. */, 
+	(404, 496 /** The 2nd HBI finishes and then the drawing border starts. 
+				  In the documentation it happens at 480, but it wouldn't make a border with the same with than the right one! */, 
+		24, 343, 375, 379 /** 1st horizontal blanking interval (HBI) */, 403 /** 1st HBI finishes., */,
 		504 /** For everyting to run, it has to be divisible by 8. */, 7, 9);
 const MCHEmul::RasterData COMMODORE::VICII_NTSC::_VRASTERDATA 
 	(27, 41, 51, 250, 2, 26, 26, 262, 4, 4); // Same meaning than in the case of the PAL system...
 const MCHEmul::RasterData COMMODORE::VICII_NTSC::_HRASTERDATA 
-	(412, 504, 24, 343, 375, 379, 411, 512 , 7, 9); // Same meaning than in the case of the PAL system...
+	(412, 504, 24, 343, 375, 379, 411, 512, 7, 9); // Same meaning than in the case of the PAL system...
 // This two positions are fized...
 // are the ones where the VICII reads information from when it is not in the visible part!
 const MCHEmul::Address COMMODORE::VICII::_MEMORYPOSIDLE1 = MCHEmul::Address ({ 0xff, 0x39 }, false);
@@ -875,7 +881,8 @@ void COMMODORE::VICII::drawVisibleZone (MCHEmul::CPU* cpu)
 	drawGraphicsSpritesAndDetectCollisions (
 		{
 			/** _ICD */ _raster.hData ().firstDisplayPosition (),		// DISPLAY: The original...
-			/** _SC	 */ _VICIIRegisters -> horizontalScrollPosition (),	// From 0 - 7 
+			/** _SC	 */ _VICIIRegisters -> horizontalScrollPosition (),	// From 0 - 7
+			/** _RC  */ cv,												// Not adjusted with in the window...
 			/** _RCA */ cav,											// Where the horizontal raster is (adjusted to 8) inside the window
 			/** _RR	 */ rv												// Where the vertical raster is inside the window (it is not the chip raster line)
 		});
@@ -973,6 +980,12 @@ COMMODORE::VICII::DrawResult COMMODORE::VICII::drawGraphics (const COMMODORE::VI
 	// To draw is only valid in the graphical state...
 	if (_vicGraphicInfo._idleState)
 		return (COMMODORE::VICII::DrawResult ());
+
+	/** IMPORTANT NOTE:
+		When the raster cycle is 16, _RC = 28 and _RCA = 24.
+		The VIC should start to draw at that cycle. 
+		As the code is now, using _RCA instead _RC to determine the initial position to start the drawing,
+		that wouldn't happen until cycle 17. */
 
 	// The "display" column being involved...
 	// In cb, the SCROLLX is involved, so it could be negative! starting from -7, 

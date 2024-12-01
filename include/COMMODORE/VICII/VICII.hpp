@@ -180,6 +180,7 @@ namespace COMMODORE
 		{
 			unsigned short _ICD;	// Initial Column of the Display (Not taken into account reductions in size).
 			unsigned short _SC;		// Scroll X
+			unsigned short _RC;		// Raster X position not adjusted
 			unsigned short _RCA;	// Raster X position adjusted (Moves 8 by 8, so = Raster X >> 3 << 3)
 			unsigned short _RR;		// Raster Y (From the beginning of the visible zone.
 									// Moves 1 by 1. No adjusted needed because how the C64 screen is defined...
