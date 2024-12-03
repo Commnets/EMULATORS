@@ -121,7 +121,7 @@ IRQ:@IRQ@(@IRQLINE@)
 #---
 #---
 ;VICIIInternal
-VCBASE:@VCBASE@, VC:@VC@, RC:@RC@, ROW:@ROW@
+VCBASE:@VCBASE@, VC:@VC@, RC:@RC@, ROW:@ROW@, IDLE:@IDLE@
 #---
 #---
 ;VICII
@@ -130,7 +130,7 @@ Id:@ID@
 ->VICIIRegisters:
 @VICIIRegisters>@
 @Raster>@
-Line Cycle:@Cycle@
+Badline:@BADLINE@, Line Cycle:@Cycle@
 @VICIIInternal>@
 #---
 #---

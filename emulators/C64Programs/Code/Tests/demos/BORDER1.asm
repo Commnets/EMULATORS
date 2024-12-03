@@ -3,6 +3,7 @@
 *=$c000
 main:
 ;to complete
+				inc $d020
 				RTS
 
 ;----------------------------------
@@ -57,6 +58,7 @@ loopSpriteForm:
 				LDA #$00
 				LDX #$00
 loopSpriteColor:
+				LDA vicIIValues+$10,X
 				STA $D027,X					;sets sprite color to white ($0e)
 				CLC
 				ADC #$01
@@ -73,6 +75,7 @@ loopSpriteColor:
 vicIIValues=$c300
 BYTES $00 $F7 $30 $F7 $60 $F7 $90 $F7
 BYTES $C0 $F7 $F0 $F7 $20 $F7 $50 $F7
+BYTES $00 $01 $02 $03 $04 $05 $00 $07
 
 ;----------------------------------
 ;from where to start the execution of the program
@@ -128,10 +131,10 @@ loopWait:
 ;so up to now 41 additional cycles = 2 + (5 cyles * 8 times - 1)
 ;let's divide this loop in 2 phases: 
 ;when the VICII internal cycle 62 is reached, and sprite info started to be read, and the rest
-;the first phase is reached when the: 38/41 + (5 cycles * x times) = 62; x = in the middle of the loop 4th...
-;As there are 8 sprites info to read, the CPU stops until the cycle 14th is reached in the next line...
-;and then there would be between 15 and 18 additional cycles spend in the rest of the loop.
-;so after the loop the VICII internal cycle would be = 14 + 19/14 + 22 = 33/36, that is in the middle of the line $f8...
+;the first phase is reached when the: 38/41 + (5 cycles * x times) = 55 (3 cycles before reading the first); x = in the middle of the loop 2nd or 3rd...
+;As there are 8 sprites info to read, the CPU stops until the cycle 12th is reached in the next line...
+;and then there would be between 21 and 24 additional cycles spend in the rest of the loop.
+;so after the loop the VICII internal cycle would be = 12 + 21/12 + 24 = 33/36, that is in the middle of the line $f8...
 				LDX #$28					;+2: 40 or so lines
 				NOP							;+2
 				NOP							;+2
@@ -140,19 +143,25 @@ loopLine:
 				NOP							;+2
 				NOP							;+2
 				DEC $D016					;+6: fiddle register
+;at the first iteration at this position the VICII cycle will be = 39 + 10/42 + 10 = 49/52
 				INC $D016					;+6: I don't know what this is for yet...
-				LDY $D012					;loads where the raster is (in Y register): from F7 onwards.
-				DEY							;decrease it by one...
-				NOP				
-				TYA							;transfer to A register
-				AND #$07					;keeps only bits 0,1 and 2
-				ORA #$10					;set bits 3 and 4
-				STA $D011					;and store final value back into D011 (25 rows and screen switched on)...to avoid bad line?
-				BIT $EA						;+3 cycles
-				NOP							;+2 cycles
-				NOP							;+2 cycles
-				DEX				
-				BPL loopLine				;repeat next line
+;at the first iteration at this position the VICII cycle will be = 39 + 16/42 + 16 = 55/58
+;at this moment the VICII starts to read again the information of the sprites, so it stops until everything is in cycle 12 and the raster line = $fa
+;the cpu stops, but the content is store in the memory...
+				LDY $D012					;+4: loads where the raster is (in Y register): from F8 onwards.
+				DEY							;+2: decrease it by one...
+				NOP							;+2
+				TYA							;+2: transfer to A register
+				AND #$07					;+2: keeps only bits 0,1 and 2
+				ORA #$10					;+2: set bits 3 and 4
+				STA $D011					;+4: and store final value back into D011 (25 rows and screen switched on)...to avoid bad line?
+				BIT $EA						;+3
+				NOP							;+2
+				NOP							;+2
+				DEX							;+2 				
+				BPL loopLine				;+3: repeat next line
+;at the first iteration at this position the VICII cycle will be = 12+30 = 42
+;so it starts back for 38 more lines, using the same cycles and the same behaviour...
 				LDA #$1B					;sets the right value in the size of the screen (25 rows) and the position of scrollX
 				STA $D011		
 				LDA #$01

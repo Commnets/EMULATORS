@@ -140,8 +140,11 @@ namespace COMMODORE
 
 		/**
 		  *	The name of the fields are: \n
-		  * VICIIRegisters	= InfoStructure: Info about the registers.
-		  * Raster			= InfoStructure: Info about the raster.
+		  * VICIIRegisters	= InfoStructure: Info about the registers. \n
+		  * Raster			= InfoStructure: Info about the raster. \n
+		  * VICIIInternal	= InfoStructure: Info about the internal registers of the VICII. \n
+		  * Badline			= Attribute: Whether the raster is or not in a bad line. \n
+		  * Cycle			= Attribute: Number of the VICII internal cycle where the raster beam is. \n
 		  */
 		virtual MCHEmul::InfoStructure getInfoStructure () const override;
 
@@ -425,8 +428,9 @@ namespace COMMODORE
 		  *		CYCLE 14:			VC = VCBASE. If Bad Line => RC = 0 \n
 		  *		CYCLES 15 - 54:		VC = VC + 1 \n
 		  *		CYCLE 58:			if RC == 7 => VCBASE = VC; RC = RC + 1 \n
-		  * So VC goes from 0 to 40 7 times before VBASE incrementes in 40,
-		  * then 7 times more from 40 to 80 before VCBASE moves to 80 and so on and so forth.
+		  * So VC goes from 0 to 40, 7 times before VBASE incrementes in 40,
+		  * then 7 times more from 40 to 80 before VCBASE moves to 80 and so on and so forth....
+		  * So VCBASE moves incrementing in 40....
 		  */
 		struct VICGraphicInfo
 		{
@@ -455,14 +459,33 @@ namespace COMMODORE
 			void emptyGraphicData ()
 							{ _graphicData		= std::vector <MCHEmul::UByte> (40, MCHEmul::UByte::_0); }
 
+
+			/** 
+				The name of the fields are: \n
+				VCBASE		= Attribute: Video position counter base in the line. Step 40. \n
+				VC			= Attribute: Video position counter. Step 1. \n
+				RC			= Attribute: Line position within the graphics memory. From 0 to 7. \n
+				VLMI		= Attribute: Position witin the char line. From 0 to 39. \n
+				ROW			= Attribute: Row number. Depending on the VICII type. \n
+				IDLE		= Attribute: Whether the VICII is or not in idle state.
+			  */
 			MCHEmul::InfoStructure getInfoStructure () const;
 
+			// Internal elements used to read the memory from the VICII
+			/** Read what the do at the header of the class. Very important counters. */
 			unsigned short _VCBASE, _VC;
-			unsigned char _RC;
-			unsigned short _ROW;
 			unsigned short _VLMI;
-			bool _idleState; 
-			// Related with the border...
+			unsigned char _RC;
+			/** Where the raster is from the VICII perspective. \n
+				This counter gets updated just when the first cycle of the VICII happens. */
+			unsigned short _ROW;
+			/** Whether the VICII is or not in idle state. \n
+				Idle state is no longer active (false) as long as a bad condition is detected, 
+				and	becomes active again (true) as long as there is no bad condition and _RC == 7 at internal cycle 58. 
+				Draw conditions happens always also at _idle state. */
+			bool _idleState;
+
+			// Internal elements used to manage the border...
 			bool _ffVBorder; 
 			bool _ffMBorder;
 			/** These two ones are temporal variables due to the VICII simulation doesn't execute cycle by clcle. 
@@ -472,14 +495,14 @@ namespace COMMODORE
 			bool _ffLBorder, _ffRBorder;
 			unsigned short _ffMBorderBegin;
 			unsigned char _ffMBorderPixels;
+
+			// Implementation...
 			// This one doesn't actually exist "in" the VICII chip, 
 			// but is used when he left border has to be partially drawn.
 			// After doing so, the _ffMBorder will become false...
 			mutable MCHEmul::UBytes _screenCodeData;
 			mutable MCHEmul::UBytes _graphicData; 
 			mutable MCHEmul::UBytes _colorData;
-
-			// Implementation...
 			/** The last info read. */
 			mutable MCHEmul::UByte _lastScreenCodeDataRead;
 			mutable MCHEmul::UByte _lastGraphicDataRead;
@@ -656,12 +679,16 @@ namespace COMMODORE
 	{
 		memoryRef () -> setActiveView (_VICIIView);
 
-		if (_vicGraphicInfo._idleState) // In this state the info is read from a specific place of the memory...
+		// In this state the info is read from a specific place of the memory...
+		// ...that could vary a bit depending on the graphic mode and the active bank
+		if (_vicGraphicInfo._idleState) 
 			_vicGraphicInfo._lastGraphicDataRead =
 				_vicGraphicInfo._graphicData [_vicGraphicInfo._VLMI] = 
 					_VICIIRegisters -> graphicExtendedColorTextModeActive () 
-						? memoryRef () -> value (_MEMORYPOSIDLE1) : memoryRef () -> value (_MEMORYPOSIDLE2);
-		else // ..in the other one the info will be read attending to the situation of the memory...
+						? memoryRef () -> value (_MEMORYPOSIDLE1 + (bank () << 14))
+						: memoryRef () -> value (_MEMORYPOSIDLE2 + (bank () << 14));
+		// ..in this other one, the info will be read attending to the situation of the memory...
+		else 
 			_vicGraphicInfo._lastGraphicDataRead =
 				_vicGraphicInfo._graphicData [_vicGraphicInfo._VLMI] = _VICIIRegisters -> textMode () 
 					? memoryRef () -> value (_VICIIRegisters -> charDataMemory () + 

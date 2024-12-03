@@ -1,0 +1,194 @@
+00001  0000             ;INIT VIC
+00002  0001             *=$C000
+00003  C000             MAIN
+00004  C000             ;TO COMPLETE
+00005  C000  EE 20 D0              INC $D020
+00006  C003  60                    RTS
+00007  C004             
+00008  C004             ;----------------------------------
+00009  C004             ;CLEAR SPRITE ZONE
+00010  C004             *=$C100
+00011  C100             CLEARSPRITEAREA 
+00012  C100  A9 AA                 LDA #$AA
+00013  C102  A2 3F                 LDX #$3F
+00014  C104             LOOPCLEAR
+00015  C104  9D 00 3E              STA $3E00,X
+00016  C107  9D 40 3E              STA $3E40,X
+00017  C10A  9D 80 3E              STA $3E80,X
+00018  C10D  9D C0 3E              STA $3EC0,X
+00019  C110  9D 00 3F              STA $3F00,X
+00020  C113  9D 40 3F              STA $3F40,X
+00021  C116  9D 80 3F              STA $3F80,X
+00022  C119  9D C0 3F              STA $3FC0,X
+00023  C11C  CA                    DEX
+00024  C11D  10 E5                 BPL LOOPCLEAR
+00025  C11F  60                    RTS
+00026  C120             
+00027  C120             ;----------------------------------
+00028  C120             ;INIT VIC
+00029  C120             *=$C200
+00030  C200             INITVIC
+00031  C200  A2 00                 LDX #$00
+00032  C202             LOOPSPRITESPOSITION 
+00033  C202  BD 00 C3              LDA VICIIVALUES,X
+00034  C205  9D 00 D0              STA $D000,X              ;SET FIRST 16 VALUES FROM TABLE. POSITION OF SPRITES
+00035  C208  E8                    INX
+00036  C209  E0 10                 CPX #$10
+00037  C20B  D0 F5                 BNE LOOPSPRITESPOSITION
+00038  C20D  A9 FF                 LDA #$FF
+00039  C20F  8D 15 D0              STA $D015                ;ALLOW ALL SPRITES
+00040  C212  A9 00                 LDA #$00
+00041  C214  8D 1C D0              STA $D01C                ;NONE SPRITE MULTICOLOR
+00042  C217  A9 FF                 LDA #$FF
+00043  C219  8D 17 D0              STA $D017                ;NONE SPRITE EXPANDED Y
+00044  C21C  8D 1D D0              STA $D01D                ;NONE SPRITE EXPANDED X
+00045  C21F  A9 C0                 LDA #$C0
+00046  C221  8D 10 D0              STA $D010                ;ONLY SPRITES 8 AND 6 IN THE RIGHT
+00047  C224  A9 F8                 LDA #$F8
+00048  C226  A2 00                 LDX #$00
+00049  C228             LOOPSPRITEFORM 
+00050  C228  9D F8 07              STA $07F8,X              ;SETS WHERE TO READ THE SPRITE INFO (FORM)
+00051  C22B  18                    CLC
+00052  C22C  69 01                 ADC #$01
+00053  C22E  E8                    INX
+00054  C22F  E0 08                 CPX #$08
+00055  C231  D0 F5                 BNE LOOPSPRITEFORM
+00056  C233  A9 00                 LDA #$00
+00057  C235  A2 00                 LDX #$00
+00058  C237             LOOPSPRITECOLOR 
+00059  C237  BD 10 C3              LDA VICIIVALUES+$10,X
+00060  C23A  9D 27 D0              STA $D027,X              ;SETS SPRITE COLOR TO WHITE ($0E)
+00061  C23D  18                    CLC
+00062  C23E  69 01                 ADC #$01
+00063  C240  E8                    INX
+00064  C241  E0 08                 CPX #$08
+00065  C243  D0 F2                 BNE LOOPSPRITECOLOR
+00066  C245  60                    RTS
+00067  C246             
+00068  C246             ;----------------------------------
+00069  C246             ;DATA SET INTO VIC REGISTERS
+00070  C246             ;DEFINES THE POSITION OF THE SPRITES IN THE SCREEN
+00071  C246             ;ALL OF THEM ABOVE F7 THAT IS WHERE THE RASTER IRQ STARTS
+00072  C246             *=$C300
+00073  C300             VICIIVALUES=$C300 
+00074  C300  00 F7 30              BYTE $00,$F7,$30,$F7,$60,$F7,$90,$F7
+00075  C308  C0 F7 F0              BYTE $C0,$F7,$F0,$F7,$20,$F7,$50,$F7
+00076  C310  00 01 02              BYTE $00,$01,$02,$03,$04,$05,$00,$07
+00077  C318             
+00078  C318             ;----------------------------------
+00079  C318             ;FROM WHERE TO START THE EXECUTION OF THE PROGRAM
+00080  C318             ;WRITE IN BASIC "SYS 49560" TO START
+00081  C318             *=$C400
+00082  C400             INIT
+00083  C400  78                    SEI                      ;NO INTERRUPTS ALLOWED
+00084  C401  20 00 C1              JSR CLEARSPRITEAREA      ;CLEAR SPRITE AREA
+00085  C404  20 00 C2              JSR INITVIC              ;INIT VIC
+00086  C407  A9 00                 LDA #$00                 ;SET UP IRQ IN C200
+00087  C409  A2 C5                 LDX #$C5
+00088  C40B  8D 14 03              STA $0314
+00089  C40E  8E 15 03              STX $0315
+00090  C411  A9 1B                 LDA #$1B
+00091  C413  8D 11 D0              STA $D011                ;ROWS = 25 & SCROLLY = 3 (NORMAL SETUP CONFIGURATION)
+00092  C416  A9 F7                 LDA #$F7
+00093  C418  8D 12 D0              STA $D012                ;RASTER LINE IRQ AT = 247 (-51 / 8 = 24,5... THAT'S IT AT THE MIDDLE OF THE LAST TEXT LINE)
+00094  C41B  A9 01                 LDA #$01
+00095  C41D  8D 1A D0              STA $D01A                ;ENABLE RASTER LINE IRQ
+00096  C420  A9 7F                 LDA #$7F
+00097  C422  8D 0D DC              STA $DC0D                ;NO INTERRUPTS REALTED WITH CIA1
+00098  C425  A9 01                 LDA #$01
+00099  C427  8D 19 D0              STA $D019                ;NO PENDING INTERRUPTS RELATED WITH THE VICII
+00100  C42A  58                    CLI                      ;INTERRUPTS ALLOWED AGAIN
+00101  C42B  60                    RTS                      ;A INTERRUPT COULD HAPPEN JUST AFTER CLI AND JUST BEFORE RTS...WHICH WOULDN'T BE GOOD!
+00102  C42C             
+00103  C42C             ;----------------------------------
+00104  C42C             ;MAIN IRQ ROUTINE
+00105  C42C             *=$C500
+00106  C500             ;HOW MANY CYCLES FROM THIS POINT ONWARDS?
+00107  C500             ;+UP TO 3 CYCLES TO FINISH THE INSTRUCTION UNDER EXECUTION
+00108  C500             ;+7:CYCLES USED TO START THE IRQ
+00109  C500             ;+3:PHA                         ; SAVE A
+00110  C500             ;+2:TXA                         ; COPY X
+00111  C500             ;+3:PHA                         ; SAVE X
+00112  C500             ;+2:TYA                         ; COPY Y
+00113  C500             ;+3:PHA                         ; SAVE Y
+00114  C500             ;+2:TSX                         ; COPY STACK POINTER
+00115  C500             ;+4:LDA LAB_0100+4,X    ; GET STACKED STATUS REGISTER
+00116  C500             ;+2:AND #$10                    ; MASK BRK FLAG
+00117  C500             ;+3:BEQ LAB_FF58                ; BRANCH IF NOT BRK, THAT IT WILL BE THE CASE...
+00118  C500             ;+0:JMP (LAB_0316)              ; ELSE DO BRK VECTOR (IBRK), BECAUSE THIS INSTRUCTION IS NOT TAKEN...
+00119  C500             ;LAB_FF58
+00120  C500             ;+5:JMP (LAB_0314)              ; DO IRQ VECTOR (IIRQ)
+00121  C500             ;FROM 36 UO TO 39 CYCLES
+00122  C500             ;SO VICII INTERNAL CYCLE = 36/39
+00123  C500             IRQ
+00124  C500  A2 08                 LDX #$08                 ;+2
+00125  C502             ;SO UP TO NOW 2 ADDITIONAL CYCLES
+00126  C502             LOOPWAIT
+00127  C502  CA                    DEX                      ;+2
+00128  C503  D0 FD                 BNE LOOPWAIT             ;+3,+2
+00129  C505             ;SO UP TO NOW 41 ADDITIONAL CYCLES = 2 + (5 CYLES * 8 TIMES - 1)
+00130  C505             ;LET'S DIVIDE THIS LOOP IN 2 PHASES:
+00131  C505             ;WHEN THE VICII INTERNAL CYCLE 62 IS REACHED, AND SPRITE INFO STARTED TO BE READ, AND THE REST
+00132  C505             ;THE FIRST PHASE IS REACHED WHEN THE: 38/41 + (5 CYCLES * X TIMES) = 55 (3 CYCLES BEFORE READING THE FIRST); X = IN THE MIDDLE OF THE LOOP 2ND OR 3RD...
+00133  C505             ;AS THERE ARE 8 SPRITES INFO TO READ, THE CPU STOPS UNTIL THE CYCLE 12TH IS REACHED IN THE NEXT LINE...
+00134  C505             ;AND THEN THERE WOULD BE BETWEEN 21 AND 24 ADDITIONAL CYCLES SPEND IN THE REST OF THE LOOP.
+00135  C505             ;SO AFTER THE LOOP THE VICII INTERNAL CYCLE WOULD BE = 12 + 21/12 + 24 = 33/36, THAT IS IN THE MIDDLE OF THE LINE $F8...
+00136  C505  A2 28                 LDX #$28                 ;+2: 40 OR SO LINES
+00137  C507  EA                    NOP                      ;+2
+00138  C508  EA                    NOP                      ;+2
+00139  C509             ;AT THIS POINT THE VICII INTERNAL CYCLE WOULD BE = 39/42
+00140  C509             LOOPLINE
+00141  C509  EA                    NOP                      ;+2
+00142  C50A  EA                    NOP                      ;+2
+00143  C50B  CE 16 D0              DEC $D016                ;+6: FIDDLE REGISTER
+00144  C50E             ;AT THE FIRST ITERATION AT THIS POSITION THE VICII CYCLE WILL BE = 39 + 10/42 + 10 = 49/52
+00145  C50E  EE 16 D0              INC $D016                ;+6: I DON'T KNOW WHAT THIS IS FOR YET...
+00146  C511             ;AT THE FIRST ITERATION AT THIS POSITION THE VICII CYCLE WILL BE = 39 + 16/42 + 16 = 55/58
+00147  C511             ;AT THIS MOMENT THE VICII STARTS TO READ AGAIN THE INFORMATION OF THE SPRITES, SO IT STOPS UNTIL EVERYTHING IS IN CYCLE 12 AND THE RASTER LINE = $FA
+00148  C511             ;THE CPU STOPS, BUT THE CONTENT IS STORE IN THE MEMORY...
+00149  C511  AC 12 D0              LDY $D012                ;+4: LOADS WHERE THE RASTER IS (IN Y REGISTER): FROM F8 ONWARDS.
+00150  C514  88                    DEY                      ;+2: DECREASE IT BY ONE...
+00151  C515  EA                    NOP                      ;+2
+00152  C516  98                    TYA                      ;+2: TRANSFER TO A REGISTER
+00153  C517  29 07                 AND #$07                 ;+2: KEEPS ONLY BITS 0,1 AND 2
+00154  C519  09 10                 ORA #$10                 ;+2: SET BITS 3 AND 4
+00155  C51B  8D 11 D0              STA $D011                ;+4: AND STORE FINAL VALUE BACK INTO D011 (25 ROWS AND SCREEN SWITCHED ON)...TO AVOID BAD LINE?
+00156  C51E  24 EA                 BIT $EA                  ;+3
+00157  C520  EA                    NOP                      ;+2
+00158  C521  EA                    NOP                      ;+2
+00159  C522  CA                    DEX                      ;+2
+00160  C523  10 E4                 BPL LOOPLINE             ;REPEAT NEXT LINE
+00161  C525             ;AT THE FIRST ITERATION AT THIS POSITION THE VICII CYCLE WILL BE = 12+30 = 42
+00162  C525             ;SO IT STARTS BACK FOR 38 MORE LINES, USING THE SAME CYCLES AND THE SAME BEHAVIOUR...
+00163  C525  A9 1B                 LDA #$1B                 ;SETS THE RIGHT VALUE IN THE SIZE OF THE SCREEN (25 ROWS) AND THE POSITION OF SCROLLX
+00164  C527  8D 11 D0              STA $D011
+00165  C52A  A9 01                 LDA #$01
+00166  C52C  8D 19 D0              STA $D019                ;CLEARS UP THE INTERRUPT...
+00167  C52F  20 00 C0              JSR MAIN                 ;CALL MAIN CODE
+00168  C532  4C 31 EA              JMP $EA31                ;FINISH IRQ AND RETURN FROM THE IRQ
+00169  C535             
+
+******* 11 Label(s) *******
+clearSpriteArea = $C100 
+init = $C400 
+initVIC = $C200 
+irq = $C500 
+loopClear = $C104 
+loopLine = $C509 
+loopSpriteColor = $C237 
+loopSpriteForm = $C228 
+loopSpritesPosition = $C202 
+loopWait = $C502 
+main = $C000 
+
+******* 2 Unused label(s) *******
+init
+irq
+
+******* 2 Variable(s) *******
+tgt_c64  = $0001
+vicIIValues  = $C300
+******* 2 Unused variables(s) *******
+tgt_c64
+vicIIValues
+

@@ -30,11 +30,7 @@ const MCHEmul::Address COMMODORE::VICII::_MEMORYPOSIDLE2 = MCHEmul::Address ({ 0
 COMMODORE::VICII::VICII (int intId, MCHEmul::PhysicalStorageSubset* cR, const MCHEmul::Address& cRA,
 		const MCHEmul::RasterData& vd, const MCHEmul::RasterData& hd, 
 		int vV, unsigned short cRL, const MCHEmul::Attributes& attrs)
-	: MCHEmul::GraphicalChip (_ID, 
-		{ { "Name", "VICII" },
-		  { "Code", "6567/8562/8564 (NTSC), 6569/8565/8566 (PAL)" },
-		  { "Manufacturer", "Commodore Business Machines CBM" },
-		  { "Year", "1983" } }),
+	: MCHEmul::GraphicalChip (_ID, attrs),
 	  _interruptId (intId),
 	  _colorRAM (cR), _colorRAMAddress (cRA),
 	  _VICIIRegisters (nullptr), 
@@ -314,6 +310,7 @@ MCHEmul::InfoStructure COMMODORE::VICII::getInfoStructure () const
 	result.add ("VICIIRegisters",	std::move (_VICIIRegisters -> getInfoStructure ()));
 	result.add ("Raster",			std::move (_raster.getInfoStructure ()));
 	result.add ("VICIIInternal",	std::move (_vicGraphicInfo.getInfoStructure ()));
+	result.add ("Badline",			std::string (_newBadLineCondition ? "YES" : "NO"));
 	result.add ("Cycle",			_cycleInRasterLine);
 
 	return (result);
@@ -977,9 +974,9 @@ void COMMODORE::VICII::drawOtherEvents ()
 // ---
 COMMODORE::VICII::DrawResult COMMODORE::VICII::drawGraphics (const COMMODORE::VICII::DrawContext& dC)
 {
-	// To draw is only valid in the graphical state...
-	if (_vicGraphicInfo._idleState)
-		return (COMMODORE::VICII::DrawResult ());
+	/** IMPORTANT NOTE:
+		When it is in idle state it also drawn
+		With the content of a fixed position depending on the active bacnk and always in color 0. */
 
 	/** IMPORTANT NOTE:
 		When the raster cycle is 16, _RC = 28 and _RCA = 24.
@@ -1091,10 +1088,12 @@ COMMODORE::VICII::DrawResult COMMODORE::VICII::drawMonoColorChar (int cb)
 		{
 			result._collisionGraphicData.setBit (7 - i, true);
 
-			result._foregroundColorData [i] = 
-				(unsigned int) (_vicGraphicInfo._colorData [iBy].value () & 0x0f /** Useful nibble. */);
+			result._foregroundColorData [i] = _vicGraphicInfo._idleState 
+				? 0x00 // In idle state the color is always 0...
+				: (unsigned int) (_vicGraphicInfo._colorData [iBy].value () & 0x0f /** Useful nibble. */);
 		}
-		// When 0, it is background...
+
+		// When false, it is background...
 		// Not necessary to specify neither collision information
 		// nor the color of the pixels as it will be always the basic background color,
 		// that has already been set to the value of $d021 in the main loop...
@@ -1129,11 +1128,12 @@ COMMODORE::VICII::DrawResult COMMODORE::VICII::drawMultiColorChar (int cb, bool 
 		// The way the pixels are going to be drawn will depend on the information in the color memory
 		// If the most significant bit of the low significant nibble of the color memory is set to 1
 		// the data will be managed in a monocolor way...
-		if ((_vicGraphicInfo._colorData [iBy] & 0x08) == 0x00) 
+		if ((_vicGraphicInfo._colorData [iBy] & 0x08) == 0x00 || 
+			 _vicGraphicInfo._idleState) // also when idle state...
 		{
 			unsigned int fc = 
-				inv 
-					? 0x00 // When invalid all pixels are black...
+				(inv || _vicGraphicInfo._idleState)
+					? 0x00 // When invalid or idle state all pixels are black...
 					: _vicGraphicInfo._colorData [iBy].value () & 0x07;
 
 			// ...and remember we are dealing with pairs of pixels...
@@ -1223,10 +1223,11 @@ COMMODORE::VICII::DrawResult COMMODORE::VICII::drawMultiColorExtendedChar (int c
 		// The color of the pixel 0 is determined by the 2 MSBites of the char code...
 		bool bS = _vicGraphicInfo._graphicData [iBy].bit (iBt); // To know whether the bit is 1 or 0...
 		unsigned int cs = ((_vicGraphicInfo._screenCodeData [iBy].value () & 0xc0) >> 6) & 0x03; // 0, 1, 2, or 3
-		unsigned int fc = 
-			bS 
+		unsigned int fc = _vicGraphicInfo._idleState 
+			? 0x00 // In idle state the color is always 0...
+			: (bS 
 				? (_vicGraphicInfo._colorData [iBy].value () & 0x0f) 
-				: _VICIIRegisters -> backgroundColor (cs);
+				: _VICIIRegisters -> backgroundColor (cs));
 
 		if (bS)
 		{
@@ -1262,8 +1263,8 @@ COMMODORE::VICII::DrawResult COMMODORE::VICII::drawMonoColorBitMap (int cb, bool
 		size_t iBt = 7 - (((size_t) pp) % 8); // From MSB to LSB...
 		bool bS = _vicGraphicInfo._graphicData [iBy].bit (iBt);
 		unsigned int fc = 
-			inv 
-				? 0x00 // When invalid, all pixels are black...
+			(inv || _vicGraphicInfo._idleState)
+				? 0x00 // When invalid or idle state, all pixels are black...
 				: bS 
 					? (_vicGraphicInfo._screenCodeData [iBy].value () & 0xf0) >> 4	// If the bit is 1, the color is determined by the MSNibble
 					: (_vicGraphicInfo._screenCodeData [iBy].value () & 0x0f);		// ...and for LSNibble if it is 0...
@@ -1308,8 +1309,8 @@ COMMODORE::VICII::DrawResult COMMODORE::VICII::drawMultiColorBitMap (int cb, boo
 			continue;
 
 		unsigned fc = // The value 0x00 is not tested....
-				inv
-					? 0x00 // When invalid all pixels are black...
+				(inv || _vicGraphicInfo._idleState)
+					? 0x00 // When invalid or idle state all pixels are black...
 					: (cs == 0x01) // The color is the defined in the video matrix, high nibble...
 						? (_vicGraphicInfo._screenCodeData [iBy].value () & 0xf0) >> 4
 						: ((cs == 0x02) // The color is defined in the video matrix, low nibble...
@@ -1589,9 +1590,9 @@ COMMODORE::VICII_PAL::VICII_PAL (int intId, MCHEmul::PhysicalStorageSubset* cR,
 	: COMMODORE::VICII (intId, cR, cRA,
 		 _VRASTERDATA, _HRASTERDATA, vV, COMMODORE::VICII_PAL::_CYCLESPERRASTERLINE,
 		 { { "Name", "VIC-II (PAL) Video Chip Interface II" },
-		   { "Code", "6569/8565/8566" },
+		   { "Code", "6569(NMOS 63 cycles)/8565(HMOS)/8566(HMOS in C128)" },
 		   { "Manufacturer", "MOS Technology INC/Commodore Semiconductor Group (CBM)"},
-		   { "Year", "1980" } })
+		   { "Year", "1982-1983 (depending on version)" } })
 {
 	// This value - the initial position in the row divided by 8 must have a rest of 0
 	_IRQrasterPosition = 404;
@@ -1643,9 +1644,9 @@ COMMODORE::VICII_NTSC::VICII_NTSC (int intId, MCHEmul::PhysicalStorageSubset* cR
 	: COMMODORE::VICII (intId, cR, cRA,
 		 _VRASTERDATA, _HRASTERDATA, vV, 64,
 		 { { "Name", "VIC-II (NTSC) Video Chip Interface II" },
-		   { "Code", "6567/8562/8564" },
+		   { "Code", "6567R56A(NMOS 64 cycles)/8582(HMOS)/8564(HMOS in C128)" },
 		   { "Manufacturer", "MOS Technology INC/Commodore Semiconductor Group (CBM)"},
-		   { "Year", "1980" } })
+		   { "Year", "1983" } })
 {
 	// This value - the initial position in the row divided by 8 must have a rest of 0
 	_IRQrasterPosition = 412;
@@ -1706,11 +1707,13 @@ void COMMODORE::VICII::debugVICIICycle (MCHEmul::CPU* cpu, unsigned int i)
 			"Row=" + std::to_string (_raster.currentLine ()) + "(" + 
 				std::to_string (_raster.currentLineAtBase0 ()) + ")," },
 		  { "Internal",
+			"IDLE=" + std::to_string (_vicGraphicInfo._idleState) + "," +
 			"VCBASE=" + std::to_string (_vicGraphicInfo._VCBASE) + "," +
 			"VC=" + std::to_string (_vicGraphicInfo._VC) + "," +
 			"VLMI=" + std::to_string (_vicGraphicInfo._VLMI) + "," +
 			"RC=" + std::to_string (_vicGraphicInfo._RC) + "," +
 			"ROW=" + std::to_string (_vicGraphicInfo._ROW) + "," +
+			"BADLINE" + std::to_string (_newBadLineCondition) + "," +
 			"Cycle=" + std::to_string (_cycleInRasterLine) },
 		  { "Graphics mode",
 			std::to_string ((int) _VICIIRegisters -> graphicModeActive ()) },
@@ -1814,6 +1817,7 @@ MCHEmul::InfoStructure COMMODORE::VICII::VICGraphicInfo::getInfoStructure () con
 	result.add ("RC",		_RC);
 	result.add ("VLMI",		_VLMI);
 	result.add ("ROW",		_ROW);
+	result.add ("IDLE",		std::string (_idleState ? "YES" : "NO"));
 
 	return (result);
 }
