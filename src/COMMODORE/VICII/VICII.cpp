@@ -113,6 +113,17 @@ bool COMMODORE::VICII::initialize ()
 // ---
 bool COMMODORE::VICII::simulate (MCHEmul::CPU* cpu)
 {
+	// Details about the emulation of the VICII:
+	// VICII does activities in both phases of the clock.
+	// In a bad line, the VICII reads the screen code in the phase 2 (up) of the clock (when the CPU is usually doing things)...
+	// ...and the graphics data in the phase 1
+	// The VICII starts to read in the cycle 15 the screen code (phase 2) and the graphics data in the phase 1 of the next cycle 16.
+	// IMPORTANT: The simulation has been built to do both actions in the cycle 16.
+	// The graphic is then sent to the screen in two moments: 4 pixels in the phase 2 of the cycle 16, and 4 more in the phase 1 of the cycle 17.
+	// IMPORTANT: The simulation has been done to do both activities in the cycle 17.
+	// The same rational is applied for the next: So the graphics are read from cycle 16 to 55 (included)...
+	// ...and the screen is drawn from cycle 17 to 56.
+
 	// First time?
 	if (_lastCPUCycles == 0)
 	{ 
@@ -202,6 +213,9 @@ bool COMMODORE::VICII::simulate (MCHEmul::CPU* cpu)
 		// the CPU has to stop 3 cycles in advance (just for READ activities) for those activities,
 		// unless it was stopped previously and that stop situation were still valid...
 		// In the case of graphics that stop only happens when the situation arise in the "screen cycles" (40)
+		// When a badline happens (usual bad line) to stop the CPU is requested at cycle 12, then it would be stopped cycles 13, 14, and 15
+		// At cycle 16 the code reaches this point and the condition will also be met so a new stop will be requested (3 cycles more)
+		// However, later the graphics will start to be read an a new stop condition will arise....(1)
 		if (!cpu -> stopped () && 
 			(isAboutToReadSpriteInfo () || 
 				(_newBadLineCondition && (_cycleInRasterLine >= 12 && _cycleInRasterLine < 52))))
@@ -210,6 +224,7 @@ bool COMMODORE::VICII::simulate (MCHEmul::CPU* cpu)
 
 		// Treat the right cycle...
 		// ...and as a consequence the CPU can be also stopped...
+		// (1)...so this condition will overwrite the previous one!
 		unsigned int cS = 0;
 		if ((cS = treatRasterCycle ()) > 0)
 			cpu -> setStop (true, MCHEmul::InstructionDefined::_CYCLEALL /** fully stopped. */, cpu -> clockCycles () - i, (int) cS);
@@ -1705,7 +1720,7 @@ void COMMODORE::VICII::debugVICIICycle (MCHEmul::CPU* cpu, unsigned int i)
 			"Column=" + std::to_string (_raster.currentColumn ()) + "(" + 
 				std::to_string (_raster.currentColumnAtBase0 ()) + ")," +
 			"Row=" + std::to_string (_raster.currentLine ()) + "(" + 
-				std::to_string (_raster.currentLineAtBase0 ()) + ")," },
+				std::to_string (_raster.currentLineAtBase0 ()) + ")" },
 		  { "Internal",
 			"IDLE=" + std::to_string (_vicGraphicInfo._idleState) + "," +
 			"VCBASE=" + std::to_string (_vicGraphicInfo._VCBASE) + "," +
@@ -1713,8 +1728,13 @@ void COMMODORE::VICII::debugVICIICycle (MCHEmul::CPU* cpu, unsigned int i)
 			"VLMI=" + std::to_string (_vicGraphicInfo._VLMI) + "," +
 			"RC=" + std::to_string (_vicGraphicInfo._RC) + "," +
 			"ROW=" + std::to_string (_vicGraphicInfo._ROW) + "," +
-			"BADLINE" + std::to_string (_newBadLineCondition) + "," +
+			"Badline=" + std::to_string (_newBadLineCondition) + "," +
 			"Cycle=" + std::to_string (_cycleInRasterLine) },
+		  { "Border", 
+			"Main=" + std::to_string (_vicGraphicInfo._ffMBorder) + "," +
+			"Vertical=" + std::to_string (_vicGraphicInfo._ffVBorder) + "," +
+			"Border=" + std::to_string (_vicGraphicInfo._ffMBorderBegin) + "," +
+			"Pixels=" + std::to_string (_vicGraphicInfo._ffMBorderPixels) },
 		  { "Graphics mode",
 			std::to_string ((int) _VICIIRegisters -> graphicModeActive ()) },
 		  { "Memory location", 

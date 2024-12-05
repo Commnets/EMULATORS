@@ -70,10 +70,16 @@ void MCHEmul::CPU::setStop (bool s, unsigned int tC, unsigned int cC, int nC)
 		// nor the point where the stop started...
 		if (_state == CPU::_STOPPED)
 		{ 
-			_typeCycleStopped = tC;
+			// If the new request were over a still valid previous request...
+			// ...it would be admitted, but the situation would be also debugged
+			// as it not so common, no?
+			if ((cC - _cyclesAtStop) < (unsigned int) _cyclesStopped)
+				_IFDEBUG debugAlreadyStopped (tC, nC); 
 
-			_cyclesStopped = nC; 
-			_counterCyclesStopped = 0; 
+			_typeCycleStopped = tC;
+			_cyclesAtStop = cC;	
+			_cyclesStopped = nC;
+			_counterCyclesStopped = 0;
 		}
 		// If not already stopped...
 		else
@@ -87,11 +93,9 @@ void MCHEmul::CPU::setStop (bool s, unsigned int tC, unsigned int cC, int nC)
 				_state = CPU::_STOPPED; 
 
 				_typeCycleStopped = tC;
-			
 				_cyclesAtStop = cC;
-
 				_cyclesStopped = nC; 
-				_counterCyclesStopped = 0; 
+				_counterCyclesStopped = 0;
 			}
 
 			// ...otherwise the CPU doesn't stop.
@@ -157,6 +161,10 @@ bool MCHEmul::CPU::initialize ()
 bool MCHEmul::CPU::executeNextCycle ()
 {
 	memoryRef () -> setCPUView (); // Always...
+
+	// If the memory access were buffered... 
+	// ...this instruction would free all accesses...
+	MCHEmul::Memory::configuration ().executeMemorySetCommandsBuffered ();
 
 	bool result;
 	switch (_state)
@@ -501,9 +509,6 @@ bool MCHEmul::CPU::executeNextInstruction_PerCycle (unsigned int& e)
 				sdd = MCHEmul::removeAll0 (_programCounter.asString ()) + "(Stack "
 					+ std::to_string (memoryRef () -> stack () -> position ()) + ")"; }
 
-			// If the memory access were buffered, this instruction would free all accesses...
-			MCHEmul::Memory::configuration ().executeMemorySetCommandsBuffered ();
-
 			// The execution of the instruction is notified
 			// just in case any other part of the computer needed to prepare something...
 			notify (MCHEmul::Event (_CPUTOEXECUTEINSTRUCTION, 0 /** No sense. */,
@@ -604,9 +609,6 @@ bool MCHEmul::CPU::executeNextInstruction_Full (unsigned int &e)
 		sdd = MCHEmul::removeAll0 (_programCounter.asString ()) + "(Stack "
 			+ std::to_string (memoryRef () -> stack () -> position ()) + ")"; }
 
-	// If the memory access were buffered, this instruction would free all accesses...
-	MCHEmul::Memory::configuration ().executeMemorySetCommandsBuffered ();
-
 	// The execution of the instruction is notified
 	// just in case any other part of the computer needed to prepare something...
 	notify (MCHEmul::Event (_CPUTOEXECUTEINSTRUCTION, 0 /** No sense. */,
@@ -698,7 +700,23 @@ void MCHEmul::CPU::debugStopSituation () const
 	_deepDebugFile -> writeCompleteLine ("CPU", _clockCycles, "Stopped", 
 		{ ((_cyclesStopped == -1) 
 			? "-" 
-			: std::to_string (_counterCyclesStopped)) + " cycle" });
+			: std::to_string (_cyclesStopped - (_counterCyclesStopped + 1))) + " cycles pending of " + 
+			  std::to_string (_cyclesStopped) });
+}
+
+// ---
+void MCHEmul::CPU::debugAlreadyStopped (unsigned int tC, int nC) const
+{
+	assert (_deepDebugFile != nullptr);
+
+	_deepDebugFile -> writeLineData (
+		{ "Already stopped:" + 
+			(((_cyclesStopped == -1) 
+				? "-" 
+				: std::to_string (_cyclesStopped - (_counterCyclesStopped + 1))) + " cycles pending of " + 
+				  std::to_string (_cyclesStopped)) + ", " +
+		  "New request:" + std::to_string (nC)
+			+ " cycles [" + ((tC == std::numeric_limits <unsigned int>::max ()) ? "-" : std::to_string (tC)) + " type]" });
 }
 
 // ---

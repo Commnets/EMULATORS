@@ -121,7 +121,7 @@ init:
 ;LAB_FF58:
 ;+5:JMP	(LAB_0314)		; do IRQ vector (iIRQ)
 ;from 36 uo to 39 cycles
-;so VICII internal cycle = 36/39
+;so VICII internal cycle = 36/39 (raster = $f7)
 irq:
 				LDX #$08					;+2
 ;so up to now 2 additional cycles
@@ -132,29 +132,34 @@ loopWait:
 ;let's divide this loop in 2 phases: 
 ;when the VICII internal cycle 62 is reached, and sprite info started to be read, and the rest
 ;the first phase is reached when the: 38/41 + (5 cycles * x times) = 55 (3 cycles before reading the first); x = in the middle of the loop 2nd or 3rd...
-;As there are 8 sprites info to read, the CPU stops until the cycle 12th is reached in the next line...
+;As there are 8 sprites info to read, the CPU stops until the cycle 12th is reached in the next line (raster = $f8)
 ;and then there would be between 21 and 24 additional cycles spend in the rest of the loop.
-;so after the loop the VICII internal cycle would be = 12 + 21/12 + 24 = 33/36, that is in the middle of the line $f8...
-				LDX #$28					;+2: 40 or so lines
+;so after the loop the VICII internal cycle would be = 12 + 21/12 + 24 = 33/36, atill in the middle of the line $f8 (raster = $f8)
+				LDX #$28					;+2: loop for 40 or so lines (the border is 39)
 				NOP							;+2
 				NOP							;+2
 ;at this point the VICII internal cycle would be = 39/42
 loopLine:
 				NOP							;+2
 				NOP							;+2
-				DEC $D016					;+6: fiddle register
+				DEC $D016					;+6:
 ;at the first iteration at this position the VICII cycle will be = 39 + 10/42 + 10 = 49/52
-				INC $D016					;+6: I don't know what this is for yet...
+;before executing the next instruction (at cycle 52) the X resolution reduces up to 38 chars width, 9 pixels less in the right boder...so in position 38 (0..39)
+;It should start to draw the boder at cycle 57, that's it 5 cycles later from this point...
+				INC $D016					;+6:
 ;at the first iteration at this position the VICII cycle will be = 39 + 16/42 + 16 = 55/58
-;at this moment the VICII starts to read again the information of the sprites, so it stops until everything is in cycle 12 and the raster line = $fa
-;the cpu stops, but the content is store in the memory...
+;now the resolution is back to 40 chars, but the raster should have overcame the init of the border at cycle 57, and the drawing is avoid!
+;at this moment the VICII starts to read again the information of the sprites, so it stops until everything is in cycle 12 and the raster line = $f9 (249)
+;the cpu stops, but the content is stored in the memory...
 				LDY $D012					;+4: loads where the raster is (in Y register): from F8 onwards.
 				DEY							;+2: decrease it by one...
 				NOP							;+2
 				TYA							;+2: transfer to A register
 				AND #$07					;+2: keeps only bits 0,1 and 2
-				ORA #$10					;+2: set bits 3 and 4
-				STA $D011					;+4: and store final value back into D011 (25 rows and screen switched on)...to avoid bad line?
+				ORA #$10					;+2: set bit 4 and put off bit 3...
+				STA $D011					;+4: and store final value back into D011 (24 rows and screen switched on)
+;at this point there are 18 cycles more, that's is at cycle 12 + 18 = 30 still at raster line $f9.
+;but now the down limit is moved oto $f7 that has already overcome by the raster so there is NO BORDER....
 				BIT $EA						;+3
 				NOP							;+2
 				NOP							;+2

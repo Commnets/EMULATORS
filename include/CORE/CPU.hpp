@@ -27,7 +27,6 @@
 #include <CORE/ProgramCounter.hpp>
 #include <CORE/StatusRegister.hpp>
 #include <CORE/Instruction.hpp>
-#include <CORE/CPUInterrupt.hpp>
 #include <fstream>
 #include <vector>
 
@@ -406,6 +405,7 @@ namespace MCHEmul
 		void debugInterruptRequest (const CPUInterruptRequest& iR) const;
 		void debugLastExecutionData () const; // Using information in _lastInstruction...
 		void debugStopSituation () const; // Using information in CPU abour stop situation (@see below)
+		void debugAlreadyStopped (unsigned int tC, int nC) const; // That situation is not ususal...(same meaning than debugStopRequest)
 		void debugInterruptLaunched () const; // Using the information in _currentInterrupt...
 		void debugInterruptFails () const; // Using the information in _currentInterrupt...
 		void debugInterruptRequestNotAllowed (const CPUInterruptRequest& iR) const;

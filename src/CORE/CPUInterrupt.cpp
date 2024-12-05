@@ -170,8 +170,8 @@ void MCHEmul::CPUInterrupt::debugInterruptToStart (MCHEmul::CPU* c)
 std::string MCHEmul::CPUInterruptRequest::toString () const
 { 
 	return (
-		"type " +	std::to_string (_type) + "," +
-		"from " + ((_from == nullptr) ? " - " : std::to_string (_from -> id ())) + "," +
+		"type " +	std::to_string (_type) + ", " +
+		"from " + ((_from == nullptr) ? " - " : std::to_string (_from -> id ())) + ", " +
 		"reason " + std::to_string (_reason));
 }
 
