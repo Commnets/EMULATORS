@@ -267,6 +267,8 @@ namespace MCHEmul
 		// If more types of cycles were defined in classes inheriting from this, 
 		// be sure that its id is power of two different than the ones already used.
 		// _CYCLEALL will be still valid!
+		/** No type of cycle declared. */
+		static const unsigned int _CYCLENOTDEFINED = 0;
 		/** When a cycle is internal, that is the default value. 
 			Used in internal calculus, o movement between registers inside the processor. */
 		static const unsigned int _CYCLEINTERNAL = 1;
@@ -277,6 +279,8 @@ namespace MCHEmul
 		/** More types might be added... */
 		/** All at the same time. */
 		static const unsigned int _CYCLEALL = std::numeric_limits <unsigned int>::max ();
+		/** To simplify the definition of the structure of type of cycles of a instruction. */
+		using CycleStructure = std::vector <unsigned int>;
 
 		/** 
 		  *	Constructor.
@@ -285,6 +289,7 @@ namespace MCHEmul
 		  * @param cc	:	The number of clock cyles the instruction uses to be executed (usually). \n
 		  *					Some ocassions, some instructions under certain circunstances can take longer than expected. \n
 		  *					@see for so: _additionalClockCycles (method and variable).
+		  * @param cS	:	The structure of cycles. Is empty, then all are declared as nor defined...
 		  *	@param t	:	The template of the instruction. \n
 		  *					The way it is defined is key for it to be read and understood by the parsers. \n
 		  *					The parameters should be within [] with two additional data: \n
@@ -292,7 +297,7 @@ namespace MCHEmul
 		  *					Regarding the type: # means number, $ means address and & means relative jump (@see type of parameter).
 		  *	@param bE	:	Indicate whether the info contained is managed big or little endian.
 		  */
-		InstructionDefined (unsigned int c, unsigned int mp, unsigned int cc, 
+		InstructionDefined (unsigned int c, unsigned int mp, unsigned int cc, const CycleStructure& cS,
 			const std::string& t, bool bE = true);
 
 		// The internal structure...
@@ -310,11 +315,11 @@ namespace MCHEmul
 		virtual unsigned int clockCycles (Memory* m, const Address& a) const override
 							{ return (_clockCycles); } // The ones defined at construction time...
 
-		/** To get the type of the cycle. \n
-			This operation can be overloaded later depending on the set of instructions. 
-			From 0 to _clockCycles - 1. */
-		virtual unsigned int typeOfCycle (unsigned int c) const
-							{ return (_CYCLEINTERNAL); } // All cycles by default are internal...
+		/** To get the type of the cycle. */
+		const CycleStructure& cycleStructure () const
+							{ return (_cycleStructure); }
+		unsigned int typeOfCycle (size_t c) const // Bear in mind that no boundary check is done!
+							{ return (_cycleStructure [c]); }
 
 		virtual InstructionDefined* matchesWith (const std::string& i, Strings& prms) override;
 
@@ -369,6 +374,7 @@ namespace MCHEmul
 		protected:
 		unsigned int _memoryPositions; 
 		unsigned int _clockCycles;
+		CycleStructure _cycleStructure;
 		std::string _iTemplate;
 
 		// Implementation
@@ -441,7 +447,8 @@ namespace MCHEmul
   *	@param _C  : Code.
   *	@param _M  : MemoryPositions occupied.
   *	@param _CC : Clock cycles used. 
-  * @param _RCC: Read clock cycles used within the total.
+  * @param _RCC: Structure of the internal cycles.
+  *				 Maintained empty to declare that they are not defined.
   * @param _T  : The template to print the instruction.
   *	@param _I  : Name of the intruction.
   * @param _J  : Name of the parent class. The last parent class should be InstructionDefined.
@@ -449,18 +456,18 @@ namespace MCHEmul
   * Always this method is used take into account that the variable _FINISH 
   * must be set to true of false to indicate whether the instruction has or not finished.
   */
-#define _INST_FROM(_C, _M, _CC, _RCC, _T, _I, _J) \
+#define _INST_FROM(_C, _M, _CC, _RCC, _T, _I, _J, K) \
 class _I final : public _J \
 { \
 	public: \
-	_I () : _J (_C, _M, _CC, _RCC, _T) { } \
+	_I () : _J (_C, _M, _CC, _RCC, _T, K) { } \
 	protected: \
 	virtual bool executeImpl (bool& _FINISH) override; \
 };
 
 /** Idem but inheriting from basic instruction. */
 #define _INST(_C, _M, _CC, _RCC, _T, _I, _K) \
-	_INST_FROM(_C, _M, _CC, _RCC, _T, _I, MCHEmul::InstructionDefined);
+	_INST_FROM(_C, _M, _CC, _RCC, _T, _I, MCHEmul::InstructionDefined, K);
 
 #define _INST_IMPL(_I) \
 bool _I::executeImpl (bool& _FINISH)

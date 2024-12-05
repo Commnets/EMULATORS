@@ -219,7 +219,7 @@ bool COMMODORE::VICII::simulate (MCHEmul::CPU* cpu)
 		if (!cpu -> stopped () && 
 			(isAboutToReadSpriteInfo () || 
 				(_newBadLineCondition && (_cycleInRasterLine >= 12 && _cycleInRasterLine < 52))))
-			cpu -> setStop (true, MCHEmul::InstructionDefined::_CYCLEREAD /** only read in not allowed. */, 
+			cpu -> setStop (true, MCHEmul::InstructionDefined::_CYCLEREAD /** only read is not allowed. */, 
 				cpu -> clockCycles () - i, 3);
 
 		// Treat the right cycle...

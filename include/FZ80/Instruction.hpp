@@ -19,13 +19,34 @@
 
 namespace FZ80
 {
+	/** 
+	  *	To simplify the way a new Instruction for this processor is implemented.
+	  *	@param _C  : Code.
+	  *	@param _M  : MemoryPositions occupied.
+	  *	@param _CC : Clock cycles used. 
+	  * @param _RCC: Structure of the internal cycles.
+	  *				 Maintained empty to declare that they are not defined.
+	  * @param _T  : The template to print the instruction.
+	  *	@param _I  : Name of the intruction.
+	  * @param _J  : Name of the parent class. The last parent class should be InstructionDefined.
+	  */
+	#define _INSTZ80_FROM(_C, _M, _CC, _RCC, _T, _I, _J) \
+	class _I final : public _J \
+	{ \
+		public: \
+		_I () : _J (_C, _M, _CC, _RCC, _T) { } \
+		protected: \
+		virtual bool executeImpl (bool& _FINISH) override; \
+	};
+
 	/** The global definition of a Z80 instruction. */
 	class Instruction : public MCHEmul::InstructionDefined
 	{
 		public:
-		Instruction (unsigned int c, unsigned int mp, unsigned int cc, unsigned int rcc, 
+		Instruction (unsigned int c, unsigned int mp, unsigned int cc, 
+				const MCHEmul::InstructionDefined::CycleStructure& cS, 
 				const std::string& t)
-			: MCHEmul::InstructionDefined (c, mp, cc, t, false)
+			: MCHEmul::InstructionDefined (c, mp, cc, cS, t, false)
 							{ }
 
 		// To get the reference to registers...

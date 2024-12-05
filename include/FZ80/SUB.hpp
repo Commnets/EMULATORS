@@ -23,9 +23,10 @@ namespace FZ80
 	class SUB_General : public Instruction
 	{
 		public:
-		SUB_General (unsigned int c, unsigned int mp, unsigned int cc, unsigned int rcc, 
+		SUB_General (unsigned int c, unsigned int mp, unsigned int cc,
+				const MCHEmul::InstructionDefined::CycleStructure& cS, 
 				const std::string& t)
-			: Instruction (c, mp, cc, rcc, t)
+			: Instruction (c, mp, cc, cS, t)
 							{ }
 
 		protected:
@@ -109,90 +110,90 @@ namespace FZ80
 
 	// Without carry
 	// With A
-	_INST_FROM (0x97,	1, 4, 4,	"SUB A",				SUB_AWithA, SUB_General);
-	_INST_FROM (0xDD97,	2, 8, 8,	"U1SUB A",				U1SUB_AWithA, SUB_General);				// Undocumented
-	_INST_FROM (0xFD97,	2, 8, 8,	"U2SUB A",				U2SUB_AWithA, SUB_General);				// Undocumented
+	_INSTZ80_FROM (0x97,	1, 4, { },	"SUB A",				SUB_AWithA, SUB_General);
+	_INSTZ80_FROM (0xDD97,	2, 8, { },	"U1SUB A",				U1SUB_AWithA, SUB_General);				// Undocumented
+	_INSTZ80_FROM (0xFD97,	2, 8, { },	"U2SUB A",				U2SUB_AWithA, SUB_General);				// Undocumented
 	// With B
-	_INST_FROM (0x90,	1, 4, 4,	"SUB B",				SUB_AWithB, SUB_General);
-	_INST_FROM (0xDD90,	2, 8, 8,	"U1SUB B",				U1SUB_AWithB, SUB_General);				// Undocumented
-	_INST_FROM (0xFD90,	2, 8, 8,	"U2SUB B",				U2SUB_AWithB, SUB_General);				// Undocumented
+	_INSTZ80_FROM (0x90,	1, 4, { },	"SUB B",				SUB_AWithB, SUB_General);
+	_INSTZ80_FROM (0xDD90,	2, 8, { },	"U1SUB B",				U1SUB_AWithB, SUB_General);				// Undocumented
+	_INSTZ80_FROM (0xFD90,	2, 8, { },	"U2SUB B",				U2SUB_AWithB, SUB_General);				// Undocumented
 	// Wit C
-	_INST_FROM (0x91,	1, 4, 4,	"SUB C",				SUB_AWithC, SUB_General);
-	_INST_FROM (0xDD91,	2, 8, 8,	"U1SUB C",				U1SUB_AWithC, SUB_General);				// Undocumented
-	_INST_FROM (0xFD91,	2, 8, 8,	"U2SUB C",				U2SUB_AWithC, SUB_General);				// Undocumented
+	_INSTZ80_FROM (0x91,	1, 4, { },	"SUB C",				SUB_AWithC, SUB_General);
+	_INSTZ80_FROM (0xDD91,	2, 8, { },	"U1SUB C",				U1SUB_AWithC, SUB_General);				// Undocumented
+	_INSTZ80_FROM (0xFD91,	2, 8, { },	"U2SUB C",				U2SUB_AWithC, SUB_General);				// Undocumented
 	// Wih D
-	_INST_FROM (0x92,	1, 4, 4,	"SUB D",				SUB_AWithD, SUB_General);
-	_INST_FROM (0xDD92,	2, 8, 8,	"U1SUB D",				U1SUB_AWithD, SUB_General);				// Undocumented
-	_INST_FROM (0xFD92,	2, 8, 8,	"U2SUB D",				U2SUB_AWithD, SUB_General);				// Undocumented
+	_INSTZ80_FROM (0x92,	1, 4, { },	"SUB D",				SUB_AWithD, SUB_General);
+	_INSTZ80_FROM (0xDD92,	2, 8, { },	"U1SUB D",				U1SUB_AWithD, SUB_General);				// Undocumented
+	_INSTZ80_FROM (0xFD92,	2, 8, { },	"U2SUB D",				U2SUB_AWithD, SUB_General);				// Undocumented
 	// Wth E
-	_INST_FROM (0x93,	1, 4, 4,	"SUB E",				SUB_AWithE, SUB_General);
-	_INST_FROM (0xDD93,	2, 8, 8,	"U1SUB E",				U1SUB_AWithE, SUB_General);				// Undocumented
-	_INST_FROM (0xFD93,	2, 8, 8,	"U2SUB E",				U2SUB_AWithE, SUB_General);				// Undocumented
+	_INSTZ80_FROM (0x93,	1, 4, { },	"SUB E",				SUB_AWithE, SUB_General);
+	_INSTZ80_FROM (0xDD93,	2, 8, { },	"U1SUB E",				U1SUB_AWithE, SUB_General);				// Undocumented
+	_INSTZ80_FROM (0xFD93,	2, 8, { },	"U2SUB E",				U2SUB_AWithE, SUB_General);				// Undocumented
 	// Wih H
-	_INST_FROM (0x94,	1, 4, 4,	"SUB H",				SUB_AWithH, SUB_General);
+	_INSTZ80_FROM (0x94,	1, 4, { },	"SUB H",				SUB_AWithH, SUB_General);
 	// Wih L
-	_INST_FROM (0x95,	1, 4, 4,	"SUB L",				SUB_AWithL, SUB_General);
+	_INSTZ80_FROM (0x95,	1, 4, { },	"SUB L",				SUB_AWithL, SUB_General);
 	// With (HL)
-	_INST_FROM (0x96,	1, 7, 7,	"SUB (HL)",				SUB_AWithIndirectHL, SUB_General);
+	_INSTZ80_FROM (0x96,	1, 7, { },	"SUB (HL)",				SUB_AWithIndirectHL, SUB_General);
 	// With(IX + d)
-	_INST_FROM (0xDD96, 3, 19, 19,	"SUB (IX+[#1])",		SUB_AWithIndirectIndexIX, SUB_General);
+	_INSTZ80_FROM (0xDD96, 3, 19, { },	"SUB (IX+[#1])",		SUB_AWithIndirectIndexIX, SUB_General);
 	// With (IX + d)
-	_INST_FROM (0xFD96,	3, 19, 19,	"SUB (IY+[#1])",		SUB_AWithIndirectIndexIY, SUB_General);
+	_INSTZ80_FROM (0xFD96,	3, 19, { },	"SUB (IY+[#1])",		SUB_AWithIndirectIndexIY, SUB_General);
 	// With Value
-	_INST_FROM (0xD6,	2, 7, 7,	"SUB [#1]",				SUB_A, SUB_General);
+	_INSTZ80_FROM (0xD6,	2, 7, { },	"SUB [#1]",				SUB_A, SUB_General);
 	// Notice that there is no 16 bit SUB instructions
 	// With A and IXH, IXL, IYH or IYL
-	_INST_FROM (0xDD94,	2, 8, 8,	"SUB IXH",				SUB_AWithIXH, SUB_General);				// Undocumented
-	_INST_FROM (0xDD95,	2, 8, 8,	"SUB IXL",				SUB_AWithIXL, SUB_General);				// Undocumented
-	_INST_FROM (0xFD94,	2, 8, 8,	"SUB IYH",				SUB_AWithIYH, SUB_General);				// Undocumented
-	_INST_FROM (0xFD95,	2, 8, 8,	"SUB IYL",				SUB_AWithIYL, SUB_General);				// Undocumented
+	_INSTZ80_FROM (0xDD94,	2, 8, { },	"SUB IXH",				SUB_AWithIXH, SUB_General);				// Undocumented
+	_INSTZ80_FROM (0xDD95,	2, 8, { },	"SUB IXL",				SUB_AWithIXL, SUB_General);				// Undocumented
+	_INSTZ80_FROM (0xFD94,	2, 8, { },	"SUB IYH",				SUB_AWithIYH, SUB_General);				// Undocumented
+	_INSTZ80_FROM (0xFD95,	2, 8, { },	"SUB IYL",				SUB_AWithIYL, SUB_General);				// Undocumented
 
 	// With carry
 	// With A
-	_INST_FROM (0x9F,	1, 4, 4,	"SBC A,A",				SBC_AWithA, SUB_General);
-	_INST_FROM (0xDD9F,	2, 8, 8,	"U1SBC A,A",			U1SBC_AWithA, SUB_General);				// Undocumented
-	_INST_FROM (0xFD9F,	2, 8, 8,	"U2SBC A,A",			U2SBC_AWithA, SUB_General);				// Undocumented
+	_INSTZ80_FROM (0x9F,	1, 4, { },	"SBC A,A",				SBC_AWithA, SUB_General);
+	_INSTZ80_FROM (0xDD9F,	2, 8, { },	"U1SBC A,A",			U1SBC_AWithA, SUB_General);				// Undocumented
+	_INSTZ80_FROM (0xFD9F,	2, 8, { },	"U2SBC A,A",			U2SBC_AWithA, SUB_General);				// Undocumented
 	// With B
-	_INST_FROM (0x98,	1, 4, 4,	"SBC A,B",				SBC_AWithB, SUB_General);
-	_INST_FROM (0xDD98,	2, 8, 8,	"U1SBC A,B",			U1SBC_AWithB, SUB_General);				// Undocumented
-	_INST_FROM (0xFD98,	2, 8, 8,	"U2SBC A,B",			U2SBC_AWithB, SUB_General);				// Undocumented
+	_INSTZ80_FROM (0x98,	1, 4, { },	"SBC A,B",				SBC_AWithB, SUB_General);
+	_INSTZ80_FROM (0xDD98,	2, 8, { },	"U1SBC A,B",			U1SBC_AWithB, SUB_General);				// Undocumented
+	_INSTZ80_FROM (0xFD98,	2, 8, { },	"U2SBC A,B",			U2SBC_AWithB, SUB_General);				// Undocumented
 	// Wit C
-	_INST_FROM (0x99,	1, 4, 4,	"SBC A,C",				SBC_AWithC, SUB_General);
-	_INST_FROM (0xDD99,	2, 8, 8,	"U1SBC A,C",			U1SBC_AWithC, SUB_General);				// Undocumented
-	_INST_FROM (0xFD99,	2, 8, 8,	"U2SBC A,C",			U2SBC_AWithC, SUB_General);				// Undocumented
+	_INSTZ80_FROM (0x99,	1, 4, { },	"SBC A,C",				SBC_AWithC, SUB_General);
+	_INSTZ80_FROM (0xDD99,	2, 8, { },	"U1SBC A,C",			U1SBC_AWithC, SUB_General);				// Undocumented
+	_INSTZ80_FROM (0xFD99,	2, 8, { },	"U2SBC A,C",			U2SBC_AWithC, SUB_General);				// Undocumented
 	// Wih D
-	_INST_FROM (0x9A,	1, 4, 4,	"SBC A,D",				SBC_AWithD, SUB_General);
-	_INST_FROM (0xDD9A,	2, 8, 8,	"U1SBC A,D",			U1SBC_AWithD, SUB_General);				// Undocumented
-	_INST_FROM (0xFD9A,	2, 8, 8,	"U2SBC A,D",			U2SBC_AWithD, SUB_General);				// Undocumented
+	_INSTZ80_FROM (0x9A,	1, 4, { },	"SBC A,D",				SBC_AWithD, SUB_General);
+	_INSTZ80_FROM (0xDD9A,	2, 8, { },	"U1SBC A,D",			U1SBC_AWithD, SUB_General);				// Undocumented
+	_INSTZ80_FROM (0xFD9A,	2, 8, { },	"U2SBC A,D",			U2SBC_AWithD, SUB_General);				// Undocumented
 	// Wth E
-	_INST_FROM (0x9B,	1, 4, 4,	"SBC A,E",				SBC_AWithE, SUB_General);
-	_INST_FROM (0xDD9B,	2, 8, 8,	"U1SBC A,E",			U1SBC_AWithE, SUB_General);				// Undocumented
-	_INST_FROM (0xFD9B,	2, 8, 8,	"U2SBC A,E",			U2SBC_AWithE, SUB_General);				// Undocumented
+	_INSTZ80_FROM (0x9B,	1, 4, { },	"SBC A,E",				SBC_AWithE, SUB_General);
+	_INSTZ80_FROM (0xDD9B,	2, 8, { },	"U1SBC A,E",			U1SBC_AWithE, SUB_General);				// Undocumented
+	_INSTZ80_FROM (0xFD9B,	2, 8, { },	"U2SBC A,E",			U2SBC_AWithE, SUB_General);				// Undocumented
 	// Wih H
-	_INST_FROM (0x9C,	1, 4, 4,	"SBC A,H",				SBC_AWithH, SUB_General);
+	_INSTZ80_FROM (0x9C,	1, 4, { },	"SBC A,H",				SBC_AWithH, SUB_General);
 	// Wih L
-	_INST_FROM (0x9D,	1, 4, 4,	"SBC A,L",				SBC_AWithL, SUB_General);
+	_INSTZ80_FROM (0x9D,	1, 4, { },	"SBC A,L",				SBC_AWithL, SUB_General);
 	// With (HL)
-	_INST_FROM (0x9E,	1, 7, 7,	"SBC A,(HL)",			SBC_AWithIndirectHL, SUB_General);
+	_INSTZ80_FROM (0x9E,	1, 7, { },	"SBC A,(HL)",			SBC_AWithIndirectHL, SUB_General);
 	// With(IX + d)
-	_INST_FROM (0xDD9E, 3, 19, 19,	"SBC A,(IX+[#1])",		SBC_AWithIndirectIndexIX, SUB_General);
+	_INSTZ80_FROM (0xDD9E, 3, 19, { },	"SBC A,(IX+[#1])",		SBC_AWithIndirectIndexIX, SUB_General);
 	// With (IX + d)
-	_INST_FROM (0xFD9E,	3, 19, 19,	"SBC A,(IY+[#1])",		SBC_AWithIndirectIndexIY, SUB_General);
+	_INSTZ80_FROM (0xFD9E,	3, 19, { },	"SBC A,(IY+[#1])",		SBC_AWithIndirectIndexIY, SUB_General);
 	// With Value
-	_INST_FROM (0xDE,	2, 7, 7,	"SBC A,[#1]",			SBC_A, SUB_General);
+	_INSTZ80_FROM (0xDE,	2, 7, { },	"SBC A,[#1]",			SBC_A, SUB_General);
 	// With HL and BC
-	_INST_FROM (0xED42,	2, 15, 15,	"SBC HL,BC",			SBC_HLWithBC, SUB_General);
+	_INSTZ80_FROM (0xED42,	2, 15, { },	"SBC HL,BC",			SBC_HLWithBC, SUB_General);
 	// With HL and DE
-	_INST_FROM (0xED52,	2, 15, 15,	"SBC HL,DE",			SBC_HLWithDE, SUB_General);
+	_INSTZ80_FROM (0xED52,	2, 15, { },	"SBC HL,DE",			SBC_HLWithDE, SUB_General);
 	// With HL and HL
-	_INST_FROM (0xED62,	2, 15, 15,	"SBC HL,HL",			SBC_HLWithHL, SUB_General);
+	_INSTZ80_FROM (0xED62,	2, 15, { },	"SBC HL,HL",			SBC_HLWithHL, SUB_General);
 	// With HL and SP
-	_INST_FROM (0xED72,	2, 15, 15,	"SBC HL,SP",			SBC_HLWithSP, SUB_General);
+	_INSTZ80_FROM (0xED72,	2, 15, { },	"SBC HL,SP",			SBC_HLWithSP, SUB_General);
 	// With A and IXH, IXL, IYH or IYL
-	_INST_FROM (0xDD9C,	2, 8, 8,	"SBC A,IXH",			SBC_AWithIXH, SUB_General);				// Undocumented
-	_INST_FROM (0xDD9D,	2, 8, 8,	"SBC A,IXL",			SBC_AWithIXL, SUB_General);				// Undocumented
-	_INST_FROM (0xFD9C,	2, 8, 8,	"SBC A,IYH",			SBC_AWithIYH, SUB_General);				// Undocumented
-	_INST_FROM (0xFD9D,	2, 8, 8,	"SBC A,IYL",			SBC_AWithIYL, SUB_General);				// Undocumented
+	_INSTZ80_FROM (0xDD9C,	2, 8, { },	"SBC A,IXH",			SBC_AWithIXH, SUB_General);				// Undocumented
+	_INSTZ80_FROM (0xDD9D,	2, 8, { },	"SBC A,IXL",			SBC_AWithIXL, SUB_General);				// Undocumented
+	_INSTZ80_FROM (0xFD9C,	2, 8, { },	"SBC A,IYH",			SBC_AWithIYH, SUB_General);				// Undocumented
+	_INSTZ80_FROM (0xFD9D,	2, 8, { },	"SBC A,IYL",			SBC_AWithIYL, SUB_General);				// Undocumented
 }
 
 #endif

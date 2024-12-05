@@ -24,9 +24,10 @@ namespace FZ80
 	class SHIFTLeft_General : public Instruction
 	{
 		public:
-		SHIFTLeft_General (unsigned int c, unsigned int mp, unsigned int cc, unsigned int rcc, 
+		SHIFTLeft_General (unsigned int c, unsigned int mp, unsigned int cc,
+				const MCHEmul::InstructionDefined::CycleStructure& cS, 
 				const std::string& t)
-			: Instruction (c, mp, cc, rcc, t)
+			: Instruction (c, mp, cc, cS, t)
 							{ }
 
 		protected:
@@ -100,9 +101,10 @@ namespace FZ80
 	class SHIFTLeft_Index : public SHIFTLeft_General
 	{
 		public:
-		SHIFTLeft_Index (unsigned int c, unsigned int mp, unsigned int cc, unsigned int rcc, 
+		SHIFTLeft_Index (unsigned int c, unsigned int mp, unsigned int cc, 
+				const MCHEmul::InstructionDefined::CycleStructure& cS, 
 				const std::string& t)
-			: SHIFTLeft_General (c, mp, cc, rcc, t)
+			: SHIFTLeft_General (c, mp, cc, cS, t)
 							{ }
 
 		/** The last part of the code is at the end of the byte codes. */
@@ -112,87 +114,87 @@ namespace FZ80
 
 	// Shift introducing a 0 in the first bit!
 	// Within A
-	_INST_FROM (0xCB27,		2, 8, 8,	"SLA A",			SLA_A, SHIFTLeft_General);
+	_INSTZ80_FROM (0xCB27,		2, 8, { },	"SLA A",			SLA_A, SHIFTLeft_General);
 	// Within B
-	_INST_FROM (0xCB20,		2, 8, 8,	"SLA B",			SLA_B, SHIFTLeft_General);
+	_INSTZ80_FROM (0xCB20,		2, 8, { },	"SLA B",			SLA_B, SHIFTLeft_General);
 	// Within C
-	_INST_FROM (0xCB21,		2, 8, 8,	"SLA C",			SLA_C, SHIFTLeft_General);
+	_INSTZ80_FROM (0xCB21,		2, 8, { },	"SLA C",			SLA_C, SHIFTLeft_General);
 	// Within D
-	_INST_FROM (0xCB22,		2, 8, 8,	"SLA D",			SLA_D, SHIFTLeft_General);
+	_INSTZ80_FROM (0xCB22,		2, 8, { },	"SLA D",			SLA_D, SHIFTLeft_General);
 	// Within E
-	_INST_FROM (0xCB23,		2, 8, 8,	"SLA E",			SLA_E, SHIFTLeft_General);
+	_INSTZ80_FROM (0xCB23,		2, 8, { },	"SLA E",			SLA_E, SHIFTLeft_General);
 	// Within F
-	_INST_FROM (0xCB24,		2, 8, 8,	"SLA H",			SLA_H, SHIFTLeft_General);
+	_INSTZ80_FROM (0xCB24,		2, 8, { },	"SLA H",			SLA_H, SHIFTLeft_General);
 	// Within L
-	_INST_FROM (0xCB25,		2, 8, 8,	"SLA L",			SLA_L, SHIFTLeft_General);
+	_INSTZ80_FROM (0xCB25,		2, 8, { },	"SLA L",			SLA_L, SHIFTLeft_General);
 	// Within (HL)
-	_INST_FROM (0xCB26,		2, 15, 15,	"SLA (HL)",			SLA_IndirectHL, SHIFTLeft_General);
+	_INSTZ80_FROM (0xCB26,		2, 15, { },	"SLA (HL)",			SLA_IndirectHL, SHIFTLeft_General);
 	// Within (IX + d)...4 block but it really uses only 3!
 	// The instruction code is really DDCD(opCode)06, but is done in this way to simplify the way it is used...
 	// This applicable to all instructions...
-	_INST_FROM (0xDDCB26,	4, 23, 23,	"SLA (IX+[#1])",	SLA_IndirectIndexIX, SHIFTLeft_Index);
+	_INSTZ80_FROM (0xDDCB26,	4, 23, { },	"SLA (IX+[#1])",	SLA_IndirectIndexIX, SHIFTLeft_Index);
 	// Within (IX + d) and the result copied into a register. 
 	// All of them are non documented
-	_INST_FROM (0xDDCB27,	4, 23, 23,	"SLA (IX+[#1]),A",	SLA_IndirectIndexIXCopyA, SHIFTLeft_Index);		// Undocumented
-	_INST_FROM (0xDDCB20,	4, 23, 23,	"SLA (IX+[#1]),B",	SLA_IndirectIndexIXCopyB, SHIFTLeft_Index);		// Undocumented
-	_INST_FROM (0xDDCB21,	4, 23, 23,	"SLA (IX+[#1]),C",	SLA_IndirectIndexIXCopyC, SHIFTLeft_Index);		// Undocumented
-	_INST_FROM (0xDDCB22,	4, 23, 23,	"SLA (IX+[#1]),D",	SLA_IndirectIndexIXCopyD, SHIFTLeft_Index);		// Undocumented
-	_INST_FROM (0xDDCB23,	4, 23, 23,	"SLA (IX+[#1]),E",	SLA_IndirectIndexIXCopyE, SHIFTLeft_Index);		// Undocumented
-	_INST_FROM (0xDDCB24,	4, 23, 23,	"SLA (IX+[#1]),H",	SLA_IndirectIndexIXCopyH, SHIFTLeft_Index);		// Undocumented
-	_INST_FROM (0xDDCB25,	4, 23, 23,	"SLA (IX+[#1]),L",	SLA_IndirectIndexIXCopyL, SHIFTLeft_Index);		// Undocumented
+	_INSTZ80_FROM (0xDDCB27,	4, 23, { },	"SLA (IX+[#1]),A",	SLA_IndirectIndexIXCopyA, SHIFTLeft_Index);		// Undocumented
+	_INSTZ80_FROM (0xDDCB20,	4, 23, { },	"SLA (IX+[#1]),B",	SLA_IndirectIndexIXCopyB, SHIFTLeft_Index);		// Undocumented
+	_INSTZ80_FROM (0xDDCB21,	4, 23, { },	"SLA (IX+[#1]),C",	SLA_IndirectIndexIXCopyC, SHIFTLeft_Index);		// Undocumented
+	_INSTZ80_FROM (0xDDCB22,	4, 23, { },	"SLA (IX+[#1]),D",	SLA_IndirectIndexIXCopyD, SHIFTLeft_Index);		// Undocumented
+	_INSTZ80_FROM (0xDDCB23,	4, 23, { },	"SLA (IX+[#1]),E",	SLA_IndirectIndexIXCopyE, SHIFTLeft_Index);		// Undocumented
+	_INSTZ80_FROM (0xDDCB24,	4, 23, { },	"SLA (IX+[#1]),H",	SLA_IndirectIndexIXCopyH, SHIFTLeft_Index);		// Undocumented
+	_INSTZ80_FROM (0xDDCB25,	4, 23, { },	"SLA (IX+[#1]),L",	SLA_IndirectIndexIXCopyL, SHIFTLeft_Index);		// Undocumented
 	// Within (IY + d)...4 block instruction but it really uses only 3!
-	_INST_FROM (0xFDCB26,	4, 23, 23,	"SLA (IY+[#1])",	SLA_IndirectIndexIY, SHIFTLeft_Index);
+	_INSTZ80_FROM (0xFDCB26,	4, 23, { },	"SLA (IY+[#1])",	SLA_IndirectIndexIY, SHIFTLeft_Index);
 	// Within (IX + d) and the result copied into a register. 
 	// All of them are non documented
-	_INST_FROM (0xFDCB27,	4, 23, 23,	"SLA (IY+[#1]),A",	SLA_IndirectIndexIYCopyA, SHIFTLeft_Index);		// Undocumented
-	_INST_FROM (0xFDCB20,	4, 23, 23,	"SLA (IY+[#1]),B",	SLA_IndirectIndexIYCopyB, SHIFTLeft_Index);		// Undocumented
-	_INST_FROM (0xFDCB21,	4, 23, 23,	"SLA (IY+[#1]),C",	SLA_IndirectIndexIYCopyC, SHIFTLeft_Index);		// Undocumented
-	_INST_FROM (0xFDCB22,	4, 23, 23,	"SLA (IY+[#1]),D",	SLA_IndirectIndexIYCopyD, SHIFTLeft_Index);		// Undocumented
-	_INST_FROM (0xFDCB23,	4, 23, 23,	"SLA (IY+[#1]),E",	SLA_IndirectIndexIYCopyE, SHIFTLeft_Index);		// Undocumented
-	_INST_FROM (0xFDCB24,	4, 23, 23,	"SLA (IY+[#1]),H",	SLA_IndirectIndexIYCopyH, SHIFTLeft_Index);		// Undocumented
-	_INST_FROM (0xFDCB25,	4, 23, 23,	"SLA (IY+[#1]),L",	SLA_IndirectIndexIYCopyL, SHIFTLeft_Index);		// Undocumented
+	_INSTZ80_FROM (0xFDCB27,	4, 23, { },	"SLA (IY+[#1]),A",	SLA_IndirectIndexIYCopyA, SHIFTLeft_Index);		// Undocumented
+	_INSTZ80_FROM (0xFDCB20,	4, 23, { },	"SLA (IY+[#1]),B",	SLA_IndirectIndexIYCopyB, SHIFTLeft_Index);		// Undocumented
+	_INSTZ80_FROM (0xFDCB21,	4, 23, { },	"SLA (IY+[#1]),C",	SLA_IndirectIndexIYCopyC, SHIFTLeft_Index);		// Undocumented
+	_INSTZ80_FROM (0xFDCB22,	4, 23, { },	"SLA (IY+[#1]),D",	SLA_IndirectIndexIYCopyD, SHIFTLeft_Index);		// Undocumented
+	_INSTZ80_FROM (0xFDCB23,	4, 23, { },	"SLA (IY+[#1]),E",	SLA_IndirectIndexIYCopyE, SHIFTLeft_Index);		// Undocumented
+	_INSTZ80_FROM (0xFDCB24,	4, 23, { },	"SLA (IY+[#1]),H",	SLA_IndirectIndexIYCopyH, SHIFTLeft_Index);		// Undocumented
+	_INSTZ80_FROM (0xFDCB25,	4, 23, { },	"SLA (IY+[#1]),L",	SLA_IndirectIndexIYCopyL, SHIFTLeft_Index);		// Undocumented
 
 	// Shift introducing a 1 in the first bit!
 	// Within A
-	_INST_FROM (0xCB37,		2, 8, 8,	"SLL A",			SLL_A, SHIFTLeft_General);
+	_INSTZ80_FROM (0xCB37,		2, 8, { },	"SLL A",			SLL_A, SHIFTLeft_General);
 	// Within B
-	_INST_FROM (0xCB30,		2, 8, 8,	"SLL B",			SLL_B, SHIFTLeft_General);
+	_INSTZ80_FROM (0xCB30,		2, 8, { },	"SLL B",			SLL_B, SHIFTLeft_General);
 	// Within C
-	_INST_FROM (0xCB31,		2, 8, 8,	"SLL C",			SLL_C, SHIFTLeft_General);
+	_INSTZ80_FROM (0xCB31,		2, 8, { },	"SLL C",			SLL_C, SHIFTLeft_General);
 	// Within D
-	_INST_FROM (0xCB32,		2, 8, 8,	"SLL D",			SLL_D, SHIFTLeft_General);
+	_INSTZ80_FROM (0xCB32,		2, 8, { },	"SLL D",			SLL_D, SHIFTLeft_General);
 	// Within E
-	_INST_FROM (0xCB33,		2, 8, 8,	"SLL E",			SLL_E, SHIFTLeft_General);
+	_INSTZ80_FROM (0xCB33,		2, 8, { },	"SLL E",			SLL_E, SHIFTLeft_General);
 	// Within F
-	_INST_FROM (0xCB34,		2, 8, 8,	"SLL H",			SLL_H, SHIFTLeft_General);
+	_INSTZ80_FROM (0xCB34,		2, 8, { },	"SLL H",			SLL_H, SHIFTLeft_General);
 	// Within L
-	_INST_FROM (0xCB35,		2, 8, 8,	"SLL L",			SLL_L, SHIFTLeft_General);
+	_INSTZ80_FROM (0xCB35,		2, 8, { },	"SLL L",			SLL_L, SHIFTLeft_General);
 	// Within (HL)
-	_INST_FROM (0xCB36,		2, 15, 15,	"SLL (HL)",			SLL_IndirectHL, SHIFTLeft_General);
+	_INSTZ80_FROM (0xCB36,		2, 15, { },	"SLL (HL)",			SLL_IndirectHL, SHIFTLeft_General);
 	// Within (IX + d)...4 block but it really uses only 3!
 	// The instruction code is really DDCD(opCode)06, but is done in this way to simplify the way it is used...
 	// This applicable to all instructions...
-	_INST_FROM (0xDDCB36,	4, 23, 23,	"SLL (IX+[#1])",	SLL_IndirectIndexIX, SHIFTLeft_Index);
+	_INSTZ80_FROM (0xDDCB36,	4, 23, { },	"SLL (IX+[#1])",	SLL_IndirectIndexIX, SHIFTLeft_Index);
 	// Within (IX + d) and the result copied into a register. 
 	// All of them are non documented
-	_INST_FROM (0xDDCB37,	4, 23, 23,	"SLL (IX+[#1]),A",	SLL_IndirectIndexIXCopyA, SHIFTLeft_Index);		// Undocumented
-	_INST_FROM (0xDDCB30,	4, 23, 23,	"SLL (IX+[#1]),B",	SLL_IndirectIndexIXCopyB, SHIFTLeft_Index);		// Undocumented
-	_INST_FROM (0xDDCB31,	4, 23, 23,	"SLL (IX+[#1]),C",	SLL_IndirectIndexIXCopyC, SHIFTLeft_Index);		// Undocumented
-	_INST_FROM (0xDDCB32,	4, 23, 23,	"SLL (IX+[#1]),D",	SLL_IndirectIndexIXCopyD, SHIFTLeft_Index);		// Undocumented
-	_INST_FROM (0xDDCB33,	4, 23, 23,	"SLL (IX+[#1]),E",	SLL_IndirectIndexIXCopyE, SHIFTLeft_Index);		// Undocumented
-	_INST_FROM (0xDDCB34,	4, 23, 23,	"SLL (IX+[#1]),H",	SLL_IndirectIndexIXCopyH, SHIFTLeft_Index);		// Undocumented
-	_INST_FROM (0xDDCB35,	4, 23, 23,	"SLL (IX+[#1]),L",	SLL_IndirectIndexIXCopyL, SHIFTLeft_Index);		// Undocumented
+	_INSTZ80_FROM (0xDDCB37,	4, 23, { },	"SLL (IX+[#1]),A",	SLL_IndirectIndexIXCopyA, SHIFTLeft_Index);		// Undocumented
+	_INSTZ80_FROM (0xDDCB30,	4, 23, { },	"SLL (IX+[#1]),B",	SLL_IndirectIndexIXCopyB, SHIFTLeft_Index);		// Undocumented
+	_INSTZ80_FROM (0xDDCB31,	4, 23, { },	"SLL (IX+[#1]),C",	SLL_IndirectIndexIXCopyC, SHIFTLeft_Index);		// Undocumented
+	_INSTZ80_FROM (0xDDCB32,	4, 23, { },	"SLL (IX+[#1]),D",	SLL_IndirectIndexIXCopyD, SHIFTLeft_Index);		// Undocumented
+	_INSTZ80_FROM (0xDDCB33,	4, 23, { },	"SLL (IX+[#1]),E",	SLL_IndirectIndexIXCopyE, SHIFTLeft_Index);		// Undocumented
+	_INSTZ80_FROM (0xDDCB34,	4, 23, { },	"SLL (IX+[#1]),H",	SLL_IndirectIndexIXCopyH, SHIFTLeft_Index);		// Undocumented
+	_INSTZ80_FROM (0xDDCB35,	4, 23, { },	"SLL (IX+[#1]),L",	SLL_IndirectIndexIXCopyL, SHIFTLeft_Index);		// Undocumented
 	// Within (IY + d)...4 block instruction but it really uses only 3!
-	_INST_FROM (0xFDCB36,	4, 23, 23,	"SLL (IY+[#1])",	SLL_IndirectIndexIY, SHIFTLeft_Index);
+	_INSTZ80_FROM (0xFDCB36,	4, 23, { },	"SLL (IY+[#1])",	SLL_IndirectIndexIY, SHIFTLeft_Index);
 	// Within (IX + d) and the result copied into a register. 
 	// All of them are non documented
-	_INST_FROM (0xFDCB37,	4, 23, 23,	"SLL (IY+[#1]),A",	SLL_IndirectIndexIYCopyA, SHIFTLeft_Index);		// Undocumented
-	_INST_FROM (0xFDCB30,	4, 23, 23,	"SLL (IY+[#1]),B",	SLL_IndirectIndexIYCopyB, SHIFTLeft_Index);		// Undocumented
-	_INST_FROM (0xFDCB31,	4, 23, 23,	"SLL (IY+[#1]),C",	SLL_IndirectIndexIYCopyC, SHIFTLeft_Index);		// Undocumented
-	_INST_FROM (0xFDCB32,	4, 23, 23,	"SLL (IY+[#1]),D",	SLL_IndirectIndexIYCopyD, SHIFTLeft_Index);		// Undocumented
-	_INST_FROM (0xFDCB33,	4, 23, 23,	"SLL (IY+[#1]),E",	SLL_IndirectIndexIYCopyE, SHIFTLeft_Index);		// Undocumented
-	_INST_FROM (0xFDCB34,	4, 23, 23,	"SLL (IY+[#1]),H",	SLL_IndirectIndexIYCopyH, SHIFTLeft_Index);		// Undocumented
-	_INST_FROM (0xFDCB35,	4, 23, 23,	"SLL (IY+[#1]),L",	SLL_IndirectIndexIYCopyL, SHIFTLeft_Index);		// Undocumented
+	_INSTZ80_FROM (0xFDCB37,	4, 23, { },	"SLL (IY+[#1]),A",	SLL_IndirectIndexIYCopyA, SHIFTLeft_Index);		// Undocumented
+	_INSTZ80_FROM (0xFDCB30,	4, 23, { },	"SLL (IY+[#1]),B",	SLL_IndirectIndexIYCopyB, SHIFTLeft_Index);		// Undocumented
+	_INSTZ80_FROM (0xFDCB31,	4, 23, { },	"SLL (IY+[#1]),C",	SLL_IndirectIndexIYCopyC, SHIFTLeft_Index);		// Undocumented
+	_INSTZ80_FROM (0xFDCB32,	4, 23, { },	"SLL (IY+[#1]),D",	SLL_IndirectIndexIYCopyD, SHIFTLeft_Index);		// Undocumented
+	_INSTZ80_FROM (0xFDCB33,	4, 23, { },	"SLL (IY+[#1]),E",	SLL_IndirectIndexIYCopyE, SHIFTLeft_Index);		// Undocumented
+	_INSTZ80_FROM (0xFDCB34,	4, 23, { },	"SLL (IY+[#1]),H",	SLL_IndirectIndexIYCopyH, SHIFTLeft_Index);		// Undocumented
+	_INSTZ80_FROM (0xFDCB35,	4, 23, { },	"SLL (IY+[#1]),L",	SLL_IndirectIndexIYCopyL, SHIFTLeft_Index);		// Undocumented
 }
 
 #endif

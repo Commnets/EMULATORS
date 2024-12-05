@@ -24,9 +24,10 @@ namespace FZ80
 	class SHIFTRight_General : public Instruction
 	{
 		public:
-		SHIFTRight_General (unsigned int c, unsigned int mp, unsigned int cc, unsigned int rcc, 
+		SHIFTRight_General (unsigned int c, unsigned int mp, unsigned int cc,
+				const MCHEmul::InstructionDefined::CycleStructure& cS, 
 				const std::string& t)
-			: Instruction (c, mp, cc, rcc, t)
+			: Instruction (c, mp, cc, cS, t)
 							{ }
 
 		protected:
@@ -101,9 +102,10 @@ namespace FZ80
 	class SHIFTRight_Index : public SHIFTRight_General
 	{
 		public:
-		SHIFTRight_Index (unsigned int c, unsigned int mp, unsigned int cc, unsigned int rcc, 
+		SHIFTRight_Index (unsigned int c, unsigned int mp, unsigned int cc,
+				const MCHEmul::InstructionDefined::CycleStructure& cS, 
 				const std::string& t)
-			: SHIFTRight_General (c, mp, cc, rcc, t)
+			: SHIFTRight_General (c, mp, cc, cS, t)
 							{ }
 
 		/** The last part of the code is at the end of the byte codes. */
@@ -113,87 +115,87 @@ namespace FZ80
 
 	// Shift maintaining the bit 7!
 	// Within A
-	_INST_FROM (0xCB2F,		2, 8, 8,	"SRA A",			SRA_A, SHIFTRight_General);
+	_INSTZ80_FROM (0xCB2F,		2, 8, { },	"SRA A",			SRA_A, SHIFTRight_General);
 	// Within B
-	_INST_FROM (0xCB28,		2, 8, 8,	"SRA B",			SRA_B, SHIFTRight_General);
+	_INSTZ80_FROM (0xCB28,		2, 8, { },	"SRA B",			SRA_B, SHIFTRight_General);
 	// Within C
-	_INST_FROM (0xCB29,		2, 8, 8,	"SRA C",			SRA_C, SHIFTRight_General);
+	_INSTZ80_FROM (0xCB29,		2, 8, { },	"SRA C",			SRA_C, SHIFTRight_General);
 	// Within D
-	_INST_FROM (0xCB2A,		2, 8, 8,	"SRA D",			SRA_D, SHIFTRight_General);
+	_INSTZ80_FROM (0xCB2A,		2, 8, { },	"SRA D",			SRA_D, SHIFTRight_General);
 	// Within E
-	_INST_FROM (0xCB2B,		2, 8, 8,	"SRA E",			SRA_E, SHIFTRight_General);
+	_INSTZ80_FROM (0xCB2B,		2, 8, { },	"SRA E",			SRA_E, SHIFTRight_General);
 	// Within F
-	_INST_FROM (0xCB2C,		2, 8, 8,	"SRA H",			SRA_H, SHIFTRight_General);
+	_INSTZ80_FROM (0xCB2C,		2, 8, { },	"SRA H",			SRA_H, SHIFTRight_General);
 	// Within L
-	_INST_FROM (0xCB2D,		2, 8, 8,	"SRA L",			SRA_L, SHIFTRight_General);
+	_INSTZ80_FROM (0xCB2D,		2, 8, { },	"SRA L",			SRA_L, SHIFTRight_General);
 	// Within (HL)
-	_INST_FROM (0xCB2E,		2, 15, 15,	"SRA (HL)",			SRA_IndirectHL, SHIFTRight_General);
+	_INSTZ80_FROM (0xCB2E,		2, 15, { },	"SRA (HL)",			SRA_IndirectHL, SHIFTRight_General);
 	// Within (IX + d)...4 block but it really uses only 3!
 	// The instruction code is really DDCD(opCode)06, but is done in this way to simplify the way it is used...
 	// This applicable to all instructions...
-	_INST_FROM (0xDDCB2E,	4, 23, 23,	"SRA (IX+[#1])",	SRA_IndirectIndexIX, SHIFTRight_Index);
+	_INSTZ80_FROM (0xDDCB2E,	4, 23, { },	"SRA (IX+[#1])",	SRA_IndirectIndexIX, SHIFTRight_Index);
 	// Within (IX + d) and the result copied into a register. 
 	// All of them are non documented
-	_INST_FROM (0xDDCB2F,	4, 23, 23,	"SRA (IX+[#1]),A",	SRA_IndirectIndexIXCopyA, SHIFTRight_Index);	// Undocumented
-	_INST_FROM (0xDDCB28,	4, 23, 23,	"SRA (IX+[#1]),B",	SRA_IndirectIndexIXCopyB, SHIFTRight_Index);	// Undocumented
-	_INST_FROM (0xDDCB29,	4, 23, 23,	"SRA (IX+[#1]),C",	SRA_IndirectIndexIXCopyC, SHIFTRight_Index);	// Undocumented
-	_INST_FROM (0xDDCB2A,	4, 23, 23,	"SRA (IX+[#1]),D",	SRA_IndirectIndexIXCopyD, SHIFTRight_Index);	// Undocumented
-	_INST_FROM (0xDDCB2B,	4, 23, 23,	"SRA (IX+[#1]),E",	SRA_IndirectIndexIXCopyE, SHIFTRight_Index);	// Undocumented
-	_INST_FROM (0xDDCB2C,	4, 23, 23,	"SRA (IX+[#1]),H",	SRA_IndirectIndexIXCopyH, SHIFTRight_Index);	// Undocumented
-	_INST_FROM (0xDDCB2D,	4, 23, 23,	"SRA (IX+[#1]),L",	SRA_IndirectIndexIXCopyL, SHIFTRight_Index);	// Undocumented
+	_INSTZ80_FROM (0xDDCB2F,	4, 23, { },	"SRA (IX+[#1]),A",	SRA_IndirectIndexIXCopyA, SHIFTRight_Index);	// Undocumented
+	_INSTZ80_FROM (0xDDCB28,	4, 23, { },	"SRA (IX+[#1]),B",	SRA_IndirectIndexIXCopyB, SHIFTRight_Index);	// Undocumented
+	_INSTZ80_FROM (0xDDCB29,	4, 23, { },	"SRA (IX+[#1]),C",	SRA_IndirectIndexIXCopyC, SHIFTRight_Index);	// Undocumented
+	_INSTZ80_FROM (0xDDCB2A,	4, 23, { },	"SRA (IX+[#1]),D",	SRA_IndirectIndexIXCopyD, SHIFTRight_Index);	// Undocumented
+	_INSTZ80_FROM (0xDDCB2B,	4, 23, { },	"SRA (IX+[#1]),E",	SRA_IndirectIndexIXCopyE, SHIFTRight_Index);	// Undocumented
+	_INSTZ80_FROM (0xDDCB2C,	4, 23, { },	"SRA (IX+[#1]),H",	SRA_IndirectIndexIXCopyH, SHIFTRight_Index);	// Undocumented
+	_INSTZ80_FROM (0xDDCB2D,	4, 23, { },	"SRA (IX+[#1]),L",	SRA_IndirectIndexIXCopyL, SHIFTRight_Index);	// Undocumented
 	// Within (IY + d)...4 block instruction but it really uses only 3!
-	_INST_FROM (0xFDCB2E,	4, 23, 23,	"SRA (IY+[#1])",	SRA_IndirectIndexIY, SHIFTRight_Index);
+	_INSTZ80_FROM (0xFDCB2E,	4, 23, { },	"SRA (IY+[#1])",	SRA_IndirectIndexIY, SHIFTRight_Index);
 	// Within (IX + d) and the result copied into a register. 
 	// All of them are non documented
-	_INST_FROM (0xFDCB2F,	4, 23, 23,	"SRA (IY+[#1]),A",	SRA_IndirectIndexIYCopyA, SHIFTRight_Index);	// Undocumented
-	_INST_FROM (0xFDCB28,	4, 23, 23,	"SRA (IY+[#1]),B",	SRA_IndirectIndexIYCopyB, SHIFTRight_Index);	// Undocumented
-	_INST_FROM (0xFDCB29,	4, 23, 23,	"SRA (IY+[#1]),C",	SRA_IndirectIndexIYCopyC, SHIFTRight_Index);	// Undocumented
-	_INST_FROM (0xFDCB2A,	4, 23, 23,	"SRA (IY+[#1]),D",	SRA_IndirectIndexIYCopyD, SHIFTRight_Index);	// Undocumented
-	_INST_FROM (0xFDCB2B,	4, 23, 23,	"SRA (IY+[#1]),E",	SRA_IndirectIndexIYCopyE, SHIFTRight_Index);	// Undocumented
-	_INST_FROM (0xFDCB2C,	4, 23, 23,	"SRA (IY+[#1]),H",	SRA_IndirectIndexIYCopyH, SHIFTRight_Index);	// Undocumented
-	_INST_FROM (0xFDCB2D,	4, 23, 23,	"SRA (IY+[#1]),L",	SRA_IndirectIndexIYCopyL, SHIFTRight_Index);	// Undocumented
+	_INSTZ80_FROM (0xFDCB2F,	4, 23, { },	"SRA (IY+[#1]),A",	SRA_IndirectIndexIYCopyA, SHIFTRight_Index);	// Undocumented
+	_INSTZ80_FROM (0xFDCB28,	4, 23, { },	"SRA (IY+[#1]),B",	SRA_IndirectIndexIYCopyB, SHIFTRight_Index);	// Undocumented
+	_INSTZ80_FROM (0xFDCB29,	4, 23, { },	"SRA (IY+[#1]),C",	SRA_IndirectIndexIYCopyC, SHIFTRight_Index);	// Undocumented
+	_INSTZ80_FROM (0xFDCB2A,	4, 23, { },	"SRA (IY+[#1]),D",	SRA_IndirectIndexIYCopyD, SHIFTRight_Index);	// Undocumented
+	_INSTZ80_FROM (0xFDCB2B,	4, 23, { },	"SRA (IY+[#1]),E",	SRA_IndirectIndexIYCopyE, SHIFTRight_Index);	// Undocumented
+	_INSTZ80_FROM (0xFDCB2C,	4, 23, { },	"SRA (IY+[#1]),H",	SRA_IndirectIndexIYCopyH, SHIFTRight_Index);	// Undocumented
+	_INSTZ80_FROM (0xFDCB2D,	4, 23, { },	"SRA (IY+[#1]),L",	SRA_IndirectIndexIYCopyL, SHIFTRight_Index);	// Undocumented
 
 	// Shift introducing a 0 in the bit 7!
 	// Within A
-	_INST_FROM (0xCB3F,		2, 8, 8,	"SRL A",			SRL_A, SHIFTRight_General);
+	_INSTZ80_FROM (0xCB3F,		2, 8, { },	"SRL A",			SRL_A, SHIFTRight_General);
 	// Within B
-	_INST_FROM (0xCB38,		2, 8, 8,	"SRL B",			SRL_B, SHIFTRight_General);
+	_INSTZ80_FROM (0xCB38,		2, 8, { },	"SRL B",			SRL_B, SHIFTRight_General);
 	// Within C
-	_INST_FROM (0xCB39,		2, 8, 8,	"SRL C",			SRL_C, SHIFTRight_General);
+	_INSTZ80_FROM (0xCB39,		2, 8, { },	"SRL C",			SRL_C, SHIFTRight_General);
 	// Within D
-	_INST_FROM (0xCB3A,		2, 8, 8,	"SRL D",			SRL_D, SHIFTRight_General);
+	_INSTZ80_FROM (0xCB3A,		2, 8, { },	"SRL D",			SRL_D, SHIFTRight_General);
 	// Within E
-	_INST_FROM (0xCB3B,		2, 8, 8,	"SRL E",			SRL_E, SHIFTRight_General);
+	_INSTZ80_FROM (0xCB3B,		2, 8, { },	"SRL E",			SRL_E, SHIFTRight_General);
 	// Within F
-	_INST_FROM (0xCB3C,		2, 8, 8,	"SRL H",			SRL_H, SHIFTRight_General);
+	_INSTZ80_FROM (0xCB3C,		2, 8, { },	"SRL H",			SRL_H, SHIFTRight_General);
 	// Within L
-	_INST_FROM (0xCB3D,		2, 8, 8,	"SRL L",			SRL_L, SHIFTRight_General);
+	_INSTZ80_FROM (0xCB3D,		2, 8, { },	"SRL L",			SRL_L, SHIFTRight_General);
 	// Within (HL)
-	_INST_FROM (0xCB3E,		2, 15, 15,	"SRL (HL)",			SRL_IndirectHL, SHIFTRight_General);
+	_INSTZ80_FROM (0xCB3E,		2, 15, { },	"SRL (HL)",			SRL_IndirectHL, SHIFTRight_General);
 	// Within (IX + d)...4 block but it really uses only 3!
 	// The instruction code is really DDCD(opCode)06, but is done in this way to simplify the way it is used...
 	// This applicable to all instructions...
-	_INST_FROM (0xDDCB3E,	4, 23, 23,	"SRL (IX+[#1])",	SRL_IndirectIndexIX, SHIFTRight_Index);
+	_INSTZ80_FROM (0xDDCB3E,	4, 23, { },	"SRL (IX+[#1])",	SRL_IndirectIndexIX, SHIFTRight_Index);
 	// Within (IX + d) and the result copied into a register. 
 	// All of them are non documented
-	_INST_FROM (0xDDCB3F,	4, 23, 23,	"SRL (IX+[#1]),A",	SRL_IndirectIndexIXCopyA, SHIFTRight_Index);	// Undocumented
-	_INST_FROM (0xDDCB38,	4, 23, 23,	"SRL (IX+[#1]),B",	SRL_IndirectIndexIXCopyB, SHIFTRight_Index);	// Undocumented
-	_INST_FROM (0xDDCB39,	4, 23, 23,	"SRL (IX+[#1]),C",	SRL_IndirectIndexIXCopyC, SHIFTRight_Index);	// Undocumented
-	_INST_FROM (0xDDCB3A,	4, 23, 23,	"SRL (IX+[#1]),D",	SRL_IndirectIndexIXCopyD, SHIFTRight_Index);	// Undocumented
-	_INST_FROM (0xDDCB3B,	4, 23, 23,	"SRL (IX+[#1]),E",	SRL_IndirectIndexIXCopyE, SHIFTRight_Index);	// Undocumented
-	_INST_FROM (0xDDCB3C,	4, 23, 23,	"SRL (IX+[#1]),H",	SRL_IndirectIndexIXCopyH, SHIFTRight_Index);	// Undocumented
-	_INST_FROM (0xDDCB3D,	4, 23, 23,	"SRL (IX+[#1]),L",	SRL_IndirectIndexIXCopyL, SHIFTRight_Index);	// Undocumented
+	_INSTZ80_FROM (0xDDCB3F,	4, 23, { },	"SRL (IX+[#1]),A",	SRL_IndirectIndexIXCopyA, SHIFTRight_Index);	// Undocumented
+	_INSTZ80_FROM (0xDDCB38,	4, 23, { },	"SRL (IX+[#1]),B",	SRL_IndirectIndexIXCopyB, SHIFTRight_Index);	// Undocumented
+	_INSTZ80_FROM (0xDDCB39,	4, 23, { },	"SRL (IX+[#1]),C",	SRL_IndirectIndexIXCopyC, SHIFTRight_Index);	// Undocumented
+	_INSTZ80_FROM (0xDDCB3A,	4, 23, { },	"SRL (IX+[#1]),D",	SRL_IndirectIndexIXCopyD, SHIFTRight_Index);	// Undocumented
+	_INSTZ80_FROM (0xDDCB3B,	4, 23, { },	"SRL (IX+[#1]),E",	SRL_IndirectIndexIXCopyE, SHIFTRight_Index);	// Undocumented
+	_INSTZ80_FROM (0xDDCB3C,	4, 23, { },	"SRL (IX+[#1]),H",	SRL_IndirectIndexIXCopyH, SHIFTRight_Index);	// Undocumented
+	_INSTZ80_FROM (0xDDCB3D,	4, 23, { },	"SRL (IX+[#1]),L",	SRL_IndirectIndexIXCopyL, SHIFTRight_Index);	// Undocumented
 	// Within (IY + d)...4 block instruction but it really uses only 3!
-	_INST_FROM (0xFDCB3E,	4, 23, 23,	"SRL (IY+[#1])",	SRL_IndirectIndexIY, SHIFTRight_Index);
+	_INSTZ80_FROM (0xFDCB3E,	4, 23, { },	"SRL (IY+[#1])",	SRL_IndirectIndexIY, SHIFTRight_Index);
 	// Within (IX + d) and the result copied into a register. 
 	// All of them are non documented
-	_INST_FROM (0xFDCB3F,	4, 23, 23,	"SRL (IY+[#1]),A",	SRL_IndirectIndexIYCopyA, SHIFTRight_Index);	// Undocumented
-	_INST_FROM (0xFDCB38,	4, 23, 23,	"SRL (IY+[#1]),B",	SRL_IndirectIndexIYCopyB, SHIFTRight_Index);	// Undocumented
-	_INST_FROM (0xFDCB39,	4, 23, 23,	"SRL (IY+[#1]),C",	SRL_IndirectIndexIYCopyC, SHIFTRight_Index);	// Undocumented
-	_INST_FROM (0xFDCB3A,	4, 23, 23,	"SRL (IY+[#1]),D",	SRL_IndirectIndexIYCopyD, SHIFTRight_Index);	// Undocumented
-	_INST_FROM (0xFDCB3A,	4, 23, 23,	"SRL (IY+[#1]),E",	SRL_IndirectIndexIYCopyE, SHIFTRight_Index);	// Undocumented
-	_INST_FROM (0xFDCB3B,	4, 23, 23,	"SRL (IY+[#1]),H",	SRL_IndirectIndexIYCopyH, SHIFTRight_Index);	// Undocumented
-	_INST_FROM (0xFDCB3C,	4, 23, 23,	"SRL (IY+[#1]),L",	SRL_IndirectIndexIYCopyL, SHIFTRight_Index);	// Undocumented
+	_INSTZ80_FROM (0xFDCB3F,	4, 23, { },	"SRL (IY+[#1]),A",	SRL_IndirectIndexIYCopyA, SHIFTRight_Index);	// Undocumented
+	_INSTZ80_FROM (0xFDCB38,	4, 23, { },	"SRL (IY+[#1]),B",	SRL_IndirectIndexIYCopyB, SHIFTRight_Index);	// Undocumented
+	_INSTZ80_FROM (0xFDCB39,	4, 23, { },	"SRL (IY+[#1]),C",	SRL_IndirectIndexIYCopyC, SHIFTRight_Index);	// Undocumented
+	_INSTZ80_FROM (0xFDCB3A,	4, 23, { },	"SRL (IY+[#1]),D",	SRL_IndirectIndexIYCopyD, SHIFTRight_Index);	// Undocumented
+	_INSTZ80_FROM (0xFDCB3A,	4, 23, { },	"SRL (IY+[#1]),E",	SRL_IndirectIndexIYCopyE, SHIFTRight_Index);	// Undocumented
+	_INSTZ80_FROM (0xFDCB3B,	4, 23, { },	"SRL (IY+[#1]),H",	SRL_IndirectIndexIYCopyH, SHIFTRight_Index);	// Undocumented
+	_INSTZ80_FROM (0xFDCB3C,	4, 23, { },	"SRL (IY+[#1]),L",	SRL_IndirectIndexIYCopyL, SHIFTRight_Index);	// Undocumented
 }
 
 #endif

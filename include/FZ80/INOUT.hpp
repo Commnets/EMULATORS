@@ -24,9 +24,10 @@ namespace FZ80
 	class IN_General : public Instruction
 	{
 		public:
-		IN_General (unsigned int c, unsigned int mp, unsigned int cc, unsigned int rcc, 
+		IN_General (unsigned int c, unsigned int mp, unsigned int cc,
+				const MCHEmul::InstructionDefined::CycleStructure& cS, 
 				const std::string& t)
-			: Instruction (c, mp, cc, rcc, t)
+			: Instruction (c, mp, cc, cS, t)
 							{ }
 
 		protected:
@@ -101,26 +102,27 @@ namespace FZ80
 	}
 
 	// With the register A from a value, quicker!
-	_INST_FROM (0xDB,		2, 11, 11,	"IN A,([#1])",			IN_A, IN_General);
+	_INSTZ80_FROM (0xDB,		2, 11, { },	"IN A,([#1])",			IN_A, IN_General);
 	// With a register from a port
-	_INST_FROM (0xED78,		2, 12, 12,	"IN A,(C)",				IN_AFromC, IN_General);
-	_INST_FROM (0xED40,		2, 12, 12,	"IN B,(C)",				IN_BFromC, IN_General);
-	_INST_FROM (0xED48,		2, 12, 12,	"IN C,(C)",				IN_CFromC, IN_General);
-	_INST_FROM (0xED50,		2, 12, 12,	"IN D,(C)",				IN_DFromC, IN_General);
-	_INST_FROM (0xED58,		2, 12, 12,	"IN E,(C)",				IN_EFromC, IN_General);
-	_INST_FROM (0xED60,		2, 12, 12,	"IN H,(C)",				IN_HFromC, IN_General);
-	_INST_FROM (0xED68,		2, 12, 12,	"IN L,(C)",				IN_LFromC, IN_General);
+	_INSTZ80_FROM (0xED78,		2, 12, { },	"IN A,(C)",				IN_AFromC, IN_General);
+	_INSTZ80_FROM (0xED40,		2, 12, { },	"IN B,(C)",				IN_BFromC, IN_General);
+	_INSTZ80_FROM (0xED48,		2, 12, { },	"IN C,(C)",				IN_CFromC, IN_General);
+	_INSTZ80_FROM (0xED50,		2, 12, { },	"IN D,(C)",				IN_DFromC, IN_General);
+	_INSTZ80_FROM (0xED58,		2, 12, { },	"IN E,(C)",				IN_EFromC, IN_General);
+	_INSTZ80_FROM (0xED60,		2, 12, { },	"IN H,(C)",				IN_HFromC, IN_General);
+	_INSTZ80_FROM (0xED68,		2, 12, { },	"IN L,(C)",				IN_LFromC, IN_General);
 	// Just affecting the flags, but not loading anything in anyplace...
-	_INST_FROM (0xED70,		2, 12, 12,	"IN F,(C)",				IN_FFromC, IN_General);		// Undocumented 
+	_INSTZ80_FROM (0xED70,		2, 12, { }, "IN F,(C)",				IN_FFromC, IN_General);		// Undocumented 
 																							// (other representation is IN (C))
 
 	/** IN as a block. */
 	class INBlock_General : public Instruction
 	{
 		public:
-		INBlock_General (unsigned int c, unsigned int mp, unsigned int cc, unsigned int rcc, 
+		INBlock_General (unsigned int c, unsigned int mp, unsigned int cc, 
+				const MCHEmul::InstructionDefined::CycleStructure& cS, 
 				const std::string& t)
-			: Instruction (c, mp, cc, rcc, t),
+			: Instruction (c, mp, cc, cS, t),
 			  _inExecution (false),
 			  _b0 (false)
 							{ }
@@ -138,24 +140,25 @@ namespace FZ80
 	};
 
 	// (HL) <- IN(BC) & Next memory position (HL = HL + 1) & --Counter (B = B - 1)
-	_INST_FROM (0xEDA2,		2, 16, 16,	"INI",				INI, INBlock_General);
+	_INSTZ80_FROM (0xEDA2,		2, 16, { }, "INI",				INI, INBlock_General);
 	// (HL) <- IN(BC) & Next memory position & --Counter until B = 0;
 	// 21 Cycles when B != 0 (_additionalCycles = 5). _FINISH = true when B == 0
-	_INST_FROM (0xEDB2,		2, 16, 16,	"INIR",				INIR, INBlock_General);	
+	_INSTZ80_FROM (0xEDB2,		2, 16, { }, "INIR",				INIR, INBlock_General);
 	// (HL) <- IN(BC) & Previous memory position (HL = HL - 1) & --Counter (B = B - 1)
-	_INST_FROM (0xEDAA,		2, 16, 16,	"IND",				IND, INBlock_General);
+	_INSTZ80_FROM (0xEDAA,		2, 16, { }, "IND",				IND, INBlock_General);
 	// (HL) <- IN(BC) & Previous memory position & --Counter until B = 0;
 	// 21 Cycles when B != 0 (_additionalCycles = 5). _FINISH = true when B == 0
-	_INST_FROM (0xEDBA,		2, 16, 16,	"INDR",				INDR, INBlock_General);	
+	_INSTZ80_FROM (0xEDBA,		2, 16, { }, "INDR",				INDR, INBlock_General);
 
 	/** OUT_General: To save any value to a port. \n
 		None affects the flags. */
 	class OUT_General : public Instruction
 	{
 		public:
-		OUT_General (unsigned int c, unsigned int mp, unsigned int cc, unsigned int rcc, 
+		OUT_General (unsigned int c, unsigned int mp, unsigned int cc,
+				const MCHEmul::InstructionDefined::CycleStructure& cS, 
 				const std::string& t)
-			: Instruction (c, mp, cc, rcc, t)
+			: Instruction (c, mp, cc, cS, t)
 							{ }
 
 		protected:
@@ -214,25 +217,26 @@ namespace FZ80
 	}
 
 	// To A. Quicker...
-	_INST_FROM (0xD3,		2, 11, 11,	"OUT ([#1]),A",			OUT_A, OUT_General);
+	_INSTZ80_FROM (0xD3,		2, 11, { }, "OUT ([#1]),A",			OUT_A, OUT_General);
 	// From a register to a Port...
-	_INST_FROM (0xED79,		2, 12, 12,	"OUT (C),A",			OUT_AToC, OUT_General);
-	_INST_FROM (0xED41,		2, 12, 12,	"OUT (C),B",			OUT_BToC, OUT_General);
-	_INST_FROM (0xED49,		2, 12, 12,	"OUT (C),C",			OUT_CToC, OUT_General);
-	_INST_FROM (0xED51,		2, 12, 12,	"OUT (C),D",			OUT_DToC, OUT_General);
-	_INST_FROM (0xED59,		2, 12, 12,	"OUT (C),E",			OUT_EToC, OUT_General);
-	_INST_FROM (0xED61,		2, 12, 12,	"OUT (C),H",			OUT_HToC, OUT_General);
-	_INST_FROM (0xED69,		2, 12, 12,	"OUT (C),L",			OUT_LToC, OUT_General);
+	_INSTZ80_FROM (0xED79,		2, 12, { },	"OUT (C),A",			OUT_AToC, OUT_General);
+	_INSTZ80_FROM (0xED41,		2, 12, { },	"OUT (C),B",			OUT_BToC, OUT_General);
+	_INSTZ80_FROM (0xED49,		2, 12, { },	"OUT (C),C",			OUT_CToC, OUT_General);
+	_INSTZ80_FROM (0xED51,		2, 12, { },	"OUT (C),D",			OUT_DToC, OUT_General);
+	_INSTZ80_FROM (0xED59,		2, 12, { },	"OUT (C),E",			OUT_EToC, OUT_General);
+	_INSTZ80_FROM (0xED61,		2, 12, { },	"OUT (C),H",			OUT_HToC, OUT_General);
+	_INSTZ80_FROM (0xED69,		2, 12, { },	"OUT (C),L",			OUT_LToC, OUT_General);
 	// Just 0 to a port
-	_INST_FROM (0xED71,		2, 12, 12,	"OUT (C),0",			OUT_0ToC, OUT_General);		// Undocumented
+	_INSTZ80_FROM (0xED71,		2, 12, { }, "OUT (C),0",			OUT_0ToC, OUT_General);		// Undocumented
 
 	/** OUT as a block. */
 	class OUTBlock_General : public Instruction
 	{
 		public:
-		OUTBlock_General (unsigned int c, unsigned int mp, unsigned int cc, unsigned int rcc, 
+		OUTBlock_General (unsigned int c, unsigned int mp, unsigned int cc,
+				const MCHEmul::InstructionDefined::CycleStructure& cS, 
 				const std::string& t)
-			: Instruction (c, mp, cc, rcc, t),
+			: Instruction (c, mp, cc, cS, t),
 			  _inExecution (false),
 			  _b0 (false)
 							{ }
@@ -250,15 +254,15 @@ namespace FZ80
 	};
 
 	// (HL) -> OUT(BC) & Next memory position (HL = HL + 1) & --Counter (B = B - 1)
-	_INST_FROM (0xEDA3,		2, 16, 16,	"OUTI",				OUTI, OUTBlock_General);
+	_INSTZ80_FROM (0xEDA3,		2, 16, { }, "OUTI",				OUTI, OUTBlock_General);
 	// (HL) -> OUT(BC) & Next memory position & --Counter until B = 0;
 	// 21 Cycles when B != 0 (_additionalCycles = 5). _FINISH = true when B == 0
-	_INST_FROM (0xEDB3,		2, 16, 16,	"OTIR",				OTIR, OUTBlock_General);	
+	_INSTZ80_FROM (0xEDB3,		2, 16, { }, "OTIR",				OTIR, OUTBlock_General);
 	// (HL) -> OUT(BC) & Previous memory position (HL = HL - 1) & --Counter (B = B - 1)
-	_INST_FROM (0xEDAB,		2, 16, 16,	"OUTD",				OUTD, OUTBlock_General);
+	_INSTZ80_FROM (0xEDAB,		2, 16, { }, "OUTD",				OUTD, OUTBlock_General);
 	// (HL) -> OUT(BC) & Previous memory position & --Counter until B = 0;
 	// 21 Cycles when B != 0 (_additionalCycles = 5). _FINISH = true when B == 0
-	_INST_FROM (0xEDBB,		2, 16, 16,	"OTDR",				OTDR, OUTBlock_General);	
+	_INSTZ80_FROM (0xEDBB,		2, 16, { }, "OTDR",				OTDR, OUTBlock_General);
 }
 
 #endif

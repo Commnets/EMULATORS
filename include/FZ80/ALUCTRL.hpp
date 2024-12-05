@@ -20,27 +20,27 @@
 namespace FZ80
 {
 	// DAA: Decimal Adjust Accumulator (after addition usually)
-	_INST_FROM (0x27,	1, 4, 4,	"DAA",					DAA, Instruction);
+	_INSTZ80_FROM (0x27,	1, 4, { },	"DAA",					DAA, Instruction);
 	// CPL: Complement Accumulator
-	_INST_FROM (0x2F,	1, 4, 4,	"CPL",					CPL, Instruction);
+	_INSTZ80_FROM (0x2F,	1, 4, { },	"CPL",					CPL, Instruction);
 	// NEG: Negated Accumulator (two's complement)
-	_INST_FROM (0xED44,	2, 8, 8,	"NEG",					NEG, Instruction);
+	_INSTZ80_FROM (0xED44,	2, 8, { },	"NEG",					NEG, Instruction);
 	// CCF: Inverts carry flag
-	_INST_FROM (0x3F,	1, 4, 4,	"CCF",					CCF, Instruction);
+	_INSTZ80_FROM (0x3F,	1, 4, { },	"CCF",					CCF, Instruction);
 	// SCF: Set carry flag
-	_INST_FROM (0x37,	1, 4, 4,	"SCF",					SCF, Instruction);
+	_INSTZ80_FROM (0x37,	1, 4, { },	"SCF",					SCF, Instruction);
 	// NOP: Does nothing
-	_INST_FROM (0x00,	1, 4, 4,	"NOP",					NOP, Instruction);
+	_INSTZ80_FROM (0x00,	1, 4, { },	"NOP",					NOP, Instruction);
 	// HALT: Stop processor until interrupt happens!
-	_INST_FROM (0x76,	1, 4, 4,	"HALT",					HALT, Instruction);
+	_INSTZ80_FROM (0x76,	1, 4, { },	"HALT",					HALT, Instruction);
 	// DI: Disable interrupts (INT)
-	_INST_FROM (0xF3,	1, 4, 4,	"DI",					DI, Instruction);
+	_INSTZ80_FROM (0xF3,	1, 4, { },	"DI",					DI, Instruction);
 	// EI: Enable interrupts (INT)
-	_INST_FROM (0xFB,	1, 4, 4,	"EI",					EI, Instruction);
+	_INSTZ80_FROM (0xFB,	1, 4, { },	"EI",					EI, Instruction);
 	// IM: Change the type of interrupt (INT)
-	_INST_FROM (0xED46,	2, 8, 8,	"IM 0",					IM_0, Instruction);
-	_INST_FROM (0xED56,	2, 8, 8,	"IM 1",					IM_1, Instruction);
-	_INST_FROM (0xED5E,	2, 8, 8,	"IM 2",					IM_2, Instruction);
+	_INSTZ80_FROM (0xED46,	2, 8, { },	"IM 0",					IM_0, Instruction);
+	_INSTZ80_FROM (0xED56,	2, 8, { },	"IM 1",					IM_1, Instruction);
+	_INSTZ80_FROM (0xED5E,	2, 8, { },	"IM 2",					IM_2, Instruction);
 }
 
 #endif

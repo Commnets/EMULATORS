@@ -46,16 +46,24 @@ MCHEmul::Instruction::Instruction (unsigned int c, bool bE)
 
 // ---
 MCHEmul::InstructionDefined::InstructionDefined (unsigned int c, unsigned int mp, unsigned int cc, 
+		const MCHEmul::InstructionDefined::CycleStructure& cS,
 		const std::string& t, bool bE)
 	: MCHEmul::Instruction (c, bE),
 	  _memoryPositions (mp), 
 	  _clockCycles (cc),
+	  _cycleStructure (cS),
 	  _iTemplate (MCHEmul::noSpaces (MCHEmul::upper (t))), // The template if stored in uppercase and with no spaces...
 	  _iStructure (),
 	  _additionalCycles (0)
 { 
 	assert (_memoryPositions > 0 && _clockCycles > 0); 
 	assert (_iTemplate != ""); 
+
+	if (_cycleStructure.empty ())
+		_cycleStructure = 
+			MCHEmul::InstructionDefined::CycleStructure (_clockCycles, _CYCLENOTDEFINED);
+
+	assert (_cycleStructure.size () == _clockCycles);
 
 	_iStructure = analyzeInstruction ();
 	if (_iStructure._error)
