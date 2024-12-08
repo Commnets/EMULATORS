@@ -209,25 +209,29 @@ bool COMMODORE::VICII::simulate (MCHEmul::CPU* cpu)
 				_raster.vData ().currentVisiblePosition ();
 		}
 
-		// When VICII is about to read sprites or graphics info (bad line),
-		// the CPU has to stop 3 cycles in advance (just for READ activities) for those activities,
-		// unless it was stopped previously and that stop situation were still valid...
-		// In the case of graphics that stop only happens when the situation arise in the "screen cycles" (40)
-		// When a badline happens (usual bad line) to stop the CPU is requested at cycle 12, then it would be stopped cycles 13, 14, and 15
-		// At cycle 16 the code reaches this point and the condition will also be met so a new stop will be requested (3 cycles more)
+		// When VICII is about to read sprites or screen code info (in a bad line),
+		// the phase 1 of the clock (the one usually managed by the VICII) is not enough to read all info needed.
+		// So the CPU has to be stop to use their cycles too, but it is requested 3 cycles before it is actually needed.
+		// That is because the CPU stops only when the next internal CPU movement (within every instruction) is a _CYCLEREAD type (@see F6500::Instruction).
+		// If it were a _CYCLEWRITE instead the CPU wouldn't stop, and there are a maximum of 3 _CYCLEWRITE together (in BRK and JSR instructions).
+		// The stop is requested if the CPU wasn't in the same situation previously... 
+		// In the case of graphics, the stop could happen when the situation arise at any point of the "screen cycles" (from cycle 16 to 55).
+		// When a badline comes, the requested to stop the CPU usually happens at cycle 13, then it would be stopped cycles 14, 15, and 16
+		// and at cycle 16 the code reaches back this point again and the condition will also be met so a new stop will be requested (3 cycles more)
 		// However, later the graphics will start to be read an a new stop condition will arise....(1)
-		if (!cpu -> stopped () && 
+		if ((cpu -> lastState () != MCHEmul::CPU::_STOPPED && !cpu -> stopped ()) &&
 			(isAboutToReadSpriteInfo () || 
-				(_newBadLineCondition && (_cycleInRasterLine >= 12 && _cycleInRasterLine < 52))))
+				(_newBadLineCondition && (_cycleInRasterLine >= 13 && _cycleInRasterLine < 52))))
 			cpu -> setStop (true, MCHEmul::InstructionDefined::_CYCLEREAD /** only read is not allowed. */, 
-				cpu -> clockCycles () - i, 3);
+				cpu -> clockCycles () - i, 3); // It is the way to simulate when the BA signal goes low...
 
 		// Treat the right cycle...
 		// ...and as a consequence the CPU can be also stopped...
 		// (1)...so this condition will overwrite the previous one!
 		unsigned int cS = 0;
 		if ((cS = treatRasterCycle ()) > 0)
-			cpu -> setStop (true, MCHEmul::InstructionDefined::_CYCLEALL /** fully stopped. */, cpu -> clockCycles () - i, (int) cS);
+			cpu -> setStop (true, MCHEmul::InstructionDefined::_CYCLEALL /** fully stopped. */, 
+				cpu -> clockCycles () - i, (int) cS); // In this case the CPU is fully stopped because it is comming from the previous one...
 
 		// Draws the graphics & border if it has to do so...
 		if (_raster.isInVisibleZone ())
@@ -1055,7 +1059,8 @@ COMMODORE::VICII::DrawResult COMMODORE::VICII::drawGraphics (const COMMODORE::VI
 		case COMMODORE::VICIIRegisters::GraphicMode::_INVALIDTEXMODE:
 			{
 				// Like multicolor char mode, but invalid...
-				result = std::move (drawMultiColorChar (cb, result._invalid = true));
+				result = std::move (drawMultiColorChar (cb, true));
+				result._invalid = true;
 			}
 
 			break;
@@ -1063,14 +1068,16 @@ COMMODORE::VICII::DrawResult COMMODORE::VICII::drawGraphics (const COMMODORE::VI
 		case COMMODORE::VICIIRegisters::GraphicMode::_INVALIDBITMAPMODE1:
 			{
 				// Like moncocolor bitmap mode, but invalid...
-				result = std::move (drawMonoColorBitMap (cb, result._invalid = true));
+				result = std::move (drawMonoColorBitMap (cb, true));
+				result._invalid = true;
 			}
 			break;
 
 		case COMMODORE::VICIIRegisters::GraphicMode::_INVALIDBITMAPMODE2:
 			{
 				// Like multicolor bitmap mode, but invalid...
-				result = std::move (drawMultiColorBitMap (cb, result._invalid = true));
+				result = std::move (drawMultiColorBitMap (cb, true));
+				result._invalid = true;
 			}
 
 			break;

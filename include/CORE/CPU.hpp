@@ -113,8 +113,12 @@ namespace MCHEmul
 		const CPUArchitecture& architecture () const
 							{ return (_architecture); }
 
+		/** To get the current state. */
 		unsigned int state () const
 							{ return (_state); }
+		/** To get the one before the current one. */
+		unsigned int lastState () const
+							{ return (_lastState); }
 
 		// Related with the stae stopped...
 		/** Is the CPU stopped for any reason? 
@@ -401,7 +405,7 @@ namespace MCHEmul
 		// and to make simplier the modification in case it is needed...
 		/** Debug special situations...
 			Take care using this instructions _deepDebugFile could be == nullptr... */
-		void debugStopRequest (unsigned int tC, int nC) const; // tC = type of stop cycles, nC = number cycles to stop (== -1 forever)
+		void debugStopRequest () const; // tC = type of stop cycles, nC = number cycles to stop (== -1 forever)
 		void debugInterruptRequest (const CPUInterruptRequest& iR) const;
 		void debugLastExecutionData () const; // Using information in _lastInstruction...
 		void debugStopSituation () const; // Using information in CPU abour stop situation (@see below)
@@ -448,6 +452,7 @@ namespace MCHEmul
 		unsigned int _lastState;
 
 		// Implementation
+		/** Just what was the error in the execution if any. */
 		unsigned int _error;
 
 		// When things are executed by cycle...
@@ -469,15 +474,25 @@ namespace MCHEmul
 		Instruction* _lastInstruction;
 
 		// When _STOPPED:
-		/** Type of cycle stopped. */
+		/** Type of cycle where to stop. */
 		unsigned int _typeCycleStopped;
-		/** Number of cycles to be stopped. -1 when it is forever... */
+		/** Number of cycles to be stopped. -1 means forever... */
 		int _cyclesStopped; 
 		/** Number of cycles of the processor when the stop was requested. */
 		unsigned int _cyclesAtStop;
 		/** Current number of cycles already stopped, 
-			obviously when it is the situation and it is nor forever. */
+			obviously when it is the situation and it is nor forever. 
+			It is put to 0 when the stop is requested back. */
 		unsigned int _counterCyclesStopped;
+		// Imagine that CPU is running in parallel with a chip that requested stopping the CPU 
+		// in the middle of the execution of that instruction. 
+		// Should have the CPU stopped? What should it be done now once the instruction was executed? 
+		// What to do is something depending on the implementation of the emulation.
+		// This variables are filled up automatically and can could help to decide what to do:
+		/** Number of cycles that the last Instruction overlapped when the stop was request, if any. */
+		unsigned int _cyclesLastInstructionOverlappedStopRequest;
+		/** Number of cycles of the last instruction that were executed before the stop was requested. */
+		unsigned int _cyclesLastInstructionExecutedStopRequest;
 
 		/** The instructions will be moved into an array at construction time,
 			to speed up their access in the executeNextInstruction method. */

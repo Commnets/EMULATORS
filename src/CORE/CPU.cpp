@@ -32,7 +32,8 @@ MCHEmul::CPU::CPU (int id, const MCHEmul::CPUArchitecture& a,
 	  _currentInterrupt (nullptr), 
 	  _cyclesPendingExecution (0), 
 	  // When the CPU is stopped...
-	  _typeCycleStopped (0 /** nothing. */), _cyclesStopped (0), _cyclesAtStop (0), _counterCyclesStopped (0),
+	  _typeCycleStopped (0 /** nothing. */), _cyclesStopped (0), _cyclesAtStop (0), _counterCyclesStopped (0), 
+	  _cyclesLastInstructionOverlappedStopRequest (0), _cyclesLastInstructionExecutedStopRequest (0),
 	  // For performance reasons...
 	  _rowInstructions () // It will be fulfilled below!
 { 
@@ -63,42 +64,40 @@ void MCHEmul::CPU::setStop (bool s, unsigned int tC, unsigned int cC, int nC)
 	// Stop requested...
 	if (s)
 	{
-		_IFDEBUG debugStopRequest (tC, nC);
-
-		// If the CPU was already stopped...
-		// the counter starts back, but neither the state changes
-		// nor the point where the stop started...
-		if (_state == CPU::_STOPPED)
-		{ 
+		// ...the requested cycles to stop should then be 
+		// positive or -1 to indicate infinite...
+		if (nC == -1 || nC > 0)
+		{
 			// If the new request were over a still valid previous request...
 			// ...it would be admitted, but the situation would be also debugged
 			// as it not so common, no?
-			if ((cC - _cyclesAtStop) < (unsigned int) _cyclesStopped)
-				_IFDEBUG debugAlreadyStopped (tC, nC); 
+			if (_state == MCHEmul::CPU::_STOPPED)
+				_IFDEBUG debugAlreadyStopped (tC, nC); // The data of the new stop request are passed...
 
 			_typeCycleStopped = tC;
 			_cyclesAtStop = cC;	
 			_cyclesStopped = nC;
 			_counterCyclesStopped = 0;
-		}
-		// If not already stopped...
-		else
-		{
-			// ...the requested cycles to stop should then be 
-			// positive or -1 to indicate infinite...
-			if (nC == -1 || nC > 0)
-			{
-				_lastState = _state;
 
-				_state = CPU::_STOPPED; 
+			// If the last state isn't stopped...
+			if (_state != MCHEmul::CPU::_STOPPED)
+				_lastState = _state; // ...it is kept to be recovered later...
 
-				_typeCycleStopped = tC;
-				_cyclesAtStop = cC;
-				_cyclesStopped = nC; 
-				_counterCyclesStopped = 0;
-			}
+			// If the CPU was not stopped before...
+			// it is needed to calculate information about what may cycles of the last 
+			// instruction (if any, what should be the normal cincunstance) were executed before receiving this notification
+			// and how many are overlapped in it....
+			if (_lastState != MCHEmul::CPU::_STOPPED && 
+				_state != MCHEmul::CPU::_STOPPED)
+				_cyclesLastInstructionExecutedStopRequest =	
+					(_lastInstruction != nullptr && (_clockCycles > cC)) 
+						? _lastInstruction -> totalClockCyclesExecuted () - 
+							(_cyclesLastInstructionOverlappedStopRequest = (_clockCycles - cC)) // Could be negative!
+						: (_cyclesLastInstructionOverlappedStopRequest = 0);
 
-			// ...otherwise the CPU doesn't stop.
+			_state = MCHEmul::CPU::_STOPPED; 
+
+			_IFDEBUG debugStopRequest ();
 		}
 	}
 	// Run back requested...
@@ -112,6 +111,9 @@ void MCHEmul::CPU::setStop (bool s, unsigned int tC, unsigned int cC, int nC)
 			_state = _lastState; 
 			
 			_lastState = iS;
+
+			_cyclesLastInstructionExecutedStopRequest = 
+				_cyclesLastInstructionOverlappedStopRequest = 0;
 		}
 	}
 }
@@ -150,9 +152,11 @@ bool MCHEmul::CPU::initialize ()
 
 	// Related with the internal states...
 	_lastInstruction = nullptr;
+
 	_typeCycleStopped = 0; // Meaning none
 	_cyclesStopped = 0;
-	_cyclesAtStop = _counterCyclesStopped = 0;
+	_cyclesAtStop = _counterCyclesStopped = 
+		_cyclesLastInstructionOverlappedStopRequest = _cyclesLastInstructionExecutedStopRequest = 0;
 
 	return (true);
 }
@@ -286,6 +290,9 @@ bool MCHEmul::CPU::when_Stopped ()
 		_state = _lastState;
 
 		_lastState = iS;
+
+		_cyclesLastInstructionExecutedStopRequest = 
+			_cyclesLastInstructionOverlappedStopRequest = 0;
 	}
 
 	// No other value of this status is changed, because everything has to continue 
@@ -533,6 +540,8 @@ bool MCHEmul::CPU::executeNextInstruction_PerCycle (unsigned int& e)
 
 				_currentInstruction = nullptr; // another one is needed...
 
+				_lastState = _state; // After one instruction executed, the last state was also running...
+
 				_IFDEBUG debugInstructionExecuted (sdd);
 			}
 		}
@@ -625,6 +634,9 @@ bool MCHEmul::CPU::executeNextInstruction_Full (unsigned int &e)
 		// ...and finally saves the instruction executed...
 		_lastInstruction = inst;
 
+		// After one instruction executed, the last state was also running...
+		_lastState = _state; 
+
 		_IFDEBUG debugInstructionExecuted (sdd);
 	}
 	// ...otherwise again an error is generated...
@@ -663,12 +675,15 @@ MCHEmul::Instruction* MCHEmul::CPU::instructionAt
 }
 
 // ---
-void MCHEmul::CPU::debugStopRequest (unsigned int tC, int nC) const
+void MCHEmul::CPU::debugStopRequest () const
 {
 	assert (_deepDebugFile != nullptr);
 
-	_deepDebugFile -> writeLineData ("Stop CPU requested " + std::to_string (nC)
-		+ " cycles [" + ((tC == std::numeric_limits <unsigned int>::max ()) ? "-" : std::to_string (tC)) + " type]");
+	_deepDebugFile -> writeLineData ("Stop CPU requested " + std::to_string (_cyclesStopped) + 
+		" cycles(" + ((_typeCycleStopped == std::numeric_limits <unsigned int>::max ()) 
+			? "-" : std::to_string (_typeCycleStopped)) + "), " +
+		"Cycles executed " + std::to_string (_cyclesLastInstructionExecutedStopRequest) + ", " +
+		"Cycles overlapped " + std::to_string (_cyclesLastInstructionOverlappedStopRequest));
 }
 
 // ---
@@ -710,13 +725,13 @@ void MCHEmul::CPU::debugAlreadyStopped (unsigned int tC, int nC) const
 	assert (_deepDebugFile != nullptr);
 
 	_deepDebugFile -> writeLineData (
-		{ "Already stopped:" + 
+		"Already stopped:" + 
 			(((_cyclesStopped == -1) 
 				? "-" 
 				: std::to_string (_cyclesStopped - (_counterCyclesStopped + 1))) + " cycles pending of " + 
 				  std::to_string (_cyclesStopped)) + ", " +
-		  "New request:" + std::to_string (nC)
-			+ " cycles [" + ((tC == std::numeric_limits <unsigned int>::max ()) ? "-" : std::to_string (tC)) + " type]" });
+		"New request:" + std::to_string (nC)
+			+ " cycles [" + ((tC == std::numeric_limits <unsigned int>::max ()) ? "-" : std::to_string (tC)) + " type]");
 }
 
 // ---
