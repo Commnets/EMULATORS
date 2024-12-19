@@ -666,10 +666,18 @@ namespace COMMODORE
 		
 		_vicGraphicInfo._lastScreenCodeDataRead =
 			_vicGraphicInfo._screenCodeData [_vicGraphicInfo._VLMI] =
-				memoryRef () -> value (_VICIIRegisters -> screenMemory () + (size_t) _vicGraphicInfo._VC); 
-		_vicGraphicInfo._lastColorDataRead = // The color RAM is read not taken into account whether is ready or not for reading!
+				memoryRef () -> value (_VICIIRegisters -> screenMemory () + (size_t) _vicGraphicInfo._VC);
+		// In the invalid text mode, the bits 6 & 7 won't be used (see when reading the graphics info) that they are eliminated...
+		// In the invalid graphics mode 1 & 2 the information won't be used ever
+		
+		// The color RAM is read not taken into account whether is ready or not for reading!
+		// as it is an internal zone of memroy only accesible from the VICII!
+		_vicGraphicInfo._lastColorDataRead = 
 			_vicGraphicInfo._colorData [_vicGraphicInfo._VLMI] = 
-				_colorRAM -> valueDirect (_colorRAMAddress + (size_t) _vicGraphicInfo._VC); 
+				_colorRAM -> valueDirect (_colorRAMAddress + (size_t) _vicGraphicInfo._VC) &
+					(_VICIIRegisters -> invalidGraphicMode () ? 0x80 : 0xff); 
+		// In the invalid text mode, only the MG flag is taken into account at this point
+		// however it won't be used as all pixels will be drawn in black...
 		
 		memoryRef () -> setCPUView ();
 	}
@@ -693,10 +701,14 @@ namespace COMMODORE
 				_vicGraphicInfo._graphicData [_vicGraphicInfo._VLMI] = _VICIIRegisters -> textMode () 
 					? memoryRef () -> value (_VICIIRegisters -> charDataMemory () + 
 						(((size_t) _vicGraphicInfo._screenCodeData [_vicGraphicInfo._VLMI].value () & 
-							(_VICIIRegisters -> graphicExtendedColorTextModeActive () ? 0x3f : 0xff)) 
-							/** In the extended graphics mode there is only 64 chars possible. */ << 3) + _vicGraphicInfo._RC)
-					: memoryRef () -> value (_VICIIRegisters -> bitmapMemory () + 
-						(_vicGraphicInfo._VC << 3) + _vicGraphicInfo._RC);
+							((_VICIIRegisters -> graphicExtendedColorTextModeActive () ||
+							  _VICIIRegisters -> invalidGraphicMode ()) ? 0x3f : 0xff))
+							/** In the extended graphics mode or in the invalid text mode, 
+								there are only 64 chars possible. */ << 3) + _vicGraphicInfo._RC)
+					: memoryRef () -> value (_VICIIRegisters -> bitmapMemory () +
+						((_vicGraphicInfo._VC & 
+							(_VICIIRegisters -> invalidGraphicMode () ? 0x033f : 0xffff)) << 3) + _vicGraphicInfo._RC);
+		// In the invalid graphic modes the bits 6 & 7 of the VC position are not taken into account...
 		
 		memoryRef () -> setCPUView ();
 	}

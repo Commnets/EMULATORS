@@ -53,6 +53,15 @@ bool F6500::C6500::initialize ()
 }
 
 // ---
+void F6500::C6500::setStopAdditional (bool s, unsigned int tC, unsigned int cC, int nC)
+{
+	if (_lastInstruction == nullptr)
+		return; // There is no instruction executed, so nothing else to do...
+
+	// TODO
+}
+
+// ---
 MCHEmul::CPUArchitecture F6500::C6500::createArchitecture ()
 {
 	return (

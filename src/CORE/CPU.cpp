@@ -97,6 +97,8 @@ void MCHEmul::CPU::setStop (bool s, unsigned int tC, unsigned int cC, int nC)
 
 			_state = MCHEmul::CPU::_STOPPED; 
 
+			setStopAdditional (true, tC, cC, nC);
+
 			_IFDEBUG debugStopRequest ();
 		}
 	}
@@ -114,6 +116,8 @@ void MCHEmul::CPU::setStop (bool s, unsigned int tC, unsigned int cC, int nC)
 
 			_cyclesLastInstructionExecutedStopRequest = 
 				_cyclesLastInstructionOverlappedStopRequest = 0;
+
+			setStopAdditional (false, 0, 0, 0);
 		}
 	}
 }
@@ -293,6 +297,8 @@ bool MCHEmul::CPU::when_Stopped ()
 
 		_cyclesLastInstructionExecutedStopRequest = 
 			_cyclesLastInstructionOverlappedStopRequest = 0;
+
+		setStopAdditional (false, 0, 0, 0); // The parameters are not interesting at this point...
 	}
 
 	// No other value of this status is changed, because everything has to continue 

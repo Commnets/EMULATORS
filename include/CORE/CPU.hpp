@@ -341,9 +341,18 @@ namespace MCHEmul
 		virtual InfoStructure getInfoStructure () const override;
 
 		protected:
-		// Internal methods to simplify the comprension of the code.
+		// Internal methods to simplify the understanding of the code.
 		// However they can be overloaded...
-		// Invoke from executeNextInstruction
+		// Invoked from setStop
+		/** When the instruction setStop (standard behaviour) is invoked
+			some additional things could have been done depending on the CPU.
+			This exit allows to overload that behaviour. \n
+			The paremeters are the same one than in the original instuction, 
+			plus the _state before executing the instruction stop. */
+		virtual void setStopAdditional (bool s, unsigned int tC, unsigned int cC, int nC)
+							{  }
+
+		// Invoked from executeNextInstruction
 		/** 
 		  * When the state is: _EXECUTINGINSTRUCTION.
 		  * The method can be overloaded. \n

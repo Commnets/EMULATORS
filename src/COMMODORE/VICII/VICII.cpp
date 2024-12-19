@@ -1060,6 +1060,7 @@ COMMODORE::VICII::DrawResult COMMODORE::VICII::drawGraphics (const COMMODORE::VI
 			{
 				// Like multicolor char mode, but invalid...
 				result = std::move (drawMultiColorChar (cb, true));
+
 				result._invalid = true;
 			}
 
@@ -1069,6 +1070,7 @@ COMMODORE::VICII::DrawResult COMMODORE::VICII::drawGraphics (const COMMODORE::VI
 			{
 				// Like moncocolor bitmap mode, but invalid...
 				result = std::move (drawMonoColorBitMap (cb, true));
+
 				result._invalid = true;
 			}
 			break;
@@ -1077,13 +1079,14 @@ COMMODORE::VICII::DrawResult COMMODORE::VICII::drawGraphics (const COMMODORE::VI
 			{
 				// Like multicolor bitmap mode, but invalid...
 				result = std::move (drawMultiColorBitMap (cb, true));
+
 				result._invalid = true;
 			}
 
 			break;
 
 		default:
-			assert (0); // Not possible...the code shouldn't pass over this point!
+			assert (false); // Not possible...the code shouldn't pass over this point!
 			break;
 	}
 
@@ -1142,20 +1145,25 @@ COMMODORE::VICII::DrawResult COMMODORE::VICII::drawMultiColorChar (int cb, bool 
 		size_t iBt = 3 - ((((size_t) pp) % 8) >> 1);
 		unsigned char cs = (_vicGraphicInfo._graphicData [iBy].value () >> (iBt << 1)) & 0x03; // 0, 1, 2 or 3
 
+		// If it is invalid all colors are black, including the background...
+		// Rememeber that at this point that background will have been already drawn...
+		if (inv)
+			result._backgroundColorData [i] = 0x00;
+
 		// If 0, the pixel should be drawn (and considered) as background 
 		// and it is already the default status tha comes from the parent method...
 		if (cs == 0x00)
 			continue;
 
 		// The way the pixels are going to be drawn will depend on the information in the color memory
-		// If the most significant bit of the low significant nibble of the color memory is set to 1
-		// the data will be managed in a monocolor way...
-		if ((_vicGraphicInfo._colorData [iBy] & 0x08) == 0x00 || 
-			 _vicGraphicInfo._idleState) // also when idle state...
+		// If the most significant bit of the low significant nibble of the color memory is set to 0
+		// the data will be managed in a monolor way...
+		if ((_vicGraphicInfo._colorData [iBy] & 0x08) == 0x00 ||
+			 _vicGraphicInfo._idleState) // The idle state is treated as monocolor...
 		{
 			unsigned int fc = 
-				(inv || _vicGraphicInfo._idleState)
-					? 0x00 // When invalid or idle state all pixels are black...
+				(inv || _vicGraphicInfo._idleState) // also in idle state it is black...
+					? 0x00 // When invalid or idle all pixels are black...
 					: _vicGraphicInfo._colorData [iBy].value () & 0x07;
 
 			// ...and remember we are dealing with pairs of pixels...
@@ -1200,8 +1208,8 @@ COMMODORE::VICII::DrawResult COMMODORE::VICII::drawMultiColorChar (int cb, bool 
 		else
 		{
 			unsigned int fc = 
-				inv 
-					? 0x00 
+				inv
+					? 0x00 // unless the mode is invalid where everything is black...
 					: (unsigned int) ((cs == 0x03) 
 						? (_vicGraphicInfo._colorData [iBy].value () & 0x07)
 						: _VICIIRegisters -> backgroundColor (cs));
@@ -1291,6 +1299,15 @@ COMMODORE::VICII::DrawResult COMMODORE::VICII::drawMonoColorBitMap (int cb, bool
 					? (_vicGraphicInfo._screenCodeData [iBy].value () & 0xf0) >> 4	// If the bit is 1, the color is determined by the MSNibble
 					: (_vicGraphicInfo._screenCodeData [iBy].value () & 0x0f);		// ...and for LSNibble if it is 0...
 
+		// If the mode is invalid all bits must be invalid...
+		// Reme,ber that at this point the background will have been already drawn
+		// so it is needed to draw it back all black!
+		if (inv)
+			result._backgroundColorData [i] = 0x00;
+
+		// And then attending to the status of the pixels itself
+		// it would be drawn either as background or foregrand and 
+		// taken into account for the collision purposes
 		if (bS)
 		{
 			result._collisionGraphicData.setBit (7 - i, true);
@@ -1324,6 +1341,12 @@ COMMODORE::VICII::DrawResult COMMODORE::VICII::drawMultiColorBitMap (int cb, boo
 		iBy = ((size_t) pp) >> 3; 
 		size_t iBt = 3 - ((((size_t) pp) % 8) >> 1);
 		unsigned char cs = (_vicGraphicInfo._graphicData [iBy].value () >> (iBt << 1)) & 0x03; // 0, 1, 2 or 3
+
+		// If the mode is invalid all bits must be invalid...
+		// Reme,ber that at this point the background will have been already drawn
+		// so it is needed to draw it back all black!
+		if (inv)
+			result._backgroundColorData [i] = 0x00;
 
 		// If 0, the pixel should be drawn (and considered) as background 
 		// and it is already the default status tha comes from the parent method...

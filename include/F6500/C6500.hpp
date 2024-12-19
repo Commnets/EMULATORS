@@ -99,6 +99,19 @@ namespace F6500
 							  return (true); }
 
 		protected:
+		/** In the case of the 6500, when a stop request is received, 
+			it will only take effect when the first `_CYCLEREAD` of the next instruction is about to be executed. \n
+			If the cycle being executed during the current instruction is a `_CYCLEWRITE`, the CPU will continue executing.  
+			This code is usually invoked when simulating a chip in the computer where the CPU is inserted. 
+			In such cases, the instruction would have already been executed, along with all its cycles. \n
+			To handle this scenario, the solution involves checking the type of the first overlapping cycle. 
+			If it is a `_CYCLEREAD`, the waiting period should be extended by the number of overlapped cycles. 
+			If it is a `_CYCLEWRITE`, the waiting period should only be extended for the cycles following the last 
+			`_CYCLEWRITE` type (usually none, except in the cases of the BRK and JSR instructions)....\n
+			IMPORTANT NOTE: In the first case, the actualization of the memory should be stopped. \n
+			That actualization has to be configured as "buffered" in the definition of the memory. */
+		virtual void setStopAdditional (bool s, unsigned int tC, unsigned int cC, int nC) override;
+
 		virtual MCHEmul::CPUInterruptSystem* createInterruptSystem () const override
 							{ return (new MCHEmul::StandardCPUInterruptSystem 
 								({ { F6500::IRQInterrupt::_ID, new F6500::IRQInterrupt }, 

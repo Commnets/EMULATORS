@@ -99,6 +99,7 @@ namespace COMMODORE
 							{ return (_graphicExtendedColorTextModeActive); }
 		bool graphicMulticolorTextModeActive () const
 							{ return (_graphicMulticolorTextModeActive); }
+		inline bool invalidGraphicMode () const;
 		GraphicMode graphicModeActive () const
 							{ return (_graphicModeActive); }
 		bool textMode () const
@@ -377,6 +378,14 @@ namespace COMMODORE
 		bool _expansionYFlipFlop [8];
 		MCHEmul::OBool _interruptsEnabledBack;
 	};
+
+	// ---
+	inline bool VICIIRegisters::invalidGraphicMode () const
+	{ 
+		return (_graphicModeActive == GraphicMode::_INVALIDTEXMODE ||
+				_graphicModeActive == GraphicMode::_INVALIDBITMAPMODE1 ||
+				_graphicModeActive == GraphicMode::_INVALIDBITMAPMODE2); 
+	}
 
 	// ---
 	inline bool VICIIRegisters::launchIRQ () const
