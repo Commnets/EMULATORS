@@ -224,9 +224,12 @@ namespace F6500
 	{
 		assert (parameters ().size () == 2);
 
-		return (_lastExecutionData._INOUTAddress = 
-			MCHEmul::Address ({ parameters ()[1] }) + 
-				(size_t) (registerX ()[0].value ())); 
+		// Take care because when adding the value of the register X the final address can not be in the page 0
+		// and an adjustment will be required...
+		MCHEmul::Address pg0A = 
+			MCHEmul::Address ({ parameters ()[1] }) + (size_t) (registerX ()[0].value ());
+		if (pg0A.value () > (unsigned int) 0x00ff) pg0A -= (size_t) 0x0100; // To avoid go out of the limits...
+		return (_lastExecutionData._INOUTAddress = pg0A);
 	}
 
 	// ---
@@ -245,9 +248,13 @@ namespace F6500
 		assert (parameters ().size () == 2);
 
 		// Pre - indirect zero page addressing...
+		// Take care because when adding the value of the register X the final address can not be in the page 0
+		// and an adjustment will be required...
+		MCHEmul::Address pg0A = 
+			MCHEmul::Address ({ parameters ()[1] }) + (size_t) (registerX ()[0].value ());
+		if (pg0A.value () > (unsigned int) 0x00ff) pg0A -= (size_t) 0x0100; // To avoid go out of the limits...
 		return (_lastExecutionData._INOUTAddress = 
-			MCHEmul::Address (memory () -> values (MCHEmul::Address ({ parameters ()[1] }) + 
-				(size_t) (registerX ()[0].value ()), 2), false)); 
+			MCHEmul::Address (memory () -> values (pg0A, 2), false)); 
 	}
 
 	// ---

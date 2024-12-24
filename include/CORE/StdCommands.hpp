@@ -431,6 +431,28 @@ namespace MCHEmul
 		virtual void executeImpl (CommandExecuter* cE, Computer* c, InfoStructure& rst) override;
 	};
 
+	/** To run instructions until the stack position was the same
+		than when the command was executed first. \n
+		It sets a special action in the computer to do that. 
+		In some implementations this command could not make any sense. 
+		e.g when the stack is manipulated to return to specific positions as the ZX81 does. */
+	class NextInstructionUntilStackCommand final : public Command
+	{
+		public:
+		static const int _ID = 109;
+		static const std::string _NAME;
+
+		NextInstructionUntilStackCommand ()
+			: Command (_ID, _NAME)
+							{ }
+
+		virtual bool canBeExecuted () const override
+							{ return (_parameters.size () == 0); }
+
+		private:
+		virtual void executeImpl (CommandExecuter* cE, Computer* c, InfoStructure& rst) override;
+	};
+
 	/** To know what the next/nexts instruction/s will be. \n
 		Command line: SHOWNEXT [N] */
 	class ShowNextInstructionCommand final : public Command

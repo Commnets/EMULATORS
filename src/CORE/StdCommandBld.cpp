@@ -44,6 +44,8 @@ MCHEmul::Command* MCHEmul::StandardCommandBuilder::createEmptyCommand (const std
 		result = new MCHEmul::SetProgramCounterCommand;
 	else if (cmdName == "NEXT" || cmdName == "N" || cmdName == MCHEmul::NextInstructionCommand::_NAME)
 		result = new MCHEmul::NextInstructionCommand;
+	else if (cmdName == "NEXTSTACK" || cmdName == "NS" || cmdName == MCHEmul::NextInstructionUntilStackCommand::_NAME)
+		result = new MCHEmul::NextInstructionUntilStackCommand;
 	else if (cmdName == "SHOWNEXT" || cmdName == "SN" || cmdName == MCHEmul::ShowNextInstructionCommand::_NAME)
 		result = new MCHEmul::ShowNextInstructionCommand;
 	else if (cmdName == "INST" || cmdName == MCHEmul::LastIntructionCPUCommand::_NAME)

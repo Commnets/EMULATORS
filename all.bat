@@ -13,6 +13,8 @@ COPY .\exe\x86\TestZ80.exe .\tests\TestZ80\ /Y
 COPY .\exe\x86\TestZ80D.exe .\tests\TestZ80\ /Y
 COPY .\exe\x86\TestInstZ80.exe .\tests\TestInstZ80\ /Y
 COPY .\exe\x86\TestInstZ80D.exe .\tests\TestInstZ80\ /Y
+COPY .\exe\x86\TestInst6500.exe .\tests\TestInst6500\ /Y
+COPY .\exe\x86\TestInst6500D.exe .\tests\TestInst6500\ /Y
 COPY .\exe\x86\TestCPU.exe .\tests\TestCPU\ /Y
 COPY .\exe\x86\TestCPUD.exe .\tests\TestCPU\ /Y
 COPY .\exe\x86\6500Compiler.exe .\compilers\6500Compiler\ /Y

@@ -7,6 +7,127 @@
 #include <sstream>
 
 // ---
+bool MCHEmul::Computer::CompositeAction::execute (MCHEmul::Computer* c)
+{
+	bool result = true;
+	for (auto& i : _actions)
+		result &= i -> execute (c);
+	return (result);
+}
+
+// ---
+bool MCHEmul::Computer::NoAction::execute (MCHEmul::Computer* c)
+{
+	// What to do now will depend on was the last action was...
+	switch (c -> _lastAction)
+	{
+		// The status doesn't change as there is nothing else to do...
+		case MCHEmul::Computer::_ACTIONNOTHING:
+			break;
+
+		// After stopping or executing a "next command" the CPU maintains stopped...
+		// This situation will become the first in the next cycle....
+		case MCHEmul::Computer::_ACTIONSTOP:
+		case MCHEmul::Computer::_ACTIONNEXT:
+			{
+				c -> _status = MCHEmul::Computer::_STATUSSTOPPED;
+			}
+
+			break;
+
+		// In this case, if after executing the "next stack command" the position of the
+		// stack is the same than after the beginning, the CPU stops, any other case
+		// it continues working executing another action...
+		case MCHEmul::Computer::_ACTIONNEXTSTACK:
+			{
+				MCHEmul::Computer::NextStackCommandAction* act = 
+					static_cast <MCHEmul::Computer::NextStackCommandAction*> 
+						(c -> _templateListActions [_ACTIONNEXTSTACK]);
+				if (act -> initialPosition () == c -> memory () -> stack () -> position ())
+				{
+					c -> _status = MCHEmul::Computer::_STATUSSTOPPED;
+
+					// Ready for a similar command...
+					act -> init ();
+				}
+				else
+				{ 
+					c -> _status = MCHEmul::Computer::_STATUSRUNNING;
+
+					// Bear in mind, that this is the only situation
+					// where the _actionForNextCycle is set to another value...
+					c -> _actionForNextCycle = MCHEmul::Computer::_ACTIONNEXTSTACK;
+				}
+			}
+
+			break;
+
+		// In this case, keep running.
+			// This situation will become the first in the next cycle...
+		case MCHEmul::Computer::_ACTIONCONTINUE:
+			{ 
+				c -> _status = MCHEmul::Computer::_STATUSRUNNING;
+			}
+
+			break;
+	}
+
+	return (c -> _status == MCHEmul::Computer::_STATUSRUNNING);
+}
+
+// ---
+bool MCHEmul::Computer::StopAction::execute (MCHEmul::Computer* c)
+{
+	c -> _status = MCHEmul::Computer::_STATUSSTOPPED;
+
+	return (false);
+}
+
+// ---
+bool MCHEmul::Computer::ContinueAction::execute (MCHEmul::Computer* c)
+{
+	c -> _status = MCHEmul::Computer::_STATUSRUNNING;
+
+	return (true);
+}
+
+// ---
+bool MCHEmul::Computer::NextCommandAction::execute (MCHEmul::Computer* c)
+{
+	c -> _status = MCHEmul::Computer::_STATUSRUNNING;
+
+	// When the execution is done step by step...
+	// ...flusing the memory is better to trace what happens (if configured)
+	// Otherwise misunderstandings could happen...
+	c -> memory () -> configuration ().executeMemorySetCommandsBuffered ();
+
+	return (true);
+}
+
+// ----
+bool MCHEmul::Computer::NextStackCommandAction::execute (MCHEmul::Computer* c)
+{
+	// Meaning not initialized...
+	if (_initialPosition == -1) 
+	{
+		_initialPosition = c -> memory () -> stack () -> position ();
+
+		c -> _status = MCHEmul::Computer::_STATUSRUNNING;
+	}
+	// But if it was, the status will depend on whether 
+	// the stack position is or not what it was at the beginning...
+	else
+		c -> _status = 
+			(_initialPosition == c -> memory () -> stack () -> position ())
+				? MCHEmul::Computer::_STATUSSTOPPED
+				: MCHEmul::Computer::_STATUSRUNNING;
+
+	c -> memory () -> configuration ().executeMemorySetCommandsBuffered ();
+
+	return (c -> _status == MCHEmul::Computer::_STATUSRUNNING);
+}
+
+// ---
 MCHEmul::Computer::Computer (
 		MCHEmul::CPU* cpu, 
 		const MCHEmul::Chips& c, 
@@ -90,7 +211,8 @@ MCHEmul::Computer::Computer (
 			{ MCHEmul::Computer::_ACTIONNOTHING,	new MCHEmul::Computer::NoAction }, 
 			{ MCHEmul::Computer::_ACTIONCONTINUE,	new MCHEmul::Computer::ContinueAction }, 
 			{ MCHEmul::Computer::_ACTIONSTOP,		new MCHEmul::Computer::StopAction }, 
-			{ MCHEmul::Computer::_ACTIONNEXT,		new MCHEmul::Computer::NextCommandAction}
+			{ MCHEmul::Computer::_ACTIONNEXT,		new MCHEmul::Computer::NextCommandAction },
+			{ MCHEmul::Computer::_ACTIONNEXTSTACK,	new MCHEmul::Computer::NextStackCommandAction }
 		};
 
 	// Generate the plain vision of both chips and devices
@@ -250,6 +372,8 @@ bool MCHEmul::Computer::initialize (bool iM)
 	_templateListActions = std::vector <MCHEmul::Computer::Action*> (maxTAId + 1, nullptr);
 	for (auto& i : _templateActions)
 		_templateListActions [i.second -> id ()] = i.second;
+	static_cast <MCHEmul::Computer::NextStackCommandAction*> 
+		(_templateListActions [MCHEmul::Computer::_ACTIONNEXTSTACK]) -> init (); // To be sure...
 
 	// Does the computer have to start stopped?
 	if (_startStopped)
@@ -334,14 +458,15 @@ bool MCHEmul::Computer::runComputerCycle (unsigned int a)
 	// Maybe there will be some to be execute at the point where the CPU is now stopped
 	// The action received in the loop is passed to the method to 
 	// be considered in the decision in case of conflict!
+	// NOTE: The variable _actionForNextCycle is set to _ACTIONNOTHING by default...
+	// ...but some specific action when executed could set another value.
 	if (!executeActionAtPC (a))
 	{
-		_actionForNextCycle = MCHEmul::Computer::_ACTIONNOTHING;
+		MCHEmul::Memory::configuration ().executeMemorySetCommandsBuffered ();
 
-		return (true); // It has decided not to execute the cycle...
+		return (true); // It has decided not to execute the cycle, 
+					   // however the memory actions are unbufefred if any! (to trace the program properly)...
 	}
-
-	_actionForNextCycle = MCHEmul::Computer::_ACTIONNOTHING;
 
 	// The CPU is executed only when the computer is stable...
 	if (_stabilized)
@@ -583,6 +708,10 @@ bool MCHEmul::Computer::executeActionAtPC (unsigned int a)
 			: (at == _actionsAt.end ()) 
 				? MCHEmul::Computer::_ACTIONNOTHING
 				: (*at).second;
+
+	// By defaultm the next action is set to nothing...
+	_actionForNextCycle = MCHEmul::Computer::_ACTIONNOTHING;
+	// ...but the method executed next could set another value...
 
 	// Get the action from the template...
 	bool result = false;

@@ -46,6 +46,8 @@ bool F6500::C6500::initialize ()
 	addClockCycles (6);
 	// Initially the interruptions are disabled!
 	statusRegister ().setBitStatus (F6500::C6500::_IRQFLAG, false);
+	// ...and remember that the bit 5 is always true...
+	statusRegister ().setBitStatus (5, true); // This is also done at construction time...
 	// Sets the point where the execution starts!
 	restartPC ();
 

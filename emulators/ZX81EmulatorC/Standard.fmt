@@ -349,6 +349,9 @@ Current:@INST@
 ;CNEXT
 #---
 #---
+;CNEXTSTACK
+#---
+#---
 ;CSHOWNEXT
 @CODELINES?{key=NO,equal=:,empty=no code\n}\n@
 #---

@@ -45,6 +45,7 @@ namespace MCHEmul
 		static const unsigned int _ACTIONSTOP = 1; // Meaning to stop the execution of the program...
 		static const unsigned int _ACTIONCONTINUE = 2; // Menaing to continue the execution until any other stop action is found...
 		static const unsigned int _ACTIONNEXT = 3; // Meaning to execute just only the next instruction...
+		static const unsigned int _ACTIONNEXTSTACK = 4; // Meaning to execute the next instructions until the stack was the same that the first time...
 
 		/** The types of status that a computer can have. */
 		static const unsigned int _STATUSRUNNING = 0;
@@ -86,7 +87,7 @@ namespace MCHEmul
 
 			/** It will return true when all elements return true, 
 				and false in other circunstance. */
-			virtual inline bool execute (Computer* c) override;
+			virtual bool execute (Computer* c) override;
 
 			protected:
 			Actions _actions;
@@ -101,7 +102,7 @@ namespace MCHEmul
 				: Action (Computer::_ACTIONNOTHING)
 							{ }
 			
-			virtual inline bool execute (Computer*) override;
+			virtual bool execute (Computer*) override;
 		};
 
 		/** A clear and simple action is just to stop the execution. */
@@ -112,7 +113,7 @@ namespace MCHEmul
 				: Action (Computer::_ACTIONSTOP)
 							{ }
 
-			virtual inline bool execute (Computer* c) override;
+			virtual bool execute (Computer* c) override;
 		};
 
 		/** In the opposite side, the action is to continue with the execution. */
@@ -123,10 +124,10 @@ namespace MCHEmul
 				: Action (Computer::_ACTIONCONTINUE)
 							{ }
 
-			virtual inline bool execute (Computer* c) override;
+			virtual bool execute (Computer* c) override;
 		};
 
-		/** Move to the next instrction. */
+		/** Move to the next instruction. */
 		class NextCommandAction final : public Action
 		{
 			public:
@@ -134,7 +135,30 @@ namespace MCHEmul
 				: Action (Computer::_ACTIONNEXT)
 							{ }
 
-			virtual inline bool execute (Computer* c) override;
+			virtual bool execute (Computer* c) override;
+		};
+
+		/** Move to the next instruction that maintains the position in the stack.
+			That's it, the execution will continue until the position of the stack
+			was the same than the first time it was executed. */
+		class NextStackCommandAction final : public Action
+		{
+			public:
+			NextStackCommandAction ()
+				: Action (Computer::_ACTIONNEXTSTACK),
+				  _initialPosition (-1) // meaning no initialized...
+							{ }
+
+			void init ()
+							{ _initialPosition = -1; }
+
+			int initialPosition () const
+							{ return (_initialPosition); }
+
+			virtual bool execute (Computer* c) override;
+
+			private:
+			int _initialPosition;
 		};
 
 		using TemplateOfActions = std::map <unsigned int, Action*>;
@@ -527,65 +551,6 @@ namespace MCHEmul
 		mutable unsigned short _currentStabilizationLoops;
 		std::vector <Action*> _templateListActions; // The same the template of actions but in a vector to speed up access...
 	};
-
-	// ---
-	inline bool Computer::CompositeAction::execute (Computer* c)
-	{
-		bool result = true;
-		for (auto& i : _actions)
-			result &= i -> execute (c);
-		return (result);
-	}
-
-	// ---
-	inline bool Computer::NoAction::execute (Computer* c)
-	{
-		// What to do now will depend on was the last action was...
-		switch (c -> _lastAction)
-		{
-			case Computer::_ACTIONNOTHING:
-				// The status doesn't change as there is nothing else to do...
-				break;
-
-			case Computer::_ACTIONSTOP:
-			case Computer::_ACTIONNEXT:
-				c -> _status = Computer::_STATUSSTOPPED;
-				break;
-
-			case Computer::_ACTIONCONTINUE:
-				c -> _status = Computer::_STATUSRUNNING;
-				break;
-		}
-
-		return (c -> _status == Computer::_STATUSRUNNING);
-	}
-
-	// ---
-	inline bool Computer::StopAction::execute (Computer* c)
-	{
-		c -> _status = Computer::_STATUSSTOPPED;
-
-		return (false);
-	}
-
-	// ---
-	inline bool Computer::ContinueAction::execute (Computer* c)
-	{
-		c -> _status = Computer::_STATUSRUNNING;
-
-		return (true);
-	}
-
-	// ---
-	inline bool Computer::NextCommandAction::execute (Computer* c)
-	{
-		c -> _status = Computer::_STATUSRUNNING;
-
-		// Flush the memory, if needed...
-		c -> memory () -> configuration ().executeMemorySetCommandsBuffered ();
-
-		return (true);
-	}
 }
 
 #endif

@@ -139,11 +139,14 @@ namespace C64
 		virtual MCHEmul::MemoryView* lookForCPUView () override
 							{ return (view (_CPU_VIEW)); }
 
-		static MCHEmul::Memory::Content standardMemoryContent ();
-
 		/** Invoked from the cartridge. */
 		void setExtensionAt (Cartridge* c)
 							{ _cartridge = c; }
+
+		/** To debug the memory configuration. */
+		void debugMemoryConfiguration ();
+
+		static MCHEmul::Memory::Content standardMemoryContent ();
 
 		private:
 		Cartridge* _cartridge;

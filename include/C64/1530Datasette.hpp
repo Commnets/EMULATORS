@@ -28,7 +28,7 @@ namespace C64
 
 		private:
 		/** To load the info just only inthe RAM. */
-		virtual void loadDataBlockInRAM (const MCHEmul::DataMemoryBlock& dB, MCHEmul::CPU* cpu)
+		virtual void loadDataBlockInRAM (const MCHEmul::DataMemoryBlock& dB, MCHEmul::CPU* cpu) override
 							{ static_cast <C64::Memory*> (cpu -> memoryRef ()) -> loadDataBlockInRAM (_data._data [_dataCounter]); }
 	};
 }

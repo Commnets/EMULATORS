@@ -26,6 +26,7 @@ const std::string MCHEmul::StopCPUCommand::_NAME = "CSTOP";
 const std::string MCHEmul::RunCPUCommand::_NAME = "CRUN";
 const std::string MCHEmul::SetProgramCounterCommand::_NAME = "CSETPC";
 const std::string MCHEmul::NextInstructionCommand::_NAME = "CNEXT";
+const std::string MCHEmul::NextInstructionUntilStackCommand::_NAME = "CNEXTSTACK";
 const std::string MCHEmul::ShowNextInstructionCommand::_NAME = "CSHOWNEXT";
 const std::string MCHEmul::LastIntructionCPUCommand::_NAME = "CINST";
 const std::string MCHEmul::ListOfBreakPointsCommand::_NAME = "CBREAKS";
@@ -434,6 +435,20 @@ void MCHEmul::NextInstructionCommand::executeImpl (MCHEmul::CommandExecuter* cE,
 }
 
 // ---
+void MCHEmul::NextInstructionUntilStackCommand::executeImpl 
+	(MCHEmul::CommandExecuter* cE, MCHEmul::Computer* c, MCHEmul::InfoStructure& rst)
+{
+	if (c == nullptr)
+		return;
+
+	c -> setActionForNextCycle (MCHEmul::Computer::_ACTIONNEXTSTACK);
+
+	// To show status after execution...
+	if (cE != nullptr)
+		cE -> executeCommand (cE -> commandBuilder () -> command ("CPUSSTATUS"), c);
+}
+
+// ---
 void MCHEmul::ShowNextInstructionCommand::executeImpl 
 	(MCHEmul::CommandExecuter* cE, MCHEmul::Computer* c, MCHEmul::InfoStructure& rst)
 {
@@ -478,18 +493,29 @@ void MCHEmul::LastIntructionCPUCommand::executeImpl (MCHEmul::CommandExecuter* c
 	if (c == nullptr)
 		return;
 
-	rst.add ("CYCLES", c -> cpu () -> lastInstruction () -> totalClockCyclesExecuted ());
-	rst.add ("CLK", c -> cpu () -> clockCycles ());
-	/** The instruction is added in the format of a byte code line. */
-	rst.add ("INST", c -> cpu () -> lastInstruction () == nullptr 
-		? "-" 
-		: MCHEmul::ByteCodeLine (
-			c -> cpu () -> lastInstruction () -> programCounter ().asAddress (), // Before the execution
-			c -> cpu () -> lastInstruction () -> parameters ().bytes (), // The bytes of the instruction
-			"", /** No label recognized. */
-			c -> cpu () -> lastInstruction (), 
-			c -> action (c -> cpu () -> programCounter ().asAddress ())).
-				asString (MCHEmul::UByte::OutputFormat::_HEXA, ' ', 2));
+	// If there is no instruction executed yet...
+	if (c -> cpu () -> lastInstruction () == nullptr)
+	{
+		// ...nohing makes sense...
+		rst.add ("CYCLES", std::string ("-"));
+		rst.add ("CLK", std::string ("-"));
+		rst.add ("INST", std::string ("-"));
+	}
+	else
+	{
+		rst.add ("CYCLES", c -> cpu () -> lastInstruction () -> totalClockCyclesExecuted ());
+		rst.add ("CLK", c -> cpu () -> clockCycles ());
+		/** The instruction is added in the format of a byte code line. */
+		rst.add ("INST", c -> cpu () -> lastInstruction () == nullptr 
+			? "-" 
+			: MCHEmul::ByteCodeLine (
+				c -> cpu () -> lastInstruction () -> programCounter ().asAddress (), // Before the execution
+				c -> cpu () -> lastInstruction () -> parameters ().bytes (), // The bytes of the instruction
+				"", /** No label recognized. */
+				c -> cpu () -> lastInstruction (), 
+				c -> action (c -> cpu () -> programCounter ().asAddress ())).
+					asString (MCHEmul::UByte::OutputFormat::_HEXA, ' ', 2));
+	}
 }
 
 // ---

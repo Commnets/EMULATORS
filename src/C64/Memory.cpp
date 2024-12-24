@@ -324,39 +324,7 @@ void C64::Memory::configureMemoryStructure (bool basic, bool kernel, bool chrRom
 		_cartridge -> configureMemoryStructure (romL, romH1, romH2CPU, romH2VIC);
 
 	// Print out the status of the configuration if debug active...
-	if (deepDebugActive ())
-	{
-		auto bN =  [](bool st) -> std::string 
-			{ return (st ? "YES" : "NO"); };
-		auto mSts = [=](MCHEmul::PhysicalStorageSubset* p) -> std::string 
-			{ return ("(" + bN (p -> active ()) + "," + bN (p -> activeForReading ()) + ")"); };
-
-		bool fl = true;
-		std::string sts;
-		for (size_t i = 0; i < _memStrList.size (); i++)
-		{
-			if (((i % 4) == 0))
-			{
-				sts += "\n\t\t\t\t"; // Every 4 change the line but maintain the indent...
-
-				fl = true;
-			}
-
-			sts += (!fl ? "," : "") + _memStrNamesList [i] + mSts (_memStrList [i]);
-
-			fl = false;
-		}
-
-		*_deepDebugFile
-			// Where
-			<< "C64 Memory\t" 
-			// When
-			<< "-" << "\t" // clock cycles at that point
-			// What
-			<< "Change Configuration\t\t"
-			// Data
-			<< sts << "\n";
-	}
+	_IFDEBUG debugMemoryConfiguration ();
 }
 
 // ---
@@ -384,6 +352,38 @@ void C64::Memory::loadDataBlockInRAM (const MCHEmul::DataMemoryBlock& dB)
 
 		_memStrList [i] -> setActiveForReading (aRM [i]);
 	}
+}
+
+// ---
+void C64::Memory::debugMemoryConfiguration ()
+{
+	auto bN =  [](bool st) -> std::string 
+		{ return (st ? "YES" : "NO"); };
+	auto mSts = [=](MCHEmul::PhysicalStorageSubset* p) -> std::string 
+		{ return ("(" + bN (p -> active ()) + "," + bN (p -> activeForReading ()) + ")"); };
+
+	bool fl = true;
+	MCHEmul::Strings sts = { };
+	std::string st = "";
+	for (size_t i = 0; i < _memStrList.size (); i++)
+	{
+		if (((i % 4) == 0) && i != 0)
+		{
+			sts.push_back (st);
+
+			st = "";
+
+			fl = true;
+		}
+
+		st += (!fl ? "," : "") + _memStrNamesList [i] + mSts (_memStrList [i]);
+
+		fl = false;
+	}
+
+	_deepDebugFile -> 
+		writeCompleteLine ("C64 Memory", 
+			(std::numeric_limits <unsigned int>::max)() /** To prevent the use of the macro. */, "Change Configuration", sts);
 }
 
 // ---

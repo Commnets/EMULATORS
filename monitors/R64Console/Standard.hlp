@@ -151,8 +151,18 @@ Take care using this command only because Program Counter is changed before star
 R can also be used instead.
 The value of the address can be given in decimal, hexadecimal ($), octal (o) or binary (z).
 ;NEXT
-To execute the next instruction after being stopped.
+To execute the next instruction.
 N can also be used instead.
+No parameters are needed.
+;NEXTSTACK
+To execute  instructions until the stack position was the same that at the beginning.
+This could be  useful to jump over routines when required.
+Notice that only the position of the stack is taken into account 
+and not the execution of instructions that go or come back to or from routines.
+It has been done so, to be CPU independent.
+Take care using this command because in some implementations (e.g ZX81) could not make any sense.
+ZX81 manages the return position of a routine changing the values of the stack.
+NS can also be used instead.
 No parameters are needed.
 ;SHOWNEXT [NUMBER]
 Just to show the instruction about to be executed.

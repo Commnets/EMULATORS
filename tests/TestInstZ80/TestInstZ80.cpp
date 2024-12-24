@@ -31,7 +31,7 @@ int _tmain (int argc, _TCHAR *argv [])
 		!test.noimplemented ().empty ())
 	{
 		size_t nT = 0;
-		std::cout << "Results:" 
+		std::cout << "Results:" << std::endl
 				  << "Total Tests:" << test.totalTests () << std::endl;
 
 		std::cout << "Tests not implemented:" << std::endl;
