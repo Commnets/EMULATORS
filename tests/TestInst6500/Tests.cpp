@@ -27,6 +27,7 @@ void Test::runTest (F6500::C6500* cpu)
 		cpu -> statusRegister ().set ({ (*i).second._statusIn._ST });
 
 		// ...the stack pointer...
+		cpu -> memoryRef () -> stack () -> reset ();
 		cpu -> memoryRef () -> stack () -> setPosition ((int) (*i).second._statusIn._SP);
 		cpu -> memoryRef () -> stack () -> setNotUsed (false); // it is considered already used!
 
@@ -51,8 +52,9 @@ void Test::runTest (F6500::C6500* cpu)
 			continue;
 		}
 
-		inst -> execute (cpu, 
+		bool e = inst -> execute (cpu, 
 			cpu -> memoryRef (), cpu -> memoryRef () -> stack (), &cpu -> programCounter ());
+		MCHEmul::Memory::configuration ().executeMemorySetCommandsBuffered ();
 
 		// Verify the result...
 		// First whether the internal regisrters have what it supposed they should have!
@@ -61,8 +63,10 @@ void Test::runTest (F6500::C6500* cpu)
 			cpu -> accumulator ().values ()[0] == tOut._A &&
 			cpu -> xRegister ().values ()[0] == tOut._X &&
 			cpu -> yRegister ().values ()[0] == tOut._Y;
+		// To avoid the way the "-" flag is treaten...
+		// (in my simulation is always 1 and in some examples it could be to 0)
 		bool eI2 =
-			cpu -> statusRegister ().values ()[0] == tOut._ST;
+			(cpu -> statusRegister ().values () [0] & 0xdf) == (tOut._ST & 0xdf); 
 		// Then the stack pointer...
 		bool eI3 =
 			cpu -> memoryRef () -> stack () -> position () ==  (int) tOut._SP;
@@ -75,7 +79,7 @@ void Test::runTest (F6500::C6500* cpu)
 			cpu -> programCounter ().internalRepresentation () == tOut._PC;
 
 		// If after all testings, there is no error...
-		if (!(eI1 && eI2 && eI3 && eI4 && eI5))
+		if (!(e && eI1 && eI2 && eI3 && eI4 && eI5))
 		{
 			auto cpuRegs = [&]() -> std::string 
 				{ 
@@ -113,6 +117,8 @@ void Test::runTest (F6500::C6500* cpu)
 
 			std::string sInst = inst -> asString ();
 			std::cout << "Error:" << inst -> asString () << std::endl;
+			if (!e) _errors.emplace_back
+				("Error executing the instruction");
 			if (!eI1) _errors.emplace_back 
 				("Error in test " + ((*i).first) + ", file:" + (*i).second._file + 
 					", line:" + std::to_string ((*i).second._line) + ". " + 

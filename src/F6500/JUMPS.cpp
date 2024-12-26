@@ -65,7 +65,12 @@ _INST_IMPL (F6500::RTI)
 
 	// See the part of the logic where the interruptions are managed, 
 	// to see how status register is also saved!
-	cpu () -> statusRegister ().set (stack () -> pull (1));
+	MCHEmul::StatusRegister& st = cpu () -> statusRegister ();
+	st.set (stack () -> pull (1));
+	// The bit 5 must always be set in this implementation...
+	st.setBitStatus (5, true);
+	// ...and the bit 4 is psuhed back to false
+	st.setBitStatus (F6500::C6500::_BREAKFLAG, false);
 
 	// The interruption is no longer under execution but...which one?
 	// Just in case both are set off...

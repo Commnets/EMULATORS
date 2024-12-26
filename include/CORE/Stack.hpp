@@ -21,15 +21,46 @@ namespace MCHEmul
 	class Stack final : public PhysicalStorageSubset
 	{
 		public:
+		/** The configuration of the way the stack works. 
+			The parameters can be accessed directly. */
+		struct Configuration
+		{
+			Configuration ()
+				: _fromBack (true),
+				  _pointToEmpty (true),
+				  _detectOverflow (true),
+				  _maxSize (-1) // meaning the limit position of the memory...
+							{ }
+
+			Configuration (bool b, bool e, bool o, int s)
+				: _fromBack (b), 
+				  _pointToEmpty (e),
+				  _detectOverflow (o),
+				  _maxSize (s)
+							{ }
+
+			/** To start to insert from the las position backwards. */
+			bool _fromBack;
+			/** The stack pointer is always pointing to the empty position,
+				or it is pointing to the last written one? .*/
+			bool _pointToEmpty;
+			/* *Is it needed to detect when the stack pointer goes out of limits? */
+			bool _detectOverflow;
+			/** Which is ths max size of the stack pointer. 
+				-1 will mean that that max limit is the limit of the memory where the stacj is defeined. */
+			int _maxSize; // Like the max position in address...
+		};
+
 		/**
 		  * Constructor:
 		  * The ones needed by the parent class.
-		  * @param b	: From the end of the memory to the beggining or the other way around
-		  * @param e	: Poining always to the empty place or pointing to the last position kept.
+		  * @param cfg	: The way the stack works. Look above.
 		  */
-		Stack (int id, PhysicalStorage* ps, size_t pp, const Address& iA, size_t s, bool b = true, bool e = true)
+		Stack (int id, PhysicalStorage* ps, size_t pp, const Address& iA, size_t s, 
+				const Configuration& cfg = Configuration ())
 			: PhysicalStorageSubset (id, ps, pp, iA, s), 
-			  _position (0), _fromBack (b), _pointToEmpty (e),
+			  _position (0),
+			  _configuration (cfg),
 			  _overflow (false),
 			  _notUsed (true)
 							{ setClassName ("Stack"); }
@@ -51,6 +82,11 @@ namespace MCHEmul
 		/** To move to the beginning. */
 		void reset ();
 
+		/** To get the configuration of the stack. 
+			Omnce the configuration is set can not be changed!. */
+		const Configuration& configuration () const
+							{ return (_configuration); }
+
 		virtual void initialize () override;
 
 		/** To manage the stack. */
@@ -59,8 +95,11 @@ namespace MCHEmul
 
 		/** It is true when the stack is empty. */
 		bool empty () const
-							{ return (_notUsed ? true 
-								: (_fromBack ? (_position == (int) (size () - 1)) : (_position == 0))); }
+							{ return (_notUsed 
+								? true 
+								: (_configuration._fromBack 
+									? (_position == (int) (size () - 1)) 
+									: (_position == 0))); }
 		/** It is set to true when something happens after push or pull actions. */
 		bool overflow () const
 							{ return (_overflow); }
@@ -89,13 +128,12 @@ namespace MCHEmul
 		virtual InfoStructure getInfoStructure () const override;
 
 		private:
+		const Configuration _configuration; // Asjusted at the constructor...
 		int _position;
-		const bool _fromBack = true; // Adapted at construction time
-		const bool _pointToEmpty = true; // Adapted at construction time
 
 		// Implementation
 		bool _overflow;
-		bool _notUsed;
+		bool _notUsed; // Has it ever been used?
 	};
 }
 

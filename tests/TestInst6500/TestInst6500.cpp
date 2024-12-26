@@ -20,7 +20,7 @@ int _tmain (int argc, _TCHAR *argv [])
 	std::cout << "Copyright (C) 2024 by Ignacio Cea" << std::endl;
 	std::cout << "To test (against results) the different instructions of the 6500 family" << std::endl;
 	std::cout << "/h For help" << std::endl;
-	std::cout << "/n[FILENAME]: For the name of the file with the opcode of the instructions to test" << std::endl;
+	std::cout << "/n[FILENAME]: For a bulk of tests" << std::endl;
 	std::cout << "/t[TESTPERINST]: With the max number of tests to do per instruction" << std::endl << std::endl;
 
 	bool h = false;

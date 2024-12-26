@@ -5,7 +5,7 @@
 // ---
 void MCHEmul::Stack::reset ()
 { 
-	_position = _fromBack ? (int) (size () - 1) : 0; 
+	_position = _configuration._fromBack ? (int) (size () - 1) : 0; 
 	_overflow = false; 
 	_notUsed = true; // No elements so far at the beginning...
 }
@@ -30,11 +30,11 @@ void MCHEmul::Stack::push (const MCHEmul::UBytes& v)
 			i != v.bytes ().end () && !_overflow; i++)
 	{
 		// When the stack is filled from the highest address down to 0...
-		if (_fromBack)
+		if (_configuration._fromBack)
 		{
 			// Filling from highest down to 0, but
 			// The stack pointer points to an empty position? 
-			if (_pointToEmpty)
+			if (_configuration._pointToEmpty)
 			{
 				// In that case, 
 				// If would be only possible to insert a new byte when that pointer is >= 0 (never less than 1)
@@ -64,7 +64,7 @@ void MCHEmul::Stack::push (const MCHEmul::UBytes& v)
 		// When the stack is filled from the position 0 to the highest possible...
 		else
 		{
-			if (_pointToEmpty)
+			if (_configuration._pointToEmpty)
 			{
 				if (!(_overflow = ((size_t) _position >= size ())))
 				{
@@ -105,9 +105,9 @@ MCHEmul::UBytes MCHEmul::Stack::pull (size_t nV)
 
 	for (size_t i = 0; i < nV && !_overflow; i++)
 	{
-		if (_fromBack)
+		if (_configuration._fromBack)
 		{
-			if (_pointToEmpty)
+			if (_configuration._pointToEmpty)
 			{
 				if (!(_overflow = ((size_t) _position >= size ())))
 				{
@@ -128,7 +128,7 @@ MCHEmul::UBytes MCHEmul::Stack::pull (size_t nV)
 		}
 		else
 		{
-			if (_pointToEmpty)
+			if (_configuration._pointToEmpty)
 			{
 				if (!(_overflow = (_position < 0)))
 				{
@@ -163,8 +163,8 @@ MCHEmul::InfoStructure MCHEmul::Stack::getInfoStructure () const
 	MCHEmul::InfoStructure result = std::move (MCHEmul::InfoClass::getInfoStructure ());
 
 	result.add ("PhysicalStorageSubset",	std::move (MCHEmul::PhysicalStorageSubset::getInfoStructure ()));
-	result.add ("BACK",						_fromBack );
-	result.add ("LAST",						_pointToEmpty );
+	result.add ("BACK",						_configuration._fromBack );
+	result.add ("LAST",						_configuration._pointToEmpty );
 	result.add ("OVERFLOW",					_overflow );
 	result.add ("EMPTY",					_notUsed );
 	result.add ("POSITION",					_position);

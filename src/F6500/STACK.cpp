@@ -19,7 +19,7 @@ _INST_IMPL (F6500::PHP)
 
 	stack () -> push (_lastExecutionData._INOUTData = 
 		cpu () -> statusRegister ().values ()); // 1 byte long...
-
+	
 	return (!stack () -> overflow ());
 }
 
@@ -44,8 +44,10 @@ _INST_IMPL (F6500::PLP)
 {
 	assert (parameters ().size () == 1);
 
-	cpu () -> statusRegister ().set 
-		(_lastExecutionData._INOUTData = stack () -> pull (1 /** 1 byte long. */));
+	MCHEmul::StatusRegister& st = cpu () -> statusRegister ();
+	st.set (_lastExecutionData._INOUTData = stack () -> pull (1 /** 1 byte long. */));
+	// The but 5 must always be set in this implementation
+	st.setBitStatus (5, true);
 
 	return (!stack () -> overflow ());
 }

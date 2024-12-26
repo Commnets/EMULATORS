@@ -10,7 +10,8 @@ MCHEmul::Memory::Content FZ80::PlainMemoryTest::basicContent ()
 
 	// 0x0000 - 0xffff = 65536 bytes
 	MCHEmul::Stack*  Stack = new MCHEmul::Stack 
-		(0x00, RAM, 0x0000, MCHEmul::Address ({ 0x00, 0x00 }, false), 0x10000, true, false); 
+		(0x00, RAM, 0x0000, MCHEmul::Address ({ 0x00, 0x00 }, false), 0x10000, 
+			MCHEmul::Stack::Configuration (true, false /** pointing always to the last. */, true, -1));
 
 	MCHEmul::PhysicalStorageSubsets AllSubsets ({ { 0x00, Stack } });
 

@@ -237,9 +237,10 @@ namespace F6500
 	{
 		assert (parameters ().size () == 2);
 
-		return (_lastExecutionData._INOUTAddress = 
-			MCHEmul::Address ({ parameters ()[1] }) + 
-				(size_t) (registerY ()[0].value ())); 
+		MCHEmul::Address pg0A = 
+			MCHEmul::Address ({ parameters ()[1] }) + (size_t) (registerY ()[0].value ());
+		if (pg0A.value () > (unsigned int) 0x00ff) pg0A -= (size_t) 0x0100; // To avoid go out of the limits...
+		return (_lastExecutionData._INOUTAddress = pg0A);
 	}
 
 	// ---

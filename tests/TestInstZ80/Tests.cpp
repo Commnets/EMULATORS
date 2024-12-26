@@ -73,6 +73,7 @@ void Test::runTest (FZ80::CZ80* cpu)
 		cpu -> iRegister ().set ({ (*i).second._status._I });
 		cpu -> rRegister ().set ({ (*i).second._status._R });
 		// ...the stack pointer...
+		cpu -> memoryRef () -> stack () -> reset (); // Just in case...
 		cpu -> memoryRef () -> stack () -> setPosition ((int) (*i).second._status._SP);
 		cpu -> memoryRef () -> stack () -> setNotUsed (false); // it is considered already used!
 		// ..the info about the interrupts (INT specially)...
@@ -112,6 +113,7 @@ void Test::runTest (FZ80::CZ80* cpu)
 
 			e = !nI -> execute (cpu, cpu -> memoryRef (), 
 				cpu -> memoryRef () -> stack (), &cpu -> programCounter ());
+			MCHEmul::Memory::configuration ().executeMemorySetCommandsBuffered ();
 			
 			j += nI -> clockCyclesExecuted () + nI -> additionalClockCyclesExecuted ();
 

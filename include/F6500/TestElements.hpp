@@ -30,7 +30,7 @@ namespace F6500
 
 		private:
 		virtual MCHEmul::Stack* lookForStack () override
-							{ return (dynamic_cast <MCHEmul::Stack*> (subset (0))); }
+							{ return (dynamic_cast <MCHEmul::Stack*> (subset (1))); }
 		virtual MCHEmul::MemoryView* lookForCPUView () override
 							{ return (view (0)); }
 
@@ -48,7 +48,7 @@ namespace F6500
 
 		private:
 		virtual MCHEmul::Stack* lookForStack () override
-							{ return (dynamic_cast <MCHEmul::Stack*> (subset (0))); }
+							{ return (dynamic_cast <MCHEmul::Stack*> (subset (1))); }
 		virtual MCHEmul::MemoryView* lookForCPUView () override
 							{ return (view (0)); }
 
