@@ -45,13 +45,14 @@ void Test::runTest (F6500::C6500* cpu)
 					cpu -> programCounter ().asAddress (), cpu -> architecture ().instructionLength ()),
 				cpu -> architecture ().bigEndian ()).asUnsignedInt ();
 		MCHEmul::Instruction* inst = nullptr;
-		if ((inst = cpu -> instruction (nInst)) == nullptr)
+		if (!cpu -> existsInstruction (nInst))
 		{
 			_errors.emplace_back ("Instruction not implemented:" + std::to_string (nInst));
 
 			continue;
 		}
 
+		inst = cpu -> instruction (nInst);
 		bool e = inst -> execute (cpu, 
 			cpu -> memoryRef (), cpu -> memoryRef () -> stack (), &cpu -> programCounter ());
 		MCHEmul::Memory::configuration ().executeMemorySetCommandsBuffered ();
@@ -226,8 +227,6 @@ Test::TestsDataMap Test::readTest (const std::string& t, unsigned int mtpc, unsi
 		{
 			testData._name = j.at ("name");
 
-			std::cout << "Creating: " + testData._name + " test" << std::endl;
-
 			auto in = j.at ("initial");
 			testData._statusIn._A  = (unsigned char)  in.at ("a");
 			testData._statusIn._X  = (unsigned char)  in.at ("x");
@@ -258,7 +257,7 @@ Test::TestsDataMap Test::readTest (const std::string& t, unsigned int mtpc, unsi
 
 			if (result.find (testData._name) == result.end ())
 				result.insert (Test::TestsDataMap::value_type 
-					(MCHEmul::fixLenStr (std::to_string (ict + ct), 4, true, MCHEmul::_CEROS), testData));
+					(MCHEmul::fixLenStr (std::to_string (ict + ct), 8, true, MCHEmul::_CEROS), testData));
 			else
 				_errors.emplace_back ("Test repeated: " + testData._name);
 		}

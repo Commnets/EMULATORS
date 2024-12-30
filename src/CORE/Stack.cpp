@@ -5,9 +5,15 @@
 // ---
 void MCHEmul::Stack::reset ()
 { 
-	_position = _configuration._fromBack ? (int) (size () - 1) : 0; 
+	_position = _configuration._fromBack 
+		? ((_configuration._maxSize == -1) 
+			? (int) (size () - 1) 
+			: (_configuration._maxSize - 1))
+		: 0;
+
 	_overflow = false; 
-	_notUsed = true; // No elements so far at the beginning...
+
+	_notUsed = true; // No elements considered so far at the beginning...
 }
 
 // ---
@@ -24,72 +30,30 @@ void MCHEmul::Stack::push (const MCHEmul::UBytes& v)
 	if (_overflow)
 		return;
 
-	_overflow = false;
-
 	for (std::vector <MCHEmul::UByte>::const_iterator i = v.bytes ().begin (); 
 			i != v.bytes ().end () && !_overflow; i++)
 	{
-		// When the stack is filled from the highest address down to 0...
-		if (_configuration._fromBack)
-		{
-			// Filling from highest down to 0, but
-			// The stack pointer points to an empty position? 
-			if (_configuration._pointToEmpty)
-			{
-				// In that case, 
-				// If would be only possible to insert a new byte when that pointer is >= 0 (never less than 1)
-				if (!(_overflow = (_position < 0)))
-				{
-					set (initialAddress () + (size_t) _position, (*i));
-
-					_position--; // After that it could be negative and no other insertion will allowed later!
-				}
-			}
-			else
-			{
-				// The pointer doesn't move after this first insertion!
-				if (_notUsed)
-					set (initialAddress () + (size_t) _position, (*i)); // And not move the pointer...
-				else
-				{
-					if (!(_overflow = (_position < 1)))
-					{
-						_position--; // After that the position can become 0 not allowing insertions later!
-
-						set (initialAddress () + (size_t) _position, (*i));
-					}
-				}
-			}
-		}
-		// When the stack is filled from the position 0 to the highest possible...
-		else
+		// When _position == -1, 
+		// means that an overflow was detected previously, and then nothing can be done!
+		// The overflow is only detected if configured, otherwise the pointer starts back
+		if (!_overflow)
 		{
 			if (_configuration._pointToEmpty)
 			{
-				if (!(_overflow = ((size_t) _position >= size ())))
-				{
-					set (initialAddress () + (size_t) _position, (*i));
-
-					_position++;
-				}
+				set (initialAddress () + (size_t) _position, (*i));
+				if (_configuration._fromBack) decrementStackPosition ();
+				else incrementStackPosition (); // overflow could come here...
 			}
 			else
 			{
-				if (_notUsed)
-					set (initialAddress () + (size_t) _position, (*i)); 
-				else
-				{
-					if (!(_overflow = ((size_t) _position >= (size () - 1))))
-					{
-						_position++;
-
-						set (initialAddress () + (size_t) _position, (*i));
-					}
-				}
+				if (_configuration._fromBack) decrementStackPosition ();
+				else incrementStackPosition (); // overflow could come here...
+				if (!_overflow)
+					set (initialAddress () + (size_t) _position, (*i));
 			}
 		}
 
-		_notUsed = false;
+		_notUsed = false; // already used once at least...
 	}
 }
 
@@ -101,50 +65,25 @@ MCHEmul::UBytes MCHEmul::Stack::pull (size_t nV)
 
 	std::vector <MCHEmul::UByte> dt = { };
 
-	_overflow = false;
-
 	for (size_t i = 0; i < nV && !_overflow; i++)
 	{
-		if (_configuration._fromBack)
+		// When _position == -1, 
+		// means that an overflow was detected previously and then nothing can be done!
+		// The overflow is only detected if configured, otherwise the pointer starts back
+		if (!_overflow)
 		{
 			if (_configuration._pointToEmpty)
 			{
-				if (!(_overflow = ((size_t) _position >= size ())))
-				{
-					_position++;
-
+				if (_configuration._fromBack) incrementStackPosition ();
+				else decrementStackPosition (); // overflow could come here...
+				if (!_overflow)
 					dt.push_back (value (initialAddress () + (size_t) _position));
-				}
 			}
 			else
 			{
-				if (!(_overflow = ((size_t)_position >= (size () - 1))))
-				{
-					dt.push_back (value (initialAddress () + (size_t) _position));
-
-					_position++;
-				}
-			}
-		}
-		else
-		{
-			if (_configuration._pointToEmpty)
-			{
-				if (!(_overflow = (_position < 0)))
-				{
-					_position--;
-
-					dt.push_back (value (initialAddress () + (size_t) _position));
-				}
-			}
-			else
-			{
-				if (!(_overflow = (_position < 1)))
-				{
-					dt.push_back (value (initialAddress () + (size_t) _position));
-
-					_position--;
-				}
+				dt.push_back (value (initialAddress () + (size_t) _position));
+				if (_configuration._fromBack) incrementStackPosition ();
+				else decrementStackPosition (); // overflow could come here...
 			}
 		}
 	}

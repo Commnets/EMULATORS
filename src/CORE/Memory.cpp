@@ -118,9 +118,21 @@ std::vector <MCHEmul::UByte> MCHEmul::PhysicalStorageSubset::bytes (const MCHEmu
 
 	int dt;
 	if (_active && _activeForReading &&
-		nB <= _size && (a >= _initialAddress && (dt = _initialAddress.distanceWith (a)) <= (int) (_size - nB))) 
+		nB <= _size && 
+		(a >= _initialAddress && 
+			(dt = _initialAddress.distanceWith (a)) <= (int) (_size - nB)))
+			// dt is always positive or 0, but the operand compared couldn't, 
+			// and then this logical expression won't match!
+	{
+		// At this place, it is guaranteed that the first position is within the memory
+		// but not necessarily the rest. So the boundaries muct be checked!
 		for (size_t i = 0; i < nB; i++)
-			result.emplace_back (readValue (dt + i)); 
+		{
+			size_t pos = (size_t) dt + i;
+			if (pos < _size)
+				result.emplace_back (readValue (pos)); 
+		}
+	}
 
 	return (result);
 }
@@ -131,14 +143,21 @@ void MCHEmul::PhysicalStorageSubset::set
 {
 	int dt; 
 	if (_active && _physicalStorage -> canBeWriten (f) &&
-		v.size () <= _size && (a >= _initialAddress && (dt = _initialAddress.distanceWith (a)) <= (int) (_size - v.size ())))
+		v.size () <= _size && 
+		(a >= _initialAddress && 
+			(dt = _initialAddress.distanceWith (a)) <= (int) (_size - v.size ())))
+		// Read the explanations above!
 	{
 		for (size_t i = 0; i < v.size (); i++)
 		{
-			if (MCHEmul::Memory::configuration ().bufferMemorySetCommands (this))
-				MCHEmul::Memory::configuration ().addMemorySetCommand (MCHEmul::SetMemoryCommand (this, dt + i, v [i]));
-			else
-				setValue (dt + i, v [i]);
+			size_t pos = (size_t) dt + i;
+			if (pos < _size)
+			{
+				if (MCHEmul::Memory::configuration ().bufferMemorySetCommands (this))
+					MCHEmul::Memory::configuration ().addMemorySetCommand (MCHEmul::SetMemoryCommand (this, pos, v [i]));
+				else
+					setValue (pos, v [i]);
+			}
 		}
 	}
 }
@@ -149,17 +168,26 @@ void MCHEmul::PhysicalStorageSubset::put
 {
 	int dt; 
 	if (_active && _physicalStorage -> canBeWriten (f) &&
-		v.size () <= _size && (a >= _initialAddress && (dt = _initialAddress.distanceWith (a)) <= (int) (_size - v.size ())))
+		v.size () <= _size && 
+		(a >= _initialAddress && 
+			(dt = _initialAddress.distanceWith (a)) <= (int) (_size - v.size ())))
+		// Also read the explanations above!
+	{
 		for (size_t i = 0; i < v.size (); i++)
-			setValue (dt + i, v [i]);
+		{
+			size_t pos = (size_t) dt + i;
+			if (pos < _size)
+				setValue (pos, v [i]);
+		}
+	}
 }
 
 // ---
 void MCHEmul::PhysicalStorageSubset::fillWith (const MCHEmul::Address& addr, const MCHEmul::UByte& b, size_t nB)
 { 
-	if (addr > _initialAddress) // Only if the requested address is bigger than the initial position...
+	if (addr >= _initialAddress) // Only if the requested address is bigger than the initial position...
 		for (size_t i = (addr - _initialAddress); i < _size; i++) 
-			setValue (i, b); 
+			setValue (i, b); // The boundaries are controlled in the loop!
 }
 
 // ---
@@ -185,6 +213,7 @@ MCHEmul::PhysicalStorageSubsetDUMP MCHEmul::PhysicalStorageSubset::dump
 			std::vector <MCHEmul::UByte> dt;
 			for (size_t i = 0; i <= (size_t) (lst - fst); i++)
 				dt.push_back (value (fst + i)); // If the data didn't belong to the set, the default value would be added...
+												// The boundaries are also checked in the loop...
 			result._bytes = dt;
 		}
 	}
@@ -335,7 +364,7 @@ const MCHEmul::UByte& MCHEmul::MemoryView::value (const MCHEmul::Address& a) con
 
 		// If a valid storage has been found under the address requested...
 		if (fS != nullptr)
-			result = fS -> readValue (a - fS -> initialAddress ()); // ...the value is got!
+			result = fS -> readValue ((size_t) (a - fS -> initialAddress ())); // ...the value is got!
 	}
 
 	return (result);
@@ -359,7 +388,7 @@ void MCHEmul::MemoryView::set (const MCHEmul::Address& a, const MCHEmul::UByte& 
 				MCHEmul::Memory::configuration ().addMemorySetCommand 
 					(MCHEmul::SetMemoryCommand (fS, a - fS -> initialAddress (), d));
 			else
-				fS -> setValue (a - fS -> initialAddress (), d); // ...save the value...
+				fS -> setValue ((size_t) (a - fS -> initialAddress ()), d); // ...save the value...
 		}
 	}
 }
@@ -381,8 +410,12 @@ std::vector <MCHEmul::UByte> MCHEmul::MemoryView::bytes (const MCHEmul::Address&
 				if (pL [j] -> active () && pL [j] -> activeForReading ()) 
 					fS = pL [j];
 
-			result.emplace_back ((fS != nullptr) // Only if the storage behind is valid a valis value is got...
-				? fS -> readValue (a - fS -> initialAddress () + i) : PhysicalStorage::_DEFAULTVALUE);
+			// At this point it is sure that the first position requested is inside the memory identified...
+			// ..but not necessary the last one. So it is needed to control that we don't exceed the boundaries!
+			// and if this happen a DEFAULT value is kept into the list to be returned!
+			size_t pos = (size_t) (a - fS -> initialAddress ()) + i;
+			result.emplace_back ((fS != nullptr && pos < fS -> size ())
+				? fS -> readValue (pos) : MCHEmul::PhysicalStorage::_DEFAULTVALUE);
 		}
 	}
 			
@@ -403,13 +436,17 @@ void MCHEmul::MemoryView::set (const MCHEmul::Address& a, const std::vector <MCH
 			for (size_t j = 0; j < pL.size () && fS == nullptr; j++)
 				if (pL [j] -> active () && pL [j] -> canBeWriten (f)) fS = pL [j];
 
-			if (fS != nullptr)
+			// At this point it is guarantteed that the first position will be inside the memory
+			// but the rests won't. To avoid a crash in the system it is needed to control
+			// the boundaries..
+			size_t pos = (size_t) (a - fS -> initialAddress ()) + i;
+			if (fS != nullptr && pos < fS -> size ())
 			{
 				if (MCHEmul::Memory::configuration ().bufferMemorySetCommands (fS))
 					MCHEmul::Memory::configuration ().addMemorySetCommand 
-						(MCHEmul::SetMemoryCommand (fS, a - fS -> initialAddress () + i, v [i]));
+						(MCHEmul::SetMemoryCommand (fS, pos, v [i]));
 				else
-					fS -> setValue (a - fS -> initialAddress () + i, v [i]);
+					fS -> setValue (pos, v [i]);
 			}
 		}
 	}
@@ -428,7 +465,7 @@ void MCHEmul::MemoryView::put (const MCHEmul::Address& a, const MCHEmul::UByte& 
 
 		// If a valid storage is under the position requested...
 		if (fS != nullptr)
-			fS -> setValue (a - fS -> initialAddress (), d); // ...save the value...
+			fS -> setValue ((size_t) (a - fS -> initialAddress ()), d); // ...save the value...
 	}
 }
 
@@ -446,8 +483,12 @@ void MCHEmul::MemoryView::put (const MCHEmul::Address& a, const std::vector <MCH
 			for (size_t j = 0; j < pL.size () && fS == nullptr; j++)
 				if (pL [j] -> active () && pL [j] -> canBeWriten (f)) fS = pL [j];
 
-			if (fS != nullptr)
-				fS -> setValue (a - fS -> initialAddress () + i, v [i]);
+			// The next action goes directly against the memory,
+			// so to avoid unexpected results (or even a crash of the system),
+			// it is needed to verify that we don't go over the boundaries...
+			size_t pos = (size_t) (a - fS -> initialAddress ()) + i;
+			if (fS != nullptr && pos < fS -> size ())
+				fS -> setValue (pos, v [i]); // If it were out the limits, the operations wouldn't take place...
 		}
 	}
 }

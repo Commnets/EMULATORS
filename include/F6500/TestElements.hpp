@@ -24,13 +24,15 @@ namespace F6500
 	class PlainMemoryTest final : public MCHEmul::Memory
 	{
 		public:
+		static const int _STACKSUBSET = 1;
+
 		PlainMemoryTest ()
 			: MCHEmul::Memory (0, basicContent ())
 								{ }
 
 		private:
 		virtual MCHEmul::Stack* lookForStack () override
-							{ return (dynamic_cast <MCHEmul::Stack*> (subset (1))); }
+							{ return (dynamic_cast <MCHEmul::Stack*> (subset (_STACKSUBSET))); }
 		virtual MCHEmul::MemoryView* lookForCPUView () override
 							{ return (view (0)); }
 
@@ -42,13 +44,15 @@ namespace F6500
 	class FragmentatedMemoryTest final : public MCHEmul::Memory
 	{
 		public:
+		static const int _STACKSUBSET = 1;
+
 		FragmentatedMemoryTest ()
 			: MCHEmul::Memory (0, basicContent ())
 								{ }
 
 		private:
 		virtual MCHEmul::Stack* lookForStack () override
-							{ return (dynamic_cast <MCHEmul::Stack*> (subset (1))); }
+							{ return (dynamic_cast <MCHEmul::Stack*> (subset (_STACKSUBSET))); }
 		virtual MCHEmul::MemoryView* lookForCPUView () override
 							{ return (view (0)); }
 

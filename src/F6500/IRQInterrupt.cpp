@@ -21,9 +21,14 @@ bool F6500::IRQInterrupt::executeOverImpl (MCHEmul::CPU* c, unsigned int cC)
 	MCHEmul::StatusRegister& st = c -> statusRegister ();
 	MCHEmul::ProgramCounter& pc = c -> programCounter ();
 	c -> memoryRef () -> stack () -> push ((_exeAddress = pc.asAddress ()).bytes () /** First high, then low byte */);
-	c -> memoryRef () -> stack () -> push (st.values ()); // The break flag is not taken into account...
+	// The BREAK flag is always set to false when saving...
+	// To distinguish this execution from the BRK one!
+	MCHEmul::UByte stV = st.values ()[0];
+	stV.setBit (F6500::C6500::_BREAKFLAG, false);
+	c -> memoryRef () -> stack () -> push (MCHEmul::UBytes ({ stV }));
 	st.setBitStatus (F6500::C6500::_IRQFLAG, true); // No more interruptions so far...
 
+	// Jump to the IRQ vector...
 	pc.setAddress (MCHEmul::Address (c -> memoryRef () -> values 
 		(static_cast <F6500::C6500*> (c) -> IRQVectorAddress (), 2), false /** Little - endian. */));
 

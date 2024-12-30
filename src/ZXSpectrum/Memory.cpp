@@ -163,12 +163,16 @@ MCHEmul::Memory::Content ZXSPECTRUM::Memory::standardMemoryContent ()
 	// RAMS: 
 	// 16K version: From 0x4000 to 0x7fff. 16k.
 	MCHEmul::Stack* RAM16k = new MCHEmul::Stack
-		(_RAM16K_SUBSET, RAM, 0x4000, MCHEmul::Address ({ 0x00, 0x40 }, false), 0x4000);
+		(_RAM16K_SUBSET, RAM, 0x4000, MCHEmul::Address ({ 0x00, 0x40 }, false), 0x4000,
+			MCHEmul::Stack::Configuration (true, false /** Pointing to the last written. */, 
+				false /** No overflow detection. */, -1));
 	MCHEmul::EmptyPhysicalStorageSubset* RAM32k_E = new MCHEmul::EmptyPhysicalStorageSubset
 		(_RAM32KE_SUBSET, MCHEmul::UByte::_0, RAM, 0x8000, MCHEmul::Address ({ 0x00, 0x80 }, false), 0x8000); // When not expanded, the rest is empty...
 	// 48k version: From 0x4000 to 0xffff. 32k.
 	MCHEmul::Stack* RAM48k = new MCHEmul::Stack
-		(_RAM48K_SUBSET, RAM, 0x4000, MCHEmul::Address ({ 0x00, 0x40 }, false), 0xc000);
+		(_RAM48K_SUBSET, RAM, 0x4000, MCHEmul::Address ({ 0x00, 0x40 }, false), 0xc000,
+			MCHEmul::Stack::Configuration (true, false /** Pointing to the last written. */, 
+				false /** No overflow detection. */, -1));
 	// ------
 
 	ROMBasic -> setName ("ROM Basic");

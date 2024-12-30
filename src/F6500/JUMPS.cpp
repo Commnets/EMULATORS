@@ -8,17 +8,22 @@ _INST_IMPL (F6500::BRK)
 {
 	assert (parameters ().size () == 1);
 
-	// It is like NMI...
+	// It is like IRQ...
 	MCHEmul::ProgramCounter& pc = cpu () -> programCounter ();
 	MCHEmul::StatusRegister& st = cpu () -> statusRegister ();
-	stack () -> push (pc.asAddress ().bytes ());
-	stack () -> push (st.values ());
-	st.setBitStatus (F6500::C6500::_IRQFLAG, true); // No more interruptions so far...
-	st.setBitStatus (F6500::C6500::_BREAKFLAG, true);
+	// The BRK will emulate a IRQ situation by code (could be useful to debug code)
+	// That IRQ will finish with a RTI, so the program counter will come back to 2 positions more that the original one
+	// Because the instruction only occupies a single byte, the program counter saved is one position more...
+	stack () -> push (pc.asAddress ().next (1).values ());
+	// The status register is saved with the BREAK flag set...
+	MCHEmul::UByte stV = st.values ()[0];
+	stV.setBit (F6500::C6500::_BREAKFLAG, true);
+	stack () -> push (MCHEmul::UBytes ({ stV }) /** Only 1 byte long. */);
+	st.setBitStatus (F6500::C6500::_IRQFLAG, true);
 
-	// Jump to the NMI vector...
+	// Jump to the IRQ vector...
 	pc.setAddress (MCHEmul::Address (memory () -> values 
-		(static_cast <F6500::C6500*> (cpu ()) -> NMIVectorAddress (), 2), false /** Little - endian. */));
+		(static_cast <F6500::C6500*> (cpu ()) -> IRQVectorAddress (), 2), false /** Little - endian. */));
 
 	return (!stack () -> overflow ());
 }

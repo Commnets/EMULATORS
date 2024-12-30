@@ -473,7 +473,9 @@ MCHEmul::Memory::Content VIC20::Memory::standardMemoryContent ()
 		(_PAGEZERO_SUBSET, RAM, 0x0000, MCHEmul::Address ({ 0x00, 0x00 }, false), 0x0100);
 	// Page 1: Stack, Where the CPU stores info...
 	MCHEmul::Stack* Stack = new MCHEmul::Stack 
-		(_STACK_SUBSET, RAM, 0x0100, MCHEmul::Address ({ 0x00, 0x01 }, false), 0x0100);
+		(_STACK_SUBSET, RAM, 0x0100, MCHEmul::Address ({ 0x00, 0x01 }, false), 0x0100,
+			MCHEmul::Stack::Configuration (true, true /** Pointing to the empty place. */, 
+				false /** No overflow detection. */, -1));
 	// Page 2 & 3:
 	MCHEmul::PhysicalStorageSubset* Page2And3 = new MCHEmul::PhysicalStorageSubset 
 		(_PAGE2AND3_SUBSET, RAM, 0x0200, MCHEmul::Address ({ 0x00, 0x02 }, false), 0x0200);

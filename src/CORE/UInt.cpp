@@ -141,14 +141,23 @@ MCHEmul::UInt MCHEmul::UInt::PackagedBCDFormatManager::add
 	MCHEmul::UInt result = u1;
 	for (int i = (int) (u2.bytes ().size () - 1); i >= 0; i--) 
 	{
+		// First nibble...
 		r  = (unsigned short) (result [i].value () & MCHEmul::UByte::_0F) + 
 			 (unsigned short) (u2 [i].value () & MCHEmul::UByte::_0F) + 
 			 (c ? MCHEmul::UByte::_1 : MCHEmul::UByte::_0);
+		// Adjustment...
 		if (r > MCHEmul::UByte::_09) r += MCHEmul::UByte::_06;
-		r += (unsigned short) (result [i].value () & MCHEmul::UByte::_F0) + 
-			 (unsigned short) (u2 [i].value () & MCHEmul::UByte::_F0);
+
+		// With the second nible...
+		r = (r & 0x000f) /** Just the first nible... */ +
+			(unsigned short) (result [i].value () & MCHEmul::UByte::_F0) + 
+			(unsigned short) (u2 [i].value () & MCHEmul::UByte::_F0) +
+			((r > 0x000f) ? MCHEmul::UByte::_10 : MCHEmul::UByte::_0); // The carry from the previous nibble if any...
+		// Adjusment...
 		if ((r & 0x01f0) > MCHEmul::UByte::_90) r += MCHEmul::UByte::_60;
 
+		// The carry for the next nibble if any,
+		// or just the result of the substraction
 		c = r > MCHEmul::UByte::_FF;
 		
 		result [i] = (unsigned char) r;
@@ -172,8 +181,10 @@ MCHEmul::UInt MCHEmul::UInt::PackagedBCDFormatManager::substract
 	MCHEmul::UInt result = u1;
 	for (int i = (int) (u2.bytes ().size () - 1); i >= 0; i--) 
 	{
+		// First nibble...
 		r  = (unsigned short) (result [i].value () & MCHEmul::UByte::_0F) - 
 			 (unsigned short) (u2 [i].value () & MCHEmul::UByte::_0F) - (c ? MCHEmul::UByte::_0 : MCHEmul::UByte::_1);
+		// Adjustment + second nibble...
 		r = ((r & MCHEmul::UByte::_10) != MCHEmul::UByte::_0)
 				? (unsigned short) ((r - MCHEmul::UByte::_06) & MCHEmul::UByte::_0F) |
 				  (unsigned short) ((result [i].value () & MCHEmul::UByte::_F0) - 
@@ -181,9 +192,12 @@ MCHEmul::UInt MCHEmul::UInt::PackagedBCDFormatManager::substract
 				: (unsigned short) (r & MCHEmul::UByte::_0F) |
 				  (unsigned short) ((result [i].value () & MCHEmul::UByte::_F0) - 
 					  (u2 [i].value () & MCHEmul::UByte::_F0));
+		// Adjustment of the second nibble..
 		if ((r & 0x0100) != MCHEmul::UByte::_0)
 			r -= MCHEmul::UByte::_60;
 
+		// The carry for the next nibble if any,
+		// or just the result of the substraction
 		c = r < 0x0100;
 		
 		result [i] = (unsigned char) r;

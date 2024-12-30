@@ -20,8 +20,8 @@ int _tmain (int argc, _TCHAR *argv [])
 	std::cout << "Copyright (C) 2024 by Ignacio Cea" << std::endl;
 	std::cout << "To test (against results) the different instructions of the 6500 family" << std::endl;
 	std::cout << "/h For help" << std::endl;
-	std::cout << "/n[FILENAME]: For a bulk of tests" << std::endl;
-	std::cout << "/t[TESTPERINST]: With the max number of tests to do per instruction" << std::endl << std::endl;
+	std::cout << "/n[FILENAME]: For a bulk of tests. Tests.dt as devault value" << std::endl;
+	std::cout << "/t[TESTPERINST]: With the max number of tests to do per instruction. 10 as default value" << std::endl << std::endl;
 
 	bool h = false;
 	std::string tId = "Tests.dt";
@@ -51,36 +51,29 @@ int _tmain (int argc, _TCHAR *argv [])
 	else
 		test.runTest (new F6500::Test6500 (new F6500::PlainMemoryTest));
 
-	if (!test.errors ().empty () || 
-		!test.warnings ().empty () || 
-		!test.noimplemented ().empty ())
-	{
-		size_t nT = 0;
-		std::cout << "Results:" << std::endl
-				  << "Total Tests:" << test.totalTests () << std::endl;
+	size_t nT = 0;
+	std::cout << "Results:" << std::endl
+				<< "Total Tests:" << test.totalTests () << std::endl;
 
-		std::cout << "Tests not implemented:" << std::endl;
-		printErrors (test.noimplemented ());
-		std::cout << "Total: " << test.noimplemented ().size () << std::endl;
-		std::cout << "----------" << std::endl;
-		nT += test.noimplemented ().size ();
+	std::cout << "Tests not implemented:" << std::endl;
+	printErrors (test.noimplemented ());
+	std::cout << "Total: " << test.noimplemented ().size () << std::endl;
+	std::cout << "----------" << std::endl;
+	nT += test.noimplemented ().size ();
 
-		std::cout << "Tests with errors:" << std::endl;
-		printErrors (test.errors ());
-		std::cout << "Total:" << test.errors ().size () << std::endl;
-		std::cout << "----------" << std::endl;
-		nT += test.errors ().size ();
+	std::cout << "Tests with errors:" << std::endl;
+	printErrors (test.errors ());
+	std::cout << "Total:" << test.errors ().size () << std::endl;
+	std::cout << "----------" << std::endl;
+	nT += test.errors ().size ();
 
-		std::cout << "Tests with warnings:" << std::endl;
-		printErrors (test.warnings ());
-		std::cout << "Total:" << test.warnings ().size () << std::endl;
-		std::cout << "----------" << std::endl;
-		nT += test.warnings().size ();
+	std::cout << "Tests with warnings:" << std::endl;
+	printErrors (test.warnings ());
+	std::cout << "Total:" << test.warnings ().size () << std::endl;
+	std::cout << "----------" << std::endl;
+	nT += test.warnings().size ();
 
-		std::cout << "Tests Ok:" << (test.totalTests () - nT) << std::endl;
-	}
-	else
-		std::cout << "Tests OK:" << test.totalTests () << std::endl;
+	std::cout << "Tests Ok:" << (test.totalTests () - nT) << std::endl;
 
 	return (test.errors ().empty () ? 0 : 1);
 }

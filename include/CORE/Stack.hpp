@@ -128,6 +128,10 @@ namespace MCHEmul
 		virtual InfoStructure getInfoStructure () const override;
 
 		private:
+		inline void decrementStackPosition ();
+		inline void incrementStackPosition ();
+
+		private:
 		const Configuration _configuration; // Asjusted at the constructor...
 		int _position;
 
@@ -135,6 +139,44 @@ namespace MCHEmul
 		bool _overflow;
 		bool _notUsed; // Has it ever been used?
 	};
+
+	// ---
+	inline void Stack::decrementStackPosition ()
+	{
+		auto SSIZE = [&]() -> int
+			{ return ((_configuration._maxSize == -1) 
+				? (int) size () : _configuration._maxSize); };
+
+		if (--_position < 0)
+		{
+			if (_configuration._detectOverflow)
+			{
+				_overflow = true;
+				_position = -1; // To be sure...
+			}
+			else
+				_position += SSIZE ();
+		}
+	}
+
+	// ---
+	inline void Stack::incrementStackPosition ()
+	{
+		auto SSIZE = [&]() -> int
+			{ return ((_configuration._maxSize == -1) 
+				? (int) size () : _configuration._maxSize); };
+
+		if (++_position >= SSIZE ())
+		{
+			if (_configuration._detectOverflow)
+			{
+				_overflow = true;
+				_position = -1; // To be sure...
+			}
+			else
+				_position -= SSIZE ();
+		}
+	}
 }
 
 #endif

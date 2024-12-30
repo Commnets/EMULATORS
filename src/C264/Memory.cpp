@@ -386,7 +386,9 @@ MCHEmul::Memory::Content C264::Memory::standardMemoryContent ()
 		(_PAGEZERO_SUBSET, RAM, 0x0002, MCHEmul::Address ({ 0x02, 0x00 }, false), 0xfe);
 	// Page 1: Stack, Where the CPU stores info...
 	MCHEmul::Stack* Stack = new MCHEmul::Stack 
-		(_STACK_SUBSET, RAM, 0x0100, MCHEmul::Address ({ 0x00, 0x01 }, false), 0x0100);
+		(_STACK_SUBSET, RAM, 0x0100, MCHEmul::Address ({ 0x00, 0x01 }, false), 0x0100,
+			MCHEmul::Stack::Configuration (true, true /** Pointing to the first empty position. */, 
+				false /** No overflow detection. */, -1));
 	// ...and basic RAM...(divided in blocks of 16k)
 	MCHEmul::PhysicalStorageSubset* RAM1 = new MCHEmul::PhysicalStorageSubset 
 		(_RAM1_SUBSET, RAM, 0x0200, MCHEmul::Address ({ 0x00, 0x02 }, false), 0x3e00);							// 16k - 512 bytes (2 previous pages)

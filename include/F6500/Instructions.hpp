@@ -158,6 +158,15 @@ namespace F6500
 		const MCHEmul::UByte& value_indirectZeroPageY () const
 							{ return ((_lastExecutionData._INOUTData = 
 								MCHEmul::UBytes ({ memory () -> value (address_indirectZeroPageY ()) }))[0]); }
+
+		// Implementation
+		// Addition & subtraction with the accumulator is reused in non documented instructions
+		// That's why they are declared here...
+		/** The parameter received is added or substracted with the value of the acummulator
+			and stored back into it, affecting all flags. 
+			The DECIMAL flag is taken into account. */
+		inline void binaryAddition (const MCHEmul::UByte& u);
+		inline void binarySubtraction (const MCHEmul::UByte& u);
 	};
 
 	// ---
@@ -178,7 +187,7 @@ namespace F6500
 		assert (parameters ().size () == 3);
 
 		return (_lastExecutionData._INOUTAddress = 
-			MCHEmul::Address ({ parameters ()[1], parameters ()[2] }, false));
+			MCHEmul::Address ({ parameters ()[1], parameters ()[2] }, false /** little endian. */) /** Tow bytes long. */);
 	}
 
 	// ---
@@ -186,7 +195,7 @@ namespace F6500
 	{
 		assert (parameters ().size () == 2);
 
-		return _lastExecutionData._INOUTAddress = (MCHEmul::Address ({ parameters ()[1] }));
+		return _lastExecutionData._INOUTAddress = (MCHEmul::Address ({ parameters ()[1] }) /** 1 byte long. */);
 	}
 
 	// ---
@@ -197,7 +206,7 @@ namespace F6500
 		const MCHEmul::Register& x = registerX ();
 
 		MCHEmul::Address iA ({ parameters ()[1], parameters ()[2] }, false);
-		MCHEmul::Address fA = iA + (size_t) (x [0].value ());
+		MCHEmul::Address fA = iA + (size_t) (x [0].value ()); // It could go out of the limits (0xffff), but it will be adjusted...
 		if (iA [0] != fA [0]) 
 			_additionalCycles = 1; // Page jump in the address so one cycle more
 		
@@ -212,7 +221,7 @@ namespace F6500
 		const MCHEmul::Register& y = registerY ();
 
 		MCHEmul::Address iA ({ parameters ()[1], parameters ()[2] }, false);
-		MCHEmul::Address fA = iA + (size_t) (y [0].value ());
+		MCHEmul::Address fA = iA + (size_t) (y [0].value ()); // It could also go aout of the limits (0xffff), but adjusted anycase...
 		if (iA [0] != fA [0]) 
 			_additionalCycles = 1; // Page jump in the address so one cycle more
 		
@@ -224,12 +233,9 @@ namespace F6500
 	{
 		assert (parameters ().size () == 2);
 
-		// Take care because when adding the value of the register X the final address can not be in the page 0
-		// and an adjustment will be required...
-		MCHEmul::Address pg0A = 
-			MCHEmul::Address ({ parameters ()[1] }) + (size_t) (registerX ()[0].value ());
-		if (pg0A.value () > (unsigned int) 0x00ff) pg0A -= (size_t) 0x0100; // To avoid go out of the limits...
-		return (_lastExecutionData._INOUTAddress = pg0A);
+		return (_lastExecutionData._INOUTAddress = 
+			MCHEmul::Address ({ parameters ()[1] } /** 1 byte long. */) + 
+				(size_t) (registerX ()[0].value ()) /** It can go out of the limits (0xff), but it will be adjusted. */);
 	}
 
 	// ---
@@ -237,10 +243,9 @@ namespace F6500
 	{
 		assert (parameters ().size () == 2);
 
-		MCHEmul::Address pg0A = 
-			MCHEmul::Address ({ parameters ()[1] }) + (size_t) (registerY ()[0].value ());
-		if (pg0A.value () > (unsigned int) 0x00ff) pg0A -= (size_t) 0x0100; // To avoid go out of the limits...
-		return (_lastExecutionData._INOUTAddress = pg0A);
+		return (_lastExecutionData._INOUTAddress = 
+			MCHEmul::Address ({ parameters ()[1] } /** 1 byte long. */) +
+				(size_t) (registerY ()[0].value ()) /** It can go out of the limits (0xff), but it will be adjusted. */);
 	}
 
 	// ---
@@ -249,13 +254,19 @@ namespace F6500
 		assert (parameters ().size () == 2);
 
 		// Pre - indirect zero page addressing...
-		// Take care because when adding the value of the register X the final address can not be in the page 0
-		// and an adjustment will be required...
 		MCHEmul::Address pg0A = 
-			MCHEmul::Address ({ parameters ()[1] }) + (size_t) (registerX ()[0].value ());
-		if (pg0A.value () > (unsigned int) 0x00ff) pg0A -= (size_t) 0x0100; // To avoid go out of the limits...
-		return (_lastExecutionData._INOUTAddress = 
-			MCHEmul::Address (memory () -> values (pg0A, 2), false)); 
+			MCHEmul::Address ({ parameters ()[1] } /** 1 byte long. */) + 
+				(size_t) (registerX ()[0].value () /** It can go out of the limits (0xff), but it will adjusted. */);
+		
+		// Now it will be needed to get two bytes of two contiguous memory address,
+		// However if the first memory position were in the limit of the page 0 the infomration won't be get properly...
+		// unless we take this situation into consideration...
+		return (_lastExecutionData._INOUTAddress =
+				(pg0A.value () == (unsigned int) 0xff)
+					? MCHEmul::Address (
+						{ memory () -> value (MCHEmul::Address ({ 0x00, 0xff }, true)),
+						  memory () -> value (MCHEmul::Address ({ 0x00, 0x00 }, true)) }, false /** It is in little endian. */)
+					: MCHEmul::Address (memory () -> values (pg0A, 2), false));
 	}
 
 	// ---
@@ -266,10 +277,19 @@ namespace F6500
 		const MCHEmul::Register& y = registerY ();
 
 		// Post - indirect zero page addressing...
-		MCHEmul::Address iA (memory () -> values (MCHEmul::Address ({ parameters ()[1] }), 2), false);
-		MCHEmul::Address fA = iA + (size_t) (y [0].value ());
+		// Two bytes are needed to get the final address where to look for the data,
+		// but it is needed to take into account that the first parameter could be at the limit of the page 0!
+		MCHEmul::Address iA;
+		if (parameters ()[1].value () == (unsigned int) 0xff) // limit?
+			iA = MCHEmul::Address (
+				{ memory () -> value (MCHEmul::Address ({ 0x00, 0xff }, true)),
+				  memory () -> value (MCHEmul::Address ({ 0x00, 0x00 }, true)) }, false);
+		else
+			iA = MCHEmul::Address (memory () -> values (MCHEmul::Address ({ parameters ()[1] }), 2), false);
+
+		MCHEmul::Address fA = iA + (size_t) (y [0].value ()); // It could go out of the limits (0xffff), but it will adjusted...
 		if (iA [0] != fA [0]) 
-			_additionalCycles = 1; // Page jump in the address so one cycle more
+			_additionalCycles = 1; // Page jump in the address so one cycle more...
 
 		return (_lastExecutionData._INOUTAddress = fA);
 	}
@@ -300,6 +320,106 @@ namespace F6500
 		return (parameters ()[1]); // The number can be interpreted as a negative number (used in jumps)...
 	}
 
+	// ---
+	inline void Instruction::binaryAddition (const MCHEmul::UByte& u)
+	{
+		MCHEmul::Register& a = registerA ();
+		MCHEmul::StatusRegister& st = statusRegister ();
+
+		bool cf = st.bitStatus (C6500::_CARRYFLAG);
+
+		// The flags will be treated different in decimal than in binary...
+		if (st.bitStatus (C6500::_DECIMALFLAG))
+		{
+			// ...and the way those are calculated by the standard library in decimal is not valid...
+
+			unsigned short aV = (unsigned short) a.values ()[0].value ();
+			unsigned short pV = (unsigned short) u.value ();
+			unsigned short tmp;
+
+			// First nibble...
+            tmp = (aV & 0x000f) + (pV & 0x000f) + (cf ? 0x0001 : 0x0000);
+			// Adjustment of the first nibble...
+			if (tmp > 0x0009) tmp += 0x0006;
+			// Then add the second nibble, but doesn't adjust anything so far...
+			tmp = (tmp & 0x000f) + (aV & 0x00f0) + (pV & 0x00f0) + 
+				((tmp > 0x000f) ? 0x0010 : 0x0000);
+
+			// These flags are determined with the result of the first nibble after just adjusted...
+			st.setBitStatus (C6500::_NEGATIVEFLAG, (tmp & 0x0080) != 0x0000);
+			st.setBitStatus (C6500::_OVERFLOWFLAG, ((aV ^ tmp) & 0x0080) != 0x0000 && ((aV ^ pV) & 0x0080) == 0x0000);
+			st.setBitStatus (C6500::_ZEROFLAG, ((aV + pV + (cf ? 0x0001 : 0x0000)) & 0xff) == 0x0000);
+					
+			// Adjust the second nibble to get the final result...
+			if ((tmp & 0x1f0) > 0x90) tmp += 0x60;                                                                        \
+
+			// ...which is used to determine the value of the carry flag
+			st.setBitStatus (C6500::_CARRYFLAG, (tmp & 0x0ff0) > 0x00f0);
+
+			a.set ({ (unsigned char) (tmp & 0x00ff) });
+		}
+		else
+		{
+			// Calculate the binary addition...
+			MCHEmul::UInt r = MCHEmul::UInt (a.values ()[0], 
+				MCHEmul::UInt::_BINARY).add (MCHEmul::UInt (u, MCHEmul::UInt::_BINARY), cf);
+			a.set (r.bytes ()); // The carry register is taken into account in the addition...
+
+			st.setBitStatus (C6500::_NEGATIVEFLAG, r.negative ());
+			st.setBitStatus (C6500::_OVERFLOWFLAG, r.overflow ());
+			st.setBitStatus (C6500::_ZEROFLAG, r == MCHEmul::UInt::_0);
+			st.setBitStatus (C6500::_CARRYFLAG, r.carry ());
+		}
+	}
+
+	// ---
+	inline void Instruction::binarySubtraction (const MCHEmul::UByte& u)
+	{
+		MCHEmul::Register& a = registerA ();
+		MCHEmul::StatusRegister& st = statusRegister ();
+
+		bool cf = st.bitStatus (C6500::_CARRYFLAG);
+
+		// The flags will be trated different in decimal than in binary...
+		if (st.bitStatus (C6500::_DECIMALFLAG))
+		{
+			// ...and the way those are calculated by the standard library in decimal is not valid...
+
+			unsigned short aV = (unsigned short) a.values ()[0].value ();
+			unsigned short pV = (unsigned short) u.value ();
+			unsigned short tmpB = aV - pV - (cf ? 0 : 1);                               \
+			unsigned short tmp;
+
+			// First nibble...
+			tmp = (aV & 0x000f) - (pV & 0x000f) - (cf ? 0 : 1);
+			// Adjust and add the second nibble...
+			if ((tmp & 0x0010) != 0x0000) tmp = ((tmp - 0x0006) & 0x000f) | ((aV & 0x00f0) - (pV & 0x00f0) - 0x0010);
+			else tmp = (tmp & 0x000f) | ((aV & 0x00f0) - (pV & 0x00f0));
+			// Adjust that second nible, and then the final result...
+			if ((tmp & 0x0100) != 0x0000) tmp -=0x0060;
+
+			a.set ({ (unsigned char) (tmp & 0x00ff) });
+
+			// Time of the status register, that is basically set based on the binary substraction...
+			st.setBitStatus (C6500::_NEGATIVEFLAG, (tmpB & 0x0080) != 0x0000);
+			st.setBitStatus (C6500::_OVERFLOWFLAG, ((aV ^ tmpB) & 0x0080) != 0x0000 && ((aV ^ pV) & 0x0080) != 0x0000);
+			st.setBitStatus (C6500::_ZEROFLAG, (tmpB & 0x00ff) == 0x000);
+			st.setBitStatus (C6500::_CARRYFLAG, tmpB < 0x0100);
+		}
+		else
+		{
+			MCHEmul::UInt r = MCHEmul::UInt (a.values ()[0], MCHEmul::UInt::_BINARY).
+				substract (MCHEmul::UInt (u, MCHEmul::UInt::_BINARY), st.bitStatus (C6500::_CARRYFLAG));
+			a.set (r.bytes ()); // The carry is taken into account in the substraction
+
+			// Time of the status register...
+			st.setBitStatus (C6500::_NEGATIVEFLAG, r.negative ());
+			st.setBitStatus (C6500::_OVERFLOWFLAG, r.overflow ());
+			st.setBitStatus (C6500::_ZEROFLAG, r == MCHEmul::UInt::_0);
+			st.setBitStatus (C6500::_CARRYFLAG, r.carry ());
+		}
+	}
+
 	// ADC
 	/** ADC_General: To aggregate common steps in every ADC instruction. */
 	class ADC_General : public Instruction
@@ -318,21 +438,7 @@ namespace F6500
 	// ---
 	inline bool ADC_General::executeWith (const MCHEmul::UByte& u)
 	{
-		MCHEmul::Register& a = registerA ();
-		MCHEmul::StatusRegister& st = statusRegister ();
-	
-		// Calculate the addition...
-		unsigned char ft = st.bitStatus (C6500::_DECIMALFLAG) 
-			? MCHEmul::UInt::_PACKAGEDBCD : MCHEmul::UInt::_BINARY; // In BCD?
-		MCHEmul::UInt r = MCHEmul::UInt (a.values ()[0], ft).
-			add (MCHEmul::UInt (u, ft), st.bitStatus (C6500::_CARRYFLAG));
-		a.set (r.bytes ()); // The carry register is taken into account in the addition...
-
-		// Time of the status register...
-		st.setBitStatus (C6500::_NEGATIVEFLAG, r.negative ());
-		st.setBitStatus (C6500::_OVERFLOWFLAG, r.overflow ());
-		st.setBitStatus (C6500::_ZEROFLAG, r == MCHEmul::UInt::_0);
-		st.setBitStatus (C6500::_CARRYFLAG, r.carry ());
+		binaryAddition (u);
 
 		return (true);
 	}
@@ -485,17 +591,36 @@ namespace F6500
 	{
 		MCHEmul::Register& a = registerA ();
 		MCHEmul::StatusRegister& st = statusRegister ();
-	
-		MCHEmul::UByte r = (a.values ()[0] & u); // AND...
-		bool o = r [7] ^ r [6]; // The overflow flag is calculated different...
-		r.rotateRightC (st.bitStatus (C6500::_CARRYFLAG), 1); // ...ROR
-		a.set ({ r });
 
-		// Time of the status register...
-		st.setBitStatus (C6500::_NEGATIVEFLAG, r [7]);
-		st.setBitStatus (C6500::_OVERFLOWFLAG, o);
-		st.setBitStatus (C6500::_ZEROFLAG, r == MCHEmul::UByte::_0);
-		st.setBitStatus (C6500::_CARRYFLAG, r [6] /** after. */);
+		// This is complex instruction mixed of an AND and a ROR...
+		// ...but with additional things in the the DECIMAL mode!
+		bool cf;
+		MCHEmul::UByte r = (a.values ()[0] & u); // AND...
+		MCHEmul::UByte rp = r;
+		rp.rotateRightC (cf = st.bitStatus (C6500::_CARRYFLAG), 1); // ...ROR
+
+		// and now depending on whether the DECIMAL mode is set or not...
+		if (st.bitStatus (C6500::_DECIMALFLAG))
+		{
+			st.setBitStatus (C6500::_NEGATIVEFLAG, cf);
+			st.setBitStatus (C6500::_OVERFLOWFLAG, ((rp.value () ^ r.value ()) & 0x40) != 0x00);
+			st.setBitStatus (C6500::_ZEROFLAG, rp == MCHEmul::UByte::_0);
+			if (((r.value () & 0x0f) + (r.value () & 0x01)) > 0x05)
+				rp = (rp.value () & 0xf0) | ((rp.value () + 0x06) & 0x0f);
+			if (cf = (((r.value () & 0xf0) + (r.value () & 0x10)) > 0x50))
+				rp = (rp.value () & 0x0f) | ((rp.value () + 0x60) & 0xf0);
+			st.setBitStatus (C6500::_CARRYFLAG, cf);
+		}
+		else
+		{
+			st.setBitStatus (C6500::_NEGATIVEFLAG, rp [7]);
+			st.setBitStatus (C6500::_OVERFLOWFLAG, rp [6] ^ rp [5]);
+			st.setBitStatus (C6500::_ZEROFLAG, rp == MCHEmul::UByte::_0);
+			st.setBitStatus (C6500::_CARRYFLAG, rp [6]);
+		}
+
+		// and finally sets the accumulator...
+		a.set ({ rp });
 
 		return (true);
 	}
@@ -926,27 +1051,18 @@ namespace F6500
 	// ---
 	inline bool ISC_General::executeOn (const MCHEmul::Address& a)
 	{
-		MCHEmul::Register& ac = registerA ();
 		MCHEmul::StatusRegister& st = statusRegister ();
 
+		// This operation affects the memory like INC:
 		// Read the value, makes the operation and sets it back...
 		MCHEmul::UInt v = MCHEmul::UInt ((memory () -> value (a))) /** 1 bytelong. */ + MCHEmul::UInt::_1; // INC...
-		// A carry could be generated, but it will be ignored...
+		// Like in INC, the carry is ignored...
 		memory () -> set (a, v.bytes ()[0]);
+
 		_lastExecutionData._INOUTData = v.bytes ();
 
-		// ...and then the substract...
-		unsigned char ft = st.bitStatus (C6500::_DECIMALFLAG) 
-			? MCHEmul::UInt::_PACKAGEDBCD : MCHEmul::UInt::_BINARY; // In BCD?
-		MCHEmul::UInt r = MCHEmul::UInt (ac.values ()[0], ft).substract 
-			(MCHEmul::UInt (v.bytes (), ft), st.bitStatus (C6500::_CARRYFLAG)); // ...SBC
-		ac.set (r.bytes ());
-
-		// Time of the status register...
-		st.setBitStatus (C6500::_NEGATIVEFLAG, r.negative ());
-		st.setBitStatus (C6500::_OVERFLOWFLAG, r.overflow ());
-		st.setBitStatus (C6500::_ZEROFLAG, r == MCHEmul::UInt::_0);
-		st.setBitStatus (C6500::_CARRYFLAG, r.carry ());
+		// But also like SBC (the carry will affect the result)
+		binarySubtraction (v.bytes ()[0]);
 
 		return (true);
 	}
@@ -1403,26 +1519,19 @@ namespace F6500
 	// ---
 	inline bool RRA_General::executeOn (const MCHEmul::Address& a)
 	{
-		MCHEmul::Register& ac = registerA ();
 		MCHEmul::StatusRegister& st = statusRegister ();
 
 		// The operation affects the memory...
+		// ...like a ROR operation...
 		MCHEmul::UByte v = memory () -> value (a); // Always 1 byte long...
-		bool c = v.rotateRightC (st.bitStatus (C6500::_CARRYFLAG), 1); // ROR...
-		memory () -> set (a, v);
+		st.setBitStatus (C6500::_CARRYFLAG, 
+			v.rotateRightC (st.bitStatus (C6500::_CARRYFLAG), 1)); // ROR in v, affecting the carry flag...
+		memory () -> set (a, v); // v is stored in memory back...
+
 		_lastExecutionData._INOUTData = MCHEmul::UBytes ({ v });
 
-		// ...and also the accumulator...
-		unsigned char ft = st.bitStatus (C6500::_DECIMALFLAG) 
-			? MCHEmul::UInt::_PACKAGEDBCD : MCHEmul::UInt::_BINARY; // In BCD?
-		MCHEmul::UInt r = MCHEmul::UInt (ac.values ()[0], ft).add (MCHEmul::UInt (v, ft), c); // ...ADC
-		ac.set (r.bytes ());
-
-		// Time of the status register...
-		st.setBitStatus (C6500::_NEGATIVEFLAG, r.negative ());
-		st.setBitStatus (C6500::_OVERFLOWFLAG, r.overflow ());
-		st.setBitStatus (C6500::_ZEROFLAG, r == MCHEmul::UInt::_0);
-		st.setBitStatus (C6500::_CARRYFLAG, r.carry ());
+		// But also like ADC...
+		binaryAddition (v);
 
 		return (true);
 	}
@@ -1495,21 +1604,7 @@ namespace F6500
 	// ---
 	inline bool SBC_General::executeWith (const MCHEmul::UByte& u)
 	{
-		MCHEmul::Register& a = registerA ();
-		MCHEmul::StatusRegister& st = statusRegister ();
-
-		// Read the value, makes the operation and set it back!
-		unsigned char ft = st.bitStatus (C6500::_DECIMALFLAG) 
-			? MCHEmul::UInt::_PACKAGEDBCD : MCHEmul::UInt::_BINARY; // In BCD?
-		MCHEmul::UInt r = MCHEmul::UInt (a.values ()[0], ft).
-			substract (MCHEmul::UInt (u, ft), st.bitStatus (C6500::_CARRYFLAG));
-		a.set (r.bytes ()); // The carry is taken into account in the substraction
-
-		// Time of the status register...
-		st.setBitStatus (C6500::_NEGATIVEFLAG, r.negative ());
-		st.setBitStatus (C6500::_OVERFLOWFLAG, r.overflow ());
-		st.setBitStatus (C6500::_ZEROFLAG, r == MCHEmul::UInt::_0);
-		st.setBitStatus (C6500::_CARRYFLAG, r.carry ());
+		binarySubtraction (u);
 
 		return (true);
 	}

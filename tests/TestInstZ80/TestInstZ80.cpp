@@ -26,34 +26,29 @@ int _tmain (int argc, _TCHAR *argv [])
 	else
 		test.runTest (new FZ80::TestZ80 (new FZ80::PlainMemoryTest));
 
-	if (!test.errors ().empty () || 
-		!test.warnings ().empty () || 
-		!test.noimplemented ().empty ())
-	{
-		size_t nT = 0;
-		std::cout << "Results:" << std::endl
-				  << "Total Tests:" << test.totalTests () << std::endl;
+	size_t nT = 0;
+	std::cout << "Results:" << std::endl
+				<< "Total Tests:" << test.totalTests () << std::endl;
 
-		std::cout << "Tests not implemented:" << std::endl;
-		printErrors (test.noimplemented ());
-		std::cout << "Total: " << test.noimplemented ().size () << std::endl;
-		std::cout << "----------" << std::endl;
-		nT += test.noimplemented ().size ();
+	std::cout << "Tests not implemented:" << std::endl;
+	printErrors (test.noimplemented ());
+	std::cout << "Total: " << test.noimplemented ().size () << std::endl;
+	std::cout << "----------" << std::endl;
+	nT += test.noimplemented ().size ();
 
-		std::cout << "Tests with errors:" << std::endl;
-		printErrors (test.errors ());
-		std::cout << "Total:" << test.errors ().size () << std::endl;
-		std::cout << "----------" << std::endl;
-		nT += test.errors ().size ();
+	std::cout << "Tests with errors:" << std::endl;
+	printErrors (test.errors ());
+	std::cout << "Total:" << test.errors ().size () << std::endl;
+	std::cout << "----------" << std::endl;
+	nT += test.errors ().size ();
 
-		std::cout << "Tests with warnings:" << std::endl;
-		printErrors (test.warnings ());
-		std::cout << "Total:" << test.warnings ().size () << std::endl;
-		std::cout << "----------" << std::endl;
-		nT += test.warnings().size ();
+	std::cout << "Tests with warnings:" << std::endl;
+	printErrors (test.warnings ());
+	std::cout << "Total:" << test.warnings ().size () << std::endl;
+	std::cout << "----------" << std::endl;
+	nT += test.warnings().size ();
 
-		std::cout << "Tests Ok:" << (test.totalTests () - nT) << std::endl;
-	}
+	std::cout << "Tests Ok:" << (test.totalTests () - nT) << std::endl;
 
 	return (test.errors ().empty () ? 0 : 1);
 }

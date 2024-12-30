@@ -40,13 +40,15 @@ namespace FZ80
 	class PlainMemoryTest final : public MCHEmul::Memory
 	{
 		public:
+		static const int _STACKSUBSET = 0;
+
 		PlainMemoryTest ()
 			: MCHEmul::Memory (0, basicContent ())
 								{ }
 
 		private:
 		virtual MCHEmul::Stack* lookForStack () override
-							{ return (dynamic_cast <MCHEmul::Stack*> (subset (0))); }
+							{ return (dynamic_cast <MCHEmul::Stack*> (subset (_STACKSUBSET))); }
 		virtual MCHEmul::MemoryView* lookForCPUView () override
 							{ return (view (0)); }
 
@@ -58,13 +60,15 @@ namespace FZ80
 	class FragmentatedMemoryTest final : public MCHEmul::Memory
 	{
 		public:
+		static const int _STACKSUBSET = 0;
+
 		FragmentatedMemoryTest ()
 			: MCHEmul::Memory (0, basicContent ())
 								{ }
 
 		private:
 		virtual MCHEmul::Stack* lookForStack () override
-							{ return (dynamic_cast <MCHEmul::Stack*> (subset (0))); }
+							{ return (dynamic_cast <MCHEmul::Stack*> (subset (_STACKSUBSET))); }
 		virtual MCHEmul::MemoryView* lookForCPUView () override
 							{ return (view (0)); }
 

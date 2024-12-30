@@ -13,8 +13,10 @@ MCHEmul::Memory::Content F6500::PlainMemoryTest::basicContent ()
 	MCHEmul::PhysicalStorageSubset* PageZero = new MCHEmul::PhysicalStorageSubset 
 		(0, RAM, 0x0000, MCHEmul::Address ({ 0x00, 0x00 }, false), 0x0100);
 	// Page 1: Stack = 256 bytes...
+	// In F6500 the stack is always at this position and it is always 256 bytes long...
 	MCHEmul::Stack* Stack = new MCHEmul::Stack 
-		(1, RAM, 0x0100, MCHEmul::Address ({ 0x00, 0x01 }, false), 0x0100); // In F6500 the stack is always at this position and it is always 256 bytes long...
+		(_STACKSUBSET, RAM, 0x0100, MCHEmul::Address ({ 0x00, 0x01 }, false), 0x0100,
+			MCHEmul::Stack::Configuration (true, true, false /** No overflow detection. */, -1)); 
 	// The rest of the memory:63,5k...
 	MCHEmul::PhysicalStorageSubset* RestRAM = new MCHEmul::PhysicalStorageSubset 
 		(2, RAM, 0x0200, MCHEmul::Address ({ 0x00, 0x02 }, false), 0xfe00); 
@@ -41,8 +43,10 @@ MCHEmul::Memory::Content F6500::FragmentatedMemoryTest::basicContent ()
 
 	MCHEmul::PhysicalStorageSubset* Data1 = new MCHEmul::PhysicalStorageSubset 
 		(0, RAM, 0x0100, MCHEmul::Address ({ 0x00, 0x00 }, false), 0x0100); // 0x0000 - 0x00ff = 256 bytes
-	MCHEmul::Stack*  Stack = new MCHEmul::Stack // In F6500 the stack is always at this position and it is always 256 bytes long...
-		(1, RAM, 0x0000, MCHEmul::Address ({ 0x00, 0x01 }, false), 0x0100); // 0x0100 - 0x01ff = 256 bytes
+	// In F6500 the stack is always at this position and it is always 256 bytes long...
+	MCHEmul::Stack*  Stack = new MCHEmul::Stack 
+		(_STACKSUBSET, RAM, 0x0000, MCHEmul::Address ({ 0x00, 0x01 }, false), 0x0100,
+			MCHEmul::Stack::Configuration (true, true, false /** No overflow detection. */, -1)); 
 	MCHEmul::PhysicalStorageSubset* Data2 = new MCHEmul::PhysicalStorageSubset 
 		(2, RAM, 0x0200, MCHEmul::Address ({ 0x00, 0x02 }, false), 0x0100); // 0x0200 - 0x02ff = 256 bytes
 	MCHEmul::PhysicalStorageSubset* Data3 = new MCHEmul::PhysicalStorageSubset 

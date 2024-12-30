@@ -264,7 +264,8 @@ MCHEmul::Memory::Content ZX81::Memory::standardMemoryContent ()
 	// Then we have 1k (the standard one)
 	MCHEmul::Stack* RAM1S = new MCHEmul::Stack
 		(_RAM1K_SUBSET, RAM, 0x4000, MCHEmul::Address ({ 0x00, 0x40 }, false), 0x0400, 
-			MCHEmul::Stack::Configuration (true, false, true, -1));	// 1k that can behave as Stack...
+			MCHEmul::Stack::Configuration (true, false /** Pointing always to the last written. */, 
+				false /** No overflow detection. */, -1));	// 1k that can behave as Stack...
 	// ...and the rest (up to 16k) is not accesible and mirrored the previous one in 1k blocks-size...
 	std::vector <MCHEmul::MirrorPhysicalStorageSubset*> RAM1S_S;
 	for (size_t i = 1; i <= 15; i++)
@@ -274,7 +275,8 @@ MCHEmul::Memory::Content ZX81::Memory::standardMemoryContent ()
 	// But these previous 16k could be fully accesible externally when the RAM_CS = 0...
 	MCHEmul::Stack* RAM16S_CS1 = new MCHEmul::Stack
 		(_RAM16KCS1_SUBSET, RAM, 0x4000, MCHEmul::Address ({ 0x00, 0x40 }, false), 0x4000, 
-			MCHEmul::Stack::Configuration (true, false, true, -1));										// 16k (When expansion), 
+			MCHEmul::Stack::Configuration (true, false /** Pointing always to the last written. */,
+				true /** No overflow detection. */, -1));												// 16k (When expansion), 
 																										// ...that can behave as stack...
 																										// One or another...
 	// ----- 16k

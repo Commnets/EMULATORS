@@ -30,76 +30,76 @@ namespace MCHEmul
 		public:
 		/** Represents a no valid Address... \n
 			When size = 0, the _internalValue is not important at all. */
-		constexpr Address ()
+		Address ()
 			: _size (0),
 			  _internalRepresentation (0)
 							{ }
 
 		/** The address is always undertood as positive. 
 			The size could be adjusted depending on the value. */
-		constexpr Address (size_t s, unsigned int a)
+		Address (size_t s, unsigned int a)
 			: _size (s),
 			  _internalRepresentation (a)
-							{ if (_size > 4) _size = 4; }
+							{ if (_size > 4) _size = 4; adjustValueToSize (); }
 
 		Address (const UInt& a)
 			: _size (a.size ()),
 			  _internalRepresentation (valueFromUBytes (a.bytes ()))
-							{ if (_size > 4) _size = 4; }
+							{ if (_size > 4) _size = 4; adjustValueToSize (); }
 
 		Address (const UBytes& a, bool bE = true)
 			: _size (a.size ()),
 			  _internalRepresentation (valueFromUBytes (a.bytes (), bE))
-							{ if (_size > 4) _size = 4; }
+							{ if (_size > 4) _size = 4; adjustValueToSize (); }
 
 		Address (const std::vector <UByte>& a, bool bE = true)
 			: _size (a.size ()),
 			  _internalRepresentation (valueFromUBytes (a, bE))
-							{ if (_size > 4) _size = 4; }
+							{ if (_size > 4) _size = 4; adjustValueToSize (); }
 
-		constexpr size_t size () const
+		size_t size () const
 							{ return (_size); }
 
-		constexpr unsigned int value () const
+		unsigned int value () const
 							{ return (_internalRepresentation);}
 		UBytes values () const
 							{ return (UBytes (bytes ())); }
 		inline std::vector <UByte> bytes () const;
 
 		/** Could be negative. */
-		constexpr int distanceWith (const Address& a) const
+		int distanceWith (const Address& a) const
 							{ return ((int) ((long long) a._internalRepresentation - (long long) _internalRepresentation)); }
 
 		/** When reach the limit starts back from 0 (as it is a unsigned int). */
-		constexpr Address next (size_t n) const
+		Address next (size_t n) const
 							{ return (Address (_size, _internalRepresentation + (unsigned int) n /** Can overflow. */)); }
-		constexpr Address previous (size_t n) const
+		Address previous (size_t n) const
 							{ return (Address (_size, _internalRepresentation - (unsigned int) n /** Can overflow. */)); }
 
-		constexpr bool operator == (const Address& a) const
+		bool operator == (const Address& a) const
 							{ return (_internalRepresentation == a._internalRepresentation); }
-		constexpr bool operator != (const Address& a) const
+		bool operator != (const Address& a) const
 							{ return (_internalRepresentation != a._internalRepresentation); }
-		constexpr bool operator < (const Address& a) const
+		bool operator < (const Address& a) const
 							{ return (_internalRepresentation < a._internalRepresentation); }
-		constexpr bool operator <= (const Address& a) const
+		bool operator <= (const Address& a) const
 							{ return (_internalRepresentation <= a._internalRepresentation); }
-		constexpr bool operator > (const Address& a) const
+		bool operator > (const Address& a) const
 							{ return (_internalRepresentation > a._internalRepresentation); }
-		constexpr bool operator >= (const Address& a) const
+		bool operator >= (const Address& a) const
 							{ return (_internalRepresentation >= a._internalRepresentation); }
 
-		constexpr Address operator + (size_t n) const
+		Address operator + (size_t n) const
 							{ return (Address (*this).next (n)); }
-		constexpr friend Address operator + (size_t n, const Address& a)
+		friend Address operator + (size_t n, const Address& a)
 							{ return (a + n); }
 		Address& operator += (size_t n)
 							{ *this = *this + n; return (*this); }
-		constexpr int operator - (const Address& a) const
+		int operator - (const Address& a) const
 							{ return (a.distanceWith (*this)); }
-		constexpr Address operator - (size_t n) const
+		Address operator - (size_t n) const
 							{ return (Address (*this).previous (n)); }
-		constexpr friend Address operator - (size_t n, const Address& a)
+		friend Address operator - (size_t n, const Address& a)
 							{ return (a - n); }
 		Address& operator -= (size_t n)
 							{ *this = *this - n; return (*this); }
@@ -126,6 +126,10 @@ namespace MCHEmul
 		private:
 		/** To get an address from a set of UByte. */
 		static inline unsigned int valueFromUBytes (const std::vector <UByte>& a, bool bE = true);
+
+		// Implementation
+		/** To adsjust to the length of the address. */
+		inline void adjustValueToSize ();
 
 		private:
 		size_t _size;
@@ -167,6 +171,14 @@ namespace MCHEmul
 			result += a [i].value () * (1 << ((bE ? (a.size () - i - 1) : i) * UByte::sizeBits ()));
 
 		return (result);
+	}
+
+	// ---
+	inline void Address::adjustValueToSize ()
+	{
+		unsigned int maxValue = 1 << (size () << 3 /** 8 bits. */);
+		if (_internalRepresentation >= maxValue)
+			_internalRepresentation = _internalRepresentation % maxValue /** adjust it. */;
 	}
 }
 

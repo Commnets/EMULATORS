@@ -427,7 +427,9 @@ MCHEmul::Memory::Content C64::Memory::standardMemoryContent ()
 	
 	// 0.25K: Stack
 	MCHEmul::Stack* Stack = new MCHEmul::Stack 
-		(_STACK_SUBSET, RAM, 0x0100, MCHEmul::Address ({ 0x00, 0x01 }, false), 0x0100);
+		(_STACK_SUBSET, RAM, 0x0100, MCHEmul::Address ({ 0x00, 0x01 }, false), 0x0100,
+			MCHEmul::Stack::Configuration (true, true /** Pointing always to the empty position. */, 
+				false /** No owverflow detection. */, -1));
 	
 	// 39.5k: RAM
 	// Pure RAM. A piece used by BASIC
