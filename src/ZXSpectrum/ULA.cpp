@@ -57,7 +57,8 @@ bool ZXSPECTRUM::ULA::initialize ()
 
 	_raster.initialize ();
 
-	_showEvents = false;
+	// Notice that all attributes related with drawing signal are not inialized
+	// to avoid that when restart a new ulaevents instruction must be commanded!
 
 	_ULARegisters -> initialize ();
 
@@ -116,12 +117,12 @@ bool ZXSPECTRUM::ULA::simulate (MCHEmul::CPU* cpu)
 		if (_raster.moveCycles (1))
 		{
 			// The flash attribute has to be updated!
-			if (++_videoSignalData._flashCounter == 50)
-			{
-				_videoSignalData._flashCounter = 0;
-
-				_videoSignalData._flash = !_videoSignalData._flash;
-			}
+//			if (++_videoSignalData._flashCounter == 50)
+//			{
+//				_videoSignalData._flashCounter = 0;
+//
+//				_videoSignalData._flash = !_videoSignalData._flash;
+//			}
 
 			// An interrupt is generated any time the raster reaches the end of the scren...
 			cpu -> requestInterrupt 

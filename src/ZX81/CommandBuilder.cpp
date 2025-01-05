@@ -12,6 +12,10 @@ MCHEmul::Command* ZX81::CommandBuilder::createEmptyCommand (const std::string& c
 		result = new ZX81::ULAStatusCommand;
 	else if (cmdName == "ULAEVENTS" || cmdName == ZX81::ULAShowEventsCommand::_NAME)
 		result = new ZX81::ULAShowEventsCommand;
+	else if (cmdName == "DFDUMP" || cmdName == ZX81::DisplayFileDUMPCommand::_NAME)
+		result = new ZX81::DisplayFileDUMPCommand;
+	else if (cmdName == "CHARSDRAW" || cmdName == ZX81::CharactersDrawCommand::_NAME)
+		result = new ZX81::CharactersDrawCommand;
 
 	return (result);
 }

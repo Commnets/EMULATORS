@@ -7,3 +7,10 @@ To know the info about the situation of the ULA.
 No parameters needed.
 ;ULAEVENTS [ON|OFF]
 To activate or desactivate the visualization of ULA events.
+;DFDUMP
+To show the content of the display file.
+No parameters needed.
+;CHARSDRAW [c1 c2 c3...]
+To print out the characters data.
+No parameters of the list of characters to visualize from 0 to 127 in decimal format.
+The parameters could be repeated, but just one instace of every value is accepted.

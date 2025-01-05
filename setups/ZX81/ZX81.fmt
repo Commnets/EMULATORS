@@ -34,6 +34,14 @@ Brown: NMI Generator off
 Cyan: reading from a port
 #---
 #---
+;CDFDUMP
+@BYTES{blocksize=33,listsep=\,,tablesep=\ ,minsize=2}@
+#---
+#---
+;CCHARSDRAW
+@DRAW@
+#---
+#---
 ;ZX81Datasette
 Id:@ID@
 @ATTRS?{key=YES,equal=:,empty=no attributes}\n@

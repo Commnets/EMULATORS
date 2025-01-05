@@ -44,6 +44,30 @@ namespace ZX81
 		Type type () const
 							{ return (_type); }
 
+		// To access the different locations of the memory...
+		/** Where the display file starting point is stored. */
+		inline MCHEmul::Address D_FILEAddress () const;
+		/** The location of the display file. */
+		MCHEmul::Address D_FILE () const
+							{ return (MCHEmul::Address (memory () -> values (D_FILEAddress (), 2), false)); }
+		/** Where the variables starting point is stored. */
+		inline MCHEmul::Address VARSAddress () const;
+		/** Th elocation of the variables. */
+		inline MCHEmul::Address VARS () const
+							{ return (MCHEmul::Address (memory () -> values (VARSAddress (), 2), false)); }
+
+		// To get snapshots of the memory...
+		// They are used in some commands...
+		/** Content of the display file. \n
+			The location of the display file varies depending on the program 
+			and also depending on the computer being emulated. \n
+			Its initial position is located under the variable D_FILE. \n
+			In the memory structure of the ZX81 like machines the VARS space follows the D_FILE,
+			And where the VARS starts is located in the VARS variable.
+			D_FILE and VARS variables location itself varies depending on the version of the computer emulated. 
+			We have simulated this under the ULA because it is more or less "graphic", but it could be simple at memory. */
+		inline MCHEmul::UBytes displayFileSnapShot () const;
+
 		/** To get a reference to the ULA chip. */
 		const ULA* ula () const
 							{ return (_ula); }
@@ -83,6 +107,31 @@ namespace ZX81
 		/** To control the status of the A6. */
 		MCHEmul::Pulse _A6;
 	};
+
+	// ---
+	inline MCHEmul::Address SinclairZX81::D_FILEAddress () const
+	{ 
+		return (MCHEmul::Address ({ 0x0c, 0x40 }, false)); 
+	}
+
+	// ---
+	inline MCHEmul::Address SinclairZX81::VARSAddress () const
+	{ 
+		return (_type == Type::_ZX80 
+			? MCHEmul::Address ({ 0x08, 0x40 }, false)
+			: MCHEmul::Address ({ 0x10, 0x40 }, false)); 
+	}
+
+	// ---
+	inline MCHEmul::UBytes SinclairZX81::displayFileSnapShot () const
+	{ 
+		MCHEmul::Address dF = D_FILE ();
+		MCHEmul::Address vrs = VARS ();
+
+		assert (vrs.value () >= dF.value ());
+
+		return (memory () -> values (dF, (size_t) vrs.value () - dF.value ()));
+	}
 }
 
 #endif

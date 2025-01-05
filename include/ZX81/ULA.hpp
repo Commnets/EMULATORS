@@ -161,6 +161,10 @@ namespace ZX81
 		  */
 		virtual MCHEmul::InfoStructure getInfoStructure () const override;
 
+		/** The characters. */
+		MCHEmul::Strings charsDrawSnapshot (MCHEmul::CPU* cpu, 
+			const std::vector <size_t>& chrs = { }) const;
+
 		// Port events...
 		/** To reflect the event related with reading/writting in a port,
 			related with the management of the display: That's it :
