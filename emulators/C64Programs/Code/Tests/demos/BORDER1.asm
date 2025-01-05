@@ -1,3 +1,9 @@
+; Very complex boirder demo.
+; It has to be invoked from the BASIC interface because it doesn't stop it!
+; Load the program and call SYS50176
+; It doesn't still work perfectly because it should also 
+; switch off the aside bottom border and not only the up and down ones
+
 ;----------------------------------
 ;init VIC
 *=$c000

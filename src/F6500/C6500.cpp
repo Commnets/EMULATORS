@@ -55,12 +55,35 @@ bool F6500::C6500::initialize ()
 }
 
 // ---
-void F6500::C6500::setStopAdditional (bool s, unsigned int tC, unsigned int cC, int nC)
+bool F6500::C6500::unbufferCommands ()
 {
-	if (_lastInstruction == nullptr)
-		return; // There is no instruction executed, so nothing else to do...
+	// At this point could be nullptr, but all instructions are alll defined in 6500 family...
+	const MCHEmul::InstructionDefined* inst = 
+			static_cast <const MCHEmul::InstructionDefined*> (lastInstruction ()); 
+	// The number of cycles finally executed can be more than the ones defined in the structure
+	// In some instructions, like relative jumps, when the condition is not fit, there is one cycle more executed
+	// or in indirect storing instructions, if the final position calculated jump over the page of the original one
+	// again there is one more cycle executed...
+	// In both situations the new cycle will have the same characetristics that the last definied one.
+	size_t nC = stopStatusData ()._cyclesLastInstructionExecutedStopRequest;
+	if (inst != nullptr && 
+		nC >= inst -> cycleStructure ().size ()) 
+		nC = inst -> cycleStructure ().size () - 1; // this situation!
 
-	// TODO
+	// Should have the last instruction been stopped before executing write instructions?
+	bool result =
+		state () == MCHEmul::CPU::_STOPPED &&
+		inst != nullptr &&
+		inst -> cycleStructure ()[nC] == MCHEmul::InstructionDefined::_CYCLEREAD;
+
+	_IFDEBUG
+	{
+		// Trace the situation if it was the case...
+		if (result)
+			debugUnbufferCommands ();
+	}
+
+	return (!result);
 }
 
 // ---
@@ -263,7 +286,7 @@ MCHEmul::Instructions F6500::C6500::createInstructions ()
 	result [0xFF] = new F6500::ISC_AbsoluteX;
 	result [0xFB] = new F6500::ISC_AbsoluteY;
 
-	// JAM: Restart the CPU
+	// JAM: Stop the CPU
 	// Totally undocumented
 	result [0x02] = new F6500::JAM;
 	result [0x12] = new F6500::JAM;
@@ -524,4 +547,15 @@ MCHEmul::Instructions F6500::C6500::createInstructions ()
 	assert (result.size () == 248); 
 
 	return (result);
+}
+
+// ---
+void F6500::C6500::debugUnbufferCommands ()
+{
+	deepDebugFile () -> writeCompleteLine ("CPU", clockCycles (), 
+		"Last Instruction shouldn't have been executed fully. Flush Memory blocked",
+		{ 
+			{ "Stopped at:", std::to_string (stopStatusData ()._cyclesAtStop) },
+			{ "Cycles overlapped:", std::to_string (stopStatusData ()._cyclesLastInstructionOverlappedStopRequest) }
+		});
 }

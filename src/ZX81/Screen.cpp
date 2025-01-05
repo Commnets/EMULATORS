@@ -10,11 +10,11 @@ ZX81::Screen::Screen (double hz, int w, int h, const MCHEmul::Attributes& attrs)
 		("./zx81_1.rom", e, 0 /** no address needed */, true);
 	if (!e)
 	{
-		for (size_t i = 0x1e00; i < 0x0200; i += 8) // 64 characters (8 bytes each) = 512bytes
+		for (size_t i = 0x0000; i < 0x0200; i += 8) // 64 characters (8 bytes each) = 512bytes
 		{
 			std::vector <MCHEmul::UBytes> chrdt;
 			for (size_t j = 0; j < 8; j++)
-				chrdt.push_back (MCHEmul::UBytes ({ dt.byte (i + j) }));
+				chrdt.push_back (MCHEmul::UBytes ({ dt.byte (0x1e00 + i + j) }));
 			_graphicsDef.emplace_back (std::move (chrdt));
 		}
 	}
@@ -31,7 +31,8 @@ void ZX81::Screen::drawAdditional ()
 	{
 		// The color...
 		// Only 4 are available...
-		unsigned int bC = (gridColor () > 3) ? 0 : gridColor ();
+		unsigned int bC = (gridColor () > 15) ? 0 : gridColor ();
+		unsigned int bCB = bC + 1; if (bCB > 15) bCB = 0;
 
 		// Where is the screen...
 		ZX81::ULA* gC = static_cast <ZX81::ULA*> (_graphicalChip);
@@ -40,7 +41,7 @@ void ZX81::Screen::drawAdditional ()
 
 		// Draws rectangles and reference lines...
 		drawRectangle ((size_t) (x1 - 1), (size_t) (y1 - 1), 
-			(size_t) (x2 + 1), (size_t) (y2 + 1), 3);
+			(size_t) (x2 + 1), (size_t) (y2 + 1), bCB);
 		for (short i = y1 + 8; i <= y2; i += 8)
 			drawHorizontalLineStep ((size_t) x1, (size_t) i, (size_t) (x2 - x1 + 1), 2, bC);
 		for (short i = x1 + 8; i <= x2; i += 8)

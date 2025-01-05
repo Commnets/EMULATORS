@@ -5,6 +5,49 @@
 #include <CORE/LogChannel.hpp>
 
 // ---
+MCHEmul::Attributes MCHEmul::CPU::StopStatusData::attributes () const
+{
+	return (MCHEmul::Attributes (
+		{
+			{ "When", std::to_string (_cyclesAtStop) },
+			{ "CPU", std::to_string (_cyclesAtCPU) },
+			{ "Type", (_typeCyclesStopped == MCHEmul::InstructionDefined::_CYCLEALL) 
+				? "All" 
+				: std::to_string (_typeCyclesStopped) },
+			{ "Duration", (_cyclesStopped == -1) 
+				? "Forever" 
+				: std::to_string (_cyclesStopped) + "(" + std::to_string (_cyclesStopped - _counterCyclesStopped) + " pending)" },
+			{ "LI Exec", std::to_string (_cyclesLastInstructionExecutedStopRequest) },
+			{ "LI Overlap", std::to_string (_cyclesLastInstructionOverlappedStopRequest) }
+		}));
+}
+
+// ---
+std::string MCHEmul::CPU::StopStatusData::asString () const
+{ 
+	std::string result;
+
+	bool f = true;
+	MCHEmul::Attributes attrs = std::move (attributes ());
+	for (const auto& i : attrs)
+	{
+		result += (!f ? "," : "") + i.first + ("=") + i.second;
+
+		f = false;
+	}
+
+	return (result);
+}
+
+// ---
+std::string MCHEmul::CPU::StopStatusData::asStringCore () const
+{
+	MCHEmul::Attributes attrs = std::move (attributes ());
+	return ("Duration " + (*attrs.find ("Duration")).second + "," +
+			"Cycles type " + (*attrs.find ("Type")).second);
+}
+
+// ---
 MCHEmul::CPU::CPU (int id, const MCHEmul::CPUArchitecture& a, 
 	const MCHEmul::Registers& r, const MCHEmul::StatusRegister& sR, const MCHEmul::Instructions& ins,
 	const MCHEmul::Attributes& attrs)
@@ -30,10 +73,8 @@ MCHEmul::CPU::CPU (int id, const MCHEmul::CPUArchitecture& a,
 	  _currentInstruction (nullptr),
 	  _currentInterruptRequest (CPUInterruptRequest::_NOINTREQUEST), 
 	  _currentInterrupt (nullptr), 
-	  _cyclesPendingExecution (0), 
-	  // When the CPU is stopped...
-	  _typeCycleStopped (0 /** nothing. */), _cyclesStopped (0), _cyclesAtStop (0), _counterCyclesStopped (0), 
-	  _cyclesLastInstructionOverlappedStopRequest (0), _cyclesLastInstructionExecutedStopRequest (0),
+	  _cyclesPendingExecution (0),
+	  _stopStatusData (), // When the CPU is stopped. Then same object is reused!
 	  // For performance reasons...
 	  _rowInstructions () // It will be fulfilled below!
 { 
@@ -72,32 +113,27 @@ void MCHEmul::CPU::setStop (bool s, unsigned int tC, unsigned int cC, int nC)
 			// ...it would be admitted, but the situation would be also debugged
 			// as it not so common, no?
 			if (_state == MCHEmul::CPU::_STOPPED)
-				_IFDEBUG debugAlreadyStopped (tC, nC); // The data of the new stop request are passed...
+			{
+				_IFDEBUG debugAlreadyStopped ();
+			}
+			// Any other case the last state...
+			else
+				_lastState = _state; // ...is kept to be recovered later...
 
-			_typeCycleStopped = tC;
-			_cyclesAtStop = cC;	
-			_cyclesStopped = nC;
-			_counterCyclesStopped = 0;
+			_stopStatusData.reset (tC, cC, nC, _clockCycles);
 
-			// If the last state isn't stopped...
-			if (_state != MCHEmul::CPU::_STOPPED)
-				_lastState = _state; // ...it is kept to be recovered later...
-
-			// If the CPU was not stopped before...
+			// If the CPU was running before...
 			// it is needed to calculate information about what may cycles of the last 
 			// instruction (if any, what should be the normal cincunstance) were executed before receiving this notification
 			// and how many are overlapped in it....
-			if (_lastState != MCHEmul::CPU::_STOPPED && 
-				_state != MCHEmul::CPU::_STOPPED)
-				_cyclesLastInstructionExecutedStopRequest =	
-					(_lastInstruction != nullptr && (_clockCycles > cC)) 
-						? _lastInstruction -> totalClockCyclesExecuted () - 
-							(_cyclesLastInstructionOverlappedStopRequest = (_clockCycles - cC)) // Could be negative!
-						: (_cyclesLastInstructionOverlappedStopRequest = 0);
+			if (_lastState == MCHEmul::CPU::_EXECUTINGINSTRUCTION &&
+				_state == MCHEmul::CPU::_EXECUTINGINSTRUCTION)
+				_stopStatusData.calcOverlapInfo ( // ...and the status data is updated...
+					(_lastInstruction == nullptr) ? 0 : _lastInstruction -> totalClockCyclesExecuted ());
 
+			// The new state is admitted...
+			// It could be the same than before, remember!
 			_state = MCHEmul::CPU::_STOPPED; 
-
-			setStopAdditional (true, tC, cC, nC);
 
 			_IFDEBUG debugStopRequest ();
 		}
@@ -114,10 +150,8 @@ void MCHEmul::CPU::setStop (bool s, unsigned int tC, unsigned int cC, int nC)
 			
 			_lastState = iS;
 
-			_cyclesLastInstructionExecutedStopRequest = 
-				_cyclesLastInstructionOverlappedStopRequest = 0;
-
-			setStopAdditional (false, 0, 0, 0);
+			// No longer valid...
+			_stopStatusData.reset ();
 		}
 	}
 }
@@ -157,10 +191,7 @@ bool MCHEmul::CPU::initialize ()
 	// Related with the internal states...
 	_lastInstruction = nullptr;
 
-	_typeCycleStopped = 0; // Meaning none
-	_cyclesStopped = 0;
-	_cyclesAtStop = _counterCyclesStopped = 
-		_cyclesLastInstructionOverlappedStopRequest = _cyclesLastInstructionExecutedStopRequest = 0;
+	_stopStatusData.reset ();
 
 	return (true);
 }
@@ -172,7 +203,10 @@ bool MCHEmul::CPU::executeNextCycle ()
 
 	// If the memory access were buffered... 
 	// ...this instruction would free all accesses...
-	MCHEmul::Memory::configuration ().executeMemorySetCommandsBuffered ();
+	// but only in the case it was possible...
+	// something that depends on the type of CPU!
+	if (unbufferCommands ())
+		MCHEmul::Memory::configuration ().executeMemorySetCommandsBuffered ();
 
 	bool result;
 	switch (_state)
@@ -284,10 +318,13 @@ bool MCHEmul::CPU::when_Stopped ()
 {
 	assert (_state == MCHEmul::CPU::_STOPPED);
 
+	// _stopStatusData.run () returns false when no more cycles valid...
+	// Important: This instruction actualize the number of cycles pending...
+	// This is the reason to do the code in this way: 
+	// to reflect in the debug file the number of cycles pending!
+	bool f = !_stopStatusData.run ();
 	_IFDEBUG debugStopSituation ();
-
-	if (_cyclesStopped != -1 &&
-		(++_counterCyclesStopped == (unsigned int) _cyclesStopped))
+	if (f) 
 	{
 		unsigned int iS = _state;
 
@@ -295,10 +332,8 @@ bool MCHEmul::CPU::when_Stopped ()
 
 		_lastState = iS;
 
-		_cyclesLastInstructionExecutedStopRequest = 
-			_cyclesLastInstructionOverlappedStopRequest = 0;
-
-		setStopAdditional (false, 0, 0, 0); // The parameters are not interesting at this point...
+		// No longer valid...
+		_stopStatusData.reset ();
 	}
 
 	// No other value of this status is changed, because everything has to continue 
@@ -685,11 +720,8 @@ void MCHEmul::CPU::debugStopRequest () const
 {
 	assert (_deepDebugFile != nullptr);
 
-	_deepDebugFile -> writeLineData ("Stop CPU requested " + std::to_string (_cyclesStopped) + 
-		" cycles(" + ((_typeCycleStopped == std::numeric_limits <unsigned int>::max ()) 
-			? "-" : std::to_string (_typeCycleStopped)) + "), " +
-		"Cycles executed " + std::to_string (_cyclesLastInstructionExecutedStopRequest) + ", " +
-		"Cycles overlapped " + std::to_string (_cyclesLastInstructionOverlappedStopRequest));
+	_deepDebugFile -> writeLineData 
+		("New stop request. " + _stopStatusData.asStringCore ());
 }
 
 // ---
@@ -719,25 +751,18 @@ void MCHEmul::CPU::debugStopSituation () const
 	assert (_deepDebugFile != nullptr);
 
 	_deepDebugFile -> writeCompleteLine ("CPU", _clockCycles, "Stopped", 
-		{ ((_cyclesStopped == -1) 
-			? "-" 
-			: std::to_string (_cyclesStopped - (_counterCyclesStopped + 1))) + " cycles pending of " + 
-			  std::to_string (_cyclesStopped) });
+		_stopStatusData.attributes ());
+	_deepDebugFile -> writeLineData	("State:" + std::to_string (_state) + 
+		", Last State:" + std::to_string (_lastState));
 }
 
 // ---
-void MCHEmul::CPU::debugAlreadyStopped (unsigned int tC, int nC) const
+void MCHEmul::CPU::debugAlreadyStopped () const
 {
 	assert (_deepDebugFile != nullptr);
 
 	_deepDebugFile -> writeLineData (
-		"Already stopped:" + 
-			(((_cyclesStopped == -1) 
-				? "-" 
-				: std::to_string (_cyclesStopped - (_counterCyclesStopped + 1))) + " cycles pending of " + 
-				  std::to_string (_cyclesStopped)) + ", " +
-		"New request:" + std::to_string (nC)
-			+ " cycles [" + ((tC == std::numeric_limits <unsigned int>::max ()) ? "-" : std::to_string (tC)) + " type]");
+		"Already stopped. " + std::to_string (_stopStatusData.cyclesStillValid ()) + " cycles pending");
 }
 
 // ---
@@ -812,7 +837,8 @@ void MCHEmul::CPU::debugInstructionExecuted (const std::string& sdd) const
 	_deepDebugFile -> writeLineData (sdd + " " + lSt + " " + lStAB);
 	// ...The program counter and the stack position + The last in(struction + Address bus and Data bus ...if used!
 	_deepDebugFile -> writeLineData	(MCHEmul::Strings
-		({ _statusRegister.asString () , // ...The status register...
+		({ "State:" + std::to_string (_state) + ", Last State:" + std::to_string (_lastState),
+		   _statusRegister.asString (), // ...The status register...
 		   rInfo })); // The register info...
 }
 

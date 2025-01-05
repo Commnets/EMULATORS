@@ -1,3 +1,9 @@
+; To fill up and down the screen with a character
+; Load the program from the console
+; and then call SYS2049 from the BASIC line
+; It can also be invoked from the command line with the
+; parameter /c[PATH]/Char.asm /a$0801
+
 * = $0801
 
 	lda #$00 			; black

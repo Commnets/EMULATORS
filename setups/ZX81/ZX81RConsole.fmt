@@ -23,6 +23,15 @@ Id:@ID@
 #---
 #---
 ;CULAEVENTS
+Legend:
+Light Gray: HALT active
+Light Green: First HALT of many toghether
+Red: INT active
+Yellow: NMI active
+Green: Writting to a port
+Blue: NMI Generator on
+Brown: NMI Generator off
+Cyan: reading from a port
 #---
 #---
 ;ZX81Datasette

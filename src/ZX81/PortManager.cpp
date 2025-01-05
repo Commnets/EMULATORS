@@ -20,6 +20,9 @@ ZX81::PortManager::PortManager ()
 // ---
 void ZX81::PortManager::setValue (unsigned short ab, unsigned char id, const MCHEmul::UByte& v)
 {
+	// Mark the event in the screen...
+	_ULA -> markWritePortAction ();
+
 	// Any out really does this set of actions...
 	// As it is defined in the ZX81 ports documentation!:
 
@@ -31,11 +34,19 @@ void ZX81::PortManager::setValue (unsigned short ab, unsigned char id, const MCH
 
 	// If the port id has the bit 1 off (FD is the normal ZX81 but many others will behave equal)...
 	if ((id & 0b00000010) == 0x00)
+	{
 		_ULARegisters -> setNMIGenerator (false); // the NMI generator is disconnected...
+
+		_ULA -> markNMIGeneratorOff ();
+	}
 
 	// If the port id has the bit 0 off (FE is the normal ZX81, but many others will behave in the same way)...
 	if ((id & 0b00000001) == 0x00)
+	{
 		_ULARegisters -> setNMIGenerator (true); // The NMI generator is connected...
+
+		_ULA -> markNMIGeneratorOn ();
+	}
 }
 
 // ---
@@ -46,6 +57,9 @@ MCHEmul::UByte ZX81::PortManager::getValue (unsigned short ab, unsigned char id,
 	// Any port with A0 = 0... (FE is the ZX81 common one, but many others will behave similar)...
 	if ((id & 0b00000001) == 0b00000000)
 	{ 
+		// Mark the event in the screen...
+		_ULA -> markReadPortFEAction ();
+
 		result = 0b00100000 | // Bit 5 is always set...
 			(_ULARegisters -> NTSC () ? 0b00000000 : 0b01000000); // Bit 6 set when 50Hz = PAL = !NTSC...
 

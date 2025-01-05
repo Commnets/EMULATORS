@@ -147,6 +147,7 @@ namespace ZX81
 			see @ZX81::ZX81Computer for more details. */
 		void setINTack ()
 							{ _ULARegisters -> setINTack (); }
+		inline bool aboutToGenerateNMIAfterCycles (unsigned int nC);
 
 		virtual bool initialize () override;
 
@@ -159,6 +160,20 @@ namespace ZX81
 		  * Raster			= InfoStructure: Info about the raster.
 		  */
 		virtual MCHEmul::InfoStructure getInfoStructure () const override;
+
+		// Port events...
+		/** To reflect the event related with reading/writting in a port,
+			related with the management of the display: That's it :
+			writting in anyone and reading from anyone ending in 0, usually $FE. */
+		void markWritePortAction ()
+							{ _writePort = true; }
+		void markReadPortFEAction ()
+							{ _readPortFE = true; }
+		/** Specifically events related with the NMI generator. */
+		void markNMIGeneratorOn ()
+							{ _NMIGeneratorOn = true; }
+		void markNMIGeneratorOff ()
+							{ _NMIGeneratorOff = true; }
 
 		protected:
 		virtual void processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifier* n) override;
@@ -198,7 +213,9 @@ namespace ZX81
 		bool _firstVBlankEntered;
 
 		// To draw situations...
+		bool _HALTBefore; // Just to identify the first HALT of many!
 		MCHEmul::OBool _INTActive, _NMIActive, _HALTActive;
+		MCHEmul::OBool _writePort, _readPortFE, _NMIGeneratorOn, _NMIGeneratorOff;
 	};
 
 	// ---
@@ -206,6 +223,16 @@ namespace ZX81
 		unsigned short& x2, unsigned short& y2)
 	{
 		_raster.displayPositions (x1, y1, x2, y2);
+	}
+
+	// ---
+	inline bool ULA::aboutToGenerateNMIAfterCycles (unsigned int nC)
+	{
+		bool rP;
+		return (_raster.simulateMoveCycles (nC, rP) &&
+			_ULARegisters -> NMIGenerator ()); 
+		// It means that in the next execution for nC cycles, 
+		// a NMI interrupt will be generated...
 	}
 
 	/** The version para PAL systems. */

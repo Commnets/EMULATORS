@@ -44,6 +44,10 @@ namespace MCHEmul
 
 		Formatter& operator = (Formatter&&) = delete;
 
+		/** To know whether the formattter is or not empty. */
+		bool empty () const
+							{ return (_lines.empty ()); }
+
 		/** To initialize the formatter.
 			This method create all neceessary internal elements to manipulate the format. */
 		virtual void initialize () = 0;

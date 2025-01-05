@@ -1,3 +1,8 @@
+; To flash the border at a specific raster line
+; Load the program from the console and then
+; Call SYS2049 from the BASIC line
+; It cannot be invoked from the command line as it uses the addresses $0314 and $0315.
+
 * = $1000
 
 start:
@@ -33,7 +38,7 @@ loop:
 * = $1200
 int = $1200
 	inc $d020			; flash border
-
+	
 	asl $d019			; ACK interrupt (to re-enable it)
 	pla
 	tay

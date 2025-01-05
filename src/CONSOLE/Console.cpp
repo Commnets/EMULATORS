@@ -95,11 +95,14 @@ void MCHEmul::Console::run ()
 // ---
 void MCHEmul::Console::manageAnswer (MCHEmul::Command* c, const MCHEmul::InfoStructure& rst)
 {
-	if (rst.empty ())
-		return;
+	// It is used the formatter with the name of the command!
+	std::shared_ptr <MCHEmul::Formatter> fmt = 
+		MCHEmul::FormatterBuilder::instance () -> formatter (c -> name ());
 
-	_outputStream << MCHEmul::FormatterBuilder::instance () ->
-		formatter (c -> name ()) -> format (rst) << std::endl; // It is used the formatter with the name of the command!
+	if (rst.empty () && fmt -> empty ())
+		return; // Nothing to print out...
+
+	_outputStream << fmt -> format (rst) << std::endl; 
 }
 
 // ---

@@ -274,6 +274,12 @@ Data:@DATA@
 #---
 #---
 ;CVICIIEVENTS
+Legend:
+Light Cyan: Positive edge vertical border (on)
+Light Yellow: Negative edge vertical border (off)
+Light Orange: Positive edge main border (on)
+Light Purple: Negative edge main border (off)
+Light Green: Badline
 #---
 #---
 ;CVIA

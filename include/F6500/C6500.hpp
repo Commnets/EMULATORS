@@ -110,12 +110,18 @@ namespace F6500
 			`_CYCLEWRITE` type (usually none, except in the cases of the BRK and JSR instructions)....\n
 			IMPORTANT NOTE: In the first case, the actualization of the memory should be stopped. \n
 			That actualization has to be configured as "buffered" in the definition of the memory. */
-		virtual void setStopAdditional (bool s, unsigned int tC, unsigned int cC, int nC) override;
+		virtual bool unbufferCommands () override;
 
 		virtual MCHEmul::CPUInterruptSystem* createInterruptSystem () const override
 							{ return (new MCHEmul::StandardCPUInterruptSystem 
 								({ { F6500::IRQInterrupt::_ID, new F6500::IRQInterrupt }, 
 								   { F6500::NMIInterrupt::_ID, new F6500::NMIInterrupt } })); }
+
+		private:
+		// -----
+		// Different debug methods to simplify the internal code
+		// and to make simplier the modification in case it is needed...
+		void debugUnbufferCommands ();
 
 		private:
 		// Implementation

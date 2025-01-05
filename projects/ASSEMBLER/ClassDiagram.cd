@@ -1,0 +1,312 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1">
+  <Class Name="MCHEmul::Assembler::Compiler" Collapsed="true">
+    <Position X="33" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAQAAgAAFAAAACAAEIAAAAAAEAAAAAAIAgAAAAAIA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\ASSEMBLER\Compiler.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::Assembler::OperationParser" Collapsed="true">
+    <Position X="0.5" Y="6.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAEARAAAAAAAIAAASAAAAwEBAAAoAIBAAgAgAAIAw=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\ASSEMBLER\OperationParser.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::Assembler::Macro" Collapsed="true">
+    <Position X="34.75" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>ABAAIAAAAAAACAAAAAEBAAAAAgAEMCAAAAAgAAAAFCA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\ASSEMBLER\Grammar.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::Assembler::CodeTemplate" Collapsed="true">
+    <Position X="31.25" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AJAAIAAAAAAEEAAAAAEBAQAAAAAEIAAAAAAgAAAAAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\ASSEMBLER\Grammar.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::Assembler::Semantic" Collapsed="true">
+    <Position X="34.75" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AhEAEAQAgZAAABAAABEAAABBEEBAIAIAAABkAAAAAEA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\ASSEMBLER\Grammar.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::Assembler::CommandParser" Collapsed="true">
+    <Position X="15.25" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAgAIAAAAIAAEAAAAACAEAAgAAAIAgAAAAIAg=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\ASSEMBLER\Parser.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::Assembler::OperationElement" Collapsed="true">
+    <Position X="9" Y="6.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAgAEIAAAAAAAgICAAAAAhAAAAAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\ASSEMBLER\Operation.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::Assembler::ValueOperationElement" Collapsed="true">
+    <Position X="14.75" Y="7.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>ABAAAAAAAAQAAAAAAAAIAAAAAAAAACAAAAAAAAAAAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\ASSEMBLER\Operation.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::Assembler::VariableOperationElement" Collapsed="true">
+    <Position X="17" Y="7.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAIAAAAAAAAAAAAAAIAAAAAAAAACAIAAAAAAAAAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\ASSEMBLER\Operation.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::Assembler::ParserContext" Collapsed="true">
+    <Position X="33" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AEgAAAAEABBAAACAAAABCgAAAEAAAAACgAAAIAAAMCA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\ASSEMBLER\Parser.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::Assembler::Parser" Collapsed="true">
+    <Position X="31.25" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAwAAAhQQBAAAAAAAFBAgAACEAAAAABAIAgAgAAIAo=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\ASSEMBLER\Parser.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::Assembler::CommentCommandParser" Collapsed="true">
+    <Position X="1.75" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAIAAAAAAAAAAAAAAAAAACAAIAAAAAAAAAAAAAAIAg=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\ASSEMBLER\Parser.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::Assembler::IncludeCommandParser" Collapsed="true">
+    <Position X="6.25" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAABAAAAAAAAAAAAAAAAAAAAIAAAAAAAAAAAAAAIAg=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\ASSEMBLER\Parser.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::Assembler::MacroCommandParser" Collapsed="true">
+    <Position X="10.75" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>ACAAAAAAAAAAAAAAAAAAAAAAAIAAAAAAAAAAAAAAIAg=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\ASSEMBLER\Parser.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::Assembler::CodeTemplateDefinitionCommandParser" Collapsed="true">
+    <Position X="15.25" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>gCAAAAAAAAAAAAAAAACAAAAAAAAAAAAAAAAAAAAAIAg=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\ASSEMBLER\Parser.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::Assembler::CodeTemplateUseCommandParser" Collapsed="true">
+    <Position X="19.75" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAIAQAAAAAAAAAAAAIAg=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\ASSEMBLER\Parser.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::Assembler::StartingPointCommandParser" Collapsed="true">
+    <Position X="24.25" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAIAgAAAAAAAAAAAAIAg=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\ASSEMBLER\Parser.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::Assembler::LabelCommandParser" Collapsed="true">
+    <Position X="28.75" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAABAAAAAAAAAAAIAAAAAAAAAAAAAAIAg=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\ASSEMBLER\Parser.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::Assembler::BytesCommandParser" Collapsed="true">
+    <Position X="4" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAIAAAAAAAAAAIAg=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\ASSEMBLER\Parser.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::Assembler::BinaryDefinitionParser" Collapsed="true">
+    <Position X="8.5" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAACAAEABgAAAAAAAAAAAAIAg=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\ASSEMBLER\Parser.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::Assembler::BinaryCommandParser" Collapsed="true">
+    <Position X="13" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAgAAQAAAAAAAAAAQAAAAAAAIAg=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\ASSEMBLER\Parser.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::Assembler::TextCommandParser" Collapsed="true">
+    <Position X="17.5" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAgAAAAAAEAAABAAAAAAAAAAIAg=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\ASSEMBLER\Parser.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::Assembler::LoadBytesFileCommandParser" Collapsed="true">
+    <Position X="22" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIAg=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\ASSEMBLER\Parser.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::Assembler::InstructionCommandParser" Collapsed="true">
+    <Position X="26.5" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAACAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIAg=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\ASSEMBLER\Parser.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::Assembler::StdOperationParser" Collapsed="true">
+    <Position X="0.5" Y="7.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAABAAAAAAAAAAACAAAAQAAEAAIAIAAAAAAAAAAg=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\ASSEMBLER\StdOperationParser.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::Assembler::FunctionOperationElement" Collapsed="true">
+    <Position X="6.75" Y="7.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAEAAAAAAAAAAAAAAAgCIAAEABAAAAAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\ASSEMBLER\StdOperations.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::Assembler::BinaryFunctionOperationElement" Collapsed="true">
+    <Position X="4.5" Y="9.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAIAAAAAAAAACAAABAAAAAAAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\ASSEMBLER\StdOperations.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::Assembler::UnaryFunctionOperationElement" Collapsed="true">
+    <Position X="11.25" Y="9.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAIAAAAAAAAACAAAAAAAAAEAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\ASSEMBLER\StdOperations.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::Assembler::AddFunctionOperationElement" Collapsed="true">
+    <Position X="1.25" Y="10.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAACAAAAAAAAAAAAAAAAAAAAAAgAAAAAABAAAAAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\ASSEMBLER\StdOperations.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::Assembler::SubtractFunctionOperationElement" Collapsed="true">
+    <Position X="3.5" Y="10.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAACAAAAAAAAAgAAAAAABAAAAAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\ASSEMBLER\StdOperations.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::Assembler::MultiplyFunctionOperationElement" Collapsed="true">
+    <Position X="5.75" Y="10.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AABAAAAAAAAAAAAAAAAAAAAAAAAAgAAAAAABAAAAAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\ASSEMBLER\StdOperations.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::Assembler::DivideFunctionOperationElement" Collapsed="true">
+    <Position X="8" Y="10.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>ABAAAAAAAAAAAAAAAAAAAAAAAAAAgAAAAAABAAAAAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\ASSEMBLER\StdOperations.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::Assembler::LSBFunctionOperationElement" Collapsed="true">
+    <Position X="10.25" Y="10.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAgAAAAAAAAAgAAAAAABAAAAAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\ASSEMBLER\StdOperations.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MCHEmul::Assembler::MSBFunctionOperationElement" Collapsed="true">
+    <Position X="12.5" Y="10.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAhAAAAAABAAAAAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\ASSEMBLER\StdOperations.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Struct Name="MCHEmul::Assembler::ByteCode" Collapsed="true">
+    <Position X="31.25" Y="2.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>QAACAAAAAAAAAAAAEACBAEAAEAAAAAAAQAAAAAEAAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\ASSEMBLER\ByteCode.hpp</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Struct Name="MCHEmul::Assembler::Error" Collapsed="true">
+    <Position X="33" Y="2.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAQAAAAAAAAYQAAAAJAAAAAAAAAAAAAAAAAAAAEAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\ASSEMBLER\Error.hpp</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Struct Name="MCHEmul::Assembler::GrammaticalElement" Collapsed="true">
+    <Position X="6.5" Y="3.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAEAAAAAACAAAEQAAIFBAAACAAIAIIAAAAAgQIAAEgA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\ASSEMBLER\Grammar.hpp</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Struct Name="MCHEmul::Assembler::LabelElement" Collapsed="true">
+    <Position X="3.25" Y="4.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAIAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\ASSEMBLER\Grammar.hpp</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Struct Name="MCHEmul::Assembler::BytesInMemoryElement" Collapsed="true">
+    <Position X="5.5" Y="4.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAABAAAAAABAIAAAAAAAAAAAIAAAAAAAAAAAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\ASSEMBLER\Grammar.hpp</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Struct Name="MCHEmul::Assembler::BytesFileElement" Collapsed="true">
+    <Position X="7.75" Y="4.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAQAAAAAAIIAAAAAAAAAAIAAAAAAAAAAAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\ASSEMBLER\Grammar.hpp</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Struct Name="MCHEmul::Assembler::TextBytesElement" Collapsed="true">
+    <Position X="10" Y="4.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAIAAAAAAAEAAIIAIAAAAAAAAAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\ASSEMBLER\Grammar.hpp</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Struct Name="MCHEmul::Assembler::InstructionElement" Collapsed="true">
+    <Position X="12.25" Y="4.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAACAAAEAAAIAAAAAIAAAAAJAIAAAAAAAAAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\ASSEMBLER\Grammar.hpp</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Struct Name="MCHEmul::Assembler::StartingPointElement" Collapsed="true">
+    <Position X="1" Y="4.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>ABAAAAAAAAAAAAAAACAAAAAAAAIAAIAAAAAAAAAAAAA=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\ASSEMBLER\Grammar.hpp</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Enum Name="MCHEmul::Assembler::ErrorType" Collapsed="true">
+    <Position X="31.25" Y="4" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>EgAAQEAAFIAAIAEAAAAAgAQAAQYAAAEKAAAAQgAAAEI=</HashCode>
+      <FileName>C:\Workspaces\EMULATORS\include\ASSEMBLER\Error.hpp</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Font Name="Segoe UI" Size="9" />
+</ClassDiagram>

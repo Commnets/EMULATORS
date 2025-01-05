@@ -89,6 +89,9 @@ bool COMMODORE::VICII::initialize ()
 
 	_raster.initialize ();
 
+	// Notice that all attributes related with drawing signal are not inialized
+	// to avoid that when restart a new showevents instruction must be commanded!
+
 	_VICIIRegisters -> linkToRaster (&_raster);
 	_VICIIRegisters -> initialize (); // The raster is not reinitialized there...
 
@@ -967,15 +970,15 @@ void COMMODORE::VICII::drawOtherEvents ()
 	// Draw the border events...
 	unsigned int cEvent = std::numeric_limits <unsigned int>::max ();
 	if (_eventStatus._ffVBorderChange.positiveEdge ()) 
-		cEvent = 32; // Auxiliar...
+		cEvent = 32; // Auxiliar. Light cyan
 	if (_eventStatus._ffVBorderChange.negativeEdge ()) 
-		cEvent = 33; // Auxiliar...
+		cEvent = 33; // Auxiliar. Light yellow
 	if (_eventStatus._ffMBorderChange.positiveEdge ())
-		cEvent = 34; // The main indication for the border...
+		cEvent = 34; // The main indication for the border (when activated). Light orange
 	if (_eventStatus._ffMBorderChange.negativeEdge ())
-		cEvent = 35; // The main indication for the border...
+		cEvent = 35; // The main indication for the border (when dsactivated). Light purple
 	if (cEvent != std::numeric_limits <unsigned int>::max ())
-		screenMemory () -> setHorizontalLine 
+		screenMemory () -> setHorizontalLine // Draw at least two pixels when the events has happpened...
 			(_vicGraphicInfo._ffMBorderBegin, _raster.vData ().currentVisiblePosition (), 2, cEvent);
 
 	// Draw the bad line event...
@@ -1016,7 +1019,9 @@ COMMODORE::VICII::DrawResult COMMODORE::VICII::drawGraphics (const COMMODORE::VI
 	// Never invoke the methods within the swith case statements direcly
 	// a crash might be generated...
 
-	_IFDEBUG debugDrawPixelAt (cb);
+	// What is debugged is where the raster is,
+	// Not what is going to be drawn!
+	_IFDEBUG debugDrawPixelAt (dC._RCA);
 
 	COMMODORE::VICII::DrawResult result;
 	switch (_VICIIRegisters -> graphicModeActive ())

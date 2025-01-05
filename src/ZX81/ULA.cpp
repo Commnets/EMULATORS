@@ -32,7 +32,10 @@ ZX81::ULA::ULA (const MCHEmul::RasterData& vd, const MCHEmul::RasterData& hd,
 	  _lastCPUCycles (0),
 	  _format (nullptr),
 	  _firstVBlankEntered (false),
-	  _INTActive (false), _NMIActive (false), _HALTActive (false)
+	  _HALTBefore (false),
+	  _INTActive (false), _NMIActive (false), _HALTActive (false),
+	  _writePort (false), _readPortFE (false),
+	  _NMIGeneratorOn (false), _NMIGeneratorOff (false)
 {
 	setClassName ("ULA");
 
@@ -55,7 +58,8 @@ bool ZX81::ULA::initialize ()
 
 	_raster.initialize ();
 
-	_showEvents = false;
+	// Notice that all attributes related with drawing signal are not inialized
+	// to avoid that when restart a new ulaevents instruction must be commanded!
 
 	_ULARegisters -> initialize ();
 
@@ -63,6 +67,12 @@ bool ZX81::ULA::initialize ()
 
 	_firstVBlankEntered = false;
 
+	// Events null...
+	_HALTBefore = false;
+	_INTActive = false; _NMIActive = false; _HALTActive = false;
+	_writePort = false; _readPortFE = false;
+	_NMIGeneratorOn = false; _NMIGeneratorOff = false;
+	
 	return (true);
 }
 
@@ -96,9 +106,13 @@ bool ZX81::ULA::simulate (MCHEmul::CPU* cpu)
 				cpu -> programCounter ().internalRepresentation () == 0x066)
 				_NMIActive = true;
 			// When the HALT situation is active...
-			if (!_HALTActive.peekValue () &&
-				cpu -> lastInstruction () -> code () == 0x076)
-				_HALTActive = true;
+			if (cpu -> lastInstruction () -> code () == 0x076)
+			{
+				if (!_HALTActive.peekValue ())
+					_HALTActive = true;
+			}
+			else
+				_HALTBefore = false;
 		}
 
 		// Read the graphics and draw the visible zone, 
@@ -203,21 +217,22 @@ MCHEmul::ScreenMemory* ZX81::ULA::createScreenMemory ()
 	// The colors are partially transparents to allow the blending...
 	cP [0]  = SDL_MapRGBA (_format, 0x00, 0x00, 0x00, 0xe0); // Black
 	cP [1]  = SDL_MapRGBA (_format, 0xff, 0xff, 0xff, 0xe0); // White
+
 	// These other colors doesn't exist in ZX81, but are used to draw borders, bebug information, etc...
-	cP [2]  = SDL_MapRGBA (_format, 0x92, 0x4a, 0x40, 0xe0); // Red
-	cP [3]  = SDL_MapRGBA (_format, 0x84, 0xc5, 0xcc, 0xe0); // Cyan
-	cP [4]  = SDL_MapRGBA (_format, 0x93, 0x51, 0xb6, 0xe0); // Violet
-	cP [5]  = SDL_MapRGBA (_format, 0x72, 0xb1, 0x4b, 0xe0); // Green
-	cP [6]  = SDL_MapRGBA (_format, 0x48, 0x3a, 0xaa, 0xe0); // Blue
-	cP [7]  = SDL_MapRGBA (_format, 0xd5, 0xdf, 0x7c, 0xe0); // Yellow
-	cP [8]  = SDL_MapRGBA (_format, 0x99, 0x69, 0x2d, 0xe0); // Brown
-	cP [9]  = SDL_MapRGBA (_format, 0x67, 0x52, 0x00, 0xe0); // Light Red
-	cP [10] = SDL_MapRGBA (_format, 0xc1, 0x81, 0x78, 0xe0); // Orange
-	cP [11] = SDL_MapRGBA (_format, 0x60, 0x60, 0x60, 0xe0); // Dark Grey
-	cP [12] = SDL_MapRGBA (_format, 0x8a, 0x8a, 0x8a, 0xe0); // Medium Grey
-	cP [13] = SDL_MapRGBA (_format, 0xb3, 0xec, 0x91, 0xe0); // Light Green
-	cP [14] = SDL_MapRGBA (_format, 0x86, 0x7a, 0xde, 0xe0); // Light Blue
-	cP [15] = SDL_MapRGBA (_format, 0xb3, 0xb3, 0xb3, 0xe0); // Light Grey
+	cP [2]  = SDL_MapRGBA (_format, 0x92, 0x4a, 0x40, 0xff); // Red
+	cP [3]  = SDL_MapRGBA (_format, 0x84, 0xc5, 0xcc, 0xff); // Cyan
+	cP [4]  = SDL_MapRGBA (_format, 0x93, 0x51, 0xb6, 0xff); // Violet
+	cP [5]  = SDL_MapRGBA (_format, 0x72, 0xb1, 0x4b, 0xff); // Green
+	cP [6]  = SDL_MapRGBA (_format, 0x48, 0x3a, 0xaa, 0xff); // Blue
+	cP [7]  = SDL_MapRGBA (_format, 0xd5, 0xdf, 0x7c, 0xff); // Yellow
+	cP [8]  = SDL_MapRGBA (_format, 0x99, 0x69, 0x2d, 0xff); // Brown
+	cP [9]  = SDL_MapRGBA (_format, 0x67, 0x52, 0x00, 0xff); // Light Red
+	cP [10] = SDL_MapRGBA (_format, 0xc1, 0x81, 0x78, 0xff); // Orange
+	cP [11] = SDL_MapRGBA (_format, 0x60, 0x60, 0x60, 0xff); // Dark Grey
+	cP [12] = SDL_MapRGBA (_format, 0x8a, 0x8a, 0x8a, 0xff); // Medium Grey
+	cP [13] = SDL_MapRGBA (_format, 0xb3, 0xec, 0x91, 0xff); // Light Green
+	cP [14] = SDL_MapRGBA (_format, 0x86, 0x7a, 0xde, 0xff); // Light Blue
+	cP [15] = SDL_MapRGBA (_format, 0xb3, 0xb3, 0xb3, 0xff); // Light Grey
 
 	return (new MCHEmul::ScreenMemory (numberColumns (), numberRows (), cP));
 }
@@ -239,9 +254,16 @@ void ZX81::ULA::readGraphicsAndDrawVisibleZone (MCHEmul::CPU* cpu)
 
 	if (_showEvents)
 	{
-		if (_HALTActive) _screenMemory -> setPixel (x, y, 12);
-		if (_INTActive) _screenMemory -> setPixel (x, y, 2);
-		if (_NMIActive) _screenMemory -> setPixel (x, y, 7);
+		if (_HALTActive)
+			{ _screenMemory -> setPixel (x, y, !_HALTBefore ? 13 /** Fist HALT. */ : 12); _HALTBefore = true; }
+		if (_INTActive)			_screenMemory -> setPixel (x, y, 2);	// Red
+		if (_NMIActive)			_screenMemory -> setPixel (x, y, 7);	// Yellow
+		// Writting and reading to the specific ports is also detected...
+		size_t l = (x <= 5) ? x : 5;
+		if (_writePort)			_screenMemory -> setHorizontalLine (x - l, y, l, 5);	// Green
+		if (_NMIGeneratorOn)	_screenMemory -> setHorizontalLine (x - l, y, l, 6);	// Blue
+		if (_NMIGeneratorOff)	_screenMemory -> setHorizontalLine (x - l, y, l, 8);	// Brown
+		if (_readPortFE)		_screenMemory -> setHorizontalLine (x - l, y, l, 3);	// Cyan
 	}
 
 	bool px = true;

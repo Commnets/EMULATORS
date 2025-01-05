@@ -41,6 +41,9 @@
     <ClCompile Include="..\..\src\ASSEMBLER\StdOperationParser.cpp" />
     <ClCompile Include="..\..\src\ASSEMBLER\StdOperations.cpp" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="ClassDiagram.cd" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>
     <ProjectGuid>{8388FEAA-CDFA-430C-945D-5272AB6D3980}</ProjectGuid>

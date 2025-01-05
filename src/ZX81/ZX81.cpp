@@ -29,7 +29,7 @@ ZX81::SinclairZX81::SinclairZX81 (ZX81::Memory::Configuration cfg,
 	  _A6 (false)
 {
 	// Add the port manager for all ports!
-	ZX81::PortManager* pM = new PortManager;
+	ZX81::PortManager* pM = new ZX81::PortManager;
 	FZ80::Z80PortsMap pMps;
 	for (unsigned short i = 0; i < 256; i++)
 		pMps.insert (FZ80::Z80PortsMap::value_type ((unsigned char) i, pM));
@@ -97,15 +97,15 @@ void ZX81::SinclairZX81::specificComputerCycle ()
 
 	// If the bit 6 of the address went from 1 to 0...
 	// the INT line of the Z80 should be up (interrupt requested).
-	// However at this point the ULA cycle han't been executed yet,
-	// and there a NMI request could be generated and with more priority that this
-	// So the INT is only requeted if the ULA were not about to do so!
+	// However at this point, the ULA cycle hasn't been executed yet,
+	// and a NMI requests could be generated and obvioulsy with more priority than this one.
+	// So the INT here is only requested if the ULA were not about to do so later!
 	// In the definition of the ZX81 (machine) is possbile to have INT and NMI at the same time...
 	// It is guaranteed by the code!...
 	if (_A6.negativeEdge () &&	// From 1 to 0...
 		cpu () -> interrupt (FZ80::INTInterrupt::_ID) -> 
 			canBeExecutedOver (cpu (), cpu () -> clockCycles ()) &&
-		!_ula -> registers () -> NMIGenerator ())
+		!_ula -> aboutToGenerateNMIAfterCycles (cpu () -> lastCPUClockCycles ()))
 	{ 
 		// The INT is requested...
 		cpu () -> requestInterrupt

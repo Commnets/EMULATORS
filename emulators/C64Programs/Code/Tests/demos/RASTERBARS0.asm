@@ -1,6 +1,7 @@
 ; flasher
 ; This program causes the border to flash 60 times per second
-; It has to be executed from basic interface
+; It has to be executed from BASIC line bacause it doesn't stop it!
+; Load the program and call SYS49152. 
 
 * = $c000
 main:

@@ -1,11 +1,8 @@
-;making simple rasterbars
-;by Knoeki of Digital Sounds System
-;
-;was coded and proven to work in Turbo Assembler 5.2 (Cyberpunx RR)
-;
-;should be compatible with most assemblers out there..
-;
-;                                                          enjoy ;)
+; Simple Rasterbar demo
+; by Knoeki of Digital Sounds System
+; invoke it directly from the command line 
+; with the parameters /c..[PATH]\RASTERBARS1.asm /a$080d
+; It could also work from the BASIC line: Load the program and call SYS2061
 
 * = $080d
 

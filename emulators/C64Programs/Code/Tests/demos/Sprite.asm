@@ -1,4 +1,8 @@
 ; A white full sprite crossing the screen.
+; Can be invoked from BASIC interface
+; Load the program an call SYS2049
+; It can also be loaded direcly from the command line with
+; the parameter /c[PATH]\Sprite.asm /a$0801
 
 * = $0801
 

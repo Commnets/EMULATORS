@@ -413,7 +413,8 @@ std::vector <MCHEmul::UByte> MCHEmul::MemoryView::bytes (const MCHEmul::Address&
 			// At this point it is sure that the first position requested is inside the memory identified...
 			// ..but not necessary the last one. So it is needed to control that we don't exceed the boundaries!
 			// and if this happen a DEFAULT value is kept into the list to be returned!
-			size_t pos = (size_t) (a - fS -> initialAddress ()) + i;
+			size_t pos = (fS != nullptr) 
+				? ((size_t) (a - fS -> initialAddress ()) + i) : 0;
 			result.emplace_back ((fS != nullptr && pos < fS -> size ())
 				? fS -> readValue (pos) : MCHEmul::PhysicalStorage::_DEFAULTVALUE);
 		}
@@ -439,7 +440,8 @@ void MCHEmul::MemoryView::set (const MCHEmul::Address& a, const std::vector <MCH
 			// At this point it is guarantteed that the first position will be inside the memory
 			// but the rests won't. To avoid a crash in the system it is needed to control
 			// the boundaries..
-			size_t pos = (size_t) (a - fS -> initialAddress ()) + i;
+			size_t pos = (fS != nullptr) 
+				? ((size_t) (a - fS -> initialAddress ()) + i) : 0;
 			if (fS != nullptr && pos < fS -> size ())
 			{
 				if (MCHEmul::Memory::configuration ().bufferMemorySetCommands (fS))
@@ -486,7 +488,8 @@ void MCHEmul::MemoryView::put (const MCHEmul::Address& a, const std::vector <MCH
 			// The next action goes directly against the memory,
 			// so to avoid unexpected results (or even a crash of the system),
 			// it is needed to verify that we don't go over the boundaries...
-			size_t pos = (size_t) (a - fS -> initialAddress ()) + i;
+			size_t pos = (fS != nullptr) 
+				? ((size_t) (a - fS -> initialAddress ()) + i) : 0;
 			if (fS != nullptr && pos < fS -> size ())
 				fS -> setValue (pos, v [i]); // If it were out the limits, the operations wouldn't take place...
 		}

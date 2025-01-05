@@ -92,6 +92,103 @@ namespace MCHEmul
 		// These states are managed in the method @see executeNextCycle, that is the core of the CPU
 		// So if more states were added the method would have to be overloaded too...
 
+		/** The Stop Status is very special in the CPU.
+			It is needed to keep a lot of information about it, 
+			that can be managed in many different ways depending on the implementation of the CPU. */
+		struct StopStatusData final
+		{
+			StopStatusData ()
+				: _typeCyclesStopped (0),
+				  _cyclesAtStop (0),
+				  _cyclesStopped (0),
+				  _cyclesAtCPU (0),
+				  _cyclesLastInstructionExecutedStopRequest (0),
+				  _cyclesLastInstructionOverlappedStopRequest (0),
+				  _counterCyclesStopped (0)
+							{ }
+
+			/** The parameters are:
+				@param tC	: Type of cycle where to stop. @see InstructionDefined. \n
+				@param cC	: Cycle when the stop request came. \n
+				@param nC	: For how many cycles must the CPU stop? -1 will mean forever. \n
+							  Only either positive values or -1 are allowed!
+				@param c	: Current cycle of the CPU, usually after having ececuted the last instruction. \n
+				@param nLI	: Number of cycles of the last instruction. 
+				The last two parameters are to calculate the overlap of the stop request with the last instruction. */
+			StopStatusData (unsigned int tC, unsigned int cC, int nC, 
+				unsigned int c, unsigned int nLI)
+							{ initialize (tC, cC, nC, c, nLI); }
+
+			/** To know whether the status is valid for certain type of cycles. */
+			bool validForCycles (unsigned int tC) const
+							{ return ((_typeCyclesStopped & tC) != 0); }
+
+			/** Put all attributes to 0. */
+			inline void reset ();
+
+			/** Same effect that the constructor but without creating a new object.
+				It is even invoked from the constructor. */
+			inline void initialize (unsigned int tC, unsigned int cC, int nC,
+				unsigned int c, unsigned int nLI);
+
+			// Partial execution...
+			/** Simnilar than the previous but not actualizing the information about the overlap. */
+			inline void reset (unsigned tC, unsigned int cC, int nC, unsigned int c);
+			/** To recalculate the overlap info. */
+			inline void calcOverlapInfo (unsigned int nLI);
+
+			// When running...
+			/** Just running, 
+				but is there still to maintain this state? 
+				This method must be executed after being inialized and always the stop state remains. 
+				Returns true if the status is still valid and false if it isn't. */
+			bool run () const
+							{ return (_cyclesStopped == -1 ||
+								(_cyclesStopped != -1 &&
+								 (int (++_counterCyclesStopped) < _cyclesStopped))); }
+			/** To get the number of cycles still stopped.
+				It returns -1 meaning forever. */
+			int cyclesStillValid () const
+							{ return (_cyclesStopped == -1 
+								? _cyclesStopped // Meaning forever...
+								: ((_cyclesStopped >= (int) _counterCyclesStopped) // Only if it is bigger...
+									? (_cyclesStopped - (int) _counterCyclesStopped) : 0)); }
+
+			/** To get the attributes. */
+			Attributes attributes () const;
+			/** To get information about the status in a string. */
+			std::string asString () const;
+			/** To get only the core info about the status. */
+			std::string asStringCore () const;
+
+			// It is not recommened to access directly to the attributes, but just in case...
+
+			/** Type of cycle where to stop. */
+			unsigned int _typeCyclesStopped;
+			/** Number of cycles of the processor when the stop was requested. */
+			unsigned int _cyclesAtStop;
+			/** Number of cycles to be stopped. -1 means forever... */
+			int _cyclesStopped; 
+			/** The number of cycles at the CPU. */
+			unsigned int _cyclesAtCPU;
+
+			/** The stop request usually comes externally to the CPU.
+				The way this simulation is done implies that the last instruction had been already executed 
+				when the stop request same. So part (or all) of the last instruction shouldn't have vbeen executed.
+				This structure calculate how many cycles were overlap of the last instruction were overlaped 
+				and how many of them were really executed. */
+			/** Number of cycles that the last Instruction overlapped when the stop was request, if any. */
+			unsigned int _cyclesLastInstructionOverlappedStopRequest;
+			/** Number of cycles of the last instruction that were executed before the stop was requested. */
+			unsigned int _cyclesLastInstructionExecutedStopRequest;
+
+			// Implementation
+			/** Current number of cycles already stopped, 
+				obviously when it is the situation and it is nor forever. 
+				It is put to 0 when the stop is requested back. */
+			mutable unsigned int _counterCyclesStopped;
+		};
+
 		/** The most important attribute is maybe the "set of instructions". \n
 			Define them very carefully. They are the CORE of the processor. 
 			Notice that no list of interrupt is given at construction time. 
@@ -120,11 +217,12 @@ namespace MCHEmul
 		unsigned int lastState () const
 							{ return (_lastState); }
 
-		// Related with the stae stopped...
-		/** Is the CPU stopped for any reason? 
-			The type of cycles why the CPU is stopped for is optional (all as default). */
-		bool stopped (unsigned int tC = InstructionDefined::_CYCLEALL) const
-							{ return (_state == _STOPPED && ((_typeCycleStopped & tC) != 0)); }
+		// Related with the state stopped...
+		/** To get a reference to the stop status. */
+		const StopStatusData& stopStatusData () const
+							{ return (_stopStatusData); }
+		StopStatusData& stopStatusData ()
+							{ return (_stopStatusData); }
 		/** 
 		  *	By default: \n
 		  *	Only possible to stop (s = true) if it was either executing an instruction or starting an interruption. \n
@@ -138,10 +236,14 @@ namespace MCHEmul
 			unsigned int tC, /** Type of cycle affected when stop. 0 means none, than might be contradictory with s value. */
 			unsigned int cC, /** Number of cycles of the microprocessor when the the stop was requested. */
 			int nC = -1 /** how many cycles when s = true. -1 will mean forever. */);
+		/** Is the CPU stopped for any reason? 
+			The type of cycles why the CPU is stopped for is optional (all as default). */
+		bool stopped (unsigned int tC = InstructionDefined::_CYCLEALL) const
+							{ return (_state == _STOPPED && _stopStatusData.validForCycles (tC)); }
 		/** To know how many cycles the cpu will remain still stopped.
 			= 0 if nothing ot if the state is = _RUNNING. */
 		unsigned int cyclesRemainStopped () const
-							{ return ((_state == _STOPPED) ? (_cyclesStopped - _counterCyclesStopped) : 0); }
+							{ return ((_state == _STOPPED) ? _stopStatusData.cyclesStillValid () : 0); }
 
 		// Info about the registers...
 		const Registers& internalRegisters () const
@@ -342,15 +444,13 @@ namespace MCHEmul
 
 		protected:
 		// Internal methods to simplify the understanding of the code.
-		// However they can be overloaded...
-		// Invoked from setStop
-		/** When the instruction setStop (standard behaviour) is invoked
-			some additional things could have been done depending on the CPU.
-			This exit allows to overload that behaviour. \n
-			The paremeters are the same one than in the original instuction, 
-			plus the _state before executing the instruction stop. */
-		virtual void setStopAdditional (bool s, unsigned int tC, unsigned int cC, int nC)
-							{  }
+		// Most of them can be overloaded...take care!
+
+		// Invoked from executeNextCycle
+		/** The first instruction of the method is to free the buffered commands (if any). \n
+			This method must answer true when that instruction can be run and false in other circunstance. */
+		virtual bool unbufferCommands ()
+							{ return (true); }
 
 		// Invoked from executeNextInstruction
 		/** 
@@ -418,7 +518,7 @@ namespace MCHEmul
 		void debugInterruptRequest (const CPUInterruptRequest& iR) const;
 		void debugLastExecutionData () const; // Using information in _lastInstruction...
 		void debugStopSituation () const; // Using information in CPU abour stop situation (@see below)
-		void debugAlreadyStopped (unsigned int tC, int nC) const; // That situation is not ususal...(same meaning than debugStopRequest)
+		void debugAlreadyStopped () const; // That situation is not ususal...
 		void debugInterruptLaunched () const; // Using the information in _currentInterrupt...
 		void debugInterruptFails () const; // Using the information in _currentInterrupt...
 		void debugInterruptRequestNotAllowed (const CPUInterruptRequest& iR) const;
@@ -483,30 +583,65 @@ namespace MCHEmul
 		Instruction* _lastInstruction;
 
 		// When _STOPPED:
-		/** Type of cycle where to stop. */
-		unsigned int _typeCycleStopped;
-		/** Number of cycles to be stopped. -1 means forever... */
-		int _cyclesStopped; 
-		/** Number of cycles of the processor when the stop was requested. */
-		unsigned int _cyclesAtStop;
-		/** Current number of cycles already stopped, 
-			obviously when it is the situation and it is nor forever. 
-			It is put to 0 when the stop is requested back. */
-		unsigned int _counterCyclesStopped;
-		// Imagine that CPU is running in parallel with a chip that requested stopping the CPU 
-		// in the middle of the execution of that instruction. 
-		// Should have the CPU stopped? What should it be done now once the instruction was executed? 
-		// What to do is something depending on the implementation of the emulation.
-		// This variables are filled up automatically and can could help to decide what to do:
-		/** Number of cycles that the last Instruction overlapped when the stop was request, if any. */
-		unsigned int _cyclesLastInstructionOverlappedStopRequest;
-		/** Number of cycles of the last instruction that were executed before the stop was requested. */
-		unsigned int _cyclesLastInstructionExecutedStopRequest;
+		StopStatusData _stopStatusData;
 
 		/** The instructions will be moved into an array at construction time,
 			to speed up their access in the executeNextInstruction method. */
 		ListOfInstructions _rowInstructions;
 	};
+
+	// ---
+	inline void CPU::StopStatusData::reset ()
+	{ 
+		reset (0, 0, 0, 0);  
+
+		_cyclesLastInstructionOverlappedStopRequest =
+		_cyclesLastInstructionExecutedStopRequest = 0;
+	}
+
+	// ---
+	inline void CPU::StopStatusData::initialize 
+		(unsigned int tC, unsigned int cC, int nC, unsigned int c, unsigned int nLI)
+	{
+		reset (tC, cC, nC, c);
+
+		calcOverlapInfo (nLI);
+	}
+
+	// ---
+	inline void CPU::StopStatusData::reset (unsigned tC, unsigned int cC, int nC, unsigned int c)
+	{
+		_typeCyclesStopped = tC;
+		_cyclesAtStop = cC;
+		// The values allowed are either positive or -1 meaning forever!
+		_cyclesStopped = (nC < 0) ? -1 : nC; 
+		_cyclesAtCPU = c;
+
+		// Notice that the overlap info is not updated...
+
+		_counterCyclesStopped = 0;
+	}
+
+	// ---
+	inline void CPU::StopStatusData::calcOverlapInfo (unsigned int nLI)
+	{
+
+		// Actualize the info related with the overlapping...
+		// c should be always bigger (or equal) that cC. If it wasn't no overlap happened!
+		if (_cyclesAtCPU < _cyclesAtStop)
+		{
+			_cyclesLastInstructionOverlappedStopRequest = 0; // No overlapped could happen ener...
+			_cyclesLastInstructionExecutedStopRequest = nLI; // ...so the last instruction was exected fully!
+		}
+		else
+		{
+			_cyclesLastInstructionOverlappedStopRequest = _cyclesAtCPU - _cyclesAtStop;
+			_cyclesLastInstructionExecutedStopRequest = 
+				(nLI >= _cyclesLastInstructionOverlappedStopRequest) 
+					? nLI - _cyclesLastInstructionOverlappedStopRequest
+					: 0; // If this situation an error has happened.... 
+		}
+	}
 
 	// ---
 	inline void CPU::addHook (unsigned long a, CPUHook* h)
