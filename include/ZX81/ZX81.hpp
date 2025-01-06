@@ -45,16 +45,23 @@ namespace ZX81
 							{ return (_type); }
 
 		// To access the different locations of the memory...
+		// The locations depends in some ocassions on the type of computer...
 		/** Where the display file starting point is stored. */
 		inline MCHEmul::Address D_FILEAddress () const;
 		/** The location of the display file. */
 		MCHEmul::Address D_FILE () const
 							{ return (MCHEmul::Address (memory () -> values (D_FILEAddress (), 2), false)); }
-		/** Where the variables starting point is stored. */
+		/** The location of the end of the display.
+			In the ZX80 there is a specific variable with that. 
+			In the ZX81 there isn't and it lasts until the vars space starts. */
+		inline MCHEmul::Address DF_END () const;
+		/** Where the variables of the system starting point is stored. */
 		inline MCHEmul::Address VARSAddress () const;
-		/** Th elocation of the variables. */
-		inline MCHEmul::Address VARS () const
+		/** The location of the variables of the system */
+		MCHEmul::Address VARS () const
 							{ return (MCHEmul::Address (memory () -> values (VARSAddress (), 2), false)); }
+		/** The location of the chars definition. */
+		inline MCHEmul::Address CHARS () const;
 
 		// To get snapshots of the memory...
 		// They are used in some commands...
@@ -67,6 +74,9 @@ namespace ZX81
 			D_FILE and VARS variables location itself varies depending on the version of the computer emulated. 
 			We have simulated this under the ULA because it is more or less "graphic", but it could be simple at memory. */
 		inline MCHEmul::UBytes displayFileSnapShot () const;
+		/** To get the characters. */
+		MCHEmul::Strings charsDrawSnapshot (MCHEmul::CPU* cpu, 
+			const std::vector <size_t>& chrs = { }) const;
 
 		/** To get a reference to the ULA chip. */
 		const ULA* ula () const
@@ -89,7 +99,7 @@ namespace ZX81
 		/** Adapt the ZX81 to the memory configuration. \n
 			The parameter rs indicates whether to restart the computer. \n
 			By default it is true. */
-		void setConfiguration (Memory::Configuration cfg, bool rs = true);
+		void setConfiguration (Memory::Configuration cfg, Type t, bool rs = true);
 
 		// Implementation
 		static MCHEmul::Chips standardChips (VisualSystem vS);
@@ -115,22 +125,39 @@ namespace ZX81
 	}
 
 	// ---
+	inline MCHEmul::Address SinclairZX81::DF_END () const
+	{
+		return ((_type == Type::_ZX80)
+			? MCHEmul::Address (memory () -> values (MCHEmul::Address 
+				({ 0x10, 0x40 } /** DF_ENDAddress. */, false), 2), false)
+			: VARS ());
+	}
+
+	// ---
 	inline MCHEmul::Address SinclairZX81::VARSAddress () const
 	{ 
-		return (_type == Type::_ZX80 
+		return ((_type == Type::_ZX80)
 			? MCHEmul::Address ({ 0x08, 0x40 }, false)
 			: MCHEmul::Address ({ 0x10, 0x40 }, false)); 
 	}
 
 	// ---
+	inline MCHEmul::Address SinclairZX81::CHARS () const
+	{
+		return ((_type == Type::_ZX80)
+			? MCHEmul::Address ({ 0x00, 0x0e }, false)
+			: MCHEmul::Address (MCHEmul::Address ({ 0x00, 0x1e }, false)));
+	}
+
+	// ---
 	inline MCHEmul::UBytes SinclairZX81::displayFileSnapShot () const
 	{ 
-		MCHEmul::Address dF = D_FILE ();
-		MCHEmul::Address vrs = VARS ();
+		MCHEmul::Address dFI = D_FILE ();
+		MCHEmul::Address dFE = DF_END ();
 
-		assert (vrs.value () >= dF.value ());
+		assert (dFE.value () >= dFI.value ());
 
-		return (memory () -> values (dF, (size_t) vrs.value () - dF.value ()));
+		return (memory () -> values (dFI, (size_t) (dFE.value () - dFI.value ())));
 	}
 }
 

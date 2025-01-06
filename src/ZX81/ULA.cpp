@@ -177,38 +177,6 @@ MCHEmul::InfoStructure ZX81::ULA::getInfoStructure () const
 }
 
 // ---
-MCHEmul::Strings ZX81::ULA::charsDrawSnapshot (MCHEmul::CPU* cpu,
-	const std::vector <size_t>& chrs) const
-{
-	MCHEmul::Strings result;
-	for (size_t i = 0; i < 128; i++)
-	{
-		if (!chrs.empty () && 
-			std::find (chrs.begin (), chrs.end (), i) == chrs.end ())
-			continue;
-
-		MCHEmul::Address chrAdd = MCHEmul::Address ({ 0x00, 0x1e }, false) + (i << 3);
-		std::string dt = std::to_string (i) + "---\n$" +
-			MCHEmul::removeAll0 (chrAdd.asString (MCHEmul::UByte::OutputFormat::_HEXA, '\0', 2)) + "\n";
-		MCHEmul::UBytes chrDt = cpu -> memoryRef () -> values (chrAdd, 0x08);
-		for (size_t j = 0; j < 8; j++) // 8 lines per character...
-		{
-			if (j != 0)
-				dt += "\n";
-
-			for (size_t l = 0; l < 8; l++)
-				dt += ((chrDt [j].value () & (1 << (7 - l))) != 0x00) ? "#" : " ";
-		}
-
-		result.emplace_back (std::move (dt));
-	}
-
-	result.emplace_back ("---");
-
-	return (result);
-}
-
-// ---
 void ZX81::ULA::processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifier* n)
 {
 	switch (evnt.id ())

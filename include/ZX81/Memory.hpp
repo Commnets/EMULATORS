@@ -108,7 +108,7 @@ namespace ZX81
 			It shows change only at initialization, otherwise the consecuencues are not clear. */
 		Configuration configuration () const
 							{ return (_configuration); }
-		void setConfiguration (Configuration cfg);
+		void setConfiguration (Configuration cfg, Type t);
 
 		/** To activate the right subsets in the CPU view. */
 		virtual bool initialize () override;
@@ -119,7 +119,7 @@ namespace ZX81
 		virtual MCHEmul::MemoryView* lookForCPUView () override
 							{ return (view (_CPU_VIEW)); }
 
-		static MCHEmul::Memory::Content standardMemoryContent ();
+		static MCHEmul::Memory::Content standardMemoryContent (Type t);
 
 		private:
 		Type _type;

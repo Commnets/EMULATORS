@@ -41,7 +41,39 @@ ZX81::SinclairZX81::SinclairZX81 (ZX81::Memory::Configuration cfg,
 	// Assign the ULA to the PortManager...
 	pM -> linkToULA (_ula);
 
-	setConfiguration (cfg, false /** Not restart at initialization. */);
+	setConfiguration (cfg, t, false /** Not restart at initialization. */);
+}
+
+// ---
+MCHEmul::Strings ZX81::SinclairZX81::charsDrawSnapshot (MCHEmul::CPU* cpu,
+	const std::vector <size_t>& chrs) const
+{
+	MCHEmul::Strings result;
+	for (size_t i = 0; i < 64; i++)
+	{
+		if (!chrs.empty () && 
+			std::find (chrs.begin (), chrs.end (), i) == chrs.end ())
+			continue;
+
+		MCHEmul::Address chrAdd = CHARS () + (i << 3);
+		std::string dt = std::to_string (i) + "---\n$" +
+			MCHEmul::removeAll0 (chrAdd.asString (MCHEmul::UByte::OutputFormat::_HEXA, '\0', 2)) + "\n";
+		MCHEmul::UBytes chrDt = cpu -> memoryRef () -> values (chrAdd, 0x08);
+		for (size_t j = 0; j < 8; j++) // 8 lines per character...
+		{
+			if (j != 0)
+				dt += "\n";
+
+			for (size_t l = 0; l < 8; l++)
+				dt += ((chrDt [j].value () & (1 << (7 - l))) != 0x00) ? "#" : " ";
+		}
+
+		result.emplace_back (std::move (dt));
+	}
+
+	result.emplace_back ("---");
+
+	return (result);
 }
 
 // ---
@@ -52,7 +84,7 @@ bool ZX81::SinclairZX81::initialize (bool iM)
 		return (false);
 
 	setConfiguration (static_cast <ZX81::Memory*> 
-		(memory ()) -> configuration (), false /** Not restart. */);
+		(memory ()) -> configuration (), type (), false /** Not restart. */);
 
 	/** This memory has to know where the CPU is on to return
 		either a value of other. */
@@ -118,9 +150,10 @@ void ZX81::SinclairZX81::specificComputerCycle ()
 }
 
 // ---
-void ZX81::SinclairZX81::setConfiguration (ZX81::Memory::Configuration cfg, bool rs) 
+void ZX81::SinclairZX81::setConfiguration 
+	(ZX81::Memory::Configuration cfg, ZX81::Type t, bool rs) 
 {
-	static_cast <ZX81::Memory*> (memory ()) -> setConfiguration (cfg);
+	static_cast <ZX81::Memory*> (memory ()) -> setConfiguration (cfg, t);
 
 	// Restart?
 	if (rs)

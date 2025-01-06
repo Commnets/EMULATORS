@@ -18,7 +18,7 @@ const MCHEmul::UByte& ZX81::MemoryVideoCode::readValue (size_t nB) const
 
 // ---
 ZX81::Memory::Memory (ZX81::Memory::Configuration cfg, ZX81::Type t)
-	: MCHEmul::Memory (0, ZX81::Memory::standardMemoryContent (), { }),
+	: MCHEmul::Memory (0, ZX81::Memory::standardMemoryContent (t), { }),
 	  _type (t),
 	  _configuration (cfg),
 	  _ROM (nullptr), 
@@ -115,11 +115,11 @@ ZX81::Memory::Memory (ZX81::Memory::Configuration cfg, ZX81::Type t)
 		_ROMCS2			!= nullptr);
 
 	// Sets the configuration of the memory...
-	setConfiguration (_configuration);
+	setConfiguration (_configuration, _type);
 }
 
 // ---
-void ZX81::Memory::setConfiguration (ZX81::Memory::Configuration cfg)
+void ZX81::Memory::setConfiguration (ZX81::Memory::Configuration cfg, ZX81::Type t)
 {
 	// In any of the configurations, 
 	// the stack will behave as already used from the early beginning...
@@ -161,30 +161,36 @@ void ZX81::Memory::setConfiguration (ZX81::Memory::Configuration cfg)
 
 		case ZX81::Memory::Configuration::_16KEXPANSION:
 			{
-				// ROMS (shadow or not) are always active
-				_ROM			-> setActive (true);
-				_ROM_S1			-> setActive (true);
-				_ROM_S2			-> setActive (true);
-				_ROM_S3			-> setActive (true);
-				// ...but not the expansions...
-				_ROMCS1			-> setActive (false);
-				_ROMCS2			-> setActive (false);
+				// This situation shouldn't happen, just in case...
+				if (t == ZX81::Type::_ZX80)
+					_LOG ("ZX80 doesn't allow _16KEXPANSION configuration");
+				else
+				{
+					// ROMS (shadow or not) are always active
+					_ROM			-> setActive (true);
+					_ROM_S1			-> setActive (true);
+					_ROM_S2			-> setActive (true);
+					_ROM_S3			-> setActive (true);
+					// ...but not the expansions...
+					_ROMCS1			-> setActive (false);
+					_ROMCS2			-> setActive (false);
 
-				// RAMS: 1k no active...
-				_RAM1K			-> setActive (false);
-				_RAM1K_S		-> setActive (false);
-				_RAM1K_V		-> setActive (false);
-				for (size_t i = 0; i < 15; _RAM15K_UC [i++] -> setActive (false));
-				for (size_t i = 0; i < 15; _RAM15K_UC_S [i++] -> setActive (false));
-				for (size_t i = 0; i < 15; _RAM15K_V [i++] -> setActive (false));
-				// ...and expansion active!
-				_RAM16K_CS1		-> setActive (true);
-				_RAM16K_S		-> setActive (true);
-				_RAM16K_V		-> setActive (true);
+					// RAMS: 1k no active...
+					_RAM1K			-> setActive (false);
+					_RAM1K_S		-> setActive (false);
+					_RAM1K_V		-> setActive (false);
+					for (size_t i = 0; i < 15; _RAM15K_UC [i++] -> setActive (false));
+					for (size_t i = 0; i < 15; _RAM15K_UC_S [i++] -> setActive (false));
+					for (size_t i = 0; i < 15; _RAM15K_V [i++] -> setActive (false));
+					// ...and expansion active!
+					_RAM16K_CS1		-> setActive (true);
+					_RAM16K_S		-> setActive (true);
+					_RAM16K_V		-> setActive (true);
 
-				// The stack is in the 16k zone
-				_STACK_SUBSET = _RAM16K_CS1 -> id ();
-				_stack = nullptr; // To reload the stack!
+					// The stack is in the 16k zone
+					_STACK_SUBSET = _RAM16K_CS1 -> id ();
+					_stack = nullptr; // To reload the stack!
+				}
 			}
 
 			break;
@@ -192,8 +198,9 @@ void ZX81::Memory::setConfiguration (ZX81::Memory::Configuration cfg)
 		default:
 			{ 
 				// It shouldn't exist, but just in case...
-				_LOG ("ZX81 Configuration mode not supported:" +
-					std::to_string ((int) _configuration));
+				_LOG ("ZX81 configuration mode " + 
+					std::to_string ((int) _configuration) + " not supported");
+
 				assert (false);
 			}
 
@@ -219,8 +226,11 @@ bool ZX81::Memory::initialize ()
 }
 
 // ---
-MCHEmul::Memory::Content ZX81::Memory::standardMemoryContent ()
+MCHEmul::Memory::Content ZX81::Memory::standardMemoryContent (ZX81::Type t)
 {
+	// So far the structue of the memory is the same in any type of ZX81 like computer...
+	// What changes is the ROM loaded, and maybe the way it is configured...
+
 	/** All dirs in Little - endian format. */
 
 	// Phisical storages

@@ -64,24 +64,19 @@ namespace ZX81
 
 		/** To know which is the type of computer to be emulated: 
 			0 = ZX81(1), 1 = ZX81(2), 2 = ZX81(3). */
-		inline Type emulattedComputer () const;
+		Type emulatedComputer () const;
 
 		/** To add the peripherals linked to the computer, according to the parameters. */
 		virtual bool initialize () override;
 
 		protected:
-		virtual MCHEmul::Computer* createComputer () const override
-							{ return (new ZX81::SinclairZX81 (
-								(Memory::Configuration) configurationMode (),
-								NTSCSystem () 
-									? ZX81::SinclairZX81::VisualSystem::_NTSC : ZX81::SinclairZX81::VisualSystem::_PAL,
-								emulattedComputer ())); }
+		virtual MCHEmul::Computer* createComputer () const override;
 		virtual MCHEmul::IOPeripheralBuilder* createPeripheralBuilder () const override
 							{ return (new IOPeripheralBuilder); }
 		virtual MCHEmul::FileIO* createFileReader () const override
 							{ return (new MCHEmul::FileIO 
 								(MCHEmul::FileTypeIOList (
-									{	new ZX81::OAndPFileTypeIO, /** O, 80, P, 81 and P81 extensions. */
+									{	new OAndPFileTypeIO, /** O, 80, P, 81 and P81 extensions. */
 										new MCHEmul::RawFileTypeIO /** Row data. */ }))); }
 	};
 
@@ -91,41 +86,16 @@ namespace ZX81
 		int bC = drawBorder () 
 			? cmdlineArguments ().argumentAsInt (_PARAMBORDER) : 0;
 
-		return (bC > 3 ? 3 : bC); 
+		return (bC > 15 ? 15 : bC); 
 	}
 
 	// ---
 	inline unsigned int ZX81Emulator::configurationMode () const
 	{ 
-		unsigned int result = 
+		return (
 			configuration () 
 				? cmdlineArguments ().argumentAsInt (_PARAMCONFIGURATION) 
-				: 0; /** Not expanded. */
-
-		// No more than 2 configurations are allowed...
-		return ((result > 2) ? 2 : result); 
-	}
-
-	// ---
-	inline Type ZX81Emulator::emulattedComputer () const
-	{ 
-		ZX81::Type result = ZX81::Type::_ZX80;
-		if (cmdlineArguments ().existsArgument (_PARAMMACHINE))
-		{
-			std::string mT = 
-				MCHEmul::upper (cmdlineArguments ().argumentAsString (_PARAMMACHINE));
-			result = (mT == "ZX80") 
-				? ZX81::Type::_ZX80
-				: ((mT == "ZX811") 
-					? ZX81::Type::_ZX811
-					: ((mT == "ZX812") 
-						? ZX81::Type::_ZX812 
-						: ((mT == "ZX813")
-							? ZX81::Type::_ZX813 
-							: ZX81::Type::_ZX80 /** by default, the very basic one. */)));
-		}
-
-		return (result);
+				: 0 /** The meaning of the default value will depend onthe computer emulatted, usually NOT EXPANDED. */);
 	}
 }
 

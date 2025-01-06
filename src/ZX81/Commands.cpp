@@ -60,12 +60,12 @@ void ZX81::CharactersDrawCommand::executeImpl (MCHEmul::CommandExecuter* cE,
 		for (const auto& i : parameters ())
 		{ 
 			size_t nchr = (size_t) MCHEmul::UInt::fromStr (i.second.c_str ()).asUnsignedInt ();
-			if ((nchr >= 0 && nchr < 128) && 
+			if ((nchr >= 0 && nchr < 64) && 
 				std::find (chrs.begin (), chrs.end (), nchr) == chrs.end ()) // Not added before...
 				chrs.emplace_back (nchr);
 		}
 	}
 
 	rst.add ("DRAW", MCHEmul::concatenateStrings 
-		(static_cast <ZX81::SinclairZX81*> (c) -> ula () -> charsDrawSnapshot (c -> cpu (), chrs), "\n"));
+		(static_cast <ZX81::SinclairZX81*> (c) -> charsDrawSnapshot (c -> cpu (), chrs), "\n"));
 }

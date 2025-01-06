@@ -21,9 +21,11 @@ namespace ZX81
 	class ULA;
 
 	/** The ZX81::InputOSSystem 
-		it is very related with the por EF. \n
+		it is very related with the port EF. \n
 		The events that happen in the OS have to be transmitted to that port
-		for them to be accesible for the rest of the computer elements. */
+		for them to be accesible for the rest of the computer elements. \n
+		The matrx is the same for any king of ZX81 computer like. 
+		The main difference is the way the ROM interprets any keystroke. */
 	class InputOSSystem final : public MCHEmul::InputOSSystem
 	{
 		public:
