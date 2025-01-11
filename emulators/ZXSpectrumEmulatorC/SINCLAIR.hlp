@@ -1,2 +1,8 @@
 #Commands only valid over a Sinclair machine, local and remotly. 
 #(C) 2024 Ignacio Cea Fornies
+;SYSVAR [VNAME]
+To know the information about one specific system variable.
+The only parameter needed is the name of the variabe to know. It is mandatory.
+;SYSVARS
+To know the list of the system variables defined for this computer.
+No parameters needed.

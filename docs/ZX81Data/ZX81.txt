@@ -1,0 +1,39 @@
+﻿ERR_NR;$1;$4000;Current report code minus one
+FLAGS;$1;$4001;Various flags
+ERR_SP;$2;$4002;Address of top of GOSUB stack
+RAMTOP;$2;$4004;Address of reserved area (not wiped out by NEW)
+MODE;$1;$4006;Current cursor mode
+PPC;$2;$4007;Line number of line being executed
+VERSN;$1;$4009;First system variable to be SAVEd
+E_PPC;$2;$400A;Line number of line with cursor
+D_FILE;$2;$400C;Address of start of display file
+DF_CC;$2;$400E;Address of print position within display file
+VARS;$2;$4010;Address of start of variables area
+DEST;$2;$4012;Address of variable being assigned
+E_LINE;$2;$4014;Address of start of edit line
+CH_ADD;$2;$4016;Address of the next character to interpret
+X_PTR;$2;$4018;Address of char. preceding syntax error marker
+STKBOT;$2;$401A;Address of calculator stack
+STKEND;$2;$401C;Address of end of calculator stack
+BERG;$1;$401E;Used by floating point calculator
+MEM;$2;$401F;Address of start of calculator's memory area
+SPARE1;$1;$4021;One spare byte
+DF_SZ;$2;$4022;Number of lines in lower part of screen
+S_TOP;$2;$4023;Line number of line at top of screen
+LAST_K;$2;$4025;Keyboard scan taken after the last TV frame
+DB_ST;$1;$4027;Debounce status of keyboard
+MARGIN;$1;$4028;Number of blank lines above or below picture
+NXTLIN;$2;$4029;Address of next program line to be executed
+OLDPPC;$2;$402B;Line number to which CONT/CONTINUE jumps
+FLAGX;$1;$402D;Various flags
+STRLEN;$2;$402E;Information concerning assigning of strings
+T_ADDR;$2;$4030;Address of next item in syntax table
+SEED;$2;$4032;Seed for random number generator
+FRAMES;$2;$4034;Updated once for every TV frame displayed
+COORDS;$2;$4036;Coordinates of last point PLOTed
+PR_CC;$1;$4038;Address of LPRINT position (high part assumed 40)
+S_POSN;$2;$4039;Coordinates of print position
+CDFLAG;$1;$403B;Flags relating to FAST/SLOW mode
+PRBUFF;$21;$403C;Buffer to store LPRINT output
+MEMBOT;$1E;$405D;Area which may be used for calculator memory
+SPARE2;$2;$407B;Two spare bytes

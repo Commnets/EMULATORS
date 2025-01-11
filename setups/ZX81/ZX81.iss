@@ -34,6 +34,8 @@ Source: "LocalConsole.fmt"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Standard.fmt"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Default.fmt"; DestDir: "{app}"; Flags: ignoreversion
 Source: "blkFormatter.fmt"; DestDir: "{app}"; Flags: ignoreversion
+Source: "ZX80SysVars.txt"; DestDir: "{app}"; Flags: ignoreversion
+Source: "ZX81SysVars.txt"; DestDir: "{app}"; Flags: ignoreversion
 
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl"

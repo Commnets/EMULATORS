@@ -17,6 +17,7 @@ ZX81::SinclairZX81::SinclairZX81 (ZX81::Memory::Configuration cfg,
 		 ZX81::SinclairZX81::standardChips (vS),
 		 new ZX81::Memory (cfg, t), // Depending on the configuration...
 		 ZX81::SinclairZX81::standardDevices (vS),
+		 loadSystemVariablesFrom ((t == ZX81::Type::_ZX80) ? "ZX80SysVars.txt" : "ZX81SysVars.txt"),
 		 _CLOCK, // In ZX81 the speed is constant as the CPU is aimed also to draw!
 		 { }, { }, // The ZX81 emulation has been done without neither Buses nor Wires!
 		 { { "Name", "ZX81" },

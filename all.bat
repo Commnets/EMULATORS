@@ -188,7 +188,15 @@ DEL  .\monitors\RZX81Console\*.def
 DEL  .\emulators\ZX81Emulator\*.hlp
 DEL  .\emulators\ZX81EmulatorC\*.hlp
 DEL  .\monitors\RZX81Console\*.hlp
+DEL  .\monitors\ZX81Emulator\ZX80SysVars.txt
+DEL  .\monitors\ZX81Emulator\ZX81SysVars.txt
+DEL  .\monitors\ZX81EmulatorC\ZX80SysVars.txt
+DEL  .\monitors\ZX81EmulatorC\ZX81SysVars.txt
 COPY .\projects\ZX81\*.fmt .\emulators\ZX81Emulator\ /Y
+COPY .\projects\ZX81\ZX80SysVars.txt .\emulators\ZX81Emulator\ /Y
+COPY .\projects\ZX81\ZX81SysVars.txt .\emulators\ZX81Emulator\ /Y
+COPY .\projects\ZX81\ZX80SysVars.txt .\emulators\ZX81EmulatorC\ /Y
+COPY .\projects\ZX81\ZX81SysVars.txt .\emulators\ZX81EmulatorC\ /Y
 DEL .\emulators\ZX81Emulator\ZX81RConsole.fmt
 COPY .\projects\ZX81\*.fmt .\emulators\ZX81EmulatorC\ /Y
 DEL .\emulators\ZX81EmulatorC\ZX81RConsole.fmt
@@ -372,6 +380,8 @@ COPY .\projects\CONSOLE\*.hlp .\setups\ZX81\ /Y
 COPY .\projects\CORE\*.fmt .\setups\ZX81\ /Y
 COPY .\projects\CORE\*.hlp .\setups\ZX81\ /Y
 COPY .\projects\ASSEMBLER\*.fmt .\setups\ZX81\ /Y
+COPY .\projects\ZX81\ZX80SysVars.txt .\setups\ZX81\ /Y
+COPY .\projects\ZX81\ZX81SysVars.txt .\setups\ZX81\ /Y
 "C:\Program files (x86)\Inno Setup 6\iscc" ".\setups\ZX81\ZX81.iss"
 Echo ********************************************************************
 Echo ********************************************************************

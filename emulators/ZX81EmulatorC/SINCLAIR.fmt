@@ -26,3 +26,16 @@ First:@FIRST@, Last:@LAST@
 ->Raster Vertical:
 @RasterY>@
 #---
+#---
+;SysVar
+@NAME@\t@ADDRESS@\t@VALUE@\t@BYTES@\t@DESCRIPTION@
+#---
+#---
+;CSYSVARS
+Name\tAddress\tValue\tBytes\tDescription
+@SYSVARS?{fmter=SysVar,empty=no vars}\n@
+#---
+#---
+;CSYSVAR
+@SysVar>@
+#---

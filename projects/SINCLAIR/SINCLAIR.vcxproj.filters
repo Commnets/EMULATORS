@@ -71,6 +71,9 @@
     <ClCompile Include="..\..\src\SINCLAIR\IOPBuilder.cpp">
       <Filter>Archivos de origen\IO</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\SINCLAIR\Computer.cpp">
+      <Filter>Archivos de origen\Motherboard</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="ClassDiagram.cd" />

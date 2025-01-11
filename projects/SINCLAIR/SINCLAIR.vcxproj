@@ -28,6 +28,7 @@
   <ItemGroup>
     <ClCompile Include="..\..\src\SINCLAIR\CommandBuilder.cpp" />
     <ClCompile Include="..\..\src\SINCLAIR\Commands.cpp" />
+    <ClCompile Include="..\..\src\SINCLAIR\Computer.cpp" />
     <ClCompile Include="..\..\src\SINCLAIR\IOPBuilder.cpp" />
   </ItemGroup>
   <ItemGroup>

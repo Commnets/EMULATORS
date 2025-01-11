@@ -119,9 +119,9 @@ MCHEmul::Computer* ZX81::ZX81Emulator::createComputer () const
 				}
 				
 				result = new ZX81::SinclairZX81 (
-					(ZX81::Memory::Configuration) configurationMode (),
+					(ZX81::Memory::Configuration) cM,
 					ZX81::SinclairZX81::VisualSystem::_PAL /** PAL is always mandatory in this emulation. */,
-					ZX81::Type::_ZX80);
+					t);
 
 				if (NTSCSystem ())
 					_LOG ("ZX81 (any type) emulation is ready only for PAL systems");

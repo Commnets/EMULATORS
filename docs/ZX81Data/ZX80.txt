@@ -1,0 +1,22 @@
+﻿ERR_NR;$1;$4000;Current report code minus one
+FLAGS;$1;$4001;Various flags
+PPC;$2;$4002;Line number of line being executed
+E_ADDR;$2;$4004;Address of cursor in edit line
+E_PPC;$2;$4006;Line number of line with cursor
+VARS;$2;$4008;Address of start of variables area
+E_LINE;$2;$400A;Address of start of edit line
+D_FILE;$2;$400C;Address of start of display file
+DF_EA;$2;$400E;Address of start of lower part of screen
+DF_END;$2;$4010;Address of end of display file
+DF_SZ;$2;$4012;Number of lines in lower part of screen
+S_TOP;$2;$4013;Line number of line at top of screen
+X_PTR;$2;$4015;Address of char. preceding syntax error marker
+OLDPPC;$2;$4017;Line number to which CONT/CONTINUE jumps
+FLAGX;$1;$4019;Various flags
+T_ADDR;$2;$401A;Address of next item in syntax table
+SEED;$2;$401C;Seed for random number generator
+FRAMES;$2;$401E;Updated once for every TV frame displayed
+V_ADDR;$2;$4020;Address of variable name to be assigned
+ACC;$2;$4022;Value of last expression
+S_POSN;$2;$4024;Coordinates of print position
+CH_ADD;$2;$4026;Address of the next character to interpret
