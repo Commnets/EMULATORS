@@ -47,16 +47,21 @@ namespace ZX81
 		// To access the different locations of the memory...
 		// The locations depends in some ocassions on the type of computer...
 		/** Where the display file starting point is stored. */
-		inline MCHEmul::Address D_FILEAddress () const;
+		MCHEmul::Address D_FILEAddress () const
+							{ return (systemVariable ("D_FILE")._address); }
 		/** The location of the display file. */
 		MCHEmul::Address D_FILE () const
 							{ return (MCHEmul::Address (memory () -> values (D_FILEAddress (), 2), false)); }
 		/** The location of the end of the display.
 			In the ZX80 there is a specific variable with that. 
 			In the ZX81 there isn't and it lasts until the vars space starts. */
-		inline MCHEmul::Address DF_END () const;
+		MCHEmul::Address DF_END () const
+							{ return ((_type == Type::_ZX80) 
+								? MCHEmul::Address (memory () -> values (systemVariable ("DF_END")._address, 2), false) 
+								: VARS ()); }
 		/** Where the variables of the system starting point is stored. */
-		inline MCHEmul::Address VARSAddress () const;
+		MCHEmul::Address VARSAddress () const
+							{ return (systemVariable ("VARS")._address); }
 		/** The location of the variables of the system */
 		MCHEmul::Address VARS () const
 							{ return (MCHEmul::Address (memory () -> values (VARSAddress (), 2), false)); }
@@ -117,29 +122,6 @@ namespace ZX81
 		/** To control the status of the A6. */
 		MCHEmul::Pulse _A6;
 	};
-
-	// ---
-	inline MCHEmul::Address SinclairZX81::D_FILEAddress () const
-	{ 
-		return (MCHEmul::Address ({ 0x0c, 0x40 }, false)); 
-	}
-
-	// ---
-	inline MCHEmul::Address SinclairZX81::DF_END () const
-	{
-		return ((_type == Type::_ZX80)
-			? MCHEmul::Address (memory () -> values (MCHEmul::Address 
-				({ 0x10, 0x40 } /** DF_ENDAddress. */, false), 2), false)
-			: VARS ());
-	}
-
-	// ---
-	inline MCHEmul::Address SinclairZX81::VARSAddress () const
-	{ 
-		return ((_type == Type::_ZX80)
-			? MCHEmul::Address ({ 0x08, 0x40 }, false)
-			: MCHEmul::Address ({ 0x10, 0x40 }, false)); 
-	}
 
 	// ---
 	inline MCHEmul::Address SinclairZX81::CHARS () const
