@@ -188,10 +188,10 @@ DEL  .\monitors\RZX81Console\*.def
 DEL  .\emulators\ZX81Emulator\*.hlp
 DEL  .\emulators\ZX81EmulatorC\*.hlp
 DEL  .\monitors\RZX81Console\*.hlp
-DEL  .\monitors\ZX81Emulator\ZX80SysVars.txt
-DEL  .\monitors\ZX81Emulator\ZX81SysVars.txt
-DEL  .\monitors\ZX81EmulatorC\ZX80SysVars.txt
-DEL  .\monitors\ZX81EmulatorC\ZX81SysVars.txt
+DEL  .\emulators\ZX81Emulator\ZX80SysVars.txt
+DEL  .\emulators\ZX81Emulator\ZX81SysVars.txt
+DEL  .\emulators\ZX81EmulatorC\ZX80SysVars.txt
+DEL  .\emulators\ZX81EmulatorC\ZX81SysVars.txt
 COPY .\projects\ZX81\*.fmt .\emulators\ZX81Emulator\ /Y
 COPY .\projects\ZX81\ZX80SysVars.txt .\emulators\ZX81Emulator\ /Y
 COPY .\projects\ZX81\ZX81SysVars.txt .\emulators\ZX81Emulator\ /Y
@@ -242,8 +242,12 @@ DEL  .\monitors\RZXSpectrumConsole\*.fmt
 DEL  .\monitors\RZXSpectrumConsole\*.def
 DEL  .\emulators\ZXSpectrumEmulator\*.hlp
 DEL  .\emulators\ZXSpectrumEmulatorC\*.hlp
-DEL  .\monitors\RZXSpectrumConsole\*.hlp
+DEL  .\emulators\ZXSpectrum\ZXSpectrumSysVars.txt
+DEL  .\emulators\ZXSpectrumC\ZXSpectrumSysVars.txt
+DEL  .\monitors\ZXSpectrumC\ZX80SysVars.txt
 COPY .\projects\ZXSpectrum\*.fmt .\emulators\ZXSpectrumEmulator\ /Y
+COPY .\projects\ZXSpectrum\ZXSpectrumSysVars.txt .\emulators\ZXSpectrumEmulator\ /Y
+COPY .\projects\ZXSpectrum\ZXSpectrumSysVars.txt .\emulators\ZXSpectrumEmulatorC\ /Y
 DEL .\emulators\ZXSpectrumEmulator\ZXSpectrumRConsole.fmt
 COPY .\projects\ZXSpectrum\*.fmt .\emulators\ZXSpectrumEmulatorC\ /Y
 DEL .\emulators\ZXSpectrumEmulatorC\ZXSpectrumRConsole.fmt
@@ -404,6 +408,7 @@ COPY .\projects\CONSOLE\*.hlp .\setups\ZXSpectrum\ /Y
 COPY .\projects\CORE\*.fmt .\setups\ZXSpectrum\ /Y
 COPY .\projects\CORE\*.hlp .\setups\ZXSpectrum\ /Y
 COPY .\projects\ASSEMBLER\*.fmt .\setups\ZXSpectrum\ /Y
+COPY .\projects\ZXSpectrum\ZXSpectrumSysVars.txt .\setups\ZXSpectrum\ /Y
 "C:\Program files (x86)\Inno Setup 6\iscc" ".\setups\ZXSpectrum\ZXSpectrum.iss"
 Echo ********************************************************************
 Echo

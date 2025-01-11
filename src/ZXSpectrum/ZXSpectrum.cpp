@@ -19,7 +19,7 @@ ZXSPECTRUM::SinclairZXSpectrum::SinclairZXSpectrum (ZXSPECTRUM::Memory::Configur
 		 ZXSPECTRUM::SinclairZXSpectrum::standardChips (vS),
 		 new ZXSPECTRUM::Memory (cfg, t, lang), // Depending on the configuration, the type, and the languaje!
 		 ZXSPECTRUM::SinclairZXSpectrum::standardDevices (vS),
-		 { }, // Defined later...
+		 loadSystemVariablesFrom ("ZXSpectrumSysVars.txt"),
 		 _CLOCK,
 		 { }, { }, // The ZXSpectrum, emulation has been done without neither Buses nor Wires!
 		 { { "Name", "ZXSpectrum" },

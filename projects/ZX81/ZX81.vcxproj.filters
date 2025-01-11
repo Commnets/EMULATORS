@@ -176,4 +176,12 @@
       <Filter>Configuration</Filter>
     </None>
   </ItemGroup>
+  <ItemGroup>
+    <Text Include="ZX80SysVars.txt">
+      <Filter>Configuration</Filter>
+    </Text>
+    <Text Include="ZX81SysVars.txt">
+      <Filter>Configuration</Filter>
+    </Text>
+  </ItemGroup>
 </Project>

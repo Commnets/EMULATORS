@@ -176,4 +176,9 @@
       <Filter>Configuration</Filter>
     </None>
   </ItemGroup>
+  <ItemGroup>
+    <Text Include="ZXSpectrumSysVars.txt">
+      <Filter>Configuration</Filter>
+    </Text>
+  </ItemGroup>
 </Project>

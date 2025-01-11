@@ -37,5 +37,6 @@ Name\tAddress\tValue\tBytes\tDescription
 #---
 #---
 ;CSYSVAR
+Name\tAddress\tValue\tBytes\tDescription
 @SysVar>@
 #---
