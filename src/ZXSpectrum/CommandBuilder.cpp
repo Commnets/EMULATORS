@@ -12,6 +12,12 @@ MCHEmul::Command* ZXSPECTRUM::CommandBuilder::createEmptyCommand (const std::str
 		result = new ZXSPECTRUM::ULAStatusCommand;
 	else if (cmdName == "ULAEVENTS" || cmdName == ZXSPECTRUM::ULAShowEventsCommand::_NAME)
 		result = new ZXSPECTRUM::ULAShowEventsCommand;
+	else if (cmdName == "SCREENDUMP" || cmdName == ZXSPECTRUM::ScreenMemoryDUMPCommand::_NAME)
+		result = new ZXSPECTRUM::ScreenMemoryDUMPCommand;
+	else if (cmdName == "COLORDUMP" || cmdName == ZXSPECTRUM::ColorMemoryDUMPCommand::_NAME)
+		result = new ZXSPECTRUM::ColorMemoryDUMPCommand;
+	else if (cmdName == "CHARSDRAW" || cmdName == ZXSPECTRUM::CharactersDrawCommand::_NAME)
+		result = new ZXSPECTRUM::CharactersDrawCommand;
 
 	return (result);
 }

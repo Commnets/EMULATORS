@@ -12,7 +12,7 @@ No parameters are needed.
 To know the content of the screen.
 No parameters are needed.
 ;COLORDUMP
-To know the content of the screen.
+To know the content of the color screen.
 No parameters are needed.
 ;CHARSDRAW [c1 c2 c3...]
 To print out the characters data.

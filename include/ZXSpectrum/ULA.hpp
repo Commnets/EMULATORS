@@ -167,8 +167,6 @@ namespace ZXSPECTRUM
 		/** The format used to draw. 
 			It has to be the same that is used by the Screen object. */
 		SDL_PixelFormat* _format;
-		/** Whether the vertical raster has entered the first VBlank zone already. */
-		bool _firstVBlankEntered;
 	};
 
 	// ---
@@ -176,10 +174,11 @@ namespace ZXSPECTRUM
 	{
 		_memory -> setActiveView (_ULAView);
 
-		unsigned short vP = ((y & 0x38) << 2) + ((y & 0x07) << 8) + ((y & 0xc0) << 5) + ((x >> 3) & 0x1f);
-		_videoSignalData._dataLatch = _memory -> value (MCHEmul::Address (2, (unsigned int) vP));
+		// Remember that this is from ULA's point of view!
+		_videoSignalData._dataLatch = _memory -> value (MCHEmul::Address (2, 
+			(unsigned int) ((y & 0x38) << 2) + ((y & 0x07) << 8) + ((y & 0xc0) << 5) + ((x >> 3) & 0x1f)));
 		_videoSignalData._attributeLatch = _memory -> value (MCHEmul::Address ({ 0x00, 0x18 }, false) + 
-				(unsigned int) (vP >> 3 /** 8 times less. */));
+			(unsigned int) (((y >> 3) << 5) + (x >> 3)));
 
 		_memory -> setCPUView ();
 	}

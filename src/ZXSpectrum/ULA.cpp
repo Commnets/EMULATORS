@@ -33,8 +33,7 @@ ZXSPECTRUM::ULA::ULA (const MCHEmul::RasterData& vd, const MCHEmul::RasterData& 
 	  _showEvents (false),
 	  _videoSignalData (),
 	  _lastCPUCycles (0),
-	  _format (nullptr),
-	  _firstVBlankEntered (false)
+	  _format (nullptr)
 {
 	setClassName ("ULA");
 
@@ -66,8 +65,6 @@ bool ZXSPECTRUM::ULA::initialize ()
 
 	_lastCPUCycles = 0;
 
-	_firstVBlankEntered = false;
-
 	return (true);
 }
 
@@ -98,35 +95,25 @@ bool ZXSPECTRUM::ULA::simulate (MCHEmul::CPU* cpu)
 				drawEvents ();
 		}
 
-		// When the raster enters the non visible part of the screen,
-		// a notification is sent (to the Screen class usually) 
-		// just to draw the screen...
-		if (_raster.isInFirstVBlankZone ())
+		// First, moves the raster...
+		_raster.moveCycles (1);
+		// But, if is starting the screen...
+		if (_raster.vData ().currentPositionAtBase0 () == 0 &&
+			_raster.hData ().currentPositionAtBase0 () == 0)
 		{
-			if (!_firstVBlankEntered)
-			{
-				_firstVBlankEntered = true;
-
-				MCHEmul::GraphicalChip::notify (MCHEmul::Event (_GRAPHICSREADY));
-			}
-		}
-		else
-			_firstVBlankEntered = false;
-
-		// Moves the internal cycles counter 1...
-		if (_raster.moveCycles (1))
-		{
-			// The flash attribute has to be updated!
-//			if (++_videoSignalData._flashCounter == 50)
-//			{
-//				_videoSignalData._flashCounter = 0;
-//
-//				_videoSignalData._flash = !_videoSignalData._flash;
-//			}
-
-			// An interrupt is generated any time the raster reaches the end of the scren...
+			// An interrupt is generated...
 			cpu -> requestInterrupt 
 				(FZ80::INTInterrupt::_ID, i, this, 0 /** The reason is that the screen is complete. */);
+	
+			// ...a notification to draw the screen is also generated...
+			MCHEmul::GraphicalChip::notify (MCHEmul::Event (_GRAPHICSREADY));
+
+			// ...and additionally, the blinker is updated...
+			if (++_videoSignalData._flashCounter == 50)
+			{
+				_videoSignalData._flashCounter = 0;
+				_videoSignalData._flash = !_videoSignalData._flash;
+			}
 		}
 	}
 

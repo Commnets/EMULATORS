@@ -25,6 +25,18 @@ Id:@ID@
 ;CULAEVENTS
 #---
 #---
+;CSCREENDUMP
+@BYTES{blocksize=32,listsep=\,,tablesep=\ ,minsize=2}@
+#---
+#---
+;CCOLORDUMP
+@BYTES{blocksize=32,listsep=\,,tablesep=\ ,minsize=2}@
+#---
+#---
+;CCHARSDRAW
+@DRAW@
+#---
+#---
 ;ZXSpectrumDatasette
 Id:@ID@
 @ATTRS?{key=YES,equal=:,empty=no attributes}\n@

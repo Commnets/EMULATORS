@@ -41,6 +41,21 @@ namespace ZXSPECTRUM
 		Type type () const
 							{ return (_type); }
 
+		// To get snapshots of the memory...
+		// They are used in some commands...
+		/** Content of the screen memory. \n
+			The position of the screen memory in the ZX Spectrum memory is fixed. */
+		MCHEmul::UBytes screenMemorySnapShot () const
+							{ return (memory () -> values (MCHEmul::Address ({ 0x00, 0x40 }, false), (size_t) 0x1800)); }
+		/** Content of the color memory. \n
+			The position of the color memory in the ZX Spectrum memory is fixed. */
+		MCHEmul::UBytes colorMemorySnapShot () const
+							{ return (memory () -> values (MCHEmul::Address ({ 0x00, 0x58 }, false), (size_t) 0x0300)); }
+		/** To get the characters. \n
+			The position of the chars in the ZX Spectrum memory is fixed. */
+		MCHEmul::Strings charsDrawSnapshot (MCHEmul::CPU* cpu, 
+			const std::vector <size_t>& chrs = { }) const;
+
 		/** To get a reference to the ULA chip. */
 		const ULA* ula () const
 							{ return (_ula); }

@@ -47,6 +47,39 @@ ZXSPECTRUM::SinclairZXSpectrum::SinclairZXSpectrum (ZXSPECTRUM::Memory::Configur
 }
 
 // ---
+MCHEmul::Strings ZXSPECTRUM::SinclairZXSpectrum::charsDrawSnapshot (MCHEmul::CPU* cpu,
+	const std::vector <size_t>& chrs) const
+{
+	MCHEmul::Strings result;
+	for (size_t i = 0; i < 96; i++)
+	{
+		if (!chrs.empty () && 
+			std::find (chrs.begin (), chrs.end (), i) == chrs.end ())
+			continue;
+
+		MCHEmul::Address chrAdd = 
+			MCHEmul::Address ({ 0x00, 0x3d }, false) + (i << 3);
+		std::string dt = std::to_string (i) + "---\n$" +
+			MCHEmul::removeAll0 (chrAdd.asString (MCHEmul::UByte::OutputFormat::_HEXA, '\0', 2)) + "\n";
+		MCHEmul::UBytes chrDt = cpu -> memoryRef () -> values (chrAdd, 0x08);
+		for (size_t j = 0; j < 8; j++) // 8 lines per character...
+		{
+			if (j != 0)
+				dt += "\n";
+
+			for (size_t l = 0; l < 8; l++)
+				dt += ((chrDt [j].value () & (1 << (7 - l))) != 0x00) ? "#" : " ";
+		}
+
+		result.emplace_back (std::move (dt));
+	}
+
+	result.emplace_back ("---");
+
+	return (result);
+}
+
+// ---
 bool ZXSPECTRUM::SinclairZXSpectrum::initialize (bool iM)
 {
 	bool result = SINCLAIR::Computer::initialize (iM);

@@ -16,7 +16,7 @@ To know the content of the screen.
 No parameters are needed.
 The data is shown in hexadecimal format (but with no symbol at the beginning).
 ;COLORDUMP
-To know the content of the screen.
+To know the content of the color screen.
 No parameters are needed.
 The data is shown in hexadecimal format (but with no symbol at the beginning).
 ;BITMAPDUMP
