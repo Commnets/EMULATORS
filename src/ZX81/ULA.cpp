@@ -31,7 +31,6 @@ ZX81::ULA::ULA (const MCHEmul::RasterData& vd, const MCHEmul::RasterData& hd,
 	  _showEvents (false),
 	  _lastCPUCycles (0),
 	  _format (nullptr),
-	  _firstVBlankEntered (false),
 	  _HALTBefore (false),
 	  _INTActive (false), _NMIActive (false), _HALTActive (false),
 	  _writePort (false), _readPortFE (false),
@@ -64,8 +63,6 @@ bool ZX81::ULA::initialize ()
 	_ULARegisters -> initialize ();
 
 	_lastCPUCycles = 0;
-
-	_firstVBlankEntered = false;
 
 	// Events null...
 	_HALTBefore = false;
@@ -125,7 +122,10 @@ bool ZX81::ULA::simulate (MCHEmul::CPU* cpu)
 			_ULARegisters -> INTack ()) // ...or a INT has been launched externally...
 		{
 			// the HSYNC happens...
-			_raster.vData ().add (1); _raster.hData ().reset ();
+			// Including a notification to generate the graphics...
+			if (_raster.vData ().add (1)); 
+				MCHEmul::GraphicalChip::notify (MCHEmul::Event (_GRAPHICSREADY));
+			_raster.hData ().reset ();
 			// ...and also the line of control is incremented...
 			_ULARegisters -> incLINECTRL ();
 			
@@ -137,21 +137,6 @@ bool ZX81::ULA::simulate (MCHEmul::CPU* cpu)
 
 		// Notice that the VSYNC doesn't happen here as it is the port output the one launching that...
 		// (@see ZX81::PortManager class)
-
-		// When the raster enters the non visible part of the screen,
-		// a notification is sent (to the Screen class usually) 
-		// just to draw the screen...
-		if (_raster.isInFirstVBlankZone ())
-		{
-			if (!_firstVBlankEntered)
-			{
-				_firstVBlankEntered = true;
-
-				MCHEmul::GraphicalChip::notify (MCHEmul::Event (_GRAPHICSREADY));
-			}
-		}
-		else
-			_firstVBlankEntered = false;
 
 		// If the status of the casette signal has changed, it has to be notified...
 		if (_ULARegisters -> casetteSignalChanged ())

@@ -57,7 +57,7 @@ const ZXSPECTRUM::InputOSSystem::KeystrockesMap ZXSPECTRUM::InputOSSystem::_ZX81
 
 			// Row 7
 			{ SDL_SCANCODE_SPACE,			{ std::make_pair (7, 0) } },
-			{ SDL_SCANCODE_LALT,			{ std::make_pair (7, 1) } }, // Sym = Left ALT key
+			{ SDL_SCANCODE_RCTRL,			{ std::make_pair (7, 1) } }, // Sym = Right CTRL key
 			{ SDL_SCANCODE_M,				{ std::make_pair (7, 2) } },
 			{ SDL_SCANCODE_N,				{ std::make_pair (7, 3) } },
 			{ SDL_SCANCODE_B,				{ std::make_pair (7, 4) } }

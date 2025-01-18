@@ -21,7 +21,9 @@ void ZXSPECTRUM::ZXSpectrumEmulator::printOutParameters (std::ostream& o) const
 	o << "/m[MACHINE]:\t" << "Define the type of ROM loaded" << std::endl;
 	o << "LANGUAGES allowed under command line /i (not all languages are available for all models):" << std::endl << 
 		 "ENG:\tEnglish" << std::endl <<
-		 "ESP:\tSpanish" << std::endl;
+		 "ESP:\tSpanish" << std::endl <<
+		 "NOR:\tNordics" << std::endl <<
+		 "ARA:\tArabic" << std::endl;
 	o << "CONFIGURATIONS (depends on type of machine) allowed under command line /w:" << std::endl << 
 		 "When ZXSTD:" << std::endl <<
 		 "0:\tNot expanded. 16k" << std::endl <<

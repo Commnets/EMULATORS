@@ -10,13 +10,14 @@ const MCHEmul::RasterData ZXSPECTRUM::ULA_PAL::_VRASTERDATA
 const MCHEmul::RasterData ZXSPECTRUM::ULA_PAL::_HRASTERDATA
 	(320, 416 /** 96 = Blanking Period + HSYNC (different in 5C, happens before, than in 6C) */, 
 	 0 /** 32 left border. */, 255 /** 256 (32 chars * 8 ULA cycles or 4 CPU cycles) draw. */, 
-	 319 /** 64 right border. */, 319, 319, 448, 0, 0);
+	 287 /** 32 right border. */, 319 /** Other 32 non visible. */, 319, 448, 0, 0);
 // NTSC is explained in similar terms than PAL...
 const MCHEmul::RasterData ZXSPECTRUM::ULA_NTSC::_VRASTERDATA (216, 224, 0, 191, 215, 215, 215, 264, 0, 0);
-const MCHEmul::RasterData ZXSPECTRUM::ULA_NTSC::_HRASTERDATA (320, 416, 0, 255, 319, 319, 319, 448, 0, 0);
+const MCHEmul::RasterData ZXSPECTRUM::ULA_NTSC::_HRASTERDATA (320, 416, 0, 255, 287, 319, 319, 448, 0, 0);
 
 // ---
-ZXSPECTRUM::ULA::ULA (const MCHEmul::RasterData& vd, const MCHEmul::RasterData& hd, 
+ZXSPECTRUM::ULA::ULA (const MCHEmul::RasterData& vd, const MCHEmul::RasterData& hd,
+		unsigned char f,
 		int vV, const MCHEmul::Attributes& attrs)
 	: MCHEmul::GraphicalChip (_ID, 
 		{ { "Name", "ULA" },
@@ -32,6 +33,7 @@ ZXSPECTRUM::ULA::ULA (const MCHEmul::RasterData& vd, const MCHEmul::RasterData& 
 	  _raster (vd, hd, 1 /** The step is 1 pixel. */),
 	  _showEvents (false),
 	  _videoSignalData (),
+	  _blinkingFrequency (f),
 	  _lastCPUCycles (0),
 	  _format (nullptr)
 {
@@ -109,7 +111,8 @@ bool ZXSPECTRUM::ULA::simulate (MCHEmul::CPU* cpu)
 			MCHEmul::GraphicalChip::notify (MCHEmul::Event (_GRAPHICSREADY));
 
 			// ...and additionally, the blinker is updated...
-			if (++_videoSignalData._flashCounter == 50)
+			// that depends on the type of visualization!
+			if (++_videoSignalData._flashCounter == _blinkingFrequency)
 			{
 				_videoSignalData._flashCounter = 0;
 				_videoSignalData._flash = !_videoSignalData._flash;
@@ -279,7 +282,7 @@ void ZXSPECTRUM::ULA::debugULACycle (MCHEmul::CPU* cpu, unsigned int i)
 
 // ---
 ZXSPECTRUM::ULA_PAL::ULA_PAL (int vV)
-	: ZXSPECTRUM::ULA (_VRASTERDATA, _HRASTERDATA, vV,
+	: ZXSPECTRUM::ULA (_VRASTERDATA, _HRASTERDATA, 25, vV,
 		 { { "Name", "ULA" },
 		  { "Code", "5C102E, 5C112E, 5C112E-2, 5C112E-3, 6C001E-5, 6C001E-6, 6C001E-7, 7K010E-5 ULA / Amstrad 40056, +2A/+3 Gate Array" },
 		  { "Manufacturer", "Ferranti" },
@@ -290,7 +293,7 @@ ZXSPECTRUM::ULA_PAL::ULA_PAL (int vV)
 
 // ---
 ZXSPECTRUM::ULA_NTSC::ULA_NTSC (int vV)
-	: ZXSPECTRUM::ULA (_VRASTERDATA, _HRASTERDATA, vV,
+	: ZXSPECTRUM::ULA (_VRASTERDATA, _HRASTERDATA, 30, vV,
 		 { { "Name", "ULA" },
 		  { "Code", "5C102E, 5C112E, 5C112E-2, 5C112E-3, 6C001E-5, 6C001E-6, 6C001E-7, 7K010E-5 ULA / Amstrad 40056, +2A/+3 Gate Array" },
 		  { "Manufacturer", "Ferranti" },

@@ -36,7 +36,7 @@ namespace ZXSPECTRUM
 			The number of cycles of every raster line (different depending on the ULA version),
 			a reference to the portFE that is used to read the keyboard,
 			and additional attributes. */
-		ULA (const MCHEmul::RasterData& vd, const MCHEmul::RasterData& hd, 
+		ULA (const MCHEmul::RasterData& vd, const MCHEmul::RasterData& hd, unsigned char f,
 			int vV, const MCHEmul::Attributes& attrs = { });
 
 		virtual ~ULA () override;
@@ -162,6 +162,8 @@ namespace ZXSPECTRUM
 
 		/** The video signal data. */
 		VideoSignalData _videoSignalData;
+		/** Blinking frequency. */
+		unsigned char _blinkingFrequency; // in Mhz... Will depend on the type of ULA...
 		/** The number of cycles the CPU was executed once the simulated method finishes. */
 		unsigned int _lastCPUCycles;
 		/** The format used to draw. 

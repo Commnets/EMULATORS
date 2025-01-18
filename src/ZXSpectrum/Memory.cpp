@@ -19,8 +19,9 @@ ZXSPECTRUM::Memory::Memory (ZXSPECTRUM::Memory::Configuration cfg,
 
 	// The ROM to load can be configurable...
 	std::string ROMFILE = "./48Standard-ENG.rom";
-	if (lang == "ESP")
-		ROMFILE = "./48Standard-ESP.rom";
+	if (lang == "ESP") ROMFILE = "./48Standard-ESP.rom";
+	else if (lang == "NOR") ROMFILE = "./48Standard-NOR.rom";
+	else if (lang == "ARA") ROMFILE = "./48Standard-ARA.rom";
 
 	bool ok = true;
 	ok &= physicalStorage (_ROM_SET) -> loadInto (ROMFILE);

@@ -209,8 +209,6 @@ namespace ZX81
 		/** The format used to draw. 
 			It has to be the same that is used by the Screen object. */
 		SDL_PixelFormat* _format;
-		/** Whether the vertical raster has entered the first VBlank zone already. */
-		bool _firstVBlankEntered;
 
 		// To draw situations...
 		bool _HALTBefore; // Just to identify the first HALT of many!
