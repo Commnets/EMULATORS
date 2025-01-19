@@ -35,7 +35,7 @@ ZX81::DatasetteInjection::DatasetteInjection (ZX81::Type t)
 		  ? MCHEmul::Address ({ 0x03, 0x02 }, false)
 		  : MCHEmul::Address ({ 0x07, 0x02 }, false),
 		{  }
-			}
+	  }
 {
 	setClassName ("ZX81DatasetteI");
 }
@@ -46,16 +46,7 @@ bool ZX81::DatasetteInjection::simulate (MCHEmul::CPU* cpu)
 	if ((cpu -> programCounter ().internalRepresentation () == _loadTrap._addressIn.value ()) &&
 		!_data._data.empty ()) // there must be data inside...
 	{
-		if (deepDebugActive ())
-		{
-			*_deepDebugFile
-				// Where
-				<< "ZX81DN\t" 
-				// When
-				<< std::to_string (cpu -> clockCycles ()) << "\t" // clock cycles at that point
-				// What
-				<< "Datsette trap executed:\n";
-		}
+		_IFDEBUG debugSimulation (cpu);
 
 		// Empty any pending set action...
 		// Because a trap is breaking the normal flow of the code...
@@ -85,4 +76,12 @@ bool ZX81::DatasetteInjection::connectData (MCHEmul::FileData* dt)
 	_data = std::move (dt -> asMemoryBlocks ());
 	
 	return (true); 
+}
+
+// ---
+void ZX81::DatasetteInjection::debugSimulation (MCHEmul::CPU* cpu)
+{
+	assert (_deepDebugFile != nullptr);
+
+	_deepDebugFile -> writeCompleteLine ("ZX81DN", cpu -> clockCycles (), "Datasette trap executed");
 }

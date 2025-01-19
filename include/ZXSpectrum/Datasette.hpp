@@ -55,10 +55,20 @@ namespace ZXSPECTRUM
 		virtual bool connectData (MCHEmul::FileData* dt) override;
 
 		private:
+		// -----
+		// Different debug methods to simplify the internal code
+		// and to make simplier the modification in case it is needed...
+		/** Debug special situations...
+			Take care using this instructions _deepDebugFile could be == nullptr... */
+		void debugSimulation (MCHEmul::CPU* cpu);
+		// -----
+
+		private:
 		Type _type;
 
 		// Implementation...
-		const MCHEmul::Address _addressIn, _addressOut;
+		const MCHEmul::Trap _loadTrap;
+		size_t _blockRead;
 	};
 }
 

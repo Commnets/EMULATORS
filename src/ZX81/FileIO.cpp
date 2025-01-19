@@ -43,7 +43,7 @@ bool ZX81::OAndPFileTypeIO::canRead (const std::string& fN) const
 	f.seekg (0, std::ios::end);
 	std::streamoff s = f.tellg ();
 	if (s < (std::streamoff) (p81 ? 127 /** 126 name + last bye = 0x80. */ : 0))
-		return (false); // ...noThe length of the file must be at least 1 byte
+		return (false);
 
 	if (!p81)
 		return (true);

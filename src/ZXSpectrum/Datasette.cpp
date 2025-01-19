@@ -25,8 +25,13 @@ ZXSPECTRUM::DatasetteInjection::DatasetteInjection (ZXSPECTRUM::Type t)
 		{ { "Name", "Datasette Injection ZXSpectrum" },
 		  { "Manufacturer", "ICF to inject the code directly into the memory" } }),
 	  _type (t),
-	  _addressIn (), // TODO in function of the type of computer maybe...
-	  _addressOut ()
+	  _loadTrap { 
+		0, 
+		"LOAD", 
+		MCHEmul::Address ({ 0x56, 0x05 }, false),
+		MCHEmul::Address ({ 0xe2, 0x05 }, false),
+		{  }
+	  }
 {
 	setClassName ("ZXSpectrumDatasetteI");
 }
@@ -34,18 +39,14 @@ ZXSPECTRUM::DatasetteInjection::DatasetteInjection (ZXSPECTRUM::Type t)
 // ---
 bool ZXSPECTRUM::DatasetteInjection::simulate (MCHEmul::CPU* cpu)
 {
-	if ((cpu -> programCounter ().internalRepresentation () == _addressIn.value ()) &&
+	if ((cpu -> programCounter ().internalRepresentation () == _loadTrap._addressIn.value ()) &&
 		!_data._data.empty ()) // there must be data inside...
 	{
-		// The only type of data recognized is so far, OAndPFileData
-		// This type of data is made up of only 1 program, so 
-		// the data as a whole might be loaded!
-		cpu -> memoryRef () -> put (_data._data);
+		_IFDEBUG debugSimulation (cpu);
 
-		// To simulate the return from the routine...
-		cpu -> memoryRef () -> stack () -> pull (2);
+		// TODO
 
-		cpu -> programCounter ().setAddress (_addressOut);
+		cpu -> programCounter ().setAddress (_loadTrap._addressOut);
 	}
 
 	return (true);
@@ -54,9 +55,27 @@ bool ZXSPECTRUM::DatasetteInjection::simulate (MCHEmul::CPU* cpu)
 // ---
 bool ZXSPECTRUM::DatasetteInjection::connectData (MCHEmul::FileData* dt)
 {
-	// TODO: Pending to verify the type of IO content...
+	if (dynamic_cast <ZXSPECTRUM::TAPFileData*> (dt) == nullptr)
+		return (false); // That type of info is not valid from the datasette...
 
 	_data = std::move (dt -> asMemoryBlocks ());
+
+	// Starting from the beginning...
+	_blockRead = 0;
 	
 	return (true); 
+}
+
+// ---
+void ZXSPECTRUM::DatasetteInjection::debugSimulation (MCHEmul::CPU* cpu)
+{
+	assert (_deepDebugFile != nullptr);
+
+	// TODO
+
+	_deepDebugFile -> writeCompleteLine 
+		("ZXSPECTRUMDN", 
+		 cpu -> clockCycles (), 
+		 "Datasette requested:",
+		 { "" });
 }
