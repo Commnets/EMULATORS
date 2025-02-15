@@ -37,7 +37,8 @@ namespace ZXSPECTRUM
 		So, the minimum length of a TAP file is: 21 bytes. */
 	struct TAPFileData final : public MCHEmul::FileData
 	{
-		struct InfoBlock
+		// Every block is made up of a header...
+		struct HeaderBlock
 		{
 			enum class Type
 			{
@@ -47,25 +48,41 @@ namespace ZXSPECTRUM
 				_CODE = 3
 			};
 
-			InfoBlock ()
-				: _headerLength (0),
-				  _headerChecksum (0),
-				  _dataLength (0),
-				  _name (""),
+			HeaderBlock ()
+				: _length (0),
 				  _type (Type::_PROGRAM),
-				  _parameter1 { 0x00, 0x00 }, _parameter2 { 0x00, 0x00 },
-				  _block (),
-				  _dataChecksum (0)
+				  _name (""),
+				  _dataLength (0), // The length in terms of bytes of the data after this header...
+				  _parameter1 { 0x00, 0x00 },_parameter2 { 0x00, 0x00 },
+				  _data (),
+				  _checksum (0)
 							{ }
-		
-			unsigned short _headerLength;
-			unsigned char _headerChecksum;
-			unsigned short _dataLength;
-			std::string _name;
-			Type _type;
-			char _parameter1 [2], _parameter2 [2];
-			MCHEmul::DataMemoryBlock _block;
-			unsigned char _dataChecksum;
+
+			unsigned short _length; // Including all bytes...
+			Type _type; // Type of block...
+			std::string _name; // Name of the block...
+			unsigned short _dataLength; // Defined in the header, and regarding the next...
+			char _parameter1 [2], _parameter2 [2]; // 2 parameters which meaning will depend on the type before...
+			MCHEmul::DataMemoryBlock _data; // Just the data of teh header...
+
+			// Implementation...
+			unsigned char _checksum;
+		};
+
+		// ...and a block of data...
+		struct InfoBlock
+		{
+			InfoBlock ()
+				: _header (),
+				  _length (0),
+				  _data (),
+				  _checksum (0)
+							{  }
+
+			HeaderBlock _header;
+			unsigned short _length;
+			MCHEmul::DataMemoryBlock _data;
+			unsigned char _checksum;
 		};
 
 		using InfoBlocks = std::vector <InfoBlock>;

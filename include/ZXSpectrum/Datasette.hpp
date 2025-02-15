@@ -55,12 +55,30 @@ namespace ZXSPECTRUM
 		virtual bool connectData (MCHEmul::FileData* dt) override;
 
 		private:
+		/** Pure trap simulation. \n
+			On exit: \n
+			A	= calculated parity byte if parity checked, else 0 (CHECKME). \n
+			F	= if parity checked, all flags are modified
+				  else carry only is modified (FIXME).
+			B	= 0xB0 (success) or 0x00 (failure). \n
+			C	= 0x01 (confirmed), 0x21, 0xFE or 0xDE (CHECKME). ºn
+			DE	= decremented by number of bytes loaded or verified. \n
+			H	= calculated parity byte or undefined. \n
+			L	= last byte read, or 1 if none. \n
+			IX	= incremented by number of bytes loaded or verified. \n
+			A'	= unchanged on error + no flag byte, else 0x01. \n
+			F'	= 0x01      on error + no flag byte, else 0x45. \n
+			R	= no point in altering it :-). \n
+			Other registers unchanged. **/
+		bool simulateTrap (MCHEmul::CPU* cpu);
+
 		// -----
 		// Different debug methods to simplify the internal code
 		// and to make simplier the modification in case it is needed...
 		/** Debug special situations...
 			Take care using this instructions _deepDebugFile could be == nullptr... */
 		void debugSimulation (MCHEmul::CPU* cpu);
+		void debugErrorTrap ();
 		// -----
 
 		private:

@@ -8,20 +8,28 @@ MCHEmul::ExtendedDataMemoryBlocks ZXSPECTRUM::TAPFileData::asMemoryBlocks () con
 
 	for (const auto& i : _infoBlocks)
 	{
-		MCHEmul::DataMemoryBlock dB;
-		dB.setAttribute ("HEADERLENGTH", std::to_string (i._headerLength));
-		dB.setAttribute ("HEADERCHECKSUM", std::to_string (i._headerChecksum));
-		dB.setAttribute ("DATALENGTH", std::to_string (i._dataLength));
-		dB.setAttribute ("TYPE", std::to_string ((unsigned int) i._type));
-		dB.setName (i._name);
-		dB.setAttribute ("PRM10", std::to_string ((unsigned int) i._parameter1 [0]));
-		dB.setAttribute ("PRM11", std::to_string ((unsigned int) i._parameter1 [1]));
-		dB.setAttribute ("PRM20", std::to_string ((unsigned int) i._parameter2 [0]));
-		dB.setAttribute ("PRM21", std::to_string ((unsigned int) i._parameter2 [1]));
-		dB.setAttribute ("DATACHECKSUM", std::to_string (i._dataChecksum));
-		dB.addBytes (i._block.bytes ());
+		// Save the header block...
+		MCHEmul::DataMemoryBlock dBH;
+		dBH.setAttribute ("LENGTH", std::to_string (i._header._length));
+		dBH.setAttribute ("FLAG", "0"); // The header is always 00...
+		dBH.setAttribute ("TYPE", std::to_string ((unsigned int) i._header._type)); // The type of the data following this header...
+		dBH.setAttribute ("NAME", i._header._name);
+		dBH.setAttribute ("DATALENGTH", std::to_string (i._header._dataLength));
+		dBH.setAttribute ("PRM10", std::to_string ((unsigned int) i._header._parameter1 [0]));
+		dBH.setAttribute ("PRM11", std::to_string ((unsigned int) i._header._parameter1 [1]));
+		dBH.setAttribute ("PRM20", std::to_string ((unsigned int) i._header._parameter2 [0]));
+		dBH.setAttribute ("PRM21", std::to_string ((unsigned int) i._header._parameter2 [1]));
+		dBH.setAttribute ("CHECKSUM", std::to_string (i._header._checksum));
+		dBH.addBytes (i._header._data.bytes ());
+		result._data.emplace_back (std::move (dBH));
 
-		result._data.emplace_back (std::move (dB));
+		// Save the data information...
+		MCHEmul::DataMemoryBlock dBD;
+		dBD.setAttribute ("LENGTH", std::to_string (i._length));
+		dBD.setAttribute ("FLAG", "255"); // The flag is always FF = 255...
+		dBD.setAttribute ("CHECKSUM", std::to_string (i._checksum));
+		dBD.addBytes (i._data.bytes ());
+		result._data.emplace_back (std::move (dBD));
 	}
 
 	return (result);
@@ -36,9 +44,9 @@ std::string ZXSPECTRUM::TAPFileData::asString () const
 	for (const auto& i : _infoBlocks)
 	{
 		result += ((ct != 0) ? ", " : "") +
-			std::string ("Block:") + std::to_string (ct) + "(" + MCHEmul::trim (i._name) + ") " +
-			std::string ("Type:") + std::to_string ((unsigned int) i._type) + " " +
-			std::string ("Size:") + std::to_string (i._dataLength);
+			std::string ("Block:") + std::to_string (ct) + "(" + MCHEmul::trim (i._header._name) + ") " +
+			std::string ("Type:") + std::to_string ((unsigned int) i._header._type) + " " +
+			std::string ("Data Size:") + std::to_string (i._header._dataLength);
 
 		ct++;
 	}
@@ -136,27 +144,43 @@ MCHEmul::FileData* ZXSPECTRUM::TAPFileTypeIO::readFile (const std::string& fN, b
 
 					fB = false; // It is no longer the first one...
 
+					// Including the flag type and the checksum! (total)
+					iB._header._length = 0x13;
+
 					// Within the new infoblock...
 					// 1 byte: Type of file...
 					// If the type weren't possible, the info won't be generated and the loop finishes...
-					if (e = (bd [1] > 3)) 
+					// https://sinclair.wiki.zxnet.co.uk/wiki/TAP_format
+					if (e = (bd [1] > 3)) // It can not be more than 3!
 						{ delete [] bd; bd = nullptr; break; }
-					iB._type = (ZXSPECTRUM::TAPFileData::InfoBlock::Type) bd [1];
+					iB._header._type = (ZXSPECTRUM::TAPFileData::HeaderBlock::Type) bd [1];
+					// Type 0 = Program. Type 1 = Number Array. Type 2 = Character Array. Type 3 = Code File.
+
 					// 10 bytes: Name of the file data...
 					char n [11]; for (size_t i = 0; i < 10; n [i++] = bd [i + 2]); n [10] = 0x00;
-					iB._name = std::string (n);
-					// 2 bytes: The length of the header...
-					iB._headerLength = (((unsigned short) bd [13]) << 8) + ((unsigned short) bd [12]); // Big endian...
+					iB._header._name = std::string (n);
+
+					// 2 bytes: The length of the data defined later!
+					iB._header._dataLength = (((unsigned short) bd [13]) << 8) + ((unsigned short) bd [12]); // Big endian...
 					// 2 bytes: parameter 1 (the interpretacition will come later)
-					iB._parameter1 [0] = bd [14]; iB._parameter1 [1] = bd [15];
+					iB._header._parameter1 [0] = bd [14]; iB._header._parameter1 [1] = bd [15];
 					// 2 bytes: parameter 2 (the interpretation will come later)
-					iB._parameter2 [0] = bd [16]; iB._parameter2 [1] = bd [17];
-					// 1 byte: The check sum...
-					// If the checksum didn't match, the info won't be generated and the loop finishes...
-					iB._headerChecksum = 0x00;
-					for (size_t i = 1; i < size_t (bl - 1); iB._headerChecksum ^= bd [i++]);
-					if (e = (iB._headerChecksum != (unsigned char) bd [bl - 1])) 
-						{ delete [] bd; bd = nullptr; break; }
+					iB._header._parameter2 [0] = bd [16]; iB._header._parameter2 [1] = bd [17];
+
+					// The cjecksum is kept in the last byte...
+					iB._header._checksum = (unsigned char) bd [bl - 1];
+					unsigned char parity = 0x00;
+					std::vector <MCHEmul::UByte> dt;
+					for (size_t i = 0; /** The byte 0 is the flag. */
+							i < bl /** The checksum is also taken into account. */; i++)
+						{ parity ^= (unsigned char) bd [i]; dt.emplace_back (bd [i]); }
+					// If the parity is not 0 at this point (the checksum is not rigth),
+					// the info won't be generated and the loop finishes...
+					if (e = (parity != 0)) 
+						{ delete [] bd; bd = nullptr; break; } // When error there is no data to be loaded...
+
+					// So the final dara loaded is 18 bytes (and not 19) because the checksum is not loaded!
+					iB._header._data = MCHEmul::DataMemoryBlock ({ } /** No address needed. */, dt);
 				}
 
 				break;
@@ -164,16 +188,23 @@ MCHEmul::FileData* ZXSPECTRUM::TAPFileTypeIO::readFile (const std::string& fN, b
 			// Data...
 			case 0xff:
 				{
-					iB._dataLength = bl;
-					iB._dataChecksum = 0xff;
+					// Including the flag type and the checksum!
+					iB._length= bl;
+
+					// Calculating the checksum...
+					iB._checksum = (unsigned char) bd [bl - 1];
+					unsigned char parity = 0x00;
 					std::vector <MCHEmul::UByte> dt;
-					for (size_t i = 1 /** The byte 0 is the flag. */; 
-							i < size_t (bl - 1) /** The check sum of this block is not taken into account either. */; i++)
-						{ iB._dataChecksum ^= (unsigned char) bd [i]; dt.emplace_back (bd [i]); }
-					// If the checksum didn't match, the info won't be generated and the loop finishes...
-					if (e = (iB._dataChecksum != (unsigned char) bd [bl - 1])) 
+					for (size_t i = 0 /** The byte 0 is the flag. */; 
+							i < bl /** The checksum of this block is also taken into account. */; i++)
+						{ parity ^= (unsigned char) bd [i]; dt.emplace_back (bd [i]); }
+					// If the parity is not 0 at this point (the checksum is not rigth), 
+					// the info won't be generated and the loop finishes...
+					if (e = (parity != 0)) 
 						{ delete [] bd; bd = nullptr; break; }
-					iB._block = MCHEmul::DataMemoryBlock ({ } /** No address needed. */, dt);
+
+					// In this case the number of bytes loaded is bl - 1, because the checksum is not loaded either...
+					iB._data = MCHEmul::DataMemoryBlock ({ } /** No address needed. */, dt);
 				}
 
 				break;

@@ -320,6 +320,32 @@ namespace FZ80
 		const MCHEmul::RefRegisters& iyRegister () const
 							{ return (_iyRegister); }
 
+		// To get or set the value of one register...
+		/** To get the value. */
+		const MCHEmul::UByte& valueRegister (const MCHEmul::Register& r) const
+							{ return (r.values () [0]); }
+		/** To set the value. */
+		void setValueRegister (MCHEmul::Register& r, const MCHEmul::UByte& v)
+							{ r.set ({ v }); }
+
+		// To get or set the values of complex registers...
+		/** To get the value of a pair of registers, 
+			supossing that the high byte is first and the second next */
+		unsigned short valueFromRegisters (MCHEmul::RefRegisters& r) const
+							{ return ((r [0] -> values ()[0].value () << 8) + r [1] -> values ()[0].value ()); }
+		/** To set the value, in the same onditions. */
+		void setValueInRegisters (MCHEmul::RefRegisters& r, unsigned short v)
+							{ r [0] -> set ({ (unsigned char) ((v & 0xff00) >> 8) });
+							  r [1] -> set ({ (unsigned char) (v & 0x00ff) }); }
+		/** What if it is an Address? Supposing that the high byte is first and the low second. */
+		MCHEmul::Address addressFromRegisters (MCHEmul::RefRegisters& r) const
+							{ return (MCHEmul::Address ({ r [0] -> values () [0].value (), 
+														  r [1] -> values () [0].value () }, true /** Already in big endian. */)); }
+		/** And setting: Always suposse that the high byte of the address is first, and the low second. */
+		void setAddressInRegisters (MCHEmul::RefRegisters& r, const MCHEmul::Address& a)
+							{ MCHEmul::UBytes by = std::move (a.bytes ());
+							  r [0] -> set ({ by [0] }); r [1] -> set ({ by [1] }); }
+
 		// Accesing other registers used only in some computers...
 		MCHEmul::Register& iRegister ()
 							{ return (internalRegister (_IREGISTER)); }
