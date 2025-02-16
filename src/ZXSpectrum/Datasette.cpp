@@ -82,7 +82,7 @@ bool ZXSPECTRUM::DatasetteInjection::simulateTrap (MCHEmul::CPU* cpu)
 			: FZ80::ADD_General (0, 1, 1, { }, "ADC1") // This info is not important...
 				{  }
 
-		bool justADC1 (FZ80::CZ80* cpu)
+		bool justDo (FZ80::CZ80* cpu)
 			{ _lastExecutionData._cpu = cpu; return (executeWith (MCHEmul::UByte::_1, true)); }
 
 		// This instruction is never used, but it has to be defined...
@@ -96,7 +96,7 @@ bool ZXSPECTRUM::DatasetteInjection::simulateTrap (MCHEmul::CPU* cpu)
 			: FZ80::CP_General (0, 1, 1, { }, "CP1") // This info is not important...
 				{  }
 
-		bool justCP1 (FZ80::CZ80* cpu)
+		bool justDo (FZ80::CZ80* cpu)
 			{ _lastExecutionData._cpu = cpu; return (executeWith (MCHEmul::UByte::_1)); }
 
 		// This instruction is never used, but it has to be defined...
@@ -110,7 +110,7 @@ bool ZXSPECTRUM::DatasetteInjection::simulateTrap (MCHEmul::CPU* cpu)
 			: FZ80::INC_General (0, 1, 1, { }, "INCB") // This info is not important...
 				{  }
 
-		bool justINCB (FZ80::CZ80* cpu)
+		bool justDo (FZ80::CZ80* cpu)
 			{ _lastExecutionData._cpu = cpu; return (executeWith (cpu -> bRegister ())); }
 
 		// This instruction is never used, but it has to be defined...
@@ -134,7 +134,7 @@ bool ZXSPECTRUM::DatasetteInjection::simulateTrap (MCHEmul::CPU* cpu)
 	unsigned char parity; // checksum...0 when everything is ok!
 	unsigned short i; // Number of data read or the type of block if none!
 
-	auto preReturn = [&]() -> void
+	auto commonReturn = [&]() -> void
 		{
 			cR.set ({ 0x01 });
 			hlR [0] -> set ({ parity });
@@ -147,29 +147,20 @@ bool ZXSPECTRUM::DatasetteInjection::simulateTrap (MCHEmul::CPU* cpu)
 		{
 			st.setBitStatus (FZ80::CZ80::_CARRYFLAG, false);
 
-			preReturn ();
-		};
-
-	auto okReturn = [&]() -> void
-		{
-			st.setBitStatus (FZ80::CZ80::_CARRYFLAG, true);
-
-			preReturn ();
+			commonReturn ();
 		};
 
 	auto _ADC1 = [&]() -> void
-		{ ADC1 adc1; adc1.justADC1 (c); };
+		{ ADC1 adc1; adc1.justDo (c); };
 
 	auto _CP1 = [&]() -> void
-		{ CP1 cp1; cp1.justCP1 (c); };
+		{ CP1 cp1; cp1.justDo (c); };
 
 	auto _INCB = [&]() -> void
-		{ INCB incb; incb.justINCB (c); };
+		{ INCB incb; incb.justDo (c); };
 
 	const std::vector <MCHEmul::UByte>& dMB = _data._data [_blockRead].bytes ();
 	unsigned short length = (unsigned short) dMB.size ();
-	// Recall that the length doesn't include the checksum 
-	// but it includes the type of block! (so length always = blockLength - 1)
 	
 	// No data...it shouldn't happen!
 	if (length == 0) 
@@ -214,7 +205,7 @@ bool ZXSPECTRUM::DatasetteInjection::simulateTrap (MCHEmul::CPU* cpu)
 
 		_CP1 ();
 
-		okReturn ();
+		commonReturn ();
 
 		return (true);
 	}
@@ -271,7 +262,7 @@ bool ZXSPECTRUM::DatasetteInjection::simulateTrap (MCHEmul::CPU* cpu)
 
 		bR.set ({ 0x0b });
 
-		okReturn ();
+		commonReturn ();
 	}
 	else
 	{
