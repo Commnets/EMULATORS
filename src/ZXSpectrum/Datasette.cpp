@@ -224,7 +224,7 @@ bool ZXSPECTRUM::DatasetteInjection::simulateTrap (MCHEmul::CPU* cpu)
 
 	// The expected type (from the rom) and the type read (from the data), must match!
 	// ...otherwise there is an error, and the routine finishes...
-	if (parity != i)
+	if (parity != (unsigned char) i)
 	{
 		errorReturn ();
 
@@ -236,10 +236,9 @@ bool ZXSPECTRUM::DatasetteInjection::simulateTrap (MCHEmul::CPU* cpu)
 	unsigned char dt;
 	/** The block of information either to load or to verify 
 		is what DEv marks (that can be shorted that the real block of info. */
+	MCHEmul::Address ad = c -> addressFromRegisters (ixR);
 	for (i = 0; i < read /** The number of bytes to load. */; i++)
 	{
-		MCHEmul::Address ad ({ c -> ixlRegister ().values ()[0].value (), 
-			c -> ixhRegister ().values ()[0].value () }, false); ad += (size_t) i;
 		parity ^= (dt = dMB [(size_t) 
 			(i + 1 /** Because when i == 0, the byte to be used would be the type of block,
 					   and it's been already considered.
@@ -247,7 +246,7 @@ bool ZXSPECTRUM::DatasetteInjection::simulateTrap (MCHEmul::CPU* cpu)
 		// At the end of the loop parity == ckecksum...if everything goes ok!
 		if (verify)
 		{
-			if (dt != c -> memoryRef () -> value (ad).value ())
+			if (dt != c -> memoryRef () -> value (ad + i).value ())
 			{
 				hlR [1] -> set ({ dt });
 
@@ -257,7 +256,7 @@ bool ZXSPECTRUM::DatasetteInjection::simulateTrap (MCHEmul::CPU* cpu)
 			}
 		}
 		else
-			c -> memoryRef () -> set (ad, dt);
+			c -> memoryRef () -> put (ad + i, dt);
 	}
 
 	if ((c -> valueFromRegisters (deR) == i) && 
