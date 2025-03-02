@@ -102,7 +102,8 @@ namespace MCHEmul
 		size_t nE = std::numeric_limits <size_t>::max ());
 	/** To setup the list of strings like a table. */
 	std::string tableFormat (const Strings& s, const std::string& sp, size_t l /** minimun length per element. */,
-		size_t sb = std::numeric_limits <size_t>::max () /** size per line. */);
+		size_t sb = std::numeric_limits <size_t>::max () /** size per line. */, 
+		int ne = -1 /** number of elements to comvert in table. -1 = all. */);
 	/** Used in the main function, mainly! */
 	Strings convertIntoStrings (int n, char** dt);
 	Strings convertIntoStrings (int n, wchar_t** dt); // Unicode...

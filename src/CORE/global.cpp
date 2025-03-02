@@ -312,18 +312,22 @@ MCHEmul::Strings MCHEmul::getElementsFrom (const std::string& txt, unsigned char
 }
 
 // ---
-std::string MCHEmul::tableFormat (const MCHEmul::Strings& s, const std::string& sp, size_t l, size_t sb)
+std::string MCHEmul::tableFormat (const MCHEmul::Strings& s, const std::string& sp, size_t l, size_t sb, int ne)
 {
 	std::string result;
 
-	for (size_t i = 0; i < s.size (); i += sb)
+	MCHEmul::Strings cs = s;
+	if (ne != -1 && cs.size () > ne)
+		cs = MCHEmul::Strings (cs.end () - ne, cs.end ());
+
+	for (size_t i = 0; i < cs.size (); i += sb)
 	{
 		if (i != 0) result += '\n';
-		for (size_t j = i; j < (i + sb) && j < s.size (); j++)
+		for (size_t j = i; j < (i + sb) && j < cs.size (); j++)
 		{
 			if (j != i) result += sp;
-			result += s [j] + 
-				((s [j].length () < l) ? MCHEmul::_SPACES.substr (0, l - s [j].length ()) : "");
+			result += cs [j] + 
+				((cs [j].length () < l) ? MCHEmul::_SPACES.substr (0, l - cs [j].length ()) : "");
 		}
 	}
 

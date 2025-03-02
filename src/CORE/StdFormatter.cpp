@@ -166,17 +166,30 @@ std::string MCHEmul::StdFormatter::TablePiece::format (const MCHEmul::InfoStruct
 	std::string sbs = attribute ("blocksize");
 	if (sbs != "") sb = (size_t) std::atoi (sbs.c_str ());
 
+	// How the original elements are separated...
 	char sp = ',';
 	std::string sps = attribute ("listsep");
 	if (sps != "") sp = sps [0];
 
+	// The element used to separate the elements in the table...
+	// If the attribute is not defined, then the default one is used...
+	// ..and this is ""...
 	std::string tsp = attribute ("tablesep");
 
+	// The minimum size that every element in the table has to have...
 	size_t es = 0;
 	std::string ess = attribute ("minsize");
 	if (ess != "") es = (size_t) std::atoi (ess.c_str ());
 
-	return (MCHEmul::tableFormat (MCHEmul::getElementsFrom (by, sp), tsp, es, sb));
+	// The max number of elements to print out...
+	// If the table has more than this number of elements, 
+	// only the last element (max size) will be printed out
+	// If the parameter is not defined all will be printed out... (-1)
+	int ne = -1;
+	std::string nes = attribute ("maxelements");
+	if (nes != "") ne = std::atoi (nes.c_str ());
+
+	return (MCHEmul::tableFormat (MCHEmul::getElementsFrom (by, sp), tsp, es, sb, ne));
 }
 
 // ---

@@ -54,6 +54,12 @@ Active:@ACTIVE@, Read:@READ@
 @BYTES{blocksize=16,listsep=\,,tablesep=\ ,minsize=2}@
 #---
 #---
+;PhysicalStorageSubset256
+Id:@ID@ (@NAME@) Address:$@ADDRESS@, Size:@SIZE@
+Active:@ACTIVE@, Read:@READ@
+@BYTES{blocksize=16,listsep=\,,tablesep=\ ,minsize=2,maxelements=256}@
+#---
+#---
 ;MemoryViewDUMP
 View Id:@ID@
 ->Storages:
@@ -91,7 +97,8 @@ Memory Id:@ID@
 #---
 #---
 ;Stack
-@PhysicalStorageSubset>@
+Last 256 bytes...
+@PhysicalStorageSubset256>@
 From Back:@BACK@, Last Point:@LAST@
 Overflow:@OVERFLOW@
 Empty:@EMPTY@

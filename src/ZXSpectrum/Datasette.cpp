@@ -134,6 +134,13 @@ bool ZXSPECTRUM::DatasetteInjection::simulateTrap (MCHEmul::CPU* cpu)
 	unsigned char parity; // checksum...0 when everything is ok!
 	unsigned short i; // Number of data read or the type of block if none!
 
+	_IFDEBUG debugStatus ("Entering Routine Simulation", c);
+
+	std::cout << MCHEmul::FormatterBuilder::instance () -> 
+		formatter ("CPU") -> format (c -> getInfoStructure ()) << std::endl;
+	std::cout << MCHEmul::FormatterBuilder::instance () -> 
+		formatter ("Stack") -> format (c -> memoryRef () -> stack () -> getInfoStructure ()) << std::endl;
+
 	auto commonReturn = [&]() -> void
 		{
 			cR.set ({ 0x01 });
@@ -173,6 +180,8 @@ bool ZXSPECTRUM::DatasetteInjection::simulateTrap (MCHEmul::CPU* cpu)
 		st.setBitStatus (FZ80::CZ80::_CARRYFLAG, false); 
 		// Seems that when the carry = false, there is an error...
 
+		_IFDEBUG debugStatus ("No data to read", c);
+
 		return (true);
 	}
 
@@ -207,6 +216,8 @@ bool ZXSPECTRUM::DatasetteInjection::simulateTrap (MCHEmul::CPU* cpu)
 
 		commonReturn ();
 
+		_IFDEBUG debugStatus ("ROM Bug simualtion", c);
+
 		return (true);
 	}
 
@@ -218,6 +229,8 @@ bool ZXSPECTRUM::DatasetteInjection::simulateTrap (MCHEmul::CPU* cpu)
 	if (parity != (unsigned char) i)
 	{
 		errorReturn ();
+
+		_IFDEBUG debugStatus ("Info in the file doesn't match request", c);
 
 		return (true);
 	}
@@ -242,6 +255,8 @@ bool ZXSPECTRUM::DatasetteInjection::simulateTrap (MCHEmul::CPU* cpu)
 				hlR [1] -> set ({ dt });
 
 				errorReturn ();
+
+				_IFDEBUG debugStatus ("Verification process KO", c);
 
 				return (true);
 			}
@@ -275,7 +290,28 @@ bool ZXSPECTRUM::DatasetteInjection::simulateTrap (MCHEmul::CPU* cpu)
 		errorReturn ();
 	}
 
+	_IFDEBUG debugStatus ("Exiting Routine OK", c);
+
+	std::cout << MCHEmul::FormatterBuilder::instance () -> 
+		formatter ("CPU") -> format (c -> getInfoStructure ()) << std::endl;
+	std::cout << MCHEmul::FormatterBuilder::instance () -> 
+		formatter ("Stack") -> format (c -> memoryRef () -> stack () -> getInfoStructure ()) << std::endl;
+
 	return (true);
+}
+
+// ---
+void ZXSPECTRUM::DatasetteInjection::debugStatus (const std::string& where, FZ80::CZ80* cpu)
+{
+	auto allRgsAsAttrs = [&](const MCHEmul::Registers& rgs) -> MCHEmul::Attributes
+		{ MCHEmul::Attributes result;
+		  for (const auto& i : rgs) 
+			  result.insert (MCHEmul::Attributes::value_type (i.name (), i.asString ()));
+		  return (result); };
+
+	_deepDebugFile -> writeSimpleLine (where);
+	_deepDebugFile -> writeCompleteLine ("ZXSPECTRUMDN", cpu -> clockCycles (), 
+		"Registers:", allRgsAsAttrs (cpu -> internalRegisters ()));
 }
 
 // ---

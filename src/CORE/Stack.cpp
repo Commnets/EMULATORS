@@ -101,7 +101,8 @@ MCHEmul::InfoStructure MCHEmul::Stack::getInfoStructure () const
 	// as the info from parent class is included in the informatiomn added as a subset...
 	MCHEmul::InfoStructure result = std::move (MCHEmul::InfoClass::getInfoStructure ());
 
-	result.add ("PhysicalStorageSubset",	std::move (MCHEmul::PhysicalStorageSubset::getInfoStructure ()));
+	result.add ("PhysicalStorageSubset256", 
+		std::move (MCHEmul::PhysicalStorageSubset::getInfoStructure ())); // Elements limited to last 256 bytes...
 	result.add ("BACK",						_configuration._fromBack );
 	result.add ("LAST",						_configuration._pointToEmpty );
 	result.add ("OVERFLOW",					_overflow );
