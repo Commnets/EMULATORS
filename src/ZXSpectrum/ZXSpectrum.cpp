@@ -140,10 +140,14 @@ MCHEmul::Chips ZXSPECTRUM::SinclairZXSpectrum::standardChips (ZXSPECTRUM::Sincla
 	MCHEmul::Chips result;
 
 	// The ULA
+	ZXSPECTRUM::ULA* ula = nullptr;
 	result.insert (MCHEmul::Chips::value_type (ZXSPECTRUM::ULA::_ID, 
-		(vS == ZXSPECTRUM::SinclairZXSpectrum::VisualSystem::_PAL) // Will depend on the type of screen...
-			? (ZXSPECTRUM::ULA*) new ZXSPECTRUM::ULA_PAL (ZXSPECTRUM::Memory::_ULA_VIEW)
-			: (ZXSPECTRUM::ULA*) new ZXSPECTRUM::ULA_NTSC (ZXSPECTRUM::Memory::_ULA_VIEW)));
+		ula = ((vS == ZXSPECTRUM::SinclairZXSpectrum::VisualSystem::_PAL) // Will depend on the type of screen...
+			? (ZXSPECTRUM::ULA*) new ZXSPECTRUM::ULA_PAL (ZXSPECTRUM::Memory::_ULA_VIEW, _CLOCK)
+			: (ZXSPECTRUM::ULA*) new ZXSPECTRUM::ULA_NTSC (ZXSPECTRUM::Memory::_ULA_VIEW, _CLOCK))));
+
+	// ...and the simulation of the sound function within the ULA!
+	result.insert (MCHEmul::Chips::value_type (ZXSPECTRUM::ULA::SoundFunction::_ID, ula -> soundFunction ()));
 
 	return (result);
 }

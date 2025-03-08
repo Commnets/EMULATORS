@@ -16,7 +16,90 @@ const MCHEmul::RasterData ZXSPECTRUM::ULA_NTSC::_VRASTERDATA (216, 224, 0, 191, 
 const MCHEmul::RasterData ZXSPECTRUM::ULA_NTSC::_HRASTERDATA (320, 416, 0, 255, 287, 319, 319, 448, 0, 0);
 
 // ---
+ZXSPECTRUM::ULA::SoundFunction::SoundFunction (unsigned int cF, unsigned int sF)
+	: MCHEmul::SoundChip (_ID, 
+		{ { "Name", "SoundFunction" },
+		  { "Code", "Inside ULA ZXSpectrum" },
+		  { "Manufacturer", "ferranti" },
+		  { "Year", "1982 - 1985" } },
+		nullptr), // There is no need of any wrapper...
+	  _chipFrequency (cF), _samplingFrequency (sF),
+	  _ULARegisters (nullptr), // Assigned later when ULA ins set up!
+	  _lastCPUCycles (0),
+	  _clocksPerSample ((unsigned int) ((double) cF / (double (sF)))),
+	  _counterClocksPerSample (0)
+{
+	setClassName ("SoundFunction");
+}
+
+// ---
+bool ZXSPECTRUM::ULA::SoundFunction::initialize ()
+{
+	MCHEmul::SoundChip::initialize ();
+
+	_counterClocksPerSample = 0;
+
+	return (true);
+}
+
+// ---
+bool ZXSPECTRUM::ULA::SoundFunction::simulate (MCHEmul::CPU* cpu)
+{
+	assert (_ULARegisters != nullptr); // Just in case...
+
+	// First time?
+	if (_lastCPUCycles == 0)
+	{ 
+		_lastCPUCycles = cpu -> clockCycles (); // Nothing to do...
+
+		return (true);
+	}
+
+	// The sound function has to be simulated in every clock cycle...
+	for (unsigned int i = (cpu -> clockCycles  () - _lastCPUCycles); i > 0; i--)
+	{
+		_IFDEBUG debugULASoundCycle (cpu, i);
+
+		if (++_counterClocksPerSample >= _clocksPerSample)
+		{
+			if ((_counterClocksPerSample -= _clocksPerSample) >= _clocksPerSample)
+				_counterClocksPerSample = 0; // Just in case _clocksPerSample == 0...
+
+			char dt = (_ULARegisters -> EARSignal ()) ? 100 : 0; // Full sound or not...
+			if (soundMemory () -> addSampleData (&dt, sizeof (char)))
+				MCHEmul::SoundChip::notify (MCHEmul::Event (_SOUNDREADY)); // When buffer is full, notify!
+		}
+	}
+
+	_lastCPUCycles = cpu -> clockCycles ();
+
+	return (true);
+}
+
+// ---
+MCHEmul::InfoStructure ZXSPECTRUM::ULA::SoundFunction::getInfoStructure () const
+{
+	MCHEmul::InfoStructure result = std::move (MCHEmul::SoundChip::getInfoStructure ());
+
+	result.add ("SAMPLINGFREQ", std::to_string (_samplingFrequency));
+	result.add ("CLOCKSSAMPLING", std::to_string (_clocksPerSample));
+
+	return (result);
+}
+
+// ---
+void ZXSPECTRUM::ULA::SoundFunction::debugULASoundCycle (MCHEmul::CPU* cpu, unsigned int i)
+{
+	assert (_deepDebugFile != nullptr);
+
+	_deepDebugFile -> writeCompleteLine (className (), cpu -> clockCycles () - (i >> 1), "Info Cyle", 
+		MCHEmul::Attributes ({ 
+			{ "Sound", std::string (_ULARegisters -> EARSignal () ? "UP" : "DOWN") } }));
+}
+
+// ---
 ZXSPECTRUM::ULA::ULA (const MCHEmul::RasterData& vd, const MCHEmul::RasterData& hd,
+		unsigned int cF,
 		unsigned char f,
 		int vV, const MCHEmul::Attributes& attrs)
 	: MCHEmul::GraphicalChip (_ID, 
@@ -28,6 +111,7 @@ ZXSPECTRUM::ULA::ULA (const MCHEmul::RasterData& vd, const MCHEmul::RasterData& 
 		  { "Code", "5C102E, 5C112E, 5C112E-2, 5C112E-3, 6C001E-5, 6C001E-6, 6C001E-7, 7K010E-5 ULA / Amstrad 40056, +2A/+3 Gate Array" },
 		  { "Manufacturer", "Ferranti" },
 		  { "Year", "1982-1985" } }),
+	  _soundFunction (new ZXSPECTRUM::ULA::SoundFunction (cF, _SOUNDSAMPLINGCLOCK)),
 	  _ULARegisters (new ZXSPECTRUM::ULARegisters),
 	  _ULAView (vV),
 	  _raster (vd, hd, 1 /** The step is 1 pixel. */),
@@ -40,12 +124,17 @@ ZXSPECTRUM::ULA::ULA (const MCHEmul::RasterData& vd, const MCHEmul::RasterData& 
 	setClassName ("ULA");
 
 	_format = SDL_AllocFormat (SDL_PIXELFORMAT_ARGB8888);
+
+	// Asign the ULA registers also to the ULA function...
+	_soundFunction -> setULARegisters (_ULARegisters);
 }
 
 // ---
 ZXSPECTRUM::ULA::~ULA ()
 {
 	SDL_FreeFormat (_format);
+
+	// The sound function is not deleted here because it belongs already to the computer!
 }
 
 // ---
@@ -131,8 +220,9 @@ MCHEmul::InfoStructure ZXSPECTRUM::ULA::getInfoStructure () const
 	MCHEmul::InfoStructure result = std::move (MCHEmul::GraphicalChip::getInfoStructure ());
 
 	result.remove ("Memory"); // This info is not neccesary...
-	result.add ("ULARegisters",	std::move (_ULARegisters -> getInfoStructure ()));
-	result.add ("Raster",		std::move (_raster.getInfoStructure ()));
+	result.add ("ULARegisters",		std::move (_ULARegisters -> getInfoStructure ()));
+	result.add ("Raster",			std::move (_raster.getInfoStructure ()));
+	result.add ("ULASoundFunction",	std::move (_soundFunction -> getInfoStructure ()));
 
 	return (result);
 }
@@ -281,8 +371,8 @@ void ZXSPECTRUM::ULA::debugULACycle (MCHEmul::CPU* cpu, unsigned int i)
 }
 
 // ---
-ZXSPECTRUM::ULA_PAL::ULA_PAL (int vV)
-	: ZXSPECTRUM::ULA (_VRASTERDATA, _HRASTERDATA, 25, vV,
+ZXSPECTRUM::ULA_PAL::ULA_PAL (int vV, unsigned int cF)
+	: ZXSPECTRUM::ULA (_VRASTERDATA, _HRASTERDATA, cF, 25, vV,
 		 { { "Name", "ULA" },
 		  { "Code", "5C102E, 5C112E, 5C112E-2, 5C112E-3, 6C001E-5, 6C001E-6, 6C001E-7, 7K010E-5 ULA / Amstrad 40056, +2A/+3 Gate Array" },
 		  { "Manufacturer", "Ferranti" },
@@ -292,8 +382,8 @@ ZXSPECTRUM::ULA_PAL::ULA_PAL (int vV)
 }
 
 // ---
-ZXSPECTRUM::ULA_NTSC::ULA_NTSC (int vV)
-	: ZXSPECTRUM::ULA (_VRASTERDATA, _HRASTERDATA, 30, vV,
+ZXSPECTRUM::ULA_NTSC::ULA_NTSC (int vV, unsigned int cF)
+	: ZXSPECTRUM::ULA (_VRASTERDATA, _HRASTERDATA, cF, 30, vV,
 		 { { "Name", "ULA" },
 		  { "Code", "5C102E, 5C112E, 5C112E-2, 5C112E-3, 6C001E-5, 6C001E-6, 6C001E-7, 7K010E-5 ULA / Amstrad 40056, +2A/+3 Gate Array" },
 		  { "Manufacturer", "Ferranti" },

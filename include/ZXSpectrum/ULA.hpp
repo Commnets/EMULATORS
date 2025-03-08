@@ -29,17 +29,90 @@ namespace ZXSPECTRUM
 	class ULA : public MCHEmul::GraphicalChip
 	{
 		public:
+		/** The ULA has a very limited sound possibilities, just on / off.
+			To generate a proper wave form and a note the software is needd,
+			and to do so the interrupt system is used. */
+		class SoundFunction : public MCHEmul::SoundChip
+		{
+			public:
+			friend ULA;
+
+			static const unsigned int _ID = 2100;
+
+			/** 
+			  *	Constructor.
+			  *	@param cF	Chip frequency in clocks / second.
+			  * @param sF	Sampling frequency in samples / second. It cannot be 0.
+			  */
+			SoundFunction (unsigned int cF, unsigned int sF);
+
+			/** The main characteristics of the SoundChip. */
+			virtual SDL_AudioFormat type () const override
+								{ return (_SOUNDSAMPLINGFORMAT); }
+			virtual int maxFrequency () const override
+								{ return (_SOUNDSAMPLINGCLOCK >> 1); }
+			virtual unsigned char numberChannels () const override
+								{ return (_SOUNDCHANNELS); }
+
+			virtual bool initialize () override;
+
+			virtual bool simulate (MCHEmul::CPU* cpu) override;
+
+			virtual MCHEmul::InfoStructure getInfoStructure () const override;
+
+			private:
+			/** Invoked when SoundFunction is built. */
+			void setULARegisters (ULARegisters* uR)
+								{ _ULARegisters = uR; }
+			// -----
+			// Different debug methods to simplify the internal code
+			// and to make simplier the modification in case it is needed...
+			/** Debug special situations...
+				Take care using this instructions _deepDebugFile could be == nullptr... */
+			void debugULASoundCycle (MCHEmul::CPU* cpu, unsigned int i);
+			// -----
+
+			private:
+			unsigned int _chipFrequency;
+			unsigned int _samplingFrequency;
+
+			// Implementation
+			/** A Reference to the ULA Registers. */
+			ULARegisters* _ULARegisters;
+			/** The number of cycles the CPU was executed once the simulated method finishes. */
+			unsigned int _lastCPUCycles;
+			/** Number of clocks to get a sample. */
+			unsigned int _clocksPerSample;
+			/** Counter from 0 to _clockPerSample. */
+			unsigned int _counterClocksPerSample;
+		};
+
 		static const unsigned int _ID = 210;
+
+		// 44,1MHz (more or less standard in current sound cards)
+		static const unsigned int _SOUNDSAMPLINGCLOCK		= 44100;
+		// 8 bits sound data, very simple nothing complicated...
+		static const unsigned short _SOUNDSAMPLINGFORMAT	= AUDIO_U8;
+		// Number of channels..
+		static const unsigned char _SOUNDCHANNELS			= 1;
 
 		/** Specific classes for PAL & NTSC have been created giving this data as default. \n
 			The ULA constructor receives info over the raster data, the memory view to use,
 			The number of cycles of every raster line (different depending on the ULA version),
 			a reference to the portFE that is used to read the keyboard,
 			and additional attributes. */
-		ULA (const MCHEmul::RasterData& vd, const MCHEmul::RasterData& hd, unsigned char f,
+		ULA (const MCHEmul::RasterData& vd, const MCHEmul::RasterData& hd, 
+			unsigned int cF,
+			unsigned char f,
 			int vV, const MCHEmul::Attributes& attrs = { });
 
 		virtual ~ULA () override;
+
+		/** To get the sound function. */
+		const SoundFunction* soundFunction () const
+							{ return (_soundFunction); }
+		SoundFunction* soundFunction ()
+							{ return (_soundFunction); }
 
 		/** To get a reference to the ULARegisters. */
 		const ULARegisters* registers () const
@@ -102,6 +175,8 @@ namespace ZXSPECTRUM
 		// -----
 
 		protected:
+		/** A reference to the sound function, that is created at construction tine. */
+		SoundFunction* _soundFunction;
 		/** A reference to the ULA registers. */
 		ULARegisters* _ULARegisters;
 		/** The number of the memory view used to read the data. */
@@ -225,7 +300,7 @@ namespace ZXSPECTRUM
 		static const MCHEmul::RasterData _VRASTERDATA;
 		static const MCHEmul::RasterData _HRASTERDATA;
 
-		ULA_PAL (int vV);
+		ULA_PAL (int vV, unsigned int cF);
 	};
 
 	/** The version para NTSC systems. */
@@ -235,7 +310,7 @@ namespace ZXSPECTRUM
 		static const MCHEmul::RasterData _VRASTERDATA;
 		static const MCHEmul::RasterData _HRASTERDATA;
 
-		ULA_NTSC (int vV);
+		ULA_NTSC (int vV, unsigned int cF);
 	};
 }
 
