@@ -105,6 +105,9 @@
     <ClInclude Include="..\..\include\ZXSpectrum\ZXSpectrumEmulator.hpp">
       <Filter>Archivos de encabezado\Emulators</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\include\ZXSpectrum\Sound.hpp">
+      <Filter>Archivos de encabezado\IO</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\ZXSpectrum\Memory.cpp">
@@ -157,6 +160,9 @@
     </ClCompile>
     <ClCompile Include="..\..\src\ZXSpectrum\ULARegisters.cpp">
       <Filter>Archivos de origen\Motherboard\Chips</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\ZXSpectrum\Sound.cpp">
+      <Filter>Archivos de origen\IO</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

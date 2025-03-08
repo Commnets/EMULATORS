@@ -33,6 +33,7 @@
     <ClInclude Include="..\..\include\ZXSpectrum\OSIO.hpp" />
     <ClInclude Include="..\..\include\ZXSpectrum\PortManager.hpp" />
     <ClInclude Include="..\..\include\ZXSpectrum\Screen.hpp" />
+    <ClInclude Include="..\..\include\ZXSpectrum\Sound.hpp" />
     <ClInclude Include="..\..\include\ZXSpectrum\Type.hpp" />
     <ClInclude Include="..\..\include\ZXSpectrum\ULA.hpp" />
     <ClInclude Include="..\..\include\ZXSpectrum\ULARegisters.hpp" />
@@ -53,6 +54,7 @@
     <ClCompile Include="..\..\src\ZXSpectrum\OSIO.cpp" />
     <ClCompile Include="..\..\src\ZXSpectrum\PortManager.cpp" />
     <ClCompile Include="..\..\src\ZXSpectrum\Screen.cpp" />
+    <ClCompile Include="..\..\src\ZXSpectrum\Sound.cpp" />
     <ClCompile Include="..\..\src\ZXSpectrum\ULA.cpp" />
     <ClCompile Include="..\..\src\ZXSpectrum\ULARegisters.cpp" />
     <ClCompile Include="..\..\src\ZXSpectrum\ZXSpectrum.cpp" />

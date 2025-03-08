@@ -15,6 +15,7 @@
 #define __MCHEMUL_SOUNDMEMORY__
 
 #include <cstring>
+#include <vector>
 
 namespace MCHEmul
 {
@@ -68,6 +69,9 @@ namespace MCHEmul
 			it is stored back from the beginning. */
 		inline bool addSampleData (char* sB, size_t nD, bool o = false);
 
+		/** To get the values in the memory as bytes of info. */
+		inline std::vector <char> getValues () const;
+
 		private:
 		// Represents a circular buffer...
 		char* _samplingData;
@@ -109,6 +113,15 @@ namespace MCHEmul
 			}
 		}
 
+		return (result);
+	}
+
+	// ---
+	inline std::vector <char> SoundMemory::getValues () const
+	{
+		std::vector <char> result;
+		for (size_t i = 0; i < (_numberSamples * _sizeSample); i++)
+			result.emplace_back (_samplingData [i]);
 		return (result);
 	}
 }

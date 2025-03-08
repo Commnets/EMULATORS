@@ -2,6 +2,7 @@
 #include <ZXSpectrum/PortManager.hpp>
 #include <ZXSpectrum/ULA.hpp>
 #include <ZXSpectrum/Screen.hpp>
+#include <ZXSpectrum/Sound.hpp>
 #include <ZXSpectrum/OSIO.hpp>
 #include <ZXSpectrum/EdgeConnector.hpp>
 #include <ZXSpectrum/Cartridge.hpp>
@@ -162,6 +163,7 @@ MCHEmul::IODevices ZXSPECTRUM::SinclairZXSpectrum::standardDevices (ZXSPECTRUM::
 	result.insert (MCHEmul::IODevices::value_type (ZXSPECTRUM::Screen::_ID, 
 		(MCHEmul::IODevice*) ((vS == ZXSPECTRUM::SinclairZXSpectrum::VisualSystem::_NTSC) 
 			? (ZXSPECTRUM::Screen*) new ZXSPECTRUM::ScreenNTSC : (ZXSPECTRUM::Screen*) new ZXSPECTRUM::ScreenPAL)));
+	result.insert (MCHEmul::IODevices::value_type (ZXSPECTRUM::SoundSystem::_ID, new ZXSPECTRUM::SoundSystem));
 	result.insert (MCHEmul::IODevices::value_type (ZXSPECTRUM::InputOSSystem::_ID, new ZXSPECTRUM::InputOSSystem));
 
 	// The Edge Connector

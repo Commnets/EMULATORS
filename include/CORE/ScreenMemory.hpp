@@ -14,6 +14,8 @@
 #ifndef __MCHEMUL_SCREENMEMORY__
 #define __MCHEMUL_SCREENMEMORY__
 
+#include <vector>
+
 namespace MCHEmul
 {
 	/** It represents a the memory where all things to be sent to the screen are store. \n
@@ -58,6 +60,8 @@ namespace MCHEmul
 							{ for (unsigned int i = 0; i < (nP - s); setPixel (x, y + (i += s), color)); }
 		inline void setBox (size_t x1, size_t y1, size_t nPX, size_t nPY, unsigned int color);
 
+		inline std::vector <unsigned int> getValues () const;
+
 		private:
 		unsigned int* _frameData;
 		size_t _columns, _rows;
@@ -71,6 +75,15 @@ namespace MCHEmul
 		setHorizontalLine (x1, y1 + nPY - 1, nPX, color);
 		setVerticalLine (x1, y1, nPY, color);
 		setVerticalLine (x1 + nPX - 1, y1, nPY, color);
+	}
+
+	// ---
+	inline std::vector <unsigned int> ScreenMemory::getValues () const
+	{
+		std::vector <unsigned int> result;
+		for (size_t i = 0; i < (_columns * _rows); i++)
+			result.emplace_back (_frameData [i]);
+		return (result);
 	}
 }
 

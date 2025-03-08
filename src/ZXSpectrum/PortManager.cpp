@@ -28,10 +28,10 @@ void ZXSPECTRUM::PortManager::setValue (unsigned short ab, unsigned char id, con
 		// Bear in mind than in ZXSpectrum the border can not have bright!
 		_ULARegisters -> setBorderColor (v.value () & 0x07);
 
-		// The bit 3 activates the MIC socket...
+		// The bit 3 (when 0) activates the MIC socket...
 		_ULARegisters -> setMICSignal (!v.bit (3));
-		// ...and the 4 activates the EAR one and also the internal speaker...
-		_ULARegisters -> setEARSignal (!v.bit (4));
+		// ...and the 4 (when 1) activates the EAR one and also the internal speaker...
+		_ULARegisters -> setEARSignal (v.bit (4));
 	}
 }
 

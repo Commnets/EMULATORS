@@ -136,11 +136,6 @@ bool ZXSPECTRUM::DatasetteInjection::simulateTrap (MCHEmul::CPU* cpu)
 
 	_IFDEBUG debugStatus ("Entering Routine Simulation", c);
 
-	std::cout << MCHEmul::FormatterBuilder::instance () -> 
-		formatter ("CPU") -> format (c -> getInfoStructure ()) << std::endl;
-	std::cout << MCHEmul::FormatterBuilder::instance () -> 
-		formatter ("Stack") -> format (c -> memoryRef () -> stack () -> getInfoStructure ()) << std::endl;
-
 	auto commonReturn = [&]() -> void
 		{
 			cR.set ({ 0x01 });
@@ -291,11 +286,6 @@ bool ZXSPECTRUM::DatasetteInjection::simulateTrap (MCHEmul::CPU* cpu)
 	}
 
 	_IFDEBUG debugStatus ("Exiting Routine OK", c);
-
-	std::cout << MCHEmul::FormatterBuilder::instance () -> 
-		formatter ("CPU") -> format (c -> getInfoStructure ()) << std::endl;
-	std::cout << MCHEmul::FormatterBuilder::instance () -> 
-		formatter ("Stack") -> format (c -> memoryRef () -> stack () -> getInfoStructure ()) << std::endl;
 
 	return (true);
 }
