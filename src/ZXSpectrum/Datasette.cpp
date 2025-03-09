@@ -73,8 +73,84 @@ bool ZXSPECTRUM::DatasetteInjection::connectData (MCHEmul::FileData* dt)
 	return (true); 
 }
 
-// ---
 bool ZXSPECTRUM::DatasetteInjection::simulateTrap (MCHEmul::CPU* cpu)
+{
+	struct CP1 : public FZ80::CP_General
+	{
+		CP1 ()
+			: FZ80::CP_General (0, 1, 1, { }, "CP1") // This info is not important...
+				{  }
+
+		bool justDo (FZ80::CZ80* cpu)
+			{ _lastExecutionData._cpu = cpu; return (executeWith (MCHEmul::UByte::_1)); }
+
+		// This instruction is never used, but it has to be defined...
+		bool executeImpl (bool &f) override
+			{ return (false); }
+	};
+
+	if (_data._data.empty () ||
+		_data._data.size () <= _blockRead ||
+		_data._data [_blockRead].size () < 2)
+		return (true); // There is no data to load...
+
+	// The main registers used here...
+	FZ80::CZ80* c = static_cast <FZ80::CZ80*> (cpu);
+	MCHEmul::Register& aR		= c -> aRegister ();
+	MCHEmul::Register& bR		= c -> bRegister ();
+	MCHEmul::Register& cR		= c -> cRegister ();
+	MCHEmul::RefRegisters& deR	= c -> deRegister ();
+	MCHEmul::RefRegisters& hlR	= c -> hlRegister ();
+	MCHEmul::RefRegisters& ixR	= c -> ixRegister ();
+	MCHEmul::RefRegisters& afpR	= c -> afpRegister ();
+	MCHEmul::StatusRegister& st = c -> statusRegister ();
+
+	_IFDEBUG debugStatus ("Entering Routine Simulation", c);
+
+	const std::vector <MCHEmul::UByte>& dMB = 
+		_data._data [_blockRead].bytes ();
+	unsigned short lMB		= (unsigned short) dMB.size ();
+	MCHEmul::UByte fMB		= dMB [0];
+	unsigned short length	= c -> valueFromRegisters (deR);
+	MCHEmul::Address where	= c -> addressFromRegisters (ixR);
+	MCHEmul::UByte flag		= afpR [0] -> values ()[0];
+
+	if (fMB != flag && lMB > 0)
+	{
+	}
+	else
+	if (length > (lMB - 2))
+	{
+
+	}
+	else
+	if (length < (lMB - 2))
+	{
+	}
+	else
+	if (length == 0)
+	{
+	}
+	else
+	{
+		for (unsigned short i = 0; i < length; i++)
+			c -> memoryRef () -> put (where + i, dMB [(size_t) (i + 1)]);
+
+		CP1 ().justDo (c);
+
+		aR.set ({ MCHEmul::UByte::_0 });
+
+		c -> setValueInRegisters (deR, 0);
+		c -> setValueInRegisters (ixR, (unsigned short) where.value () + length);
+	}
+
+	_IFDEBUG debugStatus ("Exiting Routine OK", c);
+
+	return (true);
+}
+
+// ---
+bool ZXSPECTRUM::DatasetteInjection::simulateTrap_old (MCHEmul::CPU* cpu)
 {
 	struct ADC1 : public FZ80::ADD_General
 	{

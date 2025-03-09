@@ -71,6 +71,7 @@ namespace ZXSPECTRUM
 			R	= no point in altering it :-). \n
 			Other registers unchanged. **/
 		bool simulateTrap (MCHEmul::CPU* cpu);
+		bool simulateTrap_old (MCHEmul::CPU* cpu);
 
 		// -----
 		// Different debug methods to simplify the internal code

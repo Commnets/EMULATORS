@@ -67,6 +67,7 @@ MCHEmul::CPU::CPU (int id, const MCHEmul::CPUArchitecture& a,
 	  _state (MCHEmul::CPU::_EXECUTINGINSTRUCTION),
 	  _clockCycles (0), _lastCPUClockCycles (0),
 	  _lastState (MCHEmul::CPU::_EXECUTINGINSTRUCTION),
+	  _debugLimitsInit (a.numberBytes (), 0), _debugLimitsEnd (a.longestAddressPossible ()), // To debug...
 	  _lastInstruction (nullptr),
 	  _error (_NOERROR),
 	  // Only when executing a instruction/interrupt per cycle...
@@ -720,6 +721,10 @@ void MCHEmul::CPU::debugStopRequest () const
 {
 	assert (_deepDebugFile != nullptr);
 
+	if (_programCounter < _debugLimitsInit ||
+		_programCounter > _debugLimitsEnd)
+		return; // Nothing to do...
+
 	_deepDebugFile -> writeLineData 
 		("New stop request. " + _stopStatusData.asStringCore ());
 }
@@ -729,6 +734,10 @@ void MCHEmul::CPU::debugInterruptRequest (const MCHEmul::CPUInterruptRequest& iR
 { 
 	assert (_deepDebugFile != nullptr);
 
+	if (_programCounter < _debugLimitsInit ||
+		_programCounter > _debugLimitsEnd)
+		return; // Nothing to do...
+
 	_deepDebugFile -> writeLineData ("Interrupt CPU requested " + iR.toString ()); 
 }
 
@@ -737,6 +746,10 @@ void MCHEmul::CPU::debugLastExecutionData () const
 { 
 	assert (_deepDebugFile != nullptr &&
 			_lastInstruction != nullptr);
+
+	if (_programCounter < _debugLimitsInit ||
+		_programCounter > _debugLimitsEnd)
+		return; // Nothing to do...
 
 	_deepDebugFile -> writeCompleteLine ("CPU", _clockCycles, "Info Cycle", 
 		{ "Last " + ((_lastInstruction == nullptr)
@@ -750,6 +763,10 @@ void MCHEmul::CPU::debugStopSituation () const
 {
 	assert (_deepDebugFile != nullptr);
 
+	if (_programCounter < _debugLimitsInit ||
+		_programCounter > _debugLimitsEnd)
+		return; // Nothing to do...
+
 	_deepDebugFile -> writeCompleteLine ("CPU", _clockCycles, "Stopped", 
 		_stopStatusData.attributes ());
 	_deepDebugFile -> writeLineData	("State:" + std::to_string (_state) + 
@@ -761,6 +778,10 @@ void MCHEmul::CPU::debugAlreadyStopped () const
 {
 	assert (_deepDebugFile != nullptr);
 
+	if (_programCounter < _debugLimitsInit ||
+		_programCounter > _debugLimitsEnd)
+		return; // Nothing to do...
+
 	_deepDebugFile -> writeLineData (
 		"Already stopped. " + std::to_string (_stopStatusData.cyclesStillValid ()) + " cycles pending");
 }
@@ -770,6 +791,10 @@ void MCHEmul::CPU::debugInterruptLaunched () const
 {
 	assert (_deepDebugFile != nullptr &&
 			_currentInterrupt != nullptr);
+
+	if (_programCounter < _debugLimitsInit ||
+		_programCounter > _debugLimitsEnd)
+		return; // Nothing to do...
 
 	_deepDebugFile -> writeLineData ("Interrupt launched type " + 
 		std::to_string (_currentInterrupt -> id ()));
@@ -781,6 +806,10 @@ void MCHEmul::CPU::debugInterruptFails () const
 	assert (_deepDebugFile != nullptr &&
 			_currentInterrupt != nullptr);
 
+	if (_programCounter < _debugLimitsInit ||
+		_programCounter > _debugLimitsEnd)
+		return; // Nothing to do...
+
 	_deepDebugFile -> writeLineData ("Error launching Interrupt type " + 
 		std::to_string (_currentInterrupt -> id ()));
 }
@@ -790,6 +819,10 @@ void MCHEmul::CPU::debugInterruptRequestNotAllowed (const MCHEmul::CPUInterruptR
 {
 	assert (_deepDebugFile != nullptr);
 
+	if (_programCounter < _debugLimitsInit ||
+		_programCounter > _debugLimitsEnd)
+		return; // Nothing to do...
+
 	_deepDebugFile -> writeLineData ("Interrupt request not allowed " + iR.toString ());
 }
 
@@ -797,6 +830,10 @@ void MCHEmul::CPU::debugInterruptRequestNotAllowed (const MCHEmul::CPUInterruptR
 void MCHEmul::CPU::debugInterruptRequestToWait (const MCHEmul::CPUInterruptRequest& iR) const
 {
 	assert (_deepDebugFile != nullptr);
+
+	if (_programCounter < _debugLimitsInit ||
+		_programCounter > _debugLimitsEnd)
+		return; // Nothing to do...
 
 	_deepDebugFile -> writeLineData ("Interrupt request to wait " + iR.toString ());
 }
@@ -807,6 +844,10 @@ void MCHEmul::CPU::debugInstructionFails () const
 	assert (_deepDebugFile != nullptr &&
 			_currentInstruction != nullptr);
 
+	if (_programCounter < _debugLimitsInit ||
+		_programCounter > _debugLimitsEnd)
+		return; // Nothing to do...
+
 	_deepDebugFile -> writeLineData ("Error executing instruction " + 
 		_currentInstruction -> asString ());
 }
@@ -816,6 +857,10 @@ void MCHEmul::CPU::debugInstructionExecuted (const std::string& sdd) const
 {
 	assert (_deepDebugFile != nullptr &&
 			_lastInstruction != nullptr);
+
+	if (_programCounter < _debugLimitsInit ||
+		_programCounter > _debugLimitsEnd)
+		return; // Nothing to do...
 
 	std::string lSt = _lastInstruction -> asString (); 
 	std::string lStA = 
@@ -847,6 +892,10 @@ void MCHEmul::CPU::debugInstructionWaiting () const
 {
 	assert (_deepDebugFile != nullptr);
 
+	if (_programCounter < _debugLimitsInit &&
+		_programCounter > _debugLimitsEnd)
+		return; // Nothing to do...
+
 	_deepDebugFile -> writeCompleteLine ("CPU", _clockCycles, "Info Cycle", 
 		{ "Instruction in " + std::to_string (_cyclesPendingExecution) + " cycles" });
 }
@@ -855,6 +904,10 @@ void MCHEmul::CPU::debugInstructionWaiting () const
 void MCHEmul::CPU::debugInstructionNoExists (unsigned int nI)
 {
 	assert (_deepDebugFile != nullptr);
+
+	if (_programCounter < _debugLimitsInit &&
+		_programCounter > _debugLimitsEnd)
+		return; // Nothing to do...
 
 	_deepDebugFile -> writeLineData ("Instruction doesn't exist " + std::to_string (nI));
 }

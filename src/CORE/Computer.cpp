@@ -574,15 +574,21 @@ bool MCHEmul::Computer::runIOCycle ()
 
 // ---
 bool MCHEmul::Computer::activateDeepDebug 
-	(const std::string& fN, bool cpud, const std::vector <int>& cId, 
+	(const std::string& fN, 
+		const MCHEmul::Address& d1, const MCHEmul::Address& d2,
+		bool cpud, 
+		const std::vector <int>& cId,
 		const std::vector <int>& iId, const std::vector <int>& mId, bool a)
 { 
 	bool result = _deepDebug.activate (fN, a);
 
 	if (result)
 	{ 
-		if (cpud) 
+		if (cpud)
+		{
 			cpu () -> setDeepDebugFile (&_deepDebug); /** Minimum the CPU is activated. */
+			cpu () -> setDeepDebugLimits (d1, d2);
+		}
 
 		// For the chips...
 		// if there is only one element in the list and it is a -1, means all!

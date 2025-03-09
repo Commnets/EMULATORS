@@ -29,16 +29,25 @@ void ZXSPECTRUM::PortManager::setValue (unsigned short ab, unsigned char id, con
 		_ULARegisters -> setBorderColor (v.value () & 0x07);
 
 		// The bit 3 (when 0) activates the MIC socket...
-		_ULARegisters -> setMICSignal (!v.bit (3));
 		// ...and the 4 (when 1) activates the EAR one and also the internal speaker...
-		_ULARegisters -> setEARSignal (v.bit (4));
+		// But one one of then is activated, then the other is also activated, 
+		// because both are connected to resistor to the same entry point as it is described in:
+		// http://fizyka.umk.pl/~jacek/zx/faq/reference/48kreference.htm
+		bool aME = !v.bit (3) || v.bit (4);
+		_ULARegisters -> setMICSignal (aME);
+		_ULARegisters -> setEARSignal (aME);
 	}
 }
 
 // ---
 MCHEmul::UByte ZXSPECTRUM::PortManager::getValue (unsigned short ab, unsigned char id, bool ms) const
 {
-	MCHEmul::UByte result = MCHEmul::UByte::_0;
+	// The bit 6 of the final result will be the value in the EAR socket...
+	/** The EAR signal can be used to identify which is the ZXSpectrum issue (1,2 or 3),
+		as it is described in: http://fizyka.umk.pl/~jacek/zx/faq/reference/48kreference.htm \n
+		However it is not important for an emulator, so the first signal the port will read will be always false, 
+		genarating a final result 0f 0xbf with no keys pressed. */
+	MCHEmul::UByte result = 0b10100000; // = 0xa0
 
 	// Any port with A0 = 0 is ULA
 	// However, 0xfe is the ZXSpectrum common one, but many others will behave similar...
@@ -48,20 +57,14 @@ MCHEmul::UByte ZXSPECTRUM::PortManager::getValue (unsigned short ab, unsigned ch
 		// What row to read is determined by the value of the register B...
 		MCHEmul::UByte bVal = (unsigned char) ((ab & 0xff00) >> 8);
 		// If no row is selected...
-		if (bVal.value () == MCHEmul::UByte::_FF)
-			result |= 0b00011111; // ...nothing has to be analysed!
-		else
+		if (bVal.value () != MCHEmul::UByte::_FF)
+		{
 			for (size_t i = 0; i < 8; i++) // Several keys can be pressed simultaneously...
 				if (!bVal.bit (i)) 
 					pR &= ~_ULARegisters -> keyboardStatus (i); // ...and all of them are added!
-		result |= pR & 0x1f; // but at the end only the lowest 5 bits are important!
+		}
 
-		// The bit 6 of the final result will be the value in the EAR socket...
-		/** The EAR signal can be used to identify which is the ZXSpectrum issue (1,2 or 3),
-			as it is described in: http://fizyka.umk.pl/~jacek/zx/faq/reference/48kreference.htm \n
-			However it is not important for an emulator, so the first signal the port will read will be always false, 
-			genarting a final result 0f 0x1f with no keys pressed. */
-		result.setBit (6, _ULARegisters -> EARSignal ());
+		result |= pR & 0x1f; // but at the end only the lowest 5 bits are important!
 	}
 
 	return (result);

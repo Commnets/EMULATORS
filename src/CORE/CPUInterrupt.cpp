@@ -29,7 +29,10 @@ void MCHEmul::CPUInterrupt::setInExecution (bool i)
 			!_computer -> deepDebug ())
 		{
 			if (_computer -> activateDeepDebug // ...activate the deep debug, and if there is no error...
-				(_debugFileName, true, 
+				(_debugFileName,
+					MCHEmul::Address (),
+					_computer -> cpu () -> architecture ().longestAddressPossible (),
+					true, 
 					{ -1 } /* all chips. */, { -1 } /* all io. */, { -1 } /** all memory. */, _addDebugInfo))
 				debugStartingToDebugInterrupt ();
 		}

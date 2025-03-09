@@ -67,13 +67,15 @@ MCHEmul::UByte ZX81::PortManager::getValue (unsigned short ab, unsigned char id,
 		// What row to read is determined by the value of the register B...
 		MCHEmul::UByte bVal = (unsigned char) ((ab & 0xff00) >> 8);
 		// If no row is selected...
-		if (bVal.value () == MCHEmul::UByte::_FF)
-			result |= 0b00011111; // ...nothing has to be analysed!
-		else
+		if (bVal.value () != MCHEmul::UByte::_FF)
+		{
 			for (size_t i = 0; i < 8; i++) // Several keys can be pressed simultaneously...
 				if (!bVal.bit (i)) 
 					pR &= ~_ULARegisters -> keyboardStatus (i); // ...and all of them are added!
-		result |= pR & 0x1f; // but at the end only the lowest 5 bits are important!
+		}
+
+		// but at the end only the lowest 5 bits are important!
+		result |= pR & 0x1f; 
 
 		// If the NMI generator is off...
 		if (ms && // ...and it is wanted to modify the status...

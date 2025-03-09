@@ -657,6 +657,10 @@ void MCHEmul::ActivateDeepDebugCommand::executeImpl
 	std::vector <int> iId = { };		// None by default...
 	std::vector <int> mId = { };		// None by default...
 	bool a = false;						// Not to add by default...
+	std::string d1 = "$0";
+	std::string d2 = "$" + MCHEmul::removeAll0 (c -> cpu () ->
+		architecture ().longestAddressPossible ().asString (MCHEmul::UByte::OutputFormat::_HEXA, '\0'));
+
 	if (parameters ().size () >= 3)
 	{
 		a = (parameter ("02") == "YES") ? true : false;
@@ -691,6 +695,24 @@ void MCHEmul::ActivateDeepDebugCommand::executeImpl
 						if (prm.substr (0, 2) == "M:" && 
 							(iId.size () == 0 || (iId.size () != 0 && iId [0] != -1)))
 							mId.emplace_back (std::atoi (prm.substr (2).c_str ()));
+						if (prm.substr (0, 2) == "D:")
+						{
+							std::string drs = prm.substr (2);
+							size_t drsp = drs.find ('-');
+							if (drsp != std::string::npos)
+							{
+								if (drsp == 0)
+									d2 = drs.substr (1);
+								else
+								{
+									d1 = drs.substr (0, drsp);
+									if (drsp < (drs.length () - 1))
+										d2 = drs.substr (drsp + 1);
+								}
+							}
+							else
+								d1 = drs;
+						}
 					}
 				}
 
@@ -701,7 +723,9 @@ void MCHEmul::ActivateDeepDebugCommand::executeImpl
 	}
 
 	rst.add ("ERROR", 
-		c -> activateDeepDebug (fN, cpud, cId, iId, mId, a)
+		c -> activateDeepDebug (fN, 
+			MCHEmul::Address::fromStr (d1), MCHEmul::Address::fromStr (d2), 
+			cpud, cId, iId, mId, a)
 				? std::string ("No errors")
 				: std::string ("Deep debugging activation error"));
 }

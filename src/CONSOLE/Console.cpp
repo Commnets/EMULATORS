@@ -170,7 +170,7 @@ bool MCHEmul::Console::readAndExecuteCommand ()
 // ---
 bool MCHEmul::Console::readCommand ()
 {
-	static const std::string alKey (" :./$\\_=");
+	static const std::string alKey (" :./$\\_=-");
 
 	if (_clock.tooQuick ())
 	{ 

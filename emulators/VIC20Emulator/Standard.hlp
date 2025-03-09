@@ -37,14 +37,17 @@ To activate or desactivate the execution of interrupts.
 The first parameter is either the ID of the interrupt to operate or the word ALL to refer to all of them.
 The second parameter is the action to execute over the selected interruts. ON to activate them, OFF to desactivate them.
 If the requested interrupt didn't exist, and error would be generated. 
-;DEBUGON FILENAME YES|NO [YES|NO] [ALLCHIP|C:CHIPID1 C:CHIPID2 ...] [ALLIO|I:DEVICEID1 I:DEVICEID2 ...] [ALLMEM|M:MEMID1 M:MEMID2 ...]
+;DEBUGON FILENAME YES|NO [YES|NO] [ALLDIR|D:DIR1-DIR2] [ALLCHIP|C:CHIPID1 C:CHIPID2 ...] [ALLIO|I:DEVICEID1 I:DEVICEID2 ...] [ALLMEM|M:MEMID1 M:MEMID2 ...]
 To activate the deep debugging of the Computer.
 In this state the CPU will trace every instruction executed including the status of the 
 registers and program counter into the file received as parameter after every execution.
 The name (and path) of the file where to write the info is then needed.
 The second parameter is also mandatory to say whether the info of the CPU must be or not traced.
-Additionally other YES will indicate that the info will be added to the file if it existed already.
 NO will delete any previous file with the same name and will create a new one.
+Additionally other YES will indicate that the info will be added to the file if it existed already.
+It is possible to specify the directions among which the info is printed out, with the parameter D:DIRA-DIRB
+If many of these parameters where specified, only the last one would be taken into account.
+If nothing is said, all directions will be traced. In other case only the ones between the parameters defined.
 Additionally the list of the chips id where to actiavte to the deep info can be provided.
 ALLCHIP will indicate to include all Chips.
 The same rational could be applied to a list of Devices.

@@ -442,6 +442,13 @@ namespace MCHEmul
 		  */
 		virtual InfoStructure getInfoStructure () const override;
 
+		/** Fix the limits to debug info. */
+		void setDeepDebugLimits (const Address& d1, const Address& d2)
+		{
+			_debugLimitsInit = d1;
+			_debugLimitsEnd = d2;
+		}
+
 		protected:
 		// Internal methods to simplify the understanding of the code.
 		// Most of them can be overloaded...take care!
@@ -559,6 +566,9 @@ namespace MCHEmul
 		unsigned int _lastCPUClockCycles;
 		/** The last state. */
 		unsigned int _lastState;
+
+		/** Limits in the memory to debug. */
+		Address _debugLimitsInit, _debugLimitsEnd;
 
 		// Implementation
 		/** Just what was the error in the execution if any. */
