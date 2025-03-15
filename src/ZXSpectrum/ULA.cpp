@@ -26,7 +26,7 @@ ZXSPECTRUM::ULA::SoundFunction::SoundFunction (unsigned int cF, unsigned int sF)
 	  _chipFrequency (cF), _samplingFrequency (sF),
 	  _ULARegisters (nullptr), // Assigned later when ULA ins set up!
 	  _lastCPUCycles (0),
-	  _clocksPerSample ((unsigned int) ((double) cF / (double (sF)))),
+	  _clocksPerSample ((unsigned int) (((double) cF * 0.8f) / (double) (sF))),
 	  _counterClocksPerSample (0)
 {
 	setClassName ("SoundFunction");
@@ -38,6 +38,8 @@ bool ZXSPECTRUM::ULA::SoundFunction::initialize ()
 	MCHEmul::SoundChip::initialize ();
 
 	_counterClocksPerSample = 0;
+
+	_lastCPUCycles = 0;
 
 	return (true);
 }
@@ -62,9 +64,7 @@ bool ZXSPECTRUM::ULA::SoundFunction::simulate (MCHEmul::CPU* cpu)
 
 		if (++_counterClocksPerSample >= _clocksPerSample)
 		{
-			if ((_counterClocksPerSample -= _clocksPerSample) >= _clocksPerSample)
-				_counterClocksPerSample = 0; // Just in case _clocksPerSample == 0...
-
+			_counterClocksPerSample = 0;
 			char dt = (_ULARegisters -> EARSignal ()) ? 100 : 0; // Full sound or not...
 			if (soundMemory () -> addSampleData (&dt, sizeof (char)))
 				MCHEmul::SoundChip::notify (MCHEmul::Event (_SOUNDREADY)); // When buffer is full, notify!
@@ -371,8 +371,8 @@ void ZXSPECTRUM::ULA::debugULACycle (MCHEmul::CPU* cpu, unsigned int i)
 }
 
 // ---
-ZXSPECTRUM::ULA_PAL::ULA_PAL (int vV, unsigned int cF)
-	: ZXSPECTRUM::ULA (_VRASTERDATA, _HRASTERDATA, cF, 25, vV,
+ZXSPECTRUM::ULA_PAL::ULA_PAL (int vV, unsigned int cF /** Clock frequency. */)
+	: ZXSPECTRUM::ULA (_VRASTERDATA, _HRASTERDATA, cF, 25 /** Blinking frequency */, vV,
 		 { { "Name", "ULA" },
 		  { "Code", "5C102E, 5C112E, 5C112E-2, 5C112E-3, 6C001E-5, 6C001E-6, 6C001E-7, 7K010E-5 ULA / Amstrad 40056, +2A/+3 Gate Array" },
 		  { "Manufacturer", "Ferranti" },
@@ -382,8 +382,8 @@ ZXSPECTRUM::ULA_PAL::ULA_PAL (int vV, unsigned int cF)
 }
 
 // ---
-ZXSPECTRUM::ULA_NTSC::ULA_NTSC (int vV, unsigned int cF)
-	: ZXSPECTRUM::ULA (_VRASTERDATA, _HRASTERDATA, cF, 30, vV,
+ZXSPECTRUM::ULA_NTSC::ULA_NTSC (int vV, unsigned int cF /** Clock frequency. */)
+	: ZXSPECTRUM::ULA (_VRASTERDATA, _HRASTERDATA, cF, 30 /** Blinking frequency. */, vV,
 		 { { "Name", "ULA" },
 		  { "Code", "5C102E, 5C112E, 5C112E-2, 5C112E-3, 6C001E-5, 6C001E-6, 6C001E-7, 7K010E-5 ULA / Amstrad 40056, +2A/+3 Gate Array" },
 		  { "Manufacturer", "Ferranti" },

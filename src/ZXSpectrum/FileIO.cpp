@@ -121,7 +121,8 @@ MCHEmul::FileData* ZXSPECTRUM::TAPFileTypeIO::readFile (const std::string& fN, b
 	{
 		// 2 bytes: The length of the block...
 		f.read (chr, 2);
-		unsigned short bl = (((unsigned short) chr [1]) << 8) + ((unsigned short) chr [0]); // Big endian
+		unsigned short bl = (((unsigned short) ((unsigned char) chr [1])) << 8) + 
+			((unsigned short) ((unsigned char) chr [0])); // Big endian
 		// x bytes: The data of the block...
 		char* bd = new char [bl];
 		f.read (bd, bl);
@@ -161,7 +162,8 @@ MCHEmul::FileData* ZXSPECTRUM::TAPFileTypeIO::readFile (const std::string& fN, b
 					iB._header._name = std::string (n);
 
 					// 2 bytes: The length of the data defined later!
-					iB._header._dataLength = (((unsigned short) bd [13]) << 8) + ((unsigned short) bd [12]); // Big endian...
+					iB._header._dataLength = (((unsigned short) ((unsigned char) bd [13])) << 8) + 
+						((unsigned short) ((unsigned char) bd [12])); // Big endian...
 					// 2 bytes: parameter 1 (the interpretacition will come later)
 					iB._header._parameter1 [0] = bd [14]; iB._header._parameter1 [1] = bd [15];
 					// 2 bytes: parameter 2 (the interpretation will come later)

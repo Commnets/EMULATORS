@@ -65,6 +65,7 @@ namespace ZXSPECTRUM
 		virtual bool initialize (bool iM = true) override;
 
 		private:
+		/** To process the events related with the insertion or extraction of a cartridge. */
 		virtual void processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifier* n) override;
 
 		// Managing memory configuration...

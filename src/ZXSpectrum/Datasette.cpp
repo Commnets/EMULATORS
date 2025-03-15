@@ -113,9 +113,9 @@ bool ZXSPECTRUM::DatasetteInjection::simulateTrap (MCHEmul::CPU* cpu)
 	MCHEmul::UByte fMB		= dMB [0];
 	unsigned short length	= c -> valueFromRegisters (deR);
 	MCHEmul::Address where	= c -> addressFromRegisters (ixR);
-	MCHEmul::UByte flag		= afpR [0] -> values ()[0];
+	MCHEmul::UByte flag		= aR.values ()[0];
 
-	if (fMB != flag && lMB > 0)
+	if (flag != fMB && lMB > 0)
 	{
 	}
 	else
@@ -136,9 +136,9 @@ bool ZXSPECTRUM::DatasetteInjection::simulateTrap (MCHEmul::CPU* cpu)
 		for (unsigned short i = 0; i < length; i++)
 			c -> memoryRef () -> put (where + i, dMB [(size_t) (i + 1)]);
 
-		CP1 ().justDo (c);
-
 		aR.set ({ MCHEmul::UByte::_0 });
+
+		CP1 ().justDo (c);
 
 		c -> setValueInRegisters (deR, 0);
 		c -> setValueInRegisters (ixR, (unsigned short) where.value () + length);
