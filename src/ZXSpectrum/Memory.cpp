@@ -127,7 +127,13 @@ bool ZXSPECTRUM::Memory::initialize ()
 	if (!result)
 		return (false);
 
-	// TODO
+	// Initialize the RAM with random values...
+	// ...as it is described mainñy in  the ZXSpectrum documentation...
+	// The ROM is not affected at all!
+	for (size_t i = 0; i < _RAM16k -> size (); i++)
+		_RAM16k -> set (_RAM16k -> initialAddress () + i, std::rand () % 256);
+	for (size_t i = 0; i < _RAM48k -> size (); i++)
+		_RAM48k -> set (_RAM48k -> initialAddress () + i, std::rand () % 256);
 
 	// The active view has to be initially the CPU view...
 	setCPUView ();

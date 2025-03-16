@@ -341,15 +341,15 @@ void ZXSPECTRUM::ULA::readGraphicInfoAndDrawVisibleZone (MCHEmul::CPU* cpu)
 	// But always draw the content of the poixels shifted...
 	// but taking into account the flash attribute (1 every 32 frames)....
 	// In this case for both PAPER and INK the bright attribute is taking into account...
-	unsigned char brightVal = (_videoSignalData._attribute.value () & 0x40) ? 0x80 : 0x00;
+	unsigned char brightVal = (_videoSignalData._attribute.value () & 0x40) ? 0x08 : 0x00;
 	// But also whether the pixels has or not to flash...
 	bool fl = _videoSignalData._attribute.value () & 0x80 /** Flash? */ 
 		&& _videoSignalData._flash /** Invert? */;
 	// to finally draw the pixel...
 	_screenMemory -> setPixel (x, y, unsigned int // To be adapted to the right estructure...
 		(_videoSignalData._lastBitShifted ^ fl
-			? (_videoSignalData._attribute.value () & 0x07 | brightVal)
-			: ((_videoSignalData._attribute.value () & 0x38) >> 3) | brightVal));
+			? (_videoSignalData._attribute.value () & 0x07 + brightVal)
+			: ((_videoSignalData._attribute.value () & 0x38) >> 3) + brightVal));
 }
 
 // ---
@@ -372,7 +372,7 @@ void ZXSPECTRUM::ULA::debugULACycle (MCHEmul::CPU* cpu, unsigned int i)
 
 // ---
 ZXSPECTRUM::ULA_PAL::ULA_PAL (int vV, unsigned int cF /** Clock frequency. */)
-	: ZXSPECTRUM::ULA (_VRASTERDATA, _HRASTERDATA, cF, 25 /** Blinking frequency */, vV,
+	: ZXSPECTRUM::ULA (_VRASTERDATA, _HRASTERDATA, cF, 12 /** Blinking frequency */, vV,
 		 { { "Name", "ULA" },
 		  { "Code", "5C102E, 5C112E, 5C112E-2, 5C112E-3, 6C001E-5, 6C001E-6, 6C001E-7, 7K010E-5 ULA / Amstrad 40056, +2A/+3 Gate Array" },
 		  { "Manufacturer", "Ferranti" },
@@ -383,7 +383,7 @@ ZXSPECTRUM::ULA_PAL::ULA_PAL (int vV, unsigned int cF /** Clock frequency. */)
 
 // ---
 ZXSPECTRUM::ULA_NTSC::ULA_NTSC (int vV, unsigned int cF /** Clock frequency. */)
-	: ZXSPECTRUM::ULA (_VRASTERDATA, _HRASTERDATA, cF, 30 /** Blinking frequency. */, vV,
+	: ZXSPECTRUM::ULA (_VRASTERDATA, _HRASTERDATA, cF, 15 /** Blinking frequency. */, vV,
 		 { { "Name", "ULA" },
 		  { "Code", "5C102E, 5C112E, 5C112E-2, 5C112E-3, 6C001E-5, 6C001E-6, 6C001E-7, 7K010E-5 ULA / Amstrad 40056, +2A/+3 Gate Array" },
 		  { "Manufacturer", "Ferranti" },
