@@ -46,13 +46,27 @@ namespace ZXSPECTRUM
 		public:
 		static const int _ID = 101;
 
+		/** The commands accepted by this peripheral. \n
+			They refer mainly to keys that can be pressed.
+			Combinations are not possible. */
+		static const int _KEYFOWARD = 1; // Move the block to read forward (until the maximum)
+		static const int _KEYREWIND = 2; // Move the block to read backward (until the minimum)
+		static const int _KEYEJECT  = 4; // To clean up the data loaded, or to simulate a new casette is inserted...
+
 		/** The parameters are the point in the execution where the code has to be injected, and
 			the point where to return once the injection has been done. */
 		DatasetteInjection (Type t);
 
+		virtual bool connectData (MCHEmul::FileData* dt) override;
+
+		virtual bool executeCommand (int cId, const MCHEmul::Strings& prms) override;
+		virtual MCHEmul::Strings commandDescriptions () const override
+							{ return (MCHEmul::Strings (
+								{ "1:FORWARD", "2:REWIND", "4:EJECT (and clear data)" })); }
+
 		virtual bool simulate (MCHEmul::CPU* cpu) override;
 
-		virtual bool connectData (MCHEmul::FileData* dt) override;
+		virtual MCHEmul::InfoStructure getInfoStructure () const override;
 
 		private:
 		/** Pure trap simulation. \n
@@ -71,16 +85,16 @@ namespace ZXSPECTRUM
 			R	= no point in altering it :-). \n
 			Other registers unchanged. **/
 		bool simulateTrap (MCHEmul::CPU* cpu);
-		bool simulateTrap_old (MCHEmul::CPU* cpu);
 
 		// -----
 		// Different debug methods to simplify the internal code
 		// and to make simplier the modification in case it is needed...
 		/** Debug special situations...
 			Take care using this instructions _deepDebugFile could be == nullptr... */
-		void debugStatus (const std::string& where, FZ80::CZ80* cpu);
 		void debugSimulation (MCHEmul::CPU* cpu);
+		void debugStatus (const std::string& where, FZ80::CZ80* cpu);
 		void debugErrorTrap ();
+		void debugNothingToRead ();
 		// -----
 
 		private:

@@ -50,9 +50,11 @@ namespace ZX81
 			the point where to return once the injection has been done. */
 		DatasetteInjection (Type t);
 
+		virtual bool connectData (MCHEmul::FileData* dt) override;
+
 		virtual bool simulate (MCHEmul::CPU* cpu) override;
 
-		virtual bool connectData (MCHEmul::FileData* dt) override;
+		virtual MCHEmul::InfoStructure getInfoStructure () const override;
 
 		private:
 		// -----

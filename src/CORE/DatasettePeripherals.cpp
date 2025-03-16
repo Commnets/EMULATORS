@@ -93,6 +93,7 @@ MCHEmul::InfoStructure MCHEmul::DatasettePeripheral::getInfoStructure () const
 	for (size_t i = 0; i < (size_t) _data._data.size (); i++)
 	{
 		MCHEmul::InfoStructure dSA;
+
 		dSA.add ("ID",		i); // The id...
 		dSA.add ("SIZE",	_data._data [i].size ());
 		if (_data._data [i].bytes ().size () > 256)
@@ -103,7 +104,9 @@ MCHEmul::InfoStructure MCHEmul::DatasettePeripheral::getInfoStructure () const
 		}
 		else // This way because the type of method used varies...
 			dSA.add ("BYTES", _data._data [i].bytes ());
-		dS.add (std::to_string (i), std::move (dSA));
+
+		dS.add (MCHEmul::fixLenStr (std::to_string (i), 4, true, MCHEmul::_CEROS), 
+			std::move (dSA));
 	}
 
 	result.add ("DATA", dS);

@@ -259,6 +259,34 @@ NOTE: Only the first 256 bytes are shown
 NOTE: Change to FBYTES attribute in DatasetteData structure instead
 #---
 #---
+;D1530InjectionDefinition
+Buffer Address:@BUFFER@
+Status:@STATUS@
+Verifiy Flag:@VERIFYFLAG@
+Start:@STARTPRG@, End:@ENDPRG@
+Keyboad Buffer:@KEYBOARDBUFFER@ (@KEYBOARDPENDING@)
+->Traps:
+@TRAPS?{key=no,equal=,empty=no trap}\n@
+#---
+#---
+;C2N1530Injection
+Id:@ID@
+@ATTRS?{key=YES,equal=:,empty=no attributes}\n@
+COMMANDS:@COMMANDS@
+Keys Pressed:@KEYS@
+Motor on:@MOTOR@
+Data Counter: @DATACOUNTER@
+IO Emulation: @IOEMULATION@
+->Data:
+Name:@DATANAME@
+Size:@DATASIZE@
+@DATA?{fmter=DatasetteData,empty=no data}\n---\n@
+NOTE: Only the first 256 bytes are shown
+NOTE: Change to FBYTES attribute in DatasetteData structure instead
+->Definition:
+@D1530InjectionDefinition>@
+#---
+#---
 ;Cartridge
 Id:@ID@
 @ATTRS?{key=YES,equal=:,empty=no attributes}\n@

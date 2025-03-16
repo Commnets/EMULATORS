@@ -258,8 +258,8 @@ MCHEmul::ExtendedDataMemoryBlocks COMMODORE::T64FileData::asMemoryBlocks () cons
 	MCHEmul::ExtendedDataMemoryBlocks result;
 
 	result._name = _tapeRecord._userDescriptor;
-	result._attributes ["VERSION"]	= std::to_string (_tapeRecord._version);
-	result._attributes ["ENTRIES"]	= std::to_string (_tapeRecord._usedEntries);
+	result._attributes ["VERSION"] = std::to_string (_tapeRecord._version);
+	result._attributes ["ENTRIES"] = std::to_string (_tapeRecord._usedEntries);
 
 	for (unsigned short i = 0; i < _tapeRecord._usedEntries; i++)
 	{

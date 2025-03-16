@@ -36,7 +36,7 @@ MCHEmul::InfoStructure COMMODORE::Datasette1530Injection::Definition::getInfoStr
 	MCHEmul::InfoStructure trps;
 	for (size_t i = 0; i < _traps.size (); i++)
 		trps.add (std::to_string (i), _traps [i].asString ());
-	result.add ("Traps", std::move (trps));
+	result.add ("TRAPS", std::move (trps));
 
 	return (result);
 }
@@ -49,49 +49,7 @@ COMMODORE::Datasette1530Injection::Datasette1530Injection (const COMMODORE::Data
 		  { "Manufacturer", "ICF to inject the code directly into the memory" } }),
 	  _definition (def)
 { 
-	setClassName ("C2N1530");
-}
-
-// ---
-bool COMMODORE::Datasette1530Injection::simulate (MCHEmul::CPU* cpu)
-{
-	bool result = true;
-
-	// What to do will depend on the simulation is...
-	// Te definition can be in many different trap(
-	// Detect first whether the simulation is or not in one of them and then execute the right thing...
-	// There can not be more than 1 trap with the same name
-	bool nF = false;
-	for (MCHEmul::Traps::const_iterator i = _definition._traps.begin ();
-		i != _definition._traps.end () && !nF; i++)
-	{
-		if (nF = (cpu -> programCounter ().internalRepresentation () == (*i)._addressIn.value () && 
-			(*i).verifyFingerTipAgainst (cpu -> memoryRef ()))) // The fingertip has to be also "found"...
-		{
-			if (deepDebugActive ())
-			{
-				*_deepDebugFile
-					// Where
-					<< "1530DN\t" 
-					// When
-					<< std::to_string (cpu -> clockCycles ()) << "\t" // clock cycles at that point
-					// What
-					<< "Trap executed:" << (*i).asString () << "\n";
-			}
-
-			// Empty any pending set action...
-			// Because a trap is breaking the normal flow of the code...
-			// so no set commands pendings can be left!
-			MCHEmul::Memory::configuration ().executeMemorySetCommandsBuffered ();
-
-			// Execute the trap...
-			result = executeTrap ((*i), cpu);
-
-			cpu -> programCounter ().setAddress ((*i)._addressOut);
-		}
-	}
-
-	return (result);
+	setClassName ("C2N1530Injection");
 }
 
 // ---
@@ -110,11 +68,42 @@ bool COMMODORE::Datasette1530Injection::connectData (MCHEmul::FileData* dt)
 }
 
 // ---
+bool COMMODORE::Datasette1530Injection::simulate (MCHEmul::CPU* cpu)
+{
+	bool result = true;
+
+	// What to do will depend on the simulation is...
+	// Te definition can be in many different trap(
+	// Detect first whether the simulation is or not in one of them and then execute the right thing...
+	// There can not be more than 1 trap with the same name
+	bool nF = false;
+	for (MCHEmul::Traps::const_iterator i = _definition._traps.begin ();
+		i != _definition._traps.end () && !nF; i++)
+	{
+		if (nF = (cpu -> programCounter ().internalRepresentation () == (*i)._addressIn.value () && 
+			(*i).verifyFingerTipAgainst (cpu -> memoryRef ()))) // The fingertip has to be also "found"...
+		{
+			// Empty any pending set action...
+			// Because a trap is breaking the normal flow of the code...
+			// so no set commands pendings can be left!
+			MCHEmul::Memory::configuration ().executeMemorySetCommandsBuffered ();
+
+			// Execute the trap...
+			result = executeTrap ((*i), cpu);
+
+			cpu -> programCounter ().setAddress ((*i)._addressOut);
+		}
+	}
+
+	return (result);
+}
+
+// ---
 MCHEmul::InfoStructure COMMODORE::Datasette1530Injection::getInfoStructure () const
 {
 	MCHEmul::InfoStructure result = std::move (MCHEmul::StandardDatasette::getInfoStructure ());
 
-	result.add ("Definition", std::move (_definition.getInfoStructure ()));
+	result.add ("D1530InjectionDefinition", std::move (_definition.getInfoStructure ()));
 
 	return (result);
 }
@@ -127,11 +116,15 @@ bool COMMODORE::Datasette1530Injection::executeTrap (const MCHEmul::Trap& t, MCH
 	// The CPU has to be from the F6500 family!
 	assert (dynamic_cast <F6500::C6500*> (cpu) != nullptr);
 
+	_IFDEBUG debugStatus (t.asString (), cpu);
+
 	switch (t._id)
 	{
-		// When the loader is lloking for a header...
+		// When the loader is looking for a header...
 		case _FINDHEADERTRAP:
 			{
+				_IFDEBUG debugHeaderFileFound (cpu);
+
 				int e = 0;
 
 				// Gets with the buffer is really located...(
@@ -140,7 +133,9 @@ bool COMMODORE::Datasette1530Injection::executeTrap (const MCHEmul::Trap& t, MCH
 				MCHEmul::Address ctteBuffer (cpu -> memoryRef () -> values (_definition._bufferAddr, 2).reverse ());
 
 				// If there is no data, makes no sense to progress...
-				if (_data._data.empty ())
+				// ..ot the data counter is at the end of the datasette file...
+				if (_data._data.empty () ||
+					_dataCounter > (_data._data.size () - 1))
 					e = 1;
 				else
 				{
@@ -153,7 +148,7 @@ bool COMMODORE::Datasette1530Injection::executeTrap (const MCHEmul::Trap& t, MCH
 					{
 						_dataCounter = 0; // Start back next time...
 
-						e = 1;
+						e = 2;
 
 						break;
 					}
@@ -173,7 +168,14 @@ bool COMMODORE::Datasette1530Injection::executeTrap (const MCHEmul::Trap& t, MCH
 							(i < dtM.name ().size ()) ? dtM.name ()[i] : MCHEmul::UByte::_0);
 				}
 				else
+				if (e == 1)
+				{
 					cpu -> memoryRef () -> put (ctteBuffer, 0x05 /** End of casette. */);
+
+					_IFDEBUG debugNothingToRead ();
+				}
+				else
+					_IFDEBUG debugErrorTrap ();
 
 				// Cleans up everthing...
 				cpu -> memoryRef () -> put (_definition._statusAddr, MCHEmul::UByte::_0);
@@ -208,6 +210,8 @@ bool COMMODORE::Datasette1530Injection::executeTrap (const MCHEmul::Trap& t, MCH
 		// When there is data about to be loaded...
 		case _RECEIVEDATATRAP:
 			{
+				_IFDEBUG debugDataFileFound (cpu);
+
 				MCHEmul::Address start (cpu -> memoryRef () -> 
 					values (_definition._startProgramAddr, 2).reverse ());
 				MCHEmul::Address end (cpu -> memoryRef () -> 
@@ -254,4 +258,60 @@ bool COMMODORE::Datasette1530Injection::executeTrap (const MCHEmul::Trap& t, MCH
 	}
 
 	return (result);
+}
+
+// ---
+void COMMODORE::Datasette1530Injection::debugHeaderFileFound (MCHEmul::CPU* cpu)
+{
+	assert (_deepDebugFile != nullptr);
+
+	_deepDebugFile -> writeCompleteLine 
+		("C2N1530DN", 
+		 cpu -> clockCycles (), 
+		 "Block Found:",
+			{ { "BLOCK:", std::to_string (_dataCounter) },
+			  { "TYPE:", _data._data [_dataCounter].attribute ("TYPE") } });
+}
+
+// ---
+void COMMODORE::Datasette1530Injection::debugDataFileFound (MCHEmul::CPU* cpu)
+{
+	assert (_deepDebugFile != nullptr);
+
+	_deepDebugFile -> writeCompleteLine 
+		("C2N1530DN", 
+		 cpu -> clockCycles (), 
+		 "Block Read:",
+			{ { "BLOCK:", std::to_string (_dataCounter) },
+			  { "TYPE:", _data._data [_dataCounter].attribute ("TYPE") } });
+}
+
+// ---
+void COMMODORE::Datasette1530Injection::debugStatus (const std::string& where, MCHEmul::CPU* cpu)
+{
+	auto allRgsAsAttrs = [&](const MCHEmul::Registers& rgs) -> MCHEmul::Attributes
+		{ MCHEmul::Attributes result;
+		  for (const auto& i : rgs) 
+			  result.insert (MCHEmul::Attributes::value_type (i.name (), i.asString ()));
+		  return (result); };
+
+	_deepDebugFile -> writeSimpleLine (where);
+	_deepDebugFile -> writeCompleteLine ("C2N1530DN", cpu -> clockCycles (), 
+		"Registers:", allRgsAsAttrs (cpu -> internalRegisters ()));
+}
+
+// ---
+void COMMODORE::Datasette1530Injection::debugErrorTrap ()
+{
+	assert (_deepDebugFile != nullptr);
+
+	_deepDebugFile -> writeLineData ("Error reading block:" + std::to_string (_dataCounter));
+}
+
+// ---
+void COMMODORE::Datasette1530Injection::debugNothingToRead ()
+{
+	assert (_deepDebugFile != nullptr);
+
+	_deepDebugFile -> writeLineData ("No data to read...");
 }

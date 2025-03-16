@@ -86,9 +86,9 @@ namespace COMMODORE
 
 		Datasette1530Injection (const Definition& dt);
 
-		virtual bool simulate (MCHEmul::CPU* cpu) override;
-
 		virtual bool connectData (MCHEmul::FileData* dt) override;
+
+		virtual bool simulate (MCHEmul::CPU* cpu) override;
 
 		virtual MCHEmul::InfoStructure getInfoStructure () const override;
 
@@ -102,6 +102,18 @@ namespace COMMODORE
 			In some COMMODORE computers (like C64) the whole RAM memory is not directly accesible. */
 		virtual void loadDataBlockInRAM (const MCHEmul::DataMemoryBlock& dB, MCHEmul::CPU* cpu)
 							{ cpu -> memoryRef () -> put (_data._data [_dataCounter]); }
+
+		// -----
+		// Different debug methods to simplify the internal code
+		// and to make simplier the modification in case it is needed...
+		/** Debug special situations...
+			Take care using this instructions _deepDebugFile could be == nullptr... */
+		void debugStatus (const std::string& where, MCHEmul::CPU* cpu);
+		void debugHeaderFileFound (MCHEmul::CPU* cpu);
+		void debugDataFileFound (MCHEmul::CPU* cpu);
+		void debugErrorTrap ();
+		void debugNothingToRead ();
+		// -----
 
 		protected:
 		Definition _definition;

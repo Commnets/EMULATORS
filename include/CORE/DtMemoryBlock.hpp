@@ -43,6 +43,8 @@ namespace MCHEmul
 		void setName (const std::string& n)
 							{ _name = n; }
 		/** The attributes. */
+		const Attributes& attributes () const
+							{ return (_attributes);	}
 		bool existAttribute (const std::string& aN) const
 							{ return (_attributes.find (aN) != _attributes.end ()); }
 		const std::string& attribute (const std::string& aN) const

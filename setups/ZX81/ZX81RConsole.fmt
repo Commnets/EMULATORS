@@ -56,7 +56,7 @@ Size:@DATASIZE@
 @DATA?{fmter=DatasetteData,empty=no data}\n---\n@
 #---
 #---
-;ZX81DatasetteI
+;ZX81DatasetteInjection
 Id:@ID@
 @ATTRS?{key=YES,equal=:,empty=no attributes}\n@
 COMMANDS:@COMMANDS@
@@ -66,4 +66,5 @@ Motor on:@MOTOR@
 Name:@DATANAME@
 Size:@DATASIZE@
 @DATA?{fmter=DatasetteData,empty=no data}\n---\n@
+Trap:@TRAP@
 #---

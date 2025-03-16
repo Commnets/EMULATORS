@@ -37,7 +37,18 @@ ZX81::DatasetteInjection::DatasetteInjection (ZX81::Type t)
 		{  }
 	  }
 {
-	setClassName ("ZX81DatasetteI");
+	setClassName ("ZX81DatasetteInjection");
+}
+
+// ---
+bool ZX81::DatasetteInjection::connectData (MCHEmul::FileData* dt)
+{
+	if (dynamic_cast <ZX81::OAndPFileData*> (dt) == nullptr)
+		return (false); // That type of info is not valid from the datasette...
+
+	_data = std::move (dt -> asMemoryBlocks ());
+	
+	return (true); 
 }
 
 // ---
@@ -68,14 +79,14 @@ bool ZX81::DatasetteInjection::simulate (MCHEmul::CPU* cpu)
 }
 
 // ---
-bool ZX81::DatasetteInjection::connectData (MCHEmul::FileData* dt)
+MCHEmul::InfoStructure ZX81::DatasetteInjection::getInfoStructure () const
 {
-	if (dynamic_cast <ZX81::OAndPFileData*> (dt) == nullptr)
-		return (false); // That type of info is not valid from the datasette...
+	MCHEmul::InfoStructure result = std::move (MCHEmul::DatasettePeripheral::getInfoStructure ());
 
-	_data = std::move (dt -> asMemoryBlocks ());
-	
-	return (true); 
+	result.add ("TYPE", std::to_string ((int) _type));
+	result.add ("TRAP", _loadTrap.asString ());
+
+	return (result);
 }
 
 // ---

@@ -395,7 +395,7 @@ namespace MCHEmul
 		static const int _KEYSTOP   = 4;
 		static const int _KEYPLAY   = 8;
 		static const int _KEYRECORD = 16; // Save = RECORD + PLAY
-		static const int _KEYEJECT	= 32; // To clean up the data loaded, or to simulate a new castte is inserted...
+		static const int _KEYEJECT	= 32; // To clean up the data loaded, or to simulate a new casette is inserted...
 		static const int _KEYIOBASE	= 64; // 10 command to the io simulation... (64...73)
 		/** The key EJECT has no value. */
 
