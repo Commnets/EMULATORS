@@ -62,3 +62,12 @@ The different configurations of the ZX81 can be simulated using the parameter /m
 <img src="./docs/ZX81Data/Picture1.png"/><br>
 <img src="./docs/ZX81Data/Picture2.png"/><br>
 <img src="./docs/ZX81Data/Picture3.png"/>
+
+<h1><b>ZXSpectrum emulator</b></h1>
+The implementation of the framework for ZX81 has been included.<br>
+Execute ZXSpectrumEmulatorC or ZXSpectrumEmulator /h to see the different options at starting, and the command HELP in the console to manipulate later the emulation.<br>
+The different configurations of the ZXSpectrum can be simulated using the parameter /m to indicate the ROM (ZXSTD) and /w (0 = default 16k and 1=48k) at command line.<br><br>
+<img src="./docs/ZXSpectrumData/Picture1.png"/><br>
+<img src="./docs/ZXSpectrumData/Picture2.png"/><br>
+<img src="./docs/ZXSpectrumData/Picture3.png"/>
+
