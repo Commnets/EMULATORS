@@ -119,7 +119,10 @@ ZXSPECTRUM::ULA::ULA (const MCHEmul::RasterData& vd, const MCHEmul::RasterData& 
 	  _videoSignalData (),
 	  _blinkingFrequency (f),
 	  _lastCPUCycles (0),
-	  _format (nullptr)
+	  _format (nullptr),
+	  _screenMemoryAccessedFromCPU (false),
+	  _cyclesStopped (0),
+	  _eventStatus ({ false, false, false })
 {
 	setClassName ("ULA");
 
@@ -156,6 +159,10 @@ bool ZXSPECTRUM::ULA::initialize ()
 
 	_lastCPUCycles = 0;
 
+	_cyclesStopped = 0;
+
+	_eventStatus = { false, false, false };
+
 	return (true);
 }
 
@@ -177,15 +184,27 @@ bool ZXSPECTRUM::ULA::simulate (MCHEmul::CPU* cpu)
 	{
 		_IFDEBUG debugULACycle (cpu, i);
 
-		// Read the graphics and draw the visible zone, 
-		// if it is the case...
+		if (_cyclesStopped > 0)
+			--_cyclesStopped;
+
+		// Read the graphics and draw the visible zone, if it is the case...
+		// ...Mark also whethe rthe event have to be drawn or not!
 		if (_raster.isInVisibleZone ())
 		{
-			readGraphicInfoAndDrawVisibleZone (cpu);
+			if (readGraphicInfoAndDrawVisibleZone (cpu) && // A graphic has been read...
+				_screenMemoryAccessedFromCPU && // ...and the CPU tried also to access this space...
+				!cpu -> stopped ()) // ...and the CPU is not stopped already...
+			{
+				cpu -> setStop (true, MCHEmul::InstructionDefined::_CYCLEALL,
+					cpu -> clockCycles (), (_cyclesStopped += 12) >> 1 /** In CPU time the number of cycles is half. */);
+
+				_eventStatus._contentedSituation = true;
+			}
+
 			if (_showEvents)
 				drawEvents ();
 		}
-
+	
 		// First, moves the raster...
 		_raster.moveCycles (1);
 		// But, if is starting the screen...
@@ -264,7 +283,7 @@ void ZXSPECTRUM::ULA::processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifie
 // ---
 MCHEmul::ScreenMemory* ZXSPECTRUM::ULA::createScreenMemory ()
 {
-	unsigned int* cP = new unsigned int [16];
+	unsigned int* cP = new unsigned int [20];
 	// The colors are partially transparents to allow the blending...
 	cP [0]  = SDL_MapRGBA (_format, 0x00, 0x00, 0x00, 0xe0); // Black
 	cP [1]  = SDL_MapRGBA (_format, 0x01, 0x00, 0xce, 0xe0); // Blue
@@ -283,11 +302,17 @@ MCHEmul::ScreenMemory* ZXSPECTRUM::ULA::createScreenMemory ()
 	cP [14] = SDL_MapRGBA (_format, 0xff, 0xff, 0x1d, 0xe0); // Bright Yellow
 	cP [15] = SDL_MapRGBA (_format, 0xff, 0xff, 0xff, 0xe0); // Bright White
 
+	// Colors used for events!
+	cP [16] = SDL_MapRGBA (_format, 0X00, 0Xf5, 0xff, 0xff); // light Cyan
+	cP [17] = SDL_MapRGBA (_format, 0Xfc, 0Xe7, 0x00, 0xff); // light Yellow
+	cP [18] = SDL_MapRGBA (_format, 0Xff, 0X6d, 0x28, 0xff); // light Orange
+	cP [19] = SDL_MapRGBA (_format, 0Xea, 0X04, 0x7e, 0xff); // light Purple
+
 	return (new MCHEmul::ScreenMemory (numberColumns (), numberRows (), cP));
 }
 
 // --
-void ZXSPECTRUM::ULA::readGraphicInfoAndDrawVisibleZone (MCHEmul::CPU* cpu)
+bool ZXSPECTRUM::ULA::readGraphicInfoAndDrawVisibleZone (MCHEmul::CPU* cpu)
 {
 	// Here it is sure that the raster in the visible zone...
 
@@ -301,41 +326,46 @@ void ZXSPECTRUM::ULA::readGraphicInfoAndDrawVisibleZone (MCHEmul::CPU* cpu)
 	_screenMemory -> setPixel 
 		(x, y, _ULARegisters -> borderColor () & 0x07); // The bright has no effect in the border...
 
-	// When the raster zone is not in the pure visible zone...
-	// Theer is nothing else to do...
-	if (!_raster.vData ().isInScreenZone ())
-		return; // The visible part happens when raster is between 0 and 191 (as per definition at the top)....
-
-	// _vidEn is active only when the horizontal raster position is between 0 and 255, that is, the high bit is 0
-	// additioanlly a positive pulse is generated when that bit passes from 0 to 1 
-	// and a negative one when goes from 1 to 0...
-	_videoSignalData._vidEN.set (_raster.hData ().isInScreenZone ());
-	// ...and it is not, there is nothing else to do...
+	// When the raster zone is not in the pure screen zone....
+	// Theer is nothing else to do, but the signal _vidEn  becomes false...
+	_videoSignalData._vidEN.set (
+			_raster.vData ().isInScreenZone () &&
+			_raster.hData ().isInScreenZone ());
 	if (!_videoSignalData._vidEN.value ())
-		return;
+		return (false); // The screen part happens when raster is between 0 and 191 (as per definition at the top) and the 
+						// ...the hotizontal raster is between 0 and 255...
 
-	// From here onwards, the raster is really in the display part...
+	// At this point the signal _vidEN gets active...
 
-	// When the raster is at the beginning everything is again started...
+	// From here onwards, the raster is really in the visible part...
+
+	// But, when the raster is at the beginning any internal registers is again started...
 	if (_raster.vData ().currentPosition () == 0 && 
 		_raster.hData ().currentPosition () == 0)
-		_videoSignalData.initializeDisplayZone (); // ..everything except the flash situation and _vidEn situation...
+	{
+		_videoSignalData.initializeDisplayZone (); 
+		// ..everything except the flash situation and _vidEn situation...
+
+		_eventStatus._screenPart = true;
+	}
 
 	// The _vidEn generates a positive pulse that indicates that the data has to be read...
 	// Calculates the location within the screen zone...
 	// But 0,0 will be the left up corner in the screen zone
-	// This values are used only to read the memory if needed...
 	unsigned short xS = x - _raster.hData ().firstScreenPosition ();
 	unsigned short yS = y - _raster.vData ().firstScreenPosition ();
-	if (_videoSignalData._vidEN.positiveEdge ()) 
-		readGraphicInfo (xS, yS);
-	// In this way, because the clock has always to be done with right data already loaded...
+
+	// First time that the _vidEN signal is activated, the data has to be read...
+	// ...and in the rest it is read just when the internal clocks says that!
+	bool rG = false; // It will be true when the graphics were read...
+	if (_videoSignalData._vidEN.positiveEdge ())
+		{ readGraphicInfo (xS, yS); _eventStatus._graphicRead = rG = true; }
 	if (_videoSignalData.clock ())
 	{ 
 		// At this point the memory read has to be the next one...
 		if (++xS >= _raster.hData ().screenPositions ()) 
 			{ xS = 0; if (++yS >= _raster.vData ().screenPositions ()) yS = 0; }
-		readGraphicInfo (xS, yS);
+		readGraphicInfo (xS, yS); _eventStatus._graphicRead = rG = true;
 	}
 
 	// But always draw the content of the poixels shifted...
@@ -350,12 +380,24 @@ void ZXSPECTRUM::ULA::readGraphicInfoAndDrawVisibleZone (MCHEmul::CPU* cpu)
 		(_videoSignalData._lastBitShifted ^ fl
 			? (_videoSignalData._attribute.value () & 0x07 + brightVal)
 			: ((_videoSignalData._attribute.value () & 0x38) >> 3) + brightVal));
+
+	return (rG);
 }
 
 // ---
 void ZXSPECTRUM::ULA::drawEvents ()
 {
-	// TODO
+	// Draw the border events...
+	unsigned int cEvent = std::numeric_limits <unsigned int>::max ();
+	if (_eventStatus._screenPart)
+		cEvent = 16;
+	if (_eventStatus._graphicRead)
+		cEvent = 17;
+	if (_eventStatus._contentedSituation)
+		cEvent = 18;
+	if (cEvent != std::numeric_limits <unsigned int>::max ())
+		screenMemory () -> setHorizontalLine // Draw at least two pixels when the events has happpened...
+			(_raster.hData ().currentVisiblePosition (), _raster.vData ().currentVisiblePosition (), 2, cEvent);
 }
 
 // ---

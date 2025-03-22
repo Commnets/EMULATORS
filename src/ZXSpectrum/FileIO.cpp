@@ -158,7 +158,9 @@ MCHEmul::FileData* ZXSPECTRUM::TAPFileTypeIO::readFile (const std::string& fN, b
 					// Type 0 = Program. Type 1 = Number Array. Type 2 = Character Array. Type 3 = Code File.
 
 					// 10 bytes: Name of the file data...
-					char n [11]; for (size_t i = 0; i < 10; n [i++] = bd [i + 2]); n [10] = 0x00;
+					char n [11]; 
+					for (size_t i = 0; i < 10; n [i] = bd [i + 2]) i++; 
+					n [10] = 0x00;
 					iB._header._name = std::string (n);
 
 					// 2 bytes: The length of the data defined later!

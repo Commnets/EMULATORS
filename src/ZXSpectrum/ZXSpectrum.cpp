@@ -110,6 +110,19 @@ bool ZXSPECTRUM::SinclairZXSpectrum::initialize (bool iM)
 }
 
 // ---
+void ZXSPECTRUM::SinclairZXSpectrum::specificComputerCycle ()
+{ 
+	// When the screen memory is accesed...
+	_ula -> setScreenMemoryAccessedFromCPU (
+		cpu () -> stopped () 
+			? false // If it is stopped, it is not accesed...
+			: ((cpu () -> lastINOUTAddress ().value () >= 0x4000 &&
+			    cpu () -> lastINOUTAddress ().value () < 0x8000) ||
+			   (cpu () -> programCounter ().internalRepresentation () >= 0x4000 &&
+				cpu () -> programCounter ().internalRepresentation () < 0x8000)));
+}
+
+// ---
 void ZXSPECTRUM::SinclairZXSpectrum::processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifier* n)
 {
 	// When a expansion element is inserted (or extracted) in (off) the edge connector, 

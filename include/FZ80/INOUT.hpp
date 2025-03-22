@@ -45,8 +45,8 @@ namespace FZ80
 	// ---
 	inline bool IN_General::executeAWith (unsigned char np)
 	{ 
-		// The value of the component BC is pushed into the address bus...
-		// ...because it migth be usefull when reading the port! (and it is the behaviour defined)
+		// The value of the component A(MSB)|np(LSB) is pushed into the address bus...
+		// ...because it migth be useful when reading the port! (and it is the behaviour defined)
 		_lastExecutionData._INOUTAddress = 
 			MCHEmul::Address ({ registerA ().values ()[0], np }, true /** Already in big endian. */);
 
@@ -62,7 +62,10 @@ namespace FZ80
 	{
 		unsigned char np = registerC ().values ()[0].value ();
 
-		_lastExecutionData._INOUTAddress = MCHEmul::Address ({ registerB ().values ()[0], np }, true);
+		// The value of the component B(MSB)|np(LSB) is pushed into the address bus...
+		// ...because it migth be useful when reading the port! (and it is the behaviour defined)
+		_lastExecutionData._INOUTAddress = 
+			MCHEmul::Address ({ registerB ().values ()[0], np }, true);
 
 		MCHEmul::UByte v;
 		r.set ({ v = static_cast <CZ80*> (cpu ()) -> portValue 
@@ -77,7 +80,10 @@ namespace FZ80
 	{
 		unsigned char np = registerC ().values ()[0].value ();
 
-		_lastExecutionData._INOUTAddress = MCHEmul::Address ({ registerB ().values ()[0], np }, true);
+		// The value of the component B(MSB)|np(LSB) is pushed into the address bus...
+		// ...because it migth be useful when reading the port! (and it is the behaviour defined)
+		_lastExecutionData._INOUTAddress = 
+			MCHEmul::Address ({ registerB ().values ()[0], np }, true);
 
 		// The value is not kept anywhere...(lost)
 		affectFlags (static_cast <CZ80*> (cpu ()) -> portValue 
@@ -173,9 +179,10 @@ namespace FZ80
 	// ---
 	inline bool OUT_General::executeAWith (unsigned char np)
 	{ 
-		// In the case of using the OUT A, (n)...
-		// ...the address bus is kept with An
-		_lastExecutionData._INOUTAddress = MCHEmul::Address ({ registerA ().values ()[0], np }, true);
+		// In the case of using the OUT (n), A...
+		// ...the address bus is kept in the address bus A(MSB)|n(LSB)
+		_lastExecutionData._INOUTAddress = 
+			MCHEmul::Address ({ registerA ().values ()[0], np }, true);
 
 		static_cast <CZ80*> (cpu ()) -> setPortValue 
 			((unsigned short) _lastExecutionData._INOUTAddress.value (), np, registerA ().values ()[0].value ()); 
@@ -191,7 +198,8 @@ namespace FZ80
 
 		// In the case of using the OUT r, (C)...
 		// ...the address bus is kept with Bn
-		_lastExecutionData._INOUTAddress = MCHEmul::Address ({ registerB ().values ()[0], v }, true);
+		_lastExecutionData._INOUTAddress =
+			MCHEmul::Address ({ registerB ().values ()[0], v }, true);
 
 		static_cast <CZ80*> (cpu ()) -> setPortValue 
 			((unsigned short) _lastExecutionData._INOUTAddress.value (), v, r.values () [0].value ());
@@ -205,7 +213,8 @@ namespace FZ80
 	{ 
 		unsigned char v = registerC ().values ()[0].value ();
 
-		_lastExecutionData._INOUTAddress = MCHEmul::Address ({ registerB ().values ()[0], v }, true /** Already in big endian. */);
+		_lastExecutionData._INOUTAddress = 
+			MCHEmul::Address ({ registerB ().values ()[0], v }, true /** Already in big endian. */);
 
 		// Same behaviour that IN r,(C)
 		// But nothing is written instead...

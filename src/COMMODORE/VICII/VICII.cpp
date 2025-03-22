@@ -48,7 +48,7 @@ COMMODORE::VICII::VICII (int intId, MCHEmul::PhysicalStorageSubset* cR, const MC
 	  _lastBadLineScrollY (-1), _newBadLineCondition (false), _badLineStopCyclesAdded (false),
 	  _vicGraphicInfo (),
 	  _vicSpriteInfo (),
-	  _eventStatus { false, false }
+	  _eventStatus { false, false, false }
 {
 	// At this point the color RAM can be nullptr, 
 	// but never when the VIC starts to work!
@@ -642,10 +642,10 @@ MCHEmul::ScreenMemory* COMMODORE::VICII::createScreenMemory ()
 
 	// Colors used for events!
 	cP [32] = SDL_MapRGBA (_format, 0X00, 0Xf5, 0xff, 0xff); // light Cyan
-	cP [33] = SDL_MapRGBA (_format, 0Xfc, 0Xe7, 0x00, 0xff); // light yellow
-	cP [34] = SDL_MapRGBA (_format, 0Xff, 0X6d, 0x28, 0xff); // light orange
-	cP [35] = SDL_MapRGBA (_format, 0Xea, 0X04, 0x7e, 0xff); // light purple
-	cP [36] = SDL_MapRGBA (_format, 0X3e, 0Xc7, 0x0b, 0xff); // light green
+	cP [33] = SDL_MapRGBA (_format, 0Xfc, 0Xe7, 0x00, 0xff); // light Yellow
+	cP [34] = SDL_MapRGBA (_format, 0Xff, 0X6d, 0x28, 0xff); // light Orange
+	cP [35] = SDL_MapRGBA (_format, 0Xea, 0X04, 0x7e, 0xff); // light Purple
+	cP [36] = SDL_MapRGBA (_format, 0X3e, 0Xc7, 0x0b, 0xff); // light Green
 
 	return (new MCHEmul::ScreenMemory (numberColumns (), numberRows (), cP));
 }

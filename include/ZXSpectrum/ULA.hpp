@@ -152,6 +152,12 @@ namespace ZXSPECTRUM
 		  */
 		virtual MCHEmul::InfoStructure getInfoStructure () const override;
 
+		/** Called from Computer specific cycle method,
+			to determine whether the CPU accesed or not to the screen memory. \n
+			This is important to detect contentions and then to whether stop the CPU. */
+		void setScreenMemoryAccessedFromCPU (bool sM)
+							{ _screenMemoryAccessedFromCPU = sM; }
+
 		protected:
 		virtual void processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifier* n) override;
 
@@ -159,8 +165,11 @@ namespace ZXSPECTRUM
 		virtual MCHEmul::ScreenMemory* createScreenMemory () override;
 
 		// Invoked from the method "simulation"...
-		/** Read the graphical info (when needed) and draw the graphics. */
-		void readGraphicInfoAndDrawVisibleZone (MCHEmul::CPU* cpu);
+		/** Read the graphical info (when needed) and draw the graphics. \n
+			Returns true when the graphics are read. \n
+			That returns variable will be used to determine whether 
+			the CPU has to be stopped or not. */
+		bool readGraphicInfoAndDrawVisibleZone (MCHEmul::CPU* cpu);
 		/** Read the memory with new data. */
 		inline void readGraphicInfo (unsigned short x, unsigned short y);
 		/** Draw the important events, in case this option is set. */
@@ -244,6 +253,28 @@ namespace ZXSPECTRUM
 		/** The format used to draw. 
 			It has to be the same that is used by the Screen object. */
 		SDL_PixelFormat* _format;
+		/** Active when the screen memory is accesed (16k - 32k). 
+			It can be checked from the ULA to define whether to stop the CPU or not. */
+		bool _screenMemoryAccessedFromCPU;
+
+		// Implementation
+		/** Number of cycles the the CPU is stopped. */
+		int _cyclesStopped;
+
+		/** The events that can be drawn
+			associated to the movement of the raster line. */
+		struct EventsStatus
+		{
+			/** When the visible part starts. */
+			MCHEmul::OBool _screenPart;
+			/** Any time a graphic is read. */
+			MCHEmul::OBool _graphicRead;
+			/** Any time a contention situation is generated. */
+			MCHEmul::OBool _contentedSituation;
+		};
+
+		mutable EventsStatus _eventStatus;
+
 	};
 
 	// ---

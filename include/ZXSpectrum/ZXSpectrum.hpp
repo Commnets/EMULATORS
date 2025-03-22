@@ -65,6 +65,10 @@ namespace ZXSPECTRUM
 		virtual bool initialize (bool iM = true) override;
 
 		private:
+		/** To identify whether the CPU tries to access the 16k of then screen memory
+			to then activate the ULA contention access if needed. */
+		virtual void specificComputerCycle () override;
+
 		/** To process the events related with the insertion or extraction of a cartridge. */
 		virtual void processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifier* n) override;
 
