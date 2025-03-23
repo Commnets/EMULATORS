@@ -196,7 +196,7 @@ bool ZXSPECTRUM::ULA::simulate (MCHEmul::CPU* cpu)
 				!cpu -> stopped ()) // ...and the CPU is not stopped already...
 			{
 				cpu -> setStop (true, MCHEmul::InstructionDefined::_CYCLEALL,
-					cpu -> clockCycles (), (_cyclesStopped += 12) >> 1 /** In CPU time the number of cycles is half. */);
+					cpu -> clockCycles () - (i >> i), (_cyclesStopped += 12) >> 1 /** In CPU time the number of cycles is half. */);
 
 				_eventStatus._contentedSituation = true;
 			}

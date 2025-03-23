@@ -4,9 +4,9 @@
 ?./LocalConsole.fmt
 #---
 ;ULARegisters
-NTSC:@NTSC@
-NMIGenerator:@NMIGEN@, SYNCWhite:@SYNCWHITE@, LineCtrl:@LINECNTRL@
-Casette:@CASETTE@
+BORDER:@BORDER@
+MIC:@MICST@(@MIC@)
+EAR:@EARST@(@EAR@)
 #---
 #---
 ;ULASoundFunction

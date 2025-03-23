@@ -37,8 +37,42 @@ namespace ZXSPECTRUM
 		So, the minimum length of a TAP file is: 21 bytes. */
 	struct TAPFileData final : public MCHEmul::FileData
 	{
-		// Every block is made up of a header...
-		struct HeaderBlock
+		// All info blocks inherits from this one...
+		struct InfoBlock
+		{
+			InfoBlock ()
+				: _length (0),
+				  _data (),
+				  _checksum (0)
+							{ }
+
+			virtual ~InfoBlock ()
+							{ }
+
+			/** The way the block is recognized into the definition file. */
+			virtual unsigned char flag () const
+							{ return (0xff); }
+
+			/** The block as a memory block. */ 
+			virtual MCHEmul::DataMemoryBlock asMemoryBlock () const;
+
+			/** The block as a string. */
+			virtual std::string asString () const;
+
+			/** The block is filled from a byte array, usually data read from a definition file. \n
+				The variable e will be true if there were any error reading the data. */
+			virtual void fillFrom (char* bd, unsigned short nR, bool& e);
+	
+			unsigned short _length;
+			MCHEmul::DataMemoryBlock _data;
+
+			// Implementation...
+			unsigned char _checksum;
+		};
+
+		// The header block is a specific type of block...
+		// ...to define the length of the data and the type of data...
+		struct HeaderBlock final : public InfoBlock
 		{
 			enum class Type
 			{
@@ -49,48 +83,36 @@ namespace ZXSPECTRUM
 			};
 
 			HeaderBlock ()
-				: _length (0),
+				: InfoBlock (),
 				  _type (Type::_PROGRAM),
 				  _name (""),
 				  _dataLength (0), // The length in terms of bytes of the data after this header...
-				  _parameter1 { 0x00, 0x00 },_parameter2 { 0x00, 0x00 },
-				  _data (),
-				  _checksum (0)
+				  _parameter1 { 0x00, 0x00 },_parameter2 { 0x00, 0x00 }
 							{ }
 
-			unsigned short _length; // Including all bytes...
+			virtual unsigned char flag () const override
+							{ return (0x00); }
+
+			virtual MCHEmul::DataMemoryBlock asMemoryBlock () const override;
+
+			virtual std::string asString () const override;
+
+			virtual void fillFrom (char* bd, unsigned short nR, bool& e) override;
+
 			Type _type; // Type of block...
 			std::string _name; // Name of the block...
 			unsigned short _dataLength; // Defined in the header, and regarding the next...
 			char _parameter1 [2], _parameter2 [2]; // 2 parameters which meaning will depend on the type before...
-			MCHEmul::DataMemoryBlock _data; // Just the data of teh header...
-
-			// Implementation...
-			unsigned char _checksum;
 		};
 
-		// ...and a block of data...
-		struct InfoBlock
-		{
-			InfoBlock ()
-				: _header (),
-				  _length (0),
-				  _data (),
-				  _checksum (0)
-							{  }
-
-			HeaderBlock _header;
-			unsigned short _length;
-			MCHEmul::DataMemoryBlock _data;
-			unsigned char _checksum;
-		};
-
-		using InfoBlocks = std::vector <InfoBlock>;
+		using InfoBlocks = std::vector <InfoBlock*>;
 
 		TAPFileData ()
 			: MCHEmul::FileData (),
 			  _infoBlocks ()
 							{ }
+
+		~TAPFileData ();
 
 		/** Get the info as memory data blocks, with the following attributes per data block. \n
 			HEADERLENGTH: Length of the header. Usually two bytes less than the data length. \n
