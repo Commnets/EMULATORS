@@ -247,7 +247,9 @@ MCHEmul::FileData* ZXSPECTRUM::TAPFileTypeIO::readFile (const std::string& fN, b
 
 		unsigned short bl = (((unsigned short) ((unsigned char) chr [1])) << 8) + 
 			((unsigned short) ((unsigned char) chr [0])); // Big endian
-		// x bytes: The data of the block...
+		if (bl == 0) // If there is no data, the block is not valid...
+			continue;
+		// bl bytes: The data of the block...
 		char* bd = new char [bl];
 
 		f.read (bd, bl);
