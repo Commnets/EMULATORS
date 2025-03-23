@@ -273,9 +273,12 @@ bool MCHEmul::InstructionDefined::execute (MCHEmul::CPU* c, MCHEmul::Memory* m, 
 
 		_lastExecutionData._memoryPositions = _memoryPositions;
 
-		c -> setLastINOUTAddress (_lastExecutionData._INOUTAddress);
-
-		c -> setLastINOUTData (_lastExecutionData._INOUTData);
+		// If a new address and data were generated...
+		// ...they are stored in the CPU...
+		if (_lastExecutionData._INOUTAddress.size () != 0)
+			c -> setLastINOUTAddress (_lastExecutionData._INOUTAddress);
+		if (_lastExecutionData._INOUTData.size () != 0)
+			c -> setLastINOUTData (_lastExecutionData._INOUTData);
 	}
 
 	return (r);
@@ -374,6 +377,12 @@ bool MCHEmul::InstructionUndefined::execute (MCHEmul::CPU* c, MCHEmul::Memory* m
 	MCHEmul::ProgramCounter* pc)
 {
 	bool result = false; // By default...
+	
+	// The instruction to be executed could need the last data...
+	// ...and the previous instruction could not be a undefined one...
+	if (c -> lastInstruction () != nullptr)
+		_lastExecutionData = c -> lastInstruction () -> lastExecutionData ();
+
 	MCHEmul::Instruction* sI = 
 		const_cast <MCHEmul::Instruction*> (selectInstruction (m, pc -> asAddress ())); // To select the instruction...
 	if (sI != nullptr && (result = sI -> execute (c, m, stk, pc)))

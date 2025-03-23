@@ -183,7 +183,8 @@ namespace FZ80
 		/** In the case of the interrupt type 2, the address to jump to is deducted from the values in the dataBus and register I. */
 		MCHEmul::Address INT2VectorAddress () const
 							{ return (MCHEmul::Address 
-								({ lastINOUTData ()[0], iRegister ().values () [0] }, false /** Little - endian */)); }
+								({ ((lastINOUTData ().size () == 0) ? 0x00 : lastINOUTData () [0]),
+								   iRegister ().values () [0] }, false /** Little - endian */)); }
 		MCHEmul::Address NMIVectorAddress () const
 							{ return (MCHEmul::Address ({ 0x66, 0x00 }, false /** Little - endian */)); }
 
