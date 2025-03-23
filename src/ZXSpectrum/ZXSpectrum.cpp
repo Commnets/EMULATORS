@@ -81,7 +81,7 @@ MCHEmul::Strings ZXSPECTRUM::SinclairZXSpectrum::charsDrawSnapshot (MCHEmul::CPU
 }
 
 // ---
-bool ZXSPECTRUM::SinclairZXSpectrum::initialize (bool iM)
+bool ZXSPECTRUM::SinclairZXSpectrum::initialize (bool iM)	
 {
 	bool result = SINCLAIR::Computer::initialize (iM);
 	if (!result)

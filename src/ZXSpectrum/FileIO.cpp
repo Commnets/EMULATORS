@@ -79,7 +79,7 @@ std::string ZXSPECTRUM::TAPFileData::HeaderBlock::asString () const
 
 	result +=
 		"," + 
-		std::string ("Name:") + _name + "," +
+		std::string ("Name:") + MCHEmul::trim (_name) + "," +
 		std::string ("Type:") + std::to_string ((unsigned int) _type) + "," +
 		std::string ("Data Size:") + std::to_string (_dataLength);
 
