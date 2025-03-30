@@ -22,8 +22,7 @@ namespace ZXSPECTRUM
 	class ULARegisters;
 	class ULA;
 
-	// Generic Port to manage all...
-	/**  */
+	/** Generic Port to manage all... */
 	class PortManager final : public FZ80::Z80Port
 	{
 		public:

@@ -14,7 +14,6 @@
 #ifndef __COMMODORE_VIAINCS__
 #define __COMMODORE_VIAINCS__
 
-#include <COMMODORE/incs.hpp>
 #include <COMMODORE/VIA/VIAControlLines.hpp>
 #include <COMMODORE/VIA/VIATimer.hpp>
 #include <COMMODORE/VIA/VIAShiftRegister.hpp>

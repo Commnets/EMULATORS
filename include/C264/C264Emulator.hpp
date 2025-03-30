@@ -14,6 +14,7 @@
 #ifndef __C264_C264EMULATOR__
 #define __C264_C264EMULATOR__
 
+#include <EMULATORS/incs.hpp>
 #include <COMMODORE/incs.hpp>
 #include <C264/C264.hpp>
 #include <C264/IOPBuilder.hpp>

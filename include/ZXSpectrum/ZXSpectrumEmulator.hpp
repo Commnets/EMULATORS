@@ -38,8 +38,8 @@ namespace ZXSPECTRUM
 		  *	The basic parameters for any ZXSpectrum emulator are (apart of the ones defined by the parent: \n
 		  *	/n				: To indicate if the visualization system is NTSC. PAL by default. \n
 		  *	/b[COLOR]		: To draw a black box around the writable part of the screen. The color is optional. \n
-		  * /w[CONF]		: To define the configuration of the machine when starting: // TODO \n
-		  * /m[MACHINE]		: To define the type of ROM loaded: // TODO.
+		  * /w[CONF]		: To define the configuration of the machine when starting: 0 (16k RAM), 1 (48k RAM) \n
+		  * /m[MACHINE]		: To define the type of ROM loaded: ZXSTD (Standard).
 		  * @param cS		: A reference to the communication system. It can be nullptr if no required.
 		  */
 		ZXSpectrumEmulator (const MCHEmul::CommandLineArguments& args, MCHEmul::CommunicationSystem* cS = nullptr)

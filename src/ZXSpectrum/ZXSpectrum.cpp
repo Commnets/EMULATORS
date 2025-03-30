@@ -32,7 +32,7 @@ ZXSPECTRUM::SinclairZXSpectrum::SinclairZXSpectrum (ZXSPECTRUM::Memory::Configur
 	  _ula (nullptr)
 {
 	// Add the port manager for all ports!
-	ZXSPECTRUM::PortManager* pM = new PortManager;
+	ZXSPECTRUM::PortManager* pM = new ZXSPECTRUM::PortManager;
 	FZ80::Z80PortsMap pMps;
 	for (unsigned short i = 0; i < 256; i++)
 		pMps.insert (FZ80::Z80PortsMap::value_type ((unsigned char) i, pM));

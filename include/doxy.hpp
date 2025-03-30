@@ -64,10 +64,20 @@
 
 /**
  *	\defgroup	ZX81 Classes defining a ZX81 Computer
- *	Classes and macros defining the characteristics of any ZX81 seriesComputer.
+ *	Classes and macros defining the characteristics of any ZX81 series Computer.
  */
 
 /**
  *	\defgroup	ZXSPECTRUM Classes defining a ZXSPECTRUM Computer
- *	Classes and macros defining the characteristics of any ZXSPECTRUM seriesComputer.
+ *	Classes and macros defining the characteristics of any ZXSPECTRUM series Computer.
+ */
+
+/**
+ *	\defgroup	TEXASINSTRUMENTS Classes defining chips manufactured by Texas Instruments Company
+ *	Classes and macros defining the characteristics of any Chip manufactured by Texas Instruments Company.
+ */
+
+/**
+ *	\defgroup	MSX Classes defining a MSX Computer (1, 2, 2+...)
+ *	Classes and macros defining the characteristics of any MSX series Computer.
  */

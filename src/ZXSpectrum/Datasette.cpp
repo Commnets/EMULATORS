@@ -1,5 +1,7 @@
 #include <ZXSpectrum/Datasette.hpp>
 #include <ZXSpectrum/FileIO.hpp>
+#include <FZ80/CP.hpp>
+#include <FZ80/XOR.hpp>
 
 // ---
 ZXSPECTRUM::Datasette::Datasette (unsigned int rS)

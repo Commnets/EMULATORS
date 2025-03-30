@@ -25,6 +25,7 @@
     <ClInclude Include="..\..\include\COMMODORE\ACIA\incs.hpp" />
     <ClInclude Include="..\..\include\COMMODORE\C6529B\C6529B.hpp" />
     <ClInclude Include="..\..\include\COMMODORE\C6529B\C6529BRegisters.hpp" />
+    <ClInclude Include="..\..\include\COMMODORE\C6529B\incs.hpp" />
     <ClInclude Include="..\..\include\COMMODORE\CIA\CIA.hpp" />
     <ClInclude Include="..\..\include\COMMODORE\CIA\CIAClock.hpp" />
     <ClInclude Include="..\..\include\COMMODORE\CIA\CIARegisters.hpp" />

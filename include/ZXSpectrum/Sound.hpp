@@ -1,4 +1,4 @@
-/** \ingroup VIC20 */
+/** \ingroup ZXSPECTRUM */
 /*@{*/
 
 /**	

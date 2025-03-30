@@ -9,6 +9,7 @@
 #include <C264/TED.hpp>
 #include <C264/ROMRAMSwitch.hpp>
 #include <C264/Cartridge.hpp>
+#include <F6500/C7501.hpp>
 
 // ---
 C264::Commodore264::Commodore264 (const MCHEmul::Chips& cps, MCHEmul::Memory* m, const MCHEmul::IODevices& dvs, 

@@ -2,6 +2,7 @@
 #include <ZX81/ULARegisters.hpp>
 #include <ZX81/ZX81.hpp>
 #include <ZX81/OSIO.hpp>
+#include <FZ80/CZ80.hpp>
 #include <FZ80/NMIInterrupt.hpp>
 
 // ---
@@ -123,7 +124,7 @@ bool ZX81::ULA::simulate (MCHEmul::CPU* cpu)
 		{
 			// the HSYNC happens...
 			// Including a notification to generate the graphics...
-			if (_raster.vData ().add (1)); 
+			if (_raster.vData ().add (1)) 
 				MCHEmul::GraphicalChip::notify (MCHEmul::Event (_GRAPHICSREADY));
 			_raster.hData ().reset ();
 			// ...and also the line of control is incremented...

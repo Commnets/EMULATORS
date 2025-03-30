@@ -14,7 +14,6 @@
 #ifndef __COMMODORE_VICIINCS__
 #define __COMMODORE_VICIINCS__
 
-#include <COMMODORE/incs.hpp>
 #include <COMMODORE/VICI/VICISoundWrapper.hpp>
 #include <COMMODORE/VICI/VICIRegisters.hpp>
 #include <COMMODORE/VICI/VICI.hpp>

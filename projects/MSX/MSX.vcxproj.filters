@@ -1,0 +1,132 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Archivos de origen">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Archivos de encabezado">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+    <Filter Include="Archivos de recursos">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Archivos de encabezado\Commands">
+      <UniqueIdentifier>{6205ed23-c4f6-4f0b-aa32-cb1b4bc340e0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Archivos de encabezado\Emulators">
+      <UniqueIdentifier>{45e2f0df-0c28-4a57-bbba-c4f15029c9d3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Archivos de encabezado\IO">
+      <UniqueIdentifier>{046ecd46-833a-450a-970f-706e0fde9931}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Archivos de encabezado\Motherboard">
+      <UniqueIdentifier>{f30e6fac-bf12-40de-a75d-66b92a3f6e01}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Archivos de origen\Commands">
+      <UniqueIdentifier>{cbfc2a9d-aee3-4047-9e38-0ab93934fecf}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Archivos de origen\Emulators">
+      <UniqueIdentifier>{f0ee4a14-76ec-4ea0-a586-00165b23a5b7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Archivos de origen\IO">
+      <UniqueIdentifier>{4d1a5df6-4796-4766-bf00-12613731d3d6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Archivos de origen\Motherboard">
+      <UniqueIdentifier>{96b3bc11-71f0-4920-9841-0f72af3be930}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Archivos de encabezado\Motherboard\Chips">
+      <UniqueIdentifier>{76a26147-db8d-4e7b-a163-e7555457474d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Archivos de origen\Motherboard\Chips">
+      <UniqueIdentifier>{14d4d608-6538-482b-b446-f1832a7224ad}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\include\MSX\incs.hpp">
+      <Filter>Archivos de encabezado</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\MSX\CommandBuilder.hpp">
+      <Filter>Archivos de encabezado\Commands</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\MSX\Commands.hpp">
+      <Filter>Archivos de encabezado\Commands</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\MSX\FileIO.hpp">
+      <Filter>Archivos de encabezado\IO</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\MSX\IOPBuilder.hpp">
+      <Filter>Archivos de encabezado\IO</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\MSX\MSX.hpp">
+      <Filter>Archivos de encabezado\Motherboard</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\MSX\MSXEmulator.hpp">
+      <Filter>Archivos de encabezado\Emulators</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\MSX\OSIO.hpp">
+      <Filter>Archivos de encabezado\IO</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\MSX\PortManager.hpp">
+      <Filter>Archivos de encabezado\Motherboard</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\MSX\Screen.hpp">
+      <Filter>Archivos de encabezado\IO</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\MSX\Sound.hpp">
+      <Filter>Archivos de encabezado\IO</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\MSX\Type.hpp">
+      <Filter>Archivos de encabezado\Motherboard</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\MSX\Memory.hpp">
+      <Filter>Archivos de encabezado\Motherboard</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\MSX\VDP.hpp">
+      <Filter>Archivos de encabezado\Motherboard\Chips</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\src\MSX\CommandBuilder.cpp">
+      <Filter>Archivos de origen\Commands</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\MSX\Commands.cpp">
+      <Filter>Archivos de origen\Commands</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\MSX\FileIO.cpp">
+      <Filter>Archivos de origen\IO</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\MSX\IOPBuilder.cpp">
+      <Filter>Archivos de origen\IO</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\MSX\MSX.cpp">
+      <Filter>Archivos de origen\Motherboard</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\MSX\MSXEmulator.cpp">
+      <Filter>Archivos de origen\Emulators</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\MSX\OSIO.cpp">
+      <Filter>Archivos de origen\IO</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\MSX\PortManager.cpp">
+      <Filter>Archivos de origen\Motherboard</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\MSX\Screen.cpp">
+      <Filter>Archivos de origen\IO</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\MSX\Sound.cpp">
+      <Filter>Archivos de origen\IO</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\MSX\Memory.cpp">
+      <Filter>Archivos de origen\Motherboard</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\MSX\Type.cpp">
+      <Filter>Archivos de origen\Motherboard</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\MSX\VDP.cpp">
+      <Filter>Archivos de origen\Motherboard\Chips</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>

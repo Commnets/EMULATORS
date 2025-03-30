@@ -14,7 +14,6 @@
 #ifndef __COMMODORE_TIAINCS__
 #define __COMMODORE_TIAINCS__
 
-#include <COMMODORE/incs.hpp>
 #include <COMMODORE/TIA/TIARegisters.hpp>
 #include <COMMODORE/TIA/TIA.hpp>
 

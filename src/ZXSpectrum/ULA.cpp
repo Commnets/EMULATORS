@@ -2,7 +2,7 @@
 #include <ZXSpectrum/ULARegisters.hpp>
 #include <ZXSpectrum/ZXSpectrum.hpp>
 #include <ZXSpectrum/OSIO.hpp>
-#include <FZ80/NMIInterrupt.hpp>
+#include <FZ80/INTInterrupt.hpp>
 
 // ---
 const MCHEmul::RasterData ZXSPECTRUM::ULA_PAL::_VRASTERDATA

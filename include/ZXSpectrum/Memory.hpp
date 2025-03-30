@@ -49,7 +49,6 @@ namespace ZXSPECTRUM
 		static const int _CPU_VIEW					= 0;
 		static const int _ULA_VIEW					= 1;
 
-		/** */
 		Memory (Configuration cfg, Type t, const std::string& lang);
 
 		/** Gets the type. */

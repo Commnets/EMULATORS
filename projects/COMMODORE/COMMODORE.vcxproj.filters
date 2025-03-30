@@ -252,6 +252,9 @@
     <ClInclude Include="..\..\include\COMMODORE\FileIO.hpp">
       <Filter>Archivos de encabezado\IO</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\include\COMMODORE\C6529B\incs.hpp">
+      <Filter>Archivos de encabezado\Motherboard\Chips\C6529B</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Commodore.fmt">

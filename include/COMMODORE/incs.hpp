@@ -15,7 +15,8 @@
 #define __COMMODORE_INCS__
 
 #include <F6500/incs.hpp>
-#include <EMULATORS/incs.hpp>
+// COMMODORE is both a set of computers based on the 6500 family 
+// and also a manufacturer of chips.
 #include <COMMODORE/C6529B/incs.hpp>
 #include <COMMODORE/CIA/incs.hpp>
 #include <COMMODORE/VIA/incs.hpp>

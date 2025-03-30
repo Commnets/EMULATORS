@@ -14,7 +14,6 @@
 #ifndef __COMMODORE_VICIIINCS__
 #define __COMMODORE_VICIIINCS__
 
-#include <COMMODORE/incs.hpp>
 #include <COMMODORE/VICII/VICIIRegisters.hpp>
 #include <COMMODORE/VICII/VICII.hpp>
 

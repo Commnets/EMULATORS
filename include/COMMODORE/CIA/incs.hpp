@@ -14,7 +14,6 @@
 #ifndef __COMMODORE_CIAINCS__
 #define __COMMODORE_CIAINCS__
 
-#include <COMMODORE/incs.hpp>
 #include <COMMODORE/CIA/CIATimer.hpp>
 #include <COMMODORE/CIA/CIAClock.hpp>
 #include <COMMODORE/CIA/CIASerialPort.hpp>

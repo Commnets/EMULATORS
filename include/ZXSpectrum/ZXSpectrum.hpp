@@ -86,7 +86,7 @@ namespace ZXSPECTRUM
 		static MCHEmul::IODevices standardDevices (VisualSystem vS);
 
 		private:
-		/** The video system used by ZX81 emulation. */
+		/** The video system used by ZXSpectrum emulation. */
 		VisualSystem _visualSystem;
 		/** Which computer is being emulated indeed. */
 		Type _type;

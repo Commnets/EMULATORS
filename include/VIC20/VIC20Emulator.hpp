@@ -14,6 +14,7 @@
 #ifndef __VIC20_VIC20EMULATOR__
 #define __VIC20_VIC20EMULATOR__
 
+#include <EMULATORS/incs.hpp>
 #include <COMMODORE/incs.hpp>
 #include <VIC20/VIC20.hpp>
 #include <VIC20/IOPBuilder.hpp>

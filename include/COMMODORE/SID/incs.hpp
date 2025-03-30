@@ -14,7 +14,6 @@
 #ifndef __COMMODORE_SIDINCS__
 #define __COMMODORE_SIDINCS__
 
-#include <COMMODORE/incs.hpp>
 #include <COMMODORE/SID/SIDLibWrapper.hpp>
 #include <COMMODORE/SID/SIDRegisters.hpp>
 #include <COMMODORE/SID/SID.hpp>

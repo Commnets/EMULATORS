@@ -1,0 +1,75 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Archivos de origen">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Archivos de encabezado">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+    <Filter Include="Archivos de recursos">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Archivos de encabezado\Commands">
+      <UniqueIdentifier>{bd47fd58-bba6-4395-b01a-fb9caa90c011}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Archivos de encabezado\Emulators">
+      <UniqueIdentifier>{e22b0fe8-4ebc-48f8-928c-ec9983ac375a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Archivos de encabezado\IO">
+      <UniqueIdentifier>{90f56c34-56e7-42fc-afed-f9ae4246e9f0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Archivos de encabezado\Motherboard">
+      <UniqueIdentifier>{16546a36-4764-47c0-a4cb-1d68c6cd0d20}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Archivos de origen\Commands">
+      <UniqueIdentifier>{51333c6a-cd97-4b7d-8e52-8ad96d430ff9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Archivos de origen\Emulators">
+      <UniqueIdentifier>{e3980475-5764-4845-a187-1268e6318526}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Archivos de origen\IO">
+      <UniqueIdentifier>{658e0efb-7c3a-4dac-96d4-3b96ba912e44}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Archivos de origen\Motherboard">
+      <UniqueIdentifier>{47c8cb41-ba51-4a00-8822-261e6f2c26cb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Archivos de origen\Motherboard\Chips">
+      <UniqueIdentifier>{fa47abbb-10b5-48b5-bd43-fae6cf48d150}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Archivos de encabezado\Motherboard\Chips">
+      <UniqueIdentifier>{7bcc6008-01c4-44f3-8655-62bbe3b5823f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Archivos de encabezado\Motherboard\Chips\TMS99XX">
+      <UniqueIdentifier>{a330117c-df8f-41b0-b332-68026b77b201}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Archivos de origen\Motherboard\Chips\TMS99XX">
+      <UniqueIdentifier>{2123a055-f950-4b4d-8fe9-38089c236a08}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\include\TEXASINST\incs.hpp">
+      <Filter>Archivos de encabezado\Motherboard</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\TEXASINST\TMS99XX\incs.hpp">
+      <Filter>Archivos de encabezado\Motherboard\Chips\TMS99XX</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\TEXASINST\TMS99XX\TMS99XX.hpp">
+      <Filter>Archivos de encabezado\Motherboard\Chips\TMS99XX</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\TEXASINST\TMS99XX\TMS99XXRegisters.hpp">
+      <Filter>Archivos de encabezado\Motherboard\Chips\TMS99XX</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\src\TEXASINST\TMS99XX\TMS99XX.cpp">
+      <Filter>Archivos de origen\Motherboard\Chips\TMS99XX</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\TEXASINST\TMS99XX\TMS99XXRegisters.cpp">
+      <Filter>Archivos de origen\Motherboard\Chips\TMS99XX</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>

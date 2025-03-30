@@ -14,6 +14,7 @@
 #ifndef __C64_C64EMULATOR__
 #define __C64_C64EMULATOR__
 
+#include <EMULATORS/incs.hpp>
 #include <COMMODORE/incs.hpp>
 #include <C64/C64.hpp>
 #include <C64/IOPBuilder.hpp>

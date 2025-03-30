@@ -16,6 +16,7 @@
 
 #include <SINCLAIR/incs.hpp>
 #include <ZXSpectrum/Type.hpp>
+#include <FZ80/CZ80.hpp>
 
 namespace ZXSPECTRUM
 {

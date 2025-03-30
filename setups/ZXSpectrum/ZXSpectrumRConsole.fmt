@@ -1,6 +1,6 @@
 #Formats used for the ZX81 Emulation
 #(C) 2024 Ignacio Cea Fornies
-?./Commodore.fmt
+?./SINCLAIR.fmt
 ?./Standard.fmt
 #---
 ;ULARegisters

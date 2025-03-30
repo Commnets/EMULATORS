@@ -1,0 +1,446 @@
+#General Formats
+#Usually attached to Standard Commands
+#(C) 2022 Ignacio Cea Fornies
+?./Default.fmt
+#---
+;Author
+@NAME@
+From @CITY@ (@COUNTRY@) At @DATE@
+email:@EMAIL@
+I hope you like this emulator!
+What I really love is @LOVE@
+#---
+#---
+;Architecture
+@ATTRS?{key=YES,equal=:,empty=no attributes}\n@
+@NBYTES@ bytes, @NBITS@ bits, @NBYTESPERINST@ bytes per instruction
+Big Endian:@ENDIAN@
+#---
+#---
+;Interrupt
+Id:@ID@, Active:@ACTIVE@, In Execution:@EXECUTION@
+#---
+#---
+;CPUInterruptSystem
+@INTERRUPTS?{fmter=.CLASS,empty=no interruptions}\n@
+#---
+#---
+;CPU
+@ATTRS?{key=YES,equal=:,empty=no attributes}\n@
+@Architecture>@
+@REGS?{key=NO,equal=:,empty=no registers,blocksize=4}\t@
+@PC@
+@SR@
+->Interrupts:
+@CPUInterruptSystem>@
+CLK:@CLK@ ticks
+State:@STATE@ (Cycles Stopped:@CLKSTOP@)
+#---
+#---
+;ClockFactor
+#---
+#---
+;PhysicalStorageSubsetDUMP
+Storage Id:@ID@ (@NAME@)
+RAM:@RAM@
+From:$@FROM@, To:$@TO@
+Active:@ACTIVE@, Read:@READ@
+@BYTES{blocksize=16,listsep=\,,tablesep=\ ,minsize=2}@
+#---
+#---
+;PhysicalStorageSubset
+Id:@ID@ (@NAME@) Address:$@ADDRESS@, Size:@SIZE@
+Active:@ACTIVE@, Read:@READ@
+@BYTES{blocksize=16,listsep=\,,tablesep=\ ,minsize=2}@
+#---
+#---
+;PhysicalStorageSubset256
+Id:@ID@ (@NAME@) Address:$@ADDRESS@, Size:@SIZE@
+Active:@ACTIVE@, Read:@READ@
+@BYTES{blocksize=16,listsep=\,,tablesep=\ ,minsize=2,maxelements=256}@
+#---
+#---
+;MemoryViewDUMP
+View Id:@ID@
+->Storages:
+@DATA?{fmter=.CLASS,empty=no data}\n---\n@
+#---
+#---
+;MemoryView
+@STORAGES?{key=NO,equal=:,empty=no storages}\n---\n@
+#---
+#---
+;MemoryDUMP
+Memory Id:@ID@
+->Views:
+@DATA?{fmter=.CLASS,empty=no data}\n---\n@
+#---
+#---
+;MemoryStrStorage
+Storage Id:@ID@ (@NAME@) From:$@FROM@ To:$@TO@ Active:@ACTIVE@ RAM:@RAM@ Read:@READ@
+#---
+#---
+;MemoryStrView
+View Id:@ID@
+->Storages:
+@DATA?{fmter=MemoryStrStorage,empty=no storages}\n@
+#---
+#---
+;MemoryStructure
+Memory Id:@ID@
+->Views:
+@DATA?{fmter=MemoryStrView,empty=no storages}\n---\n@
+#---
+#---
+;Memory
+@STORAGES?{key=NO,equal=:,empty=no storages}\n@
+#---
+#---
+;Stack
+Last 256 bytes...
+@PhysicalStorageSubset256>@
+From Back:@BACK@, Last Point:@LAST@
+Overflow:@OVERFLOW@
+Empty:@EMPTY@
+Position:@POSITION@
+Address:$@ADDRESS@
+#---
+#---
+;Chip
+Id:@ID@
+@ATTRS?\n@
+->Memory:
+@Memory>@
+#---
+;Computer
+@ATTRS?{key=YES,equal=:,empty=no attributes}\n@
+->Memory Structure:
+@MemoryStructure>@
+->CPU:
+@CPU>@
+->Stack:
+@Stack>@
+->Chips:
+@CHIPS?{fmter=.CLASS,empty=no chips}\n---\n@
+->Devices:
+@DEVICES?{fmter=.CLASS,empty=no devices}\n---\n@
+#---
+#---
+;Peripheral
+Id:@ID@
+@ATTRS?{key=YES,equal=:,empty=no attributes}\n@
+COMMANDS:@COMMANDS@
+#---
+#---
+;DatasetteData
+Id:@ID@(Size:@SIZE@)
+@BYTES{blocksize=32,listsep=\,,tablesep=\ ,minsize=2}@
+#@FBYTES{blocksize=32,listsep=\,,tablesep=\ ,minsize=2}@
+#Include the command above to show all data when the size is bigger than 256 bytes...
+#---
+#---
+;Datasette
+Id:@ID@
+@ATTRS?{key=YES,equal=:,empty=no attributes}\n@
+Keys Pressed:@KEYS@
+Motor on:@MOTOR@
+->Data:
+Name:@DATANAME@
+Size:@DATASIZE@
+@DATA?{fmter=DatasetteData,empty=no data}\n---\n@
+NOTE: Only the first 256 bytes are shown
+NOTE: Change to FBYTES attribute in DatasetteData structure instead
+#---
+#---
+;StdDatasette
+Id:@ID@
+@ATTRS?{key=YES,equal=:,empty=no attributes}\n@
+COMMANDS:@COMMANDS@
+Keys Pressed:@KEYS@
+Motor on:@MOTOR@
+Data Counter: @DATACOUNTER@
+IO Emulation: @IOEMULATION@
+->Data:
+Name:@DATANAME@
+Size:@DATASIZE@
+@DATA?{fmter=DatasetteData,empty=no data}\n---\n@
+NOTE: Only the first 256 bytes are shown
+NOTE: Change to FBYTES attribute in DatasetteData structure instead
+#---
+#---
+;IODevice
+Id:@ID@
+@ATTRS?{key=YES,equal=:,empty=no attributes}\n@
+->Peripherals:
+@IOPERIPHERALS?{fmter=.CLASS,empty=no peripherals}\n@
+#---
+#---
+;IOSystem
+Id:@ID@
+@ATTRS?{key=YES,equal=:,empty=no attributes}\n@
+Joysticks:@JOYSTICKS@
+->Peripherals:
+@IOPERIPHERALS?{fmter=.CLASS,empty=no peripherals}\n@
+#---
+#---
+;Screen
+Id:@ID@
+@ATTRS?{key=YES,equal=:,empty=no attributes}\n@
+@NAME@(@HERTZS@Hz)@COLUMNS@x@ROWS@
+->Peripherals:
+@IOPERIPHERALS?{fmter=.CLASS,empty=no peripherals}\n@
+#---
+#---
+;SoundSystem
+Id:@ID@
+@ATTRS?{key=YES,equal=:,empty=no attributes}\n@
+Data Form:@TYPE@ Frequency:@FREQUENCY@kHz Channels:@CHANNELS@
+->Peripherals:
+@IOPERIPHERALS?{fmter=.CLASS,empty=no peripherals}\n@
+#---
+#---
+;SoundLibWrapper
+@ATTRS?{key=YES,equal=:,empty=no attributes}\n@
+->Voices:
+@VOICES?{fmter=.CLASS,empty=no voices}\n---\n@
+#---
+#---
+;SoundVoice
+Active:@ACTIVE@
+ADSR:@ATTACK@/@DECAY@/@SUSTAIN@/@RELEASE@(@STATE@)
+@WAVES?{fmter=.CLASS,empty=no waves}\n@
+#---
+#---
+;SoundWave
+Active:@ACTIVE@, Type:@TYPE@, Frequency:@FREQUENCY@
+#---
+#---
+;SoundPulseWave
+Active:@ACTIVE@, Type:@TYPE@, Frequency:@FREQUENCY@(@PULSEUP@)
+#---
+#---
+;CRESTART
+#---
+#---
+;CAUTHOR
+@Author>@
+#---
+#---
+;CHELP
+@HELP?{key=YES,equal=:\n,empty=no help}\n@
+#---
+#---
+;CINTERRUPTS
+@INTERRUPTS?{fmter=.CLASS,empty=no interruptions}\n@
+#---
+#---
+#---
+;CINTSET
+->Errors:
+@ERROR@
+#---
+;CIDEBUGON
+->Errors:
+@ERROR@
+#---
+#---
+;CIDEBUGOFF
+->Errors:
+@ERROR@
+#---
+#---
+;CSTATUS
+@SR@
+#---
+#---
+;CREGISTERS
+@REGS?{key=NO,equal=:,empty=no registers,blocksize=4}\t@
+#---
+#---
+;CCHANGEREG
+->Errors:
+@ERROR@
+#---
+#---
+;CPC
+@PC@
+#---
+#---
+;CSETPC
+->Errors:
+@ERROR@
+#---
+#---
+;CSTACK
+@Stack>@
+#---
+#---
+;CCPUSTATUS
+State:@STATE@ (Cycles Stopped:@CLKSTOP@)
+Last:@INST@
+@PC@
+@REGS?{key=NO,equal=:,empty=no registers,blocksize=4}\t@
+@SR@
+->Stack:
+@Stack>@
+->Interrupts:
+@INTERRUPTS?{fmter=.CLASS,empty=no interruptions}\n@
+#---
+#---
+;CCPUSSTATUS
+State:@STATE@ (Cycles Stopped:@CLKSTOP@)
+Last:@INST@
+@PC@
+@REGS?{key=NO,equal=:,empty=no registers,blocksize=4}\t@
+@SR@
+->Interrupts:
+@INTERRUPTS?{fmter=.CLASS,empty=no interruptions}\n@
+#---
+#---
+;CCPUSTATE
+State:@STATE@ (Cycles Stopped:@CLKSTOP@)
+#---
+#---
+;CCPUINFO
+@CPU>@
+#---
+#---
+;CACTIVATEDEEPDEBUG
+->Errors:
+@ERROR@
+#---
+#---
+;CDESACTIVATEDEEPDEBUG
+->Errors:
+@ERROR@
+#---
+#---
+;CCLOCKFACTOR
+#---
+#---
+;CCHIPS
+@CHIPS?{key=YES,equal=:,empty=no chips}\n@
+#---
+#---
+;CMEMORY
+@BYTES{blocksize=16,listsep=\,,tablesep=\ ,minsize=2}@
+#---
+#---
+;CSETMEMORY
+->Errors:
+@ERROR@
+#---
+#---
+;CMEMORYDUMP
+@MemoryDUMP>@
+#---
+#---
+;CMEMORYSTR
+@MemoryStructure>@
+#---
+#---
+;CSTOP
+@PC@
+Last:@INST@
+@REGS?{key=NO,equal=:,empty=no registers,blocksize=4}\t@
+@SR@
+#---
+#---
+;CRUN
+@PC@
+Current:@INST@
+@REGS?{key=NO,equal=:,empty=no registers,blocksize=4}\t@
+@SR@
+#---
+#---
+;CNEXT
+#---
+#---
+;CNEXTSTACK
+#---
+#---
+;CSHOWNEXT
+@CODELINES?{key=NO,equal=:,empty=no code\n}\n@
+#---
+#---
+;CINST
+@INST@
+@CYCLES@ Cycles (Clock at:@CLK@)
+#---
+#---
+;CBREAKS
+@BREAKPOINTS@
+#---
+#---
+;CSETBREAK
+->Errors:
+@ERROR@
+#---
+#---
+;CREMOVEBREAK
+->Errors:
+@ERROR@
+#---
+#---
+;CREMOVEBREAKS
+#---
+#---
+;CSPEED
+CPU:@SPEED@ cycles/second
+Screen Speed:@HERTZS@ cycles/second
+#---
+#---
+;CLOADBIN
+Program loaded=@RESULT@
+#---
+#---
+;CSAVEBIN
+Program saved=@RESULT@
+#---
+#---
+;CDEVICES
+@DEVICES?{fmter=.CLASS,empty=no devices}\n---\n@
+#---
+#---
+;CDATASETTE
+@Datasette>@
+#---
+#---
+;CPERIPHERALS
+@PERIPHERALS?{fmter=.CLASS,empty=no peripherals}\n---\n@
+#---
+#---
+;CPERCMD
+->Errors:
+@ERROR@
+#---
+#---
+;CASSIGNJ
+->Errors:
+@ERROR@
+#---
+#---
+;CSOUNDON
+#---
+#---
+;CSOUNDOFF
+#---
+#---
+;CCRTON
+#---
+#---
+;CCRTOFF
+#---
+#---
+;CANSWER
+@RESULT@
+#---
+#---
+;CGRIDON
+#---
+#---
+;CGRIDOFF
+#---
+#---
+;CMOVEPARAMS
+#---
