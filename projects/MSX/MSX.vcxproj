@@ -31,7 +31,7 @@
     <ClInclude Include="..\..\include\MSX\PortManager.hpp" />
     <ClInclude Include="..\..\include\MSX\Screen.hpp" />
     <ClInclude Include="..\..\include\MSX\Sound.hpp" />
-    <ClInclude Include="..\..\include\MSX\Type.hpp" />
+    <ClInclude Include="..\..\include\MSX\Model.hpp" />
     <ClInclude Include="..\..\include\MSX\VDP.hpp" />
   </ItemGroup>
   <ItemGroup>
@@ -46,7 +46,7 @@
     <ClCompile Include="..\..\src\MSX\PortManager.cpp" />
     <ClCompile Include="..\..\src\MSX\Screen.cpp" />
     <ClCompile Include="..\..\src\MSX\Sound.cpp" />
-    <ClCompile Include="..\..\src\MSX\Type.cpp" />
+    <ClCompile Include="..\..\src\MSX\Model.cpp" />
     <ClCompile Include="..\..\src\MSX\VDP.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

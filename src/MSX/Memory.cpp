@@ -24,12 +24,6 @@ MSX::Memory::Memory (MSX::MSXModel* m, unsigned int cfg,
 }
 
 // ---
-void MSX::Memory::setConfiguration (unsigned int cfg)
-{
-	// TODO
-}
-
-// ---
 bool MSX::Memory::initialize ()
 {
 	bool result = MCHEmul::Memory::initialize ();

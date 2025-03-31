@@ -1,4 +1,4 @@
-#include <MSX/Type.hpp>
+#include <MSX/Model.hpp>
 #include <MSX/Memory.hpp>
 #include <MSX/Screen.hpp>
 #include <MSX/Sound.hpp>
@@ -16,6 +16,7 @@ MSX::MSXModel::~MSXModel ()
 // ---
 MSX::Memory* MSX::MSXModel::memory (unsigned int cfg, const std::string& lang)
 { 
+	// It is created here to avoid recursive include...
 	return ((_memory == nullptr) 
 		? (_memory = new MSX::Memory (this, cfg, lang)) : _memory); 
 }
@@ -115,6 +116,12 @@ bool MSX::MSXStdModel::loadROMOverForLanguage (MCHEmul::PhysicalStorage* fs,
 }
 
 // ---
+void MSX::MSXStdModel::configureMemory (MSX::Memory* m, unsigned int cfg)
+{
+	// TODO
+}
+
+// ---
 MCHEmul::Attributes MSX::SVI728::attributes () const
 {
 	MCHEmul::Attributes attrs 
@@ -176,6 +183,12 @@ bool MSX::SVI728::loadROMOverForLanguage (MCHEmul::PhysicalStorage* ss,
 	result &= ss -> loadInto (ROMFILE);
 
 	return (result);
+}
+
+// ---
+void MSX::SVI728::configureMemory (MSX::Memory* m, unsigned int cfg)
+{
+	// TODO
 }
 
 // ---
@@ -241,4 +254,10 @@ bool MSX::SVI738::loadROMOverForLanguage (MCHEmul::PhysicalStorage* ss,
 	result &= ss -> loadInto (ROMFILE);
 
 	return (result);
+}
+
+// ---
+void MSX::SVI738::configureMemory (MSX::Memory* m, unsigned int cfg)
+{
+	// TODO
 }

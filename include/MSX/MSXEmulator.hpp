@@ -15,7 +15,7 @@
 #define __MSX_MSXEMULATOR__
 
 #include <EMULATORS/Emulator.hpp>
-#include <MSX/Type.hpp>
+#include <MSX/Model.hpp>
 #include <MSX/MSX.hpp>
 #include <MSX/FileIO.hpp>
 #include <MSX/IOPBuilder.hpp>
@@ -61,18 +61,22 @@ namespace MSX
 							{ return (cmdlineArguments ().existsArgument (_PARAMBORDER)); }
 		inline unsigned int borderColor () const; // Black by default!. From 0 to 4 max. Above 4 = 4
 	
-		/** To know the parameter related with the type of computer configuration. */
+		/** To know the parameter related with the type of computer configuration. \n
+			The configuration selected could not be possible under a specific model. \n
+			That is controlled within the Computer constructor method only. */
 		bool configuration () const
 							{ return (cmdlineArguments ().existsArgument (_PARAMCONFIGURATION)); }
-		inline unsigned int configurationMode () const;
+		inline unsigned int configurationMode () const
+							{ return (cmdlineArguments ().existsArgument (_PARAMCONFIGURATION)
+										? cmdlineArguments ().argumentAsInt (_PARAMCONFIGURATION) : 0); }
 
 		/** To know which is the type of computer to be emulated:
 			It works like a factory method. \n
 			First time it is invoked it calculates the model simulated, but next times just get it. \n
 			A default model is always returned. */
-		MSXModel* emulattedComputer () const
+		MSXModel* model () const
 							{ return ((_model == nullptr) 
-								? (_model = defineComputerEmulatted ()) : _model); }
+								? (_model = createModel ()) : _model); }
 
 		/** To add the peripherals linked to the computer, according to the parameters. */
 		virtual bool initialize () override;
@@ -80,9 +84,7 @@ namespace MSX
 		protected:
 		virtual MCHEmul::Computer* createComputer () const override
 							{ return (new MSX::MSXComputer (
-								emulattedComputer (), 
-								configurationMode (), 
-								computerLanguage ())); }
+								model (), configurationMode (), computerLanguage ())); }
 		virtual MCHEmul::IOPeripheralBuilder* createPeripheralBuilder () const override
 							{ return (new IOPeripheralBuilder); }
 		virtual MCHEmul::FileIO* createFileReader () const override
@@ -91,8 +93,9 @@ namespace MSX
 									{ /** TODO. */ }))); }
 
 		private:
-		/** Factory method to create the right type of MSX. */
-		MSXModel* defineComputerEmulatted () const;
+		/** Factory method to create the right type of MSX. 
+			All models are create here. Thjis is critical to run the emulator. */
+		MSXModel* createModel () const;
 
 		private:
 		mutable MSXModel* _model;
@@ -105,15 +108,6 @@ namespace MSX
 			? cmdlineArguments ().argumentAsInt (_PARAMBORDER) : 0;
 
 		return (bC > 3 ? 3 : bC); 
-	}
-
-	// ---
-	unsigned int MSXEmulator::configurationMode () const
-	{
-		return (
-			configuration () 
-				? cmdlineArguments ().argumentAsInt (_PARAMCONFIGURATION) 
-				: 0); /** Not expanded. */
 	}
 }
 

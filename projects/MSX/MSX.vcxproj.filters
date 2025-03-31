@@ -78,7 +78,7 @@
     <ClInclude Include="..\..\include\MSX\Sound.hpp">
       <Filter>Archivos de encabezado\IO</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\include\MSX\Type.hpp">
+    <ClInclude Include="..\..\include\MSX\Model.hpp">
       <Filter>Archivos de encabezado\Motherboard</Filter>
     </ClInclude>
     <ClInclude Include="..\..\include\MSX\Memory.hpp">
@@ -122,7 +122,7 @@
     <ClCompile Include="..\..\src\MSX\Memory.cpp">
       <Filter>Archivos de origen\Motherboard</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\MSX\Type.cpp">
+    <ClCompile Include="..\..\src\MSX\Model.cpp">
       <Filter>Archivos de origen\Motherboard</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\MSX\VDP.cpp">

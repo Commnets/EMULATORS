@@ -16,7 +16,7 @@
 
 #include <CORE/incs.hpp>
 #include <TEXASINST/incs.hpp>
-#include <MSX/Type.hpp>
+#include <MSX/Model.hpp>
 #include <MSX/Memory.hpp>
 
 namespace MSX

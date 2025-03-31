@@ -3,7 +3,7 @@
 
 /**	
  *	@file	
- *	File: Type.hpp \n
+ *	File: Model.hpp \n
  *	Framework: CPU Emulators library \n
  *	Author: Ignacio Cea Fornies (EMULATORS library) \n
  *	Creation Date: 09/08/2024 \n
@@ -12,8 +12,8 @@
  *	Based on: https://sinclair.wiki.zxnet.co.uk/wiki/ROM_images and https://www.msx.org/wiki/Category:MSX_systems
  */
 
-#ifndef __MSX_TYPE__
-#define __MSX_TYPE__
+#ifndef __MSX_MODEL__
+#define __MSX_MODEL__
 
 #include <CORE/incs.hpp>
 #include <MSX/VDP.hpp>
@@ -71,6 +71,9 @@ namespace MSX
 							{ return (cfg == 0); }
 		virtual unsigned int basicConfiguration () const
 							{ return (0); }
+		unsigned int configurationAdjusted (unsigned int cfg) const
+							{ return (admitConfiguration (cfg)
+								? cfg : basicConfiguration ()); }
 
 		/** To get the right used as VDP in the model. \n
 			First time this method is invoked the VDP is created. \n
@@ -104,6 +107,8 @@ namespace MSX
 			If it were not possible false should be returned, and true if everythings went ok. */
 		virtual bool loadROMOverForLanguage (MCHEmul::PhysicalStorage* fs, 
 			const std::string& lang) = 0;
+		/** To configure the memory. */
+		virtual void configureMemory (Memory* m, unsigned int cfg) = 0;
 
 		protected:
 		// Implementation
@@ -147,6 +152,7 @@ namespace MSX
 		virtual MCHEmul::Memory::Content memoryContent () const override;
 		virtual bool loadROMOverForLanguage (MCHEmul::PhysicalStorage* fs, 
 			const std::string& lang) override;
+		virtual void configureMemory (Memory* m, unsigned int cfg) override;
 	};
 
 	/** Spectravideo 728. */
@@ -174,6 +180,7 @@ namespace MSX
 		virtual MCHEmul::Memory::Content memoryContent () const override;
 		virtual bool loadROMOverForLanguage (MCHEmul::PhysicalStorage* fs, 
 			const std::string& lang) override;
+		virtual void configureMemory (Memory* m, unsigned int cfg) override;
 
 		private:
 		VisualSystem _visualSystem;
@@ -204,6 +211,7 @@ namespace MSX
 		virtual MCHEmul::Memory::Content memoryContent () const override;
 		virtual bool loadROMOverForLanguage (MCHEmul::PhysicalStorage* fs, 
 			const std::string& lang) override;
+		virtual void configureMemory (Memory* m, unsigned int cfg) override;
 
 		private:
 		VisualSystem _visualSystem;

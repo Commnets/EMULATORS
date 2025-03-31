@@ -32,7 +32,10 @@ void MSX::MSXEmulator::printOutParameters (std::ostream& o) const
 		 "ENG:\tEnglish" << std::endl <<
 		 "DEU:\tAleman" << std::endl <<
 		 "SWE:\tSueco" << std::endl;
-	o << "CONFIGURATIONS (depends on type of machine) allowed under command line /w:" << std::endl;
+	o << "CONFIGURATIONS (depends on type of machine) allowed under command line /w:" << std::endl <<
+		 "When Machine is SVI728:" << std::endl <<
+		 "0:\tBasic Machine" << std::endl <<
+		 "1:\tBasic Machine" << std::endl;
 	o << "MACHINE allowed under command line /m:" << std::endl << 
 		 "SVI728:\tMSX1 Spectravideo 728" << std::endl <<
 		 "SVI738:\tMSX2 Spectravideo 738" << std::endl;
@@ -52,7 +55,7 @@ bool MSX::MSXEmulator::initialize ()
 }
 
 // ---
-MSX::MSXModel* MSX::MSXEmulator::defineComputerEmulatted () const
+MSX::MSXModel* MSX::MSXEmulator::createModel () const
 {
 	MSX::MSXModel* result = nullptr;
 	if (cmdlineArguments ().existsArgument (_PARAMMACHINE))

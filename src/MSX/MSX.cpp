@@ -9,7 +9,7 @@ MSX::MSXComputer::MSXComputer (MSX::MSXModel* m, unsigned int cfg,
 		(new FZ80::CZ80 (0, 
 			{ }), // Some other ports (the ones related with chips) are added later...
 		 m -> chips (),
-		 m -> memory (cfg, lang), // Depending on the configuration, the type, and the languaje!
+		 m -> memory (m -> configurationAdjusted (cfg), lang), // Depending on the configuration, the type, and the languaje!
 		 m -> ioDevices (),
 		 m -> clockSpeed (),
 		 { }, { }, // The MSX, emulation has been done without neither Buses nor Wires!
@@ -24,7 +24,7 @@ MSX::MSXComputer::MSXComputer (MSX::MSXModel* m, unsigned int cfg,
 	static_cast <FZ80::CZ80*> (cpu ()) -> addPorts (pMps);
 
 	// Adapt the configuration again, and it doesn't initialize back...
-	setConfiguration (cfg, false /** Not restart at initialization. */);
+	setConfiguration (m -> configurationAdjusted (cfg), false /** Not restart at initialization. */);
 }
 
 // ---

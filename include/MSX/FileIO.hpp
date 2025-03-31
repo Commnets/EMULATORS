@@ -15,7 +15,6 @@
 #define __MSX_FILEIO__
 
 #include <CORE/incs.hpp>
-#include <MSX/Type.hpp>
 
 namespace MSX
 {

@@ -15,7 +15,7 @@
 #define __MSX_MEMORY__
 
 #include <CORE/incs.hpp>
-#include <MSX/Type.hpp>
+#include <MSX/Model.hpp>
 
 namespace MSX
 {
@@ -47,7 +47,8 @@ namespace MSX
 			It shows change only at initialization, otherwise the consecuencues are not clear. */
 		unsigned int configuration () const
 							{ return (_configuration); }
-		void setConfiguration (unsigned int cfg);
+		void setConfiguration (unsigned int cfg)
+							{ _model -> configureMemory (this, cfg); }
 
 		/** To activate the right subsets in the CPU view. */
 		virtual bool initialize () override;
