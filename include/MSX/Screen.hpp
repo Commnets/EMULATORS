@@ -32,9 +32,9 @@ namespace MSX
 		private:
 		virtual void drawAdditional () override;
 
-		// The char code and the ASCII code are in the same order!
+		// The char code and the ASCII code are the same. The CNTL codes are not used.
 		virtual size_t charCodeFromASCII (unsigned char id) const override
-							{ return (std::isalnum ((int) id) ? (id - 0x20) : 0); }
+							{ return (std::isalnum ((int) id) ? id : 0x20); }
 
 		private:
 		VDP* _vdp;
