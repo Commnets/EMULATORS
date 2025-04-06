@@ -14,7 +14,7 @@
 #ifndef __MSX_SCREEN__
 #define __MSX_SCREEN__
 
-#include <SINCLAIR/incs.hpp>
+#include <CORE/incs.hpp>
 
 namespace MSX
 {

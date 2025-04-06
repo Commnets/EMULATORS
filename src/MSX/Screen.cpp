@@ -12,9 +12,10 @@ MSX::Screen::Screen (double hz, int w, int h, MSX::VDP* vdp,
 	bool e;
 	MCHEmul::DataMemoryBlock dt = MCHEmul::DataMemoryBlock::loadBinaryFile 
 		("./bios/svi728_basic-bios_ENG.rom", e, 0 /** no address needed */, true);
+	// In this version of the ROM, the graphics are in the address 0x1bbf....
 	if (!e)
 	{
-		for (size_t i = 0x3d00; i < 0x4000; i += 8) // 96 characters (8 bytes each) = 768 bytes = 0x0300 bytes
+		for (size_t i = 0x1bbf; i < 0x23bf; i += 8) // 256 characters (8 bytes each) = 2048 bytes = 0x0800 bytes
 		{
 			std::vector <MCHEmul::UBytes> chrdt;
 			for (size_t j = 0; j < 8; j++)

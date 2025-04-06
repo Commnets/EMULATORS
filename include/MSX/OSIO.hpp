@@ -14,7 +14,7 @@
 #ifndef __MSX_OSIO__
 #define __MSX_OSIO__
 
-#include <SINCLAIR/incs.hpp>
+#include <CORE/incs.hpp>
 
 namespace MSX
 {

@@ -19,6 +19,8 @@
 
 namespace MSX
 {
+	class VDP;
+
 	/** Generic Port to manage all... */
 	class PortManager final : public FZ80::Z80Port
 	{
@@ -28,9 +30,6 @@ namespace MSX
 
 		PortManager ();
 
-		// See that the constructor is private
-		// because it can only be invoked from ULA
-
 		virtual MCHEmul::UByte value (unsigned short ab, unsigned char id) const override
 							{ return (getValue (ab, id, true)); }
 		virtual MCHEmul::UByte peekValue (unsigned short ab, unsigned char id) const override
@@ -39,9 +38,18 @@ namespace MSX
 
 		virtual void initialize () override;
 
+		/** To link it to the VDP and the sound chip. \n
+			They are not the owner of the port manager. */
+		void linkVDP (VDP* vdp)
+							{ _vdp = vdp; }
+
 		private:
 		/** ms = true when is is wanted to modify the internal status. */
 		MCHEmul::UByte getValue (unsigned short ab, unsigned char id, bool ms = false) const;
+
+		private:
+		/** The VDP. */
+		VDP* _vdp;
 	};
 }
 

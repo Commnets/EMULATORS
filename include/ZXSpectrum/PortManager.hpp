@@ -31,9 +31,6 @@ namespace ZXSPECTRUM
 
 		PortManager ();
 
-		// See that the constructor is private
-		// because it can only be invoked from ULA
-
 		virtual MCHEmul::UByte value (unsigned short ab, unsigned char id) const override
 							{ return (getValue (ab, id, true)); }
 		virtual MCHEmul::UByte peekValue (unsigned short ab, unsigned char id) const override

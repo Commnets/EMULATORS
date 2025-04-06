@@ -3,15 +3,7 @@
 #include <MSX/Screen.hpp>
 #include <MSX/Sound.hpp>
 #include <MSX/OSIO.hpp>
-#include <TEXASINST/incs.hpp>
-
-// ---
-MSX::MSXModel::~MSXModel ()
-{
-	delete (_vdp);
-
-	_vdp = nullptr;
-}
+#include <MSX/VDP.hpp>
 
 // ---
 MSX::Memory* MSX::MSXModel::memory (unsigned int cfg, const std::string& lang)
@@ -26,9 +18,11 @@ MCHEmul::Chips MSX::MSXModel::createChips () const
 {
 	MCHEmul::Chips result;
 
-	// Add the graphical chip...
-	const VDP* vcd = vdp (); // It doesn't own ot...
-	result.insert (MCHEmul::Chips::value_type (vcd -> id (), (MCHEmul::Chip*) vcd -> chip ()));
+    // Add the graphical chip...
+    _vdp = const_cast <MSX::VDP*> (vdp ()); // It doesn't own it...
+    result.insert (MCHEmul::Chips::value_type (_vdp -> id(), (MCHEmul::Chip*) _vdp));
+
+	// TODO: Sound chip...
 
 	return (result);
 }
@@ -43,19 +37,108 @@ MCHEmul::IODevices MSX::MSXModel::createIODevices () const
 	result.insert (MCHEmul::IODevices::value_type (MSX::Screen::_ID, 
 		(MCHEmul::IODevice*) new MSX::Screen 
 			(screenFrequency (), 
-			 vdp () -> chip () -> numberColumns (), 
-			 vdp () -> chip () -> numberRows (),
+			 vdp () -> numberColumns (), 
+			 vdp () -> numberRows (),
 			 const_cast <MSX::VDP*> (vdp ()), // To avoid the cast...
 			 { 
-				 {"Name", "Screen" }, 
+				{"Name", "Screen" }, 
 				{ "Type", "Output" }, 
 				{ "Frequency", std::to_string (screenFrequency ()) 
 			 } }))); // The data depends on the the screen frequency...
-	// The Sound System...
-	result.insert (MCHEmul::IODevices::value_type (MSX::SoundSystem::_ID,
-		(MCHEmul::IODevice*) new MSX::SoundSystem ()));
+
+	// TODO: The sound system...
+
 	// ...and the IO system...
 	result.insert (MCHEmul::IODevices::value_type (MSX::InputOSSystem::_ID, new MSX::InputOSSystem));
+
+	return (result);
+}
+
+// ---
+MCHEmul::Memory::Content MSX::MSXModel::memoryContent () const
+{ 
+	// There might be up to 4 slots and 4 subslots of 64k each in the memory of the MSX.
+	// In that slots different things might connected: A cartridge, a disk, RAM...
+	// And only one thing at the same time in each slot and subslot, if any...
+	// By default the basic set will consider a empty zone very slot/subslot in every different banks, 
+	// with the exception of the banks 0 & 1, slot 0, subslot 0 that is filled with the ROM
+	// and the bank 3, slot 0, subslot 0 that is filled with RAM.
+
+	// The physical elements for all the 16 slots possible...
+	// ROM is only, initially, at the slot 0, bank 0 & 1.
+	MCHEmul::PhysicalStorage* ROM_SLOT0 = new MCHEmul::PhysicalStorage (MSX::Memory::_ROM_SET,
+			MCHEmul::PhysicalStorage::Type::_ROM, 0x8000);  // 32k
+	std::vector <MCHEmul::PhysicalStorage*> RAM_SLOTS;
+	for (int i = 0; i < 16; i++) // 4 slots, 4 subslots each...
+		RAM_SLOTS.push_back (new MCHEmul::PhysicalStorage (MSX::Memory::_RAM_SET + i,
+			MCHEmul::PhysicalStorage::Type::_RAM, 0x10000)); // 64k each...
+
+	// The map of phisical storages, used later...
+	MCHEmul::PhysicalStorages storages;
+	storages.insert (MCHEmul::PhysicalStorages::value_type (MSX::Memory::_ROM_SET, ROM_SLOT0));
+	for (int i = 0; i < 16; i++)
+		storages.insert (MCHEmul::PhysicalStorages::value_type 
+			(MSX::Memory::_RAM_SET + i, RAM_SLOTS [(size_t) i]));
+
+	// Now the subsets...
+	// // The basic subsets in the slot0 and subs slot 0...
+	// The BIOS subset is ROM, that is iun the banks 0 & 1 of the slot 0, subslot 0...
+	MCHEmul::PhysicalStorageSubset* ROMBIOS =
+		new MCHEmul::PhysicalStorageSubset (MSX::Memory::_ROMBIOS_SUBSET, ROM_SLOT0,
+			0x0000, MCHEmul::Address ({ 0x00, 0x00 }, false), 0x8000); // 32k
+	ROMBIOS -> setName ("ROM BIOS, Slot 0, Subslot 0, Bank 0 & 1");
+	// An empty subset of 16k in the bank 2 of the slot 0
+	MCHEmul::EmptyPhysicalStorageSubset* ERAMB2_SLOT0SUBSLOT0 =
+		new MCHEmul::EmptyPhysicalStorageSubset (MSX::Memory::_ERAM16KSLOT0SUBSLOT0_SUBSET, MCHEmul::UByte::_0, RAM_SLOTS [0],
+			0x8000, MCHEmul::Address ({ 0x00, 0x80 }, false), 0x4000); // 16k 
+	ERAMB2_SLOT0SUBSLOT0 -> setName ("RAM Empty 16k, Slot 0, Subslot 0, Bank 2");
+	// The basic subset of 16k in the bank 3 of the slot 0
+	MCHEmul::PhysicalStorageSubset* RAMB3_SLOT0SUBSLOT0 = 
+		new MCHEmul::Stack (MSX::Memory::_RAM16KSLOT0SUBSLOT0_SUBSET, RAM_SLOTS [0],
+			0xc000, MCHEmul::Address ({ 0x00, 0xc0 }, false), 0x4000,
+				MCHEmul::Stack::Configuration (true, false /** Pointing to the last written. */, 
+					false /** No overflow detection. */, -1)); // 16k
+	RAMB3_SLOT0SUBSLOT0 -> setName ("RAM 16k, Slot 0, Subslot 0, Bank 3");
+
+	// The rest of the memory is created with empty subsets...
+	// It is needed to create 12 subslots (remaining) + 
+	// 3 (remaining slots) * 4 (subslots each) * 4 (banks each) = 60 empty subsets of 16k each...
+	// The rest of the 16 blocks in any slot and subslot are empty...
+	std::vector <MCHEmul::PhysicalStorageSubset*> ERAMB_SLOTSSUBSLOTS;
+	for (int i = 4; i < (16 << 2); i++) // 4 slots, 4 subslots each...
+	{
+		MCHEmul::Address add (2, 0x0000 + ((i % 4) << 14 /** Multiply by 16. */));
+		MCHEmul::EmptyPhysicalStorageSubset* empty = new MCHEmul::EmptyPhysicalStorageSubset 
+			(MSX::Memory::_SLOTSUBSLOTBASE_SUBSET + ((i / 16) * 100) /** From 0 to 3 * 100. */ + 
+			(((i % 16) / 4) * 10) + /** From 0 to 3 * 10. */
+			(i % 4) /** From 0 to 3. */,
+			MCHEmul::UByte::_0, RAM_SLOTS [(size_t) (i / 16)] /** From 0 to 3. */,
+			add.value (), add, 0x4000); // 16k
+		ERAMB_SLOTSSUBSLOTS.emplace_back (empty);
+		empty -> setName ("RAM Empty 16k, Slot " + std::to_string (i >> 4) + ", Subslot " + std::to_string ((i % 16) / 4) + 
+			", Bank " + std::to_string (i % 4));
+	}
+
+	// The view from the CPU...
+	MCHEmul::PhysicalStorageSubsets allsubsets;
+	allsubsets.insert (MCHEmul::PhysicalStorageSubsets::value_type 
+		(MSX::Memory::_ROMBIOS_SUBSET, ROMBIOS));
+	allsubsets.insert (MCHEmul::PhysicalStorageSubsets::value_type 
+		(MSX::Memory::_ERAM16KSLOT0SUBSLOT0_SUBSET, ERAMB2_SLOT0SUBSLOT0));
+	allsubsets.insert (MCHEmul::PhysicalStorageSubsets::value_type 
+		(MSX::Memory::_RAM16KSLOT0SUBSLOT0_SUBSET, RAMB3_SLOT0SUBSLOT0));
+	for (int i = 4; i < (16 << 2); i++)
+		allsubsets.insert (MCHEmul::PhysicalStorageSubsets::value_type 
+			(MSX::Memory::_SLOTSUBSLOTBASE_SUBSET + ((i / 16) * 100) + (((i % 16) / 4) * 10) + (i % 4), 
+				ERAMB_SLOTSSUBSLOTS [(size_t) (i - 4)]));
+	MCHEmul::MemoryView* cpuView = new MCHEmul::MemoryView (MSX::Memory::_CPU_VIEW, allsubsets);
+
+	// ...and finally the memory that is the result...
+	MCHEmul::Memory::Content result;
+	result._physicalStorages = storages;
+	result._subsets = allsubsets;
+	result._views = MCHEmul::MemoryViews (
+		{ { MSX::Memory::_CPU_VIEW, cpuView} });
 
 	return (result);
 }
@@ -64,7 +147,11 @@ MCHEmul::IODevices MSX::MSXModel::createIODevices () const
 MCHEmul::Attributes MSX::MSXStdModel::attributes () const
 {
 	MCHEmul::Attributes attrs 
-		({ 
+		({
+			{ "Manufacturer", "MSX" },
+			{ "Generation", "MSX1" },
+			{ "Visual System", "PAL" }, // Always PAL...
+			{ "Clock Speed", std::to_string (clockSpeed ()) + " Hz" },
 			{ "Name", "MSX Standard" },
 			{ "Year", "1980" } });
 
@@ -72,53 +159,37 @@ MCHEmul::Attributes MSX::MSXStdModel::attributes () const
 }
 
 // ---
-MSX::VDP* MSX::MSXStdModel::createVDP ()
+MSX::VDP* MSX::MSXStdModel::createVDP () const
 {
-	return (new MSX::VDPOverTexasInstruments99XXFamily 
-		(new TEXASINSTRUMENTS::TMS9929A_PAL (clockSpeed ())));
-}
-
-// ---
-MCHEmul::Chips MSX::MSXStdModel::createChips () const
-{
-	MCHEmul::Chips result = std::move (MSX::MSXModel::createChips ());
-
-	// TODO
-
-	return (result);
-}
-
-// ---
-MCHEmul::IODevices MSX::MSXStdModel::createIODevices () const
-{
-	MCHEmul::IODevices result = std::move (MSX::MSXModel::createIODevices ());
-
-	// TODO
-
-	return (result);
-}
-
-//---
-MCHEmul::Memory::Content MSX::MSXStdModel::memoryContent () const
-{
-	// TODO
-
-	return (MCHEmul::Memory::Content ());
+	// The standard model is always PAL...
+	return (new MSX::VDP_PAL (clockSpeed (), new MSX::VDPBehaviour ()));
 }
 
 // ---
 bool MSX::MSXStdModel::loadROMOverForLanguage (MCHEmul::PhysicalStorage* fs,
 	const std::string& lang)
 {
-	// TODO
+	bool result = true;
 
-	return (false);
+	// The standard version is like the SVI728 in English...
+	result &= fs -> loadInto ("./bios/svi728_basic-bios_ENG.rom");
+
+	return (result);
 }
 
 // ---
 void MSX::MSXStdModel::configureMemory (MSX::Memory* m, unsigned int cfg)
 {
-	// TODO
+	assert (m != nullptr);
+
+	// Disactive all elements, but maintain the standard ones...
+	m -> desactivateAllElements (true);
+	// ...and only the basic elements are connected...
+	m -> connectElements ({ 
+		MSX::Memory::_ROMBIOS_SUBSET, 
+		MSX::Memory::_RAM16KSLOT0SUBSLOT0_SUBSET });
+	// ...and also fix the stack subset...
+	m -> setStackSubset (MSX::Memory::_RAM16KSLOT0SUBSLOT0_SUBSET);
 }
 
 // ---
@@ -126,20 +197,22 @@ MCHEmul::Attributes MSX::SVI728::attributes () const
 {
 	MCHEmul::Attributes attrs 
 		({ 
-			{ "Name", "SVI Spectravideo 728" },
-			{ "Manufacturer", "Spectravideo" },
-			{ "Year", "1985" } });
+			{ "Manufacturer", "SpectraVideo" },
+			{ "Generation", "MSX1" },
+			{ "Visual System", (visualSystem () == MSX::MSXModel::VisualSystem::_PAL) ? "PAL" : "NTSC" },
+			{ "Clock Speed", std::to_string (clockSpeed ()) + " Hz" },
+			{ "Name", "MSX SpectraVideo 728" },
+			{ "Year", "1980" } });
 
 	return (attrs);
 }
 
 // ---
-MSX::VDP* MSX::SVI728::createVDP ()
+MSX::VDP* MSX::SVI728::createVDP () const
 {
-	return (new MSX::VDPOverTexasInstruments99XXFamily 
-		((visualSystem () == MSX::MSXModel::VisualSystem::_PAL) 
-			? (TEXASINSTRUMENTS::TMS99XX*) new TEXASINSTRUMENTS::TMS9929A_PAL (clockSpeed ())
-			: (TEXASINSTRUMENTS::TMS99XX*) new TEXASINSTRUMENTS::TMS9928A_NTSC (clockSpeed ())));
+	return ((visualSystem () == MSX::MSXModel::VisualSystem::_PAL) 
+			? (MSX::VDP*) new MSX::VDP_PAL  (clockSpeed (), new MSX::VDPBehaviour ())
+			: (MSX::VDP*) new MSX::VDP_NTSC (clockSpeed (), new MSX::VDPBehaviour ()));
 }
 
 // ---
@@ -161,15 +234,7 @@ MCHEmul::IODevices MSX::SVI728::createIODevices () const
 }
 
 // ---
-MCHEmul::Memory::Content MSX::SVI728::memoryContent () const
-{
-	// TODO
-
-	return (MCHEmul::Memory::Content ());
-}
-
-// ---
-bool MSX::SVI728::loadROMOverForLanguage (MCHEmul::PhysicalStorage* ss,
+bool MSX::SVI728::loadROMOverForLanguage (MCHEmul::PhysicalStorage* fs,
 	const std::string& lang)
 {
 	bool result = true;
@@ -180,7 +245,7 @@ bool MSX::SVI728::loadROMOverForLanguage (MCHEmul::PhysicalStorage* ss,
 	else if (lang == "ESP")	ROMFILE = "./bios/svi728_basic-bios_ESP.rom";
 	else result = false;
 
-	result &= ss -> loadInto (ROMFILE);
+	result &= fs -> loadInto (ROMFILE);
 
 	return (result);
 }
@@ -188,7 +253,16 @@ bool MSX::SVI728::loadROMOverForLanguage (MCHEmul::PhysicalStorage* ss,
 // ---
 void MSX::SVI728::configureMemory (MSX::Memory* m, unsigned int cfg)
 {
-	// TODO
+	assert (m != nullptr);
+
+	// Disactive all elements, but maintain the standard ones...
+	m -> desactivateAllElements (true);
+	// ...and only the basic elements are connected...
+	m -> connectElements ({ 
+		MSX::Memory::_ROMBIOS_SUBSET, 
+		MSX::Memory::_RAM16KSLOT0SUBSLOT0_SUBSET });
+	// ...and also fix the stack subset...
+	m -> setStackSubset (MSX::Memory::_RAM16KSLOT0SUBSLOT0_SUBSET);
 }
 
 // ---
@@ -196,20 +270,22 @@ MCHEmul::Attributes MSX::SVI738::attributes () const
 {
 	MCHEmul::Attributes attrs 
 		({ 
-			{ "Name", "SVI Spectravideo 738" },
-			{ "Manufacturer", "Spectravideo" },
-			{ "Year", "1985" } });
+			{ "Manufacturer", "SpectraVideo" },
+			{ "Generation", "MSX2" },
+			{ "Visual System", (visualSystem () == MSX::MSXModel::VisualSystem::_PAL) ? "PAL" : "NTSC" },
+			{ "Clock Speed", std::to_string (clockSpeed ()) + " Hz" },
+			{ "Name", "MSX SpectraVideo 738" },
+			{ "Year", "1982" } });
 
 	return (attrs);
 }
 
 // ---
-MSX::VDP* MSX::SVI738::createVDP ()
+MSX::VDP* MSX::SVI738::createVDP () const
 {
-	return (new MSX::VDPOverTexasInstruments99XXFamily 
-		((visualSystem () == MSX::MSXModel::VisualSystem::_PAL) 
-			? (TEXASINSTRUMENTS::TMS99XX*) new TEXASINSTRUMENTS::TMS9929A_PAL (clockSpeed ())
-			: (TEXASINSTRUMENTS::TMS99XX*) new TEXASINSTRUMENTS::TMS9928A_NTSC (clockSpeed ())));
+	return ((visualSystem () == MSX::MSXModel::VisualSystem::_PAL) 
+			? (MSX::VDP*) new MSX::VDP_PAL  (clockSpeed (), new MSX::VDPBehaviourMSX2)
+			: (MSX::VDP*) new MSX::VDP_NTSC (clockSpeed (), new MSX::VDPBehaviourMSX2));
 }
 
 // ---
@@ -233,13 +309,15 @@ MCHEmul::IODevices MSX::SVI738::createIODevices () const
 // ---
 MCHEmul::Memory::Content MSX::SVI738::memoryContent () const
 {
+	MCHEmul::Memory::Content result = std::move (MSX::MSXModel::memoryContent ());
+
 	// TODO
 
-	return (MCHEmul::Memory::Content ());
+	return (result);
 }
 
 // ---
-bool MSX::SVI738::loadROMOverForLanguage (MCHEmul::PhysicalStorage* ss,
+bool MSX::SVI738::loadROMOverForLanguage (MCHEmul::PhysicalStorage* fs,
 	const std::string& lang)
 {
 	bool result = true;
@@ -251,7 +329,7 @@ bool MSX::SVI738::loadROMOverForLanguage (MCHEmul::PhysicalStorage* ss,
 	else if (lang == "SEW") ROMFILE = "./bios/svi738_basic-bios_SEW.rom";
 	else result = false;
 
-	result &= ss -> loadInto (ROMFILE);
+	result &= fs -> loadInto (ROMFILE);
 
 	return (result);
 }
@@ -259,5 +337,14 @@ bool MSX::SVI738::loadROMOverForLanguage (MCHEmul::PhysicalStorage* ss,
 // ---
 void MSX::SVI738::configureMemory (MSX::Memory* m, unsigned int cfg)
 {
-	// TODO
+	assert (m != nullptr);
+
+	// Disactive all elements, but maintain the standard ones...
+	m -> desactivateAllElements (true);
+	// ...and only the basic elements are connected...
+	m -> connectElements ({ 
+		MSX::Memory::_ROMBIOS_SUBSET, 
+		MSX::Memory::_RAM16KSLOT0SUBSLOT0_SUBSET });
+	// ...and also fix the stack subset...
+	m -> setStackSubset (MSX::Memory::_RAM16KSLOT0SUBSLOT0_SUBSET);
 }

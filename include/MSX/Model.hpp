@@ -9,7 +9,8 @@
  *	Creation Date: 09/08/2024 \n
  *	Description: Type: The "real" computer this emulation is working for...There are many MSXs!
  *	Versions: 1.0 Initial
- *	Based on: https://sinclair.wiki.zxnet.co.uk/wiki/ROM_images and https://www.msx.org/wiki/Category:MSX_systems
+ *	Based on: https://sinclair.wiki.zxnet.co.uk/wiki/ROM_images and 
+ *			  https://www.msx.org/wiki/Category:MSX_systems
  */
 
 #ifndef __MSX_MODEL__
@@ -45,9 +46,8 @@ namespace MSX
 			  _memory (nullptr)
 							{ }
 
-		/** The MSXModel class is owner of the VDP object
-			but not of the Graphical Chip this one is wrappering. */
-		virtual ~MSXModel ();
+		// The model is not the owner of any element of the machine, 
+		// but just the machine itself. So the destructor is empty.
 
 		virtual Generation generation () const = 0;
 
@@ -96,13 +96,18 @@ namespace MSX
 		Memory* memory (unsigned int cfg, const std::string& lang);
 
 		protected:
-		virtual VDP* createVDP () = 0;
+		virtual VDP* createVDP () const = 0;
 		virtual MCHEmul::Chips createChips () const;
 		virtual MCHEmul::IODevices createIODevices () const;
 
 		// This method are invoked from the construction of the memory element (above)...
-		/** Gets the structure of the memory and with the right ROM loaded. */
-		virtual MCHEmul::Memory::Content memoryContent () const = 0;
+		/** Gets the structure of the memory. \n
+			It can be overloaded, but the default basic standard structure is createde here. \n
+			The basic memory structure is made up of 4 slots witch 4 subslots each and 4 different banks each.
+			All banks will contain "empty RAM", except, slot 0, subslot 0, bank 0 & 1 that will contain ROM,
+			and slot 0, subslot 2 that will contain RAM (the minumum that the standard accepts). \n
+			Other models could add additional components. */
+		virtual MCHEmul::Memory::Content memoryContent () const;
 		/** Load the ROM with the right data, considering the language. \n
 			If it were not possible false should be returned, and true if everythings went ok. */
 		virtual bool loadROMOverForLanguage (MCHEmul::PhysicalStorage* fs, 
@@ -145,11 +150,11 @@ namespace MSX
 		virtual MCHEmul::Attributes attributes () const;
 
 		private:
-		virtual VDP* createVDP () override;
-		virtual MCHEmul::Chips createChips () const override;
-		virtual MCHEmul::IODevices createIODevices () const override;
+		virtual VDP* createVDP () const override;
+		// The standard model doesn't add any additional chip to the basic system...
+		// The standard model doesn't add any additional iodevice to the basic system...
 
-		virtual MCHEmul::Memory::Content memoryContent () const override;
+		// No need to create a memory structure different that the basic one!
 		virtual bool loadROMOverForLanguage (MCHEmul::PhysicalStorage* fs, 
 			const std::string& lang) override;
 		virtual void configureMemory (Memory* m, unsigned int cfg) override;
@@ -173,11 +178,11 @@ namespace MSX
 		virtual MCHEmul::Attributes attributes () const;
 
 		private:
-		virtual VDP* createVDP () override;
+		virtual VDP* createVDP () const override;
 		virtual MCHEmul::Chips createChips () const override;
 		virtual MCHEmul::IODevices createIODevices () const override;
 		
-		virtual MCHEmul::Memory::Content memoryContent () const override;
+		// No need to create a memory structure different that the basic one!
 		virtual bool loadROMOverForLanguage (MCHEmul::PhysicalStorage* fs, 
 			const std::string& lang) override;
 		virtual void configureMemory (Memory* m, unsigned int cfg) override;
@@ -204,7 +209,7 @@ namespace MSX
 		virtual MCHEmul::Attributes attributes () const;
 
 		private:
-		virtual VDP* createVDP () override;
+		virtual VDP* createVDP () const override;
 		virtual MCHEmul::Chips createChips () const override;
 		virtual MCHEmul::IODevices createIODevices () const override;
 		

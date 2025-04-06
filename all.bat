@@ -242,9 +242,8 @@ DEL  .\monitors\RZXSpectrumConsole\*.fmt
 DEL  .\monitors\RZXSpectrumConsole\*.def
 DEL  .\emulators\ZXSpectrumEmulator\*.hlp
 DEL  .\emulators\ZXSpectrumEmulatorC\*.hlp
-DEL  .\emulators\ZXSpectrum\ZXSpectrumSysVars.txt
-DEL  .\emulators\ZXSpectrumC\ZXSpectrumSysVars.txt
-DEL  .\monitors\ZXSpectrumC\ZX80SysVars.txt
+DEL  .\emulators\ZXSpectrumEmulator\ZXSpectrumSysVars.txt
+DEL  .\emulators\ZXSpectrumEmulatorC\ZXSpectrumSysVars.txt
 COPY .\projects\ZXSpectrum\*.fmt .\emulators\ZXSpectrumEmulator\ /Y
 COPY .\projects\ZXSpectrum\ZXSpectrumSysVars.txt .\emulators\ZXSpectrumEmulator\ /Y
 COPY .\projects\ZXSpectrum\ZXSpectrumSysVars.txt .\emulators\ZXSpectrumEmulatorC\ /Y
@@ -273,6 +272,56 @@ COPY .\projects\CORE\*.fmt .\monitors\RZXSpectrumConsole\ /Y
 COPY .\projects\CORE\*.hlp .\emulators\ZXSpectrumEmulatorC\ /Y
 COPY .\projects\CORE\*.hlp .\emulators\ZXSpectrumEmulator\ /Y
 COPY .\projects\CORE\*.hlp .\monitors\RZXSpectrumConsole\ /Y
+Echo ********************************************************************
+Echo ********************************************************************
+Echo 1.7: MSX
+Echo ********************************************************************
+Echo Exe files...
+COPY .\exe\x86\MSXEmulator.exe .\emulators\MSXEmulator\ /Y
+COPY .\exe\x86\MSXEmulatorD.exe .\emulators\MSXEmulator\ /Y
+COPY .\exe\x86\MSXEmulatorC.exe .\emulators\MSXEmulatorC\ /Y
+COPY .\exe\x86\MSXEmulatorCD.exe .\emulators\MSXEmulatorC\ /Y
+COPY .\exe\x86\RMSXConsole.exe .\monitors\RMSXConsole\ /Y
+COPY .\exe\x86\RMSXConsoleD.exe .\monitors\RMSXConsole\ /Y
+COPY .\exe\x86\MSXCRTGenerator.exe .\projects\MSXCRTGenerator\ /Y
+COPY .\exe\x86\MSXCRTGeneratorD.exe .\projects\MSXCRTGenerator\ /Y
+Echo Configuration files...
+DEL  .\emulators\MSXEmulator\*.fmt
+DEL  .\emulators\MSXEmulatorC\*.fmt
+DEL  .\monitors\RMSXConsole\*.fmt
+DEL  .\monitors\RMSXConsole\*.def
+DEL  .\emulators\MSXEmulator\*.hlp
+DEL  .\emulators\MSXEmulatorC\*.hlp
+DEL  .\emulators\MSXEmulator\MSXSysVars.txt
+DEL  .\emulators\MSXEmulatorC\MSXSysVars.txt
+COPY .\projects\MSX\*.fmt .\emulators\MSXEmulator\ /Y
+COPY .\projects\MSX\MSXSysVars.txt .\emulators\MSXEmulator\ /Y
+COPY .\projects\MSX\MSXSysVars.txt .\emulators\MSXEmulatorC\ /Y
+DEL .\emulators\MSXEmulator\MSXRConsole.fmt
+COPY .\projects\MSX\*.fmt .\emulators\MSXEmulatorC\ /Y
+DEL .\emulators\MSXEmulatorC\MSXRConsole.fmt
+COPY .\projects\MSX\*.fmt .\monitors\RMSXConsole\ /Y
+DEL .\monitors\RMSXConsole\MSX.fmt
+RENAME .\monitors\RMSXConsole\MSXRConsole.fmt MSX.fmt
+COPY .\projects\MSX\*.def .\emulators\MSXEmulatorC\ /Y
+COPY .\projects\MSX\*.hlp .\emulators\MSXEmulatorC\ /Y
+DEL .\emulators\MSXEmulatorC\MSXRConsole.hlp
+COPY .\projects\MSX\*.hlp .\monitors\RMSXConsole\ /Y
+DEL .\monitors\RMSXConsole\MSX.hlp
+RENAME .\monitors\RMSXConsole\MSXRConsole.hlp MSX.hlp
+COPY .\projects\SINCLAIR\*.fmt .\emulators\MSXEmulatorC\ /Y
+COPY .\projects\SINCLAIR\*.fmt .\emulators\MSXEmulator\ /Y
+COPY .\projects\SINCLAIR\*.fmt .\monitors\RMSXConsole\ /Y
+COPY .\projects\SINCLAIR\*.hlp .\emulators\MSXEmulatorC\ /Y
+COPY .\projects\SINCLAIR\*.hlp .\monitors\RMSXConsole\ /Y
+COPY .\projects\CONSOLE\*.fmt .\emulators\MSXEmulatorC\ /Y
+COPY .\projects\CONSOLE\*.hlp .\emulators\MSXEmulatorC\ /Y
+COPY .\projects\CORE\*.fmt .\emulators\MSXEmulatorC\ /Y
+COPY .\projects\CORE\*.fmt .\emulators\MSXEmulator\ /Y
+COPY .\projects\CORE\*.fmt .\monitors\RMSXConsole\ /Y
+COPY .\projects\CORE\*.hlp .\emulators\MSXEmulatorC\ /Y
+COPY .\projects\CORE\*.hlp .\emulators\MSXEmulator\ /Y
+COPY .\projects\CORE\*.hlp .\monitors\RMSXConsole\ /Y
 Echo ********************************************************************
 Echo
 Echo
@@ -410,6 +459,29 @@ COPY .\projects\CORE\*.hlp .\setups\ZXSpectrum\ /Y
 COPY .\projects\ASSEMBLER\*.fmt .\setups\ZXSpectrum\ /Y
 COPY .\projects\ZXSpectrum\ZXSpectrumSysVars.txt .\setups\ZXSpectrum\ /Y
 "C:\Program files (x86)\Inno Setup 6\iscc" ".\setups\ZXSpectrum\ZXSpectrum.iss"
+Echo ********************************************************************
+Echo ********************************************************************
+Echo 3.6: MSX
+Echo ********************************************************************
+COPY .\exe\x86\MSXEmulatorC.exe .\setups\MSX\ /Y
+COPY .\exe\x86\MSXEmulator.exe .\setups\MSX\ /Y
+COPY .\exe\x86\RMSXConsole.exe .\setups\MSX\ /Y
+COPY .\exe\x86\Z80Compiler.exe .\setups\MSX\ /Y
+COPY .\exe\x86\TestZ80.exe .\setups\MSX\ /Y
+COPY .\exe\x86\MSXCRTGenerator.exe .\setups\MSX\ /Y
+COPY .\emulators\MSXCommons\*.* .\setups\MSX\ /Y
+COPY .\projects\MSX\*.fmt .\setups\MSX\ /Y
+COPY .\projects\MSX\*.hlp .\setups\MSX\ /Y
+COPY .\projects\MSX\*.def .\setups\MSX\ /Y
+COPY .\projects\SINCLAIR\*.fmt .\setups\MSX\ /Y
+COPY .\projects\SINCLAIR\*.hlp .\setups\MSX\ /Y
+COPY .\projects\CONSOLE\*.fmt .\setups\MSX\ /Y
+COPY .\projects\CONSOLE\*.hlp .\setups\MSX\ /Y
+COPY .\projects\CORE\*.fmt .\setups\MSX\ /Y
+COPY .\projects\CORE\*.hlp .\setups\MSX\ /Y
+COPY .\projects\ASSEMBLER\*.fmt .\setups\MSX\ /Y
+COPY .\projects\MSX\MSXSysVars.txt .\setups\MSX\ /Y
+"C:\Program files (x86)\Inno Setup 6\iscc" ".\setups\MSX\MSX.iss"
 Echo ********************************************************************
 Echo
 Echo

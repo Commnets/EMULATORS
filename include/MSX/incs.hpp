@@ -27,6 +27,7 @@
 #include <MSX/OSIO.hpp>
 #include <MSX/PortManager.hpp>
 #include <MSX/VDP.hpp>
+#include <MSX/VDPBehaviour.hpp>
 #include <MSX/MSX.hpp>
 #include <MSX/MSXEmulator.hpp>
 

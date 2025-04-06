@@ -14,7 +14,7 @@
 #ifndef __MSX_IOPBUILDER__
 #define __MSX_IOPBUILDER__
 
-#include <SINCLAIR/incs.hpp>
+#include <CORE/incs.hpp>
 
 namespace MSX
 {

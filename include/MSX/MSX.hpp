@@ -15,7 +15,6 @@
 #define __MSX_MSX__
 
 #include <CORE/incs.hpp>
-#include <TEXASINST/incs.hpp>
 #include <MSX/Model.hpp>
 #include <MSX/Memory.hpp>
 

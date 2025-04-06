@@ -33,6 +33,7 @@
     <ClInclude Include="..\..\include\MSX\Sound.hpp" />
     <ClInclude Include="..\..\include\MSX\Model.hpp" />
     <ClInclude Include="..\..\include\MSX\VDP.hpp" />
+    <ClInclude Include="..\..\include\MSX\VDPBehaviour.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\MSX\CommandBuilder.cpp" />
@@ -48,6 +49,7 @@
     <ClCompile Include="..\..\src\MSX\Sound.cpp" />
     <ClCompile Include="..\..\src\MSX\Model.cpp" />
     <ClCompile Include="..\..\src\MSX\VDP.cpp" />
+    <ClCompile Include="..\..\src\MSX\VDPBehaviour.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>
