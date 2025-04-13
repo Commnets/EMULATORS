@@ -11,35 +11,6 @@ Type:INT, Id:@ID@, Active:@ACTIVE@, In Execution:@EXECUTION@, At Address:$@ADDRE
 Type:NMI, Id:@ID@, Active:@ACTIVE@, In Execution:@EXECUTION@, At Address:$@ADDRESS@
 #---
 #---
-;RasterX
-Position:@POSITION@(@POSITION0@)
-First:@FIRST@, Last:@LAST@
-#---
-#---
-;RasterY
-Position:@POSITION@(@POSITION0@)
-First:@FIRST@, Last:@LAST@
-#---
-#---
-;Raster
-->Raster Horizontal:
-@RasterX>@
-->Raster Vertical:
-@RasterY>@
-#---
-#---
-;SysVar
-@NAME@\t@ADDRESS@\t@VALUE@\t@BYTES@\t@DESCRIPTION@
-#---
-#---
-;CSYSVARS
-Name\tAddress\tValue\tBytes\tDescription
-@SYSVARS?{fmter=SysVar,empty=no vars}\n@
-#---
-#---
-;CSYSVAR
-Name\tAddress\tValue\tBytes\tDescription
-@SysVar>@
-#---
 ;VDP
 @TMS99xxFamily>@
+#---

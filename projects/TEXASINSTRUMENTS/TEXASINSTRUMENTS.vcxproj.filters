@@ -49,6 +49,9 @@
     <Filter Include="Archivos de origen\Motherboard\Chips\TMS99xxFamily">
       <UniqueIdentifier>{2123a055-f950-4b4d-8fe9-38089c236a08}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Configuration">
+      <UniqueIdentifier>{2ccf9112-8644-4b79-bff1-214edc237d7a}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\include\TEXASINSTRUMENTS\incs.hpp">
@@ -71,5 +74,13 @@
     <ClCompile Include="..\..\src\TEXASINSTRUMENTS\TMS99xxFamily\TMS99xxFamilyRegisters.cpp">
       <Filter>Archivos de origen\Motherboard\Chips\TMS99xxFamily</Filter>
     </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="TexasInstruments.fmt">
+      <Filter>Configuration</Filter>
+    </None>
+    <None Include="TexasInstruments.hlp">
+      <Filter>Configuration</Filter>
+    </None>
   </ItemGroup>
 </Project>

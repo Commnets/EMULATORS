@@ -43,6 +43,15 @@
     <Filter Include="Archivos de origen\Motherboard\Chips">
       <UniqueIdentifier>{14d4d608-6538-482b-b446-f1832a7224ad}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Archivos de origen\Motherboard\Chips\PPI8255">
+      <UniqueIdentifier>{9aa43ea4-2e94-4a7c-935b-615068c59c82}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Archivos de encabezado\Motherboard\Chips\PPI8255">
+      <UniqueIdentifier>{a04f10d3-5989-4780-b30e-d5b15806f792}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Configuration">
+      <UniqueIdentifier>{15afaaf5-1568-4c1b-b028-8198bac8bfdb}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\include\MSX\incs.hpp">
@@ -87,6 +96,12 @@
     <ClInclude Include="..\..\include\MSX\VDP.hpp">
       <Filter>Archivos de encabezado\Motherboard\Chips</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\include\MSX\PPI8255.hpp">
+      <Filter>Archivos de encabezado\Motherboard\Chips\PPI8255</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\MSX\PPI8255Registers.hpp">
+      <Filter>Archivos de encabezado\Motherboard\Chips\PPI8255</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\MSX\CommandBuilder.cpp">
@@ -128,5 +143,33 @@
     <ClCompile Include="..\..\src\MSX\VDP.cpp">
       <Filter>Archivos de origen\Motherboard\Chips</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\MSX\PPI8255.cpp">
+      <Filter>Archivos de origen\Motherboard\Chips\PPI8255</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\MSX\PPI8255Registers.cpp">
+      <Filter>Archivos de origen\Motherboard\Chips\PPI8255</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="console.def">
+      <Filter>Configuration</Filter>
+    </None>
+    <None Include="MSX.fmt">
+      <Filter>Configuration</Filter>
+    </None>
+    <None Include="MSX.hlp">
+      <Filter>Configuration</Filter>
+    </None>
+    <None Include="MSXRConsole.fmt">
+      <Filter>Configuration</Filter>
+    </None>
+    <None Include="MSXRConsole.hlp">
+      <Filter>Configuration</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="MSXSysVars.txt">
+      <Filter>Configuration</Filter>
+    </Text>
   </ItemGroup>
 </Project>

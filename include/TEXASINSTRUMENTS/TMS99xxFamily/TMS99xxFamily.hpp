@@ -96,6 +96,7 @@ namespace TEXASINSTRUMENTS
 
 		/**
 		  *	The name of the fields are: \n
+		  * The ones from the parent company plus:
 		  * TMS99xxFamilyRegisters	= InfoStructure: Info about the registers.
 		  * Raster				= InfoStructure: Info about the raster.
 		  */

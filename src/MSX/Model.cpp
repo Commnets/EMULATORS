@@ -4,6 +4,7 @@
 #include <MSX/Sound.hpp>
 #include <MSX/OSIO.hpp>
 #include <MSX/VDP.hpp>
+#include <MSX/PPI8255.hpp>
 #include <FZ80/INTInterrupt.hpp>
 
 // ---
@@ -33,6 +34,10 @@ MCHEmul::Chips MSX::MSXModel::createChips () const
 		(MCHEmul::Chip*) _vdp -> graphicalChip ()));
 
 	// TODO: Sound chip...
+
+	// The PPI Chip, that is critical in communications...
+	MSX::PPI8255* ppi = new MSX::PPI8255 (nullptr);
+	result.insert (MCHEmul::Chips::value_type (ppi -> id (), ppi));
 
 	return (result);
 }

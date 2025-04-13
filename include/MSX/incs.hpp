@@ -30,6 +30,8 @@
 #include <MSX/MSX.hpp>
 #include <MSX/MSXEmulator.hpp>
 #include <MSX/VDP.hpp>
+#include <MSX/PPI8255.hpp>
+#include <MSX/PPI8255Registers.hpp>
 
 #endif
 

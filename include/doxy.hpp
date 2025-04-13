@@ -78,6 +78,11 @@
  */
 
 /**
+ *	\defgroup	GENERALINSTRUMENTS Classes defining chips manufactured by General Instruments Company
+ *	Classes and macros defining the characteristics of any Chip manufactured by General Instruments Company.
+ */
+
+/**
  *	\defgroup	MSX Classes defining a MSX Computer (1, 2, 2+...)
  *	Classes and macros defining the characteristics of any MSX series Computer.
  */

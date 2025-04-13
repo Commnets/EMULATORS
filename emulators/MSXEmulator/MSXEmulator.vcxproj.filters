@@ -13,6 +13,12 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Configuration">
+      <UniqueIdentifier>{203c2c2b-536c-4c5b-9208-27dd20731c61}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Configuration\bios">
+      <UniqueIdentifier>{892bb719-62ff-43fb-853f-0297e0535056}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="MSXEmulator.cpp">
@@ -42,5 +48,42 @@
     <ResourceCompile Include="MSXEmulator.rc">
       <Filter>Archivos de recursos</Filter>
     </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Standard.hlp">
+      <Filter>Configuration</Filter>
+    </None>
+    <None Include="Default.fmt">
+      <Filter>Configuration</Filter>
+    </None>
+    <None Include="MSX.fmt">
+      <Filter>Configuration</Filter>
+    </None>
+    <None Include="Standard.fmt">
+      <Filter>Configuration</Filter>
+    </None>
+    <None Include="TexasInstruments.fmt">
+      <Filter>Configuration</Filter>
+    </None>
+    <None Include="bios\svi728_basic-bios_ENG.rom">
+      <Filter>Configuration\bios</Filter>
+    </None>
+    <None Include="bios\svi728_basic-bios_ESP.rom">
+      <Filter>Configuration\bios</Filter>
+    </None>
+    <None Include="bios\svi738_basic-bios_DEU.rom">
+      <Filter>Configuration\bios</Filter>
+    </None>
+    <None Include="bios\svi738_basic-bios_ENG.rom">
+      <Filter>Configuration\bios</Filter>
+    </None>
+    <None Include="bios\svi738_basic-bios_SEW.rom">
+      <Filter>Configuration\bios</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="MSXSysVars.txt">
+      <Filter>Configuration</Filter>
+    </Text>
   </ItemGroup>
 </Project>

@@ -19,6 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\include\MSX\PPI8255.hpp" />
     <ClInclude Include="..\..\include\MSX\CommandBuilder.hpp" />
     <ClInclude Include="..\..\include\MSX\Commands.hpp" />
     <ClInclude Include="..\..\include\MSX\FileIO.hpp" />
@@ -29,6 +30,7 @@
     <ClInclude Include="..\..\include\MSX\MSXEmulator.hpp" />
     <ClInclude Include="..\..\include\MSX\OSIO.hpp" />
     <ClInclude Include="..\..\include\MSX\PortManager.hpp" />
+    <ClInclude Include="..\..\include\MSX\PPI8255Registers.hpp" />
     <ClInclude Include="..\..\include\MSX\Screen.hpp" />
     <ClInclude Include="..\..\include\MSX\Sound.hpp" />
     <ClInclude Include="..\..\include\MSX\Model.hpp" />
@@ -44,10 +46,52 @@
     <ClCompile Include="..\..\src\MSX\MSXEmulator.cpp" />
     <ClCompile Include="..\..\src\MSX\OSIO.cpp" />
     <ClCompile Include="..\..\src\MSX\PortManager.cpp" />
+    <ClCompile Include="..\..\src\MSX\PPI8255.cpp" />
+    <ClCompile Include="..\..\src\MSX\PPI8255Registers.cpp" />
     <ClCompile Include="..\..\src\MSX\Screen.cpp" />
     <ClCompile Include="..\..\src\MSX\Sound.cpp" />
     <ClCompile Include="..\..\src\MSX\Model.cpp" />
     <ClCompile Include="..\..\src\MSX\VDP.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="console.def">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </None>
+    <None Include="MSX.fmt">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </None>
+    <None Include="MSX.hlp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </None>
+    <None Include="MSXRConsole.fmt">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </None>
+    <None Include="MSXRConsole.hlp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="MSXSysVars.txt">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </Text>
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>

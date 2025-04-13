@@ -7,7 +7,7 @@
  *	Framework: CPU Emulators library \n
  *	Author: Ignacio Cea Fornies (EMULATORS library) \n
  *	Creation Date: 29/03/2025 \n
- *	Description: To manager all ports in a MSX.
+ *	Description: To manage all ports in a MSX.
  *	Versions: 1.0 Initial
  */
 
@@ -17,6 +17,7 @@
 #include <CORE/incs.hpp>
 #include <FZ80/incs.hpp>
 #include <MSX/VDP.hpp>
+#include <MSX/PPI8255.hpp>
 
 namespace MSX
 {
@@ -32,6 +33,10 @@ namespace MSX
 
 		virtual MCHEmul::UByte value (unsigned short ab, unsigned char id) const override;
 		virtual void setValue (unsigned short ab, unsigned char id, const MCHEmul::UByte& v) override;
+
+		/** The initialization does nothing. */
+		virtual void initialize () override
+							{ /** Do nothing. */ }
 	};
 
 	/** Port Manager to manage block (groups) of ports linked with the VDP. */
@@ -50,9 +55,11 @@ namespace MSX
 		virtual void setValue (unsigned short ab, unsigned char id, const MCHEmul::UByte& v) override
 							{ _vdp -> setRegister (id - 0x98, v); }
 
-		virtual void initialize () override;
+		/** The initialization does nothing. */
+		virtual void initialize () override
+							{ /** Do nothing. */ }
 
-		/** To link it to the VDP and the sound chip. \n
+		/** To link it to the VDP. \n
 			They are not the owner of the port manager. */
 		void linkVDP (VDP* vdp)
 							{ _vdp = vdp; }
@@ -60,6 +67,36 @@ namespace MSX
 		private:
 		/** The VDP. */
 		VDP* _vdp;
+	};
+
+	/** Port Manager to manage block (groups) of ports linked with the PPI. */
+	class PPIPortManager final : public FZ80::Z80Port
+	{
+		public:
+		static const int _ID = 2;
+		static const std::string _NAME;
+
+		PPIPortManager ();
+
+		virtual MCHEmul::UByte value (unsigned short ab, unsigned char id) const override
+							{ return (_ppi -> readRegister (id - 0xa8)); }
+		virtual MCHEmul::UByte peekValue (unsigned short ab, unsigned char id) const override
+							{ return (_ppi -> peekRegister (id - 0xa8)); }
+		virtual void setValue (unsigned short ab, unsigned char id, const MCHEmul::UByte& v) override
+							{ _ppi -> setRegister (id - 0xa8, v); }
+
+		/** The initialization does nothing. */
+		virtual void initialize () override
+							{ /** Do nothing. */ }
+
+		/** To link it to the PPI. \n
+			They are not the owner of the port manager. */
+		void linkPPI (PPI8255* ppi)
+							{ _ppi = ppi; }
+
+		private:
+		/** The PPI. */
+		PPI8255* _ppi;
 	};
 }
 

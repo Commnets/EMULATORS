@@ -13,6 +13,12 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Configuration">
+      <UniqueIdentifier>{5c3b33a5-8b73-40b5-8b0c-54848e986c7d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Configuration\bios">
+      <UniqueIdentifier>{a9644eba-0404-4caf-ad89-2bc8ffb1b57d}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="MSXEmulatorC.cpp">
@@ -45,5 +51,57 @@
     <Image Include="MSKLogo.ico">
       <Filter>Archivos de recursos</Filter>
     </Image>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="LocalConsole.hlp">
+      <Filter>Configuration</Filter>
+    </None>
+    <None Include="MSX.hlp">
+      <Filter>Configuration</Filter>
+    </None>
+    <None Include="Standard.hlp">
+      <Filter>Configuration</Filter>
+    </None>
+    <None Include="TexasInstruments.hlp">
+      <Filter>Configuration</Filter>
+    </None>
+    <None Include="Default.fmt">
+      <Filter>Configuration</Filter>
+    </None>
+    <None Include="LocalConsole.fmt">
+      <Filter>Configuration</Filter>
+    </None>
+    <None Include="MSX.fmt">
+      <Filter>Configuration</Filter>
+    </None>
+    <None Include="Standard.fmt">
+      <Filter>Configuration</Filter>
+    </None>
+    <None Include="TexasInstruments.fmt">
+      <Filter>Configuration</Filter>
+    </None>
+    <None Include="console.def">
+      <Filter>Configuration</Filter>
+    </None>
+    <None Include="bios\svi728_basic-bios_ENG.rom">
+      <Filter>Configuration\bios</Filter>
+    </None>
+    <None Include="bios\svi728_basic-bios_ESP.rom">
+      <Filter>Configuration\bios</Filter>
+    </None>
+    <None Include="bios\svi738_basic-bios_DEU.rom">
+      <Filter>Configuration\bios</Filter>
+    </None>
+    <None Include="bios\svi738_basic-bios_ENG.rom">
+      <Filter>Configuration\bios</Filter>
+    </None>
+    <None Include="bios\svi738_basic-bios_SEW.rom">
+      <Filter>Configuration\bios</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="MSXSysVars.txt">
+      <Filter>Configuration</Filter>
+    </Text>
   </ItemGroup>
 </Project>
