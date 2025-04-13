@@ -6,7 +6,8 @@ MCHEmul::Command* MSX::CommandBuilder::createEmptyCommand (const std::string& cm
 {
 	MCHEmul::Command* result = nullptr;
 
-	// TODO
+	if (cmdName == "VDP" || cmdName == MSX::VDPStatusCommand::_NAME)
+		result = new MSX::VDPStatusCommand;
 
 	return (result);
 }

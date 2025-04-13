@@ -4,13 +4,22 @@
 #include <MSX/Sound.hpp>
 #include <MSX/OSIO.hpp>
 #include <MSX/VDP.hpp>
+#include <FZ80/INTInterrupt.hpp>
+
+// ---
+MSX::MSXModel::~MSXModel ()
+{
+	delete (_vdp);
+
+	// But deleting VDP the graphical chip is not deleted...
+}
 
 // ---
 MSX::Memory* MSX::MSXModel::memory (unsigned int cfg, const std::string& lang)
 { 
-	// It is created here to avoid recursive include...
+	// It is created here intead in the .hpp file to avoid recursive include...
 	return ((_memory == nullptr) 
-		? (_memory = new MSX::Memory (this, cfg, lang)) : _memory); 
+		? (_memory = new MSX::Memory (this /** The model. */, cfg, lang)) : _memory);
 }
 
 // ---
@@ -18,9 +27,10 @@ MCHEmul::Chips MSX::MSXModel::createChips () const
 {
 	MCHEmul::Chips result;
 
-    // Add the graphical chip...
-    _vdp = const_cast <MSX::VDP*> (vdp ()); // It doesn't own it...
-    result.insert (MCHEmul::Chips::value_type (_vdp -> id(), (MCHEmul::Chip*) _vdp));
+    // Add the Graphical Chip....
+    _vdp = const_cast <MSX::VDP*> (vdp ());
+    result.insert (MCHEmul::Chips::value_type (_vdp -> id (), 
+		(MCHEmul::Chip*) _vdp -> graphicalChip ()));
 
 	// TODO: Sound chip...
 
@@ -39,7 +49,7 @@ MCHEmul::IODevices MSX::MSXModel::createIODevices () const
 			(screenFrequency (), 
 			 vdp () -> numberColumns (), 
 			 vdp () -> numberRows (),
-			 const_cast <MSX::VDP*> (vdp ()), // To avoid the cast...
+			 const_cast <MSX::VDP*> (vdp ()), // To avoid the const returned...
 			 { 
 				{"Name", "Screen" }, 
 				{ "Type", "Output" }, 
@@ -161,8 +171,11 @@ MCHEmul::Attributes MSX::MSXStdModel::attributes () const
 // ---
 MSX::VDP* MSX::MSXStdModel::createVDP () const
 {
-	// The standard model is always PAL...
-	return (new MSX::VDP_PAL (clockSpeed (), new MSX::VDPBehaviour ()));
+	// The standard model is always PAL and based on a Texas Instruments basic chip...
+	// Notice that VDP doesn't own the graphical chip behind...
+	return (new MSX::VDP_TMS99xxFamily
+		(new TEXASINSTRUMENTS::TMS9929A 
+			(nullptr /** Created internally. */, 2 /** 2 times quicked than CPU. */, FZ80::INTInterrupt::_ID)));
 }
 
 // ---
@@ -211,8 +224,14 @@ MCHEmul::Attributes MSX::SVI728::attributes () const
 MSX::VDP* MSX::SVI728::createVDP () const
 {
 	return ((visualSystem () == MSX::MSXModel::VisualSystem::_PAL) 
-			? (MSX::VDP*) new MSX::VDP_PAL  (clockSpeed (), new MSX::VDPBehaviour ())
-			: (MSX::VDP*) new MSX::VDP_NTSC (clockSpeed (), new MSX::VDPBehaviour ()));
+			? (MSX::VDP*) new MSX::VDP_TMS99xxFamily
+				(new TEXASINSTRUMENTS::TMS9929A 
+					(nullptr /** Created internally. */, 2 /** 2 times quicker than CPU. */, 
+						FZ80::INTInterrupt::_ID /** INT. */))
+			: (MSX::VDP*) new MSX::VDP_TMS99xxFamily 
+				(new TEXASINSTRUMENTS::TMS9918A 
+					(nullptr /** Created internally. */, 2 /** 2 times quicker than CPU. */, 
+						FZ80::INTInterrupt::_ID /** INT. */)));
 }
 
 // ---
@@ -229,6 +248,8 @@ MCHEmul::Chips MSX::SVI728::createChips () const
 MCHEmul::IODevices MSX::SVI728::createIODevices () const
 {
 	MCHEmul::IODevices result = std::move (MSX::MSXModel::createIODevices ());
+
+	// TODO
 
 	return (result);
 }
@@ -283,9 +304,9 @@ MCHEmul::Attributes MSX::SVI738::attributes () const
 // ---
 MSX::VDP* MSX::SVI738::createVDP () const
 {
-	return ((visualSystem () == MSX::MSXModel::VisualSystem::_PAL) 
-			? (MSX::VDP*) new MSX::VDP_PAL  (clockSpeed (), new MSX::VDPBehaviourMSX2)
-			: (MSX::VDP*) new MSX::VDP_NTSC (clockSpeed (), new MSX::VDPBehaviourMSX2));
+	// TODO
+
+	return (nullptr);
 }
 
 // ---
@@ -302,6 +323,8 @@ MCHEmul::Chips MSX::SVI738::createChips () const
 MCHEmul::IODevices MSX::SVI738::createIODevices () const
 {
 	MCHEmul::IODevices result = std::move (MSX::MSXModel::createIODevices ());
+
+	// TODO
 
 	return (result);
 }

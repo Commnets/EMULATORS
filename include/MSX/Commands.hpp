@@ -19,7 +19,24 @@
 
 namespace MSX
 {
-	// TODO
+	/** To get the status of the VDP chip. */
+	class VDPStatusCommand final : public MCHEmul::Command
+	{
+		public:
+		static const int _ID = 100;
+		static const std::string _NAME;
+	
+		VDPStatusCommand ()
+			: MCHEmul::Command (_ID, _NAME)
+							{ }
+
+		virtual bool canBeExecuted () const override
+							{ return (_parameters.size () == 0); }
+
+		private:
+		virtual void executeImpl (MCHEmul::CommandExecuter* cE, 
+			MCHEmul::Computer* c, MCHEmul::InfoStructure& rst) override;
+	};
 }
 
 #endif

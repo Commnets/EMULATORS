@@ -43,33 +43,33 @@
     <Filter Include="Archivos de encabezado\Motherboard\Chips">
       <UniqueIdentifier>{7bcc6008-01c4-44f3-8655-62bbe3b5823f}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Archivos de encabezado\Motherboard\Chips\TMS99XX">
+    <Filter Include="Archivos de encabezado\Motherboard\Chips\TMS99xxFamily">
       <UniqueIdentifier>{a330117c-df8f-41b0-b332-68026b77b201}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Archivos de origen\Motherboard\Chips\TMS99XX">
+    <Filter Include="Archivos de origen\Motherboard\Chips\TMS99xxFamily">
       <UniqueIdentifier>{2123a055-f950-4b4d-8fe9-38089c236a08}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\include\TEXASINST\incs.hpp">
-      <Filter>Archivos de encabezado\Motherboard</Filter>
+    <ClInclude Include="..\..\include\TEXASINSTRUMENTS\incs.hpp">
+      <Filter>Archivos de encabezado</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\include\TEXASINST\TMS99XX\incs.hpp">
-      <Filter>Archivos de encabezado\Motherboard\Chips\TMS99XX</Filter>
+    <ClInclude Include="..\..\include\TEXASINSTRUMENTS\TMS99xxFamily\incs.hpp">
+      <Filter>Archivos de encabezado\Motherboard\Chips\TMS99xxFamily</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\include\TEXASINST\TMS99XX\TMS99XX.hpp">
-      <Filter>Archivos de encabezado\Motherboard\Chips\TMS99XX</Filter>
+    <ClInclude Include="..\..\include\TEXASINSTRUMENTS\TMS99xxFamily\TMS99xxFamily.hpp">
+      <Filter>Archivos de encabezado\Motherboard\Chips\TMS99xxFamily</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\include\TEXASINST\TMS99XX\TMS99XXRegisters.hpp">
-      <Filter>Archivos de encabezado\Motherboard\Chips\TMS99XX</Filter>
+    <ClInclude Include="..\..\include\TEXASINSTRUMENTS\TMS99xxFamily\TMS99xxFamilyRegisters.hpp">
+      <Filter>Archivos de encabezado\Motherboard\Chips\TMS99xxFamily</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\src\TEXASINST\TMS99XX\TMS99XX.cpp">
-      <Filter>Archivos de origen\Motherboard\Chips\TMS99XX</Filter>
+    <ClCompile Include="..\..\src\TEXASINSTRUMENTS\TMS99xxFamily\TMS99xxFamily.cpp">
+      <Filter>Archivos de origen\Motherboard\Chips\TMS99xxFamily</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\TEXASINST\TMS99XX\TMS99XXRegisters.cpp">
-      <Filter>Archivos de origen\Motherboard\Chips\TMS99XX</Filter>
+    <ClCompile Include="..\..\src\TEXASINSTRUMENTS\TMS99xxFamily\TMS99xxFamilyRegisters.cpp">
+      <Filter>Archivos de origen\Motherboard\Chips\TMS99xxFamily</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

@@ -16,6 +16,7 @@
 
 #include <FZ80/incs.hpp>
 #include <EMULATORS/incs.hpp>
+#include <TEXASINSTRUMENTS/incs.hpp>
 #include <MSX/Model.hpp>
 #include <MSX/CommandBuilder.hpp>
 #include <MSX/Commands.hpp>
@@ -26,10 +27,9 @@
 #include <MSX/Sound.hpp>
 #include <MSX/OSIO.hpp>
 #include <MSX/PortManager.hpp>
-#include <MSX/VDP.hpp>
-#include <MSX/VDPBehaviour.hpp>
 #include <MSX/MSX.hpp>
 #include <MSX/MSXEmulator.hpp>
+#include <MSX/VDP.hpp>
 
 #endif
 

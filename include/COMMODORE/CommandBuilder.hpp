@@ -7,7 +7,7 @@
  *	Framework: CPU Emulators library \n
  *	Author: Ignacio Cea Fornies (EMULATORS library) \n
  *	Creation Date: 01/10/2022 \n
- *	Description: To build specific command in a C64 environment.
+ *	Description: To build specific command in a COMMODORE environment.
  *	Versions: 1.0 Initial
  */
 

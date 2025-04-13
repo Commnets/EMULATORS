@@ -1,0 +1,47 @@
+#Formats Associated to Texas Instruments Commands
+#(C) 2025 Ignacio Cea Fornies
+?./Standard.fmt
+#---
+;Registers
+@BYTES{blocksize=16,listsep=\,,tablesep=\ ,minsize=2}@
+#---
+#---
+;RasterX
+Position:@POSITION@(@POSITION0@)
+First:@FIRST@, Last:@LAST@
+#---
+#---
+;RasterY
+Position:@POSITION@(@POSITION0@)
+First:@FIRST@, Last:@LAST@
+#---
+#---
+;Raster
+->Raster Horizontal:
+@RasterX>@
+->Raster Vertical:
+@RasterY>@
+#---
+#---
+;TMS9918ARegisters
+GraphicMode:@GraphicMode@
+External Video:@ExternalVideo@
+16k Video RAM:@16kVideo@
+Blank Screen:@BlankScreen@
+Sprites 16 Pixels:@Sprites16pixels@
+Sprites Enlarged:@SpritesEnlarged@
+Launch Interrupt:@LaunchInterrupt@
+Memory:@NameAddress@, @ColorAddress@, @PatternAddress@, @SpriteAddress@, @SpriteAttrsAddress@, @SpriteGenAddress@
+Color:@TextColor@, @BackdropColor@
+->Video Memory:
+Meory Size:@MemSize@ Bytes
+@BYTES{blocksize=16,listsep=\,,tablesep=\ ,minsize=2}@
+#---
+#---
+;TMS9918A
+Id:@ID@
+@ATTRS?{key=YES,equal=:,empty=no attributes}\n@
+->TMS9918 Registers:
+@TMS9918ARegisters>@
+@Raster>@
+#---

@@ -19,14 +19,14 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\include\TEXASINST\incs.hpp" />
-    <ClInclude Include="..\..\include\TEXASINST\TMS99XX\incs.hpp" />
-    <ClInclude Include="..\..\include\TEXASINST\TMS99XX\TMS99XX.hpp" />
-    <ClInclude Include="..\..\include\TEXASINST\TMS99XX\TMS99XXRegisters.hpp" />
+    <ClInclude Include="..\..\include\TEXASINSTRUMENTS\incs.hpp" />
+    <ClInclude Include="..\..\include\TEXASINSTRUMENTS\TMS99xxFamily\incs.hpp" />
+    <ClInclude Include="..\..\include\TEXASINSTRUMENTS\TMS99xxFamily\TMS99xxFamily.hpp" />
+    <ClInclude Include="..\..\include\TEXASINSTRUMENTS\TMS99xxFamily\TMS99xxFamilyRegisters.hpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\src\TEXASINST\TMS99XX\TMS99XX.cpp" />
-    <ClCompile Include="..\..\src\TEXASINST\TMS99XX\TMS99XXRegisters.cpp" />
+    <ClCompile Include="..\..\src\TEXASINSTRUMENTS\TMS99xxFamily\TMS99xxFamily.cpp" />
+    <ClCompile Include="..\..\src\TEXASINSTRUMENTS\TMS99xxFamily\TMS99xxFamilyRegisters.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>

@@ -268,16 +268,32 @@ std::string MCHEmul::StdFormatter::ArrayPiece::format (const MCHEmul::InfoStruct
 // ---
 std::string MCHEmul::StdFormatter::InvokePiece::format (const MCHEmul::InfoStructure& iS) const
 {
-	if (!iS.existsInfoStructure (_name))
-		return ("");
+	std::string result = "";
 
-	MCHEmul::InfoStructure sIS = iS.infoStructure (_name);
-	const std::shared_ptr <MCHEmul::StdFormatter>& sFmter = 
-		std::static_pointer_cast <MCHEmul::StdFormatter> (MCHEmul::FormatterBuilder::instance () -> formatter (_name));
-	if (sFmter == nullptr)
-		return (""); // Not valid...
+	// If the redirection is over .CLASS
+	// Look for a formatter with the name of the class and then print it out!
+	if (_name == ".CLASS")
+	{
+		const std::shared_ptr <MCHEmul::StdFormatter>& sFmter = 
+			std::static_pointer_cast <MCHEmul::StdFormatter> (MCHEmul::FormatterBuilder::instance () -> 
+				formatter (iS.attribute (".CLASSNAME")));
+		if (sFmter != nullptr)
+			result = sFmter -> format (iS) + _post;
+	}
+	// ...otherwise the redirection is applied over the attribute pointed out!
+	else
+	{
+		if (iS.existsInfoStructure (_name))
+		{
+			MCHEmul::InfoStructure sIS = iS.infoStructure (_name);
+			const std::shared_ptr <MCHEmul::StdFormatter>& sFmter = 
+				std::static_pointer_cast <MCHEmul::StdFormatter> (MCHEmul::FormatterBuilder::instance () -> formatter (_name));
+			if (sFmter != nullptr)
+				result = sFmter -> format (sIS) + _post;
+		}
+	}
 
-	return (sFmter -> format (sIS) + _post);
+	return (result);
 }
 
 // ---

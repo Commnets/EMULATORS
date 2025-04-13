@@ -7,7 +7,8 @@
  *	Framework: CPU Emulators library \n
  *	Author: Ignacio Cea Fornies (EMULATORS library) \n
  *	Creation Date: 09/08/2024 \n
- *	Description: Type: The "real" computer this emulation is working for...There are many MSXs!
+ *	Description: This class represents the "real" computer this emulation is working for...
+ *				 There had been many MSXs types along history!
  *	Versions: 1.0 Initial
  *	Based on: https://sinclair.wiki.zxnet.co.uk/wiki/ROM_images and 
  *			  https://www.msx.org/wiki/Category:MSX_systems
@@ -25,7 +26,7 @@ namespace MSX
 
 	/** There are many types of MSX computers and 
 		with different behaviour and characteristicis. \n
-		The Model is not the owner of any element that creates. */
+		The Model is not the owner of any element that creates! */
 	class MSXModel
 	{
 		public:
@@ -35,25 +36,27 @@ namespace MSX
 
 		enum class Generation 
 		{ 
-			MSX1 = 0,	// First generation of MSX standard...
+			MSX1 = 0,	// First generation of MSX
 			MSX2 = 1
 		};
 
 		MSXModel ()
-			: _vdp (nullptr),
+			: _vdp (nullptr), // @see VDP class
 			  _chips (),
 			  _ioDevices (),
 			  _memory (nullptr)
 							{ }
 
-		// The model is not the owner of any element of the machine, 
-		// but just the machine itself. So the destructor is empty.
+		/** The model is not the owner of any element of the machine,
+			but just the VDP wrapper that is created when incoking first time the method vdp (). */
+		virtual ~MSXModel ();
 
 		virtual Generation generation () const = 0;
 
 		virtual VisualSystem visualSystem () const = 0;
 
-		/** Can be overloaded, but those are the ones by default. */
+		/** Can be overloaded, 
+			but the default frequency is very standard in the market. */
 		virtual double screenFrequency () const
 							{ return ((visualSystem () == VisualSystem::_NTSC) ? 60.03f : 50.04); }
 
@@ -65,8 +68,9 @@ namespace MSX
 		/** To get the clock speed. */
 		virtual unsigned int clockSpeed () const = 0;
 
-		/** Related with the configurations possible. 
-			By default only one configuration (the basic one) is allowed. */
+		/** Related with the configurations possible for a specific model \n 
+			By default only one configuration (the basic one) is allowed. \n
+			That basic configuration is defined with the number 0. */
 		virtual bool admitConfiguration (unsigned int cfg) const
 							{ return (cfg == 0); }
 		virtual unsigned int basicConfiguration () const
@@ -75,32 +79,41 @@ namespace MSX
 							{ return (admitConfiguration (cfg)
 								? cfg : basicConfiguration ()); }
 
-		/** To get the right used as VDP in the model. \n
+		/** To get the VDP used in the model. \n
 			First time this method is invoked the VDP is created. \n
-			But remember that the VDP doesn't own to this class but the Computer. */
+			VDP is a wrapper over the real graphical chip. \n
+			The VDP belongs to this class but not the graphical chip that is wrapped, 
+			that must belong to the computer as part of the chips managed by it. \n
+			So never forget to add it inside the list returned by the method chips (). @see above */
 		VDP* vdp () 
 							{ return ((_vdp == nullptr) ? _vdp = createVDP () : _vdp); }
 		const VDP* vdp () const
 							{ return (const_cast <MSXModel*> (this) -> vdp ()); }
 
 		/** To get the chips that this model is made up of. \n
-			Ths first time this routine is invoked, the chips are created. */
+			Ths first time this routine is invoked, the chips are created. \n
+			Never forget to include the graphical chip created with the VDP. */
 		const MCHEmul::Chips& chips () const
 							{ return (_chips.empty () ? (_chips = createChips ()) : _chips); }
 		/** Same for the IO devices. */
 		const MCHEmul::IODevices& ioDevices () const
 							{ return (_ioDevices.empty () ? (_ioDevices = createIODevices ()) : _ioDevices); }
 
-		/** To get the memory. \n
-			This will invoke the methods below. */
+		/** To get the memory of the system. \n
+			First time ois invoked the content memoty is created using the method memoryContent. */
 		Memory* memory (unsigned int cfg, const std::string& lang);
 
 		protected:
+		/** This is pure virtual. Every model has to define its own. */
 		virtual VDP* createVDP () const = 0;
+		/** The default version creates the basic chips: Video & Sound. \n
+			It can be anyway overloaded to add specific chips per MSX model. */
 		virtual MCHEmul::Chips createChips () const;
+		/** The default version creates the basic io devices: Screen, Speakers and Keyboard. \n
+			It can be overloaded anyway. */
 		virtual MCHEmul::IODevices createIODevices () const;
 
-		// This method are invoked from the construction of the memory element (above)...
+		// All these methods are invoked from the construction of the memory element (above)...
 		/** Gets the structure of the memory. \n
 			It can be overloaded, but the default basic standard structure is createde here. \n
 			The basic memory structure is made up of 4 slots witch 4 subslots each and 4 different banks each.
@@ -124,7 +137,7 @@ namespace MSX
 	};
 
 	/** The first generation of MSX standard. */
-	class MSXModel1 : public MSXModel
+	class MSX1Model : public MSXModel
 	{
 		public:
 		static const unsigned int _CLOCKSPEED = 3580000000; // 3,58MHz
@@ -138,7 +151,7 @@ namespace MSX
 
 	/** The very standard model. 
 		It is used when the right parameters are not passed to the program. */
-	class MSXStdModel final : public MSXModel1
+	class MSXStdModel final : public MSX1Model
 	{
 		public:
 		virtual VisualSystem visualSystem () const override
@@ -161,11 +174,11 @@ namespace MSX
 	};
 
 	/** Spectravideo 728. */
-	class SVI728 final : public MSXModel1
+	class SVI728 final : public MSX1Model
 	{
 		public:
 		SVI728 (VisualSystem vs)
-			: MSXModel1 (),
+			: MSX1Model (),
 			  _visualSystem (vs)
 							{ }
 
@@ -192,11 +205,11 @@ namespace MSX
 	};
 
 	/** Spectravideo 738. */
-	class SVI738 final : public MSXModel1
+	class SVI738 final : public MSX1Model
 	{
 		public:
 		SVI738 (VisualSystem vs)
-			: MSXModel1 (),
+			: MSX1Model (),
 			  _visualSystem (vs)
 							{ }
 
@@ -223,7 +236,7 @@ namespace MSX
 	};
 
 	/** The second generation of MSX standard. */
-	class MSXModel2 : public MSXModel
+	class MSX2Model : public MSXModel
 	{
 		public:
 		static const unsigned int _CLOCKSPEED = 3580000000; // 3,58MHz

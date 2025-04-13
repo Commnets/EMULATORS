@@ -309,11 +309,11 @@ DEL .\emulators\MSXEmulatorC\MSXRConsole.hlp
 COPY .\projects\MSX\*.hlp .\monitors\RMSXConsole\ /Y
 DEL .\monitors\RMSXConsole\MSX.hlp
 RENAME .\monitors\RMSXConsole\MSXRConsole.hlp MSX.hlp
-COPY .\projects\SINCLAIR\*.fmt .\emulators\MSXEmulatorC\ /Y
-COPY .\projects\SINCLAIR\*.fmt .\emulators\MSXEmulator\ /Y
-COPY .\projects\SINCLAIR\*.fmt .\monitors\RMSXConsole\ /Y
-COPY .\projects\SINCLAIR\*.hlp .\emulators\MSXEmulatorC\ /Y
-COPY .\projects\SINCLAIR\*.hlp .\monitors\RMSXConsole\ /Y
+COPY .\projects\TEXASINSTRUMENTS\*.fmt .\emulators\MSXEmulatorC\ /Y
+COPY .\projects\TEXASINSTRUMENTS\*.fmt .\emulators\MSXEmulator\ /Y
+COPY .\projects\TEXASINSTRUMENTS\*.fmt .\monitors\RMSXConsole\ /Y
+COPY .\projects\TEXASINSTRUMENTS\*.hlp .\emulators\MSXEmulatorC\ /Y
+COPY .\projects\TEXASINSTRUMENTS\*.hlp .\monitors\RMSXConsole\ /Y
 COPY .\projects\CONSOLE\*.fmt .\emulators\MSXEmulatorC\ /Y
 COPY .\projects\CONSOLE\*.hlp .\emulators\MSXEmulatorC\ /Y
 COPY .\projects\CORE\*.fmt .\emulators\MSXEmulatorC\ /Y
@@ -350,7 +350,7 @@ Echo --------------------------------------------------------------------
 Echo PHASE 3: Instalation files 
 Echo --------------------------------------------------------------------
 Echo ********************************************************************
-Echo 3.1: CBM64
+Echo 3.1: C64
 Echo ********************************************************************
 COPY .\exe\x86\C64Emulator.exe .\setups\C64\ /Y
 COPY .\exe\x86\C64EmulatorC.exe .\setups\C64\ /Y
@@ -473,8 +473,8 @@ COPY .\emulators\MSXCommons\*.* .\setups\MSX\ /Y
 COPY .\projects\MSX\*.fmt .\setups\MSX\ /Y
 COPY .\projects\MSX\*.hlp .\setups\MSX\ /Y
 COPY .\projects\MSX\*.def .\setups\MSX\ /Y
-COPY .\projects\SINCLAIR\*.fmt .\setups\MSX\ /Y
-COPY .\projects\SINCLAIR\*.hlp .\setups\MSX\ /Y
+COPY .\projects\TEXASINSTRUMENTS\*.fmt .\setups\MSX\ /Y
+COPY .\projects\TEXASINSTRUMENTS\*.hlp .\setups\MSX\ /Y
 COPY .\projects\CONSOLE\*.fmt .\setups\MSX\ /Y
 COPY .\projects\CONSOLE\*.hlp .\setups\MSX\ /Y
 COPY .\projects\CORE\*.fmt .\setups\MSX\ /Y

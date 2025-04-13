@@ -1,84 +1,47 @@
 #include <MSX/PortManager.hpp>
 #include <MSX/VDP.hpp>
 
-const std::string MSX::PortManager::_NAME = "ZX81 PortManager";
+const std::string MSX::GeneralPortManager::_NAME = "MSX General PortManager";
+const std::string MSX::VDPPortManager::_NAME = "MSX VDP PortManager";
 
 // ---
-MSX::PortManager::PortManager ()
+MSX::GeneralPortManager::GeneralPortManager ()
 	: FZ80::Z80Port (_ID, _NAME,
 		{ { "Name", "General Port Manager" },
-		  { "Description", "Class to manage all MSX port iteractions" }
+		  { "Description", "Class to manage MSX iteractions with posts not mapped against any device" }
 		})
 {
-	setClassName ("PortManager");
+	setClassName ("GeneralPortManager");
 }
 
 // ---
-void MSX::PortManager::setValue (unsigned short ab, unsigned char id, const MCHEmul::UByte& v)
-{
-	// Depending on the port the chip affected will be one or another...
-	switch (id)
-	{
-		// VDP Ports
-		case 0x98:
-		case 0x99:
-		case 0x9B:
-		case 0x9C:
-		case 0x9D:
-		case 0x9E:
-		case 0x9F:
-			{
-				_vdp -> setPortValue (id - 0x98, v);
-			}
-
-			break;
-
-		// TODO
-
-		// It shouldn't be here...
-		default:
-			{
-				_LOG ("Port not implemented: " + std::to_string (id));
-			}
-	}
+MCHEmul::UByte MSX::GeneralPortManager::value (unsigned short ab, unsigned char id) const
+{ 
+	_LOG ("Port " + std::to_string (id) + " not implemented"); 
+	
+	return (MCHEmul::UByte::_0); 
 }
 
 // ---
-MCHEmul::UByte MSX::PortManager::getValue (unsigned short ab, unsigned char id, bool ms) const
-{
-	MCHEmul::UByte result = 0x00;
-
-	// Depending on the port the chip affected will be one or another...
-	switch (id)
-	{
-		// VDP Ports: From 0x98 to 0x9F
-		case 0x98:
-		case 0x99:
-		case 0x9B:
-		case 0x9C:
-		case 0x9D:
-		case 0x9E:
-		case 0x9F:
-			{
-				result = _vdp -> readPortValue (id - 0x98);
-			}
-
-			break;
-
-		// TODO
-
-		// It shouldn't be here...
-		default:
-			{
-				_LOG ("Port not implemented: " + std::to_string (id));
-			}
-	}
-
-	return (result);
+void MSX::GeneralPortManager::setValue (unsigned short ab, unsigned char id, const MCHEmul::UByte& v)
+{ 
+	_LOG ("Port " + std::to_string (id) + " not implemented"); 
 }
 
 // ---
-void MSX::PortManager::initialize ()
+MSX::VDPPortManager::VDPPortManager ()
+	: FZ80::Z80Port (_ID, _NAME,
+		{ { "Name", "VDP Port Manager" },
+		  { "Description", "Class to manage MSX iteractions with ports mapped to VDP chip" }
+		})
 {
+	setClassName ("VDPPortManager");
+}
+
+// ---
+void MSX::VDPPortManager::initialize ()
+{
+	FZ80::Z80Port::initialize ();
+
 	// TODO
 }

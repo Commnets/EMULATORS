@@ -1,3 +1,7 @@
 #MSX Local Console Commands
 #(C) 2025 Ignacio Cea Fornies
 ?./LocalConsole.hlp
+?./TexasInstruments.hlp
+;VDP
+Printout the status of the VDP.
+No parameters needed.

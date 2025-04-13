@@ -17,6 +17,7 @@
 #include <CORE/incs.hpp>
 #include <MSX/Model.hpp>
 #include <MSX/Memory.hpp>
+#include <MSX/VDP.hpp>
 
 namespace MSX
 {
@@ -27,10 +28,17 @@ namespace MSX
 		MSXComputer (MSXModel* m, unsigned int cfg,
 			const std::string& lang = MCHEmul::_DEFAULTLANGUAGE);
 
+		/** To get the model. */
 		const MSXModel* model () const
 							{ return (_model); }
 		MSXModel* model ()
 							{ return (_model); }
+
+		/** To get a refence to the vdp chip. */
+		const VDP* vdp () const
+							{ return (_model -> vdp ()); }
+		VDP* vdp ()
+							{ return (_model -> vdp ()); }
 
 		// To get snapshots of the memory...
 		// They are used in some commands...

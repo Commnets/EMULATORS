@@ -87,9 +87,6 @@
     <ClInclude Include="..\..\include\MSX\VDP.hpp">
       <Filter>Archivos de encabezado\Motherboard\Chips</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\include\MSX\VDPBehaviour.hpp">
-      <Filter>Archivos de encabezado\Motherboard\Chips</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\MSX\CommandBuilder.cpp">
@@ -129,9 +126,6 @@
       <Filter>Archivos de origen\Motherboard</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\MSX\VDP.cpp">
-      <Filter>Archivos de origen\Motherboard\Chips</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\MSX\VDPBehaviour.cpp">
       <Filter>Archivos de origen\Motherboard\Chips</Filter>
     </ClCompile>
   </ItemGroup>

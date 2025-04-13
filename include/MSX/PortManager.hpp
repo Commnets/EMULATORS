@@ -16,25 +16,39 @@
 
 #include <CORE/incs.hpp>
 #include <FZ80/incs.hpp>
+#include <MSX/VDP.hpp>
 
 namespace MSX
 {
-	class VDP;
-
-	/** Generic Port to manage all... */
-	class PortManager final : public FZ80::Z80Port
+	/** Generic Port Manager to manage blocks (groups) of ports that 
+		are neither still implemented nor linked to any device. */
+	class GeneralPortManager final : public FZ80::Z80Port
 	{
 		public:
 		static const int _ID = 0;
 		static const std::string _NAME;
 
-		PortManager ();
+		GeneralPortManager ();
+
+		virtual MCHEmul::UByte value (unsigned short ab, unsigned char id) const override;
+		virtual void setValue (unsigned short ab, unsigned char id, const MCHEmul::UByte& v) override;
+	};
+
+	/** Port Manager to manage block (groups) of ports linked with the VDP. */
+	class VDPPortManager final : public FZ80::Z80Port
+	{
+		public:
+		static const int _ID = 1;
+		static const std::string _NAME;
+
+		VDPPortManager ();
 
 		virtual MCHEmul::UByte value (unsigned short ab, unsigned char id) const override
-							{ return (getValue (ab, id, true)); }
+							{ return (_vdp -> readRegister (id - 0x98)); }
 		virtual MCHEmul::UByte peekValue (unsigned short ab, unsigned char id) const override
-							{ return (getValue (ab, id, false)); }
-		virtual void setValue (unsigned short ab, unsigned char id, const MCHEmul::UByte& v) override;
+							{ return (_vdp -> peekRegister (id - 0x98)); }
+		virtual void setValue (unsigned short ab, unsigned char id, const MCHEmul::UByte& v) override
+							{ _vdp -> setRegister (id - 0x98, v); }
 
 		virtual void initialize () override;
 
@@ -42,10 +56,6 @@ namespace MSX
 			They are not the owner of the port manager. */
 		void linkVDP (VDP* vdp)
 							{ _vdp = vdp; }
-
-		private:
-		/** ms = true when is is wanted to modify the internal status. */
-		MCHEmul::UByte getValue (unsigned short ab, unsigned char id, bool ms = false) const;
 
 		private:
 		/** The VDP. */
