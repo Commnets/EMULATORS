@@ -37,10 +37,10 @@ MSX::MSXComputer::MSXComputer (MSX::MSXModel* m, unsigned int cfg,
 	FZ80::Z80PortsMap pMps;
 	for (unsigned short i = 0; i < 256; i++)
 		pMps.insert (FZ80::Z80PortsMap::value_type ((unsigned char) i, 
-			(i >= 0x98 && i < 0xa0)
-				? (FZ80::Z80Port*) vdpPM		// When the port is related with the VDP...
-				: (i >= 0xa8 && i < 0xb0)
-					? (FZ80::Z80Port*) ppiPM	// When the port is related with the PPI...
+			(i >= 0x98 && i < 0xa0)				// 8 positions...
+				? (FZ80::Z80Port*) vdpPM		// ...when the port is related with the VDP...
+				: (i >= 0xa8 && i < 0xb0)		// 8 position...
+					? (FZ80::Z80Port*) ppiPM	// ...when the port is related with the PPI...
 					: (FZ80::Z80Port*) gPM));	// In any other case...
 	static_cast <FZ80::CZ80*> (cpu ()) -> addPorts (pMps);
 
@@ -58,8 +58,9 @@ bool MSX::MSXComputer::initialize (bool iM)
 	setConfiguration (static_cast <MSX::Memory*> 
 		(memory ()) -> configuration (), false /** Not restart. */);
 
-	// TODO: Observe directly devices, peripherals, chips...
-	// TODO: Manage the conexion of the cartridge
+	// Observe the PPI that manages, among other thigs, 
+	// the changes in the configuration of the memory...
+	observe (chip (MSX::PPI8255::_ID));
 
 	return (true);
 }
@@ -67,8 +68,18 @@ bool MSX::MSXComputer::initialize (bool iM)
 // ---
 void MSX::MSXComputer::processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifier* n)
 {
-	// TODO: Normally when a cartrodge is connected then the 
-	// memory configuration changes and everything has to start up back
+	MCHEmul::Computer::processEvent (evnt, n);
+
+	// Manage the changes in the configuration of the memory....
+	if (evnt.id () == MSX::PPI8255::_SLOTCHANGED)
+	{
+		static_cast <MSX::Memory*> (memory ()) -> 
+			activeSlotsPerBank 
+				((evnt.value () & 0x03),		// Slot active in bank 0
+				 (evnt.value () & 0x0c) >> 2,	// Slot active in bank 1 
+				 (evnt.value () & 0x30) >> 4,	// Slot active in bank 2
+				 (evnt.value () & 0xc0) >> 6);	// Slot active in bank 3
+	}
 }
 
 // ---

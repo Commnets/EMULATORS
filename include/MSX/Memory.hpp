@@ -21,12 +21,97 @@ namespace MSX
 {
 	class MSXComputer;
 
-	/** The memory itself for the MSX. \n
-		The memory is made up of elements (RAM, cartridge, Disks,...) connected in 4 slots and 4 subslots possible. \n
+	/** This class represents the subslot subsregisters that can be read from the memory of the MSX. \n
+		When at the bank 3 (0xc000 - 0xffff) the slot connected has "nothing" there, 
+		the position 0xffff has "subslots" that are connected to the different banks. \n
+		This class leeps that information with a Singleton design pattern and ten can be accessed from anyplace. \n
+		The object is instanciated in the Memory constructor and destroyed in the Memory destructor. */
+	class SubSlotRegisters final
+	{
+		public:
+		static SubSlotRegisters* instance ()
+							{ return ((_instance == nullptr) 
+								? _instance = new SubSlotRegisters : _instance); }
+		static void destroyInstance ()
+							{ delete (_instance); _instance = nullptr; }
+
+		void setSubSlotRegister (size_t nR, const MCHEmul::UByte& v)
+							{ _subSlotRegister [nR] = v; }
+		const MCHEmul::UByte& subSlotRegister (size_t nR) const
+							{ return (_subSlotRegister [nR]); }
+
+		private:
+		// Declared private to implement the Singleton design pattern...
+		SubSlotRegisters ()
+			: _subSlotRegister { MCHEmul::UByte::_0, MCHEmul::UByte::_0, 
+								 MCHEmul::UByte::_0, MCHEmul::UByte::_0 }
+							{ }
+
+		private:
+		/** A reference to the instance created. */
+		static SubSlotRegisters* _instance;
+		/** The value of the subSlot registers. */
+		MCHEmul::UByte _subSlotRegister [4]; // 1 per slot...
+	};
+
+	/** Create a special empty phisical storage that can work as a stack. \n
+		This makes no sense from a theoretical point of view, but in a MSX the stack could be located in that places. \n
+		This class is used to repesent a part of the memory (usually of 0x4000 bytes long or a multiple) that has nothing. \n
+		There must be one and only one of this (or someone inheriting from this) present at every bank of memory. \n
+		This situation is verified at construction time one the element _memoryElements is created. \n
+		The id received as parameter is very very special. \n
+		Has to be built using the method "firstIdMemoryElementFreeSlotSubSlot" that creates the id from the slot and subslot 
+		which the memory element belongs to. */
+	class EmptyPhysicalStorageSubset final : public MCHEmul::Stack
+	{
+		public:
+		EmptyPhysicalStorageSubset (int id, const MCHEmul::UByte& fV, 
+				MCHEmul::PhysicalStorage* ps, size_t pp, const MCHEmul::Address& iA, size_t s, 
+				const Configuration& cfg = MCHEmul::Stack::Configuration ());
+
+		private:
+		virtual void setValue (size_t nB, const MCHEmul::UByte& v) override
+							{  } // Does nothing...
+		virtual const MCHEmul::UByte& readValue (size_t nB) const override
+							{ return (_fixValue); } // ...and always returns the same value...
+
+		private:
+		MCHEmul::UByte _fixValue;
+	};
+
+	/** This class is simular to the previous one but representing the last accesible part of the memory. \n
+		This is special to be able to read the position 0xffff and other ones special when nothing is connected. */
+	class EmptyPhysicalStorageLastBankSubset final : public MCHEmul::Stack
+	{
+		public:
+		EmptyPhysicalStorageLastBankSubset (int id, const MCHEmul::UByte& fV, 
+				MCHEmul::PhysicalStorage* ps, size_t pp, const MCHEmul::Address& iA, size_t s, 
+				const Configuration& cfg = MCHEmul::Stack::Configuration ());
+
+		private:
+		virtual void setValue (size_t nB, const MCHEmul::UByte& v) override;
+		virtual const MCHEmul::UByte& readValue (size_t nB) const override;
+
+		private:
+		MCHEmul::UByte _fixValue;
+
+		// Implemetation
+		mutable MCHEmul::UByte _lastValueRead;
+		unsigned char _slotNumber;
+	};
+
+	/** The memory for the MSX. \n
+		The memory is made up of elements (RAM, cartridge, Disks,...) connected in 4 slots and 4 subslots possible each. \n
+		Those elements will be represented in the memory by a memory element that can be either RAM, ROM or nothing. \n
 		In other side, the memory accesible from the Z80 (64k) is splitted in 4 banks of 16k bytes each. \n
 		In each of these banks only one slot/subslot can be active at the same time,
-		an only one element cab ne active at that position simultaneously. \n
-		If there were not anything connected, the memory at that bank would be empty. */
+		an only one element can be active at that block of positions (bank) simultaneously. \n
+		If there were not anything connected, the memory at that bank would be empty. \n
+		The port 0xa8 (@see PPIPortManager class) is sused to select the active slot per block of memory. \n
+		In every slot, the position 0xffff is presented from the page 3 of the slot to indicate 
+		the active subslots per bank of memoty when the slot has a expander. \n
+		e.g. 0xffff will have 0b00000001 to indicate that the subslot 0 is active for banks 3,2 and 1 and the subslot 1 is active for bank 0. \n
+		Reading that position returns the value inverted when written. So reading it when there is no expansion will return 0x00. */
 	class Memory final : public MCHEmul::Memory
 	{
 		public:
@@ -67,9 +152,18 @@ namespace MSX
 		// The views of the memory...
 		static const int _CPU_VIEW = 0;	// The view from the CPU...
 
+		/** Given a memory element id, to get the slot, subslot and bank of a element id. 
+			This system is based on maintining a rigorous way of naming the memory elements. */
+		static inline void getSlotSubSlotAndBankForMemoryElement 
+			(int id, unsigned char& slot, unsigned char& sslot, unsigned char& bank);
+
 		/** Creates the memory based on the model, the configuartion and the language. 
-			The language is used mainly to load the right type of ROM. */
+			The language is used mainly to load the right type of ROM. \n
+			Creates the structure to keep the value of the subslots. */
 		Memory (MSXModel* m, unsigned int cfg, const std::string& lang);
+
+		/** Destroy the structure creates to maintain the value of the subSlot registers. */
+		~Memory ();
 
 		/** Gets the type. */
 		MSXModel* model () const
@@ -83,43 +177,61 @@ namespace MSX
 							{ _model -> configureMemory (this, cfg); }
 
 		// Knowing and managing the id of the elements connected in the memory...
-		/** To get the id base for a element connected in a slot and in a subslot. */
-		int idElementBaseSlotSubslot (unsigned char slot, unsigned char sslot) const
+		/** To get the id base for a memory element connected in a slot and in a subslot. */
+		int idMemoryElementBaseSlotSubSlot (unsigned char slot, unsigned char sslot) const
 							{ return (_SLOTSUBSLOTBASE_SUBSET + (slot * 100) + (sslot * 10)); }
-		/** To get the first id free in a slot and subslot to define and element. */
-		inline int firstIdElementFreeSlotSubSlot (unsigned char slot, unsigned char sslot) const;
+		/** To get the first memory id free in a slot and subslot to define and element. */
+		inline int firstIdMemoryElementFreeSlotSubSlot (unsigned char slot, unsigned char sslot) const;
 
-		// To desactivate elements connected in the slots and subslots per bank.
+		// To desactivate elements connected in the different slots and subslots per bank.
 		// These methods are used in running, so no boundary check is done.
-		/** Desactivate all elements connected in a bank of a subslot of a slot. \n
-			the parameter std indicates that either 
-			the EMPTY RAMs or ROM or 16k basic system are available in slot, subslot 0, bank 0,1 & 3. */
-		inline void desactivateElementsSubSlotAndBank 
+		/** Desactivate all memory elements connected in a bank of a subslot of a slot. \n
+			the parameter std indicates that either the EMPTY RAMs or ROM or 16k basic system 
+			are available in slot, subslot 0, bank 0,1 & 3 when everything else is desactivated there. */
+		inline void desactivateMemoryElementsSubSlotAndBank 
 			(unsigned char slot, unsigned char sslot, unsigned char bank, bool std = false);
-		/** Desactivate all elements in every bank of a subslot of a slot. */
-		void desactivateElementsSubSlot (unsigned char slot, unsigned char sslot, bool std = false)
+		/** Desactivate all memory elements in every bank of a subslot of a slot,
+			following the same rules described desactivateMemoryElementsSubSlotAndBank. */
+		void desactivateMemoryElementsSubSlot (unsigned char slot, unsigned char sslot, bool std = false)
 							{ for (unsigned char i = 0; i < 4; 
-								desactivateElementsSubSlotAndBank (slot, sslot, i++, std)); }
-		/** Desactivate all elements in every subslot and bank of a slot. */
-		void desactivateElementsSlot (unsigned char slot, bool std = false)
+								desactivateMemoryElementsSubSlotAndBank (slot, sslot, i++, std)); }
+		/** Desactivate all memory elements in every subslot and bank of a slot,
+			following the same rules described in desactivateMemoryElementsSubSlotAndBank. */
+		void desactivateMemoryElementsSlot (unsigned char slot, bool std = false)
 							{ for (unsigned char i = 0; i < 4; 
-								desactivateElementsSubSlot (slot, i++, std)); }
-		/** Desactivate all elements in all slots and subslots. */
-		void desactivateAllElements (bool std = false)
+								desactivateMemoryElementsSubSlot (slot, i++, std)); }
+		/** Desactivate all elements in all slots and subslots
+			following the same rules described int desactivateMemoryElementsSubSlotAndBank. */
+		void desactivateAllMemoryElements (bool std = false)
 							{ for (unsigned char i = 0; i < 4; 
-								desactivateElementsSlot (i++, std)); }
+								desactivateMemoryElementsSlot (i++, std)); }
 
-		// To connect elements in the memory...
-		/** To connect and element given by its id, only if it exists.
+		// To connect memory elements in the MSX...
+		/** To connect a memory element given by its id, only if it exists.
 			Desactivate all other elements connected in the same slot, subslot and bank, if any. */
-		inline void connectElement (int id);
-		/** To connect a copuple of elements. */
-		void connectElements (const std::vector <int>& ids)
-							{ for (const auto& i : ids) connectElement (i); }
+		inline void connectMemoryElement (int id);
+		/** To connect a set of elements in the MSX memory structure,
+			following the same rules described above. */
+		void connectMemoryElements (const std::vector <int>& ids)
+							{ for (const auto& i : ids) connectMemoryElement (i); }
+
+		// To change the memory configuration...
+		/** Active the memory element is a bank, slot and sublot.
+			Because there can be only a maximum of two elements in that situation and 
+			only one of them can be different than empty, activates it if that situation exists. \n
+			The method returns a reference to the element returned. */
+		MCHEmul::PhysicalStorageSubset* activeMemoryElementInSlotSubSlotAndBank 
+			(unsigned char slot, unsigned char sslot, unsigned char bank);
+		/** Change the slot active per bank of memory. \n 
+			Remember that in a subslot up to 4 differemt
+			The subslot finally selected (expanded) will depend on the last memory structure active. 
+			That memory structure is managed acting over direction $ffff of every slot (subslot register). 
+			@see in the definition of the class. */
+		void activeSlotsPerBank (unsigned char sb0, unsigned char sb1, unsigned char sb2, unsigned sb3);
 
 		/** Change the stack subset. */
 		void setStackSubset (int id)
-							{ _STACK_SUBSET = id; }
+							{ resetStack (); _STACK_SUBSET = id; }
 
 		/** To activate the right subsets in the CPU view. */
 		virtual bool initialize () override;
@@ -131,10 +243,10 @@ namespace MSX
 							{ return (view (_CPU_VIEW)); }
 
 		// Implementation
-		/** To get the slot, subslot and bank of a element id. */
-		inline void getSlotSubSlotAndBank (int id, unsigned char& slot, unsigned char& sslot, unsigned char& bank) const;
-		/** To create the internal _bank variable. */
-		void createBanks ();
+		/** To create the internal _memoryElements variable. 
+			There must be only one valid memory element (different than EmptyPhysicalStorage) per bank and subslot.
+			If the result follows this rule, the method returns true, and false in other circunstance. */
+		bool createBanks ();
 
 		private:
 		MSXModel* _model;
@@ -145,23 +257,35 @@ namespace MSX
 		MCHEmul::PhysicalStorageSubset* _ROM;
 		MCHEmul::PhysicalStorageSubset* _BASICRAM;
 		MCHEmul::PhysicalStorageSubset* _EMPTYBASICRAM;
-		/** The list of subsets that there is in every slot/subslot. \n
-			This class is not the woner of the elements in this cube. \n
+		/** The list of memory elements that there are in every slot/subslot/bank. \n
+			This class is not the owner of the elements in this cube. \n
 			The variable is filled up at construction time. */
-		MCHEmul::PhysicalStorageSubsetsList _bank [4][4][4];
+		MCHEmul::PhysicalStorageSubsetsList _memoryElements [4][4][4];
 		/** The id of the subset used for the stack... 
 			that will depend on the configuration! */
 		int _STACK_SUBSET;
 	};
 
 	// ---
-	inline int Memory::firstIdElementFreeSlotSubSlot (unsigned char slot, unsigned char sslot) const
+	inline void Memory::getSlotSubSlotAndBankForMemoryElement 
+		(int id, unsigned char& slot, unsigned char& sslot, unsigned char& bank)
+	{
+		slot = (unsigned char) (id / 100); slot--;
+		assert (slot >= 0 && slot < 4);		// Just in case...
+		sslot = (unsigned char) ((id % 100) / 10);
+		assert (sslot >= 0 && sslot < 4);	// Just in case...
+		bank = (unsigned char) (id % 10);
+		assert (bank >= 0 && bank < 4);		// Just in case...
+	}
+
+	// ---
+	inline int Memory::firstIdMemoryElementFreeSlotSubSlot (unsigned char slot, unsigned char sslot) const
 	{
 		bool found = false;
-		int result = idElementBaseSlotSubslot (slot, sslot);
+		int result = idMemoryElementBaseSlotSubSlot (slot, sslot);
 		for (size_t i = 0; i < 4; i++)
 		{
-			for (const auto& j : _bank [slot][sslot][i])
+			for (const auto& j : _memoryElements [slot][sslot][i])
 			{ 
 				found = true; // There is something...
 				if (j -> id () > result)
@@ -173,12 +297,12 @@ namespace MSX
 	}
 
 	// ---
-	inline void Memory::desactivateElementsSubSlotAndBank 
+	inline void Memory::desactivateMemoryElementsSubSlotAndBank 
 		(unsigned char slot, unsigned char sslot, unsigned char bank, bool std)
 	{
 		if (slot == 0 && sslot == 0)
 		{
-			for (const auto& i : _bank [slot][sslot][bank])
+			for (const auto& i : _memoryElements [slot][sslot][bank])
 				{ i -> setActive (false); i -> setActiveForReading (false); }
 			if (std)
 			{
@@ -189,7 +313,7 @@ namespace MSX
 		}
 		else
 		{
-			for (const auto& i : _bank [slot][sslot][bank])
+			for (const auto& i : _memoryElements [slot][sslot][bank])
 			{ 
 				bool a = std && // Activate the basic element when it is selected!
 					(dynamic_cast <MCHEmul::EmptyPhysicalStorageSubset*> (i) != nullptr);
@@ -201,7 +325,7 @@ namespace MSX
 	}
 
 	// ---
-	inline void Memory::connectElement (int id)
+	inline void Memory::connectMemoryElement (int id)
 	{
 		// First of all, does the element exist?
 		MCHEmul::PhysicalStorageSubset* elemt = subset (id);
@@ -211,25 +335,14 @@ namespace MSX
 		// An elements can be live in many banks attending to the size of the element...
 		// However the element is connected in only one bank at the same time...
 		unsigned char slot, sslot, bank;
-		getSlotSubSlotAndBank (id, slot, sslot, bank);
+		getSlotSubSlotAndBankForMemoryElement (id, slot, sslot, bank);
 
 		// Desactivate all other elements connected in the same slot, subslot and bank, if any...
-		desactivateElementsSubSlotAndBank (slot, sslot, bank);
+		desactivateMemoryElementsSubSlotAndBank (slot, sslot, bank);
 
 		// ...and finally connected the element...
 		elemt -> setActive (true);
 		elemt -> setActiveForReading (true);
-	}
-
-	// ---
-	inline void Memory::getSlotSubSlotAndBank (int id, unsigned char& slot, unsigned char& sslot, unsigned char& bank) const
-	{
-		slot = (unsigned char) (id / 100); slot--;
-		assert (slot >= 0 && slot < 4);		// Just in case...
-		sslot = (unsigned char) ((id % 100) / 10);
-		assert (sslot >= 0 && sslot < 4);	// Just in case...
-		bank = (unsigned char) (id % 10);
-		assert (bank >= 0 && bank < 4);		// Just in case...
 	}
 }
 

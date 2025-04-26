@@ -8,7 +8,9 @@
  *	Author: Ignacio Cea Fornies (EMULATORS library) \n
  *	Creation Date: 13/04/2025 \n
  *	Description: This class manages different I/O Ports that are connected to Keyboard, Casette and Slot selection.
- *				 So this is a very important processor within any MSX computer.
+ *				 So this is a very important processor within any MSX computer. \n
+ *				 This chip was manufactured by Intel, so it should be defined in a specific Manufactirer library,
+ *				 however there have not been many used declared in emulators but the MSX.
  *	Versions: 1.0 Initial
  *  Based on: https://theoddys.com/acorn/semiconductor_datasheets/P8255A.pdf
  *			  https://www.angelfire.com/art2/unicorndreams/msx/RR-PPI.html
@@ -26,6 +28,9 @@ namespace MSX
 	{
 		public:
 		static const int _ID = 100;
+
+		// Some events...
+		static const unsigned int _SLOTCHANGED = 100;
 
 		PPI8255 (PPI8255Registers* reg);
 
@@ -54,7 +59,7 @@ namespace MSX
 		// and to make simplier the modification in case it is needed...
 		/** Debug special situations...
 			Take care using this instructions _deepDebugFile could be == nullptr... */
-		void debugPPI8255Cycle (MCHEmul::CPU* cpu, unsigned int i);
+		void debugPPI8255Cycle (MCHEmul::CPU* cpu);
 		// -----
 
 		private:

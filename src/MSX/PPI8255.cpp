@@ -13,7 +13,6 @@ MSX::PPI8255::PPI8255 (MSX::PPI8255Registers* reg)
 	// If nullptr a temporal one is created that it will be deleted when the object is destroyed...
 	if (_PPI8255Registers == nullptr)
 		_internalRegisters = _PPI8255Registers = new MSX::PPI8255Registers;
-
 }
 
 // ---
@@ -34,15 +33,13 @@ bool MSX::PPI8255::simulate (MCHEmul::CPU* cpu)
 		return (true);
 	}
 
-	// Simulate the visulization...
-	for (unsigned int i = 
-			((cpu -> clockCycles  () - _lastCPUCycles)); 
-		i > 0; i--)
-	{
-		_IFDEBUG debugPPI8255Cycle (cpu, i);
+	// Simulate the the chip...
+	// IN this case it is not needed to iterate over all cycles executed at CPU level...
+	_IFDEBUG debugPPI8255Cycle (cpu);
 
-		// TODO
-	}
+	if (_PPI8255Registers -> slotChanged ())
+		notify (MCHEmul::Event (MSX::PPI8255::_SLOTCHANGED, 
+			(int) _PPI8255Registers -> peekRegister (0).value ()));
 
 	_lastCPUCycles = cpu -> clockCycles ();
 
@@ -60,7 +57,7 @@ MCHEmul::InfoStructure MSX::PPI8255::getInfoStructure () const
 }
 
 // ---
-void MSX::PPI8255::debugPPI8255Cycle (MCHEmul::CPU* cpu, unsigned int i)
+void MSX::PPI8255::debugPPI8255Cycle (MCHEmul::CPU* cpu)
 {
 	assert (_deepDebugFile != nullptr);
 

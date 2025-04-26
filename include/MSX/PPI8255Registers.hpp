@@ -39,28 +39,14 @@ namespace MSX
 			The physical memory is not owned by this class but the computer (memory class). */
 		PPI8255Registers (MCHEmul::PhysicalStorage* ps, size_t pp, const MCHEmul::Address& a, size_t s); 
 
-		/** Destroy the internal physycal memory when created. */
-		virtual ~PPI8255Registers ();
-
 		/** This chip has only 4 registers valid: 0 & 1 & 2 & 4 */
 		virtual size_t numberRegisters () const override
-							{ return (0x04); }
+							{ return (4); }
 
-		// The class is designed to be accessed from wither a port or from a memory position.
-		// When it is accessed from a port the following methods must be used...
-		// ...and they invoke the ones used when the positions are accesed from a memory...
-		// ...readValue, peekValue & setValue defined below)
-		/** To read a register. 
-			When reading a register the internal situation could be modified. */
-		MCHEmul::UByte readRegister (unsigned char rId) const
-							{ return (readValue ((size_t) rId)); }
-		/** Like the previous one but not changing tthe internal situation of the registers. */
-		MCHEmul::UByte peekRegister (unsigned char rId) const
-							{ return (peekValue ((size_t) rId)); }
-		/** To change the value of a register. \n
-			The internal situation is also change. */
-		void setRegister (unsigned char rId, const MCHEmul::UByte& v)
-							{ setValue ((size_t) rId, v); }
+		/** To know whether the slot configuration has changed. 
+			Once the variable is read, it comes back to false. */
+		bool slotChanged () const
+							{ return (_slotChanged); }
 
 		virtual void initialize () override;
 
@@ -81,10 +67,18 @@ namespace MSX
 		void initializeInternalValues ();
 
 		protected:
-		// Implementation		
-		/** This variable is created when the register is created 
-			to be accessed fromports and not from internal memory. */
-		MCHEmul::PhysicalStorage* _internalPhysicalMemory;
+		/** The different slots slected by bank. 
+			When one of them changed, the _slotChanged variable is set and
+			used from the simulation method of the processor to raise an event 
+			that it would change finally the configuration. */
+		unsigned char _slotBank0; // Primary slot selected for bank 0: 0x0000 - 0x4000
+		unsigned char _slotBank1; // Primary slot selected for bank 1: 0x4000 - 0x7fff
+		unsigned char _slotBank2; // Primary slot selected for bank 2: 0x8000 - 0xbfff
+		unsigned char _slotBank3; // Primary slot selected for bank 3: 0xc000 - 0xffff
+		/** When any of the previous values change. */
+		MCHEmul::OBool _slotChanged;
+
+		// Implementation
 		/** The last value read. */
 		mutable MCHEmul::UByte _lastValueRead;
 	};

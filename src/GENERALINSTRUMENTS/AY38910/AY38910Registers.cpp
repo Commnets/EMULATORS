@@ -2,35 +2,21 @@
 
 // ---
 GENERALINSTRUMENTS::AY38910Registers::AY38910Registers ()
-	: MCHEmul::ChipRegisters 
-		(GENERALINSTRUMENTS::AY38910Registers::_ID, 
-		 new MCHEmul::PhysicalStorage 
-			(GENERALINSTRUMENTS::AY38910Registers::_ID, MCHEmul::PhysicalStorage::Type::_RAM, 2),
-		 0x0000, MCHEmul::Address ({ 0x00, 0x00 }, false), 2),
-	  _internalPhysicalMemory (nullptr),
+	: MCHEmul::ChipRegisters (GENERALINSTRUMENTS::AY38910Registers::_ID, 
+		2 /** 2 bytes per address. */, 3 /** 3 Registers. */),
 	  _lastValueRead (MCHEmul::UByte::_0)
 	// The rest of the attributes are initialized with the method initializeInternalValues...
 {
-	_internalPhysicalMemory = physicalStorage ();
-
 	initializeInternalValues ();
 }
 
 // ---
 GENERALINSTRUMENTS::AY38910Registers::AY38910Registers
 		(MCHEmul::PhysicalStorage* ps, size_t pp, const MCHEmul::Address& a, size_t s)
-	: MCHEmul::ChipRegisters (GENERALINSTRUMENTS::AY38910Registers::_ID, ps, pp, a, s),
-	  _internalPhysicalMemory (nullptr)
+	: MCHEmul::ChipRegisters (GENERALINSTRUMENTS::AY38910Registers::_ID, ps, pp, a, s)
 	 // The rest of the attributes are initialized with the method initializeInternalValues...
 {
 	initializeInternalValues ();
-}
-
-// ---
-GENERALINSTRUMENTS::AY38910Registers::~AY38910Registers ()
-{
-	// It could be nullptr, if it wouldn't have been created internally...
-	delete (_internalPhysicalMemory);
 }
 
 // ---
@@ -56,14 +42,20 @@ MCHEmul::InfoStructure GENERALINSTRUMENTS::AY38910Registers::getInfoStructure ()
 // ---
 void GENERALINSTRUMENTS::AY38910Registers::setValue (size_t p, const MCHEmul::UByte& v)
 {
-	size_t pp = p % 4;
+	if (p >= numberRegisters ())
+	{
+		_LOG ("Register: " + std::to_string (p) + " not supported in AY38910");
 
-	MCHEmul::PhysicalStorageSubset::setValue (pp, v);
+		return;
+	}
 
-	switch (pp)
+	MCHEmul::PhysicalStorageSubset::setValue (p, v);
+
+	switch (p)
 	{
 		// TODO
 
+		// It shouldn't be here...
 		default:
 			break;
 	}
@@ -73,11 +65,16 @@ void GENERALINSTRUMENTS::AY38910Registers::setValue (size_t p, const MCHEmul::UB
 // ---
 const MCHEmul::UByte& GENERALINSTRUMENTS::AY38910Registers::readValue (size_t p) const
 {
-	size_t pp = p % 2;
-
 	MCHEmul::UByte result = MCHEmul::PhysicalStorage::_DEFAULTVALUE;
 
-	switch (pp)
+	if (p >= numberRegisters ())
+	{
+		_LOG ("Register: " + std::to_string (p) + " not supported in AY38910");
+
+		return (_lastValueRead = result);
+	}
+
+	switch (p)
 	{
 		// TODO
 
@@ -92,13 +89,18 @@ const MCHEmul::UByte& GENERALINSTRUMENTS::AY38910Registers::readValue (size_t p)
 // ---
 const MCHEmul::UByte& GENERALINSTRUMENTS::AY38910Registers::peekValue (size_t p) const
 {
-	size_t pp = p % 2;
-
 	MCHEmul::UByte result = MCHEmul::PhysicalStorage::_DEFAULTVALUE;
 
-	switch (pp)
+	if (p >= numberRegisters ())
 	{
-		// TODo
+		_LOG ("Register: " + std::to_string (p) + " not supported in AY38910");
+
+		return (_lastValueRead = result);
+	}
+
+	switch (p)
+	{
+		// TODO
 
 		default:
 			break;

@@ -2,21 +2,15 @@
 
 // ---
 TEXASINSTRUMENTS::TMS99xxFamilyRegisters::TMS99xxFamilyRegisters (size_t vS)
-	: MCHEmul::ChipRegisters 
-		(TEXASINSTRUMENTS::TMS99xxFamilyRegisters::_ID, 
-		 new MCHEmul::PhysicalStorage 
-			(TEXASINSTRUMENTS::TMS99xxFamilyRegisters::_ID, MCHEmul::PhysicalStorage::Type::_RAM, 2),
-		 0x0000, MCHEmul::Address ({ 0x00, 0x00 }, false), 2),
+	: MCHEmul::ChipRegisters (TEXASINSTRUMENTS::TMS99xxFamilyRegisters::_ID,
+		2 /** bytes per address. */, 2 /** registers. */),
 	  _videoMemory (vS, MCHEmul::UByte::_0),
 	  _controlRegisters (8, MCHEmul::UByte::_0),
-	  _internalPhysicalMemory (nullptr),
 	  _lastValueRead (MCHEmul::UByte::_0)
 	// The rest of the attributes are initialized with the method initializeInternalValues...
 {
 	// The memory cannot have less than 16k...
 	assert (_videoMemory.size () >= 0x4000);
-
-	_internalPhysicalMemory = physicalStorage ();
 
 	initializeInternalValues ();
 }
@@ -26,21 +20,13 @@ TEXASINSTRUMENTS::TMS99xxFamilyRegisters::TMS99xxFamilyRegisters
 		(MCHEmul::PhysicalStorage* ps, size_t pp, const MCHEmul::Address& a, size_t s, size_t vS)
 	: MCHEmul::ChipRegisters (TEXASINSTRUMENTS::TMS99xxFamilyRegisters::_ID, ps, pp, a, s),
 	  _videoMemory (vS, MCHEmul::UByte::_0),
-	  _controlRegisters (8, MCHEmul::UByte::_0),
-	  _internalPhysicalMemory (nullptr)
+	  _controlRegisters (8, MCHEmul::UByte::_0)
 	 // The rest of the attributes are initialized with the method initializeInternalValues...
 {
 	// The memory cannot have less than 16k...
 	assert (_videoMemory.size () >= 0x4000);
 
 	initializeInternalValues ();
-}
-
-// ---
-TEXASINSTRUMENTS::TMS99xxFamilyRegisters::~TMS99xxFamilyRegisters ()
-{
-	// It could be nullptr, if it wouldn't have been created internally...
-	delete (_internalPhysicalMemory);
 }
 
 // ---
@@ -72,6 +58,7 @@ MCHEmul::InfoStructure TEXASINSTRUMENTS::TMS99xxFamilyRegisters::getInfoStructur
 	result.add ("SpriteGenAddress",		_spriteGenAddress);
 	result.add ("TextColor",			_textColor);
 	result.add ("BackdropColor",		_backdropColor);
+	// The video RAM is 16k long. But it is allowed to print it out...
 	result.add ("BYTES",				_videoMemory);
 
 	return (result);
@@ -96,11 +83,17 @@ MCHEmul::UBytes TEXASINSTRUMENTS::TMS99xxFamilyRegisters::colorMemorySnapShot ()
 // ---
 void TEXASINSTRUMENTS::TMS99xxFamilyRegisters::setValue (size_t p, const MCHEmul::UByte& v)
 {
-	size_t pp = p % 2;
+	if (p >= numberRegisters ())
+	{
+		_LOG ("Register: " + std::to_string (p) + " not supported in TMS99xxFamily");
 
-	MCHEmul::PhysicalStorageSubset::setValue (pp, v);
+		return;
+	}
 
-	switch (pp)
+	// Keeps the value in the internal physical storage...
+	MCHEmul::PhysicalStorageSubset::setValue (p, v);
+
+	switch (p)
 	{
 		case 0x00:
 			{
@@ -153,20 +146,25 @@ void TEXASINSTRUMENTS::TMS99xxFamilyRegisters::setValue (size_t p, const MCHEmul
 
 			break;
 
+		// It shouldn't be here...
 		default:
 			break;
 	}
-
 }
 
 // ---
 const MCHEmul::UByte& TEXASINSTRUMENTS::TMS99xxFamilyRegisters::readValue (size_t p) const
 {
-	size_t pp = p % 2;
-
 	MCHEmul::UByte result = MCHEmul::PhysicalStorage::_DEFAULTVALUE;
 
-	switch (pp)
+	if (p >= numberRegisters ())
+	{
+		_LOG ("Register: " + std::to_string (p) + " not supported in TMS99xxFamily");
+
+		return (_lastValueRead = result);
+	}
+
+	switch (p)
 	{
 		case 0x00:
 			{
@@ -199,11 +197,16 @@ const MCHEmul::UByte& TEXASINSTRUMENTS::TMS99xxFamilyRegisters::readValue (size_
 // ---
 const MCHEmul::UByte& TEXASINSTRUMENTS::TMS99xxFamilyRegisters::peekValue (size_t p) const
 {
-	size_t pp = p % 2;
-
 	MCHEmul::UByte result = MCHEmul::PhysicalStorage::_DEFAULTVALUE;
 
-	switch (pp)
+	if (p >= numberRegisters ())
+	{
+		_LOG ("Register: " + std::to_string (p) + " not supported in TMS99xxFamily");
+
+		return (_lastValueRead = result);
+	}
+
+	switch (p)
 	{
 		case 0x00:
 			{

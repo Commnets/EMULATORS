@@ -1,6 +1,22 @@
 #include <CORE/ChipRegisters.hpp>
 
 // ---
+MCHEmul::ChipRegisters::ChipRegisters (int id, size_t nB, size_t nR)
+	: MCHEmul::PhysicalStorageSubset
+		(id, new MCHEmul::PhysicalStorage (id, MCHEmul::PhysicalStorage::Type::_RAM,
+			nR), 0, MCHEmul::Address (nB, 0), nR),
+	  _internalStorage (nullptr)
+{
+	_internalStorage = physicalStorage ();
+}
+
+// ---
+MCHEmul::ChipRegisters::~ChipRegisters ()
+{
+	delete (_internalStorage);
+}
+
+// ---
 std::vector <MCHEmul::UByte> MCHEmul::ChipRegisters::valueRegisters () const
 {
 	std::vector <MCHEmul::UByte> result; 

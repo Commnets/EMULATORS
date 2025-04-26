@@ -2,6 +2,9 @@
 #include <CORE/FmterBuilder.hpp>
 #include <CORE/Formatter.hpp>
 
+
+
+size_t MCHEmul::PhysicalStorageSubset::_GETINFOBYTESLIMIT = std::numeric_limits <size_t>::max (); // Meaning no limit...
 MCHEmul::Memory::Configuration MCHEmul::Memory::_CONFIGURATION = 
 	MCHEmul::Memory::Configuration ();
 
@@ -269,7 +272,12 @@ MCHEmul::InfoStructure MCHEmul::PhysicalStorageSubset::getInfoStructure () const
 	result.add ("SIZE",		_size);
 	result.add ("ACTIVE",	_active);
 	result.add ("READ",		_activeForReading);
-	result.add ("BYTES",	std::move (bytes ()));
+	/** The memory subset could be long.
+		As much as the CPU allows.
+		So the number of bytes to print out can be limited. */
+	result.add ("BYTES",	std::move (bytes (initialAddress (), 
+		(size () > MCHEmul::PhysicalStorageSubset::_GETINFOBYTESLIMIT) 
+			? MCHEmul::PhysicalStorageSubset::_GETINFOBYTESLIMIT : size ())));
 
 	return (result);
 }

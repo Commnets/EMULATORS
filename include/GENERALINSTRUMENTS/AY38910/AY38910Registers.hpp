@@ -39,28 +39,9 @@ namespace GENERALINSTRUMENTS
 			The physical memory is not owned by this class but the computer (memory class). */
 		AY38910Registers (MCHEmul::PhysicalStorage* ps, size_t pp, const MCHEmul::Address& a, size_t s); 
 
-		/** Destroy the internal physycal memory when created. */
-		virtual ~AY38910Registers ();
-
 		/** This chip has only 4 registers valid: 0 & 1 & 2 & 4 */
 		virtual size_t numberRegisters () const override
 							{ return (0x04); }
-
-		// The class is designed to be accessed from wither a port or from a memory position.
-		// When it is accessed from a port the following methods must be used...
-		// ...and they invoke the ones used when the positions are accesed from a memory...
-		// ...readValue, peekValue & setValue defined below)
-		/** To read a register. 
-			When reading a register the internal situation could be modified. */
-		MCHEmul::UByte readRegister (unsigned char rId) const
-							{ return (readValue ((size_t) rId)); }
-		/** Like the previous one but not changing tthe internal situation of the registers. */
-		MCHEmul::UByte peekRegister (unsigned char rId) const
-							{ return (peekValue ((size_t) rId)); }
-		/** To change the value of a register. \n
-			The internal situation is also change. */
-		void setRegister (unsigned char rId, const MCHEmul::UByte& v)
-							{ setValue ((size_t) rId, v); }
 
 		virtual void initialize () override;
 
@@ -82,9 +63,6 @@ namespace GENERALINSTRUMENTS
 
 		protected:
 		// Implementation		
-		/** This variable is created when the register is created 
-			to be accessed fromports and not from internal memory. */
-		MCHEmul::PhysicalStorage* _internalPhysicalMemory;
 		/** The last value read. */
 		mutable MCHEmul::UByte _lastValueRead;
 	};

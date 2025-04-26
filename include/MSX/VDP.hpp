@@ -73,8 +73,7 @@ namespace MSX
 		virtual void setShowEvents (bool sE) = 0;
 
 		/** To get information about the specific chip behind the VDP. */
-		MCHEmul::InfoStructure getInfoStructure () const
-							{ return (_graphicalChip -> getInfoStructure ()); }
+		MCHEmul::InfoStructure getInfoStructure () const;
 
 		protected:
 		MCHEmul::GraphicalChip* _graphicalChip;

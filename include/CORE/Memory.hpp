@@ -141,6 +141,8 @@ namespace MCHEmul
 		friend MemoryView;
 		friend SetMemoryCommand;
 
+		static size_t _GETINFOBYTESLIMIT; // Bytes maximum to be printed out when getInfoStructure is invoked...
+
 		/** It is guarantteed that the subset is always within the boundaries of the phisical storage behind. \n
 			Otherwise the view will be have the same size than that. \n
 			The reference to the phisical storage can't be null at all. \n 
@@ -284,7 +286,7 @@ namespace MCHEmul
 		  *	SIZE		= Attribute: Size in bytes. \n
 		  * ACTIVE		= Attribute: YES when access operations are possible and NO in other case. \n
 		  * READ		= Attribute: YES when read operations are possible and NO in other case. \n
-		  * BYTES		= Attribute: Info of the memory.
+		  * BYTES		= Attribute: Info of the memory. It is limited by the variable _GETINFOBYTESLIMIT. \n
 		  */
 		virtual InfoStructure getInfoStructure () const override;
 
@@ -772,6 +774,10 @@ namespace MCHEmul
 		size_t size () const
 							{ return (_activeView -> size ()); }
 
+		// Manage the stack...
+		/** To force the system to look for the stack again. */
+		void resetStack ()
+							{ _stack = nullptr; }
 		/** To get the stack space reserve in the memory. 
 			This is something every implementation must define. */
 		const Stack* stack () const

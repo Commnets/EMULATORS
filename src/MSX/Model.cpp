@@ -122,13 +122,25 @@ MCHEmul::Memory::Content MSX::MSXModel::memoryContent () const
 	std::vector <MCHEmul::PhysicalStorageSubset*> ERAMB_SLOTSSUBSLOTS;
 	for (int i = 4; i < (16 << 2); i++) // 4 slots, 4 subslots each...
 	{
-		MCHEmul::Address add (2, 0x0000 + ((i % 4) << 14 /** Multiply by 16. */));
-		MCHEmul::EmptyPhysicalStorageSubset* empty = new MCHEmul::EmptyPhysicalStorageSubset 
-			(MSX::Memory::_SLOTSUBSLOTBASE_SUBSET + ((i / 16) * 100) /** From 0 to 3 * 100. */ + 
+		int mId = 
+			MSX::Memory::_SLOTSUBSLOTBASE_SUBSET + ((i / 16) * 100) /** From 0 to 3 * 100. */ + 
 			(((i % 16) / 4) * 10) + /** From 0 to 3 * 10. */
-			(i % 4) /** From 0 to 3. */,
-			MCHEmul::UByte::_0, RAM_SLOTS [(size_t) (i / 16)] /** From 0 to 3. */,
-			add.value (), add, 0x4000); // 16k
+			(i % 4); /** From 0 to 3. */
+		MCHEmul::Address add (2, 0x0000 + ((i % 4) << 14 /** Multiply by 16. */));
+		MCHEmul::Stack* empty = 
+			(add.value () == 0xc000) 
+				? (MCHEmul::Stack*) new MSX::EmptyPhysicalStorageLastBankSubset
+					(mId, MCHEmul::UByte::_FF, RAM_SLOTS [(size_t) (i / 16)], /** From 0 to 3. */
+					 add.value (), add, 0x4000,
+					 MCHEmul::Stack::Configuration (true, false /** Pointing to the last written. */, 
+						false /** No overflow detection. */, -1)) 
+				  // 16k memory but with registers controlling things...
+				: (MCHEmul::Stack*) new MSX::EmptyPhysicalStorageSubset
+					(mId, MCHEmul::UByte::_FF, RAM_SLOTS [(size_t) (i / 16)], /** From 0 to 3. */
+					 add.value (), add, 0x4000,
+					 MCHEmul::Stack::Configuration (true, false /** Pointing to the last written. */, 
+						false /** No overflow detection. */, -1)); 
+				  // 16k of no memory!
 		ERAMB_SLOTSSUBSLOTS.emplace_back (empty);
 		empty -> setName ("RAM Empty 16k, Slot " + std::to_string (i >> 4) + ", Subslot " + std::to_string ((i % 16) / 4) + 
 			", Bank " + std::to_string (i % 4));
@@ -201,9 +213,9 @@ void MSX::MSXStdModel::configureMemory (MSX::Memory* m, unsigned int cfg)
 	assert (m != nullptr);
 
 	// Disactive all elements, but maintain the standard ones...
-	m -> desactivateAllElements (true);
+	m -> desactivateAllMemoryElements (true);
 	// ...and only the basic elements are connected...
-	m -> connectElements ({ 
+	m -> connectMemoryElements ({ 
 		MSX::Memory::_ROMBIOS_SUBSET, 
 		MSX::Memory::_RAM16KSLOT0SUBSLOT0_SUBSET });
 	// ...and also fix the stack subset...
@@ -282,9 +294,9 @@ void MSX::SVI728::configureMemory (MSX::Memory* m, unsigned int cfg)
 	assert (m != nullptr);
 
 	// Disactive all elements, but maintain the standard ones...
-	m -> desactivateAllElements (true);
+	m -> desactivateAllMemoryElements (true);
 	// ...and only the basic elements are connected...
-	m -> connectElements ({ 
+	m -> connectMemoryElements ({ 
 		MSX::Memory::_ROMBIOS_SUBSET, 
 		MSX::Memory::_RAM16KSLOT0SUBSLOT0_SUBSET });
 	// ...and also fix the stack subset...
@@ -368,9 +380,9 @@ void MSX::SVI738::configureMemory (MSX::Memory* m, unsigned int cfg)
 	assert (m != nullptr);
 
 	// Disactive all elements, but maintain the standard ones...
-	m -> desactivateAllElements (true);
+	m -> desactivateAllMemoryElements (true);
 	// ...and only the basic elements are connected...
-	m -> connectElements ({ 
+	m -> connectMemoryElements ({ 
 		MSX::Memory::_ROMBIOS_SUBSET, 
 		MSX::Memory::_RAM16KSLOT0SUBSLOT0_SUBSET });
 	// ...and also fix the stack subset...

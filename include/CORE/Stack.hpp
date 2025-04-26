@@ -18,7 +18,7 @@
 
 namespace MCHEmul
 {
-	class Stack final : public PhysicalStorageSubset
+	class Stack : public PhysicalStorageSubset
 	{
 		public:
 		/** The configuration of the way the stack works. 

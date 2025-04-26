@@ -2,17 +2,12 @@
 
 // ---
 MSX::PPI8255Registers::PPI8255Registers ()
-	: MCHEmul::ChipRegisters 
-		(MSX::PPI8255Registers::_ID, 
-		 new MCHEmul::PhysicalStorage 
-			(MSX::PPI8255Registers::_ID, MCHEmul::PhysicalStorage::Type::_RAM, 2),
-		 0x0000, MCHEmul::Address ({ 0x00, 0x00 }, false), 2),
-	  _internalPhysicalMemory (nullptr),
-	  _lastValueRead (MCHEmul::UByte::_0)
+	: MCHEmul::ChipRegisters (MSX::PPI8255Registers::_ID,
+		2 /** 2 bytes per address. */, 4 /** Registers. */),
+	  _lastValueRead (MCHEmul::UByte::_0),
+	  _slotChanged (false)
 	// The rest of the attributes are initialized with the method initializeInternalValues...
 {
-	_internalPhysicalMemory = physicalStorage ();
-
 	initializeInternalValues ();
 }
 
@@ -20,17 +15,11 @@ MSX::PPI8255Registers::PPI8255Registers ()
 MSX::PPI8255Registers::PPI8255Registers
 		(MCHEmul::PhysicalStorage* ps, size_t pp, const MCHEmul::Address& a, size_t s)
 	: MCHEmul::ChipRegisters (MSX::PPI8255Registers::_ID, ps, pp, a, s),
-	  _internalPhysicalMemory (nullptr)
+	  _lastValueRead (MCHEmul::UByte::_0),
+	  _slotChanged (false)
 	 // The rest of the attributes are initialized with the method initializeInternalValues...
 {
 	initializeInternalValues ();
-}
-
-// ---
-MSX::PPI8255Registers::~PPI8255Registers ()
-{
-	// It could be nullptr, if it wouldn't have been created internally...
-	delete (_internalPhysicalMemory);
 }
 
 // ---
@@ -38,7 +27,8 @@ void MSX::PPI8255Registers::initialize ()
 {
 	MCHEmul::ChipRegisters::initialize ();
 
-	// TODO
+	// To force the configuration...
+	_slotChanged = true;
 
 	initializeInternalValues ();
 }
@@ -56,14 +46,51 @@ MCHEmul::InfoStructure MSX::PPI8255Registers::getInfoStructure () const
 // ---
 void MSX::PPI8255Registers::setValue (size_t p, const MCHEmul::UByte& v)
 {
-	size_t pp = p % 4;
-
-	MCHEmul::PhysicalStorageSubset::setValue (pp, v);
-
-	switch (pp)
+	if (p >= numberRegisters ())
 	{
-		// TODO
+		_LOG ("Register: " + std::to_string (p) + " not supported in PPI8255");
 
+		return;
+	}
+
+	MCHEmul::PhysicalStorageSubset::setValue (p, v);
+
+	switch (p)
+	{
+		// To select the slot of every bank...
+		case 0x00:
+			{
+				_slotBank0 = (v.value () & 0x03);
+				_slotBank1 = (v.value () & 0x0c) >> 2;
+				_slotBank2 = (v.value () & 0x30) >> 4;
+				_slotBank3 = (v.value () & 0xc0) >> 6;
+				_slotChanged = true; // To send the event...
+			}
+
+			break;
+
+		case 0x01:
+			{
+				// TODO
+			}
+
+			break;
+
+		case 0x02:
+			{
+				// TODO
+			}
+
+			break;
+
+		case 0x03:
+			{
+				// TODO
+			}
+
+			break;
+
+		// It shouldn't be here...
 		default:
 			break;
 	}
@@ -73,13 +100,45 @@ void MSX::PPI8255Registers::setValue (size_t p, const MCHEmul::UByte& v)
 // ---
 const MCHEmul::UByte& MSX::PPI8255Registers::readValue (size_t p) const
 {
-	size_t pp = p % 2;
-
 	MCHEmul::UByte result = MCHEmul::PhysicalStorage::_DEFAULTVALUE;
 
-	switch (pp)
+	if (p >= numberRegisters ())
 	{
-		// TODO
+		_LOG ("Register: " + std::to_string (p) + " not supported in PPI8255");
+
+		return (_lastValueRead = result);
+	}
+
+	switch (p)
+	{
+		// To select the slot of every bank...
+		case 0x00:
+			{
+				result = MCHEmul::PhysicalStorageSubset::readValue (0x00);
+			}
+
+			break;
+
+		case 0x01:
+			{
+				// TODO
+			}
+
+			break;
+
+		case 0x02:
+			{
+				// TODO
+			}
+
+			break;
+
+		case 0x03:
+			{
+				// TODO
+			}
+
+			break;
 
 		// It shouldn't be here...
 		default:
@@ -92,14 +151,47 @@ const MCHEmul::UByte& MSX::PPI8255Registers::readValue (size_t p) const
 // ---
 const MCHEmul::UByte& MSX::PPI8255Registers::peekValue (size_t p) const
 {
-	size_t pp = p % 2;
-
 	MCHEmul::UByte result = MCHEmul::PhysicalStorage::_DEFAULTVALUE;
 
-	switch (pp)
+	if (p >= numberRegisters ())
 	{
-		// TODo
+		_LOG ("Register: " + std::to_string (p) + " not supported in PPI8255");
 
+		return (_lastValueRead = result);
+	}
+
+	switch (p)
+	{
+		// To select the slot of every bank...
+		case 0x00:
+			{
+				result = MCHEmul::PhysicalStorageSubset::readValue (0x00);
+			}
+
+			break;
+
+		case 0x01:
+			{
+				// TODO
+			}
+
+			break;
+
+		case 0x02:
+			{
+				// TODO
+			}
+
+			break;
+
+		case 0x03:
+			{
+				// TODO
+			}
+
+			break;
+
+		// It shouldn't be here...
 		default:
 			break;
 	}
@@ -110,5 +202,5 @@ const MCHEmul::UByte& MSX::PPI8255Registers::peekValue (size_t p) const
 // ---
 void MSX::PPI8255Registers::initializeInternalValues ()
 {
-	// TODO
+	_slotBank0 = _slotBank1 = _slotBank2 = _slotBank3 = 0;
 }

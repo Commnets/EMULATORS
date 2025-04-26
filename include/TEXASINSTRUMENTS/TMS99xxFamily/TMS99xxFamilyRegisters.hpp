@@ -43,28 +43,9 @@ namespace TEXASINSTRUMENTS
 			The physical memory is not owned by this class but the computer (memory class). */
 		TMS99xxFamilyRegisters (MCHEmul::PhysicalStorage* ps, size_t pp, const MCHEmul::Address& a, size_t s, size_t vS = 0x4000); 
 
-		/** Destroy the internal physycal memory when created. */
-		virtual ~TMS99xxFamilyRegisters ();
-
 		/** This chip has only 2 registers valid: 0 & 1 */
 		virtual size_t numberRegisters () const override
-							{ return (0x02); }
-
-		// The class is designed to be accessed from wither a port or from a memory position.
-		// When it is accessed from a port the following methods must be used...
-		// ...and they invoke the ones used when the positions are accesed from a memory...
-		// ...readValue, peekValue & setValue defined below)
-		/** To read a register. 
-			When reading a register the internal situation could be modified. */
-		MCHEmul::UByte readRegister (unsigned char rId) const
-							{ return (readValue ((size_t) rId)); }
-		/** Like the previous one but not changing tthe internal situation of the registers. */
-		MCHEmul::UByte peekRegister (unsigned char rId) const
-							{ return (peekValue ((size_t) rId)); }
-		/** To change the value of a register. \n
-			The internal situation is also change. */
-		void setRegister (unsigned char rId, const MCHEmul::UByte& v)
-							{ setValue ((size_t) rId, v); }
+							{ return (2); }
 
 		// Manage the internal video memory of the chip...
 		// Take care because no boundaries checks are done!
@@ -221,10 +202,6 @@ namespace TEXASINSTRUMENTS
 		/** The value read from the previous address when the read operation is selected.
 			This value won't be returned until it was requested throught out thr right port. */
 		mutable MCHEmul::UByte _readAheadBuffer;
-		
-		/** This variable is created when the register is created 
-			to be accessed fromports and not from internal memory. */
-		MCHEmul::PhysicalStorage* _internalPhysicalMemory;
 		/** The last value read. */
 		mutable MCHEmul::UByte _lastValueRead;
 	};
