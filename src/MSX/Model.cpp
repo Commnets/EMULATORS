@@ -33,7 +33,10 @@ MCHEmul::Chips MSX::MSXModel::createChips () const
     result.insert (MCHEmul::Chips::value_type (_vdp -> id (), 
 		(MCHEmul::Chip*) _vdp -> graphicalChip ()));
 
-	// TODO: Sound chip...
+	// Add the Sound Chip...
+	_psg = const_cast <MSX::PSG*> (psg ());
+	result.insert (MCHEmul::Chips::value_type (_psg -> id (),
+		(MCHEmul::Chip*) _psg -> soundChip ()));
 
 	// The PPI Chip, that is critical in communications...
 	MSX::PPI8255* ppi = new MSX::PPI8255 (nullptr);
@@ -196,6 +199,14 @@ MSX::VDP* MSX::MSXStdModel::createVDP () const
 }
 
 // ---
+MSX::PSG* MSX::MSXStdModel::createPSG () const
+{
+	// The standard model is based on the General Instruments AY-3-8910 chip...
+	return (new MSX::PSG_AY38910
+		(new GENERALINSTRUMENTS::AY38910 (nullptr)));
+}
+
+// ---
 bool MSX::MSXStdModel::loadROMOverForLanguage (MCHEmul::PhysicalStorage* fs,
 	const std::string& lang)
 {
@@ -249,6 +260,14 @@ MSX::VDP* MSX::SVI728::createVDP () const
 				(new TEXASINSTRUMENTS::TMS9918A 
 					(nullptr /** Created internally. */, 2 /** 2 times quicker than CPU. */, 
 						FZ80::INTInterrupt::_ID /** INT. */)));
+}
+
+// ---
+MSX::PSG* MSX::SVI728::createPSG () const
+{
+	// The standard model is based on the General Instruments AY-3-8910 chip...
+	return (new MSX::PSG_AY38910
+		(new GENERALINSTRUMENTS::AY38910 (nullptr)));
 }
 
 // ---
@@ -320,6 +339,14 @@ MCHEmul::Attributes MSX::SVI738::attributes () const
 
 // ---
 MSX::VDP* MSX::SVI738::createVDP () const
+{
+	// TODO
+
+	return (nullptr);
+}
+
+// ---
+MSX::PSG* MSX::SVI738::createPSG () const
 {
 	// TODO
 

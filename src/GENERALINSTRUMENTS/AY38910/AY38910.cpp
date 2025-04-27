@@ -2,7 +2,7 @@
 
 // ---
 GENERALINSTRUMENTS::AY38910::AY38910 (GENERALINSTRUMENTS::AY38910Registers* reg)
-	: MCHEmul::Chip (GENERALINSTRUMENTS::AY38910::_ID,
+	: MCHEmul::SoundChip (GENERALINSTRUMENTS::AY38910::_ID,
 		 { { "Name", "PPI 8255" },
 		   { "Manufacturer", "Intel" },
 		   { "Year", "1970" } }),
@@ -13,7 +13,6 @@ GENERALINSTRUMENTS::AY38910::AY38910 (GENERALINSTRUMENTS::AY38910Registers* reg)
 	// If nullptr a temporal one is created that it will be deleted when the object is destroyed...
 	if (_AY38910Registers == nullptr)
 		_internalRegisters = _AY38910Registers = new GENERALINSTRUMENTS::AY38910Registers;
-
 }
 
 // ---

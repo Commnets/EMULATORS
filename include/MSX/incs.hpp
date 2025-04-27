@@ -33,6 +33,7 @@
 #include <MSX/VDP.hpp>
 #include <MSX/PPI8255.hpp>
 #include <MSX/PPI8255Registers.hpp>
+#include <MSX/PSG.hpp>
 
 #endif
 

@@ -26,7 +26,7 @@ namespace TEXASINSTRUMENTS
 	class TMS99xxFamily : public MCHEmul::GraphicalChip
 	{
 		public:
-		static const unsigned int _ID = 120;
+		static const unsigned int _ID = 1120;
 
 		/** The register of the chip can be provided from outside. \n	
 			It not, a temporal ones is created in this constructor and they are owned by this class. \n

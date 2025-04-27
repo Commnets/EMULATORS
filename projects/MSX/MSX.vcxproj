@@ -31,6 +31,7 @@
     <ClInclude Include="..\..\include\MSX\OSIO.hpp" />
     <ClInclude Include="..\..\include\MSX\PortManager.hpp" />
     <ClInclude Include="..\..\include\MSX\PPI8255Registers.hpp" />
+    <ClInclude Include="..\..\include\MSX\PSG.hpp" />
     <ClInclude Include="..\..\include\MSX\Screen.hpp" />
     <ClInclude Include="..\..\include\MSX\Sound.hpp" />
     <ClInclude Include="..\..\include\MSX\Model.hpp" />
@@ -48,6 +49,7 @@
     <ClCompile Include="..\..\src\MSX\PortManager.cpp" />
     <ClCompile Include="..\..\src\MSX\PPI8255.cpp" />
     <ClCompile Include="..\..\src\MSX\PPI8255Registers.cpp" />
+    <ClCompile Include="..\..\src\MSX\PSG.cpp" />
     <ClCompile Include="..\..\src\MSX\Screen.cpp" />
     <ClCompile Include="..\..\src\MSX\Sound.cpp" />
     <ClCompile Include="..\..\src\MSX\Model.cpp" />

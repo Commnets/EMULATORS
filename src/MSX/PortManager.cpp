@@ -4,6 +4,7 @@
 const std::string MSX::GeneralPortManager::_NAME = "MSX General PortManager";
 const std::string MSX::VDPPortManager::_NAME = "MSX VDP PortManager";
 const std::string MSX::PPIPortManager::_NAME = "MSX PPI PortManager";
+const std::string MSX::PSGPortManager::_NAME = "MSX PSG PortManager";
 
 // ---
 MSX::GeneralPortManager::GeneralPortManager ()
@@ -49,4 +50,15 @@ MSX::PPIPortManager::PPIPortManager ()
 	  _ppi (nullptr)
 {
 	setClassName ("PPIPortManager");
+}
+
+// ---
+MSX::PSGPortManager::PSGPortManager ()
+	: FZ80::Z80Port (_ID, _NAME,
+		{ { "Name", "PSG Port Manager" },
+		  { "Description", "Class to manage MSX iteractions with ports mapped to PSG chip" }
+		}),
+	  _psg (nullptr)
+{
+	setClassName ("PSGPortManager");
 }

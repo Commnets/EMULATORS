@@ -22,14 +22,29 @@
 
 namespace GENERALINSTRUMENTS
 {
-	class AY38910 final : public MCHEmul::Chip
+	class AY38910 final : public MCHEmul::SoundChip
 	{
 		public:
-		static const int _ID = 100;
+		static const int _ID = 1100;
+
+		// 44,1MHz (more or less standard in current sound cards)
+		static const unsigned int _SOUNDSAMPLINGCLOCK		= 44100;
+		// 8 bits sound data, very simple nothing complicated...
+		static const unsigned short _SOUNDSAMPLINGFORMAT	= AUDIO_U8;
+		// Number of channels..
+		static const unsigned char _SOUNDCHANNELS			= 1;
 
 		AY38910 (AY38910Registers* reg);
 
 		~AY38910 ();
+
+		/** The main characteristics of the SID. */
+		virtual SDL_AudioFormat type () const override
+							{ return (_SOUNDSAMPLINGFORMAT); }
+		virtual int maxFrequency () const override
+							{ return (_SOUNDSAMPLINGCLOCK >> 1); }
+		virtual unsigned char numberChannels () const override
+							{ return (_SOUNDCHANNELS); }
 
 		// The access to the chip can be throught out the pins connected to the outside...
 		// ...What this actions do, will depend on the internal situation of the chip

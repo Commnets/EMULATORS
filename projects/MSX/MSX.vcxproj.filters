@@ -102,6 +102,9 @@
     <ClInclude Include="..\..\include\MSX\PPI8255Registers.hpp">
       <Filter>Archivos de encabezado\Motherboard\Chips\PPI8255</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\include\MSX\PSG.hpp">
+      <Filter>Archivos de encabezado\Motherboard\Chips</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\MSX\CommandBuilder.cpp">
@@ -148,6 +151,9 @@
     </ClCompile>
     <ClCompile Include="..\..\src\MSX\PPI8255Registers.cpp">
       <Filter>Archivos de origen\Motherboard\Chips\PPI8255</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\MSX\PSG.cpp">
+      <Filter>Archivos de origen\Motherboard\Chips</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

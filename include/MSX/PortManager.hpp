@@ -18,6 +18,7 @@
 #include <FZ80/incs.hpp>
 #include <MSX/VDP.hpp>
 #include <MSX/PPI8255.hpp>
+#include <MSX/PSG.hpp>
 
 namespace MSX
 {
@@ -97,6 +98,36 @@ namespace MSX
 		private:
 		/** The PPI. */
 		PPI8255* _ppi;
+	};
+
+	/** Port Manager to manage block (groups) of ports linked with the sound chip. */
+	class PSGPortManager final : public FZ80::Z80Port
+	{
+		public:
+		static const int _ID = 3;
+		static const std::string _NAME;
+
+		PSGPortManager ();
+
+		virtual MCHEmul::UByte value (unsigned short ab, unsigned char id) const override
+							{ return (_psg -> readRegister (id - 0x98)); }
+		virtual MCHEmul::UByte peekValue (unsigned short ab, unsigned char id) const override
+							{ return (_psg -> peekRegister (id - 0x98)); }
+		virtual void setValue (unsigned short ab, unsigned char id, const MCHEmul::UByte& v) override
+							{ _psg -> setRegister (id - 0x98, v); }
+
+		/** The initialization does nothing. */
+		virtual void initialize () override
+							{ /** Do nothing. */ }
+
+		/** To link it to the PSG. \n
+			They are not the owner of the port manager. */
+		void linkPSG (PSG* psg)
+							{ _psg = psg; }
+
+		private:
+		/** The PSG. */
+		PSG* _psg;
 	};
 }
 

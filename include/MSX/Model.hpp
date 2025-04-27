@@ -19,6 +19,7 @@
 
 #include <CORE/incs.hpp>
 #include <MSX/VDP.hpp>
+#include <MSX/PSG.hpp>
 
 namespace MSX
 {
@@ -42,6 +43,7 @@ namespace MSX
 
 		MSXModel ()
 			: _vdp (nullptr), // @see VDP class
+			  _psg (nullptr), // @see PSG class
 			  _chips (),
 			  _ioDevices (),
 			  _memory (nullptr)
@@ -90,6 +92,17 @@ namespace MSX
 		const VDP* vdp () const
 							{ return (const_cast <MSXModel*> (this) -> vdp ()); }
 
+		/** To get the PSG used in the model. \n
+			First time this method is invoked the PSG is created. \n
+			PSG is a wrapper over the real sound chip. \n
+			The PSG belongs to this class but not the sound chip that is wrapped, 
+			that must belong to the computer as part of the chips managed by it. \n
+			So never forget to add it inside the list returned by the method chips (). @see above */
+		PSG* psg () 
+							{ return ((_psg == nullptr) ? _psg = createPSG () : _psg); }
+		const PSG* psg () const
+							{ return (const_cast <MSXModel*> (this) -> psg ()); }
+
 		/** To get the chips that this model is made up of. \n
 			Ths first time this routine is invoked, the chips are created. \n
 			Never forget to include the graphical chip created with the VDP. */
@@ -106,6 +119,8 @@ namespace MSX
 		protected:
 		/** This is pure virtual. Every model has to define its own. */
 		virtual VDP* createVDP () const = 0;
+		/** This is pure virtual. Every model has to define its own. */
+		virtual PSG* createPSG () const = 0;
 		/** The default version creates the basic chips: Video & Sound. \n
 			It can be anyway overloaded to add specific chips per MSX model. */
 		virtual MCHEmul::Chips createChips () const;
@@ -131,6 +146,7 @@ namespace MSX
 		protected:
 		// Implementation
 		mutable VDP* _vdp;
+		mutable PSG* _psg;
 		mutable MCHEmul::Chips _chips;
 		mutable MCHEmul::IODevices _ioDevices;
 		mutable Memory* _memory;
@@ -164,6 +180,7 @@ namespace MSX
 
 		private:
 		virtual VDP* createVDP () const override;
+		virtual PSG* createPSG () const override;
 		// The standard model doesn't add any additional chip to the basic system...
 		// The standard model doesn't add any additional iodevice to the basic system...
 
@@ -192,6 +209,7 @@ namespace MSX
 
 		private:
 		virtual VDP* createVDP () const override;
+		virtual PSG* createPSG () const override;
 		virtual MCHEmul::Chips createChips () const override;
 		virtual MCHEmul::IODevices createIODevices () const override;
 		
@@ -223,6 +241,7 @@ namespace MSX
 
 		private:
 		virtual VDP* createVDP () const override;
+		virtual PSG* createPSG () const override;
 		virtual MCHEmul::Chips createChips () const override;
 		virtual MCHEmul::IODevices createIODevices () const override;
 		

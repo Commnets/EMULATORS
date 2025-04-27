@@ -28,7 +28,7 @@ namespace MSX
 		public:
 		VDP (MCHEmul::GraphicalChip* gC);
 
-		/** VDP is not the owber of the chip received, 
+		/** VDP is not the owner of the chip received, 
 			but a just in case a destructor is needed in any class inheriting this one. */
 		virtual ~VDP ()
 							{  }
@@ -50,6 +50,7 @@ namespace MSX
 		virtual void screenPositions (unsigned short& x1, unsigned short& y1, 
 			unsigned short& x2, unsigned short& y2) = 0;
 
+		// Manage the internal registers of the VDP
 		/** To get & set the registers of the chip behind. */
 		virtual MCHEmul::UByte readRegister (unsigned char rId) const = 0;
 		virtual MCHEmul::UByte peekRegister (unsigned char rId) const = 0;
@@ -64,8 +65,6 @@ namespace MSX
 
 		virtual MCHEmul::UBytes screenMemorySnapShot () const = 0;
 		virtual MCHEmul::UBytes colorMemorySnapShot () const = 0;
-
-		// Manage the internal registers of the VPD
 
 		/** To activate or desactivate the visualization of events. 
 			This is something accesed from outside and the specific implementation
