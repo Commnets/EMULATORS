@@ -57,6 +57,8 @@ namespace MSX
 		/** To process the events related with the insertion or extraction of a cartridge. */
 		virtual void processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifier* n) override;
 
+		virtual void specificComputerCycle () override;
+
 		// Managing memory configuration...
 		/** To get the configuration. */
 		unsigned int configuration () const

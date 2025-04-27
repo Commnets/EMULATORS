@@ -35,16 +35,20 @@ namespace MSX
 		static void destroyInstance ()
 							{ delete (_instance); _instance = nullptr; }
 
-		void setSubSlotRegister (size_t nR, const MCHEmul::UByte& v)
-							{ _subSlotRegister [nR] = v; }
+		inline void setSubSlotRegister (size_t nR, const MCHEmul::UByte& v);
 		const MCHEmul::UByte& subSlotRegister (size_t nR) const
 							{ return (_subSlotRegister [nR]); }
+
+		/** To know whether the subslots have changed or not. */
+		bool changed () const
+							{ return (_changed); }
 
 		private:
 		// Declared private to implement the Singleton design pattern...
 		SubSlotRegisters ()
 			: _subSlotRegister { MCHEmul::UByte::_0, MCHEmul::UByte::_0, 
-								 MCHEmul::UByte::_0, MCHEmul::UByte::_0 }
+								 MCHEmul::UByte::_0, MCHEmul::UByte::_0 },
+			  _changed (false)
 							{ }
 
 		private:
@@ -52,7 +56,20 @@ namespace MSX
 		static SubSlotRegisters* _instance;
 		/** The value of the subSlot registers. */
 		MCHEmul::UByte _subSlotRegister [4]; // 1 per slot...
+		
+		// Implementation
+		/** When the subslot register is changed. */
+		MCHEmul::OBool _changed;
 	};
+
+	// ---
+	inline void SubSlotRegisters::setSubSlotRegister (size_t nR, const MCHEmul::UByte& v)
+	{
+		MCHEmul::UByte oV = _subSlotRegister [nR];
+
+		// Only if it changed the value...
+		_changed = (_subSlotRegister [nR] = v) != oV;
+	}
 
 	/** Create a special empty phisical storage that can work as a stack. \n
 		This makes no sense from a theoretical point of view, but in a MSX the stack could be located in that places. \n
@@ -115,6 +132,8 @@ namespace MSX
 	class Memory final : public MCHEmul::Memory
 	{
 		public:
+		struct SlotSublotActive { unsigned char _slot, _subSlot; };
+
 		// ID used to refer the different positions in the memory...
 		// The physycal elements...
 		static const int _ROM_SET = 100;				// Initially there is only ROM in the slot 0 bank 0...
@@ -215,6 +234,11 @@ namespace MSX
 		void connectMemoryElements (const std::vector <int>& ids)
 							{ for (const auto& i : ids) connectMemoryElement (i); }
 
+		/** To get the memory configuration. 
+			it can get only as a const, that can not be changed... */
+		const SlotSublotActive* const slotSubSlotsActive () const
+							{ return (_slotSubSlotActive); }
+
 		// To change the memory configuration...
 		/** Active the memory element is a bank, slot and sublot.
 			Because there can be only a maximum of two elements in that situation and 
@@ -227,7 +251,16 @@ namespace MSX
 			The subslot finally selected (expanded) will depend on the last memory structure active. 
 			That memory structure is managed acting over direction $ffff of every slot (subslot register). 
 			@see in the definition of the class. */
-		void activeSlotsPerBank (unsigned char sb0, unsigned char sb1, unsigned char sb2, unsigned sb3);
+		void activeteSlotsPerBank (unsigned char sb0, unsigned char sb1, unsigned char sb2, unsigned sb3);
+		/** To reactivate the slots per bank.
+			This is used when the subslots configuration changes, 
+			and then it is needed to reassign that configuration in the memory. */
+		void reactivateSlotsPerBank ()
+							{ activeteSlotsPerBank 
+								(_slotSubSlotActive [0]._slot, // The ones that already active...
+								 _slotSubSlotActive [1]._slot,
+								 _slotSubSlotActive [2]._slot, 
+								 _slotSubSlotActive [3]._slot); }
 
 		/** Change the stack subset. */
 		void setStackSubset (int id)
@@ -264,6 +297,8 @@ namespace MSX
 		/** The id of the subset used for the stack... 
 			that will depend on the configuration! */
 		int _STACK_SUBSET;
+		/** To indicate what slot and subslot is active per bank. */
+		SlotSublotActive _slotSubSlotActive [4];
 	};
 
 	// ---

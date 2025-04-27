@@ -74,12 +74,19 @@ void MSX::MSXComputer::processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifi
 	if (evnt.id () == MSX::PPI8255::_SLOTCHANGED)
 	{
 		static_cast <MSX::Memory*> (memory ()) -> 
-			activeSlotsPerBank 
+			activeteSlotsPerBank 
 				((evnt.value () & 0x03),		// Slot active in bank 0
 				 (evnt.value () & 0x0c) >> 2,	// Slot active in bank 1 
 				 (evnt.value () & 0x30) >> 4,	// Slot active in bank 2
 				 (evnt.value () & 0xc0) >> 6);	// Slot active in bank 3
 	}
+}
+
+// ---
+void MSX::MSXComputer::specificComputerCycle ()
+{
+	if (MSX::SubSlotRegisters::instance () -> changed ()) // put it back to false when tested...
+		static_cast <MSX::Memory*> (memory ()) -> reactivateSlotsPerBank ();
 }
 
 // ---

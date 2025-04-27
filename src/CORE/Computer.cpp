@@ -464,6 +464,8 @@ bool MCHEmul::Computer::runComputerCycle (unsigned int a)
 	{
 		MCHEmul::Memory::configuration ().executeMemorySetCommandsBuffered ();
 
+		specificComputerCycle (); // Just in case...
+
 		return (true); // It has decided not to execute the cycle, 
 					   // however the memory actions are unbufefred if any! (to trace the program properly)...
 	}

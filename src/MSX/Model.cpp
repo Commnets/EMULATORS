@@ -130,13 +130,13 @@ MCHEmul::Memory::Content MSX::MSXModel::memoryContent () const
 		MCHEmul::Stack* empty = 
 			(add.value () == 0xc000) 
 				? (MCHEmul::Stack*) new MSX::EmptyPhysicalStorageLastBankSubset
-					(mId, MCHEmul::UByte::_FF, RAM_SLOTS [(size_t) (i / 16)], /** From 0 to 3. */
+					(mId, MCHEmul::UByte::_0, RAM_SLOTS [(size_t) (i / 16)], /** From 0 to 3. */
 					 add.value (), add, 0x4000,
 					 MCHEmul::Stack::Configuration (true, false /** Pointing to the last written. */, 
 						false /** No overflow detection. */, -1)) 
 				  // 16k memory but with registers controlling things...
 				: (MCHEmul::Stack*) new MSX::EmptyPhysicalStorageSubset
-					(mId, MCHEmul::UByte::_FF, RAM_SLOTS [(size_t) (i / 16)], /** From 0 to 3. */
+					(mId, MCHEmul::UByte::_0, RAM_SLOTS [(size_t) (i / 16)], /** From 0 to 3. */
 					 add.value (), add, 0x4000,
 					 MCHEmul::Stack::Configuration (true, false /** Pointing to the last written. */, 
 						false /** No overflow detection. */, -1)); 
