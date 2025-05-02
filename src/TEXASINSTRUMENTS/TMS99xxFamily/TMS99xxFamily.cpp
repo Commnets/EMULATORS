@@ -20,7 +20,7 @@ TEXASINSTRUMENTS::TMS99xxFamily::TMS99xxFamily (const MCHEmul::RasterData& vd, c
 		int iId,
 		const MCHEmul::Attributes& attrs)
 	: MCHEmul::GraphicalChip (_ID, attrs),
-	  _TMS9918ARegisters (reg),
+	  _TMS99xxFamilyRegisters (reg),
 	  _raster (vd, hd, 1 /** The step is 1 pixel. */),
 	  _clockFactor (cF),
 	  _interruptId (iId),
@@ -36,8 +36,8 @@ TEXASINSTRUMENTS::TMS99xxFamily::TMS99xxFamily (const MCHEmul::RasterData& vd, c
 	setClassName ("TMS99xxFamily");
 
 	// If nullptr a temporal one is created that it will be deleted when the object is destroyed...
-	if (_TMS9918ARegisters == nullptr)
-		_internalRegisters = _TMS9918ARegisters = new TEXASINSTRUMENTS::TMS99xxFamilyRegisters;
+	if (_TMS99xxFamilyRegisters == nullptr)
+		_internalRegisters = _TMS99xxFamilyRegisters = new TEXASINSTRUMENTS::TMS99xxFamilyRegisters;
 
 	_format = SDL_AllocFormat (SDL_PIXELFORMAT_ARGB8888);
 }
@@ -61,7 +61,7 @@ bool TEXASINSTRUMENTS::TMS99xxFamily::initialize ()
 
 	_raster.initialize ();
 
-	_TMS9918ARegisters -> initialize ();
+	_TMS99xxFamilyRegisters -> initialize ();
 
 	_lastCPUCycles = 0;
 
@@ -104,16 +104,20 @@ bool TEXASINSTRUMENTS::TMS99xxFamily::simulate (MCHEmul::CPU* cpu)
 		if (_raster.vData ().currentPositionAtBase0 () == 0 &&
 			_raster.hData ().currentPositionAtBase0 () == 0)
 		{
-			// An interrupt is generated, if it is configured so...
-			_TMS9918ARegisters -> setSreenUpdateHappen ();
-			if (_TMS9918ARegisters -> screenUpdateHappen () &&
-				_TMS9918ARegisters -> launchScreenUpdateInterrupt ())
-				cpu -> requestInterrupt
-					(_interruptId /** Received at construction time. */, i, this, 0 /** The reason is that the screen is complete. */);
+			// Set the bit 7 in the status register (INT)
+			_TMS99xxFamilyRegisters -> setSreenUpdateHappen ();
 	
 			// ...a notification to draw the screen is also generated...
 			MCHEmul::GraphicalChip::notify (MCHEmul::Event (_GRAPHICSREADY));
 		}
+
+		// An interrupt is launched if the system was configured to execute that action...
+		if (_TMS99xxFamilyRegisters -> screenUpdateHappen () &&
+			_TMS99xxFamilyRegisters -> launchScreenUpdateInterrupt ())
+			cpu -> requestInterrupt
+				(_interruptId /** Received at construction time. */, i, this, 0 /** The reason is that the screen is complete. */);
+		// The interrupt routine must clear that bit 7 or otherwise...
+		// ...the interrupts will be called over and over again!
 	}
 
 	_lastCPUCycles = cpu -> clockCycles ();
@@ -127,7 +131,7 @@ MCHEmul::InfoStructure TEXASINSTRUMENTS::TMS99xxFamily::getInfoStructure () cons
 	MCHEmul::InfoStructure result = std::move (MCHEmul::GraphicalChip::getInfoStructure ());
 
 	result.remove ("Memory"); // This info is not neccesary...
-	result.add ("TMS99xxFamilyRegisters",	std::move (_TMS9918ARegisters -> getInfoStructure ()));
+	result.add ("TMS99xxFamilyRegisters",	std::move (_TMS99xxFamilyRegisters -> getInfoStructure ()));
 	result.add ("Raster",				std::move (_raster.getInfoStructure ()));
 
 	return (result);
@@ -186,7 +190,118 @@ void TEXASINSTRUMENTS::TMS99xxFamily::readGraphicInfoAndDrawVisibleZone (MCHEmul
 	unsigned short x = 0, y = 0;
 	_raster.currentVisiblePosition (x, y);
 		
-	// TODO
+	// Draws a point with the background first...
+	// Unless the raster were in a display zone, it will be the only thing to be drawn...
+	_screenMemory -> setPixel 
+		(x, y, (unsigned int) _TMS99xxFamilyRegisters -> backDropColor () & 0x07);
+
+	// If it is not still in the screen position, there is anything else to do...
+	if (!_raster.isInScreenZone ())
+		return;
+
+	// If the screen is in blank, 
+	// ...the system doesn't continue either...
+	if (_TMS99xxFamilyRegisters -> blankScreen ())
+	{
+		_IFDEBUG debugVideoNoActive ();
+
+		return;
+	}
+
+	// Draw the graphics and sprites and detect the collisions 
+	// All that done depending on the graphical mode used too...
+	drawGraphicsSpritesAndDetectCollisions (x, y,
+		_TMS99xxFamilyRegisters -> readGraphicInfo 
+			(x - _raster.hData ().firstScreenPosition (), // Positions within the screen part of the memory...
+			 y - _raster.vData ().firstScreenPosition ()) /** From the video memory. */);
+}
+
+// ---
+void TEXASINSTRUMENTS::TMS99xxFamily::drawGraphicsSpritesAndDetectCollisions 
+	(unsigned short x, unsigned short y, const std::tuple <MCHEmul::UByte, MCHEmul::UByte, MCHEmul::UByte>& data)
+{
+	switch (_TMS99xxFamilyRegisters -> graphicMode ())
+	{
+		case TEXASINSTRUMENTS::TMS99xxFamilyRegisters::_GRAPHICIMODE:
+			{
+				drawGraphicsScreenGraphicsMode (x, y, data);
+			}
+
+			break;
+
+		case TEXASINSTRUMENTS::TMS99xxFamilyRegisters::_TEXTMODE:
+			{
+				drawGraphicsScreenTextMode (x, y, data);
+			}
+
+			break;
+
+		case TEXASINSTRUMENTS::TMS99xxFamilyRegisters::_MULTICOLORMODE:
+			{
+				drawGraphicsScreenMulticolorMode (x, y, data);
+			}
+
+			break;
+
+		case TEXASINSTRUMENTS::TMS99xxFamilyRegisters::_GRAPHICIIMODE:
+			{
+				drawGraphicsScreenGraphicsMode (x, y, data);
+			}
+
+			break;
+
+		default:
+			{
+				_LOG ("Graphic mode:" + 
+					  std::to_string (_TMS99xxFamilyRegisters -> graphicMode ()) + " not implemented");
+
+				assert (false);
+			}
+
+			break;
+	}
+}
+
+// ----
+void TEXASINSTRUMENTS::TMS99xxFamily::drawGraphicsScreenGraphicsMode (unsigned short x, unsigned short y,
+			 const std::tuple <MCHEmul::UByte, MCHEmul::UByte, MCHEmul::UByte>& data)
+{
+	// Which is the foreground color?
+	unsigned int fC = (unsigned int) ((std::get <2> (data).value () & 0xf0) >> 4);
+	// Which is the background color?
+	unsigned int bC = (unsigned int) std::get <2> (data).value () & 0x0f;
+	// Is there any pixel to draw?
+	bool p = std::get <1> (data).bit (7 - ((x - _raster.hData ().firstScreenPosition ()) % 8));
+	// If there is color defined for a pixel to be drawn...draw it!
+	if (fC != 0 && p)	_screenMemory -> setPixel (x, y, fC);
+	// If there is color defined for a pixel not drawn...draw it too! 
+	if (bC != 0 && !p)	_screenMemory -> setPixel (x, y, bC);
+}
+
+// ---
+void TEXASINSTRUMENTS::TMS99xxFamily::drawGraphicsScreenTextMode (unsigned short x, unsigned short y,
+			 const std::tuple <MCHEmul::UByte, MCHEmul::UByte, MCHEmul::UByte>& data)
+{
+	unsigned short xS = x - _raster.hData ().firstScreenPosition ();
+	if (xS < 8 || xS >= 248 /** (40 * 6) + 8 first pixels = 248. */)
+		_screenMemory -> setPixel (x, y, _TMS99xxFamilyRegisters -> backDropColor ());
+	else
+		_screenMemory -> setPixel (x, y,
+			std::get <1> (data).bit (7 - ((xS - 8) % 6))
+				? _TMS99xxFamilyRegisters -> textColor ()
+				: _TMS99xxFamilyRegisters -> backDropColor ());
+}
+
+// ---
+void TEXASINSTRUMENTS::TMS99xxFamily::drawGraphicsScreenMulticolorMode (unsigned short x, unsigned short y,
+			 const std::tuple <MCHEmul::UByte, MCHEmul::UByte, MCHEmul::UByte>& data)
+{
+	// The colot to apply will depend on the group of 4 pixels...
+	unsigned int cl = 0;
+	unsigned short xS = x - _raster.hData ().firstScreenPosition ();
+	if (((xS >> 2) % 1) == 0) cl = (unsigned int) ((std::get <2> (data).value () & 0xf0) >> 4); // even block...
+	else cl = (unsigned int) (std::get <2> (data).value () & 0x0f); // odd block...
+	_screenMemory -> setPixel (x, y, cl);
 }
 
 // ---
@@ -212,6 +327,14 @@ void TEXASINSTRUMENTS::TMS99xxFamily::debugTMS9918ACycle (MCHEmul::CPU* cpu, uns
 			{ "Raster",
 				std::to_string (_raster.currentColumnAtBase0 ()) + "," +
 				std::to_string (_raster.currentLineAtBase0 ()) } }));
+}
+
+// ---
+void TEXASINSTRUMENTS::TMS99xxFamily::debugVideoNoActive ()
+{
+	assert (_deepDebugFile != nullptr);
+
+	// TODO
 }
 
 // ---

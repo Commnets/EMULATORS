@@ -48,11 +48,6 @@
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
-    <Image Include="MSKLogo.ico">
-      <Filter>Archivos de recursos</Filter>
-    </Image>
-  </ItemGroup>
-  <ItemGroup>
     <None Include="LocalConsole.hlp">
       <Filter>Configuration</Filter>
     </None>

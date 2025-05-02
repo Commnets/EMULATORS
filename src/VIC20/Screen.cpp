@@ -51,10 +51,10 @@ void VIC20::Screen::drawAdditional ()
 		// as the drawable zone could be out of the visible window and not be real boxes...
 		short x1p, y1p, x2p, y2p;
 		gC -> originalScreenPositions (x1p, y1p, x2p, y2p);
-		for (short i = y1p + 8; i <= y2p; i += 8)
+		for (unsigned short i = y1p + 8; i <= y2p; i += 8)
 			if (i >= 0 && i < gC -> raster ().visibleLines ())
 				drawHorizontalLineStep ((size_t) x1, (size_t) i, (size_t) (x2 - x1 + 1), 2, bC);
-		for (short i = x1p + 8; i <= x2p; i += 8)
+		for (unsigned short i = x1p + 8; i <= x2p; i += 8)
 			if (i >= 0 && i < gC -> raster ().visibleColumns ())
 				drawVerticalLineStep ((size_t) i, (size_t) y1, (size_t) (y2 - y1 + 1), 2, bC);
 

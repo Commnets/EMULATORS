@@ -22,7 +22,7 @@ namespace MSX
 {
 	class PPI8255Registers : public MCHEmul::ChipRegisters
 	{
-		friend class PPI8855;
+		friend class PPI8255;
 
 		public:
 		static const unsigned int _ID = 1200;
@@ -57,12 +57,17 @@ namespace MSX
 		virtual MCHEmul::InfoStructure getInfoStructure () const override;
 
 		protected:
-		// This methods are directly invoked when the registers are accesible from a memory position
+		// These methods are directly invoked when the registers are accesible from a memory position
 		// They are also invoked from other methods defined above...
 		// ....when the registers are accesible from ports...
 		virtual void setValue (size_t p, const MCHEmul::UByte& v) override;
 		virtual const MCHEmul::UByte& readValue (size_t p) const override;
 		virtual const MCHEmul::UByte& peekValue (size_t p) const override;
+
+		// These methods reflects the key that is pressed...
+		// This method is used only from the chip. No boundary check is done at all...
+		void setKeyboardStatusMatrix (unsigned short row, unsigned short bit, bool st)
+							{ _keyboardStatusMatrix [(size_t) row].setBit ((size_t) bit, st); }
 
 		void initializeInternalValues ();
 
@@ -77,6 +82,14 @@ namespace MSX
 		unsigned char _slotBank3; // Primary slot selected for bank 3: 0xc000 - 0xffff
 		/** When any of the previous values change. */
 		MCHEmul::OBool _slotChanged;
+
+		// Managing the ketboard...
+		/** The information about the key pressed. 
+			With all FF means nothing pressed. When something is pressed the right bit becomes false. 
+			There are 10 of this elements, equivalent to the number of rows managed in the MSX standard. 
+			This number of elements is initialized at construction time. */
+		std::vector <MCHEmul::UByte> _keyboardStatusMatrix;
+		unsigned char _keyboardRowSelected;
 
 		// Implementation
 		/** The last value read. */

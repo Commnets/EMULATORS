@@ -170,9 +170,6 @@
     <ResourceCompile Include="MSXEmulatorC.rc" />
   </ItemGroup>
   <ItemGroup>
-    <Image Include="MSKLogo.ico" />
-  </ItemGroup>
-  <ItemGroup>
     <None Include="bios\svi728_basic-bios_ENG.rom">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>

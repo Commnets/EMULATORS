@@ -44,11 +44,12 @@ void MSX::Screen::drawAdditional ()
 		_vdp -> screenPositions (x1, y1, x2, y2);
 
 		// Draws rectangles and reference lines...
+		unsigned short stp = (_vdp -> graphicMode () == 1 /** Text Mode. */) ? 6 : 8;
 		drawRectangle ((size_t) (x1 - 1), (size_t) (y1 - 1), 
 			(size_t) (x2 + 1), (size_t) (y2 + 1), 3);
-		for (short i = y1 + 8; i <= y2; i += 8)
+		for (unsigned short i = y1 + 8; i <= y2; i += 8)
 			drawHorizontalLineStep ((size_t) x1, (size_t) i, (size_t) (x2 - x1 + 1), 2, bC);
-		for (short i = x1 + 8; i <= x2; i += 8)
+		for (unsigned short i = x1 + 8; i <= x2; i += stp)
 			drawVerticalLineStep ((size_t) i, (size_t) y1, (size_t) (y2 - y1 + 1), 2, bC);
 
 		// Draws a reference to the owner to the simulator!

@@ -46,7 +46,7 @@ MCHEmul::Chips MSX::MSXModel::createChips () const
 }
 
 // ---
-MCHEmul::IODevices MSX::MSXModel::createIODevices () const
+MCHEmul::IODevices MSX::MSXModel::createIODevices (const std::string& lang) const
 {
 	MCHEmul::IODevices result;
 
@@ -64,12 +64,126 @@ MCHEmul::IODevices MSX::MSXModel::createIODevices () const
 				{ "Frequency", std::to_string (screenFrequency ()) 
 			 } }))); // The data depends on the the screen frequency...
 
-	// TODO: The sound system...
+	// ...The sound system
+	result.insert (MCHEmul::IODevices::value_type (MSX::SoundSystem::_ID,
+		(MCHEmul::IODevice*) new MSX::SoundSystem ()));
 
 	// ...and the IO system...
-	result.insert (MCHEmul::IODevices::value_type (MSX::InputOSSystem::_ID, new MSX::InputOSSystem));
+	// with the standard key
+	result.insert (MCHEmul::IODevices::value_type 
+		(MSX::InputOSSystem::_ID, new MSX::InputOSSystem (keystrockedMap (lang))));
 
 	return (result);
+}
+
+// ---
+MSX::InputOSSystem::KeystrockesMap MSX::MSXModel::createKeystrockesMap (const std::string& lang) const
+{
+	// TODO Consider different languages...
+
+	return (MSX::InputOSSystem::KeystrockesMap (
+		{
+			// Row 0
+			{ SDL_SCANCODE_7,				{ std::make_pair (0, 7) } },
+			{ SDL_SCANCODE_6,				{ std::make_pair (0, 6) } },
+			{ SDL_SCANCODE_5,				{ std::make_pair (0, 5) } },
+			{ SDL_SCANCODE_4,				{ std::make_pair (0, 4) } },
+			{ SDL_SCANCODE_3,				{ std::make_pair (0, 3) } },
+			{ SDL_SCANCODE_2,				{ std::make_pair (0, 2) } },
+			{ SDL_SCANCODE_1,				{ std::make_pair (0, 1) } },
+			{ SDL_SCANCODE_0,				{ std::make_pair (0, 0) } },
+			// Row 1
+			{ SDL_SCANCODE_SEMICOLON,		{ std::make_pair (1, 7) } },
+			{ SDL_SCANCODE_RIGHTBRACKET,	{ std::make_pair (1, 6) } },
+			{ SDL_SCANCODE_LEFTBRACKET,		{ std::make_pair (1, 5) } },
+			{ SDL_SCANCODE_BACKSLASH,		{ std::make_pair (1, 4) } },
+			{ SDL_SCANCODE_EQUALS,			{ std::make_pair (1, 3) } },
+			{ SDL_SCANCODE_MINUS,			{ std::make_pair (1, 2) } },
+			{ SDL_SCANCODE_9,				{ std::make_pair (1, 1) } },
+			{ SDL_SCANCODE_8,				{ std::make_pair (1, 0) } },
+			// Row 2
+			{ SDL_SCANCODE_B,				{ std::make_pair (2, 7) } },
+			{ SDL_SCANCODE_A,				{ std::make_pair (2, 6) } },
+			{ SDL_SCANCODE_LEFTBRACKET,		{ std::make_pair (2, 5) } }, // Pending DEAD
+			{ SDL_SCANCODE_SLASH,			{ std::make_pair (2, 4) } },
+			{ SDL_SCANCODE_PERIOD,			{ std::make_pair (2, 3) } },
+			{ SDL_SCANCODE_COMMA,			{ std::make_pair (2, 2) } },
+			{ SDL_SCANCODE_GRAVE,			{ std::make_pair (2, 1) } },
+			{ SDL_SCANCODE_APOSTROPHE,		{ std::make_pair (2, 0) } },
+			// Row 3
+			{ SDL_SCANCODE_J,				{ std::make_pair (3, 7) } },
+			{ SDL_SCANCODE_I,				{ std::make_pair (3, 6) } },
+			{ SDL_SCANCODE_H,				{ std::make_pair (3, 5) } },
+			{ SDL_SCANCODE_G,				{ std::make_pair (3, 4) } },
+			{ SDL_SCANCODE_F,				{ std::make_pair (3, 3) } },
+			{ SDL_SCANCODE_E,				{ std::make_pair (3, 2) } },
+			{ SDL_SCANCODE_D,				{ std::make_pair (3, 1) } },
+			{ SDL_SCANCODE_C,				{ std::make_pair (3, 0) } },
+			// Row 4
+			{ SDL_SCANCODE_R,				{ std::make_pair (4, 7) } },
+			{ SDL_SCANCODE_Q,				{ std::make_pair (4, 6) } },
+			{ SDL_SCANCODE_P,				{ std::make_pair (4, 5) } },
+			{ SDL_SCANCODE_O,				{ std::make_pair (4, 4) } },
+			{ SDL_SCANCODE_N,				{ std::make_pair (4, 3) } },
+			{ SDL_SCANCODE_M,				{ std::make_pair (4, 2) } },
+			{ SDL_SCANCODE_L,				{ std::make_pair (4, 1) } },
+			{ SDL_SCANCODE_K,				{ std::make_pair (4, 0) } },
+			// Row 5
+			{ SDL_SCANCODE_Z,				{ std::make_pair (5, 7) } },
+			{ SDL_SCANCODE_Y,				{ std::make_pair (5, 6) } },
+			{ SDL_SCANCODE_X,				{ std::make_pair (5, 5) } },
+			{ SDL_SCANCODE_W,				{ std::make_pair (5, 4) } },
+			{ SDL_SCANCODE_V,				{ std::make_pair (5, 3) } },
+			{ SDL_SCANCODE_U,				{ std::make_pair (5, 2) } },
+			{ SDL_SCANCODE_T,				{ std::make_pair (5, 1) } },
+			{ SDL_SCANCODE_S,				{ std::make_pair (5, 0) } },
+			// Row 6
+			{ SDL_SCANCODE_F3,				{ std::make_pair (6, 7) } },
+			{ SDL_SCANCODE_F2,				{ std::make_pair (6, 6) } },
+			{ SDL_SCANCODE_F1,				{ std::make_pair (6, 5) } },
+			{ SDL_SCANCODE_LALT,			{ std::make_pair (6, 4) } }, // = CODE
+			{ SDL_SCANCODE_V,				{ std::make_pair (6, 3) } }, // Pending CAPS
+			{ SDL_SCANCODE_LCTRL,			{ std::make_pair (6, 2) } }, // = GRAPH
+			{ SDL_SCANCODE_RCTRL,			{ std::make_pair (6, 1) } }, // = CTRL
+			{ SDL_SCANCODE_LSHIFT,			{ std::make_pair (6, 0) } }, // = SHIFT
+			{ SDL_SCANCODE_RSHIFT,			{ std::make_pair (6, 0) } }, // = SHIFT
+			// Row 7
+			{ SDL_SCANCODE_RETURN,			{ std::make_pair (7, 7) } },
+			{ SDL_SCANCODE_HOME,			{ std::make_pair (7, 6) } }, // Pending SELECT
+			{ SDL_SCANCODE_BACKSPACE,		{ std::make_pair (7, 5) } }, // Backspace
+			{ SDL_SCANCODE_END,				{ std::make_pair (7, 4) } }, // = STOP
+			{ SDL_SCANCODE_TAB,				{ std::make_pair (7, 3) } },
+			{ SDL_SCANCODE_ESCAPE,			{ std::make_pair (7, 2) } },
+			{ SDL_SCANCODE_F5,				{ std::make_pair (7, 1) } },
+			{ SDL_SCANCODE_F4,				{ std::make_pair (7, 0) } },
+			// Row 8
+			{ SDL_SCANCODE_RIGHT,			{ std::make_pair (8, 7) } },
+			{ SDL_SCANCODE_DOWN,			{ std::make_pair (8, 6) } },
+			{ SDL_SCANCODE_UP,				{ std::make_pair (8, 5) } },
+			{ SDL_SCANCODE_LEFT,			{ std::make_pair (8, 4) } },
+			{ SDL_SCANCODE_DELETE,			{ std::make_pair (8, 3) } },
+			{ SDL_SCANCODE_INSERT,			{ std::make_pair (8, 2) } },
+			{ SDL_SCANCODE_HOME,			{ std::make_pair (8, 1) } },
+			{ SDL_SCANCODE_SPACE,			{ std::make_pair (8, 0) } },
+			// Row 9
+			{ SDL_SCANCODE_KP_4,			{ std::make_pair (8, 7) } },
+			{ SDL_SCANCODE_KP_3,			{ std::make_pair (8, 6) } },
+			{ SDL_SCANCODE_KP_2,			{ std::make_pair (8, 5) } },
+			{ SDL_SCANCODE_KP_1,			{ std::make_pair (8, 4) } },
+			{ SDL_SCANCODE_KP_0,			{ std::make_pair (8, 3) } },
+			{ SDL_SCANCODE_KP_DIVIDE,		{ std::make_pair (8, 2) } },
+			{ SDL_SCANCODE_KP_PLUS,			{ std::make_pair (8, 1) } },
+			{ SDL_SCANCODE_KP_MULTIPLY,		{ std::make_pair (8, 0) } },
+			// Row 10
+			{ SDL_SCANCODE_KP_PERIOD,		{ std::make_pair (8, 7) } },
+			{ SDL_SCANCODE_KP_COMMA,		{ std::make_pair (8, 6) } },
+			{ SDL_SCANCODE_KP_MINUS,		{ std::make_pair (8, 5) } },
+			{ SDL_SCANCODE_KP_9,			{ std::make_pair (8, 4) } },
+			{ SDL_SCANCODE_KP_8,			{ std::make_pair (8, 3) } },
+			{ SDL_SCANCODE_KP_7,			{ std::make_pair (8, 2) } },
+			{ SDL_SCANCODE_KP_6,			{ std::make_pair (8, 1) } },
+			{ SDL_SCANCODE_KP_5,			{ std::make_pair (8, 0) } }
+		}));
 }
 
 // ---
@@ -281,9 +395,19 @@ MCHEmul::Chips MSX::SVI728::createChips () const
 }
 
 // ---
-MCHEmul::IODevices MSX::SVI728::createIODevices () const
+MCHEmul::IODevices MSX::SVI728::createIODevices (const std::string& lang) const
 {
-	MCHEmul::IODevices result = std::move (MSX::MSXModel::createIODevices ());
+	MCHEmul::IODevices result = std::move (MSX::MSXModel::createIODevices (lang));
+
+	// TODO
+
+	return (result);
+}
+
+// ---
+MSX::InputOSSystem::KeystrockesMap MSX::SVI728::createKeystrockesMap (const std::string& lang) const
+{
+	MSX::InputOSSystem::KeystrockesMap result = std::move (MSX::MSX1Model::createKeystrockesMap (lang));
 
 	// TODO
 
@@ -364,9 +488,19 @@ MCHEmul::Chips MSX::SVI738::createChips () const
 }
 
 // ---
-MCHEmul::IODevices MSX::SVI738::createIODevices () const
+MCHEmul::IODevices MSX::SVI738::createIODevices (const std::string& lang) const
 {
-	MCHEmul::IODevices result = std::move (MSX::MSXModel::createIODevices ());
+	MCHEmul::IODevices result = std::move (MSX::MSXModel::createIODevices (lang));
+
+	// TODO
+
+	return (result);
+}
+
+// ---
+MSX::InputOSSystem::KeystrockesMap MSX::SVI738::createKeystrockesMap (const std::string& lang) const
+{
+	MSX::InputOSSystem::KeystrockesMap result = std::move (MSX::MSX1Model::createKeystrockesMap (lang));
 
 	// TODO
 

@@ -31,6 +31,13 @@ namespace TEXASINSTRUMENTS
 		public:
 		static const unsigned int _ID = 1200;
 
+		/** The different graphic modes. */
+		static const unsigned char _GRAPHICIMODE = 0;
+		static const unsigned char _TEXTMODE = 1;
+		static const unsigned char _MULTICOLORMODE = 2;
+		static const unsigned char _GRAPHICIIMODE = 4;
+		// The rest (up to 8) can be used but they have an non offical behaviour...
+
 		// Constructors...
 		/** This constructor is used when the registers will be used directly from the Chip
 			and this one from the port manager. \n
@@ -46,6 +53,17 @@ namespace TEXASINSTRUMENTS
 		/** This chip has only 2 registers valid: 0 & 1 */
 		virtual size_t numberRegisters () const override
 							{ return (2); }
+
+		// Accesing to the important registers...
+		/** Whether the system is or not active. */
+		bool blankScreen () const
+							{ return (_blankScreen); }
+		/** The text color. */
+		unsigned char textColor () const
+							{ return (_textColor); }
+		/** The background color. */
+		unsigned char backDropColor () const
+							{ return (_backdropColor); }
 
 		// Manage the internal video memory of the chip...
 		// Take care because no boundaries checks are done!
@@ -123,6 +141,9 @@ namespace TEXASINSTRUMENTS
 		/** Executed when the _graphicMode is changed. 
 			It can be overloaded because the more complex versions of the TMS99xxFamily allow more screen modes. */
 		void setGraphicMode (unsigned char gM);
+		/** Which is the graphic mode. */
+		unsigned char graphicMode () const
+							{ return (_graphicMode); }
 
 		// Internal methods invoked from the chip when some circunstances are detected...
 		// That the reason to define them protected, and to declare TMS99xxFamily as a friend class...
@@ -138,6 +159,15 @@ namespace TEXASINSTRUMENTS
 							{ return (_screenUpdateHappen); }
 		void setSreenUpdateHappen ()
 							{ _screenUpdateHappen = true; }
+
+		protected:
+		/** Read the memory with new data if needed...
+			...it will depend on the graphical mode. \n
+			The method returns the element in the code table (if makes sense),
+			the element in the pattern table (if makes sense) 
+			and the element in the color table (again if it makes sense), in the form of a tuple... */
+		std::tuple <MCHEmul::UByte, MCHEmul::UByte, MCHEmul::UByte> 
+			readGraphicInfo (unsigned short x, unsigned short y);
 
 		protected:
 		/** The Video RAM is stored inside of the TMS99xxFamily. \n
@@ -204,6 +234,16 @@ namespace TEXASINSTRUMENTS
 		mutable MCHEmul::UByte _readAheadBuffer;
 		/** The last value read. */
 		mutable MCHEmul::UByte _lastValueRead;
+
+		// Implementation
+		/** All used when reading graphical information. */
+		bool _dataRead;
+		MCHEmul::Address _lastPatternNameTablePositionRead;
+		MCHEmul::UByte _lastPatterNameValueRead; // In the last position...
+		MCHEmul::Address _lastPatterGeneratorTablePositionRead;
+		MCHEmul::UByte _lastPatternGeneratorValueRead; // In the last position...
+		MCHEmul::Address _lastColorTablePositionRead;
+		MCHEmul::UByte _lastColorValueRead; // In the last position...
 	};
 
 	// ---

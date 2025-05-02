@@ -5,7 +5,8 @@ MSX::PPI8255Registers::PPI8255Registers ()
 	: MCHEmul::ChipRegisters (MSX::PPI8255Registers::_ID,
 		2 /** 2 bytes per address. */, 4 /** Registers. */),
 	  _lastValueRead (MCHEmul::UByte::_0),
-	  _slotChanged (false)
+	  _slotChanged (false),
+	  _keyboardStatusMatrix (11, MCHEmul::UByte::_FF)
 	// The rest of the attributes are initialized with the method initializeInternalValues...
 {
 	initializeInternalValues ();
@@ -76,9 +77,11 @@ void MSX::PPI8255Registers::setValue (size_t p, const MCHEmul::UByte& v)
 
 			break;
 
+		// Among other things this register selects the row of the keyboard to be read...
 		case 0x02:
 			{
-				// TODO
+				if ((_keyboardRowSelected = v.value () & 0x0f) > 10) // From 0 to 10. Over that nothing is valid...
+					_keyboardRowSelected = 0x0f; // Meaaning none...
 			}
 
 			break;
@@ -119,9 +122,10 @@ const MCHEmul::UByte& MSX::PPI8255Registers::readValue (size_t p) const
 
 			break;
 
+		// To read the status of the keyboard...
 		case 0x01:
 			{
-				// TODO
+				result = _keyboardStatusMatrix [_keyboardRowSelected];
 			}
 
 			break;
@@ -203,4 +207,8 @@ const MCHEmul::UByte& MSX::PPI8255Registers::peekValue (size_t p) const
 void MSX::PPI8255Registers::initializeInternalValues ()
 {
 	_slotBank0 = _slotBank1 = _slotBank2 = _slotBank3 = 0;
+
+	for (size_t i = 0; i < _keyboardStatusMatrix.size (); 
+		_keyboardStatusMatrix [i++] = MCHEmul::UByte::_FF); // None pressed...
+	_keyboardRowSelected = 0x0f; // ...Meaning none...
 }

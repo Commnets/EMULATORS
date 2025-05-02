@@ -45,18 +45,18 @@ namespace TEXASINSTRUMENTS
 		// Ta access to the internal registers...
 		// ...although, you shouldn't do that...
 		const TMS99xxFamilyRegisters* registers () const
-							{ return (_TMS9918ARegisters); }
+							{ return (_TMS99xxFamilyRegisters); }
 		TMS99xxFamilyRegisters* registers ()
-							{ return (_TMS9918ARegisters); }
+							{ return (_TMS99xxFamilyRegisters); }
 
 		// The access to the chip can be throught out the pins connected to the outside...
 		// ...What this actions do, will depend on the internal situation of the chip
 		MCHEmul::UByte readRegister (unsigned char rId) const
-							{ return (_TMS9918ARegisters -> readRegister (rId)); }
+							{ return (_TMS99xxFamilyRegisters -> readRegister (rId)); }
 		MCHEmul::UByte peekRegister (unsigned char rId) const // Same that previous but not changind the content...
-							{ return (_TMS9918ARegisters -> peekRegister (rId)); }
+							{ return (_TMS99xxFamilyRegisters -> peekRegister (rId)); }
 		void setRegister (unsigned char rId, const MCHEmul::UByte& v)
-							{ _TMS9918ARegisters -> setRegister (rId, v); }
+							{ _TMS99xxFamilyRegisters -> setRegister (rId, v); }
 
 		/** Size & position of the screen. */
 		virtual unsigned short numberColumns () const override
@@ -72,13 +72,15 @@ namespace TEXASINSTRUMENTS
 		// Relies in the registers...
 		// Take care because no boundaries checks are done...
 		size_t videoMemorySize () const
-							{ return (_TMS9918ARegisters -> videoMemorySize ()); }
+							{ return (_TMS99xxFamilyRegisters -> videoMemorySize ()); }
 		const std::vector <MCHEmul::UByte>& videoMemory () const
-							{ return (_TMS9918ARegisters -> videoMemory ()); }
+							{ return (_TMS99xxFamilyRegisters -> videoMemory ()); }
 		const MCHEmul::UByte& videoData (const MCHEmul::Address& pos) const
-							{ return (_TMS9918ARegisters -> videoData (pos)); }
+							{ return (_TMS99xxFamilyRegisters -> videoData (pos)); }
 		void setVideoData (const MCHEmul::Address& pos, const MCHEmul::UByte& v)
-							{ _TMS9918ARegisters -> setVideoData (pos, v); }
+							{ _TMS99xxFamilyRegisters -> setVideoData (pos, v); }
+		unsigned char graphicMode () const
+							{ return (_TMS99xxFamilyRegisters -> graphicMode ()); }
 
 		/** To get the raster info. */
 		const MCHEmul::Raster& raster () const
@@ -105,9 +107,9 @@ namespace TEXASINSTRUMENTS
 		/** To get snapshots of the graphical memory. 
 			The info returned will depend on the active graphic mode. */
 		MCHEmul::UBytes screenMemorySnapShot () const
-							{ return (_TMS9918ARegisters -> screenMemorySnapShot ()); }
+							{ return (_TMS99xxFamilyRegisters -> screenMemorySnapShot ()); }
 		MCHEmul::UBytes colorMemorySnapShot () const
-							{ return (_TMS9918ARegisters -> colorMemorySnapShot ()); }
+							{ return (_TMS99xxFamilyRegisters -> colorMemorySnapShot ()); }
 
 		protected:
 		virtual void processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifier* n) override;
@@ -121,8 +123,18 @@ namespace TEXASINSTRUMENTS
 			That returns variable will be used to determine whether 
 			the CPU has to be stopped or not. */
 		void readGraphicInfoAndDrawVisibleZone (MCHEmul::CPU* cpu);
-		/** Read the memory with new data. */
-		inline void readGraphicInfo (unsigned short x, unsigned short y);
+		/** Draw the graphics, sprites and detect collisuions depending on the graphics mode. */
+		void drawGraphicsSpritesAndDetectCollisions 
+			(unsigned short x, unsigned short y,
+			 const std::tuple <MCHEmul::UByte, MCHEmul::UByte, MCHEmul::UByte>& data);
+		/** Invoked from the previous one. 
+			The methods receive the position within the real screen. */
+		void drawGraphicsScreenGraphicsMode (unsigned short x, unsigned short y,
+			 const std::tuple <MCHEmul::UByte, MCHEmul::UByte, MCHEmul::UByte>& data);
+		void drawGraphicsScreenTextMode (unsigned short x, unsigned short y,
+			 const std::tuple <MCHEmul::UByte, MCHEmul::UByte, MCHEmul::UByte>& data);
+		void drawGraphicsScreenMulticolorMode (unsigned short x, unsigned short y,
+			 const std::tuple <MCHEmul::UByte, MCHEmul::UByte, MCHEmul::UByte>& data);
 		/** Draw the important events, in case this option is set. */
 		void drawEvents ();
 
@@ -132,11 +144,12 @@ namespace TEXASINSTRUMENTS
 		/** Debug special situations...
 			Take care using this instructions _deepDebugFile could be == nullptr... */
 		void debugTMS9918ACycle (MCHEmul::CPU* cpu, unsigned int i);
+		void debugVideoNoActive ();
 		// -----
 
 		protected:
 		/** A reference to the TMS99xxFamily registers. */
-		TMS99xxFamilyRegisters* _TMS9918ARegisters;
+		TMS99xxFamilyRegisters* _TMS99xxFamilyRegisters;
 		/** The raster. */
 		MCHEmul::Raster _raster;
 		/** The number of cycles to be executed by every CPU clycle. \n
@@ -168,12 +181,6 @@ namespace TEXASINSTRUMENTS
 			variable is set and must be deleted. */
 		TMS99xxFamilyRegisters* _internalRegisters;
 	};
-
-	// ---
-	inline void TMS99xxFamily::readGraphicInfo (unsigned short x, unsigned short y)
-	{
-		// TODO
-	}
 
 	/** The version of the TMS99xxFamily for PAL systems. */
 	class TMS9929A final : public TMS99xxFamily

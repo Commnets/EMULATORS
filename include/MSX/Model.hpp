@@ -20,6 +20,7 @@
 #include <CORE/incs.hpp>
 #include <MSX/VDP.hpp>
 #include <MSX/PSG.hpp>
+#include <MSX/OSIO.hpp>
 
 namespace MSX
 {
@@ -109,8 +110,11 @@ namespace MSX
 		const MCHEmul::Chips& chips () const
 							{ return (_chips.empty () ? (_chips = createChips ()) : _chips); }
 		/** Same for the IO devices. */
-		const MCHEmul::IODevices& ioDevices () const
-							{ return (_ioDevices.empty () ? (_ioDevices = createIODevices ()) : _ioDevices); }
+		const MCHEmul::IODevices& ioDevices (const std::string& lang) const
+							{ return (_ioDevices.empty () ? (_ioDevices = createIODevices (lang)) : _ioDevices); }
+		/** To get the map of keys of the model. */
+		const InputOSSystem::KeystrockesMap& keystrockedMap (const std::string& lang) const
+							{ return (_keystrockesMap.empty () ? (_keystrockesMap = createKeystrockesMap (lang)) : _keystrockesMap); }
 
 		/** To get the memory of the system. \n
 			First time ois invoked the content memoty is created using the method memoryContent. */
@@ -126,7 +130,9 @@ namespace MSX
 		virtual MCHEmul::Chips createChips () const;
 		/** The default version creates the basic io devices: Screen, Speakers and Keyboard. \n
 			It can be overloaded anyway. */
-		virtual MCHEmul::IODevices createIODevices () const;
+		virtual MCHEmul::IODevices createIODevices (const std::string& lang) const;
+		/** To create the specific keystrockes. */
+		virtual InputOSSystem::KeystrockesMap createKeystrockesMap (const std::string& lang) const;
 
 		// All these methods are invoked from the construction of the memory element (above)...
 		/** Gets the structure of the memory. \n
@@ -149,6 +155,7 @@ namespace MSX
 		mutable PSG* _psg;
 		mutable MCHEmul::Chips _chips;
 		mutable MCHEmul::IODevices _ioDevices;
+		mutable InputOSSystem::KeystrockesMap _keystrockesMap;
 		mutable Memory* _memory;
 	};
 
@@ -211,7 +218,8 @@ namespace MSX
 		virtual VDP* createVDP () const override;
 		virtual PSG* createPSG () const override;
 		virtual MCHEmul::Chips createChips () const override;
-		virtual MCHEmul::IODevices createIODevices () const override;
+		virtual MCHEmul::IODevices createIODevices (const std::string& lang) const override;
+		virtual InputOSSystem::KeystrockesMap createKeystrockesMap (const std::string& lang) const override;
 		
 		// No need to create a memory structure different that the basic one!
 		virtual bool loadROMOverForLanguage (MCHEmul::PhysicalStorage* fs, 
@@ -243,8 +251,9 @@ namespace MSX
 		virtual VDP* createVDP () const override;
 		virtual PSG* createPSG () const override;
 		virtual MCHEmul::Chips createChips () const override;
-		virtual MCHEmul::IODevices createIODevices () const override;
-		
+		virtual MCHEmul::IODevices createIODevices (const std::string& lang) const override;
+		virtual InputOSSystem::KeystrockesMap createKeystrockesMap (const std::string& lang) const override;
+	
 		virtual MCHEmul::Memory::Content memoryContent () const override;
 		virtual bool loadROMOverForLanguage (MCHEmul::PhysicalStorage* fs, 
 			const std::string& lang) override;

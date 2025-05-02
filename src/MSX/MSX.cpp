@@ -13,7 +13,7 @@ MSX::MSXComputer::MSXComputer (MSX::MSXModel* m, unsigned int cfg,
 		 (m == nullptr) ? MCHEmul::Chips () : m -> chips (),
 		// The memory depends on the configuration, the type, and the languaje!
 		 (m == nullptr) ? nullptr : m -> memory (m -> configurationAdjusted (cfg), lang), 
-		 (m == nullptr) ? MCHEmul::IODevices ()	: m -> ioDevices (),
+		 (m == nullptr) ? MCHEmul::IODevices ()	: m -> ioDevices (lang), // The keyboard might be affected by the language...
 		 (m == nullptr) ? 0 : m -> clockSpeed (),
 		 { }, { }, // The MSX, emulation has been done without neither Buses nor Wires!
 		 (m == nullptr) ? MCHEmul::Attributes () : m -> attributes ()),

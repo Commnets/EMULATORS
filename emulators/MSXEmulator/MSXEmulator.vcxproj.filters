@@ -40,11 +40,6 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <Image Include="MSKLogo.ico">
-      <Filter>Archivos de recursos</Filter>
-    </Image>
-  </ItemGroup>
-  <ItemGroup>
     <ResourceCompile Include="MSXEmulator.rc">
       <Filter>Archivos de recursos</Filter>
     </ResourceCompile>

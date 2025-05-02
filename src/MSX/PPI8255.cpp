@@ -1,4 +1,5 @@
 #include <MSX/PPI8255.hpp>
+#include <MSX/OSIO.hpp>
 
 // ---
 MSX::PPI8255::PPI8255 (MSX::PPI8255Registers* reg)
@@ -54,6 +55,39 @@ MCHEmul::InfoStructure MSX::PPI8255::getInfoStructure () const
 	// TODO
 
 	return (result);
+}
+
+// ---
+void MSX::PPI8255::processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifier* n)
+{
+	switch (evnt.id ())
+	{
+		case MCHEmul::InputOSSystem::_KEYBOARDKEYPRESSED:
+			{
+				const MSX::InputOSSystem::Keystrokes& ks = ((MSX::InputOSSystem*) n) -> keystrokesFor
+					(std::static_pointer_cast <MCHEmul::InputOSSystem::KeyboardEvent> (evnt.data ()) -> _key);
+				if (!ks.empty ()) // The key has to be defined...
+					for (const auto& j : ks)
+						_PPI8255Registers -> setKeyboardStatusMatrix (j.first, j.second, false);
+			}
+
+			break;
+
+		case MCHEmul::InputOSSystem::_KEYBOARDKEYRELEASED:
+			{
+				const MSX::InputOSSystem::Keystrokes& ks = ((MSX::InputOSSystem*) n) -> keystrokesFor
+					(std::static_pointer_cast <MCHEmul::InputOSSystem::KeyboardEvent> (evnt.data ()) -> _key);
+				if (!ks.empty ()) // The key has to be defined...
+					for (const auto& j : ks)
+						_PPI8255Registers -> setKeyboardStatusMatrix (j.first, j.second, true);
+			}
+
+			break;
+
+		// Event not managed...
+		default:
+			break;
+	}
 }
 
 // ---

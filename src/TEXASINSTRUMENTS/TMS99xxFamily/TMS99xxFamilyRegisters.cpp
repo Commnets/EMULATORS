@@ -269,6 +269,15 @@ void TEXASINSTRUMENTS::TMS99xxFamilyRegisters::initializeInternalValues ()
 	// Iniatialize the video memory...
 	for (size_t i = 0; i < _videoMemory.size (); 
 		_videoMemory [i++] = MCHEmul::UByte::_0);
+
+	// The temnporal info used when running...
+	_dataRead = false;
+	_lastPatternNameTablePositionRead = { };
+	_lastPatterNameValueRead = MCHEmul::UByte::_0;
+	_lastPatterGeneratorTablePositionRead = { };
+	_lastPatternGeneratorValueRead = MCHEmul::UByte::_0;
+	_lastColorTablePositionRead = { };
+	_lastColorValueRead = MCHEmul::UByte::_0;
 }
 
 // ---
@@ -412,5 +421,205 @@ MCHEmul::UByte TEXASINSTRUMENTS::TMS99xxFamilyRegisters::peekStatus () const
 // ---
 void TEXASINSTRUMENTS::TMS99xxFamilyRegisters::setGraphicMode (unsigned char gM)
 {
-	// TODO
+	_graphicMode = gM;
+
+	_dataRead = false;
+
+	_lastPatternNameTablePositionRead = { };
+	_lastPatterNameValueRead = MCHEmul::UByte::_0;
+	_lastPatterGeneratorTablePositionRead = { };
+	_lastPatternGeneratorValueRead = MCHEmul::UByte::_0;
+	_lastColorTablePositionRead = { };
+	_lastColorValueRead = MCHEmul::UByte::_0;
+}
+
+// ---
+std::tuple <MCHEmul::UByte, MCHEmul::UByte, MCHEmul::UByte> 
+	TEXASINSTRUMENTS::TMS99xxFamilyRegisters::readGraphicInfo (unsigned short x, unsigned short y)
+{
+	switch (_graphicMode)
+	{
+		/** Graphics I mode. \n
+			32 * 24 + Sprites. \n
+			Every character is 8 pixels width. */
+		case _GRAPHICIMODE:
+			{
+				MCHEmul::Address pT = 
+					_nameAddress + 
+					(size_t) (((y >> 3 /** 8 bytes high every pattern. */) << 5 /** 32 patterns per line. */) + 
+					(size_t) (x >> 3 /** 8 bits used per line of pattern. */)); // 768 positions max...
+
+				// If the position to read is "new" or nothing was read before, read the data...
+				if (pT != _lastPatternNameTablePositionRead || !_dataRead)
+				{
+					_lastPatterNameValueRead = 
+						videoData (_lastPatternNameTablePositionRead = pT); // a pattern bwteen 0 and 255...
+					_lastPatternGeneratorValueRead =
+						videoData (_lastPatterGeneratorTablePositionRead = 
+							// The base...
+							_patternAddress +
+							// ...8 bytes per char in the pattern table...
+							(size_t) (_lastPatterNameValueRead.value () << 3) + 
+							// ...and the right byte within that 8, will depend on the line where the raster is now...
+							(size_t) (y % 8));
+					_lastColorValueRead =
+						videoData (_lastColorTablePositionRead =
+							// The base...
+							_colorAddress +	
+							// 32 possible colors depending on the char name...
+							(size_t) (_lastPatterNameValueRead.value () >> 3));
+				}
+
+				_dataRead = true;
+			}
+
+			break;
+
+		/** Text mode. \n
+			40 * 24 - Sprites. \n
+			Every character is 6 pixels width. */
+		case _TEXTMODE:
+			{
+				// In this mode the first and the last 8 pixels per line are blank...
+				// ...and they have to be drawn in the same color than the background...
+				if (x < 8 || x >= 248 /** (40 * 6) + first 8 pixels = 248. */)
+				{
+					_lastPatternNameTablePositionRead =
+					_lastPatterGeneratorTablePositionRead =
+					_lastColorTablePositionRead = { };
+					_lastPatterNameValueRead = 
+					_lastPatternGeneratorValueRead =
+					_lastColorValueRead = MCHEmul::UByte::_0;
+				}
+				else
+				{
+					MCHEmul::Address pT = 
+						_nameAddress + 
+						(size_t) ((y >> 3 /** 8 bytes high every pattern. */) * 40 /** 32 patterns per line. */) + 
+						(size_t) ((x - 8 /** From 1st position onwards. */) / 6 /** 6 bits used per line of pattern. */); // 960 in total...
+
+					// If the position to read is "new" or nothing was read before, read the data...
+					if (pT != _lastPatternNameTablePositionRead || !_dataRead)
+					{
+						_lastPatterNameValueRead = 
+							videoData (_lastPatternNameTablePositionRead = pT);
+						_lastPatternGeneratorValueRead =
+							videoData (_lastPatterGeneratorTablePositionRead = 
+								// The base...
+								_patternAddress + 
+								// 8 bytes per pattern (name selects the pattern)...
+								(size_t) (_lastPatterNameValueRead.value () << 3) + 
+								// The right byte of the pattern depends on the screen position...
+								(size_t) (y % 8)); 
+						// Only the first 6 bits are used...
+						// ...and the color table in this case is not used...
+						_lastColorTablePositionRead = { }; // Not important...
+						_lastColorValueRead = MCHEmul::UByte::_0;
+					}
+
+					_dataRead = true;
+				}
+			}
+
+			break;
+
+		/** Multicolor mode. \n
+			64 * 48 (blocks of 4 * 4 pixels) + Sprites. 
+			Just to draw graphics of colors. */
+		case _MULTICOLORMODE:
+			{
+				MCHEmul::Address pT = 
+					_nameAddress + 
+					(size_t) (((y >> 3 /** 8 bytes high every pattern. */) << 5 /** 32 patterns per line. */) + 
+					(size_t) (x >> 3 /** 8 bits used per line of pattern. */)); // 768 positions max...
+
+				// If the position to read is "new" or nothing was read before, read the data...
+				if (pT != _lastPatternNameTablePositionRead || !_dataRead)
+				{
+					unsigned char row = (unsigned char) (y >> 3); // From 0 to 23...
+					_lastPatterNameValueRead = 
+						videoData (_lastPatternNameTablePositionRead = pT);
+					// The pattern name is used to get the color pattern that is stored in the pattern generation table.
+					// Every color pattern is made up of 8 bytes and there is 2 colors defined in each byte
+					_lastPatternGeneratorValueRead =
+						videoData (_lastPatterGeneratorTablePositionRead =
+							// The base...
+							_patternAddress +
+							// 8 bytes per pattern (name selects the color pattern)...
+							(size_t) (_lastPatterNameValueRead.value () << 3));
+					// But the specific byte to select will depend on, the row where the pattern name was initially read (768 positions)
+					// So if the row were 0, the byte selected would be 0 & 1, row 1 -> bytes 2 & 3, row 2 -> bytes 4 & 5, row 3 -> bytes 6 & 7...
+					// So the byte to select is (row AND 3) << 1 & ((row AND 3) << 1) + 1
+					// The 1 added at the end will depend of the raster row: 0 - 3 = +0, 4 - 7 = +1, 8 - 11 = +0, 12 - 15 = +1,...
+					// So (rasterRow >> 2) % 2 is what is has to be added...
+					_lastColorTablePositionRead = { }; // Is wasn't used...
+					_lastColorValueRead = 
+						_lastPatternGeneratorValueRead [((row & 0x03) << 1) + ((y >> 2) % 2) /** Even = +0, Odd = +1. */];
+				}
+
+				_dataRead = true;
+			}
+
+			break;
+
+		/** Graphics II mode. \n
+			Similar to Graphics mode 1, 
+			but with a much wider set of patterns and colors to select. \n
+			32 * 24 + Sprites.
+			Every character is 8 pixels width. */
+		case _GRAPHICIIMODE:
+			{
+				size_t sP = 
+					(size_t) ((y >> 3 /** 8 bytes high every pattern. */) << 5 /** 32 patterns per line. */) + 
+					(size_t) (x >> 3 /** 8 bits used per line of pattern. */); // 768 different positions max...
+				MCHEmul::Address pT = _nameAddress + sP;
+
+				// If the position to read is "new" or nothing was read before, read the data...
+				if (pT != _lastPatternNameTablePositionRead || !_dataRead)
+				{
+					// 0, 1 or 2. clock of 256 bytes in the screen...
+					unsigned char bP = (unsigned char) (sP >> 8); 
+					_lastPatterNameValueRead = 
+						videoData (_lastPatternNameTablePositionRead = pT); // a pattern bwteen 0 and 255...
+					_lastPatternGeneratorValueRead =
+						videoData (_lastPatterGeneratorTablePositionRead = 
+							// The base...
+							_patternAddress +
+							// ...a different block of 2028 bytes depending on the section in the screen (<< 11 = *0x0800 = 2048)
+							(size_t) (bP << 11) +
+							// ...8 bytes per char in the pattern table...
+							(size_t) (_lastPatterNameValueRead.value () << 3) +
+							// ...and the right byte within that 8, will depend on the line where the raster is now...
+							(size_t) (y % 8));
+					_lastColorValueRead =
+						videoData (_lastColorTablePositionRead =
+							// The base...
+							_colorAddress +
+							// ...a different block of 2028 bytes depending on the section in the screen (<< 11 = *0x0800 = 2048)
+							(size_t) (bP << 11) +
+							// ...8 bytes per char in the color table...
+							(size_t) (_lastPatterNameValueRead.value () << 3) +
+							// ...and the right byte within that 8, will depend on the line where the raster is now...
+							(size_t) (y % 8));
+				}
+
+				_dataRead = true;
+			}
+
+			break;
+
+		// This mode is not allowed...
+		default:
+			{
+				_LOG ("Graphic mode:" + std::to_string (_graphicMode) + " not implemented");
+
+				assert (false);
+			}
+
+			break;
+	}
+
+	// Returns the info read if it was actualized...
+	return (std::tuple <MCHEmul::UByte, MCHEmul::UByte, MCHEmul::UByte> 
+		{ _lastPatterNameValueRead, _lastPatternGeneratorValueRead, _lastColorValueRead });
 }

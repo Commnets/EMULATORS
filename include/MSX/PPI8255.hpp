@@ -54,6 +54,8 @@ namespace MSX
 		virtual MCHEmul::InfoStructure getInfoStructure () const override;
 
 		private:
+		virtual void processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifier* n) override;
+
 		// -----
 		// Different debug methods to simplify the internal code
 		// and to make simplier the modification in case it is needed...

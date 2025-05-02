@@ -18,6 +18,8 @@
 
 namespace MSX
 {
+	class PPI8255;
+
 	/** The MSX::InputOSSystem 
 		It is very related with the por EF. \n
 		The events that happen in the OS have to be transmitted to that port
@@ -30,17 +32,25 @@ namespace MSX
 		using Keystroke = 
 			std::pair <unsigned short /** bit at port A. */, unsigned short /** bit at port B. */>;
 		using Keystrokes = std::vector <Keystroke>;
+		using KeystrockesMap = std::map <SDL_Scancode, Keystrokes>;
 
-		InputOSSystem ();
+		/** Constructor.
+			The key matrix is given at construction time because it could depend on the type of MSX. */
+		InputOSSystem (const KeystrockesMap& ks);
 
 		virtual void linkToChips (const MCHEmul::Chips& c) override;
 
 		inline const Keystrokes& keystrokesFor (SDL_Scancode sc) const;
 
 		private:
-		// TODO: Describe the map of keystrokes
-		using KeystrockesMap = std::map <SDL_Scancode, Keystrokes>;
-		static const KeystrockesMap _MSXKEYS;
+		/** Assigned at construction time. \n
+			Defines the map of keys used in the system. It is something than can depend on the model. \n
+			Once assigned it can not be changed. */
+		const KeystrockesMap _MSXKEYS;
+		/** A reference to the PPI chip where the keyboard info is finally read. */
+		PPI8255* _ppi8255;
+
+		/** It is fixed, and what to return when nothing is pushed. */
 		static const Keystrokes _NOKEYSTROKES;
 	};
 
