@@ -14,3 +14,19 @@ Type:NMI, Id:@ID@, Active:@ACTIVE@, In Execution:@EXECUTION@, At Address:$@ADDRE
 ;CVDP
 @TMS99xxFamily>@
 #---
+#---
+;CPNAME
+@BYTES{blocksize=32,listsep=\,,tablesep=\ ,minsize=2}@
+#---
+#---
+;CPGEN
+@BYTES{blocksize=32,listsep=\,,tablesep=\ ,minsize=2}@
+#---
+#---
+;CCNAME
+@BYTES{blocksize=32,listsep=\,,tablesep=\ ,minsize=2}@
+#---
+#---
+;CSPRITESDRAW
+@DRAW@
+#---

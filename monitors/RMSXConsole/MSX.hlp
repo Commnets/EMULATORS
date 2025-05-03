@@ -5,3 +5,19 @@
 ;VDP
 Printout the status of the VDP.
 No parameters needed.
+;PNAME
+To know the content of the Pattern Name Table.
+No parameters are needed.
+The output will depend on the graphic mode set.
+;PGEN
+To know the content of the Pattern Generation Table.
+No parameters are needed.
+The output will depend on the graphic mode set.
+;CNAME
+To know the content of the Color Name Table.
+No parameters are needed.
+The output will depend on the graphic mode set.
+;SPRITESDRAW [n1 n2 n3...]
+To print out the sprites data.
+No parameters or the list of sprites to visualize from 1 to 32.
+The parameters could be repeated, but just one instace of every value is accepted.

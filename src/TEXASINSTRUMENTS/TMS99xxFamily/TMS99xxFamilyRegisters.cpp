@@ -53,7 +53,6 @@ MCHEmul::InfoStructure TEXASINSTRUMENTS::TMS99xxFamilyRegisters::getInfoStructur
 	result.add ("NameAddress",			_nameAddress);
 	result.add ("ColorAddress",			_colorAddress);
 	result.add ("PatternAddress",		_patternAddress);
-	result.add ("SpriteAddress",		_spriteAddress);
 	result.add ("SpriteAttrsAddress",	_spriteAttrsAddress);
 	result.add ("SpriteGenAddress",		_spriteGenAddress);
 	result.add ("TextColor",			_textColor);
@@ -65,19 +64,44 @@ MCHEmul::InfoStructure TEXASINSTRUMENTS::TMS99xxFamilyRegisters::getInfoStructur
 }
 
 // ---
-MCHEmul::UBytes TEXASINSTRUMENTS::TMS99xxFamilyRegisters::screenMemorySnapShot () const
+MCHEmul::Strings TEXASINSTRUMENTS::TMS99xxFamilyRegisters::spriteDrawSnapShot (size_t nS) const
 {
-	// TODO
+	MCHEmul::Strings result = { };
 
-	return (MCHEmul::UBytes ());
+	auto toString = [](const MCHEmul::UByte& b) -> std::string
+		{
+			std::string result = "";
+			for (int i = 7; i > 0; i--) result += b.bit (i) ? "*" : ".";
+			return (result);
+		};
+
+	std::vector <MCHEmul::UByte> sD = 
+		std::move (readSpriteDefinition ((unsigned char) (nS - 1)));
+	if (_sprites16pixels)
+		for (size_t i = 0; i < 16; i++) 
+			result.emplace_back (toString (sD [i]) + toString (sD [i + 16]));
+	else
+		for (size_t i = 0; i < 8; i++)
+			result.emplace_back (toString (sD [i]));
+
+	return (result);
 }
 
 // ---
-MCHEmul::UBytes TEXASINSTRUMENTS::TMS99xxFamilyRegisters::colorMemorySnapShot () const
+MCHEmul::Strings TEXASINSTRUMENTS::TMS99xxFamilyRegisters::spritesDrawSnapShot (const std::vector <size_t>& nS) const
 {
-	// TODO
+	MCHEmul::Strings result;
 
-	return (MCHEmul::UBytes ());
+	std::vector <size_t> rnS = nS;
+	if (nS.empty ()) for (unsigned char i = 1; i <= 32; rnS.push_back (i++)); // The 32 if nothing...
+	for (const auto& i : rnS)
+	{
+		result.emplace_back ("-Sprite:" + std::to_string ((int) i) + "-----");
+		MCHEmul::Strings sS = std::move (spriteDrawSnapShot (i));
+		result.insert (result.end (), sS.begin (), sS.end ());
+	}
+
+	return (result);
 }
 
 // ---
@@ -287,6 +311,8 @@ void TEXASINSTRUMENTS::TMS99xxFamilyRegisters::setControlRegister (unsigned char
 
 	switch (rId)
 	{
+		// Control Register 1
+		// Graphic mode
 		case 0x00:
 			{
 				// Bit 0: External signal?
@@ -304,6 +330,8 @@ void TEXASINSTRUMENTS::TMS99xxFamilyRegisters::setControlRegister (unsigned char
 
 			break;
 
+		// Control Register 2
+		// Graphic mode, Sprites, Interrupt...
 		case 0x01:
 			{
 				// Bit 0: Sprites enlarged in both axis?
@@ -334,6 +362,7 @@ void TEXASINSTRUMENTS::TMS99xxFamilyRegisters::setControlRegister (unsigned char
 
 			break;
 
+		// Pattern Name Table Address
 		case 0x02:
 			{
 				// Bits 0, 1, 2 & 3: Where the table of codes (patterns' name) is (blocks of 1k)...
@@ -344,6 +373,7 @@ void TEXASINSTRUMENTS::TMS99xxFamilyRegisters::setControlRegister (unsigned char
 
 			break;
 
+		// Color Name Table Address
 		case 0x03:
 			{
 				// Special meaning when bit 1 register 0 (M2) is on...
@@ -352,6 +382,7 @@ void TEXASINSTRUMENTS::TMS99xxFamilyRegisters::setControlRegister (unsigned char
 
 			break;
 
+		// Pattern Generation Table Address
 		case 0x04:
 			{
 				// Bits 0, 1 & 2: Where the patters are (blocks of 2k)...
@@ -360,6 +391,7 @@ void TEXASINSTRUMENTS::TMS99xxFamilyRegisters::setControlRegister (unsigned char
 
 			break;
 
+		// Sprite Attributes Table Address
 		case 0x05:
 			{
 				// Bits 0 to 6: Where the sprites' attribute table is (blocks of 128 bytes)...
@@ -368,6 +400,7 @@ void TEXASINSTRUMENTS::TMS99xxFamilyRegisters::setControlRegister (unsigned char
 
 			break;
 
+		// Sprite Generation Table Address
 		case 0x06:
 			{
 				// Bits 0, 1 & 3: Where the definition of the sprites is (blocks of 2k)...
@@ -376,6 +409,7 @@ void TEXASINSTRUMENTS::TMS99xxFamilyRegisters::setControlRegister (unsigned char
 
 			break;
 
+		// Colors
 		case 0x07:
 			{
 				// Bits 0, 1, 2 & 3: Back drop (background color)
@@ -461,7 +495,7 @@ std::tuple <MCHEmul::UByte, MCHEmul::UByte, MCHEmul::UByte>
 							// ...8 bytes per char in the pattern table...
 							(size_t) (_lastPatterNameValueRead.value () << 3) + 
 							// ...and the right byte within that 8, will depend on the line where the raster is now...
-							(size_t) (y % 8));
+							(size_t) (y % 8)); // Total 2048 bytes...
 					_lastColorValueRead =
 						videoData (_lastColorTablePositionRead =
 							// The base...
@@ -510,7 +544,7 @@ std::tuple <MCHEmul::UByte, MCHEmul::UByte, MCHEmul::UByte>
 								// 8 bytes per pattern (name selects the pattern)...
 								(size_t) (_lastPatterNameValueRead.value () << 3) + 
 								// The right byte of the pattern depends on the screen position...
-								(size_t) (y % 8)); 
+								(size_t) (y % 8)); // Total 2048 bytes...
 						// Only the first 6 bits are used...
 						// ...and the color table in this case is not used...
 						_lastColorTablePositionRead = { }; // Not important...
@@ -546,7 +580,7 @@ std::tuple <MCHEmul::UByte, MCHEmul::UByte, MCHEmul::UByte>
 							// The base...
 							_patternAddress +
 							// 8 bytes per pattern (name selects the color pattern)...
-							(size_t) (_lastPatterNameValueRead.value () << 3));
+							(size_t) (_lastPatterNameValueRead.value () << 3)); // Total 2048 bytes...
 					// But the specific byte to select will depend on, the row where the pattern name was initially read (768 positions)
 					// So if the row were 0, the byte selected would be 0 & 1, row 1 -> bytes 2 & 3, row 2 -> bytes 4 & 5, row 3 -> bytes 6 & 7...
 					// So the byte to select is (row AND 3) << 1 & ((row AND 3) << 1) + 1
@@ -585,22 +619,22 @@ std::tuple <MCHEmul::UByte, MCHEmul::UByte, MCHEmul::UByte>
 						videoData (_lastPatterGeneratorTablePositionRead = 
 							// The base...
 							_patternAddress +
-							// ...a different block of 2028 bytes depending on the section in the screen (<< 11 = *0x0800 = 2048)
+							// ...a different block of 2048 bytes depending on the section in the screen (<< 11 = *0x0800 = 2048)
 							(size_t) (bP << 11) +
 							// ...8 bytes per char in the pattern table...
 							(size_t) (_lastPatterNameValueRead.value () << 3) +
 							// ...and the right byte within that 8, will depend on the line where the raster is now...
-							(size_t) (y % 8));
+							(size_t) (y % 8)); // Total 2048 * 3 = 6144 bytes
 					_lastColorValueRead =
 						videoData (_lastColorTablePositionRead =
 							// The base...
 							_colorAddress +
-							// ...a different block of 2028 bytes depending on the section in the screen (<< 11 = *0x0800 = 2048)
+							// ...a different block of 2048 bytes depending on the section in the screen (<< 11 = *0x0800 = 2048)
 							(size_t) (bP << 11) +
 							// ...8 bytes per char in the color table...
 							(size_t) (_lastPatterNameValueRead.value () << 3) +
 							// ...and the right byte within that 8, will depend on the line where the raster is now...
-							(size_t) (y % 8));
+							(size_t) (y % 8)); // Total 2048 * 4 = 6144 bytes
 				}
 
 				_dataRead = true;

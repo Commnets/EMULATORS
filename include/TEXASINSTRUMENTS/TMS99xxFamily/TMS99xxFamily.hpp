@@ -106,10 +106,16 @@ namespace TEXASINSTRUMENTS
 
 		/** To get snapshots of the graphical memory. 
 			The info returned will depend on the active graphic mode. */
-		MCHEmul::UBytes screenMemorySnapShot () const
-							{ return (_TMS99xxFamilyRegisters -> screenMemorySnapShot ()); }
-		MCHEmul::UBytes colorMemorySnapShot () const
-							{ return (_TMS99xxFamilyRegisters -> colorMemorySnapShot ()); }
+		std::vector <MCHEmul::UByte> patternNameTableSnapShot () const
+							{ return (std::move (_TMS99xxFamilyRegisters -> patternNameTableSnapShot ())); }
+		std::vector <MCHEmul::UByte> patternGenerationTableSnapShot () const
+							{ return (std::move (_TMS99xxFamilyRegisters -> patternGenerationTableSnapShot ())); }
+		std::vector <MCHEmul::UByte> colorNameTableSnapShot () const
+							{ return (std::move (_TMS99xxFamilyRegisters -> colorNameTableSnapShot ())); }
+		MCHEmul::Strings spriteDrawSnapShot (size_t nS) const // From 1 to 32
+							{ return (std::move (_TMS99xxFamilyRegisters -> spriteDrawSnapShot (nS))); }
+		MCHEmul::Strings spritesDrawSnapShot (const std::vector <size_t>& nS) const // From 1 to 32 or empty for everything...
+							{ return (std::move (_TMS99xxFamilyRegisters -> spritesDrawSnapShot (nS))); }
 
 		protected:
 		virtual void processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifier* n) override;

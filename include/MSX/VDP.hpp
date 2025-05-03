@@ -64,8 +64,11 @@ namespace MSX
 		virtual const MCHEmul::UByte& videoData (const MCHEmul::Address& pos) const = 0;
 		virtual unsigned char graphicMode () const = 0;
 
-		virtual MCHEmul::UBytes screenMemorySnapShot () const = 0;
-		virtual MCHEmul::UBytes colorMemorySnapShot () const = 0;
+		virtual std::vector <MCHEmul::UByte> patternNameTableSnapShot () const = 0;
+		virtual std::vector <MCHEmul::UByte> patternGenerationTableSnapShot () const = 0;
+		virtual std::vector <MCHEmul::UByte> colorNameTableSnapShot () const = 0;
+		virtual MCHEmul::Strings spriteDrawSnapShot (size_t nS) const = 0;
+		virtual MCHEmul::Strings spritesDrawSnapShot (const std::vector <size_t>& nS) const = 0;
 
 		/** To activate or desactivate the visualization of events. 
 			This is something accesed from outside and the specific implementation
@@ -113,10 +116,16 @@ namespace MSX
 		virtual unsigned char graphicMode () const override
 							{ return (_TMS99xxFamily -> graphicMode ()); }
 
-		virtual MCHEmul::UBytes screenMemorySnapShot () const override
-							{ return (_TMS99xxFamily -> screenMemorySnapShot ()); }
-		virtual MCHEmul::UBytes colorMemorySnapShot () const override
-							{ return (_TMS99xxFamily -> colorMemorySnapShot ()); }
+		virtual std::vector <MCHEmul::UByte> patternNameTableSnapShot () const override
+							{ return (std::move (_TMS99xxFamily -> patternNameTableSnapShot ())); }
+		virtual std::vector <MCHEmul::UByte> patternGenerationTableSnapShot () const override
+							{ return (std::move (_TMS99xxFamily -> patternGenerationTableSnapShot ())); }
+		virtual std::vector <MCHEmul::UByte> colorNameTableSnapShot () const override
+							{ return (std::move (_TMS99xxFamily -> colorNameTableSnapShot ())); }
+		virtual MCHEmul::Strings spriteDrawSnapShot (size_t nS) const override
+							{ return (std::move (_TMS99xxFamily -> spriteDrawSnapShot (nS))); }
+		virtual MCHEmul::Strings spritesDrawSnapShot (const std::vector <size_t>& nS) const override
+							{ return (std::move (_TMS99xxFamily -> spritesDrawSnapShot (nS))); }
 
 		virtual void setShowEvents (bool sE) override
 							{ _TMS99xxFamily -> setShowEvents (sE); }

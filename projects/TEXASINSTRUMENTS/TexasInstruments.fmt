@@ -31,11 +31,11 @@ Blank Screen:@BlankScreen@
 Sprites 16 Pixels:@Sprites16pixels@
 Sprites Enlarged:@SpritesEnlarged@
 Launch Interrupt:@LaunchInterrupt@
-Memory:@NameAddress@, @ColorAddress@, @PatternAddress@, @SpriteAddress@, @SpriteAttrsAddress@, @SpriteGenAddress@
+Memory: PN=@NameAddress@, PG=@PatternAddress@, CN=@ColorAddress@, SA=@SpriteAttrsAddress@, SG=@SpriteGenAddress@
 Color:@TextColor@, @BackdropColor@
 ->Video Memory:
 Meory Size:@MemSize@ Bytes
-@BYTES{blocksize=16,listsep=\,,tablesep=\ ,minsize=2}@
+@BYTES{blocksize=32,listsep=\,,tablesep=\ ,minsize=2}@
 #---
 #---
 ;TMS99xxFamily

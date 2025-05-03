@@ -42,14 +42,28 @@ namespace MSX
 
 		// To get snapshots of the memory...
 		// They are used in some commands...
-		/** Content of the screen memory. \n
-			The position of the screen memory in the MSX is fixed. It is within the graphical chip. */
-		MCHEmul::UBytes screenMemorySnapShot () const
-							{ return (_model -> vdp () -> screenMemorySnapShot ()); }
-		/** Content of the color memory. \n
-			The position of the color memory in the ZX Spectrum memory is fixed. */
-		MCHEmul::UBytes colorMemorySnapShot () const
-							{ return (_model -> vdp () -> colorMemorySnapShot ()); }
+		/** To get the content of the pattern name table. \n
+			The information finally retrieved will depend on the active graphical mode. */
+		std::vector <MCHEmul::UByte> patternNameTableSnapShot () const
+							{ return (_model -> vdp () -> patternNameTableSnapShot ()); }
+		/** To get the information about the pattern generation table. \n
+			The information finally collected will depend on the active graphical mode . */
+		std::vector <MCHEmul::UByte> patternGenerationTableSnapShot () const
+							{ return (_model -> vdp () -> patternGenerationTableSnapShot ()); }
+		/** To get the information about the color name table. \n
+			The information finally collected will depend on the active graphical mode . \n
+			In the TextMode the color are not used, and in the multicolor mode the table 
+			defining the colort is the pattern generation one... */
+		std::vector <MCHEmul::UByte> colorNameTableSnapShot () const
+							{ return (_model -> vdp () -> colorNameTableSnapShot ()); }
+		/** To get an snapshot of the sprite definition. 
+			No boundaries limits are done. */
+		MCHEmul::Strings spriteDrawSnapShot (size_t nS) const
+							{ return (_model -> vdp () -> spriteDrawSnapShot (nS)); }
+		/** To get a snapshot of a set of sprites.
+			When parameter = empty means all sprites. */
+		MCHEmul::Strings spritesDrawSnapShot (const std::vector <size_t>& nS = { }) const
+							{ return (_model -> vdp () -> spritesDrawSnapShot (nS)); }
 
 		virtual bool initialize (bool iM = true) override;
 

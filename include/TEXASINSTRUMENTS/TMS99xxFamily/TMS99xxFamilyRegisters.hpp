@@ -29,6 +29,14 @@ namespace TEXASINSTRUMENTS
 		friend class TMS99xxFamily;
 
 		public:
+		struct SpriteAttributes
+		{
+			unsigned char _posX, _posY; // The position in the memory...
+			unsigned char _pattern; // Block of info where to find the definition of the sprite
+			unsigned int _color; // From the palette...
+			bool _earlyClock; // To show the sprite 32 pixels in advance inthe X axis...
+		};
+
 		static const unsigned int _ID = 1200;
 
 		/** The different graphic modes. */
@@ -73,6 +81,10 @@ namespace TEXASINSTRUMENTS
 							{ return (_videoMemory); }
 		const MCHEmul::UByte& videoData (const MCHEmul::Address& pos) const
 							{ return (_videoMemory [(size_t) pos.value ()]); }
+		std::vector <MCHEmul::UByte> videoData (const MCHEmul::Address& pos, size_t nB) const
+							{ return (std::vector <MCHEmul::UByte> 
+								(_videoMemory.begin () + pos.value (), 
+								 _videoMemory.begin () + pos.value () + nB /** The last is no included. */)); }
 		void setVideoData (const MCHEmul::Address& pos, const MCHEmul::UByte& v)
 							{ _videoMemory [(size_t) pos.value ()] = v; }
 
@@ -100,12 +112,34 @@ namespace TEXASINSTRUMENTS
 		  */
 		virtual MCHEmul::InfoStructure getInfoStructure () const override;
 
-		/** To get the content of the screen memory. \n
+		// To get info about the VRAM...
+		// No boundaries checks are done...
+		/** To get the content of the pattern name table. \n
 			The information finally retrieved will depend on the active graphical mode. */
-		MCHEmul::UBytes screenMemorySnapShot () const;
-		/** To get the information about the colors. \n
+		std::vector <MCHEmul::UByte> patternNameTableSnapShot () const
+							{ return (videoData (_nameAddress, 
+								(size_t) (_graphicMode == _TEXTMODE) ? (40 * 24) : (32 * 24))); }
+		/** To get the information about the pattern generation table. \n
 			The information finally collected will depend on the active graphical mode . */
-		MCHEmul::UBytes colorMemorySnapShot () const;
+		std::vector <MCHEmul::UByte> patternGenerationTableSnapShot () const
+							{ return (videoData (_patternAddress, 
+								(size_t) (_graphicMode == _GRAPHICIIMODE) ? (2048 * 3) : 2048)); }
+		/** To get the information about the color name table. \n
+			The information finally collected will depend on the active graphical mode . \n
+			In the TextMode the color are not used, and in the multicolor mode the table 
+			defining the colort is the pattern generation one... */
+		std::vector <MCHEmul::UByte> colorNameTableSnapShot () const
+							{ return (
+								(_graphicMode == _GRAPHICIMODE || _graphicMode == _GRAPHICIIMODE) 
+									? videoData (_colorAddress, (_graphicMode == _GRAPHICIMODE) ? 32 : (2048 * 3))
+									: std::vector <MCHEmul::UByte> ()); } 
+		/** To get an snapshot of the sprite definition. 
+			No boundaries limits are done. \n
+			The number of the sprite is from 1 to 32. */
+		MCHEmul::Strings spriteDrawSnapShot (size_t nS) const;
+		/** To get a snapshot of a set of sprites.
+			When parameter = empty means all sprites. */
+		MCHEmul::Strings spritesDrawSnapShot (const std::vector <size_t>& nS = { }) const;
 
 		protected:
 		// This methods are directly invoked when the registers are accesible from a memory position
@@ -159,6 +193,12 @@ namespace TEXASINSTRUMENTS
 							{ return (_screenUpdateHappen); }
 		void setSreenUpdateHappen ()
 							{ _screenUpdateHappen = true; }
+	
+		// Mamaging the info of the sprites...
+		/** Read the information of the sprite received as parameter. */
+		inline SpriteAttributes readSpriteAttributes (unsigned char nS) const;
+		/** To get the definition of the sprite received as parameter. */
+		inline std::vector <MCHEmul::UByte> readSpriteDefinition (unsigned char nS) const;
 
 		protected:
 		/** Read the memory with new data if needed...
@@ -198,8 +238,6 @@ namespace TEXASINSTRUMENTS
 		MCHEmul::Address _colorAddress;
 		/** Pattern's table address. */
 		MCHEmul::Address _patternAddress;
-		/** Sprites' table address. */
-		MCHEmul::Address _spriteAddress;
 		/** Sprites' attributes table address. */
 		MCHEmul::Address _spriteAttrsAddress;
 		/** Sprites' generator. */
@@ -252,6 +290,35 @@ namespace TEXASINSTRUMENTS
 		_readWriteAddress += 1;
 		if (_readWriteAddress.value () > 0x3fff) // If if out of the 16k, it starts back!
 			_readWriteAddress -= _readWriteAddress.value ();
+	}
+
+	// ---
+	inline TMS99xxFamilyRegisters::SpriteAttributes TMS99xxFamilyRegisters::readSpriteAttributes (unsigned char nS) const
+	{
+		TMS99xxFamilyRegisters::SpriteAttributes result = { 0, 0, 0, 0, false };
+
+		std::vector <MCHEmul::UByte> dt = 
+			videoData (_spriteAttrsAddress + (size_t) (nS << 2 /** 4 bytes each. */), 4);
+		result._posX		= dt [0].value ();
+		result._posY		= dt [1].value ();
+		result._pattern		= dt [2].value ();
+		result._color		= dt [3].value () & 0x0f;
+		// Bit 4 to 6 should be 0, but they are ignored in the reality...
+		result._earlyClock	= dt [3].bit (7);
+
+		return (result);
+	}
+
+	// ---
+	inline std::vector <MCHEmul::UByte> TMS99xxFamilyRegisters::readSpriteDefinition (unsigned char nS) const
+	{
+		std::vector <MCHEmul::UByte> result;
+
+		TMS99xxFamilyRegisters::SpriteAttributes sI = std::move (readSpriteAttributes (nS));
+		if (!_sprites16pixels) result = videoData (_spriteGenAddress + (size_t) (sI._pattern << 3), 8);
+		else result = videoData (_spriteGenAddress + (size_t) ((sI._pattern & 0xfc) << 3), 32);
+
+		return (result);
 	}
 }
 

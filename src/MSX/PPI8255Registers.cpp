@@ -58,7 +58,8 @@ void MSX::PPI8255Registers::setValue (size_t p, const MCHEmul::UByte& v)
 
 	switch (p)
 	{
-		// To select the slot of every bank...
+		// PPI Port A (Register A)
+		// Primary Slot Select Register
 		case 0x00:
 			{
 				_slotBank0 = (v.value () & 0x03);
@@ -70,30 +71,53 @@ void MSX::PPI8255Registers::setValue (size_t p, const MCHEmul::UByte& v)
 
 			break;
 
+		// PPI Port B (Register B)
+		// Keyboard Matrix Input Register
+		// This is read-only register, so it cannot be written...
 		case 0x01:
-			{
-				// TODO
-			}
-
 			break;
 
-		// Among other things this register selects the row of the keyboard to be read...
+		// PPI Por C (Register C)
+		// Keyboard & Casette Interface
 		case 0x02:
 			{
-				if ((_keyboardRowSelected = v.value () & 0x0f) > 10) // From 0 to 10. Over that nothing is valid...
-					_keyboardRowSelected = 0x0f; // Meaaning none...
+				_keyboardRowSelected	= v.value () & 0x0f; // It could be > 10...
+				_casetteMotorControl	= v.bit (4);
+				_casetteWriteSignal		= v.bit (5);
+				_keyboardCAPSLED		= v.bit (6);
+				_keyClickSoundOuput		= v.bit (7);
 			}
 
 			break;
 
+		// PPI Command Register
+		// This is the fastest way to modify individual bits in the register C (the previous one)
 		case 0x03:
 			{
-				// TODO
+				// In the MSX1 this bit must be to 0 for something to happen
+				// Otherwise the system doesn't do anything and the registers continue as they were before...
+				if (v.bit (7))
+					break;
+
+				bool s = v.bit (0); // Set o Reset?
+				unsigned nb = (v.value () & 0x0e) >> 1; // From 0 to 7...
+				switch (nb)
+				{
+					case 0: _keyboardRowSelected = (_keyboardRowSelected & ~0x01) | (s ? 0x01 : 0x00); break;
+					case 1: _keyboardRowSelected = (_keyboardRowSelected & ~0x02) | (s ? 0x02 : 0x00); break;
+					case 2: _keyboardRowSelected = (_keyboardRowSelected & ~0x04) | (s ? 0x04 : 0x00); break;
+					case 3: _keyboardRowSelected = (_keyboardRowSelected & ~0x08) | (s ? 0x08 : 0x00); break;
+					case 4: _casetteMotorControl	= s; break;
+					case 5: _casetteWriteSignal		= s; break;
+					case 6: _keyboardCAPSLED		= s; break;
+					case 7: _keyClickSoundOuput		= s; break;
+				}
 			}
 
 			break;
 
 		// It shouldn't be here...
+		// It is guarantted with the check at the beginning of the method...
 		default:
 			break;
 	}
@@ -114,7 +138,8 @@ const MCHEmul::UByte& MSX::PPI8255Registers::readValue (size_t p) const
 
 	switch (p)
 	{
-		// To select the slot of every bank...
+		// PPI Port A (Register A)
+		// Primary Slot Select Register
 		case 0x00:
 			{
 				result = MCHEmul::PhysicalStorageSubset::readValue (0x00);
@@ -122,29 +147,32 @@ const MCHEmul::UByte& MSX::PPI8255Registers::readValue (size_t p) const
 
 			break;
 
-		// To read the status of the keyboard...
+		// PPI Port B (Register B)
+		// Keyboard Matrix Input Register
 		case 0x01:
 			{
-				result = _keyboardStatusMatrix [_keyboardRowSelected];
+				if (_keyboardRowSelected <= 10) // To avoid running out of the limits...
+					result = _keyboardStatusMatrix [_keyboardRowSelected];
 			}
 
 			break;
 
+		// PPI Por C (Register C)
+		// Keyboard & Casette Interface
 		case 0x02:
 			{
-				// TODO
+				result = MCHEmul::PhysicalStorageSubset::readValue (0x02);
 			}
 
 			break;
 
+		// PPI Command Register
+		// This Register is write only, so it cannot read...
 		case 0x03:
-			{
-				// TODO
-			}
-
 			break;
 
 		// It shouldn't be here...
+		// It is guarantted by the lines at the top of the method...
 		default:
 			break;
 	}
@@ -164,41 +192,7 @@ const MCHEmul::UByte& MSX::PPI8255Registers::peekValue (size_t p) const
 		return (_lastValueRead = result);
 	}
 
-	switch (p)
-	{
-		// To select the slot of every bank...
-		case 0x00:
-			{
-				result = MCHEmul::PhysicalStorageSubset::readValue (0x00);
-			}
-
-			break;
-
-		case 0x01:
-			{
-				// TODO
-			}
-
-			break;
-
-		case 0x02:
-			{
-				// TODO
-			}
-
-			break;
-
-		case 0x03:
-			{
-				// TODO
-			}
-
-			break;
-
-		// It shouldn't be here...
-		default:
-			break;
-	}
+	result = MCHEmul::PhysicalStorageSubset::readValue (0x00);
 
 	return (_lastValueRead = result);
 }
@@ -210,5 +204,5 @@ void MSX::PPI8255Registers::initializeInternalValues ()
 
 	for (size_t i = 0; i < _keyboardStatusMatrix.size (); 
 		_keyboardStatusMatrix [i++] = MCHEmul::UByte::_FF); // None pressed...
-	_keyboardRowSelected = 0x0f; // ...Meaning none...
+	_keyboardRowSelected = 15; // ...Meaning none...
 }
