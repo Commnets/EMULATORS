@@ -29,12 +29,39 @@ namespace TEXASINSTRUMENTS
 		friend class TMS99xxFamily;
 
 		public:
-		struct SpriteAttributes
+		/** To identify the attributes of a sprite. */
+		struct SpriteDefinition
 		{
+			SpriteDefinition ()
+				: _posX (0), _posY (0), 
+				  _pattern (0), 
+				  _color (0),
+				  _16pixels (false), _enlarged (false),
+				  _earlyClock (false),
+				  _data ({ })
+							{ }
+
+			/** Return true if the sprite is visible at raster line rL. \n
+				The raster line 0 happens at the beginning of the visible zone. \n
+				Takes into account whether the sprite is expanded and it is 16 pixels wide or only 8. 
+				Returns also the line visible within the definition. If it is not visible that value makes no sense. */
+			inline bool visibleAtPositionY (unsigned short rL, size_t& dF) const;
+			/** Return true if the sprite is visible in the position x. \n
+				The position y has the same reference than the position of the sprite. \n
+				It take sinto account whether the early clock is set up or not. \n
+				Returns also which is "bit" visible. It is not visible that value makes no sense. */
+			inline bool visibleAtPositionX (unsigned short rP, size_t& dP) const;
+
+			/** To get the info of the sprite as a set of strings. */
+			MCHEmul::Strings spriteDrawSnapShot () const;
+
 			unsigned char _posX, _posY; // The position in the memory...
 			unsigned char _pattern; // Block of info where to find the definition of the sprite
 			unsigned int _color; // From the palette...
+			bool _16pixels; // Whether it is 16 pixels wide definition or not...
+			bool _enlarged; // Whether it is expanded of not...
 			bool _earlyClock; // To show the sprite 32 pixels in advance inthe X axis...
+			std::vector <MCHEmul::UByte> _data;
 		};
 
 		static const unsigned int _ID = 1200;
@@ -136,7 +163,8 @@ namespace TEXASINSTRUMENTS
 		/** To get an snapshot of the sprite definition. 
 			No boundaries limits are done. \n
 			The number of the sprite is from 1 to 32. */
-		MCHEmul::Strings spriteDrawSnapShot (size_t nS) const;
+		MCHEmul::Strings spriteDrawSnapShot (size_t nS) const
+							{ return (readSpriteDefinition ((unsigned char) nS).spriteDrawSnapShot ()); }
 		/** To get a snapshot of a set of sprites.
 			When parameter = empty means all sprites. */
 		MCHEmul::Strings spritesDrawSnapShot (const std::vector <size_t>& nS = { }) const;
@@ -145,6 +173,9 @@ namespace TEXASINSTRUMENTS
 		// This methods are directly invoked when the registers are accesible from a memory position
 		// They are also invoked from other methods defined above...
 		// ....when the registers are accesible from ports...
+		// When a value is set/read to a internal register the MODE pin of the chip is important
+		// This PIN says whether the byte that ise been sent is data or simply an instruction
+		// This situation is not simulated in the Chip!
 		virtual void setValue (size_t p, const MCHEmul::UByte& v) override;
 		virtual const MCHEmul::UByte& readValue (size_t p) const override;
 		virtual const MCHEmul::UByte& peekValue (size_t p) const override;
@@ -185,8 +216,8 @@ namespace TEXASINSTRUMENTS
 							{ return (_launchScreenUpdateInterrupt); }
 		void setSpriteCollisionDetected ()
 							{ _spriteCollisionDetected = true; }
-		void setFifthSpriteDetected ()
-							{ _fifthSpriteDetected = true;  }
+		void setFifthSpriteDetected (bool fD)
+							{ _fifthSpriteDetected = fD;  }
 		void setFifthSpriteNotDrawn (unsigned char sN)
 							{ _fifthSpriteNotDrawn = sN; }
 		bool screenUpdateHappen ()
@@ -196,16 +227,14 @@ namespace TEXASINSTRUMENTS
 	
 		// Mamaging the info of the sprites...
 		/** Read the information of the sprite received as parameter. */
-		inline SpriteAttributes readSpriteAttributes (unsigned char nS) const;
-		/** To get the definition of the sprite received as parameter. */
-		inline std::vector <MCHEmul::UByte> readSpriteDefinition (unsigned char nS) const;
+		inline SpriteDefinition readSpriteDefinition (unsigned char nS) const;
 
 		protected:
 		/** Read the memory with new data if needed...
 			...it will depend on the graphical mode. \n
-			The method returns the element in the code table (if makes sense),
-			the element in the pattern table (if makes sense) 
-			and the element in the color table (again if it makes sense), in the form of a tuple... */
+			The method returns the element in the name pattern table (if makes sense),
+			the element in the pattern generation table (if makes sense) 
+			and the element in the color name table (again if it makes sense), in the form of a tuple... */
 		std::tuple <MCHEmul::UByte, MCHEmul::UByte, MCHEmul::UByte> 
 			readGraphicInfo (unsigned short x, unsigned short y);
 
@@ -262,7 +291,7 @@ namespace TEXASINSTRUMENTS
 
 		// Implementation
 		/** In which moment of the use of the port 0x99 is the operation. */
-		bool _99setOnce;
+		mutable bool _99setOnce;
 		/** The value of the first access to the video 0x99. */
 		MCHEmul::UByte _99firstAccessValue;
 		/** The address where the next read/write operation will be executed over. */
@@ -285,6 +314,53 @@ namespace TEXASINSTRUMENTS
 	};
 
 	// ---
+	inline bool TMS99xxFamilyRegisters::SpriteDefinition::visibleAtPositionY (unsigned short rL, size_t& dF) const
+	{ 
+		bool result = false;
+
+		unsigned short en	= (_enlarged ? 1 : 0); // *2 when enlarged?
+		unsigned short d	= (_16pixels ? 1 : 0); // *2 when 16pixels height?
+		unsigned short mL	= 8 << (en + d); // Total height?
+
+		// Sprites can be defined in a position before the visible position...
+		// So the real position could be negative!...
+		int pY = int (((char) _posY >= 208) ? (char) _posY /** Here become negative. */ : _posY);
+		if ((int) rL >= pY && (int) rL < (pY + (int) mL))
+		{ 
+			result = true; 
+			
+			// Which is the byte visible,
+			// The byte can vary from 0 to 15!
+			// that takes into account when enlarged and 16pixels height together...
+			// But could finally be 16 bytes more, depending on the position x!
+			dF = (size_t) ((rL - (unsigned short) _posY) >> en);
+		}
+
+		return (result); 
+	}
+
+	// ---
+	inline bool TMS99xxFamilyRegisters::SpriteDefinition::visibleAtPositionX (unsigned short rP, size_t& dP) const
+	{
+		bool result = false;
+
+		unsigned short en	= (_enlarged ? 1 : 0); // *2 when enlarged?
+		unsigned short d	= (_16pixels ? 1 : 0); // *2 when 16pixels width?
+		unsigned short mP	= 8 << (en + d); // Total width?
+		if (rP >= (unsigned short) _posX && rP < ((unsigned short) _posX + mP))
+		{
+			result = true;
+
+			// Which is the "bit" visible, that takes into account when enlarged...
+			// The bit can vary from 0 to 15!
+			// Starting from 0 in the left, and ending (if enlarged and expanded) with 31 in the right side!
+			dP = (size_t) ((mP - (unsigned short) _posX) >> en); 
+		}
+
+		return (result);
+	}
+
+	// ---
 	inline void TMS99xxFamilyRegisters::incrementReadWriteAddress () const
 	{
 		_readWriteAddress += 1;
@@ -293,9 +369,10 @@ namespace TEXASINSTRUMENTS
 	}
 
 	// ---
-	inline TMS99xxFamilyRegisters::SpriteAttributes TMS99xxFamilyRegisters::readSpriteAttributes (unsigned char nS) const
+	inline TMS99xxFamilyRegisters::SpriteDefinition TMS99xxFamilyRegisters::readSpriteDefinition (unsigned char nS) const
 	{
-		TMS99xxFamilyRegisters::SpriteAttributes result = { 0, 0, 0, 0, false };
+		TMS99xxFamilyRegisters::SpriteDefinition result =
+			TMS99xxFamilyRegisters::SpriteDefinition ();
 
 		std::vector <MCHEmul::UByte> dt = 
 			videoData (_spriteAttrsAddress + (size_t) (nS << 2 /** 4 bytes each. */), 4);
@@ -303,20 +380,14 @@ namespace TEXASINSTRUMENTS
 		result._posY		= dt [1].value ();
 		result._pattern		= dt [2].value ();
 		result._color		= dt [3].value () & 0x0f;
+		result._16pixels	= _sprites16pixels; // Common to all sprites...(stored here to speed up the acceses)
+		result._enlarged	= _spritesEnlarged; // Common to all sprites...(stored here to speed up the acceses)
 		// Bit 4 to 6 should be 0, but they are ignored in the reality...
+		// so they are not taken into account here...
 		result._earlyClock	= dt [3].bit (7);
-
-		return (result);
-	}
-
-	// ---
-	inline std::vector <MCHEmul::UByte> TMS99xxFamilyRegisters::readSpriteDefinition (unsigned char nS) const
-	{
-		std::vector <MCHEmul::UByte> result;
-
-		TMS99xxFamilyRegisters::SpriteAttributes sI = std::move (readSpriteAttributes (nS));
-		if (!_sprites16pixels) result = videoData (_spriteGenAddress + (size_t) (sI._pattern << 3), 8);
-		else result = videoData (_spriteGenAddress + (size_t) ((sI._pattern & 0xfc) << 3), 32);
+		result._data = (_sprites16pixels)
+			? videoData (_spriteGenAddress + (size_t) ((result._pattern & 0xfc) << 3), 32) // 32 bytes (16 * 2)
+			: videoData (_spriteGenAddress + (size_t) (result._pattern << 3), 8); // 8 bytes
 
 		return (result);
 	}

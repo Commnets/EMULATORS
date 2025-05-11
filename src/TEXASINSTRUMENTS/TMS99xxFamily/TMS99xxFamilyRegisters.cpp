@@ -1,6 +1,28 @@
 #include <TEXASINSTRUMENTS/TMS99xxFamily/TMS99xxFamilyRegisters.hpp>
 
 // ---
+MCHEmul::Strings TEXASINSTRUMENTS::TMS99xxFamilyRegisters::SpriteDefinition::spriteDrawSnapShot () const
+{
+	MCHEmul::Strings result = { };
+
+	auto toString = [](const MCHEmul::UByte& b) -> std::string
+		{
+			std::string result = "";
+			for (int i = 7; i > 0; i--) result += b.bit (i) ? "*" : ".";
+			return (result);
+		};
+
+	if (_16pixels)
+		for (size_t i = 0; i < 16; i++) 
+			result.emplace_back (toString (_data [i]) + toString (_data [i + 16]));
+	else
+		for (size_t i = 0; i < 8; i++)
+			result.emplace_back (toString (_data [i]));
+
+	return (result);
+}
+
+// ---
 TEXASINSTRUMENTS::TMS99xxFamilyRegisters::TMS99xxFamilyRegisters (size_t vS)
 	: MCHEmul::ChipRegisters (TEXASINSTRUMENTS::TMS99xxFamilyRegisters::_ID,
 		2 /** bytes per address. */, 2 /** registers. */),
@@ -64,30 +86,6 @@ MCHEmul::InfoStructure TEXASINSTRUMENTS::TMS99xxFamilyRegisters::getInfoStructur
 }
 
 // ---
-MCHEmul::Strings TEXASINSTRUMENTS::TMS99xxFamilyRegisters::spriteDrawSnapShot (size_t nS) const
-{
-	MCHEmul::Strings result = { };
-
-	auto toString = [](const MCHEmul::UByte& b) -> std::string
-		{
-			std::string result = "";
-			for (int i = 7; i > 0; i--) result += b.bit (i) ? "*" : ".";
-			return (result);
-		};
-
-	std::vector <MCHEmul::UByte> sD = 
-		std::move (readSpriteDefinition ((unsigned char) (nS - 1)));
-	if (_sprites16pixels)
-		for (size_t i = 0; i < 16; i++) 
-			result.emplace_back (toString (sD [i]) + toString (sD [i + 16]));
-	else
-		for (size_t i = 0; i < 8; i++)
-			result.emplace_back (toString (sD [i]));
-
-	return (result);
-}
-
-// ---
 MCHEmul::Strings TEXASINSTRUMENTS::TMS99xxFamilyRegisters::spritesDrawSnapShot (const std::vector <size_t>& nS) const
 {
 	MCHEmul::Strings result;
@@ -122,6 +120,12 @@ void TEXASINSTRUMENTS::TMS99xxFamilyRegisters::setValue (size_t p, const MCHEmul
 		case 0x00:
 			{
 				// The value written is also stored in the buffer ahead....
+				// The time to set / read a data to / from the VRAM will depend on whether 
+				// the Chip is or not in a "CPU window", that is a moment where it is not reading info from the VRAM
+				// The size of that window will depend on two things: where the raster line is and the type of graphics more.
+				// That time can vary between 2us and 8us (in the visual screen and in the graphics mode I or II and with the sprites on)
+				// 8us are 14 clock cycles in a MSX1, what is a Z80 instruction later...
+				// Note that this delay is not emulated!
 				setVideoData (_readWriteAddress, _readAheadBuffer = v);
 				// ...and then the position is incremented...
 				incrementReadWriteAddress ();
@@ -195,6 +199,8 @@ const MCHEmul::UByte& TEXASINSTRUMENTS::TMS99xxFamilyRegisters::readValue (size_
 				// Return the value in the buffer...
 				result = _readAheadBuffer;
 				// ...read a new value (the position eill have been incremented when st for reading...
+				// Read the value from the VRAM has delay too...
+				// Read the detailed information written for the setValue method!
 				_readAheadBuffer = videoData (_readWriteAddress);
 				// ...and then increment looking for a bew position...
 				incrementReadWriteAddress ();
@@ -206,6 +212,9 @@ const MCHEmul::UByte& TEXASINSTRUMENTS::TMS99xxFamilyRegisters::readValue (size_
 			{
 				// Reading the statis several insternal status will be actualized...
 				result = readStatus ();
+
+				// Reading the status, the info is again ready to be read!
+				_99setOnce = false; 
 			}
 
 			break;

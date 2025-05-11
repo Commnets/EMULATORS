@@ -309,7 +309,7 @@ MSX::VDP* MSX::MSXStdModel::createVDP () const
 	// Notice that VDP doesn't own the graphical chip behind...
 	return (new MSX::VDP_TMS99xxFamily
 		(new TEXASINSTRUMENTS::TMS9929A 
-			(nullptr /** Created internally. */, 2 /** 2 times quicked than CPU. */, FZ80::INTInterrupt::_ID)));
+			(nullptr /** Created internally. */, 3 /** 3 times quicked than CPU = 10,74MHz */, FZ80::INTInterrupt::_ID)));
 }
 
 // ---
@@ -368,11 +368,11 @@ MSX::VDP* MSX::SVI728::createVDP () const
 	return ((visualSystem () == MSX::MSXModel::VisualSystem::_PAL) 
 			? (MSX::VDP*) new MSX::VDP_TMS99xxFamily
 				(new TEXASINSTRUMENTS::TMS9929A 
-					(nullptr /** Created internally. */, 2 /** 2 times quicker than CPU. */, 
+					(nullptr /** Created internally. */, 3 /** 2 times quicker than CPU = 10,74MHz */, 
 						FZ80::INTInterrupt::_ID /** INT. */))
 			: (MSX::VDP*) new MSX::VDP_TMS99xxFamily 
 				(new TEXASINSTRUMENTS::TMS9918A 
-					(nullptr /** Created internally. */, 2 /** 2 times quicker than CPU. */, 
+					(nullptr /** Created internally. */, 3 /** 2 times quicker than CPU = 10,74MHz */, 
 						FZ80::INTInterrupt::_ID /** INT. */)));
 }
 

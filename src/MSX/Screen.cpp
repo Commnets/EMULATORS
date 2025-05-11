@@ -35,8 +35,9 @@ void MSX::Screen::drawAdditional ()
 	if (drawGrid ())
 	{
 		// The color...
-		// Only 4 are available...
+		// 16 are available...
 		unsigned int bC = (gridColor () > 15) ? 0 : gridColor ();
+		unsigned int gC = ((bC + 1) > 15) ? 0 : (bC + 1);
 
 		// Where is the screen...
 		unsigned short x1, y1, x2, y2;
@@ -44,13 +45,14 @@ void MSX::Screen::drawAdditional ()
 		_vdp -> screenPositions (x1, y1, x2, y2);
 
 		// Draws rectangles and reference lines...
-		unsigned short stp = (_vdp -> graphicMode () == 1 /** Text Mode. */) ? 6 : 8;
 		drawRectangle ((size_t) (x1 - 1), (size_t) (y1 - 1), 
 			(size_t) (x2 + 1), (size_t) (y2 + 1), 3);
 		for (unsigned short i = y1 + 8; i <= y2; i += 8)
-			drawHorizontalLineStep ((size_t) x1, (size_t) i, (size_t) (x2 - x1 + 1), 2, bC);
-		for (unsigned short i = x1 + 8; i <= x2; i += stp)
-			drawVerticalLineStep ((size_t) i, (size_t) y1, (size_t) (y2 - y1 + 1), 2, bC);
+			drawHorizontalLineStep ((size_t) x1, (size_t) i, (size_t) (x2 - x1 + 1), 2, gC);
+		unsigned short stp = (_vdp -> graphicMode () == 1 /** Text Mode. */) ? 6 : 8;
+		unsigned short x2n = (_vdp -> graphicMode () == 1 /** Text Mode. */) ? ((x2 - 8) + 1) : x2;
+		for (unsigned short i = x1 + 8; i <= x2n; i += stp)
+			drawVerticalLineStep ((size_t) i, (size_t) y1, (size_t) (y2 - y1 + 1), 2, gC);
 
 		// Draws a reference to the owner to the simulator!
 		drawTextHorizontal (8, 8, "ICF 2025", 0 /** not used. */, bC, true);

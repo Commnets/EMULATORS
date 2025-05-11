@@ -4,14 +4,16 @@
 // ---
 // PAL Systems...
 const MCHEmul::RasterData TEXASINSTRUMENTS::TMS9929A::_VRASTERDATA
-	(248, 256 /** 8 VSYNC. */, 0 /** 56 top border. */, 191 /** 192 draw. */, 247 /** 56 bottom. */, 247, 247, 312, 0, 0);
+	(0, 0 /** First visible position. */, 54 /** 54 top border. */, 245 /** 192 lines to draw. */, 
+	 298 /** 53 bottom. */, 299 /** Retrace init. */, 311 /** End of VSYNC. */, 312, 0, 0);
 const MCHEmul::RasterData TEXASINSTRUMENTS::TMS9929A::_HRASTERDATA
-	(320, 416 /** 96 = Blanking Period + HSYNC (different in 5C, happens before, than in 6C) */, 
-	 0 /** 32 left border. */, 255 /** 256 (32 chars * 8 TMS9918 cycles or 4 CPU cycles) draw. */, 
-	 287 /** 32 right border. */, 319 /** Other 32 non visible. */, 319, 448, 0, 0);
+	(0, 0 /** First visible position. */, 32 /** 32 left border. */, 287 /** 256 columns to draw. 32 chars (8 pixels each). */, 
+	 319 /** 32 right border. */, 320 /** Retrace Init. */, 341 /** End of SYNC. */, 342, 0, 0);
 // NTSC is explained in similar terms than PAL...
-const MCHEmul::RasterData TEXASINSTRUMENTS::TMS9918A::_VRASTERDATA (216, 224, 0, 191, 215, 215, 215, 264, 0, 0);
-const MCHEmul::RasterData TEXASINSTRUMENTS::TMS9918A::_HRASTERDATA (320, 416, 0, 255, 287, 319, 319, 448, 0, 0);
+const MCHEmul::RasterData TEXASINSTRUMENTS::TMS9918A::_VRASTERDATA
+	(0, 0, 27, 218, 245, 246, 261, 262, 0, 0); // Sorter...
+const MCHEmul::RasterData TEXASINSTRUMENTS::TMS9918A::_HRASTERDATA
+	(0, 0, 32, 287, 319, 320, 341, 342, 0, 0);
 
 // ---
 TEXASINSTRUMENTS::TMS99xxFamily::TMS99xxFamily (const MCHEmul::RasterData& vd, const MCHEmul::RasterData& hd, 
@@ -28,7 +30,9 @@ TEXASINSTRUMENTS::TMS99xxFamily::TMS99xxFamily (const MCHEmul::RasterData& vd, c
 	  _lastCPUCycles (0),
 	  _format (nullptr),
 	  _eventStatus ({ }), // No event status so far!
-	  _internalRegisters (nullptr)
+	  _internalRegisters (nullptr),
+	  _2CYCLE (false), // To control when the raster moves forward...
+	  _spriteInfo (32, TEXASINSTRUMENTS::TMS99xxFamily::SpriteInfo ()) // 32 positions empty...
 {
 	// Can not be 0!...
 	assert (_clockFactor != 0);
@@ -67,6 +71,11 @@ bool TEXASINSTRUMENTS::TMS99xxFamily::initialize ()
 
 	_eventStatus = { };
 
+	_2CYCLE = false;
+
+	for (size_t i = 0; i < 32; 
+		_spriteInfo [i++] = TEXASINSTRUMENTS::TMS99xxFamily::SpriteInfo ());
+
 	return (true);
 }
 
@@ -82,14 +91,21 @@ bool TEXASINSTRUMENTS::TMS99xxFamily::simulate (MCHEmul::CPU* cpu)
 	}
 
 	// Simulate the visulization...
+	// It is needed 2 cycles to draw a pixel
 	for (unsigned int i = 
 			((cpu -> clockCycles  () - _lastCPUCycles) * _clockFactor); 
 		i > 0; i--)
 	{
+		// Only every 2 cycles the rest of the code is taken,
+		// Otherwise it continues iterating...
+		// This is the way to reach the _clockFactor (usually 3)/2 speed drawing pixels against the CPU!
+		if (!(_2CYCLE = !_2CYCLE))
+			continue;
+
 		_IFDEBUG debugTMS9918ACycle (cpu, i);
 
 		// Read the graphics and draw the visible zone, if it is the case...
-		// ...Mark also whethe rthe event have to be drawn or not!
+		// ...marks also whether the event have to be drawn or not!
 		if (_raster.isInVisibleZone ())
 		{
 			readGraphicInfoAndDrawVisibleZone (cpu);
@@ -97,10 +113,8 @@ bool TEXASINSTRUMENTS::TMS99xxFamily::simulate (MCHEmul::CPU* cpu)
 			if (_showEvents)
 				drawEvents ();
 		}
-	
-		// First, moves the raster...
-		_raster.moveCycles (1);
-		// But, if is starting the screen...
+
+		// If the starting position is reached...
 		if (_raster.vData ().currentPositionAtBase0 () == 0 &&
 			_raster.hData ().currentPositionAtBase0 () == 0)
 		{
@@ -109,7 +123,18 @@ bool TEXASINSTRUMENTS::TMS99xxFamily::simulate (MCHEmul::CPU* cpu)
 	
 			// ...a notification to draw the screen is also generated...
 			MCHEmul::GraphicalChip::notify (MCHEmul::Event (_GRAPHICSREADY));
+
+			// Refresh the information about the sprites
+			// The information won't change until the next frame...
+			for (size_t i = 0; i < 32; i++) // The number of sprites...
+				_spriteInfo [i] = TEXASINSTRUMENTS::TMS99xxFamily::SpriteInfo 
+					(_TMS99xxFamilyRegisters -> readSpriteDefinition ((unsigned char) i));
 		}
+
+		// It may do a specific action at the position where the raster is currently...
+		actionPerRasterLineAndCyle ();
+		// ...before moving the raster one additional position...
+		_raster.moveCycles (1);
 
 		// An interrupt is launched if the system was configured to execute that action...
 		if (_TMS99xxFamilyRegisters -> screenUpdateHappen () &&
@@ -132,7 +157,7 @@ MCHEmul::InfoStructure TEXASINSTRUMENTS::TMS99xxFamily::getInfoStructure () cons
 
 	result.remove ("Memory"); // This info is not neccesary...
 	result.add ("TMS99xxFamilyRegisters",	std::move (_TMS99xxFamilyRegisters -> getInfoStructure ()));
-	result.add ("Raster",				std::move (_raster.getInfoStructure ()));
+	result.add ("Raster",					std::move (_raster.getInfoStructure ()));
 
 	return (result);
 }
@@ -180,6 +205,50 @@ MCHEmul::ScreenMemory* TEXASINSTRUMENTS::TMS99xxFamily::createScreenMemory ()
 	return (new MCHEmul::ScreenMemory (numberColumns (), numberRows (), cP));
 }
 
+// ---
+void TEXASINSTRUMENTS::TMS99xxFamily::actionPerRasterLineAndCyle ()
+{
+	// This is done whatever the graphics mode is!
+	// Even if the text mode i sturned on. The sprites won't be brawn in that case for sure...
+	if (_raster.isInVisibleZone () &&
+		_raster.hData ().currentPositionAtBase0 () == 0)
+	{
+		// Variables used in the loop...
+		bool fF = false; // Fifth found?
+		size_t n = 0; // Number of sprites visibles...
+		unsigned short cRL = _raster.vData ().currentVisiblePosition ();
+		// No sprite visible in this line so far...
+		_TMS99xxFamilyRegisters -> setFifthSpriteDetected (false);
+		_TMS99xxFamilyRegisters -> setFifthSpriteNotDrawn (0xff); // Makes no sense, it is not used...just in case!
+		// With no meaning, because fifthDetected = false
+
+		// Lets found the ones that are visible!
+		// If there were a sprite with its position defined at line 208 or more
+		// The system stops the process...
+		size_t i = 0;
+		for (;i < 32 /** 32 max. */ && 
+			  _spriteInfo [i]._definition._posY < 208 /* Until one after this position was found. */ && 
+			  !fF /** or the fifth in the line was found. */; i++)
+		{
+			// If it is not visible, then contunue looking for the next one, if possible!
+			if (!_spriteInfo [i].actualizeInfoAtLine (cRL)) 
+				continue;
+
+			// If it is visible, there can not be more than 4 max visible...
+			// ...and if there were more, the system would stops and it wouldn't continue looking for more...
+			if (n++ < 4) _spriteInfo [i]._visible = true;
+			else _TMS99xxFamilyRegisters -> setFifthSpriteDetected (fF = true); // At this point n has to be less or equal to 3...
+			// Any case, loads the info about the bytes that woul
+			// The register always contains the highest element found...
+			_TMS99xxFamilyRegisters -> setFifthSpriteNotDrawn ((unsigned char) i); 
+		}
+
+		// The rest, if any, are not visible...
+		for (; i < 32 /** 32 max. */; i++) 
+			_spriteInfo [i]._visible = false;
+	}
+}
+
 // --
 void TEXASINSTRUMENTS::TMS99xxFamily::readGraphicInfoAndDrawVisibleZone (MCHEmul::CPU* cpu)
 {
@@ -225,6 +294,7 @@ void TEXASINSTRUMENTS::TMS99xxFamily::drawGraphicsSpritesAndDetectCollisions
 		case TEXASINSTRUMENTS::TMS99xxFamilyRegisters::_GRAPHICIMODE:
 			{
 				drawGraphicsScreenGraphicsMode (x, y, data);
+				drawSprites (x, y);
 			}
 
 			break;
@@ -239,6 +309,7 @@ void TEXASINSTRUMENTS::TMS99xxFamily::drawGraphicsSpritesAndDetectCollisions
 		case TEXASINSTRUMENTS::TMS99xxFamilyRegisters::_MULTICOLORMODE:
 			{
 				drawGraphicsScreenMulticolorMode (x, y, data);
+				drawSprites (x, y);
 			}
 
 			break;
@@ -246,6 +317,7 @@ void TEXASINSTRUMENTS::TMS99xxFamily::drawGraphicsSpritesAndDetectCollisions
 		case TEXASINSTRUMENTS::TMS99xxFamilyRegisters::_GRAPHICIIMODE:
 			{
 				drawGraphicsScreenGraphicsMode (x, y, data);
+				drawSprites (x, y);
 			}
 
 			break;
@@ -302,6 +374,20 @@ void TEXASINSTRUMENTS::TMS99xxFamily::drawGraphicsScreenMulticolorMode (unsigned
 	if (((xS >> 2) % 1) == 0) cl = (unsigned int) ((std::get <2> (data).value () & 0xf0) >> 4); // even block...
 	else cl = (unsigned int) (std::get <2> (data).value () & 0x0f); // odd block...
 	_screenMemory -> setPixel (x, y, cl);
+}
+
+// ---
+void TEXASINSTRUMENTS::TMS99xxFamily::drawSprites (unsigned short x, unsigned short y)
+{
+	for (size_t i = 0; i < 32; i++)
+		if (_spriteInfo [i]._visible) 
+			drawSprite (x, y, (unsigned char) i);
+}
+
+// ---
+void TEXASINSTRUMENTS::TMS99xxFamily::drawSprite (unsigned x, unsigned y, unsigned char nS)
+{
+	// TODO
 }
 
 // ---
