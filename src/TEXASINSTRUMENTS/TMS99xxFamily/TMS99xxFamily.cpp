@@ -216,7 +216,7 @@ void TEXASINSTRUMENTS::TMS99xxFamily::actionPerRasterLineAndCyle ()
 		// Variables used in the loop...
 		bool fF = false; // Fifth found?
 		size_t n = 0; // Number of sprites visibles...
-		unsigned short cRL = _raster.vData ().currentVisiblePosition ();
+		unsigned short vL = _raster.vData ().currentVisiblePosition ();
 		// No sprite visible in this line so far...
 		_TMS99xxFamilyRegisters -> setFifthSpriteDetected (false);
 		_TMS99xxFamilyRegisters -> setFifthSpriteNotDrawn (0xff); // Makes no sense, it is not used...just in case!
@@ -226,18 +226,26 @@ void TEXASINSTRUMENTS::TMS99xxFamily::actionPerRasterLineAndCyle ()
 		// If there were a sprite with its position defined at line 208 or more
 		// The system stops the process...
 		size_t i = 0;
+		unsigned short lB, uB;
+		_raster.firstScreenPosition (lB, uB);
 		for (;i < 32 /** 32 max. */ && 
 			  _spriteInfo [i]._definition._posY < 208 /* Until one after this position was found. */ && 
 			  !fF /** or the fifth in the line was found. */; i++)
 		{
 			// If it is not visible, then contunue looking for the next one, if possible!
-			if (!_spriteInfo [i].actualizeInfoAtLine (cRL)) 
+			// Otherwise the infomation about which pixel is the first obne visible is update...
+			if (!_spriteInfo [i].actualizeInfoAtVisibleLine (vL, lB, uB))
 				continue;
 
 			// If it is visible, there can not be more than 4 max visible...
 			// ...and if there were more, the system would stops and it wouldn't continue looking for more...
 			if (n++ < 4) _spriteInfo [i]._visible = true;
-			else _TMS99xxFamilyRegisters -> setFifthSpriteDetected (fF = true); // At this point n has to be less or equal to 3...
+			else 
+			{
+				_spriteInfo [i]._visible = false;
+				_TMS99xxFamilyRegisters -> setFifthSpriteDetected (fF = true); // At this point n has to be less or equal to 4...
+			}
+			
 			// Any case, loads the info about the bytes that woul
 			// The register always contains the highest element found...
 			_TMS99xxFamilyRegisters -> setFifthSpriteNotDrawn ((unsigned char) i); 
@@ -279,7 +287,9 @@ void TEXASINSTRUMENTS::TMS99xxFamily::readGraphicInfoAndDrawVisibleZone (MCHEmul
 
 	// Draw the graphics and sprites and detect the collisions 
 	// All that done depending on the graphical mode used too...
-	drawGraphicsSpritesAndDetectCollisions (x, y,
+	unsigned short xS = 0, yS = 0;
+	_raster.firstScreenPosition (xS, yS);
+	drawGraphicsSpritesAndDetectCollisions (x, y, xS /** left border. */, yS /** up border. */,
 		_TMS99xxFamilyRegisters -> readGraphicInfo 
 			(x - _raster.hData ().firstScreenPosition (), // Positions within the screen part of the memory...
 			 y - _raster.vData ().firstScreenPosition ()) /** From the video memory. */);
@@ -287,14 +297,15 @@ void TEXASINSTRUMENTS::TMS99xxFamily::readGraphicInfoAndDrawVisibleZone (MCHEmul
 
 // ---
 void TEXASINSTRUMENTS::TMS99xxFamily::drawGraphicsSpritesAndDetectCollisions 
-	(unsigned short x, unsigned short y, const std::tuple <MCHEmul::UByte, MCHEmul::UByte, MCHEmul::UByte>& data)
+	(unsigned short x, unsigned short y, unsigned short xS, unsigned short yS,
+	 const std::tuple <MCHEmul::UByte, MCHEmul::UByte, MCHEmul::UByte>& data)
 {
 	switch (_TMS99xxFamilyRegisters -> graphicMode ())
 	{
 		case TEXASINSTRUMENTS::TMS99xxFamilyRegisters::_GRAPHICIMODE:
 			{
 				drawGraphicsScreenGraphicsMode (x, y, data);
-				drawSprites (x, y);
+				drawSprites (x, y, xS);
 			}
 
 			break;
@@ -309,7 +320,7 @@ void TEXASINSTRUMENTS::TMS99xxFamily::drawGraphicsSpritesAndDetectCollisions
 		case TEXASINSTRUMENTS::TMS99xxFamilyRegisters::_MULTICOLORMODE:
 			{
 				drawGraphicsScreenMulticolorMode (x, y, data);
-				drawSprites (x, y);
+				drawSprites (x, y, xS);
 			}
 
 			break;
@@ -317,7 +328,7 @@ void TEXASINSTRUMENTS::TMS99xxFamily::drawGraphicsSpritesAndDetectCollisions
 		case TEXASINSTRUMENTS::TMS99xxFamilyRegisters::_GRAPHICIIMODE:
 			{
 				drawGraphicsScreenGraphicsMode (x, y, data);
-				drawSprites (x, y);
+				drawSprites (x, y, xS);
 			}
 
 			break;
@@ -377,17 +388,24 @@ void TEXASINSTRUMENTS::TMS99xxFamily::drawGraphicsScreenMulticolorMode (unsigned
 }
 
 // ---
-void TEXASINSTRUMENTS::TMS99xxFamily::drawSprites (unsigned short x, unsigned short y)
+void TEXASINSTRUMENTS::TMS99xxFamily::drawSprites (unsigned short x, unsigned short y, unsigned short xS)
 {
-	for (size_t i = 0; i < 32; i++)
+	// The have to be drawn in the reverse order, from 31 to 0...
+	for (int i = 31; i >= 0; i--)
 		if (_spriteInfo [i]._visible) 
-			drawSprite (x, y, (unsigned char) i);
+			drawSprite (x, y, xS, (unsigned char) i);
 }
 
 // ---
-void TEXASINSTRUMENTS::TMS99xxFamily::drawSprite (unsigned x, unsigned y, unsigned char nS)
+void TEXASINSTRUMENTS::TMS99xxFamily::drawSprite 
+	(unsigned short x, unsigned short y, unsigned short xS, unsigned char nS)
 {
-	// TODO
+	size_t dP = 0;
+	if (_spriteInfo [nS]._definition.visibleAtVisiblePosition (x, xS, dP)) // In an independt line to load dP...
+		if (_spriteInfo [nS]._bytes 
+			[(_spriteInfo [nS]._definition._16pixels ? 1 : 0) - ((dP >> 3) /** 0 or 1 when 16 pixels on. */) 
+				/** so 1 or 0 in same circunstances. */].bit (dP % 8)) // If the pixel is to be drawn...
+			_screenMemory -> setPixel (x, y, _spriteInfo [nS]._definition._color);
 }
 
 // ---

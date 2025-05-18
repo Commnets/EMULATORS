@@ -144,7 +144,7 @@ namespace TEXASINSTRUMENTS
 			The tuple received is from the method readGraphicInfo in the Register class (@see)
 			and it is used in all method below this one. */
 		void drawGraphicsSpritesAndDetectCollisions 
-			(unsigned short x, unsigned short y,
+			(unsigned short x, unsigned short y, unsigned short xS, unsigned short yS,
 			 const std::tuple <MCHEmul::UByte, MCHEmul::UByte, MCHEmul::UByte>& data);
 		/** Invoked from the previous one. 
 			The methods receive the position within the real screen and tuple with graphical info. */
@@ -154,8 +154,8 @@ namespace TEXASINSTRUMENTS
 			 const std::tuple <MCHEmul::UByte, MCHEmul::UByte, MCHEmul::UByte>& data);
 		void drawGraphicsScreenMulticolorMode (unsigned short x, unsigned short y,
 			 const std::tuple <MCHEmul::UByte, MCHEmul::UByte, MCHEmul::UByte>& data);
-		void drawSprites (unsigned short x, unsigned short y);
-		void drawSprite (unsigned x, unsigned y, unsigned char nS);
+		void drawSprites (unsigned short x, unsigned short y, unsigned short xS);
+		void drawSprite (unsigned short x, unsigned short y, unsigned short xS, unsigned char nS);
 
 		/** Draw the important events, in case this option is set. */
 		void drawEvents ();
@@ -223,14 +223,18 @@ namespace TEXASINSTRUMENTS
 
 			/** Load the information about the sprite. \n
 				The info (bytes) that will be displayed if there were visible. \n
-				It will return true if the sprite were visible in the line. */
-			inline bool actualizeInfoAtLine (unsigned short y);
+				It will return true if the sprite were visible in the line. \n 
+				This method is invoked at the beginning oif every raster line. \n 
+				The method receives also the size of the borders. */
+			inline bool actualizeInfoAtVisibleLine
+				(unsigned short y, unsigned short uB, unsigned short lB);
 
 			// Implementation
 			// This info is actualized with the previous method...
 			/** To describe whether the sprite is or not visible. \n
 				This attribute gets update at the beginning of every raster line within the visible zone. */
 			bool _visible;
+
 			/** The bytes (max 2) that will define the structure if the sprite were visible. */
 			MCHEmul::UBytes _bytes;
 		};
@@ -246,10 +250,11 @@ namespace TEXASINSTRUMENTS
 	};
 
 	// ---
-	inline bool TMS99xxFamily::SpriteInfo::actualizeInfoAtLine (unsigned short y)
+	inline bool TMS99xxFamily::SpriteInfo::actualizeInfoAtVisibleLine 
+		(unsigned short vL, unsigned short lB, unsigned short uB)
 	{
-		size_t bV; 
-		if ((_visible = _definition.visibleAtPositionY (y, bV)))
+		size_t bV;
+		if ((_visible = _definition.visibleAtVisibleLine (vL, uB, bV)))
 		{
 			assert (!_definition._data.empty ()); // Just in case...
 

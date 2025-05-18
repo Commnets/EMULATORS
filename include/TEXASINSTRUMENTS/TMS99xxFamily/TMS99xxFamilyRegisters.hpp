@@ -43,14 +43,18 @@ namespace TEXASINSTRUMENTS
 
 			/** Return true if the sprite is visible at raster line rL. \n
 				The raster line 0 happens at the beginning of the visible zone. \n
-				Takes into account whether the sprite is expanded and it is 16 pixels wide or only 8. 
-				Returns also the line visible within the definition. If it is not visible that value makes no sense. */
-			inline bool visibleAtPositionY (unsigned short rL, size_t& dF) const;
+				Takes into account whether the sprite is expanded and it is 16 pixels wide or only 8. \n
+				Returns also the line visible within the definition. If it is not visible that value makes no sense. \n
+				The method receives also the size of the upper border (that will depend on the projection system). */
+			inline bool visibleAtVisibleLine 
+				(unsigned short vL, unsigned short uB, size_t& dF) const;
 			/** Return true if the sprite is visible in the position x. \n
 				The position y has the same reference than the position of the sprite. \n
 				It take sinto account whether the early clock is set up or not. \n
-				Returns also which is "bit" visible. It is not visible that value makes no sense. */
-			inline bool visibleAtPositionX (unsigned short rP, size_t& dP) const;
+				Returns also which is "bit" visible. It is not visible that value makes no sense. \n
+				The methos receives also the size of the left border (that will depend on the projection system). */
+			inline bool visibleAtVisiblePosition 
+				(unsigned short vP, unsigned short lB, size_t& dP) const;
 
 			/** To get the info of the sprite as a set of strings. */
 			MCHEmul::Strings spriteDrawSnapShot () const;
@@ -314,18 +318,21 @@ namespace TEXASINSTRUMENTS
 	};
 
 	// ---
-	inline bool TMS99xxFamilyRegisters::SpriteDefinition::visibleAtPositionY (unsigned short rL, size_t& dF) const
+	inline bool TMS99xxFamilyRegisters::SpriteDefinition::visibleAtVisibleLine 
+		(unsigned short vL, unsigned short uB, size_t& dF) const
 	{ 
 		bool result = false;
-
 		unsigned short en	= (_enlarged ? 1 : 0); // *2 when enlarged?
 		unsigned short d	= (_16pixels ? 1 : 0); // *2 when 16pixels height?
 		unsigned short mL	= 8 << (en + d); // Total height?
 
 		// Sprites can be defined in a position before the visible position...
 		// So the real position could be negative!...
+		// When rL = uB, the rLN will be still - 1 = 255, that is the first visible position in a sprite...
+		// When rl = uB - 7, there will be only one line visible (the last one).
+		int vLN = (int) vL - (int) uB - 1;
 		int pY = int (((char) _posY >= 208) ? (char) _posY /** Here become negative. */ : _posY);
-		if ((int) rL >= pY && (int) rL < (pY + (int) mL))
+		if (vLN >= pY && vLN < (pY + (int) mL))
 		{ 
 			result = true; 
 			
@@ -333,28 +340,36 @@ namespace TEXASINSTRUMENTS
 			// The byte can vary from 0 to 15!
 			// that takes into account when enlarged and 16pixels height together...
 			// But could finally be 16 bytes more, depending on the position x!
-			dF = (size_t) ((rL - (unsigned short) _posY) >> en);
+			dF = (size_t) (((unsigned short) vLN - (unsigned short) _posY) >> en);
 		}
 
 		return (result); 
 	}
 
 	// ---
-	inline bool TMS99xxFamilyRegisters::SpriteDefinition::visibleAtPositionX (unsigned short rP, size_t& dP) const
+	inline bool TMS99xxFamilyRegisters::SpriteDefinition::visibleAtVisiblePosition
+		(unsigned short vP, unsigned short lB, size_t& dP) const
 	{
 		bool result = false;
 
 		unsigned short en	= (_enlarged ? 1 : 0); // *2 when enlarged?
 		unsigned short d	= (_16pixels ? 1 : 0); // *2 when 16pixels width?
 		unsigned short mP	= 8 << (en + d); // Total width?
-		if (rP >= (unsigned short) _posX && rP < ((unsigned short) _posX + mP))
+
+		// Sprites can be defined in a position before the visible position...
+		// So the real position could be negative!...
+		// When the position of the sprite is 0 and early clock is set, 
+		// the sprite will start to be drawn when rP is -32...
+		int vPN = (int) vP - (int) lB; // The raster position, less the left border...
+		int pX = (int) _posX - (_earlyClock ? 32 : 0); // The position of the border less 32...
+		if (vPN >= pX && vPN < (pX + (int) mP))
 		{
 			result = true;
 
 			// Which is the "bit" visible, that takes into account when enlarged...
 			// The bit can vary from 0 to 15!
 			// Starting from 0 in the left, and ending (if enlarged and expanded) with 31 in the right side!
-			dP = (size_t) ((mP - (unsigned short) _posX) >> en); 
+			dP = ((1 << (3 + d)) - 1) - (size_t) (((unsigned short) vPN - (unsigned short) pX) >> en);
 		}
 
 		return (result);
