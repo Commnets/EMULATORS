@@ -218,8 +218,8 @@ namespace TEXASINSTRUMENTS
 		// That the reason to define them protected, and to declare TMS99xxFamily as a friend class...
 		bool launchScreenUpdateInterrupt () const
 							{ return (_launchScreenUpdateInterrupt); }
-		void setSpriteCollisionDetected ()
-							{ _spriteCollisionDetected = true; }
+		void setSpriteCollisionDetected (bool cD)
+							{ _spriteCollisionDetected = cD; }
 		void setFifthSpriteDetected (bool fD)
 							{ _fifthSpriteDetected = fD;  }
 		void setFifthSpriteNotDrawn (unsigned char sN)
@@ -391,8 +391,8 @@ namespace TEXASINSTRUMENTS
 
 		std::vector <MCHEmul::UByte> dt = 
 			videoData (_spriteAttrsAddress + (size_t) (nS << 2 /** 4 bytes each. */), 4);
-		result._posX		= dt [0].value ();
-		result._posY		= dt [1].value ();
+		result._posY		= dt [0].value ();
+		result._posX		= dt [1].value ();
 		result._pattern		= dt [2].value ();
 		result._color		= dt [3].value () & 0x0f;
 		result._16pixels	= _sprites16pixels; // Common to all sprites...(stored here to speed up the acceses)

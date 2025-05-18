@@ -108,7 +108,9 @@ bool TEXASINSTRUMENTS::TMS99xxFamily::simulate (MCHEmul::CPU* cpu)
 		// ...marks also whether the event have to be drawn or not!
 		if (_raster.isInVisibleZone ())
 		{
-			readGraphicInfoAndDrawVisibleZone (cpu);
+			// Collision detected?
+			_TMS99xxFamilyRegisters -> setSpriteCollisionDetected 
+				(readGraphicInfoAndDrawVisibleZone (cpu));
 
 			if (_showEvents)
 				drawEvents ();
@@ -258,7 +260,7 @@ void TEXASINSTRUMENTS::TMS99xxFamily::actionPerRasterLineAndCyle ()
 }
 
 // --
-void TEXASINSTRUMENTS::TMS99xxFamily::readGraphicInfoAndDrawVisibleZone (MCHEmul::CPU* cpu)
+bool TEXASINSTRUMENTS::TMS99xxFamily::readGraphicInfoAndDrawVisibleZone (MCHEmul::CPU* cpu)
 {
 	// Here it is sure that the raster in the visible zone...
 
@@ -274,7 +276,7 @@ void TEXASINSTRUMENTS::TMS99xxFamily::readGraphicInfoAndDrawVisibleZone (MCHEmul
 
 	// If it is not still in the screen position, there is anything else to do...
 	if (!_raster.isInScreenZone ())
-		return;
+		return (false); // No collision...
 
 	// If the screen is in blank, 
 	// ...the system doesn't continue either...
@@ -282,30 +284,34 @@ void TEXASINSTRUMENTS::TMS99xxFamily::readGraphicInfoAndDrawVisibleZone (MCHEmul
 	{
 		_IFDEBUG debugVideoNoActive ();
 
-		return;
+		return (false); // No collision...
 	}
 
 	// Draw the graphics and sprites and detect the collisions 
 	// All that done depending on the graphical mode used too...
 	unsigned short xS = 0, yS = 0;
 	_raster.firstScreenPosition (xS, yS);
-	drawGraphicsSpritesAndDetectCollisions (x, y, xS /** left border. */, yS /** up border. */,
+	return (drawGraphicsSpritesAndDetectCollisions (x, y, xS /** left border. */, yS /** up border. */,
 		_TMS99xxFamilyRegisters -> readGraphicInfo 
 			(x - _raster.hData ().firstScreenPosition (), // Positions within the screen part of the memory...
-			 y - _raster.vData ().firstScreenPosition ()) /** From the video memory. */);
+			 y - _raster.vData ().firstScreenPosition ()) /** From the video memory. */));
 }
 
 // ---
-void TEXASINSTRUMENTS::TMS99xxFamily::drawGraphicsSpritesAndDetectCollisions 
+bool TEXASINSTRUMENTS::TMS99xxFamily::drawGraphicsSpritesAndDetectCollisions 
 	(unsigned short x, unsigned short y, unsigned short xS, unsigned short yS,
 	 const std::tuple <MCHEmul::UByte, MCHEmul::UByte, MCHEmul::UByte>& data)
 {
+	// Was there a collision between sprites?
+	bool result = false;
+
 	switch (_TMS99xxFamilyRegisters -> graphicMode ())
 	{
 		case TEXASINSTRUMENTS::TMS99xxFamilyRegisters::_GRAPHICIMODE:
 			{
 				drawGraphicsScreenGraphicsMode (x, y, data);
-				drawSprites (x, y, xS);
+
+				result = drawSprites (x, y, xS);
 			}
 
 			break;
@@ -320,7 +326,8 @@ void TEXASINSTRUMENTS::TMS99xxFamily::drawGraphicsSpritesAndDetectCollisions
 		case TEXASINSTRUMENTS::TMS99xxFamilyRegisters::_MULTICOLORMODE:
 			{
 				drawGraphicsScreenMulticolorMode (x, y, data);
-				drawSprites (x, y, xS);
+
+				result = drawSprites (x, y, xS);
 			}
 
 			break;
@@ -328,7 +335,8 @@ void TEXASINSTRUMENTS::TMS99xxFamily::drawGraphicsSpritesAndDetectCollisions
 		case TEXASINSTRUMENTS::TMS99xxFamilyRegisters::_GRAPHICIIMODE:
 			{
 				drawGraphicsScreenGraphicsMode (x, y, data);
-				drawSprites (x, y, xS);
+
+				result = drawSprites (x, y, xS);
 			}
 
 			break;
@@ -343,6 +351,8 @@ void TEXASINSTRUMENTS::TMS99xxFamily::drawGraphicsSpritesAndDetectCollisions
 
 			break;
 	}
+
+	return (result);
 }
 
 // ----
@@ -379,33 +389,47 @@ void TEXASINSTRUMENTS::TMS99xxFamily::drawGraphicsScreenTextMode (unsigned short
 void TEXASINSTRUMENTS::TMS99xxFamily::drawGraphicsScreenMulticolorMode (unsigned short x, unsigned short y,
 			 const std::tuple <MCHEmul::UByte, MCHEmul::UByte, MCHEmul::UByte>& data)
 {
-	// The colot to apply will depend on the group of 4 pixels...
+	// The color to apply will depend on the group of 4 pixels...
 	unsigned int cl = 0;
 	unsigned short xS = x - _raster.hData ().firstScreenPosition ();
 	if (((xS >> 2) % 1) == 0) cl = (unsigned int) ((std::get <2> (data).value () & 0xf0) >> 4); // even block...
 	else cl = (unsigned int) (std::get <2> (data).value () & 0x0f); // odd block...
-	_screenMemory -> setPixel (x, y, cl);
+	if (cl != 0)
+		_screenMemory -> setPixel (x, y, cl);
 }
 
 // ---
-void TEXASINSTRUMENTS::TMS99xxFamily::drawSprites (unsigned short x, unsigned short y, unsigned short xS)
+bool TEXASINSTRUMENTS::TMS99xxFamily::drawSprites (unsigned short x, unsigned short y, unsigned short xS)
 {
 	// The have to be drawn in the reverse order, from 31 to 0...
+	int nD = 0;
 	for (int i = 31; i >= 0; i--)
-		if (_spriteInfo [i]._visible) 
-			drawSprite (x, y, xS, (unsigned char) i);
+	{
+		if (_spriteInfo [i]._visible)
+			if (drawSprite (x, y, xS, (unsigned char) i))
+				nD++;
+	}
+
+	// There were a collision in this point 
+	// because there were more than one sprite drawn in the same position...
+	return (nD > 1);
 }
 
 // ---
-void TEXASINSTRUMENTS::TMS99xxFamily::drawSprite 
+bool  TEXASINSTRUMENTS::TMS99xxFamily::drawSprite 
 	(unsigned short x, unsigned short y, unsigned short xS, unsigned char nS)
 {
+	bool result = false;
+
 	size_t dP = 0;
-	if (_spriteInfo [nS]._definition.visibleAtVisiblePosition (x, xS, dP)) // In an independt line to load dP...
-		if (_spriteInfo [nS]._bytes 
+	if (_spriteInfo [nS]._definition.visibleAtVisiblePosition (x, xS, dP)) // In an independent line to load dP...
+		if ((result = _spriteInfo [nS]._bytes 
 			[(_spriteInfo [nS]._definition._16pixels ? 1 : 0) - ((dP >> 3) /** 0 or 1 when 16 pixels on. */) 
-				/** so 1 or 0 in same circunstances. */].bit (dP % 8)) // If the pixel is to be drawn...
-			_screenMemory -> setPixel (x, y, _spriteInfo [nS]._definition._color);
+				/** so 1 or 0 in same circunstances. */].bit (dP % 8)) && // If the pixel is to be drawn...
+			_spriteInfo [nS]._definition._color != 0) // ...and the color is not 0 (transparent)...
+			_screenMemory -> setPixel (x, y, _spriteInfo [nS]._definition._color); // The color 0 counts for collisions instead...
+	
+	return (result);
 }
 
 // ---

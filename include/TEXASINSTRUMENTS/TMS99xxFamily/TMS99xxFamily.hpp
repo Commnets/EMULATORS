@@ -138,12 +138,14 @@ namespace TEXASINSTRUMENTS
 		/** Read the graphical info (when needed) and draw the graphics. \n
 			Returns true when the graphics are read. \n
 			That returns variable will be used to determine whether 
-			the CPU has to be stopped or not. */
-		void readGraphicInfoAndDrawVisibleZone (MCHEmul::CPU* cpu);
+			the CPU has to be stopped or not. \n
+			Returns true when a collision between two sprites were detected. */
+		bool readGraphicInfoAndDrawVisibleZone (MCHEmul::CPU* cpu);
 		/** Draw the graphics, sprites and detect collisuions depending on the graphics mode. \n
 			The tuple received is from the method readGraphicInfo in the Register class (@see)
-			and it is used in all method below this one. */
-		void drawGraphicsSpritesAndDetectCollisions 
+			and it is used in all method below this one. \n
+			The method returns true when a collision between two or more sprites was detected. */
+		bool drawGraphicsSpritesAndDetectCollisions 
 			(unsigned short x, unsigned short y, unsigned short xS, unsigned short yS,
 			 const std::tuple <MCHEmul::UByte, MCHEmul::UByte, MCHEmul::UByte>& data);
 		/** Invoked from the previous one. 
@@ -154,8 +156,10 @@ namespace TEXASINSTRUMENTS
 			 const std::tuple <MCHEmul::UByte, MCHEmul::UByte, MCHEmul::UByte>& data);
 		void drawGraphicsScreenMulticolorMode (unsigned short x, unsigned short y,
 			 const std::tuple <MCHEmul::UByte, MCHEmul::UByte, MCHEmul::UByte>& data);
-		void drawSprites (unsigned short x, unsigned short y, unsigned short xS);
-		void drawSprite (unsigned short x, unsigned short y, unsigned short xS, unsigned char nS);
+		/** Returns true when drawing the collision between 2 sprites is detected. */
+		bool drawSprites (unsigned short x, unsigned short y, unsigned short xS);
+		/** Returns true when the pixels is being drawn, even if its color were 0 (transparent). */
+		bool drawSprite (unsigned short x, unsigned short y, unsigned short xS, unsigned char nS);
 
 		/** Draw the important events, in case this option is set. */
 		void drawEvents ();
