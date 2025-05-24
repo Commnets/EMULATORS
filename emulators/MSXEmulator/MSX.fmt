@@ -30,3 +30,7 @@ Type:NMI, Id:@ID@, Active:@ACTIVE@, In Execution:@EXECUTION@, At Address:$@ADDRE
 ;CSPRITESDRAW
 @DRAW@
 #---
+#---
+;CVDPMEMORY
+@BYTES{blocksize=16,listsep=\,,tablesep=\ ,minsize=2}@
+#---

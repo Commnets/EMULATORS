@@ -118,6 +118,31 @@ namespace MSX
 			MCHEmul::Computer* c, MCHEmul::InfoStructure& rst) override;
 	};
 
+	/** To get the content of the video memory. \n
+		The command must have 1 parameter at least with the direction which value is requested. \n
+		A second parameter might be provided, and the the content between those two memory locations is got. \n
+		The address can be in octal, hexadecimal or decimal. \n
+		Command line: VDPMEMORY ADDRESS [OTHER ADDRESS] 
+		The values got at from the activeView and considering the current active memory regions only. */
+	class VDPMemoryStatusCommand final : public MCHEmul::Command
+	{
+		public:
+		static const int _ID = 105;
+		static const std::string _NAME;
+
+		VDPMemoryStatusCommand ()
+			: Command (_ID, _NAME)
+							{ }
+
+		virtual bool canBeExecuted () const override
+							{ return (_parameters.size () == 1 || _parameters.size () == 2); }
+
+		private:
+		/** The fields returned are: \n
+			BYTES = Attributes: The bytes in the locations requested. */
+		virtual void executeImpl 
+			(MCHEmul::CommandExecuter* cE, MCHEmul::Computer* c, MCHEmul::InfoStructure& rst) override;
+	};
 }
 
 #endif

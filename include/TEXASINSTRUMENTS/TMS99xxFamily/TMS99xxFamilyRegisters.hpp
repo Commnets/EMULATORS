@@ -168,7 +168,7 @@ namespace TEXASINSTRUMENTS
 			No boundaries limits are done. \n
 			The number of the sprite is from 1 to 32. */
 		MCHEmul::Strings spriteDrawSnapShot (size_t nS) const
-							{ return (readSpriteDefinition ((unsigned char) nS).spriteDrawSnapShot ()); }
+							{ return (readSpriteDefinition ((unsigned char) (nS - 1)).spriteDrawSnapShot ()); }
 		/** To get a snapshot of a set of sprites.
 			When parameter = empty means all sprites. */
 		MCHEmul::Strings spritesDrawSnapShot (const std::vector <size_t>& nS = { }) const;
@@ -230,7 +230,8 @@ namespace TEXASINSTRUMENTS
 							{ _screenUpdateHappen = true; }
 	
 		// Mamaging the info of the sprites...
-		/** Read the information of the sprite received as parameter. */
+		/** Read the information of the sprite received as parameter. 
+			The number of the sprite is from 0 to 31. */
 		inline SpriteDefinition readSpriteDefinition (unsigned char nS) const;
 
 		protected:

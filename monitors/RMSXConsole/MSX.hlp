@@ -21,3 +21,9 @@ The output will depend on the graphic mode set.
 To print out the sprites data.
 No parameters or the list of sprites to visualize from 1 to 32.
 The parameters could be repeated, but just one instace of every value is accepted.
+;VDPMEMORY INITIAL [FINAL]
+To get the content of a video memory position.
+One parameter minimum is required (INITIAL) that is the position of the video memory.
+If a second parameter is given then the content between the two locations is returned.
+The value of the initial and final memory can be given in decimal, hexadecimal ($), octal (o) or binary (z).
+The value of the memories is given in hexadecimal format but with no symbol at the beginning.

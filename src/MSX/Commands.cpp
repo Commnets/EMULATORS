@@ -8,6 +8,7 @@ const std::string MSX::PatternNameTableDUMPCommand::_NAME = "CPNAME";
 const std::string MSX::PatternGenerationTableDUMPCommand::_NAME = "CPGEN";
 const std::string MSX::ColorNameTableDUMPCommand::_NAME = "CCNAME";
 const std::string MSX::SpritesDrawCommand::_NAME = "CSPRITESDRAW";
+const std::string MSX::VDPMemoryStatusCommand::_NAME = "CVDPMEMORY";
 
 // ---
 void MSX::VDPStatusCommand::executeImpl 
@@ -84,4 +85,35 @@ void MSX::SpritesDrawCommand::executeImpl (MCHEmul::CommandExecuter* cE,
 
 	rst.add ("DRAW", MCHEmul::concatenateStrings 
 		(static_cast <MSX::MSXComputer*> (c) -> spritesDrawSnapShot (sprs), "\n"));
+}
+
+// ---
+
+// ---
+void MSX::VDPMemoryStatusCommand::executeImpl 
+	(MCHEmul::CommandExecuter* cE, MCHEmul::Computer* c, MCHEmul::InfoStructure& rst)
+{
+	if (c == nullptr || 
+		dynamic_cast <MSX::MSXComputer*> (c) == nullptr)
+		return;
+
+	MSX::MSXComputer* mC = static_cast <MSX::MSXComputer*> (c);
+
+	MCHEmul::Address a1 = MCHEmul::Address::fromStr (parameter ("00"));
+	if (a1 > c -> cpu () -> architecture ().longestAddressPossible ()) 
+		return;
+
+	if (_parameters.size () == 2)
+	{
+		MCHEmul::Address a2 = MCHEmul::Address::fromStr (parameter ("01"));
+		if (a2 > c -> cpu () -> architecture ().longestAddressPossible ())
+			return;
+
+		MCHEmul::Address iA = ((a1 <= a2) ? a1 : a2);
+		rst.add ("BYTES", MCHEmul::UBytes (mC -> vdp () -> videoData (iA, (((a2 >= a1) ? a2 : a1) - iA) + 1)).
+			asString (MCHEmul::UByte::OutputFormat::_HEXA, ',', 2));
+	}
+	else
+		rst.add ("BYTES", mC -> vdp () -> videoData (a1).
+			asString (MCHEmul::UByte::OutputFormat::_HEXA, 2));
 }

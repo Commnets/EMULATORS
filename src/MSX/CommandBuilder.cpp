@@ -6,7 +6,9 @@ MCHEmul::Command* MSX::CommandBuilder::createEmptyCommand (const std::string& cm
 {
 	MCHEmul::Command* result = nullptr;
 
-	if (cmdName == "VDP" || cmdName == MSX::VDPStatusCommand::_NAME)
+	if (cmdName == "HELP" || cmdName == MCHEmul::HelpCommand::_NAME)
+		result = new MCHEmul::HelpCommand ("./MSX.hlp"); // Adding the commands for a MSX...
+	else if (cmdName == "VDP" || cmdName == MSX::VDPStatusCommand::_NAME)
 		result = new MSX::VDPStatusCommand;
 	else if (cmdName == "PNAME" || cmdName == MSX::PatternNameTableDUMPCommand::_NAME)
 		result = new MSX::PatternNameTableDUMPCommand;
@@ -16,6 +18,8 @@ MCHEmul::Command* MSX::CommandBuilder::createEmptyCommand (const std::string& cm
 		result = new MSX::ColorNameTableDUMPCommand;
 	else if (cmdName == "SPRITESDRAW" || cmdName == MSX::SpritesDrawCommand::_NAME)
 		result = new MSX::SpritesDrawCommand;
+	else if (cmdName == "VDPMEMORY" || cmdName == MSX::VDPMemoryStatusCommand::_NAME)
+		result = new MSX::VDPMemoryStatusCommand;
 
 	return (result);
 }

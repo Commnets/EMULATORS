@@ -62,6 +62,7 @@ namespace MSX
 		virtual size_t videoMemorySize () const = 0;
 		virtual const std::vector <MCHEmul::UByte>& videoMemory () const = 0;
 		virtual const MCHEmul::UByte& videoData (const MCHEmul::Address& pos) const = 0;
+		virtual std::vector <MCHEmul::UByte> videoData (const MCHEmul::Address& pos, size_t nB) const = 0;
 		virtual unsigned char graphicMode () const = 0;
 
 		virtual std::vector <MCHEmul::UByte> patternNameTableSnapShot () const = 0;
@@ -113,6 +114,8 @@ namespace MSX
 							{ return (_TMS99xxFamily -> videoMemory ()); }
 		virtual const MCHEmul::UByte& videoData (const MCHEmul::Address& pos) const override
 							{ return (_TMS99xxFamily -> videoData (pos)); }
+		virtual std::vector <MCHEmul::UByte> videoData (const MCHEmul::Address& pos, size_t nB) const override
+							{ return (_TMS99xxFamily -> videoData (pos, nB)); }
 		virtual unsigned char graphicMode () const override
 							{ return (_TMS99xxFamily -> graphicMode ()); }
 

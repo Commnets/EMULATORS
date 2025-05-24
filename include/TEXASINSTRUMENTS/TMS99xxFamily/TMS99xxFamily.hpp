@@ -86,6 +86,8 @@ namespace TEXASINSTRUMENTS
 							{ return (_TMS99xxFamilyRegisters -> videoMemory ()); }
 		const MCHEmul::UByte& videoData (const MCHEmul::Address& pos) const
 							{ return (_TMS99xxFamilyRegisters -> videoData (pos)); }
+		std::vector <MCHEmul::UByte> videoData (const MCHEmul::Address& pos, size_t nB) const
+							{ return (_TMS99xxFamilyRegisters -> videoData (pos, nB)); }
 		void setVideoData (const MCHEmul::Address& pos, const MCHEmul::UByte& v)
 							{ _TMS99xxFamilyRegisters -> setVideoData (pos, v); }
 		unsigned char graphicMode () const
