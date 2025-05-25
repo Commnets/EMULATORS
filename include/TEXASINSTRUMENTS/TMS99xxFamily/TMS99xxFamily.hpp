@@ -158,10 +158,14 @@ namespace TEXASINSTRUMENTS
 			 const std::tuple <MCHEmul::UByte, MCHEmul::UByte, MCHEmul::UByte>& data);
 		void drawGraphicsScreenMulticolorMode (unsigned short x, unsigned short y,
 			 const std::tuple <MCHEmul::UByte, MCHEmul::UByte, MCHEmul::UByte>& data);
-		/** Returns true when drawing the collision between 2 sprites is detected. */
-		bool drawSprites (unsigned short x, unsigned short y, unsigned short xS);
-		/** Returns true when the pixels is being drawn, even if its color were 0 (transparent). */
-		bool drawSprite (unsigned short x, unsigned short y, unsigned short xS, unsigned char nS);
+		/** Returns true when drawing the collision between 2 sprites is detected. 
+			The position of the raster in the visible screen is given as parameter
+			and also the size of the borders. */
+		bool drawSprites (unsigned short x, unsigned short y, unsigned short xS, unsigned short yS);
+		/** Returns true when the pixels is being drawn, even if its color were 0 (transparent). 
+			The position of the raster in the visible screen is given as parameter
+			and also the size of the borders and also the number of sprite to draw. */
+		bool drawSprite (unsigned short x, unsigned short y, unsigned short xS, unsigned short yS, unsigned char nS);
 
 		/** Draw the important events, in case this option is set. */
 		void drawEvents ();
@@ -268,6 +272,8 @@ namespace TEXASINSTRUMENTS
 			_bytes [1] = _definition._16pixels 
 				? _definition._data [bV + 16] : MCHEmul::UByte::_0;
 		}
+		else
+			_bytes [0] = _bytes [1] = MCHEmul::UByte::_0; // Not visible, so no data to show...
 
 		return (_visible);
 	}

@@ -34,3 +34,11 @@ Type:NMI, Id:@ID@, Active:@ACTIVE@, In Execution:@EXECUTION@, At Address:$@ADDRE
 ;CVDPMEMORY
 @BYTES{blocksize=16,listsep=\,,tablesep=\ ,minsize=2}@
 #---
+#---
+;CSETVDPMEMORY
+->Errors:
+@ERROR@
+#---
+#---
+;CVDPEVENTS
+#---

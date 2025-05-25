@@ -20,6 +20,10 @@ MCHEmul::Command* MSX::CommandBuilder::createEmptyCommand (const std::string& cm
 		result = new MSX::SpritesDrawCommand;
 	else if (cmdName == "VDPMEMORY" || cmdName == MSX::VDPMemoryStatusCommand::_NAME)
 		result = new MSX::VDPMemoryStatusCommand;
+	else if (cmdName == "SETVDPMEMORY" || cmdName == MSX::SetVDPMemoryValueCommand::_NAME)
+		result = new MSX::SetVDPMemoryValueCommand;
+	else if (cmdName == "VDPEVENTS" || cmdName == MSX::VDPShowEventsCommand::_NAME)
+		result = new MSX::VDPShowEventsCommand;
 
 	return (result);
 }

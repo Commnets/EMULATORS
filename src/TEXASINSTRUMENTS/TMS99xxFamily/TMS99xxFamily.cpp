@@ -311,7 +311,7 @@ bool TEXASINSTRUMENTS::TMS99xxFamily::drawGraphicsSpritesAndDetectCollisions
 			{
 				drawGraphicsScreenGraphicsMode (x, y, data);
 
-				result = drawSprites (x, y, xS);
+				result = drawSprites (x, y, xS, yS);
 			}
 
 			break;
@@ -327,7 +327,7 @@ bool TEXASINSTRUMENTS::TMS99xxFamily::drawGraphicsSpritesAndDetectCollisions
 			{
 				drawGraphicsScreenMulticolorMode (x, y, data);
 
-				result = drawSprites (x, y, xS);
+				result = drawSprites (x, y, xS, yS);
 			}
 
 			break;
@@ -336,7 +336,7 @@ bool TEXASINSTRUMENTS::TMS99xxFamily::drawGraphicsSpritesAndDetectCollisions
 			{
 				drawGraphicsScreenGraphicsMode (x, y, data);
 
-				result = drawSprites (x, y, xS);
+				result = drawSprites (x, y, xS, yS);
 			}
 
 			break;
@@ -399,14 +399,15 @@ void TEXASINSTRUMENTS::TMS99xxFamily::drawGraphicsScreenMulticolorMode (unsigned
 }
 
 // ---
-bool TEXASINSTRUMENTS::TMS99xxFamily::drawSprites (unsigned short x, unsigned short y, unsigned short xS)
+bool TEXASINSTRUMENTS::TMS99xxFamily::drawSprites 
+	(unsigned short x, unsigned short y, unsigned short xS, unsigned short yS)
 {
 	// The have to be drawn in the reverse order, from 31 to 0...
 	int nD = 0;
 	for (int i = 31; i >= 0; i--)
 	{
 		if (_spriteInfo [i]._visible)
-			if (drawSprite (x, y, xS, (unsigned char) i))
+			if (drawSprite (x, y, xS, yS, (unsigned char) i))
 				nD++;
 	}
 
@@ -417,17 +418,38 @@ bool TEXASINSTRUMENTS::TMS99xxFamily::drawSprites (unsigned short x, unsigned sh
 
 // ---
 bool  TEXASINSTRUMENTS::TMS99xxFamily::drawSprite 
-	(unsigned short x, unsigned short y, unsigned short xS, unsigned char nS)
+	(unsigned short x, unsigned short y, unsigned short xS, unsigned short yS, unsigned char nS)
 {
 	bool result = false;
 
 	size_t dP = 0;
 	if (_spriteInfo [nS]._definition.visibleAtVisiblePosition (x, xS, dP)) // In an independent line to load dP...
+	{
 		if ((result = _spriteInfo [nS]._bytes 
 			[(_spriteInfo [nS]._definition._16pixels ? 1 : 0) - ((dP >> 3) /** 0 or 1 when 16 pixels on. */) 
 				/** so 1 or 0 in same circunstances. */].bit (dP % 8)) && // If the pixel is to be drawn...
 			_spriteInfo [nS]._definition._color != 0) // ...and the color is not 0 (transparent)...
 			_screenMemory -> setPixel (x, y, _spriteInfo [nS]._definition._color); // The color 0 counts for collisions instead...
+
+		// Draw a rectangle around the sprite if the events have to be highligthed...
+		if (_showEvents)
+		{
+			unsigned short en = 
+				(_spriteInfo [nS]._definition._enlarged ? 1 : 0);
+			unsigned short d = 
+				(_spriteInfo [nS]._definition._16pixels ? 1 : 0);
+			unsigned short mP = 8 << (en + d); 
+			int pY = int (((char) _spriteInfo [nS]._definition._posY >= 208) 
+				? (char) _spriteInfo [nS]._definition._posY /** Here become negative. */ : _spriteInfo [nS]._definition._posY);
+			int pX = (int) _spriteInfo [nS]._definition._posX - 
+				(_spriteInfo [nS]._definition._earlyClock ? 32 : 0); // here it can be also negative...
+			int vLN = (int) y - (int) yS - 1;
+			int vPN = (int) x - (int) xS;
+			if ((vLN == pY || vLN == ((pY + (int) mP) - 1)) ||
+				(vPN == pX || vPN == ((pX + (int) mP) - 1))) 
+				_screenMemory -> setPixel (x, y, 16);
+		}
+	}
 	
 	return (result);
 }
@@ -437,7 +459,7 @@ void TEXASINSTRUMENTS::TMS99xxFamily::drawEvents ()
 {
 	// Draw the border events...
 	unsigned int cEvent = std::numeric_limits <unsigned int>::max ();
-	
+
 	// TODO
 	
 	if (cEvent != std::numeric_limits <unsigned int>::max ())

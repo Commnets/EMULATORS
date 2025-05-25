@@ -27,3 +27,13 @@ One parameter minimum is required (INITIAL) that is the position of the video me
 If a second parameter is given then the content between the two locations is returned.
 The value of the initial and final memory can be given in decimal, hexadecimal ($), octal (o) or binary (z).
 The value of the memories is given in hexadecimal format but with no symbol at the beginning.
+;SETVDPMEMORY INITIAL [FINAL] VALUE
+To set the value of the video memory memory with a value.
+Two parameters minimum are required that are tha memory position to set (INITAL) and the value (VALUE).
+An optional second memory position can be given meaning that the value
+will be set among those two positions.
+Be really careful using this method. It can generate a crash in the computer simulation.
+If the value is more than 1 byte length, the memory steps will be equal to that length.
+The value of the initial and final memory can be given in decimal, hexadecimal ($), octal (o) or binary (z).
+;VDPEVENTS [ON|OFF]
+To activate or desactivate the visualization of VDP events.

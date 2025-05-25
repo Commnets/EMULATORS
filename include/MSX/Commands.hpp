@@ -143,6 +143,50 @@ namespace MSX
 		virtual void executeImpl 
 			(MCHEmul::CommandExecuter* cE, MCHEmul::Computer* c, MCHEmul::InfoStructure& rst) override;
 	};
+
+	/** To change the value of a VDP memory location. \n
+		The command is usefull to set only one location of a set of them with the same value. \n
+		So 3 parameters could be provided. \n
+		Command line: SETVDPMEMORY ADDRESS [FINAL ADDRESS] VALUE */
+	class SetVDPMemoryValueCommand final : public MCHEmul::Command
+	{
+		public:
+		static const int _ID = 106;
+		static const std::string _NAME;
+
+		SetVDPMemoryValueCommand ()
+			: Command (_ID, _NAME)
+							{ }
+
+		virtual bool canBeExecuted () const override
+							{ return (_parameters.size () == 2 /** One location. */ ||
+									  _parameters.size () == 3 /** a range. */); }
+
+		private:
+		virtual void executeImpl 
+			(MCHEmul::CommandExecuter* cE, MCHEmul::Computer* c, MCHEmul::InfoStructure& rst) override;
+	};
+
+	/** To activate the visualization of the important events
+		in the relation between CPU and the Screen. */
+	class VDPShowEventsCommand final : public MCHEmul::Command
+	{
+		public:
+		static const int _ID = 107;
+		static const std::string _NAME;
+
+		VDPShowEventsCommand ()
+			: MCHEmul::Command (_ID, _NAME)
+							{ }
+
+		/** The parameter can be ON or OFF. */
+		virtual bool canBeExecuted () const override
+							{ return (_parameters.size () == 1); }
+
+		private:
+		virtual void executeImpl (MCHEmul::CommandExecuter* cE, 
+			MCHEmul::Computer* c, MCHEmul::InfoStructure& rst) override;
+	};
 }
 
 #endif
