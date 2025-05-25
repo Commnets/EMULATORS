@@ -109,8 +109,10 @@ bool TEXASINSTRUMENTS::TMS99xxFamily::simulate (MCHEmul::CPU* cpu)
 		if (_raster.isInVisibleZone ())
 		{
 			// Collision detected?
+			// The only way to delete the collision bit is to read the status info...
+			bool cD = readGraphicInfoAndDrawVisibleZone (cpu); // It has to be executed anyway...
 			_TMS99xxFamilyRegisters -> setSpriteCollisionDetected 
-				(readGraphicInfoAndDrawVisibleZone (cpu));
+				(_TMS99xxFamilyRegisters -> spriteCollisionDetected () || cD);
 
 			if (_showEvents)
 				drawEvents ();
@@ -121,7 +123,14 @@ bool TEXASINSTRUMENTS::TMS99xxFamily::simulate (MCHEmul::CPU* cpu)
 			_raster.hData ().currentPositionAtBase0 () == 0)
 		{
 			// Set the bit 7 in the status register (INT)
+			// This register is used to indicate that the screen has been updated...
+			// The only way to clear that bit is to read the status register...
 			_TMS99xxFamilyRegisters -> setSreenUpdateHappen ();
+			// Set the bit 5 off in the status register
+			// This register is used to indicate that a fifth register situation has been detected...
+			// The only way this bit is clear is when there is no a fifth sprite detected!
+			_TMS99xxFamilyRegisters -> setFifthSpriteDetected (false);
+			_TMS99xxFamilyRegisters -> setFifthSpriteNotDrawn (0xff);
 	
 			// ...a notification to draw the screen is also generated...
 			MCHEmul::GraphicalChip::notify (MCHEmul::Event (_GRAPHICSREADY));
@@ -219,10 +228,6 @@ void TEXASINSTRUMENTS::TMS99xxFamily::actionPerRasterLineAndCyle ()
 		bool fF = false; // Fifth found?
 		size_t n = 0; // Number of sprites visibles...
 		unsigned short vL = _raster.vData ().currentVisiblePosition ();
-		// No sprite visible in this line so far...
-		_TMS99xxFamilyRegisters -> setFifthSpriteDetected (false);
-		_TMS99xxFamilyRegisters -> setFifthSpriteNotDrawn (0xff); // Makes no sense, it is not used...just in case!
-		// With no meaning, because fifthDetected = false
 
 		// Lets found the ones that are visible!
 		// If there were a sprite with its position defined at line 208 or more
@@ -246,11 +251,8 @@ void TEXASINSTRUMENTS::TMS99xxFamily::actionPerRasterLineAndCyle ()
 			{
 				_spriteInfo [i]._visible = false;
 				_TMS99xxFamilyRegisters -> setFifthSpriteDetected (fF = true); // At this point n has to be less or equal to 4...
+				_TMS99xxFamilyRegisters -> setFifthSpriteNotDrawn ((unsigned char) i); // The sprite that is not drawn...
 			}
-			
-			// Any case, loads the info about the bytes that woul
-			// The register always contains the highest element found...
-			_TMS99xxFamilyRegisters -> setFifthSpriteNotDrawn ((unsigned char) i); 
 		}
 
 		// The rest, if any, are not visible...

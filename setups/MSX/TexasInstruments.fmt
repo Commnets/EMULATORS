@@ -23,18 +23,34 @@ First:@FIRST@, Last:@LAST@
 @RasterY>@
 #---
 #---
+;VDPSpriteInfo
+Sprite number:@ID@
+Position:@POSX@(@EARLYCLOCK@),@POSY@
+Color:@COLOR@
+Pattern:@PATTERN@
+Enlarged:@ENLARGED@, 16x16:@16PIXELS@
+->Definition:
+@BYTES{blocksize=16,listsep=\,,tablesep=\ ,minsize=2,maxelements=256}@
+#---
+;VDPSpritesInfo
+@VDPSpritesInfo?{fmter=VDPSpriteInfo,empty=no sprites}\n---\n@
+#---
 ;TMS99xxFamilyRegisters
-GraphicMode:@GraphicMode@
-External Video:@ExternalVideo@
-16k Video RAM:@16kVideo@
-Blank Screen:@BlankScreen@
-Sprites 16 Pixels:@Sprites16pixels@
-Sprites Enlarged:@SpritesEnlarged@
-Launch Interrupt:@LaunchInterrupt@
-Memory: PN=$@NameAddress@, PG=$@PatternAddress@, CN=$@ColorAddress@, SA=$@SpriteAttrsAddress@, SG=$@SpriteGenAddress@
-Color:@TextColor@, @BackdropColor@
+GraphicMode:@GRAPHICMODE@
+External Video:@EXTERNALVIDEO@
+16k Video RAM:@16KVIDEO@
+Blank Screen:@BLANKSCREEN@
+Sprites 16 Pixels:@SPRITES16PIXELS@
+Sprites Enlarged:@SPRITESENLARGED@
+->Sprites Info:
+@VDPSpritesInfo>@
+Fifth Sprite:@FIFTHSPRITE@(@FIFTHSPRITENOTDRAWN@)
+Collision Detected:@COLLISION@
+Launch Interrupt:@LAUNCHINTERRUPT@
+Memory: PN=$@NAMEADDRESS@, PG=$@PATTERNADDRESS@, CN=$@COLORADDRESS@, SA=$@SPRITEATTRSADDRESS@, SG=$@SPRITEGENADDRESS@
+Text Color:@TEXCOLOR@, Backdrop Color:@BACKDROPCOLOR@
 ->Video Memory:
-Memory Size:@MemSize@ Bytes
+Memory Size:@MEMSIZE@ Bytes
 @BYTES{blocksize=32,listsep=\,,tablesep=\ ,minsize=2}@
 #---
 #---

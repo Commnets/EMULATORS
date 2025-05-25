@@ -32,8 +32,9 @@ namespace TEXASINSTRUMENTS
 		/** To identify the attributes of a sprite. */
 		struct SpriteDefinition
 		{
-			SpriteDefinition ()
-				: _posX (0), _posY (0), 
+			SpriteDefinition (unsigned char id)
+				: _id (id),
+				  _posX (0), _posY (0), 
 				  _pattern (0), 
 				  _color (0),
 				  _16pixels (false), _enlarged (false),
@@ -59,6 +60,10 @@ namespace TEXASINSTRUMENTS
 			/** To get the info of the sprite as a set of strings. */
 			MCHEmul::Strings spriteDrawSnapShot () const;
 
+			/** To get the definition. */
+			MCHEmul::InfoStructure getInfoStructure () const;
+
+			unsigned char _id; // The id of the sprite defition (from 0 to 31).
 			unsigned char _posX, _posY; // The position in the memory...
 			unsigned char _pattern; // Block of info where to find the definition of the sprite
 			unsigned int _color; // From the palette...
@@ -142,6 +147,13 @@ namespace TEXASINSTRUMENTS
 		  *	BYTES				= Attribute: Video RAM.
 		  */
 		virtual MCHEmul::InfoStructure getInfoStructure () const override;
+		/** To get information about the structure of the sprites. 
+			The sumber of the sprites is from 1 to 32. \n
+			If there were not sprites listed, all will be included. */
+		MCHEmul::InfoStructure getSpritesInfoStructure (const std::vector <size_t>& nS) const;
+		/** To get info about all sprites. */
+		MCHEmul::InfoStructure getSpritesInfoStructure () const
+							{ return (getSpritesInfoStructure ({ })); }
 
 		// To get info about the VRAM...
 		// No boundaries checks are done...
@@ -218,8 +230,12 @@ namespace TEXASINSTRUMENTS
 		// That the reason to define them protected, and to declare TMS99xxFamily as a friend class...
 		bool launchScreenUpdateInterrupt () const
 							{ return (_launchScreenUpdateInterrupt); }
+		bool spriteCollisionDetected () const // To know the value...
+							{ return (_spriteCollisionDetected); }
 		void setSpriteCollisionDetected (bool cD)
 							{ _spriteCollisionDetected = cD; }
+		bool fifthSpriteDetected () const // To know the value...
+							{ return (_fifthSpriteDetected); }
 		void setFifthSpriteDetected (bool fD)
 							{ _fifthSpriteDetected = fD;  }
 		void setFifthSpriteNotDrawn (unsigned char sN)
@@ -388,7 +404,7 @@ namespace TEXASINSTRUMENTS
 	inline TMS99xxFamilyRegisters::SpriteDefinition TMS99xxFamilyRegisters::readSpriteDefinition (unsigned char nS) const
 	{
 		TMS99xxFamilyRegisters::SpriteDefinition result =
-			TMS99xxFamilyRegisters::SpriteDefinition ();
+			TMS99xxFamilyRegisters::SpriteDefinition (nS);
 
 		std::vector <MCHEmul::UByte> dt = 
 			videoData (_spriteAttrsAddress + (size_t) (nS << 2 /** 4 bytes each. */), 4);

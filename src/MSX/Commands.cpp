@@ -79,7 +79,7 @@ void MSX::SpritesDrawCommand::executeImpl (MCHEmul::CommandExecuter* cE,
 		for (const auto& i : parameters ())
 		{ 
 			size_t nspr = (size_t) MCHEmul::UInt::fromStr (i.second.c_str ()).asUnsignedInt ();
-			if ((nspr > 0 && nspr <= 32) && 
+			if ((nspr > 0 && nspr <= 32) && // Only between 1 and 32
 				std::find (sprs.begin (), sprs.end (), nspr) == sprs.end ()) // Not added before...
 				sprs.emplace_back (nspr);
 		}

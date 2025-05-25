@@ -222,7 +222,7 @@ namespace TEXASINSTRUMENTS
 		{
 			public:
 			SpriteInfo (const TMS99xxFamilyRegisters::SpriteDefinition& i = 
-				TMS99xxFamilyRegisters::SpriteDefinition ())
+				TMS99xxFamilyRegisters::SpriteDefinition ((unsigned char) 0))
 				: _definition (i),
 				  _visible (false), // When created none is visible...
 				  _bytes ({ 0x00, 0x00 }) // Two bytes max in a sprite extended!

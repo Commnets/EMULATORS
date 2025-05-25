@@ -23,6 +23,24 @@ MCHEmul::Strings TEXASINSTRUMENTS::TMS99xxFamilyRegisters::SpriteDefinition::spr
 }
 
 // ---
+MCHEmul::InfoStructure TEXASINSTRUMENTS::TMS99xxFamilyRegisters::SpriteDefinition::getInfoStructure () const
+{
+	MCHEmul::InfoStructure result;
+
+	result.add ("ID",			((int) _id) + 1); // From 1 to 32, not from 0 to 31.
+	result.add ("POSX",			(int) _posX);
+	result.add ("POSY",			(int) _posY);
+	result.add ("PATTERN",		(int) _pattern);
+	result.add ("COLOR",		_color);
+	result.add ("16PIXELS",		_16pixels);
+	result.add ("ENLARGED",		_enlarged);
+	result.add ("EARLYCLOCK",	_earlyClock);
+	result.add ("BYTES",		_data);
+
+	return (result);
+}
+
+// ---
 TEXASINSTRUMENTS::TMS99xxFamilyRegisters::TMS99xxFamilyRegisters (size_t vS)
 	: MCHEmul::ChipRegisters (TEXASINSTRUMENTS::TMS99xxFamilyRegisters::_ID,
 		2 /** bytes per address. */, 2 /** registers. */),
@@ -64,23 +82,48 @@ MCHEmul::InfoStructure TEXASINSTRUMENTS::TMS99xxFamilyRegisters::getInfoStructur
 {
 	MCHEmul::InfoStructure result = std::move (MCHEmul::InfoClass::getInfoStructure ());
 
-	result.add ("MemSize",				std::to_string (_videoMemory.size ()));
-	result.add ("GraphicMode",			_graphicMode);
-	result.add ("ExternalVideo",		_externalVideo);
-	result.add ("16kVideo",				_16k);
-	result.add ("BlankScreen",			_blankScreen);
-	result.add ("Sprites16pixels",		_sprites16pixels);
-	result.add ("SpritesEnlarged",		_spritesEnlarged);
-	result.add ("LaunchInterrupt",		_launchScreenUpdateInterrupt);
-	result.add ("NameAddress",			_nameAddress);
-	result.add ("ColorAddress",			_colorAddress);
-	result.add ("PatternAddress",		_patternAddress);
-	result.add ("SpriteAttrsAddress",	_spriteAttrsAddress);
-	result.add ("SpriteGenAddress",		_spriteGenAddress);
-	result.add ("TextColor",			_textColor);
-	result.add ("BackdropColor",		_backdropColor);
+	result.add ("MEMSIZE",				std::to_string (_videoMemory.size ()));
+	result.add ("GRAPHICMODE",			_graphicMode);
+	result.add ("EXTERNALVIDEO",		_externalVideo);
+	result.add ("16KVIDEO",				_16k);
+	result.add ("BLANKSCREEN",			_blankScreen);
+	result.add ("SPRITES16PIXELS",		_sprites16pixels);
+	result.add ("SPRITESENLARGED",		_spritesEnlarged);
+	result.add ("LAUNCHINTERRUPT",		_launchScreenUpdateInterrupt);
+	result.add ("NAMEADDRESS",			_nameAddress);
+	result.add ("COLORADDRESS",			_colorAddress);
+	result.add ("PATTERNADDRESS",		_patternAddress);
+	result.add ("SPRITEATTRSADDRESS",	_spriteAttrsAddress);
+	result.add ("SPRITEGENADDRESS",		_spriteGenAddress);
+	result.add ("TEXTCOLOR",			_textColor);
+	result.add ("BACKDROPCOLOR",		_backdropColor);
+	result.add ("COLLISION",			_spriteCollisionDetected);
+	result.add ("FIFTHSPRITE",			_fifthSpriteDetected);
+	result.add ("FIFTHSPRITENOTDRAWN",	_fifthSpriteNotDrawn);
+	result.add ("VDPSpritesInfo",		std::move (getSpritesInfoStructure ()));
 	// The video RAM is 16k long. But it is allowed to print it out...
+	result.add ("MEMSIZE",				(unsigned int) _videoMemory.size ());
 	result.add ("BYTES",				_videoMemory);
+
+	return (result);
+}
+
+// ---
+MCHEmul::InfoStructure TEXASINSTRUMENTS::TMS99xxFamilyRegisters::getSpritesInfoStructure
+	(const std::vector <size_t>& nS) const
+{
+	MCHEmul::InfoStructure result;
+	std::vector <size_t> rnS = nS;
+	if (nS.empty ()) 
+		for (size_t i = 1; i <= 32; rnS.push_back (i++)); // The 32 if nothing...
+	
+	size_t ct = 0;
+	MCHEmul::InfoStructure sInfo;
+	for (const auto& i : rnS)
+		if (i > 0 && i <= 32) // Between 1 and 32...
+			sInfo.add (MCHEmul::fixLenStr (std::to_string (ct++), 3 /** Enough. */, true, MCHEmul::_CEROS),
+				std::move (readSpriteDefinition ((unsigned char) (i - 1) /** Here is from 0 to 31. */).getInfoStructure ()));
+	result.add ("VDPSpritesInfo", std::move (sInfo));
 
 	return (result);
 }
