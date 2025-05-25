@@ -348,7 +348,7 @@ namespace TEXASINSTRUMENTS
 		// When rL = uB, the rLN will be still - 1 = 255, that is the first visible position in a sprite...
 		// When rl = uB - 7, there will be only one line visible (the last one).
 		int vLN = (int) vL - (int) uB - 1;
-		int pY = int (((char) _posY >= 208) ? (char) _posY /** Here become negative. */ : _posY);
+		int pY = int ((_posY >= 223) ? (char) _posY /** Here become negative. */ : _posY);
 		if (vLN >= pY && vLN < (pY + (int) mL))
 		{ 
 			result = true; 
@@ -357,7 +357,7 @@ namespace TEXASINSTRUMENTS
 			// The byte can vary from 0 to 15!
 			// that takes into account when enlarged and 16pixels height together...
 			// But could finally be 16 bytes more, depending on the position x!
-			dF = (size_t) (((unsigned short) vLN - (unsigned short) _posY) >> en);
+			dF = (size_t) (((unsigned short) (vLN - pY)) >> en);
 		}
 
 		return (result); 
@@ -386,7 +386,7 @@ namespace TEXASINSTRUMENTS
 			// Which is the "bit" visible, that takes into account when enlarged...
 			// The bit can vary from 0 to 15!
 			// Starting from 0 in the left, and ending (if enlarged and expanded) with 31 in the right side!
-			dP = ((1 << (3 + d)) - 1) - (size_t) (((unsigned short) vPN - (unsigned short) pX) >> en);
+			dP = ((1 << (3 + d)) - 1) - (size_t) (((unsigned short) (vPN - pX)) >> en);
 		}
 
 		return (result);

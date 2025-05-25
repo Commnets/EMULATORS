@@ -236,7 +236,8 @@ void TEXASINSTRUMENTS::TMS99xxFamily::actionPerRasterLineAndCyle ()
 		unsigned short lB, uB;
 		_raster.firstScreenPosition (lB, uB);
 		for (;i < 32 /** 32 max. */ && 
-			  _spriteInfo [i]._definition._posY < 208 /* Until one after this position was found. */ && 
+			  (_spriteInfo [i]._definition._posY < 209 /* Until one after this position was found. */ ||
+			   _spriteInfo [i]._definition._posY >= 223) &&
 			  !fF /** or the fifth in the line was found. */; i++)
 		{
 			// If it is not visible, then contunue looking for the next one, if possible!
