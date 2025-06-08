@@ -242,8 +242,10 @@ void COMMODORE::SoundSIDSimpleWrapper::setValue (size_t p, const MCHEmul::UByte&
 		// Voice 1 Attack/Decay register: ATDCY1
 		case 0x05:
 			{
-				_voices [0] -> setAttack (_ATTACKTIMES [(v.value () & 0xf0) >> 4]);
-				_voices [0] -> setDecay (_DECAYTIMES [v.value () & 0x0f]);
+				static_cast <MCHEmul::SoundADSREnvelope*> (_voices [0] -> envelope ()) -> 
+					setAttack (_ATTACKTIMES [(v.value () & 0xf0) >> 4]);
+				static_cast <MCHEmul::SoundADSREnvelope*> (_voices [0] -> envelope ()) -> 
+					setDecay (_DECAYTIMES [v.value () & 0x0f]);
 			}
 
 			break;
@@ -251,8 +253,10 @@ void COMMODORE::SoundSIDSimpleWrapper::setValue (size_t p, const MCHEmul::UByte&
 		// Voice 1 Sustain/Release register: SUREL1
 		case 0x06:
 			{
-				_voices [0] -> setSustainVolumen ((double) ((v.value () & 0xf0) >> 4) / 15.0f /** between 0 an 1. */);
-				_voices [0] -> setRelease (_RELEASETIMES [v.value () & 0x0f]);
+				static_cast <MCHEmul::SoundADSREnvelope*> (_voices [0] -> envelope ()) ->
+					setSustainVolumen ((double) ((v.value () & 0xf0) >> 4) / 15.0f /** between 0 an 1. */);
+				static_cast <MCHEmul::SoundADSREnvelope*> (_voices [0] -> envelope ()) -> 
+					setRelease (_RELEASETIMES [v.value () & 0x0f]);
 			}
 
 			break;
@@ -302,8 +306,10 @@ void COMMODORE::SoundSIDSimpleWrapper::setValue (size_t p, const MCHEmul::UByte&
 		// Voice 2 Attack/Decay register: ATDCY2
 		case 0x0c:
 			{
-				_voices [1] -> setAttack (_ATTACKTIMES [(v.value () & 0xf0) >> 4]);
-				_voices [1] -> setDecay (_DECAYTIMES [v.value () & 0x0f]);
+				static_cast <MCHEmul::SoundADSREnvelope*> (_voices [1] -> envelope ()) -> 
+					setAttack (_ATTACKTIMES [(v.value () & 0xf0) >> 4]);
+				static_cast <MCHEmul::SoundADSREnvelope*> (_voices [1] -> envelope ()) -> 
+					setDecay (_DECAYTIMES [v.value () & 0x0f]);
 			}
 
 			break;
@@ -311,8 +317,10 @@ void COMMODORE::SoundSIDSimpleWrapper::setValue (size_t p, const MCHEmul::UByte&
 		// Voice 2 Sustain/Release register: SUREL2
 		case 0x0d:
 			{
-				_voices [1] -> setSustainVolumen ((double) ((v.value () & 0xf0) >> 4) / 15.0f);
-				_voices [1] -> setRelease (_RELEASETIMES [v.value () & 0x0f]);
+				static_cast <MCHEmul::SoundADSREnvelope*> (_voices [1] -> envelope ()) -> 
+					setSustainVolumen ((double) ((v.value () & 0xf0) >> 4) / 15.0f);
+				static_cast <MCHEmul::SoundADSREnvelope*> (_voices [1] -> envelope ()) -> 
+					setRelease (_RELEASETIMES [v.value () & 0x0f]);
 			}
 
 			break;
@@ -362,8 +370,10 @@ void COMMODORE::SoundSIDSimpleWrapper::setValue (size_t p, const MCHEmul::UByte&
 		// Voice 3 Attack/Decay register: ATDCY3
 		case 0x13:
 			{
-				_voices [2] -> setAttack (_ATTACKTIMES [(v.value () & 0xf0) >> 4]);
-				_voices [2] -> setDecay (_DECAYTIMES [v.value () & 0x0f]);
+				static_cast <MCHEmul::SoundADSREnvelope*> (_voices [2] -> envelope ()) -> 
+					setAttack (_ATTACKTIMES [(v.value () & 0xf0) >> 4]);
+				static_cast <MCHEmul::SoundADSREnvelope*> (_voices [2] -> envelope ()) -> 
+					setDecay (_DECAYTIMES [v.value () & 0x0f]);
 			}
 
 			break;
@@ -371,8 +381,10 @@ void COMMODORE::SoundSIDSimpleWrapper::setValue (size_t p, const MCHEmul::UByte&
 		// Voice 3 Sustain/Release register: SUREL3
 		case 0x14:
 			{
-				_voices [2] -> setSustainVolumen ((double) ((v.value () & 0xf0) >> 4) / 15.0f);
-				_voices [2] -> setRelease (_RELEASETIMES [v.value () & 0x0f]);
+				static_cast <MCHEmul::SoundADSREnvelope*> (_voices [2] -> envelope ()) -> 
+					setSustainVolumen ((double) ((v.value () & 0xf0) >> 4) / 15.0f);
+				static_cast <MCHEmul::SoundADSREnvelope*> (_voices [2] -> envelope ()) -> 
+					setRelease (_RELEASETIMES [v.value () & 0x0f]);
 			}
 
 			break;
@@ -489,6 +501,23 @@ bool COMMODORE::SoundSIDSimpleWrapper::getData (MCHEmul::CPU *cpu, MCHEmul::UByt
 }
 
 // ---
+COMMODORE::SoundSIDSimpleWrapper::Voice::Voice (int id, unsigned int cF)
+	: MCHEmul::SoundVoice (id, cF,
+		{
+			new MCHEmul::TriangleSoundWave (cF),
+			new MCHEmul::SawSmoothSoundWave (cF),
+			new MCHEmul::PulseSoundWave (cF),
+			new MCHEmul::NoiseSoundWave (cF)
+		}, new MCHEmul::SoundADSREnvelope (cF)), // The envelope is the traditional one!
+		_voiceRelated (nullptr), // set when Emulation is built (it is guarentted that it is not nullptr when running)
+		_ringModulation (false), // Not modulated by default...
+		_sync (false), // Not sync by default...
+		_wavesActive (0)
+{ 
+	setClassName ("SIDVoice");
+}
+
+// ---
 void COMMODORE::SoundSIDSimpleWrapper::Voice::initialize ()
 {
 	MCHEmul::SoundVoice::initialize ();
@@ -506,7 +535,7 @@ double COMMODORE::SoundSIDSimpleWrapper::Voice::data () const
 
 	// When sync the internal clocks of the waves are synchronized...
 	if (_sync && wavesClockRestarted ())
-		_voiceRelated -> initializeWavesInternalCounters ();
+		_voiceRelated -> initializeInternalCounters ();
 
 	double result = 0.0f;
 
@@ -520,23 +549,23 @@ double COMMODORE::SoundSIDSimpleWrapper::Voice::data () const
 		case 0x10:
 			// Depending whether the voice is modulated or not, 
 			// ...just happens on the triangle wave...
-			result = waves ()[(size_t) MCHEmul::SoundWave::Type::_TRIANGLE] -> data () *
+			result = wave (MCHEmul::SoundWave::Type::_TRIANGLE) -> data () *
 				(_ringModulation ? _voiceRelated -> data () : 1.0f); // Multiplying two waves...
 			break;
 
 		// sawtooth
 		case 0x20:
-			result = waves ()[(size_t) MCHEmul::SoundWave::Type::_SAWTOOTH] -> data ();
+			result = wave (MCHEmul::SoundWave::Type::_SAWTOOTH) -> data ();
 			break;
 
 		// pulse
 		case 0x40:
-			result = waves ()[(size_t) MCHEmul::SoundWave::Type::_PULSE] -> data ();
+			result = wave (MCHEmul::SoundWave::Type::_PULSE) -> data ();
 			break;
 
 		// noise
 		case 0x80:
-			result = waves ()[(size_t) MCHEmul::SoundWave::Type::_NOISE] -> data ();
+			result = wave (MCHEmul::SoundWave::Type::_NOISE) -> data ();
 			break;
 
 		// sawtooth & triangle
@@ -546,22 +575,22 @@ double COMMODORE::SoundSIDSimpleWrapper::Voice::data () const
 
 		// pulse & triangle
 		case 0x50:
-			if (static_cast <MCHEmul::PulseSoundWave*> 
-					(waves ()[(size_t) MCHEmul::SoundWave::Type::_PULSE]) -> pulseUp ())
+			if (static_cast <const MCHEmul::PulseSoundWave*> 
+					(wave (MCHEmul::SoundWave::Type::_PULSE)) -> pulseUp ())
 				result = (double) _PULSETRIWAVE_6581 [(size_t) wavesClockValue ()] / 256.0f;
 			break;
 
 		// pulse & sawtooth
 		case 0x60:
-			if (static_cast <MCHEmul::PulseSoundWave*> 
-					(waves ()[(size_t) MCHEmul::SoundWave::Type::_PULSE]) -> pulseUp ())
+			if (static_cast <const MCHEmul::PulseSoundWave*> 
+					(wave (MCHEmul::SoundWave::Type::_PULSE)) -> pulseUp ())
 				result = (double) _PULSESAWWAVE_6581 [(size_t) wavesClockValue ()] / 256.0f;
 			break;
 
 		// pulse & sawtooth & triangle
 		case 0x70:
-			if (static_cast <MCHEmul::PulseSoundWave*> 
-					(waves ()[(size_t) MCHEmul::SoundWave::Type::_PULSE]) -> pulseUp ())
+			if (static_cast <const MCHEmul::PulseSoundWave*> 
+					(wave (MCHEmul::SoundWave::Type::_PULSE)) -> pulseUp ())
 				result = (double) _PULSESAWTRIWAVE_6581 [(size_t) wavesClockValue ()] / 256.0f;
 			break;
 
@@ -586,7 +615,7 @@ double COMMODORE::SoundSIDSimpleWrapper::Voice::data () const
 	}
 
 	if (result != 0.0f)
-		result *= ADSRData ();
+		result *= _envelope -> envelopeData ();
 
 	return ((result > 1.0f) ? 1.0f : result);
 }

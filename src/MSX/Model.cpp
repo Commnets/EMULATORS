@@ -317,7 +317,10 @@ MSX::PSG* MSX::MSXStdModel::createPSG () const
 {
 	// The standard model is based on the General Instruments AY-3-8910 chip...
 	return (new MSX::PSG_AY38910
-		(new GENERALINSTRUMENTS::AY38910 (nullptr)));
+		(new GENERALINSTRUMENTS::AY38910
+			(nullptr /** to create the internal ones. */,
+			 new GENERALINSTRUMENTS::AY38910SimpleLibWrapper 
+				(clockSpeed (), GENERALINSTRUMENTS::AY38910::_SOUNDSAMPLINGCLOCK))));
 }
 
 // ---
@@ -379,9 +382,11 @@ MSX::VDP* MSX::SVI728::createVDP () const
 // ---
 MSX::PSG* MSX::SVI728::createPSG () const
 {
-	// The standard model is based on the General Instruments AY-3-8910 chip...
 	return (new MSX::PSG_AY38910
-		(new GENERALINSTRUMENTS::AY38910 (nullptr)));
+		(new GENERALINSTRUMENTS::AY38910 
+			(nullptr /** to create th einternal ones. */,
+			 new GENERALINSTRUMENTS::AY38910SimpleLibWrapper 
+				(clockSpeed (), GENERALINSTRUMENTS::AY38910::_SOUNDSAMPLINGCLOCK))));
 }
 
 // ---

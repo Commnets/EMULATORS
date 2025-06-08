@@ -17,12 +17,13 @@
 #define __GENERALINSTRUMENTS_AY38910REGISTERS__
 
 #include <CORE/incs.hpp>
+#include <GENERALINSTRUMENTS/AY38910/AY38910LibWrapper.hpp>
 
 namespace GENERALINSTRUMENTS
 {
 	class AY38910Registers : public MCHEmul::ChipRegisters
 	{
-		friend class PPI8855;
+		friend class AY38910;
 
 		public:
 		static const unsigned int _ID = 1200;
@@ -57,11 +58,19 @@ namespace GENERALINSTRUMENTS
 		// ....when the registers are accesible from ports...
 		virtual void setValue (size_t p, const MCHEmul::UByte& v) override;
 		virtual const MCHEmul::UByte& readValue (size_t p) const override;
-		virtual const MCHEmul::UByte& peekValue (size_t p) const override;
 
 		void initializeInternalValues ();
 
+		/** This method is to establish the wrapper used. */
+		void setAY38910LibWrapper (AY38910LibWrapper* w)
+							{ _AY38910Wrapper = w; }
+
 		protected:
+		/** The control register selected that will be accessed by default. */
+		unsigned char _selectedControlRegister;
+		/** A reference to AY38910 Lib Wrapper. */
+		AY38910LibWrapper* _AY38910Wrapper;
+
 		// Implementation		
 		/** The last value read. */
 		mutable MCHEmul::UByte _lastValueRead;

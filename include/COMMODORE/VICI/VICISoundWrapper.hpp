@@ -86,18 +86,7 @@ namespace COMMODORE
 			public:
 			friend VICISoundSimpleLibWrapper;
 
-			Voice (int id, unsigned int cF)
-				: MCHEmul::SoundVoice (id, cF,
-					{
-						// There must be the fourth types...
-						// ...although just Pulse and Noise are used (because there is a direct acces to the array)
-						new MCHEmul::TriangleSoundWave (cF),
-						new MCHEmul::SawSmoothSoundWave (cF),
-						new MCHEmul::PulseSoundWave (cF),
-						new MCHEmul::NoiseSoundWave (cF)
-					}),
-				  _wavesActive (0)
-							{ setClassName ("VICIVoice"); }
+			Voice (int id, unsigned int cF);
 
 			virtual void setActive (bool a) override
 							{ if ((_active != a) && (_active = a)) 

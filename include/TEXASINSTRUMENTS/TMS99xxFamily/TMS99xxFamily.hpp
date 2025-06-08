@@ -150,14 +150,18 @@ namespace TEXASINSTRUMENTS
 		bool drawGraphicsSpritesAndDetectCollisions 
 			(unsigned short x, unsigned short y, unsigned short xS, unsigned short yS,
 			 const std::tuple <MCHEmul::UByte, MCHEmul::UByte, MCHEmul::UByte>& data);
-		/** Invoked from the previous one. 
-			The methods receive the position within the real screen and tuple with graphical info. */
+		/** Invoked from the previous one. \n
+			The methods receive the position within the real screen and tuple with graphical info. \n
+			The undocumented modes are also simulated base on the information at: 
+			http://bifi.msxnet.org/msxnet/tech/tms9918a.txt */
 		void drawGraphicsScreenGraphicsMode (unsigned short x, unsigned short y,
 			 const std::tuple <MCHEmul::UByte, MCHEmul::UByte, MCHEmul::UByte>& data);
 		void drawGraphicsScreenTextMode (unsigned short x, unsigned short y,
 			 const std::tuple <MCHEmul::UByte, MCHEmul::UByte, MCHEmul::UByte>& data);
 		void drawGraphicsScreenMulticolorMode (unsigned short x, unsigned short y,
 			 const std::tuple <MCHEmul::UByte, MCHEmul::UByte, MCHEmul::UByte>& data);
+		void drawGraphicsScreenFixPatternMode (unsigned short x, unsigned short y,
+			const std::tuple <MCHEmul::UByte, MCHEmul::UByte, MCHEmul::UByte>& data);
 		/** Returns true when drawing the collision between 2 sprites is detected. 
 			The position of the raster in the visible screen is given as parameter
 			and also the size of the borders. */

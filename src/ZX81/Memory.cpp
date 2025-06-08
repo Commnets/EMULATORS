@@ -1,17 +1,24 @@
 #include <ZX81/Memory.hpp>
+#include <ZX81/ULA.hpp>
 
-MCHEmul::ProgramCounter* ZX81::MemoryVideoCode::_programCounter = nullptr;
+MCHEmul::CPU* ZX81::MemoryVideoCode::_cpu = nullptr;
+ZX81::ULA* ZX81::MemoryVideoCode::_ula = nullptr;
 
 // ---
 const MCHEmul::UByte& ZX81::MemoryVideoCode::readValue (size_t nB) const
 { 
 	_lastValueRead = MCHEmul::MirrorPhysicalStorageSubset::readValue (nB);
 	
-	if (_programCounter != nullptr && 
-		_programCounter -> internalRepresentation () >= 0xc000 &&
-		!_lastValueRead.bit (6)) // When the counter is above 0xc00 and the info read has not the bit 6 set, 
+	if (_cpu != nullptr && 
+		_cpu -> programCounter ().internalRepresentation () >= 0xc000 &&
+		!_lastValueRead.bit (6)) // When the counter is above 0xc000 and the info read has not the bit 6 set, 
 								 // it is transalated into a HALT
+	{
+		// The value is passed to the ULA...
+		_ula -> readCharData (_cpu, _lastValueRead);
+
 		_lastValueRead = MCHEmul::UByte::_0;
+	}
 
 	return (_lastValueRead);
 } 

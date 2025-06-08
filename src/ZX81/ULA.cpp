@@ -1,4 +1,4 @@
-#include <ZX81/ULA.hpp>
+﻿#include <ZX81/ULA.hpp>
 #include <ZX81/ULARegisters.hpp>
 #include <ZX81/ZX81.hpp>
 #include <ZX81/OSIO.hpp>
@@ -6,17 +6,74 @@
 #include <FZ80/NMIInterrupt.hpp>
 
 // ---
+/** Standard PAL requires 64us to draw a line. \n
+	ULA runs in parallel with CPU and runs at double speed than the CPU. \n
+	CPU runs at 3,25Mhz and ULA runs at 6,50Mhz. \n
+	CPU need 207 cycles (CPU type) to draw a line, so ULA needs 414 cycles (ULA type). \n
+	The structure of a line is the following: \n
+	-----------------------------------------------------------------------------\n
+	|Zone				|Time aprox	|ULA Cicles (at 6.5 MHz, double than CPU)	|\n
+	|------------------	|-----------|-------------------------------------------|\n
+	|**HSYNC**			|\~4.7 µs	|4.7 µs × 6.5 MHz ≈ **30.6 → 31 cycles**		|\n
+	|**Back Porch**		|\~5.7 µs	|5.7 µs × 6.5 MHz ≈ **37.1 → 36 cycles**		|\n
+	|**Video Active**	|\~52 µs		|52 µs × 6.5 MHz ≈ **338 cycles**				|\n
+	|**Front Porch**	|\~1.5 µs	|1.5 µs × 6.5 MHz ≈ **9.75 → 9 cycles**		|\n
+	|------------------	|-----------|-------------------------------------------|\n
+	|**TOTAL**			|\~63.9 µs	|**414 cycles** (rounded)					|\n
+	-----------------------------------------------------------------------------\n 
+	Standard PAL requires 312 lines to draw a frame. \n
+	The structure of the frame is the following: \n
+	-----------------------------------------------------------------\n 
+	|Zone							|Lines aprox.	|Time aprox.	|\n
+	|-------------------------------|--------------	|-------------	|\n
+	|**Vertical sync pulse** (VSYNC)|\~5 lines		|\~320 µs		|\n
+	|**Vertical back porch**		|\~25 lines		|\~1.6 ms		|\n
+	|**Zona de imagen activa**		|\~284 lines	|\~18.2 ms		|\n
+	|**Vertical front porch**		|\~3 lines		|\~192 µs		|\n
+	|-------------------------------|--------------	|-------------	|\n
+	|**TOTAL**						|**312 líneas**	|**20 ms**		|\n
+	-----------------------------------------------------------------\n 
+	\n
+	Where the border and the drawing zone that is seen is the phisical screen is actually, 
+	cannot be defined in advance!, like happens in e.g. VICII (C64). \n
+	It is really the software and the CPU the ones building up the screen: \n
+	---
+	When the address bus connected to ULA have bit 14 set (1) and bit 15 reset (0),
+	the ULA will know that the CPU is accesing the video memory. \n
+	Then uses the info at the data bus to load the shift register and start to shift it left (see below). \n
+	Just after loading that info the ULA put back "0" in the data bus (unless the bit 6 of the data is on)
+	to "confuse" the CPU that will execute a NOP operation. \n
+	Take a look to ZX81::MemoryVideoCode class. \n
+	If the bit 6 is set, the ULA doesn't change the value in the data bus (usually equivalent to HALT), \n
+	The value read is used (together with the LINECNTRL register) to build up 
+	the address where to read the value to load in the shift register. \n
+	Then every clock (ULAwise) the register shifts one position left and draws a pixel according to the value shifted. \n
+	When the shift ends, there won't be more pixels to draw until another byte were loaded. \n
+	So, the drawing zone will start where the CPU starts to "run" things in the video memory.
+	---
+	In which line starts the drawing is not directly controlled actually! \n
+	What it is really controlled is when the VSYNC starts only. \n
+	It starts when the port FE is read. This is the zone of the ROM called VSYC Routine. \n
+	When that happens a signal is sent to ULA to reset the vertical raster,
+	LINECTRL is set to 0 and "locked" temporally. \n
+	That routine VSYNC finishes, a OUT port FD is sent to activate (in ULA) the NMI interrupts. \n
+	This port also indicates that the VSYNC zone has finishes and LINENCTRL is unlocked to count. \n
+	----
+	In MCHEmul, raster is thought to be "linked" to the different zones of a screen (border, drawing, etc.),
+	And also used to draw the window that content the whole simulation. \n
+	The only important value is where the visible parts starts because 
+	it has to be aligned with the INT routine that draws the screen. \n
+	142 "cycles" is enough to left a 8 width pixels border. \n
+	After all being said, the only behaviour that could be use is the second one. */
+/** 32 lines border up/down/left/right by default in both PAL & NTSC. */
 const MCHEmul::RasterData ZX81::ULA_PAL::_VRASTERDATA
-	(0, 6 /** 6 VSYNC. */, 62 /** 56 top border. */, 253 /** 192 draw. */, 309 /** 56 bottom. */, 309, 309, 310, 0, 0);
-/** In terms of ULA cycles, there would be double:
-	CPU cycles = (0, 45, 75, 202, 232, 232, 233, 0, 0); */
+	(0, 30 /** +30 starts visible. */, 30 /** = starts screen. */, 285 /** +32+192+32 (24 char lines * 8) end screen. */,
+	 285 /** = end visible part. */, 311 /** +26 retrace. */, 311 /** = end. */, 312 /* total */, 0, 0);
 const MCHEmul::RasterData ZX81::ULA_PAL::_HRASTERDATA
-	(0, 90 /** Including 20 (*2) HSYNC + part INT routine execution */, 
-		146 /** 28 (*2) left border. */, 401 /** 128 (32 chars * 4 ULA cycles * 2) draw. */, 
-		465 /** 32 right border. */, 465 /** When the INT is issued. */, 465, 466, 0, 0);
-// NTSC is explained in similar terms than PAL...
-const MCHEmul::RasterData ZX81::ULA_NTSC::_VRASTERDATA (0, 6, 38, 229, 261, 261, 261, 262, 0, 0);
-const MCHEmul::RasterData ZX81::ULA_NTSC::_HRASTERDATA (0, 90, 146, 401, 465, 465, 465, 466, 0, 0);
+	(0, 125 /** +128 starts visible. */, 125 /** = starts screen, */, 413 /** +19+256+14 (32 chars * 8) end screen. */,
+	 413 /** = end visible part. */, 413 /** = retrace. */, 413 /** = end. */, 414 /** total. */, 0, 0);
+const MCHEmul::RasterData ZX81::ULA_NTSC::_VRASTERDATA (0, 15, 15, 246, 246, 261, 261, 262, 0, 0);
+const MCHEmul::RasterData ZX81::ULA_NTSC::_HRASTERDATA (0, 125, 125, 413, 413, 413, 413, 414, 0, 0);
 
 // ---
 ZX81::ULA::ULA (const MCHEmul::RasterData& vd, const MCHEmul::RasterData& hd, 
@@ -86,12 +143,18 @@ bool ZX81::ULA::simulate (MCHEmul::CPU* cpu)
 	}
 
 	// Simulate the visulization...
-	for (unsigned int i = 
-			((cpu -> clockCycles  () - _lastCPUCycles) << 1 /** ULA cycles = 2 * CPU Cycles. */); 
-			i > 0; i--)
+	for (unsigned int i = 0;
+			i < ((cpu -> clockCycles  () - _lastCPUCycles) << 1 /** ULA cycles = 2 * CPU Cycles. */); 
+			i++)
 	{
 		_IFDEBUG debugULACycle (cpu, i);
 
+		// Draws the screen to the display at the beginning of everything...
+		if (_raster.vData ().currentPositionAtBase0 () == 0 &&
+			_raster.hData ().currentPositionAtBase0 () == 0)
+			MCHEmul::GraphicalChip::notify (MCHEmul::Event (_GRAPHICSREADY));
+
+		// Decide whether it is needed to draw or not the events...
 		if (_showEvents)
 		{
 			// Keep track of different situations to be drawn later if needed...
@@ -113,27 +176,29 @@ bool ZX81::ULA::simulate (MCHEmul::CPU* cpu)
 				_HALTBefore = false;
 		}
 
-		// Read the graphics and draw the visible zone, 
-		// if it is the case...
-		if (_raster.isInVisibleZone ())
-			readGraphicsAndDrawVisibleZone (cpu);
+		// Notice that graphics are always tried to be drawn, 
+		// but only f there were something to draw because the ULA has info to draw in the shift register...
+		drawInVisibleZone (cpu);
 
-		// Moves the internal cycles counter 1...(from 0 to 415)
-		if (_raster.hData ().add (1) || // ...and if reaches the end...
-			_ULARegisters -> INTack ()) // ...or a INT has been launched externally...
+		// This block is the one that simulates the HSYNC and VSYNC signals...
+		// The HSYNC signal can come from outside the ULA (from the INTack signal) or
+		// from the internal raster data (when the NMI interrupts are active) at the end of the line.
+		bool eH = _ULARegisters -> INTack (_lastCPUCycles + (i >> 1));
+		if (_raster.hData ().add (1) || eH)
 		{
 			// the HSYNC happens...
-			// Including a notification to generate the graphics...
-			if (_raster.vData ().add (1)) 
-				MCHEmul::GraphicalChip::notify (MCHEmul::Event (_GRAPHICSREADY));
-			_raster.hData ().reset ();
-			// ...and also the line of control is incremented...
-			_ULARegisters -> incLINECTRL ();
-			
-			// An NMI interrupt could be launched, if the ULA generator was on...
+			_raster.vData ().add (1);
+			// ..and just in case horizontal raster is set back to 0...
+			_raster.hData ().initialize ();
+			// If there was a signal from outside to change the line (a INT was launched)...
+			// ...the LINECTRL register is incremented...
+			if (eH)	_ULARegisters -> incLINECTRL ();
+
+			// If the NMI generator is active a interrupt is launched to the CPU...
+			// This situation shouldn't ever happen is the previous one (INT interrupt) was launched...
 			if (_ULARegisters -> NMIGenerator ()) // The generator has to be active! (@see PortManager)
-				cpu -> requestInterrupt (FZ80::NMIInterrupt::_ID, _lastCPUCycles + i, this, 1 /** HSYNC reason */);
-			// This shouldn't happen if INTack was on in a well programmed ZX80 series...but
+				cpu -> requestInterrupt (FZ80::NMIInterrupt::_ID, 
+					_lastCPUCycles + (i >> 1), this, 1 /** HSYNC reason */);
 		}
 
 		// Notice that the VSYNC doesn't happen here as it is the port output the one launching that...
@@ -224,20 +289,23 @@ MCHEmul::ScreenMemory* ZX81::ULA::createScreenMemory ()
 }
 
 // --
-void ZX81::ULA::readGraphicsAndDrawVisibleZone (MCHEmul::CPU* cpu)
+void ZX81::ULA::drawInVisibleZone (MCHEmul::CPU* cpu)
 {
-	_ULARegisters -> setInVSync (false); 
-	// Finally out of the vsync cycle!...
-	// Hopefully when the code reaches this position, 
-	// an OUT FF,A instruction will have been executed already and the VSYNC has finished!
+	bool d = false;
+	bool p = _ULARegisters-> shiftOutData (d);
+
+	if (!_raster.isInVisibleZone ())
+		return; // Nothing else can be done...
 
 	unsigned short x = 0, y = 0;
 	_raster.currentVisiblePosition (x, y);
-
-	// Draws the background first...
-	// ...that is always at color 1 (white)....
+	// Draws the pixel..
 	_screenMemory -> setPixel (x, y, 1);
+	if (p && _ULARegisters -> syncOutputWhite () &&
+		(_ULARegisters -> reverseVideo () ^ d)) // normal video and pixel on?, or inverse video and pixels off?
+			_screenMemory -> setPixel (x, y, 0); // ...then put it in black...
 
+	// Draws the events if any...
 	if (_showEvents)
 	{
 		if (_HALTActive)
@@ -251,35 +319,33 @@ void ZX81::ULA::readGraphicsAndDrawVisibleZone (MCHEmul::CPU* cpu)
 		if (_NMIGeneratorOff)	_screenMemory -> setHorizontalLine (x - l, y, l, 8);	// Brown
 		if (_readPortFE)		_screenMemory -> setHorizontalLine (x - l, y, l, 3);	// Cyan
 	}
+}
 
-	bool px = true;
-	// When x is a multiple of 8...
-	if (x % 8 == 0)
-	{
-		// ...reads the char code to draw...
-		// ...and how to draw that char code...
-		// Remember that the way that the ULA sees the memory is different than the way CPU does...
-		memoryRef () -> setActiveView (_ULAView);
-		MCHEmul::UByte chrCode = 
-			memoryRef () -> value (cpu -> programCounter ().asAddress ());
-		_ULARegisters -> setReverseVideo (chrCode.bit (7));
-		_ULARegisters -> setSHIFTRegister (chrCode.bit (6) 
-			? 0x00 // It is an special code and has to be treated as an space from the graphical perspective!
-			: memoryRef () -> value (MCHEmul::Address (2, 
+// ---
+bool ZX81::ULA::readCharData (MCHEmul::CPU* cpu, const MCHEmul::UByte& dt)
+{
+	MCHEmul::MemoryView* oV = memoryRef () -> activeView ();
+
+	// The information is looked for always from the point of view of the ULA!
+	// That0s the reason to remember what the origina view was before changing it...
+	memoryRef () -> setActiveView (_ULAView);
+
+	bool result = false;
+
+	// Possible or not?
+	// It wasn't possible is it beacuse it was reading another value before...
+	if ((result = _ULARegisters -> loadSHIFTRegister (
+			memoryRef () -> value (MCHEmul::Address (2,
 				(unsigned int (static_cast <FZ80::CZ80*> (cpu) -> iRegister ().values ()[0].value ()) << 8) |
-				(unsigned int ((chrCode.value () & 0b00111111) << 3)) |
-				(unsigned int) _ULARegisters -> LINECNTRL ())));
-		memoryRef () -> setCPUView ();
-	}
+				(unsigned int ((dt.value () & 0b00111111) << 3)) |
+				(unsigned int) _ULARegisters -> LINECNTRL ())))))
+		_ULARegisters -> setReverseVideo (dt.bit (7)); // The reverse video depends on the 
+													   // bit 7 of the data received (from video memory)
 
-	// Shift the data to draw...
-	px = _ULARegisters -> shiftOutData ();
+	// ...then the view is set back to the original one...
+	memoryRef () -> setActiveView (oV -> id ());
 
-	// and then draws the character, if it is allowed!
-	if (_raster.isInDisplayZone () &&
-		_ULARegisters -> syncOutputWhite () &&
-		(_ULARegisters -> reverseVideo () ^ px)) // normal video and pixel on?, or inverse video and pixels off?
-			_screenMemory -> setPixel (x, y, 0); // ...then put it in black...
+	return (result);
 }
 
 // ---
@@ -287,7 +353,7 @@ void ZX81::ULA::debugULACycle (MCHEmul::CPU* cpu, unsigned int i)
 {
 	assert (_deepDebugFile != nullptr);
 
-	_deepDebugFile -> writeCompleteLine (className (), cpu -> clockCycles () - (i >> 1), "Info Cycle",
+	_deepDebugFile -> writeCompleteLine (className (), _lastCPUCycles + (i >> 1), "Info Cycle",
 		{ { "Raster position",
 			std::to_string (_raster.currentColumnAtBase0 ()) + "," +
 			std::to_string (_raster.currentLineAtBase0 ()) },

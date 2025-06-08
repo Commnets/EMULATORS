@@ -43,27 +43,39 @@
     <Filter Include="Archivos de origen\Motherboard\Chips">
       <UniqueIdentifier>{674bc39d-3005-4eae-aece-0c43cf73081f}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Archivos de origen\Motherboard\Chips\AY38910">
+      <UniqueIdentifier>{44814192-7fb0-4bc6-b6df-5debde318e53}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Archivos de encabezado\Motherboard\Chips\AY38910">
+      <UniqueIdentifier>{b13c06e4-9ccb-4b4f-a100-44fb9cffa9ca}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\include\GENERALINSTRUMENTS\incs.hpp">
       <Filter>Archivos de encabezado</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\include\GENERALINSTRUMENTS\AY38910\AY38910.hpp">
-      <Filter>Archivos de encabezado\Motherboard\Chips</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\include\GENERALINSTRUMENTS\AY38910\AY38910Registers.hpp">
-      <Filter>Archivos de encabezado\Motherboard\Chips</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\include\GENERALINSTRUMENTS\AY38910\incs.hpp">
       <Filter>Archivos de encabezado\Motherboard\Chips</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\GENERALINSTRUMENTS\AY38910\AY38910.hpp">
+      <Filter>Archivos de encabezado\Motherboard\Chips\AY38910</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\GENERALINSTRUMENTS\AY38910\AY38910Registers.hpp">
+      <Filter>Archivos de encabezado\Motherboard\Chips\AY38910</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\GENERALINSTRUMENTS\AY38910\AY38910LibWrapper.hpp">
+      <Filter>Archivos de encabezado\Motherboard\Chips\AY38910</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\GENERALINSTRUMENTS\AY38910\AY38910.cpp">
-      <Filter>Archivos de origen\Motherboard\Chips</Filter>
+      <Filter>Archivos de origen\Motherboard\Chips\AY38910</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\GENERALINSTRUMENTS\AY38910\AY38910LibWrapper.cpp">
+      <Filter>Archivos de origen\Motherboard\Chips\AY38910</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\GENERALINSTRUMENTS\AY38910\AY38910Registers.cpp">
-      <Filter>Archivos de origen\Motherboard\Chips</Filter>
+      <Filter>Archivos de origen\Motherboard\Chips\AY38910</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

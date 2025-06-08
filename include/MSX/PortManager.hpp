@@ -110,11 +110,11 @@ namespace MSX
 		PSGPortManager ();
 
 		virtual MCHEmul::UByte value (unsigned short ab, unsigned char id) const override
-							{ return (_psg -> readRegister (id - 0x98)); }
+							{ return (_psg -> readRegister (id - 0xa0)); }
 		virtual MCHEmul::UByte peekValue (unsigned short ab, unsigned char id) const override
-							{ return (_psg -> peekRegister (id - 0x98)); }
+							{ return (_psg -> peekRegister (id - 0xa0)); }
 		virtual void setValue (unsigned short ab, unsigned char id, const MCHEmul::UByte& v) override
-							{ _psg -> setRegister (id - 0x98, v); }
+							{ _psg -> setRegister (id - 0xa0, v); }
 
 		/** The initialization does nothing. */
 		virtual void initialize () override

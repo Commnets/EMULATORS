@@ -322,6 +322,8 @@ bool TEXASINSTRUMENTS::TMS99xxFamily::drawGraphicsSpritesAndDetectCollisions
 		case TEXASINSTRUMENTS::TMS99xxFamilyRegisters::_TEXTMODE:
 			{
 				drawGraphicsScreenTextMode (x, y, data);
+
+				// No sprites in this mode, so no collisions will be detected...
 			}
 
 			break;
@@ -344,6 +346,38 @@ bool TEXASINSTRUMENTS::TMS99xxFamily::drawGraphicsSpritesAndDetectCollisions
 
 			break;
 
+		case TEXASINSTRUMENTS::TMS99xxFamilyRegisters::_UNDOCUMENTED12:
+			{
+				// The character read will have been different...
+				drawGraphicsScreenTextMode (x, y, data);
+
+				// No sprites in this mode, so no collisions will be detected...
+			}
+
+			break;
+
+		case TEXASINSTRUMENTS::TMS99xxFamilyRegisters::_UNDOCUMENTED23:
+			{
+				// The character read will have been different...
+				drawGraphicsScreenMulticolorMode (x, y, data);
+
+				result = drawSprites (x, y, xS, yS);
+			}
+			
+			break;
+
+		case TEXASINSTRUMENTS::TMS99xxFamilyRegisters::_UNDOCUMENTED13:
+		case TEXASINSTRUMENTS::TMS99xxFamilyRegisters::_UNDOCUMENTED123:
+			{
+				// Here the character read, if any, makes no sense...
+				drawGraphicsScreenFixPatternMode (x, y, data);
+
+				// No sprites in this mode, so no collisions will be detected...
+			}
+
+			break;
+
+		// It shouldn't happen, but if it does, then it is an error!
 		default:
 			{
 				_LOG ("Graphic mode:" + 
@@ -399,6 +433,19 @@ void TEXASINSTRUMENTS::TMS99xxFamily::drawGraphicsScreenMulticolorMode (unsigned
 	else cl = (unsigned int) (std::get <2> (data).value () & 0x0f); // odd block...
 	if (cl != 0)
 		_screenMemory -> setPixel (x, y, cl);
+}
+
+// ---
+void TEXASINSTRUMENTS::TMS99xxFamily::drawGraphicsScreenFixPatternMode (unsigned short x, unsigned short y,
+			const std::tuple <MCHEmul::UByte, MCHEmul::UByte, MCHEmul::UByte>& data)
+{
+	unsigned short xS = x - _raster.hData ().firstScreenPosition ();
+	if (xS < 8 || xS >= 248 /** (40 * 6) + 8 first pixels = 248. */)
+		_screenMemory -> setPixel (x, y, _TMS99xxFamilyRegisters -> backDropColor ());
+	else
+		_screenMemory -> setPixel (x, y, ((xS % 6) < 4)
+			? _TMS99xxFamilyRegisters -> textColor () // 4 pixels of the same color. The value read doesn't matter...
+			: _TMS99xxFamilyRegisters -> backDropColor ()); // The other two are the background color...
 }
 
 // ---

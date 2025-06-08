@@ -76,11 +76,16 @@ namespace TEXASINSTRUMENTS
 		static const unsigned int _ID = 1200;
 
 		/** The different graphic modes. */
-		static const unsigned char _GRAPHICIMODE = 0;
-		static const unsigned char _TEXTMODE = 1;
-		static const unsigned char _MULTICOLORMODE = 2;
-		static const unsigned char _GRAPHICIIMODE = 4;
-		// The rest (up to 8) can be used but they have an non offical behaviour...
+		static const unsigned char _GRAPHICIMODE	= 0;
+		static const unsigned char _TEXTMODE		= 1;
+		static const unsigned char _MULTICOLORMODE	= 2;
+		static const unsigned char _GRAPHICIIMODE	= 4;
+		// The rest (up to 8) can be used but they have a non offical behaviour...
+		// They are combinations of the prvious modes at the end of the day..
+		static const unsigned char _UNDOCUMENTED12	= 3; // A text mode with access to three block of patterns (like _MULTOCLORMODE)
+		static const unsigned char _UNDOCUMENTED23	= 6; // A graphic mode with access to three block of patterns (like _GRAPHICIIMODE)
+		static const unsigned char _UNDOCUMENTED13	= 5; // These tow modes seem to be "wired".
+		static const unsigned char _UNDOCUMENTED123	= 7; // They draw in a screen of 40x24 chars a fixed pattern of color.
 
 		// Constructors...
 		/** This constructor is used when the registers will be used directly from the Chip

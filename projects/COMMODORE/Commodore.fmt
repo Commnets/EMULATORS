@@ -229,7 +229,7 @@ Dir A:@CIDDRA@, Dir B:@CIDDRB@
 #---
 ;SIDVoice
 Id:@ID@, Active:@ACTIVE@
-ADSR:@ATTACK@/@DECAY@/@SUSTAIN@/@RELEASE@
+ADSR:@ATTACK@/@DECAY@/@SUSTAIN@/@RELEASE@(@ADSR@)
 Linked:@VOICERELATED@, Ring:@RINGMODULATION@, Sync:@SYNC@
 @WAVES?{fmter=.CLASS,empty=no waves}\n@
 #---

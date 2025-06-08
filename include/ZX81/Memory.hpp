@@ -20,6 +20,7 @@
 namespace ZX81
 {
 	class SinclairZX81;
+	class ULA;
 
 	/** 
 	  * The video info has to be set from D_FILE location.
@@ -33,6 +34,7 @@ namespace ZX81
 	{
 		public:
 		friend SinclairZX81;
+		friend ULA;
 
 		MemoryVideoCode (int id, 
 			PhysicalStorageSubset* pSS, const MCHEmul::Address& a)
@@ -47,7 +49,8 @@ namespace ZX81
 		mutable MCHEmul::UByte _lastValueRead;
 
 		/** Very internal. Modified from the SinclairZX81. */
-		static MCHEmul::ProgramCounter* _programCounter;
+		static MCHEmul::CPU* _cpu;
+		static ULA* _ula;
 	};
 
 

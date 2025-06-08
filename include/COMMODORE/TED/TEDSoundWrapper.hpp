@@ -86,14 +86,7 @@ namespace COMMODORE
 			public:
 			friend TEDSoundSimpleLibWrapper;
 
-			Voice (int id, unsigned int cF)
-				: MCHEmul::SoundVoice (id, cF,
-					{
-						new MCHEmul::PulseSoundWave (cF),
-						new MCHEmul::NoiseSoundWave (cF)
-					}),
-				  _wavesActive (0)
-							{ setClassName ("TEDVoice"); }
+			Voice (int id, unsigned int cF);
 
 			virtual void setActive (bool a) override
 							{ if ((_active != a) && (_active = a)) 

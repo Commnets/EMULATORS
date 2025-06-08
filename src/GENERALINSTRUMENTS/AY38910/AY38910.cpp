@@ -1,18 +1,24 @@
 #include <GENERALINSTRUMENTS/AY38910/AY38910.hpp>
 
 // ---
-GENERALINSTRUMENTS::AY38910::AY38910 (GENERALINSTRUMENTS::AY38910Registers* reg)
+GENERALINSTRUMENTS::AY38910::AY38910 
+	(GENERALINSTRUMENTS::AY38910Registers* reg, GENERALINSTRUMENTS::AY38910LibWrapper* w)
 	: MCHEmul::SoundChip (GENERALINSTRUMENTS::AY38910::_ID,
 		 { { "Name", "PPI 8255" },
 		   { "Manufacturer", "Intel" },
 		   { "Year", "1970" } }),
 	  _AY38910Registers (reg),
+	  _AY38910LibWrapper (w),
 	  _lastCPUCycles (0),
 	  _internalRegisters (nullptr)
 {
 	// If nullptr a temporal one is created that it will be deleted when the object is destroyed...
 	if (_AY38910Registers == nullptr)
 		_internalRegisters = _AY38910Registers = new GENERALINSTRUMENTS::AY38910Registers;
+	_AY38910Registers -> setAY38910LibWrapper (_AY38910LibWrapper); // To link it to it...
+
+	// The warpper cannot be nullptr never...
+	assert (_AY38910LibWrapper != nullptr);
 }
 
 // ---
@@ -20,6 +26,8 @@ GENERALINSTRUMENTS::AY38910::~AY38910 ()
 {
 	// That could be nullptr, it they would have been created externally!
 	delete (_internalRegisters); // ...and in that case, nothing will happen...
+	// The wrapper is deleted here also...
+	delete (_AY38910LibWrapper);
 }
 
 // ---
@@ -33,14 +41,27 @@ bool GENERALINSTRUMENTS::AY38910::simulate (MCHEmul::CPU* cpu)
 		return (true);
 	}
 
-	// Simulate the visulization...
-	for (unsigned int i = 
-			((cpu -> clockCycles  () - _lastCPUCycles)); 
-		i > 0; i--)
+	if (soundWrapper () != nullptr)
 	{
-		_IFDEBUG debugAY38910Cycle (cpu, i);
+		// Simulate the sound...
+		for (unsigned int i = 
+				((cpu -> clockCycles  () - _lastCPUCycles) >> 1); 
+			i > 0; i--)
+		{
+			_IFDEBUG debugAY38910Cycle (cpu, i);
 
-		// TODO
+			// The number of bytes that can come from the wrapper might not be fixed...
+			MCHEmul::UBytes data;
+			if (soundWrapper () -> getData (cpu, data))
+			{
+				for (size_t j = 0; j < data.size (); j++)
+				{
+					char dt = data [j].value ();
+					if (soundMemory () -> addSampleData (&dt, sizeof (char)))
+						notify (MCHEmul::Event (_SOUNDREADY));
+				}
+			}
+		}
 	}
 
 	_lastCPUCycles = cpu -> clockCycles ();

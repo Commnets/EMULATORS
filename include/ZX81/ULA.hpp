@@ -21,6 +21,8 @@
 
 namespace ZX81
 {
+	class MemoryVideoCode;
+
 	/** 
 		The chip that takes care of anything around the graphics in ZX81. \n
 		It is also accountable for reading the status of the keyboard. \n
@@ -106,6 +108,8 @@ namespace ZX81
 	class ULA : public MCHEmul::GraphicalChip
 	{
 		public:
+		friend MemoryVideoCode;
+
 		static const unsigned int _ID = 210;
 
 		/** Specific classes for PAL & NTSC have been created giving this data as default. \n
@@ -144,9 +148,10 @@ namespace ZX81
 							{ _showEvents = sE; }
 
 		/** To inform about the INT ack. \n
-			see @ZX81::ZX81Computer for more details. */
-		void setINTack ()
-							{ _ULARegisters -> setINTack (); }
+			see @ZX81::SinclairZX81 class for more details. 
+			The method received the clock situation (CPU point of view) when happened. */
+		void setINTack (unsigned int c)
+							{ _ULARegisters -> setINTack (c); }
 		inline bool aboutToGenerateNMIAfterCycles (unsigned int nC);
 
 		virtual bool initialize () override;
@@ -182,8 +187,18 @@ namespace ZX81
 		virtual MCHEmul::ScreenMemory* createScreenMemory () override;
 
 		// Invoked from the method "simulation"...
-		/** Read and draw the graphics. */
-		void readGraphicsAndDrawVisibleZone (MCHEmul::CPU* cpu);
+		/** Draw in the visible zone if there were something to be drawn. \n
+			This method is executed in every ULA clock. The ULA shifts left the SHIFT register 
+			until there were nothing. The bit shifted is drawn taking into account 
+			whether the code read (from the video memory) had the bit 7 set. */
+		void drawInVisibleZone (MCHEmul::CPU* cpu);
+
+		// Invoked from memory ZX81::MemoryVideoCode::readCharData!
+		/** To load data into the SHIFT Registers after readind char. 
+			This method is invoked from the memory. \n
+			It takes into account the LNCTRL, the character read and the value of the IR register.
+			This is the way the ULA builds up where the info to load is. */
+		bool readCharData (MCHEmul::CPU* cpu, const MCHEmul::UByte& dt);
 
 		// -----
 		// Different debug methods to simplify the internal code
@@ -227,7 +242,7 @@ namespace ZX81
 	inline bool ULA::aboutToGenerateNMIAfterCycles (unsigned int nC)
 	{
 		bool rP;
-		return (_raster.simulateMoveCycles (nC, rP) &&
+		return (_raster.simulateMoveCycles (nC << 1 /** double cycles in ULA. */, rP) &&
 			_ULARegisters -> NMIGenerator ()); 
 		// It means that in the next execution for nC cycles, 
 		// a NMI interrupt will be generated...

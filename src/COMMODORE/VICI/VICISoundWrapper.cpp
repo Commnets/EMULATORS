@@ -32,15 +32,11 @@ COMMODORE::VICISoundSimpleLibWrapper::VICISoundSimpleLibWrapper (unsigned int cF
 	  _clocksPerSample ((unsigned int) ((double) cF / (double (sF)))),
 	  _counterClocksPerSample (0)
 {
-	// The ADSR is not active in any of the 4 voices...
-	for (size_t i = 0; i < 4; i++)
-		_voices [i] -> setADSRActive (false);
-
 	// The voice 0...
 	COMMODORE::VICISoundSimpleLibWrapper::Voice* v0 = 
 		static_cast <COMMODORE::VICISoundSimpleLibWrapper::Voice*> (_voices [0]);
 	v0 -> setWavesActive (0x40); // Always a pulse wave...
-	v0 -> wave (MCHEmul::SoundWave::Type::_SAWTOOTH) -> setActive (true);
+	v0 -> wave (MCHEmul::SoundWave::Type::_PULSE) -> setActive (true);
 	static_cast <MCHEmul::PulseSoundWave*> (v0 -> wave (MCHEmul::SoundWave::Type::_PULSE)) -> 
 		setPulseUpPercentage (0.5f);
 
@@ -205,6 +201,18 @@ bool COMMODORE::VICISoundSimpleLibWrapper::getData (MCHEmul::CPU *cpu, MCHEmul::
 }
 
 // ---
+COMMODORE::VICISoundSimpleLibWrapper::Voice::Voice (int id, unsigned int cF)
+	: MCHEmul::SoundVoice (id, cF,
+		{
+			new MCHEmul::PulseSoundWave (cF),
+			new MCHEmul::NoiseSoundWave (cF)
+		}, nullptr), // There is no envelope around this sound!
+		_wavesActive (0)
+{ 
+	setClassName ("VICIVoice");
+}
+
+// ---
 double COMMODORE::VICISoundSimpleLibWrapper::Voice::data () const
 { 
 	// When the wave is active or is in test active and the selected wave is a pulse...
@@ -224,7 +232,7 @@ double COMMODORE::VICISoundSimpleLibWrapper::Voice::data () const
 		// pulse
 		case 0x40:
 			{
-				result = waves ()[(size_t) MCHEmul::SoundWave::Type::_PULSE] -> data ();
+				result = wave (MCHEmul::SoundWave::Type::_PULSE) -> data ();
 			}
 
 			break;
@@ -232,7 +240,7 @@ double COMMODORE::VICISoundSimpleLibWrapper::Voice::data () const
 		// noise
 		case 0x80:
 			{
-				result = waves ()[(size_t) MCHEmul::SoundWave::Type::_NOISE] -> data ();
+				result = wave (MCHEmul::SoundWave::Type::_NOISE) -> data ();
 			}
 
 			break;
@@ -247,9 +255,7 @@ double COMMODORE::VICISoundSimpleLibWrapper::Voice::data () const
 			break;
 	}
 
-	if (result != 0.0f)
-		result *= ADSRData (); 
-	// However because ADSR is not active this value will be = result...
+	// There is no need to pass the result through the envelope, as there is no any!
 
 	return ((result > 1.0f) ? 1.0f : result);
 }

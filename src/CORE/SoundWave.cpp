@@ -78,6 +78,17 @@ MCHEmul::PulseSoundWave::PulseSoundWave (unsigned int cF)
 }
 
 // ---
+MCHEmul::SquareSoundWave::SquareSoundWave (unsigned int cF)
+	: MCHEmul::PulseSoundWave (cF)
+{ 
+		_type = Type::_SQUARE; // Set the type to square wave
+
+		setClassName ("SoundSquareWave"); 
+
+		setPulseUpPercentage (0.5f); // 50% of the time up, 50% down
+};
+
+// ---
 void MCHEmul::PulseSoundWave::initialize ()
 { 
 	SoundWave::initialize (); 

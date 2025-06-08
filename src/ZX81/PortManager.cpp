@@ -86,7 +86,8 @@ MCHEmul::UByte ZX81::PortManager::getValue (unsigned short ab, unsigned char id,
 			{ 
 				_ULARegisters -> setVSync (true);
 
-				_ULA -> raster ().vData ().initialize ();
+				// The raster is initialized. Both, the horizontal and the vertical ones...
+				_ULA -> raster ().initialize ();
 			}
 
 			// ...and also the casette signal will be down!
@@ -113,6 +114,6 @@ void ZX81::PortManager::initialize ()
 	_ULARegisters -> setNMIGenerator (false);
 	_ULARegisters -> setLINECNTRL (0);
 	_ULARegisters -> setLINECTRLNBlocked (true);
-	_ULARegisters -> setSHIFTRegister (MCHEmul::UByte::_0);
+	_ULARegisters -> loadSHIFTRegister (MCHEmul::UByte::_0);
 	_ULARegisters -> setCasetteSignal (false);
 }

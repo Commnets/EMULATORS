@@ -30,7 +30,8 @@ namespace MCHEmul
 			_TRIANGLE = 0,
 			_SAWTOOTH = 1,
 			_PULSE = 2,
-			_NOISE = 3
+			_SQUARE = 3, // Pulse with a 50% duty cycle
+			_NOISE = 4
 		};
 
 		/**
@@ -168,7 +169,7 @@ namespace MCHEmul
 	/** A pulse. \n
 		In a pulse wave is important to know how much percentage of the cycle the pulse is up
 		and how much of it is down. */
-	class PulseSoundWave final : public SoundWave
+	class PulseSoundWave : public SoundWave
 	{
 		public:
 		PulseSoundWave (unsigned int cF);
@@ -215,6 +216,14 @@ namespace MCHEmul
 		/** A counter for the cycles when the pulse is up and down. */
 		unsigned int _counterCyclesPulseUp, _counterCyclesPulseDown;
 		
+	};
+
+	/** A pure square sound wave. \n
+		This is a pulse sound wave but with a dutty cycle of 50%. */
+	class SquareSoundWave final : public PulseSoundWave
+	{
+		public:
+		SquareSoundWave (unsigned int cF);
 	};
 
 	/** Random. */

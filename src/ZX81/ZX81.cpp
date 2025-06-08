@@ -88,8 +88,10 @@ bool ZX81::SinclairZX81::initialize (bool iM)
 		(memory ()) -> configuration (), type (), false /** Not restart. */);
 
 	/** This memory has to know where the CPU is on to return
-		either a value of other. */
-	ZX81::MemoryVideoCode::_programCounter = &cpu () -> programCounter ();
+		either a value of other, but it is not the owner of it! */
+	ZX81::MemoryVideoCode::_cpu = cpu ();
+	/** And also where the ULA is. */
+	ZX81::MemoryVideoCode::_ula = _ula;
 
 	// It is also needed to observe the edge connector...
 	// Events when it is disonnected and connected are sent and with many implications
@@ -130,23 +132,26 @@ void ZX81::SinclairZX81::specificComputerCycle ()
 
 	// If the bit 6 of the address went from 1 to 0...
 	// the INT line of the Z80 should be up (interrupt requested).
-	// However at this point, the ULA cycle hasn't been executed yet,
+	// However at this point, the ULA cycle hasn't been executed yet (it is just after executing the instruction),
 	// and a NMI requests could be generated and obvioulsy with more priority than this one.
+	// Important ro highlight that the clock cyclycles counter is not updated yet at this position either...
 	// So the INT here is only requested if the ULA were not about to do so later!
-	// In the definition of the ZX81 (machine) is possbile to have INT and NMI at the same time...
+	// In the definition of the ZX81 (machine) is possible to have INT and NMI at the same time...
 	// It is guaranteed by the code!...
+	unsigned int cC = 0;
 	if (_A6.negativeEdge () &&	// From 1 to 0...
 		cpu () -> interrupt (FZ80::INTInterrupt::_ID) -> 
-			canBeExecutedOver (cpu (), cpu () -> clockCycles ()) &&
+			canBeExecutedOver (cpu (), cC = cpu () -> clockCycles ()) &&
 		!_ula -> aboutToGenerateNMIAfterCycles (cpu () -> lastCPUClockCycles ()))
 	{ 
 		// The INT is requested...
 		cpu () -> requestInterrupt
-			(FZ80::INTInterrupt::_ID, cpu () -> clockCycles (), nullptr, 2);
+			(FZ80::INTInterrupt::_ID, cC, nullptr, 2);
 
 		// The ULA has to know that the INT is requested, 
+		// ..and also at the time it was (in CPU cycles!),
 		// because the counter of horizontal lines has to be updated when that happen...
-		_ula -> setINTack ();
+		_ula -> setINTack (cC);
 	}
 }
 

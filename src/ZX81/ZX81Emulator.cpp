@@ -16,10 +16,10 @@ void ZX81::ZX81Emulator::printOutParameters (std::ostream& o) const
 	MCHEmul::Emulator::printOutParameters (o);
 
 	o << "/n:\t\t" << "Emulation using NTSC parameters and screen size" << std::endl
-	  << "\t\t\t\t\tDepending on the computer type emulatted the combination might not be possible" << std::endl;
+	  << "\t\tDepending on the computer type emulatted the combination might not be possible" << std::endl;
 	o << "/b[COLOR]:\t" << "Draw a dark grid in the drawable screen. Color optional" << std::endl;
-	o << "/w[CONFIGURATION]:\t" << "Starts in a different memory configuration" << std::endl
-	  << "\t\t\t\t\tIt is is optional and, depending on the computer emulated the combination might not be possible" << std::endl;
+	o << "/w[CONF]:\t" << "Starts in a different memory configuration" << std::endl
+	  << "\t\tIt is is optional and, depending on the computer emulated the combination might not be possible" << std::endl;
 	o << "/m[MACHINE]:\t" << "Define the type of ROM loaded" << std::endl;
 	o << "LANGUAGES allowed under command line /i:" << std::endl << 
 		 "ENG:\tEnglish" << std::endl;

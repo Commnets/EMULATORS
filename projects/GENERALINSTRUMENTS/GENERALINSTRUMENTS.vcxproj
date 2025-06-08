@@ -20,12 +20,14 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\include\GENERALINSTRUMENTS\AY38910\AY38910.hpp" />
+    <ClInclude Include="..\..\include\GENERALINSTRUMENTS\AY38910\AY38910LibWrapper.hpp" />
     <ClInclude Include="..\..\include\GENERALINSTRUMENTS\AY38910\AY38910Registers.hpp" />
     <ClInclude Include="..\..\include\GENERALINSTRUMENTS\AY38910\incs.hpp" />
     <ClInclude Include="..\..\include\GENERALINSTRUMENTS\incs.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\GENERALINSTRUMENTS\AY38910\AY38910.cpp" />
+    <ClCompile Include="..\..\src\GENERALINSTRUMENTS\AY38910\AY38910LibWrapper.cpp" />
     <ClCompile Include="..\..\src\GENERALINSTRUMENTS\AY38910\AY38910Registers.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

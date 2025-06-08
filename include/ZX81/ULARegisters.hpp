@@ -52,12 +52,14 @@ namespace ZX81
 							{ _syncOutputWhite = w; }
 
 		// When INT interrupt has been acknowledged...
-		void setINTack ()
-							{ _INTack = true; }
-		bool INTack () const
-							{ return (_INTack); }
+		void setINTack (unsigned int cC)
+							{ _INTack = true; _INTackClock = cC; }
+		/** Returns true if the INT has been acknowledged at the given clock cycle. \n/ */
+		inline bool INTack (unsigned int cC) const;
+		unsigned int INTackClock () const
+							{ return (_INTackClock); }
 
-		// Counting internally from 0 to 7 every HSYNC...
+		// Counting internally from 0 to 7 every HSYNC with an external origin (INT)...
 		unsigned char LINECNTRL () const // From 0 to 8...
 							{ return (_LINECNTRL); }
 		void setLINECNTRL (unsigned char lc)
@@ -79,10 +81,13 @@ namespace ZX81
 							{ return (_SHIFTR); }
 		const MCHEmul::UByte& originalSHIFTRegister () const
 							{ return (_originalSHIFTR); }
-		void setSHIFTRegister (const MCHEmul::UByte& sr) // with 0 restart it...
-							{ _SHIFTR = _originalSHIFTR = sr; }
-		bool shiftOutData ()
-							{ return (_SHIFTR.shiftLeftC ()); }
+		/** Only if the previous SHIFT Register value has all bits shifted out. */
+		inline bool loadSHIFTRegister (const MCHEmul::UByte& sr);
+		/** Shifts the SHIFT Register left. \n
+			Returns true if the bit has been shifted out, false otherwise. \n
+			The d variable has the value shifed, if any!.
+			When 8 bits are shifted out, it returns false. */
+		inline bool shiftOutData (bool& d);
 
 		// The casette signal...
 		bool casetteSignal () const
@@ -129,6 +134,9 @@ namespace ZX81
 		bool _syncOutputWhite;
 		/** The INT ack. Once it is checked becomes false. */
 		MCHEmul::OBool _INTack;
+		/** At the same time it is checked, the value of the clock is kept. 
+			This value makes no sense when the previous one is false, just when it is true. */
+		unsigned int _INTackClock;
 		/** Something similar is done withe this 3 bits (0-7) internal counter,
 			that is used to determine which line of the character has to be ddrawn
 			and increments every HSYNC event. */
@@ -138,6 +146,8 @@ namespace ZX81
 		bool _reverseVideo;
 		/** The SHIFT Register. */
 		MCHEmul::UByte _SHIFTR, _originalSHIFTR;
+		/** The number of bit shifted. When it becomes 8 no more shifts are done. */
+		unsigned char _shiftedBit;
 		/** The casette signal and the signal to indicate whether it has changed. \n
 			When read it becomes back to false. */
 		bool _casetteSignal;
@@ -156,7 +166,7 @@ namespace ZX81
 			// no output signal...
 			_syncOutputWhite = false;
 			// and no counting LINES (from 0 to 7)...
-			_LINECNTRL = 0;
+			_LINECNTRL = 7; // To start counting from 0 at the very first INC
 			_LINECNTRLBlocked = true;
 		}
 		// When it is not...
@@ -167,7 +177,19 @@ namespace ZX81
 			_syncOutputWhite = true;
 			// ans starts to count LINECTRL...
 			_LINECNTRLBlocked = false;
+
+			_shiftedBit = 8; // To load a new value...
 		}
+	}
+
+	// ---
+	bool ULARegisters::INTack (unsigned int cC) const
+	{ 
+		bool tmp = 
+			(cC == _INTackClock) && _INTack.peekValue () /** Doesn't change the value. */;
+							 
+		return (tmp
+			? (bool) _INTack /** to reset the value. */ : false);
 	}
 
 	// ---
@@ -176,6 +198,40 @@ namespace ZX81
 		if (!_LINECNTRLBlocked && (++_LINECNTRL > 7))
 			_LINECNTRL = 0;
 		return (_LINECNTRL);
+	}
+
+	// ---
+	inline bool ULARegisters::loadSHIFTRegister (const MCHEmul::UByte& sr)
+	{ 
+		bool result = false;
+
+		if (result = (_shiftedBit >= 8)) // Only at the end...
+		{
+			_SHIFTR = _originalSHIFTR = sr;
+
+			_shiftedBit = 0; // Reset the shifted bit counter.
+		}
+
+		return (result);
+	}
+
+	// ---
+	inline bool ULARegisters::shiftOutData (bool& d)
+	{ 
+		bool result = false;
+
+		if (_shiftedBit < 8)
+		{
+			// Shift the bit out...
+			result = true;
+				
+			d = _SHIFTR.shiftLeftC ();
+
+			_shiftedBit++;
+
+		}
+
+		return (result);
 	}
 
 	// ---

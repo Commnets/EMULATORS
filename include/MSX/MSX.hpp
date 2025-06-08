@@ -34,11 +34,17 @@ namespace MSX
 		MSXModel* model ()
 							{ return (_model); }
 
-		/** To get a refence to the vdp chip. */
+		/** To get a refence to the VDP chip. */
 		const VDP* vdp () const
 							{ return (_model -> vdp ()); }
 		VDP* vdp ()
 							{ return (_model -> vdp ()); }
+
+		/** To get a refence to the PSG chip. */
+		const PSG* psg () const
+							{ return (_model -> psg ()); }
+		PSG* psg ()
+							{ return (_model -> psg ()); }
 
 		// To get snapshots of the memory...
 		// They are used in some commands...

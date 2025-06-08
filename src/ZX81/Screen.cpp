@@ -39,9 +39,7 @@ void ZX81::Screen::drawAdditional ()
 		unsigned short x1, y1, x2, y2;
 		gC -> screenPositions (x1, y1, x2, y2);
 
-		// Draws rectangles and reference lines...
-		drawRectangle ((size_t) (x1 - 1), (size_t) (y1 - 1), 
-			(size_t) (x2 + 1), (size_t) (y2 + 1), bCB);
+		// There is no outer boder, just the grid...
 		for (unsigned short i = y1 + 8; i <= y2; i += 8)
 			drawHorizontalLineStep ((size_t) x1, (size_t) i, (size_t) (x2 - x1 + 1), 2, bC);
 		for (unsigned short i = x1 + 8; i <= x2; i += 8)

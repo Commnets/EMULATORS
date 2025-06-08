@@ -218,6 +218,8 @@ void TEXASINSTRUMENTS::TMS99xxFamilyRegisters::setValue (size_t p, const MCHEmul
 			break;
 
 		// It shouldn't be here...
+		// Any case these registers are not mapped in the TMS99xxFamily
+		// But it is not erro getting this point, just not doing anything...
 		default:
 			break;
 	}
@@ -263,6 +265,8 @@ const MCHEmul::UByte& TEXASINSTRUMENTS::TMS99xxFamilyRegisters::readValue (size_
 			break;
 
 		// It shouldn't be here...
+		// Any case these registers are not mapped in the TMS99xxFamily
+		// But it is not erro getting this point, just not doing anything...
 		default:
 			break;
 	}
@@ -300,6 +304,9 @@ const MCHEmul::UByte& TEXASINSTRUMENTS::TMS99xxFamilyRegisters::peekValue (size_
 
 			break;
 
+		// It shouldn't be here...
+		// Any case these registers are not mapped in the TMS99xxFamily
+		// But it is not erro getting this point, just not doing anything...
 		default:
 			break;
 	}
@@ -419,8 +426,10 @@ void TEXASINSTRUMENTS::TMS99xxFamilyRegisters::setControlRegister (unsigned char
 			{
 				// Bits 0, 1, 2 & 3: Where the table of codes (patterns' name) is (blocks of 1k)...
 				_nameAddress = MCHEmul::Address (2, (v.value () & 0x0f) << 10);
+				// The rest of the bits are not used...
 
-				// The rest of the bits are not used
+				// Reset the data read flag, as the pattern table has changed.
+				_dataRead = false; 
 			}
 
 			break;
@@ -430,6 +439,10 @@ void TEXASINSTRUMENTS::TMS99xxFamilyRegisters::setControlRegister (unsigned char
 			{
 				// Special meaning when bit 1 register 0 (M2) is on...
 				_colorAddress = MCHEmul::Address (2, v.value () << 6);
+				// The rest of the bits are not used...
+
+				// Reset the data read flag, as the color table has changed.
+				_dataRead = false; 
 			}
 
 			break;
@@ -439,6 +452,10 @@ void TEXASINSTRUMENTS::TMS99xxFamilyRegisters::setControlRegister (unsigned char
 			{
 				// Bits 0, 1 & 2: Where the patters are (blocks of 2k)...
 				_patternAddress = MCHEmul::Address (2, (v.value () & 0x07) << 11);
+				// The rest of the bits are not used...
+
+				// Reset the data read flag, as the pattern table has changed.
+				_dataRead = false; 
 			}
 
 			break;
@@ -663,7 +680,7 @@ std::tuple <MCHEmul::UByte, MCHEmul::UByte, MCHEmul::UByte>
 				// If the position to read is "new" or nothing was read before, read the data...
 				if (pT != _lastPatternNameTablePositionRead || !_dataRead)
 				{
-					// 0, 1 or 2. clock of 256 bytes in the screen...
+					// 0, 1 or 2. block of 256 bytes in the screen...
 					unsigned char bP = (unsigned char) (sP >> 8); 
 					_lastPatterNameValueRead = 
 						videoData (_lastPatternNameTablePositionRead = pT); // a pattern bwteen 0 and 255...
@@ -690,6 +707,126 @@ std::tuple <MCHEmul::UByte, MCHEmul::UByte, MCHEmul::UByte>
 				}
 
 				_dataRead = true;
+			}
+
+			break;
+
+		case _UNDOCUMENTED12:
+			{
+				// This mode is like _TEXMODE but with the possibility to use 3 blocks of patterns...
+				if (x < 8 || x >= 248 /** (40 * 6) + first 8 pixels = 248. */)
+				{
+					_lastPatternNameTablePositionRead =
+					_lastPatterGeneratorTablePositionRead =
+					_lastColorTablePositionRead = { };
+					_lastPatterNameValueRead = 
+					_lastPatternGeneratorValueRead =
+					_lastColorValueRead = MCHEmul::UByte::_0;
+				}
+				else
+				{
+					MCHEmul::Address pT = 
+						_nameAddress + 
+						(size_t) ((y >> 3 /** 8 bytes high every pattern. */) * 40 /** 32 patterns per line. */) + 
+						(size_t) ((x - 8 /** From 1st position onwards. */) / 6 /** 6 bits used per line of pattern. */); // 960 in total...
+
+					// If the position to read is "new" or nothing was read before, read the data...
+					if (pT != _lastPatternNameTablePositionRead || !_dataRead)
+					{
+						unsigned char row = (unsigned char) (y >> 3); // From 0 to 23...
+						// The bit of the pattern address...
+						unsigned int rB = (_patternAddress.value () & 0x1800) >> 11; // 0, 1 or 2 (equivalent to >> 11 & 0x03)...
+						// The value to be addedd to the beginning of the pattern address depending on the row...
+						// ...0, 2048 or 4096 bytes depending on the row where the raster is now...
+						unsigned int dA = (row < 8) 
+							? 0x0000 // Nothing to add to the patter address when the row is 0 - 7
+							: ((row >= 8 && row < 16) && (rB & 0x01)) 
+								? 0x0800 // If the row is 8 - 15 and the bit 0 of the pattern address is set, add 2048 bytes
+								: ((row >= 16) && (rB & 0x02)) 
+									? 0x1000 // If the row is 16 - 23 and the bit 1 of the pattern address is set, add 4096 bytes
+									: 0x0000; // Any other case, nothing to add to the pattern address...
+
+
+						_lastPatterNameValueRead = 
+							videoData (_lastPatternNameTablePositionRead = pT);
+						_lastPatternGeneratorValueRead =
+							videoData (_lastPatterGeneratorTablePositionRead = 
+								MCHEmul::Address (2,
+									// The base...
+									(_patternAddress.value () & 0x2000) + dA +
+									// 8 bytes per pattern (name selects the pattern)...
+									(unsigned int) (_lastPatterNameValueRead.value () << 3) + 
+									// The right byte of the pattern depends on the screen position...
+									(unsigned int) (y % 8))); // Total 2048 * 3 block total...
+
+						// Only the first 6 bits are used...
+						// ...and the color table in this case is not used...
+						_lastColorTablePositionRead = { }; // Not important...
+						_lastColorValueRead = MCHEmul::UByte::_0;
+					}
+
+					_dataRead = true;
+				}
+			}
+
+			break;
+
+		case _UNDOCUMENTED13:
+			{
+				MCHEmul::Address pT = 
+					_nameAddress + 
+					(size_t) (((y >> 3 /** 8 bytes high every pattern. */) << 5 /** 32 patterns per line. */) + 
+					(size_t) (x >> 3 /** 8 bits used per line of pattern. */)); // 768 positions max...
+
+				// If the position to read is "new" or nothing was read before, read the data...
+				if (pT != _lastPatternNameTablePositionRead || !_dataRead)
+				{
+					unsigned char row = (unsigned char) (y >> 3); // From 0 to 23...
+					// The bit of the pattern address...
+					unsigned int rB = (_patternAddress.value () & 0x1800) >> 11; // 0, 1 or 2 (equivalent to >> 11 & 0x03)...
+					// The value to be addedd to the beginning of the pattern address depending on the row...
+					// ...0, 2048 or 4096 bytes depending on the row where the raster is now...
+					unsigned int dA = (row < 8) 
+						? 0x0000 // Nothing to add to the patter address when the row is 0 - 7
+						: ((row >= 8 && row < 16) && (rB & 0x01)) 
+							? 0x0800 // If the row is 8 - 15 and the bit 0 of the pattern address is set, add 2048 bytes
+							: ((row >= 16) && (rB & 0x02)) 
+								? 0x1000 // If the row is 16 - 23 and the bit 1 of the pattern address is set, add 4096 bytes
+								: 0x0000; // Any other case, nothing to add to the pattern address...
+
+					_lastPatterNameValueRead = 
+						videoData (_lastPatternNameTablePositionRead = pT);
+					// The pattern name is used to get the color pattern that is stored in the pattern generation table.
+					// Every color pattern is made up of 8 bytes and there is 2 colors defined in each byte
+					_lastPatternGeneratorValueRead =
+						videoData (_lastPatterGeneratorTablePositionRead =
+								MCHEmul::Address (2,
+									// The base...
+									(_patternAddress.value () & 0x2000) + dA +
+									// 8 bytes per pattern (name selects the pattern)...
+									(unsigned int) (_lastPatterNameValueRead.value () << 3)));
+
+					// But the specific byte to select will depend on, the row where the pattern name was initially read (768 positions)
+					// So if the row were 0, the byte selected would be 0 & 1, row 1 -> bytes 2 & 3, row 2 -> bytes 4 & 5, row 3 -> bytes 6 & 7...
+					// So the byte to select is (row AND 3) << 1 & ((row AND 3) << 1) + 1
+					// The 1 added at the end will depend of the raster row: 0 - 3 = +0, 4 - 7 = +1, 8 - 11 = +0, 12 - 15 = +1,...
+					// So (rasterRow >> 2) % 2 is what is has to be added...
+					_lastColorTablePositionRead = { }; // Is wasn't used...
+					_lastColorValueRead = 
+						_lastPatternGeneratorValueRead [((row & 0x03) << 1) + ((y >> 2) % 2) /** Even = +0, Odd = +1. */];
+				}
+
+				_dataRead = true;
+			}
+
+			break;
+
+		// These tow modes don't read anything...
+		// ...as they draw a fixed pattern of forms and colors...
+		case _UNDOCUMENTED23:
+		case _UNDOCUMENTED123:
+			{
+				// Nothing else to do...
 			}
 
 			break;

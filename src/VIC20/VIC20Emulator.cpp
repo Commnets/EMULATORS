@@ -15,7 +15,7 @@ void VIC20::VIC20Emulator::printOutParameters (std::ostream& o) const
 
 	o << "/n:\t\t" << "Emulation using NTSC parameters and screen size" << std::endl;
 	o << "/b[COLOR]:\t" << "Draw a dark grid in the drawable screen. Color optional" << std::endl;
-	o << "/w[CONFIGURATION]:\t" << "Starts in a different memory configuration. It is is optional" << std::endl;
+	o << "/w[CONF]:\t" << "Starts in a different memory configuration. It is is optional" << std::endl;
 	o << "LANGUAGES allowed under command line /i:" << std::endl << 
 		 "ENG:\tEnglish" << std::endl <<
 		 "JAP:\tJapanesse" << std::endl << 

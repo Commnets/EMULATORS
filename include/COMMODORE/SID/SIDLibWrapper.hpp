@@ -137,19 +137,7 @@ namespace COMMODORE
 			public:
 			friend SoundSIDSimpleWrapper;
 
-			Voice (int id, unsigned int cF)
-				: MCHEmul::SoundVoice (id, cF,
-					{
-						new MCHEmul::TriangleSoundWave (cF),
-						new MCHEmul::SawSmoothSoundWave (cF),
-						new MCHEmul::PulseSoundWave (cF),
-						new MCHEmul::NoiseSoundWave (cF)
-					}),
-				  _voiceRelated (nullptr), // set when Emulation is built (it is guarentted that it is not nullptr when running)
-				  _ringModulation (false), // Not modulated by default...
-				  _sync (false), // Not sync by default...
-				  _wavesActive (0)
-							{ setClassName ("SIDVoice"); }
+			Voice (int id, unsigned int cF);
 
 			virtual void setActive (bool a) override
 							{ if ((_active != a) && (_active = a)) 
@@ -183,7 +171,7 @@ namespace COMMODORE
 							{ return ((unsigned char) (wavesData () * 255)); }
 			/** Same but for the envelope. */
 			unsigned char envelopeValue () const
-							{ return ((unsigned char) (ADSRData () * 255)); }
+							{ return ((unsigned char) (_envelope -> envelopeData () * 255)); }
 
 			/** To control the percentage of the pulse wave when active. */
 			double pulseUpPercentage () const

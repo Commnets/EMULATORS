@@ -205,9 +205,14 @@ Data Form:@TYPE@ Frequency:@FREQUENCY@kHz Channels:@CHANNELS@
 @VOICES?{fmter=.CLASS,empty=no voices}\n---\n@
 #---
 #---
+;SoundEnvelope
+ADSR:@ATTACK@/@DECAY@/@SUSTAIN@/@RELEASE@(@ADSR@)
+#---
+#---
 ;SoundVoice
+ID:@ID@
 Active:@ACTIVE@
-ADSR:@ATTACK@/@DECAY@/@SUSTAIN@/@RELEASE@(@STATE@)
+@SoundEnvelope>@
 @WAVES?{fmter=.CLASS,empty=no waves}\n@
 #---
 #---

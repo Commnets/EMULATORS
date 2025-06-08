@@ -34,13 +34,10 @@ COMMODORE::TEDSoundSimpleLibWrapper::TEDSoundSimpleLibWrapper (unsigned int cF, 
 	COMMODORE::TEDSoundSimpleLibWrapper::Voice* v0 = 
 		static_cast <COMMODORE::TEDSoundSimpleLibWrapper::Voice*> (_voices [0]);
 	v0 -> setWavesActive (0); // Always a pulse wave...
-	v0 -> setADR (0, 0, 0); // No ADR effect....
-
 	// The voice 1...
 	COMMODORE::TEDSoundSimpleLibWrapper::Voice* v1 = 
 		static_cast <COMMODORE::TEDSoundSimpleLibWrapper::Voice*> (_voices [1]);
 	v1 -> setWavesActive (1); // By defect a pulse wave, but it can be moved to noise!
-	v1 -> setADR (0, 0, 0); // No ADR effect....
 }
 
 // ---
@@ -211,6 +208,19 @@ bool COMMODORE::TEDSoundSimpleLibWrapper::getData (MCHEmul::CPU *cpu, MCHEmul::U
 }
 
 // ---
+COMMODORE::TEDSoundSimpleLibWrapper::Voice::Voice (int id, unsigned int cF)
+	: MCHEmul::SoundVoice (id, cF,
+		{
+			new MCHEmul::SawSmoothSoundWave (cF),
+			new MCHEmul::PulseSoundWave (cF),
+			new MCHEmul::NoiseSoundWave (cF)
+		}, nullptr), // No envelope attached...
+		_wavesActive (0)
+{ 
+	setClassName ("TEDVoice");
+}
+
+// ---
 double COMMODORE::TEDSoundSimpleLibWrapper::Voice::data () const
 { 
 	// When the wave is active or is in test active and the selected wave is a pulse...
@@ -228,17 +238,17 @@ double COMMODORE::TEDSoundSimpleLibWrapper::Voice::data () const
 	{
 		// sawtooth
 		case 0x20:
-			result = waves ()[(size_t) MCHEmul::SoundWave::Type::_SAWTOOTH] -> data ();
+			result = wave (MCHEmul::SoundWave::Type::_SAWTOOTH) -> data ();
 			break;
 
 		// pulse
 		case 0x40:
-			result = waves ()[(size_t) MCHEmul::SoundWave::Type::_PULSE] -> data ();
+			result = wave (MCHEmul::SoundWave::Type::_PULSE) -> data ();
 			break;
 
 		// noise
 		case 0x80:
-			result = waves ()[(size_t) MCHEmul::SoundWave::Type::_NOISE] -> data ();
+			result = wave (MCHEmul::SoundWave::Type::_NOISE) -> data ();
 			break;
 
 		// This sitution is not possible but just in case!
@@ -246,8 +256,7 @@ double COMMODORE::TEDSoundSimpleLibWrapper::Voice::data () const
 			break;
 	}
 
-	if (result != 0.0f)
-		result *= ADSRData ();
+	// There is no affection by the envelope, because there is no envelope in this chip!
 
 	return ((result > 1.0f) ? 1.0f : result);
 }
