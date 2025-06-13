@@ -31,7 +31,8 @@ Yellow: NMI active
 Green: Writting to a port
 Blue: NMI Generator on
 Brown: NMI Generator off
-Cyan: reading from a port
+Cyan: Reading from a port
+Violet: When the LNCTRL is equal to 7
 #---
 #---
 ;CDFDUMP

@@ -90,7 +90,7 @@ ZX81::ULA::ULA (const MCHEmul::RasterData& vd, const MCHEmul::RasterData& hd,
 	  _lastCPUCycles (0),
 	  _format (nullptr),
 	  _HALTBefore (false),
-	  _INTActive (false), _NMIActive (false), _HALTActive (false),
+	  _INTActive (false), _NMIActive (false), _HALTActive (false), _LINECNTRLTo0 (false), _LINECNTRLTo0Draw (0),
 	  _writePort (false), _readPortFE (false),
 	  _NMIGeneratorOn (false), _NMIGeneratorOff (false)
 {
@@ -125,6 +125,7 @@ bool ZX81::ULA::initialize ()
 	// Events null...
 	_HALTBefore = false;
 	_INTActive = false; _NMIActive = false; _HALTActive = false;
+	_LINECNTRLTo0 = false; _LINECNTRLTo0Draw = 0;
 	_writePort = false; _readPortFE = false;
 	_NMIGeneratorOn = false; _NMIGeneratorOff = false;
 	
@@ -158,6 +159,9 @@ bool ZX81::ULA::simulate (MCHEmul::CPU* cpu)
 		if (_showEvents)
 		{
 			// Keep track of different situations to be drawn later if needed...
+			// When the LINE of Control is 0...
+			if (_ULARegisters -> LINECNTRL () == 7)
+				_LINECNTRLTo0 = true; // the value _LINECNTRLTo0Draw is not initialized...
 			// When a INT interrupt is in execution...
 			if (!_INTActive.peekValue () && 
 				cpu -> programCounter ().internalRepresentation () == 0x038)
@@ -177,8 +181,12 @@ bool ZX81::ULA::simulate (MCHEmul::CPU* cpu)
 		}
 
 		// Notice that graphics are always tried to be drawn, 
-		// but only f there were something to draw because the ULA has info to draw in the shift register...
-		drawInVisibleZone (cpu);
+		// but only if there were something to draw because the ULA has info to draw in the shift register 
+		// and it was in the visible zone
+		bool iV = drawInVisibleZone (cpu);
+		// In that case, gets also where the raster bar is currently located...
+		unsigned short x = 0, y = 0;
+		if (iV)	_raster.currentDisplayPosition (x, y);
 
 		// This block is the one that simulates the HSYNC and VSYNC signals...
 		// The HSYNC signal can come from outside the ULA (from the INTack signal) or
@@ -190,9 +198,13 @@ bool ZX81::ULA::simulate (MCHEmul::CPU* cpu)
 			_raster.vData ().add (1);
 			// ..and just in case horizontal raster is set back to 0...
 			_raster.hData ().initialize ();
-			// If there was a signal from outside to change the line (a INT was launched)...
 			// ...the LINECTRL register is incremented...
-			if (eH)	_ULARegisters -> incLINECTRL ();
+			_ULARegisters -> incLINECTRL ();
+			// If the change of line was because of the external HSYNC signal,
+			// the raster line has to be completed...
+			if (eH && iV && (x + 1) < _raster.visibleColumns ())
+				_screenMemory -> setHorizontalLine 
+					(x + 1, y, _raster.visibleColumns () - (x + 1), 1); // Draws the HSYNC line in the screen memory...
 
 			// If the NMI generator is active a interrupt is launched to the CPU...
 			// This situation shouldn't ever happen is the previous one (INT interrupt) was launched...
@@ -289,13 +301,13 @@ MCHEmul::ScreenMemory* ZX81::ULA::createScreenMemory ()
 }
 
 // --
-void ZX81::ULA::drawInVisibleZone (MCHEmul::CPU* cpu)
+bool ZX81::ULA::drawInVisibleZone (MCHEmul::CPU* cpu)
 {
 	bool d = false;
 	bool p = _ULARegisters-> shiftOutData (d);
 
 	if (!_raster.isInVisibleZone ())
-		return; // Nothing else can be done...
+		return (false); // Nothing else can be done...
 
 	unsigned short x = 0, y = 0;
 	_raster.currentVisiblePosition (x, y);
@@ -312,6 +324,8 @@ void ZX81::ULA::drawInVisibleZone (MCHEmul::CPU* cpu)
 			{ _screenMemory -> setPixel (x, y, !_HALTBefore ? 13 /** Fist HALT. */ : 12); _HALTBefore = true; }
 		if (_INTActive)			_screenMemory -> setPixel (x, y, 2);	// Red
 		if (_NMIActive)			_screenMemory -> setPixel (x, y, 7);	// Yellow
+		if (_LINECNTRLTo0 && ++_LINECNTRLTo0Draw == 3) 
+			{ _LINECNTRLTo0Draw = 0; _screenMemory -> setPixel (x, y, 4); }	// Violet
 		// Writting and reading to the specific ports is also detected...
 		size_t l = (x <= 5) ? x : 5;
 		if (_writePort)			_screenMemory -> setHorizontalLine (x - l, y, l, 5);	// Green
@@ -319,6 +333,8 @@ void ZX81::ULA::drawInVisibleZone (MCHEmul::CPU* cpu)
 		if (_NMIGeneratorOff)	_screenMemory -> setHorizontalLine (x - l, y, l, 8);	// Brown
 		if (_readPortFE)		_screenMemory -> setHorizontalLine (x - l, y, l, 3);	// Cyan
 	}
+
+	return (true);
 }
 
 // ---

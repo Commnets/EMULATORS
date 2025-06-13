@@ -190,8 +190,9 @@ namespace ZX81
 		/** Draw in the visible zone if there were something to be drawn. \n
 			This method is executed in every ULA clock. The ULA shifts left the SHIFT register 
 			until there were nothing. The bit shifted is drawn taking into account 
-			whether the code read (from the video memory) had the bit 7 set. */
-		void drawInVisibleZone (MCHEmul::CPU* cpu);
+			whether the code read (from the video memory) had the bit 7 set. \n
+			Returns true when the raster was in the visible zona and false in other circunstance. */
+		bool drawInVisibleZone (MCHEmul::CPU* cpu);
 
 		// Invoked from memory ZX81::MemoryVideoCode::readCharData!
 		/** To load data into the SHIFT Registers after readind char. 
@@ -228,6 +229,8 @@ namespace ZX81
 		// To draw situations...
 		bool _HALTBefore; // Just to identify the first HALT of many!
 		MCHEmul::OBool _INTActive, _NMIActive, _HALTActive;
+		MCHEmul::OBool _LINECNTRLTo0;
+		unsigned char _LINECNTRLTo0Draw; // Alternative (when 0) to draw the LNCTRL = 1 situation...
 		MCHEmul::OBool _writePort, _readPortFE, _NMIGeneratorOn, _NMIGeneratorOff;
 	};
 
