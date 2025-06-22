@@ -54,7 +54,9 @@ namespace GENERALINSTRUMENTS
 		public:
 		/** 
 		  *	Constructor.
-		  *	@param cF	Chip frequency in clocks / second.
+		  *	@param cF	Chip frequency (sound) in clocks / second.
+		  *				In a MXS1 e,g, the speed of this chip is half the speed of the CPU...
+		  *				This is also the speed used to calculate the waveforms. \n
 		  * @param sF	Sampling frequency in samples / second. It cannot be 0.
 		  */
 		AY38910SimpleLibWrapper (unsigned int cF, unsigned int sF);
@@ -73,8 +75,102 @@ namespace GENERALINSTRUMENTS
 		unsigned int _chipFrequency;
 		unsigned int _samplingFrequency;
 
-		/** The SID voice is made up of 4 waves and
-			there is special methos to deal with the pulse one. */
+		/** The envelope of the chip is different that a classic ADSR. */
+		class Envelope final : public MCHEmul::SoundEnvelope
+		{
+			public:
+			/** The type of wave the system is reproducing. */
+			enum class Type
+			{
+				_TYPE0  = 0,
+				_TYPE1  = 1,
+				_TYPE8  = 8,
+				_TYPE9  = 9,
+				_TYPE10 = 10,
+				_TYPE11 = 11,
+				_TYPE12 = 12,
+				_TYPE13 = 13,
+				_TYPE14 = 14,
+				_TYPE15 = 15
+			};
+
+			friend AY38910SimpleLibWrapper;
+
+			/** The type by default is _TYPE0 and the frequency is 0 by default. */
+			Envelope (unsigned short cF);
+
+			/** Change the type of envelope drawn. \n
+				Any type the envelope form is changed the sampling data is recalculated. */
+			Type type () const
+							{ return (_type); }
+			void setType (Type t)
+							{ _type =  t, calculateSamplingData (); }
+			/** Same, but from the value of a register directly...
+				Transmit the changes directly to the previous method. */
+			void setType (const MCHEmul::UByte& v); 
+
+			/** Sets directly the frequency of the envelope. */
+			unsigned short frequency () const
+							{ return (_frequency); }
+			void setFrequency (unsigned short f)
+							{ _frequency = f; calculateSamplingData (); }
+
+			virtual void setStart (bool s) override;
+			virtual void initialize () override;
+			virtual void initializeInternalCounters () override;
+			virtual void clock (unsigned int nC = 1) override;
+			virtual double envelopeData () const override;
+
+			virtual MCHEmul::InfoStructure getInfoStructure () const override;
+
+			private:
+			/** To calculate the internal data needed to later "draw" the voice. 
+				Anytme the sampling data is recalculated the internal counter are also recualculated and 
+				the State turns back into attack directly. */
+			void calculateSamplingData ();
+
+			private:
+			// Implementation
+			/** The status in which the wave is in. \n
+				That status will depend on which type of wave the envelope system is reproducing. */
+			enum class State
+			{
+				_ATTACK = 0,
+				_SUSTAIN = 1,
+				_DECAY = 2
+			};
+
+			/** The type of envelope wave. */
+			Type _type;
+			/** The state in which the full wave is. */
+			State _state;
+			/** The internal frequency of the wave. */
+			unsigned short _frequency;
+
+			/** The counters used to control the states _increase, _sustian and _decrease. */
+			struct StateCounters
+			{
+				StateCounters ()
+					: _cyclesPerState (0), _counterCyclesPerState (0),
+					  _limit (false)
+								{ }
+
+				void initialize ()
+								{ _counterCyclesPerState = 0;
+								  _limit = false; }
+
+				unsigned int _cyclesPerState;
+				unsigned int _counterCyclesPerState;
+				bool _limit;
+			}; 
+
+			mutable std::vector <StateCounters> _stateCounters;
+		};
+
+		/** Every AY voice is made up only of a either single pulse or noise wave. \n 
+			No voice has its own ADSR. It is common to all voices, 
+			but it can be used or not depending on the configuration. 
+			SO here the envelope is nullptr. */
 		class Voice final : public MCHEmul::SoundVoice
 		{
 			public:
@@ -117,8 +213,15 @@ namespace GENERALINSTRUMENTS
 		};
 
 		/** The different voices used by AY38910. \n
-			They will be three defined at construction time. */
+			They will be three defined at construction time. \n
+			There are 3 square voices and a noise one. \n
+			The noise one can be mixed with the voices attending the value of register 7. \n 
+			The envelope is common for all voices, so there is no envelope assigned to te individual voices. */
 		MCHEmul::SoundVoices _voices;
+		Envelope _envelope; // The envelope affects, all voices at the same time...
+		bool _useEnvelope [3]; // To determine whether the envelope has to be used or not...
+		bool _mixNoise [3]; // Mix noise with the square waves. false by default...
+		double _volumen [3]; // The volumen can be between 0 and 1, per voice...
 
 		/** The registers used by the AY38910. */
 		std::vector <MCHEmul::UByte> _registers;

@@ -107,8 +107,8 @@ namespace ZX81
 		void setConfiguration (Memory::Configuration cfg, Type t, bool rs = true);
 
 		// Implementation
-		static MCHEmul::Chips standardChips (VisualSystem vS);
-		static MCHEmul::IODevices standardDevices (VisualSystem vS);
+		static MCHEmul::Chips standardChips (VisualSystem vS, Type t);
+		static MCHEmul::IODevices standardDevices (VisualSystem vS, Type t);
 
 		private:
 		/** The video system used by ZX81 emulation. */

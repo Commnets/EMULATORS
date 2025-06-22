@@ -17,6 +17,7 @@
 
 #include <CORE/incs.hpp>
 #include <FZ80/incs.hpp>
+#include <ZX81/Type.hpp>
 
 namespace ZX81
 {
@@ -49,7 +50,7 @@ namespace ZX81
 		static const int _ID = 0;
 		static const std::string _NAME;
 
-		PortManager ();
+		PortManager (Type t);
 
 		// See that the constructor is private
 		// because it can only be invoked from ULA
@@ -70,6 +71,7 @@ namespace ZX81
 		MCHEmul::UByte getValue (unsigned short ab, unsigned char id, bool ms = false) const;
 
 		private:
+		Type _type;
 		ULA* _ULA;
 		ULARegisters* _ULARegisters;
 	};

@@ -172,7 +172,7 @@ COMMODORE::SoundSIDSimpleWrapper::SoundSIDSimpleWrapper (unsigned int cF, unsign
 	  _chipFrequency (cF), _samplingFrequency (sF),
 	  _volumen (0.0f), // There is no volumen at the beginning...
 	  _voices (
-		{ new COMMODORE::SoundSIDSimpleWrapper::Voice (0, cF), 
+		{ new COMMODORE::SoundSIDSimpleWrapper::Voice (0, cF), // Desactivated by default...
 		  new COMMODORE::SoundSIDSimpleWrapper::Voice (1, cF), 
 		  new COMMODORE::SoundSIDSimpleWrapper::Voice (2, cF) }),
 	  _registers (std::vector <MCHEmul::UByte> (0x20, MCHEmul::UByte::_0)),
@@ -186,6 +186,9 @@ COMMODORE::SoundSIDSimpleWrapper::SoundSIDSimpleWrapper (unsigned int cF, unsign
 		setRelation (static_cast <COMMODORE::SoundSIDSimpleWrapper::Voice*> (_voices [0]));
 	static_cast <COMMODORE::SoundSIDSimpleWrapper::Voice*> (_voices [2]) -> 
 		setRelation (static_cast <COMMODORE::SoundSIDSimpleWrapper::Voice*> (_voices [1]));
+
+	// The voices are desactivated by default...
+	// ...ans also the enevlope in each...
 }
 
 // ---
@@ -228,7 +231,7 @@ void COMMODORE::SoundSIDSimpleWrapper::setValue (size_t p, const MCHEmul::UByte&
 					(_voices [0]) -> setSync (v.bit (1)); 
 				static_cast <COMMODORE::SoundSIDSimpleWrapper::Voice*> 
 					(_voices [0]) -> setRingModulation (v.bit (2));
-				_voices [0] -> setActive (!v.bit (3));
+				_voices [0] -> setActive (!v.bit (3)); // Activates also the envelope...
 				_voices [0] -> wave (MCHEmul::SoundWave::Type::_TRIANGLE) -> setActive (v.bit (4));
 				_voices [0] -> wave (MCHEmul::SoundWave::Type::_SAWTOOTH) -> setActive (v.bit (5));
 				_voices [0] -> wave (MCHEmul::SoundWave::Type::_PULSE) -> setActive (v.bit (6));
@@ -292,7 +295,7 @@ void COMMODORE::SoundSIDSimpleWrapper::setValue (size_t p, const MCHEmul::UByte&
 					(_voices [1]) -> setSync (v.bit (1)); 
 				static_cast <COMMODORE::SoundSIDSimpleWrapper::Voice*> 
 					(_voices [1]) -> setRingModulation (v.bit (2));
-				_voices [1] -> setActive (!v.bit (3));
+				_voices [1] -> setActive (!v.bit (3)); // Activates also the envelope...
 				_voices [1] -> wave (MCHEmul::SoundWave::Type::_TRIANGLE) -> setActive (v.bit (4));
 				_voices [1] -> wave (MCHEmul::SoundWave::Type::_SAWTOOTH) -> setActive (v.bit (5));
 				_voices [1] -> wave (MCHEmul::SoundWave::Type::_PULSE) -> setActive (v.bit (6));
@@ -356,7 +359,7 @@ void COMMODORE::SoundSIDSimpleWrapper::setValue (size_t p, const MCHEmul::UByte&
 					(_voices [2]) -> setSync (v.bit (1)); 
 				static_cast <COMMODORE::SoundSIDSimpleWrapper::Voice*> 
 					(_voices [2]) -> setRingModulation (v.bit (2));
-				_voices [2] -> setActive (!v.bit (3));
+				_voices [2] -> setActive (!v.bit (3)); // Activates also the envelope...
 				_voices [2] -> wave (MCHEmul::SoundWave::Type::_TRIANGLE) -> setActive (v.bit (4));
 				_voices [2] -> wave (MCHEmul::SoundWave::Type::_SAWTOOTH) -> setActive (v.bit (5));
 				_voices [2] -> wave (MCHEmul::SoundWave::Type::_PULSE) -> setActive (v.bit (6));

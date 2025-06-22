@@ -320,7 +320,7 @@ MSX::PSG* MSX::MSXStdModel::createPSG () const
 		(new GENERALINSTRUMENTS::AY38910
 			(nullptr /** to create the internal ones. */,
 			 new GENERALINSTRUMENTS::AY38910SimpleLibWrapper 
-				(clockSpeed (), GENERALINSTRUMENTS::AY38910::_SOUNDSAMPLINGCLOCK))));
+				(clockSpeed () >> 1 /** Half speed. */, GENERALINSTRUMENTS::AY38910::_SOUNDSAMPLINGCLOCK))));
 }
 
 // ---
@@ -384,9 +384,9 @@ MSX::PSG* MSX::SVI728::createPSG () const
 {
 	return (new MSX::PSG_AY38910
 		(new GENERALINSTRUMENTS::AY38910 
-			(nullptr /** to create th einternal ones. */,
+			(nullptr /** to create the internal ones. */,
 			 new GENERALINSTRUMENTS::AY38910SimpleLibWrapper 
-				(clockSpeed (), GENERALINSTRUMENTS::AY38910::_SOUNDSAMPLINGCLOCK))));
+				(clockSpeed () >> 1, GENERALINSTRUMENTS::AY38910::_SOUNDSAMPLINGCLOCK))));
 }
 
 // ---

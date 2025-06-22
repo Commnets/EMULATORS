@@ -14,9 +14,9 @@ ZX81::SinclairZX81::SinclairZX81 (ZX81::Memory::Configuration cfg,
 	: SINCLAIR::Computer 
 		(new FZ80::CZ80 (0, 
 			{ }), // Some other ports (the ones related with chips) are added later...
-		 ZX81::SinclairZX81::standardChips (vS),
+		 ZX81::SinclairZX81::standardChips (vS, t), // The chips can vary depending on the type of model...
 		 new ZX81::Memory (cfg, t), // Depending on the configuration...
-		 ZX81::SinclairZX81::standardDevices (vS),
+		 ZX81::SinclairZX81::standardDevices (vS, t), // The devices can vary depending on the type of model...
 		 loadSystemVariablesFrom ((t == ZX81::Type::_ZX80) ? "ZX80SysVars.txt" : "ZX81SysVars.txt"),
 		 _CLOCK, // In ZX81 the speed is constant as the CPU is aimed also to draw!
 		 { }, { }, // The ZX81 emulation has been done without neither Buses nor Wires!
@@ -30,7 +30,7 @@ ZX81::SinclairZX81::SinclairZX81 (ZX81::Memory::Configuration cfg,
 	  _A6 (false)
 {
 	// Add the port manager for all ports!
-	ZX81::PortManager* pM = new ZX81::PortManager;
+	ZX81::PortManager* pM = new ZX81::PortManager (_type);
 	FZ80::Z80PortsMap pMps;
 	for (unsigned short i = 0; i < 256; i++)
 		pMps.insert (FZ80::Z80PortsMap::value_type ((unsigned char) i, pM));
@@ -170,21 +170,25 @@ void ZX81::SinclairZX81::setConfiguration
 }
 
 // ---
-MCHEmul::Chips ZX81::SinclairZX81::standardChips (ZX81::SinclairZX81::VisualSystem vS)
+MCHEmul::Chips ZX81::SinclairZX81::standardChips 
+	(ZX81::SinclairZX81::VisualSystem vS, ZX81::Type t)
 {
 	MCHEmul::Chips result;
 
 	// The ULA
+	// In the ZX80 like models there is no really a ULA but just digital circuits...
+	// However the behaviour of those is simulated using a "ULA"....
 	result.insert (MCHEmul::Chips::value_type (ZX81::ULA::_ID, 
 		(vS == ZX81::SinclairZX81::VisualSystem::_PAL) // Will depend on the type of screen...
-			? (ZX81::ULA*) new ZX81::ULA_PAL (ZX81::Memory::_ULA_VIEW)
-			: (ZX81::ULA*) new ZX81::ULA_NTSC (ZX81::Memory::_ULA_VIEW)));
+			? (ZX81::ULA*) new ZX81::ULA_PAL (t, ZX81::Memory::_ULA_VIEW)
+			: (ZX81::ULA*) new ZX81::ULA_NTSC (t, ZX81::Memory::_ULA_VIEW)));
 
 	return (result);
 }
 
 // ---
-MCHEmul::IODevices ZX81::SinclairZX81::standardDevices (ZX81::SinclairZX81::VisualSystem vS)
+MCHEmul::IODevices ZX81::SinclairZX81::standardDevices 
+	(ZX81::SinclairZX81::VisualSystem vS, ZX81::Type t)
 {
 	MCHEmul::IODevices result;
 

@@ -25,12 +25,12 @@ Id:@ID@
 ;CULAEVENTS
 Legend:
 Light Gray: HALT active
-Light Green: First HALT of many toghether
+Green Lime: First HALT of many toghether
 Red: INT active
 Yellow: NMI active
 Green: Writting to a port
 Blue: NMI Generator on
-Brown: NMI Generator off
+Light Pink: NMI Generator off
 Cyan: Reading from a port
 Violet: When the LNCTRL is equal to 7
 #---

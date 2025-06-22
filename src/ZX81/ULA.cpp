@@ -76,14 +76,15 @@ const MCHEmul::RasterData ZX81::ULA_NTSC::_VRASTERDATA (0, 15, 15, 246, 246, 261
 const MCHEmul::RasterData ZX81::ULA_NTSC::_HRASTERDATA (0, 125, 125, 413, 413, 413, 413, 414, 0, 0);
 
 // ---
-ZX81::ULA::ULA (const MCHEmul::RasterData& vd, const MCHEmul::RasterData& hd, 
+ZX81::ULA::ULA (const MCHEmul::RasterData& vd, const MCHEmul::RasterData& hd, ZX81::Type t, 
 		int vV, const MCHEmul::Attributes& attrs)
 	: MCHEmul::GraphicalChip (_ID, 
 		{ { "Name", "ULA" },
 		  { "Code", "2C184E" },
 		  { "Manufacturer", "Ferranti" },
 		  { "Year", "1980" } }),
-	  _ULARegisters (new ZX81::ULARegisters),
+	  _ULARegisters (new ZX81::ULARegisters (t)),
+	  _type (t),
 	  _ULAView (vV),
 	  _raster (vd, hd, 1 /** The step is 1 pixel. */),
 	  _showEvents (false),
@@ -208,6 +209,8 @@ bool ZX81::ULA::simulate (MCHEmul::CPU* cpu)
 
 			// If the NMI generator is active a interrupt is launched to the CPU...
 			// This situation shouldn't ever happen is the previous one (INT interrupt) was launched...
+			// In the case of _type = ZX81::_ZX80 the NMI will never happen. 
+			// There is no even a wire connected to that PIN in the Z80 processor...
 			if (_ULARegisters -> NMIGenerator ()) // The generator has to be active! (@see PortManager)
 				cpu -> requestInterrupt (FZ80::NMIInterrupt::_ID, 
 					_lastCPUCycles + (i >> 1), this, 1 /** HSYNC reason */);
@@ -282,20 +285,20 @@ MCHEmul::ScreenMemory* ZX81::ULA::createScreenMemory ()
 	cP [1]  = SDL_MapRGBA (_format, 0xff, 0xff, 0xff, 0xe0); // White
 
 	// These other colors doesn't exist in ZX81, but are used to draw borders, bebug information, etc...
-	cP [2]  = SDL_MapRGBA (_format, 0x92, 0x4a, 0x40, 0xff); // Red
-	cP [3]  = SDL_MapRGBA (_format, 0x84, 0xc5, 0xcc, 0xff); // Cyan
-	cP [4]  = SDL_MapRGBA (_format, 0x93, 0x51, 0xb6, 0xff); // Violet
-	cP [5]  = SDL_MapRGBA (_format, 0x72, 0xb1, 0x4b, 0xff); // Green
-	cP [6]  = SDL_MapRGBA (_format, 0x48, 0x3a, 0xaa, 0xff); // Blue
-	cP [7]  = SDL_MapRGBA (_format, 0xd5, 0xdf, 0x7c, 0xff); // Yellow
-	cP [8]  = SDL_MapRGBA (_format, 0x99, 0x69, 0x2d, 0xff); // Brown
-	cP [9]  = SDL_MapRGBA (_format, 0x67, 0x52, 0x00, 0xff); // Light Red
-	cP [10] = SDL_MapRGBA (_format, 0xc1, 0x81, 0x78, 0xff); // Orange
+	cP [2]  = SDL_MapRGBA (_format, 0xff, 0x00, 0x00, 0xff); // Red
+	cP [3]  = SDL_MapRGBA (_format, 0x00, 0xff, 0xff, 0xff); // Cyan
+	cP [4]  = SDL_MapRGBA (_format, 0xff, 0x00, 0xff, 0xff); // Violet
+	cP [5]  = SDL_MapRGBA (_format, 0x00, 0xff, 0x00, 0xff); // Green
+	cP [6]  = SDL_MapRGBA (_format, 0x00, 0x00, 0xff, 0xff); // Blue
+	cP [7]  = SDL_MapRGBA (_format, 0xff, 0xff, 0x00, 0xff); // Yellow
+	cP [8]  = SDL_MapRGBA (_format, 0xff, 0x00, 0x7f, 0xff); // Light Pink
+	cP [9]  = SDL_MapRGBA (_format, 0x80, 0x00, 0x80, 0xff); // Purple
+	cP [10] = SDL_MapRGBA (_format, 0xff, 0xa5, 0x00, 0xff); // Orange
 	cP [11] = SDL_MapRGBA (_format, 0x60, 0x60, 0x60, 0xff); // Dark Grey
-	cP [12] = SDL_MapRGBA (_format, 0x8a, 0x8a, 0x8a, 0xff); // Medium Grey
-	cP [13] = SDL_MapRGBA (_format, 0xb3, 0xec, 0x91, 0xff); // Light Green
-	cP [14] = SDL_MapRGBA (_format, 0x86, 0x7a, 0xde, 0xff); // Light Blue
-	cP [15] = SDL_MapRGBA (_format, 0xb3, 0xb3, 0xb3, 0xff); // Light Grey
+	cP [12] = SDL_MapRGBA (_format, 0x8a, 0x8a, 0x8a, 0xff); // Light Grey
+	cP [13] = SDL_MapRGBA (_format, 0x32, 0xc8, 0x32, 0xff); // Green Lime
+	cP [14] = SDL_MapRGBA (_format, 0x00, 0xa0, 0xff, 0xff); // Light Blue
+	cP [15] = SDL_MapRGBA (_format, 0xff, 0x33, 0x33, 0xff); // Light Red
 
 	return (new MCHEmul::ScreenMemory (numberColumns (), numberRows (), cP));
 }
@@ -320,18 +323,18 @@ bool ZX81::ULA::drawInVisibleZone (MCHEmul::CPU* cpu)
 	// Draws the events if any...
 	if (_showEvents)
 	{
+		// First because if could hide the rst of the events...
+		if (_LINECNTRLTo0 && ++_LINECNTRLTo0Draw == 3) 
+			{ _LINECNTRLTo0Draw = 0; _screenMemory -> setPixel (x, y, 4); }	// Violet
 		if (_HALTActive)
 			{ _screenMemory -> setPixel (x, y, !_HALTBefore ? 13 /** Fist HALT. */ : 12); _HALTBefore = true; }
 		if (_INTActive)			_screenMemory -> setPixel (x, y, 2);	// Red
 		if (_NMIActive)			_screenMemory -> setPixel (x, y, 7);	// Yellow
-		if (_LINECNTRLTo0 && ++_LINECNTRLTo0Draw == 3) 
-			{ _LINECNTRLTo0Draw = 0; _screenMemory -> setPixel (x, y, 4); }	// Violet
 		// Writting and reading to the specific ports is also detected...
-		size_t l = (x <= 5) ? x : 5;
-		if (_writePort)			_screenMemory -> setHorizontalLine (x - l, y, l, 5);	// Green
-		if (_NMIGeneratorOn)	_screenMemory -> setHorizontalLine (x - l, y, l, 6);	// Blue
-		if (_NMIGeneratorOff)	_screenMemory -> setHorizontalLine (x - l, y, l, 8);	// Brown
-		if (_readPortFE)		_screenMemory -> setHorizontalLine (x - l, y, l, 3);	// Cyan
+		if (_writePort)			_screenMemory -> setPixel (x, y, 5);	// Green
+		if (_NMIGeneratorOn)	_screenMemory -> setPixel (x, y, 6);	// Blue
+		if (_NMIGeneratorOff)	_screenMemory -> setPixel (x, y, 8);	// Light Pink
+		if (_readPortFE)		_screenMemory -> setPixel (x, y, 3);	// Cyan
 	}
 
 	return (true);
@@ -380,8 +383,8 @@ void ZX81::ULA::debugULACycle (MCHEmul::CPU* cpu, unsigned int i)
 }
 
 // ---
-ZX81::ULA_PAL::ULA_PAL (int vV)
-	: ZX81::ULA (_VRASTERDATA, _HRASTERDATA, vV,
+ZX81::ULA_PAL::ULA_PAL (ZX81::Type t, int vV)
+	: ZX81::ULA (_VRASTERDATA, _HRASTERDATA, t, vV,
 		 { { "Name", "ULA" },
 		   { "Code", "2C184E (PAL)" },
 		   { "Manufacturer", "Ferranti"},
@@ -391,8 +394,8 @@ ZX81::ULA_PAL::ULA_PAL (int vV)
 }
 
 // ---
-ZX81::ULA_NTSC::ULA_NTSC (int vV)
-	: ZX81::ULA (_VRASTERDATA, _HRASTERDATA, vV,
+ZX81::ULA_NTSC::ULA_NTSC (ZX81::Type t, int vV)
+	: ZX81::ULA (_VRASTERDATA, _HRASTERDATA, t, vV,
 		 { { "Name", "ULA" },
 		   { "Code", "2C184E (PAL)" },
 		   { "Manufacturer", "Ferranti"},

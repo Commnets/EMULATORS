@@ -6,19 +6,18 @@ GENERALINSTRUMENTS::AY38910::AY38910
 	: MCHEmul::SoundChip (GENERALINSTRUMENTS::AY38910::_ID,
 		 { { "Name", "PPI 8255" },
 		   { "Manufacturer", "Intel" },
-		   { "Year", "1970" } }),
+		   { "Year", "1970" } }, w),
 	  _AY38910Registers (reg),
-	  _AY38910LibWrapper (w),
 	  _lastCPUCycles (0),
 	  _internalRegisters (nullptr)
 {
 	// If nullptr a temporal one is created that it will be deleted when the object is destroyed...
 	if (_AY38910Registers == nullptr)
 		_internalRegisters = _AY38910Registers = new GENERALINSTRUMENTS::AY38910Registers;
-	_AY38910Registers -> setAY38910LibWrapper (_AY38910LibWrapper); // To link it to it...
+	_AY38910Registers -> setAY38910LibWrapper (w); // To link it to it...
 
 	// The warpper cannot be nullptr never...
-	assert (_AY38910LibWrapper != nullptr);
+	assert (soundWrapper () != nullptr);
 }
 
 // ---
@@ -26,8 +25,7 @@ GENERALINSTRUMENTS::AY38910::~AY38910 ()
 {
 	// That could be nullptr, it they would have been created externally!
 	delete (_internalRegisters); // ...and in that case, nothing will happen...
-	// The wrapper is deleted here also...
-	delete (_AY38910LibWrapper);
+	// The wrapper is deleted in the parent class...
 }
 
 // ---

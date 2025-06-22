@@ -17,6 +17,7 @@
 #define __ZX81_ULAREGISTERS__
 
 #include <CORE/incs.hpp>
+#include <ZX81/Type.hpp>
 
 namespace ZX81
 {
@@ -26,7 +27,7 @@ namespace ZX81
 	class ULARegisters final : public MCHEmul::InfoClass
 	{
 		public:
-		ULARegisters ();
+		ULARegisters (Type t);
 
 		// The NMIGenerator...
 		bool NMIGenerator () const
@@ -123,6 +124,8 @@ namespace ZX81
 		void initializeInternalValues ();
 
 		private:
+		/** The type of model representing in this ULA. */
+		Type _type;
 		/** The NMI Generator can be active or not. */
 		bool _NMIGenerator;
 		/** NTSC. This variable is set when starting. */
@@ -166,7 +169,8 @@ namespace ZX81
 			// no output signal...
 			_syncOutputWhite = false;
 			// and no counting LINES (from 0 to 7)...
-			_LINECNTRL = 7; // To start counting from 0 at the very first INC
+			// In the Type::_ZX80, the counting starts from 0...
+			_LINECNTRL = (_type == Type::_ZX80) ? 0 : 7; 
 			_LINECNTRLBlocked = true;
 		}
 		// When it is not...

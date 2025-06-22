@@ -36,9 +36,10 @@ namespace MCHEmul
 
 		/** To activate or desactivate the envelop. */
 		bool active () const
-						{ return (_active); }
+							{ return (_active); }
 		void setActive (bool a)
-						{ _active = a; }
+							{ if ((_active != a) && (_active = a))
+								initializeInternalCounters (); }
 
 		// To manage the way the Envelope works...
 		/** To start/stop the envelope from the state it is. \n
@@ -172,10 +173,9 @@ namespace MCHEmul
 
 		bool active () const
 							{ return (_active); }
-		/** It can be overloaded for special purposes. */
-		virtual void setActive (bool a)
-							{ if ((_active != a) && (_active = a))
-								initializeInternalCounters (); }
+		/** It can be overloaded for special purposes. 
+			This methid manages also the envelope by default. */
+		virtual void setActive (bool a);
 	
 		// To manage the waves...
 		const SoundWaves& waves () const

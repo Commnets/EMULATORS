@@ -76,8 +76,6 @@ namespace GENERALINSTRUMENTS
 		private:
 		/** A reference to the 8255 PPI Registers. */
 		AY38910Registers* _AY38910Registers;
-		/** A reference to the AY38910 Library Wrapper. */
-		AY38910LibWrapper* _AY38910LibWrapper;
 
 		/** The number of cycles the CPU was executed once the simulated method finishes. */
 		unsigned int _lastCPUCycles;

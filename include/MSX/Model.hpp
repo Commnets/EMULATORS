@@ -163,7 +163,7 @@ namespace MSX
 	class MSX1Model : public MSXModel
 	{
 		public:
-		static const unsigned int _CLOCKSPEED = 3580000000; // 3,58MHz
+		static const unsigned int _CLOCKSPEED = 3580000; // 3,58MHz
 
 		virtual Generation generation () const override
 							{ return (Generation::MSX1); }
@@ -267,7 +267,7 @@ namespace MSX
 	class MSX2Model : public MSXModel
 	{
 		public:
-		static const unsigned int _CLOCKSPEED = 3580000000; // 3,58MHz
+		static const unsigned int _CLOCKSPEED = 3580000; // 3,58MHz
 
 		virtual Generation generation () const override
 							{ return (Generation::MSX2); }

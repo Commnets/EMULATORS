@@ -17,6 +17,7 @@
 #define __ZX81_ULA__
 
 #include <CORE/incs.hpp>
+#include <ZX81/Type.hpp>
 #include <ZX81/ULARegisters.hpp>
 
 namespace ZX81
@@ -117,7 +118,7 @@ namespace ZX81
 			The number of cycles of every raster line (different depending on the ULA version),
 			a reference to the portFE that is used to read the keyboard,
 			and additional attributes. */
-		ULA (const MCHEmul::RasterData& vd, const MCHEmul::RasterData& hd, 
+		ULA (const MCHEmul::RasterData& vd, const MCHEmul::RasterData& hd, Type t, 
 			int vV, const MCHEmul::Attributes& attrs = { });
 
 		virtual ~ULA () override;
@@ -212,6 +213,8 @@ namespace ZX81
 		protected:
 		/** A reference to the ULA registers. */
 		ULARegisters* _ULARegisters;
+		/** The type of model. */
+		Type _type;
 		/** The number of the memory view used to read the data. */
 		int _ULAView;
 		/** The raster. */
@@ -258,7 +261,7 @@ namespace ZX81
 		static const MCHEmul::RasterData _VRASTERDATA;
 		static const MCHEmul::RasterData _HRASTERDATA;
 
-		ULA_PAL (int vV);
+		ULA_PAL (Type t, int vV);
 	};
 
 	/** The version para NTSC systems. */
@@ -268,7 +271,7 @@ namespace ZX81
 		static const MCHEmul::RasterData _VRASTERDATA;
 		static const MCHEmul::RasterData _HRASTERDATA;
 
-		ULA_NTSC (int vV);
+		ULA_NTSC (Type t, int vV);
 	};
 }
 

@@ -5,12 +5,13 @@
 const std::string ZX81::PortManager::_NAME = "ZX81 PortManager";
 
 // ---
-ZX81::PortManager::PortManager ()
+ZX81::PortManager::PortManager (ZX81::Type t)
 	: FZ80::Z80Port (_ID, _NAME,
 		{ { "Name", "General Port Manager" },
 		  { "Description", "Class to manage all ZX81 port iteractions" },
 		  { "Detail", "FE (to read the keyboard status), FE (to enable NMI generation), FD (to disable NMI generation)" }
 		}),
+	  _type (t),
 	  _ULA (nullptr),
 	  _ULARegisters (nullptr)
 {
@@ -33,7 +34,7 @@ void ZX81::PortManager::setValue (unsigned short ab, unsigned char id, const MCH
 	_ULARegisters -> setCasetteSignal (true);
 
 	// If the port id has the bit 1 off (FD is the normal ZX81 but many others will behave equal)...
-	if ((id & 0b00000010) == 0x00)
+	if ((id & 0b00000010) == 0x00 && _type != ZX81::Type::_ZX80) // In the ZX80 there is no this port...
 	{
 		_ULARegisters -> setNMIGenerator (false); // the NMI generator is disconnected...
 
@@ -43,7 +44,9 @@ void ZX81::PortManager::setValue (unsigned short ab, unsigned char id, const MCH
 	// If the port id has the bit 0 off (FE is the normal ZX81, but many others will behave in the same way)...
 	if ((id & 0b00000001) == 0x00)
 	{
-		_ULARegisters -> setNMIGenerator (true); // The NMI generator is connected...
+		// In the ZX80 there is no even a wire connected to NMI pint...
+		if (_type != Type::_ZX80)
+			_ULARegisters -> setNMIGenerator (true); // The NMI generator is connected...
 
 		_ULA -> markNMIGeneratorOn ();
 	}

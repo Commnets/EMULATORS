@@ -1,8 +1,9 @@
 #include <ZX81/ULARegisters.hpp>
 
 // ---
-ZX81::ULARegisters::ULARegisters ()
+ZX81::ULARegisters::ULARegisters (ZX81::Type t)
 	: MCHEmul::InfoClass ("ULARegisters"),
+	  _type (t),
 	  _keyboardStatus (8, MCHEmul::UByte::_0),
 	  _casetteSignalChanged (false),
 	 _INTack (false), _INTackClock (0)
@@ -43,7 +44,8 @@ void ZX81::ULARegisters::initializeInternalValues ()
 	_INTack = false;
 	_INTackClock = 0;
 
-	_LINECNTRL = 7; // To start to count from 0 at the very first INC
+	// To start to count from 0 at the very first INC
+	_LINECNTRL = (_type == Type::_ZX80) ? 0 : 7; 
 	_LINECNTRLBlocked = true;
 
 	_reverseVideo = false;
