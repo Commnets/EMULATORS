@@ -4,7 +4,7 @@ Used allowed under GPL license.<br>
 The framework has been developed fully in C++ (version 20) using <a href="https://visualstudio.microsoft.com/es/vs/">Visual Studio Community 2022 (64bits)</a>.<br><br>
 For better understanding of the framework unzip <b>html.zip</b>, included in the package.<br>
 The package includes classes to develop you own emulator, including also assembler, compiler and consoles, remote and local ones.<br>
-The emulation of <b>COMMODORE64</b> (including Ultimmax mode), <b>VIC20</b>, <b>264 Series</b> (C16, C116 and Plus4) and <b>ZX81</b> are included.<br>
+The emulation of <b>COMMODORE64</b> (including Ultimmax mode), <b>VIC20</b>, <b>264 Series</b> (C16, C116 and Plus4), <b>ZX81</b>, <b>ZXSpectrum</b> and <b>MSX1</b> are included.<br>
 To compile the framework, Visual Studio compiler is needed and also the <a href="https://github.com/libsdl-org/SDL/releases/tag/release-2.26.2">SDL Core</a>, <a href="https://www.libsdl.org/projects/SDL_image/release/">SDL image</a>, <a href="https://github.com/libsdl-org/SDL_mixer">SDL Mixer</a> and <a href="https://github.com/facebookarchive/RakNet">Raknet</a> libraries are necessary. Download them, install them and set the environmental variables: <b>SDL_HOME</b>, <b>SDL_IMAGEHOME</b>, <b>SDL_MIXERHOME</b>, <b>RAKNET_HOME</b>.<br>
 
 <h1><b>Commodore 64 emulator</b></h1>
