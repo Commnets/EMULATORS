@@ -61,7 +61,7 @@ Execute ZX81EmulatorC or ZX81Emulator /h to see the different options at startin
 The different configurations of the ZX81 can be simulated using the parameter /m to indicate the ROM (ZX811, ZX812, ZX812, or ZX80) and /w (0 = default and 1=16k expansion) at command line.<br><br>
 <img src="./docs/ZX81Data/Picture1.png"/><br>
 <img src="./docs/ZX81Data/Picture2.png"/><br>
-<img src="./docs/ZX81Data/Picture3.png"/>
+<img src="./docs/ZX81Data/Picture4.png"/>
 
 <h1><b>ZXSpectrum emulator</b></h1>
 The implementation of the framework for ZX81 has been included.<br>
