@@ -170,6 +170,10 @@ namespace MSX
 
 		virtual unsigned int clockSpeed () const override
 							{ return (_CLOCKSPEED); }
+
+		private:
+		virtual VDP* createVDP () const override;
+		virtual PSG* createPSG () const override;
 	};
 
 	/** The very standard model. 
@@ -215,12 +219,6 @@ namespace MSX
 		virtual MCHEmul::Attributes attributes () const;
 
 		private:
-		virtual VDP* createVDP () const override;
-		virtual PSG* createPSG () const override;
-		virtual MCHEmul::Chips createChips () const override;
-		virtual MCHEmul::IODevices createIODevices (const std::string& lang) const override;
-		virtual InputOSSystem::KeystrockesMap createKeystrockesMap (const std::string& lang) const override;
-		
 		// No need to create a memory structure different that the basic one!
 		virtual bool loadROMOverForLanguage (MCHEmul::PhysicalStorage* fs, 
 			const std::string& lang) override;
@@ -258,6 +256,66 @@ namespace MSX
 		virtual bool loadROMOverForLanguage (MCHEmul::PhysicalStorage* fs, 
 			const std::string& lang) override;
 		virtual void configureMemory (Memory* m, unsigned int cfg) override;
+
+		private:
+		VisualSystem _visualSystem;
+	};
+
+	/** A model from Sony: SonyHB10P. 
+		The one emulated is the one outside Japan. */
+	class SonyHB10P final : public MSX1Model
+	{
+		public:
+		SonyHB10P (VisualSystem vs)
+			: MSX1Model (),
+			  _visualSystem (vs)
+							{ }
+
+		virtual VisualSystem visualSystem () const override
+							{ return (_visualSystem); }
+
+		virtual std::string name () const override
+							{ return ("SonyHB10P"); }
+
+		virtual MCHEmul::Attributes attributes () const;
+
+		private:
+		// No need to create a memory structure different that the basic one!
+		virtual bool loadROMOverForLanguage (MCHEmul::PhysicalStorage* fs, 
+			const std::string& lang) override;
+		virtual void configureMemory (Memory* m, unsigned int cfg) override;
+
+		private:
+		VisualSystem _visualSystem;
+	};
+
+	/** A model from Philips: VG8010. */
+	class PhilipsVG8010 final : public MSX1Model
+	{
+		public:
+		static const int _RAM32KSLOT0SUBSLOT0_SUBSET = 1102;		// Slot 0, Subslot 0, Bank 2-3. 32K RAM configuration...
+
+		PhilipsVG8010 (VisualSystem vs)
+			: MSX1Model (),
+			  _visualSystem (vs)
+							{ }
+
+		virtual VisualSystem visualSystem () const override
+							{ return (_visualSystem); }
+
+		virtual std::string name () const override
+							{ return ("SonyHB10P"); }
+
+		virtual MCHEmul::Attributes attributes () const;
+
+		private:
+		// No need to create a memory structure different that the basic one!
+		virtual bool loadROMOverForLanguage (MCHEmul::PhysicalStorage* fs, 
+			const std::string& lang) override;
+		virtual void configureMemory (Memory* m, unsigned int cfg) override;
+
+		// This element has 32K RAM instead the 16K RAM standard in the model 1
+		virtual MCHEmul::Memory::Content memoryContent () const;
 
 		private:
 		VisualSystem _visualSystem;

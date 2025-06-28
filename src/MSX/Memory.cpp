@@ -72,7 +72,7 @@ MSX::Memory::Memory (MSX::MSXModel* m, unsigned int cfg,
 	_BASICRAM = subset (_RAM16KSLOT0SUBSLOT0_SUBSET);
 	_EMPTYBASICRAM = subset (_ERAM16KSLOT0SUBSLOT0_SUBSET);
 	// None of them can be nullptr...
-	if (_ROM == nullptr || _BASICRAM == nullptr || _EMPTYBASICRAM == nullptr)
+	if (_ROM == nullptr) // The other two can be nullptr, but not the ROM...
 		{ _error = MCHEmul::_INIT_ERROR; return; }	
 	// Create the internal variable _memoryElements, but it must follows the structure defined!
 	if (!createBanks ())

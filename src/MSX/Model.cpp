@@ -213,7 +213,7 @@ MCHEmul::Memory::Content MSX::MSXModel::memoryContent () const
 			(MSX::Memory::_RAM_SET + i, RAM_SLOTS [(size_t) i]));
 
 	// Now the subsets...
-	// // The basic subsets in the slot0 and subs slot 0...
+	// The basic subsets in the slot0 and subs slot 0...
 	// The BIOS subset is ROM, that is iun the banks 0 & 1 of the slot 0, subslot 0...
 	MCHEmul::PhysicalStorageSubset* ROMBIOS =
 		new MCHEmul::PhysicalStorageSubset (MSX::Memory::_ROMBIOS_SUBSET, ROM_SLOT0,
@@ -270,7 +270,7 @@ MCHEmul::Memory::Content MSX::MSXModel::memoryContent () const
 	allsubsets.insert (MCHEmul::PhysicalStorageSubsets::value_type 
 		(MSX::Memory::_ERAM16KSLOT0SUBSLOT0_SUBSET, ERAMB2_SLOT0SUBSLOT0));
 	allsubsets.insert (MCHEmul::PhysicalStorageSubsets::value_type 
-		(MSX::Memory::_RAM16KSLOT0SUBSLOT0_SUBSET, RAMB3_SLOT0SUBSLOT0));
+		(MSX::Memory::_RAM16KSLOT0SUBSLOT0_SUBSET, RAMB3_SLOT0SUBSLOT0)); // It will be active one...
 	for (int i = 4; i < (16 << 2); i++)
 		allsubsets.insert (MCHEmul::PhysicalStorageSubsets::value_type 
 			(MSX::Memory::_SLOTSUBSLOTBASE_SUBSET + ((i / 16) * 100) + (((i % 16) / 4) * 10) + (i % 4), 
@@ -351,22 +351,7 @@ void MSX::MSXStdModel::configureMemory (MSX::Memory* m, unsigned int cfg)
 }
 
 // ---
-MCHEmul::Attributes MSX::SVI728::attributes () const
-{
-	MCHEmul::Attributes attrs 
-		({ 
-			{ "Manufacturer", "SpectraVideo" },
-			{ "Generation", "MSX1" },
-			{ "Visual System", (visualSystem () == MSX::MSXModel::VisualSystem::_PAL) ? "PAL" : "NTSC" },
-			{ "Clock Speed", std::to_string (clockSpeed ()) + " Hz" },
-			{ "Name", "MSX SpectraVideo 728" },
-			{ "Year", "1980" } });
-
-	return (attrs);
-}
-
-// ---
-MSX::VDP* MSX::SVI728::createVDP () const
+MSX::VDP* MSX::MSX1Model::createVDP () const
 {
 	return ((visualSystem () == MSX::MSXModel::VisualSystem::_PAL) 
 			? (MSX::VDP*) new MSX::VDP_TMS99xxFamily
@@ -380,43 +365,29 @@ MSX::VDP* MSX::SVI728::createVDP () const
 }
 
 // ---
-MSX::PSG* MSX::SVI728::createPSG () const
+MSX::PSG* MSX::MSX1Model::createPSG () const
 {
+	// The standard model is based on the General Instruments AY-3-8910 chip...
 	return (new MSX::PSG_AY38910
-		(new GENERALINSTRUMENTS::AY38910 
+		(new GENERALINSTRUMENTS::AY38910
 			(nullptr /** to create the internal ones. */,
 			 new GENERALINSTRUMENTS::AY38910SimpleLibWrapper 
-				(clockSpeed () >> 1, GENERALINSTRUMENTS::AY38910::_SOUNDSAMPLINGCLOCK))));
+				(clockSpeed () >> 1 /** Half speed. */, GENERALINSTRUMENTS::AY38910::_SOUNDSAMPLINGCLOCK))));
 }
 
 // ---
-MCHEmul::Chips MSX::SVI728::createChips () const
+MCHEmul::Attributes MSX::SVI728::attributes () const
 {
-	MCHEmul::Chips result = std::move (MSX::MSXModel::createChips ());
+	MCHEmul::Attributes attrs 
+		({ 
+			{ "Manufacturer", "SpectraVideo" },
+			{ "Generation", "MSX1" },
+			{ "Visual System", (visualSystem () == MSX::MSXModel::VisualSystem::_PAL) ? "PAL" : "NTSC" },
+			{ "Clock Speed", std::to_string (clockSpeed ()) + " Hz" },
+			{ "Name", "MSX SpectraVideo 728" },
+			{ "Year", "1980" } });
 
-	// TODO
-
-	return (result);
-}
-
-// ---
-MCHEmul::IODevices MSX::SVI728::createIODevices (const std::string& lang) const
-{
-	MCHEmul::IODevices result = std::move (MSX::MSXModel::createIODevices (lang));
-
-	// TODO
-
-	return (result);
-}
-
-// ---
-MSX::InputOSSystem::KeystrockesMap MSX::SVI728::createKeystrockesMap (const std::string& lang) const
-{
-	MSX::InputOSSystem::KeystrockesMap result = std::move (MSX::MSX1Model::createKeystrockesMap (lang));
-
-	// TODO
-
-	return (result);
+	return (attrs);
 }
 
 // ---
@@ -553,4 +524,128 @@ void MSX::SVI738::configureMemory (MSX::Memory* m, unsigned int cfg)
 		MSX::Memory::_RAM16KSLOT0SUBSLOT0_SUBSET });
 	// ...and also fix the stack subset...
 	m -> setStackSubset (MSX::Memory::_RAM16KSLOT0SUBSLOT0_SUBSET);
+}
+
+// ---
+MCHEmul::Attributes MSX::SonyHB10P::attributes () const
+{
+	MCHEmul::Attributes attrs 
+		({ 
+			{ "Manufacturer", "Sony" },
+			{ "Generation", "MSX1" },
+			{ "Visual System", (visualSystem () == MSX::MSXModel::VisualSystem::_PAL) ? "PAL" : "NTSC" },
+			{ "Clock Speed", std::to_string (clockSpeed ()) + " Hz" },
+			{ "Name", "MSX SonyHB10P" },
+			{ "Year", "1985/1986" } });
+
+	return (attrs);
+}
+
+// ---
+bool MSX::SonyHB10P::loadROMOverForLanguage (MCHEmul::PhysicalStorage* fs,
+	const std::string& lang)
+{
+	bool result = true;
+
+	// Select the version of the ROM to load....
+	std::string ROMFILE = "./bios/sonyhb10p_basic-bios_ENG.rom";
+
+	result &= fs -> loadInto (ROMFILE);
+
+	return (result);
+}
+
+// ---
+void MSX::SonyHB10P::configureMemory (MSX::Memory* m, unsigned int cfg)
+{
+	assert (m != nullptr);
+
+	// Disactive all elements, but maintain the standard ones...
+	m -> desactivateAllMemoryElements (true);
+	// ...and only the basic elements are connected...
+	m -> connectMemoryElements ({ 
+		MSX::Memory::_ROMBIOS_SUBSET, 
+		MSX::Memory::_RAM16KSLOT0SUBSLOT0_SUBSET });
+	// ...and also fix the stack subset...
+	m -> setStackSubset (MSX::Memory::_RAM16KSLOT0SUBSLOT0_SUBSET);
+}
+
+// ---
+MCHEmul::Attributes MSX::PhilipsVG8010::attributes () const
+{
+	MCHEmul::Attributes attrs 
+		({ 
+			{ "Manufacturer", "Philips" },
+			{ "Generation", "MSX1" },
+			{ "Visual System", (visualSystem () == MSX::MSXModel::VisualSystem::_PAL) ? "PAL" : "NTSC" },
+			{ "Clock Speed", std::to_string (clockSpeed ()) + " Hz" },
+			{ "Name", "MSX PhilipsVG8010" },
+			{ "Year", "1985/1986" } });
+
+	return (attrs);
+}
+
+// ---
+bool MSX::PhilipsVG8010::loadROMOverForLanguage (MCHEmul::PhysicalStorage* fs,
+	const std::string& lang)
+{
+	bool result = true;
+
+	// Select the version of the ROM to load....
+	std::string ROMFILE = "./bios/philipsvg8010_basic-bios_ENG.rom";
+	if (lang == "ENG")		ROMFILE = "./bios/philipsvg8010_basic-bios_ENG.rom";
+	else if (lang == "FRA") ROMFILE = "./bios/philipsvg8010_basic-bios_FRA.rom";
+
+	result &= fs -> loadInto (ROMFILE);
+
+	return (result);
+}
+
+// ---
+void MSX::PhilipsVG8010::configureMemory (MSX::Memory* m, unsigned int cfg)
+{
+	assert (m != nullptr);
+
+	// Disactive all elements, but maintain the standard ones...
+	m -> desactivateAllMemoryElements (true);
+	// ...and only the basic elements are connected...
+	m -> connectMemoryElements ({ 
+		MSX::Memory::_ROMBIOS_SUBSET, 
+		_RAM32KSLOT0SUBSLOT0_SUBSET });
+	// ...and also fix the stack subset...
+	m -> setStackSubset (_RAM32KSLOT0SUBSLOT0_SUBSET);
+}
+
+//  ---
+MCHEmul::Memory::Content MSX::PhilipsVG8010::memoryContent () const
+{
+	MCHEmul::Memory::Content result = std::move (MSX::MSXModel::memoryContent ());
+
+	// In this computer the1 16K RAM are replace by a 32K RAM in the slot 0, subslot 0, bank 2-3.
+
+	// Remove the default 16k RAM in the slot 0, subslot 0, bank 3...
+	// ...that is comming from the MSXModel::memoryContent ()...
+	result._subsets.erase (MSX::Memory::_RAM16KSLOT0SUBSLOT0_SUBSET);
+	result._subsets.erase (MSX::Memory::_ERAM16KSLOT0SUBSLOT0_SUBSET);
+	// ...also in the CPU view...
+	MCHEmul::MemoryView* CPUView = 
+		(*result._views.find (MSX::Memory::_CPU_VIEW)).second;
+	CPUView -> removeSubSet (MSX::Memory::_RAM16KSLOT0SUBSLOT0_SUBSET);
+	CPUView -> removeSubSet (MSX::Memory::_ERAM16KSLOT0SUBSLOT0_SUBSET);
+
+	// Cretaes the 32K RAM....
+	MCHEmul::PhysicalStorage* rS0S0 = (*result._physicalStorages.find (MSX::Memory::_RAM_SET)).second;
+	MCHEmul::PhysicalStorageSubset* RAMB23_SLOT0SUBSLOT0 = 
+		new MCHEmul::Stack (_RAM32KSLOT0SUBSLOT0_SUBSET, rS0S0,
+			0x8000, MCHEmul::Address ({ 0x00, 0x80 }, false), 0x8000,
+				MCHEmul::Stack::Configuration (true, false /** Pointing to the last written. */, 
+					false /** No overflow detection. */, -1)); // 32k
+	RAMB23_SLOT0SUBSLOT0 -> setName ("RAM 32k, Slot 0, Subslot 0, Bank 2-3");
+	// That is added to the content...
+	result._subsets.insert (MCHEmul::PhysicalStorageSubsets::value_type 
+		(_RAM32KSLOT0SUBSLOT0_SUBSET, RAMB23_SLOT0SUBSLOT0));
+	// ...and also in the CPU View (that is the only one)...
+	CPUView -> addSubset (RAMB23_SLOT0SUBSLOT0);
+
+	return (result);
 }
