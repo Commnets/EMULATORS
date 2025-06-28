@@ -71,3 +71,9 @@ The different configurations of the ZXSpectrum can be simulated using the parame
 <img src="./docs/ZXSpectrumData/Picture2.png"/><br>
 <img src="./docs/ZXSpectrumData/Picture3.png"/>
 
+<h1><b>MSXEmulator emulator</b></h1>
+The implementation of the framework for MSX1 has been included.<br>
+Execute MSXEmulatorC or MSXEmulator /h to see the different options at starting, and the command HELP in the console to manipulate later the emulation.<br>
+The different configurations of the MSX can be simulated using the parameter /m to indicate the ROM (SVI728 e.g.) and /w (0 = default) at command line.<br><br>
+<img src="./docs/MSXData/Picture1.png"/><br>
+
