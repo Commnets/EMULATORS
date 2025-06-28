@@ -74,6 +74,8 @@ MSX::MSXModel* MSX::MSXEmulator::createModel () const
 												 // althought it is not correct!
 		}
 	}
+	else
+		result = new MSX::MSXStdModel; // Default model
 
 	return (result);
 }
