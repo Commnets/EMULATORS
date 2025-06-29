@@ -250,26 +250,146 @@ MCHEmul::InfoStructure ZXSPECTRUM::ULA::getInfoStructure () const
 // ---
 void ZXSPECTRUM::ULA::processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifier* n)
 {
+	auto pressOrReleaseKey = [=](SDL_Scancode sc, bool pressed) -> void
+		{
+			const ZXSPECTRUM::InputOSSystem::Keystrokes& ks = 
+				((ZXSPECTRUM::InputOSSystem*) n) -> keystrokesFor (sc);
+			if (!ks.empty ()) // The key has to be defined...
+				for (const auto& j : ks)
+					_ULARegisters -> setKeyboardStatus (j.first, j.second, pressed);
+		};
+
 	switch (evnt.id ())
 	{
 		case MCHEmul::InputOSSystem::_KEYBOARDKEYPRESSED:
 			{
-				const ZXSPECTRUM::InputOSSystem::Keystrokes& ks = ((ZXSPECTRUM::InputOSSystem*) n) -> keystrokesFor
-					(std::static_pointer_cast <MCHEmul::InputOSSystem::KeyboardEvent> (evnt.data ()) -> _key);
-				if (!ks.empty ()) // The key has to be defined...
-					for (const auto& j : ks)
-						_ULARegisters -> setKeyboardStatus (j.first, j.second, true);
+				pressOrReleaseKey (std::static_pointer_cast <MCHEmul::InputOSSystem::KeyboardEvent> 
+					(evnt.data ()) -> _key, true);
 			}
 
 			break;
 
 		case MCHEmul::InputOSSystem::_KEYBOARDKEYRELEASED:
 			{
-				const ZXSPECTRUM::InputOSSystem::Keystrokes& ks = ((ZXSPECTRUM::InputOSSystem*) n) -> keystrokesFor
-				(std::static_pointer_cast <MCHEmul::InputOSSystem::KeyboardEvent> (evnt.data ()) -> _key);
-				if (!ks.empty ()) // The key has to be defined...
-					for (const auto& j : ks)
-						_ULARegisters -> setKeyboardStatus (j.first, j.second, false);
+				pressOrReleaseKey (std::static_pointer_cast <MCHEmul::InputOSSystem::KeyboardEvent> 
+					(evnt.data ()) -> _key, false);
+			}
+
+			break;
+
+		case MCHEmul::InputOSSystem::_JOYSTICKMOVED:
+			{
+				std::shared_ptr <MCHEmul::InputOSSystem::JoystickMovementEvent> jm = 
+					std::static_pointer_cast <MCHEmul::InputOSSystem::JoystickMovementEvent> (evnt.data ());
+				if ((jm -> _joystickId != 0 && jm -> _joystickId != 1) || jm -> _axisValues.size () > 2)
+					break; // Only joysticks 0 y 1 are allowed and never more than 2 axis each!
+
+				size_t ct = 0;
+				for (size_t i = 0; i < 4; // Clear the situation of all axis...
+					_ULARegisters -> setJoystickStatus ((ZXSPECTRUM::ULARegisters::JoystickElement) (i++), false));
+				for (auto i : jm -> _axisValues)
+				{
+					if (ct == 0)
+					{
+						if (i > 0) 
+						{
+							_ULARegisters -> setJoystickStatus 
+								(ZXSPECTRUM::ULARegisters::JoystickElement::_RIGHT, true);
+
+							// And simulates the key 8 pressed for the emulation of the joystick cursor type...
+							pressOrReleaseKey (SDL_SCANCODE_8, true);
+							// The opposite direction, which is the left and simulated with the key 5, 
+							// is not pressed but released...
+							pressOrReleaseKey (SDL_SCANCODE_5, false);
+						}
+						else 
+						if (i < 0) 
+						{
+							_ULARegisters -> setJoystickStatus 
+								(ZXSPECTRUM::ULARegisters::JoystickElement::_LEFT, true);
+
+							// And simulates the key 5 pressed for the emulation of the joystick cursor type...
+							pressOrReleaseKey (SDL_SCANCODE_5, true);
+							// The opposite direction, which is the right and simulated with the key 8, 
+							// is not pressed but released...
+							pressOrReleaseKey (SDL_SCANCODE_8, false);
+						}
+						else
+						{
+							// Stop!
+							pressOrReleaseKey (SDL_SCANCODE_8, false);
+							pressOrReleaseKey (SDL_SCANCODE_5, false);
+						}
+					}
+					else
+					{
+						if (i > 0)
+						{
+							_ULARegisters -> setJoystickStatus 
+								(ZXSPECTRUM::ULARegisters::JoystickElement::_DOWN, true);
+
+							// And simulates the key 6 pressed for the emulation of the joystick cursor type...
+							pressOrReleaseKey (SDL_SCANCODE_6, true);
+							// The opposite direction, which is the up and simulated with the key 7, 
+							// is not pressed but released...
+							pressOrReleaseKey (SDL_SCANCODE_7, false);
+						}
+						else 
+						if (i < 0)
+						{
+							_ULARegisters -> setJoystickStatus 
+								(ZXSPECTRUM::ULARegisters::JoystickElement::_UP, true);
+
+							// And simulates the key 7 pressed for the emulation of the joystick cursor type...
+							pressOrReleaseKey (SDL_SCANCODE_7, true);
+							// The opposite direction, which is the up and simulated with the key 6, 
+							// is not pressed but released...
+							pressOrReleaseKey (SDL_SCANCODE_6, false);
+						}
+						else
+						{
+							// Stop!
+							pressOrReleaseKey (SDL_SCANCODE_6, false);
+							pressOrReleaseKey (SDL_SCANCODE_7, false);
+						}
+					}
+
+					ct++;
+				}
+			}
+
+			break;
+
+		case MCHEmul::InputOSSystem::_JOYSTICKBUTTONPRESSED:
+			{
+				std::shared_ptr <MCHEmul::InputOSSystem::JoystickButtonEvent> jb = 
+					std::static_pointer_cast <MCHEmul::InputOSSystem::JoystickButtonEvent> (evnt.data ());
+				if (jb -> _joystickId != 0 && jb -> _joystickId != 1)
+					break; // Only joysticks 0 y 1 are allowed!
+
+				// The button is pressed...
+				_ULARegisters -> setJoystickStatus 
+					(ZXSPECTRUM::ULARegisters::JoystickElement::_FIRE, true);
+
+				// And simulates the key 0 pressed for the emulation of the joystick cursor type...
+				pressOrReleaseKey (SDL_SCANCODE_0, true);
+			}
+
+			break;
+
+		case MCHEmul::InputOSSystem::_JOYSTICKBUTTONRELEASED:
+			{
+				std::shared_ptr <MCHEmul::InputOSSystem::JoystickButtonEvent> jb = 
+					std::static_pointer_cast <MCHEmul::InputOSSystem::JoystickButtonEvent> (evnt.data ());
+				if (jb -> _joystickId != 0 && jb -> _joystickId != 1)
+					break; // Only joysticks 0 y 1 are allowed!
+
+				// The button is no longer pressed...
+				_ULARegisters -> setJoystickStatus 
+					(ZXSPECTRUM::ULARegisters::JoystickElement::_FIRE, false);
+
+				// And simulates the key 0 released for the emulation of the joystick cursor type...
+				pressOrReleaseKey (SDL_SCANCODE_0, false);
 			}
 
 			break;

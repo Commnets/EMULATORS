@@ -220,8 +220,8 @@ MCHEmul::Memory::Content MSX::MSXModel::memoryContent () const
 			0x0000, MCHEmul::Address ({ 0x00, 0x00 }, false), 0x8000); // 32k
 	ROMBIOS -> setName ("ROM BIOS, Slot 0, Subslot 0, Bank 0 & 1");
 	// An empty subset of 16k in the bank 2 of the slot 0
-	MCHEmul::EmptyPhysicalStorageSubset* ERAMB2_SLOT0SUBSLOT0 =
-		new MCHEmul::EmptyPhysicalStorageSubset (MSX::Memory::_ERAM16KSLOT0SUBSLOT0_SUBSET, MCHEmul::UByte::_0, RAM_SLOTS [0],
+	MSX::EmptyPhysicalStorageSubset* ERAMB2_SLOT0SUBSLOT0 =
+		new MSX::EmptyPhysicalStorageSubset (MSX::Memory::_ERAM16KSLOT0SUBSLOT0_SUBSET, MCHEmul::UByte::_0, RAM_SLOTS [0],
 			0x8000, MCHEmul::Address ({ 0x00, 0x80 }, false), 0x4000); // 16k 
 	ERAMB2_SLOT0SUBSLOT0 -> setName ("RAM Empty 16k, Slot 0, Subslot 0, Bank 2");
 	// The basic subset of 16k in the bank 3 of the slot 0
@@ -646,6 +646,104 @@ MCHEmul::Memory::Content MSX::PhilipsVG8010::memoryContent () const
 		(_RAM32KSLOT0SUBSLOT0_SUBSET, RAMB23_SLOT0SUBSLOT0));
 	// ...and also in the CPU View (that is the only one)...
 	CPUView -> addSubset (RAMB23_SLOT0SUBSLOT0);
+
+	return (result);
+}
+
+// ---
+MCHEmul::Attributes MSX::CanonV20::attributes () const
+{
+	MCHEmul::Attributes attrs 
+		({ 
+			{ "Manufacturer", "Canon" },
+			{ "Generation", "MSX1" },
+			{ "Visual System", (visualSystem () == MSX::MSXModel::VisualSystem::_PAL) ? "PAL" : "NTSC" },
+			{ "Clock Speed", std::to_string (clockSpeed ()) + " Hz" },
+			{ "Name", "MSX CanonV20" },
+			{ "Year", "1984" } });
+
+	return (attrs);
+}
+
+// ---
+bool MSX::CanonV20::loadROMOverForLanguage (MCHEmul::PhysicalStorage* fs,
+	const std::string& lang)
+{
+	bool result = true;
+
+	// Select the version of the ROM to load....
+	std::string ROMFILE = "./bios/canonV20_basic-bios_ENG.rom";
+
+	result &= fs -> loadInto (ROMFILE);
+
+	return (result);
+}
+
+// ---
+void MSX::CanonV20::configureMemory (MSX::Memory* m, unsigned int cfg)
+{
+	assert (m != nullptr);
+
+	// Disactive all elements, but maintain the standard ones...
+	m -> desactivateAllMemoryElements (true);
+	// ...and only the basic elements are connected...
+	m -> connectMemoryElements ({ 
+		MSX::Memory::_ROMBIOS_SUBSET, 
+		_RAM64KSLOT3SUBSLOT0_SUBSET });
+	// ...and also fix the stack subset...
+	m -> setStackSubset (_RAM64KSLOT3SUBSLOT0_SUBSET);
+}
+
+//  ---
+MCHEmul::Memory::Content MSX::CanonV20::memoryContent () const
+{
+	MCHEmul::Memory::Content result = std::move (MSX::MSXModel::memoryContent ());
+
+	// In this computer the1 16K RAM are replace by a 32K RAM in the slot 0, subslot 0, bank 2-3.
+
+	// Gets the CPU View...
+	MCHEmul::MemoryView* CPUView = 
+		(*result._views.find (MSX::Memory::_CPU_VIEW)).second;
+
+	// Modifications in the slot 0...
+	// Remove the default 16k RAM in the slot 0, subslot 0, bank 3...
+	// ...that is comming from the MSXModel::memoryContent ()...
+	result._subsets.erase (MSX::Memory::_RAM16KSLOT0SUBSLOT0_SUBSET);
+	CPUView -> removeSubSet (MSX::Memory::_RAM16KSLOT0SUBSLOT0_SUBSET);
+	// ...and creates a EMPTY (Last) RAM in the slot 0, subslot 0, bank 3 instead
+	MCHEmul::PhysicalStorage* rS0S0 = (*result._physicalStorages.find (MSX::Memory::_RAM_SET)).second;
+	MCHEmul::PhysicalStorageSubset* ERAMB3_SLOT0SUBSLOT0 = 
+		new MSX::EmptyPhysicalStorageLastBankSubset (_ERAM16KSLOT0SUBSLOT0_SUBSET, MCHEmul::UByte::_0, rS0S0,
+			0xc000, MCHEmul::Address ({ 0x00, 0xc0 }, false), 0x4000); // 16K
+	ERAMB3_SLOT0SUBSLOT0  -> setName ("RAM Empty 16k, Slot 0, Subslot 0, Bank 3");
+	// Add the new element to the subsets and to the CPU View...
+	result._subsets.insert (MCHEmul::PhysicalStorageSubsets::value_type 
+		(_ERAM16KSLOT0SUBSLOT0_SUBSET, ERAMB3_SLOT0SUBSLOT0));
+	CPUView -> addSubset (ERAMB3_SLOT0SUBSLOT0);
+
+	// Modifications in the slot 3...
+	// Removes the empty elements that ar comming in the slot 3...
+	// ...and also in the CPU View...
+	for (size_t i = 0; i < 4; i++)
+	{
+		result._subsets.erase
+			(MSX::Memory::_SLOT3SUBSLOT0BASE_SUBSET + i);
+		CPUView -> removeSubSet 
+			(MSX::Memory::_SLOT3SUBSLOT0BASE_SUBSET + i);
+	}
+
+	// Creates the 64K RAM in the slot 3, subslot 0, bank 0-1-2-3.
+	MCHEmul::PhysicalStorage* rS3S0 = (*result._physicalStorages.find (MSX::Memory::_RAM_SET + 3)).second;
+	MCHEmul::PhysicalStorageSubset* RAMB0123_SLOT3SUBSLOT0 = 
+		new MCHEmul::Stack (_RAM64KSLOT3SUBSLOT0_SUBSET, rS3S0,
+			0x0000, MCHEmul::Address ({ 0x00, 0x00 }, false), 0x10000,
+				MCHEmul::Stack::Configuration (true, false /** Pointing to the last written. */, 
+					false /** No overflow detection. */, -1)); // 64k
+	RAMB0123_SLOT3SUBSLOT0 -> setName ("RAM 64k, Slot 0, Subslot 0, Bank 0-1-2-3");
+	// That is added to the content, and to the CPU view...
+	result._subsets.insert (MCHEmul::PhysicalStorageSubsets::value_type 
+		(_RAM64KSLOT3SUBSLOT0_SUBSET, RAMB0123_SLOT3SUBSLOT0));
+	CPUView -> addSubset (RAMB0123_SLOT3SUBSLOT0);
 
 	return (result);
 }

@@ -212,7 +212,8 @@ bool MSX::Memory::createBanks ()
 	{
 		unsigned cnt = 0;
 		for (const auto& l : _memoryElements [i][j][k])
-			if (dynamic_cast <MCHEmul::EmptyPhysicalStorageSubset*> (l) != nullptr) cnt++;
+			if (dynamic_cast <MSX::EmptyPhysicalStorageSubset*> (l) != nullptr ||
+				dynamic_cast <MSX::EmptyPhysicalStorageLastBankSubset*> (l) != nullptr) cnt++;
 		result = (_memoryElements [i][j][k].size () == 1) ||
 				 (_memoryElements [i][j][k].size () == 2 && cnt == 1);
 	}

@@ -42,17 +42,19 @@ void ZXSPECTRUM::PortManager::setValue (unsigned short ab, unsigned char id, con
 // ---
 MCHEmul::UByte ZXSPECTRUM::PortManager::getValue (unsigned short ab, unsigned char id, bool ms) const
 {
-	// The bit 6 of the final result will be the value in the EAR socket...
-	/** The EAR signal can be used to identify which is the ZXSpectrum issue (1,2 or 3),
-		as it is described in: http://fizyka.umk.pl/~jacek/zx/faq/reference/48kreference.htm \n
-		However it is not important for an emulator, so the first signal the port will read will be always false, 
-		genarating a final result 0f 0xbf with no keys pressed. */
-	MCHEmul::UByte result = 0b10100000; // = 0xa0
+	MCHEmul::UByte result = MCHEmul::UByte::_0;
 
 	// Any port with A0 = 0 is ULA
 	// However, 0xfe is the ZXSpectrum common one, but many others will behave similar...
 	if ((id & 0b00000001) == 0b00000000)
 	{ 
+		// The bit 6 of the final result will be the value in the EAR socket...
+		/** The EAR signal can be used to identify which is the ZXSpectrum issue (1,2 or 3),
+			as it is described in: http://fizyka.umk.pl/~jacek/zx/faq/reference/48kreference.htm \n
+			However it is not important for an emulator, so the first signal the port will read will be always false, 
+			genarating a final result 0f 0xbf with no keys pressed. */
+		result = 0b10100000; // = 0xa0
+
 		MCHEmul::UByte pR = MCHEmul::UByte::_FF;
 		// What row to read is determined by the value of the register B...
 		MCHEmul::UByte bVal = (unsigned char) ((ab & 0xff00) >> 8);
@@ -65,6 +67,24 @@ MCHEmul::UByte ZXSPECTRUM::PortManager::getValue (unsigned short ab, unsigned ch
 		}
 
 		result |= pR & 0x1f; // but at the end only the lowest 5 bits are important!
+	}
+
+	// Any port with A5 = 0 is Kempston Joystick...
+	if ((id & 0b00100000) == 0b00000000)
+	{
+		result = MCHEmul::UByte::_0;
+
+		// Set the bits of the result...
+		result.setBit (0, _ULARegisters -> joystickStatus 
+			(ZXSPECTRUM::ULARegisters::JoystickElement::_RIGHT));
+		result.setBit (1, _ULARegisters -> joystickStatus 
+			(ZXSPECTRUM::ULARegisters::JoystickElement::_LEFT));
+		result.setBit (2, _ULARegisters -> joystickStatus 
+			(ZXSPECTRUM::ULARegisters::JoystickElement::_DOWN));
+		result.setBit (3, _ULARegisters -> joystickStatus 
+			(ZXSPECTRUM::ULARegisters::JoystickElement::_UP));
+		result.setBit (4, _ULARegisters -> joystickStatus 
+			(ZXSPECTRUM::ULARegisters::JoystickElement::_FIRE));
 	}
 
 	return (result);

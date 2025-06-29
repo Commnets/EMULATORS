@@ -321,6 +321,39 @@ namespace MSX
 		VisualSystem _visualSystem;
 	};
 
+	/** A model from Canon: CanonV20. */
+	class CanonV20 final : public MSX1Model
+	{
+		public:
+		static const int _ERAM16KSLOT0SUBSLOT0_SUBSET = 1103;	// Slot 0, Subslot 0, Bank 0. 16K Empty RAM...
+		static const int _RAM64KSLOT3SUBSLOT0_SUBSET = 1400;	// Slot 3, Subslot 0, Bank 0-1-2-3. 64K RAM configuration...
+
+		CanonV20 (VisualSystem vs)
+			: MSX1Model (),
+			  _visualSystem (vs)
+							{ }
+
+		virtual VisualSystem visualSystem () const override
+							{ return (_visualSystem); }
+
+		virtual std::string name () const override
+							{ return ("CanonV20"); }
+
+		virtual MCHEmul::Attributes attributes () const;
+
+		private:
+		// No need to create a memory structure different that the basic one!
+		virtual bool loadROMOverForLanguage (MCHEmul::PhysicalStorage* fs, 
+			const std::string& lang) override;
+		virtual void configureMemory (Memory* m, unsigned int cfg) override;
+
+		// This element has 32K RAM instead the 16K RAM standard in the model 1
+		virtual MCHEmul::Memory::Content memoryContent () const;
+
+		private:
+		VisualSystem _visualSystem;
+	};
+
 	/** The second generation of MSX standard. */
 	class MSX2Model : public MSXModel
 	{

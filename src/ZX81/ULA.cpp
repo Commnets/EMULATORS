@@ -245,26 +245,124 @@ MCHEmul::InfoStructure ZX81::ULA::getInfoStructure () const
 // ---
 void ZX81::ULA::processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifier* n)
 {
+	auto pressOrReleaseKey = [=](SDL_Scancode sc, bool pressed) -> void
+		{
+			const ZX81::InputOSSystem::Keystrokes& ks = 
+				((ZX81::InputOSSystem*) n) -> keystrokesFor (sc);
+			if (!ks.empty ()) // The key has to be defined...
+				for (const auto& j : ks)
+					_ULARegisters -> setKeyboardStatus (j.first, j.second, pressed);
+		};
+
 	switch (evnt.id ())
 	{
 		case MCHEmul::InputOSSystem::_KEYBOARDKEYPRESSED:
 			{
-				const ZX81::InputOSSystem::Keystrokes& ks = ((ZX81::InputOSSystem*) n) -> keystrokesFor
-					(std::static_pointer_cast <MCHEmul::InputOSSystem::KeyboardEvent> (evnt.data ()) -> _key);
-				if (!ks.empty ()) // The key has to be defined...
-					for (const auto& j : ks)
-						_ULARegisters -> setKeyboardStatus (j.first, j.second, true);
+				pressOrReleaseKey (std::static_pointer_cast <MCHEmul::InputOSSystem::KeyboardEvent> 
+					(evnt.data ()) -> _key, true);
 			}
 
 			break;
 
 		case MCHEmul::InputOSSystem::_KEYBOARDKEYRELEASED:
 			{
-				const ZX81::InputOSSystem::Keystrokes& ks = ((ZX81::InputOSSystem*) n) -> keystrokesFor
-				(std::static_pointer_cast <MCHEmul::InputOSSystem::KeyboardEvent> (evnt.data ()) -> _key);
-				if (!ks.empty ()) // The key has to be defined...
-					for (const auto& j : ks)
-						_ULARegisters -> setKeyboardStatus (j.first, j.second, false);
+				pressOrReleaseKey (std::static_pointer_cast <MCHEmul::InputOSSystem::KeyboardEvent> 
+					(evnt.data ()) -> _key, false);
+			}
+
+			break;
+
+		case MCHEmul::InputOSSystem::_JOYSTICKMOVED:
+			{
+				std::shared_ptr <MCHEmul::InputOSSystem::JoystickMovementEvent> jm = 
+					std::static_pointer_cast <MCHEmul::InputOSSystem::JoystickMovementEvent> (evnt.data ());
+				if ((jm -> _joystickId != 0 && jm -> _joystickId != 1) || jm -> _axisValues.size () > 2)
+					break; // Only joysticks 0 y 1 are allowed and never more than 2 axis each!
+
+				size_t ct = 0;
+				for (auto i : jm -> _axisValues)
+				{
+					if (ct == 0)
+					{
+						if (i > 0) 
+						{
+							// And simulates the key 8 pressed for the emulation of the joystick cursor type...
+							pressOrReleaseKey (SDL_SCANCODE_8, true);
+							// The opposite direction, which is the left and simulated with the key 5, 
+							// is not pressed but released...
+							pressOrReleaseKey (SDL_SCANCODE_5, false);
+						}
+						else 
+						if (i < 0) 
+						{
+							// And simulates the key 5 pressed for the emulation of the joystick cursor type...
+							pressOrReleaseKey (SDL_SCANCODE_5, true);
+							// The opposite direction, which is the right and simulated with the key 8, 
+							// is not pressed but released...
+							pressOrReleaseKey (SDL_SCANCODE_8, false);
+						}
+						else
+						{
+							// Stop!
+							pressOrReleaseKey (SDL_SCANCODE_8, false);
+							pressOrReleaseKey (SDL_SCANCODE_5, false);
+						}
+					}
+					else
+					{
+						if (i > 0)
+						{
+							// And simulates the key 6 pressed for the emulation of the joystick cursor type...
+							pressOrReleaseKey (SDL_SCANCODE_6, true);
+							// The opposite direction, which is the up and simulated with the key 7, 
+							// is not pressed but released...
+							pressOrReleaseKey (SDL_SCANCODE_7, false);
+						}
+						else 
+						if (i < 0)
+						{
+							// And simulates the key 7 pressed for the emulation of the joystick cursor type...
+							pressOrReleaseKey (SDL_SCANCODE_7, true);
+							// The opposite direction, which is the up and simulated with the key 6, 
+							// is not pressed but released...
+							pressOrReleaseKey (SDL_SCANCODE_6, false);
+						}
+						else
+						{
+							// Stop!
+							pressOrReleaseKey (SDL_SCANCODE_6, false);
+							pressOrReleaseKey (SDL_SCANCODE_7, false);
+						}
+					}
+
+					ct++;
+				}
+			}
+
+			break;
+
+		case MCHEmul::InputOSSystem::_JOYSTICKBUTTONPRESSED:
+			{
+				std::shared_ptr <MCHEmul::InputOSSystem::JoystickButtonEvent> jb = 
+					std::static_pointer_cast <MCHEmul::InputOSSystem::JoystickButtonEvent> (evnt.data ());
+				if (jb -> _joystickId != 0 && jb -> _joystickId != 1)
+					break; // Only joysticks 0 y 1 are allowed!
+
+				// And simulates the key 0 pressed for the emulation of the joystick cursor type...
+				pressOrReleaseKey (SDL_SCANCODE_0, true);
+			}
+
+			break;
+
+		case MCHEmul::InputOSSystem::_JOYSTICKBUTTONRELEASED:
+			{
+				std::shared_ptr <MCHEmul::InputOSSystem::JoystickButtonEvent> jb = 
+					std::static_pointer_cast <MCHEmul::InputOSSystem::JoystickButtonEvent> (evnt.data ());
+				if (jb -> _joystickId != 0 && jb -> _joystickId != 1)
+					break; // Only joysticks 0 y 1 are allowed!
+
+				// And simulates the key 0 released for the emulation of the joystick cursor type...
+				pressOrReleaseKey (SDL_SCANCODE_0, false);
 			}
 
 			break;

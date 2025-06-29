@@ -33,6 +33,8 @@ void MSX::MSXEmulator::printOutParameters (std::ostream& o) const
 		 "When Machine is PHILIPSVG8010:" << std::endl <<
 		 "ENG:\tEnglish" << std::endl <<
 		 "FRA:\tFrench" << std::endl <<
+		 "When Machine is CANONV20:" << std::endl <<
+		 "The language is standard and English" << std::endl <<
 		 "When Machine is SVI738:" << std::endl <<
 		 "ENG:\tEnglish" << std::endl <<
 		 "DEU:\tAleman" << std::endl <<
@@ -46,6 +48,7 @@ void MSX::MSXEmulator::printOutParameters (std::ostream& o) const
 		 "SVI728:\tMSX1 Spectravideo 728" << std::endl <<
 		 "SONYHB10P:\tMSX1 Sony HB10P" << std::endl <<
 		 "PHILIPSVG8010:\tMSX1 Philips VG8010" << std::endl <<
+		 "CANONV20:\tMSX1 Canon V20" << std::endl <<
 		 "SVI738:\tMSX2 Spectravideo 738" << std::endl;
 }
 
@@ -75,6 +78,8 @@ MSX::MSXModel* MSX::MSXEmulator::createModel () const
 		else if (mT == "SONYHB10P") result = new MSX::SonyHB10P (NTSCSystem ()
 			? MSX::MSXModel::VisualSystem::_NTSC : MSX::MSXModel::VisualSystem::_PAL);
 		else if (mT == "PHILIPSVG8010") result = new MSX::PhilipsVG8010 (NTSCSystem ()
+			? MSX::MSXModel::VisualSystem::_NTSC : MSX::MSXModel::VisualSystem::_PAL);
+		else if (mT == "CANONV20") result = new MSX::CanonV20 (NTSCSystem ()
 			? MSX::MSXModel::VisualSystem::_NTSC : MSX::MSXModel::VisualSystem::_PAL);
 		else if (mT == "SVI738") result = new MSX::SVI738 (NTSCSystem () 
 			? MSX::MSXModel::VisualSystem::_NTSC : MSX::MSXModel::VisualSystem::_PAL);

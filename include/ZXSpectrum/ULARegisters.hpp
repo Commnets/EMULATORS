@@ -26,6 +26,16 @@ namespace ZXSPECTRUM
 	class ULARegisters final : public MCHEmul::InfoClass
 	{
 		public:
+		/** To read the different element sof the Joystick. */
+		enum class JoystickElement : size_t
+		{
+			_RIGHT = 0, 
+			_LEFT = 1,
+			_DOWN = 2, 
+			_UP = 3, 
+			_FIRE = 4
+		};
+
 		ULARegisters ();
 
 		// The border color
@@ -67,6 +77,12 @@ namespace ZXSPECTRUM
 		void setKeyboardStatus (size_t r, size_t c, bool v)
 							{ _keyboardStatus [r].setBit (c, v); }
 
+		// Information about the situation of the joystick!
+		bool joystickStatus (JoystickElement jE) const
+							{ return (_joystickStatus [(size_t) jE]); }
+		void setJoystickStatus (JoystickElement jE, bool v)
+							{ _joystickStatus [(size_t) jE] = v; }
+
 		void initialize ();
 
 		/**
@@ -98,6 +114,13 @@ namespace ZXSPECTRUM
 		MCHEmul::OBool _EARSignalChanged;
 		/** Where the status of the keyboard matrix is kept. */
 		std::vector <MCHEmul::UByte> _keyboardStatus;
+		/** Where the status of the joystick is kept. 5 positions: \n
+			-> 0 = right position selected. \n
+			-> 1 = left position selected. \n
+			-> 2 = down position selected. \n
+			-> 3 = up position selected. \n
+			-> 4 = fire button pressed. */
+		std::vector <bool> _joystickStatus;
 	};
 
 	// ---

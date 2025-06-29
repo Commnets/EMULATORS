@@ -352,7 +352,8 @@ namespace MSX
 				{ i -> setActive (false); i -> setActiveForReading (false); }
 			if (std)
 			{
-				if (bank == 0 || bank == 1)	{ _ROM -> setActive (true); _ROM -> setActiveForReading (true); }
+				if (bank == 0 || bank == 1)	
+					{ _ROM -> setActive (true); _ROM -> setActiveForReading (true); }
 				// The RAM can cary...the onky fixed point is always the ROM...
 			}
 		}
@@ -361,7 +362,8 @@ namespace MSX
 			for (const auto& i : _memoryElements [slot][sslot][bank])
 			{ 
 				bool a = std && // Activate the basic element when it is selected!
-					(dynamic_cast <MCHEmul::EmptyPhysicalStorageSubset*> (i) != nullptr);
+					(dynamic_cast <MSX::EmptyPhysicalStorageSubset*> (i) != nullptr &&
+					 dynamic_cast <MSX::EmptyPhysicalStorageLastBankSubset*> (i) != nullptr);
 				
 				i -> setActive (a); 
 				i -> setActiveForReading (a);
