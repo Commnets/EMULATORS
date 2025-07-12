@@ -105,6 +105,11 @@ namespace ZX81
 		4.- BOTTOM Blank lines / App Code: \n
 		Same than above... \n
 		When finishes swiches back NMI = false and back to TOP. \n
+		\n
+		The ULA also read the events comming from the IO keyboard and joystick, 
+		and store the info uinto the ULARegister class for them to be managed from the PortManager. (@see class). \n
+		The joystick movements are also kept as keyboboard to emulate the CURSOR type of joystick. \n
+		The joystick type KEMPSTON is also emulated like press in the keyboard...
 	*/
 	class ULA : public MCHEmul::GraphicalChip
 	{

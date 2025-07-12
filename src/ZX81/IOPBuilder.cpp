@@ -23,8 +23,6 @@ MCHEmul::IOPeripheral* ZX81::IOPeripheralBuilder::createPeripheral
 			there must be an access to the datasette every 487 cpu cycles = (3,25MHz * 150us).
 			The speed is the same in PAL and in NTSC. */
 		result = new ZX81::Datasette (487);
-	else if (id == ZX81::DatasetteP::_ID)
-		result = new ZX81::DatasetteP (150);
 	else if (id == ZX81::DatasetteInjection::_ID)
 		result = new ZX81::DatasetteInjection (static_cast <ZX81::SinclairZX81*> (c) -> type ());
 	else

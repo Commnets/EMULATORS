@@ -25,6 +25,8 @@
 #include <ZXSpectrum/Screen.hpp>
 #include <ZXSpectrum/OSIO.hpp>
 #include <ZXSpectrum/ULA.hpp>
+#include <ZXSpectrum/ULARegisters.hpp>
+#include <ZXSpectrum/ULASoundWrapper.hpp>
 #include <ZXSpectrum/PortManager.hpp>
 #include <ZXSpectrum/ZXSpectrum.hpp>
 #include <ZXSpectrum/EdgeConnector.hpp>

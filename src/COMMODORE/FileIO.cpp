@@ -70,7 +70,6 @@ MCHEmul::FileData* COMMODORE::TAPFileTypeIO::readFile (const std::string& fN, bo
 	f.read (data, 4);
 	tap -> _dataSize = (unsigned int) (((unsigned char) data [3] << 24) + 
 		((unsigned char) data [2] << 16) + ((unsigned char) data [1] << 8) + ((unsigned char) data [0]));
-	f.read (data, (std::streamsize) tap -> _dataSize); 
 
 	// The data...
 	unsigned int dSize = tap -> _dataSize - 20;

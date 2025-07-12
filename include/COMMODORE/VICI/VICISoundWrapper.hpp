@@ -93,26 +93,6 @@ namespace COMMODORE
 								for (auto i : _waves) // Initialize only the counters of the waves...
 									i -> initializeInternalCounters (); }
 
-			/** To know the value of the oscilator behind.
-				It is used sometimes for complex effects. \n
-				It returns a number from 0 to 255 depending on the wave that is moving behind!. */
-			unsigned char wavesClockValue () const
-							{ return ((unsigned char) (waves ()[0] /** whatever. */ -> clockValue () * 255)); }
-			bool wavesClockRestarted () const
-							{ bool r = true; 
-							  for (auto i : waves ()) r &= i -> clockRestarted (); /** One will be enought, but just to set all rest to 0. */
-							  return (r); }
-			unsigned char oscillatorValue () const
-							{ return ((unsigned char) (wavesData () * 255)); }
-
-			/** To control the percentage of the pulse wave when active. */
-			double pulseUpPercentage () const
-							{ return (static_cast <MCHEmul::PulseSoundWave*> 
-								(waves ()[(size_t) MCHEmul::SoundWave::Type::_PULSE]) -> pulseUpPercentage ()); }
-			void setPulseUpPercentage (double pU)
-							{ static_cast <MCHEmul::PulseSoundWave*> 
-								(waves ()[(size_t) MCHEmul::SoundWave::Type::_PULSE]) -> setPulseUpPercentage (pU); }
-
 			/** To support the ring modulation. */
 			virtual double data () const override;
 
@@ -126,7 +106,7 @@ namespace COMMODORE
 			unsigned char _wavesActive;
 		};
 
-		/** The different voices used by SID. \n
+		/** The different voices used by VICI. \n
 			They will be three defined at construction time. */
 		MCHEmul::SoundVoices _voices;
 

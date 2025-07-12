@@ -11,7 +11,7 @@ MCHEmul::IOPeripheral* C64::IOPeripheralBuilder::createPeripheral
 
 	if (id == C64::Cartridge::_ID)
 		result = new C64::Cartridge;
-	else if (id == COMMODORE::Datasette1530P::_ID)
+	else if (id == COMMODORE::Datasette1530::_ID)
 		/** CN2 datasette keeps three types on short pulses in NTSC:
 			long pulses = 1488Hz (672us length),
 			medium pulses = 1953Hz (512us length),
@@ -19,7 +19,7 @@ MCHEmul::IOPeripheral* C64::IOPeripheralBuilder::createPeripheral
 			Following Fourier series theory, the sampling period must be half the shortest one,
 			or said in the other way around, the sampling frequency must be double that the hightest one = 5680Hz (176us). \n
 			Doing a similar calculus for PAL, the sampling frequency should be 5474Hz (182us). */
-		result = new COMMODORE::Datasette1530P 
+		result = new COMMODORE::Datasette1530 
 			(dynamic_cast <C64::Commodore64*> (c) -> visualSystem () == 
 				C64::Commodore64::VisualSystem::_PAL ? 182 : 176);
 	else if (id == COMMODORE::Datasette1530Injection::_ID)

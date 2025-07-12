@@ -25,7 +25,11 @@ namespace ZXSPECTRUM
 		In the PAL/NTSC mode, the horizontal raster takes 64us to go through a line, which is 448 7MH clock cycles. \n
 		In the PAL mode, the vertical raster go through 312 lines to produce images 50 per second, 
 		whilst in NTSC does 264 lines to produce images 60 per second. \n
-		The ULA generates the clock for the CPU reducing the speed half, so the CPU is loaded with a 3.5 MHz clock. */
+		The ULA generates the clock for the CPU reducing the speed half, so the CPU is loaded with a 3.5 MHz clock. \n
+		The simulation of ULA also receives the events comming the different IO elements like keyboard and joystick. \n
+		The events comming from the joystick are translated into actions and kept in the ULARegisters. \n
+		Those events are also translated into key presses to simulate the CURSOR type of joystick. \n
+		The class PortManager will see those events when the port 31 is scaneed, to simulate the KEMPSTON type of joystick. */
 	class ULA : public MCHEmul::GraphicalChip
 	{
 		public:

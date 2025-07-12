@@ -108,6 +108,9 @@
     <ClInclude Include="..\..\include\ZXSpectrum\Sound.hpp">
       <Filter>Archivos de encabezado\IO</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\include\ZXSpectrum\ULASoundWrapper.hpp">
+      <Filter>Archivos de encabezado\Motherboard\Chips</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\ZXSpectrum\Memory.cpp">
@@ -163,6 +166,9 @@
     </ClCompile>
     <ClCompile Include="..\..\src\ZXSpectrum\Sound.cpp">
       <Filter>Archivos de origen\IO</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\ZXSpectrum\ULASoundWrapper.cpp">
+      <Filter>Archivos de origen\Motherboard\Chips</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

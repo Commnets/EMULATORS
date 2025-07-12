@@ -727,9 +727,9 @@ MCHEmul::Memory::Content MSX::CanonV20::memoryContent () const
 	for (size_t i = 0; i < 4; i++)
 	{
 		result._subsets.erase
-			(MSX::Memory::_SLOT3SUBSLOT0BASE_SUBSET + i);
+			((int) (MSX::Memory::_SLOT3SUBSLOT0BASE_SUBSET + i));
 		CPUView -> removeSubSet 
-			(MSX::Memory::_SLOT3SUBSLOT0BASE_SUBSET + i);
+			((int) (MSX::Memory::_SLOT3SUBSLOT0BASE_SUBSET + i));
 	}
 
 	// Creates the 64K RAM in the slot 3, subslot 0, bank 0-1-2-3.

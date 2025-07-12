@@ -1,5 +1,6 @@
 #include <CORE/DatasettePort.hpp>
 #include <CORE/DatasettePeripherals.hpp>
+#include <CORE/CPU.hpp>
 
 // ---
 bool MCHEmul::DatasetteIOPort::connectPeripheral (MCHEmul::IOPeripheral* p)
@@ -37,6 +38,8 @@ bool MCHEmul::DatasetteIOPort::simulate (MCHEmul::CPU* cpu)
 			notify (MCHEmul::Event (_READ, _datasette -> read () ? 1 : 0)); 
 	}
 
+	_lastCPUCycles = cpu -> clockCycles ();
+
 	// The standard simulation is invoked to
 	// invoke the simulation methds for all devices connected...
 	return (MCHEmul::IODevice::simulate (cpu));
@@ -51,7 +54,7 @@ void MCHEmul::DatasetteIOPort::processEvent (const MCHEmul::Event& evnt, MCHEmul
 	if (evnt.id () == _WRITE)
 	{
 		if (_datasette != nullptr)
-			_datasette -> setWrite (evnt.value () == 1);
+			_datasette -> setWrite (evnt.value () == 1, _lastCPUCycles);
 	}
 	else
 	if (evnt.id () == _MOTORRUNNING || evnt.id () == _MOTORSTOPPED)

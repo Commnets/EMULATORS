@@ -3,21 +3,38 @@
 #include <F6500/incs.hpp>
 
 // ---
-COMMODORE::Datasette1530::Datasette1530 (unsigned int rS)
-	: MCHEmul::BasicDatasette (_ID, rS, true /** Motor controlled internaly. */,
-		{ { "Name", "Commodore 1530 (CN2)" },
+void COMMODORE::Datasette1530::TAPFileFormatImplementation::whenValueRead (const MCHEmul::UByte& v)
+{
+	_cyclesToRead = ((unsigned int) v.value ()) << 3;
+
+	// To start back to count!
+	resetClock ();
+}
+
+// ---
+COMMODORE::Datasette1530::Datasette1530 (unsigned int cR)
+	: MCHEmul::StandardDatasette (_ID, 
+		new COMMODORE::Datasette1530::TAPFileFormatImplementation (cR), true /** Motor controlled internaly. */,
+		{ { "Name", "Commodore 1530 Synchronous (CN2)" },
 		  { "Manufacturer", "Commodore Business Machines CBM" } })
 {
 	setClassName ("C2N1530");
 }
 
 // ---
-COMMODORE::Datasette1530P::Datasette1530P (unsigned int mS)
-	: MCHEmul::BasicDatasetteP (_ID, mS, true /** Motor controlled internally. */,
-		{ { "Name", "Commodore 1530 Parallel (CN2)" },
-		  { "Manufacturer", "Commodore Business Machines CBM" } })
+bool COMMODORE::Datasette1530::connectData (MCHEmul::FileData* dt)
 {
-	setClassName ("C2N1530");
+	// The parent class moves RAW type, 
+	// that is not going to be valid for this datasette...
+
+	if (dynamic_cast <COMMODORE::TAPFileData*> (dt) == nullptr)
+		return (false); // That type of info is not valid from the datasette...
+
+	_data = std::move (dt -> asMemoryBlocks ());
+	_dataCounter = 
+		(_data._data.empty () ? std::numeric_limits <size_t>::max () : 0 /** At the first element. */);
+	
+	return (true); 
 }
 
 // ---
@@ -44,7 +61,7 @@ MCHEmul::InfoStructure COMMODORE::Datasette1530Injection::Definition::getInfoStr
 // ---
 COMMODORE::Datasette1530Injection::Datasette1530Injection (const COMMODORE::Datasette1530Injection::Definition& def)
 	: MCHEmul::StandardDatasette (_ID,
-		new MCHEmul::StandardDatasette::IONilSimulation, new MCHEmul::StandardDatasette::IOEmptyEncoder, true,
+		new MCHEmul::StandardDatasette::NilImplementation, true,
 		{ { "Name", "Datasette Injection 1530 (CN2)" },
 		  { "Manufacturer", "ICF to inject the code directly into the memory" } }),
 	  _definition (def)

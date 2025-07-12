@@ -99,9 +99,8 @@ void MCHEmul::HelpCommand::executeImpl (MCHEmul::CommandExecuter* cE, MCHEmul::C
 
 	MCHEmul::InfoStructure iS;
 
-	auto helpInfoCommand = [&](const std::string& cmd, bool sp) -> void
+	auto helpInfoCommand = [&](const std::string& cmd) -> void
 		{
-			bool fL = true;
 			MCHEmul::HelpCommand::HelpInfo::const_iterator i;
 			auto eCmd = std::find_if (cmd.begin (), cmd.end (), std::isspace);
 			if ((i = _helpInfo.find (cmd)) != _helpInfo.end ())
@@ -109,18 +108,19 @@ void MCHEmul::HelpCommand::executeImpl (MCHEmul::CommandExecuter* cE, MCHEmul::C
 				std::string h = "";
 				for (size_t j = 0; j < (*i).second.size (); j++)
 					h += ((j == 0) ? '\0' : '\n') + (*i).second [j];
-				iS.add (((sp) ? "---\n" : "") + std::string ("->") + cmd, MCHEmul::removeAll0 (h));
+				// All commands start in the same way...
+				// ...so they are added into the InfoEstructure object in order!
+				iS.add (std::string ("---\n->") + cmd, MCHEmul::removeAll0 (h));
 			}
 		};
 
 	if (_parameters.size () == 0)
 	{
-		unsigned int ct = 0;
 		for (const auto& i : _helpInfo)
-			helpInfoCommand (i.first, (ct++ != 0) ? true : false);
+			helpInfoCommand (i.first);
 	}
 	else
-		helpInfoCommand (parameter ("00"), false);
+		helpInfoCommand (parameter ("00"));
 
 	rst.add ("HELP", std::move (iS));
 }

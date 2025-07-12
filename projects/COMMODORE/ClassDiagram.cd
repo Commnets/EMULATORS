@@ -1,13 +1,13 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <ClassDiagram MajorVersion="1" MinorVersion="1">
-  <Class Name="COMMODORE::Datasette1530" Collapsed="true">
+  <Class Name="COMMODORE::Datasette1530IOSynchronous" Collapsed="true">
     <Position X="21.5" Y="1.5" Width="1.5" />
     <TypeIdentifier>
       <HashCode>AAAAAAAAAAAAAAAAAAAAIAAAAAAAAAAAAAAAAAAEAAA=</HashCode>
       <FileName>C:\Workspaces\EMULATORS\include\COMMODORE\1530Datasette.hpp</FileName>
     </TypeIdentifier>
   </Class>
-  <Class Name="COMMODORE::Datasette1530P" Collapsed="true">
+  <Class Name="COMMODORE::Datasette1530IOASynchronous" Collapsed="true">
     <Position X="12.75" Y="2.5" Width="1.5" />
     <TypeIdentifier>
       <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAAAAAEAAA=</HashCode>

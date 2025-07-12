@@ -222,9 +222,13 @@ bool ZX81::Memory::initialize ()
 	if (!result)
 		return (false);
 
-	// The memory RAM is fill up to 0x07! (learnt from other emulators)
-	_RAM1K		-> fillWith (MCHEmul::UByte (0x07));
-	_RAM16K_CS1 -> fillWith (MCHEmul::UByte (0x07));
+	// Initialize the RAM with random values...
+	// ...as it is described mainñy in  the ZXSpectrum documentation...
+	// The ROM is not affected at all!
+	for (size_t i = 0; i < _RAM1K -> size (); i++)
+		_RAM1K -> set (_RAM1K -> initialAddress () + i, std::rand () % 256);
+	for (size_t i = 0; i < _RAM16K_CS1 -> size (); i++)
+		_RAM16K_CS1 -> set (_RAM16K_CS1 -> initialAddress () + i, std::rand () % 256);
 
 	// The active view has to be initially the CPU view...
 	setCPUView ();

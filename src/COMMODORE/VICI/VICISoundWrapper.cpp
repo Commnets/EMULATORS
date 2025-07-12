@@ -217,16 +217,12 @@ double COMMODORE::VICISoundSimpleLibWrapper::Voice::data () const
 { 
 	// When the wave is active or is in test active and the selected wave is a pulse...
 	// ...the sound has to be produced
-	if (!(active () || 
-		 (!active () && _wavesActive == 0x40 /** pulse. */)))
+	if (!active ())
 		return (0.0f);
 
 	double result = 0.0f;
 
-	// The way the different waves is merged in the SID
-	// is not the standard way of just adding the values...
-	// ...because the way they are played are not the same...
-	// ..and definetively is not adding data!
+	// There could be two types of waves in the VICI only: pulse and noise.
 	switch (_wavesActive)
 	{
 		// pulse

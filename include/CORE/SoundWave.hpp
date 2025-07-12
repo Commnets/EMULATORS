@@ -31,7 +31,8 @@ namespace MCHEmul
 			_SAWTOOTH = 1,
 			_PULSE = 2,
 			_SQUARE = 3, // Pulse with a 50% duty cycle
-			_NOISE = 4
+			_NOISE = 4,
+			_PLAIN = 5 // Just a constant sound, no wave!
 		};
 
 		/**
@@ -235,6 +236,25 @@ namespace MCHEmul
 						{ }
 
 		virtual double data () const override;
+	};
+
+	/** This is not a wave in the pure sense, just a constant sound.
+		It could be used, when the sound is regulated by software alternating on/off situations. */
+	class PlainSoundWave final : public SoundWave
+	{
+		public:
+		/** The frequency here is not really neede. */
+		PlainSoundWave ()
+			: SoundWave (Type::_PLAIN, 0)
+						{ }
+
+		/** Here the clock is mot needed really, do does nothing. */
+		virtual void clock (unsigned int nC = 1) override
+							{ /** Does nothing. */ }
+
+		/** The data is always 1.0f (when active), because it is a constant sound. */
+		virtual double data () const override
+							{ return (active () ? 1.0f : 0.0f); }
 	};
 }
 

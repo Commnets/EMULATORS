@@ -21,14 +21,14 @@
       <FileName>C:\Workspaces\EMULATORS\include\CORE\DatasettePeripherals.hpp</FileName>
     </TypeIdentifier>
   </Class>
-  <Class Name="MCHEmul::BasicDatasette" Collapsed="true">
+  <Class Name="MCHEmul::BasicDatasetteIOSynchronous" Collapsed="true">
     <Position X="40.5" Y="9.25" Width="1.5" />
     <TypeIdentifier>
       <HashCode>AAAAAgAAAABAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAA=</HashCode>
       <FileName>C:\Workspaces\EMULATORS\include\CORE\DatasettePeripherals.hpp</FileName>
     </TypeIdentifier>
   </Class>
-  <Class Name="MCHEmul::BasicDatasetteP" Collapsed="true">
+  <Class Name="MCHEmul::BasicDatasetteIOASynchronous" Collapsed="true">
     <Position X="42.75" Y="9.25" Width="1.5" />
     <TypeIdentifier>
       <HashCode>AAAAAxAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>

@@ -66,7 +66,7 @@ bool COMMODORE::SID::simulate (MCHEmul::CPU* cpu)
 			{
 				for (size_t j = 0; j < data.size (); j++)
 				{
-					char dt = data [j].value ();
+					char dt = (char) data [j].value ();
 					if (soundMemory () -> addSampleData (&dt, sizeof (char)))
 						notify (MCHEmul::Event (_SOUNDREADY));
 				}

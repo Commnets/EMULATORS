@@ -115,136 +115,19 @@ MCHEmul::InfoStructure MCHEmul::DatasettePeripheral::getInfoStructure () const
 }
 
 // ---
-MCHEmul::InfoStructure MCHEmul::StandardDatasette::IOSimulation::getInfoStructure () const
-{
-	MCHEmul::InfoStructure result = std::move (MCHEmul::InfoClass::getInfoStructure ());
-
-	result.add ("IOCOMMANDS", MCHEmul::concatenateStrings (commandDescriptions (), ", "));
-
-	return (result);
-}
-
-// ---
-void MCHEmul::StandardDatasette::IOSynchronous::initialize ()
-{
-	_firstCycleSimulation = true;
-
-	_lastCPUCycles = _clockCycles = 0; 
-}
-
-// ---
-bool MCHEmul::StandardDatasette::IOSynchronous::io (MCHEmul::StandardDatasette& dS, MCHEmul::CPU* cpu)
-{
-	if (_firstCycleSimulation)
-	{
-		_firstCycleSimulation = false;
-
-		_lastCPUCycles = cpu -> clockCycles () - cpu -> lastCPUClockCycles ();
-	}
-
-	for (unsigned int i = (cpu -> clockCycles  () - _lastCPUCycles); 
-		i > 0; i--)
-	{
-		if (++_clockCycles <= _runningSpeed)
-			continue; // Not the time...
-	
-		// Start back...
-		_clockCycles = 0; 
-
-		dS.io ();
-	}
-
-	_lastCPUCycles = cpu -> clockCycles ();
-
-	return (true);
-}
-
-// ---
-bool MCHEmul::StandardDatasette::IOSynchronous::executeCommand
-	(int id, const MCHEmul::Strings& prms)
-{
-	if (id == _KEYIOBASE)
-		setRunningSpeed (std::atoi (prms [0].c_str ()));
-
-	return (true);
-}
-
-// ---
-MCHEmul::InfoStructure MCHEmul::StandardDatasette::IOSynchronous::getInfoStructure () const
-{
-	MCHEmul::InfoStructure result = 
-		std::move (MCHEmul::StandardDatasette::IOSimulation::getInfoStructure ());
-
-	result.add ("SPEED", _runningSpeed);
-
-	return (result);
-}
-
-// ---
-bool MCHEmul::StandardDatasette::IOASynchronous::io (MCHEmul::StandardDatasette& dS, MCHEmul::CPU* cpu)
-{
-	if (_process != nullptr)
-		return (true);
-
-	// If there was no process already running, 
-	// creates and on and start the simulation in paralell...
-	_thread = std::thread (&MCHEmul::StandardDatasette::IOASynchronous::Process::run, 
-		_process = new MCHEmul::StandardDatasette::IOASynchronous::Process (dS, _motorSpeed));
-	// The process continues because the thread variable is persistent!
-
-	return (true);
-}
-
-// ---
-void MCHEmul::StandardDatasette::IOASynchronous::stop ()
-{
-	if (_process != nullptr)
-	{
-		_process -> finish (); // The process finishes...
-		
-		_thread.join (); // The current thread (main), waits for the operation really finishes...
-		
-		delete (_process); // Now is safe to delete the process...
-		
-		_process = nullptr; // ...and prepare the system for the next!
-	}
-}
-
-// ---
-bool MCHEmul::StandardDatasette::IOASynchronous::executeCommand
-	(int id, const MCHEmul::Strings& prms)
-{
-	if (id == _KEYIOBASE)
-		setMotorSpeed (std::atoi (prms [0].c_str ()));
-
-	return (true);
-}
-
-// ---
-MCHEmul::InfoStructure MCHEmul::StandardDatasette::IOASynchronous::getInfoStructure () const
-{
-	MCHEmul::InfoStructure result = 
-		std::move (MCHEmul::StandardDatasette::IOSimulation::getInfoStructure ());
-
-	result.add ("SPEED", _motorSpeed);
-
-	return (result);
-}
-
-// ---
 MCHEmul::StandardDatasette::StandardDatasette 
-		(int id, MCHEmul::StandardDatasette::IOSimulation* s, 
-		 MCHEmul::StandardDatasette::IOEncoderDecoder* e, bool mI, const MCHEmul::Attributes& attrs)
+		(int id, MCHEmul::StandardDatasette::Implementation* i, 
+		 bool mI, const MCHEmul::Attributes& attrs)
 	: MCHEmul::DatasettePeripheral (id, attrs),
-	  _ioSimulation (s),
-	  _ioEncoderDecoder (e),
+	  _implementation (i),
 	  _motorControlledInternally (mI),
 	  _status (Status::_STOPPED),
 	  _dataCounter (std::numeric_limits <size_t>::max ()), 
-	  _elementCounter (0)
+	  _elementCounter (0),
+	  _lastCPUCycles (0),
+	  _firstTimeReading (false)
 {
-	assert (_ioSimulation != nullptr && 
-			_ioEncoderDecoder != nullptr);
+	assert (_implementation != nullptr);
 
 	setClassName ("StdDatasette");
 }
@@ -252,9 +135,7 @@ MCHEmul::StandardDatasette::StandardDatasette
 // ---
 MCHEmul::StandardDatasette::~StandardDatasette ()
 {
-	delete (_ioSimulation);
-
-	delete (_ioEncoderDecoder);
+	delete (_implementation);
 }
 
 // ---
@@ -264,8 +145,10 @@ bool MCHEmul::StandardDatasette::initialize ()
 
 	_dataCounter = (std::numeric_limits <size_t>::max ()); // No data loaded at the beginning (@see parent class method)
 	_elementCounter = 0;
+	_lastCPUCycles = 0;
+	_firstTimeReading = false;
 
-	_ioSimulation -> initialize ();
+	_implementation -> initialize ();
 
 	return (MCHEmul::DatasettePeripheral::initialize ());
 }
@@ -286,6 +169,7 @@ bool MCHEmul::StandardDatasette::executeCommand (int id, const MCHEmul::Strings&
 					!_data._data.empty ()) // There must be data inside...
 				{
 					// ...move the pointer to the next element in the list...
+					// It can pointer to the one "after" the last!
 					if (++_dataCounter > _data._data.size ())
 						_dataCounter = 0; // ...or to the first one if there is none else to point to...
 
@@ -305,8 +189,9 @@ bool MCHEmul::StandardDatasette::executeCommand (int id, const MCHEmul::Strings&
 					!_data._data.empty ())
 				{
 					// ...move the pointer to the previous element in the list...
+					// It can pointer to the one after the last too!
 					if (--_dataCounter > _data._data.size ()) // it is an unsigned short...
-						_dataCounter = _data._data.size (); //...or to after the last one if there is none else to point to...
+						_dataCounter = (_data._data.size () - 1); //...or to after the last one if there is none else to point to...
 
 					setNoKeyPressed (true);
 				}
@@ -338,7 +223,9 @@ bool MCHEmul::StandardDatasette::executeCommand (int id, const MCHEmul::Strings&
 
 					_status = Status::_READING;
 
-					_ioSimulation -> initialize ();
+					_implementation -> initialize ();
+
+					_firstTimeReading = true;
 
 					// If there is no any further internal signal expected to start...
 					if (!_motorControlledInternally)
@@ -346,6 +233,9 @@ bool MCHEmul::StandardDatasette::executeCommand (int id, const MCHEmul::Strings&
 
 					setNoKeyPressed (false);
 				}
+
+				// Notice that, if the pointer is set after the last one,
+				// the reading operation won't work at all!
 			}
 
 			break;
@@ -372,7 +262,7 @@ bool MCHEmul::StandardDatasette::executeCommand (int id, const MCHEmul::Strings&
 					// There shouldn't be here anything, but just in case!
 					_data._data [_dataCounter].clear ();
 
-					_ioSimulation -> initialize ();
+					_implementation -> initialize ();
 
 					// If there is no any further internal signal expected to start...
 					if (!_motorControlledInternally)
@@ -409,30 +299,97 @@ bool MCHEmul::StandardDatasette::executeCommand (int id, const MCHEmul::Strings&
 			break;
 	}
 
-	// The simulation can also been affected!
-	_ioSimulation -> executeCommand (id, prms);
-
 	return (result);
 }
 
 // ---
 bool MCHEmul::StandardDatasette::simulate (MCHEmul::CPU* cpu)
 {
-	if (motorOff ())
+	// First time?
+	if (_lastCPUCycles == 0)
 	{ 
-		_ioSimulation -> stop ();
+		_lastCPUCycles = cpu -> clockCycles (); // Nothing to do...
 
 		return (true);
 	}
 
-	bool result = true;
-	if (_status == Status::_READING ||
-		_status == Status::_SAVING)
-		result = _ioSimulation -> io (*this, cpu);
-	else
-		_ioSimulation -> stop ();
+	// If the motor doesn't run, nothing to do...
+	if (motorOff ())
+	{
+		_lastCPUCycles = cpu -> clockCycles ();
 
-	additionalSimulateActions (cpu);
+		return (true);
+	}
+
+	bool result = true; // Can be changed when reading...
+	for (unsigned int i = 0; 
+		 i < (cpu -> clockCycles () - _lastCPUCycles) && result; i++)
+	{
+		_implementation -> clock ();
+
+		switch (_status)
+		{
+			case Status::_STOPPED:
+				// Nothing else to do...
+				break;
+
+			// The Datasette is reading...
+			case Status::_READING:
+				{
+					bool rV = false;
+					if (_firstTimeReading) // Becomes false once it is used!
+						rV = true;
+					else
+					{
+						// If it was time to read, the value read will be in v...
+						// This value can be either 0 or 1, and it will depend on the implementation!
+						bool v = false;
+						if (_implementation -> timeToReadValue (v))
+						{
+							// Set the value read...
+							// The IODevice simulation will use it to sent an event...
+							// The way that event is managed will depend on the computer/element connected...
+							setRead (v);
+							// Reads a new value...
+							rV = true;
+						}
+					}
+
+					// Reads a new value?
+					if (rV)
+					{
+						// Read the next value from the data file...
+						MCHEmul::UByte nVR = readFromData (result);
+						// if there was no erro, the implementation adapts!
+						if (result)
+							_implementation -> whenValueRead (nVR);
+					}
+				}
+
+				break;
+
+			// The datasette is saving...
+			case Status::_SAVING:
+				{
+					if (_writeChangeValueRequest.peekValue () &&
+						((_lastCPUCycles + i) > _clockCyclesWhenWriteAction))
+					{
+						// The value has been used...
+						_writeChangeValueRequest = false;
+						// The implementaion determines what to do whit the value...
+						storeInData (_implementation -> valueToSaveForBit (_valueToWrite));
+						// After the action, the implementation is reseted...
+						_implementation -> resetClock ();
+					}
+				}
+
+				break;
+		}
+
+		additionalSimulateActions (cpu, _lastCPUCycles + i);
+	}
+
+	_lastCPUCycles = cpu -> clockCycles ();
 
 	return (result);
 }
@@ -455,8 +412,6 @@ MCHEmul::InfoStructure MCHEmul::StandardDatasette::getInfoStructure () const
 {
 	MCHEmul::InfoStructure result = std::move (MCHEmul::DatasettePeripheral::getInfoStructure ());
 
-	result.add ("IOEMULATION", // All attributes together...
-		std::move (_ioSimulation -> getInfoStructure ().asString ()));
 	result.add ("DATACOUNTER", _dataCounter);
 
 	return (result);

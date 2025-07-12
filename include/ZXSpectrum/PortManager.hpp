@@ -22,7 +22,9 @@ namespace ZXSPECTRUM
 	class ULARegisters;
 	class ULA;
 
-	/** Generic Port to manage all... */
+	/** Generic Port to manage all. \n
+		It manages mainly the port 254 (and similars) that takes care of the keyboard presses and
+		also the port 31 that takes care of the simulation of the KEMPSTON joystick. */
 	class PortManager final : public FZ80::Z80Port
 	{
 		public:

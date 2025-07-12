@@ -46,7 +46,7 @@ MCHEmul::UByte ZXSPECTRUM::PortManager::getValue (unsigned short ab, unsigned ch
 
 	// Any port with A0 = 0 is ULA
 	// However, 0xfe is the ZXSpectrum common one, but many others will behave similar...
-	if ((id & 0b00000001) == 0b00000000)
+	if ((id & 0b00000001) == 0b00000000) // The post 254 is the typical one...
 	{ 
 		// The bit 6 of the final result will be the value in the EAR socket...
 		/** The EAR signal can be used to identify which is the ZXSpectrum issue (1,2 or 3),
@@ -69,8 +69,8 @@ MCHEmul::UByte ZXSPECTRUM::PortManager::getValue (unsigned short ab, unsigned ch
 		result |= pR & 0x1f; // but at the end only the lowest 5 bits are important!
 	}
 
-	// Any port with A5 = 0 is Kempston Joystick...
-	if ((id & 0b00100000) == 0b00000000)
+	// Any port with A5 = 0 and A0 = 1 is Kempston Joystick...
+	if ((id & 0b00100001) == 0b00000001) // the port 31 is the typical one...
 	{
 		result = MCHEmul::UByte::_0;
 
@@ -85,6 +85,8 @@ MCHEmul::UByte ZXSPECTRUM::PortManager::getValue (unsigned short ab, unsigned ch
 			(ZXSPECTRUM::ULARegisters::JoystickElement::_UP));
 		result.setBit (4, _ULARegisters -> joystickStatus 
 			(ZXSPECTRUM::ULARegisters::JoystickElement::_FIRE));
+
+		// The bits 5 - 7 are not used...
 	}
 
 	return (result);

@@ -42,7 +42,7 @@ namespace ZX81
 	  *		NMIs (Non maskable interrupts) are used during SLOW mode vertical blanking
 	  *		periods to count the number of drawn blank scanlines. \n
 	  *		Put the casette signal up. \n
-	  *		Restart the LINECNTR. \n
+	  *		Restart the LINECNTR.
 	  */
 	class PortManager final : public FZ80::Z80Port
 	{

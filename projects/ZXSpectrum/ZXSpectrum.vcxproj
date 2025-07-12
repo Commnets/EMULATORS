@@ -37,6 +37,7 @@
     <ClInclude Include="..\..\include\ZXSpectrum\Type.hpp" />
     <ClInclude Include="..\..\include\ZXSpectrum\ULA.hpp" />
     <ClInclude Include="..\..\include\ZXSpectrum\ULARegisters.hpp" />
+    <ClInclude Include="..\..\include\ZXSpectrum\ULASoundWrapper.hpp" />
     <ClInclude Include="..\..\include\ZXSpectrum\ZXSpectrum.hpp" />
     <ClInclude Include="..\..\include\ZXSpectrum\ZXSpectrumEmulator.hpp" />
   </ItemGroup>
@@ -57,6 +58,7 @@
     <ClCompile Include="..\..\src\ZXSpectrum\Sound.cpp" />
     <ClCompile Include="..\..\src\ZXSpectrum\ULA.cpp" />
     <ClCompile Include="..\..\src\ZXSpectrum\ULARegisters.cpp" />
+    <ClCompile Include="..\..\src\ZXSpectrum\ULASoundWrapper.cpp" />
     <ClCompile Include="..\..\src\ZXSpectrum\ZXSpectrum.cpp" />
     <ClCompile Include="..\..\src\ZXSpectrum\ZXSpectrumEmulator.cpp" />
   </ItemGroup>

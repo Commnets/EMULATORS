@@ -8,7 +8,6 @@ C64::CIA1::CIA1 ()
 	: CIA (_ID, CIA1Registers::_CIA1_SUBSET, F6500::IRQInterrupt::_ID),
 	  _CIA1Registers (nullptr),
 	  _sid (nullptr),
-	  _lastDatasetteRead (0),
 	  _lastKeyPressed (""), _lastKeyReleased ("")
 { 
 	setClassName ("CIA1"); 
@@ -28,8 +27,6 @@ bool C64::CIA1::initialize ()
 
 		return (false);
 	}
-
-	_lastDatasetteRead = 0;
 
 	return (COMMODORE::CIA::initialize ());
 }
@@ -144,15 +141,12 @@ void C64::CIA1::processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifier* n)
 
 			break;
 
+		// A change in the datsette port has been detected...
+		// Notice that the value of the event is not taken into account
+		// because just the change in the signal is detected!
 		case C64::DatasetteIOPort::_READ:
-			// When this signal is received from the casette...
-			// It is needed to check whether the signal moves from 1 to 0...
-			// ...and in this case a interrupt is flagged!
-			if (_lastDatasetteRead == 1 && evnt.value () == 0)
 			{
 				_CIA1Registers -> setFlagLineInterruptRequested (true);
-
-				_lastDatasetteRead = 0;
 			}
 
 			break;

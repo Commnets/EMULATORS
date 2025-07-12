@@ -26,7 +26,7 @@ ZXSPECTRUM::ULA::SoundFunction::SoundFunction (unsigned int cF, unsigned int sF)
 	  _chipFrequency (cF), _samplingFrequency (sF),
 	  _ULARegisters (nullptr), // Assigned later when ULA ins set up!
 	  _lastCPUCycles (0),
-	  _clocksPerSample ((unsigned int) (((double) cF * 0.8f) / (double) (sF))),
+	  _clocksPerSample ((unsigned int) (((double) cF * 1.0f) / (double) (sF))),
 	  _counterClocksPerSample (0)
 {
 	setClassName ("SoundFunction");
@@ -59,14 +59,14 @@ bool ZXSPECTRUM::ULA::SoundFunction::simulate (MCHEmul::CPU* cpu)
 
 	// The sound function has to be simulated in every clock cycle...
 	// But as it is a function of the ULA, the speed hpuld be then double!
-	for (unsigned int i = ((cpu -> clockCycles  () - _lastCPUCycles) << 1); i > 0; i--)
+	for (unsigned int i = (cpu -> clockCycles  () - _lastCPUCycles); i > 0; i--)
 	{
 		_IFDEBUG debugULASoundCycle (cpu, i);
 
 		if (++_counterClocksPerSample >= _clocksPerSample)
 		{
 			_counterClocksPerSample = 0;
-			char dt = (_ULARegisters -> EARSignal ()) ? 100 : 0; // Full sound or not...
+			char dt = (_ULARegisters -> EARSignal ()) ? (char) 100 /** The max volumen. */ : (char) 0; // Full sound or not...
 			if (soundMemory () -> addSampleData (&dt, sizeof (char)))
 				MCHEmul::SoundChip::notify (MCHEmul::Event (_SOUNDREADY)); // When buffer is full, notify!
 		}
@@ -112,7 +112,7 @@ ZXSPECTRUM::ULA::ULA (const MCHEmul::RasterData& vd, const MCHEmul::RasterData& 
 		  { "Code", "5C102E, 5C112E, 5C112E-2, 5C112E-3, 6C001E-5, 6C001E-6, 6C001E-7, 7K010E-5 ULA / Amstrad 40056, +2A/+3 Gate Array" },
 		  { "Manufacturer", "Ferranti" },
 		  { "Year", "1982-1985" } }),
-	  _soundFunction (new ZXSPECTRUM::ULA::SoundFunction (cF, _SOUNDSAMPLINGCLOCK)),
+	  _soundFunction (new ZXSPECTRUM::ULA::SoundFunction (cF, (_SOUNDSAMPLINGCLOCK << 1))),
 	  _ULARegisters (new ZXSPECTRUM::ULARegisters),
 	  _ULAView (vV),
 	  _raster (vd, hd, 1 /** The step is 1 pixel. */),

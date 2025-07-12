@@ -20,39 +20,64 @@ namespace COMMODORE
 {
 	/** This unit was used in many COMMODORE models. \n
 		Mainly all of them except COMMODORE16. \n
-		The datasette moves between 300 and 311 bits per second, 
+		The datasette moves between 300 and 311 bits per second in average, 
 		depending on the speed of the computer connected. \n
-		Every bit is broken in 4 cycles of information. \n
-		Every two cycles makes a dipole, so a bit is always make up of 2 dipoles. \n
-		A leader bit is made up of 4 0 cyles. \n
-		A 0 bit is made up of 2 (1st dipole) 0 cycles and 2 (2nd dipole) 1 cycles. \n
-		A 1 bit is made up of 2 (1st dipole) 1 cycles and 2 (2nd dipole) 0 cycles. \n
-		A work market bit is make up of a word marker dipole and and one dipole 1. \n
+		Every bit is broken in 4 datasette cycles (DCycle) of information. \n
+		Every two datasette cycles makes a "dipole", so a bit is always make up of 2 "dipoles". \n
+		A leader bit is made up of 4 0 type DCycles = 16 DCycles \n
+		A 0 bit is made up of 2 (1st dipole) 0 DCycles and 2 (2nd dipole) 1 DCycles. \n
+		A 1 bit is made up of 2 (1st dipole) 1 DCycles and 2 (2nd dipole) 0 DCycles. \n
+		A work marker bit is make up of a word marker dipole and and one dipole 1. \n
 		Every cycle lasts different depending whether it represents a leader bit (174 us), 
 		a 0 data bit (169 us), a 1 data bit (247 us) or a word market bit (332 us).
 		https://archive.org/details/COMPUTEs_VIC-20_and_Commodore_64_Tool_Kit_Kernal_1985_COMPUTE_Publications_a (page 275).
-		However the one managing that stuff is the ROM emulation, the duty of this class is to have the right 
-		speed of the motor at construction time.
+		The way 0 and 1 are kept in the datasette is changing the frequency of the signal stored.
+		It means changinf the time the CPU takes before storing the next piece of info!
 		*/
-	class Datasette1530 : public MCHEmul::BasicDatasette
+	class Datasette1530 : public MCHEmul::StandardDatasette
 	{
 		public:
+		/** The implementation (@see TAPFileData class). 
+			The paremeter received is the number of cycles before the system is ready for the next read activity. \n
+			And that number of cycles are used (comparing to the current cycles in the methods redefined. */
+		class TAPFileFormatImplementation final : 
+			public MCHEmul::StandardDatasette::Implementation
+		{
+			public:
+			TAPFileFormatImplementation (unsigned int cR)
+				: MCHEmul::StandardDatasette::Implementation (),
+				  _cyclesToRead (cR)
+							{ }
+
+			/** v is set to 1, when the time to read is true,
+				pointing out that a falling edge has been detected. */
+			virtual bool timeToReadValue (bool &v) const override
+							{ return (v = (clockValue () >= _cyclesToRead)); }
+			/** The value read from the file is translated into number of cycles until the next 
+				falling edge comes, that is the signal sent to the computer. */
+			virtual void whenValueRead (const MCHEmul::UByte& v) override;
+
+			/** The value sent to the file is always related with the number of cycles
+				since this method was invoked last time. */
+			virtual MCHEmul::UByte valueToSaveForBit (bool v) const override
+							{ return (clockValue () >> 3); }
+
+			private:
+			/** The number of cycles that the datasxette need to read a value. \n
+				In the TAP file data every data byte represents (with a formula) 
+				the number of cycles to wait until the next down edged of every signal that is 
+				exactly when a "1" is sent to the computer. */
+			unsigned int _cyclesToRead;
+		};
+
 		static const int _ID = 100;
 
-		/** The running speed is still a parameter. */
-		Datasette1530 (unsigned int rS);
-	};
+		/** The number of cycles to next read operation is received as paraneter. \n
+			Usually that number of seconds is not constant but changed as the simulation progreeses. */
+		Datasette1530 (unsigned int cR);
 
-	/** This is identical to the previous one, 
-		but with the motor running in parallel. The internal name of the lass is the same. */
-	class Datasette1530P final : public MCHEmul::BasicDatasetteP
-	{
-		public:
-		static const int _ID = 1000;
-
-		/** The "speed of the motor" is still a parameter. 
-			It is really the time in millisecond between two io actions in the datasette. */
-		Datasette1530P (unsigned int mS);
+		/** To connect the type of data TAP. */
+		virtual bool connectData (MCHEmul::FileData* dt) override;
 	};
 
 	/** This unit is just to jump over the routines aimed for this task in the kernel. 

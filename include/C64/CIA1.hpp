@@ -73,7 +73,6 @@ namespace C64
 		COMMODORE::SID* _sid;
 
 		// Implementation
-		unsigned int _lastDatasetteRead;
 		/** The last key pressed/released. \n
 			used when debugging. */
 		std::string _lastKeyPressed, _lastKeyReleased;

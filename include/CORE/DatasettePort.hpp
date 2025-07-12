@@ -41,7 +41,8 @@ namespace MCHEmul
 
 		DatasetteIOPort (int id, const Attributes& attrs = { })
 			: IODevice (IODevice::Type::_INPUTOUTPUT, id, attrs),
-			  _datasette (nullptr)
+			  _datasette (nullptr),
+			  _lastCPUCycles (0)
 							{ }
 
 		/** To get the casette connect if any. */
@@ -60,6 +61,9 @@ namespace MCHEmul
 		protected:
 		/** The casette connected. */
 		DatasettePeripheral* _datasette;
+		// Implementation
+		/** The CPU cycles when the simulate method was invoked the last time. */
+		unsigned int _lastCPUCycles;
 	};
 }
 

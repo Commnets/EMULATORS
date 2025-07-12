@@ -4,9 +4,10 @@
 ZX81::ULARegisters::ULARegisters (ZX81::Type t)
 	: MCHEmul::InfoClass ("ULARegisters"),
 	  _type (t),
-	  _keyboardStatus (8, MCHEmul::UByte::_0),
 	  _casetteSignalChanged (false),
-	 _INTack (false), _INTackClock (0)
+	  _INTack (false), _INTackClock (0),
+	  _keyboardStatus (8, MCHEmul::UByte::_0),
+	  _joystickStatus (5, MCHEmul::UByte::_0) // Just to define the initial size...
 { 
 	initializeInternalValues ();
 }
@@ -59,4 +60,6 @@ void ZX81::ULARegisters::initializeInternalValues ()
 
 	for (size_t i = 0; i < 8; 
 		_keyboardStatus [i++] = MCHEmul::UByte::_0);
+	for (size_t i = 0; i < 5; 
+		_joystickStatus [i++] = false);
 }

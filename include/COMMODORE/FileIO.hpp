@@ -55,7 +55,7 @@ namespace COMMODORE
 		virtual std::string asString () const override
 							{ return (_signature + 
 								"(Version: " + std::to_string (_version) +
-								", Size: " + std::to_string (_dataSize)); }
+								", Size: " + std::to_string (_dataSize) + ")"); }
 
 		std::string _signature;
 		unsigned char _version;

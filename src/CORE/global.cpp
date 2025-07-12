@@ -317,7 +317,7 @@ std::string MCHEmul::tableFormat (const MCHEmul::Strings& s, const std::string& 
 	std::string result;
 
 	MCHEmul::Strings cs = s;
-	if (ne != -1 && cs.size () > ne)
+	if (ne != -1 && cs.size () > (size_t) ne)
 		cs = MCHEmul::Strings (cs.end () - ne, cs.end ());
 
 	for (size_t i = 0; i < cs.size (); i += sb)

@@ -23,8 +23,6 @@ MCHEmul::IOPeripheral* ZXSPECTRUM::IOPeripheralBuilder::createPeripheral
 			there must be an access to the datasette every 487 cpu cycles = (3,25MHz * 150us).
 			The speed is the same in PAL and in NTSC. */
 		result = new ZXSPECTRUM::Datasette (487);
-	else if (id == ZXSPECTRUM::DatasetteP::_ID)
-		result = new ZXSPECTRUM::DatasetteP (150);
 	else if (id == ZXSPECTRUM::DatasetteInjection::_ID)
 		result = new ZXSPECTRUM::DatasetteInjection (static_cast <ZXSPECTRUM::SinclairZXSpectrum*> (c) -> type ());
 	else

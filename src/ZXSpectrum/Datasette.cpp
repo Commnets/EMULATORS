@@ -5,16 +5,8 @@
 
 // ---
 ZXSPECTRUM::Datasette::Datasette (unsigned int rS)
-	: MCHEmul::BasicDatasette (_ID, rS, false /** Controlled externally. */,
-		{ { "Name", "Datasette ZXSpectrum" },
-		  { "Manufacturer", "Almost anyone, No special connector needed" } })
-{
-	setClassName ("ZXSpectrumDatasette");
-}
-
-// ---
-ZXSPECTRUM::DatasetteP::DatasetteP (unsigned int mS)
-	: MCHEmul::BasicDatasetteP (_ID, mS, false /** Controlled externally. */,
+	: MCHEmul::StandardDatasette (_ID, 
+		new MCHEmul::StandardDatasette::NilImplementation, false /** Controlled externally. */,
 		{ { "Name", "Datasette ZXSpectrum" },
 		  { "Manufacturer", "Almost anyone, No special connector needed" } })
 {
