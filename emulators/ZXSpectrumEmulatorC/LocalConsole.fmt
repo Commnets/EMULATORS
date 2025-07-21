@@ -40,6 +40,11 @@
 @ERROR@
 #---
 #---
+;CEMPTYPERDATA
+->Errors:
+@ERROR@
+#---
+#---
 ;CSAVEPERDATA
 ->Errors:
 @ERROR@

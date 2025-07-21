@@ -1,5 +1,6 @@
 #include <CORE/DatasettePeripherals.hpp>
 #include <CORE/CPU.hpp>
+#include <CORE/LogChannel.hpp>
 
 // ---
 MCHEmul::DatasettePeripheral::DatasettePeripheral (int id, const MCHEmul::Attributes& attrs)
@@ -172,11 +173,18 @@ bool MCHEmul::StandardDatasette::executeCommand (int id, const MCHEmul::Strings&
 					// It can pointer to the one "after" the last!
 					if (++_dataCounter > _data._data.size ())
 						_dataCounter = 0; // ...or to the first one if there is none else to point to...
+					_elementCounter = 0; // Always pointing to the first element of the block...
 
 					// No keys is supossed to be pressed...
 					// if the user wanted to move to the next / previous element
 					// the same command would have to be executed...
 					setNoKeyPressed (true);
+				}
+				else
+				{
+					result = false;
+
+					_LOG ("No forward possible until datasette is stopped and has data inside");
 				}
 			}
 
@@ -192,8 +200,15 @@ bool MCHEmul::StandardDatasette::executeCommand (int id, const MCHEmul::Strings&
 					// It can pointer to the one after the last too!
 					if (--_dataCounter > _data._data.size ()) // it is an unsigned short...
 						_dataCounter = (_data._data.size () - 1); //...or to after the last one if there is none else to point to...
+					_elementCounter = 0; // Always pointing to the first element of the block...
 
 					setNoKeyPressed (true);
+				}
+				else
+				{
+					result = false;
+
+					_LOG ("No rewind possible until datasette is stopped and has data inside");
 				}
 			}
 
@@ -202,9 +217,14 @@ bool MCHEmul::StandardDatasette::executeCommand (int id, const MCHEmul::Strings&
 		// STOPPED...
 		case _KEYSTOP:
 			{
-				// If it was saving data, the counter is moved one position...
+				// If it was saving data, the counter is moved one position forward...
 				if (_status == Status::_SAVING)
+				{
 					_dataCounter++;
+					// It will be then pointing to the next element
+					// ...or to an empty space (@see _PLAY and _PLAY + _RECORD command)
+					_elementCounter = 0;
+				}
 
 				_status = Status::_STOPPED;
 
@@ -219,7 +239,8 @@ bool MCHEmul::StandardDatasette::executeCommand (int id, const MCHEmul::Strings&
 				if (_status == Status::_STOPPED &&
 					_dataCounter < _data._data.size ())
 				{
-					_elementCounter = 0;
+					// Notice that the varible _elementCounter is not set back to 0
+					// It means, that the casette continues reading from the last element...
 
 					_status = Status::_READING;
 
@@ -232,6 +253,12 @@ bool MCHEmul::StandardDatasette::executeCommand (int id, const MCHEmul::Strings&
 						setMotorOff (false); // The motor starts...
 
 					setNoKeyPressed (false);
+				}
+				else
+				{
+					result = false;
+
+					_LOG ("No play possible until datasette is stopped and has data inside");
 				}
 
 				// Notice that, if the pointer is set after the last one,
@@ -250,8 +277,9 @@ bool MCHEmul::StandardDatasette::executeCommand (int id, const MCHEmul::Strings&
 
 					_status = Status::_SAVING;
 
-					// If the counter is pointing at the end, a null data element is added...
-					if (_dataCounter > _data._data.size ())
+					// If the counter is pointing at the end, 
+					// a null data element is added...
+					if (_dataCounter >= _data._data.size ())
 					{ 
 						_data._data.push_back (MCHEmul::DataMemoryBlock ());
 
@@ -269,6 +297,12 @@ bool MCHEmul::StandardDatasette::executeCommand (int id, const MCHEmul::Strings&
 						setMotorOff (false); // The motor starts...
 
 					setNoKeyPressed (false);
+				}
+				else
+				{
+					result = false;
+
+					_LOG ("No play + record possible until datasette is stopped");
 				}
 			}
 
@@ -344,7 +378,7 @@ bool MCHEmul::StandardDatasette::simulate (MCHEmul::CPU* cpu)
 						// If it was time to read, the value read will be in v...
 						// This value can be either 0 or 1, and it will depend on the implementation!
 						bool v = false;
-						if (_implementation -> timeToReadValue (v))
+						if (_implementation -> timeToReadValue (_lastCPUCycles + i, v))
 						{
 							// Set the value read...
 							// The IODevice simulation will use it to sent an event...
@@ -359,10 +393,12 @@ bool MCHEmul::StandardDatasette::simulate (MCHEmul::CPU* cpu)
 					if (rV)
 					{
 						// Read the next value from the data file...
-						MCHEmul::UByte nVR = readFromData (result);
-						// if there was no erro, the implementation adapts!
-						if (result)
-							_implementation -> whenValueRead (nVR);
+						bool e = false; // No error at the beginning...
+						MCHEmul::UByte nVR = readFromData (e);
+						// The error variable wil point out when the end of the data file was reached
+						if (e) _LOG ("Error while reading data from the file");
+						// The value is managed...
+						_implementation -> whenValueRead (_lastCPUCycles + i, nVR);
 					}
 				}
 
@@ -371,15 +407,18 @@ bool MCHEmul::StandardDatasette::simulate (MCHEmul::CPU* cpu)
 			// The datasette is saving...
 			case Status::_SAVING:
 				{
-					if (_writeChangeValueRequest.peekValue () &&
-						((_lastCPUCycles + i) > _clockCyclesWhenWriteAction))
+					// Time to write in the file?
+					if (peekWriteChangeValueRequested () && // The action "write" was requested?...
+						clockCyclesWhenWriteAction () == (_lastCPUCycles + i) && // ...and at the right moment?...
+						_implementation -> timeToWriteValue (_lastCPUCycles + i, valueToWrite ())) //...and is it time to write?
 					{
-						// The value has been used...
-						_writeChangeValueRequest = false;
-						// The implementaion determines what to do whit the value...
-						storeInData (_implementation -> valueToSaveForBit (_valueToWrite));
-						// After the action, the implementation is reseted...
-						_implementation -> resetClock ();
+						// The implementaion determines what to do with the value...
+						MCHEmul::UByte nVR =
+							_implementation -> valueToSaveForBit (valueToWrite ());
+						// Store the value in the data file...
+						storeInData (nVR);
+						// ...and what is necessary to do after the action...
+						_implementation -> whenValueWritten (_lastCPUCycles + i, nVR);
 					}
 				}
 
@@ -412,7 +451,8 @@ MCHEmul::InfoStructure MCHEmul::StandardDatasette::getInfoStructure () const
 {
 	MCHEmul::InfoStructure result = std::move (MCHEmul::DatasettePeripheral::getInfoStructure ());
 
-	result.add ("DATACOUNTER", _dataCounter);
+	result.add ("DATACOUNTER",		_dataCounter);
+	result.add ("ELEMENTCOUNTER",	_elementCounter);
 
 	return (result);
 }

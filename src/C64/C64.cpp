@@ -10,6 +10,7 @@
 #include <C64/ExpansionPort.hpp>
 #include <C64/Cartridge.hpp>
 #include <C64/IOExpansionMemory.hpp>
+#include <C64/SerialPort.hpp>
 #include <COMMODORE/UserPort.hpp>
 #include <F6500/C6510.hpp>
 
@@ -63,18 +64,24 @@ bool C64::Commodore64::initialize (bool iM)
 	// THe CIA1 controls the information of the potentiometers that the SID must reflect!
 	cia1 () -> linkToSID (sid ());
 
-	// Limks between memory and devices...
-	// But the bit 3 of the same position is where the info to send to the casette is writtem...
-	device (COMMODORE::DatasetteIOPort::_ID) -> observe (memory () -> subset (C64::IO6510PortRegisters::_IO6510REGISTERS_SUBSET));
+	// Links between memory and devices...
+	// But the bit 3 of the same position is where the info to send to the casette is written...
+	device (COMMODORE::DatasetteIOPort::_ID) -> observe 
+		(memory () -> subset (C64::IO6510PortRegisters::_IO6510REGISTERS_SUBSET));
 	// But also the bit 4 is where is possible to read whether any key in the datasette has been preseed 
 	// and where to know whether the motor is running or not...
-	memory () -> subset (C64::IO6510PortRegisters::_IO6510REGISTERS_SUBSET) -> observe (device (COMMODORE::DatasetteIOPort::_ID));
+	memory () -> subset (C64::IO6510PortRegisters::_IO6510REGISTERS_SUBSET) -> observe 
+		(device (COMMODORE::DatasetteIOPort::_ID));
 	// The expansion memory is observed by the expansion port
 	// which can do different actions attending to the type of peripheral connected...
 	device (COMMODORE::ExpansionIOPort::_ID) -> observe 
 		(memory () -> subset (C64::IOExpansionMemoryI::_IO1_SUBSET));
 	device (COMMODORE::ExpansionIOPort::_ID) -> observe 
 		(memory () -> subset (C64::IOExpansionMemoryII::_IO2_SUBSET));
+	// The links also between the serial port and the CIA2 registers
+	// Because any alteration in the bits that they hace affects the serial port (and also the RS-2323)
+	device (C64::SerialIOPort::_ID) -> observe 
+		(memory () -> subset (C64::CIA2Registers::_CIA2_SUBSET));
 
 	// C64 direct with devices...
 	// It is also needed to observe the expansion port...
@@ -165,8 +172,8 @@ MCHEmul::IODevices C64::Commodore64::standardDevices (C64::Commodore64::VisualSy
 	// The different ports: 4!
 	// The port where usually the datasette is connected...
 	result.insert (MCHEmul::IODevices::value_type (COMMODORE::DatasetteIOPort::_ID, new C64::DatasetteIOPort));
-	// The port where the floppy disk & printers are connected...
-	result.insert (MCHEmul::IODevices::value_type (COMMODORE::SerialIOPort::_ID, new COMMODORE::SerialIOPort));
+	// The port where the floppy disk & printers are usually connected...
+	result.insert (MCHEmul::IODevices::value_type (COMMODORE::SerialIOPort::_ID, new C64::SerialIOPort));
 	// The port where the cartriges are connected...
 	result.insert (MCHEmul::IODevices::value_type (COMMODORE::ExpansionIOPort::_ID, new C64::ExpansionIOPort));
 	// The port where very specific devices are connected...

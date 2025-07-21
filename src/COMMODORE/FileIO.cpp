@@ -5,13 +5,95 @@ MCHEmul::ExtendedDataMemoryBlocks COMMODORE::TAPFileData::asMemoryBlocks() const
 {
 	MCHEmul::ExtendedDataMemoryBlocks result;
 
+	// The common part of the result...
 	result._name = _signature;
 	MCHEmul::Attributes attrs;
 	attrs ["VERSION"]	= std::to_string ((unsigned int) _version);
 	attrs ["CVERSION"]	= std::to_string ((unsigned int) _computerVersion);
 	attrs ["VVERSION"]	= std::to_string ((unsigned int) _videoVersion);
+	for (const auto& i : _attributes)
+		attrs [i.first] = i.second; // Copy the attributes (none can have the same name than the ones above)...
 	result._attributes	= std::move (attrs); // It is not longer valid...
-	result._data = { MCHEmul::DataMemoryBlock (MCHEmul::Address (), _bytes.bytes ()) }; // Just the data...
+
+	// The data that is behind...
+	static const std::vector <MCHEmul::UByte> _HEADERPATTERN { 0x2e, 0x2f, 0x30 };
+	auto isInHeaderPattern = 
+		[&](const MCHEmul::UByte& b) -> bool
+		{ return (std::find (_HEADERPATTERN.begin (), _HEADERPATTERN.end (), b) != _HEADERPATTERN.end ()); };
+	enum class FileZone { _HEADER, _BLOCK };
+	size_t i = 0, iP = 0, iB = 0, nHE = 0, nBE = 0;
+	for (i = 0; i < _bytes.bytes ().size () && !isInHeaderPattern (_bytes [i]); i++); // Find the first header character...
+	FileZone zone = FileZone::_HEADER;
+	for (; i < _bytes.bytes ().size (); i++)
+	{
+		switch (zone)
+		{
+			// While the cursor is in the header...
+			case FileZone::_HEADER:
+				{
+					// The header lasts until the first no header character is found... 
+					// ...and at least 0x3000 bytes of that type are...
+					if (isInHeaderPattern (_bytes [i]))
+						nHE++;
+					else
+					{
+						if (nHE >= 0x3000)
+						{
+							// A new blocks starts...
+							zone = FileZone::_BLOCK;
+							// The block starts from the current position...
+							iB = i;
+							// The new block has at least this byte found...
+							nBE = 1; 
+							// Restart the header counter...
+							nHE = 0;
+
+						}
+					}
+				}
+
+				break;
+
+			// While the cursor is in the data block (supposed to be)...
+			case FileZone::_BLOCK:
+				{
+					if (!isInHeaderPattern (_bytes [i]))
+					{
+						// The header is not found, so the block continues...
+						nHE = 0; 
+						// The number of bytes in the block is increased...
+						nBE++; 
+					}
+					else
+					{
+						if (++nHE >= 0x3000)
+						{
+							// A new header is found, so the program definition was found...
+							// ...but some time ago, and now has to be created!
+							result._data.emplace_back (std::move (MCHEmul::DataMemoryBlock (
+								MCHEmul::Address (), std::vector <MCHEmul::UByte> 
+									(_bytes.bytes ().begin () + iP, _bytes.bytes ().begin () + (i - nHE)))));
+
+							// It is time to start with another program, but from the beginning...
+							zone = FileZone::_HEADER; 
+							// That was some time ago....
+							iP = i - nHE;
+							// It is suppossed that the program will start the same position...
+							i = iP; 
+							// And with the counters reseted...
+							nHE = 0; nBE = 0;
+						}
+					}
+				}
+
+				break;
+		}
+	}
+
+	// Add a last block if any...
+	result._data.emplace_back (std::move (MCHEmul::DataMemoryBlock (
+		MCHEmul::Address (), std::vector <MCHEmul::UByte> 
+			(_bytes.bytes ().begin () + iP, _bytes.bytes ().begin () + i))));
 
 	return (result);
 }
@@ -38,7 +120,7 @@ bool COMMODORE::TAPFileTypeIO::canRead (const std::string& fN) const
 	f.seekg (0, std::ios::end);
 	std::streamoff s = (std::streamoff) f.tellg ();
 	f.close ();
-	if (s < (std::streamoff) (0x14 /** Header. */ + 0x1 /** At least one byte. */))
+	if (s < (std::streamoff) (0x14 /** Header only is needed if length is equal to 0 (checked later) */))
 		return (false); // ...no. The length of the file is less than expected. It has to be minimum 0x15!
 
 	return (true);
@@ -57,6 +139,9 @@ MCHEmul::FileData* COMMODORE::TAPFileTypeIO::readFile (const std::string& fN, bo
 	COMMODORE::TAPFileData* tap = 
 		static_cast <COMMODORE::TAPFileData*> (result); // To better manipulation...
 
+	// The name of the file is in an attribute...
+	tap -> _attributes ["FNAME"] = fN;
+
 	// The header
 	f.read (data, 12); data [12] = 0; // End of char...
 	tap -> _signature = std::string (data);
@@ -72,13 +157,14 @@ MCHEmul::FileData* COMMODORE::TAPFileTypeIO::readFile (const std::string& fN, bo
 		((unsigned char) data [2] << 16) + ((unsigned char) data [1] << 8) + ((unsigned char) data [0]));
 
 	// The data...
-	unsigned int dSize = tap -> _dataSize - 20;
-	if (dSize != 0)
+	bool e = false;
+	if (tap -> _dataSize != 0)
 	{
-		char* romData = new char [(size_t) dSize];
-		f.read (romData, (std::streamsize) dSize);
+		char* romData = new char [(size_t) tap -> _dataSize];
+		f.read (romData, (std::streamsize) tap -> _dataSize);
+		e = !f; // The system tried to read more bytes than available, and this is not possible...
 		std::vector <MCHEmul::UByte> romBytes;
-		for (size_t i = 0; i < (size_t) dSize; 
+		for (size_t i = 0; i < (size_t) tap -> _dataSize; 
 			romBytes.emplace_back (romData [i++]));
 		tap -> _bytes = MCHEmul::UBytes (romBytes);
 		delete [] romData;
@@ -87,6 +173,15 @@ MCHEmul::FileData* COMMODORE::TAPFileTypeIO::readFile (const std::string& fN, bo
 		tap -> _bytes = { };
 
 	f.close ();
+
+	// If there was a mistake reading the content of the file
+	// the file can not be created at all!
+	if (e)
+	{
+		delete result;
+
+		result = nullptr;
+	}
 
 	return (result);
 }
@@ -99,7 +194,20 @@ bool COMMODORE::TAPFileTypeIO::writeFile (MCHEmul::FileData* fD, const std::stri
 	if (tap == nullptr)
 		return (false); // it is not really a tap structure!
 
-	std::ofstream f (fN, std::ios::out | std::ios::binary);
+	// There might not be name of the file,
+	// It it were the case, the name defined in the data file should be taken instead
+	// and if there were not event that, a mistake is generated!
+	std::string lFN = fN;
+	if (lFN == "")
+	{
+		MCHEmul::Attributes::const_iterator p = tap -> _attributes.find ("FNAME");
+		if (p == tap -> _attributes.end ())
+			return (false);
+		else
+			lFN = (*p).second; // The name of the file to write...
+	}
+
+	std::ofstream f (lFN, std::ios::out | std::ios::binary);
 	if (!f)
 		return (false); // Impossible to be opened...
 
@@ -107,9 +215,9 @@ bool COMMODORE::TAPFileTypeIO::writeFile (MCHEmul::FileData* fD, const std::stri
 
 	// The signature...
 	size_t i = 0;
-	for (; i < tap -> _signature.size () && i < 11; i++)
+	for (; i < tap -> _signature.size () && i < 12; i++)
 		data [i] = tap -> _signature [i];
-	for (; i < 12; data [i++] = 0)
+	for (; i < 12; data [i++] = 0);
 	f.write (data, 12);
 
 	// The versions...
@@ -134,11 +242,14 @@ bool COMMODORE::TAPFileTypeIO::writeFile (MCHEmul::FileData* fD, const std::stri
 	f.write (data, 4);
 
 	// The data
-	char* prgData = new char [(size_t) tap -> _dataSize];
-	for (size_t i = 0; i < (size_t) tap -> _dataSize; i++)
-		prgData [i] = tap -> _bytes.bytes ()[i].value ();
-	f.write (prgData, (std::streamsize) tap -> _dataSize);
-	delete [] prgData;
+	if (tap -> _dataSize != 0)
+	{
+		char* prgData = new char [(size_t) tap -> _dataSize];
+		for (size_t i = 0; i < (size_t) tap -> _dataSize; i++)
+			prgData [i] = tap -> _bytes.bytes ()[i].value ();
+		f.write (prgData, (std::streamsize) tap -> _dataSize);
+		delete [] prgData;
+	}
 
 	f.close ();
 

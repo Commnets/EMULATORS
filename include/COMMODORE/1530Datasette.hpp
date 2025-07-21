@@ -15,6 +15,7 @@
 #define __COMMODORE_1530DATASETTE__
 
 #include <CORE/incs.hpp>
+#include <COMMODORE/FileIO.hpp>
 
 namespace COMMODORE
 {
@@ -51,11 +52,19 @@ namespace COMMODORE
 
 			/** v is set to 1, when the time to read is true,
 				pointing out that a falling edge has been detected. */
-			virtual bool timeToReadValue (bool &v) const override
+			virtual bool timeToReadValue (unsigned int cC, bool &v) const override
 							{ return (v = (clockValue () >= _cyclesToRead)); }
 			/** The value read from the file is translated into number of cycles until the next 
 				falling edge comes, that is the signal sent to the computer. */
-			virtual void whenValueRead (const MCHEmul::UByte& v) override;
+			virtual void whenValueRead (unsigned int cC, const MCHEmul::UByte& v) override;
+
+			/** The information has to tell us that is the time, and the value to write has to be 1.
+				because it will represent a complete cycle. 0 - 1 - 0 or 1 - 0 - 1 */
+			virtual bool timeToWriteValue (unsigned int cC, bool v) const override
+							{ return (v); }
+			/** The only thing to do is to reset the internal couner. */
+			virtual void whenValueWritten (unsigned int cC, const MCHEmul::UByte& v)
+							{ resetClock (); }
 
 			/** The value sent to the file is always related with the number of cycles
 				since this method was invoked last time. */
@@ -78,6 +87,12 @@ namespace COMMODORE
 
 		/** To connect the type of data TAP. */
 		virtual bool connectData (MCHEmul::FileData* dt) override;
+		/** To create an empty file of type TAP. 
+			The one by default is C64 type (@see TAPFileData class. */
+		virtual MCHEmul::FileData* emptyData () const override
+							{ return (new TAPFileData); }
+		/** To get the data kept into the system as something to be saved. */
+		virtual MCHEmul::FileData* retrieveData () const override;
 	};
 
 	/** This unit is just to jump over the routines aimed for this task in the kernel. 

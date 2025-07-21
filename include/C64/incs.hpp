@@ -32,6 +32,7 @@
 #include <C64/DatasettePort.hpp>
 #include <C64/1530Datasette.hpp>
 #include <C64/ExpansionPort.hpp>
+#include <C64/SerialPort.hpp>
 #include <C64/Cartridge.hpp>
 #include <C64/IOPBuilder.hpp>
 #include <C64/Commands.hpp>

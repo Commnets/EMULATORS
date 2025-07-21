@@ -141,7 +141,7 @@ void C64::CIA1::processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifier* n)
 
 			break;
 
-		// A change in the datsette port has been detected...
+		// A change in the datasette port has been detected...
 		// Notice that the value of the event is not taken into account
 		// because just the change in the signal is detected!
 		case C64::DatasetteIOPort::_READ:

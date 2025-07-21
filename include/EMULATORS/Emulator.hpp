@@ -204,6 +204,13 @@ namespace MCHEmul
 		/** Connect the data to a peripheral, building up the data. 
 			Returns a reference to the data loaded and nullptr if error or nothing. */
 		FileData* connectDataToPeripheral (const std::string& fN, int id);
+		/** To create a basic empty data in a peripheral. \n
+			Not all peripherals accept this. \n
+			If the file requested already existed, it would be then deleted and replaced by the new one. \n
+			The "FileData" object created is returned, but can be nullptr if it is not accepted 
+			or it was impossible to create it ort saved. 
+			The object create (if any) is "injected" into the emulation. */
+		FileData* createEmptyDataInPeripheral (const std::string& fN, int id);
 		/** To retrieve data from a peripheral into a file. 
 			Returns true when the data was sucessfully saved and false in other circunstance. */
 		bool saveDataFromPeripheral (const std::string& fN, int id);

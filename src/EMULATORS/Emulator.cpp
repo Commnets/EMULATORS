@@ -168,6 +168,24 @@ MCHEmul::FileData* MCHEmul::Emulator::connectDataToPeripheral (const std::string
 }
 
 // ---
+MCHEmul::FileData* MCHEmul::Emulator::createEmptyDataInPeripheral (const std::string& fN, int id)
+{
+	MCHEmul::IOPeripheral* p = _computer -> peripheral (id);
+	if (p == nullptr)
+		return (nullptr);
+
+	bool ok = true;
+	MCHEmul::FileData* result = p -> emptyData ();
+	if (result != nullptr)
+		ok = fileIO () -> 
+				saveFile (result, fN, computer () -> cpu () -> architecture ().bigEndian ());
+	// The data created is no longer needed...
+	delete (result);
+	// Connect the data to the peripheral...if any!
+	return (ok ? connectDataToPeripheral (fN, id) : nullptr);
+}
+
+// ---
 bool MCHEmul::Emulator::saveDataFromPeripheral (const std::string & fN, int id)
 {
 	MCHEmul::IOPeripheral* p = _computer -> peripheral (id);

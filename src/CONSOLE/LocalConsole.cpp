@@ -48,6 +48,7 @@ void MCHEmul::LocalConsole::createAndExecuteCommand ()
 	std::string cmdConnectPeripheral ("CONNECTPER");
 	std::string cmdDisconnectPeripherals ("DISCONNECTPERS");
 	std::string cmdLoadPeripheralData ("LOADPERDATA");
+	std::string cmdEmptyPeripheralData ("EMPTYPERDATA");
 	std::string cmdSavePeripheralData ("SAVEPERDATA");
 
 	std::string cmdName = nameFor (_command);
@@ -83,6 +84,11 @@ void MCHEmul::LocalConsole::createAndExecuteCommand ()
 		outputStream () << MCHEmul::FormatterBuilder::instance () ->
 			formatter ("C" + cmdLoadPeripheralData) -> format (loadPeripheralData 
 				(prmsFor (_command, cmdLoadPeripheralData))) << std::endl;
+	else
+	if (cmdName == cmdEmptyPeripheralData)
+		outputStream () << MCHEmul::FormatterBuilder::instance () ->
+			formatter ("C" + cmdEmptyPeripheralData) -> format (emptyDataInPeripheral 
+				(prmsFor (_command, cmdEmptyPeripheralData))) << std::endl;
 	else
 	if (cmdName == cmdSavePeripheralData)
 		outputStream () << MCHEmul::FormatterBuilder::instance () ->
@@ -306,7 +312,7 @@ MCHEmul::InfoStructure MCHEmul::LocalConsole::loadPeripheralData (const std::str
 }
 
 // ---
-MCHEmul::InfoStructure MCHEmul::LocalConsole::savePeripheralData (const std::string & prms) const
+MCHEmul::InfoStructure MCHEmul::LocalConsole::emptyDataInPeripheral (const std::string& prms) const
 {
 	MCHEmul::InfoStructure result;
 
@@ -318,10 +324,35 @@ MCHEmul::InfoStructure MCHEmul::LocalConsole::savePeripheralData (const std::str
 		return (result);
 	}
 
+	MCHEmul::FileData* dt = 
+		_emulator -> createEmptyDataInPeripheral (prmsL [1], std::atoi (prmsL [0].c_str ()));
+	if (dt == nullptr)
+		result.add (std::string ("ERROR"),
+			std::string ("Impossible to create empty data in the peripheral."));
+	else
+		result = std::move (loadPeripheralData (prms));
+
+	return (result);
+}
+
+// ---
+MCHEmul::InfoStructure MCHEmul::LocalConsole::savePeripheralData (const std::string & prms) const
+{
+	MCHEmul::InfoStructure result;
+
+	MCHEmul::Strings prmsL = parametersListFrom (prms);
+	if (prmsL.size () != 2 && prmsL.size () != 1)
+	{ 
+		result.add (std::string ("ERROR"), std::string ("Insuficient number of arguments"));
+
+		return (result);
+	}
+
 	result.add (std::string ("ERROR"), 
-		(_emulator -> saveDataFromPeripheral (prmsL [1], std::atoi (prmsL [0].c_str ()))
-			? std::string ("No errors.")
-			: std::string ("The data was not connected to the peripheral.")));
+		(_emulator -> saveDataFromPeripheral 
+			((prmsL.size () == 1) ? "" : prmsL [1], std::atoi (prmsL [0].c_str ()))
+				? std::string ("No errors.")
+				: std::string ("The data was not connected to the peripheral.")));
 
 	return (result);
 }

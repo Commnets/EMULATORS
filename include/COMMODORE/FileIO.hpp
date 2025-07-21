@@ -42,12 +42,13 @@ namespace COMMODORE
 		};
 
 		TAPFileData ()
-			: _signature (""),
+			: _signature ("C64-TAPE-RAW"), // The default one...
 			  _version (0), // The default one...
 			  _computerVersion (_C64),
 			  _videoVersion (_PAL),
 			  _dataSize (0),
-			  _bytes ()
+			  _bytes (),
+			  _attributes { }
 							{ }
 
 		virtual MCHEmul::ExtendedDataMemoryBlocks asMemoryBlocks () const override;
@@ -63,6 +64,7 @@ namespace COMMODORE
 		VideoVersion _videoVersion;
 		unsigned int _dataSize;
 		MCHEmul::UBytes _bytes;
+		MCHEmul::Attributes _attributes; // Attributes of the file, like the name (FNAME), etc.
 	};
 
 	/** To read/wrote TAP files. */

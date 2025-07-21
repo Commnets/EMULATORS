@@ -70,6 +70,9 @@ namespace MCHEmul
 			The parameters are the id of the peripheral and the file to load into. \n
 			The peripheral has to exists and it has also to accept the file loaded (format). */
 		InfoStructure loadPeripheralData (const std::string& prms) const;
+		/** To create an empty file data in the peripheral. \n
+			Not always it is possible. The InfoStructure has to reflect the result of that operation. */
+		InfoStructure emptyDataInPeripheral (const std::string& prms) const;
 		/** To save data from a peripheral. \n
 			The parameters are the id of the peripheral and the file where to save the info. \n
 			The peripheral has to exists and the format generated from it must have the possibility to be saved. */

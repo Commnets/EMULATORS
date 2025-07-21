@@ -1,11 +1,13 @@
 #include <COMMODORE/1530Datasette.hpp>
-#include <COMMODORE/FileIO.hpp>
 #include <F6500/incs.hpp>
 
 // ---
-void COMMODORE::Datasette1530::TAPFileFormatImplementation::whenValueRead (const MCHEmul::UByte& v)
+void COMMODORE::Datasette1530::TAPFileFormatImplementation::whenValueRead 
+	(unsigned int cC, const MCHEmul::UByte& v)
 {
-	_cyclesToRead = ((unsigned int) v.value ()) << 3;
+	_cyclesToRead = (v == valueForNoMoreData ()) 
+		? std::numeric_limits <unsigned int>::max () // No more 1 signals from the tape!
+		: ((unsigned int) v.value ()) << 3;
 
 	// To start back to count!
 	resetClock ();
@@ -35,6 +37,44 @@ bool COMMODORE::Datasette1530::connectData (MCHEmul::FileData* dt)
 		(_data._data.empty () ? std::numeric_limits <size_t>::max () : 0 /** At the first element. */);
 	
 	return (true); 
+}
+
+// ---
+MCHEmul::FileData* COMMODORE::Datasette1530::retrieveData () const
+{
+	auto getAttr = [](const MCHEmul::Attributes& attrs, const std::string& id) -> std::string
+		{ 
+			MCHEmul::Attributes::const_iterator i = attrs.find (id);
+			return (i != attrs.end () ? i -> second : "");
+		};
+		  
+	// The format understood by this retrive method is just raw...
+	MCHEmul::FileData* result = new COMMODORE::TAPFileData; 
+	COMMODORE::TAPFileData* tap = dynamic_cast <COMMODORE::TAPFileData*> (result);
+	// If is not needed to ckeckit because it has been the one loaded at the beginning...
+
+	// Later, when saving if any, the size in the name will be limited...
+	tap -> _signature = _data._name;
+	tap -> _version = (unsigned char) std::stoi (getAttr (_data._attributes, "VERSION").c_str ());
+	tap -> _computerVersion = (COMMODORE::TAPFileData::ComputerVersion) 
+		std::stoi (getAttr (_data._attributes, "CVERSION").c_str ());
+	tap -> _videoVersion = (COMMODORE::TAPFileData::VideoVersion) 
+		std::stoi (getAttr (_data._attributes, "VVERSION").c_str ());
+
+	// Just in case there would be mode than one data block, 
+	// generated duting the opertion of the datasette, all information is kept together!
+	tap -> _dataSize = 0;
+	for (size_t i = 0; i < _data._data.size (); 
+		tap -> _dataSize += _data._data [i++].size ());
+	std::vector <MCHEmul::UByte> by;
+	for (size_t i = 0; i < _data._data.size (); i++)
+		by.insert (by.end (), _data._data [i].bytes ().begin (), _data._data [i].bytes ().end ());
+	tap -> _bytes = by;
+
+	// The name of the file if any (it was created from another previouly or an empty one)...
+	tap -> _attributes ["FNAME"] = getAttr (_data._attributes, "FNAME");
+
+	return (result);
 }
 
 // ---

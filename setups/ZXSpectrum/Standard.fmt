@@ -158,7 +158,7 @@ Id:@ID@
 COMMANDS:@COMMANDS@
 Keys Pressed:@KEYS@
 Motor on:@MOTOR@
-Data Counter: @DATACOUNTER@
+Position: @DATACOUNTER@,@ELEMENTCOUNTER@
 IO Emulation: @IOEMULATION@
 ->Data:
 Name:@DATANAME@

@@ -72,13 +72,17 @@ namespace MCHEmul
 			The process should return true when everything is ok and false when problems. */
 		virtual bool finalize () = 0;
 
+		// Managing the info in the peripheral...
 		/** To link, when it is needed, the peripheral with data comming from a file. \n
 			Makes sense specially when the peripheral is an input one (like a casette or a unit disk or a cartridge). \n
 			There might be a content in those types of periperals and this instruction is for that. \n
 			By default the data can't be connected. */
 		virtual bool connectData (FileData* dt)
 							{ return (false); }
-
+		/** To create and empty File of Data. \n
+			By default it returns nullptr, meaning that the peripheral does not support this. */
+		virtual FileData* emptyData () const
+							{ return (nullptr); }
 		/** To get, when it is needed, the data of the peripheral because it could be saved back into a file. \n
 			Makes sense specially when the peripheral is an putput one (like a casette or a unit disk. \n
 			By default returns nullptr. \n

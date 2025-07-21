@@ -24,12 +24,21 @@ The parameters requested are the ID of the peripheral to connect, and an optiona
 To disconnect a set of peripherals.
 The parameters requested are the list of the ids of the peripherals to disconnect.
 At list one of them is mandatory.
-;LOADPERDATA PERID FILEDATA [DEBUG FILE]
+;LOADPERDATA PERID FILENAME [DEBUG FILE]
 To load a peripheral with the data stored into a file with a specific format.
-The PERID of the peripheral and the name of the file (FILEDATA) where the data to load is located are needed.
+The PERID of the peripheral and the name of the file (FILENAME) where the data to load is located are needed.
 An additional parameter, DEBUG FILE, can be added. 
 In this case the system starts to debug when started, keeping the info in the file defined. Devices info is not saved.
-;SAVEPERDATA PERID FILEDATA
+;EMPTYPERDATA PERID FILENAME
+To create an empty file of data in a peripheral.
+The format of the file is defined by the peripheral.
+If the peripheral did understand more than one file format, the most common one would be the one created.
+That file data object is then injected into the emulation.
+Not all peripherals can generate an empty file format. 
+;SAVEPERDATA PERID [FILENAME]
 To save the data from a peripheral into a file with a specific format.
 The format is decided by the peripheral.
 The PERID of the peripheral and the name of the file (FILEDATA) where to save the data are needed.
+Depending on the device used, the NAME couldn't be mandatory.
+Same situation when the FILE were the information wanted to be saved is the same
+than the one created with EMPTY or the one loaded with LOAD.

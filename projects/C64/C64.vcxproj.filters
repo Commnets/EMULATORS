@@ -114,6 +114,9 @@
     <ClInclude Include="..\..\include\C64\1530Datasette.hpp">
       <Filter>Archivos de encabezado\IO</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\include\C64\SerialPort.hpp">
+      <Filter>Archivos de encabezado\IO</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\C64\Screen.cpp">
@@ -175,6 +178,9 @@
     </ClCompile>
     <ClCompile Include="..\..\src\C64\VICII.cpp">
       <Filter>Archivos de origen\Motherboard\Chips</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\C64\SerialPort.cpp">
+      <Filter>Archivos de origen\IO</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
