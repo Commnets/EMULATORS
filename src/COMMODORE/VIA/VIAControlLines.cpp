@@ -6,7 +6,6 @@ COMMODORE::VIAControlLine::VIAControlLine (int id)
 	  _wire (id),
 	  _mode (0), // Not defined yet...
 	  _interruptEnabled (false),
-	  _P (nullptr), _CL (nullptr),
 	  _interruptRequested (false)
 { 
 	initialize (); 
@@ -15,7 +14,7 @@ COMMODORE::VIAControlLine::VIAControlLine (int id)
 // ---
 void COMMODORE::VIAControlLine::initialize ()
 { 
-	_wire.setValue (false); 
+	_wire.setValue (true); 
 		
 	_interruptRequested = false; 
 }
@@ -34,6 +33,14 @@ MCHEmul::InfoStructure COMMODORE::VIAControlLine::getInfoStructure () const
 }
 
 // ---
+void COMMODORE::VIAControlLineType1::initialize ()
+{
+	COMMODORE::VIAControlLine::initialize ();
+
+	_mode = 0; // By default...
+}
+
+// ---
 bool COMMODORE::VIAControlLineType1::simulate (MCHEmul::CPU* cpu)
 {
 	switch (_mode)
@@ -46,7 +53,9 @@ bool COMMODORE::VIAControlLineType1::simulate (MCHEmul::CPU* cpu)
 
 					_interruptRequested = true;
 
-					_P -> setLatchIR (true);
+					// The value is latched...
+					// ...whether it is returned is defined by the Port itself...
+					_P -> latchValue ();
 				}
 			}
 
@@ -60,7 +69,9 @@ bool COMMODORE::VIAControlLineType1::simulate (MCHEmul::CPU* cpu)
 
 					_interruptRequested = true;
 
-					_P -> setLatchIR (true);
+					// The value is latched...
+					// ...whether it is returned is defined by the Port itself...
+					_P -> latchValue ();
 				}
 			}
 
@@ -138,9 +149,11 @@ void COMMODORE::VIAControlLineType2::whenReadWritePort (bool r)
 // ---
 void COMMODORE::VIAControlLineType2::initialize ()
 {
-	_justMovedToFalse = false;
-
 	COMMODORE::VIAControlLine::initialize ();
+
+	_mode = 3; // This is the default mode...
+
+	_justMovedToFalse = false;
 }
 
 // ---

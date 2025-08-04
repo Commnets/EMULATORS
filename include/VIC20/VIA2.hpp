@@ -23,7 +23,8 @@ namespace VIC20
 	class InputOSSystem;
 
 	/** VIA 2 in VIC20, 
-		takes care of the keyboard and right joystick 1 switch. */
+		takes care of the keyboard and right joystick 1 switch. \n
+		It takes also care or reading (CA1) and writting (PB3) to the datasette port. */
 	class VIA2 final : public COMMODORE::VIA
 	{
 		public:

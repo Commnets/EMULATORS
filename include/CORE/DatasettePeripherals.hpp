@@ -19,17 +19,15 @@
 #include <CORE/FileIO.hpp>
 #include <CORE/DtMemoryBlock.hpp>
 #include <CORE/InfoStructure.hpp>
-#include <thread>
-#include <mutex>
 
 namespace MCHEmul
 {
 	/** All datasette peripheral should inherit from this class. \n
 		Just to guarantte that they can be linked to the Datasette Port. */
-	class DatasettePeripheral : public MCHEmul::IOPeripheral
+	class DatasettePeripheral : public IOPeripheral
 	{
 		public:
-		DatasettePeripheral (int id, const MCHEmul::Attributes& attrs);
+		DatasettePeripheral (int id, const Attributes& attrs);
 
 		/** To know when some element in the status of the datasette has requested to change it status. \n
 			The status might or not actually change. \n
@@ -76,7 +74,7 @@ namespace MCHEmul
 
 		/** It can be overloaded later. \n
 			The default accepted type of data is @see @RawFileData. */
-		virtual bool connectData (MCHEmul::FileData* dt) override;
+		virtual bool connectData (FileData* dt) override;
 
 		/** The specific format could be overloaded. \n
 			By default it is again the most simple one (@see @RawFileData) */
@@ -118,7 +116,7 @@ namespace MCHEmul
 		bool _motorOff;
 		bool _noKeyPressed;
 
-		MCHEmul::ExtendedDataMemoryBlocks _data;
+		ExtendedDataMemoryBlocks _data;
 
 		// Implementation...
 		mutable OBool _motorChangeStatusRequest;
@@ -155,7 +153,7 @@ namespace MCHEmul
 			: DatasettePeripheral (_ID, { }) // A nothing identificator...
 							{ }
 
-		virtual bool simulate (MCHEmul::CPU* cpu) override
+		virtual bool simulate (CPU* cpu) override
 							{ return (true); } // Always right but nothing is done with the variations of the internal data...
 	};
 	
@@ -196,7 +194,7 @@ namespace MCHEmul
 		class Implementation
 		{
 			public:
-			Implementation (const MCHEmul::UByte& nV = MCHEmul::UByte::_FF)
+			Implementation (const UByte& nV = UByte::_FF)
 				: _clockCyclesCounter (0),
 				  _valueForNoMoreData (nV)
 							{ }
@@ -204,7 +202,7 @@ namespace MCHEmul
 			virtual ~Implementation () = default;
 
 			/** Which is the value when there is no more data to read. */
-			const MCHEmul::UByte& valueForNoMoreData () const
+			const UByte& valueForNoMoreData () const
 							{ return (_valueForNoMoreData); }
 
 			// Controlling the clock...
@@ -223,7 +221,7 @@ namespace MCHEmul
 			/** What to do when a value has been read from the data file. \n
 				The method receives the number of cycles of the CPU when the value was read,
 				and also the value finally read from the file. */
-			virtual void whenValueRead (unsigned int cC, const MCHEmul::UByte& v) = 0;
+			virtual void whenValueRead (unsigned int cC, const UByte& v) = 0;
 			
 			// Actions when writting...
 			/** To decide whether it is or not time to write a value. \n
@@ -234,11 +232,11 @@ namespace MCHEmul
 			/** What to do when a value has been writtem to the data file. \n
 				The method receives the number of cycles of the CPU when the value was written to the data file
 				and also the value finally written. */
-			virtual void whenValueWritten (unsigned int, const MCHEmul::UByte& v) = 0;
+			virtual void whenValueWritten (unsigned int, const UByte& v) = 0;
 
 			// Actions when writting...
 			/** To decide what value has to be saved for a bit. */
-			virtual MCHEmul::UByte valueToSaveForBit (bool v) const = 0;
+			virtual UByte valueToSaveForBit (bool v) const = 0;
 
 			virtual void initialize ()
 							{ resetClock (); }
@@ -247,7 +245,7 @@ namespace MCHEmul
 			/** To control the clock. */
 			unsigned int _clockCyclesCounter;
 			/** Value returned when there is no more data to read from the file. */
-			MCHEmul::UByte _valueForNoMoreData;
+			UByte _valueForNoMoreData;
 		};
 
 		/** A implementation to do nothing. */
@@ -260,15 +258,15 @@ namespace MCHEmul
 
 			virtual bool timeToReadValue (unsigned int cC, bool &v) const override
 							{ v = false; return (false); } // Never is time!
-			virtual void whenValueRead (unsigned int cC, const MCHEmul::UByte& v) override 
+			virtual void whenValueRead (unsigned int cC, const UByte& v) override 
 							{ } // Nothing to do...
 
 			virtual bool timeToWriteValue (unsigned int cC, bool v) const override
 							{ return (false); } // Never is time!
-			virtual void whenValueWritten (unsigned int cC, const MCHEmul::UByte& v) override
+			virtual void whenValueWritten (unsigned int cC, const UByte& v) override
 							{ } // Nothing to do...
 
-			virtual MCHEmul::UByte valueToSaveForBit (bool v) const override
+			virtual UByte valueToSaveForBit (bool v) const override
 							{ return (0); }
 		};
 
@@ -280,9 +278,7 @@ namespace MCHEmul
 		static const int _KEYSTOP   = 4;
 		static const int _KEYPLAY   = 8;
 		static const int _KEYRECORD = 16; // Save = RECORD + PLAY
-		static const int _KEYEJECT	= 32; // To clean up the data loaded, or to simulate a new casette is inserted...
-		static const int _KEYIOBASE	= 64; // 10 command to the io simulation... (64...73)
-		/** The key EJECT has no value. */
+		static const int _KEYEJECT	= 32; // To clean up the data loaded, or to simulate like a new casette is inserted...
 
 		/** The object is owner of the implementation object too. */
 		StandardDatasette (int id, Implementation* i, 
@@ -298,34 +294,34 @@ namespace MCHEmul
 
 		virtual bool initialize () override;
 
-		virtual bool executeCommand (int id, const MCHEmul::Strings& prms) override;
+		virtual bool connectData (FileData* dt) override;
+
+		virtual bool executeCommand (int id, const Strings& prms) override;
 		virtual Strings commandDescriptions () const override
 							{ return (Strings (
 								{ "1:FORWARD", "2:REWIND", "4:STOP", "8:PLAY", "24:PLAY + RECORD", "32:EJECT(and clear data)" })); }
 
-		virtual bool simulate (MCHEmul::CPU* cpu) override;
-
-		virtual bool connectData (MCHEmul::FileData* dt) override;
+		virtual bool simulate (CPU* cpu) override;
 
 		/**
 		  *	The name of the fields are: \n
 		  * The ones in the parent class. \n
 		  *	ATTRS	= InfoStructure: Attributes defining the Peripheral. \n
 		  */
-		virtual MCHEmul::InfoStructure getInfoStructure () const override;
+		virtual InfoStructure getInfoStructure () const override;
 
 		protected:
 		// Invoked from the method simulate...
 		/** To execute additional things. \n
 			It can be extended from the user to do additional activities when making io,
 			like sound?....By default it does nothing. (it is invoked per cycle). */
-		virtual void additionalSimulateActions (MCHEmul::CPU* cpu, unsigned int cC) { }
+		virtual void additionalSimulateActions (CPU* cpu, unsigned int cC) { }
 		/** Read the next value from the data file. \n
 			The variable e is set to true when there is no more data to read, and
 			false in any other circunstance. */
-		inline MCHEmul::UByte readFromData (bool& e);
+		inline UByte readFromData (bool& e);
 		/** Store a value in the data file */
-		inline void storeInData (const MCHEmul::UByte& dt);
+		inline void storeInData (const UByte& dt);
 
 		/** To change the implementation, it cannot be nullptr. */
 		inline void setImplementation (Implementation* i);
@@ -356,11 +352,11 @@ namespace MCHEmul
 		mutable unsigned int _lastCPUCycles;
 		/** Everytime the status is set back to read (PLAY Key), 
 			this variable is set to true. */
-		MCHEmul::OBool _firstTimeReading;
+		OBool _firstTimeReading;
 	};
 
 	// ---
-	inline MCHEmul::UByte StandardDatasette::readFromData (bool& e)
+	inline UByte StandardDatasette::readFromData (bool& e)
 	{
 		e = false;
 		if (_dataCounter < _data._data.size ())
@@ -385,7 +381,7 @@ namespace MCHEmul
 	}
 
 	// ---
-	inline void StandardDatasette::storeInData (const MCHEmul::UByte& dt)
+	inline void StandardDatasette::storeInData (const UByte& dt)
 	{
 		_data._data [_dataCounter].addByte (dt);
 

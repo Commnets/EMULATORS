@@ -19,8 +19,9 @@
 
 namespace COMMODORE
 {
-	class VIAControlLine;
-	class VIATimer;
+	class VIAControlLineType1;
+	class VIAControlLineType2;
+	class VIATimer1;
 	class VIA;
 
 	/** 
@@ -42,11 +43,14 @@ namespace COMMODORE
 	  * A "Timer" might be also linked to the "Port" (Timer1 usually). \n
 	  * In some modes of the timer (Timer1 when ACR7 = true) anytime reaches0 = true, P7 changes its value.
 	  */
-	class VIAPort final : public MCHEmul::InfoClass
+	class VIAPort : public MCHEmul::InfoClass, public MCHEmul::Notifier
 	{
 		public:
-		friend VIATimer;
 		friend VIA;
+
+		// Events...
+		/** Event sent when the value of the port has changed. */
+		static const unsigned int _VIAPORTIOBITSACTUALIZED = 240;
 
 		VIAPort (int id);
 
@@ -61,7 +65,7 @@ namespace COMMODORE
 		void setLatchIR (bool l)
 							{ _latch = l; }
 		void latchValue ()
-							{ _valueLatched = value (false); /** not to affect control lines. */ }
+							{ _valueLatched = portValue (); }
 
 		/** To fix the value of the port pins. \n
 			This routine can be used from externally the class, 
@@ -75,27 +79,9 @@ namespace COMMODORE
 		/** To get the value present in the "Port" (potentially to be moved into the data bus). \n
 			The value = pins when no latching. \n
 			Any time this method is executed the "ControlLines" interrupt flag is cleared only if r = true (default). */
-		const MCHEmul::UByte& value (bool r = true) const;
-		/** To know whether there is a pulse happen in bit 6. */
-		bool p6Pulse () const // Bear in mind that when this method is invoked "transition" becomes again false...
-							{ return (_p6.transition ()); }
-		bool peekP6Pulse () const // When this one, the "transition" status is not cleared...
-							{ return (_p6.peekTransition ()); }
-		/** To set the value to be sent (initially) to the port pins. \n
-			The value that finally will be present in the port pins might be slighly different
-			depending on the Direction Register (DDR) value and others (reflection of timer2 in bit 7 of output register). \n
-			Any time this method is executed the "ControlLines" interrupt flag is cleared only if r = true. */
-		void setValue (const MCHEmul::UByte& v, bool r = true);
-		bool p7 () const
-							{ return (_p7); }
-		/** Set the value of the bit 7. \n
-			Usually this is called from "Timer" simulation in some modes, when reaches0 = true. */
-		void setP7 (bool v)
-							{ _p7 = v; }
-		/** Just to change the value of the bit 7. \n
-			Same comments than above. */
-		void changeP7 ()
-							{ _p7 = !_p7; }
+		virtual const MCHEmul::UByte& value (bool r = true) const;
+		/** To set the value to be sent (initially) to the port pins. */
+		virtual void setValue (const MCHEmul::UByte& v, bool r = true);
 
 		/** To read/set the direction of the data to the port pins. \n
 			A bit to 0 in the value means input, while a bit to 1 means output. */
@@ -111,10 +97,11 @@ namespace COMMODORE
 		const MCHEmul::UByte& IR () const
 							{ return (_IR); }
 
-		void initialize ();
+		virtual void initialize ();
 
-		/** Returns true with everything ok, and false in any other circunstance. */
-		bool simulate (MCHEmul::CPU* cpu);
+		/** Returns true with everything ok, and false in any other circunstance. 
+			The simulation behaviour is a bit different depending on the type of port. */
+		virtual bool simulate (MCHEmul::CPU* cpu);
 
 		/**
 		  *	The name of the fields are: \n
@@ -135,12 +122,14 @@ namespace COMMODORE
 									  _DDR.asString (MCHEmul::UByte::OutputFormat::_HEXA)); }
 
 		protected:
-		/** Link to "ControlLines." */
-		void linkAtControlLines (VIAControlLine* cl1, VIAControlLine* cl2)
+		/** Link to "ControlLines". 
+			Could be overloaded e.g. to control the type of control lines linked. */
+		virtual void linkAtControlLines (VIAControlLineType1* cl1, VIAControlLineType2* cl2)
 							{ _CL1 = cl1; _CL2 = cl2;  }
-		/** Link to "Timer". */
-		void linkAtTimer (VIATimer* t)
-							{ _T = t; }
+
+		/** Notify changes in the value of the port.
+			The first parameter represents the bit that changed, and the second is the new value. */
+		virtual void notifyPortChanges (const MCHEmul::UByte& c, const MCHEmul::UByte& v);
 
 		protected:
 		int _id;
@@ -149,7 +138,7 @@ namespace COMMODORE
 		/** The value latched, if the option is activ. */
 		MCHEmul::UByte _valueLatched;
 		/** The value present at the pins of the VIC. 
-			It is represented using a Bus of 8 bits. */
+			It is represented using a Bus of 8 bits, to detect changes e.g in it. */
 		MCHEmul::Bus _port;
 		/** The Data Direction Register. 
 			A 0 in the bit means the correspondant pin in the port will act as input, 
@@ -170,11 +159,79 @@ namespace COMMODORE
 		mutable MCHEmul::UByte _IR;
 
 		// Elements related with this one...
-		VIATimer* _T;
-		VIAControlLine *_CL1, *_CL2;
+		VIAControlLineType1 *_CL1;
+		VIAControlLineType2 *_CL2;
 
 		// Implementation
 		MCHEmul::UByte _lastPortValue;
+	};
+
+	/** The Port A follows pretty much the standard behaviour. */
+	class VIAPortA final : public VIAPort
+	{
+		public:
+		VIAPortA (int id)
+			: VIAPort (id)
+							{ /** Nothing else. */ }
+	};
+
+	/** The Port B has a different behaviour in some bits. \n
+		Bit 6 is used to detect pulses, and bit 7 is used to reflect the timer2 status. */
+	class VIAPortB final : public VIAPort
+	{
+		public:
+		friend VIA;
+
+		// Events...
+		/** When the value of the PIN3 has changed. 
+			This is used to notify write actions in the datsette. */
+		static const unsigned int _VIAPORTN3ACTUALIZED = 241;
+
+		VIAPortB (int id);
+
+		/** To know whether there is a pulse happen in bit 6. */
+		bool p6Pulse () const // Bear in mind that when this method is invoked "transition" becomes again false...
+							{ return (_p6.transition ()); }
+		bool peekP6negativeEdge () const // When this one, the "transition" status is not cleared...
+							{ return (_p6.peekNegativeEdge ()); }
+		/** To set the value to be sent (initially) to the port pins. \n
+			The value that finally will be present in the port pins might be slighly different
+			depending on the Direction Register (DDR) value and others (reflection of timer2 in bit 7 of output register). \n
+			Any time this method is executed the "ControlLines" interrupt flag is cleared only if r = true. */
+		bool p7 () const
+							{ return (_p7); }
+		/** Set the value of the bit 7. \n
+			Usually this is called from "Timer" simulation in some modes, when reaches0 = true. */
+		void setP7 (bool v)
+							{ _p7 = v; }
+		/** Just to change the value of the bit 7. \n
+			Same comments than above. */
+		void changeP7 ()
+							{ _p7 = !_p7; }
+
+		/** In the PortB the value returned finally for the PINS declared as output
+			is the value in the OR Register. \n
+			This is because a Darlington Transistor can be connected to that port and, 
+			when a big current is demanded the value in that port pint coould bring down up to 0, 
+			reading then as a 0 instead a 1. */
+		virtual const MCHEmul::UByte& value (bool r = true) const override;
+
+		virtual void initialize () override;
+
+		virtual bool simulate (MCHEmul::CPU* cpu) override;
+
+		private:
+		/** Link to "Timer" 
+			Could be overloaded e.g. to control the type of control lines linked. */
+		void linkAtTimer (VIATimer1* t)
+							{ _T = t; }
+
+		virtual void notifyPortChanges (const MCHEmul::UByte& c, const MCHEmul::UByte& v) override;
+
+		private:
+		// Elements related with this one...
+		VIATimer1* _T;
+
 		bool _p7;
 		MCHEmul::Pulse _p6;
 	};

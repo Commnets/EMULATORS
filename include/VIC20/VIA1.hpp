@@ -21,7 +21,8 @@
 namespace VIC20
 {
 	/** VIA1 in the VIC20,
-		takes care of the Serial Port and Expansdion Port. */
+		takes care of the Serial Port, User Port, 
+		Game Port and Datasette Port (key pressed and motor) */
 	class VIA1 final : public COMMODORE::VIA
 	{
 		public:

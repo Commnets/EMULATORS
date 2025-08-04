@@ -9,7 +9,9 @@ MCHEmul::IOPeripheral* C64::IOPeripheralBuilder::createPeripheral
 {
 	MCHEmul::IOPeripheral* result = nullptr;
 
-	if (id == C64::Cartridge::_ID)
+	if (id == MCHEmul::Typewriter::_ID)
+		result = new MCHEmul::Typewriter (2 /** 1 every 25 miliseconds. */, c);
+	else if (id == C64::Cartridge::_ID)
 		result = new C64::Cartridge;
 	else if (id == COMMODORE::Datasette1530::_ID)
 		/** CN2 datasette keeps three types on short pulses in NTSC:

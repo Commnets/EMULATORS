@@ -52,11 +52,11 @@ namespace MCHEmul
 							{ return (_datasette); }
 
 		/** It verifies that the peripheral to add is compatible (= DatasettePeripheral). */
-		virtual bool connectPeripheral (MCHEmul::IOPeripheral* p) override;
+		virtual bool connectPeripheral (IOPeripheral* p) override;
 
-		virtual bool simulate (MCHEmul::CPU* cpu) override;
+		virtual bool simulate (CPU* cpu) override;
 
-		virtual void processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifier* n) override;
+		virtual void processEvent (const Event& evnt, Notifier* n) override;
 
 		protected:
 		/** The casette connected. */

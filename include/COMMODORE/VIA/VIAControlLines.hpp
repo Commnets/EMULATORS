@@ -27,8 +27,6 @@ namespace COMMODORE
 	class VIAControlLine : public MCHEmul::InfoClass
 	{
 		public:
-		friend VIA;
-
 		VIAControlLine (int id);
 
 		int id () const
@@ -100,27 +98,11 @@ namespace COMMODORE
 		  */
 		virtual MCHEmul::InfoStructure getInfoStructure () const override;
 
-		private:
-		/** In some modes, when the control line changes the status, 
-			the value in a port related might be latched. \n
-			The link is not always needed. */
-		void linkToPort (VIAPort* p)
-							{ _P = p; }
-		/** In some type, in some modes, 
-			the result might affect another "ControlLine". (pulse mdoes). \n
-			The link is not always needeed. */
-		void linkToControlLine (VIAControlLine* c)
-							{ _CL = c;}
-
 		protected:
 		MCHEmul::Wire _wire;
 		unsigned char _mode;
 		/** When interrupts are enabled. */
 		bool _interruptEnabled;
-
-		// Other elements this "ControlLine" has relation with...
-		VIAPort* _P;
-		VIAControlLine* _CL;
 
 		// Implementation
 		/** When a interrupt has been requested for this object. */
@@ -139,8 +121,11 @@ namespace COMMODORE
 	class VIAControlLineType1 final : public VIAControlLine
 	{
 		public:
+		friend VIA;
+
 		VIAControlLineType1 (int id)
-			: VIAControlLine (id)
+			: VIAControlLine (id),
+			  _P (nullptr) // it must be associated later...
 							{ }
 
 		/** The collateral effect when read/write action in the port
@@ -148,7 +133,19 @@ namespace COMMODORE
 		virtual void whenReadWritePort (bool) override
 							{ interruptRequested (); }
 
+		virtual void initialize () override;
+
 		virtual bool simulate (MCHEmul::CPU* cpu) override;
+
+		private:
+		/** A transition in this type of line it is used to latch a value in a associated port. \n
+			The value will or not be used depending on the configuration of the port. \n
+			This method is to link the port. */
+		void linkToPort (VIAPort* p)
+							{ _P = p; }
+
+		private:
+		VIAPort* _P;
 	};
 
 	/** Type 2 of "ControlLine".
@@ -178,11 +175,16 @@ namespace COMMODORE
 	class VIAControlLineType2 final : public VIAControlLine
 	{
 		public:
+		friend VIA;
+
 		VIAControlLineType2 (int id)
 			: VIAControlLine (id),
+			  _CL (nullptr), // it must be associated later...
 			  _justMovedToFalse (false)
 							{ }
 
+		/** The collateral effect in he port will depend on 
+			the mode the line is configured. */
 		virtual void whenReadWritePort (bool r) override;
 
 		virtual void initialize () override;
@@ -190,9 +192,19 @@ namespace COMMODORE
 		virtual bool simulate (MCHEmul::CPU* cpu) override;
 
 		private:
+		/** In some type, in some modes, 
+			the result might affect another "ControlLine". (pulse modes). \n
+			The link is not always needeed. */
+		void linkToControlLine (VIAControlLine* c)
+							{ _CL = c;}
+
+		private:
 		/** In handshake mode (0x05) a pulse is generate in the control line
 			for just one cycle. */
 		MCHEmul::OBool _justMovedToFalse;
+
+		private:
+		VIAControlLine* _CL;
 	};
 }
 

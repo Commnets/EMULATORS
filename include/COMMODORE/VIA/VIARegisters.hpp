@@ -25,7 +25,8 @@ namespace COMMODORE
 	class VIAControlLine;
 	class VIATimer;
 	class VIAShiftRegister;
-	class VIAPort;
+	class VIAPortA;
+	class VIAPortB;
 
 	/** In the VIA Memory, there are a couple of records that behave different
 		when they are read that when they are written. \n
@@ -59,8 +60,8 @@ namespace COMMODORE
 
 		// This methods are invoked from CIA chip...
 		/** Link to the "ControlLines". */
-		void lookAtControlLines (VIAControlLine* ca1, VIAControlLine* ca2, 
-			VIAControlLine* cb1, VIAControlLine* cb2)
+		void lookAtControlLines (VIAControlLineType1* ca1, VIAControlLineType2* ca2, 
+			VIAControlLineType1* cb1, VIAControlLineType2* cb2)
 							{ _CA1 = ca1; _CA2 = ca2; _CB1 = cb1; _CB2 = cb2; }
 		/** Link to "Timers". */
 		void lookAtTimers (VIATimer* tA, VIATimer* tB)
@@ -69,19 +70,21 @@ namespace COMMODORE
 		void lookAtShiftRegister (VIAShiftRegister* s)
 							{ _SR = s; }
 		/** Link to "Ports". */
-		void lookAtPorts (VIAPort* pa, VIAPort* pb)
-							{ _PA = pa; _PB = pb; }
+		void lookAtPorts (VIAPortA* pA, VIAPortB* pB)
+							{ _PA = pA; _PB = pB; }
 
 		protected:
 		// Elements related with this one...
 		/** The control lines: _CA1, _CA2, CB1, _CB2 */
-		VIAControlLine *_CA1, *_CA2, *_CB1, *_CB2;
+		VIAControlLineType1 *_CA1, *_CB1;
+		VIAControlLineType2 *_CA2, *_CB2;
 		/** The timers = T1 & T2 */
 		VIATimer *_T1, *_T2;
 		/** The shift register = SR */
 		VIAShiftRegister* _SR;
 		/** The ports = PA & PB */
-		VIAPort *_PA, *_PB;
+		VIAPortA *_PA; 
+		VIAPortB *_PB;
 
 		// Implementation
 		/** Keeps always the last value read. */

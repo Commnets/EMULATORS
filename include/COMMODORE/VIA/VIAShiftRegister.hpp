@@ -67,8 +67,10 @@ namespace COMMODORE
 
 		ShiftMode mode () const
 							{ return (_mode); }
-		inline void setMode (ShiftMode m);
+		void setMode (ShiftMode m)
+							{ _mode = m; }
 
+		// Managing the value that is in the register...
 		inline const MCHEmul::UByte value () const;
 		inline void setValue (const MCHEmul::UByte& v);
 
@@ -135,14 +137,6 @@ namespace COMMODORE
 		/** When the interrupt has been requested. */
 		mutable MCHEmul::OBool _interruptRequested;
 	};
-
-	// ---
-	inline void VIAShiftRegister::setMode (VIAShiftRegister::ShiftMode m)
-	{
-		_mode = m;
-
-		initialize ();
-	}
 
 	// ---
 	inline const MCHEmul::UByte VIAShiftRegister::value () const

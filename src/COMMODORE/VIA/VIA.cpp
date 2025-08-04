@@ -103,9 +103,6 @@ bool COMMODORE::VIA::simulate (MCHEmul::CPU* cpu)
 
 		// Simulations...
 		// "ControlLines"
-		// Clean up first the signals...
-		_CA1.transition (); _CA2.transition (); 
-		_CB1.transition (); _CB2.transition ();
 		result &= _CA1.simulate (cpu);
 		result &= _CA2.simulate (cpu);
 		result &= _CB1.simulate (cpu);
@@ -121,8 +118,6 @@ bool COMMODORE::VIA::simulate (MCHEmul::CPU* cpu)
 		result &= _SR.simulate (cpu);
 
 		// "Ports"
-		// Clean up first the signals...
-		_PA.p6Pulse (); _PB.p6Pulse ();
 		result &= _PA.simulate (cpu);
 		result &= _PB.simulate (cpu);
 		// After this the signals can be up, and can be used by
@@ -137,6 +132,14 @@ bool COMMODORE::VIA::simulate (MCHEmul::CPU* cpu)
 				cpu -> clockCycles  () - i, 
 				this,
 				cI);
+
+		// Clean up the signals...
+		// Just in case they were not used in the cycle...
+		_CA1.positiveEdge (); _CA1.negativeEdge ();
+		_CA2.positiveEdge (); _CA2.negativeEdge ();
+		_CB1.positiveEdge (); _CB1.negativeEdge ();
+		_CB2.positiveEdge (); _CB2.negativeEdge ();
+		_PB.p6Pulse ();
 	}
 
 	_lastClockCycles = cpu -> clockCycles ();

@@ -1,4 +1,5 @@
 #include <CORE/OSIO.hpp>
+#include <CORE/OSIOPeripheral.hpp>
 #include <SDL.h>
 
 // ---
@@ -11,6 +12,15 @@ MCHEmul::InputOSSystem::InputOSSystem (int id, const MCHEmul::Attributes& attrs)
 	  _joyMovementMap ()
 { 
 	setClassName ("IOSystem"); 
+}
+
+// ---
+bool MCHEmul::InputOSSystem::connectPeripheral (MCHEmul::IOPeripheral* p)
+{
+	if (dynamic_cast <MCHEmul::InputOSSystemPeripheral*> (p) == nullptr)
+		return (false); // Not supported...
+
+	return (IODevice::connectPeripheral (p)); // No peripheral is supported, so it will return false...
 }
 
 // ---
@@ -43,8 +53,56 @@ bool MCHEmul::InputOSSystem::initialize ()
 // ---
 bool MCHEmul::InputOSSystem::simulate (MCHEmul::CPU* cpu)
 {
-	if (!MCHEmul::IODevice::simulate (cpu))
-		return (false);
+	bool mainEvent = false;
+	SDL_Event event;
+	MCHEmul::InputOSSystem::SDL_JoyAxisEvents js;
+	auto manageEvent = [&](const SDL_Event& event) -> void
+		{
+			mainEvent = true;
+
+			switch (event.type)
+			{
+				case SDL_KEYDOWN:
+					whenKeyPressed (event.key.keysym.scancode);
+					break;
+
+				case SDL_KEYUP:
+					whenKeyReleased (event.key.keysym.scancode);
+					break;
+
+				case SDL_JOYAXISMOTION:
+					js.push_back (event.jaxis);
+					break;
+
+				case SDL_JOYBUTTONDOWN:
+					whenJoystickButtonPressed (event.jbutton);
+					break;
+			
+				case SDL_JOYBUTTONUP:
+					whenJoystickButtonReleased (event.jbutton);
+					break;
+
+				case SDL_MOUSEMOTION:
+					whenMouseMoved (event.motion);
+					break;
+
+				case SDL_MOUSEBUTTONDOWN:
+					whenMouseButtonPressed (event.button);
+						break;
+
+				case SDL_MOUSEBUTTONUP:
+					whenMouseButtonReleased (event.button);
+						break;
+
+				case SDL_QUIT:
+					_quitRequested = true;
+					break;
+
+				default:
+					mainEvent = false;
+					break;
+			}
+		};
 
 	if (_clock.tooQuick ())
 	{
@@ -53,53 +111,29 @@ bool MCHEmul::InputOSSystem::simulate (MCHEmul::CPU* cpu)
 		return (true); // Nothing read, but everything ok...
 	}
 
-	SDL_Event event;
+	// The execution of the peripherals has to have 
+	// the same execution pace than the main device...
+	if (!MCHEmul::IODevice::simulate (cpu))
+		return (false);
 
-	MCHEmul::InputOSSystem::SDL_JoyAxisEvents js;
-
+	// Manage the internal events...
+	// The priority is for the systemn events...
 	while (SDL_PollEvent (&event))
+		manageEvent (event);
+
+	// If there was no events generated from the system, 
+	// there might be an opportunity to manage the ones comming from the outside!
+	// Manage the events injected from the peripherals connected to this device...
+	// Bear in mind that a static_cast conversion id done because it is supossed that all 
+	// peripherals connected to this one are of the type InputOSSystemPeripheral: @see connectPeripheral method
+	// If there were be more than 1 peripherals connected generating events simultaneously, only one
+	// would treated per IODevice cycle.
+	if (!mainEvent)
 	{
-		switch (event.type)
-		{
-			case SDL_KEYDOWN:
-				whenKeyPressed (event.key.keysym.scancode);
-				break;
-
-			case SDL_KEYUP:
-				whenKeyReleased (event.key.keysym.scancode);
-				break;
-
-			case SDL_JOYAXISMOTION:
-				js.push_back (event.jaxis);
-				break;
-
-			case SDL_JOYBUTTONDOWN:
-				whenJoystickButtonPressed (event.jbutton);
-				break;
-			
-			case SDL_JOYBUTTONUP:
-				whenJoystickButtonReleased (event.jbutton);
-				break;
-
-			case SDL_MOUSEMOTION:
-				whenMouseMoved (event.motion);
-				break;
-
-			case SDL_MOUSEBUTTONDOWN:
-				whenMouseButtonPressed (event.button);
-					break;
-
-			case SDL_MOUSEBUTTONUP:
-				whenMouseButtonReleased (event.button);
-					break;
-
-			case SDL_QUIT:
-				_quitRequested = true;
-				break;
-
-			default:
-				break;
-		}
+		for (MCHEmul::IOPeripherals::const_iterator i = _peripherals.begin (); 
+				i != _peripherals.end () && !mainEvent; i++)
+			if (static_cast <MCHEmul::InputOSSystemPeripheral*> ((*i).second) -> eventReady ())
+				manageEvent (static_cast <MCHEmul::InputOSSystemPeripheral*> ((*i).second) -> eventToInject ());
 	}
 
 	_clock.countCycles (1);

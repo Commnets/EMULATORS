@@ -63,6 +63,7 @@
 #include <CORE/Screen.hpp>
 #include <CORE/ScreenMemory.hpp>
 #include <CORE/OSIO.hpp>
+#include <CORE/OSIOPeripheral.hpp>
 #include <CORE/Sound.hpp>
 #include <CORE/SoundWave.hpp>
 #include <CORE/SoundVoice.hpp>
@@ -71,6 +72,7 @@
 #include <CORE/DatasettePort.hpp>
 #include <CORE/IOPeripheral.hpp>
 #include <CORE/DatasettePeripherals.hpp>
+#include <CORE/Typewriter.hpp>
 #include <CORE/IOPBuilder.hpp>
 #include <CORE/Command.hpp>
 #include <CORE/CommandBuilder.hpp>

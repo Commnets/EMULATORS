@@ -46,7 +46,7 @@ bool MCHEmul::DatasettePeripheral::initialize ()
 
 // ---
 bool MCHEmul::DatasettePeripheral::connectData (MCHEmul::FileData* dt)
-{ 
+{
 	if (dynamic_cast <MCHEmul::RawFileData*> (dt) == nullptr)
 		return (false); // That type of info is not valid from the datasette...
 
@@ -61,7 +61,7 @@ MCHEmul::FileData* MCHEmul::DatasettePeripheral::retrieveData () const
 	// The format understood by this retrive method is just raw...
 	MCHEmul::FileData* result = new MCHEmul::RawFileData; 
 	MCHEmul::RawFileData* tap = dynamic_cast <MCHEmul::RawFileData*> (result);
-	// If is not needed to ckeckit because it has been the one loaded at the beginning...
+	// If is not needed to ckeck it because it has been the one loaded at the beginning...
 
 	// Later, when saving if any, the size in the name will be limited...
 	tap -> _signature = _data._name;
@@ -152,6 +152,19 @@ bool MCHEmul::StandardDatasette::initialize ()
 	_implementation -> initialize ();
 
 	return (MCHEmul::DatasettePeripheral::initialize ());
+}
+
+// ---
+bool MCHEmul::StandardDatasette::connectData (MCHEmul::FileData* dt)
+{
+	bool result = MCHEmul::DatasettePeripheral::connectData (dt);
+
+	if (result)
+		_dataCounter = 
+			(_data._data.empty () ? std::numeric_limits <size_t>::max () : 0); 
+	// at the beginning or pointing to nowhere if there is no data finally loaded...
+
+	return (result);
 }
 
 // ---
@@ -429,19 +442,6 @@ bool MCHEmul::StandardDatasette::simulate (MCHEmul::CPU* cpu)
 	}
 
 	_lastCPUCycles = cpu -> clockCycles ();
-
-	return (result);
-}
-
-// ---
-bool MCHEmul::StandardDatasette::connectData (MCHEmul::FileData* dt)
-{
-	bool result = MCHEmul::DatasettePeripheral::connectData (dt);
-
-	if (result)
-		_dataCounter = 
-			(_data._data.empty () ? std::numeric_limits <size_t>::max () : 0); 
-	// at the beginning or pointing to nowhere if there is no data finally loaded...
 
 	return (result);
 }

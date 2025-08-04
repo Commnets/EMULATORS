@@ -101,9 +101,11 @@ namespace COMMODORE
 		// The different elements of the VIA Chip...
 		VIAControlLineType1 _CA1, _CB1;
 		VIAControlLineType2 _CA2, _CB2;
-		VIATimer _T1, _T2;
+		VIATimer1 _T1;
+		VIATimer2 _T2;
 		VIAShiftRegister _SR;
-		VIAPort _PA, _PB;
+		VIAPortA _PA;
+		VIAPortB _PB;
 
 		// Implementation
 		unsigned int _lastClockCycles;

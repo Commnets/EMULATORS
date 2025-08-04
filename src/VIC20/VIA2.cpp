@@ -16,6 +16,9 @@ bool VIC20::VIA2::initialize ()
 		return (false);
 	}
 
+	// Just to observe the write actions aganst the datasette port...
+	observe (&_PB);
+
 	return (COMMODORE::VIA::initialize ());
 }
 
@@ -74,7 +77,25 @@ void VIC20::VIA2::processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifier* n
 
 			break;
 
-			// The rest of the movements of the joystick are managed throught out VIA1...
+		// The rest of the movements of the joystick are managed throught out VIA1...
+
+		// A change in the datasette port input line (CA1) has been detected...
+		// Notice that the value of the event is not taken into account
+		// because just the change in the signal is detected!
+		case MCHEmul::DatasetteIOPort::_READ:
+			{
+				_CA1.setValue (false); // The datasette is reading!
+			}
+
+			break;
+
+		// When writting if becase the datasette port output line (PB3) has changed...
+		case COMMODORE::VIAPortB::_VIAPORTN3ACTUALIZED:
+			{
+				notify (MCHEmul::Event (MCHEmul::DatasetteIOPort::_WRITE, evnt.value ())); // Write to the datasette...
+			}
+
+			break;
 
 		default:
 			break;

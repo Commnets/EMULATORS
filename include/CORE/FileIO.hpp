@@ -177,6 +177,74 @@ namespace MCHEmul
 							{ return (dynamic_cast <RawFileData*> (fD) != nullptr); }
 		virtual bool writeFile (FileData* fD, const std::string& fN, bool bE = true) const override;
 	};
+
+	/** Structure to store a set keystrokes that are sent to the simulation. \n
+		The keystrockes are read from a file and stored in a standard format with in this structure. \n
+		The keystrokes have to be connected to a typewriter device	
+		that will translate them in specific data to be injected into the simulation. \n
+		The simulation is accountable to manage those. \n
+		A keystroke is basically the keyletter pressed in the keyboard,
+		When that letter is a combination of two is desscribed when 
+		the name of the key (e.g CTRL) the sign + and the key. */
+	struct KeystrokeData final : public FileData
+	{
+		KeystrokeData ()
+			: _keystrokes ()
+							{ }
+
+		/** This type of data has no reflection into data memory blocks. */
+		virtual ExtendedDataMemoryBlocks asMemoryBlocks () const override
+							{ return (ExtendedDataMemoryBlocks ()); }
+
+		virtual std::string asString () const override
+							{ return ("Keystrokes: " + std::to_string (_keystrokes.size ())); }
+
+		/** There will be two types of keystrokes :
+			1. The ones that are just the key pressed, like "A", "B", "C", etc. \n
+			2. The ones that are a combination of keys, like "CTRL+A", "SHIFT+B", etc.
+			3.- The control keys allowed will depend on the element receiving the data...
+			The way ones and other are managed will depend on the specific device receiving them. */
+		Strings _keystrokes; 
+	};
+
+	/** To read/write KeystrockData from a file. \n
+		The file has to have the extension .KEY. \n
+		Every line read is converted into keystrockes (@see KeystrokeData class). \n
+		The way every letter o set of letters is converted in a specific keystroke might depend on the using it emulator. \n
+		E.g " (quote) in COMMODORE is LSHIFT+2 (see a picture of the keyboard), but in a ZXSpectrum is LCTRL+P. \n
+		\n
+		The method generateTokensFor splites a line in different elements. \n
+		The default implementation just generates as many tokens as letters are in the line received + new line. \n
+		The method generateKeytrokeForToken generates a keystroke for a specific token. \n
+		The default implementation generates the keystroke for a specific key as it is in a standard keyboard.
+		\n
+		In the file received there could be written directly the keystroke to generate when it is a 
+		combination of keys. To do so the combination must be written between the simbols "\".
+		E.g. \SHIFT+Q\ will mean pressing SHIFT and then Q key (it is the same in upper or lower case). */
+	class KeystrokeTypeIO : public FileTypeIO
+	{
+		public:
+		KeystrokeTypeIO ()
+			: FileTypeIO ()
+							{ }
+
+		virtual bool canRead (const std::string& fN) const override;
+		virtual FileData* readFile (const std::string& fN, bool bE = true) const override;
+
+		virtual bool canWrite (FileData* fD) const override
+							{ return (dynamic_cast <KeystrokeData*> (fD) != nullptr); }
+		virtual bool writeFile (FileData* fD, const std::string& fN, bool bE = true) const override;
+
+		protected:
+		/** Identifies the tokens in a line of text. \n
+			The implementation will dependn on the specific emulator,
+			although the default implementation just separates the letters + end of line. */
+		virtual Strings generateTokensFor (const std::string& str) const;
+		/** Determine the keystroke for a specific token. \n
+			Again it must be defined per emulator, although the default implementation
+			identify the keystroke as it is in a standard keyboard. */
+		virtual std::string generateKeystrokeForToken (const std::string& t) const;
+	};
 }
 
 #endif

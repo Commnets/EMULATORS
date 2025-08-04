@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="..\..\packages\Microsoft.Windows.CppWinRT.2.0.220531.1\build\native\Microsoft.Windows.CppWinRT.props" Condition="Exists('..\..\packages\Microsoft.Windows.CppWinRT.2.0.220531.1\build\native\Microsoft.Windows.CppWinRT.props')" />
   <ItemGroup Label="ProjectConfigurations">
@@ -54,6 +54,7 @@
     <ClCompile Include="..\..\src\CORE\Memory.cpp" />
     <ClCompile Include="..\..\src\CORE\NotifyObserver.cpp" />
     <ClCompile Include="..\..\src\CORE\OSIO.cpp" />
+    <ClCompile Include="..\..\src\CORE\OSIOPeripheral.cpp" />
     <ClCompile Include="..\..\src\CORE\Raster.cpp" />
     <ClCompile Include="..\..\src\CORE\Screen.cpp" />
     <ClCompile Include="..\..\src\CORE\ScreenMemory.cpp" />
@@ -64,6 +65,7 @@
     <ClCompile Include="..\..\src\CORE\SoundVoice.cpp" />
     <ClCompile Include="..\..\src\CORE\SoundWave.cpp" />
     <ClCompile Include="..\..\src\CORE\Trap.cpp" />
+    <ClCompile Include="..\..\src\CORE\Typewriter.cpp" />
     <ClCompile Include="..\..\src\CORE\Wire.cpp" />
     <ClCompile Include="..\..\src\CORE\Stack.cpp" />
     <ClCompile Include="..\..\src\CORE\StatusRegister.cpp" />
@@ -116,6 +118,7 @@
     <ClInclude Include="..\..\include\CORE\NotifyObserver.hpp" />
     <ClInclude Include="..\..\include\CORE\OBool.hpp" />
     <ClInclude Include="..\..\include\CORE\OSIO.hpp" />
+    <ClInclude Include="..\..\include\CORE\OSIOPeripheral.hpp" />
     <ClInclude Include="..\..\include\CORE\ProgramCounter.hpp" />
     <ClInclude Include="..\..\include\CORE\Pulse.hpp" />
     <ClInclude Include="..\..\include\CORE\Raster.hpp" />
@@ -136,6 +139,7 @@
     <ClInclude Include="..\..\include\CORE\TestCPUSpeed.hpp" />
     <ClInclude Include="..\..\include\CORE\Ticks.hpp" />
     <ClInclude Include="..\..\include\CORE\Trap.hpp" />
+    <ClInclude Include="..\..\include\CORE\Typewriter.hpp" />
     <ClInclude Include="..\..\include\CORE\UByte.hpp" />
     <ClInclude Include="..\..\include\CORE\UBytes.hpp" />
     <ClInclude Include="..\..\include\CORE\UInt.hpp" />

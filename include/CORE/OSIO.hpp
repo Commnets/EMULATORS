@@ -20,6 +20,8 @@
 
 namespace MCHEmul
 {
+	class IOPeripheral;
+
 	/** Represents the generation of inputs from the OS. */
 	class InputOSSystem : public IODevice
 	{
@@ -117,9 +119,8 @@ namespace MCHEmul
 		bool quitRequested () const
 							{ return (_quitRequested); }
 
-		/** Not possible to connect any peripheral. */
-		virtual bool connectPeripheral (IOPeripheral* p) override
-							{ return (false); }
+		/** It verifies that the peripheral to add is compatible (= InputOSSyetemPeripheral). */
+		virtual bool connectPeripheral (IOPeripheral* p) override;
 
 		virtual bool initialize () override;
 
@@ -132,6 +133,7 @@ namespace MCHEmul
 		  */
 		virtual InfoStructure getInfoStructure () const override;
 
+		// Managing the conversions...
 		/** To know which is the name of a scan code. 
 			It can be usefull in debug functions. */
 		static std::string nameOfkey (SDL_Scancode sc)

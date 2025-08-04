@@ -168,6 +168,13 @@ NOTE: Only the first 256 bytes are shown
 NOTE: Change to FBYTES attribute in DatasetteData structure instead
 #---
 #---
+;Typewriter
+Id:@ID@
+@ATTRS?{key=YES,equal=:,empty=no attributes}\n@
+COMMANDS:@COMMANDS@
+Running:@RUNNING@ (Position:@POSITION@)
+#---
+#---
 ;IODevice
 Id:@ID@
 @ATTRS?{key=YES,equal=:,empty=no attributes}\n@

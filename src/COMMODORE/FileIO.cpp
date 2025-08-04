@@ -641,3 +641,23 @@ MCHEmul::FileData* COMMODORE::CRTFileTypeIO::readFile (const std::string& fN, bo
 
 	return (result);
 }
+
+// ---
+std::string COMMODORE::KeystrokeTypeIO::generateKeystrokeForToken (const std::string& t) const
+{
+	static const std::string NORMALSYMBOLS = "º1234567890'¡`+´ç<,.-";
+	static const std::string SHIFTSIMBOLS  = "ª!\"·$%&/()=?¿^*¨Ç>;:_";
+
+	if (t.length () > 1)
+		return (""); // No keystroke by default for this type of "complexity"
+
+	size_t sp = std::string::npos;
+	std::string ut = MCHEmul::upper (t);
+	std::string result;
+	if ((sp = SHIFTSIMBOLS.find (ut [0])) != std::string::npos) 
+		result = "LSHIFT+" + std::string (1, NORMALSYMBOLS [sp]);
+	else result = t;
+
+	return (result);
+
+}

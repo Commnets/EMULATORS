@@ -16,6 +16,10 @@ bool VIC20::VIA1::initialize ()
 		return (false);
 	}
 
+	// When the CA2 is moved to down (being up before), the chane is notified here...
+	// ...and the motor of the atasette starts to move...
+	observe (&_CA2.wire ());
+
 	return (COMMODORE::VIA::initialize ());
 }
 
@@ -46,7 +50,7 @@ void VIC20::VIA1::processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifier* n
 
 				/** The full joystick status is saved,
 					but bear in mind that VIA1 only takes care of every movement except right/east 
-					that is managed through out VIA 2. */
+					that is managed through out VIA2. */
 				_VIA1Registers -> setJoystickStatus 
 					((dr == 0x00) ? 0xff /** none connected. */ : _VIA1Registers -> joystickStatus () & ~dr);
 			}
@@ -73,6 +77,28 @@ void VIC20::VIA1::processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifier* n
 					break; // Only joystick 0 is allowed!
 	
 				_VIA1Registers -> setJoystickStatus (_VIA1Registers -> joystickStatus () & ~0x20 /** bit 5. */);
+			}
+
+			break;
+
+		// The rest of the movements of the joystick are managed throught out VIA1...
+
+		// When a key is pressed in the datasette...
+		case MCHEmul::DatasetteIOPort::_KEYPRESSED:
+			{
+				// The PB6 is reset to indicate that a button has been pressed...
+				// This is the SENSE line as it described in the documentsion...
+				_PA.setValue (_PA.value () & ~(1 << 6)); // Reset the bit 6 (PB6) to 0.
+			}
+
+			break;
+
+		// A change in the status of the CA2 will imply changes in the status of the datasette motor...
+		case MCHEmul::Wire::_WIREDCHANGED:
+			{
+				notify (MCHEmul::Event (evnt.value () == 1 // Whn 0 the motor starts...
+					? MCHEmul::DatasetteIOPort::_MOTORSTOPPED 
+					: MCHEmul::DatasetteIOPort::_MOTORRUNNING));
 			}
 
 			break;

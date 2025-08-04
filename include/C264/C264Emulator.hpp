@@ -73,6 +73,7 @@ namespace C264
 								(MCHEmul::FileTypeIOList (
 									{ new COMMODORE::CRTFileTypeIO /** Cartridges. */,
 									  new COMMODORE::TAPFileTypeIO /** Tapes. */,
+									  new COMMODORE::KeystrokeTypeIO /** Keystroke data. */,
 									  new MCHEmul::RawFileTypeIO /** Row data. */ }))); }
 	};
 

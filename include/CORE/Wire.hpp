@@ -84,7 +84,7 @@ namespace MCHEmul
 	{ 
 		bool result = _pulse.set (b);
 		if (result)
-			notify (Event (_WIREDCHANGED)); 
+			notify (Event (_WIREDCHANGED, (unsigned int) _pulse.value ())); 
 
 		return (result);
 	} 

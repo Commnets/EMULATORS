@@ -286,6 +286,18 @@ namespace COMMODORE
 		virtual bool writeFile (MCHEmul::FileData* fD, const std::string& fN, bool bE = true) const override
 							{ return (false); }
 	};
+
+	/** In the COMMODORE the keystrokes are generated in a special manner. */
+	class KeystrokeTypeIO final : public MCHEmul::KeystrokeTypeIO
+	{
+		public:
+		KeystrokeTypeIO ()
+			: MCHEmul::KeystrokeTypeIO ()
+							{ }
+
+		private:
+		virtual std::string generateKeystrokeForToken (const std::string& t) const override;
+	};
 }
 
 #endif

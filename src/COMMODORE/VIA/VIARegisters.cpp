@@ -146,28 +146,25 @@ void COMMODORE::VIARegisters::setValue (size_t p, const MCHEmul::UByte& v)
 		// Control timers & shift register behaviour and also whether CB1 and CA1 status reflects in the ports
 		case 0x0b:
 			{
-				_T1 -> setCountMode (COMMODORE::VIATimer::CountMode::_PROCESSORCYCLES); // Always...
-				_T1 -> setRunMode ((COMMODORE::VIATimer::RunMode) 
-					((unsigned char) ((v.value () & 0xd0) >> 6))); // the bit 7 and 6 determines the RunMode...
+				//The behaviour of the Timer 1 is controlled with bits 7 and 6...
+				_T1 -> setCountAndRunMode (
+					COMMODORE::VIATimer::CountMode::_PROCESSORCYCLES, // Always...
+					(COMMODORE::VIATimer::RunMode) ((unsigned char) ((v.value () & 0xd0) >> 6 /** From 0 to 3 */)));
+				if (_T1 -> runMode () == COMMODORE::VIATimer::RunMode::_ONESHOOTSIGNAL ||
+					_T1 -> runMode () == COMMODORE::VIATimer::RunMode::_CONTINUOUSSIGNAL)
+					_PB -> setP7 (true); // Reflect the status in the bit 7 of the port linked...
+										 // The initial vwlue is true. The pulse is when false!
 
-				// For the Timer B the behaviour will be different
-				// depending onthe value of the bit 5...
+				// For the Timer 2 the behaviour will be different
+				// depending onthe value of the bit 5 only...
 				if (v.bit (5))
-				{ 
-					// Count pulse...
-					_T2 -> setCountMode 
-						(COMMODORE::VIATimer::CountMode::_PULSERECEIVED);
-					_T2 -> setRunMode 
-						(COMMODORE::VIATimer::RunMode::_CONTINUOUS);
-				}
+					_T2 -> setCountAndRunMode (
+						COMMODORE::VIATimer::CountMode::_PULSERECEIVED, // Count pulse...
+						COMMODORE::VIATimer::RunMode::_CONTINUOUS); // ...in a continuous way...
 				else
-				{
-					// Like the basic behaviour of the timer A...
-					_T2 -> setCountMode 
-						(COMMODORE::VIATimer::CountMode::_PROCESSORCYCLES);
-					_T2 -> setRunMode 
-						(COMMODORE::VIATimer::RunMode::_ONESHOOT);
-				}
+					_T2 -> setCountAndRunMode (
+						COMMODORE::VIATimer::CountMode::_PROCESSORCYCLES, // Count every processor cycle...
+						COMMODORE::VIATimer::RunMode::_ONESHOOT); // ...and just once.
 
 				// The way the shift register works is controlled with bit 2 - 4
 				_SR -> setMode 
@@ -181,46 +178,46 @@ void COMMODORE::VIARegisters::setValue (size_t p, const MCHEmul::UByte& v)
 			break;
 
 		// Peripheral control register for handshaking: VIA?PCR
-		// Optios to control CA1, CA2, CB1 y CB2 lines....
+		// Options to control CA1, CA2, CB1 y CB2 lines....
 		case 0x0c:
 			{
 				_CA1 -> setMode (v.bit (0) ? 1 : 0); // 0 or 1
 				_CA2 -> setMode ((v.value () & 0x0f) >> 1); // From 0 to 7
 				_CB1 -> setMode (v.bit (4) ? 1 : 0); // 0 or 1
-				_CB2 -> setMode ((v.value () & 0xf0 /** bits 5,6,7 */) >> 5); // From 0 to 7
+				_CB2 -> setMode ((v.value () & 0xf0 /** bits 7,6,5 */) >> 5); // From 0 to 7
 			}
 
 			break;
 
 		// Interrupt flag register: VIA?IFR
-		// Only makes sense when reading...
 		// The register bits are "set" when IRQ conditions happens!
+		// The register 
 		case 0x0d:
+			{
+				// The interrupt flag is cleared writting down a 1 into it...
+				if (v.bit (6)) _T1  -> interruptRequested ();
+				if (v.bit (5)) _T2  -> interruptRequested ();
+				if (v.bit (4)) _CB1 -> interruptRequested ();
+				if (v.bit (3)) _CB2 -> interruptRequested ();
+				if (v.bit (2)) _SR  -> interruptRequested ();
+				if (v.bit (1)) _CA1 -> interruptRequested ();
+				if (v.bit (0)) _CA2 -> interruptRequested ();
+			}
+
 			break;
 
 		// Interrupt enable register: VIA?IER
 		case 0x0e:
 			{
-				if (v.bit (7)) 
-				{
-					if (v.bit (6)) _T1  -> setInterruptEnabled (true);
-					if (v.bit (5)) _T2  -> setInterruptEnabled (true);
-					if (v.bit (4)) _CB1 -> setInterruptEnabled (true);
-					if (v.bit (3)) _CB2 -> setInterruptEnabled (true);
-					if (v.bit (2)) _SR  -> setInterruptEnabled (true);
-					if (v.bit (1)) _CA1 -> setInterruptEnabled (true);
-					if (v.bit (0)) _CA2 -> setInterruptEnabled (true);
-				}
-				else
-				{
-					if (v.bit (6)) _T1  -> setInterruptEnabled (false);
-					if (v.bit (5)) _T2  -> setInterruptEnabled (false);
-					if (v.bit (4)) _CB1 -> setInterruptEnabled (false);
-					if (v.bit (3)) _CB2 -> setInterruptEnabled (false);
-					if (v.bit (2)) _SR  -> setInterruptEnabled (false);
-					if (v.bit (1)) _CA1 -> setInterruptEnabled (false);
-					if (v.bit (0)) _CA2 -> setInterruptEnabled (false);
-				}
+				// Bit 7 is the "set" bit, to enable or disable the interrupts...
+				bool s = v.bit (7); 
+				if (v.bit (6)) _T1  -> setInterruptEnabled (s);
+				if (v.bit (5)) _T2  -> setInterruptEnabled (s);
+				if (v.bit (4)) _CB1 -> setInterruptEnabled (s);
+				if (v.bit (3)) _CB2 -> setInterruptEnabled (s);
+				if (v.bit (2)) _SR  -> setInterruptEnabled (s);
+				if (v.bit (1)) _CA1 -> setInterruptEnabled (s);
+				if (v.bit (0)) _CA2 -> setInterruptEnabled (s);
 			}
 
 			break;
@@ -268,6 +265,8 @@ const MCHEmul::UByte& COMMODORE::VIARegisters::readValue (size_t p) const
 			{
 				result = _PA -> value ();
 			}
+
+			break;
 
 		case 0x02:
 			{
@@ -371,6 +370,7 @@ const MCHEmul::UByte& COMMODORE::VIARegisters::readValue (size_t p) const
 			{
 				result = MCHEmul::UByte::_0;
 				result.setBit (7, launchInterrupt ()); // Any Interrupt?
+				// Reading any bit clears the flag...
 				result.setBit (6, _T1  -> interruptRequested ()); // in Timer A?
 				result.setBit (5, _T2  -> interruptRequested ()); // in Timer B?
 				result.setBit (4, _CB1 -> interruptRequested ()); // CB1 transition?
@@ -383,6 +383,7 @@ const MCHEmul::UByte& COMMODORE::VIARegisters::readValue (size_t p) const
 		case 0x0e:
 			{
 				result = MCHEmul::UByte::_0;
+				// Bit 7 is always 0...
 				result.setBit (6, _T1  -> interruptEnabled ());
 				result.setBit (5, _T2  -> interruptEnabled ());
 				result.setBit (4, _CB1 -> interruptEnabled ());
@@ -488,7 +489,8 @@ void COMMODORE::VIARegisters::initializeInternalValues ()
 	*/
 	setValue (0x0a, 0x00);	// SR = 0
 	setValue (0x0b, 0x40);	// ACR (T1 = free running, T2 = single interval timing, SR disabled, PA and PB no latch)
-	setValue (0x0c, 0xde);  // PCR (CB2 = outpur mode, CB1 = interrup high to low transition, CA2 = input mode, CA1 = low to high transition)
+	setValue (0x0c, 0xef);  // PCR (CB2 = output mode manual, CB1 = interrupt high to low transition,... 
+							// ...CA2 = output mode normal, CA1 = high to low transition)
 	setValue (0x0d, 0x00);	// IFR. No interrupts so far...
 	setValue (0x0e, 0x00);	// IER. No interrupts so far...
 	setValue (0x0f, 0x00);	// Has no impact when setting...

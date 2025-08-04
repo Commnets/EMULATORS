@@ -307,7 +307,7 @@ namespace MCHEmul
 							{ return (_screen); }
 		const InputOSSystem* inputOSSystem () const
 							{ return (_inputOSSystem); }
-		InputOSSystem* inputOSSytem ()
+		InputOSSystem* inputOSSystem ()
 							{ return (_inputOSSystem); }
 		const SoundSystem* sound () const // Can be nullptr...
 							{ return (_sound); }

@@ -217,3 +217,143 @@ bool MCHEmul::RawFileTypeIO::writeFile (MCHEmul::FileData* fD, const std::string
 
 	return (true);
 }
+
+// ---
+bool MCHEmul::KeystrokeTypeIO::canRead (const std::string& fN) const
+{
+	// Extension?
+	size_t pp = fN.find_last_of ('.');
+	if (pp == std::string::npos || pp == fN.length ())
+		return (false); // ...no
+
+	// The right extension?
+	std::string ext = MCHEmul::upper (fN.substr (pp + 1));
+	if (ext != "KEY")
+		return (false); // ...no
+
+	// Possible to be opened? In this case a text file (no binary)...
+	std::ifstream f (fN, std::ios::in);
+	if (!f)
+		return (false); // ...no
+
+	// The file can be read and everything would be changed into keystrokes...
+	return (true);
+}
+
+// ---
+MCHEmul::FileData* MCHEmul::KeystrokeTypeIO::readFile (const std::string& fN, bool bE) const
+{
+	// The file is not binary...
+	std::ifstream f (fN, std::ios::in);
+	if (!f)
+		return (nullptr); // Impossible to be open... 
+						  // At this point it shouldn't happen but just in case...
+
+	MCHEmul::KeystrokeData* result = new MCHEmul::KeystrokeData;
+
+	std::string l;
+	while (std::getline (f, l) && result)
+	{
+		MCHEmul::Strings tkns = generateTokensFor (l);
+		for (const auto& i : tkns)
+			result -> _keystrokes.emplace_back (generateKeystrokeForToken (i));
+	}
+
+	return (result);
+}
+
+bool MCHEmul::KeystrokeTypeIO::writeFile (MCHEmul::FileData* fD, const std::string& fN, bool bE) const
+{
+	MCHEmul::KeystrokeData* kSD = 
+		dynamic_cast <MCHEmul::KeystrokeData*> (fD); // To better manipulation...
+	if (kSD == nullptr)
+		return (false); // It is not really a KeystrokeData structure...
+
+	std::ofstream f (fN, std::ios::out);
+	if (!f)
+		return (false); // Impossible to be opened...
+
+	// Write all keystrokes...
+	for (const auto& i : kSD -> _keystrokes)
+	{
+		// including a new line keystroke...
+		if (i.length () == 1) f << i; 
+		// The keystroke is complex and in the file has to be packaged by \\ chars...
+		else f << '\\' << i << '\\'; 
+	}
+
+	return (true);
+}
+
+// ---
+MCHEmul::Strings MCHEmul::KeystrokeTypeIO::generateTokensFor (const std::string& str) const
+{
+	MCHEmul::Strings result;
+
+	// The tokens are generated bu character 
+	// unless a special combiantion of keys is introduced...
+
+	size_t i = 0;
+	while (i < str.length ())
+	{
+		// The character \ delimits a special sequence of keystrokes...
+		if (str [i] != '\\')
+			result.emplace_back (std::string (1, str [i])); // otherwhise just the key...
+		else
+		{
+			size_t ep = str.find ('\\', i + 1); // Find the next \ character...
+			if (ep != std::string::npos)
+			{
+				// Verifies that all elements in the specif combination are aloowed...
+				bool e = false;
+				std::string cK = str.substr (i + 1, ep - i - 1);
+				MCHEmul::Strings ks = MCHEmul::getElementsFrom (cK, '+');
+				for (size_t j = 0; j < ks.size () && !e; j++)
+				{
+					if (ks [j].length () == 1) continue;
+					std::string uks = MCHEmul::upper (ks [j]);
+					e = uks != "LCTRL" && uks != "RCTRL" &&
+						uks != "LALT" && uks != "RALT" &&
+						uks != "LSHIFT" && uks != "RSHIFT";
+				}
+
+				// If there were no error, the combination is inserted,
+				// otherwise it is ignored...
+				if (!e)
+					result.emplace_back (cK);
+
+				// Continues with the rest...
+				i = ep + 1; 
+			}
+		}
+
+		i++;
+	}
+
+	// ...plus the end of the line...
+	result.emplace_back (std::string (1, '\n'));
+
+	return (result);
+}
+
+// ---
+std::string MCHEmul::KeystrokeTypeIO::generateKeystrokeForToken (const std::string& t) const
+{
+	static const std::string NORMALSYMBOLS =
+		"º1234567890'¡qwertyuiop`+asdfghjklñ´ç<zxcvbnm,.-";
+	static const std::string SHIFTSIMBOLS = 
+		"ª!\"·$%&/()=?¿QWERTYUIOP^*ASDFGHJKLÑ¨Ç>ZXCVBNM;:_";
+
+	// When to this point something longer that 1 char is received...
+	// It means (@see above) that a combination of keys are 
+	if (t.length () > 1)
+		return (""); 
+
+	size_t sp = std::string::npos;
+	std::string result;
+	if ((sp = SHIFTSIMBOLS.find (t [0])) != std::string::npos) 
+		result = "LSHIFT+" + std::string (1, NORMALSYMBOLS [sp]);
+	else result = t;
+
+	return (result);
+}
