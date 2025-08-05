@@ -5,8 +5,8 @@
 #---
 ;ULARegisters
 BORDER:@BORDER@
-MIC:@MICST@(@MIC@)
-EAR:@EARST@(@EAR@)
+MIC:@MIC@
+EAR:@EAR@
 #---
 #---
 ;ULASoundFunction

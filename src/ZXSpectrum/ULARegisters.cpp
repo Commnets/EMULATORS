@@ -23,9 +23,7 @@ MCHEmul::InfoStructure ZXSPECTRUM::ULARegisters::getInfoStructure () const
 	MCHEmul::InfoStructure result = std::move (MCHEmul::InfoClass::getInfoStructure ());
 
 	result.add ("BORDER",		_borderColor);
-	result.add ("MICST",		_MICActivated);
 	result.add ("MIC",			_MICSignal);
-	result.add ("EARST",		_EARActivated);
 	result.add ("EAR",			_EARSignal);
 
 	return (result);
@@ -36,11 +34,9 @@ void ZXSPECTRUM::ULARegisters::initializeInternalValues ()
 {
 	_borderColor = 0;
 
-	_MICActivated = false;
 	_MICSignal = false;
 	_MICSignalChanged = false;
 
-	_EARActivated = false;
 	_EARSignal = false;
 	_EARSignalChanged = false;
 

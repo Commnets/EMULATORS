@@ -30,12 +30,11 @@ void ZXSPECTRUM::PortManager::setValue (unsigned short ab, unsigned char id, con
 
 		// The bit 3 (when 0) activates the MIC socket...
 		// ...and the 4 (when 1) activates the EAR one and also the internal speaker...
-		// But one one of then is activated, then the other is also activated, 
+		// But once one of them is activated, then the other is also activated, 
 		// because both are connected to resistor to the same entry point as it is described in:
 		// http://fizyka.umk.pl/~jacek/zx/faq/reference/48kreference.htm
-		bool aME = !v.bit (3) || v.bit (4);
-		_ULARegisters -> setMICSignal (aME);
-		_ULARegisters -> setEARSignal (aME);
+		_ULARegisters -> setMICSignal (!v.bit (3));
+		_ULARegisters -> setEARSignal (v.bit (4));
 	}
 }
 

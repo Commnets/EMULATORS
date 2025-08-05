@@ -78,7 +78,6 @@ namespace ZXSPECTRUM
 
 			private:
 			unsigned int _chipFrequency;
-			unsigned int _samplingFrequency;
 
 			// Implementation
 			/** A Reference to the ULA Registers. */

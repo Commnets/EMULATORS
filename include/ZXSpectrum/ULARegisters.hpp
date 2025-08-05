@@ -45,9 +45,6 @@ namespace ZXSPECTRUM
 							{ _borderColor = bC; }
 
 		// The MIC Signal
-		bool MICActivated () const
-							{ return (_MICActivated); }
-		inline void setMICActivated (bool mA);
 		bool MICSignal () const
 							{ return (_MICSignal); }
 		bool MICSignalChanged () const
@@ -57,10 +54,6 @@ namespace ZXSPECTRUM
 		inline void setMICSignal (bool cs);
 
 		// The EAR Signal
-		// Activating the EAR Signal the speaker is activated...
-		bool EARActivated () const
-							{ return (_EARActivated); }
-		inline void setEARActivated (bool mA);
 		bool EARSignal () const
 							{ return (_EARSignal); }
 		bool EARSignalChanged () const
@@ -102,13 +95,9 @@ namespace ZXSPECTRUM
 		private:
 		/** The border color. */
 		unsigned char _borderColor;
-		/** To indicate whether the MIC signal is or not activated. */
-		bool _MICActivated;
 		/** The MIC signal and the signal to indicate whether it has changed. */
 		bool _MICSignal;
 		MCHEmul::OBool _MICSignalChanged;
-		/** To indicate whether the EAR signal is or not activated. */
-		bool _EARActivated;
 		/** The EAR signal and the signal to indicate whether it has changed. */
 		bool _EARSignal;
 		MCHEmul::OBool _EARSignalChanged;
@@ -124,19 +113,9 @@ namespace ZXSPECTRUM
 	};
 
 	// ---
-	inline void ULARegisters::setMICActivated (bool mA) // Activating one the other is also activated...
-	{ 
-		if (_MICActivated = mA) 
-			setEARActivated (true); 
-		
-		_MICSignal = false; 
-		_MICSignalChanged = false; 
-	}
-
-	// ---
 	inline void ULARegisters::setMICSignal (bool cs)
 	{ 
-		if (cs != _MICSignal) 
+		if (_MICSignal != cs) 
 		{ 
 			_MICSignal = cs;
 			
@@ -145,19 +124,9 @@ namespace ZXSPECTRUM
 	}
 
 	// ---
-	inline void ULARegisters::setEARActivated (bool mA)
-	{ 
-		if (_EARActivated = mA) 
-			setMICActivated (true); // Activating one the other is also activated...
-		
-		_EARSignal = false; 
-		_EARSignalChanged = false; 
-	}
-
-	// ---
 	inline void ULARegisters::setEARSignal (bool cs)
 	{ 
-		if (cs != _EARSignal) 
+		if (_EARSignal != cs) 
 		{ 
 			_EARSignal = cs;
 			

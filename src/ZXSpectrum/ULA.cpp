@@ -23,7 +23,7 @@ ZXSPECTRUM::ULA::SoundFunction::SoundFunction (unsigned int cF, unsigned int sF)
 		  { "Manufacturer", "ferranti" },
 		  { "Year", "1982 - 1985" } },
 		nullptr), // There is no need of any wrapper...
-	  _chipFrequency (cF), _samplingFrequency (sF),
+	  _chipFrequency (cF),
 	  _ULARegisters (nullptr), // Assigned later when ULA ins set up!
 	  _lastCPUCycles (0),
 	  _clocksPerSample ((unsigned int) (((double) cF * 1.0f) / (double) (sF))),
@@ -65,6 +65,8 @@ bool ZXSPECTRUM::ULA::SoundFunction::simulate (MCHEmul::CPU* cpu)
 
 		if (++_counterClocksPerSample >= _clocksPerSample)
 		{
+			// Just check whether the EAR is or not activated...
+			// ...to determine whether the sound function is on or off!
 			_counterClocksPerSample = 0;
 			char dt = (_ULARegisters -> EARSignal ()) ? (char) 100 /** The max volumen. */ : (char) 0; // Full sound or not...
 			if (soundMemory () -> addSampleData (&dt, sizeof (char)))
@@ -82,7 +84,7 @@ MCHEmul::InfoStructure ZXSPECTRUM::ULA::SoundFunction::getInfoStructure () const
 {
 	MCHEmul::InfoStructure result = std::move (MCHEmul::SoundChip::getInfoStructure ());
 
-	result.add ("SAMPLINGFREQ", std::to_string (_samplingFrequency));
+	result.add ("SAMPLINGFREQ", std::to_string (samplingFrecuency ()));
 	result.add ("CLOCKSSAMPLING", std::to_string (_clocksPerSample));
 
 	return (result);
@@ -93,7 +95,7 @@ void ZXSPECTRUM::ULA::SoundFunction::debugULASoundCycle (MCHEmul::CPU* cpu, unsi
 {
 	assert (_deepDebugFile != nullptr);
 
-	_deepDebugFile -> writeCompleteLine (className (), cpu -> clockCycles () - (i >> 1), "Info Cyle", 
+	_deepDebugFile -> writeCompleteLine (className (), cpu -> clockCycles () - i, "Info Cyle", 
 		MCHEmul::Attributes ({ 
 			{ "Sound", std::string (_ULARegisters -> EARSignal () ? "UP" : "DOWN") } }));
 }
@@ -112,7 +114,7 @@ ZXSPECTRUM::ULA::ULA (const MCHEmul::RasterData& vd, const MCHEmul::RasterData& 
 		  { "Code", "5C102E, 5C112E, 5C112E-2, 5C112E-3, 6C001E-5, 6C001E-6, 6C001E-7, 7K010E-5 ULA / Amstrad 40056, +2A/+3 Gate Array" },
 		  { "Manufacturer", "Ferranti" },
 		  { "Year", "1982-1985" } }),
-	  _soundFunction (new ZXSPECTRUM::ULA::SoundFunction (cF, (_SOUNDSAMPLINGCLOCK << 1))),
+	  _soundFunction (new ZXSPECTRUM::ULA::SoundFunction (cF, _SOUNDSAMPLINGCLOCK)),
 	  _ULARegisters (new ZXSPECTRUM::ULARegisters),
 	  _ULAView (vV),
 	  _raster (vd, hd, 1 /** The step is 1 pixel. */),
