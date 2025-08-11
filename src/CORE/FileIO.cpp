@@ -54,7 +54,11 @@ bool MCHEmul::FileIO::saveFile (MCHEmul::FileData* fD, const std::string& fN, bo
 		return (false);
 
 	// Otherwise the file is written...
-	return (fR -> writeFile (fD, fN, bE));
+	// and archived into the list of files managed (written over a previous one if exsited)...
+	bool result = fR -> writeFile (fD, fN, bE);
+	if (result)
+		_fileData [fN] = fD;
+	return (result);
 }
 
 // ---
@@ -88,7 +92,7 @@ bool MCHEmul::RawFileTypeIO::canRead (const std::string& fN) const
 		return (false); // ...no
 
 	// Possible to be opened?
-	std::ifstream f (fN, std::ios::in || std::ios::binary);
+	std::ifstream f (fN, std::ios::in | std::ios::binary);
 	if (!f)
 		return (false); // ...no
 
@@ -256,7 +260,12 @@ MCHEmul::FileData* MCHEmul::KeystrokeTypeIO::readFile (const std::string& fN, bo
 	{
 		MCHEmul::Strings tkns = generateTokensFor (l);
 		for (const auto& i : tkns)
-			result -> _keystrokes.emplace_back (generateKeystrokeForToken (i));
+		{
+			// The keystrokes can be multiple...
+			MCHEmul::Strings kS = std::move (generateKeystrokeForToken (i));
+			result -> _keystrokes.insert 
+				(result -> _keystrokes.end (), kS.begin (), kS.end ());
+		}
 	}
 
 	return (result);
@@ -314,7 +323,10 @@ MCHEmul::Strings MCHEmul::KeystrokeTypeIO::generateTokensFor (const std::string&
 					std::string uks = MCHEmul::upper (ks [j]);
 					e = uks != "LCTRL" && uks != "RCTRL" &&
 						uks != "LALT" && uks != "RALT" &&
-						uks != "LSHIFT" && uks != "RSHIFT";
+						uks != "LSHIFT" && uks != "RSHIFT" &&
+						uks != "HOME" &&
+						uks != "DOWN" && uks != "UP" && uks != "LEFT" && uks != "RIGHT" &&
+						uks != "PAGEUP" && uks != "PAGEDOWN";
 				}
 
 				// If there were no error, the combination is inserted,
@@ -337,7 +349,7 @@ MCHEmul::Strings MCHEmul::KeystrokeTypeIO::generateTokensFor (const std::string&
 }
 
 // ---
-std::string MCHEmul::KeystrokeTypeIO::generateKeystrokeForToken (const std::string& t) const
+MCHEmul::Strings MCHEmul::KeystrokeTypeIO::generateKeystrokeForToken (const std::string& t) const
 {
 	static const std::string NORMALSYMBOLS =
 		"º1234567890'¡qwertyuiop`+asdfghjklñ´ç<zxcvbnm,.-";
@@ -347,7 +359,7 @@ std::string MCHEmul::KeystrokeTypeIO::generateKeystrokeForToken (const std::stri
 	// When to this point something longer that 1 char is received...
 	// It means (@see above) that a combination of keys are 
 	if (t.length () > 1)
-		return (""); 
+		return (MCHEmul::Strings { t });
 
 	size_t sp = std::string::npos;
 	std::string result;
@@ -355,5 +367,5 @@ std::string MCHEmul::KeystrokeTypeIO::generateKeystrokeForToken (const std::stri
 		result = "LSHIFT+" + std::string (1, NORMALSYMBOLS [sp]);
 	else result = t;
 
-	return (result);
+	return (MCHEmul::Strings { result });
 }

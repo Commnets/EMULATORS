@@ -367,6 +367,26 @@ std::string MCHEmul::concatenateStrings (const Strings& strs, const std::string&
 }
 
 // ---
+bool MCHEmul::isThereAttribute (const std::string& attr, const MCHEmul::Attributes& attrs)
+{
+	return (attrs.find (attr) != attrs.end ());
+}
+
+// ---
+const std::string MCHEmul::getAttribute (const std::string& attr, const MCHEmul::Attributes& attrs)
+{
+	MCHEmul::Attributes::const_iterator i = attrs.find (attr);
+
+	return (i != attrs.end () ? (*i).second : MCHEmul::_EMPTY);
+}
+
+// ---
+int MCHEmul::getAttributeAsInt (const std::string& attr, const MCHEmul::Attributes& attrs)
+{
+	return (std::atoi (getAttribute (attr, attrs).c_str ()));
+}
+
+// ---
 bool MCHEmul::validLabel (const std::string& s)
 {
 	return (s.length () >= 1 && 

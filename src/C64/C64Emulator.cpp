@@ -24,6 +24,7 @@ void C64::C64Emulator::printOutParameters (std::ostream& o) const
 		 "SWE:\tSwedish" << std::endl <<
 		 "DKA:\tDanish" << std::endl;
 	o << "DEVICES allowed to be connected under command CONNECTPER:" << std::endl <<
+		 std::to_string (MCHEmul::Typewriter::_ID) << ":\tTypewriter" << std::endl <<
 		 std::to_string (C64::Cartridge::_ID) << ":\tCartridge" << std::endl <<
 		 std::to_string (COMMODORE::Datasette1530::_ID) << ":\tCasette 1530/1" << std::endl <<
 		 std::to_string (COMMODORE::Datasette1530Injection::_ID) << ":\tDirect injection into memory" << std::endl;

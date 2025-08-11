@@ -77,6 +77,7 @@ namespace ZX81
 							{ return (new MCHEmul::FileIO 
 								(MCHEmul::FileTypeIOList (
 									{	new OAndPFileTypeIO, /** O, 80, P, 81 and P81 extensions. */
+										new KeystrokeTypeIO (emulatedComputer ()),
 										new MCHEmul::RawFileTypeIO /** Row data. */ }))); }
 	};
 

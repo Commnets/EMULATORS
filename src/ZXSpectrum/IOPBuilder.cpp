@@ -11,7 +11,9 @@ MCHEmul::IOPeripheral* ZXSPECTRUM::IOPeripheralBuilder::createPeripheral
 
 	MCHEmul::IOPeripheral* result = nullptr;
 
-	if (id == ZXSPECTRUM::Cartridge::_ID)
+	if (id == MCHEmul::Typewriter::_ID)
+		result = new MCHEmul::Typewriter (3 /** 1/25 * 4 = 1 every 160 miliseconds. */, c);
+	else if (id == ZXSPECTRUM::Cartridge::_ID)
 		result = new ZXSPECTRUM::Cartridge;
 	// https://en.wikipedia.org/wiki/ZX81
 	else if (id == ZXSPECTRUM::Datasette::_ID)

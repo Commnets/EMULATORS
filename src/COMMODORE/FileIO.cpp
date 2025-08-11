@@ -1,6 +1,35 @@
 #include <COMMODORE/FileIO.hpp>
 
 // ---
+// How the special keys in the keyboard of the C64 are generated using a standard PC keyboard...
+const std::map <char, MCHEmul::Strings> COMMODORE::KeystrokeTypeIO::_DEFAULTSPECIALKEYS = {
+		{ '-', { "'" } },
+		{ '=', { "¡" } },
+		{ '|', { "LSHIFT+'" } },
+		{ '+', { "``" } },
+		{ '*', { "+" } },
+		{ ';', { "ñ" } },
+		{ ']', { "LSHIFT+ñ" } },
+		{ ':', { "´" } },
+		{ '[', { "LSHIFT+´" } },
+		{ '@', { "ç" } },
+		{ '<', { "LSHIFT+;" } },
+		{ '>', { "LSHIFT+:" } },
+		{ '/', { "-" } },
+		{ '?', { "LSHIFT+_" } },
+		{ '£', { "º" } },
+		{ '!', { "LSHIFT+1" } },
+		{ '"', { "LSHIFT+2" } },
+		{ '#', { "LSHIFT+3" } },
+		{ '$', { "LSHIFT+4" } },
+		{ '%', { "LSHIFT+5" } },
+		{ '&', { "LSHIFT+6" } },
+		{ '´', { "LSHIFT+7" } },
+		{ '(', { "LSHIFT+8" } },
+		{ ')', { "LSHIFT+9" } }
+	};
+
+// ---
 MCHEmul::ExtendedDataMemoryBlocks COMMODORE::TAPFileData::asMemoryBlocks() const
 {
 	MCHEmul::ExtendedDataMemoryBlocks result;
@@ -99,6 +128,29 @@ MCHEmul::ExtendedDataMemoryBlocks COMMODORE::TAPFileData::asMemoryBlocks() const
 }
 
 // ---
+void COMMODORE::TAPFileData::addHeaderFromMemoryBlock (const MCHEmul::ExtendedDataMemoryBlocks& dMB)
+{
+	_signature = dMB._name;
+	_version = (unsigned char) MCHEmul::getAttributeAsInt ("VERSION", dMB._attributes);
+	_computerVersion = (COMMODORE::TAPFileData::ComputerVersion) 
+		MCHEmul::getAttributeAsInt ("CVERSION", dMB._attributes);
+	_videoVersion = (COMMODORE::TAPFileData::VideoVersion) 
+		MCHEmul::getAttributeAsInt ("VVERSION", dMB._attributes);
+}
+
+// ---
+void COMMODORE::TAPFileData::addDataBlockFromMemoryBlock (const MCHEmul::ExtendedDataMemoryBlocks& dMB)
+{
+	_dataSize = 0;
+	for (size_t i = 0; i < dMB._data.size (); 
+		_dataSize += (unsigned int) dMB._data [i++].size ());
+	std::vector <MCHEmul::UByte> by;
+	for (size_t i = 0; i < dMB._data.size (); i++)
+		by.insert (by.end (), dMB._data [i].bytes ().begin (), dMB._data [i].bytes ().end ());
+	_bytes = by;
+}
+
+// ---
 bool COMMODORE::TAPFileTypeIO::canRead (const std::string& fN) const
 {
 	// Extension?
@@ -112,7 +164,7 @@ bool COMMODORE::TAPFileTypeIO::canRead (const std::string& fN) const
 		return (false); // ...no
 
 	// Possible to open?
-	std::ifstream f (fN, std::ios::in || std::ios::binary);
+	std::ifstream f (fN, std::ios::in | std::ios::binary);
 	if (!f)
 		return (false); // ...no
 
@@ -282,7 +334,7 @@ bool COMMODORE::PRGFileTypeIO::canRead (const std::string& fN) const
 		return (false); // ...no
 
 	// Possible to open?
-	std::ifstream f (fN, std::ios::in || std::ios::binary);
+	std::ifstream f (fN, std::ios::in | std::ios::binary);
 	if (!f)
 		return (false); // ...no
 
@@ -329,37 +381,6 @@ MCHEmul::FileData* COMMODORE::PRGFileTypeIO::readFile (const std::string& fN, bo
 	f.close ();
 
 	return (result);
-}
-
-// ---
-bool COMMODORE::PRGFileTypeIO::writeFile (MCHEmul::FileData* fD, const std::string& fN, bool bE) const
-{
-	COMMODORE::PRGFileData* prg = 
-		dynamic_cast <COMMODORE::PRGFileData*> (fD); // To better manipulation...
-	if (prg == nullptr)
-		return (false); // it is not really a tap structure!
-
-	std::ofstream f (fN, std::ios::out | std::ios::binary);
-	if (!f)
-		return (false); // Impossible to be opened...
-
-	char data [256] = { };
-
-	// The header = address
-	std::vector <MCHEmul::UByte> by = prg -> _address.bytes ();
-	data [0] = (char) by [1].value (); data [1] = (char) by [0].value ();
-	f.write (data, 2);
-	
-	// The data
-	char* prgData = new char [(size_t) prg -> _bytes.size ()];
-	for (size_t i = 0; i < (size_t) prg -> _bytes.size (); i++)
-		prgData [i] = (char) prg -> _bytes.bytes ()[i].value ();
-	f.write (prgData, (std::streamsize) prg -> _bytes.size ());
-	delete [] prgData;
-
-	f.close ();
-
-	return (true);
 }
 
 // ---
@@ -414,7 +435,7 @@ bool COMMODORE::T64FileTypeIO::canRead (const std::string& fN) const
 		return (false); // ...no
 
 	// Possible to open?
-	std::ifstream f (fN, std::ios::in || std::ios::binary);
+	std::ifstream f (fN, std::ios::in | std::ios::binary);
 	if (!f)
 		return (false); // ...no
 
@@ -559,7 +580,7 @@ bool COMMODORE::CRTFileTypeIO::canRead (const std::string& fN) const
 		return (false); // ...no
 
 	// Can it be opened?
-	std::ifstream f (fN, std::ios::in || std::ios::binary);
+	std::ifstream f (fN, std::ios::in | std::ios::binary);
 	if (!f)
 		return (false); // ...no
 
@@ -643,21 +664,19 @@ MCHEmul::FileData* COMMODORE::CRTFileTypeIO::readFile (const std::string& fN, bo
 }
 
 // ---
-std::string COMMODORE::KeystrokeTypeIO::generateKeystrokeForToken (const std::string& t) const
+MCHEmul::Strings COMMODORE::KeystrokeTypeIO::generateKeystrokeForToken (const std::string& t) const
 {
-	static const std::string NORMALSYMBOLS = "º1234567890'¡`+´ç<,.-";
-	static const std::string SHIFTSIMBOLS  = "ª!\"·$%&/()=?¿^*¨Ç>;:_";
-
+	// If the token received is just "complex"
+	// because the comnbination of the keys was done...
 	if (t.length () > 1)
-		return (""); // No keystroke by default for this type of "complexity"
+		return (MCHEmul::Strings { t }); // The keystroke is already the token!
 
-	size_t sp = std::string::npos;
+	MCHEmul::Strings result;
+
 	std::string ut = MCHEmul::upper (t);
-	std::string result;
-	if ((sp = SHIFTSIMBOLS.find (ut [0])) != std::string::npos) 
-		result = "LSHIFT+" + std::string (1, NORMALSYMBOLS [sp]);
-	else result = t;
+	std::map <char, MCHEmul::Strings>::const_iterator sp;
+	if ((sp = _SPECIALKEYS.find (ut [0])) != _SPECIALKEYS.end ()) result = (*sp).second;
+	else  result = MCHEmul::Strings { t };
 
 	return (result);
-
 }

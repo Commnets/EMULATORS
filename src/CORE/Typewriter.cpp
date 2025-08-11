@@ -75,6 +75,23 @@ bool MCHEmul::Typewriter::connectData (MCHEmul::FileData* dt)
 						scs.emplace_back (SDL_SCANCODE_LALT);
 					else if (j == "RALT")
 						scs.emplace_back (SDL_SCANCODE_RALT);
+					else if (j == "INIT")
+						scs.emplace_back (SDL_SCANCODE_HOME);
+					else if (j == "DOWN")
+						scs.emplace_back (SDL_SCANCODE_DOWN);
+					else if (j == "UP")
+						scs.emplace_back (SDL_SCANCODE_UP);
+					else if (j == "LEFT")
+						scs.emplace_back (SDL_SCANCODE_LEFT);
+					else if (j == "RIGHT")
+						scs.emplace_back (SDL_SCANCODE_RIGHT);
+					else if (j == "PAGEUP")
+						scs.emplace_back (SDL_SCANCODE_PAGEUP);
+					else if (j == "PAGEDOWN")
+						scs.emplace_back (SDL_SCANCODE_PAGEDOWN);
+					else if (j == "RETURN")
+						scs.emplace_back (SDL_SCANCODE_RETURN);
+
 					// Any other thing not listed here is ignored, 
 					// but some member might be inserted eventually, so the outcome could be uncontrolable...
 				}

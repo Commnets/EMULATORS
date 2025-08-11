@@ -179,10 +179,20 @@ MCHEmul::FileData* MCHEmul::Emulator::createEmptyDataInPeripheral (const std::st
 	if (result != nullptr)
 		ok = fileIO () -> 
 				saveFile (result, fN, computer () -> cpu () -> architecture ().bigEndian ());
-	// The data created is no longer needed...
-	delete (result);
-	// Connect the data to the peripheral...if any!
-	return (ok ? connectDataToPeripheral (fN, id) : nullptr);
+
+	// The data has to be destroyed just in the case it were not well saved!
+	// But if it were well created is connected back to the peripheral...
+	if (ok)
+		result = connectDataToPeripheral (fN, id); // the execution of this method will be quick 
+												   // as the file will be in memory already
+	else
+	{
+		delete (result);
+
+		result = nullptr;
+	}
+
+	return (result);
 }
 
 // ---
@@ -198,9 +208,12 @@ bool MCHEmul::Emulator::saveDataFromPeripheral (const std::string & fN, int id)
 		result = fileIO () -> 
 			saveFile (data, fN, computer () -> cpu () -> architecture ().bigEndian ());
 
-	// The data has to be deleted...
-	delete (data);
+	// The data has to be destroyed, just in the case it was not well saved...
+	// ..becasuse it was not added to the list of files managed!
+	if (!result)
+		delete (data);
 
+	// The result of the operation is deteted...
 	return (result);
 }
 

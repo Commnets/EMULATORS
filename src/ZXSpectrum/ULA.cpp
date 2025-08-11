@@ -231,6 +231,11 @@ bool ZXSPECTRUM::ULA::simulate (MCHEmul::CPU* cpu)
 		}
 	}
 
+	// If the MIC signal changed, a signal to the datasette is send...
+	// ...the datasette would manage that change as a modification in the information written if any...
+	if (_ULARegisters -> EARSignalChanged ()) // After ckecked it, the value returns to false...
+		notify (MCHEmul::Event (MCHEmul::DatasetteIOPort::_WRITE, _ULARegisters -> EARSignal () ? 1 : 0));
+
 	_lastCPUCycles = cpu -> clockCycles ();
 
 	return (true);
@@ -397,6 +402,16 @@ void ZXSPECTRUM::ULA::processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifie
 			break;
 
 		// The rest of the events are not taken here into account!
+
+		// When a signal in the datasette has chanegd, 
+			// it means than somethinh has benn read...
+		case MCHEmul::DatasetteIOPort::_READ:
+			{
+
+			}
+
+			break;
+
 
 		default:
 			break;

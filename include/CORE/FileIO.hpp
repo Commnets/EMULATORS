@@ -107,11 +107,17 @@ namespace MCHEmul
 
 		/** Just read the file. \n
 			If the file could not be read or it is inconsistent, a NODATA object reference is returned,
-			but no variable related with errors is set. */
+			but no variable related with errors is set. \n
+			If the file is weel read, it will be added to the list of files loaded,
+			and if a file with the same name is requested, that reference will be returned instead o loading it again. */
 		FileData* readFile (const std::string& fN, bool bE = true) const;
 
 		/** Just save a file. \n
-			If the file could not be saved (will depend on the type) false it is returned and true in other case. */
+			If the file could not be saved (will depend on the type) false it is returned and true in other case. \n
+			If the file is saved right, it will be added to the list of files already in memory, 
+			and if something with the same name were requested, that reference will returned istead of loading it back. \n
+			When saving if something with the same name already existed in the list of files loaded,
+			the content will be replaced. */
 		bool saveFile (FileData* fD, const std::string& fN, bool bE = true) const;
 
 		private:
@@ -237,13 +243,18 @@ namespace MCHEmul
 
 		protected:
 		/** Identifies the tokens in a line of text. \n
-			The implementation will dependn on the specific emulator,
-			although the default implementation just separates the letters + end of line. */
+			The implementation will depennd on the specific emulator,
+			although the default implementation just separates the letters + end of line
+			+ the following standard tokens for standard no letter or numbers keys:
+			LCTRL, RCTRL, LALT, RALT, LSHIFT ,RSHIFT, HOME, DOWN, UP, LEFT, RIGHT, PAGEUP, PAGEDOWN.
+			*/
 		virtual Strings generateTokensFor (const std::string& str) const;
-		/** Determine the keystroke for a specific token. \n
+		/** Determine the keystroke/s for a specific token. \n
 			Again it must be defined per emulator, although the default implementation
-			identify the keystroke as it is in a standard keyboard. */
-		virtual std::string generateKeystrokeForToken (const std::string& t) const;
+			identify the keystroke as it is in a standard keyboard. 
+			In some emulators to get a symbol can required several keystrokes aone after other (e.g. ZXSpectrum). 
+			Usually where the every key of the keyboard might represent several different tokens. */
+		virtual Strings generateKeystrokeForToken (const std::string& t) const;
 	};
 }
 

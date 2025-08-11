@@ -1,16 +1,139 @@
 #include <ZXSpectrum/Datasette.hpp>
-#include <ZXSpectrum/FileIO.hpp>
 #include <FZ80/CP.hpp>
 #include <FZ80/XOR.hpp>
+
+// ---
+std::tuple <bool, bool, bool> ZXSPECTRUM::Datasette::DirectRecordingImplementation::timeToReadValue (unsigned int cC) 
+{
+	// Time to read?
+	bool tr = false;
+	// Which value is read?
+	bool vr = false;
+	// Get a new value from the file?
+	bool nVR  = false;
+
+	// Is is time for a new value?
+	if (tr = (clockValue () >= _cyclesToAction))
+	{
+		// The value to read is codified into the _byteInfo. From MSB to LSB
+		vr = _byteInfo.bit (_bitManaged);
+		// ...but all bits have been processing,
+		// and is time to read a neew value from the file?
+		nVR = (_bitManaged == 0);
+		// The bit to managed for the next iteration...
+		_bitManaged = nVR ? 7 : _bitManaged - 1;
+
+		// Time to restart...
+		resetClock ();
+	}
+
+	return { tr, vr, nVR };
+}
+
+// ---
+void ZXSPECTRUM::Datasette::DirectRecordingImplementation::whenReadingNewBlock (const MCHEmul::DataMemoryBlock& dB)
+{
+	// New parameters to sample...
+	_cyclesToAction = (unsigned int) 
+		MCHEmul::getAttributeAsInt ("TSTATESSAMPLE", dB.attributes ());
+	// New information about the last bit in this block...
+	_bitsLastByte = (unsigned int) 
+		MCHEmul::getAttributeAsInt ("BITSUSEDLAST", dB.attributes ());
+
+	// Restart the clock...
+	resetClock ();
+}
+
+// ---
+std::tuple <bool, MCHEmul::UByte> ZXSPECTRUM::Datasette::DirectRecordingImplementation::timeToWriteValue 
+	(unsigned int cC, bool vc, unsigned int ccvc, bool vs)
+{
+	// Write a new value to the file?
+	bool tw = false;
+	// Which value must be written in that case?
+	MCHEmul::UByte vw = MCHEmul::UByte::_0;
+
+	// Is time to action?
+	if (clockValue () >= _cyclesToAction)
+	{
+		// Shift left 1 and set the value of the bit 0 witjh the value vs...
+		// As you notice, it doesn't mather whether the value in the EAR was or changed...
+		// It saves at a specific pace!
+		_byteInfo.shiftLeft (1).setBit (0, vs);
+		// If the number of iterations (bits managed) is already 8 (or bigger)
+		// it is time to write the value...
+		// ...and the value is the one that has been managed for a while...
+		if (tw = (++_bitManaged >= 8))
+			vw = _byteInfo;
+
+		// Restart the clock!
+		resetClock ();
+	}
+
+	return { tw, vw };
+}
+
+
+// ---
+void ZXSPECTRUM::Datasette::DirectRecordingImplementation::initialize 
+	(MCHEmul::StandardDatasette::Status st)
+{
+	MCHEmul::StandardDatasette::Implementation::initialize (st);
+
+	_byteInfo = MCHEmul::UByte::_0;
+
+	_bitManaged = (st == MCHEmul::StandardDatasette::Status::_READING) 
+		? 7 /** The MSB when reading. */ : 0; // The LSB in other cases...
+}
 
 // ---
 ZXSPECTRUM::Datasette::Datasette (unsigned int rS)
 	: MCHEmul::StandardDatasette (_ID, 
 		new MCHEmul::StandardDatasette::NilImplementation, false /** Controlled externally. */,
 		{ { "Name", "Datasette ZXSpectrum" },
-		  { "Manufacturer", "Almost anyone, No special connector needed" } })
+		  { "Manufacturer", "Almost anyone, No special connector needed" } }),
+	  _originalData () // Assigned when connectdata is executed...
 {
 	setClassName ("ZXSpectrumDatasette");
+}
+
+// ---
+bool ZXSPECTRUM::Datasette::connectData (MCHEmul::FileData* dt)
+{
+	// The parent class moves RAW type, 
+	// that is not going to be valid for this datasette...
+
+	// Only TZX is admitted...
+	// ...and everything is transformed into DirectRecording type of records...
+	if (dynamic_cast <ZXSPECTRUM::TZXFileData*> (dt) == nullptr)
+		return (false); // That type of info is not valid from the datasette...
+	// But TZX is only admitted when all blocks talks about sampling info...
+	if (!static_cast <ZXSPECTRUM::TZXFileData*> (dt) -> isSamplingInfo ())
+		return (false);
+
+	// MOves the data...
+	_data = std::move (dt -> asMemoryBlocks ());
+
+	// And sets the counter to start...
+	_dataCounter = 
+		(_data._data.empty () ? std::numeric_limits <size_t>::max () : 0 /** At the first element. */);
+	_elementCounter = 0;
+	
+	return (true); 
+}
+
+// ---
+MCHEmul::FileData* ZXSPECTRUM::Datasette::retrieveData () const
+{
+	ZXSPECTRUM::TZXFileData* result = 
+		ZXSPECTRUM::TZXFileData::createFromMemoryBlock (_data);
+
+	// Adds the name of the file...
+	result -> _attributes ["FNAME"] = 
+		MCHEmul::getAttribute ("FNAME", _originalData._attributes);
+
+	// ...and returns it!
+	return (result);
 }
 
 // ---
@@ -36,8 +159,15 @@ ZXSPECTRUM::DatasetteInjection::DatasetteInjection (ZXSPECTRUM::Type t)
 // ---
 bool ZXSPECTRUM::DatasetteInjection::connectData (MCHEmul::FileData* dt)
 {
-	if (dynamic_cast <ZXSPECTRUM::TAPFileData*> (dt) == nullptr)
+	// There are two types of files admitted: 
+	// TAP that is most standard way of injecting info into the memory...
+	// ...and TZX when all blocks are like TAP!
+	if (dynamic_cast <ZXSPECTRUM::TAPFileData*> (dt) == nullptr &&
+		dynamic_cast <ZXSPECTRUM::TZXFileData*> (dt) == nullptr)
 		return (false); // That type of info is not valid from the datasette...
+	if (dynamic_cast <ZXSPECTRUM::TZXFileData*> (dt) &&
+		!static_cast <ZXSPECTRUM::TZXFileData*> (dt) -> isLikeTAPInfo ())
+		return (false);
 
 	_data = std::move (dt -> asMemoryBlocks ());
 

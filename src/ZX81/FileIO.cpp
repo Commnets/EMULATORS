@@ -1,5 +1,165 @@
 #include <ZX81/FileIO.hpp>
 
+
+// ---
+// The tokens used in the ZX81...
+const MCHEmul::Strings ZX81::KeystrokeTypeIO::_ZX81TOKENS = {
+	"+",			"-",			"*",			"**",			"/",			"=",			"<=",			">=",			
+	"<>",			"<",			">",			"\"",			"\"\"",			",",			"(",			")",			
+	";",			".",			":",			"$",			"?",			"£",			"¶",			"ABS ",		
+	"ACS ",			"AND ",			"ASN ",			"AT ",			"ATN ",			"CHR$ ",		"COS ",			"CLEAR ",		
+	"CLS ",			"CODE ",		"CONT ",		"COPY ",		"DIM ",			"EXP ",			"FAST ",		"FOR ",		
+	"GOSUB ",		"GOTO ",		"IF ",			"INKEY$ ",		"INPUT ",		"INT ",			"LEN ",			"LET ",		
+	"LIST ",		"LLIST ",		"LN ",			"LOAD ",		"LPRINT ",		"NEW ",			"NEXT ",		"NOT ",			
+	"OR ",			"PAUSE ",		"PEEK ",		"PLOT ",		"POKE ",		"PRINT ",		"RAND ",		"RND ",		
+	"REM ",			"RETURN ",		"RUN ",			"SAVE ",		"SCROLL ",		"SGN ",			"SIN ",			"SLOW ",		
+	"SQR ",			"STEP ",		"STOP ",		"STR$ ",		"TAB ",			"TAN ",			"THEN ",		"TO ",		
+	"UNPLOT ",		"USR ",			"VAL " };
+
+// And the keys used to get them...
+const std::map <std::string, MCHEmul::Strings> ZX81::KeystrokeTypeIO::_ZX81KEYSTROKES = {
+	{ "+",			{ "LSHIFT+K" } },
+	{ "-",			{ "LSHIFT+J" } },
+	{ "*",			{ "LSHIFT+B" } },
+	{ "**",			{ "LSHIFT+H" } },
+	{ "/",			{ "LSHIFT+V" } },
+	{ "=",			{ "LSHIFT+L" } },
+	{ "<=",			{ "LSHIFT+R" } },
+	{ ">=",			{ "LSHIFT+Y" } },
+	{ "<>",			{ "LSHIFT+T" } },
+	{ "<",			{ "LSHIFT+N" } },
+	{ ">",			{ "LSHIFT+M" } },
+	{ "\"",			{ "LSHIFT+P" } },
+	{ "\"\"",		{ "LSHIFT+Q" } },
+	{ ",",			{ "LSHIFT+." } },
+	{ "(",			{ "LSHIFT+I" } },
+	{ ")",			{ "LSHIFT+O" } },
+	{ ";",			{ "LSHIFT+X" } },
+	{ ".",			{ "." } },
+	{ ":",			{ "LSHIFT+Z" } },
+	{ "$",			{ "LSHIFT+U" } },
+	{ "?",			{ "LSHIFT+C" } },
+	{ "£",			{ "LSHIFT+ " } },
+	{ "¶",			{ "LSHIFT+RETURN", "M" } },
+	{ "ABS",		{ "LSHIFT+RETURN", "G" } },
+	{ "ACS",		{ "LSHIFT+RETURN", "S" } },
+	{ "AND",		{ "LSHIFT+2" } },
+	{ "ASN",		{ "LSHIFT+RETURN", "A" } },
+	{ "AT",			{ "LSHIFT+RETURN", "C" } },		
+	{ "ATN",		{ "LSHIFT+RETURN", "D" } },
+	{ "CHR$",		{ "LSHIFT+RETURN", "U" } },		
+	{ "COS",		{ "LSHIFT+RETURN", "W" } },		
+	{ "CLEAR",		{ "X" } },
+	{ "CLS",		{ "V" } },
+	{ "CODE",		{ "LSHIFT+RETURN", "I" } },	
+	{ "CONT",		{ "C" } },
+	{ "COPY",		{ "Z" } },
+	{ "DIM",		{ "D" } },
+	{ "EXP",		{ "LSHIFT+RETURN", "X" } },
+	{ "FAST",		{ "LSHIFT+D" } },
+	{ "FOR",		{ "F" } },
+	{ "GOSUB",		{ "H" } },
+	{ "GOTO",		{ "G" } },
+	{ "IF",			{ "U" } },
+	{ "INKEY$",		{ "LSHIFT+RETURN", "B" } },		
+	{ "INPUT",		{ "I" } },
+	{ "INT",		{ "LSHIFT+RETURN", "R" } },		
+	{ "LEN",		{ "LSHIFT+RETURN", "K" } },
+	{ "LET",		{ "L" } },
+	{ "LIST",		{ "K" } },
+	{ "LLIST",		{ "LSHIFT+G" } },
+	{ "LN",			{ "LSHIFT+RETURN", "Z" } },		
+	{ "LOAD",		{ "J" } },
+	{ "LPRINT",		{ "LSHIFT+S" } },
+	{ "NEW",		{ "A" } },
+	{ "NEXT",		{ "N" } },
+	{ "NOT",		{ "LSHIFT+RETURN", "N" } },		
+	{ "OR",			{ "LSHIFT+W" } },
+	{ "PAUSE",		{ "M" } },
+	{ "PEEK",		{ "LSHIFT+RETURN", "O" } },	
+	{ "PLOT",		{ "Q" } },
+	{ "POKE",		{ "O" } },
+	{ "PRINT",		{ "P" } },
+	{ "RAND",		{ "T" } },
+	{ "RND",		{ "LSHIFT+RETURN", "T" } },		
+	{ "REM",		{ "E" } },
+	{ "RETURN",		{ "Y" } },
+	{ "RUN",		{ "R" } },
+	{ "SAVE",		{ "S" } },
+	{ "SCROLL",		{ "B" } },
+	{ "SGN",		{ "LSHIFT+RETURN", "F" } },		
+	{ "SIN",		{ "LSHIFT+RETURN", "Q" } },		
+	{ "SLOW",		{ "LSHIFT+D" } },
+	{ "SQR",		{ "LSHIFT+RETURN", "H" } },		
+	{ "STEP",		{ "LSHIFT+E" } },
+	{ "STOP",		{ "LSHIFT+A" } },
+	{ "STR$",		{ "LSHIFT+RETURN", "Y" } },	
+	{ "TAB",		{ "LSHIFT+RETURN", "P" } },
+	{ "TAN",		{ "LSHIFT+RETURN", "E" } },		
+	{ "THEN",		{ "LSHIFT+3" } },		
+	{ "TO",			{ "LSHIFT+4" } },		
+	{ "UNPLOT",		{ "W" } },
+	{ "USR",		{ "LSHIFT+RETURN", "L" } },		
+	{ "VAL",		{ "LSHIFT+RETURN", "J" } } };
+
+// ---
+// The tokens used in the ZX80...
+const MCHEmul::Strings ZX81::KeystrokeTypeIO::_ZX80TOKENS = {
+	"+",			"-",			"*",			"**",			"/",			"=",			"<",			">",			
+	"\"",			",",			"(",			")",			";",			".",			":",			"$",			
+	"?",			"£",			"AND ",			"CLEAR ",		"CLS ",			"CONT ",		"DIM ",			"FOR ",		
+	"GOSUB ",		"GOTO ",		"IF ",			"INPUT ",		"LET ",			"LIST ",		"LOAD ",		"NEW ",		
+	"NEXT ",		"NOT ",			"OR ",			"POKE ",		"PRINT ",		"RAND ",		"REM ",			"RETURN ",		
+	"RUN ",			"SAVE ",		"STOP ",		"THEN ",		"TO " };
+
+// And the keys used to get them...
+const std::map <std::string, MCHEmul::Strings> ZX81::KeystrokeTypeIO::_ZX80KEYSTROKES = {
+	{ "+",			{ "LSHIFT+K" } },			
+	{ "-",			{ "LSHIFT+J" } },			
+	{ "*",			{ "LSHIFT+P" } },			
+	{ "**",			{ "LSHIFT+H" } },			
+	{ "/",			{ "LSHIFT+V" } },			
+	{ "=",			{ "LSHIFT+L" } },			
+	{ "<",			{ "LSHIFT+N" } },			
+	{ ">",			{ "LSHIFT+M" } },			
+	{ "\"",			{ "LSHIFT+Y" } },			
+	{ ",",			{ "LSHIFT+." } },			
+	{ "(",			{ "LSHIFT+I" } },			
+	{ ")",			{ "LSHIFT+O" } },			
+	{ ";",			{ "LSHIFT+X" } },			
+	{ ".",			{ "." } },
+	{ ":",			{ "LSHIFT+Z" } },			
+	{ "$",			{ "LSHIFT+U" } },			
+	{ "?",			{ "LSHIFT+C" } },			
+	{ "£",			{ "LSHIFT+ " } },			
+	{ "AND",		{ "LSHIFT+2" } },			
+	{ "CLEAR",		{ "X" } },
+	{ "CLS",		{ "C" } },
+	{ "CONT",		{ "T" } },
+	{ "DIM",		{ "D" } },
+	{ "FOR",		{ "F" } },
+	{ "GOSUB",		{ "V" } },
+	{ "GOTO",		{ "G" } },
+	{ "IF",			{ "U" } },
+	{ "INPUT",		{ "I" } },
+	{ "LET",		{ "K" } },
+	{ "LIST",		{ "A" } },
+	{ "LOAD",		{ "W" } },
+	{ "NEW",		{ "Q" } },
+	{ "NEXT",		{ "N" } },
+	{ "NOT",		{ "LSHIFT+1" } },
+	{ "OR",			{ "LSHIFT+B" } },			
+	{ "POKE",		{ "H" } },
+	{ "PRINT",		{ "O" } },
+	{ "RAND",		{ "J" } },
+	{ "REM",		{ "Y" } },
+	{ "RETURN",		{ "B" } },
+	{ "RUN",		{ "R" } },
+	{ "SAVE",		{ "E" } },
+	{ "STOP",		{ "S" } },
+	{ "THEN",		{ "LSHIFT+3" } },		
+	{ "TO",			{ "LSHIFT+4" } } };
+
 // ---
 MCHEmul::ExtendedDataMemoryBlocks ZX81::OAndPFileData::asMemoryBlocks () const
 {
@@ -35,7 +195,7 @@ bool ZX81::OAndPFileTypeIO::canRead (const std::string& fN) const
 	bool p81 = (ext == "P81");
 
 	// Possible to be opened?
-	std::ifstream f (fN, std::ios::in || std::ios::binary);
+	std::ifstream f (fN, std::ios::in | std::ios::binary);
 	if (!f)
 		return (false); // ...no
 
@@ -106,41 +266,55 @@ MCHEmul::FileData* ZX81::OAndPFileTypeIO::readFile (const std::string& fN, bool 
 }
 
 // ---
-bool ZX81::OAndPFileTypeIO::writeFile (MCHEmul::FileData* fD, const std::string& fN, bool bE) const
+MCHEmul::Strings ZX81::KeystrokeTypeIO::generateKeystrokeForToken (const std::string& t) const
 {
-	ZX81::OAndPFileData* op = 
-		dynamic_cast <ZX81::OAndPFileData*> (fD); // To better manipulation...
-	if (op == nullptr)
-		return (false); // It is not really a OAnPFileData structure...
-
-	std::ofstream f (fN, std::ios::out | std::ios::binary);
-	if (!f)
-		return (false); // Impossible to be opened...
-
-	char data [256] = { };
-
-	// The name just in the case the type of file is P81...
-	if (MCHEmul::upper (fN.substr (fN.find_last_of ('.') + 1)) == "P81")
+	// If the keystroke is not found, an enrror is kept into the log and nothing is returned...
+	MCHEmul::Strings result;
+	std::map <std::string, MCHEmul::Strings>::const_iterator i = _KEYSTROKES.find (t);
+	if (i == _KEYSTROKES.end ())
 	{
-		size_t i = 0;
-		for (; i < op -> _name.size () && i < 127; i++)
-			data [i] = op -> _name [i];
-		for (; i < 127; data [i++] = 0);
-		f.write (data, 127);
+		// All letters ars upperkeys always...
+		for (const auto& i : t)
+			result.push_back (std::string (1, std::toupper (i)));
 	}
+	else
+		result = (*i).second;
 
-	// Then the bytes are written!
-	size_t nB = op -> _bytes.size (); // The number of pure info...
-	size_t nBT = nB + // When the format is P81 the number of bytes to save will be one more!
-		((MCHEmul::upper (fN.substr (fN.find_last_of ('.') + 1)) == "P81") ? 1 : 0);
-	char* prgData = new char [nBT];
-	for (size_t i = 0; i < nB; i++)
-		prgData [i] = (char) op -> _bytes [i].value ();
-	if (nBT != nB) prgData [nBT - 1] = (char) 0x80; // Add the last bytes (0x80) when the final file is P81 type...
-	f.write (prgData, (std::streamsize) nBT);
-	delete [] prgData;
+	return (result);
+}
 
-	f.close ();
+// ---
+bool ZX81::KeystrokeTypeIO::isARealToken (char u, const std::string& l, size_t p) const
+{
+	bool result = true;
 
-	return (true);
+	if (_type == ZX81::Type::_ZX80)
+	{
+		if ((u == '*') &&
+			(p + 1) < l.size ())
+		{
+			// Excludes the operational symbols that are a combination of several...
+			char nL = l [p + 1];
+			if (nL == '*')
+				result = false;
+		}
+	}
+	else
+	{
+		if ((u == '<' || u == '>' || u == '*' || u == '\"') &&
+			(p + 1) < l.size ())
+		{
+			// Excludes the operational symbols that are a combination of several...
+			char nL = l [p + 1];
+			if ((u == '<' && nL == '=') ||
+				(u == '<' && nL == '>') ||
+				(u == '>' && nL == '=') ||
+				(u == '*' && nL == '*') ||
+				(u == '\"' && nL == '\"'))
+				result = false;
+		}
+	}
+		
+
+	return (result);
 }

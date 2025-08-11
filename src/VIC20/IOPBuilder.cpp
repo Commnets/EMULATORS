@@ -8,7 +8,9 @@ MCHEmul::IOPeripheral* VIC20::IOPeripheralBuilder::createPeripheral
 {
 	MCHEmul::IOPeripheral* result = nullptr;
 
-	if (id == VIC20::Cartridge::_ID)
+	if (id == MCHEmul::Typewriter::_ID)
+		result = new MCHEmul::Typewriter (3 /** 1/25 * 3 = 1 every 120 miliseconds. */, c);
+	else if (id == VIC20::Cartridge::_ID)
 		result = new VIC20::Cartridge;
 	else if (id == COMMODORE::Datasette1530::_ID)
 		/** CN2 datasette keeps three types on short pulses in NTSC:

@@ -25,6 +25,7 @@
 namespace MCHEmul
 {
 	// Important macros used many times
+	static const std::string _EMPTY = "";
 	static const std::string _YES = "YES";
 	static const std::string _NO = "NO";
 	static const std::string _DEFAULTLANGUAGE = "ENG";
@@ -108,6 +109,11 @@ namespace MCHEmul
 	Strings convertIntoStrings (int n, char** dt);
 	Strings convertIntoStrings (int n, wchar_t** dt); // Unicode...
 	std::string concatenateStrings (const Strings& strs, const std::string& c);
+
+	/** General functions to manage Attributes. */
+	bool isThereAttribute (const std::string& attr, const Attributes& attrs);
+	const std::string getAttribute (const std::string& attr, const Attributes& attrs); // _EMPTY if not found...
+	int getAttributeAsInt (const std::string& attr, const Attributes& attrs); // 0 if not found...
 
 	/** General functions to determine whether a string is or not valid
 		from a specific perspective. */

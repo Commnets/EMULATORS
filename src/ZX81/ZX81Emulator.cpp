@@ -35,6 +35,7 @@ void ZX81::ZX81Emulator::printOutParameters (std::ostream& o) const
 		 "ZX812:\tZX81 rare rom version" << std::endl <<
 		 "ZX813:\tZX81 newest rom version" << std::endl;
 	o << "DEVICES allowed to be connected under command CONNECTPER:" << std::endl <<
+		 std::to_string (MCHEmul::Typewriter::_ID) << ":\tTypewriter" << std::endl <<
 		 std::to_string (ZX81::Datasette::_ID) << ":\tDatasette" << std::endl <<
 		 std::to_string (ZX81::DatasetteInjection::_ID) << ":\tDirect injection into memory" << std::endl <<
 		 std::to_string (ZX81::Cartridge::_ID) << ":\tCartridge" << std::endl;

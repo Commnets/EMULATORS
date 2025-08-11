@@ -50,29 +50,32 @@ namespace COMMODORE
 				  _cyclesToRead (cR)
 							{ }
 
-			/** v is set to 1, when the time to read is true,
-				pointing out that a falling edge has been detected. */
-			virtual bool timeToReadValue (unsigned int cC, bool &v) const override
-							{ return (v = (clockValue () >= _cyclesToRead)); }
+			/** The time is reached <0> when the number of cycles to read has been reached.
+				The value returned is always true <1> because this datasette sends 
+				1 anytime a change in the polarity is detected. 
+				<2> At that moment if will ne also the time to read a new value. */
+			virtual std::tuple <bool, bool, bool> timeToReadValue (unsigned int cC) override
+							{ return ((clockValue () >= _cyclesToRead) 
+								? std::tuple <bool, bool, bool> ({ true, true, true }) 
+								: std::tuple <bool, bool, bool> ({ false, false, false })); }
 			/** The value read from the file is translated into number of cycles until the next 
 				falling edge comes, that is the signal sent to the computer. */
 			virtual void whenValueRead (unsigned int cC, const MCHEmul::UByte& v) override;
 
 			/** The information has to tell us that is the time, and the value to write has to be 1.
 				because it will represent a complete cycle. 0 - 1 - 0 or 1 - 0 - 1 */
-			virtual bool timeToWriteValue (unsigned int cC, bool v) const override
-							{ return (v); }
+			virtual std::tuple <bool, MCHEmul::UByte> timeToWriteValue (unsigned int cC, 
+				bool vc, unsigned int ccvc, bool vs) override
+							{ return ((vc && (cC == ccvc) && vs)
+								? std::tuple <bool, MCHEmul::UByte> 
+									{ true, MCHEmul::UByte ((unsigned char) (clockValue () >> 3)) }
+								: std::tuple <bool, MCHEmul::UByte> { false, MCHEmul::UByte::_0 }); }
 			/** The only thing to do is to reset the internal couner. */
 			virtual void whenValueWritten (unsigned int cC, const MCHEmul::UByte& v)
 							{ resetClock (); }
 
-			/** The value sent to the file is always related with the number of cycles
-				since this method was invoked last time. */
-			virtual MCHEmul::UByte valueToSaveForBit (bool v) const override
-							{ return (clockValue () >> 3); }
-
 			private:
-			/** The number of cycles that the datasxette need to read a value. \n
+			/** The number of cycles that the datasette need to read a value. \n
 				In the TAP file data every data byte represents (with a formula) 
 				the number of cycles to wait until the next down edged of every signal that is 
 				exactly when a "1" is sent to the computer. */
@@ -91,7 +94,8 @@ namespace COMMODORE
 			The one by default is C64 type (@see TAPFileData class. */
 		virtual MCHEmul::FileData* emptyData () const override
 							{ return (new TAPFileData); }
-		/** To get the data kept into the system as something to be saved. */
+		/** To get the data kept into the system as something to be saved. 
+			The only type of information supported is TAP. */
 		virtual MCHEmul::FileData* retrieveData () const override;
 	};
 
@@ -127,6 +131,9 @@ namespace COMMODORE
 		Datasette1530Injection (const Definition& dt);
 
 		virtual bool connectData (MCHEmul::FileData* dt) override;
+		/** No data can be retrieved using this device. */
+		virtual MCHEmul::FileData* retrieveData () const override
+							{ return (nullptr); }
 
 		virtual bool simulate (MCHEmul::CPU* cpu) override;
 

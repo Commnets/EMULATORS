@@ -149,7 +149,7 @@ bool MCHEmul::StandardDatasette::initialize ()
 	_lastCPUCycles = 0;
 	_firstTimeReading = false;
 
-	_implementation -> initialize ();
+	_implementation -> initialize (_status);
 
 	return (MCHEmul::DatasettePeripheral::initialize ());
 }
@@ -257,7 +257,7 @@ bool MCHEmul::StandardDatasette::executeCommand (int id, const MCHEmul::Strings&
 
 					_status = Status::_READING;
 
-					_implementation -> initialize ();
+					_implementation -> initialize (_status);
 
 					_firstTimeReading = true;
 
@@ -303,7 +303,7 @@ bool MCHEmul::StandardDatasette::executeCommand (int id, const MCHEmul::Strings&
 					// There shouldn't be here anything, but just in case!
 					_data._data [_dataCounter].clear ();
 
-					_implementation -> initialize ();
+					_implementation -> initialize (_status);
 
 					// If there is no any further internal signal expected to start...
 					if (!_motorControlledInternally)
@@ -383,32 +383,36 @@ bool MCHEmul::StandardDatasette::simulate (MCHEmul::CPU* cpu)
 			// The Datasette is reading...
 			case Status::_READING:
 				{
-					bool rV = false;
+					bool rNB = false; // Read a new value fromn the data file?
 					if (_firstTimeReading) // Becomes false once it is used!
-						rV = true;
+						rNB = true;
 					else
 					{
-						// If it was time to read, the value read will be in v...
-						// This value can be either 0 or 1, and it will depend on the implementation!
-						bool v = false;
-						if (_implementation -> timeToReadValue (_lastCPUCycles + i, v))
-						{
+						// If it was time to read (tr), the value read will be in rv...
+						// This value can be either 0 or 1 (false or true), and it will depend on the implementation!
+						// The variable rV will be set to true when it were also time to read a new byte from the file.
+						bool tr = false;
+						bool vr = false;
+						std::tie (tr, vr, rNB) = 
+							_implementation -> timeToReadValue (_lastCPUCycles + i);
+						if (tr)
 							// Set the value read...
 							// The IODevice simulation will use it to sent an event...
 							// The way that event is managed will depend on the computer/element connected...
-							setRead (v);
-							// Reads a new value...
-							rV = true;
-						}
+							setRead (vr);
 					}
 
 					// Reads a new value?
-					if (rV)
+					if (rNB)
 					{
 						// Read the next value from the data file...
 						bool e = false; // No error at the beginning...
+						size_t pDC = _dataCounter;
 						MCHEmul::UByte nVR = readFromData (e);
-						// The error variable wil point out when the end of the data file was reached
+						// If there was a change in the block managed...
+						if (_dataCounter != pDC)
+							_implementation -> whenReadingNewBlock (_data._data [_dataCounter]);
+						// The error variable will point out when the end of the data file was reached
 						if (e) _LOG ("Error while reading data from the file");
 						// The value is managed...
 						_implementation -> whenValueRead (_lastCPUCycles + i, nVR);
@@ -420,18 +424,19 @@ bool MCHEmul::StandardDatasette::simulate (MCHEmul::CPU* cpu)
 			// The datasette is saving...
 			case Status::_SAVING:
 				{
-					// Time to write in the file?
-					if (peekWriteChangeValueRequested () && // The action "write" was requested?...
-						clockCyclesWhenWriteAction () == (_lastCPUCycles + i) && // ...and at the right moment?...
-						_implementation -> timeToWriteValue (_lastCPUCycles + i, valueToWrite ())) //...and is it time to write?
+					bool tw = false; // Time to write a new value?
+					MCHEmul::UByte vw = MCHEmul::UByte::_0; // Which value (to write) in the file in that case (when previous = true)?
+					std::tie (tw, vw) = 
+						_implementation -> timeToWriteValue (_lastCPUCycles + i, 
+							peekWriteChangeValueRequested (), clockCyclesWhenWriteAction (), valueToWrite ());
+					if (tw)
 					{
-						// The implementaion determines what to do with the value...
-						MCHEmul::UByte nVR =
-							_implementation -> valueToSaveForBit (valueToWrite ());
+						// The change in the value has been already taken into account...
+						writeChangeValueRequested ();
 						// Store the value in the data file...
-						storeInData (nVR);
+						storeInData (vw);
 						// ...and what is necessary to do after the action...
-						_implementation -> whenValueWritten (_lastCPUCycles + i, nVR);
+						_implementation -> whenValueWritten (_lastCPUCycles + i, vw);
 					}
 				}
 

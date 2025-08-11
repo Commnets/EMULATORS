@@ -17,6 +17,7 @@
 #include <SINCLAIR/CommandBuilder.hpp>
 #include <SINCLAIR/Commands.hpp>
 #include <SINCLAIR/IOPBuilder.hpp>
+#include <SINCLAIR/FileIO.hpp>
 #include <SINCLAIR/Computer.hpp>
 
 #endif

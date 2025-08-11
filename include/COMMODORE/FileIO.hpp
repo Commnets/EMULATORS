@@ -51,7 +51,31 @@ namespace COMMODORE
 			  _attributes { }
 							{ }
 
+		// From a memory data block...
+		TAPFileData (const MCHEmul::ExtendedDataMemoryBlocks& dMB)
+			: _signature ("C64-TAPE-RAW"), // The default one...
+			  _version (0), // The default one...
+			  _computerVersion (_C64),
+			  _videoVersion (_PAL),
+			  _dataSize (0),
+			  _bytes (),
+			  _attributes { }
+							{ addFromMemoryBlock (dMB); }
+
 		virtual MCHEmul::ExtendedDataMemoryBlocks asMemoryBlocks () const override;
+
+		/** Adds all info possible from a ExtendedDataMemoryBlock. */
+		void addFromMemoryBlock (const MCHEmul::ExtendedDataMemoryBlocks& dMB)
+							{ addHeaderFromMemoryBlock (dMB); addDataBlockFromMemoryBlock (dMB); }
+		/** Adds the header from a extended data block. */
+		void addHeaderFromMemoryBlock (const MCHEmul::ExtendedDataMemoryBlocks& dMB);
+		/** Creates and adds (if possible) a Data Block from a DataMemoryBlock info received as parameter. \n
+			If not possible, a nullptr is returned. \n
+			The method behaves as a factory method. */
+		void addDataBlockFromMemoryBlock (const MCHEmul::ExtendedDataMemoryBlocks& dMB);
+		/** Create a new object from a ExtendedDataMemoryBlock...if possible. */
+		static TAPFileData* createFromMemoryBlock (const MCHEmul::ExtendedDataMemoryBlocks& dMB)
+							{ return (new TAPFileData (dMB)); }
 
 		virtual std::string asString () const override
 							{ return (_signature + 
@@ -80,6 +104,8 @@ namespace COMMODORE
 
 		virtual bool canWrite (MCHEmul::FileData* fD) const override
 							{ return (dynamic_cast <TAPFileData*> (fD) != nullptr); }
+		/** This format for COMMODORE than can be written back,
+			because it is the one managed by the standard datasette. */
 		virtual bool writeFile (MCHEmul::FileData* fD, const std::string& fN, bool bE = true) const override;
 	};
 
@@ -110,7 +136,9 @@ namespace COMMODORE
 
 		virtual bool canWrite (MCHEmul::FileData* fD) const override
 							{ return (dynamic_cast <PRGFileData*> (fD) != nullptr); }
-		virtual bool writeFile (MCHEmul::FileData* fD, const std::string& fN, bool bE = true) const override;
+		/** This type of format can not be written back to any file. */
+		virtual bool writeFile (MCHEmul::FileData* fD, const std::string& fN, bool bE = true) const override
+							{ return (false); }
 	};
 
 	/**	Struct to content the cartridge info...
@@ -291,12 +319,20 @@ namespace COMMODORE
 	class KeystrokeTypeIO final : public MCHEmul::KeystrokeTypeIO
 	{
 		public:
-		KeystrokeTypeIO ()
-			: MCHEmul::KeystrokeTypeIO ()
+		KeystrokeTypeIO (const std::map <char, MCHEmul::Strings>& sK = _DEFAULTSPECIALKEYS)
+			: MCHEmul::KeystrokeTypeIO (),
+			  _SPECIALKEYS (sK)
 							{ }
 
 		private:
-		virtual std::string generateKeystrokeForToken (const std::string& t) const override;
+		/** It is like the standard one, but no lowecase letters are allowed.
+			So any letter will be managed as an uiper ase letter. */
+		virtual MCHEmul::Strings generateKeystrokeForToken (const std::string& t) const override;
+
+		private:
+		const std::map <char, MCHEmul::Strings> _SPECIALKEYS;
+		// The default ones...
+		static const std::map <char, MCHEmul::Strings> _DEFAULTSPECIALKEYS;
 	};
 }
 

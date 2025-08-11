@@ -83,7 +83,9 @@ namespace ZXSPECTRUM
 		virtual MCHEmul::FileIO* createFileReader () const override
 							{ return (new MCHEmul::FileIO 
 								(MCHEmul::FileTypeIOList (
-									{	new TAPFileTypeIO,
+									{	new TZXFileTypeIO,
+										new TAPFileTypeIO,
+										new KeystrokeTypeIO,
 										new MCHEmul::RawFileTypeIO /** Row data. */ }))); }
 	};
 

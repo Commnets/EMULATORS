@@ -33,6 +33,7 @@ void VIC20::VIC20Emulator::printOutParameters (std::ostream& o) const
 		 "8:\t+27K expansion (+3K +8k +8k +8k)" << std::endl <<
 		 "9:\t+35K expansion (+3K +8k +8k +8k +8k)" << std::endl;
 	o << "DEVICES allowed to be connected under command CONNECTPER:" << std::endl <<
+		 std::to_string (MCHEmul::Typewriter::_ID) << ":\tTypewriter" << std::endl <<
 		 std::to_string (VIC20::Cartridge::_ID) << ":\tCartridge" << std::endl <<
 		 std::to_string (COMMODORE::Datasette1530::_ID) << ":\tCasette 1530/1" << std::endl <<
 		 std::to_string (COMMODORE::Datasette1530Injection::_ID) << ":\tDirect injection into memory" << std::endl;

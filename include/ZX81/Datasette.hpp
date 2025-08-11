@@ -19,7 +19,8 @@
 
 namespace ZX81
 {
-	/** With the io activities running "linked" with the CPU. */
+	/** With the io activities running "linked" with the CPU.
+		Still pending to be implemented. */
 	class Datasette final : public MCHEmul::StandardDatasette
 	{
 		public:
@@ -42,6 +43,9 @@ namespace ZX81
 		DatasetteInjection (Type t);
 
 		virtual bool connectData (MCHEmul::FileData* dt) override;
+		/** No data can be retrieved using this device. */
+		virtual MCHEmul::FileData* retrieveData () const override
+							{ return (nullptr); }
 
 		virtual bool simulate (MCHEmul::CPU* cpu) override;
 

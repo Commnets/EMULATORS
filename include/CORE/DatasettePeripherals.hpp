@@ -184,6 +184,15 @@ namespace MCHEmul
 	class StandardDatasette : public DatasettePeripheral
 	{
 		public:
+		/** The different status that this peripheral can be in. \n
+			At creating this datasette is stopped. */
+		enum class Status
+		{
+			_STOPPED = 0,
+			_READING = 1,
+			_SAVING = 2
+		};
+
 		/** This class represents the way in detail the bits are read or written. 
 			The default implementation just manage an internal counter that is incremented
 			through out the method clock (), but defines three methods to be implemented:
@@ -215,30 +224,42 @@ namespace MCHEmul
 
 			/// Actions when reading...
 			/** To decide whether it is or not time to read a value. \n
-				If it is the time, the value is returned in the parameter. 
-				The method receives also the number of cycles of the CPU when this method is invoked. */
-			virtual bool timeToReadValue (unsigned int cC, bool &v) const = 0;
+				The method returns always a tuple with 3 values:
+				<0>: Whether it is the moment to simulate that a new value has been read from the datasette.
+				<1>: If the previous one is true, this value will point the value read
+				<2>: Whether it is time to also read a new value from the data file. */
+			virtual std::tuple <bool, bool, bool> timeToReadValue (unsigned int cC) = 0;
 			/** What to do when a value has been read from the data file. \n
 				The method receives the number of cycles of the CPU when the value was read,
 				and also the value finally read from the file. */
 			virtual void whenValueRead (unsigned int cC, const UByte& v) = 0;
+			/** Something, just when reading, the block can change. \n
+				In this situations a decision can be needed in the content of the Implementation. \m
+				The new block is passed as parameter. \n
+				By default, nothing is done. */
+			virtual void whenReadingNewBlock (const DataMemoryBlock& dB) { }
 			
 			// Actions when writting...
 			/** To decide whether it is or not time to write a value. \n
-				Just return true when it is time, and false if it is not. \n
-				The method receives the number of cycles of the CPU when the method is invoked
-				and the value to be written (suggested by the logic of the program). */
-			virtual bool timeToWriteValue (unsigned int cC, bool v) const = 0;
+				The parameters needed are:
+				@param cC	: Cycles of the system when the method is invoked.
+				@param vc	: Has changed the value sent to the peripheral?
+				@param ccvc	: Cycles when the request of change was invoked (the previous parameter is true).
+				@oaram vs   : What was the value sent? \m
+				The method has to return a tuple when two fields: \n
+				<0> to indicate whether a new value has to be saved into the data file,
+				<1> to indicate that value, */
+			virtual std::tuple <bool, UByte> timeToWriteValue (unsigned int cC, 
+				bool vc, unsigned int ccvc, bool vs) = 0;
 			/** What to do when a value has been writtem to the data file. \n
 				The method receives the number of cycles of the CPU when the value was written to the data file
 				and also the value finally written. */
 			virtual void whenValueWritten (unsigned int, const UByte& v) = 0;
 
-			// Actions when writting...
-			/** To decide what value has to be saved for a bit. */
-			virtual UByte valueToSaveForBit (bool v) const = 0;
-
-			virtual void initialize ()
+			/** The initialization is always with the status. 
+				That can or cannot be taken into account by the method. \n
+				By default it just reset the counter. */
+			virtual void initialize (Status st)
 							{ resetClock (); }
 
 			protected:
@@ -256,18 +277,16 @@ namespace MCHEmul
 				: Implementation ()
 							{ }
 
-			virtual bool timeToReadValue (unsigned int cC, bool &v) const override
-							{ v = false; return (false); } // Never is time!
+			virtual std::tuple <bool, bool, bool> timeToReadValue (unsigned int cC) override
+							{ return { false, false, false }; } // Never is time!
 			virtual void whenValueRead (unsigned int cC, const UByte& v) override 
 							{ } // Nothing to do...
 
-			virtual bool timeToWriteValue (unsigned int cC, bool v) const override
-							{ return (false); } // Never is time!
+			virtual std::tuple <bool, UByte> timeToWriteValue (unsigned int cC, 
+				bool vc, unsigned int ccvc, bool vs) override
+							{ return { false, MCHEmul::UByte::_0 }; } // Never is time!
 			virtual void whenValueWritten (unsigned int cC, const UByte& v) override
 							{ } // Nothing to do...
-
-			virtual UByte valueToSaveForBit (bool v) const override
-							{ return (0); }
 		};
 
 		/** The commands accepted by this peripheral. \n
@@ -291,6 +310,11 @@ namespace MCHEmul
 		Implementation* implementation ()
 							{ return (_implementation); }
 		// The implementation can only be changed using a protected method, so usually inside the class!
+
+		/** The status cannot be changed but using the commands. 
+			At the b eginning the status is _STOPEED. */
+		Status status () const
+							{ return (_status); }
 
 		virtual bool initialize () override;
 
@@ -329,21 +353,12 @@ namespace MCHEmul
 		protected:
 		Implementation* _implementation;
 		bool _motorControlledInternally;
-
-		/** The different status that this peripheral can be in. \n
-			At creating this datasette is stopped. */
-		enum class Status
-		{
-			_STOPPED = 0,
-			_READING = 1,
-			_SAVING = 2
-		};
-
-		// Immplementation
 		/** The status of the datasette. \n
 			It can be either stopped, reading or saving. \n
 			Notice that the status is not changed when the motor is off!. */
 		mutable Status _status;
+
+		// Immplementation
 		// Counting which the info to write or read!
 		/** value = max size_t means that there is no data pointed. */
 		mutable size_t _dataCounter; 

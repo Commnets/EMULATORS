@@ -437,6 +437,11 @@ bool VIC20::Memory::initialize ()
 	if (!result)
 		return (false);
 
+	// Fill the memory with random values...
+	for (size_t i = 0X000; i < 0x10000; i++)
+		fillWith (MCHEmul::Address ({ 0x00, 0x00 }) + i, 
+			MCHEmul::UByte ((unsigned char) (std::rand () % 255)), 1); // Only affects the RAM....
+
 	// The active view has to be initially the CPU view...
 	setCPUView ();
 
