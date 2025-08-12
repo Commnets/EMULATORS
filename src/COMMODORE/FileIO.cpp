@@ -1,32 +1,39 @@
 #include <COMMODORE/FileIO.hpp>
 
 // ---
-// How the special keys in the keyboard of the C64 are generated using a standard PC keyboard...
+// How the special keys in the keyboard of the C64 are generated using a standard PC UK keyboard
+// Really the keys assigned are the equivalents to the ones used in COMMODORE::InputIOSystem,
+// that reflects the location of the keys in the UK keyboard.
+// Typewriter class interprets the keys in the opposite way and assign a the SDL_KEYCode 
 const std::map <char, MCHEmul::Strings> COMMODORE::KeystrokeTypeIO::_DEFAULTSPECIALKEYS = {
-		{ '-', { "'" } },
-		{ '=', { "¡" } },
-		{ '|', { "LSHIFT+'" } },
-		{ '+', { "``" } },
-		{ '*', { "+" } },
-		{ ';', { "ñ" } },
-		{ ']', { "LSHIFT+ñ" } },
-		{ ':', { "´" } },
-		{ '[', { "LSHIFT+´" } },
-		{ '@', { "ç" } },
-		{ '<', { "LSHIFT+;" } },
-		{ '>', { "LSHIFT+:" } },
-		{ '/', { "-" } },
-		{ '?', { "LSHIFT+_" } },
-		{ '£', { "º" } },
-		{ '!', { "LSHIFT+1" } },
-		{ '"', { "LSHIFT+2" } },
-		{ '#', { "LSHIFT+3" } },
-		{ '$', { "LSHIFT+4" } },
-		{ '%', { "LSHIFT+5" } },
-		{ '&', { "LSHIFT+6" } },
-		{ '´', { "LSHIFT+7" } },
-		{ '(', { "LSHIFT+8" } },
-		{ ')', { "LSHIFT+9" } }
+		{ '\n',	{ "RETURN" } },
+		{ ' ',	{ "SPACE" } },
+		{ '-',	{ "-" } },
+		{ '|',	{ "LSHIFT+-" } },
+		{ '=',	{ "=" } },
+		{ '+',	{ "[" } },
+		{ '*',	{ "]" } },
+		{ ';',	{ ";" } },
+		{ ']',	{ "LSHIFT+;" } },
+		{ ':',	{ "´" } },
+		{ '[',	{ "LSHIFT+´" } },
+		{ '@',	{ "\\" } },
+		{ ',',	{ "," } },
+		{ '<',	{ "LSHIFT+," } },
+		{ '.',	{ "." } },
+		{ '>',	{ "LSHIFT+." } },
+		{ '/',	{ "/" } },
+		{ '?',	{ "LSHIFT+/" } },
+		{ '£',	{ "`" } },	
+		{ '!',	{ "LSHIFT+1" } },
+		{ '"',	{ "LSHIFT+2" } },
+		{ '#',	{ "LSHIFT+3" } },
+		{ '$',	{ "LSHIFT+4" } },
+		{ '%',	{ "LSHIFT+5" } },
+		{ '&',	{ "LSHIFT+6" } },
+		{ '´',	{ "LSHIFT+7" } },
+		{ '(',	{ "LSHIFT+8" } },
+		{ ')',	{ "LSHIFT+9" } }
 	};
 
 // ---

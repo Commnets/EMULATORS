@@ -23,6 +23,8 @@ const MCHEmul::Strings ZXSPECTRUM::KeystrokeTypeIO::_ZXSPECTRUMTOKENS = {
 // And the keys used to get them...
 const std::map <std::string, MCHEmul::Strings> 
 		ZXSPECTRUM::KeystrokeTypeIO::_ZXSPECTRUMKEYSTROKES = {
+	{ "\n",			{ "RETURN" } }, // In K,L or C mode
+	{ " ",			{ "SPACE" } }, // In K,L or C mode
 	{ "+",			{ "RCTRL+K" } }, // In K,L or C mode
 	{ "-",			{ "RCTRL+J" } }, // In K,L or C mode
 	{ "*",			{ "RCTRL+B" } }, // In K,L or C mode

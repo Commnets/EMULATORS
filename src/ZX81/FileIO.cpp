@@ -18,6 +18,8 @@ const MCHEmul::Strings ZX81::KeystrokeTypeIO::_ZX81TOKENS = {
 
 // And the keys used to get them...
 const std::map <std::string, MCHEmul::Strings> ZX81::KeystrokeTypeIO::_ZX81KEYSTROKES = {
+	{ "\n",			{ "RETURN" } },
+	{ " ",			{ "SPACE" } },
 	{ "+",			{ "LSHIFT+K" } },
 	{ "-",			{ "LSHIFT+J" } },
 	{ "*",			{ "LSHIFT+B" } },
@@ -114,6 +116,8 @@ const MCHEmul::Strings ZX81::KeystrokeTypeIO::_ZX80TOKENS = {
 
 // And the keys used to get them...
 const std::map <std::string, MCHEmul::Strings> ZX81::KeystrokeTypeIO::_ZX80KEYSTROKES = {
+	{ "\n",			{ "RETURN" } },
+	{ " ",			{ "SPACE" } },
 	{ "+",			{ "LSHIFT+K" } },			
 	{ "-",			{ "LSHIFT+J" } },			
 	{ "*",			{ "LSHIFT+P" } },			
@@ -275,7 +279,11 @@ MCHEmul::Strings ZX81::KeystrokeTypeIO::generateKeystrokeForToken (const std::st
 	{
 		// All letters ars upperkeys always...
 		for (const auto& i : t)
-			result.push_back (std::string (1, std::toupper (i)));
+			result.push_back ((i == ' ') 
+				// A space is not considering as a token (so it is not in the transaltion list), 
+				// but requeries special key for typewriter...
+				? "SPACE"
+				: std::string (1, std::toupper (i)));
 	}
 	else
 		result = (*i).second;

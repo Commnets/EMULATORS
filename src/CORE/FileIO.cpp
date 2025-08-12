@@ -343,7 +343,7 @@ MCHEmul::Strings MCHEmul::KeystrokeTypeIO::generateTokensFor (const std::string&
 	}
 
 	// ...plus the end of the line...
-	result.emplace_back (std::string (1, '\n'));
+	result.emplace_back (std::string ("\n"));
 
 	return (result);
 }

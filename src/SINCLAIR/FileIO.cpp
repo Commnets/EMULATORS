@@ -100,7 +100,11 @@ MCHEmul::Strings SINCLAIR::KeystrokeTypeIO::generateKeystrokeForToken (const std
 		// The letter could be in uppercase...
 		// ...and a SHIFT could be needed before...
 		for (const auto& i : t)
-			result.push_back ((std::isupper (i) ? "LSHIFT+" : "") + std::string (1, i));
+			result.push_back ((i == ' ') 
+				// A space is not considering as a token (so it is not in the transaltion list), 
+				// but requeries special key for typewriter...
+				? "SPACE" 
+				: (std::isupper (i) ? "LSHIFT+" : "") + std::string (1, i));
 	}
 	else
 		result = (*i).second;

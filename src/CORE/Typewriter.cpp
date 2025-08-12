@@ -14,10 +14,91 @@ MCHEmul::Typewriter::Typewriter (unsigned int nC,
 // ---
 bool MCHEmul::Typewriter::connectData (MCHEmul::FileData* dt)
 { 
+	// To make the translation from the key code to the scan code...
+	// All these membes are the ones to be used in the different KeystrokeTypeIO...
+	static const std::map <std::string, SDL_Scancode> _SYMBOLSTRANSLATE = {
+		/** letters */
+		{ "A",				SDL_SCANCODE_A },
+		{ "B",				SDL_SCANCODE_B },
+		{ "C",				SDL_SCANCODE_C },
+		{ "D",				SDL_SCANCODE_D },
+		{ "E",				SDL_SCANCODE_E },
+		{ "F",				SDL_SCANCODE_F },
+		{ "G",				SDL_SCANCODE_G },
+		{ "H",				SDL_SCANCODE_H },
+		{ "I",				SDL_SCANCODE_I },
+		{ "J",				SDL_SCANCODE_J },
+		{ "K",				SDL_SCANCODE_K },
+		{ "L",				SDL_SCANCODE_L },
+		{ "M",				SDL_SCANCODE_M },
+		{ "N",				SDL_SCANCODE_N },
+		{ "O",				SDL_SCANCODE_O },
+		{ "P",				SDL_SCANCODE_P },
+		{ "Q",				SDL_SCANCODE_Q },
+		{ "R",				SDL_SCANCODE_R },
+		{ "S",				SDL_SCANCODE_S },
+		{ "T",				SDL_SCANCODE_T },
+		{ "U",				SDL_SCANCODE_U },
+		{ "V",				SDL_SCANCODE_V },
+		{ "W",				SDL_SCANCODE_W },
+		{ "X",				SDL_SCANCODE_X },
+		{ "Y",				SDL_SCANCODE_Y },
+		{ "Z",				SDL_SCANCODE_Z },
+		/* keymap numbers */
+		{ "1",				SDL_SCANCODE_1 },
+		{ "2",				SDL_SCANCODE_2 },
+		{ "3",				SDL_SCANCODE_3 },
+		{ "4",				SDL_SCANCODE_4 },
+		{ "5",				SDL_SCANCODE_5 },
+		{ "6",				SDL_SCANCODE_6 },
+		{ "7",				SDL_SCANCODE_7 },
+		{ "8",				SDL_SCANCODE_8 },
+		{ "9",				SDL_SCANCODE_9 },
+		{ "0",				SDL_SCANCODE_0 },
+		/* keymap: special keys */
+		{ "RETURN",			SDL_SCANCODE_RETURN },
+		{ "SPACE",			SDL_SCANCODE_SPACE },
+		{ "LSHIFT",			SDL_SCANCODE_LSHIFT },
+		{ "RSHIFT",			SDL_SCANCODE_RSHIFT },
+		{ "LCTRL",			SDL_SCANCODE_LCTRL },
+		{ "RCTRL",			SDL_SCANCODE_RCTRL },
+		{ "LEFT",			SDL_SCANCODE_LEFT },
+		{ "RIGHT",			SDL_SCANCODE_RIGHT },
+		{ "UP",				SDL_SCANCODE_UP },
+		{ "DOWN",			SDL_SCANCODE_DOWN },
+		{ "HOME",			SDL_SCANCODE_HOME },
+		{ ",",				SDL_SCANCODE_COMMA },
+		{ ".",				SDL_SCANCODE_PERIOD },
+		{ "[",				SDL_SCANCODE_LEFTBRACKET },
+		{ "]",				SDL_SCANCODE_RIGHTBRACKET },
+		{ "´",				SDL_SCANCODE_APOSTROPHE },
+		{ "\\",				SDL_SCANCODE_BACKSLASH },
+		{ "-",				SDL_SCANCODE_MINUS },
+		{ "/",				SDL_SCANCODE_SLASH },
+		{ ";",				SDL_SCANCODE_SEMICOLON },
+		{ "=",				SDL_SCANCODE_EQUALS },
+		{ "`",				SDL_SCANCODE_GRAVE },
+		/** Derivated. */
+		{ "F1",				SDL_SCANCODE_F1 },
+		{ "F2",				SDL_SCANCODE_F2 },
+		{ "F3",				SDL_SCANCODE_F3 },
+		{ "F4",				SDL_SCANCODE_F4 },
+		{ "F5",				SDL_SCANCODE_F5 },
+		{ "F6",				SDL_SCANCODE_F6 },
+		{ "F7",				SDL_SCANCODE_F7 },
+		{ "F8",				SDL_SCANCODE_F8 },
+		{ "F9",				SDL_SCANCODE_F9 },
+		{ "F10",			SDL_SCANCODE_F10 },
+		{ "F11",			SDL_SCANCODE_F11 },
+		{ "F12",			SDL_SCANCODE_F12 }
+	};
+
 	if (dynamic_cast <MCHEmul::KeystrokeData*> (dt) == nullptr)
 		return (false); // That type of info is not valid for the typewriter...
 
 	_keystrokes = static_cast <MCHEmul::KeystrokeData*> (dt) -> _keystrokes;
+
+	_eventNumber = 0; // Just in case...
 
 	// The connection of the keystrokes has to be done using the specifc InputOSSystem of the emulation...
 	std::vector <SDL_Event> events;
@@ -43,70 +124,30 @@ bool MCHEmul::Typewriter::connectData (MCHEmul::FileData* dt)
 			// ...and bot has to be injected into the parent...
 		};
 
+	// Manage all keystrokes...
 	for (const auto& i : _keystrokes)
 	{
-		if (i.length () == 1)
-			addKeyFullEvent (
-				(i == "\n")
-					? SDL_SCANCODE_RETURN
-					: SDL_GetScancodeFromKey (static_cast <SDL_Keycode> (std::tolower (i [0]))));
-		else
+		// Gets all the scan codes...
+		MCHEmul::Strings strs = MCHEmul::getElementsFrom (i, '+');
+		std::vector <SDL_Scancode> scs;
+		std::map <std::string, SDL_Scancode>::const_iterator k;
+		for (auto& j : strs)
 		{
-			// Gets all the scan codes...
-			MCHEmul::Strings strs = MCHEmul::getElementsFrom (i, '+');
-			std::vector <SDL_Scancode> scs;
-			for (auto& j : strs)
-			{
-				if (j.length () == 1)
-					scs.emplace_back 
-						(SDL_GetScancodeFromKey (static_cast <SDL_Keycode> (std::tolower (j [0]))));
-				else
-				{
-					j = MCHEmul::upper (j);
-					if (j == "LCTRL")
-						scs.emplace_back (SDL_SCANCODE_LCTRL);
-					else if (j == "RCTRL")
-						scs.emplace_back (SDL_SCANCODE_RCTRL);
-					else if (j == "LSHIFT")
-						scs.emplace_back (SDL_SCANCODE_LSHIFT);
-					else if (j == "RSHIFT")
-						scs.emplace_back (SDL_SCANCODE_RSHIFT);
-					else if (j == "LALT")
-						scs.emplace_back (SDL_SCANCODE_LALT);
-					else if (j == "RALT")
-						scs.emplace_back (SDL_SCANCODE_RALT);
-					else if (j == "INIT")
-						scs.emplace_back (SDL_SCANCODE_HOME);
-					else if (j == "DOWN")
-						scs.emplace_back (SDL_SCANCODE_DOWN);
-					else if (j == "UP")
-						scs.emplace_back (SDL_SCANCODE_UP);
-					else if (j == "LEFT")
-						scs.emplace_back (SDL_SCANCODE_LEFT);
-					else if (j == "RIGHT")
-						scs.emplace_back (SDL_SCANCODE_RIGHT);
-					else if (j == "PAGEUP")
-						scs.emplace_back (SDL_SCANCODE_PAGEUP);
-					else if (j == "PAGEDOWN")
-						scs.emplace_back (SDL_SCANCODE_PAGEDOWN);
-					else if (j == "RETURN")
-						scs.emplace_back (SDL_SCANCODE_RETURN);
-
-					// Any other thing not listed here is ignored, 
-					// but some member might be inserted eventually, so the outcome could be uncontrolable...
-				}
-			}
-
-			// BNow the scan codes and inserted twice...
-			// One pressing them...
-			for (const auto& j : scs)
-				addKeyPress (j);
-			// ...and the other ones releasing them in the reverse order...
-			for (std::vector <SDL_Scancode>::const_reverse_iterator j = scs.rbegin (); 
-				j != scs.rend (); j++)
-				addKeyRelease ((*j));
+			// Any other key not listed is ignored, 
+			// but some member might be inserted eventually, so the outcome could be uncontrolable...
+			k = _SYMBOLSTRANSLATE.find (j);
+			if (k != _SYMBOLSTRANSLATE.end ())
+				scs.emplace_back ((*k).second);
 		}
 
+		// BNow the scan codes and inserted twice...
+		// One pressing them...
+		for (const auto& j : scs)
+			addKeyPress (j);
+		// ...and the other ones releasing them in the reverse order...
+		for (std::vector <SDL_Scancode>::const_reverse_iterator j = scs.rbegin (); 
+			j != scs.rend (); j++)
+			addKeyRelease ((*j));
 	}
 
 	loadEvents (events);
