@@ -8,7 +8,7 @@ MCHEmul::InputOSSystemPeripheral::InputOSSystemPeripheral (int id,
 		unsigned int wt, MCHEmul::Computer* c, const MCHEmul::Attributes& attrs)
 	: MCHEmul::IOPeripheral (id, attrs),
 	  _events { }, // Empty at the beginning...
-	  _waitTime (wt), // Number of 1/25 s-length. 25 will mean 1 second...
+	  _originalWaitTime (wt), _waitTime (wt), // Number of 1/25 s-length. 25 will mean 1 second...
 	  _OSIO (nullptr), // This is set up later...
 	  // Implementation variables...
 	  _running (false), 
@@ -142,6 +142,12 @@ bool MCHEmul::InputOSSystemPeripheral::simulate (MCHEmul::CPU* cpu)
 			_eventReady = true;
 
 			_eventToInject = _events [_eventNumber++];
+
+			// The waiting time can change if there is a specific event that requieres...
+			std::map <size_t, unsigned int>::const_iterator i =
+				_specificWaitingTimes.find (_eventNumber);
+			_waitTime = (i == _specificWaitingTimes.end () 
+				? _originalWaitTime : (*i).second);
 		}
 		else
 		{

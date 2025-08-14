@@ -102,6 +102,7 @@ bool MCHEmul::Typewriter::connectData (MCHEmul::FileData* dt)
 
 	// The connection of the keystrokes has to be done using the specifc InputOSSystem of the emulation...
 	std::vector <SDL_Event> events;
+	std::map <size_t, unsigned int> waitingTimes;
 	auto addKeyPress = [&](SDL_Scancode sc) -> void
 		{
 			SDL_Event evnt; 
@@ -147,10 +148,19 @@ bool MCHEmul::Typewriter::connectData (MCHEmul::FileData* dt)
 		// ...and the other ones releasing them in the reverse order...
 		for (std::vector <SDL_Scancode>::const_reverse_iterator j = scs.rbegin (); 
 			j != scs.rend (); j++)
+		{
 			addKeyRelease ((*j));
+
+			// In some emulators a "RETURN" (e.g. SINCLAR's) implies
+			// that the kernel process the information and takes longer...
+			// These instruction is just for that.
+			if ((*j) == SDL_SCANCODE_RETURN) 
+				waitingTimes [events.size ()] = _originalWaitTime * 3;
+		}
 	}
 
 	loadEvents (events);
+	setSpecficEventsWaitingTime (waitingTimes);
 	
 	return (true); 
 }

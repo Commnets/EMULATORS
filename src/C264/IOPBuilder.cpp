@@ -8,7 +8,7 @@ MCHEmul::IOPeripheral* C264::IOPeripheralBuilder::createPeripheral
 	MCHEmul::IOPeripheral* result = nullptr;
 
 	if (id == MCHEmul::Typewriter::_ID)
-		result = new MCHEmul::Typewriter (2 /** 1 every 500 miliseconds. */, c);
+		result = new MCHEmul::Typewriter (3 /** 1/25 * 3 = 1 every 120 miliseconds. */, c);
 	else if (id == C264::Cartridge::_ID)
 		result = new C264::Cartridge;
 	else

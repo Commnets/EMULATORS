@@ -188,6 +188,10 @@ bool MCHEmul::StandardDatasette::executeCommand (int id, const MCHEmul::Strings&
 						_dataCounter = 0; // ...or to the first one if there is none else to point to...
 					_elementCounter = 0; // Always pointing to the first element of the block...
 
+					// Just to be ready when the new block is reached!
+					_implementation -> 
+						whenReadingNewBlock (_data._data [_dataCounter]);
+
 					// No keys is supossed to be pressed...
 					// if the user wanted to move to the next / previous element
 					// the same command would have to be executed...
@@ -214,6 +218,10 @@ bool MCHEmul::StandardDatasette::executeCommand (int id, const MCHEmul::Strings&
 					if (--_dataCounter > _data._data.size ()) // it is an unsigned short...
 						_dataCounter = (_data._data.size () - 1); //...or to after the last one if there is none else to point to...
 					_elementCounter = 0; // Always pointing to the first element of the block...
+
+					// Just to be ready when the new block is reached!
+					_implementation -> 
+						whenReadingNewBlock (_data._data [_dataCounter]);
 
 					setNoKeyPressed (true);
 				}
@@ -265,6 +273,10 @@ bool MCHEmul::StandardDatasette::executeCommand (int id, const MCHEmul::Strings&
 					if (!_motorControlledInternally)
 						setMotorOff (false); // The motor starts...
 
+					// Just to be ready when the new block is reached!
+					_implementation -> 
+						whenReadingNewBlock (_data._data [_dataCounter]);
+
 					setNoKeyPressed (false);
 				}
 				else
@@ -308,6 +320,9 @@ bool MCHEmul::StandardDatasette::executeCommand (int id, const MCHEmul::Strings&
 					// If there is no any further internal signal expected to start...
 					if (!_motorControlledInternally)
 						setMotorOff (false); // The motor starts...
+
+					// In this case, the invocation to _implementation -> whenReadingNewBlock is not needed...
+					// The system will have to take care of saving all variables associated to the block too!
 
 					setNoKeyPressed (false);
 				}

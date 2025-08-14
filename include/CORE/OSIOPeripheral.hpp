@@ -38,7 +38,9 @@ namespace MCHEmul
 		static const int _EJECT		= 32; // To clean up the data loaded, or to simulate a new casette is inserted...
 
 		/** To set up an instance of this class.
-			A computer reference must be given to determine the InputOSSystem from it. */
+			A computer reference must be given to determine the InputOSSystem from it. \n
+			@param wt		The time to wait (in multiples of "OSIO reading speed", usually = 1/25 seconds) 
+							This time can be modified for specific events. @see method setSpecficEventsWaitingTime. */
 		InputOSSystemPeripheral (int id, unsigned int wt, Computer* c, const Attributes& attrs);
 	
 		/** Is there any event ready to be process. 
@@ -78,8 +80,13 @@ namespace MCHEmul
 
 		protected:
 		/** This method has to be invoked from connectData once the FileData received has been "received and "translated"
-			into SDL_Events in the method connectData that has to be overloaded. */
+			into SDL_Events in the method connectData that has to be overloaded. \n
+			@see connectData in every specific implementation of this class (e.g. Typewriter). */
 		void loadEvents (const std::vector <SDL_Event>& evnts);
+		/** This method is to set specials reading speeds associated to specific events. \n
+			Again, the method has to be invoked from the connectData in every class inhereting from this one. */
+		void setSpecficEventsWaitingTime (const std::map <size_t, unsigned int>& swt)
+							{ _specificWaitingTimes = std::move (swt); }
 
 		protected:
 		/** This list has to be loaded with the method load events. 
@@ -87,8 +94,12 @@ namespace MCHEmul
 			received usually through out the method connectData \n
 			That methid has to be overloaded in the specific peripheral. */
 		std::vector <SDL_Event> _events;
-		/** Number of 1/25 seconds to wait before injecting the next event. */
-		unsigned int _waitTime;
+		/** The specific waiting times for the events. */
+		std::map <size_t, unsigned int> _specificWaitingTimes;
+		/** Number of 1/25 seconds to wait before injecting the next event. 
+			This value can change affected in a specific event. \n
+			That's the reason to keep a copy in _originalWaitTime. */
+		unsigned int _originalWaitTime, _waitTime;
 		/** Extracted from the computer. */
 		InputOSSystem* _OSIO;
 		

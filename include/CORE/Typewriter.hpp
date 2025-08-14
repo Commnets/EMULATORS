@@ -36,9 +36,13 @@ namespace MCHEmul
 		Typewriter (unsigned int nC, Computer* c,const Attributes& attrs = { });
 
 		/** The keys allowed are: \n
-			1.- Any simple key of the keyboard, like A, B, C.... \n
-				If a capital letter is requiered, the combination should be "[L|R]SHIFT+[letter]". \n
-			2.- The special keys allowed are: LSHIFT, RSHIFT, LCTRL, RCTRL, LALT, and RALT. */
+			The FileData receives has to contain every "symbol" in the keyboard (UK one).
+			The KeystrokeTypeIO has to convert the "text" into "symbols" of the keyboard. \n
+			This method will translate those symbols into SDL_Events. \n
+			The special keys of the keyboard are: LSHIFT, RSHIFT, LCTRL, 
+			RCTRL, LALT, RALT, HOME, UP, DOWN, LEFT, RIGH, SPACE & RETURN  \n
+			Every RETURN will generate a special delay time to treat it. \n
+			This is because in manu emulators the kernel takes time to process the line introduce after a RETURN! */
 		virtual bool connectData (FileData* dt) override;
 		virtual FileData* retrieveData () const override;
 

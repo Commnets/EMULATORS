@@ -13,7 +13,7 @@ MCHEmul::IOPeripheral* ZX81::IOPeripheralBuilder::createPeripheral
 
 	// The ZX81/ZX80 are very slow mnachines!
 	if (id == MCHEmul::Typewriter::_ID)
-		result = new MCHEmul::Typewriter (20 /** 1/25 * 20 = 1 every 800 miliseconds. */, c);
+		result = new MCHEmul::Typewriter (8 /** 1/25 * 20 = 1 every 320 miliseconds. */, c);
 	else if (id == ZX81::Cartridge::_ID)
 		result = new ZX81::Cartridge;
 	// https://en.wikipedia.org/wiki/ZX81
