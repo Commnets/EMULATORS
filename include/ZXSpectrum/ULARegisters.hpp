@@ -62,6 +62,13 @@ namespace ZXSPECTRUM
 							{ return (_EARSignalChanged.peekValue ()); }
 		inline void setEARSignal (bool cs);
 
+		// The buzzer signal
+		bool buzzerSignal () const
+							{ return (_buzzerSignal); }
+		/** According with the status of the EAR and MIC signals. 
+			EAR affect directly, but when it doesn't change, the sound is managed by the MIC. */
+		inline void alignBuzzerSignal ();
+
 		// Info about the situation of the keyboard!
 		const MCHEmul::UByte& keyboardStatus (size_t r) const
 							{ return (_keyboardStatus [r]); }
@@ -101,6 +108,9 @@ namespace ZXSPECTRUM
 		/** The EAR signal and the signal to indicate whether it has changed. */
 		bool _EARSignal;
 		MCHEmul::OBool _EARSignalChanged;
+		/** The buzzer signal.
+			It is not directly the EAR signal, but it is also affected by the MIC one. */
+		bool _buzzerSignal;
 		/** Where the status of the keyboard matrix is kept. */
 		std::vector <MCHEmul::UByte> _keyboardStatus;
 		/** Where the status of the joystick is kept. 5 positions: \n
@@ -130,8 +140,17 @@ namespace ZXSPECTRUM
 		{ 
 			_EARSignal = cs;
 			
-			_EARSignalChanged = true; 
+			_EARSignalChanged = true;
 		} 
+	}
+
+	// ---
+	inline void ULARegisters::alignBuzzerSignal ()
+	{
+		if (_EARSignalChanged) _buzzerSignal = _EARSignal;
+		else if (_MICSignalChanged.peekValue ()) _buzzerSignal = _MICSignal;
+		// Here it is used peekMICSignalChanged () to avoid changing the value
+		// Because the simulate method of ULA uses the chan ge to send and event (usually to the datasette)!
 	}
 }
 

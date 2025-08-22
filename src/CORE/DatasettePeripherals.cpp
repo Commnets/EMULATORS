@@ -7,6 +7,7 @@ MCHEmul::DatasettePeripheral::DatasettePeripheral (int id, const MCHEmul::Attrib
 	: MCHEmul::IOPeripheral (id, attrs),
 	  _valueRead (true),
 	  _valueToWrite (false),
+	  _clockCyclesWhenWriteAction (0),
 	  _motorOff (true),
 	  _noKeyPressed (true),
 	  _data (),
@@ -249,6 +250,10 @@ bool MCHEmul::StandardDatasette::executeCommand (int id, const MCHEmul::Strings&
 
 				_status = Status::_STOPPED;
 
+				// If the motor is not controlled internally...
+				if (!_motorControlledInternally) // ...it has to stop...
+					setMotorOff (true);
+
 				setNoKeyPressed (true);
 			}
 
@@ -302,27 +307,32 @@ bool MCHEmul::StandardDatasette::executeCommand (int id, const MCHEmul::Strings&
 
 					_status = Status::_SAVING;
 
-					// If the counter is pointing at the end, 
-					// a null data element is added...
+					// Every time "save" is selected, a new block is created...
+					MCHEmul::DataMemoryBlock nB = std::move (createNewDataBlock ());
+					// What to do with the new block?
+					// If the counter is pointing at the end,...
 					if (_dataCounter >= _data._data.size ())
 					{ 
-						_data._data.push_back (MCHEmul::DataMemoryBlock ());
-
-						_dataCounter = _data._data.size () -1;
+						// ..the new element is added at behind...
+						_data._data.emplace_back (nB);
+						// ...the data counter is then set to that new element...
+						_dataCounter = _data._data.size () - 1;
 					}
+					// If it is not, the previous elements is replaced by the new one...
+					else 
+						_data._data [_dataCounter] = std::move (nB);
 
-					// ...and, any case, the element affected is fully clearead...
+					// The implementation is notified...
+					_implementation -> whenCreatingNewBlock (_data._data [_dataCounter]);
+					// ...and the element affected is fully clearead...
 					// There shouldn't be here anything, but just in case!
 					_data._data [_dataCounter].clear ();
-
+					// The implementation is intialized in the new status...
 					_implementation -> initialize (_status);
 
 					// If there is no any further internal signal expected to start...
 					if (!_motorControlledInternally)
 						setMotorOff (false); // The motor starts...
-
-					// In this case, the invocation to _implementation -> whenReadingNewBlock is not needed...
-					// The system will have to take care of saving all variables associated to the block too!
 
 					setNoKeyPressed (false);
 				}
@@ -331,6 +341,59 @@ bool MCHEmul::StandardDatasette::executeCommand (int id, const MCHEmul::Strings&
 					result = false;
 
 					_LOG ("No play + record possible until datasette is stopped");
+				}
+			}
+
+			break;
+
+		// BEGIN...
+		case _KEYBEGIN:
+			{
+				if (_status == Status::_STOPPED)
+				{
+					// ...move the pointer to the first element in the list...
+					// There couldn't be any element, so it is set to the first one...
+					_dataCounter = 0;
+					// Always pointing to the first element of the block...
+					_elementCounter = 0; 
+
+					// Just to be ready when the new block is reached!
+					if (_data._data.size () > 0)
+						_implementation -> 
+							whenReadingNewBlock (_data._data [_dataCounter]);
+
+					setNoKeyPressed (true);
+				}
+				else
+				{
+					result = false;
+
+					_LOG ("No begin possible until datasette is stopped and has data inside");
+				}
+			}
+
+			break;
+
+		// END...
+		case _KEYEND:
+			{
+				if (_status == Status::_STOPPED)
+				{
+					// ...move the pointer to the last element in the list...
+					// There couldn't be any element, so it is set to the first one...
+					_dataCounter = _data._data.size ();
+					// Always pointing to the first element of the block...
+					_elementCounter = 0; 
+
+					// None element is after this one...
+
+					setNoKeyPressed (true);
+				}
+				else
+				{
+					result = false;
+
+					_LOG ("No begin possible until datasette is stopped and has data inside");
 				}
 			}
 

@@ -43,23 +43,14 @@ Id:@ID@
 @DRAW@
 #---
 #---
-;ZXSpectrumDatasette
-Id:@ID@
-@ATTRS?{key=YES,equal=:,empty=no attributes}\n@
-COMMANDS:@COMMANDS@
-Keys Pressed:@KEYS@
-Motor on:@MOTOR@
-Data Counter:@DATACOUNTER@
-IO Emulation:@IOEMULATION@
-->Data:
-Name:@DATANAME@ (Size:@DATASIZE@)
-@DATA?{fmter=DatasetteData,empty=no data}\n---\n@
-#---
-#---
 ;ZXSpectrumDatasetteInjection
 Id:@ID@
 @ATTRS?{key=YES,equal=:,empty=no attributes}\n@
-COMMANDS:@COMMANDS@
+COMMANDS:
+@COMMANDS@
+Keys Pressed:@KEYS@
+Motor on:@MOTOR@
+Position:@DATACOUNTER@,@ELEMENTCOUNTER@
 ->Data:
 Name:@DATANAME@ (Size:@DATASIZE@)
 @DATA?{fmter=DatasetteData,empty=no data}\n---\n@

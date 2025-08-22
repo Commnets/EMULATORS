@@ -124,7 +124,8 @@ bool MCHEmul::Emulator::connectPeripheral (int id, const MCHEmul::Attributes& pr
 	if (ph == nullptr)
 		return (false);
 
-	// Los for the first one where can match...
+	// Look for the first one where can match...
+	// ...and this is the one where to connect the peripheral...
 	bool result = false;
 	for (MCHEmul::IODevices::const_iterator i = computer () -> devices ().begin ();
 			i != computer () -> devices ().end () && !result; i++)

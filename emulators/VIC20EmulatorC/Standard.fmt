@@ -142,6 +142,8 @@ Id:@ID@(Size:@SIZE@)
 ;Datasette
 Id:@ID@
 @ATTRS?{key=YES,equal=:,empty=no attributes}\n@
+COMMANDS:
+@COMMANDS@
 Keys Pressed:@KEYS@
 Motor on:@MOTOR@
 ->Data:

@@ -16,11 +16,23 @@ bool MCHEmul::DatasetteIOPort::connectPeripheral (MCHEmul::IOPeripheral* p)
 	// There can be only one peripheral connected at the same time...
 	if (!peripherals ().empty ())
 		MCHEmul::IODevice::disconnectAllPeripherals ();
+	// If there were another datasette previously...
 	if (_datasette != nullptr)
-		notify (MCHEmul::Event (_NOKEYPRESSED)); // just in case...
+		// No key is pressed...
+		notify (MCHEmul::Event (_NOKEYPRESSED)); 
+
+	// Assign the new datsette...
 	_datasette = (p == nullptr) // It is possible to disconnect the peripheral simply...
 		? nullptr : static_cast <MCHEmul::DatasettePeripheral*> (p);
-	return (MCHEmul::IODevice::connectPeripheral (p));
+	// In the parent class the peripheral is initialzed and finally connected...
+	bool result = MCHEmul::IODevice::connectPeripheral (p);
+
+	// If the datasette is finally connected, 
+	// the status of the motor is transmited...
+	if (_datasette != nullptr)
+		_datasette -> setMotorOff (_motorStopped);
+
+	return (result);
 }
 
 // ---
@@ -59,7 +71,8 @@ void MCHEmul::DatasetteIOPort::processEvent (const MCHEmul::Event& evnt, MCHEmul
 	else
 	if (evnt.id () == _MOTORRUNNING || evnt.id () == _MOTORSTOPPED)
 	{
+		_motorStopped = evnt.id () == _MOTORSTOPPED;
 		if (_datasette != nullptr)
-			_datasette -> setMotorOff (evnt.id () == _MOTORSTOPPED);
+			_datasette -> setMotorOff (_motorStopped);
 	}
 }

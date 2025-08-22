@@ -42,7 +42,8 @@ namespace MCHEmul
 		DatasetteIOPort (int id, const Attributes& attrs = { })
 			: IODevice (IODevice::Type::_INPUTOUTPUT, id, attrs),
 			  _datasette (nullptr),
-			  _lastCPUCycles (0)
+			  _lastCPUCycles (0),
+			  _motorStopped (true)
 							{ }
 
 		/** To get the casette connect if any. */
@@ -50,8 +51,11 @@ namespace MCHEmul
 							{ return (_datasette); }
 		DatasettePeripheral* datasette ()
 							{ return (_datasette); }
-
-		/** It verifies that the peripheral to add is compatible (= DatasettePeripheral). */
+		
+		/** It verifies that the peripheral to add is compatible (= DatasettePeripheral). \n
+			There can only be just one peripheral connected,
+			so it another one is connected to the same port, the previous ones will be disconnected. \n
+			@see also comments about the variable _motorStopped below. */
 		virtual bool connectPeripheral (IOPeripheral* p) override;
 
 		virtual bool simulate (CPU* cpu) override;
@@ -64,6 +68,12 @@ namespace MCHEmul
 		// Implementation
 		/** The CPU cycles when the simulate method was invoked the last time. */
 		unsigned int _lastCPUCycles;
+		/** This variable is a copy of something that it is really at peripheral level. \n
+			The status of the motor is affected by external events (depending on the emulator). \n
+			When that event comes no peripherals could be connected yet...lossing the information. \n
+			For this reason a copy of the motor status is kept here. \n
+			When the peripheral is connected, this variable is set to the value of the motor status. */
+		bool _motorStopped;
 	};
 }
 

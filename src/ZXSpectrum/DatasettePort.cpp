@@ -21,4 +21,7 @@ void ZXSPECTRUM::DatasetteIOPort::linkToChips (const MCHEmul::Chips& c)
 
 	// It cannot be nullptr...
 	assert (_ULA != nullptr);
+
+	// The ULA observes this datasette port...
+	_ULA -> observe (this);
 }

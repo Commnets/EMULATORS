@@ -266,7 +266,9 @@ bool COMMODORE::TAPFileTypeIO::writeFile (MCHEmul::FileData* fD, const std::stri
 			lFN = (*p).second; // The name of the file to write...
 	}
 
-	std::ofstream f (lFN, std::ios::out | std::ios::binary);
+	// Open the file, and keeps its name just for the next time, if any!
+	std::ofstream f (tap -> _attributes ["FNAME"] = lFN, 
+		std::ios::out | std::ios::binary);
 	if (!f)
 		return (false); // Impossible to be opened...
 

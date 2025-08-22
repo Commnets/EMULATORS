@@ -2,16 +2,6 @@
 #include <ZX81/FileIO.hpp>
 
 // ---
-ZX81::Datasette::Datasette (unsigned int rS)
-	: MCHEmul::StandardDatasette (_ID, 
-		new MCHEmul::StandardDatasette::NilImplementation, false /** Controlled externally. */,
-		{ { "Name", "Datasette ZX81" },
-		  { "Manufacturer", "Almost anyone, No special connector needed" } })
-{
-	setClassName ("ZX81Datasette");
-}
-
-// ---
 ZX81::DatasetteInjection::DatasetteInjection (ZX81::Type t)
 	: MCHEmul::DatasettePeripheral (_ID, 
 		{ { "Name", "Datasette Injection ZX81" },

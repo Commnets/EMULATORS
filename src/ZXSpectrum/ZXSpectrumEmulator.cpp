@@ -32,7 +32,7 @@ void ZXSPECTRUM::ZXSpectrumEmulator::printOutParameters (std::ostream& o) const
 		 "ZXSTD:\t16k/48k ZX Spectrum" << std::endl;
 	o << "DEVICES allowed to be connected under command CONNECTPER:" << std::endl <<
 		 std::to_string (MCHEmul::Typewriter::_ID) << ":\tTypewriter" << std::endl <<
-		 std::to_string (ZXSPECTRUM::Datasette::_ID) << ":\tDatasette" << std::endl <<
+		 std::to_string (SINCLAIR::Datasette::_ID) << ":\tDatasette" << std::endl <<
 		 std::to_string (ZXSPECTRUM::DatasetteInjection::_ID) << ":\tDirect injection into memory" << std::endl <<
 		 std::to_string (ZXSPECTRUM::Cartridge::_ID) << ":\tCartridge" << std::endl;
 }

@@ -68,7 +68,7 @@ bool ZXSPECTRUM::ULA::SoundFunction::simulate (MCHEmul::CPU* cpu)
 			// Just check whether the EAR is or not activated...
 			// ...to determine whether the sound function is on or off!
 			_counterClocksPerSample = 0;
-			char dt = (_ULARegisters -> EARSignal ()) ? (char) 100 /** The max volumen. */ : (char) 0; // Full sound or not...
+			char dt = (_ULARegisters -> buzzerSignal ()) ? (char) 100 /** The max volumen. */ : (char) 0; // Full sound or not...
 			if (soundMemory () -> addSampleData (&dt, sizeof (char)))
 				MCHEmul::SoundChip::notify (MCHEmul::Event (_SOUNDREADY)); // When buffer is full, notify!
 		}
@@ -233,8 +233,8 @@ bool ZXSPECTRUM::ULA::simulate (MCHEmul::CPU* cpu)
 
 	// If the MIC signal changed, a signal to the datasette is send...
 	// ...the datasette would manage that change as a modification in the information written if any...
-	if (_ULARegisters -> EARSignalChanged ()) // After ckecked it, the value returns to false...
-		notify (MCHEmul::Event (MCHEmul::DatasetteIOPort::_WRITE, _ULARegisters -> EARSignal () ? 1 : 0));
+	if (_ULARegisters -> MICSignalChanged ()) // After ckecked it, the value returns to false...
+		notify (MCHEmul::Event (MCHEmul::DatasetteIOPort::_WRITE, _ULARegisters -> MICSignal () ? 1 : 0));
 
 	_lastCPUCycles = cpu -> clockCycles ();
 
@@ -404,14 +404,18 @@ void ZXSPECTRUM::ULA::processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifie
 		// The rest of the events are not taken here into account!
 
 		// When a signal in the datasette has chanegd, 
-			// it means than somethinh has benn read...
+		// it means than something has benn read...
+		// Put in the EAR signal for the simulation to read it!
 		case MCHEmul::DatasetteIOPort::_READ:
 			{
-
+				// Activates the EAR signal to be properly read later...
+				// Remember that is the Issue 3 the one being emulated...
+				_ULARegisters -> setEARSignal (evnt.value () == 1 ? true : false);
+				// And the buzzer is also activated...
+				_ULARegisters -> alignBuzzerSignal ();
 			}
 
 			break;
-
 
 		default:
 			break;

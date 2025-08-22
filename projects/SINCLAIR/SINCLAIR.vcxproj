@@ -22,6 +22,7 @@
     <ClInclude Include="..\..\include\SINCLAIR\CommandBuilder.hpp" />
     <ClInclude Include="..\..\include\SINCLAIR\Commands.hpp" />
     <ClInclude Include="..\..\include\SINCLAIR\Computer.hpp" />
+    <ClInclude Include="..\..\include\SINCLAIR\Datasette.hpp" />
     <ClInclude Include="..\..\include\SINCLAIR\FileIO.hpp" />
     <ClInclude Include="..\..\include\SINCLAIR\incs.hpp" />
     <ClInclude Include="..\..\include\SINCLAIR\IOPBuilder.hpp" />
@@ -30,6 +31,7 @@
     <ClCompile Include="..\..\src\SINCLAIR\CommandBuilder.cpp" />
     <ClCompile Include="..\..\src\SINCLAIR\Commands.cpp" />
     <ClCompile Include="..\..\src\SINCLAIR\Computer.cpp" />
+    <ClCompile Include="..\..\src\SINCLAIR\Datasette.cpp" />
     <ClCompile Include="..\..\src\SINCLAIR\FileIO.cpp" />
     <ClCompile Include="..\..\src\SINCLAIR\IOPBuilder.cpp" />
   </ItemGroup>

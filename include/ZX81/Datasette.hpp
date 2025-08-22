@@ -19,16 +19,6 @@
 
 namespace ZX81
 {
-	/** With the io activities running "linked" with the CPU.
-		Still pending to be implemented. */
-	class Datasette final : public MCHEmul::StandardDatasette
-	{
-		public:
-		static const int _ID = 100;
-
-		Datasette (unsigned int rS);
-	};
-
 	/** This type of datasette "injects" the infomation into the memory when it is simulated. 
 		The way it is done, will depend on the type of structure prepared for that, 
 		and also on the type of computer that is being simulated. \n

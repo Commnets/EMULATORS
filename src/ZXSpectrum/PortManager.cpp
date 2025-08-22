@@ -28,13 +28,21 @@ void ZXSPECTRUM::PortManager::setValue (unsigned short ab, unsigned char id, con
 		// Bear in mind than in ZXSpectrum the border can not have bright!
 		_ULARegisters -> setBorderColor (v.value () & 0x07);
 
-		// The bit 3 (when 0) activates the MIC socket...
-		// ...and the 4 (when 1) activates the EAR one and also the internal speaker...
-		// But once one of them is activated, then the other is also activated, 
-		// because both are connected to resistor to the same entry point as it is described in:
+		// The bit 3 is the MIC signal, and the bit 4 is the EAR signal.
+		// Both activates (when 1) the buzzer in the ULA.
+		// In the initial Spectrums (Issues 1 and 2) the EAR signal (when reading) was affected by also the MIC signal.
+		// In the last issue (Issue 3) the EAR signal was not affected by the MIC signal.
+		// This emulator emulates the Issue 3:
+		// Value output to bit 4 (EAR)  3 (MIC)  |  Iss 2  Iss 3   Iss 2 V    Iss 3 V <= Output when read EAR signal
+		//						  1			1	 |    1      1       3.79       3.70
+        //						  1			0	 |    1      1       3.66       3.56
+        //						  0			1	 |    1      0       0.73       0.66
+        //						  0			0	 |    0      0       0.39       0.34		
 		// http://fizyka.umk.pl/~jacek/zx/faq/reference/48kreference.htm
-		_ULARegisters -> setMICSignal (!v.bit (3));
+		_ULARegisters -> setMICSignal (v.bit (3));
 		_ULARegisters -> setEARSignal (v.bit (4));
+		// Both signals affect the buzzer (Issue 3), but EAR is stronger...
+		_ULARegisters -> alignBuzzerSignal ();
 	}
 }
 
@@ -66,6 +74,10 @@ MCHEmul::UByte ZXSPECTRUM::PortManager::getValue (unsigned short ab, unsigned ch
 		}
 
 		result |= pR & 0x1f; // but at the end only the lowest 5 bits are important!
+
+		// The bit 6 is the EAR when reading!
+		// This is important when the system is reading the information from the casette...
+		result.setBit (6, _ULARegisters -> EARSignal ());
 	}
 
 	// Any port with A5 = 0 and A0 = 1 is Kempston Joystick...

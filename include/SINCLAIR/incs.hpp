@@ -19,6 +19,7 @@
 #include <SINCLAIR/IOPBuilder.hpp>
 #include <SINCLAIR/FileIO.hpp>
 #include <SINCLAIR/Computer.hpp>
+#include <SINCLAIR/Datasette.hpp>
 
 #endif
 

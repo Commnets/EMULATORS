@@ -255,6 +255,9 @@ namespace MCHEmul
 				The method receives the number of cycles of the CPU when the value was written to the data file
 				and also the value finally written. */
 			virtual void whenValueWritten (unsigned int, const UByte& v) = 0;
+			/** This method is invoked when a new block is created. 
+				By default nothing is done. */
+			virtual void whenCreatingNewBlock (const DataMemoryBlock& dB) { }
 
 			/** The initialization is always with the status. 
 				That can or cannot be taken into account by the method. \n
@@ -298,6 +301,8 @@ namespace MCHEmul
 		static const int _KEYPLAY   = 8;
 		static const int _KEYRECORD = 16; // Save = RECORD + PLAY
 		static const int _KEYEJECT	= 32; // To clean up the data loaded, or to simulate like a new casette is inserted...
+		static const int _KEYBEGIN	= 64; // To start the tape from the beginning, so it is like a rewind x times...
+		static const int _KEYEND	= 128; // To stop the tape at the end, so it is like a forward x times...
 
 		/** The object is owner of the implementation object too. */
 		StandardDatasette (int id, Implementation* i, 
@@ -323,7 +328,9 @@ namespace MCHEmul
 		virtual bool executeCommand (int id, const Strings& prms) override;
 		virtual Strings commandDescriptions () const override
 							{ return (Strings (
-								{ "1:FORWARD", "2:REWIND", "4:STOP", "8:PLAY", "24:PLAY + RECORD", "32:EJECT(and clear data)" })); }
+								{ "1:FORWARD", "2:REWIND", "4:STOP", "8:PLAY", 
+								  "24:PLAY + RECORD", "32:EJECT(and clear data)",
+								  "64:BEGIN", "128:END (to start to write)" })); }
 
 		virtual bool simulate (CPU* cpu) override;
 
@@ -335,6 +342,12 @@ namespace MCHEmul
 		virtual InfoStructure getInfoStructure () const override;
 
 		protected:
+		// Invoked from the method executeCommand...
+		/** When "save" command is about to be executed at the "end" of the current "tape",
+			a new DataBlock must be created, but additional info might need to be added to it, so this method 
+			can be overloaded. */
+		virtual DataMemoryBlock createNewDataBlock ()
+							{ return (DataMemoryBlock ()); }
 		// Invoked from the method simulate...
 		/** To execute additional things. \n
 			It can be extended from the user to do additional activities when making io,
