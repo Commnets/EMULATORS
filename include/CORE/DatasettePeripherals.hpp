@@ -354,9 +354,9 @@ namespace MCHEmul
 			like sound?....By default it does nothing. (it is invoked per cycle). */
 		virtual void additionalSimulateActions (CPU* cpu, unsigned int cC) { }
 		/** Read the next value from the data file. \n
-			The variable e is set to true when there is no more data to read, and
+			The variable ov is set to true when there is no more data to read, and
 			false in any other circunstance. */
-		inline UByte readFromData (bool& e);
+		inline UByte readFromData (bool& ov);
 		/** Store a value in the data file */
 		inline void storeInData (const UByte& dt);
 
@@ -384,26 +384,21 @@ namespace MCHEmul
 	};
 
 	// ---
-	inline UByte StandardDatasette::readFromData (bool& e)
+	inline UByte StandardDatasette::readFromData (bool& ov)
 	{
-		e = false;
+		ov = false;
+
 		if (_dataCounter < _data._data.size ())
 		{
-			e = true;
 			if (_elementCounter >= _data._data [_dataCounter].bytes ().size ())
 			{
 				_elementCounter = 0;
-
-				if (++_dataCounter >= _data._data.size ())
-				{
-					_dataCounter = 0;
-
-					e = false; // Overflow...
-				}
+				if (ov = (++_dataCounter >= _data._data.size ()))
+					_dataCounter = 0; // Overflow...
 			}
 		}
 
-		return (e // Without error (to avoid problems with the counter)
+		return (!ov // Without error (to avoid problems with the counter)
 			? _data._data [_dataCounter].bytes ()[_elementCounter++] 
 			: _implementation -> valueForNoMoreData ());
 	}

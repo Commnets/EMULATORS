@@ -944,8 +944,6 @@ SINCLAIR::TZXFileData::DirectRecordingDataBlock* SINCLAIR::TZXFileTypeIO::readBl
 	}
 
 	delete [] dt;
-	if (ck != MCHEmul::UByte::_0) // ? Checksum...
-		{ delete result; return (nullptr); }
 
 	return (result);
 }

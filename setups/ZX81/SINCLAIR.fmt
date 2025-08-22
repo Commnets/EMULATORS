@@ -48,10 +48,10 @@ COMMANDS:
 @COMMANDS@
 Keys Pressed:@KEYS@
 Motor on:@MOTOR@
-Position:@DATACOUNTER@,@ELEMENTCOUNTER@
 ->Data:
 Name:@DATANAME@ (Size:@DATASIZE@)
 @DATA?{fmter=DatasetteData,empty=no data}\n---\n@
 NOTE: Only the first 256 bytes are shown
 NOTE: Change to FBYTES attribute in DatasetteData structure instead
+Position:@DATACOUNTER@,@ELEMENTCOUNTER@
 #---

@@ -33,7 +33,7 @@ void SINCLAIR::Datasette::TZXDirectRecordingImplementation::whenReadingNewBlock 
 {
 	// New parameters to sample...
 	_cyclesToAction = (unsigned int) 
-		MCHEmul::getAttributeAsInt ("TSTATESSAMPLE", dB.attributes ());
+		MCHEmul::getAttributeAsInt ("TSTATES", dB.attributes ());
 	// New information about the last bit in this block...
 	_bitsLastByte = (unsigned int) 
 		MCHEmul::getAttributeAsInt ("BITSUSEDLAST", dB.attributes ());
