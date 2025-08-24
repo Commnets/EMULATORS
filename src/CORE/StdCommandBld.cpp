@@ -104,6 +104,8 @@ MCHEmul::Command* MCHEmul::StandardCommandBuilder::createEmptyCommand (const std
 		result = new MCHEmul::GridOnCommand;
 	else if (cmdName == "GRIDOFF" || cmdName == MCHEmul::GridOffCommand::_NAME)
 		result = new MCHEmul::GridOffCommand;
+	else if (cmdName == "PICTURE" || cmdName == MCHEmul::TakePictureCommand::_NAME)
+		result = new MCHEmul::TakePictureCommand;
 	else if (cmdName == MCHEmul::MoveParametersToAnswerCommand::_NAME)
 		result = new MCHEmul::MoveParametersToAnswerCommand;
 

@@ -50,6 +50,13 @@ namespace MCHEmul
 		/** Activate or desactivate the CRT mode. */
 		void setCRTEffect (bool a);
 
+		/** Take a picture of the texture to a file. \n
+			The method receives the name of the file where to save the info to. \n 
+			Returns true when everything was ok, and false in other case. \n
+			The format of the final file will depend on the extension of the file name requested. \n
+			It can be PNG, JPG or BMP. Any other requested extension will fail. */
+		bool takePicture (const std::string& fN) const;
+
 		/** To activate or desactivate to draw a possible grid.
 			That grid can be in many differenty ways which is something to be decided in the implementation. */
 		void setDrawGrid (bool dB, unsigned int c = 0)

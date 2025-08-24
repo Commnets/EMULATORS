@@ -29,6 +29,10 @@ Id:@ID@
 #---
 #---
 ;CULAEVENTS
+Legend:
+Light Cyan: Screen Starts
+Light Yellow: Reading Information
+Light Orange: Content (Access to Video) Situation
 #---
 #---
 ;CSCREENDUMP

@@ -1,5 +1,6 @@
 #include <CORE/Screen.hpp>
 #include <CORE/GraphicalChip.hpp>
+#include <SDL_image.h>
 
 // ---
 MCHEmul::Screen::Screen (const std::string& n, int id, 
@@ -67,6 +68,97 @@ void MCHEmul::Screen::setCRTEffect (bool a)
 	_texture  = SDL_CreateTexture
 		(_renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, (int) _screenColumns, (int) _screenRows);
 	SDL_SetTextureBlendMode (_texture, SDL_BLENDMODE_BLEND);
+}
+
+// ---
+bool MCHEmul::Screen::takePicture (const std::string& fN) const
+{
+    // Get Texture dimensions...
+	int w, h;
+    Uint32 format;
+	int access;
+	if (SDL_QueryTexture (_texture, &format, &access, &w, &h) != 0)
+		return (false);
+	// Usually the emulators managed a "small" screen...
+	w *= 4; h *= 4;
+
+	// Save the previous render target...
+    SDL_Texture* prevTarget = SDL_GetRenderTarget (_renderer);
+
+	// PHASE 1: Creates a copy of the current texture...
+	// ...but to make it accesible later!
+    SDL_Texture* newTexture = SDL_CreateTexture 
+		(_renderer, format /** Same format than the original. */, 
+		 SDL_TEXTUREACCESS_TARGET /** Accesible later for RenderReadPizels. */, w, h);
+	if (newTexture == nullptr)
+		return (false); // Nothing has changed so far...
+
+	// The new target of the render is the new texture...
+	// ...but if it can not be created...
+	if (SDL_SetRenderTarget (_renderer, newTexture) != 0)
+	{ 
+		SDL_DestroyTexture (newTexture); // ...destroy the texture before leaving...
+		return (false); 
+	}
+
+	// Now render the the original texture into the new one...
+	// But, again, it it is not possible, everything has to be destroyed...
+    if (SDL_RenderCopy (_renderer, _texture, nullptr, nullptr) != 0)
+	{ 
+		SDL_DestroyTexture (newTexture); 
+		SDL_SetRenderTarget (_renderer, prevTarget); // ...and restore the previous target...
+		return (false); 
+	}
+
+	// PHASE 2: Now makes a copy of the texture in a surface...
+	// ..because it is the only way to save it later...
+	SDL_Surface* surface = SDL_CreateRGBSurfaceWithFormat 
+		(0, w, h, 32, format /** Same format than the original. */);
+	// If the surface can not be created...
+	if (surface == nullptr)
+	{ 
+		SDL_DestroyTexture (newTexture); // ...destroy the texture before leaving...
+		SDL_SetRenderTarget (_renderer, prevTarget); // ...and restore the previous target...
+		return (false); 
+	}
+
+	// Render the pixels of the texture into the surface...
+	// If is not possible...
+    if (SDL_RenderReadPixels (_renderer, nullptr, 
+			surface -> format -> format,
+			surface -> pixels,
+			surface -> pitch) != 0) 
+	{ 
+		SDL_DestroyTexture (newTexture); 
+		SDL_FreeSurface (surface); // ...destroy also the surface before leaving...
+		SDL_SetRenderTarget (_renderer, prevTarget); 
+		return (false); 
+	}
+
+	// The texture copied is no longer needed...
+	SDL_DestroyTexture (newTexture);
+    // And also rstore the render target...
+	SDL_SetRenderTarget (_renderer, prevTarget);
+
+	// PHASE 3: Now it is time to save the picture...
+	// Which is the format to save?
+	bool result = true;
+	std::string ext = MCHEmul::upper (fN.substr (fN.find_last_of (".") + 1));
+	if (ext == "PNG" || ext == "JPG" || ext == "JPEG" || ext == "BMP")
+	{
+		// Save the picture, in the format requested...
+		if (ext == "BMP")
+			result = SDL_SaveBMP (surface, fN.c_str ()) ? false : true;
+		else if (ext == "JPG" || ext == "JPEG")
+			result = IMG_SaveJPG (surface, fN.c_str (), 95) ? false : true; // Quality 95%
+		else if (ext == "PNG") // Just in case...
+			result = IMG_SavePNG (surface, fN.c_str ()) ? false : true;
+	}
+
+	// The surface is no longer used...
+    SDL_FreeSurface (surface);
+
+	return (result);
 }
 
 // ---

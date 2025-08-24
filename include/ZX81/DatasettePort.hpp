@@ -18,6 +18,8 @@
 
 namespace ZX81
 {
+	class ULA;
+
 	/** This class represents the DatasettePort. */
 	class DatasetteIOPort final : public MCHEmul::DatasetteIOPort
 	{
@@ -25,6 +27,12 @@ namespace ZX81
 		static const int _ID = 100; // Similar to other semulators...
 
 		DatasetteIOPort ();
+
+		/** The datasette port is linked to the ULA. */
+		virtual void linkToChips (const MCHEmul::Chips& c) override;
+
+		private:
+		ULA* _ULA;
 	};
 }
 

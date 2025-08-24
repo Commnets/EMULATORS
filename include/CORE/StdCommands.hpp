@@ -1078,6 +1078,27 @@ namespace MCHEmul
 		virtual void executeImpl (MCHEmul::CommandExecuter* cE, 
 			MCHEmul::Computer* c, MCHEmul::InfoStructure& rst) override;
 	};
+
+	/** To take a picture of the emulator.
+		The comamand is: \n
+		PICTURE FILENAME */
+	class TakePictureCommand final : public MCHEmul::Command
+	{
+		public:
+		static const int _ID = 108;
+		static const std::string _NAME;
+
+		TakePictureCommand ()
+			: MCHEmul::Command (_ID, _NAME)
+							{ }
+
+		virtual bool canBeExecuted () const override
+							{ return (_parameters.size () == 1); }
+
+		private:
+		virtual void executeImpl (MCHEmul::CommandExecuter* cE, 
+			MCHEmul::Computer* c, MCHEmul::InfoStructure& rst) override;
+	};
 }
 
 #endif

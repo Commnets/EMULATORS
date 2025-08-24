@@ -531,12 +531,12 @@ void ZXSPECTRUM::ULA::drawEvents ()
 {
 	// Draw the border events...
 	unsigned int cEvent = std::numeric_limits <unsigned int>::max ();
-	if (_eventStatus._screenPart)
-		cEvent = 16;
 	if (_eventStatus._graphicRead)
-		cEvent = 17;
+		cEvent = 17; // It is the basic access...
+	if (_eventStatus._screenPart)
+		cEvent = 16; // The second most important event...
 	if (_eventStatus._contentedSituation)
-		cEvent = 18;
+		cEvent = 18; // But this one is critical to be controlled...
 	if (cEvent != std::numeric_limits <unsigned int>::max ())
 		screenMemory () -> setHorizontalLine // Draw at least two pixels when the events has happpened...
 			(_raster.hData ().currentVisiblePosition (), _raster.vData ().currentVisiblePosition (), 2, cEvent);

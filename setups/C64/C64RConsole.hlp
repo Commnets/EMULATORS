@@ -4,49 +4,57 @@
 ?./Commodore.hlp
 ;CIA1
 To know the status of the CIA1 chip.
-No parameters are needed.
+Parameters: None.
 ;CIA2
 To know the status of the CIA2 chip.
-No parameters are needed.
+Parameters: None.
 ;PLA
 To know the status of the PLA chip.
-No parameters are needed.
+Parameters: None.
 ;SCREENDUMP
 To know the content of the screen.
-No parameters are needed.
-The data is shown in hexadecimal format (but with no symbol at the beginning).
+Parameters: None.
+Notes: The data is shown in hexadecimal format (but with no symbol at the beginning).
 ;COLORDUMP
 To know the content of the color screen.
-No parameters are needed.
-The data is shown in hexadecimal format (but with no symbol at the beginning).
+Parameters: None.
+Notes: The data is shown in hexadecimal format (but with no symbol at the beginning).
 ;BITMAPDUMP
 To know the content of the screen.
-No parameters are needed.
-The data is shown in hexadecimal format (but with no symbol at the beginning).
-;SPRITESDUMP [n1 n2 n3...]
+Parameters: None.
+Notes: The data is shown in hexadecimal format (but with no symbol at the beginning).
+;SPRITESDUMP [n1 n2 n3 ...]
 To know the sprites data.
-No parameters or the list of sprites to visualize from 1 to 8.
-The parameters could be repeated, but just one instace of every value is accepted.
-;SPRITESDRAW [n1 n2 n3...]
+Parameters:
+=> None: Show the info of the 8 sprites.
+=> [n1 n2 n2 ...] (optional): Show the info for just the sprites listed. From 1 to 8
+;SPRITESDRAW [n1 n2 n3 ...]
 To print out the sprites data.
-No parameters or the list of sprites to visualize from 1 to 8.
-The parameters could be repeated, but just one instace of every value is accepted.
-;CHARSDRAW [c1 c2 c3...]
+Parameters:
+=> None: Draw the 8 sprites.
+=> [n1 n2 n2 ...] (optional): Draw just the sprites listed. From 1 to 8.
+Notes: 
+In monocolor sprites SPACE = 0, # = 1.
+In multicolor sprites SPACE = 00, OO = 01, XX = 10, ## = 11.
+;CHARSDRAW [c1 c2 c3 ...]
 To print out the characters data.
-No parameters of the list of characters to visualize from 0 to 255 in decimal format.
-The parameters could be repeated, but just one instace of every value is accepted.
+Parameters:
+=> None: Draw all characters.
+=> [c1 c2 c3 ...] (optional): Draw just the characters listed. From 0 to 255.
 ;GRIDON COLOR [ON]
 To activate to draw a grid in the screen of the computer.
-A color for the grid is mandatory.
-Optionally, the command could also activate drawing the position where the raster interrupts happen
-and a tiny border around the sprites for those to be easily identified just defining the "ON" parameter. 
-The color used for the raster line is the same than the background + 1, and the color around the sprites will be light cyan.
+Parameters:
+=> COLOR (mandatory): The color of the grid.
+=> [ON] (optional): To point out the position in the screen where a raster interrupts happen.
 ;GRIDOFF
 To switch off to draw a grid in the screen of the compurter.
-The command desactivates also to draw the position where the raster interrupts happen if it was activated previously
-No parameters are needed.
-;PADDLE ON|OFF [PORTID1 PORTID2...]
+The command desactivates also to draw the position where the raster interrupts happen if it was activated previously.
+Parameters: None.
+;PADDLE ON|OFF [PORTID1 PORTID2]
 To active/deactivate the connection of a paddle in a specfic port.
-By default what is connected is a joystick, deactivating a paddle in a port would connected a joystick back instead.
-The parameters are the action to execute (connection or disconnection) and the list of port where the action must be executed.
-As C64 has only 2 game ports, the values are limited to these two possibilities.
+By default what is connected is a joystick.
+Desactivating a paddle in a port would connected a joystick back instead.
+Parameters:
+=> ON|OFF (mandatory): Whether to activate or to desactivate the paddle.
+=> [PORTID1 PORTID2] (optional): The ports (0 or 1) where to connect/disconnect the paddles.
+When no port is defined the paddles are connected in all ports.

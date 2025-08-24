@@ -100,14 +100,23 @@ namespace ZX81
 			When 8 bits are shifted out, it returns false. */
 		inline bool shiftOutData (bool& d);
 
-		// The casette signal...
-		bool casetteSignal () const
-							{ return (_casetteSignal); }
-		bool casetteSignalChanged () const // When read, it becomes back to false,...
-							{ return (_casetteSignalChanged); }
-		bool peekCasetteSignalChanged () const
-							{ return (_casetteSignalChanged.peekValue ()); }
-		inline void setCasetteSignal (bool cs);
+		// The MIC Signal
+		bool MICSignal () const
+							{ return (_MICSignal); }
+		bool MICSignalChanged () const
+							{ return (_MICSignalChanged); }
+		bool peekMICSignalChanged () const
+							{ return (_MICSignalChanged.peekValue ()); }
+		inline void setMICSignal (bool cs);
+
+		// The EAR Signal
+		bool EARSignal () const
+							{ return (_EARSignal); }
+		bool EARSignalChanged () const
+							{ return (_EARSignalChanged); }
+		bool peekEARSignalChanged () const
+							{ return (_EARSignalChanged.peekValue ()); }
+		inline void setEARSignal (bool cs);
 
 		// Info about the situation of the keyboard!
 		const MCHEmul::UByte& keyboardStatus (size_t r) const
@@ -167,10 +176,12 @@ namespace ZX81
 		MCHEmul::UByte _SHIFTR, _originalSHIFTR;
 		/** The number of bit shifted. When it becomes 8 no more shifts are done. */
 		unsigned char _shiftedBit;
-		/** The casette signal and the signal to indicate whether it has changed. \n
-			When read it becomes back to false. */
-		bool _casetteSignal;
-		MCHEmul::OBool _casetteSignalChanged;
+		/** The MIC signal and the signal to indicate whether it has changed. */
+		bool _MICSignal;
+		MCHEmul::OBool _MICSignalChanged;
+		/** The EAR signal and the signal to indicate whether it has changed. */
+		bool _EARSignal;
+		MCHEmul::OBool _EARSignalChanged;
 		/** Where the status of the keyboard matrix is kept. */
 		std::vector <MCHEmul::UByte> _keyboardStatus;
 		/** Where the status of the joystick is kept. 5 positions: \n
@@ -262,13 +273,24 @@ namespace ZX81
 	}
 
 	// ---
-	inline void ULARegisters::setCasetteSignal (bool cs)
+	inline void ULARegisters::setMICSignal (bool cs)
 	{ 
-		if (cs != _casetteSignal) 
+		if (_MICSignal != cs) 
 		{ 
-			_casetteSignal = cs;
+			_MICSignal = cs;
 			
-			_casetteSignalChanged = true; 
+			_MICSignalChanged = true; 
+		}
+	}
+
+	// ---
+	inline void ULARegisters::setEARSignal (bool cs)
+	{ 
+		if (_EARSignal != cs) 
+		{ 
+			_EARSignal = cs;
+			
+			_EARSignalChanged = true;
 		} 
 	}
 }

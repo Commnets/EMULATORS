@@ -4,7 +4,8 @@
 ZX81::ULARegisters::ULARegisters (ZX81::Type t)
 	: MCHEmul::InfoClass ("ULARegisters"),
 	  _type (t),
-	  _casetteSignalChanged (false),
+	  _MICSignalChanged (false), // It is an OBool...
+	  _EARSignalChanged (false), // It is an OBool...
 	  _INTack (false), _INTackClock (0),
 	  _keyboardStatus (8, MCHEmul::UByte::_0),
 	  _joystickStatus (5, MCHEmul::UByte::_0) // Just to define the initial size...
@@ -27,7 +28,8 @@ MCHEmul::InfoStructure ZX81::ULARegisters::getInfoStructure () const
 	result.add ("NMIGEN",		_NMIGenerator);
 	result.add ("SYNCWHITE",	_syncOutputWhite);
 	result.add ("LINECNTRL",	_LINECNTRL);
-	result.add ("CASETTE",		_casetteSignal);
+	result.add ("MIC",			_MICSignal);
+	result.add ("EAR",			_EARSignal);
 
 	return (result);
 }
@@ -55,8 +57,11 @@ void ZX81::ULARegisters::initializeInternalValues ()
 	_originalSHIFTR = 0;
 	_shiftedBit = 8; // To load a value first time memory is read...
 
-	_casetteSignal = false;
-	_casetteSignalChanged = false;
+	_MICSignal = false;
+	_MICSignalChanged = false;
+
+	_EARSignal = false;
+	_EARSignalChanged = false;
 
 	for (size_t i = 0; i < 8; 
 		_keyboardStatus [i++] = MCHEmul::UByte::_0);

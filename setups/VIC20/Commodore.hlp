@@ -2,25 +2,29 @@
 #(C) 2022 Ignacio Cea Fornies
 ;TED
 To know the status of the TED chip, including raster and others.
-No parameters are needed.
+Parameters: None.
 ;VICI
 To know the status of the VICI chip, including raster and others.
-No parameters are needed.
+Parameters: None.
 ;VICII
 To know the status of the VICII chip, including raster and others.
-No parameters are needed.
+Parameters: None.
 ;VICIIEVENTS ON|OFF
 To activate or desactivate the visualization of VICII events.
+Parameters:
+=> ON|OFF (mandatory): Activate or desactivate the events.
 ;VIA
 To know the status of the VIA chip.
-No parameters are needed.
+Parameters: None.
 ;CIA
 To know the status of the CIA chip.
-No parameters are needed.
+Parameters: None.
 ;SID
 To know the status of the SID chip.
-No parameters are needed.
+Parameters: None.
 ;SIDW LIBID
-To change the sound wrapper used.
-The only parameter needed is the number of the library (LIBID) to use.
-Where 0 is the standard RESID library and 1 is an very basic simulation made by Ignacio Cea.
+To change the sound wrapper used in the SID chip.
+Parameters:
+=> LIBID (mandatory): The ID of the library to activate.
+  => 0: RESID
+  => 1: Sound Simple Wrapper by ICF.

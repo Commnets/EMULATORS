@@ -30,10 +30,9 @@ void ZX81::PortManager::setValue (unsigned short ab, unsigned char id, const MCH
 	// Any time an output is done...
 	// The Vsync finishes...
 	_ULARegisters -> setVSync (false);
-	// ...and the a positive signal is sent to the cassette...
-	_ULARegisters -> setCasetteSignal (true);
 
-	// If the port id has the bit 1 off (FD is the normal ZX81 but many others will behave equal)...
+	// If the port id has the bit 1 off 
+	// (FD is the normal ZX81 but many others will behave equal)...
 	if ((id & 0b00000010) == 0x00 && _type != ZX81::Type::_ZX80) // In the ZX80 there is no this port...
 	{
 		_ULARegisters -> setNMIGenerator (false); // the NMI generator is disconnected...
@@ -41,7 +40,8 @@ void ZX81::PortManager::setValue (unsigned short ab, unsigned char id, const MCH
 		_ULA -> markNMIGeneratorOff ();
 	}
 
-	// If the port id has the bit 0 off (FE is the normal ZX81, but many others will behave in the same way)...
+	// If the port id has the bit 0 off (FE is the normal ZX81, 
+	// but many others will behave in the same way)...
 	if ((id & 0b00000001) == 0x00)
 	{
 		// In the ZX80 there is no even a wire connected to NMI pint...
@@ -50,6 +50,11 @@ void ZX81::PortManager::setValue (unsigned short ab, unsigned char id, const MCH
 
 		_ULA -> markNMIGeneratorOn ();
 	}
+
+	// Any output to any odd port manages the casette signal...
+	// Always put it high!
+	if ((id & 0b00000001) == 0b00000001) // Any odd port...
+		_ULARegisters -> setMICSignal (true); 
 }
 
 // ---
@@ -92,10 +97,12 @@ MCHEmul::UByte ZX81::PortManager::getValue (unsigned short ab, unsigned char id,
 				// The raster is initialized. Both, the horizontal and the vertical ones...
 				_ULA -> raster ().initialize ();
 			}
-
-			// ...and also the casette signal will be down!
-			_ULARegisters -> setCasetteSignal (false);		
 		}
+
+		// Any read to the port FE put the MIC signal low...
+		_ULARegisters -> setMICSignal (false);
+		// ...and gets the status of the EAR signal in the bit 6!
+		result.setBit (6, _ULARegisters -> EARSignal ());
 	}
 
 	return (result);
@@ -113,10 +120,5 @@ void ZX81::PortManager::linkToULA (ZX81::ULA* ula)
 // ---
 void ZX81::PortManager::initialize ()
 {
-	_ULARegisters -> setSyncOutputWhite (true);
-	_ULARegisters -> setNMIGenerator (false);
-	_ULARegisters -> setLINECNTRL (0);
-	_ULARegisters -> setLINECTRLNBlocked (true);
-	_ULARegisters -> loadSHIFTRegister (MCHEmul::UByte::_0);
-	_ULARegisters -> setCasetteSignal (false);
+	_ULARegisters -> initialize ();
 }

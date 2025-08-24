@@ -4,17 +4,18 @@
 ?./Commodore.hlp
 ;VIA1
 To know the status of the VIA1 chip.
-No parameters are needed.
+Parameters: None.
 ;VIA2
 To know the status of the VIA2 chip.
-No parameters are needed.
+Parameters: None.
 ;SCREENDUMP
 To know the content of the screen.
-No parameters are needed.
+Parameters: None.
 ;COLORDUMP
 To know the content of the color screen.
-No parameters are needed.
-;CHARSDRAW [c1 c2 c3...]
+Parameters: None.
+;CHARSDRAW [c1 c2 c3 ...]
 To print out the characters data.
-No parameters of the list of characters to visualize from 0 to 255 in decimal format.
-The parameters could be repeated, but just one instace of every value is accepted.
+Parameters:
+=> None: Draw all characters.
+=> [c1 c2 c3 ...] (optional): Draw just the characters listed. From 0 to 255.

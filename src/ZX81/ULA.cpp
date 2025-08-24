@@ -67,8 +67,8 @@
 	After all being said, the only behaviour that could be use is the second one. */
 /** 32 lines border up/down/left/right by default in both PAL & NTSC. */
 const MCHEmul::RasterData ZX81::ULA_PAL::_VRASTERDATA
-	(0, 30 /** +30 starts visible. */, 30 /** = starts screen. */, 285 /** +32+192+32 (24 char lines * 8) end screen. */,
-	 285 /** = end visible part. */, 311 /** +26 retrace. */, 311 /** = end. */, 312 /* total */, 0, 0);
+	(0, 22 /** +22 starts visible. */, 22 /** = starts screen. */, 245 /** +16+192+16 (24 char lines * 8) end screen. */,
+	 245 /** = end visible part. */, 311 /** +26 retrace. */, 311 /** = end. */, 312 /* total */, 0, 0);
 const MCHEmul::RasterData ZX81::ULA_PAL::_HRASTERDATA
 	(0, 125 /** +128 starts visible. */, 125 /** = starts screen, */, 413 /** +19+256+14 (32 chars * 8) end screen. */,
 	 413 /** = end visible part. */, 413 /** = retrace. */, 413 /** = end. */, 414 /** total. */, 0, 0);
@@ -220,9 +220,8 @@ bool ZX81::ULA::simulate (MCHEmul::CPU* cpu)
 		// (@see ZX81::PortManager class)
 
 		// If the status of the casette signal has changed, it has to be notified...
-		if (_ULARegisters -> casetteSignalChanged ())
-			notify (MCHEmul::Event (MCHEmul::DatasetteIOPort::_WRITE, 
-				_ULARegisters -> casetteSignal () ? 1 : 0));
+		if (_ULARegisters -> MICSignalChanged ()) // After checked the value returns false...
+			notify (MCHEmul::Event (MCHEmul::DatasetteIOPort::_WRITE, _ULARegisters -> MICSignal () ? 1 : 0));
 	}
 
 	_lastCPUCycles = cpu -> clockCycles ();

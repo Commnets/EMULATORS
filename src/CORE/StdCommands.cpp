@@ -57,6 +57,7 @@ const std::string MCHEmul::CRTEffectOffCommand::_NAME = "CCRTOFF";
 const std::string MCHEmul::DatasetteStatusCommand::_NAME = "CDATASETTE";
 const std::string MCHEmul::GridOnCommand::_NAME = "CGRIDON";
 const std::string MCHEmul::GridOffCommand::_NAME = "CGRIDOFF";
+const std::string MCHEmul::TakePictureCommand::_NAME = "CPICTURE";
 
 // ---
 MCHEmul::HelpCommand::HelpCommand (const std::string& hF)
@@ -110,7 +111,7 @@ void MCHEmul::HelpCommand::executeImpl (MCHEmul::CommandExecuter* cE, MCHEmul::C
 					h += ((j == 0) ? '\0' : '\n') + (*i).second [j];
 				// All commands start in the same way...
 				// ...so they are added into the InfoEstructure object in order!
-				iS.add (std::string ("---\n->") + cmd, MCHEmul::removeAll0 (h));
+				iS.add (std::string ("---\n**") + cmd, MCHEmul::removeAll0 (h));
 			}
 		};
 
@@ -1044,4 +1045,17 @@ void MCHEmul::GridOffCommand::executeImpl (MCHEmul::CommandExecuter* cE,
 		return;
 
 	c -> screen () -> setDrawGrid (false, 0 /** It doesn't matter. */);
+}
+
+// ---
+void MCHEmul::TakePictureCommand::executeImpl (MCHEmul::CommandExecuter* cE,
+	MCHEmul::Computer* c, MCHEmul::InfoStructure& rst)
+{
+	if (c == nullptr)
+		return;
+
+	rst.add ("ERROR",
+		c -> screen () -> takePicture (parameter ("00"))
+			? std::string ("No errors")
+			: std::string ("Error taking the picture"));
 }
