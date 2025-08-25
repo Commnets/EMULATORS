@@ -93,15 +93,15 @@ VIC20::Memory::Memory (VIC20::Memory::Configuration cfg, const std::string& lang
 
 	// The default ROMS...
 	// They might change depending on the language
-	std::string ROMFILE = "./basic.901486-01.bin";
-	std::string CHARROMFILE = "./characters.901460-03-ENG.bin";
-	std::string KERNELFILE = "./kernal.901486-07-ENG.bin";
+	std::string ROMFILE = "./bios/basic.901486-01.bin";
+	std::string CHARROMFILE = "./bios/characters.901460-03-ENG.bin";
+	std::string KERNELFILE = "./bios/kernal.901486-07-ENG.bin";
 
 	// If the languaje selected is not ENG...
 	// then anither char rom file is selected!
-	if (lang == "JAP") { CHARROMFILE = "characters.901460-02-JAP.bin"; KERNELFILE = "kernal.901486-02-JAP.bin"; }
-	else if (lang == "SWE") { CHARROMFILE = "characters.NecP22101-207-SWE.bin"; KERNELFILE = "kernal.NecP22081-206-SWE.bin"; }
-	else if (lang == "DKA") { CHARROMFILE = "characters.DK901460-03-DKK.bin"; KERNELFILE = "kernal.901486-07-DKK.bin"; }
+	if (lang == "JAP") { CHARROMFILE = "./bios/characters.901460-02-JAP.bin"; KERNELFILE = "./bios/kernal.901486-02-JAP.bin"; }
+	else if (lang == "SWE") { CHARROMFILE = "./bios/characters.NecP22101-207-SWE.bin"; KERNELFILE = "./bios/kernal.NecP22081-206-SWE.bin"; }
+	else if (lang == "DKA") { CHARROMFILE = "./bios/characters.DK901460-03-DKK.bin"; KERNELFILE = "./bios/kernal.901486-07-DKK.bin"; }
 
 	// The info is load into the physical storage directly, 
 	// but fixed into the subset above!

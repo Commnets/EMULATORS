@@ -50,23 +50,23 @@ ZX81::Memory::Memory (ZX81::Memory::Configuration cfg, ZX81::Type t)
 		return;
 
 	// The ROM to load can be configurable...
-	std::string ROMFILE = "./zx81_1.rom";
+	std::string ROMFILE = "./bios/zx81_1.rom";
 	switch (_type)
 	{
 		case ZX81::Type::_ZX80: 
-			ROMFILE = "./zx80.rom"; 
+			ROMFILE = "./bios/zx80.rom"; 
 			break;
 
 		case ZX81::Type::_ZX811: 
-			ROMFILE = "./zx81_1.rom"; 
+			ROMFILE = "./bios/zx81_1.rom"; 
 			break;
 
 		case ZX81::Type::_ZX812:
-			ROMFILE = "./zx81_2.rom";
+			ROMFILE = "./bios/zx81_2.rom";
 			break;
 
 		case ZX81::Type::_ZX813: 
-			ROMFILE = "./zx81_3.rom"; 
+			ROMFILE = "./bios/zx81_3.rom"; 
 			break;
 	}
 

@@ -44,15 +44,15 @@ C264::Memory::Memory (const MCHEmul::Memory::Content& cnt, const std::string& la
 	// The default ROMS...
 	// They might change depending on the language
 	// By default the English language is taken
-	std::string ROMFILE = "./basic.318006-01.bin";
-	std::string KERNELFILE = "./kernal.318004-05-ENG.bin";
+	std::string ROMFILE = "./bios/basic.318006-01.bin";
+	std::string KERNELFILE = "./bios/kernal.318004-05-ENG.bin";
 
 	// If the languaje selected is not ENG...
 	// then another char rom file is selected!
 	// The CHARROM here is part of the Kernal
-	if (lang == "FRA") { KERNELFILE = "./kernal.318005-05-FRA.bin"; }
-	else if (lang == "HUN") { KERNELFILE = "./kernal.318030-02-HUN.bin"; }
-	else if (lang == "SWE") { KERNELFILE = "./kernel.325155-03-SWE.bin"; }
+	if (lang == "FRA") { KERNELFILE = "./bios/kernal.318005-05-FRA.bin"; }
+	else if (lang == "HUN") { KERNELFILE = "./bios/kernal.318030-02-HUN.bin"; }
+	else if (lang == "SWE") { KERNELFILE = "./bios/kernel.325155-03-SWE.bin"; }
 
 	bool ok = true;
 	ok &= physicalStorage (_BASICROM) -> loadInto (ROMFILE);

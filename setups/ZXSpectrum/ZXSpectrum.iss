@@ -30,10 +30,10 @@ Source: "LocalConsole.fmt"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Standard.fmt"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Default.fmt"; DestDir: "{app}"; Flags: ignoreversion
 Source: "blkFormatter.fmt"; DestDir: "{app}"; Flags: ignoreversion
-Source: "48Standard-ENG.rom"; DestDir: "{app}"; Flags: ignoreversion
-Source: "48Standard-ESP.rom"; DestDir: "{app}"; Flags: ignoreversion
-Source: "48Standard-NOR.rom"; DestDir: "{app}"; Flags: ignoreversion
-Source: "48Standard-ARA.rom"; DestDir: "{app}"; Flags: ignoreversion
+Source: "bios/48Standard-ENG.rom"; DestDir: "{app}/bios"; Flags: ignoreversion
+Source: "bios/48Standard-ESP.rom"; DestDir: "{app}/bios"; Flags: ignoreversion
+Source: "bios/48Standard-NOR.rom"; DestDir: "{app}/bios"; Flags: ignoreversion
+Source: "bios/48Standard-ARA.rom"; DestDir: "{app}/bios"; Flags: ignoreversion
 Source: "ZXSpectrumSysVars.txt"; DestDir: "{app}"; Flags: ignoreversion
 
 [Languages]

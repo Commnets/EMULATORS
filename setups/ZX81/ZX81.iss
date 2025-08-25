@@ -19,10 +19,10 @@ Source: "ZX81Emulator.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "RZX81Console.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Z80Compiler.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "TestZ80.exe"; DestDir: "{app}"; Flags: ignoreversion
-Source: "zx80.rom"; DestDir: "{app}"; Flags: ignoreversion
-Source: "zx81_1.rom"; DestDir: "{app}"; Flags: ignoreversion
-Source: "zx81_2.rom"; DestDir: "{app}"; Flags: ignoreversion
-Source: "zx81_3.rom"; DestDir: "{app}"; Flags: ignoreversion
+Source: "bios/zx80.rom"; DestDir: "{app}/bios"; Flags: ignoreversion
+Source: "bios/zx81_1.rom"; DestDir: "{app}/bios"; Flags: ignoreversion
+Source: "bios/zx81_2.rom"; DestDir: "{app}/bios"; Flags: ignoreversion
+Source: "bios/zx81_3.rom"; DestDir: "{app}/bios"; Flags: ignoreversion
 Source: "ZX81.hlp"; DestDir: "{app}"; Flags: ignoreversion
 Source: "SINCLAIR.hlp"; DestDir: "{app}"; Flags: ignoreversion
 Source: "LocalConsole.hlp"; DestDir: "{app}"; Flags: ignoreversion

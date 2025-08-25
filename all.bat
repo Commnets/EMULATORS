@@ -357,7 +357,7 @@ COPY .\exe\x86\C64EmulatorC.exe .\setups\C64\ /Y
 COPY .\exe\x86\R64Console.exe .\setups\C64\ /Y
 COPY .\exe\x86\6500Compiler.exe .\setups\C64\ /Y
 COPY .\exe\x86\Test6500.exe .\setups\C64\ /Y
-COPY .\emulators\C64Commons\*.* .\setups\C64\ /Y
+COPY .\emulators\C64Commons\bios\*.* .\setups\C64\bios\ /Y
 COPY .\projects\C64\*.fmt .\setups\C64\ /Y
 COPY .\projects\C64\*.hlp .\setups\C64\ /Y
 COPY .\projects\C64\*.def .\setups\C64\ /Y
@@ -379,7 +379,7 @@ COPY .\exe\x86\RVIC20Console.exe .\setups\VIC20\ /Y
 COPY .\exe\x86\6500Compiler.exe .\setups\VIC20\ /Y
 COPY .\exe\x86\Test6500.exe .\setups\VIC20\ /Y
 COPY .\exe\x86\VIC20CRTGenerator.exe .\setups\VIC20\ /Y
-COPY .\emulators\VIC20Commons\*.* .\setups\VIC20\ /Y
+COPY .\emulators\VIC20Commons\bios\*.* .\setups\VIC20\bios\ /Y
 COPY .\projects\VIC20\*.fmt .\setups\VIC20\ /Y
 COPY .\projects\VIC20\*.hlp .\setups\VIC20\ /Y
 COPY .\projects\VIC20\*.def .\setups\VIC20\ /Y
@@ -400,7 +400,7 @@ COPY .\exe\x86\C264Emulator.exe .\setups\C264\ /Y
 COPY .\exe\x86\R264Console.exe .\setups\C264\ /Y
 COPY .\exe\x86\6500Compiler.exe .\setups\C264\ /Y
 COPY .\exe\x86\Test6500.exe .\setups\C264\ /Y
-COPY .\emulators\C264Commons\*.* .\setups\C264\ /Y
+COPY .\emulators\C264Commons\bios\*.* .\setups\C264\bios\ /Y
 COPY .\projects\C264\*.fmt .\setups\C264\ /Y
 COPY .\projects\C264\*.hlp .\setups\C264\ /Y
 COPY .\projects\C264\*.def .\setups\C264\ /Y
@@ -422,7 +422,7 @@ COPY .\exe\x86\RZX81Console.exe .\setups\ZX81\ /Y
 COPY .\exe\x86\Z80Compiler.exe .\setups\ZX81\ /Y
 COPY .\exe\x86\TestZ80.exe .\setups\ZX81\ /Y
 COPY .\exe\x86\ZX81CRTGenerator.exe .\setups\ZX81\ /Y
-COPY .\emulators\ZX81Commons\*.* .\setups\ZX81\ /Y
+COPY .\emulators\ZX81Commons\bios\*.* .\setups\ZX81\bios\ /Y
 COPY .\projects\ZX81\*.fmt .\setups\ZX81\ /Y
 COPY .\projects\ZX81\*.hlp .\setups\ZX81\ /Y
 COPY .\projects\ZX81\*.def .\setups\ZX81\ /Y
@@ -446,7 +446,7 @@ COPY .\exe\x86\RZXSpectrumConsole.exe .\setups\ZXSpectrum\ /Y
 COPY .\exe\x86\Z80Compiler.exe .\setups\ZXSpectrum\ /Y
 COPY .\exe\x86\TestZ80.exe .\setups\ZXSpectrum\ /Y
 COPY .\exe\x86\ZXSpectrumCRTGenerator.exe .\setups\ZXSpectrum\ /Y
-COPY .\emulators\ZXSpectrumCommons\*.* .\setups\ZXSpectrum\ /Y
+COPY .\emulators\ZXSpectrumCommons\bios\*.* .\setups\ZXSpectrum\bios\ /Y
 COPY .\projects\ZXSpectrum\*.fmt .\setups\ZXSpectrum\ /Y
 COPY .\projects\ZXSpectrum\*.hlp .\setups\ZXSpectrum\ /Y
 COPY .\projects\ZXSpectrum\*.def .\setups\ZXSpectrum\ /Y
