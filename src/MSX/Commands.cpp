@@ -159,7 +159,7 @@ void MSX::SetVDPMemoryValueCommand::executeImpl
 	MCHEmul::Address fA = (a2 >= a1) ? a2 : a1;
 	for (size_t i = 0; i <= (size_t) (fA - iA); i += v.size ())
 		mC -> vdp () -> setVideoData (iA + i, v);
-	rst.add ("ERROR", std::string ("No errors"));
+	rst.add ("ERROR", std::string ("No errors. VDP Memory set"));
 }
 
 // ---

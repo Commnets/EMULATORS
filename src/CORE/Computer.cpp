@@ -7,15 +7,6 @@
 #include <sstream>
 
 // ---
-bool MCHEmul::Computer::CompositeAction::execute (MCHEmul::Computer* c)
-{
-	bool result = true;
-	for (auto& i : _actions)
-		result &= i -> execute (c);
-	return (result);
-}
-
-// ---
 bool MCHEmul::Computer::NoAction::execute (MCHEmul::Computer* c)
 {
 	// What to do now will depend on was the last action was...
@@ -139,7 +130,8 @@ MCHEmul::Computer::Computer (
 		const MCHEmul::Attributes& attrs, unsigned short sL)
 	: MCHEmul::InfoClass ("Computer"),
 	  _cpu (cpu), _chips (c), _memory (m), _devices (d), _attributes (attrs), 
-	  _templateActions (), _actionsAt (), 
+	  _templateActions (), _actionsAt (),
+	  _hooks (),
 	  _status (MCHEmul::Computer::_STATUSRUNNING), _actionForNextCycle (MCHEmul::Computer::_ACTIONNOTHING),
 	  _deepDebug (), // No active at all...
 	  _exit (false), _restartAfterExit (false), _restartLevel (0), // Meaning full!
@@ -204,8 +196,11 @@ MCHEmul::Computer::Computer (
 	for (const auto& i : _wires)
 		i.second -> connectElements (mbE);
 
+	// NOTE:
 	// Create the template of actions more common...
 	// More actions can be added in later instances of the class computer!
+	// But all of them has to be created before the computer starts working...
+	// because in the initialization of the computer the plain list of actions is created...
 	_templateActions =
 		{ 
 			{ MCHEmul::Computer::_ACTIONNOTHING,	new MCHEmul::Computer::NoAction }, 
@@ -251,6 +246,10 @@ MCHEmul::Computer::~Computer ()
 	// We want just to delete the array!
 	delete _plainChips;
 	delete _plainDevices;
+
+	// Deletes the hooks pool
+	// Notice that the hooks are not deleted, because the computer is not the owner of them...
+	delete (_hooksPool);
 }
 
 // ---
@@ -364,12 +363,13 @@ bool MCHEmul::Computer::initialize (bool iM)
 	_stabilized = (_stabilizationLoops == _currentStabilizationLoops); // Can be stable from the beginning...
 
 	// Put in a plain format the list of actions...
+	// Critical for speed reasons!
 	unsigned int maxTAId = 0;
 	_templateListActions = { };
 	for (auto& i : _templateActions)
 		if (i.second -> id () > maxTAId)
 			maxTAId = i.second -> id ();
-	_templateListActions = std::vector <MCHEmul::Computer::Action*> (maxTAId + 1, nullptr);
+	_templateListActions = MCHEmul::ComputerActions (maxTAId + 1, nullptr);
 	for (auto& i : _templateActions)
 		_templateListActions [i.second -> id ()] = i.second;
 	static_cast <MCHEmul::Computer::NextStackCommandAction*> 
@@ -455,6 +455,10 @@ bool MCHEmul::Computer::runComputerCycle (unsigned int a)
 			? cpu () -> clockCycles ()
 			: 0; // It doesn't matter... 
 
+	// Executes the hooks, if there were any...
+	// The return value is ignored as the hooks are not critical...
+	// An internal action might be executed, the next command would take this into account..
+	executeComputerHooks ();
 	// Maybe there will be some to be execute at the point where the CPU is now stopped
 	// The action received in the loop is passed to the method to 
 	// be considered in the decision in case of conflict!
@@ -678,6 +682,21 @@ void MCHEmul::Computer::removeAllActions (unsigned int a)
 }
 
 // ---
+void MCHEmul::Computer::addHook (MCHEmul::ComputerHook* h)
+{
+	if (std::find_if (_hooks.begin (), _hooks.end (),
+			[h](const MCHEmul::ComputerHook* eh) { return (eh == h); }) == _hooks.end ())
+		_hooks.push_back (h);
+}
+
+// ---
+void MCHEmul::Computer::removeHook (unsigned int id)
+{
+	_hooks.erase (std::remove_if (_hooks.begin (), _hooks.end (),
+		[id](const MCHEmul::ComputerHook* eh) { return (eh -> id ()  == id); }), _hooks.end ());
+}
+
+// ---
 MCHEmul::InfoStructure MCHEmul::Computer::getInfoStructure () const
 {
 	MCHEmul::InfoStructure result = std::move (MCHEmul::InfoClass::getInfoStructure ());
@@ -723,7 +742,7 @@ bool MCHEmul::Computer::executeActionAtPC (unsigned int a)
 
 	// Get the action from the template...
 	bool result = false;
-	MCHEmul::Computer::Action* actPtr = nullptr;
+	MCHEmul::ComputerAction* actPtr = nullptr;
 	if (act < _templateListActions.size () && // Defined?
 		(actPtr = _templateListActions [act]) != nullptr)
 		result = actPtr -> execute (this);
@@ -731,5 +750,15 @@ bool MCHEmul::Computer::executeActionAtPC (unsigned int a)
 	// Keep track of the last action executed...
 	_lastAction = act;
 	
+	return (result);
+}
+
+// ---
+bool MCHEmul::Computer::executeComputerHooks ()
+{
+	bool result = true;
+	for (const auto& h : _hooks)
+		result &= h -> verifyAndExecuteAction (this);
+
 	return (result);
 }

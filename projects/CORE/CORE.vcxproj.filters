@@ -210,6 +210,12 @@
     <ClCompile Include="..\..\src\CORE\OSIOPeripheral.cpp">
       <Filter>Archivos de origen\IO</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\CORE\ComputerAction.cpp">
+      <Filter>Archivos de origen\Motherboard</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\CORE\ComputerHook.cpp">
+      <Filter>Archivos de origen\Motherboard</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\include\CORE\IO.hpp">
@@ -395,7 +401,7 @@
     <ClInclude Include="..\..\include\CORE\DatasettePort.hpp">
       <Filter>Archivos de encabezado\IO</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\include\CORE\CPUHook.hpp">
+    <ClInclude Include="..\..\include\CORE\ComputerHook.hpp">
       <Filter>Archivos de encabezado\Motherboard</Filter>
     </ClInclude>
     <ClInclude Include="..\..\include\CORE\Trap.hpp">
@@ -409,6 +415,9 @@
     </ClInclude>
     <ClInclude Include="..\..\include\CORE\OSIOPeripheral.hpp">
       <Filter>Archivos de encabezado\IO</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\CORE\ComputerAction.hpp">
+      <Filter>Archivos de encabezado\Motherboard</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

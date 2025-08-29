@@ -106,6 +106,14 @@ MCHEmul::Command* MCHEmul::StandardCommandBuilder::createEmptyCommand (const std
 		result = new MCHEmul::GridOffCommand;
 	else if (cmdName == "PICTURE" || cmdName == MCHEmul::TakePictureCommand::_NAME)
 		result = new MCHEmul::TakePictureCommand;
+	else if (cmdName == "SETHOOK" || cmdName == MCHEmul::SetHookCommand::_NAME)
+		result = new MCHEmul::SetHookCommand;
+	else if (cmdName == "REMOVEHOOK" || cmdName == MCHEmul::RemoveHookCommand::_NAME)
+		result = new MCHEmul::RemoveHookCommand;
+	else if (cmdName == "HOOKS" || cmdName == MCHEmul::HooksCommand::_NAME)
+		result = new MCHEmul::HooksCommand;
+	else if (cmdName == "HOOKSHELP" || cmdName == MCHEmul::HooksHelpCommand::_NAME)
+		result = new MCHEmul::HooksHelpCommand;
 	else if (cmdName == MCHEmul::MoveParametersToAnswerCommand::_NAME)
 		result = new MCHEmul::MoveParametersToAnswerCommand;
 

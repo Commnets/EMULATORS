@@ -15,7 +15,6 @@
 #define __MCHEMUL_CPU__
 
 #include <CORE/global.hpp>
-#include <CORE/CPUHook.hpp>
 #include <CORE/MBElement.hpp>
 #include <CORE/DebugFile.hpp>
 #include <CORE/CPUArchitecture.hpp>
@@ -390,11 +389,6 @@ namespace MCHEmul
 		void removeInterruptRequest (const CPUInterruptRequest& iR)
 							{ interruptSystem () -> removeInterruptRequest (iR); }
 
-		// Managing hooks...
-		/** Adding a hook/hooks */
-		inline void addHook (unsigned long a, CPUHook* h);
-		inline void addHooks (const CPUHooks& hs);
-
 		/** 
 		  *	The real CORE of the class. \n
 		  *	The behaviour can be changed and adapted to different types of CPUs, overloading this method. \n
@@ -508,9 +502,6 @@ namespace MCHEmul
 			If the instruction can not be created, a nullptr is returned. */
 		static Instruction* instructionAt (Memory* m, const Address& addr, CPU* c);
 
-		/** To execute the hook if any at the position where the PC is now. */
-		inline CPUHook* executeHookIfAny ();
-
 		/** To create the interrupt system. \n
 			It must be redefined depeing on the type of CPU. */
 		virtual CPUInterruptSystem* createInterruptSystem () const = 0;
@@ -534,7 +525,6 @@ namespace MCHEmul
 		void debugInstructionExecuted (const std::string& sdd) const; // ...plus then info in _currentInstruction...
 		void debugInstructionWaiting () const; // Using the information in _currentInstruction...
 		void debugInstructionNoExists (unsigned int nI);
-		void debugHookInfo (CPUHook* hk);
 		// -----
 
 		protected:
@@ -545,7 +535,6 @@ namespace MCHEmul
 		ProgramCounter _programCounter;
 		StatusRegister _statusRegister;
 		Memory* _memory; // A reference...
-		CPUHooks _hooks;
 		/** The Interrupt System. 
 			Defined as mutable because it could be created in a const method. */
 		mutable CPUInterruptSystem* _interruptSystem;
@@ -651,36 +640,6 @@ namespace MCHEmul
 					? nLI - _cyclesLastInstructionOverlappedStopRequest
 					: 0; // If this situation an error has happened.... 
 		}
-	}
-
-	// ---
-	inline void CPU::addHook (unsigned long a, CPUHook* h)
-	{
-		MCHEmul::CPUHooks::const_iterator i = _hooks.find (a);
-		if (i == _hooks.end ())
-			_hooks.insert (MCHEmul::CPUHooks::value_type (a, h));
-	}
-
-	// ---
-	inline void CPU::addHooks (const CPUHooks& hs)
-	{
-		for (const auto& i : _hooks)
-			delete (i.second);
-
-		_hooks = hs;
-	}
-
-	// ---
-	inline CPUHook* CPU::executeHookIfAny ()
-	{
-		CPUHook* result = nullptr;
-
-		CPUHooks::const_iterator i = 
-			_hooks.find (_programCounter.internalRepresentation ());
-		if (i != _hooks.end ())
-			(result = (*i).second) -> hook (this);
-
-		return (result);
 	}
 }
 

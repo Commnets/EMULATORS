@@ -233,6 +233,15 @@ Active:@ACTIVE@, Type:@TYPE@, Frequency:@FREQUENCY@
 Active:@ACTIVE@, Type:@TYPE@, Frequency:@FREQUENCY@(@PULSEUP@)
 #---
 #---
+;ComputerHook
+Id:@ID@, Type:@TYPE@, Action:@ACTION@
+Detail:@INFO@
+#---
+#---
+;ComputerHooksPool
+@Hooks?{fmter=.CLASS,empty=no hooks}\n---\n@
+#---
+#---
 ;CRESTART
 #---
 #---
@@ -462,4 +471,25 @@ Program saved=@RESULT@
 ;CPICTURE
 ->Errors:
 @ERROR@
+#---
+#---
+;CSETHOOK
+->Errors:
+@ERROR@
+#---
+#---
+;CREMOVEHOOK
+@ERROR@
+#---
+#---
+;HOOKSPOOL
+@Hooks?{fmter=.CLASS,empty=no hooks}\n---\n@
+#---
+#---
+;CHOOKS
+@HOOKSPOOL>@
+#---
+#---
+;CHOOKSHELP
+@HOOKSHELP@
 #---

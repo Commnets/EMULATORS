@@ -58,6 +58,10 @@ const std::string MCHEmul::DatasetteStatusCommand::_NAME = "CDATASETTE";
 const std::string MCHEmul::GridOnCommand::_NAME = "CGRIDON";
 const std::string MCHEmul::GridOffCommand::_NAME = "CGRIDOFF";
 const std::string MCHEmul::TakePictureCommand::_NAME = "CPICTURE";
+const std::string MCHEmul::SetHookCommand::_NAME = "CSETHOOK";
+const std::string MCHEmul::RemoveHookCommand::_NAME = "CREMOVEHOOK";
+const std::string MCHEmul::HooksCommand::_NAME = "CHOOKS";
+const std::string MCHEmul::HooksHelpCommand::_NAME = "CHOOKSHELP";
 
 // ---
 MCHEmul::HelpCommand::HelpCommand (const std::string& hF)
@@ -204,7 +208,7 @@ void MCHEmul::RegisterChangeCommand::executeImpl (MCHEmul::CommandExecuter* cE, 
 		// ...but it also has to accept the bytes (size mainly) as parameter...
 		if (c -> cpu () -> internalRegister (nR).accept (by))
 		{ 
-			rst.add ("ERROR", std::string ("No errors"));
+			rst.add ("ERROR", std::string ("No errors. Register changed"));
 
 			c -> cpu () -> internalRegister (nR).set (by);
 		}
@@ -375,7 +379,7 @@ void MCHEmul::SetMemoryValueCommand::executeImpl (MCHEmul::CommandExecuter* cE, 
 	MCHEmul::Address fA = (a2 >= a1) ? a2 : a1;
 	for (size_t i = 0; i <= (size_t) (fA - iA); i += v.size ())
 		c -> cpu () -> memoryRef () -> put (iA + i, v); // Without force it!
-	rst.add ("ERROR", std::string ("No errors"));
+	rst.add ("ERROR", std::string ("No errors. Memory set"));
 }
 
 // ---
@@ -419,7 +423,7 @@ void MCHEmul::SetProgramCounterCommand::executeImpl
 	}
 
 	c -> cpu () -> programCounter ().setAddress (MCHEmul::Address::fromStr (parameter ("00")));
-	rst.add ("ERROR", std::string ("No errors"));
+	rst.add ("ERROR", std::string ("No errors. Program Counter changed"));
 }
 
 // ---
@@ -561,7 +565,7 @@ void MCHEmul::SetBreakPointCommand::executeImpl (MCHEmul::CommandExecuter* cE, M
 		rst.add ("ERROR", "Breaks no correct:" + tE);
 	}
 	else
-		rst.add ("ERROR", std::string ("No errors"));
+		rst.add ("ERROR", std::string ("No errors. Breakpoint set"));
 }
 
 // ---
@@ -592,7 +596,7 @@ void MCHEmul::RemoveBreakPointCommand::executeImpl (MCHEmul::CommandExecuter* cE
 		rst.add ("ERROR", "Breaks no correct:" + tE);
 	}
 	else
-		rst.add ("ERROR", std::string ("No errors"));
+		rst.add ("ERROR", std::string ("No errors. Breakpoint removed"));
 }
 
 // ---
@@ -857,7 +861,7 @@ void MCHEmul::AssignJoystickNameCommand::executeImpl
 
 	const_cast <MCHEmul::InputOSSystem*> (c -> inputOSSystem ()) -> addConversionJoystick (jId, jN);
 
-	rst.add ("ERROR", std::string ("No errors"));
+	rst.add ("ERROR", std::string ("No errors. Joystick assignment changed"));
 }
 
 // ---
@@ -1058,4 +1062,83 @@ void MCHEmul::TakePictureCommand::executeImpl (MCHEmul::CommandExecuter* cE,
 		c -> screen () -> takePicture (parameter ("00"))
 			? std::string ("No errors")
 			: std::string ("Error taking the picture"));
+}
+
+// ---
+void MCHEmul::SetHookCommand::executeImpl (MCHEmul::CommandExecuter* cE,
+	MCHEmul::Computer* c, MCHEmul::InfoStructure& rst)
+{
+	if (c == nullptr)
+		return;
+
+	// Analyze the parameters of the invocations...
+	unsigned int id = (unsigned int) std::atoi (parameter ("00").c_str ());
+	int type = std::atoi (parameter ("01").c_str ());
+	MCHEmul::Strings prms;
+
+	size_t ct = 2;
+	bool end = false;
+	while (!end)
+	{
+		std::string ctStr = 
+			MCHEmul::fixLenStr (std::to_string (ct++), 2, true, MCHEmul::_CEROS);
+		if (!(end = !existParameter (ctStr)))
+			prms.push_back (parameter (ctStr));
+	}
+
+	MCHEmul::ComputerHook* hook = nullptr;
+	std::string err = "";
+	std::tie (hook, err) = c -> hooksPool () -> hook (id, type, prms);
+	if (err != "")
+		rst.add ("ERROR",
+			"Hook " + std::to_string (id) + " not created, with error " + err);
+	else
+	{
+		c -> addHook (hook);
+
+		rst.add ("ERROR",
+			"No errors. Hook " + std::to_string (hook -> id ()) + " created and added to computer");
+	}
+}
+
+// ---
+void MCHEmul::RemoveHookCommand::executeImpl (MCHEmul::CommandExecuter* cE,
+	MCHEmul::Computer* c, MCHEmul::InfoStructure& rst)
+{
+	if (c == nullptr)
+		return;
+
+	unsigned int id = (unsigned int) std::atoi (parameter ("00").c_str ());
+	if (c -> hooksPool () -> existsHook (id))
+	{
+		c -> removeHook (id);
+		c -> hooksPool () -> removeHook (id);
+
+		rst.add ("ERROR", std::string ("No errors. Hook deleted"));
+	}
+	else
+		rst.add ("ERROR",
+			"Hook " + std::to_string (id) + " doesn't exist");
+}
+
+// ---
+void MCHEmul::HooksCommand::executeImpl (MCHEmul::CommandExecuter* cE,
+	MCHEmul::Computer* c, MCHEmul::InfoStructure& rst)
+{
+	if (c == nullptr)
+		return;
+
+	rst.add ("HOOKSPOOL", 
+		std::move (c -> hooksPool () -> getInfoStructure ()));
+}
+
+// ---
+void MCHEmul::HooksHelpCommand::executeImpl (MCHEmul::CommandExecuter* cE, 
+	MCHEmul::Computer* c, MCHEmul::InfoStructure& rst)
+{
+	if (c == nullptr)
+		return;
+
+	rst.add ("HOOKSHELP", 
+		MCHEmul::concatenateStrings (c -> hooksPool () -> help (), "---\n"));
 }

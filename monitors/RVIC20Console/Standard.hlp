@@ -222,3 +222,22 @@ Takes a screenshot of the emulator screen.
 Parameters:  
 => FILENAME (mandatory): Output file name (supported formats: PNG, JPG, BMP).  
 Notes: Any unsupported format will fail.
+;SETHOOK ID TYPE [PARAMS]
+Set a hook in the execution of the computer.
+Parameters:
+=> ID (madatory): The id of the hook. The id must be unique in the list of hooks.
+=> TYPE (mandatory): The type of the id. This attribute sets finally what the hook will really do.
+  => 0: Hook that stops the execution when the CPU accesses (read/write) a zone of the memory. 
+		The parameters needed are [INITIAL ADDRESS] mandatory and optional [FINAL ADDRESS].
+=> [PARAMS] (optional): The parameters that the type of hook need. From this perspective they are mandatory.
+;REMOVEHOOK ID
+Removes a hooks given by its id.
+Parameters:
+=> ID (mandtory): The id of the hook to remove
+Notes: If the hook didn't exist, nothing would be done.
+;HOOKS
+To list all hooks running in the system.
+Parameters: None.
+;HOOKSHELP
+Help about all type of hooks than can be created in the simulation.
+Parameters: None.

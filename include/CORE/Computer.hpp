@@ -30,6 +30,8 @@
 #include <CORE/Sound.hpp>
 #include <CORE/OSIO.hpp>
 #include <CORE/DebugFile.hpp>
+#include <CORE/ComputerAction.hpp>
+#include <CORE/ComputerHook.hpp>
 #include <chrono>
 
 namespace MCHEmul
@@ -39,8 +41,9 @@ namespace MCHEmul
 	class Computer : public InfoClass, public Notifier, public Observer
 	{
 		public:
-		/** Types of actions than can be executed on a compter. 
-			They can be overloaded in extensions of the computer. */
+		/** Types of most common actions than can be executed on a computer. 
+			They can be overloaded in extensions of the computer. ºn
+			Many others can be defined and added externally. */
 		static const unsigned int _ACTIONNOTHING = 0; // Meaning working normally...
 		static const unsigned int _ACTIONSTOP = 1; // Meaning to stop the execution of the program...
 		static const unsigned int _ACTIONCONTINUE = 2; // Menaing to continue the execution until any other stop action is found...
@@ -51,88 +54,46 @@ namespace MCHEmul
 		static const unsigned int _STATUSRUNNING = 0;
 		static const unsigned int _STATUSSTOPPED = 1;
 
-		/** The computer might execute different actions when reaching a specific position. */
-		class Action
-		{
-			public:
-			// No default constructors are needed...
-			Action (unsigned int id)
-				: _id (id)
-							{ }
-
-			unsigned int id () const
-							{ return (_id); }
-
-			virtual ~Action () 
-							{ /** Just in case an extension is needed. */ }
-
-			/** Returns true when the next CPU cycle has to be executed after this action,
-				and false in any other circusntance. */
-			virtual bool execute (Computer*) = 0;
-
-			protected:
-			unsigned int _id;
-		};
-
-		using Actions = std::vector <Action*>;
-
-		/** Made up of a set of actions. */
-		class CompositeAction : public Action
-		{
-			public:
-			CompositeAction (unsigned int id, const Actions& a)
-				: Action (id),
-				  _actions (a)
-							{ }
-
-			/** It will return true when all elements return true, 
-				and false in other circunstance. */
-			virtual bool execute (Computer* c) override;
-
-			protected:
-			Actions _actions;
-		};
-
 		/** No action at all. 
 			Usually it is not needed. It is defined just in case. */
-		class NoAction final : public Action
+		class NoAction final : public ComputerAction
 		{
 			public:
 			NoAction ()
-				: Action (Computer::_ACTIONNOTHING)
+				: ComputerAction (Computer::_ACTIONNOTHING)
 							{ }
 			
 			virtual bool execute (Computer*) override;
 		};
 
 		/** A clear and simple action is just to stop the execution. */
-		class StopAction final : public Action
+		class StopAction final : public ComputerAction
 		{
 			public:
 			StopAction ()
-				: Action (Computer::_ACTIONSTOP)
+				: ComputerAction (Computer::_ACTIONSTOP)
 							{ }
 
 			virtual bool execute (Computer* c) override;
 		};
 
 		/** In the opposite side, the action is to continue with the execution. */
-		class ContinueAction final : public Action
+		class ContinueAction final : public ComputerAction
 		{
 			public:
 			ContinueAction ()
-				: Action (Computer::_ACTIONCONTINUE)
+				: ComputerAction (Computer::_ACTIONCONTINUE)
 							{ }
 
 			virtual bool execute (Computer* c) override;
 		};
 
 		/** Move to the next instruction. */
-		class NextCommandAction final : public Action
+		class NextCommandAction final : public ComputerAction
 		{
 			public:
 			NextCommandAction ()
-				: Action (Computer::_ACTIONNEXT)
+				: ComputerAction (Computer::_ACTIONNEXT)
 							{ }
 
 			virtual bool execute (Computer* c) override;
@@ -141,11 +102,11 @@ namespace MCHEmul
 		/** Move to the next instruction that maintains the position in the stack.
 			That's it, the execution will continue until the position of the stack
 			was the same than the first time it was executed. */
-		class NextStackCommandAction final : public Action
+		class NextStackCommandAction final : public ComputerAction
 		{
 			public:
 			NextStackCommandAction ()
-				: Action (Computer::_ACTIONNEXTSTACK),
+				: ComputerAction (Computer::_ACTIONNEXTSTACK),
 				  _initialPosition (-1) // meaning no initialized...
 							{ }
 
@@ -161,7 +122,6 @@ namespace MCHEmul
 			int _initialPosition;
 		};
 
-		using TemplateOfActions = std::map <unsigned int, Action*>;
 		using MapOfActions = std::map <MCHEmul::Address, unsigned int>;
 
 		/** 
@@ -466,6 +426,40 @@ namespace MCHEmul
 		unsigned int lastAction () const
 							{ return (_lastAction); }
 
+		// To manage the template actions defined within the Computer class
+		// The could be useful to know them from outside
+		// e.g in the definition of hooks...
+		/** To get the list of those. */
+		const ComputerActionsMap& templateActions () const
+							{ return (_templateActions); }
+		bool existTemplaceAction (unsigned int id) const
+							{ return (_templateActions.find (id) != _templateActions.end ()); }
+		inline ComputerAction* templateAction (unsigned int id);
+		const ComputerAction* templateAction (unsigned int id) const
+							{ return (const_cast <const ComputerAction*> 
+								(const_cast <Computer*> (this) -> templateAction (id))); }
+
+		// To manage the computer hooks...
+		// The access to the hooks is always through out a list of them
+		// So getting or remove them by id is pretty slow and can affect your main loop performance!
+		/** Add a computer hook. \n
+			Only one instance of the same hook can be added. */
+		void addHook (ComputerHook* h);
+		/** To get the list of computer hooks defined. */
+		const ComputerHooks& hooks () const
+							{ return (_hooks); }
+		/** To remove a computer hook.
+			All instances with the same id (they shouldn't have) are erased. */
+		void removeHook (unsigned int id);
+		/** To get the hook factory managing all hooks affecting this computer. 
+			First time it is invoked is created. */
+		ComputerHooksPool* hooksPool ()
+							{ return ((_hooksPool == nullptr) 
+								? _hooksPool = createHooksPool () : _hooksPool); }
+		const ComputerHooksPool* hooksPool () const
+							{ return (const_cast <const ComputerHooksPool*> 
+								(const_cast <Computer*> (this) -> hooksPool ())); }
+
 		/**
 		  *	The name of the fields are: \n
 		  *	ATTRS		= InfoStructure: attributes defining the computer.
@@ -495,6 +489,18 @@ namespace MCHEmul
 			During the execution of the method the firt parameter (lastAction) can be modified. */
 		virtual bool executeActionAtPC (unsigned int a);
 
+		/** Execute all hooks if they exist. 
+			The default method is quite simple but it can be overloaded. \n
+			By default it is just a loop to iterate over all. 
+			False is returned when at least 1 individual hook did. Otherwise it will return true. */
+		virtual bool executeComputerHooks ();
+
+		/** The method to create the hooks pool. \n
+			Can be overloaded. \n
+			By default, it creates a very basic hooks pool. */
+		virtual ComputerHooksPool* createHooksPool () const
+							{ return (new ComputerHooksPool ()); }
+
 		protected:
 		CPU* _cpu;
 		Chips _chips; 
@@ -503,8 +509,10 @@ namespace MCHEmul
 		Buses _buses;
 		Wires _wires;
 		const Attributes _attributes = { }; // Maybe modified at construction level
-		TemplateOfActions _templateActions; // The templates are used to acclerate what to do!
+		ComputerActionsMap _templateActions; // The templates are used to accelerate what to do!
 		MapOfActions _actionsAt;
+		ComputerHooks _hooks; // The list of the hooks managed in the computer...
+		ComputerHooksPool* _hooksPool; // Where all hooks must be!
 		unsigned int _status;
 		unsigned int _actionForNextCycle; // The action to be executed in the next cycle...
 		DebugFile _deepDebug; // When the deep debug is requested...
@@ -550,8 +558,15 @@ namespace MCHEmul
 		unsigned int _lastAction;
 		mutable bool _stabilized;
 		mutable unsigned short _currentStabilizationLoops;
-		std::vector <Action*> _templateListActions; // The same the template of actions but in a vector to speed up access...
+		ComputerActions _templateListActions; // The same the template of actions but in a vector to speed up access...
 	};
+
+	// ---
+	inline ComputerAction* Computer::templateAction (unsigned int id)
+	{
+		ComputerActionsMap::const_iterator i = _templateActions.find (id);
+		return ((i != _templateActions.end ()) ? (*i).second : nullptr);
+	}
 }
 
 #endif

@@ -59,7 +59,6 @@ MCHEmul::CPU::CPU (int id, const MCHEmul::CPUArchitecture& a,
 	  _instructions (ins),
 	  _programCounter (a.numberBytes ()), 
 	  _memory (nullptr), 
-	  _hooks (),
 	  _interruptSystem (nullptr),
 	  // When neither buses nor wires are used, these variable must be set from instruction execution!
 	  _lastINOUTAddress (), _lastINOUTData (),
@@ -92,9 +91,6 @@ MCHEmul::CPU::CPU (int id, const MCHEmul::CPUArchitecture& a,
 MCHEmul::CPU::~CPU ()
 {
 	for (const auto& i : _instructions)
-		delete (i.second);
-
-	for (const auto& i : _hooks)
 		delete (i.second);
 
 	delete (_interruptSystem);
@@ -592,11 +588,6 @@ bool MCHEmul::CPU::executeNextInstruction_PerCycle (unsigned int& e)
 	}
 	else
 	{
-		// Any hook at this position?
-		MCHEmul::CPUHook* hk = executeHookIfAny ();
-		if (hk != nullptr)
-			_IFDEBUG debugHookInfo (hk);
-
 		// ...look for the next instruction to be executed...
 		unsigned int nInst = 
 			MCHEmul::UInt (
@@ -629,11 +620,6 @@ bool MCHEmul::CPU::executeNextInstruction_Full (unsigned int &e)
 	// By default, 
 	// the instruction cycle should be processed always at this point!
 	// ...but with errors? (see below)
-
-	// Any hook at this position?
-	MCHEmul::CPUHook* hk = executeHookIfAny ();
-	if (hk != nullptr)
-		_IFDEBUG debugHookInfo (hk);
 
 	// Access the next instruction...
 	// Using the row description of the instructions!
@@ -910,13 +896,4 @@ void MCHEmul::CPU::debugInstructionNoExists (unsigned int nI)
 		return; // Nothing to do...
 
 	_deepDebugFile -> writeLineData ("Instruction doesn't exist " + std::to_string (nI));
-}
-
-// ---
-void MCHEmul::CPU::debugHookInfo (MCHEmul::CPUHook* hk)
-{
-	assert (_deepDebugFile != nullptr &&
-			hk != nullptr);
-
-	_deepDebugFile -> writeLineData (hk -> asString ());
 }

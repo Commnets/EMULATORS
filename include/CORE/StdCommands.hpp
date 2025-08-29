@@ -19,6 +19,7 @@
 #define __MCHEMUL_STDCOMMANDS__
 
 #include <CORE/Command.hpp>
+#include <CORE/ComputerHook.hpp>
 
 namespace MCHEmul
 {
@@ -1026,7 +1027,7 @@ namespace MCHEmul
 		static const std::string _NAME;
 
 		DatasetteStatusCommand ()
-			: MCHEmul::Command (_ID, _NAME)
+			: Command (_ID, _NAME)
 							{ }
 
 		virtual bool canBeExecuted () const override
@@ -1039,14 +1040,14 @@ namespace MCHEmul
 	/** To set to draw a grid. \n
 		The comamand is: \n
 		GRIDON COLOR */
-	class GridOnCommand final : public MCHEmul::Command
+	class GridOnCommand final : public Command
 	{
 		public:
 		static const int _ID = 106;
 		static const std::string _NAME;
 
 		GridOnCommand ()
-			: MCHEmul::Command (_ID, _NAME)
+			: Command (_ID, _NAME)
 							{ }
 
 		/** The parameter is the clor of the grid. */
@@ -1054,50 +1055,132 @@ namespace MCHEmul
 							{ return (_parameters.size () == 1); }
 
 		private:
-		virtual void executeImpl (MCHEmul::CommandExecuter* cE, 
-			MCHEmul::Computer* c, MCHEmul::InfoStructure& rst) override;
+		virtual void executeImpl (CommandExecuter* cE, Computer* c, InfoStructure& rst) override;
 	};
 
 	/** To unset border and grid. \n
 		The comamand is: \n
 		GRIDOFF */
-	class GridOffCommand final : public MCHEmul::Command
+	class GridOffCommand final : public Command
 	{
 		public:
 		static const int _ID = 107;
 		static const std::string _NAME;
 
 		GridOffCommand ()
-			: MCHEmul::Command (_ID, _NAME)
+			: Command (_ID, _NAME)
 							{ }
 
 		virtual bool canBeExecuted () const override
 							{ return (_parameters.size () == 0); }
 
 		private:
-		virtual void executeImpl (MCHEmul::CommandExecuter* cE, 
-			MCHEmul::Computer* c, MCHEmul::InfoStructure& rst) override;
+		virtual void executeImpl (CommandExecuter* cE, Computer* c, InfoStructure& rst) override;
 	};
 
 	/** To take a picture of the emulator.
 		The comamand is: \n
 		PICTURE FILENAME */
-	class TakePictureCommand final : public MCHEmul::Command
+	class TakePictureCommand final : public Command
 	{
 		public:
 		static const int _ID = 108;
 		static const std::string _NAME;
 
 		TakePictureCommand ()
-			: MCHEmul::Command (_ID, _NAME)
+			: Command (_ID, _NAME)
 							{ }
 
 		virtual bool canBeExecuted () const override
 							{ return (_parameters.size () == 1); }
 
 		private:
-		virtual void executeImpl (MCHEmul::CommandExecuter* cE, 
-			MCHEmul::Computer* c, MCHEmul::InfoStructure& rst) override;
+		virtual void executeImpl (CommandExecuter* cE, Computer* c, InfoStructure& rst) override;
+	};
+
+	/** To create a hook in the code. \n
+		This could be usefull for very specific debugging and traccing tasks. \n
+		The command is: \n
+		SETHOOK ID TYPE [PARAMETERS] \n
+		The types possible are: \n
+		0: Memory hook stopping the execution of the CPU (like a brea), 
+		   and the pareneters will be either 1 or 2 addresses. \n */
+	class SetHookCommand final : public Command
+	{
+		public:
+		static const int _ID = 109;
+		static const std::string _NAME;
+
+		SetHookCommand ()
+			: Command (_ID, _NAME)
+							{ }
+
+		virtual bool canBeExecuted () const override
+							{ return (_parameters.size () >= 2); }
+
+		private:
+		virtual void executeImpl (CommandExecuter* cE, Computer* c, InfoStructure& rst) override;
+	};
+
+	/** To remove a hook from the computer. \n
+		The command is: \n
+		REMOVEHOOK ID 
+		The hook is deleted from the system and also from the computer pool. */
+	class RemoveHookCommand final : public Command
+	{
+		public:
+		static const int _ID = 110;
+		static const std::string _NAME;
+
+		RemoveHookCommand ()
+			: Command (_ID, _NAME)
+							{ }
+
+		virtual bool canBeExecuted () const override
+							{ return (_parameters.size () == 1); }
+
+		private:
+		virtual void executeImpl (CommandExecuter* cE, Computer* c, InfoStructure& rst) override;
+	};
+
+	/** To list all hooks actually running in the emulation. \n
+		The command is: \n
+		HOOKS */
+	class HooksCommand final : public Command
+	{
+		public:
+		static const int _ID = 111;
+		static const std::string _NAME;
+
+		HooksCommand ()
+			: Command (_ID, _NAME)
+							{ }
+
+		virtual bool canBeExecuted () const override
+							{ return (_parameters.size () == 0); }
+
+		private:
+		virtual void executeImpl (CommandExecuter* cE, Computer* c, InfoStructure& rst) override;
+	};
+
+	/** To ask for information about all hooks possible in the system. 
+		Remember that the list of hooks depends on the computer at the end.
+		So the system has to have its own help system. */
+	class HooksHelpCommand final : public Command
+	{
+		public:
+		static const int _ID = 112;
+		static const std::string _NAME;
+
+		HooksHelpCommand ()
+			: Command (_ID, _NAME)
+							{ }
+
+		virtual bool canBeExecuted () const override
+							{ return (_parameters.size () == 0); }
+
+		private:
+		virtual void executeImpl (CommandExecuter* cE, Computer* c, InfoStructure& rst) override;
 	};
 }
 

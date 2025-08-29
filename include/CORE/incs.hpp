@@ -38,8 +38,9 @@
 #include <CORE/Chip.hpp>
 #include <CORE/GraphicalChip.hpp>
 #include <CORE/SoundChip.hpp>
+#include <CORE/ComputerAction.hpp>
+#include <CORE/ComputerHook.hpp>
 #include <CORE/Computer.hpp>
-#include <CORE/CPUHook.hpp>
 #include <CORE/CPU.hpp>
 #include <CORE/CPUArchitecture.hpp>
 #include <CORE/CPUInterrupt.hpp>
