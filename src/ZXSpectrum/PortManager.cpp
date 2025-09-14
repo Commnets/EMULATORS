@@ -24,6 +24,10 @@ void ZXSPECTRUM::PortManager::setValue (unsigned short ab, unsigned char id, con
 	// However, 0xfe is the ZXSpectrum common one, but many others will behave similar...
 	if ((id & 0b00000001) == 0b00000000) 
 	{
+		// The access to the ULA is "noticed"
+		// This is used later to verify content access problems...
+		_ULARegisters -> setULABeingAccessedFromPortManager ();
+
 		// The three lowest significant bits defines the border color
 		// Bear in mind than in ZXSpectrum the border can not have bright!
 		_ULARegisters -> setBorderColor (v.value () & 0x07);
@@ -55,6 +59,10 @@ MCHEmul::UByte ZXSPECTRUM::PortManager::getValue (unsigned short ab, unsigned ch
 	// However, 0xfe is the ZXSpectrum common one, but many others will behave similar...
 	if ((id & 0b00000001) == 0b00000000) // The post 254 is the typical one...
 	{ 
+		// The access to the ULA is "noticed"
+		// This is used later to verify content access problems...
+		_ULARegisters -> setULABeingAccessedFromPortManager ();
+
 		// The bit 6 of the final result will be the value in the EAR socket...
 		/** The EAR signal can be used to identify which is the ZXSpectrum issue (1,2 or 3),
 			as it is described in: http://fizyka.umk.pl/~jacek/zx/faq/reference/48kreference.htm \n

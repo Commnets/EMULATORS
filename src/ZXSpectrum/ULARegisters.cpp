@@ -6,7 +6,8 @@ ZXSPECTRUM::ULARegisters::ULARegisters ()
 	  _MICSignalChanged (false), // It is an OBool...
 	  _EARSignalChanged (false), // It is an OBool...
 	  _keyboardStatus (8, MCHEmul::UByte::_0), // To define the initial size...
-	  _joystickStatus (5, MCHEmul::UByte::_0) // Just to define the initial size...
+	  _joystickStatus (5, MCHEmul::UByte::_0), // Just to define the initial size...
+	  _ULABeingAccessedFromPortManager (false)
 { 
 	initializeInternalValues ();
 }
@@ -44,4 +45,6 @@ void ZXSPECTRUM::ULARegisters::initializeInternalValues ()
 		_keyboardStatus [i++] = MCHEmul::UByte::_0);
 	for (size_t i = 0; i < 5; 
 		_joystickStatus [i++] = false);
+
+	_ULABeingAccessedFromPortManager = false;
 }

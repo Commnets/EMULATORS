@@ -241,7 +241,8 @@ namespace MCHEmul
 							{ for (const auto& i : mb) put (i, f); }
 
 		// To fill up the memory with values...
-		/** To fill the memory with value/values. */
+		/** To fill the memory with value/values. 
+			These method are not tracked as access to memory. */
 		void fillWith (const UByte& b)
 							{ for (size_t i = 0; i < _size; i++) setValue (i, b); }
 		void fillWith (const Address& addr, const UByte& b, size_t nB);
@@ -601,12 +602,34 @@ namespace MCHEmul
 		InfoStructure getInfoStructure () const;
 	};
 
+	/** To keep an access to the memory. */
+	struct MemoryAccess final
+	{
+		/** No more type os accesses allowed. */
+		enum class Type
+		{
+			_READ = 0,
+			_WRITE = 1
+		};
+
+		/** Where. */
+		Address _to;
+		/** Doing what. */
+		Type _type;
+		/** How much bytes accessed. */
+		size_t _size;
+	};
+
+	/** To manage better the types. */
+	using MemoryAccesses = std::vector <MemoryAccess>;
+
 	/** 
 	  * A memory is just an agregation of eveytthing above: phisical storages, subsets and views. \n
 	  *	A view has to de declared as the active one. \n
 	  *	All accesses will be done throught out that active view. \n
 	  *	This gives the user the possible to have different "views" of the memory in different
-	  *	moments of the execution of the main cycle from, e.g. different elements in the CPU. */
+	  *	moments of the execution of the main cycle from, e.g. different elements in the CPU. \n
+	  The access to the memory is tracked. */
 	class Memory : public MotherboardElement
 	{
 		public:
@@ -708,7 +731,7 @@ namespace MCHEmul
 		using Contents = std::map <int, Content>;
 		using AdditionalSubsets = std::map <int, PhysicalStorageSubsets>;
 
-		Memory (int id, const Content& cnt, const Attributes& attrs = { });
+		Memory (int id, const Content& cnt, const Attributes& attrs = { }, size_t tz = 10);
 
 		Memory (const Memory&) = delete;
 
@@ -793,20 +816,27 @@ namespace MCHEmul
 		// Manage the memory...
 		/** The _activeView might not be nullptr ever, or a crahs is generated. */
 		const UByte& value (const Address& a) const
-							{ return (_activeView -> value (a)); }
+							{ _tracker.addAccess (MemoryAccess { a, MemoryAccess::Type::_READ, 1 }); 
+							  return (_activeView -> value (a)); }
 		void set (const Address& a, const UByte& v, bool f = false /** To force even when it is a ROM. */)
-							{ _activeView -> set (a, v, f); }
+							{ _tracker.addAccess (MemoryAccess { a, MemoryAccess::Type::_WRITE, 1 });
+							  _activeView -> set (a, v, f); }
 		UBytes values (const Address& a, size_t nB) const
-							{ return (_activeView -> values (a, nB)); }
+							{ _tracker.addAccess (MemoryAccess { a, MemoryAccess::Type::_READ, nB }); 
+							  return (_activeView -> values (a, nB)); }
 		void set (const Address& a, const UBytes& v, bool f = false)
-							{ _activeView -> set (a, v, f); }
+							{ _tracker.addAccess (MemoryAccess { a, MemoryAccess::Type::_WRITE, v.size () });
+							  _activeView -> set (a, v, f); }
 		std::vector <UByte> bytes (const Address& a, size_t nB) const
-							{ return (_activeView -> bytes (a, nB)); }
+							{ _tracker.addAccess (MemoryAccess { a, MemoryAccess::Type::_READ, nB });
+							  return (_activeView -> bytes (a, nB)); }
 		void set (const Address& a, const std::vector <UByte>& v, bool f = false)
-							{ _activeView -> set (a, v, f); }
+							{ _tracker.addAccess (MemoryAccess { a, MemoryAccess::Type::_WRITE, v.size () });
+							  _activeView -> set (a, v, f); }
 
 		// To put a value/values in the memory...
 		// The methods use put method of the MemoryView (@see MemotyView) to avoid buffering behaviour if any...
+		// This methos are not used in the main loop, so they don't buffer the information...
 		void put (const Address& a, const UByte& d, bool f = false)
 							{ _activeView -> put (a, d, f); }
 		void put (const Address& a, const UBytes& v, bool f = false)
@@ -817,6 +847,15 @@ namespace MCHEmul
 							{ put (mb.startAddress (), mb.bytes (), f); }
 		void put (const DataMemoryBlocks& mb, bool f = false)
 							{ for (const auto& i : mb) put (i, f); }
+
+		// Managing the tracker...
+		/** To reset the tracker. */
+		void resetMemoryAccessTracker () const
+							{ _tracker.start (); }
+		/** To get the last accesses to the memory. 
+			Notice that this method generates a copy, so it can be slow... */
+		MemoryAccesses lasMemoryAccesses () const
+							{ return (_tracker.lastAccesses ()); }
 
 		// Fill up the memory...
 		/** To fill the all memory with value/values. */
@@ -882,6 +921,53 @@ namespace MCHEmul
 		AdditionalSubsets _additionalSubsets;
 		static Configuration _CONFIGURATION;
 
+		/** A buffer to keep track of last accesses to the memory. \n
+			When the number of insertions overdrafts the max sze possible, 
+			it starts back from 0. So it doesn't behave as a circle. \n
+			Notice that it is very private, so it can not be accessed from outside, 
+			but the list of last accesses can! */
+		class AccessTrack final
+		{
+			public:
+			AccessTrack (size_t n = 10 /** By default. */)
+			: _accesses (n, 
+				MemoryAccess 
+					{ Address (), MemoryAccess::Type::_READ, 0 }), // Empty...
+			  _trackSize (n),
+			  _pointer (0)
+							{ }
+
+			// Managing the pool...
+			/** Just to "clear". 
+				Notice that the size is bever changed. */
+			void start ()
+							{ _pointer = 0; }
+			inline void addAccess (const MemoryAccess& a);
+			/* To get the last accesses kept into the pool. 
+				This metjod is slow as it does a copy of just the last accesses controlled, 
+				so try not to use it in the main loop!. */
+			MemoryAccesses lastAccesses () const
+							{ return (_pointer == 0 
+								? MemoryAccesses () // Empty...
+								: MemoryAccesses 
+									(_accesses.begin (), _accesses.begin () + _pointer - 1)); }
+			const MemoryAccesses accesses () const
+							{ return (_accesses); }
+			size_t pointer () const
+							{ return (_pointer); }
+
+			private:
+			/** The size of the buffer. */
+			size_t _trackSize;
+			/** The buffer. */
+			MemoryAccesses _accesses;
+			/** Where the information is about to be inserted. */
+			size_t _pointer;
+		};
+
+		/** To keep track of the accesses. */
+		mutable AccessTrack _tracker;
+
 		// To manage the debug info...
 		DebugFile* _deepDebugFile;
 
@@ -902,6 +988,14 @@ namespace MCHEmul
 					
 			_memorySetCommands.clear ();
 		}
+	}
+
+	// ---
+	inline void Memory::AccessTrack::addAccess (const MemoryAccess& a)
+	{ 
+		if (_pointer >= _trackSize) _pointer = 0;  
+		_accesses [_pointer] = a;
+		_pointer++;
 	}
 }
 

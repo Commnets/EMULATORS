@@ -22,14 +22,15 @@
 namespace ZXSPECTRUM
 {
 	/** The ULA is loaded with a 7MHz clock. \n
-		In the PAL/NTSC mode, the horizontal raster takes 64us to go through a line, which is 448 7MH clock cycles. \n
+		In the PAL/NTSC mode, the horizontal raster takes 64us to go through a line, which is 448 (7MH) clock cycles. \n
 		In the PAL mode, the vertical raster go through 312 lines to produce images 50 per second, 
 		whilst in NTSC does 264 lines to produce images 60 per second. \n
 		The ULA generates the clock for the CPU reducing the speed half, so the CPU is loaded with a 3.5 MHz clock. \n
 		The simulation of ULA also receives the events comming the different IO elements like keyboard and joystick. \n
 		The events comming from the joystick are translated into actions and kept in the ULARegisters. \n
-		Those events are also translated into key presses to simulate the CURSOR type of joystick. \n
-		The class PortManager will see those events when the port 31 is scaneed, to simulate the KEMPSTON type of joystick. */
+		Those events are also translated into key presses to simulate the CURSOR type of Joystick. \n
+		The class PortManager will see those events when the port 31 is scaneed, to simulate the KEMPSTON type of joystick. 
+		The Contention is also simulated. @see also SinclairZXSpectrum::specificComputerCycle method for further details. */
 	class ULA : public MCHEmul::GraphicalChip
 	{
 		public:
@@ -155,11 +156,14 @@ namespace ZXSPECTRUM
 		  */
 		virtual MCHEmul::InfoStructure getInfoStructure () const override;
 
+		// To control the video memory contention
+		/** To know whether the ULA was accessed from the PortManager. */
+		bool ULABeingAccesedFromPortManager () const
+							{ return (_ULARegisters -> ULABeingAccessedFromPortManager ()); }
 		/** Called from Computer specific cycle method,
 			to determine whether the CPU accesed or not to the screen memory. \n
 			This is important to detect contentions and then to whether stop the CPU. */
-		void setScreenMemoryAccessedFromCPU (bool sM)
-							{ _screenMemoryAccessedFromCPU = sM; }
+		inline void setScreenMemoryAccessedFromCPU (std::vector <unsigned int>&& fC);
 
 		protected:
 		virtual void processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifier* n) override;
@@ -177,6 +181,11 @@ namespace ZXSPECTRUM
 		inline void readGraphicInfo (unsigned short x, unsigned short y);
 		/** Draw the important events, in case this option is set. */
 		void drawEvents ();
+		/** To calculate the contention when any. 
+			The parameters are:
+			@param uC:	When the ULA accesses the Video RAM. 
+			@param cC:	When the CPU accesses the Video RAM. */
+		std::tuple <unsigned int, int> calculateContention (const std::vector <unsigned int>& uC) const;
 
 		// -----
 		// Different debug methods to simplify the internal code
@@ -256,9 +265,14 @@ namespace ZXSPECTRUM
 		/** The format used to draw. 
 			It has to be the same that is used by the Screen object. */
 		SDL_PixelFormat* _format;
-		/** Active when the screen memory is accesed (16k - 32k). 
-			It can be checked from the ULA to define whether to stop the CPU or not. */
-		bool _screenMemoryAccessedFromCPU;
+
+		// Relative to the access to the video memory to manage the content situation
+		/** With data when the last CPU instruction executed has accesed the screen memory ($4000 - $7fff). \n
+			If the ULA had had to access (happen in parallel!) the screen at the same time, 
+			a contention would have produced and the instruction would taje longer than did.
+			This situation is simulated stopping the CPU (cpu -> stop ()) for a couple of TStates. 
+			It was also with data when there was cycles pending to be trated. */
+		mutable std::vector <unsigned int> _screenMemoryAccessedFromCPUCycles;
 
 		// Implementation
 		/** Number of cycles the the CPU is stopped. */
@@ -268,17 +282,42 @@ namespace ZXSPECTRUM
 			associated to the movement of the raster line. */
 		struct EventsStatus
 		{
+			EventsStatus ()
+				: _screenPart (false), 
+				  _graphicRead (false), 
+				  _contentedSituation (false),
+				  _INTActive (false), 
+				  _NMIActive (false), 
+				  _HALTActivated (false), _HALTCounter (0)
+							{ }
+
 			/** When the visible part starts. */
 			MCHEmul::OBool _screenPart;
 			/** Any time a graphic is read. */
 			MCHEmul::OBool _graphicRead;
 			/** Any time a contention situation is generated. */
 			MCHEmul::OBool _contentedSituation;
+			/** The different situation related with the interruptions. */
+			MCHEmul::OBool _INTActive, _NMIActive, _HALTActivated;
+			/** To count number of pixels to represent the situation of HALT Active.
+				Just to make it more clear in the screen. */
+			unsigned int _HALTCounter;
 		};
 
 		mutable EventsStatus _eventStatus;
-
 	};
+
+	// ---
+	inline void ULA::setScreenMemoryAccessedFromCPU (std::vector <unsigned int>&& fC)
+	{ 
+		// The new cycles are added at the end...
+		// If it were empty, it would be like a copy...
+		// But there could be cycles pending to be trated...
+		// It is guarantteed that the new cycles will be after the previous ones if any
+		if (!fC.empty ())
+			_screenMemoryAccessedFromCPUCycles.insert 
+				(_screenMemoryAccessedFromCPUCycles.end (), fC.begin (), fC.end ());
+	}
 
 	// ---
 	inline void ULA::readGraphicInfo (unsigned short x, unsigned short y)

@@ -17,8 +17,8 @@ const MCHEmul::Strings ZXSPECTRUM::KeystrokeTypeIO::_ZXSPECTRUMTOKENS = {
 	"NEXT ",	"NOT ",		"OPEN# ",	"OR ",		"OUT ",		"OVER ",	"PAUSE ",	"PAPER ",	
 	"PEEK ",	"PI ",		"PLOT ",	"POINT ",	"POKE ",	"PRINT ",	"RANDOMIZE ","READ ",	
 	"REM ",		"RESTORE ",	"RETURN ",	"RND ",		"RUN ",		"SAVE ",	"SCREEN$ ",	"SGN ",		
-	"SIN ",		"SQR",		"STEP ",	"STOP ",	"STR$ ",	"SUB ",		"TAB ",		"TAN ",		
-	"THEN ",	"TO",		"USR ",		"VAL ",		"VAL$ ",	"VERIFY " };
+	"SIN ",		"SQR ",		"STEP ",	"STOP ",	"STR$ ",	"SUB ",		"TAB ",		"TAN ",		
+	"THEN ",	"TO ",		"USR ",		"VAL ",		"VAL$ ",	"VERIFY " };
 
 // And the keys used to get them...
 const std::map <std::string, MCHEmul::Strings> 

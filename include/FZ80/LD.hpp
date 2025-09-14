@@ -73,8 +73,8 @@ namespace FZ80
 	_INSTZ80_FROM (0xFD7B,	2, 8, { },	"U2LD A,E",				U2LD_AFromE, LD_General);				// Undocumented
 	_INSTZ80_FROM (0x7C,	1, 4, { },	"LD A,H",				LD_AFromH, LD_General);
 	_INSTZ80_FROM (0x7D,	1, 4, { },	"LD A,L",				LD_AFromL, LD_General);
-	_INSTZ80_FROM (0xED57, 2, 9, { },	"LD A,I",				LD_AFromI, LD_General);
-	_INSTZ80_FROM (0xED5F, 2, 9, { },	"LD A,R",				LD_AFromR, LD_General);
+	_INSTZ80_FROM (0xED57,  2, 9, { },	"LD A,I",				LD_AFromI, LD_General);
+	_INSTZ80_FROM (0xED5F,  2, 9, { },	"LD A,R",				LD_AFromR, LD_General);
 	_INSTZ80_FROM (0x7E,	1, 7, { },	"LD A,(HL)",			LD_AFromAddressHL, LD_General);
 	_INSTZ80_FROM (0x0A,	1, 7, { },	"LD A,(BC)",			LD_AFromAddressBC, LD_General);
 	_INSTZ80_FROM (0x1A,	1, 7, { },	"LD A,(DE)",			LD_AFromAddressDE, LD_General);

@@ -100,6 +100,8 @@ bool MCHEmul::InputOSSystemPeripheral::executeCommand (int id, const MCHEmul::St
 				_eventNumber= 0;
 			}
 
+			break;
+
 		// EJECT...
 		case _EJECT:
 			{

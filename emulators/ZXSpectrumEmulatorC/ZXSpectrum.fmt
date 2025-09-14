@@ -31,8 +31,15 @@ Id:@ID@
 ;CULAEVENTS
 Legend:
 Light Cyan: Screen Starts.
-Light Yellow: Reading Information
+Dark Grey: Reading graphics information.
 Light Orange: Content (Access to Video) Situation.
+Light Violet: HALT active.
+Light Purple: Executing INT interruption.
+Light Blue: Executing NMI interruption.
+If two events happen in the same visual position, 
+only the last one is shown (in this order)
+Some events like HALT, INT or NMI mainly may happen out of the visible screen
+but they are shown at the beginning of the visible part.
 #---
 #---
 ;CSCREENDUMP

@@ -100,8 +100,8 @@ void MCHEmul::PhysicalStorageSubset::set
 const MCHEmul::UByte& MCHEmul::PhysicalStorageSubset::value (const MCHEmul::Address& a) const
 { 
 	int dt = 0; 
-	
-	return (_activeForReading && (isIn (a, dt)) 
+
+	return ((_activeForReading && isIn (a, dt))
 		? readValue (dt) : MCHEmul::PhysicalStorage::_DEFAULTVALUE); 
 }
 
@@ -109,8 +109,8 @@ const MCHEmul::UByte& MCHEmul::PhysicalStorageSubset::value (const MCHEmul::Addr
 const MCHEmul::UByte& MCHEmul::PhysicalStorageSubset::valueDirect (const Address& a) const
 { 
 	int dt = 0; 
-	
-	return ((a >= _initialAddress && (dt = _initialAddress.distanceWith (a)) < (int) _size)
+
+	return ((a >= _initialAddress && (dt = _initialAddress.distanceWith (a)) < (int) _size) 
 		? readValue (dt) : MCHEmul::PhysicalStorage::_DEFAULTVALUE); 
 }
 
@@ -681,10 +681,11 @@ bool MCHEmul::Memory::Content::initialize ()
 }
 
 // ---
-MCHEmul::Memory::Memory (int id, const MCHEmul::Memory::Content& cnt, const MCHEmul::Attributes& attrs)
+MCHEmul::Memory::Memory (int id, const MCHEmul::Memory::Content& cnt, const MCHEmul::Attributes& attrs, size_t ts)
 	: MCHEmul::MotherboardElement (id, "Memory", attrs),
 	  _content (),
 	  _additionalSubsets (),
+	  _tracker (ts),
 	  _deepDebugFile (nullptr),
 	  _activeView (nullptr),
 	  _stack (nullptr), 

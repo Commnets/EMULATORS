@@ -31,6 +31,7 @@ Id:@ID@, Active:@ACTIVE@, In Execution:@EXECUTION@
 @REGS?{key=NO,equal=:,empty=no registers,blocksize=4}\t@
 @PC@
 @SR@
+Bus:@BUSADDRESS@,@BUSDATA@
 ->Interrupts:
 @CPUInterruptSystem>@
 CLK:@CLK@ ticks
