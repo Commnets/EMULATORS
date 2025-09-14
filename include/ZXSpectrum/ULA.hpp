@@ -157,6 +157,9 @@ namespace ZXSPECTRUM
 		virtual MCHEmul::InfoStructure getInfoStructure () const override;
 
 		// To control the video memory contention
+		/** To know the last Byte read from the VRAM, usually from the Attribute RAM */
+		const MCHEmul::UByte& lastVRAMByteRead () const
+							{ return (_videoSignalData._attributeLatch); }
 		/** To know whether the ULA was accessed from the PortManager. */
 		bool ULABeingAccesedFromPortManager () const
 							{ return (_ULARegisters -> ULABeingAccessedFromPortManager ()); }

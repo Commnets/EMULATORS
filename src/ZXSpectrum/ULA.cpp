@@ -242,8 +242,8 @@ bool ZXSPECTRUM::ULA::simulate (MCHEmul::CPU* cpu)
 				// ...and it takes 4 CPU cycles (8 ULA's)
 				// So as this "simulate" method executes as many times as cycles the last instruction took
 				// this situation can happen several times...
-				// Notice that 2 cycles are substracted, because the ULA detection cycle starts (CLWAIT) 
-				ulaVRAM.emplace_back (cpu -> clockCycles () - (i >> 1) - 2);
+				// Notice that 3 cycles are substracted, because the ULA detection cycle starts (CLWAIT) T1 never finishes either!
+				ulaVRAM.emplace_back (cpu -> clockCycles () - (i >> 1) - 3);
 
 			if (_showEvents)
 				drawEvents ();
@@ -282,7 +282,8 @@ bool ZXSPECTRUM::ULA::simulate (MCHEmul::CPU* cpu)
 	{
 		unsigned int ws = 0;
 		std::tie (ws, _cyclesStopped) = calculateContention (ulaVRAM);
-		cpu -> setStop (true, MCHEmul::InstructionDefined::_CYCLEALL, ws, _cyclesStopped);
+		if (_cyclesStopped != 0)
+			cpu -> setStop (true, MCHEmul::InstructionDefined::_CYCLEALL, ws, _cyclesStopped);
 
 		// The contention will exist if stop the CPU is needed...
 		_eventStatus._contentedSituation = (_cyclesStopped != 0);
@@ -518,7 +519,7 @@ MCHEmul::ScreenMemory* ZXSPECTRUM::ULA::createScreenMemory ()
 // --
 bool ZXSPECTRUM::ULA::readGraphicInfoAndDrawVisibleZone (MCHEmul::CPU* cpu)
 {
-	// Here it is sure that the raster in the visible zone...
+	// Here it is sure that the raster is in the visible zone...
 
 	// Gets the position with in the visible zone...
 	// That position will take into account the birder (top and left)...
@@ -531,7 +532,7 @@ bool ZXSPECTRUM::ULA::readGraphicInfoAndDrawVisibleZone (MCHEmul::CPU* cpu)
 		(x, y, (unsigned int) (_ULARegisters -> borderColor () & 0x07)); // The bright has no effect in the border...
 
 	// When the raster zone is not in the pure screen zone....
-	// Theer is nothing else to do, but the signal _vidEn  becomes false...
+	// There is nothing else to do, but the signal _vidEn  becomes false...
 	_videoSignalData._vidEN.set (
 			_raster.vData ().isInScreenZone () &&
 			_raster.hData ().isInScreenZone ());
@@ -553,23 +554,34 @@ bool ZXSPECTRUM::ULA::readGraphicInfoAndDrawVisibleZone (MCHEmul::CPU* cpu)
 		_eventStatus._screenPart = true;
 	}
 
-	// The _vidEn generates a positive pulse that indicates that the data has to be read...
+	// The _vidEN generates a positive pulse that indicates that the data has to be read...
 	// Calculates the location within the screen zone...
 	// But 0,0 will be the left up corner in the screen zone
 	unsigned short xS = x - _raster.hData ().firstScreenPosition ();
 	unsigned short yS = y - _raster.vData ().firstScreenPosition ();
-
+	
 	// First time that the _vidEN signal is activated, the data has to be read...
 	// ...and in the rest it is read just when the internal clocks says that!
 	bool rG = false; // It will be true when the graphics were read...
 	if (_videoSignalData._vidEN.positiveEdge ())
-		{ readGraphicInfo (xS, yS); _eventStatus._graphicRead = rG = true; }
+	{ 
+		readGraphicInfo (xS, yS); 
+
+		rG = _eventStatus._graphicRead = true; 
+	}
+
+	// Everytime the clock works a bit is extrated from the shift register 
+	// and stored inthe _lastBitShifted...
+	// The method returns true when the last bit is shifted and a new one has to be read...
 	if (_videoSignalData.clock ())
 	{ 
-		// At this point the memory read has to be the next one...
+		// The position where to read the next byte is the next position in the screen...
+		// That can also be at the beginning of the memory RAM...
 		if (++xS >= _raster.hData ().screenPositions ()) 
 			{ xS = 0; if (++yS >= _raster.vData ().screenPositions ()) yS = 0; }
-		readGraphicInfo (xS, yS); _eventStatus._graphicRead = rG = true;
+		readGraphicInfo (xS, yS);
+
+		rG = _eventStatus._graphicRead = true;
 	}
 
 	// But always draw the content of the poixels shifted...
@@ -633,10 +645,11 @@ std::tuple <unsigned int, int> ZXSPECTRUM::ULA::calculateContention
 	// but the additional stop cycles added after instead...
 	// So, the process is repited with the next CPU access, until all ULA access moments are treated.
 	// If not found go for the next ULA access.
-	unsigned e = 0;
+	unsigned int e = 0;
+	unsigned int lB = 0;
 	for (size_t uCP = 0; 
 			uCP != uC.size () && cCP < _screenMemoryAccessedFromCPUCycles.size (); uCP++)
-		if ((e = ((_screenMemoryAccessedFromCPUCycles [cCP] + cS) - uC [uCP])) < 4) 
+		if ((e = ((lB = (_screenMemoryAccessedFromCPUCycles [cCP] + cS)) - uC [uCP])) < 4) 
 			{ cS += ULAWAIT [e]; cCP++; }
 
 	// But if after reviewing the accesses to the ULA, 
@@ -654,9 +667,9 @@ std::tuple <unsigned int, int> ZXSPECTRUM::ULA::calculateContention
 		}
 	}
 	else
-		_screenMemoryAccessedFromCPUCycles = { };
+;		_screenMemoryAccessedFromCPUCycles = { };
 
-	return (std::tuple <unsigned int, int> (*uC.begin (), cS));
+	return (std::tuple <unsigned int, int> (lB, cS));
 }
 
 // ---

@@ -48,6 +48,10 @@ void ZXSPECTRUM::PortManager::setValue (unsigned short ab, unsigned char id, con
 		// Both signals affect the buzzer (Issue 3), but EAR is stronger...
 		_ULARegisters -> alignBuzzerSignal ();
 	}
+
+	// Accessing to a no codified port might be instesting to force
+	// a contention without affecting the ULA work
+	// It would depend on the type of OUT sentence used and the value of the registers B, C and A...
 }
 
 // ---
@@ -87,8 +91,8 @@ MCHEmul::UByte ZXSPECTRUM::PortManager::getValue (unsigned short ab, unsigned ch
 		// This is important when the system is reading the information from the casette...
 		result.setBit (6, _ULARegisters -> EARSignal ());
 	}
-
 	// Any port with A5 = 0 and A0 = 1 is Kempston Joystick...
+	else
 	if ((id & 0b00100001) == 0b00000001) // the port 31 is the typical one...
 	{
 		result = MCHEmul::UByte::_0;
@@ -106,6 +110,12 @@ MCHEmul::UByte ZXSPECTRUM::PortManager::getValue (unsigned short ab, unsigned ch
 			(ZXSPECTRUM::ULARegisters::JoystickElement::_FIRE));
 
 		// The bits 5 - 7 are not used...
+	}
+	// When accesing a no codified port, 
+	// The value of the last data read from the ULA (usually an attribute byte) is put into the data bus...
+	else
+	{
+		result = _ULA -> lastVRAMByteRead ();
 	}
 
 	return (result);
