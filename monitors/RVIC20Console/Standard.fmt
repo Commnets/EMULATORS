@@ -130,7 +130,8 @@ Id:@ID@
 ;Peripheral
 Id:@ID@
 @ATTRS?{key=YES,equal=:,empty=no attributes}\n@
-COMMANDS:@COMMANDS@
+COMMANDS:
+@COMMANDS@
 #---
 #---
 ;DatasetteData
