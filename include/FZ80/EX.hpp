@@ -57,11 +57,12 @@ namespace FZ80
 	inline bool EX_General::executeWithSP (MCHEmul::RefRegisters& r)
 	{
 		MCHEmul::Address spA = memory () -> stack () -> currentAddress ();
-		MCHEmul::UBytes mD = memory () -> values (spA, 2);
+		// There is also a manage of the address bus and data bus but the final real value is later...
+		MCHEmul::UBytes mD = memory () -> values (spA, 2); 
 		MCHEmul::UBytes rD ({ r [0] -> values ()[0], r [1] -> values ()[0] }, false); // To wrtite it later in the right order...
 		r [0] -> set ({ mD [1] }); // Notice that they are set in the reverse order!
 		r [1] -> set ({ mD [0] });
-		memory () -> set (spA, rD);
+		memory () -> set (_lastExecutionData._INOUTAddress = spA, _lastExecutionData._INOUTData = rD);
 
 		// It could be done using the method stack -> push seberal times...
 		// ...but seems this way is quicker as it avoids stupid calculus!
@@ -130,7 +131,9 @@ namespace FZ80
 
 		// Move the content from (hlA) into (deA)
 		MCHEmul::UBytes vc = { };
-		memory () -> set (deA, vc = memory () -> values (hlA, 1)); // 1 byte...
+		memory () -> set 
+			(_lastExecutionData._INOUTAddress = deA, 
+			 _lastExecutionData._INOUTData = vc = memory () -> values (hlA, 1)); // 1 byte...
 		// This value is calculated to determine the value of the status flag 3 and 5 as described in: 
 		// http://www.z80.info/zip/z80-documented.pdf (section 4.2)
 		MCHEmul::UByte n ((unsigned char) (vc [0].value () + registerA ().values ()[0].value ())); // Possible carry is not taken into account
@@ -176,7 +179,9 @@ namespace FZ80
 
 		// To compare the two registers a mathematical operation is done...
 		MCHEmul::UByte rAV = registerA ().values ()[0];
-		MCHEmul::UInt mV (memory () -> value (hlA));
+		_lastExecutionData._INOUTData = 
+			MCHEmul::UBytes ({ memory () -> value (_lastExecutionData._INOUTAddress = hlA) }); // Just only 1 byte...
+		MCHEmul::UInt mV (_lastExecutionData._INOUTData [0]);
 		MCHEmul::UInt rst  = MCHEmul::UInt (rAV) -  mV;
 		// This is needed to calculate later the status of the half carry...
 		int mVI = mV.asInt ();

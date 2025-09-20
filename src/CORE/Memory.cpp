@@ -2,8 +2,6 @@
 #include <CORE/FmterBuilder.hpp>
 #include <CORE/Formatter.hpp>
 
-
-
 size_t MCHEmul::PhysicalStorageSubset::_GETINFOBYTESLIMIT = std::numeric_limits <size_t>::max (); // Meaning no limit...
 MCHEmul::Memory::Configuration MCHEmul::Memory::_CONFIGURATION = 
 	MCHEmul::Memory::Configuration ();
