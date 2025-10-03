@@ -19,6 +19,8 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\src\C264\C1C2Selector.cpp" />
+    <ClCompile Include="..\..\src\C264\C1C2SelectorRegisters.cpp" />
     <ClCompile Include="..\..\src\C264\C264.cpp" />
     <ClCompile Include="..\..\src\C264\C264Emulator.cpp" />
     <ClCompile Include="..\..\src\C264\C6529B1.cpp" />
@@ -39,6 +41,8 @@
     <ClCompile Include="..\..\src\C264\TEDRegisters.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\include\C264\C1C2Selector.hpp" />
+    <ClInclude Include="..\..\include\C264\C1C2SelectorRegisters.hpp" />
     <ClInclude Include="..\..\include\C264\C264.hpp" />
     <ClInclude Include="..\..\include\C264\C264Emulator.hpp" />
     <ClInclude Include="..\..\include\C264\C6529B1.hpp" />
@@ -60,6 +64,7 @@
     <ClInclude Include="..\..\include\C264\Sound.hpp" />
     <ClInclude Include="..\..\include\C264\TED.hpp" />
     <ClInclude Include="..\..\include\C264\TEDRegisters.hpp" />
+    <ClInclude Include="..\..\include\C264\Type.hpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="C264.fmt">

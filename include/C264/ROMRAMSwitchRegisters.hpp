@@ -36,12 +36,9 @@ namespace C264
 							{ return (0x10); }
 
 		// Mamaging the configuration...
-		/** Allow/disallow changed inthe configuration. 
-			This methoid is invoked when $ff3e and $ff3f are accesed. */
-		void allowROMConfiguration (bool a);
-		/** Returns the configuration of the memory stored. */
-		const MCHEmul::UByte& configurationROM () const
-							{ return (_configurationROM); }
+		/** To know whether the ROM is or not active. */
+		bool ROMActive () const
+							{ return (_ROMActive); }
 		/** To know whether the configuration changed. */
 		bool configurationChanged () const
 							{ return (_configurationChanged); } // This method put the v alue back to false in the variable
@@ -65,10 +62,12 @@ namespace C264
 		void initializeInternalValues ();
 
 		private:
-		bool _allowROMConfiguration;
-		MCHEmul::UByte _configurationROM;
-		MCHEmul::UByte _latchedConfigurationROM;
-		// Set when the latched valued chages...
+		/** To indicate whether the ROM is or not active. */
+		bool _ROMActive;
+
+		// Implementation
+		/** When the configuration has been changed, 
+			as any of the registers has been accessed. */
 		MCHEmul::OBool _configurationChanged;
 	};
 }

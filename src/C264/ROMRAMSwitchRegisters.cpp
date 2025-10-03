@@ -1,17 +1,6 @@
 #include <C264/ROMRAMSwitchRegisters.hpp>
 
 // ---
-void C264::ROMRAMSwitchRegisters::allowROMConfiguration (bool a)
-{ 
-	_configurationROM = 
-		(_allowROMConfiguration = a) 
-			? _latchedConfigurationROM		// ..the last configuration latched...
-			: MCHEmul::UByte::_FF;			// Meaning nothing but all RAMS active...
-	
-	_configurationChanged = true;
-}
-
-// ---
 void C264::ROMRAMSwitchRegisters::initialize ()
 {
 	MCHEmul::ChipRegisters::initialize ();
@@ -24,7 +13,7 @@ MCHEmul::InfoStructure C264::ROMRAMSwitchRegisters::getInfoStructure () const
 {
 	MCHEmul::InfoStructure result = std::move (MCHEmul::ChipRegisters::getInfoStructure ());
 
-	result.add ("CONFIGURATION", _configurationROM);
+	result.add ("ROMACTIVE", _ROMActive);
 
 	return (result);
 }
@@ -34,25 +23,39 @@ void C264::ROMRAMSwitchRegisters::setValue (size_t p, const MCHEmul::UByte& v)
 { 
 	MCHEmul::ChipRegisters::setValue (p, v); 
 
-	size_t pp =  p % 0x10;
+	size_t pp =  p % 0x02;
 
-	// Only if it is allowed...
-	if (_allowROMConfiguration)
+	switch (pp)
 	{
-		_configurationROM = (unsigned char) pp;
+		// Switch to ROM between positions $8000-$FFFF
+		case 0x00: 
+			{
+				_ROMActive = true;
 
-		_configurationChanged = true;
+				_configurationChanged = true;
+			}
+
+			break;
+
+		// Switch to RAM between positions $8000-$FFFF
+		case 0x01: 
+			{
+				_ROMActive = false;
+
+				_configurationChanged = true;
+			}
+
+			break;
+
+		// This situation never happens...
+		default:
+			return;
 	}
-
-	_latchedConfigurationROM = (unsigned char) pp;
 }
 
 // ---
 void C264::ROMRAMSwitchRegisters::initializeInternalValues ()
 {
-	_allowROMConfiguration = true;
-
-	_latchedConfigurationROM = _configurationROM = 0; // Meaning BASIC and KERNEL active!
-
-	_configurationChanged = false; 
+	// Switch to ROM between positions $8000-$FFFF
+	setValue (0x00, 0 /** The byte is the same. */);
 }

@@ -53,18 +53,13 @@ namespace C264
 
 		virtual bool initialize () override;
 
-		/** When there is changes in the configuration of the memory, 
-			those are notify to the computer that is observing this chip. */
-		virtual bool simulate (MCHEmul::CPU* cpu) override;
-
 		private:
 		virtual void processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifier* n) override;
 
 		virtual bool ROMActiveToFetchCharData () const override // The memory is C264 type...
-							{ return (static_cast <const C264::Memory*> (memoryRef ()) -> kernelROMActive ()); }
+							{ return (static_cast <const C264::Memory*> (memoryRef ()) -> ROMactive ()); }
 		virtual void activeROMtoFecthCharData (bool a) override //The memory is C264 type...
-							{ static_cast <C264::Memory*> (memoryRef ()) -> activeKernelROM (a); }
-
+							{ static_cast <C264::Memory*> (memoryRef ()) -> setROMactive (a); }
 		private:
 		TEDRegisters* _TEDRegisters;
 	};

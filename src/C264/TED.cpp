@@ -19,18 +19,6 @@ bool C264::TED::initialize ()
 }
 
 // ---
-bool C264::TED::simulate (MCHEmul::CPU* cpu)
-{
-	COMMODORE::TED::simulate (cpu);
-
-	if (_TEDRegisters -> romAccessChanged ()) // Changes the value...
-		notify (MCHEmul::Event (_ROMACCESSCHANGED, 
-			_TEDRegisters -> hiromSelected () ? 1 : 0));
-
-	return (true);
-}
-
-// ---
 void C264::TED::processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifier* n)
 {
 	switch (evnt.id ())

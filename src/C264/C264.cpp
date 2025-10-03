@@ -8,12 +8,13 @@
 #include <C264/C6529B2.hpp>
 #include <C264/TED.hpp>
 #include <C264/ROMRAMSwitch.hpp>
+#include <C264/C1C2Selector.hpp>
 #include <C264/Cartridge.hpp>
 #include <F6500/C7501.hpp>
 
 // ---
 C264::Commodore264::Commodore264 (const MCHEmul::Chips& cps, MCHEmul::Memory* m, const MCHEmul::IODevices& dvs, 
-		C264::Commodore264::VisualSystem vS, const std::string& lng)
+		C264::Commodore264::VisualSystem vS, C264::Type t, unsigned int cfg, const std::string& lng)
 	: COMMODORE::Computer 
 		(new F6500::C7501 (0 /** Only one micro. */),
 		 cps,
@@ -26,11 +27,11 @@ C264::Commodore264::Commodore264 (const MCHEmul::Chips& cps, MCHEmul::Memory* m,
 		   { "Year", "1984" }
 		 }),
 	  _visualSystem (vS),
-	  _configuration (MCHEmul::UByte::_0)
+	  _configuration (cfg)
 {
 	assert (_memory != nullptr);
 
-	setConfiguration (_configuration, false);
+	setConfiguration (_configuration, false /** No restart. */);
 }
 
 // ---
@@ -51,12 +52,6 @@ bool C264::Commodore264::initialize (bool iM)
 	// The ted has to observe the events comming from the C6521B1 chip on regards 
 	// changes in the keyboard matrix...
 	chip (COMMODORE::TED::_ID) -> observe (chip (C264::C6529B1::_ID));
-
-	// The ROMRAMSwitch observes the TED
-	// This chip is not the PLA but at the end groups all related functions of this!
-	chip (C264::ROMRAMSwitch::_ID) -> observe (chip (COMMODORE::TED::_ID));
-	// and that "virtual" chip has to be set up for not changes...
-	dynamic_cast <C264::ROMRAMSwitch*> (chip (C264::ROMRAMSwitch::_ID)) -> setBasicROMAccessConfiguration ();
 
 	// TODO: The IOPorRegister has to be observed...
 
@@ -84,8 +79,9 @@ void C264::Commodore264::processEvent (const MCHEmul::Event& evnt, MCHEmul::Noti
 }
 
 // ---
-void C264::Commodore264::setConfiguration (const MCHEmul::UByte& cfg, bool rs) 
+void C264::Commodore264::setConfiguration (unsigned int cfg, bool rs) 
 {
+	// Just change the configuration...
 	static_cast <C264::Memory*> (memory ()) -> setConfiguration (cfg);
 
 	// Restart?
@@ -117,19 +113,21 @@ MCHEmul::Chips C264::Commodore264::standardChips (const std::string& sS, C264::C
 						? (C264::Commodore264::_PALCLOCK * 20) : (C264::Commodore264::_NTSCCLOCK * 16), 
 					 COMMODORE::TED::_SOUNDSAMPLINGCLOCK));
 	result.insert (MCHEmul::Chips::value_type (COMMODORE::TED::_ID, (MCHEmul::Chip*) ted));
-	
+
 	// The sound chip doesn't exist in C264 series. 
 	// It is part of the TED.
-	// However, he emulation needs to treat it as an independent chip...
+	// However, the emulation needs to treat it as an independent chip...
 	result.insert (MCHEmul::Chips::value_type (COMMODORE::TED::SoundFunction::_ID, ted -> soundFunction ()));
 
+	// Other chips...
 	// This intermediate chip is just used to latch the value of the keyboard matrix...
 	result.insert (MCHEmul::Chips::value_type (C264::C6529B1::_ID, new C264::C6529B1));
-
-	// This chip is "virtual". It doesn't exist in the real C264 series. 
-	// Althought it could be understood as part of the PLA!
+	// This chip is like virtual...
 	// It is to manage the changes in the ROM/RAM configuration
 	result.insert (MCHEmul::Chips::value_type (C264::ROMRAMSwitch::_ID, new C264::ROMRAMSwitch));
+	// This chip is like virtual...
+	// It is to manage the changes in the ROM/RAM configuration
+	result.insert (MCHEmul::Chips::value_type (C264::C1C2Selector::_ID, new C264::C1C2Selector));
 
 	return (result);
 }
@@ -163,6 +161,8 @@ MCHEmul::Chips C264::Commodore16_116::standardChips (const std::string& sS, C264
 	MCHEmul::Chips result = 
 		std::move (C264::Commodore264::standardChips (sS, vS));
 
+	// There is no additional chips inside...
+
 	return (result);
 }
 
@@ -187,9 +187,10 @@ MCHEmul::Chips C264::CommodorePlus4::standardChips (const std::string& sS, C264:
 	MCHEmul::Chips result = 
 		std::move (C264::Commodore264::standardChips (sS, vS));
 
+	// Other important chips in this version...
 	// The ACIA...
 	result.insert (MCHEmul::Chips::value_type (COMMODORE::ACIA::_ID, new COMMODORE::ACIA));
-	// ...and the other C6529...
+	// ...and the other C6529 apparently used in the IO operations...
 	result.insert (MCHEmul::Chips::value_type (C264::C6529B2::_ID, new C264::C6529B2));
 
 	return (result);

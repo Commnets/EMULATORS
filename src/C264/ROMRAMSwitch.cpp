@@ -13,14 +13,6 @@ C264::ROMRAMSwitch::ROMRAMSwitch ()
 }
 
 // ---
-void C264::ROMRAMSwitch::setBasicROMAccessConfiguration ()
-{
-	assert (_ROMRAMSwitchRegisters != nullptr);
-
-	_ROMRAMSwitchRegisters -> allowROMConfiguration (true);
-}
-
-// ---
 bool C264::ROMRAMSwitch::initialize ()
 {
 	assert (memoryRef () != nullptr);
@@ -49,36 +41,29 @@ bool C264::ROMRAMSwitch::simulate (MCHEmul::CPU* cpu)
 
 	if (_ROMRAMSwitchRegisters -> configurationChanged ())
 	{ 
-		if (deepDebugActive ())
-		{
-			*_deepDebugFile
-				// Where
-				<< "FDDO,X\t" 
-				// When
-				<< std::to_string (cpu -> clockCycles ()) << "\t" // clock cycles at that point
-				// What
-				<< "Info cycle\t\t"
-				// Data
-				<< "LOROM:"
-				<< ((_ROMRAMSwitchRegisters -> configurationROM ().value () != MCHEmul::UByte::_FF)
-						? std::to_string (_ROMRAMSwitchRegisters -> configurationROM ().value () & 0x03)
-						: "-") << ", "
-				<< "HIROM:"
-				<< ((_ROMRAMSwitchRegisters -> configurationROM ().value () != MCHEmul::UByte::_FF)
-						? std::to_string ((_ROMRAMSwitchRegisters -> configurationROM ().value () & 0x0c) >> 2) 
-						: "-") << "\n";
+		_IFDEBUG debugROMRAMSwitchCycle (cpu);
 
-			dynamic_cast <C264::Memory*> (memoryRef ()) -> 
-				setConfiguration (_ROMRAMSwitchRegisters -> configurationROM ().value ());
-		}
+		// The memory is always a C264::Memory! (use of static to speed up)
+		static_cast <C264::Memory*> (memoryRef ()) -> 
+			setROMactive (_ROMRAMSwitchRegisters -> ROMActive () /** But what changes is the status of the ROM. */);
 	}
 
 	return (true);
 }
 
 // ---
-void C264::ROMRAMSwitch::processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifier* n)
+void C264::ROMRAMSwitch::debugROMRAMSwitchCycle (MCHEmul::CPU* cpu)
 {
-	if (evnt.id () == C264::TED::_ROMACCESSCHANGED)
-		_ROMRAMSwitchRegisters -> allowROMConfiguration (evnt.value () == 1);
+	assert (_deepDebugFile != nullptr);
+
+	*_deepDebugFile
+		// Where
+		<< "FF3E/FF3F,X\t" 
+		// When
+		<< std::to_string (cpu -> clockCycles ()) << "\t" // clock cycles at that point
+		// What
+		<< "Info cycle\t\t"
+		// Data
+		<< "ROM Active:"
+		<< (_ROMRAMSwitchRegisters -> ROMActive () ? "YES" : "NO") << "\n";
 }

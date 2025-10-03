@@ -16,6 +16,7 @@
 
 #include <EMULATORS/incs.hpp>
 #include <COMMODORE/incs.hpp>
+#include <C264/Type.hpp>
 #include <C264/C264.hpp>
 #include <C264/IOPBuilder.hpp>
 
@@ -31,6 +32,7 @@ namespace C264
 		/** The possible additional parameters of the C264 Emulator. */
 		static const unsigned char _PARAMNTSC;
 		static const unsigned char _PARAMBORDER;
+		static const unsigned char _PARAMCONFIGURATION;
 		static const unsigned char _PARAMMACHINE;
 
 		/**
@@ -58,8 +60,14 @@ namespace C264
 		unsigned int borderColor () const // Black by default!...
 							{ return (drawBorder () ? cmdlineArguments ().argumentAsInt (_PARAMBORDER) : 0); }
 
-		/** To know which is the type of computer to be emulated: 0 = C16, 1 = C116, 2 = CPlus/4. */
-		inline unsigned int emulattedComputer () const;
+		/** To know the parameter related with the type of computer configuration. */
+		bool configuration () const
+							{ return (cmdlineArguments ().existsArgument (_PARAMCONFIGURATION)); }
+		inline unsigned int configurationMode () const; // Not expanded by default!
+
+		/** To know which is the type of computer to be emulated: 
+			0 = C16, 1 = C116, 2 = CPlus/4. */
+		inline Type emulattedComputer () const;
 
 		/** To add the peripherals linked to the computer, according to the parameters. */
 		virtual bool initialize () override;
@@ -78,20 +86,39 @@ namespace C264
 	};
 
 	// ---
-	inline unsigned int C264Emulator::emulattedComputer () const
+	inline unsigned int C264Emulator::configurationMode () const
 	{ 
-		unsigned int result = 0;
+		unsigned int result = 0; // The basic by default...
+
+		// The configuration mode allowed will depend on the type of computer emulatted!
+		if (configuration ())
+		{
+			unsigned int cfg = cmdlineArguments ().argumentAsInt (_PARAMCONFIGURATION);
+			if (emulattedComputer () == Type::_C16 || emulattedComputer () == Type::_C116)
+				// C16/116 only 0 or 1 allowed...
+				result = (cfg > 1 ? 0 : cfg);
+			else // Type CPlus/4
+				result = (0);
+		}
+
+		return (result);
+	}
+
+	// ---
+	inline Type C264Emulator::emulattedComputer () const
+	{ 
+		Type result = Type::_C16;
 		
 		if (cmdlineArguments ().existsArgument (_PARAMMACHINE))
 		{
 			std::string mT = 
 				MCHEmul::upper (cmdlineArguments ().argumentAsString (_PARAMMACHINE));
 			result = (mT == "C16") 
-				? 0
+				? Type::_C16
 				: ((mT == "C116") 
-					? 0 // Notice that it is the same than C16...
+					? Type::_C116 // Notice that it is the same than C16...
 					: ((mT == "CP4") 
-						? 2 : 0 /** by default. */));
+						? Type::_CPLUS4 : Type::_C16 /** The one by default. */));
 		}
 
 		return (result);

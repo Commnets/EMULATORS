@@ -633,7 +633,7 @@ const MCHEmul::UByte& COMMODORE::TEDRegisters::readValue (size_t p) const
 
 			break;
 
-		// This sutation never happens...
+		// This situation never happens...
 		default:
 			break;
 	}

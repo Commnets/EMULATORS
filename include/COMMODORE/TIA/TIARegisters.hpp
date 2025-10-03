@@ -25,7 +25,7 @@ namespace COMMODORE
 		public:
 		friend TIA;
 
-		static const int _TIAREGS_SUBSET = 2000;
+		static const int _TIAREGS_SUBSET = 1100;
 
 		TIARegisters (MCHEmul::PhysicalStorage* ps, size_t pp, const MCHEmul::Address& a, size_t s);
 

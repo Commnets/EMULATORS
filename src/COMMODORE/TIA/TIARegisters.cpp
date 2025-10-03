@@ -34,7 +34,8 @@ void COMMODORE::TIARegisters::setValue (size_t p, const MCHEmul::UByte& v)
 {
 	MCHEmul::PhysicalStorageSubset::setValue (p, v);
 
-	size_t pp = p % 0x10;
+	// In blocks of 8 registers...
+	size_t pp = p % 0x08;
 
 	switch (pp)
 	{
@@ -50,7 +51,8 @@ const MCHEmul::UByte& COMMODORE::TIARegisters::readValue (size_t p) const
 {
 	MCHEmul::UByte result = MCHEmul::PhysicalStorage::_DEFAULTVALUE;
 
-	size_t pp = p % 0x10;
+	// In blocks of 8 registers...
+	size_t pp = p % 0x08;
 
 	switch (pp)
 	{

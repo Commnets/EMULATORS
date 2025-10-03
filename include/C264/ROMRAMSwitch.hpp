@@ -8,9 +8,9 @@
  *	Author: Ignacio Cea Fornies (EMULATORS library) \n
  *	Creation Date: 10/03/2024 \n
  *	Description: In the C264 series memory, 
- *				 there is a couple of registers (from $fdd0 to fddf) that are used
- *				 to change the configuration of LOROM ($8000 - $bfff) and HIROM ($c000 - $fbff). \n
- *				 We have tried to emulate that behaviour with this cirtual Chip.
+ *				 there is a couple of registers ($ff3e and $ff3f) that are used
+ *				 to select ROM or RAM in the address space $8000 - $ffff. \n
+ *				 We have tried to emulate that behaviour with this virtual chip.
  *	Versions: 1.0 Initial
  */
 
@@ -29,16 +29,18 @@ namespace C264
 		static const int _ID = 202;
 		
 		ROMRAMSwitch ();
-		
-		// Sets the default ROM access configuration...
-		void setBasicROMAccessConfiguration ();
 
 		virtual bool initialize () override;
 
 		virtual bool simulate (MCHEmul::CPU* cpu) override;
 
-		private:
-		virtual void processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifier* n) override;
+		// -----
+		// Different debug methods to simplify the internal code
+		// and to make simplier the modification in case it is needed...
+		/** Debug special situations...
+			Take care using this instructions _deepDebugFile could be == nullptr... */
+		void debugROMRAMSwitchCycle (MCHEmul::CPU* cpu);
+		// -----
 
 		private:
 		// Implementation

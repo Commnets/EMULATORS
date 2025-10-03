@@ -48,6 +48,7 @@ MCHEmul::InfoStructure MCHEmul::PhysicalStorageSubsetDUMP::getInfoStructure () c
 	result.add ("READ",			_activeForReading);
 	result.add ("FROM",			_from);
 	result.add ("TO",			_to);
+	result.add ("SIZE",			_to - _from + 1);
 	result.add ("BYTES",		_bytes);
 
 	return (result);

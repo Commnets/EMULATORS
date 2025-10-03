@@ -35,31 +35,18 @@ namespace C264
 		virtual size_t numberRegisters () const override
 							{ return (0x40); }
 
-		// Related with the access to the memory...
-		bool hiromSelected () const
-							{ return (_HIROMSelected); }
-		// Any time the value above changes, this variable is set to true
-		// and when checked it goes back to false...
-		bool romAccessChanged () const
-							{ return (_ROMAccessChanged); }
-		bool peekROMAccessChanged () const
-							{ return (_ROMAccessChanged.peekValue ()); }
-
 		void setJoystickPins (size_t nj, const MCHEmul::UByte& v)
 							{ _joystickPins [nj] = v; }
 
 		void initialize ();
 
 		private:
-		void setValue (size_t p, const MCHEmul::UByte& v);
-		const MCHEmul::UByte& readValue (size_t p) const;
+		virtual void setValue (size_t p, const MCHEmul::UByte& v) override;
 		
 		void initializeInternalValues ();
 
 		private:
 		/** Whether the access to the HIROM has or not been selected. */
-		bool _HIROMSelected;
-		MCHEmul::OBool _ROMAccessChanged;
 		MCHEmul::UByte _joystickPins [2];
 	};
 }

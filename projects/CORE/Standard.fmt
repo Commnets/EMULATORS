@@ -78,7 +78,7 @@ Memory Id:@ID@
 #---
 #---
 ;MemoryStrStorage
-Storage Id:@ID@ (@NAME@) From:$@FROM@ To:$@TO@ Active:@ACTIVE@ RAM:@RAM@ Read:@READ@
+Storage Id:@ID@ (@NAME@) From:$@FROM@ To:$@TO@ Size:@SIZE@bytes Active:@ACTIVE@ RAM:@RAM@ Read:@READ@
 #---
 #---
 ;MemoryStrView

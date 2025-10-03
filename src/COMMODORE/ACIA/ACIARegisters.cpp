@@ -34,7 +34,8 @@ void COMMODORE::ACIARegisters::setValue (size_t p, const MCHEmul::UByte& v)
 {
 	MCHEmul::PhysicalStorageSubset::setValue (p, v);
 
-	size_t pp = p % 0x10;
+	// In block of 4 elements...
+	size_t pp = p % 0x04;
 
 	switch (pp)
 	{
@@ -50,7 +51,8 @@ const MCHEmul::UByte& COMMODORE::ACIARegisters::readValue (size_t p) const
 {
 	MCHEmul::UByte result = MCHEmul::PhysicalStorage::_DEFAULTVALUE;
 
-	size_t pp = p % 0x10;
+	// In block of 4 elements...
+	size_t pp = p % 0x04;
 
 	switch (pp)
 	{

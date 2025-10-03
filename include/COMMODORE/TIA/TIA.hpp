@@ -24,7 +24,7 @@ namespace COMMODORE
 	class TIA final : public MCHEmul::Chip
 	{
 		public:
-		static const int _ID = 200;
+		static const int _ID = 110;
 		
 		TIA ();
 

@@ -17,6 +17,7 @@
 
 #include <CORE/incs.hpp>
 #include <COMMODORE/incs.hpp>
+#include <C264/Type.hpp>
 #include <C264/Memory.hpp>
 
 namespace C264
@@ -41,7 +42,7 @@ namespace C264
 		static const unsigned int _NTSCCLOCK	= 896040; // 0.896 MHz
 
 		Commodore264 (const MCHEmul::Chips& cps, MCHEmul::Memory* m, const MCHEmul::IODevices& dvs, 
-			VisualSystem vS, const std::string& lng = MCHEmul::_DEFAULTLANGUAGE);
+			VisualSystem vS, Type t, unsigned int cfg, const std::string& lng = MCHEmul::_DEFAULTLANGUAGE);
 
 		virtual bool initialize (bool iM = true) override;
 
@@ -50,12 +51,12 @@ namespace C264
 
 		// Managing memory configuration...
 		/** To get the configuration of the memory. */
-		const MCHEmul::UByte& configuration () const
+		unsigned int configuration () const
 							{ return (static_cast <const Memory*> (memory ()) -> configuration ()); }
 		/** Change the configuration of the memory. \n
 			The parameter rs indicates whether to restart the computer. ºn
 			By default it is true. */
-		void setConfiguration (const MCHEmul::UByte& cfg, bool rs = true);
+		void setConfiguration (unsigned int cfg, bool rs = true);
 
 		// Implementation
 		static MCHEmul::Chips standardChips (const std::string& sS, VisualSystem vS);
@@ -66,7 +67,7 @@ namespace C264
 		VisualSystem _visualSystem;
 		/** The configuration mode of the computer. 
 			In some version couldn't make sense. */
-		MCHEmul::UByte _configuration;
+		unsigned int _configuration;
 	};
 
 	/** The Commodore 16_116 a specific element of the series 264. \n
@@ -75,8 +76,10 @@ namespace C264
 	class Commodore16_116 final : public Commodore264
 	{
 		public:
-		Commodore16_116 (VisualSystem vS, const std::string& lg = MCHEmul::_DEFAULTLANGUAGE)
-			: Commodore264 (standardChips (lg, vS), new C264::C16_116Memory (lg), standardDevices (vS), vS, lg)
+		Commodore16_116 (VisualSystem vS, 
+				unsigned int cfg, const std::string& lg = MCHEmul::_DEFAULTLANGUAGE)
+			: Commodore264 (standardChips (lg, vS), 
+				new C264::C16_116Memory (cfg, lg), standardDevices (vS), vS, Type::_C16, cfg, lg)
 							{ }
 
 		protected:
@@ -90,8 +93,10 @@ namespace C264
 	class CommodorePlus4 final : public Commodore264
 	{
 		public:
-		CommodorePlus4 (VisualSystem vS, const std::string& lg = MCHEmul::_DEFAULTLANGUAGE)
-			: Commodore264 (standardChips (lg, vS), new C264::CPlus4Memory (lg), standardDevices (vS), vS, lg)
+		CommodorePlus4 (VisualSystem vS, 
+				unsigned int cfg, const std::string& lg = MCHEmul::_DEFAULTLANGUAGE)
+			: Commodore264 (standardChips (lg, vS), 
+				new C264::CPlus4Memory (cfg, lg), standardDevices (vS), vS, Type::_CPLUS4, cfg, lg)
 							{ }
 
 		protected:
