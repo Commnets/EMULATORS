@@ -166,7 +166,8 @@ std::string MCHEmul::StdFormatter::AttributePiece::format (const MCHEmul::InfoSt
 	// Length, adjust by the right with chars...
 	if (existAttribute ("length"))
 		result = MCHEmul::fixLenStr 
-			(result, (size_t) std::atoi (attribute ("length").c_str ()), false, MCHEmul::_SPACES);
+			(result, (size_t) std::atoi (attribute ("length").c_str ()), 
+				existAttribute ("right") /** By default is in the left side if fix length defined. */, MCHEmul::_SPACES);
 
 	return (result);
 }
