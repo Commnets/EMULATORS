@@ -160,8 +160,9 @@ namespace MCHEmul
 				: Piece (Type::_DATA, n, prms, pt)
 							{ }
 
-			virtual std::string format (const InfoStructure& iS) const override
-							{ return (iS.attribute (_name)); }
+			/** Depending on the parameters the text can be one or other.
+				e.g: length:determines the max number of characters to print out. */
+			virtual std::string format (const InfoStructure& iS) const override;
 		};
 
 		/** To format the a list of elements like a table. \n

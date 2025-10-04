@@ -158,6 +158,20 @@ MCHEmul::StdFormatter::FixTextPiece::FixTextPiece (const std::string& n)
 }
 
 // ---
+std::string MCHEmul::StdFormatter::AttributePiece::format (const MCHEmul::InfoStructure& iS) const
+{ 
+	std::string result = iS.attribute (_name);
+	
+	// Manages the parameters...
+	// Length, adjust by the right with chars...
+	if (existAttribute ("length"))
+		result = MCHEmul::fixLenStr 
+			(result, (size_t) std::atoi (attribute ("length").c_str ()), false, MCHEmul::_SPACES);
+
+	return (result);
+}
+
+// ---
 std::string MCHEmul::StdFormatter::TablePiece::format (const MCHEmul::InfoStructure& iS) const
 {
 	std::string by = iS.attribute (_name);

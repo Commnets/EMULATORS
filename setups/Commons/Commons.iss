@@ -29,7 +29,7 @@ WizardImageFile=..\Commons\Installer Background Image.bmp
 WizardSmallImageFile=..\Commons\Letra C Community HD small.bmp
 UserInfoPage=True
 VersionInfoCompany=Community Networks S.L.
-VersionInfoCopyright=2020 - 2022 Community Networks S.L.
+VersionInfoCopyright=2020 - 2026 Community Networks S.L.
 VersionInfoDescription=MyProductInfo
 VersionInfoProductName=MyProductName
 WizardImageStretch=False
@@ -53,7 +53,7 @@ Source: "..\Commons\RakNet_VS2008_DLL_Release_Win32.dll"; DestDir: "{app}"; Flag
 
 [Tasks]
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
-Name: "quicklaunchicon"; Description: "{cm:CreateQuickLaunchIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked; OnlyBelowVersion: 0,6.1
+Name: "quicklaunchicon"; Description: "{cm:CreateQuickLaunchIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
 
 [Icons]
 Name: "{group}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"
