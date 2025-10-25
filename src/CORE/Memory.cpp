@@ -282,6 +282,20 @@ MCHEmul::InfoStructure MCHEmul::PhysicalStorageSubset::getInfoStructure () const
 }
 
 // ---
+MCHEmul::MirrorPhysicalStorageSubset::MirrorPhysicalStorageSubset (int id, 
+		MCHEmul::PhysicalStorageSubset* pSS, const MCHEmul::Address& a, size_t iP, int d)
+	: MCHEmul::PhysicalStorageSubset (id,
+		pSS -> physicalStorage (),
+		pSS -> initialPhysicalPosition () + iP,
+		a, (d == -1) ? (pSS -> size () - iP) : (size_t) d)
+{
+	// Making these assertions to be sure that the parameters are correct!
+	assert (pSS != nullptr && iP < pSS -> size ());
+	if (d != -1)
+		assert (d >= 0 && ((iP + (size_t) d) <= pSS -> size ()));
+}
+
+// ---
 void MCHEmul::SetMemoryCommand::execute ()
 { 
 	if (_subset -> deepDebugActive ())

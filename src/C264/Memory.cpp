@@ -6,20 +6,36 @@ C264::Memory::Memory (const MCHEmul::Memory::Content& cnt,
 	: MCHEmul::Memory (0, cnt, { }),
 	  _type (t),
 	  _configuration (cfg),
+	  _memoryConfiguration (0), // The one by default...
 	  _ROMActive (true), // By default the ROM is active...
-	  _C1Low (false), _C1High (false),
-	  _C2Low (false), _C2High (false),
+	  _cartridge1Loaded (false), _cartridge1Connected (false),
+	  _cartridge2Loaded (false), _cartridge2Connected (false),
 	  _RAM1 (nullptr),
 	  _RAM2 (nullptr),
-	  _EMPTYRAM2 (nullptr),
+	  _RAM2MirrorIO7501Port (nullptr),
+	  _RAM2MirrorPageZero (nullptr),
+	  _RAM2MirrorStack (nullptr),
+	  _RAM2MirrorRAM1 (nullptr),
 	  _basicROM (nullptr),
+	  _3plus1ROM1 (nullptr),
+	  _cartridge1Low (nullptr),
+	  _cartridge2Low (nullptr),
+	  _noExtension (nullptr),
 	  _RAM3 (nullptr),
-	  _EMPTYRAM3 (nullptr),
-	  _lowCartridge (nullptr),
+	  _RAM3MirrorIO7501Port (nullptr),
+	  _RAM3MirrorPageZero (nullptr),
+	  _RAM3MirrorStack (nullptr),
+	  _RAM3MirrorRAM1 (nullptr),
 	  _kernelROM1 (nullptr),
-	  _RAM4 (nullptr),
-	  _EMPTYRAM4 (nullptr),
-	  _highCartridge1 (nullptr),
+	  _3plus1ROM21 (nullptr),
+	  _cartridge1High1 (nullptr),
+	  _cartridge2High1 (nullptr),
+	  _RAM41 (nullptr),
+	  _RAM41MirrorIO7501Port (nullptr),
+	  _RAM41MirrorPageZero (nullptr),
+	  _RAM41MirrorStack (nullptr),
+	  _RAM41MirrorRAM1 (nullptr),
+	  _RAM41MirrorRAM2 (nullptr),
 	  _IOnomapped2 (nullptr),
 	  _IO6529B1 (nullptr),
 	  _IOnomapped3 (nullptr),
@@ -30,87 +46,137 @@ C264::Memory::Memory (const MCHEmul::Memory::Content& cnt,
 	  _IOTED (nullptr),
 	  _ROMRAMSwitch (nullptr),
 	  _kernelROM2 (nullptr),
-	  _RAM5 (nullptr),
-	  _EMPTYRAM5 (nullptr),
-	  _highCartridge2 (nullptr)
+	  _3plus1ROM22 (nullptr),
+	  _cartridge1High2 (nullptr),
+	  _cartridge2High2 (nullptr),
+	  _RAM42 (nullptr),
+	  _RAM42MirrorRAM1 (nullptr),
+	  _RAM42MirrorRAM2 (nullptr)
 {
 	// In the content...
 	if (error () != MCHEmul::_NOERROR)
 		return;
 
 	// Get references to all things tha can change in configuration...
-	// Low RAM zones...
-	_RAM1				= subset (_RAM1_SUBSET);
-	_RAM2				= subset (_RAM2_SUBSET);
-	_EMPTYRAM2			= dynamic_cast <MCHEmul::EmptyPhysicalStorageSubset*> 
-							(subset (_EMPTYRAM2_SUBSET));		// This zone of the RAM cannot exist...
-	// BASIC or RAM or Nothing...
-	_basicROM			= subset (_BASICROM_SUBSET);			// Either this...
-	_RAM3				= subset (_RAM3_SUBSET);				// or this...
-	_EMPTYRAM3			= dynamic_cast <MCHEmul::EmptyPhysicalStorageSubset*> 
-							(subset (_EMPTYRAM3_SUBSET));		// ...or this when more RAM that the very basic (RAM1) exists..
-	_lowCartridge		= dynamic_cast <MCHEmul::EmptyPhysicalStorageSubset*> 
-							(subset (_LOWCARTRIDGE_SUBSET));	// This zone of the memory can be occupied by a cartridge, but empty by default...
-	// ROM or RAM or Nothing...
-	_kernelROM1			= subset (_KERNELROM1_SUBSET);			// Either this...
-	_RAM4				= subset (_RAM4_SUBSET);				// ...or this...
-	_EMPTYRAM4			= dynamic_cast <MCHEmul::EmptyPhysicalStorageSubset*> 
-							(subset (_EMPTYRAM4_SUBSET));		// ...or this
-	_highCartridge1		= dynamic_cast <MCHEmul::EmptyPhysicalStorageSubset*> 
-							(subset (_HIGHCARTRIDGE1_SUBSET));	// This zone of the memory can be occupied by a cartridge, but empty by default...
-	// IO zone and ROM/RAM switching always on...
-	_IOnomapped2		= dynamic_cast <MCHEmul::EmptyPhysicalStorageSubset*> 
-							(subset (_IONOMAPPED2_SUBSET));
-	_IO6529B1			= dynamic_cast <C264::C6529B1Registers*> 
-							(subset (C264::C6529B1Registers::_C6529B1REGS_SUBSET));
-	_IOnomapped3		= dynamic_cast <MCHEmul::EmptyPhysicalStorageSubset*> 
-							(subset (_IONOMAPPED3_SUBSET));
-	_IOC1C2Selector		= dynamic_cast <C264::C1C2SelectorRegisters*>
-							(subset (C264::C1C2SelectorRegisters::_C1C2SELECTORREGS_SUBSET));
-	_IOnomapped5		= dynamic_cast <MCHEmul::EmptyPhysicalStorageSubset*> 
-							(subset (_IONOMAPPED5_SUBSET));
-	_IOTIA9				= dynamic_cast <COMMODORE::TIARegisters*> 
-							(subset (COMMODORE::TIARegisters::_TIAREGS_SUBSET));
-	_IOTIA8				= dynamic_cast <MCHEmul::MirrorPhysicalStorageSubset*> 
-							(subset (_IOTIA8_SUBSET));
-	_IOTED				= dynamic_cast <C264::TEDRegisters*> 
-							(subset (C264::TEDRegisters::_TEDREGS_SUBSET));
-	_ROMRAMSwitch		= dynamic_cast <C264::ROMRAMSwitchRegisters*> 
-							(subset (C264::ROMRAMSwitchRegisters::_ROMRAMSWITCHREGS_SUBSET)); 
-	// KERNAL or RAM or Nothing...
-	_kernelROM2			= subset (_KERNELROM2_SUBSET);			// Either this...
-	_RAM5				= subset (_RAM5_SUBSET);				// or this...
-	_EMPTYRAM5			= dynamic_cast <MCHEmul::EmptyPhysicalStorageSubset*> 
-							(subset (_EMPTYRAM5_SUBSET));		// ...or this
-	_highCartridge2		= dynamic_cast <MCHEmul::EmptyPhysicalStorageSubset*> 
-							(subset (_HIGHCARTRIDGE2_SUBSET));	// This zone of the memory can be occupied by a cartridge, but empty by default...
+	// B1
+	_RAM1						= subset (_RAM1_SUBSET);
+	// B2
+	_RAM2						= subset (_RAM2_SUBSET);
+	_RAM2MirrorIO7501Port		= dynamic_cast <MCHEmul::MirrorPhysicalStorageSubset*> 
+									(subset (_RAM2MIRRORIO7501PORT_SUBSET));
+	_RAM2MirrorPageZero			= dynamic_cast <MCHEmul::MirrorPhysicalStorageSubset*> 
+									(subset (_RAM2MIRRORPAGEZERO_SUBSET));
+	_RAM2MirrorStack			= dynamic_cast <MCHEmul::MirrorPhysicalStorageSubset*> 
+									(subset (_RAM2MIRRORSTACK_SUBSET));
+	_RAM2MirrorRAM1				= dynamic_cast <MCHEmul::MirrorPhysicalStorageSubset*> 
+									(subset (_RAM2MIRRORRAM1_SUBSET));
+	// B3
+	_basicROM					= subset (_BASICROM_SUBSET);
+	_3plus1ROM1					= subset (_3PLUS1ROM1_SUBSET);
+	_cartridge1Low				= subset (_CARTRIDGE1LOW_SUBSET);
+	_cartridge2Low				= subset (_CARTRIDGE2LOW_SUBSET);
+	_noExtension				= dynamic_cast <MCHEmul::EmptyPhysicalStorageSubset*> 
+									(subset (_NOEXTENSION_SUBSET));
+	_RAM3						= subset (_RAM3_SUBSET);
+	_RAM3MirrorIO7501Port		= dynamic_cast <MCHEmul::MirrorPhysicalStorageSubset*> 
+									(subset (_RAM3MIRRORIO7501PORT_SUBSET));
+	_RAM3MirrorPageZero			= dynamic_cast <MCHEmul::MirrorPhysicalStorageSubset*> 
+									(subset (_RAM3MIRRORPAGEZERO_SUBSET));
+	_RAM3MirrorStack			= dynamic_cast <MCHEmul::MirrorPhysicalStorageSubset*> 
+									(subset (_RAM3MIRRORSTACK_SUBSET));
+	_RAM3MirrorRAM1				= dynamic_cast <MCHEmul::MirrorPhysicalStorageSubset*> 
+									(subset (_RAM3MIRRORRAM1_SUBSET));
+	// B4 (Part 1)
+	_kernelROM1					= subset (_KERNELROM1_SUBSET);
+	_3plus1ROM21				= subset (_3PLUS1ROM21_SUBSET);
+	_cartridge1High1			= subset (_CARTRIDGE1HIGH1_SUBSET);
+	_cartridge2High1			= subset (_CARTRIDGE2HIGH1_SUBSET);
+	_RAM41						= subset (_RAM41_SUBSET);
+	_RAM41MirrorIO7501Port		= dynamic_cast <MCHEmul::MirrorPhysicalStorageSubset*> 
+									(subset (_RAM41MIRRORIO7501PORT_SUBSET));
+	_RAM41MirrorPageZero		= dynamic_cast <MCHEmul::MirrorPhysicalStorageSubset*> 
+									(subset (_RAM41MIRRORPAGEZERO_SUBSET));
+	_RAM41MirrorStack			= dynamic_cast <MCHEmul::MirrorPhysicalStorageSubset*> 
+									(subset (_RAM41MIRRORSTACK_SUBSET));
+	_RAM41MirrorRAM1			= dynamic_cast <MCHEmul::MirrorPhysicalStorageSubset*> 
+									(subset (_RAM41MIRRORRAM1_SUBSET));
+	_RAM41MirrorRAM2			= dynamic_cast <MCHEmul::MirrorPhysicalStorageSubset*>
+									(subset (_RAM41MIRRORRAM2_SUBSET));
+
+	// B4 (Part IO)
+	_IOnomapped2				= dynamic_cast <MCHEmul::EmptyPhysicalStorageSubset*> 
+									(subset (_IONOMAPPED2_SUBSET));
+	_IO6529B1					= dynamic_cast <C264::C6529B1Registers*> 
+									(subset (C264::C6529B1Registers::_C6529B1REGS_SUBSET));
+	_IOnomapped3				= dynamic_cast <MCHEmul::EmptyPhysicalStorageSubset*> 
+									(subset (_IONOMAPPED3_SUBSET));
+	_IOC1C2Selector				= dynamic_cast <C264::C1C2SelectorRegisters*>
+									(subset (C264::C1C2SelectorRegisters::_C1C2SELECTORREGS_SUBSET));
+	_IOnomapped5				= dynamic_cast <MCHEmul::EmptyPhysicalStorageSubset*> 
+									(subset (_IONOMAPPED5_SUBSET));
+	_IOTIA9						= dynamic_cast <COMMODORE::TIARegisters*> 
+									(subset (COMMODORE::TIARegisters::_TIAREGS_SUBSET));
+	_IOTIA8						= dynamic_cast <MCHEmul::MirrorPhysicalStorageSubset*> 
+									(subset (_IOTIA8_SUBSET));
+	_IOTED						= dynamic_cast <C264::TEDRegisters*> 
+									(subset (C264::TEDRegisters::_TEDREGS_SUBSET));
+	_ROMRAMSwitch				= dynamic_cast <C264::ROMRAMSwitchRegisters*> 
+									(subset (C264::ROMRAMSwitchRegisters::_ROMRAMSWITCHREGS_SUBSET)); 
+	// B4 (Part 2)
+	_kernelROM2					= subset (_KERNELROM2_SUBSET);
+	_3plus1ROM22				= subset (_3PLUS1ROM22_SUBSET);
+	_cartridge1High2			= subset (_CARTRIDGE1HIGH2_SUBSET);
+	_cartridge2High2			= subset (_CARTRIDGE2HIGH2_SUBSET);
+	_RAM42						= subset (_RAM42_SUBSET);
+	_RAM42MirrorRAM1			= dynamic_cast <MCHEmul::MirrorPhysicalStorageSubset*> 
+									(subset (_RAM42MIRRORRAM1_SUBSET));
+	_RAM42MirrorRAM2			= dynamic_cast <MCHEmul::MirrorPhysicalStorageSubset*>
+									(subset (_RAM42MIRRORRAM2_SUBSET));
 
 	// None can be nullptr...
 	assert (
-		_RAM1 != nullptr && 
-		_RAM2 != nullptr && 
-		_EMPTYRAM2 != nullptr && 
-		_basicROM != nullptr && 
-		_RAM3 != nullptr &&
-		_EMPTYRAM3 != nullptr &&
-		_lowCartridge != nullptr &&
-		_kernelROM1 != nullptr && 
-		_RAM4 != nullptr && 
-		_EMPTYRAM4 != nullptr &&
-		_highCartridge1 != nullptr &&
-		_IOnomapped2 != nullptr &&
-		_IO6529B1 != nullptr && 
-		_IOnomapped3 != nullptr && 
-		_IOC1C2Selector != nullptr &&
-		_IOnomapped5 != nullptr && 
-		_IOTIA9 != nullptr && 
-		_IOTIA8 != nullptr &&
-		_IOTED != nullptr && 
-		_ROMRAMSwitch != nullptr && 
-		_kernelROM2 != nullptr && 
-		_RAM5 != nullptr &&
-		_EMPTYRAM5 != nullptr &&
-		_highCartridge2 != nullptr);
+	  _RAM1						!= nullptr &&
+	  _RAM2						!= nullptr &&
+	  _RAM2MirrorIO7501Port		!= nullptr &&
+	  _RAM2MirrorPageZero		!= nullptr &&
+	  _RAM2MirrorStack			!= nullptr &&
+	  _RAM2MirrorRAM1			!= nullptr &&
+	  _basicROM					!= nullptr &&
+	  _3plus1ROM1				!= nullptr &&
+	  _cartridge1Low			!= nullptr &&
+	  _cartridge2Low			!= nullptr &&
+	  _noExtension				!= nullptr &&
+	  _RAM3						!= nullptr &&
+	  _RAM3MirrorIO7501Port		!= nullptr &&
+	  _RAM3MirrorPageZero		!= nullptr &&
+	  _RAM3MirrorStack			!= nullptr &&
+	  _RAM3MirrorRAM1			!= nullptr &&
+	  _kernelROM1				!= nullptr &&
+	  _3plus1ROM21				!= nullptr &&
+	  _cartridge1High1			!= nullptr &&
+	  _cartridge2High1			!= nullptr &&
+	  _RAM41					!= nullptr &&
+	  _RAM41MirrorIO7501Port	!= nullptr &&
+	  _RAM41MirrorPageZero		!= nullptr &&
+	  _RAM41MirrorStack			!= nullptr &&
+	  _RAM41MirrorRAM1			!= nullptr &&
+	  _RAM41MirrorRAM2			!= nullptr &&
+	  _IOnomapped2				!= nullptr &&
+	  _IO6529B1					!= nullptr &&
+	  _IOnomapped3				!= nullptr &&
+	  _IOC1C2Selector			!= nullptr &&
+	  _IOnomapped5				!= nullptr &&
+	  _IOTIA9					!= nullptr &&
+	  _IOTIA8					!= nullptr &&
+	  _IOTED					!= nullptr &&
+	  _ROMRAMSwitch				!= nullptr &&
+	  _kernelROM2				!= nullptr &&
+	  _3plus1ROM22				!= nullptr &&
+	  _cartridge1High2			!= nullptr &&
+	  _cartridge2High2			!= nullptr &&
+	  _RAM42					!= nullptr &&
+	  _RAM42MirrorRAM1			!= nullptr &&
+	  _RAM42MirrorRAM2			!= nullptr);
 
 	// The default ROMS...
 	// They might change depending on the language
@@ -131,6 +197,7 @@ C264::Memory::Memory (const MCHEmul::Memory::Content& cnt,
 	ok &= physicalStorage (_KERNELROM) -> loadInto (KERNELFILE);
 	subset (_KERNELROM1_SUBSET) -> fixDefaultValues ();
 	subset (_KERNELROM2_SUBSET) -> fixDefaultValues ();
+	// The cartridges and the 3+1 roms are empty by default...
 
 	if (!ok)
 		_error = MCHEmul::_INIT_ERROR;
@@ -138,6 +205,22 @@ C264::Memory::Memory (const MCHEmul::Memory::Content& cnt,
 	// The configuration is not set, 
 	// as it is done in the classes inheriting this one...
 	// It it were done here, the virtual method won't be invoked with a behaviour not defined...
+}
+
+// ---
+void C264::Memory::loadCartridge1 (const std::string& f1, const std::string& f2)
+{
+	// TODO
+
+	_cartridge1Loaded = true;
+}
+
+// ---
+void C264::Memory::loadCartridge2 (const std::string& f1, const std::string& f2)
+{
+	// TODO
+
+	_cartridge2Loaded = true;
 }
 
 // ---
@@ -151,16 +234,18 @@ bool C264::Memory::initialize ()
 	// Keep the status of the configuration...
 	unsigned int oC = configuration ();
 	bool oRA = ROMactive ();
-	bool oCL1 = C1Low (); bool oCH1 = C1High ();
-	bool oCL2 = C2Low (); bool oCH2 = C2High ();
-	setConfiguration (1 /** With all memory RAM possible. */, false, false, false, false, false);
+	unsigned int oMC = memoryConfiguration ();
+	setConfiguration (0 /** The very basic configuration of the computer */, 
+		false /** ROM active */, 0 /** The very basic configuration of the memory. */);
 	// Just to fillup all RAM with the initial value!
-	for (size_t i = 0X000; i < 0x10000; i += 0x40)
+	for (size_t i = 0X0000; i < 0x10000; i += 0x40)
 		if (i < 0xfd00 || i >= 0xff40) // The IO zone is not filled...
 			fillWith (MCHEmul::Address ({ 0x00, 0x00 }) + i, 
 				(((i / 0x40) % 2) == 0) ? MCHEmul::UByte::_0 : MCHEmul::UByte::_FF, 0x40);
 	// Go back to the same configuration...
-	setConfiguration (oC, oRA, oCL1, oCH1, oCL2, oCH2);
+	setConfiguration (oC, oRA, oMC);
+	// The cartridges are not connected...
+	_cartridge1Connected = _cartridge2Connected = false;
 
 	// The active view has to be initially the CPU view...
 	setCPUView ();
@@ -175,94 +260,205 @@ MCHEmul::Memory::Content C264::Memory::standardMemoryContent ()
 
 	// Phisical storages
 	// RAM...
-	MCHEmul::PhysicalStorage* RAM = 
-		new MCHEmul::PhysicalStorage (_RAM, MCHEmul::PhysicalStorage::Type::_RAM, 0x10000);						// 64k
-	// ROM...
+	// usually RAM is all behind the system...
+MCHEmul::PhysicalStorage* RAM = 
+		new MCHEmul::PhysicalStorage (_RAM,
+			MCHEmul::PhysicalStorage::Type::_RAM, 0x10000);														// 64k RAM
+
+	// Standard ROM...
+	// This is common in C16 and in C116...
 	MCHEmul::PhysicalStorage* BASICROM = 
-		new MCHEmul::PhysicalStorage (_BASICROM, MCHEmul::PhysicalStorage::Type::_ROM, 0x4000);					// 16k
+		new MCHEmul::PhysicalStorage (_BASICROM,
+			MCHEmul::PhysicalStorage::Type::_ROM, 0x4000);														// 16k ROM
 	MCHEmul::PhysicalStorage* KERNELROM	= 
-		new MCHEmul::PhysicalStorage (_KERNELROM, MCHEmul::PhysicalStorage::Type::_ROM, 0x4000);				// 16k
-	// External Cartridges but rmpty that can be added later...
-	MCHEmul::PhysicalStorage* LOWCARTRIDGEROM = 
-		new MCHEmul::PhysicalStorage (_LOWCARTRIDGEROM, MCHEmul::PhysicalStorage::Type::_ROM, 0x4000);			// 16k
-	MCHEmul::PhysicalStorage* HIGHCARTRIDGEROM = 
-		new MCHEmul::PhysicalStorage (_HIGHCARTRIDGEROM, MCHEmul::PhysicalStorage::Type::_ROM, 0x4000);			// 16k
+		new MCHEmul::PhysicalStorage (_KERNELROM,
+			MCHEmul::PhysicalStorage::Type::_ROM, 0x4000);														// 16k ROM
+	// These two are not initialized because they will filled up with the ROM after creation...
+
+	// The ROM instead the standard when 3+1 configuration is used...
+	// This is only in C264...
+	MCHEmul::PhysicalStorage* THREEPLUS1ROM1 = 
+		new MCHEmul::PhysicalStorage (_3PLUS1ROM1,
+			MCHEmul::PhysicalStorage::Type::_ROM, 0x4000);														// 16k ROM
+	MCHEmul::PhysicalStorage* THREEPLUS1ROM2 =
+		new MCHEmul::PhysicalStorage (_3PLUS1ROM2,
+			MCHEmul::PhysicalStorage::Type::_ROM, 0x4000);														// 16k ROM
+
+	// External Cartridges but empty that can be added later...
+	// In some configurations the external cartridges are used...
+	// Cartridge 1...
+	MCHEmul::PhysicalStorage* CARTRIDGE1LOWROM = 
+		new MCHEmul::PhysicalStorage (_CARTRIDGE1LOWROM, 
+			MCHEmul::PhysicalStorage::Type::_ROM, 0x4000);														// 16k ROM
+	MCHEmul::PhysicalStorage* CARTRIDGE1HIGHROM = 
+		new MCHEmul::PhysicalStorage (_CARTRIDGE1HIGHROM, 
+			MCHEmul::PhysicalStorage::Type::_ROM, 0x4000);														// 16k ROM
+	// Cartridge 2...
+	MCHEmul::PhysicalStorage* CARTRIDGE2LOWROM = 
+		new MCHEmul::PhysicalStorage (_CARTRIDGE2LOWROM, 
+			MCHEmul::PhysicalStorage::Type::_ROM, 0x4000);														// 16k ROM
+	MCHEmul::PhysicalStorage* CARTRIDGE2HIGHROM = 
+		new MCHEmul::PhysicalStorage (_CARTRIDGE2HIGHROM, 
+			MCHEmul::PhysicalStorage::Type::_ROM, 0x4000);														// 16k ROM
+
+	// All are initialized as the emulator VICE recognize them...
+	for (size_t i = 0; i < 0x4000; i++)
+	{
+		THREEPLUS1ROM1		-> set (i, MCHEmul::UByte::_FF);
+		THREEPLUS1ROM2		-> set (i, MCHEmul::UByte::_FF);
+		CARTRIDGE1LOWROM	-> set (i, MCHEmul::UByte::_FF);
+		CARTRIDGE1HIGHROM	-> set (i, MCHEmul::UByte::_FF);
+		CARTRIDGE2LOWROM	-> set (i, MCHEmul::UByte::_FF);
+		CARTRIDGE2HIGHROM	-> set (i, MCHEmul::UByte::_FF);
+	}
 
 	// The map of phisical storages, used later...
 	MCHEmul::PhysicalStorages storages (
 		{
-			{ _RAM, RAM },
-			{ _BASICROM, BASICROM },
-			{ _KERNELROM, KERNELROM },
-			{ _LOWCARTRIDGEROM, LOWCARTRIDGEROM },
-			{ _HIGHCARTRIDGEROM, HIGHCARTRIDGEROM }
+			{ _RAM,					RAM },
+			{ _BASICROM,			BASICROM },
+			{ _3PLUS1ROM1,			THREEPLUS1ROM1 },
+			{ _CARTRIDGE1LOWROM,	CARTRIDGE1LOWROM },
+			{ _CARTRIDGE2LOWROM,	CARTRIDGE2LOWROM },
+			{ _KERNELROM,			KERNELROM },
+			{ _3PLUS1ROM2,			THREEPLUS1ROM2 },
+			{ _CARTRIDGE1HIGHROM,	CARTRIDGE1HIGHROM },
+			{ _CARTRIDGE2HIGHROM,	CARTRIDGE2HIGHROM }
 		});
 
-	// Subsets
+	// ----
+	// B1
 	// $0000-$0001: The two registers of the IO expansion port...
+	// This subset exists always...
 	MCHEmul::PhysicalStorageSubset* IO7501Port = 
-		new F6500::IO7501PortRegisters (_IO7501PORT_SUBSET, RAM);
+		new F6500::IO7501PortRegisters (_IO7501PORT_SUBSET, RAM);												// 2 bytes
 	IO7501Port -> setName ("IO7501 Port Registers");
-
 	// $0002-$00FF: Page 0.The quickest possible access...
-	MCHEmul::PhysicalStorageSubset* PageZero = new MCHEmul::PhysicalStorageSubset 
-		(_PAGEZERO_SUBSET, RAM, 0x0002, MCHEmul::Address ({ 0x02, 0x00 }, false), 0xfe);
-	PageZero -> setName ("Page Zero");
-
+	// This subset exists always too...
+	MCHEmul::PhysicalStorageSubset* pageZero = new MCHEmul::PhysicalStorageSubset 
+		(_PAGEZERO_SUBSET, RAM, 0x0002, MCHEmul::Address ({ 0x02, 0x00 }, false), 0xfe);						// 254 bytes
+	pageZero -> setName ("Page Zero");
 	// $0100-$01FF: Page 1.Stack, Where the CPU stores info...
-	MCHEmul::Stack* Stack = new MCHEmul::Stack 
-		(_STACK_SUBSET, RAM, 0x0100, MCHEmul::Address ({ 0x00, 0x01 }, false), 0x0100,
+	// This subset exists always too...
+	MCHEmul::Stack* stack = new MCHEmul::Stack 
+		(_STACK_SUBSET, RAM, 0x0100, MCHEmul::Address ({ 0x00, 0x01 }, false), 0x0100,							// 256 bytes
 			MCHEmul::Stack::Configuration (true, true /** Pointing to the first empty position. */, 
 				false /** No overflow detection. */, -1));
-	Stack -> setName ("Stack");
-
-	// $0200-$7FFF: Basic RAM, divided in blocks of 16ks
+	stack -> setName ("Stack");
+	// After the stack a set of RAM is followed, divided in two blocks...
+	// From $0200 - $3FFF: The first block of memory exists always, whatever the computer emulated is...
 	MCHEmul::PhysicalStorageSubset* RAM1 = new MCHEmul::PhysicalStorageSubset 
 		(_RAM1_SUBSET, RAM, 0x0200, MCHEmul::Address ({ 0x00, 0x02 }, false), 0x3e00);							// 16k - 512 bytes (2 previous pages)
-	RAM1 -> setName ("Basic RAM 1");
+	RAM1 -> setName ("RAM 1");
+	// ----
+
+	// ----
+	// B2
+	// From $4000-$7FFF:
+	// The possibilites are either new RAM or a mirror of the first block of RAM...
 	MCHEmul::PhysicalStorageSubset* RAM2 = new MCHEmul::PhysicalStorageSubset 
 		(_RAM2_SUBSET, RAM, 0x4000, MCHEmul::Address ({ 0x00, 0x40 }, false), 0x4000);							// 16k
-	RAM2 -> setName ("Basic RAM 2");
-	// But this piece of the RAM can no be connected if the machine is not extended in RAM...
-	MCHEmul::PhysicalStorageSubset* EMPTYRAM2 = new MCHEmul::EmptyPhysicalStorageSubset 
-		(_EMPTYRAM2_SUBSET, MCHEmul::UByte::_0, RAM, 0x4000, MCHEmul::Address ({ 0x00, 0x40 }, false), 0x4000);
-	EMPTYRAM2 -> setName ("Empty Basic RAM 2");
+	RAM2 -> setName ("RAM 2");
+	// ...or the mirror or the RAM 1 has to be defined in pieces also...
+	MCHEmul::MirrorPhysicalStorageSubset* RAM2MirrorIO7501Port = new MCHEmul::MirrorPhysicalStorageSubset 
+		(_RAM2MIRRORIO7501PORT_SUBSET, IO7501Port, MCHEmul::Address ({ 0x00, 0x40 }, false));
+	RAM2MirrorIO7501Port -> setName ("RAM 2 Mirror of IO7501 Port Registers");
+	MCHEmul::MirrorPhysicalStorageSubset* RAM2MirrorPageZero = new MCHEmul::MirrorPhysicalStorageSubset
+		(_RAM2MIRRORPAGEZERO_SUBSET, pageZero, MCHEmul::Address ({ 0x02, 0x40 }, false));
+	RAM2MirrorPageZero -> setName ("RAM 2 Mirror of Page Zero");
+	MCHEmul::MirrorPhysicalStorageSubset* RAM2MirrorStack = new MCHEmul::MirrorPhysicalStorageSubset
+		(_RAM2MIRRORSTACK_SUBSET, stack, MCHEmul::Address ({ 0x00, 0x41 }, false));
+	RAM2MirrorStack -> setName ("RAM 2 Mirror of Stack");
+	MCHEmul::MirrorPhysicalStorageSubset* RAM2MirrorRAM1 = new MCHEmul::MirrorPhysicalStorageSubset 
+		(_RAM2MIRRORRAM1_SUBSET, RAM1, MCHEmul::Address ({ 0x00, 0x42 }, false));								
+	RAM2MirrorRAM1 -> setName ("RAM 2 Mirror of RAM 1");
+	// ----
 
-	// From $8000-$BFFF: BASIC ROM (RAM behind)
-	MCHEmul::PhysicalStorageSubset* BasicROM = new MCHEmul::PhysicalStorageSubset 
+	// ----
+	// B3
+	// From $8000-$BFFF:
+	// There might be different possibilities:
+	// BASIC ROM, 3+1 ROM (part 1), CARTRIDGE1LOW, CARTRIDGE2LOW or RAM (that can be a mirror of the one in B1)...
+	MCHEmul::PhysicalStorageSubset* basicROM = new MCHEmul::PhysicalStorageSubset
 		(_BASICROM_SUBSET, BASICROM, 0x0000, MCHEmul::Address ({ 0x00, 0x80 }, false), 0x4000);					// 16k ROM
-	BasicROM -> setName ("BASIC ROM");
-	// But it can be also RAM...
+	basicROM -> setName ("BASIC ROM");
+	MCHEmul::PhysicalStorageSubset* threePlus1ROM1 = new MCHEmul::PhysicalStorageSubset 
+		(_3PLUS1ROM1_SUBSET, THREEPLUS1ROM1, 0x0000, MCHEmul::Address ({ 0x00, 0x80 }, false), 0x4000);
+	threePlus1ROM1 -> setName ("3+1 ROM 1");
+	MCHEmul::PhysicalStorageSubset* cartridge1Low = new MCHEmul::PhysicalStorageSubset 
+		(_CARTRIDGE1LOW_SUBSET, CARTRIDGE1LOWROM, 0x0000, MCHEmul::Address ({ 0x00, 0x80 }, false), 0x4000);
+	cartridge1Low -> setName ("Cartridge 1 Low");
+	MCHEmul::PhysicalStorageSubset* cartridge2Low = new MCHEmul::PhysicalStorageSubset 
+		(_CARTRIDGE2LOW_SUBSET, CARTRIDGE2LOWROM, 0x0000, MCHEmul::Address ({ 0x00, 0x80 }, false), 0x4000);
+	cartridge2Low -> setName ("Cartridge 1 Low");
+	// Notice that there is no an equivalent of this element in the high part of the ROM
+	// In the system, when there is nothing there connected, the KERNEL is valid!
+	MCHEmul::EmptyPhysicalStorageSubset* noExtension = new MCHEmul::EmptyPhysicalStorageSubset 
+		(_NOEXTENSION_SUBSET, MCHEmul::UByte::_FF, RAM, 0x8000, 
+			MCHEmul::Address ({ 0x00, 0x80 }, false), 0x4000);
+	noExtension -> setName ("Nothing connected in Low Memory");
+	// ...or RAM 3...
 	MCHEmul::PhysicalStorageSubset* RAM3 = new MCHEmul::PhysicalStorageSubset 
-		(_RAM3_SUBSET, RAM, 0x8000, MCHEmul::Address ({ 0x00, 0x80 }, false), 0x4000);
-	RAM3 -> setName ("BASIC RAM 3");
-	// ...or totally empty with nothing connected behind...
-	MCHEmul::PhysicalStorageSubset* EMPTYRAM3 = new MCHEmul::EmptyPhysicalStorageSubset 
-		(_EMPTYRAM3_SUBSET, MCHEmul::UByte::_0, RAM, 0x8000, MCHEmul::Address ({ 0x00, 0x80 }, false), 0x4000);
-	EMPTYRAM3 -> setName ("Empty BASIC RAM 3");
-	// This zone of the memory can be occupied by a cartridge, but empty by default...
-	MCHEmul::PhysicalStorageSubset* LOWCARTRIDGE = new MCHEmul::EmptyPhysicalStorageSubset 
-		(_LOWCARTRIDGE_SUBSET, MCHEmul::UByte::_0, LOWCARTRIDGEROM, 0x0000, MCHEmul::Address ({ 0x00, 0x80 }, false), 0x4000);
-	LOWCARTRIDGE -> setName ("Low Cartridge");
+		(_RAM3_SUBSET, RAM, 0x8000, MCHEmul::Address ({ 0x00, 0x80 }, false), 0x4000);							// 16k ROM
+	RAM3 -> setName ("RAM 3 (Under BASIC)");
+	// ...or a mirror of the RAM 1 that has to be defined also in pieces...
+	MCHEmul::MirrorPhysicalStorageSubset* RAM3MirrorIO7501Port = new MCHEmul::MirrorPhysicalStorageSubset 
+		(_RAM3MIRRORIO7501PORT_SUBSET, IO7501Port, MCHEmul::Address ({ 0x00, 0x80 }, false));
+	RAM3MirrorIO7501Port -> setName ("RAM 3 Mirror of IO7501 Port Registers");
+	MCHEmul::MirrorPhysicalStorageSubset* RAM3MirrorPageZero = new MCHEmul::MirrorPhysicalStorageSubset
+		(_RAM3MIRRORPAGEZERO_SUBSET, pageZero, MCHEmul::Address ({ 0x02, 0x80 }, false));
+	RAM3MirrorPageZero -> setName ("RAM 3 Mirror of Page Zero");
+	MCHEmul::MirrorPhysicalStorageSubset* RAM3MirrorStack = new MCHEmul::MirrorPhysicalStorageSubset
+		(_RAM3MIRRORSTACK_SUBSET, stack, MCHEmul::Address ({ 0x00, 0x81 }, false));
+	RAM3MirrorStack -> setName ("RAM 3 Mirror of Stack");
+	MCHEmul::MirrorPhysicalStorageSubset* RAM3MirrorRAM1 = new MCHEmul::MirrorPhysicalStorageSubset 
+		(_RAM3MIRRORRAM1_SUBSET, RAM1, MCHEmul::Address ({ 0x00, 0x82 }, false));
+	RAM3MirrorRAM1 -> setName ("RAM 3 (Under BASIC) Mirror of RAM 1");
 
-	// $C000-$FD00: KERNEL ROM (RAM behind). There is another piece after IO area...
-	MCHEmul::PhysicalStorageSubset* KernelROM1 = new MCHEmul::PhysicalStorageSubset 
+	// ----
+	// B4 (Part 1)
+	// From $C000-$FCFF: 
+	// There might different possibilities:
+	// KERNEL ROM, 3+1 ROM (part 2), CARTRIDGE1HIGH, CARTRIDGE2HIGH or RAM (that can be a mirror of the one in B1 or B2)...
+	// In the middle the IO area...
+	MCHEmul::PhysicalStorageSubset* kernelROM1 = new MCHEmul::PhysicalStorageSubset 
 		(_KERNELROM1_SUBSET, KERNELROM, 0x0000, MCHEmul::Address ({ 0x00, 0xc0 }, false), 0x3d00);				// 16k - 768 bytes
-	KernelROM1 -> setName ("KERNEL ROM 1");
-	// But again there can be RAM behind!
-	MCHEmul::PhysicalStorageSubset* RAM4 = new MCHEmul::PhysicalStorageSubset 
-		(_RAM4_SUBSET, RAM, 0xc000, MCHEmul::Address ({ 0x00, 0xc0 }, false), 0x3d00);
-	RAM4 -> setName ("KERNEL RAM 4");
-	// ...or again nothing connected behind...
-	MCHEmul::PhysicalStorageSubset* EMPTYRAM4 = new MCHEmul::EmptyPhysicalStorageSubset 
-		(_EMPTYRAM4_SUBSET, MCHEmul::UByte::_0, RAM, 0xc000, MCHEmul::Address ({ 0x00, 0xc0 }, false), 0x3d00);
-	EMPTYRAM4 -> setName ("Empty KERNEL RAM 4");
-	// This zone of the memory can be occupied by a cartridge, but empty by default...
-	MCHEmul::PhysicalStorageSubset* HIGHCARTRIDGE1 = new MCHEmul::EmptyPhysicalStorageSubset 
-		(_HIGHCARTRIDGE1_SUBSET, MCHEmul::UByte::_0, HIGHCARTRIDGEROM, 0x0000, MCHEmul::Address ({ 0x00, 0xc0 }, false), 0x3d00);
-	HIGHCARTRIDGE1 -> setName ("High Cartridge 1");
+	kernelROM1 -> setName ("KERNEL ROM Part 1");
+	MCHEmul::PhysicalStorageSubset* threePlus1ROM21 = new MCHEmul::PhysicalStorageSubset 
+		(_3PLUS1ROM21_SUBSET, THREEPLUS1ROM2, 0x0000, MCHEmul::Address ({ 0x00, 0xc0 }, false), 0x3d00);
+	threePlus1ROM21 -> setName ("3+1 ROM 2 Part 1");
+	MCHEmul::PhysicalStorageSubset* cartridge1High1 = new MCHEmul::PhysicalStorageSubset 
+		(_CARTRIDGE1HIGH1_SUBSET, CARTRIDGE1HIGHROM, 0x0000, MCHEmul::Address ({ 0x00, 0xc0 }, false), 0x3d00);
+	cartridge1High1 -> setName ("High Cartridge 1 Part 1");
+	MCHEmul::PhysicalStorageSubset* cartridge2High1 = new MCHEmul::PhysicalStorageSubset 
+		(_CARTRIDGE2HIGH1_SUBSET, CARTRIDGE2HIGHROM, 0x0000, MCHEmul::Address ({ 0x00, 0xc0 }, false), 0x3d00);
+	cartridge2High1 -> setName ("High Cartridge 2 Part 1");
+	MCHEmul::PhysicalStorageSubset* RAM41 = new MCHEmul::PhysicalStorageSubset 
+		(_RAM41_SUBSET, RAM, 0xc000, MCHEmul::Address ({ 0x00, 0xc0 }, false), 0x3d00);
+	RAM41 -> setName ("RAM 4 Part 1 (Under KERNEL)");
+	// ...or a mirror or the RAM 1 that has to be defined in pieces...
+	MCHEmul::MirrorPhysicalStorageSubset* RAM41MirrorIO7501Port = new MCHEmul::MirrorPhysicalStorageSubset 
+		(_RAM41MIRRORIO7501PORT_SUBSET, IO7501Port, MCHEmul::Address ({ 0x00, 0xc0 }, false));
+	RAM41MirrorIO7501Port -> setName ("RAM 41 Mirror of IO7501 Port Registers");
+	MCHEmul::MirrorPhysicalStorageSubset* RAM41MirrorPageZero = new MCHEmul::MirrorPhysicalStorageSubset
+		(_RAM41MIRRORPAGEZERO_SUBSET, pageZero, MCHEmul::Address ({ 0x02, 0xc0 }, false));
+	RAM41MirrorPageZero -> setName ("RAM 41 Mirror of Page Zero");
+	MCHEmul::MirrorPhysicalStorageSubset* RAM41MirrorStack = new MCHEmul::MirrorPhysicalStorageSubset
+		(_RAM41MIRRORSTACK_SUBSET, stack, MCHEmul::Address ({ 0x00, 0xc1 }, false));
+	RAM41MirrorStack -> setName ("RAM 41 Mirror of Stack");
+	MCHEmul::MirrorPhysicalStorageSubset* RAM41MirrorRAM1 = new MCHEmul::MirrorPhysicalStorageSubset 
+		(_RAM41MIRRORRAM1_SUBSET, RAM1, MCHEmul::Address ({ 0x00, 0xc2 }, false), 
+			0 /** From the beginning. */, (int) (0x3e00 - 0x0300) /** The full length except the IO part + the part 2. */);
+	RAM41MirrorRAM1 -> setName ("RAM 4 Part 1 (Under KERNEL) Mirror of RAM 1");
+	// or a mirror or the RAM 2...
+	MCHEmul::MirrorPhysicalStorageSubset* RAM41MirrorRAM2 = new MCHEmul::MirrorPhysicalStorageSubset 
+		(_RAM41MIRRORRAM2_SUBSET, RAM2, MCHEmul::Address ({ 0x00, 0xc0 }, false),
+			0 /** From the beginning. */, (int) (0x4000 - 0x0300) /** The full length except the IO part + part 2. */);
+	RAM41MirrorRAM2 -> setName ("RAM 4 Part 1 (Under KERNEL) Mirror of RAM 2");
+	// ----
 
-	// The I/O Zone...
+	// ----
+	// B4 (IO Part)
 	// $FD00-$FD0F (0x10): Could be either ACIA (in CPlus4) or not mapped (in C16/116)
 	// $FD10-$FD1F (0x10): Could be either C6529B1 (in CPlus4) or not mapped (in C16/116)
 	// These tow first blocks are no created here but depending on the type of machine...
@@ -303,43 +499,77 @@ MCHEmul::Memory::Content C264::Memory::standardMemoryContent ()
 	C264::ROMRAMSwitchRegisters* ROMRAMSWITCH = new C264::ROMRAMSwitchRegisters
 		(RAM, 0xff3e, MCHEmul::Address ({ 0x3e, 0xff }, false), 0x02);											// 2 bytes
 	ROMRAMSWITCH -> setName ("ROM/RAM Switch Registers");
+	// ----
 
-	// The rest is ROM...
-	MCHEmul::PhysicalStorageSubset* KernelROM2 = new MCHEmul::PhysicalStorageSubset 
+	// ----
+	// B4 (Part 2)
+	// From $FF40-$FFFF: 
+	// There might different possibilities:
+	// KERNEL ROM, 3+1 ROM (part 2), CARTRIDGE1HIGH, CARTRIDGE2HIGH or RAM (that can be a mirror of the one in B1 or B2)...
+	MCHEmul::PhysicalStorageSubset* kernelROM2 = new MCHEmul::PhysicalStorageSubset 
 		(_KERNELROM2_SUBSET, KERNELROM, 0x3f40, MCHEmul::Address ({ 0x40, 0xff }, false), 0xc0);				// 192 bytes...
-	KernelROM2 -> setName ("KERNEL ROM 2");
-	// ...but it also can be RAM...
-	MCHEmul::PhysicalStorageSubset* RAM5 = new MCHEmul::PhysicalStorageSubset 
-		(_RAM5_SUBSET, RAM, 0xff40, MCHEmul::Address ({ 0x40, 0xff }, false), 0xc0);
-	RAM5 -> setName ("KERNEL RAM 5");
-	// ...or again with nothing connected behind...
-	MCHEmul::EmptyPhysicalStorageSubset* EMPTYRAM5 = new MCHEmul::EmptyPhysicalStorageSubset 
-		(_EMPTYRAM5_SUBSET, MCHEmul::UByte::_0, RAM, 0xff40, MCHEmul::Address ({ 0x40, 0xff }, false), 0xc0);
-	EMPTYRAM5 -> setName ("Empty KERNEL RAM 5");
-	// This zone of the memory can be occupied by a cartridge, but empty by default...
-	MCHEmul::PhysicalStorageSubset* HIGHCARTRIDGE2 = new MCHEmul::EmptyPhysicalStorageSubset 
-		(_HIGHCARTRIDGE2_SUBSET, MCHEmul::UByte::_0, HIGHCARTRIDGEROM, 0x3f40, MCHEmul::Address ({ 0x40, 0xff }, false), 0xc0);
-	HIGHCARTRIDGE2 -> setName ("High Cartridge 2");
+	kernelROM2 -> setName ("KERNEL ROM Part 2");
+	MCHEmul::PhysicalStorageSubset* threePlus1ROM22 = new MCHEmul::PhysicalStorageSubset 
+		(_3PLUS1ROM22_SUBSET, THREEPLUS1ROM2, 0x3f40, MCHEmul::Address ({ 0x40, 0xff }, false), 0xc0);
+	threePlus1ROM22 -> setName ("3+1 ROM 2 Part 2");
+	MCHEmul::PhysicalStorageSubset* cartridge1High2 = new MCHEmul::PhysicalStorageSubset 
+		(_CARTRIDGE1HIGH2_SUBSET, CARTRIDGE1HIGHROM, 0x3f40, MCHEmul::Address ({ 0x40, 0xff }, false), 0xc0);
+	cartridge1High2 -> setName ("High Cartridge 1 Part 2");
+	MCHEmul::PhysicalStorageSubset* cartridge2High2 = new MCHEmul::PhysicalStorageSubset 
+		(_CARTRIDGE2HIGH2_SUBSET, CARTRIDGE2HIGHROM, 0x3f40, MCHEmul::Address ({ 0x40, 0xff }, false), 0xc0);
+	cartridge2High2 -> setName ("High Cartridge 2 Part 2");
+	MCHEmul::PhysicalStorageSubset* RAM42 = new MCHEmul::PhysicalStorageSubset 
+		(_RAM42_SUBSET, RAM, 0xff40, MCHEmul::Address ({ 0x40, 0xff }, false), 0xc0);
+	RAM42 -> setName ("RAM 4 Part 2 (Under KERNEL)");
+	// ...or the rest of the mirror over RAM 1. This last piece is the last part over the last piece...
+	// From position 15680! (Only last 192 positions)
+	MCHEmul::MirrorPhysicalStorageSubset* RAM42MirrorRAM1 = new MCHEmul::MirrorPhysicalStorageSubset 
+		(_RAM42MIRRORRAM1_SUBSET, RAM1, MCHEmul::Address ({ 0x40, 0xff }, false), 
+			(0x3e00 - 0x00c0) /** From almost the end, except part 2. */, (int) 0xc0 /** the length of the part 2. */);
+	RAM42MirrorRAM1 -> setName ("RAM 4 Part 2 (Under KERNEL) Mirror of RAM 1");
+	// ...or the rest of the mirror over RAM 2...
+	MCHEmul::MirrorPhysicalStorageSubset* RAM42MirrorRAM2 = new MCHEmul::MirrorPhysicalStorageSubset 
+		(_RAM42MIRRORRAM2_SUBSET, RAM2, MCHEmul::Address ({ 0x40, 0xff }, false),
+			(0x4000 - 0x00c0) /** From almost the end except part 2. */, (int) 0xc0 /** The length of the part 2. */);
+	RAM42MirrorRAM2 -> setName ("RAM 4 Part 2 (Under KERNEL) Mirror of RAM 2");
 
-	// A map with all the subsets possible...
+	// A map with all the possible subsets...
 	MCHEmul::PhysicalStorageSubsets allsubsets (
 		{
+			// B1
 			{ _IO7501PORT_SUBSET,										IO7501Port }, 
-			{ _PAGEZERO_SUBSET,											PageZero }, 
-			{ _STACK_SUBSET,											Stack },
+			{ _PAGEZERO_SUBSET,											pageZero }, 
+			{ _STACK_SUBSET,											stack },
 			{ _RAM1_SUBSET,												RAM1 },
+			// B2
 			{ _RAM2_SUBSET,												RAM2 },
-			{ _EMPTYRAM2_SUBSET,										EMPTYRAM2 },
-			{ _BASICROM_SUBSET,											BasicROM },
+			{ _RAM2MIRRORIO7501PORT_SUBSET,								RAM2MirrorIO7501Port }, 
+			{ _RAM2MIRRORPAGEZERO_SUBSET,								RAM2MirrorPageZero }, 
+			{ _RAM2MIRRORSTACK_SUBSET,									RAM2MirrorStack },
+			{ _RAM2MIRRORRAM1_SUBSET,									RAM2MirrorRAM1 },
+			// B3
+			{ _BASICROM_SUBSET,											basicROM },
+			{ _3PLUS1ROM1_SUBSET,										threePlus1ROM1 },
+			{ _CARTRIDGE1LOW_SUBSET,									cartridge1Low },
+			{ _CARTRIDGE2LOW_SUBSET,									cartridge2Low },
+			{ _NOEXTENSION_SUBSET,										noExtension },
 			{ _RAM3_SUBSET,												RAM3 },
-			{ _EMPTYRAM3_SUBSET,										EMPTYRAM3 },
-			{ _LOWCARTRIDGE_SUBSET,										LOWCARTRIDGE },
-			{ _KERNELROM1_SUBSET,										KernelROM1 },
-			{ _RAM4_SUBSET,												RAM4 },
-			{ _EMPTYRAM4_SUBSET,										EMPTYRAM4 },
-			{ _KERNELROM2_SUBSET,										KernelROM2 },
-			{ _RAM4_SUBSET,												RAM4 },
-			{ _HIGHCARTRIDGE1_SUBSET,									HIGHCARTRIDGE1 },
+			{ _RAM3MIRRORIO7501PORT_SUBSET,								RAM3MirrorIO7501Port }, 
+			{ _RAM3MIRRORPAGEZERO_SUBSET,								RAM3MirrorPageZero }, 
+			{ _RAM3MIRRORSTACK_SUBSET,									RAM3MirrorStack },
+			{ _RAM3MIRRORRAM1_SUBSET,									RAM3MirrorRAM1 },
+			// B4 (Part 1)
+			{ _KERNELROM1_SUBSET,										kernelROM1 },
+			{ _3PLUS1ROM21_SUBSET,										threePlus1ROM21 },
+			{ _CARTRIDGE1HIGH1_SUBSET,									cartridge1High1 },
+			{ _CARTRIDGE2HIGH1_SUBSET,									cartridge2High1 },
+			{ _RAM41_SUBSET,											RAM41 },
+			{ _RAM41MIRRORIO7501PORT_SUBSET,							RAM41MirrorIO7501Port }, 
+			{ _RAM41MIRRORPAGEZERO_SUBSET,								RAM41MirrorPageZero }, 
+			{ _RAM41MIRRORSTACK_SUBSET,									RAM41MirrorStack },
+			{ _RAM41MIRRORRAM1_SUBSET,									RAM41MirrorRAM1 },
+			{ _RAM41MIRRORRAM2_SUBSET,									RAM41MirrorRAM2 },
+			// B4 (IO Part)
 			{ _IONOMAPPED2_SUBSET,										IONOMAPPED2 },
 			{ C264::C6529B1Registers::_C6529B1REGS_SUBSET,				IO6529B1 },
 			{ _IONOMAPPED3_SUBSET,										IONOMAPPED3 },
@@ -349,10 +579,14 @@ MCHEmul::Memory::Content C264::Memory::standardMemoryContent ()
 			{ _IOTIA8_SUBSET,											IOTIA8 },
 			{ C264::TEDRegisters::_TEDREGS_SUBSET,						IOTED },
 			{ C264::ROMRAMSwitchRegisters::_ROMRAMSWITCHREGS_SUBSET,	ROMRAMSWITCH },
-			{ _KERNELROM2_SUBSET,										KernelROM2 },
-			{ _RAM5_SUBSET,												RAM5 },
-			{ _EMPTYRAM5_SUBSET,										EMPTYRAM5 },
-			{ _HIGHCARTRIDGE2_SUBSET,									HIGHCARTRIDGE2 }
+			// B4 (Part 2)
+			{ _KERNELROM2_SUBSET,										kernelROM2 },
+			{ _3PLUS1ROM22_SUBSET,										threePlus1ROM22 },
+			{ _CARTRIDGE1HIGH2_SUBSET,									cartridge1High2 },
+			{ _CARTRIDGE2HIGH2_SUBSET,									cartridge2High2 },
+			{ _RAM42_SUBSET,											RAM42 },
+			{ _RAM42MIRRORRAM1_SUBSET,									RAM42MirrorRAM1 },
+			{ _RAM42MIRRORRAM2_SUBSET,									RAM42MirrorRAM2 }
 		});
 
 	// The views are not created...
@@ -383,15 +617,15 @@ C264::C16_116Memory::C16_116Memory (unsigned int cfg, const std::string& lang)
 		_IOnomapped0 != nullptr && 
 		_IOnomapped1 != nullptr);
 
-	setConfiguration (configuration (), ROMactive (), 
-		C1Low (), C1High (), C2Low (), C2High ());
+	setConfiguration (configuration (), ROMactive (), memoryConfiguration ());
 }
 	
 // ---
-void C264::C16_116Memory::setConfiguration (unsigned int cfg, bool a, 
-	bool c1l, bool c1h, bool c2l, bool c2h)
+void C264::C16_116Memory::setConfiguration (unsigned int cfg, bool a, unsigned char mcfg) 
 {
-	if (cfg != 0 && cfg != 1)
+	if (cfg != 0 /** 16k. */ && 
+		cfg != 1 /** 32k. */ && 
+		cfg != 2 /** 64k. */) // very rare this last one...
 	{
 		_LOG ("Configuration mode:" + std::to_string (cfg) + 
 			" not valid in C16/C116 memory");
@@ -401,72 +635,81 @@ void C264::C16_116Memory::setConfiguration (unsigned int cfg, bool a,
 
 	// New values for configuration...
 	_configuration = cfg;
+	// The memory configuration...
+	_memoryConfiguration = mcfg;
 	// ...and ROM/RAM status...
 	_ROMActive = a;
-	// ...and C1 & C2 lines status...
-	_C1Low = c1l; _C1High = c1h;
-	_C2Low = c2l; _C2High = c2h;
 
-	// The very basic zones of the RAM...
-	_RAM1					-> setActive (true); // The very basic RAM...
-
-	// IO zone is always active...
-	_IOnomapped0			-> setActive (true);
-	_IOnomapped1			-> setActive (true);
-	_IOnomapped2			-> setActive (true);
-	_IO6529B1				-> setActive (true);
-	_IOnomapped3			-> setActive (true);
-	_IOC1C2Selector			-> setActive (true);
-	_IOnomapped5			-> setActive (true);
-	_IOTIA9					-> setActive (true);
-	_IOTIA8					-> setActive (true);
-	_IOTED					-> setActive (true);
-	_ROMRAMSwitch			-> setActive (true); 
-
-	// ...when none of this flags is on, the BASIC ROM is connected...
-	bool rA = !_C1Low && !_C1High && !_C2Low && !_C2High;
-	// ...and just to keep track of the opposite situation...
-	bool cA = !rA;
-
-	// The ROM...
-	// Inclusing the the basic and the kernel with the possibilities of having external connections...
-	// Either BASIC or RAM or Nothing...
-	_basicROM			-> setActive (a);				// Active with ROM connected...
-	_lowCartridge		-> setActive (false);			// Disconnected always by default...
-	// Either KERNEL or RAM or Nothing...
-	_kernelROM1			-> setActive (a);				// Active when ROM is on...
-	_highCartridge1		-> setActive (false);			// Disconnected always by default...
-	// Either KERNEL or RAM...
-	_kernelROM2			-> setActive (a);				// Active with ROM is on...
-	_highCartridge2		-> setActive (false);			// Disconnected always by default...
-
-	// The RAM will depend on the configuration...
-	// 16k RAM
-	if (_configuration == 0)
-	{
-		// No more RAM...
-		_RAM2				-> setActive (false);		// No RAM2...
-		_EMPTYRAM2			-> setActive (true);		// No RAM2...
-		_RAM3				-> setActive (false);		// No RAM3...
-		_EMPTYRAM3			-> setActive (!a);			// EMPTYRAM3 active when no ROM is active...
-		_RAM4				-> setActive (false);		// No RAM4...
-		_EMPTYRAM4			-> setActive (!a);			// EMPTYRAM4 active when no ROM is active...
-		_RAM5				-> setActive (false);		// No RAM5...
-		_EMPTYRAM5			-> setActive (!a);			// EMPTYRAM5 active when no ROM is active...
-	}
-	// 64k RAM...
-	else
-	{
-		// ..more RAM...
-		_RAM2				-> setActive (true);		// Because it is extended to 64k...
-		_EMPTYRAM2			-> setActive (false);		// No empty space...
-		_RAM3				-> setActive (!a);			// RAM3 active when ROM is no active...
-		_EMPTYRAM3			-> setActive (false);		// No empty space...
-		_RAM4				-> setActive (!a);			// RAM4 active when ROM is no active...
-		_EMPTYRAM4			-> setActive (false);		// No empty space...
-		_RAM5				-> setActive (!a);			// RAM5 active when ROM is no active...
-		_EMPTYRAM5			-> setActive (false);		// No empty space...
-	}
+	// B1
+	_RAM1					-> setActive (true);
+	// B2
+	_RAM2					-> setActive (cfg != 0); // 32k
+	_RAM2MirrorIO7501Port	-> setActive (cfg == 0);
+	_RAM2MirrorPageZero		-> setActive (cfg == 0);
+	_RAM2MirrorStack		-> setActive (cfg == 0);
+	_RAM2MirrorRAM1			-> setActive (cfg == 0); // When only 16, the second block of RAM is a mirror of the first...
+	// B3
+	_basicROM				-> setActive (a && isMemoryConfigurationLowROMBasic ());
+	_3plus1ROM1				-> setActive (false);	// Always off...
+	_cartridge1Low			-> setActive (a && isMemoryConfigurationLowROMCartridge1 ());
+	_cartridge2Low			-> setActive (a && isMemoryConfigurationLowROMCartridge2 ());
+	_noExtension			-> setActive (a && 
+								(!isMemoryConfigurationLowROMBasic () && 
+								 !isMemoryConfigurationLowROMCartridge1 () && 
+								 !isMemoryConfigurationLowROMCartridge2 ()));
+	_RAM3					-> setActive (!a && cfg == 2); // When no ROM is connected and the RAM is 64k...
+	_RAM3MirrorIO7501Port	-> setActive (!a && cfg != 2);
+	_RAM3MirrorPageZero		-> setActive (!a && cfg != 2);
+	_RAM3MirrorStack		-> setActive (!a && cfg != 2);
+	_RAM3MirrorRAM1			-> setActive (!a && cfg != 2); // When no ROM is connected and the RAM is 16k or 32k...
+	// B4 (Part 1)
+	_kernelROM1				-> setActive (a && 
+								(!cartridgeConnected () || 
+								 (cartridgeConnected () && 
+									(!isMemoryConfigurationHighROMCartridge1 () && 
+									 !isMemoryConfigurationHighROMCartridge2 ())))); // Just when no cartridge is connected...
+	_3plus1ROM21			-> setActive (false);	// Always off, not possible in C16/C116
+	_cartridge1High1		-> setActive (a && 
+								(_cartridge1Connected && 
+								 isMemoryConfigurationHighROMCartridge1 ())); // When cartridge 1 is connected and ROM selected....
+	_cartridge2High1		-> setActive (a && 
+								(_cartridge2Connected && 
+								 isMemoryConfigurationHighROMCartridge2 ())); // When cartridge 2 is connected and ROM selected....
+	_RAM41					-> setActive (!a && cfg == 2); // When no ROM is connected and the RAM is 64k...
+	_RAM41MirrorIO7501Port	-> setActive (!a && cfg == 0);
+	_RAM41MirrorPageZero	-> setActive (!a && cfg == 0);
+	_RAM41MirrorStack		-> setActive (!a && cfg == 0);
+	_RAM41MirrorRAM1		-> setActive (!a && cfg == 0); // When no ROM is connected and the RAM is 16k...
+	_RAM41MirrorRAM2		-> setActive (!a && cfg == 1); // When no ROM is connected and the RAM is 32k...
+	// B4 (IO Part)
+	_IOnomapped0			-> setActive (true);	// Always on...
+	_IOnomapped1			-> setActive (true);	// Always on...
+	_IOnomapped2			-> setActive (true);	// Always on...
+	_IO6529B1				-> setActive (true);	// Always on...
+	_IOnomapped3			-> setActive (true);	// Always on...
+	_IOC1C2Selector			-> setActive (true);	// Always on...
+	_IOnomapped5			-> setActive (true);	// Always on...
+	_IOTIA9					-> setActive (true);	// Always on...
+	_IOTIA8					-> setActive (true);	// Always on...
+	_IOTED					-> setActive (true);	// Always on...
+	_ROMRAMSwitch			-> setActive (true);	// Always on...
+	// B4 (Part 1)
+	// See comments in the part 1....
+	_kernelROM2				-> setActive (a && 
+								(!cartridgeConnected () || 
+								 (cartridgeConnected () && 
+									(!isMemoryConfigurationHighROMCartridge1 () && 
+									 !isMemoryConfigurationHighROMCartridge2 ()))));
+	_3plus1ROM22			-> setActive (false);	// Always off...
+	_cartridge1High2		-> setActive (a && 
+								(_cartridge1Connected && 
+								 isMemoryConfigurationHighROMCartridge1 ()));
+	_cartridge2High2		-> setActive (a && 
+								(_cartridge2Connected && 
+								 isMemoryConfigurationHighROMCartridge2 ()));
+	_RAM42					-> setActive (!a && cfg == 2); // When no ROM is connected and the RAM is 64k...
+	_RAM42MirrorRAM1		-> setActive (!a && cfg == 0); // When no ROM is connected and the RAM is 16k...
+	_RAM42MirrorRAM2		-> setActive (!a && cfg == 1); // When no ROM is connected and the RAM is 32k...
 }
 
 // ---
@@ -503,18 +746,12 @@ MCHEmul::Memory::Content C264::C16_116Memory::standardMemoryContent ()
 
 // ---
 C264::CPlus4Memory::CPlus4Memory (unsigned int cfg, const std::string& lang)
-	: C264::Memory (C264::CPlus4Memory::standardMemoryContent (), C264::Type::_CPLUS4, cfg, lang),
-	  _functionLow (nullptr), 
-	  _functionHigh1 (nullptr),
-	  _functionHigh2 (nullptr)
+	: C264::Memory (C264::CPlus4Memory::standardMemoryContent (), C264::Type::_CPLUS4, cfg, lang)
 {
 	// In the content...
 	if (error () != MCHEmul::_NOERROR)
 		return;
 
-	_functionLow	= subset (_FUNCTIONLOW_SUBSET);
-	_functionHigh1	= subset (_FUNCTIONHIGH1_SUBSET);
-	_functionHigh2	= subset (_FUNCTIONHIGH2_SUBSET);
 	_IOACIA			= dynamic_cast <COMMODORE::ACIARegisters*> 
 		(subset (COMMODORE::ACIARegisters::_ACIAREGS_SUBSET));
 	_IO6529B2		= dynamic_cast <C264::C6529B2Registers*> 
@@ -522,35 +759,30 @@ C264::CPlus4Memory::CPlus4Memory (unsigned int cfg, const std::string& lang)
 
 	// None can be nullptr...
 	assert (
-		_functionLow != nullptr && 
-		_functionHigh1 != nullptr &&
-		_functionHigh2 != nullptr &&
 		_IOACIA != nullptr &&
 		_IO6529B2 != nullptr);
 
 	// The roms with the standard code for this machine!
-	std::string FUNCTIONLOWFILE = "./CP4/3-plus-1.317053-01.bin";
-	std::string FUNCTIONHIGHFILE = "./CP4/3-plus-1.317054-01.bin";
+	std::string THREEPLUS11FILE = "./CP4/3-plus-1.317053-01.bin";
+	std::string THREEPLUS12FILE = "./CP4/3-plus-1.317054-01.bin";
 
 	// In this case there different options per languaje...
 
 	bool ok = true;
-	ok &= physicalStorage (_FUNCTIONLOW) -> loadInto (FUNCTIONLOWFILE);
-	subset (_FUNCTIONLOW_SUBSET) -> fixDefaultValues (); // Fix the values for further initializations...
-	ok &= physicalStorage (_FUNCTIONHIGH) -> loadInto (FUNCTIONHIGHFILE);
-	subset (_FUNCTIONHIGH1_SUBSET) -> fixDefaultValues ();
-	subset (_FUNCTIONHIGH2_SUBSET) -> fixDefaultValues ();
+	ok &= physicalStorage (_3PLUS1ROM1) -> loadInto (THREEPLUS11FILE);
+	subset (_3PLUS1ROM1_SUBSET) -> fixDefaultValues (); // Fix the values for further initializations...
+	ok &= physicalStorage (_3PLUS1ROM2) -> loadInto (THREEPLUS12FILE);
+	subset (_3PLUS1ROM21_SUBSET) -> fixDefaultValues ();
+	subset (_3PLUS1ROM22_SUBSET) -> fixDefaultValues ();
 
 	if (!ok)
 		_error = MCHEmul::_INIT_ERROR;
 
-	setConfiguration (configuration (), ROMactive (), 
-		C1Low (), C1High (), C2Low (), C2High ());
+	setConfiguration (configuration (), ROMactive (), memoryConfiguration ());
 }
 	
 // ---
-void C264::CPlus4Memory::setConfiguration (unsigned int cfg, bool a, 
-	bool c1l, bool c1h, bool c2l, bool c2h)
+void C264::CPlus4Memory::setConfiguration (unsigned int cfg, bool a, unsigned char mcfg) 
 {
 	if (cfg != 0)
 	{
@@ -562,58 +794,62 @@ void C264::CPlus4Memory::setConfiguration (unsigned int cfg, bool a,
 
 	// New values for configuration...
 	_configuration = cfg;
+	// ...and memory status...
+	_memoryConfiguration = mcfg;
 	// ...and ROM/RAM status...
 	_ROMActive = a;
-	// ...and also the configuration of the C1 and C2 lines...
-	_C1Low = c1l; _C1High = c1h;
-	_C2Low = c2l; _C2High = c2h;
 
-	// The very basic zones of the RAM...
-	_RAM1			-> setActive (true);
-	_RAM2			-> setActive (true); // Because it is extended to 64k...
+	// B1
+	_RAM1					-> setActive (true);
+	// B2
+	_RAM2					-> setActive (true);
+	_RAM2MirrorRAM1			-> setActive (false);
+	// B4 (IO Part)
+	_IOACIA					-> setActive (true);
+	_IO6529B2				-> setActive (true);
+	_IOnomapped2			-> setActive (true);
+	_IO6529B1				-> setActive (true);
+	_IOnomapped3			-> setActive (true);
+	_IOC1C2Selector			-> setActive (true);
+	_IOnomapped5			-> setActive (true);
+	_IOTIA9					-> setActive (true);
+	_IOTIA8					-> setActive (true);
+	_IOTED					-> setActive (true);
+	_ROMRAMSwitch			-> setActive (true);
+	// The rest will depend on the configuration of the memory...
+	switch (_memoryConfiguration)
+	{
+		case 0:
+		case 1:
+		case 2:
+		case 3:
+		case 4:
+		case 5:
+		case 6:
+		case 7:
+		case 8:
+		case 9:
+		case 10:
+		case 11:
+		case 12:
+		case 13:
+		case 14:
+		case 15:
+			{
 
-	// The IO zone is always active...
-	_IOACIA			-> setActive (true);
-	_IO6529B2		-> setActive (true);
-	_IOnomapped2	-> setActive (true);
-	_IO6529B1		-> setActive (true);
-	_IOnomapped3	-> setActive (true);
-	_IOC1C2Selector	-> setActive (true);
-	_IOnomapped5	-> setActive (true);
-	_IOTIA9			-> setActive (true);
-	_IOTIA8			-> setActive (true);
-	_IOTED			-> setActive (true);
-	_ROMRAMSwitch	-> setActive (true);
+			}
 
-	bool fA = (_C1Low && _C2Low);
-	bool rA = (!_C1Low && !_C1High && !_C2Low && !_C2High);
-	bool cA = !fA && !rA; // Any other combination...
+			break;
 
-	// The ROM...
-	// In this case, the cartridges are connected just when c1low = true and c2low = true...
-	// ...so when the valoe stored in the FDD0 register is 0x05...
-	// The zone of the RAM...
-	_functionLow	-> setActive (a && fA);		// Active with both lines connected...
-	_basicROM		-> setActive (a && rA);		// Active with no line connected...
-	_lowCartridge	-> setActive (a && cA);		// Active with any other combination...
-	// The zone 1 of the KERNEL...
-	_functionHigh1	-> setActive (a && fA);		// Active with both lines connected...
-	_kernelROM1		-> setActive (a && rA);		// Active with no line connected...
-	_highCartridge1	-> setActive (a && cA);		// Active with any other combination...
-	// The zone 2 of the KERNEL...
-	_functionHigh2	-> setActive (a && fA);		// Active with both lines connected...
-	_kernelROM2		-> setActive (a && rA);		// Active with no line connected...
-	_highCartridge1	-> setActive (a && cA);		// Active with any other combination...
+		// It shouldn't ne here, kist in case...
+		default:
+			{
+				_LOG ("Memory configuration mode:" + std::to_string (_memoryConfiguration) + 
+					" not valid in CPlus4 memory");
+			}
 
-	// Then the rest of the RAM...
-	// This type of computer has always 64k...
-	_EMPTYRAM2		-> setActive (false); // The RAM exists instead!
-	_RAM3			-> setActive (!a);
-	_EMPTYRAM3		-> setActive (false); // No empty space...
-	_RAM4			-> setActive (!a);
-	_EMPTYRAM4		-> setActive (false); // No empty space...
-	_RAM5			-> setActive (!a);
-	_EMPTYRAM5		-> setActive (false); // No empty space...
+			break;
+	};
 }
 
 // ---
@@ -622,35 +858,8 @@ MCHEmul::Memory::Content C264::CPlus4Memory::standardMemoryContent ()
 	MCHEmul::Memory::Content result = 
 		std::move (C264::Memory::standardMemoryContent ());
 
-	// Add new physical storage for the predefined code...
-	MCHEmul::PhysicalStorage* FUNCLOW = new MCHEmul::PhysicalStorage 
-		(_FUNCTIONLOW, MCHEmul::PhysicalStorage::Type::_ROM, 0x4000);		// 16k...
-	result._physicalStorages.insert (MCHEmul::PhysicalStorages::value_type (_FUNCTIONLOW, FUNCLOW));
-	MCHEmul::PhysicalStorage* FUNCHIGH = new MCHEmul::PhysicalStorage 
-		(_FUNCTIONHIGH, MCHEmul::PhysicalStorage::Type::_ROM, 0x4000);		// 16k...
-	result._physicalStorages.insert (MCHEmul::PhysicalStorages::value_type (_FUNCTIONHIGH, FUNCHIGH));
-
-	// Add the new element to the subsets...
-	// The function Low...
-	MCHEmul::PhysicalStorageSubset* nSS = nullptr;
-	result._subsets.insert 
-		(MCHEmul::PhysicalStorageSubsets::value_type
-			(_FUNCTIONLOW_SUBSET, nSS = new MCHEmul::PhysicalStorageSubset 
-				(_FUNCTIONLOW_SUBSET, FUNCLOW, 0x0000, MCHEmul::Address ({ 0x00, 0x80 }, false), 0x4000)));
-	nSS -> setName ("Function Low ROM");
-	// The function High 1...
-	result._subsets.insert 
-		(MCHEmul::PhysicalStorageSubsets::value_type
-			(_FUNCTIONHIGH1_SUBSET, nSS = new MCHEmul::PhysicalStorageSubset 
-				(_FUNCTIONHIGH1_SUBSET, FUNCHIGH, 0x0000, MCHEmul::Address ({ 0x00, 0xc0 }, false), 0x3d00)));
-	nSS -> setName ("Function High 1 ROM");
-	// The function High 2...
-	result._subsets.insert 
-		(MCHEmul::PhysicalStorageSubsets::value_type
-			(_FUNCTIONHIGH2_SUBSET, nSS = new MCHEmul::PhysicalStorageSubset 
-				(_FUNCTIONHIGH2_SUBSET, FUNCHIGH, 0x0000, MCHEmul::Address ({ 0x40, 0xff }, false), 0xc0)));
-
 	// The ACIA chip (used in communications)
+	MCHEmul::PhysicalStorageSubset* nSS = nullptr;
 	result._subsets.insert 
 		(MCHEmul::PhysicalStorageSubsets::value_type 
 			(COMMODORE::ACIARegisters::_ACIAREGS_SUBSET, 

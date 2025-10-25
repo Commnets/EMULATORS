@@ -13,10 +13,7 @@ MCHEmul::InfoStructure C264::C1C2SelectorRegisters::getInfoStructure () const
 {
 	MCHEmul::InfoStructure result = std::move (MCHEmul::ChipRegisters::getInfoStructure ());
 
-	result.add ("C1Low",	_C1Low);
-	result.add ("C1High",	_C1High);
-	result.add ("C2Low",	_C2Low);
-	result.add ("C2High",	_C2High);
+	result.add ("MEMORYCFG",	_memoryConfiguration);
 
 	return (result);
 }
@@ -24,13 +21,10 @@ MCHEmul::InfoStructure C264::C1C2SelectorRegisters::getInfoStructure () const
 // ---
 void C264::C1C2SelectorRegisters::setValue (size_t p, const MCHEmul::UByte& v)
 { 
-	MCHEmul::ChipRegisters::setValue (p, v); 
+	MCHEmul::ChipRegisters::setValue (p, v);
 
-	// Whatever register is accessed, the configuration is changed...
-	_C1Low	= v.bit (0);
-	_C1High = v.bit (1);
-	_C2Low	= v.bit (2);
-	_C2High = v.bit (3);
+	// The configuration selected will depend on the element accesed...
+	_memoryConfiguration = p & 0x0f;
 
 	_configurationChanged = true;
 }

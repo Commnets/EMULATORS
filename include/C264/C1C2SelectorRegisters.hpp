@@ -36,15 +36,9 @@ namespace C264
 							{ return (0x10); }
 
 		// Mamaging the configuration...
-		/** To know the status of the C1 and C2 line. */
-		bool C1Low () const
-							{ return (_C1Low); }
-		bool C1High () const
-							{ return (_C1High); }
-		bool C2Low () const
-							{ return (_C2Low); }
-		bool C2High () const
-							{ return (_C2High); }
+		/** To know the configuration of the memory. */
+		unsigned char memoryConfiguration () const
+							{ return (_memoryConfiguration); }
 		/** To know whether the configuration changed. */
 		bool configurationChanged () const
 							{ return (_configurationChanged); } // This method put the v alue back to false in the variable
@@ -56,10 +50,7 @@ namespace C264
 		/**
 		  *	The name of the fields are: \n
 		  * The structure of Chip Registers plus:
-		  * C1Low	= Attribute: The configuration of the C1 Low latched. \n
-		  * C1High	= Attribute: The configuration of the C1 High latched. \n
-		  * C2Low	= Attribute: The configuration of the C2 Low latched. \n
-		  * C2High	= Attribute: The configuration of the C2 High latched. \n
+		  * MEMORYCFG = Attribute: The configuration of the memory.
 		  */
 		virtual MCHEmul::InfoStructure getInfoStructure () const override;
 
@@ -71,9 +62,8 @@ namespace C264
 		void initializeInternalValues ();
 
 		private:
-		/** To indicate the status of the C1 and C2 lines. */
-		bool _C1Low, _C1High;
-		bool _C2Low, _C2High;
+		/** To indicate the configuration of the memory. */
+		unsigned char _memoryConfiguration;
 
 		// Implementation
 		/** When the configuration has been changed, 

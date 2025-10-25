@@ -96,7 +96,7 @@ namespace C264
 			unsigned int cfg = cmdlineArguments ().argumentAsInt (_PARAMCONFIGURATION);
 			if (emulattedComputer () == Type::_C16 || emulattedComputer () == Type::_C116)
 				// C16/116 only 0 or 1 allowed...
-				result = (cfg > 1 ? 0 : cfg);
+				result = (cfg > 2 ? 0 : cfg);
 			else // Type CPlus/4
 				result = (0);
 		}

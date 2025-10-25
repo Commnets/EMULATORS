@@ -51,6 +51,7 @@
 #include <CORE/Register.hpp>
 #include <CORE/Latch.hpp>
 #include <CORE/Stack.hpp>
+#include <CORE/StackBehaviour.hpp>
 #include <CORE/StatusRegister.hpp>
 #include <CORE/UByte.hpp>
 #include <CORE/UBytes.hpp>

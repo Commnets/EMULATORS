@@ -45,10 +45,7 @@ bool C264::C1C2Selector::simulate (MCHEmul::CPU* cpu)
 
 		// The memory is always C264::Memory!
 		static_cast <C264::Memory*> (memoryRef ()) -> 
-			setC1C2Lines (_C1C2SelectorRegisters -> C1Low (), 
-						  _C1C2SelectorRegisters -> C1High (), 
-						  _C1C2SelectorRegisters -> C2Low (),
-						  _C1C2SelectorRegisters -> C2High ());
+			setMemoryConfiguration (_C1C2SelectorRegisters -> memoryConfiguration ());
 	}
 
 	return (true);
@@ -67,12 +64,6 @@ void C264::C1C2Selector::debugC1C2SelectorCycle (MCHEmul::CPU* cpu)
 		// What
 		<< "Info cycle\t\t"
 		// Data
-		<< "C1Low:"
-		<< (_C1C2SelectorRegisters -> C1Low () ? "ON" : "OFF") 
-		<< "C1High:"
-		<< (_C1C2SelectorRegisters -> C1High () ? "ON" : "OFF") 
-		<< "C2Low:"
-		<< (_C1C2SelectorRegisters -> C2Low () ? "ON" : "OFF") 
-		<< "C2High:"
-		<< (_C1C2SelectorRegisters -> C2High () ? "ON" : "OFF") << "\n";
+		<< "Memory Cfg:"
+		<< std::to_string (_C1C2SelectorRegisters -> memoryConfiguration ()) << "\n";
 }

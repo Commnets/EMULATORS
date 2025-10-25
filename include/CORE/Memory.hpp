@@ -385,15 +385,13 @@ namespace MCHEmul
 	};
 
 	/** A physicial subset that is a mirror of a previous one, 
-		but in another address! */
+		but in another address and potentially from another initial position, and with other length! */
 	class MirrorPhysicalStorageSubset : public PhysicalStorageSubset
 	{
 		public:
 		MirrorPhysicalStorageSubset (int id, 
-			PhysicalStorageSubset* pSS, const Address& a)
-			: PhysicalStorageSubset (id, 
-				pSS -> physicalStorage (), pSS -> initialPhysicalPosition (), a, pSS -> size ())
-							{ assert (pSS != nullptr); } // maybe too late, but just in case...
+			PhysicalStorageSubset* pSS, const Address& a, 
+				size_t iP = 0 /** By default with no slip. */, int d = -1 /** Initial size. All size by default. */);
 	};
 
 	/** A SetMemoryOrder is to buffer the execution of a "set" command. \n

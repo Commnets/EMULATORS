@@ -78,7 +78,7 @@ Memory Id:@ID@
 #---
 #---
 ;MemoryStrStorage
-Storage Id:@ID{length=5}@(@NAME{length=26}@) From:$@FROM{length=5}@ To:$@TO{length=5}@ Size:@SIZE{length=5,right=true}@bytes Active:@ACTIVE{length=3}@ RAM:@RAM{length=3}@ Read:@READ{length=3}@
+Storage Id:@ID{length=5}@(@NAME{length=26}@) From:$@FROM{length=5}@ To:$@TO{length=5}@ Size:@SIZE{length=5}@bytes Active:@ACTIVE{length=3}@ RAM:@RAM{length=3}@ Read:@READ{length=3}@
 #---
 #---
 ;MemoryStrView

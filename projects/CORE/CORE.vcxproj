@@ -65,6 +65,7 @@
     <ClCompile Include="..\..\src\CORE\SoundMemory.cpp" />
     <ClCompile Include="..\..\src\CORE\SoundVoice.cpp" />
     <ClCompile Include="..\..\src\CORE\SoundWave.cpp" />
+    <ClCompile Include="..\..\src\CORE\StackBehaviour.cpp" />
     <ClCompile Include="..\..\src\CORE\Trap.cpp" />
     <ClCompile Include="..\..\src\CORE\Typewriter.cpp" />
     <ClCompile Include="..\..\src\CORE\Wire.cpp" />
@@ -133,6 +134,7 @@
     <ClInclude Include="..\..\include\CORE\SoundVoice.hpp" />
     <ClInclude Include="..\..\include\CORE\SoundWave.hpp" />
     <ClInclude Include="..\..\include\CORE\Stack.hpp" />
+    <ClInclude Include="..\..\include\CORE\StackBehaviour.hpp" />
     <ClInclude Include="..\..\include\CORE\StatusRegister.hpp" />
     <ClInclude Include="..\..\include\CORE\StdCommandBld.hpp" />
     <ClInclude Include="..\..\include\CORE\StdCommands.hpp" />

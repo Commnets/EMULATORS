@@ -27,8 +27,8 @@ void C264::C264Emulator::printOutParameters (std::ostream& o) const
 		 "C116:\tCommodore 16/116 not expanded" << std::endl <<
 		 "CP4:\tCommodore Plus/4 not expanded" << std::endl;
 	o << "CONFIGURATION MODES allowed under command line /w:" << std::endl <<
-		 "C16:\t0 = 16k, 1 = 32k" << std::endl <<
-		 "C116:\t0 = 16k, 1 = 32k" << std::endl <<
+		 "C16:\t0=16k, 1=32k, 2=64k" << std::endl <<
+		 "C116:\t0=16k, 1=32k, 2=64k" << std::endl <<
 		 "CP4:\t0 = Internal Programs" << std::endl;
 	o << "DEVICES allowed to be connected under command CONNECTPER:" << std::endl <<
 		 std::to_string (COMMODORE::Datasette1530::_ID) << ":\tCasette 1530/1" << std::endl <<
