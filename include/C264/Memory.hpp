@@ -255,6 +255,7 @@ namespace C264
 			The original value is also kept in the chip emulating the ROM/RAM switching. */
 		bool _ROMActive;
 		/** The situation of the cartridges. */
+		bool _3plus1Loaded; // Never lodaed by default. Loaded in CPLUS4 type...
 		bool _cartridge1Loaded, _cartridge1Connected;
 		bool _cartridge2Loaded, _cartridge2Connected;
 

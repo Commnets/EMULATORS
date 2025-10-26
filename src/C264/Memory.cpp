@@ -8,6 +8,7 @@ C264::Memory::Memory (const MCHEmul::Memory::Content& cnt,
 	  _configuration (cfg),
 	  _memoryConfiguration (0), // The one by default...
 	  _ROMActive (true), // By default the ROM is active...
+	  _3plus1Loaded (false),
 	  _cartridge1Loaded (false), _cartridge1Connected (false),
 	  _cartridge2Loaded (false), _cartridge2Connected (false),
 	  _RAM1 (nullptr),
@@ -245,11 +246,11 @@ void C264::Memory::setConfiguration (unsigned int cfg, bool a, unsigned char mcf
 	_cartridge2Low			-> setActive (a && isMemoryConfigurationLowROMCartridge2 ()); // Active depending on the configuration...
 	_cartridge2Low			-> setActiveForReading (a && isMemoryConfigurationLowROMCartridge2 ());
 	_noExtension			-> setActive (a && 
-								(!isMemoryConfigurationLowROMBasic () && 
+								(!isMemoryConfigurationLowROMBasic () &&
 								 !isMemoryConfigurationLowROMCartridge1 () && 
 								 !isMemoryConfigurationLowROMCartridge2 ())); // Just when nothing else is connected...
 	_noExtension			-> setActiveForReading (a &&
-								(!isMemoryConfigurationLowROMBasic () && 
+								(!isMemoryConfigurationLowROMBasic () &&
 								 !isMemoryConfigurationLowROMCartridge1 () &&
 								 !isMemoryConfigurationLowROMCartridge2 ()));
 	_RAM3					-> setActive (cfg == 2); // ..active only when it is 64k...
@@ -268,15 +269,26 @@ void C264::Memory::setConfiguration (unsigned int cfg, bool a, unsigned char mcf
 								(!cartridgeConnected () || 
 								 (cartridgeConnected () && 
 									(!isMemoryConfigurationHighROMCartridge1 () && 
-									 !isMemoryConfigurationHighROMCartridge2 ())))); // Just when no cartridge is connected...
+									 !isMemoryConfigurationHighROMCartridge2 ())))); // Active also when no cartridge is connected...
+	_kernelROM1				-> setActiveForReading (a &&
+								(!cartridgeConnected () || 
+								 (cartridgeConnected () && 
+									(!isMemoryConfigurationHighROMCartridge1 () && 
+									 !isMemoryConfigurationHighROMCartridge2 ()))));
 	_3plus1ROM21			-> setActive (false);	// Always off, not possible in C16/C116
 	_3plus1ROM21			-> setActiveForReading (false);
 	_cartridge1High1		-> setActive (a && 
 								(_cartridge1Connected && 
 								 isMemoryConfigurationHighROMCartridge1 ())); // When cartridge 1 is connected and ROM selected....
+	_cartridge1High1		-> setActiveForReading (a &&
+								(_cartridge1Connected && 
+								 isMemoryConfigurationHighROMCartridge1 ()));
 	_cartridge2High1		-> setActive (a && 
 								(_cartridge2Connected && 
 								 isMemoryConfigurationHighROMCartridge2 ())); // When cartridge 2 is connected and ROM selected....
+	_cartridge2High1		-> setActiveForReading (a &&
+								(_cartridge2Connected && 
+								 isMemoryConfigurationHighROMCartridge2 ()));
 	_RAM41					-> setActive (cfg == 2); // ...active only when it is 64k...
 	_RAM41					-> setActiveForReading (!a && cfg == 2); // ...but active for reading just when RAM actives...
 	_RAM41MirrorIO7501Port	-> setActive (cfg == 0); // ...active when it is 16k...
@@ -839,6 +851,9 @@ C264::CPlus4Memory::CPlus4Memory (unsigned int cfg, const std::string& lang)
 
 	if (!ok)
 		_error = MCHEmul::_INIT_ERROR;
+
+	// Just loaded...
+	_3plus1Loaded = true;
 
 	setConfiguration (configuration (), ROMactive (), memoryConfiguration ());
 }
