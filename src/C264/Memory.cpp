@@ -208,6 +208,137 @@ C264::Memory::Memory (const MCHEmul::Memory::Content& cnt,
 }
 
 // ---
+void C264::Memory::setConfiguration (unsigned int cfg, bool a, unsigned char mcfg)
+{
+	// There can not be more than 3 configurations possibles..., 
+	// ...but the basic ones will depend on the type of machine...
+	assert (cfg >= 0 && cfg <= 2);
+
+	// New values for configuration...
+	_configuration = cfg;
+	// The memory configuration...
+	_memoryConfiguration = mcfg;
+	// ...and ROM/RAM status...
+	_ROMActive = a;
+
+	// B1
+	_RAM1					-> setActive (true);	 // 16, 32 or 64K. Always active...
+	_RAM1					-> setActiveForReading (true); // ....and active also for reading...It is the basic standard memory...
+	// B2
+	_RAM2					-> setActive (cfg != 0); // ...active when the computer is 32k...
+	_RAM2					-> setActiveForReading (cfg != 0); // ...and also active for reading...
+	_RAM2MirrorIO7501Port	-> setActive (cfg == 0); // ...only when the computer is 16k...
+	_RAM2MirrorIO7501Port	-> setActiveForReading (cfg == 0); // ...and also for reading... (the rest of the parts of the RAM1 mirror too)
+	_RAM2MirrorPageZero		-> setActive (cfg == 0);
+	_RAM2MirrorPageZero		-> setActiveForReading (cfg == 0);
+	_RAM2MirrorStack		-> setActive (cfg == 0);
+	_RAM2MirrorStack		-> setActiveForReading (cfg == 0);
+	_RAM2MirrorRAM1			-> setActive (cfg == 0);
+	_RAM2MirrorRAM1			-> setActiveForReading (cfg == 0);
+	// B3
+	_basicROM				-> setActive (a && isMemoryConfigurationLowROMBasic ()); // Active depending on the configuration...
+	_basicROM				-> setActiveForReading (a && isMemoryConfigurationLowROMBasic ());	
+	_3plus1ROM1				-> setActive (false);	// Always off...
+	_3plus1ROM1				-> setActiveForReading (false);
+	_cartridge1Low			-> setActive (a && isMemoryConfigurationLowROMCartridge1 ()); // Active depending on the configuration...
+	_cartridge1Low			-> setActiveForReading (a && isMemoryConfigurationLowROMCartridge1 ());
+	_cartridge2Low			-> setActive (a && isMemoryConfigurationLowROMCartridge2 ()); // Active depending on the configuration...
+	_cartridge2Low			-> setActiveForReading (a && isMemoryConfigurationLowROMCartridge2 ());
+	_noExtension			-> setActive (a && 
+								(!isMemoryConfigurationLowROMBasic () && 
+								 !isMemoryConfigurationLowROMCartridge1 () && 
+								 !isMemoryConfigurationLowROMCartridge2 ())); // Just when nothing else is connected...
+	_noExtension			-> setActiveForReading (a &&
+								(!isMemoryConfigurationLowROMBasic () && 
+								 !isMemoryConfigurationLowROMCartridge1 () &&
+								 !isMemoryConfigurationLowROMCartridge2 ()));
+	_RAM3					-> setActive (cfg == 2); // ..active only when it is 64k...
+	_RAM3					-> setActiveForReading (!a && cfg == 2); // ...but active for reading just when RAM actives...
+	_RAM3MirrorIO7501Port	-> setActive (cfg != 2); // ...active when the configuration is not 64k...
+	_RAM3MirrorIO7501Port	-> setActiveForReading (!a && cfg != 2); // ...and active for reading just when RAM actives...
+	_RAM3MirrorPageZero		-> setActive (cfg != 2);
+	_RAM3MirrorPageZero		-> setActiveForReading (!a && cfg != 2);
+	_RAM3MirrorStack		-> setActive (cfg != 2);
+	_RAM3MirrorStack		-> setActiveForReading (!a && cfg != 2);
+	_RAM3MirrorRAM1			-> setActive (cfg != 2); 
+	_RAM3MirrorRAM1			-> setActiveForReading (!a && cfg != 2); 
+
+	// B4 (Part 1)
+	_kernelROM1				-> setActive (a && 
+								(!cartridgeConnected () || 
+								 (cartridgeConnected () && 
+									(!isMemoryConfigurationHighROMCartridge1 () && 
+									 !isMemoryConfigurationHighROMCartridge2 ())))); // Just when no cartridge is connected...
+	_3plus1ROM21			-> setActive (false);	// Always off, not possible in C16/C116
+	_3plus1ROM21			-> setActiveForReading (false);
+	_cartridge1High1		-> setActive (a && 
+								(_cartridge1Connected && 
+								 isMemoryConfigurationHighROMCartridge1 ())); // When cartridge 1 is connected and ROM selected....
+	_cartridge2High1		-> setActive (a && 
+								(_cartridge2Connected && 
+								 isMemoryConfigurationHighROMCartridge2 ())); // When cartridge 2 is connected and ROM selected....
+	_RAM41					-> setActive (cfg == 2); // ...active only when it is 64k...
+	_RAM41					-> setActiveForReading (!a && cfg == 2); // ...but active for reading just when RAM actives...
+	_RAM41MirrorIO7501Port	-> setActive (cfg == 0); // ...active when it is 16k...
+	_RAM41MirrorIO7501Port	-> setActiveForReading (!a && cfg == 0); // ...and active for reading just when RAM actives...
+	_RAM41MirrorPageZero	-> setActive (cfg == 0); 
+	_RAM41MirrorPageZero	-> setActiveForReading (!a && cfg == 0);
+	_RAM41MirrorStack		-> setActive (cfg == 0);
+	_RAM41MirrorStack		-> setActiveForReading (!a && cfg == 0);
+	_RAM41MirrorRAM1		-> setActive (cfg == 0);
+	_RAM41MirrorRAM1		-> setActiveForReading (!a && cfg == 0);
+	_RAM41MirrorRAM2		-> setActive (cfg == 1); // ...active only when it is 32k...
+	_RAM41MirrorRAM2		-> setActiveForReading (!a && cfg == 1); // ...but active for reading just when RAM actives...
+	// B4 (IO Part)
+	// The specific areas of every computer are in their own classes...
+	// Remember that there are tow pieces missed in the generic part...
+	_IOnomapped2			-> setActive (true);	// Always on...
+	_IOnomapped2			-> setActiveForReading (true);
+	_IO6529B1				-> setActive (true);	// Always on...
+	_IO6529B1				-> setActiveForReading (true);
+	_IOnomapped3			-> setActive (true);	// Always on...
+	_IOnomapped3			-> setActiveForReading (true);
+	_IOC1C2Selector			-> setActive (true);	// Always on...
+	_IOC1C2Selector			-> setActiveForReading (true);
+	_IOnomapped5			-> setActive (true);	// Always on...
+	_IOnomapped5			-> setActiveForReading (true);
+	_IOTIA9					-> setActive (true);	// Always on...
+	_IOTIA9					-> setActiveForReading (true);
+	_IOTIA8					-> setActive (true);	// Always on...
+	_IOTIA8					-> setActiveForReading (true);
+	_IOTED					-> setActive (true);	// Always on...
+	_IOTED					-> setActiveForReading (true);
+	_ROMRAMSwitch			-> setActive (true);	// Always on...
+	_ROMRAMSwitch			-> setActiveForReading (true);
+	// B4 (Part 1)
+	// See comments in the part 1....
+	_kernelROM2				-> setActive (a && 
+								(!cartridgeConnected () || 
+								 (cartridgeConnected () && 
+									(!isMemoryConfigurationHighROMCartridge1 () && 
+									 !isMemoryConfigurationHighROMCartridge2 ()))));
+	_kernelROM2				-> setActiveForReading (a && 
+								(!cartridgeConnected () || 
+								 (cartridgeConnected () && 
+									(!isMemoryConfigurationHighROMCartridge1 () && 
+										!isMemoryConfigurationHighROMCartridge2 ()))));
+	_3plus1ROM22			-> setActive (false);	// Always off...
+	_3plus1ROM22			-> setActiveForReading (false);
+	_cartridge1High2		-> setActive (a && 
+								(_cartridge1Connected && 
+								 isMemoryConfigurationHighROMCartridge1 ()));
+	_cartridge2High2		-> setActive (a && 
+								(_cartridge2Connected && 
+								 isMemoryConfigurationHighROMCartridge2 ()));
+	_RAM42					-> setActive (cfg == 2); // ...active when computer is 64k...
+	_RAM42					-> setActiveForReading (!a && cfg == 2); // ...but active for reading when RAMs active...
+	_RAM42MirrorRAM1		-> setActive (cfg == 0); // ...active just when it is 16k...
+	_RAM42MirrorRAM1		-> setActiveForReading (!a && cfg == 0); // ...but active for reading when RAMSs active...
+	_RAM42MirrorRAM2		-> setActive (cfg == 1); // ...active when computer is 32k...
+	_RAM42MirrorRAM2		-> setActiveForReading (!a && cfg == 1); // ...but active for reading when RAMs active...
+}
+
+// ---
 void C264::Memory::loadCartridge1 (const std::string& f1, const std::string& f2)
 {
 	// TODO
@@ -633,104 +764,14 @@ void C264::C16_116Memory::setConfiguration (unsigned int cfg, bool a, unsigned c
 		return;
 	}
 
-	// New values for configuration...
-	_configuration = cfg;
-	// The memory configuration...
-	_memoryConfiguration = mcfg;
-	// ...and ROM/RAM status...
-	_ROMActive = a;
+	C264::Memory::setConfiguration (cfg, a, mcfg);
 
-	// B1
-	_RAM1					-> setActive (true);	 // 16, 32 or 64K. Always active...
-	_RAM1					-> setActiveForReading (true); // ....and active also for reading...It is the basic standard memory...
-	// B2
-	_RAM2					-> setActive (cfg != 0); // ...active when the computer is 32k...
-	_RAM2					-> setActiveForReading (cfg != 0); // ...and also active for reading...
-	_RAM2MirrorIO7501Port	-> setActive (cfg == 0); // ...only when the computer is 16k...
-	_RAM2MirrorIO7501Port	-> setActiveForReading (cfg == 0); // ...and also for reading... (the rest of the parts of the RAM1 mirror too)
-	_RAM2MirrorPageZero		-> setActive (cfg == 0);
-	_RAM2MirrorPageZero		-> setActiveForReading (cfg == 0);
-	_RAM2MirrorStack		-> setActive (cfg == 0);
-	_RAM2MirrorStack		-> setActiveForReading (cfg == 0);
-	_RAM2MirrorRAM1			-> setActive (cfg == 0);
-	_RAM2MirrorRAM1			-> setActiveForReading (cfg == 0);
-	// B3
-	_basicROM				-> setActive (a && isMemoryConfigurationLowROMBasic ());
-	_3plus1ROM1				-> setActive (false);	// Always off...
-	_cartridge1Low			-> setActive (a && isMemoryConfigurationLowROMCartridge1 ());
-	_cartridge2Low			-> setActive (a && isMemoryConfigurationLowROMCartridge2 ());
-	_noExtension			-> setActive (a && 
-								(!isMemoryConfigurationLowROMBasic () && 
-								 !isMemoryConfigurationLowROMCartridge1 () && 
-								 !isMemoryConfigurationLowROMCartridge2 ()));
-	_RAM3					-> setActive (cfg == 2); // ..active only when it is 64k...
-	_RAM3					-> setActiveForReading (!a && cfg == 2); // ...but active for reading just when RAM actives...
-	_RAM3MirrorIO7501Port	-> setActive (cfg != 2); // ...active when the configuration is not 64k...
-	_RAM3MirrorIO7501Port	-> setActiveForReading (!a && cfg != 2); // ...and active for reading just when RAM actives...
-	_RAM3MirrorPageZero		-> setActive (cfg != 2);
-	_RAM3MirrorPageZero		-> setActiveForReading (!a && cfg != 2);
-	_RAM3MirrorStack		-> setActive (cfg != 2);
-	_RAM3MirrorStack		-> setActiveForReading (!a && cfg != 2);
-	_RAM3MirrorRAM1			-> setActive (cfg != 2); 
-	_RAM3MirrorRAM1			-> setActiveForReading (!a && cfg != 2); 
-
-	// B4 (Part 1)
-	_kernelROM1				-> setActive (a && 
-								(!cartridgeConnected () || 
-								 (cartridgeConnected () && 
-									(!isMemoryConfigurationHighROMCartridge1 () && 
-									 !isMemoryConfigurationHighROMCartridge2 ())))); // Just when no cartridge is connected...
-	_3plus1ROM21			-> setActive (false);	// Always off, not possible in C16/C116
-	_cartridge1High1		-> setActive (a && 
-								(_cartridge1Connected && 
-								 isMemoryConfigurationHighROMCartridge1 ())); // When cartridge 1 is connected and ROM selected....
-	_cartridge2High1		-> setActive (a && 
-								(_cartridge2Connected && 
-								 isMemoryConfigurationHighROMCartridge2 ())); // When cartridge 2 is connected and ROM selected....
-	_RAM41					-> setActive (cfg == 2); // ...active only when it is 64k...
-	_RAM41					-> setActiveForReading (!a && cfg == 2); // ...but active for reading just when RAM actives...
-	_RAM41MirrorIO7501Port	-> setActive (cfg == 0); // ...active when it is 16k...
-	_RAM41MirrorIO7501Port	-> setActiveForReading (!a && cfg == 0); // ...and active for reading just when RAM actives...
-	_RAM41MirrorPageZero	-> setActive (cfg == 0); 
-	_RAM41MirrorPageZero	-> setActiveForReading (!a && cfg == 0);
-	_RAM41MirrorStack		-> setActive (cfg == 0);
-	_RAM41MirrorStack		-> setActiveForReading (!a && cfg == 0);
-	_RAM41MirrorRAM1		-> setActive (cfg == 0);
-	_RAM41MirrorRAM1		-> setActiveForReading (!a && cfg == 0);
-	_RAM41MirrorRAM2		-> setActive (cfg == 1); // ...active only when it is 32k...
-	_RAM41MirrorRAM2		-> setActiveForReading (!a && cfg == 1); // ...but active for reading just when RAM actives...
-	// B4 (IO Part)
+	// These two areas are always active...
+	// ...they are specific of the C16/116...
 	_IOnomapped0			-> setActive (true);	// Always on...
+	_IOnomapped0			-> setActiveForReading (true);
 	_IOnomapped1			-> setActive (true);	// Always on...
-	_IOnomapped2			-> setActive (true);	// Always on...
-	_IO6529B1				-> setActive (true);	// Always on...
-	_IOnomapped3			-> setActive (true);	// Always on...
-	_IOC1C2Selector			-> setActive (true);	// Always on...
-	_IOnomapped5			-> setActive (true);	// Always on...
-	_IOTIA9					-> setActive (true);	// Always on...
-	_IOTIA8					-> setActive (true);	// Always on...
-	_IOTED					-> setActive (true);	// Always on...
-	_ROMRAMSwitch			-> setActive (true);	// Always on...
-	// B4 (Part 1)
-	// See comments in the part 1....
-	_kernelROM2				-> setActive (a && 
-								(!cartridgeConnected () || 
-								 (cartridgeConnected () && 
-									(!isMemoryConfigurationHighROMCartridge1 () && 
-									 !isMemoryConfigurationHighROMCartridge2 ()))));
-	_3plus1ROM22			-> setActive (false);	// Always off...
-	_cartridge1High2		-> setActive (a && 
-								(_cartridge1Connected && 
-								 isMemoryConfigurationHighROMCartridge1 ()));
-	_cartridge2High2		-> setActive (a && 
-								(_cartridge2Connected && 
-								 isMemoryConfigurationHighROMCartridge2 ()));
-	_RAM42					-> setActive (cfg == 2); // ...active when computer is 64k...
-	_RAM42					-> setActiveForReading (!a && cfg == 2); // ...but active for reading when RAMs active...
-	_RAM42MirrorRAM1		-> setActive (cfg == 0); // ...active just when it is 16k...
-	_RAM42MirrorRAM1		-> setActiveForReading (!a && cfg == 0); // ...but active for reading when RAMSs active...
-	_RAM42MirrorRAM2		-> setActive (cfg == 1); // ...active when computer is 32k...
-	_RAM42MirrorRAM2		-> setActiveForReading (!a && cfg == 1); // ...but active for reading when RAMs active...
+	_IOnomapped1			-> setActiveForReading (true);
 }
 
 // ---
@@ -784,8 +825,8 @@ C264::CPlus4Memory::CPlus4Memory (unsigned int cfg, const std::string& lang)
 		_IO6529B2 != nullptr);
 
 	// The roms with the standard code for this machine!
-	std::string THREEPLUS11FILE = "./CP4/3-plus-1.317053-01.bin";
-	std::string THREEPLUS12FILE = "./CP4/3-plus-1.317054-01.bin";
+	std::string THREEPLUS11FILE = "./bios/CP4/3-plus-1.317053-01.bin";
+	std::string THREEPLUS12FILE = "./bios/CP4/3-plus-1.317054-01.bin";
 
 	// In this case there different options per languaje...
 
@@ -813,64 +854,14 @@ void C264::CPlus4Memory::setConfiguration (unsigned int cfg, bool a, unsigned ch
 		return;
 	}
 
-	// New values for configuration...
-	_configuration = cfg;
-	// ...and memory status...
-	_memoryConfiguration = mcfg;
-	// ...and ROM/RAM status...
-	_ROMActive = a;
+	C264::Memory::setConfiguration (cfg, a, mcfg);
 
-	// B1
-	_RAM1					-> setActive (true);
-	// B2
-	_RAM2					-> setActive (true);
-	_RAM2MirrorRAM1			-> setActive (false);
-	// B4 (IO Part)
-	_IOACIA					-> setActive (true);
-	_IO6529B2				-> setActive (true);
-	_IOnomapped2			-> setActive (true);
-	_IO6529B1				-> setActive (true);
-	_IOnomapped3			-> setActive (true);
-	_IOC1C2Selector			-> setActive (true);
-	_IOnomapped5			-> setActive (true);
-	_IOTIA9					-> setActive (true);
-	_IOTIA8					-> setActive (true);
-	_IOTED					-> setActive (true);
-	_ROMRAMSwitch			-> setActive (true);
-	// The rest will depend on the configuration of the memory...
-	switch (_memoryConfiguration)
-	{
-		case 0:
-		case 1:
-		case 2:
-		case 3:
-		case 4:
-		case 5:
-		case 6:
-		case 7:
-		case 8:
-		case 9:
-		case 10:
-		case 11:
-		case 12:
-		case 13:
-		case 14:
-		case 15:
-			{
-
-			}
-
-			break;
-
-		// It shouldn't ne here, kist in case...
-		default:
-			{
-				_LOG ("Memory configuration mode:" + std::to_string (_memoryConfiguration) + 
-					" not valid in CPlus4 memory");
-			}
-
-			break;
-	};
+	// These two areas are always active...
+	// ...they are specific of the CPlus4...
+	_IOACIA			-> setActive (true);	// Always on...
+	_IOACIA			-> setActiveForReading (true);
+	_IO6529B2		-> setActive (true);	// Always on...
+	_IO6529B2		-> setActiveForReading (true);
 }
 
 // ---

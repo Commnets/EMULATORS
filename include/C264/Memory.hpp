@@ -122,9 +122,8 @@ namespace C264
 		// Managing the configuration...
 		/** To change the configuration of the memory. \n
 			The way it is set will depend on the type of memory behind. \n
-			Activate or desactivate too the situation of the ROM/RAM in the machine,
-			and change the situation of the lines C1 and C2.*/
-		virtual void setConfiguration (unsigned int cfg, bool a, unsigned char mcfg) = 0;
+			Activate or desactivate too the situation of the ROM/RAM in the machine. */
+		virtual void setConfiguration (unsigned int cfg, bool a, unsigned char mcfg);
 		/** Just to change the configuration without affecting the status of the memory behind. */
 		void setConfiguration (unsigned char cfg)
 							{ setConfiguration (cfg, ROMactive (), memoryConfiguration ()); } 
