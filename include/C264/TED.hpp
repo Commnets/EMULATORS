@@ -46,10 +46,7 @@ namespace C264
 		static const unsigned int _ROMACCESSCHANGED = 300;
 
 		TED (int intId, const MCHEmul::RasterData& vd, const MCHEmul::RasterData& hd,
-			int vV, MCHEmul::SoundLibWrapper* sW, const MCHEmul::Attributes& attrs = { })
-			: COMMODORE::TED (intId, vd, hd, vV, sW, attrs),
-			  _TEDRegisters (nullptr)
-							{ }
+			int vV, MCHEmul::SoundLibWrapper* sW, const MCHEmul::Attributes& attrs = { });
 
 		virtual bool initialize () override;
 
@@ -60,6 +57,7 @@ namespace C264
 							{ return (static_cast <const C264::Memory*> (memoryRef ()) -> ROMactive ()); }
 		virtual void activeROMtoFecthCharData (bool a) override //The memory is C264 type...
 							{ static_cast <C264::Memory*> (memoryRef ()) -> setROMactive (a); }
+
 		private:
 		TEDRegisters* _TEDRegisters;
 	};

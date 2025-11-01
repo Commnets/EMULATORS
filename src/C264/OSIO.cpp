@@ -22,7 +22,7 @@ const C264::InputOSSystem::KeystrockesMap C264::InputOSSystem::_C264KEYS
 			{ SDL_SCANCODE_N,				{ std::make_pair (7, 4) } },
 			{ SDL_SCANCODE_O,				{ std::make_pair (6, 4) } },
 			{ SDL_SCANCODE_P,				{ std::make_pair (1, 5) } },
-			{ SDL_SCANCODE_Q,				{ std::make_pair (6, 0) } },
+			{ SDL_SCANCODE_Q,				{ std::make_pair (6, 7) } },
 			{ SDL_SCANCODE_R,				{ std::make_pair (1, 2) } },
 			{ SDL_SCANCODE_S,				{ std::make_pair (5, 1) } },
 			{ SDL_SCANCODE_T,				{ std::make_pair (6, 2) } },

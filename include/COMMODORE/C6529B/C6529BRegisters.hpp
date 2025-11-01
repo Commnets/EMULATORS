@@ -29,34 +29,52 @@ namespace COMMODORE
 
 		static const int _C6529BREGS_SUBSET = 1080;
 
-		C6529BRegisters (int id, MCHEmul::PhysicalStorage* ps, size_t pp, const MCHEmul::Address& a, size_t s)
-			: MCHEmul::ChipRegisters (id, ps, pp, a, s),
-			  _latchValue (MCHEmul::UByte::_0),
-			  _latchChanged (false)
-							{ setClassName ("6529Registers"); }
+		C6529BRegisters (int id, MCHEmul::PhysicalStorage* ps, size_t pp, const MCHEmul::Address& a, size_t s);
 
-		// This method puts back _latchValue to false...
-		bool latchChanged () const
-							{ return (_latchChanged); }
+		// Managing directly the value of the ports...
+		// These methods are not usually managed...
+		/** Set the data to the port. */
+		inline void setPortValue (const MCHEmul::UByte& v);
+		/** Get the data from the port. */
+		const MCHEmul::UByte& portValue () const
+							{ return (_portValue); }
+		/** Has the por t value changed. Becomes false after being tested. */
+		bool portValueChanged () const
+							{ return (_portValueChanged); }
+
+		/** Port pulled up by default. */
+		virtual void initialize () override;
 
 		/**
 		  *	The name of the fields are: \n
 		  * The structure of Chip Registers plus:
-		  * LATCHVALUE			= Attribute: Value latched. \n
+		  * PORT			= Attribute: Value Port. \n
 		  */
 		virtual MCHEmul::InfoStructure getInfoStructure () const override;
 
 		protected:
 		virtual void setValue (size_t p, const MCHEmul::UByte& v) override
-							{ _latchValue = v; _latchChanged = true; }
+							{ setPortValue (v); }
 		virtual const MCHEmul::UByte& readValue (size_t p) const override
-							{ return (_latchValue); }
+							{ return (portValue ()); }
 
 		protected:
-		MCHEmul::UByte _latchValue;
-		// Set when the latched valued chages...
-		MCHEmul::OBool _latchChanged;
+		/** The value of the port. */
+		MCHEmul::UByte _portValue; // pulled up (= 0xff) by default...
+
+		// Implementation
+		/** Becomes true when the value port is changed. \n
+			Once it is checked becomes back false. */
+		MCHEmul::OBool _portValueChanged = false;
 	};
+
+	// ---
+	inline void C6529BRegisters::setPortValue (const MCHEmul::UByte& v)
+	{ 
+		_portValueChanged = (v != _portValue);
+
+		_portValue = v;
+	}
 }
 
 #endif

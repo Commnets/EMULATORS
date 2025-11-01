@@ -204,9 +204,9 @@ bool COMMODORE::TED::simulate (MCHEmul::CPU* cpu)
 	_raster.reduceDisplayZone
 		(!_TEDRegisters -> textDisplay25RowsActive (), !_TEDRegisters -> textDisplay40ColumnsActive ());
 
-	// The simulation has to be repeated as many time as cycles have spent since the last invocation...
-	bool r = true;
-	for (unsigned int i = (cpu -> clockCycles  () - _lastCPUCycles); i > 0 && r; i--)
+	// The simulation has to be repeated as many time 
+	// as cycles have been spent since the last invocation...
+	for (unsigned int i = (cpu -> clockCycles  () - _lastCPUCycles); i > 0; i--)
 	{
 		_IFDEBUG debugTEDCycle (cpu, i);
 
@@ -220,7 +220,8 @@ bool COMMODORE::TED::simulate (MCHEmul::CPU* cpu)
 		if (isNewBadLine ())
 		{
 			if (deepDebugActive ())
-				*_deepDebugFile << "\t\t\t\t\tBad line situation\n";
+				*_deepDebugFile << "\t\t\t\t\tBad line situation\n"; 
+			// It is not needed a special routine for so simple thing...
 
 			_newBadLineCondition = true;		// latched...
 			_badLineStopCyclesAdded = false;	// ...the cycles have to be added...
@@ -269,6 +270,8 @@ bool COMMODORE::TED::simulate (MCHEmul::CPU* cpu)
 			{ 
 				_tedGraphicInfo._VCBASE = _tedGraphicInfo._VC = 0;
 				_tedGraphicInfo._RC = 0;
+				// Flash counter is incremented every frame...
+				_TEDRegisters -> incrementFlashCounter (); 
 			}
 			// In any other line number, VC start back to count from the value in VCBASE.
 			// VCBASE is actualized only then RC reaches 8. @see rasterCycle 58 treatment.
@@ -281,9 +284,9 @@ bool COMMODORE::TED::simulate (MCHEmul::CPU* cpu)
 		}
 
 		// Simulate the timers!
-		r &= _T1.simulate (cpu);
-		r &= _T2.simulate (cpu);
-		r &= _T3.simulate (cpu);
+		_T1.simulate (cpu);
+		_T2.simulate (cpu);
+		_T3.simulate (cpu);
 
 		// Per cycle, the IRQ condition is checked! 
 		// (many reasons during the cycle can unchain the IRQ interrupt)
@@ -572,7 +575,7 @@ void COMMODORE::TED::drawVisibleZone (MCHEmul::CPU* cpu)
 			/** _IRS */ _raster.vData ().firstScreenPosition (),		// SCREEN:  And the real one (after reduction size)
 			/** _LRD */ _raster.vData ().lastDisplayPosition (),		// DISPLAY: The original...
 			/** _LRS */ _raster.vData ().lastScreenPosition (),			// SCREEN: And the real one (after reduction size)
-			/** _SR	 */ _TEDRegisters -> verticalScrollPosition (),	// From 0 - 7 (taken into account in bad lines)
+			/** _SR	 */ _TEDRegisters -> verticalScrollPosition (),		// From 0 - 7 (taken into account in bad lines)
 			/** _RR	 */ rv												// Where the vertical raster is inside the window (it is not the chip raster line)
 		});
 
@@ -732,9 +735,15 @@ COMMODORE::TED::DrawResult COMMODORE::TED::drawMonoColorChar (int cb)
 		size_t iBy = ((size_t) pp) >> 3; // To determine the byte...
 		size_t iBt = 7 - (((size_t) pp) % 8); // From MSB to LSB...
 
-		if (_tedGraphicInfo._graphicData [iBy].bit (iBt))
+		// Draws the pixel using the color or leave it in the background one?
+		bool dP = 
+			(_tedGraphicInfo._colorData [iBy].bit (7)) // The bit of the byte read defines whether the color blinks or not...
+				? ((!_TEDRegisters -> flashCounterOn () && _tedGraphicInfo._graphicData [iBy].bit (iBt)) ||
+				   (_TEDRegisters -> flashCounterOn () && !_tedGraphicInfo._graphicData [iBy].bit (iBt))) // If blinks draws in reverse video!
+				: _tedGraphicInfo._graphicData [iBy].bit (iBt); // If the byte doesn't define any blink, draws normally...
+		if (dP)
 			result._foregroundColorData [i] = 
-				(unsigned int) (_tedGraphicInfo._colorData [iBy].value ());
+				(unsigned int) (_tedGraphicInfo._colorData [iBy].value () & 0x7f /** Without the bit 7. */);
 
 		// When 0, it is background...
 		// Not necessary to the color of the pixels as it will be always the basic background color,

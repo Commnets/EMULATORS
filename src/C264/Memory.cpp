@@ -239,18 +239,20 @@ void C264::Memory::setConfiguration (unsigned int cfg, bool a, unsigned char mcf
 	// B3
 	_basicROM				-> setActive (a && isMemoryConfigurationLowROMBasic ()); // Active depending on the configuration...
 	_basicROM				-> setActiveForReading (a && isMemoryConfigurationLowROMBasic ());	
-	_3plus1ROM1				-> setActive (false);	// Always off...
-	_3plus1ROM1				-> setActiveForReading (false);
+	_3plus1ROM1				-> setActive (a && isMemoryConfigurationLowROM3plus1 ()); // Active depending on the configuration...
+	_3plus1ROM1				-> setActiveForReading (a && isMemoryConfigurationLowROM3plus1 ());
 	_cartridge1Low			-> setActive (a && isMemoryConfigurationLowROMCartridge1 ()); // Active depending on the configuration...
 	_cartridge1Low			-> setActiveForReading (a && isMemoryConfigurationLowROMCartridge1 ());
 	_cartridge2Low			-> setActive (a && isMemoryConfigurationLowROMCartridge2 ()); // Active depending on the configuration...
 	_cartridge2Low			-> setActiveForReading (a && isMemoryConfigurationLowROMCartridge2 ());
 	_noExtension			-> setActive (a && 
 								(!isMemoryConfigurationLowROMBasic () &&
+								 !isMemoryConfigurationLowROM3plus1 () &&
 								 !isMemoryConfigurationLowROMCartridge1 () && 
 								 !isMemoryConfigurationLowROMCartridge2 ())); // Just when nothing else is connected...
 	_noExtension			-> setActiveForReading (a &&
 								(!isMemoryConfigurationLowROMBasic () &&
+								 !isMemoryConfigurationLowROM3plus1 () &&
 								 !isMemoryConfigurationLowROMCartridge1 () &&
 								 !isMemoryConfigurationLowROMCartridge2 ()));
 	_RAM3					-> setActive (cfg == 2); // ..active only when it is 64k...
@@ -266,17 +268,23 @@ void C264::Memory::setConfiguration (unsigned int cfg, bool a, unsigned char mcf
 
 	// B4 (Part 1)
 	_kernelROM1				-> setActive (a && 
-								(!cartridgeConnected () || 
-								 (cartridgeConnected () && 
-									(!isMemoryConfigurationHighROMCartridge1 () && 
-									 !isMemoryConfigurationHighROMCartridge2 ())))); // Active also when no cartridge is connected...
+								((!cartridgeConnected () && !_3plus1Loaded) || 
+								 ((cartridgeConnected () || _3plus1Loaded) && 
+								  (!isMemoryConfigurationHighROM3plus1 () &&
+								   !isMemoryConfigurationHighROMCartridge1 () && 
+								   !isMemoryConfigurationHighROMCartridge2 ())))); // Active also when no cartridge is connected...
 	_kernelROM1				-> setActiveForReading (a &&
-								(!cartridgeConnected () || 
-								 (cartridgeConnected () && 
-									(!isMemoryConfigurationHighROMCartridge1 () && 
-									 !isMemoryConfigurationHighROMCartridge2 ()))));
-	_3plus1ROM21			-> setActive (false);	// Always off, not possible in C16/C116
-	_3plus1ROM21			-> setActiveForReading (false);
+								((!cartridgeConnected () && !_3plus1Loaded) || 
+								 ((cartridgeConnected () || _3plus1Loaded) && 
+								  (!isMemoryConfigurationHighROM3plus1 () &&
+								   !isMemoryConfigurationHighROMCartridge1 () && 
+								   !isMemoryConfigurationHighROMCartridge2 ()))));
+	_3plus1ROM21			-> setActive (a &&
+								(_3plus1Loaded && 
+								 isMemoryConfigurationHighROM3plus1 ())); // When 3+1 is loaded and ROM selected....
+	_3plus1ROM21			-> setActiveForReading (a &&
+								(_3plus1Loaded && 
+								 isMemoryConfigurationHighROM3plus1 ()));
 	_cartridge1High1		-> setActive (a && 
 								(_cartridge1Connected && 
 								 isMemoryConfigurationHighROMCartridge1 ())); // When cartridge 1 is connected and ROM selected....
@@ -325,17 +333,23 @@ void C264::Memory::setConfiguration (unsigned int cfg, bool a, unsigned char mcf
 	// B4 (Part 1)
 	// See comments in the part 1....
 	_kernelROM2				-> setActive (a && 
-								(!cartridgeConnected () || 
-								 (cartridgeConnected () && 
-									(!isMemoryConfigurationHighROMCartridge1 () && 
-									 !isMemoryConfigurationHighROMCartridge2 ()))));
+								((!cartridgeConnected () && !_3plus1Loaded) || 
+								 ((cartridgeConnected () || _3plus1Loaded) && 
+								  (!isMemoryConfigurationHighROM3plus1 () &&
+								   !isMemoryConfigurationHighROMCartridge1 () && 
+								   !isMemoryConfigurationHighROMCartridge2 ()))));
 	_kernelROM2				-> setActiveForReading (a && 
-								(!cartridgeConnected () || 
-								 (cartridgeConnected () && 
-									(!isMemoryConfigurationHighROMCartridge1 () && 
-										!isMemoryConfigurationHighROMCartridge2 ()))));
-	_3plus1ROM22			-> setActive (false);	// Always off...
-	_3plus1ROM22			-> setActiveForReading (false);
+								((!cartridgeConnected () && !_3plus1Loaded) || 
+								 ((cartridgeConnected () || _3plus1Loaded) && 
+								  (!isMemoryConfigurationHighROM3plus1 () &&
+								   !isMemoryConfigurationHighROMCartridge1 () && 
+								   !isMemoryConfigurationHighROMCartridge2 ()))));
+	_3plus1ROM22			-> setActive (a &&
+								(_3plus1Loaded &&
+								 isMemoryConfigurationHighROM3plus1 ()));
+	_3plus1ROM22			-> setActiveForReading (a &&
+								(_3plus1Loaded &&
+								 isMemoryConfigurationHighROM3plus1 ()));
 	_cartridge1High2		-> setActive (a && 
 								(_cartridge1Connected && 
 								 isMemoryConfigurationHighROMCartridge1 ()));

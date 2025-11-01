@@ -197,6 +197,14 @@ namespace COMMODORE
 							{ return (_graphicalInfo); }
 		void setGraphicalInfo (const GraphicalInfo& gI)
 							{ _graphicalInfo = gI; }
+		/** To increment the flash counter. \n
+			It is a number between 0 and 32. 
+			The most significant bit defines whether it is flashing or not. */
+		void incrementFlashCounter ()
+							{ _graphicalInfo._flashCounter = _graphicalInfo._flashCounter++ & 0x01f; }
+		/** To get whether the flash counter is on or off. */
+		bool flashCounterOn () const
+							{ return ((_graphicalInfo._flashCounter & 0x10) != 0); }
 
 		// Memory zones
 		const MCHEmul::Address& charDataMemory () const

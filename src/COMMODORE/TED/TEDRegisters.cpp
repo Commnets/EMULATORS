@@ -77,8 +77,9 @@ void COMMODORE::TEDRegisters::setValue (size_t p, const MCHEmul::UByte& v)
 {
 	if (_soundWrapper == nullptr ||
 		_T1 == nullptr ||
-		_T2 == nullptr)
-		return;
+		_T2 == nullptr ||
+		_T3 == nullptr)
+		return; // Cannot work until initiated...
 
 	size_t pp = p % 0x20;
 
@@ -111,6 +112,9 @@ void COMMODORE::TEDRegisters::setValue (size_t p, const MCHEmul::UByte& v)
 		case 0x02:
 			{
 				_T2 -> setInitialValue ((_T1 -> initialValue () & 0xff00) | v.value ());
+
+				// Stop counting until the hight byte is loaded...
+				_T2 -> stop ();
 			}
 
 			break;
@@ -119,6 +123,9 @@ void COMMODORE::TEDRegisters::setValue (size_t p, const MCHEmul::UByte& v)
 		case 0x03:
 			{
 				_T2 -> setInitialValue ((_T1 -> initialValue () & 0x00ff) | (v.value () << 8));
+
+				// Once the hight byte is loaded, the timer starts to count...
+				_T2 -> start ();
 			}
 
 			break;
@@ -127,6 +134,9 @@ void COMMODORE::TEDRegisters::setValue (size_t p, const MCHEmul::UByte& v)
 		case 0x04:
 			{
 				_T3 -> setInitialValue ((_T1 -> initialValue () & 0xff00) | v.value ());
+
+				// Stop counting until the hight byte is loaded...
+				_T3 -> stop ();
 			}
 
 			break;
@@ -135,6 +145,9 @@ void COMMODORE::TEDRegisters::setValue (size_t p, const MCHEmul::UByte& v)
 		case 0x05:
 			{
 				_T3 -> setInitialValue ((_T1 -> initialValue () & 0x00ff) | (v.value () << 8));
+
+				// Once the hight byte is loaded, the timer starts to count...
+				_T3 -> start ();
 			}
 
 			break;
@@ -147,8 +160,8 @@ void COMMODORE::TEDRegisters::setValue (size_t p, const MCHEmul::UByte& v)
 				_blankEntireScreen = !v.bit (4); // When happens the CPU clocks moves twice the speed...
 				_graphicBitModeActive = v.bit (5);
 				_graphicExtendedColorTextModeActive = v.bit (6);
-
-				// Pending to implement bit 7...
+				// The bit 7 is used for I.C Testing and should be always set to 0...
+				// Anyway, setting it up to 0 instead, has no consequences inthe emulation...
 
 				setGraphicModeActive ();
 			}

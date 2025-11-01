@@ -1,5 +1,15 @@
 #include <C264/TED.hpp>
 #include <C264/TEDRegisters.hpp>
+#include <C264/OSIO.hpp>
+
+// ---
+C264::TED::TED (int intId, const MCHEmul::RasterData& vd, const MCHEmul::RasterData& hd,
+		int vV, MCHEmul::SoundLibWrapper* sW, const MCHEmul::Attributes& attrs)
+	: COMMODORE::TED (intId, vd, hd, vV, sW, attrs),
+	  _TEDRegisters (nullptr)
+{
+	// Nothing else to do...
+}
 
 // ---
 bool C264::TED::initialize ()
@@ -23,29 +33,51 @@ void C264::TED::processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifier* n)
 {
 	switch (evnt.id ())
 	{
-		// When there is a value latched for the keyboard...
-		case COMMODORE::C6529B::_LACTCHEDVALUECHANGED:
-			{ 
-				_TEDRegisters -> 
-					setKeyboardPins (MCHEmul::UByte ((unsigned char) evnt.value ()));
+		// Whn a change in the port is detected, it is just kept under the TED info...
+		// ...it will taken into account later, when the TED info was reached!
+		case C264::C6529B1::_PORTVALUECHANGED:
+			{
+				_TEDRegisters -> setKeyboardEntry (MCHEmul::UByte ((unsigned char) evnt.value ()));
 			}
 
 			break;
 
-		// When the joystick 1 have changed...
-		case C264::C6529B1::_JOYSTICK1VALUECHANGED:
-			{ 
-				_TEDRegisters -> 
-					setJoystickPins (0, MCHEmul::UByte ((unsigned char) evnt.value ()));
+		case MCHEmul::InputOSSystem::_JOYSTICKMOVED:
+			{
+				std::shared_ptr <MCHEmul::InputOSSystem::JoystickMovementEvent> jm = 
+					std::static_pointer_cast <MCHEmul::InputOSSystem::JoystickMovementEvent> (evnt.data ());
+
+				size_t ct = 0; // Counts the axis...
+				unsigned char dr = 0;
+				for (size_t ct = 0; ct < jm ->_axisValues.size (); ct++)
+					dr |= 1 << ((C264::InputOSSystem*) n) -> bitForJoystickAxis 
+						(jm -> _joystickId, (int) ct, jm -> _axisValues [ct]);
+
+				/** Saves the full status of the joystick. */
+				_TEDRegisters -> setJoystickStatus 
+					(jm -> _joystickId, (dr == 0x00) 
+						? 0xff /** none connected. */ 
+						: _TEDRegisters -> joystickStatus (jm -> _joystickId) & ~dr);
 			}
 
 			break;
 
-		// When the joystick 2 have changed...
-		case C264::C6529B1::_JOYSTICK2VALUECHANGED:
-			{ 
-				_TEDRegisters -> 
-					setJoystickPins (1, MCHEmul::UByte ((unsigned char) evnt.value ()));
+		case MCHEmul::InputOSSystem::_JOYSTICKBUTTONPRESSED:
+			{
+				std::shared_ptr <MCHEmul::InputOSSystem::JoystickButtonEvent> jb = 
+					std::static_pointer_cast <MCHEmul::InputOSSystem::JoystickButtonEvent> (evnt.data ()); // Cannot be null...
+				_TEDRegisters -> setJoystickStatusBit (jb -> _joystickId, 
+					((C264::InputOSSystem*) n) -> bitForJoystickButton (jb -> _joystickId, jb -> _buttonId), true);
+			}
+
+			break;
+
+		case MCHEmul::InputOSSystem::_JOYSTICKBUTTONRELEASED:
+			{
+				std::shared_ptr <MCHEmul::InputOSSystem::JoystickButtonEvent> jb = 
+					std::static_pointer_cast <MCHEmul::InputOSSystem::JoystickButtonEvent> (evnt.data ()); // Cannot be null
+				_TEDRegisters -> setJoystickStatusBit (jb -> _joystickId, 
+					((C264::InputOSSystem*) n) -> bitForJoystickButton (jb -> _joystickId, jb -> _buttonId), false);
 			}
 
 			break;

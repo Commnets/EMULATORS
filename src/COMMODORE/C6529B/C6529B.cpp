@@ -36,6 +36,18 @@ bool COMMODORE::C6529B::initialize ()
 }
 
 // ---
+bool COMMODORE::C6529B::simulate (MCHEmul::CPU* cpu)
+{
+	// Has the port value changed?, then notifies it!
+	if (_C6529BRegisters -> portValueChanged ())
+		notify (MCHEmul::Event (_PORTVALUECHANGED, 
+			(unsigned int) _C6529BRegisters -> portValue ().value ()));
+
+	return (true);
+}
+
+
+// ---
 MCHEmul::InfoStructure COMMODORE::C6529B::getInfoStructure () const
 {
 	MCHEmul::InfoStructure result = std::move (MCHEmul::Chip::getInfoStructure ());

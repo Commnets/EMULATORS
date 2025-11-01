@@ -3,7 +3,9 @@
 // ---
 C264::TEDRegisters::TEDRegisters 
 		(MCHEmul::PhysicalStorage* ps, size_t pp, const MCHEmul::Address& a, size_t s)
-	: COMMODORE::TEDRegisters (ps, pp, a, s)
+	: COMMODORE::TEDRegisters (ps, pp, a, s),
+	  _register8 (MCHEmul::UByte::_0)
+	  // The rest of the value sare initialized under the method initializeInternalValues...
 { 
 	initializeInternalValues (); 
 }
@@ -12,6 +14,8 @@ C264::TEDRegisters::TEDRegisters
 void C264::TEDRegisters::initialize ()
 {
 	COMMODORE::TEDRegisters::initialize ();
+
+	_register8 = MCHEmul::UByte::_0;
 
 	initializeInternalValues ();
 }
@@ -29,14 +33,7 @@ void C264::TEDRegisters::setValue (size_t p, const MCHEmul::UByte& v)
 		// The TED keyboard port is linked to the joystick situation...
 		case 0x08:
 			{
-				COMMODORE::TEDRegisters::setValue (pp, v);
-				
-				if (v.value () == 0xfb && 
-					_joystickPins [0].value () != MCHEmul::UByte::_FF)
-					_keyboardLatch &= _joystickPins [0].value ();
-				if (v.value () == 0xfd &&
-					_joystickPins [1].value () != MCHEmul::UByte::_FF)
-					_keyboardLatch &= _joystickPins [1].value ();
+				_register8 = v;
 			}
 
 			break;
@@ -48,18 +45,49 @@ void C264::TEDRegisters::setValue (size_t p, const MCHEmul::UByte& v)
 
 			break;
 	}
-}       
+}     
 
+// ---
+const MCHEmul::UByte& C264::TEDRegisters::readValue (size_t p) const
+{
+	MCHEmul::UByte result = MCHEmul::UByte::_0;
+
+	size_t pp = p % 0x20;
+
+	switch (pp)
+	{
+		// This register read finally the status of the keyboard entry, 
+		// but the situation of the joystick mist also be taken into account...
+		case 0x08:
+			{
+				result =
+					(_register8 == 0xfb) // The selector has pointed the joystick 1
+						? _keyboardEntry & ~_joystickStatus [0]
+						: ((_register8 == 0xfd) // The seelctor just pointed the joystick 2
+							? _keyboardEntry & ~_joystickStatus [1]
+							: _keyboardEntry); // No joystick pointed...
+			}
+
+			break;
+
+		default:
+			{
+				result = COMMODORE::TEDRegisters::readValue (pp);
+			}
+
+			break;
+	}
+
+	return (_lastValueRead = result);
+}
+	
 // ---
 void C264::TEDRegisters::initializeInternalValues ()
 {
 	COMMODORE::TEDRegisters::initializeInternalValues ();
 
-	// The RAM values...
-	for (size_t i = 0x20; i < 0x40; 
-		setValue (i++, MCHEmul::UByte::_0));
-
-	// No info from joysticks...
-	_joystickPins [0] = 
-	_joystickPins [1] = MCHEmul::UByte::_FF;
+	// Pull up by default...
+	_keyboardEntry = MCHEmul::UByte::_FF;
+	// Pull up by default...
+	_joystickStatus [0] = _joystickStatus [1] = MCHEmul::UByte::_FF;
 }
