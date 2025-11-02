@@ -48,16 +48,11 @@ void C264::TED::processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifier* n)
 					std::static_pointer_cast <MCHEmul::InputOSSystem::JoystickMovementEvent> (evnt.data ());
 
 				size_t ct = 0; // Counts the axis...
-				unsigned char dr = 0;
-				for (size_t ct = 0; ct < jm ->_axisValues.size (); ct++)
-					dr |= 1 << ((C264::InputOSSystem*) n) -> bitForJoystickAxis 
-						(jm -> _joystickId, (int) ct, jm -> _axisValues [ct]);
-
-				/** Saves the full status of the joystick. */
-				_TEDRegisters -> setJoystickStatus 
-					(jm -> _joystickId, (dr == 0x00) 
-						? 0xff /** none connected. */ 
-						: _TEDRegisters -> joystickStatus (jm -> _joystickId) & ~dr);
+				MCHEmul::UByte dr = MCHEmul::UByte::_0;
+				for (size_t ct = 0; ct < jm -> _axisValues.size (); ct++)
+					dr.setBit (((C264::InputOSSystem*) n) -> bitForJoystickAxis 
+						(jm -> _joystickId, (int) ct, jm -> _axisValues [ct]), true);
+				_TEDRegisters -> setJoystickStatus (jm -> _joystickId, dr); // If there is no axis pressed, then a 0 is set...
 			}
 
 			break;
