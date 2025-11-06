@@ -12,6 +12,10 @@ MCHEmul::Command* COMMODORE::CommandBuilder::createEmptyCommand (const std::stri
 		result = new COMMODORE::VICIIStatusCommand;
 	else if (cmdName == "VICIIEVENTS" || cmdName == COMMODORE::VICIIStatusCommand::_NAME)
 		result = new COMMODORE::VICIIShowEventsCommand;
+	if (cmdName == "TED" || cmdName == COMMODORE::TEDStatusCommand::_NAME)
+		result = new COMMODORE::TEDStatusCommand;
+	else if (cmdName == "TEDEVENTS" || cmdName == COMMODORE::TEDStatusCommand::_NAME)
+		result = new COMMODORE::TEDShowEventsCommand;
 	else if (cmdName == "VIA" || cmdName == COMMODORE::VIAStatusCommand::_NAME)
 		result = new COMMODORE::VIAStatusCommand;
 	else if (cmdName == "CIA" || cmdName == COMMODORE::CIAStatusCommand::_NAME)

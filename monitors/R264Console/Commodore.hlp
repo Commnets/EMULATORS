@@ -13,6 +13,13 @@ Parameters: None.
 To activate or desactivate the visualization of VICII events.
 Parameters:
 => ON|OFF (mandatory): Activate or desactivate the events.
+;TED
+To know the status of the TED chip, including raster and others.
+Parameters: None.
+;TEDEVENTS ON|OFF
+To activate or desactivate the visualization of TED events.
+Parameters:
+=> ON|OFF (mandatory): Activate or desactivate the events.
 ;VIA
 To know the status of the VIA chip.
 Parameters: None.

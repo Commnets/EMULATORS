@@ -53,6 +53,7 @@ Value:@VALUE@(@INITIALVALUE@)
 @BYTES{blocksize=16,listsep=\,,tablesep=\ ,minsize=2}@
 Graphic Mode:@MODE@
 40 Columns:@40C@, 25 Rows:@25R@
+Cursor Position:@CURSOR@
 ScrollX:@SCROLLX@, ScrollY:@SCROLLY@
 LIGHTPEN:@LIGHTPENX@,@LIGHTPENY@
 Colors:@FORECOLOR@(@BKCOLOR1@,@BKCOLOR2@,@BKCOLOR3@,@BKCOLOR4@)
@@ -305,6 +306,14 @@ Light Yellow: Negative edge vertical border (off)
 Light Orange: Positive edge main border (on)
 Light Purple: Negative edge main border (off)
 Light Green: Badline
+#---
+#---
+;CTED
+@TED>@
+#---
+#---
+;CTEDEVENTS
+Legend:
 #---
 #---
 ;CVIA

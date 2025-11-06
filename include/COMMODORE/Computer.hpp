@@ -44,20 +44,6 @@ namespace COMMODORE
 							{ }
 
 		// To get direct access to the most important COMMODORE chips...
-		/** The TED. */
-		bool existsTED () const
-							{ return (_chips.find (TED::_ID) != _chips.end ()); }
-		const TED* ted () const
-							{ return (existsVICI () 
-								? dynamic_cast <const TED*> 
-								  ((* _chips.find (TED::_ID)).second)
-								: nullptr); }
-		TED* ted ()
-							{ return (existsTED () 
-								? dynamic_cast <TED*> 
-								  ((* _chips.find (TED::_ID)).second)
-								: nullptr); }
-
 		// Not all these chips have to exist in any COMMODORE computer, so the answer can be nullptr.
 		/** The VICI. */
 		bool existsVICI () const
@@ -85,6 +71,20 @@ namespace COMMODORE
 							{ return (existsVICII () 
 								? dynamic_cast <VICII*> 
 								  ((* _chips.find (VICII::_ID)).second)
+								: nullptr); }
+
+		/** The TED. */
+		bool existsTED () const
+							{ return (_chips.find (TED::_ID) != _chips.end ()); }
+		const TED* ted () const
+							{ return (existsTED () 
+								? dynamic_cast <const TED*> 
+								  ((* _chips.find (TED::_ID)).second)
+								: nullptr); }
+		TED* ted ()
+							{ return (existsTED () 
+								? dynamic_cast <TED*> 
+								  ((* _chips.find (TED::_ID)).second)
 								: nullptr); }
 
 		/** The ACIA. */

@@ -5,6 +5,8 @@
 const std::string COMMODORE::VICIStatusCommand::_NAME = "CVICI";
 const std::string COMMODORE::VICIIStatusCommand::_NAME = "CVICII";
 const std::string COMMODORE::VICIIShowEventsCommand::_NAME = "CVICIIEVENTS";
+const std::string COMMODORE::TEDStatusCommand::_NAME = "CTED";
+const std::string COMMODORE::TEDShowEventsCommand::_NAME = "CTEDEVENTS";
 const std::string COMMODORE::VIAStatusCommand::_NAME = "CVIA";
 const std::string COMMODORE::CIAStatusCommand::_NAME = "CCIA";
 const std::string COMMODORE::SIDStatusCommand::_NAME = "CSID";
@@ -45,6 +47,31 @@ void COMMODORE::VICIIShowEventsCommand::executeImpl (MCHEmul::CommandExecuter* c
 		return;
 
 	static_cast <COMMODORE::Computer*> (c) -> vicII () -> setDrawOtherEvents ((parameter ("00") == "ON"));
+}
+
+// ---
+void COMMODORE::TEDStatusCommand::executeImpl (MCHEmul::CommandExecuter* cE, MCHEmul::Computer* c, MCHEmul::InfoStructure& rst)
+{
+	// Only with a valid computer, but also a COMMODORE one. 
+	if (c == nullptr || 
+		dynamic_cast <COMMODORE::Computer*> (c) == nullptr ||
+		static_cast <COMMODORE::Computer*> (c) -> ted () == nullptr)
+		return;
+
+	rst.add ("TED", std::move (static_cast <COMMODORE::Computer*> (c) -> ted () -> getInfoStructure ()));
+}
+
+// ---
+void COMMODORE::TEDShowEventsCommand::executeImpl (MCHEmul::CommandExecuter* cE,
+	MCHEmul::Computer* c, MCHEmul::InfoStructure& rst)
+{
+	// Only with a valid computer, but also a ZX81 one. 
+	if (c == nullptr || 
+		dynamic_cast <COMMODORE::Computer*> (c) == nullptr ||
+		static_cast <COMMODORE::Computer*> (c) -> ted () == nullptr) // Just in case...
+		return;
+
+	static_cast <COMMODORE::Computer*> (c) -> ted () -> setDrawOtherEvents ((parameter ("00") == "ON"));
 }
 
 // ---

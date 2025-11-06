@@ -21,7 +21,6 @@ MCHEmul::InfoStructure COMMODORE::TEDRegisters::GraphicalInfo::getInfoStructure 
 	result.add ("RASTERY",		_currentRasterLine);
 	result.add ("RASTERX",		_currentRasterColumn);
 	result.add ("CHARPOS",		_currentCharacterPosition);
-	result.add ("FLASHCOUNTER",	_flashCounter);
 
 	return (result);
 }
@@ -57,6 +56,7 @@ MCHEmul::InfoStructure COMMODORE::TEDRegisters::getInfoStructure () const
 	result.add ("25R",				_textDisplay25RowsActive);
 	result.add ("SCROLLX",			_horizontalScrollPosition);
 	result.add ("SCROLLY",			_verticalScrollPosition);
+	result.add ("CURSOR",			cursorPosition ());
 	result.add ("BkColor1",			std::move (_backgroundColor [0].getInfoStructure ()));
 	result.add ("BkColor2",			std::move (_backgroundColor [1].getInfoStructure ()));
 	result.add ("BkColor3",			std::move (_backgroundColor [2].getInfoStructure ()));
@@ -406,7 +406,7 @@ void COMMODORE::TEDRegisters::setValue (size_t p, const MCHEmul::UByte& v)
 		case 0x1f:
 			{
 				_graphicalInfo._currentCharacterRow = v.value () & 0x07;
-				_graphicalInfo._flashCounter = (v.value () & 0b01111000) >> 3;
+				_flashCounter = (v.value () & 0b01111000) >> 3;
 			}
 
 			break;
@@ -641,7 +641,7 @@ const MCHEmul::UByte& COMMODORE::TEDRegisters::readValue (size_t p) const
 		case 0x1f:
 			{
 				result = ((_graphicalInfo._currentCharacterRow & 0x0f) |
-						 ((_graphicalInfo._flashCounter & 0x0f) << 3)) | ~0b01111111; // The bit 7 to 1!
+						 ((_flashCounter & 0x0f) << 3)) | ~0b01111111; // The bit 7 to 1!
 			}
 
 			break;
@@ -689,7 +689,8 @@ void COMMODORE::TEDRegisters::initializeInternalValues ()
 	setValue (0x17, MCHEmul::UByte::_0);
 	setValue (0x18, MCHEmul::UByte::_0);
 	setValue (0x19, MCHEmul::UByte::_0);	// Background & foreground colors in black...
-	// From 0x1a to 0x1f control who screen behaves...
+	setValue (0x1f, MCHEmul::UByte::_0);	// Flash counter to 0...
+	// From 0x1a to 0x1f control who screen behaves...(except flash Counter)
 	// better if nothing is written. Look at the next line instead...
 
 	// Managed direclty by the TED Chip...

@@ -79,13 +79,19 @@ namespace COMMODORE
 		static const unsigned short _GRAPHMAXBITMAPROWS		= 200;
 
 		/** Specific classes for PAL & NTSC have been created giving this data as default. \n
-			The TED constructor receives info over the raster data, the memory view to use,
+			The TED constructor receives info over the raster data, the frequency it works, the memory view to use,
 			The number of cycles of every raster line (different depending on the VICII version) 
 			and additional attributes. */
-		TED (int intId, const MCHEmul::RasterData& vd, const MCHEmul::RasterData& hd,
-			int vV, MCHEmul::SoundLibWrapper* sW, const MCHEmul::Attributes& attrs = { });
+		TED (int intId, unsigned short fq, 
+			 const MCHEmul::RasterData& vd, const MCHEmul::RasterData& hd,
+			 int vV, MCHEmul::SoundLibWrapper* sW, const MCHEmul::Attributes& attrs = { });
 
 		virtual ~TED () override;
+
+		/** Whether to draw other events related with the raster of VICII. 
+			Borders, bad lines mainly. */
+		void setDrawOtherEvents (bool d)
+							{ _drawOtherEvents = d; }
 
 		const SoundFunction* soundFunction () const
 							{ return (_soundFunction); }
@@ -129,17 +135,9 @@ namespace COMMODORE
 		struct DrawContext
 		{
 			unsigned short _ICD;	// Initial Column of the Display (Not taken into account reductions in size).
-			unsigned short _ICS;	// Initial Column Screen (Screen = Display with reductions in the size considered).
-			unsigned short _LCD;	// Last Column of the Display 
-			unsigned short _LCS;	// Last Column of the Screen
 			unsigned short _SC;		// Scroll X
 			unsigned short _RC;		// Raster X (from the beginning of the visible zone)
 			unsigned short _RCA;	// Raster X adjusted (Moves 8 by 8, so = Raster X >> 3 << 3)
-			unsigned short _IRD;	// Initial Row Display (Not taken into account reductions of the size)
-			unsigned short _IRS;	// Initial Row Screen (Screen = Display with reductions of size taken into account).
-			unsigned short _LRD;	// Last Row of the Display 
-			unsigned short _LRS;	// Last Row of the Screen
-			unsigned short _SR;		// Scroll Y
 			unsigned short _RR;		// Raster Y (From the beginning of the visible zone.
 									// Moves 1 by 1. No adjusted needed)
 		};
@@ -197,15 +195,11 @@ namespace COMMODORE
 		  *	Draws a monocolor char. \n
 		  *	All methods receive: \n
 		  *	cb	= window column adjusted by the scrollX value where to start to draw 8 pixels. \n
-		  *	rc	= window row adjusted by the scrollY value where to draw. \n
-		  *	also some of those:
-		  *	bt	= The bits to draw, from the graphical memory. \n
-		  *	clr = The color of those bits, from the ram color memory. \n
-		  *	sc  = The screen codes, from the matrix memory. \n
-		  *	and, some of them:
-		  *	blk = When the graphical mode is inavlid and nothing has to be drawn.
+		  * Some of them receive: \n
+		  * inv = to point aout that the method is invoked from an invalid graphic mode. \n
+		  * The first method receives a flag to point out whether the cursor has or not to be drawn. 
 		  */
-		DrawResult drawMonoColorChar (int cb);
+		DrawResult drawMonoColorChar (int cb, bool c);
 		/** Draws a multicolor char. \n
 			The mode can be used also as an invalid mode. */
 		DrawResult drawMultiColorChar (int cb, bool inv = false);
@@ -242,6 +236,8 @@ namespace COMMODORE
 		protected:
 		/** The type of interrupt launched from the TED. */
 		int _interruptId;
+		/** The frequency of the TED: */
+		unsigned short _frequency;
 		/** There three timers within the TED. */
 		TEDTimer _T1, _T2, _T3;
 		/** A reference to the sound part of the chip. */
@@ -254,8 +250,14 @@ namespace COMMODORE
 		unsigned short _cyclesPerRasterLine;
 		/** The raster. */
 		MCHEmul::Raster _raster;
+		/** To draw or not other different events. */
+		bool _drawOtherEvents;
 
 		// Implementation
+		/** Internal counter that increments in 1 when the frame is drawn. 
+			This internal counetr is used to determine whether the internal cursor must blink. 
+			It reaches always just half of the frequency. */
+		unsigned short _timesFrameDrawn;
 		/** When the CPU is not stopped (sometimes the VIC requires to stop it). \n 
 			and a instruction is executed, the number of cycles that that instruction required, has to be taken into account
 			to define what the VICII has to do. */
@@ -312,6 +314,7 @@ namespace COMMODORE
 				: _VCBASE (0), _VC (0), _VLMI (0),
 				  _RC (0),
 				  _idleState (true),
+				  _cursorHardwareStatus (false),
 				  _screenCodeData (std::vector <MCHEmul::UByte> (40, MCHEmul::UByte::_0)),
 				  _graphicData (std::vector <MCHEmul::UByte> (40, MCHEmul::UByte::_0)),
 				  _colorData (std::vector <MCHEmul::UByte> (40, MCHEmul::UByte::_0))
@@ -324,9 +327,16 @@ namespace COMMODORE
 			void emptyGraphicData ()
 							{ _graphicData		= std::vector <MCHEmul::UByte> (40, MCHEmul::UByte::_0); }
 
+			void changeCursorHardwareStatus ()
+							{ _cursorHardwareStatus = !_cursorHardwareStatus; }
+			bool cursorHardwareStatus () const
+							{ return (_cursorHardwareStatus); }
+
+
 			unsigned short _VCBASE, _VC, _VLMI;
 			unsigned char _RC;
 			bool _idleState; 
+			bool _cursorHardwareStatus;
 			mutable MCHEmul::UBytes _screenCodeData;
 			mutable MCHEmul::UBytes _graphicData; 
 			mutable MCHEmul::UBytes _colorData;

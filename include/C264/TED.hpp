@@ -45,8 +45,9 @@ namespace C264
 		public:
 		static const unsigned int _ROMACCESSCHANGED = 300;
 
-		TED (int intId, const MCHEmul::RasterData& vd, const MCHEmul::RasterData& hd,
-			int vV, MCHEmul::SoundLibWrapper* sW, const MCHEmul::Attributes& attrs = { });
+		TED (int intId, unsigned short fq,
+			 const MCHEmul::RasterData& vd, const MCHEmul::RasterData& hd,
+			 int vV, MCHEmul::SoundLibWrapper* sW, const MCHEmul::Attributes& attrs = { });
 
 		virtual bool initialize () override;
 

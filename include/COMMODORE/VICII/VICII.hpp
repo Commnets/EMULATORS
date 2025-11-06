@@ -281,13 +281,8 @@ namespace COMMODORE
 		  *	Draws a monocolor char. \n
 		  *	All methods receive: \n
 		  *	cb	= window column adjusted by the scrollX value where to start to draw 8 pixels. \n
-		  *	rc	= window row adjusted by the scrollY value where to draw. \n
-		  *	also some of those:
-		  *	bt	= The bits to draw, from the graphical memory. \n
-		  *	clr = The color of those bits, from the ram color memory. \n
-		  *	sc  = The screen codes, from the matrix memory. \n
-		  *	and, some of them:
-		  *	blk = When the graphical mode is inavlid and nothing has to be drawn.
+		  * Some of them receive: \n
+		  * inv = to point aout that the method is invoked from an invalid graphic mode.
 		  */
 		DrawResult drawMonoColorChar (int cb);
 		/** Draws a multicolor char. \n

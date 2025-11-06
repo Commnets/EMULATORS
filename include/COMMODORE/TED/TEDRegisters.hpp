@@ -84,16 +84,14 @@ namespace COMMODORE
 			GraphicalInfo ()
 				: MCHEmul::InfoClass ("TEDGraphicalInfo"),
 				  _currentRasterLine (0), _currentRasterColumn (0),
-				  _currentCharacterPosition (0), _currentCharacterRow (0),
-				  _flashCounter (0)
+				  _currentCharacterPosition (0), _currentCharacterRow (0)
 							{ }
 
 			GraphicalInfo (unsigned short rL, unsigned short rC, 
 				unsigned short cP, unsigned char cR, unsigned char fC)
 				: MCHEmul::InfoClass ("TEDGraphicalInfo"),
 				  _currentRasterLine (rL), _currentRasterColumn (rC),
-				  _currentCharacterPosition (cP), _currentCharacterRow (cR),
-				  _flashCounter (fC)
+				  _currentCharacterPosition (cP), _currentCharacterRow (cR)
 							{ }
 
 			virtual MCHEmul::InfoStructure getInfoStructure () const override;
@@ -105,8 +103,6 @@ namespace COMMODORE
 			unsigned short _currentCharacterPosition; 
 			/** From 0 to 7. */
 			unsigned char _currentCharacterRow;
-			/** Counting for flashing. */
-			unsigned char _flashCounter; 
 		};
 
 		TEDRegisters (MCHEmul::PhysicalStorage* ps, size_t pp, const MCHEmul::Address& a, size_t s);
@@ -160,6 +156,12 @@ namespace COMMODORE
 		bool textMode () const
 							{ return (_textMode); }
 
+		// Flash counter
+		void incrementFlashCounter ()
+						{ _flashCounter = _flashCounter++ & 0x01f; }
+		bool flashCounterOn () const
+						{ return ((_flashCounter & 0x10) != 0); }
+
 		// IRQs...
 		// To know whether a IRQ could be generated in different scenarios...
 		// To generate the IRQ the condition has to be reached
@@ -197,14 +199,6 @@ namespace COMMODORE
 							{ return (_graphicalInfo); }
 		void setGraphicalInfo (const GraphicalInfo& gI)
 							{ _graphicalInfo = gI; }
-		/** To increment the flash counter. \n
-			It is a number between 0 and 32. 
-			The most significant bit defines whether it is flashing or not. */
-		void incrementFlashCounter ()
-							{ _graphicalInfo._flashCounter = _graphicalInfo._flashCounter++ & 0x01f; }
-		/** To get whether the flash counter is on or off. */
-		bool flashCounterOn () const
-							{ return ((_graphicalInfo._flashCounter & 0x10) != 0); }
 
 		// Memory zones
 		const MCHEmul::Address& charDataMemory () const
@@ -298,6 +292,8 @@ namespace COMMODORE
 		bool _lightPenIRQActive;
 		/** Raster Control. */
 		unsigned short _IRQRasterLineAt; // To define where to launch the IRQ. When reading therre is other variable...
+		/** Flash control counter. */
+		unsigned char _flashCounter;
 
 		// Managed from the TED simulation directly...
 		/** About the graphical Info. */

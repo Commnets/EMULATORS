@@ -87,10 +87,12 @@ MCHEmul::InfoStructure COMMODORE::TED::SoundFunction::getInfoStructure () const
 }
 
 // ---
-COMMODORE::TED::TED (int intId, const MCHEmul::RasterData& vd, const MCHEmul::RasterData& hd,
+COMMODORE::TED::TED (int intId, unsigned short fq,
+		const MCHEmul::RasterData& vd, const MCHEmul::RasterData& hd,
 		int vV, MCHEmul::SoundLibWrapper* sW, const MCHEmul::Attributes& attrs)
 	: MCHEmul::GraphicalChip (_ID, attrs),
 	  _interruptId (intId),
+	  _frequency (fq),
 	  _T1 (1, COMMODORE::TEDTimer::RunMode::_FROMINITIALVALUE),
 	  _T2 (2, COMMODORE::TEDTimer::RunMode::_CONTINUOUS),
 	  _T3 (3, COMMODORE::TEDTimer::RunMode::_CONTINUOUS),
@@ -99,6 +101,8 @@ COMMODORE::TED::TED (int intId, const MCHEmul::RasterData& vd, const MCHEmul::Ra
 	  _TEDView (vV),
 	  _cyclesPerRasterLine (57),
 	  _raster (vd, hd, 8 /** step. */),
+	  _drawOtherEvents (false),
+	  _timesFrameDrawn (0),
 	  _lastCPUCycles (0),
 	  _format (nullptr),
 	  _cycleInRasterLine (1),
@@ -152,6 +156,8 @@ bool COMMODORE::TED::initialize ()
 	_TEDRegisters -> lookAtTimers (&_T1, &_T2, &_T3);
 	_TEDRegisters -> lookAtSoundLibWrapper (_soundFunction -> soundWrapper ());
 	_TEDRegisters -> initialize ();
+
+	_timesFrameDrawn = 0;
 
 	_lastCPUCycles = 0;
 	
@@ -270,8 +276,17 @@ bool COMMODORE::TED::simulate (MCHEmul::CPU* cpu)
 			{ 
 				_tedGraphicInfo._VCBASE = _tedGraphicInfo._VC = 0;
 				_tedGraphicInfo._RC = 0;
+				
 				// Flash counter is incremented every frame...
 				_TEDRegisters -> incrementFlashCounter (); 
+				
+				// Every half the frequecy of the TED....
+				// ...the cursor hardware status (used in standard char mode changes)
+				if (++_timesFrameDrawn >= (_frequency >> 1))
+				{
+					_timesFrameDrawn = 0;
+					_tedGraphicInfo.changeCursorHardwareStatus ();
+				}
 			}
 			// In any other line number, VC start back to count from the value in VCBASE.
 			// VCBASE is actualized only then RC reaches 8. @see rasterCycle 58 treatment.
@@ -565,17 +580,9 @@ void COMMODORE::TED::drawVisibleZone (MCHEmul::CPU* cpu)
 	drawGraphicsAndMoveToScreen (
 		{
 			/** _ICD */ _raster.hData ().firstDisplayPosition (),		// DISLAY: The original...
-			/** _ICS */ _raster.hData ().firstScreenPosition (),		// SCREEN: And the real one (after reduction size)
-			/** _LCD */ _raster.hData ().lastDisplayPosition (),		// DISPLAY: The original...
-			/** _LCS */ _raster.hData ().lastScreenPosition (),			// SCREEN: And the real one (after reduction size)
 			/** _SC	 */ _TEDRegisters -> horizontalScrollPosition (),	// From 0 - 7 
 			/** _RC	 */ cv,												// Where the horizontal raster is (not adjusted to 8) inside the window
 			/** _RCA */ cav,											// Where the horizontal raster is (adjusted to 8) inside the window
-			/** _IRD */ _raster.vData ().firstDisplayPosition (),		// DISPLAY: The original... 
-			/** _IRS */ _raster.vData ().firstScreenPosition (),		// SCREEN:  And the real one (after reduction size)
-			/** _LRD */ _raster.vData ().lastDisplayPosition (),		// DISPLAY: The original...
-			/** _LRS */ _raster.vData ().lastScreenPosition (),			// SCREEN: And the real one (after reduction size)
-			/** _SR	 */ _TEDRegisters -> verticalScrollPosition (),		// From 0 - 7 (taken into account in bad lines)
 			/** _RR	 */ rv												// Where the vertical raster is inside the window (it is not the chip raster line)
 		});
 
@@ -655,7 +662,13 @@ COMMODORE::TED::DrawResult COMMODORE::TED::drawGraphics (const COMMODORE::TED::D
 	{
 		case COMMODORE::TEDRegisters::GraphicMode::_CHARMODE:
 			{
-				result = std::move (drawMonoColorChar (cb));
+				// Calculates whether the position of the cursor is or not visible...
+				// ...as this is the only mode where the cursor can be drawn...
+				unsigned short cp = _TEDRegisters -> cursorPosition (); // This is number between 0 and 1024...
+				unsigned short cpy = (((unsigned short) (cp / 0x28)) << 3) + _raster.vData ().firstScreenPosition (),
+							   cpx = (int) (((unsigned short) (cp % 0x28)) << 3); // Not needed to add the border...
+				result = std::move (drawMonoColorChar (cb, 
+					((dC._RR >= cpy && dC._RR < (cpy + 8)) && (cpx >= cb && cpx < (cb + 8)))));
 			}
 
 			break;
@@ -720,7 +733,7 @@ COMMODORE::TED::DrawResult COMMODORE::TED::drawGraphics (const COMMODORE::TED::D
 }
 
 // ---
-COMMODORE::TED::DrawResult COMMODORE::TED::drawMonoColorChar (int cb)
+COMMODORE::TED::DrawResult COMMODORE::TED::drawMonoColorChar (int cb, bool c)
 {
 	COMMODORE::TED::DrawResult result;
 
@@ -735,12 +748,15 @@ COMMODORE::TED::DrawResult COMMODORE::TED::drawMonoColorChar (int cb)
 		size_t iBy = ((size_t) pp) >> 3; // To determine the byte...
 		size_t iBt = 7 - (((size_t) pp) % 8); // From MSB to LSB...
 
-		// Draws the pixel using the color or leave it in the background one?
+		// Pixel must be on or off?
 		bool dP = 
 			(_tedGraphicInfo._colorData [iBy].bit (7)) // The bit of the byte read defines whether the color blinks or not...
 				? ((!_TEDRegisters -> flashCounterOn () && _tedGraphicInfo._graphicData [iBy].bit (iBt)) ||
 				   (_TEDRegisters -> flashCounterOn () && !_tedGraphicInfo._graphicData [iBy].bit (iBt))) // If blinks draws in reverse video!
 				: _tedGraphicInfo._graphicData [iBy].bit (iBt); // If the byte doesn't define any blink, draws normally...
+		// ...if the cursor is over the pixels to draw and the cursor hardware is on, changes the status of the pixel...
+		if (c && _tedGraphicInfo.cursorHardwareStatus ()) dP = !dP;
+		// ...and finally draws it...
 		if (dP)
 			result._foregroundColorData [i] = 
 				(unsigned int) (_tedGraphicInfo._colorData [iBy].value () & 0x7f /** Without the bit 7. */);
@@ -1019,7 +1035,7 @@ void COMMODORE::TED::debugTEDCycle (MCHEmul::CPU* cpu, unsigned int i)
 
 // ---
 COMMODORE::TED_PAL::TED_PAL (int intId, int vV, MCHEmul::SoundLibWrapper* wS)
-	: COMMODORE::TED (intId,
+	: COMMODORE::TED (intId, 50,
 		 _VRASTERDATA, _HRASTERDATA, vV, wS,
 		{ { "Name", "TED" },
 		  { "Code", "7360/8360 for PAL" },
@@ -1031,7 +1047,7 @@ COMMODORE::TED_PAL::TED_PAL (int intId, int vV, MCHEmul::SoundLibWrapper* wS)
 
 // ---
 COMMODORE::TED_NTSC::TED_NTSC (int intId, int vV, MCHEmul::SoundLibWrapper* wS)
-	: COMMODORE::TED (intId,
+	: COMMODORE::TED (intId, 60,
 		 _VRASTERDATA, _HRASTERDATA, vV, wS,
 		{ { "Name", "TED" },
 		  { "Code", "7360/8360 for NTSC" },

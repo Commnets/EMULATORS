@@ -77,11 +77,51 @@ namespace COMMODORE
 			MCHEmul::Computer* c, MCHEmul::InfoStructure& rst) override;
 	};
 
+	/** To get the status of the TED chip. */
+	class TEDStatusCommand final : public MCHEmul::Command
+	{
+		public:
+		static const int _ID = 103;
+		static const std::string _NAME;
+	
+		TEDStatusCommand ()
+			: MCHEmul::Command (_ID, _NAME)
+							{ }
+
+		virtual bool canBeExecuted () const override
+							{ return (_parameters.size () == 0); }
+
+		private:
+		virtual void executeImpl (MCHEmul::CommandExecuter* cE, 
+			MCHEmul::Computer* c, MCHEmul::InfoStructure& rst) override;
+	};
+
+	/** To activate the visualization of the important events
+		in the relation between CPU and the Screen. */
+	class TEDShowEventsCommand final : public MCHEmul::Command
+	{
+		public:
+		static const int _ID = 104;
+		static const std::string _NAME;
+
+		TEDShowEventsCommand ()
+			: MCHEmul::Command (_ID, _NAME)
+							{ }
+
+		/** The parameter can be ON or OFF. */
+		virtual bool canBeExecuted () const override
+							{ return (_parameters.size () == 1); }
+
+		private:
+		virtual void executeImpl (MCHEmul::CommandExecuter* cE, 
+			MCHEmul::Computer* c, MCHEmul::InfoStructure& rst) override;
+	};
+
 	/** To get the status of the VIA chip. */
 	class VIAStatusCommand final : public MCHEmul::Command
 	{
 		public:
-		static const int _ID = 103;
+		static const int _ID = 105;
 		static const std::string _NAME;
 
 		VIAStatusCommand ()
@@ -100,7 +140,7 @@ namespace COMMODORE
 	class CIAStatusCommand final : public MCHEmul::Command
 	{
 		public:
-		static const int _ID = 104;
+		static const int _ID = 106;
 		static const std::string _NAME;
 
 		CIAStatusCommand ()
@@ -119,7 +159,7 @@ namespace COMMODORE
 	class SIDStatusCommand final : public MCHEmul::Command
 	{
 		public:
-		static const int _ID = 105;
+		static const int _ID = 107;
 		static const std::string _NAME;
 
 		SIDStatusCommand ()
@@ -138,7 +178,7 @@ namespace COMMODORE
 	class SIDWrapperCommand final : public MCHEmul::Command
 	{
 		public:
-		static const int _ID = 106;
+		static const int _ID = 108;
 		static const std::string _NAME;
 
 		SIDWrapperCommand ()
