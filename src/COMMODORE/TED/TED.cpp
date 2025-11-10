@@ -665,10 +665,22 @@ COMMODORE::TED::DrawResult COMMODORE::TED::drawGraphics (const COMMODORE::TED::D
 				// Calculates whether the position of the cursor is or not visible...
 				// ...as this is the only mode where the cursor can be drawn...
 				unsigned short cp = _TEDRegisters -> cursorPosition (); // This is number between 0 and 1024...
-				unsigned short cpy = (((unsigned short) (cp / 0x28)) << 3) + _raster.vData ().firstScreenPosition (),
-							   cpx = (int) (((unsigned short) (cp % 0x28)) << 3); // Not needed to add the border...
+				unsigned short cpy = unsigned short (((((int) cp / 0x28)) << 3) + (int) _raster.vData ().firstScreenPosition () 
+										+ ((int) _TEDRegisters -> verticalScrollPosition () - 3));
+				unsigned short cpx = (((cp % 0x28)) << 3) + dC._SC; // Not needed to add the border...
+				bool dCA = cpx >= cb && cpx < (cb + 8);
+				bool dCB = (cpx + 7) >= cb && (cpx + 7) < (cb + 8);
+				int dCI = 0, dCN = 8;
+				if (dCA || dCB)
+				{
+					if (dCA) { dCI = (int) cpx - cb; dCN = 8 - dCI; }
+					if (dCB) { dCI = 0; dCN = 8 - ((cb + 8) - ((int) cpx + 8)); }
+					if (dCI < 0 || dCI > 8 || dCN < 0 || dCN > 8)
+					{ std::cout << "mal"; }
+				}
+
 				result = std::move (drawMonoColorChar (cb, 
-					((dC._RR >= cpy && dC._RR < (cpy + 8)) && (cpx >= cb && cpx < (cb + 8)))));
+					(dC._RR >= cpy && dC._RR < (cpy + 8)) && (dCA || dCB), dCI, dCN));
 			}
 
 			break;
@@ -733,7 +745,7 @@ COMMODORE::TED::DrawResult COMMODORE::TED::drawGraphics (const COMMODORE::TED::D
 }
 
 // ---
-COMMODORE::TED::DrawResult COMMODORE::TED::drawMonoColorChar (int cb, bool c)
+COMMODORE::TED::DrawResult COMMODORE::TED::drawMonoColorChar (int cb, bool c, int dCI, int dCN)
 {
 	COMMODORE::TED::DrawResult result;
 
@@ -755,7 +767,8 @@ COMMODORE::TED::DrawResult COMMODORE::TED::drawMonoColorChar (int cb, bool c)
 				   (_TEDRegisters -> flashCounterOn () && !_tedGraphicInfo._graphicData [iBy].bit (iBt))) // If blinks draws in reverse video!
 				: _tedGraphicInfo._graphicData [iBy].bit (iBt); // If the byte doesn't define any blink, draws normally...
 		// ...if the cursor is over the pixels to draw and the cursor hardware is on, changes the status of the pixel...
-		if (c && _tedGraphicInfo.cursorHardwareStatus ()) dP = !dP;
+		if (c && _tedGraphicInfo.cursorHardwareStatus () && 
+			i >= dCI && i < (dCI + dCN)) dP = !dP;
 		// ...and finally draws it...
 		if (dP)
 			result._foregroundColorData [i] = 

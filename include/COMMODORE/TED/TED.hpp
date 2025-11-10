@@ -107,6 +107,11 @@ namespace COMMODORE
 		unsigned short cyclesPerRasterLine () const
 							{ return (_cyclesPerRasterLine); }
 
+		/** To know whether the TED is or not in idle_situation.
+			This can be used to change the speed of the processor later. */
+		bool isIdleState () const
+							{ return (_tedGraphicInfo._idleState); }
+
 		/** To get the raster info. */
 		const MCHEmul::Raster& raster () const
 							{ return (_raster); }
@@ -197,9 +202,10 @@ namespace COMMODORE
 		  *	cb	= window column adjusted by the scrollX value where to start to draw 8 pixels. \n
 		  * Some of them receive: \n
 		  * inv = to point aout that the method is invoked from an invalid graphic mode. \n
-		  * The first method receives a flag to point out whether the cursor has or not to be drawn. 
+		  * The first method receives a flag to point out whether the cursor has or not to be drawn,
+		  * and also the position to draw the cursor (useful when the previous variable was true).
 		  */
-		DrawResult drawMonoColorChar (int cb, bool c);
+		DrawResult drawMonoColorChar (int cb, bool c, int cI, int cP);
 		/** Draws a multicolor char. \n
 			The mode can be used also as an invalid mode. */
 		DrawResult drawMultiColorChar (int cb, bool inv = false);
@@ -285,11 +291,14 @@ namespace COMMODORE
 		mutable bool _badLineStopCyclesAdded;
 
 		/** 
+		  * TED behaves quit similar to VICII. \n
+		  * So, the description of the internal behavior has been extracted from there:
+		  * \n
 		  *	Structure to control how the graphics are displayed in the screen. \n
 		  *	https://www.cebix.net/VIC-Article.txt. (points 3.7.1 & 3.7.2): \n
 		  *	The VICII can be in either "idle" state or "screen" state... \n
 		  *	In the idle state c and g accesses (code and color matrix and graphics data) takes place one, 
-		  *	Whilest in the second one only access to $3fff memory takes place
+		  *	Whilst in the second one only access to $3fff memory takes place
 		  *	(or $39ff when ECM = multicolor bit in register $d016 is set). \n
 		  *	The screen state is set as soon as a bad condition comes. \n
 		  *	The idle state is set at cycle 58 if RC == 7 and ther eis no bad condition. \n

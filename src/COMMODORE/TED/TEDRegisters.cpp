@@ -97,6 +97,8 @@ void COMMODORE::TEDRegisters::setValue (size_t p, const MCHEmul::UByte& v)
 				_T1 -> stop ();
 			}
 
+			break;
+
 		// Timer High Byte
 		case 0x01:
 			{
@@ -476,10 +478,10 @@ const MCHEmul::UByte& COMMODORE::TEDRegisters::readValue (size_t p) const
 
 		case 0x06:
 			{
-				result = MCHEmul::UByte::_FF;
-				result |= (MCHEmul::PhysicalStorageSubset::readValue (pp).value () & 0x7f);
-
+				result = (MCHEmul::PhysicalStorageSubset::readValue (pp).value () & 0x7f);
 				// Pending to implement bit 7...
+				// // By default the value is always set to 0
+				// That is used for testing purposes, but not necessary works...
 			}
 
 			break;
@@ -488,6 +490,8 @@ const MCHEmul::UByte& COMMODORE::TEDRegisters::readValue (size_t p) const
 			{
 				result = MCHEmul::PhysicalStorageSubset::readValue (pp);
 			}
+
+			break;
 
 		// Read the value latched in TED
 		// after executing setValue (0x08)...
@@ -543,6 +547,8 @@ const MCHEmul::UByte& COMMODORE::TEDRegisters::readValue (size_t p) const
 			{
 				result = ((unsigned char) ((_cursorPosition & 0xff00) >> 8)) | 0xfc;
 			}
+
+			break;
 
 		case 0x0d:
 			{

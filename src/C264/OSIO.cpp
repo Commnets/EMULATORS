@@ -49,6 +49,8 @@ const C264::InputOSSystem::KeystrockesMap C264::InputOSSystem::_C264KEYS
 			{ SDL_SCANCODE_F3,				{ std::make_pair (6, 0) } },
 			{ SDL_SCANCODE_F8,				{ std::make_pair (3, 0) } }, // HELP Instead
 			/** the cursor/control keys */
+			{ SDL_SCANCODE_ESCAPE,			{ std::make_pair (4, 6) } },
+			{ SDL_SCANCODE_HOME,			{ std::make_pair (1, 7) } },
 			{ SDL_SCANCODE_RIGHT,			{ std::make_pair (3, 6) } },
 			{ SDL_SCANCODE_LEFT,			{ std::make_pair (0, 6) } },
 			{ SDL_SCANCODE_UP,				{ std::make_pair (3, 5) } },

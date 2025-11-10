@@ -36,7 +36,7 @@ namespace C264
 			In the original series computer, 
 			the speed if defined by the TED (Video/Sound & IO) Chip. \n
 			The TED change speed depending on whether the raster is in a visible or nor visible zone of the screen.
-			and even if it has been configured to be PAL or NTSC! ºn
+			and even if it has been configured to be PAL or NTSC! \n
 			So the speed here is just a reference as an average. */
 		static const unsigned int _PALCLOCK		= 889200; // 0.889 MHz
 		static const unsigned int _NTSCCLOCK	= 896040; // 0.896 MHz
@@ -48,6 +48,9 @@ namespace C264
 
 		protected:
 		virtual void processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifier* n) override;
+
+		/** To change the speed of the CPU. */
+		virtual void specificComputerCycle () override;
 
 		// Managing memory configuration...
 		/** To get the configuration of the memory. */
@@ -68,6 +71,10 @@ namespace C264
 		/** The configuration mode of the computer. 
 			In some version couldn't make sense. */
 		unsigned int _configuration;
+
+		// Implementation
+		/** A reference to the TED chip. */
+		TED* _ted;
 	};
 
 	/** The Commodore 16_116 a specific element of the series 264. \n

@@ -32,6 +32,11 @@ C264::Commodore264::Commodore264 (const MCHEmul::Chips& cps, MCHEmul::Memory* m,
 	assert (_memory != nullptr);
 
 	setConfiguration (_configuration, false /** No restart. */);
+
+	// Look for the TED...
+	_ted = dynamic_cast <C264::TED*> (ted ());
+	// ...and cannot be nullptr!
+	assert (_ted != nullptr);
 }
 
 // ---
@@ -76,6 +81,14 @@ void C264::Commodore264::processEvent (const MCHEmul::Event& evnt, MCHEmul::Noti
 		setExit (true);
 		setRestartAfterExit (true, 9999 /** Big enough */);
 	}
+}
+
+// ---
+void C264::Commodore264::specificComputerCycle ()
+{
+	// Changes the speed of the CPU attending whether the TED is or not in idle state...
+	// ...using the same mechanisim that in a external access!
+	clock ().setFactor (_ted -> isIdleState () ? 2.0 : 1.0);
 }
 
 // ---
