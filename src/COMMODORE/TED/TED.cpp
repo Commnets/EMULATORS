@@ -664,20 +664,15 @@ COMMODORE::TED::DrawResult COMMODORE::TED::drawGraphics (const COMMODORE::TED::D
 			{
 				// Calculates whether the position of the cursor is or not visible...
 				// ...as this is the only mode where the cursor can be drawn...
-				unsigned short cp = _TEDRegisters -> cursorPosition (); // This is number between 0 and 1024...
-				unsigned short cpy = unsigned short (((((int) cp / 0x28)) << 3) + (int) _raster.vData ().firstScreenPosition () 
-										+ ((int) _TEDRegisters -> verticalScrollPosition () - 3));
-				unsigned short cpx = (((cp % 0x28)) << 3) + dC._SC; // Not needed to add the border...
-				bool dCA = cpx >= cb && cpx < (cb + 8);
-				bool dCB = (cpx + 7) >= cb && (cpx + 7) < (cb + 8);
-				int dCI = 0, dCN = 8;
-				if (dCA || dCB)
-				{
-					if (dCA) { dCI = (int) cpx - cb; dCN = 8 - dCI; }
-					if (dCB) { dCI = 0; dCN = 8 - ((cb + 8) - ((int) cpx + 8)); }
-					if (dCI < 0 || dCI > 8 || dCN < 0 || dCN > 8)
-					{ std::cout << "mal"; }
-				}
+				unsigned short cp = _TEDRegisters -> cursorPosition (); // This is number between 0 and 1000...
+				int cpy = ((((int) cp / 0x28)) << 3) + (int) _raster.vData ().firstScreenPosition () 
+							+ ((int) _TEDRegisters -> verticalScrollPosition () - 3);
+				int cpx = (((cp % 0x28)) << 3) - dC._SC; // Not needed to add the border, but it can be negative because the scroll...
+				bool dCA = cpx >= cb && cpx <= (cb + 7); // Is the first part of the cursor visible?
+				bool dCB = (cpx + 7 + dC._SC) >= cb && (cpx + 7 + dC._SC) <= (cb + 7); // or the last one?
+				int dCI = 0, dCN = 8; // From what position to draw, and how many pixles should be drawn...
+				if (dCA) { dCI = dC._SC; dCN = 8 - dCI; }
+				else if (dCB) { dCI = 0; dCN = dC._SC; }
 
 				result = std::move (drawMonoColorChar (cb, 
 					(dC._RR >= cpy && dC._RR < (cpy + 8)) && (dCA || dCB), dCI, dCN));
