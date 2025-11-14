@@ -211,7 +211,6 @@ bool COMMODORE::TEDSoundSimpleLibWrapper::getData (MCHEmul::CPU *cpu, MCHEmul::U
 COMMODORE::TEDSoundSimpleLibWrapper::Voice::Voice (int id, unsigned int cF)
 	: MCHEmul::SoundVoice (id, cF,
 		{
-			new MCHEmul::SawSmoothSoundWave (cF),
 			new MCHEmul::PulseSoundWave (cF),
 			new MCHEmul::NoiseSoundWave (cF)
 		}, nullptr), // No envelope attached...
