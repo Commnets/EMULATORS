@@ -87,12 +87,13 @@ MCHEmul::InfoStructure COMMODORE::TED::SoundFunction::getInfoStructure () const
 }
 
 // ---
-COMMODORE::TED::TED (int intId, unsigned short fq,
+COMMODORE::TED::TED (int intId, unsigned short clkcpum, unsigned short sfq, 
 		const MCHEmul::RasterData& vd, const MCHEmul::RasterData& hd,
 		int vV, MCHEmul::SoundLibWrapper* sW, const MCHEmul::Attributes& attrs)
 	: MCHEmul::GraphicalChip (_ID, attrs),
 	  _interruptId (intId),
-	  _frequency (fq),
+	  _timesFasterThanCPU (clkcpum),
+	  _screenfrequency (sfq),
 	  _T1 (1, COMMODORE::TEDTimer::RunMode::_FROMINITIALVALUE),
 	  _T2 (2, COMMODORE::TEDTimer::RunMode::_CONTINUOUS),
 	  _T3 (3, COMMODORE::TEDTimer::RunMode::_CONTINUOUS),
@@ -282,7 +283,7 @@ bool COMMODORE::TED::simulate (MCHEmul::CPU* cpu)
 				
 				// Every half the frequecy of the TED....
 				// ...the cursor hardware status (used in standard char mode changes)
-				if (++_timesFrameDrawn >= (_frequency >> 1))
+				if (++_timesFrameDrawn >= (_screenfrequency >> 1))
 				{
 					_timesFrameDrawn = 0;
 					_tedGraphicInfo.changeCursorHardwareStatus ();
@@ -1042,8 +1043,8 @@ void COMMODORE::TED::debugTEDCycle (MCHEmul::CPU* cpu, unsigned int i)
 }
 
 // ---
-COMMODORE::TED_PAL::TED_PAL (int intId, int vV, MCHEmul::SoundLibWrapper* wS)
-	: COMMODORE::TED (intId, 50,
+COMMODORE::TED_PAL::TED_PAL (int intId, unsigned short clkcpum, int vV, MCHEmul::SoundLibWrapper* wS)
+	: COMMODORE::TED (intId, clkcpum, _SCREENFREQUENCY,
 		 _VRASTERDATA, _HRASTERDATA, vV, wS,
 		{ { "Name", "TED" },
 		  { "Code", "7360/8360 for PAL" },
@@ -1054,8 +1055,8 @@ COMMODORE::TED_PAL::TED_PAL (int intId, int vV, MCHEmul::SoundLibWrapper* wS)
 }
 
 // ---
-COMMODORE::TED_NTSC::TED_NTSC (int intId, int vV, MCHEmul::SoundLibWrapper* wS)
-	: COMMODORE::TED (intId, 60,
+COMMODORE::TED_NTSC::TED_NTSC (int intId, unsigned short clkcpum, int vV, MCHEmul::SoundLibWrapper* wS)
+	: COMMODORE::TED (intId, clkcpum, _SCREENFREQUENCY,
 		 _VRASTERDATA, _HRASTERDATA, vV, wS,
 		{ { "Name", "TED" },
 		  { "Code", "7360/8360 for NTSC" },

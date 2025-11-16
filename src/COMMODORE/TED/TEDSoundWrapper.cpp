@@ -14,30 +14,40 @@ MCHEmul::InfoStructure COMMODORE::TEDSoundLibWrapper::getInfoStructure () const
 }
 
 // ---
-COMMODORE::TEDSoundSimpleLibWrapper::TEDSoundSimpleLibWrapper (unsigned int cF, unsigned int sF)
+COMMODORE::TEDSoundSimpleLibWrapper::TEDSoundSimpleLibWrapper 
+		(unsigned int tF, unsigned int dv, unsigned int sF)
 	: TEDSoundLibWrapper (
 		{
 			{ "Name", "TEDSound" },
 			{ "Programer", "Ignacio Cea" },
 			{ "Year", "2023" }
 		}),
-	  _chipFrequency (cF), _samplingFrequency (sF),
+	  _tedFrequency (tF), 
+	  _dividerValue (dv), // To get the CPU clock frequency...
+	  _samplingFrequency (sF),
 	  _volumen (0.0f), // There is no volumen at the beginning...
 	  _voices ( // Two voices...
-		{ new COMMODORE::TEDSoundSimpleLibWrapper::Voice (0, cF), 
-		  new COMMODORE::TEDSoundSimpleLibWrapper::Voice (1, cF) }),
+		{ new COMMODORE::TEDSoundSimpleLibWrapper::Voice (0, tF / dv), 
+		  new COMMODORE::TEDSoundSimpleLibWrapper::Voice (1, tF / dv) }),
 	  _registers (std::vector <MCHEmul::UByte> (0x20, MCHEmul::UByte::_0)),
-	  _clocksPerSample ((unsigned int) ((double) cF / (double (sF)))),
+	  _clocksPerSample ((unsigned int) ((double) tF / (double (sF) * double (dv)))),
 	  _counterClocksPerSample (0)
 {
 	// The voice 0...
 	COMMODORE::TEDSoundSimpleLibWrapper::Voice* v0 = 
 		static_cast <COMMODORE::TEDSoundSimpleLibWrapper::Voice*> (_voices [0]);
+	static_cast <MCHEmul::PulseSoundWave*> (v0 -> wave (MCHEmul::SoundWave::Type::_PULSE)) -> 
+		setActive (true); // The pulse is the one active always...
+	static_cast <MCHEmul::PulseSoundWave*> (v0 -> wave (MCHEmul::SoundWave::Type::_PULSE)) ->
+		setPulseUpPercentage (0.5); // 50% by default...
 	v0 -> setWavesActive (0); // Always a pulse wave...
+
 	// The voice 1...
 	COMMODORE::TEDSoundSimpleLibWrapper::Voice* v1 = 
 		static_cast <COMMODORE::TEDSoundSimpleLibWrapper::Voice*> (_voices [1]);
-	v1 -> setWavesActive (1); // By defect a pulse wave, but it can be moved to noise!
+	static_cast <MCHEmul::PulseSoundWave*> (v1 -> wave (MCHEmul::SoundWave::Type::_PULSE)) ->
+		setPulseUpPercentage (0.5); // 50% by default...
+	v1 -> setWavesActive (0); // By defect a pulse wave, but it can be moved to noise!
 }
 
 // ---
@@ -52,8 +62,10 @@ void COMMODORE::TEDSoundSimpleLibWrapper::setValue (size_t p, const MCHEmul::UBy
 		// Voice 0 LSB
 		case 0x0e:
 			{
-				_voices [0] -> setFrequency 
-					(1023 - (unsigned short) (111860.78125f / (float) ((_voices [0] -> frequency () & 0xff00) | v.value ())));
+				_voices [0] -> setFrequency ((unsigned short) 
+					(((float) _tedFrequency / (float) (_dividerValue << 3)) /
+					 (float) (1024 - ((unsigned short)
+						 ((_registers [0x10].value () & 0x03) << 8) | (unsigned short) v.value ()))));
 			}
 
 			break;
@@ -61,18 +73,21 @@ void COMMODORE::TEDSoundSimpleLibWrapper::setValue (size_t p, const MCHEmul::UBy
 		// Voice 1 LSB
 		case 0x0f:
 			{
-				_voices [1] -> setFrequency 
-					(1023 - (unsigned short) (111860.78125f / (float) ((_voices [1] -> frequency () & 0xff00) | v.value ())));
+				_voices [1] -> setFrequency ((unsigned short) 
+					(((float) _tedFrequency / (float) (_dividerValue << 3)) /
+					 (float) (1024 - ((unsigned short)
+						 ((_registers [0x12].value () & 0x03) << 8) | (unsigned short) v.value ()))));
 			}
 
 			break;
 
-		// Voice 0 MSB (only two bits)
+		// Voice 1 MSB (only two bits)
 		case 0x10:
 			{
-				_voices [0] -> setFrequency 
-					(1023 - (unsigned short) (111860.78125f / 
-						(float) ((_voices [0] -> frequency () & 0x00ff) | (((unsigned short) (v.value () & 0x03)) << 8))));
+				_voices [1] -> setFrequency ((unsigned short) 
+					(((float) _tedFrequency / (float) (_dividerValue << 3)) /
+					 (float) (1024 - ((unsigned short)
+						 ((v.value () & 0x03) << 8) | (unsigned short) _registers [0x0f].value ()))));
 			}
 
 			break;
@@ -81,40 +96,13 @@ void COMMODORE::TEDSoundSimpleLibWrapper::setValue (size_t p, const MCHEmul::UBy
 		case 0x11:
 			{
 				setVolumen ((float) (v.value () & 0x0f) / 15.0f);
-				_voices [0] -> setActive (v.bit (4));
-				switch ((v.value () & 0x60 /** bits 5 y 6. */) >> 5) // 0, 1, 2, 3
-				{
-					case 0:
-						{
-							_voices [0] -> setActive (false);
-							_voices [1] -> setActive (false);
-						}
-						
-						break;
-
-					case 1:
-					case 3:
-						{
-							_voices [0] -> setActive (true);
-							static_cast <COMMODORE::TEDSoundSimpleLibWrapper::Voice*> (_voices [1]) -> 
-								setWavesActive (0); // The noise is selected...
-							_voices [1] -> setActive (false); // But it is not active...
-						}
-
-					case 2:
-						{
-							_voices [0] -> setActive (false);
-							static_cast <COMMODORE::TEDSoundSimpleLibWrapper::Voice*> (_voices [1]) -> 
-								setWavesActive (1);
-							_voices [1] -> setActive (true);
-						}
-
-						break;
-
-					// This sutation never happens...
-					default:
-						break;
-				}
+				_voices [0] -> setActive (v.bit (4)); // Active/Desactive the voice 0
+				_voices [1] -> setActive (v.bit (5)); // Active/Desactive the voice 1
+				static_cast <MCHEmul::PulseSoundWave*> (_voices [1] -> wave 
+					(v.bit (6) ? MCHEmul::SoundWave::Type::_PULSE : MCHEmul::SoundWave::Type::_NOISE)) ->
+						setActive (true); // The one active will be either the pulse or the noise...
+				static_cast <COMMODORE::TEDSoundSimpleLibWrapper::Voice*> (_voices [1]) -> 
+					setWavesActive (v.bit (6) ? 1 : 0); // Either the pulse or the noise wave is selected...
 			}
 
 			break;
@@ -122,9 +110,10 @@ void COMMODORE::TEDSoundSimpleLibWrapper::setValue (size_t p, const MCHEmul::UBy
 		// Voice 1 MSB (only two bits)
 		case 0x12:
 			{
-				_voices [1] -> setFrequency 
-					(1023 - (unsigned short) (111860.78125f / 
-						(float) ((_voices [1] -> frequency () & 0x00ff) | (((unsigned short) (v.value () & 0x03)) << 8))));
+				_voices [0] -> setFrequency ((unsigned short) 
+					(((float) _tedFrequency / (float) (_dividerValue << 3)) /
+					 (float) (1024 - ((unsigned short)
+						 ((v.value () & 0x03) << 8) | (unsigned short) _registers [0x0e].value ()))));
 			}
 
 			break;
@@ -235,18 +224,13 @@ double COMMODORE::TEDSoundSimpleLibWrapper::Voice::data () const
 	// ..and definetively is not adding data!
 	switch (_wavesActive)
 	{
-		// sawtooth
-		case 0x20:
-			result = wave (MCHEmul::SoundWave::Type::_SAWTOOTH) -> data ();
-			break;
-
 		// pulse
-		case 0x40:
+		case 0x00:
 			result = wave (MCHEmul::SoundWave::Type::_PULSE) -> data ();
 			break;
 
 		// noise
-		case 0x80:
+		case 0x01:
 			result = wave (MCHEmul::SoundWave::Type::_NOISE) -> data ();
 			break;
 

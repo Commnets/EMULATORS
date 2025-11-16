@@ -38,8 +38,8 @@ namespace C264
 			The TED change speed depending on whether the raster is in a visible or nor visible zone of the screen.
 			and even if it has been configured to be PAL or NTSC! \n
 			So the speed here is just a reference as an average. */
-		static const unsigned int _PALCLOCK		= 889200; // 0.889 MHz
-		static const unsigned int _NTSCCLOCK	= 896040; // 0.896 MHz
+		static const unsigned int _PALCLOCK		= 886723; // 0.886 MHz = TED_PAL::_CLOCK / 20
+		static const unsigned int _NTSCCLOCK	= 894886; // 0.894 MHz = TED_NTSC::_CLOCK / 16
 
 		Commodore264 (const MCHEmul::Chips& cps, MCHEmul::Memory* m, const MCHEmul::IODevices& dvs, 
 			VisualSystem vS, Type t, unsigned int cfg, const std::string& lng = MCHEmul::_DEFAULTLANGUAGE);

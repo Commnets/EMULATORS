@@ -3,10 +3,10 @@
 #include <C264/OSIO.hpp>
 
 // ---
-C264::TED::TED (int intId, unsigned short fq,
+C264::TED::TED (int intId, unsigned short clkcpum, unsigned short sfq,
 		const MCHEmul::RasterData& vd, const MCHEmul::RasterData& hd,
 		int vV, MCHEmul::SoundLibWrapper* sW, const MCHEmul::Attributes& attrs)
-	: COMMODORE::TED (intId, fq, vd, hd, vV, sW, attrs),
+	: COMMODORE::TED (intId, clkcpum, sfq, vd, hd, vV, sW, attrs),
 	  _TEDRegisters (nullptr)
 {
 	// Nothing else to do...
@@ -84,8 +84,8 @@ void C264::TED::processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifier* n)
 }
 
 // ---
-C264::TED_PAL::TED_PAL (int intId, int vV, MCHEmul::SoundLibWrapper* wS)
-	: C264::TED (intId, 50,
+C264::TED_PAL::TED_PAL (int intId, unsigned short clkcpum, int vV, MCHEmul::SoundLibWrapper* wS)
+	: C264::TED (intId, clkcpum, COMMODORE::TED_PAL::_SCREENFREQUENCY,
 		 COMMODORE::TED_PAL::_VRASTERDATA, COMMODORE::TED_PAL::_HRASTERDATA, vV, wS,
 		{ { "Name", "TED" },
 		  { "Code", "7360/8360 for PAL" },
@@ -96,8 +96,8 @@ C264::TED_PAL::TED_PAL (int intId, int vV, MCHEmul::SoundLibWrapper* wS)
 }
 
 // ---
-C264::TED_NTSC::TED_NTSC (int intId, int vV, MCHEmul::SoundLibWrapper* wS)
-	: C264::TED (intId, 60,
+C264::TED_NTSC::TED_NTSC (int intId, unsigned short clkcpum, int vV, MCHEmul::SoundLibWrapper* wS)
+	: C264::TED (intId, clkcpum, COMMODORE::TED_NTSC::_SCREENFREQUENCY,
 		 COMMODORE::TED_NTSC::_VRASTERDATA, COMMODORE::TED_NTSC::_HRASTERDATA, vV, wS,
 		{ { "Name", "TED" },
 		  { "Code", "7360/8360 for NTSC" },

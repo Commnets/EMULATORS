@@ -32,7 +32,8 @@ namespace COMMODORE
 			TED should then inherit from both MCHEmul::GraphicalCip & MCHEmul::SoundChip,
 			but this could generate ambiguity when calling some parent methods, that will be the case. \n
 			The main function of the TED is, however, the graphical one. \n
-			TED will then inherit from MCHEmul::GraphicalChip only and it will use an object inside inheriting from MCHEmul::SoundChip. */
+			TED will then inherit from MCHEmul::GraphicalChip only and it will use an object inside inheriting from MCHEmul::SoundChip. \n
+			The sound function behaves really at a slower speed internally (/160 in a PAL TED and /128 in NTSC one). */
 		class SoundFunction final : public MCHEmul::SoundChip
 		{
 			public:
@@ -82,7 +83,7 @@ namespace COMMODORE
 			The TED constructor receives info over the raster data, the frequency it works, the memory view to use,
 			The number of cycles of every raster line (different depending on the VICII version) 
 			and additional attributes. */
-		TED (int intId, unsigned short fq, 
+		TED (int intId, unsigned short clkcpum, unsigned short sfq,
 			 const MCHEmul::RasterData& vd, const MCHEmul::RasterData& hd,
 			 int vV, MCHEmul::SoundLibWrapper* sW, const MCHEmul::Attributes& attrs = { });
 
@@ -92,6 +93,11 @@ namespace COMMODORE
 			Borders, bad lines mainly. */
 		void setDrawOtherEvents (bool d)
 							{ _drawOtherEvents = d; }
+
+		unsigned short screenFrequency () const
+							{ return (_screenfrequency); }
+		unsigned short timesFasterThanCPU () const
+							{ return (_timesFasterThanCPU); }
 
 		const SoundFunction* soundFunction () const
 							{ return (_soundFunction); }
@@ -242,8 +248,10 @@ namespace COMMODORE
 		protected:
 		/** The type of interrupt launched from the TED. */
 		int _interruptId;
+		/** How faster the TED is on respect the CPU. */
+		unsigned short _timesFasterThanCPU;
 		/** The frequency of the TED: */
-		unsigned short _frequency;
+		unsigned short _screenfrequency;
 		/** There three timers within the TED. */
 		TEDTimer _T1, _T2, _T3;
 		/** A reference to the sound part of the chip. */
@@ -404,24 +412,32 @@ namespace COMMODORE
 	class TED_PAL final : public TED
 	{
 		public:
+		// The structure of the screen...
 		static const MCHEmul::RasterData _VRASTERDATA;
 		static const MCHEmul::RasterData _HRASTERDATA;
+		// Important data for the internal working of the chip...
+		static const unsigned short _SCREENFREQUENCY			= 50;	// Hz
+		static const unsigned short _DIVIDERCPUCLOCK			= 20;	// The CPU clock is /20 the TED clock
+		static const unsigned short _DIVIDERSOUNDCLOCK			= 160;	// The sound clock is /160 = _DIVIDERCPUCLOCK << 3 the TED clock
+		static constexpr unsigned short _CYCLESPERRASTERLINE	= 71;
 
-		static constexpr unsigned short _CYCLESPERRASTERLINE = 71;
-
-		TED_PAL (int intId, int vV, MCHEmul::SoundLibWrapper* wS);
+		TED_PAL (int intId, unsigned short clkcpum, int vV, MCHEmul::SoundLibWrapper* wS);
 	};
 
 	/** The version para NTSC systems. */
 	class TED_NTSC final : public TED
 	{
 		public:
+		// The structure of the screen...
 		static const MCHEmul::RasterData _VRASTERDATA;
 		static const MCHEmul::RasterData _HRASTERDATA;
+		// Important data for the internal working of the chip...
+		static const unsigned short _SCREENFREQUENCY			= 60;	// Hz;
+		static const unsigned short _DIVIDERCPUCLOCK			= 16;	// The CPU clock is /20 the TED clock
+		static const unsigned short _DIVIDERSOUNDCLOCK			= 128;	// The sound clock is /128 = _DIVIDERCPUCLOCK << 3 the TED clock
+		static constexpr unsigned short _CYCLESPERRASTERLINE	= 65;
 
-		static constexpr unsigned short _CYCLESPERRASTERLINE = 65;
-
-		TED_NTSC (int intId, int vV, MCHEmul::SoundLibWrapper* wS);
+		TED_NTSC (int intId, unsigned short clkcpum, int vV, MCHEmul::SoundLibWrapper* wS);
 	};
 }
 

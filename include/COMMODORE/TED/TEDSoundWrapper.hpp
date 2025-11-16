@@ -53,10 +53,12 @@ namespace COMMODORE
 		public:
 		/** 
 		  *	Constructor.
-		  *	@param cF	Chip frequency in clocks / second.
+		  *	@param tF	TED frequency in clocks / second.
+		  * @param dv	Divider value to get the cpu frequency from the TED frequency.
+		  *				The TED frequency is the one leading the CPU working.
 		  * @param sF	Sampling frequency in samples / second. It cannot be 0.
 		  */
-		TEDSoundSimpleLibWrapper (unsigned int cF, unsigned int sF);
+		TEDSoundSimpleLibWrapper (unsigned int tF, unsigned int dv, unsigned int sF);
 
 		/** The volumen is a number between 0 and 1. */
 		double volumen () const
@@ -75,7 +77,8 @@ namespace COMMODORE
 						{ return ((nV < 2) ? _voices [nV] -> getInfoStructure () : MCHEmul::InfoStructure ()); }
 
 		private:
-		unsigned int _chipFrequency;
+		unsigned int _tedFrequency;
+		unsigned int _dividerValue;
 		unsigned int _samplingFrequency;
 		double _volumen;
 

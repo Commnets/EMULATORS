@@ -45,7 +45,7 @@ namespace C264
 		public:
 		static const unsigned int _ROMACCESSCHANGED = 300;
 
-		TED (int intId, unsigned short fq,
+		TED (int intId, unsigned short clkcpum, unsigned short sfq,
 			 const MCHEmul::RasterData& vd, const MCHEmul::RasterData& hd,
 			 int vV, MCHEmul::SoundLibWrapper* sW, const MCHEmul::Attributes& attrs = { });
 
@@ -67,14 +67,20 @@ namespace C264
 	class TED_PAL final : public TED
 	{
 		public:
-		TED_PAL (int intId, int vV, MCHEmul::SoundLibWrapper* wS);
+		// This clock is never used, just for reference...
+		static const unsigned int _CLOCK		= 17734475; // 17.734475MHz = CPU Clock * 20
+
+		TED_PAL (int intId, unsigned short clkcpum, int vV, MCHEmul::SoundLibWrapper* wS);
 	};
 
 	/** The version para NTSC systems for C264. */
 	class TED_NTSC final : public TED
 	{
 		public:
-		TED_NTSC (int intId, int vV, MCHEmul::SoundLibWrapper* wS);
+		// This clock is never used, just for reference...
+		static const unsigned int _CLOCK		= 14318180; // 14.31818MHz = CPU Clock * 16
+
+		TED_NTSC (int intId, unsigned short clkcpum, int vV, MCHEmul::SoundLibWrapper* wS);
 	};
 }
 
