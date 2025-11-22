@@ -89,6 +89,9 @@ namespace COMMODORE
 
 		virtual ~TED () override;
 
+		/** To draw or not to draw raster interrupt positions. */
+		void setDrawRasterInterruptPositions (bool d)
+							{ _drawRasterInterruptPositions = d; }
 		/** Whether to draw other events related with the raster of VICII. 
 			Borders, bad lines mainly. */
 		void setDrawOtherEvents (bool d)
@@ -135,6 +138,21 @@ namespace COMMODORE
 		  * Raster			= InfoStructure: Info about the raster.
 		  */
 		virtual MCHEmul::InfoStructure getInfoStructure () const override;
+
+		// To get snapshots of the memory...
+		// They are used in some commands...
+		/** content of the screen. */
+		MCHEmul::UBytes screenMemorySnapShot (MCHEmul::CPU* cpu) const;
+		/** The content of the attribute memory. */
+		MCHEmul::UBytes attributeMemorySnapShot (MCHEmul::CPU* cpu) const;
+		/** The content of the bitmap memory. */
+		MCHEmul::UBytes bitmapMemorySnapShot (MCHEmul::CPU* cpu) const;
+
+		// To print out the form of the different graphic elements
+		// taking into account the graphic mode active
+		/** The characters. */
+		MCHEmul::Strings charsDrawSnapshot (MCHEmul::CPU* cpu, 
+			const std::vector <size_t>& chrs = { }) const;
 
 		protected:
 		/** Invoked from initialize to create the right screen memory. \n
@@ -184,6 +202,8 @@ namespace COMMODORE
 		  *	The parameters are the context of the draw. \n
 		  *	@see also DrawContext and DrawResult structures. */
 		void drawGraphicsAndMoveToScreen (const DrawContext& dC);
+		/** To draw events that happened inside the TED, if the variable _drawOtherEvents is set. */
+		void drawOtherEvents ();
 
 		// These all methods are invoked from the three ones above!
 		// They are here just to structure better the code...
@@ -243,6 +263,9 @@ namespace COMMODORE
 		/** Debug special situations...
 			Take care using this instructions _deepDebugFile could be == nullptr... */
 		void debugTEDCycle (MCHEmul::CPU* cpu, unsigned int i);
+		void debugBadLine ();
+		void debugReadingVideoMatrix ();
+		void debugReadingGraphics ();
 		// -----
 
 		protected:
@@ -264,6 +287,8 @@ namespace COMMODORE
 		unsigned short _cyclesPerRasterLine;
 		/** The raster. */
 		MCHEmul::Raster _raster;
+		/** To draw or not to draw lines at the positions where the raster interruptions are generated. */
+		bool _drawRasterInterruptPositions;
 		/** To draw or not other different events. */
 		bool _drawOtherEvents;
 
@@ -334,7 +359,10 @@ namespace COMMODORE
 				  _cursorHardwareStatus (false),
 				  _screenCodeData (std::vector <MCHEmul::UByte> (40, MCHEmul::UByte::_0)),
 				  _graphicData (std::vector <MCHEmul::UByte> (40, MCHEmul::UByte::_0)),
-				  _colorData (std::vector <MCHEmul::UByte> (40, MCHEmul::UByte::_0))
+				  _colorData (std::vector <MCHEmul::UByte> (40, MCHEmul::UByte::_0)),
+				  _lastScreenCodeDataRead (MCHEmul::UByte::_0),
+				  _lastGraphicDataRead (MCHEmul::UByte::_0),
+				  _lastColorDataRead (MCHEmul::UByte::_0)
 							{ }
 
 			void emptyVideoMatrixAndColorRAMData ()
@@ -354,12 +382,31 @@ namespace COMMODORE
 			unsigned char _RC;
 			bool _idleState; 
 			bool _cursorHardwareStatus;
+
+			// Implementation...
+			// This one doesn't actually exist "in" the VICII chip, 
+			// but is used when he left border has to be partially drawn.
+			// After doing so, the _ffMBorder will become false...
 			mutable MCHEmul::UBytes _screenCodeData;
 			mutable MCHEmul::UBytes _graphicData; 
 			mutable MCHEmul::UBytes _colorData;
+			/** The last info read. */
+			mutable MCHEmul::UByte _lastScreenCodeDataRead;
+			mutable MCHEmul::UByte _lastGraphicDataRead;
+			mutable MCHEmul::UByte _lastColorDataRead;
 		};
 
 		TEDGraphicInfo _tedGraphicInfo;
+
+		/** The events that can be drawn
+			associated to the movement of the raster line. */
+		struct EventsStatus
+		{
+			/** The bad line to hightlight. */
+			unsigned short _badLine;
+		};
+
+		mutable EventsStatus _eventStatus;
 
 		private:
 		static const MCHEmul::Address _MEMORYPOSIDLE1, _MEMORYPOSIDLE2;
@@ -369,10 +416,12 @@ namespace COMMODORE
 	{
 		memoryRef () -> setActiveView (_TEDView);
 		
-		_tedGraphicInfo._screenCodeData [_tedGraphicInfo._VLMI] =
-			memoryRef () -> value (_TEDRegisters -> screenMemory () + (size_t) _tedGraphicInfo._VC); 
-		_tedGraphicInfo._colorData [_tedGraphicInfo._VLMI] = 
-			memoryRef () -> value (_TEDRegisters -> attributeMemory () + (size_t) _tedGraphicInfo._VC);
+		_tedGraphicInfo._lastScreenCodeDataRead =
+			_tedGraphicInfo._screenCodeData [_tedGraphicInfo._VLMI] =
+				memoryRef () -> value (_TEDRegisters -> screenMemory () + (size_t) _tedGraphicInfo._VC); 
+		_tedGraphicInfo._lastColorDataRead =
+			_tedGraphicInfo._colorData [_tedGraphicInfo._VLMI] = 
+				memoryRef () -> value (_TEDRegisters -> attributeMemory () + (size_t) _tedGraphicInfo._VC);
 		
 		memoryRef () -> setCPUView ();
 	}
@@ -383,9 +432,10 @@ namespace COMMODORE
 		memoryRef () -> setActiveView (_TEDView);
 
 		if (_tedGraphicInfo._idleState) // In this state the info is read from a specific place of the memory...
-			_tedGraphicInfo._graphicData [_tedGraphicInfo._VLMI] = 
-			_TEDRegisters -> graphicExtendedColorTextModeActive () 
-				? memoryRef () -> value (_MEMORYPOSIDLE1) : memoryRef () -> value (_MEMORYPOSIDLE2);
+			_tedGraphicInfo._lastGraphicDataRead =
+				_tedGraphicInfo._graphicData [_tedGraphicInfo._VLMI] = 
+					_TEDRegisters -> graphicExtendedColorTextModeActive () 
+						? memoryRef () -> value (_MEMORYPOSIDLE1) : memoryRef () -> value (_MEMORYPOSIDLE2);
 		else // ..in the other one the info will be read attending to the situation of the memory...
 		{	 // ...and from ROM or RAM...
 
@@ -393,13 +443,14 @@ namespace COMMODORE
 			if (_TEDRegisters -> ROMSourceActive () && !aR)
 				activeROMtoFecthCharData (true); // Active ROM to read the data...
 
-			_tedGraphicInfo._graphicData [_tedGraphicInfo._VLMI] = _TEDRegisters -> textMode () 
-				? memoryRef () -> value (_TEDRegisters -> charDataMemory () + 
-					(((size_t) _tedGraphicInfo._screenCodeData [_tedGraphicInfo._VLMI].value () & 
-						(_TEDRegisters -> graphicExtendedColorTextModeActive () ? 0x3f : 0xff)) 
+			_tedGraphicInfo._lastGraphicDataRead =
+				_tedGraphicInfo._graphicData [_tedGraphicInfo._VLMI] = _TEDRegisters -> textMode () 
+					? memoryRef () -> value (_TEDRegisters -> charDataMemory () + 
+						(((size_t) _tedGraphicInfo._screenCodeData [_tedGraphicInfo._VLMI].value () & 
+							(_TEDRegisters -> graphicExtendedColorTextModeActive () ? 0x3f : 0xff)) 
 						/** In the extended graphics mode there is only 64 chars possible. */ << 3) + _tedGraphicInfo._RC)
-				: memoryRef () -> value (_TEDRegisters -> bitmapMemory () + 
-					(_tedGraphicInfo._VC << 3) + _tedGraphicInfo._RC);
+					: memoryRef () -> value (_TEDRegisters -> bitmapMemory () + 
+						(_tedGraphicInfo._VC << 3) + _tedGraphicInfo._RC);
 
 			if (_TEDRegisters -> ROMSourceActive () && !aR)
 				activeROMtoFecthCharData (false); // Activethe RAM to read the data...

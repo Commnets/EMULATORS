@@ -2,3 +2,29 @@
 #(C) 2022 Ignacio Cea Fornies
 ?./Standard.hlp
 ?./Commodore.hlp
+;SCREENDUMP
+To know the content of the screen.
+Parameters: None.
+Notes: The data is shown in hexadecimal format (but with no symbol at the beginning).
+;ATTRIBUTEDUMP
+To know the content of the attribute memory.
+Parameters: None.
+Notes: The data is shown in hexadecimal format (but with no symbol at the beginning).
+;BITMAPDUMP
+To know the content of the screen.
+Parameters: None.
+Notes: The data is shown in hexadecimal format (but with no symbol at the beginning).
+;CHARSDRAW [c1 c2 c3 ...]
+To print out the characters data.
+Parameters:
+=> None: Draw all characters.
+=> [c1 c2 c3 ...] (optional): Draw just the characters listed. From 0 to 255.
+;GRIDON COLOR [ON]
+To activate to draw a grid in the screen of the computer.
+Parameters:
+=> COLOR (mandatory): The color of the grid.
+=> [ON] (optional): To point out the position in the screen where a raster interrupts happen.
+;GRIDOFF
+To switch off to draw a grid in the screen of the compurter.
+The command desactivates also to draw the position where the raster interrupts happen if it was activated previously.
+Parameters: None.

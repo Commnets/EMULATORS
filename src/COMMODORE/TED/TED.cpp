@@ -102,6 +102,7 @@ COMMODORE::TED::TED (int intId, unsigned short clkcpum, unsigned short sfq,
 	  _TEDView (vV),
 	  _cyclesPerRasterLine (57),
 	  _raster (vd, hd, 8 /** step. */),
+	  _drawRasterInterruptPositions (false),
 	  _drawOtherEvents (false),
 	  _timesFrameDrawn (0),
 	  _lastCPUCycles (0),
@@ -226,14 +227,16 @@ bool COMMODORE::TED::simulate (MCHEmul::CPU* cpu)
 		// When happened, the graphics are read and the situation is latched because maybe additional stop cycles could be needed.
 		if (isNewBadLine ())
 		{
-			if (deepDebugActive ())
-				*_deepDebugFile << "\t\t\t\t\tBad line situation\n"; 
-			// It is not needed a special routine for so simple thing...
+			_IFDEBUG debugBadLine ();
 
 			_newBadLineCondition = true;		// latched...
 			_badLineStopCyclesAdded = false;	// ...the cycles have to be added...
 
 			_tedGraphicInfo._idleState = false; // No longer in "idle" state but in the "screen" one!
+
+			// To keep track of the event later, if needed...
+			_eventStatus._badLine = 
+				_raster.vData ().currentVisiblePosition ();
 		}
 
 		// When TED is about to read graphics info (bad line),
@@ -354,6 +357,114 @@ MCHEmul::InfoStructure COMMODORE::TED::getInfoStructure () const
 	result.add ("TEDTimer1",		std::move (_T1.getInfoStructure ()));
 	result.add ("TEDTimer2",		std::move (_T2.getInfoStructure ()));
 	result.add ("TEDTimer3",		std::move (_T3.getInfoStructure ()));
+
+	return (result);
+}
+
+// ---
+MCHEmul::UBytes COMMODORE::TED::screenMemorySnapShot (MCHEmul::CPU* cpu) const
+{ 	
+	// Usually in this point the active view should be the CPU one, 
+	// But the one needed is the TED, so it is changed if neded...
+	int aVID = cpu -> memoryRef () -> activeView () -> id ();
+	if (aVID != _TEDView)
+		cpu -> memoryRef () -> setActiveView (_TEDView);
+
+	MCHEmul::UBytes result = cpu -> memoryRef () -> values 
+		(_TEDRegisters -> screenMemory (), 0x03e8 /** 1000 positions = 40 x 25. */);
+
+	cpu -> memoryRef () -> setActiveView (aVID);
+
+	return (result);
+}
+
+// ---
+MCHEmul::UBytes COMMODORE::TED::attributeMemorySnapShot (MCHEmul::CPU* cpu) const
+{ 
+	// The TED doesn't manage colors only but attributes instead...
+	// ...the meaning of each will depend on the mode used...
+	int aVID = cpu -> memoryRef () -> activeView () -> id ();
+	if (aVID == _TEDView)
+		cpu -> memoryRef () -> setCPUView (); // Change to the main one...
+
+	// Gets the data from the memory directly...
+	MCHEmul::UBytes result = cpu -> memoryRef () -> values 
+		(_TEDRegisters -> attributeMemory (), 0x03e8 /** 1000 positions = 40 x 25. */);
+	for (size_t i = 0; i < result.size (); i++)
+		result [i] = result [i]; // All bits are usefull...
+
+	cpu -> memoryRef () -> setActiveView (aVID);
+
+	return (result);
+}
+
+// ---
+MCHEmul::UBytes COMMODORE::TED::bitmapMemorySnapShot (MCHEmul::CPU* cpu) const
+{ 
+	int aVID = cpu -> memoryRef () -> activeView () -> id ();
+	if (aVID != _TEDView)
+		cpu -> memoryRef () -> setActiveView (_TEDView);
+
+	MCHEmul::UBytes result = cpu -> memoryRef () -> values 
+		(_TEDRegisters -> bitmapMemory (), 0x1f40 /** 8000 positions = 40 x 25 x 8. */); 
+
+	cpu -> memoryRef () -> setActiveView (aVID);
+
+	return (result);
+}
+
+// ---
+MCHEmul::Strings COMMODORE::TED::charsDrawSnapshot (MCHEmul::CPU* cpu,
+	const std::vector <size_t>& chrs) const
+{
+	int aVID = cpu -> memoryRef () -> activeView () -> id ();
+	if (aVID != _TEDView)
+		cpu -> memoryRef () -> setActiveView (_TEDView);
+
+	MCHEmul::Strings result;
+	for (size_t i = 0; i < 256; i++)
+	{
+		if (!chrs.empty () && 
+			std::find (chrs.begin (), chrs.end (), i) == chrs.end ())
+			continue;
+
+		MCHEmul::Address chrAdd = _TEDRegisters -> charDataMemory () + (i << 3);
+		std::string dt = std::to_string (i) + "---\n$" +
+			MCHEmul::removeAll0 (chrAdd.asString (MCHEmul::UByte::OutputFormat::_HEXA, '\0', 2)) + "\n";
+		MCHEmul::UBytes chrDt = cpu -> memoryRef () -> values (chrAdd, 0x08);
+		for (size_t j = 0; j < 8; j++) // 8 lines per character...
+		{
+			if (j != 0)
+				dt += "\n";
+
+			if (_TEDRegisters -> graphicMulticolorTextModeActive ())
+			{
+				for (size_t l = 0; l < 8; l += 2)
+				{ 
+					switch ((chrDt [j].value () & (0x03 << (6 - l))) >> (6 - l))
+					{
+						case 0x00: dt += "  "; break;
+						case 0x01: dt += "OO"; break;
+						case 0x02: dt += "XX"; break;
+						case 0x03: dt += "##"; break;
+						// This situation doesn't happen...
+						default: break;
+					}
+				}
+			}
+			else // Including extended (in terms of definition)...
+			{
+				for (size_t l = 0; l < 8; l++)
+					dt += ((chrDt [j].value () & (1 << (7 - l))) != 0x00) ? "#" : " ";
+			}
+		}
+
+		result.emplace_back (std::move (dt));
+	}
+
+	result.emplace_back ("---");
+
+	cpu -> memoryRef () -> setActiveView (aVID);
 
 	return (result);
 }
@@ -525,18 +636,14 @@ unsigned int COMMODORE::TED::treatRasterCycle ()
 				result = 48 - _cycleInRasterLine;
 			}
 
-			if (deepDebugActive ())
-				*_deepDebugFile
-					<< "\t\t\t\t\tReading Video Matrix & Color RAM" << "\n";
-
 			readVideoMatrixAndColorRAM ();
+
+			_IFDEBUG debugReadingVideoMatrix ();
 		}
 
-		if (deepDebugActive ())
-			*_deepDebugFile
-				<< "\t\t\t\t\tReading Graphics" << "\n";
-
 		readGraphicalInfo ();
+
+		_IFDEBUG debugReadingGraphics ();
 
 		if (!_tedGraphicInfo._idleState)
 			_tedGraphicInfo._VC++;	
@@ -623,6 +730,26 @@ void COMMODORE::TED::drawVisibleZone (MCHEmul::CPU* cpu)
 		screenMemory () -> setHorizontalLine ((size_t) stp, (size_t) rv, lbk, 
 			_TEDRegisters -> borderColor ().asChar ());
 	}
+
+	// If there were requested to draw the position where the Raster Interrupt is generated...
+	// All draw are replace by a line with a color different of the background!
+	// The line is only drawn if that position where within the visible zone!
+	if (_drawRasterInterruptPositions)
+	{
+		unsigned short lrt = 
+			_raster.lineInVisibleZone (_TEDRegisters -> IRQRasterLineAt ());
+		if (lrt <= _raster.vData ().lastVisiblePosition ())
+			screenMemory () -> setHorizontalLine ((size_t) cav, (size_t) lrt,
+				(cav + 8) > _raster.visibleColumns () ? (_raster.visibleColumns () - cav) : 8, 
+					_TEDRegisters -> backgroundColor ()._color == 15 
+						? 0 : _TEDRegisters -> backgroundColor ()._color + 1 /** to be visible. */);
+	}
+
+	// The draw around the sprites is drawn as part of the sprite draw routine...
+
+	// If it activated to draw other events that happen during the interation of the VICII...
+	if (_drawOtherEvents)
+		drawOtherEvents ();
 }
 
 // ---
@@ -636,6 +763,21 @@ void COMMODORE::TED::drawGraphicsAndMoveToScreen (const COMMODORE::TED::DrawCont
 
 	// The the graphical info is moved to the screen...
 	drawResultToScreen (colGraphics, dC);
+}
+
+// ---
+void COMMODORE::TED::drawOtherEvents ()
+{
+	// Draw the bad line event...
+	// From the moment the condition is identified and a full line!
+	if (_eventStatus._badLine != std::numeric_limits <unsigned short>::max ())
+	{ 
+		if (_raster.vData ().currentVisiblePosition () == _eventStatus._badLine)
+			screenMemory () -> setHorizontalLine 
+				(_raster.hData ().currentVisiblePosition (), _eventStatus._badLine, 2, 36); // in points and draw in auxiliar color...
+		else
+			_eventStatus._badLine = std::numeric_limits <unsigned short>::max ();
+	}
 }
 
 // ---
@@ -1040,6 +1182,33 @@ void COMMODORE::TED::debugTEDCycle (MCHEmul::CPU* cpu, unsigned int i)
 	if (lrt <= _raster.vData ().lastVisiblePosition ())
 		screenMemory () -> setHorizontalLine (0, lrt, _raster.visibleColumns (), 
 			_TEDRegisters -> borderColor ().nextLuminance ().asChar ());
+}
+
+// ---
+void COMMODORE::TED::debugBadLine ()
+{
+	assert (_deepDebugFile != nullptr);
+
+	_deepDebugFile -> writeLineData ("Bad line situation");
+}
+
+// ---
+void COMMODORE::TED::debugReadingVideoMatrix ()
+{
+	assert (_deepDebugFile != nullptr);
+
+	_deepDebugFile -> writeLineData ("Reading Video Matrix & Color RAM [" +
+					_tedGraphicInfo._lastScreenCodeDataRead.asString (MCHEmul::UByte::OutputFormat::_HEXA) + ", " +
+					_tedGraphicInfo._lastColorDataRead.asString (MCHEmul::UByte::OutputFormat::_HEXA) + "]");
+}
+
+// ---
+void COMMODORE::TED::debugReadingGraphics ()
+{
+	assert (_deepDebugFile != nullptr);
+	
+	_deepDebugFile -> writeLineData ("Reading Graphics [" + 
+		_tedGraphicInfo._lastGraphicDataRead.asString (MCHEmul::UByte::OutputFormat::_HEXA) + "]");
 }
 
 // ---

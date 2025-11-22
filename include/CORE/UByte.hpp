@@ -125,7 +125,7 @@ namespace MCHEmul
 		constexpr bool operator >= (const UByte& u) const
 							{ return (_value >= u._value); }
 		constexpr bool operator < (const UByte& u) const
-							{ return (_value == u._value); }
+							{ return (_value < u._value); }
 		constexpr bool operator <= (const UByte& u) const
 							{ return (_value <= u._value); }
 

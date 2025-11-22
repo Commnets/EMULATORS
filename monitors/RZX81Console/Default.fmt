@@ -6,5 +6,5 @@
 #---
 #---
 ;DEBUGCPUINFO
-@PC@ @INST@ @REGS?{key=NO,equal=:},@ @SR@
+@PC@ @INST@ @REGS?{key=NO,equal=:}@, @SR@
 #---

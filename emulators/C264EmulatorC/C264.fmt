@@ -2,3 +2,27 @@
 #(C) 2024 Ignacio Cea Fornies
 ?./Commodore.fmt
 ?./LocalConsole.fmt
+#---
+;CSCREENDUMP
+@BYTES{blocksize=40,listsep=\,,tablesep=\ ,minsize=2}@
+#---
+#---
+;CATTRIBUTEDUMP
+@BYTES{blocksize=40,listsep=\,,tablesep=\ ,minsize=2}@
+#---
+#---
+;CBITMAPDUMP
+@BYTES{blocksize=40,listsep=\,,tablesep=\ ,minsize=2}@
+#---
+#---
+;CSPRITESDUMP
+@BYTES{blocksize=3,listsep=\,,tablesep=\ ,minsize=2}@
+#---
+#---
+;CSPRITESDRAW
+@DRAW@
+#---
+#---
+;CCHARSDRAW
+@DRAW@
+#---
