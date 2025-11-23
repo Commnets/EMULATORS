@@ -111,7 +111,8 @@ COMMODORE::TED::TED (int intId, unsigned short clkcpum, unsigned short sfq,
 	  _videoActive (true),
 	  _lastVBlankEntered (false),
 	  _lastBadLineScrollY (-1), _newBadLineCondition (false), _badLineStopCyclesAdded (false),
-	  _tedGraphicInfo ()
+	  _tedGraphicInfo (),
+	  _eventStatus { 0 }
 {
 	setClassName ("TED");
 
@@ -525,11 +526,19 @@ MCHEmul::ScreenMemory* COMMODORE::TED::createScreenMemory ()
 		};
 
 	// From a structure based on positions, to a structure based on luminance...
-	unsigned int* cP = new unsigned int [128];
+	unsigned int* cP = new unsigned int [128 + 5];
 	for (size_t i = 0; i < 16; i++)
 		for (size_t j = 0; j < 8; j++)
 			cP [i + (j << 4)] = SDL_MapRGBA (_format, 
 				_COLORS [(i << 3) + j].R, _COLORS [(i << 3) + j].G, _COLORS [(i << 3) + j].B, 0xe0);
+
+	// More colors just to reflect events...
+	cP [128] = SDL_MapRGBA (_format, 0X00, 0Xf5, 0xff, 0xff); // light Cyan
+	cP [129] = SDL_MapRGBA (_format, 0Xfc, 0Xe7, 0x00, 0xff); // light Yellow
+	cP [130] = SDL_MapRGBA (_format, 0Xff, 0X6d, 0x28, 0xff); // light Orange
+	cP [131] = SDL_MapRGBA (_format, 0Xea, 0X04, 0x7e, 0xff); // light Purple
+	cP [132] = SDL_MapRGBA (_format, 0X3e, 0Xc7, 0x0b, 0xff); // light Green
+
 	return (new MCHEmul::ScreenMemory (numberColumns (), numberRows (), cP));
 }
 
@@ -740,9 +749,7 @@ void COMMODORE::TED::drawVisibleZone (MCHEmul::CPU* cpu)
 			_raster.lineInVisibleZone (_TEDRegisters -> IRQRasterLineAt ());
 		if (lrt <= _raster.vData ().lastVisiblePosition ())
 			screenMemory () -> setHorizontalLine ((size_t) cav, (size_t) lrt,
-				(cav + 8) > _raster.visibleColumns () ? (_raster.visibleColumns () - cav) : 8, 
-					_TEDRegisters -> backgroundColor ()._color == 15 
-						? 0 : _TEDRegisters -> backgroundColor ()._color + 1 /** to be visible. */);
+				(cav + 8) > _raster.visibleColumns () ? (_raster.visibleColumns () - cav) : 8, 130);
 	}
 
 	// The draw around the sprites is drawn as part of the sprite draw routine...
@@ -774,7 +781,7 @@ void COMMODORE::TED::drawOtherEvents ()
 	{ 
 		if (_raster.vData ().currentVisiblePosition () == _eventStatus._badLine)
 			screenMemory () -> setHorizontalLine 
-				(_raster.hData ().currentVisiblePosition (), _eventStatus._badLine, 2, 36); // in points and draw in auxiliar color...
+				(_raster.hData ().currentVisiblePosition (), _eventStatus._badLine, 2, 128); // in points and draw in auxiliar color...
 		else
 			_eventStatus._badLine = std::numeric_limits <unsigned short>::max ();
 	}
@@ -1197,7 +1204,7 @@ void COMMODORE::TED::debugReadingVideoMatrix ()
 {
 	assert (_deepDebugFile != nullptr);
 
-	_deepDebugFile -> writeLineData ("Reading Video Matrix & Color RAM [" +
+	_deepDebugFile -> writeLineData ("Reading Video Matrix & Attribute RAM [" +
 					_tedGraphicInfo._lastScreenCodeDataRead.asString (MCHEmul::UByte::OutputFormat::_HEXA) + ", " +
 					_tedGraphicInfo._lastColorDataRead.asString (MCHEmul::UByte::OutputFormat::_HEXA) + "]");
 }

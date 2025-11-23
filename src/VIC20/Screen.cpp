@@ -6,7 +6,7 @@ VIC20::Screen::Screen (double hz, int w, int h, const MCHEmul::Attributes& attrs
 {
 	bool e;
 	MCHEmul::DataMemoryBlock dt = MCHEmul::DataMemoryBlock::loadBinaryFile 
-		("./characters.901460-03-ENG.bin", e, 0 /** no address needed */, true);
+		("./bios/characters.901460-03-ENG.bin", e, 0 /** no address needed */, true);
 	if (!e)
 	{
 		for (size_t i = 0; i < 4096; i += 8)

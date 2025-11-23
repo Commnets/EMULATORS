@@ -7,7 +7,7 @@ ZX81::Screen::Screen (double hz, int w, int h, const MCHEmul::Attributes& attrs)
 {
 	bool e;
 	MCHEmul::DataMemoryBlock dt = MCHEmul::DataMemoryBlock::loadBinaryFile 
-		("./zx81_1.rom", e, 0 /** no address needed */, true);
+		("./bios/zx81_1.rom", e, 0 /** no address needed */, true);
 	if (!e)
 	{
 		for (size_t i = 0x0000; i < 0x0200; i += 8) // 64 characters (8 bytes each) = 512bytes

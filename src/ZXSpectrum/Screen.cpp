@@ -7,7 +7,7 @@ ZXSPECTRUM::Screen::Screen (double hz, int w, int h, const MCHEmul::Attributes& 
 {
 	bool e;
 	MCHEmul::DataMemoryBlock dt = MCHEmul::DataMemoryBlock::loadBinaryFile 
-		("./48Standard-ENG.rom", e, 0 /** no address needed */, true);
+		("./bios/48Standard-ENG.rom", e, 0 /** no address needed */, true);
 	if (!e)
 	{
 		for (size_t i = 0x3d00; i < 0x4000; i += 8) // 96 characters (8 bytes each) = 768 bytes = 0x0300 bytes
