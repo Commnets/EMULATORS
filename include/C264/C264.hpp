@@ -44,6 +44,9 @@ namespace C264
 		Commodore264 (const MCHEmul::Chips& cps, MCHEmul::Memory* m, const MCHEmul::IODevices& dvs, 
 			VisualSystem vS, Type t, unsigned int cfg, const std::string& lng = MCHEmul::_DEFAULTLANGUAGE);
 
+		VisualSystem visualSystem () const
+							{ return (_visualSystem); }
+
 		virtual bool initialize (bool iM = true) override;
 
 		protected:

@@ -4,6 +4,7 @@
 #include <C264/OSIO.hpp>
 #include <C264/DatasettePort.hpp>
 #include <C264/ExpansionPort.hpp>
+#include <C264/IO7510PortRegisters.hpp>
 #include <C264/C6529B1.hpp>
 #include <C264/C6529B2.hpp>
 #include <C264/TED.hpp>
@@ -59,7 +60,13 @@ bool C264::Commodore264::initialize (bool iM)
 	// changes in the keyboard matrix...
 	chip (COMMODORE::TED::_ID) -> observe (chip (C264::C6529B1::_ID));
 
-	// TODO: The IOPorRegister has to be observed...
+	// Links between memory and devices...
+	// The device observe the interactions between the IO7501 port registers and itself...
+	device (COMMODORE::DatasetteIOPort::_ID) -> observe 
+		(memory () -> subset (C264::IO7501PortRegisters::_IO7501REGISTERS_SUBSET));
+	// ...but also the port registers observe the datasette device...
+	memory () -> subset (C264::IO7501PortRegisters::_IO7501REGISTERS_SUBSET) -> observe 
+		(device (COMMODORE::DatasetteIOPort::_ID));
 
 	// Check whether there is an expansion element inserted in the expansion port
 	// If it is, it's info is loaded if any...

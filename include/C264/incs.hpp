@@ -17,6 +17,7 @@
 #include <F6500/incs.hpp>
 #include <EMULATORS/incs.hpp>
 #include <COMMODORE/incs.hpp>
+#include <C264/IO7510PortRegisters.hpp>
 #include <C264/C6529B1.hpp>
 #include <C264/C6529B1Registers.hpp>
 #include <C264/C6529B2.hpp>
@@ -31,6 +32,7 @@
 #include <C264/OSIO.hpp>
 #include <C264/ExpansionPort.hpp>
 #include <C264/DatasettePort.hpp>
+#include <C264/1531Datasette.hpp>
 #include <C264/Cartridge.hpp>
 #include <C264/Memory.hpp>
 #include <C264/Screen.hpp>

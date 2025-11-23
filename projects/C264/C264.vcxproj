@@ -31,6 +31,7 @@
     <ClCompile Include="..\..\src\C264\Commands.cpp" />
     <ClCompile Include="..\..\src\C264\DatasettePort.cpp" />
     <ClCompile Include="..\..\src\C264\ExpansionPort.cpp" />
+    <ClCompile Include="..\..\src\C264\IO7510PortRegisters.cpp" />
     <ClCompile Include="..\..\src\C264\IOPBuilder.cpp" />
     <ClCompile Include="..\..\src\C264\Memory.cpp" />
     <ClCompile Include="..\..\src\C264\OSIO.cpp" />
@@ -42,6 +43,7 @@
     <ClCompile Include="..\..\src\C264\TEDRegisters.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\include\C264\1531Datasette.hpp" />
     <ClInclude Include="..\..\include\C264\C1C2Selector.hpp" />
     <ClInclude Include="..\..\include\C264\C1C2SelectorRegisters.hpp" />
     <ClInclude Include="..\..\include\C264\C264.hpp" />

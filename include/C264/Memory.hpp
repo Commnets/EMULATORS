@@ -53,51 +53,50 @@ namespace C264
 
 		// Subsets that exists from the beginning in any type of machine...
 		// B1
-		static const int _IO7501PORT_SUBSET					= 100;
-		static const int _PAGEZERO_SUBSET					= 101;
-		static const int _STACK_SUBSET						= 102;
-		static const int _RAM1_SUBSET						= 103;
+		static const int _PAGEZERO_SUBSET					= 100;
+		static const int _STACK_SUBSET						= 101;
+		static const int _RAM1_SUBSET						= 102;
 		// B2
-		static const int _RAM2_SUBSET						= 104;
-		static const int _RAM2MIRRORIO7501PORT_SUBSET		= 105;
-		static const int _RAM2MIRRORPAGEZERO_SUBSET			= 106;
-		static const int _RAM2MIRRORSTACK_SUBSET			= 107;
-		static const int _RAM2MIRRORRAM1_SUBSET				= 108;
+		static const int _RAM2_SUBSET						= 103;
+		static const int _RAM2MIRRORIO7501PORT_SUBSET		= 104;
+		static const int _RAM2MIRRORPAGEZERO_SUBSET			= 105;
+		static const int _RAM2MIRRORSTACK_SUBSET			= 106;
+		static const int _RAM2MIRRORRAM1_SUBSET				= 107;
 		// B3
-		static const int _BASICROM_SUBSET					= 109;
-		static const int _3PLUS1ROM1_SUBSET					= 110;
-		static const int _CARTRIDGE1LOW_SUBSET				= 111;
-		static const int _CARTRIDGE2LOW_SUBSET				= 112;
-		static const int _NOEXTENSION_SUBSET				= 113;
-		static const int _RAM3_SUBSET						= 114;
-		static const int _RAM3MIRRORIO7501PORT_SUBSET		= 115;
-		static const int _RAM3MIRRORPAGEZERO_SUBSET			= 116;
-		static const int _RAM3MIRRORSTACK_SUBSET			= 117;
-		static const int _RAM3MIRRORRAM1_SUBSET				= 118;
+		static const int _BASICROM_SUBSET					= 108;
+		static const int _3PLUS1ROM1_SUBSET					= 109;
+		static const int _CARTRIDGE1LOW_SUBSET				= 110;
+		static const int _CARTRIDGE2LOW_SUBSET				= 111;
+		static const int _NOEXTENSION_SUBSET				= 112;
+		static const int _RAM3_SUBSET						= 113;
+		static const int _RAM3MIRRORIO7501PORT_SUBSET		= 114;
+		static const int _RAM3MIRRORPAGEZERO_SUBSET			= 115;
+		static const int _RAM3MIRRORSTACK_SUBSET			= 116;
+		static const int _RAM3MIRRORRAM1_SUBSET				= 117;
 		// B4 (Part 1)
-		static const int _KERNELROM1_SUBSET					= 119;
-		static const int _3PLUS1ROM21_SUBSET				= 120;
-		static const int _CARTRIDGE1HIGH1_SUBSET			= 121;
-		static const int _CARTRIDGE2HIGH1_SUBSET			= 122;
-		static const int _RAM41_SUBSET						= 123;
-		static const int _RAM41MIRRORIO7501PORT_SUBSET		= 124;
-		static const int _RAM41MIRRORPAGEZERO_SUBSET		= 125;
-		static const int _RAM41MIRRORSTACK_SUBSET			= 126;
-		static const int _RAM41MIRRORRAM1_SUBSET			= 127;
-		static const int _RAM41MIRRORRAM2_SUBSET			= 128;
+		static const int _KERNELROM1_SUBSET					= 118;
+		static const int _3PLUS1ROM21_SUBSET				= 119;
+		static const int _CARTRIDGE1HIGH1_SUBSET			= 120;
+		static const int _CARTRIDGE2HIGH1_SUBSET			= 121;
+		static const int _RAM41_SUBSET						= 122;
+		static const int _RAM41MIRRORIO7501PORT_SUBSET		= 123;
+		static const int _RAM41MIRRORPAGEZERO_SUBSET		= 124;
+		static const int _RAM41MIRRORSTACK_SUBSET			= 125;
+		static const int _RAM41MIRRORRAM1_SUBSET			= 126;
+		static const int _RAM41MIRRORRAM2_SUBSET			= 127;
 		// B4 (Part IO)
-		static const int _IONOMAPPED2_SUBSET				= 129;
-		static const int _IONOMAPPED3_SUBSET				= 130;
-		static const int _IONOMAPPED5_SUBSET				= 131;
-		static const int _IOTIA8_SUBSET						= 132;
+		static const int _IONOMAPPED2_SUBSET				= 128;
+		static const int _IONOMAPPED3_SUBSET				= 129;
+		static const int _IONOMAPPED5_SUBSET				= 130;
+		static const int _IOTIA8_SUBSET						= 131;
 		// B4 (Part 2)
-		static const int _KERNELROM2_SUBSET					= 133;
-		static const int _3PLUS1ROM22_SUBSET				= 134;
-		static const int _CARTRIDGE1HIGH2_SUBSET			= 135;
-		static const int _CARTRIDGE2HIGH2_SUBSET			= 136;
-		static const int _RAM42_SUBSET						= 137;
-		static const int _RAM42MIRRORRAM1_SUBSET			= 138;
-		static const int _RAM42MIRRORRAM2_SUBSET			= 139;
+		static const int _KERNELROM2_SUBSET					= 132;
+		static const int _3PLUS1ROM22_SUBSET				= 133;
+		static const int _CARTRIDGE1HIGH2_SUBSET			= 134;
+		static const int _CARTRIDGE2HIGH2_SUBSET			= 135;
+		static const int _RAM42_SUBSET						= 136;
+		static const int _RAM42MIRRORRAM1_SUBSET			= 137;
+		static const int _RAM42MIRRORRAM2_SUBSET			= 138;
 
 		// Views
 		static const int _CPU_VIEW							= 0;

@@ -20,7 +20,7 @@
 namespace COMMODORE
 {
 	/** This unit was used in many COMMODORE models. \n
-		Mainly all of them except COMMODORE16. \n
+		Mainly all of them including COMMODORE16 (which name in that case is 1531 and has differences in the connector). \n
 		The datasette moves between 300 and 311 bits per second in average, 
 		depending on the speed of the computer connected. \n
 		Every bit is broken in 4 datasette cycles (DCycle) of information. \n

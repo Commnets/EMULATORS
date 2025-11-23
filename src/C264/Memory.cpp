@@ -1,4 +1,5 @@
 #include <C264/Memory.hpp>
+#include <C264/IO7510PortRegisters.hpp>
 
 // ---
 C264::Memory::Memory (const MCHEmul::Memory::Content& cnt, 
@@ -487,8 +488,7 @@ MCHEmul::PhysicalStorage* RAM =
 	// B1
 	// $0000-$0001: The two registers of the IO expansion port...
 	// This subset exists always...
-	MCHEmul::PhysicalStorageSubset* IO7501Port = 
-		new F6500::IO7501PortRegisters (_IO7501PORT_SUBSET, RAM);												// 2 bytes
+	MCHEmul::PhysicalStorageSubset* IO7501Port = new C264::IO7501PortRegisters (RAM);							// 2 bytes
 	IO7501Port -> setName ("IO7501 Port Registers");
 	// $0002-$00FF: Page 0.The quickest possible access...
 	// This subset exists always too...
@@ -694,7 +694,7 @@ MCHEmul::PhysicalStorage* RAM =
 	MCHEmul::PhysicalStorageSubsets allsubsets (
 		{
 			// B1
-			{ _IO7501PORT_SUBSET,										IO7501Port }, 
+			{ C264::IO7501PortRegisters::_IO7501REGISTERS_SUBSET,		IO7501Port }, 
 			{ _PAGEZERO_SUBSET,											pageZero }, 
 			{ _STACK_SUBSET,											stack },
 			{ _RAM1_SUBSET,												RAM1 },
