@@ -71,7 +71,7 @@ namespace COMMODORE
 
 		/** The position of the bad lines. */
 		static const unsigned short _FIRSTBADLINE	= 0x00;
-		static const unsigned short _LASTBADLINE	= 0xc8;
+		static const unsigned short _LASTBADLINE	= 0xc7;
 
 		/** Data about the size of the screen */
 		static const unsigned short _GRAPHMAXCHARLINES		= 25;	// Not taking into account reductions in the size
