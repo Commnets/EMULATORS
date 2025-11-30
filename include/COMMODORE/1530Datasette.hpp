@@ -33,8 +33,7 @@ namespace COMMODORE
 		a 0 data bit (169 us), a 1 data bit (247 us) or a word market bit (332 us).
 		https://archive.org/details/COMPUTEs_VIC-20_and_Commodore_64_Tool_Kit_Kernal_1985_COMPUTE_Publications_a (page 275).
 		The way 0 and 1 are kept in the datasette is changing the frequency of the signal stored.
-		It means changinf the time the CPU takes before storing the next piece of info!
-		*/
+		It means changinf the time the CPU takes before storing the next piece of info! */
 	class Datasette1530 : public MCHEmul::StandardDatasette
 	{
 		public:
@@ -100,7 +99,10 @@ namespace COMMODORE
 	};
 
 	/** This unit is just to jump over the routines aimed for this task in the kernel. 
-		The info needed to "trap" the right position will depend on the final computer emulated. */
+		The info needed to "trap" the right position will depend on the final computer emulated. \n
+		The most important method is executeTrap. The method is execute when a position of the trap is found. \n
+		The code of that methd has to be aligned with the KERNEL using it. \n
+		The default implementation is alligned with a Commodore 64 and a Commodore VIC20 kernel. */
 	class Datasette1530Injection : public MCHEmul::StandardDatasette
 	{
 		public:
@@ -142,7 +144,8 @@ namespace COMMODORE
 		protected:
 		/** Invoked from simulate. It can be overloaded, 
 			but a couple of basic traps are understood: "Header" & "Retrieve".
-			Define them when construct the object because the address In/Out can vary per type of COMMODORE machine. */
+			Define them when construct the object because the address In/Out can vary per type of COMMODORE machine. \n
+			However this default implementation oas highlighted above is ready for a Commodore 64 and a Commodore VIC20 */
 		virtual bool executeTrap (const MCHEmul::Trap& t, MCHEmul::CPU* cpu);
 
 		/** To load the program into the memory. \n

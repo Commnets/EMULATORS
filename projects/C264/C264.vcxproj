@@ -19,6 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\src\C264\1531Datasette.cpp" />
     <ClCompile Include="..\..\src\C264\C1C2Selector.cpp" />
     <ClCompile Include="..\..\src\C264\C1C2SelectorRegisters.cpp" />
     <ClCompile Include="..\..\src\C264\C264.cpp" />

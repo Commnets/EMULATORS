@@ -114,6 +114,9 @@
     <ClCompile Include="..\..\src\C264\IO7510PortRegisters.cpp">
       <Filter>Archivos de origen\IO</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\C264\1531Datasette.cpp">
+      <Filter>Archivos de origen\IO</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\include\C264\C264.hpp">

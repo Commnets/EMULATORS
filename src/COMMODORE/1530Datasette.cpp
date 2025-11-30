@@ -161,7 +161,7 @@ bool COMMODORE::Datasette1530Injection::executeTrap (const MCHEmul::Trap& t, MCH
 
 				int e = 0;
 
-				// Gets with the buffer is really located...(
+				// Gets with the buffer is really located...
 				// using and indirect address mode...
 				// This info will be used many times later...
 				MCHEmul::Address ctteBuffer (cpu -> memoryRef () -> values (_definition._bufferAddr, 2).reverse ());
@@ -191,7 +191,7 @@ bool COMMODORE::Datasette1530Injection::executeTrap (const MCHEmul::Trap& t, MCH
 				// Only if something usefull was found, the method continues...
 				if (e == 0)
 				{
-					// Storing the header of the info found in the casette buffer...
+					// Storing the header of the info found in the cassette buffer...
 					MCHEmul::DataMemoryBlock& dtM = _data._data [_dataCounter];
 					cpu -> memoryRef () -> put (ctteBuffer, 0x01 /** Machine type default value. */);
 					cpu -> memoryRef () -> put (ctteBuffer + 1, MCHEmul::UBytes (dtM.startAddress ().bytes (), 
@@ -254,6 +254,9 @@ bool COMMODORE::Datasette1530Injection::executeTrap (const MCHEmul::Trap& t, MCH
 				switch (static_cast <F6500::C6500*> (cpu) -> xRegister ().values () [0].value ())
 				{
 					case 0x0e:
+						// This methd has been defined to read always the same number 
+						// of bytes that it was expected!
+						// VOther implementatoions (VICE e.g.) are prepared to read even files with defect...
 						loadDataBlockInRAM (_data._data [_dataCounter], cpu);
 						break;
 
