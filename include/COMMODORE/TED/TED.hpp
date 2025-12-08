@@ -116,6 +116,10 @@ namespace COMMODORE
 		unsigned short cyclesPerRasterLine () const
 							{ return (_cyclesPerRasterLine); }
 
+		/** Single clock active? */
+		bool singleClockModeActive () const
+							{ return (_TEDRegisters -> singleClockModeActive ()); }
+
 		/** To know whether the TED is or not in idle_situation.
 			This can be used to change the speed of the processor later. */
 		bool isIdleState () const

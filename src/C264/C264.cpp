@@ -96,7 +96,8 @@ void C264::Commodore264::specificComputerCycle ()
 {
 	// Changes the speed of the CPU attending whether the TED is or not in idle state...
 	// ...using the same mechanisim that in a external access!
-	clock ().setFactor (_ted -> isIdleState () ? 2.0 : 1.0);
+	clock ().setFactor 
+		(_ted -> isIdleState () && !_ted -> singleClockModeActive () ? 2.0 : 1.0);
 }
 
 // ---

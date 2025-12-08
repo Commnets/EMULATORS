@@ -51,8 +51,9 @@ void C264::TED::processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifier* n)
 				size_t ct = 0; // Counts the axis...
 				MCHEmul::UByte dr = MCHEmul::UByte::_0;
 				for (size_t ct = 0; ct < jm -> _axisValues.size (); ct++)
-					dr.setBit (((C264::InputOSSystem*) n) -> bitForJoystickAxis 
-						(jm -> _joystickId, (int) ct, jm -> _axisValues [ct]), true);
+					if (jm -> _axisValues [ct] != 0) // When the axis is 0, there is no bit to set!!
+						dr.setBit (((C264::InputOSSystem*) n) -> bitForJoystickAxis 
+							(jm -> _joystickId, (int) ct, jm -> _axisValues [ct]), true);
 				_TEDRegisters -> setJoystickStatus (jm -> _joystickId, dr); // If there is no axis pressed, then a 0 is set...
 			}
 

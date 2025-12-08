@@ -1,5 +1,6 @@
 #include <C264/OSIO.hpp>
 #include <C264/C6529B1.hpp>
+#include <C264/TED.hpp>
 
 // ---
 const C264::InputOSSystem::KeystrockesMap C264::InputOSSystem::_C264KEYS
@@ -94,11 +95,16 @@ void C264::InputOSSystem::linkToChips (const MCHEmul::Chips& c)
 	{
 		if (dynamic_cast <C264::C6529B1*> ((*i).second) != nullptr) 
 			_C6529B1 = dynamic_cast <C264::C6529B1*> ((*i).second);
+		if (dynamic_cast <C264::TED*> ((*i).second) != nullptr) 
+			_TED = dynamic_cast <C264::TED*> ((*i).second);
 	}
 
 	// Can't be null after this method...
-	assert (_C6529B1 != nullptr);
+	assert (_C6529B1 != nullptr && 
+			_TED != nullptr);
 
-	// The C6529b1 will receive the event related with the io system...
+	// The C6529B1 will receive the event related with the io system...
+	// ...and also the TED...
 	_C6529B1 -> observe (this);
+	_TED -> observe (this);
 }

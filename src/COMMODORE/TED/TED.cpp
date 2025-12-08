@@ -480,6 +480,7 @@ MCHEmul::Strings COMMODORE::TED::charsDrawSnapshot (MCHEmul::CPU* cpu,
 			dt += textByteMonocolor (chrDt [j]);
 			if (_TEDRegisters -> graphicMulticolorTextModeActive ())
 				dt += " | " /** Separated by a symbol. */ + textByteMultiColor (chrDt [j]);
+			dt += "|$" + chrDt [j].asString (MCHEmul::UByte::OutputFormat::_BINARY, '0');
 		}
 
 		result.emplace_back (std::move (dt));
@@ -1155,10 +1156,11 @@ COMMODORE::TED::DrawResult COMMODORE::TED::drawMultiColorBitMap (int cb, bool in
 						? _TEDRegisters -> backgroundColor ().asChar ()
 						: ((cs == 0x01) // The color is the defined in the video matrix (color) & color data (luminance)...
 							? (((_tedGraphicInfo._screenCodeData [iBy].value () & 0xf0 /** bits 4, 5, 6 & 7. */) >> 4) /** to color position. */
-								| (_tedGraphicInfo._colorData [iBy].value () & 0x70 /** bits 4, 5 & 6. */))
+								// There is a mistake in the TED documentation, it shows bits 4, 5 & 6 instead of bits 0, 1 & 2...
+								| ((_tedGraphicInfo._colorData [iBy].value () & 0x07 /** bits 0, 1 & 2. */) << 4))
 							: ((cs == 0x02) // The color is defined in the video matrix (color) & color data (luminance)...
 								? ((_tedGraphicInfo._screenCodeData [iBy].value () & 0x0f /** bits 0, 1, 2 & 3 */)
-									| ((_tedGraphicInfo._colorData [iBy].value () & 0x07 /** bits 0, 1 & 2. */) << 4) /** to luminance position. */)
+									| (_tedGraphicInfo._colorData [iBy].value () & 0x70 /** bits 4, 5 & 6. */) /** to luminance position. */)
 								: (_TEDRegisters -> backgroundColor (0x01).asChar ())));
 
 		// ...and draws it!!

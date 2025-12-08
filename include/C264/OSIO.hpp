@@ -20,6 +20,8 @@
 namespace C264
 {
 	class C6529B1; 
+	class TED;
+
 	/** The C264::InputOSSystem  \n
 		is very related with the 6529B1 chip (@see C6529B1). */
 	class InputOSSystem final : public MCHEmul::InputOSSystem
@@ -33,7 +35,7 @@ namespace C264
 
 		InputOSSystem ()
 			: MCHEmul::InputOSSystem (_ID),
-			  _C6529B1 (nullptr)
+			  _C6529B1 (nullptr), _TED (nullptr)
 							{ }
 
 		/** link to C6529B1 chip. */
@@ -99,6 +101,7 @@ namespace C264
 		// Implementation
 		/** The linked chip. */
 		C6529B1* _C6529B1;
+		TED* _TED;
 	};
 
 	// ---
