@@ -31,6 +31,26 @@ First:@FIRST@, Last:@LAST@
 @RasterY>@
 #---
 #---
+;BorderColor
+(@COLOR@,@LUMINANCE@)
+#---
+#---
+;BkColor1
+(@COLOR@,@LUMINANCE@)
+#---
+#---
+;BkColor2
+(@COLOR@,@LUMINANCE@)
+#---
+#---
+;BkColor3
+(@COLOR@,@LUMINANCE@)
+#---
+#---
+;BkColor4
+(@COLOR@,@LUMINANCE@)
+#---
+#---
 ;TEDTimer1
 Run Mode:@RUN@
 IRQ:@IRQ@
@@ -56,8 +76,9 @@ Graphic Mode:@MODE@
 Cursor Position:@CURSOR@
 ScrollX:@SCROLLX@, ScrollY:@SCROLLY@
 LIGHTPEN:@LIGHTPENX@,@LIGHTPENY@
-Colors:@FORECOLOR@(@BKCOLOR1@,@BKCOLOR2@,@BKCOLOR3@,@BKCOLOR4@)
-Memory: Chars($@CHARADDRESS@), Screen($@SCREENADDRESS@), Bitmap($@BITMAPADDRESS@)
+Border Color:@BorderColor>@
+Colors:@BkColor1>@, @BkColor2>@, @BkColor3>@, @BkColor4>@
+Memory:Screen($@SCREENADDRESS@), Chars($@CHARADDRESS@, ROM=@CHARSINROM@), Attributes($@ATTRIBUTEADDRESS@$), Bitmap($@BITMAPADDRESS@)
 IRQ:@IRQ@(@IRQLINE@)
 #---
 #---
@@ -88,7 +109,7 @@ Id:@ID@, Active:@ACTIVE@
 @BYTES{blocksize=16,listsep=\,,tablesep=\ ,minsize=2}@
 LIGHTPEN:@LIGHTPENX@,@LIGHTPENY@
 Colors:@AUXCOLOR@(@BKCOLOR@,@BRDCOLOR@)
-Memory: Chars($@CHARADDRESS@), Screen($@SCREENADDRESS@), Colour($@COLOURADDRESS@)
+Memory:Chars($@CHARADDRESS@), Screen($@SCREENADDRESS@), Colour($@COLOURADDRESS@)
 #---
 #---
 ;VICI
@@ -115,7 +136,7 @@ ScrollX:@SCROLLX@, ScrollY:@SCROLLY@
 LIGHTPEN:@LIGHTPENX@,@LIGHTPENY@
 Colors:@FORECOLOR@(@BKCOLOR1@,@BKCOLOR2@,@BKCOLOR3@,@BKCOLOR4@)
 Bank:@BANK@
-Memory: Chars($@CHARADDRESS@), Screen($@SCREENADDRESS@), Bitmap($@BITMAPADDRESS@), Sprites($@SPRITEADDRESS@)
+Memory:Chars($@CHARADDRESS@), Screen($@SCREENADDRESS@), Bitmap($@BITMAPADDRESS@), Sprites($@SPRITEADDRESS@)
 IRQ:@IRQ@(@IRQLINE@)
 ->Sprites:
 @SPRITES?{fmter=.CLASS,empty=no sprites}\n@

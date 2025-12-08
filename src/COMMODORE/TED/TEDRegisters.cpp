@@ -60,12 +60,14 @@ MCHEmul::InfoStructure COMMODORE::TEDRegisters::getInfoStructure () const
 	result.add ("BkColor1",			std::move (_backgroundColor [0].getInfoStructure ()));
 	result.add ("BkColor2",			std::move (_backgroundColor [1].getInfoStructure ()));
 	result.add ("BkColor3",			std::move (_backgroundColor [2].getInfoStructure ()));
-	result.add ("BkCOlor4",			std::move (_backgroundColor [3].getInfoStructure ()));
+	result.add ("BkColor4",			std::move (_backgroundColor [3].getInfoStructure ()));
 	result.add ("BorderColor",		std::move (_borderColor.getInfoStructure ()));
 	result.add ("IRQ",				_rasterIRQActive);
 	result.add ("IRQLINE",			_IRQRasterLineAt);
-	result.add ("CHARADDRESS",		charDataMemory ());
 	result.add ("SCREENADDRESS",	screenMemory ());
+	result.add ("CHARADDRESS",		charDataMemory ());
+	result.add ("CHARSINROM",		std::string (_ROMSourceActive ? "YES" : "NO"));
+	result.add ("ATTRIBUTEADDRESS",	attributeMemory ());
 	result.add ("BITMAPADDRESS",	bitmapMemory ());
 	result.add ("GraphicalInfo",	std::move (_graphicalInfo.getInfoStructure ()));
 
@@ -293,10 +295,10 @@ void COMMODORE::TEDRegisters::setValue (size_t p, const MCHEmul::UByte& v)
 			{
 				/** Bits 0, 1 & 2 are not used. */
 				_screenMemory = MCHEmul::Address (2,
-					(unsigned int) ((v.value () & 0xf8 /** bits 3 - 7. */) << 8 
-						/** 3 + 8 to become the bits 11 - 15 of the address. */) | 0x400 /** The bit 10 is always set. */);
+					(unsigned int) ((v.value () & 0xf8 /** bits 3 - 7. */) << 8
+						/** 3 + 8 to become the bits 11 - 15 of the address. */) | 0x0400 /** The bit 10 is always set. */);
 				_attributeMemory = MCHEmul::Address (2,
-					(unsigned int) ((v.value () & 0xf8 /** bits 3 - 7. */) << 8 
+					(unsigned int) ((v.value () & 0xf8 /** bits 3 - 7. */) << 8
 						/** 3 + 8 to become the bits 11 - 15 of the address. */));
 				// The difference between the _screenMemory location and the _attributeMemory location
 				// is just the bit 10 is set in _screeMemory and off in _attributeMemory...
@@ -394,11 +396,11 @@ void COMMODORE::TEDRegisters::setValue (size_t p, const MCHEmul::UByte& v)
 			break;
 
 		// Horizontal Raster Position MSB
-			// But only the 8 most significant bits...
+		// But only the 8 most significant bits...
+		// So the value received is always the 8 MSBits of a 9 bits value...
 		case 0x1e:
 			{
-				_graphicalInfo._currentRasterColumn = 
-					_graphicalInfo._currentRasterColumn | ((v.value () & 0xfe) /** bit 0 is not used. */ << 1);
+				_graphicalInfo._currentRasterColumn = (v.value () << 1);
 			}
 
 			break;
@@ -638,8 +640,7 @@ const MCHEmul::UByte& COMMODORE::TEDRegisters::readValue (size_t p) const
 
 		case 0x1e:
 			{
-				result = ((unsigned char) ((_graphicalInfo._currentRasterColumn >> 1) & 0x00ff)) 
-					| ~0b11111110; // The bits not used are set to 1...
+				result = (unsigned char) ((_graphicalInfo._currentRasterColumn >> 1) & 0x00ff); 
 			}
 
 			break;

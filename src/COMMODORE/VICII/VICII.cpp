@@ -927,10 +927,16 @@ void COMMODORE::VICII::drawVisibleZone (MCHEmul::CPU* cpu)
 		unsigned short lrt = 
 			_raster.lineInVisibleZone (_VICIIRegisters -> IRQRasterLineAt ());
 		if (lrt <= _raster.vData ().lastVisiblePosition ())
+		{
+			unsigned int cl = _VICIIRegisters -> backgroundColor () == 15 
+				? 0 : _VICIIRegisters -> backgroundColor () + 1; /** to be visible. */
 			screenMemory () -> setHorizontalLine ((size_t) cav, (size_t) lrt,
-				(cav + 8) > _raster.visibleColumns () ? (_raster.visibleColumns () - cav) : 8, 
-					_VICIIRegisters -> backgroundColor () == 15 
-						? 0 : _VICIIRegisters -> backgroundColor () + 1 /** to be visible. */);
+				(cav + 8) > _raster.visibleColumns () ? (_raster.visibleColumns () - cav) : 8, cl);
+			if (cav >= 8 && cav < 40 && lrt > 5)
+				screenMemory () -> setString ((size_t) 0, (size_t) (lrt - 5), 
+					std::to_string ((unsigned int) _VICIIRegisters -> IRQRasterLineAt ()) + " " +
+					std::to_string ((unsigned int) lrt), cl);
+		}
 	}
 
 	// The draw around the sprites is drawn as part of the sprite draw routine...

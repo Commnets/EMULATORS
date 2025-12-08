@@ -117,7 +117,7 @@ namespace COMMODORE
 		// Backgrund & Boder colors
 		const Color& backgroundColor (size_t p = 0) const
 							{ return (_backgroundColor [p]); }
-		Color& backkgroundColor (size_t p = 0)
+		Color& backgroundColor (size_t p = 0)
 							{ return (_backgroundColor [p]); }
 		const Color& borderColor () const
 							{ return (_borderColor); }
@@ -219,27 +219,39 @@ namespace COMMODORE
 		void setKeyboardPins (const MCHEmul::UByte& kp)
 							{ _keyboardPins = kp; }
 
+		// Related with the position of the raster line in the screen...
+		// This position is updated continiuously by the TED simulation...
+		// an it is latched here to be returned when needed...
+		void setCurrentRasterLine (unsigned short rL)
+							{ _graphicalInfo._currentRasterLine = rL; }
+		void setCurrentRasterColumn (unsigned short rC)
+							{ _graphicalInfo._currentRasterColumn = rC; }
+		void setCurrentRasterPosition (unsigned short rL, unsigned short rC)
+							{ _graphicalInfo._currentRasterLine = rL; _graphicalInfo._currentRasterColumn = rC; }
+
 		virtual void initialize () override;
 
 		/**
 		  *	The name of the fields are: \n
 		  * The structure of Chip Registers plus:
-		  * MODE			= Attribute: The mode working in the TED. \n
-		  *	40C				= Attribute: Whether there is 40 columns or not. \n
-		  * 25R				= Attribute: Whether there is 25 rows or not. \n
-		  * SCROLLX			= Attribute; Value of the horizontal scroll. \n
-		  * SCROLLY			= Attribute; Value of the vertical scroll. \n
-		  * BKCOLOR1		= InfoStructure; Background 1 color value. \n
-		  * BKCOLOR2		= InfoStructure; Background 2 color value. \n
-		  * BKCOLOR3		= InfoStructure; Background 3 color value. \n
-		  * BKCOLOR4		= InfoStructure; Background 4 color value. \n
-		  * BORDER			= InfoStructure; Border color value. \n
-		  * IRQ				= Attribute; Whether the IRQ is or not requested. \n
-		  * IRQLINE			= Attribute; The number of scan line where the IRQ should be requested if on. \n
-		  * CHARADDRESS		= Attribute; The address of the characters definition. \n
-		  * SCREENADDRESS	= Attribute; The address of the video matrix. \n
-		  * BITMAPADDRESS	= Attribute; The address of the bit maps. \n
-		  * GRAPHICALINFO	= InfoStructure; Info about how the graphics are being drawn.
+		  * MODE				= Attribute: The mode working in the TED. \n
+		  *	40C					= Attribute: Whether there is 40 columns or not. \n
+		  * 25R					= Attribute: Whether there is 25 rows or not. \n
+		  * SCROLLX				= Attribute; Value of the horizontal scroll. \n
+		  * SCROLLY				= Attribute; Value of the vertical scroll. \n
+		  * BKCOLOR1			= InfoStructure; Background 1 color value. \n
+		  * BKCOLOR2			= InfoStructure; Background 2 color value. \n
+		  * BKCOLOR3			= InfoStructure; Background 3 color value. \n
+		  * BKCOLOR4			= InfoStructure; Background 4 color value. \n
+		  * BORDER				= InfoStructure; Border color value. \n
+		  * IRQ					= Attribute; Whether the IRQ is or not requested. \n
+		  * IRQLINE				= Attribute; The number of scan line where the IRQ should be requested if on. \n
+		  * SCREENADDRESS		= Attribute; The address of the video matrix. \n
+		  * CHARADDRESS			= Attribute; The address of the characters definition. \n
+		  * CHARSINROM			= Attribute; Whether the characters are in ROM or in RAM. \n
+		  * ATTRIBUTEADDRESS	= Attribute; The address of the attribute definition. \n
+		  * BITMAPADDRESS		= Attribute; The address of the bit maps. \n
+		  * GRAPHICALINFO		= InfoStructure; Info about how the graphics are being drawn.
 		  */
 		virtual MCHEmul::InfoStructure getInfoStructure () const override;
 

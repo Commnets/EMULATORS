@@ -15,6 +15,7 @@
 #define __MCHEMUL_SCREENMEMORY__
 
 #include <vector>
+#include <CORE\UByte.hpp>
 
 namespace MCHEmul
 {
@@ -48,6 +49,7 @@ namespace MCHEmul
 							{ return (_frameData); }
 
 		// Managing basically the pixels of the frame...
+		// Take into account that no bounds checking is done...
 		void setPixel (size_t x, size_t y, unsigned int color)
 							{ _frameData [y * _columns + x] = _colorPalette [color]; }
 		void setHorizontalLine (size_t x, size_t y, size_t nP, unsigned int color)
@@ -59,13 +61,21 @@ namespace MCHEmul
 		void setVerticalLineStep (size_t x, size_t y, size_t nP, unsigned int color, unsigned int s)
 							{ for (unsigned int i = 0; i < (nP - s); setPixel (x, y + (i += s), color)); }
 		inline void setBox (size_t x1, size_t y1, size_t nPX, size_t nPY, unsigned int color);
+		void setByte (size_t x, size_t y, UByte c, unsigned int color)
+							{ for (unsigned int i = 0; i < 8; i++) if (c.bit (7 - i)) setPixel (x + i, y, color); }
+		inline void setChar (size_t x, size_t y, char c, unsigned int color);
+		void setString (size_t x, size_t y, const std::string& s, unsigned int color)
+							{ for (size_t i = 0; i < s.size (); i++) setChar (x + (i * 5), y, s [i], color); }
 
 		inline std::vector <unsigned int> getValues () const;
 
-		private:
+		protected:
 		unsigned int* _frameData;
 		size_t _columns, _rows;
 		unsigned int* _colorPalette;
+
+		// The definition of the ascii codes...
+		static const std::vector <std::vector <UByte>> _CHARS;
 	};
 
 	// ---
@@ -75,6 +85,19 @@ namespace MCHEmul
 		setHorizontalLine (x1, y1 + nPY - 1, nPX, color);
 		setVerticalLine (x1, y1, nPY, color);
 		setVerticalLine (x1 + nPX - 1, y1, nPY, color);
+	}
+
+	// ---
+	inline void ScreenMemory::setChar (size_t x, size_t y, char c, unsigned int color)
+	{
+		size_t p = (std::isalpha (c) 
+			? (std::toupper (c) - 'A' + 11) // A=11,B=12,...,Z=36
+			: (std::isdigit (c)
+				? (c - '0' + 1) // 0=0, 1=1, ..., 9=9
+				: 0 /** Space for any other char. */));
+
+		for (size_t i = 0; i < 4; i++)
+			setByte (x, y + i, _CHARS [p][i], color);
 	}
 
 	// ---

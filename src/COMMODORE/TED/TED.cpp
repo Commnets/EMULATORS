@@ -174,6 +174,9 @@ bool COMMODORE::TED::initialize ()
 	_newBadLineCondition = false;
 	_badLineStopCyclesAdded = false;
 
+	_tedGraphicInfo = { };
+	_eventStatus = { 0 };
+
 	return (true);
 }
 
@@ -270,6 +273,10 @@ bool COMMODORE::TED::simulate (MCHEmul::CPU* cpu)
 		// just to take into account other issuing possibilities like two sprites collision analized later.
 		if (_raster.moveCycles (1))
 		{
+			// Update the position of the raster in the TED Registers...
+			_TEDRegisters -> setCurrentRasterPosition 
+				(_raster.currentLine (), _raster.currentColumn ());
+
 			_cycleInRasterLine = 1;
 
 			_lastBadLineScrollY = -1;
@@ -333,9 +340,6 @@ bool COMMODORE::TED::simulate (MCHEmul::CPU* cpu)
 	}
 	else
 		_lastVBlankEntered = false;
-
-	_TEDRegisters -> setGraphicalInfo (COMMODORE::TEDRegisters::GraphicalInfo 
-		(_raster.currentLine (), _raster.currentColumn (), 0, 0, 0));
 
 	_lastCPUCycles = cpu -> clockCycles ();
 
@@ -418,6 +422,38 @@ MCHEmul::UBytes COMMODORE::TED::bitmapMemorySnapShot (MCHEmul::CPU* cpu) const
 MCHEmul::Strings COMMODORE::TED::charsDrawSnapshot (MCHEmul::CPU* cpu,
 	const std::vector <size_t>& chrs) const
 {
+	// Lambda function to draw the content of a byte in a "monocolor way".
+	// That is: one bit, one pixel, one color...
+	auto textByteMonocolor = [](const MCHEmul::UByte& u) -> std::string 
+		{ 
+			std::string result;
+			for (size_t l = 0; l < 8; l++)
+				result += ((u.value () & (1 << (7 - l))) != 0x00) ? "#" : " ";
+			return (result);
+		};
+
+	// Lambda function to draw the content of a byte in "multicolor way".
+	// That is: a par of bit, two pixels, one color...
+	auto textByteMultiColor = [](const MCHEmul::UByte& u) -> std::string
+		{
+			std::string result;
+
+			for (size_t l = 0; l < 8; l += 2)
+			{ 
+				switch ((u.value () & (0x03 << (6 - l))) >> (6 - l))
+				{
+					case 0x00: result += "  "; break;
+					case 0x01: result += "OO"; break;
+					case 0x02: result += "XX"; break;
+					case 0x03: result += "##"; break;
+					// This situation doesn't happen...
+					default: break;
+				}
+			}
+
+			return (result);
+		};
+
 	int aVID = cpu -> memoryRef () -> activeView () -> id ();
 	if (aVID != _TEDView)
 		cpu -> memoryRef () -> setActiveView (_TEDView);
@@ -438,26 +474,12 @@ MCHEmul::Strings COMMODORE::TED::charsDrawSnapshot (MCHEmul::CPU* cpu,
 			if (j != 0)
 				dt += "\n";
 
+			// In multicolor, depending on the bit 3 of the attribute byte
+			// in the color matrix, the character can be draw as monocolor or as multicolor...
+			// The rest of the modes are draw as monocolor, including the extended multicolor char...
+			dt += textByteMonocolor (chrDt [j]);
 			if (_TEDRegisters -> graphicMulticolorTextModeActive ())
-			{
-				for (size_t l = 0; l < 8; l += 2)
-				{ 
-					switch ((chrDt [j].value () & (0x03 << (6 - l))) >> (6 - l))
-					{
-						case 0x00: dt += "  "; break;
-						case 0x01: dt += "OO"; break;
-						case 0x02: dt += "XX"; break;
-						case 0x03: dt += "##"; break;
-						// This situation doesn't happen...
-						default: break;
-					}
-				}
-			}
-			else // Including extended (in terms of definition)...
-			{
-				for (size_t l = 0; l < 8; l++)
-					dt += ((chrDt [j].value () & (1 << (7 - l))) != 0x00) ? "#" : " ";
-			}
+				dt += " | " /** Separated by a symbol. */ + textByteMultiColor (chrDt [j]);
 		}
 
 		result.emplace_back (std::move (dt));
@@ -748,11 +770,15 @@ void COMMODORE::TED::drawVisibleZone (MCHEmul::CPU* cpu)
 		unsigned short lrt = 
 			_raster.lineInVisibleZone (_TEDRegisters -> IRQRasterLineAt ());
 		if (lrt <= _raster.vData ().lastVisiblePosition ())
+		{
 			screenMemory () -> setHorizontalLine ((size_t) cav, (size_t) lrt,
 				(cav + 8) > _raster.visibleColumns () ? (_raster.visibleColumns () - cav) : 8, 130);
+			if (cav >= 8 && cav < 40 && lrt > 5)
+				screenMemory () -> setString ((size_t) 0, (size_t) (lrt - 5), 
+					std::to_string ((unsigned int) _TEDRegisters -> IRQRasterLineAt ()) + " " +
+					std::to_string ((unsigned int) lrt), 131);
+		}
 	}
-
-	// The draw around the sprites is drawn as part of the sprite draw routine...
 
 	// If it activated to draw other events that happen during the interation of the VICII...
 	if (_drawOtherEvents)
@@ -902,22 +928,21 @@ COMMODORE::TED::DrawResult COMMODORE::TED::drawMonoColorChar (int cb, bool c, in
 		if (pp >= 320)
 			break;
 
+		// Calculate the byte and bit where the pixel info is...
 		size_t iBy = ((size_t) pp) >> 3; // To determine the byte...
 		size_t iBt = 7 - (((size_t) pp) % 8); // From MSB to LSB...
 
 		// Pixel must be on or off?
-		bool dP = 
-			(_tedGraphicInfo._colorData [iBy].bit (7)) // The bit of the byte read defines whether the color blinks or not...
-				? ((!_TEDRegisters -> flashCounterOn () && _tedGraphicInfo._graphicData [iBy].bit (iBt)) ||
-				   (_TEDRegisters -> flashCounterOn () && !_tedGraphicInfo._graphicData [iBy].bit (iBt))) // If blinks draws in reverse video!
-				: _tedGraphicInfo._graphicData [iBy].bit (iBt); // If the byte doesn't define any blink, draws normally...
+		bool dP = calcPixelHiResMode (iBy, iBt);
 		// ...if the cursor is over the pixels to draw and the cursor hardware is on, changes the status of the pixel...
+		// Hardware status only happen in the MonoColorChar mode...
 		if (c && _tedGraphicInfo.cursorHardwareStatus () && 
 			i >= dCI && i < (dCI + dCN)) dP = !dP;
 		// ...and finally draws it...
-		if (dP)
-			result._foregroundColorData [i] = 
-				(unsigned int) (_tedGraphicInfo._colorData [iBy].value () & 0x7f /** Without the bit 7. */);
+		// In the case of dP == false, it is redundant at it is already background...
+		result._foregroundColorData [i] = dP 
+			? (unsigned int) (_tedGraphicInfo._colorData [iBy].value () & 0x7f /** Without the bit 7 (tha define blinking mode or not) */)
+			: (unsigned int) (_TEDRegisters -> backgroundColor ().asChar ());
 
 		// When 0, it is background...
 		// Not necessary to the color of the pixels as it will be always the basic background color,
@@ -931,7 +956,7 @@ COMMODORE::TED::DrawResult COMMODORE::TED::drawMultiColorChar (int cb, bool inv)
 {
 	COMMODORE::TED::DrawResult result;
 
-	for (unsigned short i = 0 ; i < 8 /** To paint always 8 pixels but in blocks of 2. */; i += 2)
+	for (unsigned short i = 0 ; i < 8; i++)
 	{
 		int pp = cb + i;
 		if (pp < -1)
@@ -941,81 +966,83 @@ COMMODORE::TED::DrawResult COMMODORE::TED::drawMultiColorChar (int cb, bool inv)
 
 		// After this pp can be -1...
 
-		size_t iBy = 0;
-		unsigned char cs = 0;
-		if (pp >= 0)
+		// Calculate the byte where the pixel info is...
+		size_t iBy = ((size_t) pp) >> 3; 
+		// If the bit 3 of the attribute byte is on, 
+		// the character will be drawn in real multicolor mode...
+		if (_tedGraphicInfo._colorData [iBy].bit (3))
 		{
-			iBy = ((size_t) pp) >> 3; 
-			size_t iBt = 3 - ((((size_t) pp) % 8) >> 1);
-			cs = (_tedGraphicInfo._graphicData [iBy].value () >> (iBt << 1)) & 0x03; // 0, 1, 2 or 3
-		}
-		// This is the case when pp == -1...
-		else
-			cs = (_tedGraphicInfo._graphicData [0].value () >> 6) & 0x03; // 0, 1, 2 or 3
+			unsigned char cs = 0;
+			if (pp >= 0)
+			{
+				// Calculate the bit where the pixel info is...
+				// in this case there a pair of bit with the color info...
+				size_t iBt = 3 - ((((size_t) pp) % 8) >> 1);
+				cs = (_tedGraphicInfo._graphicData [iBy].value () >> (iBt << 1)) & 0x03; // 0, 1, 2 or 3
+			}
+			// This is the case when pp == -1...
+			else
+				cs = (_tedGraphicInfo._graphicData [0].value () >> 6) & 0x03; // 0, 1, 2 or 3
 
-		// If 0, the pixel should be drawn (and considered) as background 
-		// and it is already the default status tha comes from the parent method...
-		if (cs == 0x00)
-			continue;
+			// If the pixel 7 of the character data is set to 1, 
+			// the video inverse is calculated...
+			if (_tedGraphicInfo._screenCodeData [iBy].bit (7) &&
+				_TEDRegisters -> reverseVideoActive ()) cs = 3 - cs;
+			// The blinking is defined in the bit 7 of the color attribute...
+			if (_tedGraphicInfo._colorData [iBy].bit (7) &&
+				_TEDRegisters -> flashCounterOn ()) cs = 3 - cs;
 
-		// The way the pixels are going to be drawn will depend on the information in the color memory
-		// If the most significant bit of the low significant nibble of the color memory is set to 1
-		// the data will be managed in a monocolor way...
-		// But only 8 colors are allowed (+ luminance)
-		if ((_tedGraphicInfo._colorData [iBy] & 0x08) == 0x00) 
-		{
-			unsigned int fc = 
-				inv 
-					? 0x00 // When invalid all pixels are black...
-					: _tedGraphicInfo._colorData [iBy].value () & ~0x08 
-						/** Only the first 8 colors are allowed (the bit 3 is removed). */;
-
-			// ...and remember we are dealing with pairs of pixels...
-
+			// The color of the pixels will depend on the value of cs....
+			// In the case of cs == 0x00 it will be redudant as it is already background, but just in case...
 			switch (cs)
 			{
+				case 0x00:
 				case 0x01:
-					{
-						result._foregroundColorData [i + 1] = fc;
-					}
-
-					break;
-
 				case 0x02:
 					{
-						result._foregroundColorData [i] = fc;
+						// i + 1 is always < 8...
+						result._foregroundColorData [i] =
+						result._foregroundColorData [i + 1] = 
+							_TEDRegisters -> backgroundColor ((size_t) cs).asChar ();
 					}
 
 					break;
 
 				case 0x03:
 					{
-						result._foregroundColorData [i] = fc;
-						result._foregroundColorData [i + 1] = fc;
+						// i + 1 is always < 8...
+						result._foregroundColorData [i]		= 
+						result._foregroundColorData [i + 1] = 
+							_tedGraphicInfo._colorData [iBy].value () & 0b01110111; // Without bits 3 & 7
 					}
 
 					break;
 
-				// Not possible to be here, just in case...
 				default:
+					// Other value is not possible...
 					break;
 			}
+
+			// As two pixels have been drawn...
+			// This is the way to guranttee that i is always even...
+			i++; 
 		}
-		// But if it is 1, 
-		// then it will be draw as in the multicolor version...
-		// But only 8 colors are allowed (+ luminance)
+		// ...but if not, it will be drawn in hi - res mode (like above)
 		else
 		{
-			unsigned int fc = 
-				inv 
-					? 0x00 
-					: (unsigned int) ((cs == 0x03) 
-						? (_tedGraphicInfo._colorData [iBy].value () & ~0x08
-							/** Only the first 7 colors are allowed (the bit 3 is removed). */)
-						: _TEDRegisters -> backgroundColor (cs).asChar ());
+			if (pp < 0)
+				continue; 
 
-			result._foregroundColorData [i] = fc;
-			result._foregroundColorData [i + 1] = fc;
+			// Calculate the bit where the pixel info is...
+			size_t iBt = 7 - (((size_t) pp) % 8); 
+			// Calc the status of the pixel in hi - res mode...
+			// Notice that here the is no hardware cursor possible!
+			bool dP = calcPixelHiResMode (iBy, iBt);
+			// ...and finally draws it...
+			// In the case of dP == false, it is redundant at it is already background...
+			result._foregroundColorData [i] = dP 
+				? (unsigned int) (_tedGraphicInfo._colorData [iBy].value () & 0x7f /** Without the bit 7 (tha define blinking mode or not) */)
+				: (unsigned int) (_TEDRegisters -> backgroundColor ().asChar ());
 		}
 	}
 
@@ -1038,26 +1065,22 @@ COMMODORE::TED::DrawResult COMMODORE::TED::drawMultiColorExtendedChar (int cb)
 		if (pp >= 320)
 			break;
 
+		// Calculate the byte and bit where the pixel info is...
 		size_t iBy = ((size_t) pp) >> 3 /** To determine the byte. */;
 		size_t iBt = 7 - (((size_t) pp) % 8); /** From MSB to LSB. */
-		// The color of the pixel 0 is determined by the 2 MSBites of the char code...
-		bool bS = _tedGraphicInfo._graphicData [iBy].bit (iBt); // To know whether the bit is 1 or 0...
+
+		// Pixel must be on or off?
+		bool dP = calcPixelHiResMode (iBy, iBt);
+		// The color of the pixel will depend on whether it is on or off...
+		// ...and also on the 2 MSB bites of the screen code byte...
+		// In the case of cs == 0x00 it will be redudant as it is already background, but just in case...
 		unsigned int cs = ((_tedGraphicInfo._screenCodeData [iBy].value () & 0xc0) >> 6) & 0x03; // 0, 1, 2, or 3
 		unsigned int fc = 
-			bS 
+			dP 
 				? (_tedGraphicInfo._colorData [iBy].value ()) 
 				: _TEDRegisters -> backgroundColor (cs).asChar ();
-
-		if (bS)
-		{
-			result._foregroundColorData [i] = fc;
-		}
-		else
-		// ...all of them are treated as background...
-		// ...but with the possibility to have different colors!
-		// The value 0x00 has been already treated in the main loop...
-		if (cs != 0x00)
-			result._foregroundColorData [i] = fc;
+		// ...and draws it!!
+		result._foregroundColorData [i] = fc;
 	}
 
 	return (result);
@@ -1079,6 +1102,8 @@ COMMODORE::TED::DrawResult COMMODORE::TED::drawMonoColorBitMap (int cb, bool inv
 		size_t iBy = ((size_t) pp) >> 3; // To determine the byte...
 		size_t iBt = 7 - (((size_t) pp) % 8); // From MSB to LSB...
 		bool bS = _tedGraphicInfo._graphicData [iBy].bit (iBt);
+
+		// Determines the color as a function of the screen code and the attribute byte...
 		unsigned int fc = 
 			inv 
 				? 0x00 // When invalid, all pixels are black...
@@ -1088,6 +1113,7 @@ COMMODORE::TED::DrawResult COMMODORE::TED::drawMonoColorBitMap (int cb, bool inv
 					: ((_tedGraphicInfo._screenCodeData [iBy].value () & 0x07 /** bits 0, 1 & 2. */)
 						| (_tedGraphicInfo._colorData [iBy].value () & 0x70 /** bits 4, 5 & 6. */));
 
+		// ...and draws it!!
 		result._foregroundColorData [i] = fc;
 	}
 
@@ -1121,22 +1147,21 @@ COMMODORE::TED::DrawResult COMMODORE::TED::drawMultiColorBitMap (int cb, bool in
 		else
 			cs = (_tedGraphicInfo._graphicData [0].value () >> 6) & 0x03; // 0, 1, 2 or 3
 
-		// If 0, the pixel should be drawn (and considered) as background 
-		// and it is already the default status tha comes from the parent method...
-		if (cs == 0x00)
-			continue;
-
+		// Determines the color...
 		unsigned fc = // The value 0x00 is not tested....
 				inv
 					? 0x00 // When invalid all pixels are black...
-					: (cs == 0x01) // The color is the defined in the video matrix (color) & color data (luminance)...
-						? (((_tedGraphicInfo._screenCodeData [iBy].value () & 0xf0 /** bits 4, 5, 6 & 7. */) >> 4) /** to color position. */
-							| (_tedGraphicInfo._colorData [iBy].value () & 0x70 /** bits 4, 5 & 6. */))
-						: ((cs == 0x02) // The color is defined in the video matrix (color) & color data (luminance)...
-							? ((_tedGraphicInfo._screenCodeData [iBy].value () & 0x0f /** bits 0, 1, 2 & 3 */)
-								| ((_tedGraphicInfo._colorData [iBy].value () & 0x07 /** bits 0, 1 & 2. */) << 4) /** to luminance position. */)
-							: (_TEDRegisters -> backgroundColor (0x01).asChar ()));
+					: (cs == 0x00) // In the case of cs == 0x00 it will be redudant as it is already background, but just in case...
+						? _TEDRegisters -> backgroundColor ().asChar ()
+						: ((cs == 0x01) // The color is the defined in the video matrix (color) & color data (luminance)...
+							? (((_tedGraphicInfo._screenCodeData [iBy].value () & 0xf0 /** bits 4, 5, 6 & 7. */) >> 4) /** to color position. */
+								| (_tedGraphicInfo._colorData [iBy].value () & 0x70 /** bits 4, 5 & 6. */))
+							: ((cs == 0x02) // The color is defined in the video matrix (color) & color data (luminance)...
+								? ((_tedGraphicInfo._screenCodeData [iBy].value () & 0x0f /** bits 0, 1, 2 & 3 */)
+									| ((_tedGraphicInfo._colorData [iBy].value () & 0x07 /** bits 0, 1 & 2. */) << 4) /** to luminance position. */)
+								: (_TEDRegisters -> backgroundColor (0x01).asChar ())));
 
+		// ...and draws it!!
 		result._foregroundColorData [i] = fc;
 		result._foregroundColorData [i + 1] = fc;
 	}

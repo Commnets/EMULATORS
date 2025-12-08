@@ -243,6 +243,9 @@ namespace COMMODORE
 		/** Draws a multicolor bitmap. \n
 			The mode can be used as an invalid mode. */
 		DrawResult drawMultiColorBitMap (int cb, bool inv = false);
+		/** To calculate whether a pixel is or not on in the hi - res mode. \n
+			The method takes into account whether the flash mode is or not active. */
+		inline bool calcPixelHiResMode (size_t iBy, size_t iBt) const;
 
 		// The last part...
 		/** To move the graphics drawn to the screen. \n
@@ -444,19 +447,39 @@ namespace COMMODORE
 				activeROMtoFecthCharData (true); // Active ROM to read the data...
 
 			_tedGraphicInfo._lastGraphicDataRead =
-				_tedGraphicInfo._graphicData [_tedGraphicInfo._VLMI] = _TEDRegisters -> textMode () 
-					? memoryRef () -> value (_TEDRegisters -> charDataMemory () + 
-						(((size_t) _tedGraphicInfo._screenCodeData [_tedGraphicInfo._VLMI].value () & 
-							(_TEDRegisters -> graphicExtendedColorTextModeActive () ? 0x3f : 0xff)) 
-						/** In the extended graphics mode there is only 64 chars possible. */ << 3) + _tedGraphicInfo._RC)
-					: memoryRef () -> value (_TEDRegisters -> bitmapMemory () + 
-						(_tedGraphicInfo._VC << 3) + _tedGraphicInfo._RC);
+				_tedGraphicInfo._graphicData [_tedGraphicInfo._VLMI] = 
+					_TEDRegisters -> textMode () 
+						? memoryRef () -> value (_TEDRegisters -> charDataMemory () + 
+							(((size_t) _tedGraphicInfo._screenCodeData [_tedGraphicInfo._VLMI].value () & 
+								(_TEDRegisters -> graphicExtendedColorTextModeActive () 
+									? 0x3f /** In the extended graphics mode there is only 64 chars possible. */
+									: (_TEDRegisters -> reverseVideoActive () 
+										? 0x7f /** When the reverse video is active, 
+												   there is only 128 chars available in the normal text. */
+										: 0xff)))
+							 << 3) + _tedGraphicInfo._RC)
+						: memoryRef () -> value (_TEDRegisters -> bitmapMemory () + 
+							(_tedGraphicInfo._VC << 3) + _tedGraphicInfo._RC);
 
 			if (_TEDRegisters -> ROMSourceActive () && !aR)
 				activeROMtoFecthCharData (false); // Activethe RAM to read the data...
 		}
 		
 		memoryRef () -> setCPUView ();
+	}
+
+	// ---
+	inline bool COMMODORE::TED::calcPixelHiResMode (size_t iBy, size_t iBt) const
+	{
+		bool result = _tedGraphicInfo._graphicData [iBy].bit (iBt);
+		// If the reverse video is active, the pixels is inverted...
+		if (_tedGraphicInfo._screenCodeData [iBy].bit (7) &&
+			_TEDRegisters -> reverseVideoActive ()) result = !result;
+		// The bit of the byte read defines whether the color blinks or not...
+		if (_tedGraphicInfo._colorData [iBy].bit (7) && 
+			_TEDRegisters -> flashCounterOn ()) result = !result;
+
+		return (result);
 	}
 
 	/** The version para PAL systems. */
