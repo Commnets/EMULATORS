@@ -77,3 +77,12 @@ Execute MSXEmulatorC or MSXEmulator /h to see the different options at starting,
 The different configurations of the MSX can be simulated using the parameter /m to indicate the ROM (SVI728 e.g.) and /w (0 = default) at command line.<br><br>
 <img src="./docs/MSXData/Picture1.png"/><br>
 
+<h1><b>C16/116/PLU4 emulator</b></h1>
+The implementation of the framework for Commodore C16/C116 and PLUS4 has been included.<br>
+Execute C264EmulatorC or C264Emulator /h to see the different options at starting, and the command HELP in the console to manipulate later the emulation.<br>
+The different configurations of the Commodore 264 can be simulated using the parameter /w at command line (0=default, 1=3k, 2=8k, 4=all).<br>
+The keyboard is configured as Commodore 64.<br>
+<img src="./docs/C264Data/Picture1.png"/><br>
+<img src="./docs/C264Data/Picture2.png"/><br>
+
+
