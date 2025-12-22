@@ -262,7 +262,7 @@ namespace COMMODORE
 			the fetch of dot or char data info has to be from ROM always. \n
 			The way the method are implemented will depend on the place where the chip is running. */
 		virtual bool ROMActiveToFetchCharData () const = 0;
-		virtual void activeROMtoFecthCharData (bool a) = 0;
+		virtual void activeROMtoFetchCharData (bool a) = 0;
 
 		// -----
 		// Different debug methods to simplify the internal code
@@ -447,8 +447,8 @@ namespace COMMODORE
 		{	 // ...and from ROM or RAM...
 
 			bool aR = ROMActiveToFetchCharData ();
-			if (_TEDRegisters -> ROMSourceActive () && !aR)
-				activeROMtoFecthCharData (true); // Active ROM to read the data...
+			if (_TEDRegisters -> ROMActiveToFetchCharAndBitmap () && !aR)
+				activeROMtoFetchCharData (true); // Active ROM to read the data...
 
 			_tedGraphicInfo._lastGraphicDataRead =
 				_tedGraphicInfo._graphicData [_tedGraphicInfo._VLMI] = 
@@ -465,8 +465,8 @@ namespace COMMODORE
 						: memoryRef () -> value (_TEDRegisters -> bitmapMemory () + 
 							(_tedGraphicInfo._VC << 3) + _tedGraphicInfo._RC);
 
-			if (_TEDRegisters -> ROMSourceActive () && !aR)
-				activeROMtoFecthCharData (false); // Activethe RAM to read the data...
+			if (_TEDRegisters -> ROMActiveToFetchCharAndBitmap () && !aR)
+				activeROMtoFetchCharData (false); // Active the RAM to read the data...
 		}
 		
 		memoryRef () -> setCPUView ();

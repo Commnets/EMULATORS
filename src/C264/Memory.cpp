@@ -1,6 +1,10 @@
 #include <C264/Memory.hpp>
 #include <C264/IO7510PortRegisters.hpp>
 
+MCHEmul::PhysicalStorageSubsets C264::Memory::_CPUSUBSETS = { };
+MCHEmul::PhysicalStorageSubsets C264::Memory::_TEDSUBSETS = { };
+MCHEmul::PhysicalStorageSubsets C264::Memory::_ALLSUBSETS = { };
+
 // ---
 C264::Memory::Memory (const MCHEmul::Memory::Content& cnt, 
 		C264::Type t, unsigned int cfg, const std::string& lang)
@@ -9,6 +13,7 @@ C264::Memory::Memory (const MCHEmul::Memory::Content& cnt,
 	  _configuration (cfg),
 	  _memoryConfiguration (0), // The one by default...
 	  _ROMActive (true), // By default the ROM is active...
+	  _TEDROMActive (true), // By default the TED ROM is active...
 	  _3plus1Loaded (false),
 	  _cartridge1Loaded (false), _cartridge1Connected (false),
 	  _cartridge2Loaded (false), _cartridge2Connected (false),
@@ -22,7 +27,6 @@ C264::Memory::Memory (const MCHEmul::Memory::Content& cnt,
 	  _3plus1ROM1 (nullptr),
 	  _cartridge1Low (nullptr),
 	  _cartridge2Low (nullptr),
-	  _noExtension (nullptr),
 	  _RAM3 (nullptr),
 	  _RAM3MirrorIO7501Port (nullptr),
 	  _RAM3MirrorPageZero (nullptr),
@@ -53,13 +57,30 @@ C264::Memory::Memory (const MCHEmul::Memory::Content& cnt,
 	  _cartridge2High2 (nullptr),
 	  _RAM42 (nullptr),
 	  _RAM42MirrorRAM1 (nullptr),
-	  _RAM42MirrorRAM2 (nullptr)
-{
+	  _RAM42MirrorRAM2 (nullptr),
+	  _RAM1TED (nullptr),
+	  _RAM2TED (nullptr),
+	  _RAM2MirrorRAM1TED (nullptr),
+	  _basicROMTED (nullptr),
+	  _3plus1ROM1TED (nullptr),
+	  _cartridge1LowTED (nullptr),
+	  _cartridge2LowTED (nullptr),
+	  _RAM3TED (nullptr),
+	  _RAM3MirrorRAM1TED (nullptr),
+	  _kernelROMTED (nullptr),
+	  _3plus1ROM2TED (nullptr),
+	  _cartridge1HighTED (nullptr),
+	  _cartridge2HighTED (nullptr),
+	  _RAM4TED (nullptr),
+	  _RAM4MirrorRAM1TED (nullptr),
+	  _RAM4MirrorRAM2TED (nullptr)
+  {
 	// In the content...
 	if (error () != MCHEmul::_NOERROR)
 		return;
 
 	// Get references to all things tha can change in configuration...
+	// From the CPU Perspective...
 	// B1
 	_RAM1						= subset (_RAM1_SUBSET);
 	// B2
@@ -77,8 +98,6 @@ C264::Memory::Memory (const MCHEmul::Memory::Content& cnt,
 	_3plus1ROM1					= subset (_3PLUS1ROM1_SUBSET);
 	_cartridge1Low				= subset (_CARTRIDGE1LOW_SUBSET);
 	_cartridge2Low				= subset (_CARTRIDGE2LOW_SUBSET);
-	_noExtension				= dynamic_cast <MCHEmul::EmptyPhysicalStorageSubset*> 
-									(subset (_NOEXTENSION_SUBSET));
 	_RAM3						= subset (_RAM3_SUBSET);
 	_RAM3MirrorIO7501Port		= dynamic_cast <MCHEmul::MirrorPhysicalStorageSubset*> 
 									(subset (_RAM3MIRRORIO7501PORT_SUBSET));
@@ -135,6 +154,28 @@ C264::Memory::Memory (const MCHEmul::Memory::Content& cnt,
 	_RAM42MirrorRAM2			= dynamic_cast <MCHEmul::MirrorPhysicalStorageSubset*>
 									(subset (_RAM42MIRRORRAM2_SUBSET));
 
+	// From the TED Perspective...
+	_RAM1TED					= subset (_RAM1TED_SUBSET);
+	_RAM2TED					= subset (_RAM2TED_SUBSET);
+	_RAM2MirrorRAM1TED			= dynamic_cast <MCHEmul::MirrorPhysicalStorageSubset*>
+									(subset (_RAM2MIRRORRAM1TED_SUBSET));
+	_basicROMTED				= subset (_BASICROMTED_SUBSET);
+	_3plus1ROM1TED				= subset (_3PLUS1ROM1TED_SUBSET);
+	_cartridge1LowTED			= subset (_CARTRIDGE1LOWTED_SUBSET);
+	_cartridge2LowTED			= subset (_CARTRIDGE2LOWTED_SUBSET);
+	_RAM3TED					= subset (_RAM3TED_SUBSET);
+	_RAM3MirrorRAM1TED				= dynamic_cast <MCHEmul::MirrorPhysicalStorageSubset*>
+									(subset (_RAM3MIRRORRAM1TED_SUBSET));
+	_kernelROMTED				= subset (_KERNELROMTED_SUBSET);
+	_3plus1ROM2TED				= subset (_3PLUS1ROM2TED_SUBSET);
+	_cartridge1HighTED			= subset (_CARTRIDGE1HIGHTED_SUBSET);
+	_cartridge2HighTED			= subset (_CARTRIDGE2HIGHTED_SUBSET);
+	_RAM4TED					= subset (_RAM4TED_SUBSET);
+	_RAM4MirrorRAM1TED			= dynamic_cast <MCHEmul::MirrorPhysicalStorageSubset*>
+									(subset (_RAM4MIRRORRAM1TED_SUBSET));
+	_RAM4MirrorRAM2TED			= dynamic_cast <MCHEmul::MirrorPhysicalStorageSubset*>
+									(subset (_RAM4MIRRORRAM2TED_SUBSET));
+
 	// None can be nullptr...
 	assert (
 	  _RAM1						!= nullptr &&
@@ -177,7 +218,23 @@ C264::Memory::Memory (const MCHEmul::Memory::Content& cnt,
 	  _cartridge2High2			!= nullptr &&
 	  _RAM42					!= nullptr &&
 	  _RAM42MirrorRAM1			!= nullptr &&
-	  _RAM42MirrorRAM2			!= nullptr);
+	  _RAM42MirrorRAM2			!= nullptr &&
+	  _RAM1TED					!= nullptr &&
+	  _RAM2TED					!= nullptr &&
+	  _RAM2MirrorRAM1TED		!= nullptr &&
+	  _basicROMTED				!= nullptr &&
+	  _3plus1ROM1TED			!= nullptr &&
+	  _cartridge1LowTED			!= nullptr &&
+	  _cartridge2LowTED			!= nullptr &&
+	  _RAM3TED					!= nullptr &&
+	  _RAM3MirrorRAM1TED		!= nullptr &&
+	  _kernelROMTED				!= nullptr &&
+	  _3plus1ROM2TED			!= nullptr &&
+	  _cartridge1HighTED		!= nullptr &&
+	  _cartridge2HighTED		!= nullptr &&
+	  _RAM4TED					!= nullptr &&
+	  _RAM4MirrorRAM1TED		!= nullptr &&
+	  _RAM4MirrorRAM2TED		!= nullptr);
 
 	// The default ROMS...
 	// They might change depending on the language
@@ -193,11 +250,13 @@ C264::Memory::Memory (const MCHEmul::Memory::Content& cnt,
 	else if (lang == "SWE") { KERNELFILE = "./bios/kernel.325155-03-SWE.bin"; }
 
 	bool ok = true;
-	ok &= physicalStorage (_BASICROM) -> loadInto (ROMFILE);
-	subset (_BASICROM_SUBSET) -> fixDefaultValues (); // Fix the values for further initializations...
-	ok &= physicalStorage (_KERNELROM) -> loadInto (KERNELFILE);
-	subset (_KERNELROM1_SUBSET) -> fixDefaultValues ();
-	subset (_KERNELROM2_SUBSET) -> fixDefaultValues ();
+	ok &= physicalStorage (_BASICROM)	-> loadInto (ROMFILE);
+	subset (_BASICROM_SUBSET)			-> fixDefaultValues (); // Fix the values for further initializations...
+	subset (_BASICROMTED_SUBSET)		-> fixDefaultValues (); // ...and also from the TED perspective...
+	ok &= physicalStorage (_KERNELROM)	-> loadInto (KERNELFILE);
+	subset (_KERNELROM1_SUBSET)			-> fixDefaultValues (); // Fix the values for further initializations...
+	subset (_KERNELROM2_SUBSET)			-> fixDefaultValues ();
+	subset (_KERNELROMTED_SUBSET)		-> fixDefaultValues (); // ...and also from the TED perspective...
 	// The cartridges and the 3+1 roms are empty by default...
 
 	if (!ok)
@@ -209,106 +268,86 @@ C264::Memory::Memory (const MCHEmul::Memory::Content& cnt,
 }
 
 // ---
-void C264::Memory::setConfiguration (unsigned int cfg, bool a, unsigned char mcfg)
+void C264::Memory::setConfiguration (unsigned int cfg, bool ra, unsigned char mcfg)
 {
 	// There can not be more than 3 configurations possibles..., 
 	// ...but the basic ones will depend on the type of machine...
 	assert (cfg >= 0 && cfg <= 2);
 
 	// New values for configuration...
-	_configuration = cfg;
+	_configuration = cfg; // 0 = 16k; 1 = 32k; 2 = 64k
 	// The memory configuration...
 	_memoryConfiguration = mcfg;
 	// ...and ROM/RAM status...
-	_ROMActive = a;
+	_ROMActive = ra;
 
+	// There are just 16 possible configurations (4 bits)
+	// Just to be sure..this method is invoked externally and can fail!
+	assert (_memoryConfiguration <= 0x0f); 
+
+	// Configuration only from the CPU perspective...
 	// B1
 	_RAM1					-> setActive (true);	 // 16, 32 or 64K. Always active...
 	_RAM1					-> setActiveForReading (true); // ....and active also for reading...It is the basic standard memory...
 	// B2
-	_RAM2					-> setActive (cfg != 0); // ...active when the computer is 32k...
-	_RAM2					-> setActiveForReading (cfg != 0); // ...and also active for reading...
-	_RAM2MirrorIO7501Port	-> setActive (cfg == 0); // ...only when the computer is 16k...
-	_RAM2MirrorIO7501Port	-> setActiveForReading (cfg == 0); // ...and also for reading... (the rest of the parts of the RAM1 mirror too)
-	_RAM2MirrorPageZero		-> setActive (cfg == 0);
-	_RAM2MirrorPageZero		-> setActiveForReading (cfg == 0);
-	_RAM2MirrorStack		-> setActive (cfg == 0);
-	_RAM2MirrorStack		-> setActiveForReading (cfg == 0);
-	_RAM2MirrorRAM1			-> setActive (cfg == 0);
-	_RAM2MirrorRAM1			-> setActiveForReading (cfg == 0);
+	_RAM2					-> setActive (_configuration != 0); // ...active when the computer is 32k or 64k...
+	_RAM2					-> setActiveForReading (_configuration != 0); // ...and also active for reading...
+	_RAM2MirrorIO7501Port	-> setActive (_configuration == 0); // ...only when the computer is 16k...
+	_RAM2MirrorIO7501Port	-> setActiveForReading (_configuration == 0); // ...and also for reading... (the rest of RAM1 is mirrored too)
+	_RAM2MirrorPageZero		-> setActive (_configuration == 0);
+	_RAM2MirrorPageZero		-> setActiveForReading (_configuration == 0);
+	_RAM2MirrorStack		-> setActive (_configuration == 0);
+	_RAM2MirrorStack		-> setActiveForReading (_configuration == 0);
+	_RAM2MirrorRAM1			-> setActive (_configuration == 0);
+	_RAM2MirrorRAM1			-> setActiveForReading (_configuration == 0);
 	// B3
-	_basicROM				-> setActive (a && isMemoryConfigurationLowROMBasic ()); // Active depending on the configuration...
-	_basicROM				-> setActiveForReading (a && isMemoryConfigurationLowROMBasic ());	
-	_3plus1ROM1				-> setActive (a && isMemoryConfigurationLowROM3plus1 ()); // Active depending on the configuration...
-	_3plus1ROM1				-> setActiveForReading (a && isMemoryConfigurationLowROM3plus1 ());
-	_cartridge1Low			-> setActive (a && isMemoryConfigurationLowROMCartridge1 ()); // Active depending on the configuration...
-	_cartridge1Low			-> setActiveForReading (a && isMemoryConfigurationLowROMCartridge1 ());
-	_cartridge2Low			-> setActive (a && isMemoryConfigurationLowROMCartridge2 ()); // Active depending on the configuration...
-	_cartridge2Low			-> setActiveForReading (a && isMemoryConfigurationLowROMCartridge2 ());
-	_noExtension			-> setActive (a && 
-								(!isMemoryConfigurationLowROMBasic () &&
-								 !isMemoryConfigurationLowROM3plus1 () &&
-								 !isMemoryConfigurationLowROMCartridge1 () && 
-								 !isMemoryConfigurationLowROMCartridge2 ())); // Just when nothing else is connected...
-	_noExtension			-> setActiveForReading (a &&
-								(!isMemoryConfigurationLowROMBasic () &&
-								 !isMemoryConfigurationLowROM3plus1 () &&
-								 !isMemoryConfigurationLowROMCartridge1 () &&
-								 !isMemoryConfigurationLowROMCartridge2 ()));
-	_RAM3					-> setActive (cfg == 2); // ..active only when it is 64k...
-	_RAM3					-> setActiveForReading (!a && cfg == 2); // ...but active for reading just when RAM actives...
-	_RAM3MirrorIO7501Port	-> setActive (cfg != 2); // ...active when the configuration is not 64k...
-	_RAM3MirrorIO7501Port	-> setActiveForReading (!a && cfg != 2); // ...and active for reading just when RAM actives...
-	_RAM3MirrorPageZero		-> setActive (cfg != 2);
-	_RAM3MirrorPageZero		-> setActiveForReading (!a && cfg != 2);
-	_RAM3MirrorStack		-> setActive (cfg != 2);
-	_RAM3MirrorStack		-> setActiveForReading (!a && cfg != 2);
-	_RAM3MirrorRAM1			-> setActive (cfg != 2); 
-	_RAM3MirrorRAM1			-> setActiveForReading (!a && cfg != 2); 
-
+	_basicROM				-> setActive (_ROMActive && isMemoryConfigurationLowROMBasic ()); // Active depending on the configuration...
+	_basicROM				-> setActiveForReading (_ROMActive && isMemoryConfigurationLowROMBasic ());	
+	_3plus1ROM1				-> setActive (_ROMActive && isMemoryConfigurationLowROM3plus1 ()); // Active depending on the configuration...
+	_3plus1ROM1				-> setActiveForReading (_ROMActive && isMemoryConfigurationLowROM3plus1 ());
+	_cartridge1Low			-> setActive (_ROMActive && isMemoryConfigurationLowROMCartridge1 ()); // Active depending on the configuration...
+	_cartridge1Low			-> setActiveForReading (_ROMActive && isMemoryConfigurationLowROMCartridge1 ());
+	_cartridge2Low			-> setActive (_ROMActive && isMemoryConfigurationLowROMCartridge2 ()); // Active depending on the configuration...
+	_cartridge2Low			-> setActiveForReading (_ROMActive && isMemoryConfigurationLowROMCartridge2 ());
+	_RAM3					-> setActive (_configuration == 2); // ..active only when it is 64k...
+	_RAM3					-> setActiveForReading (!_ROMActive && _configuration == 2); // ...but active for reading just when RAM actives...
+	_RAM3MirrorIO7501Port	-> setActive (_configuration != 2); // ...active when the configuration is not 64k...
+	_RAM3MirrorIO7501Port	-> setActiveForReading (!_ROMActive && _configuration != 2); // ...and active for reading just when RAM actives...
+	_RAM3MirrorPageZero		-> setActive (_configuration != 2);
+	_RAM3MirrorPageZero		-> setActiveForReading (!_ROMActive && _configuration != 2);
+	_RAM3MirrorStack		-> setActive (_configuration != 2);
+	_RAM3MirrorStack		-> setActiveForReading (!_ROMActive && _configuration != 2);
+	_RAM3MirrorRAM1			-> setActive (_configuration != 2); 
+	_RAM3MirrorRAM1			-> setActiveForReading (!_ROMActive && _configuration != 2); 
 	// B4 (Part 1)
-	_kernelROM1				-> setActive (a && 
-								((!cartridgeConnected () && !_3plus1Loaded) || 
-								 ((cartridgeConnected () || _3plus1Loaded) && 
-								  (!isMemoryConfigurationHighROM3plus1 () &&
-								   !isMemoryConfigurationHighROMCartridge1 () && 
-								   !isMemoryConfigurationHighROMCartridge2 ())))); // Active also when no cartridge is connected...
-	_kernelROM1				-> setActiveForReading (a &&
-								((!cartridgeConnected () && !_3plus1Loaded) || 
-								 ((cartridgeConnected () || _3plus1Loaded) && 
-								  (!isMemoryConfigurationHighROM3plus1 () &&
-								   !isMemoryConfigurationHighROMCartridge1 () && 
-								   !isMemoryConfigurationHighROMCartridge2 ()))));
-	_3plus1ROM21			-> setActive (a &&
-								(_3plus1Loaded && 
-								 isMemoryConfigurationHighROM3plus1 ())); // When 3+1 is loaded and ROM selected....
-	_3plus1ROM21			-> setActiveForReading (a &&
-								(_3plus1Loaded && 
-								 isMemoryConfigurationHighROM3plus1 ()));
-	_cartridge1High1		-> setActive (a && 
-								(_cartridge1Connected && 
-								 isMemoryConfigurationHighROMCartridge1 ())); // When cartridge 1 is connected and ROM selected....
-	_cartridge1High1		-> setActiveForReading (a &&
-								(_cartridge1Connected && 
-								 isMemoryConfigurationHighROMCartridge1 ()));
-	_cartridge2High1		-> setActive (a && 
-								(_cartridge2Connected && 
-								 isMemoryConfigurationHighROMCartridge2 ())); // When cartridge 2 is connected and ROM selected....
-	_cartridge2High1		-> setActiveForReading (a &&
-								(_cartridge2Connected && 
-								 isMemoryConfigurationHighROMCartridge2 ()));
-	_RAM41					-> setActive (cfg == 2); // ...active only when it is 64k...
-	_RAM41					-> setActiveForReading (!a && cfg == 2); // ...but active for reading just when RAM actives...
-	_RAM41MirrorIO7501Port	-> setActive (cfg == 0); // ...active when it is 16k...
-	_RAM41MirrorIO7501Port	-> setActiveForReading (!a && cfg == 0); // ...and active for reading just when RAM actives...
-	_RAM41MirrorPageZero	-> setActive (cfg == 0); 
-	_RAM41MirrorPageZero	-> setActiveForReading (!a && cfg == 0);
-	_RAM41MirrorStack		-> setActive (cfg == 0);
-	_RAM41MirrorStack		-> setActiveForReading (!a && cfg == 0);
-	_RAM41MirrorRAM1		-> setActive (cfg == 0);
-	_RAM41MirrorRAM1		-> setActiveForReading (!a && cfg == 0);
-	_RAM41MirrorRAM2		-> setActive (cfg == 1); // ...active only when it is 32k...
-	_RAM41MirrorRAM2		-> setActiveForReading (!a && cfg == 1); // ...but active for reading just when RAM actives...
+	bool bA = _ROMActive &&
+		(isMemoryConfigurationHighROMKernel () ||
+		 (isMemoryConfigurationHighROM3plus1 () && !_3plus1Loaded) ||
+		 (isMemoryConfigurationHighROMCartridge1 () && !_cartridge1Connected) ||
+		 (isMemoryConfigurationHighROMCartridge2 () && !_cartridge2Connected));
+	_kernelROM1				-> setActive (bA); // Active also when no cartridge is connected...
+	_kernelROM1				-> setActiveForReading (bA);
+	bA = (_ROMActive && (_3plus1Loaded && isMemoryConfigurationHighROM3plus1 ()));
+	_3plus1ROM21			-> setActive (bA); // When 3+1 is loaded and ROM selected....
+	_3plus1ROM21			-> setActiveForReading (bA);
+	bA = (_ROMActive && (_cartridge1Connected && isMemoryConfigurationHighROMCartridge1 ()));
+	_cartridge1High1		-> setActive (bA); // When cartridge 1 is connected and ROM selected....
+	_cartridge1High1		-> setActiveForReading (bA);
+	bA = (_ROMActive &&  (_cartridge2Connected && isMemoryConfigurationHighROMCartridge2 ()));
+	_cartridge2High1		-> setActive (bA); // When cartridge 2 is connected and ROM selected....
+	_cartridge2High1		-> setActiveForReading (bA);
+	_RAM41					-> setActive (_configuration == 2); // ...active only when it is 64k...
+	_RAM41					-> setActiveForReading (!_ROMActive && _configuration == 2); // ...but active for reading just when RAM actives...
+	_RAM41MirrorIO7501Port	-> setActive (_configuration == 0); // ...active when it is 16k...
+	_RAM41MirrorIO7501Port	-> setActiveForReading (!_ROMActive && _configuration == 0); // ...and active for reading just when RAM actives...
+	_RAM41MirrorPageZero	-> setActive (_configuration == 0); 
+	_RAM41MirrorPageZero	-> setActiveForReading (!_ROMActive && _configuration == 0);
+	_RAM41MirrorStack		-> setActive (_configuration == 0);
+	_RAM41MirrorStack		-> setActiveForReading (!_ROMActive && _configuration == 0);
+	_RAM41MirrorRAM1		-> setActive (_configuration == 0);
+	_RAM41MirrorRAM1		-> setActiveForReading (!_ROMActive && _configuration == 0);
+	_RAM41MirrorRAM2		-> setActive (_configuration == 1); // ...active only when it is 32k...
+	_RAM41MirrorRAM2		-> setActiveForReading (!_ROMActive && _configuration == 1); // ...but active for reading just when RAM actives...
 	// B4 (IO Part)
 	// The specific areas of every computer are in their own classes...
 	// Remember that there are tow pieces missed in the generic part...
@@ -332,36 +371,72 @@ void C264::Memory::setConfiguration (unsigned int cfg, bool a, unsigned char mcf
 	_ROMRAMSwitch			-> setActiveForReading (true);
 	// B4 (Part 1)
 	// See comments in the part 1....
-	_kernelROM2				-> setActive (a && 
-								((!cartridgeConnected () && !_3plus1Loaded) || 
-								 ((cartridgeConnected () || _3plus1Loaded) && 
-								  (!isMemoryConfigurationHighROM3plus1 () &&
-								   !isMemoryConfigurationHighROMCartridge1 () && 
-								   !isMemoryConfigurationHighROMCartridge2 ()))));
-	_kernelROM2				-> setActiveForReading (a && 
-								((!cartridgeConnected () && !_3plus1Loaded) || 
-								 ((cartridgeConnected () || _3plus1Loaded) && 
-								  (!isMemoryConfigurationHighROM3plus1 () &&
-								   !isMemoryConfigurationHighROMCartridge1 () && 
-								   !isMemoryConfigurationHighROMCartridge2 ()))));
-	_3plus1ROM22			-> setActive (a &&
-								(_3plus1Loaded &&
-								 isMemoryConfigurationHighROM3plus1 ()));
-	_3plus1ROM22			-> setActiveForReading (a &&
-								(_3plus1Loaded &&
-								 isMemoryConfigurationHighROM3plus1 ()));
-	_cartridge1High2		-> setActive (a && 
-								(_cartridge1Connected && 
-								 isMemoryConfigurationHighROMCartridge1 ()));
-	_cartridge2High2		-> setActive (a && 
-								(_cartridge2Connected && 
-								 isMemoryConfigurationHighROMCartridge2 ()));
-	_RAM42					-> setActive (cfg == 2); // ...active when computer is 64k...
-	_RAM42					-> setActiveForReading (!a && cfg == 2); // ...but active for reading when RAMs active...
-	_RAM42MirrorRAM1		-> setActive (cfg == 0); // ...active just when it is 16k...
-	_RAM42MirrorRAM1		-> setActiveForReading (!a && cfg == 0); // ...but active for reading when RAMSs active...
-	_RAM42MirrorRAM2		-> setActive (cfg == 1); // ...active when computer is 32k...
-	_RAM42MirrorRAM2		-> setActiveForReading (!a && cfg == 1); // ...but active for reading when RAMs active...
+	bA = _ROMActive &&
+		(isMemoryConfigurationHighROMKernel () ||
+		 (isMemoryConfigurationHighROM3plus1 () && !_3plus1Loaded) ||
+		 (isMemoryConfigurationHighROMCartridge1 () && !_cartridge1Connected) ||
+		 (isMemoryConfigurationHighROMCartridge2 () && !_cartridge2Connected));
+	_kernelROM2				-> setActive (bA);
+	_kernelROM2				-> setActiveForReading (bA);
+	bA = _ROMActive && (_3plus1Loaded && isMemoryConfigurationHighROM3plus1 ());
+	_3plus1ROM22			-> setActive (bA);
+	bA = _ROMActive && (_3plus1Loaded && isMemoryConfigurationHighROM3plus1 ());
+	_3plus1ROM22			-> setActiveForReading (bA);
+	bA = _ROMActive && (_cartridge1Connected && isMemoryConfigurationHighROMCartridge1 ());
+	_cartridge1High2		-> setActive (bA);
+	bA = _ROMActive && (_cartridge2Connected && isMemoryConfigurationHighROMCartridge2 ());
+	_cartridge2High2		-> setActive (bA);
+	_RAM42					-> setActive (_configuration == 2); // ...active when computer is 64k...
+	_RAM42					-> setActiveForReading (!_ROMActive && _configuration == 2); // ...but active for reading when RAMs active...
+	_RAM42MirrorRAM1		-> setActive (_configuration == 0); // ...active just when it is 16k...
+	_RAM42MirrorRAM1		-> setActiveForReading (!_ROMActive && _configuration == 0); // ...but active for reading when RAMSs active...
+	_RAM42MirrorRAM2		-> setActive (_configuration == 1); // ...active when computer is 32k...
+	_RAM42MirrorRAM2		-> setActiveForReading (!_ROMActive && _configuration == 1); // ...but active for reading when RAMs active...
+
+	setTEDROMActive (_ROMActive);
+}
+
+// ---
+void C264::Memory::setTEDROMActive (bool ra)
+{
+	_TEDROMActive = ra;
+
+	// B1
+	_RAM1TED				-> setActive (true); // Alweays active...
+	_RAM1TED				-> setActiveForReading (true); // ...and for reading...
+	// B2
+	_RAM2TED				-> setActive (_configuration != 0); // Active when computer is 32k or 64k...
+	_RAM2TED				-> setActiveForReading (_configuration != 0);
+	_RAM2MirrorRAM1TED		-> setActive (_configuration == 0); // Active when computer is 16k...
+	_RAM2MirrorRAM1TED		-> setActiveForReading (_configuration == 0);
+	// B3
+	_basicROMTED			-> setActive (_TEDROMActive && isMemoryConfigurationLowROMBasic ()); // Active depending on the configuration...
+	_basicROMTED			-> setActiveForReading (_TEDROMActive && isMemoryConfigurationLowROMBasic ());
+	_3plus1ROM1TED			-> setActive (_TEDROMActive && isMemoryConfigurationLowROM3plus1 ());
+	_3plus1ROM1TED			-> setActiveForReading (_TEDROMActive && isMemoryConfigurationLowROM3plus1 ());
+	_cartridge1LowTED		-> setActive (_TEDROMActive && isMemoryConfigurationLowROMCartridge1 ());
+	_cartridge1LowTED		-> setActiveForReading (_TEDROMActive && isMemoryConfigurationLowROMCartridge1 ());
+	_cartridge2LowTED		-> setActive (_TEDROMActive && isMemoryConfigurationLowROMCartridge2 ());
+	_cartridge2LowTED		-> setActiveForReading (_TEDROMActive && isMemoryConfigurationLowROMCartridge2 ());
+	_RAM3TED				-> setActive (_configuration == 2); // ..active only when it is 64k...
+	_RAM3TED				-> setActiveForReading (!_TEDROMActive && _configuration == 2); // ...but active for reading just when RAM actives...
+	_RAM3MirrorRAM1TED		-> setActive (_configuration != 2); // ...active when the configuration is not 64k...
+	_RAM3MirrorRAM1TED		-> setActiveForReading (!_TEDROMActive && _configuration != 2); // ...and active for reading just when RAM actives...
+	// B4
+	_kernelROMTED			-> setActive (_TEDROMActive &&  isMemoryConfigurationHighROMKernel ());
+	_kernelROMTED			-> setActiveForReading (_TEDROMActive && isMemoryConfigurationHighROMKernel ());
+	_3plus1ROM2TED			-> setActive (_TEDROMActive && isMemoryConfigurationHighROM3plus1 ());
+	_3plus1ROM2TED			-> setActiveForReading (_TEDROMActive && isMemoryConfigurationHighROM3plus1 ());
+	_cartridge1HighTED		-> setActive (_TEDROMActive && isMemoryConfigurationHighROMCartridge1 ());
+	_cartridge1HighTED		-> setActiveForReading (_TEDROMActive && isMemoryConfigurationHighROMCartridge1 ());
+	_cartridge2HighTED		-> setActive (_TEDROMActive && isMemoryConfigurationHighROMCartridge2 ());
+	_cartridge2HighTED		-> setActiveForReading (_TEDROMActive && isMemoryConfigurationHighROMCartridge2 ());
+	_RAM4TED				-> setActive (_configuration == 2); // ...active when computer is 64k...
+	_RAM4TED				-> setActiveForReading (!_TEDROMActive && _configuration == 2); // ...but active for reading when RAMs active...
+	_RAM4MirrorRAM1TED		-> setActive (_configuration == 0); // ...active just when it is 16k...
+	_RAM4MirrorRAM1TED		-> setActiveForReading (!_TEDROMActive && _configuration == 0); // ...but active for reading when RAMSs active...
+	_RAM4MirrorRAM2TED		-> setActive (_configuration == 1); // ...active when computer is 32k...
+	_RAM4MirrorRAM2TED		-> setActiveForReading (!_TEDROMActive && _configuration == 1); // ...but active for reading when RAMs active...
 }
 
 // ---
@@ -392,8 +467,8 @@ bool C264::Memory::initialize ()
 	unsigned int oC = configuration ();
 	bool oRA = ROMactive ();
 	unsigned int oMC = memoryConfiguration ();
-	setConfiguration (0 /** The very basic configuration of the computer */, 
-		false /** ROM active */, 0 /** The very basic configuration of the memory. */);
+	setConfiguration (2 /** A configuration with 64k to cover all RAM. */, 
+		true /** ROM active, the RAM will be active to write */, 0 /** The very basic configuration of the memory. */);
 	// Just to fillup all RAM with the initial value!
 	for (size_t i = 0X0000; i < 0x10000; i += 0x40)
 		if (i < 0xfd00 || i >= 0xff40) // The IO zone is not filled...
@@ -401,8 +476,11 @@ bool C264::Memory::initialize ()
 				(((i / 0x40) % 2) == 0) ? MCHEmul::UByte::_0 : MCHEmul::UByte::_FF, 0x40);
 	// Go back to the same configuration...
 	setConfiguration (oC, oRA, oMC);
+
 	// The cartridges are not connected...
 	_cartridge1Connected = _cartridge2Connected = false;
+	// The content of the cartrodges are just initialized when the memory is created...
+	// ...to avoid delete it when the computer is re initilized!
 
 	// The active view has to be initially the CPU view...
 	setCPUView ();
@@ -459,14 +537,21 @@ MCHEmul::PhysicalStorage* RAM =
 			MCHEmul::PhysicalStorage::Type::_ROM, 0x4000);														// 16k ROM
 
 	// All are initialized as the emulator VICE recognize them...
-	for (size_t i = 0; i < 0x4000; i++)
+	MCHEmul::UByte b0 = MCHEmul::UByte::_FF;
+	for (size_t i = 0; i < 0x4000; i += 0x40)
 	{
-		THREEPLUS1ROM1		-> set (i, MCHEmul::UByte::_FF);
-		THREEPLUS1ROM2		-> set (i, MCHEmul::UByte::_FF);
-		CARTRIDGE1LOWROM	-> set (i, MCHEmul::UByte::_FF);
-		CARTRIDGE1HIGHROM	-> set (i, MCHEmul::UByte::_FF);
-		CARTRIDGE2LOWROM	-> set (i, MCHEmul::UByte::_FF);
-		CARTRIDGE2HIGHROM	-> set (i, MCHEmul::UByte::_FF);
+		for (size_t j = i; j < 0x40; j++)
+		{
+			THREEPLUS1ROM1		-> set (i, b0);
+			THREEPLUS1ROM2		-> set (i, b0);
+			CARTRIDGE1LOWROM	-> set (i, b0);
+			CARTRIDGE1HIGHROM	-> set (i, b0);
+			CARTRIDGE2LOWROM	-> set (i, b0);
+			CARTRIDGE2HIGHROM	-> set (i, b0);
+		}
+
+		b0 = (b0 == MCHEmul::UByte::_0) 
+			? MCHEmul::UByte::_FF : MCHEmul::UByte::_0;
 	}
 
 	// The map of phisical storages, used later...
@@ -547,13 +632,6 @@ MCHEmul::PhysicalStorage* RAM =
 	MCHEmul::PhysicalStorageSubset* cartridge2Low = new MCHEmul::PhysicalStorageSubset 
 		(_CARTRIDGE2LOW_SUBSET, CARTRIDGE2LOWROM, 0x0000, MCHEmul::Address ({ 0x00, 0x80 }, false), 0x4000);
 	cartridge2Low -> setName ("Cartridge 1 Low");
-	// Notice that there is no an equivalent of this element in the high part of the ROM
-	// In the system, when there is nothing there connected, the KERNEL is valid!
-	MCHEmul::EmptyPhysicalStorageSubset* noExtension = new MCHEmul::EmptyPhysicalStorageSubset 
-		(_NOEXTENSION_SUBSET, MCHEmul::UByte::_FF, RAM, 0x8000, 
-			MCHEmul::Address ({ 0x00, 0x80 }, false), 0x4000);
-	noExtension -> setName ("Nothing connected in Low Memory");
-	// ...or RAM 3...
 	MCHEmul::PhysicalStorageSubset* RAM3 = new MCHEmul::PhysicalStorageSubset 
 		(_RAM3_SUBSET, RAM, 0x8000, MCHEmul::Address ({ 0x00, 0x80 }, false), 0x4000);							// 16k ROM
 	RAM3 -> setName ("RAM 3 (Under BASIC)");
@@ -688,9 +766,10 @@ MCHEmul::PhysicalStorage* RAM =
 		(_RAM42MIRRORRAM2_SUBSET, RAM2, MCHEmul::Address ({ 0x40, 0xff }, false),
 			(0x4000 - 0x00c0) /** From almost the end except part 2. */, (int) 0xc0 /** The length of the part 2. */);
 	RAM42MirrorRAM2 -> setName ("RAM 4 Part 2 (Under KERNEL) Mirror of RAM 2");
+	// ----
 
-	// A map with all the possible subsets...
-	MCHEmul::PhysicalStorageSubsets allsubsets (
+	// A map with just all CPU subsets...
+	_CPUSUBSETS = MCHEmul::PhysicalStorageSubsets (
 		{
 			// B1
 			{ C264::IO7501PortRegisters::_IO7501REGISTERS_SUBSET,		IO7501Port }, 
@@ -708,7 +787,6 @@ MCHEmul::PhysicalStorage* RAM =
 			{ _3PLUS1ROM1_SUBSET,										threePlus1ROM1 },
 			{ _CARTRIDGE1LOW_SUBSET,									cartridge1Low },
 			{ _CARTRIDGE2LOW_SUBSET,									cartridge2Low },
-			{ _NOEXTENSION_SUBSET,										noExtension },
 			{ _RAM3_SUBSET,												RAM3 },
 			{ _RAM3MIRRORIO7501PORT_SUBSET,								RAM3MirrorIO7501Port }, 
 			{ _RAM3MIRRORPAGEZERO_SUBSET,								RAM3MirrorPageZero }, 
@@ -742,17 +820,175 @@ MCHEmul::PhysicalStorage* RAM =
 			{ _CARTRIDGE2HIGH2_SUBSET,									cartridge2High2 },
 			{ _RAM42_SUBSET,											RAM42 },
 			{ _RAM42MIRRORRAM1_SUBSET,									RAM42MirrorRAM1 },
-			{ _RAM42MIRRORRAM2_SUBSET,									RAM42MirrorRAM2 }
-		});
+			{ _RAM42MIRRORRAM2_SUBSET,									RAM42MirrorRAM2 },
+		}
+	);
 
-	// The views are not created...
-	// because when the view is created the memory positions are moved plain
-	// and at this point there might be some subsets pending to be created...
+	// ----
+	// Full Visión from the TED!
+	// B1
+	MCHEmul::PhysicalStorageSubset* RAM1_TED = new MCHEmul::PhysicalStorageSubset 
+		(_RAM1TED_SUBSET, RAM, 0x0000, MCHEmul::Address ({ 0x00, 0x00 }, false), 0x4000);							// 16k
+	RAM1_TED -> setName ("RAM 1 TED");
+	// B2
+	MCHEmul::PhysicalStorageSubset* RAM2_TED = new MCHEmul::PhysicalStorageSubset 
+		(_RAM2TED_SUBSET, RAM, 0x4000, MCHEmul::Address ({ 0x00, 0x40 }, false), 0x4000);							// 16k
+	RAM2_TED -> setName ("RAM 2 TED");
+	MCHEmul::MirrorPhysicalStorageSubset* RAM2MirrorRAM1_TED = new MCHEmul::MirrorPhysicalStorageSubset 
+		(_RAM2MIRRORRAM1TED_SUBSET, RAM1_TED, MCHEmul::Address ({ 0x00, 0x40 }, false));
+	RAM2MirrorRAM1_TED -> setName ("RAM 2 Mirror RAM 1 TED");
+	// B3
+	MCHEmul::PhysicalStorageSubset* basicROM_TED = new MCHEmul::PhysicalStorageSubset
+		(_BASICROMTED_SUBSET, BASICROM, 0x0000, MCHEmul::Address ({ 0x00, 0x80 }, false), 0x4000);					// 16k ROM
+	basicROM_TED -> setName ("BASIC ROM TED");
+	MCHEmul::PhysicalStorageSubset* threePlus1ROM1_TED = new MCHEmul::PhysicalStorageSubset 
+		(_3PLUS1ROM1TED_SUBSET, THREEPLUS1ROM1, 0x0000, MCHEmul::Address ({ 0x00, 0x80 }, false), 0x4000);
+	threePlus1ROM1_TED -> setName ("3+1 ROM 1 TED");
+	MCHEmul::PhysicalStorageSubset* cartridge1Low_TED = new MCHEmul::PhysicalStorageSubset 
+		(_CARTRIDGE1LOWTED_SUBSET, CARTRIDGE1LOWROM, 0x0000, MCHEmul::Address ({ 0x00, 0x80 }, false), 0x4000);
+	cartridge1Low_TED -> setName ("Cartridge 1 Low TED");
+	MCHEmul::PhysicalStorageSubset* cartridge2Low_TED = new MCHEmul::PhysicalStorageSubset 
+		(_CARTRIDGE2LOWTED_SUBSET, CARTRIDGE2LOWROM, 0x0000, MCHEmul::Address ({ 0x00, 0x80 }, false), 0x4000);
+	cartridge2Low_TED -> setName ("Cartridge 1 Low TED");
+	MCHEmul::PhysicalStorageSubset* RAM3_TED = new MCHEmul::PhysicalStorageSubset 
+		(_RAM3TED_SUBSET, RAM, 0x8000, MCHEmul::Address ({ 0x00, 0x80 }, false), 0x4000);
+	RAM3_TED -> setName ("RAM 3 (Under BASIC) TED");
+	MCHEmul::MirrorPhysicalStorageSubset* RAM3MirrorRAM1_TED = new MCHEmul::MirrorPhysicalStorageSubset 
+		(_RAM3MIRRORRAM1TED_SUBSET, RAM1_TED, MCHEmul::Address ({ 0x00, 0x80 }, false));
+	RAM3MirrorRAM1_TED -> setName ("RAM 3 (under BASIC) Mirror RAM 1 TED");
+	// B4
+	MCHEmul::PhysicalStorageSubset* kernelROM_TED = new MCHEmul::PhysicalStorageSubset 
+		(_KERNELROMTED_SUBSET, KERNELROM, 0x0000, MCHEmul::Address ({ 0x00, 0xc0 }, false), 0x4000);				// 16k
+	kernelROM_TED -> setName ("KERNEL ROM TED");
+	MCHEmul::PhysicalStorageSubset* threePlus1ROM2_TED = new MCHEmul::PhysicalStorageSubset 
+		(_3PLUS1ROM2TED_SUBSET, THREEPLUS1ROM2, 0x0000, MCHEmul::Address ({ 0x00, 0xc0 }, false), 0x4000);
+	threePlus1ROM2_TED -> setName ("3+1 ROM 2 TED");
+	MCHEmul::PhysicalStorageSubset* cartridge1High_TED = new MCHEmul::PhysicalStorageSubset 
+		(_CARTRIDGE1HIGHTED_SUBSET, CARTRIDGE1HIGHROM, 0x0000, MCHEmul::Address ({ 0x00, 0xc0 }, false), 0x4000);
+	cartridge1High_TED -> setName ("High Cartridge 1 TED");
+	MCHEmul::PhysicalStorageSubset* cartridge2High_TED = new MCHEmul::PhysicalStorageSubset 
+		(_CARTRIDGE2HIGHTED_SUBSET, CARTRIDGE2HIGHROM, 0x0000, MCHEmul::Address ({ 0x00, 0xc0 }, false), 0x4000);
+	cartridge2High_TED -> setName ("High Cartridge 2 TED");
+	MCHEmul::PhysicalStorageSubset* RAM4_TED = new MCHEmul::PhysicalStorageSubset 
+		(_RAM4TED_SUBSET, RAM, 0xc000, MCHEmul::Address ({ 0x00, 0xc0 }, false), 0x4000);
+	RAM4_TED -> setName ("RAM 4 (Under KERNEL) TED" );
+	MCHEmul::MirrorPhysicalStorageSubset* RAM4MirrorRAM1_TED = new MCHEmul::MirrorPhysicalStorageSubset 
+		(_RAM4MIRRORRAM1TED_SUBSET, RAM1_TED, MCHEmul::Address ({ 0x00, 0xc0 }, false));
+	RAM4MirrorRAM1_TED -> setName ("RAM 4 (Under KERNEL) Mirror RAM 1 TED");
+	MCHEmul::MirrorPhysicalStorageSubset* RAM4MirrorRAM2_TED = new MCHEmul::MirrorPhysicalStorageSubset 
+		(_RAM4MIRRORRAM2TED_SUBSET, RAM2_TED, MCHEmul::Address ({ 0x00, 0xc0 }, false));
+	RAM4MirrorRAM2_TED -> setName ("RAM 4 (Under KERNEL) Mirror RAM 2 TED");
+
+	// A map with just all TED subsets...
+	// From the TED there is no vision of the TED positions...everything is either ROM or RAM!
+	_TEDSUBSETS = MCHEmul::PhysicalStorageSubsets (
+		{
+			// B1
+			{ _RAM1TED_SUBSET,										RAM1_TED },
+			// B2
+			{ _RAM2TED_SUBSET,										RAM2_TED },
+			{ _RAM2MIRRORRAM1TED_SUBSET,							RAM2MirrorRAM1_TED },
+			// B3
+			{ _BASICROMTED_SUBSET,									basicROM_TED },
+			{ _3PLUS1ROM1TED_SUBSET,								threePlus1ROM1_TED },
+			{ _CARTRIDGE1LOWTED_SUBSET,								cartridge1Low_TED },
+			{ _CARTRIDGE2LOWTED_SUBSET,								cartridge2Low_TED },
+			{ _RAM3TED_SUBSET,										RAM3_TED },
+			{ _RAM3MIRRORRAM1TED_SUBSET,							RAM3MirrorRAM1_TED },
+			// B4
+			{ _KERNELROMTED_SUBSET,									kernelROM_TED },
+			{ _3PLUS1ROM2TED_SUBSET,								threePlus1ROM2_TED },
+			{ _CARTRIDGE1HIGHTED_SUBSET,							cartridge1High_TED },
+			{ _CARTRIDGE2HIGHTED_SUBSET,							cartridge2High_TED },
+			{ _RAM4TED_SUBSET,										RAM4_TED },
+			{ _RAM4MIRRORRAM1TED_SUBSET,							RAM4MirrorRAM1_TED },
+			{ _RAM4MIRRORRAM2TED_SUBSET,							RAM4MirrorRAM2_TED }
+		}
+	);
+
+	// A map with all the possible subsets...
+	_ALLSUBSETS = MCHEmul::PhysicalStorageSubsets (
+		{
+			// CPU Point of view
+			// B1
+			{ C264::IO7501PortRegisters::_IO7501REGISTERS_SUBSET,		IO7501Port }, 
+			{ _PAGEZERO_SUBSET,											pageZero }, 
+			{ _STACK_SUBSET,											stack },
+			{ _RAM1_SUBSET,												RAM1 },
+			// B2
+			{ _RAM2_SUBSET,												RAM2 },
+			{ _RAM2MIRRORIO7501PORT_SUBSET,								RAM2MirrorIO7501Port }, 
+			{ _RAM2MIRRORPAGEZERO_SUBSET,								RAM2MirrorPageZero }, 
+			{ _RAM2MIRRORSTACK_SUBSET,									RAM2MirrorStack },
+			{ _RAM2MIRRORRAM1_SUBSET,									RAM2MirrorRAM1 },
+			// B3
+			{ _BASICROM_SUBSET,											basicROM },
+			{ _3PLUS1ROM1_SUBSET,										threePlus1ROM1 },
+			{ _CARTRIDGE1LOW_SUBSET,									cartridge1Low },
+			{ _CARTRIDGE2LOW_SUBSET,									cartridge2Low },
+			{ _RAM3_SUBSET,												RAM3 },
+			{ _RAM3MIRRORIO7501PORT_SUBSET,								RAM3MirrorIO7501Port }, 
+			{ _RAM3MIRRORPAGEZERO_SUBSET,								RAM3MirrorPageZero }, 
+			{ _RAM3MIRRORSTACK_SUBSET,									RAM3MirrorStack },
+			{ _RAM3MIRRORRAM1_SUBSET,									RAM3MirrorRAM1 },
+			// B4 (Part 1)
+			{ _KERNELROM1_SUBSET,										kernelROM1 },
+			{ _3PLUS1ROM21_SUBSET,										threePlus1ROM21 },
+			{ _CARTRIDGE1HIGH1_SUBSET,									cartridge1High1 },
+			{ _CARTRIDGE2HIGH1_SUBSET,									cartridge2High1 },
+			{ _RAM41_SUBSET,											RAM41 },
+			{ _RAM41MIRRORIO7501PORT_SUBSET,							RAM41MirrorIO7501Port }, 
+			{ _RAM41MIRRORPAGEZERO_SUBSET,								RAM41MirrorPageZero }, 
+			{ _RAM41MIRRORSTACK_SUBSET,									RAM41MirrorStack },
+			{ _RAM41MIRRORRAM1_SUBSET,									RAM41MirrorRAM1 },
+			{ _RAM41MIRRORRAM2_SUBSET,									RAM41MirrorRAM2 },
+			// B4 (IO Part)
+			{ _IONOMAPPED2_SUBSET,										IONOMAPPED2 },
+			{ C264::C6529B1Registers::_C6529B1REGS_SUBSET,				IO6529B1 },
+			{ _IONOMAPPED3_SUBSET,										IONOMAPPED3 },
+			{ C264::C1C2SelectorRegisters::_C1C2SELECTORREGS_SUBSET,	IOC1C2Selector },
+			{ _IONOMAPPED5_SUBSET,										IONOMAPPED5 },
+			{ COMMODORE::TIARegisters::_TIAREGS_SUBSET,					IOTIA9 },
+			{ _IOTIA8_SUBSET,											IOTIA8 },
+			{ C264::TEDRegisters::_TEDREGS_SUBSET,						IOTED },
+			{ C264::ROMRAMSwitchRegisters::_ROMRAMSWITCHREGS_SUBSET,	ROMRAMSWITCH },
+			// B4 (Part 2)
+			{ _KERNELROM2_SUBSET,										kernelROM2 },
+			{ _3PLUS1ROM22_SUBSET,										threePlus1ROM22 },
+			{ _CARTRIDGE1HIGH2_SUBSET,									cartridge1High2 },
+			{ _CARTRIDGE2HIGH2_SUBSET,									cartridge2High2 },
+			{ _RAM42_SUBSET,											RAM42 },
+			{ _RAM42MIRRORRAM1_SUBSET,									RAM42MirrorRAM1 },
+			{ _RAM42MIRRORRAM2_SUBSET,									RAM42MirrorRAM2 },
+			// TED Point of view
+			// B1
+			{ _RAM1TED_SUBSET,											RAM1_TED },
+			// B2
+			{ _RAM2TED_SUBSET,											RAM2_TED },
+			{ _RAM2MIRRORRAM1TED_SUBSET,								RAM2MirrorRAM1_TED },
+			// B3
+			{ _BASICROMTED_SUBSET,										basicROM_TED },
+			{ _3PLUS1ROM1TED_SUBSET,									threePlus1ROM1_TED },
+			{ _CARTRIDGE1LOWTED_SUBSET,									cartridge1Low_TED },
+			{ _CARTRIDGE2LOWTED_SUBSET,									cartridge2Low_TED },
+			{ _RAM3TED_SUBSET,											RAM3_TED },
+			{ _RAM3MIRRORRAM1TED_SUBSET,								RAM3MirrorRAM1_TED },
+			// B4
+			{ _KERNELROMTED_SUBSET,										kernelROM_TED },
+			{ _3PLUS1ROM2TED_SUBSET,									threePlus1ROM2_TED },
+			{ _CARTRIDGE1HIGHTED_SUBSET,								cartridge1High_TED },
+			{ _CARTRIDGE2HIGHTED_SUBSET,								cartridge2High_TED },
+			{ _RAM4TED_SUBSET,											RAM4_TED },
+			{ _RAM4MIRRORRAM1TED_SUBSET,								RAM4MirrorRAM1_TED },
+			{ _RAM4MIRRORRAM2TED_SUBSET,								RAM4MirrorRAM2_TED }
+		});
 
 	// ...and finally the memory that is the result...
 	MCHEmul::Memory::Content result;
 	result._physicalStorages = storages;
-	result._subsets = allsubsets;
+
+	// Still pending to create the views and the whole list of subsets...
+	// This is something to be done depending on the type of computer...
 
 	return (result);
 }
@@ -780,8 +1016,7 @@ C264::C16_116Memory::C16_116Memory (unsigned int cfg, const std::string& lang)
 void C264::C16_116Memory::setConfiguration (unsigned int cfg, bool a, unsigned char mcfg) 
 {
 	if (cfg != 0 /** 16k. */ && 
-		cfg != 1 /** 32k. */ && 
-		cfg != 2 /** 64k. */) // very rare this last one...
+		cfg != 1 /** 32k. */)
 	{
 		_LOG ("Configuration mode:" + std::to_string (cfg) + 
 			" not valid in C16/C116 memory");
@@ -808,25 +1043,30 @@ MCHEmul::Memory::Content C264::C16_116Memory::standardMemoryContent ()
 	// Add the new element to the subsets...
 	// There is ACIA so an no mapped place is installed instead...
 	MCHEmul::PhysicalStorageSubset* nSS = nullptr;
-	result._subsets.insert 
+	_CPUSUBSETS.insert 
 		(MCHEmul::PhysicalStorageSubsets::value_type 
 			(_IONOMAPPED0_SUBSET, nSS = new MCHEmul::EmptyPhysicalStorageSubset 
 				(_IONOMAPPED0_SUBSET, // No mapped instead...
 					MCHEmul::UByte::_0, result.physicalStorage (_RAM), 0xfd00, MCHEmul::Address ({ 0x00, 0xfd }, false), 0x10)));
+	_ALLSUBSETS.insert (MCHEmul::PhysicalStorageSubsets::value_type (_IONOMAPPED0_SUBSET, nSS));
 	nSS -> setName ("IO Not Mapped 0");
 	// It doesn't exist a second C6529 register so a no mapped place is created also instead...
-	result._subsets.insert 
+	_CPUSUBSETS.insert 
 		(MCHEmul::PhysicalStorageSubsets::value_type 
 			(_IONOMAPPED1_SUBSET, nSS = new MCHEmul::EmptyPhysicalStorageSubset 
 				(_IONOMAPPED1_SUBSET, // No mapperd instead...
 					MCHEmul::UByte::_0, result.physicalStorage (_RAM), 0xfd10, MCHEmul::Address ({ 0x10, 0xfd }, false), 0x10)));
+	_ALLSUBSETS.insert (MCHEmul::PhysicalStorageSubsets::value_type (_IONOMAPPED1_SUBSET, nSS));
 	nSS -> setName ("IO Not Mapped 1");
 
-	// Then the views are recreated...
+	// ...and finally the memory that is the result...
+	result._subsets = _ALLSUBSETS;
 	result._views = MCHEmul::MemoryViews (
 		{
-			{ _CPU_VIEW, new MCHEmul::MemoryView (_CPU_VIEW, result._subsets) }
-		});
+			{ _CPU_VIEW, new MCHEmul::MemoryView (_CPU_VIEW, _CPUSUBSETS) },
+			{ _TED_VIEW, new MCHEmul::MemoryView (_TED_VIEW, _TEDSUBSETS) }
+		}
+	);
 
 	return (result);
 }
@@ -846,8 +1086,8 @@ C264::CPlus4Memory::CPlus4Memory (unsigned int cfg, const std::string& lang)
 
 	// None can be nullptr...
 	assert (
-		_IOACIA != nullptr &&
-		_IO6529B2 != nullptr);
+		_IOACIA		!= nullptr &&
+		_IO6529B2	!= nullptr);
 
 	// The roms with the standard code for this machine!
 	std::string THREEPLUS11FILE = "./bios/CP4/3-plus-1.317053-01.bin";
@@ -858,9 +1098,11 @@ C264::CPlus4Memory::CPlus4Memory (unsigned int cfg, const std::string& lang)
 	bool ok = true;
 	ok &= physicalStorage (_3PLUS1ROM1) -> loadInto (THREEPLUS11FILE);
 	subset (_3PLUS1ROM1_SUBSET) -> fixDefaultValues (); // Fix the values for further initializations...
+	subset (_3PLUS1ROM1TED_SUBSET) -> fixDefaultValues (); // ...and also from the TED perspective...
 	ok &= physicalStorage (_3PLUS1ROM2) -> loadInto (THREEPLUS12FILE);
 	subset (_3PLUS1ROM21_SUBSET) -> fixDefaultValues ();
 	subset (_3PLUS1ROM22_SUBSET) -> fixDefaultValues ();
+	subset (_3PLUS1ROM2TED_SUBSET) -> fixDefaultValues ();
 
 	if (!ok)
 		_error = MCHEmul::_INIT_ERROR;
@@ -874,7 +1116,7 @@ C264::CPlus4Memory::CPlus4Memory (unsigned int cfg, const std::string& lang)
 // ---
 void C264::CPlus4Memory::setConfiguration (unsigned int cfg, bool a, unsigned char mcfg) 
 {
-	if (cfg != 0)
+	if (cfg != 2) // There is no other possibility...
 	{
 		_LOG ("Configuration mode:" + std::to_string (cfg) + 
 			" not valid in CPlus4 memory");
@@ -900,25 +1142,30 @@ MCHEmul::Memory::Content C264::CPlus4Memory::standardMemoryContent ()
 
 	// The ACIA chip (used in communications)
 	MCHEmul::PhysicalStorageSubset* nSS = nullptr;
-	result._subsets.insert 
+	_CPUSUBSETS.insert 
 		(MCHEmul::PhysicalStorageSubsets::value_type 
 			(COMMODORE::ACIARegisters::_ACIAREGS_SUBSET, 
 				nSS = new COMMODORE::ACIARegisters (result.physicalStorage (_RAM), // The ACIA...
 					0xfd00, MCHEmul::Address ({ 0x00, 0xfd }, false), 0x10)));
+	_ALLSUBSETS.insert (MCHEmul::PhysicalStorageSubsets::value_type (COMMODORE::ACIARegisters::_ACIAREGS_SUBSET, nSS));
 	nSS -> setName ("ACIA Registers");
 	// The C6529 (2) chip, which use is still unknown...
-	result._subsets.insert
+	_CPUSUBSETS.insert
 		(MCHEmul::PhysicalStorageSubsets::value_type 
 			(C264::C6529B2Registers::_C6529B2REGS_SUBSET,
 				nSS = new C264::C6529B2Registers (result.physicalStorage (_RAM), // And another latch chip...
 					0xfd10, MCHEmul::Address ({ 0x10, 0xfd }, false), 0x10)));
+	_ALLSUBSETS.insert (MCHEmul::PhysicalStorageSubsets::value_type (C264::C6529B2Registers::_C6529B2REGS_SUBSET, nSS));
 	nSS -> setName ("C6529B2 Registers");
 
-	// Finally, recreates the view...
+	// ...and finally the memory that is the result...
+	result._subsets = _ALLSUBSETS;
 	result._views = MCHEmul::MemoryViews (
 		{
-			{ _CPU_VIEW, new MCHEmul::MemoryView (_CPU_VIEW, result._subsets) }
-		});
+			{ _CPU_VIEW, new MCHEmul::MemoryView (_CPU_VIEW, _CPUSUBSETS) },
+			{ _TED_VIEW, new MCHEmul::MemoryView (_TED_VIEW, _TEDSUBSETS) }
+		}
+	);
 
 	return (result);
 }

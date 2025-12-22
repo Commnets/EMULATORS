@@ -189,8 +189,16 @@ namespace COMMODORE
 		inline unsigned int reasonIRQCode () const;
 
 		/** To know whether the source of the bit dot or character data is in ROM or in RAM. */
-		bool ROMSourceActive () const
-							{ return (_ROMSourceActive); }
+		bool ROMActiveToFetchCharAndBitmap () const
+							{ return (_ROMActiveToFetchCharAndBitmap); }
+		/** To know whether the ROM configuration is or or not active. 
+			This variable reflects the situation of the memory and it is managed externally. */
+		bool ROMMemoryConfigurationActive () const
+							{ return (_ROMMemoryConfigurationActive); }
+		/** The is usually changed externally accrding with the memory configuration.
+			It has to be usually involked in simulate method of the class TED. */
+		void setROMMemoryConfigurationActive (bool r)
+							{ _ROMMemoryConfigurationActive = r; }
 
 		// Graphical info: Used from TED during the simulation...
 		const GraphicalInfo& graphicalInfo () const
@@ -317,7 +325,8 @@ namespace COMMODORE
 
 		/** Location of the Graphical Memory. 
 			Info calculated when the registers are accessed. */
-		bool _ROMSourceActive;
+		bool _ROMActiveToFetchCharAndBitmap;
+		bool _ROMMemoryConfigurationActive;
 		MCHEmul::Address _charDataMemory;	
 		MCHEmul::Address _screenMemory;
 		MCHEmul::Address _attributeMemory;

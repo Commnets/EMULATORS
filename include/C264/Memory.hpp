@@ -52,6 +52,7 @@ namespace C264
 		static const int _CARTRIDGE2HIGHROM					= 8;
 
 		// Subsets that exists from the beginning in any type of machine...
+		// From the CPU perspective
 		// B1
 		static const int _PAGEZERO_SUBSET					= 100;
 		static const int _STACK_SUBSET						= 101;
@@ -67,39 +68,57 @@ namespace C264
 		static const int _3PLUS1ROM1_SUBSET					= 109;
 		static const int _CARTRIDGE1LOW_SUBSET				= 110;
 		static const int _CARTRIDGE2LOW_SUBSET				= 111;
-		static const int _NOEXTENSION_SUBSET				= 112;
-		static const int _RAM3_SUBSET						= 113;
-		static const int _RAM3MIRRORIO7501PORT_SUBSET		= 114;
-		static const int _RAM3MIRRORPAGEZERO_SUBSET			= 115;
-		static const int _RAM3MIRRORSTACK_SUBSET			= 116;
-		static const int _RAM3MIRRORRAM1_SUBSET				= 117;
+		static const int _RAM3_SUBSET						= 112;
+		static const int _RAM3MIRRORIO7501PORT_SUBSET		= 113;
+		static const int _RAM3MIRRORPAGEZERO_SUBSET			= 114;
+		static const int _RAM3MIRRORSTACK_SUBSET			= 115;
+		static const int _RAM3MIRRORRAM1_SUBSET				= 116;
 		// B4 (Part 1)
-		static const int _KERNELROM1_SUBSET					= 118;
-		static const int _3PLUS1ROM21_SUBSET				= 119;
-		static const int _CARTRIDGE1HIGH1_SUBSET			= 120;
-		static const int _CARTRIDGE2HIGH1_SUBSET			= 121;
-		static const int _RAM41_SUBSET						= 122;
-		static const int _RAM41MIRRORIO7501PORT_SUBSET		= 123;
-		static const int _RAM41MIRRORPAGEZERO_SUBSET		= 124;
-		static const int _RAM41MIRRORSTACK_SUBSET			= 125;
-		static const int _RAM41MIRRORRAM1_SUBSET			= 126;
-		static const int _RAM41MIRRORRAM2_SUBSET			= 127;
+		static const int _KERNELROM1_SUBSET					= 117;
+		static const int _3PLUS1ROM21_SUBSET				= 118;
+		static const int _CARTRIDGE1HIGH1_SUBSET			= 119;
+		static const int _CARTRIDGE2HIGH1_SUBSET			= 120;
+		static const int _RAM41_SUBSET						= 121;
+		static const int _RAM41MIRRORIO7501PORT_SUBSET		= 122;
+		static const int _RAM41MIRRORPAGEZERO_SUBSET		= 123;
+		static const int _RAM41MIRRORSTACK_SUBSET			= 124;
+		static const int _RAM41MIRRORRAM1_SUBSET			= 125;
+		static const int _RAM41MIRRORRAM2_SUBSET			= 126;
 		// B4 (Part IO)
-		static const int _IONOMAPPED2_SUBSET				= 128;
-		static const int _IONOMAPPED3_SUBSET				= 129;
-		static const int _IONOMAPPED5_SUBSET				= 130;
-		static const int _IOTIA8_SUBSET						= 131;
+		static const int _IONOMAPPED2_SUBSET				= 127;
+		static const int _IONOMAPPED3_SUBSET				= 128;
+		static const int _IONOMAPPED5_SUBSET				= 129;
+		static const int _IOTIA8_SUBSET						= 130;
 		// B4 (Part 2)
-		static const int _KERNELROM2_SUBSET					= 132;
-		static const int _3PLUS1ROM22_SUBSET				= 133;
-		static const int _CARTRIDGE1HIGH2_SUBSET			= 134;
-		static const int _CARTRIDGE2HIGH2_SUBSET			= 135;
-		static const int _RAM42_SUBSET						= 136;
-		static const int _RAM42MIRRORRAM1_SUBSET			= 137;
-		static const int _RAM42MIRRORRAM2_SUBSET			= 138;
+		static const int _KERNELROM2_SUBSET					= 131;
+		static const int _3PLUS1ROM22_SUBSET				= 132;
+		static const int _CARTRIDGE1HIGH2_SUBSET			= 133;
+		static const int _CARTRIDGE2HIGH2_SUBSET			= 134;
+		static const int _RAM42_SUBSET						= 135;
+		static const int _RAM42MIRRORRAM1_SUBSET			= 136;
+		static const int _RAM42MIRRORRAM2_SUBSET			= 137;
+
+		// From the TED perspective
+		static const int _RAM1TED_SUBSET					= 150;
+		static const int _RAM2TED_SUBSET					= 151;
+		static const int _RAM2MIRRORRAM1TED_SUBSET			= 152;
+		static const int _BASICROMTED_SUBSET				= 153;
+		static const int _3PLUS1ROM1TED_SUBSET				= 154;
+		static const int _CARTRIDGE1LOWTED_SUBSET			= 155;
+		static const int _CARTRIDGE2LOWTED_SUBSET			= 156;
+		static const int _RAM3TED_SUBSET					= 157;
+		static const int _RAM3MIRRORRAM1TED_SUBSET			= 158;
+		static const int _KERNELROMTED_SUBSET				= 159;
+		static const int _3PLUS1ROM2TED_SUBSET				= 160;
+		static const int _CARTRIDGE1HIGHTED_SUBSET			= 161;
+		static const int _CARTRIDGE2HIGHTED_SUBSET			= 162;
+		static const int _RAM4TED_SUBSET					= 163;
+		static const int _RAM4MIRRORRAM1TED_SUBSET			= 164;
+		static const int _RAM4MIRRORRAM2TED_SUBSET			= 165;
 
 		// Views
 		static const int _CPU_VIEW							= 0;
+		static const int _TED_VIEW							= 1;
 
 		/** The constructor receives the configuration type. */
 		Memory (const MCHEmul::Memory::Content& cnt, 
@@ -117,12 +136,15 @@ namespace C264
 		/** Whether the ROM is or not active. */
 		bool ROMactive () const
 							{ return (_ROMActive); }
+		/** Whether the TED ROM is or nor active. */
+		bool TEDROMactive () const
+							{ return (_TEDROMActive); }
 
 		// Managing the configuration...
-		/** To change the configuration of the memory. \n
-			The way it is set will depend on the type of memory behind. \n
-			Activate or desactivate too the situation of the ROM/RAM in the machine. */
-		virtual void setConfiguration (unsigned int cfg, bool a, unsigned char mcfg);
+		/** To change the configuration of the memory when it is accessed from CPU/TED (mcfg). \n
+			The way it is set will depend on the type of memory behind (cfg). \n
+			Activate or desactivate too the situation of the switch ROM/RAM in the machine (ra). */
+		virtual void setConfiguration (unsigned int cfg, bool ra, unsigned char mcfg);
 		/** Just to change the configuration without affecting the status of the memory behind. */
 		void setConfiguration (unsigned char cfg)
 							{ setConfiguration (cfg, ROMactive (), memoryConfiguration ()); } 
@@ -163,61 +185,70 @@ namespace C264
 							{ setConfiguration (configuration (), ROMactive (), mcfg); }
 		/** Just to activate or desactivate the ROM, 
 			maintaining the same configuration. */
-		void setROMactive (bool a)
-							{ setConfiguration (configuration (), a, memoryConfiguration ()); }
+		void setROMactive (bool ra)
+							{ setConfiguration (configuration (), ra, memoryConfiguration ()); }
+
+		/** Just to activate the ROM from the TED perspective. 
+			This method is also invoked from the TED when it is needed according with its internal configuration. */
+		void setTEDROMActive (bool ra);
 
 		// Knowing different memory configurations...
-		/** To determine whether the configuration for the low rom is basic or not. */
+		/** To determine whether the configuration for the low rom is basic or not. \n
+			bits 1 & 0 of the memoryConfiguration unset. */
 		bool isMemoryConfigurationLowROMBasic () const
-							{ return (_memoryConfiguration == 0x00 || 
-									  _memoryConfiguration == 0x04 || 
-									  _memoryConfiguration == 0x08 || 
-									  _memoryConfiguration == 0x0c); }
-		/** To determine whether the configuration for the low rom is 3+1 or not. */
+							{ return ((_memoryConfiguration & 0x03) == 0x00); }
+		/** To determine whether the configuration for the low rom is 3+1 or not. \n
+			bits 1 of the memoryConfiguration unset and bit 0 set. */
 		bool isMemoryConfigurationLowROM3plus1 () const
-							{ return (_memoryConfiguration == 0x01 || 
-									  _memoryConfiguration == 0x05 || 
-									  _memoryConfiguration == 0x09 || 
-									  _memoryConfiguration == 0x0d); }
-		/** To determine whether the configuration for the low rom is cartridge 1 or not. */
+							{ return ((_memoryConfiguration & 0x03) == 0x01); }
+		bool mightConnectLowROM3Plus1 () const // Only when 3plus1 info is loaded and when ROM is active and configuration matches
+							{ return (_3plus1Loaded && 
+									  _ROMActive && isMemoryConfigurationLowROM3plus1 ()); }
+		/** To determine whether the configuration for the low rom is cartridge 1 or not. \n
+			bits 1 of the memoryConfiguration set and bit 0 unset. */
 		bool isMemoryConfigurationLowROMCartridge1 () const
-							{ return (_memoryConfiguration == 0x02 || 
-									  _memoryConfiguration == 0x06 || 
-									  _memoryConfiguration == 0x0a || 
-									  _memoryConfiguration == 0x0e); }
-		/** To determine whether the configuration for the low rom is cartridge 2 or not. */
+							{ return ((_memoryConfiguration & 0x03) == 0x02); }
+		bool mightConnectLowROMCartridget1 () const // Only when ROM is active and configuration matches
+							{ return (_cartridge1Connected &&
+									  _ROMActive && isMemoryConfigurationLowROMCartridge1 ()); }
+		/** To determine whether the configuration for the low rom is cartridge 2 or not. \n
+			bits 1 & 0 of the memoryConfiguration set. */
 		bool isMemoryConfigurationLowROMCartridge2 () const
-							{ return (_memoryConfiguration == 0x03 || 
-									  _memoryConfiguration == 0x07 || 
-									  _memoryConfiguration == 0x0b || 
-									  _memoryConfiguration == 0x0f); }
-		/** To determine whether the configuration for the high rom is basic or not. */
+							{ return ((_memoryConfiguration & 0x03) == 0x03); }
+		bool mightConnectLowROMCartridget2 () const // Only when ROM is active and configuration matches
+							{ return (_cartridge2Connected &&
+									  _ROMActive && isMemoryConfigurationLowROMCartridge2 ()); }
+		/** To determine whether the configuration for the high rom is basic or not. \n
+			bits 3 & 2 of the memoryConfiguration unset. */
 		bool isMemoryConfigurationHighROMKernel () const
-							{ return (_memoryConfiguration == 0x00 || 
-									  _memoryConfiguration == 0x01 || 
-									  _memoryConfiguration == 0x02 || 
-									  _memoryConfiguration == 0x03); }
-		/** To determine whether the configuration for the high rom is 3+1 or not. */
+							{ return ((_memoryConfiguration & 0x0c) == 0x00); }
+		/** To determine whether the configuration for the high rom is 3+1 or not. \n
+			bits 3 of the memoryConfiguration unset and bit 2 set. */
 		bool isMemoryConfigurationHighROM3plus1 () const
-							{ return (_memoryConfiguration == 0x04 || 
-									  _memoryConfiguration == 0x05 || 
-									  _memoryConfiguration == 0x06 || 
-									  _memoryConfiguration == 0x07); }
-		/** To determine whether the configuration for the high rom is cartridge 1 or not. */
+							{ return ((_memoryConfiguration & 0x0c) == 0x04); }
+		bool mightConnectHighROM3plus1 () const // Only when 3plus1 info is loaded and when ROM is active and configuration matches
+							{ return (_3plus1Loaded && 
+									  _ROMActive && isMemoryConfigurationHighROM3plus1 ()); }
+		/** To determine whether the configuration for the high rom is cartridge 1 or not. \n
+			bits 3 of the memoryConfiguration set and bit 2 unset. */
 		bool isMemoryConfigurationHighROMCartridge1 () const
-							{ return (_memoryConfiguration == 0x08 || 
-									  _memoryConfiguration == 0x09 || 
-									  _memoryConfiguration == 0x0a || 
-									  _memoryConfiguration == 0x0b); }
-		/** To determine whether the configuration for the high rom is cartridge 2 or not. */
+							{ return ((_memoryConfiguration & 0x0c) == 0x08); }
+		bool mightConnectHighROMCartridget1 () const // Only when ROM is active and configuration matches
+							{ return (_cartridge1Connected &&
+									  _ROMActive && isMemoryConfigurationHighROMCartridge1 ()); }
+		/** To determine whether the configuration for the high rom is cartridge 2 or not. \n
+			bits 3 & 2 of the memoryConfiguration set. */
 		bool isMemoryConfigurationHighROMCartridge2 () const
-							{ return (_memoryConfiguration == 0x0c || 
-									  _memoryConfiguration == 0x0d || 
-									  _memoryConfiguration == 0x0e || 
-									  _memoryConfiguration == 0x0f); }
+							{ return ((_memoryConfiguration & 0x0c) == 0x0c); }
+		bool mightConnectHighROMCartridget2 () const // Only when ROM is active and configuration matches
+							{ return (_cartridge2Connected &&
+									  _ROMActive && isMemoryConfigurationHighROMCartridge2 ()); }
 		/** To know whether a cartridge is connected. */
 		bool cartridgeConnected () const
 							{ return (_cartridge1Connected || _cartridge2Connected); }
+		/** To know whether external info (including 3plus1) is connected. */
+		bool externalInfoConnected () const
+							{ return (_3plus1Loaded || cartridgeConnected ()); }
 
 		// Managing the cartridges...
 		void loadCartridge1 (const std::string& f1, const std::string& f2);
@@ -253,6 +284,8 @@ namespace C264
 		/** To know whether the ROM is or not active. 
 			The original value is also kept in the chip emulating the ROM/RAM switching. */
 		bool _ROMActive;
+		/** To know whgether the ROM is or not active from the TED perspective. */
+		bool _TEDROMActive;
 		/** The situation of the cartridges. */
 		bool _3plus1Loaded; // Never lodaed by default. Loaded in CPLUS4 type...
 		bool _cartridge1Loaded, _cartridge1Connected;
@@ -260,6 +293,7 @@ namespace C264
 
 		// Implementation
 		// Things that can be connected and disconnected...
+		// From the CPU perspective...
 		// B1
 		MCHEmul::PhysicalStorageSubset*			_RAM1;
 		// B2
@@ -273,7 +307,6 @@ namespace C264
 		MCHEmul::PhysicalStorageSubset*			_3plus1ROM1;
 		MCHEmul::PhysicalStorageSubset*			_cartridge1Low;
 		MCHEmul::PhysicalStorageSubset*			_cartridge2Low;
-		MCHEmul::EmptyPhysicalStorageSubset*	_noExtension;
 		MCHEmul::PhysicalStorageSubset*			_RAM3;
 		MCHEmul::MirrorPhysicalStorageSubset*	_RAM3MirrorIO7501Port;
 		MCHEmul::MirrorPhysicalStorageSubset*	_RAM3MirrorPageZero;
@@ -308,6 +341,28 @@ namespace C264
 		MCHEmul::PhysicalStorageSubset*			_RAM42;
 		MCHEmul::MirrorPhysicalStorageSubset*	_RAM42MirrorRAM1;
 		MCHEmul::MirrorPhysicalStorageSubset*	_RAM42MirrorRAM2;
+
+		// From the TED perspective
+		MCHEmul::PhysicalStorageSubset*			_RAM1TED;
+		MCHEmul::PhysicalStorageSubset*			_RAM2TED;
+		MCHEmul::MirrorPhysicalStorageSubset*	_RAM2MirrorRAM1TED;
+		MCHEmul::PhysicalStorageSubset*			_basicROMTED;
+		MCHEmul::PhysicalStorageSubset*			_3plus1ROM1TED;
+		MCHEmul::PhysicalStorageSubset*			_cartridge1LowTED;
+		MCHEmul::PhysicalStorageSubset*			_cartridge2LowTED;
+		MCHEmul::PhysicalStorageSubset*			_RAM3TED;
+		MCHEmul::MirrorPhysicalStorageSubset*	_RAM3MirrorRAM1TED;
+		MCHEmul::PhysicalStorageSubset*			_kernelROMTED;
+		MCHEmul::PhysicalStorageSubset*			_3plus1ROM2TED;
+		MCHEmul::PhysicalStorageSubset*			_cartridge1HighTED;
+		MCHEmul::PhysicalStorageSubset*			_cartridge2HighTED;
+		MCHEmul::PhysicalStorageSubset*			_RAM4TED;
+		MCHEmul::MirrorPhysicalStorageSubset*	_RAM4MirrorRAM1TED;
+		MCHEmul::MirrorPhysicalStorageSubset*	_RAM4MirrorRAM2TED;
+
+		// Implementation
+		/** To be used in the creation of the views in every type of computer. */
+		static MCHEmul::PhysicalStorageSubsets _CPUSUBSETS, _TEDSUBSETS, _ALLSUBSETS;
 	};
 
 	/** The memory for the C16/116. */
@@ -315,8 +370,8 @@ namespace C264
 	{
 		public:
 		// Subsets that only exists in the C16/C116 type of machine 
-		static const int _IONOMAPPED0_SUBSET	= 150;		// Instead of ACIA
-		static const int _IONOMAPPED1_SUBSET	= 151;		// Instead of C65529B2
+		static const int _IONOMAPPED0_SUBSET	= 170;		// Instead of ACIA
+		static const int _IONOMAPPED1_SUBSET	= 171;		// Instead of C65529B2
 
 		C16_116Memory (unsigned int cfg, const std::string& lang = MCHEmul::_DEFAULTLANGUAGE);
 

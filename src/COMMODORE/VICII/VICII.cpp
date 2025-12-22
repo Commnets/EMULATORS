@@ -445,6 +445,7 @@ MCHEmul::Strings COMMODORE::VICII::spritesDrawSnapshot (MCHEmul::CPU* cpu,
 			if (j != 0)
 				dt += "\n";
 
+			std::string byDt ="";
 			for (size_t k = 0; k < 3; k++) // 3 bytes per line...
 			{
 				if (_VICIIRegisters -> spriteMulticolorMode (i)) // Can be monocolor or multicolor...
@@ -463,9 +464,18 @@ MCHEmul::Strings COMMODORE::VICII::spritesDrawSnapshot (MCHEmul::CPU* cpu,
 					}
 				}
 				else
+				{
 					for (size_t l = 0; l < 8; l++)
 						dt += ((sprDt [(j * 3) + k].value () & (1 << (7 - l))) != 0x00) ? "#" : " ";
+				}
+
+				// Accumulate the byte info...
+				byDt += "$" + sprDt [(j * 3) + k].asString (MCHEmul::UByte::OutputFormat::_HEXA, 2);
 			}
+
+			// ...and draws the data info...
+			// It is an addition of the 3 bytes printed out per line...
+			dt += "|" + byDt;
 		}
 
 		result.emplace_back (std::move (dt));
@@ -524,7 +534,7 @@ MCHEmul::Strings COMMODORE::VICII::charsDrawSnapshot (MCHEmul::CPU* cpu,
 			}
 
 			// Draws the data info...
-			dt += "|$" + chrDt [j].asString (MCHEmul::UByte::OutputFormat::_BINARY, '0');
+			dt += "|$" + chrDt [j].asString (MCHEmul::UByte::OutputFormat::_HEXA, 2);
 		}
 
 		result.emplace_back (std::move (dt));

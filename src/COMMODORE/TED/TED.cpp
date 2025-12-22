@@ -273,10 +273,6 @@ bool COMMODORE::TED::simulate (MCHEmul::CPU* cpu)
 		// just to take into account other issuing possibilities like two sprites collision analized later.
 		if (_raster.moveCycles (1))
 		{
-			// Update the position of the raster in the TED Registers...
-			_TEDRegisters -> setCurrentRasterPosition 
-				(_raster.currentLine (), _raster.currentColumn ());
-
 			_cycleInRasterLine = 1;
 
 			_lastBadLineScrollY = -1;
@@ -292,9 +288,9 @@ bool COMMODORE::TED::simulate (MCHEmul::CPU* cpu)
 				// Flash counter is incremented every frame...
 				_TEDRegisters -> incrementFlashCounter (); 
 				
-				// Every half the frequecy of the TED....
+				// Every half the frequency of the TED....
 				// ...the cursor hardware status (used in standard char mode changes)
-				if (++_timesFrameDrawn >= (_screenfrequency >> 1))
+				if (++_timesFrameDrawn >= (_screenfrequency >> 2))
 				{
 					_timesFrameDrawn = 0;
 					_tedGraphicInfo.changeCursorHardwareStatus ();
@@ -309,6 +305,10 @@ bool COMMODORE::TED::simulate (MCHEmul::CPU* cpu)
 			if (_raster.currentLine () == _TEDRegisters -> IRQRasterLineAt ())
 				_TEDRegisters -> activateRasterIRQ (); // ...the interrupt is activated (but not necessary launched!)
 		}
+
+		// Update the position of the raster in the TED Registers...
+		_TEDRegisters -> setCurrentRasterPosition 
+			(_raster.currentLine (), _raster.currentColumn ());
 
 		// Simulate the timers!
 		_T1.simulate (cpu);
@@ -480,7 +480,7 @@ MCHEmul::Strings COMMODORE::TED::charsDrawSnapshot (MCHEmul::CPU* cpu,
 			dt += textByteMonocolor (chrDt [j]);
 			if (_TEDRegisters -> graphicMulticolorTextModeActive ())
 				dt += " | " /** Separated by a symbol. */ + textByteMultiColor (chrDt [j]);
-			dt += "|$" + chrDt [j].asString (MCHEmul::UByte::OutputFormat::_BINARY, '0');
+			dt += "|$" + chrDt [j].asString (MCHEmul::UByte::OutputFormat::_HEXA, 2);
 		}
 
 		result.emplace_back (std::move (dt));
@@ -986,7 +986,7 @@ COMMODORE::TED::DrawResult COMMODORE::TED::drawMultiColorChar (int cb, bool inv)
 				cs = (_tedGraphicInfo._graphicData [0].value () >> 6) & 0x03; // 0, 1, 2 or 3
 
 			// If the pixel 7 of the character data is set to 1, 
-			// the video inverse is calculated...
+			// the video inverse is then calculated...
 			if (_tedGraphicInfo._screenCodeData [iBy].bit (7) &&
 				_TEDRegisters -> reverseVideoActive ()) cs = 3 - cs;
 			// The blinking is defined in the bit 7 of the color attribute...
@@ -1071,7 +1071,8 @@ COMMODORE::TED::DrawResult COMMODORE::TED::drawMultiColorExtendedChar (int cb)
 		size_t iBt = 7 - (((size_t) pp) % 8); /** From MSB to LSB. */
 
 		// Pixel must be on or off?
-		bool dP = calcPixelHiResMode (iBy, iBt);
+		// In this mode there is no reverse mode or blinking...
+		bool dP = _tedGraphicInfo._graphicData [iBy].bit (iBt);
 		// The color of the pixel will depend on whether it is on or off...
 		// ...and also on the 2 MSB bites of the screen code byte...
 		// In the case of cs == 0x00 it will be redudant as it is already background, but just in case...
@@ -1205,17 +1206,13 @@ void COMMODORE::TED::debugTEDCycle (MCHEmul::CPU* cpu, unsigned int i)
 		  { "Memory",
 				"Screen=$" + MCHEmul::removeAll0 (_TEDRegisters -> screenMemory ().asString
 					(MCHEmul::UByte::OutputFormat::_HEXA, '\0', 2)) + "," +
-				"Characters=$" + MCHEmul::removeAll0 (_TEDRegisters -> charDataMemory ().asString
+				"Attributes=$" + MCHEmul::removeAll0 (_TEDRegisters -> attributeMemory ().asString
 					(MCHEmul::UByte::OutputFormat::_HEXA, '\0', 2)) + "," +
+				"Characters=$" + MCHEmul::removeAll0 (_TEDRegisters -> charDataMemory ().asString
+					(MCHEmul::UByte::OutputFormat::_HEXA, '\0', 2)) + 
+					"(ROM=" + (_TEDRegisters -> ROMActiveToFetchCharAndBitmap () ? "TRUE" : "FALSE") + ")," +
 				"Bitmap=$" + MCHEmul::removeAll0 (_TEDRegisters -> bitmapMemory ().asString
 				(MCHEmul::UByte::OutputFormat::_HEXA, '\0', 2)) } });
-
-	// Draws lines where there is a IRQ interruption...
-	unsigned short lrt = 
-		_raster.lineInVisibleZone (_TEDRegisters -> IRQRasterLineAt ());
-	if (lrt <= _raster.vData ().lastVisiblePosition ())
-		screenMemory () -> setHorizontalLine (0, lrt, _raster.visibleColumns (), 
-			_TEDRegisters -> borderColor ().nextLuminance ().asChar ());
 }
 
 // ---

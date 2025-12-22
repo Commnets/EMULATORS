@@ -385,6 +385,9 @@ MCHEmul::Strings COMMODORE::VICI::charsDrawSnapshot (MCHEmul::CPU* cpu,
 
 			for (size_t l = 0; l < 8; l++)
 				dt += ((chrDt [j].value () & (1 << (7 - l))) != 0x00) ? "#" : " ";
+
+			// Draws the data info...
+			dt += "|$" + chrDt [j].asString (MCHEmul::UByte::OutputFormat::_HEXA, 2);
 		}
 
 		result.emplace_back (std::move (dt));

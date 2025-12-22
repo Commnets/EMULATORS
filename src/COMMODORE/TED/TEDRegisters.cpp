@@ -66,7 +66,7 @@ MCHEmul::InfoStructure COMMODORE::TEDRegisters::getInfoStructure () const
 	result.add ("IRQLINE",			_IRQRasterLineAt);
 	result.add ("SCREENADDRESS",	screenMemory ());
 	result.add ("CHARADDRESS",		charDataMemory ());
-	result.add ("CHARSINROM",		std::string (_ROMSourceActive ? "YES" : "NO"));
+	result.add ("CHARSINROM",		std::string (_ROMActiveToFetchCharAndBitmap ? "YES" : "NO"));
 	result.add ("ATTRIBUTEADDRESS",	attributeMemory ());
 	result.add ("BITMAPADDRESS",	bitmapMemory ());
 	result.add ("GraphicalInfo",	std::move (_graphicalInfo.getInfoStructure ()));
@@ -267,8 +267,8 @@ void COMMODORE::TEDRegisters::setValue (size_t p, const MCHEmul::UByte& v)
 			{
 				// The bits 0 y 1 are MSB of the Voice 1 Frequency...
 				_soundWrapper -> setValue (pp, v);
-
-				_ROMSourceActive = v.bit (2);
+				// The rest is part of the memlory configuration...
+				_ROMActiveToFetchCharAndBitmap = v.bit (2);
 				_bitmapMemory = MCHEmul::Address (2, 
 					(unsigned int) ((v.value () & 0x38 /** bits 3, 4 & 5. */) << 10
 						/** 3 + 10 to become the bits 13, 14 & 15 of the address. */));
@@ -281,7 +281,7 @@ void COMMODORE::TEDRegisters::setValue (size_t p, const MCHEmul::UByte& v)
 		// Also whether the clock mode is twice or single...
 		case 0x13:
 			{
-				/** The bit 0 is reading. */
+				_ROMMemoryConfigurationActive = v.bit (0);
 				_singleClockModeActive = v.bit (1);
 				_charDataMemory = MCHEmul::Address (2, 
 					(unsigned int) ((v.value () & 0xfc /** bits 2 - 7. */) << 8 
@@ -572,9 +572,10 @@ const MCHEmul::UByte& COMMODORE::TEDRegisters::readValue (size_t p) const
 
 		case 0x12:
 			{
-				result = ((unsigned char) ((_bitmapMemory.value () & 0xff00) >> 10
-					/** to become the bits 3, 4 & 5 of the address. */)) | ~0b00111000; // The rest of the bits to 1 initially...
-				result.setBit (2, _ROMSourceActive);
+				result = ((unsigned char) ((_bitmapMemory.value () & 0xff00) >> 10 /** to become the bits 3, 4 & 5 of the address. */)) | 
+					(_soundWrapper -> readValue (pp) & 0b0000011 /** Only the bits 0 and 1 are useful. */).value () | 
+					~0b00111011; // The rest of the bits to 1 until the next instruction...
+				result.setBit (2, _ROMActiveToFetchCharAndBitmap);
 			}
 
 			break;
@@ -582,8 +583,9 @@ const MCHEmul::UByte& COMMODORE::TEDRegisters::readValue (size_t p) const
 		case 0x13:
 			{
 				result = ((unsigned char) ((_charDataMemory.value () & 0xff00) >> 8 /** The become the bits from 7 to 2. */)) 
-					| ~0b11111100; // The rest of the bits to 1 initially...
-				result.setBit (2, _singleClockModeActive);
+					| ~0b11111100; // Until the next instruction the rest of the bits to 1...
+				result.setBit (1, _singleClockModeActive);
+				result.setBit (0, _ROMMemoryConfigurationActive);
 			}
 
 			break;

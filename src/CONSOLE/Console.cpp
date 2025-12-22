@@ -230,7 +230,8 @@ bool MCHEmul::Console::readCommand ()
 				break;
 
 			case MCHEmul::ConsoleKeys::_DOWNKEY:
-				if (_lastCommandPosition < (_lastCommands.size () - 1))
+				if (!_lastCommands.empty () && 
+					_lastCommandPosition < (_lastCommands.size () - 1))
 				{
 					delCurrentCommand ();
 					_command = _lastCommands [++_lastCommandPosition];

@@ -1,0 +1,61 @@
+Apuntes sobre el funcionamiento de la memoria en el IPLUS4
+
+Variables globales importantes:
+1.- mem_config.
+Parece que guarda la configuración de la memoria.
+Parece tener un valor entre 0 y 15...
+2.- mem_ram. 64k de datos de 8 bits.
+
+
+
+Método importante que configura la memoria: mem_initialize_memory en plus4mem.c
+Variables importantes definidas: 
+1.- chargen_tab [][]. 
+Dos dimensiones: 
+a.- Bloque de memoria de 16k (8) de 0 a 7. En realidad parece que hay dos grupos de bloques de memoria. De 0 a 3 y de 4 a 7, según esté la RAM (primer bloque) o la ROM (segundo bloque activas).
+b.- Configuración (16) de 0 a 15 (según se actúe sobre las direcciones $fdd0 - $fddf).
+La inicialización de esa variable se realiza al principio del fichero.
+Luego en el método mem_initialize_memory, sólo se ajusta la memoria RAM tanto para la visión RAM o ROM activa (parece) en función de la memoria máxima del ordenador emulado.
+La parte de ROM ($8000-$bfff y $c000-$ffff) siempre parecen asignadas a la ROM, diferente, en función de la configuración.
+La variable sólo se usa desde el método mem_get_tedmem_base en plus4mem.c. Este método, en función del segmento (recibido como parámetro) y de mem_config (dividido por dos) devuelve un bloque de memoria (16k).
+El método mem_get_tedmem_base se usa sólo desde ted_update_memory_ptrs en ted.c para calcular los valores de las variables: screen_base, bitmap_base, char_base y color_base que son las direcciones de dónde el TED leerá información para pintar.
+Las variables screen_base y color_base tienen en cuenta el valor de la variable cpu_romsel.
+Las variables bitmap_base y char_base tienen en cuenta el valor de la variable video_romsel.
+cpu_romsel es el bit 1 del registro 0x13 (=19) del TED multiplicado por 2. Es decir puede valer o 0 o 4.
+video_romsel es el bit 4 del registro 0x12 (=18) del TED. Es decir puede valer o 0 o 16.
+Esas variables (las 4) se usan desde el TED para localizar la información a dibujar. Por tanto, en definitiva, chargen_tab parece determinar la visión del TED...
+Y están tremendamente afectadas por lo que el valor del los bits 4 y 1 de los registros 0x12 y 0x13 del TED respectivamente.
+
+2.- mem_read_tab [][].
+Dos dimensiones: 
+a.- Configuración (32) de 0 a 31. 
+En realidad el sistema sólo soporta 16 configuraciones, por lo que parece que en realidad hay dos grupos de configuraciones. De 0 a 15 y de 16 a 31. Depende de si están las RAM o las ROM activas
+b.- Página (de 0 a 256)
+Lo que parece curioso es ver que hay 257 páginas declaradas...y no 256 que es lo máximo que puede direccionar un procesador tipo 6510. ¿Por qué?
+Cada una de los valores de esa variable contiene un puntero a una rutina.
+Esas rutinas son rutinas específicas para leer en cada página.
+el de la página cero se llama zero_read y se asigna a todas las configuraciones (32) de la página 0. mem_read_tab [0..31][0] = zero_read.
+Esa función considera si lo que se está leyendo es la dirección 0 o 1 u otra cualquiera, porque las dos primeras corresponden a los puertos del ordenador (veremos más tarde).
+Por defecto todas las páginas de la 1 a la 255 (incluida) de todas las configuraciones se asocian a la rutina ram_read que retorna mem_ram [addr]; es decir el valor de la ram.
+c.- Configuración para las páginas 0x80 - 0xbf
+Las páginas de la 0x80 a la 0xbf de las configuraciones impares (1,3,5,7,9...31) se asocian a rutinas para leer la ROM.
+Hay 4 tipos de ROM en este espacio: BASIC (1,9,17,25), EXTROMLO1 (3,11,19,27), C1LOW (5,13,21,29), EXTROMLO3 (7,15,23,31).
+d.- Configuración para las páginas 0xc0 - 0xff.
+Las páginas de la 0xc0 a la 0xff de las configuraciones impares (1,3,5,7,9...31) se asocian a rutinas para leer la ROM.
+Hay 4 tipos de ROM en este espacio: KERNEL (1,3,5,7), EXTROMHI1 (9,11,13,15), C1HI (17,19,21,23), EXTROMHI3 (25,27,29,31).
+e.- Configuración para la página 0xfd.
+El valor de la configuración activa, que es una array de funciones para leer cada una de las 255 páginas de la memoria del computador, se asocia a _mem_read_tab_ptr que se usa en la emulación de las instrucciones del procesador. 
+Por tanto el procesador (emulación), y en función de la configuración activa, accederá mediante una función diferente a la memoria en función de la página en la que esté!
+
+3.- mem_read_base_tab [][].
+Dimensiones como la anterior.
+Lo que hay en cada valor es un puntero al principio de la dirección de memoria de la página donde debe actuar mem_read_tab.
+Parece, sin embargo, que para determinas configuraciones esa dirección de memoria se hace NULL.
+Concretamente para 5,13,21 y 29 en dónde debería actuar C1LOW en las páginas 0x80-0xbf y las configiraciones 17,19,21,23 en donde debería actuar CIHI.
+Ese valor se usa en la función mem_mmu_translate que recibe como parámetro una dirección y devuelve la dirección de la memoria en la que hay que leer el dato en función de la dirección de memopria recibida,. 
+También devuelve la dirección recibida y el límite (qué no sé que es aún).
+Si el comienzo de la dirección de referencia recibida es NULL se llama a la función cartridge_mmu_translate que en el caso del PLUS4 deveulve todo NULL.
+Yo creo que eso se va a utilizar para que si un cartucho no está activo...y se activa una configuración en la que se activa el cartucho...pues no se le hace caso y se accede a la posición de memoria tradicional de ROM....
+
+
+

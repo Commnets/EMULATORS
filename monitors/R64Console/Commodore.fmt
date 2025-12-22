@@ -78,7 +78,7 @@ ScrollX:@SCROLLX@, ScrollY:@SCROLLY@
 LIGHTPEN:@LIGHTPENX@,@LIGHTPENY@
 Border Color:@BorderColor>@
 Colors:@BkColor1>@, @BkColor2>@, @BkColor3>@, @BkColor4>@
-Memory:Screen($@SCREENADDRESS@), Chars($@CHARADDRESS@, ROM=@CHARSINROM@), Attributes($@ATTRIBUTEADDRESS@$), Bitmap($@BITMAPADDRESS@)
+Memory:Screen($@SCREENADDRESS@), Chars($@CHARADDRESS@, ROM=@CHARSINROM@), Attributes($@ATTRIBUTEADDRESS@), Bitmap($@BITMAPADDRESS@)
 IRQ:@IRQ@(@IRQLINE@)
 #---
 #---
