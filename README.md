@@ -50,7 +50,7 @@ SUPR                 = UP ARROW<br>
 The implementation of the framework for VIC20 has been included.<br>
 Execute VIC20EmulatorC or VIC20Emulator /h to see the different options at starting, and the command HELP in the console to manipulate later the emulation.<br>
 The different configurations of the VIC20 can be simulated using the parameter /w at command line (0=default, 1=3k, 2=8k, 4=all).<br>
-The keyboard is configured as Commodore 64.<br>
+The keyboard is configured as Commodore VIC20.<br><br>
 <img src="./docs/VIC20Data/Picture1.png"/><br>
 <img src="./docs/VIC20Data/Picture2.png"/><br>
 <img src="./docs/VIC20Data/Picture3.png"/>
@@ -81,7 +81,7 @@ The different configurations of the MSX can be simulated using the parameter /m 
 The implementation of the framework for Commodore C16/C116 and PLUS4 has been included.<br>
 Execute C264EmulatorC or C264Emulator /h to see the different options at starting, and the command HELP in the console to manipulate later the emulation.<br>
 The different configurations of the Commodore 264 can be simulated using the parameter /w at command line (0=default, 1=3k, 2=8k, 4=all).<br>
-The keyboard is configured as Commodore 64.<br>
+The keyboard is configured as Commodore 264.<br><br>
 <img src="./docs/C264Data/Picture1.png"/><br>
 <img src="./docs/C264Data/Picture2.png"/><br>
 
