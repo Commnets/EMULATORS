@@ -147,7 +147,6 @@ C264::Memory::Memory (const MCHEmul::Memory::Content& cnt,
 	  _3plus1ROM1				!= nullptr &&
 	  _cartridge1Low			!= nullptr &&
 	  _cartridge2Low			!= nullptr &&
-	  _noExtension				!= nullptr &&
 	  _RAM3						!= nullptr &&
 	  _RAM3MirrorIO7501Port		!= nullptr &&
 	  _RAM3MirrorPageZero		!= nullptr &&
