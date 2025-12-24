@@ -32,7 +32,8 @@ C264::Memory::Memory (const MCHEmul::Memory::Content& cnt,
 	  _RAM3MirrorPageZero (nullptr),
 	  _RAM3MirrorStack (nullptr),
 	  _RAM3MirrorRAM1 (nullptr),
-	  _kernelROM1 (nullptr),
+	  _kernelROM1A (nullptr),
+	  _kernelROM1B (nullptr),
 	  _3plus1ROM21 (nullptr),
 	  _cartridge1High1 (nullptr),
 	  _cartridge2High1 (nullptr),
@@ -108,7 +109,8 @@ C264::Memory::Memory (const MCHEmul::Memory::Content& cnt,
 	_RAM3MirrorRAM1				= dynamic_cast <MCHEmul::MirrorPhysicalStorageSubset*> 
 									(subset (_RAM3MIRRORRAM1_SUBSET));
 	// B4 (Part 1)
-	_kernelROM1					= subset (_KERNELROM1_SUBSET);
+	_kernelROM1A				= subset (_KERNELROM1A_SUBSET);
+	_kernelROM1B				= subset (_KERNELROM1B_SUBSET);
 	_3plus1ROM21				= subset (_3PLUS1ROM21_SUBSET);
 	_cartridge1High1			= subset (_CARTRIDGE1HIGH1_SUBSET);
 	_cartridge2High1			= subset (_CARTRIDGE2HIGH1_SUBSET);
@@ -193,7 +195,8 @@ C264::Memory::Memory (const MCHEmul::Memory::Content& cnt,
 	  _RAM3MirrorPageZero		!= nullptr &&
 	  _RAM3MirrorStack			!= nullptr &&
 	  _RAM3MirrorRAM1			!= nullptr &&
-	  _kernelROM1				!= nullptr &&
+	  _kernelROM1A				!= nullptr &&
+	  _kernelROM1B				!= nullptr &&
 	  _3plus1ROM21				!= nullptr &&
 	  _cartridge1High1			!= nullptr &&
 	  _cartridge2High1			!= nullptr &&
@@ -254,7 +257,8 @@ C264::Memory::Memory (const MCHEmul::Memory::Content& cnt,
 	subset (_BASICROM_SUBSET)			-> fixDefaultValues (); // Fix the values for further initializations...
 	subset (_BASICROMTED_SUBSET)		-> fixDefaultValues (); // ...and also from the TED perspective...
 	ok &= physicalStorage (_KERNELROM)	-> loadInto (KERNELFILE);
-	subset (_KERNELROM1_SUBSET)			-> fixDefaultValues (); // Fix the values for further initializations...
+	subset (_KERNELROM1A_SUBSET)		-> fixDefaultValues (); // Fix the values for further initializations...
+	subset (_KERNELROM1B_SUBSET)		-> fixDefaultValues ();
 	subset (_KERNELROM2_SUBSET)			-> fixDefaultValues ();
 	subset (_KERNELROMTED_SUBSET)		-> fixDefaultValues (); // ...and also from the TED perspective...
 	// The cartridges and the 3+1 roms are empty by default...
@@ -325,8 +329,10 @@ void C264::Memory::setConfiguration (unsigned int cfg, bool ra, unsigned char mc
 		 (isMemoryConfigurationHighROM3plus1 () && !_3plus1Loaded) ||
 		 (isMemoryConfigurationHighROMCartridge1 () && !_cartridge1Connected) ||
 		 (isMemoryConfigurationHighROMCartridge2 () && !_cartridge2Connected));
-	_kernelROM1				-> setActive (bA); // Active also when no cartridge is connected...
-	_kernelROM1				-> setActiveForReading (bA);
+	_kernelROM1A			-> setActive (bA); // Active also when no cartridge is connected...
+	_kernelROM1A			-> setActiveForReading (bA);
+	_kernelROM1B			-> setActive (_ROMActive); // Active always when ROM is active!
+	_kernelROM1B			-> setActiveForReading (_ROMActive);
 	bA = (_ROMActive && (_3plus1Loaded && isMemoryConfigurationHighROM3plus1 ()));
 	_3plus1ROM21			-> setActive (bA); // When 3+1 is loaded and ROM selected....
 	_3plus1ROM21			-> setActiveForReading (bA);
@@ -471,7 +477,8 @@ bool C264::Memory::initialize ()
 		true /** ROM active, the RAM will be active to write */, 0 /** The very basic configuration of the memory. */);
 	// Just to fillup all RAM with the initial value!
 	for (size_t i = 0X0000; i < 0x10000; i += 0x40)
-		if (i < 0xfd00 || i >= 0xff40) // The IO zone is not filled...
+		if ((i < 0xfd00 || i >= 0xff40) && 
+			(i != 0x0000 && i != 0x0001)) // The IO zone is not filled...
 			fillWith (MCHEmul::Address ({ 0x00, 0x00 }) + i, 
 				(((i / 0x40) % 2) == 0) ? MCHEmul::UByte::_0 : MCHEmul::UByte::_FF, 0x40);
 	// Go back to the same configuration...
@@ -655,17 +662,20 @@ MCHEmul::PhysicalStorage* RAM =
 	// There might different possibilities:
 	// KERNEL ROM, 3+1 ROM (part 2), CARTRIDGE1HIGH, CARTRIDGE2HIGH or RAM (that can be a mirror of the one in B1 or B2)...
 	// In the middle the IO area...
-	MCHEmul::PhysicalStorageSubset* kernelROM1 = new MCHEmul::PhysicalStorageSubset 
-		(_KERNELROM1_SUBSET, KERNELROM, 0x0000, MCHEmul::Address ({ 0x00, 0xc0 }, false), 0x3d00);				// 16k - 768 bytes
-	kernelROM1 -> setName ("KERNEL ROM Part 1");
+	MCHEmul::PhysicalStorageSubset* kernelROM1A = new MCHEmul::PhysicalStorageSubset 
+		(_KERNELROM1A_SUBSET, KERNELROM, 0x0000, MCHEmul::Address ({ 0x00, 0xc0 }, false), 0x3c00);				// 16k - -256 - 768 bytes
+	kernelROM1A -> setName ("KERNEL ROM Part 1A");
+	MCHEmul::PhysicalStorageSubset* kernelROM1B = new MCHEmul::PhysicalStorageSubset 
+		(_KERNELROM1B_SUBSET, KERNELROM, 0x3c00, MCHEmul::Address ({ 0x00, 0xfc }, false), 0x100);				// 256 bytes
+	kernelROM1B -> setName ("KERNEL ROM Part 1B");
 	MCHEmul::PhysicalStorageSubset* threePlus1ROM21 = new MCHEmul::PhysicalStorageSubset 
-		(_3PLUS1ROM21_SUBSET, THREEPLUS1ROM2, 0x0000, MCHEmul::Address ({ 0x00, 0xc0 }, false), 0x3d00);
+		(_3PLUS1ROM21_SUBSET, THREEPLUS1ROM2, 0x0000, MCHEmul::Address ({ 0x00, 0xc0 }, false), 0x3c00);		// Always 16k - 256 (no bankable) - 768 bytes...
 	threePlus1ROM21 -> setName ("3+1 ROM 2 Part 1");
 	MCHEmul::PhysicalStorageSubset* cartridge1High1 = new MCHEmul::PhysicalStorageSubset 
-		(_CARTRIDGE1HIGH1_SUBSET, CARTRIDGE1HIGHROM, 0x0000, MCHEmul::Address ({ 0x00, 0xc0 }, false), 0x3d00);
+		(_CARTRIDGE1HIGH1_SUBSET, CARTRIDGE1HIGHROM, 0x0000, MCHEmul::Address ({ 0x00, 0xc0 }, false), 0x3c00);
 	cartridge1High1 -> setName ("High Cartridge 1 Part 1");
 	MCHEmul::PhysicalStorageSubset* cartridge2High1 = new MCHEmul::PhysicalStorageSubset 
-		(_CARTRIDGE2HIGH1_SUBSET, CARTRIDGE2HIGHROM, 0x0000, MCHEmul::Address ({ 0x00, 0xc0 }, false), 0x3d00);
+		(_CARTRIDGE2HIGH1_SUBSET, CARTRIDGE2HIGHROM, 0x0000, MCHEmul::Address ({ 0x00, 0xc0 }, false), 0x3c00);
 	cartridge2High1 -> setName ("High Cartridge 2 Part 1");
 	MCHEmul::PhysicalStorageSubset* RAM41 = new MCHEmul::PhysicalStorageSubset 
 		(_RAM41_SUBSET, RAM, 0xc000, MCHEmul::Address ({ 0x00, 0xc0 }, false), 0x3d00);
@@ -793,7 +803,8 @@ MCHEmul::PhysicalStorage* RAM =
 			{ _RAM3MIRRORSTACK_SUBSET,									RAM3MirrorStack },
 			{ _RAM3MIRRORRAM1_SUBSET,									RAM3MirrorRAM1 },
 			// B4 (Part 1)
-			{ _KERNELROM1_SUBSET,										kernelROM1 },
+			{ _KERNELROM1A_SUBSET,										kernelROM1A },
+			{ _KERNELROM1B_SUBSET,										kernelROM1B },
 			{ _3PLUS1ROM21_SUBSET,										threePlus1ROM21 },
 			{ _CARTRIDGE1HIGH1_SUBSET,									cartridge1High1 },
 			{ _CARTRIDGE2HIGH1_SUBSET,									cartridge2High1 },
@@ -932,7 +943,8 @@ MCHEmul::PhysicalStorage* RAM =
 			{ _RAM3MIRRORSTACK_SUBSET,									RAM3MirrorStack },
 			{ _RAM3MIRRORRAM1_SUBSET,									RAM3MirrorRAM1 },
 			// B4 (Part 1)
-			{ _KERNELROM1_SUBSET,										kernelROM1 },
+			{ _KERNELROM1A_SUBSET,										kernelROM1A },
+			{ _KERNELROM1B_SUBSET,										kernelROM1B },
 			{ _3PLUS1ROM21_SUBSET,										threePlus1ROM21 },
 			{ _CARTRIDGE1HIGH1_SUBSET,									cartridge1High1 },
 			{ _CARTRIDGE2HIGH1_SUBSET,									cartridge2High1 },

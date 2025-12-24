@@ -74,29 +74,30 @@ namespace C264
 		static const int _RAM3MIRRORSTACK_SUBSET			= 115;
 		static const int _RAM3MIRRORRAM1_SUBSET				= 116;
 		// B4 (Part 1)
-		static const int _KERNELROM1_SUBSET					= 117;
-		static const int _3PLUS1ROM21_SUBSET				= 118;
-		static const int _CARTRIDGE1HIGH1_SUBSET			= 119;
-		static const int _CARTRIDGE2HIGH1_SUBSET			= 120;
-		static const int _RAM41_SUBSET						= 121;
-		static const int _RAM41MIRRORIO7501PORT_SUBSET		= 122;
-		static const int _RAM41MIRRORPAGEZERO_SUBSET		= 123;
-		static const int _RAM41MIRRORSTACK_SUBSET			= 124;
-		static const int _RAM41MIRRORRAM1_SUBSET			= 125;
-		static const int _RAM41MIRRORRAM2_SUBSET			= 126;
+		static const int _KERNELROM1A_SUBSET				= 117;
+		static const int _KERNELROM1B_SUBSET				= 118;
+		static const int _3PLUS1ROM21_SUBSET				= 119;
+		static const int _CARTRIDGE1HIGH1_SUBSET			= 120;
+		static const int _CARTRIDGE2HIGH1_SUBSET			= 121;
+		static const int _RAM41_SUBSET						= 122;
+		static const int _RAM41MIRRORIO7501PORT_SUBSET		= 123;
+		static const int _RAM41MIRRORPAGEZERO_SUBSET		= 124;
+		static const int _RAM41MIRRORSTACK_SUBSET			= 125;
+		static const int _RAM41MIRRORRAM1_SUBSET			= 126;
+		static const int _RAM41MIRRORRAM2_SUBSET			= 127;
 		// B4 (Part IO)
-		static const int _IONOMAPPED2_SUBSET				= 127;
-		static const int _IONOMAPPED3_SUBSET				= 128;
-		static const int _IONOMAPPED5_SUBSET				= 129;
-		static const int _IOTIA8_SUBSET						= 130;
+		static const int _IONOMAPPED2_SUBSET				= 128;
+		static const int _IONOMAPPED3_SUBSET				= 129;
+		static const int _IONOMAPPED5_SUBSET				= 130;
+		static const int _IOTIA8_SUBSET						= 131;
 		// B4 (Part 2)
-		static const int _KERNELROM2_SUBSET					= 131;
-		static const int _3PLUS1ROM22_SUBSET				= 132;
-		static const int _CARTRIDGE1HIGH2_SUBSET			= 133;
-		static const int _CARTRIDGE2HIGH2_SUBSET			= 134;
-		static const int _RAM42_SUBSET						= 135;
-		static const int _RAM42MIRRORRAM1_SUBSET			= 136;
-		static const int _RAM42MIRRORRAM2_SUBSET			= 137;
+		static const int _KERNELROM2_SUBSET					= 132;
+		static const int _3PLUS1ROM22_SUBSET				= 133;
+		static const int _CARTRIDGE1HIGH2_SUBSET			= 134;
+		static const int _CARTRIDGE2HIGH2_SUBSET			= 135;
+		static const int _RAM42_SUBSET						= 136;
+		static const int _RAM42MIRRORRAM1_SUBSET			= 137;
+		static const int _RAM42MIRRORRAM2_SUBSET			= 138;
 
 		// From the TED perspective
 		static const int _RAM1TED_SUBSET					= 150;
@@ -313,7 +314,8 @@ namespace C264
 		MCHEmul::MirrorPhysicalStorageSubset*	_RAM3MirrorStack;
 		MCHEmul::MirrorPhysicalStorageSubset*	_RAM3MirrorRAM1;
 		// B4 (Part 1)
-		MCHEmul::PhysicalStorageSubset*			_kernelROM1;
+		MCHEmul::PhysicalStorageSubset*			_kernelROM1A;
+		MCHEmul::PhysicalStorageSubset*			_kernelROM1B;
 		MCHEmul::PhysicalStorageSubset*			_3plus1ROM21;
 		MCHEmul::PhysicalStorageSubset*			_cartridge1High1;
 		MCHEmul::PhysicalStorageSubset*			_cartridge2High1;
