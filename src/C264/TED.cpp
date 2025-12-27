@@ -47,7 +47,10 @@ void C264::TED::processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifier* n)
 		// ...it will taken into account later, when the TED info was reached!
 		case C264::C6529B1::_PORTVALUECHANGED:
 			{
-				_TEDRegisters -> setKeyboardEntry (MCHEmul::UByte ((unsigned char) evnt.value ()));
+				// The pins going to the keyboard matrix...
+				// ...they will be latched when writting in the register 8!
+				_TEDRegisters -> setKeyboardPins 
+					(MCHEmul::UByte ((unsigned char) evnt.value ()));
 			}
 
 			break;
@@ -60,7 +63,7 @@ void C264::TED::processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifier* n)
 				size_t ct = 0; // Counts the axis...
 				MCHEmul::UByte dr = MCHEmul::UByte::_0;
 				for (size_t ct = 0; ct < jm -> _axisValues.size (); ct++)
-					if (jm -> _axisValues [ct] != 0) // When the axis is 0, there is no bit to set!!
+					if (jm -> _axisValues [ct] != 0) // When the value in the axis is 0, there is no bit to set!!
 						dr.setBit (((C264::InputOSSystem*) n) -> bitForJoystickAxis 
 							(jm -> _joystickId, (int) ct, jm -> _axisValues [ct]), true);
 				_TEDRegisters -> setJoystickStatus (jm -> _joystickId, dr); // If there is no axis pressed, then a 0 is set...

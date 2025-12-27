@@ -788,6 +788,7 @@ namespace MCHEmul
 	/** Command to assign a different number to a given joystick. \n
 		E.g. When there is only one joystick the "system" assigns the number 0 to it, but
 		we might want it to act as joystick number 1. so an assigment from 0 to 1 would be needed. \n
+		If an assignment is no longer needed, just assign both numbers to be the same. \n
 		Command line: ASSIGNJOY IDFROM IDTO */
 	class AssignJoystickNameCommand final : public Command
 	{

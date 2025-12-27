@@ -132,6 +132,7 @@ Changes joystick identification number.
 Parameters:  
 => ID (mandatory): Current joystick ID.  
 => NEWID (optional): New assigned ID.  
+Notes: if ID == NEWID any assignment on ID would be removed.
 ;SOUNDON  
 Enables sound.  
 Parameters: None. 

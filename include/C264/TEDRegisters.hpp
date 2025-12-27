@@ -35,10 +35,6 @@ namespace C264
 		virtual size_t numberRegisters () const override
 							{ return (0x40); }
 
-		/** To set the value comming from the keyboard matrix. */
-		void setKeyboardEntry (const MCHEmul::UByte& k)
-							{ _keyboardEntry = k; }
-
 		/** The joysticks are connected directly to the keyboard pines of the TED. \n
 			These methods are not usually manged directly but just in case. */
 		const MCHEmul::UByte& joystickStatus (size_t nj) const
@@ -52,13 +48,10 @@ namespace C264
 
 		private:
 		virtual void setValue (size_t p, const MCHEmul::UByte& v) override;
-		virtual const MCHEmul::UByte& readValue (size_t p) const override;
 		
 		void initializeInternalValues ();
 
 		private:
-		/** The value coming from the chip C6529B. */
-		MCHEmul::UByte _keyboardEntry;
 		/** At the bit representing the direction/fire of the joystick pressed. \n
 			Remember that in the Commodore264 series 
 			the joysticks are connected directly to the keyboard data port of the TED,

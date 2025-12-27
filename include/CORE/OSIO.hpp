@@ -110,11 +110,24 @@ namespace MCHEmul
 
 		InputOSSystem (int id, const Attributes& attrs = { });
 
+		// Managing the conversions between joysticks...
+		// ..this is important is many emulators...
+		const std::map <int, int>& conversionJoystick () const
+							{ return (_conversionJoystickMap); }
 		/** Assign a number to a joystick id. */
+		void removeConversionJoysticks () // To clear the conversion...
+							{ _conversionJoystickMap = { }; _joyMovementMap = { }; }
+		/** Remove the conversion for a specific joystick id. */
+		void removeConversionJoystick (int id) // If the key doesn't exist, nothing is done...
+							{ _conversionJoystickMap.erase (id); _joyMovementMap = { }; }
+		/** Remove all conversions to a possible joystick id. */
+		inline void removeConversionsJoystickTo (int id);
 		void addConversionJoystick (int id, int n)
 							{ _conversionJoystickMap [id] = n; _joyMovementMap = { }; }
 		void setConversionJoystickMap (std::map <int, int>&& cJM)
 							{ _conversionJoystickMap = std::move (cJM); _joyMovementMap = { }; }
+		/** To get the current assignements. */
+		std::string currentAssignementJoysticksAsString () const;
 
 		bool quitRequested () const
 							{ return (_quitRequested); }
@@ -214,6 +227,16 @@ namespace MCHEmul
 		/** To track the movement of the josyticks in the different directions. */
 		JoystickMovementMap _joyMovementMap;
 	};
+
+	// ---
+	inline void InputOSSystem::removeConversionsJoystickTo (int id)
+	{
+		std::vector <int> toDelete;
+		for (const auto& i : _conversionJoystickMap)
+			if (i.second == id) toDelete.push_back (i.first);
+		for (const auto& i : toDelete)
+			_conversionJoystickMap.erase (i);
+	}
 }
 
 #endif

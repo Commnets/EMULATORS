@@ -859,8 +859,16 @@ void MCHEmul::AssignJoystickNameCommand::executeImpl
 		return;
 	}
 
-	const_cast <MCHEmul::InputOSSystem*> (c -> inputOSSystem ()) -> addConversionJoystick (jId, jN);
+	// If the target joystick is the same than the source one, the assignment is removed...
+	// ...because at the end of the daym it would mean that is not needed at all...
+	if (jId == jN)
+		const_cast <MCHEmul::InputOSSystem*> (c -> inputOSSystem ()) -> removeConversionJoystick (jId);
+	// ...in other circunstances the new assignement is done...
+	else
+		const_cast <MCHEmul::InputOSSystem*> (c -> inputOSSystem ()) -> addConversionJoystick (jId, jN);
 
+	rst.add ("ASSIGNEMENTS", 
+		const_cast <MCHEmul::InputOSSystem*> (c -> inputOSSystem ()) -> currentAssignementJoysticksAsString ());
 	rst.add ("ERROR", std::string ("No errors. Joystick assignment changed"));
 }
 

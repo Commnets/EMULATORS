@@ -441,6 +441,7 @@ Program saved=@RESULT@
 #---
 #---
 ;CASSIGNJ
+Assignements:@ASSIGNEMENTS@
 ->Errors:
 @ERROR@
 #---

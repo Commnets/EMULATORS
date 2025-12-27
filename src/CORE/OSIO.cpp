@@ -15,6 +15,22 @@ MCHEmul::InputOSSystem::InputOSSystem (int id, const MCHEmul::Attributes& attrs)
 }
 
 // ---
+std::string MCHEmul::InputOSSystem::currentAssignementJoysticksAsString () const
+{ 
+	bool f = true;
+	std::string result;
+	for (const auto& i : _conversionJoystickMap) 
+	{
+		result += (f ? "" : ",") + 
+			std::to_string (i.first) + "->" + std::to_string (i.second);
+
+		f = false;
+	}
+
+	return (result); 
+}
+
+// ---
 bool MCHEmul::InputOSSystem::connectPeripheral (MCHEmul::IOPeripheral* p)
 {
 	if (dynamic_cast <MCHEmul::InputOSSystemPeripheral*> (p) == nullptr)

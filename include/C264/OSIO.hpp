@@ -72,10 +72,10 @@ namespace C264
 		inline const Keystrokes& keystrokesFor (SDL_Scancode sc) const;
 		size_t bitForJoystickAxis (int jId, int aId, int aV) const
 							{ return ((aId == 0) // x axis
-								? ((aV > 0) ? 0 : 1) /** 0 = right, 1 = left */
-								: ((aV > 0) ? 2 : 3)); /** 2 = down, 3 = up */ }
+								? ((aV > 0) ? 3 : 2) /** 3 = right, 2 = left */
+								: ((aV > 0) ? 1 : 0)); /** 1 = down, 0 = up */ }
 		size_t bitForJoystickButton (int jId, int bId) const
-							{ return (4); /** Always the bit 4. */ }
+							{ return (jId == 0 ? 6 : 7); /** The bit 6 in joystick 0 and 7 in the joystick 1. */ }
 
 		private:
 		/** 

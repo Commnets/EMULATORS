@@ -335,6 +335,8 @@ namespace COMMODORE
 		/** The keyboard latch, 
 			and the info at the entrace of the keyboard pins. */
 		MCHEmul::UByte _keyboardLatch;
+		/** This byte is what it is in the keyboard pins before it is latched into the previous one.
+			It has to be set by anyone else out of this register. */
 		MCHEmul::UByte _keyboardPins;
 
 		// Implementation

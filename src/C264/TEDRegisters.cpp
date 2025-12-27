@@ -33,7 +33,21 @@ void C264::TEDRegisters::setValue (size_t p, const MCHEmul::UByte& v)
 		// The TED keyboard port is linked to the joystick situation...
 		case 0x08:
 			{
-				_register8 = v;
+				// This code is similar to the one in COMMODORE::TEDRegisters,
+				// but adapted to C264 behaviour...
+				// ...because the joysticks are connected directly to the TED keyboard port too!
+				_keyboardLatch = 
+					_keyboardPins & 
+						((v == 0xfb) // Just in case just only one type of joystick is selected...
+							? ~_joystickStatus [0]
+							: ((v == 0xfd) 
+								? ~_joystickStatus [1] 
+								: ~_joystickStatus [0] & ~_joystickStatus [1]));
+
+				// It is said in some forums (https://plus4world.powweb.com/forum/42748#42810)
+				// that if the TED register 8 is broken, the system read the value of the keyboard port
+				// with no need to latch it before...
+				// However this code doesn't reflect this behaviour, because it is not the standard one!
 			}
 
 			break;
@@ -46,48 +60,12 @@ void C264::TEDRegisters::setValue (size_t p, const MCHEmul::UByte& v)
 			break;
 	}
 }     
-
-// ---
-const MCHEmul::UByte& C264::TEDRegisters::readValue (size_t p) const
-{
-	MCHEmul::UByte result = MCHEmul::UByte::_0;
-
-	size_t pp = p % 0x20;
-
-	switch (pp)
-	{
-		// This register read finally the status of the keyboard entry, 
-		// but the situation of the joystick mist also be taken into account...
-		case 0x08:
-			{
-				result =
-					(_register8 == 0xfb) // The selector has pointed the joystick 1
-						? _keyboardEntry & ~_joystickStatus [0]
-						: ((_register8 == 0xfd) // The seelctor just pointed the joystick 2
-							? _keyboardEntry & ~_joystickStatus [1]
-							: _keyboardEntry); // No joystick pointed...
-			}
-
-			break;
-
-		default:
-			{
-				result = COMMODORE::TEDRegisters::readValue (pp);
-			}
-
-			break;
-	}
-
-	return (_lastValueRead = result);
-}
 	
 // ---
 void C264::TEDRegisters::initializeInternalValues ()
 {
 	COMMODORE::TEDRegisters::initializeInternalValues ();
 
-	// Pull up by default...
-	_keyboardEntry = MCHEmul::UByte::_FF;
 	// Nothing pressed by default...
 	_joystickStatus [0] = _joystickStatus [1] = MCHEmul::UByte::_0;
 }

@@ -672,6 +672,8 @@ void COMMODORE::TEDRegisters::initializeInternalValues ()
 		_T3 == nullptr)
 		return; // Not time still to initialize anything...
 
+	_keyboardPins = MCHEmul::UByte::_FF; // All up...
+
 	setValue (0x00, MCHEmul::UByte::_0);
 	setValue (0x01, MCHEmul::UByte::_0);
 	setValue (0x02, MCHEmul::UByte::_0);
@@ -680,7 +682,7 @@ void COMMODORE::TEDRegisters::initializeInternalValues ()
 	setValue (0x05, MCHEmul::UByte::_0);
 	setValue (0x06, 0x1b);					// scroll y = 3, 25 rows, no blank screem normal graphic mode
 	setValue (0x07, 0x88);					// scroll x = 0, 40 columns, no freeze, PAL, no reverse
-	setValue (0x08, MCHEmul::UByte::_0);
+	setValue (0x08, MCHEmul::UByte::_FF);	// It really doesn't matter but _keybiardPins are all up...
 	setValue (0x09, MCHEmul::UByte::_FF);	// Clear up all interrupts...
 	setValue (0x0a, MCHEmul::UByte::_0);	// No interrups enabled.
 	setValue (0x0b, MCHEmul::UByte::_0);	// Raster IRQ, when any, at the beginning...
