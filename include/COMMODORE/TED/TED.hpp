@@ -247,9 +247,6 @@ namespace COMMODORE
 		/** Draws a multicolor bitmap. \n
 			The mode can be used as an invalid mode. */
 		DrawResult drawMultiColorBitMap (int cb, bool inv = false);
-		/** To calculate whether a pixel is or not on in the hi - res mode. \n
-			The method takes into account whether the flash mode is or not active. */
-		inline bool calcPixelHiResMode (size_t iBy, size_t iBt) const;
 
 		// The last part...
 		/** To move the graphics drawn to the screen. \n
@@ -470,20 +467,6 @@ namespace COMMODORE
 		}
 		
 		memoryRef () -> setCPUView ();
-	}
-
-	// ---
-	inline bool COMMODORE::TED::calcPixelHiResMode (size_t iBy, size_t iBt) const
-	{
-		bool result = _tedGraphicInfo._graphicData [iBy].bit (iBt);
-		// If the reverse video is active, the pixels is inverted...
-		if (_tedGraphicInfo._screenCodeData [iBy].bit (7) &&
-			_TEDRegisters -> reverseVideoActive ()) result = !result;
-		// The bit of the byte read defines whether the color blinks or not...
-		if (_tedGraphicInfo._colorData [iBy].bit (7) && 
-			_TEDRegisters -> flashCounterOn ()) result = !result;
-
-		return (result);
 	}
 
 	/** The version para PAL systems. */

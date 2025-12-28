@@ -945,8 +945,8 @@ void COMMODORE::VICII::drawVisibleZone (MCHEmul::CPU* cpu)
 				? 0 : _VICIIRegisters -> backgroundColor () + 1; /** to be visible. */
 			screenMemory () -> setHorizontalLine ((size_t) cav, (size_t) lrt,
 				(cav + 8) > _raster.visibleColumns () ? (_raster.visibleColumns () - cav) : 8, cl);
-			if (cav >= 8 && cav < 40 && lrt > 5)
-				screenMemory () -> setString ((size_t) 0, (size_t) (lrt - 5), 
+			if (cav >= 8 && cav < 40 && lrt > 6)
+				screenMemory () -> setString ((size_t) 0, (size_t) (lrt - 6), 
 					std::to_string ((unsigned int) _VICIIRegisters -> IRQRasterLineAt ()) + " " +
 					std::to_string ((unsigned int) lrt), cl);
 		}

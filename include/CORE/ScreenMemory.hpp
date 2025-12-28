@@ -65,7 +65,7 @@ namespace MCHEmul
 							{ for (unsigned int i = 0; i < 8; i++) if (c.bit (7 - i)) setPixel (x + i, y, color); }
 		inline void setChar (size_t x, size_t y, char c, unsigned int color);
 		void setString (size_t x, size_t y, const std::string& s, unsigned int color)
-							{ for (size_t i = 0; i < s.size (); i++) setChar (x + (i * 5), y, s [i], color); }
+							{ for (size_t i = 0; i < s.size (); i++) setChar (x + (i * 6), y, s [i], color); }
 
 		inline std::vector <unsigned int> getValues () const;
 
@@ -96,7 +96,7 @@ namespace MCHEmul
 				? (c - '0' + 1) // 0=0, 1=1, ..., 9=9
 				: 0 /** Space for any other char. */));
 
-		for (size_t i = 0; i < 4; i++)
+		for (size_t i = 0; i < 5; i++)
 			setByte (x, y + i, _CHARS [p][i], color);
 	}
 

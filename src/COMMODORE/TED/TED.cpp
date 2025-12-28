@@ -5,10 +5,10 @@
 // ---
 const MCHEmul::RasterData COMMODORE::TED_PAL::_VRASTERDATA (260, 274, 3, 202, 245, 259, 259, 312, 4, 4);
 const MCHEmul::RasterData COMMODORE::TED_PAL::_HRASTERDATA 
-	(376, 384, 432, 295, 343, 375, 375, 456 /** For everyting to run, it has to be divisible by 8. */, 7, 9);
+	(376, 384, 432, 295, 343, 375, 375, 456 /** For everyting to run, it has to be divisible by 8. */, 8, 8);
 const MCHEmul::RasterData COMMODORE::TED_NTSC::_VRASTERDATA (235, 249, 3, 202, 220, 234, 234, 262, 4, 4);
 const MCHEmul::RasterData COMMODORE::TED_NTSC::_HRASTERDATA 
-	(376, 384, 432, 295, 343, 375, 375, 456 /** For everyting to run, it has to be divisible by 8. */, 7, 9);
+	(376, 384, 432, 295, 343, 375, 375, 456 /** For everyting to run, it has to be divisible by 8. */, 8, 8);
 // This two positions are fized...
 const MCHEmul::Address COMMODORE::TED::_MEMORYPOSIDLE1 = MCHEmul::Address ({ 0xff, 0x39 }, false);
 const MCHEmul::Address COMMODORE::TED::_MEMORYPOSIDLE2 = MCHEmul::Address ({ 0xff, 0x3f }, false);
@@ -502,6 +502,56 @@ MCHEmul::ScreenMemory* COMMODORE::TED::createScreenMemory ()
 			{ 0x00,0x00,0x00 },{ 0x00,0x00,0x00 },{ 0x00,0x00,0x00 },{ 0x00,0x00,0x00 },
 			{ 0x00,0x00,0x00 },{ 0x00,0x00,0x00 },{ 0x00,0x00,0x00 },{ 0x00,0x00,0x00 },
 			// White
+			{ 0x33,0x33,0x33 },{ 0x42,0x42,0x42 },{ 0x4C,0x4C,0x4C },{ 0x5E,0x5E,0x5E },
+			{ 0x84,0x84,0x84 },{ 0xAA,0xAA,0xAA },{ 0xC3,0xC3,0xC3 },{ 0xFF,0xFF,0xFF },
+			// Red
+			{ 0x6C,0x1B,0x1C },{ 0x87,0x34,0x34 },{ 0x9D,0x49,0x49 },{ 0xB0,0x5D,0x5E },
+			{ 0xDC,0x89,0x8A },{ 0xF5,0xAA,0xAA },{ 0xFF,0xC4,0xC4 },{ 0xFF,0xFF,0xFF },
+			// Cyan
+			{ 0x00,0x4B,0x4A },{ 0x14,0x66,0x65 },{ 0x26,0x7A,0x79 },{ 0x3A,0x8E,0x8D },
+			{ 0x66,0xBA,0xB9 },{ 0x80,0xD4,0xD3 },{ 0x9A,0xEA,0xE9 },{ 0xFF,0xFF,0xFF },
+			// Purple
+			{ 0x61,0x0F,0x71 },{ 0x7E,0x2B,0x87 },{ 0x94,0x40,0x9D },{ 0xA8,0x56,0xB0 },
+			{ 0xD2,0x80,0xD9 },{ 0xEC,0x9A,0xF3 },{ 0xFF,0xB4,0xFF },{ 0xFF,0xFF,0xFF },
+			// Green
+			{ 0x00,0x57,0x01 },{ 0x12,0x72,0x15 },{ 0x26,0x87,0x2B },{ 0x3B,0x9C,0x41 },
+			{ 0x66,0xC6,0x6B },{ 0x80,0xE1,0x85 },{ 0x9A,0xF8,0xA0 },{ 0xFF,0xFF,0xFF },
+			// Blue
+			{ 0x26,0x26,0x98 },{ 0x3F,0x41,0xB0 },{ 0x54,0x56,0xC6 },{ 0x69,0x6B,0xDB },
+			{ 0x92,0x95,0xFF },{ 0xAB,0xAF,0xFF },{ 0xC6,0xC9,0xFF },{ 0xFF,0xFF,0xFF },
+			// Yellow
+			{ 0x40,0x40,0x00 },{ 0x5A,0x5A,0x00 },{ 0x70,0x70,0x00 },{ 0x85,0x85,0x00 },
+			{ 0xAE,0xAE,0x25 },{ 0xC8,0xC8,0x3F },{ 0xE0,0xE0,0x5A },{ 0xFF,0xFF,0xFF },
+			// Orange
+			{ 0x60,0x29,0x00 },{ 0x78,0x40,0x00 },{ 0x8B,0x55,0x1A },{ 0xA0,0x6A,0x30 },
+			{ 0xCA,0x92,0x58 },{ 0xE0,0xAB,0x71 },{ 0xF7,0xC5,0x8B },{ 0xFF,0xFF,0xFF },
+			// Brown
+			{ 0x52,0x34,0x00 },{ 0x68,0x4A,0x00 },{ 0x7A,0x5E,0x16 },{ 0x8F,0x74,0x2B },
+			{ 0xBA,0x9D,0x53 },{ 0xD0,0xB6,0x6C },{ 0xE6,0xD0,0x87 },{ 0xFF,0xFF,0xFF },
+			// Yellow - Green
+			{ 0x24,0x4E,0x00 },{ 0x3B,0x68,0x00 },{ 0x52,0x7B,0x14 },{ 0x67,0x91,0x28 },
+			{ 0x90,0xBC,0x51 },{ 0xAA,0xD5,0x6A },{ 0xC3,0xEC,0x84 },{ 0xFF,0xFF,0xFF },
+			// Pink
+			{ 0x6D,0x14,0x38 },{ 0x87,0x2F,0x50 },{ 0x9D,0x44,0x65 },{ 0xB0,0x5A,0x79 },
+			{ 0xDC,0x85,0xA2 },{ 0xF5,0x9E,0xBA },{ 0xFF,0xB8,0xD0 },{ 0xFF,0xFF,0xFF },
+			// Blue - Green
+			{ 0x00,0x51,0x31 },{ 0x16,0x6B,0x47 },{ 0x2B,0x80,0x5C },{ 0x41,0x95,0x71 },
+			{ 0x6B,0xBF,0x9A },{ 0x85,0xD9,0xB4 },{ 0xA0,0xF0,0xCF },{ 0xFF,0xFF,0xFF },
+			// Light Blue
+			{ 0x10,0x35,0x86 },{ 0x2A,0x4F,0x9D },{ 0x40,0x64,0xB3 },{ 0x56,0x78,0xC8 },
+			{ 0x7F,0xA2,0xF2 },{ 0x99,0xBC,0xFF },{ 0xB4,0xD2,0xFF },{ 0xFF,0xFF,0xFF },
+			// Dark Blue
+			{ 0x33,0x1F,0x9B },{ 0x4B,0x3A,0xB0 },{ 0x60,0x4F,0xC6 },{ 0x76,0x64,0xDB },
+			{ 0x9D,0x8C,0xFF },{ 0xB6,0xA6,0xFF },{ 0xD0,0xC1,0xFF },{ 0xFF,0xFF,0xFF },
+			// Light Green
+			{ 0x13,0x54,0x00 },{ 0x22,0x63,0x00 },{ 0x2D,0x6E,0x00 },{ 0x3E,0x7F,0x07 },
+			{ 0x64,0xA5,0x2D },{ 0x8A,0xCB,0x53 },{ 0xA4,0xE5,0x6D },{ 0xDF,0xFF,0xA8 }
+/*
+	Original ICF Colors.
+			// Black
+			{ 0x00,0x00,0x00 },{ 0x00,0x00,0x00 },{ 0x00,0x00,0x00 },{ 0x00,0x00,0x00 },
+			{ 0x00,0x00,0x00 },{ 0x00,0x00,0x00 },{ 0x00,0x00,0x00 },{ 0x00,0x00,0x00 },
+			// White
 			{ 0x20,0x20,0x20 },{ 0x40,0x40,0x40 },{ 0x60,0x60,0x60 },{ 0x80,0x80,0x80 },
 			{ 0x9f,0x9f,0x9f },{ 0xbf,0xbf,0xbf },{ 0xdf,0xdf,0xdf },{ 0xff,0xff,0xff },
 			// Red
@@ -546,6 +596,7 @@ MCHEmul::ScreenMemory* COMMODORE::TED::createScreenMemory ()
 			// Light Green
 			{ 0x00,0x42,0x02 },{ 0x08,0x62,0x22 },{ 0x27,0x82,0x42 },{ 0x47,0xa2,0x62 },
 			{ 0x67,0xc2,0x82 },{ 0x87,0xe2,0xa2 },{ 0xa7,0xff,0xc2 },{ 0xc7,0xff,0xe2 }
+*/
 		};
 
 	// From a structure based on positions, to a structure based on luminance...
@@ -774,8 +825,8 @@ void COMMODORE::TED::drawVisibleZone (MCHEmul::CPU* cpu)
 		{
 			screenMemory () -> setHorizontalLine ((size_t) cav, (size_t) lrt,
 				(cav + 8) > _raster.visibleColumns () ? (_raster.visibleColumns () - cav) : 8, 130);
-			if (cav >= 8 && cav < 40 && lrt > 5)
-				screenMemory () -> setString ((size_t) 0, (size_t) (lrt - 5), 
+			if (cav >= 8 && cav < 40 && lrt > 6)
+				screenMemory () -> setString ((size_t) 0, (size_t) (lrt - 6), 
 					std::to_string ((unsigned int) _TEDRegisters -> IRQRasterLineAt ()) + " " +
 					std::to_string ((unsigned int) lrt), 131);
 		}
@@ -842,7 +893,7 @@ COMMODORE::TED::DrawResult COMMODORE::TED::drawGraphics (const COMMODORE::TED::D
 				// Calculates whether the position of the cursor is or not visible...
 				// ...as this is the only mode where the cursor can be drawn...
 				unsigned short cp = _TEDRegisters -> cursorPosition (); // This is number between 0 and 1000...
-				int cpy = ((((int) cp / 0x28)) << 3) + (int) _raster.vData ().firstScreenPosition () 
+				int cpy = ((((int) cp / 0x28)) << 3) + (int) _raster.vData ().firstDisplayPosition () 
 							+ ((int) _TEDRegisters -> verticalScrollPosition () - 3);
 				int cpx = (((cp % 0x28)) << 3) - dC._SC; // Not needed to add the border, but it can be negative because the scroll...
 				bool dCA = cpx >= cb && cpx <= (cb + 7); // Is the first part of the cursor visible?
@@ -933,12 +984,21 @@ COMMODORE::TED::DrawResult COMMODORE::TED::drawMonoColorChar (int cb, bool c, in
 		size_t iBy = ((size_t) pp) >> 3; // To determine the byte...
 		size_t iBt = 7 - (((size_t) pp) % 8); // From MSB to LSB...
 
-		// Pixel must be on or off?
-		bool dP = calcPixelHiResMode (iBy, iBt);
+		// The status of the pixels can vary a lot!
+		// First: Pixel must be on or off?
+		bool dP = _tedGraphicInfo._graphicData [iBy].bit (iBt);
+		// If the reverse video is active, the pixels is inverted...
+		if (_tedGraphicInfo._screenCodeData [iBy].bit (7) &&
+			_TEDRegisters -> reverseVideoActive ()) dP = !dP;
+		// Second: Blinks or not?: The bit of the byte read defines whether the color blinks or not...
+		if (_tedGraphicInfo._colorData [iBy].bit (7) && 
+			_TEDRegisters -> flashCounterOn ()) dP = !dP;
+		// Thirs: Is the cursor active on it?:
 		// ...if the cursor is over the pixels to draw and the cursor hardware is on, changes the status of the pixel...
 		// Hardware status only happen in the MonoColorChar mode...
 		if (c && _tedGraphicInfo.cursorHardwareStatus () && 
 			i >= dCI && i < (dCI + dCN)) dP = !dP;
+
 		// ...and finally draws it...
 		// In the case of dP == false, it is redundant at it is already background...
 		result._foregroundColorData [i] = dP 
@@ -968,7 +1028,7 @@ COMMODORE::TED::DrawResult COMMODORE::TED::drawMultiColorChar (int cb, bool inv)
 		// After this pp can be -1...
 
 		// Calculate the byte where the pixel info is...
-		size_t iBy = ((size_t) pp) >> 3; 
+		size_t iBy = (pp >= 0) ? (((size_t) pp) >> 3) : 0; 
 		// If the bit 3 of the attribute byte is on, 
 		// the character will be drawn in real multicolor mode...
 		if (_tedGraphicInfo._colorData [iBy].bit (3))
@@ -989,9 +1049,8 @@ COMMODORE::TED::DrawResult COMMODORE::TED::drawMultiColorChar (int cb, bool inv)
 			// the video inverse is then calculated...
 			if (_tedGraphicInfo._screenCodeData [iBy].bit (7) &&
 				_TEDRegisters -> reverseVideoActive ()) cs = 3 - cs;
-			// The blinking is defined in the bit 7 of the color attribute...
-			if (_tedGraphicInfo._colorData [iBy].bit (7) &&
-				_TEDRegisters -> flashCounterOn ()) cs = 3 - cs;
+			// In this no blinking possibility here although the bit 7 of the attribute byte is set...
+			// And there is no cursos possiblities either in this mode...
 
 			// The color of the pixels will depend on the value of cs....
 			// In the case of cs == 0x00 it will be redudant as it is already background, but just in case...
@@ -1036,9 +1095,15 @@ COMMODORE::TED::DrawResult COMMODORE::TED::drawMultiColorChar (int cb, bool inv)
 
 			// Calculate the bit where the pixel info is...
 			size_t iBt = 7 - (((size_t) pp) % 8); 
-			// Calc the status of the pixel in hi - res mode...
+
+			// The status of the pixel...
 			// Notice that here the is no hardware cursor possible!
-			bool dP = calcPixelHiResMode (iBy, iBt);
+			// and also no blinking is possibilities...
+			bool dP = _tedGraphicInfo._graphicData [iBy].bit (iBt);
+			// But, if the reverse video is active, the pixels are inverted...
+			if (_tedGraphicInfo._screenCodeData [iBy].bit (7) &&
+				_TEDRegisters -> reverseVideoActive ()) dP = !dP;
+
 			// ...and finally draws it...
 			// In the case of dP == false, it is redundant at it is already background...
 			result._foregroundColorData [i] = dP 
@@ -1070,6 +1135,8 @@ COMMODORE::TED::DrawResult COMMODORE::TED::drawMultiColorExtendedChar (int cb)
 		size_t iBy = ((size_t) pp) >> 3 /** To determine the byte. */;
 		size_t iBt = 7 - (((size_t) pp) % 8); /** From MSB to LSB. */
 
+		// Status of the pixel...
+		// There is no neither blinking nor hardware cursor possibility in this mode either...
 		// Pixel must be on or off?
 		// In this mode there is no reverse mode or blinking...
 		bool dP = _tedGraphicInfo._graphicData [iBy].bit (iBt);
