@@ -62,6 +62,7 @@ MCHEmul::InfoStructure COMMODORE::TEDRegisters::getInfoStructure () const
 	result.add ("BkColor3",			std::move (_backgroundColor [2].getInfoStructure ()));
 	result.add ("BkColor4",			std::move (_backgroundColor [3].getInfoStructure ()));
 	result.add ("BorderColor",		std::move (_borderColor.getInfoStructure ()));
+	result.add ("SINGLECLK",		_singleClockModeForced);
 	result.add ("IRQ",				_rasterIRQActive);
 	result.add ("IRQLINE",			_IRQRasterLineAt);
 	result.add ("SCREENADDRESS",	screenMemory ());
@@ -282,7 +283,7 @@ void COMMODORE::TEDRegisters::setValue (size_t p, const MCHEmul::UByte& v)
 		case 0x13:
 			{
 				_ROMMemoryConfigurationActive = v.bit (0);
-				_singleClockModeActive = v.bit (1);
+				_singleClockModeForced = v.bit (1);
 				_charDataMemory = MCHEmul::Address (2, 
 					(unsigned int) ((v.value () & 0xfc /** bits 2 - 7. */) << 8 
 						/** 2 + 8 to become the bits 10 - 15 of the address. */));
@@ -584,7 +585,7 @@ const MCHEmul::UByte& COMMODORE::TEDRegisters::readValue (size_t p) const
 			{
 				result = ((unsigned char) ((_charDataMemory.value () & 0xff00) >> 8 /** The become the bits from 7 to 2. */)) 
 					| ~0b11111100; // Until the next instruction the rest of the bits to 1...
-				result.setBit (1, _singleClockModeActive);
+				result.setBit (1, _singleClockModeForced);
 				result.setBit (0, _ROMMemoryConfigurationActive);
 			}
 

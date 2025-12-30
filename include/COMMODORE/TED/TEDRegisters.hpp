@@ -111,8 +111,8 @@ namespace COMMODORE
 							{ return (0x20); }
 
 		// Clock mode
-		bool singleClockModeActive () const
-							{ return (_singleClockModeActive); }
+		bool singleClockModeForced () const
+							{ return (_singleClockModeForced); }
 
 		// Backgrund & Boder colors
 		const Color& backgroundColor (size_t p = 0) const
@@ -247,11 +247,12 @@ namespace COMMODORE
 		  * 25R					= Attribute: Whether there is 25 rows or not. \n
 		  * SCROLLX				= Attribute; Value of the horizontal scroll. \n
 		  * SCROLLY				= Attribute; Value of the vertical scroll. \n
-		  * BKCOLOR1			= InfoStructure; Background 1 color value. \n
-		  * BKCOLOR2			= InfoStructure; Background 2 color value. \n
-		  * BKCOLOR3			= InfoStructure; Background 3 color value. \n
-		  * BKCOLOR4			= InfoStructure; Background 4 color value. \n
-		  * BORDER				= InfoStructure; Border color value. \n
+		  * BkColor1			= InfoStructure; Background 1 color value. \n
+		  * BkColor2			= InfoStructure; Background 2 color value. \n
+		  * BkColor3			= InfoStructure; Background 3 color value. \n
+		  * BkColor4			= InfoStructure; Background 4 color value. \n
+		  * BorderColor			= InfoStructure; Border color value. \n
+		  * SINGLECLK			= Attribute; Whether the single clock mode is or not forced. \n
 		  * IRQ					= Attribute; Whether the IRQ is or not requested. \n
 		  * IRQLINE				= Attribute; The number of scan line where the IRQ should be requested if on. \n
 		  * SCREENADDRESS		= Attribute; The address of the video matrix. \n
@@ -259,7 +260,7 @@ namespace COMMODORE
 		  * CHARSINROM			= Attribute; Whether the characters are in ROM or in RAM. \n
 		  * ATTRIBUTEADDRESS	= Attribute; The address of the attribute definition. \n
 		  * BITMAPADDRESS		= Attribute; The address of the bit maps. \n
-		  * GRAPHICALINFO		= InfoStructure; Info about how the graphics are being drawn.
+		  * GraphicalInfo		= InfoStructure; Info about how the graphics are being drawn.
 		  */
 		virtual MCHEmul::InfoStructure getInfoStructure () const override;
 
@@ -287,8 +288,8 @@ namespace COMMODORE
 		TEDTimer *_T1, *_T2, *_T3;
 
 		// Info Registers
-		/** Related with clock cycle. */
-		bool _singleClockModeActive;
+		/** When the single clock mode is always forced for the CPU. */
+		bool _singleClockModeForced;
 		/** Screen related variables. */
 		std::vector <Color> _backgroundColor;
 		Color _borderColor;

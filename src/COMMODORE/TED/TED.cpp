@@ -4,11 +4,26 @@
 
 // ---
 const MCHEmul::RasterData COMMODORE::TED_PAL::_VRASTERDATA (260, 274, 3, 202, 245, 259, 259, 312, 4, 4);
+/** From the book TED (https://www.pagetable.com/docs/ted/TED%207360R0%20Preliminary%20Data%20Sheet.pdf) 
+	it can me understood:
+	There is an internal counter that goes from 0 to 455 (456 positions = dots).
+	The HSYNC happens at the value 358 of this counter,
+	The HANDSHAKING process with the processor happens between the values 400 and 432 (both included).
+	The CHARACTER DATA is fetched and drawn between the values 432 and 304 (both included),
+	what means that the counter reaches the limit and starts again at 0 at some point in the middle of the drawing,
+	and what is 8 characters more that the ones drawn in the visible area (40 characters visible, 48 characters fetched).
+	The REFRESH of the DMA memory happens between the values 304 and 344 (both included). \n
+	The documentation also says that the single clock mode happens mandatory always for these actions and when 
+	the processor is between the raster lines 0 and 204 (remeber that the first visible line happens at line 3
+	but the first bad line is at line 0 instead).
+	IN the rest of the lines (depending on PAL) the CPU can work at double speed except between the values 304 and 344
+	where the refresh has to happen too always (is mandatory). 
+	The HRASTERDATA is the same for PAL and for NTSC. */
 const MCHEmul::RasterData COMMODORE::TED_PAL::_HRASTERDATA 
-	(376, 384, 432, 295, 343, 375, 375, 456 /** For everyting to run, it has to be divisible by 8. */, 8, 8);
+	(360, 400, 432, 295, 327, 359, 359, 456 /** For everyting to run, it has to be divisible by 8. */, 8, 8);
 const MCHEmul::RasterData COMMODORE::TED_NTSC::_VRASTERDATA (235, 249, 3, 202, 220, 234, 234, 262, 4, 4);
 const MCHEmul::RasterData COMMODORE::TED_NTSC::_HRASTERDATA 
-	(376, 384, 432, 295, 343, 375, 375, 456 /** For everyting to run, it has to be divisible by 8. */, 8, 8);
+	(360, 400, 432, 295, 327, 359, 359, 456 /** For everyting to run, it has to be divisible by 8. */, 8, 8);
 // This two positions are fized...
 const MCHEmul::Address COMMODORE::TED::_MEMORYPOSIDLE1 = MCHEmul::Address ({ 0xff, 0x39 }, false);
 const MCHEmul::Address COMMODORE::TED::_MEMORYPOSIDLE2 = MCHEmul::Address ({ 0xff, 0x3f }, false);
@@ -105,12 +120,13 @@ COMMODORE::TED::TED (int intId, unsigned short clkcpum, unsigned short sfq,
 	  _drawRasterInterruptPositions (false),
 	  _drawOtherEvents (false),
 	  _timesFrameDrawn (0),
-	  _lastCPUCycles (0),
+	  _lastCPUCycles (0), _pendingCyclesFromLastExecution (0),
 	  _format (nullptr),
 	  _cycleInRasterLine (1),
 	  _videoActive (true),
+	  _inSingleClockMode (false),
 	  _lastVBlankEntered (false),
-	  _lastBadLineScrollY (-1), _newBadLineCondition (false), _badLineStopCyclesAdded (false),
+	  _lastBadLineScrollY (-1), _newBadLineCondition (false), 
 	  _tedGraphicInfo (),
 	  _eventStatus { 0 }
 {
@@ -162,17 +178,18 @@ bool COMMODORE::TED::initialize ()
 
 	_timesFrameDrawn = 0;
 
-	_lastCPUCycles = 0;
+	_lastCPUCycles = _pendingCyclesFromLastExecution = 0;
 	
 	_cycleInRasterLine = 1;
 
 	_videoActive = true;
 
+	_inSingleClockMode = false;
+
 	_lastVBlankEntered = false;
 
 	_lastBadLineScrollY = -1;
 	_newBadLineCondition = false;
-	_badLineStopCyclesAdded = false;
 
 	_tedGraphicInfo = { };
 	_eventStatus = { 0 };
@@ -216,9 +233,13 @@ bool COMMODORE::TED::simulate (MCHEmul::CPU* cpu)
 	_raster.reduceDisplayZone
 		(!_TEDRegisters -> textDisplay25RowsActive (), !_TEDRegisters -> textDisplay40ColumnsActive ());
 
-	// The simulation has to be repeated as many time 
-	// as cycles have been spent since the last invocation...
-	for (unsigned int i = (cpu -> clockCycles  () - _lastCPUCycles); i > 0; i--)
+	// Out of the zone where graphics are read, the speed of the CPU is double, so 4 dots per CPU cycle...
+	// ...but in the screen zone, the speed of the CPU is slower, so more dots per TED cycle are drawn...
+	unsigned int i = (_pendingCyclesFromLastExecution + // Always the pending cycles from last time...
+		(cpu -> clockCycles () - _lastCPUCycles)) >> (!_inSingleClockMode ? 1 : 0);
+	unsigned int pCN = !_inSingleClockMode 
+		? ((_pendingCyclesFromLastExecution + cpu -> clockCycles () - _lastCPUCycles) % 2) : 0;
+	for (i; i > 0; i--)
 	{
 		_IFDEBUG debugTEDCycle (cpu, i);
 
@@ -234,7 +255,6 @@ bool COMMODORE::TED::simulate (MCHEmul::CPU* cpu)
 			_IFDEBUG debugBadLine ();
 
 			_newBadLineCondition = true;		// latched...
-			_badLineStopCyclesAdded = false;	// ...the cycles have to be added...
 
 			_tedGraphicInfo._idleState = false; // No longer in "idle" state but in the "screen" one!
 
@@ -243,41 +263,21 @@ bool COMMODORE::TED::simulate (MCHEmul::CPU* cpu)
 				_raster.vData ().currentVisiblePosition ();
 		}
 
-		// When TED is about to read graphics info (bad line),
-		// the CPU has to stop 3 cycles in advance (just for READ activities) for those activities,
-		// unless it was stopped previously and that stop situation were still valid...
-		// In the case of graphics that stop only happens when the situation arise in the "screen cycles" (40)
-		if (!cpu -> stopped () && 
-				(_newBadLineCondition && (_cycleInRasterLine >= 4 && _cycleInRasterLine < 44)))
-			cpu -> setStop (true, MCHEmul::InstructionDefined::_CYCLEREAD /** only read in not allowed. */, 
-				cpu -> clockCycles () - i, 3);
-
 		// Treat the right cycle...
-		// ...and as a consequence the CPU can be also stopped...
-		unsigned int cS = 0;
-		if ((cS = treatRasterCycle ()) > 0)
-			cpu -> setStop (true, MCHEmul::InstructionDefined::_CYCLEALL /** fully stopped. */, cpu -> clockCycles () - i, (int) cS);
-
+		treatRasterCycle ();
 		// Draws the graphics & border if it has to do so...
 		if (_raster.isInVisibleZone ())
 			drawVisibleZone (cpu);
-
-		// Move to the next cycle...
+		// ...and move to the next cycle...
 		_cycleInRasterLine++;
 
 		// Move 8 pixels right in the raster line and jump to other line is possible...
-		// Notice that the variable _isNewRasterLine becomes true when a new line comes...
-		// Always when there is a new line the Raster IRQ has to be checked, 
-		// and the situation is flagged into the register if true...
-		// Whether finally a IRQ is or not actually launched is something that is determined later per cycle
-		// just to take into account other issuing possibilities like two sprites collision analized later.
 		if (_raster.moveCycles (1))
 		{
 			_cycleInRasterLine = 1;
 
 			_lastBadLineScrollY = -1;
 			_newBadLineCondition = false;
-			_badLineStopCyclesAdded = false;
 
 			// The graphics counters are set back to initial values at line 0!
 			if (_raster.currentLine () == 0)
@@ -297,7 +297,7 @@ bool COMMODORE::TED::simulate (MCHEmul::CPU* cpu)
 				}
 			}
 			// In any other line number, VC start back to count from the value in VCBASE.
-			// VCBASE is actualized only then RC reaches 8. @see rasterCycle 58 treatment.
+			// VCBASE is actualized only then RC reaches 8. @see rasterCycle 57 treatment.
 			else 
 				_tedGraphicInfo._VC = _tedGraphicInfo._VCBASE;
 
@@ -341,6 +341,7 @@ bool COMMODORE::TED::simulate (MCHEmul::CPU* cpu)
 	else
 		_lastVBlankEntered = false;
 
+	_pendingCyclesFromLastExecution = pCN; // How many are pending for the next execution...
 	_lastCPUCycles = cpu -> clockCycles ();
 
 	return (true);
@@ -546,57 +547,6 @@ MCHEmul::ScreenMemory* COMMODORE::TED::createScreenMemory ()
 			// Light Green
 			{ 0x13,0x54,0x00 },{ 0x22,0x63,0x00 },{ 0x2D,0x6E,0x00 },{ 0x3E,0x7F,0x07 },
 			{ 0x64,0xA5,0x2D },{ 0x8A,0xCB,0x53 },{ 0xA4,0xE5,0x6D },{ 0xDF,0xFF,0xA8 }
-/*
-	Original ICF Colors.
-			// Black
-			{ 0x00,0x00,0x00 },{ 0x00,0x00,0x00 },{ 0x00,0x00,0x00 },{ 0x00,0x00,0x00 },
-			{ 0x00,0x00,0x00 },{ 0x00,0x00,0x00 },{ 0x00,0x00,0x00 },{ 0x00,0x00,0x00 },
-			// White
-			{ 0x20,0x20,0x20 },{ 0x40,0x40,0x40 },{ 0x60,0x60,0x60 },{ 0x80,0x80,0x80 },
-			{ 0x9f,0x9f,0x9f },{ 0xbf,0xbf,0xbf },{ 0xdf,0xdf,0xdf },{ 0xff,0xff,0xff },
-			// Red
-			{ 0x58,0x09,0x02 },{ 0x78,0x29,0x22 },{ 0x98,0x49,0x42 },{ 0xb8,0x69,0x62 },
-			{ 0xd8,0x88,0x82 },{ 0xf7,0xa8,0xa2 },{ 0xff,0xc8,0xc2 },{ 0xff,0xe8,0xe2 },
-			// Cyan
-			{ 0x00,0x37,0x3d },{ 0x08,0x57,0x5d },{ 0x27,0x77,0x7d },{ 0x47,0x96,0x9d },
-			{ 0x67,0xb6,0xbd },{ 0x87,0xd6,0xdd },{ 0xa7,0xf6,0xfd },{ 0xc7,0xff,0xff },
-			// Purple
-			{ 0x4b,0x00,0x56 },{ 0x6b,0x1f,0x76 },{ 0x8b,0x3f,0x96 },{ 0xaa,0x5f,0xb6 },
-			{ 0xca,0x7f,0xb6 },{ 0xea,0x9f,0xf6 },{ 0xff,0xbf,0xff },{ 0xff,0xdf,0xff },
-			// Green
-			{ 0x00,0x40,0x00 },{ 0x15,0x60,0x09 },{ 0x35,0x80,0x29 },{ 0x55,0xa0,0x49 },
-			{ 0x74,0xc0,0x69 },{ 0x94,0xe0,0x89 },{ 0xb4,0xff,0xa9 },{ 0xd4,0xff,0xc9 },
-			// Blue
-			{ 0x20,0x11,0x6d },{ 0x40,0x31,0x8d },{ 0x60,0x51,0xac },{ 0x80,0x71,0xcc },
-			{ 0x9f,0x90,0xec },{ 0xbf,0xb0,0xff },{ 0xdf,0xd0,0xff },{ 0xff,0xf0,0xff },
-			// Yellow
-			{ 0x20,0x2f,0x00 },{ 0x40,0x4f,0x00 },{ 0x60,0x6f,0x13 },{ 0x80,0x8e,0x33 },
-			{ 0x9f,0xae,0x53 },{ 0xbf,0xce,0x72 },{ 0xdf,0xee,0x92 },{ 0xff,0xff,0xb2 },
-			// Orange
-			{ 0x4b,0x15,0x00 },{ 0x6b,0x34,0x09 },{ 0x8b,0x54,0x29 },{ 0xaa,0x74,0x49 },
-			{ 0xca,0x94,0x69 },{ 0xea,0xb4,0x89 },{ 0xff,0xd4,0xa9 },{ 0xff,0xf4,0xc9 },
-			// Brown
-			{ 0x37,0x22,0x00 },{ 0x57,0x42,0x00 },{ 0x77,0x62,0x19 },{ 0x97,0x81,0x39 },
-			{ 0xb7,0xa1,0x58 },{ 0xd7,0xc1,0x78 },{ 0xf6,0xe1,0x98 },{ 0xff,0xff,0xb8 },
-			// Yellow - Green
-			{ 0x09,0x3a,0x00 },{ 0x28,0x59,0x00 },{ 0x48,0x79,0x19 },{ 0x68,0x99,0x39 },
-			{ 0x88,0xb9,0x58 },{ 0xa8,0xd9,0x78 },{ 0xc8,0xf9,0x98 },{ 0xe8,0xff,0xb8 },
-			// Pink
-			{ 0x5d,0x01,0x20 },{ 0x7d,0x21,0x40 },{ 0x9c,0x41,0x60 },{ 0xbc,0x61,0x80 },
-			{ 0xdc,0x80,0x9f },{ 0xfc,0xa0,0xbf },{ 0xff,0xc0,0xdf },{ 0xff,0xe0,0xff },
-			// Blue - Green
-			{ 0x00,0x3f,0x20 },{ 0x03,0x5f,0x40 },{ 0x23,0x7f,0x60 },{ 0x43,0x9e,0x80 },
-			{ 0x63,0xbe,0x9f },{ 0x82,0xde,0xbf },{ 0xa2,0xfe,0xdf },{ 0xc2,0xff,0xff },
-			// Light Blue
-			{ 0x00,0x2b,0x56 },{ 0x15,0x4b,0x76 },{ 0x35,0x6b,0x96 },{ 0x55,0x8b,0xb6 },
-			{ 0x74,0xab,0xd6 },{ 0x94,0xcb,0xf6 },{ 0xb4,0xea,0xff },{ 0xd4,0xff,0xff },
-			// Dark Blue
-			{ 0x37,0x06,0x67 },{ 0x57,0x26,0x87 },{ 0x77,0x46,0xa7 },{ 0x97,0x66,0xc6 },
-			{ 0xb7,0x86,0xe6 },{ 0xd7,0xa6,0xff },{ 0xf6,0xc5,0xff },{ 0xff,0xe5,0xff },
-			// Light Green
-			{ 0x00,0x42,0x02 },{ 0x08,0x62,0x22 },{ 0x27,0x82,0x42 },{ 0x47,0xa2,0x62 },
-			{ 0x67,0xc2,0x82 },{ 0x87,0xe2,0xa2 },{ 0xa7,0xff,0xc2 },{ 0xc7,0xff,0xe2 }
-*/
 		};
 
 	// From a structure based on positions, to a structure based on luminance...
@@ -617,16 +567,21 @@ MCHEmul::ScreenMemory* COMMODORE::TED::createScreenMemory ()
 }
 
 // ---
-unsigned int COMMODORE::TED::treatRasterCycle ()
+void COMMODORE::TED::treatRasterCycle ()
 {
 	unsigned int result = 0;
+
+	// When the TED is not in the zone where characters & graphics are fetched first and then drawn...
+	// ...the CPU might work at double speed (single clock mode disabled)...
+	// ...however, it can be forced that always the single mode speed were active!
+	_inSingleClockMode = _TEDRegisters -> singleClockModeForced ();
 
 	// Read graphics zone?
 	bool rG = false;
 	switch (_cycleInRasterLine)
 	{
-		// In raster cycle 5 (=396) the graphics information moves...
-		case 5:
+		// In raster cycle 1 the graphics information moves...
+		case 1:
 			{
 				_tedGraphicInfo._VC = _tedGraphicInfo._VCBASE;
 				_tedGraphicInfo._VLMI = 0;
@@ -637,8 +592,22 @@ unsigned int COMMODORE::TED::treatRasterCycle ()
 
 			break;
 
-		// Just read the graphics...
+		// In these cycles the TED is making a processor handshaking when...
+		// ...the lines are between 0 and 204 (includes both)...
+		// in that cases, the CPU has to be slowed down to single clock mode...
+		case 5:
+		case 6:
+		case 7:
 		case 8:
+			{
+				if (_raster.currentLine () >= 0 && 
+					_raster.currentLine () <= 204)
+					_inSingleClockMode = true;
+			}
+
+			break;
+
+		// Just read the graphics...
 		case 9:
 		case 10:
 		case 11:
@@ -678,13 +647,36 @@ unsigned int COMMODORE::TED::treatRasterCycle ()
 		case 45:
 		case 46:
 		case 47:
+		case 48:
 			{
+				// The reading of the graphical information is done in every line...
+				// ...but the character information (and attribute) reading is just done
+				// when there is a bad line condition... (see later).
 				rG = true;
+
+				// When fetching character infomation and then reading graphical info...
+				// ...the CPU is at single SPEED, again when the 
+				// current raster line is between 0 and 204 (includes both)...
+				if (_raster.currentLine () >= 0 && 
+					_raster.currentLine () <= 204)
+					_inSingleClockMode = true;
 			}
 
 			break;
 
-		// In cycle 57 again the graphical info is updated...
+		// In these cycles the TED does a DRAM refresh and so...
+		// ...the CPU is always at single clock mode...
+		case 49:
+		case 50:
+		case 51:
+		case 52:
+			{
+				_inSingleClockMode = true;
+			}
+
+			break;
+
+		// In the last cycle 57 again the graphical info is updated...
 		case 57:
 			{
 				if (_tedGraphicInfo._RC == 7)
@@ -711,14 +703,6 @@ unsigned int COMMODORE::TED::treatRasterCycle ()
 	{
 		if (_newBadLineCondition)
 		{
-			if (!_badLineStopCyclesAdded)
-			{
-				_badLineStopCyclesAdded = true;
-
-				// 40 cycles more (maximum) just for reading the chars...
-				result = 48 - _cycleInRasterLine;
-			}
-
 			readVideoMatrixAndColorRAM ();
 
 			_IFDEBUG debugReadingVideoMatrix ();
@@ -732,8 +716,6 @@ unsigned int COMMODORE::TED::treatRasterCycle ()
 			_tedGraphicInfo._VC++;	
 		_tedGraphicInfo._VLMI++;
 	}
-
-	return (result);
 }
 
 // ---
@@ -1263,10 +1245,13 @@ void COMMODORE::TED::debugTEDCycle (MCHEmul::CPU* cpu, unsigned int i)
 {
 	assert (_deepDebugFile != nullptr);
 
-	_deepDebugFile -> writeCompleteLine (className (), i , "Info Cycle", 
-		{ { "Raster",
-				std::to_string (_raster.currentColumnAtBase0 ()) + "," +
-				std::to_string (_raster.currentLineAtBase0 ()) + "," +
+	_deepDebugFile -> writeCompleteLine (className (), i, 
+			"Info Cycle (In Single Clock:" + std::string ((_inSingleClockMode ? "YES" : "NO")) + ")",
+		{ { "Raster position",
+				"Column=" + std::to_string (_raster.currentColumn ()) + 
+					"(" + std::to_string (_raster.currentColumnAtBase0 ()) + ")," +
+				"Row=" + std::to_string (_raster.currentLine ()) + 
+					"(" + std::to_string (_raster.currentLineAtBase0 ()) + ")," +
 				std::to_string (_cycleInRasterLine) },
 		  { "Graphics mode",
 				std::to_string ((int) _TEDRegisters -> graphicModeActive ()) },

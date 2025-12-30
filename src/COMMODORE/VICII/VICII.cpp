@@ -1771,10 +1771,11 @@ void COMMODORE::VICII::debugVICIICycle (MCHEmul::CPU* cpu, unsigned int i)
 
 	_deepDebugFile -> writeCompleteLine (className (), cpu -> clockCycles () - i, "Info Cycle",
 		{ { "Raster position",
-			"Column=" + std::to_string (_raster.currentColumn ()) + "(" + 
-				std::to_string (_raster.currentColumnAtBase0 ()) + ")," +
-			"Row=" + std::to_string (_raster.currentLine ()) + "(" + 
-				std::to_string (_raster.currentLineAtBase0 ()) + ")" },
+				"Column=" + std::to_string (_raster.currentColumn ()) + 
+					"(" + std::to_string (_raster.currentColumnAtBase0 ()) + ")," +
+				"Row=" + std::to_string (_raster.currentLine ()) + 
+					"(" + std::to_string (_raster.currentLineAtBase0 ()) + ")," +
+				std::to_string (_cycleInRasterLine) },
 		  { "Internal",
 			"IDLE=" + std::to_string (_vicGraphicInfo._idleState) + "," +
 			"VCBASE=" + std::to_string (_vicGraphicInfo._VCBASE) + "," +

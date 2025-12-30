@@ -117,13 +117,15 @@ namespace COMMODORE
 							{ return (_cyclesPerRasterLine); }
 
 		/** Single clock active? */
-		bool singleClockModeActive () const
-							{ return (_TEDRegisters -> singleClockModeActive ()); }
+		bool inSingleClockMode () const
+							{ return (_inSingleClockMode); }
 
 		/** To know whether the TED is or not in idle_situation.
 			This can be used to change the speed of the processor later. */
 		bool isIdleState () const
 							{ return (_tedGraphicInfo._idleState); }
+		bool isInDisplayZone () const
+							{ return (_raster.isInDisplayZone ()); }
 
 		/** To get the raster info. */
 		const MCHEmul::Raster& raster () const
@@ -138,8 +140,12 @@ namespace COMMODORE
 
 		/**
 		  *	The name of the fields are: \n
-		  * VICIIRegisters	= InfoStructure: Info about the registers.
-		  * Raster			= InfoStructure: Info about the raster.
+		  * VICIIRegisters	= InfoStructure: Info about the registers. \n
+		  * Raster			= InfoStructure: Info about the raster. \n
+		  * SoundFunction	= InfoStructure: Info about the sound function. \n
+		  * TEDTimer1		= InfoStructure: Info about the timer 1. \n
+		  * TEDTimer2		= InfoStructure: Info about the timer 2. \n
+		  * TEDTimer3		= InfoStructure: Info about the timer 3. \n
 		  */
 		virtual MCHEmul::InfoStructure getInfoStructure () const override;
 
@@ -194,11 +200,8 @@ namespace COMMODORE
 		};
 
 		// Invoked from the method "simulation"....
-		/** Different actions are taken attending the raster cycle. \n
-			Returns the number of cycles that, as a consequence of dealing with a raster line, 
-			the CPU should be stopped. \n
-			The way the raster cycles are treated will depend (somehow) on the type of VICII chip. */
-		virtual unsigned int treatRasterCycle ();
+		/** Different actions are taken attending the raster cycle. */
+		virtual void treatRasterCycle ();
 		/** Treat the visible zone.
 			Draws the graphics, detect collions, and finally draw the border. */
 		void drawVisibleZone (MCHEmul::CPU* cpu);
@@ -305,15 +308,25 @@ namespace COMMODORE
 			and a instruction is executed, the number of cycles that that instruction required, has to be taken into account
 			to define what the VICII has to do. */
 		unsigned int _lastCPUCycles;
+		/** The TED draws aprox 4 dots per CPU cycle, 
+			so as avery iteration in the simnulation draws 8 instead, the number of iterations has to be divided by 2,
+			but then there could be cycles left (if the number of cycles executed by the CPU were odd). \n
+			This variable keeps the number of cycles pending for the next execution. */
+		unsigned int _pendingCyclesFromLastExecution;
 		/** The format used to draw. It has to be the same that is used by the Screen object. */
 		SDL_PixelFormat* _format;
 		/** When a raster line is processed, it is necessary to know which cycle is being processed. 
 			The number of max cycles is get from the method (@see) "cyclesPerRasterLine". */
 		unsigned short _cycleInRasterLine;
 		/** When the raster is in the first bad line this variable is set taking into account what 
-			is kept in the VICII register about whether the video ir or not active. \n
+			is kept in the TED register about whether the video ir or not active. \n
 			In any other circunstance it kepts its value. */
 		bool _videoActive;
+		/** To identify whether the TED is not double the speed of the CPU. 
+			In the TED working is important because the number of dots that the TED draws per CPU cycle can be
+			4 (_inSingleClockMode = false) or 8 (_inSingleClockMode = true). \n
+			The single clock mode is always forced (even when possible) when bit 1 of register 0x13 (= 19) is set. */
+		bool _inSingleClockMode;
 		/** Whether the vertical raster has entered the last VBlank zone already. */
 		bool _lastVBlankEntered;
 		/** The last value of the SCROLLY variable when a bad line was detected.
@@ -324,8 +337,6 @@ namespace COMMODORE
 		/** When the situation of a new bad line araises, is latched in this variable. \n
 			This variabe is desactivated at the end of the line, and when the graphical info is finally read. */
 		mutable bool _newBadLineCondition;
-		/** This very simple variable manages only when the additional stop bad line related cycles applies. */
-		mutable bool _badLineStopCyclesAdded;
 
 		/** 
 		  * TED behaves quit similar to VICII. \n
