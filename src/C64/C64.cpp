@@ -115,7 +115,7 @@ void C64::Commodore64::processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifi
 	else
 	if (evnt.id () == MCHEmul::CPU::_CPUTOEXECUTEINSTRUCTION)
 	{
-		static_cast <COMMODORE::VICII*> (chip (COMMODORE::VICII::_ID)) -> CPUAboutToExecute
+		static_cast <COMMODORE::TED*> (graphicalChip ()) -> CPUAboutToExecute
 			(_cpu, (MCHEmul::Instruction*) (static_cast <MCHEmul::CPU::EventData*> (evnt.data ().get ()) -> _data));
 	}
 	else

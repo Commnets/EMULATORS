@@ -39,6 +39,7 @@
     <ClCompile Include="..\..\src\C264\ROMRAMSwitch.cpp" />
     <ClCompile Include="..\..\src\C264\ROMRAMSwitchRegisters.cpp" />
     <ClCompile Include="..\..\src\C264\Screen.cpp" />
+    <ClCompile Include="..\..\src\C264\C16SenseTapeRegisters.cpp" />
     <ClCompile Include="..\..\src\C264\Sound.cpp" />
     <ClCompile Include="..\..\src\C264\TED.cpp" />
     <ClCompile Include="..\..\src\C264\TEDRegisters.cpp" />
@@ -65,6 +66,7 @@
     <ClInclude Include="..\..\include\C264\ROMRAMSwitch.hpp" />
     <ClInclude Include="..\..\include\C264\ROMRAMSwitchRegisters.hpp" />
     <ClInclude Include="..\..\include\C264\Screen.hpp" />
+    <ClInclude Include="..\..\include\C264\C16SenseTapeRegisters.hpp" />
     <ClInclude Include="..\..\include\C264\Sound.hpp" />
     <ClInclude Include="..\..\include\C264\TED.hpp" />
     <ClInclude Include="..\..\include\C264\TEDRegisters.hpp" />

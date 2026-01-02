@@ -28,8 +28,10 @@ MCHEmul::InfoStructure COMMODORE::TEDRegisters::GraphicalInfo::getInfoStructure 
 // ---
 COMMODORE::TEDRegisters::TEDRegisters (MCHEmul::PhysicalStorage* ps, size_t pp, const MCHEmul::Address& a, size_t s)
 	: MCHEmul::ChipRegisters (_TEDREGS_SUBSET, ps, pp, a, s),
+	  _backgroundColor (4, { 0x00, 0x00 }),
 	  _lastValueRead (MCHEmul::PhysicalStorage::_DEFAULTVALUE),
-	  _backgroundColor (4, { 0x00, 0x00 })
+	  _numberPositionsNextInstruction (0),
+	  _raster (nullptr)
 	  // At this point the rest internal variables will have random values...
 	  // The vector are initialized just to given them a default size!
 {
@@ -628,15 +630,26 @@ const MCHEmul::UByte& COMMODORE::TEDRegisters::readValue (size_t p) const
 
 		case 0x1c:
 			{
-				result = ((unsigned char) ((_graphicalInfo._currentRasterLine & 0xff00) >> 8)) 
-					| ~0b00000001; // The bits not used are 1...
+				assert (_raster != nullptr);
+
+				bool oP = false;
+				unsigned short rL = currentRasterLine ();
+				_raster -> simulateMoveCycles (_numberPositionsNextInstruction, oP);
+				if (oP) rL++;
+				result = ((unsigned char) ((rL & 0xff00) >> 8)) | ~0b00000001; // The bits not used are 1...
 			}
 
 			break;
 
 		case 0x1d:
 			{
-				result = (unsigned char) (_graphicalInfo._currentRasterLine & 0x00ff);
+				assert (_raster != nullptr);
+
+				bool oP = false;
+				unsigned short rL = currentRasterLine ();
+				_raster -> simulateMoveCycles (_numberPositionsNextInstruction, oP);
+				if (oP) rL++;
+				result = (unsigned char) (rL & 0x00ff);
 			}
 
 			break;

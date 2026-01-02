@@ -45,7 +45,7 @@ void F6500::IO6510PortRegisters::setValue (size_t p, const MCHEmul::UByte& v)
 		case 0x01:
 			{
 				MCHEmul::UByte oPV = _portValue;
-				_outputValue = (v | _mask); // It is kept in the ouTput register...
+				_outputValue = (v | _mask); // It is kept in the output register...
 				
 				/** truth table. \n
 										in			out \n

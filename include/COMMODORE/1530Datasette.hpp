@@ -22,9 +22,10 @@ namespace COMMODORE
 	/** This unit was used in many COMMODORE models. \n
 		Mainly all of them including COMMODORE16 (which name in that case is 1531 and has differences in the connector). \n
 		The datasette moves between 300 and 311 bits per second in average, 
-		depending on the speed of the computer connected. \n
+		depending on the speed of the computer connected (PAL/NTSC). \n
 		Every bit is broken in 4 datasette cycles (DCycle) of information. \n
-		Every two datasette cycles makes a "dipole", so a bit is always make up of 2 "dipoles". \n
+		Every two datasette cycles makes a "dipole", so a bit of info (that is not a logical bit) in the datasette 
+		is always make up of 2 "dipoles". \n
 		A leader bit is made up of 4 0 type DCycles = 16 DCycles \n
 		A 0 bit is made up of 2 (1st dipole) 0 DCycles and 2 (2nd dipole) 1 DCycles. \n
 		A 1 bit is made up of 2 (1st dipole) 1 DCycles and 2 (2nd dipole) 0 DCycles. \n
@@ -39,8 +40,14 @@ namespace COMMODORE
 		public:
 		/** The implementation (@see TAPFileData class). 
 			The paremeter received is the number of cycles before the system is ready for the next read activity. \n
-			And that number of cycles are used (comparing to the current cycles in the methods redefined. */
-		class TAPFileFormatImplementation final : 
+			And that number of cycles are used (comparing to the current cycles in the methods redefined. \n
+			By default the TAP File Format is written and read as follows: 
+			-> When reading a value from the file, that value is converted into number of cycles to wait until 
+			   the next falling edge comes (that is when a "1" is sent to the computer. And always a 1). \n
+			-> When writing a value to the file, the number of cycles waited since the last write operation
+			   is converted into a byte value to be stored in the file. \n
+			So the format detect and keeps the low-to-high transitions, and the time between them. */
+		class TAPFileFormatImplementation : // It is not final because the C16 is a bit different! 
 			public MCHEmul::StandardDatasette::Implementation
 		{
 			public:
@@ -69,11 +76,11 @@ namespace COMMODORE
 								? std::tuple <bool, MCHEmul::UByte> 
 									{ true, MCHEmul::UByte ((unsigned char) (clockValue () >> 3)) }
 								: std::tuple <bool, MCHEmul::UByte> { false, MCHEmul::UByte::_0 }); }
-			/** The only thing to do is to reset the internal couner. */
+			/** The only thing to do is to reset the internal counter. */
 			virtual void whenValueWritten (unsigned int cC, const MCHEmul::UByte& v)
 							{ resetClock (); }
 
-			private:
+			protected:
 			/** The number of cycles that the datasette need to read a value. \n
 				In the TAP file data every data byte represents (with a formula) 
 				the number of cycles to wait until the next down edged of every signal that is 
@@ -85,12 +92,13 @@ namespace COMMODORE
 
 		/** The number of cycles to next read operation is received as paraneter. \n
 			Usually that number of seconds is not constant but changed as the simulation progreeses. */
-		Datasette1530 (unsigned int cR);
+		Datasette1530 (unsigned int cR, TAPFileFormatImplementation* dI);
 
 		/** To connect the type of data TAP. */
 		virtual bool connectData (MCHEmul::FileData* dt) override;
 		/** To create an empty file of type TAP. 
-			The one by default is C64 type (@see TAPFileData class. */
+			The one by default is C64 type (@see TAPFileData class). 
+			The information is created for a C64 by default (it is who this format was created for!). */
 		virtual MCHEmul::FileData* emptyData () const override
 							{ return (new TAPFileData); }
 		/** To get the data kept into the system as something to be saved. 

@@ -28,6 +28,7 @@
 #include <C264/TEDRegisters.hpp>
 #include <C264/ROMRAMSwitchRegisters.hpp>
 #include <C264/C1C2SelectorRegisters.hpp>
+#include <C264/C16SenseTapeRegisters.hpp>
 
 namespace C264
 {
@@ -381,7 +382,7 @@ namespace C264
 
 		private:
 		MCHEmul::EmptyPhysicalStorageSubset*	_IOnomapped0; // Instead of ACIA
-		MCHEmul::EmptyPhysicalStorageSubset*	_IOnomapped1; // Instead of C6529B2
+		C16SenseTapeRegisters*					_IOnomapped1; // Instead of C6529B2
 
 		/** Adding the no mapped positions instead ACIA y C6529B2. */
 		static MCHEmul::Memory::Content standardMemoryContent ();

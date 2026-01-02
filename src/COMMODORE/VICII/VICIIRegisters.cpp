@@ -3,13 +3,13 @@
 // ---
 COMMODORE::VICIIRegisters::VICIIRegisters (MCHEmul::PhysicalStorage* ps, size_t pp, const MCHEmul::Address& a, size_t s)
 	: MCHEmul::ChipRegisters (_VICREGS_SUBSET, ps, pp, a, s),
-	  _numberPositionsNextInstruction (0),
 	  _backgroundColor (4, 0x00),
 	  _spriteInfo (8, COMMODORE::VICIIRegisters::SpriteInfo ()),
 	  _spriteSharedColor (2, 0x00),
 	  _lastValueRead (MCHEmul::PhysicalStorage::_DEFAULTVALUE),
-	  _raster (nullptr), // It is initialized later...
-	  _interruptsEnabledBack (false)
+	  _interruptsEnabledBack (false),
+	  _numberPositionsNextInstruction (0),
+	  _raster (nullptr) // It is initialized later...
 	  // At this point the rest internal variables will have random values...
 	  // The vector are initialized just to given them a default size!
 {
@@ -378,6 +378,8 @@ const MCHEmul::UByte& COMMODORE::VICIIRegisters::readValue (size_t p) const
 		// Just to consider that when reading the raster MSB bit shows where the raster is now
 		case 0x11:
 			{
+				assert (_raster != nullptr);
+
 				bool oP = false;
 				unsigned short rL = currentRasterLine ();
 				_raster -> simulateMoveCycles (_numberPositionsNextInstruction, oP);
@@ -391,6 +393,8 @@ const MCHEmul::UByte& COMMODORE::VICIIRegisters::readValue (size_t p) const
 		// RASTER: When reading get the current raster postion (except the MSB that is in the previous)
 		case 0x12:
 			{
+				assert (_raster != nullptr);
+
 				// The real "read" happens in the very last cycle of the instruction
 				// The same is with any other register but this one might be the very important one (and $d011)
 				// So if is necessary to know whether the execution of the instruction will imply a 

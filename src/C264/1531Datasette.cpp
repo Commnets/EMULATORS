@@ -1,6 +1,77 @@
 #include <C264/1531Datasette.hpp>
 
 // ---
+void C264::Datasette1531::TAPFileFormatImplementation::whenValueRead 
+	(unsigned int cC, const MCHEmul::UByte& v)
+{
+	COMMODORE::Datasette1530::TAPFileFormatImplementation::whenValueRead (cC, v);
+
+	// Change the value to be read from the datasette next time...
+	_valueToFromDatasette = !_valueToFromDatasette;
+}
+
+// ---
+void C264::Datasette1531::TAPFileFormatImplementation::whenValueWritten 
+	(unsigned int cC, const MCHEmul::UByte& v)
+{ 
+	COMMODORE::Datasette1530::TAPFileFormatImplementation::whenValueWritten (cC, v);
+
+	// Change the expected value to be written next time in the datasette...
+	_valueToFromDatasette = !_valueToFromDatasette;
+}
+
+// ---
+void C264::Datasette1531::TAPFileFormatImplementation::initialize 
+	(MCHEmul::StandardDatasette::Status st)
+{ 
+	COMMODORE::Datasette1530::TAPFileFormatImplementation::initialize (st); 
+
+	// The value to play with from the beginning is always true!...
+	_valueToFromDatasette = true; 
+}
+
+// ---
+C264::Datasette1531::Datasette1531 (unsigned int cR, 
+		C264::Datasette1531::TAPFileFormatImplementation* dI)
+	: COMMODORE::Datasette1530 (cR, dI)
+{
+	// The name of the class is changed...
+	setClassName ("C2N1531");
+}
+
+// ---
+bool C264::Datasette1531::connectData (MCHEmul::FileData* dt)
+{
+	// The verification in this case is a bit stronger!
+	// The contect of the TAP format needs to be created thinking in the COMMODORE16 version!
+	if (dynamic_cast <COMMODORE::TAPFileData*> (dt) == nullptr ||
+		static_cast <COMMODORE::TAPFileData*> (dt) -> _computerVersion 
+			!= COMMODORE::TAPFileData::ComputerVersion::_C16)
+		return (false);
+
+	return (COMMODORE::Datasette1530::connectData (dt));
+}
+
+// ---
+MCHEmul::FileData* C264::Datasette1531::retrieveData () const
+{
+	COMMODORE::TAPFileData* result = 
+		static_cast <COMMODORE::TAPFileData*> (COMMODORE::Datasette1530::retrieveData ());
+	assert (result != nullptr); // It cannot happen, but just in case...
+
+	// There are some attributes different than the original ones...
+	// Signature:
+	result -> _signature = std::string ("C16-TAPE-RAW");
+	// The version of the file (in C16 systems the version used is 2)
+	result -> _version = 2;
+	// ...and also the Computer version:
+	result -> _computerVersion = COMMODORE::TAPFileData::ComputerVersion::_C16;
+
+	// ...and returns it!
+	return (result);
+}
+
+// ---
 bool C264::Datasette1531Injection::executeTrap (const MCHEmul::Trap& t, MCHEmul::CPU* cpu)
 {
 	bool result = true;

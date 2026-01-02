@@ -280,6 +280,27 @@ namespace COMMODORE
 		/** Depending on how bits ar set, a no valid mode could be set. */
 		void setGraphicModeActive ();
 
+		// Some of the instruction within the TED needs to know about the raster status...
+		// So there is instructions to link the raster (defined in TED chip) to its registers
+		// These methods, however, are very internal and just inked from TED simulation
+		void linkToRaster (MCHEmul::Raster* r)
+							{ _raster = r; }
+		unsigned short currentRasterLine () const
+							{ return (_raster -> vData ().currentPosition ()); }
+		unsigned short currentRasterPositionInLine () const
+							{ return (_raster -> hData ().currentPosition ()); }
+
+		// Very important method...
+		/** When the CPU is about to execute an instruction, TED is informed about it
+			and the TED keeps that information in its registers. \n
+			When TED is requested about raster position (vertical), this information is then used. \n
+			to simulate the position where the raster will be when the instruction finishes. \n
+			The instruction requesting this information (e.g. the TED were connected to a 6500 Family CPU)
+			might read the register info just in the last cycle of the instruction, so 
+			returning the right value is mandatory. */
+		void setNumberPositionsNextInstruction (unsigned int nP)
+							{ _numberPositionsNextInstruction = nP; }
+
 		protected:
 		// Elements related with this one...
 		/** The sound wrapper. */
@@ -342,7 +363,12 @@ namespace COMMODORE
 
 		// Implementation
 		mutable MCHEmul::UByte _lastValueRead;
-	};
+
+		/** The number of cycle that the next instruction to be executed in the CPU will take. */
+		unsigned int _numberPositionsNextInstruction;
+		/** A reference to the raster. This class is not the owner of it. */
+		MCHEmul::Raster* _raster;
+};
 
 	// ---
 	inline bool TEDRegisters::launchIRQ () const

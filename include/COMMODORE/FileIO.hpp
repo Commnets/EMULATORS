@@ -21,6 +21,15 @@ namespace COMMODORE
 	/** Struct to conect tap info.
 	  *	It has been extracted from:
 	  * https://vice-emu.sourceforge.io/vice_17.html
+	  * The information is a bit different depending on whether the 
+	  * CompuerVersion is _C64, _VIC20, _C16, _PET, _C5x0 or _C6x0, althought it is basically the same.
+	  * The file has a header:
+	  * A signature of 12 bytes: "C64-TAPE-RAW" for C64 computers or "C16-TAPE-RAW" for C16 computers, etc.
+	  * 1 byte with the TAP version: 0,1, or 2. In C64 and VIC20 it is typically 0, and in C16 it is typically 2.
+	  * 1 byte with the computer version: 0 = C64, 1 = VIC20, 2 = C16,...
+	  * 1 byte with the video version: 0 = PAL, 1 = NTSC
+	  * 1 byte more not used (set to 0).
+	  * 4 bytes with the data size (little endian).
 	  */
 	struct TAPFileData final : public MCHEmul::FileData
 	{
@@ -41,22 +50,31 @@ namespace COMMODORE
 			_OLDNTSC = 2
 		};
 
-		TAPFileData ()
-			: _signature ("C64-TAPE-RAW"), // The default one...
-			  _version (0), // The default one...
-			  _computerVersion (_C64),
-			  _videoVersion (_PAL),
+		/** Default constructor. 
+			The default values are for a Commodore 64 commputer in a PAL video system. */
+		TAPFileData (
+				const std::string& sgn = "C64-TAPE-RAW", 
+				unsigned char v = 0, ComputerVersion cV = _C64, VideoVersion vV = _PAL)
+			: _signature (sgn), // The default one...
+			  _version (v), // The default one...
+			  _computerVersion (cV),
+			  _videoVersion (vV),
 			  _dataSize (0),
 			  _bytes (),
 			  _attributes { }
 							{ }
 
-		// From a memory data block...
-		TAPFileData (const MCHEmul::ExtendedDataMemoryBlocks& dMB)
-			: _signature ("C64-TAPE-RAW"), // The default one...
-			  _version (0), // The default one...
-			  _computerVersion (_C64),
-			  _videoVersion (_PAL),
+		/** Constructor from a memory data block...
+			With the possibility to change some of the parameters!
+			The default values are for a C64 computer in a PAL video system. */
+		TAPFileData (
+				const MCHEmul::ExtendedDataMemoryBlocks& dMB, // This is mandatory...
+				const std::string& sgn = "C64-TAPE-RAW",
+				unsigned char v = 0, ComputerVersion cV = _C64, VideoVersion vV = _PAL)
+			: _signature (sgn),
+			  _version (v), // The default one...
+			  _computerVersion (cV),
+			  _videoVersion (vV),
 			  _dataSize (0),
 			  _bytes (),
 			  _attributes { }
@@ -73,14 +91,20 @@ namespace COMMODORE
 			If not possible, a nullptr is returned. \n
 			The method behaves as a factory method. */
 		void addDataBlockFromMemoryBlock (const MCHEmul::ExtendedDataMemoryBlocks& dMB);
-		/** Create a new object from a ExtendedDataMemoryBlock...if possible. */
-		static TAPFileData* createFromMemoryBlock (const MCHEmul::ExtendedDataMemoryBlocks& dMB)
-							{ return (new TAPFileData (dMB)); }
+		/** Create a new object from a ExtendedDataMemoryBlock...if possible. 
+			and with some default values, that can be changed to support other computers and versions. */
+		static TAPFileData* createFromMemoryBlock 
+			(const MCHEmul::ExtendedDataMemoryBlocks& dMB,
+			 const std::string& sgn = "C64-TAPE-RAW",
+			 unsigned char v = 0, ComputerVersion cV = _C64, VideoVersion vV = _PAL)
+							{ return (new TAPFileData (dMB, sgn, v, cV, vV)); }
 
 		virtual std::string asString () const override
 							{ return (_signature + 
-								"(Version: " + std::to_string (_version) +
-								", Size: " + std::to_string (_dataSize) + ")"); }
+								"(Version: " + std::to_string (_version) + "," +
+								"ComputerVersion: " + std::to_string (_computerVersion) + "," +
+								"VideoVersion: " + std::to_string (_videoVersion) + "," +
+								"Size: " + std::to_string (_dataSize) + ")"); }
 
 		std::string _signature;
 		unsigned char _version;

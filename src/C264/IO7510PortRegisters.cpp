@@ -9,6 +9,9 @@ C264::IO7501PortRegisters::IO7501PortRegisters (MCHEmul::PhysicalStorage* ps)
 	// and the consequence in PLA must be inmediate...
 	setBufferMemorySetCommands (false);
 
+	// The bit 5 is not used but it is always to 0...
+	// This is defined in the initial values...
+
 	initializeInternalValues (); 
 }
 
@@ -17,34 +20,32 @@ void C264::IO7501PortRegisters::processEvent (const MCHEmul::Event& evnt, MCHEmu
 {
 	// A bit is read in the datasette....
 	if (evnt.id () == MCHEmul::DatasetteIOPort::_READ)
-		setBitPortValue (7, evnt.value () == 1 ? true : false);
-	// Bit 6 reflects whether some key has been pressed on the datasette...
-	// When something has been pressed this bit is set to 0, 1 in the other situation...
-	// The same bit in the memory position 0 hast to be defined as input (value = 0)
-	if (evnt.id () == MCHEmul::DatasetteIOPort::_KEYPRESSED ||
-		evnt.id () == MCHEmul::DatasetteIOPort::_NOKEYPRESSED)
-		setBitPortValue (6, evnt.id () == MCHEmul::DatasetteIOPort::_NOKEYPRESSED);
+		setBitPortValue (4, evnt.value () == 1 ? true : false);
 }
 
 // ---
 void C264::IO7501PortRegisters::notifyPortChanges (const MCHEmul::UByte& c, const MCHEmul::UByte& v)
 {
 	// Modify the status of the motor of the casette, if something changed in this bit!
-	if (c.bit (5))
-		notify (MCHEmul::Event (v.bit (5)
+	if (c.bit (3))
+		notify (MCHEmul::Event (v.bit (3)
 			? MCHEmul::DatasetteIOPort::_MOTORSTOPPED : MCHEmul::DatasetteIOPort::_MOTORRUNNING));
 	// When something is written to the datasette, 
 	// this bit is affected and it has to be notified too!
-	if (c.bit (4))
-		notify (MCHEmul::Event (MCHEmul::DatasetteIOPort::_WRITE, v.bit (4) ? 1 : 0));
+	if (c.bit (1))
+		notify (MCHEmul::Event (MCHEmul::DatasetteIOPort::_WRITE, v.bit (1) ? 1 : 0));
 }
 
 // ---
 void C264::IO7501PortRegisters::initializeInternalValues ()
 {
-	// This is an input from the casette and it is not automatically initialized...
-	_portValue = MCHEmul::UByte::_FF;
+	// The bit 5 is not used the rest are up by default...
+	_portValue = 0xd8; 
 
-	setValue (0x00, 0x00);
-	setValue (0x01, 0x00);
+	// The bits 0,1,2 and 3 are always output. 4, 6 and 7 are input. 5 is not used...
+	setValue (0x00, 0x0f);
+	// bit 3 up (motor = off) 
+	// bits 0,1,2 down (there is no data in the output lines).
+	// bit 5 is not used, and bits 6 and 7 are up...
+	setValue (0x01, 0xd8);
 }

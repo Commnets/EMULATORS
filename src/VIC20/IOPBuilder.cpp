@@ -13,17 +13,20 @@ MCHEmul::IOPeripheral* VIC20::IOPeripheralBuilder::createPeripheral
 	else if (id == VIC20::Cartridge::_ID)
 		result = new VIC20::Cartridge;
 	else if (id == COMMODORE::Datasette1530::_ID)
-		/** CN2 datasette keeps three types on short pulses in NTSC:
-			long pulses = 1488Hz (672us length = 336 up & 336 down),
-			medium pulses = 1953Hz (512us length),
-			short pulses = 2840Hz (352us length).
-			Following Fourier's signal analysis theory, the sampling ideal period must be half the shortest one,
-			or said in the other way around, the sampling frequency must be double that the hightest one = 5681Hz (176us). \n
-			Doing a similar calculus for PAL, the sampling frequency should be 5473,4Hz (182,7us). \n
-			With TurboLoaders only short and long pulses are used, but still this definition will be useful. */
-		result = new COMMODORE::Datasette1530
-			(dynamic_cast <VIC20::CommodoreVIC20*> (c) -> visualSystem () == 
-				VIC20::CommodoreVIC20::VisualSystem::_PAL ? 183 : 176);
+		{
+			/** CN2 datasette keeps three types on short pulses in NTSC:
+				long pulses = 1488Hz (672us length = 336 up & 336 down),
+				medium pulses = 1953Hz (512us length),
+				short pulses = 2840Hz (352us length).
+				Following Fourier's signal analysis theory, the sampling ideal period must be half the shortest one,
+				or said in the other way around, the sampling frequency must be double that the hightest one = 5681Hz (176us). \n
+				Doing a similar calculus for PAL, the sampling frequency should be 5473,4Hz (182,7us). \n
+				With TurboLoaders only short and long pulses are used, but still this definition will be useful. */
+			unsigned int cR = (dynamic_cast <VIC20::CommodoreVIC20*> (c) -> visualSystem () == 
+				VIC20::CommodoreVIC20::VisualSystem::_PAL) ? 183 : 176;
+			result = new COMMODORE::Datasette1530
+				(cR, new COMMODORE::Datasette1530::TAPFileFormatImplementation (cR));
+		}
 	else if (id == COMMODORE::Datasette1530Injection::_ID)
 		/** When the routines of the kernal are "overpassed". */
 		result = new COMMODORE::Datasette1530Injection

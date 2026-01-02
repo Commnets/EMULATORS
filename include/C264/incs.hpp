@@ -22,6 +22,7 @@
 #include <C264/C6529B1Registers.hpp>
 #include <C264/C6529B2.hpp>
 #include <C264/C6529B2Registers.hpp>
+#include <C264/C16SenseTapeRegisters.hpp>
 #include <C264/ROMRAMSwitch.hpp>
 #include <C264/ROMRAMSwitchRegisters.hpp>
 #include <C264/C1C2Selector.hpp>

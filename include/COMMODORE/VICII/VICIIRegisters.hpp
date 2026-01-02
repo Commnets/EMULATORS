@@ -147,16 +147,6 @@ namespace COMMODORE
 			There might be several reasons defined within the code. */
 		inline unsigned int reasonIRQCode () const;
 
-		// Managing the raster
-		// The raster info is in the VICII chip actually.
-		// However its info is needed when checking some registers...
-		void linkToRaster (MCHEmul::Raster* r)
-							{ _raster = r; }
-		unsigned short currentRasterLine () const
-							{ return (_raster -> vData ().currentPosition ()); }
-		unsigned short currentRasterPositionInLine () const
-							{ return (_raster -> hData ().currentPosition ()); }
-
 		// Knowing info about the lightpen...
 		/** The lightpen is simulated using the mouse. */
 		unsigned short currentLightPenHorizontalPosition () const
@@ -247,7 +237,24 @@ namespace COMMODORE
 		/** Calculate the internal memory positions. */
 		inline void calculateMemoryPositions ();
 		
-		/** To set the number of positions that the next instruction will take. */
+		// Some of the instruction within the VICII needs to know about the raster status...
+		// So there is instructions to link the raster (defined in VICII chip) to its registers
+		// These methods, however, are very internal and just inked from VICII simulation
+		void linkToRaster (MCHEmul::Raster* r)
+							{ _raster = r; }
+		unsigned short currentRasterLine () const
+							{ return (_raster -> vData ().currentPosition ()); }
+		unsigned short currentRasterPositionInLine () const
+							{ return (_raster -> hData ().currentPosition ()); }
+
+		// Very important method...
+		/** When the CPU is about to execute an instruction, VICII is informed about it
+			and the VICII keeps that information in its registers. \n
+			When VICII is requested about raster position (vertical), this information is then used. \n
+			to simulate the position where the raster will be when the instruction finishes. \n
+			The instruction requesting this information (e.g. the VICII were connected to a 6500 Family CPU)
+			might read the register info just in the last cycle of the instruction, so 
+			returning the right value is mandatory. */
 		void setNumberPositionsNextInstruction (unsigned int nP)
 							{ _numberPositionsNextInstruction = nP; }
 
@@ -301,9 +308,6 @@ namespace COMMODORE
 			bool _spriteToForegroundPriority;
 		};
 
-		/** The number of cycle that the next instruction to be executed in the CPU will take. */
-		unsigned int _numberPositionsNextInstruction;
-
 		// The VICII registers
 		/** Screen related variables. */
 		unsigned char _foregroundColor;
@@ -333,8 +337,6 @@ namespace COMMODORE
 
 		// Some of this variables are set by the emulation of the VICII
 		// The VICII chip also uses this object as a temporary storage
-		/** Where the raster line is. */
-		MCHEmul::Raster* _raster;
 		/** Where the lightpen has been detected. */
 		unsigned char _latchLighPenHorizontalPosition, _currentLightPenHorizontalPosition;
 		/** The position is consolidated once per frame. */
@@ -377,6 +379,11 @@ namespace COMMODORE
 			There are as many as sprites, all initially at false. */
 		bool _expansionYFlipFlop [8];
 		MCHEmul::OBool _interruptsEnabledBack;
+
+		/** The number of cycle that the next instruction to be executed in the CPU will take. */
+		unsigned int _numberPositionsNextInstruction;
+		/** A reference to the raster. This class is not the owner of it. */
+		MCHEmul::Raster* _raster;
 	};
 
 	// ---

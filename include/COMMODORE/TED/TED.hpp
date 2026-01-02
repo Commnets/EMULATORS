@@ -120,18 +120,21 @@ namespace COMMODORE
 		bool inSingleClockMode () const
 							{ return (_inSingleClockMode); }
 
-		/** To know whether the TED is or not in idle_situation.
-			This can be used to change the speed of the processor later. */
-		bool isIdleState () const
-							{ return (_tedGraphicInfo._idleState); }
-		bool isInDisplayZone () const
-							{ return (_raster.isInDisplayZone ()); }
-
 		/** To get the raster info. */
 		const MCHEmul::Raster& raster () const
 							{ return (_raster); }
 
 		virtual bool initialize () override;
+
+		/** The raster is a critical thing in the behaviour of the TED.
+			The content of several registers (0x1c, 0x1d,...) are "real time".
+			Any read instruction could read different values depending on the position of the raster 
+			when that instruction happens. */
+		virtual void CPUAboutToExecute (MCHEmul::CPU* cpu, MCHEmul::Instruction* inst) override
+							{ _TEDRegisters -> setNumberPositionsNextInstruction 
+								(inst -> memoryPositions
+									(cpu -> memoryRef (), cpu -> programCounter ().asAddress ()) >> 
+										(inSingleClockMode () ? 0 : 1)); } // The number of cycles in TED will vary depending on the mode...
 
 		/** Simulates cycles in the TED. \n
 			It draws the border AFTER once graphics info has been drawn within the display zone. \n

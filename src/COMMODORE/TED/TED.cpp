@@ -174,6 +174,7 @@ bool COMMODORE::TED::initialize ()
 
 	_TEDRegisters -> lookAtTimers (&_T1, &_T2, &_T3);
 	_TEDRegisters -> lookAtSoundLibWrapper (_soundFunction -> soundWrapper ());
+	_TEDRegisters -> linkToRaster (&_raster);
 	_TEDRegisters -> initialize ();
 
 	_timesFrameDrawn = 0;
@@ -290,7 +291,7 @@ bool COMMODORE::TED::simulate (MCHEmul::CPU* cpu)
 				
 				// Every half the frequency of the TED....
 				// ...the cursor hardware status (used in standard char mode changes)
-				if (++_timesFrameDrawn >= (_screenfrequency >> 2))
+				if (++_timesFrameDrawn >= (_screenfrequency >> 1))
 				{
 					_timesFrameDrawn = 0;
 					_tedGraphicInfo.changeCursorHardwareStatus ();

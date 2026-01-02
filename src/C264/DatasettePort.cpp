@@ -3,5 +3,5 @@
 // ---
 void C264::DatasetteIOPort::linkToChips (const MCHEmul::Chips& c)
 {
-	// TODO
+	// There is no really any special chip to link to...
 }

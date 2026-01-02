@@ -20,14 +20,17 @@ namespace C264
 {
 	/** In the C264 implementation,
 		the bits of the port are distributed as follows:
-		bit 0	= ATN Serie, \n
-		bit 1	= DATA Serie, \n
-		bit 2	= CLK Serie, \n
-		bit 3	= WREN: Write allowed, \n
-		bit 4	= WRITE: Written signal, \n
-		bit 5 	= MOTOR: Moton on (0 when it is running), \n
-		bit 6	= SENSE: Play key on (0 when something is pressed), \n
-		bit 7	= READ: Signal read */
+		https://plus4world.powweb.com/plus4encyclopedia/500290
+		The port is for serial data and casette management. \n
+		There is no way to detect whether any key is pressed in the datsette as happens in the C64. \n
+		bit 0	= Serial Data Out, \n
+		bit 1	= Serial Clock Out/Casette Write, <= \n
+		bit 2	= Serial ATN Out, \n
+		bit 3	= Datasette motor out (0 = on, 1 = off), \n
+		bit 4	= Datsette Read in, <= \n
+		bit 5 	= Not implemented, \n
+		bit 6	= Serial Clock In, \n
+		bit 7	= Serial Data In */
 	class IO7501PortRegisters final : public F6500::IO7501PortRegisters
 	{
 		public:

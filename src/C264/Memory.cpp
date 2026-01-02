@@ -476,11 +476,14 @@ bool C264::Memory::initialize ()
 	setConfiguration (2 /** A configuration with 64k to cover all RAM. */, 
 		true /** ROM active, the RAM will be active to write */, 0 /** The very basic configuration of the memory. */);
 	// Just to fillup all RAM with the initial value!
+	// The values of the ports shouldn't be changed!! (so, there are kept)
+	MCHEmul::UBytes p0p1 = 
+		lookForCPUView () -> values (MCHEmul::Address ({ 0x00, 0x00 },false), 2);
 	for (size_t i = 0X0000; i < 0x10000; i += 0x40)
-		if ((i < 0xfd00 || i >= 0xff40) && 
-			(i != 0x0000 && i != 0x0001)) // The IO zone is not filled...
-			fillWith (MCHEmul::Address ({ 0x00, 0x00 }) + i, 
+		if (i < 0xfd00 || i >= 0xff40) // The IO zone is not initialized...
+			fillWith (MCHEmul::Address ({ 0x00, 0x00 }, false) + i, 
 				(((i / 0x40) % 2) == 0) ? MCHEmul::UByte::_0 : MCHEmul::UByte::_FF, 0x40);
+	lookForCPUView () -> set (MCHEmul::Address ({ 0x00, 0x00 }, false), p0p1);
 	// Go back to the same configuration...
 	setConfiguration (oC, oRA, oMC);
 
@@ -1013,7 +1016,7 @@ C264::C16_116Memory::C16_116Memory (unsigned int cfg, const std::string& lang)
 {
 	_IOnomapped0		= dynamic_cast <MCHEmul::EmptyPhysicalStorageSubset*> 
 							(subset (_IONOMAPPED0_SUBSET));
-	_IOnomapped1		= dynamic_cast <MCHEmul::EmptyPhysicalStorageSubset*> 
+	_IOnomapped1		= dynamic_cast <C264::C16SenseTapeRegisters*> 
 							(subset (_IONOMAPPED1_SUBSET));
 
 	// None can be nullptr...
@@ -1053,7 +1056,7 @@ MCHEmul::Memory::Content C264::C16_116Memory::standardMemoryContent ()
 		std::move (C264::Memory::standardMemoryContent ());
 
 	// Add the new element to the subsets...
-	// There is ACIA so an no mapped place is installed instead...
+	// There is no ACIA so an no mapped place is installed instead...
 	MCHEmul::PhysicalStorageSubset* nSS = nullptr;
 	_CPUSUBSETS.insert 
 		(MCHEmul::PhysicalStorageSubsets::value_type 
@@ -1062,14 +1065,16 @@ MCHEmul::Memory::Content C264::C16_116Memory::standardMemoryContent ()
 					MCHEmul::UByte::_0, result.physicalStorage (_RAM), 0xfd00, MCHEmul::Address ({ 0x00, 0xfd }, false), 0x10)));
 	_ALLSUBSETS.insert (MCHEmul::PhysicalStorageSubsets::value_type (_IONOMAPPED0_SUBSET, nSS));
 	nSS -> setName ("IO Not Mapped 0");
+
 	// It doesn't exist a second C6529 register so a no mapped place is created also instead...
+	// but a curious effect about to control whether any key is pressed in the casette unit happens here!
 	_CPUSUBSETS.insert 
 		(MCHEmul::PhysicalStorageSubsets::value_type 
-			(_IONOMAPPED1_SUBSET, nSS = new MCHEmul::EmptyPhysicalStorageSubset 
+			(_IONOMAPPED1_SUBSET, nSS = new C264::C16SenseTapeRegisters
 				(_IONOMAPPED1_SUBSET, // No mapperd instead...
-					MCHEmul::UByte::_0, result.physicalStorage (_RAM), 0xfd10, MCHEmul::Address ({ 0x10, 0xfd }, false), 0x10)));
+					result.physicalStorage (_RAM), 0xfd10, MCHEmul::Address ({ 0x10, 0xfd }, false), 0x10)));
 	_ALLSUBSETS.insert (MCHEmul::PhysicalStorageSubsets::value_type (_IONOMAPPED1_SUBSET, nSS));
-	nSS -> setName ("IO Not Mapped 1");
+	nSS -> setName ("IO Control Cassette Keys");
 
 	// ...and finally the memory that is the result...
 	result._subsets = _ALLSUBSETS;

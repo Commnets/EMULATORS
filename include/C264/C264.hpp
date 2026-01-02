@@ -78,6 +78,9 @@ namespace C264
 		// Implementation
 		/** A reference to the TED chip. */
 		TED* _ted;
+		/** Two additional clocks are used, 
+			the active one will depend on the situation of the processor. */
+		MCHEmul::Clock _slowClock, _fastClock;
 	};
 
 	/** The Commodore 16_116 a specific element of the series 264. \n
@@ -91,6 +94,8 @@ namespace C264
 			: Commodore264 (standardChips (lg, vS), 
 				new C264::C16_116Memory (cfg, lg), standardDevices (vS), vS, Type::_C16, cfg, lg)
 							{ }
+
+		virtual bool initialize (bool iM = true) override;
 
 		protected:
 		// Implementation

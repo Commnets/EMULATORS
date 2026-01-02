@@ -26,7 +26,8 @@ MCHEmul::IOPeripheral* COMMODORE::IOPeripheralBuilder::createPeripheral
 			0,000176 s/device cycle == (* 1022727 CPU cycles/s) 180 CPU cycles / device cyles.
 			Making the numbers with PAL definition, the constant would be the same!.
 			Simular calculus can be done for every commodore computer type. */
-		result = new COMMODORE::Datasette1530 (180);
+		result = new COMMODORE::Datasette1530
+			(180, new COMMODORE::Datasette1530::TAPFileFormatImplementation (180));
 
 	// Take care, it could be null...
 	return (result);

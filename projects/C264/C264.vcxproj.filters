@@ -117,6 +117,9 @@
     <ClCompile Include="..\..\src\C264\1531Datasette.cpp">
       <Filter>Archivos de origen\IO</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\C264\C16SenseTapeRegisters.cpp">
+      <Filter>Archivos de origen\Motherboard\Chips</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\include\C264\C264.hpp">
@@ -193,6 +196,9 @@
     </ClInclude>
     <ClInclude Include="..\..\include\C264\1531Datasette.hpp">
       <Filter>Archivos de encabezado\IO</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\C264\C16SenseTapeRegisters.hpp">
+      <Filter>Archivos de encabezado\Motherboard\Chips</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

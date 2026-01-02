@@ -14,12 +14,15 @@ void COMMODORE::Datasette1530::TAPFileFormatImplementation::whenValueRead
 }
 
 // ---
-COMMODORE::Datasette1530::Datasette1530 (unsigned int cR)
+COMMODORE::Datasette1530::Datasette1530 (unsigned int cR, 
+		COMMODORE::Datasette1530::TAPFileFormatImplementation* dI)
 	: MCHEmul::StandardDatasette (_ID, 
-		new COMMODORE::Datasette1530::TAPFileFormatImplementation (cR), true /** Motor controlled internaly. */,
+		dynamic_cast <MCHEmul::StandardDatasette::Implementation*> (dI), 
+		true /** Motor controlled internally. */,
 		{ { "Name", "Commodore 1530/1531 Synchronous (CN2)" },
 		  { "Manufacturer", "Commodore Business Machines CBM" } })
 {
+	// But it can vary when other models...
 	setClassName ("C2N1530");
 }
 

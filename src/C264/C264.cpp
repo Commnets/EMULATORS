@@ -29,7 +29,12 @@ C264::Commodore264::Commodore264 (const MCHEmul::Chips& cps, MCHEmul::Memory* m,
 		   { "Year", "1984" }
 		 }),
 	  _visualSystem (vS),
-	  _configuration (cfg)
+	  _configuration (cfg),
+	  _ted (nullptr),
+	  _slowClock ((vS == C264::Commodore264::VisualSystem::_PAL) 
+		  ? _PALCLOCK : _NTSCCLOCK),
+	  _fastClock ((vS == C264::Commodore264::VisualSystem::_PAL) 
+		  ? _PALCLOCK << 1 : _NTSCCLOCK << 1)
 {
 	assert (_memory != nullptr);
 
@@ -51,6 +56,12 @@ bool C264::Commodore264::initialize (bool iM)
 	// Depending on the configuration of the memory 
 	// zones of the 64k memory will or not be available as RAM...
 	setConfiguration (static_cast <C264::Memory*> (memory ()) -> configuration (), false /** Not restart. */);
+
+	// The CPU is observed by C264
+	// This is because when a instruction is about to be executed,
+	// the TED has to be aware about the number of cycles that the instruction will take
+	// in order to manage what $D012 result must returns properly!
+	observe (_cpu);
 
 	// It is also needed to observe the expansion port...
 	// Events when it is disonnected and connected are sent and with many implications
@@ -89,14 +100,32 @@ void C264::Commodore264::processEvent (const MCHEmul::Event& evnt, MCHEmul::Noti
 		setExit (true);
 		setRestartAfterExit (true, 9999 /** Big enough */);
 	}
+	else
+	// The TED has to be informed when the CPU is about to execute an instruction...
+	// ...becuase it has to be taken into account to manage the information returned by TED registers properly
+	if (evnt.id () == MCHEmul::CPU::_CPUTOEXECUTEINSTRUCTION)
+	{
+		static_cast <COMMODORE::TED*> (graphicalChip ()) -> CPUAboutToExecute
+			(_cpu, (MCHEmul::Instruction*) (static_cast <MCHEmul::CPU::EventData*> (evnt.data ().get ()) -> _data));
+	}
 }
 
 // ---
 void C264::Commodore264::specificComputerCycle ()
 {
-	// Changes the speed of the CPU attending whether the TED is or not in idle state...
-	// ...using the same mechanisim that in a external access!
-	clock ().setFactor (_ted -> inSingleClockMode () ? 1.0 : 2.0);
+	// The other clock moves also forward...
+	MCHEmul::Clock& oC = 
+		(_clock.cyclesPerSecond () == _slowClock.cyclesPerSecond ())
+			? _fastClock : _slowClock;
+	oC.countCycles (oC.tooQuick () 
+			? 0 : ((_cpu -> lastCPUClockCycles () == 0) ? 1 : _cpu -> lastCPUClockCycles ()));
+	// Maintaining the factor, 
+	// because it might changed externally (command)...
+	oC.setFactor (clock ().factor ()); 
+
+	// For the next cycle...
+	// ...changes the speed of the CPU attending whether the TED is or not in single clock mode...
+	_clock = _ted -> inSingleClockMode () ? _slowClock : _fastClock;
 }
 
 // ---
@@ -172,6 +201,22 @@ MCHEmul::IODevices C264::Commodore264::standardDevices (C264::Commodore264::Visu
 	result.insert (MCHEmul::IODevices::value_type (COMMODORE::ExpansionIOPort::_ID, new C264::ExpansionIOPort));
 
 	return (result);
+}
+
+// ---
+bool C264::Commodore16_116::initialize (bool iM)
+{
+	bool result = C264::Commodore264::initialize (iM);
+	if (!result)
+		return (false);
+
+	// In the case of this computer, this specific memory subset
+	// has to observe the datasette port too...
+	// to control whether the keys are pressed or not...
+	memory () -> subset (C264::C16_116Memory::_IONOMAPPED1_SUBSET) -> observe 
+		(device (COMMODORE::DatasetteIOPort::_ID));
+
+	return (true);
 }
 
 // ---
