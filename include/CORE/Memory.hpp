@@ -384,7 +384,7 @@ namespace MCHEmul
 		mutable UByte _lastValueRead;
 	};
 
-	/** A physicial subset that is a mirror of a previous one, 
+	/** A physical subset that is a mirror of a previous one, 
 		but in another address and potentially from another initial position, and with other length! */
 	class MirrorPhysicalStorageSubset : public PhysicalStorageSubset
 	{
@@ -536,6 +536,9 @@ namespace MCHEmul
 		  *	STORAGES	= InfoStructure: Every storage belonging to the view (@see PhysicalStorageSubset).
 		  */
 		virtual InfoStructure getInfoStructure () const override;
+
+		/** To analyse the currebt configuration */
+		Strings analysis () const;
 
 		protected:
 		// Implementation
@@ -899,6 +902,9 @@ namespace MCHEmul
 		/** The info is the same than in the case of the active view (@see MemoryView). */
 		virtual InfoStructure getInfoStructure () const override
 							{ return (_activeView -> getInfoStructure ()); }
+
+		/** To detect inconsistencies in a configuration in a view. */
+		Strings analysis () const;
 
 		/** Manages the deep debug file. \n
 			Take care it can be set back to a nullptr. */

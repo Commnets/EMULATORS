@@ -114,6 +114,8 @@ MCHEmul::Command* MCHEmul::StandardCommandBuilder::createEmptyCommand (const std
 		result = new MCHEmul::HooksCommand;
 	else if (cmdName == "HOOKSHELP" || cmdName == MCHEmul::HooksHelpCommand::_NAME)
 		result = new MCHEmul::HooksHelpCommand;
+	else if (cmdName == "MEMORYANALYSIS" || cmdName == MCHEmul::MemoryAnaysisCommand::_NAME)
+		result = new MCHEmul::MemoryAnaysisCommand;
 	else if (cmdName == MCHEmul::MoveParametersToAnswerCommand::_NAME)
 		result = new MCHEmul::MoveParametersToAnswerCommand;
 

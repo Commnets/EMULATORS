@@ -364,6 +364,11 @@ State:@STATE@ (Cycles Stopped:@CLKSTOP@)
 @MemoryStructure>@
 #---
 #---
+;CMEMORYANALYSIS
+->Result:
+@MEMORYANALYSIS@
+#---
+#---
 ;CSTOP
 @PC@
 Last:@INST@

@@ -1183,6 +1183,29 @@ namespace MCHEmul
 		private:
 		virtual void executeImpl (CommandExecuter* cE, Computer* c, InfoStructure& rst) override;
 	};
+
+	/** To analyse the estructure of the memory. \n
+		That is memory positions that overlap or holes in the access 
+		both when writting and when reading information,... \n 
+		The detection is executed always in the current mempty configuration. \n
+		The command is: \n
+		MEMORYANALISYS */
+	class MemoryAnaysisCommand final : public Command
+	{
+		public:
+		static const int _ID = 113;
+		static const std::string _NAME;
+
+		MemoryAnaysisCommand ()
+			: Command (_ID, _NAME)
+							{ }
+
+		virtual bool canBeExecuted () const override
+							{ return (_parameters.size () == 0); }
+
+		private:
+		virtual void executeImpl (CommandExecuter* cE, Computer* c, InfoStructure& rst) override;
+	};
 }
 
 #endif

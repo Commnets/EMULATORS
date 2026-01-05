@@ -1,6 +1,7 @@
 #include <CORE/Memory.hpp>
 #include <CORE/FmterBuilder.hpp>
 #include <CORE/Formatter.hpp>
+#include <algorithm>
 
 size_t MCHEmul::PhysicalStorageSubset::_GETINFOBYTESLIMIT = std::numeric_limits <size_t>::max (); // Meaning no limit...
 MCHEmul::Memory::Configuration MCHEmul::Memory::_CONFIGURATION = 
@@ -604,6 +605,150 @@ MCHEmul::InfoStructure MCHEmul::MemoryView::getInfoStructure () const
 }
 
 // ---
+MCHEmul::Strings MCHEmul::MemoryView::analysis () const
+{
+	MCHEmul::Strings result { };
+
+	auto strAddress = [](const MCHEmul::Address a) -> std::string
+		{ return ("$" + MCHEmul::removeAll0 (a.asString (MCHEmul::UByte::OutputFormat::_HEXA, '\0', 2))); };
+
+	// A temporary struct to manage the basic information of each
+	struct MemData
+	{
+		int _id;
+		std::string _name;
+		Address _initialAddress, _finalAddress;
+		size_t _bytes;
+		bool _RAM;
+		bool _active;
+		bool _activeReading;
+
+		std::string asString () const
+			{ return (std::to_string (_id) + ":" + _name); }
+	};
+
+	using MemDataMap = std::map <MCHEmul::Address, MemData, 
+		std::less <MCHEmul::Address>>; // Sort them out depending on the initial address...
+
+	// Create the map of information for the RAMs...
+	MemDataMap sSRAM, sSROM;
+	for (const auto& i : _subsets)
+		if (i.second -> active ())
+			((i.second -> canBeWriten (false)) ? sSRAM : sSROM).insert 
+				(MemDataMap::value_type
+					(i.second -> initialAddress (), 
+					 MemData ({ 
+						i.second -> id (), 
+						i.second -> name (),
+						i.second -> initialAddress (), 
+						i.second -> lastAddress (), 
+						i.second -> size (),
+						i.second -> canBeWriten (false),
+						i.second -> active (),
+						i.second -> activeForReading () })));
+
+	// Start the analysis...
+
+	// First with a function that is reused for both RAM and ROM!
+	// that analyse whether the RAM and the ROM has or not continuity
+	// Detects just that the continuity. It wont't mena neccessarily that there is a mistake...
+	auto checkContinuity = [&](const MemDataMap& mD, const std::string& n) -> void
+		{
+			MCHEmul::Address nP;
+			MemData lMD = { };
+			bool fI = true;
+			for (const auto& i : mD)
+			{
+				if (fI)
+				{
+					if (i.second._initialAddress.value () != 0)
+						result.emplace_back ("(W) The " + n + " view doesn't start at position $0000 but at " + 
+							strAddress (i.second._initialAddress) + "(" + i.second.asString () + ")");
+					fI = false;
+				}
+				else
+				{
+					if (i.second._initialAddress > nP)
+						result.emplace_back ("(W) There is no " + n + " between " +
+							strAddress (nP) + "(last " + lMD.asString () + ") and " + 
+							strAddress (i.second._initialAddress) + "(next " + i.second.asString () + ")");
+					if (i.second._initialAddress < nP)
+						result.emplace_back ("(E) There is overlapped " + n + " between " + 
+							strAddress (i.second._initialAddress) + "(" + i.second.asString () + ") and " + 
+							strAddress (nP) + "(last " + lMD.asString () + ")");
+				}
+
+				nP = i.second._initialAddress + i.second._bytes;
+				lMD = i.second;
+			}
+
+			if ((nP - 1) != _maxAddress)
+				result.emplace_back ("(W) The " + n + " view doesn't finishes at position " + 
+					strAddress (_maxAddress) + " but at " + strAddress (nP - 1) + "(last " + lMD.asString () + ")");
+		};
+
+	// Then with a function that 
+
+	// Check continuity...
+	result.emplace_back ("---Start checking continuity");
+	checkContinuity	(sSRAM, "RAM"); // RAM
+	checkContinuity (sSROM, "ROM"); // and ROM
+	result.emplace_back ("---End checking continuity");
+
+	// Check if there is possibility to write in all positions...
+	// Considering at the same time ROM and RAM...
+	// The positions are grouped...
+	result.emplace_back ("---Start checking possibilities to write/read");
+	MCHEmul::Address cP, fGPROM, iGPROM, fGPRAM, iGPRAM;
+	cP = fGPROM = iGPROM = fGPRAM = iGPRAM = _minAddress;
+	for (const auto& i : _memPositions)
+	{
+		size_t nW = 0, nR = 0;
+		for (const auto& j : i._storages)
+		{
+			if (j -> active ())
+			{
+				if (j -> canBeWriten (false)) ++nW; 
+				if (j -> activeForReading ()) ++nR;
+			}
+		}
+
+		// Move the position pointed to the next one...
+		cP = cP + 1;
+
+		// Had the last position anaylsed any issue regarding writting?...
+		// The problem happens when there is no just one storage to write to!
+		// If there was, the position is added to the continuous group of those with issues...
+		if (nW != 1) fGPROM = cP;
+		// but if there wasn't, it might be determined wheter to show or not an accumulative mistake...
+		else
+		{
+			if (iGPROM != fGPROM)
+				//... so a mistake is kept...
+				result.emplace_back ("(E) Positions from " + strAddress (iGPROM) + 
+					" to " + strAddress (fGPROM - 1) +
+					" have either none storage active or many storages active to write to");
+			iGPROM = fGPROM = cP;
+		}
+
+		// Same with the RAM...
+		if (nR != 1) fGPRAM = cP;
+		else
+		{
+			if (iGPRAM != fGPRAM)
+				result.emplace_back ("(E) Positions from " + strAddress (iGPRAM) + 
+					" to " + strAddress (fGPRAM - 1) +
+					" have either none storage active or many storages active to read from");
+			iGPRAM = fGPRAM = cP;
+		}
+	}
+
+	result.emplace_back ("---End checking possibilities to write/read");
+
+	return (result);
+}
+
+// ---
 void MCHEmul::MemoryView::plainMemory ()
 {
 	_minAddress = _maxAddress = MCHEmul::Address ();
@@ -784,6 +929,25 @@ MCHEmul::MemoryDUMP MCHEmul::Memory::dumpStructure (bool a)
 
 	for (const auto& i : _content._views)
 		result._data.emplace_back (std::move (i.second -> dumpStructure (a)));
+
+	return (result);
+}
+
+// ---
+MCHEmul::Strings MCHEmul::Memory::analysis () const
+{
+	MCHEmul::Strings result { };
+
+	for (const auto& i : _content._views)
+	{
+		MCHEmul::Strings c = i.second -> analysis ();
+		if (!c.empty ())
+		{
+			result.emplace_back 
+				("View:" + std::to_string (i.second -> id ()));
+			result.insert (result.end (), c.begin (), c.end ());
+		}
+	}
 
 	return (result);
 }

@@ -127,6 +127,9 @@ Parameters:
 => [FINAL] (optional): End address (optional).  
 => VALUE (mandatory): Data to write.  
 Notes: Be careful — may crash the simulation. If value >1 byte, step equals its length.  
+;MEMORYANALYSIS
+To analyse the structure of the memory in the current configuration
+Parameters:None
 ;ASSIGNJOY ID NEWID  
 Changes joystick identification number.  
 Parameters:  

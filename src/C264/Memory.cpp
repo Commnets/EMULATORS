@@ -305,14 +305,22 @@ void C264::Memory::setConfiguration (unsigned int cfg, bool ra, unsigned char mc
 	_RAM2MirrorRAM1			-> setActive (_configuration == 0);
 	_RAM2MirrorRAM1			-> setActiveForReading (_configuration == 0);
 	// B3
-	_basicROM				-> setActive (_ROMActive && isMemoryConfigurationLowROMBasic ()); // Active depending on the configuration...
-	_basicROM				-> setActiveForReading (_ROMActive && isMemoryConfigurationLowROMBasic ());	
-	_3plus1ROM1				-> setActive (_ROMActive && isMemoryConfigurationLowROM3plus1 ()); // Active depending on the configuration...
-	_3plus1ROM1				-> setActiveForReading (_ROMActive && isMemoryConfigurationLowROM3plus1 ());
-	_cartridge1Low			-> setActive (_ROMActive && isMemoryConfigurationLowROMCartridge1 ()); // Active depending on the configuration...
-	_cartridge1Low			-> setActiveForReading (_ROMActive && isMemoryConfigurationLowROMCartridge1 ());
-	_cartridge2Low			-> setActive (_ROMActive && isMemoryConfigurationLowROMCartridge2 ()); // Active depending on the configuration...
-	_cartridge2Low			-> setActiveForReading (_ROMActive && isMemoryConfigurationLowROMCartridge2 ());
+	bool bA = _ROMActive &&
+		(isMemoryConfigurationLowROMBasic () ||
+		 (isMemoryConfigurationLowROM3plus1 () && !_3plus1Loaded) ||
+		 (isMemoryConfigurationLowROMCartridge1 () && !_cartridge1Connected) ||
+		 (isMemoryConfigurationLowROMCartridge2 () && !_cartridge2Connected));
+	_basicROM				-> setActive (bA); // Active also when no cratridge is connected...
+	_basicROM				-> setActiveForReading (bA);
+	bA = (_ROMActive && (_3plus1Loaded && isMemoryConfigurationLowROM3plus1 ()));
+	_3plus1ROM1				-> setActive (bA); // When 3+1 is loaded and ROM selected....
+	_3plus1ROM1				-> setActiveForReading (bA);
+	bA = (_ROMActive && (_cartridge1Connected && isMemoryConfigurationLowROMCartridge1 ()));
+	_cartridge1Low			-> setActive (bA); // When cartridge 1 is connected and ROM selected....
+	_cartridge1Low			-> setActiveForReading (bA);
+	bA = (_ROMActive &&  (_cartridge2Connected && isMemoryConfigurationLowROMCartridge2 ()));
+	_cartridge2Low			-> setActive (bA); // When cartridge 2 is connected and ROM selected....
+	_cartridge2Low			-> setActiveForReading (bA);
 	_RAM3					-> setActive (_configuration == 2); // ..active only when it is 64k...
 	_RAM3					-> setActiveForReading (!_ROMActive && _configuration == 2); // ...but active for reading just when RAM actives...
 	_RAM3MirrorIO7501Port	-> setActive (_configuration != 2); // ...active when the configuration is not 64k...
@@ -324,7 +332,7 @@ void C264::Memory::setConfiguration (unsigned int cfg, bool ra, unsigned char mc
 	_RAM3MirrorRAM1			-> setActive (_configuration != 2); 
 	_RAM3MirrorRAM1			-> setActiveForReading (!_ROMActive && _configuration != 2); 
 	// B4 (Part 1)
-	bool bA = _ROMActive &&
+	bA = _ROMActive &&
 		(isMemoryConfigurationHighROMKernel () ||
 		 (isMemoryConfigurationHighROM3plus1 () && !_3plus1Loaded) ||
 		 (isMemoryConfigurationHighROMCartridge1 () && !_cartridge1Connected) ||
@@ -386,12 +394,13 @@ void C264::Memory::setConfiguration (unsigned int cfg, bool ra, unsigned char mc
 	_kernelROM2				-> setActiveForReading (bA);
 	bA = _ROMActive && (_3plus1Loaded && isMemoryConfigurationHighROM3plus1 ());
 	_3plus1ROM22			-> setActive (bA);
-	bA = _ROMActive && (_3plus1Loaded && isMemoryConfigurationHighROM3plus1 ());
 	_3plus1ROM22			-> setActiveForReading (bA);
 	bA = _ROMActive && (_cartridge1Connected && isMemoryConfigurationHighROMCartridge1 ());
 	_cartridge1High2		-> setActive (bA);
+	_cartridge1High2		-> setActiveForReading (bA);
 	bA = _ROMActive && (_cartridge2Connected && isMemoryConfigurationHighROMCartridge2 ());
 	_cartridge2High2		-> setActive (bA);
+	_cartridge2High2		-> setActiveForReading (bA);
 	_RAM42					-> setActive (_configuration == 2); // ...active when computer is 64k...
 	_RAM42					-> setActiveForReading (!_ROMActive && _configuration == 2); // ...but active for reading when RAMs active...
 	_RAM42MirrorRAM1		-> setActive (_configuration == 0); // ...active just when it is 16k...
@@ -686,13 +695,13 @@ MCHEmul::PhysicalStorage* RAM =
 	// ...or a mirror or the RAM 1 that has to be defined in pieces...
 	MCHEmul::MirrorPhysicalStorageSubset* RAM41MirrorIO7501Port = new MCHEmul::MirrorPhysicalStorageSubset 
 		(_RAM41MIRRORIO7501PORT_SUBSET, IO7501Port, MCHEmul::Address ({ 0x00, 0xc0 }, false));
-	RAM41MirrorIO7501Port -> setName ("RAM 41 Mirror of IO7501 Port Registers");
+	RAM41MirrorIO7501Port -> setName ("RAM 4 Part 1 Mirror of IO7501 Port Registers");
 	MCHEmul::MirrorPhysicalStorageSubset* RAM41MirrorPageZero = new MCHEmul::MirrorPhysicalStorageSubset
 		(_RAM41MIRRORPAGEZERO_SUBSET, pageZero, MCHEmul::Address ({ 0x02, 0xc0 }, false));
-	RAM41MirrorPageZero -> setName ("RAM 41 Mirror of Page Zero");
+	RAM41MirrorPageZero -> setName ("RAM 4 Part 1 Mirror of Page Zero");
 	MCHEmul::MirrorPhysicalStorageSubset* RAM41MirrorStack = new MCHEmul::MirrorPhysicalStorageSubset
 		(_RAM41MIRRORSTACK_SUBSET, stack, MCHEmul::Address ({ 0x00, 0xc1 }, false));
-	RAM41MirrorStack -> setName ("RAM 41 Mirror of Stack");
+	RAM41MirrorStack -> setName ("RAM 4 Part 1 Mirror of Stack");
 	MCHEmul::MirrorPhysicalStorageSubset* RAM41MirrorRAM1 = new MCHEmul::MirrorPhysicalStorageSubset 
 		(_RAM41MIRRORRAM1_SUBSET, RAM1, MCHEmul::Address ({ 0x00, 0xc2 }, false), 
 			0 /** From the beginning. */, (int) (0x3e00 - 0x0300) /** The full length except the IO part + the part 2. */);
@@ -1030,8 +1039,7 @@ C264::C16_116Memory::C16_116Memory (unsigned int cfg, const std::string& lang)
 // ---
 void C264::C16_116Memory::setConfiguration (unsigned int cfg, bool a, unsigned char mcfg) 
 {
-	if (cfg != 0 /** 16k. */ && 
-		cfg != 1 /** 32k. */)
+	if (cfg > 2) // Only 16k, 32k or 64k....
 	{
 		_LOG ("Configuration mode:" + std::to_string (cfg) + 
 			" not valid in C16/C116 memory");

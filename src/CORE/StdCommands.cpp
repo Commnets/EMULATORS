@@ -62,6 +62,7 @@ const std::string MCHEmul::SetHookCommand::_NAME = "CSETHOOK";
 const std::string MCHEmul::RemoveHookCommand::_NAME = "CREMOVEHOOK";
 const std::string MCHEmul::HooksCommand::_NAME = "CHOOKS";
 const std::string MCHEmul::HooksHelpCommand::_NAME = "CHOOKSHELP";
+const std::string MCHEmul::MemoryAnaysisCommand::_NAME = "CMEMORYANALYSIS";
 
 // ---
 MCHEmul::HelpCommand::HelpCommand (const std::string& hF)
@@ -1149,4 +1150,15 @@ void MCHEmul::HooksHelpCommand::executeImpl (MCHEmul::CommandExecuter* cE,
 
 	rst.add ("HOOKSHELP", 
 		MCHEmul::concatenateStrings (c -> hooksPool () -> help (), "---\n"));
+}
+
+// ---
+void MCHEmul::MemoryAnaysisCommand::executeImpl (MCHEmul::CommandExecuter* cE, 
+	MCHEmul::Computer* c, MCHEmul::InfoStructure& rst)
+{
+	if (c == nullptr)
+		return;
+
+	rst.add ("MEMORYANALYSIS", 
+		MCHEmul::concatenateStrings (c -> memory () -> analysis (), "\n"));
 }
