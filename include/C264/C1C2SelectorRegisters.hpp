@@ -27,10 +27,7 @@ namespace C264
 
 		static const int _C1C2SELECTORREGS_SUBSET = 2030;
 
-		C1C2SelectorRegisters (MCHEmul::PhysicalStorage* ps, size_t pp, const MCHEmul::Address& a, size_t s)
-			: MCHEmul::ChipRegisters (_C1C2SELECTORREGS_SUBSET, ps, pp, a, s),
-			  _configurationChanged (false)
-							{ initializeInternalValues (); }
+		C1C2SelectorRegisters (MCHEmul::PhysicalStorage* ps, size_t pp, const MCHEmul::Address& a, size_t s);
 
 		virtual size_t numberRegisters () const override
 							{ return (0x10); }

@@ -27,10 +27,7 @@ namespace C264
 
 		static const int _ROMRAMSWITCHREGS_SUBSET = 2020;
 
-		ROMRAMSwitchRegisters (MCHEmul::PhysicalStorage* ps, size_t pp, const MCHEmul::Address& a, size_t s)
-			: MCHEmul::ChipRegisters (_ROMRAMSWITCHREGS_SUBSET, ps, pp, a, s),
-			  _configurationChanged (false)
-							{ initializeInternalValues (); }
+		ROMRAMSwitchRegisters (MCHEmul::PhysicalStorage* ps, size_t pp, const MCHEmul::Address& a, size_t s);
 
 		virtual size_t numberRegisters () const override
 							{ return (0x10); }
