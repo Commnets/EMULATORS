@@ -205,6 +205,8 @@ MCHEmul::Memory::Content ZXSPECTRUM::Memory::standardMemoryContent ()
 			0x1b00 /** $1800 screen memory + $0300 color data. */);
 	// ------
 
+	RAMULA -> setName ("RAM ULA");
+
 	// ...and the view from the ULA...
 	MCHEmul::MemoryView* ulaView = new MCHEmul::MemoryView 
 		(_ULA_VIEW, 

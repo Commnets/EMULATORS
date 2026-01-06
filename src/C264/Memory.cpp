@@ -290,10 +290,10 @@ void C264::Memory::setConfiguration (unsigned int cfg, bool ra, unsigned char mc
 	assert (_memoryConfiguration <= 0x0f); 
 
 	// Configuration only from the CPU perspective...
-	// B1
+	// B1 ($0000-$3fff)
 	_RAM1					-> setActive (true);	 // 16, 32 or 64K. Always active...
 	_RAM1					-> setActiveForReading (true); // ....and active also for reading...It is the basic standard memory...
-	// B2
+	// B2 ($4000-$7fff)
 	_RAM2					-> setActive (_configuration != 0); // ...active when the computer is 32k or 64k...
 	_RAM2					-> setActiveForReading (_configuration != 0); // ...and also active for reading...
 	_RAM2MirrorIO7501Port	-> setActive (_configuration == 0); // ...only when the computer is 16k...
@@ -304,7 +304,7 @@ void C264::Memory::setConfiguration (unsigned int cfg, bool ra, unsigned char mc
 	_RAM2MirrorStack		-> setActiveForReading (_configuration == 0);
 	_RAM2MirrorRAM1			-> setActive (_configuration == 0);
 	_RAM2MirrorRAM1			-> setActiveForReading (_configuration == 0);
-	// B3
+	// B3 ($8000-$bfff)
 	bool bA = _ROMActive &&
 		(isMemoryConfigurationLowROMBasic () ||
 		 (isMemoryConfigurationLowROM3plus1 () && !_3plus1Loaded) ||
@@ -331,7 +331,7 @@ void C264::Memory::setConfiguration (unsigned int cfg, bool ra, unsigned char mc
 	_RAM3MirrorStack		-> setActiveForReading (!_ROMActive && _configuration != 2);
 	_RAM3MirrorRAM1			-> setActive (_configuration != 2); 
 	_RAM3MirrorRAM1			-> setActiveForReading (!_ROMActive && _configuration != 2); 
-	// B4 (Part 1)
+	// B4 (Part 1) ($c000-$fcff)
 	bA = _ROMActive &&
 		(isMemoryConfigurationHighROMKernel () ||
 		 (isMemoryConfigurationHighROM3plus1 () && !_3plus1Loaded) ||
@@ -339,7 +339,7 @@ void C264::Memory::setConfiguration (unsigned int cfg, bool ra, unsigned char mc
 		 (isMemoryConfigurationHighROMCartridge2 () && !_cartridge2Connected));
 	_kernelROM1A			-> setActive (bA); // Active also when no cartridge is connected...
 	_kernelROM1A			-> setActiveForReading (bA);
-	_kernelROM1B			-> setActive (_ROMActive); // Active always when ROM is active!
+	_kernelROM1B			-> setActive (_ROMActive); // Active always when ROM is active! (routines managing banks: $fc00-$fcff)
 	_kernelROM1B			-> setActiveForReading (_ROMActive);
 	bA = (_ROMActive && (_3plus1Loaded && isMemoryConfigurationHighROM3plus1 ()));
 	_3plus1ROM21			-> setActive (bA); // When 3+1 is loaded and ROM selected....
@@ -362,7 +362,7 @@ void C264::Memory::setConfiguration (unsigned int cfg, bool ra, unsigned char mc
 	_RAM41MirrorRAM1		-> setActiveForReading (!_ROMActive && _configuration == 0);
 	_RAM41MirrorRAM2		-> setActive (_configuration == 1); // ...active only when it is 32k...
 	_RAM41MirrorRAM2		-> setActiveForReading (!_ROMActive && _configuration == 1); // ...but active for reading just when RAM actives...
-	// B4 (IO Part)
+	// B4 (IO Part) ($fd00-$ff3f)
 	// The specific areas of every computer are in their own classes...
 	// Remember that there are tow pieces missed in the generic part...
 	_IOnomapped2			-> setActive (true);	// Always on...
@@ -383,7 +383,7 @@ void C264::Memory::setConfiguration (unsigned int cfg, bool ra, unsigned char mc
 	_IOTED					-> setActiveForReading (true);
 	_ROMRAMSwitch			-> setActive (true);	// Always on...
 	_ROMRAMSwitch			-> setActiveForReading (true);
-	// B4 (Part 1)
+	// B4 (Part 2) ($ff40-$ffff)
 	// See comments in the part 1....
 	bA = _ROMActive &&
 		(isMemoryConfigurationHighROMKernel () ||

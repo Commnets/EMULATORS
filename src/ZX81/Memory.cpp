@@ -270,11 +270,14 @@ MCHEmul::Memory::Content ZX81::Memory::standardMemoryContent (ZX81::Type t)
 	// First block is ROM
 	MCHEmul::PhysicalStorageSubset* ROMS = new MCHEmul::PhysicalStorageSubset 
 		(_ROM_SUBSET, ROM, 0x0000, MCHEmul::Address ({ 0x00, 0x00 }, false), 0x2000);					// 8k
+	ROMS -> setName ("Basic ROM");
 	MCHEmul::MirrorPhysicalStorageSubset* ROMS_S1 = new MCHEmul::MirrorPhysicalStorageSubset
 		(_ROMSHADOW1_SUBSET, ROMS, MCHEmul::Address ({ 0x00, 0x20 }, false));							// 8k. It is a mirror of ROMS
+	ROMS_S1 -> setName ("Basic ROM Mirror 1");
 	// Or, when a expansion cartridge is inserted (ROMCS = 0), the hole space can be accesible as ROM....
 	MCHEmul::PhysicalStorageSubset* ROMS_CS1 = new MCHEmul::PhysicalStorageSubset 
 		(_ROMCS1_SUBSET, ROM, 0x0000, MCHEmul::Address ({ 0x00, 0x00 }, false), 0x4000);				// 16k
+	ROMS_CS1 -> setName ("Extended ROM");
 	// ----- 16k
 
 	// Second block is RAM
@@ -287,12 +290,18 @@ MCHEmul::Memory::Content ZX81::Memory::standardMemoryContent (ZX81::Type t)
 		(_RAM1K_SUBSET, RAM, 0x4000, MCHEmul::Address ({ 0x00, 0x40 }, false), 0x0400, 
 			MCHEmul::Stack::Configuration (true, false /** Pointing always to the last written. */, 
 				false /** No overflow detection. */, -1));	// 1k that can behave as Stack...
+	RAM1S -> setName ("Standard 1K RAM");
 	// ...and the rest (up to 16k) is not accesible and mirrored the previous one in 1k blocks-size...
 	std::vector <MCHEmul::MirrorPhysicalStorageSubset*> RAM1S_S;
 	for (size_t i = 1; i <= 15; i++)
-		RAM1S_S.emplace_back (new MCHEmul::MirrorPhysicalStorageSubset
+	{
+		MCHEmul::MirrorPhysicalStorageSubset* TR = nullptr;
+		RAM1S_S.emplace_back (TR = new MCHEmul::MirrorPhysicalStorageSubset
 			(_RAM1K_SUBSET + (int) i, RAM1S, 
 				MCHEmul::Address ({ 0x00, 0x40 + (unsigned char) (i << 2) }, false)));					// 15k that are a mirror...
+		TR -> setName ("Standard 1K RAM Mirror " + std::to_string (i));
+	}
+
 	// But these previous 16k could be fully accesible externally when the RAM_CS = 0...
 	MCHEmul::Stack* RAM16S_CS1 = new MCHEmul::Stack
 		(_RAM16KCS1_SUBSET, RAM, 0x4000, MCHEmul::Address ({ 0x00, 0x40 }, false), 0x4000, 
@@ -300,17 +309,21 @@ MCHEmul::Memory::Content ZX81::Memory::standardMemoryContent (ZX81::Type t)
 				true /** No overflow detection. */, -1));												// 16k (When expansion), 
 																										// ...that can behave as stack...
 																										// One or another...
+	RAM16S_CS1 -> setName ("16K RAM");
 	// ----- 16k
  
 	// Third block is ROM again
 	// Wither two mirrors of the ROM again...
 	MCHEmul::MirrorPhysicalStorageSubset* ROMS_S2 = new MCHEmul::MirrorPhysicalStorageSubset
 		(_ROMSHADOW2_SUBSET, ROMS, MCHEmul::Address ({ 0x00, 0x80 }, false));							// 8k. It is a mirror of ROMS (above)
+	ROMS_S2 -> setName ("Basic ROM Mirror 2");
 	MCHEmul::MirrorPhysicalStorageSubset* ROMS_S3 = new MCHEmul::MirrorPhysicalStorageSubset
 		(_ROMSHADOW3_SUBSET, ROMS, MCHEmul::Address ({ 0x00, 0xa0 }, false));							// 8k. It is a mirror of ROMS (above)
+	ROMS_S3 -> setName ("Basic ROM Mirror 3");
 	// Or, when a expansion cartridge is inserted (ROMCS = 0), the hole space can be accesible as ROM....
 	MCHEmul::PhysicalStorageSubset* ROMS_CS2 = new MCHEmul::PhysicalStorageSubset 
 		(_ROMCS2_SUBSET, ROM, 0x8000, MCHEmul::Address ({ 0x00, 0x80 }, false), 0x4000);				// 16k. 
+	ROMS_CS2 -> setName ("Extended ROM Mirror 1");
 	// ----- 16k
 
 	// Fourth and last block is RAM and video RAM depending on the point of view (CPU or ULA)
@@ -318,15 +331,22 @@ MCHEmul::Memory::Content ZX81::Memory::standardMemoryContent (ZX81::Type t)
 	// The rest is a mirror of the 1k + 15 or 16k RAM from the ULA perspective...
 	MCHEmul::MirrorPhysicalStorageSubset* RAM1S_S1 = new MCHEmul::MirrorPhysicalStorageSubset
 		(_RAM1KSHADOW_SUBSET, RAM1S, MCHEmul::Address ({ 0x00, 0xc0 }, false));							// 1k. It is a mirror of RAM1S
+	RAM1S_S1 -> setName ("Standard 1K RAM Mirror 16");
 	// The next 15k are a mirror of the previous ones...
 	std::vector <MCHEmul::MirrorPhysicalStorageSubset*> RAM1S_S1_S;
 	for (size_t i = 1; i <= 15; i++)
-		RAM1S_S1_S.emplace_back (new MCHEmul::MirrorPhysicalStorageSubset
+	{
+		MCHEmul::MirrorPhysicalStorageSubset* TR = nullptr;
+		RAM1S_S1_S.emplace_back (TR = new MCHEmul::MirrorPhysicalStorageSubset
 			(_RAM1KSHADOW_SUBSET + (int) i, RAM1S, /* The same than obove. */
 				MCHEmul::Address ({ 0x00, 0xc0 + (unsigned char) (i << 2) }, false)));					// 15k. It is a mirror of RAM1S_S1
+		TR -> setName ("Standard 1K RAM Mirror " + std::to_string (16 + i));
+	}
+
 	// ...but the can be replace by the mirror of the 16k if there was that... (RAM_CS = 0)
 	MCHEmul::MirrorPhysicalStorageSubset* RAM16S_CS1S1 = new MCHEmul::MirrorPhysicalStorageSubset
 		(_RAM16KSHADOW_SUBSET, RAM16S_CS1, MCHEmul::Address ({ 0x00, 0xc0 }, false));					// 16k. It is a mirror of RAM16S_CS1
+	RAM16S_CS1S1 -> setName ("16K RAM Mirror 1");
 	// ----- 16k
 
 	// From CPU perspective...
@@ -334,14 +354,20 @@ MCHEmul::Memory::Content ZX81::Memory::standardMemoryContent (ZX81::Type t)
 	// With 1 k + 15 of nothing...
 	ZX81::MemoryVideoCode* RAM1S_V = new ZX81::MemoryVideoCode
 		(_RAM1K_V_SUBSET, RAM1S, MCHEmul::Address ({ 0x00, 0xc0 }, false));								// 1k. It is a mirror of RAM1S
+	RAM1S_V -> setName ("Video 1K RAM");
 	std::vector <ZX81::MemoryVideoCode*> RAM1S_V_S;
 	for (size_t i = 1; i <= 15; i++)
-		RAM1S_V_S.emplace_back (new ZX81::MemoryVideoCode
+	{
+		ZX81::MemoryVideoCode* TR = nullptr;
+		RAM1S_V_S.emplace_back (TR = new ZX81::MemoryVideoCode
 			(_RAM1K_V_SUBSET + (int) i, RAM1S, /* The same than at the beginning. */
 				MCHEmul::Address ({ 0x00, 0xc0 + (unsigned char) (i << 2) }, false)));					// 15k. It is a mirror of RAM1S_V
+		TR -> setName ("Video 1K RAM Mirror " + std::to_string (i));
+	}
 	// ...or 16k mirroring RAM16S_CS1 when (RAMCS = 0)
 	ZX81::MemoryVideoCode* RAM16S_V = new ZX81::MemoryVideoCode
 		(_RAM16K_V_SUBSET, RAM16S_CS1, MCHEmul::Address ({ 0x00, 0xc0 }, false));						// 16k. It is a mirror of RAM16S
+	RAM16S_V -> setName ("Video 16K RAM");
 	// ----- 16k
 
 	// A map with all the subsets possible...

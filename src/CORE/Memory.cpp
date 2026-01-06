@@ -615,7 +615,7 @@ MCHEmul::Strings MCHEmul::MemoryView::analysis () const
 	// A temporary struct to manage the basic information of each
 	struct MemData
 	{
-		int _id;
+		int _id = -1000; // By default none!
 		std::string _name;
 		Address _initialAddress, _finalAddress;
 		size_t _bytes;
@@ -682,7 +682,7 @@ MCHEmul::Strings MCHEmul::MemoryView::analysis () const
 				lMD = i.second;
 			}
 
-			if ((nP - 1) != _maxAddress)
+			if (lMD._id != -1000 /** Something pending. */ && (nP - 1) != _maxAddress)
 				result.emplace_back ("(W) The " + n + " view doesn't finishes at position " + 
 					strAddress (_maxAddress) + " but at " + strAddress (nP - 1) + "(last " + lMD.asString () + ")");
 		};
@@ -725,7 +725,7 @@ MCHEmul::Strings MCHEmul::MemoryView::analysis () const
 		{
 			if (iGPROM != fGPROM)
 				//... so a mistake is kept...
-				result.emplace_back ("(E) Positions from " + strAddress (iGPROM) + 
+				result.emplace_back ("(W) Positions from " + strAddress (iGPROM) + 
 					" to " + strAddress (fGPROM - 1) +
 					" have either none storage active or many storages active to write to");
 			iGPROM = fGPROM = cP;
@@ -736,7 +736,7 @@ MCHEmul::Strings MCHEmul::MemoryView::analysis () const
 		else
 		{
 			if (iGPRAM != fGPRAM)
-				result.emplace_back ("(E) Positions from " + strAddress (iGPRAM) + 
+				result.emplace_back ("(W) Positions from " + strAddress (iGPRAM) + 
 					" to " + strAddress (fGPRAM - 1) +
 					" have either none storage active or many storages active to read from");
 			iGPRAM = fGPRAM = cP;
