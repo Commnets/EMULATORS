@@ -265,6 +265,11 @@ namespace C264
 		/** To activate the right subsets in the CPU view. */
 		virtual bool initialize () override;
 
+		/** Load in memory RAM a data block. \n
+			In C264 the memory can be configured to have some RAM zones no directly accesible in writting like IO/TED. \n
+			This method is to load a data block just in the memory RAM. */
+		void loadDataBlockInRAM (const MCHEmul::DataMemoryBlock& dB);
+
 		protected:
 		virtual MCHEmul::Stack* lookForStack () override
 							{ return (dynamic_cast <MCHEmul::Stack*> (subset (_STACK_SUBSET))); }

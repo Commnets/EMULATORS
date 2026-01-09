@@ -507,6 +507,19 @@ bool C264::Memory::initialize ()
 	return (true);
 }
 
+// ----
+void C264::Memory::loadDataBlockInRAM (const MCHEmul::DataMemoryBlock& dB)
+{
+	bool ra = ROMactive ();
+
+	// RAM
+	setROMactive (false);
+	// Load the information...
+	put (dB);
+	// Previous status
+	setROMactive (ra);
+}
+
 // ---
 MCHEmul::Memory::Content C264::Memory::standardMemoryContent ()
 {

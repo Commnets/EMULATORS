@@ -100,6 +100,11 @@ namespace C264
 		/** In this case the implementation of the trap is a bit differenet 
 			than in the case of the Commodore64 and VIC20. \n */
 		virtual bool executeTrap (const MCHEmul::Trap& t, MCHEmul::CPU* cpu) override;
+
+		/** To load the info just only inthe RAM. */
+		virtual void loadDataBlockInRAM (const MCHEmul::DataMemoryBlock& dB, MCHEmul::CPU* cpu) override
+							{ static_cast <C264::Memory*> (cpu -> memoryRef ()) -> 
+									loadDataBlockInRAM (_data._data [_dataCounter]); }
 	};
 }
 
