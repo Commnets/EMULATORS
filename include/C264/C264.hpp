@@ -114,6 +114,8 @@ namespace C264
 				new C264::CPlus4Memory (cfg, lg), standardDevices (vS), vS, Type::_CPLUS4, cfg, lg)
 							{ }
 
+		virtual bool initialize (bool iM = true) override;
+
 		protected:
 		// Implementation
 		static MCHEmul::Chips standardChips (const std::string& sS, VisualSystem vS);

@@ -120,6 +120,9 @@
     <ClCompile Include="..\..\src\C264\C16SenseTapeRegisters.cpp">
       <Filter>Archivos de origen\Motherboard\Chips</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\C264\C6529B2Registers.cpp">
+      <Filter>Archivos de origen\Motherboard\Chips</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\include\C264\C264.hpp">

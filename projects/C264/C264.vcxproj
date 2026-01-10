@@ -27,6 +27,7 @@
     <ClCompile Include="..\..\src\C264\C6529B1.cpp" />
     <ClCompile Include="..\..\src\C264\C6529B1Registers.cpp" />
     <ClCompile Include="..\..\src\C264\C6529B2.cpp" />
+    <ClCompile Include="..\..\src\C264\C6529B2Registers.cpp" />
     <ClCompile Include="..\..\src\C264\Cartridge.cpp" />
     <ClCompile Include="..\..\src\C264\CommandBuilder.cpp" />
     <ClCompile Include="..\..\src\C264\Commands.cpp" />

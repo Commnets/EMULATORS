@@ -30,3 +30,11 @@ bool C264::C6529B2::simulate (MCHEmul::CPU* cpu)
 
 	return (true); 
 }
+
+// ---
+void C264::C6529B2::processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifier* ntfer)
+{
+	if (evnt.id () == MCHEmul::DatasetteIOPort::_KEYPRESSED ||
+		evnt.id () == MCHEmul::DatasetteIOPort::_NOKEYPRESSED)
+		_C6529B2Registers -> setCasetteKeyPressed (evnt.id () == MCHEmul::DatasetteIOPort::_KEYPRESSED);
+}

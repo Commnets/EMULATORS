@@ -246,6 +246,22 @@ MCHEmul::IODevices C264::Commodore16_116::standardDevices (C264::Commodore264::V
 }
 
 // ---
+bool C264::CommodorePlus4::initialize (bool iM)
+{
+	bool result = C264::Commodore264::initialize (iM);
+	if (!result)
+		return (false);
+
+	// In the case of this computer, this specific chip
+	// has to observe the datasette port too (and also other things in the case of CPlus4)
+	// to control whether the keys are pressed or not...
+	// In the case of the C16, the datasette is direcly observed from the memory set...
+	chip (C264::C6529B2::_ID) -> observe (device (COMMODORE::DatasetteIOPort::_ID));
+
+	return (true);
+}
+
+// ---
 MCHEmul::Chips C264::CommodorePlus4::standardChips (const std::string& sS, C264::Commodore264::VisualSystem vS)
 {
 	MCHEmul::Chips result = 

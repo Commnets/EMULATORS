@@ -36,6 +36,9 @@ namespace C264
 		virtual bool simulate (MCHEmul::CPU* cpu) override;
 
 		private:
+		virtual void processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifier* ntfer) override;
+
+		private:
 		// Implementation
 		/** The memory is used also as the set of registers of the chip. */
 		C6529B2Registers* _C6529B2Registers;
