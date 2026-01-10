@@ -84,5 +84,4 @@ The different configurations of the Commodore 264 can be simulated using the par
 The keyboard is configured as Commodore 264.<br><br>
 <img src="./docs/C264Data/Picture1.png"/><br>
 <img src="./docs/C264Data/Picture2.png"/><br>
-
-
+<img src="./docs/C264Data/Picture3.png"/><br>
