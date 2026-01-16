@@ -29,6 +29,21 @@ GENERALINSTRUMENTS::AY38910::~AY38910 ()
 }
 
 // ---
+bool GENERALINSTRUMENTS::AY38910::initialize ()
+{
+	if (!MCHEmul::SoundChip::initialize ())
+		return (false);
+
+	assert (_AY38910Registers != nullptr);
+
+	_AY38910Registers -> initialize ();
+
+	_lastCPUCycles = 0;
+
+	return (true);
+}
+
+// ---
 bool GENERALINSTRUMENTS::AY38910::simulate (MCHEmul::CPU* cpu)
 {
 	// First time?

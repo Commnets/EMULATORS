@@ -335,7 +335,7 @@ MCHEmul::Strings MCHEmul::KeystrokeTypeIO::generateTokensFor (const std::string&
 					result.emplace_back (cK);
 
 				// Continues with the rest...
-				i = ep + 1; 
+				i = ep; 
 			}
 		}
 

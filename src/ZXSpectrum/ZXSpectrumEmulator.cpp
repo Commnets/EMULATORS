@@ -35,6 +35,7 @@ void ZXSPECTRUM::ZXSpectrumEmulator::printOutParameters (std::ostream& o) const
 		 std::to_string (SINCLAIR::Datasette::_ID) << ":\tDatasette" << std::endl <<
 		 std::to_string (ZXSPECTRUM::DatasetteInjection::_ID) << ":\tDirect injection into memory" << std::endl <<
 		 std::to_string (ZXSPECTRUM::Cartridge::_ID) << ":\tCartridge" << std::endl;
+	o << "Check LOG file if the emulation doesn't start as expected" << std::endl;
 }
 
 // ---

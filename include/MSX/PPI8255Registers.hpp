@@ -43,16 +43,17 @@ namespace MSX
 		virtual size_t numberRegisters () const override
 							{ return (4); }
 
-		/** To know whether the slot configuration has changed. 
+		/** To know whether the primary slot configuration has changed. 
 			Once the variable is read, it comes back to false. */
-		bool slotChanged () const
-							{ return (_slotChanged); }
+		bool primarySlotChanged () const
+							{ return (_primarySlotChanged); }
 
 		virtual void initialize () override;
 
 		/**
 		  *	The name of the fields are: \n
 		  * The ones from the parent class plus:
+		  * TODO
 		  */
 		virtual MCHEmul::InfoStructure getInfoStructure () const override;
 
@@ -72,16 +73,16 @@ namespace MSX
 		void initializeInternalValues ();
 
 		protected:
-		/** The different slots slected by bank. 
+		/** The different primary slots selected by memory page. 
 			When one of them changed, the _slotChanged variable is set and
 			used from the simulation method of the processor to raise an event 
 			that it would change finally the configuration. */
-		unsigned char _slotBank0; // Primary slot selected for bank 0: 0x0000 - 0x4000
-		unsigned char _slotBank1; // Primary slot selected for bank 1: 0x4000 - 0x7fff
-		unsigned char _slotBank2; // Primary slot selected for bank 2: 0x8000 - 0xbfff
-		unsigned char _slotBank3; // Primary slot selected for bank 3: 0xc000 - 0xffff
+		unsigned char _primarySlotPage0; // Primary slot selected for page 0: 0x0000 - 0x4000
+		unsigned char _primarySlotPage1; // Primary slot selected for page 1: 0x4000 - 0x7fff
+		unsigned char _primarySlotPage2; // Primary slot selected for page 2: 0x8000 - 0xbfff
+		unsigned char _primarySlotPage3; // Primary slot selected for page 3: 0xc000 - 0xffff
 		/** When any of the previous values change. */
-		MCHEmul::OBool _slotChanged;
+		MCHEmul::OBool _primarySlotChanged;
 
 		// Managing the ketboard...
 		/** The information about the key pressed. 

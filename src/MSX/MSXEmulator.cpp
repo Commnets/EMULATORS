@@ -50,6 +50,9 @@ void MSX::MSXEmulator::printOutParameters (std::ostream& o) const
 		 "PHILIPSVG8010:\tMSX1 Philips VG8010" << std::endl <<
 		 "CANONV20:\tMSX1 Canon V20" << std::endl <<
 		 "SVI738:\tMSX2 Spectravideo 738" << std::endl;
+	o << "DEVICES allowed to be connected under command CONNECTPER:" << std::endl <<
+		 std::to_string (MCHEmul::Typewriter::_ID) << ":\tTypewriter" << std::endl;
+	o << "Check LOG file if the emulation doesn't start as expected" << std::endl;
 }
 
 // ---

@@ -195,9 +195,6 @@ namespace TEXASINSTRUMENTS
 		int _interruptId;
 		/** To show or no the main events that affects the visualization. */
 		bool _showEvents;
-		
-		/** The number of cycles the CPU was executed once the simulated method finishes. */
-		unsigned int _lastCPUCycles;
 		/** The format used to draw. 
 			It has to be the same that is used by the Screen object. */
 		SDL_PixelFormat* _format;
@@ -212,6 +209,8 @@ namespace TEXASINSTRUMENTS
 		mutable EventsStatus _eventStatus;
 
 		// Implementation
+		/** The number of cycles the CPU was executed once the simulated method finishes. */
+		unsigned int _lastCPUCycles;
 		/** When the Registers are created internally because they will be accesed always through out the chip
 			and this one froma port and not like a memory address (that belongs to the computer) this
 			variable is set and must be deleted. */

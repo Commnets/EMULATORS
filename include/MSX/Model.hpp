@@ -115,6 +115,10 @@ namespace MSX
 		/** To get the map of keys of the model. */
 		const InputOSSystem::KeystrockesMap& keystrockedMap (const std::string& lang) const
 							{ return (_keystrockesMap.empty () ? (_keystrockesMap = createKeystrockesMap (lang)) : _keystrockesMap); }
+		/** To get the special keys and the way the typewriter (a almost default IO system) manages then. */
+		const std::map <char, MCHEmul::Strings> typewriterSpecialKeys (const std::string& lang) const
+							{ return (_typewriterSpecialKeys.empty () 
+								? _typewriterSpecialKeys = createTypewriterSpecialKeys (lang) : _typewriterSpecialKeys); }
 
 		/** To get the memory of the system. \n
 			First time ois invoked the content memoty is created using the method memoryContent. */
@@ -133,6 +137,10 @@ namespace MSX
 		virtual MCHEmul::IODevices createIODevices (const std::string& lang) const;
 		/** To create the specific keystrockes. */
 		virtual InputOSSystem::KeystrockesMap createKeystrockesMap (const std::string& lang) const;
+		/** To create the specific typewriterKeys, that are used in that specific IO device. \n
+			There is a default map, but it could be overloaded in case of a specific model defines different things. \n 
+			It can be affected by the language. */
+		virtual const std::map <char, MCHEmul::Strings> createTypewriterSpecialKeys (const std::string& lang) const;
 
 		// All these methods are invoked from the construction of the memory element (above)...
 		/** Gets the structure of the memory. \n
@@ -156,6 +164,7 @@ namespace MSX
 		mutable MCHEmul::Chips _chips;
 		mutable MCHEmul::IODevices _ioDevices;
 		mutable InputOSSystem::KeystrockesMap _keystrockesMap;
+		mutable std::map <char, MCHEmul::Strings> _typewriterSpecialKeys;
 		mutable Memory* _memory;
 	};
 

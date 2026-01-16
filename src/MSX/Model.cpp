@@ -187,17 +187,57 @@ MSX::InputOSSystem::KeystrockesMap MSX::MSXModel::createKeystrockesMap (const st
 }
 
 // ---
+const std::map <char, MCHEmul::Strings> MSX::MSXModel::createTypewriterSpecialKeys (const std::string& lang) const
+{
+	// By default any language uses the same conversion...
+	return (std::map <char, MCHEmul::Strings> ({
+		{ '\n',	{ "RETURN" } },
+		{ ' ',	{ "SPACE" } },
+		{ '!',	{ "LSHIFT+1" } },
+		{ '@',	{ "LSHIFT+2" } },
+		{ '#',	{ "LSHIFT+3" } },
+		{ '$',	{ "LSHIFT+4" } },
+		{ '%',	{ "LSHIFT+5" } },
+		{ '^',	{ "LSHIFT+6" } },
+		{ '&',	{ "LSHIFT+7" } },
+		{ '*',	{ "LSHIFT+8" } },
+		{ '(',	{ "LSHIFT+9" } },
+		{ ')',	{ "LSHIFT+0" } },
+		{ '-',	{ "-" } },
+		{ '_',	{ "LSHIFT+-" } },
+		{ '=',	{ "=" } },
+		{ '+',	{ "LSHIFT+=" } },
+		{ '[',	{ "[" } },
+		{ '{',	{ "LSHIFT+[" } },
+		{ ']',	{ "]" } },
+		{ '}',	{ "LSHIFT+]" } },
+		{ ';',	{ ";" } },
+		{ ':',	{ "LSHIFT+;" } },
+		{ '´',	{ "´" } },
+		{ '\"',	{ "LSHIFT+´" } },
+		{ '\\',	{ "\\" } },
+		{ '|',	{ "LSHIFT+\\" } },
+		{ ',',	{ "," } },
+		{ '<',	{ "LSHIFT+," } },
+		{ '.',	{ "." } },
+		{ '>',	{ "LSHIFT+." } },
+		{ '/',	{ "/" } },
+		{ '`',	{ "LSHIFT+/" } }
+	}));
+}
+
+// ---
 MCHEmul::Memory::Content MSX::MSXModel::memoryContent () const
 { 
 	// There might be up to 4 slots and 4 subslots of 64k each in the memory of the MSX.
 	// In that slots different things might connected: A cartridge, a disk, RAM...
 	// And only one thing at the same time in each slot and subslot, if any...
-	// By default the basic set will consider a empty zone very slot/subslot in every different banks, 
-	// with the exception of the banks 0 & 1, slot 0, subslot 0 that is filled with the ROM
-	// and the bank 3, slot 0, subslot 0 that is filled with RAM.
+	// By default the basic set will consider a empty zone very slot/subslot in every different page, 
+	// with the exception of the pages 0 & 1, slot 0, subslot 0 that is filled with the ROM
+	// and the page 3, slot 0, subslot 0 that is filled with RAM.
 
 	// The physical elements for all the 16 slots possible...
-	// ROM is only, initially, at the slot 0, bank 0 & 1.
+	// ROM is only, initially, at the slot 0, page 0 & 1.
 	MCHEmul::PhysicalStorage* ROM_SLOT0 = new MCHEmul::PhysicalStorage (MSX::Memory::_ROM_SET,
 			MCHEmul::PhysicalStorage::Type::_ROM, 0x8000);  // 32k
 	std::vector <MCHEmul::PhysicalStorage*> RAM_SLOTS;
@@ -213,40 +253,40 @@ MCHEmul::Memory::Content MSX::MSXModel::memoryContent () const
 			(MSX::Memory::_RAM_SET + i, RAM_SLOTS [(size_t) i]));
 
 	// Now the subsets...
-	// The basic subsets in the slot0 and subs slot 0...
-	// The BIOS subset is ROM, that is iun the banks 0 & 1 of the slot 0, subslot 0...
+	// The basic subsets in the slot0 and subslot 0...
+	// The slot 0, subslot0 BIOS subset is ROM, that is in the pages 0 & 1 of the slot 0, subslot 0...
 	MCHEmul::PhysicalStorageSubset* ROMBIOS =
 		new MCHEmul::PhysicalStorageSubset (MSX::Memory::_ROMBIOS_SUBSET, ROM_SLOT0,
 			0x0000, MCHEmul::Address ({ 0x00, 0x00 }, false), 0x8000); // 32k
-	ROMBIOS -> setName ("ROM BIOS, Slot 0, Subslot 0, Bank 0 & 1");
-	// An empty subset of 16k in the bank 2 of the slot 0
+	ROMBIOS -> setName ("Pages 0&1,Slot 0,Subslot 0:ROM BIOS");
+	// An empty subset of 16k in the page 2 of the slot 0, subslot 0
 	MSX::EmptyPhysicalStorageSubset* ERAMB2_SLOT0SUBSLOT0 =
 		new MSX::EmptyPhysicalStorageSubset (MSX::Memory::_ERAM16KSLOT0SUBSLOT0_SUBSET, MCHEmul::UByte::_0, RAM_SLOTS [0],
 			0x8000, MCHEmul::Address ({ 0x00, 0x80 }, false), 0x4000); // 16k 
-	ERAMB2_SLOT0SUBSLOT0 -> setName ("RAM Empty 16k, Slot 0, Subslot 0, Bank 2");
-	// The basic subset of 16k in the bank 3 of the slot 0
+	ERAMB2_SLOT0SUBSLOT0 -> setName ("Page 2,Slot 0,Subslot 0:RAM Empty 16k");
+	// The basic subset of 16k in the page 3 of the slot 0m subslot 0
 	MCHEmul::PhysicalStorageSubset* RAMB3_SLOT0SUBSLOT0 = 
 		new MCHEmul::Stack (MSX::Memory::_RAM16KSLOT0SUBSLOT0_SUBSET, RAM_SLOTS [0],
 			0xc000, MCHEmul::Address ({ 0x00, 0xc0 }, false), 0x4000,
 				MCHEmul::Stack::Configuration (true, false /** Pointing to the last written. */, 
 					false /** No overflow detection. */, -1)); // 16k
-	RAMB3_SLOT0SUBSLOT0 -> setName ("RAM 16k, Slot 0, Subslot 0, Bank 3");
+	RAMB3_SLOT0SUBSLOT0 -> setName ("Page 3,Slot 0,Subslot 0: RAM 16k");
 
 	// The rest of the memory is created with empty subsets...
-	// It is needed to create 12 subslots (remaining) + 
-	// 3 (remaining slots) * 4 (subslots each) * 4 (banks each) = 60 empty subsets of 16k each...
+	// It is needed to create 12 subslots (remaining of the first slot) + 
+	// 3 (remaining primary slots) * 4 (subslots each) * 4 (banks each) = 60 empty subsets of 16k each...
 	// The rest of the 16 blocks in any slot and subslot are empty...
 	std::vector <MCHEmul::PhysicalStorageSubset*> ERAMB_SLOTSSUBSLOTS;
-	for (int i = 4; i < (16 << 2); i++) // 4 slots, 4 subslots each...
+	for (int i = 4; i < (4 << 4); i++) // 4 slots, 4 subslots each, but staring from the slot 0, sublot 1 (=4)
 	{
-		int mId = 
-			MSX::Memory::_SLOTSUBSLOTBASE_SUBSET + ((i / 16) * 100) /** From 0 to 3 * 100. */ + 
-			(((i % 16) / 4) * 10) + /** From 0 to 3 * 10. */
-			(i % 4); /** From 0 to 3. */
+		int mId = // Number from 
+			MSX::Memory::_SLOTSUBSLOTBASE_SUBSET + ((i / 16) * 100) /** Slot: From 0 to 3 * 100. */ +
+			(((i % 16) / 4) * 10) + /** Subslot: From 0 to 3 * 10. */
+			(i % 4); /** Page: From 0 to 3. */
 		MCHEmul::Address add (2, 0x0000 + ((i % 4) << 14 /** Multiply by 16. */));
 		MCHEmul::Stack* empty = 
 			(add.value () == 0xc000) 
-				? (MCHEmul::Stack*) new MSX::EmptyPhysicalStorageLastBankSubset
+				? (MCHEmul::Stack*) new MSX::EmptyPhysicalStorageLastPageSubset
 					(mId, MCHEmul::UByte::_0, RAM_SLOTS [(size_t) (i / 16)], /** From 0 to 3. */
 					 add.value (), add, 0x4000,
 					 MCHEmul::Stack::Configuration (true, false /** Pointing to the last written. */, 
@@ -259,8 +299,11 @@ MCHEmul::Memory::Content MSX::MSXModel::memoryContent () const
 						false /** No overflow detection. */, -1)); 
 				  // 16k of no memory!
 		ERAMB_SLOTSSUBSLOTS.emplace_back (empty);
-		empty -> setName ("RAM Empty 16k, Slot " + std::to_string (i >> 4) + ", Subslot " + std::to_string ((i % 16) / 4) + 
-			", Bank " + std::to_string (i % 4));
+		empty -> setName (
+			"Page " + std::to_string (i % 4) + 
+			",Slot " + std::to_string (i >> 4) + 
+			",Subslot " + std::to_string ((i % 16) / 4) +
+			":RAM Empty 16k" + ((add.value () == 0xc000) ? " (last page)" : ""));
 	}
 
 	// The view from the CPU...
@@ -271,7 +314,7 @@ MCHEmul::Memory::Content MSX::MSXModel::memoryContent () const
 		(MSX::Memory::_ERAM16KSLOT0SUBSLOT0_SUBSET, ERAMB2_SLOT0SUBSLOT0));
 	allsubsets.insert (MCHEmul::PhysicalStorageSubsets::value_type 
 		(MSX::Memory::_RAM16KSLOT0SUBSLOT0_SUBSET, RAMB3_SLOT0SUBSLOT0)); // It will be active one...
-	for (int i = 4; i < (16 << 2); i++)
+	for (int i = 4; i < (4 << 4); i++)
 		allsubsets.insert (MCHEmul::PhysicalStorageSubsets::value_type 
 			(MSX::Memory::_SLOTSUBSLOTBASE_SUBSET + ((i / 16) * 100) + (((i % 16) / 4) * 10) + (i % 4), 
 				ERAMB_SLOTSSUBSLOTS [(size_t) (i - 4)]));
@@ -713,7 +756,7 @@ MCHEmul::Memory::Content MSX::CanonV20::memoryContent () const
 	// ...and creates a EMPTY (Last) RAM in the slot 0, subslot 0, bank 3 instead
 	MCHEmul::PhysicalStorage* rS0S0 = (*result._physicalStorages.find (MSX::Memory::_RAM_SET)).second;
 	MCHEmul::PhysicalStorageSubset* ERAMB3_SLOT0SUBSLOT0 = 
-		new MSX::EmptyPhysicalStorageLastBankSubset (_ERAM16KSLOT0SUBSLOT0_SUBSET, MCHEmul::UByte::_0, rS0S0,
+		new MSX::EmptyPhysicalStorageLastPageSubset (_ERAM16KSLOT0SUBSLOT0_SUBSET, MCHEmul::UByte::_0, rS0S0,
 			0xc000, MCHEmul::Address ({ 0x00, 0xc0 }, false), 0x4000); // 16K
 	ERAMB3_SLOT0SUBSLOT0  -> setName ("RAM Empty 16k, Slot 0, Subslot 0, Bank 3");
 	// Add the new element to the subsets and to the CPU View...

@@ -5,11 +5,15 @@ MSX::PPI8255Registers::PPI8255Registers ()
 	: MCHEmul::ChipRegisters (MSX::PPI8255Registers::_ID,
 		2 /** 2 bytes per address. */, 4 /** Registers. */),
 	  _lastValueRead (MCHEmul::UByte::_0),
-	  _slotChanged (false),
+	  _primarySlotChanged (false),
 	  _keyboardStatusMatrix (11, MCHEmul::UByte::_FF)
 	// The rest of the attributes are initialized with the method initializeInternalValues...
 {
 	initializeInternalValues ();
+
+	// This memory is not buffered...
+	// ...anytime a change is done, it is directly applicable...
+	setBufferMemorySetCommands (false);
 }
 
 // ---
@@ -17,10 +21,14 @@ MSX::PPI8255Registers::PPI8255Registers
 		(MCHEmul::PhysicalStorage* ps, size_t pp, const MCHEmul::Address& a, size_t s)
 	: MCHEmul::ChipRegisters (MSX::PPI8255Registers::_ID, ps, pp, a, s),
 	  _lastValueRead (MCHEmul::UByte::_0),
-	  _slotChanged (false)
+	  _primarySlotChanged (false)
 	 // The rest of the attributes are initialized with the method initializeInternalValues...
 {
 	initializeInternalValues ();
+
+	// This memory is not buffered...
+	// ...anytime a change is done, it is directly applicable...
+	setBufferMemorySetCommands (false);
 }
 
 // ---
@@ -29,7 +37,7 @@ void MSX::PPI8255Registers::initialize ()
 	MCHEmul::ChipRegisters::initialize ();
 
 	// To force the configuration...
-	_slotChanged = true;
+	_primarySlotChanged = true;
 
 	initializeInternalValues ();
 }
@@ -62,11 +70,11 @@ void MSX::PPI8255Registers::setValue (size_t p, const MCHEmul::UByte& v)
 		// Primary Slot Select Register
 		case 0x00:
 			{
-				_slotBank0 = (v.value () & 0x03);
-				_slotBank1 = (v.value () & 0x0c) >> 2;
-				_slotBank2 = (v.value () & 0x30) >> 4;
-				_slotBank3 = (v.value () & 0xc0) >> 6;
-				_slotChanged = true; // To send the event...
+				_primarySlotPage0 = (v.value () & 0x03);
+				_primarySlotPage1 = (v.value () & 0x0c) >> 2;
+				_primarySlotPage2 = (v.value () & 0x30) >> 4;
+				_primarySlotPage3 = (v.value () & 0xc0) >> 6;
+				_primarySlotChanged = true; // To send the event...
 			}
 
 			break;
@@ -200,7 +208,10 @@ const MCHEmul::UByte& MSX::PPI8255Registers::peekValue (size_t p) const
 // ---
 void MSX::PPI8255Registers::initializeInternalValues ()
 {
-	_slotBank0 = _slotBank1 = _slotBank2 = _slotBank3 = 0;
+	_primarySlotPage0 = 
+	_primarySlotPage1 = 
+	_primarySlotPage2 =
+	_primarySlotPage3 = 0;
 
 	for (size_t i = 0; i < _keyboardStatusMatrix.size (); 
 		_keyboardStatusMatrix [i++] = MCHEmul::UByte::_FF); // None pressed...

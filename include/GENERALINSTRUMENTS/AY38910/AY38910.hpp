@@ -56,6 +56,8 @@ namespace GENERALINSTRUMENTS
 		void setRegister (unsigned char rId, const MCHEmul::UByte& v)
 							{ _AY38910Registers -> setRegister (rId, v); }
 
+		virtual bool initialize () override;
+
 		virtual bool simulate (MCHEmul::CPU* cpu) override;
 
 		/**
@@ -77,12 +79,11 @@ namespace GENERALINSTRUMENTS
 		/** A reference to the 8255 PPI Registers. */
 		AY38910Registers* _AY38910Registers;
 
+		// Implementation
 		/** The number of cycles the CPU was executed once the simulated method finishes. */
 		unsigned int _lastCPUCycles;
-
-		// Implementation
 		/** When the Registers are created internally because they will be accesed always through out the chip
-			and this one froma port and not like a memory address (that belongs to the computer) this
+			and this on e froma port and not like a memory address (that belongs to the computer) this
 			variable is set and must be deleted. */
 		AY38910Registers* _internalRegisters;
 

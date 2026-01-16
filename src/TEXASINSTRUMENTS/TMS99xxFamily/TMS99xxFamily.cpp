@@ -98,7 +98,7 @@ bool TEXASINSTRUMENTS::TMS99xxFamily::simulate (MCHEmul::CPU* cpu)
 	{
 		// Only every 2 cycles the rest of the code is taken,
 		// Otherwise it continues iterating...
-		// This is the way to reach the _clockFactor (usually 3)/2 speed drawing pixels against the CPU!
+		// This is the way to reach the _clockFactor (usually 3/2) speed drawing pixels against the CPU!
 		if (!(_2CYCLE = !_2CYCLE))
 			continue;
 

@@ -37,6 +37,7 @@ void VIC20::VIC20Emulator::printOutParameters (std::ostream& o) const
 		 std::to_string (VIC20::Cartridge::_ID) << ":\tCartridge" << std::endl <<
 		 std::to_string (COMMODORE::Datasette1530::_ID) << ":\tCasette 1530/1" << std::endl <<
 		 std::to_string (COMMODORE::Datasette1530Injection::_ID) << ":\tDirect injection into memory" << std::endl;
+	o << "Check LOG file if the emulation doesn't start as expected" << std::endl;
 }
 
 // ---

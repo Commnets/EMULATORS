@@ -13,7 +13,7 @@ MSX::EmptyPhysicalStorageSubset::EmptyPhysicalStorageSubset (int id, const MCHEm
 }
 
 // ---
-MSX::EmptyPhysicalStorageLastBankSubset::EmptyPhysicalStorageLastBankSubset (int id, const MCHEmul::UByte& fV, 
+MSX::EmptyPhysicalStorageLastPageSubset::EmptyPhysicalStorageLastPageSubset (int id, const MCHEmul::UByte& fV, 
 		MCHEmul::PhysicalStorage* ps, size_t pp, const MCHEmul::Address& iA, size_t s, 
 		const MCHEmul::Stack::Configuration& cfg)
 	: MCHEmul::Stack (id, ps, pp, iA, s, cfg),
@@ -21,20 +21,23 @@ MSX::EmptyPhysicalStorageLastBankSubset::EmptyPhysicalStorageLastBankSubset (int
 	  _slotNumber (0) // Assigned later...
 {
 	unsigned char sslot, bank;
-	MSX::Memory::getSlotSubSlotAndBankForMemoryElement (id, _slotNumber, sslot, bank);
+	MSX::Memory::getSlotSubSlotAndPageForMemoryElement (id, _slotNumber, sslot, bank);
+
+	// The actions in this set are not buffered...
+	// ...just to allow the changes in the configuration inmediatly...
+	setBufferMemorySetCommands (false);
 }
 
 // ---
-void MSX::EmptyPhysicalStorageLastBankSubset::setValue (size_t nB, const MCHEmul::UByte& v)
+void MSX::EmptyPhysicalStorageLastPageSubset::setValue (size_t nB, const MCHEmul::UByte& v)
 {
-	if (nB == 0x3fff) // The last register in the bank? (== 0xffff)
+	if (nB == 0x3fff) // The last register in the page? (== 0xffff)
 		MSX::SubSlotRegisters::instance () -> setSubSlotRegister (_slotNumber, v);
-
-	// In other case, does nothing...
+	// In other case, it does nothing because it is an empty storage!
 }
 
 // ---
-const MCHEmul::UByte& MSX::EmptyPhysicalStorageLastBankSubset::readValue (size_t nB) const
+const MCHEmul::UByte& MSX::EmptyPhysicalStorageLastPageSubset::readValue (size_t nB) const
 {
 	return (_lastValueRead = 
 		((nB == 0x3fff) // The last register in the bank? (== 0xffff)
@@ -89,16 +92,16 @@ MSX::Memory::~Memory ()
 }
 
 // ---
-MCHEmul::PhysicalStorageSubset* MSX::Memory::activeMemoryElementInSlotSubSlotAndBank 
-	(unsigned char slot, unsigned char sslot, unsigned char bank)
+MCHEmul::PhysicalStorageSubset* MSX::Memory::activeMemoryElementInSlotSubSlotAndPage 
+	(unsigned char slot, unsigned char sslot, unsigned char page)
 {
 	MCHEmul::PhysicalStorageSubset* result = nullptr;
 
 	for (size_t i = 0; i < 4; i++)
 	for (size_t j = 0; j < 4; j++)
 	{
-		bool oneE = (_memoryElements [i][j][bank].size () == 1); // Many elements?
-		for (const auto& k : _memoryElements [i][j][bank]) // A maximum of 2...
+		bool oneE = (_memoryElements [i][j][page].size () == 1); // Many elements?
+		for (const auto& k : _memoryElements [i][j][page]) // A maximum of 2...
 		{
 			bool eps = (dynamic_cast <MSX::EmptyPhysicalStorageSubset*> (k) != nullptr); // Is it different than Empty?
 			bool a = 
@@ -122,7 +125,7 @@ MCHEmul::PhysicalStorageSubset* MSX::Memory::activeMemoryElementInSlotSubSlotAnd
 }
 
 // ---
-void MSX::Memory::activeteSlotsPerBank (unsigned char sb0, unsigned char sb1, unsigned char sb2, unsigned sb3)
+void MSX::Memory::activateSlotsPerPage (unsigned char sb0, unsigned char sb1, unsigned char sb2, unsigned sb3)
 {
 	unsigned char bStack = (unsigned char) 
 		(stack () -> initialAddress ().value () / 0x4000); // In which bank is the stack now?
@@ -132,13 +135,13 @@ void MSX::Memory::activeteSlotsPerBank (unsigned char sb0, unsigned char sb1, un
 	// By default these subslots will be the 0 in each of the slots (no extension admitted)....
 	MCHEmul::PhysicalStorageSubset* nSS [4] = { };
 	MCHEmul::Stack* nStack = nullptr;
-	nSS [0] = activeMemoryElementInSlotSubSlotAndBank (_slotSubSlotActive [0]._slot = sb0, // Slot to be active in the bank 0...
+	nSS [0] = activeMemoryElementInSlotSubSlotAndPage (_slotSubSlotActive [0]._slot = sb0, // Slot to be active in the bank 0...
 		_slotSubSlotActive [0]._subSlot = (MSX::SubSlotRegisters::instance () -> subSlotRegister (sb0).value () & 0x03), 0);
-	nSS [1] = activeMemoryElementInSlotSubSlotAndBank (_slotSubSlotActive [1]._slot = sb1, // Slot to be active in the bank 1...
+	nSS [1] = activeMemoryElementInSlotSubSlotAndPage (_slotSubSlotActive [1]._slot = sb1, // Slot to be active in the bank 1...
 		_slotSubSlotActive [1]._subSlot = (MSX::SubSlotRegisters::instance () -> subSlotRegister (sb1).value () & 0xc0) >> 2, 1);
-	nSS [2] = activeMemoryElementInSlotSubSlotAndBank (_slotSubSlotActive [2]._slot = sb2, // Slot to be active in the bank 2...
+	nSS [2] = activeMemoryElementInSlotSubSlotAndPage (_slotSubSlotActive [2]._slot = sb2, // Slot to be active in the bank 2...
 		_slotSubSlotActive [2]._subSlot = (MSX::SubSlotRegisters::instance () -> subSlotRegister (sb2).value () & 0x30) >> 4, 2);
-	nSS [3] = activeMemoryElementInSlotSubSlotAndBank (_slotSubSlotActive [3]._slot = sb3, // Slot to be active in the bank 3...
+	nSS [3] = activeMemoryElementInSlotSubSlotAndPage (_slotSubSlotActive [3]._slot = sb3, // Slot to be active in the bank 3...
 		_slotSubSlotActive [3]._subSlot= (MSX::SubSlotRegisters::instance () -> subSlotRegister (sb3).value () & 0x03) >> 6, 3);
 
 	// The memory activated in the place where the stack was defined, must be also of the type stack! 
@@ -193,7 +196,7 @@ bool MSX::Memory::createBanks ()
 	for (const auto& i : view (_CPU_VIEW) -> subsets ())
 	{
 		unsigned char slot, sslot, bank;
-		getSlotSubSlotAndBankForMemoryElement (i.first, slot, sslot, bank);
+		getSlotSubSlotAndPageForMemoryElement (i.first, slot, sslot, bank);
 
 		// Very block is 16k wide, but the element to insert can be in many banks, depending on the size...
 		// For instance the ROM of the BIOS is 32k, so it will be in 2 banks...
@@ -213,7 +216,7 @@ bool MSX::Memory::createBanks ()
 		unsigned cnt = 0;
 		for (const auto& l : _memoryElements [i][j][k])
 			if (dynamic_cast <MSX::EmptyPhysicalStorageSubset*> (l) != nullptr ||
-				dynamic_cast <MSX::EmptyPhysicalStorageLastBankSubset*> (l) != nullptr) cnt++;
+				dynamic_cast <MSX::EmptyPhysicalStorageLastPageSubset*> (l) != nullptr) cnt++;
 		result = (_memoryElements [i][j][k].size () == 1) ||
 				 (_memoryElements [i][j][k].size () == 2 && cnt == 1);
 	}

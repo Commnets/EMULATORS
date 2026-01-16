@@ -9,7 +9,8 @@ MCHEmul::IOPeripheral* MSX::IOPeripheralBuilder::createPeripheral
 
 	MCHEmul::IOPeripheral* result = nullptr;
 
-	// TODO
+	if (id == MCHEmul::Typewriter::_ID)
+		result = new MCHEmul::Typewriter (3 /** 1/25 * 3 = 1 every 120 miliseconds. */, c);
 
 	// Take care, it could be null...
 	return (result);

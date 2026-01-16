@@ -30,7 +30,7 @@ namespace MSX
 		static const int _ID = 100;
 
 		// Some events...
-		static const unsigned int _SLOTCHANGED = 100;
+		static const unsigned int _PRIMARYSLOTCHANGED = 100;
 
 		PPI8255 (PPI8255Registers* reg);
 
@@ -44,6 +44,8 @@ namespace MSX
 							{ return (_PPI8255Registers-> peekRegister (rId)); }
 		void setRegister (unsigned char rId, const MCHEmul::UByte& v)
 							{ _PPI8255Registers -> setRegister (rId, v); }
+
+		virtual bool initialize () override;
 
 		virtual bool simulate (MCHEmul::CPU* cpu) override;
 
@@ -68,10 +70,9 @@ namespace MSX
 		/** A reference to the 8255 PPI Registers. */
 		PPI8255Registers* _PPI8255Registers;
 
+		// Implementation
 		/** The number of cycles the CPU was executed once the simulated method finishes. */
 		unsigned int _lastCPUCycles;
-
-		// Implementation
 		/** When the Registers are created internally because they will be accesed always through out the chip
 			and this one froma port and not like a memory address (that belongs to the computer) this
 			variable is set and must be deleted. */

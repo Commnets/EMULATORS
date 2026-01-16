@@ -24,6 +24,18 @@ MSX::PPI8255::~PPI8255 ()
 }
 
 // ---
+bool MSX::PPI8255::initialize ()
+{
+	assert (_PPI8255Registers != nullptr);
+
+	_PPI8255Registers -> initialize ();
+
+	_lastCPUCycles = 0;
+
+	return (true);
+}
+
+// ---
 bool MSX::PPI8255::simulate (MCHEmul::CPU* cpu)
 {
 	// First time?
@@ -38,8 +50,8 @@ bool MSX::PPI8255::simulate (MCHEmul::CPU* cpu)
 	// IN this case it is not needed to iterate over all cycles executed at CPU level...
 	_IFDEBUG debugPPI8255Cycle (cpu);
 
-	if (_PPI8255Registers -> slotChanged ())
-		notify (MCHEmul::Event (MSX::PPI8255::_SLOTCHANGED, 
+	if (_PPI8255Registers -> primarySlotChanged ()) // The changes in the values are not buffered...
+		notify (MCHEmul::Event (MSX::PPI8255::_PRIMARYSLOTCHANGED, 
 			(int) _PPI8255Registers -> peekRegister (0).value ()));
 
 	_lastCPUCycles = cpu -> clockCycles ();

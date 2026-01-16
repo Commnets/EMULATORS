@@ -22,7 +22,7 @@ namespace MSX
 	class MSXComputer;
 
 	/** This class represents the subslot subsregisters that can be read from the memory of the MSX. \n
-		When at the bank 3 (0xc000 - 0xffff) the slot connected has "nothing" there, 
+		When at the page 3 (0xc000 - 0xffff) the slot connected has "nothing" there, 
 		the position 0xffff has "subslots" that are connected to the different banks. \n
 		This class leeps that information with a Singleton design pattern and ten can be accessed from anyplace. \n
 		The object is instanciated in the Memory constructor and destroyed in the Memory destructor. */
@@ -98,10 +98,10 @@ namespace MSX
 
 	/** This class is simular to the previous one but representing the last accesible part of the memory. \n
 		This is special to be able to read the position 0xffff and other ones special when nothing is connected. */
-	class EmptyPhysicalStorageLastBankSubset final : public MCHEmul::Stack
+	class EmptyPhysicalStorageLastPageSubset final : public MCHEmul::Stack
 	{
 		public:
-		EmptyPhysicalStorageLastBankSubset (int id, const MCHEmul::UByte& fV, 
+		EmptyPhysicalStorageLastPageSubset (int id, const MCHEmul::UByte& fV, 
 				MCHEmul::PhysicalStorage* ps, size_t pp, const MCHEmul::Address& iA, size_t s, 
 				const Configuration& cfg = MCHEmul::Stack::Configuration ());
 
@@ -179,10 +179,10 @@ namespace MSX
 		// The views of the memory...
 		static const int _CPU_VIEW = 0;	// The view from the CPU...
 
-		/** Given a memory element id, to get the slot, subslot and bank of a element id. 
+		/** Given a memory element id, to get the slot, subslot and page of a element id. 
 			This system is based on maintining a rigorous way of naming the memory elements. */
-		static inline void getSlotSubSlotAndBankForMemoryElement 
-			(int id, unsigned char& slot, unsigned char& sslot, unsigned char& bank);
+		static inline void getSlotSubSlotAndPageForMemoryElement 
+			(int id, unsigned char& slot, unsigned char& sslot, unsigned char& page);
 
 		/** Creates the memory based on the model, the configuartion and the language. 
 			The language is used mainly to load the right type of ROM. \n
@@ -210,19 +210,19 @@ namespace MSX
 		/** To get the first memory id free in a slot and subslot to define and element. */
 		inline int firstIdMemoryElementFreeSlotSubSlot (unsigned char slot, unsigned char sslot) const;
 
-		// To desactivate elements connected in the different slots and subslots per bank.
+		// To desactivate elements connected in the different slots and subslots per page.
 		// These methods are used in running, so no boundary check is done.
-		/** Desactivate all memory elements connected in a bank of a subslot of a slot. \n
+		/** Desactivate all memory elements connected in a page of a subslot of a slot. \n
 			the parameter std indicates that either the EMPTY RAMs or ROM or 16k basic system 
 			are available in slot, subslot 0, bank 0,1 & 3 when everything else is desactivated there. */
-		inline void desactivateMemoryElementsSubSlotAndBank 
-			(unsigned char slot, unsigned char sslot, unsigned char bank, bool std = false);
-		/** Desactivate all memory elements in every bank of a subslot of a slot,
+		inline void desactivateMemoryElementsSubSlotAndPage 
+			(unsigned char slot, unsigned char sslot, unsigned char page, bool std = false);
+		/** Desactivate all memory elements in every page of a subslot of a slot,
 			following the same rules described desactivateMemoryElementsSubSlotAndBank. */
 		void desactivateMemoryElementsSubSlot (unsigned char slot, unsigned char sslot, bool std = false)
 							{ for (unsigned char i = 0; i < 4; 
-								desactivateMemoryElementsSubSlotAndBank (slot, sslot, i++, std)); }
-		/** Desactivate all memory elements in every subslot and bank of a slot,
+								desactivateMemoryElementsSubSlotAndPage (slot, sslot, i++, std)); }
+		/** Desactivate all memory elements in every subslot and page of a slot,
 			following the same rules described in desactivateMemoryElementsSubSlotAndBank. */
 		void desactivateMemoryElementsSlot (unsigned char slot, bool std = false)
 							{ for (unsigned char i = 0; i < 4; 
@@ -252,19 +252,19 @@ namespace MSX
 			Because there can be only a maximum of two elements in that situation and 
 			only one of them can be different than empty, activates it if that situation exists. \n
 			The method returns a reference to the element returned. */
-		MCHEmul::PhysicalStorageSubset* activeMemoryElementInSlotSubSlotAndBank 
-			(unsigned char slot, unsigned char sslot, unsigned char bank);
+		MCHEmul::PhysicalStorageSubset* activeMemoryElementInSlotSubSlotAndPage 
+			(unsigned char slot, unsigned char sslot, unsigned char page);
 		/** Change the slot active per bank of memory. \n 
 			Remember that in a subslot up to 4 differemt
 			The subslot finally selected (expanded) will depend on the last memory structure active. 
 			That memory structure is managed acting over direction $ffff of every slot (subslot register). 
 			@see in the definition of the class. */
-		void activeteSlotsPerBank (unsigned char sb0, unsigned char sb1, unsigned char sb2, unsigned sb3);
+		void activateSlotsPerPage (unsigned char sb0, unsigned char sb1, unsigned char sb2, unsigned sb3);
 		/** To reactivate the slots per bank.
 			This is used when the subslots configuration changes, 
 			and then it is needed to reassign that configuration in the memory. */
-		void reactivateSlotsPerBank ()
-							{ activeteSlotsPerBank 
+		void reactivateSlotsPerPage ()
+							{ activateSlotsPerPage 
 								(_slotSubSlotActive [0]._slot, // The ones that already active...
 								 _slotSubSlotActive [1]._slot,
 								 _slotSubSlotActive [2]._slot, 
@@ -310,8 +310,8 @@ namespace MSX
 	};
 
 	// ---
-	inline void Memory::getSlotSubSlotAndBankForMemoryElement 
-		(int id, unsigned char& slot, unsigned char& sslot, unsigned char& bank)
+	inline void Memory::getSlotSubSlotAndPageForMemoryElement 
+		(int id, unsigned char& slot, unsigned char& sslot, unsigned char& page)
 	{
 		unsigned char nE = (unsigned char) (id / 1000); // The number of elements in the slot/subslot/bank...
 		// This number is not used for anything anymore in this routine...
@@ -320,8 +320,8 @@ namespace MSX
 		assert (slot >= 0 && slot < 4);		// Just in case...
 		sslot = (unsigned char) ((id % 100) / 10);
 		assert (sslot >= 0 && sslot < 4);	// Just in case...
-		bank = (unsigned char) (id % 10);
-		assert (bank >= 0 && bank < 4);		// Just in case...
+		page = (unsigned char) (id % 10);
+		assert (page >= 0 && page < 4);		// Just in case...
 	}
 
 	// ---
@@ -343,7 +343,7 @@ namespace MSX
 	}
 
 	// ---
-	inline void Memory::desactivateMemoryElementsSubSlotAndBank 
+	inline void Memory::desactivateMemoryElementsSubSlotAndPage 
 		(unsigned char slot, unsigned char sslot, unsigned char bank, bool std)
 	{
 		if (slot == 0 && sslot == 0)
@@ -363,7 +363,7 @@ namespace MSX
 			{ 
 				bool a = std && // Activate the basic element when it is selected!
 					(dynamic_cast <MSX::EmptyPhysicalStorageSubset*> (i) != nullptr &&
-					 dynamic_cast <MSX::EmptyPhysicalStorageLastBankSubset*> (i) != nullptr);
+					 dynamic_cast <MSX::EmptyPhysicalStorageLastPageSubset*> (i) != nullptr);
 				
 				i -> setActive (a); 
 				i -> setActiveForReading (a);
@@ -382,10 +382,10 @@ namespace MSX
 		// An elements can be live in many banks attending to the size of the element...
 		// However the element is connected in only one bank at the same time...
 		unsigned char slot, sslot, bank;
-		getSlotSubSlotAndBankForMemoryElement (id, slot, sslot, bank);
+		getSlotSubSlotAndPageForMemoryElement (id, slot, sslot, bank);
 
 		// Desactivate all other elements connected in the same slot, subslot and bank, if any...
-		desactivateMemoryElementsSubSlotAndBank (slot, sslot, bank);
+		desactivateMemoryElementsSubSlotAndPage (slot, sslot, bank);
 
 		// ...and finally connected the element...
 		elemt -> setActive (true);

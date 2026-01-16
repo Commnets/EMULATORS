@@ -2,6 +2,7 @@
 #include <C264/C264.hpp>
 #include <C264/Screen.hpp>
 #include <C264/Cartridge.hpp>
+#include <C264/1531Datasette.hpp>
 
 // ---
 const unsigned char C264::C264Emulator::_PARAMNTSC = 'n';
@@ -31,8 +32,10 @@ void C264::C264Emulator::printOutParameters (std::ostream& o) const
 		 "C116:\t0=16k, 1=32k, 2=64k" << std::endl <<
 		 "CP4:\t2 = Internal Programs (64k)" << std::endl;
 	o << "DEVICES allowed to be connected under command CONNECTPER:" << std::endl <<
-		 std::to_string (COMMODORE::Datasette1530::_ID) << ":\tCasette 1530/1" << std::endl <<
+		 std::to_string (C264::Datasette1531::_ID) << ":\tCasette 1531" << std::endl <<
+		 std::to_string (C264::Datasette1531Injection::_ID) << ":\tCasette 1531 Direct Injection" << std::endl <<
 		 std::to_string (C264::Cartridge::_ID) << ":\tCartridge" << std::endl;
+	o << "Check LOG file if the emulation doesn't start as expected" << std::endl;
 }
 
 // ---

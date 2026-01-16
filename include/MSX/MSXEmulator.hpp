@@ -90,7 +90,8 @@ namespace MSX
 		virtual MCHEmul::FileIO* createFileReader () const override
 							{ return (new MCHEmul::FileIO 
 								(MCHEmul::FileTypeIOList (
-									{ /** TODO. */ }))); }
+									{ new MSX::KeystrokeTypeIO 
+										(model () -> typewriterSpecialKeys (computerLanguage ())) /** The typewirter. */ }))); }
 
 		private:
 		/** Factory method to create the right type of MSX. 
