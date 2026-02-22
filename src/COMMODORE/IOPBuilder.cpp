@@ -32,3 +32,59 @@ MCHEmul::IOPeripheral* COMMODORE::IOPeripheralBuilder::createPeripheral
 	// Take care, it could be null...
 	return (result);
 }
+
+// ---
+std::tuple <std::string, unsigned char, MCHEmul::MatrixPrinterEmulation*> 
+	COMMODORE::IOPeripheralBuilder::getDataPrinterFrom
+		(const MCHEmul::Attributes& prms,
+		 const std::tuple <std::string, unsigned char, MCHEmul::MatrixPrinterEmulation*>& eD) const
+{
+	// To get the parameter....
+	auto getParameter = [](const std::string& attr) -> std::pair <std::string, std::string>
+		{
+			MCHEmul::Strings strs = MCHEmul::getElementsFrom (attr,':');
+			return (strs.size () == 2 
+				? std::make_pair
+					(std::move (MCHEmul::upper (strs [0])), std::move (MCHEmul::upper (strs [1])))
+				: std::make_pair ("", ""));
+		};
+
+	std::string pF;
+	unsigned char dN;
+	MCHEmul::MatrixPrinterEmulation* mPE;
+	std::tie (pF, dN, mPE) = eD;
+
+	for (auto const& i : prms)
+	{
+		auto a = getParameter (i.second);
+		if (a.first != "")
+		{
+			if (a.first == "D")
+			{
+				dN = (unsigned char) std::atoi (a.second.c_str ());
+			}
+			else
+			if (a.first == "F")
+			{
+				pF = a.second;
+			}
+			else
+			if (a.first == "P")
+			{
+				delete mPE;
+				mPE = 
+					(a.second == "PSMPS801")
+						? (MCHEmul::MatrixPrinterEmulation*) 
+							new COMMODORE::MPS801PostscriptMatrixPrinterEmulation 
+								(MCHEmul::MatrixPrinterEmulation::Paper (), pF)
+						: ((a.second == "PS") 
+							? (MCHEmul::MatrixPrinterEmulation*)
+								new COMMODORE::MPS801BasicMatrixPrinterEmulation (pF)
+							: (MCHEmul::MatrixPrinterEmulation*)
+								new MCHEmul::BasicMatrixPrinterEmulation (80, pF));
+			}
+		}
+	}
+
+	return (std::make_tuple (pF, dN, mPE));
+}

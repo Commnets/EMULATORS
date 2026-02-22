@@ -20,6 +20,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\include\COMMODORE\1530Datasette.hpp" />
+    <ClInclude Include="..\..\include\COMMODORE\1540SeriesDisk.hpp" />
     <ClInclude Include="..\..\include\COMMODORE\ACIA\ACIA.hpp" />
     <ClInclude Include="..\..\include\COMMODORE\ACIA\ACIARegisters.hpp" />
     <ClInclude Include="..\..\include\COMMODORE\ACIA\incs.hpp" />
@@ -43,6 +44,7 @@
     <ClInclude Include="..\..\include\COMMODORE\IOPBuilder.hpp" />
     <ClInclude Include="..\..\include\COMMODORE\SerialIOPeripherals.hpp" />
     <ClInclude Include="..\..\include\COMMODORE\SerialPort.hpp" />
+    <ClInclude Include="..\..\include\COMMODORE\SerialPrinters.hpp" />
     <ClInclude Include="..\..\include\COMMODORE\SID\incs.hpp" />
     <ClInclude Include="..\..\include\COMMODORE\SID\SID.hpp" />
     <ClInclude Include="..\..\include\COMMODORE\SID\SIDLibWrapper.hpp" />
@@ -88,6 +90,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\COMMODORE\1530Datasette.cpp" />
+    <ClCompile Include="..\..\src\COMMODORE\1540SeriesDisk.cpp" />
     <ClCompile Include="..\..\src\COMMODORE\ACIA\ACIA.cpp" />
     <ClCompile Include="..\..\src\COMMODORE\ACIA\ACIARegisters.cpp" />
     <ClCompile Include="..\..\src\COMMODORE\C6529B\C6529B.cpp" />
@@ -104,7 +107,9 @@
     <ClCompile Include="..\..\src\COMMODORE\ExpansionPort.cpp" />
     <ClCompile Include="..\..\src\COMMODORE\FileIO.cpp" />
     <ClCompile Include="..\..\src\COMMODORE\IOPBuilder.cpp" />
+    <ClCompile Include="..\..\src\COMMODORE\SerialIOPeripherals.cpp" />
     <ClCompile Include="..\..\src\COMMODORE\SerialPort.cpp" />
+    <ClCompile Include="..\..\src\COMMODORE\SerialPrinters.cpp" />
     <ClCompile Include="..\..\src\COMMODORE\SID\SID.cpp" />
     <ClCompile Include="..\..\src\COMMODORE\SID\SIDLibWrapper.cpp" />
     <ClCompile Include="..\..\src\COMMODORE\SID\SIDRegisters.cpp" />

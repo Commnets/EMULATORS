@@ -86,7 +86,7 @@ namespace MCHEmul
 		/** This method is to set specials reading speeds associated to specific events. \n
 			Again, the method has to be invoked from the connectData in every class inhereting from this one. */
 		void setSpecficEventsWaitingTime (const std::map <size_t, unsigned int>& swt)
-							{ _specificWaitingTimes = std::move (swt); }
+							{ _specificWaitingTimes = swt; }
 
 		protected:
 		/** This list has to be loaded with the method load events. 

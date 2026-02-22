@@ -255,6 +255,12 @@
     <ClInclude Include="..\..\include\COMMODORE\C6529B\incs.hpp">
       <Filter>Archivos de encabezado\Motherboard\Chips\C6529B</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\include\COMMODORE\1540SeriesDisk.hpp">
+      <Filter>Archivos de encabezado\IO</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\COMMODORE\SerialPrinters.hpp">
+      <Filter>Archivos de encabezado\IO</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Commodore.fmt">
@@ -381,6 +387,15 @@
       <Filter>Archivos de origen\Motherboard\Chips\C6529B</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\COMMODORE\FileIO.cpp">
+      <Filter>Archivos de origen\IO</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\COMMODORE\1540SeriesDisk.cpp">
+      <Filter>Archivos de origen\IO</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\COMMODORE\SerialIOPeripherals.cpp">
+      <Filter>Archivos de origen\IO</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\COMMODORE\SerialPrinters.cpp">
       <Filter>Archivos de origen\IO</Filter>
     </ClCompile>
   </ItemGroup>

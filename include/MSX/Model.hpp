@@ -21,6 +21,7 @@
 #include <MSX/VDP.hpp>
 #include <MSX/PSG.hpp>
 #include <MSX/OSIO.hpp>
+#include <array>
 
 namespace MSX
 {
@@ -120,6 +121,12 @@ namespace MSX
 							{ return (_typewriterSpecialKeys.empty () 
 								? _typewriterSpecialKeys = createTypewriterSpecialKeys (lang) : _typewriterSpecialKeys); }
 
+		// Related with the memory
+		/** To know which slots are expaded. \n
+			By default all of them are NOT expanded. \n
+			This method has always to return a 4 elements std::vector. */
+		virtual std::array <bool, 4> expandedSlots () const
+							{ return (std::array <bool, 4> { false, false, false, false }); }
 		/** To get the memory of the system. \n
 			First time ois invoked the content memoty is created using the method memoryContent. */
 		Memory* memory (unsigned int cfg, const std::string& lang);
@@ -145,8 +152,8 @@ namespace MSX
 		// All these methods are invoked from the construction of the memory element (above)...
 		/** Gets the structure of the memory. \n
 			It can be overloaded, but the default basic standard structure is createde here. \n
-			The basic memory structure is made up of 4 slots witch 4 subslots each and 4 different banks each.
-			All banks will contain "empty RAM", except, slot 0, subslot 0, bank 0 & 1 that will contain ROM,
+			The basic memory structure is made up of 4 slots witch 4 subslots each and 4 different pages each.
+			All pages will contain "empty RAM", except, slot 0, subslot 0, page 0 & 1 that will contain ROM,
 			and slot 0, subslot 2 that will contain RAM (the minumum that the standard accepts). \n
 			Other models could add additional components. */
 		virtual MCHEmul::Memory::Content memoryContent () const;

@@ -306,6 +306,51 @@ NOTE: Change to FBYTES attribute in DatasetteData structure instead
 Position:@DATACOUNTER@,@ELEMENTCOUNTER@
 #---
 #---
+;SerialIOSimulationDefinition
+LATTABLE:$@LATTABLE@,FATTABLE:$@FATTABLE@,SATTABLE:$@SATTABLE@
+->Traps:
+@TRAPS?{key=no,equal=,empty=no trap}\n@
+#---
+#---
+;SerialIONotPresentSimulation
+Id:@ID@
+@ATTRS?{key=YES,equal=:,empty=no attributes}\n@
+->Definition:
+@SerialIOSimulationDefinition>@
+#---
+#---
+;Disk1540Data
+Id:@ID@(Size:@SIZE@)
+@BYTES{blocksize=32,listsep=\,,tablesep=\ ,minsize=2}@
+#@FBYTES{blocksize=32,listsep=\,,tablesep=\ ,minsize=2}@
+#Include the command above to show all data when the size is bigger than 256 bytes...
+#---
+#---
+;Disk1540Simulation
+Id:@ID@
+@ATTRS?{key=YES,equal=:,empty=no attributes}\n@
+Device Number:@DEVICENUMBER@
+->Data:
+Name:@DATANAME@ (Size:@DATASIZE@)
+@DATA?{fmter=Disk1540Data,empty=no data}\n---\n@
+NOTE: Only the first 256 bytes are shown
+NOTE: Change to FBYTES attribute in Disk1540Data structure instead
+->Definition:
+@SerialIOSimulationDefinition>@
+#---
+#---
+;SerialPrinterSimulation
+Id:@ID@
+@ATTRS?{key=YES,equal=:,empty=no attributes}\n@
+Device Number:@DEVICENUMBER@
+COMMANDS:
+@COMMANDS@
+->Definition:
+@SerialIOSimulationDefinition>@
+->Matrix Emulation:
+@MatrixPrinterEmulation>@
+#---
+#---
 ;Cartridge
 Id:@ID@
 @ATTRS?{key=YES,equal=:,empty=no attributes}\n@

@@ -23,6 +23,7 @@
 #include <VIC20/OSIO.hpp>
 #include <VIC20/ExpansionPort.hpp>
 #include <VIC20/DatasettePort.hpp>
+#include <VIC20/1530Datasette.hpp>
 #include <VIC20/Cartridge.hpp>
 #include <VIC20/VIA1Registers.hpp>
 #include <VIC20/VIA1.hpp>

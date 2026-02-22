@@ -39,6 +39,9 @@ Source: "Commodore.fmt"; DestDir: "{app}"; Flags: ignoreversion
 Source: "LocalConsole.fmt"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Standard.fmt"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Default.fmt"; DestDir: "{app}"; Flags: ignoreversion
+Source: "PSBasicPrinter.ps"; DestDir: "{app}"; Flags: ignoreversion
+Source: "PSMatrixPrinterI.ps"; DestDir: "{app}"; Flags: ignoreversion
+Source: "PSMatrixPrinterII.ps"; DestDir: "{app}"; Flags: ignoreversion
 Source: "blkFormatter.fmt"; DestDir: "{app}"; Flags: ignoreversion
 
 [Languages]

@@ -235,6 +235,24 @@ Active:@ACTIVE@, Type:@TYPE@, Frequency:@FREQUENCY@
 Active:@ACTIVE@, Type:@TYPE@, Frequency:@FREQUENCY@(@PULSEUP@)
 #---
 #---
+;MatrixEmulationPaper
+Paper Size:@PAPERWIDTH@' x @PAPERHEIGHT@' (inch)
+Paper Border:@PAPERBORDER@' (inch)
+#---
+#---
+;MatrixEmulationConfiguration
+Char Size:@CHARWIDTH@ x @CHARHEIGHT@
+Chars per line:@CHARSPERLINE@
+#---
+#---
+;MatrixPrinterEmulation
+->Configuration:
+@MatrixEmulationConfiguration>@
+->Paper:
+@MatrixEmulationPaper>@
+Output File:@PRINTERFILE@
+#---
+#---
 ;ComputerHook
 Id:@ID@, Type:@TYPE@, Action:@ACTION@
 Detail:@INFO@

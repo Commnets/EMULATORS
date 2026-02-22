@@ -153,8 +153,14 @@ namespace COMMODORE
 		/** Invoked from simulate. It can be overloaded, 
 			but a couple of basic traps are understood: "Header" & "Retrieve".
 			Define them when construct the object because the address In/Out can vary per type of COMMODORE machine. \n
-			However this default implementation oas highlighted above is ready for a Commodore 64 and a Commodore VIC20 */
+			However this default implementation oas highlighted above is ready for a Commodore 64 and a Commodore VIC20. \n
+			Returns true if the trap is executed actually (no matter whether with error or not). */
 		virtual bool executeTrap (const MCHEmul::Trap& t, MCHEmul::CPU* cpu);
+		// All of them ivoked from the previous one...
+		/** Can be overloaded. What is the case in the C264 e.g. \n
+			Returns true when the trap was really executed, and false in other case. */
+		virtual bool executeFindHeaderTrap (MCHEmul::CPU* cpu);
+		virtual bool executeReceiveDataTrap (MCHEmul::CPU* cpu);
 
 		/** To load the program into the memory. \n
 			In some COMMODORE computers (like C64) the whole RAM memory is not directly accesible. */

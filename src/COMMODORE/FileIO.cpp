@@ -532,6 +532,268 @@ MCHEmul::FileData* COMMODORE::T64FileTypeIO::readFile (const std::string& fN, bo
 }
 
 // ---
+COMMODORE::D64FileData::TrackInfo COMMODORE::D64FileData::TrackInfo::trackInfo (unsigned tN)
+{ 
+	if (tN >= 1 && tN <= 17) 
+		return (D64FileData::TrackInfo 
+			(tN, 21, MCHEmul::Address (3, ((tN - 1) * 21) * 256)));
+	else 
+	if (tN >= 18 && tN <= 24) 
+		return (D64FileData::TrackInfo 
+			(tN, 19, MCHEmul::Address (3, 
+				((17 * 21 /** The first 17 tracks have 21 sectors each */) + 
+				 ((tN - 18) * 19 /** The rest from 18 onwards have 19 each. */)) * 256)));
+	else
+	if (tN >= 25 && tN <= 30) 
+		return (D64FileData::TrackInfo 
+			(tN, 18, MCHEmul::Address (3, 
+				((17 * 21) + 
+				 (7 * 19 /** From 18 to 24, that's it = 7 more, have 19 sectors each. */) +
+				 ((tN - 25) * 18 /** The rest from 25 onwards have 18 each. */)) * 256)));
+	else 
+	if (tN >= 31 && tN <= 42) 
+		return (D64FileData::TrackInfo 
+			(tN, 17, MCHEmul::Address (3, 
+				((17 * 21) + 
+				 (7 * 19) + 
+				 (6 * 18 /** From 25 to 30, that's it = 6 more, have 18 sectors each. */) +
+				 ((tN - 31) * 17) /** The rest from 31 onwards have 17 each. */) * 256)));
+	else 
+		_LOG ("D64FileData::TrackInfo::trackInfo: Invalid track number: " + std::to_string (tN));
+
+	// This method should not arrive here...
+	// It would mean that the track number is invalid...
+	// So, return a default value, but assert (in TrackInfo constructor) shold declare the problem...
+	return (D64FileData::TrackInfo (0, 0, MCHEmul::Address ()));
+}
+
+// ---
+void COMMODORE::D64FileData::Track18Data::setSectorData (unsigned char sn, const MCHEmul::UBytes& data)
+{ 
+	COMMODORE::D64FileData::TrackData::setSectorData (sn, data); 
+
+	_entriesCreated = false;
+}
+
+// ---
+const COMMODORE::D64FileData::DirectoryEntries& 
+	COMMODORE::D64FileData::Track18Data::entries () const
+{ 
+	if (!_entriesCreated) 
+	{
+		createEntries ();
+
+		_entriesCreated = true;
+	}
+
+	return (_entries);
+}
+
+// ---
+std::string COMMODORE::D64FileData::Track18Data::asString () const
+{ 
+	std::string result = "";
+
+	// Just to force the generation if needed....
+	const COMMODORE::D64FileData::DirectoryEntries& e = entries (); 
+	for (const auto& i : e)
+	{
+		for (const auto& j : i)
+		{
+			if (j._fileName == "")
+				continue; // No entry...
+			result += (result != "" ? "," : "") + j.asString ();
+		}
+	}
+
+	return (result);
+}
+
+// ---
+void COMMODORE::D64FileData::Track18Data::createEntries () const
+{
+	_entries = { };
+
+	// Enty blocks counter...
+	size_t eB = 0;
+	// Current track & sector...
+	unsigned char cT = 18; // The directory is always in track 18... 
+	unsigned char cS = 0;  // Starting from the sector 0...
+	do
+	{
+		// Next track & sector...
+		unsigned char nT = 
+			_sectorsData [cS].bytes () [0].value ();
+		unsigned char nS = 
+			_sectorsData [cS].bytes () [1].value ();
+
+		switch (cS)
+		{
+			// Sector 0 is the directory header...
+			case 0:
+				{
+					// TODO
+				}
+				break;
+
+			// The rest have entries...
+			// ...8 entries per sector...
+			default:
+				{
+					_entries [eB++] = getEntriesFromSector (cS);
+				}
+
+				break;
+		}
+
+		cT = nT; cS = nS;
+	} while (cT != 0);
+}
+
+// ---
+COMMODORE::D64FileData::DirectoryEntriesPerSector 
+	COMMODORE::D64FileData::Track18Data::getEntriesFromSector (unsigned char sN) const
+{
+	// No entries in sector 0...
+	// ...just in case they are requested...
+	if (sN == 0)
+		return (COMMODORE::D64FileData::DirectoryEntriesPerSector { });
+		
+	COMMODORE::D64FileData::DirectoryEntriesPerSector result;
+	// Each sector has 8 entries of 32 bytes each...
+	bool end = false;
+	for (unsigned char i = 0; i < 8 && !end; i++)
+	{
+		COMMODORE::D64FileData::DirectoryEntry dE;
+	
+		dE._fileType = (COMMODORE::D64FileData::DirectoryEntry::FileType) 
+			(_sectorsData [sN].bytes () [(i << 5) + 2].value () & 0x0f); // The LSB Nibble...
+		dE._startTrack = _sectorsData [sN].bytes () [(i << 5) + 3].value ();
+		dE._startSector = _sectorsData [sN].bytes () [(i << 5) + 4].value ();
+		dE._fileSizeBlocks = 
+			((unsigned short) (_sectorsData [sN].bytes () [(i << 5) + 31].value ()) << 8) + 
+			 (unsigned short) (_sectorsData [sN].bytes () [(i << 5) + 30].value ());
+		
+		dE._fileName = "";
+		for (unsigned char j = 0; j < 16; j++)
+		{ unsigned char c = 
+			 _sectorsData [sN].bytes () [(i << 5) + 5 + j].value ();
+			dE._fileName += (std::isalpha (c) ? (char) std::toupper (c) : ' ');	}
+		dE._fileName = MCHEmul::trim (dE._fileName);
+
+		// End? or not end and added?...
+		if (!(end = (dE._fileName == "")))
+			result [i] = std::move (dE);
+	}
+
+	return (result);
+}
+
+// ---
+COMMODORE::D64FileData::D64FileData (unsigned char nT)
+	: _numberTracks (nT),
+	  _tracksData ()
+{ 
+	assert (_numberTracks <= 42);
+
+	// Creating all tracks...
+	for (unsigned char i = 1; i <= _numberTracks; i++)
+		_tracksData.emplace_back ((i == 18) ? new Track18Data  : new TrackData (i));
+}
+
+// ---
+MCHEmul::ExtendedDataMemoryBlocks COMMODORE::D64FileData::asMemoryBlocks () const
+{
+	MCHEmul::ExtendedDataMemoryBlocks result;
+
+	for (unsigned char i = 1; i <= _numberTracks; i++)
+	{
+		for (unsigned char j = 0; 
+				j < _tracksData [i - 1] -> _trackInfo._sectors; j++)
+		{
+			MCHEmul::DataMemoryBlock mB (
+				MCHEmul::Address (3, 
+					_tracksData [i - 1] -> _trackInfo._offset.value () + ((unsigned int) j * 256)),  
+				_tracksData [i - 1] -> getSectorData (j).bytes ());
+			mB.setName ("TRACK " + std::to_string ((int) i) + " SECTOR " + std::to_string ((int) j));
+			mB.setAttribute ("TRACK", std::to_string ((int) i));
+			mB.setAttribute ("SECTOR", std::to_string ((int) j));
+			result._data.emplace_back (std::move (mB));
+		}
+	}
+
+	return (result);
+}
+
+// ---
+bool COMMODORE::D64FileTypeIO::canRead (const std::string& fN) const
+{
+	// Extension?
+	size_t pp = fN.find_last_of ('.');
+	if (pp == std::string::npos || pp == fN.length ())
+		return (false); // ...no
+
+	// The right extension?
+	std::string ext = MCHEmul::upper (fN.substr (pp + 1));
+	if (ext != "D64")
+		return (false); // ...no
+
+	// Possible to open?
+	std::ifstream f (fN, std::ios::in | std::ios::binary);
+	if (!f)
+		return (false); // ...no
+
+	// Has it the right (minimum) length?
+	f.seekg (0, std::ios::end);
+	std::streamoff s = (std::streamoff) f.tellg ();
+	f.close ();
+	if (s != (std::streamoff) 0x2ab00 && // 35 tracks...
+		s != (std::streamoff) 0x2c000 && // 40 tracks...
+		s != (std::streamoff) 0x2c800)	 // 42 tracks...
+		return (false); // ...this type of format is very very precissed in the length...
+
+	return (true);
+}
+
+// ---
+MCHEmul::FileData* COMMODORE::D64FileTypeIO::readFile (const std::string& fN, bool bE) const
+{
+	std::ifstream f (fN, std::ios::in | std::ios::binary);
+	if (!f)
+		return (nullptr); // Impossible to be open... 
+						  // At this point it shouldn't happen but just in case...
+
+	f.seekg (0, std::ios::end);
+	std::streamoff s = (std::streamoff) f.tellg ();
+	unsigned char nT = 35; // The usual number of tracks...
+	if (s == (std::streamoff) 0x2c000) nT = 40; // ...but ir could be different...
+	else if (s == (std::streamoff) 0x2c800) nT = 42;
+	MCHEmul::FileData* result = new COMMODORE::D64FileData (nT);
+	COMMODORE::D64FileData* rD64 = 
+		static_cast <COMMODORE::D64FileData*> (result); // To better manipulation...
+	f.seekg (0, std::ios::beg);
+
+	// It is time to read the info per block...
+	for (unsigned char i = 1; i <= nT; i++)
+	{
+		for (unsigned char j = 0; 
+				j < rD64 -> _tracksData [i - 1] -> _trackInfo._sectors; j++)
+		{
+			char data [256] = { };
+			f.read (data, 256);
+			std::vector <MCHEmul::UByte> dtBytes;
+			for (size_t k = 0; k < 256; 
+				dtBytes.emplace_back (data [k++]));
+			rD64 -> _tracksData [i - 1] -> setSectorData (j, MCHEmul::UBytes (dtBytes));
+		}
+	}
+
+	f.close ();
+
+	return (result);
+}
+
+// ---
 MCHEmul::ExtendedDataMemoryBlocks COMMODORE::CRTFileData::asMemoryBlocks () const
 {
 	MCHEmul::ExtendedDataMemoryBlocks result;

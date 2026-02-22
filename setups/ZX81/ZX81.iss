@@ -33,6 +33,7 @@ Source: "SINCLAIR.fmt"; DestDir: "{app}"; Flags: ignoreversion
 Source: "LocalConsole.fmt"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Standard.fmt"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Default.fmt"; DestDir: "{app}"; Flags: ignoreversion
+Source: "PSBasicPrinter.ps"; DestDir: "{app}"; Flags: ignoreversion
 Source: "blkFormatter.fmt"; DestDir: "{app}"; Flags: ignoreversion
 Source: "ZX80SysVars.txt"; DestDir: "{app}"; Flags: ignoreversion
 Source: "ZX81SysVars.txt"; DestDir: "{app}"; Flags: ignoreversion

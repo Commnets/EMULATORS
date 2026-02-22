@@ -1,0 +1,375 @@
+%!PS-Adobe-3.0
+%%Title: Dot-Matrix 8x8 Vertical Font (A-Z a-z) + Text Rendering
+%%Pages: 1
+%%BoundingBox: 0 0 595 842
+%%EndComments
+
+initgraphics
+
+% =========================================================
+% Global Parameters
+% =========================================================
+/dotRadius  1 def        % point radix
+/dotGray    0.15 def     % point gray level
+
+% Steps center to center (column & row)
+/dotStepX   2 def        % distance between columns (centers)
+/dotStepY   2 def        % distance between vertical points (centers)
+
+% Distance between letters and lines (additional in points)
+/charGapX   0 def
+/lineGapY   1 def
+
+% =========================================================
+% Routine: fillCircle
+% x y -> -
+% =========================================================
+/fillCircle {
+  /y exch def
+  /x exch def
+  gsave
+    dotGray setgray
+    newpath x y dotRadius 0 360 arc closepath fill
+  grestore
+} def
+
+% =========================================================
+% Routine: drawByteBits (COLUMNA)
+% byte xStart yStart -> -
+% bit0 = up pixel (yStart), bit7 = low pixel
+% =========================================================
+/drawByteBits {
+  10 dict begin
+    /yStart exch def
+    /xStart exch def
+    /b exch def
+
+    0 1 7 {
+      /i exch def
+      b 1 i bitshift and 0 ne {
+        xStart
+        yStart i dotStepY mul sub
+        fillCircle
+      } if
+    } for
+  end
+} def
+
+% =========================================================
+% Routine: drawByteArrayColumns
+% arr n xBase yTop -> -
+% Draw n bytes like n joined columns.
+% =========================================================
+/drawByteArrayColumns {
+  10 dict begin
+    /yTop exch def
+    /xBase exch def
+    /n exch def
+    /arr exch def
+
+    0 1 n 1 sub {
+      /k exch def
+      arr k get
+      xBase k dotStepX mul add
+      yTop
+      drawByteBits
+    } for
+  end
+} def
+
+% =========================================================
+% Font: letras A-Z y a-z (8 bytes por carácter, VERTICAL)
+% byte0..byte7 = columsn left->right, bits 0..7 = up->down
+% glifo "Unknown" included for not defined chars
+% =========================================================
+% =========================================================
+% Font8x8ByCode: ASCII(int) -> [8 bytes]   (8x8, columnas, bit0 arriba)
+% =========================================================
+/Font8x8ByCode 256 dict def
+/putGlyph { Font8x8ByCode 3 1 roll put } bind def
+
+% Unknown (lo guardo en 0 para fallback explícito)
+0 [16#00 16#C3 16#A5 16#99 16#99 16#A5 16#C3 16#00] putGlyph
+% -------------------------------------------------
+% Uppercase A–Z : ASCII 65..90
+% -------------------------------------------------
+65 [16#00 16#7E 16#09 16#09 16#09 16#09 16#7E 16#00] putGlyph % 'A'
+66 [16#00 16#7F 16#49 16#49 16#49 16#49 16#36 16#00] putGlyph % 'B'
+67 [16#00 16#3E 16#41 16#41 16#41 16#41 16#22 16#00] putGlyph % 'C'
+68 [16#00 16#7F 16#41 16#41 16#41 16#22 16#1C 16#00] putGlyph % 'D'
+69 [16#00 16#7F 16#49 16#49 16#49 16#49 16#41 16#00] putGlyph % 'E'
+70 [16#00 16#7F 16#09 16#09 16#09 16#09 16#01 16#00] putGlyph % 'F'
+71 [16#00 16#3E 16#41 16#41 16#41 16#51 16#32 16#00] putGlyph % 'G'
+72 [16#00 16#7F 16#08 16#08 16#08 16#08 16#7F 16#00] putGlyph % 'H'
+73 [16#00 16#41 16#41 16#7F 16#7F 16#41 16#41 16#00] putGlyph % 'I'
+74 [16#00 16#21 16#41 16#7F 16#3F 16#01 16#01 16#00] putGlyph % 'J'
+75 [16#00 16#7F 16#08 16#14 16#22 16#41 16#00 16#00] putGlyph % 'K'
+76 [16#00 16#7F 16#40 16#40 16#40 16#40 16#40 16#00] putGlyph % 'L'
+77 [16#00 16#7F 16#02 16#04 16#04 16#02 16#7F 16#00] putGlyph % 'M'
+78 [16#00 16#7F 16#02 16#04 16#08 16#10 16#7F 16#00] putGlyph % 'N'
+79 [16#00 16#3E 16#41 16#41 16#41 16#41 16#3E 16#00] putGlyph % 'O'
+80 [16#00 16#7F 16#09 16#09 16#09 16#09 16#06 16#00] putGlyph % 'P'
+81 [16#00 16#3E 16#41 16#51 16#61 16#41 16#3E 16#00] putGlyph % 'Q'
+82 [16#00 16#7F 16#09 16#19 16#29 16#49 16#06 16#00] putGlyph % 'R'
+83 [16#00 16#26 16#49 16#49 16#49 16#49 16#32 16#00] putGlyph % 'S'
+84 [16#00 16#01 16#01 16#7F 16#7F 16#01 16#01 16#00] putGlyph % 'T'
+85 [16#00 16#3F 16#40 16#40 16#40 16#40 16#3F 16#00] putGlyph % 'U'
+86 [16#00 16#1F 16#20 16#40 16#40 16#20 16#1F 16#00] putGlyph % 'V'
+87 [16#00 16#3F 16#40 16#20 16#20 16#40 16#3F 16#00] putGlyph % 'W'
+88 [16#00 16#63 16#14 16#08 16#08 16#14 16#63 16#00] putGlyph % 'X'
+89 [16#00 16#03 16#04 16#78 16#78 16#04 16#03 16#00] putGlyph % 'Y'
+90 [16#00 16#61 16#51 16#49 16#45 16#43 16#41 16#00] putGlyph % 'Z'
+% -------------------------------------------------
+% Lowercase a–z : ASCII 97..122
+% -------------------------------------------------
+97  [16#00 16#20 16#54 16#54 16#54 16#54 16#78 16#00] putGlyph % 'a'
+98  [16#00 16#7F 16#48 16#44 16#44 16#44 16#38 16#00] putGlyph % 'b'
+99  [16#00 16#38 16#44 16#44 16#44 16#44 16#28 16#00] putGlyph % 'c'
+100 [16#00 16#38 16#44 16#44 16#44 16#48 16#7F 16#00] putGlyph % 'd'
+101 [16#00 16#38 16#54 16#54 16#54 16#54 16#18 16#00] putGlyph % 'e'
+102 [16#00 16#08 16#7E 16#09 16#09 16#01 16#02 16#00] putGlyph % 'f'
+103 [16#00 16#18 16#64 16#64 16#64 16#64 16#3F 16#00] putGlyph % 'g'
+104 [16#00 16#7F 16#08 16#04 16#04 16#04 16#78 16#00] putGlyph % 'h'
+105 [16#00 16#00 16#44 16#7D 16#40 16#00 16#00 16#00] putGlyph % 'i'
+106 [16#00 16#40 16#80 16#80 16#84 16#7D 16#00 16#00] putGlyph % 'j'
+107 [16#00 16#7F 16#10 16#28 16#44 16#00 16#00 16#00] putGlyph % 'k'
+108 [16#00 16#00 16#41 16#7F 16#40 16#00 16#00 16#00] putGlyph % 'l'
+109 [16#00 16#7C 16#04 16#78 16#04 16#04 16#78 16#00] putGlyph % 'm'
+110 [16#00 16#7C 16#08 16#04 16#04 16#04 16#78 16#00] putGlyph % 'n'
+111 [16#00 16#38 16#44 16#44 16#44 16#44 16#38 16#00] putGlyph % 'o'
+112 [16#00 16#7C 16#24 16#24 16#24 16#24 16#18 16#00] putGlyph % 'p'
+113 [16#00 16#18 16#24 16#24 16#24 16#24 16#7C 16#00] putGlyph % 'q'
+114 [16#00 16#7C 16#08 16#04 16#04 16#08 16#00 16#00] putGlyph % 'r'
+115 [16#00 16#24 16#54 16#54 16#54 16#54 16#48 16#00] putGlyph % 's'
+116 [16#00 16#04 16#3F 16#44 16#44 16#40 16#20 16#00] putGlyph % 't'
+117 [16#00 16#3C 16#40 16#40 16#40 16#20 16#7C 16#00] putGlyph % 'u'
+118 [16#00 16#1C 16#20 16#40 16#40 16#20 16#1C 16#00] putGlyph % 'v'
+119 [16#00 16#3C 16#40 16#20 16#20 16#40 16#3C 16#00] putGlyph % 'w'
+120 [16#00 16#44 16#28 16#10 16#10 16#28 16#44 16#00] putGlyph % 'x'
+121 [16#00 16#1C 16#60 16#60 16#60 16#60 16#3F 16#00] putGlyph % 'y'
+122 [16#00 16#44 16#64 16#54 16#4C 16#44 16#00 16#00] putGlyph % 'z'
+% -------------------------------------------------
+% Numbers 0–9 : ASCII 48..57
+% -------------------------------------------------
+48 [16#00 16#3E 16#41 16#45 16#49 16#51 16#3E 16#00] putGlyph % '0'
+49 [16#00 16#00 16#42 16#7F 16#40 16#00 16#00 16#00] putGlyph % '1'
+50 [16#00 16#62 16#51 16#49 16#49 16#49 16#46 16#00] putGlyph % '2'
+51 [16#00 16#22 16#41 16#49 16#49 16#49 16#36 16#00] putGlyph % '3'
+52 [16#00 16#18 16#14 16#12 16#7F 16#10 16#10 16#00] putGlyph % '4'
+53 [16#00 16#27 16#45 16#45 16#45 16#45 16#39 16#00] putGlyph % '5'
+54 [16#00 16#3C 16#4A 16#49 16#49 16#49 16#30 16#00] putGlyph % '6'
+55 [16#00 16#01 16#71 16#09 16#05 16#03 16#01 16#00] putGlyph % '7'
+56 [16#00 16#36 16#49 16#49 16#49 16#49 16#36 16#00] putGlyph % '8'
+57 [16#00 16#06 16#49 16#49 16#49 16#29 16#1E 16#00] putGlyph % '9'
+% -------------------------------------------------
+% Operators
+% -------------------------------------------------
+43 [16#00 16#08 16#08 16#3E 16#08 16#08 16#08 16#00] putGlyph % +
+45 [16#00 16#08 16#08 16#08 16#08 16#08 16#08 16#00] putGlyph % -
+42 [16#00 16#22 16#14 16#7F 16#14 16#22 16#00 16#00] putGlyph % *
+47 [16#00 16#40 16#20 16#10 16#08 16#04 16#02 16#00] putGlyph % /
+61 [16#00 16#14 16#14 16#14 16#14 16#14 16#14 16#00] putGlyph % =
+37 [16#00 16#63 16#13 16#08 16#64 16#63 16#00 16#00] putGlyph % %
+94 [16#00 16#02 16#01 16#02 16#00 16#00 16#00 16#00] putGlyph % ^
+% -------------------------------------------------
+% Comparators
+% -------------------------------------------------
+60 [16#00 16#08 16#14 16#22 16#41 16#00 16#00 16#00] putGlyph % <
+62 [16#00 16#00 16#41 16#22 16#14 16#08 16#00 16#00] putGlyph % >
+% -------------------------------------------------
+% Paranthesis and dilimitators
+% -------------------------------------------------
+40 [16#00 16#00 16#1C 16#22 16#41 16#00 16#00 16#00] putGlyph % (
+41 [16#00 16#00 16#41 16#22 16#1C 16#00 16#00 16#00] putGlyph % )
+91 [16#00 16#00 16#7F 16#41 16#41 16#00 16#00 16#00] putGlyph % [
+93 [16#00 16#00 16#41 16#41 16#7F 16#00 16#00 16#00] putGlyph % ]
+123 [16#00 16#08 16#36 16#41 16#41 16#00 16#00 16#00] putGlyph % {
+125 [16#00 16#00 16#41 16#41 16#36 16#08 16#00 16#00] putGlyph % }
+% -------------------------------------------------
+% Puntuation
+% -------------------------------------------------
+46 [16#00 16#00 16#00 16#00 16#00 16#60 16#60 16#00] putGlyph % .
+44 [16#00 16#00 16#00 16#00 16#00 16#60 16#20 16#00] putGlyph % ,
+58 [16#00 16#00 16#36 16#36 16#00 16#36 16#36 16#00] putGlyph % :
+59 [16#00 16#00 16#36 16#36 16#00 16#36 16#16 16#00] putGlyph % ;
+33 [16#00 16#00 16#00 16#7D 16#00 16#00 16#00 16#00] putGlyph % !
+63 [16#00 16#02 16#01 16#59 16#09 16#06 16#00 16#00] putGlyph % ?
+% -------------------------------------------------
+% Others
+% -------------------------------------------------
+34 [16#00 16#00 16#03 16#00 16#03 16#00 16#00 16#00] putGlyph % "
+39 [16#00 16#00 16#00 16#03 16#00 16#00 16#00 16#00] putGlyph % '
+92 [16#00 16#02 16#04 16#08 16#10 16#20 16#40 16#00] putGlyph % \
+96 [16#00 16#01 16#02 16#00 16#00 16#00 16#00 16#00] putGlyph % `
+126 [16#00 16#20 16#10 16#20 16#00 16#00 16#00 16#00] putGlyph % ~
+95 [16#00 16#40 16#40 16#40 16#40 16#40 16#40 16#00] putGlyph % _
+
+% =========================================================
+% Routine: getGlyphColsByCode
+% code -> -
+% Look for glifo; if it doesn't exist /0 is used.
+% =========================================================
+/getGlyphColsByCode { % asciiCode -> glyphArray(8)
+  /code exch def
+  Font8x8ByCode code known
+    { Font8x8ByCode code get }
+    { Font8x8ByCode 0 get }   % Unknown
+  ifelse
+} def
+
+% =========================================================
+% Routine: drawCharByCode
+% asciiCode xLeft yTop -> -
+% Look for glifo; if it doesn't exist 0 is used.
+% Then call drawByteArrayColumns(glifo, 8, xLeft, yTop).
+% =========================================================
+/drawCharByCode {
+  10 dict begin
+    /yTop exch def
+    /xLeft exch def
+    /code exch def
+    code getGlyphColsByCode
+    8 xLeft yTop drawByteArrayColumns
+  end
+} def
+
+% =========================================================
+% Routine: drawText
+% (text) xLeft yTop -> -
+% Iterates a string and draws only alphanum characters, the res = /Unknown.
+% Supports:
+% - space (32): move forward with no drawing
+% - line jump (10): move down to the next line
+% =========================================================
+/drawText {
+  20 dict begin
+    /y0 exch def
+    /x0 exch def
+    /s exch def
+
+    /cx x0 def
+    /cy y0 def
+
+    % Avances
+    /advX dotStepX 8 mul charGapX add def
+    /advY dotStepY 8 mul lineGapY add def
+
+    0 1 s length 1 sub {
+      /i exch def
+      s i get /ch exch def
+
+      ch 10 eq ch 13 eq or {          % LF o CR
+        /cx x0 def
+        /cy cy advY sub def
+      }{
+        ch 32 eq {                    % space
+          /cx cx advX add def
+        }{
+          ch cx cy drawCharByCode
+          /cx cx advX add def
+        } ifelse
+      } ifelse
+    } for
+  end
+} def
+
+% =========================================================
+% drawByteArrayColumnsDouble
+% arr n xBase yTop -> -
+% Iterates arr[0..n-1] and per each byte draws 2 columns:
+% col 2*k and col 2*k+1 with the same byte.
+% outcome: n bytes -> 2*n columsn (8 -> 16)
+% =========================================================
+/drawByteArrayColumnsDouble {
+  10 dict begin
+    /yTop exch def
+    /xBase exch def
+    /n exch def
+    /arr exch def
+
+    0 1 n 1 sub {
+      /k exch def
+      /b arr k get def
+
+      % First column (2*k)
+      b
+      xBase k 2 mul dotStepX mul add
+      yTop
+      drawByteBits
+
+      % Second column (2*k+1)
+      b
+      xBase k 2 mul 1 add dotStepX mul add
+      yTop
+      drawByteBits
+    } for
+  end
+} def
+
+% =========================================================
+% drawCharByCodeDouble
+% asciiCode xLeft yTop -> -
+% Look for glifo in Font8x8V and draws it double space
+% =========================================================
+/drawCharByCodeDouble {
+  10 dict begin
+    /yTop exch def
+    /xLeft exch def
+    /code exch def
+    code getGlyphColsByCode
+    8 xLeft yTop drawByteArrayColumnsDouble
+  end
+} def
+
+% =========================================================
+% drawTextDouble
+% (text) xLeft yTop -> -
+% Iterates a string an print each leatter out with double width.
+% Supports:
+% - space (32): move forward with no drawing
+% - line jumo (10): move to the next line
+% =========================================================
+/drawTextDouble {
+  20 dict begin
+    /y0 exch def
+    /x0 exch def
+    /s exch def
+
+    /cx x0 def
+    /cy y0 def
+
+    % Avances: 16 columnas (doble ancho) + gap
+    /advX dotStepX 16 mul charGapX add def
+    /advY dotStepY 8 mul  lineGapY add def
+
+    0 1 s length 1 sub {
+      /i exch def
+      s i get /ch exch def
+
+      ch 10 eq ch 13 eq or {          % LF o CR
+        /cx x0 def
+        /cy cy advY sub def
+      }{
+        ch 32 eq {                    % espacio
+          /cx cx advX add def
+        }{
+          ch cx cy drawCharByCodeDouble
+          /cx cx advX add def
+        } ifelse
+      } ifelse
+    } for
+  end
+} def
+
+% =========================================================
+% DEMO
+% =========================================================
+0 setgray
+/Helvetica findfont 10 scalefont setfont
+40 820 moveto (Demo: drawText con fuente 8x8 vertical A-Z a-z + Unknown) show
+
+(HelloWorld\nABCxyz!?+-*/?¿;:,.<> 123) 40 780 drawText
+(Hello\nABCxyz\n123) 40 650 drawTextDouble 
+
+showpage
+%%EOF

@@ -15,6 +15,7 @@
 #define __COMMODORE_FILEIO__
 
 #include <CORE/incs.hpp>
+#include <array>
 
 namespace COMMODORE
 {
@@ -256,6 +257,204 @@ namespace COMMODORE
 		virtual bool canWrite (MCHEmul::FileData* fD) const override
 							{ return (dynamic_cast <T64FileData*> (fD) != nullptr); }
 		/** This type of file can not be written back. */
+		virtual bool writeFile (MCHEmul::FileData* fD, const std::string& fN, bool bE = true) const override
+							{ return (false); }
+	};
+
+	/** The D64 format file data. \n
+		To represent a disk image for COMMODORE 1541 disk drives
+		https://vice-emu.sourceforge.io/vice_17.html#SEC418. */
+	struct D64FileData final : public MCHEmul::FileData
+	{
+		/** The basic structure of the D64 is the track. \n
+			The D64 is made up of 35-42 (depending on the version of the disk) tracks named from 1. \n
+			Offset is the place where the info in the file will start. */
+		struct TrackInfo
+		{
+			TrackInfo 
+					(unsigned char tn, unsigned char s, const MCHEmul::Address& o)
+				: _track (tn),
+				  _sectors (s),
+				  _offset (o)
+							{ assert (
+								(_track >= 1 && _track <= 42) && // Named from 1 to 42 maximum...
+								(_sectors >= 17 && _sectors <= 21) && // Number of sectors depending on the track, but between 17 and 21...
+								(
+									(_track >= 1 && _track <= 17 && _sectors == 21) ||	// Tracks 1-17 have 21 sectors
+									(_track >= 18 && _track <= 24 && _sectors == 19) ||	// Tracks 18-24 have 19 sectors
+									(_track >= 25 && _track <= 30 && _sectors == 18) ||	// Tracks 25-30 have 18 sectors
+									(_track >= 31 && _track <= 42 && _sectors == 17)	// Tracks 31-42 have 17 sectors
+								)); }
+
+			/** To create the trackInfo from the number of track. */
+			static TrackInfo trackInfo (unsigned tN);
+
+			// The information can not be modified...
+			/** The number of track. */
+			const unsigned char _track;
+			/** Number of sectors in this track. */
+			const unsigned char _sectors; 
+			/** Offset in the file where the track starts. */
+			const MCHEmul::Address _offset;
+		};
+
+		/** The data per track. 
+			By default just the number of the track is requested. */
+		struct TrackData
+		{
+			TrackData (unsigned char tN)
+				: _trackInfo (TrackInfo::trackInfo (tN)),
+				  _sectorsData ()
+							{ _sectorsData = std::vector <MCHEmul::UBytes> 
+								(_trackInfo._sectors, MCHEmul::UBytes (std::vector <MCHEmul::UByte> (256))); }
+
+			/** To get the bytes of a sector. \n
+				If the sector is not definied an empty vector is returned. */
+			virtual MCHEmul::UBytes getSectorData (unsigned char sn) const
+							{ return (sn < _trackInfo._sectors ? _sectorsData [sn] : MCHEmul::UBytes::_E); }
+			/** To change the information of a sector within the track. \n
+				If the sector is not defined in the track nothing happens. */
+			virtual void setSectorData (unsigned char sn, const MCHEmul::UBytes& data)
+							{ if (sn < _trackInfo._sectors && data.size () == 256) 
+								_sectorsData [sn] = data; }
+
+			/** To get the main info of the track. 
+				But it can be overloaded for specific tracks, like the one with the entrie. */
+			virtual std::string asString () const
+							{ return (
+								"Track " + std::to_string (_trackInfo._track) + "(" +
+								"Sectors: " + std::to_string (_trackInfo._sectors) + "," +
+								"Offset: " + MCHEmul::removeAll0 
+									(_trackInfo._offset.asString (MCHEmul::UByte::OutputFormat::_HEXA, '\0')) + ")"); }
+
+			/** The information of the track, that cannot be modifed. */
+			const TrackInfo _trackInfo;
+
+			protected:
+			/** The data per sector in the track. \n
+				Each sector has 256 bytes. It can only be modified using setSectorData. \n
+				The length of the vector will depend on the number of track! */
+			std::vector <MCHEmul::UBytes> _sectorsData;
+		};
+
+		/** Every entry in a directory. */
+		struct DirectoryEntry final
+		{
+			/** Different types of entries in the D64. */
+			enum class FileType 			{
+				_DEL = 0x00,
+				_SEQ = 0x01,
+				_PRG = 0x02,
+				_USR = 0x03,
+				_REL = 0x04,
+				_DIR = 0x05,
+				_CBM = 0x06
+			};
+
+			DirectoryEntry ()
+				: _fileType (FileType::_PRG),
+				  _startTrack (0),
+				  _startSector (0),
+				  _fileName (""),
+				  _fileSizeBlocks (0)
+							{ }
+
+			/** To get the info of the entry. */
+			std::string asString () const
+							{ return (
+								"File:" + _fileName + "(" +
+								"Type:" + std::to_string (static_cast <unsigned char> (_fileType)) + "," +
+								"Start:" + std::to_string (_startTrack) + "/" + std::to_string (_startSector) + "," +
+								"Blocks:" + std::to_string (_fileSizeBlocks) + ")"); }
+
+			/** The type of info kept. */
+			FileType _fileType;
+			/** Where the info related with this entry starts. */
+			unsigned char _startTrack, _startSector;
+			/** The name if the entry. It is 16 characters length only max padded with A0$. */
+			std::string _fileName;
+			/** The size of the file in blocks of 256 bytes. */
+			unsigned short _fileSizeBlocks;
+		};
+
+		// To simplify later manipulations...
+		/** There are 8 entries per sector within the track 8. */
+		using DirectoryEntriesPerSector = std::array <DirectoryEntry, 8>;
+		/** There are 18 sectors with directory entries in the track 18. */
+		using DirectoryEntries = std::array <DirectoryEntriesPerSector, 18>;
+
+		/** The track 18 is the one containing the entries of the rest of the disk. */
+		struct Track18Data final : public TrackData
+		{
+			Track18Data ()
+				: TrackData (18),
+				  _entries (), _entriesCreated (false)
+								{ }
+
+			/** Any time a sector is set, the entries needed to be rebuilt. \n
+				Any method in the class need to call entries () method to access the entries. \n
+				NOTE: None of them should access directly to _entries attribute because it could be inconsistent.
+				(@see implementation of asString as an example). */
+			virtual void setSectorData (unsigned char sn, const MCHEmul::UBytes& data) override;
+
+			// Managing the entries...
+			const DirectoryEntries& entries () const;
+			
+			virtual std::string asString () const override;
+
+			private:
+			/** To create the entries from the data of the track. 
+				From the sector 1, because the sector 0 is used for other purposes. */
+			void createEntries () const;
+			/** Get the entries from a specific sector. */
+			DirectoryEntriesPerSector getEntriesFromSector (unsigned char sN) const;
+
+			private:
+			mutable DirectoryEntries _entries;
+
+			// Implementation
+			/** To define whether the entries have or not been created. */
+			mutable bool _entriesCreated = false;
+		};
+
+		/** Usually the file data is just for 35 tracks,
+			that is the most common size. */
+		D64FileData (unsigned char nt = 35);
+
+		/** The track data elements must be removed. */
+		virtual ~D64FileData () override
+							{ for (const auto& tD : _tracksData) delete tD; }
+
+		virtual MCHEmul::ExtendedDataMemoryBlocks asMemoryBlocks () const override;
+
+		/** To access the entries. \n
+			Track 18 (17 ehen counting from 0) is the directory track always. */
+		const DirectoryEntries& directoryEntries () const
+							{ return (static_cast <Track18Data*> (_tracksData [17]) -> entries ()); }
+
+		virtual std::string asString () const override
+							{ return (std::to_string (_tracksData.size ()) + "(" +
+								_tracksData [17] -> asString () + ")"); }
+
+
+		const unsigned char _numberTracks;
+		std::vector <TrackData*> _tracksData;
+	};
+
+	/** The loader for D64. */
+	class D64FileTypeIO final : public MCHEmul::FileTypeIO
+	{
+		public:
+		D64FileTypeIO ()
+			: MCHEmul::FileTypeIO ()
+							{ }
+
+		virtual bool canRead (const std::string& fN) const override;
+		virtual MCHEmul::FileData* readFile (const std::string& fN, bool bE = true) const override;
+
+		virtual bool canWrite (MCHEmul::FileData* fD) const override
+							{ return (dynamic_cast <D64FileData*> (fD) != nullptr); }
+		/** This type of format can not be written back to any file. */
 		virtual bool writeFile (MCHEmul::FileData* fD, const std::string& fN, bool bE = true) const override
 							{ return (false); }
 	};

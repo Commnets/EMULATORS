@@ -21,11 +21,15 @@ namespace C64
 {
 	class CIA2;
 
+	/** The default peripheral is nullptr by default. 
+		In a C64 many devices can be linked to the port (up to 32). 
+		When none is connected, something will have to answer!. 
+		This is the default peripheral received as parameter. */
 	class SerialIOPort final : public COMMODORE::SerialIOPort
 	{
 		public:
-		SerialIOPort ()
-			: COMMODORE::SerialIOPort (),
+		SerialIOPort (COMMODORE::SerialIOPeripheral* nS = nullptr)
+			: COMMODORE::SerialIOPort (nS),
 			  _cia2 (nullptr)
 							{ }
 	

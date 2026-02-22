@@ -1,0 +1,334 @@
+%!PS-Adobe-3.0
+%%Title: Dot-Matrix 8x8 Vertical Font (A-Z a-z) + Text Rendering
+%%Pages: 1
+%%BoundingBox: 0 0 595 842
+%%EndComments
+
+initgraphics
+
+% =========================================================
+% Global Parameters
+% =========================================================
+/dotRadius  1 def        % point radix
+/dotGray    0.15 def     % point gray level
+
+% Steps center to center (column & row)
+/dotStepX   2 def        % distance between columns (centers)
+/dotStepY   2 def        % distance between vertical points (centers)
+
+% Distance between letters and lines (additional in points)
+/charGapX   0 def
+/lineGapY   1 def
+
+% =========================================================
+% Routine: fillCircle
+% x y -> -
+% =========================================================
+/fillCircle {
+  /y exch def
+  /x exch def
+  gsave
+    dotGray setgray
+    newpath x y dotRadius 0 360 arc closepath fill
+  grestore
+} def
+
+% =========================================================
+% Routine: drawByteBits (COLUMNA)
+% byte xStart yStart -> -
+% bit0 = up pixel (yStart), bit7 = low pixel
+% =========================================================
+/drawByteBits {
+  10 dict begin
+    /yStart exch def
+    /xStart exch def
+    /b exch def
+
+    0 1 7 {
+      /i exch def
+      b 1 i bitshift and 0 ne {
+        xStart
+        yStart i dotStepY mul sub
+        fillCircle
+      } if
+    } for
+  end
+} def
+
+% =========================================================
+% Routine: drawByteArrayColumns
+% arr n xBase yTop -> -
+% Draw n bytes like n joined columsn.
+% =========================================================
+/drawByteArrayColumns {
+  10 dict begin
+    /yTop exch def
+    /xBase exch def
+    /n exch def
+    /arr exch def
+
+    0 1 n 1 sub {
+      /k exch def
+      arr k get
+      xBase k dotStepX mul add
+      yTop
+      drawByteBits
+    } for
+  end
+} def
+
+% =========================================================
+% Font: letras A-Z y a-z (8 bytes por carácter, VERTICAL)
+% byte0..byte7 = columsn left->right, bits 0..7 = up->down
+% glifo "Unknown" included for not defined chars
+% =========================================================
+/Font8x8V <<
+  % -------------------------------------------------
+  % Unknown character
+  % -------------------------------------------------
+  /Unknown [16#00 16#C3 16#A5 16#99 16#99 16#A5 16#C3 16#00]
+
+  % -------------------------------------------------
+  % Uppercase A–Z
+  % -------------------------------------------------
+  /A [16#00 16#7E 16#09 16#09 16#09 16#09 16#7E 16#00]
+  /B [16#00 16#7F 16#49 16#49 16#49 16#49 16#36 16#00]
+  /C [16#00 16#3E 16#41 16#41 16#41 16#41 16#22 16#00]
+  /D [16#00 16#7F 16#41 16#41 16#41 16#22 16#1C 16#00]
+  /E [16#00 16#7F 16#49 16#49 16#49 16#49 16#41 16#00]
+  /F [16#00 16#7F 16#09 16#09 16#09 16#09 16#01 16#00]
+  /G [16#00 16#3E 16#41 16#41 16#41 16#51 16#32 16#00]
+  /H [16#00 16#7F 16#08 16#08 16#08 16#08 16#7F 16#00]
+  /I [16#00 16#41 16#41 16#7F 16#7F 16#41 16#41 16#00]
+  /J [16#00 16#21 16#41 16#7F 16#3F 16#01 16#01 16#00]
+  /K [16#00 16#7F 16#08 16#14 16#22 16#41 16#00 16#00]
+  /L [16#00 16#7F 16#40 16#40 16#40 16#40 16#40 16#00]
+  /M [16#00 16#7F 16#02 16#04 16#04 16#02 16#7F 16#00]
+  /N [16#00 16#7F 16#02 16#04 16#08 16#10 16#7F 16#00]
+  /O [16#00 16#3E 16#41 16#41 16#41 16#41 16#3E 16#00]
+  /P [16#00 16#7F 16#09 16#09 16#09 16#09 16#06 16#00]
+  /Q [16#00 16#3E 16#41 16#51 16#61 16#41 16#3E 16#00]
+  /R [16#00 16#7F 16#09 16#19 16#29 16#49 16#06 16#00]
+  /S [16#00 16#26 16#49 16#49 16#49 16#49 16#32 16#00]
+  /T [16#00 16#01 16#01 16#7F 16#7F 16#01 16#01 16#00]
+  /U [16#00 16#3F 16#40 16#40 16#40 16#40 16#3F 16#00]
+  /V [16#00 16#1F 16#20 16#40 16#40 16#20 16#1F 16#00]
+  /W [16#00 16#3F 16#40 16#20 16#20 16#40 16#3F 16#00]
+  /X [16#00 16#63 16#14 16#08 16#08 16#14 16#63 16#00]
+  /Y [16#00 16#03 16#04 16#78 16#78 16#04 16#03 16#00]
+  /Z [16#00 16#61 16#51 16#49 16#45 16#43 16#41 16#00]
+
+  % -------------------------------------------------
+  % Lowercase a–z
+  % -------------------------------------------------
+  /a [16#00 16#20 16#54 16#54 16#54 16#54 16#78 16#00]
+  /b [16#00 16#7F 16#48 16#44 16#44 16#44 16#38 16#00]
+  /c [16#00 16#38 16#44 16#44 16#44 16#44 16#28 16#00]
+  /d [16#00 16#38 16#44 16#44 16#44 16#48 16#7F 16#00]
+  /e [16#00 16#38 16#54 16#54 16#54 16#54 16#18 16#00]
+  /f [16#00 16#08 16#7E 16#09 16#09 16#01 16#02 16#00]
+  /g [16#00 16#18 16#64 16#64 16#64 16#64 16#3F 16#00]
+  /h [16#00 16#7F 16#08 16#04 16#04 16#04 16#78 16#00]
+  /i [16#00 16#00 16#44 16#7D 16#40 16#00 16#00 16#00]
+  /j [16#00 16#40 16#80 16#80 16#84 16#7D 16#00 16#00]
+  /k [16#00 16#7F 16#10 16#28 16#44 16#00 16#00 16#00]
+  /l [16#00 16#00 16#41 16#7F 16#40 16#00 16#00 16#00]
+  /m [16#00 16#7C 16#04 16#78 16#04 16#04 16#78 16#00]
+  /n [16#00 16#7C 16#08 16#04 16#04 16#04 16#78 16#00]
+  /o [16#00 16#38 16#44 16#44 16#44 16#44 16#38 16#00]
+  /p [16#00 16#7C 16#24 16#24 16#24 16#24 16#18 16#00]
+  /q [16#00 16#18 16#24 16#24 16#24 16#24 16#7C 16#00]
+  /r [16#00 16#7C 16#08 16#04 16#04 16#08 16#00 16#00]
+  /s [16#00 16#24 16#54 16#54 16#54 16#54 16#48 16#00]
+  /t [16#00 16#04 16#3F 16#44 16#44 16#40 16#20 16#00]
+  /u [16#00 16#3C 16#40 16#40 16#40 16#20 16#7C 16#00]
+  /v [16#00 16#1C 16#20 16#40 16#40 16#20 16#1C 16#00]
+  /w [16#00 16#3C 16#40 16#20 16#20 16#40 16#3C 16#00]
+  /x [16#00 16#44 16#28 16#10 16#10 16#28 16#44 16#00]
+  /y [16#00 16#1C 16#60 16#60 16#60 16#60 16#3F 16#00]
+  /z [16#00 16#44 16#64 16#54 16#4C 16#44 16#00 16#00]
+
+  % -------------------------------------------------
+  % Numbers 0–9
+  % -------------------------------------------------
+  /0 [16#00 16#3E 16#41 16#45 16#49 16#51 16#3E 16#00]
+  /1 [16#00 16#00 16#42 16#7F 16#40 16#00 16#00 16#00]
+  /2 [16#00 16#62 16#51 16#49 16#49 16#49 16#46 16#00]
+  /3 [16#00 16#22 16#41 16#49 16#49 16#49 16#36 16#00]
+  /4 [16#00 16#18 16#14 16#12 16#7F 16#10 16#10 16#00]
+  /5 [16#00 16#27 16#45 16#45 16#45 16#45 16#39 16#00]
+  /6 [16#00 16#3C 16#4A 16#49 16#49 16#49 16#30 16#00]
+  /7 [16#00 16#01 16#71 16#09 16#05 16#03 16#01 16#00]
+  /8 [16#00 16#36 16#49 16#49 16#49 16#49 16#36 16#00]
+  /9 [16#00 16#06 16#49 16#49 16#49 16#29 16#1E 16#00]
+>> def
+
+% =========================================================
+% Routine: drawLetterByASCII
+% asciiCode xLeft yTop -> -
+% Look for glifo; if it doesn't exist /Unknown is used.
+% Then call drawByteArrayColumns(glifo, 8, xLeft, yTop).
+% =========================================================
+/drawLetterByASCII {
+  10 dict begin
+    /yTop exch def
+    /xLeft exch def
+    /code exch def
+
+    /nm 1 string def
+    nm 0 code put
+    /key nm cvn def
+
+    /glyph Font8x8V key known { Font8x8V key get }{ Font8x8V /Unknown get } ifelse def
+
+    glyph 8 xLeft yTop drawByteArrayColumns
+  end
+} def
+
+% =========================================================
+% Routine: drawText
+% (text) xLeft yTop -> -
+% Iterates a string and draws only alphanum characters, the res = /Unknown.
+% Supports:
+% - space (32): move forward with no drawing
+% - line jump (10): move down to the next line
+% =========================================================
+/drawText {
+  20 dict begin
+    /y0 exch def
+    /x0 exch def
+    /s exch def
+
+    /cx x0 def
+    /cy y0 def
+
+    % Avances (en puntos)
+    /advX dotStepX 8 mul charGapX add def
+    /advY dotStepY 8 mul lineGapY add def
+
+    0 1 s length 1 sub {
+      /i exch def
+      s i get /ch exch def
+
+      ch 10 eq {                 % \n
+        /cx x0 def
+        /cy cy advY sub def
+      }{
+        ch 32 eq {               % space
+          /cx cx advX add def
+        }{
+          ch cx cy drawLetterByASCII
+          /cx cx advX add def
+        } ifelse
+      } ifelse
+    } for
+  end
+} def
+
+% =========================================================
+% drawByteArrayColumnsDouble
+% arr n xBase yTop -> -
+% Iterates arr[0..n-1] and per each byte draws 2 columns:
+% col 2*k and col 2*k+1 with the same byte.
+% outcome: n bytes -> 2*n columsn (8 -> 16)
+% =========================================================
+/drawByteArrayColumnsDouble {
+  10 dict begin
+    /yTop exch def
+    /xBase exch def
+    /n exch def
+    /arr exch def
+
+    0 1 n 1 sub {
+      /k exch def
+      /b arr k get def
+
+      % First column (2*k)
+      b
+      xBase k 2 mul dotStepX mul add
+      yTop
+      drawByteBits
+
+      % Second column (2*k+1)
+      b
+      xBase k 2 mul 1 add dotStepX mul add
+      yTop
+      drawByteBits
+    } for
+  end
+} def
+
+% =========================================================
+% drawLetterByASCIIDouble
+% asciiCode xLeft yTop -> -
+% Look for glifo in Font8x8V and draws it double space
+% =========================================================
+/drawLetterByASCIIDouble {
+  10 dict begin
+    /yTop exch def
+    /xLeft exch def
+    /code exch def
+
+    /nm 1 string def
+    nm 0 code put
+    /key nm cvn def
+
+    /glyph Font8x8V key known { Font8x8V key get }{ Font8x8V /Unknown get } ifelse def
+
+    glyph 8 xLeft yTop drawByteArrayColumnsDouble
+  end
+} def
+
+% =========================================================
+% drawTextDouble
+% (text) xLeft yTop -> -
+% Iterates a string an print each leatter out with double width.
+% Supports:
+% - space (32): move forward with no drawing
+% - line jumo (10): move to the next line
+% =========================================================
+/drawTextDouble {
+  20 dict begin
+    /y0 exch def
+    /x0 exch def
+    /s exch def
+
+    /cx x0 def
+    /cy y0 def
+
+    % Avance horizontal: 16 columnas + gap
+    /advX dotStepX 16 mul charGapX add def
+    % Avance vertical: 8 filas + gap
+    /advY dotStepY 8 mul lineGapY add def
+
+    0 1 s length 1 sub {
+      /i exch def
+      s i get /ch exch def
+
+      ch 10 eq {
+        /cx x0 def
+        /cy cy advY sub def
+      }{
+        ch 32 eq {
+          /cx cx advX add def
+        }{
+          ch cx cy drawLetterByASCIIDouble
+          /cx cx advX add def
+        } ifelse
+      } ifelse
+    } for
+  end
+} def
+
+% =========================================================
+% DEMO
+% =========================================================
+0 setgray
+/Helvetica findfont 10 scalefont setfont
+40 820 moveto (Demo: drawText con fuente 8x8 vertical A-Z a-z + Unknown) show
+
+(HelloWorld\nABCxyz!? 123) 40 780 drawText
+(Hello\nABCxyz\n123) 40 650 drawTextDouble 
+
+showpage
+%%EOF

@@ -79,6 +79,7 @@ namespace C64
 									  new COMMODORE::T64FileTypeIO /** Tapes. */,
 									  new COMMODORE::TAPFileTypeIO /** Tapes. */,
 									  new COMMODORE::PRGFileTypeIO /** Very simple PRG files. */,
+									  new COMMODORE::D64FileTypeIO /** The most complex. */,
 									  new COMMODORE::KeystrokeTypeIO /** Keystroke data. */,
 									  new MCHEmul::RawFileTypeIO /** Row data. */ }))); }
 	};

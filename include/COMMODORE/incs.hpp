@@ -30,6 +30,8 @@
 #include <COMMODORE/IOPBuilder.hpp>
 #include <COMMODORE/DatasettePort.hpp>
 #include <COMMODORE/1530Datasette.hpp>
+#include <COMMODORE/1540SeriesDisk.hpp>
+#include <COMMODORE/SerialPrinters.hpp>
 #include <COMMODORE/UserPort.hpp>
 #include <COMMODORE/UserIOPeripherals.hpp>
 #include <COMMODORE/SerialPort.hpp>

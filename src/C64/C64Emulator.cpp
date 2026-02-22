@@ -1,6 +1,8 @@
 #include <C64/C64Emulator.hpp>
 #include <C64/C64.hpp>
 #include <C64/Cartridge.hpp>
+#include <C64/1541Disk.hpp>
+#include <C64/StdSerialPrinter.hpp>
 
 // ---
 const unsigned char C64::C64Emulator::_PARAMNTSC = 'n';
@@ -27,7 +29,17 @@ void C64::C64Emulator::printOutParameters (std::ostream& o) const
 		 std::to_string (MCHEmul::Typewriter::_ID) << ":\tTypewriter" << std::endl <<
 		 std::to_string (C64::Cartridge::_ID) << ":\tCartridge" << std::endl <<
 		 std::to_string (COMMODORE::Datasette1530::_ID) << ":\tCasette 1530/1" << std::endl <<
-		 std::to_string (COMMODORE::Datasette1530Injection::_ID) << ":\tDirect injection into memory" << std::endl;
+		 std::to_string (COMMODORE::Datasette1530Injection::_ID) << ":\tDatasette with direct injection into memory" << std::endl <<
+		 std::to_string (C64::StandardSerialPrinterSimulation::_DEFAULTID) << " or " <<
+		 std::to_string (C64::StandardSerialPrinterSimulation::_DEFAULTID + 1) << 
+		 ":\tSerial Standard Printer to file (optional parameters: NUMDEVICE and FILENAME)" << std::endl <<
+		 std::to_string (C64::Disk1541Simulation::_DEFAULTID) << " or " << 
+		 std::to_string (C64::Disk1541Simulation::_DEFAULTID + 1) << 
+		  ":\t1541 Disk with direct injection into memory (optional parameters: NUMDEVICE)" << std::endl;
+	o << "PARAMETERS to connect the printer CONNECTPER:" << std::endl <<
+		 "D:[DEVICE = 4 or 5]" << std::endl <<
+		 "F:[FILENAME = Name of the file where to print out. *.PS if postscript simulation" << std::endl <<
+		 "P:[PSMPS801|PS|BASIC] = MP801 taking care of the printer limits and simulating even the paper, PS normal or BASIC" << std::endl;
 	o << "Check LOG file if the emulation doesn't start as expected" << std::endl;
 }
 

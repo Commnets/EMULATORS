@@ -352,7 +352,7 @@ MCHEmul::Strings MCHEmul::convertIntoStrings (int n, wchar_t** dt)
 }
 
 // ---
-std::string MCHEmul::concatenateStrings (const Strings& strs, const std::string& c)
+std::string MCHEmul::concatenateStrings (const MCHEmul::Strings& strs, const std::string& c)
 {
 	bool f = true;
 	std::string result = "";
@@ -363,6 +363,32 @@ std::string MCHEmul::concatenateStrings (const Strings& strs, const std::string&
 		f = false;
 	}
 
+	return (result);
+}
+
+// ---
+std::string MCHEmul::replaceStrings (const std::string& oS,
+	const MCHEmul::Strings& v1, const MCHEmul::Strings& v2)
+{
+	auto replaceJustOne = [](std::string& s,
+		const std::string& from, const std::string& to) -> void
+		{
+			if (from.empty()) return;
+
+			std::size_t pos = 0;
+			while ((pos = s.find(from, pos)) != std::string::npos) {
+				s.replace(pos, from.length(), to);
+				pos += to.length();
+			}
+		};
+
+	if (v1.size () != v2.size ())
+		return (oS); // Nothing converted...
+
+	// Then convert everything...
+	std::string result = oS;
+	for (size_t i = 0; i < v1.size (); i++)
+		replaceJustOne (result, v1 [i], v2 [i]);
 	return (result);
 }
 

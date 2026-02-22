@@ -153,6 +153,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\src\VIC20\1530Datasette.cpp" />
     <ClCompile Include="..\..\src\VIC20\Cartridge.cpp" />
     <ClCompile Include="..\..\src\VIC20\CommandBuilder.cpp" />
     <ClCompile Include="..\..\src\VIC20\Commands.cpp" />
@@ -171,6 +172,7 @@
     <ClCompile Include="..\..\src\VIC20\VIC20Emulator.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\include\VIC20\1530Datasette.hpp" />
     <ClInclude Include="..\..\include\VIC20\Cartridge.hpp" />
     <ClInclude Include="..\..\include\VIC20\CommandBuilder.hpp" />
     <ClInclude Include="..\..\include\VIC20\Commands.hpp" />

@@ -75,6 +75,7 @@
 #include <CORE/IOPeripheral.hpp>
 #include <CORE/DatasettePeripherals.hpp>
 #include <CORE/Typewriter.hpp>
+#include <CORE/MatrixPrinterEmulation.hpp>
 #include <CORE/IOPBuilder.hpp>
 #include <CORE/Command.hpp>
 #include <CORE/CommandBuilder.hpp>

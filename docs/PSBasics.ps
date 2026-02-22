@@ -1,0 +1,75 @@
+%!PS-Adobe-3.0
+
+/leading 14 def  % interline
+/F /Courier findfont 16 scalefont def
+
+% Gets the Y position of the left up corner of the page (ury)
+% Leaves that position in the queue...
+/pageTopY {
+  /currentpagedevice where
+  {
+    pop
+    currentpagedevice /PageSize get 1 get
+  }
+  {
+    % clippath pathbbox -> llx lly urx ury
+    clippath pathbbox
+    3 -1 roll pop
+    2 -1 roll pop
+    exch pop
+  } ifelse
+} def
+
+% Put the head of the printer at the left up corner of the page including margins (mx,my)
+% Additional set the the font...
+/initHead {
+  % stack: mx my
+  /my exch def
+  /mx exch def
+
+  F setfont
+
+  mx pageTopY my sub moveto
+} def
+
+% Print out an ascii code at the position of the head of the printer
+% The head if the printer is also moved forward...
+/printCharAtHead {
+  % stack: ascii
+  /ascii exch def
+  1 string dup 0 ascii put show
+} def
+
+% Print out a repeated char
+/printRepeatChar {
+    % stack: ascii count
+    /count exch def
+    /ascii exch def
+
+    count 1 1 {
+        pop                  % descartamos índice del for
+        ascii printCharAtHead
+    } for
+} def
+
+% Print out line feed
+/lineFeed {
+  0 leading neg rmoveto 
+} def
+
+% Print out Line feed and carry
+/newLine {
+  % stack: (vacío)
+  currentpoint
+  exch pop
+  leading sub
+  mx exch moveto
+} def
+
+50 50 initHead
+72 printCharAtHead  % 'H'
+79 printCharAtHead  % 'O'
+76 printCharAtHead  % 'L'
+65 printCharAtHead  % 'A'
+newline
+65 printCharAtHead  % 'A' en la siguiente línea

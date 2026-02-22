@@ -11,6 +11,7 @@
 #include <C64/Cartridge.hpp>
 #include <C64/IOExpansionMemory.hpp>
 #include <C64/SerialPort.hpp>
+#include <C64/SerialIONotPresent.hpp>
 #include <COMMODORE/UserPort.hpp>
 #include <F6500/C6510.hpp>
 
@@ -173,7 +174,9 @@ MCHEmul::IODevices C64::Commodore64::standardDevices (C64::Commodore64::VisualSy
 	// The port where usually the datasette is connected...
 	result.insert (MCHEmul::IODevices::value_type (COMMODORE::DatasetteIOPort::_ID, new C64::DatasetteIOPort));
 	// The port where the floppy disk & printers are usually connected...
-	result.insert (MCHEmul::IODevices::value_type (COMMODORE::SerialIOPort::_ID, new C64::SerialIOPort));
+	// Simulation when nothing is connected...
+	result.insert (MCHEmul::IODevices::value_type (COMMODORE::SerialIOPort::_ID, 
+		new C64::SerialIOPort (new C64::SerialNotPresentIOPeripheralSimulation))); 
 	// The port where the cartriges are connected...
 	result.insert (MCHEmul::IODevices::value_type (COMMODORE::ExpansionIOPort::_ID, new C64::ExpansionIOPort));
 	// The port where very specific devices are connected...

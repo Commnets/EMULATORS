@@ -29,6 +29,7 @@ Source: "TexasInstruments.fmt"; DestDir: "{app}"; Flags: ignoreversion
 Source: "LocalConsole.fmt"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Standard.fmt"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Default.fmt"; DestDir: "{app}"; Flags: ignoreversion
+Source: "PSBasicPrinter.ps"; DestDir: "{app}"; Flags: ignoreversion
 Source: "blkFormatter.fmt"; DestDir: "{app}"; Flags: ignoreversion
 Source: "bios/svi728_basic-bios_ENG.rom"; DestDir: "{app}/bios"; Flags: ignoreversion
 Source: "bios/svi728_basic-bios_ESP.rom"; DestDir: "{app}/bios"; Flags: ignoreversion

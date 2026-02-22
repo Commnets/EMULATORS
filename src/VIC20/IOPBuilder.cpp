@@ -1,5 +1,6 @@
 #include <VIC20/IOPBuilder.hpp>
 #include <VIC20/Cartridge.hpp>
+#include <VIC20/1530Datasette.hpp>
 #include <VIC20/VIC20.hpp>
 
 // ---
@@ -29,35 +30,7 @@ MCHEmul::IOPeripheral* VIC20::IOPeripheralBuilder::createPeripheral
 		}
 	else if (id == COMMODORE::Datasette1530Injection::_ID)
 		/** When the routines of the kernal are "overpassed". */
-		result = new COMMODORE::Datasette1530Injection
-			(
-				{	
-					// General definitions for the injection (@see Datasette1530Injection class too)...
-					MCHEmul::Address ({ 0xb2 ,0x00 }, false), // Start of the tape buffer...
-					MCHEmul::Address ({ 0x90, 0x00 }, false), // The casette routines use this space to track the operations and status...
-					MCHEmul::Address ({ 0x93, 0x00 }, false), // 0 = Load, 1 = Verify as the same kernel rountine could do both functions...
-					MCHEmul::Address ({ 0x9f, 0x02 }, false), // Place when temporal IRQ value are kept...
-					0x0000,									  // Must the IRQ be taken into account?
-					MCHEmul::Address ({ 0xc1, 0x00 }, false), // Pointer (0xc1, 0xc2) to the beginning of the RAM being loaded...
-					MCHEmul::Address ({ 0xae, 0x00 }, false), // Pointer (0xae, 0xaf) to the end of the load operation...
-					MCHEmul::Address ({ 0x77, 0x02 }, false), // Keyboard buffer start address...
-					MCHEmul::Address ({ 0xc6, 0x00 }, false), // Number of characters in the keyboard buffer... (to simulate "run")
-					// Traps...
-					{	// Trap to the routine finding the right header (when "load" is done by name)...
-						{ COMMODORE::Datasette1530Injection::_FINDHEADERTRAP, 
-						  "Find Header", 
-						  MCHEmul::Address ({ 0xb2, 0xf7 }, false), 
-						  MCHEmul::Address ({ 0xb5, 0xf7 }, false),
-						  { 0x20, 0xc0, 0xf8 } },
-						// Traps to the routine to get the content of the file once it has been found...
-						{ COMMODORE::Datasette1530Injection::_RECEIVEDATATRAP, 
-						  "Receive",
-						  MCHEmul::Address ({ 0x0b, 0xf9 }, false), 
-						  MCHEmul::Address ({ 0xcf, 0xfc }, false),
-						  { 0x20, 0xfb, 0xfc } }
-					}
-				}
-			);
+		result = new VIC20::Datasette1530Injection;
 	else
 		result = COMMODORE::IOPeripheralBuilder::createPeripheral (id, c, prms);
 

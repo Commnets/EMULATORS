@@ -22,14 +22,18 @@ namespace C64
 	class Datasette1530Injection : public COMMODORE::Datasette1530Injection
 	{
 		public:
-		Datasette1530Injection (const Definition& dt)
-			: COMMODORE::Datasette1530Injection (dt)
+		Datasette1530Injection ()
+			: COMMODORE::Datasette1530Injection (_DEFINITION)
 							{ }
 
 		private:
 		/** To load the info just only inthe RAM. */
 		virtual void loadDataBlockInRAM (const MCHEmul::DataMemoryBlock& dB, MCHEmul::CPU* cpu) override
 							{ static_cast <C64::Memory*> (cpu -> memoryRef ()) -> loadDataBlockInRAM (_data._data [_dataCounter]); }
+
+		private:
+		/** The default definition of the traps and so for this device. */
+		static const Definition _DEFINITION;
 	};
 }
 

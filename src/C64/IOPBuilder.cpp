@@ -1,6 +1,8 @@
 #include <C64/IOPBuilder.hpp>
 #include <C64/Cartridge.hpp>
 #include <C64/1530Datasette.hpp>
+#include <C64/1541Disk.hpp>
+#include <C64/StdSerialPrinter.hpp>
 #include <C64/C64.hpp>
 
 // ---
@@ -29,35 +31,29 @@ MCHEmul::IOPeripheral* C64::IOPeripheralBuilder::createPeripheral
 		}
 	else if (id == COMMODORE::Datasette1530Injection::_ID)
 		/** When the routines of the kernal are "overpassed". */
-		result = new C64::Datasette1530Injection
-			(
-				{	
-					// General definitions for the injection (@see Datasette1530Injection class too)...
-					MCHEmul::Address ({ 0xb2 ,0x00 }, false), // Start of the tape buffer...
-					MCHEmul::Address ({ 0x90, 0x00 }, false), // The casette routines use this space to track the operations and status...
-					MCHEmul::Address ({ 0x93, 0x00 }, false), // 0 = Load, 1 = Verify as the same kernel rountine could do both functions...
-					MCHEmul::Address ({ 0x9f, 0x02 }, false), // Place when temporal IRQ value are kept...
-					0x0000,									  // Must the IRQ be taken into account?
-					MCHEmul::Address ({ 0xc1, 0x00 }, false), // Pointer (0xc1, 0xc2) to the beginning of the RAM being loaded...
-					MCHEmul::Address ({ 0xae, 0x00 }, false), // Pointer (0xae, 0xaf) to the end of the load operation...
-					MCHEmul::Address ({ 0x77, 0x02 }, false), // Keyboard buffer start address...
-					MCHEmul::Address ({ 0xc6, 0x00 }, false), // Number of characters in the keyboard buffer... (to simulate "run")
-					// Traps...
-					{	// Trap to the routine finding the right header (when "load" is done by name)...
-						{ COMMODORE::Datasette1530Injection::_FINDHEADERTRAP,
-						  "Find Header", 
-						  MCHEmul::Address ({ 0x2f, 0xf7 }, false),
-						  MCHEmul::Address ({ 0x32, 0xf7 }, false), 
-						  { 0x20, 0x41, 0xf8 } },
-						// Traps to the routine to get the content of the file once it has been found...
-						{ COMMODORE::Datasette1530Injection::_RECEIVEDATATRAP,
-						  "Receive",
-						  MCHEmul::Address ({ 0xa1, 0xf8 }, false),
-						  MCHEmul::Address ({ 0x93, 0xfc }, false),
-						  { 0x20, 0xbd, 0xfc } }
-					}
-				}
-			);
+		result = new C64::Datasette1530Injection;
+	else if (id == C64::Disk1541Simulation::_DEFAULTID)
+		{
+			// There might be several units connected to the serial port with different device numbers
+			// It is also possible to select the name of the output file...
+			unsigned char dN = C64::Disk1541Simulation::_DEFAULTDEVICENUMBER;
+			if (prms.size () == 1) dN = (unsigned char) std::atoi ((*prms.find ("0")).second.c_str ());
+			if (C64::Disk1541Simulation::isDeviceNumberValid (dN)) // Only if it is valid...
+				result = new C64::Disk1541Simulation (id, dN); // ...otherwise it will nullptr, and not created...
+		}
+	else if (id >= C64::StandardSerialPrinterSimulation::_DEFAULTID && 
+			 (id <= C64::StandardSerialPrinterSimulation::_DEFAULTID + 1)) // 2 possible printers connected....
+		{
+			std::string pF = "Printer.txt"; // Default output file name...
+			unsigned char dN = C64::StandardSerialPrinterSimulation::_DEFAULTDEVICENUMBER;
+			MCHEmul::MatrixPrinterEmulation* mPE = nullptr;
+			std::tie (pF, dN, mPE) = getDataPrinterFrom (prms, std::make_tuple (pF, dN, mPE));
+			if (mPE == nullptr) mPE = new MCHEmul::BasicMatrixPrinterEmulation (80, pF); // Not usual, but just to avoid a crash later!
+			if (C64::StandardSerialPrinterSimulation::isDeviceNumberValid (dN)) // Only if it is valid...
+				result = new C64::StandardSerialPrinterSimulation (id, dN, mPE);
+			else
+				delete mPE; // The emulation temporaly created has not been usedm and must be deleted!
+		}
 	else
 		result = COMMODORE::IOPeripheralBuilder::createPeripheral (id, c, prms);
 

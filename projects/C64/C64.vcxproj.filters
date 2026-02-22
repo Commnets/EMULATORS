@@ -117,6 +117,15 @@
     <ClInclude Include="..\..\include\C64\SerialPort.hpp">
       <Filter>Archivos de encabezado\IO</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\include\C64\1541Disk.hpp">
+      <Filter>Archivos de encabezado\IO</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\C64\StdSerialPrinter.hpp">
+      <Filter>Archivos de encabezado\IO</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\C64\SerialIONotPresent.hpp">
+      <Filter>Archivos de encabezado\IO</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\C64\Screen.cpp">
@@ -180,6 +189,18 @@
       <Filter>Archivos de origen\Motherboard\Chips</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\C64\SerialPort.cpp">
+      <Filter>Archivos de origen\IO</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\C64\1530Datasette.cpp">
+      <Filter>Archivos de origen\IO</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\C64\1541Disk.cpp">
+      <Filter>Archivos de origen\IO</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\C64\StdSerialPrinter.cpp">
+      <Filter>Archivos de origen\IO</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\C64\SerialIONotPresent.cpp">
       <Filter>Archivos de origen\IO</Filter>
     </ClCompile>
   </ItemGroup>

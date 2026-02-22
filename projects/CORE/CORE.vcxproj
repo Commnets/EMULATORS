@@ -28,6 +28,7 @@
     <ClCompile Include="..\..\src\CORE\DatasettePeripherals.cpp" />
     <ClCompile Include="..\..\src\CORE\DatasettePort.cpp" />
     <ClCompile Include="..\..\src\CORE\LogChannel.cpp" />
+    <ClCompile Include="..\..\src\CORE\MatrixPrinterEmulation.cpp" />
     <ClCompile Include="..\..\src\CORE\MBElement.cpp" />
     <ClCompile Include="..\..\src\CORE\Chip.cpp" />
     <ClCompile Include="..\..\src\CORE\ChipRegisters.cpp" />
@@ -89,6 +90,7 @@
     <ClInclude Include="..\..\include\CORE\DatasettePeripherals.hpp" />
     <ClInclude Include="..\..\include\CORE\DatasettePort.hpp" />
     <ClInclude Include="..\..\include\CORE\LogChannel.hpp" />
+    <ClInclude Include="..\..\include\CORE\MatrixPrinterEmulation.hpp" />
     <ClInclude Include="..\..\include\CORE\MBElement.hpp" />
     <ClInclude Include="..\..\include\CORE\Chip.hpp" />
     <ClInclude Include="..\..\include\CORE\ChipRegisters.hpp" />

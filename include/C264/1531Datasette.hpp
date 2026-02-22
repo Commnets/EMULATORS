@@ -92,19 +92,24 @@ namespace C264
 	class Datasette1531Injection : public COMMODORE::Datasette1530Injection
 	{
 		public:
-		Datasette1531Injection (const Definition& dt)
-			: COMMODORE::Datasette1530Injection (dt)
+		Datasette1531Injection ()
+			: COMMODORE::Datasette1530Injection (_DEFINITION)
 							{ }
 
 		private:
 		/** In this case the implementation of the trap is a bit differenet 
 			than in the case of the Commodore64 and VIC20. \n */
-		virtual bool executeTrap (const MCHEmul::Trap& t, MCHEmul::CPU* cpu) override;
+		virtual bool executeFindHeaderTrap (MCHEmul::CPU* cpu) override;
+		virtual bool executeReceiveDataTrap (MCHEmul::CPU* cpu) override;
 
 		/** To load the info just only inthe RAM. */
 		virtual void loadDataBlockInRAM (const MCHEmul::DataMemoryBlock& dB, MCHEmul::CPU* cpu) override
 							{ static_cast <C264::Memory*> (cpu -> memoryRef ()) -> 
 									loadDataBlockInRAM (_data._data [_dataCounter]); }
+
+		private:
+		/** The default definition of the traps and so for this device. */
+		static const Definition _DEFINITION;
 	};
 }
 

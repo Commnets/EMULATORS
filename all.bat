@@ -24,12 +24,14 @@ COPY .\exe\x86\Z80CompilerD.exe .\compilers\Z80Compiler\ /Y
 Echo Configuration files...
 DEL  .\compilers\6500Compiler\*.fmt
 DEL  .\compilers\Z80Compiler\*.fmt
-DEL  .\compilers\RConsole\*.fmt
-DEL  .\compilers\RConsole\*.hlp
+DEL  .\monitors\RConsole\*.fmt
+DEL  .\monitors\RConsole\*.hlp
+DEL  .\monitors\RConsole\*.ps
 COPY .\projects\ASSEMBLER\*.fmt .\compilers\6500Compiler\ /Y
 COPY .\projects\ASSEMBLER\*.fmt .\compilers\Z80Compiler\ /Y
 COPY .\projects\CORE\*.fmt .\monitors\RConsole\ /Y
 COPY .\projects\CORE\*.hlp .\monitors\RConsole\ /Y
+COPY .\projects\CORE\*.ps .\monitors\RConsole\ /Y
 Echo ********************************************************************
 Echo ********************************************************************
 Echo 1.2: C64
@@ -67,6 +69,9 @@ COPY .\projects\COMMODORE\*.fmt .\emulators\C64Emulator\ /Y
 COPY .\projects\COMMODORE\*.fmt .\monitors\R64Console\ /Y
 COPY .\projects\COMMODORE\*.hlp .\emulators\C64EmulatorC\ /Y
 COPY .\projects\COMMODORE\*.hlp .\monitors\R64Console\ /Y
+COPY .\projects\COMMODORE\*.ps .\emulators\C64EmulatorC\ /Y
+COPY .\projects\COMMODORE\*.ps .\emulators\C64Emulator\ /Y
+COPY .\projects\COMMODORE\*.ps .\monitors\R64Console\ /Y
 COPY .\projects\CONSOLE\*.fmt .\emulators\C64EmulatorC\ /Y
 COPY .\projects\CONSOLE\*.hlp .\emulators\C64EmulatorC\ /Y
 COPY .\projects\CORE\*.fmt .\emulators\C64EmulatorC\ /Y
@@ -75,6 +80,9 @@ COPY .\projects\CORE\*.fmt .\monitors\R64Console\ /Y
 COPY .\projects\CORE\*.hlp .\emulators\C64EmulatorC\ /Y
 COPY .\projects\CORE\*.hlp .\emulators\C64Emulator\ /Y
 COPY .\projects\CORE\*.hlp .\monitors\R64Console\ /Y
+COPY .\projects\CORE\*.ps .\emulators\C64EmulatorC\ /Y
+COPY .\projects\CORE\*.ps .\emulators\C64Emulator\ /Y
+COPY .\projects\CORE\*.ps .\monitors\R64Console\ /Y
 Echo ********************************************************************
 Echo ********************************************************************
 Echo 1.3: VIC20
@@ -114,6 +122,9 @@ COPY .\projects\COMMODORE\*.fmt .\emulators\VIC20Emulator\ /Y
 COPY .\projects\COMMODORE\*.fmt .\monitors\RVIC20Console\ /Y
 COPY .\projects\COMMODORE\*.hlp .\emulators\VIC20EmulatorC\ /Y
 COPY .\projects\COMMODORE\*.hlp .\monitors\RVIC20Console\ /Y
+COPY .\projects\COMMODORE\*.ps .\emulators\VIC20EmulatorC\ /Y
+COPY .\projects\COMMODORE\*.ps .\emulators\VIC20Emulator\ /Y
+COPY .\projects\COMMODORE\*.ps .\monitors\RVIC20Console\ /Y
 COPY .\projects\CONSOLE\*.fmt .\emulators\VIC20EmulatorC\ /Y
 COPY .\projects\CONSOLE\*.hlp .\emulators\VIC20EmulatorC\ /Y
 COPY .\projects\CORE\*.fmt .\emulators\VIC20EmulatorC\ /Y
@@ -122,6 +133,9 @@ COPY .\projects\CORE\*.fmt .\monitors\RVIC20Console\ /Y
 COPY .\projects\CORE\*.hlp .\emulators\VIC20EmulatorC\ /Y
 COPY .\projects\CORE\*.hlp .\emulators\VIC20Emulator\ /Y
 COPY .\projects\CORE\*.hlp .\monitors\RVIC20Console\ /Y
+COPY .\projects\CORE\*.ps .\emulators\VIC20EmulatorC\ /Y
+COPY .\projects\CORE\*.ps .\emulators\VIC20Emulator\ /Y
+COPY .\projects\CORE\*.ps .\monitors\RVIC20Console\ /Y
 Echo ********************************************************************
 Echo ********************************************************************
 Echo 1.4: 264 Series
@@ -159,6 +173,9 @@ COPY .\projects\COMMODORE\*.fmt .\emulators\C264Emulator\ /Y
 COPY .\projects\COMMODORE\*.fmt .\monitors\R264Console\ /Y
 COPY .\projects\COMMODORE\*.hlp .\emulators\C264EmulatorC\ /Y
 COPY .\projects\COMMODORE\*.hlp .\monitors\R264Console\ /Y
+COPY .\projects\COMMODORE\*.ps .\emulators\C264EmulatorC\ /Y
+COPY .\projects\COMMODORE\*.ps .\emulators\C264Emulator\ /Y
+COPY .\projects\COMMODORE\*.ps .\monitors\R264Console\ /Y
 COPY .\projects\CONSOLE\*.fmt .\emulators\C264EmulatorC\ /Y
 COPY .\projects\CONSOLE\*.hlp .\emulators\C264EmulatorC\ /Y
 COPY .\projects\CORE\*.fmt .\emulators\C264EmulatorC\ /Y
@@ -167,6 +184,9 @@ COPY .\projects\CORE\*.fmt .\monitors\R264Console\ /Y
 COPY .\projects\CORE\*.hlp .\emulators\C264EmulatorC\ /Y
 COPY .\projects\CORE\*.hlp .\emulators\C264Emulator\ /Y
 COPY .\projects\CORE\*.hlp .\monitors\R264Console\ /Y
+COPY .\projects\CORE\*.ps .\emulators\C264EmulatorC\ /Y
+COPY .\projects\CORE\*.ps .\emulators\C264Emulator\ /Y
+COPY .\projects\CORE\*.ps .\monitors\R264Console\ /Y
 Echo ********************************************************************
 Echo ********************************************************************
 Echo 1.5: ZX81
@@ -222,6 +242,9 @@ COPY .\projects\CORE\*.fmt .\monitors\RZX81Console\ /Y
 COPY .\projects\CORE\*.hlp .\emulators\ZX81EmulatorC\ /Y
 COPY .\projects\CORE\*.hlp .\emulators\ZX81Emulator\ /Y
 COPY .\projects\CORE\*.hlp .\monitors\RZX81Console\ /Y
+COPY .\projects\CORE\*.ps .\emulators\ZX81EmulatorC\ /Y
+COPY .\projects\CORE\*.ps .\emulators\ZX81Emulator\ /Y
+COPY .\projects\CORE\*.ps .\monitors\RZX81Console\ /Y
 Echo ********************************************************************
 Echo ********************************************************************
 Echo 1.6: ZXSpectrum
@@ -272,6 +295,9 @@ COPY .\projects\CORE\*.fmt .\monitors\RZXSpectrumConsole\ /Y
 COPY .\projects\CORE\*.hlp .\emulators\ZXSpectrumEmulatorC\ /Y
 COPY .\projects\CORE\*.hlp .\emulators\ZXSpectrumEmulator\ /Y
 COPY .\projects\CORE\*.hlp .\monitors\RZXSpectrumConsole\ /Y
+COPY .\projects\CORE\*.ps .\emulators\ZXSpectrumEmulatorC\ /Y
+COPY .\projects\CORE\*.ps .\emulators\ZXSpectrumEmulator\ /Y
+COPY .\projects\CORE\*.ps .\monitors\RZXSpectrumConsole\ /Y
 Echo ********************************************************************
 Echo ********************************************************************
 Echo 1.7: MSX
@@ -322,6 +348,9 @@ COPY .\projects\CORE\*.fmt .\monitors\RMSXConsole\ /Y
 COPY .\projects\CORE\*.hlp .\emulators\MSXEmulatorC\ /Y
 COPY .\projects\CORE\*.hlp .\emulators\MSXEmulator\ /Y
 COPY .\projects\CORE\*.hlp .\monitors\RMSXConsole\ /Y
+COPY .\projects\CORE\*.ps .\emulators\MSXEmulatorC\ /Y
+COPY .\projects\CORE\*.ps .\emulators\MSXEmulator\ /Y
+COPY .\projects\CORE\*.ps .\monitors\RMSXConsole\ /Y
 Echo ********************************************************************
 Echo
 Echo
@@ -363,10 +392,12 @@ COPY .\projects\C64\*.hlp .\setups\C64\ /Y
 COPY .\projects\C64\*.def .\setups\C64\ /Y
 COPY .\projects\COMMODORE\*.fmt .\setups\C64\ /Y
 COPY .\projects\COMMODORE\*.hlp .\setups\C64\ /Y
+COPY .\projects\COMMODORE\*.ps .\setups\C64\ /Y
 COPY .\projects\CONSOLE\*.fmt .\setups\C64\ /Y
 COPY .\projects\CONSOLE\*.hlp .\setups\C64\ /Y
 COPY .\projects\CORE\*.fmt .\setups\C64\ /Y
 COPY .\projects\CORE\*.hlp .\setups\C64\ /Y
+COPY .\projects\CORE\*.ps .\setups\C64\ /Y
 COPY .\projects\ASSEMBLER\*.fmt .\setups\C64\ /Y
 "C:\Program files (x86)\Inno Setup 6\iscc" ".\setups\C64\C64.iss"
 Echo ********************************************************************
@@ -385,10 +416,12 @@ COPY .\projects\VIC20\*.hlp .\setups\VIC20\ /Y
 COPY .\projects\VIC20\*.def .\setups\VIC20\ /Y
 COPY .\projects\COMMODORE\*.fmt .\setups\VIC20\ /Y
 COPY .\projects\COMMODORE\*.hlp .\setups\VIC20\ /Y
+COPY .\projects\COMMODORE\*.ps .\setups\VIC20\ /Y
 COPY .\projects\CONSOLE\*.fmt .\setups\VIC20\ /Y
 COPY .\projects\CONSOLE\*.hlp .\setups\VIC20\ /Y
 COPY .\projects\CORE\*.fmt .\setups\VIC20\ /Y
 COPY .\projects\CORE\*.hlp .\setups\VIC20\ /Y
+COPY .\projects\CORE\*.ps .\setups\VIC20\ /Y
 COPY .\projects\ASSEMBLER\*.fmt .\setups\VIC20\ /Y
 "C:\Program files (x86)\Inno Setup 6\iscc" ".\setups\VIC20\VIC20.iss"
 Echo ********************************************************************
@@ -406,10 +439,12 @@ COPY .\projects\C264\*.hlp .\setups\C264\ /Y
 COPY .\projects\C264\*.def .\setups\C264\ /Y
 COPY .\projects\COMMODORE\*.fmt .\setups\C264\ /Y
 COPY .\projects\COMMODORE\*.hlp .\setups\C264\ /Y
+COPY .\projects\COMMODORE\*.ps .\setups\C264\ /Y
 COPY .\projects\CONSOLE\*.fmt .\setups\C264\ /Y
 COPY .\projects\CONSOLE\*.hlp .\setups\C264\ /Y
 COPY .\projects\CORE\*.fmt .\setups\C264\ /Y
 COPY .\projects\CORE\*.hlp .\setups\C264\ /Y
+COPY .\projects\CORE\*.ps .\setups\C264\ /Y
 COPY .\projects\ASSEMBLER\*.fmt .\setups\C264\ /Y
 "C:\Program files (x86)\Inno Setup 6\iscc" ".\setups\C264\C264.iss"
 Echo ********************************************************************
@@ -432,6 +467,7 @@ COPY .\projects\CONSOLE\*.fmt .\setups\ZX81\ /Y
 COPY .\projects\CONSOLE\*.hlp .\setups\ZX81\ /Y
 COPY .\projects\CORE\*.fmt .\setups\ZX81\ /Y
 COPY .\projects\CORE\*.hlp .\setups\ZX81\ /Y
+COPY .\projects\CORE\*.ps .\setups\ZX81\ /Y
 COPY .\projects\ASSEMBLER\*.fmt .\setups\ZX81\ /Y
 COPY .\projects\ZX81\ZX80SysVars.txt .\setups\ZX81\ /Y
 COPY .\projects\ZX81\ZX81SysVars.txt .\setups\ZX81\ /Y
@@ -456,6 +492,7 @@ COPY .\projects\CONSOLE\*.fmt .\setups\ZXSpectrum\ /Y
 COPY .\projects\CONSOLE\*.hlp .\setups\ZXSpectrum\ /Y
 COPY .\projects\CORE\*.fmt .\setups\ZXSpectrum\ /Y
 COPY .\projects\CORE\*.hlp .\setups\ZXSpectrum\ /Y
+COPY .\projects\CORE\*.ps .\setups\ZXSpectrum\ /Y
 COPY .\projects\ASSEMBLER\*.fmt .\setups\ZXSpectrum\ /Y
 COPY .\projects\ZXSpectrum\ZXSpectrumSysVars.txt .\setups\ZXSpectrum\ /Y
 "C:\Program files (x86)\Inno Setup 6\iscc" ".\setups\ZXSpectrum\ZXSpectrum.iss"
@@ -479,6 +516,7 @@ COPY .\projects\CONSOLE\*.fmt .\setups\MSX\ /Y
 COPY .\projects\CONSOLE\*.hlp .\setups\MSX\ /Y
 COPY .\projects\CORE\*.fmt .\setups\MSX\ /Y
 COPY .\projects\CORE\*.hlp .\setups\MSX\ /Y
+COPY .\projects\CORE\*.ps .\setups\MSX\ /Y
 COPY .\projects\ASSEMBLER\*.fmt .\setups\MSX\ /Y
 COPY .\projects\MSX\MSXSysVars.txt .\setups\MSX\ /Y
 "C:\Program files (x86)\Inno Setup 6\iscc" ".\setups\MSX\MSX.iss"

@@ -109,6 +109,9 @@ namespace MCHEmul
 	Strings convertIntoStrings (int n, char** dt);
 	Strings convertIntoStrings (int n, wchar_t** dt); // Unicode...
 	std::string concatenateStrings (const Strings& strs, const std::string& c);
+	/** To replace a set of strings by others in another string. \n
+		Number of values to be replaced and number of values replaced have to be same size. */
+	std::string replaceStrings (const std::string& oS, const Strings& v1, const Strings& v2);
 
 	/** General functions to manage Attributes. */
 	bool isThereAttribute (const std::string& attr, const Attributes& attrs);

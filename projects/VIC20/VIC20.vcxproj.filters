@@ -99,6 +99,9 @@
     <ClInclude Include="..\..\include\VIC20\Cartridge.hpp">
       <Filter>Archivos de encabezado\IO</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\include\VIC20\1530Datasette.hpp">
+      <Filter>Archivos de encabezado\IO</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\VIC20\CommandBuilder.cpp">
@@ -147,6 +150,9 @@
       <Filter>Archivos de origen\IO</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\VIC20\Cartridge.cpp">
+      <Filter>Archivos de origen\IO</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\VIC20\1530Datasette.cpp">
       <Filter>Archivos de origen\IO</Filter>
     </ClCompile>
   </ItemGroup>

@@ -30,6 +30,18 @@ namespace COMMODORE
 		/** This method must be overloaded to include any new type of peripherals. */
 		virtual MCHEmul::IOPeripheral* createPeripheral 
 			(int id, MCHEmul::Computer* c, const MCHEmul::Attributes& prms) const override;
+
+		/** Building ap rinter can have several definition parameters: \n
+			Printer output file, device number, emulation, paper simulated used,... \n
+			That's common for every commodore emulation, so a specific method have been created to get the values. \n
+			The parameters have to have the following form: \n
+			D:[VALUE] To define the device number. \n
+			F:[VALUE] To define the name of the output file. \n
+			P:[VALUE] To define the type of simulation (PSMPS801) */
+		std::tuple <std::string, unsigned char, 
+			MCHEmul::MatrixPrinterEmulation*> getDataPrinterFrom 
+				(const MCHEmul::Attributes& prms, 
+					const std::tuple <std::string, unsigned char, MCHEmul::MatrixPrinterEmulation*>& eD) const;
 	};
 }
 

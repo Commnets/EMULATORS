@@ -241,14 +241,14 @@ MCHEmul::Memory::Content MSX::MSXModel::memoryContent () const
 	MCHEmul::PhysicalStorage* ROM_SLOT0 = new MCHEmul::PhysicalStorage (MSX::Memory::_ROM_SET,
 			MCHEmul::PhysicalStorage::Type::_ROM, 0x8000);  // 32k
 	std::vector <MCHEmul::PhysicalStorage*> RAM_SLOTS;
-	for (int i = 0; i < 16; i++) // 4 slots, 4 subslots each...
+	for (int i = 0; i < 16; i++) // 4 slots, 4 subslots each...one after other...
 		RAM_SLOTS.push_back (new MCHEmul::PhysicalStorage (MSX::Memory::_RAM_SET + i,
 			MCHEmul::PhysicalStorage::Type::_RAM, 0x10000)); // 64k each...
 
 	// The map of phisical storages, used later...
 	MCHEmul::PhysicalStorages storages;
 	storages.insert (MCHEmul::PhysicalStorages::value_type (MSX::Memory::_ROM_SET, ROM_SLOT0));
-	for (int i = 0; i < 16; i++)
+	for (int i = 0; i < 16; i++) // Remember, that 4 slots, 4 subslots each...one after other...
 		storages.insert (MCHEmul::PhysicalStorages::value_type 
 			(MSX::Memory::_RAM_SET + i, RAM_SLOTS [(size_t) i]));
 
@@ -265,8 +265,9 @@ MCHEmul::Memory::Content MSX::MSXModel::memoryContent () const
 			0x8000, MCHEmul::Address ({ 0x00, 0x80 }, false), 0x4000); // 16k 
 	ERAMB2_SLOT0SUBSLOT0 -> setName ("Page 2,Slot 0,Subslot 0:RAM Empty 16k");
 	// The basic subset of 16k in the page 3 of the slot 0m subslot 0
+	// That basic subset of 16k RAM includes the access to the last written access to change the behaviour...
 	MCHEmul::PhysicalStorageSubset* RAMB3_SLOT0SUBSLOT0 = 
-		new MCHEmul::Stack (MSX::Memory::_RAM16KSLOT0SUBSLOT0_SUBSET, RAM_SLOTS [0],
+		new MSX::LastPagePhysicalStorageSubset (MSX::Memory::_RAM16KSLOT0SUBSLOT0_SUBSET, RAM_SLOTS [0],
 			0xc000, MCHEmul::Address ({ 0x00, 0xc0 }, false), 0x4000,
 				MCHEmul::Stack::Configuration (true, false /** Pointing to the last written. */, 
 					false /** No overflow detection. */, -1)); // 16k
@@ -274,10 +275,11 @@ MCHEmul::Memory::Content MSX::MSXModel::memoryContent () const
 
 	// The rest of the memory is created with empty subsets...
 	// It is needed to create 12 subslots (remaining of the first slot) + 
-	// 3 (remaining primary slots) * 4 (subslots each) * 4 (banks each) = 60 empty subsets of 16k each...
+	// 3 (remaining primary slots) * 4 (subslots each) * 4 (pages each) = 60 empty subsets of 16k each...
 	// The rest of the 16 blocks in any slot and subslot are empty...
 	std::vector <MCHEmul::PhysicalStorageSubset*> ERAMB_SLOTSSUBSLOTS;
-	for (int i = 4; i < (4 << 4); i++) // 4 slots, 4 subslots each, but staring from the slot 0, sublot 1 (=4)
+	for (int i = 4 /** The first 4 (0,1,2,3) have already been created. */; 
+			i < (4 << 4); i++) // 4 slots, 4 subslots each, but staring from the slot 0, sublot 1 (=4)
 	{
 		int mId = // Number from 
 			MSX::Memory::_SLOTSUBSLOTBASE_SUBSET + ((i / 16) * 100) /** Slot: From 0 to 3 * 100. */ +
@@ -664,9 +666,9 @@ MCHEmul::Memory::Content MSX::PhilipsVG8010::memoryContent () const
 {
 	MCHEmul::Memory::Content result = std::move (MSX::MSXModel::memoryContent ());
 
-	// In this computer the1 16K RAM are replace by a 32K RAM in the slot 0, subslot 0, bank 2-3.
+	// In this computer the1 16K RAM are replace by a 32K RAM in the slot 0, subslot 0, page 2-3.
 
-	// Remove the default 16k RAM in the slot 0, subslot 0, bank 3...
+	// Remove the default 16k RAM in the slot 0, subslot 0, page 3...
 	// ...that is comming from the MSXModel::memoryContent ()...
 	result._subsets.erase (MSX::Memory::_RAM16KSLOT0SUBSLOT0_SUBSET);
 	result._subsets.erase (MSX::Memory::_ERAM16KSLOT0SUBSLOT0_SUBSET);
@@ -742,18 +744,18 @@ MCHEmul::Memory::Content MSX::CanonV20::memoryContent () const
 {
 	MCHEmul::Memory::Content result = std::move (MSX::MSXModel::memoryContent ());
 
-	// In this computer the1 16K RAM are replace by a 32K RAM in the slot 0, subslot 0, bank 2-3.
+	// In this computer the1 16K RAM are replace by a 32K RAM in the slot 0, subslot 0, page 2-3.
 
 	// Gets the CPU View...
 	MCHEmul::MemoryView* CPUView = 
 		(*result._views.find (MSX::Memory::_CPU_VIEW)).second;
 
 	// Modifications in the slot 0...
-	// Remove the default 16k RAM in the slot 0, subslot 0, bank 3...
+	// Remove the default 16k RAM in the slot 0, subslot 0, page 3...
 	// ...that is comming from the MSXModel::memoryContent ()...
 	result._subsets.erase (MSX::Memory::_RAM16KSLOT0SUBSLOT0_SUBSET);
 	CPUView -> removeSubSet (MSX::Memory::_RAM16KSLOT0SUBSLOT0_SUBSET);
-	// ...and creates a EMPTY (Last) RAM in the slot 0, subslot 0, bank 3 instead
+	// ...and creates a EMPTY (Last) RAM in the slot 0, subslot 0, page 3 instead
 	MCHEmul::PhysicalStorage* rS0S0 = (*result._physicalStorages.find (MSX::Memory::_RAM_SET)).second;
 	MCHEmul::PhysicalStorageSubset* ERAMB3_SLOT0SUBSLOT0 = 
 		new MSX::EmptyPhysicalStorageLastPageSubset (_ERAM16KSLOT0SUBSLOT0_SUBSET, MCHEmul::UByte::_0, rS0S0,
@@ -775,7 +777,7 @@ MCHEmul::Memory::Content MSX::CanonV20::memoryContent () const
 			((int) (MSX::Memory::_SLOT3SUBSLOT0BASE_SUBSET + i));
 	}
 
-	// Creates the 64K RAM in the slot 3, subslot 0, bank 0-1-2-3.
+	// Creates the 64K RAM in the slot 3, subslot 0, pages 0-1-2-3.
 	MCHEmul::PhysicalStorage* rS3S0 = (*result._physicalStorages.find (MSX::Memory::_RAM_SET + 3)).second;
 	MCHEmul::PhysicalStorageSubset* RAMB0123_SLOT3SUBSLOT0 = 
 		new MCHEmul::Stack (_RAM64KSLOT3SUBSLOT0_SUBSET, rS3S0,

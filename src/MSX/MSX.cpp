@@ -82,10 +82,10 @@ void MSX::MSXComputer::processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifi
 	{
 		static_cast <MSX::Memory*> (memory ()) -> 
 			activateSlotsPerPage 
-				((evnt.value () & 0x03),		// Slot active in bank 0
-				 (evnt.value () & 0x0c) >> 2,	// Slot active in bank 1 
-				 (evnt.value () & 0x30) >> 4,	// Slot active in bank 2
-				 (evnt.value () & 0xc0) >> 6);	// Slot active in bank 3
+				((evnt.value () & 0x03),		// Slot active in page 0
+				 (evnt.value () & 0x0c) >> 2,	// Slot active in page 1 
+				 (evnt.value () & 0x30) >> 4,	// Slot active in page 2
+				 (evnt.value () & 0xc0) >> 6);	// Slot active in page 3
 	}
 }
 

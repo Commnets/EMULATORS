@@ -89,7 +89,11 @@ namespace MCHEmul
 		/**
 		  *	The name of the fields are: \n
 		  * The ones in the parent class. \n
-		  *	ATTRS	= InfoStructure: Attributes defining the Peripheral. \n
+		  * KEYS		= Attribute: To indicate whether the keys are or not pressed. \n
+		  * MOTOR		= Attribute: To indicate whether the MOTOR (simulation) is or not running. \n
+		  * DATANAME	= Attribute: Name of the data kept. \n
+		  * DATASIZE	= Attribute: Size of the data kept. \n
+		  * DATA		= InfoStructure: Data kept. 
 		  */
 		virtual InfoStructure getInfoStructure () const override;
 

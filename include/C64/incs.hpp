@@ -31,6 +31,9 @@
 #include <C64/OSIO.hpp>
 #include <C64/DatasettePort.hpp>
 #include <C64/1530Datasette.hpp>
+#include <C64/1541Disk.hpp>
+#include <C64/StdSerialPrinter.hpp>
+#include <C64/SerialIONotPresent.hpp>
 #include <C64/ExpansionPort.hpp>
 #include <C64/SerialPort.hpp>
 #include <C64/Cartridge.hpp>
