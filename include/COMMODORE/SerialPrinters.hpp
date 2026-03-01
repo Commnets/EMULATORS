@@ -28,16 +28,19 @@ namespace COMMODORE
 		public MCHEmul::BasicMatrixPrinterEmulation
 	{
 		public:
-		MPS801BasicMatrixPrinterEmulation (const std::string& pFN = "MPS801MatrixPrinter.txt")
-			: MCHEmul::BasicMatrixPrinterEmulation (80 /** Always. */, pFN),
-			  _double (false) // There i no more configuration needed...
-							{ }
+		MPS801BasicMatrixPrinterEmulation (const std::string& pFN = "MPS801MatrixPrinter.txt");
 
 		private:
-		/** The main thing to do is the concversion between PETSCII y ASCII. */
-		virtual bool printCharImplementation (unsigned char chr) override;
+		/** The only control character managed is to double the size of the letters, 
+			repeating the same char, the line feed, and the type of letter (uuper case or lower case) writtend down). */
+		virtual bool isControlChar (unsigned char chr) override;
+		virtual std::tuple <short, short, short> manageControlChar (unsigned char chr) override;
+		/** Only the list of letters and numbers both in business mnode and in the graphical mode. */
+		virtual bool isNormalChar (unsigned char chr) override;
+		virtual size_t printNormalChar (unsigned char chr) override;
 
 		private:
+		bool _businessMode;
 		bool _double;
 	};
 
@@ -48,21 +51,19 @@ namespace COMMODORE
 	{
 		public:
 		MPS801PostscriptMatrixPrinterEmulation (const MCHEmul::MatrixPrinterEmulation::Paper& p,
-				const std::string& pFN = "MPS801MatrixPrinter.ps")
-			: MCHEmul::PostscriptMatrixPrinterEmulation (_CONFIGURATION, p, pFN),
-			  _double (false),
-			  _graphical (false),
-			  _settingTab (false),
-			  _reverse (false),
-			  _cInside (0),
-			  _posXInside (0), _posYInside (0)
-							{ }
+				const std::string& pFN = "MPS801MatrixPrinter.ps");
 
 		private:
 		/** The main postscript routines are copied. */
 		virtual void firstTimePrinting (unsigned char chr) override;
-		/** The main thing to do is the concversion between PETSCII y ASCII. */
-		virtual bool printCharImplementation (unsigned char chr) override;
+
+		virtual bool isControlChar (unsigned char chr) override;
+		virtual std::tuple <short, short, short> manageControlChar (unsigned char chr) override;
+		virtual void printNewLine () override;
+		virtual void closePage (unsigned short p) override;
+		virtual void setNewPage (unsigned short chr) override;
+		virtual bool isNormalChar (unsigned char chr) override;
+		virtual size_t printNormalChar (unsigned char chr) override;
 
 		private:
 		static const MCHEmul::MatrixPrinterEmulation::Configuration _CONFIGURATION;
@@ -70,14 +71,19 @@ namespace COMMODORE
 		// Implementation
 		/** True when the double width per char is activated. */
 		bool _double;
-		/** True when the graphical printing is set. */
-		bool _graphical;
+		/** True when the business mode printing is set. */
+		bool _businessMode;
+		/** The graphics mode is or not set. */
+		bool _graphicMode;
 		/** Setting the tab. */
 		bool _settingTab;
+		unsigned char _charsSettingtabPending;
+		unsigned char _nextTabSettingValue [2];
+		/** Setting the specific dot address. 
+			The previous one are also used. */
+		bool _setSpecificDotAddress;
 		/** When the reverse function is selected. */
 		bool _reverse;
-		/** The number of column with a character. */
-		unsigned char _cInside;
 
 		// The position inside the page...
 		unsigned short _posXInside, _posYInside;
@@ -115,22 +121,17 @@ namespace COMMODORE
 		virtual bool executeCommand (int cId, const MCHEmul::Strings& prms) override;
 		/** To get the commands to manage the device, if any. */
 		virtual MCHEmul::Strings commandDescriptions () const
-							{ return { "FLUSH:Send buffer to printer" }; }
+							{ return (MCHEmul::Strings (
+								{ "1:FLUSH",
+								  "2:NEW PAGE" })); }
 
 		/** The info returned is the one from the parent class, plus:
 			MatrixPrinterEmulation	= InfoStructure : Information about the emulation. */
 		virtual MCHEmul::InfoStructure getInfoStructure () const override;
 
 		protected:
-		virtual unsigned char listen (MCHEmul::CPU* cpu, const MCHEmul::UByte& b) override;
-		virtual unsigned char unlisten (MCHEmul::CPU* cpu, const MCHEmul::UByte& b) override;
-		virtual unsigned char talk (MCHEmul::CPU* cpu, const MCHEmul::UByte& b) override;
-		virtual unsigned char untalk (MCHEmul::CPU* cpu, const MCHEmul::UByte& b) override;
-		virtual unsigned char openChannel (MCHEmul::CPU* cpu, const MCHEmul::UByte& chn) override;
-		virtual unsigned char closeChannel (MCHEmul::CPU* cpu, const MCHEmul::UByte& chn) override;
+		/** Linking with the emulation. */
 		virtual unsigned char sendByte (MCHEmul::CPU* cpu, const MCHEmul::UByte& b) override;
-		virtual unsigned char receiveByte (MCHEmul::CPU* cpu, MCHEmul::UByte& b) override;
-		virtual unsigned char getReady (MCHEmul::CPU* cpu) override;
 
 		protected:
 		/** The emulation used. */

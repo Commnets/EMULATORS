@@ -77,19 +77,24 @@ namespace MCHEmul
 			using CharSetDefinition = std::map <unsigned int, CharDefinition>;
 
 			Configuration ()
-				: _wChar (0), _hChar (0),
+				: _wChar (8), _hChar (8),
 				  _charSet (),
-				  _charsPerLine (0),
-				  _charNewLine ('\n'),
-				  _charTab ('\t'), _numSpacesTabChar (4)
+				  _charsPerLine (80),
+				  _charsPerPage (80),
+				  _charNewLine ((unsigned char) 0x0d), // This is the typical value for carry return!
+				  _charSpace ((unsigned char) 0x20),
+				  _charTab ((unsigned char) 0x09), _numSpacesTabChar (4) // ...and the typical value for TAB!
 							{ }
 
 			Configuration (unsigned char wC, unsigned char hC,
-				const CharSetDefinition& d, unsigned short cL, char cNL, char cT, unsigned short sT)
+				const CharSetDefinition& d, unsigned short cL, unsigned short cP, 
+				unsigned char cNL, unsigned char cSpc, char cT, unsigned short sT)
 				: _wChar (wC), _hChar (hC),
 				  _charSet (d),
 				  _charsPerLine (cL),
+				  _charsPerPage (cP),
 				  _charNewLine (cNL),
+				  _charSpace (cSpc),
 				  _charTab (cT), _numSpacesTabChar (sT)
 							{ }
 
@@ -110,11 +115,13 @@ namespace MCHEmul
 
 			/** How many characters per line in the normal size. */
 			unsigned short _charsPerLine;
+			/** How many characters per page in the normal size. */
+			unsigned short _charsPerPage;
 
-			// Special chars to guide the printer...
-			/** The char to change the line being printed out. */
-			char _charNewLine;
-			char _charTab;
+			// Special codes to guide the printer...
+			unsigned char _charNewLine;
+			unsigned char _charTab;
+			unsigned char _charSpace;
 			unsigned short _numSpacesTabChar;
 		};
 
@@ -122,7 +129,7 @@ namespace MCHEmul
 			const std::string& pFN);
 
 		virtual ~MatrixPrinterEmulation ()
-							{ finalize (); }
+							{ closeCurrentPage (); finalize (); /** Just in case somethign wa flying!. */ }
 
 		/** See the configuration... */
 		const Configuration& configuration () const
@@ -132,6 +139,10 @@ namespace MCHEmul
 							{ return (_paper); }
 		void setPaper (const Paper& p)
 							{ _paper = p; }
+
+		/** Close the current page. */
+		void closeCurrentPage () 
+							{ closePage (_page); moveHeadTo (0, 0); }
 
 		/** To get a reference to the printer file. */
 		const std::ofstream& printerFile () const
@@ -152,18 +163,22 @@ namespace MCHEmul
 		/** Get the position of the head of the printer. */
 		void headPosition (unsigned short &px, unsigned short& py)
 							{ px = _posX, py = _posY; }
+		unsigned short page () const
+							{ return (_page); }
 		/** Move the head x positions respect the current position. \n
 			Can be moved forward and backward. Never less than the 0,0. \n
-			The method returns the number of lines incremented or decremented or 0 if none. \n
+			The method returns whether there was a change in the line and a change in the page. \n
 			For more detail about the final position, use the method headPosition. */
-		short moveHeadFromX (short px);
+		std::tuple <bool /** line. */, bool /** page. */> moveHeadFromX (short px);
 		/** Move the head y positions respect the current position. \n
 			Can also be moved forward and backward, but never less than 0,0. \n
-			In this case is is not needed to return anything. */
-		void moveHeadFromY (short py);
+			Again, it is returned whether the line and the page have been moved. */
+		std::tuple < bool /** line. */, bool /** page. */> moveHeadFromY (short py);
 		/** Move the head to a specific position. */
 		void moveHeadTo (unsigned short px, unsigned short py)
 							{ _posX = px; _posY = 0; }
+		void setPage (unsigned short p)
+							{ _page = p; }
 
 		/** The way a char is printed out will depend on the specific char and the specific matriz printer emulation. \n
 			First time printing anything something special could be done,
@@ -187,13 +202,36 @@ namespace MCHEmul
 		virtual InfoStructure getInfoStructure () const override;
 
 		protected:
+		// All these methods are invoked from the method printChar..
 		virtual void firstTimePrinting (unsigned char) { }
 		virtual void beforePrintingChar (unsigned char) { }
-		/** Returns true when the printer really printed out something. 
-			It could happen that the char send represented a control character with no implications in the 
-			position of the head of the printer. */
-		virtual bool printCharImplementation (unsigned char) = 0;
+		/** This method controls the implications of the caharacter being printed out. \n
+			It can be overloaded but there is a default definition that consists on: \n
+			1.- Check (isControlChar () method) whether the character is or not a control char, appart of newLine or tab.
+			2.- If it were that, the method invoked will be manageControlChar (). \n
+				Usually this method will activate or desactivate "flags" that will be used when printing a normal char. \n
+				or will change the position of the head of the printer. \n
+				So that's the reason to return how much to add to the position of the head of the printer or to new pages. \n
+			3.- If it were a newLine char, the method invoked will be printLineNew (). \n
+			4.- When the end of the page is reached, the method serNewPage () is invoked. \n
+			5.- and, finally, in other case, the method invoked will be printOtherChar ();
+			All of then can be overloaded for more flexibility. \n
+			The tab is simulated, printing out "spaces".
+			The method finally returns the number of positions to add to the head of the printer and the page. */
+		virtual std::tuple <short, short, short> printCharImplementation (unsigned char chr);
 		virtual void afterPrintingChar (unsigned char) { }
+
+		// All methos invoked from printCharImplementation () default...
+		virtual bool isControlChar (unsigned char) { return (false); } // By default, there is no control chars...
+		virtual std::tuple <short, short, short> manageControlChar (unsigned char chr) 
+							{ return (std::make_tuple (0, 0, 0)); } // Nothing to add by default...
+		virtual void printNewLine () { _printerFile << std::endl; } // By default uses the c++ standard...
+		virtual void closePage (unsigned short) { } // Again, byt detault it doesn't do anything...
+		virtual void setNewPage (unsigned short) { } // Nothing by default...
+		virtual bool isNormalChar (unsigned char) { return (true); }
+		/** Returns the number of positions advanced if the character was really printer out. */
+		virtual size_t printNormalChar (unsigned char chr)
+							{ _printerFile << std::string ((size_t) 1, (char) chr); return (1);  } // Again, the default output...
 
 		protected:
 		/** The configuration of the printer. 
@@ -206,12 +244,14 @@ namespace MCHEmul
 		std::string _printerFileName;
 
 		// Implementation
+		/** The file where to print out the data.
+			It is open at construction time and closed when destroy method is invoked. */
 		std::ofstream _printerFile;
 		/** The number of page being printed out. */
-		mutable unsigned short _page;
-		/** Where the printer head is in every moment. */
-		mutable unsigned short _posX, _posY; // It is changed any time printChar method is invoked...
-		/** To indicate whether a first char has or not been printed out. */
+		mutable unsigned short _page; // It might be changed anytime prinChar method is invoked...
+		/** Where the printer head is in the page in every moment. */
+		mutable unsigned short _posX, _posY; // It might be changed any time printChar method is invoked...
+		/** To indicate whether a first char has or not been printed out yet. */
 		mutable bool _firstChar;
 	};
 
@@ -225,11 +265,6 @@ namespace MCHEmul
 				const std::string& pFN = "MatrixPrinter.txt")
 			: MatrixPrinterEmulation (Configuration (), Paper (), pFN)
 							{ _configuration._charsPerLine = cPL; }
-
-		protected:
-		// Only alphanumeric characters are printed out...
-		// ...and also the characters basic control characters: line feed = carry return
-		virtual bool printCharImplementation (unsigned char chr) override;
 	};
 
 	/** To simulate a basic printing based on postscript
@@ -245,9 +280,16 @@ namespace MCHEmul
 							{ }
 
 		protected:
-		/** The main postscript routines are copied. */
+		/** The main postscript routines are copied.
+			The fine defining everything is: PSBasic.ps. \n
+			It has to exist in the directory where the application is running. */
 		virtual void firstTimePrinting (unsigned char chr) override;
-		virtual bool printCharImplementation (unsigned char chr) override;
+
+		/** Again, using postscript instructions. */
+		virtual void printNewLine () override
+							{ printerFile () << "newLine" << std::endl; } // The postcript instruction in defined in 
+		virtual size_t printNormalChar (unsigned char chr) override
+							{ printerFile () << std::to_string ((int) chr) + " printCharAtHead" << std::endl; return (1); }
 	};
 }
 

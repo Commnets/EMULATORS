@@ -243,6 +243,7 @@ Paper Border:@PAPERBORDER@' (inch)
 ;MatrixEmulationConfiguration
 Char Size:@CHARWIDTH@ x @CHARHEIGHT@
 Chars per line:@CHARSPERLINE@
+Chars per page:@CHARSPERPAGE@
 #---
 #---
 ;MatrixPrinterEmulation
