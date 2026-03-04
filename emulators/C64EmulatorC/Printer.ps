@@ -1,5 +1,165 @@
-/FontByCode 256 dict def
+%!PS-Adobe-3.0
+%%Title: Dot-matrix continuous form paper + 6x7 font renderer
+%%Creator: ChatGPT
+%%Pages: 2
+%%BoundingBox: 0 0 612 792
+%%EndComments
+
+% =========================================================
+% Global Parameters (dot matrix rendering)
+% =========================================================
+/dotRadius  1 def                 % radius of each dot (points)
+/dotGray    0.15 def              % dot fill gray level (0=black, 1=white)
+
+% Dot grid steps (center-to-center distance)
+/dotStepX   2 def                 % horizontal distance between dot columns
+/dotStepY   2 def                 % vertical distance between dot rows
+
+% Extra spacing between characters/lines (in points)
+/charGapX   0 def
+/lineGapY   1 def
+
+% =========================================================
+% Units and tiny helpers
+% =========================================================
+/inch { 72 mul } bind def         % inches -> PostScript points
+/gray { setgray } bind def        % shortcut
+/rgb  { setrgbcolor } bind def    % shortcut
+
+% =========================================================
+% Color palettes for alternating bands
+% =========================================================
+/BandPalettes <<
+  /Blue    [0.82 0.90 1.00]
+  /Green   [0.86 1.00 0.90]
+  /Gray    [0.92 0.92 0.92]
+  /Ivory   [1.00 0.99 0.94]
+  /Pink    [1.00 0.90 0.94]
+>> def
+
+% =========================================================
+% setTinted
+%   Blend between white and a tint color
+% Stack:
+%   [r g b] t  ->  -
+% Notes:
+%   t=0 => white
+%   t=1 => tint
+% =========================================================
+/setTinted {
+  /t exch def                       % t on stack -> store
+  aload pop                         % unpack [r g b] -> r g b
+  /b exch def /g exch def /r exch def
+
+  % For each channel:
+  % out = 1 - (1 - channel) * t
+  1 r sub t mul 1 exch sub
+  1 g sub t mul 1 exch sub
+  1 b sub t mul 1 exch sub
+  setrgbcolor
+} bind def
+
+% =========================================================
+% getBandTint
+%   Resolve the tint array to use for bands.
+%   Priority:
+%     cfg/bandTone (name lookup in BandPalettes), else cfg/bandTint
+% Stack:
+%   -> [r g b]
+% =========================================================
+/getBandTint {
+  cfg /bandTone known {
+    BandPalettes cfg /bandTone get known {
+      BandPalettes cfg /bandTone get get
+    }{
+      cfg /bandTint get
+    } ifelse
+  }{
+    cfg /bandTint get
+  } ifelse
+} bind def
+
+% =========================================================
+% Page Configuration (cfg)
+% =========================================================
+/cfg <<
+  % Physical page size (inches)
+  /pageWidthInch   9.500000
+  /pageHeightInch  11.000000
+
+  % Content margins (mechanical elements can reach edges)
+  /contentLeft     0.1 inch
+  /contentRight    0.1 inch
+  /contentTop      0 inch
+  /contentBottom   0 inch
+
+  % Tractor band width (each side)
+  /tractorBand     0.5 inch
+
+  % Horizontal ruling
+  /linePitch       1 6 div inch     % 6 lines per inch
+  /thinLineGray    0.85
+  /thinLineWidth   0.4
+  /majorEvery      6                % every 6th line is major
+  /majorLineGray   0.65
+  /majorLineWidth  0.7
+
+  % Alternating background bands
+  /bandTone        /Blue
+  /bandTint        [0.82 0.90 1.00] % fallback if tone not found
+  /bandTintA       0.18
+  /bandTintB       0.10
+  /bandHeight      0.5 inch
+  /bandsFromTop    true
+
+  % Tractor feed holes
+  /holesPerInch    2
+  /holeRadius      0.06 inch
+  /holeInset       0.25 inch
+  /holeGray        0.60
+
+  % Vertical micro-perforation lines
+  /microPerfs      true
+  /microPerfGray   0.55
+  /microPerfWidth  0.6
+  /microPerfDash   [1.2 3.0]
+  /microPerfOuterInset  0.10 inch
+  /microPerfInnerInset  0.08 inch
+
+  % Horizontal micro-cut (sheet separation)
+  /microCut        true
+  /foldEvery       3 inch
+  /microCutGray    0.55
+  /microCutWidth   0.7
+  /microCutDash    [2.0 2.5]
+  /microCutAcrossTractor true
+
+  % Optional fold marks
+  /foldMarks       true
+  /foldMarkGray    0.50
+  /foldMarkWidth   0.8
+  /foldMarkLen     0.3 inch
+>> def
+
+% =========================================================
+% Font Configuration (6 columns per glyph; 7 vertical dots)
+%
+% FontByCode:
+%   key   = integer code (e.g. ASCII)
+%   value = array of 6 bytes (each byte is one vertical column)
+%
+% drawByteBits expects bits 0..6 used (bit0 top dot).
+% =========================================================
+/FontByCode 512 dict def
+
+% putGlyph
+% Stack: code glyphArray -> -
 /putGlyph { FontByCode 3 1 roll put } bind def
+
+% ---------------------------------------------------------
+% glyph set:
+%   - code 0 as fallback/unknown
+% ---------------------------------------------------------
 0 [16#00 16#00 16#00 16#00 16#00 16#00] putGlyph
 32 [16#00 16#00 16#00 16#00 16#00 16#00] putGlyph
 33 [16#00 16#00 16#5f 16#00 16#00 16#00] putGlyph
@@ -386,9 +546,18 @@
 510 [16#07 16#07 16#07 16#00 16#00 16#00] putGlyph
 511 [16#07 16#07 16#07 16#78 16#78 16#78] putGlyph
 
-% =========================
+% =========================================================
 % Page geometry helpers
-% =========================
+% =========================================================
+
+% pageWidth / pageHeight / pageTopY
+% These are safe even if currentpagedevice is missing.
+% Stack:
+%   pageWidth  -> w
+%   pageHeight -> h
+%   pageTopY   -> topY (same as height in our translated space)
+%
+% In the fallback, we derive width/height from clippath pathbbox.
 /pageWidth {
   /currentpagedevice where
   {
@@ -396,10 +565,8 @@
   }
   {
     clippath pathbbox            % llx lly urx ury
-    3 -1 roll pop                % drop llx
-    exch pop                     % drop lly
-    % stack now: urx ury -> keep urx as width reference? (not width)
-    % For width, easier:
+    3 -1 roll sub                % (urx-llx) ury
+    exch pop                     % -> width
   } ifelse
 } def
 
@@ -410,58 +577,34 @@
   }
   {
     clippath pathbbox            % llx lly urx ury
-    3 -1 roll pop                % drop llx
-    2 -1 roll pop                % drop lly
-    exch pop                     % drop urx
-    % stack now: ury
+    exch sub                     % llx (ury-lly) urx
+    2 -1 roll pop                % (ury-lly) urx
+    exch pop                     % -> height
   } ifelse
 } def
 
-/pageTopY {
-  /currentpagedevice where
-  {
-    pop currentpagedevice /PageSize get 1 get
-  }
-  {
-    clippath pathbbox            % llx lly urx ury
-    3 -1 roll pop                % drop llx
-    2 -1 roll pop                % drop lly
-    exch pop                     % drop urx
-    % stack now: ury
-  } ifelse
-} def
+/pageTopY { pageHeight } def
 
-% =========================
-% Top-left of the *clipping* area, with margins
-% =========================
-/topLeftWithMargin {  % marginX marginY -> x0 y0
+% topLeftWithMargin
+% Compute top-left point inside current clipping box (with margins).
+% Stack:
+%   marginX marginY -> x0 y0
+/topLeftWithMargin {
   /mY exch def
   /mX exch def
-  clippath pathbbox          % llx lly urx ury
+  clippath pathbbox              % llx lly urx ury
   /uY exch def /uX exch def /lY exch def /lX exch def
-  lX mX add                  % x0
-  uY mY sub                  % y0
+  lX mX add                      % x0 = llx + mX
+  uY mY sub                      % y0 = ury - mY
 } def
 
-
 % =========================================================
-% Global Parameters
+% Basic drawing routines
 % =========================================================
-/dotRadius  1 def        % point radix
-/dotGray    0.15 def     % point gray level
+/line { newpath moveto lineto stroke } bind def
 
-% Steps center to center (column & row)
-/dotStepX   2 def        % distance between columns (centers)
-/dotStepY   2 def        % distance between vertical points (centers)
+/fillHole { newpath 0 360 arc fill } bind def
 
-% Distance between letters and lines (additional in points)
-/charGapX   0 def
-/lineGapY   1 def
-
-% =========================================================
-% Routine: fillCircle
-% x y -> -
-% =========================================================
 /fillCircle {
   /y exch def
   /x exch def
@@ -472,13 +615,230 @@
 } def
 
 % =========================================================
-% Routine: drawByteBits (COLUMNA)
-% byte xStart yStart -> -
-% bit0 = up pixel (yStart), bit6 = low pixel
+% Decorative page drawing routines
 % =========================================================
+
+% drawBands
+% Paints alternating tinted bands, aligned from the top edge.
+% Requires:
+%   PW, PH set
+/drawBands {
+  /bh cfg /bandHeight get def
+  /tA cfg /bandTintA get def
+  /tB cfg /bandTintB get def
+  /tint getBandTint def
+
+  % Base background fill
+  gsave
+    tint tB setTinted
+    newpath 0 0 moveto PW 0 rlineto 0 PH rlineto
+    PW neg 0 rlineto closepath fill
+  grestore
+
+  % Bands from the top: y is band-bottom in PS coords
+  /y PH bh sub def
+  /i 0 def
+  {
+    y 0 lt { exit } if
+    gsave
+      tint i 2 mod 0 eq { tA } { tB } ifelse setTinted
+      newpath 0 y moveto
+      PW 0 rlineto
+      0 bh rlineto
+      PW neg 0 rlineto
+      closepath fill
+    grestore
+    /y y bh sub def
+    /i i 1 add def
+  } loop
+} bind def
+
+% drawRuling
+% Draw horizontal ruled lines top-referenced, first always thin.
+% Requires:
+%   PW, PH set
+/drawRuling {
+  /cl cfg /contentLeft get def
+  /cr cfg /contentRight get def
+  /ct cfg /contentTop get def
+  /cb cfg /contentBottom get def
+  /tb cfg /tractorBand get def
+
+  % Ruling spans between tractor bands (and respects content margins)
+  /x1 cl tb add def
+  /x2 PW cr sub tb sub def
+  /pitch cfg /linePitch get def
+
+  % yTop is "distance from top edge" (in points)
+  /yTop ct def
+  /k 1 def
+
+  {
+    yTop PH cb sub gt { exit } if
+    /isMajor k cfg /majorEvery get mod 0 eq def
+
+    % Convert top-referenced yTop to PostScript y coordinate
+    /yPS PH yTop sub def
+
+    gsave
+      isMajor {
+        cfg /majorLineGray get gray
+        cfg /majorLineWidth get setlinewidth
+      }{
+        cfg /thinLineGray get gray
+        cfg /thinLineWidth get setlinewidth
+      } ifelse
+      x1 yPS x2 yPS line
+    grestore
+
+    /yTop yTop pitch add def
+    /k k 1 add def
+  } loop
+} bind def
+
+% drawMicroCuts
+% Draw horizontal dashed micro-cuts every foldEvery.
+% Safe early return (NO 'exit' outside loops).
+/drawMicroCuts {
+  cfg /microCut get not { % disabled => do nothing
+  }{
+    /every cfg /foldEvery get def
+
+    % Decide whether the line spans full width or only content area
+    cfg /microCutAcrossTractor get
+      { /x1 0 def /x2 PW def }
+      {
+        /cl cfg /contentLeft get def
+        /cr cfg /contentRight get def
+        /tb cfg /tractorBand get def
+        /x1 cl tb add def
+        /x2 PW cr sub tb sub def
+      } ifelse
+
+    /yTop 0 def
+    {
+      yTop PH gt { exit } if
+      /yPS PH yTop sub def
+
+      gsave
+        cfg /microCutGray get gray
+        cfg /microCutWidth get setlinewidth
+        cfg /microCutDash get 0 setdash
+        x1 yPS x2 yPS line
+        [] 0 setdash
+      grestore
+
+      /yTop yTop every add def
+    } loop
+  } ifelse
+} bind def
+
+% drawMicroPerfs
+% Draw vertical dashed micro-perforation lines at edges.
+% Safe early return.
+% Requires: PW, PH set
+/drawMicroPerfs {
+  cfg /microPerfs get not {
+  }{
+    /tb cfg /tractorBand get def
+    /outer cfg /microPerfOuterInset get def
+    /inner cfg /microPerfInnerInset get def
+
+    /xL_outer outer def
+    /xL_inner tb inner sub def
+    /xR_outer PW outer sub def
+    /xR_inner PW tb sub inner add def
+
+    gsave
+      cfg /microPerfGray get gray
+      cfg /microPerfWidth get setlinewidth
+      cfg /microPerfDash get 0 setdash
+
+      xL_outer 0 xL_outer PH line
+      xL_inner 0 xL_inner PH line
+      xR_inner 0 xR_inner PH line
+      xR_outer 0 xR_outer PH line
+
+      [] 0 setdash
+    grestore
+  } ifelse
+} bind def
+
+% drawTractorHoles
+% Draw white holes + gray stroke along both tractor bands.
+% Requires: PW, PH set
+/drawTractorHoles {
+  /inset cfg /holeInset get def
+  /r cfg /holeRadius get def
+  /step 72 cfg /holesPerInch get div def
+
+  /xL inset def
+  /xR PW inset sub def
+
+  /y r def
+  /yMax PH r sub def
+
+  {
+    y yMax gt { exit } if
+
+    % Hole fill (paper "cut-out")
+    gsave
+      1 gray
+      xL y r fillHole
+      xR y r fillHole
+    grestore
+
+    % Hole outline
+    gsave
+      cfg /holeGray get gray
+      0.4 setlinewidth
+      newpath xL y r 0 360 arc stroke
+      newpath xR y r 0 360 arc stroke
+    grestore
+
+    /y y step add def
+  } loop
+} bind def
+
+% drawFoldMarks
+% Draw small marks at left/right edges every foldEvery.
+% Safe early return.
+% Requires: PW, PH set
+/drawFoldMarks {
+  cfg /foldMarks get not {
+  }{
+    /len cfg /foldMarkLen get def
+    /every cfg /foldEvery get def
+    /yTop 0 def
+
+    gsave
+      cfg /foldMarkGray get gray
+      cfg /foldMarkWidth get setlinewidth
+      {
+        yTop PH gt { exit } if
+        /yPS PH yTop sub def
+        0 yPS 0 len add yPS line
+        PW len sub yPS PW yPS line
+        /yTop yTop every add def
+      } loop
+    grestore
+  } ifelse
+} bind def
+
+% =========================================================
+% Dot-matrix printer emulation (glyph rendering)
+% =========================================================
+
+% drawByteBits
+% Render one byte as ONE VERTICAL COLUMN of up to 7 dots.
+% Stack:
+%   byte xStart yTop -> -
+% Bit mapping:
+%   bit0 => top dot at yTop
+%   bit6 => bottom dot at yTop - 6*dotStepY
 /drawByteBits {
   10 dict begin
-    /yStart exch def
+    /yTop exch def
     /xStart exch def
     /b exch def
 
@@ -486,72 +846,68 @@
       /i exch def
       b 1 i bitshift and 0 ne {
         xStart
-        yStart i dotStepY mul sub
+        yTop i dotStepY mul sub
         fillCircle
       } if
     } for
   end
 } def
 
-% =========================================================
-% Routine: drawByteArrayColumns
-% arr n xBase yTop -> -
-% Draw n bytes like n joined columns.
-% =========================================================
+% drawByteArrayColumns
+% Draw n bytes as n adjacent columns.
+% Stack:
+%   arr n xLeft yTop -> -
 /drawByteArrayColumns {
   10 dict begin
     /yTop exch def
-    /xBase exch def
+    /xLeft exch def
     /n exch def
     /arr exch def
 
     0 1 n 1 sub {
       /k exch def
       arr k get
-      xBase k dotStepX mul add
+      xLeft k dotStepX mul add
       yTop
       drawByteBits
     } for
   end
 } def
 
-% =========================================================
-% Routine: getGlyphColsByCode
-% code -> -
-% Look for glifo; if it doesn't exist /0 is used.
-% =========================================================
-/getGlyphColsByCode { % asciiCode -> glyphArray(8)
+% getGlyphColsByCode
+% Fetch glyph for code; fallback to code 0 if missing.
+% Stack:
+%   code -> glyphArray(6)
+/getGlyphColsByCode {
   /code exch def
   FontByCode code known
     { FontByCode code get }
-    { FontByCode 0 get }   % Unknown
+    { FontByCode 0 get }
   ifelse
 } def
 
-% =========================================================
-% Routine: drawCharByCode
-% asciiCode xLeft yTop -> -
-% Look for glifo; if it doesn't exist 0 is used.
-% Then call drawByteArrayColumns(glifo, 8, xLeft, yTop).
-% =========================================================
+% drawCharByCode
+% Draw a character (6 columns) at xLeft,yTop.
+% Stack:
+%   code xLeft yTop -> -
 /drawCharByCode {
   10 dict begin
     /yTop exch def
     /xLeft exch def
     /code exch def
+
     code getGlyphColsByCode
     6 xLeft yTop drawByteArrayColumns
   end
 } def
 
-% =========================================================
-% Routine: drawText
-% (text) xLeft yTop -> -
-% Iterates a string and draws only alphanum characters, the res = /Unknown.
+% drawText
+% Draw a string using 6-column glyphs.
 % Supports:
-% - space (32): move forward with no drawing
-% - line jump (10): move down to the next line
-% =========================================================
+%   - space (32): advance only
+%   - LF (10) or CR (13): newline
+% Stack:
+%   (text) xLeft yTop -> -
 /drawText {
   20 dict begin
     /y0 exch def
@@ -561,21 +917,26 @@
     /cx x0 def
     /cy y0 def
 
-    % Avances
+    % Advancements:
+    % - each character is 6 columns wide
     /advX dotStepX 6 mul charGapX add def
+    % - vertical: 7 dots high + some extra; we keep your 8-step convention
     /advY dotStepY 8 mul lineGapY add def
 
     0 1 s length 1 sub {
       /i exch def
       s i get /ch exch def
 
-      ch 10 eq ch 13 eq or {          % LF o CR
+      ch 10 eq ch 13 eq or {
+        % New line: go back to x0 and move down
         /cx x0 def
         /cy cy advY sub def
       }{
-        ch 32 eq {                    % space
+        ch 32 eq {
+          % Space: just advance
           /cx cx advX add def
         }{
+          % Printable: draw and advance
           ch cx cy drawCharByCode
           /cx cx advX add def
         } ifelse
@@ -584,17 +945,15 @@
   end
 } def
 
-% =========================================================
 % drawByteArrayColumnsDouble
-% arr n xBase yTop -> -
-% Iterates arr[0..n-1] and per each byte draws 2 columns:
-% col 2*k and col 2*k+1 with the same byte.
-% outcome: n bytes -> 2*n columsn (8 -> 16)
-% =========================================================
+% Draw n bytes as DOUBLE-WIDTH columns:
+%   Each byte is rendered twice => 2*n columns.
+% Stack:
+%   arr n xLeft yTop -> -
 /drawByteArrayColumnsDouble {
   10 dict begin
     /yTop exch def
-    /xBase exch def
+    /xLeft exch def
     /n exch def
     /arr exch def
 
@@ -602,26 +961,25 @@
       /k exch def
       /b arr k get def
 
-      % First column (2*k)
+      % Column 2*k
       b
-      xBase k 2 mul dotStepX mul add
+      xLeft k 2 mul dotStepX mul add
       yTop
       drawByteBits
 
-      % Second column (2*k+1)
+      % Column 2*k + 1
       b
-      xBase k 2 mul 1 add dotStepX mul add
+      xLeft k 2 mul 1 add dotStepX mul add
       yTop
       drawByteBits
     } for
   end
 } def
 
-% =========================================================
 % drawCharByCodeDouble
-% asciiCode xLeft yTop -> -
-% Look for glifo in Font8x8V and draws it double space
-% =========================================================
+% Render one 6-column glyph in DOUBLE WIDTH => 12 columns.
+% Stack:
+%   code xLeft yTop -> -
 /drawCharByCodeDouble {
   10 dict begin
     /yTop exch def
@@ -632,14 +990,13 @@
   end
 } def
 
-% =========================================================
 % drawTextDouble
-% (text) xLeft yTop -> -
-% Iterates a string an print each leatter out with double width.
+% Double-width text rendering (each glyph becomes 12 columns).
 % Supports:
-% - space (32): move forward with no drawing
-% - line jumo (10): move to the next line
-% =========================================================
+%   - space (32)
+%   - LF (10) / CR (13)
+% Stack:
+%   (text) xLeft yTop -> -
 /drawTextDouble {
   20 dict begin
     /y0 exch def
@@ -649,7 +1006,8 @@
     /cx x0 def
     /cy y0 def
 
-    % Avances: 16 columnas (doble ancho) + gap
+    % Advancements:
+    % - 6 columns doubled => 12 columns
     /advX dotStepX 12 mul charGapX add def
     /advY dotStepY 8 mul  lineGapY add def
 
@@ -657,11 +1015,11 @@
       /i exch def
       s i get /ch exch def
 
-      ch 10 eq ch 13 eq or {          % LF o CR
+      ch 10 eq ch 13 eq or {
         /cx x0 def
         /cy cy advY sub def
       }{
-        ch 32 eq {                    % espacio
+        ch 32 eq {
           /cx cx advX add def
         }{
           ch cx cy drawCharByCodeDouble
@@ -672,416 +1030,154 @@
   end
 } def
 
+% =========================================================
+% Page setup and rendering helpers
+% =========================================================
+
+% setupPage
+% - Applies PageSize from cfg
+% - Normalizes coordinate system so clip ll corner is (0,0)
+% - Defines PW and PH
+% - Clips to the page rectangle
+/setupPage {
+  % Request physical PageSize
+  /reqPW cfg /pageWidthInch get inch def
+  /reqPH cfg /pageHeightInch get inch def
+  << /PageSize [reqPW reqPH] >> setpagedevice
+
+  initgraphics
+  erasepage
+
+  % Capture clipping bounding box (in device space)
+  clippath pathbbox               % llx lly urx ury
+  /ury exch def /urx exch def
+  /lly exch def /llx exch def
+
+  % Translate so ll becomes (0,0)
+  llx neg lly neg translate
+
+  % Compute page width/height in this normalized space
+  /PW urx llx sub def
+  /PH ury lly sub def
+
+  % Force clip to exact page rectangle
+  newpath 0 0 moveto PW 0 rlineto 0 PH rlineto
+  PW neg 0 rlineto closepath clip newpath
+} bind def
+
+% drawPaper
+% Draws all mechanical/page decorations based on cfg.
+/drawPaper {
+  gsave
+    drawBands
+    drawRuling
+    drawMicroCuts
+    drawMicroPerfs
+    drawTractorHoles
+    drawFoldMarks
+  grestore
+} bind def
+
+% =========================================================
+% MAIN PROGRAM
+% =========================================================
+% ----- Page:00--------------------------------------------
+setupPage
+drawPaper
+
 initgraphics
 36 0 topLeftWithMargin /y0 exch def /x0 exch def
 
-% Graphic value 156
-156	x0 0 0 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
-% Graphic value 162
-162	x0 1 0 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
-% Graphic value 193
-193	x0 2 0 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
-% Graphic value 193
-193	x0 3 0 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
-% Graphic value 182
-182	x0 4 0 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
-% Graphic value 162
-162	x0 5 0 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
-% Character 67
+% Character 72
+127	x0 0 0 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
+8	x0 1 0 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
+8	x0 2 0 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
+8	x0 3 0 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
+127	x0 4 0 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 5 0 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
+% Character 79
 62	x0 0 1 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
 65	x0 1 1 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
 65	x0 2 1 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
 65	x0 3 1 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
-34	x0 4 1 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
+62	x0 4 1 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
 0	x0 5 1 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
-% Character 79
-62	x0 0 2 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
-65	x0 1 2 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
-65	x0 2 2 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
-65	x0 3 2 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
-62	x0 4 2 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
+% Character 76
+127	x0 0 2 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
+64	x0 1 2 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
+64	x0 2 2 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
+64	x0 3 2 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
+64	x0 4 2 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
 0	x0 5 2 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
-% Character 77
-127	x0 0 3 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
-2	x0 1 3 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
-12	x0 2 3 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
-2	x0 3 3 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
-127	x0 4 3 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
+% Character 65
+126	x0 0 3 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
+9	x0 1 3 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
+9	x0 2 3 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
+9	x0 3 3 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
+126	x0 4 3 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
 0	x0 5 3 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
-% Character 77
-127	x0 0 4 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
-2	x0 1 4 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
-12	x0 2 4 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
-2	x0 3 4 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
-127	x0 4 4 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
-0	x0 5 4 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
-% Character 79
-62	x0 0 5 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
-65	x0 1 5 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
-65	x0 2 5 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
-65	x0 3 5 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
-62	x0 4 5 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
-0	x0 5 5 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
-% Character 68
-65	x0 0 6 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
-127	x0 1 6 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
-65	x0 2 6 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
-65	x0 3 6 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
-62	x0 4 6 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
-0	x0 5 6 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
-% Character 79
-62	x0 0 7 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
-65	x0 1 7 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
-65	x0 2 7 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
-65	x0 3 7 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
-62	x0 4 7 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
-0	x0 5 7 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
 % Character 82
-127	x0 0 8 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
-9	x0 1 8 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
-25	x0 2 8 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
-41	x0 3 8 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
-70	x0 4 8 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
-0	x0 5 8 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
+127	x0 0 0 6 mul add dotStepX mul add	y0 3 dotStepY 7 mul lineGapY add mul sub drawByteBits
+9	x0 1 0 6 mul add dotStepX mul add	y0 3 dotStepY 7 mul lineGapY add mul sub drawByteBits
+25	x0 2 0 6 mul add dotStepX mul add	y0 3 dotStepY 7 mul lineGapY add mul sub drawByteBits
+41	x0 3 0 6 mul add dotStepX mul add	y0 3 dotStepY 7 mul lineGapY add mul sub drawByteBits
+70	x0 4 0 6 mul add dotStepX mul add	y0 3 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 5 0 6 mul add dotStepX mul add	y0 3 dotStepY 7 mul lineGapY add mul sub drawByteBits
 % Character 69
-127	x0 0 9 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
-73	x0 1 9 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
-73	x0 2 9 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
-73	x0 3 9 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
-65	x0 4 9 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
-0	x0 5 9 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
-% Graphic value 156
-156	x0 0 0 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
-% Graphic value 162
-162	x0 1 0 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
-% Graphic value 193
-193	x0 2 0 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
-% Graphic value 193
-193	x0 3 0 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
-% Graphic value 182
-182	x0 4 0 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
-% Graphic value 162
-162	x0 5 0 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
-% Character 67
-62	x0 0 1 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
-65	x0 1 1 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
-65	x0 2 1 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
-65	x0 3 1 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
-34	x0 4 1 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
-0	x0 5 1 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
-% Character 79
-62	x0 0 2 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
-65	x0 1 2 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
-65	x0 2 2 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
-65	x0 3 2 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
-62	x0 4 2 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
-0	x0 5 2 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
-% Character 77
-127	x0 0 3 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
-2	x0 1 3 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
-12	x0 2 3 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
-2	x0 3 3 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
-127	x0 4 3 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
-0	x0 5 3 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
-% Character 77
-127	x0 0 4 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
-2	x0 1 4 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
-12	x0 2 4 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
-2	x0 3 4 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
-127	x0 4 4 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
-0	x0 5 4 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
-% Character 79
-62	x0 0 5 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
-65	x0 1 5 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
-65	x0 2 5 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
-65	x0 3 5 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
-62	x0 4 5 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
-0	x0 5 5 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
-% Character 68
-65	x0 0 6 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
-127	x0 1 6 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
-65	x0 2 6 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
-65	x0 3 6 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
-62	x0 4 6 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
-0	x0 5 6 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
-% Character 79
-62	x0 0 7 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
-65	x0 1 7 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
-65	x0 2 7 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
-65	x0 3 7 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
-62	x0 4 7 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
-0	x0 5 7 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
-% Character 82
-127	x0 0 8 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
-9	x0 1 8 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
-25	x0 2 8 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
-41	x0 3 8 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
-70	x0 4 8 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
-0	x0 5 8 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
-% Character 69
-127	x0 0 9 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
-73	x0 1 9 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
-73	x0 2 9 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
-73	x0 3 9 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
-65	x0 4 9 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
-0	x0 5 9 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
-% Graphic value 156
-156	x0 0 0 6 mul add dotStepX mul add	y0 2 dotStepY 7 mul lineGapY add mul sub drawByteBits
-% Graphic value 162
-162	x0 1 0 6 mul add dotStepX mul add	y0 2 dotStepY 7 mul lineGapY add mul sub drawByteBits
-% Graphic value 193
-193	x0 2 0 6 mul add dotStepX mul add	y0 2 dotStepY 7 mul lineGapY add mul sub drawByteBits
-% Graphic value 193
-193	x0 3 0 6 mul add dotStepX mul add	y0 2 dotStepY 7 mul lineGapY add mul sub drawByteBits
-% Graphic value 182
-182	x0 4 0 6 mul add dotStepX mul add	y0 2 dotStepY 7 mul lineGapY add mul sub drawByteBits
-% Graphic value 162
-162	x0 5 0 6 mul add dotStepX mul add	y0 2 dotStepY 7 mul lineGapY add mul sub drawByteBits
-% Character 67
-62	x0 0 1 6 mul add dotStepX mul add	y0 2 dotStepY 7 mul lineGapY add mul sub drawByteBits
-65	x0 1 1 6 mul add dotStepX mul add	y0 2 dotStepY 7 mul lineGapY add mul sub drawByteBits
-65	x0 2 1 6 mul add dotStepX mul add	y0 2 dotStepY 7 mul lineGapY add mul sub drawByteBits
-65	x0 3 1 6 mul add dotStepX mul add	y0 2 dotStepY 7 mul lineGapY add mul sub drawByteBits
-34	x0 4 1 6 mul add dotStepX mul add	y0 2 dotStepY 7 mul lineGapY add mul sub drawByteBits
-0	x0 5 1 6 mul add dotStepX mul add	y0 2 dotStepY 7 mul lineGapY add mul sub drawByteBits
-% Character 79
-62	x0 0 2 6 mul add dotStepX mul add	y0 2 dotStepY 7 mul lineGapY add mul sub drawByteBits
-65	x0 1 2 6 mul add dotStepX mul add	y0 2 dotStepY 7 mul lineGapY add mul sub drawByteBits
-65	x0 2 2 6 mul add dotStepX mul add	y0 2 dotStepY 7 mul lineGapY add mul sub drawByteBits
-65	x0 3 2 6 mul add dotStepX mul add	y0 2 dotStepY 7 mul lineGapY add mul sub drawByteBits
-62	x0 4 2 6 mul add dotStepX mul add	y0 2 dotStepY 7 mul lineGapY add mul sub drawByteBits
-0	x0 5 2 6 mul add dotStepX mul add	y0 2 dotStepY 7 mul lineGapY add mul sub drawByteBits
-% Character 77
-127	x0 0 3 6 mul add dotStepX mul add	y0 2 dotStepY 7 mul lineGapY add mul sub drawByteBits
-2	x0 1 3 6 mul add dotStepX mul add	y0 2 dotStepY 7 mul lineGapY add mul sub drawByteBits
-12	x0 2 3 6 mul add dotStepX mul add	y0 2 dotStepY 7 mul lineGapY add mul sub drawByteBits
-2	x0 3 3 6 mul add dotStepX mul add	y0 2 dotStepY 7 mul lineGapY add mul sub drawByteBits
-127	x0 4 3 6 mul add dotStepX mul add	y0 2 dotStepY 7 mul lineGapY add mul sub drawByteBits
-0	x0 5 3 6 mul add dotStepX mul add	y0 2 dotStepY 7 mul lineGapY add mul sub drawByteBits
-% Character 77
-127	x0 0 4 6 mul add dotStepX mul add	y0 2 dotStepY 7 mul lineGapY add mul sub drawByteBits
-2	x0 1 4 6 mul add dotStepX mul add	y0 2 dotStepY 7 mul lineGapY add mul sub drawByteBits
-12	x0 2 4 6 mul add dotStepX mul add	y0 2 dotStepY 7 mul lineGapY add mul sub drawByteBits
-2	x0 3 4 6 mul add dotStepX mul add	y0 2 dotStepY 7 mul lineGapY add mul sub drawByteBits
-127	x0 4 4 6 mul add dotStepX mul add	y0 2 dotStepY 7 mul lineGapY add mul sub drawByteBits
-0	x0 5 4 6 mul add dotStepX mul add	y0 2 dotStepY 7 mul lineGapY add mul sub drawByteBits
-% Character 79
-62	x0 0 5 6 mul add dotStepX mul add	y0 2 dotStepY 7 mul lineGapY add mul sub drawByteBits
-65	x0 1 5 6 mul add dotStepX mul add	y0 2 dotStepY 7 mul lineGapY add mul sub drawByteBits
-65	x0 2 5 6 mul add dotStepX mul add	y0 2 dotStepY 7 mul lineGapY add mul sub drawByteBits
-65	x0 3 5 6 mul add dotStepX mul add	y0 2 dotStepY 7 mul lineGapY add mul sub drawByteBits
-62	x0 4 5 6 mul add dotStepX mul add	y0 2 dotStepY 7 mul lineGapY add mul sub drawByteBits
-0	x0 5 5 6 mul add dotStepX mul add	y0 2 dotStepY 7 mul lineGapY add mul sub drawByteBits
-% Character 68
-65	x0 0 6 6 mul add dotStepX mul add	y0 2 dotStepY 7 mul lineGapY add mul sub drawByteBits
-127	x0 1 6 6 mul add dotStepX mul add	y0 2 dotStepY 7 mul lineGapY add mul sub drawByteBits
-65	x0 2 6 6 mul add dotStepX mul add	y0 2 dotStepY 7 mul lineGapY add mul sub drawByteBits
-65	x0 3 6 6 mul add dotStepX mul add	y0 2 dotStepY 7 mul lineGapY add mul sub drawByteBits
-62	x0 4 6 6 mul add dotStepX mul add	y0 2 dotStepY 7 mul lineGapY add mul sub drawByteBits
-0	x0 5 6 6 mul add dotStepX mul add	y0 2 dotStepY 7 mul lineGapY add mul sub drawByteBits
-% Character 79
-62	x0 0 7 6 mul add dotStepX mul add	y0 2 dotStepY 7 mul lineGapY add mul sub drawByteBits
-65	x0 1 7 6 mul add dotStepX mul add	y0 2 dotStepY 7 mul lineGapY add mul sub drawByteBits
-65	x0 2 7 6 mul add dotStepX mul add	y0 2 dotStepY 7 mul lineGapY add mul sub drawByteBits
-65	x0 3 7 6 mul add dotStepX mul add	y0 2 dotStepY 7 mul lineGapY add mul sub drawByteBits
-62	x0 4 7 6 mul add dotStepX mul add	y0 2 dotStepY 7 mul lineGapY add mul sub drawByteBits
-0	x0 5 7 6 mul add dotStepX mul add	y0 2 dotStepY 7 mul lineGapY add mul sub drawByteBits
-% Character 82
-127	x0 0 8 6 mul add dotStepX mul add	y0 2 dotStepY 7 mul lineGapY add mul sub drawByteBits
-9	x0 1 8 6 mul add dotStepX mul add	y0 2 dotStepY 7 mul lineGapY add mul sub drawByteBits
-25	x0 2 8 6 mul add dotStepX mul add	y0 2 dotStepY 7 mul lineGapY add mul sub drawByteBits
-41	x0 3 8 6 mul add dotStepX mul add	y0 2 dotStepY 7 mul lineGapY add mul sub drawByteBits
-70	x0 4 8 6 mul add dotStepX mul add	y0 2 dotStepY 7 mul lineGapY add mul sub drawByteBits
-0	x0 5 8 6 mul add dotStepX mul add	y0 2 dotStepY 7 mul lineGapY add mul sub drawByteBits
-% Character 69
-127	x0 0 9 6 mul add dotStepX mul add	y0 2 dotStepY 7 mul lineGapY add mul sub drawByteBits
-73	x0 1 9 6 mul add dotStepX mul add	y0 2 dotStepY 7 mul lineGapY add mul sub drawByteBits
-73	x0 2 9 6 mul add dotStepX mul add	y0 2 dotStepY 7 mul lineGapY add mul sub drawByteBits
-73	x0 3 9 6 mul add dotStepX mul add	y0 2 dotStepY 7 mul lineGapY add mul sub drawByteBits
-65	x0 4 9 6 mul add dotStepX mul add	y0 2 dotStepY 7 mul lineGapY add mul sub drawByteBits
-0	x0 5 9 6 mul add dotStepX mul add	y0 2 dotStepY 7 mul lineGapY add mul sub drawByteBits
-% Graphic value 156
-156	x0 0 0 6 mul add dotStepX mul add	y0 3 dotStepY 7 mul lineGapY add mul sub drawByteBits
-% Graphic value 162
-162	x0 1 0 6 mul add dotStepX mul add	y0 3 dotStepY 7 mul lineGapY add mul sub drawByteBits
-% Graphic value 193
-193	x0 2 0 6 mul add dotStepX mul add	y0 3 dotStepY 7 mul lineGapY add mul sub drawByteBits
-% Graphic value 193
-193	x0 3 0 6 mul add dotStepX mul add	y0 3 dotStepY 7 mul lineGapY add mul sub drawByteBits
-% Graphic value 182
-182	x0 4 0 6 mul add dotStepX mul add	y0 3 dotStepY 7 mul lineGapY add mul sub drawByteBits
-% Graphic value 162
-162	x0 5 0 6 mul add dotStepX mul add	y0 3 dotStepY 7 mul lineGapY add mul sub drawByteBits
-% Character 67
-62	x0 0 1 6 mul add dotStepX mul add	y0 3 dotStepY 7 mul lineGapY add mul sub drawByteBits
-65	x0 1 1 6 mul add dotStepX mul add	y0 3 dotStepY 7 mul lineGapY add mul sub drawByteBits
-65	x0 2 1 6 mul add dotStepX mul add	y0 3 dotStepY 7 mul lineGapY add mul sub drawByteBits
-65	x0 3 1 6 mul add dotStepX mul add	y0 3 dotStepY 7 mul lineGapY add mul sub drawByteBits
-34	x0 4 1 6 mul add dotStepX mul add	y0 3 dotStepY 7 mul lineGapY add mul sub drawByteBits
+127	x0 0 1 6 mul add dotStepX mul add	y0 3 dotStepY 7 mul lineGapY add mul sub drawByteBits
+73	x0 1 1 6 mul add dotStepX mul add	y0 3 dotStepY 7 mul lineGapY add mul sub drawByteBits
+73	x0 2 1 6 mul add dotStepX mul add	y0 3 dotStepY 7 mul lineGapY add mul sub drawByteBits
+73	x0 3 1 6 mul add dotStepX mul add	y0 3 dotStepY 7 mul lineGapY add mul sub drawByteBits
+65	x0 4 1 6 mul add dotStepX mul add	y0 3 dotStepY 7 mul lineGapY add mul sub drawByteBits
 0	x0 5 1 6 mul add dotStepX mul add	y0 3 dotStepY 7 mul lineGapY add mul sub drawByteBits
-% Character 79
-62	x0 0 2 6 mul add dotStepX mul add	y0 3 dotStepY 7 mul lineGapY add mul sub drawByteBits
-65	x0 1 2 6 mul add dotStepX mul add	y0 3 dotStepY 7 mul lineGapY add mul sub drawByteBits
-65	x0 2 2 6 mul add dotStepX mul add	y0 3 dotStepY 7 mul lineGapY add mul sub drawByteBits
-65	x0 3 2 6 mul add dotStepX mul add	y0 3 dotStepY 7 mul lineGapY add mul sub drawByteBits
-62	x0 4 2 6 mul add dotStepX mul add	y0 3 dotStepY 7 mul lineGapY add mul sub drawByteBits
+% Character 65
+126	x0 0 2 6 mul add dotStepX mul add	y0 3 dotStepY 7 mul lineGapY add mul sub drawByteBits
+9	x0 1 2 6 mul add dotStepX mul add	y0 3 dotStepY 7 mul lineGapY add mul sub drawByteBits
+9	x0 2 2 6 mul add dotStepX mul add	y0 3 dotStepY 7 mul lineGapY add mul sub drawByteBits
+9	x0 3 2 6 mul add dotStepX mul add	y0 3 dotStepY 7 mul lineGapY add mul sub drawByteBits
+126	x0 4 2 6 mul add dotStepX mul add	y0 3 dotStepY 7 mul lineGapY add mul sub drawByteBits
 0	x0 5 2 6 mul add dotStepX mul add	y0 3 dotStepY 7 mul lineGapY add mul sub drawByteBits
-% Character 77
-127	x0 0 3 6 mul add dotStepX mul add	y0 3 dotStepY 7 mul lineGapY add mul sub drawByteBits
-2	x0 1 3 6 mul add dotStepX mul add	y0 3 dotStepY 7 mul lineGapY add mul sub drawByteBits
-12	x0 2 3 6 mul add dotStepX mul add	y0 3 dotStepY 7 mul lineGapY add mul sub drawByteBits
-2	x0 3 3 6 mul add dotStepX mul add	y0 3 dotStepY 7 mul lineGapY add mul sub drawByteBits
-127	x0 4 3 6 mul add dotStepX mul add	y0 3 dotStepY 7 mul lineGapY add mul sub drawByteBits
+% Character 68
+65	x0 0 3 6 mul add dotStepX mul add	y0 3 dotStepY 7 mul lineGapY add mul sub drawByteBits
+127	x0 1 3 6 mul add dotStepX mul add	y0 3 dotStepY 7 mul lineGapY add mul sub drawByteBits
+65	x0 2 3 6 mul add dotStepX mul add	y0 3 dotStepY 7 mul lineGapY add mul sub drawByteBits
+65	x0 3 3 6 mul add dotStepX mul add	y0 3 dotStepY 7 mul lineGapY add mul sub drawByteBits
+62	x0 4 3 6 mul add dotStepX mul add	y0 3 dotStepY 7 mul lineGapY add mul sub drawByteBits
 0	x0 5 3 6 mul add dotStepX mul add	y0 3 dotStepY 7 mul lineGapY add mul sub drawByteBits
-% Character 77
-127	x0 0 4 6 mul add dotStepX mul add	y0 3 dotStepY 7 mul lineGapY add mul sub drawByteBits
-2	x0 1 4 6 mul add dotStepX mul add	y0 3 dotStepY 7 mul lineGapY add mul sub drawByteBits
-12	x0 2 4 6 mul add dotStepX mul add	y0 3 dotStepY 7 mul lineGapY add mul sub drawByteBits
-2	x0 3 4 6 mul add dotStepX mul add	y0 3 dotStepY 7 mul lineGapY add mul sub drawByteBits
-127	x0 4 4 6 mul add dotStepX mul add	y0 3 dotStepY 7 mul lineGapY add mul sub drawByteBits
+% Character 89
+7	x0 0 4 6 mul add dotStepX mul add	y0 3 dotStepY 7 mul lineGapY add mul sub drawByteBits
+8	x0 1 4 6 mul add dotStepX mul add	y0 3 dotStepY 7 mul lineGapY add mul sub drawByteBits
+120	x0 2 4 6 mul add dotStepX mul add	y0 3 dotStepY 7 mul lineGapY add mul sub drawByteBits
+8	x0 3 4 6 mul add dotStepX mul add	y0 3 dotStepY 7 mul lineGapY add mul sub drawByteBits
+7	x0 4 4 6 mul add dotStepX mul add	y0 3 dotStepY 7 mul lineGapY add mul sub drawByteBits
 0	x0 5 4 6 mul add dotStepX mul add	y0 3 dotStepY 7 mul lineGapY add mul sub drawByteBits
-% Character 79
-62	x0 0 5 6 mul add dotStepX mul add	y0 3 dotStepY 7 mul lineGapY add mul sub drawByteBits
-65	x0 1 5 6 mul add dotStepX mul add	y0 3 dotStepY 7 mul lineGapY add mul sub drawByteBits
-65	x0 2 5 6 mul add dotStepX mul add	y0 3 dotStepY 7 mul lineGapY add mul sub drawByteBits
-65	x0 3 5 6 mul add dotStepX mul add	y0 3 dotStepY 7 mul lineGapY add mul sub drawByteBits
-62	x0 4 5 6 mul add dotStepX mul add	y0 3 dotStepY 7 mul lineGapY add mul sub drawByteBits
+% Character 46
+0	x0 0 5 6 mul add dotStepX mul add	y0 3 dotStepY 7 mul lineGapY add mul sub drawByteBits
+96	x0 1 5 6 mul add dotStepX mul add	y0 3 dotStepY 7 mul lineGapY add mul sub drawByteBits
+96	x0 2 5 6 mul add dotStepX mul add	y0 3 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 3 5 6 mul add dotStepX mul add	y0 3 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 4 5 6 mul add dotStepX mul add	y0 3 dotStepY 7 mul lineGapY add mul sub drawByteBits
 0	x0 5 5 6 mul add dotStepX mul add	y0 3 dotStepY 7 mul lineGapY add mul sub drawByteBits
-% Character 68
-65	x0 0 6 6 mul add dotStepX mul add	y0 3 dotStepY 7 mul lineGapY add mul sub drawByteBits
-127	x0 1 6 6 mul add dotStepX mul add	y0 3 dotStepY 7 mul lineGapY add mul sub drawByteBits
-65	x0 2 6 6 mul add dotStepX mul add	y0 3 dotStepY 7 mul lineGapY add mul sub drawByteBits
-65	x0 3 6 6 mul add dotStepX mul add	y0 3 dotStepY 7 mul lineGapY add mul sub drawByteBits
-62	x0 4 6 6 mul add dotStepX mul add	y0 3 dotStepY 7 mul lineGapY add mul sub drawByteBits
-0	x0 5 6 6 mul add dotStepX mul add	y0 3 dotStepY 7 mul lineGapY add mul sub drawByteBits
-% Character 79
-62	x0 0 7 6 mul add dotStepX mul add	y0 3 dotStepY 7 mul lineGapY add mul sub drawByteBits
-65	x0 1 7 6 mul add dotStepX mul add	y0 3 dotStepY 7 mul lineGapY add mul sub drawByteBits
-65	x0 2 7 6 mul add dotStepX mul add	y0 3 dotStepY 7 mul lineGapY add mul sub drawByteBits
-65	x0 3 7 6 mul add dotStepX mul add	y0 3 dotStepY 7 mul lineGapY add mul sub drawByteBits
-62	x0 4 7 6 mul add dotStepX mul add	y0 3 dotStepY 7 mul lineGapY add mul sub drawByteBits
-0	x0 5 7 6 mul add dotStepX mul add	y0 3 dotStepY 7 mul lineGapY add mul sub drawByteBits
-% Character 82
-127	x0 0 8 6 mul add dotStepX mul add	y0 3 dotStepY 7 mul lineGapY add mul sub drawByteBits
-9	x0 1 8 6 mul add dotStepX mul add	y0 3 dotStepY 7 mul lineGapY add mul sub drawByteBits
-25	x0 2 8 6 mul add dotStepX mul add	y0 3 dotStepY 7 mul lineGapY add mul sub drawByteBits
-41	x0 3 8 6 mul add dotStepX mul add	y0 3 dotStepY 7 mul lineGapY add mul sub drawByteBits
-70	x0 4 8 6 mul add dotStepX mul add	y0 3 dotStepY 7 mul lineGapY add mul sub drawByteBits
-0	x0 5 8 6 mul add dotStepX mul add	y0 3 dotStepY 7 mul lineGapY add mul sub drawByteBits
-% Character 69
-127	x0 0 9 6 mul add dotStepX mul add	y0 3 dotStepY 7 mul lineGapY add mul sub drawByteBits
-73	x0 1 9 6 mul add dotStepX mul add	y0 3 dotStepY 7 mul lineGapY add mul sub drawByteBits
-73	x0 2 9 6 mul add dotStepX mul add	y0 3 dotStepY 7 mul lineGapY add mul sub drawByteBits
-73	x0 3 9 6 mul add dotStepX mul add	y0 3 dotStepY 7 mul lineGapY add mul sub drawByteBits
-65	x0 4 9 6 mul add dotStepX mul add	y0 3 dotStepY 7 mul lineGapY add mul sub drawByteBits
-0	x0 5 9 6 mul add dotStepX mul add	y0 3 dotStepY 7 mul lineGapY add mul sub drawByteBits
-% Graphic value 156
-156	x0 0 0 6 mul add dotStepX mul add	y0 5 dotStepY 7 mul lineGapY add mul sub drawByteBits
-% Graphic value 162
-162	x0 1 0 6 mul add dotStepX mul add	y0 5 dotStepY 7 mul lineGapY add mul sub drawByteBits
-% Graphic value 193
-193	x0 2 0 6 mul add dotStepX mul add	y0 5 dotStepY 7 mul lineGapY add mul sub drawByteBits
-% Graphic value 193
-193	x0 3 0 6 mul add dotStepX mul add	y0 5 dotStepY 7 mul lineGapY add mul sub drawByteBits
-% Graphic value 182
-182	x0 4 0 6 mul add dotStepX mul add	y0 5 dotStepY 7 mul lineGapY add mul sub drawByteBits
-% Graphic value 162
-162	x0 5 0 6 mul add dotStepX mul add	y0 5 dotStepY 7 mul lineGapY add mul sub drawByteBits
-% Character 32
-0	x0 0 1 6 mul add dotStepX mul add	y0 5 dotStepY 7 mul lineGapY add mul sub drawByteBits
-0	x0 1 1 6 mul add dotStepX mul add	y0 5 dotStepY 7 mul lineGapY add mul sub drawByteBits
-0	x0 2 1 6 mul add dotStepX mul add	y0 5 dotStepY 7 mul lineGapY add mul sub drawByteBits
-0	x0 3 1 6 mul add dotStepX mul add	y0 5 dotStepY 7 mul lineGapY add mul sub drawByteBits
-0	x0 4 1 6 mul add dotStepX mul add	y0 5 dotStepY 7 mul lineGapY add mul sub drawByteBits
-0	x0 5 1 6 mul add dotStepX mul add	y0 5 dotStepY 7 mul lineGapY add mul sub drawByteBits
-% Character 67
-62	x0 0 2 6 mul add dotStepX mul add	y0 5 dotStepY 7 mul lineGapY add mul sub drawByteBits
-65	x0 1 2 6 mul add dotStepX mul add	y0 5 dotStepY 7 mul lineGapY add mul sub drawByteBits
-65	x0 2 2 6 mul add dotStepX mul add	y0 5 dotStepY 7 mul lineGapY add mul sub drawByteBits
-65	x0 3 2 6 mul add dotStepX mul add	y0 5 dotStepY 7 mul lineGapY add mul sub drawByteBits
-34	x0 4 2 6 mul add dotStepX mul add	y0 5 dotStepY 7 mul lineGapY add mul sub drawByteBits
-0	x0 5 2 6 mul add dotStepX mul add	y0 5 dotStepY 7 mul lineGapY add mul sub drawByteBits
-% Character 79
-62	x0 0 3 6 mul add dotStepX mul add	y0 5 dotStepY 7 mul lineGapY add mul sub drawByteBits
-65	x0 1 3 6 mul add dotStepX mul add	y0 5 dotStepY 7 mul lineGapY add mul sub drawByteBits
-65	x0 2 3 6 mul add dotStepX mul add	y0 5 dotStepY 7 mul lineGapY add mul sub drawByteBits
-65	x0 3 3 6 mul add dotStepX mul add	y0 5 dotStepY 7 mul lineGapY add mul sub drawByteBits
-62	x0 4 3 6 mul add dotStepX mul add	y0 5 dotStepY 7 mul lineGapY add mul sub drawByteBits
-0	x0 5 3 6 mul add dotStepX mul add	y0 5 dotStepY 7 mul lineGapY add mul sub drawByteBits
-% Character 77
-127	x0 0 4 6 mul add dotStepX mul add	y0 5 dotStepY 7 mul lineGapY add mul sub drawByteBits
-2	x0 1 4 6 mul add dotStepX mul add	y0 5 dotStepY 7 mul lineGapY add mul sub drawByteBits
-12	x0 2 4 6 mul add dotStepX mul add	y0 5 dotStepY 7 mul lineGapY add mul sub drawByteBits
-2	x0 3 4 6 mul add dotStepX mul add	y0 5 dotStepY 7 mul lineGapY add mul sub drawByteBits
-127	x0 4 4 6 mul add dotStepX mul add	y0 5 dotStepY 7 mul lineGapY add mul sub drawByteBits
-0	x0 5 4 6 mul add dotStepX mul add	y0 5 dotStepY 7 mul lineGapY add mul sub drawByteBits
-% Character 77
-127	x0 0 5 6 mul add dotStepX mul add	y0 5 dotStepY 7 mul lineGapY add mul sub drawByteBits
-2	x0 1 5 6 mul add dotStepX mul add	y0 5 dotStepY 7 mul lineGapY add mul sub drawByteBits
-12	x0 2 5 6 mul add dotStepX mul add	y0 5 dotStepY 7 mul lineGapY add mul sub drawByteBits
-2	x0 3 5 6 mul add dotStepX mul add	y0 5 dotStepY 7 mul lineGapY add mul sub drawByteBits
-127	x0 4 5 6 mul add dotStepX mul add	y0 5 dotStepY 7 mul lineGapY add mul sub drawByteBits
-0	x0 5 5 6 mul add dotStepX mul add	y0 5 dotStepY 7 mul lineGapY add mul sub drawByteBits
-% Character 79
-62	x0 0 6 6 mul add dotStepX mul add	y0 5 dotStepY 7 mul lineGapY add mul sub drawByteBits
-65	x0 1 6 6 mul add dotStepX mul add	y0 5 dotStepY 7 mul lineGapY add mul sub drawByteBits
-65	x0 2 6 6 mul add dotStepX mul add	y0 5 dotStepY 7 mul lineGapY add mul sub drawByteBits
-65	x0 3 6 6 mul add dotStepX mul add	y0 5 dotStepY 7 mul lineGapY add mul sub drawByteBits
-62	x0 4 6 6 mul add dotStepX mul add	y0 5 dotStepY 7 mul lineGapY add mul sub drawByteBits
-0	x0 5 6 6 mul add dotStepX mul add	y0 5 dotStepY 7 mul lineGapY add mul sub drawByteBits
-% Character 68
-65	x0 0 7 6 mul add dotStepX mul add	y0 5 dotStepY 7 mul lineGapY add mul sub drawByteBits
-127	x0 1 7 6 mul add dotStepX mul add	y0 5 dotStepY 7 mul lineGapY add mul sub drawByteBits
-65	x0 2 7 6 mul add dotStepX mul add	y0 5 dotStepY 7 mul lineGapY add mul sub drawByteBits
-65	x0 3 7 6 mul add dotStepX mul add	y0 5 dotStepY 7 mul lineGapY add mul sub drawByteBits
-62	x0 4 7 6 mul add dotStepX mul add	y0 5 dotStepY 7 mul lineGapY add mul sub drawByteBits
-0	x0 5 7 6 mul add dotStepX mul add	y0 5 dotStepY 7 mul lineGapY add mul sub drawByteBits
-% Character 79
-62	x0 0 8 6 mul add dotStepX mul add	y0 5 dotStepY 7 mul lineGapY add mul sub drawByteBits
-65	x0 1 8 6 mul add dotStepX mul add	y0 5 dotStepY 7 mul lineGapY add mul sub drawByteBits
-65	x0 2 8 6 mul add dotStepX mul add	y0 5 dotStepY 7 mul lineGapY add mul sub drawByteBits
-65	x0 3 8 6 mul add dotStepX mul add	y0 5 dotStepY 7 mul lineGapY add mul sub drawByteBits
-62	x0 4 8 6 mul add dotStepX mul add	y0 5 dotStepY 7 mul lineGapY add mul sub drawByteBits
-0	x0 5 8 6 mul add dotStepX mul add	y0 5 dotStepY 7 mul lineGapY add mul sub drawByteBits
-% Character 82
-127	x0 0 9 6 mul add dotStepX mul add	y0 5 dotStepY 7 mul lineGapY add mul sub drawByteBits
-9	x0 1 9 6 mul add dotStepX mul add	y0 5 dotStepY 7 mul lineGapY add mul sub drawByteBits
-25	x0 2 9 6 mul add dotStepX mul add	y0 5 dotStepY 7 mul lineGapY add mul sub drawByteBits
-41	x0 3 9 6 mul add dotStepX mul add	y0 5 dotStepY 7 mul lineGapY add mul sub drawByteBits
-70	x0 4 9 6 mul add dotStepX mul add	y0 5 dotStepY 7 mul lineGapY add mul sub drawByteBits
-0	x0 5 9 6 mul add dotStepX mul add	y0 5 dotStepY 7 mul lineGapY add mul sub drawByteBits
-% Character 69
-127	x0 0 10 6 mul add dotStepX mul add	y0 5 dotStepY 7 mul lineGapY add mul sub drawByteBits
-73	x0 1 10 6 mul add dotStepX mul add	y0 5 dotStepY 7 mul lineGapY add mul sub drawByteBits
-73	x0 2 10 6 mul add dotStepX mul add	y0 5 dotStepY 7 mul lineGapY add mul sub drawByteBits
-73	x0 3 10 6 mul add dotStepX mul add	y0 5 dotStepY 7 mul lineGapY add mul sub drawByteBits
-65	x0 4 10 6 mul add dotStepX mul add	y0 5 dotStepY 7 mul lineGapY add mul sub drawByteBits
-0	x0 5 10 6 mul add dotStepX mul add	y0 5 dotStepY 7 mul lineGapY add mul sub drawByteBits
-% Graphic value 156
-156	x0 0 0 6 mul add dotStepX mul add	y0 6 dotStepY 7 mul lineGapY add mul sub drawByteBits
-% Graphic value 162
-162	x0 1 0 6 mul add dotStepX mul add	y0 6 dotStepY 7 mul lineGapY add mul sub drawByteBits
-% Graphic value 193
-193	x0 2 0 6 mul add dotStepX mul add	y0 6 dotStepY 7 mul lineGapY add mul sub drawByteBits
-% Graphic value 193
-193	x0 3 0 6 mul add dotStepX mul add	y0 6 dotStepY 7 mul lineGapY add mul sub drawByteBits
-% Graphic value 182
-182	x0 4 0 6 mul add dotStepX mul add	y0 6 dotStepY 7 mul lineGapY add mul sub drawByteBits
-% Graphic value 162
-162	x0 5 0 6 mul add dotStepX mul add	y0 6 dotStepY 7 mul lineGapY add mul sub drawByteBits
-% Character 32
-0	x0 0 1 6 mul add dotStepX mul add	y0 6 dotStepY 7 mul lineGapY add mul sub drawByteBits
-0	x0 1 1 6 mul add dotStepX mul add	y0 6 dotStepY 7 mul lineGapY add mul sub drawByteBits
-0	x0 2 1 6 mul add dotStepX mul add	y0 6 dotStepY 7 mul lineGapY add mul sub drawByteBits
-0	x0 3 1 6 mul add dotStepX mul add	y0 6 dotStepY 7 mul lineGapY add mul sub drawByteBits
-0	x0 4 1 6 mul add dotStepX mul add	y0 6 dotStepY 7 mul lineGapY add mul sub drawByteBits
+% Character 49
+0	x0 0 0 6 mul add dotStepX mul add	y0 6 dotStepY 7 mul lineGapY add mul sub drawByteBits
+66	x0 1 0 6 mul add dotStepX mul add	y0 6 dotStepY 7 mul lineGapY add mul sub drawByteBits
+127	x0 2 0 6 mul add dotStepX mul add	y0 6 dotStepY 7 mul lineGapY add mul sub drawByteBits
+64	x0 3 0 6 mul add dotStepX mul add	y0 6 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 4 0 6 mul add dotStepX mul add	y0 6 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 5 0 6 mul add dotStepX mul add	y0 6 dotStepY 7 mul lineGapY add mul sub drawByteBits
+% Character 48
+62	x0 0 1 6 mul add dotStepX mul add	y0 6 dotStepY 7 mul lineGapY add mul sub drawByteBits
+81	x0 1 1 6 mul add dotStepX mul add	y0 6 dotStepY 7 mul lineGapY add mul sub drawByteBits
+73	x0 2 1 6 mul add dotStepX mul add	y0 6 dotStepY 7 mul lineGapY add mul sub drawByteBits
+69	x0 3 1 6 mul add dotStepX mul add	y0 6 dotStepY 7 mul lineGapY add mul sub drawByteBits
+62	x0 4 1 6 mul add dotStepX mul add	y0 6 dotStepY 7 mul lineGapY add mul sub drawByteBits
 0	x0 5 1 6 mul add dotStepX mul add	y0 6 dotStepY 7 mul lineGapY add mul sub drawByteBits
-% Character 67
-62	x0 0 2 6 mul add dotStepX mul add	y0 6 dotStepY 7 mul lineGapY add mul sub drawByteBits
-65	x0 1 2 6 mul add dotStepX mul add	y0 6 dotStepY 7 mul lineGapY add mul sub drawByteBits
-65	x0 2 2 6 mul add dotStepX mul add	y0 6 dotStepY 7 mul lineGapY add mul sub drawByteBits
-65	x0 3 2 6 mul add dotStepX mul add	y0 6 dotStepY 7 mul lineGapY add mul sub drawByteBits
-34	x0 4 2 6 mul add dotStepX mul add	y0 6 dotStepY 7 mul lineGapY add mul sub drawByteBits
+% Character 32
+0	x0 0 2 6 mul add dotStepX mul add	y0 6 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 1 2 6 mul add dotStepX mul add	y0 6 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 2 2 6 mul add dotStepX mul add	y0 6 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 3 2 6 mul add dotStepX mul add	y0 6 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 4 2 6 mul add dotStepX mul add	y0 6 dotStepY 7 mul lineGapY add mul sub drawByteBits
 0	x0 5 2 6 mul add dotStepX mul add	y0 6 dotStepY 7 mul lineGapY add mul sub drawByteBits
 % Character 79
 62	x0 0 3 6 mul add dotStepX mul add	y0 6 dotStepY 7 mul lineGapY add mul sub drawByteBits
@@ -1090,216 +1186,1006 @@ initgraphics
 65	x0 3 3 6 mul add dotStepX mul add	y0 6 dotStepY 7 mul lineGapY add mul sub drawByteBits
 62	x0 4 3 6 mul add dotStepX mul add	y0 6 dotStepY 7 mul lineGapY add mul sub drawByteBits
 0	x0 5 3 6 mul add dotStepX mul add	y0 6 dotStepY 7 mul lineGapY add mul sub drawByteBits
-% Character 77
+% Character 80
 127	x0 0 4 6 mul add dotStepX mul add	y0 6 dotStepY 7 mul lineGapY add mul sub drawByteBits
-2	x0 1 4 6 mul add dotStepX mul add	y0 6 dotStepY 7 mul lineGapY add mul sub drawByteBits
-12	x0 2 4 6 mul add dotStepX mul add	y0 6 dotStepY 7 mul lineGapY add mul sub drawByteBits
-2	x0 3 4 6 mul add dotStepX mul add	y0 6 dotStepY 7 mul lineGapY add mul sub drawByteBits
-127	x0 4 4 6 mul add dotStepX mul add	y0 6 dotStepY 7 mul lineGapY add mul sub drawByteBits
+9	x0 1 4 6 mul add dotStepX mul add	y0 6 dotStepY 7 mul lineGapY add mul sub drawByteBits
+9	x0 2 4 6 mul add dotStepX mul add	y0 6 dotStepY 7 mul lineGapY add mul sub drawByteBits
+9	x0 3 4 6 mul add dotStepX mul add	y0 6 dotStepY 7 mul lineGapY add mul sub drawByteBits
+6	x0 4 4 6 mul add dotStepX mul add	y0 6 dotStepY 7 mul lineGapY add mul sub drawByteBits
 0	x0 5 4 6 mul add dotStepX mul add	y0 6 dotStepY 7 mul lineGapY add mul sub drawByteBits
-% Character 77
+% Character 69
 127	x0 0 5 6 mul add dotStepX mul add	y0 6 dotStepY 7 mul lineGapY add mul sub drawByteBits
-2	x0 1 5 6 mul add dotStepX mul add	y0 6 dotStepY 7 mul lineGapY add mul sub drawByteBits
-12	x0 2 5 6 mul add dotStepX mul add	y0 6 dotStepY 7 mul lineGapY add mul sub drawByteBits
-2	x0 3 5 6 mul add dotStepX mul add	y0 6 dotStepY 7 mul lineGapY add mul sub drawByteBits
-127	x0 4 5 6 mul add dotStepX mul add	y0 6 dotStepY 7 mul lineGapY add mul sub drawByteBits
+73	x0 1 5 6 mul add dotStepX mul add	y0 6 dotStepY 7 mul lineGapY add mul sub drawByteBits
+73	x0 2 5 6 mul add dotStepX mul add	y0 6 dotStepY 7 mul lineGapY add mul sub drawByteBits
+73	x0 3 5 6 mul add dotStepX mul add	y0 6 dotStepY 7 mul lineGapY add mul sub drawByteBits
+65	x0 4 5 6 mul add dotStepX mul add	y0 6 dotStepY 7 mul lineGapY add mul sub drawByteBits
 0	x0 5 5 6 mul add dotStepX mul add	y0 6 dotStepY 7 mul lineGapY add mul sub drawByteBits
-% Character 79
-62	x0 0 6 6 mul add dotStepX mul add	y0 6 dotStepY 7 mul lineGapY add mul sub drawByteBits
-65	x0 1 6 6 mul add dotStepX mul add	y0 6 dotStepY 7 mul lineGapY add mul sub drawByteBits
-65	x0 2 6 6 mul add dotStepX mul add	y0 6 dotStepY 7 mul lineGapY add mul sub drawByteBits
-65	x0 3 6 6 mul add dotStepX mul add	y0 6 dotStepY 7 mul lineGapY add mul sub drawByteBits
-62	x0 4 6 6 mul add dotStepX mul add	y0 6 dotStepY 7 mul lineGapY add mul sub drawByteBits
+% Character 78
+127	x0 0 6 6 mul add dotStepX mul add	y0 6 dotStepY 7 mul lineGapY add mul sub drawByteBits
+4	x0 1 6 6 mul add dotStepX mul add	y0 6 dotStepY 7 mul lineGapY add mul sub drawByteBits
+8	x0 2 6 6 mul add dotStepX mul add	y0 6 dotStepY 7 mul lineGapY add mul sub drawByteBits
+16	x0 3 6 6 mul add dotStepX mul add	y0 6 dotStepY 7 mul lineGapY add mul sub drawByteBits
+127	x0 4 6 6 mul add dotStepX mul add	y0 6 dotStepY 7 mul lineGapY add mul sub drawByteBits
 0	x0 5 6 6 mul add dotStepX mul add	y0 6 dotStepY 7 mul lineGapY add mul sub drawByteBits
-% Character 68
-65	x0 0 7 6 mul add dotStepX mul add	y0 6 dotStepY 7 mul lineGapY add mul sub drawByteBits
-127	x0 1 7 6 mul add dotStepX mul add	y0 6 dotStepY 7 mul lineGapY add mul sub drawByteBits
-65	x0 2 7 6 mul add dotStepX mul add	y0 6 dotStepY 7 mul lineGapY add mul sub drawByteBits
-65	x0 3 7 6 mul add dotStepX mul add	y0 6 dotStepY 7 mul lineGapY add mul sub drawByteBits
-62	x0 4 7 6 mul add dotStepX mul add	y0 6 dotStepY 7 mul lineGapY add mul sub drawByteBits
+% Character 51
+34	x0 0 7 6 mul add dotStepX mul add	y0 6 dotStepY 7 mul lineGapY add mul sub drawByteBits
+65	x0 1 7 6 mul add dotStepX mul add	y0 6 dotStepY 7 mul lineGapY add mul sub drawByteBits
+73	x0 2 7 6 mul add dotStepX mul add	y0 6 dotStepY 7 mul lineGapY add mul sub drawByteBits
+73	x0 3 7 6 mul add dotStepX mul add	y0 6 dotStepY 7 mul lineGapY add mul sub drawByteBits
+54	x0 4 7 6 mul add dotStepX mul add	y0 6 dotStepY 7 mul lineGapY add mul sub drawByteBits
 0	x0 5 7 6 mul add dotStepX mul add	y0 6 dotStepY 7 mul lineGapY add mul sub drawByteBits
-% Character 79
-62	x0 0 8 6 mul add dotStepX mul add	y0 6 dotStepY 7 mul lineGapY add mul sub drawByteBits
-65	x0 1 8 6 mul add dotStepX mul add	y0 6 dotStepY 7 mul lineGapY add mul sub drawByteBits
-65	x0 2 8 6 mul add dotStepX mul add	y0 6 dotStepY 7 mul lineGapY add mul sub drawByteBits
-65	x0 3 8 6 mul add dotStepX mul add	y0 6 dotStepY 7 mul lineGapY add mul sub drawByteBits
-62	x0 4 8 6 mul add dotStepX mul add	y0 6 dotStepY 7 mul lineGapY add mul sub drawByteBits
+% Character 44
+0	x0 0 8 6 mul add dotStepX mul add	y0 6 dotStepY 7 mul lineGapY add mul sub drawByteBits
+64	x0 1 8 6 mul add dotStepX mul add	y0 6 dotStepY 7 mul lineGapY add mul sub drawByteBits
+48	x0 2 8 6 mul add dotStepX mul add	y0 6 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 3 8 6 mul add dotStepX mul add	y0 6 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 4 8 6 mul add dotStepX mul add	y0 6 dotStepY 7 mul lineGapY add mul sub drawByteBits
 0	x0 5 8 6 mul add dotStepX mul add	y0 6 dotStepY 7 mul lineGapY add mul sub drawByteBits
-% Character 82
-127	x0 0 9 6 mul add dotStepX mul add	y0 6 dotStepY 7 mul lineGapY add mul sub drawByteBits
-9	x0 1 9 6 mul add dotStepX mul add	y0 6 dotStepY 7 mul lineGapY add mul sub drawByteBits
-25	x0 2 9 6 mul add dotStepX mul add	y0 6 dotStepY 7 mul lineGapY add mul sub drawByteBits
-41	x0 3 9 6 mul add dotStepX mul add	y0 6 dotStepY 7 mul lineGapY add mul sub drawByteBits
-70	x0 4 9 6 mul add dotStepX mul add	y0 6 dotStepY 7 mul lineGapY add mul sub drawByteBits
+% Character 52
+24	x0 0 9 6 mul add dotStepX mul add	y0 6 dotStepY 7 mul lineGapY add mul sub drawByteBits
+20	x0 1 9 6 mul add dotStepX mul add	y0 6 dotStepY 7 mul lineGapY add mul sub drawByteBits
+18	x0 2 9 6 mul add dotStepX mul add	y0 6 dotStepY 7 mul lineGapY add mul sub drawByteBits
+127	x0 3 9 6 mul add dotStepX mul add	y0 6 dotStepY 7 mul lineGapY add mul sub drawByteBits
+16	x0 4 9 6 mul add dotStepX mul add	y0 6 dotStepY 7 mul lineGapY add mul sub drawByteBits
 0	x0 5 9 6 mul add dotStepX mul add	y0 6 dotStepY 7 mul lineGapY add mul sub drawByteBits
-% Character 69
-127	x0 0 10 6 mul add dotStepX mul add	y0 6 dotStepY 7 mul lineGapY add mul sub drawByteBits
-73	x0 1 10 6 mul add dotStepX mul add	y0 6 dotStepY 7 mul lineGapY add mul sub drawByteBits
-73	x0 2 10 6 mul add dotStepX mul add	y0 6 dotStepY 7 mul lineGapY add mul sub drawByteBits
-73	x0 3 10 6 mul add dotStepX mul add	y0 6 dotStepY 7 mul lineGapY add mul sub drawByteBits
-65	x0 4 10 6 mul add dotStepX mul add	y0 6 dotStepY 7 mul lineGapY add mul sub drawByteBits
-0	x0 5 10 6 mul add dotStepX mul add	y0 6 dotStepY 7 mul lineGapY add mul sub drawByteBits
-% Graphic value 156
-156	x0 0 0 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
-% Graphic value 162
-162	x0 1 0 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
-% Graphic value 193
-193	x0 2 0 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
-% Graphic value 193
-193	x0 3 0 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
-% Graphic value 182
-182	x0 4 0 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
-% Graphic value 162
-162	x0 5 0 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
-% Character 32
-0	x0 0 1 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
-0	x0 1 1 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
-0	x0 2 1 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
-0	x0 3 1 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
-0	x0 4 1 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+% Character 50
+98	x0 0 0 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+81	x0 1 0 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+81	x0 2 0 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+73	x0 3 0 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+70	x0 4 0 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 5 0 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+% Character 48
+62	x0 0 1 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+81	x0 1 1 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+73	x0 2 1 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+69	x0 3 1 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+62	x0 4 1 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
 0	x0 5 1 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
-% Character 67
-62	x0 0 2 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
-65	x0 1 2 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
-65	x0 2 2 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
-65	x0 3 2 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
-34	x0 4 2 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
-0	x0 5 2 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
-% Character 79
-62	x0 0 3 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
-65	x0 1 3 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
-65	x0 2 3 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
-65	x0 3 3 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
-62	x0 4 3 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
-0	x0 5 3 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
-% Character 77
-127	x0 0 4 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
-2	x0 1 4 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
-12	x0 2 4 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
-2	x0 3 4 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
-127	x0 4 4 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
-0	x0 5 4 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
-% Character 77
-127	x0 0 5 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
-2	x0 1 5 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
-12	x0 2 5 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
-2	x0 3 5 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
-127	x0 4 5 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
-0	x0 5 5 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
-% Character 79
-62	x0 0 6 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
-65	x0 1 6 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
-65	x0 2 6 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
-65	x0 3 6 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
-62	x0 4 6 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
-0	x0 5 6 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
-% Character 68
-65	x0 0 7 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
-127	x0 1 7 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
-65	x0 2 7 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
-65	x0 3 7 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
-62	x0 4 7 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
-0	x0 5 7 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
-% Character 79
-62	x0 0 8 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
-65	x0 1 8 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
-65	x0 2 8 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
-65	x0 3 8 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
-62	x0 4 8 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
-0	x0 5 8 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
-% Character 82
-127	x0 0 9 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
-9	x0 1 9 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
-25	x0 2 9 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
-41	x0 3 9 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
-70	x0 4 9 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
-0	x0 5 9 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
-% Character 69
-127	x0 0 10 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
-73	x0 1 10 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
-73	x0 2 10 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
-73	x0 3 10 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
-65	x0 4 10 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
-0	x0 5 10 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
-% Graphic value 156
-156	x0 0 0 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
-% Graphic value 162
-162	x0 1 0 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
-% Graphic value 193
-193	x0 2 0 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
-% Graphic value 193
-193	x0 3 0 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
-% Graphic value 182
-182	x0 4 0 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
-% Graphic value 162
-162	x0 5 0 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
 % Character 32
-0	x0 0 1 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
-0	x0 1 1 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
-0	x0 2 1 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
-0	x0 3 1 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
-0	x0 4 1 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
-0	x0 5 1 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
-% Character 67
-62	x0 0 2 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
-65	x0 1 2 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
-65	x0 2 2 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
-65	x0 3 2 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
-34	x0 4 2 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
-0	x0 5 2 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
-% Character 79
-62	x0 0 3 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
-65	x0 1 3 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
-65	x0 2 3 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
-65	x0 3 3 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
-62	x0 4 3 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
-0	x0 5 3 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
-% Character 77
-127	x0 0 4 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
-2	x0 1 4 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
-12	x0 2 4 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
-2	x0 3 4 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
-127	x0 4 4 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
-0	x0 5 4 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
-% Character 77
-127	x0 0 5 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
-2	x0 1 5 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
-12	x0 2 5 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
-2	x0 3 5 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
-127	x0 4 5 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
-0	x0 5 5 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
-% Character 79
-62	x0 0 6 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
-65	x0 1 6 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
-65	x0 2 6 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
-65	x0 3 6 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
-62	x0 4 6 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
-0	x0 5 6 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
-% Character 68
-65	x0 0 7 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
-127	x0 1 7 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
-65	x0 2 7 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
-65	x0 3 7 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
-62	x0 4 7 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
-0	x0 5 7 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
-% Character 79
-62	x0 0 8 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
-65	x0 1 8 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
-65	x0 2 8 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
-65	x0 3 8 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
-62	x0 4 8 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
-0	x0 5 8 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 0 2 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 1 2 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 2 2 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 3 2 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 4 2 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 5 2 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+% Character 80
+127	x0 0 3 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+9	x0 1 3 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+9	x0 2 3 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+9	x0 3 3 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+6	x0 4 3 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 5 3 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
 % Character 82
-127	x0 0 9 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
-9	x0 1 9 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
-25	x0 2 9 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
-41	x0 3 9 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
-70	x0 4 9 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
-0	x0 5 9 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+127	x0 0 4 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+9	x0 1 4 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+25	x0 2 4 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+41	x0 3 4 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+70	x0 4 4 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 5 4 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+% Character 73
+0	x0 0 5 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+65	x0 1 5 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+127	x0 2 5 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+65	x0 3 5 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 4 5 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 5 5 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+% Character 78
+127	x0 0 6 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+4	x0 1 6 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+8	x0 2 6 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+16	x0 3 6 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+127	x0 4 6 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 5 6 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+% Character 84
+1	x0 0 7 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+1	x0 1 7 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+127	x0 2 7 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+1	x0 3 7 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+1	x0 4 7 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 5 7 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+% Character 35
+20	x0 0 8 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+127	x0 1 8 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+20	x0 2 8 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+127	x0 3 8 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+20	x0 4 8 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 5 8 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+% Character 51
+34	x0 0 9 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+65	x0 1 9 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+73	x0 2 9 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+73	x0 3 9 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+54	x0 4 9 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 5 9 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+% Character 44
+0	x0 0 10 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+64	x0 1 10 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+48	x0 2 10 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 3 10 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 4 10 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 5 10 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+% Character 34
+0	x0 0 11 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+7	x0 1 11 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 2 11 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+7	x0 3 11 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 4 11 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 5 11 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+% Character 72
+127	x0 0 12 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+8	x0 1 12 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+8	x0 2 12 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+8	x0 3 12 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+127	x0 4 12 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 5 12 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+% Character 79
+62	x0 0 13 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+65	x0 1 13 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+65	x0 2 13 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+65	x0 3 13 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+62	x0 4 13 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 5 13 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+% Character 76
+127	x0 0 14 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+64	x0 1 14 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+64	x0 2 14 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+64	x0 3 14 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+64	x0 4 14 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 5 14 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+% Character 65
+126	x0 0 15 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+9	x0 1 15 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+9	x0 2 15 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+9	x0 3 15 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+126	x0 4 15 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 5 15 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+% Character 32
+0	x0 0 16 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 1 16 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 2 16 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 3 16 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 4 16 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 5 16 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+% Character 81
+62	x0 0 17 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+65	x0 1 17 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+81	x0 2 17 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+33	x0 3 17 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+94	x0 4 17 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 5 17 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+% Character 85
+63	x0 0 18 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+64	x0 1 18 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+64	x0 2 18 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+64	x0 3 18 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+63	x0 4 18 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 5 18 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
 % Character 69
-127	x0 0 10 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
-73	x0 1 10 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
-73	x0 2 10 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
-73	x0 3 10 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
-65	x0 4 10 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+127	x0 0 19 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+73	x0 1 19 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+73	x0 2 19 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+73	x0 3 19 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+65	x0 4 19 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 5 19 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+% Character 32
+0	x0 0 20 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 1 20 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 2 20 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 3 20 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 4 20 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 5 20 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+% Character 84
+1	x0 0 21 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+1	x0 1 21 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+127	x0 2 21 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+1	x0 3 21 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+1	x0 4 21 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 5 21 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+% Character 65
+126	x0 0 22 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+9	x0 1 22 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+9	x0 2 22 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+9	x0 3 22 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+126	x0 4 22 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 5 22 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+% Character 76
+127	x0 0 23 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+64	x0 1 23 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+64	x0 2 23 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+64	x0 3 23 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+64	x0 4 23 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 5 23 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+% Character 32
+0	x0 0 24 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 1 24 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 2 24 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 3 24 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 4 24 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 5 24 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+% Character 74
+32	x0 0 25 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+64	x0 1 25 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+65	x0 2 25 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+63	x0 3 25 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+1	x0 4 25 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 5 25 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+% Character 65
+126	x0 0 26 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+9	x0 1 26 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+9	x0 2 26 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+9	x0 3 26 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+126	x0 4 26 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 5 26 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+% Character 86
+7	x0 0 27 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+24	x0 1 27 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+96	x0 2 27 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+24	x0 3 27 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+7	x0 4 27 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 5 27 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+% Character 73
+0	x0 0 28 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+65	x0 1 28 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+127	x0 2 28 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+65	x0 3 28 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 4 28 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 5 28 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+% Character 34
+0	x0 0 29 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+7	x0 1 29 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 2 29 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+7	x0 3 29 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 4 29 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 5 29 6 mul add dotStepX mul add	y0 7 dotStepY 7 mul lineGapY add mul sub drawByteBits
+% Character 51
+34	x0 0 0 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+65	x0 1 0 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+73	x0 2 0 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+73	x0 3 0 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+54	x0 4 0 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 5 0 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+% Character 48
+62	x0 0 1 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+81	x0 1 1 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+73	x0 2 1 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+69	x0 3 1 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+62	x0 4 1 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 5 1 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+% Character 32
+0	x0 0 2 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 1 2 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 2 2 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 3 2 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 4 2 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 5 2 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+% Character 80
+127	x0 0 3 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+9	x0 1 3 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+9	x0 2 3 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+9	x0 3 3 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+6	x0 4 3 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 5 3 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+% Character 82
+127	x0 0 4 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+9	x0 1 4 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+25	x0 2 4 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+41	x0 3 4 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+70	x0 4 4 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 5 4 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+% Character 73
+0	x0 0 5 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+65	x0 1 5 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+127	x0 2 5 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+65	x0 3 5 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 4 5 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 5 5 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+% Character 78
+127	x0 0 6 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+4	x0 1 6 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+8	x0 2 6 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+16	x0 3 6 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+127	x0 4 6 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 5 6 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+% Character 84
+1	x0 0 7 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+1	x0 1 7 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+127	x0 2 7 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+1	x0 3 7 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+1	x0 4 7 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 5 7 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+% Character 35
+20	x0 0 8 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+127	x0 1 8 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+20	x0 2 8 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+127	x0 3 8 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+20	x0 4 8 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 5 8 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+% Character 51
+34	x0 0 9 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+65	x0 1 9 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+73	x0 2 9 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+73	x0 3 9 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+54	x0 4 9 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 5 9 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+% Character 44
+0	x0 0 10 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+64	x0 1 10 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+48	x0 2 10 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 3 10 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 4 10 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
 0	x0 5 10 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+% Character 67
+62	x0 0 11 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+65	x0 1 11 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+65	x0 2 11 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+65	x0 3 11 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+34	x0 4 11 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 5 11 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+% Character 72
+127	x0 0 12 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+8	x0 1 12 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+8	x0 2 12 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+8	x0 3 12 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+127	x0 4 12 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 5 12 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+% Character 82
+127	x0 0 13 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+9	x0 1 13 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+25	x0 2 13 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+41	x0 3 13 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+70	x0 4 13 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 5 13 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+% Character 36
+36	x0 0 14 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+42	x0 1 14 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+127	x0 2 14 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+42	x0 3 14 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+18	x0 4 14 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 5 14 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+% Character 40
+0	x0 0 15 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+28	x0 1 15 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+34	x0 2 15 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+65	x0 3 15 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 4 15 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 5 15 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+% Character 49
+0	x0 0 16 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+66	x0 1 16 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+127	x0 2 16 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+64	x0 3 16 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 4 16 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 5 16 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+% Character 52
+24	x0 0 17 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+20	x0 1 17 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+18	x0 2 17 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+127	x0 3 17 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+16	x0 4 17 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 5 17 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+% Character 41
+0	x0 0 18 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+65	x0 1 18 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+34	x0 2 18 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+28	x0 3 18 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 4 18 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 5 18 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+% Character 34
+0	x0 0 19 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+7	x0 1 19 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 2 19 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+7	x0 3 19 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 4 19 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 5 19 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+% Character 65
+126	x0 0 20 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+9	x0 1 20 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+9	x0 2 20 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+9	x0 3 20 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+126	x0 4 20 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 5 20 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+% Character 72
+127	x0 0 21 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+8	x0 1 21 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+8	x0 2 21 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+8	x0 3 21 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+127	x0 4 21 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 5 21 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+% Character 79
+62	x0 0 22 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+65	x0 1 22 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+65	x0 2 22 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+65	x0 3 22 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+62	x0 4 22 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 5 22 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+% Character 82
+127	x0 0 23 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+9	x0 1 23 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+25	x0 2 23 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+41	x0 3 23 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+70	x0 4 23 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 5 23 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+% Character 65
+126	x0 0 24 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+9	x0 1 24 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+9	x0 2 24 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+9	x0 3 24 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+126	x0 4 24 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 5 24 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+% Character 32
+0	x0 0 25 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 1 25 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 2 25 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 3 25 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 4 25 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 5 25 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+% Character 71
+62	x0 0 26 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+65	x0 1 26 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+65	x0 2 26 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+73	x0 3 26 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+58	x0 4 26 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 5 26 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+% Character 82
+127	x0 0 27 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+9	x0 1 27 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+25	x0 2 27 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+41	x0 3 27 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+70	x0 4 27 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 5 27 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+% Character 65
+126	x0 0 28 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+9	x0 1 28 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+9	x0 2 28 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+9	x0 3 28 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+126	x0 4 28 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 5 28 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+% Character 78
+127	x0 0 29 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+4	x0 1 29 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+8	x0 2 29 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+16	x0 3 29 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+127	x0 4 29 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 5 29 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+% Character 68
+65	x0 0 30 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+127	x0 1 30 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+65	x0 2 30 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+65	x0 3 30 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+62	x0 4 30 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 5 30 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+% Character 69
+127	x0 0 31 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+73	x0 1 31 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+73	x0 2 31 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+73	x0 3 31 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+65	x0 4 31 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 5 31 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+% Character 34
+0	x0 0 32 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+7	x0 1 32 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 2 32 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+7	x0 3 32 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 4 32 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 5 32 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+% Character 67
+62	x0 0 33 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+65	x0 1 33 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+65	x0 2 33 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+65	x0 3 33 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+34	x0 4 33 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 5 33 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+% Character 72
+127	x0 0 34 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+8	x0 1 34 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+8	x0 2 34 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+8	x0 3 34 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+127	x0 4 34 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 5 34 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+% Character 82
+127	x0 0 35 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+9	x0 1 35 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+25	x0 2 35 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+41	x0 3 35 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+70	x0 4 35 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 5 35 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+% Character 36
+36	x0 0 36 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+42	x0 1 36 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+127	x0 2 36 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+42	x0 3 36 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+18	x0 4 36 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 5 36 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+% Character 40
+0	x0 0 37 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+28	x0 1 37 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+34	x0 2 37 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+65	x0 3 37 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 4 37 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 5 37 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+% Character 49
+0	x0 0 38 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+66	x0 1 38 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+127	x0 2 38 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+64	x0 3 38 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 4 38 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 5 38 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+% Character 53
+39	x0 0 39 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+69	x0 1 39 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+69	x0 2 39 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+69	x0 3 39 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+57	x0 4 39 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 5 39 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+% Character 41
+0	x0 0 40 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+65	x0 1 40 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+34	x0 2 40 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+28	x0 3 40 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 4 40 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 5 40 6 mul add dotStepX mul add	y0 8 dotStepY 7 mul lineGapY add mul sub drawByteBits
+% Character 52
+24	x0 0 0 6 mul add dotStepX mul add	y0 9 dotStepY 7 mul lineGapY add mul sub drawByteBits
+20	x0 1 0 6 mul add dotStepX mul add	y0 9 dotStepY 7 mul lineGapY add mul sub drawByteBits
+18	x0 2 0 6 mul add dotStepX mul add	y0 9 dotStepY 7 mul lineGapY add mul sub drawByteBits
+127	x0 3 0 6 mul add dotStepX mul add	y0 9 dotStepY 7 mul lineGapY add mul sub drawByteBits
+16	x0 4 0 6 mul add dotStepX mul add	y0 9 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 5 0 6 mul add dotStepX mul add	y0 9 dotStepY 7 mul lineGapY add mul sub drawByteBits
+% Character 48
+62	x0 0 1 6 mul add dotStepX mul add	y0 9 dotStepY 7 mul lineGapY add mul sub drawByteBits
+81	x0 1 1 6 mul add dotStepX mul add	y0 9 dotStepY 7 mul lineGapY add mul sub drawByteBits
+73	x0 2 1 6 mul add dotStepX mul add	y0 9 dotStepY 7 mul lineGapY add mul sub drawByteBits
+69	x0 3 1 6 mul add dotStepX mul add	y0 9 dotStepY 7 mul lineGapY add mul sub drawByteBits
+62	x0 4 1 6 mul add dotStepX mul add	y0 9 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 5 1 6 mul add dotStepX mul add	y0 9 dotStepY 7 mul lineGapY add mul sub drawByteBits
+% Character 32
+0	x0 0 2 6 mul add dotStepX mul add	y0 9 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 1 2 6 mul add dotStepX mul add	y0 9 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 2 2 6 mul add dotStepX mul add	y0 9 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 3 2 6 mul add dotStepX mul add	y0 9 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 4 2 6 mul add dotStepX mul add	y0 9 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 5 2 6 mul add dotStepX mul add	y0 9 dotStepY 7 mul lineGapY add mul sub drawByteBits
+% Character 67
+62	x0 0 3 6 mul add dotStepX mul add	y0 9 dotStepY 7 mul lineGapY add mul sub drawByteBits
+65	x0 1 3 6 mul add dotStepX mul add	y0 9 dotStepY 7 mul lineGapY add mul sub drawByteBits
+65	x0 2 3 6 mul add dotStepX mul add	y0 9 dotStepY 7 mul lineGapY add mul sub drawByteBits
+65	x0 3 3 6 mul add dotStepX mul add	y0 9 dotStepY 7 mul lineGapY add mul sub drawByteBits
+34	x0 4 3 6 mul add dotStepX mul add	y0 9 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 5 3 6 mul add dotStepX mul add	y0 9 dotStepY 7 mul lineGapY add mul sub drawByteBits
+% Character 76
+127	x0 0 4 6 mul add dotStepX mul add	y0 9 dotStepY 7 mul lineGapY add mul sub drawByteBits
+64	x0 1 4 6 mul add dotStepX mul add	y0 9 dotStepY 7 mul lineGapY add mul sub drawByteBits
+64	x0 2 4 6 mul add dotStepX mul add	y0 9 dotStepY 7 mul lineGapY add mul sub drawByteBits
+64	x0 3 4 6 mul add dotStepX mul add	y0 9 dotStepY 7 mul lineGapY add mul sub drawByteBits
+64	x0 4 4 6 mul add dotStepX mul add	y0 9 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 5 4 6 mul add dotStepX mul add	y0 9 dotStepY 7 mul lineGapY add mul sub drawByteBits
+% Character 79
+62	x0 0 5 6 mul add dotStepX mul add	y0 9 dotStepY 7 mul lineGapY add mul sub drawByteBits
+65	x0 1 5 6 mul add dotStepX mul add	y0 9 dotStepY 7 mul lineGapY add mul sub drawByteBits
+65	x0 2 5 6 mul add dotStepX mul add	y0 9 dotStepY 7 mul lineGapY add mul sub drawByteBits
+65	x0 3 5 6 mul add dotStepX mul add	y0 9 dotStepY 7 mul lineGapY add mul sub drawByteBits
+62	x0 4 5 6 mul add dotStepX mul add	y0 9 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 5 5 6 mul add dotStepX mul add	y0 9 dotStepY 7 mul lineGapY add mul sub drawByteBits
+% Character 83
+38	x0 0 6 6 mul add dotStepX mul add	y0 9 dotStepY 7 mul lineGapY add mul sub drawByteBits
+73	x0 1 6 6 mul add dotStepX mul add	y0 9 dotStepY 7 mul lineGapY add mul sub drawByteBits
+73	x0 2 6 6 mul add dotStepX mul add	y0 9 dotStepY 7 mul lineGapY add mul sub drawByteBits
+73	x0 3 6 6 mul add dotStepX mul add	y0 9 dotStepY 7 mul lineGapY add mul sub drawByteBits
+50	x0 4 6 6 mul add dotStepX mul add	y0 9 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 5 6 6 mul add dotStepX mul add	y0 9 dotStepY 7 mul lineGapY add mul sub drawByteBits
+% Character 69
+127	x0 0 7 6 mul add dotStepX mul add	y0 9 dotStepY 7 mul lineGapY add mul sub drawByteBits
+73	x0 1 7 6 mul add dotStepX mul add	y0 9 dotStepY 7 mul lineGapY add mul sub drawByteBits
+73	x0 2 7 6 mul add dotStepX mul add	y0 9 dotStepY 7 mul lineGapY add mul sub drawByteBits
+73	x0 3 7 6 mul add dotStepX mul add	y0 9 dotStepY 7 mul lineGapY add mul sub drawByteBits
+65	x0 4 7 6 mul add dotStepX mul add	y0 9 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 5 7 6 mul add dotStepX mul add	y0 9 dotStepY 7 mul lineGapY add mul sub drawByteBits
+% Character 51
+34	x0 0 8 6 mul add dotStepX mul add	y0 9 dotStepY 7 mul lineGapY add mul sub drawByteBits
+65	x0 1 8 6 mul add dotStepX mul add	y0 9 dotStepY 7 mul lineGapY add mul sub drawByteBits
+73	x0 2 8 6 mul add dotStepX mul add	y0 9 dotStepY 7 mul lineGapY add mul sub drawByteBits
+73	x0 3 8 6 mul add dotStepX mul add	y0 9 dotStepY 7 mul lineGapY add mul sub drawByteBits
+54	x0 4 8 6 mul add dotStepX mul add	y0 9 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 5 8 6 mul add dotStepX mul add	y0 9 dotStepY 7 mul lineGapY add mul sub drawByteBits
+% Character 53
+39	x0 0 0 6 mul add dotStepX mul add	y0 10 dotStepY 7 mul lineGapY add mul sub drawByteBits
+69	x0 1 0 6 mul add dotStepX mul add	y0 10 dotStepY 7 mul lineGapY add mul sub drawByteBits
+69	x0 2 0 6 mul add dotStepX mul add	y0 10 dotStepY 7 mul lineGapY add mul sub drawByteBits
+69	x0 3 0 6 mul add dotStepX mul add	y0 10 dotStepY 7 mul lineGapY add mul sub drawByteBits
+57	x0 4 0 6 mul add dotStepX mul add	y0 10 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 5 0 6 mul add dotStepX mul add	y0 10 dotStepY 7 mul lineGapY add mul sub drawByteBits
+% Character 48
+62	x0 0 1 6 mul add dotStepX mul add	y0 10 dotStepY 7 mul lineGapY add mul sub drawByteBits
+81	x0 1 1 6 mul add dotStepX mul add	y0 10 dotStepY 7 mul lineGapY add mul sub drawByteBits
+73	x0 2 1 6 mul add dotStepX mul add	y0 10 dotStepY 7 mul lineGapY add mul sub drawByteBits
+69	x0 3 1 6 mul add dotStepX mul add	y0 10 dotStepY 7 mul lineGapY add mul sub drawByteBits
+62	x0 4 1 6 mul add dotStepX mul add	y0 10 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 5 1 6 mul add dotStepX mul add	y0 10 dotStepY 7 mul lineGapY add mul sub drawByteBits
+% Character 32
+0	x0 0 2 6 mul add dotStepX mul add	y0 10 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 1 2 6 mul add dotStepX mul add	y0 10 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 2 2 6 mul add dotStepX mul add	y0 10 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 3 2 6 mul add dotStepX mul add	y0 10 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 4 2 6 mul add dotStepX mul add	y0 10 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 5 2 6 mul add dotStepX mul add	y0 10 dotStepY 7 mul lineGapY add mul sub drawByteBits
+% Character 69
+127	x0 0 3 6 mul add dotStepX mul add	y0 10 dotStepY 7 mul lineGapY add mul sub drawByteBits
+73	x0 1 3 6 mul add dotStepX mul add	y0 10 dotStepY 7 mul lineGapY add mul sub drawByteBits
+73	x0 2 3 6 mul add dotStepX mul add	y0 10 dotStepY 7 mul lineGapY add mul sub drawByteBits
+73	x0 3 3 6 mul add dotStepX mul add	y0 10 dotStepY 7 mul lineGapY add mul sub drawByteBits
+65	x0 4 3 6 mul add dotStepX mul add	y0 10 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 5 3 6 mul add dotStepX mul add	y0 10 dotStepY 7 mul lineGapY add mul sub drawByteBits
+% Character 78
+127	x0 0 4 6 mul add dotStepX mul add	y0 10 dotStepY 7 mul lineGapY add mul sub drawByteBits
+4	x0 1 4 6 mul add dotStepX mul add	y0 10 dotStepY 7 mul lineGapY add mul sub drawByteBits
+8	x0 2 4 6 mul add dotStepX mul add	y0 10 dotStepY 7 mul lineGapY add mul sub drawByteBits
+16	x0 3 4 6 mul add dotStepX mul add	y0 10 dotStepY 7 mul lineGapY add mul sub drawByteBits
+127	x0 4 4 6 mul add dotStepX mul add	y0 10 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 5 4 6 mul add dotStepX mul add	y0 10 dotStepY 7 mul lineGapY add mul sub drawByteBits
+% Character 68
+65	x0 0 5 6 mul add dotStepX mul add	y0 10 dotStepY 7 mul lineGapY add mul sub drawByteBits
+127	x0 1 5 6 mul add dotStepX mul add	y0 10 dotStepY 7 mul lineGapY add mul sub drawByteBits
+65	x0 2 5 6 mul add dotStepX mul add	y0 10 dotStepY 7 mul lineGapY add mul sub drawByteBits
+65	x0 3 5 6 mul add dotStepX mul add	y0 10 dotStepY 7 mul lineGapY add mul sub drawByteBits
+62	x0 4 5 6 mul add dotStepX mul add	y0 10 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 5 5 6 mul add dotStepX mul add	y0 10 dotStepY 7 mul lineGapY add mul sub drawByteBits
+% Character 82
+127	x0 0 0 6 mul add dotStepX mul add	y0 12 dotStepY 7 mul lineGapY add mul sub drawByteBits
+9	x0 1 0 6 mul add dotStepX mul add	y0 12 dotStepY 7 mul lineGapY add mul sub drawByteBits
+25	x0 2 0 6 mul add dotStepX mul add	y0 12 dotStepY 7 mul lineGapY add mul sub drawByteBits
+41	x0 3 0 6 mul add dotStepX mul add	y0 12 dotStepY 7 mul lineGapY add mul sub drawByteBits
+70	x0 4 0 6 mul add dotStepX mul add	y0 12 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 5 0 6 mul add dotStepX mul add	y0 12 dotStepY 7 mul lineGapY add mul sub drawByteBits
+% Character 69
+127	x0 0 1 6 mul add dotStepX mul add	y0 12 dotStepY 7 mul lineGapY add mul sub drawByteBits
+73	x0 1 1 6 mul add dotStepX mul add	y0 12 dotStepY 7 mul lineGapY add mul sub drawByteBits
+73	x0 2 1 6 mul add dotStepX mul add	y0 12 dotStepY 7 mul lineGapY add mul sub drawByteBits
+73	x0 3 1 6 mul add dotStepX mul add	y0 12 dotStepY 7 mul lineGapY add mul sub drawByteBits
+65	x0 4 1 6 mul add dotStepX mul add	y0 12 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 5 1 6 mul add dotStepX mul add	y0 12 dotStepY 7 mul lineGapY add mul sub drawByteBits
+% Character 65
+126	x0 0 2 6 mul add dotStepX mul add	y0 12 dotStepY 7 mul lineGapY add mul sub drawByteBits
+9	x0 1 2 6 mul add dotStepX mul add	y0 12 dotStepY 7 mul lineGapY add mul sub drawByteBits
+9	x0 2 2 6 mul add dotStepX mul add	y0 12 dotStepY 7 mul lineGapY add mul sub drawByteBits
+9	x0 3 2 6 mul add dotStepX mul add	y0 12 dotStepY 7 mul lineGapY add mul sub drawByteBits
+126	x0 4 2 6 mul add dotStepX mul add	y0 12 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 5 2 6 mul add dotStepX mul add	y0 12 dotStepY 7 mul lineGapY add mul sub drawByteBits
+% Character 68
+65	x0 0 3 6 mul add dotStepX mul add	y0 12 dotStepY 7 mul lineGapY add mul sub drawByteBits
+127	x0 1 3 6 mul add dotStepX mul add	y0 12 dotStepY 7 mul lineGapY add mul sub drawByteBits
+65	x0 2 3 6 mul add dotStepX mul add	y0 12 dotStepY 7 mul lineGapY add mul sub drawByteBits
+65	x0 3 3 6 mul add dotStepX mul add	y0 12 dotStepY 7 mul lineGapY add mul sub drawByteBits
+62	x0 4 3 6 mul add dotStepX mul add	y0 12 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 5 3 6 mul add dotStepX mul add	y0 12 dotStepY 7 mul lineGapY add mul sub drawByteBits
+% Character 89
+7	x0 0 4 6 mul add dotStepX mul add	y0 12 dotStepY 7 mul lineGapY add mul sub drawByteBits
+8	x0 1 4 6 mul add dotStepX mul add	y0 12 dotStepY 7 mul lineGapY add mul sub drawByteBits
+120	x0 2 4 6 mul add dotStepX mul add	y0 12 dotStepY 7 mul lineGapY add mul sub drawByteBits
+8	x0 3 4 6 mul add dotStepX mul add	y0 12 dotStepY 7 mul lineGapY add mul sub drawByteBits
+7	x0 4 4 6 mul add dotStepX mul add	y0 12 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 5 4 6 mul add dotStepX mul add	y0 12 dotStepY 7 mul lineGapY add mul sub drawByteBits
+% Character 46
+0	x0 0 5 6 mul add dotStepX mul add	y0 12 dotStepY 7 mul lineGapY add mul sub drawByteBits
+96	x0 1 5 6 mul add dotStepX mul add	y0 12 dotStepY 7 mul lineGapY add mul sub drawByteBits
+96	x0 2 5 6 mul add dotStepX mul add	y0 12 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 3 5 6 mul add dotStepX mul add	y0 12 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 4 5 6 mul add dotStepX mul add	y0 12 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 5 5 6 mul add dotStepX mul add	y0 12 dotStepY 7 mul lineGapY add mul sub drawByteBits
+% Character 82
+127	x0 0 0 6 mul add dotStepX mul add	y0 16 dotStepY 7 mul lineGapY add mul sub drawByteBits
+9	x0 1 0 6 mul add dotStepX mul add	y0 16 dotStepY 7 mul lineGapY add mul sub drawByteBits
+25	x0 2 0 6 mul add dotStepX mul add	y0 16 dotStepY 7 mul lineGapY add mul sub drawByteBits
+41	x0 3 0 6 mul add dotStepX mul add	y0 16 dotStepY 7 mul lineGapY add mul sub drawByteBits
+70	x0 4 0 6 mul add dotStepX mul add	y0 16 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 5 0 6 mul add dotStepX mul add	y0 16 dotStepY 7 mul lineGapY add mul sub drawByteBits
+% Character 69
+127	x0 0 1 6 mul add dotStepX mul add	y0 16 dotStepY 7 mul lineGapY add mul sub drawByteBits
+73	x0 1 1 6 mul add dotStepX mul add	y0 16 dotStepY 7 mul lineGapY add mul sub drawByteBits
+73	x0 2 1 6 mul add dotStepX mul add	y0 16 dotStepY 7 mul lineGapY add mul sub drawByteBits
+73	x0 3 1 6 mul add dotStepX mul add	y0 16 dotStepY 7 mul lineGapY add mul sub drawByteBits
+65	x0 4 1 6 mul add dotStepX mul add	y0 16 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 5 1 6 mul add dotStepX mul add	y0 16 dotStepY 7 mul lineGapY add mul sub drawByteBits
+% Character 65
+126	x0 0 2 6 mul add dotStepX mul add	y0 16 dotStepY 7 mul lineGapY add mul sub drawByteBits
+9	x0 1 2 6 mul add dotStepX mul add	y0 16 dotStepY 7 mul lineGapY add mul sub drawByteBits
+9	x0 2 2 6 mul add dotStepX mul add	y0 16 dotStepY 7 mul lineGapY add mul sub drawByteBits
+9	x0 3 2 6 mul add dotStepX mul add	y0 16 dotStepY 7 mul lineGapY add mul sub drawByteBits
+126	x0 4 2 6 mul add dotStepX mul add	y0 16 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 5 2 6 mul add dotStepX mul add	y0 16 dotStepY 7 mul lineGapY add mul sub drawByteBits
+% Character 68
+65	x0 0 3 6 mul add dotStepX mul add	y0 16 dotStepY 7 mul lineGapY add mul sub drawByteBits
+127	x0 1 3 6 mul add dotStepX mul add	y0 16 dotStepY 7 mul lineGapY add mul sub drawByteBits
+65	x0 2 3 6 mul add dotStepX mul add	y0 16 dotStepY 7 mul lineGapY add mul sub drawByteBits
+65	x0 3 3 6 mul add dotStepX mul add	y0 16 dotStepY 7 mul lineGapY add mul sub drawByteBits
+62	x0 4 3 6 mul add dotStepX mul add	y0 16 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 5 3 6 mul add dotStepX mul add	y0 16 dotStepY 7 mul lineGapY add mul sub drawByteBits
+% Character 89
+7	x0 0 4 6 mul add dotStepX mul add	y0 16 dotStepY 7 mul lineGapY add mul sub drawByteBits
+8	x0 1 4 6 mul add dotStepX mul add	y0 16 dotStepY 7 mul lineGapY add mul sub drawByteBits
+120	x0 2 4 6 mul add dotStepX mul add	y0 16 dotStepY 7 mul lineGapY add mul sub drawByteBits
+8	x0 3 4 6 mul add dotStepX mul add	y0 16 dotStepY 7 mul lineGapY add mul sub drawByteBits
+7	x0 4 4 6 mul add dotStepX mul add	y0 16 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 5 4 6 mul add dotStepX mul add	y0 16 dotStepY 7 mul lineGapY add mul sub drawByteBits
+% Character 46
+0	x0 0 5 6 mul add dotStepX mul add	y0 16 dotStepY 7 mul lineGapY add mul sub drawByteBits
+96	x0 1 5 6 mul add dotStepX mul add	y0 16 dotStepY 7 mul lineGapY add mul sub drawByteBits
+96	x0 2 5 6 mul add dotStepX mul add	y0 16 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 3 5 6 mul add dotStepX mul add	y0 16 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 4 5 6 mul add dotStepX mul add	y0 16 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 5 5 6 mul add dotStepX mul add	y0 16 dotStepY 7 mul lineGapY add mul sub drawByteBits
+% Character 72
+127	x0 0 0 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
+8	x0 1 0 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
+8	x0 2 0 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
+8	x0 3 0 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
+127	x0 4 0 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 5 0 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
+% Character 79
+62	x0 0 1 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
+65	x0 1 1 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
+65	x0 2 1 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
+65	x0 3 1 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
+62	x0 4 1 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 5 1 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
+% Character 76
+127	x0 0 2 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
+64	x0 1 2 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
+64	x0 2 2 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
+64	x0 3 2 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
+64	x0 4 2 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 5 2 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
+% Character 65
+126	x0 0 3 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
+9	x0 1 3 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
+9	x0 2 3 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
+9	x0 3 3 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
+126	x0 4 3 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 5 3 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
+% Character 32
+0	x0 0 4 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 1 4 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 2 4 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 3 4 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 4 4 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 5 4 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
+% Character 81
+62	x0 0 5 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
+65	x0 1 5 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
+81	x0 2 5 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
+33	x0 3 5 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
+94	x0 4 5 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 5 5 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
+% Character 85
+63	x0 0 6 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
+64	x0 1 6 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
+64	x0 2 6 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
+64	x0 3 6 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
+63	x0 4 6 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 5 6 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
+% Character 69
+127	x0 0 7 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
+73	x0 1 7 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
+73	x0 2 7 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
+73	x0 3 7 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
+65	x0 4 7 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 5 7 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
+% Character 32
+0	x0 0 8 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 1 8 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 2 8 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 3 8 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 4 8 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 5 8 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
+% Character 84
+1	x0 0 9 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
+1	x0 1 9 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
+127	x0 2 9 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
+1	x0 3 9 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
+1	x0 4 9 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 5 9 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
+% Character 65
+126	x0 0 10 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
+9	x0 1 10 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
+9	x0 2 10 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
+9	x0 3 10 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
+126	x0 4 10 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 5 10 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
+% Character 76
+127	x0 0 11 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
+64	x0 1 11 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
+64	x0 2 11 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
+64	x0 3 11 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
+64	x0 4 11 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 5 11 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
+% Character 32
+0	x0 0 12 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 1 12 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 2 12 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 3 12 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 4 12 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 5 12 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
+% Character 74
+32	x0 0 13 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
+64	x0 1 13 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
+65	x0 2 13 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
+63	x0 3 13 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
+1	x0 4 13 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 5 13 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
+% Character 65
+126	x0 0 14 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
+9	x0 1 14 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
+9	x0 2 14 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
+9	x0 3 14 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
+126	x0 4 14 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 5 14 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
+% Character 86
+7	x0 0 15 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
+24	x0 1 15 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
+96	x0 2 15 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
+24	x0 3 15 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
+7	x0 4 15 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 5 15 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
+% Character 73
+0	x0 0 16 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
+65	x0 1 16 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
+127	x0 2 16 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
+65	x0 3 16 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 4 16 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 5 16 6 mul add dotStepX mul add	y0 0 dotStepY 7 mul lineGapY add mul sub drawByteBits
+% Character 65
+126	x0 0 0 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
+126	x0 1 0 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
+9	x0 2 0 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
+9	x0 3 0 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
+9	x0 4 0 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
+9	x0 5 0 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
+9	x0 0 1 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
+9	x0 1 1 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
+126	x0 2 1 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
+126	x0 3 1 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 4 1 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 5 1 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
+% Character 72
+127	x0 0 2 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
+127	x0 1 2 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
+8	x0 2 2 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
+8	x0 3 2 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
+8	x0 4 2 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
+8	x0 5 2 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
+8	x0 0 3 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
+8	x0 1 3 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
+127	x0 2 3 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
+127	x0 3 3 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 4 3 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 5 3 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
+% Character 79
+62	x0 0 4 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
+62	x0 1 4 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
+65	x0 2 4 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
+65	x0 3 4 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
+65	x0 4 4 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
+65	x0 5 4 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
+65	x0 0 5 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
+65	x0 1 5 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
+62	x0 2 5 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
+62	x0 3 5 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 4 5 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 5 5 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
+% Character 82
+127	x0 0 6 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
+127	x0 1 6 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
+9	x0 2 6 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
+9	x0 3 6 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
+25	x0 4 6 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
+25	x0 5 6 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
+41	x0 0 7 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
+41	x0 1 7 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
+70	x0 2 7 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
+70	x0 3 7 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 4 7 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 5 7 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
+% Character 65
+126	x0 0 8 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
+126	x0 1 8 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
+9	x0 2 8 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
+9	x0 3 8 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
+9	x0 4 8 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
+9	x0 5 8 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
+9	x0 0 9 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
+9	x0 1 9 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
+126	x0 2 9 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
+126	x0 3 9 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 4 9 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 5 9 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
+% Character 32
+0	x0 0 10 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 1 10 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 2 10 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 3 10 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 4 10 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 5 10 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 0 11 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 1 11 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 2 11 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 3 11 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 4 11 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 5 11 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
+% Character 71
+62	x0 0 12 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
+62	x0 1 12 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
+65	x0 2 12 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
+65	x0 3 12 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
+65	x0 4 12 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
+65	x0 5 12 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
+73	x0 0 13 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
+73	x0 1 13 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
+58	x0 2 13 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
+58	x0 3 13 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 4 13 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 5 13 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
+% Character 82
+127	x0 0 14 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
+127	x0 1 14 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
+9	x0 2 14 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
+9	x0 3 14 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
+25	x0 4 14 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
+25	x0 5 14 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
+41	x0 0 15 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
+41	x0 1 15 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
+70	x0 2 15 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
+70	x0 3 15 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 4 15 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 5 15 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
+% Character 65
+126	x0 0 16 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
+126	x0 1 16 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
+9	x0 2 16 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
+9	x0 3 16 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
+9	x0 4 16 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
+9	x0 5 16 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
+9	x0 0 17 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
+9	x0 1 17 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
+126	x0 2 17 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
+126	x0 3 17 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 4 17 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 5 17 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
+% Character 78
+127	x0 0 18 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
+127	x0 1 18 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
+4	x0 2 18 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
+4	x0 3 18 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
+8	x0 4 18 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
+8	x0 5 18 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
+16	x0 0 19 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
+16	x0 1 19 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
+127	x0 2 19 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
+127	x0 3 19 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 4 19 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 5 19 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
+% Character 68
+65	x0 0 20 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
+65	x0 1 20 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
+127	x0 2 20 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
+127	x0 3 20 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
+65	x0 4 20 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
+65	x0 5 20 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
+65	x0 0 21 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
+65	x0 1 21 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
+62	x0 2 21 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
+62	x0 3 21 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 4 21 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 5 21 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
+% Character 69
+127	x0 0 22 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
+127	x0 1 22 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
+73	x0 2 22 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
+73	x0 3 22 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
+73	x0 4 22 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
+73	x0 5 22 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
+73	x0 0 23 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
+73	x0 1 23 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
+65	x0 2 23 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
+65	x0 3 23 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 4 23 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits
+0	x0 5 23 6 mul add dotStepX mul add	y0 1 dotStepY 7 mul lineGapY add mul sub drawByteBits

@@ -1,4 +1,5 @@
 #include <COMMODORE/SerialPrinters.hpp>
+#include <sstream>
 
 const MCHEmul::MatrixPrinterEmulation::Configuration 
 	COMMODORE::MPS801PostscriptMatrixPrinterEmulation::_CONFIGURATION (
@@ -540,7 +541,19 @@ void COMMODORE::MPS801PostscriptMatrixPrinterEmulation::firstTimePrinting (unsig
 	std::ifstream l1File ("PSMatrixPrinterI.ps");
 	if (!l1File)
 		_LOG ("File PSMatrixPrinterI.ps doesn't exist");
-	printerFile () << l1File.rdbuf ();
+	std::stringstream sst; sst << l1File.rdbuf ();
+	printerFile () << MCHEmul::replaceStrings (sst.str (),
+		{ "[[PAGEWIDTHINCH]]",
+		  "[[PAGEHEIGHTINCH]]",
+		  "[[PAGECOLOR]]" },
+		{ std::to_string (paper ()._width), 
+		  std::to_string (paper ()._height),
+		  paper ()._type == MCHEmul::MatrixPrinterEmulation::Paper::Type::_BLUEBAND 
+			? "/Blue"
+			: (paper ()._type == MCHEmul::MatrixPrinterEmulation::Paper::Type::_GREENBAND 		
+				? "/Green"
+				: "/Gray") });
+
 	l1File.close ();
 
 	// Print out the information about the chars...
@@ -582,6 +595,7 @@ bool COMMODORE::MPS801PostscriptMatrixPrinterEmulation::isControlChar (unsigned 
 	// the graphic bytes are always with the bit 7 to 1!
 	return (chr == (unsigned char) 0x08 /** Activating graphics mode. */ ||
 			chr == (unsigned char) 0x0a /** line feed. */ ||
+			chr == (unsigned char) 0x10 /** Start setting tab. */ ||
 			chr == (unsigned char) 0x0e /** Double width. */ ||
 			chr == (unsigned char) 0x0f /** Standard width. */ ||
 			chr == (unsigned char) 0x11 /** Cursor down == business mode = lowercase. */ ||
@@ -720,7 +734,7 @@ void COMMODORE::MPS801PostscriptMatrixPrinterEmulation::printNewLine ()
 void COMMODORE::MPS801PostscriptMatrixPrinterEmulation::closePage (unsigned short p)
 {
 	printerFile ()
-		<< std::endl << "showpage" << std::endl;
+		<< std::endl << "showpage" << std::endl << std::endl;
 }
 
 // ---
@@ -728,6 +742,11 @@ void COMMODORE::MPS801PostscriptMatrixPrinterEmulation::setNewPage (unsigned sho
 {
 	// Beginning of the next one...
 	printerFile ()
+		<< "% ----- Page:"
+		<< MCHEmul::fixLenStr (std::to_string (_page), 2, true, MCHEmul::_CEROS) 
+		<< "--------------------------------------------" << std::endl
+		<< "setupPage" << std::endl
+		<< "drawPaper" << std::endl << std::endl
 		<< "initgraphics" << std::endl
 		<< std::to_string ((unsigned int) (paper ()._border /** in inches. */ * 72.0f /** points per inch. */)) + " " +
 		   "0 topLeftWithMargin /y0 exch def /x0 exch def" << std::endl << std::endl;		
@@ -779,10 +798,10 @@ size_t COMMODORE::MPS801PostscriptMatrixPrinterEmulation::printNormalChar (unsig
 	if (_settingTab)
 	{
 		// When two chars more are defined, then the settin process has finished...
-		if (_settingTab = (_charsSettingtabPending-- > 0))
-			_nextTabSettingValue [1 - (size_t) _charsSettingtabPending] = 
+		_nextTabSettingValue [1 - (size_t) --_charsSettingtabPending] = 
 				(chr >= 0x30) ? chr - 0x30 : 0x00;
-		else
+		_settingTab = (_charsSettingtabPending != 0); // Still setting tab?
+		if (!_settingTab)
 		{
 			unsigned short tV = 
 				(_nextTabSettingValue [0] * 10) + _nextTabSettingValue [1]; // The value...
@@ -803,7 +822,7 @@ size_t COMMODORE::MPS801PostscriptMatrixPrinterEmulation::printNormalChar (unsig
 
 			// Move the head to the right position if possible, otherwise it will be ignored...
 			if (tV < 80)
-				moveHeadFromX (tV);
+				moveHeadFromX (-headXPosition () + tV); // Absolute...
 		}
 	}
 	else
