@@ -128,8 +128,7 @@ namespace MCHEmul
 		MatrixPrinterEmulation (const Configuration& cfg, const Paper& p, 
 			const std::string& pFN);
 
-		virtual ~MatrixPrinterEmulation ()
-							{ closeCurrentPage (); finalize (); /** Just in case somethign wa flying!. */ }
+		virtual ~MatrixPrinterEmulation ();
 
 		/** See the configuration... */
 		const Configuration& configuration () const
@@ -142,7 +141,7 @@ namespace MCHEmul
 
 		/** Close the current page. */
 		void closeCurrentPage () 
-							{ closePage (_page); moveHeadTo (0, 0); }
+							{ closePage (_page); setNewPage (++_page); moveHeadTo (0, 0); }
 
 		/** To get a reference to the printer file. */
 		const std::ofstream& printerFile () const

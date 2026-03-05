@@ -62,6 +62,13 @@ MCHEmul::MatrixPrinterEmulation::MatrixPrinterEmulation
 			std::to_string (_configuration._hChar));
 }
 
+// ---
+MCHEmul::MatrixPrinterEmulation::~MatrixPrinterEmulation ()
+{ 
+	// Just in case it wasn't done before...
+	finalize ();
+}
+
 // ----
 bool MCHEmul::MatrixPrinterEmulation::initialize () 
 { 
@@ -80,12 +87,19 @@ bool MCHEmul::MatrixPrinterEmulation::initialize ()
 // ---
 bool MCHEmul::MatrixPrinterEmulation::finalize () 
 { 
-	if (!_printerFile.is_open ())
+	// If the file was open, it must be closed...
+	if (_printerFile.is_open ())
 	{
-		_printerFile.flush (); 
-		_printerFile.close (); 
+		// ..and if something was printer out before...
+		// ...it must be closed!
+		if (!_firstChar)
+			closeCurrentPage ();
+
+		_printerFile.flush ();
+		_printerFile.close ();
 	}
 	
+	// Always ok
 	return (true);
 }
 

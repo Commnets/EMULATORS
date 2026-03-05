@@ -756,10 +756,12 @@ void COMMODORE::MPS801PostscriptMatrixPrinterEmulation::setNewPage (unsigned sho
 bool COMMODORE::MPS801PostscriptMatrixPrinterEmulation::isNormalChar (unsigned char chr)
 {
 	// In the graphic mode, all the chars with bit 7 to 1 are valid...
-	return (_graphicMode 
-		? (chr >= 0x80)
-		: ((chr >= 0x20 && chr <= 0x7f) ||
-		   (chr >= 0xa0 && chr <= 0xff)));
+	return (_setSpecificDotAddress 
+		? true // When setting the specific address, any position is possible...
+		: (_graphicMode 
+			? (chr >= 0x80)
+			: ((chr >= 0x20 && chr <= 0x7f) ||
+			   (chr >= 0xa0 && chr <= 0xff))));
 }
 
 // ---
@@ -799,28 +801,28 @@ size_t COMMODORE::MPS801PostscriptMatrixPrinterEmulation::printNormalChar (unsig
 	{
 		// When two chars more are defined, then the settin process has finished...
 		_nextTabSettingValue [1 - (size_t) --_charsSettingtabPending] = 
-				(chr >= 0x30) ? chr - 0x30 : 0x00;
+				_setSpecificDotAddress 
+					? chr // When setting the specific dot address, the number is "pure"
+					: ((chr >= 0x30) ? chr - 0x30 : 0x00); // Otherwise the char is the number in ASCII!
 		_settingTab = (_charsSettingtabPending != 0); // Still setting tab?
 		if (!_settingTab)
 		{
-			unsigned short tV = 
-				(_nextTabSettingValue [0] * 10) + _nextTabSettingValue [1]; // The value...
-			
-			// When setting the specific dot address...
+			unsigned short tV =
+				_setSpecificDotAddress
+					? (_nextTabSettingValue [0] * 256) + _nextTabSettingValue [1]  // the value is MSB/LSB...
+					: (_nextTabSettingValue [0] * 10)  + _nextTabSettingValue [1]; // the value is a decimal value...
 			if (_setSpecificDotAddress)
 			{
 				// ...but the position can never be bigger the 480,
-				// otherwise it will be ignored!
-				if (tV < 480)
-				{
-					_posXInside = tV % 6; // The position inside the char...
-					tV /= 6; // The char position...
-				}
-
+				// otherwise it will be ignored!...
+				// The position inside the char, and the position of the head...
 				_setSpecificDotAddress = false;
+				if (tV < 480) 
+					{ _posXInside = tV % 6; tV /= 6; }
 			}
 
-			// Move the head to the right position if possible, otherwise it will be ignored...
+			// Move the head to the right position if possible, 
+			// otherwise it will be ignored...
 			if (tV < 80)
 				moveHeadFromX (-headXPosition () + tV); // Absolute...
 		}
@@ -873,8 +875,9 @@ COMMODORE::SerialPrinterPeripheralSimulation::SerialPrinterPeripheralSimulation
 // ---
 COMMODORE::SerialPrinterPeripheralSimulation::~SerialPrinterPeripheralSimulation ()
 { 
-	finalize (); 
+	finalize ();
 
+	// No longer valid...
 	delete (_emulation);
 } 
 
