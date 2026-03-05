@@ -39,7 +39,8 @@ void C64::C64Emulator::printOutParameters (std::ostream& o) const
 	o << "PARAMETERS to connect the printer CONNECTPER:" << std::endl <<
 		 "D:[DEVICE = 4 or 5]" << std::endl <<
 		 "F:[FILENAME = Name of the file where to print out. *.PS if postscript simulation" << std::endl <<
-		 "P:[PSMPS801|PS|BASIC] = MP801 taking care of the printer limits and simulating even the paper, PS normal or BASIC" << std::endl;
+		 "P:[PSMPS801|PS|BASIC]([BLUEBAND|GREENBAND|GREYBAND|WHITE],[WIDTHINCH],[HEIGHTINCH],[BORDERINCH])" <<
+		 "   = MP801 taking care of the printer limits and simulating even the paper, PS normal or BASIC" << std::endl;
 	o << "Check LOG file if the emulation doesn't start as expected" << std::endl;
 }
 

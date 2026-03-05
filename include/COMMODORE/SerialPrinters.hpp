@@ -35,6 +35,10 @@ namespace COMMODORE
 			repeating the same char, the line feed, and the type of letter (uuper case or lower case) writtend down). */
 		virtual bool isControlChar (unsigned char chr) override;
 		virtual std::tuple <short, short, short> manageControlChar (unsigned char chr) override;
+		virtual void setNewPage (unsigned short p) override // Just to point out the new page in the printer file...
+							{ printerFile () << "----Page:" 
+											 << MCHEmul::fixLenStr (std::to_string (p), 2, true, MCHEmul::_CEROS) 
+											 << "----" << std::endl; }
 		/** Only the list of letters and numbers both in business mnode and in the graphical mode. */
 		virtual bool isNormalChar (unsigned char chr) override;
 		virtual size_t printNormalChar (unsigned char chr) override;
@@ -50,7 +54,9 @@ namespace COMMODORE
 		public MCHEmul::PostscriptMatrixPrinterEmulation
 	{
 		public:
-		MPS801PostscriptMatrixPrinterEmulation (const MCHEmul::MatrixPrinterEmulation::Paper& p,
+		MPS801PostscriptMatrixPrinterEmulation (
+				const MCHEmul::MatrixPrinterEmulation::Configuration& cfg,
+				const MCHEmul::MatrixPrinterEmulation::Paper& p,
 				const std::string& pFN = "MPS801MatrixPrinter.ps");
 
 		private:
@@ -66,8 +72,6 @@ namespace COMMODORE
 		virtual size_t printNormalChar (unsigned char chr) override;
 
 		private:
-		static const MCHEmul::MatrixPrinterEmulation::Configuration _CONFIGURATION;
-
 		// Implementation
 		/** True when the double width per char is activated. */
 		bool _double;

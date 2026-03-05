@@ -42,6 +42,14 @@ namespace COMMODORE
 			MCHEmul::MatrixPrinterEmulation*> getDataPrinterFrom 
 				(const MCHEmul::Attributes& prms, 
 					const std::tuple <std::string, unsigned char, MCHEmul::MatrixPrinterEmulation*>& eD) const;
+
+		/** To get the parameters related with the emultator driver. \n
+			Those parameters are always in parenthesis and separated by commas and between parenthesis,
+			and in the following order: \n
+			[PAPER TYPE],[PAPER WIDTH],[PAPER HEIGHT],[PAPER COLOR]. \n
+			The methos returns the configuration of the printer and the paper to be used. */
+		std::tuple <MCHEmul::MatrixPrinterEmulation::Configuration, MCHEmul::MatrixPrinterEmulation::Paper>
+			getDataPrinterEmulationFrom (const std::string& pDt) const;
 	};
 }
 
