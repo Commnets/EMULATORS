@@ -123,6 +123,12 @@
     <ClCompile Include="..\..\src\C264\C6529B2Registers.cpp">
       <Filter>Archivos de origen\Motherboard\Chips</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\C264\SerialIONotPresent.cpp">
+      <Filter>Archivos de origen\IO</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\C264\StdSerialPrinter.cpp">
+      <Filter>Archivos de origen\IO</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\include\C264\C264.hpp">
@@ -202,6 +208,12 @@
     </ClInclude>
     <ClInclude Include="..\..\include\C264\C16SenseTapeRegisters.hpp">
       <Filter>Archivos de encabezado\Motherboard\Chips</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\C264\SerialIONotPresent.hpp">
+      <Filter>Archivos de encabezado\IO</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\C264\StdSerialPrinter.hpp">
+      <Filter>Archivos de encabezado\IO</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -102,6 +102,7 @@ namespace COMMODORE
 		static const int _SENDBYTETRAP = 2;
 		static const int _RECEIVEBYTETRAP = 3;
 		static const int _READYTRAP = 4;
+		static const int _READYTRAP2 = 5; // In commodore 16/iPlus4
 
 		SerialIOPeripheralSimulation (int id, unsigned char dN, const Definition& dt, 
 			const MCHEmul::Attributes& attrs);

@@ -35,6 +35,11 @@ void C264::C264Emulator::printOutParameters (std::ostream& o) const
 		 std::to_string (C264::Datasette1531::_ID) << ":\tCasette 1531" << std::endl <<
 		 std::to_string (C264::Datasette1531Injection::_ID) << ":\tCasette 1531 Direct Injection" << std::endl <<
 		 std::to_string (C264::Cartridge::_ID) << ":\tCartridge" << std::endl;
+	o << "PARAMETERS to connect the printer CONNECTPER:" << std::endl <<
+		 "D:[DEVICE = 4|5]" << std::endl <<
+		 "F:[FILENAME = Name of the file where to print out. *.PS recommended if postscript simulation" << std::endl <<
+		 "P:[MPS801|MPS802|NPL10|BASIC][-[PS|...]]" << std::endl <<
+		 "  ([BLUEBAND | GREENBAND | GREYBAND | WHITE], [WIDTHINCH], [HEIGHTINCH], [BORDERINCH])" << std::endl;
 	o << "Check LOG file if the emulation doesn't start as expected" << std::endl;
 }
 

@@ -21,6 +21,8 @@
 
 namespace COMMODORE
 {
+	// --------
+	// MPS801 PRINTER
 	/** MPS801 emulated in a very simple way. \n
 		Just printing out chars and when double is set up (the only configuration set), 
 		two letters equal are printed out. */
@@ -29,6 +31,11 @@ namespace COMMODORE
 	{
 		public:
 		MPS801BasicMatrixPrinterEmulation (const std::string& pFN = "MPS801MatrixPrinter.txt");
+
+		/** When the secondary address is used,
+			and it is 7, the businessMode is activated. */
+		virtual void activateFunction (unsigned char f) override
+							{ if (f == 0 || f == 7) _businessMode = (f == 7); }
 
 		private:
 		/** The only control character managed is to double the size of the letters, 
@@ -54,10 +61,18 @@ namespace COMMODORE
 		public MCHEmul::PostscriptMatrixPrinterEmulation
 	{
 		public:
+		// The default configuration of the printer...
+		// Usually is not needed more...
+		static const MCHEmul::MatrixPrinterEmulation::Configuration _CONFIGURATION;
+
 		MPS801PostscriptMatrixPrinterEmulation (
-				const MCHEmul::MatrixPrinterEmulation::Configuration& cfg,
 				const MCHEmul::MatrixPrinterEmulation::Paper& p,
 				const std::string& pFN = "MPS801MatrixPrinter.ps");
+
+		/** When the secondary address is used,
+			and it is 7, the businessMode is activated. */
+		virtual void activateFunction (unsigned char f) override
+							{ if (f == 0 || f == 7) _businessMode = (f == 7); }
 
 		private:
 		/** The main postscript routines are copied. */
@@ -67,7 +82,7 @@ namespace COMMODORE
 		virtual std::tuple <short, short, short> manageControlChar (unsigned char chr) override;
 		virtual void printNewLine () override;
 		virtual void closePage (unsigned short p) override;
-		virtual void setNewPage (unsigned short chr) override;
+		virtual void setNewPage (unsigned short p) override;
 		virtual bool isNormalChar (unsigned char chr) override;
 		virtual size_t printNormalChar (unsigned char chr) override;
 
@@ -92,6 +107,67 @@ namespace COMMODORE
 		// The position inside the page...
 		unsigned short _posXInside, _posYInside;
 	};
+	// --------
+
+	// --------
+	// MPS802 PRINTER
+	// The MPS802 PRTINTER was more complex and the characteres had more resolution...
+	/** MPS802 emulated in a very simple way. \n
+		Just printing out chars and when double is set up (the only configuration set), 
+		two letters equal are printed out. */
+	class MPS802BasicMatrixPrinterEmulation final : 
+		public MCHEmul::BasicMatrixPrinterEmulation
+	{
+		public:
+		MPS802BasicMatrixPrinterEmulation (const std::string& pFN = "MPS802MatrixPrinter.txt");
+
+		private:
+		/** The only control character managed is to double the size of the letters, 
+			repeating the same char, the line feed, and the type of letter (uuper case or lower case) writtend down). */
+		virtual bool isControlChar (unsigned char chr) override;
+		virtual std::tuple <short, short, short> manageControlChar (unsigned char chr) override;
+		virtual void setNewPage (unsigned short p) override // Just to point out the new page in the printer file...
+							{ printerFile () << "----Page:" 
+											 << MCHEmul::fixLenStr (std::to_string (p), 2, true, MCHEmul::_CEROS) 
+											 << "----" << std::endl; }
+		/** Only the list of letters and numbers both in business mnode and in the graphical mode. */
+		virtual bool isNormalChar (unsigned char chr) override;
+		virtual size_t printNormalChar (unsigned char chr) override;
+
+		private:
+		// TODO
+	};
+
+	/** MPS802 emulated generating a postscript file. 
+		The special characters are managed in the full emulation, including the graphical things. */
+	class MPS802PostscriptMatrixPrinterEmulation final : 
+		public MCHEmul::PostscriptMatrixPrinterEmulation
+	{
+		public:
+		// The default configuration of the printer...
+		// Usually is not needed more...
+		static const MCHEmul::MatrixPrinterEmulation::Configuration _CONFIGURATION;
+
+		MPS802PostscriptMatrixPrinterEmulation (
+				const MCHEmul::MatrixPrinterEmulation::Paper& p,
+				const std::string& pFN = "MPS802MatrixPrinter.ps");
+
+		private:
+		/** The main postscript routines are copied. */
+		virtual void firstTimePrinting (unsigned char chr) override;
+
+		virtual bool isControlChar (unsigned char chr) override;
+		virtual std::tuple <short, short, short> manageControlChar (unsigned char chr) override;
+		virtual void printNewLine () override;
+		virtual void closePage (unsigned short p) override;
+		virtual void setNewPage (unsigned short p) override;
+		virtual bool isNormalChar (unsigned char chr) override;
+		virtual size_t printNormalChar (unsigned char chr) override;
+
+		private:
+		// TODO
+	};
+	// --------
 
 	/** To emulate a serial printer.
 		The name of the file created to keep the info is received as parameter, but there is a default value. \n
@@ -136,6 +212,10 @@ namespace COMMODORE
 		protected:
 		/** Linking with the emulation. */
 		virtual unsigned char sendByte (MCHEmul::CPU* cpu, const MCHEmul::UByte& b) override;
+		/** Thes methods are invoked when secondary address is selected, 
+			and teay are linked with the functions of the emulation. */
+		virtual unsigned char openChannel (MCHEmul::CPU* cpu, const MCHEmul::UByte& chn) override;
+		virtual unsigned char closeChannel (MCHEmul::CPU* cpu, const MCHEmul::UByte& chn) override;
 
 		protected:
 		/** The emulation used. */

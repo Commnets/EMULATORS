@@ -22,10 +22,11 @@ MCHEmul::InfoStructure MCHEmul::MatrixPrinterEmulation::Configuration::getInfoSt
 {
 	MCHEmul::InfoStructure result;
 
-	result.add ("CHARWIDTH",	_wChar);
-	result.add ("CHARHEIGHT",	_hChar);
-	result.add ("CHARSPERLINE", _charsPerLine);
-	result.add ("CHARSPERPAGE", _charsPerPage);
+	result.add ("MATRIXEMULATIONDES",	(_description == "") ? "Not defined" : _description);
+	result.add ("CHARWIDTH",			_wChar);
+	result.add ("CHARHEIGHT",			_hChar);
+	result.add ("CHARSPERLINE",			_charsPerLine);
+	result.add ("CHARSPERPAGE",			_charsPerPage);
 
 	return (result);
 }

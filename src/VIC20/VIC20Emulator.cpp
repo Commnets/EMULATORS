@@ -37,6 +37,11 @@ void VIC20::VIC20Emulator::printOutParameters (std::ostream& o) const
 		 std::to_string (VIC20::Cartridge::_ID) << ":\tCartridge" << std::endl <<
 		 std::to_string (COMMODORE::Datasette1530::_ID) << ":\tCasette 1530/1" << std::endl <<
 		 std::to_string (COMMODORE::Datasette1530Injection::_ID) << ":\tDirect injection into memory" << std::endl;
+	o << "PARAMETERS to connect the printer CONNECTPER:" << std::endl <<
+		 "D:[DEVICE = 4|5]" << std::endl <<
+		 "F:[FILENAME = Name of the file where to print out. *.PS recommended if postscript simulation" << std::endl <<
+		 "P:[MPS801|MPS802|NPL10|BASIC][-[PS|...]]" << std::endl <<
+		 "  ([BLUEBAND | GREENBAND | GREYBAND | WHITE], [WIDTHINCH], [HEIGHTINCH], [BORDERINCH])" << std::endl;
 	o << "Check LOG file if the emulation doesn't start as expected" << std::endl;
 }
 

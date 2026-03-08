@@ -41,7 +41,9 @@
     <ClCompile Include="..\..\src\C264\ROMRAMSwitchRegisters.cpp" />
     <ClCompile Include="..\..\src\C264\Screen.cpp" />
     <ClCompile Include="..\..\src\C264\C16SenseTapeRegisters.cpp" />
+    <ClCompile Include="..\..\src\C264\SerialIONotPresent.cpp" />
     <ClCompile Include="..\..\src\C264\Sound.cpp" />
+    <ClCompile Include="..\..\src\C264\StdSerialPrinter.cpp" />
     <ClCompile Include="..\..\src\C264\TED.cpp" />
     <ClCompile Include="..\..\src\C264\TEDRegisters.cpp" />
   </ItemGroup>
@@ -68,7 +70,9 @@
     <ClInclude Include="..\..\include\C264\ROMRAMSwitchRegisters.hpp" />
     <ClInclude Include="..\..\include\C264\Screen.hpp" />
     <ClInclude Include="..\..\include\C264\C16SenseTapeRegisters.hpp" />
+    <ClInclude Include="..\..\include\C264\SerialIONotPresent.hpp" />
     <ClInclude Include="..\..\include\C264\Sound.hpp" />
+    <ClInclude Include="..\..\include\C264\StdSerialPrinter.hpp" />
     <ClInclude Include="..\..\include\C264\TED.hpp" />
     <ClInclude Include="..\..\include\C264\TEDRegisters.hpp" />
     <ClInclude Include="..\..\include\C264\Type.hpp" />

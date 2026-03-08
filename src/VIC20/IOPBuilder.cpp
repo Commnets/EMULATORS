@@ -1,6 +1,8 @@
 #include <VIC20/IOPBuilder.hpp>
 #include <VIC20/Cartridge.hpp>
 #include <VIC20/1530Datasette.hpp>
+#include <VIC20/StdSerialPrinter.hpp>
+#include <VIC20/SerialIONotPresent.hpp>
 #include <VIC20/VIC20.hpp>
 
 // ---
@@ -31,6 +33,19 @@ MCHEmul::IOPeripheral* VIC20::IOPeripheralBuilder::createPeripheral
 	else if (id == COMMODORE::Datasette1530Injection::_ID)
 		/** When the routines of the kernal are "overpassed". */
 		result = new VIC20::Datasette1530Injection;
+	else if (id >= VIC20::StandardSerialPrinterSimulation::_DEFAULTID && 
+			 (id <= VIC20::StandardSerialPrinterSimulation::_DEFAULTID + 1)) // 2 possible printers connected....
+		{
+			std::string pF = "Printer.txt"; // Default output file name...
+			unsigned char dN = VIC20::StandardSerialPrinterSimulation::_DEFAULTDEVICENUMBER;
+			MCHEmul::MatrixPrinterEmulation* mPE = nullptr;
+			std::tie (pF, dN, mPE) = getDataPrinterFrom (prms, std::make_tuple (pF, dN, mPE));
+			if (mPE == nullptr) mPE = new MCHEmul::BasicMatrixPrinterEmulation (80, pF); // Not usual, but just to avoid a crash later!
+			if (VIC20::StandardSerialPrinterSimulation::isDeviceNumberValid (dN)) // Only if it is valid...
+				result = new VIC20::StandardSerialPrinterSimulation (id, dN, mPE);
+			else
+				delete mPE; // The emulation temporaly created has not been usedm and must be deleted!
+		}
 	else
 		result = COMMODORE::IOPeripheralBuilder::createPeripheral (id, c, prms);
 

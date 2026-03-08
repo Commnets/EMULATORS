@@ -25,6 +25,8 @@
 #include <VIC20/DatasettePort.hpp>
 #include <VIC20/1530Datasette.hpp>
 #include <VIC20/Cartridge.hpp>
+#include <VIC20/StdSerialPrinter.hpp>
+#include <VIC20/SerialIONotPresent.hpp>
 #include <VIC20/VIA1Registers.hpp>
 #include <VIC20/VIA1.hpp>
 #include <VIC20/VIA2Registers.hpp>

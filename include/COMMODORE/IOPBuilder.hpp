@@ -48,8 +48,8 @@ namespace COMMODORE
 			and in the following order: \n
 			[PAPER TYPE],[PAPER WIDTH],[PAPER HEIGHT],[PAPER COLOR]. \n
 			The methos returns the configuration of the printer and the paper to be used. */
-		std::tuple <MCHEmul::MatrixPrinterEmulation::Configuration, MCHEmul::MatrixPrinterEmulation::Paper>
-			getDataPrinterEmulationFrom (const std::string& pDt) const;
+		MCHEmul::MatrixPrinterEmulation::Paper
+			getPaperDataPrinterEmulationFrom (const std::string& pDt) const;
 	};
 }
 

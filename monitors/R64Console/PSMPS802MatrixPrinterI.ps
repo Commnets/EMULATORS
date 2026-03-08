@@ -1,0 +1,162 @@
+%!PS-Adobe-3.0
+%%Title: Dot-matrix continuous form paper + 6x7 font renderer
+%%Creator: ChatGPT
+%%Pages: 2
+%%BoundingBox: 0 0 612 792
+%%EndComments
+
+% =========================================================
+% Global Parameters (dot matrix rendering)
+% =========================================================
+/dotRadius  1 def                 % radius of each dot (points)
+/dotGray    0.15 def              % dot fill gray level (0=black, 1=white)
+
+% Dot grid steps (center-to-center distance)
+/dotStepX   2 def                 % horizontal distance between dot columns
+/dotStepY   2 def                 % vertical distance between dot rows
+
+% Extra spacing between characters/lines (in points)
+/charGapX   0 def
+/lineGapY   1 def
+
+% =========================================================
+% Units and tiny helpers
+% =========================================================
+/inch { 72 mul } bind def         % inches -> PostScript points
+/gray { setgray } bind def        % shortcut
+/rgb  { setrgbcolor } bind def    % shortcut
+
+% =========================================================
+% Color palettes for alternating bands
+% =========================================================
+/BandPalettes <<
+  /Blue    [0.82 0.90 1.00]
+  /Green   [0.86 1.00 0.90]
+  /Gray    [0.92 0.92 0.92]
+  /Ivory   [1.00 0.99 0.94]
+  /Pink    [1.00 0.90 0.94]
+>> def
+
+% =========================================================
+% setTinted
+%   Blend between white and a tint color
+% Stack:
+%   [r g b] t  ->  -
+% Notes:
+%   t=0 => white
+%   t=1 => tint
+% =========================================================
+/setTinted {
+  /t exch def                       % t on stack -> store
+  aload pop                         % unpack [r g b] -> r g b
+  /b exch def /g exch def /r exch def
+
+  % For each channel:
+  % out = 1 - (1 - channel) * t
+  1 r sub t mul 1 exch sub
+  1 g sub t mul 1 exch sub
+  1 b sub t mul 1 exch sub
+  setrgbcolor
+} bind def
+
+% =========================================================
+% getBandTint
+%   Resolve the tint array to use for bands.
+%   Priority:
+%     cfg/bandTone (name lookup in BandPalettes), else cfg/bandTint
+% Stack:
+%   -> [r g b]
+% =========================================================
+/getBandTint {
+  cfg /bandTone known {
+    BandPalettes cfg /bandTone get known {
+      BandPalettes cfg /bandTone get get
+    }{
+      cfg /bandTint get
+    } ifelse
+  }{
+    cfg /bandTint get
+  } ifelse
+} bind def
+
+% =========================================================
+% Page Configuration (cfg)
+% =========================================================
+/cfg <<
+  % Physical page size (inches)
+  /pageWidthInch   [[PAGEWIDTHINCH]]
+  /pageHeightInch  [[PAGEHEIGHTINCH]]
+
+  % Content margins (mechanical elements can reach edges)
+  /contentLeft     0.1 inch
+  /contentRight    0.1 inch
+  /contentTop      0 inch
+  /contentBottom   0 inch
+
+  % Tractor band width (each side)
+  /tractorBand     0.5 inch
+
+  % Horizontal ruling
+  /linePitch       1 6 div inch     % 6 lines per inch
+  /thinLineGray    0.85
+  /thinLineWidth   0.4
+  /majorEvery      6                % every 6th line is major
+  /majorLineGray   0.65
+  /majorLineWidth  0.7
+
+  % Alternating background bands
+  /bandTone        [[PAGECOLOR]]
+  /bandTint        [0.82 0.90 1.00] % fallback if tone not found
+  /bandTintA       0.18
+  /bandTintB       0.10
+  /bandHeight      0.5 inch
+  /bandsFromTop    true
+
+  % Tractor feed holes
+  /holesPerInch    2
+  /holeRadius      0.06 inch
+  /holeInset       0.25 inch
+  /holeGray        0.60
+
+  % Vertical micro-perforation lines
+  /microPerfs      true
+  /microPerfGray   0.55
+  /microPerfWidth  0.6
+  /microPerfDash   [1.2 3.0]
+  /microPerfOuterInset  0.10 inch
+  /microPerfInnerInset  0.08 inch
+
+  % Horizontal micro-cut (sheet separation)
+  /microCut        true
+  /foldEvery       3 inch
+  /microCutGray    0.55
+  /microCutWidth   0.7
+  /microCutDash    [2.0 2.5]
+  /microCutAcrossTractor true
+
+  % Optional fold marks
+  /foldMarks       true
+  /foldMarkGray    0.50
+  /foldMarkWidth   0.8
+  /foldMarkLen     0.3 inch
+>> def
+
+% =========================================================
+% Font Configuration (8 columns per glyph; 8 vertical dots)
+%
+% FontByCode:
+%   key   = integer code (e.g. ASCII)
+%   value = array of 8 bytes (each byte is one vertical column)
+%
+% drawByteBits expects bits 0..7 used (bit7 top dot).
+% =========================================================
+/FontByCode 512 dict def
+
+% putGlyph
+% Stack: code glyphArray -> -
+/putGlyph { FontByCode 3 1 roll put } bind def
+
+% ---------------------------------------------------------
+% glyph set:
+%   - code 0 as fallback/unknown
+% ---------------------------------------------------------

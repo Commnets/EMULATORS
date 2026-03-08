@@ -34,6 +34,8 @@
 #include <C264/ExpansionPort.hpp>
 #include <C264/DatasettePort.hpp>
 #include <C264/1531Datasette.hpp>
+#include <C264/StdSerialPrinter.hpp>
+#include <C264/SerialIONotPresent.hpp>
 #include <C264/Cartridge.hpp>
 #include <C264/Memory.hpp>
 #include <C264/Screen.hpp>

@@ -7,6 +7,7 @@
 #include <VIC20/DatasettePort.hpp>
 #include <VIC20/ExpansionPort.hpp>
 #include <VIC20/Cartridge.hpp>
+#include <VIC20/SerialIONotPresent.hpp>
 #include <COMMODORE/VICI/VICI.hpp>
 #include <F6500/C6502.hpp>
 
@@ -138,7 +139,9 @@ MCHEmul::IODevices VIC20::CommodoreVIC20::standardDevices (VIC20::CommodoreVIC20
 	// The port where usually the datasette is connected...
 	result.insert (MCHEmul::IODevices::value_type (COMMODORE::DatasetteIOPort::_ID, new VIC20::DatasetteIOPort));
 	// The port where the floppy disk & printers are connected...
-	result.insert (MCHEmul::IODevices::value_type (COMMODORE::SerialIOPort::_ID, new COMMODORE::SerialIOPort));
+	// In the port there is a no device simualtion connected by default...
+	result.insert (MCHEmul::IODevices::value_type (COMMODORE::SerialIOPort::_ID, 
+		new COMMODORE::SerialIOPort (new VIC20::SerialNotPresentIOPeripheralSimulation)));
 	// The port where the cartriges are connected...
 	result.insert (MCHEmul::IODevices::value_type (COMMODORE::ExpansionIOPort::_ID, new VIC20::ExpansionIOPort));
 	// The port where very specific devices are connected...

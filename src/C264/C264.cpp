@@ -11,6 +11,7 @@
 #include <C264/ROMRAMSwitch.hpp>
 #include <C264/C1C2Selector.hpp>
 #include <C264/Cartridge.hpp>
+#include <C264/SerialIONotPresent.hpp>
 #include <F6500/C7501.hpp>
 
 // ---
@@ -196,7 +197,8 @@ MCHEmul::IODevices C264::Commodore264::standardDevices (C264::Commodore264::Visu
 	// The port where usually the datasette is connected...
 	result.insert (MCHEmul::IODevices::value_type (COMMODORE::DatasetteIOPort::_ID, new C264::DatasetteIOPort));
 	// The port where the floppy disk & printers are connected...
-	result.insert (MCHEmul::IODevices::value_type (COMMODORE::SerialIOPort::_ID, new COMMODORE::SerialIOPort));
+	result.insert (MCHEmul::IODevices::value_type (COMMODORE::SerialIOPort::_ID, 
+		new COMMODORE::SerialIOPort (new C264::SerialNotPresentIOPeripheralSimulation)));
 	// The port where the cartriges are connected...
 	result.insert (MCHEmul::IODevices::value_type (COMMODORE::ExpansionIOPort::_ID, new C264::ExpansionIOPort));
 

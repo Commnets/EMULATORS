@@ -77,7 +77,8 @@ namespace MCHEmul
 			using CharSetDefinition = std::map <unsigned int, CharDefinition>;
 
 			Configuration ()
-				: _wChar (8), _hChar (8),
+				: _description (""),
+				  _wChar (8), _hChar (8),
 				  _charSet (),
 				  _charsPerLine (80),
 				  _charsPerPage (80),
@@ -89,7 +90,8 @@ namespace MCHEmul
 			Configuration (unsigned char wC, unsigned char hC,
 				const CharSetDefinition& d, unsigned short cL, unsigned short cP, 
 				unsigned char cNL, unsigned char cSpc, char cT, unsigned short sT)
-				: _wChar (wC), _hChar (hC),
+				: _description (""), // The description has specifically to be assigned later...
+				  _wChar (wC), _hChar (hC),
 				  _charSet (d),
 				  _charsPerLine (cL),
 				  _charsPerPage (cP),
@@ -105,6 +107,9 @@ namespace MCHEmul
 				CHARSPERLINE	= Attribute: The number of chars (normal size) per line.
 			  */
 			InfoStructure getInfoStructure () const;
+
+			/** A description for the configuration. */
+			std::string _description;
 
 			/** The size in bits per char. 
 				Usually 8x8 but in some systems (like Commodore's) can be 6x7. */
@@ -189,6 +194,12 @@ namespace MCHEmul
 		void printString (const std::string& str)
 							{ for (const auto& i : str) printChar (i); }
 
+		/** The emulation might be invoked 
+			to activate/desactivate a specific channel function. \n
+			By default it doesn't do anything. */
+		virtual void activateFunction (unsigned char) { }
+		virtual void desactivateFunction (unsigned char) { }
+
 		/** Some times there cuould be something in the temporal mempory,
 			so this instruction is to flush it! .*/
 		void flush () { _printerFile.flush (); }
@@ -263,7 +274,8 @@ namespace MCHEmul
 		BasicMatrixPrinterEmulation (unsigned char cPL, // The paper here is not important...
 				const std::string& pFN = "MatrixPrinter.txt")
 			: MatrixPrinterEmulation (Configuration (), Paper (), pFN)
-							{ _configuration._charsPerLine = cPL; }
+							{ _configuration._charsPerLine = cPL; 
+							  _configuration._description = "Basic Matrix Emulation"; }
 	};
 
 	/** To simulate a basic printing based on postscript
@@ -276,7 +288,7 @@ namespace MCHEmul
 		PostscriptMatrixPrinterEmulation (const Configuration& cfg, const Paper& p,
 				const std::string& pFN = "MatrixPrinter.ps") // The extension is to determine that it is postscript file...
 			: MatrixPrinterEmulation (cfg, p, pFN)
-							{ }
+							{ _configuration._description = "Basic Postscript Matrix Emulation"; }
 
 		protected:
 		/** The main postscript routines are copied.
