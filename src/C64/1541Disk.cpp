@@ -7,6 +7,8 @@ const COMMODORE::SerialIOPeripheralSimulation::Definition
 		MCHEmul::Address ({ 0x59, 0x02 }, false),	// LATTABLE
 		MCHEmul::Address ({ 0x63, 0x02 }, false),	// FATTABLE
 		MCHEmul::Address ({ 0x6d, 0x02 }, false),	// SATTABLE
+		MCHEmul::Address ({ 0x99, 0x00 }, false),	// DFLTN
+		MCHEmul::Address ({ 0x9a, 0x00 }, false),	// DFLTO
 		MCHEmul::Address ({ 0x95, 0x00 }, false),	// The address where the the information to be sent is kept...
 		MCHEmul::Address ({ 0x90, 0x00 }, false),	// The address where the status is set...
 		0x00, 0x80,

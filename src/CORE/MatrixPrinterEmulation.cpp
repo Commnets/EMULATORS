@@ -39,6 +39,7 @@ MCHEmul::MatrixPrinterEmulation::MatrixPrinterEmulation
 	  _configuration (cfg),
 	  _paper (p),
 	  _printerFileName (pFN),
+	  _activeChannel { 0, 3 }, // By default, it means Keyboard and Screen respectively...
 	  _printerFile (),
 	  _page (0), // Starting from the beginning...
 	  _posX (0), _posY (0),

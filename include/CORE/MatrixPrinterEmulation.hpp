@@ -138,6 +138,8 @@ namespace MCHEmul
 		/** See the configuration... */
 		const Configuration& configuration () const
 							{ return (_configuration); }
+		Configuration& configuration ()
+							{ return (_configuration); } // To enable to change valued...
 		/** Manage the size of the paper. */
 		const Paper& paper () const
 							{ return (_paper); }
@@ -183,6 +185,15 @@ namespace MCHEmul
 							{ _posX = px; _posY = 0; }
 		void setPage (unsigned short p)
 							{ _page = p; }
+
+		/** The emulation belogs always to a device. \n
+			There can be different channels open for the same device, so 
+			when a "listen" event happen at peripherical level the emulation needs to know to 
+			which channel is that for!. It could be useful for some reasons... */
+		unsigned char activeChannel (size_t t) const // BE carefull because no border limits are checked...
+							{ return (_activeChannel [t]); }
+		void setActiveChannel (size_t t, unsigned char chn)
+							{ _activeChannel [t] = chn; }
 
 		/** The way a char is printed out will depend on the specific char and the specific matriz printer emulation. \n
 			First time printing anything something special could be done,
@@ -252,6 +263,8 @@ namespace MCHEmul
 		Paper _paper;
 		/** File's name where the printing is sent out. */
 		std::string _printerFileName;
+		/** The channel active. */
+		unsigned char _activeChannel [2]; // One for IN (0) and other for OUT (1)
 
 		// Implementation
 		/** The file where to print out the data.

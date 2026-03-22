@@ -261,6 +261,12 @@
     <ClInclude Include="..\..\include\COMMODORE\SerialPrinters.hpp">
       <Filter>Archivos de encabezado\IO</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\include\COMMODORE\SerialPrinterMPS801.hpp">
+      <Filter>Archivos de encabezado\IO</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\COMMODORE\SerialPrinterMPS802.hpp">
+      <Filter>Archivos de encabezado\IO</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Commodore.fmt">
@@ -396,6 +402,12 @@
       <Filter>Archivos de origen\IO</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\COMMODORE\SerialPrinters.cpp">
+      <Filter>Archivos de origen\IO</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\COMMODORE\SerialPrinterMPS801.cpp">
+      <Filter>Archivos de origen\IO</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\COMMODORE\SerialPrinterMPS802.cpp">
       <Filter>Archivos de origen\IO</Filter>
     </ClCompile>
   </ItemGroup>

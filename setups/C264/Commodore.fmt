@@ -308,6 +308,7 @@ Position:@DATACOUNTER@,@ELEMENTCOUNTER@
 #---
 ;SerialIOSimulationDefinition
 LATTABLE:$@LATTABLE@,FATTABLE:$@FATTABLE@,SATTABLE:$@SATTABLE@
+DFLTN:$@DFLTN@,DFLTO:$@DFLTO@
 ->Traps:
 @TRAPS?{key=no,equal=,empty=no trap}\n@
 #---

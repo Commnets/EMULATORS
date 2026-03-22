@@ -32,6 +32,8 @@
 #include <COMMODORE/1530Datasette.hpp>
 #include <COMMODORE/1540SeriesDisk.hpp>
 #include <COMMODORE/SerialPrinters.hpp>
+#include <COMMODORE/SerialPrinterMPS801.hpp>
+#include <COMMODORE/SerialPrinterMPS802.hpp>
 #include <COMMODORE/UserPort.hpp>
 #include <COMMODORE/UserIOPeripherals.hpp>
 #include <COMMODORE/SerialPort.hpp>

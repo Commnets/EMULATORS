@@ -76,6 +76,8 @@ namespace COMMODORE
 			MCHEmul::Address _LATTABLE;		// Memory address of the table with the status of every logical channel...
 			MCHEmul::Address _FATTABLE;		// Memory address of the table with the device assigned per logical channel...
 			MCHEmul::Address _SATTABLE;		// Memory address of the table with the secondary device number per logical channel...
+			MCHEmul::Address _DFLTN;		// Memory address where the Logical Active Channel active for Input is stored
+			MCHEmul::Address _DFLTO;		// Memory address where the Logical Active Channel active for Output is stored.
 
 			MCHEmul::Address _sDataAddress;	// The address where the information to be sent to the serial port is kept...
 			MCHEmul::Address _stAddress;	// Where to store the result of the operation, before returning from the any trap...
@@ -106,6 +108,13 @@ namespace COMMODORE
 
 		SerialIOPeripheralSimulation (int id, unsigned char dN, const Definition& dt, 
 			const MCHEmul::Attributes& attrs);
+
+		/** To get the definition even in a way that might be changed,
+			althought it is not advised. */
+		const Definition& definition () const
+							{ return (_definition); }
+		Definition& definition ()
+							{ return (_definition); }
 
 		virtual bool simulate (MCHEmul::CPU* cpu) override;
 

@@ -23,6 +23,10 @@ MCHEmul::InfoStructure COMMODORE::SerialIOPeripheralSimulation::Definition::getI
 		(_FATTABLE.asString (MCHEmul::UByte::OutputFormat::_HEXA, '\0')));
 	result.add ("SATTABLE", MCHEmul::removeAll0 
 		(_SATTABLE.asString (MCHEmul::UByte::OutputFormat::_HEXA, '\0')));
+	result.add ("DFLTN",	MCHEmul::removeAll0 
+		(_DFLTN.asString (MCHEmul::UByte::OutputFormat::_HEXA, '\0')));
+	result.add ("DFLTO",	MCHEmul::removeAll0 
+		(_DFLTO.asString (MCHEmul::UByte::OutputFormat::_HEXA, '\0')));
 
 	MCHEmul::InfoStructure trps;
 	for (size_t i = 0; i < _traps.size (); i++)

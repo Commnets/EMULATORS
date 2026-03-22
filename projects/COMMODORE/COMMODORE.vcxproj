@@ -44,6 +44,8 @@
     <ClInclude Include="..\..\include\COMMODORE\IOPBuilder.hpp" />
     <ClInclude Include="..\..\include\COMMODORE\SerialIOPeripherals.hpp" />
     <ClInclude Include="..\..\include\COMMODORE\SerialPort.hpp" />
+    <ClInclude Include="..\..\include\COMMODORE\SerialPrinterMPS801.hpp" />
+    <ClInclude Include="..\..\include\COMMODORE\SerialPrinterMPS802.hpp" />
     <ClInclude Include="..\..\include\COMMODORE\SerialPrinters.hpp" />
     <ClInclude Include="..\..\include\COMMODORE\SID\incs.hpp" />
     <ClInclude Include="..\..\include\COMMODORE\SID\SID.hpp" />
@@ -109,6 +111,8 @@
     <ClCompile Include="..\..\src\COMMODORE\IOPBuilder.cpp" />
     <ClCompile Include="..\..\src\COMMODORE\SerialIOPeripherals.cpp" />
     <ClCompile Include="..\..\src\COMMODORE\SerialPort.cpp" />
+    <ClCompile Include="..\..\src\COMMODORE\SerialPrinterMPS801.cpp" />
+    <ClCompile Include="..\..\src\COMMODORE\SerialPrinterMPS802.cpp" />
     <ClCompile Include="..\..\src\COMMODORE\SerialPrinters.cpp" />
     <ClCompile Include="..\..\src\COMMODORE\SID\SID.cpp" />
     <ClCompile Include="..\..\src\COMMODORE\SID\SIDLibWrapper.cpp" />
