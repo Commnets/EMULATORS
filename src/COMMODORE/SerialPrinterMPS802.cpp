@@ -490,8 +490,8 @@ COMMODORE::MPS802MatrixPrinterFormatter::NumericFormat::NumericFormat (const std
 	// If any, they can only be 9 and a "-" sign at the end! (if any)
 	if (!fNStr.empty ())
 	{
-		if (fNStr.find_first_not_of ("9-") == fNStr.npos) 
-			_error = true; // Not the values allowed...
+		if (fNStr.find_first_not_of ("9-") != fNStr.npos) 
+			_error = true; // None of the values allowed...
 		else
 		{
 			cP = fNStr.find_first_of ('-');
@@ -525,9 +525,9 @@ COMMODORE::MPS802MatrixPrinterFormatter::NumericFormat::NumericFormat (const std
 			_error = true;
 		else
 		{
-			while (cP != eNStr.npos && eNStr [cP] == '$') 
-				cP++;
-			eNStr = eNStr.substr (cP);
+			while (cP != eNStr.npos && eNStr [cP] == '$') cP++;
+			if (cP != eNStr.npos)
+				eNStr = eNStr.substr (cP);
 		}
 
 		// Now, the pure simbols related with the number are following...
@@ -579,47 +579,62 @@ std::string COMMODORE::MPS802MatrixPrinterFormatter::NumericFormat::format
 	if (_error)
 		return ("*.*");
 
-	std::string nStr = std::to_string (n);
+	std::string nStr = std::to_string (std::abs (n));
 	size_t pP = nStr.find_first_of ('.');
 	std::string eNStr = nStr.substr (0, pP);
 	std::string fNStr = (pP == std::string::npos) ? "" : nStr.substr (pP + 1);
 
 	std::string result = "";
 
-	// Format before the point...
+	// Is there any format defined before the point?
+	// I fthere is, then it must be applied...
 	if (_fBeforePoint != "")
 	{
 		size_t i = 0;
 
+		// The sign if exists must be the first element in the format definition...
 		if (_fBeforePoint [i] == 'S')
-			result += ((n >= 0) ? '+' : '-');
-		while (_fBeforePoint [++i] == '$')
-			result += ' '; // Add as many spaces as $ signs there are less 1... (if there was!)
-		if (_fBeforePoint [i - 1] == '$')
-			result += '$'; // The simbol to be added...
+			{ i++; result += ((n >= 0) ? '+' : '-'); }
+
+		// Add as many spaces as $ signs there are less 1... (if there was!)
+		while (_fBeforePoint [i] == '$')
+		{ 
+			i++; // Go next...
+			while (_fBeforePoint [i] == '$') 
+				{ result += ' '; i++; } // While that next is still a $, add an space...
+			result += '$'; // Finally adds the symbol found...
+		}
+
+		// If the number of real digits before the period is bigger
+		// than the number of digits defined in the format
+		// there is an error in the format, and this is pointed out!
 		if (_fBeforePoint.substr (i).length () < eNStr.length ())
-			result = "*.*"; // The format can not be applied, 
-							// but there is no error in the definition...
+			result = "*.*"; 
+		// In other case, the number of positions is complted
+		// wither with 0 or SPACES depending the definition of the format....
 		else
 			result += ((_fBeforePoint [i] == '9') 
 				? MCHEmul::_SPACES : MCHEmul::_CEROS).substr (0, (_fBeforePoint.length () - i - eNStr.length ())) + eNStr;
 	}
 	else
+	// If there was not any format defined before the period...
+	// ...is hat to be a decimal number or an error would have happened in the definition...
 	if (eNStr != "0")
 	{
 		_error = true;
 
-		_errorText = "*.*"; // The format can not be applied, 
-							// but there is no error in the definition...
+		_errorText = "*.*"; // The format can not be applied,
+							// ...and there is an error in the definition of the format...
 	}
 
-	// Now, format after the point,
+	// Now, format after the period,
 	// because it is simplier!
+	// unless a previous error was already detected...
 	if (result != "*.*" && 
 		_fAfterPoint != "") // Length is 1 at least!
 	{
 		size_t i = 0;
-		result += '.'; // Always a point just to start...
+		result += '.'; // Always a period just to start...
 		// As many digits as 9 are in the format (it has been verified at construction time)...
 		// Bear in mind that there could be a '-' at the end of the format that has to be considered just at the end...
 		for (; i < (_fAfterPoint.length () - ((_fAfterPoint [_fAfterPoint.length () - 1] == '-') ? 1 : 0)); i++)
@@ -694,7 +709,7 @@ COMMODORE::MPS802MatrixPrinterFormatter::Formats
 		{
 			result.push_back (createFormatFrom (pS));
 
-			pS = "";
+			pS = (lC = (*i));
 		}
 		else
 			pS += (lC = (*i));
@@ -832,7 +847,7 @@ void COMMODORE::MPS802BasicMatrixPrinterEmulation::printNewLine ()
 				}
 				// If there were not, the line formated is printed out!
 				else
-					printerFile () << std::endl << lF << std::endl;
+					printerFile () << lF << std::endl;
 
 				// Any case, the line has already been used, so start back again!
 				_lineUnderConstruction = "";
