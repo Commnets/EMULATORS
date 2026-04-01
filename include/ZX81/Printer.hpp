@@ -24,6 +24,10 @@ namespace ZX81
 	class ThermalPrinterSimulation final : public EdgeConnectorPeripheral
 	{
 		public:
+		/** The configuration of the printer.
+			Usually it is needed once. */
+		static const MCHEmul::MatrixPrinterEmulation::Configuration _CONFIGURATION;
+
 		static const int _ID = 102;
 
 		ThermalPrinterSimulation (MCHEmul::MatrixPrinterEmulation* mPE = 

@@ -15,6 +15,7 @@
 #define __SINCLAIR_IOPBUILDER__
 
 #include <CORE/incs.hpp>
+#include <SINCLAIR/ZXCodeToASCII.hpp>
 
 namespace SINCLAIR
 {
@@ -38,10 +39,15 @@ namespace SINCLAIR
 			F:[VALUE] To define the name of the output file. \n
 			P:[VALUE] To define the type of simulation (THERMAL|-PS).
 					  In case it doesn't exist a default one is created just to avoid crashes. */
-		std::tuple <std::string, 
+		std::tuple <
+			std::string, 
 			MCHEmul::MatrixPrinterEmulation*> getDataPrinterFrom 
 				(const MCHEmul::Attributes& prms, 
-					const std::tuple <std::string, MCHEmul::MatrixPrinterEmulation*>& eD) const;
+					const std::tuple <
+						ZXCodeToASCII*, 
+						MCHEmul::MatrixPrinterEmulation::Configuration,
+						std::string, 
+						MCHEmul::MatrixPrinterEmulation*>& eD) const;
 	};
 }
 

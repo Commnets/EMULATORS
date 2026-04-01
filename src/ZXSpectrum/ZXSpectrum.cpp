@@ -11,6 +11,29 @@
 #include <FZ80/NMIInterrupt.hpp>
 
 // ---
+unsigned char ZXSPECTRUM::ZXCodeToASCII::convert (unsigned char chr)
+{
+	unsigned char result = ' ';
+
+	// Control codes, with no translation...
+	if (chr < 0x20)
+		return (result);
+
+	// 0x20..0x7f: Visible ASCII
+	// The base matches with ASCII for these codes except
+	// specific SPECTRUM chars like £ (0x60) y © (0x7f).
+	if (chr <= 0x7f)
+	{
+		if (chr == 0x60) result = '£';
+		else if (chr == 0x7f ) result = '©';
+		else result = chr;
+	}
+
+	// The rest of the codes will be printed out like an space...
+	return (result);
+}
+
+// ---
 ZXSPECTRUM::SinclairZXSpectrum::SinclairZXSpectrum (ZXSPECTRUM::Memory::Configuration cfg, 
 		ZXSPECTRUM::SinclairZXSpectrum::VisualSystem vS, 
 		ZXSPECTRUM::Type t, const std::string& lang)

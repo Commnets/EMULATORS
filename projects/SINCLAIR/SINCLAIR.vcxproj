@@ -27,6 +27,7 @@
     <ClInclude Include="..\..\include\SINCLAIR\incs.hpp" />
     <ClInclude Include="..\..\include\SINCLAIR\IOPBuilder.hpp" />
     <ClInclude Include="..\..\include\SINCLAIR\Printer.hpp" />
+    <ClInclude Include="..\..\include\SINCLAIR\ZXCodeToASCII.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\SINCLAIR\CommandBuilder.cpp" />

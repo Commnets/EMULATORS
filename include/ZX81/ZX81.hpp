@@ -23,6 +23,13 @@
 
 namespace ZX81
 {
+	/** The specific conversor for ZX81 codes to ASCII. */
+	class ZXCodeToASCII final : public SINCLAIR::ZXCodeToASCII
+	{
+		public:
+		virtual unsigned char convert (unsigned char chr) override;
+	};
+
 	/** The computer. */
 	class SinclairZX81 final : public SINCLAIR::Computer
 	{

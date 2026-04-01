@@ -15,6 +15,7 @@
 #define __SINCLAIR_PRINTER__
 
 #include <CORE/incs.hpp>
+#include <SINCLAIR/ZXCodeToASCII.hpp>
 
 namespace SINCLAIR
 {
@@ -24,9 +25,13 @@ namespace SINCLAIR
 		public MCHEmul::BasicMatrixPrinterEmulation
 	{
 		public:
-		BasicThermalPrinterEmulation (const std::string& pFN = "MatrixPrinter.txt")
-			: MCHEmul::BasicMatrixPrinterEmulation (32 /** As wide as the screen. */, pFN)
-							{ }
+		/** The class is the owner of the ZXCodeToASCII converter. 
+			So it must be deleted at destruction time. */
+		BasicThermalPrinterEmulation (ZXCodeToASCII* c,
+			const std::string& pFN = "MatrixPrinter.txt");
+
+		~BasicThermalPrinterEmulation ()
+							{ delete (_ZXCodeConversor); }
 
 		private:
 		/** None is a control char. 
@@ -40,7 +45,11 @@ namespace SINCLAIR
 		/** Everything is a normal char. 
 			There is no control characters. */
 
-		virtual unsigned short printNormalChar (unsigned char chr) override;
+		virtual unsigned short printNormalChar (unsigned char chr) override
+							{ printerFile () << std::string (1, (char) _ZXCodeConversor -> convert (chr)); return (1); }
+
+		private:
+		ZXCodeToASCII* _ZXCodeConversor;
 	};
 
 	/** Very basic print simulation,
@@ -49,11 +58,9 @@ namespace SINCLAIR
 		public MCHEmul::PostscriptMatrixPrinterEmulation
 	{
 		public:
-		// The default configuration of the printer...
-		// Usually is not needed more...
-		static const MCHEmul::MatrixPrinterEmulation::Configuration _CONFIGURATION;
-
-		PostscriptThermalPrinterEmulation (const std::string& pFN = "MatrixPrinter.ps");
+		PostscriptThermalPrinterEmulation 
+			(const MCHEmul::MatrixPrinterEmulation::Configuration& cfg, 
+			 const std::string& pFN = "MatrixPrinter.ps");
 
 		private:
 		/** The main postscript routines are copied in this function. */

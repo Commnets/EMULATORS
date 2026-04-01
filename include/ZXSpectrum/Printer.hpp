@@ -24,6 +24,10 @@ namespace ZXSPECTRUM
 	class ThermalPrinterSimulation final : public EdgeConnectorPeripheral
 	{
 		public:
+		/** The configuration of the printer.
+			Usually it is needed once. */
+		static const MCHEmul::MatrixPrinterEmulation::Configuration _CONFIGURATION;
+
 		static const int _ID = 102;
 
 		ThermalPrinterSimulation (MCHEmul::MatrixPrinterEmulation* mPE = 
@@ -60,6 +64,17 @@ namespace ZXSPECTRUM
 		// -----
 
 		private:
+		/** Relative position (respect IY register) of the address 
+			with the position of the next element in the printing buffer. */
+		static size_t _PR_CC_POS;
+		/** Relative position (respect IY register) of the address 
+			with the FLAG2. */
+		static size_t _PR_FLAG2_POS;
+		/** Address of the memory buffer. */
+		static MCHEmul::Address _PRBUFF;
+		/** Length of the memory buffer (= 0x100). */
+		static const size_t _BLEN;
+
 		/** A reference to the emulation. */
 		MCHEmul::MatrixPrinterEmulation* _emulation;
 		/** The trap where the info to the printer is caught. */

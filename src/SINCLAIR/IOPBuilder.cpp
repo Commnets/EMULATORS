@@ -14,10 +14,16 @@ MCHEmul::IOPeripheral* SINCLAIR::IOPeripheralBuilder::createPeripheral
 }
 
 // ---
-std::tuple <std::string, MCHEmul::MatrixPrinterEmulation*> 
+std::tuple <
+	std::string, 
+	MCHEmul::MatrixPrinterEmulation*> 
 	SINCLAIR::IOPeripheralBuilder::getDataPrinterFrom
 		(const MCHEmul::Attributes& prms,
-		 const std::tuple <std::string, MCHEmul::MatrixPrinterEmulation*>& eD) const
+		 const std::tuple <
+			SINCLAIR::ZXCodeToASCII*,
+			MCHEmul::MatrixPrinterEmulation::Configuration,
+			std::string, 
+			MCHEmul::MatrixPrinterEmulation*>& eD) const
 {
 	// To get the parameter....
 	auto getParameter = [](const std::string& attr) -> std::pair <std::string, std::string>
@@ -29,9 +35,12 @@ std::tuple <std::string, MCHEmul::MatrixPrinterEmulation*>
 				: std::make_pair ("", ""));
 		};
 
+	SINCLAIR::ZXCodeToASCII* cvt = nullptr;
+	MCHEmul::MatrixPrinterEmulation::Configuration cfg;
 	std::string pF;
 	MCHEmul::MatrixPrinterEmulation* mPE;
-	std::tie (pF, mPE) = eD;
+	// Received as parameter...
+	std::tie (cvt, cfg, pF, mPE) = eD;
 
 	for (auto const& i : prms)
 	{
@@ -55,28 +64,30 @@ std::tuple <std::string, MCHEmul::MatrixPrinterEmulation*>
 			{
 				if (pz.size () == 1)
 				{
-					mPE = new SINCLAIR::BasicThermalPrinterEmulation (pF);
+					mPE = new SINCLAIR::BasicThermalPrinterEmulation (cvt, pF);
 				}
 				else
 				if (pz.size () == 2)
 				{
 					if (pz [1] == "PS")
 					{
-						mPE = new SINCLAIR::PostscriptThermalPrinterEmulation (pF);
+						delete cvt; // Not used...
+
+						mPE = new SINCLAIR::PostscriptThermalPrinterEmulation (cfg, pF);
 					}
 					else
 					{
 						_LOG ("Type of emulation mechanism: " + pz [1] + 
 							" not supported for THERMAL printer, using basic emulation.");
 
-						mPE = new SINCLAIR::BasicThermalPrinterEmulation (pF);
+						mPE = new SINCLAIR::BasicThermalPrinterEmulation (cvt, pF);
 					}
 				}
 				else
 				{
 					_LOG ("Too many details for MPS801 printer, using basic emulation.");
 
-					mPE = new SINCLAIR::BasicThermalPrinterEmulation (pF);
+					mPE = new SINCLAIR::BasicThermalPrinterEmulation (cvt, pF);
 				}
 			}
 			// Creates the basic printer...
@@ -84,6 +95,8 @@ std::tuple <std::string, MCHEmul::MatrixPrinterEmulation*>
 			{
 				_LOG ("Type of printer emulation: " + pz [0] + 
 					" not supported, using basic emulation.");
+
+				delete cvt; // Not used...
 
 				mPE = new MCHEmul::BasicMatrixPrinterEmulation (80, pF);
 			}

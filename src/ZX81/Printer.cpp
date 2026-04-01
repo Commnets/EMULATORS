@@ -1,6 +1,21 @@
 #include <ZX81/Printer.hpp>
 #include <FZ80/CZ80.hpp>
 
+const MCHEmul::MatrixPrinterEmulation::Configuration 
+	ZX81::ThermalPrinterSimulation::_CONFIGURATION = 
+	MCHEmul::MatrixPrinterEmulation::Configuration (
+		(unsigned char) 6, (unsigned char) 7,
+		MCHEmul::MatrixPrinterEmulation::Configuration::CharSetDefinition 
+			({
+			}),
+		// max width in chars, this printer can print up!
+		(unsigned short) 80, 
+		// usual height in chars (when the paper is 11 inches height), 
+		// although it has to be adjusted to the the height in inches of the paper...
+		(unsigned short) 66, 
+		(unsigned char) 0x0d, (unsigned char) 0x20, (unsigned char) 0x09,
+		(unsigned short) 4);
+
 MCHEmul::Address ZX81::ThermalPrinterSimulation::_PR_CC	= MCHEmul::Address ({ 0x38, 0x40 }, false);
 MCHEmul::Address ZX81::ThermalPrinterSimulation::_PRBUFF = MCHEmul::Address ({ 0x3c, 0x40 }, false);
 const MCHEmul::UByte ZX81::ThermalPrinterSimulation::_EOL = MCHEmul::UByte (0x76);
@@ -87,7 +102,7 @@ bool ZX81::ThermalPrinterSimulation::simulate (MCHEmul::CPU* cpu)
 			for (size_t i = 0; i < (size_t) ((pI.value () - _IBP.value ()));
 				_emulation -> printChar // Using the standard method of the emulation...
 					(cpu -> memoryRef () -> value (_PRBUFF + i++).value ())); 
-			_emulation -> printChar ('\n'); 
+			_emulation -> printChar (_emulation -> configuration ()._charNewLine); 
 
 			// Empty the buffer...
 			// the last element is always the end on line...

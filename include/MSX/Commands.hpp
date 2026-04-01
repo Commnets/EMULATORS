@@ -15,7 +15,6 @@
 #define __MSX_COMMANDS__
 
 #include <CORE/incs.hpp>
-#include <SINCLAIR/incs.hpp>
 
 namespace MSX
 {

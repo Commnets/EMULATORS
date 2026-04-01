@@ -9,6 +9,48 @@
 #include <FZ80/NMIInterrupt.hpp>
 
 // ---
+unsigned char ZX81::ZXCodeToASCII::convert (unsigned char chr)
+{
+	// By default what to print out is an space...
+	// unless the char received has an quivalent in "printable" ascii.
+	unsigned char result = ' ';
+
+    // En ZX81, los caracteres en vídeo inverso están en el bloque 128..191
+    // y corresponden a los códigos 0..63 con el bit 7 a 1.
+    // Los tratamos igual que su versión normal.
+	if (chr >= 0x80 && chr <= 0xbf)
+		chr &= 0x7F;
+
+	switch (chr) {
+		case 0x00: result = ' '; break;
+		case 0x0b: result = '"'; break;
+		case 0x0d: result = '$'; break;
+		case 0x0e: result = ':'; break;
+		case 0x0f: result = '?'; break;
+		case 0x10: result = '('; break;
+		case 0x11: result = ')'; break;
+		case 0x12: result = '>'; break;
+		case 0x13: result = '<'; break;
+		case 0x14: result = '='; break;
+		case 0x15: result = '+'; break;
+		case 0x16: result = '-'; break;
+		case 0x17: result = '*'; break;
+		case 0x18: result = '/'; break;
+		case 0x19: result = ';'; break;
+		case 0x1a: result = ','; break;
+		case 0x1b: result = '.'; break;
+		default: break;
+	}
+
+	// Digits 0..9
+	if (chr >= 0x1c && chr <= 0x25) result = '0' + (chr - 0x1c);
+    // Letras A..Z
+    if (chr >= 0x26 && chr <= 0x3f) result = 'A' + (chr - 0x26);
+
+	return (result);
+}
+
+// ---
 ZX81::SinclairZX81::SinclairZX81 (ZX81::Memory::Configuration cfg, 
 		ZX81::SinclairZX81::VisualSystem vS, ZX81::Type t)
 	: SINCLAIR::Computer 
