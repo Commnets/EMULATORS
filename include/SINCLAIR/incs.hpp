@@ -14,12 +14,14 @@
 #ifndef __SINCLAIR_INCS__
 #define __SINCLAIR_INCS__
 
+#include <CORE/incs.hpp>
 #include <SINCLAIR/CommandBuilder.hpp>
 #include <SINCLAIR/Commands.hpp>
 #include <SINCLAIR/IOPBuilder.hpp>
 #include <SINCLAIR/FileIO.hpp>
 #include <SINCLAIR/Computer.hpp>
 #include <SINCLAIR/Datasette.hpp>
+#include <SINCLAIR/Printer.hpp>
 
 #endif
 

@@ -725,10 +725,9 @@ COMMODORE::MPS802MatrixPrinterFormatter::Formats
 COMMODORE::MPS802BasicMatrixPrinterEmulation::MPS802BasicMatrixPrinterEmulation (const std::string& pFN)
 	: MCHEmul::BasicMatrixPrinterEmulation (80 /** Always the standard. */, pFN),
 	  _activeFunction (COMMODORE::MPS802BasicMatrixPrinterEmulation::Function::_NONE), // Not yet defined...
-	  _activeChannel (0), // Always the 0 by default, if nothing has been set!
 	  _businessMode (false),
 	  _lastFormatter (""), // No formatter defined...
-	  _timesDouble (0),
+	  _timesRepeated (1), // Just one by default!
 	  _printingErrorMessages (false), // No printing out error messages by default!
 	  _lineUnderConstruction ("") // While the format is being set up!
 {
@@ -750,81 +749,37 @@ void COMMODORE::MPS802BasicMatrixPrinterEmulation::activateFunction (unsigned ch
 		f != 0x0a)   // To reset the printer, and setting up the default values...
 		return; // The function is not recognized and it is not valid...
 	
-	_activeFunction = 
-		COMMODORE::MPS802BasicMatrixPrinterEmulation::Function (f);
+	// The business mode is active just from the moment that the function is selected...
+	// This is because as the chars come into the simulation
+	// they are translated into the right ASCII code considering the businessMode...
+	_businessMode = 
+		((_activeFunction = 
+			COMMODORE::MPS802BasicMatrixPrinterEmulation::Function (f)) == Function::_BUSINESSMODE);
 }
 
 // ---
-bool COMMODORE::MPS802BasicMatrixPrinterEmulation::isControlChar (unsigned char chr)
-{ 
-	// The control chars admitted will depend on the active function being managed...
-	// e.g. When using the channel to define a format no control chars might be used!
-	return (
-		(_activeFunction == COMMODORE::MPS802BasicMatrixPrinterEmulation::Function::_NONE || 
-		 _activeFunction == COMMODORE::MPS802BasicMatrixPrinterEmulation::Function::_BUSINESSMODE)
-			? (chr == 0x0e || // 14  = Enhanced (double or more)
-			   chr == 0x81 || // 129 = Dissable enhanced
-			   chr == 0x91 || // 145 = Uppercase
-			   chr == 0x11)   // 17  = Lowercase
-			: false); 
-}
-
-// ---
-std::tuple <short, short, short> COMMODORE::MPS802BasicMatrixPrinterEmulation::manageControlChar (unsigned char chr)
+bool COMMODORE::MPS802BasicMatrixPrinterEmulation::printNewLine ()
 {
-	// In this routine the system will only enter if the character is clasified as control!
+	bool result = false;
 
-	short aX = 0, aY = 0, aP = 0;
-
-	switch (chr)
-	{
-		// ENHACED ON
-		case 0x0e:
-			{
-				_timesDouble++;
-			}
-
-			break;
-
-		// ENHACED OFF
-		case 0x81:
-			{
-				_timesDouble = 0;
-			}
-
-			break;
-
-		// UPPERCASE
-		case 0x91:
-			{
-				_businessMode = false;
-			}
-
-			break;
-
-		// LOWERCASE
-		case 0x11:
-			{
-				_businessMode = true;
-			}
-
-			break;
-	}
-
-	// The position of the head is no really changed ever!
-	return (std::make_tuple (aX, aY, aP));
-}
-
-// ---
-void COMMODORE::MPS802BasicMatrixPrinterEmulation::printNewLine ()
-{
 	// When printing out a new line
 	// The effect can be different depending whether a formatting option was or not used...
 	// So a switch is used...
 	switch (_activeFunction)
 	{
+		// In the Graphic MODE...
+		case Function::_NONE:
+		case Function::_BUSINESSMODE:
+			{
+				printerFile () << _lineUnderConstruction << std::endl;
+
+				result = true;
+			}
+
+			break;
+
 		// Using a Formatter...
-		case COMMODORE::MPS802BasicMatrixPrinterEmulation::Function::_USEFORMATTER:
+		case Function::_USEFORMATTER:
 			{
 				// Format the line built up!
 				std::string lF = _lastFormatter.format (_lineUnderConstruction);
@@ -849,14 +804,13 @@ void COMMODORE::MPS802BasicMatrixPrinterEmulation::printNewLine ()
 				else
 					printerFile () << lF << std::endl;
 
-				// Any case, the line has already been used, so start back again!
-				_lineUnderConstruction = "";
+				result = true;
 			}
 
 			break;
 
 		// Defining a Formatter...
-		case COMMODORE::MPS802BasicMatrixPrinterEmulation::Function::_DEFININGFORMATTER:
+		case Function::_DEFININGFORMATTER:
 			{
 				// Creates the formatter with the information received so far...
 				// The previous one is destroyed when a new one assigned!
@@ -866,24 +820,25 @@ void COMMODORE::MPS802BasicMatrixPrinterEmulation::printNewLine ()
 				{
 					// ...and the option to print them out was active, the message would be printed out...
 					if (_printingErrorMessages)
+					{
 						printerFile () 
 							<< std::endl
 							<< _lastFormatter.errorTexts () 
 							<< std::endl;
 
+						result = true;
+					}
+
 					// And the formatter was any case deleted by something "empty"
 					// Abny previous one is destroyed when the new one is assigned!
 					_lastFormatter.setFormats ("");
 				}
-
-				// No more lines under construction...
-				_lineUnderConstruction = "";
 			}
 
 			break;
 
 		// Activating printing out error messages...
-		case COMMODORE::MPS802BasicMatrixPrinterEmulation::Function::_ENABLEPRINTERFORMATMESSAGES:
+		case Function::_ENABLEPRINTERFORMATMESSAGES:
 			{
 				_printingErrorMessages = true;
 			}
@@ -891,7 +846,7 @@ void COMMODORE::MPS802BasicMatrixPrinterEmulation::printNewLine ()
 			break;
 
 		// Desactivating printing out error messages...
-		case COMMODORE::MPS802BasicMatrixPrinterEmulation::Function::_SUPPRESDIAGNOSTICMESSAGES:
+		case Function::_SUPPRESDIAGNOSTICMESSAGES:
 			{
 				_printingErrorMessages = false;
 			}
@@ -899,66 +854,133 @@ void COMMODORE::MPS802BasicMatrixPrinterEmulation::printNewLine ()
 			break;
 
 		// Reseting the printer...
-		case COMMODORE::MPS802BasicMatrixPrinterEmulation::Function::_RESETPRINTER:
+		case Function::_RESETPRINTER:
 			{
-				_timesDouble = 0;
+				_timesRepeated = 1;
 				_businessMode = false;
 				_lastFormatter.setFormats ("");
+				_printingErrorMessages = false;
 			}
 
 			break;
 
-		// In any other type of channel, the end of the line is printed out...
+		// In any other type of function, the end of the line is printed out...
+		// So iut would take into account the definition there...
+		// Really it means that is not simulated!
 		default:
 			{
-				printerFile () << std::endl;
+				_LOG ("Function " + std::to_string ((int) (unsigned char) _activeFunction) + 
+					" not supported in printer emulation COMMODORE::MPS802BasicMatrixPrinterEmulation");
+
+				result = true;
 			}
+
+			break;
 	}
+
+	// Any case, the line has already been used, so start back again!
+	_lineUnderConstruction = "";
+
+	return (result);
 }
 
 // ---
-bool COMMODORE::MPS802BasicMatrixPrinterEmulation::isNormalChar (unsigned char chr)
+unsigned short COMMODORE::MPS802BasicMatrixPrinterEmulation::printNormalChar (unsigned char chr)
 {
-	// In the normal printing modes, just the printable characters are valid...
-	// ...in the configuration modes, just what is useful to configure...
-	return (
-		(_activeFunction == COMMODORE::MPS802BasicMatrixPrinterEmulation::Function::_NONE || 
-		 _activeFunction == COMMODORE::MPS802BasicMatrixPrinterEmulation::Function::_BUSINESSMODE)
-			? _businessMode 
-				? ((chr >= (unsigned char) 0x20 && (unsigned char) chr <= 0x5a) ||
-					(chr >= (unsigned char) 0xc1 && (unsigned char) chr <= 0xda))
-				: (chr >= (unsigned char) 0x20 && (unsigned char) chr <= 0x5a)
-			: ((chr >= (unsigned char) 0x20 && (unsigned char) chr <= 0x5a) ||
-			   (chr >= (unsigned char) 0xc1 && (unsigned char) chr <= 0xda) || chr == 0x1d /** limit of fields. */));
-}
-
-// ---
-size_t COMMODORE::MPS802BasicMatrixPrinterEmulation::printNormalChar (unsigned char chr)
-{
-	size_t result = 0;
+	unsigned short result = 0;
 
 	// What to do, will depend again on the active function in the channel...
-	if (_activeFunction == COMMODORE::MPS802BasicMatrixPrinterEmulation::Function::_NONE ||
-		_activeFunction == COMMODORE::MPS802BasicMatrixPrinterEmulation::Function::_BUSINESSMODE)
+	// In the RAW functions (NONE or BUSINESS) the character is printed out directly...
+	if (_activeFunction == Function::_NONE ||
+		_activeFunction == Function::_BUSINESSMODE)
 	{
-		unsigned char nChr = chr;
-		if (_businessMode)
-			nChr += (chr >= (unsigned char) 0x41 && chr <= (unsigned char) 0x5a) 
-				? 0x20 : -0x80; /** the other way around. */
+		switch (chr)
+		{
+			// ENHACED ON
+			case 0x0e:
+				{
+					_timesRepeated++;
+				}
 
-		printerFile () << std::string (1, (char) nChr); result++;
-		printerFile () << std::string (_timesDouble, (char) nChr); result += _timesDouble;
-		printerFile ().flush ();
+				break;
 
+			// ENHACED OFF
+			case 0x81:
+				{
+					_timesRepeated = 1;
+				}
+
+				break;
+
+			// UPPERCASE
+			case 0x91:
+				{
+					_businessMode = false;
+				}
+
+				break;
+
+			// LOWERCASE
+			case 0x11:
+				{
+					_businessMode = true;
+				}
+
+				break;
+
+			// This is not a managed control command, 
+			// so it might be printed out!
+			default:
+				{
+					// In business model uppercase and lowecase symbols might be printed out
+					// in this type of printer, but in no business model 
+					// just the uppercase symbols are valied
+					if (_businessMode 
+							? ((chr >= 0x20 && chr <= 0x5a) ||	// Lowercase letters..
+							   (chr >= 0xc1 && chr <= 0xda))	// Uppercase letters...
+							: (chr >= 0x20 && chr <= 0x5a))		// No business model, just uppercase!
+					{
+						// When business mode is active, the information is converted into lower case ASCII...
+						unsigned char nChr = chr;
+						if (_businessMode)
+						{
+							if (chr >= 0x41 && chr <= 0x5a)
+								nChr += 0x20;
+							else
+							if (chr >= 0xc1 && chr <= 0xda)
+								nChr -= 0x80;
+						}
+
+						// Still creating the line...
+						// It will be printed out just when a new line is detected...
+						_lineUnderConstruction += 
+							std::string (_timesRepeated, (char) nChr);
+
+						result = _timesRepeated;
+					}
+
+					// If the symbols is not usefull, it has no effect!
+				}
+
+				break;
+		}
 	}
 	else
-	if (_activeFunction == COMMODORE::MPS802BasicMatrixPrinterEmulation::Function::_DEFININGFORMATTER ||
-		_activeFunction == COMMODORE::MPS802BasicMatrixPrinterEmulation::Function::_USEFORMATTER)
+	if (_activeFunction == Function::_DEFININGFORMATTER ||
+		_activeFunction == Function::_USEFORMATTER)
 	{
-		_lineUnderConstruction += chr;
+		if ((chr >= 0x20 && chr <= 0x5a) || 
+			(chr == 0x1d && _activeFunction == Function::_USEFORMATTER))
+		{
+			_lineUnderConstruction += chr;
 
-		result++;
+			result = 1;
+		}
 	}
+
+	// In any other mode, nothing is done...
+	// So the effect of the function will only take place 
+	// when a new line was printed out actually!
 
 	return (result);
 }
@@ -968,8 +990,17 @@ COMMODORE::MPS802PostscriptMatrixPrinterEmulation::MPS802PostscriptMatrixPrinter
 		(const MCHEmul::MatrixPrinterEmulation::Paper& p, 
 		 const std::string& pFN)
 	: MCHEmul::PostscriptMatrixPrinterEmulation (_CONFIGURATION, p, pFN),
+	  _activeFunction (COMMODORE::MPS802PostscriptMatrixPrinterEmulation::Function::_NONE),
 	  _businessMode (false),
-	  _timesDouble (0)
+	  _lastFormatter (""), // No formatter defined so far...
+	  _timesRepeated (1), // Single width by default!
+	  _printingErrorMessages (false),
+	  _reverse (false),
+	  _paging (false),
+	  _programableGraphic { 0,0,0,0,0,0,0,0 }, // No more than 8 bytes...
+	  _programableGraphicDefined (false),
+	  _lineUnderConstruction (""),
+	  _posXInside (0)
 {
 	_configuration._description = "Postscript Matrix Emulation for MPS802";
 
@@ -983,7 +1014,27 @@ COMMODORE::MPS802PostscriptMatrixPrinterEmulation::MPS802PostscriptMatrixPrinter
 // ---
 void COMMODORE::MPS802PostscriptMatrixPrinterEmulation::activateFunction (unsigned char f)
 {
-
+	// Simple, f is the secondary address and also means the function...
+	// and it has to be assigned to the active channel...
+	// Any case f has to be one of the valid values...
+	if (f != 0x00 && // No special function is used...
+		f != 0x01 && // Function active when using a formatter...
+		f != 0x02 && // Function active when definning a formatter...
+		f != 0x03 && // Function to define the number of lines per page (including 3 at the top and 3 at the bottom)
+		f != 0x04 && // To enable printing error messages!
+		f != 0x05 && // Function active when defining a programmable character...
+		f != 0x06 && // Function to set the space between continuous lines...
+		f != 0x07 && // Business mode active...
+		f != 0x09 && // To supress error messages...
+		f != 0x0a)   // To reset the printer, and setting up the default values...
+		return; // The function is not recognized and it is not valid...
+	
+	// The business mode is active just from the moment that the function is selected...
+	// This is because as the chars come into the simulation
+	// they are translated into the right ASCII code considering the businessMode...
+	_businessMode = 
+		((_activeFunction = 
+			COMMODORE::MPS802PostscriptMatrixPrinterEmulation::Function (f)) == Function::_BUSINESSMODE);
 }
 
 // ---
@@ -1038,32 +1089,6 @@ void COMMODORE::MPS802PostscriptMatrixPrinterEmulation::firstTimePrinting (unsig
 }
 
 // ---
-bool COMMODORE::MPS802PostscriptMatrixPrinterEmulation::isControlChar (unsigned char chr)
-{
-	// TODO
-
-	return (false);
-}
-
-// ---
-std::tuple <short, short, short> 
-COMMODORE::MPS802PostscriptMatrixPrinterEmulation::manageControlChar (unsigned char chr)
-{
-	short aX = 0, aY = 0, aP = 0;
-
-	// TODO
-
-	return (std::make_tuple (aX, aY, aP));
-}
-
-// ---
-void COMMODORE::MPS802PostscriptMatrixPrinterEmulation::printNewLine ()
-{
-	// Starting a new line there is no "glide" inside the character...
-	_posXInside = _posYInside = 0;
-}
-
-// ---
 void COMMODORE::MPS802PostscriptMatrixPrinterEmulation::closePage (unsigned short p)
 {
 	printerFile ()
@@ -1092,109 +1117,338 @@ void COMMODORE::MPS802PostscriptMatrixPrinterEmulation::setNewPage (unsigned sho
 		// In the printer MPS802 there is 8 lines per inch. Each line is 0.094 inches as it said in the manual.
 		// Every line is made up of 16 dots = 8 * 2
 		// The scale to apply is 0,423 because 0,094 * 72 /16 = 0,423
-		<< "0.36 0.423 cale" << std::endl
+		<< "0.36 0.423 scale" << std::endl
 		<< "/x0 x0 2.7777777 mul def" << std::endl
 		<< "/y0 y0 2.3640661 mul def" << std::endl << std::endl;
 }
 
 // ---
-bool COMMODORE::MPS802PostscriptMatrixPrinterEmulation::isNormalChar (unsigned char chr)
+bool COMMODORE::MPS802PostscriptMatrixPrinterEmulation::printNewLine ()
 {
-	// TODO
+	bool result = false;
 
-	return (true);
+	// When printing out a new line
+	// The effect can be different depending whether a formatting option was or not used...
+	// So a switch is used...
+	switch (_activeFunction)
+	{
+		// Graphic mode or business mode...
+		case Function::_NONE:
+		case Function::_BUSINESSMODE:
+			{
+				printLineOfTextPostScript (_lineUnderConstruction);
+			}
+
+			break;
+
+		// Using a Formatter...
+		case Function::_USEFORMATTER:
+			{
+				// Format the line built up!
+				std::string lF = _lastFormatter.format (_lineUnderConstruction);
+
+				// If there were errors...
+				if (_lastFormatter.error ())
+				{
+					// ...and the option to print them out was active...
+					if (_printingErrorMessages)
+						printLineOfTextPostScript (_lastFormatter.errorTexts ());
+					
+					// Any case, the errors are reset for the next execution...
+					// Remember that if a format was wromg built,
+					// it would be replaced (when that happens) by a no formatter
+					// so here the only error that can happen are due to the format operation only!
+					_lastFormatter.resetError ();
+				}
+				// If there were not, the line formated is printed out!
+				else
+					printLineOfTextPostScript (lF);
+			}
+
+			break;
+
+		// Defining a Formatter...
+		case Function::_DEFININGFORMATTER:
+			{
+				// Creates the formatter with the information received so far...
+				// The previous one is destroyed when a new one assigned!
+				_lastFormatter.setFormats (_lineUnderConstruction);
+				// ...and if there was any error...
+				if (_lastFormatter.error ())
+				{
+					// ...and the option to print them out was active, the message would be printed out...
+					if (_printingErrorMessages)
+						printLineOfTextPostScript (_lastFormatter.errorTexts ());
+
+					// And the formatter was any case deleted by something "empty"
+					// Abny previous one is destroyed when the new one is assigned!
+					_lastFormatter.setFormats ("");
+				}
+			}
+
+			break;
+
+		// Changing the number of lines per page...
+		// When paging additionally it will include 3 lines at the top and three more at the bottom...
+		case Function::_SETNUMBERLINESPERPAGE:
+			{
+				if (_lineUnderConstruction.length () > 0)
+					configuration ()._charsPerPage = unsigned short (_lineUnderConstruction [0]);
+			}
+
+			break;
+
+		// Activating printing out error messages...
+		case Function::_ENABLEPRINTERFORMATMESSAGES:
+			{
+				_printingErrorMessages = true;
+			}
+
+			break;
+
+		// Definning a programable character...
+		// It will be printed out when using the char 254!
+		case Function::_DEFINEPROGRAMABLECHARACTER:
+			{
+				// Just 8 elements as a maximum...
+				for (size_t i = 0; i < 8 && i < _lineUnderConstruction.length (); i++) 
+					_programableGraphic [i] = MCHEmul::UByte (_lineUnderConstruction [i]);
+				_programableGraphicDefined = true;
+			}
+
+			break;
+
+		// Changing the space between the different lines of the printer...
+		case Function::_SETTINGSPACEBETWEENLINES:
+			{
+				// TODO
+			}
+
+			break;
+
+		// Desactivating printing out error messages...
+		case Function::_SUPPRESDIAGNOSTICMESSAGES:
+			{
+				_printingErrorMessages = false;
+			}
+
+			break;
+
+		// Reseting the printer...
+		case Function::_RESETPRINTER:
+			{
+				_timesRepeated = 1;
+				_businessMode = false;
+				_programableGraphic = { 0, 0, 0, 0, 0, 0, 0, 0 };
+				_programableGraphicDefined = false;
+				_lastFormatter.setFormats ("");
+				_printingErrorMessages = false;
+			}
+
+			break;
+
+		// It shouldn't be here...
+		// because all the types of modes have been taken already into account!
+		// Any case the suituation is managed...
+		default:
+			{
+				_LOG ("Function " + std::to_string ((int) (unsigned char) _activeFunction) + 
+					" not supported in printer emulation COMMODORE::MPS802BasicMatrixPrinterEmulation");
+			}
+
+		break;
+	}
+
+	// To start again...
+	_lineUnderConstruction = "";
+
+	return (result);
 }
 
 // ---
-size_t COMMODORE::MPS802PostscriptMatrixPrinterEmulation::printNormalChar (unsigned char chr)
+unsigned short COMMODORE::MPS802PostscriptMatrixPrinterEmulation::printNormalChar (unsigned char chr)
 {
-	// Not to print out anything by default... 
-	// It will depend on whether a printable character was actually sent!
-	// result has the number of bytesprinted out...
-	size_t result = 0;
-	
-	// Routine to print aout a byte of information and advance...
-	auto printByteColumnAndAdvance = [&](const MCHEmul::UByte& byte) -> void
-		{
-			printerFile ()
-				<< std::to_string ((unsigned int) byte.value ()) + "\t" +
-				   "x0 " +
-				   std::to_string ((unsigned int) _posXInside) + " " +
-				   std::to_string ((unsigned int) _posX + (unsigned short) result /** in the double. */) + " " +
-				   std::to_string ((unsigned int) (configuration ()._wChar)) + 
-				   " mul add dotStepX mul add\ty0 " + // dotStepX defined in PSMatrixPrinterII.ps
-				   std::to_string ((unsigned int) _posY) + " " +
-				   "dotStepY " + // dotStepY & lineGapY defined in PSMatrixPrinterII.ps
-				   std::to_string ((unsigned int) (configuration ()._hChar)) + 
-				   " mul lineGapY add mul sub drawByteBits" << std::endl;
-
-			// The definition of the dotStep...
-			if ((++_posXInside == (unsigned short) configuration ()._wChar)) // No more...
-			{
-				_posXInside = 0;
-
-				result++;
-			}
-		};
-
-	// Depending on the char received...
-	if (_settingTab)
-	{
-		// When two chars more are defined, then the settin process has finished...
-		_nextTabSettingValue [1 - (size_t) --_charsSettingtabPending] = 
-				_setSpecificDotAddress 
-					? chr // When setting the specific dot address, the number is "pure"
-					: ((chr >= 0x30) ? chr - 0x30 : 0x00); // Otherwise the char is the number in ASCII!
-		_settingTab = (_charsSettingtabPending != 0); // Still setting tab?
-		if (!_settingTab)
-		{
-			unsigned short tV =
-				_setSpecificDotAddress
-					? (_nextTabSettingValue [0] * 256) + _nextTabSettingValue [1]  // the value is MSB/LSB...
-					: (_nextTabSettingValue [0] * 10)  + _nextTabSettingValue [1]; // the value is a decimal value...
-			if (_setSpecificDotAddress)
-			{
-				// ...but the position can never be bigger the 480,
-				// otherwise it will be ignored!...
-				// The position inside the char, and the position of the head...
-				_setSpecificDotAddress = false;
-				if (tV < 480) 
-					{ _posXInside = tV % 6; tV /= 6; }
-			}
-
-			// Move the head to the right position if possible, 
-			// otherwise it will be ignored...
-			if (tV < 80)
-				moveHeadFromX (-headXPosition () + tV); // Absolute...
-		}
-	}
+	// What to do, will depend again on the active function in the channel...
+	// In the RAW functions (NONE or BUSINESS or GRAPHICS) any character code is valid...
+	if (_activeFunction == Function::_NONE ||
+		_activeFunction == Function::_BUSINESSMODE ||
+		_activeFunction == Function::_DEFINEPROGRAMABLECHARACTER)
+		_lineUnderConstruction += std::string (1, (char) chr);
 	else
-	if (_graphicMode)
+	// When defining or using a formatter, just the visible characters (numbers and letters) are valid!
+	// Really in the documentation is not clear what would happend using others,
+	// so in our implementation we have taken them off!!
+	if (_activeFunction == Function::_DEFININGFORMATTER ||
+		_activeFunction == Function::_USEFORMATTER)
 	{
-		printerFile () 
-			<< "% Graphic value " << std::to_string ((unsigned int) chr) << std::endl;
-		printByteColumnAndAdvance (chr);
-	}
-	else
-	{
-		bool existsChr = false;
-		MCHEmul::MatrixPrinterEmulation::Configuration::CharSetDefinition::const_iterator i
-			= configuration ()._charSet.find
-				((unsigned int) chr + (_businessMode ? 0x100 /** The second set. */ : 0x00));
-		const MCHEmul::MatrixPrinterEmulation::Configuration::CharDefinition& chrDef = // It is not needed a copy...
-			(existsChr = (i != configuration ()._charSet.end ()))
-				? (*i).second : (*configuration ()._charSet.begin ()).second; // The character 0 by default...
-		printerFile () 
-			<< "% Character " << (_businessMode ? "business" : "normal") << " mode: "
-			<< (existsChr ? std::to_string ((unsigned int) chr) : "Unknown") << std::endl;
-		for (const auto& j : (*i).second)
-		{
-			MCHEmul::UByte v = j; if (_reverse) v = ~v;
-			printByteColumnAndAdvance (v);
-			for (size_t k = 0; k < _timesDouble; k++) // When times double, print out the same byte twice...
-				printByteColumnAndAdvance (v); // twice...
-		}
+		if ((chr >= 0x20 && chr <= 0x5a) || 
+			(chr == 0x1d && _activeFunction == Function::_USEFORMATTER))
+			_lineUnderConstruction += chr;
 	}
 
-	return (result);
+	return (0);
+}
+
+// ---
+void COMMODORE::MPS802PostscriptMatrixPrinterEmulation::lineFeed ()
+{
+	// Move the head of the printer...
+	// in another way!
+
+	// The head has to advance one line...
+	// But again the limit of the page might be reached out
+	// so what to do in this case will depend on whether the paging is or not active...
+	moveHeadTo (headXPosition (), headYPosition () + 1);
+	if (headYPosition () == (configuration ()._charsPerPage - (_paging ? 3 : 0)))
+	{
+		moveHeadTo (headXPosition (), (_paging ? 3 : 0));
+
+		// Change the page...
+		closePage (page ());
+		setPage (page () + 1);
+		setNewPage (page ());
+	}
+}
+
+// ---
+void COMMODORE::MPS802PostscriptMatrixPrinterEmulation::advance1HeadPosition ()
+{
+	// Move the head of the printer...
+	// in another way!
+
+	// Advance the internal position...
+	// ...and if the limit has been reached...
+	if ((++_posXInside == (unsigned short) configuration ()._wChar))
+	{
+		_posXInside = 0;
+		// The head advance a full position 
+		// and if the max has been also reached...
+		moveHeadTo (headXPosition () + 1, headYPosition ());
+		if (headXPosition () == configuration ()._charsPerLine)
+			carryReturnAndLineFeed ();
+	}
+}
+
+// ---
+void COMMODORE::MPS802PostscriptMatrixPrinterEmulation::printBytePostscript (const MCHEmul::UByte& b)
+{
+	// A couple of things mut be taken into account...
+	// For instance, the number of times the byte has to be enlarged!
+	for (unsigned char i = 0; i < _timesRepeated; i++)
+	{
+		printerFile ()
+			<< std::to_string ((unsigned int) // ...also whether the byte is or not in reverse mode...
+					(_reverse ? (~b).value () : b.value ())) + "\t" +
+				"x0 " +
+				std::to_string ((unsigned int) _posXInside) + " " +
+				std::to_string ((unsigned int) headXPosition ()) + " " +
+				std::to_string ((unsigned int) (configuration ()._wChar)) + 
+				" mul add dotStepX mul add\ty0 " + // dotStepX defined in PSMatrixPrinterII.ps
+				std::to_string ((unsigned int) headYPosition ()) + " " +
+				"dotStepY " + // dotStepY & lineGapY defined in PSMatrixPrinterII.ps
+				std::to_string ((unsigned int) (configuration ()._hChar)) + 
+				" mul lineGapY add mul sub drawByteBits" << std::endl;
+
+		advance1HeadPosition ();
+	}
+}
+
+// ---
+void COMMODORE::MPS802PostscriptMatrixPrinterEmulation::printChrPostScript (unsigned char chr)
+{
+	// When this method is invoked from functions where control commands
+	// are not allowed, the case option finally executed will be the default one always!
+
+	switch (chr)
+	{
+		// Enhanced...
+		case 0x0e: 
+			{
+				_timesRepeated++;
+			}
+
+			break;
+
+		// Disable enhaced...
+		case 0x81:
+			{
+				_timesRepeated = 1;
+			}
+
+			break;
+
+		// RVS ON
+		case 0x012:
+			{
+				_reverse = true;
+			}
+
+			break;
+
+		// RVS OFF
+		case 0x92:
+			{
+				_reverse = false;
+			}
+
+			break;
+
+		// Paging on
+		case 0x93:
+			{
+				_paging = true;
+			}
+					
+			break;
+
+		// Paging off
+		case 0x13:
+			{
+				_paging = false;
+			}
+					
+			break;
+
+		// Uppercase
+		case 0x91:
+			{
+				_businessMode = false;
+			}
+					
+			break;
+					
+		// Lowercase
+		case 0x11:
+			{
+				_businessMode = true;
+			}
+					
+			break;
+
+		// Any other character...
+		// will be printed out, just if it possible...
+		default:
+			{
+				const auto i = configuration ()._charSet.find ((unsigned int) chr);
+				if (i != configuration ()._charSet.end ())
+				{
+					MCHEmul::MatrixPrinterEmulation::Configuration::CharDefinition cDef =
+						configuration ()._charSet [(unsigned int) chr + // The normal char selected...
+							(_businessMode ? 0x100 : 0x00)]; // taken into account whether the business mode is on or off...
+
+					// If the graphics are defined and the character selected is the 0xfe
+					// the graphic form is selected...
+					if (chr == 0xfe && _programableGraphicDefined)
+						for (size_t j = 0; j < 8; j++)
+							cDef [j] = _programableGraphic [j];
+
+					printerFile () 
+						<< "% Character " << (_businessMode ? "business" : "normal") << " mode: "
+						<< std::to_string ((unsigned int) chr) << std::endl;
+					printBytesPostscript (cDef);
+				}
+			}
+
+			break;
+	}
 }

@@ -67,6 +67,14 @@ MCHEmul::InfoStructure COMMODORE::SerialPrinterPeripheralSimulation::getInfoStru
 }
 
 // ---
+unsigned char COMMODORE::SerialPrinterPeripheralSimulation::listen (MCHEmul::CPU* cpu, const MCHEmul::UByte& b)
+{
+	_emulation -> desactivateAllFunctions ();
+
+	return (definition ()._okResult);
+}
+
+// ---
 unsigned char COMMODORE::SerialPrinterPeripheralSimulation::sendByte (MCHEmul::CPU* cpu, const MCHEmul::UByte& b)
 {
 	_emulation -> printChar (b.value ());

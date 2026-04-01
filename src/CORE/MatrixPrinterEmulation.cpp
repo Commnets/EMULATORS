@@ -196,38 +196,35 @@ MCHEmul::MatrixPrinterEmulation::printCharImplementation (unsigned char chr)
 	// The possibility to be at the end of the page is taken into account...
 	auto newLine = [&]() -> void
 		{
-			aX -= (short) headXPosition (); // Always at the beginning of the line...
-			if ((headYPosition () + 1) == configuration ()._charsPerPage)
-			{ 
-				aY -= (short) headYPosition (); 
-				
-				closePage (_page + aP); 
-				
+			// If the line is really printed out, 
+			// the head of the printer moved one line forward...
+			if (printNewLine ()) aY++;
+			// If the new line is at the end of the page...
+			// A new page is inserted...
+			if (((short) headYPosition () + aY) == configuration ()._charsPerPage)
+			{
+				aY -= ((short) headYPosition () + aY);
+
+				closePage (_page + aP); 	
 				setNewPage (_page + (++aP)); 
 			}
-			else 
-			{ 
-				printNewLine (); 
-				
-				aY++; 
-			}
+
+			// ...and always the head of the printer is 
+			// moved back to the beginning of the line...
+			aX -= ((short) headXPosition () + aX);
 		};
 
-	// When just a new char ins printed out...
+	// When just a new char is printed out...
 	// The possibility of a new line has to be taken into account...
 	auto justChar = [&](unsigned char chr) -> void
 		{
-			size_t numCharsPrinted = 0;
-			if ((numCharsPrinted = printNormalChar (chr)) != 0) // it should be usually one, but it cannoT!!
-				aX += (short) numCharsPrinted;
-			if ((headXPosition () + (unsigned short) numCharsPrinted) >= configuration ()._charsPerLine)
-			{ 
-				printNewLine (); 
-				
-				aY++; 
-				
-				aX -= configuration ()._charsPerLine;
-			}
+			// The char being printed out could really produce
+			// that the head of the printer moves several positions (not just one)
+			// (imagine it is e,g double than the normal size)...
+			// So, the possibility of a new line has to be taken into account...
+			aX += (short) printNormalChar (chr); 
+			if (((short) headXPosition () + aX) >= configuration ()._charsPerLine)
+				newLine ();
 		};
 
 	// Only if it can be printed out!

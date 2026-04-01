@@ -443,5 +443,8 @@
       <Filter>Configuration</Filter>
     </None>
     <None Include="ClassDiagram.cd" />
+    <None Include="PSBasicPrinter.ps">
+      <Filter>Configuration</Filter>
+    </None>
   </ItemGroup>
 </Project>

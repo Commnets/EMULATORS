@@ -182,7 +182,7 @@ namespace MCHEmul
 		std::tuple < bool /** line. */, bool /** page. */> moveHeadFromY (short py);
 		/** Move the head to a specific position. */
 		void moveHeadTo (unsigned short px, unsigned short py)
-							{ _posX = px; _posY = 0; }
+							{ _posX = px; _posY = py; }
 		void setPage (unsigned short p)
 							{ _page = p; }
 
@@ -210,6 +210,8 @@ namespace MCHEmul
 			By default it doesn't do anything. */
 		virtual void activateFunction (unsigned char) { }
 		virtual void desactivateFunction (unsigned char) { }
+		/** Invoked just to desactivate all functions. very specific. */
+		virtual void desactivateAllFunctions () { }
 
 		/** Some times there cuould be something in the temporal mempory,
 			so this instruction is to flush it! .*/
@@ -242,17 +244,24 @@ namespace MCHEmul
 		virtual std::tuple <short, short, short> printCharImplementation (unsigned char chr);
 		virtual void afterPrintingChar (unsigned char) { }
 
-		// All methos invoked from printCharImplementation () default...
+		// All methods invoked from printCharImplementation () default (algorithm)
 		virtual bool isControlChar (unsigned char) { return (false); } // By default, there is no control chars...
 		virtual std::tuple <short, short, short> manageControlChar (unsigned char chr) 
 							{ return (std::make_tuple (0, 0, 0)); } // Nothing to add by default...
-		virtual void printNewLine () { _printerFile << std::endl; } // By default uses the c++ standard...
 		virtual void closePage (unsigned short) { } // Again, byt detault it doesn't do anything...
 		virtual void setNewPage (unsigned short) { } // Nothing by default...
 		virtual bool isNormalChar (unsigned char) { return (true); }
-		/** Returns the number of positions advanced if the character was really printer out. */
-		virtual size_t printNormalChar (unsigned char chr)
-							{ _printerFile << std::string ((size_t) 1, (char) chr); return (1);  } // Again, the default output...
+
+		// The methods to print out the chars, invoked from printCharImplementation () default (algorithm)
+		/** Just print out the new line instructions (if needed), 
+			but sometimes print out something (depending on the funtion active) 
+			has no effect in the position of the head of the printer, so the method returns really whether the head has to be moved forward or not. */
+		virtual bool printNewLine () { _printerFile << std::endl; return (true); } // By default uses the c++ standard...
+		/** Somethimes when printing a normal char the head of the printer can move forward several positions actually.
+			So the method returns the number of positions that the head of the printer has to move forward. \n
+			If the limit of the line were overpassed while printing out, the excess might be lost. */
+		virtual unsigned short printNormalChar (unsigned char chr)
+							{ _printerFile << std::string (1, (char) chr); return (1);  } // Again, the default output...
 
 		protected:
 		/** The configuration of the printer. 
@@ -309,10 +318,10 @@ namespace MCHEmul
 			It has to exist in the directory where the application is running. */
 		virtual void firstTimePrinting (unsigned char chr) override;
 
-		/** Again, using postscript instructions. */
-		virtual void printNewLine () override
-							{ printerFile () << "newLine" << std::endl; } // The postcript instruction in defined in 
-		virtual size_t printNormalChar (unsigned char chr) override
+		/** Again,using postscript instructions. */
+		virtual bool printNewLine () override
+							{ printerFile () << "newLine" << std::endl; return (true); } // The postcript instruction in defined in 
+		virtual unsigned short printNormalChar (unsigned char chr) override
 							{ printerFile () << std::to_string ((int) chr) + " printCharAtHead" << std::endl; return (1); }
 	};
 }

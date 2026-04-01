@@ -39,6 +39,9 @@ void ZX81::ZX81Emulator::printOutParameters (std::ostream& o) const
 		 std::to_string (SINCLAIR::Datasette::_ID) << ":\tDatasette" << std::endl <<
 		 std::to_string (ZX81::DatasetteInjection::_ID) << ":\tDirect injection into memory" << std::endl <<
 		 std::to_string (ZX81::Cartridge::_ID) << ":\tCartridge" << std::endl;
+	o << "PARAMETERS to connect the printer (just for ZX81 models) CONNECTPER:" << std::endl <<
+		 "F:[FILENAME = Name of the file where to print out. *.PS recommended if postscript simulation" << std::endl <<
+		 "P:[THERMAL][-[PS]]" << std::endl;
 	o << "Check LOG file if the emulation doesn't start as expected" << std::endl;
 }
 

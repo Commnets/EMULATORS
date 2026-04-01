@@ -1,12 +1,13 @@
 #include <ZX81/EdgeConnector.hpp>
-#include <ZX81/EdgeConnectorPeripherals.hpp>
+#include <ZX81/Printer.hpp>
 
 // ---
-ZX81::EdgeConnector::EdgeConnector ()
+ZX81::EdgeConnector::EdgeConnector (ZX81::Type t)
 	: MCHEmul::IODevice (MCHEmul::IODevice::Type::_INPUT, _ID, 
 		{ { "Name", "Expansion Port" },
 		  { "Type", "Input/Output" },
 		  { "Manufacturer", "Sinclair Research/Timex Coporation" } }),
+	  _computerType (t),
 	  _expansionElement (nullptr),
 	  _expansionElementOut (false) // Only true when the expansion element is extracted...
 {
@@ -17,7 +18,18 @@ ZX81::EdgeConnector::EdgeConnector ()
 bool ZX81::EdgeConnector::connectPeripheral (MCHEmul::IOPeripheral* p)
 {
 	// If it is not of the right type, it could be connected at all!
-	if (p != nullptr && dynamic_cast <ZX81::EdgeConnectorPeripheral*> (p) == nullptr)
+	if (p != nullptr && 
+		dynamic_cast <ZX81::EdgeConnectorPeripheral*> (p) == nullptr)
+	{
+		_error = MCHEmul::_PERIPHERAL_ERROR;
+
+		return (false);
+	}
+
+	// It is not possible to connect the Thermal Printer to the ZX80...
+	// because it is valid just for the ZX81 (any version)...
+	if (_computerType == ZX81::Type::_ZX80 &&
+		dynamic_cast <ZX81::ThermalPrinterSimulation*> (p) != nullptr)
 	{
 		_error = MCHEmul::_PERIPHERAL_ERROR;
 

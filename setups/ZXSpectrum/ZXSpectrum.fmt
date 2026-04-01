@@ -68,3 +68,14 @@ Number Blocks:@NUMBERBLOCKS@ (Read:@BLOCKTOREAD@)
 ->Trap:
 @TRAP@
 #---
+#---
+;ZXSpectrumPrinterSimulation
+Id:@ID@
+@ATTRS?{key=YES,equal=:,empty=no attributes}\n@
+COMMANDS:
+@COMMANDS@
+->Trap:
+@TRAP@
+->Matrix Emulation:
+@MatrixPrinterEmulation>@
+#---

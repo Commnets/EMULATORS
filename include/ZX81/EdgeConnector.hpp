@@ -16,6 +16,7 @@
 #define __ZX81_EGDECONNECTOR__
 
 #include <CORE/incs.hpp>
+#include <ZX81/Type.hpp>
 #include <ZX81/EdgeConnectorPeripherals.hpp>
 
 namespace ZX81
@@ -35,7 +36,7 @@ namespace ZX81
 			Again this should imply a reinitialization of the computer. */
 		static const unsigned int _EXPANSIONELEMENTOUT		= 261;
 
-		EdgeConnector ();
+		EdgeConnector (ZX81::Type t);
 
 		/** To know the element connected. */
 		const EdgeConnectorPeripheral* expansionElement () const
@@ -60,6 +61,8 @@ namespace ZX81
 		virtual bool simulate (MCHEmul::CPU* cpu) override;
 
 		protected:
+		/** The type od computer this connector is for. */
+		ZX81::Type _computerType; // The namespace is added to distinguish it from Type in IODevice.
 		/** The element connected. */
 		EdgeConnectorPeripheral* _expansionElement;
 		/** The element just extracted. */

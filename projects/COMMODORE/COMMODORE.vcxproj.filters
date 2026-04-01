@@ -276,6 +276,18 @@
       <Filter>Configuration</Filter>
     </None>
     <None Include="ClassDiagram.cd" />
+    <None Include="PSMPS801MatrixPrinterI.ps">
+      <Filter>Configuration</Filter>
+    </None>
+    <None Include="PSMPS801MatrixPrinterII.ps">
+      <Filter>Configuration</Filter>
+    </None>
+    <None Include="PSMPS802MatrixPrinterI.ps">
+      <Filter>Configuration</Filter>
+    </None>
+    <None Include="PSMPS802MatrixPrinterII.ps">
+      <Filter>Configuration</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\COMMODORE\CommandBuilder.cpp">

@@ -503,12 +503,11 @@ bool COMMODORE::MPS801BasicMatrixPrinterEmulation::isNormalChar (unsigned char c
 }
 
 // ---
-size_t COMMODORE::MPS801BasicMatrixPrinterEmulation::printNormalChar (unsigned char chr)
+unsigned short COMMODORE::MPS801BasicMatrixPrinterEmulation::printNormalChar (unsigned char chr)
 {
-	size_t result = 0;
+	unsigned short result = 0;
 
 	unsigned char nChr = chr;
-
 	if (_businessMode)
 		nChr += (chr >= (unsigned char) 0x41 && chr <= (unsigned char) 0x5a) 
 			? 0x20 : -0x80; /** the other way around. */
@@ -533,7 +532,7 @@ COMMODORE::MPS801PostscriptMatrixPrinterEmulation::MPS801PostscriptMatrixPrinter
 	  _nextTabSettingValue { 0, 0 },
 	  _setSpecificDotAddress (false),
 	  _reverse (false),
-	  _posXInside (0), _posYInside (0)
+	  _posXInside (0)
 {
 	configuration ()._description = "Postscript Matrix Emulation for MPS801";
 
@@ -594,7 +593,7 @@ void COMMODORE::MPS801PostscriptMatrixPrinterEmulation::firstTimePrinting (unsig
 	// Just top start to print out at the right position in the page whatever its size was...
 	setNewPage (_page);
 
-	_posXInside = _posYInside = 0;
+	_posXInside = 0;
 }
 
 // ---
@@ -734,13 +733,6 @@ COMMODORE::MPS801PostscriptMatrixPrinterEmulation::manageControlChar (unsigned c
 }
 
 // ---
-void COMMODORE::MPS801PostscriptMatrixPrinterEmulation::printNewLine ()
-{
-	// Starting a new line there is no "glide" inside the character...
-	_posXInside = _posYInside = 0;
-}
-
-// ---
 void COMMODORE::MPS801PostscriptMatrixPrinterEmulation::closePage (unsigned short p)
 {
 	printerFile ()
@@ -787,12 +779,21 @@ bool COMMODORE::MPS801PostscriptMatrixPrinterEmulation::isNormalChar (unsigned c
 }
 
 // ---
-size_t COMMODORE::MPS801PostscriptMatrixPrinterEmulation::printNormalChar (unsigned char chr)
+bool COMMODORE::MPS801PostscriptMatrixPrinterEmulation::printNewLine ()
+{
+	// Starting a new line there is no "glide" inside the character...
+	_posXInside = 0;
+
+	return (true);
+}
+
+// ---
+unsigned short COMMODORE::MPS801PostscriptMatrixPrinterEmulation::printNormalChar (unsigned char chr)
 {
 	// Not to print out anything by default... 
 	// It will depend on whether a printable character was actually sent!
 	// result has the number of bytesprinted out...
-	size_t result = 0;
+	unsigned short result = 0;
 	
 	// Routine to print aout a byte of information and advance...
 	auto printByteColumnAndAdvance = [&](const MCHEmul::UByte& byte) -> void
@@ -801,10 +802,10 @@ size_t COMMODORE::MPS801PostscriptMatrixPrinterEmulation::printNormalChar (unsig
 				<< std::to_string ((unsigned int) byte.value ()) + "\t" +
 				   "x0 " +
 				   std::to_string ((unsigned int) _posXInside) + " " +
-				   std::to_string ((unsigned int) _posX + (unsigned short) result /** in the double. */) + " " +
+				   std::to_string ((unsigned int) headXPosition () + (unsigned short) result /** in the double. */) + " " +
 				   std::to_string ((unsigned int) (configuration ()._wChar)) + 
 				   " mul add dotStepX mul add\ty0 " + // dotStepX defined in PSMatrixPrinterII.ps
-				   std::to_string ((unsigned int) _posY) + " " +
+				   std::to_string ((unsigned int) headYPosition ()) + " " +
 				   "dotStepY " + // dotStepY & lineGapY defined in PSMatrixPrinterII.ps
 				   std::to_string ((unsigned int) (configuration ()._hChar)) + 
 				   " mul lineGapY add mul sub drawByteBits" << std::endl;

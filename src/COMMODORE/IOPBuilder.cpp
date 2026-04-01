@@ -139,49 +139,13 @@ std::tuple <std::string, unsigned char, MCHEmul::MatrixPrinterEmulation*>
 					mPE = new COMMODORE::MPS802BasicMatrixPrinterEmulation (pF);
 				}
 			}
-			else
-			// The printer to emulate is the NPL10...
-			if (pz [0] == "NPL10")
-			{
-				// TODO...
-
-				_LOG ("Type of printer emulation: " + pz [0] + 
-					" not supported yet, using basic emulation.");
-
-				mPE = new MCHEmul::BasicMatrixPrinterEmulation (80, pF);
-			}
 			// Creates the basic printer...
 			else
 			{
 				_LOG ("Type of printer emulation: " + pz [0] + 
 					" not supported, using basic emulation.");
 
-				if (pz.size () == 1)
-				{
-					mPE = new MCHEmul::BasicMatrixPrinterEmulation (80, pF);
-				}
-				else
-				if (pz.size () == 2)
-				{
-					if (pz [1] == "PS")
-					{
-						mPE = new COMMODORE::MPS801PostscriptMatrixPrinterEmulation
-							(getPaperDataPrinterEmulationFrom (a.second), pF);
-					}
-					else
-					{
-						_LOG ("Type of emulation mechanism: " + pz [1] + 
-							" not supported for unknown printer, using basic emulation.");
-
-						mPE = new MCHEmul::BasicMatrixPrinterEmulation (80, pF);
-					}
-				}
-				else
-				{
-					_LOG ("Too many details for unknown printer, using basic emulation.");
-
-					mPE = new MCHEmul::BasicMatrixPrinterEmulation (80, pF);
-				}
+				mPE = new MCHEmul::BasicMatrixPrinterEmulation (80, pF);
 			}
 		}
 	}

@@ -1,6 +1,7 @@
 #include <ZXSpectrum/IOPBuilder.hpp>
 #include <ZXSpectrum/Cartridge.hpp>
 #include <ZXSpectrum/Datasette.hpp>
+#include <ZXSpectrum/Printer.hpp>
 #include <ZXSpectrum/ZXSpectrum.hpp>
 
 // ---
@@ -29,6 +30,14 @@ MCHEmul::IOPeripheral* ZXSPECTRUM::IOPeripheralBuilder::createPeripheral
 		result = new SINCLAIR::Datasette (427);
 	else if (id == ZXSPECTRUM::DatasetteInjection::_ID)
 		result = new ZXSPECTRUM::DatasetteInjection (static_cast <ZXSPECTRUM::SinclairZXSpectrum*> (c) -> type ());
+	else if (id == ZXSPECTRUM::ThermalPrinterSimulation::_ID)
+	{
+		std::string pF = "Printer.txt"; // Default output file name...
+		MCHEmul::MatrixPrinterEmulation* mPE = nullptr;
+		std::tie (pF, mPE) = getDataPrinterFrom (prms, std::make_tuple (pF, mPE));
+		if (mPE == nullptr) mPE = new MCHEmul::BasicMatrixPrinterEmulation (32, pF); // Not usual, but just to avoid a crash later!
+		result = new ZXSPECTRUM::ThermalPrinterSimulation (mPE);
+	}
 	else
 		result = SINCLAIR::IOPeripheralBuilder::createPeripheral (id, c, prms);
 

@@ -34,6 +34,8 @@ namespace COMMODORE
 							{ if (f == 0 || f == 7) _businessMode = (f == 7); }
 		virtual void desactivateFunction (unsigned char f) override
 							{ if (f == 0 || f == 7) _businessMode = !(f == 7); }
+		virtual void desactivateAllFunctions () override
+							{ _businessMode = false; }
 
 		private:
 		/** The only control character managed is to double the size of the letters, 
@@ -46,7 +48,8 @@ namespace COMMODORE
 											 << "----" << std::endl; }
 		/** Only the list of letters and numbers both in business mnode and in the graphical mode. */
 		virtual bool isNormalChar (unsigned char chr) override;
-		virtual size_t printNormalChar (unsigned char chr) override;
+
+		virtual unsigned short printNormalChar (unsigned char chr) override;
 
 		private:
 		bool _businessMode;
@@ -73,6 +76,8 @@ namespace COMMODORE
 							{ if (f == 0 || f == 7) _businessMode = (f == 7); }
 		virtual void desactivateFunction (unsigned char f) override
 							{ if (f == 0 || f == 7) _businessMode = !(f == 7); }
+		virtual void desactivateAllFunctions () override
+							{ _businessMode = false; }
 
 		private:
 		/** The main postscript routines are copied. */
@@ -80,11 +85,12 @@ namespace COMMODORE
 
 		virtual bool isControlChar (unsigned char chr) override;
 		virtual std::tuple <short, short, short> manageControlChar (unsigned char chr) override;
-		virtual void printNewLine () override;
 		virtual void closePage (unsigned short p) override;
 		virtual void setNewPage (unsigned short p) override;
 		virtual bool isNormalChar (unsigned char chr) override;
-		virtual size_t printNormalChar (unsigned char chr) override;
+
+		virtual bool printNewLine () override;
+		virtual unsigned short printNormalChar (unsigned char chr) override;
 
 		private:
 		// Implementation
@@ -104,8 +110,8 @@ namespace COMMODORE
 		/** When the reverse function is selected. */
 		bool _reverse;
 
-		// The position inside the page...
-		unsigned short _posXInside, _posYInside;
+		/** The position inside the character being printed out... */
+		unsigned short _posXInside;
 	};
 }
 

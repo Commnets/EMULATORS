@@ -16,6 +16,7 @@
 
 #include <CORE/incs.hpp>
 #include <COMMODORE/SerialIOPeripherals.hpp>
+#include <array>
 
 namespace COMMODORE
 {
@@ -199,24 +200,31 @@ namespace COMMODORE
 			ara managed throught the secondaryt address when open, that is = functions. */
 		virtual void activateFunction (unsigned char f) override;
 		virtual void desactivateFunction (unsigned char f) override
-							{ _activeFunction = Function::_NONE; }
+							{ _activeFunction = Function::_NONE; _businessMode = false; }
+		virtual void desactivateAllFunctions () override
+							{ _activeFunction = Function::_NONE; _businessMode = false; }
 
 		private:
-		/** The only control character managed is to double the size of the letters, 
-			repeating the same char, the line feed, and the type of letter (uuper case or lower case) writtend down). */
-		virtual bool isControlChar (unsigned char chr) override;
-		virtual std::tuple <short, short, short> manageControlChar (unsigned char chr) override;
-		virtual void printNewLine () override;
+		/** Nothing is "by default" a control char.
+			All all them will be taken as normal chars, but they might or not have effect depending on 
+			the type of function active. \n
+			So the default implementation of isControlChar (that returns always false)
+			and manageControlChar (that doesn't do anything and return 0,0,0) are enough. */
+
 		virtual void setNewPage (unsigned short p) override // Just to point out the new page in the printer file...
 							{ printerFile () << "----Page:" 
 											 << MCHEmul::fixLenStr (std::to_string (p), 2, true, MCHEmul::_CEROS) 
 											 << "----" << std::endl; }
-		/** Only the list of letters and numbers both in business mnode and in the graphical mode. */
-		virtual bool isNormalChar (unsigned char chr) override;
-		virtual size_t printNormalChar (unsigned char chr) override;
+
+		/** Everything will be taken as a "normal char", 
+			but when printNormalChar is executed, the effect might change depending on the function active. \n
+			So the default implementation of isNormalChar (that returns always true) is enough. */
+
+		virtual bool printNewLine () override;
+		virtual unsigned short printNormalChar (unsigned char chr) override;
 
 		private:
-		// Implememtation
+		// Implementation
 		/** The different functions that can be activated in the printer (in this implementatuion) 
 			using a secondary address. */
 		enum class Function : unsigned char
@@ -233,19 +241,15 @@ namespace COMMODORE
 
 		/** The function active, by default it is nothing. */
 		Function _activeFunction;
-		/** What is the active channel after the last "listening". \n
-			Remeber that every channel is associated to a secondary address,
-			and every secondary address is associated to a function of the printer. \n 
-			So with the active channel is possible to know what function must be used. */
-		unsigned char _activeChannel;
 
 		/** Is the business mode active? */
 		bool _businessMode;
 		/** The last formatter defined. \n
 			Empty when none. */
 		MPS802MatrixPrinterFormatter _lastFormatter;
-		/** The double mode, when active, can be multiplied by several times. */
-		unsigned char _timesDouble;
+		/** How many times a letter has to be repeated. Usually just 1
+			unless the enlarge mode is up. */
+		unsigned char _timesRepeated;
 		/** Printing or not messages when error */
 		bool _printingErrorMessages;
 
@@ -270,38 +274,110 @@ namespace COMMODORE
 
 		/** The secondary address determines the function for the active channel. */
 		virtual void activateFunction (unsigned char f) override;
+		virtual void desactivateFunction (unsigned char f) override
+							{ _activeFunction = Function::_NONE; _businessMode = false; }
+		virtual void desactivateAllFunctions () override
+							{ _activeFunction = Function::_NONE; _businessMode = false; }
 
 		private:
 		/** The main postscript routines are copied. */
 		virtual void firstTimePrinting (unsigned char chr) override;
 
-		virtual bool isControlChar (unsigned char chr) override;
-		virtual std::tuple <short, short, short> manageControlChar (unsigned char chr) override;
-		virtual void printNewLine () override;
+		/** Nothing is "by default" a control char.
+			All all them will be taken as normal chars, but they might or not have effect depending on 
+			the type of function active. \n
+			So the default implementation of isControlChar (that returns always false)
+			and manageControlChar (that doesn't do anything and return 0,0,0) are enough. */
+
 		virtual void closePage (unsigned short p) override;
 		virtual void setNewPage (unsigned short p) override;
-		virtual bool isNormalChar (unsigned char chr) override;
-		virtual size_t printNormalChar (unsigned char chr) override;
+
+		/** Everything will be taken as a "normal char", 
+			but when printNormalChar is executed, the effect might change depending on the function active. \n
+			So the default implementation of isNormalChar (that returns always true) is enough. */
+
+		virtual bool printNewLine () override;
+		virtual unsigned short printNormalChar (unsigned char chr) override;
+
+		// Implementation
+		/** Just to simulate the carryReturn. */
+		void carryReturn ()
+							{ _posXInside = 0; moveHeadTo (0, headYPosition ()); }
+		/** Just to simulate a lineFeed. 
+			When the limit of the page is reached out (taken into account whether paging is on or off,
+			a new page might be set up (setNewPage). */
+		void lineFeed ();
+		/** Just to simulate carryReturn and lineFeed both together. \n
+			Usually when a new line happens. */
+		void carryReturnAndLineFeed ()
+							{ carryReturn (); lineFeed (); }
+		/** Just to advance one X internal position. \n
+			Anytime a byte is printed out the head of the printer has to me moved one position right. \n
+			The limit of the printer can be reached out, so a carryReturn and a lineFeed might happend. */
+		void advance1HeadPosition ();
+		/** Just to print out a byte. \n
+			Any time a byte is printed out then the head of the printer has to advance a position (internal) in X. */
+		void printBytePostscript (const MCHEmul::UByte& b);
+		/** Used to print out a set of bytes, one after the other,
+			considering of how to move the head of the printer. */
+		void printBytesPostscript (const std::vector <MCHEmul::UByte>& bs)
+							{ for (size_t i = 0; i < bs.size (); printBytePostscript (bs [i++])); }
+		void printChrPostScript (unsigned char chr);
+		/** Used to print out a set of characters. \n 
+			This is used when formatting is active. */
+		void printTextPostScript (const std::string& txt)
+							{ for (const auto& i : txt) printChrPostScript (i); }
+		/** Print a line of text. */
+		void printLineOfTextPostScript (const std::string& txt)
+							{ printTextPostScript (txt); carryReturnAndLineFeed (); }
 
 		private:
 		// Implementation
-		bool _businessMode;
-		/** The double mode, when active, can be multiplied by several times. */
-		unsigned char _timesDouble;
-		/** The graphics mode is or not set. */
-		bool _graphicMode;
-		/** Setting the tab. */
-		bool _settingTab;
-		unsigned char _charsSettingtabPending;
-		unsigned char _nextTabSettingValue [2];
-		/** Setting the specific dot address. 
-			The previous one are also used. */
-		bool _setSpecificDotAddress;
-		/** When the reverse function is selected. */
-		bool _reverse;
+		/** The different functions that can be activated in the printer (in this implementatuion) 
+			using a secondary address. */
+		enum class Function : unsigned char
+		{
+			_NONE = 0x00,							// The defaul mode. It uses the graphic mode characters...
+			_USEFORMATTER = 0x01,					// When used, the format, if defined, is used... 
+			_DEFININGFORMATTER = 0x02,				// To define a formatter...
+			_SETNUMBERLINESPERPAGE = 0x03,			// To set the number of lines used per page, 
+													// including 3 lines at the top and 3 more at the bottom
+			_ENABLEPRINTERFORMATMESSAGES = 0x04,	// When it is used and there is any error in printing with a format, 
+													// the error message printed out
+			_DEFINEPROGRAMABLECHARACTER = 0x05,		// To define a programmable character...
+			_SETTINGSPACEBETWEENLINES = 0x06,		// The space between lines can be changed...
+			_BUSINESSMODE = 0x07,					// The characters are different (lower case as default)...
+			_SUPPRESDIAGNOSTICMESSAGES = 0x09,		// When it is used, the diagnostic messages are not printed out in the printer file...
+			_RESETPRINTER = 0x0a					// The configuration is set jup to the default one...
+		};
 
-		// The position inside the page...
-		unsigned short _posXInside, _posYInside;
+		/** The function active, by default it is nothing. */
+		Function _activeFunction;
+
+		/** Is the business mode active? */
+		bool _businessMode;
+		/** The last formatter defined. \n
+			Empty when none. */
+		MPS802MatrixPrinterFormatter _lastFormatter;
+		/** The double mode, when active, can be multiplied by several times. */
+		unsigned char _timesRepeated;
+		/** Printing or not messages when error */
+		bool _printingErrorMessages;
+		/** Reverse on/off. */
+		bool _reverse;
+		/** Paging on/off. */
+		bool _paging;
+		/** To define a programable char. */
+		std::array <MCHEmul::UByte, 8> _programableGraphic;
+		/** When the graphic has been defined. */
+		bool _programableGraphicDefined;
+
+		/** When the definition of a format is in progress,
+			this variable is used to accumulate the definition of the format until a new line is printed out. */
+		std::string _lineUnderConstruction;
+
+		/** The position inside character being printed out... */
+		unsigned short _posXInside;
 	};
 }
 

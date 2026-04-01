@@ -52,7 +52,7 @@ MCHEmul::IOPeripheral* C64::IOPeripheralBuilder::createPeripheral
 			if (C64::StandardSerialPrinterSimulation::isDeviceNumberValid (dN)) // Only if it is valid...
 				result = new C64::StandardSerialPrinterSimulation (id, dN, mPE);
 			else
-				delete mPE; // The emulation temporaly created has not been usedm and must be deleted!
+				delete mPE; // The emulation temporaly created has not been used and must be deleted!
 		}
 	else
 		result = COMMODORE::IOPeripheralBuilder::createPeripheral (id, c, prms);

@@ -66,3 +66,14 @@ Name:@DATANAME@ (Size:@DATASIZE@)
 ->Trap:
 @TRAP@
 #---
+#---
+;ZX81PrinterSimulation
+Id:@ID@
+@ATTRS?{key=YES,equal=:,empty=no attributes}\n@
+COMMANDS:
+@COMMANDS@
+->Trap:
+@TRAP@
+->Matrix Emulation:
+@MatrixPrinterEmulation>@
+#---

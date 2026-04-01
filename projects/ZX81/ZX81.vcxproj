@@ -166,6 +166,7 @@
     <ClInclude Include="..\..\include\ZX81\Memory.hpp" />
     <ClInclude Include="..\..\include\ZX81\OSIO.hpp" />
     <ClInclude Include="..\..\include\ZX81\PortManager.hpp" />
+    <ClInclude Include="..\..\include\ZX81\Printer.hpp" />
     <ClInclude Include="..\..\include\ZX81\Screen.hpp" />
     <ClInclude Include="..\..\include\ZX81\Type.hpp" />
     <ClInclude Include="..\..\include\ZX81\ULA.hpp" />
@@ -186,6 +187,7 @@
     <ClCompile Include="..\..\src\ZX81\Memory.cpp" />
     <ClCompile Include="..\..\src\ZX81\OSIO.cpp" />
     <ClCompile Include="..\..\src\ZX81\PortManager.cpp" />
+    <ClCompile Include="..\..\src\ZX81\Printer.cpp" />
     <ClCompile Include="..\..\src\ZX81\Screen.cpp" />
     <ClCompile Include="..\..\src\ZX81\ULA.cpp" />
     <ClCompile Include="..\..\src\ZX81\ULARegisters.cpp" />

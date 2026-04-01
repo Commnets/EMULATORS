@@ -200,7 +200,9 @@ MCHEmul::IODevices ZX81::SinclairZX81::standardDevices
 	result.insert (MCHEmul::IODevices::value_type (ZX81::InputOSSystem::_ID, new ZX81::InputOSSystem));
 
 	// The Edge Connector
-	result.insert (MCHEmul::IODevices::value_type (ZX81::EdgeConnector::_ID, new ZX81::EdgeConnector));
+	// The edge connector has different behaviour depending on whwther the compyter is ZX81 or ZX80...
+	result.insert (MCHEmul::IODevices::value_type (ZX81::EdgeConnector::_ID, 
+		new ZX81::EdgeConnector (t))); 
 	// The IO port
 	result.insert (MCHEmul::IODevices::value_type (ZX81::DatasetteIOPort::_ID, new ZX81::DatasetteIOPort));
 

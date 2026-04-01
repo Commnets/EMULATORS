@@ -64,6 +64,8 @@ namespace COMMODORE
 		virtual MCHEmul::InfoStructure getInfoStructure () const override;
 
 		protected:
+		/** When listen the active function must be switch off. */
+		virtual unsigned char listen (MCHEmul::CPU* cpu, const MCHEmul::UByte& b) override;
 		/** Sending the byte to the printer emulation to treat it.
 			Depends on the type of emulation linked, what it is done will be different and more or less complex. */
 		virtual unsigned char sendByte (MCHEmul::CPU* cpu, const MCHEmul::UByte& b) override;
