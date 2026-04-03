@@ -20,7 +20,12 @@
 namespace SINCLAIR
 {
 	/** The basic thermal emulation just print out the information to a file. \n
-		A thermal printer is really a matrix printer but using different technique to print out! */
+		A thermal printer can be simulated through out a matrix printer
+		but using different "technique" to print out! */
+
+	/** In this version the characteres are just inserted into a text plan plain.
+		Only the characteres that has an equivalent in ASCII are printed out
+		For the rest, just an space is shown. */
 	class BasicThermalPrinterEmulation final : 
 		public MCHEmul::BasicMatrixPrinterEmulation
 	{
@@ -52,8 +57,8 @@ namespace SINCLAIR
 		ZXCodeToASCII* _ZXCodeConversor;
 	};
 
-	/** Very basic print simulation,
-		but using the postscript to simulate the thermal printer effect. */
+	/** In this version a real simulation is done
+		using postscript files. */
 	class PostscriptThermalPrinterEmulation final : 
 		public MCHEmul::PostscriptMatrixPrinterEmulation
 	{
@@ -69,13 +74,9 @@ namespace SINCLAIR
 		virtual void closePage (unsigned short p) override;
 		virtual void setNewPage (unsigned short p) override;
 
-		virtual bool printNewLine () override;
+		virtual bool printNewLine () override
+							{ return (true); }
 		virtual unsigned short printNormalChar (unsigned char chr) override;
-
-		private:
-		// Implementation
-		/** The position inside the character being printed out... */
-		unsigned short _posXInside;
 	};
 }
 

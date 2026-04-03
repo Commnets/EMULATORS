@@ -22,7 +22,7 @@
 #include <SINCLAIR/FileIO.hpp>
 #include <SINCLAIR/Computer.hpp>
 #include <SINCLAIR/Datasette.hpp>
-#include <SINCLAIR/Printer.hpp>
+#include <SINCLAIR/ThermalPrinter.hpp>
 
 #endif
 

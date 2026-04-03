@@ -66,7 +66,7 @@
     <ClInclude Include="..\..\include\SINCLAIR\Datasette.hpp">
       <Filter>Archivos de encabezado\IO</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\include\SINCLAIR\Printer.hpp">
+    <ClInclude Include="..\..\include\SINCLAIR\ThermalPrinter.hpp">
       <Filter>Archivos de encabezado\IO</Filter>
     </ClInclude>
     <ClInclude Include="..\..\include\SINCLAIR\ZXCodeToASCII.hpp">
@@ -92,7 +92,7 @@
     <ClCompile Include="..\..\src\SINCLAIR\Datasette.cpp">
       <Filter>Archivos de origen\IO</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\SINCLAIR\Printer.cpp">
+    <ClCompile Include="..\..\src\SINCLAIR\ThermalPrinter.cpp">
       <Filter>Archivos de origen\IO</Filter>
     </ClCompile>
   </ItemGroup>
@@ -102,6 +102,12 @@
       <Filter>Configuration</Filter>
     </None>
     <None Include="SINCLAIR.hlp">
+      <Filter>Configuration</Filter>
+    </None>
+    <None Include="PSThermalPrinterI.ps">
+      <Filter>Configuration</Filter>
+    </None>
+    <None Include="PSThermalPrinterII.ps">
       <Filter>Configuration</Filter>
     </None>
   </ItemGroup>

@@ -1,5 +1,5 @@
 #include <SINCLAIR/IOPBuilder.hpp>
-#include <SINCLAIR/Printer.hpp>
+#include <SINCLAIR/ThermalPrinter.hpp>
 
 // ---
 MCHEmul::IOPeripheral* SINCLAIR::IOPeripheralBuilder::createPeripheral 

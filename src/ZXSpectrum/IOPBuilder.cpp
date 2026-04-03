@@ -1,7 +1,7 @@
 #include <ZXSpectrum/IOPBuilder.hpp>
 #include <ZXSpectrum/Cartridge.hpp>
 #include <ZXSpectrum/Datasette.hpp>
-#include <ZXSpectrum/Printer.hpp>
+#include <ZXSpectrum/StdPrinter.hpp>
 #include <ZXSpectrum/ZXSpectrum.hpp>
 
 // ---
@@ -38,7 +38,7 @@ MCHEmul::IOPeripheral* ZXSPECTRUM::IOPeripheralBuilder::createPeripheral
 		std::string pF = "Printer.txt"; // Default output file name...
 		MCHEmul::MatrixPrinterEmulation* mPE = nullptr;
 		std::tie (pF, mPE) = getDataPrinterFrom 
-			(prms, std::make_tuple (cvt, MCHEmul::MatrixPrinterEmulation::Configuration (), pF, mPE));
+			(prms, std::make_tuple (cvt, ZXSPECTRUM::ThermalPrinterSimulation::_CONFIGURATION, pF, mPE));
 		if (mPE == nullptr) mPE = new MCHEmul::BasicMatrixPrinterEmulation (32, pF); // Not usual, but just to avoid a crash later!
 		result = new ZXSPECTRUM::ThermalPrinterSimulation (mPE);
 	}

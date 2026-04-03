@@ -32,6 +32,7 @@
 #include <ZX81/Cartridge.hpp>
 #include <ZX81/DatasettePort.hpp>
 #include <ZX81/Datasette.hpp>
+#include <ZX81/StdPrinter.hpp>
 #include <ZX81/ZX81Emulator.hpp>
 
 #endif

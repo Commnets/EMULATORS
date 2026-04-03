@@ -105,7 +105,7 @@
     <ClInclude Include="..\..\include\ZX81\Type.hpp">
       <Filter>Archivos de encabezado</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\include\ZX81\Printer.hpp">
+    <ClInclude Include="..\..\include\ZX81\StdPrinter.hpp">
       <Filter>Archivos de encabezado\IO</Filter>
     </ClInclude>
   </ItemGroup>
@@ -161,7 +161,7 @@
     <ClCompile Include="..\..\src\ZX81\FileIO.cpp">
       <Filter>Archivos de origen\IO</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\ZX81\Printer.cpp">
+    <ClCompile Include="..\..\src\ZX81\StdPrinter.cpp">
       <Filter>Archivos de origen\IO</Filter>
     </ClCompile>
   </ItemGroup>

@@ -34,6 +34,7 @@
 #include <ZXSpectrum/Cartridge.hpp>
 #include <ZXSpectrum/DatasettePort.hpp>
 #include <ZXSpectrum/Datasette.hpp>
+#include <ZXSpectrum/StdPrinter.hpp>
 #include <ZXSpectrum/ZXSpectrumEmulator.hpp>
 
 #endif

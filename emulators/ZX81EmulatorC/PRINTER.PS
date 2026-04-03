@@ -1,0 +1,1218 @@
+%!PS-Adobe-3.0
+%ZX Thermal Printer
+%%Title:	Dot-matrix continuous form paper + 8x8 font renderer
+%%Creator:	Ignacio Cea. Community Networks.
+%%EndComments
+
+% =========================================================
+% Global Parameters
+% =========================================================
+% For any dot...
+/dotRadius  2.0 def     % Global scale of the point
+/dotGray    0.7 def     % Global Gray Base (0=Black, 1=White)
+
+% For the thermal dots
+% Scales
+/thermalOuterScaleX  1.55 def
+/thermalOuterScaleY  0.62 def
+/thermalDragOffsetX  0.35 def
+/thermalDragOffsetY  0.00 def
+/thermalDragScaleX   1.20 def
+/thermalDragScaleY   0.48 def
+/thermalCoreOffsetX -0.08 def
+/thermalCoreOffsetY  0.03 def
+/thermalCoreScaleX   1.05 def
+/thermalCoreScaleY   0.42 def
+/thermalCore2OffsetX 0.28 def
+/thermalCore2OffsetY -0.02 def
+/thermalCore2ScaleX  0.65 def
+/thermalCore2ScaleY  0.30 def
+% Radious respect dotRadius...
+/thermalOuterRadius  1.05 def
+/thermalDragRadius   0.95 def
+/thermalCoreRadius   0.72 def
+/thermalCore2Radius  0.70 def
+% Gray Mix respect dotGray
+% 0 => Pure black
+% 1 => = dotGray
+/thermalOuterGrayMix  0.80 def
+/thermalDragGrayMix   0.55 def
+/thermalCoreGrayMix   0.18 def
+/thermalCore2GrayMix  0.35 def
+
+% =========================================================
+% Other global parameters
+% =========================================================
+% Dot grid steps (center-to-center distance)
+/dotStepX   2 def                 % horizontal distance between dot columns
+/dotStepY   2 def                 % vertical distance between dot rows
+
+% Extra spacing between characters/lines (in points)
+/charGapX   0 def
+/lineGapY   1 def
+
+% =========================================================
+% Units and tiny helpers
+% =========================================================
+/inch { 72 mul } bind def         % inches -> PostScript points
+/gray { setgray } bind def        % shortcut
+/rgb  { setrgbcolor } bind def    % shortcut
+/thermalSetGray {				  % respect dotGray (0 = black, 1 = dotGray)
+  dotGray mul setgray
+} bind def
+
+% =========================================================
+% Color palettes for alternating bands
+% =========================================================
+/BandPalettes <<
+  /Blue    [0.82 0.90 1.00]
+  /Green   [0.86 1.00 0.90]
+  /Gray    [0.92 0.92 0.92]
+  /Ivory   [1.00 0.99 0.94]
+  /Pink    [1.00 0.90 0.94]
+>> def
+
+% =========================================================
+% setTinted
+%   Blend between white and a tint color
+% Stack:
+%   [r g b] t  ->  -
+% Notes:
+%   t=0 => white
+%   t=1 => tint
+% =========================================================
+/setTinted {
+  /t exch def                       % t on stack -> store
+  aload pop                         % unpack [r g b] -> r g b
+  /b exch def /g exch def /r exch def
+
+  % For each channel:
+  % out = 1 - (1 - channel) * t
+  1 r sub t mul 1 exch sub
+  1 g sub t mul 1 exch sub
+  1 b sub t mul 1 exch sub
+  setrgbcolor
+} bind def
+
+% =========================================================
+% getBandTint
+%   Resolve the tint array to use for bands.
+%   Priority:
+%     cfg/bandTone (name lookup in BandPalettes), else cfg/bandTint
+% Stack:
+%   -> [r g b]
+% =========================================================
+/getBandTint {
+  cfg /bandTone known {
+    BandPalettes cfg /bandTone get known {
+      BandPalettes cfg /bandTone get get
+    }{
+      cfg /bandTint get
+    } ifelse
+  }{
+    cfg /bandTint get
+  } ifelse
+} bind def
+
+% =========================================================
+% Page Configuration (cfg)
+% =========================================================
+/cfg <<
+  % Physical page size (inches)
+  /pageWidthInch   3.940000
+  /pageHeightInch  20.000000
+
+  % Content margins (mechanical elements can reach edges)
+  /contentLeft     0.1 inch
+  /contentRight    0.1 inch
+  /contentTop      0 inch
+  /contentBottom   0 inch
+
+  % Tractor band width (each side)
+  /tractorBand     0.5 inch
+
+  % Horizontal ruling
+  /linePitch       1 6 div inch     % 6 lines per inch
+  /thinLineGray    0.85
+  /thinLineWidth   0.4
+  /majorEvery      6                % every 6th line is major
+  /majorLineGray   0.65
+  /majorLineWidth  0.7
+
+  % Alternating background bands
+  /bandTone        /Blue
+  /bandTint        [0.82 0.90 1.00] % fallback if tone not found
+  /bandTintA       0.18
+  /bandTintB       0.10
+  /bandHeight      0.5 inch
+  /bandsFromTop    true
+
+  % Tractor feed holes
+  /holesPerInch    2
+  /holeRadius      0.06 inch
+  /holeInset       0.25 inch
+  /holeGray        0.60
+
+  % Vertical micro-perforation lines
+  /microPerfs      true
+  /microPerfGray   0.55
+  /microPerfWidth  0.6
+  /microPerfDash   [1.2 3.0]
+  /microPerfOuterInset  0.10 inch
+  /microPerfInnerInset  0.08 inch
+
+  % Horizontal micro-cut (sheet separation)
+  /microCut        true
+  /foldEvery       3 inch
+  /microCutGray    0.55
+  /microCutWidth   0.7
+  /microCutDash    [2.0 2.5]
+  /microCutAcrossTractor true
+
+  % Optional fold marks
+  /foldMarks       true
+  /foldMarkGray    0.50
+  /foldMarkWidth   0.8
+  /foldMarkLen     0.3 inch
+>> def
+
+% =========================================================
+% Font Configuration (8 rows per glyph; 8 horizontal dots per row)
+%
+% FontByCode:
+%   key   = integer code (e.g. ASCII)
+%   value = array of 8 bytes (each byte is one horizontal row)
+%
+% drawByteBits expects bits 7..0 used left-to-right within each row.
+% =========================================================
+/FontByCode 512 dict def
+
+% putGlyph
+% Stack: code glyphArray -> -
+/putGlyph { FontByCode 3 1 roll put } bind def
+
+% =========================================================
+% glyph set:
+%   - code 0 as fallback/unknown
+% =========================================================
+0 [16#00 16#00 16#00 16#00 16#00 16#00 16#00 16#00] putGlyph
+1 [16#f0 16#f0 16#f0 16#f0 16#00 16#00 16#00 16#00] putGlyph
+2 [16#0f 16#0f 16#0f 16#0f 16#00 16#00 16#00 16#00] putGlyph
+3 [16#ff 16#ff 16#ff 16#ff 16#00 16#00 16#00 16#00] putGlyph
+4 [16#00 16#00 16#00 16#00 16#f0 16#f0 16#f0 16#f0] putGlyph
+5 [16#f0 16#f0 16#f0 16#f0 16#f0 16#f0 16#f0 16#f0] putGlyph
+6 [16#0f 16#0f 16#0f 16#0f 16#f0 16#f0 16#f0 16#f0] putGlyph
+7 [16#ff 16#ff 16#ff 16#ff 16#f0 16#f0 16#f0 16#f0] putGlyph
+8 [16#aa 16#55 16#aa 16#55 16#aa 16#55 16#aa 16#55] putGlyph
+9 [16#00 16#00 16#00 16#00 16#aa 16#55 16#aa 16#55] putGlyph
+10 [16#aa 16#55 16#aa 16#55 16#00 16#00 16#00 16#00] putGlyph
+11 [16#00 16#24 16#24 16#00 16#00 16#00 16#00 16#00] putGlyph
+12 [16#00 16#1c 16#22 16#78 16#20 16#20 16#7e 16#00] putGlyph
+13 [16#00 16#08 16#3e 16#28 16#3e 16#0a 16#3e 16#08] putGlyph
+14 [16#00 16#00 16#00 16#10 16#00 16#00 16#10 16#00] putGlyph
+15 [16#00 16#3c 16#42 16#04 16#08 16#00 16#08 16#00] putGlyph
+16 [16#00 16#04 16#08 16#08 16#08 16#08 16#04 16#00] putGlyph
+17 [16#00 16#20 16#10 16#10 16#10 16#10 16#20 16#00] putGlyph
+18 [16#00 16#00 16#10 16#08 16#04 16#08 16#10 16#00] putGlyph
+19 [16#00 16#00 16#04 16#08 16#10 16#08 16#04 16#00] putGlyph
+20 [16#00 16#00 16#00 16#3e 16#00 16#3e 16#00 16#00] putGlyph
+21 [16#00 16#00 16#08 16#08 16#3e 16#08 16#08 16#00] putGlyph
+22 [16#00 16#00 16#00 16#00 16#3e 16#00 16#00 16#00] putGlyph
+23 [16#00 16#00 16#14 16#08 16#3e 16#08 16#14 16#00] putGlyph
+24 [16#00 16#00 16#02 16#04 16#08 16#10 16#20 16#00] putGlyph
+25 [16#00 16#00 16#10 16#00 16#00 16#10 16#10 16#20] putGlyph
+26 [16#00 16#00 16#00 16#00 16#00 16#08 16#08 16#10] putGlyph
+27 [16#00 16#00 16#00 16#00 16#00 16#18 16#18 16#00] putGlyph
+28 [16#00 16#3c 16#46 16#4a 16#52 16#62 16#3c 16#00] putGlyph
+29 [16#00 16#18 16#28 16#08 16#08 16#08 16#3e 16#00] putGlyph
+30 [16#00 16#3c 16#42 16#02 16#3c 16#40 16#7e 16#00] putGlyph
+31 [16#00 16#3c 16#42 16#0c 16#02 16#42 16#3c 16#00] putGlyph
+32 [16#00 16#08 16#18 16#28 16#48 16#7e 16#08 16#00] putGlyph
+33 [16#00 16#7e 16#40 16#7c 16#02 16#42 16#3c 16#00] putGlyph
+34 [16#00 16#3c 16#40 16#7c 16#42 16#42 16#3c 16#00] putGlyph
+35 [16#00 16#7e 16#02 16#04 16#08 16#10 16#10 16#00] putGlyph
+36 [16#00 16#3c 16#42 16#3c 16#42 16#42 16#3c 16#00] putGlyph
+37 [16#00 16#3c 16#42 16#42 16#3e 16#02 16#3c 16#00] putGlyph
+38 [16#00 16#3c 16#42 16#42 16#7e 16#42 16#42 16#00] putGlyph
+39 [16#00 16#7c 16#42 16#7c 16#42 16#42 16#7c 16#00] putGlyph
+40 [16#00 16#3c 16#42 16#40 16#40 16#42 16#3c 16#00] putGlyph
+41 [16#00 16#78 16#44 16#42 16#42 16#44 16#78 16#00] putGlyph
+42 [16#00 16#7e 16#40 16#7c 16#40 16#40 16#7e 16#00] putGlyph
+43 [16#00 16#7e 16#40 16#7c 16#40 16#40 16#40 16#00] putGlyph
+44 [16#00 16#3c 16#42 16#40 16#4e 16#42 16#3c 16#00] putGlyph
+45 [16#00 16#42 16#42 16#7e 16#42 16#42 16#42 16#00] putGlyph
+46 [16#00 16#3e 16#08 16#08 16#08 16#08 16#3e 16#00] putGlyph
+47 [16#00 16#02 16#02 16#02 16#42 16#42 16#3c 16#00] putGlyph
+48 [16#00 16#44 16#48 16#70 16#48 16#44 16#42 16#00] putGlyph
+49 [16#00 16#40 16#40 16#40 16#40 16#40 16#7e 16#00] putGlyph
+50 [16#00 16#42 16#66 16#5a 16#42 16#42 16#42 16#00] putGlyph
+51 [16#00 16#42 16#62 16#52 16#4a 16#46 16#42 16#00] putGlyph
+52 [16#00 16#3c 16#42 16#42 16#42 16#42 16#3c 16#00] putGlyph
+53 [16#00 16#7c 16#42 16#42 16#7c 16#40 16#40 16#00] putGlyph
+54 [16#00 16#3c 16#42 16#42 16#52 16#4a 16#3c 16#00] putGlyph
+55 [16#00 16#7c 16#42 16#42 16#7c 16#44 16#42 16#00] putGlyph
+56 [16#00 16#3c 16#40 16#3c 16#02 16#42 16#3c 16#00] putGlyph
+57 [16#00 16#fe 16#10 16#10 16#10 16#10 16#10 16#00] putGlyph
+58 [16#00 16#42 16#42 16#42 16#42 16#42 16#3c 16#00] putGlyph
+59 [16#00 16#42 16#42 16#42 16#42 16#24 16#18 16#00] putGlyph
+60 [16#00 16#42 16#42 16#42 16#42 16#5a 16#24 16#00] putGlyph
+61 [16#00 16#42 16#24 16#18 16#18 16#24 16#42 16#00] putGlyph
+62 [16#00 16#82 16#44 16#28 16#10 16#10 16#10 16#00] putGlyph
+63 [16#00 16#7e 16#04 16#08 16#10 16#20 16#7e 16#00] putGlyph
+128 [16#ff 16#ff 16#ff 16#ff 16#ff 16#ff 16#ff 16#ff] putGlyph
+129 [16#0f 16#0f 16#0f 16#0f 16#ff 16#ff 16#ff 16#ff] putGlyph
+130 [16#f0 16#f0 16#f0 16#f0 16#ff 16#ff 16#ff 16#ff] putGlyph
+131 [16#00 16#00 16#00 16#00 16#ff 16#ff 16#ff 16#ff] putGlyph
+132 [16#ff 16#ff 16#ff 16#ff 16#0f 16#0f 16#0f 16#0f] putGlyph
+133 [16#0f 16#0f 16#0f 16#0f 16#0f 16#0f 16#0f 16#0f] putGlyph
+134 [16#f0 16#f0 16#f0 16#f0 16#0f 16#0f 16#0f 16#0f] putGlyph
+135 [16#00 16#00 16#00 16#00 16#0f 16#0f 16#0f 16#0f] putGlyph
+136 [16#55 16#aa 16#55 16#aa 16#55 16#aa 16#55 16#aa] putGlyph
+137 [16#ff 16#ff 16#ff 16#ff 16#55 16#aa 16#55 16#aa] putGlyph
+138 [16#55 16#aa 16#55 16#aa 16#ff 16#ff 16#ff 16#ff] putGlyph
+139 [16#ff 16#db 16#db 16#ff 16#ff 16#ff 16#ff 16#ff] putGlyph
+140 [16#ff 16#e3 16#dd 16#87 16#df 16#df 16#81 16#ff] putGlyph
+141 [16#ff 16#f7 16#c1 16#d7 16#c1 16#f5 16#c1 16#f7] putGlyph
+142 [16#ff 16#ff 16#ff 16#ef 16#ff 16#ff 16#ef 16#ff] putGlyph
+143 [16#ff 16#c3 16#bd 16#fb 16#f7 16#ff 16#f7 16#ff] putGlyph
+144 [16#ff 16#fb 16#f7 16#f7 16#f7 16#f7 16#fb 16#ff] putGlyph
+145 [16#ff 16#df 16#ef 16#ef 16#ef 16#ef 16#df 16#ff] putGlyph
+146 [16#ff 16#ff 16#ef 16#f7 16#fb 16#f7 16#ef 16#ff] putGlyph
+147 [16#ff 16#ff 16#fb 16#f7 16#ef 16#f7 16#fb 16#ff] putGlyph
+148 [16#ff 16#ff 16#ff 16#c1 16#ff 16#c1 16#ff 16#ff] putGlyph
+149 [16#ff 16#ff 16#f7 16#f7 16#c1 16#f7 16#f7 16#ff] putGlyph
+150 [16#ff 16#ff 16#ff 16#ff 16#c1 16#ff 16#ff 16#ff] putGlyph
+151 [16#ff 16#ff 16#eb 16#f7 16#c1 16#f7 16#eb 16#ff] putGlyph
+152 [16#ff 16#ff 16#fd 16#fb 16#f7 16#ef 16#df 16#ff] putGlyph
+153 [16#ff 16#ff 16#ef 16#ff 16#ff 16#ef 16#ef 16#df] putGlyph
+154 [16#ff 16#ff 16#ff 16#ff 16#ff 16#f7 16#f7 16#ef] putGlyph
+155 [16#ff 16#ff 16#ff 16#ff 16#ff 16#e7 16#e7 16#ff] putGlyph
+156 [16#ff 16#c3 16#b9 16#b5 16#ad 16#9d 16#c3 16#ff] putGlyph
+157 [16#ff 16#e7 16#d7 16#f7 16#f7 16#f7 16#c1 16#ff] putGlyph
+158 [16#ff 16#c3 16#bd 16#fd 16#c3 16#bf 16#81 16#ff] putGlyph
+159 [16#ff 16#c3 16#bd 16#f3 16#fd 16#bd 16#c3 16#ff] putGlyph
+160 [16#ff 16#f7 16#e7 16#d7 16#b7 16#81 16#f7 16#ff] putGlyph
+161 [16#ff 16#81 16#bf 16#83 16#fd 16#bd 16#c3 16#ff] putGlyph
+162 [16#ff 16#c3 16#bf 16#83 16#bd 16#bd 16#c3 16#ff] putGlyph
+163 [16#ff 16#81 16#fd 16#fb 16#f7 16#ef 16#ef 16#ff] putGlyph
+164 [16#ff 16#c3 16#bd 16#c3 16#bd 16#bd 16#c3 16#ff] putGlyph
+165 [16#ff 16#c3 16#bd 16#bd 16#c1 16#fd 16#c3 16#ff] putGlyph
+166 [16#ff 16#c3 16#bd 16#bd 16#81 16#bd 16#bd 16#ff] putGlyph
+167 [16#ff 16#83 16#bd 16#83 16#bd 16#bd 16#83 16#ff] putGlyph
+168 [16#ff 16#c3 16#bd 16#bf 16#bf 16#bd 16#c3 16#ff] putGlyph
+169 [16#ff 16#87 16#bb 16#bd 16#bd 16#bb 16#87 16#ff] putGlyph
+170 [16#ff 16#81 16#bf 16#83 16#bf 16#bf 16#81 16#ff] putGlyph
+171 [16#ff 16#81 16#bf 16#83 16#bf 16#bf 16#bf 16#ff] putGlyph
+172 [16#ff 16#c3 16#bd 16#bf 16#b1 16#bd 16#c3 16#ff] putGlyph
+173 [16#ff 16#bd 16#bd 16#81 16#bd 16#bd 16#bd 16#ff] putGlyph
+174 [16#ff 16#c1 16#f7 16#f7 16#f7 16#f7 16#c1 16#ff] putGlyph
+175 [16#ff 16#fd 16#fd 16#fd 16#bd 16#bd 16#c3 16#ff] putGlyph
+176 [16#ff 16#bb 16#b7 16#8f 16#b7 16#bb 16#bd 16#ff] putGlyph
+177 [16#ff 16#bf 16#bf 16#bf 16#bf 16#bf 16#81 16#ff] putGlyph
+178 [16#ff 16#bd 16#99 16#a5 16#bd 16#bd 16#bd 16#ff] putGlyph
+179 [16#ff 16#bd 16#9d 16#ad 16#b5 16#b9 16#bd 16#ff] putGlyph
+180 [16#ff 16#c3 16#bd 16#bd 16#bd 16#bd 16#c3 16#ff] putGlyph
+181 [16#ff 16#83 16#bd 16#bd 16#83 16#bf 16#bf 16#ff] putGlyph
+182 [16#ff 16#c3 16#bd 16#bd 16#ad 16#b5 16#c3 16#ff] putGlyph
+183 [16#ff 16#83 16#bd 16#bd 16#83 16#bb 16#bd 16#ff] putGlyph
+184 [16#ff 16#c3 16#bf 16#c3 16#fd 16#bd 16#c3 16#ff] putGlyph
+185 [16#ff 16#01 16#ef 16#ef 16#ef 16#ef 16#ef 16#ff] putGlyph
+186 [16#ff 16#bd 16#bd 16#bd 16#bd 16#bd 16#c3 16#ff] putGlyph
+187 [16#ff 16#bd 16#bd 16#bd 16#bd 16#db 16#e7 16#ff] putGlyph
+188 [16#ff 16#bd 16#bd 16#bd 16#bd 16#a5 16#db 16#ff] putGlyph
+189 [16#ff 16#bd 16#db 16#e7 16#e7 16#db 16#bd 16#ff] putGlyph
+190 [16#ff 16#7d 16#bb 16#d7 16#ef 16#ef 16#ef 16#ff] putGlyph
+191 [16#ff 16#81 16#fb 16#f7 16#ef 16#df 16#81 16#ff] putGlyph
+
+% =========================================================
+% Page geometry helpers
+% =========================================================
+% pageWidth / pageHeight / pageTopY
+% These are safe even if currentpagedevice is missing.
+% Stack:
+%   pageWidth  -> w
+%   pageHeight -> h
+%   pageTopY   -> topY (same as height in our translated space)
+%
+% In the fallback, we derive width/height from clippath pathbbox.
+/pageWidth {
+  /currentpagedevice where
+  {
+    pop currentpagedevice /PageSize get 0 get
+  }
+  {
+    clippath pathbbox            % llx lly urx ury
+    3 -1 roll sub                % (urx-llx) ury
+    exch pop                     % -> width
+  } ifelse
+} def
+
+/pageHeight {
+  /currentpagedevice where
+  {
+    pop currentpagedevice /PageSize get 1 get
+  }
+  {
+    clippath pathbbox            % llx lly urx ury
+    exch sub                     % llx (ury-lly) urx
+    2 -1 roll pop                % (ury-lly) urx
+    exch pop                     % -> height
+  } ifelse
+} def
+
+/pageTopY { pageHeight } def
+
+% topLeftWithMargin
+% Compute top-left point inside current clipping box (with margins).
+% Stack:
+%   marginX marginY -> x0 y0
+/topLeftWithMargin {
+  /mY exch def
+  /mX exch def
+  clippath pathbbox              % llx lly urx ury
+  /uY exch def /uX exch def /lY exch def /lX exch def
+  lX mX add                      % x0 = llx + mX
+  uY mY sub                      % y0 = ury - mY
+} def
+
+% =========================================================
+% Basic drawing routines
+% =========================================================
+/line { newpath moveto lineto stroke } bind def
+
+/fillHole { newpath 0 360 arc fill } bind def
+
+/fillCircle {
+  /y exch def
+  /x exch def
+  gsave
+    dotGray setgray
+    newpath x y dotRadius 0 360 arc closepath fill
+  grestore
+} def
+
+% =========================================================
+% Decorative page drawing routines
+% =========================================================
+% drawBands
+% Paints alternating tinted bands, aligned from the top edge.
+% Requires:
+%   PW, PH set
+/drawBands {
+  /bh cfg /bandHeight get def
+  /tA cfg /bandTintA get def
+  /tB cfg /bandTintB get def
+  /tint getBandTint def
+
+  % Base background fill
+  gsave
+    tint tB setTinted
+    newpath 0 0 moveto PW 0 rlineto 0 PH rlineto
+    PW neg 0 rlineto closepath fill
+  grestore
+
+  % Bands from the top: y is band-bottom in PS coords
+  /y PH bh sub def
+  /i 0 def
+  {
+    y 0 lt { exit } if
+    gsave
+      tint i 2 mod 0 eq { tA } { tB } ifelse setTinted
+      newpath 0 y moveto
+      PW 0 rlineto
+      0 bh rlineto
+      PW neg 0 rlineto
+      closepath fill
+    grestore
+    /y y bh sub def
+    /i i 1 add def
+  } loop
+} bind def
+
+% drawRuling
+% Draw horizontal ruled lines top-referenced, first always thin.
+% Requires:
+%   PW, PH set
+/drawRuling {
+  /cl cfg /contentLeft get def
+  /cr cfg /contentRight get def
+  /ct cfg /contentTop get def
+  /cb cfg /contentBottom get def
+  /tb cfg /tractorBand get def
+
+  % Ruling spans between tractor bands (and respects content margins)
+  /x1 cl tb add def
+  /x2 PW cr sub tb sub def
+  /pitch cfg /linePitch get def
+
+  % yTop is "distance from top edge" (in points)
+  /yTop ct def
+  /k 1 def
+
+  {
+    yTop PH cb sub gt { exit } if
+    /isMajor k cfg /majorEvery get mod 0 eq def
+
+    % Convert top-referenced yTop to PostScript y coordinate
+    /yPS PH yTop sub def
+
+    gsave
+      isMajor {
+        cfg /majorLineGray get gray
+        cfg /majorLineWidth get setlinewidth
+      }{
+        cfg /thinLineGray get gray
+        cfg /thinLineWidth get setlinewidth
+      } ifelse
+      x1 yPS x2 yPS line
+    grestore
+
+    /yTop yTop pitch add def
+    /k k 1 add def
+  } loop
+} bind def
+
+% drawMicroCuts
+% Draw horizontal dashed micro-cuts every foldEvery.
+% Safe early return (NO 'exit' outside loops).
+/drawMicroCuts {
+  cfg /microCut get not { % disabled => do nothing
+  }{
+    /every cfg /foldEvery get def
+
+    % Decide whether the line spans full width or only content area
+    cfg /microCutAcrossTractor get
+      { /x1 0 def /x2 PW def }
+      {
+        /cl cfg /contentLeft get def
+        /cr cfg /contentRight get def
+        /tb cfg /tractorBand get def
+        /x1 cl tb add def
+        /x2 PW cr sub tb sub def
+      } ifelse
+
+    /yTop 0 def
+    {
+      yTop PH gt { exit } if
+      /yPS PH yTop sub def
+
+      gsave
+        cfg /microCutGray get gray
+        cfg /microCutWidth get setlinewidth
+        cfg /microCutDash get 0 setdash
+        x1 yPS x2 yPS line
+        [] 0 setdash
+      grestore
+
+      /yTop yTop every add def
+    } loop
+  } ifelse
+} bind def
+
+% drawMicroPerfs
+% Draw vertical dashed micro-perforation lines at edges.
+% Safe early return.
+% Requires: PW, PH set
+/drawMicroPerfs {
+  cfg /microPerfs get not {
+  }{
+    /tb cfg /tractorBand get def
+    /outer cfg /microPerfOuterInset get def
+    /inner cfg /microPerfInnerInset get def
+
+    /xL_outer outer def
+    /xL_inner tb inner sub def
+    /xR_outer PW outer sub def
+    /xR_inner PW tb sub inner add def
+
+    gsave
+      cfg /microPerfGray get gray
+      cfg /microPerfWidth get setlinewidth
+      cfg /microPerfDash get 0 setdash
+
+      xL_outer 0 xL_outer PH line
+      xL_inner 0 xL_inner PH line
+      xR_inner 0 xR_inner PH line
+      xR_outer 0 xR_outer PH line
+
+      [] 0 setdash
+    grestore
+  } ifelse
+} bind def
+
+% drawTractorHoles
+% Draw white holes + gray stroke along both tractor bands.
+% Requires: PW, PH set
+/drawTractorHoles {
+  /inset cfg /holeInset get def
+  /r cfg /holeRadius get def
+  /step 72 cfg /holesPerInch get div def
+
+  /xL inset def
+  /xR PW inset sub def
+
+  /y r def
+  /yMax PH r sub def
+
+  {
+    y yMax gt { exit } if
+
+    % Hole fill (paper "cut-out")
+    gsave
+      1 gray
+      xL y r fillHole
+      xR y r fillHole
+    grestore
+
+    % Hole outline
+    gsave
+      cfg /holeGray get gray
+      0.4 setlinewidth
+      newpath xL y r 0 360 arc stroke
+      newpath xR y r 0 360 arc stroke
+    grestore
+
+    /y y step add def
+  } loop
+} bind def
+
+% drawFoldMarks
+% Draw small marks at left/right edges every foldEvery.
+% Safe early return.
+% Requires: PW, PH set
+/drawFoldMarks {
+  cfg /foldMarks get not {
+  }{
+    /len cfg /foldMarkLen get def
+    /every cfg /foldEvery get def
+    /yTop 0 def
+
+    gsave
+      cfg /foldMarkGray get gray
+      cfg /foldMarkWidth get setlinewidth
+      {
+        yTop PH gt { exit } if
+        /yPS PH yTop sub def
+        0 yPS 0 len add yPS line
+        PW len sub yPS PW yPS line
+        /yTop yTop every add def
+      } loop
+    grestore
+  } ifelse
+} bind def
+
+% =========================================================
+% Thermal Printer printer emulation (glyph rendering)
+% =========================================================
+/drawThermalDot {
+    % stack: x y
+    /ty exch def
+    /tx exch def
+
+    gsave
+        tx ty translate
+
+        % -------------------------------------------------
+        % 1) outer thermal stain
+        % -------------------------------------------------
+        thermalOuterGrayMix thermalSetGray
+        gsave
+            thermalOuterScaleX thermalOuterScaleY scale
+            newpath
+            0 0
+            dotRadius thermalOuterRadius mul
+            0 360 arc
+            fill
+        grestore
+
+        % -------------------------------------------------
+        % 2) lateral drag / heat smear
+        % -------------------------------------------------
+        thermalDragGrayMix thermalSetGray
+        gsave
+            thermalDragOffsetX dotRadius mul
+            thermalDragOffsetY dotRadius mul
+            translate
+            thermalDragScaleX thermalDragScaleY scale
+            newpath
+            0 0
+            dotRadius thermalDragRadius mul
+            0 360 arc
+            fill
+        grestore
+
+        % -------------------------------------------------
+        % 3) main dark core
+        % -------------------------------------------------
+        thermalCoreGrayMix thermalSetGray
+        gsave
+            thermalCoreOffsetX dotRadius mul
+            thermalCoreOffsetY dotRadius mul
+            translate
+            thermalCoreScaleX thermalCoreScaleY scale
+            newpath
+            0 0
+            dotRadius thermalCoreRadius mul
+            0 360 arc
+            fill
+        grestore
+
+        % -------------------------------------------------
+        % 4) secondary asymmetric core
+        % -------------------------------------------------
+        thermalCore2GrayMix thermalSetGray
+        gsave
+            thermalCore2OffsetX dotRadius mul
+            thermalCore2OffsetY dotRadius mul
+            translate
+            thermalCore2ScaleX thermalCore2ScaleY scale
+            newpath
+            0 0
+            dotRadius thermalCore2Radius mul
+            0 360 arc
+            fill
+        grestore
+
+    grestore
+} bind def
+
+% drawByteBits
+% Render one byte as ONE HORIZONTAL ROW of 8 dots.
+% Stack:
+%   byte xLeft yTop -> -
+% Bit mapping:
+%   bit7 => leftmost dot at xLeft
+%   bit0 => rightmost dot at xLeft + 7*dotStepX
+/drawByteBits {
+    % stack: byte x y
+    /y0 exch def
+    /x0 exch def
+    /b  exch def
+
+    0 1 7 {
+        /i exch def
+        /mask 1 7 i sub bitshift def
+        b mask and 0 ne {
+            x0 i dotStepX mul add
+            y0
+            drawThermalDot
+        } if
+    } for
+} bind def
+
+% drawByteArrayRows
+% Draw n bytes as n stacked horizontal rows.
+% Stack:
+%   arr n xLeft yTop -> -
+/drawByteArrayRows {
+  10 dict begin
+    /yTop exch def
+    /xLeft exch def
+    /n exch def
+    /arr exch def
+
+    0 1 n 1 sub {
+      /k exch def
+      arr k get
+      xLeft
+      yTop k dotStepY mul sub
+      drawByteBits
+    } for
+  end
+} def
+
+% getGlyphRowBytesByCode
+% Fetch glyph row bytes for code; fallback to code 0 if missing.
+% Glyph data is assumed to be stored directly as 8 horizontal rows.
+% Stack:
+%   code -> glyphRows(8)
+/getGlyphRowBytesByCode {
+  /code exch def
+  FontByCode code known
+    { FontByCode code get }
+    { FontByCode 0 get }
+  ifelse
+} def
+
+% drawGlyphRows
+% Draw one glyph described directly as row bytes.
+% Stack:
+%   glyphRows xLeft yTop -> -
+/drawGlyphRows {
+  10 dict begin
+    /yTop exch def
+    /xLeft exch def
+    /glyphRows exch def
+
+    glyphRows 8 xLeft yTop drawByteArrayRows
+  end
+} def
+
+% drawCharByCode
+% Draw a character (8x8) at xLeft,yTop assuming row-oriented glyph storage.
+% Stack:
+%   code xLeft yTop -> -
+/drawCharByCode {
+  10 dict begin
+    /yTop exch def
+    /xLeft exch def
+    /code exch def
+
+    code getGlyphRowBytesByCode
+    xLeft yTop drawGlyphRows
+  end
+} def
+
+% drawText
+% Draw a string using 8x8 glyphs.
+% Supports:
+%   - space (32): advance only
+%   - LF (10) or CR (13): newline
+% Stack:
+%   (text) xLeft yTop -> -
+/drawText {
+  20 dict begin
+    /y0 exch def
+    /x0 exch def
+    /s exch def
+
+    /cx x0 def
+    /cy y0 def
+
+    /advX dotStepX 8 mul charGapX add def
+    /advY dotStepY 8 mul lineGapY add def
+
+    0 1 s length 1 sub {
+      /i exch def
+      s i get /ch exch def
+
+      ch 10 eq ch 13 eq or {
+        /cx x0 def
+        /cy cy advY sub def
+      }{
+        ch 32 eq {
+          /cx cx advX add def
+        }{
+          ch cx cy drawCharByCode
+          /cx cx advX add def
+        } ifelse
+      } ifelse
+    } for
+  end
+} def
+
+% drawByteBitsDouble
+% Render one byte as a double-width horizontal row of 16 dots.
+% Stack:
+%   byte xLeft yTop -> -
+/drawByteBitsDouble {
+  10 dict begin
+    /yTop exch def
+    /xLeft exch def
+    /b exch def
+
+    0 1 7 {
+      /i exch def
+      b 1 7 i sub bitshift and 0 ne {
+        xLeft i 2 mul dotStepX mul add yTop fillCircle
+        xLeft i 2 mul 1 add dotStepX mul add yTop fillCircle
+      } if
+    } for
+  end
+} def
+
+% drawByteArrayRowsDouble
+% Draw n bytes as n stacked horizontal rows, double width.
+% Stack:
+%   arr n xLeft yTop -> -
+/drawByteArrayRowsDouble {
+  10 dict begin
+    /yTop exch def
+    /xLeft exch def
+    /n exch def
+    /arr exch def
+
+    0 1 n 1 sub {
+      /k exch def
+      arr k get
+      xLeft
+      yTop k dotStepY mul sub
+      drawByteBitsDouble
+    } for
+  end
+} def
+
+% drawGlyphRowsDouble
+% Draw one row-oriented glyph in DOUBLE WIDTH => 16 columns.
+% Stack:
+%   glyphRows xLeft yTop -> -
+/drawGlyphRowsDouble {
+  10 dict begin
+    /yTop exch def
+    /xLeft exch def
+    /glyphRows exch def
+
+    glyphRows 8 xLeft yTop drawByteArrayRowsDouble
+  end
+} def
+
+% drawCharByCodeDouble
+% Render one 8x8 glyph in DOUBLE WIDTH => 16 columns,
+% assuming row-oriented glyph storage.
+/drawCharByCodeDouble {
+  10 dict begin
+    /yTop exch def
+    /xLeft exch def
+    /code exch def
+
+    code getGlyphRowBytesByCode
+    xLeft yTop drawGlyphRowsDouble
+  end
+} def
+
+
+% Compatibility aliases (legacy names)
+/drawByteArrayColumns { drawByteArrayRows } bind def
+/getGlyphRowsByCode { getGlyphRowBytesByCode } bind def
+/drawByteArrayColumnsDouble { drawByteArrayRowsDouble } bind def
+
+% drawTextDouble
+% Double-width text rendering (each glyph becomes 16 columns).
+% Supports:
+%   - space (32)
+%   - LF (10) / CR (13)
+% Stack:
+%   (text) xLeft yTop -> -
+/drawTextDouble {
+  20 dict begin
+    /y0 exch def
+    /x0 exch def
+    /s exch def
+
+    /cx x0 def
+    /cy y0 def
+
+    /advX dotStepX 16 mul charGapX add def
+    /advY dotStepY 8 mul lineGapY add def
+
+    0 1 s length 1 sub {
+      /i exch def
+      s i get /ch exch def
+
+      ch 10 eq ch 13 eq or {
+        /cx x0 def
+        /cy cy advY sub def
+      }{
+        ch 32 eq {
+          /cx cx advX add def
+        }{
+          ch cx cy drawCharByCodeDouble
+          /cx cx advX add def
+        } ifelse
+      } ifelse
+    } for
+  end
+} def
+
+% =========================================================
+% Page setup and rendering helpers
+% =========================================================
+% setupPage
+% - Applies PageSize from cfg
+% - Normalizes coordinate system so clip ll corner is (0,0)
+% - Defines PW and PH
+% - Clips to the page rectangle
+/setupPage {
+  % Request physical PageSize
+  /reqPW cfg /pageWidthInch get inch def
+  /reqPH cfg /pageHeightInch get inch def
+  << /PageSize [reqPW reqPH] >> setpagedevice
+
+  initgraphics
+  erasepage
+
+  % Capture clipping bounding box (in device space)
+  clippath pathbbox               % llx lly urx ury
+  /ury exch def /urx exch def
+  /lly exch def /llx exch def
+
+  % Translate so ll becomes (0,0)
+  llx neg lly neg translate
+
+  % Compute page width/height in this normalized space
+  /PW urx llx sub def
+  /PH ury lly sub def
+
+  % Force clip to exact page rectangle
+  newpath 0 0 moveto PW 0 rlineto 0 PH rlineto
+  PW neg 0 rlineto closepath clip newpath
+} bind def
+
+% Background. */
+/drawThermalMetalBase {
+  gsave
+    % 1) Base
+	0.89 0.90 0.84 setrgbcolor
+	
+    newpath
+      0 0 moveto
+      PW 0 rlineto
+      0 PH rlineto
+      PW neg 0 rlineto
+    closepath fill
+
+    % 2) Vertical band 1
+    0.95 0.96 0.92 setrgbcolor
+    newpath
+      PW 0.18 mul 0 moveto
+      PW 0.34 mul 0 rlineto
+      0 PH rlineto
+      PW 0.34 mul neg 0 rlineto
+    closepath fill
+
+    % 3) Vertical band 2
+    0.93 0.94 0.89 setrgbcolor
+    newpath
+      PW 0.62 mul 0 moveto
+      PW 0.10 mul 0 rlineto
+      0 PH rlineto
+      PW 0.10 mul neg 0 rlineto
+    closepath fill
+
+    % 4) Other micro vertical smoother bands
+    0 1 36 {
+      /i exch def
+      /bx PW i 36 div mul def
+      /bw PW 90 div def
+
+      i 2 mod 0 eq
+        { 0.905 0.910 0.870 setrgbcolor }
+        { 0.918 0.922 0.885 setrgbcolor } ifelse
+
+      newpath
+        bx 0 moveto
+        bw 0 rlineto
+        0 PH rlineto
+        bw neg 0 rlineto
+      closepath fill
+    } for
+
+    % 5) Lateral shadow
+    0.84 0.85 0.80 setrgbcolor
+    newpath
+      0 0 moveto
+      PW 0.015 mul 0 rlineto
+      0 PH rlineto
+      PW 0.015 mul neg 0 rlineto
+    closepath fill
+
+    newpath
+      PW PW 0.015 mul sub 0 moveto
+      PW 0.015 mul 0 rlineto
+      0 PH rlineto
+      PW 0.015 mul neg 0 rlineto
+    closepath fill
+  grestore
+} bind def
+
+% drawPaper
+% Draws all mechanical/page decorations (if needed) based on cfg.
+/drawPaper {
+  gsave
+    drawThermalMetalBase
+  grestore
+} bind def
+
+% =========================================================
+% MAIN PROGRAM
+% =========================================================
+% ----Page:00----------------------------------------------
+setupPage
+drawPaper
+
+initgraphics
+0 0 topLeftWithMargin /y0 exch def /x0 exch def
+gsave
+0.5142857 0.75 scale
+/x0 x0 1.9444444 mul def
+/y0 y0 1.3333333 mul def
+
+% Character normal mode: 23
+23	x0 0 8 mul dotStepX mul add	y0 0 dotStepY 8 mul lineGapY add mul sub drawCharByCode
+% Character normal mode: 23
+23	x0 1 8 mul dotStepX mul add	y0 0 dotStepY 8 mul lineGapY add mul sub drawCharByCode
+% Character normal mode: 45
+45	x0 2 8 mul dotStepX mul add	y0 0 dotStepY 8 mul lineGapY add mul sub drawCharByCode
+% Character normal mode: 52
+52	x0 3 8 mul dotStepX mul add	y0 0 dotStepY 8 mul lineGapY add mul sub drawCharByCode
+% Character normal mode: 49
+49	x0 4 8 mul dotStepX mul add	y0 0 dotStepY 8 mul lineGapY add mul sub drawCharByCode
+% Character normal mode: 38
+38	x0 5 8 mul dotStepX mul add	y0 0 dotStepY 8 mul lineGapY add mul sub drawCharByCode
+% Character normal mode: 0
+0	x0 6 8 mul dotStepX mul add	y0 0 dotStepY 8 mul lineGapY add mul sub drawCharByCode
+% Character normal mode: 54
+54	x0 7 8 mul dotStepX mul add	y0 0 dotStepY 8 mul lineGapY add mul sub drawCharByCode
+% Character normal mode: 58
+58	x0 8 8 mul dotStepX mul add	y0 0 dotStepY 8 mul lineGapY add mul sub drawCharByCode
+% Character normal mode: 42
+42	x0 9 8 mul dotStepX mul add	y0 0 dotStepY 8 mul lineGapY add mul sub drawCharByCode
+% Character normal mode: 0
+0	x0 10 8 mul dotStepX mul add	y0 0 dotStepY 8 mul lineGapY add mul sub drawCharByCode
+% Character normal mode: 57
+57	x0 11 8 mul dotStepX mul add	y0 0 dotStepY 8 mul lineGapY add mul sub drawCharByCode
+% Character normal mode: 38
+38	x0 12 8 mul dotStepX mul add	y0 0 dotStepY 8 mul lineGapY add mul sub drawCharByCode
+% Character normal mode: 49
+49	x0 13 8 mul dotStepX mul add	y0 0 dotStepY 8 mul lineGapY add mul sub drawCharByCode
+% Character normal mode: 0
+0	x0 14 8 mul dotStepX mul add	y0 0 dotStepY 8 mul lineGapY add mul sub drawCharByCode
+% Character normal mode: 42
+42	x0 15 8 mul dotStepX mul add	y0 0 dotStepY 8 mul lineGapY add mul sub drawCharByCode
+% Character normal mode: 56
+56	x0 16 8 mul dotStepX mul add	y0 0 dotStepY 8 mul lineGapY add mul sub drawCharByCode
+% Character normal mode: 57
+57	x0 17 8 mul dotStepX mul add	y0 0 dotStepY 8 mul lineGapY add mul sub drawCharByCode
+% Character normal mode: 38
+38	x0 18 8 mul dotStepX mul add	y0 0 dotStepY 8 mul lineGapY add mul sub drawCharByCode
+% Character normal mode: 56
+56	x0 19 8 mul dotStepX mul add	y0 0 dotStepY 8 mul lineGapY add mul sub drawCharByCode
+% Character normal mode: 23
+23	x0 20 8 mul dotStepX mul add	y0 0 dotStepY 8 mul lineGapY add mul sub drawCharByCode
+% Character normal mode: 23
+23	x0 21 8 mul dotStepX mul add	y0 0 dotStepY 8 mul lineGapY add mul sub drawCharByCode
+% Character reverse mode: 8
+136	x0 0 8 mul dotStepX mul add	y0 1 dotStepY 8 mul lineGapY add mul sub drawCharByCode
+% Character reverse mode: 8
+136	x0 1 8 mul dotStepX mul add	y0 1 dotStepY 8 mul lineGapY add mul sub drawCharByCode
+% Character reverse mode: 62
+190	x0 2 8 mul dotStepX mul add	y0 1 dotStepY 8 mul lineGapY add mul sub drawCharByCode
+% Character reverse mode: 52
+180	x0 3 8 mul dotStepX mul add	y0 1 dotStepY 8 mul lineGapY add mul sub drawCharByCode
+% Character reverse mode: 0
+128	x0 4 8 mul dotStepX mul add	y0 1 dotStepY 8 mul lineGapY add mul sub drawCharByCode
+% Character reverse mode: 42
+170	x0 5 8 mul dotStepX mul add	y0 1 dotStepY 8 mul lineGapY add mul sub drawCharByCode
+% Character reverse mode: 56
+184	x0 6 8 mul dotStepX mul add	y0 1 dotStepY 8 mul lineGapY add mul sub drawCharByCode
+% Character reverse mode: 57
+185	x0 7 8 mul dotStepX mul add	y0 1 dotStepY 8 mul lineGapY add mul sub drawCharByCode
+% Character reverse mode: 52
+180	x0 8 8 mul dotStepX mul add	y0 1 dotStepY 8 mul lineGapY add mul sub drawCharByCode
+% Character reverse mode: 62
+190	x0 9 8 mul dotStepX mul add	y0 1 dotStepY 8 mul lineGapY add mul sub drawCharByCode
+% Character reverse mode: 0
+128	x0 10 8 mul dotStepX mul add	y0 1 dotStepY 8 mul lineGapY add mul sub drawCharByCode
+% Character reverse mode: 50
+178	x0 11 8 mul dotStepX mul add	y0 1 dotStepY 8 mul lineGapY add mul sub drawCharByCode
+% Character reverse mode: 58
+186	x0 12 8 mul dotStepX mul add	y0 1 dotStepY 8 mul lineGapY add mul sub drawCharByCode
+% Character reverse mode: 62
+190	x0 13 8 mul dotStepX mul add	y0 1 dotStepY 8 mul lineGapY add mul sub drawCharByCode
+% Character reverse mode: 0
+128	x0 14 8 mul dotStepX mul add	y0 1 dotStepY 8 mul lineGapY add mul sub drawCharByCode
+% Character reverse mode: 39
+167	x0 15 8 mul dotStepX mul add	y0 1 dotStepY 8 mul lineGapY add mul sub drawCharByCode
+% Character reverse mode: 46
+174	x0 16 8 mul dotStepX mul add	y0 1 dotStepY 8 mul lineGapY add mul sub drawCharByCode
+% Character reverse mode: 42
+170	x0 17 8 mul dotStepX mul add	y0 1 dotStepY 8 mul lineGapY add mul sub drawCharByCode
+% Character reverse mode: 51
+179	x0 18 8 mul dotStepX mul add	y0 1 dotStepY 8 mul lineGapY add mul sub drawCharByCode
+% Character reverse mode: 0
+128	x0 19 8 mul dotStepX mul add	y0 1 dotStepY 8 mul lineGapY add mul sub drawCharByCode
+% Character reverse mode: 44
+172	x0 20 8 mul dotStepX mul add	y0 1 dotStepY 8 mul lineGapY add mul sub drawCharByCode
+% Character reverse mode: 55
+183	x0 21 8 mul dotStepX mul add	y0 1 dotStepY 8 mul lineGapY add mul sub drawCharByCode
+% Character reverse mode: 38
+166	x0 22 8 mul dotStepX mul add	y0 1 dotStepY 8 mul lineGapY add mul sub drawCharByCode
+% Character reverse mode: 40
+168	x0 23 8 mul dotStepX mul add	y0 1 dotStepY 8 mul lineGapY add mul sub drawCharByCode
+% Character reverse mode: 38
+166	x0 24 8 mul dotStepX mul add	y0 1 dotStepY 8 mul lineGapY add mul sub drawCharByCode
+% Character reverse mode: 56
+184	x0 25 8 mul dotStepX mul add	y0 1 dotStepY 8 mul lineGapY add mul sub drawCharByCode
+% Character reverse mode: 8
+136	x0 26 8 mul dotStepX mul add	y0 1 dotStepY 8 mul lineGapY add mul sub drawCharByCode
+% Character reverse mode: 8
+136	x0 27 8 mul dotStepX mul add	y0 1 dotStepY 8 mul lineGapY add mul sub drawCharByCode
+% Character normal mode: 28
+28	x0 0 8 mul dotStepX mul add	y0 2 dotStepY 8 mul lineGapY add mul sub drawCharByCode
+% Character normal mode: 29
+29	x0 1 8 mul dotStepX mul add	y0 2 dotStepY 8 mul lineGapY add mul sub drawCharByCode
+% Character normal mode: 30
+30	x0 2 8 mul dotStepX mul add	y0 2 dotStepY 8 mul lineGapY add mul sub drawCharByCode
+% Character normal mode: 31
+31	x0 3 8 mul dotStepX mul add	y0 2 dotStepY 8 mul lineGapY add mul sub drawCharByCode
+% Character normal mode: 32
+32	x0 4 8 mul dotStepX mul add	y0 2 dotStepY 8 mul lineGapY add mul sub drawCharByCode
+% Character normal mode: 33
+33	x0 5 8 mul dotStepX mul add	y0 2 dotStepY 8 mul lineGapY add mul sub drawCharByCode
+% Character normal mode: 34
+34	x0 6 8 mul dotStepX mul add	y0 2 dotStepY 8 mul lineGapY add mul sub drawCharByCode
+% Character normal mode: 35
+35	x0 7 8 mul dotStepX mul add	y0 2 dotStepY 8 mul lineGapY add mul sub drawCharByCode
+% Character normal mode: 36
+36	x0 8 8 mul dotStepX mul add	y0 2 dotStepY 8 mul lineGapY add mul sub drawCharByCode
+% Character normal mode: 37
+37	x0 9 8 mul dotStepX mul add	y0 2 dotStepY 8 mul lineGapY add mul sub drawCharByCode
+% Character normal mode: 28
+28	x0 10 8 mul dotStepX mul add	y0 2 dotStepY 8 mul lineGapY add mul sub drawCharByCode
+% Character normal mode: 29
+29	x0 11 8 mul dotStepX mul add	y0 2 dotStepY 8 mul lineGapY add mul sub drawCharByCode
+% Character normal mode: 30
+30	x0 12 8 mul dotStepX mul add	y0 2 dotStepY 8 mul lineGapY add mul sub drawCharByCode
+% Character normal mode: 31
+31	x0 13 8 mul dotStepX mul add	y0 2 dotStepY 8 mul lineGapY add mul sub drawCharByCode
+% Character normal mode: 32
+32	x0 14 8 mul dotStepX mul add	y0 2 dotStepY 8 mul lineGapY add mul sub drawCharByCode
+% Character normal mode: 33
+33	x0 15 8 mul dotStepX mul add	y0 2 dotStepY 8 mul lineGapY add mul sub drawCharByCode
+% Character normal mode: 34
+34	x0 16 8 mul dotStepX mul add	y0 2 dotStepY 8 mul lineGapY add mul sub drawCharByCode
+% Character normal mode: 35
+35	x0 17 8 mul dotStepX mul add	y0 2 dotStepY 8 mul lineGapY add mul sub drawCharByCode
+% Character normal mode: 36
+36	x0 18 8 mul dotStepX mul add	y0 2 dotStepY 8 mul lineGapY add mul sub drawCharByCode
+% Character normal mode: 37
+37	x0 19 8 mul dotStepX mul add	y0 2 dotStepY 8 mul lineGapY add mul sub drawCharByCode
+% Character normal mode: 28
+28	x0 20 8 mul dotStepX mul add	y0 2 dotStepY 8 mul lineGapY add mul sub drawCharByCode
+% Character normal mode: 29
+29	x0 21 8 mul dotStepX mul add	y0 2 dotStepY 8 mul lineGapY add mul sub drawCharByCode
+% Character normal mode: 30
+30	x0 22 8 mul dotStepX mul add	y0 2 dotStepY 8 mul lineGapY add mul sub drawCharByCode
+% Character normal mode: 31
+31	x0 23 8 mul dotStepX mul add	y0 2 dotStepY 8 mul lineGapY add mul sub drawCharByCode
+% Character normal mode: 32
+32	x0 24 8 mul dotStepX mul add	y0 2 dotStepY 8 mul lineGapY add mul sub drawCharByCode
+% Character normal mode: 33
+33	x0 25 8 mul dotStepX mul add	y0 2 dotStepY 8 mul lineGapY add mul sub drawCharByCode
+% Character normal mode: 34
+34	x0 26 8 mul dotStepX mul add	y0 2 dotStepY 8 mul lineGapY add mul sub drawCharByCode
+% Character normal mode: 35
+35	x0 27 8 mul dotStepX mul add	y0 2 dotStepY 8 mul lineGapY add mul sub drawCharByCode
+% Character normal mode: 36
+36	x0 28 8 mul dotStepX mul add	y0 2 dotStepY 8 mul lineGapY add mul sub drawCharByCode
+% Character normal mode: 37
+37	x0 29 8 mul dotStepX mul add	y0 2 dotStepY 8 mul lineGapY add mul sub drawCharByCode
+% Character normal mode: 28
+28	x0 30 8 mul dotStepX mul add	y0 2 dotStepY 8 mul lineGapY add mul sub drawCharByCode
+% Character normal mode: 29
+29	x0 31 8 mul dotStepX mul add	y0 2 dotStepY 8 mul lineGapY add mul sub drawCharByCode
+
+grestore
+showpage
+
+% ----Page:01----------------------------------------------
+setupPage
+drawPaper
+
+initgraphics
+0 0 topLeftWithMargin /y0 exch def /x0 exch def
+gsave
+0.5142857 0.75 scale
+/x0 x0 1.9444444 mul def
+/y0 y0 1.3333333 mul def
+

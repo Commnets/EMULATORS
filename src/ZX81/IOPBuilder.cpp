@@ -1,7 +1,7 @@
 #include <ZX81/IOPBuilder.hpp>
 #include <ZX81/Cartridge.hpp>
 #include <ZX81/Datasette.hpp>
-#include <ZX81/Printer.hpp>
+#include <ZX81/StdPrinter.hpp>
 #include <ZX81/ZX81.hpp>
 
 // ---
@@ -41,7 +41,7 @@ MCHEmul::IOPeripheral* ZX81::IOPeripheralBuilder::createPeripheral
 		std::string pF = "Printer.txt"; // Default output file name...
 		MCHEmul::MatrixPrinterEmulation* mPE = nullptr;
 		std::tie (pF, mPE) = getDataPrinterFrom 
-			(prms, std::make_tuple (cvt, MCHEmul::MatrixPrinterEmulation::Configuration (), pF, mPE));
+			(prms, std::make_tuple (cvt, ZX81::ThermalPrinterSimulation::_CONFIGURATION, pF, mPE));
 		if (mPE == nullptr) mPE = new MCHEmul::BasicMatrixPrinterEmulation (32, pF); // Not usual, but just to avoid a crash later!
 		result = new ZX81::ThermalPrinterSimulation (mPE);
 	}

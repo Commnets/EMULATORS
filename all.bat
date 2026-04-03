@@ -234,6 +234,9 @@ COPY .\projects\SINCLAIR\*.fmt .\emulators\ZX81Emulator\ /Y
 COPY .\projects\SINCLAIR\*.fmt .\monitors\RZX81Console\ /Y
 COPY .\projects\SINCLAIR\*.hlp .\emulators\ZX81EmulatorC\ /Y
 COPY .\projects\SINCLAIR\*.hlp .\monitors\RZX81Console\ /Y
+COPY .\projects\SINCLAIR\*.ps .\emulators\ZX81EmulatorC\ /Y
+COPY .\projects\SINCLAIR\*.ps .\emulators\ZX81Emulator\ /Y
+COPY .\projects\SINCLAIR\*.ps .\monitors\RZX81Console\ /Y
 COPY .\projects\CONSOLE\*.fmt .\emulators\ZX81EmulatorC\ /Y
 COPY .\projects\CONSOLE\*.hlp .\emulators\ZX81EmulatorC\ /Y
 COPY .\projects\CORE\*.fmt .\emulators\ZX81EmulatorC\ /Y
@@ -287,6 +290,9 @@ COPY .\projects\SINCLAIR\*.fmt .\emulators\ZXSpectrumEmulator\ /Y
 COPY .\projects\SINCLAIR\*.fmt .\monitors\RZXSpectrumConsole\ /Y
 COPY .\projects\SINCLAIR\*.hlp .\emulators\ZXSpectrumEmulatorC\ /Y
 COPY .\projects\SINCLAIR\*.hlp .\monitors\RZXSpectrumConsole\ /Y
+COPY .\projects\SINCLAIR\*.ps .\emulators\ZXSpectrumEmulatorC\ /Y
+COPY .\projects\SINCLAIR\*.ps .\emulators\ZXSpectrumEmulator\ /Y
+COPY .\projects\SINCLAIR\*.ps .\monitors\RZXSpectrumConsole\ /Y
 COPY .\projects\CONSOLE\*.fmt .\emulators\ZXSpectrumEmulatorC\ /Y
 COPY .\projects\CONSOLE\*.hlp .\emulators\ZXSpectrumEmulatorC\ /Y
 COPY .\projects\CORE\*.fmt .\emulators\ZXSpectrumEmulatorC\ /Y
@@ -463,6 +469,7 @@ COPY .\projects\ZX81\*.hlp .\setups\ZX81\ /Y
 COPY .\projects\ZX81\*.def .\setups\ZX81\ /Y
 COPY .\projects\SINCLAIR\*.fmt .\setups\ZX81\ /Y
 COPY .\projects\SINCLAIR\*.hlp .\setups\ZX81\ /Y
+COPY .\projects\SINCLAIR\*.ps .\setups\ZX81\ /Y
 COPY .\projects\CONSOLE\*.fmt .\setups\ZX81\ /Y
 COPY .\projects\CONSOLE\*.hlp .\setups\ZX81\ /Y
 COPY .\projects\CORE\*.fmt .\setups\ZX81\ /Y
@@ -488,6 +495,7 @@ COPY .\projects\ZXSpectrum\*.hlp .\setups\ZXSpectrum\ /Y
 COPY .\projects\ZXSpectrum\*.def .\setups\ZXSpectrum\ /Y
 COPY .\projects\SINCLAIR\*.fmt .\setups\ZXSpectrum\ /Y
 COPY .\projects\SINCLAIR\*.hlp .\setups\ZXSpectrum\ /Y
+COPY .\projects\SINCLAIR\*.ps .\setups\ZXSpectrum\ /Y
 COPY .\projects\CONSOLE\*.fmt .\setups\ZXSpectrum\ /Y
 COPY .\projects\CONSOLE\*.hlp .\setups\ZXSpectrum\ /Y
 COPY .\projects\CORE\*.fmt .\setups\ZXSpectrum\ /Y

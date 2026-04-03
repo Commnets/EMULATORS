@@ -1343,9 +1343,9 @@ void COMMODORE::MPS802PostscriptMatrixPrinterEmulation::printBytePostscript (con
 				std::to_string ((unsigned int) _posXInside) + " " +
 				std::to_string ((unsigned int) headXPosition ()) + " " +
 				std::to_string ((unsigned int) (configuration ()._wChar)) + 
-				" mul add dotStepX mul add\ty0 " + // dotStepX defined in PSMatrixPrinterII.ps
+				" mul add dotStepX mul add\ty0 " + // dotStepX defined in PSMPS802MatrixPrinterI.ps
 				std::to_string ((unsigned int) headYPosition ()) + " " +
-				"dotStepY " + // dotStepY & lineGapY defined in PSMatrixPrinterII.ps
+				"dotStepY " + // dotStepY & lineGapY defined in PSMPS802MatrixPrinterI.ps
 				std::to_string ((unsigned int) (configuration ()._hChar)) + 
 				" mul lineGapY add mul sub drawByteBits" << std::endl;
 

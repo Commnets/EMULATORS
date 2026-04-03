@@ -26,7 +26,7 @@
     <ClInclude Include="..\..\include\SINCLAIR\FileIO.hpp" />
     <ClInclude Include="..\..\include\SINCLAIR\incs.hpp" />
     <ClInclude Include="..\..\include\SINCLAIR\IOPBuilder.hpp" />
-    <ClInclude Include="..\..\include\SINCLAIR\Printer.hpp" />
+    <ClInclude Include="..\..\include\SINCLAIR\ThermalPrinter.hpp" />
     <ClInclude Include="..\..\include\SINCLAIR\ZXCodeToASCII.hpp" />
   </ItemGroup>
   <ItemGroup>
@@ -36,10 +36,22 @@
     <ClCompile Include="..\..\src\SINCLAIR\Datasette.cpp" />
     <ClCompile Include="..\..\src\SINCLAIR\FileIO.cpp" />
     <ClCompile Include="..\..\src\SINCLAIR\IOPBuilder.cpp" />
-    <ClCompile Include="..\..\src\SINCLAIR\Printer.cpp" />
+    <ClCompile Include="..\..\src\SINCLAIR\ThermalPrinter.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="ClassDiagram.cd" />
+    <None Include="PSThermalPrinterI.ps">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </None>
+    <None Include="PSThermalPrinterII.ps">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </None>
     <None Include="SINCLAIR.fmt">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>

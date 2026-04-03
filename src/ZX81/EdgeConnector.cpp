@@ -1,5 +1,5 @@
 #include <ZX81/EdgeConnector.hpp>
-#include <ZX81/Printer.hpp>
+#include <ZX81/StdPrinter.hpp>
 
 // ---
 ZX81::EdgeConnector::EdgeConnector (ZX81::Type t)

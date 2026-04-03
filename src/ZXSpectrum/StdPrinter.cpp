@@ -1,4 +1,4 @@
-#include <ZXSpectrum/Printer.hpp>
+#include <ZXSpectrum/StdPrinter.hpp>
 #include <FZ80/CZ80.hpp>
 
 const MCHEmul::MatrixPrinterEmulation::Configuration 
