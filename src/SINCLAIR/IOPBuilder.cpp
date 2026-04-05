@@ -20,7 +20,7 @@ std::tuple <
 	SINCLAIR::IOPeripheralBuilder::getDataPrinterFrom
 		(const MCHEmul::Attributes& prms,
 		 const std::tuple <
-			SINCLAIR::ZXCodeToASCII*,
+			std::function <unsigned char (unsigned char)>,
 			MCHEmul::MatrixPrinterEmulation::Configuration,
 			std::string, 
 			MCHEmul::MatrixPrinterEmulation*>& eD) const
@@ -35,7 +35,7 @@ std::tuple <
 				: std::make_pair ("", ""));
 		};
 
-	SINCLAIR::ZXCodeToASCII* cvt = nullptr;
+	std::function <unsigned char (unsigned char)> cvt;
 	MCHEmul::MatrixPrinterEmulation::Configuration cfg;
 	std::string pF;
 	MCHEmul::MatrixPrinterEmulation* mPE;
@@ -71,8 +71,6 @@ std::tuple <
 				{
 					if (pz [1] == "PS")
 					{
-						delete cvt; // Not used...
-
 						mPE = new SINCLAIR::PostscriptThermalPrinterEmulation (cfg, pF);
 					}
 					else
@@ -95,8 +93,6 @@ std::tuple <
 			{
 				_LOG ("Type of printer emulation: " + pz [0] + 
 					" not supported, using basic emulation.");
-
-				delete cvt; // Not used...
 
 				mPE = new MCHEmul::BasicMatrixPrinterEmulation (80, pF);
 			}

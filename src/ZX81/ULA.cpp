@@ -309,7 +309,7 @@ MCHEmul::ScreenMemory* ZX81::ULA::createScreenMemory ()
 bool ZX81::ULA::drawInVisibleZone (MCHEmul::CPU* cpu)
 {
 	bool d = false;
-	bool p = _ULARegisters-> shiftOutData (d);
+	bool p = _ULARegisters -> shiftOutData (d);
 
 	if (!_raster.isInVisibleZone ())
 		return (false); // Nothing else can be done...

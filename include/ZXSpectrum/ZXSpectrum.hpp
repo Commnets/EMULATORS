@@ -23,13 +23,6 @@ namespace ZXSPECTRUM
 {
 	class ULA;
 
-	/** The specific conversor for ZXSPECTRUM codes to ASCII. */
-	class ZXCodeToASCII final : public SINCLAIR::ZXCodeToASCII
-	{
-		public:
-		virtual unsigned char convert (unsigned char chr) override;
-	};
-
 	/** The computer. */
 	class SinclairZXSpectrum final : public SINCLAIR::Computer
 	{

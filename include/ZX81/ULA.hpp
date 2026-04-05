@@ -172,6 +172,10 @@ namespace ZX81
 		  */
 		virtual MCHEmul::InfoStructure getInfoStructure () const override;
 
+		/** To know the last Byte read from the VRAM, usually from the Attribute RAM */
+		const MCHEmul::UByte& lastVRAMByteRead () const
+							{ return (_ULARegisters -> lastVRAMByteRead ()); }
+
 		// Port events...
 		/** To reflect the event related with reading/writting in a port,
 			related with the management of the display: That's it :

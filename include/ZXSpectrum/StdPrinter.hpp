@@ -17,6 +17,7 @@
 
 #include <SINCLAIR/incs.hpp>
 #include <ZXSpectrum/EdgeConnectorPeripherals.hpp>
+#include <array>
 
 namespace ZXSPECTRUM
 {
@@ -30,12 +31,15 @@ namespace ZXSPECTRUM
 
 		static const int _ID = 102;
 
+		/** The name of the traps. */
+		static const int _PRINT_A = 0;
+		static const int _COPY_BUFF = 1;
+
 		ThermalPrinterSimulation (MCHEmul::MatrixPrinterEmulation* mPE = 
 			new MCHEmul::BasicMatrixPrinterEmulation (32, "Printer.txt"));
 
 		/** Open & close the output file. */
-		virtual bool initialize () override
-							{ return (_emulation -> initialize ()); }
+		virtual bool initialize () override;
 		virtual bool finalize () override
 							{ return (_emulation -> finalize ()); }
 
@@ -55,30 +59,64 @@ namespace ZXSPECTRUM
 		virtual MCHEmul::InfoStructure getInfoStructure () const override;
 
 		private:
+		/** This method is invoked from simulate method to determine whether the 
+			CPU is just on a point where a trap maust be executed. ºn
+			Returns true when the trap is really executed. */
+		bool executeTrap (const MCHEmul::Trap& t, MCHEmul::CPU* cpu, MCHEmul::Address& rA);
+		/** The traps to be executed. */
+		bool executePrintATrap (MCHEmul::CPU* cpu, unsigned char& st, MCHEmul::Address& rA);
+		bool executeCopyBuffTrap (MCHEmul::CPU* cpu, unsigned char& st, MCHEmul::Address& rA);
+
 		// -----
 		// Different debug methods to simplify the internal code
 		// and to make simplier the modification in case it is needed...
 		/** Debug special situations...
 			Take care using this instructions _deepDebugFile could be == nullptr... */
-		void debugSimulation (MCHEmul::CPU* cpu);
+		void debugStatus (const std::string& where, MCHEmul::CPU* cpu);
 		// -----
 
 		private:
 		/** Relative position (respect IY register) of the address 
 			with the position of the next element in the printing buffer. */
-		static size_t _PR_CC_POS;
+		static const size_t _PR_CC_POS;
 		/** Relative position (respect IY register) of the address 
-			with the FLAG2. */
-		static size_t _PR_FLAG2_POS;
+			with the FLAG2, where it is pointed whether the buffer is or not empty. */
+		static const size_t _PR_FLAG2_POS;
 		/** Address of the memory buffer. */
-		static MCHEmul::Address _PRBUFF;
+		static const MCHEmul::Address _PRBUFF;
 		/** Length of the memory buffer (= 0x100). */
 		static const size_t _BLEN;
+		/** The position of the CURCHL. 
+			Thi position point somwhow what is the logical channel active
+			so it is usefull to determine if the printer is the channel being used actually. */
+		static const MCHEmul::Address _CURCHL;
+		/** The position PFLAG keeps whether the inverse is active or not for the current printing. 
+			This is important to print out. */
+		static const MCHEmul::Address _PFLAG;
 
 		/** A reference to the emulation. */
 		MCHEmul::MatrixPrinterEmulation* _emulation;
 		/** The trap where the info to the printer is caught. */
-		const MCHEmul::Trap _printTrap;
+		const MCHEmul::Traps _traps;
+
+		// Implementation
+		/** The temporal buffer where the chars and the way the will be printed out are stored. 
+			The first byte in every position keeps the status of the char to print out,
+			whilst the second one keeps the char to realy print out. */
+		union CharBufferElement
+		{
+			struct
+			{
+				unsigned char _status;
+				unsigned char _char;
+			};
+
+			unsigned short _fullValue;
+		};
+
+		std::array <CharBufferElement, 32> _charsBuffer;
+		/** Where the pointer is now. */
+		unsigned char _charsBufferPointer;
 	};
 }
 

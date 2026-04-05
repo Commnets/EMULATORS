@@ -132,6 +132,10 @@ namespace ZX81
 		void setJoystickStatus (JoystickElement jE, bool v)
 							{ _joystickStatus [(size_t) jE] = v; }
 
+		/** To know the last Byte read from the VRAM, usually from the Attribute RAM */
+		const MCHEmul::UByte& lastVRAMByteRead () const
+							{ return (_lastVRAMByteRead); }
+
 		void initialize ();
 
 		/**
@@ -191,6 +195,9 @@ namespace ZX81
 			-> 3 = up position selected. \n
 			-> 4 = fire button pressed. */
 		std::vector <bool> _joystickStatus;
+		/** The last VRAM video READ.
+			It is loaded whith the shift register and put it to oxff when the shift register is emptied. */
+		MCHEmul::UByte _lastVRAMByteRead;
 	};
 
 	// ---
@@ -245,7 +252,7 @@ namespace ZX81
 
 		if (result = (_shiftedBit >= 8)) // Only at the end...
 		{
-			_SHIFTR = _originalSHIFTR = sr;
+			_SHIFTR = _originalSHIFTR = _lastVRAMByteRead = sr;
 
 			_shiftedBit = 0; // Reset the shifted bit counter.
 		}
@@ -267,6 +274,7 @@ namespace ZX81
 
 			_shiftedBit++;
 
+			_lastVRAMByteRead = MCHEmul::UByte::_FF;
 		}
 
 		return (result);

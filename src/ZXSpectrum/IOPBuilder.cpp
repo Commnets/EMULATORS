@@ -34,11 +34,34 @@ MCHEmul::IOPeripheral* ZXSPECTRUM::IOPeripheralBuilder::createPeripheral
 	{
 		// IMPORTANT: 
 		// This basic one is destroyed in getDataPrinterFrom if is not finally used...
-		SINCLAIR::ZXCodeToASCII* cvt = new ZXSPECTRUM::ZXCodeToASCII;
 		std::string pF = "Printer.txt"; // Default output file name...
 		MCHEmul::MatrixPrinterEmulation* mPE = nullptr;
 		std::tie (pF, mPE) = getDataPrinterFrom 
-			(prms, std::make_tuple (cvt, ZXSPECTRUM::ThermalPrinterSimulation::_CONFIGURATION, pF, mPE));
+			(prms, std::make_tuple 
+				([](unsigned char chr) -> unsigned char 
+					{ 
+						unsigned char result = ' ';
+
+						// Control codes, with no translation...
+						if (chr < 0x20)
+							return (result);
+
+						// 0x20..0x7f: Visible ASCII
+						// The base matches with ASCII for these codes except
+						// specific SPECTRUM chars like £ (0x60) y © (0x7f).
+						if (chr <= 0x7f)
+						{
+							if (chr == 0x60) result = '£';
+							else if (chr == 0x7f ) result = '©';
+							else result = chr;
+						}
+
+						// The rest of the codes will be printed out like an space...
+						return (result);
+					},
+				 ZXSPECTRUM::ThermalPrinterSimulation::_CONFIGURATION, 
+				 pF, // these two last will also return...
+				 mPE));
 		if (mPE == nullptr) mPE = new MCHEmul::BasicMatrixPrinterEmulation (32, pF); // Not usual, but just to avoid a crash later!
 		result = new ZXSPECTRUM::ThermalPrinterSimulation (mPE);
 	}

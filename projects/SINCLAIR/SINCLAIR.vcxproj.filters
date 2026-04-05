@@ -69,9 +69,6 @@
     <ClInclude Include="..\..\include\SINCLAIR\ThermalPrinter.hpp">
       <Filter>Archivos de encabezado\IO</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\include\SINCLAIR\ZXCodeToASCII.hpp">
-      <Filter>Archivos de encabezado</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\SINCLAIR\CommandBuilder.cpp">

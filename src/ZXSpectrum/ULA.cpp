@@ -251,6 +251,10 @@ bool ZXSPECTRUM::ULA::simulate (MCHEmul::CPU* cpu)
 			// The content situation is calculated later, out of the loop
 			// so if existed it would be drawn in the next execution of this method
 		}
+		// When it is not in a visible zone, nothing is read!
+		else
+			_videoSignalData._attributeLatch = 
+			_videoSignalData._dataLatch = 0xff;
 	
 		// First, moves the raster...
 		_raster.moveCycles (1);

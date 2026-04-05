@@ -75,8 +75,8 @@ Id:@ID@
 @ATTRS?{key=YES,equal=:,empty=no attributes}\n@
 COMMANDS:
 @COMMANDS@
-->Trap:
-@TRAP@
+->Traps:
+@TRAPS?{key=no,equal=,empty=no trap}\n@
 ->Matrix Emulation:
 @MatrixPrinterEmulation>@
 #---

@@ -3,13 +3,10 @@
 
 // ---
 SINCLAIR::BasicThermalPrinterEmulation::BasicThermalPrinterEmulation 
-	(SINCLAIR::ZXCodeToASCII* c, const std::string& pFN)
+	(const std::function <unsigned char (unsigned char)>& cvt, const std::string& pFN)
 	: MCHEmul::BasicMatrixPrinterEmulation (32 /** As wide as the screen. */, pFN),
-	  _ZXCodeConversor (c)
+	  _ZXCodeConversorFunction (std::move (cvt))
 {
-	// Can not be nullptr...
-	assert (_ZXCodeConversor != nullptr);
-
 	configuration ()._description = "Basic Thermal ZX81 Printer Simulation";
 }
 

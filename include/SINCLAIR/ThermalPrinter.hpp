@@ -15,7 +15,7 @@
 #define __SINCLAIR_PRINTER__
 
 #include <CORE/incs.hpp>
-#include <SINCLAIR/ZXCodeToASCII.hpp>
+#include <functional>
 
 namespace SINCLAIR
 {
@@ -30,13 +30,11 @@ namespace SINCLAIR
 		public MCHEmul::BasicMatrixPrinterEmulation
 	{
 		public:
-		/** The class is the owner of the ZXCodeToASCII converter. 
-			So it must be deleted at destruction time. */
-		BasicThermalPrinterEmulation (ZXCodeToASCII* c,
+		/** The constructor received a function to convert the internal code into ascii.
+			This is needed because not all SINCLAIR computers have the same code table!. 
+			And for printing reason it is needed to take into aconsideration. */
+		BasicThermalPrinterEmulation (const std::function <unsigned char (unsigned char)>& cv,
 			const std::string& pFN = "MatrixPrinter.txt");
-
-		~BasicThermalPrinterEmulation ()
-							{ delete (_ZXCodeConversor); }
 
 		private:
 		/** None is a control char. 
@@ -51,10 +49,10 @@ namespace SINCLAIR
 			There is no control characters. */
 
 		virtual unsigned short printNormalChar (unsigned char chr) override
-							{ printerFile () << std::string (1, (char) _ZXCodeConversor -> convert (chr)); return (1); }
+							{ printerFile () << std::string (1, (char) _ZXCodeConversorFunction (chr)); return (1); }
 
 		private:
-		ZXCodeToASCII* _ZXCodeConversor;
+		std::function <unsigned char (unsigned char)> _ZXCodeConversorFunction;
 	};
 
 	/** In this version a real simulation is done

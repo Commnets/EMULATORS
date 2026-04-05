@@ -15,7 +15,6 @@
 #define __SINCLAIR_INCS__
 
 #include <CORE/incs.hpp>
-#include <SINCLAIR/ZXCodeToASCII.hpp>
 #include <SINCLAIR/CommandBuilder.hpp>
 #include <SINCLAIR/Commands.hpp>
 #include <SINCLAIR/IOPBuilder.hpp>

@@ -114,9 +114,7 @@ MCHEmul::UByte ZXSPECTRUM::PortManager::getValue (unsigned short ab, unsigned ch
 	// When accesing a no codified port, 
 	// The value of the last data read from the ULA (usually an attribute byte) is put into the data bus...
 	else
-	{
 		result = _ULA -> lastVRAMByteRead ();
-	}
 
 	return (result);
 }
