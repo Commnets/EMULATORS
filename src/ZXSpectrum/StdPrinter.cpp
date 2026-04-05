@@ -1,7 +1,7 @@
 #include <ZXSpectrum/StdPrinter.hpp>
 #include <FZ80/CZ80.hpp>
 
-const MCHEmul::MatrixPrinterEmulation::Configuration 
+MCHEmul::MatrixPrinterEmulation::Configuration 
 	ZXSPECTRUM::ThermalPrinterSimulation::_CONFIGURATION = 
 	MCHEmul::MatrixPrinterEmulation::Configuration (
 		(unsigned char) 6, (unsigned char) 7,
@@ -131,12 +131,106 @@ const MCHEmul::MatrixPrinterEmulation::Configuration
 		(unsigned char) 0x0d, (unsigned char) 0x20, (unsigned char) 0x09,
 		(unsigned short) 4);
 
-const size_t ZXSPECTRUM::ThermalPrinterSimulation::_PR_CC_POS = 0x46;
-const size_t ZXSPECTRUM::ThermalPrinterSimulation::_PR_FLAG2_POS = 0x30;
-const MCHEmul::Address ZXSPECTRUM::ThermalPrinterSimulation::_PRBUFF = MCHEmul::Address ({ 0x00, 0x5b }, false);
-const size_t ZXSPECTRUM::ThermalPrinterSimulation::_BLEN = 0x100;
-const MCHEmul::Address ZXSPECTRUM::ThermalPrinterSimulation::_CURCHL = MCHEmul::Address ({ 0x51, 0x5c }, false);
-const MCHEmul::Address ZXSPECTRUM::ThermalPrinterSimulation::_PFLAG = MCHEmul::Address ({ 0x91, 0x5c }, false);
+const MCHEmul::Address ZXSPECTRUM::ThermalPrinterSimulation::_PR_CC		= MCHEmul::Address ({ 0x80, 0x5c }, false);
+const MCHEmul::Address ZXSPECTRUM::ThermalPrinterSimulation::_FLAG2		= MCHEmul::Address ({ 0x6a, 0x5c }, false);
+const MCHEmul::Address ZXSPECTRUM::ThermalPrinterSimulation::_P_POSN	= MCHEmul::Address ({ 0x7f, 0x5c }, false);
+const MCHEmul::Address ZXSPECTRUM::ThermalPrinterSimulation::_PRBUFF	= MCHEmul::Address ({ 0x00, 0x5b }, false);
+const size_t ZXSPECTRUM::ThermalPrinterSimulation::_BLEN				= 0x100;
+const MCHEmul::Address ZXSPECTRUM::ThermalPrinterSimulation::_CURCHL	= MCHEmul::Address ({ 0x51, 0x5c }, false);
+const MCHEmul::Address ZXSPECTRUM::ThermalPrinterSimulation::_PFLAG		= MCHEmul::Address ({ 0x91, 0x5c }, false);
+const MCHEmul::Address ZXSPECTRUM::ThermalPrinterSimulation::_UDG		= MCHEmul::Address ({ 0x7b, 0x5c }, false);
+const std::map <unsigned char, std::string> ZXSPECTRUM::ThermalPrinterSimulation::_TOKENS = {
+	{ 0xa5, "RND" },
+	{ 0xa6, "INKEY$" },
+	{ 0xa7, "PI" },
+	{ 0xa8, "FN" },
+	{ 0xa9, "POINT" },
+	{ 0xaa, "SCREEN$" },
+	{ 0xab, "ATTR" },
+	{ 0xac, "AT" },
+	{ 0xad, "TAB" },
+	{ 0xae, "VAL$" },
+	{ 0xaf, "CODE" },
+	{ 0xb0, "VAL" },
+	{ 0xb1, "LEN" },
+	{ 0xb2, "SIN" },
+	{ 0xb3, "COS" },
+	{ 0xb4, "TAN" },
+	{ 0xb5, "ASN" },
+	{ 0xb6, "ACS" },
+	{ 0xb7, "ATN" },
+	{ 0xb8, "LN" },
+	{ 0xb9, "EXP" },
+	{ 0xba, "INT" },
+	{ 0xbb, "SQR" },
+	{ 0xbc, "SGN" },
+	{ 0xbd, "ABS" },
+	{ 0xbe, "PEEK" },
+	{ 0xbf, "IN" },
+	{ 0xc0, "USR" },
+	{ 0xc1, "STR$" },
+	{ 0xc2, "CHR$" },
+	{ 0xc3, "NOT" },
+	{ 0xc4, "BIN" },
+	{ 0xc5, "OR" },
+	{ 0xc6, "AND" },
+	{ 0xc7, "<=" },
+	{ 0xc8, ">=" },
+	{ 0xc9, "<>" },
+	{ 0xca, "LINE" },
+	{ 0xcb, "THEN" },
+	{ 0xcc, "TO" },
+	{ 0xcd, "STEP" },
+	{ 0xce, "DEF FN" },
+	{ 0xcf, "CAT" },
+	{ 0xd0, "FORMAT" },
+	{ 0xd1, "MOVE" },
+	{ 0xd2, "ERASE" },
+	{ 0xd3, "OPEN #" },
+	{ 0xd4, "CLOSE #" },
+	{ 0xd5, "MERGE" },
+	{ 0xd6, "VERIFY" },
+	{ 0xd7, "BEEP" },
+	{ 0xd8, "CIRCLE" },
+	{ 0xd9, "INK" },
+	{ 0xda, "PAPER" },
+	{ 0xdb, "FLASH" },
+	{ 0xdc, "BRIGHT" },
+	{ 0xdd, "INVERSE" },
+	{ 0xde, "OVER" },
+	{ 0xdf, "OUT" },
+	{ 0xe0, "LPRINT" },
+	{ 0xe1, "LLIST" },
+	{ 0xe2, "STOP" },
+	{ 0xe3, "READ" },
+	{ 0xe4, "DATA" },
+	{ 0xe5, "RESTORE" },
+	{ 0xe6, "NEW" },
+	{ 0xe7, "BORDER" },
+	{ 0xe8, "CONTINUE" },
+	{ 0xe9, "DIM" },
+	{ 0xea, "REM" },
+	{ 0xeb, "FOR" },
+	{ 0xec, "GO TO" },
+	{ 0xed, "GO SUB" },
+	{ 0xee, "INPUT" },
+	{ 0xef, "LOAD" },
+	{ 0xf0, "LIST" },
+	{ 0xf1, "LET" },
+	{ 0xf2, "PAUSE" },
+	{ 0xf3, "NEXT" },
+	{ 0xf4, "POKE" },
+	{ 0xf5, "PRINT" },
+	{ 0xf6, "PLOT" },
+	{ 0xf7, "RUN" },
+	{ 0xf8, "SAVE" },
+	{ 0xf9, "RANDOMIZE" },
+	{ 0xfa, "IF" },
+	{ 0xfb, "CLS" },
+	{ 0xfc, "DRAW" },
+	{ 0xfd, "CLEAR" },
+	{ 0xfe, "RETURN" },
+	{ 0xff, "COPY" } };
 
 // ---
 ZXSPECTRUM::ThermalPrinterSimulation::ThermalPrinterSimulation (MCHEmul::MatrixPrinterEmulation* mPE)
@@ -315,7 +409,8 @@ bool ZXSPECTRUM::ThermalPrinterSimulation::executePrintATrap
 		CharBufferElement val { 0x00 }; // Initially...
 		val._char	= static_cast <FZ80::CZ80*> (cpu) -> aRegister ().values () [0].value ();
 		val._status	= cpu -> memoryRef () -> value (_PFLAG).bit (2) ? 0x01 : 0x00;
-		_charsBuffer [_charsBufferPointer++] = std::move (val);
+		if (val._char < 0xa5) // Just if is not a token, because the tokens are not printed as chars but as strings...
+			_charsBuffer [_charsBufferPointer++] = std::move (val);
 	}
 
 	return (true);
@@ -326,10 +421,6 @@ bool ZXSPECTRUM::ThermalPrinterSimulation::executeCopyBuffTrap
 	(MCHEmul::CPU* cpu, unsigned char& st, MCHEmul::Address& rA)
 {
 	rA = MCHEmul::Address (cpu -> memoryRef () -> stack () -> pull (2), false);
-
-	// Get the value of the register IY as an address...
-	MCHEmul::Address iYA = static_cast <FZ80::CZ80*> (cpu) -> addressFromRegisters
-		(static_cast <FZ80::CZ80*> (cpu) -> iyRegister ());
 
 	// The printer prints the content of the buffer...
 	// But that content is already formatted by the firmware at this point
@@ -347,16 +438,28 @@ bool ZXSPECTRUM::ThermalPrinterSimulation::executeCopyBuffTrap
 		if (_charsBuffer [i]._char < 0x20)
 		{
 			// A blank char is printed instead of the control chars...
-			_emulation -> printChar (0x20); 
-			// Just to finish the printing...
-			f = (_charsBuffer [i]._char == 0x13); 
+			// ...except when the line finishes that if written at then end...
+			if (!(f = (_charsBuffer [i]._char == _CONFIGURATION._charNewLine)))
+				_emulation -> printChar (0x20); 
 		}
 		else
 		// UDG (User defined chras)
 		if (_charsBuffer [i]._char >= 0x90 &&
 			_charsBuffer [i]._char <= 0xa4)
 		{
-			// TODO
+			// The char is a UDG, 
+			// so the pattern of pixels is taken from the UDG area in memory...
+			// Changes the configuration of the character 0 that is not used in ZXSpectrum...
+			std::vector <MCHEmul::UByte> nChr;
+			for (size_t j = 0; j < 8; j++)
+				nChr [j] = ((rvs ? 0x80 : 0x00) + 
+					cpu -> memoryRef () -> value (MCHEmul::Address 
+						(cpu -> memoryRef () -> values (_UDG, 2), false) + 
+							((_charsBuffer [i]._char - 0x90) << 3) + j).value ());
+			_CONFIGURATION._charSet [0x00] = std::move (nChr);
+
+			// The print it...
+			_emulation -> printChar (0x00);
 		}
 		else
 		// Normal char...
@@ -367,13 +470,12 @@ bool ZXSPECTRUM::ThermalPrinterSimulation::executeCopyBuffTrap
 			// whether the reverse video is or not active...
 			_emulation -> printChar ((rvs ? 0x80 : 0x00) + _charsBuffer [i]._char);
 		}
-		else
-		// Token...
-		if (_charsBuffer [i]._char >= 0xa5)
-		{
-			// TODO
-		}
+
+		// The tokens are converted into strings whilst they are inserted...
 	}
+
+	// Just to finish the printing...
+	_emulation -> printChar (_CONFIGURATION._charNewLine);
 
 	// Clears the internal buffer...
 	for (size_t i = 0; i < 32; _charsBuffer [i++] = { 0x00 });
@@ -382,11 +484,13 @@ bool ZXSPECTRUM::ThermalPrinterSimulation::executeCopyBuffTrap
 	// Clears the computer buffer...
 	for (size_t i = 0; i < _BLEN; 
 		cpu -> memoryRef () -> set (_PRBUFF + i++, MCHEmul::UByte::_0));
-	// Set the counter of positions to 0
-	cpu -> memoryRef () -> set (iYA + _PR_CC_POS, MCHEmul::UByte::_0);
+	// Set the counter of positions to the beginning of the buffer...
+	cpu -> memoryRef () -> set (_PR_CC, _PRBUFF.values ().reverse ());
 	// FLAG 2 bit 1 to indicate that the buffer is empty...
-	cpu -> memoryRef () -> set (iYA + _PR_FLAG2_POS, 
-		cpu -> memoryRef () -> value (iYA + _PR_FLAG2_POS) & ~0x02);
+	cpu -> memoryRef () -> set (_FLAG2,
+		cpu -> memoryRef () -> value (_FLAG2) & ~0x02);
+	// The position of the printer column is back to 0x21...
+	cpu -> memoryRef () -> set (_P_POSN, 0x21);
 
 	// The register A and B are set also to 0
 	static_cast <FZ80::CZ80*> (cpu) -> aRegister ().set ({ 0x00 });

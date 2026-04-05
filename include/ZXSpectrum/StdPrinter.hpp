@@ -26,8 +26,9 @@ namespace ZXSPECTRUM
 	{
 		public:
 		/** The configuration of the printer.
-			Usually it is needed once. */
-		static const MCHEmul::MatrixPrinterEmulation::Configuration _CONFIGURATION;
+			Usually it is needed once. 
+			It is modified when there are UDG. */
+		static MCHEmul::MatrixPrinterEmulation::Configuration _CONFIGURATION;
 
 		static const int _ID = 102;
 
@@ -76,12 +77,12 @@ namespace ZXSPECTRUM
 		// -----
 
 		private:
-		/** Relative position (respect IY register) of the address 
-			with the position of the next element in the printing buffer. */
-		static const size_t _PR_CC_POS;
-		/** Relative position (respect IY register) of the address 
-			with the FLAG2, where it is pointed whether the buffer is or not empty. */
-		static const size_t _PR_FLAG2_POS;
+		/** Address with the position of the next element in the printing buffer. */
+		static const MCHEmul::Address _PR_CC;
+		/** Address with the FLAG2, where it is pointed whether the buffer is or not empty. */
+		static const MCHEmul::Address _FLAG2;
+		/** The address with the next position of the printer to printout. */
+		static const MCHEmul::Address _P_POSN;
 		/** Address of the memory buffer. */
 		static const MCHEmul::Address _PRBUFF;
 		/** Length of the memory buffer (= 0x100). */
@@ -93,6 +94,10 @@ namespace ZXSPECTRUM
 		/** The position PFLAG keeps whether the inverse is active or not for the current printing. 
 			This is important to print out. */
 		static const MCHEmul::Address _PFLAG;
+		/** The position of the memory where the user defined graphics are stored. */
+		static const MCHEmul::Address _UDG;
+		/** The relation netween tokens code and string. */
+		static const std::map <unsigned char, std::string> _TOKENS;
 
 		/** A reference to the emulation. */
 		MCHEmul::MatrixPrinterEmulation* _emulation;
