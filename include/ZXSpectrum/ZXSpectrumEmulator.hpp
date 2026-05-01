@@ -16,6 +16,7 @@
 
 #include <EMULATORS/Emulator.hpp>
 #include <SINCLAIR/incs.hpp>
+#include <ZXSpectrum/ASCIIToCodeConverter.hpp>
 #include <ZXSpectrum/ZXSpectrum.hpp>
 #include <ZXSpectrum/FileIO.hpp>
 #include <ZXSpectrum/IOPBuilder.hpp>
@@ -70,8 +71,11 @@ namespace ZXSPECTRUM
 		virtual bool initialize () override;
 
 		protected:
+		virtual ASCIIToCodeConverter* createASCIIToCodeConverter () const override
+							{ return (new ASCIIToCodeConverter); } // The ZXSpectrum versionm, that is different than ZX81's one.
 		virtual MCHEmul::Computer* createComputer () const override
 							{ return (new ZXSPECTRUM::SinclairZXSpectrum (
+								asciiToCodeConverter (),
 								(Memory::Configuration) configurationMode (),
 								NTSCSystem () 
 									? ZXSPECTRUM::SinclairZXSpectrum::VisualSystem::_NTSC 

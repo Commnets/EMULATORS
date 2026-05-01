@@ -194,7 +194,9 @@ namespace COMMODORE
 		public MCHEmul::BasicMatrixPrinterEmulation
 	{
 		public:
-		MPS802BasicMatrixPrinterEmulation (const std::string& pFN = "MPS802MatrixPrinter.txt");
+		MPS802BasicMatrixPrinterEmulation (
+			const MCHEmul::ASCIIToCodeConverter* cvs,
+			const std::string& pFN = "MPS802MatrixPrinter.txt");
 
 		/** Many of the different possibilities of this printer 
 			ara managed throught the secondaryt address when open, that is = functions. */
@@ -269,6 +271,7 @@ namespace COMMODORE
 		static const MCHEmul::MatrixPrinterEmulation::Configuration _CONFIGURATION;
 
 		MPS802PostscriptMatrixPrinterEmulation (
+				const MCHEmul::ASCIIToCodeConverter* cvs,
 				const MCHEmul::MatrixPrinterEmulation::Paper& p,
 				const std::string& pFN = "MPS802MatrixPrinter.ps");
 

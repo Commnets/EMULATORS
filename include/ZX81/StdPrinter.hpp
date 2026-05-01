@@ -30,8 +30,7 @@ namespace ZX81
 
 		static const int _ID = 102;
 
-		ThermalPrinterSimulation (MCHEmul::MatrixPrinterEmulation* mPE = 
-			new MCHEmul::BasicMatrixPrinterEmulation (32, "Printer.txt"));
+		ThermalPrinterSimulation (MCHEmul::MatrixPrinterEmulation* mPE);
 
 		/** Open & close the output file. */
 		virtual bool initialize () override

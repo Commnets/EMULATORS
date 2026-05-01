@@ -33,7 +33,9 @@ namespace VIC20
 		static const unsigned int _PALCLOCK		= 1108405; // 1.108 MHz
 		static const unsigned int _NTSCCLOCK	= 1022727; // 1.023 MHz
 
-		CommodoreVIC20 (Memory::Configuration cfg, 
+		CommodoreVIC20 (
+			const MCHEmul::ASCIIToCodeConverter* cnv,
+			Memory::Configuration cfg, 
 			VisualSystem vS, const std::string& lg = MCHEmul::_DEFAULTLANGUAGE);
 
 		VisualSystem visualSystem () const

@@ -22,7 +22,7 @@
 namespace VIC20
 {
 	/** The VIC20 emulator admits some additional parameters. */
-	class VIC20Emulator : public MCHEmul::Emulator
+	class VIC20Emulator : public COMMODORE::Emulator
 	{
 		public:
 		/** The possible additional parameters of the VIC20 Emulator. */
@@ -40,7 +40,7 @@ namespace VIC20
 		  * @param cS		: A reference to the communication system. It can be nullptr if no required.
 		  */
 		VIC20Emulator (const MCHEmul::CommandLineArguments& args, MCHEmul::CommunicationSystem* cS = nullptr)
-			: MCHEmul::Emulator (args, cS)
+			: COMMODORE::Emulator (args, cS)
 							{ }
 
 		virtual void printOutParameters (std::ostream& o = std::cout) const override;
@@ -66,6 +66,7 @@ namespace VIC20
 		protected:
 		virtual MCHEmul::Computer* createComputer () const override
 							{ return (new VIC20::CommodoreVIC20 (
+								asciiToCodeConverter (),
 								(Memory::Configuration) configurationMode (),
 								NTSCSystem () 
 									? VIC20::CommodoreVIC20::VisualSystem::_NTSC : VIC20::CommodoreVIC20::VisualSystem::_PAL,

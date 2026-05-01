@@ -25,7 +25,9 @@ namespace MSX
 	class MSXComputer final : public MCHEmul::Computer
 	{
 		public:
-		MSXComputer (MSXModel* m, unsigned int cfg,
+		MSXComputer (
+			const MCHEmul::ASCIIToCodeConverter* cvs,
+			MSXModel* m, unsigned int cfg,
 			const std::string& lang = MCHEmul::_DEFAULTLANGUAGE);
 
 		/** To get the model. */

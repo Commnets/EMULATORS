@@ -41,7 +41,9 @@ namespace C264
 		static const unsigned int _PALCLOCK		= 886723; // 0.886 MHz = TED_PAL::_CLOCK / 20
 		static const unsigned int _NTSCCLOCK	= 894886; // 0.894 MHz = TED_NTSC::_CLOCK / 16
 
-		Commodore264 (const MCHEmul::Chips& cps, MCHEmul::Memory* m, const MCHEmul::IODevices& dvs, 
+		Commodore264 (
+			const MCHEmul::ASCIIToCodeConverter* cnv, 
+			const MCHEmul::Chips& cps, MCHEmul::Memory* m, const MCHEmul::IODevices& dvs, 
 			VisualSystem vS, Type t, unsigned int cfg, const std::string& lng = MCHEmul::_DEFAULTLANGUAGE);
 
 		VisualSystem visualSystem () const
@@ -89,9 +91,11 @@ namespace C264
 	class Commodore16_116 final : public Commodore264
 	{
 		public:
-		Commodore16_116 (VisualSystem vS, 
+		Commodore16_116 (
+				const MCHEmul::ASCIIToCodeConverter* cnv,
+				VisualSystem vS, 
 				unsigned int cfg, const std::string& lg = MCHEmul::_DEFAULTLANGUAGE)
-			: Commodore264 (standardChips (lg, vS), 
+			: Commodore264 (cnv, standardChips (lg, vS), 
 				new C264::C16_116Memory (cfg, lg), standardDevices (vS), vS, Type::_C16, cfg, lg)
 							{ }
 
@@ -108,9 +112,11 @@ namespace C264
 	class CommodorePlus4 final : public Commodore264
 	{
 		public:
-		CommodorePlus4 (VisualSystem vS, 
+		CommodorePlus4 (
+				const MCHEmul::ASCIIToCodeConverter* cnv,
+				VisualSystem vS, 
 				unsigned int cfg, const std::string& lg = MCHEmul::_DEFAULTLANGUAGE)
-			: Commodore264 (standardChips (lg, vS), 
+			: Commodore264 (cnv, standardChips (lg, vS), 
 				new C264::CPlus4Memory (cfg, lg), standardDevices (vS), vS, Type::_CPLUS4, cfg, lg)
 							{ }
 

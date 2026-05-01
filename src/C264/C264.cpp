@@ -15,7 +15,9 @@
 #include <F6500/C7501.hpp>
 
 // ---
-C264::Commodore264::Commodore264 (const MCHEmul::Chips& cps, MCHEmul::Memory* m, const MCHEmul::IODevices& dvs, 
+C264::Commodore264::Commodore264 (
+		const MCHEmul::ASCIIToCodeConverter* cnv, 
+		const MCHEmul::Chips& cps, MCHEmul::Memory* m, const MCHEmul::IODevices& dvs, 
 		C264::Commodore264::VisualSystem vS, C264::Type t, unsigned int cfg, const std::string& lng)
 	: COMMODORE::Computer 
 		(new F6500::C7501 (0 /** Only one micro. */),
@@ -24,6 +26,7 @@ C264::Commodore264::Commodore264 (const MCHEmul::Chips& cps, MCHEmul::Memory* m,
 		 dvs,
 		 (vS == C264::Commodore264::VisualSystem::_PAL) 
 			? _PALCLOCK : _NTSCCLOCK,
+		 cnv,
 		 { }, { }, // The C264 series emulation has been done without neither Buses nor Wires!
 		 { { "Name", "C264 Series (C116/C16/CPlus4)" },
 		   { "Manufacturer", "Commodore Business Machines CBM" },

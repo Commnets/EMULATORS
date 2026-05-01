@@ -144,8 +144,8 @@ bool COMMODORE::SerialIOPeripheralSimulation::executeTrap
 			break;
 	}
 
-	// If everything ok, sets the result
-	// If a trap was executed actuallt but it didin't need to change the status, 
+	// Sets the result...
+	// If a trap was executed actuallt but it didn't need to change the status, 
 	// the value written will be 0 (the default one)
 	if (result)
 		cpu -> memoryRef () -> set (_definition._stAddress, 

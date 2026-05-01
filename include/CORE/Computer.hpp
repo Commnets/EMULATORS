@@ -15,6 +15,7 @@
 #define __MCHMUL_COMPUTER__
 
 #include <CORE/global.hpp>
+#include <CORE/ASCIIToCodeConverter.hpp>
 #include <CORE/Clock.hpp>
 #include <CORE/CPU.hpp>
 #include <CORE/Chip.hpp>
@@ -130,13 +131,15 @@ namespace MCHEmul
 		  *	This is verified at construction level. \n
 		  *	@param cpu		A reference to the cpu used by the computer.
 		  *	@param c		The list of the chips of the computer.
-		  *	@param m		The memory accesible to the computer. \n
+		  *	@param m		The memory accesible to the computer.
 		  *					All blocks. Whether they are or not active is something to configure in the Memory itself. 
-		  *	@param d		The devices connected to the computer. \n
-		  *					There are two that are always mandatory: An screen and a Keyboard. \n
+		  *	@param d		The devices connected to the computer.
+		  *					There are two that are always mandatory: An screen and a Keyboard.
 		  *					The chips and the devices are connected at construction time too, 
 		  *					invoking the method "linkChips" of every Device.
 		  *	@param cs		the number of cycles per second of the clock.
+		  * @param cnv		The ASCII Converter of the computer. 
+		  *					It is used to convert the ASCII codes into the specific codes of the computer.
 		  *	@param bs		Buses being part of the motherboard of the computer.
 		  *	@param ws		Wires being part of the motherboard of the computer.
 		  *	@param attrs	Optional attributes defining the computer. 
@@ -156,6 +159,7 @@ namespace MCHEmul
 				  Memory* m, 
 				  const IODevices& d,
 				  unsigned int cs,
+				  const ASCIIToCodeConverter* cnv,
 				  const Buses& bs = { },
 				  const Wires& ws = { },
 				  const Attributes& attrs = { }, unsigned short sL = 10);
@@ -209,6 +213,12 @@ namespace MCHEmul
 							{ return (existsDevice (id) ? (*_devices.find (id)).second : nullptr); }
 		IODevice* device (int id)
 							{ return (existsDevice (id) ? (*_devices.find (id)).second : nullptr); }
+
+		// Managing the ASCII Converter...
+		/** Just to get it.
+			It can never be modified. */
+		const ASCIIToCodeConverter* asciiToCodeConverter () const
+							{ return (_asciiToCodeConverter); }
 
 		// Managing the buses...
 		const Buses& buses () const
@@ -506,6 +516,7 @@ namespace MCHEmul
 		Chips _chips; 
 		Memory* _memory;
 		IODevices _devices;
+		const ASCIIToCodeConverter* _asciiToCodeConverter;
 		Buses _buses;
 		Wires _wires;
 		const Attributes _attributes = { }; // Maybe modified at construction level

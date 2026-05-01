@@ -17,6 +17,7 @@
 #include <FZ80/incs.hpp>
 #include <EMULATORS/incs.hpp>
 #include <SINCLAIR/incs.hpp>
+#include <ZXSpectrum/ASCIIToCodeConverter.hpp>
 #include <ZXSpectrum/CommandBuilder.hpp>
 #include <ZXSpectrum/Commands.hpp>
 #include <ZXSpectrum/FileIO.hpp>

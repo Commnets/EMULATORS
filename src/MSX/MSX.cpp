@@ -3,7 +3,9 @@
 #include <FZ80/CZ80.hpp>
 
 // ---
-MSX::MSXComputer::MSXComputer (MSX::MSXModel* m, unsigned int cfg, 
+MSX::MSXComputer::MSXComputer (
+		const MCHEmul::ASCIIToCodeConverter* cvs,
+		MSX::MSXModel* m, unsigned int cfg, 
 		const std::string& lang)
 	: MCHEmul::Computer 
 		(new FZ80::CZ80 (0, 
@@ -15,6 +17,7 @@ MSX::MSXComputer::MSXComputer (MSX::MSXModel* m, unsigned int cfg,
 		 (m == nullptr) ? nullptr : m -> memory (m -> configurationAdjusted (cfg), lang), 
 		 (m == nullptr) ? MCHEmul::IODevices ()	: m -> ioDevices (lang), // The keyboard might be affected by the language...
 		 (m == nullptr) ? 0 : m -> clockSpeed (),
+		 cvs,
 		 { }, { }, // The MSX, emulation has been done without neither Buses nor Wires!
 		 (m == nullptr) ? MCHEmul::Attributes () : m -> attributes ()),
 	  _model (m)

@@ -51,8 +51,11 @@ const COMMODORE::SerialIOPeripheralSimulation::Definition
 	}}};
 
 // ---
-C64::Disk1541Simulation::Disk1541Simulation (int id, unsigned char dN)
-	: COMMODORE::Disk1540SeriesSimulation (id, dN, C64::Disk1541Simulation::_DEFINITION)
+C64::Disk1541Simulation::Disk1541Simulation (
+		const MCHEmul::ASCIIToCodeConverter* cvs,
+		int id, unsigned char dN)
+	: COMMODORE::Disk1540SeriesSimulation 
+		(id, dN, cvs, C64::Disk1541Simulation::_DEFINITION)
 { 
 	// The device number can be either 0x04 or 0x05...
 	// Notice that this only verified in the debug mode...

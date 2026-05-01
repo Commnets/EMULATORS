@@ -106,7 +106,8 @@ namespace COMMODORE
 		static const int _READYTRAP = 4;
 		static const int _READYTRAP2 = 5; // In commodore 16/iPlus4
 
-		SerialIOPeripheralSimulation (int id, unsigned char dN, const Definition& dt, 
+		SerialIOPeripheralSimulation (
+			int id, unsigned char dN, const Definition& dt, 
 			const MCHEmul::Attributes& attrs);
 
 		/** To get the definition even in a way that might be changed,
@@ -142,27 +143,28 @@ namespace COMMODORE
 		virtual bool executeReadyTrap (MCHEmul::CPU* cpu, unsigned char& st);
 
 		/** What every device does, depends on the type of the device and their specific KERNEL. \n
-			So, these methods must be overloaded per tyep of device. \n
+			So, these methods must be overloaded per type of peripheral. \n
+			All these methods are invoked from the execution of the traps, but they can be invoked from other places if needed. \n
 			All they return the status code of the execution. */
 		virtual unsigned char listen (MCHEmul::CPU* cpu, const MCHEmul::UByte& b)
-							{ return (_definition._okResult); }
+							{ return (_definition._okResult); } // When the peripheral is ordered to listen instructions...
 		virtual unsigned char unlisten (MCHEmul::CPU* cpu, const MCHEmul::UByte& b)
-							{ return (_definition._okResult); }
+							{ return (_definition._okResult); } // When the peripheral is ordered to stop listening instructions...
 		virtual unsigned char talk (MCHEmul::CPU* cpu, const MCHEmul::UByte& b)
-							{ return (_definition._okResult); }
+							{ return (_definition._okResult); } // When the peripheral is ordered to talk instructions...
 		virtual unsigned char untalk (MCHEmul::CPU* cpu, const MCHEmul::UByte& b)
-							{ return (_definition._okResult); }
+							{ return (_definition._okResult); } // When the peripheral is ordered to stop talking instructions...
 		virtual unsigned char openChannel (MCHEmul::CPU* cpu, const MCHEmul::UByte& chn)
-							{ return (_definition._okResult); }
+							{ return (_definition._okResult); } // When the peripheral is ordered to open a logical channel (for both listening or talking)
 		virtual unsigned char closeChannel (MCHEmul::CPU* cpu, const MCHEmul::UByte& chn)
-							{ return (_definition._okResult); }
+							{ return (_definition._okResult); } // When the peripheral is ordered to close a logical channel (for both listening or talking)
 		virtual unsigned char sendByte (MCHEmul::CPU* cpu, const MCHEmul::UByte& b)
-							{ return (_definition._okResult); }
-		/** The byte to be received is in this case a parameter. */
+							{ return (_definition._okResult); } // When the computer is sending a byte to the peripheral...
+		/** The byte to be received is in this case a parameter, apart of the result of the instruction... */
 		virtual unsigned char receiveByte (MCHEmul::CPU* cpu, MCHEmul::UByte& b)
-							{ b = 0; return (_definition._okResult); }
+							{ b = 0; return (_definition._okResult); } // When the computer is receiving a byte from the peripheral...
 		virtual unsigned char getReady (MCHEmul::CPU* cpu)
-							{ return (_definition._okResult); }
+							{ return (_definition._okResult); } // When the computer is telling that is finally ready for next actions!...
 
 		/** To get information about the device considering the logical channel. \n
 			This information must be accessed from the execution of the traps. \n

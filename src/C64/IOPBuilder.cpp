@@ -39,7 +39,8 @@ MCHEmul::IOPeripheral* C64::IOPeripheralBuilder::createPeripheral
 			unsigned char dN = C64::Disk1541Simulation::_DEFAULTDEVICENUMBER;
 			if (prms.size () == 1) dN = (unsigned char) std::atoi ((*prms.find ("0")).second.c_str ());
 			if (C64::Disk1541Simulation::isDeviceNumberValid (dN)) // Only if it is valid...
-				result = new C64::Disk1541Simulation (id, dN); // ...otherwise it will nullptr, and not created...
+				result = new C64::Disk1541Simulation 
+					(c -> asciiToCodeConverter (), id, dN); // ...otherwise it will nullptr, and not created...
 		}
 	else if (id >= C64::StandardSerialPrinterSimulation::_DEFAULTID && 
 			 (id <= C64::StandardSerialPrinterSimulation::_DEFAULTID + 1)) // 2 possible printers connected....
@@ -47,10 +48,12 @@ MCHEmul::IOPeripheral* C64::IOPeripheralBuilder::createPeripheral
 			std::string pF = "Printer.txt"; // Default output file name...
 			unsigned char dN = C64::StandardSerialPrinterSimulation::_DEFAULTDEVICENUMBER;
 			MCHEmul::MatrixPrinterEmulation* mPE = nullptr;
-			std::tie (pF, dN, mPE) = getDataPrinterFrom (prms, std::make_tuple (pF, dN, mPE));
-			if (mPE == nullptr) mPE = new MCHEmul::BasicMatrixPrinterEmulation (80, pF); // Not usual, but just to avoid a crash later!
+			std::tie (pF, dN, mPE) = getDataPrinterFrom (prms, std::make_tuple (
+				c -> asciiToCodeConverter (), pF, dN, mPE));
+			if (mPE == nullptr) mPE = new MCHEmul::BasicMatrixPrinterEmulation 
+				(c -> asciiToCodeConverter (), 80, pF); // Not usual, but just to avoid a crash later!
 			if (C64::StandardSerialPrinterSimulation::isDeviceNumberValid (dN)) // Only if it is valid...
-				result = new C64::StandardSerialPrinterSimulation (id, dN, mPE);
+				result = new C64::StandardSerialPrinterSimulation (mPE, id, dN);
 			else
 				delete mPE; // The emulation temporaly created has not been used and must be deleted!
 		}

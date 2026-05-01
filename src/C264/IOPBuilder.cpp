@@ -37,10 +37,12 @@ MCHEmul::IOPeripheral* C264::IOPeripheralBuilder::createPeripheral
 			std::string pF = "Printer.txt"; // Default output file name...
 			unsigned char dN = C264::StandardSerialPrinterSimulation::_DEFAULTDEVICENUMBER;
 			MCHEmul::MatrixPrinterEmulation* mPE = nullptr;
-			std::tie (pF, dN, mPE) = getDataPrinterFrom (prms, std::make_tuple (pF, dN, mPE));
-			if (mPE == nullptr) mPE = new MCHEmul::BasicMatrixPrinterEmulation (80, pF); // Not usual, but just to avoid a crash later!
+			std::tie (pF, dN, mPE) = getDataPrinterFrom (prms, std::make_tuple 
+				(c -> asciiToCodeConverter (), pF, dN, mPE));
+			if (mPE == nullptr) mPE = new MCHEmul::BasicMatrixPrinterEmulation 
+				(c -> asciiToCodeConverter (), 80, pF); // Not usual, but just to avoid a crash later!
 			if (C264::StandardSerialPrinterSimulation::isDeviceNumberValid (dN)) // Only if it is valid...
-				result = new C264::StandardSerialPrinterSimulation (id, dN, mPE);
+				result = new C264::StandardSerialPrinterSimulation (mPE, id, dN);
 			else
 				delete mPE; // The emulation temporaly created has not been usedm and must be deleted!
 		}

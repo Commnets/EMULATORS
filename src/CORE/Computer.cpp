@@ -125,13 +125,18 @@ MCHEmul::Computer::Computer (
 		MCHEmul::Memory* m, 
 		const MCHEmul::IODevices& d, 
 		unsigned int cs,
+		const MCHEmul::ASCIIToCodeConverter* cnv,
 		const MCHEmul::Buses& bs,
 		const MCHEmul::Wires& ws,
 		const MCHEmul::Attributes& attrs, unsigned short sL)
 	: MCHEmul::InfoClass ("Computer"),
-	  _cpu (cpu), _chips (c), _memory (m), _devices (d), _attributes (attrs), 
+	  _cpu (cpu), _chips (c), _memory (m), _devices (d), 
+	  _asciiToCodeConverter (cnv),
+	  _buses (bs), _wires (ws),
+	  _attributes (attrs), 
 	  _templateActions (), _actionsAt (),
 	  _hooks (),
+	  _hooksPool (nullptr),
 	  _status (MCHEmul::Computer::_STATUSRUNNING), _actionForNextCycle (MCHEmul::Computer::_ACTIONNOTHING),
 	  _deepDebug (), // No active at all...
 	  _exit (false), _restartAfterExit (false), _restartLevel (0), // Meaning full!
@@ -149,6 +154,7 @@ MCHEmul::Computer::Computer (
 { 
 	assert (_cpu != nullptr);
 	assert (_memory != nullptr && _memory -> stack () != nullptr);
+	assert (_asciiToCodeConverter != nullptr); // To guranttee that any code can be converted..
 
 	// Let's put all MotherboardElements with a list of them...
 	// To add all of them to the buses and wires (if they accept!)...

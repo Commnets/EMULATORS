@@ -42,7 +42,10 @@ namespace COMMODORE
 		std::tuple <std::string, unsigned char, 
 			MCHEmul::MatrixPrinterEmulation*> getDataPrinterFrom 
 				(const MCHEmul::Attributes& prms, 
-					const std::tuple <std::string, unsigned char, MCHEmul::MatrixPrinterEmulation*>& eD) const;
+					const std::tuple <
+						const MCHEmul::ASCIIToCodeConverter*,
+						std::string, unsigned char, 
+						MCHEmul::MatrixPrinterEmulation*>& eD) const;
 
 		/** To get the parameters related with the emultator driver. \n
 			Those parameters are always in parenthesis and separated by commas and between parenthesis,

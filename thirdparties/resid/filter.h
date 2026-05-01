@@ -200,336 +200,333 @@ namespace RESID
 
 		friend class SID;
 	};
-}
 
-// ----------------------------------------------------------------------------
-// Inline functions.
-// The following functions are defined inline because they are called every
-// time a sample is calculated.
-// ----------------------------------------------------------------------------
+	// ----------------------------------------------------------------------------
+	// Inline functions.
+	// The following functions are defined inline because they are called every
+	// time a sample is calculated.
+	// ----------------------------------------------------------------------------
 
-#if RESID_INLINING || defined(__FILTER_CC__)
+	#if RESID_INLINING || defined(__FILTER_CC__)
 
-using namespace RESID;
+	// ----------------------------------------------------------------------------
+	// SID clocking - 1 cycle.
+	// ----------------------------------------------------------------------------
+	RESID_INLINE
+	void Filter::clock (sound_sample voice1,
+		sound_sample voice2,
+		sound_sample voice3,
+		sound_sample ext_in)
+	{
+		// Scale each voice down from 20 to 13 bits.
+		voice1 >>= 7;
+		voice2 >>= 7;
 
-// ----------------------------------------------------------------------------
-// SID clocking - 1 cycle.
-// ----------------------------------------------------------------------------
-RESID_INLINE
-void Filter::clock (sound_sample voice1,
-	sound_sample voice2,
-	sound_sample voice3,
-	sound_sample ext_in)
-{
-	// Scale each voice down from 20 to 13 bits.
-	voice1 >>= 7;
-	voice2 >>= 7;
-
-	// NB! Voice 3 is not silenced by voice3off if it is routed through
-	// the filter.
-	if (voice3off && !(filt & 0x04)) {
-		voice3 = 0;
-	}
-	else {
-		voice3 >>= 7;
-	}
-
-	ext_in >>= 7;
-
-	// This is handy for testing.
-	if (!enabled) {
-		Vnf = voice1 + voice2 + voice3 + ext_in;
-		Vhp = Vbp = Vlp = 0;
-		return;
-	}
-
-	// Route voices into or around filter.
-	// The code below is expanded to a switch for faster execution.
-	// (filt1 ? Vi : Vnf) += voice1;
-	// (filt2 ? Vi : Vnf) += voice2;
-	// (filt3 ? Vi : Vnf) += voice3;
-
-	sound_sample Vi;
-
-	switch (filt) {
-		default:
-		case 0x0:
-			Vi = 0;
-			Vnf = voice1 + voice2 + voice3 + ext_in;
-			break;
-		case 0x1:
-			Vi = voice1;
-			Vnf = voice2 + voice3 + ext_in;
-			break;
-		case 0x2:
-			Vi = voice2;
-			Vnf = voice1 + voice3 + ext_in;
-			break;
-		case 0x3:
-			Vi = voice1 + voice2;
-			Vnf = voice3 + ext_in;
-			break;
-		case 0x4:
-			Vi = voice3;
-			Vnf = voice1 + voice2 + ext_in;
-			break;
-		case 0x5:
-			Vi = voice1 + voice3;
-			Vnf = voice2 + ext_in;
-			break;
-		case 0x6:
-			Vi = voice2 + voice3;
-			Vnf = voice1 + ext_in;
-			break;
-		case 0x7:
-			Vi = voice1 + voice2 + voice3;
-			Vnf = ext_in;
-			break;
-		case 0x8:
-			Vi = ext_in;
-			Vnf = voice1 + voice2 + voice3;
-			break;
-		case 0x9:
-			Vi = voice1 + ext_in;
-			Vnf = voice2 + voice3;
-			break;
-		case 0xa:
-			Vi = voice2 + ext_in;
-			Vnf = voice1 + voice3;
-			break;
-		case 0xb:
-			Vi = voice1 + voice2 + ext_in;
-			Vnf = voice3;
-			break;
-		case 0xc:
-			Vi = voice3 + ext_in;
-			Vnf = voice1 + voice2;
-			break;
-		case 0xd:
-			Vi = voice1 + voice3 + ext_in;
-			Vnf = voice2;
-			break;
-		case 0xe:
-			Vi = voice2 + voice3 + ext_in;
-			Vnf = voice1;
-			break;
-		case 0xf:
-			Vi = voice1 + voice2 + voice3 + ext_in;
-			Vnf = 0;
-			break;
-	}
-
-	// delta_t = 1 is converted to seconds given a 1MHz clock by dividing
-	// with 1 000 000.
-
-	// Calculate filter outputs.
-	// Vhp = Vbp/Q - Vlp - Vi;
-	// dVbp = -w0*Vhp*dt;
-	// dVlp = -w0*Vbp*dt;
-
-	sound_sample dVbp = (w0_ceil_1 * Vhp >> 20);
-	sound_sample dVlp = (w0_ceil_1 * Vbp >> 20);
-	Vbp -= dVbp;
-	Vlp -= dVlp;
-	Vhp = (Vbp * _1024_div_Q >> 10) - Vlp - Vi;
-}
-
-// ----------------------------------------------------------------------------
-// SID clocking - delta_t cycles.
-// ----------------------------------------------------------------------------
-RESID_INLINE
-void Filter::clock (cycle_count delta_t,
-	sound_sample voice1,
-	sound_sample voice2,
-	sound_sample voice3,
-	sound_sample ext_in)
-{
-	// Scale each voice down from 20 to 13 bits.
-	voice1 >>= 7;
-	voice2 >>= 7;
-
-	// NB! Voice 3 is not silenced by voice3off if it is routed through
-	// the filter.
-	if (voice3off && !(filt & 0x04)) {
-		voice3 = 0;
-	}
-	else {
-		voice3 >>= 7;
-	}
-
-	ext_in >>= 7;
-
-	// Enable filter on/off.
-	// This is not really part of SID, but is useful for testing.
-	// On slow CPUs it may be necessary to bypass the filter to lower the CPU
-	// load.
-	if (!enabled) {
-		Vnf = voice1 + voice2 + voice3 + ext_in;
-		Vhp = Vbp = Vlp = 0;
-		return;
-	}
-
-	// Route voices into or around filter.
-	// The code below is expanded to a switch for faster execution.
-	// (filt1 ? Vi : Vnf) += voice1;
-	// (filt2 ? Vi : Vnf) += voice2;
-	// (filt3 ? Vi : Vnf) += voice3;
-
-	sound_sample Vi;
-
-	switch (filt) {
-		default:
-		case 0x0:
-			Vi = 0;
-			Vnf = voice1 + voice2 + voice3 + ext_in;
-			break;
-		case 0x1:
-			Vi = voice1;
-			Vnf = voice2 + voice3 + ext_in;
-			break;
-		case 0x2:
-			Vi = voice2;
-			Vnf = voice1 + voice3 + ext_in;
-			break;
-		case 0x3:
-			Vi = voice1 + voice2;
-			Vnf = voice3 + ext_in;
-			break;
-		case 0x4:
-			Vi = voice3;
-			Vnf = voice1 + voice2 + ext_in;
-			break;
-		case 0x5:
-			Vi = voice1 + voice3;
-			Vnf = voice2 + ext_in;
-			break;
-		case 0x6:
-			Vi = voice2 + voice3;
-			Vnf = voice1 + ext_in;
-			break;
-		case 0x7:
-			Vi = voice1 + voice2 + voice3;
-			Vnf = ext_in;
-			break;
-		case 0x8:
-			Vi = ext_in;
-			Vnf = voice1 + voice2 + voice3;
-			break;
-		case 0x9:
-			Vi = voice1 + ext_in;
-			Vnf = voice2 + voice3;
-			break;
-		case 0xa:
-			Vi = voice2 + ext_in;
-			Vnf = voice1 + voice3;
-			break;
-		case 0xb:
-			Vi = voice1 + voice2 + ext_in;
-			Vnf = voice3;
-			break;
-		case 0xc:
-			Vi = voice3 + ext_in;
-			Vnf = voice1 + voice2;
-			break;
-		case 0xd:
-			Vi = voice1 + voice3 + ext_in;
-			Vnf = voice2;
-			break;
-		case 0xe:
-			Vi = voice2 + voice3 + ext_in;
-			Vnf = voice1;
-			break;
-		case 0xf:
-			Vi = voice1 + voice2 + voice3 + ext_in;
-			Vnf = 0;
-			break;
-	}
-
-	// Maximum delta cycles for the filter to work satisfactorily under current
-	// cutoff frequency and resonance constraints is approximately 8.
-	cycle_count delta_t_flt = 8;
-
-	while (delta_t) {
-		if (delta_t < delta_t_flt) {
-			delta_t_flt = delta_t;
+		// NB! Voice 3 is not silenced by voice3off if it is routed through
+		// the filter.
+		if (voice3off && !(filt & 0x04)) {
+			voice3 = 0;
+		}
+		else {
+			voice3 >>= 7;
 		}
 
-		// delta_t is converted to seconds given a 1MHz clock by dividing
-		// with 1 000 000. This is done in two operations to avoid integer
-		// multiplication overflow.
+		ext_in >>= 7;
+
+		// This is handy for testing.
+		if (!enabled) {
+			Vnf = voice1 + voice2 + voice3 + ext_in;
+			Vhp = Vbp = Vlp = 0;
+			return;
+		}
+
+		// Route voices into or around filter.
+		// The code below is expanded to a switch for faster execution.
+		// (filt1 ? Vi : Vnf) += voice1;
+		// (filt2 ? Vi : Vnf) += voice2;
+		// (filt3 ? Vi : Vnf) += voice3;
+
+		sound_sample Vi;
+
+		switch (filt) {
+			default:
+			case 0x0:
+				Vi = 0;
+				Vnf = voice1 + voice2 + voice3 + ext_in;
+				break;
+			case 0x1:
+				Vi = voice1;
+				Vnf = voice2 + voice3 + ext_in;
+				break;
+			case 0x2:
+				Vi = voice2;
+				Vnf = voice1 + voice3 + ext_in;
+				break;
+			case 0x3:
+				Vi = voice1 + voice2;
+				Vnf = voice3 + ext_in;
+				break;
+			case 0x4:
+				Vi = voice3;
+				Vnf = voice1 + voice2 + ext_in;
+				break;
+			case 0x5:
+				Vi = voice1 + voice3;
+				Vnf = voice2 + ext_in;
+				break;
+			case 0x6:
+				Vi = voice2 + voice3;
+				Vnf = voice1 + ext_in;
+				break;
+			case 0x7:
+				Vi = voice1 + voice2 + voice3;
+				Vnf = ext_in;
+				break;
+			case 0x8:
+				Vi = ext_in;
+				Vnf = voice1 + voice2 + voice3;
+				break;
+			case 0x9:
+				Vi = voice1 + ext_in;
+				Vnf = voice2 + voice3;
+				break;
+			case 0xa:
+				Vi = voice2 + ext_in;
+				Vnf = voice1 + voice3;
+				break;
+			case 0xb:
+				Vi = voice1 + voice2 + ext_in;
+				Vnf = voice3;
+				break;
+			case 0xc:
+				Vi = voice3 + ext_in;
+				Vnf = voice1 + voice2;
+				break;
+			case 0xd:
+				Vi = voice1 + voice3 + ext_in;
+				Vnf = voice2;
+				break;
+			case 0xe:
+				Vi = voice2 + voice3 + ext_in;
+				Vnf = voice1;
+				break;
+			case 0xf:
+				Vi = voice1 + voice2 + voice3 + ext_in;
+				Vnf = 0;
+				break;
+		}
+
+		// delta_t = 1 is converted to seconds given a 1MHz clock by dividing
+		// with 1 000 000.
 
 		// Calculate filter outputs.
 		// Vhp = Vbp/Q - Vlp - Vi;
 		// dVbp = -w0*Vhp*dt;
 		// dVlp = -w0*Vbp*dt;
-		sound_sample w0_delta_t = w0_ceil_dt * delta_t_flt >> 6;
 
-		sound_sample dVbp = (w0_delta_t * Vhp >> 14);
-		sound_sample dVlp = (w0_delta_t * Vbp >> 14);
+		sound_sample dVbp = (w0_ceil_1 * Vhp >> 20);
+		sound_sample dVlp = (w0_ceil_1 * Vbp >> 20);
 		Vbp -= dVbp;
 		Vlp -= dVlp;
 		Vhp = (Vbp * _1024_div_Q >> 10) - Vlp - Vi;
-
-		delta_t -= delta_t_flt;
 	}
+
+	// ----------------------------------------------------------------------------
+	// SID clocking - delta_t cycles.
+	// ----------------------------------------------------------------------------
+	RESID_INLINE
+	void Filter::clock (cycle_count delta_t,
+		sound_sample voice1,
+		sound_sample voice2,
+		sound_sample voice3,
+		sound_sample ext_in)
+	{
+		// Scale each voice down from 20 to 13 bits.
+		voice1 >>= 7;
+		voice2 >>= 7;
+
+		// NB! Voice 3 is not silenced by voice3off if it is routed through
+		// the filter.
+		if (voice3off && !(filt & 0x04)) {
+			voice3 = 0;
+		}
+		else {
+			voice3 >>= 7;
+		}
+
+		ext_in >>= 7;
+
+		// Enable filter on/off.
+		// This is not really part of SID, but is useful for testing.
+		// On slow CPUs it may be necessary to bypass the filter to lower the CPU
+		// load.
+		if (!enabled) {
+			Vnf = voice1 + voice2 + voice3 + ext_in;
+			Vhp = Vbp = Vlp = 0;
+			return;
+		}
+
+		// Route voices into or around filter.
+		// The code below is expanded to a switch for faster execution.
+		// (filt1 ? Vi : Vnf) += voice1;
+		// (filt2 ? Vi : Vnf) += voice2;
+		// (filt3 ? Vi : Vnf) += voice3;
+
+		sound_sample Vi;
+
+		switch (filt) {
+			default:
+			case 0x0:
+				Vi = 0;
+				Vnf = voice1 + voice2 + voice3 + ext_in;
+				break;
+			case 0x1:
+				Vi = voice1;
+				Vnf = voice2 + voice3 + ext_in;
+				break;
+			case 0x2:
+				Vi = voice2;
+				Vnf = voice1 + voice3 + ext_in;
+				break;
+			case 0x3:
+				Vi = voice1 + voice2;
+				Vnf = voice3 + ext_in;
+				break;
+			case 0x4:
+				Vi = voice3;
+				Vnf = voice1 + voice2 + ext_in;
+				break;
+			case 0x5:
+				Vi = voice1 + voice3;
+				Vnf = voice2 + ext_in;
+				break;
+			case 0x6:
+				Vi = voice2 + voice3;
+				Vnf = voice1 + ext_in;
+				break;
+			case 0x7:
+				Vi = voice1 + voice2 + voice3;
+				Vnf = ext_in;
+				break;
+			case 0x8:
+				Vi = ext_in;
+				Vnf = voice1 + voice2 + voice3;
+				break;
+			case 0x9:
+				Vi = voice1 + ext_in;
+				Vnf = voice2 + voice3;
+				break;
+			case 0xa:
+				Vi = voice2 + ext_in;
+				Vnf = voice1 + voice3;
+				break;
+			case 0xb:
+				Vi = voice1 + voice2 + ext_in;
+				Vnf = voice3;
+				break;
+			case 0xc:
+				Vi = voice3 + ext_in;
+				Vnf = voice1 + voice2;
+				break;
+			case 0xd:
+				Vi = voice1 + voice3 + ext_in;
+				Vnf = voice2;
+				break;
+			case 0xe:
+				Vi = voice2 + voice3 + ext_in;
+				Vnf = voice1;
+				break;
+			case 0xf:
+				Vi = voice1 + voice2 + voice3 + ext_in;
+				Vnf = 0;
+				break;
+		}
+
+		// Maximum delta cycles for the filter to work satisfactorily under current
+		// cutoff frequency and resonance constraints is approximately 8.
+		cycle_count delta_t_flt = 8;
+
+		while (delta_t) {
+			if (delta_t < delta_t_flt) {
+				delta_t_flt = delta_t;
+			}
+
+			// delta_t is converted to seconds given a 1MHz clock by dividing
+			// with 1 000 000. This is done in two operations to avoid integer
+			// multiplication overflow.
+
+			// Calculate filter outputs.
+			// Vhp = Vbp/Q - Vlp - Vi;
+			// dVbp = -w0*Vhp*dt;
+			// dVlp = -w0*Vbp*dt;
+			sound_sample w0_delta_t = w0_ceil_dt * delta_t_flt >> 6;
+
+			sound_sample dVbp = (w0_delta_t * Vhp >> 14);
+			sound_sample dVlp = (w0_delta_t * Vbp >> 14);
+			Vbp -= dVbp;
+			Vlp -= dVlp;
+			Vhp = (Vbp * _1024_div_Q >> 10) - Vlp - Vi;
+
+			delta_t -= delta_t_flt;
+		}
+	}
+
+	// ----------------------------------------------------------------------------
+	// SID audio output (20 bits).
+	// ----------------------------------------------------------------------------
+	RESID_INLINE
+	sound_sample Filter::output ()
+	{
+		// This is handy for testing.
+		if (!enabled) {
+			return (Vnf + mixer_DC) * static_cast<sound_sample>(vol);
+		}
+
+		// Mix highpass, bandpass, and lowpass outputs. The sum is not
+		// weighted, this can be confirmed by sampling sound output for
+		// e.g. bandpass, lowpass, and bandpass+lowpass from a SID chip.
+
+		// The code below is expanded to a switch for faster execution.
+		// if (hp) Vf += Vhp;
+		// if (bp) Vf += Vbp;
+		// if (lp) Vf += Vlp;
+
+		sound_sample Vf;
+
+		switch (hp_bp_lp) {
+			default:
+			case 0x0:
+				Vf = 0;
+				break;
+			case 0x1:
+				Vf = Vlp;
+				break;
+			case 0x2:
+				Vf = Vbp;
+				break;
+			case 0x3:
+				Vf = Vlp + Vbp;
+				break;
+			case 0x4:
+				Vf = Vhp;
+				break;
+			case 0x5:
+				Vf = Vlp + Vhp;
+				break;
+			case 0x6:
+				Vf = Vbp + Vhp;
+				break;
+			case 0x7:
+				Vf = Vlp + Vbp + Vhp;
+				break;
+		}
+
+		// Sum non-filtered and filtered output.
+		// Multiply the sum with volume.
+		return (Vnf + Vf + mixer_DC) * static_cast<sound_sample>(vol);
+	}
+
+	#endif // RESID_INLINING || defined(__FILTER_CC__)
 }
-
-
-// ----------------------------------------------------------------------------
-// SID audio output (20 bits).
-// ----------------------------------------------------------------------------
-RESID_INLINE
-sound_sample Filter::output ()
-{
-	// This is handy for testing.
-	if (!enabled) {
-		return (Vnf + mixer_DC) * static_cast<sound_sample>(vol);
-	}
-
-	// Mix highpass, bandpass, and lowpass outputs. The sum is not
-	// weighted, this can be confirmed by sampling sound output for
-	// e.g. bandpass, lowpass, and bandpass+lowpass from a SID chip.
-
-	// The code below is expanded to a switch for faster execution.
-	// if (hp) Vf += Vhp;
-	// if (bp) Vf += Vbp;
-	// if (lp) Vf += Vlp;
-
-	sound_sample Vf;
-
-	switch (hp_bp_lp) {
-		default:
-		case 0x0:
-			Vf = 0;
-			break;
-		case 0x1:
-			Vf = Vlp;
-			break;
-		case 0x2:
-			Vf = Vbp;
-			break;
-		case 0x3:
-			Vf = Vlp + Vbp;
-			break;
-		case 0x4:
-			Vf = Vhp;
-			break;
-		case 0x5:
-			Vf = Vlp + Vhp;
-			break;
-		case 0x6:
-			Vf = Vbp + Vhp;
-			break;
-		case 0x7:
-			Vf = Vlp + Vbp + Vhp;
-			break;
-	}
-
-	// Sum non-filtered and filtered output.
-	// Multiply the sum with volume.
-	return (Vnf + Vf + mixer_DC) * static_cast<sound_sample>(vol);
-}
-
-#endif // RESID_INLINING || defined(__FILTER_CC__)
 
 #endif // not __FILTER_H__

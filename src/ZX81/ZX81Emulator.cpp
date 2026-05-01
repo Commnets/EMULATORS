@@ -96,6 +96,7 @@ MCHEmul::Computer* ZX81::ZX81Emulator::createComputer () const
 		case ZX81::Type::_ZX80:
 			{
 				result = new ZX81::SinclairZX81 (
+					asciiToCodeConverter (),
 					ZX81::Memory::Configuration::_NOEXPANDED /** No expansion admitted. */,
 					ZX81::SinclairZX81::VisualSystem::_PAL /** PAL is always mandatory in this emulation. */,
 					ZX81::Type::_ZX80);
@@ -122,6 +123,7 @@ MCHEmul::Computer* ZX81::ZX81Emulator::createComputer () const
 				}
 				
 				result = new ZX81::SinclairZX81 (
+					asciiToCodeConverter (),
 					(ZX81::Memory::Configuration) cM,
 					ZX81::SinclairZX81::VisualSystem::_PAL /** PAL is always mandatory in this emulation. */,
 					t);

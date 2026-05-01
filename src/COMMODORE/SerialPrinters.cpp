@@ -2,10 +2,10 @@
 
 // ---
 COMMODORE::SerialPrinterPeripheralSimulation::SerialPrinterPeripheralSimulation 
-		(int id, unsigned char dN, 
+		(MCHEmul::MatrixPrinterEmulation* mPE,
+		 int id, unsigned char dN, 
 		 const COMMODORE::SerialIOPeripheralSimulation::Definition& dt,
-		 const MCHEmul::Attributes& attrs, 
-		 MCHEmul::MatrixPrinterEmulation* mPE)
+		 const MCHEmul::Attributes& attrs)
 	: COMMODORE::SerialIOPeripheralSimulation (id, dN, dt, attrs),
 	  _emulation (mPE)
 { 

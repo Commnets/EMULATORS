@@ -70,11 +70,12 @@ namespace SINCLAIR
 				  MCHEmul::Memory* m, 
 				  const MCHEmul::IODevices& d,
 				  const SystemVariables& sV,
-				  unsigned int cs, 
+				  unsigned int cs,
+				  const MCHEmul::ASCIIToCodeConverter* cvs,
 				  const MCHEmul::Buses& bs,
 				  const MCHEmul::Wires& ws,
 				  const MCHEmul::Attributes& attrs)
-			: MCHEmul::Computer (cpu, c, m, d, cs, bs, ws, attrs),
+			: MCHEmul::Computer (cpu, c, m, d, cs, cvs, bs, ws, attrs),
 			  _systemVariables (sV)
 							{ }
 		

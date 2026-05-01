@@ -9,7 +9,9 @@
 #include <FZ80/NMIInterrupt.hpp>
 
 // ---
-ZX81::SinclairZX81::SinclairZX81 (ZX81::Memory::Configuration cfg, 
+ZX81::SinclairZX81::SinclairZX81 (
+		const MCHEmul::ASCIIToCodeConverter* cvs,
+		ZX81::Memory::Configuration cfg, 
 		ZX81::SinclairZX81::VisualSystem vS, ZX81::Type t)
 	: SINCLAIR::Computer 
 		(new FZ80::CZ80 (0, 
@@ -19,6 +21,7 @@ ZX81::SinclairZX81::SinclairZX81 (ZX81::Memory::Configuration cfg,
 		 ZX81::SinclairZX81::standardDevices (vS, t), // The devices can vary depending on the type of model...
 		 loadSystemVariablesFrom ((t == ZX81::Type::_ZX80) ? "ZX80SysVars.txt" : "ZX81SysVars.txt"),
 		 _CLOCK, // In ZX81 the speed is constant as the CPU is aimed also to draw!
+		 cvs,
 		 { }, { }, // The ZX81 emulation has been done without neither Buses nor Wires!
 		 { { "Name", "ZX81" },
 		   { "Manufacturer", "Sinclair Research/Timex Coporation" },

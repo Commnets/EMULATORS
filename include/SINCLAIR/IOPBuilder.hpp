@@ -15,7 +15,6 @@
 #define __SINCLAIR_IOPBUILDER__
 
 #include <CORE/incs.hpp>
-#include <functional>
 
 namespace SINCLAIR
 {
@@ -44,7 +43,7 @@ namespace SINCLAIR
 			MCHEmul::MatrixPrinterEmulation*> getDataPrinterFrom 
 				(const MCHEmul::Attributes& prms, 
 					const std::tuple <
-						std::function <unsigned char (unsigned char)>,
+						const MCHEmul::ASCIIToCodeConverter*,
 						MCHEmul::MatrixPrinterEmulation::Configuration,
 						std::string, 
 						MCHEmul::MatrixPrinterEmulation*>& eD) const;

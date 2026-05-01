@@ -36,12 +36,9 @@ namespace C64
 												 _POSSIBLEDEVICENUMBERS.end (), dN) 
 										!= _POSSIBLEDEVICENUMBERS.end ()); }
 
-		Disk1541Simulation (int id = _DEFAULTID, unsigned char dN = _DEFAULTDEVICENUMBER);
-
-		private:
-		/** To load the info just only inthe RAM. */
-		virtual void loadDataBlockInRAM (const MCHEmul::DataMemoryBlock& dB, MCHEmul::CPU* cpu) override
-							{ static_cast <C64::Memory*> (cpu -> memoryRef ()) -> loadDataBlockInRAM (_data._data [actualBlock ()]); }
+		Disk1541Simulation (
+			const MCHEmul::ASCIIToCodeConverter* cvs, 
+			int id = _DEFAULTID, unsigned char dN = _DEFAULTDEVICENUMBER);
 
 		private:
 		/** The definition of the traps for this device. */

@@ -32,7 +32,9 @@ namespace ZXSPECTRUM
 		// The speed of the processor...
 		static const unsigned int _CLOCK		= 3500000;	// 3.5 MHz
 
-		SinclairZXSpectrum (Memory::Configuration cfg, VisualSystem vS, 
+		SinclairZXSpectrum (
+			const MCHEmul::ASCIIToCodeConverter* cvs,
+			Memory::Configuration cfg, VisualSystem vS, 
 			Type t, const std::string& lang = MCHEmul::_DEFAULTLANGUAGE);
 
 		VisualSystem visualSystem () const

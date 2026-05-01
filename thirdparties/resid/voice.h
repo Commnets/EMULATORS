@@ -53,29 +53,27 @@ namespace RESID
 
 		friend class SID;
 	};
+
+	// ----------------------------------------------------------------------------
+	// Inline functions.
+	// The following function is defined inline because it is called every
+	// time a sample is calculated.
+	// ----------------------------------------------------------------------------
+
+	#if RESID_INLINING || defined(__VOICE_CC__)
+
+	// ----------------------------------------------------------------------------
+	// Amplitude modulated waveform output.
+	// Ideal range [-2048*255, 2047*255].
+	// ----------------------------------------------------------------------------
+	RESID_INLINE
+	sound_sample Voice::output ()
+	{
+		// Multiply oscillator output with envelope output.
+		return (wave.output () - wave_zero) * envelope.output () + voice_DC;
+	}
+
+	#endif // RESID_INLINING || defined(__VOICE_CC__)
 }
-
-using namespace RESID;
-
-// ----------------------------------------------------------------------------
-// Inline functions.
-// The following function is defined inline because it is called every
-// time a sample is calculated.
-// ----------------------------------------------------------------------------
-
-#if RESID_INLINING || defined(__VOICE_CC__)
-
-// ----------------------------------------------------------------------------
-// Amplitude modulated waveform output.
-// Ideal range [-2048*255, 2047*255].
-// ----------------------------------------------------------------------------
-RESID_INLINE
-sound_sample Voice::output ()
-{
-	// Multiply oscillator output with envelope output.
-	return (wave.output () - wave_zero) * envelope.output () + voice_DC;
-}
-
-#endif // RESID_INLINING || defined(__VOICE_CC__)
 
 #endif // not __VOICE_H__

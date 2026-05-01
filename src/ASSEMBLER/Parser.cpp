@@ -421,7 +421,7 @@ void MCHEmul::Assembler::InstructionCommandParser::parse (MCHEmul::Assembler::Pa
 
 // ---
 MCHEmul::Assembler::Parser::Parser (const MCHEmul::CPU* c, 
-		const MCHEmul::ASCIIConverter* aC, const MCHEmul::Assembler::CommandParsers& lP)
+		const MCHEmul::ASCIIToCodeConverter* aC, const MCHEmul::Assembler::CommandParsers& lP)
 	: _cpu (c),
 	  _ASCIIConverter (aC),
 	  _commandParsers (lP),
@@ -441,7 +441,7 @@ MCHEmul::Assembler::Parser::Parser (const MCHEmul::CPU* c,
 		cP |= (dynamic_cast <MCHEmul::Assembler::CommentCommandParser*> (i) != nullptr);
 		if (bD == nullptr) bD = dynamic_cast <MCHEmul::Assembler::BinaryDefinitionParser*> (i); // Get the first if any...
 		if (bP == nullptr) bP = dynamic_cast <MCHEmul::Assembler::BinaryCommandParser*> (i); // Get the first if any...
-		if (bT == nullptr) bT = dynamic_cast <MCHEmul::Assembler::TextCommandParser*> (i); // Get the first oif any...
+		if (bT == nullptr) bT = dynamic_cast <MCHEmul::Assembler::TextCommandParser*> (i); // Get the first if any...
 
 		i -> setCPU (c);
 		i -> setParser (this); 

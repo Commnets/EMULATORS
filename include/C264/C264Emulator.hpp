@@ -26,7 +26,7 @@ namespace C264
 		one oif the most important is the type of machine to be emulated, 
 		because it can be a C16, a CPlus/4 or a C116 machine, which are different
 		is several aspects like the number of ports the RAM at the beginning or the ROM loaded. */
-	class C264Emulator : public MCHEmul::Emulator
+	class C264Emulator : public COMMODORE::Emulator
 	{
 		public:
 		/** The possible additional parameters of the C264 Emulator. */
@@ -45,7 +45,7 @@ namespace C264
 		  * @param cS		: A reference to the communication system. It can be nullptr if no required.
 		  */
 		C264Emulator (const MCHEmul::CommandLineArguments& args, MCHEmul::CommunicationSystem* cS = nullptr)
-			: MCHEmul::Emulator (args, cS)
+			: COMMODORE::Emulator (args, cS)
 							{ }
 
 		virtual void printOutParameters (std::ostream& o = std::cout) const override;

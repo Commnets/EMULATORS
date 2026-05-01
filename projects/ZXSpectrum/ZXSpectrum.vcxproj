@@ -19,6 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\include\ZXSpectrum\ASCIIToCodeConverter.hpp" />
     <ClInclude Include="..\..\include\ZXSpectrum\Cartridge.hpp" />
     <ClInclude Include="..\..\include\ZXSpectrum\CommandBuilder.hpp" />
     <ClInclude Include="..\..\include\ZXSpectrum\Commands.hpp" />
@@ -43,6 +44,7 @@
     <ClInclude Include="..\..\include\ZXSpectrum\ZXSpectrumEmulator.hpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\src\ZXSpectrum\ASCIIToCodeConverter.cpp" />
     <ClCompile Include="..\..\src\ZXSpectrum\Cartridge.cpp" />
     <ClCompile Include="..\..\src\ZXSpectrum\CommandBuilder.cpp" />
     <ClCompile Include="..\..\src\ZXSpectrum\Commands.cpp" />

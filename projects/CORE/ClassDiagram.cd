@@ -574,11 +574,11 @@
       <FileName>C:\Workspaces\EMULATORS\include\CORE\Address.hpp</FileName>
     </TypeIdentifier>
   </Class>
-  <Class Name="MCHEmul::ASCIIConverter" Collapsed="true">
+  <Class Name="MCHEmul::ASCIIToCodeConverter" Collapsed="true">
     <Position X="115.75" Y="0.5" Width="1.5" />
     <TypeIdentifier>
       <HashCode>AAAAAAAAACAAgAAAAAAAAAAAgAAAAAAAAAAgAAAAAAA=</HashCode>
-      <FileName>C:\Workspaces\EMULATORS\include\CORE\ASCIIConverter.hpp</FileName>
+      <FileName>C:\Workspaces\EMULATORS\include\CORE\ASCIIToCodeConverter.hpp</FileName>
     </TypeIdentifier>
   </Class>
   <Class Name="MCHEmul::Clock" Collapsed="true">

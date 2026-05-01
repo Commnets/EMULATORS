@@ -287,7 +287,7 @@ namespace MCHEmul
 			virtual size_t size (const Semantic* s, const OperationParser* oP = nullptr) const override;
 
 			std::string _text;
-			const ASCIIConverter* _ASCIIConverter;
+			const ASCIIToCodeConverter* _ASCIIConverter;
 
 			private:
 			virtual std::vector <UByte> calculateCodeBytes 

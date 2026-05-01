@@ -153,6 +153,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\include\ZX81\ASCIIToCodeConverter.hpp" />
     <ClInclude Include="..\..\include\ZX81\Cartridge.hpp" />
     <ClInclude Include="..\..\include\ZX81\CommandBuilder.hpp" />
     <ClInclude Include="..\..\include\ZX81\Commands.hpp" />
@@ -175,6 +176,7 @@
     <ClInclude Include="..\..\include\ZX81\ZX81Emulator.hpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\src\ZX81\ASCIIToCodeConverter.cpp" />
     <ClCompile Include="..\..\src\ZX81\Cartridge.cpp" />
     <ClCompile Include="..\..\src\ZX81\CommandBuilder.cpp" />
     <ClCompile Include="..\..\src\ZX81\Commands.cpp" />

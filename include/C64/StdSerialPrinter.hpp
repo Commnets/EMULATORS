@@ -34,10 +34,9 @@ namespace C64
 										!= _POSSIBLEDEVICENUMBERS.end ()); }
 
 		StandardSerialPrinterSimulation (
+			MCHEmul::MatrixPrinterEmulation* mPE,
 			int id = _DEFAULTID, 
-			unsigned char dN = _DEFAULTDEVICENUMBER, 
-			MCHEmul::MatrixPrinterEmulation* mPE = 
-				new COMMODORE::MPS801BasicMatrixPrinterEmulation);
+			unsigned char dN = _DEFAULTDEVICENUMBER);
 
 		protected:
 		/** The definition of the traps for this device. */

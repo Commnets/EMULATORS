@@ -16,6 +16,7 @@
 
 #include <EMULATORS/Emulator.hpp>
 #include <SINCLAIR/incs.hpp>
+#include <ZX81/ASCIIToCodeConverter.hpp>
 #include <ZX81/ZX81.hpp>
 #include <ZX81/FileIO.hpp>
 #include <ZX81/IOPBuilder.hpp>
@@ -70,6 +71,8 @@ namespace ZX81
 		virtual bool initialize () override;
 
 		protected:
+		virtual ASCIIToCodeConverter* createASCIIToCodeConverter () const override
+							{ return (new ASCIIToCodeConverter); } // The ZX81 version...
 		virtual MCHEmul::Computer* createComputer () const override;
 		virtual MCHEmul::IOPeripheralBuilder* createPeripheralBuilder () const override
 							{ return (new IOPeripheralBuilder); }

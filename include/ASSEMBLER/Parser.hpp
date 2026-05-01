@@ -344,13 +344,13 @@ namespace MCHEmul
 		class TextCommandParser final : public CommandParser
 		{
 			public:
-			TextCommandParser (const ASCIIConverter* tC)
+			TextCommandParser (const ASCIIToCodeConverter* tC)
 				: CommandParser (),
 				  _ASCIIConverter (tC) // It could be null at construction time...
 							{ }
 
 			/** The class is not the owner of the converter as it might be used by other classes. */
-			void setASCIIConverter (const ASCIIConverter* tC)
+			void setASCIIConverter (const ASCIIToCodeConverter* tC)
 							{ _ASCIIConverter = tC; }
 
 			virtual bool canParse (ParserContext* pC) const override
@@ -360,7 +360,7 @@ namespace MCHEmul
 			virtual void parse (ParserContext* pC) const override;
 
 			private:
-			const ASCIIConverter* _ASCIIConverter;
+			const ASCIIToCodeConverter* _ASCIIConverter;
 		};
 
 		/** To include a binary set of data comming from a file. */
@@ -395,11 +395,12 @@ namespace MCHEmul
 			The parser is a line parser. That is, it is only able to parser a line. \n
 			There can be added specific instruction parsers but always a comment command parser must exist. \n
 			It is used to determine whether a line finishes or not. \n
-			The parser can be extended later to include / change specific command parsers */
+			The parser can be extended later to include / change specific command parsers 
+			The ASCIConverter is owned by the class. */
 		class Parser
 		{
 			public:
-			Parser (const CPU* c, const ASCIIConverter* aC = new ASCIIConverter /** The deafult one does nothing. */,
+			Parser (const CPU* c, const ASCIIToCodeConverter* aC = new ASCIIToCodeConverter /** The deafult one does nothing. */,
 					const CommandParsers& lP = // With the standard line parsers...
 						{ new CommentCommandParser, // Comments
 						  new IncludeCommandParser, // Include other assembler files
@@ -505,7 +506,7 @@ namespace MCHEmul
 
 			private:
 			const CPU* _cpu;
-			const ASCIIConverter* _ASCIIConverter;
+			const ASCIIToCodeConverter* _ASCIIConverter;
 			CommandParsers _commandParsers;
 			bool _printOutProcess;
 

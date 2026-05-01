@@ -38,6 +38,7 @@ namespace C64
 		static const unsigned int _NTSCCLOCK	= 1022727; // 1.023 MHz
 
 		Commodore64 (
+			const MCHEmul::ASCIIToCodeConverter* cnv,
 			VisualSystem vS = VisualSystem::_PAL /** Europe initially */,
 			const std::string& sS = "SID", /** Sound Emulation Library used is initially SID. */
 			const std::string& lang = MCHEmul::_DEFAULTLANGUAGE /** English language used behind. */);

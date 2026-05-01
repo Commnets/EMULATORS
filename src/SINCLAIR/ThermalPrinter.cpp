@@ -3,18 +3,20 @@
 
 // ---
 SINCLAIR::BasicThermalPrinterEmulation::BasicThermalPrinterEmulation 
-	(const std::function <unsigned char (unsigned char)>& cvt, const std::string& pFN)
-	: MCHEmul::BasicMatrixPrinterEmulation (32 /** As wide as the screen. */, pFN),
-	  _ZXCodeConversorFunction (std::move (cvt))
+	(const MCHEmul::ASCIIToCodeConverter* cvs, 
+	 const std::string& pFN)
+	: MCHEmul::BasicMatrixPrinterEmulation (cvs, 32 /** As wide as the screen. */, pFN)
 {
 	configuration ()._description = "Basic Thermal ZX81 Printer Simulation";
 }
 
 // ---
 SINCLAIR::PostscriptThermalPrinterEmulation::PostscriptThermalPrinterEmulation 
-		(const MCHEmul::MatrixPrinterEmulation::Configuration& cfg, const std::string& pFN)
+		(const MCHEmul::ASCIIToCodeConverter* cvs,
+		 const MCHEmul::MatrixPrinterEmulation::Configuration& cfg, 
+		 const std::string& pFN)
 	: MCHEmul::PostscriptMatrixPrinterEmulation 
-		(cfg, MCHEmul::MatrixPrinterEmulation::Paper 
+		(cvs, cfg, MCHEmul::MatrixPrinterEmulation::Paper 
 			(MCHEmul::MatrixPrinterEmulation::Paper::Type::_WHITE, 3.94f, 20.0f, false), pFN)
 {
 	configuration ()._description = "Postscript Thermal ZX81 Printer Simulation";

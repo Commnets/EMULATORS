@@ -22,7 +22,7 @@
 namespace C64
 {
 	/** The c64 emulator admits some additional parameters. */
-	class C64Emulator : public MCHEmul::Emulator
+	class C64Emulator : public COMMODORE::Emulator
 	{
 		public:
 		/** The possible additional parameters of the C64 Emulator. */
@@ -40,7 +40,7 @@ namespace C64
 		  * @param cS		: A reference to the communication system. It can be nullptr if no required.
 		  */
 		C64Emulator (const MCHEmul::CommandLineArguments& args, MCHEmul::CommunicationSystem* cS = nullptr)
-			: MCHEmul::Emulator (args, cS)
+			: COMMODORE::Emulator (args, cS)
 							{ }
 
 		virtual void printOutParameters (std::ostream& o = std::cout) const override;
@@ -66,6 +66,7 @@ namespace C64
 		protected:
 		virtual MCHEmul::Computer* createComputer () const override
 							{ return (new C64::Commodore64 (
+								asciiToCodeConverter (),
 								NTSCSystem () 
 									? C64::Commodore64::VisualSystem::_NTSC : C64::Commodore64::VisualSystem::_PAL,
 								SIDEmulationLib (),

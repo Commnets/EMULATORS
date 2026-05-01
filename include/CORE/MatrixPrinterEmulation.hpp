@@ -16,6 +16,7 @@
 #define __MCHEMUL_MATRIXPRINTEREMULATION__
 
 #include <CORE/InfoClass.hpp>
+#include <CORE/ASCIIToCodeConverter.hpp>
 #include <string>
 #include <fstream>
 
@@ -130,10 +131,17 @@ namespace MCHEmul
 			unsigned short _numSpacesTabChar;
 		};
 
-		MatrixPrinterEmulation (const Configuration& cfg, const Paper& p, 
+		MatrixPrinterEmulation (
+			const ASCIIToCodeConverter* cvs,
+			const Configuration& cfg, const Paper& p, 
 			const std::string& pFN);
 
 		virtual ~MatrixPrinterEmulation ();
+
+		/** To get the asciiToCodeConverter. \n
+			It can not be modified, and the object is not its owner!. */
+		const ASCIIToCodeConverter* asciiToCodeConverter () const
+							{ return (_asciiToCodeConverter); }
 
 		/** See the configuration... */
 		const Configuration& configuration () const
@@ -264,6 +272,9 @@ namespace MCHEmul
 							{ _printerFile << std::string (1, (char) chr); return (1);  } // Again, the default output...
 
 		protected:
+		/** The printer might need a converter from the code used in the computer emulation 
+			to ASCII. It is not mandatory, but it could be needed. */
+		const ASCIIToCodeConverter* _asciiToCodeConverter;
 		/** The configuration of the printer. 
 			It is usefull to define things like the size of the characters, or the max size of the paper. */
 		Configuration _configuration;
@@ -293,9 +304,11 @@ namespace MCHEmul
 	class BasicMatrixPrinterEmulation : public MatrixPrinterEmulation
 	{
 		public:
-		BasicMatrixPrinterEmulation (unsigned char cPL, // The paper here is not important...
+		BasicMatrixPrinterEmulation (
+				const MCHEmul::ASCIIToCodeConverter* cvs,
+				unsigned char cPL, // The paper here is not important...
 				const std::string& pFN = "MatrixPrinter.txt")
-			: MatrixPrinterEmulation (Configuration (), Paper (), pFN)
+			: MatrixPrinterEmulation (cvs, Configuration (), Paper (), pFN)
 							{ _configuration._charsPerLine = cPL; 
 							  _configuration._description = "Basic Matrix Emulation"; }
 	};
@@ -307,9 +320,11 @@ namespace MCHEmul
 	class PostscriptMatrixPrinterEmulation : public MatrixPrinterEmulation
 	{
 		public:
-		PostscriptMatrixPrinterEmulation (const Configuration& cfg, const Paper& p,
+		PostscriptMatrixPrinterEmulation (
+				const MCHEmul::ASCIIToCodeConverter* cvs,
+				const Configuration& cfg, const Paper& p,
 				const std::string& pFN = "MatrixPrinter.ps") // The extension is to determine that it is postscript file...
-			: MatrixPrinterEmulation (cfg, p, pFN)
+			: MatrixPrinterEmulation (cvs, cfg, p, pFN)
 							{ _configuration._description = "Basic Postscript Matrix Emulation"; }
 
 		protected:

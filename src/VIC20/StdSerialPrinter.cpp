@@ -52,12 +52,11 @@ const COMMODORE::SerialIOPeripheralSimulation::Definition
 	}}};
 
 // ---
-VIC20::StandardSerialPrinterSimulation::StandardSerialPrinterSimulation (int id, unsigned char dN,
-		MCHEmul::MatrixPrinterEmulation* mPE)
-	: COMMODORE::SerialPrinterPeripheralSimulation (id, dN, _DEFINITION,
+VIC20::StandardSerialPrinterSimulation::StandardSerialPrinterSimulation (MCHEmul::MatrixPrinterEmulation* mPE,
+		int id, unsigned char dN)
+	: COMMODORE::SerialPrinterPeripheralSimulation (mPE, id, dN, _DEFINITION,
 		{ { "Name", "Standard Serial Printer" },
-		  { "Manufacturer", "ICF Printer Software Simulation" } },
-		mPE)
+		  { "Manufacturer", "ICF Printer Software Simulation" } })
 {
 	assert (isDeviceNumberValid (deviceNumber ()));
 }

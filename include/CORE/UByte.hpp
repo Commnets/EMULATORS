@@ -163,11 +163,11 @@ namespace MCHEmul
 	// ---
 	inline constexpr bool UByte::shiftLeftC (bool c, size_t p)
 	{
-		UByte nV = UByte::_0;
-
 		bool nC = false; // Adjusted later
 		for (size_t i = 0; i < p; i++)
 		{
+			UByte nV = UByte::_0;
+
 			for (size_t j = UByte::sizeBits () - 1; j >= 1; j--)
 			{
 				if (j == UByte::sizeBits () - 1) 
@@ -177,9 +177,9 @@ namespace MCHEmul
 			}
 
 			nV.setBit (0, c);
-		}
 
-		*this = nV;
+			*this = nV;
+		}
 
 		return (nC);
 	}
@@ -187,11 +187,11 @@ namespace MCHEmul
 	// ---
 	inline constexpr bool UByte::shiftRightC (bool c, size_t p)
 	{
-		UByte nV = UByte::_0;
-
 		bool nC = false; // Adjusted later
 		for (size_t i = 0; i < p; i++)
 		{
+			UByte nV = UByte::_0;
+
 			for (size_t j = 0; j < (UByte::sizeBits () - 1); j++)
 			{
 				if (j == 0) 
@@ -201,9 +201,9 @@ namespace MCHEmul
 			}
 
 			nV.setBit (UByte::sizeBits () - 1, c);
-		}
 
-		*this = nV;
+			*this = nV;
+		}
 
 		return (nC);
 	}

@@ -46,6 +46,12 @@
     <Filter Include="Configuration">
       <UniqueIdentifier>{1863b633-ddc8-4d76-b3cf-d652095d9602}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Archivos de origen\Foundation">
+      <UniqueIdentifier>{576c9b28-e117-45fe-9d8b-5f70dbd1d2ba}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Archivos de encabezado\Foundation">
+      <UniqueIdentifier>{720f6848-c9df-475c-b1ba-412777671a2e}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\include\ZX81\incs.hpp">
@@ -108,6 +114,9 @@
     <ClInclude Include="..\..\include\ZX81\StdPrinter.hpp">
       <Filter>Archivos de encabezado\IO</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\include\ZX81\ASCIIToCodeConverter.hpp">
+      <Filter>Archivos de encabezado\Foundation</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\ZX81\CommandBuilder.cpp">
@@ -163,6 +172,9 @@
     </ClCompile>
     <ClCompile Include="..\..\src\ZX81\StdPrinter.cpp">
       <Filter>Archivos de origen\IO</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\ZX81\ASCIIToCodeConverter.cpp">
+      <Filter>Archivos de origen\Foundation</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

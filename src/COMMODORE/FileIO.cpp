@@ -632,7 +632,7 @@ void COMMODORE::D64FileData::Track18Data::createEntries () const
 			// Sector 0 is the directory header...
 			case 0:
 				{
-					// TODO
+					// Just to calculate the size in blocks...
 				}
 				break;
 
@@ -676,9 +676,8 @@ COMMODORE::D64FileData::DirectoryEntriesPerSector
 		
 		dE._fileName = "";
 		for (unsigned char j = 0; j < 16; j++)
-		{ unsigned char c = 
-			 _sectorsData [sN].bytes () [(i << 5) + 5 + j].value ();
-			dE._fileName += (std::isalpha (c) ? (char) std::toupper (c) : ' ');	}
+			{ unsigned char c = _sectorsData [sN].bytes () [(i << 5) + 5 + j].value ();
+			  dE._fileName += (std::isalnum (c) ? (char) std::toupper (c) : ' '); }
 		dE._fileName = MCHEmul::trim (dE._fileName);
 
 		// End? or not end and added?...
@@ -715,7 +714,9 @@ MCHEmul::ExtendedDataMemoryBlocks COMMODORE::D64FileData::asMemoryBlocks () cons
 				MCHEmul::Address (3, 
 					_tracksData [i - 1] -> _trackInfo._offset.value () + ((unsigned int) j * 256)),  
 				_tracksData [i - 1] -> getSectorData (j).bytes ());
-			mB.setName ("TRACK " + std::to_string ((int) i) + " SECTOR " + std::to_string ((int) j));
+			mB.setName ( // The estructure of the block's name is TRACKSECTOR with 2 digits each filled up with zeros!
+				MCHEmul::fixLenStr (std::to_string ((int) i), 2, true, MCHEmul::_CEROS) +
+				MCHEmul::fixLenStr (std::to_string ((int) j), 2, true, MCHEmul::_CEROS));
 			mB.setAttribute ("TRACK", std::to_string ((int) i));
 			mB.setAttribute ("SECTOR", std::to_string ((int) j));
 			result._data.emplace_back (std::move (mB));

@@ -36,11 +36,12 @@ namespace COMMODORE
 				  const MCHEmul::Chips& c, 
 				  MCHEmul::Memory* m, 
 				  const MCHEmul::IODevices& d, 
-				  unsigned int cs, 
+				  unsigned int cs,
+			      const MCHEmul::ASCIIToCodeConverter* cnv,
 				  const MCHEmul::Buses& bs,
 				  const MCHEmul::Wires& ws,
 				  const MCHEmul::Attributes& attrs)
-			: MCHEmul::Computer (cpu, c, m, d, cs, bs, ws, attrs)
+			: MCHEmul::Computer (cpu, c, m, d, cs, cnv, bs, ws, attrs)
 							{ }
 
 		// To get direct access to the most important COMMODORE chips...

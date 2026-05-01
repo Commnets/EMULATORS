@@ -15,7 +15,6 @@
 #define __SINCLAIR_PRINTER__
 
 #include <CORE/incs.hpp>
-#include <functional>
 
 namespace SINCLAIR
 {
@@ -33,7 +32,8 @@ namespace SINCLAIR
 		/** The constructor received a function to convert the internal code into ascii.
 			This is needed because not all SINCLAIR computers have the same code table!. 
 			And for printing reason it is needed to take into aconsideration. */
-		BasicThermalPrinterEmulation (const std::function <unsigned char (unsigned char)>& cv,
+		BasicThermalPrinterEmulation (
+			const MCHEmul::ASCIIToCodeConverter* cvs,
 			const std::string& pFN = "MatrixPrinter.txt");
 
 		private:
@@ -49,10 +49,8 @@ namespace SINCLAIR
 			There is no control characters. */
 
 		virtual unsigned short printNormalChar (unsigned char chr) override
-							{ printerFile () << std::string (1, (char) _ZXCodeConversorFunction (chr)); return (1); }
-
-		private:
-		std::function <unsigned char (unsigned char)> _ZXCodeConversorFunction;
+							{ printerFile () << std::string (1, 
+								(char) asciiToCodeConverter () -> inverseConvert (chr).value ()); return (1); }
 	};
 
 	/** In this version a real simulation is done
@@ -62,7 +60,8 @@ namespace SINCLAIR
 	{
 		public:
 		PostscriptThermalPrinterEmulation 
-			(const MCHEmul::MatrixPrinterEmulation::Configuration& cfg, 
+			(const MCHEmul::ASCIIToCodeConverter* cvs,
+			 const MCHEmul::MatrixPrinterEmulation::Configuration& cfg, 
 			 const std::string& pFN = "MatrixPrinter.ps");
 
 		private:

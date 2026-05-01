@@ -4,7 +4,6 @@
 #include <COMMODORE/1530Datasette.hpp>
 #include <COMMODORE/SerialPrinterMPS801.hpp>
 #include <COMMODORE/SerialPrinterMPS802.hpp>
-#include <C64/Cartridge.hpp>
 
 // ---
 MCHEmul::IOPeripheral* COMMODORE::IOPeripheralBuilder::createPeripheral 
@@ -39,7 +38,10 @@ MCHEmul::IOPeripheral* COMMODORE::IOPeripheralBuilder::createPeripheral
 std::tuple <std::string, unsigned char, MCHEmul::MatrixPrinterEmulation*> 
 	COMMODORE::IOPeripheralBuilder::getDataPrinterFrom
 		(const MCHEmul::Attributes& prms,
-		 const std::tuple <std::string, unsigned char, MCHEmul::MatrixPrinterEmulation*>& eD) const
+		 const std::tuple <
+			const MCHEmul::ASCIIToCodeConverter*,
+			std::string, unsigned char, 
+			MCHEmul::MatrixPrinterEmulation*>& eD) const
 {
 	// To get the parameter....
 	auto getParameter = [](const std::string& attr) -> std::pair <std::string, std::string>
@@ -51,10 +53,11 @@ std::tuple <std::string, unsigned char, MCHEmul::MatrixPrinterEmulation*>
 				: std::make_pair ("", ""));
 		};
 
+	const MCHEmul::ASCIIToCodeConverter* cvs;
 	std::string pF;
 	unsigned char dN;
 	MCHEmul::MatrixPrinterEmulation* mPE;
-	std::tie (pF, dN, mPE) = eD;
+	std::tie (cvs, pF, dN, mPE) = eD;
 
 	for (auto const& i : prms)
 	{
@@ -83,7 +86,7 @@ std::tuple <std::string, unsigned char, MCHEmul::MatrixPrinterEmulation*>
 			{
 				if (pz.size () == 1)
 				{
-					mPE = new COMMODORE::MPS801BasicMatrixPrinterEmulation (pF);
+					mPE = new COMMODORE::MPS801BasicMatrixPrinterEmulation (cvs, pF);
 				}
 				else
 				if (pz.size () == 2)
@@ -91,21 +94,21 @@ std::tuple <std::string, unsigned char, MCHEmul::MatrixPrinterEmulation*>
 					if (pz [1] == "PS")
 					{
 						mPE = new COMMODORE::MPS801PostscriptMatrixPrinterEmulation 
-							(getPaperDataPrinterEmulationFrom (a.second), pF);
+							(cvs, getPaperDataPrinterEmulationFrom (a.second), pF);
 					}
 					else
 					{
 						_LOG ("Type of emulation mechanism: " + pz [1] + 
 							" not supported for MPS801 printer, using basic emulation.");
 
-						mPE = new COMMODORE::MPS801BasicMatrixPrinterEmulation (pF);
+						mPE = new COMMODORE::MPS801BasicMatrixPrinterEmulation (cvs, pF);
 					}
 				}
 				else
 				{
 					_LOG ("Too many details for MPS801 printer, using basic emulation.");
 
-					mPE = new COMMODORE::MPS801BasicMatrixPrinterEmulation (pF);
+					mPE = new COMMODORE::MPS801BasicMatrixPrinterEmulation (cvs, pF);
 				}
 			}
 			else
@@ -114,7 +117,7 @@ std::tuple <std::string, unsigned char, MCHEmul::MatrixPrinterEmulation*>
 			{
 				if (pz.size () == 1)
 				{
-					mPE = new COMMODORE::MPS802BasicMatrixPrinterEmulation (pF);
+					mPE = new COMMODORE::MPS802BasicMatrixPrinterEmulation (cvs, pF);
 				}
 				else
 				if (pz.size () == 2)
@@ -122,21 +125,21 @@ std::tuple <std::string, unsigned char, MCHEmul::MatrixPrinterEmulation*>
 					if (pz [1] == "PS")
 					{
 						mPE = new COMMODORE::MPS802PostscriptMatrixPrinterEmulation 
-							(getPaperDataPrinterEmulationFrom (a.second), pF);
+							(cvs, getPaperDataPrinterEmulationFrom (a.second), pF);
 					}
 					else
 					{
 						_LOG ("Type of emulation mechanism: " + pz [1] + 
 							" not supported for MPS802 printer, using basic emulation.");
 
-						mPE = new COMMODORE::MPS802BasicMatrixPrinterEmulation (pF);
+						mPE = new COMMODORE::MPS802BasicMatrixPrinterEmulation (cvs, pF);
 					}
 				}
 				else
 				{
 					_LOG ("Too many details for MPS802 printer, using basic emulation.");
 
-					mPE = new COMMODORE::MPS802BasicMatrixPrinterEmulation (pF);
+					mPE = new COMMODORE::MPS802BasicMatrixPrinterEmulation (cvs, pF);
 				}
 			}
 			// Creates the basic printer...
@@ -145,7 +148,7 @@ std::tuple <std::string, unsigned char, MCHEmul::MatrixPrinterEmulation*>
 				_LOG ("Type of printer emulation: " + pz [0] + 
 					" not supported, using basic emulation.");
 
-				mPE = new MCHEmul::BasicMatrixPrinterEmulation (80, pF);
+				mPE = new MCHEmul::BasicMatrixPrinterEmulation (cvs, 80, pF);
 			}
 		}
 	}

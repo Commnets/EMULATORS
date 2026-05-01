@@ -16,13 +16,16 @@
 #include <F6500/C6510.hpp>
 
 // ---
-C64::Commodore64::Commodore64 (C64::Commodore64::VisualSystem vS, const std::string& sS, const std::string& lang)
+C64::Commodore64::Commodore64 (
+		const MCHEmul::ASCIIToCodeConverter* cnv, 
+		C64::Commodore64::VisualSystem vS, const std::string& sS, const std::string& lang)
 	: COMMODORE::Computer 
 		(new F6500::C6510 (0 /** Only 1 micro. */),
 		 C64::Commodore64::standardChips (vS, sS),
 		 new C64::Memory (lang), // The memory is loaded with different info depending on the language...
 		 C64::Commodore64::standardDevices (vS),
 		 vS == C64::Commodore64::VisualSystem::_PAL ? _PALCLOCK : _NTSCCLOCK,
+		 cnv,
 		 { }, { }, // The C64 emulation has been done without neither buses nor wires...
 		 { { "Name", "Commodore 64" },
 		   { "Manufacturer", "Commodore Business Machines CBM" },

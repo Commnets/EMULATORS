@@ -33,9 +33,11 @@ MCHEmul::InfoStructure MCHEmul::MatrixPrinterEmulation::Configuration::getInfoSt
 
 // ---
 MCHEmul::MatrixPrinterEmulation::MatrixPrinterEmulation
-		(const MCHEmul::MatrixPrinterEmulation::Configuration& cfg, 
-			const MCHEmul::MatrixPrinterEmulation::Paper& p, const std::string& pFN)
+		(const MCHEmul::ASCIIToCodeConverter* cvs,
+		 const MCHEmul::MatrixPrinterEmulation::Configuration& cfg, 
+		 const MCHEmul::MatrixPrinterEmulation::Paper& p, const std::string& pFN)
 	: MCHEmul::InfoClass ("MatrixPinterEmulation"),
+	  _asciiToCodeConverter (cvs),
 	  _configuration (cfg),
 	  _paper (p),
 	  _printerFileName (pFN),
@@ -45,6 +47,7 @@ MCHEmul::MatrixPrinterEmulation::MatrixPrinterEmulation
 	  _posX (0), _posY (0),
 	  _firstChar (true)
 {
+	assert (_asciiToCodeConverter != nullptr); // Might not be needed, but it is mandatory anyway...
 	assert (_configuration._charsPerLine > 0 && 
 			_configuration._charsPerPage > 0);
 

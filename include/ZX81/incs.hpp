@@ -17,6 +17,7 @@
 #include <FZ80/incs.hpp>
 #include <EMULATORS/incs.hpp>
 #include <SINCLAIR/incs.hpp>
+#include <ZX81/ASCIIToCodeConverter.hpp>
 #include <ZX81/CommandBuilder.hpp>
 #include <ZX81/Commands.hpp>
 #include <ZX81/FileIO.hpp>

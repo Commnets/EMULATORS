@@ -25,7 +25,9 @@ namespace COMMODORE
 	class Disk1540SeriesSimulation : public SerialIOPeripheralSimulation
 	{
 		public:
-		Disk1540SeriesSimulation (int id, unsigned char dN, 
+		Disk1540SeriesSimulation (
+			int id, unsigned char dN,
+			const MCHEmul::ASCIIToCodeConverter* cnv, // This class is not the owner of the object but ther Emulation instead!
 			const SerialIOPeripheralSimulation::Definition& dt);
 
 		virtual bool initialize () override
@@ -45,25 +47,79 @@ namespace COMMODORE
 		virtual MCHEmul::InfoStructure getInfoStructure () const override;
 
 		protected:
+		/** What every device does, depends on the type of the device and their specific KERNEL. \n
+			So, these methods must be overloaded per tyep of device. \n
+			All they return the status code of the execution. */
+		virtual unsigned char listen (MCHEmul::CPU* cpu, const MCHEmul::UByte& b);
+		virtual unsigned char unlisten (MCHEmul::CPU* cpu, const MCHEmul::UByte& b);
+		virtual unsigned char talk (MCHEmul::CPU* cpu, const MCHEmul::UByte& b);
+		virtual unsigned char untalk (MCHEmul::CPU* cpu, const MCHEmul::UByte& b);
+		virtual unsigned char openChannel (MCHEmul::CPU* cpu, const MCHEmul::UByte& chn);
+		virtual unsigned char closeChannel (MCHEmul::CPU* cpu, const MCHEmul::UByte& chn);
 		virtual unsigned char sendByte (MCHEmul::CPU* cpu, const MCHEmul::UByte& b) override;
 		virtual unsigned char receiveByte (MCHEmul::CPU* cpu, MCHEmul::UByte& b) override;
 
-		/** To load the program into the memory. \n
-			In some COMMODORE computers (like C64) the whole RAM memory is not directly accesible. */
-		virtual void loadDataBlockInRAM (const MCHEmul::DataMemoryBlock& dB, MCHEmul::CPU* cpu)
-							{ cpu -> memoryRef () -> put (_data._data [actualBlock ()]); }
+		// To get the information of the disk attending the tracks and sector structure...
+		// ...structure that was given through the connectData method...
+		/** To get a copy of a DataMemoryBlock for a specific track and sector,
+			from the data received when the disk were connected. Empty if it didn't exit. \n
+			It returns a single DataMemoryBlock. */
+		MCHEmul::DataMemoryBlock dataBlockPerTrackAndSector (size_t track, size_t sector) const;
+		/** To get a DataMemoryBlocks structure with the data for a specific track. \n
+			If the track doesn't exist, an empty structure is returned. 
+			It returns a DataMemoryBlock per sector within the track. \n
+			It is supossed that the content is returned clasified pero sector. */
+		MCHEmul::DataMemoryBlocks dataBlocksPerTrack (size_t track) const;
 
-		/** To get the actual block depending on the actual track and actual sector. \n
-			Bear in mind that not all tracks have the same number of sectors! */
-		size_t actualBlock () const;
+		// Methods to build blocks of bytes to answer, depending in the command received...
+		/** To get the name of all files in the directory, 
+			its position in the disk and its size. */
+
+		/** When the directory is requested. */
+		std::vector <MCHEmul::UByte> buildAnswerToDirCommand () const;
+		/** When another file is requested. */
+		std::vector <MCHEmul::UByte> buildAnswerToFileCommand () const;
+		/** To get the intial sector annd track of a file name. \n
+			wildcards might be used to specific the file name (in PETSCII). \n 
+			When the wildcard * is at the beginning the info returned will allow to the first file. */
+		std::tuple <size_t, size_t> getInitialTrackAndSectorOfFile (const std::string& fN) const;
+		/** To get the data of a file from a sector and track. 
+			It might be recursive, until the end of the file was found. */
+		std::vector <MCHEmul::UByte> getDataOfFileFromTrackAndSector (size_t t, size_t s) const;
 
 		protected:
+		/** The ascii conversor. */
+		const MCHEmul::ASCIIToCodeConverter* _asciiConverter;
+		/** The data of the disk, given through the connectData method. */
 		MCHEmul::ExtendedDataMemoryBlocks _data;
+		/** The original connected data in the original format allowed. */
+		D64FileData* _d64FileData;
+
+		/** Different statusd of what the disk is answering... */
+		enum class DiskFirmwareStatus
+		{
+			// Not doing anything so far...
+			_IDLE, 
+			// The disk is receiving a command, 
+			// so it is receiving data from the computer.
+			_RECEIVINGCOMMAND,	
+			// The disk is answering a command, 
+			// so it is transmitting data to the computer.
+			_ANSWERINGCOMMAND,	
+		};
 
 		// Immplementation
-		/** Where the disk is now. */
-		mutable size_t _actualTrack; 
-		mutable size_t _actualSector;
+		/** Just to keep the command being transmited to the 1541 unit. */
+		std::string _currentCommand;
+		/** The status of the firmware. */
+		enum DiskFirmwareStatus _firmwareStatus;
+		/** Block of bytes to be sent back to the computer 
+			when a specific command is received. \n
+			The content of the block will depend on the command but is built first time the command
+			has to be answered anytime. */
+		std::vector <MCHEmul::UByte> _blockToAnswer;
+		/** The byte of the previous block that is being answered. */
+		unsigned short _byteFromBlockToAnswerToSend;
 	};
 }
 

@@ -46,6 +46,12 @@
     <Filter Include="Configuration">
       <UniqueIdentifier>{7a1bfd2d-795e-4316-8ed6-a72059062b34}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Archivos de encabezado\Foundation">
+      <UniqueIdentifier>{72a758bd-af87-4c08-bd90-88bb04942829}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Archivos de origen\Foundation">
+      <UniqueIdentifier>{1bdc83ce-fb4f-497f-a9aa-af3811d1a676}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\include\ZXSpectrum\incs.hpp">
@@ -114,6 +120,9 @@
     <ClInclude Include="..\..\include\ZXSpectrum\StdPrinter.hpp">
       <Filter>Archivos de encabezado\IO</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\include\ZXSpectrum\ASCIIToCodeConverter.hpp">
+      <Filter>Archivos de encabezado\Foundation</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\ZXSpectrum\Memory.cpp">
@@ -175,6 +184,9 @@
     </ClCompile>
     <ClCompile Include="..\..\src\ZXSpectrum\StdPrinter.cpp">
       <Filter>Archivos de origen\IO</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\ZXSpectrum\ASCIIToCodeConverter.cpp">
+      <Filter>Archivos de origen\Foundation</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

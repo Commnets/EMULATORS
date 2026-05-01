@@ -138,9 +138,6 @@
     <ClCompile Include="..\..\src\CORE\ByteCodeLine.cpp">
       <Filter>Archivos de origen\Foundation</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\CORE\ASCIIConverter.cpp">
-      <Filter>Archivos de origen\Foundation</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\CORE\Sound.cpp">
       <Filter>Archivos de origen\IO</Filter>
     </ClCompile>
@@ -221,6 +218,9 @@
     </ClCompile>
     <ClCompile Include="..\..\src\CORE\MatrixPrinterEmulation.cpp">
       <Filter>Archivos de origen\IO</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\CORE\ASCIIToCodeConverter.cpp">
+      <Filter>Archivos de origen</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -344,9 +344,6 @@
     <ClInclude Include="..\..\include\CORE\ByteCodeLine.hpp">
       <Filter>Archivos de encabezado\Foundation</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\include\CORE\ASCIIConverter.hpp">
-      <Filter>Archivos de encabezado\Foundation</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\include\CORE\Sound.hpp">
       <Filter>Archivos de encabezado\IO</Filter>
     </ClInclude>
@@ -430,6 +427,9 @@
     </ClInclude>
     <ClInclude Include="..\..\include\CORE\MatrixPrinterEmulation.hpp">
       <Filter>Archivos de encabezado\IO</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\CORE\ASCIIToCodeConverter.hpp">
+      <Filter>Archivos de encabezado</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

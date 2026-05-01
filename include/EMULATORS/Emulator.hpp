@@ -110,6 +110,14 @@ namespace MCHEmul
 		Assembler::Compiler* compiler ()
 							{ return ((Assembler::Compiler*) (((const Emulator*) this) -> compiler ())); }
 
+		/** At this level the asciiToCodeConverter can be const or not. */
+		const ASCIIToCodeConverter* asciiToCodeConverter () const
+							{ return (_asciiToCodeConverter == nullptr) 
+								? (_asciiToCodeConverter = createASCIIToCodeConverter ()) 
+								: _asciiToCodeConverter; }
+		ASCIIToCodeConverter* asciiToCodeConverter ()
+							{ return ((ASCIIToCodeConverter*) (((const Emulator*) this) -> asciiToCodeConverter ())); }
+
 		/** Print out help parameter. */
 		bool helpNeeded () const
 							{ return (_cmdlineArguments.existsArgument (_PARAMHELP)); }
@@ -264,6 +272,10 @@ namespace MCHEmul
 		/** To create the right version of the compiler. */
 		virtual Assembler::Compiler* createCompiler () const
 							{ return (new Assembler::Compiler ((Assembler::Parser*) parser ())); }
+		/** To create the right version of the ASCII Converter
+			By default the very basic version is created. This version doesn't convert anything */
+		virtual ASCIIToCodeConverter* createASCIIToCodeConverter () const
+							{ return (new ASCIIToCodeConverter); }
 		/** To create the right version of the computer, 
 			attending the parameters received by the constructor. */
 		virtual Computer* createComputer () const = 0;
@@ -281,6 +293,7 @@ namespace MCHEmul
 		// Implementation
 		mutable Assembler::Parser* _parser;
 		mutable Assembler::Compiler* _compiler;
+		mutable ASCIIToCodeConverter* _asciiToCodeConverter;
 		mutable Computer* _computer;
 		mutable IOPeripheralBuilder* _peripheralBuilder;
 		mutable FileIO* _fileReader;

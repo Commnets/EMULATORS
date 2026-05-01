@@ -36,8 +36,7 @@ namespace ZXSPECTRUM
 		static const int _PRINT_A = 0;
 		static const int _COPY_BUFF = 1;
 
-		ThermalPrinterSimulation (MCHEmul::MatrixPrinterEmulation* mPE = 
-			new MCHEmul::BasicMatrixPrinterEmulation (32, "Printer.txt"));
+		ThermalPrinterSimulation (MCHEmul::MatrixPrinterEmulation* mPE);
 
 		/** Open & close the output file. */
 		virtual bool initialize () override;

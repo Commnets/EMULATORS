@@ -428,8 +428,10 @@ const MCHEmul::MatrixPrinterEmulation::Configuration
 		(unsigned short) 4);
 
 // ---
-COMMODORE::MPS801BasicMatrixPrinterEmulation::MPS801BasicMatrixPrinterEmulation (const std::string& pFN)
-	: MCHEmul::BasicMatrixPrinterEmulation (80 /** Always the standard. */, pFN),
+COMMODORE::MPS801BasicMatrixPrinterEmulation::MPS801BasicMatrixPrinterEmulation (
+		const MCHEmul::ASCIIToCodeConverter* cvs,
+		const std::string& pFN)
+	: MCHEmul::BasicMatrixPrinterEmulation (cvs, 80 /** Always the standard. */, pFN),
 	  _businessMode (false),
 	  _double (false) // There is no more configuration needed, so the default one is enought...
 {
@@ -521,9 +523,10 @@ unsigned short COMMODORE::MPS801BasicMatrixPrinterEmulation::printNormalChar (un
 
 // ---
 COMMODORE::MPS801PostscriptMatrixPrinterEmulation::MPS801PostscriptMatrixPrinterEmulation 
-		(const MCHEmul::MatrixPrinterEmulation::Paper& p, 
+		(const MCHEmul::ASCIIToCodeConverter* cvs,
+		 const MCHEmul::MatrixPrinterEmulation::Paper& p, 
 		 const std::string& pFN)
-	: MCHEmul::PostscriptMatrixPrinterEmulation (_CONFIGURATION, p, pFN),
+	: MCHEmul::PostscriptMatrixPrinterEmulation (cvs, _CONFIGURATION, p, pFN),
 	  _double (false),
 	  _businessMode (false),
 	  _graphicMode (false),

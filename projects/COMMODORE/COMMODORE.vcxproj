@@ -24,6 +24,7 @@
     <ClInclude Include="..\..\include\COMMODORE\ACIA\ACIA.hpp" />
     <ClInclude Include="..\..\include\COMMODORE\ACIA\ACIARegisters.hpp" />
     <ClInclude Include="..\..\include\COMMODORE\ACIA\incs.hpp" />
+    <ClInclude Include="..\..\include\COMMODORE\ASCIIToCodeConverter.hpp" />
     <ClInclude Include="..\..\include\COMMODORE\C6529B\C6529B.hpp" />
     <ClInclude Include="..\..\include\COMMODORE\C6529B\C6529BRegisters.hpp" />
     <ClInclude Include="..\..\include\COMMODORE\C6529B\incs.hpp" />
@@ -37,6 +38,7 @@
     <ClInclude Include="..\..\include\COMMODORE\Commands.hpp" />
     <ClInclude Include="..\..\include\COMMODORE\Computer.hpp" />
     <ClInclude Include="..\..\include\COMMODORE\DatasettePort.hpp" />
+    <ClInclude Include="..\..\include\COMMODORE\Emulator.hpp" />
     <ClInclude Include="..\..\include\COMMODORE\ExpansionPeripherals.hpp" />
     <ClInclude Include="..\..\include\COMMODORE\ExpansionPort.hpp" />
     <ClInclude Include="..\..\include\COMMODORE\FileIO.hpp" />
@@ -119,6 +121,7 @@
     <ClCompile Include="..\..\src\COMMODORE\1540SeriesDisk.cpp" />
     <ClCompile Include="..\..\src\COMMODORE\ACIA\ACIA.cpp" />
     <ClCompile Include="..\..\src\COMMODORE\ACIA\ACIARegisters.cpp" />
+    <ClCompile Include="..\..\src\COMMODORE\ASCIIToCodeConverter.cpp" />
     <ClCompile Include="..\..\src\COMMODORE\C6529B\C6529B.cpp" />
     <ClCompile Include="..\..\src\COMMODORE\C6529B\C6529BRegisters.cpp" />
     <ClCompile Include="..\..\src\COMMODORE\CIA\CIA.cpp" />

@@ -30,11 +30,10 @@ namespace COMMODORE
 	{
 		public:
 		SerialPrinterPeripheralSimulation 
-			(int id, unsigned char dN, 
+			(MCHEmul::MatrixPrinterEmulation* mPE,
+			 int id, unsigned char dN, 
 			 const Definition& dt,
-			 const MCHEmul::Attributes & attrs,
-			 MCHEmul::MatrixPrinterEmulation* mPE = 
-				new MPS801BasicMatrixPrinterEmulation ("Printer.txt"));
+			 const MCHEmul::Attributes & attrs);
 
 		virtual ~SerialPrinterPeripheralSimulation () override;
 

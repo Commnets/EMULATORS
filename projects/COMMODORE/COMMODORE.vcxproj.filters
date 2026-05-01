@@ -100,6 +100,12 @@
     <Filter Include="Archivos de encabezado\Motherboard\Chips\C6529B">
       <UniqueIdentifier>{3e7da274-01f4-41ff-98a0-9e5859ea962a}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Archivos de encabezado\Foundation">
+      <UniqueIdentifier>{c9f96cfe-62c3-4a7b-9678-3251651c1846}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Archivos de origen\Foundation">
+      <UniqueIdentifier>{11b115a9-ad15-41a8-b51b-7e84a6897844}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\include\COMMODORE\incs.hpp">
@@ -267,6 +273,12 @@
     <ClInclude Include="..\..\include\COMMODORE\SerialPrinterMPS802.hpp">
       <Filter>Archivos de encabezado\IO</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\include\COMMODORE\ASCIIToCodeConverter.hpp">
+      <Filter>Archivos de encabezado\Foundation</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\COMMODORE\Emulator.hpp">
+      <Filter>Archivos de encabezado\Emulators</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Commodore.fmt">
@@ -421,6 +433,9 @@
     </ClCompile>
     <ClCompile Include="..\..\src\COMMODORE\SerialPrinterMPS802.cpp">
       <Filter>Archivos de origen\IO</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\COMMODORE\ASCIIToCodeConverter.cpp">
+      <Filter>Archivos de origen\Foundation</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

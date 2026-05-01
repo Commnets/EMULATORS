@@ -21,6 +21,7 @@ MCHEmul::Emulator::Emulator (const MCHEmul::CommandLineArguments& args, MCHEmul:
 	  _communicationSystem (cS),
 	  _debugLevel (MCHEmul::_DEBUGNOTHING),
 	  _parser (nullptr), _compiler (nullptr),
+	  _asciiToCodeConverter (nullptr),
 	  _computer (nullptr),
 	  _peripheralBuilder (nullptr),
 	  _fileReader (nullptr),
@@ -472,7 +473,8 @@ bool MCHEmul::Emulator::runCycle (unsigned int a)
 // ---
 MCHEmul::Assembler::Parser* MCHEmul::Emulator::createParser () const 
 { 
-	Assembler::Parser* r = new MCHEmul::Assembler::Parser (_computer -> cpu ());
+	Assembler::Parser* r = 
+		new MCHEmul::Assembler::Parser (_computer -> cpu (), asciiToCodeConverter ());
 	
 	r -> setPrintOutProcess (true); // To print out the parsing process...
 	

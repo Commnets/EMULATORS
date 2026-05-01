@@ -66,6 +66,7 @@ MCHEmul::Computer* C264::C264Emulator::createComputer () const
 	{
 		case C264::Type::_CPLUS4:
 			result = new C264::CommodorePlus4 (
+				asciiToCodeConverter (),
 				NTSCSystem () 
 					? C264::Commodore264::VisualSystem::_NTSC 
 					: C264::Commodore264::VisualSystem::_PAL,
@@ -77,6 +78,7 @@ MCHEmul::Computer* C264::C264Emulator::createComputer () const
 		case C264::Type::_C116:
 		default:
 			result = new C264::Commodore16_116 (
+				asciiToCodeConverter (),
 				NTSCSystem () 
 					? C264::Commodore264::VisualSystem::_NTSC 
 					: C264::Commodore264::VisualSystem::_PAL,

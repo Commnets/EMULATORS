@@ -20,7 +20,7 @@ std::tuple <
 	SINCLAIR::IOPeripheralBuilder::getDataPrinterFrom
 		(const MCHEmul::Attributes& prms,
 		 const std::tuple <
-			std::function <unsigned char (unsigned char)>,
+			const MCHEmul::ASCIIToCodeConverter*,
 			MCHEmul::MatrixPrinterEmulation::Configuration,
 			std::string, 
 			MCHEmul::MatrixPrinterEmulation*>& eD) const
@@ -35,12 +35,12 @@ std::tuple <
 				: std::make_pair ("", ""));
 		};
 
-	std::function <unsigned char (unsigned char)> cvt;
+	const MCHEmul::ASCIIToCodeConverter* cvs;
 	MCHEmul::MatrixPrinterEmulation::Configuration cfg;
 	std::string pF;
 	MCHEmul::MatrixPrinterEmulation* mPE;
 	// Received as parameter...
-	std::tie (cvt, cfg, pF, mPE) = eD;
+	std::tie (cvs, cfg, pF, mPE) = eD;
 
 	for (auto const& i : prms)
 	{
@@ -64,28 +64,28 @@ std::tuple <
 			{
 				if (pz.size () == 1)
 				{
-					mPE = new SINCLAIR::BasicThermalPrinterEmulation (cvt, pF);
+					mPE = new SINCLAIR::BasicThermalPrinterEmulation (cvs, pF);
 				}
 				else
 				if (pz.size () == 2)
 				{
 					if (pz [1] == "PS")
 					{
-						mPE = new SINCLAIR::PostscriptThermalPrinterEmulation (cfg, pF);
+						mPE = new SINCLAIR::PostscriptThermalPrinterEmulation (cvs, cfg, pF);
 					}
 					else
 					{
 						_LOG ("Type of emulation mechanism: " + pz [1] + 
 							" not supported for THERMAL printer, using basic emulation.");
 
-						mPE = new SINCLAIR::BasicThermalPrinterEmulation (cvt, pF);
+						mPE = new SINCLAIR::BasicThermalPrinterEmulation (cvs, pF);
 					}
 				}
 				else
 				{
 					_LOG ("Too many details for MPS801 printer, using basic emulation.");
 
-					mPE = new SINCLAIR::BasicThermalPrinterEmulation (cvt, pF);
+					mPE = new SINCLAIR::BasicThermalPrinterEmulation (cvs, pF);
 				}
 			}
 			// Creates the basic printer...
@@ -94,7 +94,7 @@ std::tuple <
 				_LOG ("Type of printer emulation: " + pz [0] + 
 					" not supported, using basic emulation.");
 
-				mPE = new MCHEmul::BasicMatrixPrinterEmulation (80, pF);
+				mPE = new MCHEmul::BasicMatrixPrinterEmulation (cvs, 80, pF);
 			}
 		}
 	}

@@ -36,7 +36,9 @@ namespace ZX81
 		static const unsigned int _PALCLOCK		= 804600;	// 0.804 MHz
 		static const unsigned int _NTSCCLOCK	= 536400;	// 0.536 MHz
 
-		SinclairZX81 (Memory::Configuration cfg, VisualSystem vS, Type t);
+		SinclairZX81 (
+			const MCHEmul::ASCIIToCodeConverter* cvs,
+			Memory::Configuration cfg, VisualSystem vS, Type t);
 
 		VisualSystem visualSystem () const
 							{ return (_visualSystem); }

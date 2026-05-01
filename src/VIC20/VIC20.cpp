@@ -12,7 +12,9 @@
 #include <F6500/C6502.hpp>
 
 // ---
-VIC20::CommodoreVIC20::CommodoreVIC20 (VIC20::Memory::Configuration cfg, 
+VIC20::CommodoreVIC20::CommodoreVIC20 (
+		const MCHEmul::ASCIIToCodeConverter* cnv, 
+		VIC20::Memory::Configuration cfg, 
 		VIC20::CommodoreVIC20::VisualSystem vS, const std::string& lg)
 	: COMMODORE::Computer 
 		(new F6500::C6502 (0 /** Only one micro. */),
@@ -20,6 +22,7 @@ VIC20::CommodoreVIC20::CommodoreVIC20 (VIC20::Memory::Configuration cfg,
 		 new VIC20::Memory (cfg, lg),
 		 VIC20::CommodoreVIC20::standardDevices (vS),
 		 vS == VIC20::CommodoreVIC20::VisualSystem::_PAL ? _PALCLOCK : _NTSCCLOCK,
+		 cnv,
 		 { }, { }, // The VIC20 emulation has been done without neither Buses nor Wires!
 		 { { "Name", "VIC20" },
 		   { "Manufacturer", "Commodore Business Machines CBM" },

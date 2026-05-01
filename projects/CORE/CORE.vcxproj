@@ -20,7 +20,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\src\CORE\ASCIIConverter.cpp" />
+    <ClCompile Include="..\..\src\CORE\ASCIIToCodeConverter.cpp" />
     <ClCompile Include="..\..\src\CORE\Bus.cpp" />
     <ClCompile Include="..\..\src\CORE\ByteCodeLine.cpp" />
     <ClCompile Include="..\..\src\CORE\Clock.cpp" />
@@ -82,7 +82,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\include\CORE\Address.hpp" />
-    <ClInclude Include="..\..\include\CORE\ASCIIConverter.hpp" />
+    <ClInclude Include="..\..\include\CORE\ASCIIToCodeConverter.hpp" />
     <ClInclude Include="..\..\include\CORE\Bus.hpp" />
     <ClInclude Include="..\..\include\CORE\ByteCodeLine.hpp" />
     <ClInclude Include="..\..\include\CORE\ComputerAction.hpp" />

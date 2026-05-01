@@ -11,7 +11,9 @@
 #include <FZ80/NMIInterrupt.hpp>
 
 // ---
-ZXSPECTRUM::SinclairZXSpectrum::SinclairZXSpectrum (ZXSPECTRUM::Memory::Configuration cfg, 
+ZXSPECTRUM::SinclairZXSpectrum::SinclairZXSpectrum (
+		const MCHEmul::ASCIIToCodeConverter* cvs,
+		ZXSPECTRUM::Memory::Configuration cfg, 
 		ZXSPECTRUM::SinclairZXSpectrum::VisualSystem vS, 
 		ZXSPECTRUM::Type t, const std::string& lang)
 	: SINCLAIR::Computer 
@@ -22,6 +24,7 @@ ZXSPECTRUM::SinclairZXSpectrum::SinclairZXSpectrum (ZXSPECTRUM::Memory::Configur
 		 ZXSPECTRUM::SinclairZXSpectrum::standardDevices (vS),
 		 loadSystemVariablesFrom ("ZXSpectrumSysVars.txt"),
 		 _CLOCK,
+		 cvs,
 		 { }, { }, // The ZXSpectrum, emulation has been done without neither Buses nor Wires!
 		 { { "Name", "ZXSpectrum" },
 		   { "Manufacturer", "Sinclair Research/Timex Coporation" },

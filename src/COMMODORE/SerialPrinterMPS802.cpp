@@ -722,8 +722,10 @@ COMMODORE::MPS802MatrixPrinterFormatter::Formats
 }
 
 // ---
-COMMODORE::MPS802BasicMatrixPrinterEmulation::MPS802BasicMatrixPrinterEmulation (const std::string& pFN)
-	: MCHEmul::BasicMatrixPrinterEmulation (80 /** Always the standard. */, pFN),
+COMMODORE::MPS802BasicMatrixPrinterEmulation::MPS802BasicMatrixPrinterEmulation (
+		const MCHEmul::ASCIIToCodeConverter* cvs,
+		const std::string& pFN)
+	: MCHEmul::BasicMatrixPrinterEmulation (cvs, 80 /** Always the standard. */, pFN),
 	  _activeFunction (COMMODORE::MPS802BasicMatrixPrinterEmulation::Function::_NONE), // Not yet defined...
 	  _businessMode (false),
 	  _lastFormatter (""), // No formatter defined...
@@ -987,9 +989,10 @@ unsigned short COMMODORE::MPS802BasicMatrixPrinterEmulation::printNormalChar (un
 
 // ---
 COMMODORE::MPS802PostscriptMatrixPrinterEmulation::MPS802PostscriptMatrixPrinterEmulation 
-		(const MCHEmul::MatrixPrinterEmulation::Paper& p, 
+		(const MCHEmul::ASCIIToCodeConverter* cvs,
+		 const MCHEmul::MatrixPrinterEmulation::Paper& p, 
 		 const std::string& pFN)
-	: MCHEmul::PostscriptMatrixPrinterEmulation (_CONFIGURATION, p, pFN),
+	: MCHEmul::PostscriptMatrixPrinterEmulation (cvs, _CONFIGURATION, p, pFN),
 	  _activeFunction (COMMODORE::MPS802PostscriptMatrixPrinterEmulation::Function::_NONE),
 	  _businessMode (false),
 	  _lastFormatter (""), // No formatter defined so far...

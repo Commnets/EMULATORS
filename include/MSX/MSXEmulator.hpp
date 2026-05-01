@@ -84,6 +84,7 @@ namespace MSX
 		protected:
 		virtual MCHEmul::Computer* createComputer () const override
 							{ return (new MSX::MSXComputer (
+								asciiToCodeConverter (),
 								model (), configurationMode (), computerLanguage ())); }
 		virtual MCHEmul::IOPeripheralBuilder* createPeripheralBuilder () const override
 							{ return (new IOPeripheralBuilder); }

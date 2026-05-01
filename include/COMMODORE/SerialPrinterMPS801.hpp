@@ -26,7 +26,9 @@ namespace COMMODORE
 		public MCHEmul::BasicMatrixPrinterEmulation
 	{
 		public:
-		MPS801BasicMatrixPrinterEmulation (const std::string& pFN = "MPS801MatrixPrinter.txt");
+		MPS801BasicMatrixPrinterEmulation (
+			const MCHEmul::ASCIIToCodeConverter* cvs,
+			const std::string& pFN = "MPS801MatrixPrinter.txt");
 
 		/** When the secondary address is used,
 			and it is 7, the businessMode is activated or desactivated. */
@@ -67,6 +69,7 @@ namespace COMMODORE
 		static const MCHEmul::MatrixPrinterEmulation::Configuration _CONFIGURATION;
 
 		MPS801PostscriptMatrixPrinterEmulation (
+				const MCHEmul::ASCIIToCodeConverter* cvs,
 				const MCHEmul::MatrixPrinterEmulation::Paper& p,
 				const std::string& pFN = "MPS801MatrixPrinter.ps");
 
