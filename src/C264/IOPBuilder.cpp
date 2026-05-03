@@ -1,6 +1,7 @@
 #include <C264/IOPBuilder.hpp>
 #include <C264/Cartridge.hpp>
 #include <C264/1531Datasette.hpp>
+#include <C264/1541Disk.hpp>
 #include <C264/StdSerialPrinter.hpp>
 #include <C264/C264.hpp>
 
@@ -31,6 +32,17 @@ MCHEmul::IOPeripheral* C264::IOPeripheralBuilder::createPeripheral
 	else if (id == COMMODORE::Datasette1530Injection::_ID)
 		/** When the routines of the kernal are "overpassed". */
 		result = new C264::Datasette1531Injection;
+	else if (id >= C264::Disk1541Simulation::_DEFAULTID && 
+			 (id <= C264::Disk1541Simulation::_DEFAULTID + 3)) // There might be up to 4 disk units connected...
+		{
+			// There might be several units connected to the serial port with different device numbers
+			// It is also possible to select the name of the output file...
+			unsigned char dN = C264::Disk1541Simulation::_DEFAULTDEVICENUMBER;
+			if (prms.size () == 1) dN = (unsigned char) std::atoi ((*prms.find ("0")).second.c_str ());
+			if (C264::Disk1541Simulation::isDeviceNumberValid (dN)) // Only if it is valid...
+				result = new C264::Disk1541Simulation 
+					(c -> asciiToCodeConverter (), id, dN); // ...otherwise it will nullptr, and not created...
+		}
 	else if (id >= C264::StandardSerialPrinterSimulation::_DEFAULTID && 
 			 (id <= C264::StandardSerialPrinterSimulation::_DEFAULTID + 1)) // 2 possible printers connected....
 		{

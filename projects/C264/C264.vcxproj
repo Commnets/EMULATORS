@@ -20,6 +20,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\C264\1531Datasette.cpp" />
+    <ClCompile Include="..\..\src\C264\1541Disk.cpp" />
     <ClCompile Include="..\..\src\C264\C1C2Selector.cpp" />
     <ClCompile Include="..\..\src\C264\C1C2SelectorRegisters.cpp" />
     <ClCompile Include="..\..\src\C264\C264.cpp" />
@@ -49,6 +50,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\include\C264\1531Datasette.hpp" />
+    <ClInclude Include="..\..\include\C264\1541Disk.hpp" />
     <ClInclude Include="..\..\include\C264\C1C2Selector.hpp" />
     <ClInclude Include="..\..\include\C264\C1C2SelectorRegisters.hpp" />
     <ClInclude Include="..\..\include\C264\C264.hpp" />

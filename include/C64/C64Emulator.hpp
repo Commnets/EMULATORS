@@ -49,10 +49,11 @@ namespace C64
 		bool NTSCSystem () const
 							{ return (cmdlineArguments ().existsArgument (_PARAMNTSC)); }
 
-		/** To know which is the library used for the SID simultion. */
+		/** To know which is the library used for the SID simulation. */
 		std::string SIDEmulationLib () const // My own (ICF) by default!
 							{ return (cmdlineArguments ().existsArgument (_PARAMSID) 
-								? cmdlineArguments ().argumentAsString (_PARAMSID) : "OWN" /** My own. */); }
+								? MCHEmul::upper (cmdlineArguments ().argumentAsString (_PARAMSID)) 
+								: "OWN" /** My own. */); }
 
 		/** To know whether the border has or not to be drawn. */
 		bool drawBorder () const

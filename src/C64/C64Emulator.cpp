@@ -30,17 +30,21 @@ void C64::C64Emulator::printOutParameters (std::ostream& o) const
 		 std::to_string (C64::Cartridge::_ID) << ":\tCartridge" << std::endl <<
 		 std::to_string (COMMODORE::Datasette1530::_ID) << ":\tCasette 1530/1" << std::endl <<
 		 std::to_string (COMMODORE::Datasette1530Injection::_ID) << ":\tDatasette with direct injection into memory" << std::endl <<
-		 std::to_string (C64::StandardSerialPrinterSimulation::_DEFAULTID) << " or " <<
+		 std::to_string (C64::StandardSerialPrinterSimulation::_DEFAULTID) << "," <<
 		 std::to_string (C64::StandardSerialPrinterSimulation::_DEFAULTID + 1) << 
-		 ":\tSerial Standard Printer to file (optional parameters: NUMDEVICE and FILENAME)" << std::endl <<
-		 std::to_string (C64::Disk1541Simulation::_DEFAULTID) << " or " << 
-		 std::to_string (C64::Disk1541Simulation::_DEFAULTID + 1) << 
-		  ":\t1541 Disk with direct injection into memory (optional parameters: NUMDEVICE)" << std::endl;
-	o << "PARAMETERS to connect the printer CONNECTPER:" << std::endl <<
+		 ":\tSerial Standard Printer to file" << std::endl <<
+		 std::to_string (C64::Disk1541Simulation::_DEFAULTID) << "," << 
+		 std::to_string (C64::Disk1541Simulation::_DEFAULTID + 1) << "," <<
+		 std::to_string (C64::Disk1541Simulation::_DEFAULTID + 2) << "," <<
+		 std::to_string (C64::Disk1541Simulation::_DEFAULTID + 3) <<
+		  ":\t1541 Disk simulation" << std::endl;
+	o << "PARAMETERS to connect the printer (CONNECTPER):" << std::endl <<
 		 "D:[DEVICE = 4|5]" << std::endl <<
 		 "F:[FILENAME = Name of the file where to print out. *.PS recommended if postscript simulation" << std::endl <<
 		 "P:[MPS801|MPS802|BASIC][-[PS|...]]" << std::endl <<
-		 "  ([BLUEBAND | GREENBAND | GREYBAND | WHITE], [WIDTHINCH], [HEIGHTINCH], [BORDERINCH])" << std::endl;
+		 "  ([BLUEBAND|GREENBAND|GREYBAND|WHITE], [WIDTHINCH], [HEIGHTINCH], [BORDERINCH])" << std::endl;
+	o << "PARAMETERS to connect the Disk (CONNECTPER):" << std::endl <<
+		 "[DEVICE = 8|9|10|11]" << std::endl;
 	o << "Check LOG file if the emulation doesn't start as expected" << std::endl;
 }
 

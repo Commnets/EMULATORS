@@ -129,6 +129,9 @@
     <ClCompile Include="..\..\src\C264\StdSerialPrinter.cpp">
       <Filter>Archivos de origen\IO</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\C264\1541Disk.cpp">
+      <Filter>Archivos de origen\IO</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\include\C264\C264.hpp">
@@ -213,6 +216,9 @@
       <Filter>Archivos de encabezado\IO</Filter>
     </ClInclude>
     <ClInclude Include="..\..\include\C264\StdSerialPrinter.hpp">
+      <Filter>Archivos de encabezado\IO</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\C264\1541Disk.hpp">
       <Filter>Archivos de encabezado\IO</Filter>
     </ClInclude>
   </ItemGroup>

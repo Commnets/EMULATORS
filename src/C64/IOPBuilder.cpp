@@ -32,7 +32,8 @@ MCHEmul::IOPeripheral* C64::IOPeripheralBuilder::createPeripheral
 	else if (id == COMMODORE::Datasette1530Injection::_ID)
 		/** When the routines of the kernal are "overpassed". */
 		result = new C64::Datasette1530Injection;
-	else if (id == C64::Disk1541Simulation::_DEFAULTID)
+	else if (id >= C64::Disk1541Simulation::_DEFAULTID && 
+			 (id <= C64::Disk1541Simulation::_DEFAULTID + 3)) // There might be up to 4 disk units connected...
 		{
 			// There might be several units connected to the serial port with different device numbers
 			// It is also possible to select the name of the output file...
@@ -48,8 +49,8 @@ MCHEmul::IOPeripheral* C64::IOPeripheralBuilder::createPeripheral
 			std::string pF = "Printer.txt"; // Default output file name...
 			unsigned char dN = C64::StandardSerialPrinterSimulation::_DEFAULTDEVICENUMBER;
 			MCHEmul::MatrixPrinterEmulation* mPE = nullptr;
-			std::tie (pF, dN, mPE) = getDataPrinterFrom (prms, std::make_tuple (
-				c -> asciiToCodeConverter (), pF, dN, mPE));
+			std::tie (pF, dN, mPE) = getDataPrinterFrom (prms, std::make_tuple
+				(c -> asciiToCodeConverter (), pF, dN, mPE));
 			if (mPE == nullptr) mPE = new MCHEmul::BasicMatrixPrinterEmulation 
 				(c -> asciiToCodeConverter (), 80, pF); // Not usual, but just to avoid a crash later!
 			if (C64::StandardSerialPrinterSimulation::isDeviceNumberValid (dN)) // Only if it is valid...

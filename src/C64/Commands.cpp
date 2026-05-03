@@ -102,8 +102,25 @@ void C64::SpritesMemoryDUMPCommand::executeImpl (MCHEmul::CommandExecuter* cE,
 		static_cast <C64::Commodore64*> (c) -> vicII () == nullptr)
 		return;
 
+	// Get the different parameters to know which sprites we have to dump. 
+	// If there is no parameter, all of them will be dumped.
+	std::vector <size_t> sprs { };
+	if (!parameters ().empty ())
+	{
+		size_t prm = 0;
+		bool e = true;
+		while (e)
+		{
+			std::string prmStr = 
+				MCHEmul::fixLenStr (std::to_string (prm), 2, true, MCHEmul::_CEROS);
+			if (e = existParameter (prmStr))
+				sprs.push_back ((size_t) std::stoi (parameter (prmStr)));
+			prm++;
+		}
+	}
+
 	rst.add ("BYTES", 
-		static_cast <C64::Commodore64*> (c) -> vicII () -> spritesMemorySnapShot (c -> cpu ()));
+		static_cast <C64::Commodore64*> (c) -> vicII () -> spritesMemorySnapShot (c -> cpu (), sprs));
 }
 
 // ---
@@ -214,13 +231,20 @@ void C64::ManagePaddlesCommand::executeImpl (MCHEmul::CommandExecuter* cE,
 	std::vector <size_t> portsId; // In which ports?
 	if (parameters ().size () > 1)
 	{
-		size_t i = 1;
-		std::string pIdS = MCHEmul::fixLenStr (std::to_string (i), 2, true, MCHEmul::_CEROS);
-		while (existParameter (pIdS))
+		size_t prm = 1;
+		bool e = true;
+		while (e)
 		{
-			size_t pId = (size_t) std::atoi (parameter (pIdS).c_str ());
-			if (pId == 0 || pId == 1) // The ids can only be for port 0 or 1...
-				portsId.emplace_back (pId);
+			std::string prmStr = 
+				MCHEmul::fixLenStr (std::to_string (prm), 2, true, MCHEmul::_CEROS);
+			if (e = existParameter (prmStr))
+			{
+				size_t pId = (size_t) std::atoi (parameter (prmStr).c_str ());
+				if (pId == 0 || pId == 1) // The ids can only be for port 0 or 1...
+					portsId.emplace_back (pId);
+			}
+
+			prm++;
 		}
 	}
 

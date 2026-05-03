@@ -52,20 +52,38 @@ const MCHEmul::UByte& C64::CIA1Registers::readValue (size_t p) const
 				// What is in the portB make conexions (see .hpp) in the portA
 				// determining what is shown there...
 				unsigned char dtA = MCHEmul::UByte::_0;
-				unsigned char msk = (_outputRegB | ~_dataPortBDir) & 
-					((_paddleConnected [0]) // Paddle connected?
-						? ((_paddleFireButtonStatus [0][0] ? 0x04 : 0x00) | (_paddleFireButtonStatus [0][1] ? 0x08 : 0x00))
-						: _joystickStatus [0]);
+
+				unsigned char msk = 
+					(_outputRegB | ~_dataPortBDir) & 
+						(_paddleConnected [0] // Paddle connected?
+							? paddleDigitalLines (0)
+							: _joystickStatus [0]);
+
 				unsigned char m = 0x01;
 				for (size_t i = 0; i < 8; m <<= 1, i++)
 					if ((~msk & m) != 0x00)
-						dtA |= ~_rev_keyboardStatusMatrix [i].value (); // 1 if clicked...
-				_portA = (_outputRegA | ~_dataPortADir) /** What it should go to portA as internal configuration determines. */ & 
-					(~dtA & ((_paddleConnected [1]) // Paddle connected?
-						? ((_paddleFireButtonStatus [1][0] ? 0x04 : 0x00) | (_paddleFireButtonStatus [1][1] ? 0x08 : 0x00))
-						: _joystickStatus [1]));
-					/** but affected by the keys and joystick switches pressed 
-						(or paddle buttons if paddles are connected instead. */;
+						dtA |= ~_rev_keyboardStatusMatrix [i].value (); // true if clicked...
+
+				// but affected by the keys and joystick switches pressed... 
+				// ...or paddle buttons if paddles are connected instead.
+				unsigned char portA = 
+					(_outputRegA | ~_dataPortADir) /** What it should go to portA as internal configuration determines. */ & 
+						(~dtA & 
+							(_paddleConnected [1] // Paddle connected?
+								? paddleDigitalLines (1)
+								: _joystickStatus [1]));
+				unsigned char portB =
+					(_outputRegB | ~_dataPortBDir) &
+						(_paddleConnected [0]
+							? paddleDigitalLines (0)
+							: _joystickStatus [0]);
+
+				if (numberOfPressedKeys () > 1 || hasAnyJoystickOrPaddleLineLow ())
+					propagateKeyboardLowLines (portA, portB);
+
+				_portA = portA;
+				_portB = portB;
+
 				result = MCHEmul::UByte (_portA);
 			}
 
@@ -75,19 +93,40 @@ const MCHEmul::UByte& C64::CIA1Registers::readValue (size_t p) const
 		case 0x01:
 			{
 				// @see above
+				// Simetrically to portA, 
+				// the value of portB can be affected by the keyboard and the joystick 2 
+				// (or paddle buttons if paddles are connected instead)
 				unsigned char dtB = MCHEmul::UByte::_0;
-				unsigned char msk = (_outputRegA | ~_dataPortADir) &
-					((_paddleConnected [1]) // Paddle connected?
-						? ((_paddleFireButtonStatus [1][0] ? 0x04 : 0x00) | (_paddleFireButtonStatus [1][1] ? 0x08 : 0x00))
-						: _joystickStatus [1]);
+
+				unsigned char msk = 
+					(_outputRegA | ~_dataPortADir) &
+						((_paddleConnected [1]) // Paddle connected?
+							? paddleDigitalLines (1)
+							: _joystickStatus [1]);
+
 				unsigned char m = 0x01;
 				for (size_t i = 0; i < 8; m <<= 1, i++)
 					if ((~msk & m) != 0x00)
-						dtB |= ~_keyboardStatusMatrix [i].value ();  // 1 if clicked...
-				_portB = (_outputRegB | ~_dataPortBDir) & 
-					(~dtB & ((_paddleConnected [0])
-						? ((_paddleFireButtonStatus [0][0] ? 0x04 : 0x00) | (_paddleFireButtonStatus [0][1] ? 0x08 : 0x00))
-						: _joystickStatus [0]));
+						dtB |= ~_keyboardStatusMatrix [i].value ();  // true if clicked...
+
+				unsigned char portB	= 
+					(_outputRegB | ~_dataPortBDir) & 
+						(~dtB & 
+							((_paddleConnected [0])
+								? paddleDigitalLines (0)
+								: _joystickStatus [0]));
+				unsigned char portA =
+					(_outputRegA | ~_dataPortADir) &
+						(_paddleConnected [1]
+							? paddleDigitalLines (1)
+							: _joystickStatus [1]);
+
+				if (numberOfPressedKeys () > 1 || hasAnyJoystickOrPaddleLineLow ())
+					propagateKeyboardLowLines (portA, portB);
+
+				_portA = portA;
+				_portB = portB;
+
 				result = MCHEmul::UByte (_portB);
 			}
 
@@ -109,15 +148,63 @@ void C64::CIA1Registers::initializeInternalValues ()
 {
 	COMMODORE::CIARegisters::initializeInternalValues ();
 	
-	// Data Port A all input...
+	// Data Port A all output...
 	setValue (0x02, MCHEmul::UByte::_FF); 
-	// Data Port B all output...
+	// Data Port B all input...
 	setValue (0x03, MCHEmul::UByte::_0);
 	// Just to be able to read well the keyboard...
 
 	// The status of the different controls managed from the CIA1...
-	_joystickStatus [0] = _joystickStatus [1] = 0xff; // No switches clicked, no fire buttons pressed...
+	// No switches clicked, no fire buttons pressed...
+	_joystickStatus [0] = _joystickStatus [1] = 0xff; 
+	// No keys pressed...
 	for (size_t i = 0; i < 8; i++)
-		_keyboardStatusMatrix [i] = _rev_keyboardStatusMatrix [i] = MCHEmul::UByte::_FF; // No keys pressed...
+		_keyboardStatusMatrix [i] = _rev_keyboardStatusMatrix [i] = MCHEmul::UByte::_FF; 
+	// No paddle connected...
 	disconnectAllPaddles ();
+}
+
+// ---
+void C64::CIA1Registers::propagateKeyboardLowLines (unsigned char& portA, unsigned char& portB) const
+{
+	bool changed = true;
+	while (changed)
+	{
+		changed = false;
+	
+		// If a line on Port A is low, propagate to Port B
+		// using your code's original orientation:
+		// _keyboardStatusMatrix[i] is used when scanning from Port A.
+		for (size_t i = 0; i < 8; i++)
+		{
+			if ((portA & (1 << i)) == 0x00) // If key pressed...
+			{
+				const unsigned char newPortB = 
+					(portB & _keyboardStatusMatrix [i].value ());
+				if (newPortB != portB)
+				{ 
+					portB = newPortB;
+
+					changed = true;
+				}
+			}
+		}
+
+		// If a line on Port B is low, propagate to Port A
+		// using the inverse array that the implementation already maintains.
+		for (size_t i = 0; i < 8; i++)
+		{
+			if ((portB & (1 << i)) == 0x00) // If key pressed...
+			{
+				const unsigned char newPortA = 
+					(portA & _rev_keyboardStatusMatrix [i].value ());
+				if (newPortA != portA)
+				{
+					portA = newPortA;
+
+					changed = true;
+				}
+			}
+		}
+	}
 }

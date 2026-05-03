@@ -21,10 +21,12 @@ void C64::CIA2Registers::setValue (size_t p, const MCHEmul::UByte& v)
 	switch (pp)
 	{
 		// Data Port Register A: CI2PRA
-		// The three first bites control VICIIB active bank
+		// The three first bits control VICII active bank
+		// When the data direction dir is changed, the bank has also to be calculated!
 		case 0x00:
+		case 0x02:
 			{
-				_VICBank = 0x03 - (v.value () & 0x03); // From 0 to 3...
+				_VICBank = 0x03 - (portA ().value () & 0x03); // From 0 to 3...
 
 				// Pending to implement the RS232 and Serial bus in the port A...
 
@@ -50,9 +52,12 @@ const MCHEmul::UByte& C64::CIA2Registers::readValue (size_t p) const
 	{
 		case 0x00:
 			{
-				result = MCHEmul::PhysicalStorageSubset::readValue (pp);
+				result = COMMODORE::CIARegisters::readValue (pp);
 
-				// Pending to implement the RS232 and Serial bus in the port A...
+				// The read must be modified to take into account the Serial Port info.
+				// The two most significant bits are always 1 in the CIA2PRA register 
+				// because the serial port is not connected to anything, so they are always in high level (1)...
+				result |= 0xc0; 
 			}
 
 			break;

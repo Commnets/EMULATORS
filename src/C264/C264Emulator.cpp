@@ -3,6 +3,8 @@
 #include <C264/Screen.hpp>
 #include <C264/Cartridge.hpp>
 #include <C264/1531Datasette.hpp>
+#include <C264/StdSerialPrinter.hpp>
+#include <C264/1541Disk.hpp>
 
 // ---
 const unsigned char C264::C264Emulator::_PARAMNTSC = 'n';
@@ -18,6 +20,7 @@ void C264::C264Emulator::printOutParameters (std::ostream& o) const
 	o << "/n:\t\t" << "Emulation using NTSC parameters and screen size" << std::endl;
 	o << "/b[COLOR]:\t" << "Draw a dark grid in the drawable screen. Color optional" << std::endl;
 	o << "/m[MACHINE]:\t" << "To select the type of machine of the series to be instantiated. C16 by default" << std::endl;
+	o << "/w[CONF]:\t" << "Starts in a different memory configuration. It is is optional." << std::endl;
 	o << "LANGUAGES allowed under command line /i:" << std::endl << 
 		 "ENG:\tEnglish" << std::endl <<
 		 "FRA:\tFrench" << std::endl << 
@@ -34,12 +37,22 @@ void C264::C264Emulator::printOutParameters (std::ostream& o) const
 	o << "DEVICES allowed to be connected under command CONNECTPER:" << std::endl <<
 		 std::to_string (C264::Datasette1531::_ID) << ":\tCasette 1531" << std::endl <<
 		 std::to_string (C264::Datasette1531Injection::_ID) << ":\tCasette 1531 Direct Injection" << std::endl <<
-		 std::to_string (C264::Cartridge::_ID) << ":\tCartridge" << std::endl;
-	o << "PARAMETERS to connect the printer CONNECTPER:" << std::endl <<
+		 std::to_string (C264::Cartridge::_ID) << ":\tCartridge" << std::endl <<
+		 std::to_string (C264::StandardSerialPrinterSimulation::_DEFAULTID) << "," <<
+		 std::to_string (C264::StandardSerialPrinterSimulation::_DEFAULTID + 1) <<
+		 ":\tSerial Standard Printer to file" << std::endl <<
+		 std::to_string (C264::Disk1541Simulation::_DEFAULTID) << "," << 
+		 std::to_string (C264::Disk1541Simulation::_DEFAULTID + 1) << "," <<
+		 std::to_string (C264::Disk1541Simulation::_DEFAULTID + 2) << "," <<
+		 std::to_string (C264::Disk1541Simulation::_DEFAULTID + 3) <<
+		  ":\t1541 Disk Simulation" << std::endl;
+	o << "PARAMETERS to connect the printer (CONNECTPER):" << std::endl <<
 		 "D:[DEVICE = 4|5]" << std::endl <<
 		 "F:[FILENAME = Name of the file where to print out. *.PS recommended if postscript simulation" << std::endl <<
 		 "P:[MPS801|MPS802|BASIC][-[PS|...]]" << std::endl <<
-		 "  ([BLUEBAND | GREENBAND | GREYBAND | WHITE], [WIDTHINCH], [HEIGHTINCH], [BORDERINCH])" << std::endl;
+		 "  ([BLUEBAND|GREENBAND|GREYBAND|WHITE], [WIDTHINCH], [HEIGHTINCH], [BORDERINCH])" << std::endl;
+	o << "PARAMETERS to connect the Disk CONNECTPER:" << std::endl <<
+		 "[DEVICE = 8|9|10|11]" << std::endl;
 	o << "Check LOG file if the emulation doesn't start as expected" << std::endl;
 }
 

@@ -137,6 +137,13 @@ namespace C64
 		// Implementation
 		virtual void initializeInternalValues () override;
 
+		// very internal...
+		/** To help the way the registers 00 and 01 are managed... */
+		inline size_t numberOfPressedKeys () const;
+		inline unsigned char paddleDigitalLines (size_t port) const;
+		inline bool hasAnyJoystickOrPaddleLineLow () const;
+		void propagateKeyboardLowLines (unsigned char& portA, unsigned char& portB) const;
+
 		// Very internal...
 		/** To get the status of keyboard matrix and joystick matrix
 			in a way that could be understood by the debug system. */
@@ -147,10 +154,12 @@ namespace C64
 		private:
 		/** The SID linked. */
 		COMMODORE::SID* _sid;
-		/** The joystick status /** two ports. */
+		/** The joystick status in the two ports. 
+			When nothing is pressed the value is 0xff. */
 		unsigned char _joystickStatus [2];
 		/** The data ports A y B are actually a matrix of info: ( bytes with (bytes each). 
-			And it is used to know both the keyboard pressed and also the status of the jiystick 1. */
+			And it is used to know both the keyboard pressed and also the status of the joystick 1. \n
+			When nothing is pressed the value is 0xff. */
 		MCHEmul::UByte _keyboardStatusMatrix [8];
 		/** The opposite. */
 		MCHEmul::UByte _rev_keyboardStatusMatrix [8];
@@ -174,6 +183,39 @@ namespace C64
 		_paddleConnected [0] = _paddleConnected [1] = false;
 		_paddleFireButtonStatus [0][0] = _paddleFireButtonStatus [0][1] = 
 		_paddleFireButtonStatus [1][0] = _paddleFireButtonStatus [1][1] = false; // Quicker than a loop...
+	}
+
+	// ---
+	inline size_t CIA1Registers::numberOfPressedKeys () const
+	{
+		size_t result = 0;
+		for (size_t r = 0; r < 8; r++)
+		{
+			unsigned char pressed = ~_keyboardStatusMatrix [r].value ();
+			for (size_t b = 0; b < 8; b++)
+				if ((pressed & (1 << b)) != 0x00)
+					result++;
+		}
+
+		return result;
+	}
+
+	// ---
+	inline unsigned char CIA1Registers::paddleDigitalLines (size_t port) const
+	{
+		unsigned char result = 0xff;
+
+		if (_paddleFireButtonStatus [port][0]) result &= ~0x04;
+		if (_paddleFireButtonStatus [port][1]) result &= ~0x08;
+
+		return (result);
+	}
+
+	// ---
+	inline bool CIA1Registers::hasAnyJoystickOrPaddleLineLow() const
+	{
+		return (((_paddleConnected [0] ? paddleDigitalLines (0) : _joystickStatus [0]) != 0xff) || 
+				((_paddleConnected [1] ? paddleDigitalLines (1) : _joystickStatus [1]) != 0xff));
 	}
 
 	// ---

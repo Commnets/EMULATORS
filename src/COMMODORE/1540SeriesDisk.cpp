@@ -8,8 +8,8 @@ COMMODORE::Disk1540SeriesSimulation::Disk1540SeriesSimulation
 		 const COMMODORE::SerialIOPeripheralSimulation::Definition& def)
 	: COMMODORE::SerialIOPeripheralSimulation (id, dN,
 		def,
-		{ { "Name", "1540/1541 Disk Injection" },
-		  { "Manufacturer", "ICF 1540/1541 Software Simulation" } }),
+		{ { "Name", "1540/1541/1571/1570/1581 Disk Injection" },
+		  { "Manufacturer", "ICF 1540/1541/1571/1570/1581 Software Simulation" } }),
 	  _asciiConverter (cnv),
 	  _data { },
 	  _currentCommand (""),
@@ -279,11 +279,15 @@ std::vector <MCHEmul::UByte> COMMODORE::Disk1540SeriesSimulation::buildAnswerToD
 				  n.push_back ((nc == 0xa0) ? _SPACE_PETSCII : MCHEmul::UByte (nc)); }
 			n.push_back (_QUOTE_PETSCII);
 			n.push_back (_SPACE_PETSCII);
-			n.push_back (dt [st].byte (0xa2).value ());
-			n.push_back (dt [st].byte (0xa3).value ());
+			n.push_back ((dt [st].byte (0xa2) != 0xa0) 
+				? dt [st].byte (0xa2) : _SPACE_PETSCII);
+			n.push_back (dt [st].byte (0xa3).value () != 0xa0
+				? dt [st].byte (0xa3) : _SPACE_PETSCII);
 			n.push_back (_SPACE_PETSCII);
-			n.push_back (dt [st].byte (0xa5).value ());
-			n.push_back (dt [st].byte (0xa6).value ());
+			n.push_back ((dt [st].byte (0xa5) != 0xa0)
+				? dt [st].byte (0xa5) : _SPACE_PETSCII);
+			n.push_back ((dt [st].byte (0xa6) != 0xa0)
+				? dt [st].byte (0xa6) : _SPACE_PETSCII);
 			// The RVS OFF doesn't exist...
 
 			// Save the info of the entry...

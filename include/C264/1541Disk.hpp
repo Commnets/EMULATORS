@@ -1,4 +1,4 @@
-/** \ingroup C64 */
+/** \ingroup C264 */
 /*@{*/
 
 /**	
@@ -6,18 +6,18 @@
  *	File: 1541Disk.hpp \n
  *	Framework: CPU Emulators library \n
  *	Author: Ignacio Cea Fornies (EMULATORS library) \n
- *	Creation Date: 25/01/2026 \n
- *	Description: To emulate the behaviour of the 1541 Disk unit in a C64 (loading memory).
+ *	Creation Date: 01/05/2026 \n
+ *	Description: To emulate the behaviour of the 1541 Disk unit in a C264 (loading memory).
  *	Versions: 1.0 Initial
  */
 
-#ifndef __C64_1541DISK__
-#define __C64_1541DISK__
+#ifndef __C264_1541DISK__
+#define __C264_1541DISK__
 
 #include <COMMODORE/incs.hpp>
-#include <C64/Memory.hpp>
+#include <C264/Memory.hpp>
 
-namespace C64
+namespace C264
 {
 	/** The disk working directly against the memory. \n
 		The device number assigned by default is number 8, and the default ID = 103, but other can be created. \n

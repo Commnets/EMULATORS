@@ -147,8 +147,11 @@ namespace C64
 			: MCHEmul::Command (_ID, _NAME)
 							{ }
 
+		/** The parameters will be the sprites to dum,
+			but if there is any, all of them will be dumped. 
+			So, it is always possible to execute the command with any parameter set! */
 		virtual bool canBeExecuted () const override
-							{ return (_parameters.size () == 0); }
+							{ return (true); }
 
 		private:
 		virtual void executeImpl (MCHEmul::CommandExecuter* cE, 

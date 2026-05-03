@@ -27,9 +27,9 @@ void COMMODORE::CIARegisters::setValue (size_t p, const MCHEmul::UByte& v)
 	if (_timerA == nullptr || _timerB == nullptr || _clock == nullptr)
 		return;
 
-	MCHEmul::PhysicalStorageSubset::setValue (p, v);
-
 	size_t pp = p % 0x10;
+
+	MCHEmul::PhysicalStorageSubset::setValue (pp, v);
 
 	switch (pp)
 	{
@@ -120,7 +120,7 @@ void COMMODORE::CIARegisters::setValue (size_t p, const MCHEmul::UByte& v)
 		// Bits 0-3: BCD Digits. Bits 4-7: Unused.
 		case 0x08:
 			{
-				int ts = MCHEmul::UInt ({ MCHEmul::PhysicalStorageSubset::readValue (0x08) }, 
+				int ts = MCHEmul::UInt ({ v }, 
 					true /** 1 byte...doesn't matter. */, MCHEmul::UInt::_PACKAGEDBCD).asInt (); // A BCD value to int...
 				if (MCHEmul::PhysicalStorageSubset::readValue (0x0f).bit (7)) _clock -> setAlarmTenthSeconds ((unsigned char) ts); 
 				else _clock -> setTenthSeconds ((unsigned char) ts);
@@ -132,9 +132,9 @@ void COMMODORE::CIARegisters::setValue (size_t p, const MCHEmul::UByte& v)
 		// Bits 0-3: Second BCD Digit. Bits 4-6: First BCD Digit. Bit 7: Unused.
 		case 0x09:
 			{
-				int s = MCHEmul::UInt ({ MCHEmul::PhysicalStorageSubset::readValue (0x08) }, 
+				int s = MCHEmul::UInt ({ v }, 
 					true /** 1 byte...doesn't matter. */, MCHEmul::UInt::_PACKAGEDBCD).asInt (); // A BCD value to int...
-				if (MCHEmul::PhysicalStorageSubset::readValue (0x0f).bit (7)) _clock -> setSeconds ((unsigned char) s); 
+				if (MCHEmul::PhysicalStorageSubset::readValue (0x0f).bit (7)) _clock -> setAlarmSeconds ((unsigned char) s); 
 				else _clock -> setSeconds ((unsigned char) s);
 			}
 
@@ -144,8 +144,8 @@ void COMMODORE::CIARegisters::setValue (size_t p, const MCHEmul::UByte& v)
 		// Bits 0-3: Second BCD Digit. Bits 4-6: First BCD Digit. Bit 7: Unused.
 		case 0x0a:
 			{
-				int m = MCHEmul::UInt ({ MCHEmul::PhysicalStorageSubset::readValue (0x08) }, 
-					true /** 1 byte...doesn't matter. */, true /** BCD */).asInt (); // A BCD value to int...
+				int m = MCHEmul::UInt ({ v }, 
+					true /** 1 byte...doesn't matter. */, MCHEmul::UInt::_PACKAGEDBCD).asInt (); // A BCD value to int...
 				if (MCHEmul::PhysicalStorageSubset::readValue (0x0f).bit (7)) _clock -> setAlarmMinutes ((unsigned char) m); 
 				else _clock -> setMinutes ((unsigned char) m);
 			}
@@ -156,7 +156,7 @@ void COMMODORE::CIARegisters::setValue (size_t p, const MCHEmul::UByte& v)
 		// Bits 0-3: Second BCD Digit. Bit 4: First BCD Digit. Bits 5-6: Unused. Bit 7: AM/PM Flag (PM = 1)
 		case 0x0b:
 			{
-				MCHEmul::UByte dt = MCHEmul::PhysicalStorageSubset::readValue (0x08);
+				MCHEmul::UByte dt = v;
 				int h = MCHEmul::UInt ({ dt & 0x0f }, 
 					true /** 1 byte...doesn't matter. */, MCHEmul::UInt::_PACKAGEDBCD).asInt (); // A BCD value to int...
 				if (dt.bit (7)) h += 12; // PM...

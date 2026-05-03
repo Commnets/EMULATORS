@@ -1,7 +1,7 @@
 #include <C64/1541Disk.hpp>
 
 const std::vector <unsigned char> C64::Disk1541Simulation::_POSSIBLEDEVICENUMBERS = 
-	{ 0x08, 0x09 }; // Just the two possiblities...
+	{ 0x08, 0x09, 0x0a, 0x0b }; // Just the 4 possiblities...
 const COMMODORE::SerialIOPeripheralSimulation::Definition 
 	C64::Disk1541Simulation::_DEFINITION = {
 		MCHEmul::Address ({ 0x59, 0x02 }, false),	// LATTABLE
@@ -57,7 +57,7 @@ C64::Disk1541Simulation::Disk1541Simulation (
 	: COMMODORE::Disk1540SeriesSimulation 
 		(id, dN, cvs, C64::Disk1541Simulation::_DEFINITION)
 { 
-	// The device number can be either 0x04 or 0x05...
+	// The device number can be either 0x08 - 0x0b...
 	// Notice that this only verified in the debug mode...
 	assert (isDeviceNumberValid (deviceNumber ()));
 }
