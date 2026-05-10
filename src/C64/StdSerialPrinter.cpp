@@ -3,6 +3,10 @@
 const std::vector <unsigned char> C64::StandardSerialPrinterSimulation::_POSSIBLEDEVICENUMBERS = 
 	{ 0x04, 0x05 }; // Just the two possiblities...
 
+const MCHEmul::Attributes C64::StandardSerialPrinterSimulation::_ATTRIBUTES =
+		{ { "Name", "Standard Serial Printer" },
+		  { "Manufacturer", "ICF Software Simulation" } };
+
 const COMMODORE::SerialIOPeripheralSimulation::Definition 
 	C64::StandardSerialPrinterSimulation::_DEFINITION = {
 		MCHEmul::Address ({ 0x59, 0x02 }, false),	// LATTABLE
@@ -12,6 +16,7 @@ const COMMODORE::SerialIOPeripheralSimulation::Definition
 		MCHEmul::Address ({ 0x9a, 0x00 }, false),	// DFLTO
 		MCHEmul::Address ({ 0x95, 0x00 }, false),	// The address where the the information to be sent is kept...
 		MCHEmul::Address ({ 0x90, 0x00 }, false),	// The address where the status is set...
+		MCHEmul::Address ({ 0x01, 0x80 }, false),	// The address where the result of the "$" command is kept...
 		0x00, 0x80,
 		// Traps...
 		{
@@ -48,15 +53,14 @@ const COMMODORE::SerialIOPeripheralSimulation::Definition
 				"Serial Ready",
 				MCHEmul::Address ({ 0xa9, 0xee }, false),
 				MCHEmul::Address ({ 0xab, 0xed }, false),
-				{ 0xad, 0x00, 0xdd } 
-	}}};
+				{ 0xad, 0x00, 0xdd }
+			}
+	}};
 
 // ---
 C64::StandardSerialPrinterSimulation::StandardSerialPrinterSimulation (MCHEmul::MatrixPrinterEmulation* mPE,
 		int id, unsigned char dN)
-	: COMMODORE::SerialPrinterPeripheralSimulation (mPE, id, dN, _DEFINITION,
-		{ { "Name", "Standard Serial Printer" },
-		  { "Manufacturer", "ICF Printer Software Simulation" } })
+	: COMMODORE::SerialPrinterPeripheralSimulation (mPE, id, dN, _DEFINITION, _ATTRIBUTES)
 {
 	assert (isDeviceNumberValid (deviceNumber ()));
 }

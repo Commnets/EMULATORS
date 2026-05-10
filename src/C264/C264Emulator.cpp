@@ -34,25 +34,6 @@ void C264::C264Emulator::printOutParameters (std::ostream& o) const
 		 "C16:\t0=16k, 1=32k, 2=64k" << std::endl <<
 		 "C116:\t0=16k, 1=32k, 2=64k" << std::endl <<
 		 "CP4:\t2 = Internal Programs (64k)" << std::endl;
-	o << "DEVICES allowed to be connected under command CONNECTPER:" << std::endl <<
-		 std::to_string (C264::Datasette1531::_ID) << ":\tCasette 1531" << std::endl <<
-		 std::to_string (C264::Datasette1531Injection::_ID) << ":\tCasette 1531 Direct Injection" << std::endl <<
-		 std::to_string (C264::Cartridge::_ID) << ":\tCartridge" << std::endl <<
-		 std::to_string (C264::StandardSerialPrinterSimulation::_DEFAULTID) << "," <<
-		 std::to_string (C264::StandardSerialPrinterSimulation::_DEFAULTID + 1) <<
-		 ":\tSerial Standard Printer to file" << std::endl <<
-		 std::to_string (C264::Disk1541Simulation::_DEFAULTID) << "," << 
-		 std::to_string (C264::Disk1541Simulation::_DEFAULTID + 1) << "," <<
-		 std::to_string (C264::Disk1541Simulation::_DEFAULTID + 2) << "," <<
-		 std::to_string (C264::Disk1541Simulation::_DEFAULTID + 3) <<
-		  ":\t1541 Disk Simulation" << std::endl;
-	o << "PARAMETERS to connect the printer (CONNECTPER):" << std::endl <<
-		 "D:[DEVICE = 4|5]" << std::endl <<
-		 "F:[FILENAME = Name of the file where to print out. *.PS recommended if postscript simulation" << std::endl <<
-		 "P:[MPS801|MPS802|BASIC][-[PS|...]]" << std::endl <<
-		 "  ([BLUEBAND|GREENBAND|GREYBAND|WHITE], [WIDTHINCH], [HEIGHTINCH], [BORDERINCH])" << std::endl;
-	o << "PARAMETERS to connect the Disk CONNECTPER:" << std::endl <<
-		 "[DEVICE = 8|9|10|11]" << std::endl;
 	o << "Check LOG file if the emulation doesn't start as expected" << std::endl;
 }
 

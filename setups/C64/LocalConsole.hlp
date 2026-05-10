@@ -22,6 +22,9 @@ To decompile a zone of the memory.
 Parameters:
 => ADDRESS (mandatory): The address where to start to decompile.
 => BYTEs (mandatory): The number of bytes to decompile (rounded).
+;POSSIBLEPERS
+List of the potential peripherals that can be connected to the emulator.
+Parameters: None
 ;CONNECTPER ID [ATTR1 ATTR2 ...]
 To connect a peripheral. 
 Parameters:

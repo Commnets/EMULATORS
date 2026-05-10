@@ -99,7 +99,8 @@ void C64::CIA1::processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifier* n)
 				_CIA1Registers -> setJoystickStatusAtPort ((size_t) jm -> _joystickId,
 					((dr == 0x00) 
 						? 0xff /** none connected. */ 
-						: _CIA1Registers -> joystickStatusAtPort ((size_t) jm -> _joystickId) & ~dr));
+						: ((_CIA1Registers -> joystickStatusAtPort ((size_t) jm -> _joystickId) | 
+							0x0f /** keep the fire only */) & ~dr)));
 			}
 
 			break;

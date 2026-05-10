@@ -1,11 +1,14 @@
 #include <ZXSpectrum/Cartridge.hpp>
 #include <ZXSpectrum/EdgeConnector.hpp>
 
+const MCHEmul::Attributes ZXSPECTRUM::Cartridge::_ATTRIBUTES =
+		{ { "Name", "Sinclair ZXSpectrum Cartridge" },
+		  { "Manufacturer", "Various" } };
+
 // ---
 ZXSPECTRUM::Cartridge::Cartridge ()
-	: ZXSPECTRUM::EdgeConnectorPeripheral (_ID,
-		{ { "Name", "Sinclair ZXSpectrum Cartridge" },
-		  { "Manufacturer", "Various" } }), // This parameters can be changed when connecting data...
+	: ZXSPECTRUM::EdgeConnectorPeripheral (_ID, _ATTRIBUTES),
+	  // This parameters can be changed when connecting data...
 	  _dataDumped (false),
 	  _memoryRef (nullptr), _memoryView (nullptr)
 {

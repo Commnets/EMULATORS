@@ -35,6 +35,8 @@ namespace ZX81
 
 		static const int _ID = 201;
 
+		static const MCHEmul::Attributes _ATTRIBUTES;
+
 		Cartridge ();
 
 		/** To know the type of cartridge, if any. */

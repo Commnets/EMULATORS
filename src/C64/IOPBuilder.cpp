@@ -6,6 +6,37 @@
 #include <C64/C64.hpp>
 
 // ---
+MCHEmul::IOPeripheral::Infos C64::IOPeripheralBuilder::possiblePeripherals () const
+{
+	MCHEmul::IOPeripheral::Infos result = 
+		std::move (COMMODORE::IOPeripheralBuilder::possiblePeripherals ());
+
+	result.emplace_back (MCHEmul::IOPeripheral::Info 
+		{ MCHEmul::Typewriter::_ID, MCHEmul::Typewriter::_ATTRIBUTES });
+	result.emplace_back (MCHEmul::IOPeripheral::Info 
+		{ C64::Cartridge::_ID, C64::Cartridge::_ATTRIBUTES });
+	result.emplace_back (MCHEmul::IOPeripheral::Info
+		{ COMMODORE::Datasette1530::_ID, COMMODORE::Datasette1530::_ATTRIBUTES });
+	result.emplace_back (MCHEmul::IOPeripheral::Info
+		{ COMMODORE::Datasette1530Injection::_ID, COMMODORE::Datasette1530Injection::_ATTRIBUTES });
+	// There might be up to 4 disk units connected...
+	// but they must have different device numbers, 
+	// and also different IDs in the emulation (to be able to distinguish them).
+	for (int i = 0; i < 4; ++i) 
+		result.emplace_back (MCHEmul::IOPeripheral::Info
+			{ C64::Disk1541Simulation::_DEFAULTID + i, C64::Disk1541Simulation::_ATTRIBUTES });
+	// There might be up to 2 printers connected...
+	// but they must have different device numbers, 
+	// and also different IDs in the emulation (to be able to distinguish them).
+	for (int i = 0; i < 2; ++i)
+		result.emplace_back (MCHEmul::IOPeripheral::Info
+			{ C64::StandardSerialPrinterSimulation::_DEFAULTID + i, 
+			  C64::StandardSerialPrinterSimulation::_ATTRIBUTES });
+
+	return (result);
+}
+
+// ---
 MCHEmul::IOPeripheral* C64::IOPeripheralBuilder::createPeripheral 
 	(int id, MCHEmul::Computer* c, const MCHEmul::Attributes& prms) const
 {

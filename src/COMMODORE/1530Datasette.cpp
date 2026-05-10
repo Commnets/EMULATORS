@@ -1,6 +1,14 @@
 #include <COMMODORE/1530Datasette.hpp>
 #include <F6500/incs.hpp>
 
+const MCHEmul::Attributes COMMODORE::Datasette1530::_ATTRIBUTES =
+	{ { "Name", "Commodore 1530/1531 Datasette Synchronous (CN2)" },
+	  { "Manufacturer", "Commodore Business Machines (CBM)" } };
+
+const MCHEmul::Attributes COMMODORE::Datasette1530Injection::_ATTRIBUTES =
+	{ { "Name", "Commodore 1530/1531 Datasette Injection (CN2)" },
+	  { "Manufacturer", "ICF Software Simulation" } };;
+
 // ---
 void COMMODORE::Datasette1530::TAPFileFormatImplementation::whenValueRead 
 	(unsigned int cC, const MCHEmul::UByte& v)
@@ -19,8 +27,7 @@ COMMODORE::Datasette1530::Datasette1530 (unsigned int cR,
 	: MCHEmul::StandardDatasette (_ID, 
 		dynamic_cast <MCHEmul::StandardDatasette::Implementation*> (dI), 
 		true /** Motor controlled internally. */,
-		{ { "Name", "Commodore 1530/1531 Synchronous (CN2)" },
-		  { "Manufacturer", "Commodore Business Machines CBM" } })
+		_ATTRIBUTES)
 {
 	// But it can vary when other models...
 	setClassName ("C2N1530");
@@ -81,9 +88,9 @@ MCHEmul::InfoStructure COMMODORE::Datasette1530Injection::Definition::getInfoStr
 // ---
 COMMODORE::Datasette1530Injection::Datasette1530Injection (const COMMODORE::Datasette1530Injection::Definition& def)
 	: MCHEmul::StandardDatasette (_ID,
-		new MCHEmul::StandardDatasette::NilImplementation, true,
-		{ { "Name", "Datasette Injection 1530 (CN2)" },
-		  { "Manufacturer", "ICF Software Simulation" } }),
+		new MCHEmul::StandardDatasette::NilImplementation, 
+		true, /** Motor controlled internally. */
+		_ATTRIBUTES),
 	  _definition (def)
 { 
 	setClassName ("C2N1530Injection");

@@ -1,7 +1,7 @@
 #include <C264/1541Disk.hpp>
 
 const std::vector <unsigned char> C264::Disk1541Simulation::_POSSIBLEDEVICENUMBERS = 
-	{ 0x08, 0x09, 0x0a, 0x0b }; // Just the 4 possiblities...
+	{ 0x08, 0x09, 0x0a, 0x0b }; // Just the 4 possibilities...
 const COMMODORE::SerialIOPeripheralSimulation::Definition 
 	C264::Disk1541Simulation::_DEFINITION = {
 		MCHEmul::Address ({ 0x09, 0x05 }, false),	// LATTABLE
@@ -11,6 +11,7 @@ const COMMODORE::SerialIOPeripheralSimulation::Definition
 		MCHEmul::Address ({ 0x89, 0x00 }, false),	// DFLTO
 		MCHEmul::Address ({ 0x95, 0x00 }, false),	// The address where the the information to be sent is kept...
 		MCHEmul::Address ({ 0x90, 0x00 }, false),	// The address where the status is set...
+		MCHEmul::Address ({ 0x01, 0x10 }, false),	// The address where the result of the "$" command is kept...
 		0x00, 0x80,
 		// Traps...
 		{
@@ -54,8 +55,9 @@ const COMMODORE::SerialIOPeripheralSimulation::Definition
 				"Serial Ready 2",
 				MCHEmul::Address ({ 0xd4, 0xe2 }, false),
 				MCHEmul::Address ({ 0xe7, 0xe1 }, false),
-				{ 0xa5, 0x01, 0xc5 } 
-	}}};
+				{ 0xa5, 0x01, 0xc5 }
+			}
+	}};
 
 // ---
 C264::Disk1541Simulation::Disk1541Simulation (

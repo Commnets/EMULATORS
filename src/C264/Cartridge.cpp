@@ -1,11 +1,14 @@
 #include <C264/Cartridge.hpp>
 #include <C264/ExpansionPort.hpp>
 
+const MCHEmul::Attributes C264::Cartridge::_ATTRIBUTES =
+		{ { "Name", "Commodore C264 Cartridge" },
+		  { "Manufacturer", "Commodore Business Machines (CBM)" } };
+
 // ---
 C264::Cartridge::Cartridge ()
-	: COMMODORE::ExpansionPeripheral (_ID,
-		{ { "Name", "Commodore C264 Cartridge" },
-		  { "Manufacturer", "Commodore Business Machines CBM" } }), // This parameters can be changed when connecting data...
+	: COMMODORE::ExpansionPeripheral (_ID, _ATTRIBUTES), 
+	  // This parameters can be changed when connecting data...
 	  _dataDumped (false),
 	  _memoryRef (nullptr), _memoryView (nullptr)
 {

@@ -1,11 +1,14 @@
 #include <ZX81/Cartridge.hpp>
 #include <ZX81/EdgeConnector.hpp>
 
+const MCHEmul::Attributes ZX81::Cartridge::_ATTRIBUTES =
+		{ { "Name", "Sinclair ZX80 Cartridge" },
+		  { "Manufacturer", "Various" } };
+
 // ---
 ZX81::Cartridge::Cartridge ()
-	: ZX81::EdgeConnectorPeripheral (_ID,
-		{ { "Name", "Sinclair ZX80 Cartridge" },
-		  { "Manufacturer", "Various" } }), // This parameters can be changed when connecting data...
+	: ZX81::EdgeConnectorPeripheral (_ID, _ATTRIBUTES), 
+	  // This parameters can be changed when connecting data...
 	  _dataDumped (false),
 	  _memoryRef (nullptr), _memoryView (nullptr)
 {

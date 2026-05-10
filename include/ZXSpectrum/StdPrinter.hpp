@@ -31,6 +31,8 @@ namespace ZXSPECTRUM
 		static MCHEmul::MatrixPrinterEmulation::Configuration _CONFIGURATION;
 
 		static const int _ID = 102;
+		
+		static const MCHEmul::Attributes _ATTRIBUTES;
 
 		/** The name of the traps. */
 		static const int _PRINT_A = 0;

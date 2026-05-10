@@ -127,6 +127,11 @@ Id:@ID@
 @DEVICES?{fmter=.CLASS,empty=no devices}\n---\n@
 #---
 #---
+;InfoPeripheral
+Id:@ID@
+@ATTRS?{key=YES,equal=:,empty=no attributes}\n@
+#---
+#---
 ;Peripheral
 Id:@ID@
 @ATTRS?{key=YES,equal=:,empty=no attributes}\n@

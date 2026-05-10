@@ -25,6 +25,8 @@ namespace COMMODORE
 	class Disk1540SeriesSimulation : public SerialIOPeripheralSimulation
 	{
 		public:
+		static const MCHEmul::Attributes _ATTRIBUTES;
+
 		Disk1540SeriesSimulation (
 			int id, unsigned char dN,
 			const MCHEmul::ASCIIToCodeConverter* cnv, // This class is not the owner of the object but ther Emulation instead!
@@ -75,10 +77,18 @@ namespace COMMODORE
 		/** To get the name of all files in the directory, 
 			its position in the disk and its size. */
 
-		/** When the directory is requested. */
-		std::vector <MCHEmul::UByte> buildAnswerToDirCommand () const;
+		/** To determine whetehr a name matches or not wit a patterm
+			The pattern might be made up of wildcards '?', '*'. */
+		bool nameMatchesWithPattern (const std::string& n, const std::string& p) const;
+		/** To split a command into a pre and a post data, separated both for a ":" */
+		inline std::tuple <std::string, std::string> splitCommandIntoPreAndPostData (const std::string& c) const;
+		/** When the directory is requested. 
+			The filter is received as parameter. */
+		std::vector <MCHEmul::UByte> buildAnswerToDirCommand 
+			(const std::tuple <const std::string, const std::string>& prm) const;
 		/** When another file is requested. */
-		std::vector <MCHEmul::UByte> buildAnswerToFileCommand () const;
+		std::vector <MCHEmul::UByte> buildAnswerToFileCommand
+			(const std::tuple <const std::string, const std::string>& prm) const;
 		/** To get the intial sector annd track of a file name. \n
 			wildcards might be used to specific the file name (in PETSCII). \n 
 			When the wildcard * is at the beginning the info returned will allow to the first file. */
@@ -109,6 +119,10 @@ namespace COMMODORE
 		};
 
 		// Immplementation
+		/** The channel to be used in the current command. */
+		unsigned char _commandChannel;
+		/** But also the channel that was used last time. */
+		unsigned char _lastCommandChannel;
 		/** Just to keep the command being transmited to the 1541 unit. */
 		std::string _currentCommand;
 		/** The status of the firmware. */
@@ -121,6 +135,15 @@ namespace COMMODORE
 		/** The byte of the previous block that is being answered. */
 		unsigned short _byteFromBlockToAnswerToSend;
 	};
+
+	// ---
+	inline std::tuple <std::string, std::string> 
+		Disk1540SeriesSimulation::splitCommandIntoPreAndPostData (const std::string& c) const
+	{
+		return (std::make_tuple 
+			((c.find (':') != std::string::npos) ? c.substr (0, c.find (':')) : c, 
+			 (c.find (':') != std::string::npos) ? c.substr (c.find (':') + 1) : ""));
+	}
 }
 
 #endif

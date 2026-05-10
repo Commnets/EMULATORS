@@ -79,6 +79,7 @@ namespace VIC20
 									{ new COMMODORE::CRTFileTypeIO /** Cartridges. */,
 									  new COMMODORE::TAPFileTypeIO /** Tapes. */,
 									  new COMMODORE::PRGFileTypeIO /** Very simple PRG files. */,
+									  new COMMODORE::D64FileTypeIO /** Disk images. */,
 									  new COMMODORE::KeystrokeTypeIO /** Keystroke data. */,
 									  new MCHEmul::RawFileTypeIO /** Row data. */ }))); }
 	};

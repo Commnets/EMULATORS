@@ -25,6 +25,8 @@ namespace VIC20
 			: COMMODORE::IOPeripheralBuilder ()
 				{ }
 
+		virtual MCHEmul::IOPeripheral::Infos possiblePeripherals () const override;
+
 		protected:
 		virtual MCHEmul::IOPeripheral* createPeripheral 
 			(int id, MCHEmul::Computer* c, const MCHEmul::Attributes& prms) const override;

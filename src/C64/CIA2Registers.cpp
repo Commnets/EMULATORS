@@ -21,7 +21,7 @@ void C64::CIA2Registers::setValue (size_t p, const MCHEmul::UByte& v)
 	switch (pp)
 	{
 		// Data Port Register A: CI2PRA
-		// The three first bits control VICII active bank
+		// The two first bits, PA0 and PA1, control the active VIC-II bank.
 		// When the data direction dir is changed, the bank has also to be calculated!
 		case 0x00:
 		case 0x02:

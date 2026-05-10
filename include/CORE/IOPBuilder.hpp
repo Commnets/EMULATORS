@@ -40,6 +40,10 @@ namespace MCHEmul
 
 		IOPeripheralBuilder& operator = (IOPeripheralBuilder&&) = delete;
 
+		/** To get the list of the peripherals than can be built. */
+		virtual IOPeripheral::Infos possiblePeripherals () const
+							{ return (IOPeripheral::Infos { }); }
+
 		/** If the peripherical requeted already existed (one with the same id) a reference to it would be returned,
 			otherwise it sill created...if any! \n
 			The peripherals could need to take into account the computer they belong to. */

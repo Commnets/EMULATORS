@@ -6,6 +6,37 @@
 #include <C264/C264.hpp>
 
 // ---
+MCHEmul::IOPeripheral::Infos C264::IOPeripheralBuilder::possiblePeripherals () const
+{
+	MCHEmul::IOPeripheral::Infos result = 
+		std::move (COMMODORE::IOPeripheralBuilder::possiblePeripherals ());
+
+	result.emplace_back (MCHEmul::IOPeripheral::Info 
+		{ MCHEmul::Typewriter::_ID, MCHEmul::Typewriter::_ATTRIBUTES });
+	result.emplace_back (MCHEmul::IOPeripheral::Info 
+		{ C264::Cartridge::_ID, C264::Cartridge::_ATTRIBUTES });
+	result.emplace_back (MCHEmul::IOPeripheral::Info
+		{ COMMODORE::Datasette1530::_ID, COMMODORE::Datasette1530::_ATTRIBUTES });
+	result.emplace_back (MCHEmul::IOPeripheral::Info
+		{ COMMODORE::Datasette1530Injection::_ID, COMMODORE::Datasette1530Injection::_ATTRIBUTES });
+	// Up to 4 disk units can be connected to the serial port, 
+	// but they must have different device numbers, 
+	// and also different IDs in the emulation (to be able to distinguish them).
+	for (int i = 0; i < 4; i++) 
+		result.emplace_back (MCHEmul::IOPeripheral::Info
+			{ C264::Disk1541Simulation::_DEFAULTID + i, C264::Disk1541Simulation::_ATTRIBUTES });
+	// Up to 2 printers can be connected to the serial port, 
+	// but they must have different device numbers, 
+	// and also different IDs in the emulation (to be able to distinguish them).
+	for (int i = 0; i < 2; i++) 
+		result.emplace_back (MCHEmul::IOPeripheral::Info
+			{ C264::StandardSerialPrinterSimulation::_DEFAULTID + i, 
+			  C264::StandardSerialPrinterSimulation::_ATTRIBUTES });
+
+	return (result);
+}
+
+// ---
 MCHEmul::IOPeripheral* C264::IOPeripheralBuilder::createPeripheral 
 	(int id, MCHEmul::Computer* c, const MCHEmul::Attributes& prms) const
 {

@@ -30,10 +30,12 @@ namespace MCHEmul
 		/** This ID is part of the basic library. */
 		static const unsigned int _ID = 10;
 
+		static const Attributes _ATTRIBUTES;
+
 		/** The constructor receoved the number of cycles to wait until injecting another element 
 			in the simulation, and a reference to the real IO system used in the simnulation.
 			This last one can not be nullptr. */
-		Typewriter (unsigned int nC, Computer* c,const Attributes& attrs = { });
+		Typewriter (unsigned int nC, Computer* c,const Attributes& attrs = _ATTRIBUTES);
 
 		/** The keys allowed are: \n
 			The FileData receives has to contain every "symbol" in the keyboard (UK one).

@@ -25,6 +25,10 @@
 @ERROR@
 #---
 #---
+;CPOSSIBLEPERS
+@PERS?{fmter=InfoPeripheral,empty=no peripherals}\n---\n@
+#---
+#---
 ;CCONNECTPER
 ->Errors:
 @ERROR@

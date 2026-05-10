@@ -2,6 +2,13 @@
 #(C) 2022 Ignacio Cea Fornies
 ?./LocalConsole.hlp
 ?./Commodore.hlp
+;CONNECTPER ID [ATTRS...]
+To connect a peripheral. 
+Parameters:
+=> ID (mandatory): The ID of the peripheral to connect.
+=> For Printer (optional): d:[DEVICENUMBER=4|5] f:[FILENAME] p:[PRINTERTYPE=MPS801|MPS802|MPS801-PS|MPS802-PS]
+([BLUEBAND|GREENBAND|GREYBAND|WHITE], [WIDTHINCH], [HEIGHTINCH], [BORDERINCH])
+=> For Disk type 1540/1541/1570 (optional): d:[DEVICENUMBER=8|9|10|11]
 ;CIA1
 To know the status of the CIA1 chip.
 Parameters: None.

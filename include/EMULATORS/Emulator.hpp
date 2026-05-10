@@ -201,6 +201,9 @@ namespace MCHEmul
 							{ return ((FileIO*) (((const Emulator*) this) -> fileIO ())); }
 
 		// Managing peripherals...
+		/** To get the list of potential peripherals. */
+		IOPeripheral::Infos possiblePeripherals () const
+							{ return (peripherialBuilder () -> possiblePeripherals ()); }
 		/** Build up and connect a peripheral. */
 		bool connectPeripheral (int id, const Attributes& prms, MCHEmul::IODevice* d);
 		/** This is the simpliest version. It will try to detect automatically 

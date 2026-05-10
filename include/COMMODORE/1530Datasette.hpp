@@ -90,6 +90,8 @@ namespace COMMODORE
 
 		static const int _ID = 100;
 
+		static const MCHEmul::Attributes _ATTRIBUTES;
+
 		/** The number of cycles to next read operation is received as paraneter. \n
 			Usually that number of seconds is not constant but changed as the simulation progreeses. */
 		Datasette1530 (unsigned int cR, TAPFileFormatImplementation* dI);
@@ -132,6 +134,8 @@ namespace COMMODORE
 		};
 
 		static const int _ID = 101;
+
+		static const MCHEmul::Attributes _ATTRIBUTES;
 
 		// Use these following ids to identify the two traps that this class
 		// understood by default...

@@ -79,6 +79,8 @@ namespace SINCLAIR
 
 		static const int _ID = 100;
 
+		static const MCHEmul::Attributes _ATTRIBUTES;
+
 		Datasette (unsigned int rS);
 
 		/** The only type admitted in TZX, but only when all blocks as sampling info. */

@@ -28,6 +28,8 @@ namespace ZX81
 		public:
 		static const int _ID = 101;
 
+		static const MCHEmul::Attributes _ATTRIBUTES;
+
 		/** The parameters are the point in the execution where the code has to be injected, and
 			the point where to return once the injection has been done. */
 		DatasetteInjection (Type t);

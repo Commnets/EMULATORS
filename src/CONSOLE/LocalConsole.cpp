@@ -45,6 +45,7 @@ void MCHEmul::LocalConsole::createAndExecuteCommand ()
 	std::string cmdLoadBinary ("LOADBINARY");
 	std::string cmdLoadBlocks ("LOADBLOCKS");
 	std::string cmdDecompileMemory ("DECOMPILE");
+	std::string cmdPossiblePeripherals ("POSSIBLEPERS");
 	std::string cmdConnectPeripheral ("CONNECTPER");
 	std::string cmdDisconnectPeripherals ("DISCONNECTPERS");
 	std::string cmdLoadPeripheralData ("LOADPERDATA");
@@ -69,6 +70,10 @@ void MCHEmul::LocalConsole::createAndExecuteCommand ()
 		outputStream () << MCHEmul::FormatterBuilder::instance () ->
 			formatter ("C" + cmdDecompileMemory) -> format (decompileMemory 
 				(prmsFor (_command, cmdDecompileMemory))) << std::endl;
+	else
+	if (cmdName == cmdPossiblePeripherals)
+		outputStream () << MCHEmul::FormatterBuilder::instance () ->
+			formatter ("C" + cmdPossiblePeripherals) -> format (possiblePeripherals ()) << std::endl;
 	else
 	if (cmdName == cmdConnectPeripheral)
 		outputStream () << MCHEmul::FormatterBuilder::instance () ->
@@ -225,6 +230,24 @@ MCHEmul::InfoStructure MCHEmul::LocalConsole::decompileMemory (const std::string
 
 	result.add (std::string ("ERROR"), std::string ("no errors"));
 	result.add ("CODELINES", lns);
+	return (result);
+}
+
+// ---
+MCHEmul::InfoStructure MCHEmul::LocalConsole::possiblePeripherals () const
+{
+	MCHEmul::InfoStructure result;
+
+	size_t ct = 0;
+	MCHEmul::IOPeripheral::Infos info = 
+		std::move (_emulator -> possiblePeripherals ());
+	MCHEmul::InfoStructure iStr;
+	for (const auto& i : info)
+		iStr.add (MCHEmul::fixLenStr (std::to_string (ct++), 2, false, MCHEmul::_CEROS), 
+			i.getInfoStructure ());
+
+	result.add ("PERS", std::move (iStr));
+
 	return (result);
 }
 

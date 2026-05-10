@@ -113,6 +113,8 @@ namespace C64
 
 		static const int _ID = 203;
 
+		static const MCHEmul::Attributes _ATTRIBUTES;
+
 		Cartridge ();
 
 		void configureMemoryStructure (bool romL, bool romH1, bool romH2CPU, bool romH2VIC);

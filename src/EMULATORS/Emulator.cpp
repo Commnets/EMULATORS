@@ -132,6 +132,10 @@ bool MCHEmul::Emulator::connectPeripheral (int id, const MCHEmul::Attributes& pr
 			i != computer () -> devices ().end () && !result; i++)
 		result = (*i).second -> connectPeripheral (ph);
 
+	// Notice that the peripheral is not deleted if it is not connected,
+	// It will be inserted in the list of peripherals in the builder
+	// and it will be deleted when the builder is destroyed, so there is no memory leak in any case.
+
 	return (result);
 }
 

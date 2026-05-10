@@ -1,6 +1,10 @@
 #include <COMMODORE/SerialIOPeripherals.hpp>
 #include <F6500/incs.hpp>
 
+const MCHEmul::Attributes COMMODORE::SerialNotPresentIOPeripheralSimulation::_ATTRIBUTES =
+		{ { "Name", "COMMODORE Serial Device not present" },
+		  { "Manufacturer", "ICF Software Simulation" } };
+
 // ---
 MCHEmul::InfoStructure COMMODORE::SerialIOPeripheral::getInfoStructure () const
 {
@@ -167,8 +171,7 @@ bool COMMODORE::SerialIOPeripheralSimulation::executeListenTrap (MCHEmul::CPU* c
 	static const unsigned char _OPEN		= 0x0f;
 
 	// The LS Nibble is the logical channel...
-	unsigned char iecdata = 
-		cpu -> memoryRef () -> value (MCHEmul::Address ({ 0x95, 0x00 }, false)).value ();
+	unsigned char iecdata = cpu -> memoryRef () -> value (_definition._sDataAddress).value ();
 	unsigned char cmd = (iecdata >> 4) & 0x0f; // Command = Most Significant Nibble...
 	unsigned char attr = iecdata & 0x0f; // Device Number affected or 
 										 // Secondary Command (what means there was a previous instruction) = Less Significant Nibble...
@@ -360,9 +363,7 @@ void COMMODORE::SerialIOPeripheralSimulation::debugStatus
 // ---
 COMMODORE::SerialNotPresentIOPeripheralSimulation::SerialNotPresentIOPeripheralSimulation
 		(const Definition& dt)
-	: SerialIOPeripheralSimulation (_ID, 0 /** Not important really. */, dt, 
-		{ { "Name", "Device not present" },
-		  { "Manufacturer", "ICF Serial Port simulation" } })
+	: SerialIOPeripheralSimulation (_ID, 0 /** Not important really. */, dt, _ATTRIBUTES)
 {
 	setClassName ("SerialIONotPresentSimulation");
 }

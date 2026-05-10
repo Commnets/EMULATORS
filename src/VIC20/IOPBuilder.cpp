@@ -3,7 +3,39 @@
 #include <VIC20/1530Datasette.hpp>
 #include <VIC20/StdSerialPrinter.hpp>
 #include <VIC20/SerialIONotPresent.hpp>
+#include <VIC20/1541Disk.hpp>
 #include <VIC20/VIC20.hpp>
+
+// ---
+MCHEmul::IOPeripheral::Infos VIC20::IOPeripheralBuilder::possiblePeripherals () const
+{
+	MCHEmul::IOPeripheral::Infos result = 
+		std::move (COMMODORE::IOPeripheralBuilder::possiblePeripherals ());
+
+	result.emplace_back (MCHEmul::IOPeripheral::Info 
+		{ MCHEmul::Typewriter::_ID, MCHEmul::Typewriter::_ATTRIBUTES });
+	result.emplace_back (MCHEmul::IOPeripheral::Info 
+		{ VIC20::Cartridge::_ID, VIC20::Cartridge::_ATTRIBUTES });
+	result.emplace_back (MCHEmul::IOPeripheral::Info
+		{ COMMODORE::Datasette1530::_ID, COMMODORE::Datasette1530::_ATTRIBUTES });
+	result.emplace_back (MCHEmul::IOPeripheral::Info
+		{ COMMODORE::Datasette1530Injection::_ID, COMMODORE::Datasette1530Injection::_ATTRIBUTES });
+	// There might be up to 4 disk units connected...
+	// but they must have different device numbers, 
+	// and also different IDs in the emulation (to be able to distinguish them).
+	for (int i = 0; i < 4; ++i) 
+		result.emplace_back (MCHEmul::IOPeripheral::Info
+			{ VIC20::Disk1541Simulation::_DEFAULTID + i, VIC20::Disk1541Simulation::_ATTRIBUTES });
+	// There might be up to 2 printers connected...
+	// but they must have different device numbers, 
+	// and also different IDs in the emulation (to be able to distinguish them).
+	for (int i = 0; i < 2; ++i)
+		result.emplace_back (MCHEmul::IOPeripheral::Info
+			{ VIC20::StandardSerialPrinterSimulation::_DEFAULTID + i, 
+			  VIC20::StandardSerialPrinterSimulation::_ATTRIBUTES });
+
+	return (result);
+}
 
 // ---
 MCHEmul::IOPeripheral* VIC20::IOPeripheralBuilder::createPeripheral 
@@ -33,6 +65,17 @@ MCHEmul::IOPeripheral* VIC20::IOPeripheralBuilder::createPeripheral
 	else if (id == COMMODORE::Datasette1530Injection::_ID)
 		/** When the routines of the kernal are "overpassed". */
 		result = new VIC20::Datasette1530Injection;
+	else if (id >= VIC20::Disk1541Simulation::_DEFAULTID && 
+			 (id <= VIC20::Disk1541Simulation::_DEFAULTID + 3)) // There might be up to 4 disk units connected...
+		{
+			// There might be several units connected to the serial port with different device numbers
+			// It is also possible to select the name of the output file...
+			unsigned char dN = VIC20::Disk1541Simulation::_DEFAULTDEVICENUMBER;
+			if (prms.size () == 1) dN = (unsigned char) std::atoi ((*prms.find ("0")).second.c_str ());
+			if (VIC20::Disk1541Simulation::isDeviceNumberValid (dN)) // Only if it is valid...
+				result = new VIC20::Disk1541Simulation 
+					(c -> asciiToCodeConverter (), id, dN); // ...otherwise it will nullptr, and not created...
+		}
 	else if (id >= VIC20::StandardSerialPrinterSimulation::_DEFAULTID && 
 			 (id <= VIC20::StandardSerialPrinterSimulation::_DEFAULTID + 1)) // 2 possible printers connected....
 		{

@@ -217,7 +217,7 @@ void COMMODORE::SoundSIDSimpleWrapper::setValue (size_t p, const MCHEmul::UByte&
 		case 0x03:
 			{
 				static_cast <COMMODORE::SoundSIDSimpleWrapper::Voice*> (_voices [0]) -> setPulseUpPercentage
-					((double) ((((unsigned short) _registers [0x03].value ()) << 8) + 
+					((double) ((((unsigned short) (_registers [0x03].value () & 0x0f)) << 8) + 
 								((unsigned short) _registers [0x02].value ())) / 4096.0f);
 			}
 
@@ -281,7 +281,7 @@ void COMMODORE::SoundSIDSimpleWrapper::setValue (size_t p, const MCHEmul::UByte&
 		case 0x0a:
 			{
 				static_cast <COMMODORE::SoundSIDSimpleWrapper::Voice*> (_voices [1]) -> setPulseUpPercentage
-						((double) ((((unsigned short) _registers [0x0a].value ()) << 8) + 
+						((double) ((((unsigned short) (_registers [0x0a].value () & 0x0f)) << 8) + 
 								((unsigned short) _registers [0x09].value ())) / 4096.0f);
 			}
 
@@ -345,7 +345,7 @@ void COMMODORE::SoundSIDSimpleWrapper::setValue (size_t p, const MCHEmul::UByte&
 		case 0x11:
 			{
 				static_cast <COMMODORE::SoundSIDSimpleWrapper::Voice*> (_voices [2]) -> setPulseUpPercentage
-					((double) ((((unsigned short) _registers [0x11].value ()) << 8) + 
+					((double) ((((unsigned short) (_registers [0x11].value () & 0x0f)) << 8) + 
 								((unsigned short) _registers [0x10].value ())) / 4096.0f);
 			}
 

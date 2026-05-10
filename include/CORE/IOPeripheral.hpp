@@ -33,6 +33,21 @@ namespace MCHEmul
 		public:
 		friend IODevice;
 
+		/** Simple structure to group id and the attributes of the peripheral. \n
+			It can be used to get basic information of the peripheral in a single element. \n
+			It can be used within or outside the class! */
+		struct Info
+		{
+			int _id;
+			Attributes _attributes;
+
+			InfoStructure getInfoStructure () const;
+		};
+
+		/** To simplify the use of a list of Infos,
+			when grouping different peripherals. */
+		using Infos = std::vector <Info>;
+
 		IOPeripheral () = delete;
 
 		IOPeripheral (int id, const Attributes& attrs = { })
@@ -59,6 +74,9 @@ namespace MCHEmul
 		const std::string& attribute (const std::string& aN) const
 							{ Attributes::const_iterator i = _attributes.find (aN); 
 							  return ((i == _attributes.end ()) ? AttributedNotDefined : (*i).second); }
+
+		Info info () const
+							{ return (Info { _id, _attributes }); }
 
 		const IODevice* device () const
 							{ return (_device); }

@@ -30,6 +30,8 @@ namespace ZXSPECTRUM
 		public:
 		static const int _ID = 101;
 
+		static const MCHEmul::Attributes _ATTRIBUTES;
+
 		/** The commands accepted by this peripheral. \n
 			They refer mainly to keys that can be pressed.
 			Combinations are not possible. */

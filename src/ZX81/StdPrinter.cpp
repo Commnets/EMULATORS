@@ -1,6 +1,10 @@
 #include <ZX81/StdPrinter.hpp>
 #include <FZ80/CZ80.hpp>
 
+const MCHEmul::Attributes ZX81::ThermalPrinterSimulation::_ATTRIBUTES =
+	{ { "Name", "ZX81 Thermal Printer Simulation" },
+	  { "Manufacturer", "ICF Software Simulation" } };
+
 const MCHEmul::MatrixPrinterEmulation::Configuration 
 	ZX81::ThermalPrinterSimulation::_CONFIGURATION = 
 	MCHEmul::MatrixPrinterEmulation::Configuration (
@@ -156,9 +160,7 @@ const size_t ZX81::ThermalPrinterSimulation::_BLEN = (size_t) (_LBP.value () - _
 
 // ---
 ZX81::ThermalPrinterSimulation::ThermalPrinterSimulation (MCHEmul::MatrixPrinterEmulation* mPE)
-	: ZX81::EdgeConnectorPeripheral (_ID, 
-		{ { "Name", "ZX81 Printer" },
-		  { "Manufacturer", "ICF Standard Printer Simulation" } }),
+	: ZX81::EdgeConnectorPeripheral (_ID, _ATTRIBUTES),
 	  _printTrap { 
 		0, 
 		"PRINTER", 

@@ -2,6 +2,10 @@
 #include <CORE/CPU.hpp>
 #include <CORE/LogChannel.hpp>
 
+const MCHEmul::Attributes MCHEmul::Typewriter::_ATTRIBUTES =
+	{ { "Name", "Typewriter emulation" },
+	  { "Manufacturer", "ICF Software Simulation" } };
+
 // ---
 MCHEmul::Typewriter::Typewriter (unsigned int nC, 
 		MCHEmul::Computer* c, const MCHEmul::Attributes& attrs)

@@ -3,11 +3,14 @@
 #include <C64/Memory.hpp>
 #include <C64/IOExpansionMemory.hpp>
 
+const MCHEmul::Attributes C64::Cartridge::_ATTRIBUTES = 
+		{ { "Name", "Commodore 64 Cartridge" },
+		  { "Manufacturer", "Commodore Business Machines (CBM)" } };
+
 // ---
 C64::Cartridge::Cartridge ()
-	: COMMODORE::ExpansionPeripheral (_ID,
-		{ { "Name", "Commodore 64 Cartridge" },
-		  { "Manufacturer", "Commodore Business Machines CBM" } }), // This parameters can be changed when connecting data...
+	: COMMODORE::ExpansionPeripheral (_ID, _ATTRIBUTES),
+	  // This parameters can be changed when connecting data...
 	  _ultimax (false),
 	  _dataDumped (false),
 	  _memoryRef (nullptr), 

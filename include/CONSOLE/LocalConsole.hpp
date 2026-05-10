@@ -59,6 +59,9 @@ namespace MCHEmul
 		InfoStructure decompileMemory (const std::string& prms);
 
 		// Managing peripherals
+		/** List of the peripherals that could be connected 
+			including a brief description and thelist of the parameters. */
+		InfoStructure possiblePeripherals () const;
 		/** To connect a peripheral. \n
 			The parameters are the id of the peripheral to connect, 
 			and the list of parameters to build up the peripheral if needed. */

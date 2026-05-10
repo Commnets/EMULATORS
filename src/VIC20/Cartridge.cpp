@@ -1,11 +1,14 @@
 #include <VIC20/Cartridge.hpp>
 #include <VIC20/ExpansionPort.hpp>
 
+const MCHEmul::Attributes VIC20::Cartridge::_ATTRIBUTES =
+		{ { "Name", "Commodore VIC20 Cartridge" },
+		  { "Manufacturer", "Commodore Business Machines CBM" } };
+
 // ---
 VIC20::Cartridge::Cartridge ()
-	: COMMODORE::ExpansionPeripheral (_ID,
-		{ { "Name", "Commodore VIC20 Cartridge" },
-		  { "Manufacturer", "Commodore Business Machines CBM" } }), // This parameters can be changed when connecting data...
+	: COMMODORE::ExpansionPeripheral (_ID, _ATTRIBUTES),
+	  // This parameters can be changed when connecting data...
 	  _dataDumped (false),
 	  _memoryRef (nullptr), _memoryView (nullptr)
 {

@@ -1,17 +1,21 @@
 #include <COMMODORE/1540SeriesDisk.hpp>
 #include <F6500/C6500.hpp>
 
+const MCHEmul::Attributes COMMODORE::Disk1540SeriesSimulation::_ATTRIBUTES =
+	{ { "Name", "Commodore 1540/1541/1570/1571 Disk Injection" },
+	  { "Manufacturer", "ICF Software Simulation" } };
+
 // ---
 COMMODORE::Disk1540SeriesSimulation::Disk1540SeriesSimulation 
 		(int id, unsigned char dN, 
 		 const MCHEmul::ASCIIToCodeConverter* cnv,
 		 const COMMODORE::SerialIOPeripheralSimulation::Definition& def)
-	: COMMODORE::SerialIOPeripheralSimulation (id, dN,
-		def,
-		{ { "Name", "1540/1541/1571/1570/1581 Disk Injection" },
-		  { "Manufacturer", "ICF 1540/1541/1571/1570/1581 Software Simulation" } }),
+	: COMMODORE::SerialIOPeripheralSimulation (id, dN, def, _ATTRIBUTES),
 	  _asciiConverter (cnv),
 	  _data { },
+	  _d64FileData (nullptr),
+	  _commandChannel (0), // The default channel for the commands is 0, but it can be changed by the user...
+	  _lastCommandChannel (0),
 	  _currentCommand (""),
 	  _firmwareStatus (DiskFirmwareStatus::_IDLE),
 	  _blockToAnswer { },
@@ -116,9 +120,11 @@ unsigned char COMMODORE::Disk1540SeriesSimulation::untalk (MCHEmul::CPU* cpu, co
 // ---
 unsigned char COMMODORE::Disk1540SeriesSimulation::openChannel (MCHEmul::CPU* cpu, const MCHEmul::UByte& chn)
 { 
-	// TODO
+	_lastCommandChannel = _commandChannel; // Just in case...
 
-	// Any case the channel can be oppen whether the firmware status
+	_commandChannel = chn.value ();
+
+	// Any case the channel can be open whether the firmware status
 	// is receiving a command or sending information back...
 
 	return (definition ()._okResult);
@@ -127,7 +133,9 @@ unsigned char COMMODORE::Disk1540SeriesSimulation::openChannel (MCHEmul::CPU* cp
 // ---
 unsigned char COMMODORE::Disk1540SeriesSimulation::closeChannel (MCHEmul::CPU* cpu, const MCHEmul::UByte& chn)
 { 
-	// TODO
+	_lastCommandChannel = _commandChannel; // Just in case...
+
+	_commandChannel = 0; 
 
 	return (definition ()._okResult);
 }
@@ -151,24 +159,71 @@ unsigned char COMMODORE::Disk1540SeriesSimulation::receiveByte (MCHEmul::CPU* cp
 	// and the satus of what the firmware is doing...
 	if (_firmwareStatus == DiskFirmwareStatus::_ANSWERINGCOMMAND)
 	{
-		if (_currentCommand == "$")
+		if (_blockToAnswer.empty ())
 		{
-			if (_blockToAnswer.empty ())
+			std::tuple <std::string, std::string> preAndPostData = 
+				splitCommandIntoPreAndPostData (_currentCommand);
+			switch (_commandChannel)
 			{
-				_blockToAnswer = 
-					std::move (buildAnswerToDirCommand ());
+				// These channels are reserved for load and save operations...
+				case 0:
+				case 1:
+					{
+						if (std::get <0> (preAndPostData)[0] == 
+							_asciiConverter -> convert ('$').value ())
+						{
+							// The command $ can have parameters.
+							// These parameters are just after the $ and they are used to filter the directory information.
+							// The parameters must have after the symbol ":"
+							// Between the symbol "$" and ":" there might be a number that means the disk drive number.
+							_blockToAnswer = 
+								std::move (buildAnswerToDirCommand 
+									(splitCommandIntoPreAndPostData (
+										(_currentCommand.length () == 1 ? "" : _currentCommand.substr (1)))));
 
-				_byteFromBlockToAnswerToSend = 0;
-			}
-		}
-		else
-		{
-			if (_blockToAnswer.empty ())
-			{
-				_blockToAnswer =
-					std::move (buildAnswerToFileCommand ());
+							_byteFromBlockToAnswerToSend = 0;
+						}
+						else
+						{
+							_blockToAnswer =
+								std::move (buildAnswerToFileCommand 
+									(splitCommandIntoPreAndPostData (_currentCommand)));
 
-				_byteFromBlockToAnswerToSend = 0;
+							_byteFromBlockToAnswerToSend = 0;
+						}
+					}
+
+					break;
+
+				// These channels are reserved for data info...
+				case 2:
+				case 3:
+				case 4:
+				case 5:
+				case 6:
+				case 7:
+				case 8:
+				case 9:
+				case 10:
+				case 11:
+				case 12:
+				case 13:
+				case 14:
+					{
+						_LOG ("Disk1540SeriesSimulation: Channel " + 
+							  std::to_string (_commandChannel) + " is reserved for data info, but it is not implemented yet.");
+					}
+
+					break;
+
+				// Thi channel is reserved for disk commands...
+				case 15:
+					{
+						_LOG ("Disk1540SeriesSimulation: Channel " + 
+							  std::to_string (_commandChannel) + " is reserved for commands, but it is not implemented yet.");
+					}
+
+					break;
 			}
 		}
 
@@ -215,7 +270,31 @@ MCHEmul::DataMemoryBlocks COMMODORE::Disk1540SeriesSimulation::dataBlocksPerTrac
 }
 
 // ---
-std::vector <MCHEmul::UByte> COMMODORE::Disk1540SeriesSimulation::buildAnswerToDirCommand () const
+bool COMMODORE::Disk1540SeriesSimulation::nameMatchesWithPattern (const std::string& n, const std::string& p) const
+{
+	// Taking care when length = 0...
+	bool result = (n.length () == 0) 
+		? ((p.length () == 0) ? true : false) 
+		: true;
+
+	for (size_t i = 0; i < p.length () && i < n.length () && result; i++)
+	{
+		if (p [i] == '?')
+			continue;			// Still match...
+		else
+		if (p [i] == '*')
+			i = p.length ();	// It is not necessary to check the rest...everything matches...
+		else
+		if (p [i] != n [i])
+			result = false;		// One char that doesn't match, no worth to continue...
+	}
+
+	return (result);
+}
+
+// ---
+std::vector <MCHEmul::UByte> COMMODORE::Disk1540SeriesSimulation::buildAnswerToDirCommand 
+	(const std::tuple <const std::string, const std::string>& prm) const
 {
 	// ---
 	// Constants used in the building of the answer to the command "$", 
@@ -245,7 +324,8 @@ std::vector <MCHEmul::UByte> COMMODORE::Disk1540SeriesSimulation::buildAnswerToD
 
 	bool e = false;
 	// The first direction where to load the information of the directory...
-	MCHEmul::Address iA ({ 0x01, 0x08 }, false);
+	// From that position the rest is loaded...
+	MCHEmul::Address iA = _definition._dirAddress;
 	while (!e)
 	{
 		// Reads the information of the directory...
@@ -327,18 +407,28 @@ std::vector <MCHEmul::UByte> COMMODORE::Disk1540SeriesSimulation::buildAnswerToD
 				// Reads where the name of the entry is...
 				// ...but it can be empty what means that there is no entry at all...
 				// ...and probably the sector reading process should finish (see below)...
+				unsigned char nc = 0xa0;
+				std::string nStr = "";
 				std::vector <MCHEmul::UByte> n (4 - nfbtstr.length (), _SPACE_PETSCII); 
 				n.push_back (_QUOTE_PETSCII); // Everything starts with a comma...
-				unsigned char nc = 0xa0;
 				size_t j = 0x05;
-				for (;j < 0x15 && (nc = dt [st].byte ((i << 5) + j).value ()) != 0xa0; j++) 
-						n.push_back ((nc == 0xa0) ? _SPACE_PETSCII : MCHEmul::UByte (nc));
+				for (;j < 0x15 && 
+					 (nc = dt [st].byte ((i << 5) + j).value ()) != 0xa0; j++)
+				{ 
+					MCHEmul::UByte nChr = 
+						(nc == 0xa0) ? _SPACE_PETSCII : MCHEmul::UByte (nc);
+					nStr += (char) nChr.value ();
+					n.push_back (nChr);
+				}
+
 				n.push_back (_QUOTE_PETSCII);
 
 				// If there is no name...
+				// or it doesn matches the pattern....
 				// continue to the next element...
 				// Probably it means that the end of the entries is reached...
-				if (j == 0x05)
+				if (j == 0x05 || 
+					!nameMatchesWithPattern (nStr, std::get <1> (prm)))
 					continue;
 
 				// Calculates the number of blocks of the line...
@@ -433,12 +523,17 @@ std::vector <MCHEmul::UByte> COMMODORE::Disk1540SeriesSimulation::buildAnswerToD
 }
 
 // ---
-std::vector <MCHEmul::UByte> COMMODORE::Disk1540SeriesSimulation::buildAnswerToFileCommand () const
+std::vector <MCHEmul::UByte> COMMODORE::Disk1540SeriesSimulation::buildAnswerToFileCommand 
+	(const std::tuple <const std::string, const std::string>& prm) const
 {
 	size_t t = 0, s = 0;
-	std::tie (t, s) = getInitialTrackAndSectorOfFile (_currentCommand); // The name of the file with or without woldcards...
+
+	// Get the file wich name is received as parameter, with or without wildcards
+	// Get then the track and the sector where the file starts...
+	std::tie (t, s) = getInitialTrackAndSectorOfFile (std::get <0> (prm)); 
 	if (t == 0 && s == 0) 
 		return (std::vector <MCHEmul::UByte> { }); // No file at all...
+
 	return (getDataOfFileFromTrackAndSector (t, s));
 }
 
@@ -446,25 +541,6 @@ std::vector <MCHEmul::UByte> COMMODORE::Disk1540SeriesSimulation::buildAnswerToF
 std::tuple <size_t, size_t> 
 COMMODORE::Disk1540SeriesSimulation::getInitialTrackAndSectorOfFile (const std::string& fN) const
 {
-	// The willcards are in fN...
-	auto matchWithWildcards = [&](const std::string& fE) -> bool
-		{
-			bool match = true;
-			for (size_t i = 0; i < fN.length () && i < fE.length () && match; i++)
-			{
-				if (fN [i] == '?')
-					continue;			// Still match...
-				else
-				if (fN [i] == '*')
-					i = fN.length ();	// It is not necessary to check the rest...everything matches...
-				else
-				if (fN [i] != fE [i])
-					match = false;		// One char that doesn't match, no worth to continue...
-			}
-
-			return (match);
-		};
-
 	size_t t = 0, s = 0;
 
 	// All file info is n the track 18, until found...
@@ -474,8 +550,7 @@ COMMODORE::Disk1540SeriesSimulation::getInitialTrackAndSectorOfFile (const std::
 	{
 		for (size_t j = 0; j < 8 && !f; j++)
 		{
-			if (f = (fN == "*" || 
-				matchWithWildcards (dE [i][j]._fileName)))
+			if (f = nameMatchesWithPattern (dE [i][j]._fileName, fN))
 			{
 				t = dE [i][j]._startTrack;
 				s = dE [i][j]._startSector;

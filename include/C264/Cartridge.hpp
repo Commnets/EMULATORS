@@ -35,6 +35,8 @@ namespace C264
 
 		static const int _ID = 203;
 
+		static const MCHEmul::Attributes _ATTRIBUTES;
+
 		Cartridge ();
 
 		/** To know the type of cartridge, if any. */

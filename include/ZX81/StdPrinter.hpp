@@ -30,6 +30,8 @@ namespace ZX81
 
 		static const int _ID = 102;
 
+		static const MCHEmul::Attributes _ATTRIBUTES;
+
 		ThermalPrinterSimulation (MCHEmul::MatrixPrinterEmulation* mPE);
 
 		/** Open & close the output file. */

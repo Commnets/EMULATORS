@@ -5,6 +5,24 @@
 #include <ZXSpectrum/ZXSpectrum.hpp>
 
 // ---
+MCHEmul::IOPeripheral::Infos ZXSPECTRUM::IOPeripheralBuilder::possiblePeripherals () const
+{
+	MCHEmul::IOPeripheral::Infos result = 
+		std::move (MCHEmul::IOPeripheralBuilder::possiblePeripherals ());
+
+	result.emplace_back (MCHEmul::IOPeripheral::Info 
+		{ MCHEmul::Typewriter::_ID, MCHEmul::Typewriter::_ATTRIBUTES });
+	result.emplace_back (MCHEmul::IOPeripheral::Info 
+		{ SINCLAIR::Datasette::_ID, SINCLAIR::Datasette::_ATTRIBUTES });
+	result.emplace_back (MCHEmul::IOPeripheral::Info 
+		{ ZXSPECTRUM::DatasetteInjection::_ID, ZXSPECTRUM::DatasetteInjection::_ATTRIBUTES });
+	result.emplace_back (MCHEmul::IOPeripheral::Info 
+		{ ZXSPECTRUM::ThermalPrinterSimulation::_ID, ZXSPECTRUM::ThermalPrinterSimulation::_ATTRIBUTES });
+
+	return (result);
+}
+
+// ---
 MCHEmul::IOPeripheral* ZXSPECTRUM::IOPeripheralBuilder::createPeripheral 
 	(int id, MCHEmul::Computer* c, const MCHEmul::Attributes& prms) const
 {

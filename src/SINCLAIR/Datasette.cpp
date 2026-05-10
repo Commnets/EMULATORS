@@ -1,5 +1,9 @@
 #include <SINCLAIR/Datasette.hpp>
 
+const MCHEmul::Attributes SINCLAIR::Datasette::_ATTRIBUTES = 
+		{ { "Name", "Datasette SINCLAIR" },
+		  { "Manufacturer", "Almost anyone, No special manufacturer needed" } };
+
 // ---
 std::tuple <bool, bool, bool> SINCLAIR::Datasette::TZXDirectRecordingImplementation::timeToReadValue (unsigned int cC) 
 {
@@ -95,9 +99,9 @@ void SINCLAIR::Datasette::TZXDirectRecordingImplementation::initialize
 // ---
 SINCLAIR::Datasette::Datasette (unsigned int rS)
 	: MCHEmul::StandardDatasette (_ID, 
-		new SINCLAIR::Datasette::TZXDirectRecordingImplementation (rS, 8), false /** Controlled externally. */,
-		{ { "Name", "Datasette SINCLAIR" },
-		  { "Manufacturer", "Almost anyone, No special manufacturer needed" } }),
+		new SINCLAIR::Datasette::TZXDirectRecordingImplementation (rS, 8), 
+		false /** Controlled externally. */, 
+		_ATTRIBUTES),
 	  _originalData () // Assigned when connectdata is executed...
 {
 	setClassName ("SINCLAIRDatasette");

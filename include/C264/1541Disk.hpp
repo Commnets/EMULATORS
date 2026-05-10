@@ -20,7 +20,7 @@
 namespace C264
 {
 	/** The disk working directly against the memory. \n
-		The device number assigned by default is number 8, and the default ID = 103, but other can be created. \n
+		The device number assigned by default is number 8, and the default ID = 215, but other can be created. \n
 		Remember than in the Serial IO there might be many devices connected,
 		but all of them must have both different ID and different device number. */
 	class Disk1541Simulation final : public COMMODORE::Disk1540SeriesSimulation

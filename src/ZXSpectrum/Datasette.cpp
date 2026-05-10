@@ -2,11 +2,13 @@
 #include <FZ80/CP.hpp>
 #include <FZ80/XOR.hpp>
 
+const MCHEmul::Attributes ZXSPECTRUM::DatasetteInjection::_ATTRIBUTES =
+		{ { "Name", "Datasette Injection ZXSpectrum" },
+		  { "Manufacturer", "ICF to inject the code directly into the memory" } };
+
 // ---
 ZXSPECTRUM::DatasetteInjection::DatasetteInjection (ZXSPECTRUM::Type t)
-	: MCHEmul::DatasettePeripheral (_ID, 
-		{ { "Name", "Datasette Injection ZXSpectrum" },
-		  { "Manufacturer", "ICF to inject the code directly into the memory" } }),
+	: MCHEmul::DatasettePeripheral (_ID, _ATTRIBUTES),
 	  _type (t),
 	  _loadTrap { 
 		0, 

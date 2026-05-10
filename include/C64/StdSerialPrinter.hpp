@@ -27,6 +27,8 @@ namespace C64
 		static const unsigned char _DEFAULTDEVICENUMBER = (unsigned char) 0x04;
 		static const std::vector <unsigned char> _POSSIBLEDEVICENUMBERS;
 
+		static const MCHEmul::Attributes _ATTRIBUTES;
+
 		/** To verify whether a device number is or not right. */
 		static bool isDeviceNumberValid (unsigned char dN)
 							{ return (std::find (_POSSIBLEDEVICENUMBERS.begin (),

@@ -5,6 +5,24 @@
 #include <ZX81/ZX81.hpp>
 
 // ---
+MCHEmul::IOPeripheral::Infos ZX81::IOPeripheralBuilder::possiblePeripherals () const
+{
+	MCHEmul::IOPeripheral::Infos result = 
+		std::move (MCHEmul::IOPeripheralBuilder::possiblePeripherals ());
+
+	result.emplace_back (MCHEmul::IOPeripheral::Info 
+		{ MCHEmul::Typewriter::_ID, MCHEmul::Typewriter::_ATTRIBUTES });
+	result.emplace_back (MCHEmul::IOPeripheral::Info 
+		{ SINCLAIR::Datasette::_ID, SINCLAIR::Datasette::_ATTRIBUTES });
+	result.emplace_back (MCHEmul::IOPeripheral::Info 
+		{ ZX81::DatasetteInjection::_ID, ZX81::DatasetteInjection::_ATTRIBUTES });
+	result.emplace_back (MCHEmul::IOPeripheral::Info 
+		{ ZX81::ThermalPrinterSimulation::_ID, ZX81::ThermalPrinterSimulation::_ATTRIBUTES });
+
+	return (result);
+}
+
+// ---
 MCHEmul::IOPeripheral* ZX81::IOPeripheralBuilder::createPeripheral 
 	(int id, MCHEmul::Computer* c, const MCHEmul::Attributes& prms) const
 {

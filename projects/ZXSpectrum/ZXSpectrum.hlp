@@ -2,6 +2,11 @@
 #(C) 2024 Ignacio Cea Fornies
 ?./LocalConsole.hlp
 ?./SINCLAIR.hlp
+;CONNECTPER ID [ATTRS...]
+To connect a peripheral. 
+Parameters:
+=> ID (mandatory): The ID of the peripheral to connect.
+=> For Printer (optional): f:[FILENAME] p:[PRINTERTYPE=THERMAL|THERMAL-PS]
 ;ULA
 To know the info about the situation of the ULA.
 Parameters: None.

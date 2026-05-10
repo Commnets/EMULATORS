@@ -6,6 +6,17 @@
 #include <COMMODORE/SerialPrinterMPS802.hpp>
 
 // ---
+MCHEmul::IOPeripheral::Infos COMMODORE::IOPeripheralBuilder::possiblePeripherals () const
+{
+	MCHEmul::IOPeripheral::Infos result = 
+		std::move (MCHEmul::IOPeripheralBuilder::possiblePeripherals ());
+
+	// TODO
+
+	return (result);
+}
+
+// ---
 MCHEmul::IOPeripheral* COMMODORE::IOPeripheralBuilder::createPeripheral 
 	(int id, MCHEmul::Computer* c, const MCHEmul::Attributes& prms) const
 {

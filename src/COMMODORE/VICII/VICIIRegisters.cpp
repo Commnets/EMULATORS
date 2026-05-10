@@ -208,15 +208,11 @@ void COMMODORE::VICIIRegisters::setValue (size_t p, const MCHEmul::UByte& v)
 		// When setting it could be useful to clean up IRQ launched (if any)
 		case 0x19:
 			{
-				// Just one bit to 1 is enough to reset all of them...
-				if ((v.value () & 0x0f) != 0x00)
-				{
-					_rasterIRQHappened = false; // clean up the latches...
-					_spriteCollisionWithDataIRQHappened = false;
-					_spriteCollisionsIRQHappened = false;
-					_lightPenIRQHappened = false;
-				}
-
+				// Every bit is reset writting down 1 to it...
+				if (v.bit (0)) _rasterIRQHappened = false;
+				if (v.bit (1)) _spriteCollisionWithDataIRQHappened = false;
+				if (v.bit (2)) _spriteCollisionsIRQHappened = false;
+				if (v.bit (3)) _lightPenIRQHappened = false;
 				/** bits from 4 to 7 are not used. */
 				_interruptsEnabledBack = true;
 			}
@@ -613,7 +609,7 @@ void COMMODORE::VICIIRegisters::initializeInternalValues ()
 	setValue (0x1c, MCHEmul::UByte::_0);
 	
 	// _spriteDoubleWidth = std::vector <bool> (8, false);
-	setValue (0x1c, MCHEmul::UByte::_0);
+	setValue (0x1d, MCHEmul::UByte::_0);
 		
 	// _foregroundColor = 0x0000;
 	setValue (0x20, MCHEmul::UByte::_0);

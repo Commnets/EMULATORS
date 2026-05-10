@@ -81,6 +81,7 @@ namespace COMMODORE
 
 			MCHEmul::Address _sDataAddress;	// The address where the information to be sent to the serial port is kept...
 			MCHEmul::Address _stAddress;	// Where to store the result of the operation, before returning from the any trap...
+			MCHEmul::Address _dirAddress;	// Where to store from the result of the "$" command (directory)...in disks!
 			unsigned char _okResult;		// Code when everything is ok...
 			unsigned char _notPresent;		// Code when the device is not present...
 
@@ -223,6 +224,8 @@ namespace COMMODORE
 		/** The max possible. \n
 			It must be processed the last one in the simulation. */
 		static const int _ID = 1000;
+
+		static const MCHEmul::Attributes _ATTRIBUTES;
 
 		SerialNotPresentIOPeripheralSimulation (const Definition& dt);
 

@@ -157,7 +157,7 @@ void COMMODORE::CIARegisters::setValue (size_t p, const MCHEmul::UByte& v)
 		case 0x0b:
 			{
 				MCHEmul::UByte dt = v;
-				int h = MCHEmul::UInt ({ dt & 0x0f }, 
+				int h = MCHEmul::UInt ({ dt & 0x1f }, 
 					true /** 1 byte...doesn't matter. */, MCHEmul::UInt::_PACKAGEDBCD).asInt (); // A BCD value to int...
 				if (dt.bit (7)) h += 12; // PM...
 				if (MCHEmul::PhysicalStorageSubset::readValue (0x0f).bit (7)) _clock -> setAlarmHours ((unsigned char) h); 

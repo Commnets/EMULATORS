@@ -131,6 +131,10 @@ MCHEmul::MatrixPrinterEmulation::Configuration
 		(unsigned char) 0x0d, (unsigned char) 0x20, (unsigned char) 0x09,
 		(unsigned short) 4);
 
+const MCHEmul::Attributes ZXSPECTRUM::ThermalPrinterSimulation::_ATTRIBUTES =
+		{ { "Name", "Thermal Printer Simulation ZXSpectrum" },
+		  { "Manufacturer", "ICF to simulate the thermal printer" } };
+
 const MCHEmul::Address ZXSPECTRUM::ThermalPrinterSimulation::_PR_CC		= MCHEmul::Address ({ 0x80, 0x5c }, false);
 const MCHEmul::Address ZXSPECTRUM::ThermalPrinterSimulation::_FLAG2		= MCHEmul::Address ({ 0x6a, 0x5c }, false);
 const MCHEmul::Address ZXSPECTRUM::ThermalPrinterSimulation::_P_POSN	= MCHEmul::Address ({ 0x7f, 0x5c }, false);
@@ -234,9 +238,7 @@ const std::map <unsigned char, std::string> ZXSPECTRUM::ThermalPrinterSimulation
 
 // ---
 ZXSPECTRUM::ThermalPrinterSimulation::ThermalPrinterSimulation (MCHEmul::MatrixPrinterEmulation* mPE)
-	: ZXSPECTRUM::EdgeConnectorPeripheral (_ID, 
-		{ { "Name", "ZXSpectrum Printer" },
-		  { "Manufacturer", "ICF Standard Printer Simulation" } }),
+	: ZXSPECTRUM::EdgeConnectorPeripheral (_ID, _ATTRIBUTES),
 	  _traps ({
 		{
 			_PRINT_A, 

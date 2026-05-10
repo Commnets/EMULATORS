@@ -26,6 +26,8 @@ namespace COMMODORE
 			: MCHEmul::IOPeripheralBuilder ()
 				{ }
 
+		virtual MCHEmul::IOPeripheral::Infos possiblePeripherals () const override;
+
 		protected:
 		/** This method must be overloaded to include any new type of peripherals. */
 		virtual MCHEmul::IOPeripheral* createPeripheral 

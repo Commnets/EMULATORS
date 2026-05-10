@@ -1,11 +1,13 @@
 #include <ZX81/Datasette.hpp>
 #include <ZX81/FileIO.hpp>
 
+const MCHEmul::Attributes ZX81::DatasetteInjection::_ATTRIBUTES =
+		{ { "Name", "Datasette Injection ZX81" },
+		  { "Manufacturer", "ICF to inject the code directly into the memory" } };
+
 // ---
 ZX81::DatasetteInjection::DatasetteInjection (ZX81::Type t)
-	: MCHEmul::DatasettePeripheral (_ID, 
-		{ { "Name", "Datasette Injection ZX81" },
-		  { "Manufacturer", "ICF to inject the code directly into the memory" } }),
+	: MCHEmul::DatasettePeripheral (_ID, _ATTRIBUTES),
 	  _type (t),
 	  _loadTrap { 
 		0, 
