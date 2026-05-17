@@ -300,7 +300,7 @@ namespace COMMODORE
 				: _VBASE (0),
 				  _HC (0), _COL (0), _COLMAX (0), _FH (false),
 				  _VC (0), _ROW (0), _ROWMAX (0), _FV (false),
-				  _RC (0), _DOUBLEHIGH (false), _RCF (false),
+				  _RC (0), _DOUBLEHIGH (false),
 				  _DRAW (false), _SCREENORIGINX (false), _SCREENORIGINY (false),
 				  _screenCodeData (MCHEmul::UByte::_0),
 				  _graphicData (MCHEmul::UByte::_0),
@@ -354,8 +354,6 @@ namespace COMMODORE
 			unsigned char _RC;
 			/** When the characters can be double high this flag is set. */
 			bool _DOUBLEHIGH;
-			/** When that happens, then there is flip - flop tro control when exactly the _RC has to be incremented. */
-			bool _RCF;
 
 			/** Wether to draw or not. \n
 				This flag is set when _HC & _VC reached 0 and the _COL and _ROW are below the limits. 
@@ -434,7 +432,7 @@ namespace COMMODORE
 					(size_t) _vicGraphicInfo._VBASE + (size_t) _vicGraphicInfo._COL); 
 			_vicGraphicInfo._colorData = 
 				memoryRef () -> value (_VICIRegisters -> colourMemory () + 
-					(size_t) _vicGraphicInfo._VBASE + (size_t) _vicGraphicInfo._COL);
+					(size_t) _vicGraphicInfo._VBASE + (size_t) _vicGraphicInfo._COL) & 0x0f;
 		}
 	}
 
@@ -443,14 +441,15 @@ namespace COMMODORE
 	{
 		_vicGraphicInfo._graphicData = 
 			memoryRef () -> value (_VICIRegisters -> charDataMemory () + 
-				(size_t) ((_vicGraphicInfo._screenCodeData.value () << 3) + _vicGraphicInfo._RC));
+				(size_t) ((_vicGraphicInfo._screenCodeData.value () << (_VICIRegisters -> charsExpanded () ? 4 : 3)) + 
+					_vicGraphicInfo._RC));
 		
 		// The low nibble?
 		_vicGraphicInfo._graphicData =
 			_vicGraphicInfo._FH
 				? _vicGraphicInfo._graphicData.value () & 0x0f // low...
 				: ((_vicGraphicInfo._graphicData.value () & 0xf0) >> 4); // high...
-		// Every bit in the nibble has to be draw twice...(@see the drawinf routines)
+		// Every bit in the nibble has to be draw twice...(@see the drawing routines)
 	}
 
 	// ---
@@ -513,18 +512,14 @@ namespace COMMODORE
 		}
 		else
 		{
-			if (!_DOUBLEHIGH ||
-				(_DOUBLEHIGH && !(_RCF = !_RCF)))
+			if (++_RC == (unsigned char) (_DOUBLEHIGH ? 16 : 8))
 			{
-				if (++_RC == 8)
-				{
-					_RC = 0;
+				_RC = 0;
 
-					_VBASE += (unsigned short) _COLMAX;
+				_VBASE += (unsigned short) _COLMAX;
 
-					if (_ROW < _ROWMAX)
-						_ROW++;
-				}
+				if (_ROW < _ROWMAX)
+					_ROW++;
 			}
 		}
 
@@ -570,7 +565,6 @@ namespace COMMODORE
 		_ROW			= 0;
 		_FV				= false;
 		_RC				= 0;
-		_RCF			= false;
 
 		_SCREENORIGINY	= (_VC == 0);
 	}

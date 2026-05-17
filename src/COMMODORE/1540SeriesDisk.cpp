@@ -216,11 +216,46 @@ unsigned char COMMODORE::Disk1540SeriesSimulation::receiveByte (MCHEmul::CPU* cp
 
 					break;
 
-				// Thi channel is reserved for disk commands...
+				// This channel is reserved for disk commands...
 				case 15:
 					{
-						_LOG ("Disk1540SeriesSimulation: Channel " + 
-							  std::to_string (_commandChannel) + " is reserved for commands, but it is not implemented yet.");
+						// Let's see what the command is to answer in consequence...
+						switch (std::get <0> (preAndPostData)[0])
+						{
+							// To create a new disk...
+							case 'N':
+							// To copy a file...
+							case 'C':
+							// Rename a file...
+							case 'R':
+							// Erase an unwanted file...
+							case 'S':
+							// Initilialize the disk drive at the situation when 
+							// it was powered on...
+							case 'I':
+							// To reorganize the disk (sectors, tracks,...)
+							case 'V':
+								{
+									_LOG ("Disk1540SeriesSimulation: Command " + 
+										  std::get <0> (preAndPostData) + " is not implemented yet.");
+								}
+
+								break;
+
+							// Any other situation just validate that the file exists...
+							// If not the right information mut be returned...
+							default:
+								{
+									_blockToAnswer = 
+										std::move (buildAnswerToVerifyFile 
+											(splitCommandIntoPreAndPostData (
+												(_currentCommand.length () == 1 ? "" : _currentCommand.substr (1)))));
+
+									_byteFromBlockToAnswerToSend = 0;
+								}
+
+								break;
+						}
 					}
 
 					break;
@@ -536,6 +571,58 @@ std::vector <MCHEmul::UByte> COMMODORE::Disk1540SeriesSimulation::buildAnswerToF
 
 	return (getDataOfFileFromTrackAndSector (t, s));
 }
+
+// ---
+std::vector <MCHEmul::UByte> COMMODORE::Disk1540SeriesSimulation::buildAnswerToVerifyFile
+	(const std::tuple <const std::string, const std::string>& prm) const
+{
+	const MCHEmul::UByte _CEROCODE =  _asciiConverter -> convert ('0');
+	const MCHEmul::UByte _COMMACODE = _asciiConverter -> convert (',');
+
+	std::vector <MCHEmul::UByte> result;
+
+	// Has a diske been loaded?
+	// If not, the file won't exist for sure!...
+	if (_d64FileData == nullptr)
+	{
+		result.insert (result.end (), 
+			{ _asciiConverter -> convert ('2'),
+				_asciiConverter -> convert ('0') });
+		result.insert (result.end (), _COMMACODE);
+		std::vector <MCHEmul::UByte> eStr = _asciiConverter -> convert ("READ ERROR");
+		result.insert (result.end (), eStr.begin (), eStr.end ());
+	}
+	else
+	{
+		// Let's verify whether the file exists...
+		// When the file exists, the sector and track where it starts are returned, 
+		// but if not, the result is 0,0...
+		size_t t = 0, s = 0;
+		std::tie (t, s) = getInitialTrackAndSectorOfFile (std::get <1> (prm)); 
+		if (t == 0 && s == 0) 
+		{
+			result.insert (result.end (), 
+				{ _asciiConverter -> convert ('6'),
+				  _asciiConverter -> convert ('2') });
+			result.insert (result.end (), _COMMACODE);
+			std::vector <MCHEmul::UByte> eStr = _asciiConverter -> convert ("FILE NOT FOUND");
+			result.insert (result.end (), eStr.begin (), eStr.end ());
+		}
+		else
+		{
+			result.insert (result.end (), { _CEROCODE, _CEROCODE });
+			result.insert (result.end (), _COMMACODE);
+			std::vector <MCHEmul::UByte> okStr = _asciiConverter -> convert ("OK");
+			result.insert (result.end (), okStr.begin (), okStr.end ());
+		}
+
+		result.insert (result.end (), _COMMACODE);
+		result.insert (result.end (), { _CEROCODE, _CEROCODE });
+	}
+
+	return (result);
+}
+
 
 // ---
 std::tuple <size_t, size_t> 

@@ -49,9 +49,11 @@ MCHEmul::Screen::Screen (const std::string& n, int id,
 // ---
 MCHEmul::Screen::~Screen ()
 {
+	SDL_DestroyTexture (_texture);
+
 	SDL_DestroyRenderer (_renderer);
 
-	SDL_DestroyTexture (_texture);
+	SDL_DestroyWindow (_window);
 }
 
 // ---

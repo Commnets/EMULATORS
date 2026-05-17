@@ -179,29 +179,30 @@ const MCHEmul::UByte& COMMODORE::VICIRegisters::readValue (size_t p) const
 
 			break;
 
-		case 0x03:
-			{
-				bool oP = false;
-				unsigned short rL = currentRasterLine ();
-				_raster -> simulateMoveCycles (_numberPositionsNextInstruction, oP);
-				if (oP) rL++;
-				result = MCHEmul::UByte ((((rL & 0x0f00) != 0x00) ? 0x80 : 0x00) |
-					((_charsHeightScreen << 1) & 0x7e) | 
-					(_charsExpanded ? 0x01 : 0x00));
-			}
+			case 0x03:
+				{
+					bool oP = false;
+					unsigned short rL = currentRasterLine ();
+					_raster -> simulateMoveCycles (_numberPositionsNextInstruction, oP);
+					if (oP) rL++;
+					result = MCHEmul::UByte
+						((((rL & 0x0001) != 0x00) ? 0x80 : 0x00) |
+						 ((_charsHeightScreen << 1) & 0x7e) |
+						 ((_charsExpanded != 0x00) ? 0x01 : 0x00));
+				}
 
-			break;
+				break;
 
-		case 0x04:
-			{
-				bool oP = false;
-				unsigned short rL = currentRasterLine ();
-				_raster -> simulateMoveCycles (_numberPositionsNextInstruction, oP);
-				if (oP) rL++;
-				result = MCHEmul::UByte ((unsigned char) (rL & 0x00ff));
-			}
+			case 0x04:
+				{
+					bool oP = false;
+					unsigned short rL = currentRasterLine ();
+					_raster -> simulateMoveCycles (_numberPositionsNextInstruction, oP);
+					if (oP) rL++;
+					result = MCHEmul::UByte ((unsigned char) ((rL >> 1) & 0x00ff));
+				}
 
-			break;
+				break;
 
 		case 0x06:
 			{

@@ -48,8 +48,12 @@ namespace COMMODORE
 							{ printerFile () << "----Page:" 
 											 << MCHEmul::fixLenStr (std::to_string (p), 2, true, MCHEmul::_CEROS) 
 											 << "----" << std::endl; }
-		/** Only the list of letters and numbers both in business mnode and in the graphical mode. */
-		virtual bool isNormalChar (unsigned char chr) override;
+		/** When the emulation reaches this position, the character is definetively "printable",
+			but it doesn't have a printable glifo but an space instead!. \n
+			Only the list of letters and numbers both in business mode 
+			and in the graphical mode has a glifo in this emulation actually. */
+		virtual bool isNormalChar (unsigned char chr) override
+							{ return (true); }
 
 		virtual unsigned short printNormalChar (unsigned char chr) override;
 
@@ -90,7 +94,10 @@ namespace COMMODORE
 		virtual std::tuple <short, short, short> manageControlChar (unsigned char chr) override;
 		virtual void closePage (unsigned short p) override;
 		virtual void setNewPage (unsigned short p) override;
-		virtual bool isNormalChar (unsigned char chr) override;
+		/** When the emulation reaches this position, the character is definetively "printable",
+			but it doesn't have a printable glifo but an space instead!. */
+		virtual bool isNormalChar (unsigned char chr) override
+							{ return (true); }
 
 		virtual bool printNewLine () override;
 		virtual unsigned short printNormalChar (unsigned char chr) override;

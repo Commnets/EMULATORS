@@ -89,6 +89,9 @@ namespace COMMODORE
 		/** When another file is requested. */
 		std::vector <MCHEmul::UByte> buildAnswerToFileCommand
 			(const std::tuple <const std::string, const std::string>& prm) const;
+		/** When to verify whether a file exists or nor is requested. */
+		std::vector <MCHEmul::UByte> buildAnswerToVerifyFile
+			(const std::tuple <const std::string, const std::string>& prm) const;
 		/** To get the intial sector annd track of a file name. \n
 			wildcards might be used to specific the file name (in PETSCII). \n 
 			When the wildcard * is at the beginning the info returned will allow to the first file. */

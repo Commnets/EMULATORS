@@ -411,7 +411,7 @@ void COMMODORE::VICI::processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifie
 				unsigned short y = (unsigned short) 
 					std::dynamic_pointer_cast <MCHEmul::InputOSSystem::MouseMovementEvent> (evnt.data ()) -> _y;
 				setLightPenPosition ((x >= _raster.hData ().firstDisplayPosition () && 
-									  y <= _raster.hData ().lastDisplayPosition ()) 
+									  x <= _raster.hData ().lastDisplayPosition ()) 
 										? (x - _raster.hData ().firstDisplayPosition ()) : 0, 
 									 (y >= _raster.vData ().firstDisplayPosition () && 
 									  y <= _raster.vData ().lastDisplayPosition ()) 
@@ -601,30 +601,33 @@ COMMODORE::VICI::DrawResult COMMODORE::VICI::drawMulticolorMode (int cb)
 	COMMODORE::VICI::DrawResult result;
 
 	for (unsigned short i = 0 ; 
-			i < 8 /** To paint always 8 pixels but in blocks of 2. */; i += 2)
+			i < 8 /** To paint always 8 pixels but in blocks of 4. */; i += 4)
 	{
-		if ((cb + i) > _maxXVisible)
-			break;
+        if ((cb + i) > _maxXVisible)
+            break;
 
-		unsigned char cs = 
-			(_vicGraphicInfo._graphicData.value () >> (2 - (i >> 2))) & 0x03; // 0, 1, 2, 3?
-		// The value 0 means background, and it has already been drawn!
+		unsigned char cs =
+			(i == 0)
+				? ((_vicGraphicInfo._graphicData.value () >> 2) & 0x03)
+				: (_vicGraphicInfo._graphicData.value () & 0x03);
+
 		if (cs == 0x00)
 			continue;
 
-		// Depending on the value of the par of bits, the rule will be one or another...
-		unsigned int fc = 
+		unsigned int fc =
 			(cs == 0x01)
 				? _VICIRegisters -> borderColor ()
-				: ((cs == 0x10)
-					? _vicGraphicInfo._colorData.value () & 0x07
+				: ((cs == 0x02)
+					? (_vicGraphicInfo._colorData.value () & 0x07)
 					: _VICIRegisters -> auxiliarColor ());
 
-		result._foregroundColorData [i] = 
-		result._foregroundColorData [i + 1] = fc;
-	}
+		result._foregroundColorData [i] =
+		result._foregroundColorData [i + 1] =
+		result._foregroundColorData [i + 2] =
+		result._foregroundColorData [i + 3] = fc;
+    }
 
-	return (result);
+    return result;
 }
 
 // ---

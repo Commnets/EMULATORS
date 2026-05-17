@@ -495,27 +495,23 @@ std::tuple <short, short, short> COMMODORE::MPS801BasicMatrixPrinterEmulation::m
 }
 
 // ---
-bool COMMODORE::MPS801BasicMatrixPrinterEmulation::isNormalChar (unsigned char chr)
-{
-	return (
-		_businessMode 
-			? ((chr >= (unsigned char) 0x20 && (unsigned char) chr <= 0x5a) ||
-				(chr >= (unsigned char) 0xc1 && (unsigned char) chr <= 0xda))
-			: (chr >= (unsigned char) 0x20 && (unsigned char) chr <= 0x5a));
-}
-
-// ---
 unsigned short COMMODORE::MPS801BasicMatrixPrinterEmulation::printNormalChar (unsigned char chr)
 {
 	unsigned short result = 0;
 
-	unsigned char nChr = chr;
+	// What id the glifo to print out the character...
+	// The glifo is calculated with an equivalent witin the ASCII table!
+	unsigned char pChr = ' ';
 	if (_businessMode)
-		nChr += (chr >= (unsigned char) 0x41 && chr <= (unsigned char) 0x5a) 
-			? 0x20 : -0x80; /** the other way around. */
+	{
+		if (chr >= 0x41 && chr <= 0x5a) pChr = chr + 0x20;
+		else if (chr >= 0xc1 && chr <= 0xda) pChr = chr -= 0x80; // To lowecase...
+	}
+	else
+		if (chr >= 0x21 && chr <= 0xd5) pChr = chr;
 
-	printerFile () << std::string (1, (char) nChr); result++;
-	if (_double) { printerFile () << std::string (1, (char) nChr); result++; }
+	printerFile () << std::string (1, (char) pChr); result++;
+	if (_double) { printerFile () << std::string (1, (char) pChr); result++; }
 	printerFile ().flush ();
 
 	return (result);
@@ -611,7 +607,7 @@ bool COMMODORE::MPS801PostscriptMatrixPrinterEmulation::isControlChar (unsigned 
 			chr == (unsigned char) 0x0e /** Double width. */ ||
 			chr == (unsigned char) 0x0f /** Standard width. */ ||
 			chr == (unsigned char) 0x11 /** Cursor down == business mode = lowercase. */ ||
-			chr == (unsigned char) 0x12 /** Reverse mode on. */ ||
+			chr == (unsigned char) 0x12	/** Reverse mode on. */ ||
 			chr == (unsigned char) 0x1a /** Repeat graphic selected. */ ||
 			chr == (unsigned char) 0x1b /** Specify Dot Address. */ ||
 			chr == (unsigned char) 0x91 /** Cursor up = normal mode = uppercase. */ ||
@@ -770,18 +766,6 @@ void COMMODORE::MPS801PostscriptMatrixPrinterEmulation::setNewPage (unsigned sho
 }
 
 // ---
-bool COMMODORE::MPS801PostscriptMatrixPrinterEmulation::isNormalChar (unsigned char chr)
-{
-	// In the graphic mode, all the chars with bit 7 to 1 are valid...
-	return (_setSpecificDotAddress 
-		? true // When setting the specific address, any position is possible...
-		: (_graphicMode 
-			? (chr >= 0x80)
-			: ((chr >= 0x20 && chr <= 0x7f) ||
-			   (chr >= 0xa0 && chr <= 0xff))));
-}
-
-// ---
 bool COMMODORE::MPS801PostscriptMatrixPrinterEmulation::printNewLine ()
 {
 	// Starting a new line there is no "glide" inside the character...
@@ -793,6 +777,20 @@ bool COMMODORE::MPS801PostscriptMatrixPrinterEmulation::printNewLine ()
 // ---
 unsigned short COMMODORE::MPS801PostscriptMatrixPrinterEmulation::printNormalChar (unsigned char chr)
 {
+	// The symbol to be printed out will dedepend on the situation of the printer...
+	// When a new "thing" in under definition, the char is always valir as it is (see later to know the specific action)
+	// When the printer is in graphic mode, the char must be always above 128 (0x80)
+	// In other circunstances if the char is not printable it is converted in a space...
+	unsigned char pChr = 
+		_setSpecificDotAddress 
+			? chr 
+			: _graphicMode
+				? ((chr >= 0x80) ? chr : asciiToCodeConverter () -> convert (' ').value ())
+				: (((chr >= 0x20 && chr <= 0x7f) ||
+				    (chr >= 0xa0 && chr <= 0xff)) 
+						? chr 
+						: asciiToCodeConverter () -> convert (' ').value ());
+
 	// Not to print out anything by default... 
 	// It will depend on whether a printable character was actually sent!
 	// result has the number of bytesprinted out...
@@ -828,8 +826,8 @@ unsigned short COMMODORE::MPS801PostscriptMatrixPrinterEmulation::printNormalCha
 		// When two chars more are defined, then the settin process has finished...
 		_nextTabSettingValue [1 - (size_t) --_charsSettingtabPending] = 
 				_setSpecificDotAddress 
-					? chr // When setting the specific dot address, the number is "pure"
-					: ((chr >= 0x30) ? chr - 0x30 : 0x00); // Otherwise the char is the number in ASCII!
+					? pChr // When setting the specific dot address, the number is "pure"
+					: ((pChr >= 0x30) ? pChr - 0x30 : 0x00); // Otherwise the char is the number in ASCII!
 		_settingTab = (_charsSettingtabPending != 0); // Still setting tab?
 		if (!_settingTab)
 		{
@@ -857,21 +855,21 @@ unsigned short COMMODORE::MPS801PostscriptMatrixPrinterEmulation::printNormalCha
 	if (_graphicMode)
 	{
 		printerFile () 
-			<< "% Graphic value " << std::to_string ((unsigned int) chr) << std::endl;
-		printByteColumnAndAdvance (chr);
+			<< "% Graphic value " << std::to_string ((unsigned int) pChr) << std::endl;
+		printByteColumnAndAdvance (pChr);
 	}
 	else
 	{
 		bool existsChr = false;
 		MCHEmul::MatrixPrinterEmulation::Configuration::CharSetDefinition::const_iterator i
 			= configuration ()._charSet.find
-				((unsigned int) chr + (_businessMode ? 0x100 /** The second set. */ : 0x00));
+				((unsigned int) pChr + (_businessMode ? 0x100 /** The second set. */ : 0x00));
 		const MCHEmul::MatrixPrinterEmulation::Configuration::CharDefinition& chrDef = // It is not needed a copy...
 			(existsChr = (i != configuration ()._charSet.end ()))
 				? (*i).second : (*configuration ()._charSet.begin ()).second; // The character 0 by default...
 		printerFile () 
 			<< "% Character " << (_businessMode ? "business" : "normal") << " mode: "
-			<< (existsChr ? std::to_string ((unsigned int) chr) : "Unknown") << std::endl;
+			<< (existsChr ? std::to_string ((unsigned int) pChr) : "Unknown") << std::endl;
 		for (const auto& j : (*i).second)
 		{
 			MCHEmul::UByte v = j; if (_reverse) v = ~v;
