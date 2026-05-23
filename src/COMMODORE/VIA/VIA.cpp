@@ -4,7 +4,7 @@
 COMMODORE::VIA::VIA (int id, int rId, unsigned int intId)
 	: MCHEmul::Chip (id,
 		{ { "Name", "VIA" },
-		  { "Code", "6526/6526A/8521" },
+		  { "Code", "6522" },
 		  { "Manufacturer", "Commodore Business Machines CBM" },
 		  { "Year", "1980" } }),
 	  _registersId (rId),
@@ -160,9 +160,9 @@ MCHEmul::InfoStructure COMMODORE::VIA::getInfoStructure () const
 	result.add ("PortA",		std::move (_PA.getInfoStructure ()));
 	result.add ("PortB",		std::move (_PB.getInfoStructure ()));
 	result.add ("VIACtrlA1",	std::move (_CA1.getInfoStructure ()));
-	result.add ("VIACtrlA2",	std::move (_CA1.getInfoStructure ()));
+	result.add ("VIACtrlA2",	std::move (_CA2.getInfoStructure ()));
 	result.add ("VIACtrlB1",	std::move (_CB1.getInfoStructure ()));
-	result.add ("VIACtrlB2",	std::move (_CB1.getInfoStructure ()));
+	result.add ("VIACtrlB2",	std::move (_CB2.getInfoStructure ()));
 
 	return (result);
 }

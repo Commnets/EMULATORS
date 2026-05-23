@@ -367,6 +367,11 @@ MCHEmul::InfoStructure COMMODORE::VICI::getInfoStructure () const
 MCHEmul::Strings COMMODORE::VICI::charsDrawSnapshot (MCHEmul::CPU* cpu,
 	const std::vector <size_t>& chrs) const
 {
+	// The number of bytes per char will depend on the mode,
+	// because in the expanded mode, each character is drawn with 16 bytes instead of 8...
+	const size_t bytesPerChar = 
+		_VICIRegisters -> charsExpanded () ? 16 : 8;
+
 	MCHEmul::Strings result;
 	for (size_t i = 0; i < 256; i++)
 	{
@@ -374,16 +379,18 @@ MCHEmul::Strings COMMODORE::VICI::charsDrawSnapshot (MCHEmul::CPU* cpu,
 			std::find (chrs.begin (), chrs.end (), i) == chrs.end ())
 			continue;
 
-		MCHEmul::Address chrAdd = _VICIRegisters -> charDataMemory () + (i << 3);
+		MCHEmul::Address chrAdd = 
+			_VICIRegisters -> charDataMemory () + (i * bytesPerChar);
 		std::string dt = std::to_string (i) + "---\n$" +
 			MCHEmul::removeAll0 (chrAdd.asString (MCHEmul::UByte::OutputFormat::_HEXA, '\0', 2)) + "\n";
-		MCHEmul::UBytes chrDt = cpu -> memoryRef () -> values (chrAdd, 0x08);
-		for (size_t j = 0; j < 8; j++) // 8 lines per character...
+		MCHEmul::UBytes chrDt = 
+			cpu -> memoryRef () -> values (chrAdd, bytesPerChar);
+		for (size_t j = 0; j < bytesPerChar; j++) // 8/16 lines per character...
 		{
 			if (j != 0)
 				dt += "\n";
 
-			for (size_t l = 0; l < 8; l++)
+			for (size_t l = 0; l < 8; l++) // 8 bits per byte...
 				dt += ((chrDt [j].value () & (1 << (7 - l))) != 0x00) ? "#" : " ";
 
 			// Draws the data info...

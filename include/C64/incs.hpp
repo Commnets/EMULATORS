@@ -18,7 +18,6 @@
 #include <EMULATORS/incs.hpp>
 #include <COMMODORE/incs.hpp>
 #include <C64/Memory.hpp>
-#include <C64/VICII.hpp>
 #include <C64/CIA1.hpp>
 #include <C64/CIA1Registers.hpp>
 #include <C64/CIA2.hpp>

@@ -50,8 +50,8 @@ MCHEmul::InfoStructure COMMODORE::VICIIRegisters::getInfoStructure () const
 	result.add ("SCREENADDRESS",	screenMemory ());
 	result.add ("BITMAPADDRESS",	bitmapMemory ());
 	result.add ("SPRITEADDRESS",	spritePointersMemory ());
-	result.add ("LIGHTPENX",		_currentLightPenHorizontalPosition);
-	result.add ("LIGHTPENY",		_currentLightPenVerticalPosition);
+	result.add ("LIGHTPENX",		_latchLightPenHorizontalPosition);
+	result.add ("LIGHTPENY",		_latchLightPenVerticalPosition);
 
 	// Info for the sprites...
 	MCHEmul::InfoStructure sInfo;
@@ -408,8 +408,7 @@ const MCHEmul::UByte& COMMODORE::VICIIRegisters::readValue (size_t p) const
 		// The position is adjusted very two pixels...
 		case 0x13:
 			{
-				result = _lightPenActive // Only when the lightpen is active...
-					? MCHEmul::UByte (_currentLightPenHorizontalPosition) : 0;
+				result = MCHEmul::UByte (_latchLightPenHorizontalPosition);
 			}
 
 			break;
@@ -418,8 +417,7 @@ const MCHEmul::UByte& COMMODORE::VICIIRegisters::readValue (size_t p) const
 		// The position is adjusted very two pixels...
 		case 0x14:
 			{
-				result = _lightPenActive // only when the lightpen is active...
-					? MCHEmul::UByte (_currentLightPenVerticalPosition) : 0;
+				result = MCHEmul::UByte (_latchLightPenVerticalPosition);
 			}
 
 			break;
@@ -636,9 +634,9 @@ void COMMODORE::VICIIRegisters::initializeInternalValues ()
 	setValue (0x2e, MCHEmul::UByte::_0); // Duplicated, because buffer...
 
 	// Managed direclty by the VICII Chip...
-	_currentLightPenHorizontalPosition = _latchLighPenHorizontalPosition = 0x00;
-	_currentLightPenVerticalPosition = _latchLightPenVerticalPosition = 0x00;
-	_lightPenLatched = false; _lightPenActive = false;
+	_latchLightPenHorizontalPosition = 0x00; // Nothing...
+	_latchLightPenVerticalPosition = 0x00;
+	_lightPenActive = false;
 	_spriteCollisionWithDataHappened = std::vector <bool> (8, false), 
 	_spriteCollisionHappened = std::vector <bool> (8, false);
 	// Reasons for IRQ

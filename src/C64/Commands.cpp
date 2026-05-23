@@ -14,6 +14,7 @@ const std::string C64::CharactersDrawCommand::_NAME = "CCHARSDRAW";
 const std::string C64::GridOnCommand::_NAME = "CGRIDON";
 const std::string C64::GridOffCommand::_NAME = "CGRIDOFF";
 const std::string C64::ManagePaddlesCommand::_NAME = "CPADDLE";
+const std::string C64::ManageLightPenCommand::_NAME = "CLIGHTPEN";
 
 // ---
 void C64::CIA1StatusCommand::executeImpl (MCHEmul::CommandExecuter* cE, MCHEmul::Computer* c, MCHEmul::InfoStructure& rst)
@@ -263,3 +264,19 @@ void C64::ManagePaddlesCommand::executeImpl (MCHEmul::CommandExecuter* cE,
 		}
 	}
 }
+
+// ---
+void C64::ManageLightPenCommand::executeImpl (MCHEmul::CommandExecuter* cE,
+	MCHEmul::Computer* c, MCHEmul::InfoStructure& rst)
+{
+	if (c == nullptr)
+		return;
+
+	if (dynamic_cast <C64::Commodore64*> (c) == nullptr ||
+		static_cast <C64::Commodore64*> (c) -> vicII () == nullptr)
+		return;
+
+	COMMODORE::VICII* vicII = static_cast <C64::Commodore64*> (c) -> vicII ();
+	vicII -> setLightPenActive (parameter ("00") == "ON"); // Active?
+}
+

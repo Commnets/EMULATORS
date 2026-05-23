@@ -100,7 +100,7 @@ namespace COMMODORE
 		unsigned short initialValue () const
 							{ return (_initialValue); }
 		void setInitialValue (unsigned short iV)
-							{ _initialValue = iV; _currentValue = _initialValue; }
+							{ _initialValue = iV; }
 		unsigned short currentValue () const
 							{ return (_currentValue); }
 

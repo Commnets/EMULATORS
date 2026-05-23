@@ -138,8 +138,9 @@ namespace COMMODORE
 
 		virtual bool initialize () override;
 
-		/** The raster is a critical thing in the behaviour of the VICI.
-			The content of the register 0x04 (and the 0x14 bacause it contains low bit) is "real time".
+		/** The raster is a critical thing in the behaviour of the VICI. \n
+			The content of registers 0x03 and 0x04 is "real time". \n
+			Register 0x03 contains raster bit 0 in bit 7, and register 0x04 contains raster bits 8..1. \n
 			Any read instruction could read different values depending on the position of the raster 
 			when that instruction happens. */
 		virtual void CPUAboutToExecute (MCHEmul::CPU* cpu, MCHEmul::Instruction* inst) override

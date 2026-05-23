@@ -32,6 +32,8 @@ MCHEmul::Command* C64::CommandBuilder::createEmptyCommand (const std::string& cm
 		result = new C64::GridOffCommand;
 	else if (cmdName == "PADDLE" || cmdName == C64::ManagePaddlesCommand::_NAME)
 		result = new C64::ManagePaddlesCommand;
+	else if (cmdName == "LIGHTPEN" || cmdName == C64::ManageLightPenCommand::_NAME)
+		result = new C64::ManageLightPenCommand;
 
 	return (result);
 }

@@ -38,8 +38,8 @@ const MCHEmul::UByte& VIC20::VIA1Registers::readValue (size_t p) const
 				// this is dt, that includes the usual value (considering the situation of the timer)
 				// and also the situation of the joystick except the right/east position that is managed in VIA2...
 				MCHEmul::UByte o = _PB -> OR ();
-				if ((_T2 -> runMode () == COMMODORE::VIATimer::RunMode::_ONESHOOTSIGNAL ||
-					 _T2 -> runMode () == COMMODORE::VIATimer::RunMode::_CONTINUOUSSIGNAL) &&
+				if ((_T1 -> runMode () == COMMODORE::VIATimer::RunMode::_ONESHOOTSIGNAL ||
+					 _T1 -> runMode () == COMMODORE::VIATimer::RunMode::_CONTINUOUSSIGNAL) &&
 					_PB -> DDR ().bit (7))
 					o.setBit (7, _PB -> p7 ());
 				unsigned char dt = (o.value () | ~_PB -> DDR ().value ()) &
@@ -81,10 +81,12 @@ void VIC20::VIA1Registers::initializeInternalValues ()
 		_PB  == nullptr)
 		return;
 	
-	// Data Port B all input...
-	setValue (0x00, MCHEmul::UByte::_FF); 
-	// Data Port A all output...
-	setValue (0x01, MCHEmul::UByte::_0);
+	// VIC-20 INITVIA default for VIA1.
+	setValue (0x02, MCHEmul::UByte (0x00)); // DDRB: all input
+	setValue (0x03, MCHEmul::UByte (0x80)); // DDRA: PA7 output, PA0..PA6 input
+	// All valoes up!...
+	setValue (0x00, MCHEmul::UByte (0xff));
+	setValue (0x01, MCHEmul::UByte (0xff));
 	// Just to be able to read well the keyboard...
 
 	_joystickStatus = 0xff; // No switches clicked, no fire buttons pressed...

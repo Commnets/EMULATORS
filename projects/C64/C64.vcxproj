@@ -71,7 +71,6 @@
     <ClCompile Include="..\..\src\C64\SerialPort.cpp" />
     <ClCompile Include="..\..\src\C64\Sound.cpp" />
     <ClCompile Include="..\..\src\C64\StdSerialPrinter.cpp" />
-    <ClCompile Include="..\..\src\C64\VICII.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="C64.fmt">

@@ -29,7 +29,7 @@ namespace COMMODORE
 		Any case: \n
 		Every horizontal raster line takes 64us (including horizontal retrace = 15us as PAL/NTSC standard definition). \n
 		1/985.248 = 1,01497us per cycle in PAL. 64us/1,01497 = 63 cycles per raster line in PAL. \n
-		1/1.023.000 = 0,977517us per cycle in NTSC. 64us/0,977517us = 65 cycles per raster line in NTSC. \n
+		1/1.023.000 = 0,977517us per cycle in NTSC. 64us/0,977517us = 64 cycles per raster line in NTSC. \n
 		VICII speed is = CPU speed. \n
 		So in every CPU cycle 8 pixels are drawn (if possible). \n
 		In every VICII cycle two actions are done: 
@@ -79,6 +79,12 @@ namespace COMMODORE
 			int vV, unsigned short cRL, const MCHEmul::Attributes& attrs = { });
 
 		virtual ~VICII () override;
+
+		// Managing lightpen
+		/** To activate/descativate the lightpen. */
+		void setLightPenActive (bool a)
+							{ _VICIIRegisters -> setLigthPenActive (a); 
+							  _eventStatus._lightPenPositionLatched = false;}
 
 		/** To draw or not to draw raster interrupt positions. */
 		void setDrawRasterInterruptPositions (bool d)
@@ -250,7 +256,7 @@ namespace COMMODORE
 		  *	@see also DrawContext and DrawResult structures. */
 		void drawGraphicsSpritesAndDetectCollisions (const DrawContext& dC);
 		/** To draw events that happened inside the VICII, if the variable _drawOtherEvents is set. */
-		void drawOtherEvents ();
+		void drawOtherEvents (unsigned short cav, unsigned short rv);
 
 		// These all methods are invoked from the three ones above!
 		// They are here just to structure better the code...
@@ -326,9 +332,8 @@ namespace COMMODORE
 		void detectCollisions (const DrawResult& cT);
 
 		// Related with the lightpen...
-		/** latched the position of the mouse (simulating the light pen) when it is with in the window. */
-		inline void latchLightPenPosition () const;
-		inline void fixLightPenPosition ();
+		/** Treated every cycle. */
+		inline void treatLightPenAtCurrentRasterPosition ();
 
 		// -----
 		// Different debug methods to simplify the internal code
@@ -401,6 +406,12 @@ namespace COMMODORE
 		mutable bool _newBadLineCondition;
 		/** This very simple variable manages only when the additional stop bad line related cycles applies. */
 		mutable bool _badLineStopCyclesAdded;
+		/** A very temporal variable to indcate whether a lightpen position has or not already been latched. 
+			This variable always set to false at the beginning of every raster line, 
+			and it is set to true when the posoition is latched. */
+		bool _lightPenFrameLatched;
+		/** A very temporal variable to keep when the button is pressed. */
+		bool _lightPenButtonPressed;
 
 		/** 
 		  *	Structure to control how the graphics are displayed in the screen. \n
@@ -573,6 +584,11 @@ namespace COMMODORE
 			MCHEmul::Pulse _ffMBorderChange;
 			/** The bad line to hightlight. */
 			unsigned short _badLine;
+			// Managing the lightpen related events...
+			/** A lightpen position has been latched. */
+			bool _lightPenPositionLatched;
+			/** The lightpen position latched is different than the previous one. */
+			MCHEmul::OBool _lightPenPositionChanged;
 		};
 
 		mutable EventsStatus _eventStatus;
@@ -670,7 +686,7 @@ namespace COMMODORE
 		_vicGraphicInfo._lastColorDataRead = 
 			_vicGraphicInfo._colorData [_vicGraphicInfo._VLMI] = 
 				_colorRAM -> valueDirect (_colorRAMAddress + (size_t) _vicGraphicInfo._VC) &
-					(_VICIIRegisters -> invalidGraphicMode () ? 0x80 : 0xff); 
+					(_VICIIRegisters -> invalidGraphicMode () ? 0x08 : 0x0f); 
 		// In the invalid text mode, only the MG flag is taken into account at this point
 		// however it won't be used as all pixels will be drawn in black...
 		
@@ -721,30 +737,49 @@ namespace COMMODORE
 	}
 
 	// ---
-	inline void VICII::latchLightPenPosition () const
+	inline void VICII::treatLightPenAtCurrentRasterPosition ()
 	{
-		if (_VICIIRegisters -> isMouseInVisibleZone () && 
-			_raster.isInVisibleZone ())
-		{
-			if (_VICIIRegisters -> mousePositionY () == _raster.vData ().currentVisiblePosition () &&
-				(_VICIIRegisters -> mousePositionX () >= _raster.hData ().currentVisiblePosition () &&
-					_VICIIRegisters -> mousePositionX () < (_raster.hData ().currentVisiblePosition () + 8)))
-				_VICIIRegisters -> latchLightPenPositionFromRaster 
-					((unsigned char) (_raster.hData ().currentPosition () >> 1), // Every 2 pixels...
-						(unsigned char) (_raster.vData ().currentPosition ()));
-		}
-	}
+		if (!_VICIIRegisters -> lightPenActive () ||
+			!_lightPenButtonPressed ||
+			_lightPenFrameLatched ||
+			!_VICIIRegisters -> isMouseInVisibleZone () ||
+			!_raster.isInVisibleZone ())
+			return; // Nothing to do really...
 
-	// ---
-	inline void VICII::fixLightPenPosition ()
-	{
-		if (_VICIIRegisters -> lightPenPositionLatched () &&
-			_VICIIRegisters -> lightPenActive ())
-		{
-			_VICIIRegisters -> fixPenPositionFromLatch ();
+		unsigned short cv = 0;
+		unsigned short rv = 0;
+		_raster.currentVisiblePosition (cv, rv);
+		const int mx = _VICIIRegisters -> mousePositionX ();
+		const int my = _VICIIRegisters -> mousePositionY ();
 
-			_VICIIRegisters -> activateLightPenOnScreenIRQ ();
-		}
+		// The raster advances horizontally in 8-pixel blocks in this emulation.
+		// And it is bneeded to compare visible thing with visible things...
+		if (my != (int) rv || 
+			!((mx >= (int) cv) && (mx < (int) (cv + _raster.step ()))))
+			return;
+
+		/** At this point the raster beam is passing through the mouse/light-pen
+			position. The light pen detects the beam and drives LP low. \n
+			Convert from visible mouse coordinate to the corresponding
+			VIC-II raster coordinate. \n
+			_raster.hData().currentPosition() is the current internal
+			raster X position. mx - cv gives the pixel offset inside the
+			current 8-pixel group. */
+		unsigned char lxo, lyo;
+		_VICIIRegisters -> lightPenPositionLatched (&lxo, &lyo); // Before changing this one...
+		_VICIIRegisters -> latchLightPenPositionFromRaster
+			((unsigned char) (((_raster.hData ().currentPosition () + 
+				((unsigned short) mx - cv)) >> 1) & 0xff), // LPX is in 2-pixel units...
+			 (unsigned char) (_raster.vData ().currentPosition () & 0xff));
+		unsigned char lx, ly;
+		_VICIIRegisters -> lightPenPositionLatched (&lx, &ly); // The new one...
+
+		_eventStatus._lightPenPositionLatched = true;
+		_eventStatus._lightPenPositionChanged = (lx != lxo) || (ly != lyo);
+
+		_lightPenFrameLatched = true;
+
+		_VICIIRegisters -> activateLightPenOnScreenIRQ ();
 	}
 
 	// ---

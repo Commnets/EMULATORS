@@ -55,6 +55,13 @@ To active/deactivate the connection of a paddle in a specfic port.
 By default what is connected is a joystick.
 Desactivating a paddle in a port would connected a joystick back instead.
 Parameters:
-=> ON|OFF (mandatory): Whether to activate or to desactivate the paddle.
-=> [PORTID1 PORTID2] (optional): The ports (0 or 1) where to connect/disconnect the paddles.
+=> ON|OFF (mandatory): Whether to connect or to disconnect a paddle.
+=> [PORTID1 PORTID2] (optional): The ports (0 or/and 1) where to connect/disconnect a paddle.
 When no port is defined the paddles are connected in all ports.
+;LIGHTPEN ON|OFF
+To active/desactivate the connection of a lightpen.
+Lightpen can work at the same time that joysticks (something that doesn't happen in real C64!),
+because it is emulated using the MOUSE (where left button means "pressing the lightpen against the screen").
+Lightpen is disconnected by default.
+Parameters:
+=> ON|OFF (mandatory): Whether to activate or to desactivate the lightpen.

@@ -105,26 +105,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "C64Programs", "C64Programs"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "C64", "C64", "{CB7D0793-14E8-492E-8620-DBE966D6AA14}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Examples_1", "Examples_1", "{C6BB96CB-83B8-4F1E-B49D-A57EC2DC439F}"
-	ProjectSection(SolutionItems) = preProject
-		emulators\C64Programs\Examples_1\bitmaps.asm = emulators\C64Programs\Examples_1\bitmaps.asm
-		emulators\C64Programs\Examples_1\bitmaps.prg = emulators\C64Programs\Examples_1\bitmaps.prg
-		emulators\C64Programs\Examples_1\rasterlines.asm = emulators\C64Programs\Examples_1\rasterlines.asm
-		emulators\C64Programs\Examples_1\screencolors1.asm = emulators\C64Programs\Examples_1\screencolors1.asm
-		emulators\C64Programs\Examples_1\screencolors2.asm = emulators\C64Programs\Examples_1\screencolors2.asm
-		emulators\C64Programs\Examples_1\screencolors3.asm = emulators\C64Programs\Examples_1\screencolors3.asm
-		emulators\C64Programs\Examples_1\sprite11.asm = emulators\C64Programs\Examples_1\sprite11.asm
-		emulators\C64Programs\Examples_1\sprite21.asm = emulators\C64Programs\Examples_1\sprite21.asm
-		emulators\C64Programs\Examples_1\testkeyboard.asm = emulators\C64Programs\Examples_1\testkeyboard.asm
-		emulators\C64Programs\Examples_1\text1.asm = emulators\C64Programs\Examples_1\text1.asm
-		emulators\C64Programs\Examples_1\text2.asm = emulators\C64Programs\Examples_1\text2.asm
-		emulators\C64Programs\Examples_1\text3.asm = emulators\C64Programs\Examples_1\text3.asm
-		emulators\C64Programs\Examples_1\text4.asm = emulators\C64Programs\Examples_1\text4.asm
-		emulators\C64Programs\Examples_1\text5.asm = emulators\C64Programs\Examples_1\text5.asm
-		emulators\C64Programs\Examples_1\textcharset.64c = emulators\C64Programs\Examples_1\textcharset.64c
-		emulators\C64Programs\Examples_1\textcharset.asm = emulators\C64Programs\Examples_1\textcharset.asm
-	EndProjectSection
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "General", "General", "{AA0DD703-5C11-4DE4-87FE-02BEF245FE66}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Monitors", "Monitors", "{B6B8F9F7-9FCC-4811-8A0A-D88A40250BE1}"
@@ -149,51 +129,6 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "R64Console", "monitors\R64C
 		{8388FEAA-CDFA-430C-945D-5272AB6D3980} = {8388FEAA-CDFA-430C-945D-5272AB6D3980}
 		{A1F7489E-B003-4566-A81F-BFF6AF321BF1} = {A1F7489E-B003-4566-A81F-BFF6AF321BF1}
 		{EFD64A1D-6D9A-4716-BE18-84899483977F} = {EFD64A1D-6D9A-4716-BE18-84899483977F}
-	EndProjectSection
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Code", "Code", "{C240FE10-B986-4BE3-8142-2A73CA4C3DAB}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Macros", "Macros", "{CDFEFB5E-98A7-4934-9C5B-FD5C55E1B742}"
-	ProjectSection(SolutionItems) = preProject
-		emulators\C64Programs\Code\Macros\MCIAS.asm = emulators\C64Programs\Code\Macros\MCIAS.asm
-		emulators\C64Programs\Code\Macros\MSCREEN.asm = emulators\C64Programs\Code\Macros\MSCREEN.asm
-		emulators\C64Programs\Code\Macros\MVICII.asm = emulators\C64Programs\Code\Macros\MVICII.asm
-	EndProjectSection
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Routines", "Routines", "{1B89EA0F-83BA-4635-9B46-131784A734FB}"
-	ProjectSection(SolutionItems) = preProject
-		emulators\C64Programs\Code\Routines\RCOPYCHARSET.asm = emulators\C64Programs\Code\Routines\RCOPYCHARSET.asm
-		emulators\C64Programs\Code\Routines\RGENERAL.asm = emulators\C64Programs\Code\Routines\RGENERAL.asm
-		emulators\C64Programs\Code\Routines\RIRQ.asm = emulators\C64Programs\Code\Routines\RIRQ.asm
-		emulators\C64Programs\code\routines\RIRQ2.asm = emulators\C64Programs\code\routines\RIRQ2.asm
-		emulators\C64Programs\Code\Routines\RSCREENBOX.asm = emulators\C64Programs\Code\Routines\RSCREENBOX.asm
-		emulators\C64Programs\Code\Routines\RSCREENCLEAR.asm = emulators\C64Programs\Code\Routines\RSCREENCLEAR.asm
-		emulators\C64Programs\Code\Routines\RSCREENRECT.asm = emulators\C64Programs\Code\Routines\RSCREENRECT.asm
-		emulators\C64Programs\Code\Routines\RSCREENTEXT.asm = emulators\C64Programs\Code\Routines\RSCREENTEXT.asm
-		emulators\C64Programs\code\routines\RSPRITES.asm = emulators\C64Programs\code\routines\RSPRITES.asm
-	EndProjectSection
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{DD45DD00-02A4-4D13-8CC8-58BE8A459F48}"
-	ProjectSection(SolutionItems) = preProject
-		emulators\C64Programs\Code\Tests\SP4.asm = emulators\C64Programs\Code\Tests\SP4.asm
-		emulators\C64Programs\Code\Tests\SPRITESPRIORITY.asm = emulators\C64Programs\Code\Tests\SPRITESPRIORITY.asm
-		emulators\C64Programs\Code\Tests\TESTBIT.asm = emulators\C64Programs\Code\Tests\TESTBIT.asm
-		emulators\C64Programs\code\tests\TESTCIA1.asm = emulators\C64Programs\code\tests\TESTCIA1.asm
-		emulators\C64Programs\code\tests\TESTCIA1IRQ.asm = emulators\C64Programs\code\tests\TESTCIA1IRQ.asm
-		emulators\C64Programs\Code\Tests\TESTCIA2NMI.asm = emulators\C64Programs\Code\Tests\TESTCIA2NMI.asm
-		emulators\C64Programs\Code\Tests\TESTDEFCHARS.asm = emulators\C64Programs\Code\Tests\TESTDEFCHARS.asm
-		emulators\C64Programs\code\tests\TESTFORSKEY.asm = emulators\C64Programs\code\tests\TESTFORSKEY.asm
-		emulators\C64Programs\Code\Tests\TESTGRAPHMODES.asm = emulators\C64Programs\Code\Tests\TESTGRAPHMODES.asm
-		emulators\C64Programs\Code\Tests\TESTHRESMODES.asm = emulators\C64Programs\Code\Tests\TESTHRESMODES.asm
-		emulators\C64Programs\code\tests\TESTIRQ.asm = emulators\C64Programs\code\tests\TESTIRQ.asm
-		emulators\C64Programs\code\tests\TESTIRQ2.asm = emulators\C64Programs\code\tests\TESTIRQ2.asm
-		emulators\C64Programs\Code\Tests\TESTKEYBOARD.asm = emulators\C64Programs\Code\Tests\TESTKEYBOARD.asm
-		emulators\C64Programs\Code\Tests\TESTKEYBOARDIRQ.asm = emulators\C64Programs\Code\Tests\TESTKEYBOARDIRQ.asm
-		emulators\C64Programs\Code\Tests\TESTOUT.asm = emulators\C64Programs\Code\Tests\TESTOUT.asm
-		emulators\C64Programs\Code\Tests\TESTROUTINES.asm = emulators\C64Programs\Code\Tests\TESTROUTINES.asm
-		emulators\C64Programs\code\tests\TESTROUTINES2.asm = emulators\C64Programs\code\tests\TESTROUTINES2.asm
-		emulators\C64Programs\code\tests\TESTSIMPLEOUT.asm = emulators\C64Programs\code\tests\TESTSIMPLEOUT.asm
-		emulators\C64Programs\code\tests\TESTSPRITESIRQ.asm = emulators\C64Programs\code\tests\TESTSPRITESIRQ.asm
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Compilers", "Compilers", "{CB939E14-E506-4775-A07D-14F332CA2B47}"
@@ -950,14 +885,9 @@ Global
 		{AF53DEDC-F49D-447A-8B2F-F5DBE93F6EB7} = {CB7D0793-14E8-492E-8620-DBE966D6AA14}
 		{BC7BFE65-0F19-4EB9-914F-67B7BC21FBC4} = {CB7D0793-14E8-492E-8620-DBE966D6AA14}
 		{CB7D0793-14E8-492E-8620-DBE966D6AA14} = {33618513-AA35-4A8C-BB0B-98DD4013748D}
-		{C6BB96CB-83B8-4F1E-B49D-A57EC2DC439F} = {BC7BFE65-0F19-4EB9-914F-67B7BC21FBC4}
 		{AA0DD703-5C11-4DE4-87FE-02BEF245FE66} = {33618513-AA35-4A8C-BB0B-98DD4013748D}
 		{650026B3-1AF8-42FB-B520-0B94239CF962} = {A1513111-D847-4AB7-8A07-8AA115AC4DB9}
 		{791FCA28-ED93-4F02-B2EA-513F086F1C39} = {77A86421-CB14-474C-9B94-BD53B7ED5C0D}
-		{C240FE10-B986-4BE3-8142-2A73CA4C3DAB} = {BC7BFE65-0F19-4EB9-914F-67B7BC21FBC4}
-		{CDFEFB5E-98A7-4934-9C5B-FD5C55E1B742} = {C240FE10-B986-4BE3-8142-2A73CA4C3DAB}
-		{1B89EA0F-83BA-4635-9B46-131784A734FB} = {C240FE10-B986-4BE3-8142-2A73CA4C3DAB}
-		{DD45DD00-02A4-4D13-8CC8-58BE8A459F48} = {C240FE10-B986-4BE3-8142-2A73CA4C3DAB}
 		{37B5BB98-47CC-4566-9ACF-51E1E181B732} = {2CDC5360-C91C-4FCA-AE01-98DEFDC778B6}
 		{2CDC5360-C91C-4FCA-AE01-98DEFDC778B6} = {7CF4FC5F-24E3-4E24-AF7F-246D698BBE1E}
 		{4844D8BE-3DCA-455A-87CD-25AF8FFBC0E8} = {9E003CF6-761F-453E-BC47-ED144EB0EFB8}

@@ -76,7 +76,7 @@ void VIC20::VIA1::processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifier* n
 				if (jb -> _joystickId != 0)
 					break; // Only joystick 0 is allowed!
 	
-				_VIA1Registers -> setJoystickStatus (_VIA1Registers -> joystickStatus () & ~0x20 /** bit 5. */);
+				_VIA1Registers -> setJoystickStatus (_VIA1Registers -> joystickStatus () | 0x20 /** bit 5. */);
 			}
 
 			break;

@@ -149,18 +149,10 @@ namespace COMMODORE
 
 		// Knowing info about the lightpen...
 		/** The lightpen is simulated using the mouse. */
-		unsigned short currentLightPenHorizontalPosition () const
-							{ return (_currentLightPenHorizontalPosition); }
-		unsigned short currentLightPenVerticalPosition () const
-							{ return (_currentLightPenVerticalPosition); }
-		void currentLightPenPosition (unsigned short& x, unsigned short& y) const
-							{ x = _currentLightPenHorizontalPosition; y = _currentLightPenVerticalPosition; }
-		inline void latchLightPenPositionFromRaster (unsigned char x, unsigned char y);
-		void lightPenPosLatched (unsigned char* x, unsigned char* y)
-							{ *x = _latchLighPenHorizontalPosition; *y = _latchLightPenVerticalPosition; }
-		bool lightPenPositionLatched () const
-							{ return (_lightPenLatched); } // The value is restored when checked!
-		inline void fixPenPositionFromLatch ();
+		inline void latchLightPenPositionFromRaster (unsigned char x, unsigned char y)
+							{ _latchLightPenHorizontalPosition = x; _latchLightPenVerticalPosition = y; }
+		void lightPenPositionLatched (unsigned char* x, unsigned char* y)
+							{ *x = _latchLightPenHorizontalPosition; *y = _latchLightPenVerticalPosition; }
 		bool lightPenActive () const
 							{ return (_lightPenActive); }
 		void setLigthPenActive (bool lP)
@@ -338,10 +330,10 @@ namespace COMMODORE
 		// Some of this variables are set by the emulation of the VICII
 		// The VICII chip also uses this object as a temporary storage
 		/** Where the lightpen has been detected. */
-		unsigned char _latchLighPenHorizontalPosition, _currentLightPenHorizontalPosition;
+		unsigned char _latchLightPenHorizontalPosition;
 		/** The position is consolidated once per frame. */
-		unsigned char _latchLightPenVerticalPosition, _currentLightPenVerticalPosition;
-		bool _lightPenLatched; // When a value has been latched...
+		unsigned char _latchLightPenVerticalPosition;
+		/** To identify whether the light pen is or not active to take it into account in the simulation. */
 		bool _lightPenActive;
 		/** Whether the raster line has reached the one defined to generate an IRQ. */
 		bool _rasterIRQHappened;
@@ -410,22 +402,6 @@ namespace COMMODORE
 				((_spriteCollisionWithDataIRQHappened && _spriteCollisionWithDataIRQActive) ? 2 : 0) +
 				((_spriteCollisionsIRQHappened && _spriteCollisionsIRQActive) ? 4 : 0) +
 				((_lightPenIRQHappened && _lightPenIRQActive) ? 8 : 0)); 
-	}
-
-	// ---
-	inline void VICIIRegisters::latchLightPenPositionFromRaster (unsigned char x, unsigned char y)
-	{ 
-		_latchLighPenHorizontalPosition = x; 
-		_latchLightPenVerticalPosition = y; 
-		_lightPenLatched = true;
-	}
-
-	// ---
-	inline void VICIIRegisters::fixPenPositionFromLatch ()
-	{ 
-		_currentLightPenHorizontalPosition = _latchLighPenHorizontalPosition;
-		_currentLightPenVerticalPosition = _latchLightPenVerticalPosition;
-		_lightPenLatched = false; 
 	}
 
 	// ---

@@ -45,10 +45,13 @@ COMMODORE::VICII::VICII (int intId, MCHEmul::PhysicalStorageSubset* cR, const MC
 	  _cycleInRasterLine (1),
 	  _videoActive (true),
 	  _lastVBlankEntered (false),
-	  _lastBadLineScrollY (-1), _newBadLineCondition (false), _badLineStopCyclesAdded (false),
+	  _lastBadLineScrollY (-1), 
+	  _newBadLineCondition (false), 
+	  _badLineStopCyclesAdded (false), 
+	  _lightPenFrameLatched (false), _lightPenButtonPressed (false),
 	  _vicGraphicInfo (),
 	  _vicSpriteInfo (),
-	  _eventStatus { false, false, false }
+	  _eventStatus { false, false, false, false, false }
 {
 	// At this point the color RAM can be nullptr, 
 	// but never when the VIC starts to work!
@@ -106,9 +109,12 @@ bool COMMODORE::VICII::initialize ()
 	_lastBadLineScrollY = -1;
 	_newBadLineCondition = false;
 	_badLineStopCyclesAdded = false;
+	_lightPenFrameLatched = false; _lightPenButtonPressed = false;
 
 	_vicGraphicInfo = VICGraphicInfo ();
 	for (size_t i = 0; i < 8; _vicSpriteInfo [i++] = VICSpriteInfo ());
+
+	_eventStatus = { false, false, false, false, false };
 
 	return (true);
 }
@@ -274,7 +280,7 @@ bool COMMODORE::VICII::simulate (MCHEmul::CPU* cpu)
 				// ...but also the position of the light pen is "fixed"...
 				// ...and a interruption is also launched at that position related with the light pen!...
 				// ...is the lightpen is active for sure!
-				fixLightPenPosition ();
+				_lightPenFrameLatched = false;
 			}
 			// In any other line number, VC start back to count from the value in VCBASE.
 			// VCBASE is actualized only then RC reaches 8. @see rasterCycle 58 treatment.
@@ -288,9 +294,8 @@ bool COMMODORE::VICII::simulate (MCHEmul::CPU* cpu)
 			_raster.currentColumn () == _IRQrasterPosition)
 			_VICIIRegisters -> activateRasterIRQ (); // ...the interrupt is activated (but not necessary launched!)
 
-		// Latch the light pen position (reading the mouse)
-		// if it is within the window...
-		latchLightPenPosition ();
+		// Light pen detection for this raster position.
+		treatLightPenAtCurrentRasterPosition ();
 
 		// Per cycle, the IRQ condition is checked! 
 		// (many reasons during the cycle can unchain the IRQ interrupt)
@@ -586,12 +591,12 @@ void COMMODORE::VICII::processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifi
 
 			break;
 
-		// The lightpen actives when the right button of the mouse is pressed...
+		// The lightpen actives when the left button of the mouse is pressed...
 		case MCHEmul::InputOSSystem::_MOUSEBUTTONPRESSED:
 			{
-				if (std::dynamic_pointer_cast <MCHEmul::InputOSSystem::MouseButtonEvent> 
+				if (std::dynamic_pointer_cast <MCHEmul::InputOSSystem::MouseButtonEvent>
 					(evnt.data ()) -> _buttonId == 1 /** Left. Right would be 3. */)
-					_VICIIRegisters -> setLigthPenActive (true);
+					 _lightPenButtonPressed = true;
 			}
 			
 			break;
@@ -601,7 +606,7 @@ void COMMODORE::VICII::processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifi
 			{
 				if (std::dynamic_pointer_cast <MCHEmul::InputOSSystem::MouseButtonEvent> 
 					(evnt.data ()) -> _buttonId == 1 /** Left. */)
-					_VICIIRegisters -> setLigthPenActive (false);
+					_lightPenButtonPressed = false;
 			}
 
 			break;
@@ -625,14 +630,14 @@ MCHEmul::ScreenMemory* COMMODORE::VICII::createScreenMemory ()
 	cP [5]  = SDL_MapRGBA (_format, 0x72, 0xb1, 0x4b, 0xe0); // Green
 	cP [6]  = SDL_MapRGBA (_format, 0x48, 0x3a, 0xaa, 0xe0); // Blue
 	cP [7]  = SDL_MapRGBA (_format, 0xd5, 0xdf, 0x7c, 0xe0); // Yellow
-	cP [8]  = SDL_MapRGBA (_format, 0x99, 0x69, 0x2d, 0xe0); // Brown
-	cP [9]  = SDL_MapRGBA (_format, 0x67, 0x52, 0x00, 0xe0); // Light Red
-	cP [10] = SDL_MapRGBA (_format, 0xc1, 0x81, 0x78, 0xe0); // Orange
-	cP [11] = SDL_MapRGBA (_format, 0x60, 0x60, 0x60, 0xe0); // Dark Grey
-	cP [12] = SDL_MapRGBA (_format, 0x8a, 0x8a, 0x8a, 0xe0); // Medium Grey
+	cP [8]  = SDL_MapRGBA (_format, 0x99, 0x69, 0x2d, 0xe0); // Orange
+	cP [9]  = SDL_MapRGBA (_format, 0x67, 0x52, 0x00, 0xe0); // Brown
+	cP [10] = SDL_MapRGBA (_format, 0xc1, 0x81, 0x78, 0xe0); // Light Red
+	cP [11] = SDL_MapRGBA (_format, 0x60, 0x60, 0x60, 0xe0); // Dark Gray
+	cP [12] = SDL_MapRGBA (_format, 0x8a, 0x8a, 0x8a, 0xe0); // Medium Gray
 	cP [13] = SDL_MapRGBA (_format, 0xb3, 0xec, 0x91, 0xe0); // Light Green
 	cP [14] = SDL_MapRGBA (_format, 0x86, 0x7a, 0xde, 0xe0); // Light Blue
-	cP [15] = SDL_MapRGBA (_format, 0xb3, 0xb3, 0xb3, 0xe0); // Light Grey
+	cP [15] = SDL_MapRGBA (_format, 0xb3, 0xb3, 0xb3, 0xe0); // Light Gray
 
 	// Colors used for the borders and so! (16)
 	// Same than the original ones, but with full light!
@@ -956,7 +961,7 @@ void COMMODORE::VICII::drawVisibleZone (MCHEmul::CPU* cpu)
 
 	// If it activated to draw other events that happen during the interation of the VICII...
 	if (_drawOtherEvents)
-		drawOtherEvents ();
+		drawOtherEvents (cav, rv);
 }
 
 // ---
@@ -984,7 +989,7 @@ void COMMODORE::VICII::drawGraphicsSpritesAndDetectCollisions (const COMMODORE::
 }
 
 // ---
-void COMMODORE::VICII::drawOtherEvents ()
+void COMMODORE::VICII::drawOtherEvents (unsigned short cv, unsigned short rv)
 {
 	// Draw the border events...
 	unsigned int cEvent = std::numeric_limits <unsigned int>::max ();
@@ -1010,6 +1015,31 @@ void COMMODORE::VICII::drawOtherEvents ()
 		else
 			_eventStatus._badLine = std::numeric_limits <unsigned short>::max ();
 	}
+
+	// Draw the light pen event...
+	// if it has happened...
+	unsigned int cl = _VICIIRegisters -> backgroundColor () == 15 
+		? 0 : _VICIIRegisters -> backgroundColor () + 1; /** to be visible. */
+	auto delLPData = [&]() -> void
+		{ screenMemory () -> setString ((size_t) 0, (size_t) 20, 
+			MCHEmul::_SPACES.substr (8), cl); };
+	if (_eventStatus._lightPenPositionLatched)
+	{
+		unsigned char lx, ly;
+		_VICIIRegisters -> lightPenPositionLatched (&lx, &ly);
+		if (cv >= 0 && cv < 40 && rv >= 20 && rv <= 28)
+		{
+			if (_eventStatus._lightPenPositionChanged) 
+				delLPData (); // Just once...
+
+			screenMemory () -> setString ((size_t) 0, (size_t) 20, 
+				std::to_string ((unsigned int) lx) + " " +
+				std::to_string ((unsigned int) ly), cl); // Always printing the new one...
+		}
+	}
+	// ...and delete if not...
+	else
+		if (cv >= 0 && cv < 40 && rv >= 20 && rv <= 28) delLPData ();
 }
 
 // ---
@@ -1626,9 +1656,9 @@ void COMMODORE::VICII::detectCollisions (const DrawResult& cT)
 	// Now it is time to detect collisions...
 	// First among the graphics and the sprites
 	bool cGS = false;
-	for (size_t i = 0; i < 8 && !cGS; i++)
+	for (size_t i = 0; i < 8; i++)
 		// ...at the first collision detected, the check stops...
-		if ((cGS = (cT._collisionSpritesData [i].value () & cT._collisionGraphicData.value ()) != 0x00)) 
+		if ((cGS |= (cT._collisionSpritesData [i].value () & cT._collisionGraphicData.value ()) != 0x00)) 
 			_VICIIRegisters -> setSpriteCollisionWithDataHappened (i);
 	if (cGS) 
 		_VICIIRegisters -> activateSpriteCollisionWithDataIRQ ();

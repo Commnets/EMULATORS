@@ -149,7 +149,7 @@ void COMMODORE::VIARegisters::setValue (size_t p, const MCHEmul::UByte& v)
 				//The behaviour of the Timer 1 is controlled with bits 7 and 6...
 				_T1 -> setCountAndRunMode (
 					COMMODORE::VIATimer::CountMode::_PROCESSORCYCLES, // Always...
-					(COMMODORE::VIATimer::RunMode) ((unsigned char) ((v.value () & 0xd0) >> 6 /** From 0 to 3 */)));
+					(COMMODORE::VIATimer::RunMode) ((unsigned char) ((v.value () & 0xc0) >> 6 /** From 0 to 3 */)));
 				if (_T1 -> runMode () == COMMODORE::VIATimer::RunMode::_ONESHOOTSIGNAL ||
 					_T1 -> runMode () == COMMODORE::VIATimer::RunMode::_CONTINUOUSSIGNAL)
 					_PB -> setP7 (true); // Reflect the status in the bit 7 of the port linked...
@@ -168,7 +168,7 @@ void COMMODORE::VIARegisters::setValue (size_t p, const MCHEmul::UByte& v)
 
 				// The way the shift register works is controlled with bit 2 - 4
 				_SR -> setMode 
-					(COMMODORE::VIAShiftRegister::ShiftMode ((v.value () >> 2) && 0x07 /** bits 2, 3 and 4 */));
+					(COMMODORE::VIAShiftRegister::ShiftMode ((v.value () >> 2) & 0x07 /** bits 2, 3 and 4 */));
 
 				// The info of the ports might or not be latched...
 				_PB -> setLatchIR (v.bit (1));
@@ -371,19 +371,22 @@ const MCHEmul::UByte& COMMODORE::VIARegisters::readValue (size_t p) const
 				result = MCHEmul::UByte::_0;
 				result.setBit (7, launchInterrupt ()); // Any Interrupt?
 				// Reading any bit clears the flag...
-				result.setBit (6, _T1  -> interruptRequested ()); // in Timer A?
-				result.setBit (5, _T2  -> interruptRequested ()); // in Timer B?
-				result.setBit (4, _CB1 -> interruptRequested ()); // CB1 transition?
-				result.setBit (3, _CB2 -> interruptRequested ()); // CB2 transition?
-				result.setBit (2, _SR  -> interruptRequested ()); // In the shift register?
-				result.setBit (1, _CA1 -> interruptRequested ()); // CA1 transition?
-				result.setBit (0, _CA2 -> interruptRequested ()); // CA2 transition?
+				result.setBit (6, _T1  -> peekInterruptRequested ()); // in Timer A?
+				result.setBit (5, _T2  -> peekInterruptRequested ()); // in Timer B?
+				result.setBit (4, _CB1 -> peekInterruptRequested ()); // CB1 transition?
+				result.setBit (3, _CB2 -> peekInterruptRequested ()); // CB2 transition?
+				result.setBit (2, _SR  -> peekInterruptRequested ()); // In the shift register?
+				result.setBit (1, _CA1 -> peekInterruptRequested ()); // CA1 transition?
+				result.setBit (0, _CA2 -> peekInterruptRequested ()); // CA2 transition?
 			}
+
+			break;
 
 		case 0x0e:
 			{
 				result = MCHEmul::UByte::_0;
-				// Bit 7 is always 0...
+				// Bit 7 is always 1...
+				result.setBit (7, true);
 				result.setBit (6, _T1  -> interruptEnabled ());
 				result.setBit (5, _T2  -> interruptEnabled ());
 				result.setBit (4, _CB1 -> interruptEnabled ());

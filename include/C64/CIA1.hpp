@@ -40,7 +40,7 @@ namespace C64
 		void linkToSID (COMMODORE::SID* sid)
 							{ _sid = sid; _CIA1Registers -> linkToSID (sid); }
 
-		// Managing the paddles/jiysticks...
+		// Managing the paddles/joysticks...
 		bool isPaddleConnectedAtPort (unsigned char p) const
 							{ return (_CIA1Registers -> isPaddleConnectedAtPort (p)); }
 		bool arePaddlesConnected () const
