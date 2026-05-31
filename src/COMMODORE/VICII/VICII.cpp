@@ -43,11 +43,17 @@ COMMODORE::VICII::VICII (int intId, MCHEmul::PhysicalStorageSubset* cR, const MC
 	  _lastCPUCycles (0),
 	  _format (nullptr),
 	  _cycleInRasterLine (1),
-	  _videoActive (true),
+	  _lastVICDataRead (MCHEmul::UByte::_0),
+	  _DENSeenAtLine30 (false),
+	  _badLineAlreadyDetectedThisLine (false), 
+	  _badLineConditionActive (false),
+	  _badLinePreventedIdleThisLine (false),
+	  _badLineBAAlreadyRequested (false),
+	  _badLineBARequestCycle (0),
+	  _badLineCAccessActive (false),
+	  _badLineNormalCAccessAllowedThisLine (false),
+	  _badLineCAccessStartCycle (0),
 	  _lastVBlankEntered (false),
-	  _lastBadLineScrollY (-1), 
-	  _newBadLineCondition (false), 
-	  _badLineStopCyclesAdded (false), 
 	  _lightPenFrameLatched (false), _lightPenButtonPressed (false),
 	  _vicGraphicInfo (),
 	  _vicSpriteInfo (),
@@ -102,13 +108,20 @@ bool COMMODORE::VICII::initialize ()
 	
 	_cycleInRasterLine = 1;
 
-	_videoActive = true;
+	_lastVICDataRead = MCHEmul::UByte::_0;
+
+	_DENSeenAtLine30 = false;
+	_badLineAlreadyDetectedThisLine = false;
+	_badLineConditionActive = false;
+	_badLinePreventedIdleThisLine = false;
+	_badLineBAAlreadyRequested = false;
+	_badLineBARequestCycle = 0;
+	_badLineCAccessActive = false;
+	_badLineNormalCAccessAllowedThisLine = false;
+	_badLineCAccessStartCycle = 0;
 
 	_lastVBlankEntered = false;
 
-	_lastBadLineScrollY = -1;
-	_newBadLineCondition = false;
-	_badLineStopCyclesAdded = false;
 	_lightPenFrameLatched = false; _lightPenButtonPressed = false;
 
 	_vicGraphicInfo = VICGraphicInfo ();
@@ -118,211 +131,140 @@ bool COMMODORE::VICII::initialize ()
 
 	return (true);
 }
-
 // ---
 bool COMMODORE::VICII::simulate (MCHEmul::CPU* cpu)
 {
-	// Details about the emulation of the VICII:
-	// VICII does activities in both phases of the clock.
-	// In a bad line, the VICII reads the screen code in the phase 2 (up) of the clock (when the CPU is usually doing things)...
-	// ...and the graphics data in the phase 1
-	// The VICII starts to read in the cycle 15 the screen code (phase 2) and the graphics data in the phase 1 of the next cycle 16.
-	// IMPORTANT: The simulation has been built to do both actions in the cycle 16.
-	// The graphic is then sent to the screen in two moments: 4 pixels in the phase 2 of the cycle 16, and 4 more in the phase 1 of the cycle 17.
-	// IMPORTANT: The simulation has been done to do both activities in the cycle 17.
-	// The same rational is applied for the next: So the graphics are read from cycle 16 to 55 (included)...
-	// ...and the screen is drawn from cycle 17 to 56.
+	// The VIC-II is simulated at CPU-cycle granularity.
+	//
+	// The real chip internally works with two phases per CPU cycle:
+	//   - one phase is mainly used by the VIC-II to fetch video-related data,
+	//   - the other phase is normally available to the CPU, unless the VIC-II
+	//     needs to steal the bus for character/color accesses or sprite DMA.
+	//
+	// This emulator does not model those two half-cycles explicitly. Instead,
+	// related actions are grouped into one emulated VIC-II cycle. In particular:
+	//   - bad-line c-accesses are modeled in the emulator around cycles 16..55;
+	//   - visible drawing is executed after the raster-cycle actions of the
+	//     current emulated VIC-II cycle;
+	//   - this grouped model approximates the real phase-separated VIC-II timing
+	//     without modelling the two half-cycles explicitly;
+	//   - BA-like CPU stops are requested before the effective memory access,
+	//     so the CPU can stop on a valid read cycle.
+	//
+	// The method below is intentionally organized as a per-cycle pipeline:
+	//   1. update internal bad-line state,
+	//   2. request preliminary CPU stop if DMA/bad-line access is approaching,
+	//   3. execute the current VIC-II raster cycle,
+	//   4. draw the current visible slice,
+	//   5. advance the raster beam,
+	//   6. evaluate position-dependent events,
+	//   7. request IRQ if any VIC-II IRQ source is pending.
 
-	// First time?
+	// First invocation: synchronize the VIC-II with the CPU cycle counter.
+	// No VIC-II activity is simulated yet because there is no elapsed cycle
+	// interval to process.
 	if (_lastCPUCycles == 0)
 	{ 
-		_lastCPUCycles = cpu -> clockCycles (); // Nothing to do...
+		_lastCPUCycles = cpu -> clockCycles ();
 
 		return (true);
 	}
 
-	auto isNewBadLine = [&]() -> bool
-	{
-		bool result = 
-			_videoActive && // Bad lines only possible when the video is active...
-			_vicGraphicInfo._ROW >= _FIRSTBADLINE && 
-			_vicGraphicInfo._ROW <= _LASTBADLINE &&
-			(unsigned char) (_vicGraphicInfo._ROW & 0x07) /** The three last bits. */ == 
-				_VICIIRegisters -> verticalScrollPosition () && // aligned with the scrollY
-			_lastBadLineScrollY != (int) _VICIIRegisters -> verticalScrollPosition (); //..and obvious if that situation in the scroll changed
-		
-		if (result)
-			_lastBadLineScrollY = _VICIIRegisters -> verticalScrollPosition ();
-
-		return (result);
-	};
-
-	auto isAboutToReadSpriteInfo = [&]() -> bool
-	{
-		return (
-			(_cycleInRasterLine == 2								&& _vicSpriteInfo [5]._active) ||
-			(_cycleInRasterLine == 4								&& _vicSpriteInfo [6]._active) ||
-			(_cycleInRasterLine == 6								&& _vicSpriteInfo [7]._active) ||
-			(_cycleInRasterLine == (55 + _incCyclesPerRasterLine)	&& _vicSpriteInfo [0]._active) ||
-			(_cycleInRasterLine == (57 + _incCyclesPerRasterLine)	&& _vicSpriteInfo [1]._active) ||
-			(_cycleInRasterLine == (59 + _incCyclesPerRasterLine)	&& _vicSpriteInfo [2]._active) ||
-			(_cycleInRasterLine == (61 + _incCyclesPerRasterLine)	&& _vicSpriteInfo [3]._active) ||
-			(_cycleInRasterLine == (63 + _incCyclesPerRasterLine)	&& _vicSpriteInfo [4]._active));
-	};
-
-	// If the "video reset flag" is actived nothing should be done...
-	// This is a very strange bit "RES" at the register $d016 of the VIC.
-	// There is no too much documentation about it.
-	// In "Mapping the C64" says this bit "disconnect" the full operation of the VICII, 
-	// and that in some old C64s the screen is also turn in black...
-	// However seems that something is anyway done...
-	// and what it is done without any doubt is to actualize the raster 
-	// because it is a signal comming from the TV not from the VICII....
-	// So far just the condition is logged...
+	// The VIC-II "video reset" bit is logged as a disconnected/video-reset
+	// situation. Raster timing is still advanced because the raster position is
+	// considered an external timing reference of the video system.
 	if (_VICIIRegisters -> videoResetActive ())
 		_IFDEBUG debugDisconnected (cpu);
 
-	// Adapt the size of the display zone to the parameters specificied in the register...
-	// The zone where sprites and texts are finally visible is call the "screen zone"
+	// The visible display zone can be dynamically affected by the 24/25-row and
+	// 38/40-column display control bits. This has to be refreshed before drawing
+	// the current raster slice.
 	_raster.reduceDisplayZone
-		(!_VICIIRegisters -> textDisplay25RowsActive (), !_VICIIRegisters -> textDisplay40ColumnsActive ());
+		(!_VICIIRegisters -> textDisplay25RowsActive (),
+		 !_VICIIRegisters -> textDisplay40ColumnsActive ());
 
-	// If the right register has been modified....
+	// If the interrupt-enable/status register has been written in a way that
+	// re-arms interrupt admission, propagate that condition to the CPU interrupt
+	// controller before evaluating new IRQ causes in the current batch of cycles.
 	if (_VICIIRegisters -> interruptsEnabledBack ())
 		cpu -> interrupt (_interruptId) -> 
-			setNewInterruptRequestAdmitted (false); // ...the interrupts are admitted again...
+			setNewInterruptRequestAdmitted (false);
 
-	// The simulation has to be repeated as many time as cycles have spent since the last invocation...
-	for (unsigned int i = (cpu -> clockCycles  () - _lastCPUCycles); i > 0; i--)
+	// Simulate one VIC-II cycle for every CPU cycle elapsed since the previous
+	// invocation. The loop runs from the oldest pending cycle to the newest one.
+	for (unsigned int i = (cpu -> clockCycles () - _lastCPUCycles); i > 0; i--)
 	{
+		// Absolute CPU cycle associated with the VIC-II cycle currently being
+		// processed. It is used when requesting CPU stops or IRQs.
+		const unsigned int cC = cpu -> clockCycles () - i;
+
 		_IFDEBUG debugVICIICycle (cpu, i);
 
-		// Whether the video is active or not is only checked at the very first bad line...
-		_videoActive = (_vicGraphicInfo._ROW == _FIRSTBADLINE) 
-			? !_VICIIRegisters -> blankEntireScreen () : _videoActive; // The value can change at any cycle of this first bad line...
+		// Phase 1: update bad-line state for this exact VIC-II cycle.
+		// This includes:
+		// - latching whether DEN has been seen at raster line $30,
+		// - evaluating the current bad-line condition,
+		// - switching from idle state to display state when a new bad line
+		//   is accepted,
+		// - latching a c-access sequence if the condition appears inside
+		//   the c-access start window. Normal matrix/color reads are later
+		//   validated at cycle 14.		
+		treatBadLineStateAtCurrentCycle ();
 
-		// Is there a bad line situation?
-		// A bad line can happen at any cycle within the raster line.
-		// When happened, the graphics are read and the situation is latched because maybe additional stop cycles could be needed.
-		if (isNewBadLine ())
-		{
-			_IFDEBUG debugBadLine ();
+		// Phase 2: preliminary bus arbitration.
+		// If the VIC-II is about to need the bus for sprite data or bad-line
+		// character/color accesses, a BA-like stop request is issued in advance.
+		// The CPU will only stop when it reaches a compatible read cycle; write
+		// cycles are allowed to complete, matching the intended BA behaviour.
+		requestCPUStopForDMAIfNeeded (cpu, cC);
 
-			_newBadLineCondition = true;		// latched...
-			_badLineStopCyclesAdded = false;	// ...the cycles have to be added...
+		// Phase 3: execute the VIC-II activity associated with the current raster cycle.
+		// This performs cycle-specific actions such as sprite data reads,
+		// effective bad-line matrix/color accesses when allowed, graphic-data reads,
+		// VC/VLMI advancement, RC handling and sprite activation/deactivation.
+		treatRasterCycleAndRequestCPUStopIfNeeded (cpu, cC);
 
-			_vicGraphicInfo._idleState = false; // No longer in "idle" state but in the "screen" one!
-
-			// To keep track of the event later, if needed...
-			_eventStatus._badLine = 
-				_raster.vData ().currentVisiblePosition ();
-		}
-
-		// When VICII is about to read sprites or screen code info (in a bad line),
-		// the phase 1 of the clock (the one usually managed by the VICII) is not enough to read all info needed.
-		// So the CPU has to be stop to use their cycles too, but it is requested 3 cycles before it is actually needed.
-		// That is because the CPU stops only when the next internal CPU movement (within every instruction) is a _CYCLEREAD type (@see F6500::Instruction).
-		// If it were a _CYCLEWRITE instead the CPU wouldn't stop, and there are a maximum of 3 _CYCLEWRITE together (in BRK and JSR instructions).
-		// The stop is requested if the CPU wasn't in the same situation previously... 
-		// In the case of graphics, the stop could happen when the situation arise at any point of the "screen cycles" (from cycle 16 to 55).
-		// When a badline comes, the requested to stop the CPU usually happens at cycle 13, then it would be stopped cycles 14, 15, and 16
-		// and at cycle 16 the code reaches back this point again and the condition will also be met so a new stop will be requested (3 cycles more)
-		// However, later the graphics will start to be read an a new stop condition will arise....(1)
-		if ((cpu -> lastState () != MCHEmul::CPU::_STOPPED && !cpu -> stopped ()) &&
-			(isAboutToReadSpriteInfo () || 
-				(_newBadLineCondition && (_cycleInRasterLine >= 13 && _cycleInRasterLine < 52))))
-			cpu -> setStop (true, MCHEmul::InstructionDefined::_CYCLEREAD /** only read is not allowed. */, 
-				cpu -> clockCycles () - i, 3); // It is the way to simulate when the BA signal goes low...
-
-		// Treat the right cycle...
-		// ...and as a consequence the CPU can be also stopped...
-		// (1)...so this condition will overwrite the previous one!
-		unsigned int cS = 0;
-		if ((cS = treatRasterCycle ()) > 0)
-			cpu -> setStop (true, MCHEmul::InstructionDefined::_CYCLEALL /** fully stopped. */, 
-				cpu -> clockCycles () - i, (int) cS); // In this case the CPU is fully stopped because it is comming from the previous one...
-
-		// Draws the graphics & border if it has to do so...
+		// Phase 4: draw the current visible 8-pixel slice, if the raster is in
+		// the visible zone. The drawing path uses the data already fetched by
+		// the raster-cycle phase and then applies sprites, priority, collisions
+		// and border overlay.
 		if (_raster.isInVisibleZone ())
 			drawVisibleZone (cpu);
 
-		// Move 8 pixels right in the raster line and jump to other line is possible...
-		// Notice that the variable _isNewRasterLine becomes true when a new line comes...
-		// Always when there is a new line the Raster IRQ has to be checked, 
-		// and the situation is flagged into the register if true...
-		// Whether finally a IRQ is or not actually launched is something that is determined later per cycle
-		// just to take into account other issuing possibilities like two sprites collision analized later.
-		_cycleInRasterLine++; // First move to the next raster cycle...
+		// Phase 5: advance the raster beam by one VIC-II cycle.
+		// This moves the horizontal raster position, advances the vertical raster
+		// when horizontal retrace is crossed, and performs new-line/new-frame
+		// housekeeping such as resetting per-line bad-line state, restoring VC
+		// from VCBASE, and clearing the light-pen frame latch at the beginning
+		// of a new frame.
+		advanceRasterPosition ();
 
-		// Moves the horizontal raster...
-		bool cLine = _raster.hData ().add (1 * _raster.step ());
-		// Does the raster reached the retrace start position...
-		if (_raster.hData ().retraceJustOverPassed ())
-			_raster.vData ().next (); // ...in this case, the row has to be changed...
-		// ...and has it reached the last position defined (that is when the retrace finishes)?
-		if (cLine)
-		{
-			_cycleInRasterLine = 1;
+		// Phase 6a: evaluate raster IRQ at the new raster position.
+		// The IRQ flag is only activated here; the actual CPU IRQ request is
+		// performed later together with all other VIC-II IRQ sources.
+		treatRasterIRQAtCurrentPosition ();
 
-			_lastBadLineScrollY = -1;
-			_newBadLineCondition = false;
-			_badLineStopCyclesAdded = false;
-
-			// At the beginning of the counter....
-			_vicGraphicInfo._ROW = _raster.currentLine ();
-			if (_vicGraphicInfo._ROW == 0)
-			{ 
-				// The internal variables counting the lines, etc...
-				// are set back to 0...
-				_vicGraphicInfo._VCBASE = _vicGraphicInfo._VC = 0;
-				_vicGraphicInfo._RC = 0;
-
-				// ...but also the position of the light pen is "fixed"...
-				// ...and a interruption is also launched at that position related with the light pen!...
-				// ...is the lightpen is active for sure!
-				_lightPenFrameLatched = false;
-			}
-			// In any other line number, VC start back to count from the value in VCBASE.
-			// VCBASE is actualized only then RC reaches 8. @see rasterCycle 58 treatment.
-			else 
-				_vicGraphicInfo._VC = _vicGraphicInfo._VCBASE;
-		}
-
-		// If the current line is where a IRQ has been set...
-		// ..and also the column of the raster is where it should be launched...
-		if (_vicGraphicInfo._ROW == _VICIIRegisters -> IRQRasterLineAt () &&
-			_raster.currentColumn () == _IRQrasterPosition)
-			_VICIIRegisters -> activateRasterIRQ (); // ...the interrupt is activated (but not necessary launched!)
-
-		// Light pen detection for this raster position.
+		// Phase 6b: evaluate light-pen detection at the new raster position.
+		// The emulated light pen uses the mouse position and button state. The
+		// position is latched when the raster beam reaches the mouse/light-pen
+		// position, and at most once per frame.
 		treatLightPenAtCurrentRasterPosition ();
 
-		// Per cycle, the IRQ condition is checked! 
-		// (many reasons during the cycle can unchain the IRQ interrupt)
-		int cI = -1;
-		if ((cI = (int)_VICIIRegisters -> reasonIRQCode ()) != 0)
-			cpu -> requestInterrupt (
-				_interruptId,
-				cpu -> clockCycles  () - i, 
-				this,
-				cI);
+		// Phase 7: final IRQ evaluation for this VIC-II cycle.
+		// At this point all per-cycle IRQ sources have had the opportunity to set
+		// their corresponding flags: raster IRQ, light pen, sprite/sprite
+		// collision and sprite/data collision.
+		requestIRQIfNeeded (cpu, cC);
 	}
 
-	// When the raster enters the non visible part of the screen,
-	// a notification is sent (to the Screen class usually) 
-	// just to draw the screen...
-	if (_raster.isInFirstVBlankZone ())
-	{
-		if (!_lastVBlankEntered)
-		{
-			_lastVBlankEntered = true;
+	// Outside the per-cycle loop, notify the screen subsystem once when entering
+	// the first VBlank zone. This keeps the previous behaviour: the notification
+	// is associated with the batch of simulated cycles, not with every internal
+	// VIC-II cycle.
+	notifyGraphicsReadyIfNeeded ();
 
-			notify (MCHEmul::Event (_GRAPHICSREADY)); 
-		}
-	}
-	else
-		_lastVBlankEntered = false;
-
+	// Synchronize the VIC-II cycle counter with the CPU after processing all
+	// pending cycles.
 	_lastCPUCycles = cpu -> clockCycles ();
 
 	return (true);
@@ -334,11 +276,21 @@ MCHEmul::InfoStructure COMMODORE::VICII::getInfoStructure () const
 	MCHEmul::InfoStructure result = std::move (MCHEmul::GraphicalChip::getInfoStructure ());
 
 	result.remove ("Memory"); // This info is not neccesary...
-	result.add ("VICIIRegisters",	std::move (_VICIIRegisters -> getInfoStructure ()));
-	result.add ("Raster",			std::move (_raster.getInfoStructure ()));
-	result.add ("VICIIInternal",	std::move (_vicGraphicInfo.getInfoStructure ()));
-	result.add ("Badline",			std::string (_newBadLineCondition ? "YES" : "NO"));
-	result.add ("Cycle",			_cycleInRasterLine);
+	result.add ("VICIIRegisters",				std::move (_VICIIRegisters -> getInfoStructure ()));
+	result.add ("Raster",						std::move (_raster.getInfoStructure ()));
+	result.add ("VICIIInternal",				std::move (_vicGraphicInfo.getInfoStructure ()));
+	result.add ("DENSeenAtLine30",				std::string (_DENSeenAtLine30 ? "YES" : "NO"));
+	result.add ("BadlineCondition",				std::string (_badLineConditionActive ? "YES" : "NO"));
+	result.add ("BadlinePreventedIdleThisLine", std::string (_badLinePreventedIdleThisLine ? "YES" : "NO"));
+	result.add ("BadlineDetected",				std::string (_badLineAlreadyDetectedThisLine ? "YES" : "NO"));
+	result.add ("BadlineBARequested",			std::string (_badLineBAAlreadyRequested ? "YES" : "NO"));
+	result.add ("BadlineBARequestCycle",		_badLineBARequestCycle);
+	result.add ("BadlineFirstCAccessCycle",		firstBadLineCAccessCycle ());
+	result.add ("BadlineCAccess",				std::string (_badLineCAccessActive ? "YES" : "NO"));
+	result.add ("BadlineNormalCAccessAllowed",	std::string (_badLineNormalCAccessAllowedThisLine ? "YES" : "NO"));
+	result.add ("BadlineCAccessStartCycle",		_badLineCAccessStartCycle);
+	result.add ("Cycle",						_cycleInRasterLine);
+	result.add ("LastVICDataRead",				_lastVICDataRead.asString (MCHEmul::UByte::OutputFormat::_HEXA));
 
 	return (result);
 }
@@ -674,7 +626,6 @@ unsigned int COMMODORE::VICII::treatRasterCycle ()
 	unsigned int result = 0;
 
 	// Read graphics zone?
-	bool rG = false;
 	switch (_cycleInRasterLine)
 	{
 		// Read the sprite 3 to 7 data?
@@ -699,19 +650,15 @@ unsigned int COMMODORE::VICII::treatRasterCycle ()
 		// In raster cycle 14 the graphics information moves...
 		case 14:
 			{
-				_vicGraphicInfo._VC = _vicGraphicInfo._VCBASE;
-				_vicGraphicInfo._VLMI = 0;
-
-				if (_newBadLineCondition)
-					_vicGraphicInfo._RC = 0;
+				treatGraphicFetchStartCycle ();
 			}
 
 			break;
 
-		// Between the raster cycle 15 and 55 the graphics are read...
-		// ...But in the cycle 15 also...
-		// After reading info of the sprites, cycles 58 - 62 (previos raster line) + 1 - 9 (this line),
-		// the information about the active sprites is actualized...
+		// Simplified sprite-line bookkeeping.
+		// Graphic c/g accesses are not handled in this case. They are processed
+		// uniformly by treatGraphicAccessCycle() in the emulator's effective
+		// graphics-access window, currently cycles 16..55.
 		case 15:
 			{
 				for (size_t i = 0; i < 8; i++)
@@ -740,59 +687,17 @@ unsigned int COMMODORE::VICII::treatRasterCycle ()
 
 			break;
 
-		// Just read the graphics...
-		case 16:
-		case 17:
-		case 18:
-		case 19:
-		case 20:
-		case 21:
-		case 22:
-		case 23:
-		case 24:
-		case 25:
-		case 26:
-		case 27:
-		case 28:
-		case 29:
-		case 30:
-		case 31:
-		case 32:
-		case 33:
-		case 34:
-		case 35:
-		case 36:
-		case 37:
-		case 38:
-		case 39:
-		case 40:
-		case 41:
-		case 42:
-		case 43:
-		case 44:
-		case 45:
-		case 46:
-		case 47:
-		case 48:
-		case 49:
-		case 50:
-		case 51:
-		// 52 is a little bit special...
-		case 53:
-		case 54:
-		case 55:
-			{
-				rG = true;
-			}
-
-			break;
-
-		// The raster cycle 55/56 (we have choosen 55) is very important for sprite behaviour.
-		// At this point the active sprites are defined.
-		// Notice that this identification is done before two events:
-		// The VICII to decide whether it has or not to stop 3 cycles because sprite info is going to be read (first sprite at cycle 55),
-		// and the sprite info is actually read (first sprite at cycle 58)
-		// That the reason to choose 52, when in the real VICII this happen at cycles 55/56.
+		// Simplified sprite activation model.
+		// In the real 6569, sprite DMA and sprite display are separate internal states:
+		// - sprite DMA can be enabled around cycles 55/56;
+		// - sprite display is enabled at cycle 58 if DMA is active and the sprite Y
+		//   coordinate still matches the current raster line;
+		// - DMA is later disabled from the MCBASE/MC logic around cycle 16.
+		// This emulator still uses _vicSpriteInfo[i]._active as a combined
+		// DMA/display flag. The decision is intentionally made earlier, at cycle 52,
+		// so requestCPUStopForDMAIfNeeded() can request the BA-like CPU stop before
+		// the later sprite data reads. This block should be replaced when sprite DMA
+		// and sprite display are modelled as separate states.
 		case 52:
 			{
 				for (size_t i = 0; i < 8; i++)
@@ -822,8 +727,6 @@ unsigned int COMMODORE::VICII::treatRasterCycle ()
 						_IFDEBUG debugSpriteDrawToStart (i);
 					}
 				}
-
-				rG = true;
 			}
 
 			break;
@@ -831,15 +734,7 @@ unsigned int COMMODORE::VICII::treatRasterCycle ()
 		// In cycle 58 again the graphical info is updated...
 		case 58:
 			{
-				if (_vicGraphicInfo._RC == 7)
-				{
-					_vicGraphicInfo._VCBASE = _vicGraphicInfo._VC;
-					if (!_newBadLineCondition) // When RC gets 7 and there is no bad condition, then the idle state is set back...
-						_vicGraphicInfo._idleState = true;
-				}
-
-				if (++_vicGraphicInfo._RC == 8)
-					_vicGraphicInfo._RC = 0; // Only from 0 to 7...
+				treatGraphicRowEndCycle ();
 			}
 
 			break;
@@ -848,32 +743,7 @@ unsigned int COMMODORE::VICII::treatRasterCycle ()
 			break;
 	}
 
-	// Have graphics to be updated?
-	if (rG)
-	{
-		if (_newBadLineCondition)
-		{
-			if (!_badLineStopCyclesAdded)
-			{
-				_badLineStopCyclesAdded = true;
-
-				// 40 cycles more (maximum) just for reading the chars...
-				result = 56 - _cycleInRasterLine;
-			}
-
-			readVideoMatrixAndColorRAM ();
-
-			_IFDEBUG debugReadingVideoMatrix ();
-		}
-
-		readGraphicalInfo ();
-
-		_IFDEBUG debugReadingGraphics ();
-
-		if (!_vicGraphicInfo._idleState)
-			_vicGraphicInfo._VC++;	
-		_vicGraphicInfo._VLMI++;
-	}
+	result += treatGraphicAccessCycle ();
 
 	return (result);
 }
@@ -892,9 +762,9 @@ void COMMODORE::VICII::drawVisibleZone (MCHEmul::CPU* cpu)
 	// actualize the status of the border...
 	actualizeMainBorderStatus (cav, rv);
 
-	// If the video is not active, 
-	// then everything will have the border color...
-	if (!_videoActive)
+	// If the display has not been enabled for this frame,
+	// the visible area is covered with the border color.
+	if (!displayEnabledForCurrentFrame ())
 	{
 		_IFDEBUG debugVideoNoActiveAt (cav);
 
@@ -957,7 +827,7 @@ void COMMODORE::VICII::drawVisibleZone (MCHEmul::CPU* cpu)
 		}
 	}
 
-	// The draw around the sprites is drawn as part of the sprite draw routine...
+	// The draw around the sprites is done as part of the sprite draw routine...
 
 	// If it activated to draw other events that happen during the interation of the VICII...
 	if (_drawOtherEvents)
@@ -986,60 +856,6 @@ void COMMODORE::VICII::drawGraphicsSpritesAndDetectCollisions (const COMMODORE::
 	drawResultToScreen (colGraphics, dC);
 	// ...and the collisions are also detected...
 	detectCollisions (colGraphics);
-}
-
-// ---
-void COMMODORE::VICII::drawOtherEvents (unsigned short cv, unsigned short rv)
-{
-	// Draw the border events...
-	unsigned int cEvent = std::numeric_limits <unsigned int>::max ();
-	if (_eventStatus._ffVBorderChange.positiveEdge ()) 
-		cEvent = 32; // Auxiliar. Light cyan
-	if (_eventStatus._ffVBorderChange.negativeEdge ()) 
-		cEvent = 33; // Auxiliar. Light yellow
-	if (_eventStatus._ffMBorderChange.positiveEdge ())
-		cEvent = 34; // The main indication for the border (when activated). Light orange
-	if (_eventStatus._ffMBorderChange.negativeEdge ())
-		cEvent = 35; // The main indication for the border (when dsactivated). Light purple
-	if (cEvent != std::numeric_limits <unsigned int>::max ())
-		screenMemory () -> setHorizontalLine // Draw at least two pixels when the events has happpened...
-			(_vicGraphicInfo._ffMBorderBegin, _raster.vData ().currentVisiblePosition (), 2, cEvent);
-
-	// Draw the bad line event...
-	// From the moment the condition is identified and a full line!
-	if (_eventStatus._badLine != std::numeric_limits <unsigned short>::max ())
-	{ 
-		if (_raster.vData ().currentVisiblePosition () == _eventStatus._badLine)
-			screenMemory () -> setHorizontalLine 
-				(_raster.hData ().currentVisiblePosition (), _eventStatus._badLine, 2, 36); // in points and draw in auxiliar color...
-		else
-			_eventStatus._badLine = std::numeric_limits <unsigned short>::max ();
-	}
-
-	// Draw the light pen event...
-	// if it has happened...
-	unsigned int cl = _VICIIRegisters -> backgroundColor () == 15 
-		? 0 : _VICIIRegisters -> backgroundColor () + 1; /** to be visible. */
-	auto delLPData = [&]() -> void
-		{ screenMemory () -> setString ((size_t) 0, (size_t) 20, 
-			MCHEmul::_SPACES.substr (8), cl); };
-	if (_eventStatus._lightPenPositionLatched)
-	{
-		unsigned char lx, ly;
-		_VICIIRegisters -> lightPenPositionLatched (&lx, &ly);
-		if (cv >= 0 && cv < 40 && rv >= 20 && rv <= 28)
-		{
-			if (_eventStatus._lightPenPositionChanged) 
-				delLPData (); // Just once...
-
-			screenMemory () -> setString ((size_t) 0, (size_t) 20, 
-				std::to_string ((unsigned int) lx) + " " +
-				std::to_string ((unsigned int) ly), cl); // Always printing the new one...
-		}
-	}
-	// ...and delete if not...
-	else
-		if (cv >= 0 && cv < 40 && rv >= 20 && rv <= 28) delLPData ();
 }
 
 // ---
@@ -1152,6 +968,8 @@ COMMODORE::VICII::DrawResult COMMODORE::VICII::drawMonoColorChar (int cb)
 {
 	COMMODORE::VICII::DrawResult result;
 
+	const bool idle = idleStateActive ();
+
 	for (int i = 0; i < 8 /** To paint always 8 pixels */; i++)
 	{
 		int pp = cb + i;
@@ -1167,7 +985,7 @@ COMMODORE::VICII::DrawResult COMMODORE::VICII::drawMonoColorChar (int cb)
 		{
 			result._collisionGraphicData.setBit (7 - i, true);
 
-			result._foregroundColorData [i] = _vicGraphicInfo._idleState 
+			result._foregroundColorData [i] = idle 
 				? 0x00 // In idle state the color is always 0...
 				: (unsigned int) (_vicGraphicInfo._colorData [iBy].value () & 0x0f /** Useful nibble. */);
 		}
@@ -1185,6 +1003,8 @@ COMMODORE::VICII::DrawResult COMMODORE::VICII::drawMonoColorChar (int cb)
 COMMODORE::VICII::DrawResult COMMODORE::VICII::drawMultiColorChar (int cb, bool inv)
 {
 	COMMODORE::VICII::DrawResult result;
+
+	const bool idle = idleStateActive ();
 
 	for (unsigned short i = 0 ; i < 8 /** To paint always 8 pixels. */; i++)
 	{
@@ -1213,10 +1033,10 @@ COMMODORE::VICII::DrawResult COMMODORE::VICII::drawMultiColorChar (int cb, bool 
 		// If the most significant bit of the low significant nibble of the color memory is set to 0
 		// the data will be managed in a monolor way...
 		if ((_vicGraphicInfo._colorData [iBy] & 0x08) == 0x00 ||
-			 _vicGraphicInfo._idleState) // The idle state is treated as monocolor...
+			 idle) // The idle state is treated as monocolor...
 		{
 			unsigned int fc = 
-				(inv || _vicGraphicInfo._idleState) // also in idle state it is black...
+				(inv || idle) // also in idle state it is black...
 					? 0x00 // When invalid or idle all pixels are black...
 					: _vicGraphicInfo._colorData [iBy].value () & 0x07;
 
@@ -1294,6 +1114,8 @@ COMMODORE::VICII::DrawResult COMMODORE::VICII::drawMultiColorExtendedChar (int c
 
 	COMMODORE::VICII::DrawResult result;
 
+	const bool idle = idleStateActive ();
+
 	for (int i = 0; i < 8 /** To paint always 8 pixels */; i++)
 	{
 		int pp = cb + i;
@@ -1307,7 +1129,7 @@ COMMODORE::VICII::DrawResult COMMODORE::VICII::drawMultiColorExtendedChar (int c
 		// The color of the pixel 0 is determined by the 2 MSBites of the char code...
 		bool bS = _vicGraphicInfo._graphicData [iBy].bit (iBt); // To know whether the bit is 1 or 0...
 		unsigned int cs = ((_vicGraphicInfo._screenCodeData [iBy].value () & 0xc0) >> 6) & 0x03; // 0, 1, 2, or 3
-		unsigned int fc = _vicGraphicInfo._idleState 
+		unsigned int fc = idle 
 			? 0x00 // In idle state the color is always 0...
 			: (bS 
 				? (_vicGraphicInfo._colorData [iBy].value () & 0x0f) 
@@ -1335,6 +1157,8 @@ COMMODORE::VICII::DrawResult COMMODORE::VICII::drawMonoColorBitMap (int cb, bool
 {
 	COMMODORE::VICII::DrawResult result;
 
+	const bool idle = idleStateActive ();
+
 	for (int i = 0; i < 8 /** To paint always 8 pixels. */; i++)
 	{
 		int pp = cb + i;
@@ -1347,7 +1171,7 @@ COMMODORE::VICII::DrawResult COMMODORE::VICII::drawMonoColorBitMap (int cb, bool
 		size_t iBt = 7 - (((size_t) pp) % 8); // From MSB to LSB...
 		bool bS = _vicGraphicInfo._graphicData [iBy].bit (iBt);
 		unsigned int fc = 
-			(inv || _vicGraphicInfo._idleState)
+			(inv || idle)
 				? 0x00 // When invalid or idle state, all pixels are black...
 				: bS 
 					? (_vicGraphicInfo._screenCodeData [iBy].value () & 0xf0) >> 4	// If the bit is 1, the color is determined by the MSNibble
@@ -1383,6 +1207,8 @@ COMMODORE::VICII::DrawResult COMMODORE::VICII::drawMultiColorBitMap (int cb, boo
 {
 	COMMODORE::VICII::DrawResult result;
 
+	const bool idle = idleStateActive ();
+
 	for (unsigned short i = 0 ; i < 8 /** To paint always 8 pixels. */; i++)
 	{
 		int pp = cb + i;
@@ -1408,7 +1234,7 @@ COMMODORE::VICII::DrawResult COMMODORE::VICII::drawMultiColorBitMap (int cb, boo
 			continue;
 
 		unsigned fc = // The value 0x00 is not tested....
-				(inv || _vicGraphicInfo._idleState)
+				(inv || idle)
 					? 0x00 // When invalid or idle state all pixels are black...
 					: (cs == 0x01) // The color is the defined in the video matrix, high nibble...
 						? (_vicGraphicInfo._screenCodeData [iBy].value () & 0xf0) >> 4
@@ -1684,106 +1510,58 @@ void COMMODORE::VICII::detectCollisions (const DrawResult& cT)
 }
 
 // ---
-COMMODORE::VICII_PAL::VICII_PAL (int intId, MCHEmul::PhysicalStorageSubset* cR, 
-		const MCHEmul::Address& cRA, int vV)
-	: COMMODORE::VICII (intId, cR, cRA,
-		 _VRASTERDATA, _HRASTERDATA, vV, COMMODORE::VICII_PAL::_CYCLESPERRASTERLINE,
-		 { { "Name", "VIC-II (PAL) Video Chip Interface II" },
-		   { "Code", "6569(NMOS 63 cycles)/8565(HMOS)/8566(HMOS in C128)" },
-		   { "Manufacturer", "MOS Technology INC/Commodore Semiconductor Group (CBM)"},
-		   { "Year", "1982-1983 (depending on version)" } })
+void COMMODORE::VICII::drawOtherEvents (unsigned short cv, unsigned short rv)
 {
-	// This value - the initial position in the row divided by 8 must have a rest of 0
-	_IRQrasterPosition = 404;
-}
+	// Draw the border events...
+	unsigned int cEvent = std::numeric_limits <unsigned int>::max ();
+	if (_eventStatus._ffVBorderChange.positiveEdge ()) 
+		cEvent = 32; // Auxiliar. Light cyan
+	if (_eventStatus._ffVBorderChange.negativeEdge ()) 
+		cEvent = 33; // Auxiliar. Light yellow
+	if (_eventStatus._ffMBorderChange.positiveEdge ())
+		cEvent = 34; // The main indication for the border (when activated). Light orange
+	if (_eventStatus._ffMBorderChange.negativeEdge ())
+		cEvent = 35; // The main indication for the border (when dsactivated). Light purple
+	if (cEvent != std::numeric_limits <unsigned int>::max ())
+		screenMemory () -> setHorizontalLine // Draw at least two pixels when the events has happpened...
+			(_vicGraphicInfo._ffMBorderBegin, _raster.vData ().currentVisiblePosition (), 2, cEvent);
 
-// ---
-unsigned int COMMODORE::VICII_PAL::treatRasterCycle ()
-{
-	unsigned int result = result = COMMODORE::VICII::treatRasterCycle ();
-
-	switch (_cycleInRasterLine)
-	{
-		// Read sprite 0 to 2 data?
-		// At the last cycles...
-		case 58:
-		case 60:
-		case 62:
-			{
-				// Is there sprite info available?
-				unsigned short nSR = ((_cycleInRasterLine - 58) >> 1); // 0, 1 or 2
-				if (readSpriteData (nSR))
-				{
-					result += 2; // VICII has to read three bytes, Meaning 2 clock cycles stopped more... 
-
-					_IFDEBUG debugReadingSpriteInfo (nSR);
-				}
-			}
-
-			break;
-
-		// Manages the situation of the border...
-		case 63:
-			{ 
-				actualizeVerticalBorderStatus ();
-			}
-
-			break;
-
-		default:
-			break;
+	// Draw the accepted bad-line condition event...
+	// This marks the raster line where a Bad Line Condition was first accepted,
+	// not necessarily a line where normal matrix/color c-accesses were performed.
+	if (_eventStatus._badLine != std::numeric_limits <unsigned short>::max ())
+	{ 
+		if (_raster.vData ().currentVisiblePosition () == _eventStatus._badLine)
+			screenMemory () -> setHorizontalLine 
+				(_raster.hData ().currentVisiblePosition (), _eventStatus._badLine, 2, 36); // in points and draw in auxiliar color...
+		else
+			_eventStatus._badLine = std::numeric_limits <unsigned short>::max ();
 	}
 
-	return (result);
-}
-
-// ---
-COMMODORE::VICII_NTSC::VICII_NTSC (int intId, MCHEmul::PhysicalStorageSubset* cR,
-		const MCHEmul::Address& cRA, int vV)
-	: COMMODORE::VICII (intId, cR, cRA,
-		 _VRASTERDATA, _HRASTERDATA, vV, 64,
-		 { { "Name", "VIC-II (NTSC) Video Chip Interface II" },
-		   { "Code", "6567R56A(NMOS 64 cycles)/8582(HMOS)/8564(HMOS in C128)" },
-		   { "Manufacturer", "MOS Technology INC/Commodore Semiconductor Group (CBM)"},
-		   { "Year", "1983" } })
-{
-	// This value - the initial position in the row divided by 8 must have a rest of 0
-	_IRQrasterPosition = 412;
-}
-
-// ---
-unsigned int COMMODORE::VICII_NTSC::treatRasterCycle ()
-{
-	unsigned int result = COMMODORE::VICII::treatRasterCycle ();
-
-	switch (_cycleInRasterLine)
+	// Draw the light pen event...
+	// if it has happened...
+	unsigned int cl = _VICIIRegisters -> backgroundColor () == 15 
+		? 0 : _VICIIRegisters -> backgroundColor () + 1; /** to be visible. */
+	auto delLPData = [&]() -> void
+		{ screenMemory () -> setString ((size_t) 0, (size_t) 20, 
+			MCHEmul::_SPACES.substr (8), cl); };
+	if (_eventStatus._lightPenPositionLatched)
 	{
-		// Read sprite 0 to 2 data?
-		// At the last cycles...
-		case 60:
-		case 62:
-		case 64:
-			{
-				// Is there sprite info available?
-				unsigned short nSR = ((_cycleInRasterLine - 60) >> 1); // 0, 1 or 2
-				if (readSpriteData (nSR))
-				{
-					result += 2;	// VICII has to read three bytes, Meaning 2 clock cycles stopped more... 
+		unsigned char lx, ly;
+		_VICIIRegisters -> lightPenPositionLatched (&lx, &ly);
+		if (cv >= 0 && cv < 40 && rv >= 20 && rv <= 28)
+		{
+			if (_eventStatus._lightPenPositionChanged) 
+				delLPData (); // Just once...
 
-					_IFDEBUG debugReadingSpriteInfo (nSR);
-				}
-
-				// Manages the situation of the border...
-				actualizeVerticalBorderStatus ();
-			}
-
-			break;
-
-		default:
-			break;
+			screenMemory () -> setString ((size_t) 0, (size_t) 20, 
+				std::to_string ((unsigned int) lx) + " " +
+				std::to_string ((unsigned int) ly), cl); // Always printing the new one...
+		}
 	}
-
-	return (result);
+	// ...and delete if not...
+	else
+		if (cv >= 0 && cv < 40 && rv >= 20 && rv <= 28) delLPData ();
 }
 
 // ---
@@ -1811,9 +1589,20 @@ void COMMODORE::VICII::debugVICIICycle (MCHEmul::CPU* cpu, unsigned int i)
 			"VCBASE=" + std::to_string (_vicGraphicInfo._VCBASE) + "," +
 			"VC=" + std::to_string (_vicGraphicInfo._VC) + "," +
 			"VLMI=" + std::to_string (_vicGraphicInfo._VLMI) + "," +
+			"GAccessIndex=" + std::to_string (_vicGraphicInfo._GAccessIndex) + "," +
 			"RC=" + std::to_string (_vicGraphicInfo._RC) + "," +
 			"ROW=" + std::to_string (_vicGraphicInfo._ROW) + "," +
-			"Badline=" + std::to_string (_newBadLineCondition) + "," +
+			"LastVICDataRead=" + _lastVICDataRead.asString (MCHEmul::UByte::OutputFormat::_HEXA) + "," +
+			"DENSeenAtLine30=" + std::to_string (_DENSeenAtLine30) + "," +
+			"BadlineCondition=" + std::to_string (_badLineConditionActive) + "," +
+			"BadlinePreventedIdleThisLine=" + std::to_string (_badLinePreventedIdleThisLine) + "," +
+			"BadlineDetected=" + std::to_string (_badLineAlreadyDetectedThisLine) + "," +
+			"BadlineBARequested=" + std::to_string (_badLineBAAlreadyRequested) + "," +
+			"BadlineBARequestCycle=" + std::to_string (_badLineBARequestCycle) + "," +
+			"BadlineFirstCAccessCycle=" + std::to_string (firstBadLineCAccessCycle ()) + "," +
+			"BadlineCAccess=" + std::to_string (_badLineCAccessActive) + "," +
+			"BadlineNormalCAccessAllowed=" + std::to_string (_badLineNormalCAccessAllowedThisLine) + "," +
+			"BadlineCAccessStartCycle=" + std::to_string (_badLineCAccessStartCycle) + "," +
 			"Cycle=" + std::to_string (_cycleInRasterLine) },
 		  { "Border", 
 			"Main=" + std::to_string (_vicGraphicInfo._ffMBorder) + "," +
@@ -1917,12 +1706,118 @@ MCHEmul::InfoStructure COMMODORE::VICII::VICGraphicInfo::getInfoStructure () con
 {
 	MCHEmul::InfoStructure result;
 
-	result.add ("VCBASE",	_VCBASE);
-	result.add ("VC",		_VC);
-	result.add ("RC",		_RC);
-	result.add ("VLMI",		_VLMI);
-	result.add ("ROW",		_ROW);
-	result.add ("IDLE",		std::string (_idleState ? "YES" : "NO"));
+	result.add ("VCBASE",		_VCBASE);
+	result.add ("VC",			_VC);
+	result.add ("VLMI",			_VLMI);
+	result.add ("GAccessIndex",	_GAccessIndex);
+	result.add ("RC",			_RC);
+	result.add ("ROW",			_ROW);
+	result.add ("IDLE",			std::string (_idleState ? "YES" : "NO"));
+
+	return (result);
+}
+
+// ---
+COMMODORE::VICII_PAL::VICII_PAL (int intId, MCHEmul::PhysicalStorageSubset* cR, 
+		const MCHEmul::Address& cRA, int vV)
+	: COMMODORE::VICII (intId, cR, cRA,
+		 _VRASTERDATA, _HRASTERDATA, vV, COMMODORE::VICII_PAL::_CYCLESPERRASTERLINE,
+		 { { "Name", "VIC-II (PAL) Video Chip Interface II" },
+		   { "Code", "6569(NMOS 63 cycles)/8565(HMOS)/8566(HMOS in C128)" },
+		   { "Manufacturer", "MOS Technology INC/Commodore Semiconductor Group (CBM)"},
+		   { "Year", "1982-1983 (depending on version)" } })
+{
+	// This value - the initial position in the row divided by 8 must have a rest of 0
+	_IRQrasterPosition = 404;
+}
+
+// ---
+unsigned int COMMODORE::VICII_PAL::treatRasterCycle ()
+{
+	unsigned int result = COMMODORE::VICII::treatRasterCycle ();
+
+	switch (_cycleInRasterLine)
+	{
+		// Read sprite 0 to 2 data?
+		// At the last cycles...
+		case 58:
+		case 60:
+		case 62:
+			{
+				// Is there sprite info available?
+				unsigned short nSR = ((_cycleInRasterLine - 58) >> 1); // 0, 1 or 2
+				if (readSpriteData (nSR))
+				{
+					result += 2; // VICII has to read three bytes, Meaning 2 clock cycles stopped more... 
+
+					_IFDEBUG debugReadingSpriteInfo (nSR);
+				}
+			}
+
+			break;
+
+		// Manages the situation of the border...
+		case 63:
+			{ 
+				actualizeVerticalBorderStatus ();
+			}
+
+			break;
+
+		default:
+			break;
+	}
+
+	return (result);
+}
+
+// ---
+COMMODORE::VICII_NTSC::VICII_NTSC (int intId, MCHEmul::PhysicalStorageSubset* cR,
+		const MCHEmul::Address& cRA, int vV)
+	: COMMODORE::VICII (intId, cR, cRA,
+		 _VRASTERDATA, _HRASTERDATA, vV, 64,
+		 { { "Name", "VIC-II (NTSC) Video Chip Interface II" },
+		   { "Code", "6567R56A(NMOS 64 cycles)/8582(HMOS)/8564(HMOS in C128)" },
+		   { "Manufacturer", "MOS Technology INC/Commodore Semiconductor Group (CBM)"},
+		   { "Year", "1983" } })
+{
+	// This value - the initial position in the row divided by 8 must have a rest of 0
+	_IRQrasterPosition = 412;
+}
+
+// ---
+unsigned int COMMODORE::VICII_NTSC::treatRasterCycle ()
+{
+	unsigned int result = COMMODORE::VICII::treatRasterCycle ();
+
+	switch (_cycleInRasterLine)
+	{
+		// Read sprite 0 to 2 data?
+		// At the last cycles...
+		case 60:
+		case 62:
+		case 64:
+			{
+				// Is there sprite info available?
+				unsigned short nSR = ((_cycleInRasterLine - 60) >> 1); // 0, 1 or 2
+				if (readSpriteData (nSR))
+				{
+					result += 2;	// VICII has to read three bytes, Meaning 2 clock cycles stopped more... 
+
+					_IFDEBUG debugReadingSpriteInfo (nSR);
+				}
+
+				// In NTSC, update the vertical border state only once,
+				// at the last raster cycle of the line.
+				if (_cycleInRasterLine == 64)
+					actualizeVerticalBorderStatus ();
+			}
+
+			break;
+
+		default:
+			break;
+	}
 
 	return (result);
 }

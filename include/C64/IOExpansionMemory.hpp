@@ -48,7 +48,13 @@ namespace C64
 		private:
 		/** Just to send a notification when set happens. */
 		virtual void setValue (size_t p, const MCHEmul::UByte& v) override;
-		/** Just to send a notification when read happens. */
+		/** Just to send a notification when read happens. 
+			The expansion zone can or not be connected to e.g a cartridge. 
+			OCEAN cartridge types used the posicion 0 of the expansion zone (0xde00) to 
+			activate or desativate internal banks. \n
+			But when the expansion is not connected https://www.cebix.net/VIC-Article.txt says that 
+			the value might reflect the last VICII value read in some C64 versions. \n
+			This behaviour is not emulated in this version of the emulation. */
 		virtual const MCHEmul::UByte& readValue (size_t p) const override;
 	};
 

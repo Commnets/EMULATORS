@@ -152,7 +152,16 @@ Id:@ID@
 ->VICIIRegisters:
 @VICIIRegisters>@
 @Raster>@
-Badline:@BADLINE@, Line Cycle:@Cycle@
+->Badline:
+Current Cycle:@Cycle@
+DEN:@DENSeenAtLine30@
+Condition:@BadlineCondition@ 
+Detected:@BadlineDetected@
+BA Requested:@BadlineBARequested@
+BA Cycle:@BadlineBARequestCycle@
+First CAccess:@BadlineFirstCAccessCycle@
+CAccess:@BadlineCAccess@
+CAccess Cycle:@BadlineCAccessStartCycle@
 @VICIIInternal>@
 #---
 #---

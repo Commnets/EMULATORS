@@ -32,7 +32,9 @@ namespace C64
 
 		private:
 		/** The high nibble of the color RAM Memory bytes are not connected, 
-			so when a value is requested a random value is returned in them. */
+			so when a value is requested a random value is returned in them. \n
+			https://www.cebix.net/VIC-Article.txt says that in some C64 the last value read by the 
+			VICII could be returned in the high nibble. However the behaviour emulated here is the random one. */
 		virtual const MCHEmul::UByte& readValue (size_t p) const override
 							{ return (_lastValue = MCHEmul::PhysicalStorageSubset::readValue (p) & 0x0f | 
 								(unsigned char) ((rand () % 0x10) << 4)); }
