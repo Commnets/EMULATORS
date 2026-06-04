@@ -225,6 +225,8 @@ namespace MCHEmul
 		/** To retrieve data from a peripheral into a file. 
 			Returns true when the data was sucessfully saved and false in other circunstance. */
 		bool saveDataFromPeripheral (const std::string& fN, int id);
+		/** To clear the peripheral data. */
+		bool clearPeripheralData ();
 		/** To disconnect the peripherals. */
 		bool disconnectPeripheral (int id)
 							{ return (_computer -> disconnectPeripheral (id)); }

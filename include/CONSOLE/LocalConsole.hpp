@@ -80,6 +80,9 @@ namespace MCHEmul
 			The parameters are the id of the peripheral and the file where to save the info. \n
 			The peripheral has to exists and the format generated from it must have the possibility to be saved. */
 		InfoStructure savePeripheralData (const std::string& prms) const;
+		/** To clear data loaded. \n
+			Usually to start back with a new version. */
+		InfoStructure clearPeripheralData (const std::string& prms) const;
 
 		protected:
 		Strings parametersListFrom (const std::string& cmd) const;

@@ -110,6 +110,10 @@ namespace MCHEmul
 		virtual InfoStructure getInfoStructure () const override;
 
 		private:
+		/** Just to advance the internal state.
+			It is really an implemention method. */
+		void advanceState ();
+
 		/** To calculate the internal data needed to later "draw" the voice. \n
 			It could be overloaded to include more intenal data needed
 			depending on the type of voice. \n
@@ -121,6 +125,8 @@ namespace MCHEmul
 		unsigned short _attack, _decay, _release;
 		/** The volumen for sustain. From 0 to 1. */
 		double _sustainVolumen;
+		/** The volumen from which the release phase starts. From 0 to 1. */
+		double _releaseInitialVolumen;
 
 		// Implementation
 		/** The status in which the wave is in. */
@@ -175,7 +181,8 @@ namespace MCHEmul
 							{ return (_active); }
 		/** It can be overloaded for special purposes. 
 			This methid manages also the envelope by default. */
-		virtual void setActive (bool a);
+		virtual void setActive (bool a)
+							{ _active = a; }
 	
 		// To manage the waves...
 		const SoundWaves& waves () const
@@ -192,6 +199,8 @@ namespace MCHEmul
 							{ return (_envelope); }
 		SoundEnvelope* envelope ()
 							{ return ((SoundEnvelope*) (((const SoundVoice*) (this)) -> envelope ())); }
+		void setEnvelopeActive (bool a) // To activate / desactivate the evelope (if any) only...
+							{ if (_envelope != nullptr) _envelope -> setActive (a); }
 
 		/** All waves being part of the voice must "vibrate" at the same frequency. \n
 			Take care because no boundary analysis is done. */
@@ -223,10 +232,7 @@ namespace MCHEmul
 			It can be overloaded later for special purposes. \n
 			The number returned is less than 1.0 if each of wavedData 
 			and envelopeData is well designed and returns less than 1.0. */
-		virtual double data () const
-							{ return (wavesData () * 
-								((_envelope != nullptr && _envelope -> active ()) 
-									? _envelope -> envelopeData () : 1.0)); }
+		virtual double data () const;
 
 		/**
 		  *	The name of the fields are: \n
@@ -240,7 +246,10 @@ namespace MCHEmul
 		virtual InfoStructure getInfoStructure () const override;
 
 		protected:
-		/** To calculate the value comming from the waves. */
+		/** To calculate the value comming from the waves. 
+			The values of the different waves are combined to produce the final output. 
+			That value would be a number between 0 and 1.0, 
+			as the data of each wave is between 0 and 1.0. */
 		double wavesData () const;
 
 		protected:

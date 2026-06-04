@@ -224,6 +224,24 @@ bool MCHEmul::Emulator::saveDataFromPeripheral (const std::string & fN, int id)
 }
 
 // ---
+bool MCHEmul::Emulator::clearPeripheralData ()
+{
+	bool result = false;
+
+	// There might no necessary be a file reader in memory 
+	// (it is necessary to read first one file at least!)
+	// but if there was one, it is cleared and the result is true, otherwise it is false.
+	if (_fileReader != nullptr)
+	{
+		_fileReader -> clearFilesInMemory ();
+
+		result = true;
+	}
+
+	return (result);
+}
+
+// ---
 MCHEmul::DataMemoryBlock MCHEmul::Emulator::loadBinaryFile (const std::string& fN, bool& e)
 {
 	MCHEmul::DataMemoryBlock result = 

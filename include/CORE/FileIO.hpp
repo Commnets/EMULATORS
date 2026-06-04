@@ -97,10 +97,13 @@ namespace MCHEmul
 	class FileIO final
 	{
 		public:
-		/** The parameters received will belong to the FileIO. */
-		FileIO (const FileTypeIOList& rL)
+		/** The parameters received will belong to the FileIO. 
+			The other parameter defines the max number of files kept in memory. 
+			Once the system tries to load the next one to the maximum, the rest are cleared. */
+		FileIO (const FileTypeIOList& rL, size_t mF = 100)
 			: _IOList (rL),
-			  _fileData ()
+			  _fileData (),
+			  _maxFiles (mF)
 							{ }
 
 		~FileIO ();
@@ -120,13 +123,43 @@ namespace MCHEmul
 			the content will be replaced. */
 		bool saveFile (FileData* fD, const std::string& fN, bool bE = true) const;
 
+		/** Clear the files loaded in memory. 
+			This method can be invoked externally. */
+		inline void clearFilesInMemory () const;
+
+		private:
+		/** Just to assign the file data to a specific file name,
+			but taken into account the max size of the files kept in memory. */
+		inline FileData* assignFile (const std::string& fN, FileData* fD) const;
+
 		private:
 		FileTypeIOList _IOList;
 
 		// Implementation
 		/** The data read per name of file. */
 		mutable std::map <std::string, FileData*> _fileData;
+		/** The max number of file kept. */
+		size_t _maxFiles;
 	};
+
+	// ---
+	void FileIO::clearFilesInMemory () const
+	{ 
+		for (const auto& i : _fileData) 
+			delete (i.second); // Delete the content...
+		_fileData.clear (); //...and nothing there!
+	}
+
+	// ---
+	inline FileData* FileIO::assignFile (const std::string& fN, FileData* fD) const
+	{
+		if (_fileData.size () >= _maxFiles)
+			clearFilesInMemory ();
+
+		_fileData [fN] = fD;
+
+		return (fD);
+	}
 
 	/** Struct to content a very basic raw data. \n
 		This structure is (C) Ignacio Cea Fornies. \n 

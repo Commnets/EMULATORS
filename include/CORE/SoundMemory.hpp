@@ -39,7 +39,7 @@ namespace MCHEmul
 		SoundMemory& operator = (const SoundMemory&) = delete;
 
 		virtual ~SoundMemory ()
-							{ delete (_samplingData); }
+							{ delete [] _samplingData; }
 
 		SoundMemory (SoundMemory&&) = delete;
 

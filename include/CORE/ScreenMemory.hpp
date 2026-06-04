@@ -52,10 +52,12 @@ namespace MCHEmul
 		// Take into account that no bounds checking is done...
 		void setPixel (size_t x, size_t y, unsigned int color)
 							{ _frameData [y * _columns + x] = _colorPalette [color]; }
-		void setHorizontalLine (size_t x, size_t y, size_t nP, unsigned int color)
-							{ for (unsigned int i = 0; i < nP; setPixel (x + i++, y, color)); }
+		void setPixel (size_t pos, unsigned int color) // A quicker version..straight to the position!
+							{ _frameData [pos] = _colorPalette [color]; }
+		void setHorizontalLine (size_t x, size_t y, size_t nP, unsigned int color) // Used very often, so 1 multiplication per line!
+							{ size_t iP = y * _columns + x; for (unsigned int i = 0; i < nP; setPixel (iP + i++, color)); }
 		void setHorizontalLineStep (size_t x, size_t y, size_t nP, unsigned int color, unsigned int s)
-							{ for (unsigned int i = 0; i < (nP - s); setPixel (x + (i += s), y, color)); }
+							{ size_t iP = y * _columns + x; for (unsigned int i = 0; i < (nP - s); setPixel (iP + (i += s), color)); }
 		void setVerticalLine (size_t x, size_t y, size_t nP, unsigned int color)
 							{ for (unsigned int i = 0; i < nP; setPixel (x, y + i++, color)); }
 		void setVerticalLineStep (size_t x, size_t y, size_t nP, unsigned int color, unsigned int s)

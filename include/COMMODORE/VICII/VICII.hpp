@@ -178,7 +178,7 @@ namespace COMMODORE
 		  *		request to access to the character data happens. \n
 		  * BadlineFirstCAccessCycle		= Attribute: Number of the VICII internal cycle where the first 
 		  *		access to the character data happens. \n
-		  * BadlineNormalCAccessAllowed     = Attribute: Whether the latched c-access sequence is allowed 
+		  * BadlineCAccessAllowed			= Attribute: Whether the latched c-access sequence is allowed 
 		  *		to perform normal Video Matrix / Color RAM reads in this raster line. \n
 		  * BadlineCAccessStartCycle		= Attribute: Number of the VICII internal cycle where the access to the character data starts. \n
 		  * Cycle							= Attribute: Number of the VICII internal cycle where the raster beam is. \n
@@ -336,8 +336,9 @@ namespace COMMODORE
 		/** To treat a bad-line c-access cycle.
 			Returns the number of CPU cycles that have to be fully stolen. */
 		inline unsigned int treatBadLineCAccessCycle ();
-		/** To determine the first effective c-access cycle for the current bad line.
-			0 means that no effective c-access cycle has been defined. */
+		/** To determine the first attempted c-access cycle for the current bad-line sequence. \n
+			The first attempts can be invalid DMA-delay/FLI accesses returning $ff.
+			0 means that no c-access sequence has been defined. */
 		inline unsigned short firstBadLineCAccessCycle () const;
 		/** To determine whether the VIC-II is doing a bad-line c-access in this cycle. */
 		inline bool isBadLineCAccessCycle () const;
@@ -425,8 +426,9 @@ namespace COMMODORE
 		// Final drawing output and collision status.
 		/** To move the computed graphics/sprite result to screen memory. */
 		void drawResultToScreen (const DrawResult& cT, const DrawContext& dC);
-		/** To detect collisions between graphics and sprites, and between sprites. */
-		void detectCollisions (const DrawResult& cT);
+		/** To detect collisions between graphics and sprites, and between sprites. 
+			The second parameter is a byte which bits points out which sprites were or not drawn. */
+		void detectCollisions (const DrawResult& cT, const MCHEmul::UByte& sD);
 
 		// Optional event visualization.
 		/** To draw debug/event markers if _drawOtherEvents is active. */
@@ -509,8 +511,8 @@ namespace COMMODORE
 			The number of max cycles is get from the method (@see) "cyclesPerRasterLine". */
 		unsigned short _cycleInRasterLine;
 		/** Last byte read by the VIC-II from the 8-bit memory data bus. \n
-			This is not used directly for drawing yet. It is needed to model
-			open-bus behaviour and later invalid/late c-access effects. */
+			It is updated by matrix, graphics, sprite and invalid DMA-delay/FLI
+			accesses. It is not yet connected to CPU open-bus reads. */
 		MCHEmul::UByte _lastVICDataRead;
 		/** True when DEN has been active at least once during raster line $30. */
 		bool _DENSeenAtLine30;
@@ -532,19 +534,21 @@ namespace COMMODORE
 		/** Raster cycle where the BA-like CPU stop request for the current bad line
 			was issued. 0 means that no BA request has been issued for this line. */
 		unsigned short _badLineBARequestCycle;
-		/** True when a bad-line c-access sequence has been latched for the current	raster line. \n
-			This does not necessarily mean that normal Video Matrix / Color RAM reads
-			will be performed: late or aborted bad lines can keep timing/state effects
-			while normal matrix/color reads are blocked by
-			_badLineNormalCAccessAllowedThisLine. */
+		/** True when a bad-line c-access sequence has been latched for the current raster line. \n
+			This does not necessarily mean that real Video Matrix / Color RAM reads
+			will be performed: some attempts can be invalid DMA-delay/FLI accesses
+			returning $ff, and aborted sequences can be blocked by
+			_badLineCAccessAllowedThisLine. */
 		bool _badLineCAccessActive;
 		/** True when the current bad-line c-access sequence is allowed to perform
-			normal Video Matrix / Color RAM reads. \n
-			In this emulator model, normal c-accesses are allowed only if the Bad Line
-			Condition was active at cycle 14. Late bad lines can still affect BA/timing,
-			but they must not refill the matrix/color buffers until FLI/DMA-delay
-			behaviour is explicitly modelled. */
-		bool _badLineNormalCAccessAllowedThisLine;
+			matrix/color access attempts in this raster line. \n
+			Some of those attempts can be invalid DMA-delay/FLI accesses and therefore
+			write $ff instead of reading real Video Matrix data. */
+		bool _badLineCAccessAllowedThisLine;
+		/** Number of initial c-access attempts that must read $ff instead of real
+			Video Matrix data. \n
+			This models the AEC/BA delay effect used by FLI / DMA delay / VSP. */
+		unsigned short _badLineInvalidCAccessCycles;
 		/** Raster cycle where the current bad-line c-access sequence started.
 			0 means that no c-access sequence is active in the current line. */
 		unsigned short _badLineCAccessStartCycle;
@@ -564,9 +568,10 @@ namespace COMMODORE
 		  * In display state:
 		  * - g-accesses read character or bitmap graphics data;
 		  * - VC and the logical VMLI/VLMI advance after each g-access;
-		  * - normal bad-line c-accesses fill the internal 40-byte Video Matrix /
-		  *   Color RAM line buffer only when the bad-line sequence has been accepted
-		  *   and normal matrix/color reads are allowed for the current raster line.		  
+		  * - bad-line c-access attempts can fill the internal 40-byte Video Matrix /
+		  *   Color RAM line buffer either with real matrix/color data or, in DMA-delay /
+		  *   FLI cases, with initial invalid $ff screen-code data and provisional color
+		  *   data before normal matrix/color reads resume.
 		  *
 		  *	In idle state:
 		  *	- no new Video Matrix / Color RAM c-accesses are performed;
@@ -581,8 +586,10 @@ namespace COMMODORE
 		  *
 		  *	Relevant raster-cycle rules in this implementation:
 		  * - At cycle 14, VC is loaded from VCBASE and the line access indexes are reset.
-		  *   If a Bad Line Condition is active, RC is reset to 0 and normal matrix/color
-		  *   c-accesses are allowed for this line. If the condition was latched earlier
+		  *   If a Bad Line Condition is active, RC is reset to 0 and c-access attempts
+		  *   are allowed for this line. If the sequence was first latched at cycle 14,
+		  *   the first attempts are treated as invalid FLI/DMA-delay accesses.
+		  *   If the condition was latched earlier
 		  *   but is no longer active at cycle 14, the c-access sequence is cancelled. 
 		  *	- Effective graphics accesses are grouped in cycles 16..55 in this emulator.
 		  *	  During these accesses, _GAccessIndex always advances. VC and _VLMI advance
@@ -798,8 +805,10 @@ namespace COMMODORE
 
 		// Latch a bad-line c-access sequence if the condition appears inside
 		// Bauer's BA/c-access start window. This preserves the timing/state effect.
-		// Normal Video Matrix / Color RAM reads are allowed later only if the
-		// condition is still active at cycle 14.
+		// If the sequence is already valid at cycle 14, normal/FLI-like c-access
+		// handling is decided there. If it appears after cycle 14, it is treated as
+		// a late DMA-delay/VSP-like sequence: c-access attempts are allowed, but the
+		// first ones return invalid $ff data.
 		if (!_badLineCAccessActive &&
 			_badLineConditionActive &&
 			_cycleInRasterLine >= _BADLINE_START_FIRST_CYCLE &&
@@ -807,6 +816,16 @@ namespace COMMODORE
 		{
 			_badLineCAccessActive = true;
 			_badLineCAccessStartCycle = _cycleInRasterLine;
+
+			// If the Bad Line Condition appears after cycle 14, this is a late
+			// DMA-delay/VSP-like sequence. Cycle 14 has already passed, so the line
+			// will not be validated by treatGraphicFetchStartCycle(). Allow c-access
+			// attempts here and mark the first three as invalid.
+			if (_cycleInRasterLine > 14)
+			{
+				_badLineCAccessAllowedThisLine = true;
+				_badLineInvalidCAccessCycles = 3;
+			}
 		}
 	}
 
@@ -819,7 +838,8 @@ namespace COMMODORE
 		_badLineBAAlreadyRequested = false;
 		_badLineBARequestCycle = 0;
 		_badLineCAccessActive = false;
-		_badLineNormalCAccessAllowedThisLine = false;
+		_badLineCAccessAllowedThisLine = false;
+		_badLineInvalidCAccessCycles = 0;
 		_badLineCAccessStartCycle = 0;
 	}
 
@@ -917,20 +937,34 @@ namespace COMMODORE
 		resetGraphicAccessCountersForCurrentLine ();
 
 		// Cycle 14 is the decisive point for a normal bad-line matrix fetch.
-		// If the Bad Line Condition is active here, normal Video Matrix / Color RAM
-		// reads are allowed for this line. Late bad lines keep their timing effects
-		// but must not refill the matrix/color buffers yet.
-		_badLineNormalCAccessAllowedThisLine = _badLineConditionActive;
+		// If the Bad Line Condition is active here, the c-access sequence is allowed
+		// for this line. A sequence first latched at cycle 14 is treated as FLI-like:
+		// the first c-access attempts return $ff before normal matrix/color reads.
+		// Bad lines that appear after cycle 14 are enabled later by
+		// treatBadLineStateAtCurrentCycle() as DMA-delay/VSP-like sequences.
+		_badLineCAccessAllowedThisLine = _badLineConditionActive;
+		_badLineInvalidCAccessCycles = 0;
 
 		if (_badLineConditionActive)
+		{
+			// A normal or FLI-like bad line is valid at cycle 14.
+			// If the c-access sequence was first latched exactly at cycle 14,
+			// emulate the FLI/DMA-delay effect: the first three c-access attempts
+			// read $ff on D0-D7.
+			if (_badLineCAccessActive &&
+				_badLineCAccessStartCycle == 14)
+				_badLineInvalidCAccessCycles = 3;
+
 			_vicGraphicInfo._RC = 0;
+		}
 		else
 		{
 			// A bad-line c-access sequence could have been latched in cycles 12/13
 			// and then aborted before cycle 14. The sequencer remains in display
 			// state, but no normal matrix/color c-accesses continue.
 			_badLineCAccessActive = false;
-			_badLineNormalCAccessAllowedThisLine = false;
+			_badLineCAccessAllowedThisLine = false;
+			_badLineInvalidCAccessCycles = 0;
 			_badLineCAccessStartCycle = 0;
 		}
 	}
@@ -992,6 +1026,33 @@ namespace COMMODORE
 		if (!isBadLineCAccessCycle ())
 			return (0);
 
+		const unsigned short fCA = firstBadLineCAccessCycle ();
+
+		const bool invalidCAccess =
+			_badLineInvalidCAccessCycles > 0 &&
+			_cycleInRasterLine >= fCA &&
+			_cycleInRasterLine < (fCA + _badLineInvalidCAccessCycles);
+		if (invalidCAccess)
+		{
+			const size_t gAI = graphicAccessIndex ();
+
+			// During the first invalid DMA-delay/FLI c-accesses, the VIC reads
+			// $ff on D0-D7 instead of valid Video Matrix data.
+			_vicGraphicInfo._lastScreenCodeDataRead =
+				_lastVICDataRead =
+				_vicGraphicInfo._screenCodeData [gAI] = MCHEmul::UByte::_FF;
+
+			// Accurate Color RAM data during these invalid cycles depends on CPU
+			// bus data. Until that bus latch is modelled, use $0f as a deterministic
+			// approximation.
+			_vicGraphicInfo._lastColorDataRead =
+				_vicGraphicInfo._colorData [gAI] = MCHEmul::UByte::_0F;
+
+			_IFDEBUG debugReadingVideoMatrix ();
+
+			return (1);
+		}
+
 		readVideoMatrixAndColorRAM ();
 
 		_IFDEBUG debugReadingVideoMatrix ();
@@ -1006,8 +1067,17 @@ namespace COMMODORE
 			_badLineCAccessStartCycle == 0)
 			return (0);
 
-		unsigned short result = _badLineCAccessStartCycle + 3;
-		if (result < 16) result = 16;
+		// In this grouped model, normal bad lines and FLI-like bad lines that
+		// are active by cycle 14 start their attempted c-accesses at cycle 16.
+		// Late DMA-delay/VSP sequences start after the BA/AEC delay.
+		unsigned short result =
+			(_badLineCAccessStartCycle <= 14)
+				? _BADLINE_EFFECTIVE_CACCESS_FIRST_CYCLE
+				: (unsigned short) (_badLineCAccessStartCycle + 3);
+
+		if (result < _BADLINE_EFFECTIVE_CACCESS_FIRST_CYCLE)
+			result = _BADLINE_EFFECTIVE_CACCESS_FIRST_CYCLE;
+
 		return (result);
 	}
 
@@ -1016,7 +1086,7 @@ namespace COMMODORE
 	{
 		const unsigned short fCA = firstBadLineCAccessCycle ();
 		return (
-			_badLineNormalCAccessAllowedThisLine &&
+			_badLineCAccessAllowedThisLine &&
 			fCA != 0 &&
 			_cycleInRasterLine >= _BADLINE_EFFECTIVE_CACCESS_FIRST_CYCLE &&
 			_cycleInRasterLine <= _BADLINE_EFFECTIVE_CACCESS_LAST_CYCLE &&

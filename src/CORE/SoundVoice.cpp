@@ -5,6 +5,7 @@ MCHEmul::SoundADSREnvelope::SoundADSREnvelope (unsigned int cF,
 			unsigned short a, unsigned short d, unsigned short r)
 	: MCHEmul::SoundEnvelope (cF),
 	  _attack (a), _decay (d), _release (r),
+	  _sustainVolumen (0.0f), _releaseInitialVolumen (0.0f),
 	  _state (State::_ATTACK),
 	  _stateCounters (5 /** The five internal states of the wave = ADSR+Idle */, StateCounters ()) // All to 0...
 {
@@ -25,6 +26,9 @@ void MCHEmul::SoundADSREnvelope::setStart (bool s)
 	else /** Only when no idle. */ 
 	if (_state != MCHEmul::SoundADSREnvelope::State::_IDLE) 
 	{ 
+		// The value from which the release phase starts.
+		_releaseInitialVolumen = envelopeData (); 
+
 		_state = State::_RELEASE; 
 
 		iC = true; 
@@ -40,6 +44,7 @@ void MCHEmul::SoundADSREnvelope::initialize ()
 	_attack = _decay = _release = 0; 
 	
 	_sustainVolumen = 0.0f;
+	_releaseInitialVolumen = 0.0f;
 
 	_state = State::_ATTACK;
 
@@ -57,51 +62,53 @@ void MCHEmul::SoundADSREnvelope::initializeInternalCounters ()
 // ---
 void MCHEmul::SoundADSREnvelope::clock (unsigned int nC)
 {
-	if (_state == State::_SUSTAIN)
+	if (nC == 0)
 		return;
 
-	bool end = false;
-	while (!end)
+	if (_state == State::_SUSTAIN || _state == State::_IDLE)
+		return;
+
+	unsigned int remainingCycles = nC;
+	while (remainingCycles > 0 &&
+		   _state != State::_SUSTAIN &&
+		   _state != State::_IDLE)
 	{
-		MCHEmul::SoundADSREnvelope::StateCounters& sCA = _stateCounters [(int) _state];
-		if (++sCA._counterCyclesPerState > sCA._cyclesPerState)
+		State currentState = _state;
+		StateCounters& sC = _stateCounters [(int) currentState];
+
+		// If the state has zero duration, 
+		// it is completed immediately....
+		if (sC._cyclesPerState == 0)
 		{
-			sCA._counterCyclesPerState = 0;
+			sC._counterCyclesPerState = 0;
+			sC._limit = true;
 
-			switch (_state)
-			{
-				case MCHEmul::SoundADSREnvelope::State::_ATTACK: 
-					_state = State::_DECAY;
-					break;
+			advanceState ();
+			if (_state != State::_SUSTAIN && _state != State::_IDLE)
+				_stateCounters [(int) _state].initialize ();
 
-				case MCHEmul::SoundADSREnvelope::State::_DECAY:
-					_state = State::_SUSTAIN;
-					break;
-
-				/** This situation can not happen,
-					as the _SUSTAIN state can only be exit desactivating the signal. \n
-					This is the reason to be "SUSTIAN"! */
-				case MCHEmul::SoundADSREnvelope::State::_SUSTAIN:
-					break;
-
-				/** When the limit is reached the _RELEASE state is maintained. */
-				case MCHEmul::SoundADSREnvelope::State::_RELEASE:
-					_state = MCHEmul::SoundADSREnvelope::State::_IDLE;
-					break;
-
-				default:
-					break;
-			}
+			continue;
 		}
 
-		MCHEmul::SoundADSREnvelope::StateCounters& sCN = _stateCounters [(int) _state];
-		// The limit of the previous state was reached...
-		// unless the destination states is the same...
-		sCA._limit = (&sCA != &sCN);
-		// The loop finish when the new state is the same than previously...
-		// ...or different but not _IDLE! (it would mean that the status is changing in the same cycle)
-		end = (&sCA == &sCN) || 
-			((&sCA != &sCN) && _state == MCHEmul::SoundADSREnvelope::State::_IDLE);
+		unsigned int cyclesLeftInState =
+			sC._cyclesPerState - sC._counterCyclesPerState;
+		if (remainingCycles < cyclesLeftInState)
+		{
+			sC._counterCyclesPerState += remainingCycles;
+			remainingCycles = 0;
+		}
+		else
+		{
+			// The current state reaches its limit.
+			remainingCycles -= cyclesLeftInState;
+
+			sC._counterCyclesPerState = sC._cyclesPerState;
+			sC._limit = true;
+
+			advanceState ();
+			if (_state != State::_SUSTAIN && _state != State::_IDLE)
+				_stateCounters [(int) _state].initialize ();
+		}
 	}
 }
 
@@ -117,31 +124,54 @@ double MCHEmul::SoundADSREnvelope::envelopeData () const
 	switch (_state)
 	{
 		case MCHEmul::SoundADSREnvelope::State::_ATTACK:
-			// When the limit was reached, the state will have been move to _DECAY...
-			result = MCHEmul::linearInterpolation 
-				(0.0f, 0.0f, sC._cyclesPerState, 1.0f, sC._counterCyclesPerState);
+			{
+				// When the limit was reached, the state will have been move to _DECAY...
+				result = (sC._cyclesPerState == 0) 
+					? 1.0f
+					: MCHEmul::linearInterpolation 
+						(0.0f, 0.0f, sC._cyclesPerState, 1.0f, sC._counterCyclesPerState);
+			}
+
 			break;
 
 		case MCHEmul::SoundADSREnvelope::State::_DECAY:
-			// When the limit was reached, the state will have been move to _SUSTAIN...
-			result = MCHEmul::linearInterpolation
-				(0.0f, 1.0f, sC._cyclesPerState, _sustainVolumen, sC._counterCyclesPerState);
+			{
+				// When the limit was reached, the state will have been move to _SUSTAIN...
+				result = (sC._cyclesPerState == 0) 
+					? _sustainVolumen
+					: MCHEmul::linearInterpolation
+						(0.0f, 1.0f, sC._cyclesPerState, _sustainVolumen, sC._counterCyclesPerState);
+			}
+
 			break;
 
 		case MCHEmul::SoundADSREnvelope::State::_SUSTAIN:
-			// in _SUSTAIN there is no limits in time...
-			result = _sustainVolumen;
+			{
+				// in _SUSTAIN there is no limits in time...
+				result = _sustainVolumen;
+			}
+
 			break;
 
 		case MCHEmul::SoundADSREnvelope::State::_RELEASE:
-			// When the limit was reached, the state will have been move to _IDLE...
-			result = MCHEmul::linearInterpolation
-				(0.0f, _sustainVolumen, sC._cyclesPerState, 0.0f, sC._counterCyclesPerState);
+			{
+				// When the limit was reached, the state will have been move to _IDLE...
+				result = (sC._cyclesPerState == 0) 
+					? 0.0f
+					: MCHEmul::linearInterpolation
+						(0.0f, _releaseInitialVolumen, sC._cyclesPerState, 0.0f, sC._counterCyclesPerState);
+			}
+
 			break;
 
 		case MCHEmul::SoundADSREnvelope::State::_IDLE:
-			result = 0.0f;
+			{
+				result = 0.0f;
+			}
 
+			break;
+
+		// Not needed, but to avoid warnings...
 		default:
 			break;
 	}
@@ -164,6 +194,28 @@ MCHEmul::InfoStructure MCHEmul::SoundADSREnvelope::getInfoStructure () const
 						"--" + std::to_string (_release)); // Like a resume used sometimes...
 
 	return (result);
+}
+
+// ---
+void MCHEmul::SoundADSREnvelope::advanceState ()
+{
+	switch (_state)
+	{
+		case State::_ATTACK:
+			_state = State::_DECAY;
+			break;
+
+		case State::_DECAY:
+			_state = State::_SUSTAIN;
+			break;
+
+		case State::_RELEASE:
+			_state = State::_IDLE;
+			break;
+
+		default:
+			break;
+	}
 }
 
 // ---
@@ -215,16 +267,6 @@ MCHEmul::SoundVoice::~SoundVoice ()
 }
 
 // ---
-void MCHEmul::SoundVoice::setActive (bool a)
-{ 
-	if (_envelope != nullptr) 
-		_envelope -> setActive (a);
-
-	if ((_active != a) && (_active = a))
-		initializeInternalCounters (); 
-}
-
-// ---
 void MCHEmul::SoundVoice::initialize ()
 { 
 	setActive (false); // By default...
@@ -249,14 +291,22 @@ void MCHEmul::SoundVoice::initializeInternalCounters ()
 // ---
 void MCHEmul::SoundVoice::clock (unsigned int nC)
 { 
-	if (!_active)
-		return;
-
 	for (const auto& i : _waves)
 		i -> clock (nC);
 
 	if (_envelope != nullptr)
 		_envelope -> clock (nC);
+}
+
+// ---
+double MCHEmul::SoundVoice::data () const
+{ 
+	if (!_active)
+		return (0.0f);
+
+	return (wavesData () * 
+		((_envelope != nullptr && _envelope -> active ()) 
+			? _envelope -> envelopeData () : 1.0));
 }
 
 // ---
@@ -282,12 +332,24 @@ MCHEmul::InfoStructure MCHEmul::SoundVoice::getInfoStructure () const
 double MCHEmul::SoundVoice::wavesData () const
 {
 	double result = 0.0; 
-						 
+			
+	size_t nAW = 0; // Number of active waves...
 	for (auto i : _waves) 
+	{
 		if (i -> active ()) // Only when the wave active...
-			result += (i -> data () * 
-				((_envelope != nullptr) ? _envelope -> envelopeData () : 1.0f));
+		{
+			result += i -> data (); // Pure adding...
+
+			nAW++;
+		}
+	}
+
+	// To have a number between 0 and 1.0, 
+	// as the data of each wave is between 0 and 1.0.
+	result /= (nAW == 0) ? 1.0f : (double) nAW; 
 
 	// It can not be bigger that 1.0f...
+	// ...it should be, but just in cese, 
+	// to avoid problems with the sound output, it is limited to 1.0f.
 	return ((result > 1.0f) ? 1.0f : result);
 }

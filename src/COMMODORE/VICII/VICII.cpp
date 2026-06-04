@@ -51,7 +51,8 @@ COMMODORE::VICII::VICII (int intId, MCHEmul::PhysicalStorageSubset* cR, const MC
 	  _badLineBAAlreadyRequested (false),
 	  _badLineBARequestCycle (0),
 	  _badLineCAccessActive (false),
-	  _badLineNormalCAccessAllowedThisLine (false),
+	  _badLineCAccessAllowedThisLine (false),
+	  _badLineInvalidCAccessCycles (0),
 	  _badLineCAccessStartCycle (0),
 	  _lastVBlankEntered (false),
 	  _lightPenFrameLatched (false), _lightPenButtonPressed (false),
@@ -117,7 +118,8 @@ bool COMMODORE::VICII::initialize ()
 	_badLineBAAlreadyRequested = false;
 	_badLineBARequestCycle = 0;
 	_badLineCAccessActive = false;
-	_badLineNormalCAccessAllowedThisLine = false;
+	_badLineCAccessAllowedThisLine = false;
+	_badLineInvalidCAccessCycles = 0;
 	_badLineCAccessStartCycle = 0;
 
 	_lastVBlankEntered = false;
@@ -207,6 +209,9 @@ bool COMMODORE::VICII::simulate (MCHEmul::CPU* cpu)
 		// - switching from idle state to display state when a new bad line
 		//   is accepted,
 		// - latching a c-access sequence if the condition appears inside
+		//   the c-access start window. Cycle-14 sequences are validated there;
+		//   later sequences are handled as DMA-delay/VSP-like c-access attempts.
+		// - latching a c-access sequence if the condition appears inside
 		//   the c-access start window. Normal matrix/color reads are later
 		//   validated at cycle 14.		
 		treatBadLineStateAtCurrentCycle ();
@@ -220,6 +225,7 @@ bool COMMODORE::VICII::simulate (MCHEmul::CPU* cpu)
 
 		// Phase 3: execute the VIC-II activity associated with the current raster cycle.
 		// This performs cycle-specific actions such as sprite data reads,
+		// normal or invalid bad-line c-access attempts, graphic-data reads,
 		// effective bad-line matrix/color accesses when allowed, graphic-data reads,
 		// VC/VLMI advancement, RC handling and sprite activation/deactivation.
 		treatRasterCycleAndRequestCPUStopIfNeeded (cpu, cC);
@@ -287,7 +293,8 @@ MCHEmul::InfoStructure COMMODORE::VICII::getInfoStructure () const
 	result.add ("BadlineBARequestCycle",		_badLineBARequestCycle);
 	result.add ("BadlineFirstCAccessCycle",		firstBadLineCAccessCycle ());
 	result.add ("BadlineCAccess",				std::string (_badLineCAccessActive ? "YES" : "NO"));
-	result.add ("BadlineNormalCAccessAllowed",	std::string (_badLineNormalCAccessAllowedThisLine ? "YES" : "NO"));
+	result.add ("BadlineCAccessAllowed",		std::string (_badLineCAccessAllowedThisLine ? "YES" : "NO"));
+	result.add ("BadlineInvalidCAccessCycles",	_badLineInvalidCAccessCycles);
 	result.add ("BadlineCAccessStartCycle",		_badLineCAccessStartCycle);
 	result.add ("Cycle",						_cycleInRasterLine);
 	result.add ("LastVICDataRead",				_lastVICDataRead.asString (MCHEmul::UByte::OutputFormat::_HEXA));
@@ -844,18 +851,30 @@ void COMMODORE::VICII::drawGraphicsSpritesAndDetectCollisions (const COMMODORE::
 	COMMODORE::VICII::DrawResult colGraphics = std::move (drawGraphics (dC));
 
 	// The info about the sprites is moved into this variable too...
+	MCHEmul::UByte sCF = MCHEmul::UByte::_0; // to know whether there were at least one sprite drawn!
 	for (int i = 7; i >= 0; i--)
 	{
 		if (_vicSpriteInfo [(size_t) i]._active)
+		{
 			colGraphics._collisionSpritesData [(size_t) i] = 
 				std::move (drawSpriteOver ((size_t) i, colGraphics._spriteColor, 
 					colGraphics._spriteColorOwner));
+
+			// If a sprite has drawn something, the bit with its number will be set!
+			// It can be later used to even speed up more the detection of the collisions...
+			if (colGraphics._collisionSpritesData [(size_t) i] != MCHEmul::UByte::_0)
+				sCF.setBit ((size_t) i, true);
+		}
 	}
 
 	// The graphical info is moved to the screen...
 	drawResultToScreen (colGraphics, dC);
+
 	// ...and the collisions are also detected...
-	detectCollisions (colGraphics);
+	// when there were sprites drawn!
+	// It is done just to speed up the while drawn cycle a lot!
+	if (sCF != MCHEmul::UByte::_0)
+		detectCollisions (colGraphics, sCF);
 }
 
 // ---
@@ -1477,15 +1496,32 @@ void COMMODORE::VICII::drawResultToScreen (const COMMODORE::VICII::DrawResult& c
 }
 
 // ---
-void COMMODORE::VICII::detectCollisions (const DrawResult& cT)
+void COMMODORE::VICII::detectCollisions (const DrawResult& cT, const MCHEmul::UByte& sD)
 {
 	// Now it is time to detect collisions...
 	// First among the graphics and the sprites
 	bool cGS = false;
 	for (size_t i = 0; i < 8; i++)
+	{
+		if (!sD.bit (i))
+			continue; // This sprite didn't exist at that block of pixels, 
+					  // so it can't be in collision with the graphics...
+				
 		// ...at the first collision detected, the check stops...
-		if ((cGS |= (cT._collisionSpritesData [i].value () & cT._collisionGraphicData.value ()) != 0x00)) 
+		if ((cT._collisionSpritesData [i] &
+			 cT._collisionGraphicData) != MCHEmul::UByte::_0)
+		{
+			// At least one collision between graphics 
+			// and the sprite has happened...
+			cGS = true; 
+
+			// ...and marked it for that sprite...
 			_VICIIRegisters -> setSpriteCollisionWithDataHappened (i);
+		}
+	}
+
+	// If the collision between sprites and graphics has happened, 
+	// the corresponding IRQ is activated...
 	if (cGS) 
 		_VICIIRegisters -> activateSpriteCollisionWithDataIRQ ();
 	
@@ -1493,18 +1529,31 @@ void COMMODORE::VICII::detectCollisions (const DrawResult& cT)
 	bool cSS = false;
 	for (size_t i = 0; i < 8; i++)
 	{
+		if (!sD.bit (i))
+			continue; // This sprite didn't exist at that block of pixels, 
+					  // so it can't be in collision with the other sprites...
+
 		for (size_t j = i + 1; j < 8; j++)
 		{
-			if ((cSS = 
-					((cT._collisionSpritesData [i].value () & 
-					  cT._collisionSpritesData [j].value ()) != 0x00)))
+			if (!sD.bit (j))
+				continue; // This sprite didn't exist at that block of pixels, 
+						  // so it can't be in collision with the previous one...
+
+			if ((cT._collisionSpritesData [i] & 
+				 cT._collisionSpritesData [j]) != 0x00)
 			{ 
+				// At leat one collision happened between sprites...
+				cSS = true; 
+
+				// ...and marked it for both of them...
 				_VICIIRegisters -> setSpriteCollision (i);
 				_VICIIRegisters -> setSpriteCollision (j);
 			}
 		}
 	}
 
+	// If the collision between sprites has happened,
+	// the corresponding IRQ is activated...
 	if (cSS) 
 		_VICIIRegisters -> activateSpriteCollisionIRQ ();
 }
@@ -1601,7 +1650,8 @@ void COMMODORE::VICII::debugVICIICycle (MCHEmul::CPU* cpu, unsigned int i)
 			"BadlineBARequestCycle=" + std::to_string (_badLineBARequestCycle) + "," +
 			"BadlineFirstCAccessCycle=" + std::to_string (firstBadLineCAccessCycle ()) + "," +
 			"BadlineCAccess=" + std::to_string (_badLineCAccessActive) + "," +
-			"BadlineNormalCAccessAllowed=" + std::to_string (_badLineNormalCAccessAllowedThisLine) + "," +
+			"BadlineCAccessAllowed=" + std::to_string (_badLineCAccessAllowedThisLine) + "," +
+			"BadlineInvalidCAccessCycles=" + std::to_string (_badLineInvalidCAccessCycles) + "," +
 			"BadlineCAccessStartCycle=" + std::to_string (_badLineCAccessStartCycle) + "," +
 			"Cycle=" + std::to_string (_cycleInRasterLine) },
 		  { "Border", 

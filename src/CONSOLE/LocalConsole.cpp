@@ -51,6 +51,7 @@ void MCHEmul::LocalConsole::createAndExecuteCommand ()
 	std::string cmdLoadPeripheralData ("LOADPERDATA");
 	std::string cmdEmptyPeripheralData ("EMPTYPERDATA");
 	std::string cmdSavePeripheralData ("SAVEPERDATA");
+	std::string cmdClearPeripheralData ("CLEARPERDATA");
 
 	std::string cmdName = nameFor (_command);
 
@@ -99,6 +100,11 @@ void MCHEmul::LocalConsole::createAndExecuteCommand ()
 		outputStream () << MCHEmul::FormatterBuilder::instance () ->
 			formatter ("C" + cmdSavePeripheralData) -> format (savePeripheralData 
 				(prmsFor (_command, cmdSavePeripheralData))) << std::endl;
+	else
+	if (cmdName == cmdClearPeripheralData)
+		outputStream () << MCHEmul::FormatterBuilder::instance () ->
+			formatter ("C" + cmdClearPeripheralData) -> format (clearPeripheralData 
+			(prmsFor (_command, cmdClearPeripheralData))) << std::endl;
 	else
 	{
 		MCHEmul::Command* cmd = commandBuilder () -> command (_command);
@@ -376,6 +382,27 @@ MCHEmul::InfoStructure MCHEmul::LocalConsole::savePeripheralData (const std::str
 			((prmsL.size () == 1) ? "" : prmsL [1], std::atoi (prmsL [0].c_str ()))
 				? std::string ("No errors.")
 				: std::string ("The data was not connected to the peripheral.")));
+
+	return (result);
+}
+
+// ---
+MCHEmul::InfoStructure MCHEmul::LocalConsole::clearPeripheralData (const std::string& prms) const
+{
+	MCHEmul::InfoStructure result;
+
+	MCHEmul::Strings prmsL = parametersListFrom (prms);
+	if (prmsL.size () != 0)
+	{ 
+		result.add (std::string ("ERROR"), std::string ("Bad number of arguments"));
+
+		return (result);
+	}
+
+	result.add (std::string ("ERROR"), 
+		(_emulator -> clearPeripheralData ()
+			? std::string ("No errors.")
+			: std::string ("The data was not connected to the peripheral.")));
 
 	return (result);
 }

@@ -101,7 +101,8 @@ bool MCHEmul::SoundSystem::simulate (MCHEmul::CPU* cpu)
 				_conversionData.buf = (Uint8*) SDL_malloc (cvt_lencvt);
 				memcpy ((void*) _conversionData.buf, (void*) _soundChip -> soundMemory () -> samplingData (), _conversionData.len);
 				SDL_ConvertAudio (&_conversionData);
-				result = (SDL_QueueAudio (_deviceId, (void*) _conversionData.buf, cvt_lencvt) != -1);
+				result = (SDL_QueueAudio (_deviceId, 
+					(void*) _conversionData.buf, _conversionData.len_cvt) != -1);
 				SDL_free (_conversionData.buf);
 			}
 			else

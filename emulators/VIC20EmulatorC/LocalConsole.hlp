@@ -57,3 +57,7 @@ Parameters:
 Notes: 
 The FILENAME is not neccessary when the file has been created with EMPTYPERDATA o comes from LOADPERDATA.
 In that cases, the FILENAME used will be the the one used in those other commands.
+;CLEARPERDATA
+To clear all data loaded.
+It is usually to force a program to be realoaded.
+Parameters: None.

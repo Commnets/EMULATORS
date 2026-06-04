@@ -6,8 +6,7 @@ MCHEmul::FileIO::~FileIO ()
 	for (MCHEmul::FileTypeIO* i : _IOList)
 		delete (i);
 
-	for (const auto& i : _fileData)
-		delete (i.second);
+	clearFilesInMemory (); 
 }
 
 // ---
@@ -34,7 +33,7 @@ MCHEmul::FileData* MCHEmul::FileIO::readFile (const std::string& fN, bool bE) co
 		return (nullptr); // ...then nothing is givend then back...
 
 	// Finally the data is stored and returned...
-	return (_fileData [fN] = dt);
+	return (assignFile (fN, dt));
 }
 
 // ---
@@ -56,8 +55,7 @@ bool MCHEmul::FileIO::saveFile (MCHEmul::FileData* fD, const std::string& fN, bo
 	// Otherwise the file is written...
 	// and archived into the list of files managed (written over a previous one if exsited)...
 	bool result = fR -> writeFile (fD, fN, bE);
-	if (result)
-		_fileData [fN] = fD;
+	if (result) assignFile (fN, fD);
 	return (result);
 }
 

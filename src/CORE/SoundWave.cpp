@@ -27,28 +27,55 @@ MCHEmul::InfoStructure MCHEmul::SoundWave::getInfoStructure () const
 }
 
 // ---
+void MCHEmul::SoundWave::clock (unsigned int nC)
+{ 
+	if (_cyclesPerWave <= 0.0)
+		return;
+
+	_counterInCyclesPerWave += (double) nC;
+	if (_counterInCyclesPerWave >= _cyclesPerWave)
+	{
+		_clockRestarted = true;
+		_counterInCyclesPerWave =
+			std::fmod (_counterInCyclesPerWave, _cyclesPerWave);
+	}
+}
+
+// ---
 void MCHEmul::SoundWave::calculateWaveSamplingData ()
 {
-	// How many cycles are needed to complet a wave?
-	_cyclesPerWave= (_frequency != 0) 
-		? (int) ((double) _chipFrequency / (double) _frequency) : 0;
+	double oldClockValue = clockValue ();
 
-	initializeInternalCounters ();
+	// How many cycles are needed to complet a wave?
+    // Number of chip cycles needed to complete one wave period.
+    // It is intentionally fractional to avoid pitch error.
+	_cyclesPerWave = (_frequency != 0) 
+		? ((double) _chipFrequency / (double) _frequency)
+		: 0.0f;
+
+	// To preserve the position in the wave when the frequency is changed, 
+	// we calculate the new counter value in cycles per wave.
+	_counterInCyclesPerWave = (_cyclesPerWave > 0.0)
+		? oldClockValue * _cyclesPerWave
+		: 0.0f;
+
+	// The internal counters are not changed...
 }
 
 // ---
 double MCHEmul::TriangleSoundWave::data () const
 {
 	if (!_active)
-		return (0.0f); // No active...
+		return (0.0f);
 
-	if (_cyclesPerWave == 0)
-		return (0.0f); // No data...
+	if (_cyclesPerWave <= 0.0f)
+		return (0.0f);
 
-	return ((_counterInCyclesPerWave < (_cyclesPerWave >> 1))
-		? MCHEmul::linearInterpolation (0.0f, 0.0f, (double) (_cyclesPerWave >> 1), 1.0f, (double) _counterInCyclesPerWave)
-		: MCHEmul::linearInterpolation (0.0f, 1.0f, (double) (_cyclesPerWave >> 1), 
-			0.0f, (double) (_counterInCyclesPerWave - (_cyclesPerWave >> 1))));
+	double half = _cyclesPerWave * 0.5;
+	if (_counterInCyclesPerWave < half)
+		return _counterInCyclesPerWave / half;
+
+	return (1.0 - ((_counterInCyclesPerWave - half) / half));
 }
 
 // ---
@@ -57,20 +84,16 @@ double MCHEmul::SawSmoothSoundWave::data () const
 	if (!_active)
 		return (0.0f); // No active...
 
-	if (_cyclesPerWave == 0)
-		return (0.0f); // No data...
+	if (_cyclesPerWave <= 0.0f)
+		return 0.0f;
 
-	return (MCHEmul::linearInterpolation 
-		(0.0f, 0.0f, (double) _cyclesPerWave, 1.0f, (double) _counterInCyclesPerWave));
+	return (_counterInCyclesPerWave / _cyclesPerWave);
 }
 
 // ---
 MCHEmul::PulseSoundWave::PulseSoundWave (unsigned int cF)
 	: MCHEmul::SoundWave (Type::_PULSE, cF),
-	  _pulseUpPercentage (0),
-	  _pulseUp (false),
-	  _cyclesPulseUp (0), _counterCyclesPulseUp (0),
-	  _cyclesPulseDown (0), _counterCyclesPulseDown (0)
+	  _pulseUpPercentage (0)
 { 
 	setClassName ("SoundPulseWave");
 						  
@@ -78,36 +101,11 @@ MCHEmul::PulseSoundWave::PulseSoundWave (unsigned int cF)
 }
 
 // ---
-MCHEmul::SquareSoundWave::SquareSoundWave (unsigned int cF)
-	: MCHEmul::PulseSoundWave (cF)
-{ 
-		_type = Type::_SQUARE; // Set the type to square wave
-
-		setClassName ("SoundSquareWave"); 
-
-		setPulseUpPercentage (0.5f); // 50% of the time up, 50% down
-};
-
-// ---
 void MCHEmul::PulseSoundWave::initialize ()
 { 
 	SoundWave::initialize (); 
-	
-	_pulseUpPercentage = 0.0f;
-						  
-	_pulseUp = false;
 
 	calculateWaveSamplingData ();
-}
-
-// ---
-void MCHEmul::PulseSoundWave::initializeInternalCounters ()
-{ 
-	SoundWave::initializeInternalCounters ();
-						  
-	_counterCyclesPulseUp = _counterCyclesPulseDown = 0; 
-
-	_pulseUp = false;
 }
 
 // --
@@ -121,71 +119,105 @@ MCHEmul::InfoStructure MCHEmul::PulseSoundWave::getInfoStructure () const
 }
 
 // ---
-void MCHEmul::PulseSoundWave::clock (unsigned int nC)
-{
-	MCHEmul::SoundWave::clock (nC);
-
-	if (_pulseUp)
-	{
-		if ((_counterCyclesPulseUp += nC) > _cyclesPulseUp)
-		{
-			_counterCyclesPulseDown = _counterCyclesPulseUp - _cyclesPulseUp;
-			if (_counterCyclesPulseDown >= _cyclesPulseDown)
-				_counterCyclesPulseDown = 0;
-
-			_counterCyclesPulseUp = 0;
-
-			_pulseUp = false;
-		}
-	}
-	else
-	{
-		if ((_counterCyclesPulseDown += nC) > _cyclesPulseDown)
-		{
-			_counterCyclesPulseUp = _counterCyclesPulseDown - _cyclesPulseDown;
-			if (_counterCyclesPulseUp >= _cyclesPulseUp)
-				_counterCyclesPulseUp = 0;
-
-			_counterCyclesPulseDown = 0;
-
-			_pulseUp = true;
-		}
-	}
-}
-
-// ---
 double MCHEmul::PulseSoundWave::data () const
 {
 	if (!_active)
-		return (0.0f); // No active...
-
-	if (_cyclesPerWave == 0)
 		return (0.0f);
 
-	return (_pulseUp ? 1.0f : 0.0f);
+	if (_cyclesPerWave <= 0.0f)
+		return (0.0f);
+
+	return ((clockValue () < _pulseUpPercentage) ? 1.0f : 0.0f);
 }
 
 // ---
-void MCHEmul::PulseSoundWave::calculateWaveSamplingData ()
+MCHEmul::SquareSoundWave::SquareSoundWave (unsigned int cF)
+	: MCHEmul::PulseSoundWave (cF)
+{ 
+	_type = Type::_SQUARE; // Set the type to square wave
+
+	setClassName ("SoundSquareWave"); 
+
+	setPulseUpPercentage (0.5f); // 50% of the time up, 50% down
+};
+
+// ---
+void MCHEmul::SquareSoundWave::initialize ()
 {
-	MCHEmul::SoundWave::calculateWaveSamplingData ();
+	PulseSoundWave::initialize ();
 
-	// How many cycles within the cyclesPerWave is the pulse up?
-	_cyclesPulseUp = (int) ((double) _cyclesPerWave * (double) _pulseUpPercentage);
-	// ...and down..simple:
-	_cyclesPulseDown = _cyclesPerWave - _cyclesPulseUp;
+	// To avoid to eave it to 0.0f (as per default) 
+	// and to be a square wave, we set it to 50% of the time up.
+	setPulseUpPercentage (0.5f);
+}
 
-	_pulseUp = false;
+// ---
+void MCHEmul::NoiseSoundWave::initialize ()
+{
+	MCHEmul::SoundWave::initialize ();
+
+	_lfsr = _initialLFSR;
+
+	_currentOutput = 0.0f;
+
+	stepLFSR (); // Generate the first noise value immediately....
+}
+
+// ---
+void MCHEmul::NoiseSoundWave::clock (unsigned int nC)
+{
+	if (_cyclesPerWave <= 0.0f)
+		return;
+
+	double remainingCycles = (double) nC;
+	while (remainingCycles > 0.0f)
+	{
+		double cyclesToNextStep =
+			_cyclesPerWave - _counterInCyclesPerWave;
+		if (remainingCycles < cyclesToNextStep)
+		{
+			_counterInCyclesPerWave += remainingCycles;
+			remainingCycles = 0.0f;
+		}
+		else
+		{
+			remainingCycles -= cyclesToNextStep;
+			_counterInCyclesPerWave = 0.0f;
+			_clockRestarted = true;
+
+			stepLFSR ();
+		}
+	}
+}
+
+// ---
+void MCHEmul::NoiseSoundWave::stepLFSR ()
+{
+	// 16-bit Galois LFSR.
+	// Polynomial: x^16 + x^14 + x^13 + x^11 + 1
+	// Feedback mask: 0xB400.
+	unsigned int lsb = _lfsr & 0x0001u;
+	_lfsr >>= 1;
+	if (lsb != 0)
+		_lfsr ^= 0xB400u;
+	_lfsr &= 0xffffu;
+	// Avoid lock-up in zero state.
+	if (_lfsr == 0)
+		_lfsr = _initialLFSR;
+
+	// Convert some LFSR bits to a normalized value between 0 and 1.
+	// Using 8 bits gives a less binary, more noise-like output than using only one bit.
+	_currentOutput = (double) (_lfsr & 0x00ffu) / 255.0f;
 }
 
 // ---
 double MCHEmul::NoiseSoundWave::data () const
 {
 	if (!_active)
-		return (0.0f); // No active...
+		return (0.0f);
 
-	if (_cyclesPerWave == 0)
-		return (0.0f); // No data...
+	if (_cyclesPerWave <= 0.0f)
+		return (0.0f);
 
-	return ((double) (std::rand () % 1000) / 1000.0f);
+	return (_currentOutput);
 }
