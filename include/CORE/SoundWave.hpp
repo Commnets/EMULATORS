@@ -16,6 +16,7 @@
 
 #include <CORE/global.hpp>
 #include <CORE/InfoClass.hpp>
+#include <CORE/OBool.hpp>
 
 namespace MCHEmul
 {
@@ -45,7 +46,7 @@ namespace MCHEmul
 			  _type (t),
 			  _chipFrequency (cF),
 			  _active (false), // to indicate whether the wave s or not active...
-			  _frequency (0),
+			  _frequency (0.0f),
 			  _cyclesPerWave (0.0f), _counterInCyclesPerWave (0.0f),
 			  _clockRestarted (false)
 						{ calculateWaveSamplingData (); }
@@ -66,10 +67,10 @@ namespace MCHEmul
 						{ _active = a; }
 
 		/** The frequency. */
-		unsigned short frequency () const
+		double frequency () const
 						{ return (_frequency); }
-		void setFrequency (unsigned short f)
-						{ _frequency = f; calculateWaveSamplingData (); }
+		void setFrequency (double f)
+						{ _frequency = (f > 0.0) ? f : 0.0; calculateWaveSamplingData (); }
 
 		virtual void initialize ();
 
@@ -79,15 +80,6 @@ namespace MCHEmul
 			Initially it is also invoked from the method calculateWaveSamplingData (). */
 		virtual void initializeInternalCounters ()
 						{ _counterInCyclesPerWave = 0.0f; }
-
-		/**
-		 *	The name of the fields are: \n
-		 *	ACTIVE			= Attribute with YES when the wave is active and NO in other case.
-		 *	TYPE			= Value (integer) of the _type parameter.
-		 *	DECAY			= Value of the _frequency parameter.
-		 */
-		virtual InfoStructure getInfoStructure () const override;
-
 		/** This method has to be invoked in every cpu cycle,
 			receiving as parameter the number of cycles happened from the last invocation. \n
 			It can be overloaded to cover specific needs for specific sound waves. */
@@ -102,13 +94,21 @@ namespace MCHEmul
 		/** To know whether the clock has pass over 0. \n
 			When the value is read, it is set back to false. */
 		bool clockRestarted () const
-						{ bool r = _clockRestarted; _clockRestarted = false; return (r); }
+						{ return (_clockRestarted); }
 
 		/** This method should return always a value between 0 and 1. \n
 			Indicating the %(1) of the maximum situation achieved. \n
 			Decimal numbers are admitted (are needed). \n
 			Muct be overloaded according to the type of wave. */
 		virtual double data () const = 0;
+
+		/**
+		 *	The name of the fields are: \n
+		 *	ACTIVE			= Attribute with YES when the wave is active and NO in other case.
+		 *	TYPE			= Value (integer) of the _type parameter.
+		 *	DECAY			= Value of the _frequency parameter.
+		 */
+		virtual InfoStructure getInfoStructure () const override;
 
 		protected:
 		// Implementation
@@ -127,7 +127,7 @@ namespace MCHEmul
 		/** When the wave is active within a voice. */
 		bool _active;
 		/** The frequency of the wave. In waves per second. */
-		unsigned short _frequency;
+		double _frequency;
 
 		/** The number of computer cycles needed to complete a wave cycle. \n
 			It is double to have the better accuracy possible! */
@@ -137,7 +137,7 @@ namespace MCHEmul
 		double _counterInCyclesPerWave;
 
 		// Implementation
-		mutable bool _clockRestarted;
+		mutable OBool _clockRestarted;
 	};
 
 	/** To sumplify managing a list of sound waves. */
@@ -187,14 +187,14 @@ namespace MCHEmul
 
 		virtual void initialize () override;
 
+		virtual double data () const override;
+
 		/**
 		  *	The name of the fields are: \n
 		  *	The ones from the SoundWave +
 		  *	PULSE			= Value (from 0 to 1) of the _pulseUpPercentage.
 		  */
 		virtual InfoStructure getInfoStructure () const override;
-
-		virtual double data () const override;
 
 		private:
 		/** The percentage of the cycle that the pulse is up.

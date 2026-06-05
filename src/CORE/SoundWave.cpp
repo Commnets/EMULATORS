@@ -5,25 +5,11 @@ void MCHEmul::SoundWave::initialize ()
 { 
 	_active = false; // By default...
 
-	_frequency = 0;
+	_frequency = 0.0f;
 
 	calculateWaveSamplingData (); 
 
 	_clockRestarted = false;
-}
-
-// ---
-MCHEmul::InfoStructure MCHEmul::SoundWave::getInfoStructure () const
-{
-	MCHEmul::InfoStructure result = MCHEmul::InfoClass::getInfoStructure ();
-
-	result.add ("ACTIVE", _active);
-	result.add ("TYPE", (int) _type);
-	result.add ("FREQUENCY", _frequency);
-	result.add ("TYPEANDFREQUENCY", std::to_string ((int) _type) + "(" + 
-		std::to_string (_frequency) + ")"); // like a summary used sometimes...
-
-	return (result);
 }
 
 // ---
@@ -42,6 +28,20 @@ void MCHEmul::SoundWave::clock (unsigned int nC)
 }
 
 // ---
+MCHEmul::InfoStructure MCHEmul::SoundWave::getInfoStructure () const
+{
+	MCHEmul::InfoStructure result = MCHEmul::InfoClass::getInfoStructure ();
+
+	result.add ("ACTIVE", _active);
+	result.add ("TYPE", (int) _type);
+	result.add ("FREQUENCY", _frequency);
+	result.add ("TYPEANDFREQUENCY", std::to_string ((int) _type) + "(" + 
+		std::to_string (_frequency) + ")"); // like a summary used sometimes...
+
+	return (result);
+}
+
+// ---
 void MCHEmul::SoundWave::calculateWaveSamplingData ()
 {
 	double oldClockValue = clockValue ();
@@ -49,8 +49,8 @@ void MCHEmul::SoundWave::calculateWaveSamplingData ()
 	// How many cycles are needed to complet a wave?
     // Number of chip cycles needed to complete one wave period.
     // It is intentionally fractional to avoid pitch error.
-	_cyclesPerWave = (_frequency != 0) 
-		? ((double) _chipFrequency / (double) _frequency)
+	_cyclesPerWave = (_frequency != 0.0f) 
+		? ((double) _chipFrequency / _frequency)
 		: 0.0f;
 
 	// To preserve the position in the wave when the frequency is changed, 
@@ -108,16 +108,6 @@ void MCHEmul::PulseSoundWave::initialize ()
 	calculateWaveSamplingData ();
 }
 
-// --
-MCHEmul::InfoStructure MCHEmul::PulseSoundWave::getInfoStructure () const
-{
-	MCHEmul::InfoStructure result = MCHEmul::SoundWave::getInfoStructure ();
-
-	result.add ("PULSEUP", _pulseUpPercentage);
-
-	return (result);
-}
-
 // ---
 double MCHEmul::PulseSoundWave::data () const
 {
@@ -128,6 +118,16 @@ double MCHEmul::PulseSoundWave::data () const
 		return (0.0f);
 
 	return ((clockValue () < _pulseUpPercentage) ? 1.0f : 0.0f);
+}
+
+// --
+MCHEmul::InfoStructure MCHEmul::PulseSoundWave::getInfoStructure () const
+{
+	MCHEmul::InfoStructure result = MCHEmul::SoundWave::getInfoStructure ();
+
+	result.add ("PULSEUP", _pulseUpPercentage);
+
+	return (result);
 }
 
 // ---

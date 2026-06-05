@@ -176,8 +176,8 @@ COMMODORE::SoundSIDSimpleWrapper::SoundSIDSimpleWrapper (unsigned int cF, unsign
 		  new COMMODORE::SoundSIDSimpleWrapper::Voice (1, cF), 
 		  new COMMODORE::SoundSIDSimpleWrapper::Voice (2, cF) }),
 	  _registers (std::vector <MCHEmul::UByte> (0x20, MCHEmul::UByte::_0)),
-	  _clocksPerSample ((unsigned int) ((double) cF / (double (sF)))),
-	  _counterClocksPerSample (0)
+	  _cyclesPerSample ((double) cF / (double (sF))), // Whether the value sF == 0 is not checked...
+	  _counterCyclesPerSample (0.0f)
 { 
 	// Link the different voices to make complex effects when requested...
 	static_cast <COMMODORE::SoundSIDSimpleWrapper::Voice*> (_voices [0]) -> 
@@ -196,6 +196,7 @@ void COMMODORE::SoundSIDSimpleWrapper::setValue (size_t p, const MCHEmul::UByte&
 {
 	size_t pp = p % 0x20;
 
+	MCHEmul::UByte oldV = _registers [pp];
 	_registers [pp] = v;
 
 	switch (pp)
@@ -204,10 +205,13 @@ void COMMODORE::SoundSIDSimpleWrapper::setValue (size_t p, const MCHEmul::UByte&
 		case 0x00:
 		case 0x01:
 			{
-				_voices [0] -> setFrequency
-					((unsigned short) ((double) ((((unsigned short) _registers [0x01].value ()) << 8) + 
-												  ((unsigned short) _registers [0x00].value ())) 
-												 * (double) _chipFrequency / 16777216.0f));
+				auto* voice = 
+					static_cast <COMMODORE::SoundSIDSimpleWrapper::Voice*> (_voices [0]);
+				const unsigned short freqRegister =
+					(((unsigned short) _registers [0x01].value ()) << 8) |
+					 ((unsigned short) _registers [0x00].value ());
+				voice -> setFrequency (
+					((double) freqRegister * (double) _chipFrequency) / 16777216.0f);
 			}
 
 			break;
@@ -216,7 +220,9 @@ void COMMODORE::SoundSIDSimpleWrapper::setValue (size_t p, const MCHEmul::UByte&
 		case 0x02:
 		case 0x03:
 			{
-				static_cast <COMMODORE::SoundSIDSimpleWrapper::Voice*> (_voices [0]) -> setPulseUpPercentage
+				auto* voice = 
+					static_cast <COMMODORE::SoundSIDSimpleWrapper::Voice*> (_voices [0]);
+				voice -> setPulseUpPercentage
 					((double) ((((unsigned short) (_registers [0x03].value () & 0x0f)) << 8) + 
 								((unsigned short) _registers [0x02].value ())) / 4096.0f);
 			}
@@ -226,18 +232,18 @@ void COMMODORE::SoundSIDSimpleWrapper::setValue (size_t p, const MCHEmul::UByte&
 		// Voice 1 control regiter: VCREG1
 		case 0x04:
 			{
-				_voices [0] -> setStart (v.bit (0));
-				static_cast <COMMODORE::SoundSIDSimpleWrapper::Voice*> 
-					(_voices [0]) -> setSync (v.bit (1)); 
-				static_cast <COMMODORE::SoundSIDSimpleWrapper::Voice*> 
-					(_voices [0]) -> setRingModulation (v.bit (2));
-				_voices [0] -> setActive (!v.bit (3)); // Activates also the envelope...
-				_voices [0] -> wave (MCHEmul::SoundWave::Type::_TRIANGLE) -> setActive (v.bit (4));
-				_voices [0] -> wave (MCHEmul::SoundWave::Type::_SAWTOOTH) -> setActive (v.bit (5));
-				_voices [0] -> wave (MCHEmul::SoundWave::Type::_PULSE) -> setActive (v.bit (6));
-				_voices [0] -> wave (MCHEmul::SoundWave::Type::_NOISE) -> setActive (v.bit (7));
-				static_cast <COMMODORE::SoundSIDSimpleWrapper::Voice*> 
-					(_voices [0]) -> setWavesActive (v.value () & 0xf0);
+				auto* voice =
+					static_cast <COMMODORE::SoundSIDSimpleWrapper::Voice*> (_voices [0]);
+				if (v.bit (0) != oldV.bit (0)) 
+					voice -> setStart (v.bit (0));
+				voice -> setSync (v.bit (1)); 
+				voice -> setRingModulation (v.bit (2));
+				voice -> setTest (v.bit (3));
+				voice -> wave (MCHEmul::SoundWave::Type::_TRIANGLE) -> setActive (v.bit (4));
+				voice -> wave (MCHEmul::SoundWave::Type::_SAWTOOTH) -> setActive (v.bit (5));
+				voice -> wave (MCHEmul::SoundWave::Type::_PULSE)	-> setActive (v.bit (6));
+				voice -> wave (MCHEmul::SoundWave::Type::_NOISE)	-> setActive (v.bit (7));
+				voice -> setWavesActive (v.value () & 0xf0);
 			}
 
 			break;
@@ -245,10 +251,10 @@ void COMMODORE::SoundSIDSimpleWrapper::setValue (size_t p, const MCHEmul::UByte&
 		// Voice 1 Attack/Decay register: ATDCY1
 		case 0x05:
 			{
-				static_cast <MCHEmul::SoundADSREnvelope*> (_voices [0] -> envelope ()) -> 
-					setAttack (_ATTACKTIMES [(v.value () & 0xf0) >> 4]);
-				static_cast <MCHEmul::SoundADSREnvelope*> (_voices [0] -> envelope ()) -> 
-					setDecay (_DECAYTIMES [v.value () & 0x0f]);
+				auto* envelope = 
+					static_cast <MCHEmul::SoundADSREnvelope*> (_voices [0] -> envelope ());
+				envelope -> setAttack (_ATTACKTIMES [(v.value () & 0xf0) >> 4]);
+				envelope -> setDecay (_DECAYTIMES [v.value () & 0x0f]);
 			}
 
 			break;
@@ -256,10 +262,10 @@ void COMMODORE::SoundSIDSimpleWrapper::setValue (size_t p, const MCHEmul::UByte&
 		// Voice 1 Sustain/Release register: SUREL1
 		case 0x06:
 			{
-				static_cast <MCHEmul::SoundADSREnvelope*> (_voices [0] -> envelope ()) ->
-					setSustainVolumen ((double) ((v.value () & 0xf0) >> 4) / 15.0f /** between 0 an 1. */);
-				static_cast <MCHEmul::SoundADSREnvelope*> (_voices [0] -> envelope ()) -> 
-					setRelease (_RELEASETIMES [v.value () & 0x0f]);
+				auto* envelope = 
+					static_cast <MCHEmul::SoundADSREnvelope*> (_voices [0] -> envelope ());
+				envelope -> setSustainVolumen ((double) ((v.value () & 0xf0) >> 4) / 15.0f /** between 0 an 1. */);
+				envelope -> setRelease (_RELEASETIMES [v.value () & 0x0f]);
 			}
 
 			break;
@@ -268,10 +274,13 @@ void COMMODORE::SoundSIDSimpleWrapper::setValue (size_t p, const MCHEmul::UByte&
 		case 0x07:
 		case 0x08:
 			{
-				_voices [1] -> setFrequency
-					((unsigned short) ((double) ((((unsigned short) _registers [0x08].value ()) << 8) + 
-												  ((unsigned short) _registers [0x07].value ())) 
-												 * (double) _chipFrequency / 16777216.0f));
+				auto* voice = 
+					static_cast <COMMODORE::SoundSIDSimpleWrapper::Voice*> (_voices [1]);
+				const unsigned short freqRegister =
+					(((unsigned short) _registers [0x08].value ()) << 8) |
+					 ((unsigned short) _registers [0x07].value ());
+				voice -> setFrequency (
+					((double) freqRegister * (double) _chipFrequency) / 16777216.0f);
 			}
 
 			break;
@@ -280,7 +289,9 @@ void COMMODORE::SoundSIDSimpleWrapper::setValue (size_t p, const MCHEmul::UByte&
 		case 0x09:
 		case 0x0a:
 			{
-				static_cast <COMMODORE::SoundSIDSimpleWrapper::Voice*> (_voices [1]) -> setPulseUpPercentage
+				auto* voice = 
+					static_cast <COMMODORE::SoundSIDSimpleWrapper::Voice*> (_voices [1]);
+				voice -> setPulseUpPercentage
 						((double) ((((unsigned short) (_registers [0x0a].value () & 0x0f)) << 8) + 
 								((unsigned short) _registers [0x09].value ())) / 4096.0f);
 			}
@@ -290,18 +301,18 @@ void COMMODORE::SoundSIDSimpleWrapper::setValue (size_t p, const MCHEmul::UByte&
 		// Voice 2 control regiter: VCREG2
 		case 0x0b:
 			{
-				_voices [1] -> setStart (v.bit (0));
-				static_cast <COMMODORE::SoundSIDSimpleWrapper::Voice*> 
-					(_voices [1]) -> setSync (v.bit (1)); 
-				static_cast <COMMODORE::SoundSIDSimpleWrapper::Voice*> 
-					(_voices [1]) -> setRingModulation (v.bit (2));
-				_voices [1] -> setActive (!v.bit (3)); // Activates also the envelope...
-				_voices [1] -> wave (MCHEmul::SoundWave::Type::_TRIANGLE) -> setActive (v.bit (4));
-				_voices [1] -> wave (MCHEmul::SoundWave::Type::_SAWTOOTH) -> setActive (v.bit (5));
-				_voices [1] -> wave (MCHEmul::SoundWave::Type::_PULSE) -> setActive (v.bit (6));
-				_voices [1] -> wave (MCHEmul::SoundWave::Type::_NOISE) -> setActive (v.bit (7));
-				static_cast <COMMODORE::SoundSIDSimpleWrapper::Voice*> 
-					(_voices [1]) -> setWavesActive (v.value () & 0xf0);
+				auto* voice = 
+					static_cast <COMMODORE::SoundSIDSimpleWrapper::Voice*> (_voices [1]);
+				if (v.bit (0) != oldV.bit (0))
+					voice -> setStart (v.bit (0));
+				voice -> setSync (v.bit (1)); 
+				voice -> setRingModulation (v.bit (2));
+				voice -> setTest (v.bit (3));
+				voice -> wave (MCHEmul::SoundWave::Type::_TRIANGLE) -> setActive (v.bit (4));
+				voice -> wave (MCHEmul::SoundWave::Type::_SAWTOOTH) -> setActive (v.bit (5));
+				voice -> wave (MCHEmul::SoundWave::Type::_PULSE) -> setActive (v.bit (6));
+				voice -> wave (MCHEmul::SoundWave::Type::_NOISE) -> setActive (v.bit (7));
+				voice -> setWavesActive (v.value () & 0xf0);
 			}
 
 			break;
@@ -309,10 +320,10 @@ void COMMODORE::SoundSIDSimpleWrapper::setValue (size_t p, const MCHEmul::UByte&
 		// Voice 2 Attack/Decay register: ATDCY2
 		case 0x0c:
 			{
-				static_cast <MCHEmul::SoundADSREnvelope*> (_voices [1] -> envelope ()) -> 
-					setAttack (_ATTACKTIMES [(v.value () & 0xf0) >> 4]);
-				static_cast <MCHEmul::SoundADSREnvelope*> (_voices [1] -> envelope ()) -> 
-					setDecay (_DECAYTIMES [v.value () & 0x0f]);
+				auto* envelope =
+					static_cast <MCHEmul::SoundADSREnvelope*> (_voices [1] -> envelope ());
+				envelope -> setAttack (_ATTACKTIMES [(v.value () & 0xf0) >> 4]);
+				envelope -> setDecay (_DECAYTIMES [v.value () & 0x0f]);
 			}
 
 			break;
@@ -320,22 +331,25 @@ void COMMODORE::SoundSIDSimpleWrapper::setValue (size_t p, const MCHEmul::UByte&
 		// Voice 2 Sustain/Release register: SUREL2
 		case 0x0d:
 			{
-				static_cast <MCHEmul::SoundADSREnvelope*> (_voices [1] -> envelope ()) -> 
-					setSustainVolumen ((double) ((v.value () & 0xf0) >> 4) / 15.0f);
-				static_cast <MCHEmul::SoundADSREnvelope*> (_voices [1] -> envelope ()) -> 
-					setRelease (_RELEASETIMES [v.value () & 0x0f]);
+				auto* envelope =
+					static_cast <MCHEmul::SoundADSREnvelope*> (_voices [1] -> envelope ());
+				envelope ->	setSustainVolumen ((double) ((v.value () & 0xf0) >> 4) / 15.0f);
+				envelope -> setRelease (_RELEASETIMES [v.value () & 0x0f]);
 			}
 
 			break;
 		
-		// Frequency for voice 2: FRELO3, FREHI3
+		// Frequency for voice 3: FRELO3, FREHI3
 		case 0x0e:
 		case 0x0f:
 			{
-				_voices [2] -> setFrequency
-					((unsigned short) ((double) ((((unsigned short) _registers [0x0f].value ()) << 8) + 
-												  ((unsigned short) _registers [0x0e].value ())) 
-												 * (double) _chipFrequency / 16777216.0f));
+				auto* voice = 
+					static_cast <COMMODORE::SoundSIDSimpleWrapper::Voice*> (_voices [2]);
+				const unsigned short freqRegister =
+					(((unsigned short) _registers [0x0f].value ()) << 8) |
+					 ((unsigned short) _registers [0x0e].value ());
+				voice -> setFrequency (
+					((double) freqRegister * (double) _chipFrequency) / 16777216.0f);
 			}
 
 			break;
@@ -344,7 +358,9 @@ void COMMODORE::SoundSIDSimpleWrapper::setValue (size_t p, const MCHEmul::UByte&
 		case 0x10:
 		case 0x11:
 			{
-				static_cast <COMMODORE::SoundSIDSimpleWrapper::Voice*> (_voices [2]) -> setPulseUpPercentage
+				auto* voice = 
+					static_cast <COMMODORE::SoundSIDSimpleWrapper::Voice*> (_voices [2]);
+				voice -> setPulseUpPercentage
 					((double) ((((unsigned short) (_registers [0x11].value () & 0x0f)) << 8) + 
 								((unsigned short) _registers [0x10].value ())) / 4096.0f);
 			}
@@ -354,18 +370,18 @@ void COMMODORE::SoundSIDSimpleWrapper::setValue (size_t p, const MCHEmul::UByte&
 		// Voice 3 control regiter: VCREG3
 		case 0x12:
 			{
-				_voices [2] -> setStart (v.bit (0));
-				static_cast <COMMODORE::SoundSIDSimpleWrapper::Voice*> 
-					(_voices [2]) -> setSync (v.bit (1)); 
-				static_cast <COMMODORE::SoundSIDSimpleWrapper::Voice*> 
-					(_voices [2]) -> setRingModulation (v.bit (2));
-				_voices [2] -> setActive (!v.bit (3)); // Activates also the envelope...
-				_voices [2] -> wave (MCHEmul::SoundWave::Type::_TRIANGLE) -> setActive (v.bit (4));
-				_voices [2] -> wave (MCHEmul::SoundWave::Type::_SAWTOOTH) -> setActive (v.bit (5));
-				_voices [2] -> wave (MCHEmul::SoundWave::Type::_PULSE) -> setActive (v.bit (6));
-				_voices [2] -> wave (MCHEmul::SoundWave::Type::_NOISE) -> setActive (v.bit (7));
-				static_cast <COMMODORE::SoundSIDSimpleWrapper::Voice*> 
-					(_voices [2]) -> setWavesActive (v.value () & 0xf0);
+				auto* voice = 
+					static_cast <COMMODORE::SoundSIDSimpleWrapper::Voice*> (_voices [2]);
+				if (v.bit (0) != oldV.bit (0))
+					voice -> setStart (v.bit (0));
+				voice -> setSync (v.bit (1)); 
+				voice -> setRingModulation (v.bit (2));
+				voice -> setTest (v.bit (3));
+				voice -> wave (MCHEmul::SoundWave::Type::_TRIANGLE) -> setActive (v.bit (4));
+				voice -> wave (MCHEmul::SoundWave::Type::_SAWTOOTH) -> setActive (v.bit (5));
+				voice -> wave (MCHEmul::SoundWave::Type::_PULSE) -> setActive (v.bit (6));
+				voice -> wave (MCHEmul::SoundWave::Type::_NOISE) -> setActive (v.bit (7));
+				voice -> setWavesActive (v.value () & 0xf0);
 			}
 
 			break;
@@ -373,10 +389,10 @@ void COMMODORE::SoundSIDSimpleWrapper::setValue (size_t p, const MCHEmul::UByte&
 		// Voice 3 Attack/Decay register: ATDCY3
 		case 0x13:
 			{
-				static_cast <MCHEmul::SoundADSREnvelope*> (_voices [2] -> envelope ()) -> 
-					setAttack (_ATTACKTIMES [(v.value () & 0xf0) >> 4]);
-				static_cast <MCHEmul::SoundADSREnvelope*> (_voices [2] -> envelope ()) -> 
-					setDecay (_DECAYTIMES [v.value () & 0x0f]);
+				auto* envelope =
+					static_cast <MCHEmul::SoundADSREnvelope*> (_voices [2] -> envelope ());
+				envelope -> setAttack (_ATTACKTIMES [(v.value () & 0xf0) >> 4]);
+				envelope -> setDecay (_DECAYTIMES [v.value () & 0x0f]);
 			}
 
 			break;
@@ -384,10 +400,10 @@ void COMMODORE::SoundSIDSimpleWrapper::setValue (size_t p, const MCHEmul::UByte&
 		// Voice 3 Sustain/Release register: SUREL3
 		case 0x14:
 			{
-				static_cast <MCHEmul::SoundADSREnvelope*> (_voices [2] -> envelope ()) -> 
-					setSustainVolumen ((double) ((v.value () & 0xf0) >> 4) / 15.0f);
-				static_cast <MCHEmul::SoundADSREnvelope*> (_voices [2] -> envelope ()) -> 
-					setRelease (_RELEASETIMES [v.value () & 0x0f]);
+				auto* envelope =
+					static_cast <MCHEmul::SoundADSREnvelope*> (_voices [2] -> envelope ());
+				envelope -> setSustainVolumen ((double) ((v.value () & 0xf0) >> 4) / 15.0f);
+				envelope -> setRelease (_RELEASETIMES [v.value () & 0x0f]);
 			}
 
 			break;
@@ -449,6 +465,13 @@ const MCHEmul::UByte& COMMODORE::SoundSIDSimpleWrapper::readValue (size_t p) con
 			result = dynamic_cast <COMMODORE::SoundSIDSimpleWrapper::Voice*> (_voices [2]) -> envelopeValue ();
 			break;
 
+		// This registers always return FF
+		case 0x1d:
+		case 0x1e:
+		case 0x1f:
+			result = MCHEmul::UByte::_FF;
+			break;
+
 		// The rest of the registers are write only,
 		// ...so reading it gets back 0!
 		default:
@@ -466,7 +489,7 @@ void COMMODORE::SoundSIDSimpleWrapper::initialize ()
 							  
 	_volumen = 0.0f;
 
-	_counterClocksPerSample = 0;
+	_counterCyclesPerSample = 0.0f;
 
 	// All voices are active in this emulation...
 	for (auto i : _voices)
@@ -483,21 +506,29 @@ bool COMMODORE::SoundSIDSimpleWrapper::getData (MCHEmul::CPU *cpu, MCHEmul::UByt
 
 	for (auto i : _voices)
 		i -> clock (); // just one...
+	for (auto i : _voices)
+		static_cast <COMMODORE::SoundSIDSimpleWrapper::Voice*> (i) -> applySync ();
+	for (auto i : _voices)
+		static_cast <COMMODORE::SoundSIDSimpleWrapper::Voice*> (i) -> clearOscillatorRestarted ();
 
-	if ((result = ((++_counterClocksPerSample) >= _clocksPerSample)))
+	_counterCyclesPerSample += 1.0f;
+	if ((result = 
+			(_cyclesPerSample > 0.0f &&
+			 _counterCyclesPerSample >= _cyclesPerSample)))
 	{
-		if ((_counterClocksPerSample -= _clocksPerSample) >= _clocksPerSample)
-			_counterClocksPerSample = 0; // Just in case _clocksPerSample == 0...
+		_counterCyclesPerSample = 
+			std::fmod (_counterCyclesPerSample, _cyclesPerSample);
 
-		double iR = 0;
+		// In the emulation of the SID
+		// the voices are "added" producing more "signal"....
+		double iR = 0.0;
 		for (auto i : _voices)
 			iR += i -> data (); // but the values are added...
-		iR *= _volumen; // Adjust the volumen...
-		
-		// This number could be greater than 1!
-		if (iR > 1.0f) iR = 1.0f; // ...so it is needed to correct.
+		iR *= _volumen; // ...and adjusted to the volumen...
+		if (iR > 1.0f) // ..but the outcome can never be finally more than 1.0f!
+			iR = 1.0f;
 
-		dt = MCHEmul::UBytes ({ (unsigned char) (iR * 255.0f /** between 0 and 255. */) });
+		dt = MCHEmul::UBytes ({ (unsigned char) (iR * 255.0f) });
 	}
 
 	return (result);
@@ -515,9 +546,34 @@ COMMODORE::SoundSIDSimpleWrapper::Voice::Voice (int id, unsigned int cF)
 		_voiceRelated (nullptr), // set when Emulation is built (it is guarentted that it is not nullptr when running)
 		_ringModulation (false), // Not modulated by default...
 		_sync (false), // Not sync by default...
-		_wavesActive (0)
+		_test (false), // Not in test mode by default...
+		_wavesActive (0),
+		_oscillatorRestarted (false)
 { 
 	setClassName ("SIDVoice");
+}
+
+// ---
+void COMMODORE::SoundSIDSimpleWrapper::Voice::setTest (bool t)
+{
+	if (_test == t)
+	{
+		_active = !t;
+
+		return;
+	}
+
+	_test = t;
+	if (_test)
+	{
+		_active = false;
+
+		// Approximation:
+		// TEST disables oscillator output and resets internal oscillator state.
+		initializeOscillatorCounters ();
+	}
+	else
+		_active = true;
 }
 
 // ---
@@ -526,6 +582,34 @@ void COMMODORE::SoundSIDSimpleWrapper::Voice::initialize ()
 	MCHEmul::SoundVoice::initialize ();
 
 	_ringModulation = false;
+	_sync = false;
+	_test = false;
+	_wavesActive = 0;
+	_oscillatorRestarted = false;
+
+	if (_envelope != nullptr)
+		_envelope -> setActive (true);
+}
+
+// ---
+void COMMODORE::SoundSIDSimpleWrapper::Voice::clock (unsigned int nC)
+{
+	_oscillatorRestarted = false;
+
+	if (!_test)
+	{
+		for (auto i : _waves)
+		{
+			i -> clock (nC);
+
+			_oscillatorRestarted |= i -> clockRestarted ();
+		}
+	}
+
+	// The envelope is controlled by GATE, not by TEST.
+	// Therefore it must keep evolving even when TEST is active.
+	if (_envelope != nullptr)
+		_envelope -> clock (nC);
 }
 
 // ---
@@ -533,12 +617,9 @@ double COMMODORE::SoundSIDSimpleWrapper::Voice::data () const
 { 
 	// When the wave is active or is in test active and the selected wave is a pulse...
 	// ...the sound has to be produced
-	if (!(active () || (!active () && _wavesActive == 0x40 /** pulse. */)))
-		return (0.0f);
-
-	// When sync the internal clocks of the waves are synchronized...
-	if (_sync && wavesClockRestarted ())
-		_voiceRelated -> initializeInternalCounters ();
+    if (!active () && 
+		!(_test && (_wavesActive == 0x40)))
+        return (0.0f);
 
 	double result = 0.0f;
 
@@ -633,4 +714,27 @@ MCHEmul::InfoStructure COMMODORE::SoundSIDSimpleWrapper::Voice::getInfoStructure
 	result.add ("SYNC", _sync);
 
 	return (result);
+}
+
+// ---
+void COMMODORE::SoundSIDSimpleWrapper::Voice::applySync ()
+{
+	if (!_sync || 
+		_voiceRelated == nullptr)
+		return;
+
+	// Correct direction:
+	// If the related/source voice oscillator has restarted,
+	// this voice is reset.
+	if (_voiceRelated -> oscillatorRestarted ())
+		initializeOscillatorCounters ();
+}
+
+// ---
+void COMMODORE::SoundSIDSimpleWrapper::Voice::initializeOscillatorCounters ()
+{
+	for (auto i : _waves)
+		i -> initializeInternalCounters ();
+
+	_oscillatorRestarted = false;
 }

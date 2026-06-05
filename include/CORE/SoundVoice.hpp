@@ -204,9 +204,9 @@ namespace MCHEmul
 
 		/** All waves being part of the voice must "vibrate" at the same frequency. \n
 			Take care because no boundary analysis is done. */
-		unsigned short frequency () const
+		double frequency () const
 							{ return (_waves [0] -> frequency ()); /** could be any, as all have the same value. */ }
-		void setFrequency (unsigned short f)
+		void setFrequency (double f)
 							{ for (auto i : _waves) 
 								i -> setFrequency (f); }
 

@@ -140,9 +140,9 @@ namespace COMMODORE
 			Voice (int id, unsigned int cF);
 
 			virtual void setActive (bool a) override
-							{ if ((_active != a) && (_active = a)) 
-								for (auto i : _waves) // Initialize only the counters of the waves...
-									i -> initializeInternalCounters (); }
+							{ _active = a; }
+
+			void setTest (bool t);
 
 			/** The other voices this one could be related with. **/
 			void setRelation (Voice* v)
@@ -163,10 +163,6 @@ namespace COMMODORE
 				It returns a number from 0 to 255 depending on the wave that is moving behind!. */
 			unsigned char wavesClockValue () const
 							{ return ((unsigned char) (waves ()[0] /** whatever. */ -> clockValue () * 255)); }
-			bool wavesClockRestarted () const
-							{ bool r = true; 
-							  for (auto i : waves ()) r &= i -> clockRestarted (); /** One will be enought, but just to set all rest to 0. */
-							  return (r); }
 			unsigned char oscillatorValue () const
 							{ return ((unsigned char) (wavesData () * 255)); }
 			/** Same but for the envelope. */
@@ -184,6 +180,13 @@ namespace COMMODORE
 			virtual void initialize () override;
 
 			/** To support the ring modulation. */
+			virtual void clock (unsigned int nC = 1) override;
+
+			bool oscillatorRestarted () const
+							{ return (_oscillatorRestarted); }
+			void clearOscillatorRestarted ()
+							{ _oscillatorRestarted = false; }
+
 			virtual double data () const override;
 
 			/**
@@ -198,17 +201,27 @@ namespace COMMODORE
 			void setWavesActive (unsigned char wA)
 							{ _wavesActive = wA; }
 
+			/** To apply the syncronization. */
+			void applySync ();
+
+			/** Just o reset a part of the values. */
+			void initializeOscillatorCounters ();
+
 			private:
-			/** The voice related. */
+			/** The voice used as source for hard sync and ring modulation. */
 			Voice* _voiceRelated;
 			/** The ring modulation. */
 			bool _ringModulation;
 			/** Is it sync with its voice related?. */
 			bool _sync;
+			/** To manage the test situation. */
+			bool _test;
 
 			// Implementation
 			// Waves active..to speed up the calculus later
 			unsigned char _wavesActive;
+			/** To control when the oscilator has changed. */
+			bool _oscillatorRestarted;
 
 			// For the situations when a table of sounds is required...
 			static const unsigned char _SAWTRIWAVE_6581 [0x100]; // The number of elements that the oscillator can take...
@@ -225,9 +238,9 @@ namespace COMMODORE
 		std::vector <MCHEmul::UByte> _registers;
 
 		// Implementation
-		unsigned int _clocksPerSample;
-		/** Counter from 0 to _clockPerSample. */
-		unsigned int _counterClocksPerSample;
+		double _cyclesPerSample;
+		/** Fractional chip-cycle accumulator used to decide when a PCM sample must be emitted. */
+		double _counterCyclesPerSample;
 	};
 }
 
