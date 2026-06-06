@@ -26,8 +26,8 @@ ZXSPECTRUM::ULASoundSimpleLibWrapper::ULASoundSimpleLibWrapper (unsigned int cF,
 	  // but it could be change by software. The volumen in the original ULA is not changeable,
 	  _volumen (1.0f), 
 	  _voice (0, cF),
-	  _clocksPerSample ((unsigned int) ((double) cF / (double (sF)))),
-	  _counterClocksPerSample (0)
+	  _cyclesPerSample ((double) cF / (double (sF))),
+	  _counterCyclesPerSample (0.0f)
 {
 	// The voice has only a "plain wave" and it is always active!
 	static_cast <MCHEmul::PlainSoundWave*> (_voice.wave (MCHEmul::SoundWave::Type::_PLAIN)) -> 
@@ -46,7 +46,8 @@ void ZXSPECTRUM::ULASoundSimpleLibWrapper::setValue (size_t p, const MCHEmul::UB
 // ---
 const MCHEmul::UByte& ZXSPECTRUM::ULASoundSimpleLibWrapper::readValue (size_t p) const
 { 
-	return (_lastValueRead = (unsigned char) _voice.frequency ());
+	return (_lastValueRead = (unsigned char) 
+		((_voice.frequency () != 0.0f) ? 1 : 0));
 }
 
 // ---
@@ -56,9 +57,12 @@ void ZXSPECTRUM::ULASoundSimpleLibWrapper::initialize ()
 							  
 	_volumen = 1.0f;
 
-	_counterClocksPerSample = 0;
+	_cyclesPerSample = 0.0f;
+	_counterCyclesPerSample = 0.0f;
 	
 	_voice.initialize ();
+	// Active the right wave for the voice...
+	_voice.wave (MCHEmul::SoundWave::Type::_PLAIN) -> setActive (true);
 }
 
 // ---
@@ -70,10 +74,14 @@ bool ZXSPECTRUM::ULASoundSimpleLibWrapper::getData (MCHEmul::CPU *cpu, MCHEmul::
 	// It is here just for consistency between other wrappers!
 	_voice.clock ();
 
-	if ((result = ((++_counterClocksPerSample) >= _clocksPerSample)))
+	_counterCyclesPerSample += 1.0;
+	if ((result = 
+			(_cyclesPerSample > 0.0f &&
+			 _counterCyclesPerSample >= _cyclesPerSample)))
 	{
-		if ((_counterClocksPerSample -= _clocksPerSample) >= _clocksPerSample)
-			_counterClocksPerSample = 0; // Just in case _clocksPerSample == 0...
+		_counterCyclesPerSample = 
+			std::fmod (_counterCyclesPerSample, _cyclesPerSample);
+
 		dt = MCHEmul::UBytes 
 			({ (unsigned char) ((_voice.data () * _volumen) * 255.0f /** between 0 and 255. */) });
 	}

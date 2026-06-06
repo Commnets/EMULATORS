@@ -29,8 +29,8 @@ COMMODORE::VICISoundSimpleLibWrapper::VICISoundSimpleLibWrapper (unsigned int cF
 		  new COMMODORE::VICISoundSimpleLibWrapper::Voice (2, cF), 
 		  new COMMODORE::VICISoundSimpleLibWrapper::Voice (3, cF) }),
 	  _registers (std::vector <MCHEmul::UByte> (0x10, MCHEmul::UByte::_0)),
-	  _clocksPerSample ((unsigned int) ((double) cF / (double (sF)))),
-	  _counterClocksPerSample (0)
+	  _cyclesPerSample ((double) cF / (double (sF))),
+	  _counterCyclesPerSample (0.0f)
 {
 	// The voice 0...
 	COMMODORE::VICISoundSimpleLibWrapper::Voice* v0 = 
@@ -76,8 +76,9 @@ void COMMODORE::VICISoundSimpleLibWrapper::setValue (size_t p, const MCHEmul::UB
 		case 0x0a:
 			{
 				_voices [0] -> setActive ((v.value () & 0x80) != 0x00);
-				_voices [0] -> setFrequency ((unsigned short) (((double) _chipFrequency / 256.0f) / 
-					(double) (0x80 - (v.value () & 0x7f)))); // Bass
+				_voices [0] -> setFrequency (
+					((double) _chipFrequency / 256.0f) / 
+					(double) (0x80 - (v.value () & 0x7f)));			// Bass
 			}
 
 			break;
@@ -86,8 +87,9 @@ void COMMODORE::VICISoundSimpleLibWrapper::setValue (size_t p, const MCHEmul::UB
 		case 0x0b:
 			{
 				_voices [1] -> setActive ((v.value () & 0x80) != 0x00);
-				_voices [1] -> setFrequency ((unsigned short) (((double) _chipFrequency / 256.0f) / 
-					(double) (0x80 - (v.value () & 0x7f))) << 1); // Alto
+				_voices [1] -> setFrequency (
+					(((double) _chipFrequency / 256.0f) / 
+					 (double) (0x80 - (v.value () & 0x7f))) * 2);	// High
 
 			}
 
@@ -97,8 +99,9 @@ void COMMODORE::VICISoundSimpleLibWrapper::setValue (size_t p, const MCHEmul::UB
 		case 0x0c:
 			{
 				_voices [2] -> setActive ((v.value () & 0x80) != 0x00);
-				_voices [2] -> setFrequency ((unsigned short) (((double) _chipFrequency / 256.0f) / 
-					(double) (0x80 - (v.value () & 0x7f))) << 2); // Soprano
+				_voices [2] -> setFrequency (
+					(((double) _chipFrequency / 256.0f) / 
+					 (double) (0x80 - (v.value () & 0x7f))) * 4);	// Soprano
 			}
 
 			break;
@@ -107,8 +110,9 @@ void COMMODORE::VICISoundSimpleLibWrapper::setValue (size_t p, const MCHEmul::UB
 		case 0x0d:
 			{
 				_voices [3] -> setActive ((v.value () & 0x80) != 0x00);
-				_voices [3] -> setFrequency ((unsigned short) (((double) _chipFrequency / 256.0f) / 
-					(double) (0x80 - (v.value () & 0x7f))) << 3); // Pure noise
+				_voices [3] -> setFrequency (
+					(((double) _chipFrequency / 256.0f) / 
+					 (double) (0x80 - (v.value () & 0x7f))) * 8);	// Pure noise
 
 			}
 
@@ -117,7 +121,7 @@ void COMMODORE::VICISoundSimpleLibWrapper::setValue (size_t p, const MCHEmul::UB
 		// The volumen
 		case 0x0e:
 			{
-				_volumen = v.value () & 0x0f;
+				_volumen = (v.value () & 0x0f) / 15.0f; // Between 0 and 1...
 			}
 
 			break;
@@ -163,11 +167,26 @@ void COMMODORE::VICISoundSimpleLibWrapper::initialize ()
 							  
 	_volumen = 0.0f;
 
-	_counterClocksPerSample = 0;
+	_cyclesPerSample = 0.0f;
+	_counterCyclesPerSample = 0.0f;
 
 	// All voices are active in this emulation...
 	for (auto i : _voices)
 		i -> initialize ();
+
+	// Active the right wave per voice...
+	auto* v0 = static_cast<Voice*> (_voices [0]);
+	v0 -> setWavesActive (0x40);
+	v0 -> wave (MCHEmul::SoundWave::Type::_PULSE) -> setActive (true);
+	auto* v1 = static_cast <Voice*> (_voices [1]);
+	v1 -> setWavesActive (0x40);
+	v1 -> wave (MCHEmul::SoundWave::Type::_PULSE) -> setActive (true);
+	auto* v2 = static_cast <Voice*> (_voices [2]);
+	v2 -> setWavesActive (0x40);
+	v2 -> wave (MCHEmul::SoundWave::Type::_PULSE) -> setActive (true);
+	auto* v3 = static_cast <Voice*> (_voices [3]);
+	v3 -> setWavesActive (0x80);
+	v3 -> wave (MCHEmul::SoundWave::Type::_NOISE) -> setActive (true);
 
 	// All registers are 0 by default...
 	_registers = std::vector <MCHEmul::UByte> (0x10, MCHEmul::UByte::_0); 
@@ -181,10 +200,13 @@ bool COMMODORE::VICISoundSimpleLibWrapper::getData (MCHEmul::CPU *cpu, MCHEmul::
 	for (auto i : _voices)
 		i -> clock (); // just one...
 
-	if ((result = ((++_counterClocksPerSample) >= _clocksPerSample)))
+	_counterCyclesPerSample += 1.0;
+	if ((result = 
+			(_cyclesPerSample > 0.0f &&
+			 _counterCyclesPerSample >= _cyclesPerSample)))
 	{
-		if ((_counterClocksPerSample -= _clocksPerSample) >= _clocksPerSample)
-			_counterClocksPerSample = 0; // Just in case _clocksPerSample == 0...
+		_counterCyclesPerSample = 
+			std::fmod (_counterCyclesPerSample, _cyclesPerSample);
 
 		double iR = 0;
 		for (auto i : _voices)

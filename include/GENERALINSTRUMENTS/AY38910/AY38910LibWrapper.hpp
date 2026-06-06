@@ -110,10 +110,10 @@ namespace GENERALINSTRUMENTS
 			void setType (const MCHEmul::UByte& v); 
 
 			/** Sets directly the frequency of the envelope. */
-			unsigned short frequency () const
+			double frequency () const
 							{ return (_frequency); }
-			void setFrequency (unsigned short f)
-							{ _frequency = f; calculateSamplingData (); }
+			void setFrequency (double f)
+							{ _frequency = (f > 0.0f) ? f : 0.0; calculateSamplingData (); }
 
 			virtual void setStart (bool s) override;
 			virtual void initialize () override;
@@ -145,7 +145,7 @@ namespace GENERALINSTRUMENTS
 			/** The state in which the full wave is. */
 			State _state;
 			/** The internal frequency of the wave. */
-			unsigned short _frequency;
+			double _frequency;
 
 			/** The counters used to control the states _increase, _sustian and _decrease. */
 			struct StateCounters
@@ -227,9 +227,10 @@ namespace GENERALINSTRUMENTS
 		std::vector <MCHEmul::UByte> _registers;
 
 		// Implementation
-		unsigned int _clocksPerSample;
-		/** Counter from 0 to _clockPerSample. */
-		unsigned int _counterClocksPerSample;
+		/** The number of cycles that a sample takes in the sound. */
+		double _cyclesPerSample;
+		/** Counter from 0 to _cyclesPerSample. */
+		double _counterCyclesPerSample;
 	};
 }
 

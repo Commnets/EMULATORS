@@ -89,9 +89,7 @@ namespace COMMODORE
 			Voice (int id, unsigned int cF);
 
 			virtual void setActive (bool a) override
-							{ if ((_active != a) && (_active = a)) 
-								for (auto i : _waves) // Initialize only the counters of the waves...
-									i -> initializeInternalCounters (); }
+							{ _active = a; }
 
 			/** To support the ring modulation. */
 			virtual double data () const override;
@@ -114,9 +112,10 @@ namespace COMMODORE
 		std::vector <MCHEmul::UByte> _registers;
 
 		// Implementation
-		unsigned int _clocksPerSample;
-		/** Counter from 0 to _clockPerSample. */
-		unsigned int _counterClocksPerSample;
+		/** The number of cycles that a sample takes in the sound. */
+		double _cyclesPerSample;
+		/** Counter from 0 to _cyclesPerSample. */
+		double _counterCyclesPerSample;
 	};
 }
 

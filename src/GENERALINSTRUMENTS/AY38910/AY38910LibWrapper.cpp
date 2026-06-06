@@ -34,8 +34,8 @@ GENERALINSTRUMENTS::AY38910SimpleLibWrapper::AY38910SimpleLibWrapper (unsigned i
 	  _mixNoise { false, false, false }, // The noise is not mixed by default...
 	  _volumen { 0.0f, 0.0f, 0.0f },
 	  _registers (std::vector <MCHEmul::UByte> (0x20, MCHEmul::UByte::_0)),
-	  _clocksPerSample ((unsigned int) ((double) cF / (double (sF)))),
-	  _counterClocksPerSample (0)
+	  _cyclesPerSample ((double) cF / (double (sF))),
+	  _counterCyclesPerSample (0.0f)
 { 
 	// In each of the different voices the selected wave is the first one,
 	// ...except the 4th voice that the noise is selected by default.
@@ -64,8 +64,10 @@ void GENERALINSTRUMENTS::AY38910SimpleLibWrapper::setValue (size_t p, const MCHE
 		case 0x00:
 			{
 				_voices [0] -> setFrequency 
-					((unsigned short) ((double) _chipFrequency /
-						(double) (16 * (unsigned short) (((_registers [0x01].value () & 0x0f) << 8) + (unsigned short) v.value ()))));
+					(((double) _chipFrequency /
+					  (double) (16 * (unsigned short) 
+							(((_registers [0x01].value () & 0x0f) << 8) + 
+							 (unsigned short) v.value ()))));
 			}
 
 			break;
@@ -74,8 +76,10 @@ void GENERALINSTRUMENTS::AY38910SimpleLibWrapper::setValue (size_t p, const MCHE
 		case 0x01:
 			{
 				_voices [0] -> setFrequency 
-					((unsigned short) ((double) _chipFrequency /
-						(double) (16 * (unsigned short) (((v.value () & 0x0f) << 8) + (unsigned short) _registers [0x00].value ()))));
+					(((double) _chipFrequency /
+					  (double) (16 * (unsigned short) 
+						  (((v.value () & 0x0f) << 8) + 
+						   (unsigned short) _registers [0x00].value ()))));
 			}
 
 			break;
@@ -84,8 +88,10 @@ void GENERALINSTRUMENTS::AY38910SimpleLibWrapper::setValue (size_t p, const MCHE
 		case 0x02:
 			{
 				_voices [1] -> setFrequency 
-					((unsigned short) ((double) _chipFrequency /
-						(double) (16 * (unsigned short) (((_registers [0x03].value () & 0x0f) << 8) + (unsigned short) v.value ()))));
+					(((double) _chipFrequency /
+					  (double) (16 * (unsigned short) 
+						  (((_registers [0x03].value () & 0x0f) << 8) + 
+						   (unsigned short) v.value ()))));
 			}
 
 			break;
@@ -94,8 +100,10 @@ void GENERALINSTRUMENTS::AY38910SimpleLibWrapper::setValue (size_t p, const MCHE
 		case 0x03:
 			{
 				_voices [1] -> setFrequency 
-					((unsigned short) ((double) _chipFrequency /
-						(double) (16 * (unsigned short) (((v.value () & 0x0f) << 8) + (unsigned short) _registers [0x02].value ()))));
+					(((double) _chipFrequency /
+					  (double) (16 * (unsigned short) 
+						  (((v.value () & 0x0f) << 8) + 
+						   (unsigned short) _registers [0x02].value ()))));
 			}
 
 			break;
@@ -104,8 +112,10 @@ void GENERALINSTRUMENTS::AY38910SimpleLibWrapper::setValue (size_t p, const MCHE
 		case 0x04:
 			{
 				_voices [2] -> setFrequency 
-					((unsigned short) ((double) _chipFrequency /
-						(double) (16 * (unsigned short) (((_registers [0x05].value () & 0x0f) << 8) + (unsigned short) v.value ()))));
+					(((double) _chipFrequency /
+					  (double) (16 * (unsigned short) 
+						  (((_registers [0x05].value () & 0x0f) << 8) + 
+						   (unsigned short) v.value ()))));
 			}
 
 			break;
@@ -114,8 +124,10 @@ void GENERALINSTRUMENTS::AY38910SimpleLibWrapper::setValue (size_t p, const MCHE
 		case 0x05:
 			{
 				_voices [2] -> setFrequency 
-					((unsigned short) ((double) _chipFrequency /
-						(double) (16 * (unsigned short) (((v.value () & 0x0f) << 8) + (unsigned short) _registers [0x04].value ()))));
+					(((double) _chipFrequency /
+					  (double) (16 * (unsigned short) 
+						  (((v.value () & 0x0f) << 8) + 
+						   (unsigned short) _registers [0x04].value ()))));
 			}
 
 			break;	
@@ -123,7 +135,7 @@ void GENERALINSTRUMENTS::AY38910SimpleLibWrapper::setValue (size_t p, const MCHE
 		// Noise Generator Control Register
 		case 0x06:
 			{
-				_voices [3] -> setFrequency ((unsigned short) (v.value () & 0x1f));
+				_voices [3] -> setFrequency ((double) (v.value () & 0x1f));
 			}
 
 		// Mixer Control I/O Enable Register
@@ -182,8 +194,10 @@ void GENERALINSTRUMENTS::AY38910SimpleLibWrapper::setValue (size_t p, const MCHE
 		case 0x0b:
 			{
 				_envelope.setFrequency 
-					((unsigned short) ((double) _chipFrequency /
-						(double) (16 * (unsigned short) (((_registers [0x0c].value () & 0x0f) << 8) + (unsigned short) v.value ()))));
+					(((double) _chipFrequency /
+					  (double) (16 * (unsigned short) 
+						  (((_registers [0x0c].value () & 0x0f) << 8) + 
+						   (unsigned short) v.value ()))));
 			}
 
 			break;
@@ -193,8 +207,10 @@ void GENERALINSTRUMENTS::AY38910SimpleLibWrapper::setValue (size_t p, const MCHE
 		case 0x0c:
 			{
 				_envelope.setFrequency 
-					((unsigned short) ((double) _chipFrequency /
-						(double) (16 * (unsigned short) (((v.value () & 0x0f) << 8) + (unsigned short) _registers [0x0b].value ()))));
+					(((double) _chipFrequency /
+					  (double) (16 * (unsigned short) 
+						  (((v.value () & 0x0f) << 8) + 
+						   (unsigned short) _registers [0x0b].value ()))));
 			}
 
 			break;
@@ -259,11 +275,18 @@ void GENERALINSTRUMENTS::AY38910SimpleLibWrapper::initialize ()
 { 
 	AY38910LibWrapper::initialize ();
 
-	_counterClocksPerSample = 0;
+	_cyclesPerSample = 0.0f;
+	_counterCyclesPerSample = 0.0f;
 
 	// All voices are active in this emulation...
 	for (auto i : _voices)
 		i -> initialize ();
+	// Activate the right wave per voice...
+	_voices [0] -> wave (MCHEmul::SoundWave::Type::_SQUARE) -> setActive (true);
+	_voices [1] -> wave (MCHEmul::SoundWave::Type::_SQUARE) -> setActive (true);
+	_voices [2] -> wave (MCHEmul::SoundWave::Type::_SQUARE) -> setActive (true);
+	_voices [3] -> wave (MCHEmul::SoundWave::Type::_NOISE)  -> setActive (true);
+	_voices [3] -> setActive (true);
 
 	// All registers are 0 by default...
 	_registers = std::vector <MCHEmul::UByte> (0x20, MCHEmul::UByte::_0); 
@@ -280,10 +303,13 @@ bool GENERALINSTRUMENTS::AY38910SimpleLibWrapper::getData (MCHEmul::CPU *cpu, MC
 		i -> clock (); // just one...
 	_envelope.clock (); // just one...
 
-	if ((result = ((++_counterClocksPerSample) >= _clocksPerSample)))
+	_counterCyclesPerSample += 1.0;
+	if ((result = 
+			(_cyclesPerSample > 0.0f &&
+			 _counterCyclesPerSample >= _cyclesPerSample)))
 	{
-		if ((_counterClocksPerSample -= _clocksPerSample) >= _clocksPerSample)
-			_counterClocksPerSample = 0; // Just in case _clocksPerSample == 0...
+		_counterCyclesPerSample = 
+			std::fmod (_counterCyclesPerSample, _cyclesPerSample);
 
 		double iR = 0;
 		for (size_t i = 0; i < 3; i++) // The three voices are mixed with the noise if defined so...
@@ -436,22 +462,26 @@ void GENERALINSTRUMENTS::AY38910SimpleLibWrapper::Voice::initialize ()
 // ---
 double GENERALINSTRUMENTS::AY38910SimpleLibWrapper::Voice::data () const
 { 
+	if (!active ())
+		return (0.0f);
+
 	double result = 0.0f;
 
-	// The way the different waves is merged in the SID
-	// is not the standard way of just adding the values...
-	// ...because the way they are played are not the same...
-	// ..and definetively is not adding data!
 	switch (_wavesActive)
 	{
-		// TODO
-		
-		// This sitution is not possible but just in case!
+		case 0:
+			result = wave (MCHEmul::SoundWave::Type::_SQUARE) -> data ();
+			break;
+
+		case 1:
+			result = wave (MCHEmul::SoundWave::Type::_NOISE) -> data ();
+			break;
+
 		default:
 			break;
 	}
 
-	return ((result > 1.0f) ? 1.0f : result);
+	return (result > 1.0f) ? 1.0f : result;
 }
 
 // ---

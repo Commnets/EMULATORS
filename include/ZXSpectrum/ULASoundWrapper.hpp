@@ -90,8 +90,7 @@ namespace ZXSPECTRUM
 
 			/** When active, the internal counters are reactived. */
 			virtual void setActive (bool a) override
-							{ if ((_active != a) && (_active = a)) 
-								waves ()[0] -> initializeInternalCounters (); } // There is only one wave, remember!
+							{ _active = a; }
 
 			/** To get the data of the voice. */
 			virtual double data () const override;
@@ -101,10 +100,10 @@ namespace ZXSPECTRUM
 		Voice _voice;
 
 		// Implementation
-		/** The number of clocks that a sample takes in the sound. */
-		unsigned int _clocksPerSample;
-		/** Counter from 0 to _clockPerSample. */
-		unsigned int _counterClocksPerSample;
+		/** The number of cycles that a sample takes in the sound. */
+		double _cyclesPerSample;
+		/** Counter from 0 to _cyclesPerSample. */
+		double _counterCyclesPerSample;
 	};
 }
 
