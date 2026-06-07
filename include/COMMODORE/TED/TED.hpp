@@ -434,12 +434,13 @@ namespace COMMODORE
 	{
 		memoryRef () -> setActiveView (_TEDView);
 		
+		const size_t vc = ((size_t)_tedGraphicInfo._VC) & 0x03ff;
 		_tedGraphicInfo._lastScreenCodeDataRead =
 			_tedGraphicInfo._screenCodeData [_tedGraphicInfo._VLMI] =
-				memoryRef () -> value (_TEDRegisters -> screenMemory () + (size_t) _tedGraphicInfo._VC); 
+				memoryRef () -> value (_TEDRegisters -> screenMemory () + vc); 
 		_tedGraphicInfo._lastColorDataRead =
 			_tedGraphicInfo._colorData [_tedGraphicInfo._VLMI] = 
-				memoryRef () -> value (_TEDRegisters -> attributeMemory () + (size_t) _tedGraphicInfo._VC);
+				memoryRef () -> value (_TEDRegisters -> attributeMemory () + vc);
 		
 		memoryRef () -> setCPUView ();
 	}
@@ -456,28 +457,32 @@ namespace COMMODORE
 						? memoryRef () -> value (_MEMORYPOSIDLE1) : memoryRef () -> value (_MEMORYPOSIDLE2);
 		else // ..in the other one the info will be read attending to the situation of the memory...
 		{	 // ...and from ROM or RAM...
+			const bool oldTEDROM = ROMActiveToFetchCharData (); // What the configuration is...
+			const bool wantedTEDROM = _TEDRegisters -> ROMActiveToFetchCharAndBitmap (); // What is wanted...
+			if (oldTEDROM != wantedTEDROM) // If different activate the vision that is wanted...
+				activeROMtoFetchCharData(wantedTEDROM);
 
-			bool aR = ROMActiveToFetchCharData ();
-			if (_TEDRegisters -> ROMActiveToFetchCharAndBitmap () && !aR)
-				activeROMtoFetchCharData (true); // Active ROM to read the data...
+			// How many char are reacheable?
+			unsigned char characterIndexMask = 0xff; // 255 by default...
+			if (_TEDRegisters -> graphicExtendedColorTextModeActive ()) 
+				characterIndexMask = 0x3f; // But in this mode only 64 ones are...
+			else if (_TEDRegisters -> reverseVideoActive ()) 
+				characterIndexMask = 0x7f; // Or 128 in this other one...
+			// The index to access to the mempry is the position in the charDataMemory filetered by the mask...
+			const size_t charIndex = (size_t) _tedGraphicInfo._screenCodeData [_tedGraphicInfo._VLMI].value () & 
+				characterIndexMask;
 
 			_tedGraphicInfo._lastGraphicDataRead =
 				_tedGraphicInfo._graphicData [_tedGraphicInfo._VLMI] = 
 					_TEDRegisters -> textMode () 
 						? memoryRef () -> value (_TEDRegisters -> charDataMemory () + 
-							(((size_t) _tedGraphicInfo._screenCodeData [_tedGraphicInfo._VLMI].value () & 
-								(_TEDRegisters -> graphicExtendedColorTextModeActive () 
-									? 0x3f /** In the extended graphics mode there is only 64 chars possible. */
-									: (_TEDRegisters -> reverseVideoActive () 
-										? 0x7f /** When the reverse video is active, 
-												   there is only 128 chars available in the normal text. */
-										: 0xff)))
-							 << 3) + _tedGraphicInfo._RC)
+							(charIndex /** See above. */ << 3) + (_tedGraphicInfo._RC & 0x07))
 						: memoryRef () -> value (_TEDRegisters -> bitmapMemory () + 
-							(_tedGraphicInfo._VC << 3) + _tedGraphicInfo._RC);
+							(((size_t) (_tedGraphicInfo._VC & 0x03ff)) << 3) + 
+							  (size_t) _tedGraphicInfo._RC); // This is always between 0 and 7...
 
-			if (_TEDRegisters -> ROMActiveToFetchCharAndBitmap () && !aR)
-				activeROMtoFetchCharData (false); // Active the RAM to read the data...
+			if (oldTEDROM != wantedTEDROM)
+				activeROMtoFetchCharData (oldTEDROM); // and finally restore it...
 		}
 		
 		memoryRef () -> setCPUView ();

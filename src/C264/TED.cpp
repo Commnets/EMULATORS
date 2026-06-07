@@ -57,16 +57,22 @@ void C264::TED::processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifier* n)
 
 		case MCHEmul::InputOSSystem::_JOYSTICKMOVED:
 			{
-				std::shared_ptr <MCHEmul::InputOSSystem::JoystickMovementEvent> jm = 
+				std::shared_ptr <MCHEmul::InputOSSystem::JoystickMovementEvent> jm =
 					std::static_pointer_cast <MCHEmul::InputOSSystem::JoystickMovementEvent> (evnt.data ());
+				if ((jm -> _joystickId != 0 && jm -> _joystickId != 1) || jm -> _axisValues.size () > 2)
+					break; // Only joysticks 0 and 1 are allowed and never more than 2 axes.
 
-				size_t ct = 0; // Counts the axis...
 				MCHEmul::UByte dr = MCHEmul::UByte::_0;
 				for (size_t ct = 0; ct < jm -> _axisValues.size (); ct++)
-					if (jm -> _axisValues [ct] != 0) // When the value in the axis is 0, there is no bit to set!!
-						dr.setBit (((C264::InputOSSystem*) n) -> bitForJoystickAxis 
-							(jm -> _joystickId, (int) ct, jm -> _axisValues [ct]), true);
-				_TEDRegisters -> setJoystickStatus (jm -> _joystickId, dr); // If there is no axis pressed, then a 0 is set...
+					if (jm -> _axisValues [ct] != 0)
+						dr.setBit (((C264::InputOSSystem*) n) -> bitForJoystickAxis
+							(jm	-> _joystickId, (int) ct, jm -> _axisValues [ct]), true);
+
+				// Direction bits are 0..3. Fire bits are 6 or 7 and must be preserved...
+				_TEDRegisters -> setJoystickStatus
+				((size_t) jm -> _joystickId, 
+					(_TEDRegisters -> joystickStatus (
+						(size_t) jm -> _joystickId).value () & ~0x0f) | (dr.value () & 0x0f));
 			}
 
 			break;
@@ -75,6 +81,9 @@ void C264::TED::processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifier* n)
 			{
 				std::shared_ptr <MCHEmul::InputOSSystem::JoystickButtonEvent> jb = 
 					std::static_pointer_cast <MCHEmul::InputOSSystem::JoystickButtonEvent> (evnt.data ()); // Cannot be null...
+				if (jb -> _joystickId != 0 && jb -> _joystickId != 1)
+					break; // Only joysticks 0 y 1 are allowed!
+
 				_TEDRegisters -> setJoystickStatusBit (jb -> _joystickId, 
 					((C264::InputOSSystem*) n) -> bitForJoystickButton (jb -> _joystickId, jb -> _buttonId), true);
 			}
@@ -85,6 +94,9 @@ void C264::TED::processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifier* n)
 			{
 				std::shared_ptr <MCHEmul::InputOSSystem::JoystickButtonEvent> jb = 
 					std::static_pointer_cast <MCHEmul::InputOSSystem::JoystickButtonEvent> (evnt.data ()); // Cannot be null
+				if (jb -> _joystickId != 0 && jb -> _joystickId != 1)
+					break; // Only joysticks 0 y 1 are allowed!
+
 				_TEDRegisters -> setJoystickStatusBit (jb -> _joystickId, 
 					((C264::InputOSSystem*) n) -> bitForJoystickButton (jb -> _joystickId, jb -> _buttonId), false);
 			}

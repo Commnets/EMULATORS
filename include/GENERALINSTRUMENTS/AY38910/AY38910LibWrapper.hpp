@@ -69,7 +69,23 @@ namespace GENERALINSTRUMENTS
 		virtual bool getData (MCHEmul::CPU *cpu, MCHEmul::UBytes& dt) override;
 
 		virtual MCHEmul::InfoStructure getVoiceInfoStructure (unsigned char nV) const override
-						{ return ((nV < 3) ? _voices [nV] -> getInfoStructure () : MCHEmul::InfoStructure ()); }
+							{ return ((nV < 3) ? _voices [nV] -> getInfoStructure () : MCHEmul::InfoStructure ()); }
+
+		private:
+		// To simplify the management of periods ans frequecy 
+		// when the registers are managed...
+		inline unsigned int tonePeriod (unsigned char fR, unsigned char cR) const;
+		double toneFrequency (unsigned char fR, unsigned char cR) const
+							{ return (double) _chipFrequency / 
+								(16.0 * (double) tonePeriod (fR, cR)); }
+		inline unsigned int envelopePeriod () const;
+		double envelopeFrequency () const
+							{ return (double) _chipFrequency / 
+								(16.0 * (double) envelopePeriod ()); }
+		inline unsigned int noisePeriod () const;
+		double noiseFrequency () const
+							{ return (double) _chipFrequency / 
+								(16.0 * (double) noisePeriod ()); }
 
 		private:
 		unsigned int _chipFrequency;
@@ -232,6 +248,34 @@ namespace GENERALINSTRUMENTS
 		/** Counter from 0 to _cyclesPerSample. */
 		double _counterCyclesPerSample;
 	};
+
+	// ---
+	inline unsigned int AY38910SimpleLibWrapper::tonePeriod (unsigned char fR, unsigned char cR) const
+	{
+		unsigned int period =
+			(((unsigned int) (_registers [cR].value () & 0x0f)) << 8) |
+			 ((unsigned int) _registers [fR].value ());
+		// In the AY/YM tone generators, period 0 is treated as period 1.
+		return (period == 0) ? 1 : period;
+	}
+
+	// ---
+	inline unsigned int AY38910SimpleLibWrapper::envelopePeriod () const
+	{
+		unsigned int period =
+			(((unsigned int) _registers [0x0c].value ()) << 8) |
+			 ((unsigned int) _registers [0x0b].value ());
+		// Same defensive treatment: avoid zero divider.
+		return (period == 0) ? 1 : period;
+	}
+
+	// ---
+	inline unsigned int AY38910SimpleLibWrapper::noisePeriod () const
+	{
+		unsigned int period = (unsigned int) (_registers [0x06].value () & 0x1f);
+		// Noise period 0 must not become a zero divider.
+		return (period == 0) ? 1 : period;
+	}
 }
 
 #endif

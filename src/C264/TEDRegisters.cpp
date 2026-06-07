@@ -36,13 +36,14 @@ void C264::TEDRegisters::setValue (size_t p, const MCHEmul::UByte& v)
 				// This code is similar to the one in COMMODORE::TEDRegisters,
 				// but adapted to C264 behaviour...
 				// ...because the joysticks are connected directly to the TED keyboard port too!
-				_keyboardLatch = 
-					_keyboardPins & 
-						((v == 0xfb) // Just in case just only one type of joystick is selected...
-							? ~_joystickStatus [0]
-							: ((v == 0xfd) 
-								? ~_joystickStatus [1] 
-								: ~_joystickStatus [0] & ~_joystickStatus [1]));
+				MCHEmul::UByte latched = _keyboardPins;
+				// $FB = 11111011: bit 2 low selects Joy Lo.
+				if (!v.bit (2))
+					latched &= ~_joystickStatus [0];
+				// $FD = 11111101: bit 1 low selects Joy Hi.
+				if (!v.bit (1))
+					latched &= ~_joystickStatus [1];
+				_keyboardLatch = latched;
 
 				// It is said in some forums (https://plus4world.powweb.com/forum/42748#42810)
 				// that if the TED register 8 is broken, the system read the value of the keyboard port

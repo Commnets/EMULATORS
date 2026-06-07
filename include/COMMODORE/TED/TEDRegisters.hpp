@@ -62,7 +62,7 @@ namespace COMMODORE
 
 			/** The luminance is in bits 4, 5 & 6 y color in bits 0, 1, 2, 3. */
 			unsigned char asChar () const
-							{ return (((_luminance & 0x0f) << 4) | (_color & 0x0f)); }
+							{ return (((_luminance & 0x07) << 4) | (_color & 0x0f)); }
 
 			/** To get the nextluminance. */
 			Color nextLuminance () const
@@ -158,7 +158,7 @@ namespace COMMODORE
 
 		// Flash counter
 		void incrementFlashCounter ()
-						{ _flashCounter = _flashCounter++ & 0x01f; }
+						{ _flashCounter = (_flashCounter + 1) & 0x01f; }
 		bool flashCounterOn () const
 						{ return ((_flashCounter & 0x10) != 0); }
 
@@ -301,6 +301,10 @@ namespace COMMODORE
 		void setNumberPositionsNextInstruction (unsigned int nP)
 							{ _numberPositionsNextInstruction = nP; }
 
+		/** The alignement of the char Data memory will depend on the mode,
+			so any time the mode is changed, it must be recalculated. */
+		inline void recalculateCharDataMemory ();
+
 		protected:
 		// Elements related with this one...
 		/** The sound wrapper. */
@@ -388,6 +392,16 @@ namespace COMMODORE
 				((_T2 -> peekInterruptRequested () && _T2 -> interruptEnabled ()) ? 4 : 0) +
 				((_T3 -> peekInterruptRequested () && _T3 -> interruptEnabled ()) ? 8 : 0) +
 				((_lightPenIRQHappened && _lightPenIRQActive) ? 16 : 0)); 
+	}
+
+	// ---
+	inline void TEDRegisters::recalculateCharDataMemory ()
+	{
+	    const unsigned char mask =
+		    (_graphicExtendedColorTextModeActive || !_reverseVideoActive)
+			    ? 0xf8 : 0xfc; // Depends on the mode the bits kept will be one or others...
+	    _charDataMemory = MCHEmul::Address (2, 
+			(unsigned int) ((MCHEmul::PhysicalStorageSubset::readValue (0x13).value () & mask) << 8));
 	}
 }
 

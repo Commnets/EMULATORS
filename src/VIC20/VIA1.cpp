@@ -51,8 +51,8 @@ void VIC20::VIA1::processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifier* n
 				/** The full joystick status is saved,
 					but bear in mind that VIA1 only takes care of every movement except right/east 
 					that is managed through out VIA2. */
-				_VIA1Registers -> setJoystickStatus 
-					((dr == 0x00) ? 0xff /** none connected. */ : _VIA1Registers -> joystickStatus () & ~dr);
+				_VIA1Registers -> setJoystickStatus
+					((_VIA1Registers -> joystickStatus () | 0x9c) & ~dr);
 			}
 
 			break;

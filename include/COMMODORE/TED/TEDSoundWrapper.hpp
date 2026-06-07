@@ -77,13 +77,23 @@ namespace COMMODORE
 						{ return ((nV < 2) ? _voices [nV] -> getInfoStructure () : MCHEmul::InfoStructure ()); }
 
 		private:
+		// To help managing the voices...
+		unsigned int voice0Register () const
+						{ return (((unsigned int) (_registers [0x12].value () & 0x03)) << 8) |
+								   ((unsigned int) _registers [0x0e].value ()); }
+		unsigned int voice1Register () const
+						{ return (((unsigned int) (_registers [0x10].value () & 0x03)) << 8) |
+								   ((unsigned int) _registers [0x0f].value ()); }
+		inline double tedToneFrequency (unsigned int r) const;
+
+		private:
 		unsigned int _tedFrequency;
 		unsigned int _dividerValue;
 		unsigned int _samplingFrequency;
 		double _volumen;
 
-		/** The TED voice can adapt three different types of waves,
-			depending on the voice. */
+		/** The TED voice can adapt two different types of waves,
+			depending on the voice (1 in voice 1 and 2 in voice 2 (pulse + noise). */
 		class Voice final : public MCHEmul::SoundVoice
 		{
 			public:
@@ -114,7 +124,7 @@ namespace COMMODORE
 							{ static_cast <MCHEmul::PulseSoundWave*> 
 								(waves ()[(size_t) MCHEmul::SoundWave::Type::_PULSE]) -> setPulseUpPercentage (pU); }
 
-			/** To support the ring modulation. */
+			/** To get the current TED voice output. */
 			virtual double data () const override;
 
 			private:
@@ -127,8 +137,7 @@ namespace COMMODORE
 			unsigned char _wavesActive;
 		};
 
-		/** The different voices used by SID. \n
-			They will be three defined at construction time. */
+		/** The two TED sound voices. */
 		MCHEmul::SoundVoices _voices;
 
 		/** The registers used by the TED. */
@@ -140,6 +149,15 @@ namespace COMMODORE
 		/** Counter from 0 to _cyclesPerSample. */
 		double _counterCyclesPerSample;
 	};
+
+	// ---
+	inline double TEDSoundSimpleLibWrapper::tedToneFrequency (unsigned int r) const
+	{
+	    unsigned int divisor = 1024 - (r & 0x03ff);
+		if (divisor == 0) divisor = 1;
+		return ((double) _tedFrequency / (double) _dividerValue) /
+				(8.0f * (double) divisor);
+	}
 }
 
 #endif

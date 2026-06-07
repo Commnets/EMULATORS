@@ -222,14 +222,14 @@ const MCHEmul::UByte& COMMODORE::VICIRegisters::readValue (size_t p) const
 
 		case 0x08:
 			{
-				// TODO
+				result = MCHEmul::UByte::_FF;
 			}
 
 			break;
 
 		case 0x09:
 			{
-				// TODO
+				result = MCHEmul::UByte::_FF;
 			}
 
 			break;

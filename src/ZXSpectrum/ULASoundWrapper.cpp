@@ -26,7 +26,7 @@ ZXSPECTRUM::ULASoundSimpleLibWrapper::ULASoundSimpleLibWrapper (unsigned int cF,
 	  // but it could be change by software. The volumen in the original ULA is not changeable,
 	  _volumen (1.0f), 
 	  _voice (0, cF),
-	  _cyclesPerSample ((double) cF / (double (sF))),
+	  _cyclesPerSample ((double) cF / (double (sF))), // It doesn't change ever...
 	  _counterCyclesPerSample (0.0f)
 {
 	// The voice has only a "plain wave" and it is always active!
@@ -57,10 +57,10 @@ void ZXSPECTRUM::ULASoundSimpleLibWrapper::initialize ()
 							  
 	_volumen = 1.0f;
 
-	_cyclesPerSample = 0.0f;
 	_counterCyclesPerSample = 0.0f;
 	
 	_voice.initialize ();
+
 	// Active the right wave for the voice...
 	_voice.wave (MCHEmul::SoundWave::Type::_PLAIN) -> setActive (true);
 }

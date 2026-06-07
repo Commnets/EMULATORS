@@ -88,7 +88,7 @@ namespace ZXSPECTRUM
 
 			Voice (int id, unsigned int cF);
 
-			/** When active, the internal counters are reactived. */
+			/** Enables or disables audible output for this voice. */
 			virtual void setActive (bool a) override
 							{ _active = a; }
 

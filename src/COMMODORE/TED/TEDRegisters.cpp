@@ -118,7 +118,7 @@ void COMMODORE::TEDRegisters::setValue (size_t p, const MCHEmul::UByte& v)
 		// Timer 2 Low Byte
 		case 0x02:
 			{
-				_T2 -> setInitialValue ((_T1 -> initialValue () & 0xff00) | v.value ());
+				_T2 -> setInitialValue ((_T2 -> initialValue () & 0xff00) | v.value ());
 
 				// Stop counting until the hight byte is loaded...
 				_T2 -> stop ();
@@ -129,7 +129,7 @@ void COMMODORE::TEDRegisters::setValue (size_t p, const MCHEmul::UByte& v)
 		// Timer 2 High Byte
 		case 0x03:
 			{
-				_T2 -> setInitialValue ((_T1 -> initialValue () & 0x00ff) | (v.value () << 8));
+				_T2 -> setInitialValue ((_T2 -> initialValue () & 0x00ff) | (v.value () << 8));
 
 				// Once the hight byte is loaded, the timer starts to count...
 				_T2 -> start ();
@@ -140,7 +140,7 @@ void COMMODORE::TEDRegisters::setValue (size_t p, const MCHEmul::UByte& v)
 		// Timer 3 Low Byte
 		case 0x04:
 			{
-				_T3 -> setInitialValue ((_T1 -> initialValue () & 0xff00) | v.value ());
+				_T3 -> setInitialValue ((_T3 -> initialValue () & 0xff00) | v.value ());
 
 				// Stop counting until the hight byte is loaded...
 				_T3 -> stop ();
@@ -151,7 +151,7 @@ void COMMODORE::TEDRegisters::setValue (size_t p, const MCHEmul::UByte& v)
 		// Timer 3 High Byte
 		case 0x05:
 			{
-				_T3 -> setInitialValue ((_T1 -> initialValue () & 0x00ff) | (v.value () << 8));
+				_T3 -> setInitialValue ((_T3 -> initialValue () & 0x00ff) | (v.value () << 8));
 
 				// Once the hight byte is loaded, the timer starts to count...
 				_T3 -> start ();
@@ -171,6 +171,7 @@ void COMMODORE::TEDRegisters::setValue (size_t p, const MCHEmul::UByte& v)
 				// Anyway, setting it up to 0 instead, has no consequences inthe emulation...
 
 				setGraphicModeActive ();
+				recalculateCharDataMemory (); // because the mode can affect it!
 			}
 			
 			break;
@@ -186,6 +187,7 @@ void COMMODORE::TEDRegisters::setValue (size_t p, const MCHEmul::UByte& v)
 				_reverseVideoActive = !v.bit (7);
 
 				setGraphicModeActive ();
+				recalculateCharDataMemory (); // because the mode can affect it!
 			}
 
 			break;
@@ -270,7 +272,7 @@ void COMMODORE::TEDRegisters::setValue (size_t p, const MCHEmul::UByte& v)
 			{
 				// The bits 0 y 1 are MSB of the Voice 1 Frequency...
 				_soundWrapper -> setValue (pp, v);
-				// The rest is part of the memlory configuration...
+				// The rest is part of the memory configuration...
 				_ROMActiveToFetchCharAndBitmap = v.bit (2);
 				_bitmapMemory = MCHEmul::Address (2, 
 					(unsigned int) ((v.value () & 0x38 /** bits 3, 4 & 5. */) << 10
@@ -286,9 +288,7 @@ void COMMODORE::TEDRegisters::setValue (size_t p, const MCHEmul::UByte& v)
 			{
 				_ROMMemoryConfigurationActive = v.bit (0);
 				_singleClockModeForced = v.bit (1);
-				_charDataMemory = MCHEmul::Address (2, 
-					(unsigned int) ((v.value () & 0xfc /** bits 2 - 7. */) << 8 
-						/** 2 + 8 to become the bits 10 - 15 of the address. */));
+				recalculateCharDataMemory ();
 			}
 
 			break;

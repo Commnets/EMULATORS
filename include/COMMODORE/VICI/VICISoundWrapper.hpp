@@ -91,7 +91,7 @@ namespace COMMODORE
 			virtual void setActive (bool a) override
 							{ _active = a; }
 
-			/** To support the ring modulation. */
+			/** To get the current voice output. */
 			virtual double data () const override;
 
 			private:

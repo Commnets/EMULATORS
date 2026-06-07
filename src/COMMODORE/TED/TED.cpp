@@ -975,7 +975,7 @@ COMMODORE::TED::DrawResult COMMODORE::TED::drawMonoColorChar (int cb, bool c, in
 			_TEDRegisters -> reverseVideoActive ()) dP = !dP;
 		// Second: Blinks or not?: The bit of the byte read defines whether the color blinks or not...
 		if (_tedGraphicInfo._colorData [iBy].bit (7) && 
-			_TEDRegisters -> flashCounterOn ()) dP = !dP;
+			_TEDRegisters -> flashCounterOn ()) dP = false;
 		// Thirs: Is the cursor active on it?:
 		// ...if the cursor is over the pixels to draw and the cursor hardware is on, changes the status of the pixel...
 		// Hardware status only happen in the MonoColorChar mode...
@@ -1031,9 +1031,13 @@ COMMODORE::TED::DrawResult COMMODORE::TED::drawMultiColorChar (int cb, bool inv)
 			// If the pixel 7 of the character data is set to 1, 
 			// the video inverse is then calculated...
 			if (_tedGraphicInfo._screenCodeData [iBy].bit (7) &&
-				_TEDRegisters -> reverseVideoActive ()) cs = 3 - cs;
+				_TEDRegisters -> reverseVideoActive ()) cs = 0x03 - cs;
 			// In this no blinking possibility here although the bit 7 of the attribute byte is set...
 			// And there is no cursos possiblities either in this mode...
+
+			// However if after all, 
+			// the mode is "invalid" the color would be always 0x00
+			if (inv) cs = 0x00;
 
 			// The color of the pixels will depend on the value of cs....
 			// In the case of cs == 0x00 it will be redudant as it is already background, but just in case...
@@ -1063,6 +1067,7 @@ COMMODORE::TED::DrawResult COMMODORE::TED::drawMultiColorChar (int cb, bool inv)
 
 				default:
 					// Other value is not possible...
+					// But just in case...
 					break;
 			}
 
@@ -1089,9 +1094,13 @@ COMMODORE::TED::DrawResult COMMODORE::TED::drawMultiColorChar (int cb, bool inv)
 
 			// ...and finally draws it...
 			// In the case of dP == false, it is redundant at it is already background...
-			result._foregroundColorData [i] = dP 
-				? (unsigned int) (_tedGraphicInfo._colorData [iBy].value () & 0x7f /** Without the bit 7 (tha define blinking mode or not) */)
-				: (unsigned int) (_TEDRegisters -> backgroundColor ().asChar ());
+			result._foregroundColorData [i] = 
+				inv 
+					? 0x00
+					: dP 
+						? (unsigned int) (_tedGraphicInfo._colorData [iBy].value () & 0x7f 
+							/** Without the bit 7 (tha define blinking mode or not) */)
+						: (unsigned int) (_TEDRegisters -> backgroundColor ().asChar ());
 		}
 	}
 
@@ -1156,14 +1165,14 @@ COMMODORE::TED::DrawResult COMMODORE::TED::drawMonoColorBitMap (int cb, bool inv
 		bool bS = _tedGraphicInfo._graphicData [iBy].bit (iBt);
 
 		// Determines the color as a function of the screen code and the attribute byte...
-		unsigned int fc = 
-			inv 
+		unsigned int fc =
+			inv
 				? 0x00 // When invalid, all pixels are black...
-				: bS 
-					? (((_tedGraphicInfo._screenCodeData [iBy].value () & 0x70 /** bits 4, 5 & 6. */) >> 4 /** moved to color info. */)
-						| ((_tedGraphicInfo._colorData [iBy].value () & 0x07 /** bits 0, 1 & 2. */) << 4 /** moved to luminance info. */))
-					: ((_tedGraphicInfo._screenCodeData [iBy].value () & 0x07 /** bits 0, 1 & 2. */)
-						| (_tedGraphicInfo._colorData [iBy].value () & 0x70 /** bits 4, 5 & 6. */));
+				: bS
+					? (((_tedGraphicInfo._screenCodeData[iBy].value() & 0xf0) >> 4) // Moved to color info...
+						| ((_tedGraphicInfo._colorData[iBy].value() & 0x07) << 4))  // Moved to luminance info...
+					: ((_tedGraphicInfo._screenCodeData[iBy].value() & 0x0f)		// Idem...
+						| (_tedGraphicInfo._colorData[iBy].value() & 0x70));
 
 		// ...and draws it!!
 		result._foregroundColorData [i] = fc;

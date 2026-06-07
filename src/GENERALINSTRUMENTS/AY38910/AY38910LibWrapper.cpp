@@ -34,7 +34,7 @@ GENERALINSTRUMENTS::AY38910SimpleLibWrapper::AY38910SimpleLibWrapper (unsigned i
 	  _mixNoise { false, false, false }, // The noise is not mixed by default...
 	  _volumen { 0.0f, 0.0f, 0.0f },
 	  _registers (std::vector <MCHEmul::UByte> (0x20, MCHEmul::UByte::_0)),
-	  _cyclesPerSample ((double) cF / (double (sF))),
+	  _cyclesPerSample ((double) cF / (double (sF))), // It doesn't change ever...
 	  _counterCyclesPerSample (0.0f)
 { 
 	// In each of the different voices the selected wave is the first one,
@@ -44,9 +44,12 @@ GENERALINSTRUMENTS::AY38910SimpleLibWrapper::AY38910SimpleLibWrapper (unsigned i
 	_voices [0] -> wave (MCHEmul::SoundWave::Type::_SQUARE) -> setActive (true);
 	_voices [1] -> wave (MCHEmul::SoundWave::Type::_SQUARE) -> setActive (true);
 	_voices [2] -> wave (MCHEmul::SoundWave::Type::_SQUARE) -> setActive (true);
-	_voices [3] -> wave (MCHEmul::SoundWave::Type::_NOISE)  -> setActive (true);
 	// Voices are not active by default, but noise is always...
-	_voices [3] -> setActive (true);
+	auto* noiseVoice =
+	    static_cast <GENERALINSTRUMENTS::AY38910SimpleLibWrapper::Voice*> (_voices [3]);
+	noiseVoice -> setWavesActive (1);
+	noiseVoice -> wave (MCHEmul::SoundWave::Type::_NOISE) -> setActive (true);
+	noiseVoice -> setActive (true);
 	// The envelope is always active. It control depends on other internal variable (_useEnvelope)
 	_envelope.setActive (true);
 }
@@ -60,96 +63,53 @@ void GENERALINSTRUMENTS::AY38910SimpleLibWrapper::setValue (size_t p, const MCHE
 
 	switch (pp)
 	{
-		// Fine Tune Register Voice 0
+		// Fine & Coarse Tune Register Voice 0
 		case 0x00:
-			{
-				_voices [0] -> setFrequency 
-					(((double) _chipFrequency /
-					  (double) (16 * (unsigned short) 
-							(((_registers [0x01].value () & 0x0f) << 8) + 
-							 (unsigned short) v.value ()))));
-			}
-
-			break;
-
-		// Coarse Tune Register Voice 0
 		case 0x01:
 			{
-				_voices [0] -> setFrequency 
-					(((double) _chipFrequency /
-					  (double) (16 * (unsigned short) 
-						  (((v.value () & 0x0f) << 8) + 
-						   (unsigned short) _registers [0x00].value ()))));
+				_voices [0] -> setFrequency (toneFrequency (0x00, 0x01));
 			}
 
 			break;
 
-		// Fine Tune Register Voice 1
+		// Fine & Coarse Tune Register Voice 1
 		case 0x02:
-			{
-				_voices [1] -> setFrequency 
-					(((double) _chipFrequency /
-					  (double) (16 * (unsigned short) 
-						  (((_registers [0x03].value () & 0x0f) << 8) + 
-						   (unsigned short) v.value ()))));
-			}
-
-			break;
-
-		// Coarse Tune Register Voice 1
 		case 0x03:
 			{
-				_voices [1] -> setFrequency 
-					(((double) _chipFrequency /
-					  (double) (16 * (unsigned short) 
-						  (((v.value () & 0x0f) << 8) + 
-						   (unsigned short) _registers [0x02].value ()))));
+				_voices [1] -> setFrequency (toneFrequency (0x02, 0x03));
 			}
 
 			break;
 
-		// Fine Tune Register Voice 2
+		// Fine & Coarse Tune Register Voice 2
 		case 0x04:
-			{
-				_voices [2] -> setFrequency 
-					(((double) _chipFrequency /
-					  (double) (16 * (unsigned short) 
-						  (((_registers [0x05].value () & 0x0f) << 8) + 
-						   (unsigned short) v.value ()))));
-			}
-
-			break;
-
-		// Coarse Tune Register Voice 2
 		case 0x05:
 			{
-				_voices [2] -> setFrequency 
-					(((double) _chipFrequency /
-					  (double) (16 * (unsigned short) 
-						  (((v.value () & 0x0f) << 8) + 
-						   (unsigned short) _registers [0x04].value ()))));
+				_voices [2] -> setFrequency (toneFrequency (0x04, 0x05));
 			}
 
-			break;	
+			break;
 
 		// Noise Generator Control Register
 		case 0x06:
 			{
-				_voices [3] -> setFrequency ((double) (v.value () & 0x1f));
+				_voices [3] -> setFrequency (noiseFrequency ());
 			}
+
+			break;
 
 		// Mixer Control I/O Enable Register
 		case 0x07:
 			{
-				// The activation, activates also the envlope...
-				_voices [0] -> setActive (v.bit (0));
-				_voices [1] -> setActive (v.bit (1));
-				_voices [2] -> setActive (v.bit (2));
+				// Mixer register. Bits are inverted: 0 enables tone/noise output.
+				_voices [0] -> setActive (!v.bit (0));
+				_voices [1] -> setActive (!v.bit (1));
+				_voices [2] -> setActive (!v.bit (2));
 				// The bits 3 to 5 determine whether the noise should be mixed 
 				// with the tone comming from the 3 voices...
-				_mixNoise [0] = v.bit (3);
-				_mixNoise [1] = v.bit (4);
-				_mixNoise [2] = v.bit (5);
+				_mixNoise [0] = !v.bit (3);
+				_mixNoise [1] = !v.bit (4);
+				_mixNoise [2] = !v.bit (5);
 				// The bits 6 & 7 are not implemented yet...
 			}
 
@@ -189,28 +149,12 @@ void GENERALINSTRUMENTS::AY38910SimpleLibWrapper::setValue (size_t p, const MCHE
 
 		break;
 
-		// Envelope Period Control Register 1
-		// In the Yamaha documentation this register is called R13 instead of R11
+		// Envelope Period Control Register 1 & 2
+		// In the Yamaha documentation this register is called R13/R14 instead of R11/R12
 		case 0x0b:
-			{
-				_envelope.setFrequency 
-					(((double) _chipFrequency /
-					  (double) (16 * (unsigned short) 
-						  (((_registers [0x0c].value () & 0x0f) << 8) + 
-						   (unsigned short) v.value ()))));
-			}
-
-			break;
-
-		// Envelope Period Control Register 2
-		// In the Yamaha documentation this register is called R14 instead of R12
 		case 0x0c:
 			{
-				_envelope.setFrequency 
-					(((double) _chipFrequency /
-					  (double) (16 * (unsigned short) 
-						  (((v.value () & 0x0f) << 8) + 
-						   (unsigned short) _registers [0x0b].value ()))));
+				_envelope.setFrequency (envelopeFrequency ());
 			}
 
 			break;
@@ -275,18 +219,21 @@ void GENERALINSTRUMENTS::AY38910SimpleLibWrapper::initialize ()
 { 
 	AY38910LibWrapper::initialize ();
 
-	_cyclesPerSample = 0.0f;
 	_counterCyclesPerSample = 0.0f;
 
 	// All voices are active in this emulation...
 	for (auto i : _voices)
 		i -> initialize ();
+
 	// Activate the right wave per voice...
 	_voices [0] -> wave (MCHEmul::SoundWave::Type::_SQUARE) -> setActive (true);
 	_voices [1] -> wave (MCHEmul::SoundWave::Type::_SQUARE) -> setActive (true);
 	_voices [2] -> wave (MCHEmul::SoundWave::Type::_SQUARE) -> setActive (true);
-	_voices [3] -> wave (MCHEmul::SoundWave::Type::_NOISE)  -> setActive (true);
-	_voices [3] -> setActive (true);
+	auto* noiseVoice =
+	    static_cast <GENERALINSTRUMENTS::AY38910SimpleLibWrapper::Voice*> (_voices [3]);
+	noiseVoice -> setWavesActive (1);
+	noiseVoice -> wave (MCHEmul::SoundWave::Type::_NOISE) -> setActive (true);
+	noiseVoice -> setActive (true);
 
 	// All registers are 0 by default...
 	_registers = std::vector <MCHEmul::UByte> (0x20, MCHEmul::UByte::_0); 

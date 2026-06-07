@@ -29,7 +29,7 @@ COMMODORE::VICISoundSimpleLibWrapper::VICISoundSimpleLibWrapper (unsigned int cF
 		  new COMMODORE::VICISoundSimpleLibWrapper::Voice (2, cF), 
 		  new COMMODORE::VICISoundSimpleLibWrapper::Voice (3, cF) }),
 	  _registers (std::vector <MCHEmul::UByte> (0x10, MCHEmul::UByte::_0)),
-	  _cyclesPerSample ((double) cF / (double (sF))),
+	  _cyclesPerSample ((double) cF / (double (sF))), // It doesn't change ever...
 	  _counterCyclesPerSample (0.0f)
 {
 	// The voice 0...
@@ -167,7 +167,6 @@ void COMMODORE::VICISoundSimpleLibWrapper::initialize ()
 							  
 	_volumen = 0.0f;
 
-	_cyclesPerSample = 0.0f;
 	_counterCyclesPerSample = 0.0f;
 
 	// All voices are active in this emulation...
@@ -237,9 +236,8 @@ COMMODORE::VICISoundSimpleLibWrapper::Voice::Voice (int id, unsigned int cF)
 // ---
 double COMMODORE::VICISoundSimpleLibWrapper::Voice::data () const
 { 
-	// When the wave is active or is in test active and the selected wave is a pulse...
-	// ...the sound has to be produced
-	if (!active ())
+	// When the voice output is disabled, no audible data is produced.
+ 	if (!active ())
 		return (0.0f);
 
 	double result = 0.0f;
