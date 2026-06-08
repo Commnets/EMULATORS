@@ -89,7 +89,7 @@ namespace MCHEmul
 			It can not be overloaded. */
 		double clockValue () const
 						{ return ((_cyclesPerWave <= 0.0f) 
-							? 0.0f : (double) _counterInCyclesPerWave / (double) _cyclesPerWave); }
+							? 0.0f : ((double) _counterInCyclesPerWave / (double) _cyclesPerWave)); }
 
 		/** To know whether the clock has pass over 0. \n
 			When the value is read, it is set back to false. */

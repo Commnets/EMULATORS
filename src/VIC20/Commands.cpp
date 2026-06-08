@@ -7,6 +7,7 @@ const std::string VIC20::VIA2StatusCommand::_NAME = "CVIA2";
 const std::string VIC20::ScreenMemoryDUMPCommand::_NAME = "CSCREENDUMP";
 const std::string VIC20::ColorMemoryDUMPCommand::_NAME = "CCOLORDUMP";
 const std::string VIC20::CharactersDrawCommand::_NAME = "CCHARSDRAW";
+const std::string VIC20::ManageLightPenCommand::_NAME = "CLIGHTPEN";
 
 // ---
 void VIC20::VIA1StatusCommand::executeImpl (MCHEmul::CommandExecuter* cE, MCHEmul::Computer* c, MCHEmul::InfoStructure& rst)
@@ -82,4 +83,19 @@ void VIC20::CharactersDrawCommand::executeImpl (MCHEmul::CommandExecuter* cE,
 
 	rst.add ("DRAW", MCHEmul::concatenateStrings 
 		(static_cast <VIC20::CommodoreVIC20*> (c) -> vicI () -> charsDrawSnapshot (c -> cpu (), chrs), "\n"));
+}
+
+// ---
+void VIC20::ManageLightPenCommand::executeImpl (MCHEmul::CommandExecuter* cE,
+	MCHEmul::Computer* c, MCHEmul::InfoStructure& rst)
+{
+	if (c == nullptr)
+		return;
+
+	if (dynamic_cast <VIC20::CommodoreVIC20*> (c) == nullptr ||
+		static_cast <VIC20::CommodoreVIC20*> (c) -> vicI () == nullptr)
+		return;
+
+	COMMODORE::VICI* vicI = static_cast <VIC20::CommodoreVIC20*> (c) -> vicI ();
+	vicI -> setLightPenActive (parameter ("00") == "ON"); // Active?
 }

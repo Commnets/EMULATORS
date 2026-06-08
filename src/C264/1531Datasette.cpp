@@ -107,8 +107,6 @@ MCHEmul::FileData* C264::Datasette1531::retrieveData () const
 // ---
 bool C264::Datasette1531Injection::executeFindHeaderTrap (MCHEmul::CPU* cpu)
 {
-	_IFDEBUG debugHeaderFileFound (cpu);
-
 	int e = 0;
 
 	MCHEmul::Address ctteBuffer = _definition._bufferAddr;
@@ -119,16 +117,16 @@ bool C264::Datasette1531Injection::executeFindHeaderTrap (MCHEmul::CPU* cpu)
 	// If there is no data, makes no sense to progress...
 	// ..ot the data counter is at the end of the datasette file...
 	if (_data._data.empty () ||
-		_dataCounter > (_data._data.size () - 1))
+		_dataCounter >= _data._data.size ())
 		e = 1;
 	else
 	{
 		// Or if there is no any type of data of the type
 		// that this traps needs...
-		while (_data._data [_dataCounter].attribute ("TYPE") != "1" /** File record normal = 1 */
-			&& _dataCounter < _data._data.size ())
+		while (_dataCounter < _data._data.size () &&
+			   _data._data [_dataCounter].attribute ("TYPE") != "1" /** File record normal = 1 */)
 			_dataCounter++;
-		if (_dataCounter > _data._data.size ())
+		if (_dataCounter >= _data._data.size ())
 		{
 			_dataCounter = 0; // Start back next time...
 
@@ -139,6 +137,8 @@ bool C264::Datasette1531Injection::executeFindHeaderTrap (MCHEmul::CPU* cpu)
 	// Only if something usefull was found, the method continues...
 	if (e == 0)
 	{
+		_IFDEBUG debugHeaderFileFound (cpu);
+
 		// Storing the header of the info found in the cassette buffer...
 		MCHEmul::DataMemoryBlock& dtM = _data._data [_dataCounter];
 		cpu -> memoryRef () -> put (MCHEmul::Address ({ 0xf8, 0x00 }, false), 0x01 /** Machine type default value. */);
@@ -152,9 +152,9 @@ bool C264::Datasette1531Injection::executeFindHeaderTrap (MCHEmul::CPU* cpu)
 	else
 	if (e == 1)
 	{
-		cpu -> memoryRef () -> put (MCHEmul::Address ({ 0xf8, 0x00 }, false), 0x05 /** End of casette. */);
-
 		_IFDEBUG debugNothingToRead ();
+
+		cpu -> memoryRef () -> put (MCHEmul::Address ({ 0xf8, 0x00 }, false), 0x05 /** End of casette. */);
 	}
 	else
 		_IFDEBUG debugErrorTrap ();

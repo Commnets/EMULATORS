@@ -98,7 +98,7 @@ namespace COMMODORE
 		virtual ~VICII () override;
 
 		// Managing lightpen
-		/** To activate/descativate the lightpen. */
+		/** To activate/desactivate the lightpen. */
 		void setLightPenActive (bool a)
 							{ _VICIIRegisters -> setLigthPenActive (a); 
 							  _eventStatus._lightPenPositionLatched = false;}
@@ -1213,7 +1213,7 @@ namespace COMMODORE
 		const int my = _VICIIRegisters -> mousePositionY ();
 
 		// The raster advances horizontally in 8-pixel blocks in this emulation.
-		// And it is bneeded to compare visible thing with visible things...
+		// And it is needed to compare visible thing with visible things...
 		if (my != (int) rv || 
 			!((mx >= (int) cv) && (mx < (int) (cv + _raster.step ()))))
 			return;

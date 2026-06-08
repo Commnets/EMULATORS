@@ -64,3 +64,6 @@ Dir A:@VIADDRA@, Dir B:@VIADDRB@
 ;CCHARSDRAW
 @DRAW@
 #---
+#---
+;CLIGHTPEN
+#---

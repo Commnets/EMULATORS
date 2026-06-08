@@ -69,20 +69,28 @@ namespace COMMODORE
 		unsigned short currentRasterPositionInLine () const
 							{ return (_raster -> hData ().currentPosition ()); }
 
-		/** To manage the light pen. \n
-			This temporal variables are set from the VICI directly. */
-		unsigned short currentLightPenHorizontalPosition () const
-							{ return (_currentLightPenHorizontalPosition); }
-		unsigned short currentLightPenVerticalPosition () const
-							{ return (_currentLightPenVerticalPosition); }
-		void currentLightPenPosition (unsigned short& x, unsigned short& y)
-							{ x = _currentLightPenHorizontalPosition; y = _currentLightPenVerticalPosition; }
-		void setCurrentLightPenPosition (unsigned short x, unsigned short y)
-							{ _currentLightPenHorizontalPosition = x; _currentLightPenVerticalPosition = y; }
+		// Knowing info about the lightpen...
+		/** The lightpen is simulated using the mouse. */
+		inline void latchLightPenPositionFromRaster (unsigned char x, unsigned char y)
+							{ _latchLightPenHorizontalPosition = x; _latchLightPenVerticalPosition = y; }
+		void lightPenPositionLatched (unsigned char* x, unsigned char* y)
+							{ *x = _latchLightPenHorizontalPosition; *y = _latchLightPenVerticalPosition; }
 		bool lightPenActive () const
 							{ return (_lightPenActive); }
 		void setLigthPenActive (bool lP)
 							{ _lightPenActive = lP; }
+
+		// Managing the info about the mouse, that is used to similate the ligthtPen
+		/** To know where the mouse is within the visible zone, if is is.
+			When it is not there the variables returned -1. */
+		int mousePositionX () const
+							{ return (_mousePositionX); }
+		int mousePositionY () const
+							{ return (_mousePositionY); }
+		void setMousePosition (int x, int y)
+							{ _mousePositionX = x; _mousePositionY = y; }
+		bool isMouseInVisibleZone () const
+							{ return (_mousePositionX != -1 && _mousePositionY != -1); }
 
 		/** To manage the things related with the sound. */
 		void setSoundLibWrapper (MCHEmul::SoundLibWrapper* w)
@@ -159,8 +167,11 @@ namespace COMMODORE
 		bool _charsExpanded;
 		/** Memory numbers. */
 		unsigned int _b9ScreenColorMemory, _b10to13ScreenMemory, _b10to13CharDatamemory;
-		/** Related with the pigh pen. */
-		unsigned short _currentLightPenHorizontalPosition, _currentLightPenVerticalPosition; // Where the light pen is...
+		/** Where the lightpen has been detected. */
+		unsigned char _latchLightPenHorizontalPosition;
+		/** The position is consolidated once per frame. */
+		unsigned char _latchLightPenVerticalPosition;
+		/** To identify whether the light pen is or not active to take it into account in the simulation. */
 		bool _lightPenActive;
 		/** The sound wrapper. */
 		VICISoundLibWrapper* _soundWrapper;
@@ -179,6 +190,8 @@ namespace COMMODORE
 		MCHEmul::Address _screenMemory;
 		MCHEmul::Address _charDataMemory; 
 		MCHEmul::Address _colourMemory;
+		/** Where the mouse is. -1 when it is out of the visible zone. */
+		int _mousePositionX, _mousePositionY;
 	};
 
 	// ---

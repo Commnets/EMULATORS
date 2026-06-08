@@ -19,3 +19,10 @@ To print out the characters data.
 Parameters:
 => None: Draw all characters.
 => [c1 c2 c3 ...] (optional): Draw just the characters listed. From 0 to 255.
+;LIGHTPEN ON|OFF
+To active/desactivate the connection of a lightpen.
+Lightpen can work at the same time that joysticks (something that doesn't happen in real C64!),
+because it is emulated using the MOUSE (where left button means "pressing the lightpen against the screen").
+Lightpen is disconnected by default.
+Parameters:
+=> ON|OFF (mandatory): Whether to activate or to desactivate the lightpen.

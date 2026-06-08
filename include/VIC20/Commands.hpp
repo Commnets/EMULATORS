@@ -116,6 +116,26 @@ namespace VIC20
 		virtual void executeImpl (MCHEmul::CommandExecuter* cE, 
 			MCHEmul::Computer* c, MCHEmul::InfoStructure& rst) override;
 	};
+
+	/** Command to active or disactivate the Lightpen
+		LIGHTPEN ON|OFF */
+	class ManageLightPenCommand final : public MCHEmul::Command
+	{
+		public:
+		static const int _ID = 205;
+		static const std::string _NAME;
+
+		ManageLightPenCommand ()
+			: MCHEmul::Command (_ID, _NAME)
+							{ }
+
+		virtual bool canBeExecuted () const override
+							{ return (_parameters.size () == 1); }
+
+		private:
+		virtual void executeImpl (MCHEmul::CommandExecuter* cE, 
+			MCHEmul::Computer* c, MCHEmul::InfoStructure& rst) override;
+	};
 }
 
 #endif

@@ -196,8 +196,6 @@ bool COMMODORE::Datasette1530Injection::executeTrap (const MCHEmul::Trap& t, MCH
 // ---
 bool COMMODORE::Datasette1530Injection::executeFindHeaderTrap (MCHEmul::CPU* cpu)
 {
-	_IFDEBUG debugHeaderFileFound (cpu);
-
 	int e = 0;
 
 	// Gets with the buffer is really located...
@@ -208,16 +206,16 @@ bool COMMODORE::Datasette1530Injection::executeFindHeaderTrap (MCHEmul::CPU* cpu
 	// If there is no data, makes no sense to progress...
 	// ..ot the data counter is at the end of the datasette file...
 	if (_data._data.empty () ||
-		_dataCounter > (_data._data.size () - 1))
+		_dataCounter >= _data._data.size ())
 		e = 1;
 	else
 	{
 		// Or if there is no any type of data of the type
 		// that this traps needs...
-		while (_data._data [_dataCounter].attribute ("TYPE") != "1" /** File record normal = 1 */
-			&& _dataCounter < _data._data.size ())
+		while (_dataCounter < _data._data.size () && 
+			   _data._data [_dataCounter].attribute ("TYPE") != "1" /** File record normal = 1 */)
 			_dataCounter++;
-		if (_dataCounter > _data._data.size ())
+		if (_dataCounter >= _data._data.size ())
 		{
 			_dataCounter = 0; // Start back next time...
 
@@ -228,6 +226,8 @@ bool COMMODORE::Datasette1530Injection::executeFindHeaderTrap (MCHEmul::CPU* cpu
 	// Only if something usefull was found, the method continues...
 	if (e == 0)
 	{
+		_IFDEBUG debugHeaderFileFound (cpu);
+
 		// Storing the header of the info found in the cassette buffer...
 		MCHEmul::DataMemoryBlock& dtM = _data._data [_dataCounter];
 		cpu -> memoryRef () -> put (ctteBuffer, 0x01 /** Machine type default value. */);
@@ -241,9 +241,9 @@ bool COMMODORE::Datasette1530Injection::executeFindHeaderTrap (MCHEmul::CPU* cpu
 	else
 	if (e == 1)
 	{
-		cpu -> memoryRef () -> put (ctteBuffer, 0x05 /** End of casette. */);
-
 		_IFDEBUG debugNothingToRead ();
+
+		cpu -> memoryRef () -> put (ctteBuffer, 0x05 /** End of casette. */);
 	}
 	else
 		_IFDEBUG debugErrorTrap ();
@@ -281,6 +281,17 @@ bool COMMODORE::Datasette1530Injection::executeFindHeaderTrap (MCHEmul::CPU* cpu
 // ---
 bool COMMODORE::Datasette1530Injection::executeReceiveDataTrap (MCHEmul::CPU* cpu)
 {
+	// Just to be sure...
+	if (_data._data.empty () || 
+		_dataCounter >= _data._data.size ())
+	{
+		cpu -> memoryRef () -> put (_definition._statusAddr,
+			cpu -> memoryRef () -> value (_definition._statusAddr) | 0x40);
+		cpu -> statusRegister ().setBitStatus (F6500::C6500::_CARRYFLAG, true); // Error...
+
+		return (true);
+	}
+
 	_IFDEBUG debugDataFileFound (cpu);
 
 	MCHEmul::Address start (cpu -> memoryRef () -> 
@@ -315,7 +326,7 @@ bool COMMODORE::Datasette1530Injection::executeReceiveDataTrap (MCHEmul::CPU* cp
 	cpu -> memoryRef () -> put (_definition._statusAddr, 
 		cpu -> memoryRef () -> value (_definition._statusAddr) | 0x40 /** EOF. */);
 
-	cpu -> statusRegister ().setBitStatus (F6500::C6500::_CARRYFLAG, false);
+	cpu -> statusRegister ().setBitStatus (F6500::C6500::_CARRYFLAG, false); // No error...
 	cpu -> statusRegister ().setBitStatus (F6500::C6500::_IRQFLAG, false);
 
 	return (true);

@@ -539,8 +539,8 @@ void COMMODORE::VICII::processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifi
 					(evnt.data ()) -> _y;
 
 				// Is the mouse in the window?
-				if (x == 0 || 
-					y == 0 ||
+				if (x < 0 || 
+					y < 0 ||
 					(unsigned short) x >= _raster.visibleColumns () ||
 					(unsigned short) y >= _raster.visibleLines ())
 					_VICIIRegisters -> setMousePosition (-1, -1); // No in the window...

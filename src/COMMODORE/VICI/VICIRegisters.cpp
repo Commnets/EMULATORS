@@ -31,8 +31,8 @@ MCHEmul::InfoStructure COMMODORE::VICIRegisters::getInfoStructure () const
 	result.add ("CHARADDRESS",		charDataMemory ());
 	result.add ("SCREENADDRESS",	screenMemory ());
 	result.add ("COLOURADDRESS",	colourMemory ());
-	result.add ("LIGHTPENX",		_currentLightPenHorizontalPosition);
-	result.add ("LIGHTPENY",		_currentLightPenVerticalPosition);
+	result.add ("LIGHTPENX",		_latchLightPenHorizontalPosition);
+	result.add ("LIGHTPENY",		_latchLightPenVerticalPosition);
 
 	return (result);
 }
@@ -206,16 +206,14 @@ const MCHEmul::UByte& COMMODORE::VICIRegisters::readValue (size_t p) const
 
 		case 0x06:
 			{
-				result = _lightPenActive // Only when the lightpen is active...
-					? MCHEmul::UByte ((unsigned char) (_currentLightPenHorizontalPosition >> 1)) : 0;
+				result = MCHEmul::UByte (_latchLightPenHorizontalPosition);
 			}
 
 			break;
 
 		case 0x07:
 			{
-				result = _lightPenActive // only when the lightpen is active...
-					? MCHEmul::UByte ((unsigned char) (_currentLightPenVerticalPosition >> 1)) : 0;
+				result = MCHEmul::UByte (_latchLightPenVerticalPosition);
 			}
 
 			break;

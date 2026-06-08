@@ -123,18 +123,13 @@ namespace COMMODORE
 		const MCHEmul::Raster& raster () const
 							{ return (_raster); }
 
-		/** To set the position of the light - pen. \n
-			The position received must be relative within the display zone. */
-		void lightPenPosition (unsigned short& x, unsigned short& y) const
-							{ _VICIRegisters -> currentLightPenPosition (x, y); }
-		void setLightPenPosition (unsigned short x, unsigned short y)
-							{ _VICIRegisters -> setCurrentLightPenPosition (x, y); }
-
+		// Managing lightpen
+		/** To activate/desactivate the lightpen. */
+		void setLightPenActive (bool a)
+							{ _VICIRegisters -> setLigthPenActive (a); }
 		/** To know whether the light pen is active. */
 		bool lightPenActive () const
 							{ return (_VICIRegisters -> lightPenActive ()); }
-		void setLightPenActive (bool lP)
-							{ _VICIRegisters -> setLigthPenActive (lP); }
 
 		virtual bool initialize () override;
 
@@ -226,6 +221,10 @@ namespace COMMODORE
 			This method is executed per raster cycles. */
 		inline void readGraphicalInfo ();
 
+		// Light pen...
+		/** To treat light-pen detection at the current raster position. */
+		inline void treatLightPenAtCurrentRasterPosition ();
+
 		// Draw the screen
 		// Methods linked to the drawVisibleZone method...
 		/** Treat the visible zone.
@@ -286,6 +285,12 @@ namespace COMMODORE
 		bool _lastVBlankEntered;
 		/** The positions of the text screen. */
 		short _scrX1, _scrY1, _scrX2, _scrY2;
+		/** A temporal variable to indicate whether a lightpen position
+			has already been latched in the current frame.
+			This variable is reset at the beginning of every frame. */
+		bool _lightPenFrameLatched;
+		/** A very temporal variable to keep when the button is pressed. */
+		bool _lightPenButtonPressed;
 
 		/** 
 		  *	Structure to control how the graphics are displayed in the screen. \n
@@ -451,6 +456,49 @@ namespace COMMODORE
 				? _vicGraphicInfo._graphicData.value () & 0x0f // low...
 				: ((_vicGraphicInfo._graphicData.value () & 0xf0) >> 4); // high...
 		// Every bit in the nibble has to be draw twice...(@see the drawing routines)
+	}
+
+	// ---
+	inline void VICI::treatLightPenAtCurrentRasterPosition ()
+	{
+		if (!_VICIRegisters -> lightPenActive () ||
+			!_lightPenButtonPressed ||
+			_lightPenFrameLatched ||
+			!_VICIRegisters -> isMouseInVisibleZone () ||
+			!_raster.isInVisibleZone ())
+			return; // Nothing to do really...
+
+		unsigned short cv = 0;
+		unsigned short rv = 0;
+		_raster.currentVisiblePosition (cv, rv);
+		const int mx = _VICIRegisters -> mousePositionX ();
+		const int my = _VICIRegisters -> mousePositionY ();
+
+		// The raster advances horizontally in 8-pixel blocks in this emulation.
+		// And it is needed to compare visible thing with visible things...
+		if (my != (int) rv || 
+			!((mx >= (int) cv) && (mx < (int) (cv + _raster.step ()))))
+			return;
+
+		/** At this point the raster beam is passing through the mouse/light-pen
+			position. The light pen detects the beam and drives LP low. \n
+			Convert from visible mouse coordinate to the corresponding
+			VIC-II raster coordinate. \n
+			_raster.hData().currentPosition() is the current internal
+			raster X position. mx - cv gives the pixel offset inside the
+			current 8-pixel group. */
+		const unsigned short internalX =
+			_raster.hData ().currentPosition () + (unsigned short) (mx - (int) cv);
+		// Your raster advances in 8 internal horizontal positions per VIC-I CPU cycle.
+		const unsigned short rasterCycle = internalX / _raster.step ();
+		// VIC-I light pen X register: approximately 2 * (cycle + 1), with bit 0 set.
+		const unsigned char lpx =
+			(unsigned char) ((2 * ((rasterCycle + 1) % _cyclesPerRasterLine)) | 0x01);
+		const unsigned char lpy =
+			(unsigned char) ((_raster.vData ().currentPosition () >> 1) & 0xff);
+		_VICIRegisters -> latchLightPenPositionFromRaster (lpx, lpy);
+
+		_lightPenFrameLatched = true;
 	}
 
 	// ---

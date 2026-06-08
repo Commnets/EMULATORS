@@ -234,7 +234,8 @@ COMMODORE::VICI::VICI (const MCHEmul::RasterData& vd, const MCHEmul::RasterData&
 	  _format (nullptr),
 	  _cycleInRasterLine (0),
 	  _lastVBlankEntered (false),
-	  _scrX1 (0), _scrY1 (0), _scrX2 (0), _scrY2 (0)
+	  _scrX1 (0), _scrY1 (0), _scrX2 (0), _scrY2 (0),
+	  _lightPenFrameLatched (false), _lightPenButtonPressed (false)
 {
 	assert (_cyclesPerRasterLine >= 65);
 
@@ -293,6 +294,9 @@ bool COMMODORE::VICI::initialize ()
 
 	_scrX1 = _scrY1 = _scrX2 = _scrY2 = 0;
 
+	_lightPenFrameLatched = false;
+	_lightPenButtonPressed = false;
+
 	_vicGraphicInfo.initialize (_VICIRegisters);
 
 	return (true);
@@ -321,7 +325,13 @@ bool COMMODORE::VICI::simulate (MCHEmul::CPU* cpu)
 		treatRasterCycle ();
 		// ...and also moves 8 pixels right in the raster line and jump to other line is possible...
 		if (_raster.moveCycles (1))
+		{
 			_cycleInRasterLine = 1;
+			// ...and also allow a new light pen latch in the new frame, 
+			// if this happened...
+			if (_raster.vData ().currentPosition () == 0)
+				_lightPenFrameLatched = false;
+		}
 
 		// When the raster enters the non visible part of the screen,
 		// a notification is sent (to the Screen class usually) 
@@ -339,6 +349,12 @@ bool COMMODORE::VICI::simulate (MCHEmul::CPU* cpu)
 		}
 		else
 			_lastVBlankEntered = false;
+
+		// Evaluate light-pen detection at the new raster position.
+		// The emulated light pen uses the mouse position and button state. The
+		// position is latched when the raster beam reaches the mouse/light-pen
+		// position, and at most once per frame.
+		treatLightPenAtCurrentRasterPosition ();
 	}
 
 	_lastCPUCycles = cpu -> clockCycles ();
@@ -413,26 +429,30 @@ void COMMODORE::VICI::processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifie
 	{
 		case MCHEmul::InputOSSystem::_MOUSEMOVED:
 			{
-				unsigned short x = (unsigned short) 
-					std::dynamic_pointer_cast <MCHEmul::InputOSSystem::MouseMovementEvent> (evnt.data ()) -> _x;
-				unsigned short y = (unsigned short) 
-					std::dynamic_pointer_cast <MCHEmul::InputOSSystem::MouseMovementEvent> (evnt.data ()) -> _y;
-				setLightPenPosition ((x >= _raster.hData ().firstDisplayPosition () && 
-									  x <= _raster.hData ().lastDisplayPosition ()) 
-										? (x - _raster.hData ().firstDisplayPosition ()) : 0, 
-									 (y >= _raster.vData ().firstDisplayPosition () && 
-									  y <= _raster.vData ().lastDisplayPosition ()) 
-										? (y - _raster.vData ().firstDisplayPosition ()) : 0);
+				// Where is the mouse?
+				int x = std::dynamic_pointer_cast <MCHEmul::InputOSSystem::MouseMovementEvent> 
+					(evnt.data ()) -> _x;
+				int y = std::dynamic_pointer_cast <MCHEmul::InputOSSystem::MouseMovementEvent> 
+					(evnt.data ()) -> _y;
+
+				// Is the mouse in the window?
+				if (x < 0 || 
+					y < 0 ||
+					(unsigned short) x >= _raster.visibleColumns () ||
+					(unsigned short) y >= _raster.visibleLines ())
+					_VICIRegisters -> setMousePosition (-1, -1); // No in the window...
+				else
+					_VICIRegisters -> setMousePosition (x, y);
 			}
 
 			break;
 
-		// The lightpen actives when the right button of the mouse is pressed...
+		// The lightpen actives when the left button of the mouse is pressed...
 		case MCHEmul::InputOSSystem::_MOUSEBUTTONPRESSED:
 			{
 				if (std::dynamic_pointer_cast <MCHEmul::InputOSSystem::MouseButtonEvent> 
-					(evnt.data ()) -> _buttonId == 0 /** Left. */)
-					setLightPenActive (true);
+					(evnt.data ()) -> _buttonId == 1 /** Left button = 1, right will be = 3 */)
+					_lightPenButtonPressed = true;
 			}
 			
 			break;
@@ -441,8 +461,8 @@ void COMMODORE::VICI::processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifie
 		case MCHEmul::InputOSSystem::_MOUSEBUTTONRELEASED:
 			{
 				if (std::dynamic_pointer_cast <MCHEmul::InputOSSystem::MouseButtonEvent> 
-					(evnt.data ()) -> _buttonId == 0 /** Left. */)
-					setLightPenActive (false);
+					(evnt.data ()) -> _buttonId == 1 /** Left. */)
+					_lightPenButtonPressed = false;
 			}
 
 			break;
@@ -537,12 +557,6 @@ void COMMODORE::VICI::drawVisibleZone ()
 				/** _LRD */ _raster.vData ().lastDisplayPosition (),
 				/** _RR	 */ rv		// Where the vertical raster is inside the window (it is not the chip raster line)
 			});
-
-	// The position related with the lightpen is calculated...
-	unsigned short dx, dy;
-	_raster.currentDisplayPosition (dx, dy);
-	unsigned short lpx, lpy;
-	_VICIRegisters -> currentLightPenPosition (lpx, lpy);
 }
 
 // ---

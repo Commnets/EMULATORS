@@ -279,4 +279,3 @@ void C64::ManageLightPenCommand::executeImpl (MCHEmul::CommandExecuter* cE,
 	COMMODORE::VICII* vicII = static_cast <C64::Commodore64*> (c) -> vicII ();
 	vicII -> setLightPenActive (parameter ("00") == "ON"); // Active?
 }
-
