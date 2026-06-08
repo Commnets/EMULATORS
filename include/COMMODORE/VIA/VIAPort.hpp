@@ -66,6 +66,8 @@ namespace COMMODORE
 							{ _latch = l; }
 		void latchValue ()
 							{ _valueLatched = portValue (); }
+		const MCHEmul::UByte& valueLatched () const
+							{ return (_valueLatched); }
 
 		/** To fix the value of the port pins. \n
 			This routine can be used from externally the class, 

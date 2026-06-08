@@ -5,7 +5,12 @@ COMMODORE::VICIRegisters::VICIRegisters (MCHEmul::PhysicalStorage* ps, size_t pp
 	: MCHEmul::ChipRegisters (_VICREGS_SUBSET, ps, pp, a, s),
 	  _numberPositionsNextInstruction (0),
 	  _lastValueRead (MCHEmul::PhysicalStorage::_DEFAULTVALUE),
-	  _soundWrapper (nullptr)
+	  _soundWrapper (nullptr),
+	  _latchLightPenHorizontalPosition (0x00),
+	  _latchLightPenVerticalPosition (0x00),
+	  _lightPenActive (false),
+	  _mousePositionX (-1),
+	  _mousePositionY (-1)
 {
 	setClassName ("VICIRegisters");
 
@@ -101,6 +106,8 @@ void COMMODORE::VICIRegisters::setValue (size_t p, const MCHEmul::UByte& v)
 
 				calculateMemoryPositions ();
 			}
+
+			break;
 
 		// VICCR6 & VICCR7
 		// Lightpen position

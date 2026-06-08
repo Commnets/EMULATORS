@@ -29,27 +29,85 @@ const MCHEmul::UByte& VIC20::VIA1Registers::readValue (size_t p) const
 
 	switch (pp)
 	{
-		// The Port B is used for many other things not still implemented...
-
-		// Port A
-		case 0x01:
+		// VIA1 Port B
+		case 0x00:
 			{
-				// First of all, treat to get what should be in the Port B,
-				// this is dt, that includes the usual value (considering the situation of the timer)
-				// and also the situation of the joystick except the right/east position that is managed in VIA2...
-				MCHEmul::UByte o = _PB -> OR ();
-				if ((_T1 -> runMode () == COMMODORE::VIATimer::RunMode::_ONESHOOTSIGNAL ||
-					 _T1 -> runMode () == COMMODORE::VIATimer::RunMode::_CONTINUOUSSIGNAL) &&
-					_PB -> DDR ().bit (7))
-					o.setBit (7, _PB -> p7 ());
-				unsigned char dt = (o.value () | ~_PB -> DDR ().value ()) &
-					(_joystickStatus | 0x80	/** The bit 7 (right/east) is managed in VIA2, 
-												so here it is always considered switched on. */);
-				// The value in the portA...
-				_PA -> setPortValue ((_PA -> OR ().value () | ~_PA -> DDR ().value ()) & ~dt);
-				// This method is invoked, 
-				// to considere the impact in the ControlLines when reading this record!
-				result = _PA -> value (true);
+				const MCHEmul::UByte ddr = _PB -> DDR ();
+				MCHEmul::UByte out = _PB -> OR ();
+
+				// Timer 1 can drive PB7 only when PB7 is output...
+				if ((ddr & 0x80) != 0x00)
+				{
+					// ...and the way of Timer1 works allows it...
+					if (_T1 -> runMode () == COMMODORE::VIATimer::RunMode::_ONESHOOTSIGNAL ||
+						_T1 -> runMode () == COMMODORE::VIATimer::RunMode::_CONTINUOUSSIGNAL)
+						out = _PB -> p7 () ? (out | 0x80) : (out & ~0x80);
+				}
+
+				// Live external pins for user port / RS-232.
+				// Default: pull-up/high.
+				MCHEmul::UByte pins = 0xff;
+
+				// TODO:
+				// Apply external RS-232/user-port input states:
+				// PB7 DSR, PB6 CTS, PB4 DCD, PB3 RI, PB0 SIN.
+				//
+				// Example:
+				// if (!_rs232DSR) pins &= ~0x80;
+				// if (!_rs232CTS) pins &= ~0x40;
+				// if (!_rs232DCD) pins &= ~0x10;
+				// if (!_rs232RI ) pins &= ~0x08;
+				// if (!_rs232SIN) pins &= ~0x01;
+
+				MCHEmul::UByte input = pins;
+
+				// If you model input latching inside VIAPort, this part should
+				// use the port's latched input value instead.
+				if (_PB -> latchIR ())
+					input = _PB -> valueLatched ();
+
+				// Sets the new value...
+				_PB -> setPortValue ((out & ddr) | (input & ~ddr));
+				// Reading ORB affects CB1/CB2 interrupt flags.
+				result = _PB -> value (true);
+			}
+
+			break;
+
+		// VIA1 Port A
+		case 0x01:
+		case 0x0f:
+			{
+				const MCHEmul::UByte ddr = _PA -> DDR ();
+				const MCHEmul::UByte out = _PA -> OR ();
+
+				// Live external pins for serial/tape/joystick/fire.
+				// Default: pull-up/high.
+				MCHEmul::UByte pins = 0xff;
+
+				// PA2, PA3, PA4, PA5:
+				// joystick up/down/left/fire, active low.
+				pins &= (_joystickStatus | 0x80);
+
+				// TODO:
+				// PA6:
+				// tape sense, active low when any cassette key is down.
+				// pins = _tapeSensePressed ? (pins & ~0x40) : (pins |= 0x40);
+				// TODO:
+				// PA1/PA0:
+				// serial data in / serial clock in.
+				// Default high unless serial bus pulls low.
+				// if (!_serialDataIn)  pins &= ~0x02;
+				// if (!_serialClockIn) pins &= ~0x01;
+				MCHEmul::UByte input = pins;
+
+				if (_PA -> latchIR ())
+					input = _PA -> valueLatched ();
+
+				// Sets the new value...
+				_PA -> setPortValue ((out & ddr) | (input & ~ddr));
+				// Reading ORA affects CA1/CA2 interrupt flags.
+				result = _PA -> value (pp == 0x00);
 			}
 
 			break;

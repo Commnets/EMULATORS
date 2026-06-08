@@ -78,7 +78,7 @@ bool COMMODORE::VIAPort::simulate (MCHEmul::CPU* cpu)
 	MCHEmul::UByte r = (o | ~_DDR) & portValue ();
 	if (r != _lastPortValue)
 	{
-		notifyPortChanges (r, r ^ _lastPortValue);
+		notifyPortChanges (r ^ _lastPortValue, r);
 		setPortValue (_lastPortValue = r);
 	}
 

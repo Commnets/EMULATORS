@@ -321,8 +321,16 @@ bool COMMODORE::VICI::simulate (MCHEmul::CPU* cpu)
 		// Read the graphics and draw the visible zone, 
 		// if it is the case...
 		readGraphicsAndDrawVisibleZone ();
+
 		// ...and then treat the current cycle...
 		treatRasterCycle ();
+
+		// Evaluate light-pen detection at the new raster position.
+		// The emulated light pen uses the mouse position and button state. The
+		// position is latched when the raster beam reaches the mouse/light-pen
+		// position, and at most once per frame.
+		treatLightPenAtCurrentRasterPosition ();
+
 		// ...and also moves 8 pixels right in the raster line and jump to other line is possible...
 		if (_raster.moveCycles (1))
 		{
@@ -349,12 +357,6 @@ bool COMMODORE::VICI::simulate (MCHEmul::CPU* cpu)
 		}
 		else
 			_lastVBlankEntered = false;
-
-		// Evaluate light-pen detection at the new raster position.
-		// The emulated light pen uses the mouse position and button state. The
-		// position is latched when the raster beam reaches the mouse/light-pen
-		// position, and at most once per frame.
-		treatLightPenAtCurrentRasterPosition ();
 	}
 
 	_lastCPUCycles = cpu -> clockCycles ();

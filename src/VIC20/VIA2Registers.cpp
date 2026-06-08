@@ -30,44 +30,92 @@ const MCHEmul::UByte& VIC20::VIA2Registers::readValue (size_t p) const
 
 	switch (pp)
 	{
-		// Port B...
-		// Where the keyboard and the joystick right/east position is managed...
-		case 0x00:
+		// VIA2 Port B: keyboard columns + joystick right
+		case 0x00: 
 			{
-				unsigned char m = 0x01;
-				unsigned char dt = MCHEmul::UByte::_0;
-				unsigned char msk = (_PA -> OR ().value () | ~_PA -> DDR ().value ()) &
-					(_joystickStatus | 0x7f /** Only the bit 7 (right/east) is managed in this VIA, 
-												so the rest of the bits are considered as switched on. */);
-				for (size_t i = 0; i < 8; m <<= 1, i++)
-					if ((~msk & m) != 0x00)
-						dt |= ~_rev_keyboardStatusMatrix [i].value (); // 1 if clicked...
-				_PB -> setPortValue ((_PB -> OR ().value () | ~_PB -> DDR ().value ()) & ~dt);
-				// To considere the impact in the "ControlLines" when reading this record!
+				const MCHEmul::UByte ddra	= _PA -> DDR ().value ();
+				const MCHEmul::UByte ora	= _PA -> OR  ().value ();
+				const MCHEmul::UByte ddrb	= _PB -> DDR ().value ();
+				MCHEmul::UByte orb			= _PB -> OR  ().value ();
+
+				// PB7 may be driven by Timer 1 if it is configured as output.
+				if ((ddrb & 0x80) != 0x00)
+				{
+					if (_T1 -> runMode () == COMMODORE::VIATimer::RunMode::_ONESHOOTSIGNAL ||
+						_T1 -> runMode () == COMMODORE::VIATimer::RunMode::_CONTINUOUSSIGNAL)
+						orb = _PB -> p7 () ? (orb | 0x80) : (orb & ~0x80);
+				}
+
+				// External PB pins.
+				// Normally high.
+				MCHEmul::UByte externalPB = 0xff;
+				// PB7: joystick right/east, active low, only relevant when PB7 is input.
+				if ((ddrb & 0x80) == 0x00)
+					externalPB = (externalPB & 0x7f) | (_joystickStatus & 0x80);
+
+				unsigned char mask = 0x01;
+				const MCHEmul::UByte effectivePA = (ora & ddra) | (MCHEmul::UByte (0xff) & ~ddra);
+				MCHEmul::UByte colsLow = 0x00;
+				for (size_t row = 0; row < 8; row++, mask <<= 1)
+					// Row selected when PA bit is low.
+					if ((effectivePA & mask) == 0x00)
+						// If row is selected low, pressed keys can pull columns low.
+						colsLow |= ~_rev_keyboardStatusMatrix [row];
+
+				// Base PB value...
+				MCHEmul::UByte pb = (orb & ddrb) | (externalPB & ~ddrb);
+				// Keyboard pulls input cols low.
+				pb &= ~colsLow;
+
+				// Sets the new value...
+				_PB -> setPortValue (pb);
+				// Reading $9120 affects CB1/CB2 flags.
 				result = _PB -> value (true);
 			}
 
 			break;
 
-		case 0x01:
+		// VIA2 Port A: keyboard rows
+		case 0x01: 
 		case 0x0f:
 			{
-				// First of all, treat to get what should be in the Port B,
-				// this is dt, that includes the usual value (considering the situation of the timer)
-				MCHEmul::UByte o = _PB -> OR ();
-				if ((_T2 -> runMode () == COMMODORE::VIATimer::RunMode::_ONESHOOTSIGNAL ||
-					 _T2 -> runMode () == COMMODORE::VIATimer::RunMode::_CONTINUOUSSIGNAL) &&
-					_PB -> DDR ().bit (7))
-					o.setBit (7, _PB -> p7 ());
-				unsigned char msk = (o.value () | ~_PB -> DDR ().value ());
-				unsigned char m = 0x01;
-				unsigned char dt = MCHEmul::UByte::_0;
-				for (size_t i = 0; i < 8; m <<= 1, i++)
-					if ((~msk & m) != 0x00)
-						dt |= ~_keyboardStatusMatrix [i].value ();  // 1 if clicked...
-				_PA -> setPortValue (result = ((_PA -> OR ().value () | ~_PA -> DDR ().value ()) & ~dt));
-				// To considere (or not) the impact in the "ControlLines" when reading this record!
-				result = _PA -> value (pp == 0x01);
+				const MCHEmul::UByte ddra	= _PA -> DDR ();
+				const MCHEmul::UByte ora	= _PA -> OR  ();
+ 				MCHEmul::UByte ddrb			= _PB -> DDR ();
+				MCHEmul::UByte orb			= _PB -> OR  ();
+
+				// PB7 may be driven by Timer 1 when configured as output
+				// and ACR selects the PB7 output mode.
+				if ((ddrb & 0x80) != 0x00)
+				{
+					if (_T1 -> runMode () == COMMODORE::VIATimer::RunMode::_ONESHOOTSIGNAL ||
+						_T1 -> runMode () == COMMODORE::VIATimer::RunMode::_CONTINUOUSSIGNAL)
+						orb = _PB -> p7 () ? (orb | 0x80) : orb & ~0x80;
+				}
+
+				// Effective columns driven by Port B.
+				// DDRB=1 -> ORB drives the pin.
+				// DDRB=0 -> input/pull-up, considered high for keyboard scanning.
+				unsigned char mask = 0x01;
+				const MCHEmul::UByte effectivePB = (orb & ddrb) | (MCHEmul::UByte (0xff) & ~ddrb);
+				MCHEmul::UByte rowsLow = MCHEmul::UByte::_0;
+				for (size_t col = 0; col < 8; col++, mask <<= 1)
+					// Column selected when PB bit is low.
+					if ((effectivePB & mask) == 0x00)
+						// Keys pressed in this column pull rows low.
+						rowsLow |= ~_keyboardStatusMatrix [col].value ();
+
+				// Base PA value:
+				// DDRA=1 -> ORA output.
+				// DDRA=0 -> external row pins, normally high.
+				MCHEmul::UByte pa = (ora & ddra) | (MCHEmul::UByte (0xff) & ~ddra);
+				// Keyboard pulls input rows low.
+				pa &= ~rowsLow;
+
+				// Sets the new value...
+				_PA -> setPortValue (pa);
+				// Reading $9121 affects CA1/CA2 flags.
+				result = _PA -> value (pp == 0x00);
 			}
 
 			break;
