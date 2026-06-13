@@ -7,7 +7,7 @@ bool VIC20::VIA2::initialize ()
 {
 	assert (memoryRef () != nullptr);
 
-	// Gets the memory block dedicated to the CIA2
+	// Gets the memory block dedicated to the VIA2
 	if (!(_VIA2Registers = 
 		dynamic_cast <VIC20::VIA2Registers*> (memoryRef () -> subset (_registersId))))
 	{

@@ -148,7 +148,7 @@ namespace COMMODORE
 
 		/**
 		  *	The name of the fields are: \n
-		  * VICIIRegisters	= InfoStructure: Info about the registers.
+		  * VICIRegisters	= InfoStructure: Info about the registers.
 		  * Raster			= InfoStructure: Info about the raster.
 		  * Sound			= InfoStructire: Info about the sound.
 		  */
@@ -215,7 +215,7 @@ namespace COMMODORE
 		// Read screen data
 		// Methods linked to the treatRasterCycle method...
 		/** To read the video matrix and the RAM color. \n
-			Someting that happens during a badline. */
+			Someting that happens during a display fetch / video matrix fetch. */
 		inline void readVideoMatrixAndColorRAM ();
 		/** To read the graphical info, considerig the info read in the previous method. \n
 			This method is executed per raster cycles. */
@@ -483,7 +483,7 @@ namespace COMMODORE
 		/** At this point the raster beam is passing through the mouse/light-pen
 			position. The light pen detects the beam and drives LP low. \n
 			Convert from visible mouse coordinate to the corresponding
-			VIC-II raster coordinate. \n
+			VIC-I raster coordinate. \n
 			_raster.hData().currentPosition() is the current internal
 			raster X position. mx - cv gives the pixel offset inside the
 			current 8-pixel group. */

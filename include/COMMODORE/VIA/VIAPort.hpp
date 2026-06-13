@@ -178,7 +178,7 @@ namespace COMMODORE
 	};
 
 	/** The Port B has a different behaviour in some bits. \n
-		Bit 6 is used to detect pulses, and bit 7 is used to reflect the timer2 status. */
+		Bit 6 is used to detect pulses, and bit 7 is used to reflect the timer1 status. */
 	class VIAPortB final : public VIAPort
 	{
 		public:
@@ -198,7 +198,7 @@ namespace COMMODORE
 							{ return (_p6.peekNegativeEdge ()); }
 		/** To set the value to be sent (initially) to the port pins. \n
 			The value that finally will be present in the port pins might be slighly different
-			depending on the Direction Register (DDR) value and others (reflection of timer2 in bit 7 of output register). \n
+			depending on the Direction Register (DDR) value and others (reflection of timer1 in bit 7 of output register). \n
 			Any time this method is executed the "ControlLines" interrupt flag is cleared only if r = true. */
 		bool p7 () const
 							{ return (_p7); }

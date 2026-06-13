@@ -7,7 +7,7 @@ bool VIC20::VIA1::initialize ()
 {
 	assert (memoryRef () != nullptr);
 
-	// Gets the memory block dedicated to the CIA2
+	// Gets the memory block dedicated to the VIA1
 	if (!(_VIA1Registers = 
 		dynamic_cast <VIC20::VIA1Registers*> (memoryRef () -> subset (_registersId))))
 	{
@@ -85,10 +85,16 @@ void VIC20::VIA1::processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifier* n
 
 		// When a key is pressed in the datasette...
 		case MCHEmul::DatasetteIOPort::_KEYPRESSED:
+			{	
+				_VIA1Registers -> setTapeSensePressed (true);
+			}
+
+			break;
+
+		// When the key is released in the datasette...
+		case MCHEmul::DatasetteIOPort::_NOKEYPRESSED:
 			{
-				// The PB6 is reset to indicate that a button has been pressed...
-				// This is the SENSE line as it described in the documentsion...
-				_PA.setValue (_PA.value () & ~(1 << 6)); // Reset the bit 6 (PB6) to 0.
+				_VIA1Registers -> setTapeSensePressed (false);
 			}
 
 			break;

@@ -180,7 +180,7 @@ namespace COMMODORE
 		/** To indicate wheter the system is managing the inverse mode or not. */
 		bool _inverseMode;
 
-		// Some of this variables are set by the emulation of the VICII
+		// Some of this variables are set by the emulation of the VICI
 		// The VICI chip also uses this object as a temporary storage
 		/** Where the raster line is. */
 		MCHEmul::Raster* _raster;

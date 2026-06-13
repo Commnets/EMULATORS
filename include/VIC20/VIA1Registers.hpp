@@ -39,6 +39,12 @@ namespace VIC20
 		void setJoystickStatus (unsigned char js)
 							{ _joystickStatus = js; }
 
+		/** To know whether a key is the tape has benn pressed. */
+		bool tapeSensePressed () const
+							{ return (_tapeSensePressed); }
+	    void setTapeSensePressed (bool v)
+							{ _tapeSensePressed = v; }
+
 		private:
 		virtual const MCHEmul::UByte& readValue (size_t p) const override;
 
@@ -48,6 +54,8 @@ namespace VIC20
 		private:
 		/** Status of the joystick. */
 		unsigned char _joystickStatus;
+		/** The status of the keys in the datasette. */
+		bool _tapeSensePressed;
 	};
 }
 

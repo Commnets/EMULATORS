@@ -115,7 +115,7 @@ const MCHEmul::UByte& VIC20::VIA2Registers::readValue (size_t p) const
 				// Sets the new value...
 				_PA -> setPortValue (pa);
 				// Reading $9121 affects CA1/CA2 flags.
-				result = _PA -> value (pp == 0x00);
+				result = _PA -> value (pp == 0x01);
 			}
 
 			break;

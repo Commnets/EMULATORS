@@ -79,6 +79,7 @@ bool COMMODORE::VIAPort::simulate (MCHEmul::CPU* cpu)
 	if (r != _lastPortValue)
 	{
 		notifyPortChanges (r ^ _lastPortValue, r);
+
 		setPortValue (_lastPortValue = r);
 	}
 
@@ -121,8 +122,17 @@ const MCHEmul::UByte& COMMODORE::VIAPortB::value (bool r) const
 	// but it is changed as the behaviour of the PortB is a little bit different.
 	// See the header of the class for more details...
 	COMMODORE::VIAPort::value (r);
+
+	MCHEmul::UByte out = _OR;
+
+	if ((_T != nullptr) &&
+		(_T -> runMode () == VIATimer::RunMode::_ONESHOOTSIGNAL ||
+		 _T -> runMode () == VIATimer::RunMode::_CONTINUOUSSIGNAL) &&
+		_DDR.bit (7))
+		out.setBit (7, _p7);
+
 	// The real value is either the one latched or the last one sent to the port...
-	return (_IR = ((_IR & ~_DDR /** Pins with 1 = output become 0 and viceversa. */) | _OR));
+    return (_IR = ((_IR & ~_DDR) | (out & _DDR)));
 }
 
 // ---
@@ -146,7 +156,11 @@ bool COMMODORE::VIAPortB::simulate (MCHEmul::CPU* cpu)
 
 	MCHEmul::UByte r = (o | ~_DDR) & portValue ();
 	if (r != _lastPortValue)
+	{
+		notifyPortChanges (r ^ _lastPortValue, r);
+
 		setPortValue (_lastPortValue = r);
+	}
 	
 	// For pulse purposes, keep track of the value at bit 6...
 	// This is tracked in Timer 2, when the mode is _PULSEDETECTOR.
