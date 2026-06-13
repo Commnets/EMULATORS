@@ -84,7 +84,7 @@ void VIC20::VIA2::processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifier* n
 		// because just the change in the signal is detected!
 		case MCHEmul::DatasetteIOPort::_READ:
 			{
-				_CA1.setValue (false); // The datasette is reading!
+				_CA1.setValue (evnt.value () != 0);
 			}
 
 			break;

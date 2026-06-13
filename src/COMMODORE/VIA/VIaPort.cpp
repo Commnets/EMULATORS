@@ -75,7 +75,7 @@ void COMMODORE::VIAPort::initialize ()
 bool COMMODORE::VIAPort::simulate (MCHEmul::CPU* cpu)
 {
 	MCHEmul::UByte o = _OR;
-	MCHEmul::UByte r = (o | ~_DDR) & portValue ();
+	MCHEmul::UByte r = (o | _DDR) & (portValue () & ~_DDR);
 	if (r != _lastPortValue)
 	{
 		notifyPortChanges (r ^ _lastPortValue, r);
@@ -154,7 +154,7 @@ bool COMMODORE::VIAPortB::simulate (MCHEmul::CPU* cpu)
 		  _T -> runMode () == VIATimer::RunMode::_CONTINUOUSSIGNAL)) && _DDR.bit (7) /** as ouput. */) // The timer has priority over value...
 		o.setBit (7, _p7); // _p7 always "above", is the timer run mode is the right one...
 
-	MCHEmul::UByte r = (o | ~_DDR) & portValue ();
+	MCHEmul::UByte r = (o | _DDR) & (portValue () & ~_DDR);
 	if (r != _lastPortValue)
 	{
 		notifyPortChanges (r ^ _lastPortValue, r);

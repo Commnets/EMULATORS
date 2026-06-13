@@ -30,17 +30,17 @@ namespace VIC20
 			  _via1 (nullptr), _via2 (nullptr)
 							{ }
 
-		/** The DatasettePort is connected with the VIA1 and the VIA2: \n
-			In the VIA1:
-			-----------
-			It is controlled whether a button (that moves the motor) in the datasette is pressed,
-			and when this happens the PB6 is reset. \n
-			When the motor moves the CA2 line is moved to down (putting a value of 111 in their configuration),
-			a change happens in this line and then a notification to the datsetteport for the motor to move happens too. \n
-			In the VIA2:
-			-----------
-			Changes in the CA1 line indicates that the sound line has changed from 0 to 1 or viceversa. \n
-			And The PB3 changes (from 0 to 1 or viceversa) send a notification to the datasetteport. */
+		/** 
+		  * The DatasettePort is connected with the VIA1 and the VIA2: \n
+		  *	VIA1: \n
+		  *	----- \n
+		  *	- PA6 reads tape SENSE, active low when any datasette key is pressed. \n
+		  *	- CA2 controls the datasette motor. CA2 low means motor running. \n
+		  *	VIA2: \n
+		  *	----- \n
+		  *	- CA1 receives tape READ transitions. \n
+		  *	- PB3 drives tape WRITE. \n
+		  **/ 
 		virtual void linkToChips (const MCHEmul::Chips& c) override;
 
 		private:

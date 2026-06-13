@@ -87,7 +87,7 @@ const MCHEmul::UByte& VIC20::VIA1Registers::readValue (size_t p) const
 				pins &= (_joystickStatus | 0x80);
 				// PA6:
 				// tape sense, active low when any cassette key is down.
-				pins = _tapeSensePressed ? (pins & ~0x40) : (pins |= 0x40);
+				pins = _tapeSensePressed ? (pins & ~0x40) : (pins | 0x40);
 				// TODO:
 				// PA1/PA0:
 				// serial data in / serial clock in.

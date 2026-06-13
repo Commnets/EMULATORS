@@ -146,12 +146,13 @@ void VIC20::VIA2Registers::initializeInternalValues ()
 		_PA  == nullptr ||
 		_PB  == nullptr)
 		return;
-	
-	// Data Port B all input...
-	setValue (0x00, MCHEmul::UByte::_FF); 
-	// Data Port A all output...
-	setValue (0x01, MCHEmul::UByte::_0);
-	// Just to be able to read well the keyboard...
+
+	// VIC-20 VIA2 keyboard defaults:
+	// PB selects keyboard columns, PA reads keyboard rows.
+	setValue (0x02, MCHEmul::UByte::_FF);	// DDRB: PB0..PB7 output
+	setValue (0x03, MCHEmul::UByte::_0);	// DDRA: PA0..PA7 input
+	setValue (0x00, MCHEmul::UByte::_FF);   // ORB: columns high
+	setValue (0x01, MCHEmul::UByte::_0);    // ORA
 
 	_joystickStatus = 0xff; // No switches clicked, no fire buttons pressed...
 	for (size_t i = 0; i < 8; i++)
