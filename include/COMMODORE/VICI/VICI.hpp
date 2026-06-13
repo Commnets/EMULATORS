@@ -140,7 +140,7 @@ namespace COMMODORE
 			when that instruction happens. */
 		virtual void CPUAboutToExecute (MCHEmul::CPU* cpu, MCHEmul::Instruction* inst) override
 							{ _VICIRegisters -> setNumberPositionsNextInstruction 
-								(inst -> memoryPositions
+								(inst -> clockCycles
 									(cpu -> memoryRef (), cpu -> programCounter ().asAddress ())); }
 
 		/** Simulates cycles in the VICI. */

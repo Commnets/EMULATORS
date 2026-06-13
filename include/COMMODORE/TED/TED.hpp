@@ -132,7 +132,7 @@ namespace COMMODORE
 			when that instruction happens. */
 		virtual void CPUAboutToExecute (MCHEmul::CPU* cpu, MCHEmul::Instruction* inst) override
 							{ _TEDRegisters -> setNumberPositionsNextInstruction 
-								(inst -> memoryPositions
+								(inst -> clockCycles
 									(cpu -> memoryRef (), cpu -> programCounter ().asAddress ()) >> 
 										(inSingleClockMode () ? 0 : 1)); } // The number of cycles in TED will vary depending on the mode...
 

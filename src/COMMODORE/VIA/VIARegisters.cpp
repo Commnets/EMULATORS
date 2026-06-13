@@ -194,7 +194,9 @@ void COMMODORE::VIARegisters::setValue (size_t p, const MCHEmul::UByte& v)
 		// The register 
 		case 0x0d:
 			{
-				// The interrupt flag is cleared writting down a 1 into it...
+			    // IFR bit 7 is not a real interrupt flag.
+			    // Writing 1 to bits 0..6 clears the corresponding interrupt flags.
+			    // Writing to bit 7 has no direct effect.
 				if (v.bit (6)) _T1  -> interruptRequested ();
 				if (v.bit (5)) _T2  -> interruptRequested ();
 				if (v.bit (4)) _CB1 -> interruptRequested ();

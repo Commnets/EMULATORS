@@ -46,8 +46,8 @@ bool VIC20::CommodoreVIC20::initialize (bool iM)
 
 	// The CPU is observed by VIC20
 	// This is because when a instruction is about to be executed,
-	// the VICII has to be aware about the number of cycles that the instruction will take
-	// in order to manage what $D012 result must returns properly!
+	// The VIC-I has to be aware of the next instruction length
+	// in order to approximate reads from $9003/$9004 raster registers.
 	observe (_cpu);
 	// It is also needed to observe the expansion port...
 	// Events when it is disonnected and connected are sent and with many implications

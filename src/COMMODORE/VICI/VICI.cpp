@@ -590,7 +590,7 @@ COMMODORE::VICI::DrawResult COMMODORE::VICI::drawHighResolutionMode (int cb)
 	for (unsigned short i = 0 ; 
 			i < 8 /** To paint always 8 pixels but in blocks of 2. */; i += 2)
 	{
-		if ((cb + i) > _maxXVisible)
+		if ((cb + i) >= _maxXVisible)
 			break;
 
 		if (_vicGraphicInfo._graphicData [3 - (i >> 1)])
@@ -626,7 +626,7 @@ COMMODORE::VICI::DrawResult COMMODORE::VICI::drawMulticolorMode (int cb)
 	for (unsigned short i = 0 ; 
 			i < 8 /** To paint always 8 pixels but in blocks of 4. */; i += 4)
 	{
-        if ((cb + i) > _maxXVisible)
+        if ((cb + i) >= _maxXVisible)
             break;
 
 		unsigned char cs =
