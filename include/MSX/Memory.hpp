@@ -1,8 +1,8 @@
 /** \ingroup MSX */
 /*@{*/
 
-/**	
- *	@file	
+/**
+ *	@file
  *	File: Memory.hpp \n
  *	Framework: CPU Emulators library \n
  *	Author: Ignacio Cea Fornies (EMULATORS library) \n
@@ -23,15 +23,15 @@ namespace MSX
 	class MSXComputer;
 
 	/** This class represents the subslot subsregisters that can be read from the memory of the MSX. \n
-		When at the page 3 (0xc000 - 0xffff) the slot connected has "nothing" there, 
+		When at the page 3 (0xc000 - 0xffff) the slot connected has "nothing" there,
 		the position 0xffff has "subslots" that are connected to the different pages. \n
-		This class leeps that information with a Singleton design pattern and ten can be accessed from anyplace. \n
+		This class leeps that information with a Singleton design pattern and then can be accessed from anyplace. \n
 		The object is instanciated in the Memory constructor and destroyed in the Memory destructor. */
 	class SubSlotRegisters final
 	{
 		public:
 		static SubSlotRegisters* instance (const std::array <bool, 4>& sL)
-							{ return ((_instance == nullptr) 
+							{ return ((_instance == nullptr)
 								? _instance = new SubSlotRegisters (sL) : _instance); }
 		/** To get the instance already created. \n
 			It is assumed that the instance has been already created. */
@@ -45,8 +45,12 @@ namespace MSX
 			This is the way that the ROM will know whether the slot is or not expanded. \n
 			In other case, the value returned is just the value kept. */
 		MCHEmul::UByte subSlotRegister (size_t nR) const
-							{ return (_slotsExpanded [nR] 
+							{ return (_slotsExpanded [nR]
 								? ~_subSlotRegister [nR] : _subSlotRegister [nR]); }
+		/** However sometimes it is interested to access just to the valor of the register. \n
+			This is special important in the internal methods managing the memory. */
+		const MCHEmul::UByte& justSubSlotRegister (size_t nR) const
+							{ return (_slotsExpanded[nR] ? _subSlotRegister[nR] : MCHEmul::UByte::_0); }
 
 		/** To know whether the subslots have changed or not. */
 		bool changed () const
@@ -58,7 +62,7 @@ namespace MSX
 		// ...it is a hard definition of the machine...
 		SubSlotRegisters (const std::array <bool, 4>& sL)
 			: _slotsExpanded (sL),
-			  _subSlotRegister { MCHEmul::UByte::_0, MCHEmul::UByte::_0, 
+			  _subSlotRegister { MCHEmul::UByte::_0, MCHEmul::UByte::_0,
 								 MCHEmul::UByte::_0, MCHEmul::UByte::_0 },
 			  _changed (false)
 							{ }
@@ -71,7 +75,7 @@ namespace MSX
 		/** The value of the subSlot registers. \n
 			If the slot were not expanded, the value of the registers wouldn't have any effect. */
 		MCHEmul::UByte _subSlotRegister [4]; // 1 per slot...
-		
+
 		// Implementation
 		/** When the subslot register is changed. */
 		MCHEmul::OBool _changed;
@@ -96,8 +100,8 @@ namespace MSX
 	class LastPagePhysicalStorageSubset : public MCHEmul::Stack
 	{
 		public:
-		LastPagePhysicalStorageSubset (int id, 
-				MCHEmul::PhysicalStorage* ps, size_t pp, const MCHEmul::Address& iA, size_t s, 
+		LastPagePhysicalStorageSubset (int id,
+				MCHEmul::PhysicalStorage* ps, size_t pp, const MCHEmul::Address& iA, size_t s,
 				const Configuration& cfg = MCHEmul::Stack::Configuration ());
 
 		protected:
@@ -116,13 +120,13 @@ namespace MSX
 		There must be one and only one of this (or someone inheriting from this) present at every page of memory. \n
 		This situation is verified at construction time one the element _memoryElements is created. \n
 		The id received as parameter is very very special. \n
-		Has to be built using the method "firstIdMemoryElementFreeSlotSubSlot" that creates the id from the slot and subslot 
+		Has to be built using the method "firstIdMemoryElementFreeSlotSubSlot" that creates the id from the slot and subslot
 		which the memory element belongs to. */
 	class EmptyPhysicalStorageSubset final : public MCHEmul::Stack
 	{
 		public:
-		EmptyPhysicalStorageSubset (int id, const MCHEmul::UByte& fV, 
-				MCHEmul::PhysicalStorage* ps, size_t pp, const MCHEmul::Address& iA, size_t s, 
+		EmptyPhysicalStorageSubset (int id, const MCHEmul::UByte& fV,
+				MCHEmul::PhysicalStorage* ps, size_t pp, const MCHEmul::Address& iA, size_t s,
 				const Configuration& cfg = MCHEmul::Stack::Configuration ());
 
 		private:
@@ -141,7 +145,7 @@ namespace MSX
 	{
 		public:
 		EmptyPhysicalStorageLastPageSubset (int id, const MCHEmul::UByte& fV,
-				MCHEmul::PhysicalStorage* ps, size_t pp, const MCHEmul::Address& iA, size_t s, 
+				MCHEmul::PhysicalStorage* ps, size_t pp, const MCHEmul::Address& iA, size_t s,
 				const Configuration& cfg = MCHEmul::Stack::Configuration ());
 
 		private:
@@ -159,7 +163,7 @@ namespace MSX
 		an only one element can be active at that block of positions (page) simultaneously. \n
 		If there were not anything connected, the memory at that page would be empty. \n
 		The port 0xa8 (@see PPIPortManager class) is sused to select the active slot per block of memory. \n
-		In every slot, the position 0xffff is presented from the page 3 of the slot to indicate 
+		In every slot, the position 0xffff is presented from the page 3 of the slot to indicate
 		the active subslots per page of memoty when the slot has a expander. \n
 		e.g. 0xffff will have 0b00000001 to indicate that the subslot 0 is active for pages 3,2 and 1 and the subslot 1 is active for page 0. \n
 		Reading that position returns the value inverted when written. So reading it when there is no expansion will return 0x00. */
@@ -187,7 +191,8 @@ namespace MSX
 		// There can be a maxuim of two elements in the same slot/subslot/page, and one of them have to be a empty memory piece!...
 		static const int _SLOT0_SUBSET = 100;					// Slot 0
 		static const int _SLOTSUBSLOTBASE_SUBSET = 100;			// The base id for the slot/subslot (used in calculus)
-		static const int _ROMBIOS_SUBSET = 100;					// Slot 0, Subslot 0, Page 0 & 1. Minimum configuration...
+		static const int _ROMBIOS_SUBSET_0 = 100;				// Slot 0, Subslot 0, Page 0. Minimum configuration...
+		static const int _ROMBIOS_SUBSET_1 = 101;				// Slot 0, Subslot 0, Page 1. Minimum configuration...
 		static const int _ERAM16KSLOT0SUBSLOT0_SUBSET = 102;	// Slot 0, Subslot 0, Page 2. Minimum configuration...
 		static const int _RAM16KSLOT0SUBSLOT0_SUBSET = 103;		// Slot 0, Subslot 0, Page 3. Minimum configuration...
 		static const int _SLOT0BASE_SUBSET = 100;				// Slot 0
@@ -213,12 +218,12 @@ namespace MSX
 		// The views of the memory...
 		static const int _CPU_VIEW = 0;	// The view from the CPU...
 
-		/** Given a memory element id, to get the slot, subslot and page of a element id. 
+		/** Given a memory element id, to get the slot, subslot and page of a element id.
 			This system is based on maintining a rigorous way of naming the memory elements. */
-		static inline void getSlotSubSlotAndPageForMemoryElement 
+		static inline void getSlotSubSlotAndPageForMemoryElement
 			(int id, unsigned char& slot, unsigned char& sslot, unsigned char& page);
 
-		/** Creates the memory based on the model, the configuartion and the language. 
+		/** Creates the memory based on the model, the configuartion and the language.
 			The language is used mainly to load the right type of ROM. \n
 			Creates the structure to keep the value of the subslots. */
 		Memory (MSXModel* m, unsigned int cfg, const std::string& lang);
@@ -247,24 +252,24 @@ namespace MSX
 		// To desactivate elements connected in the different slots and subslots per page.
 		// These methods are used in running, so no boundary check is done.
 		/** Desactivate all memory elements connected in a page of a subslot of a slot. \n
-			the parameter std indicates that either the EMPTY RAMs or ROM or 16k basic system 
+			the parameter std indicates that either the EMPTY RAMs or ROM or 16k basic system
 			are available in slot, subslot 0, pages 0,1 & 3 when everything else is desactivated there. */
-		inline void desactivateMemoryElementsSubSlotAndPage 
+		inline void desactivateMemoryElementsSubSlotAndPage
 			(unsigned char slot, unsigned char sslot, unsigned char page, bool std = false);
 		/** Desactivate all memory elements in every page of a subslot of a slot,
 			following the same rules described desactivateMemoryElementsSubSlotAndBank. */
 		void desactivateMemoryElementsSubSlot (unsigned char slot, unsigned char sslot, bool std = false)
-							{ for (unsigned char i = 0; i < 4; 
+							{ for (unsigned char i = 0; i < 4;
 								desactivateMemoryElementsSubSlotAndPage (slot, sslot, i++, std)); }
 		/** Desactivate all memory elements in every subslot and page of a slot,
 			following the same rules described in desactivateMemoryElementsSubSlotAndBank. */
 		void desactivateMemoryElementsSlot (unsigned char slot, bool std = false)
-							{ for (unsigned char i = 0; i < 4; 
+							{ for (unsigned char i = 0; i < 4;
 								desactivateMemoryElementsSubSlot (slot, i++, std)); }
 		/** Desactivate all elements in all slots and subslots
 			following the same rules described int desactivateMemoryElementsSubSlotAndBank. */
 		void desactivateAllMemoryElements (bool std = false)
-							{ for (unsigned char i = 0; i < 4; 
+							{ for (unsigned char i = 0; i < 4;
 								desactivateMemoryElementsSlot (i++, std)); }
 
 		// To connect memory elements in the MSX...
@@ -276,31 +281,31 @@ namespace MSX
 		void connectMemoryElements (const std::vector <int>& ids)
 							{ for (const auto& i : ids) connectMemoryElement (i); }
 
-		/** To get the memory configuration. 
+		/** To get the memory configuration.
 			it can get only as a const, that can not be changed... */
 		const SlotSublotActive* const slotSubSlotsActive () const
 							{ return (_slotSubSlotActive); }
 
 		// To change the memory configuration...
 		/** Active the memory element is a page, slot and sublot.
-			Because there can be only a maximum of two elements in that situation and 
+			Because there can be only a maximum of two elements in that situation and
 			only one of them can be different than empty, activates it if that situation exists. \n
 			The method returns a reference to the element returned. */
-		MCHEmul::PhysicalStorageSubset* activeMemoryElementInSlotSubSlotAndPage 
+		MCHEmul::PhysicalStorageSubset* activeMemoryElementInSlotSubSlotAndPage
 			(unsigned char slot, unsigned char sslot, unsigned char page);
-		/** Change the slot active per page of memory. \n 
-			The subslot finally selected (expanded) will depend on the last memory structure active. 
-			That memory structure is managed acting over direction $ffff of every slot (subslot register). 
+		/** Change the slot active per page of memory. \n
+			The subslot finally selected (expanded) will depend on the last memory structure active.
+			That memory structure is managed acting over direction $ffff of every slot (subslot register).
 			@see in the definition of the class. */
 		void activateSlotsPerPage (unsigned char spage0, unsigned char spage1, unsigned char spage2, unsigned spage3);
 		/** To reactivate the slots per page.
-			This is used when the subslots configuration changes, 
+			This is used when the subslots configuration changes,
 			and then it is needed to reassign that configuration in the memory. */
 		void reactivateSlotsPerPage ()
-							{ activateSlotsPerPage 
+							{ activateSlotsPerPage
 								(_slotSubSlotActive [0]._slot, // The ones that already active...
 								 _slotSubSlotActive [1]._slot,
-								 _slotSubSlotActive [2]._slot, 
+								 _slotSubSlotActive [2]._slot,
 								 _slotSubSlotActive [3]._slot); }
 
 		/** Change the stack subset. */
@@ -317,7 +322,7 @@ namespace MSX
 							{ return (view (_CPU_VIEW)); }
 
 		// Implementation
-		/** To create the internal _memoryElements variable. 
+		/** To create the internal _memoryElements variable.
 			There must be only one valid memory element (different than EmptyPhysicalStorage) per page slot and subslot.
 			If the result follows this rule, the method returns true, and false in other circunstance. */
 		bool createMemoryElementsEntity ();
@@ -328,24 +333,25 @@ namespace MSX
 
 		// Implementation
 		/** A reference to the basic elements. */
-		MCHEmul::PhysicalStorageSubset* _ROM;
+		MCHEmul::PhysicalStorageSubset* _ROM0;
+		MCHEmul::PhysicalStorageSubset* _ROM1;
 		MCHEmul::PhysicalStorageSubset* _BASICRAM;
 		MCHEmul::PhysicalStorageSubset* _EMPTYBASICRAM;
 		/** The list of memory elements that there are in every slot/subslot/page. \n
 			This class is not the owner of the elements in this cube. \n
 			The variable is filled up at construction time. */
 		MCHEmul::PhysicalStorageSubsetsList _memoryElements [4][4][4];
-		/** The id of the subset used for the stack... 
+		/** The id of the subset used for the stack...
 			that will depend on the configuration! */
 		int _STACK_SUBSET;
-		/** To indicate what slot and subslot is active per page. 
-			e.g. _slotSubSlotActive [0] will keep the slot/subslot active in the page 0 ($0000 - $40000). 
+		/** To indicate what slot and subslot is active per page.
+			e.g. _slotSubSlotActive [0] will keep the slot/subslot active in the page 0 ($0000 - $40000).
 			At construction time, all pages pointed out to slot and subslot 0. */
 		SlotSublotActive _slotSubSlotActive [4];
 	};
 
 	// ---
-	inline void Memory::getSlotSubSlotAndPageForMemoryElement 
+	inline void Memory::getSlotSubSlotAndPageForMemoryElement
 		(int id, unsigned char& slot, unsigned char& sslot, unsigned char& page)
 	{
 		unsigned char nE = (unsigned char) (id / 1000); // The number of elements in the slot/subslot/page...
@@ -368,7 +374,7 @@ namespace MSX
 		for (size_t i = 0; i < 4; i++)
 		{
 			for (const auto& j : _memoryElements [slot][sslot][i])
-			{ 
+			{
 				found = true; // There is something...
 				if (j -> id () > result)
 					result = j -> id ();
@@ -379,7 +385,7 @@ namespace MSX
 	}
 
 	// ---
-	inline void Memory::desactivateMemoryElementsSubSlotAndPage 
+	inline void Memory::desactivateMemoryElementsSubSlotAndPage
 		(unsigned char slot, unsigned char sslot, unsigned char page, bool std)
 	{
 		if (slot == 0 && sslot == 0)
@@ -388,20 +394,29 @@ namespace MSX
 				{ i -> setActive (false); i -> setActiveForReading (false); }
 			if (std)
 			{
-				if (page == 0 || page == 1)	
-					{ _ROM -> setActive (true); _ROM -> setActiveForReading (true); }
-				// The RAM can cary...the onky fixed point is always the ROM...
+				if (page == 0)
+				{
+					_ROM0 -> setActive (true);
+					_ROM0 -> setActiveForReading (true);
+				}
+				else if (page == 1)
+				{
+					_ROM1 -> setActive (true);
+					_ROM1 -> setActiveForReading (true);
+				}
+
+				// ...the only fixed point is always the ROM...
 			}
 		}
 		else
 		{
 			for (const auto& i : _memoryElements [slot][sslot][page])
-			{ 
+			{
 				bool a = std && // Activate the basic element when it is selected!
 					(dynamic_cast <MSX::EmptyPhysicalStorageSubset*> (i) != nullptr &&
 					 dynamic_cast <MSX::EmptyPhysicalStorageLastPageSubset*> (i) != nullptr);
-				
-				i -> setActive (a); 
+
+				i -> setActive (a);
 				i -> setActiveForReading (a);
 			}
 		}

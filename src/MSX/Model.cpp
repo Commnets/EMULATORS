@@ -17,9 +17,9 @@ MSX::MSXModel::~MSXModel ()
 
 // ---
 MSX::Memory* MSX::MSXModel::memory (unsigned int cfg, const std::string& lang)
-{ 
+{
 	// It is created here intead in the .hpp file to avoid recursive include...
-	return ((_memory == nullptr) 
+	return ((_memory == nullptr)
 		? (_memory = new MSX::Memory (this /** The model. */, cfg, lang)) : _memory);
 }
 
@@ -30,7 +30,7 @@ MCHEmul::Chips MSX::MSXModel::createChips () const
 
     // Add the Graphical Chip....
     _vdp = const_cast <MSX::VDP*> (vdp ());
-    result.insert (MCHEmul::Chips::value_type (_vdp -> id (), 
+    result.insert (MCHEmul::Chips::value_type (_vdp -> id (),
 		(MCHEmul::Chip*) _vdp -> graphicalChip ()));
 
 	// Add the Sound Chip...
@@ -52,16 +52,16 @@ MCHEmul::IODevices MSX::MSXModel::createIODevices (const std::string& lang) cons
 
 	// The very basic systems...
 	// The Screen...
-	result.insert (MCHEmul::IODevices::value_type (MSX::Screen::_ID, 
-		(MCHEmul::IODevice*) new MSX::Screen 
-			(screenFrequency (), 
-			 vdp () -> numberColumns (), 
+	result.insert (MCHEmul::IODevices::value_type (MSX::Screen::_ID,
+		(MCHEmul::IODevice*) new MSX::Screen
+			(screenFrequency (),
+			 vdp () -> numberColumns (),
 			 vdp () -> numberRows (),
 			 const_cast <MSX::VDP*> (vdp ()), // To avoid the const returned...
-			 { 
-				{"Name", "Screen" }, 
-				{ "Type", "Output" }, 
-				{ "Frequency", std::to_string (screenFrequency ()) 
+			 {
+				{"Name", "Screen" },
+				{ "Type", "Output" },
+				{ "Frequency", std::to_string (screenFrequency ())
 			 } }))); // The data depends on the the screen frequency...
 
 	// ...The sound system
@@ -70,7 +70,7 @@ MCHEmul::IODevices MSX::MSXModel::createIODevices (const std::string& lang) cons
 
 	// ...and the IO system...
 	// with the standard key
-	result.insert (MCHEmul::IODevices::value_type 
+	result.insert (MCHEmul::IODevices::value_type
 		(MSX::InputOSSystem::_ID, new MSX::InputOSSystem (keystrockedMap (lang))));
 
 	return (result);
@@ -228,11 +228,11 @@ const std::map <char, MCHEmul::Strings> MSX::MSXModel::createTypewriterSpecialKe
 
 // ---
 MCHEmul::Memory::Content MSX::MSXModel::memoryContent () const
-{ 
+{
 	// There might be up to 4 slots and 4 subslots of 64k each in the memory of the MSX.
 	// In that slots different things might connected: A cartridge, a disk, RAM...
 	// And only one thing at the same time in each slot and subslot, if any...
-	// By default the basic set will consider a empty zone very slot/subslot in every different page, 
+	// By default the basic set will consider a empty zone very slot/subslot in every different page,
 	// with the exception of the pages 0 & 1, slot 0, subslot 0 that is filled with the ROM
 	// and the page 3, slot 0, subslot 0 that is filled with RAM.
 
@@ -249,76 +249,82 @@ MCHEmul::Memory::Content MSX::MSXModel::memoryContent () const
 	MCHEmul::PhysicalStorages storages;
 	storages.insert (MCHEmul::PhysicalStorages::value_type (MSX::Memory::_ROM_SET, ROM_SLOT0));
 	for (int i = 0; i < 16; i++) // Remember, that 4 slots, 4 subslots each...one after other...
-		storages.insert (MCHEmul::PhysicalStorages::value_type 
+		storages.insert (MCHEmul::PhysicalStorages::value_type
 			(MSX::Memory::_RAM_SET + i, RAM_SLOTS [(size_t) i]));
 
 	// Now the subsets...
 	// The basic subsets in the slot0 and subslot 0...
 	// The slot 0, subslot0 BIOS subset is ROM, that is in the pages 0 & 1 of the slot 0, subslot 0...
-	MCHEmul::PhysicalStorageSubset* ROMBIOS =
-		new MCHEmul::PhysicalStorageSubset (MSX::Memory::_ROMBIOS_SUBSET, ROM_SLOT0,
-			0x0000, MCHEmul::Address ({ 0x00, 0x00 }, false), 0x8000); // 32k
-	ROMBIOS -> setName ("Pages 0&1,Slot 0,Subslot 0:ROM BIOS");
+	MCHEmul::PhysicalStorageSubset* ROMBIOS_0 =
+		new MCHEmul::PhysicalStorageSubset (MSX::Memory::_ROMBIOS_SUBSET_0, ROM_SLOT0,
+			0x0000, MCHEmul::Address ({ 0x00, 0x00 }, false), 0x4000); // 16k (LOW)
+	ROMBIOS_0 -> setName ("Page 0,Slot 0,Subslot 0:ROM BIOS LOW");
+	MCHEmul::PhysicalStorageSubset* ROMBIOS_1 =
+		new MCHEmul::PhysicalStorageSubset (MSX::Memory::_ROMBIOS_SUBSET_1, ROM_SLOT0,
+			0x4000, MCHEmul::Address ({ 0x00, 0x40 }, false), 0x4000); // 16k (HIGH)
+	ROMBIOS_1 -> setName ("Page 1,Slot 0,Subslot 0:ROM BIOS HIGH");
 	// An empty subset of 16k in the page 2 of the slot 0, subslot 0
 	MSX::EmptyPhysicalStorageSubset* ERAMB2_SLOT0SUBSLOT0 =
 		new MSX::EmptyPhysicalStorageSubset (MSX::Memory::_ERAM16KSLOT0SUBSLOT0_SUBSET, MCHEmul::UByte::_0, RAM_SLOTS [0],
-			0x8000, MCHEmul::Address ({ 0x00, 0x80 }, false), 0x4000); // 16k 
+			0x8000, MCHEmul::Address ({ 0x00, 0x80 }, false), 0x4000); // 16k
 	ERAMB2_SLOT0SUBSLOT0 -> setName ("Page 2,Slot 0,Subslot 0:RAM Empty 16k");
 	// The basic subset of 16k in the page 3 of the slot 0m subslot 0
 	// That basic subset of 16k RAM includes the access to the last written access to change the behaviour...
-	MCHEmul::PhysicalStorageSubset* RAMB3_SLOT0SUBSLOT0 = 
+	MCHEmul::PhysicalStorageSubset* RAMB3_SLOT0SUBSLOT0 =
 		new MSX::LastPagePhysicalStorageSubset (MSX::Memory::_RAM16KSLOT0SUBSLOT0_SUBSET, RAM_SLOTS [0],
 			0xc000, MCHEmul::Address ({ 0x00, 0xc0 }, false), 0x4000,
-				MCHEmul::Stack::Configuration (true, false /** Pointing to the last written. */, 
+				MCHEmul::Stack::Configuration (true, false /** Pointing to the last written. */,
 					false /** No overflow detection. */, -1)); // 16k
 	RAMB3_SLOT0SUBSLOT0 -> setName ("Page 3,Slot 0,Subslot 0: RAM 16k");
 
 	// The rest of the memory is created with empty subsets...
-	// It is needed to create 12 subslots (remaining of the first slot) + 
+	// It is needed to create 12 subslots (remaining of the first slot) +
 	// 3 (remaining primary slots) * 4 (subslots each) * 4 (pages each) = 60 empty subsets of 16k each...
 	// The rest of the 16 blocks in any slot and subslot are empty...
 	std::vector <MCHEmul::PhysicalStorageSubset*> ERAMB_SLOTSSUBSLOTS;
-	for (int i = 4 /** The first 4 (0,1,2,3) have already been created. */; 
+	for (int i = 4 /** The first 4 (0,1,2,3) have already been created. */;
 			i < (4 << 4); i++) // 4 slots, 4 subslots each, but staring from the slot 0, sublot 1 (=4)
 	{
-		int mId = // Number from 
+		int mId = // Number from
 			MSX::Memory::_SLOTSUBSLOTBASE_SUBSET + ((i / 16) * 100) /** Slot: From 0 to 3 * 100. */ +
 			(((i % 16) / 4) * 10) + /** Subslot: From 0 to 3 * 10. */
 			(i % 4); /** Page: From 0 to 3. */
 		MCHEmul::Address add (2, 0x0000 + ((i % 4) << 14 /** Multiply by 16. */));
-		MCHEmul::Stack* empty = 
-			(add.value () == 0xc000) 
+		MCHEmul::Stack* empty =
+			(add.value () == 0xc000)
 				? (MCHEmul::Stack*) new MSX::EmptyPhysicalStorageLastPageSubset
 					(mId, MCHEmul::UByte::_0, RAM_SLOTS [(size_t) (i / 16)], /** From 0 to 3. */
 					 add.value (), add, 0x4000,
-					 MCHEmul::Stack::Configuration (true, false /** Pointing to the last written. */, 
-						false /** No overflow detection. */, -1)) 
+					 MCHEmul::Stack::Configuration (true, false /** Pointing to the last written. */,
+						false /** No overflow detection. */, -1))
 				  // 16k memory but with registers controlling things...
 				: (MCHEmul::Stack*) new MSX::EmptyPhysicalStorageSubset
 					(mId, MCHEmul::UByte::_0, RAM_SLOTS [(size_t) (i / 16)], /** From 0 to 3. */
 					 add.value (), add, 0x4000,
-					 MCHEmul::Stack::Configuration (true, false /** Pointing to the last written. */, 
-						false /** No overflow detection. */, -1)); 
+					 MCHEmul::Stack::Configuration (true, false /** Pointing to the last written. */,
+						false /** No overflow detection. */, -1));
 				  // 16k of no memory!
 		ERAMB_SLOTSSUBSLOTS.emplace_back (empty);
 		empty -> setName (
-			"Page " + std::to_string (i % 4) + 
-			",Slot " + std::to_string (i >> 4) + 
+			"Page " + std::to_string (i % 4) +
+			",Slot " + std::to_string (i >> 4) +
 			",Subslot " + std::to_string ((i % 16) / 4) +
 			":RAM Empty 16k" + ((add.value () == 0xc000) ? " (last page)" : ""));
 	}
 
 	// The view from the CPU...
 	MCHEmul::PhysicalStorageSubsets allsubsets;
-	allsubsets.insert (MCHEmul::PhysicalStorageSubsets::value_type 
-		(MSX::Memory::_ROMBIOS_SUBSET, ROMBIOS));
-	allsubsets.insert (MCHEmul::PhysicalStorageSubsets::value_type 
+	allsubsets.insert (MCHEmul::PhysicalStorageSubsets::value_type
+		(MSX::Memory::_ROMBIOS_SUBSET_0, ROMBIOS_0));
+	allsubsets.insert (MCHEmul::PhysicalStorageSubsets::value_type
+		(MSX::Memory::_ROMBIOS_SUBSET_1, ROMBIOS_1));
+	allsubsets.insert (MCHEmul::PhysicalStorageSubsets::value_type
 		(MSX::Memory::_ERAM16KSLOT0SUBSLOT0_SUBSET, ERAMB2_SLOT0SUBSLOT0));
-	allsubsets.insert (MCHEmul::PhysicalStorageSubsets::value_type 
+	allsubsets.insert (MCHEmul::PhysicalStorageSubsets::value_type
 		(MSX::Memory::_RAM16KSLOT0SUBSLOT0_SUBSET, RAMB3_SLOT0SUBSLOT0)); // It will be active one...
 	for (int i = 4; i < (4 << 4); i++)
-		allsubsets.insert (MCHEmul::PhysicalStorageSubsets::value_type 
-			(MSX::Memory::_SLOTSUBSLOTBASE_SUBSET + ((i / 16) * 100) + (((i % 16) / 4) * 10) + (i % 4), 
+		allsubsets.insert (MCHEmul::PhysicalStorageSubsets::value_type
+			(MSX::Memory::_SLOTSUBSLOTBASE_SUBSET + ((i / 16) * 100) + (((i % 16) / 4) * 10) + (i % 4),
 				ERAMB_SLOTSSUBSLOTS [(size_t) (i - 4)]));
 	MCHEmul::MemoryView* cpuView = new MCHEmul::MemoryView (MSX::Memory::_CPU_VIEW, allsubsets);
 
@@ -335,7 +341,7 @@ MCHEmul::Memory::Content MSX::MSXModel::memoryContent () const
 // ---
 MCHEmul::Attributes MSX::MSXStdModel::attributes () const
 {
-	MCHEmul::Attributes attrs 
+	MCHEmul::Attributes attrs
 		({
 			{ "Manufacturer", "MSX" },
 			{ "Generation", "MSX1" },
@@ -353,7 +359,7 @@ MSX::VDP* MSX::MSXStdModel::createVDP () const
 	// The standard model is always PAL and based on a Texas Instruments basic chip...
 	// Notice that VDP doesn't own the graphical chip behind...
 	return (new MSX::VDP_TMS99xxFamily
-		(new TEXASINSTRUMENTS::TMS9929A 
+		(new TEXASINSTRUMENTS::TMS9929A
 			(nullptr /** Created internally. */, 3 /** 3 times quicked than CPU = 10,74MHz */, FZ80::INTInterrupt::_ID)));
 }
 
@@ -364,7 +370,7 @@ MSX::PSG* MSX::MSXStdModel::createPSG () const
 	return (new MSX::PSG_AY38910
 		(new GENERALINSTRUMENTS::AY38910
 			(nullptr /** to create the internal ones. */,
-			 new GENERALINSTRUMENTS::AY38910SimpleLibWrapper 
+			 new GENERALINSTRUMENTS::AY38910SimpleLibWrapper
 				(clockSpeed () >> 1 /** Half speed. */, GENERALINSTRUMENTS::AY38910::_SOUNDSAMPLINGCLOCK))));
 }
 
@@ -388,8 +394,9 @@ void MSX::MSXStdModel::configureMemory (MSX::Memory* m, unsigned int cfg)
 	// Disactive all elements, but maintain the standard ones...
 	m -> desactivateAllMemoryElements (true);
 	// ...and only the basic elements are connected...
-	m -> connectMemoryElements ({ 
-		MSX::Memory::_ROMBIOS_SUBSET, 
+	m -> connectMemoryElements ({
+		MSX::Memory::_ROMBIOS_SUBSET_0,
+		MSX::Memory::_ROMBIOS_SUBSET_1,
 		MSX::Memory::_RAM16KSLOT0SUBSLOT0_SUBSET });
 	// ...and also fix the stack subset...
 	m -> setStackSubset (MSX::Memory::_RAM16KSLOT0SUBSLOT0_SUBSET);
@@ -398,14 +405,14 @@ void MSX::MSXStdModel::configureMemory (MSX::Memory* m, unsigned int cfg)
 // ---
 MSX::VDP* MSX::MSX1Model::createVDP () const
 {
-	return ((visualSystem () == MSX::MSXModel::VisualSystem::_PAL) 
+	return ((visualSystem () == MSX::MSXModel::VisualSystem::_PAL)
 			? (MSX::VDP*) new MSX::VDP_TMS99xxFamily
-				(new TEXASINSTRUMENTS::TMS9929A 
-					(nullptr /** Created internally. */, 3 /** 2 times quicker than CPU = 10,74MHz */, 
+				(new TEXASINSTRUMENTS::TMS9929A
+					(nullptr /** Created internally. */, 3 /** 2 times quicker than CPU = 10,74MHz */,
 						FZ80::INTInterrupt::_ID /** INT. */))
-			: (MSX::VDP*) new MSX::VDP_TMS99xxFamily 
-				(new TEXASINSTRUMENTS::TMS9918A 
-					(nullptr /** Created internally. */, 3 /** 2 times quicker than CPU = 10,74MHz */, 
+			: (MSX::VDP*) new MSX::VDP_TMS99xxFamily
+				(new TEXASINSTRUMENTS::TMS9918A
+					(nullptr /** Created internally. */, 3 /** 2 times quicker than CPU = 10,74MHz */,
 						FZ80::INTInterrupt::_ID /** INT. */)));
 }
 
@@ -416,15 +423,15 @@ MSX::PSG* MSX::MSX1Model::createPSG () const
 	return (new MSX::PSG_AY38910
 		(new GENERALINSTRUMENTS::AY38910
 			(nullptr /** to create the internal ones. */,
-			 new GENERALINSTRUMENTS::AY38910SimpleLibWrapper 
+			 new GENERALINSTRUMENTS::AY38910SimpleLibWrapper
 				(clockSpeed () >> 1 /** Half speed. */, GENERALINSTRUMENTS::AY38910::_SOUNDSAMPLINGCLOCK))));
 }
 
 // ---
 MCHEmul::Attributes MSX::SVI728::attributes () const
 {
-	MCHEmul::Attributes attrs 
-		({ 
+	MCHEmul::Attributes attrs
+		({
 			{ "Manufacturer", "SpectraVideo" },
 			{ "Generation", "MSX1" },
 			{ "Visual System", (visualSystem () == MSX::MSXModel::VisualSystem::_PAL) ? "PAL" : "NTSC" },
@@ -460,8 +467,9 @@ void MSX::SVI728::configureMemory (MSX::Memory* m, unsigned int cfg)
 	// Disactive all elements, but maintain the standard ones...
 	m -> desactivateAllMemoryElements (true);
 	// ...and only the basic elements are connected...
-	m -> connectMemoryElements ({ 
-		MSX::Memory::_ROMBIOS_SUBSET, 
+	m -> connectMemoryElements ({
+		MSX::Memory::_ROMBIOS_SUBSET_0,
+		MSX::Memory::_ROMBIOS_SUBSET_1,
 		MSX::Memory::_RAM16KSLOT0SUBSLOT0_SUBSET });
 	// ...and also fix the stack subset...
 	m -> setStackSubset (MSX::Memory::_RAM16KSLOT0SUBSLOT0_SUBSET);
@@ -470,8 +478,8 @@ void MSX::SVI728::configureMemory (MSX::Memory* m, unsigned int cfg)
 // ---
 MCHEmul::Attributes MSX::SVI738::attributes () const
 {
-	MCHEmul::Attributes attrs 
-		({ 
+	MCHEmul::Attributes attrs
+		({
 			{ "Manufacturer", "SpectraVideo" },
 			{ "Generation", "MSX2" },
 			{ "Visual System", (visualSystem () == MSX::MSXModel::VisualSystem::_PAL) ? "PAL" : "NTSC" },
@@ -564,8 +572,9 @@ void MSX::SVI738::configureMemory (MSX::Memory* m, unsigned int cfg)
 	// Disactive all elements, but maintain the standard ones...
 	m -> desactivateAllMemoryElements (true);
 	// ...and only the basic elements are connected...
-	m -> connectMemoryElements ({ 
-		MSX::Memory::_ROMBIOS_SUBSET, 
+	m -> connectMemoryElements ({
+		MSX::Memory::_ROMBIOS_SUBSET_0,
+		MSX::Memory::_ROMBIOS_SUBSET_1,
 		MSX::Memory::_RAM16KSLOT0SUBSLOT0_SUBSET });
 	// ...and also fix the stack subset...
 	m -> setStackSubset (MSX::Memory::_RAM16KSLOT0SUBSLOT0_SUBSET);
@@ -574,8 +583,8 @@ void MSX::SVI738::configureMemory (MSX::Memory* m, unsigned int cfg)
 // ---
 MCHEmul::Attributes MSX::SonyHB10P::attributes () const
 {
-	MCHEmul::Attributes attrs 
-		({ 
+	MCHEmul::Attributes attrs
+		({
 			{ "Manufacturer", "Sony" },
 			{ "Generation", "MSX1" },
 			{ "Visual System", (visualSystem () == MSX::MSXModel::VisualSystem::_PAL) ? "PAL" : "NTSC" },
@@ -608,8 +617,9 @@ void MSX::SonyHB10P::configureMemory (MSX::Memory* m, unsigned int cfg)
 	// Disactive all elements, but maintain the standard ones...
 	m -> desactivateAllMemoryElements (true);
 	// ...and only the basic elements are connected...
-	m -> connectMemoryElements ({ 
-		MSX::Memory::_ROMBIOS_SUBSET, 
+	m -> connectMemoryElements ({
+		MSX::Memory::_ROMBIOS_SUBSET_0,
+		MSX::Memory::_ROMBIOS_SUBSET_1,
 		MSX::Memory::_RAM16KSLOT0SUBSLOT0_SUBSET });
 	// ...and also fix the stack subset...
 	m -> setStackSubset (MSX::Memory::_RAM16KSLOT0SUBSLOT0_SUBSET);
@@ -618,8 +628,8 @@ void MSX::SonyHB10P::configureMemory (MSX::Memory* m, unsigned int cfg)
 // ---
 MCHEmul::Attributes MSX::PhilipsVG8010::attributes () const
 {
-	MCHEmul::Attributes attrs 
-		({ 
+	MCHEmul::Attributes attrs
+		({
 			{ "Manufacturer", "Philips" },
 			{ "Generation", "MSX1" },
 			{ "Visual System", (visualSystem () == MSX::MSXModel::VisualSystem::_PAL) ? "PAL" : "NTSC" },
@@ -654,8 +664,9 @@ void MSX::PhilipsVG8010::configureMemory (MSX::Memory* m, unsigned int cfg)
 	// Disactive all elements, but maintain the standard ones...
 	m -> desactivateAllMemoryElements (true);
 	// ...and only the basic elements are connected...
-	m -> connectMemoryElements ({ 
-		MSX::Memory::_ROMBIOS_SUBSET, 
+	m -> connectMemoryElements ({
+		MSX::Memory::_ROMBIOS_SUBSET_0,
+		MSX::Memory::_ROMBIOS_SUBSET_1,
 		_RAM32KSLOT0SUBSLOT0_SUBSET });
 	// ...and also fix the stack subset...
 	m -> setStackSubset (_RAM32KSLOT0SUBSLOT0_SUBSET);
@@ -673,21 +684,21 @@ MCHEmul::Memory::Content MSX::PhilipsVG8010::memoryContent () const
 	result._subsets.erase (MSX::Memory::_RAM16KSLOT0SUBSLOT0_SUBSET);
 	result._subsets.erase (MSX::Memory::_ERAM16KSLOT0SUBSLOT0_SUBSET);
 	// ...also in the CPU view...
-	MCHEmul::MemoryView* CPUView = 
+	MCHEmul::MemoryView* CPUView =
 		(*result._views.find (MSX::Memory::_CPU_VIEW)).second;
 	CPUView -> removeSubSet (MSX::Memory::_RAM16KSLOT0SUBSLOT0_SUBSET);
 	CPUView -> removeSubSet (MSX::Memory::_ERAM16KSLOT0SUBSLOT0_SUBSET);
 
 	// Cretaes the 32K RAM....
 	MCHEmul::PhysicalStorage* rS0S0 = (*result._physicalStorages.find (MSX::Memory::_RAM_SET)).second;
-	MCHEmul::PhysicalStorageSubset* RAMB23_SLOT0SUBSLOT0 = 
+	MCHEmul::PhysicalStorageSubset* RAMB23_SLOT0SUBSLOT0 =
 		new MCHEmul::Stack (_RAM32KSLOT0SUBSLOT0_SUBSET, rS0S0,
 			0x8000, MCHEmul::Address ({ 0x00, 0x80 }, false), 0x8000,
-				MCHEmul::Stack::Configuration (true, false /** Pointing to the last written. */, 
+				MCHEmul::Stack::Configuration (true, false /** Pointing to the last written. */,
 					false /** No overflow detection. */, -1)); // 32k
 	RAMB23_SLOT0SUBSLOT0 -> setName ("RAM 32k, Slot 0, Subslot 0, Bank 2-3");
 	// That is added to the content...
-	result._subsets.insert (MCHEmul::PhysicalStorageSubsets::value_type 
+	result._subsets.insert (MCHEmul::PhysicalStorageSubsets::value_type
 		(_RAM32KSLOT0SUBSLOT0_SUBSET, RAMB23_SLOT0SUBSLOT0));
 	// ...and also in the CPU View (that is the only one)...
 	CPUView -> addSubset (RAMB23_SLOT0SUBSLOT0);
@@ -698,8 +709,8 @@ MCHEmul::Memory::Content MSX::PhilipsVG8010::memoryContent () const
 // ---
 MCHEmul::Attributes MSX::CanonV20::attributes () const
 {
-	MCHEmul::Attributes attrs 
-		({ 
+	MCHEmul::Attributes attrs
+		({
 			{ "Manufacturer", "Canon" },
 			{ "Generation", "MSX1" },
 			{ "Visual System", (visualSystem () == MSX::MSXModel::VisualSystem::_PAL) ? "PAL" : "NTSC" },
@@ -732,8 +743,9 @@ void MSX::CanonV20::configureMemory (MSX::Memory* m, unsigned int cfg)
 	// Disactive all elements, but maintain the standard ones...
 	m -> desactivateAllMemoryElements (true);
 	// ...and only the basic elements are connected...
-	m -> connectMemoryElements ({ 
-		MSX::Memory::_ROMBIOS_SUBSET, 
+	m -> connectMemoryElements ({
+		MSX::Memory::_ROMBIOS_SUBSET_0,
+		MSX::Memory::_ROMBIOS_SUBSET_1,
 		_RAM64KSLOT3SUBSLOT0_SUBSET });
 	// ...and also fix the stack subset...
 	m -> setStackSubset (_RAM64KSLOT3SUBSLOT0_SUBSET);
@@ -747,7 +759,7 @@ MCHEmul::Memory::Content MSX::CanonV20::memoryContent () const
 	// In this computer the1 16K RAM are replace by a 32K RAM in the slot 0, subslot 0, page 2-3.
 
 	// Gets the CPU View...
-	MCHEmul::MemoryView* CPUView = 
+	MCHEmul::MemoryView* CPUView =
 		(*result._views.find (MSX::Memory::_CPU_VIEW)).second;
 
 	// Modifications in the slot 0...
@@ -757,12 +769,12 @@ MCHEmul::Memory::Content MSX::CanonV20::memoryContent () const
 	CPUView -> removeSubSet (MSX::Memory::_RAM16KSLOT0SUBSLOT0_SUBSET);
 	// ...and creates a EMPTY (Last) RAM in the slot 0, subslot 0, page 3 instead
 	MCHEmul::PhysicalStorage* rS0S0 = (*result._physicalStorages.find (MSX::Memory::_RAM_SET)).second;
-	MCHEmul::PhysicalStorageSubset* ERAMB3_SLOT0SUBSLOT0 = 
+	MCHEmul::PhysicalStorageSubset* ERAMB3_SLOT0SUBSLOT0 =
 		new MSX::EmptyPhysicalStorageLastPageSubset (_ERAM16KSLOT0SUBSLOT0_SUBSET, MCHEmul::UByte::_0, rS0S0,
 			0xc000, MCHEmul::Address ({ 0x00, 0xc0 }, false), 0x4000); // 16K
 	ERAMB3_SLOT0SUBSLOT0  -> setName ("RAM Empty 16k, Slot 0, Subslot 0, Bank 3");
 	// Add the new element to the subsets and to the CPU View...
-	result._subsets.insert (MCHEmul::PhysicalStorageSubsets::value_type 
+	result._subsets.insert (MCHEmul::PhysicalStorageSubsets::value_type
 		(_ERAM16KSLOT0SUBSLOT0_SUBSET, ERAMB3_SLOT0SUBSLOT0));
 	CPUView -> addSubset (ERAMB3_SLOT0SUBSLOT0);
 
@@ -773,20 +785,20 @@ MCHEmul::Memory::Content MSX::CanonV20::memoryContent () const
 	{
 		result._subsets.erase
 			((int) (MSX::Memory::_SLOT3SUBSLOT0BASE_SUBSET + i));
-		CPUView -> removeSubSet 
+		CPUView -> removeSubSet
 			((int) (MSX::Memory::_SLOT3SUBSLOT0BASE_SUBSET + i));
 	}
 
 	// Creates the 64K RAM in the slot 3, subslot 0, pages 0-1-2-3.
 	MCHEmul::PhysicalStorage* rS3S0 = (*result._physicalStorages.find (MSX::Memory::_RAM_SET + 3)).second;
-	MCHEmul::PhysicalStorageSubset* RAMB0123_SLOT3SUBSLOT0 = 
+	MCHEmul::PhysicalStorageSubset* RAMB0123_SLOT3SUBSLOT0 =
 		new MCHEmul::Stack (_RAM64KSLOT3SUBSLOT0_SUBSET, rS3S0,
 			0x0000, MCHEmul::Address ({ 0x00, 0x00 }, false), 0x10000,
-				MCHEmul::Stack::Configuration (true, false /** Pointing to the last written. */, 
+				MCHEmul::Stack::Configuration (true, false /** Pointing to the last written. */,
 					false /** No overflow detection. */, -1)); // 64k
 	RAMB0123_SLOT3SUBSLOT0 -> setName ("RAM 64k, Slot 0, Subslot 0, Bank 0-1-2-3");
 	// That is added to the content, and to the CPU view...
-	result._subsets.insert (MCHEmul::PhysicalStorageSubsets::value_type 
+	result._subsets.insert (MCHEmul::PhysicalStorageSubsets::value_type
 		(_RAM64KSLOT3SUBSLOT0_SUBSET, RAMB0123_SLOT3SUBSLOT0));
 	CPUView -> addSubset (RAMB0123_SLOT3SUBSLOT0);
 

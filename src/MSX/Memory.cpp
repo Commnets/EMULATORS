@@ -74,7 +74,7 @@ MSX::Memory::Memory (MSX::MSXModel* m, unsigned int cfg,
 	: MCHEmul::Memory (0, m -> memoryContent (), { }),
 	  _model (m),
 	  _configuration (cfg),
-	  _ROM (nullptr), _BASICRAM (nullptr), _EMPTYBASICRAM (nullptr),
+	  _ROM0 (nullptr), _ROM1 (nullptr), _BASICRAM (nullptr), _EMPTYBASICRAM (nullptr),
 	  _memoryElements (),
 	  _STACK_SUBSET (0), // Initially the version not expanded...
 	  _slotSubSlotActive { { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 } } // The default values...
@@ -91,14 +91,16 @@ MSX::Memory::Memory (MSX::MSXModel* m, unsigned int cfg,
 		{ _error = MCHEmul::_INIT_ERROR; return; }
 	if (!_model -> loadROMOverForLanguage (physicalStorage (_ROM_SET), lang)) 
 		{ _error = MCHEmul::_INIT_ERROR; return; }
-	subset (_ROMBIOS_SUBSET) -> fixDefaultValues (); // Fix the values in the ROM...
+	subset (_ROMBIOS_SUBSET_0) -> fixDefaultValues (); // Fix the values in the ROM...
+	subset (_ROMBIOS_SUBSET_1) -> fixDefaultValues (); // Fix the values in the ROM...
 
 	// The basic elements...
-	_ROM = subset (_ROMBIOS_SUBSET);
+	_ROM0 = subset (_ROMBIOS_SUBSET_0);
+	_ROM1 = subset (_ROMBIOS_SUBSET_1);
 	_BASICRAM = subset (_RAM16KSLOT0SUBSLOT0_SUBSET);
 	_EMPTYBASICRAM = subset (_ERAM16KSLOT0SUBSLOT0_SUBSET);
 	// None of them can be nullptr...
-	if (_ROM == nullptr) // The other two can be nullptr, but not the ROM...
+	if (_ROM0 == nullptr || _ROM1 == nullptr) // The other two can be nullptr, but not the ROM...
 		{ _error = MCHEmul::_INIT_ERROR; return; }	
 	// Create the internal variable _memoryElements, but it must follows the structure defined!
 	if (!createMemoryElementsEntity ())
@@ -161,13 +163,13 @@ void MSX::Memory::activateSlotsPerPage (unsigned char spage0, unsigned char spag
 	MCHEmul::PhysicalStorageSubset* nSS [4] = { };
 	MCHEmul::Stack* nStack = nullptr;
 	nSS [0] = activeMemoryElementInSlotSubSlotAndPage (_slotSubSlotActive [0]._slot = spage0, // Slot to be active in the page 0...
-		_slotSubSlotActive [0]._subSlot = (MSX::SubSlotRegisters::instance () -> subSlotRegister (spage0).value () & 0x03), 0);
+		_slotSubSlotActive [0]._subSlot = (MSX::SubSlotRegisters::instance () -> justSubSlotRegister (spage0).value () & 0x03), 0);
 	nSS [1] = activeMemoryElementInSlotSubSlotAndPage (_slotSubSlotActive [1]._slot = spage1, // Slot to be active in the page 1...
-		_slotSubSlotActive [1]._subSlot = (MSX::SubSlotRegisters::instance () -> subSlotRegister (spage1).value () & 0x0c) >> 2, 1);
+		_slotSubSlotActive [1]._subSlot = (MSX::SubSlotRegisters::instance () -> justSubSlotRegister (spage1).value () & 0x0c) >> 2, 1);
 	nSS [2] = activeMemoryElementInSlotSubSlotAndPage (_slotSubSlotActive [2]._slot = spage2, // Slot to be active in the page 2...
-		_slotSubSlotActive [2]._subSlot = (MSX::SubSlotRegisters::instance () -> subSlotRegister (spage2).value () & 0x30) >> 4, 2);
+		_slotSubSlotActive [2]._subSlot = (MSX::SubSlotRegisters::instance () -> justSubSlotRegister (spage2).value () & 0x30) >> 4, 2);
 	nSS [3] = activeMemoryElementInSlotSubSlotAndPage (_slotSubSlotActive [3]._slot = spage3, // Slot to be active in the page 3...
-		_slotSubSlotActive [3]._subSlot= (MSX::SubSlotRegisters::instance () -> subSlotRegister (spage3).value () & 0xc0) >> 6, 3);
+		_slotSubSlotActive [3]._subSlot = (MSX::SubSlotRegisters::instance () -> justSubSlotRegister (spage3).value () & 0xc0) >> 6, 3);
 
 	// The memory activated in the place where the stack was defined, must be also of the type stack! 
 	nStack = dynamic_cast <MCHEmul::Stack*> (nSS [bStack]);
