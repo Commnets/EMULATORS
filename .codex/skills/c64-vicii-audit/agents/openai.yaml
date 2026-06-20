@@ -1,0 +1,4 @@
+interface:
+  display_name: "C64 VIC-II Audit"
+  short_description: "Validate VIC-II timing, registers, and video"
+  default_prompt: "Use $c64-vicii-audit to audit VIC-II timing, badlines, raster, sprites, or video modes."

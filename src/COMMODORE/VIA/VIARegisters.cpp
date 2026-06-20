@@ -423,6 +423,24 @@ const MCHEmul::UByte& COMMODORE::VIARegisters::peekValue (size_t p) const
 
 	switch (pp)
 	{
+		case 0x00:
+			{
+				// To avoid the collateral effects in control lines!
+				result = _PA -> latchIR () 
+					? _PA -> valueLatched () : _PA -> portValue ();;
+			}
+
+			break;
+
+		case 0x01:
+			{
+				// To avoid the collateral effects in control lines!
+				result = _PB -> latchIR () 
+					? _PB -> valueLatched () : _PB -> portValue ();;
+			}
+
+			break;
+
 		case 0x04:
 			{
 				result = MCHEmul::UByte ((unsigned char) (_T1 -> currentValue () & 0x00ff));
@@ -433,18 +451,6 @@ const MCHEmul::UByte& COMMODORE::VIARegisters::peekValue (size_t p) const
 		case 0x08:
 			{
 				result = MCHEmul::UByte ((unsigned char) (_T2 -> currentValue () & 0x00ff));
-			}
-
-			break;
-
-		case 0x0d:
-			{
-				result = MCHEmul::UByte::_0;
-				result.setBit (7, launchInterrupt ());
-				result.setBit (6, _T1 -> peekInterruptRequested ());
-				result.setBit (5, _T2 -> peekInterruptRequested ());
-
-				// TODO
 			}
 
 			break;

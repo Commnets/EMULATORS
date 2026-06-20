@@ -1,0 +1,4 @@
+interface:
+  display_name: "C64 SID Audit"
+  short_description: "Validate SID registers, voices, and filters"
+  default_prompt: "Use $c64-sid-audit to audit SID register, envelope, waveform, or filter emulation."

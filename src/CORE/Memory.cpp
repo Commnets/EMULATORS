@@ -576,7 +576,7 @@ bool MCHEmul::MemoryView::loadInto (const std::string& fN, const MCHEmul::Addres
 			i != _subsets.end () && ss == nullptr; i++)
 		ss = (*i).second -> isIn (a, dt) ? (*i).second : nullptr;
 
-	return ((ss == nullptr) ? ss -> loadInto (fN, a) : false);
+	return ((ss != nullptr) ? ss -> loadInto (fN, a) : false);
 }
 
 // ---
@@ -588,7 +588,7 @@ bool MCHEmul::MemoryView::saveFrom (const std::string& fN, size_t nB, const MCHE
 		i != _subsets.end () && ss == nullptr; i++)
 		ss = (*i).second -> isIn (a, dt) ? (*i).second : nullptr;
 
-	return ((ss == nullptr) ? ss -> saveFrom (fN, nB, a) : false);
+	return ((ss != nullptr) ? ss -> saveFrom (fN, nB, a) : false);
 }
 
 // ---

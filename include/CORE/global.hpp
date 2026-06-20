@@ -21,6 +21,7 @@
 #include <ostream>
 #include <iostream>
 #include <chrono>
+#include <limits>
 
 namespace MCHEmul
 {
@@ -123,7 +124,7 @@ namespace MCHEmul
 	bool validLabel (const std::string& s); // alphanumeric characters and no _
 	bool validBytesChar (const std::string& s); // any alphanumeric character in ''
 	bool validBytesBinary (const std::string& s); // 0 or 1 and must start with a z
-	bool validBytesOctal (const std::string& s); // from 0 to 8 and must start with a 0
+	bool validBytesOctal (const std::string& s); // from 0 to 7 and must start with a 0
 	bool validBytesHexadecimal (const std::string& s); // from 0 to f and must start with a $
 	bool validBytesDecimal (const std::string& s); // only numbers and not starting with 0
 	bool validBytes (const std::string& s); // if type valid...

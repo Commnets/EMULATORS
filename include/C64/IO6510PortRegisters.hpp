@@ -49,6 +49,8 @@ namespace C64
 		IO6510PortRegisters (MCHEmul::PhysicalStorage* ps);
 							
 		private:
+		virtual void setValue (size_t p, const MCHEmul::UByte& v) override;
+
 		virtual void processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifier* ntier) override;
 	
 		virtual void notifyPortChanges (const MCHEmul::UByte& c, const MCHEmul::UByte& v) override;

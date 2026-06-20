@@ -231,7 +231,7 @@ COMMODORE::TEDSoundSimpleLibWrapper::Voice::Voice (int id, unsigned int cF)
 		{
 			new MCHEmul::PulseSoundWave (cF),
 			new MCHEmul::NoiseSoundWave (cF)
-		}, nullptr), // No envelope attached...
+		}, nullptr, { }), // No envelope, no filters attached...
 		_wavesActive (0)
 { 
 	setClassName ("TEDVoice");

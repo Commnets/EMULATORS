@@ -62,6 +62,8 @@
     <ClCompile Include="..\..\src\CORE\ScreenMemory.cpp" />
     <ClCompile Include="..\..\src\CORE\Sound.cpp" />
     <ClCompile Include="..\..\src\CORE\SoundChip.cpp" />
+    <ClCompile Include="..\..\src\CORE\SoundEnvelope.cpp" />
+    <ClCompile Include="..\..\src\CORE\SoundFilter.cpp" />
     <ClCompile Include="..\..\src\CORE\SoundLibWrapper.cpp" />
     <ClCompile Include="..\..\src\CORE\SoundMemory.cpp" />
     <ClCompile Include="..\..\src\CORE\SoundVoice.cpp" />
@@ -132,6 +134,8 @@
     <ClInclude Include="..\..\include\CORE\ScreenMemory.hpp" />
     <ClInclude Include="..\..\include\CORE\Sound.hpp" />
     <ClInclude Include="..\..\include\CORE\SoundChip.hpp" />
+    <ClInclude Include="..\..\include\CORE\SoundEnvelope.hpp" />
+    <ClInclude Include="..\..\include\CORE\SoundFilter.hpp" />
     <ClInclude Include="..\..\include\CORE\SoundMemory.hpp" />
     <ClInclude Include="..\..\include\CORE\SoundVoice.hpp" />
     <ClInclude Include="..\..\include\CORE\SoundWave.hpp" />

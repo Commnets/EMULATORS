@@ -17,8 +17,6 @@ void COMMODORE::VIAControlLine::initialize ()
 	_wire.setValue (true); 
 		
 	_interruptRequested = false; 
-
-	_lastModeUsed = 0xff; // Maximum possible...
 }
 
 // ---
@@ -45,9 +43,6 @@ void COMMODORE::VIAControlLineType1::initialize ()
 // ---
 bool COMMODORE::VIAControlLineType1::simulate (MCHEmul::CPU* cpu)
 {
-	if (_mode == _lastModeUsed)
-		return (true);
-
 	switch (_mode)
 	{
 		case 0x00:
@@ -92,8 +87,6 @@ bool COMMODORE::VIAControlLineType1::simulate (MCHEmul::CPU* cpu)
 
 			break;
 	}
-
-	_lastModeUsed = _mode;
 
 	return (true);
 }
@@ -166,9 +159,6 @@ void COMMODORE::VIAControlLineType2::initialize ()
 // ---
 bool COMMODORE::VIAControlLineType2::simulate (MCHEmul::CPU* cpu)
 {
-	if (_lastModeUsed == _mode)
-		return (true);
-
 	switch (_mode)
 	{
 		case 0x00:
@@ -231,8 +221,6 @@ bool COMMODORE::VIAControlLineType2::simulate (MCHEmul::CPU* cpu)
 
 			break;
 	}
-
-	_lastModeUsed = _mode;
 
 	return (true);
 }

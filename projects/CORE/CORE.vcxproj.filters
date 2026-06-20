@@ -222,6 +222,12 @@
     <ClCompile Include="..\..\src\CORE\ASCIIToCodeConverter.cpp">
       <Filter>Archivos de origen</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\CORE\SoundFilter.cpp">
+      <Filter>Archivos de origen\IO</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\CORE\SoundEnvelope.cpp">
+      <Filter>Archivos de origen\IO</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\include\CORE\IO.hpp">
@@ -430,6 +436,12 @@
     </ClInclude>
     <ClInclude Include="..\..\include\CORE\ASCIIToCodeConverter.hpp">
       <Filter>Archivos de encabezado</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\CORE\SoundFilter.hpp">
+      <Filter>Archivos de encabezado\IO</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\CORE\SoundEnvelope.hpp">
+      <Filter>Archivos de encabezado\IO</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

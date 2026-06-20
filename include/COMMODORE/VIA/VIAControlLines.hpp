@@ -107,8 +107,6 @@ namespace COMMODORE
 		// Implementation
 		/** When a interrupt has been requested for this object. */
 		MCHEmul::OBool _interruptRequested;
-		/** The last mode adopted. */
-		unsigned char _lastModeUsed;
 	};
 
 	/** Type 1 of "ControlLine".

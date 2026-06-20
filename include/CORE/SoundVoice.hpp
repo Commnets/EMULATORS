@@ -17,152 +17,11 @@
 
 #include <CORE/InfoClass.hpp>
 #include <CORE/SoundWave.hpp>
+#include <CORE/SoundEnvelope.hpp>
+#include <CORE/SoundFilter.hpp>
 
 namespace MCHEmul
 {
-	/** Represents an envelop~for the sound. \n
-		There might be many different possibilities or even none. \n
-		These is something that the every chip sound has to decide */
-	class SoundEnvelope : public InfoClass
-	{
-		public:
-		SoundEnvelope (unsigned int cF)
-			: InfoClass ("SoundEnvelope"),
-			  _active (false),
-			  _chipFrequency (cF)
-							{ }
-
-		virtual ~SoundEnvelope () = default;
-
-		/** To activate or desactivate the envelop. */
-		bool active () const
-							{ return (_active); }
-		void setActive (bool a)
-							{ if ((_active != a) && (_active = a))
-								initializeInternalCounters (); }
-
-		// To manage the way the Envelope works...
-		/** To start/stop the envelope from the state it is. \n
-			Usually the envelope is implemented internally like a FSM. \n
-			This method is used to set up that state and the internal variables that could be needed as well. */
-		virtual void setStart (bool s) = 0;
-		/** To initialize the envelope. */
-		virtual void initialize () = 0;
-		/** The envelope usually manages many internal counters
-			to control the point where it is in. This method sets up those to 0 (if any). */
-		virtual void initializeInternalCounters () = 0;
-		/** To change the status of the envelop accordingly to the number of clocks. */
-		virtual void clock (unsigned int nC = 1) = 0;
-		/** The most important method of the envelop: \n
-			To produce the envelop value. 
-			The value, according with the situation, has to be between 0 and 1.0 */
-		virtual double envelopeData () const = 0;
-
-		protected:
-		bool _active;
-		unsigned int _chipFrequency;
-	};
-
-	/** Represents the traditional envelop = ADSR. \n
-		The ADSR is about a FSM that passes through different states. 
-		The time the FSM stands in each state will depend on the configuration of the different
-		parameters of the ADSR. \n
-		Every time those parameters are changed, the sampling data has to be recalculated
-		(and the internal counters reseted. */
-	class SoundADSREnvelope final : public SoundEnvelope
-	{
-		public:
-		SoundADSREnvelope (unsigned int cF,
-			unsigned short a = 0, unsigned short d = 0, unsigned short r = 0);
-
-		// ADSR values...
-		/** The values are given and returned in milliseconds. */
-		unsigned short attack () const
-							{ return (_attack); }
-		void setAttack (unsigned short a)
-							{ _attack = a; calculateSamplingData (); }
-		unsigned short decay () const
-							{ return (_decay); }
-		void setDecay (unsigned short d)
-							{ _decay = d; calculateSamplingData (); }
-		unsigned short release () const
-							{ return (_release); }
-		void setRelease (unsigned short r)
-							{ _release = r; calculateSamplingData (); }
-		void setADR (unsigned short a, unsigned short d, unsigned short r)
-							{ _attack = a; _decay = d; _release = r; calculateSamplingData (); }
-
-		/** The sustain volumen is a number between 0 and 1 indicating 
-			the %(1) over a "maximum value". */
-		double sustainVolumen () const
-						{ return (_sustainVolumen); }
-		void setSustainVolumen (double s)
-						{ if ((_sustainVolumen = s) > 1.0f) _sustainVolumen = 1.0f; }
-
-		/** In ADSR when starts the FSM is moved into the ATTACK state,
-			and when stops the FSM is moved into the RELEASE state unless it was no in IDLE previouly in which does nothing. */
-		virtual void setStart (bool s) override;
-		virtual void initialize () override;
-		virtual void initializeInternalCounters () override;
-		virtual void clock (unsigned int nC = 1) override;
-		virtual double envelopeData () const override;
-
-		virtual InfoStructure getInfoStructure () const override;
-
-		private:
-		/** Just to advance the internal state.
-			It is really an implemention method. */
-		void advanceState ();
-
-		/** To calculate the internal data needed to later "draw" the voice. \n
-			It could be overloaded to include more intenal data needed
-			depending on the type of voice. \n
-			Any moment a key value is changed this method should be invoked. */
-		void calculateSamplingData ();
-
-		private:
-		/** The variables used for the envelop. In milliseconds. */
-		unsigned short _attack, _decay, _release;
-		/** The volumen for sustain. From 0 to 1. */
-		double _sustainVolumen;
-		/** The volumen from which the release phase starts. From 0 to 1. */
-		double _releaseInitialVolumen;
-
-		// Implementation
-		/** The status in which the wave is in. */
-		enum class State
-		{
-			_ATTACK = 0,
-			_DECAY = 1,
-			_SUSTAIN = 2,
-			_RELEASE = 3,
-			_IDLE = 4
-		};
-
-		/** The state in which the full wave is. */
-		State _state;
-
-		/** The counters used to control the states _attack, _decay, 
-			_sustain (not needed), and _release. */
-		struct StateCounters
-		{
-			StateCounters ()
-				: _cyclesPerState (0), _counterCyclesPerState (0),
-				  _limit (false)
-							{ }
-
-			void initialize ()
-							{ _counterCyclesPerState = 0;
-							  _limit = false; }
-
-			unsigned int _cyclesPerState;
-			unsigned int _counterCyclesPerState;
-			bool _limit;
-		}; 
-
-		mutable std::vector <StateCounters> _stateCounters;
-	};
-
 	/** Represents a voice. \n
 		Ot can be overloaded for specific needs. */
 	class SoundVoice : public InfoClass
@@ -170,7 +29,9 @@ namespace MCHEmul
 		public:
 		/** The voice is owner of the waves. */
 		SoundVoice (int id, unsigned int cF,
-			const SoundWaves& sw, SoundEnvelope* sE = nullptr);
+			const SoundWaves& sw, 
+			SoundEnvelope* sE = nullptr, 
+			const SoundFilters& sF = { });
 
 		~SoundVoice ();
 
@@ -191,16 +52,35 @@ namespace MCHEmul
 		const SoundWave* wave (SoundWave::Type t) const
 							{ return (_wavesPlain [(size_t) t]); }
 		SoundWave* wave (SoundWave::Type t)
-							{ return ((SoundWave*) (((const SoundVoice*) (this)) -> wave (t))); }
+							{ return (const_cast <SoundWave*> 
+								(const_cast <const SoundVoice*> (this) -> wave (t))); }
 
 		// To manage the envelop...
 		/** Take care the result can be nullptr. */
 		const SoundEnvelope* envelope () const
 							{ return (_envelope); }
 		SoundEnvelope* envelope ()
-							{ return ((SoundEnvelope*) (((const SoundVoice*) (this)) -> envelope ())); }
+							{ return (const_cast <SoundEnvelope*> 
+								(const_cast <const SoundVoice*> (this) -> envelope ())); }
 		void setEnvelopeActive (bool a) // To activate / desactivate the evelope (if any) only...
 							{ if (_envelope != nullptr) _envelope -> setActive (a); }
+
+		// To manage the filter...
+		/** Take care the result can be nullptr. */
+		const SoundFilters filters () const
+							{ return (_filters); }
+		const SoundFilter* filter (size_t nF) const // No boundary check is done...be carefull (for performance reasons)
+							{ return (_filters [nF]); }
+		SoundFilter* filter (size_t nF)
+							{ return (const_cast <SoundFilter*> 
+								(const_cast <const SoundVoice*> (this) -> filter (nF))); }
+		// To activate / desactivate the filter (if any) only...
+		// No boundary check is done at all... so be carefull!
+		void setFilterActive (size_t nF, bool a) 
+							{ filters () [nF] -> setActive (a); }
+		// To activate / desactivate all filters...
+		void setFiltersActive (bool a) 
+							{ for (auto f : _filters) f -> setActive (a); }
 
 		/** All waves being part of the voice must "vibrate" at the same frequency. \n
 			Take care because no boundary analysis is done. */
@@ -209,7 +89,6 @@ namespace MCHEmul
 		void setFrequency (double f)
 							{ for (auto i : _waves) 
 								i -> setFrequency (f); }
-
 
 		// To manage the way the voice works...
 		/** To start/stop the voice. 
@@ -261,6 +140,8 @@ namespace MCHEmul
 		bool _active;
 		/** A reference to the envelope if any, so it can be nullptr. */
 		SoundEnvelope* _envelope;
+		/** A reference to the filters if any, so it can be empty. */
+		SoundFilters _filters;
 		/** All possible waves. */
 		MCHEmul::SoundWaves _waves;
 

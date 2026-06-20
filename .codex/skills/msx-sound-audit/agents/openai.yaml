@@ -1,0 +1,4 @@
+interface:
+  display_name: "MSX Sound Audit"
+  short_description: "Validate MSX PSG and AY/YM sound behavior"
+  default_prompt: "Use $msx-sound-audit to audit MSX PSG, AY-3-8910/YM2149 registers, tone/noise/envelope, joystick GPIO, and audio output."

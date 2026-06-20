@@ -1,0 +1,4 @@
+interface:
+  display_name: "C64 Memory Map Audit"
+  short_description: "Validate C64 memory banking and mapped I/O"
+  default_prompt: "Use $c64-memory-map-audit to audit C64 memory banking or mapped I/O behavior."

@@ -1,0 +1,4 @@
+interface:
+  display_name: "MSX System Audit"
+  short_description: "Validate MSX BIOS, PPI, ports and core wiring"
+  default_prompt: "Use $msx-system-audit to audit MSX BIOS, PPI, ports, keyboard, cassette, joystick, and interrupt behavior."

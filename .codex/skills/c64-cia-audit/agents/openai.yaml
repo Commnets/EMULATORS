@@ -1,0 +1,4 @@
+interface:
+  display_name: "C64 CIA Audit"
+  short_description: "Validate CIA timers, I/O, TOD, and IRQs"
+  default_prompt: "Use $c64-cia-audit to audit C64 CIA1/CIA2 ports, timers, TOD, serial, or interrupts."

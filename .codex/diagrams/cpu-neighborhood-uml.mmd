@@ -1,0 +1,179 @@
+classDiagram
+    direction LR
+
+    class InfoClass {
+        +className() string
+        +getInfoStructure() InfoStructure
+    }
+
+    class Observer
+    class Notifier
+    class DebugableClass
+
+    class MotherboardElement {
+        +id() int
+        +initialize() bool
+        +ticksCounter() TicksCounterDelayed*
+        +bus(id) Bus*
+        +wire(id) Wire*
+    }
+
+    class Computer {
+        +initialize(iM) bool
+        +runComputerCycle(action) bool
+        +cpu() CPU*
+        +memory() Memory*
+        +chip(id) Chip*
+    }
+
+    class CPU {
+        +initialize() bool
+        +executeNextCycle() bool
+        +setStop(...)
+        +requestInterrupt(...)
+        +programCounter() ProgramCounter&
+        +statusRegister() StatusRegister&
+        +memoryRef() Memory*
+        +clockCycles() uint
+        -_state uint
+        -_clockCycles uint
+        -_currentInstruction Instruction*
+        -_lastInstruction Instruction*
+        -_interruptSystem CPUInterruptSystem*
+        -_rowInstructions ListOfInstructions
+    }
+
+    class CPUArchitecture {
+        +numberBytes() size_t
+        +instructionLength() size_t
+        +longestAddressPossible() Address
+    }
+
+    class Register {
+        +initialize()
+        +name() string
+        +values() UBytes
+        +set(UBytes)
+        +asString() string
+    }
+
+    class ProgramCounter {
+        +initialize()
+        +asAddress() Address
+        +setAddress(Address)
+        +increment(n)
+        +decrement(n)
+    }
+
+    class StatusRegister {
+        +bitStatus(name) bool
+        +setBitStatus(name, bool)
+        +valuesWithout(bits) UBytes
+        +asString() string
+    }
+
+    class Instruction {
+        +memoryPositions(Memory, Address) uint
+        +clockCycles(Memory, Address) uint
+        +execute(CPU, Memory, Stack, ProgramCounter) bool
+        +asString() string
+    }
+
+    class InstructionDefined {
+        +cycleStructure() CycleStructure
+        +executeImpl(f) bool
+        +additionalClockCycles() uint
+    }
+
+    class InstructionUndefined {
+        +selectInstruction(Memory, Address) Instruction
+    }
+
+    class CPUInterrupt {
+        +canBeExecutedOver(CPU, cycles) uint
+        +executeOver(CPU, cycles) bool
+        +cyclesToLaunch() uint
+    }
+
+    class CPUInterruptRequest {
+        +type() int
+        +cycles() uint
+        +from() Chip*
+        +reason() int
+    }
+
+    class CPUInterruptSystem {
+        +requestInterrupt(request) bool
+        +getNextInterruptRequest() CPUInterruptRequest
+        +getInterruptForRequest(request) CPUInterrupt*
+        +removeInterruptRequest(request)
+    }
+
+    class StandardCPUInterruptSystem {
+        +requestInterrupt(request) bool
+        +getNextInterruptRequest() CPUInterruptRequest
+    }
+
+    class Memory {
+        +setCPUView()
+        +stack() Stack*
+        +initialize() bool
+    }
+
+    class Stack
+
+    class Chip {
+        +setMemoryRef(Memory)
+        +CPUAboutToExecute(CPU, Instruction)
+        +simulate(CPU) bool
+    }
+
+    InfoClass <|-- MotherboardElement
+    Observer <|-- MotherboardElement
+    MotherboardElement <|-- CPU
+    Notifier <|-- CPU
+    DebugableClass <|-- CPU
+    MotherboardElement <|-- Memory
+    MotherboardElement <|-- Chip
+    Notifier <|-- Chip
+    DebugableClass <|-- Chip
+
+    Register <|-- StatusRegister
+    Instruction <|-- InstructionDefined
+    Instruction <|-- InstructionUndefined
+    InfoClass <|-- CPUArchitecture
+    InfoClass <|-- CPUInterrupt
+    InfoClass <|-- CPUInterruptSystem
+    CPUInterruptSystem <|-- StandardCPUInterruptSystem
+
+    Computer *-- CPU : owns
+    Computer *-- Memory : owns
+    Computer *-- "0..*" Chip : owns/simulates
+    Computer --> CPU : runComputerCycle()
+    Computer --> Memory : initializes
+    Computer --> Chip : simulate(cpu)
+
+    CPU *-- CPUArchitecture : value
+    CPU *-- "0..*" Register : internal registers
+    CPU *-- ProgramCounter : value
+    CPU *-- StatusRegister : value
+    CPU *-- "0..*" Instruction : owns map/vector
+    CPU *-- CPUInterruptSystem : lazy owns
+    CPU --> Memory : memoryRef, not owner
+    CPU --> Instruction : current/last/next
+    CPU --> CPUInterruptRequest : current request
+    CPU --> CPUInterrupt : current interrupt
+
+    CPUInterruptSystem *-- "0..*" CPUInterrupt : owns
+    CPUInterruptSystem o-- "0..*" CPUInterruptRequest : pending queue
+    CPUInterruptRequest --> Chip : source
+    CPUInterrupt --> CPU : executes over
+
+    Instruction --> CPU : execute()
+    Instruction --> Memory : reads/writes
+    Instruction --> Stack : optional
+    Instruction --> ProgramCounter : updates
+
+    Memory *-- Stack : stack()
+    Chip --> Memory : memoryRef, not owner
+    Chip ..> CPU : simulate(cpu)

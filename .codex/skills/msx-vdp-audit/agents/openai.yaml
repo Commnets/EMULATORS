@@ -1,0 +1,4 @@
+interface:
+  display_name: "MSX VDP Audit"
+  short_description: "Validate MSX TMS9918A video behavior"
+  default_prompt: "Use $msx-vdp-audit to audit MSX TMS9918A/TMS99xx VDP registers, VRAM, modes, sprites, and interrupts."

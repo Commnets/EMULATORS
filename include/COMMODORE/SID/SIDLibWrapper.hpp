@@ -126,6 +126,12 @@ namespace COMMODORE
 						{ return ((nV < 3) ? _voices [nV] -> getInfoStructure () : MCHEmul::InfoStructure ()); }
 
 		private:
+		// These methods are used in registers 0x15, 0x16, 0x17 & 0x18
+		void setFrecuencyInFilters (unsigned short nR);
+		void activateFiltersPerVoice 
+			(const MCHEmul::UByte& vF, const MCHEmul::UByte& tF, const MCHEmul::UByte& nL);
+
+		private:
 		unsigned int _chipFrequency;
 		unsigned int _samplingFrequency;
 		double _volumen;
@@ -137,7 +143,8 @@ namespace COMMODORE
 			public:
 			friend SoundSIDSimpleWrapper;
 
-			Voice (int id, unsigned int cF);
+			/** The sampling frecuency is needed for the filter associated to each voice. */
+			Voice (int id, unsigned int cF, unsigned int sF);
 
 			virtual void setActive (bool a) override
 							{ _active = a; }

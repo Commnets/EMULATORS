@@ -1,11 +1,12 @@
 #include <CORE/global.hpp>
 #include <algorithm>
 #include <cctype>
+#include <cstdlib>
 #include <locale>
 #include <codecvt>
 
 const MCHEmul::ClockTime MCHEmul::_STARTINGTIME = 
-	std::chrono::time_point_cast <MCHEmul::ClockDurationType> (ClockType::now ());
+	std::chrono::time_point_cast <MCHEmul::ClockDurationType> (MCHEmul::ClockType::now ());
 MCHEmul::ClockTime MCHEmul::_NOW = std::chrono::time_point_cast <MCHEmul::ClockDurationType> (MCHEmul::ClockType::now ());
 MCHEmul::ClockDurationType MCHEmul::_MILLISECONDSPAST = ClockDurationType (0);
 
@@ -93,7 +94,7 @@ std::string MCHEmul::upper (const std::string& s)
 { 
 	std::string r = s; 
 	for (auto& i : r) 
-		i = std::toupper (i); 
+		i = static_cast <char> (std::toupper (static_cast <unsigned char> (i)));
 	
 	return (r);
 }
@@ -114,7 +115,7 @@ std::string MCHEmul::upperExcept (const std::string& s)
 		}
 
 		if (!q)
-			i = std::toupper (i);
+			i = static_cast <char> (std::toupper (static_cast <unsigned char> (i)));
 	}
 	
 	return (r);
@@ -126,7 +127,7 @@ std::string MCHEmul::lower (const std::string& s)
 {
 	std::string r = s; 
 	for (auto& i : r) 
-		i = std::tolower (i); 
+		i = static_cast <char> (std::tolower (static_cast <unsigned char> (i)));
 	
 	return (r);
 }
@@ -147,7 +148,7 @@ std::string MCHEmul::lowerExcept (const std::string& s)
 		}
 
 		if (!q)
-			i = std::tolower (i);
+			i = static_cast <char> (std::tolower (static_cast <unsigned char> (i)));
 	}
 	
 	return (r);
@@ -240,15 +241,16 @@ std::string MCHEmul::removeAll0 (const std::string& s)
 // ---
 std::string MCHEmul::replaceAll (const std::string& s, const std::string& o, const std::string& d)
 {
+	if (o.empty ())
+		return (s);
+
 	std::string r = s;
 
 	size_t p = 0;
-	while (p != std::string::npos)
+	while ((p = r.find (o, p)) != std::string::npos)
 	{
-		if ((p = r.find (o, p)) == std::string::npos)
-			continue;
-
 		r.replace (p, o.length (), d);
+		p += d.length ();
 	}
 
 	return (r);
@@ -257,33 +259,24 @@ std::string MCHEmul::replaceAll (const std::string& s, const std::string& o, con
 // ---
 std::string MCHEmul::fixLenStr (const std::string& s, size_t sz, bool l, const std::string& as)
 {
-	std::string result;
-
-	// If the length of the string were bigger than the max size allowed...
-	// it would need to cut part of the string...
 	if (s.length () > sz)
-	{ 
-		// if that length of the string were bigger than 3
-		if (s.length () > 3)
-			result = s.substr (0, sz - 3) + "..."; // ...and indication of the cut is aded...
-		else
-			result = s.substr (0, sz); // ...otherwise it is not possible!
-	}
-	// But if it was smaller....
-	// ...it would need to add some chars...
-	else
-	{ 
-		// if the requested size were smaller than the max chars to add...
-		if (sz < as.length ())
-			result = l // ...add them either in the right or in the left, depend on the spefication...
-				? as.substr (0, sz - s.length ()) + s
-				: s + as.substr (0, sz - s.length ());
-		// ...if not, no action would be possible...
-		else
-			result = s;
+	{
+		if (sz <= 3)
+			return (s.substr (0, sz));
+
+		return (s.substr (0, sz - 3) + "...");
 	}
 
-	return (result);
+	if (s.length () == sz || as.empty ())
+		return (s);
+
+	std::string filler;
+	while (filler.length () < (sz - s.length ()))
+		filler += as;
+
+	filler = filler.substr (0, sz - s.length ());
+
+	return (l ? filler + s : s + filler);
 }
 
 // ---
@@ -300,6 +293,7 @@ MCHEmul::Strings MCHEmul::getElementsFrom (const std::string& txt, unsigned char
 		prt = cpTxt.substr (0, pC); 
 		cpTxt = (pC == std::numeric_limits <size_t>::max ()) ? "" : cpTxt.substr (pC + 1);
 		result.emplace_back (MCHEmul::trim (prt));
+		i++;
 	}
 
 	// Adjust the size...
@@ -539,7 +533,7 @@ double MCHEmul::linearInterpolation (double minx, double miny, double maxx, doub
 { 
 	// When there is no length in x, the value returned is always the maxy...
 	return ((maxx == minx) ? maxy : (miny + ((x - minx) * (maxy - miny) / (maxx - minx)))); 
-};
+}
 
 // ---
 void MCHEmul::actualizeGlobalTime ()

@@ -1,0 +1,4 @@
+interface:
+  display_name: "MSX Memory Map Audit"
+  short_description: "Validate MSX slots, subslots and mappers"
+  default_prompt: "Use $msx-memory-map-audit to audit MSX primary slots, secondary slots, page mapping, and memory mappers."

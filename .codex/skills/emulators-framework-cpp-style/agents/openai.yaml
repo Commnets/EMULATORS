@@ -1,0 +1,4 @@
+interface:
+  display_name: "EMULATORS C++ Style"
+  short_description: "Apply the framework C++ conventions"
+  default_prompt: "Use $emulators-framework-cpp-style when adding or editing C++ code in the EMULATORS framework."

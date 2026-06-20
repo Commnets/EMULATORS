@@ -76,6 +76,7 @@ namespace MCHEmul
 			Sometimes the executiom of a specific instruction could affect other parts of the computer,
 			like chips (specifically or devices. */
 		static const unsigned int _CPUTOEXECUTEINSTRUCTION = 130;
+		static const unsigned int _CPUINSTRUCTIONEXECUTED  = 131;
 
 		// States of the CPU
 		/** The possible different states of the CPU. 

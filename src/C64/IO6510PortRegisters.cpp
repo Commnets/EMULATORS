@@ -13,6 +13,26 @@ C64::IO6510PortRegisters::IO6510PortRegisters (MCHEmul::PhysicalStorage* ps)
 }
 
 // ---
+void C64::IO6510PortRegisters::setValue (size_t p, const MCHEmul::UByte& v)
+{
+	unsigned char pp = p % 2;
+
+	MCHEmul::UByte oPV = _portValue;
+
+	F6500::IO6510PortRegisters::setValue (pp, v);
+
+	if (pp == 0x00)
+	{
+		MCHEmul::UByte nPV = _portValue;
+		for (size_t i = 0; i < 3; i++)
+			nPV.setBit (i, _dirValue.bit (i) ? _outputValue.bit (i) : true);
+		_portValue = nPV;
+
+		notifyPortChanges (oPV ^ _portValue, _portValue);
+	}
+}
+
+// ---
 void C64::IO6510PortRegisters::processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifier* ntier)
 {
 	// Bit 4 reflects whether some key has been pressed on the dataette...

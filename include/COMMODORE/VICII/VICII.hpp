@@ -30,12 +30,19 @@ namespace COMMODORE
 		Every horizontal raster line takes 64us (including horizontal retrace = 15us as PAL/NTSC standard definition). \n
 		1/985.248 = 1,01497us per cycle in PAL. 64us/1,01497 = 63 cycles per raster line in PAL. \n
 		1/1.023.000 = 0,977517us per cycle in NTSC. 64us/0,977517us = 64 cycles per raster line in NTSC. \n
-		VICII speed is = CPU speed. \n
-		So in every CPU cycle 8 pixels are drawn (if possible). \n
-		In every VICII cycle two actions are done: 
-		In low mode the byte is read, and in the high one the byte is drawn. \n
-		In VICII simulation, the cycles (that are different per type of VICII (PAL/NTSC)) 
-		x 8 are used to represent the resolution of the VICII.
+		The VIC-II and the 6510 share the same visible cycle rate: PAL has 63
+		VIC-II/CPU cycles per raster line and NTSC has 64. Internally, every
+		cycle is split into bus phases. The VIC-II normally uses one phase for
+		video memory activity while the CPU can use the other one; during bad
+		lines or sprite DMA, the VIC-II can also steal the CPU-visible phase
+		through BA/AEC. \n
+		This emulator advances the VIC-II once per CPU cycle. It does not model
+		the two hardware half-cycles as independent scheduler steps. Instead,
+		phase-related actions such as c-access and g-access are grouped in a
+		single emulated VIC-II cycle, preserving their internal order and their
+		CPU bus-stealing effect. \n
+		Every emulated VIC-II cycle corresponds to 8 raster pixels when the beam
+		is inside the visible area.
 		\n
 		VICII has a LP pin that latches the current raster beam position on a
 		negative edge. The emulation maps this behaviour to the mouse: while the
@@ -59,10 +66,14 @@ namespace COMMODORE
 		/** Late Bad Line Condition window that can prevent idle entry at cycle 58. */
 		static const unsigned short _BADLINE_IDLE_PREVENT_FIRST_CYCLE		= 54;
 		static const unsigned short _BADLINE_IDLE_PREVENT_LAST_CYCLE		= 57;
-		/** Effective c-access window used by this emulator model. */
+		/** Effective c-access window used by the grouped CPU-cycle model.
+			Real c-access timing starts earlier in the VIC-II half-cycle model,
+			but this emulator groups the paired c/g work around cycles 16..55. */
 		static const unsigned short _BADLINE_EFFECTIVE_CACCESS_FIRST_CYCLE	= 16;
 		static const unsigned short _BADLINE_EFFECTIVE_CACCESS_LAST_CYCLE	= 55;
-		/** Effective graphics access window used by this emulator model. */
+		/** Effective g-access window used by the grouped CPU-cycle model.
+			Each cycle can perform the optional bad-line c-access first and then
+			the mandatory g-access before advancing the graphics counters once. */
 		static const unsigned short _GRAPHIC_ACCESS_FIRST_CYCLE				= 16;
 		static const unsigned short _GRAPHIC_ACCESS_LAST_CYCLE				= 55;
 
@@ -321,9 +332,19 @@ namespace COMMODORE
 		/** To treat the VIC-II cycle where VC is loaded from VCBASE and
 			the graphic access indexes are reset for the current line. */
 		inline void treatGraphicFetchStartCycle ();
+		/** To compare sprite Y with the low 8 bits of the current raster line. */
+		inline bool spriteYMatchesCurrentRaster (size_t nS) const;
 		/** To treat the VIC-II cycle where RC is advanced, VCBASE can be updated,
 			and the idle state can be restored. */
 		inline void treatGraphicRowEndCycle ();
+		/** To decide sprite DMA in cycles 55/56 before BA/RDY arbitration sees upcoming s-accesses. */
+		inline void treatSpriteDMAStartAtCurrentCycle ();
+		/** To apply the cycle-15 MCBASE +2 step when the Y-expansion flip-flop allows line advance. */
+		inline void treatSpriteCounterCycle15 ();
+		/** To apply the cycle-16 MCBASE +1 step and stop DMA after the 63 sprite bytes. */
+		inline void treatSpriteCounterCycle16 ();
+		/** To copy MCBASE to MC and enable sprite display at cycle 58 after DMA was decided earlier. */
+		inline void treatSpriteDisplayStartCycle ();
 
 		/** Last byte read by the VIC-II from the 8-bit memory data bus. */
 		const MCHEmul::UByte& lastVICDataRead () const
@@ -391,9 +412,11 @@ namespace COMMODORE
 
 		// Graphics, sprites and collision composition.
 		/** Invoked from drawVisibleZone() to draw graphics/sprites and detect collisions. \n
-		  *	The parameter is the drawing context. \n
+		  *	@param dC	= The parameter is the drawing context. \n
+		  * @param sdCA = Sprite data collision acrive. Sometimes (depending on the border) it shouldn't \n 
+		  * @param dTS	= Whether the info has or not to be draw to the screen.
 		  *	@see DrawContext and DrawResult. */
-		void drawGraphicsSpritesAndDetectCollisions (const DrawContext& dC);
+		void drawGraphicsSpritesAndDetectCollisions (const DrawContext& dC, bool sdCA, bool dTS);
 		/** To draw any text or bitmap graphic mode. \n
 			The method receives the drawing context and returns a DrawResult. */
 		DrawResult drawGraphics (const DrawContext& dC);
@@ -427,8 +450,9 @@ namespace COMMODORE
 		/** To move the computed graphics/sprite result to screen memory. */
 		void drawResultToScreen (const DrawResult& cT, const DrawContext& dC);
 		/** To detect collisions between graphics and sprites, and between sprites. 
-			The second parameter is a byte which bits points out which sprites were or not drawn. */
-		void detectCollisions (const DrawResult& cT, const MCHEmul::UByte& sD);
+			The second parameter is a byte which bits points out which sprites were or not drawn. \n
+			The thors parameter defines whether the detection of the collision and data is or not active. */
+		void detectCollisions (const DrawResult& cT, const MCHEmul::UByte& sD, bool sdCA);
 
 		// Optional event visualization.
 		/** To draw debug/event markers if _drawOtherEvents is active. */
@@ -449,9 +473,10 @@ namespace COMMODORE
 		inline void readGraphicalInfo ();
 
 		// Sprite data.
-		/** To read graphical data for all active sprites. */
+		/** Legacy helper not used by the raster pipeline. \n
+			Do not call from timing code because readSpriteData increments MC for DMA-active sprites. */
 		inline void readSpritesData ();
-		/** To read graphical data for one sprite only. */
+		/** To read the sprite pointer and, when DMA is active, the three sprite data bytes. */
 		inline bool readSpriteData (size_t nS);
 
 		// --------------------------------------------------------------------
@@ -710,41 +735,35 @@ namespace COMMODORE
 		  *							If _DMA is on and (again) the Y coordinate matches the lower 8 bits of the raster 
 		  *							the visualization of the Sprite is swithed on!. \n
 		  *	CYCLEs ss:				If _DMA is switched the sprite data is accesed and the _MC is incremented in 3. \n
-		  *	CYCLE visible:			If _visible is true, the sprite info is drawn. \n
+		  *	CYCLE visible:			If _displayActive is true, the sprite info is drawn. \n
 		  *							The rules to dowble the X size are taken as the visualization of each comes. \n
 		  *	CYCLE 15:				If the _FF is set, _MCBASE is incremented in 2. \n
 		  *	CYCLE 16:				If the _FF is set, _MCBASE is incremented in 1. \n
-		  *							If _MCBASE is 63 then _DMA and _visible are set to off. \n
-		  * In this simulation this behaviour has been simplified:
-		  * At cycle 15 the info _line is incremented. 
-		  * At cycle 52 sprites situation is actualized.
+		  *							If _MCBASE is 63 then _DMA is set to off. \n
+		  * In this simulation DMA and display are separated. \n
+		  * Sprite bytes are still kept as a 3-byte line buffer for the current
+		  * drawing path, so this is not yet a real pixel shift-register model.
 		  */
 		struct VICSpriteInfo
 		{
 			VICSpriteInfo ()
-				: _active (false), _line (0), _expansionY (false),
-				  _spriteBaseAddress ({ 0x00, 0x00 }, true), // it is the same than using false and quicker...
+				: _DMAActive (false), _displayActive (false),
+				  _MCBASE (0), _MC (0), _expansionY (false),
+				  _spriteBaseAddress ({ 0x00, 0x00 }, true),
 				  _graphicsLineSprites (MCHEmul::UBytes::_E),
 				  _drawing (false), _xS (0)
 							{ }
 
-			VICSpriteInfo (bool a, unsigned char l, bool e)
-				: _active (a), _line (l), _expansionY (e),
-				  _spriteBaseAddress ({ 0x00, 0x00 }, true), // it is the same than using false and quicker...
-				  _graphicsLineSprites (MCHEmul::UBytes::_E),
-				  _drawing (false), _xS (0)
-							{ }
-
-			bool _active; // Temporary combined sprite DMA/display flag in the current simplified sprite model.
-			unsigned char _line; // Line of the sprite to be drawn (from 0 to 21). 
-			// This is like MCBASE in the documentation. MC is not simulated, 
-			// because the read of the info is done 3 mytes simultaneosuly....
-			bool _expansionY; // True when the sprite is expanded in the Y axis
+			bool _DMAActive;		// VIC-II sprite DMA state. It controls sprite s-accesses and bus stealing.
+			bool _displayActive;	// VIC-II sprite display state. It controls drawing and collisions.
+			unsigned char _MCBASE;	// Base sprite data counter updated at cycles 15/16.
+			unsigned char _MC;		// Sprite data counter used by the actual s-accesses.
+			bool _expansionY;
 			mutable MCHEmul::Address _spriteBaseAddress;
-			mutable MCHEmul::UBytes _graphicsLineSprites; // 3 bytes line info each
+			mutable MCHEmul::UBytes _graphicsLineSprites;
 			/** Once the sprite reaches the coordinate x, the draw action continues until everyting is done. */
-			bool _drawing; // Is the sprite being drawn?
-			unsigned short _xS; // x coordinate from which the sprite is drawn!
+			bool _drawing;
+			unsigned short _xS;
 		};
 
 		VICSpriteInfo _vicSpriteInfo [8];
@@ -895,14 +914,14 @@ namespace COMMODORE
 	inline bool VICII::isAboutToReadSpriteInfo () const
 	{
 		return (
-			(_cycleInRasterLine == 2								&& _vicSpriteInfo [5]._active) ||
-			(_cycleInRasterLine == 4								&& _vicSpriteInfo [6]._active) ||
-			(_cycleInRasterLine == 6								&& _vicSpriteInfo [7]._active) ||
-			(_cycleInRasterLine == (55 + _incCyclesPerRasterLine)	&& _vicSpriteInfo [0]._active) ||
-			(_cycleInRasterLine == (57 + _incCyclesPerRasterLine)	&& _vicSpriteInfo [1]._active) ||
-			(_cycleInRasterLine == (59 + _incCyclesPerRasterLine)	&& _vicSpriteInfo [2]._active) ||
-			(_cycleInRasterLine == (61 + _incCyclesPerRasterLine)	&& _vicSpriteInfo [3]._active) ||
-			(_cycleInRasterLine == (63 + _incCyclesPerRasterLine)	&& _vicSpriteInfo [4]._active));
+			(_cycleInRasterLine == 2								&& _vicSpriteInfo [5]._DMAActive) ||
+			(_cycleInRasterLine == 4								&& _vicSpriteInfo [6]._DMAActive) ||
+			(_cycleInRasterLine == 6								&& _vicSpriteInfo [7]._DMAActive) ||
+			(_cycleInRasterLine == (55 + _incCyclesPerRasterLine)	&& _vicSpriteInfo [0]._DMAActive) ||
+			(_cycleInRasterLine == (57 + _incCyclesPerRasterLine)	&& _vicSpriteInfo [1]._DMAActive) ||
+			(_cycleInRasterLine == (59 + _incCyclesPerRasterLine)	&& _vicSpriteInfo [2]._DMAActive) ||
+			(_cycleInRasterLine == (61 + _incCyclesPerRasterLine)	&& _vicSpriteInfo [3]._DMAActive) ||
+			(_cycleInRasterLine == (63 + _incCyclesPerRasterLine)	&& _vicSpriteInfo [4]._DMAActive));
 	}
 
 	// ---
@@ -996,15 +1015,116 @@ namespace COMMODORE
 	}
 
 	// ---
+	inline bool VICII::spriteYMatchesCurrentRaster (size_t nS) const
+	{
+		return ((unsigned char) (_vicGraphicInfo._ROW & 0xff) ==
+			_VICIIRegisters -> spriteYCoord (nS));
+	}
+
+	// ---
+	inline void VICII::treatSpriteDMAStartAtCurrentCycle ()
+	{
+		if (_cycleInRasterLine != 55 && _cycleInRasterLine != 56)
+			return;
+
+		for (size_t i = 0; i < 8; i++)
+		{
+			// Sprite DMA is checked in cycles 55/56 before BA/RDY arbitration.
+			// The cycle-58 sprite data slot depends on this state already being known.
+			if (_cycleInRasterLine == 55 &&
+				_VICIIRegisters -> spriteDoubleHeight (i))
+				_VICIIRegisters -> invertExpansionYFlipFlop (i);
+
+			if (!_vicSpriteInfo [i]._DMAActive &&
+				_VICIIRegisters -> spriteEnable (i) &&
+				spriteYMatchesCurrentRaster (i))
+			{
+				_vicSpriteInfo [i]._DMAActive = true;
+				_vicSpriteInfo [i]._MCBASE = 0;
+				_vicSpriteInfo [i]._MC = 0;
+				_vicSpriteInfo [i]._graphicsLineSprites = MCHEmul::UBytes::_E;
+				_vicSpriteInfo [i]._drawing = false;
+
+				// Starting DMA for a Y-expanded sprite resets the expansion flip-flop.
+				if (_VICIIRegisters -> spriteDoubleHeight (i))
+					_VICIIRegisters -> setExpansionYFlipFlop (i, false);
+			}
+		}
+	}
+
+	// ---
+	inline void VICII::treatSpriteCounterCycle15 ()
+	{
+		for (size_t i = 0; i < 8; i++)
+			if (_vicSpriteInfo [i]._DMAActive &&
+				_VICIIRegisters -> expansionYFlipFlop (i))
+				_vicSpriteInfo [i]._MCBASE += 2;
+	}
+
+	// ---
+	inline void VICII::treatSpriteCounterCycle16 ()
+	{
+		for (size_t i = 0; i < 8; i++)
+		{
+			if (!_vicSpriteInfo [i]._DMAActive ||
+				!_VICIIRegisters -> expansionYFlipFlop (i))
+				continue;
+
+			_vicSpriteInfo [i]._MCBASE++;
+
+			if (_vicSpriteInfo [i]._MCBASE >= 63)
+			{
+				_vicSpriteInfo [i]._DMAActive = false;
+
+				// Keep the current line buffer alive: the last sprite row can
+				// still be displayed until cycle 58 observes DMA inactive.
+				_IFDEBUG debugSpriteDrawFinishes (i);
+			}
+		}
+	}
+
+	// ---
+	inline void VICII::treatSpriteDisplayStartCycle ()
+	{
+		for (size_t i = 0; i < 8; i++)
+		{
+			if (!_vicSpriteInfo [i]._DMAActive)
+			{
+				// Display is switched off at cycle 58 after DMA has already
+				// finished, not at cycle 16 when MCBASE reaches 63.
+				_vicSpriteInfo [i]._displayActive = false;
+
+				continue;
+			}
+
+			// At cycle 58 the VIC-II copies MCBASE to MC. Display is enabled only
+			// when the sprite Y coordinate still matches the current raster line.
+			_vicSpriteInfo [i]._MC = _vicSpriteInfo [i]._MCBASE;
+
+			if (spriteYMatchesCurrentRaster (i))
+			{
+				_vicSpriteInfo [i]._displayActive = true;
+				_vicSpriteInfo [i]._drawing = false;
+				_vicSpriteInfo [i]._xS = 0;
+				_vicSpriteInfo [i]._expansionY =
+					_VICIIRegisters -> spriteDoubleHeight (i);
+
+				_IFDEBUG debugSpriteDrawToStart (i);
+			}
+		}
+	}
+
+	// ---
 	inline unsigned int VICII::treatGraphicAccessCycle ()
 	{
 		if (!isGraphicAccessCycle ())
 			return (0);
 
-		// During a graphics access cycle, the VIC-II view is needed both for the
-		// optional c-access and for the mandatory g-access. Keep the VIC-II memory
-		// view active for the whole emulated graphics access cycle instead of
-		// switching it around each individual read.
+		// This grouped cycle represents the VIC-II graphics work for one
+		// CPU-visible cycle. If a bad-line c-access is active, it is performed
+		// before the g-access because text-mode g-accesses use the just-fetched
+		// Video Matrix byte. Only the c-access reports extra CPU bus stealing;
+		// the g-access is the normal VIC-II phase for this cycle.
 		memoryRef () -> setActiveView (_VICIIView);
 
 		unsigned int result = treatBadLineCAccessCycle ();
@@ -1050,6 +1170,7 @@ namespace COMMODORE
 
 			_IFDEBUG debugReadingVideoMatrix ();
 
+			// One CPU-visible bus slot is stolen by this bad-line c-access.
 			return (1);
 		}
 
@@ -1057,6 +1178,7 @@ namespace COMMODORE
 
 		_IFDEBUG debugReadingVideoMatrix ();
 
+		// One CPU-visible bus slot is stolen by this bad-line c-access.
 		return (1);
 	}
 
@@ -1410,30 +1532,29 @@ namespace COMMODORE
 
 		memoryRef () -> setActiveView (_VICIIView);
 
-		// The sprite pointer access is performed regardless of the simplified
-		// sprite active flag. This approximates the real VIC-II p-accesses, which
-		// are always done. The following three-byte sprite data read approximates
-		// the real s-accesses and is currently gated by _active, which still acts
-		// as a combined DMA/display flag.
+		// At a sprite slot the VIC-II always performs the pointer p-access.
+		// The following three data bytes are real s-accesses only while DMA is active.
 		MCHEmul::UByte sprPtr =
-			memoryRef () -> value (_VICIIRegisters -> spritePointersMemory () 
-				/** Depends on where the screen is located. */ + nS);
+			memoryRef () -> value (_VICIIRegisters -> spritePointersMemory () + nS);
 		_lastVICDataRead = sprPtr;
+
 		_vicSpriteInfo [nS]._spriteBaseAddress =
 			_VICIIRegisters -> initAddressBank () + ((size_t) sprPtr.value () << 6);
 
-		if (_vicSpriteInfo [nS]._active)
+		if (_vicSpriteInfo [nS]._DMAActive)
 		{
-			MCHEmul::UBytes sprData = 
-				std::move (MCHEmul::UBytes (memoryRef () -> bytes (_vicSpriteInfo [nS]._spriteBaseAddress + 
-					(_vicSpriteInfo [nS]._line * 3) /** bytes per line. */, 3)));
-			if (sprData.size () > 0)
-				_lastVICDataRead = sprData [sprData.size () - 1]; // Just the last one...
-			_vicSpriteInfo [nS]._graphicsLineSprites = std::move (sprData);
+			MCHEmul::UBytes sprData = std::move (MCHEmul::UBytes
+				(memoryRef () -> bytes (_vicSpriteInfo [nS]._spriteBaseAddress +
+					(size_t) _vicSpriteInfo [nS]._MC, 3)));
 
-			// When new info of the sprite is read, the "draw" condition starts back!
+			if (sprData.size () > 0)
+				_lastVICDataRead = sprData [sprData.size () - 1];
+
+			_vicSpriteInfo [nS]._graphicsLineSprites = std::move (sprData);
+			_vicSpriteInfo [nS]._MC += 3;
+
+			// New sprite data starts a new 24-pixel shift sequence for this raster line.
 			_vicSpriteInfo [nS]._drawing = false;
-			// The value of the _xS doesn't really cares!
 
 			result = true;
 		}

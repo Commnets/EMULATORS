@@ -582,6 +582,10 @@ bool MCHEmul::CPU::executeNextInstruction_PerCycle (unsigned int& e)
 
 				_lastState = _state; // After one instruction executed, the last state was also running...
 
+				// Once the instruction's been executed, the total cycles dedicated is notified...
+				notify (MCHEmul::Event (_CPUINSTRUCTIONEXECUTED, 0 /** No sense. */,
+					std::shared_ptr <MCHEmul::Event::Data> (new MCHEmul::CPU::EventData (_currentInstruction))));
+
 				_IFDEBUG debugInstructionExecuted (sdd);
 			}
 		}
@@ -666,6 +670,10 @@ bool MCHEmul::CPU::executeNextInstruction_Full (unsigned int &e)
 
 		// After one instruction executed, the last state was also running...
 		_lastState = _state; 
+
+		// Once the instruction's been executed, the total cycles dedicated is notified...
+		notify (MCHEmul::Event (_CPUINSTRUCTIONEXECUTED, 0 /** No sense. */,
+			std::shared_ptr <MCHEmul::Event::Data> (new MCHEmul::CPU::EventData (_currentInstruction))));
 
 		_IFDEBUG debugInstructionExecuted (sdd);
 	}

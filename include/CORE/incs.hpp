@@ -68,6 +68,8 @@
 #include <CORE/OSIOPeripheral.hpp>
 #include <CORE/Sound.hpp>
 #include <CORE/SoundWave.hpp>
+#include <CORE/SoundFilter.hpp>
+#include <CORE/SoundEnvelope.hpp>
 #include <CORE/SoundVoice.hpp>
 #include <CORE/SoundMemory.hpp>
 #include <CORE/SoundLibWrapper.hpp>

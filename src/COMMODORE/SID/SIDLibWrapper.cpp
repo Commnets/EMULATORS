@@ -172,9 +172,9 @@ COMMODORE::SoundSIDSimpleWrapper::SoundSIDSimpleWrapper (unsigned int cF, unsign
 	  _chipFrequency (cF), _samplingFrequency (sF),
 	  _volumen (0.0f), // There is no volumen at the beginning...
 	  _voices (
-		{ new COMMODORE::SoundSIDSimpleWrapper::Voice (0, cF), // Desactivated by default...
-		  new COMMODORE::SoundSIDSimpleWrapper::Voice (1, cF), 
-		  new COMMODORE::SoundSIDSimpleWrapper::Voice (2, cF) }),
+		{ new COMMODORE::SoundSIDSimpleWrapper::Voice (0, cF, sF), // Desactivated by default...
+		  new COMMODORE::SoundSIDSimpleWrapper::Voice (1, cF, sF), 
+		  new COMMODORE::SoundSIDSimpleWrapper::Voice (2, cF, sF) }),
 	  _registers (std::vector <MCHEmul::UByte> (0x20, MCHEmul::UByte::_0)),
 	  _cyclesPerSample ((double) cF / (double (sF))), // Whether the value sF == 0 is not checked...
 	  _counterCyclesPerSample (0.0f)
@@ -408,17 +408,35 @@ void COMMODORE::SoundSIDSimpleWrapper::setValue (size_t p, const MCHEmul::UByte&
 
 			break;
 
-		// Filter functions not implemented still
-		// From registers 0x15 to 0x17
+		// Filter cutoff: CUTLOW & CUTHI
+		// The frequency is transmitted to all filters (4 per voice = 12 in total)
+		// The ones active and desactive is not changed...
 		case 0x15:
 		case 0x16:
+			{
+				setFrecuencyInFilters (
+					(((unsigned short) _registers [0x16].value ()) << 8) |
+					 ((unsigned short) _registers [0x15].value () & 0x03));
+			}
+
+			break;
+
+		// Filter Resonance Control Register: RESON
 		case 0x17:
+			{
+				activateFiltersPerVoice 
+					(v & 0x0f, (v & 0xf0) >> 4, (_registers [0x18] & 0xf0) >> 4);
+			}
+
 			break;
 
 		// Volumen: SIGVOL
 		case 0x18:
 			{
 				setVolumen ((double) (v.value () & 0x0f) / 15.0f /** between 0 and 1. */);
+				// The rest of the info...
+				activateFiltersPerVoice 
+					(_registers [0x17] & 0x0f, (_registers [0x17] & 0xf0) >> 4, (v & 0xf0) >> 4);
 			}
 
 			break;
@@ -535,14 +553,67 @@ bool COMMODORE::SoundSIDSimpleWrapper::getData (MCHEmul::CPU *cpu, MCHEmul::UByt
 }
 
 // ---
-COMMODORE::SoundSIDSimpleWrapper::Voice::Voice (int id, unsigned int cF)
+void COMMODORE::SoundSIDSimpleWrapper::setFrecuencyInFilters (unsigned short nR)
+{
+	double cF = 30.0f + ((double) nR * 4.87f);
+	for (size_t i = 0; i < 3; i++)
+	{
+		COMMODORE::SoundSIDSimpleWrapper::Voice* voice = 
+			static_cast <COMMODORE::SoundSIDSimpleWrapper::Voice*> (_voices [i]);
+		for (size_t j = 0; j < 4; j++)
+		{
+			// Each filter in each voice belogs to a specific type...
+			switch (j)
+			{
+				case 0: voice -> filters ()[0] -> setLowPassCutFrequency	(cF); break;
+				case 1:	voice -> filters ()[1] -> setHighPassCutFrequency	(cF); break;
+				case 2: voice -> filters ()[2] -> setBandPassFrequency		(cF); break;
+				case 3: voice -> filters ()[3] -> setNotchFrequency			(cF); break;
+				default: break; // It shouldn't be here, just in case...
+			}
+		}
+	}
+}
+
+// ---
+void COMMODORE::SoundSIDSimpleWrapper::activateFiltersPerVoice
+	(const MCHEmul::UByte& vF, const MCHEmul::UByte& tF, const MCHEmul::UByte& nL)
+{
+	// The three voices...
+	for (size_t i = 0; i < 3; i++)
+	{
+		COMMODORE::SoundSIDSimpleWrapper::Voice* voice = 
+			static_cast <COMMODORE::SoundSIDSimpleWrapper::Voice*> (_voices [i]);
+		// The filters are active depending onthe value of the bytes...
+		for (size_t j = 0; j < 3; j++)
+			voice -> filter (j) -> setActive 
+				(vF.bit (i) /** Active or not. */ && tF.bit (j) /** Which type is active. */);
+		// ...but the filter 3 is always active (notch)
+		// What is adjustable is the level of this...
+		voice -> filter (3) -> setActive (true); // The notch is always active...
+		voice -> filter (3) -> setNotchFrequency ((double) (nL.value ()));
+	}
+}
+
+// ---
+COMMODORE::SoundSIDSimpleWrapper::Voice::Voice (int id, unsigned int cF, unsigned int sF)
 	: MCHEmul::SoundVoice (id, cF,
 		{
 			new MCHEmul::TriangleSoundWave (cF),
 			new MCHEmul::SawSmoothSoundWave (cF),
 			new MCHEmul::PulseSoundWave (cF),
 			new MCHEmul::NoiseSoundWave (cF)
-		}, new MCHEmul::SoundADSREnvelope (cF)), // The envelope is the traditional one!
+		}, 
+		// the most typical one!
+		new MCHEmul::SoundADSREnvelope (cF),
+		// There are four filters (one per type) per voice 
+		// that might be active simultaneously...
+		{ 
+			new MCHEmul::BiquadSoundFilter (cF, MCHEmul::SoundFilter::Type::_LOWPASS),
+			new MCHEmul::BiquadSoundFilter (cF, MCHEmul::SoundFilter::Type::_HIGHPASS),
+			new MCHEmul::BiquadSoundFilter (cF, MCHEmul::SoundFilter::Type::_BANDPASS),
+			new MCHEmul::BiquadSoundFilter (cF, MCHEmul::SoundFilter::Type::_NOTCH)
+		}),
 		_voiceRelated (nullptr), // set when Emulation is built (it is guarentted that it is not nullptr when running)
 		_ringModulation (false), // Not modulated by default...
 		_sync (false), // Not sync by default...
@@ -551,6 +622,10 @@ COMMODORE::SoundSIDSimpleWrapper::Voice::Voice (int id, unsigned int cF)
 		_oscillatorRestarted (false)
 { 
 	setClassName ("SIDVoice");
+
+	// By default none of the filters are active..
+	// ...but just in case tis method is invoked...
+	setFiltersActive (false);
 }
 
 // ---
@@ -589,6 +664,9 @@ void COMMODORE::SoundSIDSimpleWrapper::Voice::initialize ()
 
 	if (_envelope != nullptr)
 		_envelope -> setActive (true);
+
+	// None is active by default...
+	setFiltersActive (false);
 }
 
 // ---

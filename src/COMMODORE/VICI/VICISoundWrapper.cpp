@@ -227,7 +227,7 @@ COMMODORE::VICISoundSimpleLibWrapper::Voice::Voice (int id, unsigned int cF)
 		{
 			new MCHEmul::PulseSoundWave (cF),
 			new MCHEmul::NoiseSoundWave (cF)
-		}, nullptr), // There is no envelope around this sound!
+		}, nullptr, { }), // There is no envelope, no filters around this sound!
 		_wavesActive (0)
 { 
 	setClassName ("VICIVoice");

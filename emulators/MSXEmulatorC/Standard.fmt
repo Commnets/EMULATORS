@@ -225,10 +225,22 @@ Data Form:@TYPE@ Frequency:@FREQUENCY@kHz Channels:@CHANNELS@
 ADSR:@ATTACK@/@DECAY@/@SUSTAIN@/@RELEASE@(@ADSR@)
 #---
 #---
+;SoundFilter
+Type:@TYPE@(LF:@LOWCUTFREQUENCY@,HF:@HIGHCUTFREQUENCY@,CF:@CENTERFREQUENCY@,Q:@Q@,SF:@SAMPLINGFREQUENCY@)
+#---
+#---
+;BiquadSoundFilter
+Type:@TYPE@(LF:@LOWCUTFREQUENCY@,HF:@HIGHCUTFREQUENCY@,CF:@CENTERFREQUENCY@,Q:@Q@,SF:@SAMPLINGFREQUENCY@)
+B0:@B0@,B1:@B1@,B2:@B2@,A1:@A1@,A2:@A2@
+#---
+#---
 ;SoundVoice
 ID:@ID@
 Active:@ACTIVE@
 @SoundEnvelope>@
+->Filters:
+@FILTERS?{fmter=.CLASS,empty=no filter}\n@
+->Waves:
 @WAVES?{fmter=.CLASS,empty=no waves}\n@
 #---
 #---

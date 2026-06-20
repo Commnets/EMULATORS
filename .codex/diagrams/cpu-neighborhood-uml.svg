@@ -1,0 +1,293 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1080" viewBox="0 0 1600 1080" role="img" aria-labelledby="title desc">
+  <title id="title">EMULATORS CPU neighborhood UML</title>
+  <desc id="desc">UML-style class relationship map around MCHEmul::CPU.</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#334155"/>
+    </marker>
+    <marker id="triangle" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="10" markerHeight="10" orient="auto-start-reverse">
+      <path d="M 11 6 L 1 1 L 1 11 z" fill="#ffffff" stroke="#334155" stroke-width="1.4"/>
+    </marker>
+    <marker id="diamond" viewBox="0 0 14 10" refX="13" refY="5" markerWidth="12" markerHeight="10" orient="auto-start-reverse">
+      <path d="M 1 5 L 6 1 L 13 5 L 6 9 z" fill="#334155" stroke="#334155" stroke-width="1.2"/>
+    </marker>
+    <marker id="odiamond" viewBox="0 0 14 10" refX="13" refY="5" markerWidth="12" markerHeight="10" orient="auto-start-reverse">
+      <path d="M 1 5 L 6 1 L 13 5 L 6 9 z" fill="#ffffff" stroke="#334155" stroke-width="1.2"/>
+    </marker>
+    <style>
+      .bg { fill: #f8fafc; }
+      .title { font: 700 28px Segoe UI, Arial, sans-serif; fill: #0f172a; }
+      .subtitle { font: 400 15px Segoe UI, Arial, sans-serif; fill: #475569; }
+      .group-title { font: 700 14px Segoe UI, Arial, sans-serif; fill: #334155; letter-spacing: .04em; }
+      .class { fill: #ffffff; stroke: #334155; stroke-width: 1.6; rx: 8; }
+      .core { fill: #ecfeff; stroke: #0e7490; }
+      .owned { fill: #f0fdf4; stroke: #15803d; }
+      .external { fill: #fff7ed; stroke: #c2410c; }
+      .abstract { fill: #f5f3ff; stroke: #6d28d9; }
+      .header { fill: rgba(15, 23, 42, .06); }
+      .name { font: 700 15px Segoe UI, Arial, sans-serif; fill: #0f172a; }
+      .body { font: 12px Consolas, "Courier New", monospace; fill: #334155; }
+      .small { font: 11px Segoe UI, Arial, sans-serif; fill: #475569; }
+      .line { fill: none; stroke: #334155; stroke-width: 1.45; }
+      .dash { fill: none; stroke: #334155; stroke-width: 1.45; stroke-dasharray: 6 5; }
+      .label { font: 12px Segoe UI, Arial, sans-serif; fill: #334155; paint-order: stroke; stroke: #f8fafc; stroke-width: 4px; stroke-linejoin: round; }
+      .note { fill: #fffbeb; stroke: #d97706; stroke-width: 1.4; rx: 8; }
+    </style>
+  </defs>
+
+  <rect class="bg" width="1600" height="1080"/>
+  <text x="48" y="52" class="title">MCHEmul::CPU and surrounding classes</text>
+  <text x="48" y="78" class="subtitle">Class/ownership map extracted from include/CORE/CPU.hpp, CPU.cpp, Instruction.hpp, CPUInterrupt.hpp, Computer.hpp and neighbors.</text>
+
+  <text x="60" y="130" class="group-title">FRAMEWORK BASES</text>
+  <text x="490" y="130" class="group-title">COMPUTER RUNTIME</text>
+  <text x="900" y="130" class="group-title">CPU INTERNAL MODEL</text>
+  <text x="1235" y="130" class="group-title">EXECUTION EXTENSION POINTS</text>
+
+  <!-- Framework bases -->
+  <g id="InfoClass">
+    <rect x="55" y="150" width="235" height="92" class="class abstract"/>
+    <rect x="55" y="150" width="235" height="28" class="header"/>
+    <text x="72" y="169" class="name">InfoClass</text>
+    <text x="72" y="198" class="body">+className()</text>
+    <text x="72" y="218" class="body">+getInfoStructure()</text>
+  </g>
+  <g id="Observer">
+    <rect x="55" y="265" width="110" height="48" class="class abstract"/>
+    <text x="75" y="295" class="name">Observer</text>
+  </g>
+  <g id="Notifier">
+    <rect x="180" y="265" width="110" height="48" class="class abstract"/>
+    <text x="200" y="295" class="name">Notifier</text>
+  </g>
+  <g id="DebugableClass">
+    <rect x="55" y="335" width="235" height="58" class="class abstract"/>
+    <text x="82" y="370" class="name">DebugableClass</text>
+  </g>
+  <g id="MotherboardElement">
+    <rect x="55" y="430" width="260" height="142" class="class abstract"/>
+    <rect x="55" y="430" width="260" height="28" class="header"/>
+    <text x="72" y="449" class="name">MotherboardElement</text>
+    <text x="72" y="478" class="body">+id()</text>
+    <text x="72" y="498" class="body">+initialize()</text>
+    <text x="72" y="518" class="body">+ticksCounter()</text>
+    <text x="72" y="538" class="body">+bus(id) / wire(id)</text>
+  </g>
+
+  <!-- Runtime -->
+  <g id="Computer">
+    <rect x="450" y="160" width="270" height="168" class="class core"/>
+    <rect x="450" y="160" width="270" height="28" class="header"/>
+    <text x="467" y="179" class="name">Computer</text>
+    <text x="467" y="208" class="body">+initialize(iM)</text>
+    <text x="467" y="228" class="body">+runComputerCycle(action)</text>
+    <text x="467" y="248" class="body">+cpu()</text>
+    <text x="467" y="268" class="body">+memory()</text>
+    <text x="467" y="288" class="body">+chip(id)</text>
+    <text x="467" y="312" class="small">owns CPU, Memory, Chips</text>
+  </g>
+  <g id="CPU">
+    <rect x="445" y="405" width="315" height="260" class="class core"/>
+    <rect x="445" y="405" width="315" height="28" class="header"/>
+    <text x="462" y="424" class="name">CPU</text>
+    <text x="462" y="453" class="body">+initialize()</text>
+    <text x="462" y="473" class="body">+executeNextCycle()</text>
+    <text x="462" y="493" class="body">+setStop(...)</text>
+    <text x="462" y="513" class="body">+requestInterrupt(...)</text>
+    <text x="462" y="533" class="body">+memoryRef()</text>
+    <text x="462" y="553" class="body">+programCounter()</text>
+    <text x="462" y="573" class="body">+statusRegister()</text>
+    <line x1="445" y1="588" x2="760" y2="588" class="line"/>
+    <text x="462" y="611" class="body">-_state, _clockCycles</text>
+    <text x="462" y="631" class="body">-_currentInstruction, _lastInstruction</text>
+    <text x="462" y="651" class="body">-_interruptSystem, _rowInstructions</text>
+  </g>
+  <g id="Memory">
+    <rect x="430" y="760" width="235" height="112" class="class owned"/>
+    <rect x="430" y="760" width="235" height="28" class="header"/>
+    <text x="447" y="779" class="name">Memory</text>
+    <text x="447" y="808" class="body">+initialize()</text>
+    <text x="447" y="828" class="body">+setCPUView()</text>
+    <text x="447" y="848" class="body">+stack()</text>
+  </g>
+  <g id="Stack">
+    <rect x="705" y="785" width="145" height="62" class="class owned"/>
+    <text x="753" y="822" class="name">Stack</text>
+  </g>
+  <g id="Chip">
+    <rect x="120" y="720" width="245" height="128" class="class external"/>
+    <rect x="120" y="720" width="245" height="28" class="header"/>
+    <text x="137" y="739" class="name">Chip</text>
+    <text x="137" y="768" class="body">+setMemoryRef()</text>
+    <text x="137" y="788" class="body">+CPUAboutToExecute()</text>
+    <text x="137" y="808" class="body">+simulate(CPU)</text>
+  </g>
+
+  <!-- CPU internals -->
+  <g id="CPUArchitecture">
+    <rect x="900" y="165" width="255" height="112" class="class owned"/>
+    <rect x="900" y="165" width="255" height="28" class="header"/>
+    <text x="917" y="184" class="name">CPUArchitecture</text>
+    <text x="917" y="213" class="body">+numberBytes()</text>
+    <text x="917" y="233" class="body">+instructionLength()</text>
+    <text x="917" y="253" class="body">+longestAddressPossible()</text>
+  </g>
+  <g id="Register">
+    <rect x="900" y="310" width="255" height="132" class="class owned"/>
+    <rect x="900" y="310" width="255" height="28" class="header"/>
+    <text x="917" y="329" class="name">Register</text>
+    <text x="917" y="358" class="body">+initialize()</text>
+    <text x="917" y="378" class="body">+values()</text>
+    <text x="917" y="398" class="body">+set(UBytes)</text>
+    <text x="917" y="418" class="body">+asString()</text>
+  </g>
+  <g id="ProgramCounter">
+    <rect x="900" y="475" width="255" height="132" class="class owned"/>
+    <rect x="900" y="475" width="255" height="28" class="header"/>
+    <text x="917" y="494" class="name">ProgramCounter</text>
+    <text x="917" y="523" class="body">+asAddress()</text>
+    <text x="917" y="543" class="body">+setAddress()</text>
+    <text x="917" y="563" class="body">+increment()</text>
+    <text x="917" y="583" class="body">+decrement()</text>
+  </g>
+  <g id="StatusRegister">
+    <rect x="900" y="645" width="255" height="132" class="class owned"/>
+    <rect x="900" y="645" width="255" height="28" class="header"/>
+    <text x="917" y="664" class="name">StatusRegister</text>
+    <text x="917" y="693" class="body">+bitStatus()</text>
+    <text x="917" y="713" class="body">+setBitStatus()</text>
+    <text x="917" y="733" class="body">+valuesWithout()</text>
+    <text x="917" y="753" class="body">+asString()</text>
+  </g>
+
+  <!-- Extensions -->
+  <g id="Instruction">
+    <rect x="1250" y="165" width="290" height="146" class="class external"/>
+    <rect x="1250" y="165" width="290" height="28" class="header"/>
+    <text x="1267" y="184" class="name">Instruction</text>
+    <text x="1267" y="213" class="body">+memoryPositions()</text>
+    <text x="1267" y="233" class="body">+clockCycles()</text>
+    <text x="1267" y="253" class="body">+execute(CPU, Memory, Stack, PC)</text>
+    <text x="1267" y="273" class="body">+asString()</text>
+  </g>
+  <g id="InstructionDefined">
+    <rect x="1250" y="345" width="290" height="96" class="class external"/>
+    <text x="1270" y="377" class="name">InstructionDefined</text>
+    <text x="1270" y="407" class="body">+cycleStructure()</text>
+    <text x="1270" y="427" class="body">+executeImpl(f)</text>
+  </g>
+  <g id="InstructionUndefined">
+    <rect x="1250" y="475" width="290" height="76" class="class external"/>
+    <text x="1270" y="507" class="name">InstructionUndefined</text>
+    <text x="1270" y="537" class="body">+selectInstruction()</text>
+  </g>
+  <g id="CPUInterruptSystem">
+    <rect x="1250" y="615" width="290" height="146" class="class external"/>
+    <rect x="1250" y="615" width="290" height="28" class="header"/>
+    <text x="1267" y="634" class="name">CPUInterruptSystem</text>
+    <text x="1267" y="663" class="body">+requestInterrupt()</text>
+    <text x="1267" y="683" class="body">+getNextInterruptRequest()</text>
+    <text x="1267" y="703" class="body">+getInterruptForRequest()</text>
+    <text x="1267" y="723" class="body">+removeInterruptRequest()</text>
+  </g>
+  <g id="CPUInterrupt">
+    <rect x="1250" y="810" width="290" height="96" class="class external"/>
+    <text x="1270" y="842" class="name">CPUInterrupt</text>
+    <text x="1270" y="872" class="body">+canBeExecutedOver()</text>
+    <text x="1270" y="892" class="body">+executeOver()</text>
+  </g>
+  <g id="CPUInterruptRequest">
+    <rect x="920" y="855" width="235" height="96" class="class external"/>
+    <text x="940" y="887" class="name">CPUInterruptRequest</text>
+    <text x="940" y="917" class="body">+type(), +cycles()</text>
+    <text x="940" y="937" class="body">+from(), +reason()</text>
+  </g>
+  <g id="StandardCPUInterruptSystem">
+    <rect x="1250" y="945" width="290" height="58" class="class external"/>
+    <text x="1272" y="981" class="name">StandardCPUInterruptSystem</text>
+  </g>
+
+  <!-- Inheritance -->
+  <path d="M 185 430 L 185 242" class="line" marker-end="url(#triangle)"/>
+  <path d="M 150 430 C 115 390 110 350 110 313" class="line" marker-end="url(#triangle)"/>
+  <path d="M 445 515 L 315 515" class="line" marker-end="url(#triangle)"/>
+  <path d="M 445 455 C 360 420 250 345 235 313" class="line" marker-end="url(#triangle)"/>
+  <path d="M 445 625 C 340 600 230 465 210 393" class="line" marker-end="url(#triangle)"/>
+  <path d="M 547 760 C 430 695 245 625 205 572" class="line" marker-end="url(#triangle)"/>
+  <path d="M 242 720 C 210 660 185 610 185 572" class="line" marker-end="url(#triangle)"/>
+  <path d="M 365 780 C 390 705 300 345 235 313" class="line" marker-end="url(#triangle)"/>
+  <path d="M 365 825 C 400 760 285 430 210 393" class="line" marker-end="url(#triangle)"/>
+  <path d="M 1027 645 L 1027 442" class="line" marker-end="url(#triangle)"/>
+  <path d="M 1395 345 L 1395 311" class="line" marker-end="url(#triangle)"/>
+  <path d="M 1395 475 L 1395 311" class="line" marker-end="url(#triangle)"/>
+  <path d="M 1395 945 L 1395 761" class="line" marker-end="url(#triangle)"/>
+  <path d="M 1027 165 C 850 95 295 95 185 150" class="line" marker-end="url(#triangle)"/>
+  <path d="M 1395 615 C 1360 95 350 95 185 150" class="line" marker-end="url(#triangle)"/>
+  <path d="M 1395 810 C 1390 100 350 90 185 150" class="line" marker-end="url(#triangle)"/>
+
+  <!-- Ownership/composition -->
+  <path d="M 585 328 L 590 405" class="line" marker-start="url(#diamond)"/>
+  <text x="604" y="374" class="label">owns</text>
+  <path d="M 560 328 C 515 485 500 640 525 760" class="line" marker-start="url(#diamond)"/>
+  <text x="502" y="548" class="label">owns</text>
+  <path d="M 450 270 C 300 360 245 565 245 720" class="line" marker-start="url(#diamond)"/>
+  <text x="285" y="505" class="label">owns 0..*</text>
+
+  <path d="M 760 450 C 825 350 835 230 900 220" class="line" marker-start="url(#diamond)"/>
+  <text x="800" y="314" class="label">value</text>
+  <path d="M 760 505 C 830 440 845 380 900 375" class="line" marker-start="url(#diamond)"/>
+  <text x="808" y="428" class="label">0..*</text>
+  <path d="M 760 545 C 830 540 850 540 900 540" class="line" marker-start="url(#diamond)"/>
+  <text x="805" y="532" class="label">value</text>
+  <path d="M 760 610 C 830 665 850 705 900 710" class="line" marker-start="url(#diamond)"/>
+  <text x="805" y="665" class="label">value</text>
+  <path d="M 760 430 C 990 170 1150 210 1250 232" class="line" marker-start="url(#diamond)"/>
+  <text x="982" y="245" class="label">owns instructions</text>
+  <path d="M 760 638 C 940 655 1105 680 1250 688" class="line" marker-start="url(#diamond)"/>
+  <text x="990" y="646" class="label">lazy owns</text>
+  <path d="M 1250 738 C 1165 805 1145 850 1150 855" class="line" marker-start="url(#odiamond)"/>
+  <text x="1164" y="808" class="label">pending queue</text>
+  <path d="M 1395 761 L 1395 810" class="line" marker-start="url(#diamond)"/>
+  <text x="1407" y="792" class="label">owns</text>
+  <path d="M 665 815 L 705 815" class="line" marker-start="url(#diamond)"/>
+  <text x="670" y="804" class="label">stack()</text>
+
+  <!-- Associations/dependencies -->
+  <path d="M 580 665 C 565 705 555 735 548 760" class="line" marker-end="url(#arrow)"/>
+  <text x="575" y="724" class="label">memoryRef</text>
+  <path d="M 760 525 C 970 425 1110 265 1250 240" class="line" marker-end="url(#arrow)"/>
+  <text x="960" y="378" class="label">current/last/next</text>
+  <path d="M 760 645 C 850 790 940 835 1010 855" class="line" marker-end="url(#arrow)"/>
+  <text x="830" y="785" class="label">current request</text>
+  <path d="M 760 660 C 1000 860 1135 870 1250 862" class="line" marker-end="url(#arrow)"/>
+  <text x="995" y="900" class="label">current interrupt</text>
+  <path d="M 1250 858 L 1155 905" class="line" marker-end="url(#arrow)"/>
+  <text x="1177" y="872" class="label">uses</text>
+  <path d="M 920 902 C 740 920 500 900 365 790" class="line" marker-end="url(#arrow)"/>
+  <text x="626" y="916" class="label">source chip</text>
+  <path d="M 1395 810 C 1140 755 930 650 760 560" class="line" marker-end="url(#arrow)"/>
+  <text x="1012" y="746" class="label">executeOver(cpu)</text>
+  <path d="M 1250 255 C 1010 355 820 500 760 540" class="line" marker-end="url(#arrow)"/>
+  <text x="998" y="448" class="label">execute(...)</text>
+  <path d="M 1250 275 C 1000 520 720 745 665 810" class="line" marker-end="url(#arrow)"/>
+  <text x="944" y="604" class="label">reads/writes</text>
+  <path d="M 1250 295 C 1070 545 930 780 850 820" class="line" marker-end="url(#arrow)"/>
+  <text x="1015" y="688" class="label">optional stack</text>
+  <path d="M 1250 230 C 1120 330 1080 430 1030 475" class="line" marker-end="url(#arrow)"/>
+  <text x="1118" y="352" class="label">updates PC</text>
+  <path d="M 365 766 C 405 720 442 675 470 640" class="dash" marker-end="url(#arrow)"/>
+  <text x="355" y="700" class="label">simulate(cpu)</text>
+  <path d="M 320 780 C 365 790 400 800 430 810" class="line" marker-end="url(#arrow)"/>
+  <text x="350" y="808" class="label">memoryRef</text>
+
+  <!-- Flow note -->
+  <rect x="430" y="910" width="430" height="112" class="note"/>
+  <text x="450" y="940" class="name">Default execution flow</text>
+  <text x="450" y="968" class="body">Computer::runComputerCycle()</text>
+  <text x="450" y="988" class="body">  -> CPU::executeNextCycle()</text>
+  <text x="450" y="1008" class="body">  -> interrupt first, then instruction</text>
+  <text x="450" y="1028" class="body">  -> Chip::simulate(cpu) and clock update</text>
+
+  <rect x="900" y="990" width="365" height="54" class="note"/>
+  <text x="918" y="1022" class="small">Solid diamond: owner/value. Open diamond: aggregate queue. Triangle: inheritance. Dashed line: dependency/callback.</text>
+</svg>

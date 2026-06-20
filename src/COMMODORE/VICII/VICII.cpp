@@ -138,25 +138,23 @@ bool COMMODORE::VICII::simulate (MCHEmul::CPU* cpu)
 {
 	// The VIC-II is simulated at CPU-cycle granularity.
 	//
-	// The real chip internally works with two phases per CPU cycle:
-	//   - one phase is mainly used by the VIC-II to fetch video-related data,
-	//   - the other phase is normally available to the CPU, unless the VIC-II
-	//     needs to steal the bus for character/color accesses or sprite DMA.
+	// The real chip internally works with two bus phases per CPU cycle:
+	//   - one phase is normally used by the VIC-II for video memory activity,
+	//   - the other phase is normally available to the CPU,
+	//   - during bad lines and sprite DMA, BA/AEC let the VIC-II steal
+	//     CPU-visible bus time.
 	//
-	// This emulator does not model those two half-cycles explicitly. Instead,
-	// related actions are grouped into one emulated VIC-II cycle. In particular:
-	//   - bad-line c-accesses are modeled in the emulator around cycles 16..55;
-	//   - visible drawing is executed after the raster-cycle actions of the
-	//     current emulated VIC-II cycle;
-	//   - this grouped model approximates the real phase-separated VIC-II timing
-	//     without modelling the two half-cycles explicitly;
-	//   - BA-like CPU stops are requested before the effective memory access,
-	//     so the CPU can stop on a valid read cycle.
+	// This emulator does not schedule those half-cycles independently. Related
+	// phase work is grouped into one emulated VIC-II cycle. The important part
+	// is the order inside the group: c-accesses are handled before g-accesses,
+	// bus stealing is requested before the effective access, and graphics
+	// counters advance once per 8-pixel graphics access.
 	//
-	// The method below is intentionally organized as a per-cycle pipeline:
+	// The method below is intentionally organized as a per-cycle pipeline, not
+	// as hardware phi1/phi2 phases:
 	//   1. update internal bad-line state,
 	//   2. request preliminary CPU stop if DMA/bad-line access is approaching,
-	//   3. execute the current VIC-II raster cycle,
+	//   3. execute the current VIC-II raster-cycle activity,
 	//   4. draw the current visible slice,
 	//   5. advance the raster beam,
 	//   6. evaluate position-dependent events,
@@ -215,6 +213,10 @@ bool COMMODORE::VICII::simulate (MCHEmul::CPU* cpu)
 		//   the c-access start window. Normal matrix/color reads are later
 		//   validated at cycle 14.		
 		treatBadLineStateAtCurrentCycle ();
+
+		// Sprite DMA is decided before BA/RDY arbitration. Sprite 0 data is
+		// fetched at cycle 58, so cycle 55 must already request the BA lead.
+		treatSpriteDMAStartAtCurrentCycle ();
 
 		// Phase 2: preliminary bus arbitration.
 		// If the VIC-II is about to need the bus for sprite data or bad-line
@@ -662,85 +664,30 @@ unsigned int COMMODORE::VICII::treatRasterCycle ()
 
 			break;
 
-		// Simplified sprite-line bookkeeping.
-		// Graphic c/g accesses are not handled in this case. They are processed
-		// uniformly by treatGraphicAccessCycle() in the emulator's effective
-		// graphics-access window, currently cycles 16..55.
+		// Sprite MCBASE is advanced in two steps. The graphic c/g access for
+		// these cycles is still handled later by treatGraphicAccessCycle().
 		case 15:
 			{
-				for (size_t i = 0; i < 8; i++)
-				{
-					// This cycle happens at the beginning of every raster line...
-					// From 0 to 20 (21 lines)...
-					if (_vicSpriteInfo [i]._line == 21)
-					{
-						_vicSpriteInfo [i]._active = false;
-
-						_IFDEBUG debugSpriteDrawFinishes (i);
-					}
-
-					// Read also cycle 55 onwards info
-					// because if expansion flip - flop hadn't active, 
-					// the "line" will increment every two raster lines...
-					if (_VICIIRegisters -> expansionYFlipFlop (i))
-						_vicSpriteInfo [i]._line++;
-
-					// When this last instruction is executed and finally the sprite becomes no active
-					// the value of the flip flop is always "true":
-					// When the sprite is not expanded, it will remain as true from the beginning...
-					// When the sprite is expanded, it start as false (@see cycle 55) and finished in true...
-				}
+				treatSpriteCounterCycle15 ();
 			}
 
 			break;
 
-		// Simplified sprite activation model.
-		// In the real 6569, sprite DMA and sprite display are separate internal states:
-		// - sprite DMA can be enabled around cycles 55/56;
-		// - sprite display is enabled at cycle 58 if DMA is active and the sprite Y
-		//   coordinate still matches the current raster line;
-		// - DMA is later disabled from the MCBASE/MC logic around cycle 16.
-		// This emulator still uses _vicSpriteInfo[i]._active as a combined
-		// DMA/display flag. The decision is intentionally made earlier, at cycle 52,
-		// so requestCPUStopForDMAIfNeeded() can request the BA-like CPU stop before
-		// the later sprite data reads. This block should be replaced when sprite DMA
-		// and sprite display are modelled as separate states.
-		case 52:
+		// Second MCBASE update step. If this reaches the end of the 63-byte
+		// sprite definition, DMA stops but the current visible line is kept.
+		case 16:
 			{
-				for (size_t i = 0; i < 8; i++)
-				{
-					// As the documentacion describes:
-					// DMA activation is one thing and Sprite activation is another different one.
-					// In the cycle 55 the DMA is created if it wasn't before.
-					// In the cycle 55/56/58 (in PAL VICII) if the DMA is active, the sprite associated is activated too.
-					// So when DMA is "created" the sprite is active, and also in the other sense...
-
-					// Simulation of the cycle 55...
-					if (_VICIIRegisters -> spriteDoubleHeight (i))
-						_VICIIRegisters -> invertExpansionYFlipFlop (i); 
-					// The flip flop is inverted if at this point the sprite has still double height...
-
-					// Simulation of the cycle 55/56/58...
-					if (_VICIIRegisters -> spriteEnable (i) &&
-						_vicGraphicInfo._ROW == (unsigned short) _VICIIRegisters -> spriteYCoord (i))
-					{
-						_vicSpriteInfo [i]._active = true;
-						_vicSpriteInfo [i]._line = 0;
-						_vicSpriteInfo [i]._drawing = false; _vicSpriteInfo [i]._xS = 0;
-						// _expansionY attribute is used later to draw and know what the exactly height is...
-						if (_vicSpriteInfo [i]._expansionY = _VICIIRegisters -> spriteDoubleHeight (i))
-							_VICIIRegisters -> setExpansionYFlipFlop (i, false);
-
-						_IFDEBUG debugSpriteDrawToStart (i);
-					}
-				}
+				treatSpriteCounterCycle16 ();
 			}
 
 			break;
 
-		// In cycle 58 again the graphical info is updated...
+		// DMA is decided in cycles 55/56 before the sprite data slot.
+		// At cycle 58 MC is loaded from MCBASE and display can start.
 		case 58:
 			{
+				treatSpriteDisplayStartCycle ();
+
 				treatGraphicRowEndCycle ();
 			}
 
@@ -758,7 +705,7 @@ unsigned int COMMODORE::VICII::treatRasterCycle ()
 // ---
 void COMMODORE::VICII::drawVisibleZone (MCHEmul::CPU* cpu)
 {
-	// These two variables are very key.
+	// These two variables are very key.	
 	// They hold the position of the raster within the VISIBLE ZONE.
 	// It is the left up corner of the "computer screen" will be cv = 0 & rv = 0...
 	unsigned short cv, rv; 
@@ -769,6 +716,20 @@ void COMMODORE::VICII::drawVisibleZone (MCHEmul::CPU* cpu)
 	// actualize the status of the border...
 	actualizeMainBorderStatus (cav, rv);
 
+	DrawContext dC =
+	{
+		/** _ICD */ _raster.hData ().firstDisplayPosition (),		// DISPLAY: The original...
+		/** _SC	 */ _VICIIRegisters -> horizontalScrollPosition (),	// From 0 - 7
+		/** _RC  */ cv,												// Not adjusted with in the window...
+		/** _RCA */ cav,											// Where the horizontal raster is (adjusted to 8) inside the window
+		/** _RR	 */ rv												// Where the vertical raster is inside the window (it is not the chip raster line)
+	};
+
+	// The vertical border disables the graphics sequencer output.
+	// Sprite-sprite collisions still come from the sprite sequencers.
+	const bool sdCA =
+		displayEnabledForCurrentFrame () && !_vicGraphicInfo._ffVBorder;
+
 	// If the display has not been enabled for this frame,
 	// the visible area is covered with the border color.
 	if (!displayEnabledForCurrentFrame ())
@@ -778,6 +739,8 @@ void COMMODORE::VICII::drawVisibleZone (MCHEmul::CPU* cpu)
 		screenMemory () -> setHorizontalLine ((size_t) cav, (size_t) rv,
 			(cav + 8) >= _raster.visibleColumns () ? (_raster.visibleColumns () - cav) : 8, 
 				_VICIIRegisters -> foregroundColor ());
+
+		drawGraphicsSpritesAndDetectCollisions (dC, sdCA, false);
 
 		return;
 	}
@@ -792,14 +755,7 @@ void COMMODORE::VICII::drawVisibleZone (MCHEmul::CPU* cpu)
 
 	// Now the information is drawn,...
 	// ...and also the collisions detected at the same time
-	drawGraphicsSpritesAndDetectCollisions (
-		{
-			/** _ICD */ _raster.hData ().firstDisplayPosition (),		// DISPLAY: The original...
-			/** _SC	 */ _VICIIRegisters -> horizontalScrollPosition (),	// From 0 - 7
-			/** _RC  */ cv,												// Not adjusted with in the window...
-			/** _RCA */ cav,											// Where the horizontal raster is (adjusted to 8) inside the window
-			/** _RR	 */ rv												// Where the vertical raster is inside the window (it is not the chip raster line)
-		});
+	drawGraphicsSpritesAndDetectCollisions (dC, sdCA, true);
 
 	// If the raster is not in the very visible zone...
 	// it is time to cover with the border...
@@ -842,7 +798,8 @@ void COMMODORE::VICII::drawVisibleZone (MCHEmul::CPU* cpu)
 }
 
 // ---
-void COMMODORE::VICII::drawGraphicsSpritesAndDetectCollisions (const COMMODORE::VICII::DrawContext& dC)
+void COMMODORE::VICII::drawGraphicsSpritesAndDetectCollisions 
+	(const COMMODORE::VICII::DrawContext& dC, bool sdCA, bool dTS)
 {
 	// This varible keeps info about the text/graphics:
 	// Whether the 8 pixels to draw are foreground or background...
@@ -854,7 +811,7 @@ void COMMODORE::VICII::drawGraphicsSpritesAndDetectCollisions (const COMMODORE::
 	MCHEmul::UByte sCF = MCHEmul::UByte::_0; // to know whether there were at least one sprite drawn!
 	for (int i = 7; i >= 0; i--)
 	{
-		if (_vicSpriteInfo [(size_t) i]._active)
+		if (_vicSpriteInfo [(size_t) i]._displayActive)
 		{
 			colGraphics._collisionSpritesData [(size_t) i] = 
 				std::move (drawSpriteOver ((size_t) i, colGraphics._spriteColor, 
@@ -868,13 +825,15 @@ void COMMODORE::VICII::drawGraphicsSpritesAndDetectCollisions (const COMMODORE::
 	}
 
 	// The graphical info is moved to the screen...
-	drawResultToScreen (colGraphics, dC);
+	// ..if it has to!
+	if (dTS)
+		drawResultToScreen (colGraphics, dC);
 
 	// ...and the collisions are also detected...
 	// when there were sprites drawn!
 	// It is done just to speed up the while drawn cycle a lot!
 	if (sCF != MCHEmul::UByte::_0)
-		detectCollisions (colGraphics, sCF);
+		detectCollisions (colGraphics, sCF, sdCA);
 }
 
 // ---
@@ -1301,7 +1260,8 @@ MCHEmul::UByte COMMODORE::VICII::drawMonoColorSpriteOver (unsigned short c, unsi
 	unsigned short dW8	= dW << 3; // 8 or 16
 	unsigned short wY	= _vicSpriteInfo [spr]._expansionY ? 42 : 21;
 
-	// When the code reaches this position _vicSpriteInfo._active is true
+	// This method is reached only for display-active sprites.
+	// Vertical eligibility has already been decided by the sprite DMA/display logic.
 	// Which means the bits have to be shifted from the composition register
 	// No need to check whether the y position is within or not the limits
 	if ((c + 8 /** pixels */) < x || c >= (x + wX))
@@ -1376,7 +1336,8 @@ MCHEmul::UByte COMMODORE::VICII::drawMultiColorSpriteOver (unsigned short c, uns
 	unsigned short dW2  = dW << 1; // 4 or 2
 	unsigned short wY	= _vicSpriteInfo [spr]._expansionY ? 42 : 21;
 
-	// When the code reaches this position _vicSpriteInfo._active is true
+	// This method is reached only for display-active sprites.
+	// Vertical eligibility has already been decided by the sprite DMA/display logic.
 	// Which means the bits have to be shifted from the composition register
 	// No need to check whether the y position is within or not the limits
 	if ((c + 8 /** pixels */) < x || c >= (x + wX))
@@ -1496,34 +1457,37 @@ void COMMODORE::VICII::drawResultToScreen (const COMMODORE::VICII::DrawResult& c
 }
 
 // ---
-void COMMODORE::VICII::detectCollisions (const DrawResult& cT, const MCHEmul::UByte& sD)
+void COMMODORE::VICII::detectCollisions (const DrawResult& cT, const MCHEmul::UByte& sD, bool sdCA)
 {
 	// Now it is time to detect collisions...
 	// First among the graphics and the sprites
-	bool cGS = false;
-	for (size_t i = 0; i < 8; i++)
+	if (sdCA)
 	{
-		if (!sD.bit (i))
-			continue; // This sprite didn't exist at that block of pixels, 
-					  // so it can't be in collision with the graphics...
-				
-		// ...at the first collision detected, the check stops...
-		if ((cT._collisionSpritesData [i] &
-			 cT._collisionGraphicData) != MCHEmul::UByte::_0)
+		bool cGS = false;
+		for (size_t i = 0; i < 8; i++)
 		{
-			// At least one collision between graphics 
-			// and the sprite has happened...
-			cGS = true; 
+			if (!sD.bit (i))
+				continue; // This sprite didn't exist at that block of pixels, 
+						  // so it can't be in collision with the graphics...
+				
+			// ...at the first collision detected, the check stops...
+			if ((cT._collisionSpritesData [i] &
+				 cT._collisionGraphicData) != MCHEmul::UByte::_0)
+			{
+				// At least one collision between graphics 
+				// and the sprite has happened...
+				cGS = true; 
 
-			// ...and marked it for that sprite...
-			_VICIIRegisters -> setSpriteCollisionWithDataHappened (i);
+				// ...and marked it for that sprite...
+				_VICIIRegisters -> setSpriteCollisionWithDataHappened (i);
+			}
 		}
-	}
 
-	// If the collision between sprites and graphics has happened, 
-	// the corresponding IRQ is activated...
-	if (cGS) 
-		_VICIIRegisters -> activateSpriteCollisionWithDataIRQ ();
+		// If the collision between sprites and graphics has happened, 
+		// the corresponding IRQ is activated...
+		if (cGS) 
+			_VICIIRegisters -> activateSpriteCollisionWithDataIRQ ();
+	}
 	
 	// ...and among sprites...
 	bool cSS = false;

@@ -93,7 +93,7 @@ bool ZXSPECTRUM::ULASoundSimpleLibWrapper::getData (MCHEmul::CPU *cpu, MCHEmul::
 ZXSPECTRUM::ULASoundSimpleLibWrapper::Voice::Voice (int id, unsigned int cF)
 	: MCHEmul::SoundVoice (id, cF, 
 		{ new MCHEmul::PlainSoundWave (/** No frquency needed. */) }, // Only one type of wave possible!
-		nullptr) // There is no envelope around this sound!
+		nullptr, { }) // There is no envelope, no filters around this sound!
 { 
 	setClassName ("ULAVoice");
 }

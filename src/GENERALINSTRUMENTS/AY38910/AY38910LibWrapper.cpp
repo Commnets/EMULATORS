@@ -392,7 +392,8 @@ GENERALINSTRUMENTS::AY38910SimpleLibWrapper::Voice::Voice (int id, unsigned int 
 		{
 			new MCHEmul::SquareSoundWave (cF),
 			new MCHEmul::NoiseSoundWave (cF) // This is just like a fourth wave to be mixed with the rest...
-		}, nullptr), // The voices has no "individual" envelope, but one that is common to all voices..
+		}, nullptr, { }), // The voices has no "individual" envelope neither filters, 
+						  // but one that is common to all voices..no filter!
 	  _wavesActive (0)
 { 
 	setClassName ("AY38910Voice"); 
