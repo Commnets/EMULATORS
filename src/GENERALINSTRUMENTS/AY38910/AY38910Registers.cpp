@@ -61,7 +61,7 @@ void GENERALINSTRUMENTS::AY38910Registers::setValue (size_t p, const MCHEmul::UB
 		// ...where the following read/write instruction must be done
 		case 0x00:
 			{
-				_selectedControlRegister = v.value ();
+				_selectedControlRegister = v.value () & 0x0f;
 			}
 
 			break;

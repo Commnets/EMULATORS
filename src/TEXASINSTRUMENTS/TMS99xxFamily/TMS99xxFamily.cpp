@@ -230,15 +230,13 @@ void TEXASINSTRUMENTS::TMS99xxFamily::actionPerRasterLineAndCyle ()
 		unsigned short vL = _raster.vData ().currentVisiblePosition ();
 
 		// Lets found the ones that are visible!
-		// If there were a sprite with its position defined at line 208 or more
-		// The system stops the process...
+		// A sprite Y position of 0xd0 marks the end of the sprite attribute list.
 		size_t i = 0;
 		unsigned short lB, uB;
 		_raster.firstScreenPosition (lB, uB);
-		for (;i < 32 /** 32 max. */ && 
-			  (_spriteInfo [i]._definition._posY < 209 /* Until one after this position was found. */ ||
-			   _spriteInfo [i]._definition._posY >= 223) &&
-			  !fF /** or the fifth in the line was found. */; i++)
+		for (; i < 32 /** 32 max. */ &&
+			   _spriteInfo [i]._definition._posY != 0xd0 &&
+			   !fF /** or the fifth in the line was found. */; i++)
 		{
 			// If it is not visible, then contunue looking for the next one, if possible!
 			// Otherwise the infomation about which pixel is the first obne visible is update...
@@ -275,7 +273,7 @@ bool TEXASINSTRUMENTS::TMS99xxFamily::readGraphicInfoAndDrawVisibleZone (MCHEmul
 	// Draws a point with the background first...
 	// Unless the raster were in a display zone, it will be the only thing to be drawn...
 	_screenMemory -> setPixel 
-		(x, y, (unsigned int) _TMS99xxFamilyRegisters -> backDropColor () & 0x07);
+		(x, y, (unsigned int) _TMS99xxFamilyRegisters -> backDropColor ());
 
 	// If it is not still in the screen position, there is anything else to do...
 	if (!_raster.isInScreenZone ())
@@ -429,7 +427,7 @@ void TEXASINSTRUMENTS::TMS99xxFamily::drawGraphicsScreenMulticolorMode (unsigned
 	// The color to apply will depend on the group of 4 pixels...
 	unsigned int cl = 0;
 	unsigned short xS = x - _raster.hData ().firstScreenPosition ();
-	if (((xS >> 2) % 1) == 0) cl = (unsigned int) ((std::get <2> (data).value () & 0xf0) >> 4); // even block...
+	if (((xS >> 2) % 2) == 0) cl = (unsigned int) ((std::get <2> (data).value () & 0xf0) >> 4); // even block...
 	else cl = (unsigned int) (std::get <2> (data).value () & 0x0f); // odd block...
 	if (cl != 0)
 		_screenMemory -> setPixel (x, y, cl);

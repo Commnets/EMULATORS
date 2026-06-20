@@ -263,6 +263,15 @@ namespace TEXASINSTRUMENTS
 			and the element in the color name table (again if it makes sense), in the form of a tuple... */
 		std::tuple <MCHEmul::UByte, MCHEmul::UByte, MCHEmul::UByte> 
 			readGraphicInfo (unsigned short x, unsigned short y);
+		/** Calculates the pattern generator byte address used by Graphics II mode.
+			In this mode, R4 is not just a table base: bit 2 selects the 8K half of VRAM,
+			and bits 0 and 1 work as masks that decide whether the second and third
+			screen thirds use their own 2K pattern blocks or mirror the first one. */
+		inline MCHEmul::Address graphicIIPatternGeneratorAddress (unsigned char pN, unsigned short y) const;
+		/** Calculates the color table byte address used by Graphics II mode.
+			In this mode, R3 is not just a table base: bit 7 selects the 8K half of VRAM,
+			and bits 0 to 6 work as masks over the logical color-table offset. */
+		inline MCHEmul::Address graphicIIColorAddress (unsigned char pN, unsigned short y) const;
 
 		protected:
 		/** The Video RAM is stored inside of the TMS99xxFamily. \n
@@ -309,9 +318,9 @@ namespace TEXASINSTRUMENTS
 		/** To detect or not the collision among sprites. */
 		mutable bool _spriteCollisionDetected;
 		/** To detect the situation that the 5 sprite not drawn in the same row is detected. */
-		bool _fifthSpriteDetected;
+		mutable bool _fifthSpriteDetected;
 		/** Fifth sprite (number from 0 to 31) not drawn when the detection of this situation is active. */
-		unsigned char _fifthSpriteNotDrawn;
+		mutable unsigned char _fifthSpriteNotDrawn;
 		/** Screen update interruption generated. */
 		mutable bool _screenUpdateHappen;
 
@@ -427,6 +436,71 @@ namespace TEXASINSTRUMENTS
 			: videoData (_spriteGenAddress + (size_t) (result._pattern << 3), 8); // 8 bytes
 
 		return (result);
+	}
+
+	// ---
+	inline MCHEmul::Address TEXASINSTRUMENTS::TMS99xxFamilyRegisters::graphicIIPatternGeneratorAddress
+		(unsigned char pN, unsigned short y) const
+	{
+		// In Graphics II there are 3 screen thirds of 64 lines each.
+		// The logical table offset is:
+		// - bits 11 and 12: screen third, from vertical position 0..63, 64..127, 128..191
+		// - bits 3 to 10: pattern name * 8, because each pattern has 8 bytes
+		// - bits 0 to 2: line inside the 8-byte pattern
+		const unsigned int o =
+			((unsigned int) (y & 0xc0) << 5) +
+			((unsigned int) pN << 3) +
+			(unsigned int) (y & 0x07);
+
+		const unsigned int r4 = (unsigned int) _controlRegisters [4].value ();
+
+		// R4 bit 2 selects the 8K half where the pattern generator table starts.
+		// In address terms this is VRAM bit A13: 0x0000 or 0x2000.
+		const unsigned int b = (r4 & 0x04) << 11;
+
+		// R4 bits 0 and 1 are not a normal base in Graphics II.
+		// They mask the logical third bits:
+		// - bit 0 enables the second 2K block, lines 64..127
+		// - bit 1 enables the third 2K block, lines 128..191
+		// The low 11 bits are always kept because they select byte-within-2K.
+		//
+		// Examples:
+		// - R4 = 03: mask 0x1fff, three independent 2K pattern blocks.
+		// - R4 = 00: mask 0x07ff, all three screen thirds mirror the same 2K block.
+		const unsigned int m = ((r4 & 0x03) << 11) | 0x07ff;
+
+		return (MCHEmul::Address (2, b | (o & m)));
+	}
+
+	// ---
+	inline MCHEmul::Address TEXASINSTRUMENTS::TMS99xxFamilyRegisters::graphicIIColorAddress
+		(unsigned char pN, unsigned short y) const
+	{
+		// The logical color table offset has the same shape as the pattern
+		// generator offset in Graphics II:
+		// - screen third contributes the 2K block
+		// - pattern name selects one of 256 entries
+		// - vertical line inside the pattern selects the color byte for that line
+		const unsigned int o =
+			((unsigned int) (y & 0xc0) << 5) +
+			((unsigned int) pN << 3) +
+			(unsigned int) (y & 0x07);
+
+		const unsigned int r3 = (unsigned int) _controlRegisters [3].value ();
+
+		// R3 bit 7 selects the 8K half where the color table starts.
+		// In the common MSX SCREEN 2 value R3 = ff, this puts the table at 0x2000.
+		const unsigned int b = (r3 & 0x80) << 6;
+
+		// R3 bits 0..6 form the mask applied to the logical color offset.
+		// The low 6 bits are always kept because R3 starts masking at address bit A6.
+		//
+		// Examples:
+		// - R3 = ff: mask 0x1fff, full 6K color table at 0x2000..0x37ff.
+		// - R3 = 9f: mask 0x07ff, all three screen thirds share 0x2000..0x27ff.
+		const unsigned int m = ((r3 & 0x7f) << 6) | 0x003f;
+
+		return (MCHEmul::Address (2, b | (o & m)));
 	}
 }
 

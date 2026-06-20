@@ -181,10 +181,6 @@ void TEXASINSTRUMENTS::TMS99xxFamilyRegisters::setValue (size_t p, const MCHEmul
 				// Has the port 0x99 already been accessed once before?
 				if (_99setOnce)
 				{
-					_readWriteAddress = MCHEmul::Address (2, 
-						((unsigned int) (v.value () & 0x3f) << 8) | 
-						 (unsigned int) _99firstAccessValue.value ());
-
 					// Accessing to a register...
 					if (v.bit (7))
 						setControlRegister 
@@ -192,6 +188,10 @@ void TEXASINSTRUMENTS::TMS99xxFamilyRegisters::setValue (size_t p, const MCHEmul
 					// or accessing to the video memory RAM...
 					else
 					{
+						_readWriteAddress = MCHEmul::Address (2, 
+							((unsigned int) (v.value () & 0x3f) << 8) | 
+								(unsigned int) _99firstAccessValue.value ());
+
 						// Winting to set or to read the Video RRAM?
 						if (!v.bit (6)) // ...reading
 						{
@@ -318,21 +318,20 @@ const MCHEmul::UByte& TEXASINSTRUMENTS::TMS99xxFamilyRegisters::peekValue (size_
 void TEXASINSTRUMENTS::TMS99xxFamilyRegisters::initializeInternalValues ()
 {
 	// Controlling attributes...
-	_graphicMode							= 0;
+	_graphicMode							= _GRAPHICIMODE;
 	_externalVideo							= false;
 	_16k									= true;
 	_blankScreen							= false;
 	_sprites16pixels						= true;
 	_spritesEnlarged						= false;
 	_launchScreenUpdateInterrupt			= false;
-	MCHEmul::Address _nameAddress			= { };
-	MCHEmul::Address _colorAddress			= { };
-	MCHEmul::Address _patternAddress		= { };
-	MCHEmul::Address _spriteAddress			= { };
-	MCHEmul::Address _spriteAttrsAddress	= { };
-	MCHEmul::Address _spriteGenAddress		= { };
-	unsigned char _textColor				= 0x00;
-	unsigned char _backdropColor			= 0x00;
+	_nameAddress							= { };
+	_colorAddress							= { };
+	_patternAddress							= { };
+	_spriteAttrsAddress						= { };
+	_spriteGenAddress						= { };
+	_textColor								= 0x00;
+	_backdropColor							= 0x00;
 	for (size_t i = 0; i < 8; 
 		_controlRegisters [i++] = MCHEmul::UByte::_0);
 
@@ -503,6 +502,8 @@ MCHEmul::UByte TEXASINSTRUMENTS::TMS99xxFamilyRegisters::readStatus () const
 	// After reading, the folowwing bit are moved back to false...
 	_spriteCollisionDetected = false;
 	_screenUpdateHappen = false;
+	_fifthSpriteDetected = false;
+	_fifthSpriteNotDrawn = 0xff;
 
 	return (result);
 }
@@ -685,25 +686,11 @@ std::tuple <MCHEmul::UByte, MCHEmul::UByte, MCHEmul::UByte>
 					_lastPatterNameValueRead = 
 						videoData (_lastPatternNameTablePositionRead = pT); // a pattern bwteen 0 and 255...
 					_lastPatternGeneratorValueRead =
-						videoData (_lastPatterGeneratorTablePositionRead = 
-							// The base...
-							_patternAddress +
-							// ...a different block of 2048 bytes depending on the section in the screen (<< 11 = *0x0800 = 2048)
-							(size_t) (bP << 11) +
-							// ...8 bytes per char in the pattern table...
-							(size_t) (_lastPatterNameValueRead.value () << 3) +
-							// ...and the right byte within that 8, will depend on the line where the raster is now...
-							(size_t) (y % 8)); // Total 2048 * 3 = 6144 bytes
+						videoData (_lastPatterGeneratorTablePositionRead =
+							graphicIIPatternGeneratorAddress (_lastPatterNameValueRead.value (), y));
 					_lastColorValueRead =
 						videoData (_lastColorTablePositionRead =
-							// The base...
-							_colorAddress +
-							// ...a different block of 2048 bytes depending on the section in the screen (<< 11 = *0x0800 = 2048)
-							(size_t) (bP << 11) +
-							// ...8 bytes per char in the color table...
-							(size_t) (_lastPatterNameValueRead.value () << 3) +
-							// ...and the right byte within that 8, will depend on the line where the raster is now...
-							(size_t) (y % 8)); // Total 2048 * 4 = 6144 bytes
+							graphicIIColorAddress (_lastPatterNameValueRead.value (), y));
 				}
 
 				_dataRead = true;

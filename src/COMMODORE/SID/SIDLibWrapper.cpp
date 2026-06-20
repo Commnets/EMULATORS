@@ -415,8 +415,8 @@ void COMMODORE::SoundSIDSimpleWrapper::setValue (size_t p, const MCHEmul::UByte&
 		case 0x16:
 			{
 				setFrecuencyInFilters (
-					(((unsigned short) _registers [0x16].value ()) << 8) |
-					 ((unsigned short) _registers [0x15].value () & 0x03));
+					((unsigned short) _registers [0x16].value () << 3) |
+					 (unsigned short) _registers [0x15].value () & 0x03);
 			}
 
 			break;
@@ -555,7 +555,7 @@ bool COMMODORE::SoundSIDSimpleWrapper::getData (MCHEmul::CPU *cpu, MCHEmul::UByt
 // ---
 void COMMODORE::SoundSIDSimpleWrapper::setFrecuencyInFilters (unsigned short nR)
 {
-	double cF = 30.0f + ((double) nR * 4.87f);
+	double cF = 30.0f + ((double) nR * 5.85f);
 	for (size_t i = 0; i < 3; i++)
 	{
 		COMMODORE::SoundSIDSimpleWrapper::Voice* voice = 
