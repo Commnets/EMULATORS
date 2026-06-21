@@ -49,8 +49,8 @@ namespace MSX
 								? ~_subSlotRegister [nR] : _subSlotRegister [nR]); }
 		/** However sometimes it is interested to access just to the valor of the register. \n
 			This is special important in the internal methods managing the memory. */
-		const MCHEmul::UByte& justSubSlotRegister (size_t nR) const
-							{ return (_slotsExpanded[nR] ? _subSlotRegister[nR] : MCHEmul::UByte::_0); }
+		MCHEmul::UByte justSubSlotRegister (size_t nR) const
+							{ return (_slotsExpanded [nR] ? _subSlotRegister [nR] : MCHEmul::UByte::_0); }
 
 		/** To know whether the subslots have changed or not. */
 		bool changed () const

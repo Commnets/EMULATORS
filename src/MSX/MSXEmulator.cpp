@@ -24,32 +24,38 @@ void MSX::MSXEmulator::printOutParameters (std::ostream& o) const
 	o << "/b[COLOR]:\t" << "Draw a dark grid in the drawable screen. Color optional" << std::endl;
 	o << "/w[CONF]:\t" << "Starts in a different memory configuration. It is is optional" << std::endl;
 	o << "/m[MACHINE]:\t" << "Define the type of ROM loaded" << std::endl;
-	o << "LANGUAGES allowed under command line /i (not all languages are available for all models):" << std::endl << 
-		 "When Machine is SVI728:" << std::endl <<
-		 "ENG:\tEnglish" << std::endl <<
-		 "ESP:\tSpanish" << std::endl <<
-		 "When Machine is SONYHB10P:" << std::endl <<
-		 "The language is standard and English" << std::endl <<
-		 "When Machine is PHILIPSVG8010:" << std::endl <<
-		 "ENG:\tEnglish" << std::endl <<
-		 "FRA:\tFrench" << std::endl <<
-		 "When Machine is CANONV20:" << std::endl <<
-		 "The language is standard and English" << std::endl <<
-		 "When Machine is SVI738:" << std::endl <<
-		 "ENG:\tEnglish" << std::endl <<
-		 "DEU:\tAleman" << std::endl <<
-		 "SWE:\tSueco" << std::endl;
-	o << "CONFIGURATIONS (depends on type of machine) allowed under command line /w:" << std::endl <<
-		 "When Machine is SVI728" << std::endl <<
-		 "0:\tBasic Machine" << std::endl <<
-		 "When Machine is SONYHB10P" << std::endl <<
-		 "0:\tBasic Machine" << std::endl;
-	o << "MACHINE allowed under command line /m:" << std::endl << 
+	o << "MACHINEs allowed under command line /m:" << std::endl << 
 		 "SVI728:\tMSX1 Spectravideo 728" << std::endl <<
 		 "SONYHB10P:\tMSX1 Sony HB10P" << std::endl <<
 		 "PHILIPSVG8010:\tMSX1 Philips VG8010" << std::endl <<
 		 "CANONV20:\tMSX1 Canon V20" << std::endl <<
 		 "SVI738:\tMSX2 Spectravideo 738" << std::endl;
+	o << "CONFIGURATIONS (depends on type of machine) allowed under command line /w:" << std::endl <<
+		 "When Machine is SVI728:" << std::endl <<
+		 "=>0:\tBasic Machine 16K RAM" << std::endl <<
+		 "When Machine is SONYHB10P:" << std::endl <<
+		 "=>0:\tBasic Machine 16K RAM" << std::endl <<
+		 "When Machine is PHILIPSVG8010:" << std::endl <<
+		 "=>0:\tBasic Machine 32K RAM" << std::endl <<
+		 "When Machine is CANONV20:" << std::endl <<
+		 "=>0:\tBasic Machine 64K RAM" << std::endl <<
+		 "When Machine is SVI738:" << std::endl <<
+		 "=>0:\tBasic Machine 16K RAM" << std::endl;
+	o << "LANGUAGES allowed under command line /i (not all languages are available for all models):" << std::endl << 
+		 "When Machine is SVI728:" << std::endl <<
+		 "=>ENG:\tEnglish" << std::endl <<
+		 "=>ESP:\tSpanish" << std::endl <<
+		 "When Machine is SONYHB10P:" << std::endl <<
+		 "=>The language is standard and English" << std::endl <<
+		 "When Machine is PHILIPSVG8010:" << std::endl <<
+		 "=>ENG:\tEnglish" << std::endl <<
+		 "=>FRA:\tFrench" << std::endl <<
+		 "When Machine is CANONV20:" << std::endl <<
+		 "=>The language is standard and English" << std::endl <<
+		 "When Machine is SVI738:" << std::endl <<
+		 "=>ENG:\tEnglish" << std::endl <<
+		 "=>DEU:\tAleman" << std::endl <<
+		 "=>SWE:\tSueco" << std::endl;
 	o << "Check LOG file if the emulation doesn't start as expected" << std::endl;
 }
 

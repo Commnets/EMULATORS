@@ -254,7 +254,7 @@ MCHEmul::Memory::Content MSX::MSXModel::memoryContent () const
 
 	// Now the subsets...
 	// The basic subsets in the slot0 and subslot 0...
-	// The slot 0, subslot0 BIOS subset is ROM, that is in the pages 0 & 1 of the slot 0, subslot 0...
+	// The slot 0, subslot 0 BIOS subset is ROM, that is in the pages 0 & 1 of the slot 0, subslot 0...
 	MCHEmul::PhysicalStorageSubset* ROMBIOS_0 =
 		new MCHEmul::PhysicalStorageSubset (MSX::Memory::_ROMBIOS_SUBSET_0, ROM_SLOT0,
 			0x0000, MCHEmul::Address ({ 0x00, 0x00 }, false), 0x4000); // 16k (LOW)
@@ -268,14 +268,14 @@ MCHEmul::Memory::Content MSX::MSXModel::memoryContent () const
 		new MSX::EmptyPhysicalStorageSubset (MSX::Memory::_ERAM16KSLOT0SUBSLOT0_SUBSET, MCHEmul::UByte::_0, RAM_SLOTS [0],
 			0x8000, MCHEmul::Address ({ 0x00, 0x80 }, false), 0x4000); // 16k
 	ERAMB2_SLOT0SUBSLOT0 -> setName ("Page 2,Slot 0,Subslot 0:RAM Empty 16k");
-	// The basic subset of 16k in the page 3 of the slot 0m subslot 0
+	// The basic subset of 16k in the page 3 of the slot 0, subslot 0
 	// That basic subset of 16k RAM includes the access to the last written access to change the behaviour...
 	MCHEmul::PhysicalStorageSubset* RAMB3_SLOT0SUBSLOT0 =
 		new MSX::LastPagePhysicalStorageSubset (MSX::Memory::_RAM16KSLOT0SUBSLOT0_SUBSET, RAM_SLOTS [0],
 			0xc000, MCHEmul::Address ({ 0x00, 0xc0 }, false), 0x4000,
 				MCHEmul::Stack::Configuration (true, false /** Pointing to the last written. */,
 					false /** No overflow detection. */, -1)); // 16k
-	RAMB3_SLOT0SUBSLOT0 -> setName ("Page 3,Slot 0,Subslot 0: RAM 16k");
+	RAMB3_SLOT0SUBSLOT0 -> setName ("Page 3,Slot 0,Subslot 0:RAM 16k");
 
 	// The rest of the memory is created with empty subsets...
 	// It is needed to create 12 subslots (remaining of the first slot) +
@@ -333,7 +333,7 @@ MCHEmul::Memory::Content MSX::MSXModel::memoryContent () const
 	result._physicalStorages = storages;
 	result._subsets = allsubsets;
 	result._views = MCHEmul::MemoryViews (
-		{ { MSX::Memory::_CPU_VIEW, cpuView} });
+		{ { MSX::Memory::_CPU_VIEW, cpuView } });
 
 	return (result);
 }
@@ -667,9 +667,10 @@ void MSX::PhilipsVG8010::configureMemory (MSX::Memory* m, unsigned int cfg)
 	m -> connectMemoryElements ({
 		MSX::Memory::_ROMBIOS_SUBSET_0,
 		MSX::Memory::_ROMBIOS_SUBSET_1,
-		_RAM32KSLOT0SUBSLOT0_SUBSET });
+		_RAMB216KSLOT0SUBSLOT0_SUBSET,
+		MSX::Memory::_RAM16KSLOT0SUBSLOT0_SUBSET });
 	// ...and also fix the stack subset...
-	m -> setStackSubset (_RAM32KSLOT0SUBSLOT0_SUBSET);
+	m -> setStackSubset (MSX::Memory::_RAM16KSLOT0SUBSLOT0_SUBSET);
 }
 
 //  ---
@@ -677,31 +678,30 @@ MCHEmul::Memory::Content MSX::PhilipsVG8010::memoryContent () const
 {
 	MCHEmul::Memory::Content result = std::move (MSX::MSXModel::memoryContent ());
 
-	// In this computer the1 16K RAM are replace by a 32K RAM in the slot 0, subslot 0, page 2-3.
+	// In this computer has 32K RAM in the slot 0, subslot 0, page 2-3...
+	// 16 are already created in parent class, and additional 16K are added in page 2
 
-	// Remove the default 16k RAM in the slot 0, subslot 0, page 3...
+	// Remove the default 16k RAM in the slot 0, subslot 0, page 2...
 	// ...that is comming from the MSXModel::memoryContent ()...
-	result._subsets.erase (MSX::Memory::_RAM16KSLOT0SUBSLOT0_SUBSET);
 	result._subsets.erase (MSX::Memory::_ERAM16KSLOT0SUBSLOT0_SUBSET);
 	// ...also in the CPU view...
 	MCHEmul::MemoryView* CPUView =
 		(*result._views.find (MSX::Memory::_CPU_VIEW)).second;
-	CPUView -> removeSubSet (MSX::Memory::_RAM16KSLOT0SUBSLOT0_SUBSET);
 	CPUView -> removeSubSet (MSX::Memory::_ERAM16KSLOT0SUBSLOT0_SUBSET);
 
-	// Cretaes the 32K RAM....
+	// Creates the 16K Additional RAM in page 2...
 	MCHEmul::PhysicalStorage* rS0S0 = (*result._physicalStorages.find (MSX::Memory::_RAM_SET)).second;
-	MCHEmul::PhysicalStorageSubset* RAMB23_SLOT0SUBSLOT0 =
-		new MCHEmul::Stack (_RAM32KSLOT0SUBSLOT0_SUBSET, rS0S0,
-			0x8000, MCHEmul::Address ({ 0x00, 0x80 }, false), 0x8000,
+	MCHEmul::PhysicalStorageSubset* RAMB2_SLOT0SUBSLOT0 =
+		new MCHEmul::Stack (_RAMB216KSLOT0SUBSLOT0_SUBSET, rS0S0,
+			0x8000, MCHEmul::Address ({ 0x00, 0x80 }, false), 0x4000,
 				MCHEmul::Stack::Configuration (true, false /** Pointing to the last written. */,
-					false /** No overflow detection. */, -1)); // 32k
-	RAMB23_SLOT0SUBSLOT0 -> setName ("RAM 32k, Slot 0, Subslot 0, Bank 2-3");
+					false /** No overflow detection. */, -1)); // 16K
+	RAMB2_SLOT0SUBSLOT0 -> setName ("Page 2,Slot 0,Subslot 0:RAM 16K");
 	// That is added to the content...
 	result._subsets.insert (MCHEmul::PhysicalStorageSubsets::value_type
-		(_RAM32KSLOT0SUBSLOT0_SUBSET, RAMB23_SLOT0SUBSLOT0));
+		(_RAMB216KSLOT0SUBSLOT0_SUBSET, RAMB2_SLOT0SUBSLOT0));
 	// ...and also in the CPU View (that is the only one)...
-	CPUView -> addSubset (RAMB23_SLOT0SUBSLOT0);
+	CPUView -> addSubset (RAMB2_SLOT0SUBSLOT0);
 
 	return (result);
 }
@@ -746,9 +746,12 @@ void MSX::CanonV20::configureMemory (MSX::Memory* m, unsigned int cfg)
 	m -> connectMemoryElements ({
 		MSX::Memory::_ROMBIOS_SUBSET_0,
 		MSX::Memory::_ROMBIOS_SUBSET_1,
-		_RAM64KSLOT3SUBSLOT0_SUBSET });
+		_RAMB016KSLOT3SUBSLOT0_SUBSET, // 16k each...
+		_RAMB116KSLOT3SUBSLOT0_SUBSET,
+		_RAMB216KSLOT3SUBSLOT0_SUBSET,
+		_RAMB316KSLOT3SUBSLOT0_SUBSET });
 	// ...and also fix the stack subset...
-	m -> setStackSubset (_RAM64KSLOT3SUBSLOT0_SUBSET);
+	m -> setStackSubset (_RAMB316KSLOT3SUBSLOT0_SUBSET);
 }
 
 //  ---
@@ -756,7 +759,8 @@ MCHEmul::Memory::Content MSX::CanonV20::memoryContent () const
 {
 	MCHEmul::Memory::Content result = std::move (MSX::MSXModel::memoryContent ());
 
-	// In this computer the1 16K RAM are replace by a 32K RAM in the slot 0, subslot 0, page 2-3.
+	// In this computer the 16k RAM in page 3 slot 0 subslot 0 
+	// are replaced by 64k RAM in the slot 3, subslot 0
 
 	// Gets the CPU View...
 	MCHEmul::MemoryView* CPUView =
@@ -772,14 +776,14 @@ MCHEmul::Memory::Content MSX::CanonV20::memoryContent () const
 	MCHEmul::PhysicalStorageSubset* ERAMB3_SLOT0SUBSLOT0 =
 		new MSX::EmptyPhysicalStorageLastPageSubset (_ERAM16KSLOT0SUBSLOT0_SUBSET, MCHEmul::UByte::_0, rS0S0,
 			0xc000, MCHEmul::Address ({ 0x00, 0xc0 }, false), 0x4000); // 16K
-	ERAMB3_SLOT0SUBSLOT0  -> setName ("RAM Empty 16k, Slot 0, Subslot 0, Bank 3");
+	ERAMB3_SLOT0SUBSLOT0  -> setName ("Page 3,Slot 0,Subslot 0:RAM Empty 16k");
 	// Add the new element to the subsets and to the CPU View...
 	result._subsets.insert (MCHEmul::PhysicalStorageSubsets::value_type
 		(_ERAM16KSLOT0SUBSLOT0_SUBSET, ERAMB3_SLOT0SUBSLOT0));
 	CPUView -> addSubset (ERAMB3_SLOT0SUBSLOT0);
 
 	// Modifications in the slot 3...
-	// Removes the empty elements that ar comming in the slot 3...
+	// Removes the empty elements that are comming in the slot 3...
 	// ...and also in the CPU View...
 	for (size_t i = 0; i < 4; i++)
 	{
@@ -789,18 +793,27 @@ MCHEmul::Memory::Content MSX::CanonV20::memoryContent () const
 			((int) (MSX::Memory::_SLOT3SUBSLOT0BASE_SUBSET + i));
 	}
 
-	// Creates the 64K RAM in the slot 3, subslot 0, pages 0-1-2-3.
-	MCHEmul::PhysicalStorage* rS3S0 = (*result._physicalStorages.find (MSX::Memory::_RAM_SET + 3)).second;
-	MCHEmul::PhysicalStorageSubset* RAMB0123_SLOT3SUBSLOT0 =
-		new MCHEmul::Stack (_RAM64KSLOT3SUBSLOT0_SUBSET, rS3S0,
-			0x0000, MCHEmul::Address ({ 0x00, 0x00 }, false), 0x10000,
-				MCHEmul::Stack::Configuration (true, false /** Pointing to the last written. */,
-					false /** No overflow detection. */, -1)); // 64k
-	RAMB0123_SLOT3SUBSLOT0 -> setName ("RAM 64k, Slot 0, Subslot 0, Bank 0-1-2-3");
-	// That is added to the content, and to the CPU view...
-	result._subsets.insert (MCHEmul::PhysicalStorageSubsets::value_type
-		(_RAM64KSLOT3SUBSLOT0_SUBSET, RAMB0123_SLOT3SUBSLOT0));
-	CPUView -> addSubset (RAMB0123_SLOT3SUBSLOT0);
+	// Creates the 4 pages (0,1,2,3) of 16K each in slot 3, subslot 0.
+	MCHEmul::PhysicalStorage* rS3S0 = 
+		(*result._physicalStorages.find (MSX::Memory::_RAM_SET + 3)).second;
+	for (int i = 0; i < 4; i++)
+	{
+		MCHEmul::PhysicalStorageSubset* RAM_SLOT3SUBSLOT0 =
+			(i == 3)
+			? (MCHEmul::Stack*) new MSX::LastPagePhysicalStorageSubset (_RAMBASESLOT3SUBSLOT0_SUBSET + i, rS3S0,
+				(size_t) (0x0000 + (0x4000 * i)), MCHEmul::Address ({ 0x00, 0x00 }, false) + (size_t) (0x4000 * i), 0x4000,
+					MCHEmul::Stack::Configuration (true, false /** Pointing to the last written. */,
+						false /** No overflow detection. */, -1)) // 16k
+			: new MCHEmul::Stack (_RAMBASESLOT3SUBSLOT0_SUBSET + (int) i, rS3S0,
+				(size_t) (0x0000 + (0x4000 * i)), MCHEmul::Address ({ 0x00, 0x00 }, false) + (size_t) (0x4000 * i), 0x4000,
+					MCHEmul::Stack::Configuration (true, false /** Pointing to the last written. */,
+						false /** No overflow detection. */, -1)); // 16k
+		RAM_SLOT3SUBSLOT0 -> setName ("Page " + std::to_string ((unsigned int) i) + ",Slot 3,Subslot 0:RAM 16K");
+		// That is added to the content, and to the CPU view...
+		result._subsets.insert (MCHEmul::PhysicalStorageSubsets::value_type
+			(_RAMBASESLOT3SUBSLOT0_SUBSET + i, RAM_SLOT3SUBSLOT0));
+		CPUView -> addSubset (RAM_SLOT3SUBSLOT0);
+	}
 
 	return (result);
 }

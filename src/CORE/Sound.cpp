@@ -23,7 +23,7 @@ MCHEmul::SoundSystem::SoundSystem (int id,
 	specIn.freq = _samplingFrequency;
 	specIn.format = _type;
 	specIn.channels = (Uint8) _numberChannels;
-	specIn.callback = nullptr; // SDL_QueueAudio will be used intead...
+	specIn.callback = nullptr; // SDL_QueueAudio will be used instead...
 	specIn.userdata = nullptr; // No callback no special data to be passed...
 	_deviceId = SDL_OpenAudioDevice (nullptr, 0, &specIn, &_audioSpec, SDL_AUDIO_ALLOW_ANY_CHANGE);
 	
@@ -99,7 +99,8 @@ bool MCHEmul::SoundSystem::simulate (MCHEmul::CPU* cpu)
 				_conversionData.len = _soundChip -> soundBufferSize ();
 				int cvt_lencvt = _conversionData.len * _conversionData.len_mult;
 				_conversionData.buf = (Uint8*) SDL_malloc (cvt_lencvt);
-				memcpy ((void*) _conversionData.buf, (void*) _soundChip -> soundMemory () -> samplingData (), _conversionData.len);
+				memcpy ((void*) _conversionData.buf, 
+					(void*) _soundChip -> soundMemory () -> samplingData (), _conversionData.len);
 				SDL_ConvertAudio (&_conversionData);
 				result = (SDL_QueueAudio (_deviceId, 
 					(void*) _conversionData.buf, _conversionData.len_cvt) != -1);

@@ -1,4 +1,5 @@
 #include <COMMODORE/SID/SIDLibWrapper.hpp>
+#include <cmath>
 
 unsigned short COMMODORE::SoundSIDSimpleWrapper::_ATTACKTIMES [0x10] =
 	{ 2, 8, 16, 24, 38, 56, 68, 80, 100, 250, 500, 800, 1000, 3000, 5000, 8000 };
@@ -596,13 +597,88 @@ void COMMODORE::SoundSIDSimpleWrapper::activateFiltersPerVoice
 }
 
 // ---
+COMMODORE::SoundSIDSimpleWrapper::SIDNoiseSoundWave::SIDNoiseSoundWave (unsigned int cF)
+	: MCHEmul::SoundWave (MCHEmul::SoundWave::Type::_NOISE, cF),
+	  _phaseAccumulator (0),
+	  _phaseIncrement (0),
+	  _shiftRegister (0x7ffff8)
+{
+	setClassName ("SIDNoiseSoundWave");
+}
+
+// ---
+void COMMODORE::SoundSIDSimpleWrapper::SIDNoiseSoundWave::setTest (bool t)
+{
+	initializeInternalCounters ();
+
+	// reSID approximates TEST by clearing the register immediately and reseeding it when TEST ends.
+	_shiftRegister = t ? 0 : 0x7ffff8;
+}
+
+// ---
+void COMMODORE::SoundSIDSimpleWrapper::SIDNoiseSoundWave::initialize ()
+{
+	MCHEmul::SoundWave::initialize ();
+
+	_phaseAccumulator = 0;
+	_phaseIncrement = 0;
+	_shiftRegister = 0x7ffff8;
+}
+
+// ---
+void COMMODORE::SoundSIDSimpleWrapper::SIDNoiseSoundWave::initializeInternalCounters ()
+{
+	MCHEmul::SoundWave::initializeInternalCounters ();
+
+	// Hard sync resets the oscillator phase without restarting the noise sequence.
+	_phaseAccumulator = 0;
+}
+
+// ---
+void COMMODORE::SoundSIDSimpleWrapper::SIDNoiseSoundWave::clock (unsigned int nC)
+{
+	MCHEmul::SoundWave::clock (nC);
+
+	for (unsigned int i = 0; i < nC; i++)
+	{
+		const unsigned int previousAccumulator = _phaseAccumulator;
+
+		_phaseAccumulator =
+			(_phaseAccumulator + _phaseIncrement) & 0xffffff;
+
+		// The SID clocks the noise register on the rising edge of accumulator bit 19.
+		if (!(previousAccumulator & 0x080000) &&
+			(_phaseAccumulator & 0x080000))
+			stepShiftRegister ();
+	}
+}
+
+// ---
+double COMMODORE::SoundSIDSimpleWrapper::SIDNoiseSoundWave::data () const
+{
+	// FREQ zero freezes the register but does not force its DAC output to zero.
+	return (_active ? (double) outputValue () / 255.0f : 0.0f);
+}
+
+// ---
+void COMMODORE::SoundSIDSimpleWrapper::SIDNoiseSoundWave::calculateWaveSamplingData ()
+{
+	MCHEmul::SoundWave::calculateWaveSamplingData ();
+
+	_phaseIncrement = (_chipFrequency != 0)
+		? (static_cast <unsigned int> (std::llround (
+			(_frequency * 16777216.0) / (double) _chipFrequency)) & 0xffff)
+		: 0;
+}
+
+// ---
 COMMODORE::SoundSIDSimpleWrapper::Voice::Voice (int id, unsigned int cF, unsigned int sF)
 	: MCHEmul::SoundVoice (id, cF,
 		{
 			new MCHEmul::TriangleSoundWave (cF),
 			new MCHEmul::SawSmoothSoundWave (cF),
 			new MCHEmul::PulseSoundWave (cF),
-			new MCHEmul::NoiseSoundWave (cF)
+			new COMMODORE::SoundSIDSimpleWrapper::SIDNoiseSoundWave (cF) // The noise is special...
 		}, 
 		// the most typical one!
 		new MCHEmul::SoundADSREnvelope (cF),
@@ -637,6 +713,9 @@ void COMMODORE::SoundSIDSimpleWrapper::Voice::setTest (bool t)
 
 		return;
 	}
+
+	static_cast <COMMODORE::SoundSIDSimpleWrapper::SIDNoiseSoundWave*>
+		(wave (MCHEmul::SoundWave::Type::_NOISE)) -> setTest (t);
 
 	_test = t;
 	if (_test)

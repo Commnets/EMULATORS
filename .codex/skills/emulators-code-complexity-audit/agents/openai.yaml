@@ -1,0 +1,4 @@
+interface:
+  display_name: "EMULATORS Complexity Audit"
+  short_description: "Measure code complexity by C++ namespace"
+  default_prompt: "Use $emulators-code-complexity-audit to analyze framework size, recurrence, coupling, and complexity by namespace."

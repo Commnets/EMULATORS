@@ -136,6 +136,40 @@ namespace COMMODORE
 		unsigned int _samplingFrequency;
 		double _volumen;
 
+		/** Noise waveform generated as the SID does, using its phase accumulator
+			and the internal 23-bit shift register. */
+		class SIDNoiseSoundWave final : public MCHEmul::SoundWave
+		{
+			public:
+			SIDNoiseSoundWave (unsigned int cF);
+
+			void setTest (bool t);
+
+			virtual void initialize () override;
+
+			virtual void initializeInternalCounters () override;
+
+			virtual void clock (unsigned int nC = 1) override;
+
+			virtual double data () const override;
+
+			protected:
+			virtual void calculateWaveSamplingData () override;
+
+			private:
+			// Implementation...
+			inline void stepShiftRegister ();
+			inline unsigned char outputValue () const;
+
+			private:
+			/** SID 24-bit oscillator phase. */
+			unsigned int _phaseAccumulator;
+			/** 16-bit increment reconstructed from the programmed frequency. */
+			unsigned int _phaseIncrement;
+			/** SID 23-bit noise shift register. */
+			unsigned int _shiftRegister;
+		};
+
 		/** The SID voice is made up of 4 waves and
 			there is special methos to deal with the pulse one. */
 		class Voice final : public MCHEmul::SoundVoice
@@ -249,6 +283,30 @@ namespace COMMODORE
 		/** Fractional chip-cycle accumulator used to decide when a PCM sample must be emitted. */
 		double _counterCyclesPerSample;
 	};
+
+	// ---
+	inline void SoundSIDSimpleWrapper::SIDNoiseSoundWave::stepShiftRegister ()
+	{
+		const unsigned int feedback =
+			((_shiftRegister >> 22) ^ (_shiftRegister >> 17)) & 0x01;
+
+		_shiftRegister =
+			((_shiftRegister << 1) & 0x7fffff) | feedback;
+	}
+
+	// ---
+	inline unsigned char SoundSIDSimpleWrapper::SIDNoiseSoundWave::outputValue () const
+	{
+		return ((unsigned char)
+			(((_shiftRegister & 0x400000) >> 15) |
+			 ((_shiftRegister & 0x100000) >> 14) |
+			 ((_shiftRegister & 0x010000) >> 11) |
+			 ((_shiftRegister & 0x002000) >> 9) |
+			 ((_shiftRegister & 0x000800) >> 8) |
+			 ((_shiftRegister & 0x000080) >> 5) |
+			 ((_shiftRegister & 0x000010) >> 3) |
+			 ((_shiftRegister & 0x000004) >> 2)));
+	}
 }
 
 #endif
