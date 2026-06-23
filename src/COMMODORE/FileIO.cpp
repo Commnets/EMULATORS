@@ -661,27 +661,35 @@ COMMODORE::D64FileData::DirectoryEntriesPerSector
 		
 	COMMODORE::D64FileData::DirectoryEntriesPerSector result;
 	// Each sector has 8 entries of 32 bytes each...
-	bool end = false;
-	for (unsigned char i = 0; i < 8 && !end; i++)
+	for (unsigned char i = 0; i < 8; i++)
 	{
 		COMMODORE::D64FileData::DirectoryEntry dE;
-	
-		dE._fileType = (COMMODORE::D64FileData::DirectoryEntry::FileType) 
-			(_sectorsData [sN].bytes () [(i << 5) + 2].value () & 0x0f); // The LSB Nibble...
-		dE._startTrack = _sectorsData [sN].bytes () [(i << 5) + 3].value ();
-		dE._startSector = _sectorsData [sN].bytes () [(i << 5) + 4].value ();
-		dE._fileSizeBlocks = 
-			((unsigned short) (_sectorsData [sN].bytes () [(i << 5) + 31].value ()) << 8) + 
-			 (unsigned short) (_sectorsData [sN].bytes () [(i << 5) + 30].value ());
-		
+
+		unsigned char fileType =
+			_sectorsData [sN].bytes () [(i << 5) + 2].value ();
+		dE._fileType = (COMMODORE::D64FileData::DirectoryEntry::FileType)
+			(fileType & 0x0f);
+		dE._startTrack =
+			_sectorsData [sN].bytes () [(i << 5) + 3].value ();
+		dE._startSector =
+			_sectorsData [sN].bytes () [(i << 5) + 4].value ();
+		dE._fileSizeBlocks =
+			((unsigned short) (_sectorsData [sN].bytes ()
+				[(i << 5) + 31].value ()) << 8) +
+			 (unsigned short) (_sectorsData [sN].bytes ()
+				[(i << 5) + 30].value ());
 		dE._fileName = "";
 		for (unsigned char j = 0; j < 16; j++)
-			{ unsigned char c = _sectorsData [sN].bytes () [(i << 5) + 5 + j].value ();
-			  dE._fileName += (std::isalnum (c) ? (char) std::toupper (c) : ' '); }
-		dE._fileName = MCHEmul::trim (dE._fileName);
+		{
+			unsigned char c = _sectorsData [sN].bytes ()
+				[(i << 5) + 5 + j].value ();
+			if (c == 0xa0)
+				break;
 
-		// End? or not end and added?...
-		if (!(end = (dE._fileName == "")))
+			dE._fileName += static_cast <char> (c);
+		}
+
+		if (fileType != 0 && !dE._fileName.empty ())
 			result [i] = std::move (dE);
 	}
 
@@ -749,8 +757,8 @@ bool COMMODORE::D64FileTypeIO::canRead (const std::string& fN) const
 	std::streamoff s = (std::streamoff) f.tellg ();
 	f.close ();
 	if (s != (std::streamoff) 0x2ab00 && // 35 tracks...
-		s != (std::streamoff) 0x2c000 && // 40 tracks...
-		s != (std::streamoff) 0x2c800)	 // 42 tracks...
+		s != (std::streamoff) 0x30000 && // 40 tracks...
+		s != (std::streamoff) 0x32200)	 // 42 tracks...
 		return (false); // ...this type of format is very very precissed in the length...
 
 	return (true);
@@ -766,9 +774,11 @@ MCHEmul::FileData* COMMODORE::D64FileTypeIO::readFile (const std::string& fN, bo
 
 	f.seekg (0, std::ios::end);
 	std::streamoff s = (std::streamoff) f.tellg ();
-	unsigned char nT = 35; // The usual number of tracks...
-	if (s == (std::streamoff) 0x2c000) nT = 40; // ...but ir could be different...
-	else if (s == (std::streamoff) 0x2c800) nT = 42;
+	unsigned char nT = 0;
+	if (s == (std::streamoff) 0x2ab00) nT = 35;
+	else if (s == (std::streamoff) 0x30000) nT = 40;
+	else if (s == (std::streamoff) 0x32200) nT = 42;
+	else { f.close (); return (nullptr); }
 	MCHEmul::FileData* result = new COMMODORE::D64FileData (nT);
 	COMMODORE::D64FileData* rD64 = 
 		static_cast <COMMODORE::D64FileData*> (result); // To better manipulation...

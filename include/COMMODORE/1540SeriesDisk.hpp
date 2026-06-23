@@ -32,8 +32,7 @@ namespace COMMODORE
 			const MCHEmul::ASCIIToCodeConverter* cnv, // This class is not the owner of the object but ther Emulation instead!
 			const SerialIOPeripheralSimulation::Definition& dt);
 
-		virtual bool initialize () override
-							{ return (true); }
+		virtual bool initialize () override;
 		virtual bool finalize () override
 							{ return (true); }
 
@@ -49,6 +48,12 @@ namespace COMMODORE
 		virtual MCHEmul::InfoStructure getInfoStructure () const override;
 
 		protected:
+		/** Sets the persistent DOS status returned through channel 15. */
+		void setDOSStatus (
+			unsigned char c, const std::string& m,
+			unsigned char t = 0, unsigned char s = 0);
+		/** Executes the command accumulated through channel 15. */
+		void executeCommandChannel ();
 		/** What every device does, depends on the type of the device and their specific KERNEL. \n
 			So, these methods must be overloaded per tyep of device. \n
 			All they return the status code of the execution. */
@@ -88,13 +93,10 @@ namespace COMMODORE
 			(const std::tuple <const std::string, const std::string>& prm) const;
 		/** When another file is requested. */
 		std::vector <MCHEmul::UByte> buildAnswerToFileCommand
-			(const std::tuple <const std::string, const std::string>& prm) const;
-		/** When to verify whether a file exists or nor is requested. */
-		std::vector <MCHEmul::UByte> buildAnswerToVerifyFile
-			(const std::tuple <const std::string, const std::string>& prm) const;
-		/** To get the intial sector annd track of a file name. \n
-			wildcards might be used to specific the file name (in PETSCII). \n 
-			When the wildcard * is at the beginning the info returned will allow to the first file. */
+			(const std::tuple <const std::string, const std::string>& prm);
+		/** To get the initial sector and track of a file name. \n
+			Wildcards might be used in the file name pattern (in PETSCII). \n
+			The first directory entry matching the pattern is returned. */
 		std::tuple <size_t, size_t> getInitialTrackAndSectorOfFile (const std::string& fN) const;
 		/** To get the data of a file from a sector and track. 
 			It might be recursive, until the end of the file was found. */
@@ -121,22 +123,51 @@ namespace COMMODORE
 			_ANSWERINGCOMMAND,	
 		};
 
-		// Immplementation
-		/** The channel to be used in the current command. */
+		/** State independently kept for every secondary channel. */
+		struct ChannelState final
+		{
+			ChannelState ()
+				: _open (false),
+				  _command (""),
+				  _blockToAnswer { },
+				  _answerPrepared (false),
+				  _answerStatus (0),
+				  _byteFromBlockToAnswerToSend (0),
+				  _clearDOSStatusAfterAnswer (false)
+									{ }
+
+			/** Resets the current transmission, preserving the opened file name. */
+			inline void resetAnswer (unsigned char okResult);
+
+			/** Closes and fully resets the channel. */
+			inline void reset (unsigned char okResult);
+
+			/** Whether this secondary channel is currently open. */
+			bool _open;
+			/** File name, directory request or command received through this channel. */
+			std::string _command;
+			/** Bytes currently being returned through this channel. */
+			std::vector <MCHEmul::UByte> _blockToAnswer;
+			/** Whether the answer has already been built. */
+			bool _answerPrepared;
+			/** Serial status produced while building the answer. */
+			unsigned char _answerStatus;
+			/** Next byte of the answer to send. */
+			size_t _byteFromBlockToAnswerToSend;
+			/** Whether channel 15 must become OK after finishing its current answer. */
+			bool _clearDOSStatusAfterAnswer;
+		};
+
+		// Implementation
+		static const size_t _NUMBERCHANNELS = 16;
+		/** State independently kept for every secondary channel. */
+		std::array <ChannelState, _NUMBERCHANNELS> _channels;
+		/** Secondary channel currently selected on the IEC bus. */
 		unsigned char _commandChannel;
-		/** But also the channel that was used last time. */
-		unsigned char _lastCommandChannel;
-		/** Just to keep the command being transmited to the 1541 unit. */
-		std::string _currentCommand;
 		/** The status of the firmware. */
 		enum DiskFirmwareStatus _firmwareStatus;
-		/** Block of bytes to be sent back to the computer 
-			when a specific command is received. \n
-			The content of the block will depend on the command but is built first time the command
-			has to be answered anytime. */
-		std::vector <MCHEmul::UByte> _blockToAnswer;
-		/** The byte of the previous block that is being answered. */
-		unsigned short _byteFromBlockToAnswerToSend;
+		/** Last persistent DOS status returned through channel 15. */
+		std::vector <MCHEmul::UByte> _lastDOSStatus;
 	};
 
 	// ---
@@ -146,6 +177,24 @@ namespace COMMODORE
 		return (std::make_tuple 
 			((c.find (':') != std::string::npos) ? c.substr (0, c.find (':')) : c, 
 			 (c.find (':') != std::string::npos) ? c.substr (c.find (':') + 1) : ""));
+	}
+
+	// ---
+	inline void Disk1540SeriesSimulation::ChannelState::resetAnswer (unsigned char okResult)
+	{
+		_blockToAnswer = { };
+		_answerPrepared = false;
+		_answerStatus = okResult;
+		_byteFromBlockToAnswerToSend = 0;
+		_clearDOSStatusAfterAnswer = false;
+	}
+
+	// ---
+	inline void Disk1540SeriesSimulation::ChannelState::reset (unsigned char okResult)
+	{
+		_open = false;
+		_command = "";
+		resetAnswer (okResult);
 	}
 }
 
