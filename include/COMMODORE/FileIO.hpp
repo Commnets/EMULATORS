@@ -420,12 +420,20 @@ namespace COMMODORE
 		/** Usually the file data is just for 35 tracks,
 			that is the most common size. */
 		D64FileData (unsigned char nt = 35);
+		D64FileData (const D64FileData& dD);
 
 		/** The track data elements must be removed. */
 		virtual ~D64FileData () override
 							{ for (const auto& tD : _tracksData) delete tD; }
 
 		virtual MCHEmul::ExtendedDataMemoryBlocks asMemoryBlocks () const override;
+
+		/** To validate a track/sector pair within the image geometry. */
+		bool isTrackAndSectorValid (unsigned char t, unsigned char s) const;
+		/** To get the data of a sector. */
+		MCHEmul::UBytes sectorData (unsigned char t, unsigned char s) const;
+		/** To change the data of a sector. */
+		bool setSectorData (unsigned char t, unsigned char s, const MCHEmul::UBytes& data);
 
 		/** To access the entries. \n
 			Track 18 (17 ehen counting from 0) is the directory track always. */
@@ -454,9 +462,7 @@ namespace COMMODORE
 
 		virtual bool canWrite (MCHEmul::FileData* fD) const override
 							{ return (dynamic_cast <D64FileData*> (fD) != nullptr); }
-		/** This type of format can not be written back to any file. */
-		virtual bool writeFile (MCHEmul::FileData* fD, const std::string& fN, bool bE = true) const override
-							{ return (false); }
+		virtual bool writeFile (MCHEmul::FileData* fD, const std::string& fN, bool bE = true) const override;
 	};
 
 	/**	Struct to content the cartrige info...

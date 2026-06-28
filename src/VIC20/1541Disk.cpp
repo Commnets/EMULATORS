@@ -11,7 +11,8 @@ const COMMODORE::SerialIOPeripheralSimulation::Definition
 		MCHEmul::Address ({ 0x9a, 0x00 }, false),	// DFLTO
 		MCHEmul::Address ({ 0x95, 0x00 }, false),	// The address where the the information to be sent is kept...
 		MCHEmul::Address ({ 0x90, 0x00 }, false),	// The address where the status is set...
-		MCHEmul::Address ({ 0x01, 0x40 }, false),	// The address where the result of the "$" command is kept...
+		MCHEmul::Address ({ 0x01, 0x10 }, false),	// The address where the result of the "$" command is kept,
+													// but it might be adjusted at construction time...
 		0x00, 0x80,
 		// Traps...
 		{
@@ -54,11 +55,19 @@ const COMMODORE::SerialIOPeripheralSimulation::Definition
 
 // ---
 VIC20::Disk1541Simulation::Disk1541Simulation (
+		Memory::Configuration cfg,
 		const MCHEmul::ASCIIToCodeConverter* cvs,
 		int id, unsigned char dN)
 	: COMMODORE::Disk1540SeriesSimulation 
 		(id, dN, cvs, VIC20::Disk1541Simulation::_DEFINITION)
-{ 
+{
+	// The position where the dir command works...
+	// might depend on the configuration of the machine...
+	MCHEmul::Address dA = MCHEmul::Address ({ 0x01, 0x12 }, false);
+	if (cfg == VIC20::Memory::Configuration::_NOEXPANDED) dA = MCHEmul::Address ({ 0x01, 0x10 }, false);
+	else if (cfg == VIC20::Memory::Configuration::_3KEXPANSION) dA = MCHEmul::Address ({ 0x01, 0x04 }, false);
+	definition ()._dirAddress = dA;
+
 	// The device number can be either 0x08 - 0x0b...
 	// Notice that this only verified in the debug mode...
 	assert (isDeviceNumberValid (deviceNumber ()));

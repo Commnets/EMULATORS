@@ -138,6 +138,13 @@ bool COMMODORE::SerialIOPeripheralSimulation::executeTrap
 
 			break;
 
+		case _READYTRAP2:
+			{
+				result = executeReady2Trap (cpu, st);
+			}
+
+			break;
+
 		default:
 			{
 				_LOG ("Trap type not supported yet:" + 
@@ -339,6 +346,34 @@ bool COMMODORE::SerialIOPeripheralSimulation::executeReadyTrap (MCHEmul::CPU* cp
 		(F6500::C6500::_NEGATIVEFLAG, false);
 	cpu -> statusRegister ().setBitStatus
 		(F6500::C6500::_ZEROFLAG, false);
+	cpu -> statusRegister ().setBitStatus
+		(F6500::C6500::_IRQFLAG, false);
+
+	return (true);
+}
+
+// ---
+bool COMMODORE::SerialIOPeripheralSimulation::executeReady2Trap (MCHEmul::CPU* cpu, unsigned char& st)
+{
+	if (_status != COMMODORE::SerialIOPeripheralSimulation::Status::_LISTENING &&
+		_status != COMMODORE::SerialIOPeripheralSimulation::Status::_TALKING)
+		return (false); // The trap is not for this element!
+
+	st = getReady (cpu); // Just in case...
+
+	// C264 READY2 replaces the low-level $e2d4 serial line sampler.
+	MCHEmul::UByte data = cpu -> memoryRef () -> value
+		(MCHEmul::Address ({ 0x01, 0x00 }, false));
+	unsigned char dataValue = data.value ();
+	MCHEmul::UByte shiftedData ((unsigned char) (dataValue << 1));
+
+	static_cast <F6500::C6500*> (cpu) -> accumulator ().set ({ shiftedData });
+	cpu -> statusRegister ().setBitStatus
+		(F6500::C6500::_CARRYFLAG, (dataValue & 0x80) != 0);
+	cpu -> statusRegister ().setBitStatus
+		(F6500::C6500::_NEGATIVEFLAG, (shiftedData.value () & 0x80) != 0);
+	cpu -> statusRegister ().setBitStatus
+		(F6500::C6500::_ZEROFLAG, shiftedData == MCHEmul::UByte::_0);
 	cpu -> statusRegister ().setBitStatus
 		(F6500::C6500::_IRQFLAG, false);
 

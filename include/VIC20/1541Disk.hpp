@@ -42,6 +42,7 @@ namespace VIC20
 										!= _POSSIBLEDEVICENUMBERS.end ()); }
 
 		Disk1541Simulation (
+			Memory::Configuration cfg,
 			const MCHEmul::ASCIIToCodeConverter* cvs, 
 			int id = _DEFAULTID, unsigned char dN = _DEFAULTDEVICENUMBER);
 

@@ -142,6 +142,7 @@ namespace COMMODORE
 		virtual bool executeSendByteTrap (MCHEmul::CPU* cpu, unsigned char& st);
 		virtual bool executeReceiveByteTrap (MCHEmul::CPU* cpu, unsigned char& st);
 		virtual bool executeReadyTrap (MCHEmul::CPU* cpu, unsigned char& st);
+		virtual bool executeReady2Trap (MCHEmul::CPU* cpu, unsigned char& st);
 
 		/** What every device does, depends on the type of the device and their specific KERNEL. \n
 			So, these methods must be overloaded per type of peripheral. \n

@@ -54,13 +54,13 @@ namespace VIC20
 		VIA2* via2 ()
 							{ return (dynamic_cast <VIA2*> ((*_chips.find (VIA2::_ID)).second)); }
 
-		private:
-		virtual void processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifier* n) override;
-
 		// Managing memory configuration...
 		/** To get the configuration. */
 		Memory::Configuration configuration () const
 							{ return (static_cast <const VIC20::Memory*> (memory ()) -> configuration ()); }
+
+		private:
+		virtual void processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifier* n) override;
 		/** Adapt the VIC20 to the memory configuration. \n
 			The parameter rs indicates whether to restart the computer. ºn
 			By default it is true. */

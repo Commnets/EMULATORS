@@ -1,0 +1,4 @@
+interface:
+  display_name: "C64 1541 Audit"
+  short_description: "Audit 1541 disk, IEC, DOS, and D64 behavior"
+  default_prompt: "Use $c64-1541-audit to audit Commodore 1541 disk drive simulation, IEC protocol, CBM DOS, D64 layout, or 1540/1541 compatibility."

@@ -37,9 +37,8 @@ namespace COMMODORE
 							{ return (true); }
 
 		virtual bool connectData (MCHEmul::FileData* dt) override;
-		/** No data can be retrieved using this device. */
-		virtual MCHEmul::FileData* retrieveData () const override
-							{ return (nullptr); }
+		/** To retrieve a copy of the connected disk data. */
+		virtual MCHEmul::FileData* retrieveData () const override;
 
 		/** 
 		  * The info included is the one of the parent, plus: \n
@@ -54,6 +53,21 @@ namespace COMMODORE
 			unsigned char t = 0, unsigned char s = 0);
 		/** Executes the command accumulated through channel 15. */
 		void executeCommandChannel ();
+		/** Completes a pending OPEN command once the filename has been received. */
+		void executeOpenChannel ();
+		/** Executes the DOS initialize command. */
+		bool executeInitializeCommand ();
+		/** Executes the DOS validate command, rebuilding the BAM. */
+		bool executeValidateCommand ();
+		/** Executes the DOS scratch command. */
+		bool executeScratchCommand (const std::string& command);
+		/** Executes the DOS rename command. */
+		bool executeRenameCommand (const std::string& command);
+		/** Executes the DOS copy command. */
+		bool executeCopyCommand (const std::string& command);
+		/** Executes the DOS new/format command. */
+		bool executeNewCommand (const std::string& command);
+
 		/** What every device does, depends on the type of the device and their specific KERNEL. \n
 			So, these methods must be overloaded per tyep of device. \n
 			All they return the status code of the execution. */
@@ -77,6 +91,60 @@ namespace COMMODORE
 			It returns a DataMemoryBlock per sector within the track. \n
 			It is supossed that the content is returned clasified pero sector. */
 		MCHEmul::DataMemoryBlocks dataBlocksPerTrack (size_t track) const;
+		/** To validate a track and sector within the current disk data. */
+		bool isTrackAndSectorValid (size_t track, size_t sector) const;
+		/** To get the sector bytes from the current disk data. */
+		MCHEmul::UBytes sectorData (size_t track, size_t sector) const;
+		/** To change the sector bytes and keep the memory block view synchronized. */
+		bool setSectorData (size_t track, size_t sector, const MCHEmul::UBytes& data);
+		/** To rebuild the memory-block view from the current D64 data. */
+		void synchronizeDiskData ();
+
+		/** To describe where the position of an entry is in the disk.
+			This is used by many command in the disk. */
+		struct DirectoryEntryPosition final
+		{
+			DirectoryEntryPosition ()
+				: _track (0), _sector (0), _entry (0), _offset (0)
+							{ }
+
+			DirectoryEntryPosition (size_t t, size_t s, size_t e, size_t o)
+				: _track (t), _sector (s), _entry (e), _offset (o)
+							{ }
+
+			size_t _track, _sector, _entry, _offset;
+		};
+
+		/** Rebuilds the BAM from the directory and file chains. */
+		bool rebuildBAMFromDirectory (bool setStatus);
+		/** To determine how much of the command text is the DOS command name. */
+		size_t commandKeywordLength (const std::string& command) const;
+		/** Extracts the command data after the optional drive prefix. */
+		std::string commandPayload (const std::string& command, bool* validDrive) const;
+		/** Extracts the real file name from an OPEN/LOAD file specification. */
+		std::string fileNameFromFileSpec (const std::string& fileSpec, bool* validDrive = nullptr) const;
+		/** Splits a comma separated command list. */
+		std::vector <std::string> splitCommandList (const std::string& text) const;
+		/** Pads a PETSCII name with $a0 up to 16 bytes. */
+		std::string padPETSCIIName (const std::string& name) const;
+		/** To know whether a DOS name contains wildcards. */
+		bool hasWildcards (const std::string& name) const;
+		/** Finds directory entries matching a name or pattern. */
+		std::vector <DirectoryEntryPosition> findDirectoryEntries
+			(const std::string& pattern, bool wildcards, bool& ok);
+		/** Finds a free directory entry, optionally creating a new directory sector. */
+		bool findFreeDirectoryEntry (DirectoryEntryPosition& pos, bool createDirectorySector);
+		/** Reads/writes a 32-byte directory entry. */
+		bool readDirectoryEntry (const DirectoryEntryPosition& pos, std::vector <MCHEmul::UByte>& entry);
+		bool writeDirectoryEntry (const DirectoryEntryPosition& pos, const std::vector <MCHEmul::UByte>& entry);
+		/** To know whether a file exists by exact name. */
+		bool fileExists (const std::string& name);
+		/** Reads a file chain guarding against illegal/cyclic T/S links. */
+		bool readFilePayloadGuarded (size_t track, size_t sector, std::vector <MCHEmul::UByte>& data);
+		/** Allocates and writes a new file chain. */
+		bool allocateFileChain
+			(const std::vector <MCHEmul::UByte>& data,
+			 size_t& firstTrack, size_t& firstSector, unsigned short& blocks);
 
 		// Methods to build blocks of bytes to answer, depending in the command received...
 		/** To get the name of all files in the directory, 
@@ -128,6 +196,7 @@ namespace COMMODORE
 		{
 			ChannelState ()
 				: _open (false),
+				  _pendingOpen (false),
 				  _command (""),
 				  _blockToAnswer { },
 				  _answerPrepared (false),
@@ -144,6 +213,8 @@ namespace COMMODORE
 
 			/** Whether this secondary channel is currently open. */
 			bool _open;
+			/** Whether this channel has an OPEN command waiting for filename validation. */
+			bool _pendingOpen;
 			/** File name, directory request or command received through this channel. */
 			std::string _command;
 			/** Bytes currently being returned through this channel. */
@@ -193,6 +264,7 @@ namespace COMMODORE
 	inline void Disk1540SeriesSimulation::ChannelState::reset (unsigned char okResult)
 	{
 		_open = false;
+		_pendingOpen = false;
 		_command = "";
 		resetAnswer (okResult);
 	}

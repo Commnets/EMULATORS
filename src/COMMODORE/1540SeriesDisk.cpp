@@ -30,18 +30,18 @@ COMMODORE::Disk1540SeriesSimulation::Disk1540SeriesSimulation
 bool COMMODORE::Disk1540SeriesSimulation::initialize ()
 {
 	// Defined at parent class, but not used any more un this class...
-	_status = COMMODORE::SerialIOPeripheralSimulation::Status::_NOTLISTENING;
+	_status		= COMMODORE::SerialIOPeripheralSimulation::Status::_NOTLISTENING;
 	_statusOpen = COMMODORE::SerialIOPeripheralSimulation::StatusOpen::_CLOSE;
 
-	_lastCPUCycles = 0;
+	_lastCPUCycles	= 0;
 	_commandChannel = 0;
 	_firmwareStatus = DiskFirmwareStatus::_IDLE;
 
 	for (auto& channel : _channels)
 		channel.reset (definition ()._okResult);
-	// The command channel always exists even before an explicit OPEN...
+	// The command channel always exists (an open) even before an explicit OPEN...
 	_channels [15]._open = true;
-
+	// Standard answer when it is checked...
 	setDOSStatus (73, "CBM DOS V2.6 1541");
 
 	return (true);
@@ -51,7 +51,7 @@ bool COMMODORE::Disk1540SeriesSimulation::initialize ()
 bool COMMODORE::Disk1540SeriesSimulation::connectData (MCHEmul::FileData* dt)
 {
 	if ((_d64FileData = dynamic_cast <COMMODORE::D64FileData*> (dt)) == nullptr)
-		return (false); // These formats are the only ones accepted...
+		return (false); // This format are the only ones accepted...
 
 	_data = dt -> asMemoryBlocks ();
 
@@ -59,9 +59,17 @@ bool COMMODORE::Disk1540SeriesSimulation::connectData (MCHEmul::FileData* dt)
 }
 
 // ---
+MCHEmul::FileData* COMMODORE::Disk1540SeriesSimulation::retrieveData () const
+{
+	return (_d64FileData == nullptr
+		? nullptr
+		: new COMMODORE::D64FileData (*_d64FileData));
+}
+
+// ---
 MCHEmul::InfoStructure COMMODORE::Disk1540SeriesSimulation::getInfoStructure () const
 {
-	MCHEmul::InfoStructure result = 
+	MCHEmul::InfoStructure result =
 		std::move (COMMODORE::SerialIOPeripheralSimulation::getInfoStructure ());
 
 	result.add ("DATANAME", (_data._name == "") ? "-" : _data._name);
@@ -71,19 +79,19 @@ MCHEmul::InfoStructure COMMODORE::Disk1540SeriesSimulation::getInfoStructure () 
 	for (size_t i = 0; i < (size_t) _data._data.size (); i++)
 	{
 		MCHEmul::InfoStructure dSA;
-
 		dSA.add ("ID",		i); // The id...
 		dSA.add ("SIZE",	_data._data [i].size ());
 		if (_data._data [i].bytes ().size () > 256)
 		{
-			dSA.add ("FBYTES", _data._data [i].bytes ()); // All bytes...
-			dSA.add ("BYTES", std::vector <MCHEmul::UByte> 
-				(_data._data [i].bytes ().begin (), _data._data [i].bytes ().begin () + 256));
+			dSA.add ("FBYTES",	_data._data [i].bytes ()); // All bytes...
+			dSA.add ("BYTES",	std::vector <MCHEmul::UByte>
+				(_data._data [i].bytes ().begin (),
+				 _data._data [i].bytes ().begin () + 256));
 		}
 		else // This way because the type of method used varies...
 			dSA.add ("BYTES", _data._data [i].bytes ());
 
-		dS.add (MCHEmul::fixLenStr (std::to_string (i), 4, true, MCHEmul::_CEROS), 
+		dS.add (MCHEmul::fixLenStr (std::to_string (i), 4, true, MCHEmul::_CEROS),
 			std::move (dSA));
 	}
 
@@ -114,30 +122,62 @@ void COMMODORE::Disk1540SeriesSimulation::setDOSStatus
 void COMMODORE::Disk1540SeriesSimulation::executeCommandChannel ()
 {
 	ChannelState& channel = _channels [15];
-
 	while (!channel._command.empty () &&
 		   static_cast <unsigned char> (channel._command.back ()) == 0x0d)
-		channel._command.pop_back ();
+		channel._command.pop_back (); // Take the non usefull characters from back to front...
+	// An empty command must preserve the previous DOS status...
 	if (channel._command.empty ())
-		return; // An empty command must preserve the previous DOS status...
+		return;
 
-	switch (channel._command [0])
+	// The command is determined by the first character...
+	char command = channel._command [0];
+	if (command >= 'a' && command <= 'z')
+		command = (char) (command - ('a' - 'A'));
+	switch (command)
 	{
 		case 'N':
-		case 'C':
-		case 'R':
-		case 'S':
-		case 'I':
-		case 'V':
 			{
-				_LOG ("Disk1540SeriesSimulation: Command " +
-					channel._command + " is not implemented yet.");
-
-				setDOSStatus (3, "UNIMPLEMENTED");
+				executeNewCommand (channel._command);
 			}
 
 			break;
 
+		case 'C':
+			{
+				executeCopyCommand (channel._command);
+			}
+
+			break;
+
+		case 'R':
+			{
+				executeRenameCommand (channel._command);
+			}
+
+			break;
+
+		case 'S':
+			{
+				executeScratchCommand (channel._command);
+			}
+
+			break;
+
+		case 'I':
+			{
+				executeInitializeCommand ();
+			}
+
+			break;
+
+		case 'V':
+			{
+				executeValidateCommand ();
+			}
+
+			break;
+
+		// No supported...anycase...
 		default:
 			{
 				setDOSStatus (30, "SYNTAX ERROR");
@@ -148,6 +188,1221 @@ void COMMODORE::Disk1540SeriesSimulation::executeCommandChannel ()
 
 	channel._command = "";
 	channel.resetAnswer (definition ()._okResult);
+}
+
+// ---
+void COMMODORE::Disk1540SeriesSimulation::executeOpenChannel ()
+{
+	static const unsigned char _SERIALERROR = 0x02;
+	static const unsigned char _ENDOFFILE = 0x40;
+	static const unsigned char _READERROR = _SERIALERROR | _ENDOFFILE;
+
+	ChannelState& channel = _channels [_commandChannel];
+	if (!channel._pendingOpen)
+		return;
+
+	channel._pendingOpen = false;
+
+	if (_commandChannel < 2 || _commandChannel > 14)
+		return;
+
+	bool validDrive = true;
+	std::string fileName = fileNameFromFileSpec (channel._command, &validDrive);
+	if (!validDrive || fileName.empty ())
+	{
+		setDOSStatus (34, "SYNTAX ERROR");
+
+		channel._answerPrepared = true;
+		channel._answerStatus = _READERROR;
+
+		return;
+	}
+
+	channel._blockToAnswer =
+		std::move (buildAnswerToFileCommand
+			(std::make_tuple (fileName, std::string (""))));
+	channel._answerPrepared = true;
+	channel._answerStatus =
+		channel._blockToAnswer.empty () ? _READERROR : definition ()._okResult;
+	channel._byteFromBlockToAnswerToSend = 0;
+}
+
+// ---
+bool COMMODORE::Disk1540SeriesSimulation::executeInitializeCommand ()
+{
+	if (_d64FileData == nullptr)
+	{
+		setDOSStatus (74, "DRIVE NOT READY");
+
+		return (false);
+	}
+
+	synchronizeDiskData ();
+
+	for (auto& channel : _channels)
+		channel.reset (definition ()._okResult);
+	_channels [15]._open = true;
+
+	setDOSStatus (0, " OK");
+
+	return (true);
+}
+
+// ---
+bool COMMODORE::Disk1540SeriesSimulation::executeValidateCommand ()
+{
+	return (rebuildBAMFromDirectory (true));
+}
+
+// ---
+bool COMMODORE::Disk1540SeriesSimulation::rebuildBAMFromDirectory (bool setStatus)
+{
+	static const size_t _BAMTRACK	= 18;
+	static const size_t _BAMSECTOR	= 0;
+	static const size_t _BAMENTRIES	= 35;
+
+	if (_d64FileData == nullptr)
+	{
+		setDOSStatus (74, "DRIVE NOT READY");
+
+		return (false);
+	}
+
+	if (!isTrackAndSectorValid (_BAMTRACK, _BAMSECTOR))
+	{
+		setDOSStatus (74, "DRIVE NOT READY");
+
+		return (false);
+	}
+
+	std::vector <std::vector <bool>> used
+		((size_t) _d64FileData -> _numberTracks + 1);
+	for (size_t i = 1; i <= (size_t) _d64FileData -> _numberTracks; i++)
+		used [i] = std::vector <bool>
+			(_d64FileData -> _tracksData [i - 1] -> _trackInfo._sectors, false);
+
+	auto markSectorAsUsed = [this, &used] (size_t track, size_t sector) -> bool
+	{
+		if (!isTrackAndSectorValid (track, sector))
+		{
+			setDOSStatus (66, "ILLEGAL TRACK OR SECTOR",
+				(unsigned char) track, (unsigned char) sector);
+
+			return (false);
+		}
+
+		used [track][sector] = true;
+
+		return (true);
+	};
+
+	auto markFileChainAsUsed = [this, &markSectorAsUsed]
+		(size_t track, size_t sector) -> bool
+	{
+		std::vector <size_t> visitedTracks;
+		std::vector <size_t> visitedSectors;
+		while (track != 0)
+		{
+			if (!isTrackAndSectorValid (track, sector))
+			{
+				setDOSStatus (66, "ILLEGAL TRACK OR SECTOR",
+					(unsigned char) track, (unsigned char) sector);
+
+				return (false);
+			}
+
+			bool visited = false;
+			for (size_t i = 0; i < visitedTracks.size () && !visited; i++)
+				visited =
+					(visitedTracks [i] == track && visitedSectors [i] == sector);
+			if (visited)
+			{
+				setDOSStatus (66, "ILLEGAL TRACK OR SECTOR",
+					(unsigned char) track, (unsigned char) sector);
+
+				return (false);
+			}
+
+			visitedTracks.emplace_back (track);
+			visitedSectors.emplace_back (sector);
+
+			if (!markSectorAsUsed (track, sector))
+				return (false);
+
+			std::vector <MCHEmul::UByte> sD = sectorData (track, sector).bytes ();
+			if (sD.size () != 256)
+			{
+				setDOSStatus (66, "ILLEGAL TRACK OR SECTOR",
+					(unsigned char) track, (unsigned char) sector);
+
+				return (false);
+			}
+
+			track = (size_t) sD [0].value ();
+			sector = (size_t) sD [1].value ();
+		}
+
+		return (true);
+	};
+
+	std::vector <MCHEmul::UByte> bam =
+		sectorData (_BAMTRACK, _BAMSECTOR).bytes ();
+	if (bam.size () != 256)
+	{
+		setDOSStatus (66, "ILLEGAL TRACK OR SECTOR",
+			(unsigned char) _BAMTRACK, (unsigned char) _BAMSECTOR);
+
+		return (false);
+	}
+
+	if (!markSectorAsUsed (_BAMTRACK, _BAMSECTOR))
+		return (false);
+
+	size_t dirTrack = (size_t) bam [0].value ();
+	size_t dirSector = (size_t) bam [1].value ();
+	std::vector <size_t> visitedDirTracks;
+	std::vector <size_t> visitedDirSectors;
+	while (dirTrack != 0)
+	{
+		if (!isTrackAndSectorValid (dirTrack, dirSector))
+		{
+			setDOSStatus (66, "ILLEGAL TRACK OR SECTOR",
+				(unsigned char) dirTrack, (unsigned char) dirSector);
+
+			return (false);
+		}
+
+		bool visited = false;
+		for (size_t i = 0; i < visitedDirTracks.size () && !visited; i++)
+			visited =
+				(visitedDirTracks [i] == dirTrack &&
+				 visitedDirSectors [i] == dirSector);
+		if (visited)
+		{
+			setDOSStatus (66, "ILLEGAL TRACK OR SECTOR",
+				(unsigned char) dirTrack, (unsigned char) dirSector);
+
+			return (false);
+		}
+
+		visitedDirTracks.emplace_back (dirTrack);
+		visitedDirSectors.emplace_back (dirSector);
+
+		if (!markSectorAsUsed (dirTrack, dirSector))
+			return (false);
+
+		std::vector <MCHEmul::UByte> dir =
+			sectorData (dirTrack, dirSector).bytes ();
+		if (dir.size () != 256)
+		{
+			setDOSStatus (66, "ILLEGAL TRACK OR SECTOR",
+				(unsigned char) dirTrack, (unsigned char) dirSector);
+
+			return (false);
+		}
+
+		for (size_t i = 0; i < 8; i++)
+		{
+			size_t pos = (i << 5) + 0x02;
+			if (dir [pos].value () == 0x00)
+				continue;
+
+			size_t fileTrack = (size_t) dir [pos + 1].value ();
+			size_t fileSector = (size_t) dir [pos + 2].value ();
+			if (fileTrack != 0 &&
+				!markFileChainAsUsed (fileTrack, fileSector))
+				return (false);
+		}
+
+		dirTrack = (size_t) dir [0].value ();
+		dirSector = (size_t) dir [1].value ();
+	}
+
+	size_t maxBAMTrack =
+		((size_t) _d64FileData -> _numberTracks < _BAMENTRIES)
+			? (size_t) _d64FileData -> _numberTracks
+			: _BAMENTRIES;
+	for (size_t track = 1; track <= maxBAMTrack; track++)
+	{
+		size_t bamEntry = 0x04 + ((track - 1) << 2);
+		if ((bamEntry + 3) >= bam.size ())
+		{
+			setDOSStatus (66, "ILLEGAL TRACK OR SECTOR",
+				(unsigned char) _BAMTRACK, (unsigned char) _BAMSECTOR);
+
+			return (false);
+		}
+
+		bam [bamEntry] = MCHEmul::UByte::_0;
+		bam [bamEntry + 1] = MCHEmul::UByte::_0;
+		bam [bamEntry + 2] = MCHEmul::UByte::_0;
+		bam [bamEntry + 3] = MCHEmul::UByte::_0;
+
+		unsigned char freeSectors = 0;
+		for (size_t sector = 0; sector < used [track].size (); sector++)
+		{
+			if (used [track][sector])
+				continue;
+
+			freeSectors++;
+			bam [bamEntry + 1 + (sector >> 3)].setBit (sector & 0x07, true);
+		}
+
+		bam [bamEntry] = MCHEmul::UByte (freeSectors);
+	}
+
+	if (!setSectorData (_BAMTRACK, _BAMSECTOR, MCHEmul::UBytes (bam)))
+	{
+		setDOSStatus (66, "ILLEGAL TRACK OR SECTOR",
+			(unsigned char) _BAMTRACK, (unsigned char) _BAMSECTOR);
+
+		return (false);
+	}
+
+	if (setStatus)
+		setDOSStatus (0, " OK");
+
+	return (true);
+}
+
+// ---
+size_t COMMODORE::Disk1540SeriesSimulation::commandKeywordLength
+	(const std::string& command) const
+{
+	std::string uCommand = command;
+	for (auto& i : uCommand)
+		if (i >= 'a' && i <= 'z')
+			i = (char) (i - ('a' - 'A'));
+
+	static const std::vector <std::string> _COMMANDS =
+		{ "INITIALIZE", "VALIDATE", "SCRATCH", "RENAME", "COPY", "NEW" };
+	for (const auto& i : _COMMANDS)
+		if (uCommand.length () >= i.length () &&
+			uCommand.substr (0, i.length ()) == i)
+			return (i.length ());
+
+	return (command.empty () ? 0 : 1);
+}
+
+// ---
+std::string COMMODORE::Disk1540SeriesSimulation::commandPayload
+	(const std::string& command, bool* validDrive) const
+{
+	if (validDrive != nullptr)
+		*validDrive = true;
+
+	size_t commandLength = commandKeywordLength (command);
+	if (command.length () <= commandLength)
+		return ("");
+
+	std::string result = command.substr (commandLength);
+	if (result.length () >= 2 && result [1] == ':')
+	{
+		if (validDrive != nullptr)
+			*validDrive = (result [0] == '0');
+
+		return (result.substr (2));
+	}
+
+	if (!result.empty () && result [0] == ':')
+		return (result.substr (1));
+
+	return (result);
+}
+
+// ---
+std::string COMMODORE::Disk1540SeriesSimulation::fileNameFromFileSpec
+	(const std::string& fileSpec, bool* validDrive) const
+{
+	if (validDrive != nullptr)
+		*validDrive = true;
+
+	std::string result = MCHEmul::trim (fileSpec);
+
+	if (!result.empty () && result [0] == ':')
+		result = result.substr (1);
+
+	if (result.length () >= 2 && result [1] == ':')
+	{
+		if (validDrive != nullptr)
+			*validDrive = (result [0] == '0');
+
+		result = result.substr (2);
+	}
+
+	size_t commaPos = result.find (',');
+	if (commaPos != std::string::npos)
+		result = result.substr (0, commaPos);
+
+	return (MCHEmul::trim (result));
+}
+
+// ---
+std::vector <std::string> COMMODORE::Disk1540SeriesSimulation::splitCommandList
+	(const std::string& text) const
+{
+	std::vector <std::string> result;
+
+	size_t p = 0;
+	while (p <= text.length ())
+	{
+		size_t nP = text.find (',', p);
+		if (nP == std::string::npos)
+		{
+			result.emplace_back (MCHEmul::trim (text.substr (p)));
+			break;
+		}
+
+		result.emplace_back (MCHEmul::trim (text.substr (p, nP - p)));
+		p = nP + 1;
+	}
+
+	return (result);
+}
+
+// ---
+std::string COMMODORE::Disk1540SeriesSimulation::padPETSCIIName
+	(const std::string& name) const
+{
+	std::string result = name.substr (0, (name.length () < 16) ? name.length () : 16);
+	while (result.length () < 16)
+		result += (char) 0xa0;
+
+	return (result);
+}
+
+// ---
+bool COMMODORE::Disk1540SeriesSimulation::hasWildcards (const std::string& name) const
+{
+	return (name.find ('*') != std::string::npos ||
+		name.find ('?') != std::string::npos);
+}
+
+// ---
+std::vector <COMMODORE::Disk1540SeriesSimulation::DirectoryEntryPosition>
+	COMMODORE::Disk1540SeriesSimulation::findDirectoryEntries
+		(const std::string& pattern, bool wildcards, bool& ok)
+{
+	std::vector <DirectoryEntryPosition> result;
+	ok = false;
+
+	if (_d64FileData == nullptr)
+	{
+		setDOSStatus (74, "DRIVE NOT READY");
+
+		return (result);
+	}
+
+	std::vector <MCHEmul::UByte> bam = sectorData (18, 0).bytes ();
+	if (bam.size () != 256)
+	{
+		setDOSStatus (66, "ILLEGAL TRACK OR SECTOR", 18, 0);
+
+		return (result);
+	}
+
+	size_t dirTrack = (size_t) bam [0].value ();
+	size_t dirSector = (size_t) bam [1].value ();
+	std::vector <size_t> visitedTracks;
+	std::vector <size_t> visitedSectors;
+	while (dirTrack != 0)
+	{
+		if (!isTrackAndSectorValid (dirTrack, dirSector))
+		{
+			setDOSStatus (66, "ILLEGAL TRACK OR SECTOR",
+				(unsigned char) dirTrack, (unsigned char) dirSector);
+
+			return (result);
+		}
+
+		bool visited = false;
+		for (size_t i = 0; i < visitedTracks.size () && !visited; i++)
+			visited =
+				(visitedTracks [i] == dirTrack && visitedSectors [i] == dirSector);
+		if (visited)
+		{
+			setDOSStatus (66, "ILLEGAL TRACK OR SECTOR",
+				(unsigned char) dirTrack, (unsigned char) dirSector);
+
+			return (result);
+		}
+
+		visitedTracks.emplace_back (dirTrack);
+		visitedSectors.emplace_back (dirSector);
+
+		std::vector <MCHEmul::UByte> dir = sectorData (dirTrack, dirSector).bytes ();
+		if (dir.size () != 256)
+		{
+			setDOSStatus (66, "ILLEGAL TRACK OR SECTOR",
+				(unsigned char) dirTrack, (unsigned char) dirSector);
+
+			return (result);
+		}
+
+		for (size_t i = 0; i < 8; i++)
+		{
+			size_t pos = (i << 5) + 0x02;
+			if (dir [pos].value () == 0x00)
+				continue;
+
+			std::string name = "";
+			for (size_t j = 0; j < 16; j++)
+			{
+				unsigned char c = dir [pos + 3 + j].value ();
+				if (c == 0xa0)
+					break;
+
+				name += (char) c;
+			}
+
+			if (name.empty ())
+				continue;
+
+			if ((wildcards && nameMatchesWithPattern (name, pattern)) ||
+				(!wildcards && name == pattern))
+				result.emplace_back (dirTrack, dirSector, i, pos);
+		}
+
+		dirTrack = (size_t) dir [0].value ();
+		dirSector = (size_t) dir [1].value ();
+	}
+
+	ok = true;
+
+	return (result);
+}
+
+// ---
+bool COMMODORE::Disk1540SeriesSimulation::findFreeDirectoryEntry
+	(DirectoryEntryPosition& pos, bool createDirectorySector)
+{
+	std::vector <MCHEmul::UByte> bam = sectorData (18, 0).bytes ();
+	if (bam.size () != 256)
+	{
+		setDOSStatus (66, "ILLEGAL TRACK OR SECTOR", 18, 0);
+
+		return (false);
+	}
+
+	size_t dirTrack = (size_t) bam [0].value ();
+	size_t dirSector = (size_t) bam [1].value ();
+	size_t lastTrack = 0, lastSector = 0;
+	std::vector <size_t> visitedTracks;
+	std::vector <size_t> visitedSectors;
+	while (dirTrack != 0)
+	{
+		if (!isTrackAndSectorValid (dirTrack, dirSector))
+		{
+			setDOSStatus (66, "ILLEGAL TRACK OR SECTOR",
+				(unsigned char) dirTrack, (unsigned char) dirSector);
+
+			return (false);
+		}
+
+		bool visited = false;
+		for (size_t i = 0; i < visitedTracks.size () && !visited; i++)
+			visited =
+				(visitedTracks [i] == dirTrack && visitedSectors [i] == dirSector);
+		if (visited)
+		{
+			setDOSStatus (66, "ILLEGAL TRACK OR SECTOR",
+				(unsigned char) dirTrack, (unsigned char) dirSector);
+
+			return (false);
+		}
+
+		visitedTracks.emplace_back (dirTrack);
+		visitedSectors.emplace_back (dirSector);
+
+		std::vector <MCHEmul::UByte> dir = sectorData (dirTrack, dirSector).bytes ();
+		if (dir.size () != 256)
+		{
+			setDOSStatus (66, "ILLEGAL TRACK OR SECTOR",
+				(unsigned char) dirTrack, (unsigned char) dirSector);
+
+			return (false);
+		}
+
+		for (size_t i = 0; i < 8; i++)
+		{
+			size_t offset = (i << 5) + 0x02;
+			if (dir [offset].value () == 0x00)
+			{
+				pos = DirectoryEntryPosition (dirTrack, dirSector, i, offset);
+
+				return (true);
+			}
+		}
+
+		lastTrack = dirTrack;
+		lastSector = dirSector;
+		dirTrack = (size_t) dir [0].value ();
+		dirSector = (size_t) dir [1].value ();
+	}
+
+	if (!createDirectorySector || lastTrack == 0)
+	{
+		setDOSStatus (72, "DISK FULL");
+
+		return (false);
+	}
+
+	size_t newSector = 0;
+	size_t bamEntry = 0x04 + ((18 - 1) << 2);
+	for (size_t sector = 1;
+			sector < _d64FileData -> _tracksData [17] -> _trackInfo._sectors &&
+			newSector == 0; sector++)
+	{
+		if (bam [bamEntry + 1 + (sector >> 3)].bit (sector & 0x07))
+			newSector = sector;
+	}
+
+	if (newSector == 0)
+	{
+		setDOSStatus (72, "DISK FULL");
+
+		return (false);
+	}
+
+	std::vector <MCHEmul::UByte> lastDir = sectorData (lastTrack, lastSector).bytes ();
+	if (lastDir.size () != 256)
+	{
+		setDOSStatus (66, "ILLEGAL TRACK OR SECTOR",
+			(unsigned char) lastTrack, (unsigned char) lastSector);
+
+		return (false);
+	}
+
+	lastDir [0] = MCHEmul::UByte (18);
+	lastDir [1] = MCHEmul::UByte ((unsigned char) newSector);
+	if (!setSectorData (lastTrack, lastSector, MCHEmul::UBytes (lastDir)))
+		return (false);
+
+	std::vector <MCHEmul::UByte> newDir (256, MCHEmul::UByte::_0);
+	newDir [0] = MCHEmul::UByte::_0;
+	newDir [1] = MCHEmul::UByte::_FF;
+	if (!setSectorData (18, newSector, MCHEmul::UBytes (newDir)))
+		return (false);
+
+	pos = DirectoryEntryPosition (18, newSector, 0, 0x02);
+
+	return (true);
+}
+
+// ---
+bool COMMODORE::Disk1540SeriesSimulation::readDirectoryEntry
+	(const DirectoryEntryPosition& pos, std::vector <MCHEmul::UByte>& entry)
+{
+	entry = { };
+	std::vector <MCHEmul::UByte> dir = sectorData (pos._track, pos._sector).bytes ();
+	if (dir.size () != 256 || (pos._offset + 31) >= dir.size ())
+	{
+		setDOSStatus (66, "ILLEGAL TRACK OR SECTOR",
+			(unsigned char) pos._track, (unsigned char) pos._sector);
+
+		return (false);
+	}
+
+	entry.insert (entry.end (), dir.begin () + pos._offset,
+		dir.begin () + pos._offset + 32);
+
+	return (true);
+}
+
+// ---
+bool COMMODORE::Disk1540SeriesSimulation::writeDirectoryEntry
+	(const DirectoryEntryPosition& pos, const std::vector <MCHEmul::UByte>& entry)
+{
+	if (entry.size () != 32)
+	{
+		setDOSStatus (30, "SYNTAX ERROR");
+
+		return (false);
+	}
+
+	std::vector <MCHEmul::UByte> dir = sectorData (pos._track, pos._sector).bytes ();
+	if (dir.size () != 256 || (pos._offset + 31) >= dir.size ())
+	{
+		setDOSStatus (66, "ILLEGAL TRACK OR SECTOR",
+			(unsigned char) pos._track, (unsigned char) pos._sector);
+
+		return (false);
+	}
+
+	for (size_t i = 0; i < 32; i++)
+		dir [pos._offset + i] = entry [i];
+
+	return (setSectorData (pos._track, pos._sector, MCHEmul::UBytes (dir)));
+}
+
+// ---
+bool COMMODORE::Disk1540SeriesSimulation::fileExists (const std::string& name)
+{
+	bool ok = false;
+	std::vector <DirectoryEntryPosition> entries =
+		findDirectoryEntries (name, false, ok);
+
+	return (ok && !entries.empty ());
+}
+
+// ---
+bool COMMODORE::Disk1540SeriesSimulation::readFilePayloadGuarded
+	(size_t track, size_t sector, std::vector <MCHEmul::UByte>& data)
+{
+	data = { };
+	std::vector <size_t> visitedTracks;
+	std::vector <size_t> visitedSectors;
+	while (track != 0)
+	{
+		if (!isTrackAndSectorValid (track, sector))
+		{
+			setDOSStatus (66, "ILLEGAL TRACK OR SECTOR",
+				(unsigned char) track, (unsigned char) sector);
+
+			return (false);
+		}
+
+		bool visited = false;
+		for (size_t i = 0; i < visitedTracks.size () && !visited; i++)
+			visited =
+				(visitedTracks [i] == track && visitedSectors [i] == sector);
+		if (visited)
+		{
+			setDOSStatus (66, "ILLEGAL TRACK OR SECTOR",
+				(unsigned char) track, (unsigned char) sector);
+
+			return (false);
+		}
+
+		visitedTracks.emplace_back (track);
+		visitedSectors.emplace_back (sector);
+
+		std::vector <MCHEmul::UByte> sectorBytes = sectorData (track, sector).bytes ();
+		if (sectorBytes.size () != 256)
+		{
+			setDOSStatus (66, "ILLEGAL TRACK OR SECTOR",
+				(unsigned char) track, (unsigned char) sector);
+
+			return (false);
+		}
+
+		if (sectorBytes [0].value () == 0x00)
+		{
+			size_t lastByte = (size_t) sectorBytes [1].value ();
+			if (lastByte == 0)
+			{
+				setDOSStatus (66, "ILLEGAL TRACK OR SECTOR",
+					(unsigned char) track, (unsigned char) sector);
+
+				return (false);
+			}
+
+			if (lastByte >= 2)
+				data.insert (data.end (),
+					sectorBytes.begin () + 2, sectorBytes.begin () + lastByte + 1);
+
+			track = 0;
+		}
+		else
+		{
+			data.insert (data.end (), sectorBytes.begin () + 2, sectorBytes.end ());
+			track = (size_t) sectorBytes [0].value ();
+			sector = (size_t) sectorBytes [1].value ();
+		}
+	}
+
+	return (true);
+}
+
+// ---
+bool COMMODORE::Disk1540SeriesSimulation::allocateFileChain
+	(const std::vector <MCHEmul::UByte>& data,
+	 size_t& firstTrack, size_t& firstSector, unsigned short& blocks)
+{
+	firstTrack = firstSector = 0;
+	blocks = 0;
+
+	std::vector <MCHEmul::UByte> bam = sectorData (18, 0).bytes ();
+	if (bam.size () != 256)
+	{
+		setDOSStatus (66, "ILLEGAL TRACK OR SECTOR", 18, 0);
+
+		return (false);
+	}
+
+	size_t neededBlocks = data.empty () ? 1 : ((data.size () + 253) / 254);
+	std::vector <size_t> tracks;
+	std::vector <size_t> sectors;
+	size_t maxTrack =
+		((size_t) _d64FileData -> _numberTracks < 35)
+			? (size_t) _d64FileData -> _numberTracks
+			: 35;
+	for (size_t track = 1; track <= maxTrack && tracks.size () < neededBlocks; track++)
+	{
+		if (track == 18)
+			continue;
+
+		size_t bamEntry = 0x04 + ((track - 1) << 2);
+		for (size_t sector = 0;
+				sector < _d64FileData -> _tracksData [track - 1] -> _trackInfo._sectors &&
+				tracks.size () < neededBlocks; sector++)
+		{
+			if (bam [bamEntry + 1 + (sector >> 3)].bit (sector & 0x07))
+			{
+				tracks.emplace_back (track);
+				sectors.emplace_back (sector);
+			}
+		}
+	}
+
+	if (tracks.size () < neededBlocks)
+	{
+		setDOSStatus (72, "DISK FULL");
+
+		return (false);
+	}
+
+	size_t offset = 0;
+	for (size_t i = 0; i < neededBlocks; i++)
+	{
+		std::vector <MCHEmul::UByte> sectorBytes (256, MCHEmul::UByte::_0);
+		if (i == (neededBlocks - 1))
+		{
+			size_t bytesToCopy = data.size () - offset;
+			size_t lastByte = bytesToCopy + 1;
+			sectorBytes [0] = MCHEmul::UByte::_0;
+			sectorBytes [1] = MCHEmul::UByte ((unsigned char) lastByte);
+			for (size_t j = 0; j < bytesToCopy; j++)
+				sectorBytes [2 + j] = data [offset + j];
+		}
+		else
+		{
+			sectorBytes [0] = MCHEmul::UByte ((unsigned char) tracks [i + 1]);
+			sectorBytes [1] = MCHEmul::UByte ((unsigned char) sectors [i + 1]);
+			for (size_t j = 0; j < 254; j++)
+				sectorBytes [2 + j] = data [offset + j];
+			offset += 254;
+		}
+
+		if (!_d64FileData -> setSectorData
+				((unsigned char) tracks [i], (unsigned char) sectors [i],
+				 MCHEmul::UBytes (sectorBytes)))
+		{
+			setDOSStatus (66, "ILLEGAL TRACK OR SECTOR",
+				(unsigned char) tracks [i], (unsigned char) sectors [i]);
+
+			return (false);
+		}
+	}
+
+	firstTrack = tracks [0];
+	firstSector = sectors [0];
+	blocks = (unsigned short) neededBlocks;
+	synchronizeDiskData ();
+
+	return (true);
+}
+
+// ---
+bool COMMODORE::Disk1540SeriesSimulation::executeScratchCommand (const std::string& command)
+{
+	if (_d64FileData == nullptr)
+	{
+		setDOSStatus (74, "DRIVE NOT READY");
+
+		return (false);
+	}
+
+	bool validDrive = true;
+	std::string payload = MCHEmul::trim (commandPayload (command, &validDrive));
+	if (!validDrive)
+	{
+		setDOSStatus (74, "DRIVE NOT READY");
+
+		return (false);
+	}
+
+	std::vector <std::string> patterns = splitCommandList (payload);
+	if (patterns.empty ())
+	{
+		setDOSStatus (30, "SYNTAX ERROR");
+
+		return (false);
+	}
+
+	std::vector <DirectoryEntryPosition> entries;
+	for (const auto& pattern : patterns)
+	{
+		if (pattern.empty ())
+		{
+			setDOSStatus (30, "SYNTAX ERROR");
+
+			return (false);
+		}
+
+		bool ok = false;
+		std::vector <DirectoryEntryPosition> matches =
+			findDirectoryEntries (pattern, true, ok);
+		if (!ok)
+			return (false);
+
+		for (const auto& match : matches)
+		{
+			bool alreadyAdded = false;
+			for (const auto& entry : entries)
+				alreadyAdded =
+					alreadyAdded ||
+					(entry._track == match._track &&
+					 entry._sector == match._sector &&
+					 entry._entry == match._entry);
+			if (!alreadyAdded)
+				entries.emplace_back (match);
+		}
+	}
+
+	for (const auto& pos : entries)
+	{
+		std::vector <MCHEmul::UByte> entry;
+		if (!readDirectoryEntry (pos, entry))
+			return (false);
+
+		if ((entry [0].value () & (1 << 6)) != 0)
+		{
+			setDOSStatus (26, "WRITE PROTECT ON");
+
+			return (false);
+		}
+	}
+
+	for (const auto& pos : entries)
+	{
+		std::vector <MCHEmul::UByte> entry;
+		if (!readDirectoryEntry (pos, entry))
+			return (false);
+
+		entry [0] = MCHEmul::UByte::_0;
+		if (!writeDirectoryEntry (pos, entry))
+			return (false);
+	}
+
+	if (!rebuildBAMFromDirectory (false))
+		return (false);
+
+	setDOSStatus (1, "FILES SCRATCHED", (unsigned char) entries.size (), 0);
+
+	return (true);
+}
+
+// ---
+bool COMMODORE::Disk1540SeriesSimulation::executeRenameCommand (const std::string& command)
+{
+	if (_d64FileData == nullptr)
+	{
+		setDOSStatus (74, "DRIVE NOT READY");
+
+		return (false);
+	}
+
+	bool validDrive = true;
+	std::string payload = MCHEmul::trim (commandPayload (command, &validDrive));
+	if (!validDrive)
+	{
+		setDOSStatus (74, "DRIVE NOT READY");
+
+		return (false);
+	}
+
+	size_t eq = payload.find ('=');
+	if (eq == std::string::npos)
+	{
+		setDOSStatus (30, "SYNTAX ERROR");
+
+		return (false);
+	}
+
+	std::string newName = MCHEmul::trim (payload.substr (0, eq));
+	std::string oldName = MCHEmul::trim (payload.substr (eq + 1));
+	if (newName.empty () || oldName.empty () || hasWildcards (newName))
+	{
+		setDOSStatus (30, "SYNTAX ERROR");
+
+		return (false);
+	}
+
+	bool ok = false;
+	std::vector <DirectoryEntryPosition> oldEntries =
+		findDirectoryEntries (oldName, false, ok);
+	if (!ok)
+		return (false);
+	if (oldEntries.empty ())
+	{
+		setDOSStatus (62, "FILE NOT FOUND");
+
+		return (false);
+	}
+
+	if (fileExists (newName))
+	{
+		setDOSStatus (63, "FILE EXISTS");
+
+		return (false);
+	}
+
+	std::vector <MCHEmul::UByte> entry;
+	if (!readDirectoryEntry (oldEntries [0], entry))
+		return (false);
+
+	std::string paddedName = padPETSCIIName (newName);
+	for (size_t i = 0; i < 16; i++)
+		entry [3 + i] = MCHEmul::UByte ((unsigned char) paddedName [i]);
+
+	if (!writeDirectoryEntry (oldEntries [0], entry))
+		return (false);
+
+	setDOSStatus (0, " OK");
+
+	return (true);
+}
+
+// ---
+bool COMMODORE::Disk1540SeriesSimulation::executeCopyCommand (const std::string& command)
+{
+	if (_d64FileData == nullptr)
+	{
+		setDOSStatus (74, "DRIVE NOT READY");
+
+		return (false);
+	}
+
+	bool validDrive = true;
+	std::string payload = MCHEmul::trim (commandPayload (command, &validDrive));
+	if (!validDrive)
+	{
+		setDOSStatus (74, "DRIVE NOT READY");
+
+		return (false);
+	}
+
+	size_t eq = payload.find ('=');
+	if (eq == std::string::npos)
+	{
+		setDOSStatus (30, "SYNTAX ERROR");
+
+		return (false);
+	}
+
+	std::string newName = MCHEmul::trim (payload.substr (0, eq));
+	std::string sourceList = payload.substr (eq + 1);
+	if (newName.empty () || sourceList.empty () || hasWildcards (newName))
+	{
+		setDOSStatus (30, "SYNTAX ERROR");
+
+		return (false);
+	}
+
+	if (fileExists (newName))
+	{
+		setDOSStatus (63, "FILE EXISTS");
+
+		return (false);
+	}
+
+	std::vector <std::string> sourceNames = splitCommandList (sourceList);
+	if (sourceNames.empty ())
+	{
+		setDOSStatus (30, "SYNTAX ERROR");
+
+		return (false);
+	}
+
+	std::vector <MCHEmul::UByte> newData;
+	unsigned char fileType = 0x82;
+	bool firstSource = true;
+	for (const auto& sourceName : sourceNames)
+	{
+		if (sourceName.empty () || hasWildcards (sourceName))
+		{
+			setDOSStatus (30, "SYNTAX ERROR");
+
+			return (false);
+		}
+
+		bool ok = false;
+		std::vector <DirectoryEntryPosition> sourceEntries =
+			findDirectoryEntries (sourceName, false, ok);
+		if (!ok)
+			return (false);
+		if (sourceEntries.empty ())
+		{
+			setDOSStatus (62, "FILE NOT FOUND");
+
+			return (false);
+		}
+
+		std::vector <MCHEmul::UByte> entry;
+		if (!readDirectoryEntry (sourceEntries [0], entry))
+			return (false);
+
+		if (firstSource)
+		{
+			fileType = (entry [0].value () & 0x0f) | 0x80;
+			firstSource = false;
+		}
+
+		std::vector <MCHEmul::UByte> sourceData;
+		if (!readFilePayloadGuarded
+				((size_t) entry [1].value (), (size_t) entry [2].value (), sourceData))
+			return (false);
+
+		newData.insert (newData.end (), sourceData.begin (), sourceData.end ());
+	}
+
+	if (!rebuildBAMFromDirectory (false))
+		return (false);
+
+	DirectoryEntryPosition newEntryPos;
+	if (!findFreeDirectoryEntry (newEntryPos, true))
+		return (false);
+
+	if (!rebuildBAMFromDirectory (false))
+		return (false);
+
+	size_t firstTrack = 0, firstSector = 0;
+	unsigned short blocks = 0;
+	if (!allocateFileChain (newData, firstTrack, firstSector, blocks))
+		return (false);
+
+	std::vector <MCHEmul::UByte> entry (32, MCHEmul::UByte::_0);
+	entry [0] = MCHEmul::UByte (fileType);
+	entry [1] = MCHEmul::UByte ((unsigned char) firstTrack);
+	entry [2] = MCHEmul::UByte ((unsigned char) firstSector);
+	std::string paddedName = padPETSCIIName (newName);
+	for (size_t i = 0; i < 16; i++)
+		entry [3 + i] = MCHEmul::UByte ((unsigned char) paddedName [i]);
+	entry [28] = MCHEmul::UByte ((unsigned char) (blocks & 0xff));
+	entry [29] = MCHEmul::UByte ((unsigned char) (blocks >> 8));
+
+	if (!writeDirectoryEntry (newEntryPos, entry))
+	{
+		rebuildBAMFromDirectory (false);
+
+		return (false);
+	}
+
+	if (!rebuildBAMFromDirectory (false))
+		return (false);
+
+	setDOSStatus (0, " OK");
+
+	return (true);
+}
+
+// ---
+bool COMMODORE::Disk1540SeriesSimulation::executeNewCommand (const std::string& command)
+{
+	if (_d64FileData == nullptr)
+	{
+		setDOSStatus (74, "DRIVE NOT READY");
+
+		return (false);
+	}
+
+	bool validDrive = true;
+	std::string payload = MCHEmul::trim (commandPayload (command, &validDrive));
+	if (!validDrive)
+	{
+		setDOSStatus (74, "DRIVE NOT READY");
+
+		return (false);
+	}
+
+	size_t comma = payload.find (',');
+	std::string diskName =
+		MCHEmul::trim (comma == std::string::npos ? payload : payload.substr (0, comma));
+	if (diskName.empty ())
+	{
+		setDOSStatus (30, "SYNTAX ERROR");
+
+		return (false);
+	}
+
+	std::string diskID = "";
+	if (comma == std::string::npos)
+	{
+		std::vector <MCHEmul::UByte> oldBAM = sectorData (18, 0).bytes ();
+		if (oldBAM.size () == 256)
+		{
+			diskID += (char) oldBAM [0xa2].value ();
+			diskID += (char) oldBAM [0xa3].value ();
+		}
+		else
+			diskID = "  ";
+	}
+	else
+		diskID = MCHEmul::trim (payload.substr (comma + 1));
+
+	std::vector <MCHEmul::UByte> emptySector (256, MCHEmul::UByte::_0);
+	for (unsigned char track = 1; track <= _d64FileData -> _numberTracks; track++)
+		for (unsigned char sector = 0;
+				sector < _d64FileData -> _tracksData [track - 1] -> _trackInfo._sectors;
+				sector++)
+			_d64FileData -> setSectorData
+				(track, sector, MCHEmul::UBytes (emptySector));
+
+	std::vector <MCHEmul::UByte> bam (256, MCHEmul::UByte::_0);
+	bam [0] = MCHEmul::UByte (18);
+	bam [1] = MCHEmul::UByte (1);
+	bam [2] = MCHEmul::UByte ('A');
+
+	size_t maxBAMTrack =
+		((size_t) _d64FileData -> _numberTracks < 35)
+			? (size_t) _d64FileData -> _numberTracks
+			: 35;
+	for (size_t track = 1; track <= maxBAMTrack; track++)
+	{
+		size_t bamEntry = 0x04 + ((track - 1) << 2);
+		unsigned char freeSectors = 0;
+		for (size_t sector = 0;
+				sector < _d64FileData -> _tracksData [track - 1] -> _trackInfo._sectors;
+				sector++)
+		{
+			bool freeSector = !(track == 18 && (sector == 0 || sector == 1));
+			if (!freeSector)
+				continue;
+
+			freeSectors++;
+			bam [bamEntry + 1 + (sector >> 3)].setBit (sector & 0x07, true);
+		}
+
+		bam [bamEntry] = MCHEmul::UByte (freeSectors);
+	}
+
+	std::string paddedName = padPETSCIIName (diskName);
+	for (size_t i = 0; i < 16; i++)
+		bam [0x90 + i] = MCHEmul::UByte ((unsigned char) paddedName [i]);
+
+	bam [0xa0] = MCHEmul::UByte (0xa0);
+	bam [0xa1] = MCHEmul::UByte (0xa0);
+	bam [0xa2] = MCHEmul::UByte
+		((unsigned char) (diskID.length () > 0 ? diskID [0] : 0xa0));
+	bam [0xa3] = MCHEmul::UByte
+		((unsigned char) (diskID.length () > 1 ? diskID [1] : 0xa0));
+	bam [0xa4] = MCHEmul::UByte (0xa0);
+	bam [0xa5] = MCHEmul::UByte ('2');
+	bam [0xa6] = MCHEmul::UByte ('A');
+	bam [0xa7] = MCHEmul::UByte (0xa0);
+
+	std::vector <MCHEmul::UByte> directory (256, MCHEmul::UByte::_0);
+	directory [0] = MCHEmul::UByte::_0;
+	directory [1] = MCHEmul::UByte::_FF;
+
+	_d64FileData -> setSectorData (18, 0, MCHEmul::UBytes (bam));
+	_d64FileData -> setSectorData (18, 1, MCHEmul::UBytes (directory));
+	synchronizeDiskData ();
+
+	setDOSStatus (0, " OK");
+
+	return (true);
 }
 
 // ---
@@ -166,6 +1421,8 @@ unsigned char COMMODORE::Disk1540SeriesSimulation::unlisten
 {
 	if (_commandChannel == 15)
 		executeCommandChannel ();
+	else
+		executeOpenChannel ();
 
 	_firmwareStatus = DiskFirmwareStatus::_IDLE;
 
@@ -198,8 +1455,8 @@ unsigned char COMMODORE::Disk1540SeriesSimulation::untalk
 unsigned char COMMODORE::Disk1540SeriesSimulation::openChannel
 	(MCHEmul::CPU* cpu, const MCHEmul::UByte& chn)
 {
-	static const unsigned char _SECONDARY = 0x06;
-	static const unsigned char _OPEN = 0x0f;
+	static const unsigned char _SECONDARY	= 0x06;
+	static const unsigned char _OPEN		= 0x0f;
 
 	// Both IEC OPEN and SECONDARY reach this virtual method.
 	// Read the original IEC command to distinguish them.
@@ -216,14 +1473,19 @@ unsigned char COMMODORE::Disk1540SeriesSimulation::openChannel
 		// OPEN discards only the previous state of this secondary channel.
 		channel.reset (definition ()._okResult);
 		channel._open = true;
+		channel._pendingOpen =
+			(_commandChannel >= 2 && _commandChannel <= 14);
 	}
 	else if (command == _SECONDARY)
 	{
 		if (_firmwareStatus == DiskFirmwareStatus::_RECEIVINGCOMMAND)
 		{
+			channel._pendingOpen = false;
+
 			// LISTEN/SECONDARY starts a new command or output transfer,
 			// without closing the selected channel.
 			channel._command = "";
+
 			channel.resetAnswer (definition ()._okResult);
 		}
 		else if (_firmwareStatus == DiskFirmwareStatus::_ANSWERINGCOMMAND &&
@@ -347,12 +1609,24 @@ unsigned char COMMODORE::Disk1540SeriesSimulation::receiveByte
 					}
 					else
 					{
-						channel._blockToAnswer =
-							std::move (buildAnswerToFileCommand
-								(splitCommandIntoPreAndPostData
-									(channel._command)));
+						bool validDrive = true;
+						std::string fileName =
+							fileNameFromFileSpec (channel._command, &validDrive);
 
-						channel._byteFromBlockToAnswerToSend = 0;
+						if (!validDrive || fileName.empty ())
+						{
+							setDOSStatus (34, "SYNTAX ERROR");
+
+							channel._answerStatus = _READERROR;
+						}
+						else
+						{
+							channel._blockToAnswer =
+								std::move (buildAnswerToFileCommand
+									(std::make_tuple (fileName, std::string (""))));
+
+							channel._byteFromBlockToAnswerToSend = 0;
+						}
 					}
 				}
 
@@ -459,6 +1733,50 @@ MCHEmul::DataMemoryBlocks COMMODORE::Disk1540SeriesSimulation::dataBlocksPerTrac
 			result.emplace_back (_data._data [i]);
 
 	return (result);
+}
+
+// ---
+bool COMMODORE::Disk1540SeriesSimulation::isTrackAndSectorValid
+	(size_t track, size_t sector) const
+{
+	return (_d64FileData != nullptr &&
+		track <= 0xff && sector <= 0xff &&
+		_d64FileData -> isTrackAndSectorValid
+			((unsigned char) track, (unsigned char) sector));
+}
+
+// ---
+MCHEmul::UBytes COMMODORE::Disk1540SeriesSimulation::sectorData
+	(size_t track, size_t sector) const
+{
+	return (isTrackAndSectorValid (track, sector)
+		? _d64FileData -> sectorData
+			((unsigned char) track, (unsigned char) sector)
+		: MCHEmul::UBytes::_E);
+}
+
+// ---
+bool COMMODORE::Disk1540SeriesSimulation::setSectorData
+	(size_t track, size_t sector, const MCHEmul::UBytes& data)
+{
+	bool result =
+		(_d64FileData != nullptr &&
+		 track <= 0xff && sector <= 0xff &&
+		 _d64FileData -> setSectorData
+			((unsigned char) track, (unsigned char) sector, data));
+	if (result)
+		synchronizeDiskData ();
+
+	return (result);
+}
+
+// ---
+void COMMODORE::Disk1540SeriesSimulation::synchronizeDiskData ()
+{
+	if (_d64FileData != nullptr)
+		_data = _d64FileData -> asMemoryBlocks ();
+	else
+		_data = MCHEmul::ExtendedDataMemoryBlocks { };
 }
 
 // ---

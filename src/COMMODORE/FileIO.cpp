@@ -709,13 +709,24 @@ COMMODORE::D64FileData::D64FileData (unsigned char nT)
 }
 
 // ---
+COMMODORE::D64FileData::D64FileData (const COMMODORE::D64FileData& dD)
+	: D64FileData (dD._numberTracks)
+{
+	for (unsigned char i = 1; i <= _numberTracks; i++)
+		for (unsigned char j = 0;
+				j < _tracksData [i - 1] -> _trackInfo._sectors; j++)
+			_tracksData [i - 1] -> setSectorData
+				(j, dD._tracksData [i - 1] -> getSectorData (j));
+}
+
+// ---
 MCHEmul::ExtendedDataMemoryBlocks COMMODORE::D64FileData::asMemoryBlocks () const
 {
 	MCHEmul::ExtendedDataMemoryBlocks result;
 
 	for (unsigned char i = 1; i <= _numberTracks; i++)
 	{
-		for (unsigned char j = 0; 
+		for (unsigned char j = 0;
 				j < _tracksData [i - 1] -> _trackInfo._sectors; j++)
 		{
 			MCHEmul::DataMemoryBlock mB (
@@ -734,6 +745,32 @@ MCHEmul::ExtendedDataMemoryBlocks COMMODORE::D64FileData::asMemoryBlocks () cons
 	return (result);
 }
 
+// ---
+bool COMMODORE::D64FileData::isTrackAndSectorValid (unsigned char t, unsigned char s) const
+{
+	return (t >= 1 && t <= _numberTracks &&
+		s < _tracksData [t - 1] -> _trackInfo._sectors);
+}
+
+// ---
+MCHEmul::UBytes COMMODORE::D64FileData::sectorData (unsigned char t, unsigned char s) const
+{
+	return (isTrackAndSectorValid (t, s)
+		? _tracksData [t - 1] -> getSectorData (s)
+		: MCHEmul::UBytes::_E);
+}
+
+// ---
+bool COMMODORE::D64FileData::setSectorData
+	(unsigned char t, unsigned char s, const MCHEmul::UBytes& data)
+{
+	if (!isTrackAndSectorValid (t, s) || data.size () != 256)
+		return (false);
+
+	_tracksData [t - 1] -> setSectorData (s, data);
+
+	return (true);
+}
 // ---
 bool COMMODORE::D64FileTypeIO::canRead (const std::string& fN) const
 {
@@ -787,7 +824,7 @@ MCHEmul::FileData* COMMODORE::D64FileTypeIO::readFile (const std::string& fN, bo
 	// It is time to read the info per block...
 	for (unsigned char i = 1; i <= nT; i++)
 	{
-		for (unsigned char j = 0; 
+		for (unsigned char j = 0;
 				j < rD64 -> _tracksData [i - 1] -> _trackInfo._sectors; j++)
 		{
 			char data [256] = { };
@@ -804,6 +841,43 @@ MCHEmul::FileData* COMMODORE::D64FileTypeIO::readFile (const std::string& fN, bo
 	return (result);
 }
 
+// ---
+bool COMMODORE::D64FileTypeIO::writeFile
+	(MCHEmul::FileData* fD, const std::string& fN, bool bE) const
+{
+	COMMODORE::D64FileData* d64 =
+		dynamic_cast <COMMODORE::D64FileData*> (fD);
+	if (d64 == nullptr)
+		return (false);
+
+	std::ofstream f (fN, std::ios::out | std::ios::binary);
+	if (!f)
+		return (false);
+
+	for (unsigned char i = 1; i <= d64 -> _numberTracks; i++)
+	{
+		for (unsigned char j = 0;
+				j < d64 -> _tracksData [i - 1] -> _trackInfo._sectors; j++)
+		{
+			MCHEmul::UBytes sD = d64 -> sectorData (i, j);
+			if (sD.size () != 256)
+				{ f.close (); return (false); }
+
+			for (const auto& k : sD.bytes ())
+			{
+				char data = static_cast <char> (k.value ());
+				f.write (&data, 1);
+			}
+
+			if (!f)
+				{ f.close (); return (false); }
+		}
+	}
+
+	f.close ();
+
+	return (true);
+}
 // ---
 MCHEmul::ExtendedDataMemoryBlocks COMMODORE::CRTFileData::asMemoryBlocks () const
 {
