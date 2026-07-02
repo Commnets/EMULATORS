@@ -15,6 +15,8 @@ Use the framework's existing idioms deliberately:
 - Use explicit `MCHEmul::`/module qualification in `.cpp` definitions. Do not add `using namespace`.
 - Indent with tabs, not spaces, including proposed snippets and patches. Preserve existing tab-based continuation alignment from nearby code.
 - When proposing or writing code, include comments in the framework's local style only when they explain why the code exists or clarify non-obvious hardware/framework behavior. Avoid comments that merely restate what the code says.
+- For emulator methods that implement protocol, hardware, DOS, filesystem, media-layout, or state-machine behavior, add moderate in-method comments explaining why state transitions, status codes, buffer resets, compatibility choices, traversal guards, and data mutations exist.
+- For long or functionally complex methods, comment the main phases with a density comparable to the existing `buildAnswerToDirCommand`: validation, syntax parsing, linked-structure traversal, cycle/corruption guards, allocation/mutation, status/EOF decisions, and compatibility limits.
 - Preserve the spacing style: `name ()`, `std::vector <T>`, `static_cast <T>`, `_ptr -> method ()`, `return (value);`.
 - Put non-trivial method implementations in `.cpp` and separate them with `// ---`.
 - Keep small accessors and trivial mutators inline in the header when the surrounding class does.

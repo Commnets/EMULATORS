@@ -47,6 +47,29 @@ namespace COMMODORE
 		virtual MCHEmul::InfoStructure getInfoStructure () const override;
 
 		protected:
+		/** The situations a channel when is opened could be. */
+		enum class ChannelOpenMode
+		{
+			_READ,
+			_WRITE
+		};
+
+		/** The specification of a finle name. */
+		struct OpenFileSpec final
+		{
+			OpenFileSpec ()
+				: _fileName (""), _fileType (0x81),
+				  _mode (ChannelOpenMode::_READ),
+				  _validDrive (true), _syntaxOK (true)
+							{ }
+
+			std::string _fileName;
+			unsigned char _fileType;
+			ChannelOpenMode _mode;
+			bool _validDrive;
+			bool _syntaxOK;
+		};
+
 		/** Sets the persistent DOS status returned through channel 15. */
 		void setDOSStatus (
 			unsigned char c, const std::string& m,
@@ -58,7 +81,8 @@ namespace COMMODORE
 		/** Executes the DOS initialize command. */
 		bool executeInitializeCommand ();
 		/** Executes the DOS validate command, rebuilding the BAM. */
-		bool executeValidateCommand ();
+		bool executeValidateCommand ()
+							{ return (rebuildBAMFromDirectory (true)); }
 		/** Executes the DOS scratch command. */
 		bool executeScratchCommand (const std::string& command);
 		/** Executes the DOS rename command. */
@@ -123,12 +147,19 @@ namespace COMMODORE
 		std::string commandPayload (const std::string& command, bool* validDrive) const;
 		/** Extracts the real file name from an OPEN/LOAD file specification. */
 		std::string fileNameFromFileSpec (const std::string& fileSpec, bool* validDrive = nullptr) const;
+		/** Parses an OPEN file specification: name,type,mode. */
+		OpenFileSpec openFileSpec (const std::string& fileSpec) const;
+		/** Writes a new file into the connected D64 image. */
+		bool writeNewFile (const std::string& fileName, unsigned char fileType,
+			 const std::vector <MCHEmul::UByte>& data);
 		/** Splits a comma separated command list. */
 		std::vector <std::string> splitCommandList (const std::string& text) const;
 		/** Pads a PETSCII name with $a0 up to 16 bytes. */
 		std::string padPETSCIIName (const std::string& name) const;
 		/** To know whether a DOS name contains wildcards. */
-		bool hasWildcards (const std::string& name) const;
+		bool hasWildcards (const std::string& name) const
+							{ return (name.find ('*') != std::string::npos ||
+								name.find ('?') != std::string::npos); }
 		/** Finds directory entries matching a name or pattern. */
 		std::vector <DirectoryEntryPosition> findDirectoryEntries
 			(const std::string& pattern, bool wildcards, bool& ok);
@@ -198,6 +229,10 @@ namespace COMMODORE
 				: _open (false),
 				  _pendingOpen (false),
 				  _command (""),
+				  _fileName (""),
+				  _fileType (0x81),
+				  _mode (ChannelOpenMode::_READ),
+				  _writeBuffer { },
 				  _blockToAnswer { },
 				  _answerPrepared (false),
 				  _answerStatus (0),
@@ -217,6 +252,14 @@ namespace COMMODORE
 			bool _pendingOpen;
 			/** File name, directory request or command received through this channel. */
 			std::string _command;
+			/** The name of the file begin managed. */
+			std::string _fileName;
+			/** Its type. */
+			unsigned char _fileType;
+			/** The whay the channel is opened. */
+			ChannelOpenMode _mode;
+			/** Info just to write a buffer. */
+			std::vector <MCHEmul::UByte> _writeBuffer;
 			/** Bytes currently being returned through this channel. */
 			std::vector <MCHEmul::UByte> _blockToAnswer;
 			/** Whether the answer has already been built. */
@@ -266,6 +309,11 @@ namespace COMMODORE
 		_open = false;
 		_pendingOpen = false;
 		_command = "";
+		// Closing a channel also forgets the OPEN file specification.
+		_fileName = "";
+		_fileType = 0x81;
+		_mode = ChannelOpenMode::_READ;
+		_writeBuffer = { };
 		resetAnswer (okResult);
 	}
 }
