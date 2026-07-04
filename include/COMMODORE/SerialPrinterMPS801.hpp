@@ -31,13 +31,13 @@ namespace COMMODORE
 			const std::string& pFN = "MPS801MatrixPrinter.txt");
 
 		/** When the secondary address is used,
-			and it is 7, the businessMode is activated or desactivated. */
+			and it is 7, the default businessMode is activated or desactivated. */
 		virtual void activateFunction (unsigned char f) override
-							{ if (f == 0 || f == 7) _businessMode = (f == 7); }
+							{ if (f == 0 || f == 7) _businessMode = _defaultBusinessMode = (f == 7); }
 		virtual void desactivateFunction (unsigned char f) override
-							{ if (f == 0 || f == 7) _businessMode = !(f == 7); }
+							{ if (f == 7) _businessMode = _defaultBusinessMode = false; }
 		virtual void desactivateAllFunctions () override
-							{ _businessMode = false; }
+							{ _businessMode = _defaultBusinessMode = false; }
 
 		private:
 		/** The only control character managed is to double the size of the letters, 
@@ -48,6 +48,7 @@ namespace COMMODORE
 							{ printerFile () << "----Page:" 
 											 << MCHEmul::fixLenStr (std::to_string (p), 2, true, MCHEmul::_CEROS) 
 											 << "----" << std::endl; }
+		virtual bool printNewLine () override;
 		/** When the emulation reaches this position, the character is definetively "printable",
 			but it doesn't have a printable glifo but an space instead!. \n
 			Only the list of letters and numbers both in business mode 
@@ -58,6 +59,7 @@ namespace COMMODORE
 		virtual unsigned short printNormalChar (unsigned char chr) override;
 
 		private:
+		bool _defaultBusinessMode;
 		bool _businessMode;
 		bool _double;
 	};
@@ -79,16 +81,14 @@ namespace COMMODORE
 
 		/** When the secondary address is used,
 			and it is 7, the businessMode is activated or desactivated. */
-		virtual void activateFunction (unsigned char f) override
-							{ if (f == 0 || f == 7) _businessMode = (f == 7); }
-		virtual void desactivateFunction (unsigned char f) override
-							{ if (f == 0 || f == 7) _businessMode = !(f == 7); }
-		virtual void desactivateAllFunctions () override
-							{ _businessMode = false; }
+		virtual void activateFunction (unsigned char f) override;
+		virtual void desactivateFunction (unsigned char f) override;
+		virtual void desactivateAllFunctions () override;
 
 		private:
 		/** The main postscript routines are copied. */
 		virtual void firstTimePrinting (unsigned char chr) override;
+		virtual std::tuple <short, short, short> printCharImplementation (unsigned char chr) override;
 
 		virtual bool isControlChar (unsigned char chr) override;
 		virtual std::tuple <short, short, short> manageControlChar (unsigned char chr) override;
@@ -101,11 +101,14 @@ namespace COMMODORE
 
 		virtual bool printNewLine () override;
 		virtual unsigned short printNormalChar (unsigned char chr) override;
+		void printByteColumnAndAdvance (const MCHEmul::UByte& byte, unsigned short& result);
 
 		private:
 		// Implementation
 		/** True when the double width per char is activated. */
 		bool _double;
+		/** The business mode selected by the secondary address. */
+		bool _defaultBusinessMode;
 		/** True when the business mode printing is set. */
 		bool _businessMode;
 		/** The graphics mode is or not set. */
@@ -119,6 +122,10 @@ namespace COMMODORE
 		bool _setSpecificDotAddress;
 		/** When the reverse function is selected. */
 		bool _reverse;
+		/** Repeating a graphic byte after CHR$(26). */
+		bool _repeatGraphic;
+		unsigned char _charsRepeatGraphicPending;
+		unsigned char _nextRepeatGraphicValue [2];
 
 		/** The position inside the character being printed out... */
 		unsigned short _posXInside;

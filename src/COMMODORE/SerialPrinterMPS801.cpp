@@ -432,6 +432,7 @@ COMMODORE::MPS801BasicMatrixPrinterEmulation::MPS801BasicMatrixPrinterEmulation 
 		const MCHEmul::ASCIIToCodeConverter* cvs,
 		const std::string& pFN)
 	: MCHEmul::BasicMatrixPrinterEmulation (cvs, 80 /** Always the standard. */, pFN),
+	  _defaultBusinessMode (false),
 	  _businessMode (false),
 	  _double (false) // There is no more configuration needed, so the default one is enought...
 {
@@ -495,6 +496,16 @@ std::tuple <short, short, short> COMMODORE::MPS801BasicMatrixPrinterEmulation::m
 }
 
 // ---
+bool COMMODORE::MPS801BasicMatrixPrinterEmulation::printNewLine ()
+{
+	_businessMode = _defaultBusinessMode;
+
+	printerFile () << std::endl;
+
+	return (true);
+}
+
+// ---
 unsigned short COMMODORE::MPS801BasicMatrixPrinterEmulation::printNormalChar (unsigned char chr)
 {
 	unsigned short result = 0;
@@ -524,6 +535,7 @@ COMMODORE::MPS801PostscriptMatrixPrinterEmulation::MPS801PostscriptMatrixPrinter
 		 const std::string& pFN)
 	: MCHEmul::PostscriptMatrixPrinterEmulation (cvs, _CONFIGURATION, p, pFN),
 	  _double (false),
+	  _defaultBusinessMode (false),
 	  _businessMode (false),
 	  _graphicMode (false),
 	  _settingTab (false),
@@ -531,6 +543,9 @@ COMMODORE::MPS801PostscriptMatrixPrinterEmulation::MPS801PostscriptMatrixPrinter
 	  _nextTabSettingValue { 0, 0 },
 	  _setSpecificDotAddress (false),
 	  _reverse (false),
+	  _repeatGraphic (false),
+	  _charsRepeatGraphicPending (0),
+	  _nextRepeatGraphicValue { 0, 0 },
 	  _posXInside (0)
 {
 	configuration ()._description = "Postscript Matrix Emulation for MPS801";
@@ -540,6 +555,79 @@ COMMODORE::MPS801PostscriptMatrixPrinterEmulation::MPS801PostscriptMatrixPrinter
 	// so it is needed to adjust it for other heights...
 	configuration ()._charsPerPage =
 		(unsigned short) ((float) 66 * ((float) paper ()._height / 11.0f));
+}
+
+// ---
+void COMMODORE::MPS801PostscriptMatrixPrinterEmulation::activateFunction (unsigned char f)
+{
+	switch (f)
+	{
+		case 0x00:
+			{
+				_businessMode = _defaultBusinessMode = false;
+			}
+
+			break;
+
+		case 0x07:
+			{
+				_businessMode = _defaultBusinessMode = true;
+			}
+
+			break;
+
+		case 0x08:
+			{
+				_graphicMode = true;
+			}
+
+			break;
+
+		case 0x0a:
+			{
+				_double = false;
+				_businessMode = _defaultBusinessMode = false;
+				_graphicMode = false;
+				_settingTab = false;
+				_charsSettingtabPending = 0;
+				_nextTabSettingValue [0] = _nextTabSettingValue [1] = 0;
+				_setSpecificDotAddress = false;
+				_reverse = false;
+				_repeatGraphic = false;
+				_charsRepeatGraphicPending = 0;
+				_nextRepeatGraphicValue [0] = _nextRepeatGraphicValue [1] = 0;
+				_posXInside = 0;
+			}
+
+			break;
+	}
+}
+
+// ---
+void COMMODORE::MPS801PostscriptMatrixPrinterEmulation::desactivateFunction (unsigned char f)
+{
+	switch (f)
+	{
+		case 0x07:
+			{
+				_businessMode = _defaultBusinessMode = false;
+			}
+
+			break;
+
+		case 0x08:
+			{
+				_graphicMode = false;
+			}
+
+			break;
+	}
+}
+
+// ---
+void COMMODORE::MPS801PostscriptMatrixPrinterEmulation::desactivateAllFunctions ()
+{
+	_businessMode = _defaultBusinessMode = false;
 }
 
 // ---
@@ -596,6 +684,35 @@ void COMMODORE::MPS801PostscriptMatrixPrinterEmulation::firstTimePrinting (unsig
 }
 
 // ---
+std::tuple <short, short, short>
+COMMODORE::MPS801PostscriptMatrixPrinterEmulation::printCharImplementation (unsigned char chr)
+{
+	if (!_settingTab && !_repeatGraphic)
+		return (MCHEmul::MatrixPrinterEmulation::printCharImplementation (chr));
+
+	short aX = 0, aY = 0, aP = 0;
+	std::tie (aX, aY, aP) = manageControlChar (chr);
+
+	if (((short) headXPosition () + aX) >= configuration ()._charsPerLine)
+	{
+		if (printNewLine ()) aY++;
+		if (((short) headYPosition () + aY) == configuration ()._charsPerPage)
+		{
+			aY -= ((short) headYPosition () + aY);
+
+			closePage (_page + aP);
+			setNewPage (_page + (++aP));
+		}
+
+		aX -= ((short) headXPosition () + aX);
+	}
+
+	printerFile ().flush ();
+
+	return (std::make_tuple (aX, aY, aP));
+}
+
+// ---
 bool COMMODORE::MPS801PostscriptMatrixPrinterEmulation::isControlChar (unsigned char chr)
 {
 	// All control characters are under 0x80,
@@ -619,6 +736,54 @@ std::tuple <short, short, short>
 COMMODORE::MPS801PostscriptMatrixPrinterEmulation::manageControlChar (unsigned char chr)
 {
 	short aX = 0, aY = 0, aP = 0;
+
+	if (_settingTab)
+	{
+		_nextTabSettingValue [1 - (size_t) --_charsSettingtabPending] =
+				_setSpecificDotAddress
+					? chr // When setting the specific dot address, the number is "pure"
+					: ((chr >= 0x30) ? chr - 0x30 : 0x00); // Otherwise the char is the number in ASCII!
+		_settingTab = (_charsSettingtabPending != 0); // Still setting tab?
+		if (!_settingTab)
+		{
+			unsigned short tV =
+				_setSpecificDotAddress
+					? (_nextTabSettingValue [0] * 256) + _nextTabSettingValue [1]  // the value is MSB/LSB...
+					: (_nextTabSettingValue [0] * 10)  + _nextTabSettingValue [1]; // the value is a decimal value...
+			if (_setSpecificDotAddress)
+			{
+				// ...but the position can never be bigger the 480,
+				// otherwise it will be ignored!...
+				// The position inside the char, and the position of the head...
+				_setSpecificDotAddress = false;
+				if (tV < 480)
+					{ _posXInside = tV % 6; tV /= 6; }
+			}
+
+			// Move the head to the right position if possible,
+			// otherwise it will be ignored...
+			if (tV < 80)
+				aX += (short) tV - (short) headXPosition (); // Absolute...
+		}
+
+		return (std::make_tuple (aX, aY, aP));
+	}
+
+	if (_repeatGraphic)
+	{
+		_nextRepeatGraphicValue [1 - (size_t) --_charsRepeatGraphicPending] = chr;
+		_repeatGraphic = (_charsRepeatGraphicPending != 0); // Still setting the graphic repetition?
+		if (!_repeatGraphic)
+		{
+			unsigned short result = 0;
+			for (unsigned char i = 0; i < _nextRepeatGraphicValue [0]; i++)
+				printByteColumnAndAdvance (MCHEmul::UByte (_nextRepeatGraphicValue [1]), result);
+
+			aX += (short) result;
+		}
+
+		return (std::make_tuple (aX, aY, aP));
+	}
 
 	switch (chr)
 	{
@@ -686,7 +851,10 @@ COMMODORE::MPS801PostscriptMatrixPrinterEmulation::manageControlChar (unsigned c
 		// REPEAT GRAPHIC SELECTED
 		case 0x1a:
 			{
-				// TODO
+				_repeatGraphic = true;
+				_charsRepeatGraphicPending = 2;
+				_nextRepeatGraphicValue [0] = 0;
+				_nextRepeatGraphicValue [1] = 0;
 			}
 
 			break;
@@ -770,93 +938,61 @@ bool COMMODORE::MPS801PostscriptMatrixPrinterEmulation::printNewLine ()
 {
 	// Starting a new line there is no "glide" inside the character...
 	_posXInside = 0;
+	_businessMode = _defaultBusinessMode;
 
 	return (true);
 }
 
 // ---
+void COMMODORE::MPS801PostscriptMatrixPrinterEmulation::printByteColumnAndAdvance (
+	const MCHEmul::UByte& byte, unsigned short& result)
+{
+	printerFile ()
+		<< std::to_string ((unsigned int) byte.value ()) + "\t" +
+		   "x0 " +
+		   std::to_string ((unsigned int) _posXInside) + " " +
+		   std::to_string ((unsigned int) headXPosition () + (unsigned short) result /** in the double. */) + " " +
+		   std::to_string ((unsigned int) (configuration ()._wChar)) +
+		   " mul add dotStepX mul add\ty0 " + // dotStepX defined in PSMPS801MatrixPrinterI.ps
+		   std::to_string ((unsigned int) headYPosition ()) + " " +
+		   "dotStepY " + // dotStepY & lineGapY defined in PSMPS801MatrixPrinterI.ps
+		   std::to_string ((unsigned int) (configuration ()._hChar)) +
+		   " mul lineGapY add mul sub drawByteBits" << std::endl;
+
+	// The definition of the dotStep...
+	if ((++_posXInside == (unsigned short) configuration ()._wChar)) // No more...
+	{
+		_posXInside = 0;
+
+		result++;
+	}
+}
+
+// ---
 unsigned short COMMODORE::MPS801PostscriptMatrixPrinterEmulation::printNormalChar (unsigned char chr)
 {
-	// The symbol to be printed out will dedepend on the situation of the printer...
-	// When a new "thing" in under definition, the char is always valir as it is (see later to know the specific action)
+	// The symbol to be printed out will depend on the situation of the printer...
 	// When the printer is in graphic mode, the char must be always above 128 (0x80)
 	// In other circunstances if the char is not printable it is converted in a space...
-	unsigned char pChr = 
-		_setSpecificDotAddress 
-			? chr 
-			: _graphicMode
-				? ((chr >= 0x80) ? chr : asciiToCodeConverter () -> convert (' ').value ())
-				: (((chr >= 0x20 && chr <= 0x7f) ||
-				    (chr >= 0xa0 && chr <= 0xff)) 
-						? chr 
-						: asciiToCodeConverter () -> convert (' ').value ());
+	unsigned char pChr =
+		_graphicMode
+			? ((chr >= 0x80) ? chr : asciiToCodeConverter () -> convert (' ').value ())
+			: (((chr >= 0x20 && chr <= 0x7f) ||
+			    (chr >= 0xa0 && chr <= 0xff))
+					? chr
+					: asciiToCodeConverter () -> convert (' ').value ());
 
-	// Not to print out anything by default... 
+	// Not to print out anything by default...
 	// It will depend on whether a printable character was actually sent!
 	// result has the number of bytesprinted out...
 	unsigned short result = 0;
-	
-	// Routine to print aout a byte of information and advance...
-	auto printByteColumnAndAdvance = [&](const MCHEmul::UByte& byte) -> void
-		{
-			printerFile ()
-				<< std::to_string ((unsigned int) byte.value ()) + "\t" +
-				   "x0 " +
-				   std::to_string ((unsigned int) _posXInside) + " " +
-				   std::to_string ((unsigned int) headXPosition () + (unsigned short) result /** in the double. */) + " " +
-				   std::to_string ((unsigned int) (configuration ()._wChar)) + 
-				   " mul add dotStepX mul add\ty0 " + // dotStepX defined in PSMPS801MatrixPrinterI.ps
-				   std::to_string ((unsigned int) headYPosition ()) + " " +
-				   "dotStepY " + // dotStepY & lineGapY defined in PSMPS801MatrixPrinterI.ps
-				   std::to_string ((unsigned int) (configuration ()._hChar)) + 
-				   " mul lineGapY add mul sub drawByteBits" << std::endl;
-
-			// The definition of the dotStep...
-			if ((++_posXInside == (unsigned short) configuration ()._wChar)) // No more...
-			{
-				_posXInside = 0;
-
-				result++;
-			}
-		};
 
 	// Depending on the char received...
-	if (_settingTab)
-	{
-		// When two chars more are defined, then the settin process has finished...
-		_nextTabSettingValue [1 - (size_t) --_charsSettingtabPending] = 
-				_setSpecificDotAddress 
-					? pChr // When setting the specific dot address, the number is "pure"
-					: ((pChr >= 0x30) ? pChr - 0x30 : 0x00); // Otherwise the char is the number in ASCII!
-		_settingTab = (_charsSettingtabPending != 0); // Still setting tab?
-		if (!_settingTab)
-		{
-			unsigned short tV =
-				_setSpecificDotAddress
-					? (_nextTabSettingValue [0] * 256) + _nextTabSettingValue [1]  // the value is MSB/LSB...
-					: (_nextTabSettingValue [0] * 10)  + _nextTabSettingValue [1]; // the value is a decimal value...
-			if (_setSpecificDotAddress)
-			{
-				// ...but the position can never be bigger the 480,
-				// otherwise it will be ignored!...
-				// The position inside the char, and the position of the head...
-				_setSpecificDotAddress = false;
-				if (tV < 480) 
-					{ _posXInside = tV % 6; tV /= 6; }
-			}
-
-			// Move the head to the right position if possible, 
-			// otherwise it will be ignored...
-			if (tV < 80)
-				moveHeadFromX (-headXPosition () + tV); // Absolute...
-		}
-	}
-	else
 	if (_graphicMode)
 	{
-		printerFile () 
+		printerFile ()
 			<< "% Graphic value " << std::to_string ((unsigned int) pChr) << std::endl;
-		printByteColumnAndAdvance (pChr);
+		printByteColumnAndAdvance (MCHEmul::UByte (pChr), result);
 	}
 	else
 	{
@@ -867,14 +1003,15 @@ unsigned short COMMODORE::MPS801PostscriptMatrixPrinterEmulation::printNormalCha
 		const MCHEmul::MatrixPrinterEmulation::Configuration::CharDefinition& chrDef = // It is not needed a copy...
 			(existsChr = (i != configuration ()._charSet.end ()))
 				? (*i).second : (*configuration ()._charSet.begin ()).second; // The character 0 by default...
-		printerFile () 
+		printerFile ()
 			<< "% Character " << (_businessMode ? "business" : "normal") << " mode: "
 			<< (existsChr ? std::to_string ((unsigned int) pChr) : "Unknown") << std::endl;
-		for (const auto& j : (*i).second)
+		for (const auto& j : chrDef)
 		{
-			MCHEmul::UByte v = j; if (_reverse) v = ~v;
-			printByteColumnAndAdvance (v);
-			if (_double) printByteColumnAndAdvance (v); // twice...
+			MCHEmul::UByte v = j;
+			if (_reverse) v = MCHEmul::UByte ((unsigned char) ((~v).value () & 0x7f));
+			printByteColumnAndAdvance (v, result);
+			if (_double) printByteColumnAndAdvance (v, result); // twice...
 		}
 	}
 

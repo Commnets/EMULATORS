@@ -1,0 +1,4 @@
+interface:
+  display_name: "C64 MPS-801 Printer Audit"
+  short_description: "Audit Commodore MPS-801 printer emulation"
+  default_prompt: "Use $c64-mps801-printer-audit to audit the MPS-801 printer emulation against the local manual and historical sources."
