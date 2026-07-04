@@ -1,5 +1,8 @@
 #include <COMMODORE/SerialPrinterMPS802.hpp>
+#include <cmath>
+#include <iomanip>
 #include <sstream>
+#include <stdexcept>
 
 const MCHEmul::MatrixPrinterEmulation::Configuration 
 	COMMODORE::MPS802PostscriptMatrixPrinterEmulation::_CONFIGURATION =
@@ -430,12 +433,23 @@ const MCHEmul::MatrixPrinterEmulation::Configuration
 // ---
 std::string COMMODORE::MPS802MatrixPrinterFormatter::format (const std::string& s) const
 {
+	if (_formats.empty () ||
+		(_formats.size () == 1 && dynamic_cast <COMMODORE::MPS802MatrixPrinterFormatter::NoFormat*> (_formats [0]) != nullptr))
+		return (s);
+
 	std::string result;
 
 	size_t cF = 0;
 	auto applyFormat = [&](const std::string& ss) -> std::string
 		{
-			std::string result = 
+			std::string result = "";
+
+			// Spaces and literals are part of the formatter,
+			// but they don't consume any data field.
+			while (cF < _formats.size () && !_formats [cF] -> usesField ())
+				result += _formats [cF++] -> format ("" /** Not used. */);
+
+			result +=
 				(cF < _formats.size ()) 
 					? _formats [cF] -> format (ss)
 					: ss;
@@ -443,10 +457,9 @@ std::string COMMODORE::MPS802MatrixPrinterFormatter::format (const std::string& 
 			// Move to the next format field...
 			cF++;
 
-			// If the following formats are just spaces,
+			// If the following formats don't use fields,
 			// they are applied directly...
-			while (cF < _formats.size () && 
-				   dynamic_cast <COMMODORE::MPS802MatrixPrinterFormatter::SpaceFormat*> (_formats [cF]) != nullptr)
+			while (cF < _formats.size () && !_formats [cF] -> usesField ())
 				result += _formats [cF++] -> format ("" /** Not used. */);
 
 			return (result);
@@ -467,8 +480,31 @@ std::string COMMODORE::MPS802MatrixPrinterFormatter::format (const std::string& 
 	}
 
 	result += applyFormat (pS);
+	while (cF < _formats.size () && !_formats [cF] -> usesField ())
+		result += _formats [cF++] -> format ("" /** Not used. */);
 
 	return (result);
+}
+
+// ---
+std::string COMMODORE::MPS802MatrixPrinterFormatter::TextFormat::format (const std::string& str) const
+{
+	std::string tStr = str;
+
+	// The manual strips regular leading blanks in alpha fields,
+	// but shifted blanks are meaningful field contents.
+	size_t i = 0;
+	while (i < tStr.length () && ((unsigned char) tStr [i]) == 0x20)
+		i++;
+	tStr = tStr.substr (i);
+
+	for (auto& i : tStr)
+		if (((unsigned char) i) == 0xa0)
+			i = ' ';
+
+	return ((tStr.length () >= (size_t) _numberLetters)
+		? tStr.substr (0, _numberLetters)
+		: tStr + MCHEmul::_SPACES.substr (0, (_numberLetters - tStr.length ())));
 }
 
 // ---
@@ -478,23 +514,26 @@ COMMODORE::MPS802MatrixPrinterFormatter::NumericFormat::NumericFormat (const std
 	  _fBeforePoint (""), _fAfterPoint ("")
 { 
 	size_t pP = str.find_first_of ('.');
+	if (pP != std::string::npos && str.find_first_of ('.', pP + 1) != std::string::npos)
+		_error = true;
+
 	// Before the point...
 	std::string eNStr = _fBeforePoint = str.substr (0, pP); 
 	// After the point...
 	std::string fNStr = _fAfterPoint = 
 		((pP == std::string::npos) ? "" : str.substr (pP + 1));
 
-	size_t cP = 0;
+	bool sgn = false;
 
 	// After the point... (if any)
 	// If any, they can only be 9 and a "-" sign at the end! (if any)
-	if (!fNStr.empty ())
+	if (!_error && !fNStr.empty ())
 	{
 		if (fNStr.find_first_not_of ("9-") != fNStr.npos) 
 			_error = true; // None of the values allowed...
 		else
 		{
-			cP = fNStr.find_first_of ('-');
+			size_t cP = fNStr.find_first_of ('-');
 			if (cP != fNStr.npos && cP != (fNStr.length () - 1)) 
 				_error = true; // The values allowed but the "-" sign is not at the end...
 		}
@@ -502,46 +541,62 @@ COMMODORE::MPS802MatrixPrinterFormatter::NumericFormat::NumericFormat (const std
 
 	// Before the point...
 	// There cannot be any "-" sign...
-	if (eNStr.find_first_of ("-") != eNStr.npos)
-		_error = true; // The sign - can not be used before the point...
-	else
+	if (!_error)
 	{
-		// The sign S, if exists, can only be at the beggining, 
-		// ...and there must be just one and only one...
-		cP = eNStr.find_first_of ('S');
-		if (cP != eNStr.npos)
-		{
-			if (eNStr.find_last_of ('S') != 0)
-				_error = true; 
-			else
-				eNStr = eNStr.substr (1); // Take the sign off, for further anyalisis...
-		}
-			
-		// Now there can be $ signs...
-		// In this case, there can be one or many, but all together...
-		// Take them off from the string to be analysed...
-		cP = eNStr.find_first_of ('$');
-		if (cP != eNStr.npos && cP != 0)
-			_error = true;
+		if (eNStr.find_first_of ("-") != eNStr.npos)
+			_error = true; // The sign - can not be used before the point...
 		else
 		{
-			while (cP != eNStr.npos && eNStr [cP] == '$') cP++;
+			// The sign S, if exists, can only be at the beggining,
+			// ...and there must be just one and only one...
+			size_t cP = eNStr.find_first_of ('S');
 			if (cP != eNStr.npos)
-				eNStr = eNStr.substr (cP);
-		}
+			{
+				if (cP != 0 || eNStr.find_last_of ('S') != 0)
+					_error = true;
+				else
+				{
+					sgn = true;
+					eNStr = eNStr.substr (1); // Take the sign off, for further anyalisis...
+				}
+			}
 
-		// Now, the pure simbols related with the number are following...
-		// These symbols are 'Z' or '9'
-		// But there can not be mixed!!
-		// All of them have to be equal...
-		if (cP < eNStr.length ())
-		{
-			while (cP < eNStr.length () && eNStr [cP] == eNStr [0])
-				cP++; // Until the end...
-			if (cP != eNStr.length ())
+			// Now there can be $ signs...
+			// In this case, there can be one or many, but all together...
+			// Take them off from the string to be analysed...
+			cP = eNStr.find_first_of ('$');
+			if (!_error && cP != eNStr.npos && cP != 0)
 				_error = true;
+			else
+			{
+				while (cP != eNStr.npos && cP < eNStr.length () && eNStr [cP] == '$') cP++;
+				if (cP != eNStr.npos)
+					eNStr = eNStr.substr (cP);
+			}
+
+			// Now, the pure simbols related with the number are following...
+			// These symbols are 'Z' or '9'
+			// But there can not be mixed!!
+			// All of them have to be equal...
+			if (!_error && !eNStr.empty ())
+			{
+				if (eNStr [0] != '9' && eNStr [0] != 'Z')
+					_error = true;
+				else
+				{
+					cP = 0;
+					while (cP < eNStr.length () && eNStr [cP] == eNStr [0])
+						cP++; // Until the end...
+					if (cP != eNStr.length ())
+						_error = true;
+				}
+			}
 		}
 	}
+
+	// If S and final - coexist, the manual says that S is honoured.
+	if (!_error && sgn && !_fAfterPoint.empty () && _fAfterPoint [_fAfterPoint.length () - 1] == '-')
+		_fAfterPoint = _fAfterPoint.substr (0, _fAfterPoint.length () - 1);
 
 	// When error...
 	if (_error)
@@ -557,6 +612,13 @@ COMMODORE::MPS802MatrixPrinterFormatter::NumericFormat::NumericFormat (const std
 std::string COMMODORE::MPS802MatrixPrinterFormatter::NumericFormat::format
 	(const std::string& str) const
 {
+	auto fieldOverflow = [&]() -> std::string
+		{
+			size_t l = _fBeforePoint.length () +
+				(_fAfterPoint.empty () ? 0 : (1 + _fAfterPoint.length ()));
+			return (std::string ((l == 0) ? 3 : l, '*'));
+		};
+
 	// First of all, the format can only be done when it is right....
 	if (_error)
 		return ("*.*"); // The number can not be formatted when there is an error in the definition...
@@ -567,19 +629,28 @@ std::string COMMODORE::MPS802MatrixPrinterFormatter::NumericFormat::format
 	double n = 0;
 	try
 	{
-		n = std::stod (str);
+		size_t pP = 0;
+		n = std::stod (str, &pP);
+		while (pP < str.length () && str [pP] == ' ')
+			pP++;
+		if (pP != str.length ())
+			throw (std::invalid_argument ("MPS802 numeric field"));
 	}
 	catch (...)
 	{
 		_error = true;
 
-		_errorText = "*PE:M";
+		_errorText = "*PE:M*";
 	}
 
 	if (_error)
 		return ("*.*");
 
-	std::string nStr = std::to_string (std::abs (n));
+	size_t nDec = _fAfterPoint.length () -
+		(!_fAfterPoint.empty () && _fAfterPoint [_fAfterPoint.length () - 1] == '-' ? 1 : 0);
+	std::stringstream sS;
+	sS << std::fixed << std::setprecision (nDec) << std::abs (n);
+	std::string nStr = sS.str ();
 	size_t pP = nStr.find_first_of ('.');
 	std::string eNStr = nStr.substr (0, pP);
 	std::string fNStr = (pP == std::string::npos) ? "" : nStr.substr (pP + 1);
@@ -609,7 +680,7 @@ std::string COMMODORE::MPS802MatrixPrinterFormatter::NumericFormat::format
 		// than the number of digits defined in the format
 		// there is an error in the format, and this is pointed out!
 		if (_fBeforePoint.substr (i).length () < eNStr.length ())
-			result = "*.*"; 
+			result = fieldOverflow ();
 		// In other case, the number of positions is complted
 		// wither with 0 or SPACES depending the definition of the format....
 		else
@@ -621,16 +692,13 @@ std::string COMMODORE::MPS802MatrixPrinterFormatter::NumericFormat::format
 	// ...is hat to be a decimal number or an error would have happened in the definition...
 	if (eNStr != "0")
 	{
-		_error = true;
-
-		_errorText = "*.*"; // The format can not be applied,
-							// ...and there is an error in the definition of the format...
+		result = fieldOverflow ();
 	}
 
 	// Now, format after the period,
 	// because it is simplier!
 	// unless a previous error was already detected...
-	if (result != "*.*" && 
+	if ((result.empty () || result.find_first_not_of ('*') != std::string::npos) &&
 		_fAfterPoint != "") // Length is 1 at least!
 	{
 		size_t i = 0;
@@ -652,13 +720,20 @@ COMMODORE::MPS802MatrixPrinterFormatter::Formats
 {
 	COMMODORE::MPS802MatrixPrinterFormatter::Formats result;
 
+	if (f.empty ())
+	{
+		result.push_back (new COMMODORE::MPS802MatrixPrinterFormatter::NoFormat);
+
+		return (result);
+	}
+
 	// To create the right format from the structure...
 	auto createFormatFrom = [&](const std::string& ss) 
 			-> COMMODORE::MPS802MatrixPrinterFormatter::Format*
 		{
 			COMMODORE::MPS802MatrixPrinterFormatter::Format* fmt = nullptr;
 			if (ss == "")
-				fmt = new COMMODORE::MPS802MatrixPrinterFormatter::WrongFormat;
+				fmt = nullptr;
 			else
 			{
 				// If the first character is an 'A'
@@ -698,25 +773,72 @@ COMMODORE::MPS802MatrixPrinterFormatter::Formats
 			return (fmt);
 		};
 
-	char lC = '\0';
+	auto addFormatFrom = [&](const std::string& ss) -> void
+		{
+			COMMODORE::MPS802MatrixPrinterFormatter::Format* fmt = createFormatFrom (ss);
+			if (fmt != nullptr)
+				result.push_back (fmt);
+		};
+
+	auto addPlainFormatsFrom = [&](const std::string& ss) -> void
+		{
+			char lC = '\0';
+			std::string pS = "";
+			for (std::string::const_iterator i = ss.begin (); i != ss.end (); i++)
+			{
+				// The space separates Formats except the SpaceFormat!...
+				if (!pS.empty () &&
+					((lC != ' ' && (*i) == ' ') ||
+					 (lC == ' ' && (*i) != ' '))) // XOR of the two conditions...
+				{
+					addFormatFrom (pS);
+
+					pS = "";
+				}
+
+				pS += (lC = (*i));
+			}
+
+			addFormatFrom (pS);
+		};
+
+	bool literal = false;
 	std::string pS = "";
-	COMMODORE::MPS802MatrixPrinterFormatter::Format* cF = nullptr;
+	std::string lS = "";
 	for (std::string::const_iterator i = f.begin (); i != f.end (); i++)
 	{
-		// The space separates Formats except the SpaceFormat!...
-		if ((lC != ' ' && (*i) == ' ') ||
-			(lC == ' ' && (*i) != ' ')) // XOR of the two conditions...
+		if (literal)
 		{
-			result.push_back (createFormatFrom (pS));
-
-			pS = (lC = (*i));
+			if (((unsigned char) (*i)) == 0x92)
+			{
+				if (!lS.empty ())
+					result.push_back (new COMMODORE::MPS802MatrixPrinterFormatter::LiteralFormat (lS));
+				lS = "";
+				literal = false;
+			}
+			else
+				lS += (*i);
 		}
 		else
-			pS += (lC = (*i));
+		{
+			if (((unsigned char) (*i)) == 0x12)
+			{
+				addPlainFormatsFrom (pS);
+				pS = "";
+				literal = true;
+			}
+			else
+				pS += (*i);
+		}
 	}
 
-	// The last string is also the last formatter...
-	result.push_back (createFormatFrom (pS));
+	if (literal)
+		result.push_back (new COMMODORE::MPS802MatrixPrinterFormatter::WrongFormat);
+	else
+		addPlainFormatsFrom (pS);
+
+	if (result.empty ())
+		result.push_back (new COMMODORE::MPS802MatrixPrinterFormatter::NoFormat);
 
 	return (result);
 }
@@ -731,6 +853,7 @@ COMMODORE::MPS802BasicMatrixPrinterEmulation::MPS802BasicMatrixPrinterEmulation 
 	  _lastFormatter (""), // No formatter defined...
 	  _timesRepeated (1), // Just one by default!
 	  _printingErrorMessages (false), // No printing out error messages by default!
+	  _quoteMode (false),
 	  _lineUnderConstruction ("") // While the format is being set up!
 {
 	configuration ()._description = "Basic Matrix Emulation for MPS802";
@@ -860,8 +983,10 @@ bool COMMODORE::MPS802BasicMatrixPrinterEmulation::printNewLine ()
 			{
 				_timesRepeated = 1;
 				_businessMode = false;
+				_quoteMode = false;
 				_lastFormatter.setFormats ("");
 				_printingErrorMessages = false;
+				_activeFunction = Function::_NONE;
 			}
 
 			break;
@@ -881,6 +1006,8 @@ bool COMMODORE::MPS802BasicMatrixPrinterEmulation::printNewLine ()
 	}
 
 	// Any case, the line has already been used, so start back again!
+	_timesRepeated = 1;
+	_quoteMode = false;
 	_lineUnderConstruction = "";
 
 	return (result);
@@ -891,11 +1018,48 @@ unsigned short COMMODORE::MPS802BasicMatrixPrinterEmulation::printNormalChar (un
 {
 	unsigned short result = 0;
 
+	auto printRawChar = [&](unsigned char chr) -> unsigned short
+		{
+			unsigned short result = 0;
+
+			// In business model uppercase and lowecase symbols might be printed out
+			// in this type of printer, but in no business model
+			// just the uppercase symbols are valied
+			if (_businessMode
+					? ((chr >= 0x20 && chr <= 0x5a) ||	// Lowercase letters..
+					   (chr >= 0xc1 && chr <= 0xda))	// Uppercase letters...
+					: (chr >= 0x20 && chr <= 0x5a))		// No business model, just uppercase!
+			{
+				// When business mode is active, the information is converted into lower case ASCII...
+				unsigned char nChr = chr;
+				if (_businessMode)
+				{
+					if (chr >= 0x41 && chr <= 0x5a)
+						nChr += 0x20;
+					else
+					if (chr >= 0xc1 && chr <= 0xda)
+						nChr -= 0x80;
+				}
+
+				// Still creating the line...
+				// It will be printed out just when a new line is detected...
+				_lineUnderConstruction +=
+					std::string (_timesRepeated, (char) nChr);
+
+				result = _timesRepeated;
+			}
+
+			return (result);
+		};
+
 	// What to do, will depend again on the active function in the channel...
 	// In the RAW functions (NONE or BUSINESS) the character is printed out directly...
 	if (_activeFunction == Function::_NONE ||
 		_activeFunction == Function::_BUSINESSMODE)
 	{
+		if (_quoteMode && chr != 0x22)
+			result = printRawChar (chr);
+		else
 		switch (chr)
 		{
 			// ENHACED ON
@@ -930,38 +1094,40 @@ unsigned short COMMODORE::MPS802BasicMatrixPrinterEmulation::printNormalChar (un
 
 				break;
 
+			// LF
+			case 0x0a:
+				{
+					printerFile () << _lineUnderConstruction << std::endl;
+					_lineUnderConstruction = "";
+				}
+
+				break;
+
+			// CR without LF
+			case 0x8d:
+				{
+					printerFile () << _lineUnderConstruction;
+					_lineUnderConstruction = "";
+					_timesRepeated = 1;
+					_quoteMode = false;
+				}
+
+				break;
+
+			// Quote mode
+			case 0x22:
+				{
+					result = printRawChar (chr);
+					_quoteMode = !_quoteMode;
+				}
+
+				break;
+
 			// This is not a managed control command, 
 			// so it might be printed out!
 			default:
 				{
-					// In business model uppercase and lowecase symbols might be printed out
-					// in this type of printer, but in no business model 
-					// just the uppercase symbols are valied
-					if (_businessMode 
-							? ((chr >= 0x20 && chr <= 0x5a) ||	// Lowercase letters..
-							   (chr >= 0xc1 && chr <= 0xda))	// Uppercase letters...
-							: (chr >= 0x20 && chr <= 0x5a))		// No business model, just uppercase!
-					{
-						// When business mode is active, the information is converted into lower case ASCII...
-						unsigned char nChr = chr;
-						if (_businessMode)
-						{
-							if (chr >= 0x41 && chr <= 0x5a)
-								nChr += 0x20;
-							else
-							if (chr >= 0xc1 && chr <= 0xda)
-								nChr -= 0x80;
-						}
-
-						// Still creating the line...
-						// It will be printed out just when a new line is detected...
-						_lineUnderConstruction += 
-							std::string (_timesRepeated, (char) nChr);
-
-						result = _timesRepeated;
-					}
-
-					// If the symbols is not usefull, it has no effect!
+					result = printRawChar (chr);
 				}
 
 				break;
@@ -972,7 +1138,9 @@ unsigned short COMMODORE::MPS802BasicMatrixPrinterEmulation::printNormalChar (un
 		_activeFunction == Function::_USEFORMATTER)
 	{
 		if ((chr >= 0x20 && chr <= 0x5a) || 
-			(chr == 0x1d && _activeFunction == Function::_USEFORMATTER))
+			chr == 0xa0 ||
+			(chr == 0x1d && _activeFunction == Function::_USEFORMATTER) ||
+			((chr == 0x12 || chr == 0x92) && _activeFunction == Function::_DEFININGFORMATTER))
 		{
 			_lineUnderConstruction += chr;
 
@@ -1000,6 +1168,8 @@ COMMODORE::MPS802PostscriptMatrixPrinterEmulation::MPS802PostscriptMatrixPrinter
 	  _printingErrorMessages (false),
 	  _reverse (false),
 	  _paging (false),
+	  _quoteMode (false),
+	  _spaceBetweenLines (24),
 	  _programableGraphic { 0,0,0,0,0,0,0,0 }, // No more than 8 bytes...
 	  _programableGraphicDefined (false),
 	  _lineUnderConstruction (""),
@@ -1102,6 +1272,8 @@ void COMMODORE::MPS802PostscriptMatrixPrinterEmulation::closePage (unsigned shor
 // ---
 void COMMODORE::MPS802PostscriptMatrixPrinterEmulation::setNewPage (unsigned short p)
 {
+	float yScale = lineSpacingScaleY ();
+
 	// Beginning of the next one...
 	printerFile ()
 		<< "% ----Page:"
@@ -1117,12 +1289,10 @@ void COMMODORE::MPS802PostscriptMatrixPrinterEmulation::setNewPage (unsigned sho
 		// The char advance (x axis) in this printer per character is 0.08 inches = 2,032mm
 		// In a resolution of 72 dots per inch, 0,08 inches = 5,76 dots.
 		// Horizontally a character takes 8 * 2 dots = 16, then the scale to apply in the x axis is = 5,76/16 = 0,36
-		// In the printer MPS802 there is 8 lines per inch. Each line is 0.094 inches as it said in the manual.
-		// Every line is made up of 16 dots = 8 * 2
-		// The scale to apply is 0,423 because 0,094 * 72 /16 = 0,423
-		<< "0.36 0.423 scale" << std::endl
+		// Vertically the MPS802 uses the SA6 spacing, measured in 1/144 inch steps.
+		<< "0.36 " << std::to_string (yScale) << " scale" << std::endl
 		<< "/x0 x0 2.7777777 mul def" << std::endl
-		<< "/y0 y0 2.3640661 mul def" << std::endl << std::endl;
+		<< "/y0 y0 " << std::to_string (1.0f / yScale) << " mul def" << std::endl << std::endl;
 }
 
 // ---
@@ -1156,12 +1326,16 @@ bool COMMODORE::MPS802PostscriptMatrixPrinterEmulation::printNewLine ()
 					// ...and the option to print them out was active...
 					if (_printingErrorMessages)
 						printLineOfTextPostScript (_lastFormatter.errorTexts ());
+					else
+						printLineOfTextPostScript (_lineUnderConstruction);
 					
 					// Any case, the errors are reset for the next execution...
 					// Remember that if a format was wromg built,
 					// it would be replaced (when that happens) by a no formatter
 					// so here the only error that can happen are due to the format operation only!
 					_lastFormatter.resetError ();
+					_activeFunction = Function::_NONE;
+					_businessMode = false;
 				}
 				// If there were not, the line formated is printed out!
 				else
@@ -1182,10 +1356,14 @@ bool COMMODORE::MPS802PostscriptMatrixPrinterEmulation::printNewLine ()
 					// ...and the option to print them out was active, the message would be printed out...
 					if (_printingErrorMessages)
 						printLineOfTextPostScript (_lastFormatter.errorTexts ());
+					else
+						printLineOfTextPostScript (_lineUnderConstruction);
 
 					// And the formatter was any case deleted by something "empty"
 					// Abny previous one is destroyed when the new one is assigned!
 					_lastFormatter.setFormats ("");
+					_activeFunction = Function::_NONE;
+					_businessMode = false;
 				}
 			}
 
@@ -1196,7 +1374,14 @@ bool COMMODORE::MPS802PostscriptMatrixPrinterEmulation::printNewLine ()
 		case Function::_SETNUMBERLINESPERPAGE:
 			{
 				if (_lineUnderConstruction.length () > 0)
-					configuration ()._charsPerPage = unsigned short (_lineUnderConstruction [0]);
+				{
+					unsigned char nL = (unsigned char) _lineUnderConstruction [0];
+					if (nL > 13 && nL < 128)
+						configuration ()._charsPerPage = (unsigned short) nL;
+					else
+					if (_printingErrorMessages)
+						printLineOfTextPostScript ("*PE:L*");
+				}
 			}
 
 			break;
@@ -1224,7 +1409,15 @@ bool COMMODORE::MPS802PostscriptMatrixPrinterEmulation::printNewLine ()
 		// Changing the space between the different lines of the printer...
 		case Function::_SETTINGSPACEBETWEENLINES:
 			{
-				// TODO
+				if (_lineUnderConstruction.length () > 0)
+				{
+					unsigned char nS = (unsigned char) _lineUnderConstruction [0];
+					if (nS > 0 && nS < 128)
+						_spaceBetweenLines = nS;
+					else
+					if (_printingErrorMessages)
+						printLineOfTextPostScript ("*PE:L*");
+				}
 			}
 
 			break;
@@ -1242,10 +1435,19 @@ bool COMMODORE::MPS802PostscriptMatrixPrinterEmulation::printNewLine ()
 			{
 				_timesRepeated = 1;
 				_businessMode = false;
+				_reverse = false;
+				_paging = false;
+				_quoteMode = false;
+				_spaceBetweenLines = 24;
 				_programableGraphic = { 0, 0, 0, 0, 0, 0, 0, 0 };
 				_programableGraphicDefined = false;
 				_lastFormatter.setFormats ("");
 				_printingErrorMessages = false;
+				_activeFunction = Function::_NONE;
+				_configuration._charsPerPage =
+					(unsigned short) ((float) 66 * ((float) paper ()._height / 11.0f));
+				_posXInside = 0;
+				moveHeadTo (0, 0);
 			}
 
 			break;
@@ -1274,8 +1476,26 @@ unsigned short COMMODORE::MPS802PostscriptMatrixPrinterEmulation::printNormalCha
 	// What to do, will depend again on the active function in the channel...
 	// In the RAW functions (NONE or BUSINESS or GRAPHICS) any character code is valid...
 	if (_activeFunction == Function::_NONE ||
-		_activeFunction == Function::_BUSINESSMODE ||
-		_activeFunction == Function::_DEFINEPROGRAMABLECHARACTER)
+		_activeFunction == Function::_BUSINESSMODE)
+	{
+		if (chr == 0x0a)
+		{
+			printTextPostScript (_lineUnderConstruction);
+			_lineUnderConstruction = "";
+			lineFeed ();
+		}
+		else
+		if (chr == 0x8d)
+		{
+			printTextPostScript (_lineUnderConstruction);
+			_lineUnderConstruction = "";
+			carryReturn ();
+		}
+		else
+			_lineUnderConstruction += std::string (1, (char) chr);
+	}
+	else
+	if (_activeFunction == Function::_DEFINEPROGRAMABLECHARACTER)
 		_lineUnderConstruction += std::string (1, (char) chr);
 	else
 	// When defining or using a formatter, just the visible characters (numbers and letters) are valid!
@@ -1285,11 +1505,49 @@ unsigned short COMMODORE::MPS802PostscriptMatrixPrinterEmulation::printNormalCha
 		_activeFunction == Function::_USEFORMATTER)
 	{
 		if ((chr >= 0x20 && chr <= 0x5a) || 
-			(chr == 0x1d && _activeFunction == Function::_USEFORMATTER))
+			chr == 0xa0 ||
+			(chr == 0x1d && _activeFunction == Function::_USEFORMATTER) ||
+			((chr == 0x12 || chr == 0x92) && _activeFunction == Function::_DEFININGFORMATTER))
 			_lineUnderConstruction += chr;
 	}
 
 	return (0);
+}
+
+// ---
+void COMMODORE::MPS802PostscriptMatrixPrinterEmulation::resetLineModesAfterCarryReturn ()
+{
+	_timesRepeated = 1;
+	_reverse = false;
+	_quoteMode = false;
+}
+
+// ---
+void COMMODORE::MPS802PostscriptMatrixPrinterEmulation::carryReturn ()
+{
+	_posXInside = 0;
+	moveHeadTo (0, headYPosition ());
+	resetLineModesAfterCarryReturn ();
+}
+
+// ---
+void COMMODORE::MPS802PostscriptMatrixPrinterEmulation::topOfForm ()
+{
+	_posXInside = 0;
+	closePage (page ());
+	setPage (page () + 1);
+	setNewPage (page ());
+	moveHeadTo (0, 0);
+}
+
+// ---
+float COMMODORE::MPS802PostscriptMatrixPrinterEmulation::lineSpacingScaleY () const
+{
+	unsigned char nS = (_spaceBetweenLines == 0) ? 1 : _spaceBetweenLines;
+	float advY = (((float) nS / 144.0f) * 72.0f);
+	float psLineUnits = (((float) configuration ()._hChar * 2.0f) + 1.0f);
+
+	return (advY / psLineUnits);
 }
 
 // ---
@@ -1362,8 +1620,40 @@ void COMMODORE::MPS802PostscriptMatrixPrinterEmulation::printChrPostScript (unsi
 	// When this method is invoked from functions where control commands
 	// are not allowed, the case option finally executed will be the default one always!
 
+	if (_quoteMode && chr != 0x22)
+	{
+		printGlyphPostScript (chr);
+
+		return;
+	}
+
 	switch (chr)
 	{
+		// LF
+		case 0x0a:
+			{
+				lineFeed ();
+			}
+
+			break;
+
+		// CR without LF
+		case 0x8d:
+			{
+				carryReturn ();
+			}
+
+			break;
+
+		// Quote mode
+		case 0x22:
+			{
+				printGlyphPostScript (chr);
+				_quoteMode = !_quoteMode;
+			}
+
+			break;
+
 		// Enhanced...
 		case 0x0e: 
 			{
@@ -1381,7 +1671,7 @@ void COMMODORE::MPS802PostscriptMatrixPrinterEmulation::printChrPostScript (unsi
 			break;
 
 		// RVS ON
-		case 0x012:
+		case 0x12:
 			{
 				_reverse = true;
 			}
@@ -1408,6 +1698,7 @@ void COMMODORE::MPS802PostscriptMatrixPrinterEmulation::printChrPostScript (unsi
 		case 0x13:
 			{
 				_paging = false;
+				topOfForm ();
 			}
 					
 			break;
@@ -1432,26 +1723,33 @@ void COMMODORE::MPS802PostscriptMatrixPrinterEmulation::printChrPostScript (unsi
 		// will be printed out, just if it possible...
 		default:
 			{
-				const auto i = configuration ()._charSet.find ((unsigned int) chr);
-				if (i != configuration ()._charSet.end ())
-				{
-					MCHEmul::MatrixPrinterEmulation::Configuration::CharDefinition cDef =
-						configuration ()._charSet [(unsigned int) chr + // The normal char selected...
-							(_businessMode ? 0x100 : 0x00)]; // taken into account whether the business mode is on or off...
-
-					// If the graphics are defined and the character selected is the 0xfe
-					// the graphic form is selected...
-					if (chr == 0xfe && _programableGraphicDefined)
-						for (size_t j = 0; j < 8; j++)
-							cDef [j] = _programableGraphic [j];
-
-					printerFile () 
-						<< "% Character " << (_businessMode ? "business" : "normal") << " mode: "
-						<< std::to_string ((unsigned int) chr) << std::endl;
-					printBytesPostscript (cDef);
-				}
+				printGlyphPostScript (chr);
 			}
 
 			break;
 	}
+}
+
+// ---
+void COMMODORE::MPS802PostscriptMatrixPrinterEmulation::printGlyphPostScript (unsigned char chr)
+{
+	unsigned int cId = (unsigned int) chr + (_businessMode ? 0x100 : 0x00);
+	auto i = configuration ()._charSet.find (cId);
+	if (i == configuration ()._charSet.end () && _businessMode)
+		i = configuration ()._charSet.find ((unsigned int) chr);
+	if (i == configuration ()._charSet.end ())
+		return;
+
+	MCHEmul::MatrixPrinterEmulation::Configuration::CharDefinition cDef = (*i).second;
+
+	// If the graphics are defined and the character selected is the 0xfe
+	// the graphic form is selected...
+	if (chr == 0xfe && _programableGraphicDefined)
+		for (size_t j = 0; j < 8 && j < cDef.size (); j++)
+			cDef [j] = _programableGraphic [j];
+
+	printerFile ()
+		<< "% Character " << (_businessMode ? "business" : "normal") << " mode: "
+		<< std::to_string ((unsigned int) chr) << std::endl;
+	printBytesPostscript (cDef);
 }

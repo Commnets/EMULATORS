@@ -34,6 +34,9 @@ namespace COMMODORE
 				  _errorText ("")
 							{ }
 
+			virtual ~Format ()
+							{ }
+
 			bool error () const
 							{ return (_error); }
 			const std::string& errorText () const
@@ -41,6 +44,8 @@ namespace COMMODORE
 			void resetError ()
 							{ _error = false; _errorText = ""; }
 
+			virtual bool usesField () const
+							{ return (true); }
 			virtual std::string format (const std::string& str) const = 0;
 
 			protected:
@@ -59,7 +64,7 @@ namespace COMMODORE
 							{ }
 
 			virtual std::string format (const std::string& str) const override
-							{ return (""); }
+							{ return (str); }
 		};
 
 		/** The format is wrong, just from the beginning. */
@@ -88,9 +93,30 @@ namespace COMMODORE
 			/** The parameter is not used in this case. */
 			virtual std::string format (const std::string&) const override
 							{ return (MCHEmul::_SPACES.substr (0, _spaces)); }
+			virtual bool usesField () const override
+							{ return (false); }
 
 			private:
 			unsigned char _spaces;
+		};
+
+		/** A literal text printed as a part of the formatter. */
+		class LiteralFormat final : public Format
+		{
+			public:
+			LiteralFormat (const std::string& txt)
+				: Format (),
+				  _text (txt)
+							{ }
+
+			/** The parameter is not used in this case. */
+			virtual std::string format (const std::string&) const override
+							{ return (_text); }
+			virtual bool usesField () const override
+							{ return (false); }
+
+			private:
+			std::string _text;
 		};
 
 		/** Just to adjust a text to a fixed length. */
@@ -102,10 +128,7 @@ namespace COMMODORE
 				  _numberLetters (nL)
 							{ }
 
-			virtual std::string format (const std::string& str) const override
-							{ return ((str.length () >= (size_t) _numberLetters) 
-								? str.substr (0, _numberLetters) 
-								: str + MCHEmul::_SPACES.substr (0, (_numberLetters - str.length ()))); }
+			virtual std::string format (const std::string& str) const override;
 
 			private:
 			unsigned char _numberLetters;
@@ -182,7 +205,8 @@ namespace COMMODORE
 	{
 		std::string result = "";
 		for (const auto& i : _formats) 
-			result += i -> errorText () + "\n";
+			if (i -> error ())
+				result += i -> errorText () + "\n";
 		return (result);
 	}
 
@@ -254,6 +278,8 @@ namespace COMMODORE
 		unsigned char _timesRepeated;
 		/** Printing or not messages when error */
 		bool _printingErrorMessages;
+		/** Quote mode on/off. */
+		bool _quoteMode;
 
 		/** When the definition of a format is in progress,
 			this variable is used to accumulate the definition of the format until a new line is printed out. */
@@ -304,8 +330,7 @@ namespace COMMODORE
 
 		// Implementation
 		/** Just to simulate the carryReturn. */
-		void carryReturn ()
-							{ _posXInside = 0; moveHeadTo (0, headYPosition ()); }
+		void carryReturn ();
 		/** Just to simulate a lineFeed. 
 			When the limit of the page is reached out (taken into account whether paging is on or off,
 			a new page might be set up (setNewPage). */
@@ -318,6 +343,12 @@ namespace COMMODORE
 			Anytime a byte is printed out the head of the printer has to me moved one position right. \n
 			The limit of the printer can be reached out, so a carryReturn and a lineFeed might happend. */
 		void advance1HeadPosition ();
+		/** Modes that the real printer switches off after a carry return. */
+		void resetLineModesAfterCarryReturn ();
+		/** Top of form in paging mode. */
+		void topOfForm ();
+		/** The y scale depends on the line spacing selected with SA6. */
+		float lineSpacingScaleY () const;
 		/** Just to print out a byte. \n
 			Any time a byte is printed out then the head of the printer has to advance a position (internal) in X. */
 		void printBytePostscript (const MCHEmul::UByte& b);
@@ -326,6 +357,7 @@ namespace COMMODORE
 		void printBytesPostscript (const std::vector <MCHEmul::UByte>& bs)
 							{ for (size_t i = 0; i < bs.size (); printBytePostscript (bs [i++])); }
 		void printChrPostScript (unsigned char chr);
+		void printGlyphPostScript (unsigned char chr);
 		/** Used to print out a set of characters. \n 
 			This is used when formatting is active. */
 		void printTextPostScript (const std::string& txt)
@@ -370,6 +402,10 @@ namespace COMMODORE
 		bool _reverse;
 		/** Paging on/off. */
 		bool _paging;
+		/** Quote mode on/off. */
+		bool _quoteMode;
+		/** Space between lines in 1/144 inch steps. */
+		unsigned char _spaceBetweenLines;
 		/** To define a programable char. */
 		std::array <MCHEmul::UByte, 8> _programableGraphic;
 		/** When the graphic has been defined. */
