@@ -61,9 +61,16 @@ bool COMMODORE::Disk1540SeriesSimulation::connectData (MCHEmul::FileData* dt)
 // ---
 MCHEmul::FileData* COMMODORE::Disk1540SeriesSimulation::retrieveData () const
 {
-	return (_d64FileData == nullptr
-		? nullptr
-		: new COMMODORE::D64FileData (*_d64FileData));
+	COMMODORE::D64FileData* result = 
+		_d64FileData == nullptr
+			? nullptr
+			: new COMMODORE::D64FileData (*_d64FileData);
+
+	// Adds the name of the file...
+	result -> _attributes ["FNAME"] = 
+		MCHEmul::getAttribute ("FNAME", _data._attributes);
+
+	return (result);
 }
 
 // ---
@@ -822,10 +829,7 @@ std::vector <std::string> COMMODORE::Disk1540SeriesSimulation::splitCommandList
 std::string COMMODORE::Disk1540SeriesSimulation::padPETSCIIName
 	(const std::string& name) const
 {
-	std::string result = name.substr (0, (name.length () < 16) ? name.length () : 16);
-	while (result.length () < 16)
-		result += (char) 0xa0;
-	return (result);
+	return (COMMODORE::D64FileData::padPETSCIIName (name));
 }
 
 // ---
@@ -1678,73 +1682,15 @@ bool COMMODORE::Disk1540SeriesSimulation::executeNewCommand (const std::string& 
 	else
 		diskID = MCHEmul::trim (payload.substr (comma + 1));
 
-	// Clear every physical sector before reconstructing BAM and directory.
-	std::vector <MCHEmul::UByte> emptySector (256, MCHEmul::UByte::_0);
-	for (unsigned char track = 1; track <= _d64FileData -> _numberTracks; track++)
-		for (unsigned char sector = 0;
-				sector < _d64FileData -> _tracksData [track - 1] -> _trackInfo._sectors;
-				sector++)
-			_d64FileData -> setSectorData
-				(track, sector, MCHEmul::UBytes (emptySector));
-
-	// Recreate the BAM sector: it points to the first directory sector and then
-	// marks all usable sectors free except BAM/directory sectors.
-	std::vector <MCHEmul::UByte> bam (256, MCHEmul::UByte::_0);
-	bam [0] = MCHEmul::UByte (18);
-	bam [1] = MCHEmul::UByte (1);
-	bam [2] = MCHEmul::UByte ('A');
-
-	// The 1541 BAM describes the standard 35 tracks; extended image tracks are
-	// left outside this classic BAM layout.
-	size_t maxBAMTrack =
-		((size_t) _d64FileData -> _numberTracks < 35)
-			? (size_t) _d64FileData -> _numberTracks
-			: 35;
-	for (size_t track = 1; track <= maxBAMTrack; track++)
-	{
-		size_t bamEntry = 0x04 + ((track - 1) << 2);
-		unsigned char freeSectors = 0;
-		for (size_t sector = 0;
-				sector < _d64FileData -> _tracksData [track - 1] -> _trackInfo._sectors;
-				sector++)
-		{
-			bool freeSector = !(track == 18 && (sector == 0 || sector == 1));
-			if (!freeSector)
-				continue;
-
-			freeSectors++;
-			bam [bamEntry + 1 + (sector >> 3)].setBit (sector & 0x07, true);
-		}
-
-		bam [bamEntry] = MCHEmul::UByte (freeSectors);
-	}
-
-	// Disk name, id and DOS type live in fixed BAM header offsets padded in
-	// PETSCII style.
-	std::string paddedName = padPETSCIIName (diskName);
-	for (size_t i = 0; i < 16; i++)
-		bam [0x90 + i] = MCHEmul::UByte ((unsigned char) paddedName [i]);
-
-	bam [0xa0] = MCHEmul::UByte (0xa0);
-	bam [0xa1] = MCHEmul::UByte (0xa0);
-	bam [0xa2] = MCHEmul::UByte
-		((unsigned char) (diskID.length () > 0 ? diskID [0] : 0xa0));
-	bam [0xa3] = MCHEmul::UByte
-		((unsigned char) (diskID.length () > 1 ? diskID [1] : 0xa0));
-	bam [0xa4] = MCHEmul::UByte (0xa0);
-	bam [0xa5] = MCHEmul::UByte ('2');
-	bam [0xa6] = MCHEmul::UByte ('A');
-	bam [0xa7] = MCHEmul::UByte (0xa0);
-
-	// Track 18 sector 1 becomes an empty terminal directory sector.
-	std::vector <MCHEmul::UByte> directory (256, MCHEmul::UByte::_0);
-	directory [0] = MCHEmul::UByte::_0;
-	directory [1] = MCHEmul::UByte::_FF;
-
 	// Commit the rebuilt BAM and empty directory, then refresh the memory-block
 	// view used by the rest of the emulator.
-	_d64FileData -> setSectorData (18, 0, MCHEmul::UBytes (bam));
-	_d64FileData -> setSectorData (18, 1, MCHEmul::UBytes (directory));
+	if (!_d64FileData -> formatAsEmptyDisk (diskName, diskID))
+	{
+		setDOSStatus (66, "ILLEGAL TRACK OR SECTOR", 18, 0);
+
+		return (false);
+	}
+
 	synchronizeDiskData ();
 
 	setDOSStatus (0, " OK");

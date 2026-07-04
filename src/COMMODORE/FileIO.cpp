@@ -699,13 +699,24 @@ COMMODORE::D64FileData::DirectoryEntriesPerSector
 // ---
 COMMODORE::D64FileData::D64FileData (unsigned char nT)
 	: _numberTracks (nT),
-	  _tracksData ()
+	  _tracksData (),
+	  _attributes ()
 { 
 	assert (_numberTracks <= 42);
 
 	// Creating all tracks...
 	for (unsigned char i = 1; i <= _numberTracks; i++)
 		_tracksData.emplace_back ((i == 18) ? new Track18Data  : new TrackData (i));
+}
+
+// ---
+COMMODORE::D64FileData::D64FileData
+	(const std::string& diskName, const std::string& diskID, unsigned char nT)
+	: D64FileData (nT)
+{
+	bool result = formatAsEmptyDisk (diskName, diskID);
+
+	assert (result);
 }
 
 // ---
@@ -723,6 +734,11 @@ COMMODORE::D64FileData::D64FileData (const COMMODORE::D64FileData& dD)
 MCHEmul::ExtendedDataMemoryBlocks COMMODORE::D64FileData::asMemoryBlocks () const
 {
 	MCHEmul::ExtendedDataMemoryBlocks result;
+
+	MCHEmul::Attributes attrs;
+	for (const auto& i : _attributes)
+		attrs [i.first] = i.second; // Copy the attributes (none can have the same name than the ones above)...
+	result._attributes	= std::move (attrs); // It is not longer valid...
 
 	for (unsigned char i = 1; i <= _numberTracks; i++)
 	{
@@ -771,6 +787,89 @@ bool COMMODORE::D64FileData::setSectorData
 
 	return (true);
 }
+
+// ---
+std::string COMMODORE::D64FileData::padPETSCIIName (const std::string& name)
+{
+	std::string result = name.substr (0, (name.length () < 16) ? name.length () : 16);
+	while (result.length () < 16)
+		result += (char) 0xa0;
+	return (result);
+}
+
+// ---
+bool COMMODORE::D64FileData::formatAsEmptyDisk
+	(const std::string& diskName, const std::string& diskID)
+{
+	if (_numberTracks < 18)
+		return (false);
+
+	// Clear every physical sector before reconstructing BAM and directory.
+	std::vector <MCHEmul::UByte> emptySector (256, MCHEmul::UByte::_0);
+	for (size_t track = 1; track <= (size_t) _numberTracks; track++)
+		for (size_t sector = 0;
+				sector < _tracksData [track - 1] -> _trackInfo._sectors;
+				sector++)
+			if (!setSectorData
+					((unsigned char) track, (unsigned char) sector,
+					 MCHEmul::UBytes (emptySector)))
+				return (false);
+
+	// Recreate the BAM sector: it points to the first directory sector and then
+	// marks all usable sectors free except BAM/directory sectors.
+	std::vector <MCHEmul::UByte> bam (256, MCHEmul::UByte::_0);
+	bam [0] = MCHEmul::UByte (18);
+	bam [1] = MCHEmul::UByte (1);
+	bam [2] = MCHEmul::UByte ('A');
+
+	// The 1541 BAM describes the standard 35 tracks; extended image tracks are
+	// left outside this classic BAM layout.
+	size_t maxBAMTrack = ((size_t) _numberTracks < 35) ? (size_t) _numberTracks : 35;
+	for (size_t track = 1; track <= maxBAMTrack; track++)
+	{
+		size_t bamEntry = 0x04 + ((track - 1) << 2);
+		unsigned char freeSectors = 0;
+		for (size_t sector = 0;
+				sector < _tracksData [track - 1] -> _trackInfo._sectors;
+				sector++)
+		{
+			bool freeSector = !(track == 18 && (sector == 0 || sector == 1));
+			if (!freeSector)
+				continue;
+
+			freeSectors++;
+			bam [bamEntry + 1 + (sector >> 3)].setBit (sector & 0x07, true);
+		}
+
+		bam [bamEntry] = MCHEmul::UByte (freeSectors);
+	}
+
+	// Disk name, id and DOS type live in fixed BAM header offsets padded in
+	// PETSCII style.
+	std::string paddedName = padPETSCIIName (diskName);
+	for (size_t i = 0; i < 16; i++)
+		bam [0x90 + i] = MCHEmul::UByte ((unsigned char) paddedName [i]);
+
+	bam [0xa0] = MCHEmul::UByte (0xa0);
+	bam [0xa1] = MCHEmul::UByte (0xa0);
+	bam [0xa2] = MCHEmul::UByte
+		((unsigned char) (diskID.length () > 0 ? diskID [0] : 0xa0));
+	bam [0xa3] = MCHEmul::UByte
+		((unsigned char) (diskID.length () > 1 ? diskID [1] : 0xa0));
+	bam [0xa4] = MCHEmul::UByte (0xa0);
+	bam [0xa5] = MCHEmul::UByte ('2');
+	bam [0xa6] = MCHEmul::UByte ('A');
+	bam [0xa7] = MCHEmul::UByte (0xa0);
+
+	// Track 18 sector 1 becomes an empty terminal directory sector.
+	std::vector <MCHEmul::UByte> directory (256, MCHEmul::UByte::_0);
+	directory [0] = MCHEmul::UByte::_0;
+	directory [1] = MCHEmul::UByte::_FF;
+
+	return (setSectorData (18, 0, MCHEmul::UBytes (bam)) &&
+		setSectorData (18, 1, MCHEmul::UBytes (directory)));
+}
+
 // ---
 bool COMMODORE::D64FileTypeIO::canRead (const std::string& fN) const
 {
@@ -821,6 +920,9 @@ MCHEmul::FileData* COMMODORE::D64FileTypeIO::readFile (const std::string& fN, bo
 		static_cast <COMMODORE::D64FileData*> (result); // To better manipulation...
 	f.seekg (0, std::ios::beg);
 
+	// The name of the file is in an attribute...
+	rD64 -> _attributes ["FNAME"] = fN;
+
 	// It is time to read the info per block...
 	for (unsigned char i = 1; i <= nT; i++)
 	{
@@ -850,9 +952,24 @@ bool COMMODORE::D64FileTypeIO::writeFile
 	if (d64 == nullptr)
 		return (false);
 
-	std::ofstream f (fN, std::ios::out | std::ios::binary);
+	// There might not be name of the file,
+	// It it were the case, the name defined in the data file should be taken instead
+	// and if there were not event that, a mistake is generated!
+	std::string lFN = fN;
+	if (lFN == "")
+	{
+		MCHEmul::Attributes::const_iterator p = d64 -> _attributes.find ("FNAME");
+		if (p == d64 -> _attributes.end ())
+			return (false);
+		else
+			lFN = (*p).second; // The name of the file to write...
+	}
+
+	// Open the file, and keeps its name just for the next time, if any!
+	std::ofstream f (d64 -> _attributes ["FNAME"] = lFN, 
+		std::ios::out | std::ios::binary);
 	if (!f)
-		return (false);
+		return (false); // Impossible to be opened...
 
 	for (unsigned char i = 1; i <= d64 -> _numberTracks; i++)
 	{

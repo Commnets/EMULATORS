@@ -37,6 +37,10 @@ namespace COMMODORE
 							{ return (true); }
 
 		virtual bool connectData (MCHEmul::FileData* dt) override;
+		/** To create an empty formatted D64 disk image. */
+		virtual MCHEmul::FileData* emptyData () const override
+							{ return (new COMMODORE::D64FileData ("EMPTY DISK", "00")); }
+
 		/** To retrieve a copy of the connected disk data. */
 		virtual MCHEmul::FileData* retrieveData () const override;
 

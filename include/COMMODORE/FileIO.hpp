@@ -420,6 +420,10 @@ namespace COMMODORE
 		/** Usually the file data is just for 35 tracks,
 			that is the most common size. */
 		D64FileData (unsigned char nt = 35);
+		/** Creates a valid empty 1541 disk image with BAM and directory initialized. */
+		D64FileData
+			(const std::string& diskName, const std::string& diskID = "00",
+			 unsigned char nt = 35);
 		D64FileData (const D64FileData& dD);
 
 		/** The track data elements must be removed. */
@@ -434,6 +438,10 @@ namespace COMMODORE
 		MCHEmul::UBytes sectorData (unsigned char t, unsigned char s) const;
 		/** To change the data of a sector. */
 		bool setSectorData (unsigned char t, unsigned char s, const MCHEmul::UBytes& data);
+		/** Pads a PETSCII name with $a0 up to 16 bytes. */
+		static std::string padPETSCIIName (const std::string& name);
+		/** Formats the image as an empty 1541 disk. */
+		bool formatAsEmptyDisk (const std::string& diskName, const std::string& diskID);
 
 		/** To access the entries. \n
 			Track 18 (17 ehen counting from 0) is the directory track always. */
@@ -447,6 +455,7 @@ namespace COMMODORE
 
 		const unsigned char _numberTracks;
 		std::vector <TrackData*> _tracksData;
+		MCHEmul::Attributes _attributes; // Attributes of the file, like the name (FNAME), etc.
 	};
 
 	/** The loader for D64. */
