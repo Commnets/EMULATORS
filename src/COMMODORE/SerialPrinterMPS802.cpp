@@ -511,11 +511,14 @@ std::string COMMODORE::MPS802MatrixPrinterFormatter::TextFormat::format (const s
 COMMODORE::MPS802MatrixPrinterFormatter::NumericFormat::NumericFormat (const std::string& str)
 	: COMMODORE::MPS802MatrixPrinterFormatter::Format (), // After this the error is false, and with no text!
 	  _structure (str),
-	  _fBeforePoint (""), _fAfterPoint ("")
+	  _fBeforePoint (""), _fAfterPoint (""),
+	  _trailingMinus (false)
 { 
 	size_t pP = str.find_first_of ('.');
 	if (pP != std::string::npos && str.find_first_of ('.', pP + 1) != std::string::npos)
 		_error = true;
+
+	bool tMinus = (!str.empty () && str [str.length () - 1] == '-');
 
 	// Before the point...
 	std::string eNStr = _fBeforePoint = str.substr (0, pP); 
@@ -523,20 +526,27 @@ COMMODORE::MPS802MatrixPrinterFormatter::NumericFormat::NumericFormat (const std
 	std::string fNStr = _fAfterPoint = 
 		((pP == std::string::npos) ? "" : str.substr (pP + 1));
 
+	// A final "-" is a trailing sign field marker, regardless of whether
+	// the number has a fractional part.
+	if (tMinus)
+	{
+		if (!_fAfterPoint.empty ())
+			_fAfterPoint = _fAfterPoint.substr (0, _fAfterPoint.length () - 1);
+		else
+			_fBeforePoint = _fBeforePoint.substr (0, _fBeforePoint.length () - 1);
+
+		eNStr = _fBeforePoint;
+		fNStr = _fAfterPoint;
+	}
+
 	bool sgn = false;
 
 	// After the point... (if any)
-	// If any, they can only be 9 and a "-" sign at the end! (if any)
+	// If any, they can only be 9.
 	if (!_error && !fNStr.empty ())
 	{
-		if (fNStr.find_first_not_of ("9-") != fNStr.npos) 
+		if (fNStr.find_first_not_of ("9") != fNStr.npos)
 			_error = true; // None of the values allowed...
-		else
-		{
-			size_t cP = fNStr.find_first_of ('-');
-			if (cP != fNStr.npos && cP != (fNStr.length () - 1)) 
-				_error = true; // The values allowed but the "-" sign is not at the end...
-		}
 	}
 
 	// Before the point...
@@ -594,14 +604,19 @@ COMMODORE::MPS802MatrixPrinterFormatter::NumericFormat::NumericFormat (const std
 		}
 	}
 
+	if (!_error && _fBeforePoint.find_first_of ("9Z") == std::string::npos &&
+		_fAfterPoint.find_first_of ('9') == std::string::npos)
+		_error = true;
+
 	// If S and final - coexist, the manual says that S is honoured.
-	if (!_error && sgn && !_fAfterPoint.empty () && _fAfterPoint [_fAfterPoint.length () - 1] == '-')
-		_fAfterPoint = _fAfterPoint.substr (0, _fAfterPoint.length () - 1);
+	if (!_error && tMinus && !sgn)
+		_trailingMinus = true;
 
 	// When error...
 	if (_error)
 	{ 
 		_fBeforePoint = _fAfterPoint = "";
+		_trailingMinus = false;
 
 		// It is an error in the format...
 		_errorText = "*PE:F*"; 
@@ -615,7 +630,8 @@ std::string COMMODORE::MPS802MatrixPrinterFormatter::NumericFormat::format
 	auto fieldOverflow = [&]() -> std::string
 		{
 			size_t l = _fBeforePoint.length () +
-				(_fAfterPoint.empty () ? 0 : (1 + _fAfterPoint.length ()));
+				(_fAfterPoint.empty () ? 0 : (1 + _fAfterPoint.length ())) +
+				(_trailingMinus ? 1 : 0);
 			return (std::string ((l == 0) ? 3 : l, '*'));
 		};
 
@@ -646,8 +662,7 @@ std::string COMMODORE::MPS802MatrixPrinterFormatter::NumericFormat::format
 	if (_error)
 		return ("*.*");
 
-	size_t nDec = _fAfterPoint.length () -
-		(!_fAfterPoint.empty () && _fAfterPoint [_fAfterPoint.length () - 1] == '-' ? 1 : 0);
+	size_t nDec = _fAfterPoint.length ();
 	std::stringstream sS;
 	sS << std::fixed << std::setprecision (nDec) << std::abs (n);
 	std::string nStr = sS.str ();
@@ -704,12 +719,12 @@ std::string COMMODORE::MPS802MatrixPrinterFormatter::NumericFormat::format
 		size_t i = 0;
 		result += '.'; // Always a period just to start...
 		// As many digits as 9 are in the format (it has been verified at construction time)...
-		// Bear in mind that there could be a '-' at the end of the format that has to be considered just at the end...
-		for (; i < (_fAfterPoint.length () - ((_fAfterPoint [_fAfterPoint.length () - 1] == '-') ? 1 : 0)); i++)
+		for (; i < _fAfterPoint.length (); i++)
 			result += (i < fNStr.length ()) ? fNStr [i] : '0'; 
-		if (i != _fAfterPoint.length () && n < 0)
-			result += '-'; // ...and if any a sign at the end when the number is negative...
 	}
+
+	if ((result.empty () || result.find_first_not_of ('*') != std::string::npos) && _trailingMinus)
+		result += ((n < 0) ? '-' : ' ');
 
 	return (result);
 }

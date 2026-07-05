@@ -150,6 +150,7 @@ namespace COMMODORE
 			/** To speed up the further analysis. */
 			std::string _fBeforePoint;
 			std::string _fAfterPoint;
+			bool _trailingMinus;
 		};
 
 		static Formats createFormatsFrom (const std::string& f);
