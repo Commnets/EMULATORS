@@ -9,6 +9,7 @@ GENERALINSTRUMENTS::AY38910::AY38910
 		   { "Year", "1970" } }, w),
 	  _AY38910Registers (reg),
 	  _lastCPUCycles (0),
+	  _pendingCPUCyclesForSound (0),
 	  _internalRegisters (nullptr)
 {
 	// If nullptr a temporal one is created that it will be deleted when the object is destroyed...
@@ -39,6 +40,7 @@ bool GENERALINSTRUMENTS::AY38910::initialize ()
 	_AY38910Registers -> initialize ();
 
 	_lastCPUCycles = 0;
+	_pendingCPUCyclesForSound = 0;
 
 	return (true);
 }
@@ -56,10 +58,13 @@ bool GENERALINSTRUMENTS::AY38910::simulate (MCHEmul::CPU* cpu)
 
 	if (soundWrapper () != nullptr)
 	{
+		_pendingCPUCyclesForSound += cpu -> clockCycles () - _lastCPUCycles;
+		// In MSX1 the AY clock is half the CPU clock; odd CPU-cycle deltas
+		// must be carried to the next simulation step instead of being lost.
+		unsigned int nC = _pendingCPUCyclesForSound >> 1;
+		_pendingCPUCyclesForSound &= 0x01;
 		// Simulate the sound...
-		for (unsigned int i = 
-				((cpu -> clockCycles  () - _lastCPUCycles) >> 1); 
-			i > 0; i--)
+		for (unsigned int i = nC; i > 0; i--)
 		{
 			_IFDEBUG debugAY38910Cycle (cpu, i);
 

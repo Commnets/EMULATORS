@@ -82,6 +82,8 @@ namespace GENERALINSTRUMENTS
 		// Implementation
 		/** The number of cycles the CPU was executed once the simulated method finishes. */
 		unsigned int _lastCPUCycles;
+		/** CPU cycles not yet converted into PSG cycles. */
+		unsigned int _pendingCPUCyclesForSound;
 		/** When the Registers are created internally because they will be accesed always through out the chip
 			and this on e froma port and not like a memory address (that belongs to the computer) this
 			variable is set and must be deleted. */

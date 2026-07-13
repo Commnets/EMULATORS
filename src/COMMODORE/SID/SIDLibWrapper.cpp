@@ -540,14 +540,14 @@ bool COMMODORE::SoundSIDSimpleWrapper::getData (MCHEmul::CPU *cpu, MCHEmul::UByt
 
 		// In the emulation of the SID
 		// the voices are "added" producing more "signal"....
-		double iR = 0.0;
+		double iR = 0.0f; // No sound...
 		for (auto i : _voices)
 			iR += i -> data (); // but the values are added...
 		iR *= _volumen; // ...and adjusted to the volumen...
 		if (iR > 1.0f) // ..but the outcome can never be finally more than 1.0f!
 			iR = 1.0f;
 
-		dt = MCHEmul::UBytes ({ (unsigned char) (iR * 255.0f) });
+		dt = MCHEmul::UBytes ({ (unsigned char) (iR * 255.0f /** between 0 and 255 finally. */) });
 	}
 
 	return (result);

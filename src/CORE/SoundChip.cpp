@@ -6,7 +6,11 @@ bool MCHEmul::SoundChip::initialize ()
 	if (_soundMemory != nullptr)
 		delete (_soundMemory); // When reinit e.g....
 
-	_soundMemory = createSoundMemory ();
+	if ((_soundMemory = createSoundMemory ()) == nullptr)
+		return (false);
 
-	return (_soundMemory != nullptr);
+	// Must be initialized to avoid garbage data...
+	_soundMemory -> initialize ();
+
+	return (true);
 }

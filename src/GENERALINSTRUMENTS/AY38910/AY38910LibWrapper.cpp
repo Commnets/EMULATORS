@@ -143,7 +143,7 @@ void GENERALINSTRUMENTS::AY38910SimpleLibWrapper::setValue (size_t p, const MCHE
 		// In the Yamaha documentation this register is called R12 instead of R10
 		case 0x0a:
 		{
-				_volumen [2] = !v.bit (4) ? ((double) (v.value () & 0x07) / 15.0f) : 1.0f;
+				_volumen [2] = !v.bit (4) ? ((double) (v.value () & 0x0f) / 15.0f) : 1.0f;
 				_useEnvelope [2] = v.bit (4);
 		}
 
@@ -258,7 +258,7 @@ bool GENERALINSTRUMENTS::AY38910SimpleLibWrapper::getData (MCHEmul::CPU *cpu, MC
 		_counterCyclesPerSample = 
 			std::fmod (_counterCyclesPerSample, _cyclesPerSample);
 
-		double iR = 0;
+		double iR = 0.0f; // No sound...
 		for (size_t i = 0; i < 3; i++) // The three voices are mixed with the noise if defined so...
 			iR += 
 				_voices [i] -> data () * 
