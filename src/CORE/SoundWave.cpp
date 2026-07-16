@@ -73,8 +73,7 @@ double MCHEmul::TriangleSoundWave::data () const
 
 	double half = _cyclesPerWave * 0.5;
 	if (_counterInCyclesPerWave < half)
-		return _counterInCyclesPerWave / half;
-
+		return (_counterInCyclesPerWave / half);
 	return (1.0 - ((_counterInCyclesPerWave - half) / half));
 }
 
@@ -85,7 +84,7 @@ double MCHEmul::SawSmoothSoundWave::data () const
 		return (0.0f); // No active...
 
 	if (_cyclesPerWave <= 0.0f)
-		return 0.0f;
+		return (0.0f);
 
 	return (_counterInCyclesPerWave / _cyclesPerWave);
 }

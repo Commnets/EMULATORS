@@ -547,7 +547,8 @@ bool COMMODORE::SoundSIDSimpleWrapper::getData (MCHEmul::CPU *cpu, MCHEmul::UByt
 		if (iR > 1.0f) // ..but the outcome can never be finally more than 1.0f!
 			iR = 1.0f;
 
-		dt = MCHEmul::UBytes ({ (unsigned char) (iR * 255.0f /** between 0 and 255 finally. */) });
+		dt = MCHEmul::UBytes ({ (iR == 0.0f) 
+			? 128 : (unsigned char) (iR * 255.0f /** between 0 and 255 finally. */) });
 	}
 
 	return (result);

@@ -215,7 +215,8 @@ bool COMMODORE::VICISoundSimpleLibWrapper::getData (MCHEmul::CPU *cpu, MCHEmul::
 		// This number could be greater than 1!
 		if (iR > 1.0f) iR = 1.0f; // ...so it is needed to correct.
 
-		dt = MCHEmul::UBytes ({ (unsigned char) (iR * 255.0f /** between 0 and 255. */) });
+		dt = MCHEmul::UBytes ({ (iR == 0.0f) 
+			? 128 : (unsigned char) (iR * 255.0f /** between 0 and 255. */) });
 	}
 
 	return (result);

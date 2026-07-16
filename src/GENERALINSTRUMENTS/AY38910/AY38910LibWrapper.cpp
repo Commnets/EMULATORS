@@ -31,7 +31,8 @@ GENERALINSTRUMENTS::AY38910SimpleLibWrapper::AY38910SimpleLibWrapper (unsigned i
 		  new GENERALINSTRUMENTS::AY38910SimpleLibWrapper::Voice (3, cF), }),
 	  _envelope (cF),
 	  _useEnvelope { false, false, false },
-	  _mixNoise { false, false, false }, // The noise is not mixed by default...
+	  _toneDisabled { false, false, false },
+	  _noiseDisabled { false, false, false },
 	  _volumen { 0.0f, 0.0f, 0.0f },
 	  _registers (std::vector <MCHEmul::UByte> (0x20, MCHEmul::UByte::_0)),
 	  _cyclesPerSample ((double) cF / (double (sF))), // It doesn't change ever...
@@ -102,14 +103,12 @@ void GENERALINSTRUMENTS::AY38910SimpleLibWrapper::setValue (size_t p, const MCHE
 		case 0x07:
 			{
 				// Mixer register. Bits are inverted: 0 enables tone/noise output.
-				_voices [0] -> setActive (!v.bit (0));
-				_voices [1] -> setActive (!v.bit (1));
-				_voices [2] -> setActive (!v.bit (2));
-				// The bits 3 to 5 determine whether the noise should be mixed 
-				// with the tone comming from the 3 voices...
-				_mixNoise [0] = !v.bit (3);
-				_mixNoise [1] = !v.bit (4);
-				_mixNoise [2] = !v.bit (5);
+				_toneDisabled  [0] = v.bit (0);
+				_toneDisabled  [1] = v.bit (1);
+				_toneDisabled  [2] = v.bit (2);
+				_noiseDisabled [0] = v.bit (3);
+				_noiseDisabled [1] = v.bit (4);
+				_noiseDisabled [2] = v.bit (5);
 				// The bits 6 & 7 are not implemented yet...
 			}
 
@@ -238,7 +237,12 @@ void GENERALINSTRUMENTS::AY38910SimpleLibWrapper::initialize ()
 	// All registers are 0 by default...
 	_registers = std::vector <MCHEmul::UByte> (0x20, MCHEmul::UByte::_0); 
 	for (size_t i = 0; i < 3; i++) 
-		{ _useEnvelope [i] = _mixNoise [i] = false; _volumen [i] = 1.0f; }
+	{
+		_useEnvelope [i] = false;
+		_toneDisabled [i] = false;
+		_noiseDisabled [i] = false;
+		_volumen [i] = 0.0f;
+	}
 }
 
 // ---
@@ -258,18 +262,30 @@ bool GENERALINSTRUMENTS::AY38910SimpleLibWrapper::getData (MCHEmul::CPU *cpu, MC
 		_counterCyclesPerSample = 
 			std::fmod (_counterCyclesPerSample, _cyclesPerSample);
 
+		// The AY has three audible channels and a common noise generator.
+		// Mixer bits disable tone/noise inputs independently per audible channel.
+		double nD = (_voices [3] -> data () >= 0.5f) ? 1.0f : 0.0f;
 		double iR = 0.0f; // No sound...
-		for (size_t i = 0; i < 3; i++) // The three voices are mixed with the noise if defined so...
+		for (size_t i = 0; i < 3; i++)
+		{
+			double tD = _toneDisabled [i]
+				? 1.0f
+				: _voices [i] -> wave (MCHEmul::SoundWave::Type::_SQUARE) -> data ();
+			double cD =
+				tD *
+				(_noiseDisabled [i] ? 1.0f : nD);
+
 			iR += 
-				_voices [i] -> data () * 
-				_volumen [i] * // 1.0 when Envelope is not active for this voice.
-			    (_useEnvelope [i] ? _envelope.envelopeData () : 1.0f) * // Only if the envelope is active for that voice...
-				(_mixNoise [i] ? _voices [3] -> data () : 1.0f); // Mixed with the noise voice is allowed...
+				cD *
+				_volumen [i] *
+				(_useEnvelope [i] ? _envelope.envelopeData () : 1.0f);
+		}
 		
 		// This number could be greater than 1!
 		if (iR > 1.0f) iR = 1.0f; // ...so it is needed to correct.
 
-		dt = MCHEmul::UBytes ({ (unsigned char) (iR * 255.0f /** between 0 and 255. */) });
+		dt = MCHEmul::UBytes ({ (iR == 0.0f)
+			? 128 : (unsigned char) (iR * 255.0f /** between 0 and 255. */) });
 	}
 
 	return (result);
