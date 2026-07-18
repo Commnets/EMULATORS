@@ -155,6 +155,12 @@
     <ClCompile Include="..\..\src\MSX\PSG.cpp">
       <Filter>Archivos de origen\Motherboard\Chips</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\MSX\Datasette.cpp">
+      <Filter>Archivos de origen\IO</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\MSX\DatasettePort.cpp">
+      <Filter>Archivos de origen\IO</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="console.def">

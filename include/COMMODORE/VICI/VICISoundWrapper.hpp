@@ -91,7 +91,7 @@ namespace COMMODORE
 			virtual void setActive (bool a) override
 							{ _active = a; }
 
-			/** To get the current voice output. */
+			/** To get the current normalized voice output between -1.0 and 1.0. */
 			virtual double data () const override;
 
 			private:

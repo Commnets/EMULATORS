@@ -1,4 +1,5 @@
 #include <CORE/SoundLibWrapper.hpp>
+#include <cmath>
 
 // ---
 MCHEmul::InfoStructure MCHEmul::SoundLibWrapper::getInfoStructure () const

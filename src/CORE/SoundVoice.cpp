@@ -93,6 +93,8 @@ double MCHEmul::SoundVoice::data () const
 		if (i != nullptr /** Just in case, althought it shouldn't. */ && i -> active ())
 			result = i -> process (result);
 
+	if (result < -1.0f)	result = -1.0f;
+	else if (result > 1.0f)	result = 1.0f;
 	return (result);
 }
 
@@ -137,12 +139,10 @@ double MCHEmul::SoundVoice::wavesData () const
 		}
 	}
 
-	// To have a number between 0 and 1.0, 
-	// as the data of each wave is between 0 and 1.0.
+	// To keep the mix in the same normalized range as each individual wave.
 	result /= (nAW == 0) ? 1.0f : (double) nAW; 
 
-	// It can not be bigger that 1.0f...
-	// ...it should be, but just in cese, 
-	// to avoid problems with the sound output, it is limited to 1.0f.
-	return ((result > 1.0f) ? 1.0f : result);
+	if (result < -1.0f)	result = -1.0f;
+	else if (result > 1.0f)	result = 1.0f;
+	return (result);
 }

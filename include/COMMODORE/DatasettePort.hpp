@@ -19,8 +19,6 @@
 
 namespace COMMODORE
 {
-	class DatasettePeripheral;
-
 	/** This class represents the place a COMMODORRE Datasette connects. \n
 		It is pretty much like the standard one, but assigned already a specific Id. \n
 		The class is not final because when it is attached to a specific computer,

@@ -37,6 +37,34 @@ namespace MSX
 		// The default ones...
 		static const std::map <char, MCHEmul::Strings> _DEFAULTSPECIALKEYS;
 	};
+
+	/** The CAS Format. ºn
+		One of the most common formats in MSX systems. */
+	class CASFileData final : public MCHEmul::FileData
+	{
+		public:
+		CASFileData ()
+			: MCHEmul::FileData ()
+							{ }
+
+		virtual MCHEmul::ExtendedDataMemoryBlocks asMemoryBlocks () const override;
+	};
+
+	/** The extension able to read CAS file foirmat. */
+	class CASFileTypeIO final : public MCHEmul::FileTypeIO
+	{
+		public:
+		CASFileTypeIO ()
+			: MCHEmul::FileTypeIO ()
+							{ }
+		virtual bool canRead (const std::string& fN) const override;
+		virtual MCHEmul::FileData* readFile (const std::string& fN, bool bE = true) const override;
+		virtual bool canWrite (MCHEmul::FileData* fD) const override
+							{ return (dynamic_cast <CASFileData*> (fD) != nullptr); }
+		/** This type of format can not be written back to any file. */
+		virtual bool writeFile (MCHEmul::FileData* fD, const std::string& fN, bool bE = true) const override
+							{ return (false); }
+	};
 }
 
 #endif

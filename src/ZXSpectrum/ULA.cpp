@@ -68,7 +68,11 @@ bool ZXSPECTRUM::ULA::SoundFunction::simulate (MCHEmul::CPU* cpu)
 			// Just check whether the EAR is or not activated...
 			// ...to determine whether the sound function is on or off!
 			_counterClocksPerSample = 0;
-			char dt = (_ULARegisters -> buzzerSignal ()) ? (char) 100 /** The max volumen. */ : (char) 0; // Full sound or not...
+			const double sample =
+				_ULARegisters -> buzzerSignal () ? 1.0f : 0.0f;
+			const unsigned char pcm =
+				MCHEmul::normalizedSoundSampleToU8 (sample);
+			char dt = static_cast <char> (pcm);
 			if (soundMemory () -> addSampleData (&dt, sizeof (char)))
 				MCHEmul::SoundChip::notify (MCHEmul::Event (_SOUNDREADY)); // When buffer is full, notify!
 		}

@@ -82,8 +82,10 @@ bool ZXSPECTRUM::ULASoundSimpleLibWrapper::getData (MCHEmul::CPU *cpu, MCHEmul::
 		_counterCyclesPerSample = 
 			std::fmod (_counterCyclesPerSample, _cyclesPerSample);
 
-		dt = MCHEmul::UBytes 
-			({ (unsigned char) ((_voice.data () * _volumen) * 255.0f /** between 0 and 255. */) });
+		const double sample = _voice.data () * _volumen;
+
+		dt = MCHEmul::UBytes ({
+			MCHEmul::normalizedSoundSampleToU8 (sample)	});
 	}
 
 	return (result);

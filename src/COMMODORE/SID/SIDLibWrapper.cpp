@@ -112,7 +112,11 @@ bool COMMODORE::SoundRESIDWrapper::getData (MCHEmul::CPU* cpu, MCHEmul::UBytes& 
 	// A minumum buffer (it could be even shorter!)
 	short buffer [4];
 	if (_resid_sid.clock (nC, buffer, 1) != 0) // When element ready...
-		dt = MCHEmul::UBytes ({ (unsigned char) ((int (*buffer) / 256) + 128) }); // ...they are transformed into a unsigned char...
+	{
+		const double sample = (double) buffer [0] / 32768.0f;
+		dt = MCHEmul::UBytes ({
+			MCHEmul::normalizedSoundSampleToU8 (sample) });
+	}
 
 	return (true);
 }
@@ -538,17 +542,15 @@ bool COMMODORE::SoundSIDSimpleWrapper::getData (MCHEmul::CPU *cpu, MCHEmul::UByt
 		_counterCyclesPerSample = 
 			std::fmod (_counterCyclesPerSample, _cyclesPerSample);
 
-		// In the emulation of the SID
-		// the voices are "added" producing more "signal"....
-		double iR = 0.0f; // No sound...
+		// In the emulation of the SID the voices are added before applying
+		// the master volume. The PCM conversion limits the final mix.
+		double sample = 0.0f;
 		for (auto i : _voices)
-			iR += i -> data (); // but the values are added...
-		iR *= _volumen; // ...and adjusted to the volumen...
-		if (iR > 1.0f) // ..but the outcome can never be finally more than 1.0f!
-			iR = 1.0f;
+			sample += i -> data ();
+		sample *= _volumen;
 
-		dt = MCHEmul::UBytes ({ (iR == 0.0f) 
-			? 128 : (unsigned char) (iR * 255.0f /** between 0 and 255 finally. */) });
+		dt = MCHEmul::UBytes ({
+			MCHEmul::normalizedSoundSampleToU8 (sample)	});
 	}
 
 	return (result);
@@ -658,7 +660,7 @@ void COMMODORE::SoundSIDSimpleWrapper::SIDNoiseSoundWave::clock (unsigned int nC
 double COMMODORE::SoundSIDSimpleWrapper::SIDNoiseSoundWave::data () const
 {
 	// FREQ zero freezes the register but does not force its DAC output to zero.
-	return (_active ? (double) outputValue () / 255.0f : 0.0f);
+	return (_active ? ((2.0f * (double) outputValue () / 255.0f) - 1.0f) : 0.0f);
 }
 
 // ---
@@ -789,10 +791,11 @@ double COMMODORE::SoundSIDSimpleWrapper::Voice::data () const
 	{
 		// triangle
 		case 0x10:
-			// Depending whether the voice is modulated or not, 
-			// ...just happens on the triangle wave...
-			result = wave (MCHEmul::SoundWave::Type::_TRIANGLE) -> data () *
-				(_ringModulation ? _voiceRelated -> data () : 1.0f); // Multiplying two waves...
+			// SID ring modulation XORs the triangle phase with the source oscillator MSB.
+			// It must not include the source voice envelope or filters.
+			result = wave (MCHEmul::SoundWave::Type::_TRIANGLE) -> data ();
+			if (_ringModulation && _voiceRelated -> wavesClockValue () >= 128)
+				result = -result;
 			break;
 
 		// sawtooth
@@ -812,28 +815,31 @@ double COMMODORE::SoundSIDSimpleWrapper::Voice::data () const
 
 		// sawtooth & triangle
 		case 0x30:
-			result = (double) _SAWTRIWAVE_6581 [(size_t) wavesClockValue ()] / 256.0f;
+			result = (2.0f * (double) _SAWTRIWAVE_6581 [(size_t) wavesClockValue ()] / 255.0f) - 1.0f;
 			break;
 
 		// pulse & triangle
 		case 0x50:
+			result = -1.0f;
 			if (static_cast <const MCHEmul::PulseSoundWave*> 
 					(wave (MCHEmul::SoundWave::Type::_PULSE)) -> pulseUp ())
-				result = (double) _PULSETRIWAVE_6581 [(size_t) wavesClockValue ()] / 256.0f;
+				result = (2.0f * (double) _PULSETRIWAVE_6581 [(size_t) wavesClockValue ()] / 255.0f) - 1.0f;
 			break;
 
 		// pulse & sawtooth
 		case 0x60:
+			result = -1.0f;
 			if (static_cast <const MCHEmul::PulseSoundWave*> 
 					(wave (MCHEmul::SoundWave::Type::_PULSE)) -> pulseUp ())
-				result = (double) _PULSESAWWAVE_6581 [(size_t) wavesClockValue ()] / 256.0f;
+				result = (2.0f * (double) _PULSESAWWAVE_6581 [(size_t) wavesClockValue ()] / 255.0f) - 1.0f;
 			break;
 
 		// pulse & sawtooth & triangle
 		case 0x70:
+			result = -1.0f;
 			if (static_cast <const MCHEmul::PulseSoundWave*> 
 					(wave (MCHEmul::SoundWave::Type::_PULSE)) -> pulseUp ())
-				result = (double) _PULSESAWTRIWAVE_6581 [(size_t) wavesClockValue ()] / 256.0f;
+				result = (2.0f * (double) _PULSESAWTRIWAVE_6581 [(size_t) wavesClockValue ()] / 255.0f) - 1.0f;
 			break;
 
 		// With this other combinations no output is produced...
@@ -856,10 +862,11 @@ double COMMODORE::SoundSIDSimpleWrapper::Voice::data () const
 			break;
 	}
 
-	if (result != 0.0f)
-		result *= _envelope -> envelopeData ();
+	result *= _envelope -> envelopeData ();
 
-	return ((result > 1.0f) ? 1.0f : result);
+	if (result < -1.0f)	result = -1.0f;
+	else if (result > 1.0f)	result = 1.0f;
+	return (result);
 }
 
 // ---

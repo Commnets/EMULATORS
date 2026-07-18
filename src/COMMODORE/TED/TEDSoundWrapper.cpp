@@ -211,15 +211,13 @@ bool COMMODORE::TEDSoundSimpleLibWrapper::getData (MCHEmul::CPU *cpu, MCHEmul::U
 		_counterCyclesPerSample = 
 			std::fmod (_counterCyclesPerSample, _cyclesPerSample);
 
-		double iR = 0;
+		double sample = 0.0f;
 		for (auto i : _voices)
-			iR += i -> data (); // but the values are added...
-		iR *= _volumen; // Adjust the volumen...
-		
-		// This number could be greater than 1!
-		if (iR > 1.0f) iR = 1.0f; // ...so it is needed to correct.
+			sample += i -> data ();
+		sample *= _volumen;
 
-		dt = MCHEmul::UBytes ({ (unsigned char) (iR * 255.0f /** between 0 and 255. */) });
+		dt = MCHEmul::UBytes ({
+			MCHEmul::normalizedSoundSampleToU8 (sample)	});
 	}
 
 	return (result);
@@ -266,5 +264,7 @@ double COMMODORE::TEDSoundSimpleLibWrapper::Voice::data () const
 
 	// There is no affection by the envelope, because there is no envelope in this chip!
 
-	return ((result > 1.0f) ? 1.0f : result);
+	if (result < -1.0f)	result = -1.0f;
+	else if (result > 1.0f)	result = 1.0f;
+	return (result);
 }

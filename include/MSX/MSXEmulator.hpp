@@ -92,7 +92,8 @@ namespace MSX
 							{ return (new MCHEmul::FileIO 
 								(MCHEmul::FileTypeIOList (
 									{ new MSX::KeystrokeTypeIO 
-										(model () -> typewriterSpecialKeys (computerLanguage ())) /** The typewirter. */ }))); }
+										(model () -> typewriterSpecialKeys (computerLanguage ())) /** The typewirter. */,
+									  new MSX::CASFileTypeIO }))); }
 
 		private:
 		/** Factory method to create the right type of MSX. 

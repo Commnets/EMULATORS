@@ -2,6 +2,7 @@
 #include <MSX/Memory.hpp>
 #include <MSX/Screen.hpp>
 #include <MSX/Sound.hpp>
+#include <MSX/DatasettePort.hpp>
 #include <MSX/OSIO.hpp>
 #include <MSX/VDP.hpp>
 #include <MSX/PPI8255.hpp>
@@ -72,6 +73,10 @@ MCHEmul::IODevices MSX::MSXModel::createIODevices (const std::string& lang) cons
 	// with the standard key
 	result.insert (MCHEmul::IODevices::value_type
 		(MSX::InputOSSystem::_ID, new MSX::InputOSSystem (keystrockedMap (lang))));
+
+	// ..and also the Datasette port...
+	result.insert (MCHEmul::IODevices::value_type (MSX::DatasetteIOPort::_ID,
+		(MCHEmul::IODevice*) new MSX::DatasetteIOPort ()));
 
 	return (result);
 }

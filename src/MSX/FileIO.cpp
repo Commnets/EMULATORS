@@ -23,3 +23,27 @@ MCHEmul::Strings MSX::KeystrokeTypeIO::generateKeystrokeForToken (const std::str
 
 	return (result);
 }
+
+// ---
+MCHEmul::ExtendedDataMemoryBlocks MSX::CASFileData::asMemoryBlocks () const
+{
+	// TODO
+
+	return (MCHEmul::ExtendedDataMemoryBlocks { });
+}
+
+// ---
+bool MSX::CASFileTypeIO::canRead (const std::string& fN) const
+{
+	// TODO
+
+	return (false);
+}
+
+// ---
+MCHEmul::FileData* MSX::CASFileTypeIO::readFile (const std::string& fN, bool bE) const
+{
+	// TODO
+
+	return (nullptr);
+}

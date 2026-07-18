@@ -53,8 +53,8 @@ namespace MCHEmul
 		/** To change the status of the envelop accordingly to the number of clocks. */
 		virtual void clock (unsigned int nC = 1) = 0;
 		/** The most important method of the envelop: \n
-			To produce the envelop value. 
-			The value, according with the situation, has to be between 0 and 1.0 */
+			To produce the envelope gain. This is not an audio sample. \n
+			The value, according with the situation, has to be between 0.0 and 1.0. */
 		virtual double envelopeData () const = 0;
 
 		protected:

@@ -96,10 +96,10 @@ namespace MCHEmul
 		bool clockRestarted () const
 						{ return (_clockRestarted); }
 
-		/** This method should return always a value between 0 and 1. \n
-			Indicating the %(1) of the maximum situation achieved. \n
+		/** This method should always return a normalized audio sample between -1.0 and 1.0. \n
+			Silence is represented by 0.0. \n
 			Decimal numbers are admitted (are needed). \n
-			Muct be overloaded according to the type of wave. */
+			Must be overloaded according to the type of wave. */
 		virtual double data () const = 0;
 
 		/**
@@ -115,7 +115,7 @@ namespace MCHEmul
 		/** To calculate the internal data needed to later "draw" the different waves. \n
 			It could be overloaded to include more intenal data needed
 			depending on the type of wave. \n
-			Any moment a key value is changed this method should be invoked. ºn
+			Any moment a key value is changed this method should be invoked. Âºn
 			This method invokes the next one. */
 		virtual void calculateWaveSamplingData ();
 
@@ -151,6 +151,7 @@ namespace MCHEmul
 			: SoundWave (Type::_TRIANGLE, cF)
 						{ }
 
+		/** From -1.0f to 1.0f and from 1.0f to -1.0f */
 		virtual double data () const override;
 	};
 
@@ -162,6 +163,7 @@ namespace MCHEmul
 			: SoundWave (Type::_SAWTOOTH, cF)
 						{ }
 
+		/** From -1.0f to 1.0f and start back. */
 		virtual double data () const override;
 	};
 
@@ -249,7 +251,7 @@ namespace MCHEmul
 		unsigned int _initialLFSR;
 		/** Current 16-bit LFSR state. Must never be zero. */
 		unsigned int _lfsr;
-		/** Last generated noise value, normalized from 0.0 to 1.0. */
+		/** Last generated raw noise value, normalized from 0.0 to 1.0. */
 		double _currentOutput;
 	};
 
@@ -267,7 +269,7 @@ namespace MCHEmul
 		virtual void clock (unsigned int nC = 1) override
 							{ /** Does nothing. */ }
 
-		/** The data is always 1.0f (when active), because it is a constant sound. */
+		/** The data is always 1.0f when active and 0.0f when silent. */
 		virtual double data () const override
 							{ return (active () ? 1.0f : 0.0f); }
 	};

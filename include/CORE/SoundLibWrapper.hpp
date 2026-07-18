@@ -5,7 +5,7 @@
  *	@file	
  *	File: SoundLibWrapper.hpp \n
  *	Framework: CPU Emulators library \n
- *	Author: Ignacio Cea Forniés (EMULATORS library) \n
+ *	Author: Ignacio Cea ForniÃ©s (EMULATORS library) \n
  *	Creation Date: 24/03/2023 \n
  *	Description: Wrapper over a Sound Library that can be managed from the Emulators.
  *	Versions: 1.0 Initial

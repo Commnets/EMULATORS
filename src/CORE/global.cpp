@@ -536,6 +536,15 @@ double MCHEmul::linearInterpolation (double minx, double miny, double maxx, doub
 }
 
 // ---
+unsigned char MCHEmul::normalizedSoundSampleToU8 (double sample)
+{
+	if (sample < -1.0f)	sample = -1.0f;
+	else if (sample > 1.0f)	sample = 1.0f;
+	return (static_cast <unsigned char> (
+		std::lround ((sample + 1.0f) * 127.5f)));
+}
+
+// ---
 void MCHEmul::actualizeGlobalTime ()
 {
 	MCHEmul::ClockTime n = 

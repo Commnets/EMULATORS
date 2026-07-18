@@ -65,28 +65,22 @@ void MCHEmul::SoundWave::calculateWaveSamplingData ()
 // ---
 double MCHEmul::TriangleSoundWave::data () const
 {
-	if (!_active)
+	if (!_active || _cyclesPerWave <= 0.0f)
 		return (0.0f);
 
-	if (_cyclesPerWave <= 0.0f)
-		return (0.0f);
-
-	double half = _cyclesPerWave * 0.5;
-	if (_counterInCyclesPerWave < half)
-		return (_counterInCyclesPerWave / half);
-	return (1.0 - ((_counterInCyclesPerWave - half) / half));
+	const double phase = clockValue ();
+	return ((phase < 0.5f)
+		? ((4.0f * phase) - 1.0f)
+		: (3.0f - (4.0f * phase)));
 }
 
 // ---
 double MCHEmul::SawSmoothSoundWave::data () const
 {
-	if (!_active)
-		return (0.0f); // No active...
-
-	if (_cyclesPerWave <= 0.0f)
+	if (!_active || _cyclesPerWave <= 0.0f)
 		return (0.0f);
 
-	return (_counterInCyclesPerWave / _cyclesPerWave);
+	return ((2.0f * clockValue ()) - 1.0f);
 }
 
 // ---
@@ -110,13 +104,10 @@ void MCHEmul::PulseSoundWave::initialize ()
 // ---
 double MCHEmul::PulseSoundWave::data () const
 {
-	if (!_active)
+	if (!_active || _cyclesPerWave <= 0.0f)
 		return (0.0f);
 
-	if (_cyclesPerWave <= 0.0f)
-		return (0.0f);
-
-	return ((clockValue () < _pulseUpPercentage) ? 1.0f : 0.0f);
+	return ((clockValue () < _pulseUpPercentage) ? 1.0f : -1.0f);
 }
 
 // --
@@ -212,11 +203,8 @@ void MCHEmul::NoiseSoundWave::stepLFSR ()
 // ---
 double MCHEmul::NoiseSoundWave::data () const
 {
-	if (!_active)
+	if (!_active || _cyclesPerWave <= 0.0f)
 		return (0.0f);
 
-	if (_cyclesPerWave <= 0.0f)
-		return (0.0f);
-
-	return (_currentOutput);
+	return ((2.0f * _currentOutput) - 1.0f);
 }

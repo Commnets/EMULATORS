@@ -106,11 +106,10 @@ namespace MCHEmul
 			actualize the situation of the waves, ADSR cycle and others. \n
 			It can be overloaded for specific needs (imagin a filter class is added!). */
 		virtual void clock (unsigned int nC = 1);
-		/** To get the output data of the voice. \n
-			It is number between 0 an 1. \n
+		/** To get the normalized output data of the voice. \n
+			It is a number between -1.0 and 1.0, with 0.0 representing silence. \n
 			It can be overloaded later for special purposes. \n
-			The number returned is less than 1.0 if each of wavedData 
-			and envelopeData is well designed and returns less than 1.0. */
+			The envelope, when present, is applied as a gain between 0.0 and 1.0. */
 		virtual double data () const;
 
 		/**
@@ -127,8 +126,7 @@ namespace MCHEmul
 		protected:
 		/** To calculate the value comming from the waves. 
 			The values of the different waves are combined to produce the final output. 
-			That value would be a number between 0 and 1.0, 
-			as the data of each wave is between 0 and 1.0. */
+			That value is a normalized sample between -1.0 and 1.0. */
 		double wavesData () const;
 
 		protected:

@@ -262,30 +262,34 @@ bool GENERALINSTRUMENTS::AY38910SimpleLibWrapper::getData (MCHEmul::CPU *cpu, MC
 		_counterCyclesPerSample = 
 			std::fmod (_counterCyclesPerSample, _cyclesPerSample);
 
-		// The AY has three audible channels and a common noise generator.
-		// Mixer bits disable tone/noise inputs independently per audible channel.
-		double nD = (_voices [3] -> data () >= 0.5f) ? 1.0f : 0.0f;
-		double iR = 0.0f; // No sound...
+		// The AY mixer combines the tone and noise generators as digital gates.
+		// Convert their bipolar audio outputs back into logical levels first.
+		const bool noiseHigh = (_voices [3] -> data () >= 0.0f);
+
+		double sample = 0.0f;
 		for (size_t i = 0; i < 3; i++)
 		{
-			double tD = _toneDisabled [i]
-				? 1.0f
-				: _voices [i] -> wave (MCHEmul::SoundWave::Type::_SQUARE) -> data ();
-			double cD =
-				tD *
-				(_noiseDisabled [i] ? 1.0f : nD);
+			// With both generators disabled there is no varying audio signal.
+			if (_toneDisabled [i] && _noiseDisabled [i])
+				continue;
 
-			iR += 
-				cD *
+			const bool toneHigh =
+				_toneDisabled [i] ||
+				(_voices [i] -> wave (
+					MCHEmul::SoundWave::Type::_SQUARE) -> data () >= 0.0f);
+			const bool channelHigh =
+				toneHigh &&
+				(_noiseDisabled [i] || noiseHigh);
+			const double channelSample = channelHigh ? 1.0f : -1.0f;
+			const double gain =
 				_volumen [i] *
 				(_useEnvelope [i] ? _envelope.envelopeData () : 1.0f);
-		}
-		
-		// This number could be greater than 1!
-		if (iR > 1.0f) iR = 1.0f; // ...so it is needed to correct.
 
-		dt = MCHEmul::UBytes ({ (iR == 0.0f)
-			? 128 : (unsigned char) (iR * 255.0f /** between 0 and 255. */) });
+			sample += channelSample * gain;
+		}
+
+		dt = MCHEmul::UBytes ({
+			MCHEmul::normalizedSoundSampleToU8 (sample)	});
 	}
 
 	return (result);
@@ -445,7 +449,9 @@ double GENERALINSTRUMENTS::AY38910SimpleLibWrapper::Voice::data () const
 			break;
 	}
 
-	return (result > 1.0f) ? 1.0f : result;
+	if (result < -1.0f)	result = -1.0f;
+	else if (result > 1.0f)	result = 1.0f;
+	return (result);
 }
 
 // ---

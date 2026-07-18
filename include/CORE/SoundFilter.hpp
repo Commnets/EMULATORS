@@ -54,8 +54,7 @@ namespace MCHEmul
 			_NOTCH = 3,
 		};
 
-		SoundFilter (unsigned int sF, 
-			Type t = MCHEmul::SoundFilter::Type::_HIGHPASS);
+		SoundFilter (unsigned int sF, Type t = Type::_HIGHPASS);
 
 		/** Just in case. \n
 			Initially nothing to be destroyed is needed. */
@@ -64,6 +63,8 @@ namespace MCHEmul
 		virtual void initialize ()
 							{ } // By default it does nothing...
 
+		/** Processes a bipolar audio sample. The filter can produce transients
+			outside [-1.0, 1.0]; clipping belongs at the final voice or mixer boundary. */
 		virtual double process (double x) = 0;
 
 		/** To activate or desactivate the filter. */

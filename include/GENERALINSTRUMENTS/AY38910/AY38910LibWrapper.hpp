@@ -204,11 +204,11 @@ namespace GENERALINSTRUMENTS
 							  for (auto i : waves ()) r &= i -> clockRestarted (); /** One will be enought, but just to set all rest to 0. */
 							  return (r); }
 			unsigned char oscillatorValue () const
-							{ return ((unsigned char) (wavesData () * 255)); }
+							{ return (MCHEmul::normalizedSoundSampleToU8 (wavesData ())); }
 
 			virtual void initialize () override;
 
-			/** To support the ring modulation. */
+			/** To get the current normalized AY voice output between -1.0 and 1.0. */
 			virtual double data () const override;
 
 			/**

@@ -205,7 +205,8 @@ namespace COMMODORE
 			unsigned char wavesClockValue () const
 							{ return ((unsigned char) (waves ()[0] /** whatever. */ -> clockValue () * 255)); }
 			unsigned char oscillatorValue () const
-							{ return ((unsigned char) (wavesData () * 255)); }
+							{ return ((_wavesActive == 0)
+								? 0 : MCHEmul::normalizedSoundSampleToU8 (wavesData ())); }
 			/** Same but for the envelope. */
 			unsigned char envelopeValue () const
 							{ return ((unsigned char) (_envelope -> envelopeData () * 255)); }

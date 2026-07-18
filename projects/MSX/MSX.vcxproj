@@ -40,6 +40,8 @@
   <ItemGroup>
     <ClCompile Include="..\..\src\MSX\CommandBuilder.cpp" />
     <ClCompile Include="..\..\src\MSX\Commands.cpp" />
+    <ClCompile Include="..\..\src\MSX\Datasette.cpp" />
+    <ClCompile Include="..\..\src\MSX\DatasettePort.cpp" />
     <ClCompile Include="..\..\src\MSX\FileIO.cpp" />
     <ClCompile Include="..\..\src\MSX\IOPBuilder.cpp" />
     <ClCompile Include="..\..\src\MSX\Memory.cpp" />

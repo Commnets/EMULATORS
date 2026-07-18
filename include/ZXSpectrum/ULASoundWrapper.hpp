@@ -92,7 +92,7 @@ namespace ZXSPECTRUM
 			virtual void setActive (bool a) override
 							{ _active = a; }
 
-			/** To get the data of the voice. */
+			/** To get the normalized voice output between -1.0 and 1.0. */
 			virtual double data () const override;
 		};
 

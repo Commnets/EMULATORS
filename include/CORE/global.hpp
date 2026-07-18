@@ -133,6 +133,11 @@ namespace MCHEmul
 	/** To calculate the point in a curve. */
 	double linearInterpolation (double minx, double miny, double maxx, double maxy, double x);
 
+	/** Converts a normalized audio sample in the range [-1.0, 1.0]
+	to an unsigned 8-bit PCM sample. Silence, 0.0, becomes 128. \n
+	That it is very common in soiun lib wrappers. */
+	unsigned char normalizedSoundSampleToU8 (double sample);
+
 	/** To determine whether a class is or not a subclass of other. */
 	template <typename Base, typename Type>
 	bool instanceOf (const Type* ptr)
