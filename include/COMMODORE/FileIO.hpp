@@ -189,7 +189,8 @@ namespace COMMODORE
 			unsigned short _entries;				// $22 - $23 : 2 bytes. Number of directory entries (potentially).
 			unsigned short _usedEntries;			// $24 - $25 : 2 bytes. Number of used entries (the ones really used).
 			// $26 - $27 : 2 bytes. Free for future uses.
-			std::string _userDescriptor;			// $28 - $39 : 40 bytes. User descriptor displayed in the tape menu.
+			std::string _userDescriptor;			// $28 - $3f : 24 bytes. User descriptor displayed
+													// in the tape menu.
 		};
 
 		/** Per each different entry there will be one of these elements. */
@@ -217,11 +218,10 @@ namespace COMMODORE
 			EntryType _entryType;					// $00 - $00 : 1 bytes. Entry type (@see above).
 			char _fileType;							// $01 - $01 : 1 byte. File type.
 			MCHEmul::Address _startLoadAddress;		// $02 - $03 : 2 bytes. Where to start to load the data in memory.
-			MCHEmul::Address _endLoadAddress;		// $04 - $05 : 2 bytes. Where to finish that loading.
+			MCHEmul::Address _endLoadAddress;		// $04 - $05 : 2 bytes. First address after the data to load.
 			// $06 - $07: 2 bytes. Free for future uses...
-			unsigned int _offset;					// $08 - $0c : offset. Where the content tp load really starts in this data file
-													// It has to be counted from the beginning of the file, inclusing the header.
-			// $0c - $0f 2 bytes. Free for future uses...
+			unsigned int _offset;					// $08 - $0b : 4-byte absolute offset from the beginning of the T64 file.
+			// $0c - $0f : 4 bytes. Free for future uses...
 			std::string _fileName;					// $10 - $1f : Name of the file.
 		};
 
@@ -240,6 +240,7 @@ namespace COMMODORE
 
 		TapeRecord _tapeRecord;
 		FileRecords _fileRecords;
+		/** The complete T64 image. FileRecord offsets are absolute from its beginning. */
 		MCHEmul::UBytes _content;
 	};
 

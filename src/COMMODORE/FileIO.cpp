@@ -401,13 +401,22 @@ MCHEmul::ExtendedDataMemoryBlocks COMMODORE::T64FileData::asMemoryBlocks () cons
 	result._attributes ["VERSION"] = std::to_string (_tapeRecord._version);
 	result._attributes ["ENTRIES"] = std::to_string (_tapeRecord._usedEntries);
 
-	for (unsigned short i = 0; i < _tapeRecord._usedEntries; i++)
+	for (const auto& i : _fileRecords)
 	{
-		MCHEmul::DataMemoryBlock mB (_fileRecords [i]._startLoadAddress, 
-			_content.subset ((size_t) (_fileRecords [i]._offset - 0x40 - (0x20 * _tapeRecord._usedEntries)), 
-				(size_t) (_fileRecords [i]._endLoadAddress - _fileRecords [i]._startLoadAddress + 1)).bytes ());
-		mB.setName (_fileRecords [i]._fileName);
-		mB.setAttribute ("TYPE", std::to_string (_fileRecords [i]._entryType)); // Important later in header verification e.g.
+		if (i._endLoadAddress <= i._startLoadAddress)
+			continue;
+
+		size_t blockSize = (size_t) (i._endLoadAddress - i._startLoadAddress);
+
+		// T64 offsets are absolute. Reject malformed records before making a subset.
+		if (i._offset > _content.size () ||
+			blockSize > (_content.size () - i._offset))
+			continue;
+
+		MCHEmul::DataMemoryBlock mB (i._startLoadAddress,
+			_content.subset (i._offset, blockSize).bytes ());
+		mB.setName (i._fileName);
+		mB.setAttribute ("TYPE", std::to_string (i._entryType)); // Important later in header verification e.g.
 		result._data.emplace_back (std::move (mB));
 	}
 
@@ -485,14 +494,22 @@ MCHEmul::FileData* COMMODORE::T64FileTypeIO::readFile (const std::string& fN, bo
 	rT64 -> _tapeRecord._entries = (unsigned short) ((unsigned char) data [1] << 8) + ((unsigned char) data [0]);
 	f.read (data, 2);
 	rT64 -> _tapeRecord._usedEntries = (unsigned short) (((unsigned char) data [1] << 8) + ((unsigned char) data [0]));
-	if (rT64 -> _tapeRecord._usedEntries == 0) 
-		rT64->_tapeRecord._usedEntries = 1; // It cannot be 0, 1 at least...
 	f.read (data, 2); // 2 bytes free...
 	f.read (data, 24); data [24] = 0;
 	rT64 -> _tapeRecord._userDescriptor = std::string (data);
 
+	std::streamoff directoryEnd = (std::streamoff)
+		(0x40 + (0x20 * rT64 -> _tapeRecord._entries));
+	if (rT64 -> _tapeRecord._usedEntries > rT64 -> _tapeRecord._entries ||
+		size < directoryEnd)
+	{
+		delete (result);
+
+		return (nullptr);
+	}
+
 	// Per entry in the file, tipically it will be just one...
-	for (unsigned int i = 0; i < rT64 -> _tapeRecord._usedEntries; i++)
+	for (unsigned int i = 0; i < rT64 -> _tapeRecord._entries; i++)
 	{
 		COMMODORE::T64FileData::FileRecord fR;
 
@@ -513,18 +530,26 @@ MCHEmul::FileData* COMMODORE::T64FileTypeIO::readFile (const std::string& fN, bo
 		f.read (data, 16); data [16] = 0;
 		fR._fileName = std::string (data);
 
-		rT64 -> _fileRecords.emplace_back (std::move (fR));
+		if (fR._entryType != COMMODORE::T64FileData::FileRecord::_FREE)
+			rT64 -> _fileRecords.emplace_back (std::move (fR));
 	}
 
-	// The data...
-	unsigned int dSize = (unsigned int) size - 
-		64 - (32 * (unsigned int) rT64 -> _tapeRecord._usedEntries) + 1;
-	char* romData = new char [dSize];
-	f.read (romData, (std::streamsize) dSize);
+	// Keep the complete image because directory offsets are absolute.
+	f.clear ();
+	f.seekg (0, std::ios::beg);
+	std::vector <char> romData ((size_t) size);
+	f.read (romData.data (), (std::streamsize) size);
+	if (!f)
+	{
+		delete (result);
+		return (nullptr);
+	}
+
 	std::vector <MCHEmul::UByte> romBytes;
-	for (size_t i = 0; i < dSize; romBytes.emplace_back (romData [i++]));
+	romBytes.reserve ((size_t) size);
+	for (const auto& i : romData)
+		romBytes.emplace_back (i);
 	rT64 -> _content = MCHEmul::UBytes (romBytes);
-	delete [] romData;
 
 	f.close ();
 

@@ -66,6 +66,12 @@
     <ClInclude Include="..\..\include\MSX\FileIO.hpp">
       <Filter>Archivos de encabezado\IO</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\include\MSX\Datasette.hpp">
+      <Filter>Archivos de encabezado\IO</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\MSX\DatasettePort.hpp">
+      <Filter>Archivos de encabezado\IO</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\include\MSX\IOPBuilder.hpp">
       <Filter>Archivos de encabezado\IO</Filter>
     </ClInclude>

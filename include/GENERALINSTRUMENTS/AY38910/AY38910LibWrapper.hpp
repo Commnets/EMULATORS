@@ -81,7 +81,7 @@ namespace GENERALINSTRUMENTS
 		inline unsigned int envelopePeriod () const;
 		double envelopeFrequency () const
 							{ return (double) _chipFrequency / 
-								(16.0 * (double) envelopePeriod ()); }
+								(256.0 * (double) envelopePeriod ()); }
 		inline unsigned int noisePeriod () const;
 		double noiseFrequency () const
 							{ return (double) _chipFrequency / 
@@ -100,6 +100,12 @@ namespace GENERALINSTRUMENTS
 			{
 				_TYPE0  = 0,
 				_TYPE1  = 1,
+				_TYPE2  = 2,
+				_TYPE3  = 3,
+				_TYPE4  = 4,
+				_TYPE5  = 5,
+				_TYPE6  = 6,
+				_TYPE7  = 7,
 				_TYPE8  = 8,
 				_TYPE9  = 9,
 				_TYPE10 = 10,
@@ -113,14 +119,13 @@ namespace GENERALINSTRUMENTS
 			friend AY38910SimpleLibWrapper;
 
 			/** The type by default is _TYPE0 and the frequency is 0 by default. */
-			Envelope (unsigned short cF);
+			Envelope (unsigned int cF);
 
 			/** Change the type of envelope drawn. \n
-				Any type the envelope form is changed the sampling data is recalculated. */
+				Any type the envelope form is changed, the sequence starts back. */
 			Type type () const
 							{ return (_type); }
-			void setType (Type t)
-							{ _type =  t, calculateSamplingData (); }
+			void setType (Type t);
 			/** Same, but from the value of a register directly...
 				Transmit the changes directly to the previous method. */
 			void setType (const MCHEmul::UByte& v); 
@@ -128,8 +133,7 @@ namespace GENERALINSTRUMENTS
 			/** Sets directly the frequency of the envelope. */
 			double frequency () const
 							{ return (_frequency); }
-			void setFrequency (double f)
-							{ _frequency = (f > 0.0f) ? f : 0.0; calculateSamplingData (); }
+			void setFrequency (double f);
 
 			virtual void setStart (bool s) override;
 			virtual void initialize () override;
@@ -141,46 +145,30 @@ namespace GENERALINSTRUMENTS
 
 			private:
 			/** To calculate the internal data needed to later "draw" the voice. 
-				Anytme the sampling data is recalculated the internal counter are also recualculated and 
-				the State turns back into attack directly. */
+				Anytme the sampling data is recalculated the internal counter is also adjusted. */
 			void calculateSamplingData ();
+			void decodeType ();
+			void restart ();
+			void advanceLevel ();
 
 			private:
 			// Implementation
-			/** The status in which the wave is in. \n
-				That status will depend on which type of wave the envelope system is reproducing. */
-			enum class State
-			{
-				_ATTACK = 0,
-				_SUSTAIN = 1,
-				_DECAY = 2
-			};
-
 			/** The type of envelope wave. */
 			Type _type;
-			/** The state in which the full wave is. */
-			State _state;
 			/** The internal frequency of the wave. */
 			double _frequency;
-
-			/** The counters used to control the states _increase, _sustian and _decrease. */
-			struct StateCounters
-			{
-				StateCounters ()
-					: _cyclesPerState (0), _counterCyclesPerState (0),
-					  _limit (false)
-								{ }
-
-				void initialize ()
-								{ _counterCyclesPerState = 0;
-								  _limit = false; }
-
-				unsigned int _cyclesPerState;
-				unsigned int _counterCyclesPerState;
-				bool _limit;
-			}; 
-
-			mutable std::vector <StateCounters> _stateCounters;
+			/** Shape bits from register 13. */
+			bool _continue;
+			bool _attack;
+			bool _alternate;
+			bool _hold;
+			/** Current 4-bit AY envelope level. */
+			unsigned char _level;
+			/** Increment or decrement applied to the envelope level. */
+			int _direction;
+			bool _holding;
+			unsigned int _cyclesPerEnvelopeStep;
+			unsigned int _counterCyclesPerEnvelopeStep;
 		};
 
 		/** Every AY voice is made up only of a either single pulse or noise wave. \n 

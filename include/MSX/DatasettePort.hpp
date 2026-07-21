@@ -20,20 +20,14 @@
 namespace MSX
 {
 	/** This class represents the place a MSX Datasette connects. \n
-		It is pretty much like the standard one, but assigned already a specific Id. \n
-		The class is not final because when it is attached to a specific computer,
-		the links to chip o memory zones could be different. */
+		The trap-injection peripheral uses the standard datasette port contract.
+		Physical cassette signal wiring through PPI and PSG is intentionally separate. */
 	class DatasetteIOPort final : public MCHEmul::DatasetteIOPort
 	{
 		public:
 		static const int _ID = 100;
 
 		DatasetteIOPort ();
-
-		virtual void linkToChips (const MCHEmul::Chips& c) override;
-
-		private:
-		MCHEmul::SoundChip* _sChip;
 	};
 }
 

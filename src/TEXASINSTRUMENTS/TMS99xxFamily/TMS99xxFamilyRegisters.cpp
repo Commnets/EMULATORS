@@ -146,6 +146,50 @@ MCHEmul::Strings TEXASINSTRUMENTS::TMS99xxFamilyRegisters::spritesDrawSnapShot (
 }
 
 // ---
+std::vector <MCHEmul::UByte>
+	TEXASINSTRUMENTS::TMS99xxFamilyRegisters::patternGenerationTableSnapShot () const
+{
+	if (_graphicMode != _GRAPHICIIMODE)
+		return (videoData (_patternAddress, 2048));
+
+	// In Graphics II, R4 masks the three logical screen thirds.
+	// Build a logical snapshot rather than assuming a contiguous physical table.
+	std::vector <MCHEmul::UByte> result;
+	result.reserve (2048 * 3);
+	for (unsigned short third = 0; third < 3; third++)
+		for (unsigned short pattern = 0; pattern < 256; pattern++)
+			for (unsigned short line = 0; line < 8; line++)
+				result.emplace_back (videoData (graphicIIPatternGeneratorAddress
+					(static_cast <unsigned char> (pattern),
+					 static_cast <unsigned short> ((third << 6) + line))));
+
+	return (result);
+}
+
+// ---
+std::vector <MCHEmul::UByte>
+	TEXASINSTRUMENTS::TMS99xxFamilyRegisters::colorNameTableSnapShot () const
+{
+	if (_graphicMode == _GRAPHICIMODE)
+		return (videoData (_colorAddress, 32));
+	if (_graphicMode != _GRAPHICIIMODE)
+		return (std::vector <MCHEmul::UByte> ());
+
+	// R3 is a base-and-mask register in Graphics II. Following the logical
+	// addresses also keeps the snapshot inside the 16K VRAM boundary.
+	std::vector <MCHEmul::UByte> result;
+	result.reserve (2048 * 3);
+	for (unsigned short third = 0; third < 3; third++)
+		for (unsigned short pattern = 0; pattern < 256; pattern++)
+			for (unsigned short line = 0; line < 8; line++)
+				result.emplace_back (videoData (graphicIIColorAddress
+					(static_cast <unsigned char> (pattern),
+					 static_cast <unsigned short> ((third << 6) + line))));
+
+	return (result);
+}
+
+// ---
 void TEXASINSTRUMENTS::TMS99xxFamilyRegisters::setValue (size_t p, const MCHEmul::UByte& v)
 {
 	if (p >= numberRegisters ())
@@ -320,9 +364,9 @@ void TEXASINSTRUMENTS::TMS99xxFamilyRegisters::initializeInternalValues ()
 	// Controlling attributes...
 	_graphicMode							= _GRAPHICIMODE;
 	_externalVideo							= false;
-	_16k									= true;
-	_blankScreen							= false;
-	_sprites16pixels						= true;
+	_16k									= false;
+	_blankScreen							= true;
+	_sprites16pixels						= false;
 	_spritesEnlarged						= false;
 	_launchScreenUpdateInterrupt			= false;
 	_nameAddress							= { };
@@ -363,6 +407,18 @@ void TEXASINSTRUMENTS::TMS99xxFamilyRegisters::initializeInternalValues ()
 }
 
 // ---
+void TEXASINSTRUMENTS::TMS99xxFamilyRegisters::actualizeGraphicMode ()
+{
+	// Keep the internal mode number aligned with the documented screen modes:
+	// Text = 1, Multicolor = 2 and Graphics II = 4.
+	MCHEmul::UByte graphicMode = MCHEmul::UByte::_0;
+	graphicMode.setBit (0, _controlRegisters [1].bit (4)); // M1: Text.
+	graphicMode.setBit (1, _controlRegisters [1].bit (3)); // M2: Multicolor.
+	graphicMode.setBit (2, _controlRegisters [0].bit (1)); // M3: Graphics II.
+	setGraphicMode (graphicMode.value ());
+}
+
+// ---
 void TEXASINSTRUMENTS::TMS99xxFamilyRegisters::setControlRegister (unsigned char rId, const MCHEmul::UByte& v)
 {
 	_controlRegisters [rId] = v;
@@ -377,11 +433,7 @@ void TEXASINSTRUMENTS::TMS99xxFamilyRegisters::setControlRegister (unsigned char
 				_externalVideo = v.bit (0);
 
 				// Bit 1: Changing graphic mode.
-				MCHEmul::UByte gM = MCHEmul::UByte::_0;
-				gM.setBit (0, _controlRegisters [1].bit (4));
-				gM.setBit (1, _controlRegisters [0].bit (1));
-				gM.setBit (2, _controlRegisters [1].bit (3));
-				setGraphicMode (gM.value ());
+				actualizeGraphicMode ();
 
 				// The rest of the bits are not used...
 			}
@@ -401,17 +453,13 @@ void TEXASINSTRUMENTS::TMS99xxFamilyRegisters::setControlRegister (unsigned char
 				// Bit 2 is not used.
 
 				// Bits 3 & 4: Changing graphic mode (bits 3 y 4 are used here. Notice the sequence)
-				MCHEmul::UByte gM = MCHEmul::UByte::_0;
-				gM.setBit (0, _controlRegisters [1].bit (4));
-				gM.setBit (1, _controlRegisters [0].bit (1));
-				gM.setBit (2, _controlRegisters [1].bit (3));
-				setGraphicMode (gM.value ());
+				actualizeGraphicMode ();
 
 				// Bit 5: Generates interrupt when screen is over?
 				_launchScreenUpdateInterrupt = v.bit (5);
 
 				// Bit 6: Blank screen?
-				_blankScreen = !v.bit (6); // True if set!
+				_blankScreen = !v.bit (6); // The display is blank when the enable bit is clear.
 
 				// Bit 7: 16K in the screen memory (o just 4)?
 				// In TMS99xxFamily TEXASINSTRUMENTS has no effect because it has always 16k...

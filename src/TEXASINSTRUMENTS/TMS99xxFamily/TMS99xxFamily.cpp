@@ -122,10 +122,6 @@ bool TEXASINSTRUMENTS::TMS99xxFamily::simulate (MCHEmul::CPU* cpu)
 		if (_raster.vData ().currentPositionAtBase0 () == 0 &&
 			_raster.hData ().currentPositionAtBase0 () == 0)
 		{
-			// Set the bit 7 in the status register (INT)
-			// This register is used to indicate that the screen has been updated...
-			// The only way to clear that bit is to read the status register...
-			_TMS99xxFamilyRegisters -> setSreenUpdateHappen ();
 			// Set the bit 5 off in the status register
 			// This register is used to indicate that a fifth register situation has been detected...
 			// The only way this bit is clear is when there is no a fifth sprite detected!
@@ -145,7 +141,13 @@ bool TEXASINSTRUMENTS::TMS99xxFamily::simulate (MCHEmul::CPU* cpu)
 		// It may do a specific action at the position where the raster is currently...
 		actionPerRasterLineAndCyle ();
 		// ...before moving the raster one additional position...
-		_raster.moveCycles (1);
+		bool wasInScreenZone = _raster.vData ().isInScreenZone ();
+		bool newRasterLine = _raster.moveCycles (1);
+		// VBlank starts just after leaving the last active display line.
+		// The status bit stays active until the CPU reads port #99.
+		if (newRasterLine && wasInScreenZone &&
+			!_raster.vData ().isInScreenZone ())
+			_TMS99xxFamilyRegisters -> setScreenUpdateHappen ();
 
 		// An interrupt is launched if the system was configured to execute that action...
 		if (_TMS99xxFamilyRegisters -> screenUpdateHappen () &&

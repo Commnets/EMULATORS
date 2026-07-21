@@ -22,6 +22,8 @@
 #include <MSX/CommandBuilder.hpp>
 #include <MSX/Commands.hpp>
 #include <MSX/FileIO.hpp>
+#include <MSX/Datasette.hpp>
+#include <MSX/DatasettePort.hpp>
 #include <MSX/IOPBuilder.hpp>
 #include <MSX/Memory.hpp>
 #include <MSX/Screen.hpp>

@@ -243,6 +243,9 @@ void GENERALINSTRUMENTS::AY38910SimpleLibWrapper::initialize ()
 		_noiseDisabled [i] = false;
 		_volumen [i] = 0.0f;
 	}
+
+	_envelope.initialize ();
+	_envelope.setFrequency (envelopeFrequency ());
 }
 
 // ---
@@ -296,94 +299,96 @@ bool GENERALINSTRUMENTS::AY38910SimpleLibWrapper::getData (MCHEmul::CPU *cpu, MC
 }
 
 // ---
-GENERALINSTRUMENTS::AY38910SimpleLibWrapper::Envelope::Envelope (unsigned short cF)
+GENERALINSTRUMENTS::AY38910SimpleLibWrapper::Envelope::Envelope (unsigned int cF)
 	: MCHEmul::SoundEnvelope (cF),
 	  _type (GENERALINSTRUMENTS::AY38910SimpleLibWrapper::Envelope::Type::_TYPE0),
-	  _frequency (0),
-	  _stateCounters (3, GENERALINSTRUMENTS::AY38910SimpleLibWrapper::Envelope::StateCounters ())
+	  _frequency (0.0f),
+	  _continue (false),
+	  _attack (false),
+	  _alternate (false),
+	  _hold (false),
+	  _level (15),
+	  _direction (-1),
+	  _holding (false),
+	  _cyclesPerEnvelopeStep (0),
+	  _counterCyclesPerEnvelopeStep (0)
 {
 	setClassName ("AY38910Envelope"); 
 
+	decodeType ();
+	restart ();
 	calculateSamplingData ();
+}
+
+// ---
+void GENERALINSTRUMENTS::AY38910SimpleLibWrapper::Envelope::setType (
+	GENERALINSTRUMENTS::AY38910SimpleLibWrapper::Envelope::Type t)
+{
+	_type = t;
+
+	decodeType ();
+	restart ();
 }
 
 // ---
 void GENERALINSTRUMENTS::AY38910SimpleLibWrapper::Envelope::setType (const MCHEmul::UByte& v)
 {
-	if (v.bit (3))
-		setType (v.bit (2) 
-			? GENERALINSTRUMENTS::AY38910SimpleLibWrapper::Envelope::Type::_TYPE1
-			: GENERALINSTRUMENTS::AY38910SimpleLibWrapper::Envelope::Type::_TYPE0);
-	else
-		setType 
-			(GENERALINSTRUMENTS::AY38910SimpleLibWrapper::Envelope::Type (0x08 | (v.value () & 0x07)));
+	setType (GENERALINSTRUMENTS::AY38910SimpleLibWrapper::Envelope::Type (v.value () & 0x0f));
+}
+
+// ---
+void GENERALINSTRUMENTS::AY38910SimpleLibWrapper::Envelope::setFrequency (double f)
+{
+	_frequency = (f > 0.0f) ? f : 0.0f;
+
+	calculateSamplingData ();
 }
 
 // ---
 void GENERALINSTRUMENTS::AY38910SimpleLibWrapper::Envelope::setStart (bool s)
 {
-	// TODO
+	if (s)
+		restart ();
+	else
+		_holding = true;
 }
 
 // ---
 void GENERALINSTRUMENTS::AY38910SimpleLibWrapper::Envelope::initialize ()
 {
-	// TODO
+	_type = GENERALINSTRUMENTS::AY38910SimpleLibWrapper::Envelope::Type::_TYPE0;
+	_frequency = 0.0f;
 
-	_state = 
-		GENERALINSTRUMENTS::AY38910SimpleLibWrapper::Envelope::State::_ATTACK;
-
+	decodeType ();
 	calculateSamplingData ();
-	// It also initializes the internal counters...
+	restart ();
 }
 
 // ---
 void GENERALINSTRUMENTS::AY38910SimpleLibWrapper::Envelope::initializeInternalCounters ()
 {
-	for (size_t i = 0; i < 3; i++)
-		_stateCounters [i].initialize ();
+	_counterCyclesPerEnvelopeStep = 0;
 }
 
 // ---
 void GENERALINSTRUMENTS::AY38910SimpleLibWrapper::Envelope::clock (unsigned int nC)
 {
-	if (_state == State::_SUSTAIN)
+	if (nC == 0 || !_active || _holding || _cyclesPerEnvelopeStep == 0)
 		return;
 
-	bool end = false;
-	while (!end)
+	_counterCyclesPerEnvelopeStep += nC;
+	while (_counterCyclesPerEnvelopeStep >= _cyclesPerEnvelopeStep && !_holding)
 	{
-		GENERALINSTRUMENTS::AY38910SimpleLibWrapper::Envelope::StateCounters& sCA = 
-			_stateCounters [(int) _state];
-		if (++sCA._counterCyclesPerState > sCA._cyclesPerState)
-		{
-			sCA._counterCyclesPerState = 0;
+		_counterCyclesPerEnvelopeStep -= _cyclesPerEnvelopeStep;
 
-			switch (_state)
-			{
-				// TODO
-
-				default:
-					break;
-			}
-		}
-
-		GENERALINSTRUMENTS::AY38910SimpleLibWrapper::Envelope::StateCounters& sCN = 
-			_stateCounters [(int) _state];
-		// The limit of the previous state was reached...
-		// unless the destination states is the same...
-		sCA._limit = (&sCA != &sCN);
-		// The loop finish when the new state is the same than previously...
-		end = (&sCA == &sCN); 
+		advanceLevel ();
 	}
 }
 
 // ---
 double GENERALINSTRUMENTS::AY38910SimpleLibWrapper::Envelope::envelopeData () const
 {
-	// TODO
-
-	return (1.0f);
+	return (!_active ? 1.0f : ((double) _level / 15.0f));
 }
 
 // ---
@@ -391,7 +396,16 @@ MCHEmul::InfoStructure GENERALINSTRUMENTS::AY38910SimpleLibWrapper::Envelope::ge
 {
 	MCHEmul::InfoStructure result = MCHEmul::SoundEnvelope::getInfoStructure ();
 
-	// TODO
+	result.add ("TYPE", (int) _type);
+	result.add ("CONTINUE", _continue);
+	result.add ("ATTACK", _attack);
+	result.add ("ALTERNATE", _alternate);
+	result.add ("HOLD", _hold);
+	result.add ("LEVEL", (int) _level);
+	result.add ("DIRECTION", _direction);
+	result.add ("HOLDING", _holding);
+	result.add ("FREQUENCY", _frequency);
+	result.add ("CYCLESPERSTEP", _cyclesPerEnvelopeStep);
 
 	return (result);
 }
@@ -399,11 +413,71 @@ MCHEmul::InfoStructure GENERALINSTRUMENTS::AY38910SimpleLibWrapper::Envelope::ge
 // ---
 void GENERALINSTRUMENTS::AY38910SimpleLibWrapper::Envelope::calculateSamplingData ()
 {
-	// TODO
+	_cyclesPerEnvelopeStep = (_frequency == 0.0f)
+		? 0
+		: (unsigned int) (((double) _chipFrequency / _frequency) + 0.5f);
+
+	if (_cyclesPerEnvelopeStep == 0 ||
+		_counterCyclesPerEnvelopeStep >= _cyclesPerEnvelopeStep)
+		initializeInternalCounters ();
+}
+
+// ---
+void GENERALINSTRUMENTS::AY38910SimpleLibWrapper::Envelope::decodeType ()
+{
+	unsigned char t = (unsigned char) _type;
+
+	_continue = ((t & 0x08) != 0);
+	_attack = ((t & 0x04) != 0);
+	_alternate = ((t & 0x02) != 0);
+	_hold = ((t & 0x01) != 0);
+}
+
+// ---
+void GENERALINSTRUMENTS::AY38910SimpleLibWrapper::Envelope::restart ()
+{
+	_direction = _attack ? 1 : -1;
+	_level = _attack ? 0 : 15;
+	_holding = false;
 
 	initializeInternalCounters ();
+}
 
-	_state = GENERALINSTRUMENTS::AY38910SimpleLibWrapper::Envelope::State::_ATTACK;
+// ---
+void GENERALINSTRUMENTS::AY38910SimpleLibWrapper::Envelope::advanceLevel ()
+{
+	if ((_direction < 0 && _level > 0) ||
+		(_direction > 0 && _level < 15))
+	{
+		_level = (unsigned char) ((int) _level + _direction);
+
+		return;
+	}
+
+	// If Continue is not set, the AY forces the envelope output to 0
+	// after the first ramp, whatever Attack/Alternate/Hold were.
+	if (!_continue)
+	{
+		_level = 0;
+		_holding = true;
+
+		return;
+	}
+
+	if (_hold)
+	{
+		if (_alternate)
+			_level = (_direction < 0) ? 15 : 0;
+
+		_holding = true;
+
+		return;
+	}
+
+	if (_alternate)
+		_direction = -_direction;
+	else
+		_level = _attack ? 0 : 15;
 }
 
 // ---

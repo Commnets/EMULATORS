@@ -23,6 +23,8 @@
     <ClInclude Include="..\..\include\MSX\CommandBuilder.hpp" />
     <ClInclude Include="..\..\include\MSX\Commands.hpp" />
     <ClInclude Include="..\..\include\MSX\FileIO.hpp" />
+    <ClInclude Include="..\..\include\MSX\Datasette.hpp" />
+    <ClInclude Include="..\..\include\MSX\DatasettePort.hpp" />
     <ClInclude Include="..\..\include\MSX\incs.hpp" />
     <ClInclude Include="..\..\include\MSX\IOPBuilder.hpp" />
     <ClInclude Include="..\..\include\MSX\Memory.hpp" />

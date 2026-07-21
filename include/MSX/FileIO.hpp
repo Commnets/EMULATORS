@@ -38,19 +38,52 @@ namespace MSX
 		static const std::map <char, MCHEmul::Strings> _DEFAULTSPECIALKEYS;
 	};
 
-	/** The CAS Format. ºn
-		One of the most common formats in MSX systems. */
+	/** The CAS format. \n
+		It keeps the byte blocks found between the standard CAS synchronization markers. */
 	class CASFileData final : public MCHEmul::FileData
 	{
 		public:
+		enum class BlockType
+		{
+			_DATA = 0,
+			_BINARYHEADER,
+			_BASICHEADER,
+			_ASCIIHEADER
+		};
+
+		struct Block
+		{
+			Block ()
+				: _type (BlockType::_DATA),
+				  _fileName (""),
+				  _bytes ()
+							{ }
+
+			BlockType _type;
+			std::string _fileName;
+			std::vector <MCHEmul::UByte> _bytes;
+		};
+
+		using Blocks = std::vector <Block>;
+
+		static const std::vector <MCHEmul::UByte> _SIGNATURE;
+
 		CASFileData ()
-			: MCHEmul::FileData ()
+			: MCHEmul::FileData (),
+			  _blocks ()
+							{ }
+		CASFileData (const Blocks& b)
+			: MCHEmul::FileData (),
+			  _blocks (b)
 							{ }
 
 		virtual MCHEmul::ExtendedDataMemoryBlocks asMemoryBlocks () const override;
+		virtual std::string asString () const override;
+
+		Blocks _blocks;
 	};
 
-	/** The extension able to read CAS file foirmat. */
+	/** The extension able to read and write CAS file format. */
 	class CASFileTypeIO final : public MCHEmul::FileTypeIO
 	{
 		public:
@@ -61,9 +94,7 @@ namespace MSX
 		virtual MCHEmul::FileData* readFile (const std::string& fN, bool bE = true) const override;
 		virtual bool canWrite (MCHEmul::FileData* fD) const override
 							{ return (dynamic_cast <CASFileData*> (fD) != nullptr); }
-		/** This type of format can not be written back to any file. */
-		virtual bool writeFile (MCHEmul::FileData* fD, const std::string& fN, bool bE = true) const override
-							{ return (false); }
+		virtual bool writeFile (MCHEmul::FileData* fD, const std::string& fN, bool bE = true) const override;
 	};
 }
 

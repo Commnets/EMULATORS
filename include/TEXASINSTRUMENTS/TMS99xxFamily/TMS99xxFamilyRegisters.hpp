@@ -169,18 +169,12 @@ namespace TEXASINSTRUMENTS
 								(size_t) (_graphicMode == _TEXTMODE) ? (40 * 24) : (32 * 24))); }
 		/** To get the information about the pattern generation table. \n
 			The information finally collected will depend on the active graphical mode . */
-		std::vector <MCHEmul::UByte> patternGenerationTableSnapShot () const
-							{ return (videoData (_patternAddress, 
-								(size_t) (_graphicMode == _GRAPHICIIMODE) ? (2048 * 3) : 2048)); }
+		std::vector <MCHEmul::UByte> patternGenerationTableSnapShot () const;
 		/** To get the information about the color name table. \n
 			The information finally collected will depend on the active graphical mode . \n
 			In the TextMode the color are not used, and in the multicolor mode the table 
 			defining the colort is the pattern generation one... */
-		std::vector <MCHEmul::UByte> colorNameTableSnapShot () const
-							{ return (
-								(_graphicMode == _GRAPHICIMODE || _graphicMode == _GRAPHICIIMODE) 
-									? videoData (_colorAddress, (_graphicMode == _GRAPHICIMODE) ? 32 : (2048 * 3))
-									: std::vector <MCHEmul::UByte> ()); } 
+		std::vector <MCHEmul::UByte> colorNameTableSnapShot () const;
 		/** To get an snapshot of the sprite definition. 
 			No boundaries limits are done. \n
 			The number of the sprite is from 1 to 32. */
@@ -203,6 +197,8 @@ namespace TEXASINSTRUMENTS
 
 		/** Used from the methods above from different places. */
 		inline void incrementReadWriteAddress () const;
+		/** Recalculates the active graphic mode from the M1, M2 and M3 bits. */
+		void actualizeGraphicMode ();
 
 		void initializeInternalValues ();
 
@@ -247,7 +243,7 @@ namespace TEXASINSTRUMENTS
 							{ _fifthSpriteNotDrawn = sN; }
 		bool screenUpdateHappen ()
 							{ return (_screenUpdateHappen); }
-		void setSreenUpdateHappen ()
+		void setScreenUpdateHappen ()
 							{ _screenUpdateHappen = true; }
 	
 		// Mamaging the info of the sprites...
