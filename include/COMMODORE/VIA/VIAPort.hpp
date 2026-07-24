@@ -52,7 +52,7 @@ namespace COMMODORE
 		/** Event sent when the value of the port has changed. */
 		static const unsigned int _VIAPORTIOBITSACTUALIZED = 240;
 
-		VIAPort (int id);
+		VIAPort (int id, bool portA);
 
 		/** To get access to the bus to connect the VIA (if needed) to other elements. */
 		const MCHEmul::Bus& bus () const
@@ -77,6 +77,11 @@ namespace COMMODORE
 							{ _port.setValue (MCHEmul::UBytes ({ v })); } // A notification will be issued...
 		const MCHEmul::UByte& portValue () const
 							{ return (_port.value ()[0]); }
+		/** Sets the levels supplied by the devices connected to input pins. */
+		void setExternalPins (const MCHEmul::UByte& v)
+							{ _externalPins = v; refreshPortValue (); }
+		const MCHEmul::UByte& externalPins () const
+							{ return (_externalPins); }
 
 		/** To get the value present in the "Port" (potentially to be moved into the data bus). \n
 			The value = pins when no latching. \n
@@ -111,7 +116,7 @@ namespace COMMODORE
 		  *	OR		: Attribute: The Output Register.
 		  *	IR		: Attribute: The Input Register.
 		  *	DDR		: Atrribute: The Direction Register.
-		  *	Port"	: Attribute: The value present at the port.
+		  *	Port	: Attribute: The value present at the port pins.
 		  */
 		virtual MCHEmul::InfoStructure getInfoStructure () const override;
 
@@ -132,6 +137,12 @@ namespace COMMODORE
 		/** Notify changes in the value of the port.
 			The first parameter represents the bit that changed, and the second is the new value. */
 		virtual void notifyPortChanges (const MCHEmul::UByte& c, const MCHEmul::UByte& v);
+		/** Captures input pin changes made through the exposed port bus. */
+		void captureExternalPins ();
+		/** Resolves input and output pins and publishes changes on the port bus. */
+		void refreshPortValue ();
+		virtual MCHEmul::UByte outputValue () const
+							{ return (_OR); }
 
 		protected:
 		int _id;
@@ -142,6 +153,10 @@ namespace COMMODORE
 		/** The value present at the pins of the VIC. 
 			It is represented using a Bus of 8 bits, to detect changes e.g in it. */
 		MCHEmul::Bus _port;
+		/** Levels supplied by peripherals to pins configured as inputs. */
+		MCHEmul::UByte _externalPins;
+		/** Identifies Port A because its handshake rules differ from Port B. */
+		bool _portA;
 		/** The Data Direction Register. 
 			A 0 in the bit means the correspondant pin in the port will act as input, 
 			whilst a 1 means that the pin will be output. */
@@ -173,7 +188,7 @@ namespace COMMODORE
 	{
 		public:
 		VIAPortA (int id)
-			: VIAPort (id)
+			: VIAPort (id, true)
 							{ /** Nothing else. */ }
 	};
 
@@ -229,6 +244,7 @@ namespace COMMODORE
 							{ _T = t; }
 
 		virtual void notifyPortChanges (const MCHEmul::UByte& c, const MCHEmul::UByte& v) override;
+		virtual MCHEmul::UByte outputValue () const override;
 
 		private:
 		// Elements related with this one...

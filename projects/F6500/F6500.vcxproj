@@ -51,6 +51,9 @@
     <ClCompile Include="..\..\src\F6500\RRA.cpp" />
     <ClCompile Include="..\..\src\F6500\SAX.cpp" />
     <ClCompile Include="..\..\src\F6500\SBX.cpp" />
+    <ClCompile Include="..\..\src\F6500\SHA.cpp" />
+    <ClCompile Include="..\..\src\F6500\SHX.cpp" />
+    <ClCompile Include="..\..\src\F6500\SHY.cpp" />
     <ClCompile Include="..\..\src\F6500\SLO.cpp" />
     <ClCompile Include="..\..\src\F6500\SRE.cpp" />
     <ClCompile Include="..\..\src\F6500\TestElements.cpp" />

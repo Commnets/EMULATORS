@@ -7,6 +7,7 @@ const COMMODORE::Datasette1530Injection::Definition
 	MCHEmul::Address ({ 0x33 ,0x03 }, false), // Start of the tape buffer...
 	MCHEmul::Address ({ 0x90, 0x00 }, false), // The casette routines use this space to track the operations and status...
 	MCHEmul::Address ({ 0x93, 0x00 }, false), // 0 = Load, 1 = Verify as the same kernel rountine could do both functions...
+	MCHEmul::Address ({ 0xad, 0x00 }, false), // KERNAL secondary address used by LOAD...
 	MCHEmul::Address ({ 0x00, 0x00 }, false), // Not used in C264
 	0x0000,									  // Not used in C264
 	MCHEmul::Address ({ 0xb4, 0x00 }, false), // Pointer (0xb4, 0xb5) to the beginning of the RAM being loaded...
@@ -141,7 +142,8 @@ bool C264::Datasette1531Injection::executeFindHeaderTrap (MCHEmul::CPU* cpu)
 
 		// Storing the header of the info found in the cassette buffer...
 		MCHEmul::DataMemoryBlock& dtM = _data._data [_dataCounter];
-		cpu -> memoryRef () -> put (MCHEmul::Address ({ 0xf8, 0x00 }, false), 0x01 /** Machine type default value. */);
+		cpu -> memoryRef () -> put (MCHEmul::Address ({ 0xf8, 0x00 }, false),
+			headerTypeAccordingToSecondaryAddress (cpu));
 		cpu -> memoryRef () -> put (ctteBuffer, MCHEmul::UBytes (dtM.startAddress ().bytes (), 
 			false /** little - endian. */).bytes ());
 		cpu -> memoryRef () -> put (ctteBuffer + 2, MCHEmul::UBytes (dtM.endAddress ().bytes (), false).bytes ());
@@ -190,12 +192,15 @@ bool C264::Datasette1531Injection::executeReceiveDataTrap (MCHEmul::CPU* cpu)
 {
 	_IFDEBUG debugDataFileFound (cpu);
 
-	MCHEmul::Address start (cpu -> memoryRef () -> 
+	const MCHEmul::Address start (cpu -> memoryRef () ->
 		values (_definition._startProgramAddr, 2).reverse ());
-	MCHEmul::Address end (cpu -> memoryRef () -> 
-		values (_definition._endProgramAddr, 2).reverse ());
 
-	loadDataBlockInRAM (_data._data [_dataCounter], cpu);
+	// The KERNAL has already selected either the relocated LOAD address
+	// or the absolute address stored in the tape header.
+	const MCHEmul::DataMemoryBlock& sourceBlock = _data._data [_dataCounter];
+	MCHEmul::DataMemoryBlock destinationBlock (start, sourceBlock.bytes ());
+
+	loadDataBlockInRAM (destinationBlock, cpu);
 
 	cpu -> memoryRef () -> put (_definition._statusAddr, 
 		cpu -> memoryRef () -> value (_definition._statusAddr) | 0x40 /** EOF. */);

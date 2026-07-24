@@ -18,15 +18,9 @@
 
 namespace COMMODORE
 {
-	class CIATimer;
-
-	/** The serial port inside the CIA is quite complex. \n
-		It read and send bits sequentially. \n
-		To read bits the CNT and SP signals are used: \n
-		When the CNT is flow low to high (raising edge) the value of the line SP is taken into account. 
-		The CIASerialPort has to be configured in OUTPUT mode.
-		To write bits the Timer A plays a key role. This is the reason to needed at construction time:
-		When the TimerA is half its value and it is running in continuous mode,  */
+	/** The serial port inside the CIA reads and sends bits sequentially.
+		Input samples SP on CNT rising edges. Output uses Timer A underflows
+		to generate the CNT clock. */
 	class CIASerialPort final : public MCHEmul::InfoClass, public MCHEmul::Notifier
 	{
 		public:
@@ -57,15 +51,6 @@ namespace COMMODORE
 		const MCHEmul::UByte& value () const
 							{ return (_value); }
 
-		/** When the CNTsignal is received 
-			it is needed to determine whether a raising edge is generated or not and also a pulse.
-			The first will be used in reading operations while the second will be used on reading ones. */
-		bool CNTSignal () const
-							{ return (_CNTPin); }
-		void setCNTSignal (bool v)
-							{ _CNTRaisingEdge = !_CNTPin && (v);
-							  _CNTPulse = _CNTPin && !v; 
-							  _CNTPin = v; }
 		bool SPSignal () const
 							{ return (_SPPin); }
 		void setSPSignal (bool b)
@@ -92,7 +77,8 @@ namespace COMMODORE
 
 		void initialize ();
 
-		void simulate (MCHEmul::CPU* cpu, CIATimer* t);
+		void simulate (bool CNTRisingEdge, bool CNTFallingEdge,
+			bool timerAUnderflow, bool timerAContinuous);
 
 		/**
 		  *	The name of the fields are: \n
@@ -114,18 +100,13 @@ namespace COMMODORE
 		bool removeBit (bool& b)
 							{ b = _bufferValue.shiftLeftC (); return (++_numberBitsTransmitted >= 8); }
 
-		/** To know whether a raising edge or a pulse are still pending to be processed. */
-		bool CNTRaisingEdge () const
-							{ bool r = _CNTRaisingEdge; _CNTRaisingEdge = false; return (r); }
-		bool CNTPulse () const
-							{ bool r = _CNTPulse; _CNTPulse = false; return (r); }
 
 		private:
 		int _id;
 		unsigned int _interruptId;
 		Status _status;
 		MCHEmul::UByte _value;
-		bool _CNTPin, _SPPin;
+		bool _SPPin;
 
 		// Implementation
 		bool _toTransmit;
@@ -134,7 +115,7 @@ namespace COMMODORE
 		mutable bool _interruptRequested;
 		/** used for receiving and sending info. */
 		MCHEmul::UByte _bufferValue;
-		mutable bool _CNTPulse, _CNTRaisingEdge;
+		bool _generatedCNTSignal;
 	};
 
 	// ---

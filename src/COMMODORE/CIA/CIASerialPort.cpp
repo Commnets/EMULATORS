@@ -1,6 +1,5 @@
 #include <COMMODORE/CIA/CIASerialPort.hpp>
-#include <COMMODORE/CIA/CIATimer.hpp>
-#include <COMMODORE/CIA/CIA.hpp> // for the signals in CNT and SP...
+#include <COMMODORE/CIA/CIA.hpp>
 
 // ---
 void COMMODORE::CIASerialPort::initialize ()
@@ -15,58 +14,55 @@ void COMMODORE::CIASerialPort::initialize ()
 
 	_interruptEnabled = _interruptRequested = false;
 
-	_CNTPin = _SPPin = false;
-
-	_CNTRaisingEdge = _CNTPulse = false;
+	_SPPin = false;
+	_generatedCNTSignal = true;
 }
 
 // ---
-void COMMODORE::CIASerialPort::simulate (MCHEmul::CPU* cpu, COMMODORE::CIATimer* t)
+void COMMODORE::CIASerialPort::simulate
+	(bool CNTRisingEdge, bool CNTFallingEdge, bool timerAUnderflow, bool timerAContinuous)
 {
-	bool rE = CNTRaisingEdge ();
-	bool cP = CNTPulse ();
-
 	switch (_status)
 	{
-		case (Status::_READING):
+		case Status::_READING:
 			{
-				if (rE &&
-					addBit (_SPPin)) // When the buffer is filled up, 
-									 // true is returned and the bufferValue is moved into the _value variable!
+				if (CNTRisingEdge &&
+					addBit (_SPPin))
 					_interruptRequested = true;
 			}
 
 			break;
 
-		case (Status::_SAVING):
+		case Status::_SAVING:
 			{
-				// The value might only be transmitted if it has been configurated
-				// the timer is running in continious mode and it has reach out half of the value...
 				if (!_toTransmit ||
-					!t -> reachesHalf () || 
-					t -> runMode () != CIATimer::RunMode::_RESTART)
+					!timerAUnderflow ||
+					!timerAContinuous)
 					break;
 
-				// It is transmited just in the falling edge of the CNT line...
-				bool bT = false;
-				if (cP)
+				bool oldCNTSignal = _generatedCNTSignal;
+				_generatedCNTSignal = !_generatedCNTSignal;
+
+				notify (MCHEmul::Event
+					(COMMODORE::CIA::_CNTSIGNAL, _generatedCNTSignal ? 1 : 0));
+
+				// Output data advances on the falling edge of the generated CNT clock.
+				if (oldCNTSignal && !_generatedCNTSignal)
 				{
-					if (removeBit (bT))
+					bool bitToTransmit = false;
+					if (removeBit (bitToTransmit))
+					{
 						_interruptRequested = true;
+						_toTransmit = false;
+					}
 
-					// The value is notified in the SP PIN...
-					notify (MCHEmul::Event (COMMODORE::CIA::_SPSIGNAL, bT ? 1 : 0));
-
-					// The CNT is push back up!
-					setCNTSignal (true);
-					// ...and notified...
-					notify (MCHEmul::Event (COMMODORE::CIA::_CNTSIGNAL, 1));
+					notify (MCHEmul::Event
+						(COMMODORE::CIA::_SPSIGNAL, bitToTransmit ? 1 : 0));
 				}
 			}
 
 			break;
 
-		/** Any other status does nothing. */
 		default:
 			break;
 	}

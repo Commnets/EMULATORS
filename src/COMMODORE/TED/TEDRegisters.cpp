@@ -96,10 +96,7 @@ void COMMODORE::TEDRegisters::setValue (size_t p, const MCHEmul::UByte& v)
 		// Timer 1 Low Byte
 		case 0x00:
 			{
-				_T1 -> setInitialValue ((_T1 -> initialValue () & 0xff00) | v.value ());
-
-				// Stop counting until the hight byte is loaded...
-				_T1 -> stop ();
+				_T1 -> writeLowByte (v.value ());
 			}
 
 			break;
@@ -107,10 +104,7 @@ void COMMODORE::TEDRegisters::setValue (size_t p, const MCHEmul::UByte& v)
 		// Timer High Byte
 		case 0x01:
 			{
-				_T1 -> setInitialValue ((_T1 -> initialValue () & 0x00ff) | (v.value () << 8));
-
-				// Once the hight byte is loaded, the timer starts to count...
-				_T1 -> start ();
+				_T1 -> writeHighByte (v.value ());
 			}
 
 			break;
@@ -118,10 +112,7 @@ void COMMODORE::TEDRegisters::setValue (size_t p, const MCHEmul::UByte& v)
 		// Timer 2 Low Byte
 		case 0x02:
 			{
-				_T2 -> setInitialValue ((_T2 -> initialValue () & 0xff00) | v.value ());
-
-				// Stop counting until the hight byte is loaded...
-				_T2 -> stop ();
+				_T2 -> writeLowByte (v.value ());
 			}
 
 			break;
@@ -129,10 +120,7 @@ void COMMODORE::TEDRegisters::setValue (size_t p, const MCHEmul::UByte& v)
 		// Timer 2 High Byte
 		case 0x03:
 			{
-				_T2 -> setInitialValue ((_T2 -> initialValue () & 0x00ff) | (v.value () << 8));
-
-				// Once the hight byte is loaded, the timer starts to count...
-				_T2 -> start ();
+				_T2 -> writeHighByte (v.value ());
 			}
 
 			break;
@@ -140,10 +128,7 @@ void COMMODORE::TEDRegisters::setValue (size_t p, const MCHEmul::UByte& v)
 		// Timer 3 Low Byte
 		case 0x04:
 			{
-				_T3 -> setInitialValue ((_T3 -> initialValue () & 0xff00) | v.value ());
-
-				// Stop counting until the hight byte is loaded...
-				_T3 -> stop ();
+				_T3 -> writeLowByte (v.value ());
 			}
 
 			break;
@@ -151,10 +136,7 @@ void COMMODORE::TEDRegisters::setValue (size_t p, const MCHEmul::UByte& v)
 		// Timer 3 High Byte
 		case 0x05:
 			{
-				_T3 -> setInitialValue ((_T3 -> initialValue () & 0x00ff) | (v.value () << 8));
-
-				// Once the hight byte is loaded, the timer starts to count...
-				_T3 -> start ();
+				_T3 -> writeHighByte (v.value ());
 			}
 
 			break;
@@ -206,9 +188,9 @@ void COMMODORE::TEDRegisters::setValue (size_t p, const MCHEmul::UByte& v)
 			{
 				if (v.bit (1)) _rasterIRQHappened = false; // clean up the latches...
 				if (v.bit (2)) _lightPenIRQHappened = false;
-				if (v.bit (3)) _T1 -> interruptRequested (); // clen up the lacth...
-				if (v.bit (4)) _T2 -> interruptRequested ();
-				if (v.bit (6)) _T3 -> interruptRequested ();
+				if (v.bit (3)) _T1 -> clearInterruptRequested ();
+				if (v.bit (4)) _T2 -> clearInterruptRequested ();
+				if (v.bit (6)) _T3 -> clearInterruptRequested ();
 				/** bits 0, 5, and 7 are not used. */
 			}
 
@@ -515,10 +497,10 @@ const MCHEmul::UByte& COMMODORE::TEDRegisters::readValue (size_t p) const
 				/** There is no lightpen in TED systems, 
 					however it is left for future expansions. */
 				result.setBit (2, _lightPenIRQHappened);
-				result.setBit (3, _T1 -> peekInterruptRequested ());
-				result.setBit (4, _T2 -> peekInterruptRequested ());
+				result.setBit (3, _T1 -> interruptRequested ());
+				result.setBit (4, _T2 -> interruptRequested ());
 				/** bit 5 not used, and always to 1. */
-				result.setBit (6, _T3 -> peekInterruptRequested ());
+				result.setBit (6, _T3 -> interruptRequested ());
 				result.setBit (7, launchIRQ ());
 				// Notice that this bit only sets when a interruption has really happened...
 				// ...and not only when any of the conditions to launch it has been reched,

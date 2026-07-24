@@ -188,6 +188,15 @@
     <ClCompile Include="..\..\src\F6500\SBX.cpp">
       <Filter>Archivos de origen\Instructions\undocumented</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\F6500\SHA.cpp">
+      <Filter>Archivos de origen\Instructions\undocumented</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\F6500\SHX.cpp">
+      <Filter>Archivos de origen\Instructions\undocumented</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\F6500\SHY.cpp">
+      <Filter>Archivos de origen\Instructions\undocumented</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\src\F6500\JAM.cpp">
       <Filter>Archivos de origen\Instructions\undocumented</Filter>
     </ClCompile>

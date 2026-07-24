@@ -22,6 +22,47 @@ void COMMODORE::CIARegisters::initialize ()
 }
 
 // ---
+void COMMODORE::CIARegisters::actualizePortB ()
+{
+	MCHEmul::UByte outputValue (_outputRegB);
+
+	if (_reflectTimerAAtPortDataB)
+		outputValue.setBit (6, _timerAValueAtPortDataB);
+	if (_reflectTimerBAtPortDataB)
+		outputValue.setBit (7, _timerBValueAtPortDataB);
+
+	// Keep the software latch independent from the timer-driven pin values.
+	unsigned char outputRegisterB = _outputRegB;
+	_outputRegB = outputValue.value ();
+	setPortB (0xff, false);
+	_outputRegB = outputRegisterB;
+}
+
+// ---
+void COMMODORE::CIARegisters::setReflectTimerAAtPortDataB (bool r, bool v)
+{
+	if (_reflectTimerAAtPortDataB == r &&
+		(!r || _timerAValueAtPortDataB == v))
+		return;
+
+	_reflectTimerAAtPortDataB = r;
+	_timerAValueAtPortDataB = v;
+	actualizePortB ();
+}
+
+// ---
+void COMMODORE::CIARegisters::setReflectTimerBAtPortDataB (bool r, bool v)
+{
+	if (_reflectTimerBAtPortDataB == r &&
+		(!r || _timerBValueAtPortDataB == v))
+		return;
+
+	_reflectTimerBAtPortDataB = r;
+	_timerBValueAtPortDataB = v;
+	actualizePortB ();
+}
+
+// ---
 void COMMODORE::CIARegisters::setValue (size_t p, const MCHEmul::UByte& v)
 {
 	if (_timerA == nullptr || _timerB == nullptr || _clock == nullptr)
@@ -48,18 +89,9 @@ void COMMODORE::CIARegisters::setValue (size_t p, const MCHEmul::UByte& v)
 		// Data Port Register B: CIAPRB
 		case 0x01:
 			{
-				MCHEmul::UByte cV = v;
-				// The result of the timer could be taken into account...
-				if (_reflectTimerAAtPortDataB)
-					cV.setBit (6, _timerAValueAtPortDataB ? true : false);
-				if (_reflectTimerBAtPortDataB)
-					cV.setBit (7, _timerBValueAtPortDataB ? true : false);
+				_outputRegB = v.value ();
 
-				_outputRegB = cV.value ();
-
-				// The value of the portB needs to be reset...
-				// If there were any previous value set in the portB, it will be overwritten...
-				setPortB (0xff, false);
+				actualizePortB ();
 			}
 
 			break;
@@ -79,7 +111,7 @@ void COMMODORE::CIARegisters::setValue (size_t p, const MCHEmul::UByte& v)
 			{
 				_dataPortBDir = v.value ();
 
-				setPortB (0xff, false);
+				actualizePortB ();
 			}
 
 			break;
@@ -87,7 +119,7 @@ void COMMODORE::CIARegisters::setValue (size_t p, const MCHEmul::UByte& v)
 		// LSB of the Latch A
 		case 0x04:
 			{
-				_timerA -> setInitialValue ((_timerA -> initialValue () & 0xff00) | (unsigned short) v.value ());
+				_timerA -> setLatchLow (v);
 			}
 
 			break;
@@ -95,7 +127,7 @@ void COMMODORE::CIARegisters::setValue (size_t p, const MCHEmul::UByte& v)
 		// MSB of the Latch A
 		case 0x05:
 			{
-				_timerA -> setInitialValue ((_timerA -> initialValue () & 0x00ff) | (unsigned short) (v.value () << 8));
+				_timerA -> setLatchHigh (v);
 			}
 
 			break;
@@ -103,7 +135,7 @@ void COMMODORE::CIARegisters::setValue (size_t p, const MCHEmul::UByte& v)
 		// LSB of the Latch B
 		case 0x06:
 			{
-				_timerB -> setInitialValue ((_timerB -> initialValue () & 0xff00) | (unsigned short) v.value ());
+				_timerB -> setLatchLow (v);
 			}
 
 			break;
@@ -111,7 +143,7 @@ void COMMODORE::CIARegisters::setValue (size_t p, const MCHEmul::UByte& v)
 		// MSB of the Latch B
 		case 0x07:
 			{
-				_timerB -> setInitialValue ((_timerB -> initialValue () & 0x00ff) | (unsigned short) (v.value () << 8));
+				_timerB -> setLatchHigh (v);
 			}
 
 			break;
@@ -203,16 +235,20 @@ void COMMODORE::CIARegisters::setValue (size_t p, const MCHEmul::UByte& v)
 		// Control Register A
 		case 0x0e:
 			{
+				_timerA -> setRunMode
+					(v.bit (3) ? CIATimer::RunMode::_ONETIME : CIATimer::RunMode::_RESTART);
+				_timerA -> setAffectPortDataB (v.bit (1));
+				_timerA -> setPortOutputMode
+					(v.bit (2) ? CIATimer::PortOutputMode::_TOGGLE : CIATimer::PortOutputMode::_PULSE);
+				_timerA -> setCountMode
+					(v.bit (5)
+						? CIATimer::CountMode::_SIGNALSONCNTLINE
+						: CIATimer::CountMode::_PROCESSORCYCLES);
+				if (v.bit (4))
+					_timerA -> forceLoad ();
 				_timerA -> setEnabled (v.bit (0));
-				_timerA -> setAffectPortDataB (_reflectTimerAAtPortDataB = v.bit (1));
-				_timerA -> setPulseAtPortDataB (v.bit (2));
-				_timerA -> setRunMode (v.bit (3) ? CIATimer::RunMode::_ONETIME : CIATimer::RunMode::_RESTART);
-				if (v.bit (4)) _timerA -> reset ();
-				_timerA -> setCountMode (v.bit (5)
-					? COMMODORE::CIATimer::CountMode::_SIGNALSONCNTLINE : COMMODORE::CIATimer::CountMode::_PROCESSORCYCLES);
-				_serialPort -> setStatus (v.bit (6) 
-					? COMMODORE::CIASerialPort::Status::_SAVING : COMMODORE::CIASerialPort::Status::_READING); // true when output and false when input...
-				// The bit 7 to select whether TOD ic actualized under 50Hz or 60Hz is not emulated...
+				_serialPort -> setStatus
+					(v.bit (6) ? CIASerialPort::Status::_SAVING : CIASerialPort::Status::_READING);
 			}
 
 			break;
@@ -220,14 +256,16 @@ void COMMODORE::CIARegisters::setValue (size_t p, const MCHEmul::UByte& v)
 		// Control Register B
 		case 0x0f:
 			{
+				_timerB -> setRunMode
+					(v.bit (3) ? CIATimer::RunMode::_ONETIME : CIATimer::RunMode::_RESTART);
+				_timerB -> setAffectPortDataB (v.bit (1));
+				_timerB -> setPortOutputMode
+					(v.bit (2) ? CIATimer::PortOutputMode::_TOGGLE : CIATimer::PortOutputMode::_PULSE);
+				_timerB -> setCountMode
+					((CIATimer::CountMode) ((v.value () >> 5) & 0x03));
+				if (v.bit (4))
+					_timerB -> forceLoad ();
 				_timerB -> setEnabled (v.bit (0));
-				_timerB -> setAffectPortDataB (_reflectTimerBAtPortDataB = v.bit (1));
-				_timerB -> setPulseAtPortDataB (v.bit (2));
-				_timerB -> setRunMode (v.bit (3) ? CIATimer::RunMode::_ONETIME : CIATimer::RunMode::_RESTART);
-				if (v.bit (4)) _timerB -> reset ();
-				// bits 5 & 6 indicates the mode...
-				_timerB -> setCountMode ((COMMODORE::CIATimer::CountMode) ((v.value () >> 5) & 0x03));
-				// The bit 7 is taken into account when managing TOD...
 			}
 
 			break;
@@ -367,8 +405,8 @@ const MCHEmul::UByte& COMMODORE::CIARegisters::readValue (size_t p) const
 			{
 				result = MCHEmul::UByte::_0;
 				result.setBit (0, _timerA -> enabled ());
-				result.setBit (1, _reflectTimerAAtPortDataB);
-				result.setBit (2, _timerA -> pulseAtPortDataB ());
+				result.setBit (1, _timerA -> affectPortDataB ());
+				result.setBit (2, _timerA -> portOutputMode () == CIATimer::PortOutputMode::_TOGGLE);
 				result.setBit (3, (_timerA -> runMode () == CIATimer::RunMode::_ONETIME) ? true : false);
 				// Bit 4 is always 0 when read...
 				// In timer A there can only run PROCESSORCYCLES OR SIGNALONCNTLINE...
@@ -384,8 +422,8 @@ const MCHEmul::UByte& COMMODORE::CIARegisters::readValue (size_t p) const
 			{
 				result = MCHEmul::UByte::_0;
 				result.setBit (0, _timerB -> enabled ());
-				result.setBit (1, _reflectTimerBAtPortDataB);
-				result.setBit (2, _timerB -> pulseAtPortDataB ());
+				result.setBit (1, _timerB -> affectPortDataB ());
+				result.setBit (2, _timerB -> portOutputMode () == CIATimer::PortOutputMode::_TOGGLE);
 				result.setBit (3, (_timerB -> runMode () == CIATimer::RunMode::_ONETIME) ? true : false);
 				// Bit 4 is always 0 when read...
 				result.setBit (5, (_timerB -> countMode () == CIATimer::CountMode::_SIGNALSONCNTLINE ||
@@ -479,6 +517,9 @@ void COMMODORE::CIARegisters::initializeInternalValues ()
 	if (_timerA == nullptr || _timerB == nullptr || _clock == nullptr)
 		return;
 
+	_reflectTimerAAtPortDataB = _reflectTimerBAtPortDataB = false;
+	_timerAValueAtPortDataB = _timerBValueAtPortDataB = false;
+
 	//They have to be initialized in advanced as the value set depends also on the value at the beginning...
 	_portA = _portB = MCHEmul::UByte::_FF; // As described in the documentation they all have a pull up resistor...
 	// Same with the output registers
@@ -512,9 +553,6 @@ void COMMODORE::CIARegisters::initializeInternalValues ()
 
 	_portA = _portB = 0xff; // They are not initially connected against anything...
 
-	_reflectTimerAAtPortDataB = _reflectTimerBAtPortDataB = false; // Do not do anything...
-
-	_timerAValueAtPortDataB = _timerBValueAtPortDataB = false; // It is the same, but just in case...
 
 	_interruptsEnabledBack = false;
 }

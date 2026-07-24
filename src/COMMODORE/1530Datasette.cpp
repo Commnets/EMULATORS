@@ -72,6 +72,7 @@ MCHEmul::InfoStructure COMMODORE::Datasette1530Injection::Definition::getInfoStr
 	result.add ("BUFFER", _bufferAddr);
 	result.add ("STATUS", _statusAddr);
 	result.add ("VERIFYFLAG", _verifyFlagAddr);
+	result.add ("SECONDARYADDRESS", _secondaryAddressAddr);
 	result.add ("STARTPRG", _startProgramAddr);
 	result.add ("ENDPRG", _endProgramAddr);
 	result.add ("KEYBOARDBUFFER", _keyboardBufferAddr);
@@ -83,6 +84,16 @@ MCHEmul::InfoStructure COMMODORE::Datasette1530Injection::Definition::getInfoStr
 	result.add ("TRAPS", std::move (trps));
 
 	return (result);
+}
+
+// ---
+MCHEmul::UByte COMMODORE::Datasette1530Injection::
+	headerTypeAccordingToSecondaryAddress (MCHEmul::CPU* cpu) const
+{
+	return ((cpu -> memoryRef () ->
+		value (_definition._secondaryAddressAddr) == MCHEmul::UByte::_0)
+			? MCHEmul::UByte::_1
+			: MCHEmul::UByte (0x03));
 }
 
 // ---
@@ -223,14 +234,15 @@ bool COMMODORE::Datasette1530Injection::executeFindHeaderTrap (MCHEmul::CPU* cpu
 		}
 	}
 
-	// Only if something usefull was found, the method continues...
+	// Only if something useful was found, the method continues...
 	if (e == 0)
 	{
 		_IFDEBUG debugHeaderFileFound (cpu);
 
 		// Storing the header of the info found in the cassette buffer...
 		MCHEmul::DataMemoryBlock& dtM = _data._data [_dataCounter];
-		cpu -> memoryRef () -> put (ctteBuffer, 0x01 /** Machine type default value. */);
+		cpu -> memoryRef () -> put
+			(ctteBuffer, headerTypeAccordingToSecondaryAddress (cpu)); // It can be either 0x01 ir 0x03...
 		cpu -> memoryRef () -> put (ctteBuffer + 1, MCHEmul::UBytes (dtM.startAddress ().bytes (), 
 			false /** little - endian. */).bytes ());
 		cpu -> memoryRef () -> put (ctteBuffer + 3, MCHEmul::UBytes (dtM.endAddress ().bytes (), false).bytes ());
@@ -294,18 +306,21 @@ bool COMMODORE::Datasette1530Injection::executeReceiveDataTrap (MCHEmul::CPU* cp
 
 	_IFDEBUG debugDataFileFound (cpu);
 
-	MCHEmul::Address start (cpu -> memoryRef () -> 
-		values (_definition._startProgramAddr, 2).reverse ());
-	MCHEmul::Address end (cpu -> memoryRef () -> 
-		values (_definition._endProgramAddr, 2).reverse ());
-
 	switch (static_cast <F6500::C6500*> (cpu) -> xRegister ().values () [0].value ())
 	{
 		case 0x0e:
-			// This methd has been defined to read always the same number 
-			// of bytes that it was expected!
-			// VOther implementatoions (VICE e.g.) are prepared to read even files with defect...
-			loadDataBlockInRAM (_data._data [_dataCounter], cpu);
+			{
+				// The KERNAL has already selected either the relocated LOAD address
+				// or the absolute address stored in the tape header.
+				const MCHEmul::Address start (cpu -> memoryRef () ->
+					values (_definition._startProgramAddr, 2).reverse ());
+				const MCHEmul::DataMemoryBlock& sourceBlock = _data._data [_dataCounter];
+				MCHEmul::DataMemoryBlock destinationBlock
+					(start, sourceBlock.bytes ());
+
+				loadDataBlockInRAM (destinationBlock, cpu);
+			}
+
 			break;
 
 		default:

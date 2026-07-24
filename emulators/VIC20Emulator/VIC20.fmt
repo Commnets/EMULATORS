@@ -4,45 +4,11 @@
 ?./LocalConsole.fmt
 #---
 ;VIA1
-Id:@ID@
-@ATTRS?{key=YES,equal=:,empty=no attributes}\n@
-->Registers:
-@Registers>@
-->Control lines:
-@VIACtrlA1>@
-@VIACtrlA2>@
-@VIACtrlB1>@
-@VIACtrlB2>@
-->Timer 1:
-@VIATimer1>@
-->Timer 2:
-@VIATimer2>@
-->ShiftRegister:
-@VIAShiftReg>@
-->Ports:
-A:@PortA@, B:@PortB@
-Dir A:@VIADDRA@, Dir B:@VIADDRB@
+@.CLASS>@
 #---
 #---
 ;VIA2
-Id:@ID@
-@ATTRS?{key=YES,equal=:,empty=no attributes}\n@
-->Registers:
-@Registers>@
-->Control lines:
-@VIACtrlA1>@
-@VIACtrlA2>@
-@VIACtrlB1>@
-@VIACtrlB2>@
-->Timer 1:
-@VIATimer1>@
-->Timer 2:
-@VIATimer2>@
-->ShiftRegister:
-@VIAShiftReg>@
-->Ports:
-A:@PortA@, B:@PortB@
-Dir A:@VIADDRA@, Dir B:@VIADDRB@
+@.CLASS>@
 #---
 ;CVIA1
 @VIA1>@

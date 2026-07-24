@@ -1,0 +1,4 @@
+interface:
+  display_name: "EMULATORS Debug Log Audit"
+  short_description: "Interpret CPU and chip cycle debug logs"
+  default_prompt: "Use $emulators-debug-log-audit to analyze this EMULATORS debug log and correlate CPU, VIC-II, CIA, and interrupt timing."

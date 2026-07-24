@@ -14,9 +14,12 @@ COMMODORE::CIA::CIA (int id, int rId, unsigned int intId)
 	  _clock (0, intId),
 	  _serialPort (0, intId),
 	  _lastClockCycles (0),
-	  _pulseTimerASentToPortB (false), _pulseTimerBSentToPortB (false)
+	  _CNTPin (true),
+	  _pendingCNTRisingEdges (0), _pendingCNTFallingEdges (0)
 { 
-	setClassName ("CIA"); 
+	setClassName ("CIA");
+
+	observe (&_serialPort);
 }
 
 // ---
@@ -51,7 +54,8 @@ bool COMMODORE::CIA::initialize ()
 
 	_CIARegisters -> initialize ();
 
-	_pulseTimerASentToPortB = _pulseTimerBSentToPortB = false;
+	_CNTPin = true;
+	_pendingCNTRisingEdges = _pendingCNTFallingEdges = 0;
 
 	_lastClockCycles = 0;
 
@@ -61,89 +65,41 @@ bool COMMODORE::CIA::initialize ()
 // ---
 bool COMMODORE::CIA::simulate (MCHEmul::CPU* cpu)
 {
-	// First time?
 	if (_lastClockCycles == 0)
-	{ 
-		_lastClockCycles = cpu -> clockCycles (); // Nothing to do...
-
+	{
+		_lastClockCycles = cpu -> clockCycles ();
 		return (true);
 	}
 
-	// If the right register has been modified....
 	if (_CIARegisters -> interruptsEnabledBack ())
-		cpu -> interrupt (_interruptId) -> setNewInterruptRequestAdmitted (false); // ...the interrupts are admitted again...
-	// Depends on the type of interrupt connected to this CIA what the final effect will be...
-	// By example if the interrupt is a IRQ no real effect will happen,
-	// but if it is a NMI the affect wil be that a new interrupt could be admitted...
-	// It is needed to check it only once because the cycles later will take into account!
+		cpu -> interrupt (_interruptId) -> setNewInterruptRequestAdmitted (false);
 
 	for (unsigned int i = cpu -> clockCycles () - _lastClockCycles; i > 0; i--)
 	{
 		_IFDEBUG debugCIACycle (cpu, i);
 
-		// Simulate the Timers...
-		// After that the timer can reach 0
-		// If so (apart of launching a interrupt if configured) the result can be reflected
-		// in the port B of the Chip...
+		bool CNTRisingEdge = consumeCNTRisingEdge ();
+		bool CNTFallingEdge = consumeCNTFallingEdge ();
+		CIATimer::CycleResult timerAResult = 
+			_timerA.simulate (true, CNTRisingEdge, false, _CNTPin);
+		CIATimer::CycleResult timerBResult = _timerB
+			.simulate (true, CNTRisingEdge, timerAResult._underflow, _CNTPin);
 
-		// Timer A
-		_timerA.simulate (cpu);
-		// Does timer A outcome affect the port B?
-		if (_timerA.affectPortDataB ())
-		{
-			// if it affects and the timer A has reached 0...
-			if (_timerA.reaches0 ())
-				// Sets the way this is reflected
-				_CIARegisters -> setReflectTimerAAtPortDataB (true, 
-					(_pulseTimerASentToPortB = _timerA.pulseAtPortDataB ()) 
-						? true // if it is a pulse, the pulse is reflected as true but marked hee to set it off inthe next cycle...
-						: _CIARegisters -> readValue (0x01).bit (6 /** Timer A affects bit 6. */) ? false : true); // Toggle the bit!
-			else
-			// If it affects, it hasn't reached 0, and the pulse is active...
-			if (_pulseTimerASentToPortB)
-				_CIARegisters -> setReflectTimerAAtPortDataB (true, _pulseTimerASentToPortB = false); // Switch it off...
-			// Otherwise, do not change anything...
-			else
-				_CIARegisters -> setReflectTimerAAtPortDataB (false); // No longer affects...
-		}
-		// Not affect...
-		else
-			_CIARegisters -> setReflectTimerAAtPortDataB (false); // Nothing...
-
-		// Same but with timer B
-		// The timer B has to take into account the timer A...
-		_timerB.simulate (cpu, &_timerA);
-		if (_timerB.affectPortDataB ())
-		{
-			if (_timerB.reaches0 ())
-				_CIARegisters -> setReflectTimerBAtPortDataB (true, 
-					(_pulseTimerBSentToPortB = _timerB.pulseAtPortDataB ()) 
-						? true
-						: _CIARegisters -> readValue (0x01).bit (7 /** timer B affects bit 7. */) ? false : true);
-			else
-			if (_pulseTimerBSentToPortB)
-				_CIARegisters -> setReflectTimerBAtPortDataB (true, _pulseTimerBSentToPortB = false);
-			else
-				_CIARegisters -> setReflectTimerBAtPortDataB (false);
-		}
-		else
-			_CIARegisters -> setReflectTimerBAtPortDataB (false); // Nothing...
+		_CIARegisters -> setReflectTimerAAtPortDataB 
+			(_timerA.affectPortDataB (), _timerA.portOutput ());
+		_CIARegisters -> setReflectTimerBAtPortDataB 
+			(_timerB.affectPortDataB (), _timerB.portOutput ());
 
 		_clock.simulate (cpu);
+		_serialPort.simulate (CNTRisingEdge, CNTFallingEdge, timerAResult._underflow,
+			_timerA.runMode () == CIATimer::RunMode::_RESTART);
 
-		_serialPort.simulate (cpu, &_timerA);
-
-		// Any reason to launch an interruption?...
 		int cI = -1;
 		if ((cI = (int) _CIARegisters -> reasonIRQCode ()) != 0)
-			cpu -> requestInterrupt (
-				_interruptId, 
-				cpu -> clockCycles  () - i, 
-				this,
-				cI);
-	}
+			cpu -> requestInterrupt (_interruptId, cpu -> clockCycles () - i, this, cI);
 
-	_lastClockCycles = cpu -> clockCycles ();
+		_lastClockCycles++;
+	}
 
 	return (true);
 }
@@ -172,15 +128,36 @@ void COMMODORE::CIA::processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifier
 {
 	if (evnt.id () == _CNTSIGNAL)
 	{
-		_serialPort.setCNTSignal (evnt.value () == 1);
-		
-		_timerA.setCNTSignal (evnt.value () == 1);
-
-		_timerB.setCNTSignal (evnt.value () == 1);
+		bool newValue = evnt.value () == 1;
+		if (!_CNTPin && newValue)
+			_pendingCNTRisingEdges++;
+		else if (_CNTPin && !newValue)
+			_pendingCNTFallingEdges++;
+		_CNTPin = newValue;
 	}
-	else
-	if (evnt.id () == _SPSIGNAL)
+	else if (evnt.id () == _SPSIGNAL)
 		_serialPort.setSPSignal (evnt.value () == 1);
+
+	if (n == &_serialPort)
+		notify (evnt);
+}
+
+// ---
+bool COMMODORE::CIA::consumeCNTRisingEdge ()
+{
+	if (_pendingCNTRisingEdges == 0)
+		return (false);
+	_pendingCNTRisingEdges--;
+	return (true);
+}
+
+// ---
+bool COMMODORE::CIA::consumeCNTFallingEdge ()
+{
+	if (_pendingCNTFallingEdges == 0)
+		return (false);
+	_pendingCNTFallingEdges--;
+	return (true);
 }
 
 // ---

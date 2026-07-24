@@ -92,7 +92,7 @@ bool COMMODORE::VIAControlLineType1::simulate (MCHEmul::CPU* cpu)
 }
 
 // ---
-void COMMODORE::VIAControlLineType2::whenReadWritePort (bool r)
+void COMMODORE::VIAControlLineType2::whenReadWritePort (bool r, bool portA)
 {
 	// @see simulate method
 
@@ -112,7 +112,8 @@ void COMMODORE::VIAControlLineType2::whenReadWritePort (bool r)
 
 		case 0x04:
 			{
-				if (!r)
+				// CA2 handshakes reads and writes; CB2 handshakes writes only.
+				if (portA || !r)
 					setValue (false); 
 			}
 
@@ -120,7 +121,7 @@ void COMMODORE::VIAControlLineType2::whenReadWritePort (bool r)
 
 		case 0x05:
 			{
-				if (!r)
+				if (portA || !r)
 				{
 					setValue (false);
 
@@ -144,6 +145,19 @@ void COMMODORE::VIAControlLineType2::whenReadWritePort (bool r)
 
 			break;
 	}
+}
+
+// ---
+void COMMODORE::VIAControlLineType2::setMode (unsigned char m)
+{
+	_mode = m;
+	_justMovedToFalse = false;
+
+	// Output modes establish their idle/manual level immediately.
+	if (_mode == 0x04 || _mode == 0x05 || _mode == 0x07)
+		setValue (true);
+	else if (_mode == 0x06)
+		setValue (false);
 }
 
 // ---
@@ -183,7 +197,11 @@ bool COMMODORE::VIAControlLineType2::simulate (MCHEmul::CPU* cpu)
 			{
 				assert (_CL != nullptr);
 
-				if (_CL -> peekTransition ())
+				VIAControlLineType1* controlLine =
+					dynamic_cast <VIAControlLineType1*> (_CL);
+				assert (controlLine != nullptr);
+
+				if (controlLine -> activeEdgeDetected ())
 					setValue (true);
 			}
 

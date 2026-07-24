@@ -32,18 +32,6 @@ const MCHEmul::UByte& VIC20::VIA1Registers::readValue (size_t p) const
 		// VIA1 Port B
 		case 0x00:
 			{
-				const MCHEmul::UByte ddr = _PB -> DDR ();
-				MCHEmul::UByte out = _PB -> OR ();
-
-				// Timer 1 can drive PB7 only when PB7 is output...
-				if ((ddr & 0x80) != 0x00)
-				{
-					// ...and the way of Timer1 works allows it...
-					if (_T1 -> runMode () == COMMODORE::VIATimer::RunMode::_ONESHOOTSIGNAL ||
-						_T1 -> runMode () == COMMODORE::VIATimer::RunMode::_CONTINUOUSSIGNAL)
-						out = _PB -> p7 () ? (out | 0x80) : (out & ~0x80);
-				}
-
 				// Live external pins for user port / RS-232.
 				// Default: pull-up/high.
 				MCHEmul::UByte pins = 0xff;
@@ -64,8 +52,8 @@ const MCHEmul::UByte& VIC20::VIA1Registers::readValue (size_t p) const
 				if (_PB -> latchIR ())
 					input = _PB -> valueLatched ();
 
-				// Sets the new value...
-				_PB -> setPortValue ((out & ddr) | (input & ~ddr));
+				// The generic VIA port resolves ORB, DDRB and the external levels.
+				_PB -> setExternalPins (input);
 				// Reading ORB affects CB1/CB2 interrupt flags.
 				result = _PB -> value (true);
 			}
@@ -76,9 +64,6 @@ const MCHEmul::UByte& VIC20::VIA1Registers::readValue (size_t p) const
 		case 0x01:
 		case 0x0f:
 			{
-				const MCHEmul::UByte ddr = _PA -> DDR ();
-				const MCHEmul::UByte out = _PA -> OR ();
-
 				// Live external pins for serial/tape/joystick/fire.
 				// Default: pull-up/high.
 				MCHEmul::UByte pins = 0xff;
@@ -99,8 +84,8 @@ const MCHEmul::UByte& VIC20::VIA1Registers::readValue (size_t p) const
 				if (_PA -> latchIR ())
 					input = _PA -> valueLatched ();
 
-				// Sets the new value...
-				_PA -> setPortValue ((out & ddr) | (input & ~ddr));
+				// The generic VIA port resolves ORA, DDRA and the external levels.
+				_PA -> setExternalPins (input);
 				// Reading ORA affects CA1/CA2 interrupt flags.
 				result = _PA -> value (pp == 0x01);
 			}

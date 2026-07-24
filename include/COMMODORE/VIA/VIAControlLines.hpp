@@ -62,7 +62,7 @@ namespace COMMODORE
 			Every way is defined by a number (0 - 255). */
 		unsigned char mode () const
 							{ return (_mode); }
-		void setMode (unsigned char m)
+		virtual void setMode (unsigned char m)
 							{ _mode = m; }
 
 		// Managing interrupt related data...
@@ -81,7 +81,7 @@ namespace COMMODORE
 		/** When the a read/write action is done in the linked port (@see VIAPort)
 			there might be a colateral effect in the "ControlLine" linked to that.
 			This method is invoked from the port linked. */
-		virtual void whenReadWritePort (bool r /** true if read action, false if write action. */) = 0;
+		virtual void whenReadWritePort (bool r /** true if read action, false if write action. */, bool portA) = 0;
 
 		virtual void initialize ();
 
@@ -116,7 +116,7 @@ namespace COMMODORE
 			Flag is cleared when read/write action in port linked happen (not in register 0x0f). \n
 			When flag is set, the value at the port linked is lached. \n
 		1 : Interrupt is flagged when the control line value goes from 0 to 1 = positive edge.
-			Flag is NOT cleared when read/write action in the port linked happen (not in register 0x0f). \n
+			Flag is cleared when a read/write action in the linked port happens (not in register 0x0f). \n
 			When the flag is set, the value at the port linked is latched. \n */
 	class VIAControlLineType1 final : public VIAControlLine
 	{
@@ -130,8 +130,10 @@ namespace COMMODORE
 
 		/** The collateral effect when read/write action in the port
 			is always to clear the interrupt flag. */
-		virtual void whenReadWritePort (bool) override
+		virtual void whenReadWritePort (bool, bool) override
 							{ interruptRequested (); }
+		bool activeEdgeDetected () const
+							{ return (_mode == 0 ? peekNegativeEdge () : peekPositiveEdge ()); }
 
 		virtual void initialize () override;
 
@@ -155,11 +157,9 @@ namespace COMMODORE
 		0 : Interrupt is flagged when the control line value goes from 1 to 0 = negative edge.
 			In the port linked (mandatory) the value in the _IR is latched. \n
 			Flag is cleared when read/write action in the port linked happen (not in register 0x0f). \n
-		1 : Interrupt is flagged when the control line value goes from 0 to 1 = positive edge.
-			In the port linked (mandatory) the value in the _IR is latched. \n
-			Flag is NOT cleared when read/write action in the port linked happen (not in register 0x0f). \n
-		2 : Like 0, but interrupt is flagged when contro line value goes from 0 to 1 = positive edge. \n
-		3 : Like 1, but interrupt is flagged when contro line value goes from 0 to 1 = positive edge. \n
+		1 : Independent interrupt input on a negative edge. Port accesses do not clear its flag. \n
+		2 : Interrupt input on a positive edge. Port accesses clear its flag. \n
+		3 : Independent interrupt input on a positive edge. Port accesses do not clear its flag. \n
 		4 : Handshake mode: \n
 			Value goes low = 0, when write operation in linked port happen.  \n
 			Value goes back to high = 1, when transition happens in th elinked "ControlLine". \n
@@ -185,7 +185,8 @@ namespace COMMODORE
 
 		/** The collateral effect in he port will depend on 
 			the mode the line is configured. */
-		virtual void whenReadWritePort (bool r) override;
+		virtual void whenReadWritePort (bool r, bool portA) override;
+		virtual void setMode (unsigned char m) override;
 
 		virtual void initialize () override;
 

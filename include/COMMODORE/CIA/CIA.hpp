@@ -58,16 +58,16 @@ namespace COMMODORE
 
 		/**
 		  *	The name of the fields are: \n
-		  * The ones comming from the parent class. \n
-		  * Registers	= InfoStructure: Value of the registers. \n
-		  *	TimerA		= InfoStructure: Info about the timer A. \n
-		  *	TimerB		= InfoStructure: Info about the timer B. \n
-		  *	Clock		= InfoStructure: Info about the clock. \n
-		  * SerialPort	= InfoStructure: Info about the serial port. \n
-		  * PortA		= Attribute:	 Info about the value at the port A. \n
-		  * PortB		= Attribute:	 Info about the value at the port B. \n
-		  * CIDDRA		= Attribute:	 The direction of the port A. \n
-		  * CIDDRB		= Attribute:	 The direction of the port B. \n
+		  * The ones coming from the parent class and: \n
+		  * Registers		= InfoStructure: Value of the registers. \n
+		  *	CIATimerA		= InfoStructure: Information about timer A. \n
+		  *	CIATimerB		= InfoStructure: Information about timer B. \n
+		  *	CIAClock		= InfoStructure: Information about the TOD clock. \n
+		  * CIASerialPort	= InfoStructure: Information about the serial port. \n
+		  * PortA			= Attribute: Value at port A. \n
+		  * PortB			= Attribute: Value at port B. \n
+		  * CIDDRA			= Attribute: Data direction register for port A. \n
+		  * CIDDRB			= Attribute: Data direction register for port B. \n
 		  */
 		virtual MCHEmul::InfoStructure getInfoStructure () const override;
 
@@ -80,6 +80,8 @@ namespace COMMODORE
 		/** Debug special situations...
 			Take care using this instructions _deepDebugFile could be == nullptr... */
 		void debugCIACycle (MCHEmul::CPU* cpu, unsigned int i);
+		bool consumeCNTRisingEdge ();
+		bool consumeCNTFallingEdge ();
 		// -----
 
 		protected:
@@ -92,7 +94,8 @@ namespace COMMODORE
 
 		// Implementation
 		unsigned int _lastClockCycles;
-		bool _pulseTimerASentToPortB, _pulseTimerBSentToPortB;
+		bool _CNTPin;
+		unsigned int _pendingCNTRisingEdges, _pendingCNTFallingEdges;
 	};
 }
 

@@ -16,8 +16,6 @@ void COMMODORE::VIATimer::reset ()
 { 
 	_currentValue = _initialValue; 
 		
-	_alreadyReachedHalf = false; 
-							  
 	_firstTimeReaches0 = false;
 		
 	_counting = false;
@@ -37,18 +35,27 @@ void COMMODORE::VIATimer::initialize ()
 	// The implementation values...
 	_counting = false;
 	_currentValue = 0x0000;
-	_reaches0 = _reaches0LSB = _firstTimeReaches0 = _reachesHalf = _alreadyReachedHalf = false;
+	_reaches0 = _reaches0LSB = _firstTimeReaches0 = false;
 	_interruptRequested = false;
 }
 
 // ---
-bool COMMODORE::VIATimer::simulate (MCHEmul::CPU* cpu)
+COMMODORE::VIATimer::CycleResult COMMODORE::VIATimer::simulate (MCHEmul::CPU* cpu)
 {
 	assert (cpu != nullptr);
+
+	CycleResult result;
 
 	if (_counting && 
 		countDown (cpu)) // Counting one at a time...
 	{
+		result._lowByteReached0 = _reaches0LSB;
+
+		if (!_reaches0)
+			return (result);
+
+		result._timeout = true;
+
 		switch (_runMode)
 		{
 			case COMMODORE::VIATimer::RunMode::_ONESHOOT:
@@ -67,7 +74,7 @@ bool COMMODORE::VIATimer::simulate (MCHEmul::CPU* cpu)
 							// the timer 2 doesn't take a look of any timer, so this is just a protection...
 							assert (_P != nullptr);
 
-							_P -> setP7 (false); // Pulse generated!
+							_P -> setP7 (true);
 						}
 					}
 				}
@@ -82,7 +89,6 @@ bool COMMODORE::VIATimer::simulate (MCHEmul::CPU* cpu)
 					// Starts back...
 					_currentValue = _initialValue;
 
-					_alreadyReachedHalf = false;
 
 					if (_runMode == COMMODORE::VIATimer::RunMode::_CONTINUOUSSIGNAL)
 					{
@@ -105,14 +111,8 @@ bool COMMODORE::VIATimer::simulate (MCHEmul::CPU* cpu)
 				break;
 		}
 	}
-	else
-	// In the next cycle the pulse goes back to true if any!
-	{
-		if (_runMode == COMMODORE::VIATimer::RunMode::_ONESHOOTSIGNAL)
-			_P -> setP7 (true); // Pulse generated! (is the previous cycle the value of the pulse was false instead)
-	}
 
-	return (true);
+	return (result);
 }
 
 // ---
@@ -149,11 +149,7 @@ bool COMMODORE::VIATimer::countDown (MCHEmul::CPU* cpu)
 	_reaches0 = (_currentValue == 0x0000);
 	// ...and this one when the LSB part reaches 0...
 	_reaches0LSB = ((_currentValue & 0x00ff) == 0x0000);
-	// This variable is set first time the value is below the half...
-	if ((_reachesHalf = ((_currentValue >> 1) < _initialValue) && !_alreadyReachedHalf)) 
-		_alreadyReachedHalf = true; // Latches, but not follow the value...
-
-	return (_reaches0);
+	return (true);
 }
 
 // ---
@@ -176,14 +172,14 @@ void COMMODORE::VIATimer1::reset ()
 { 
 	COMMODORE::VIATimer::reset (); // Reset the common values...
 
-	// When reset the PB7 is push down 
+	// Loading T1C-H drives PB7 low until the first time-out.
 	// if the mode is the right one...
 	if (_runMode == RunMode::_ONESHOOTSIGNAL ||
 		_runMode == RunMode::_CONTINUOUSSIGNAL)
 	{ 
 		assert (_P != nullptr);
 
-		_P -> setP7 (true);
+		_P -> setP7 (false);
 	}
 }
 
@@ -201,13 +197,9 @@ void COMMODORE::VIATimer1::initialize ()
 void COMMODORE::VIATimer2::setCountAndRunMode 
 	(COMMODORE::VIATimer::CountMode cM, COMMODORE::VIATimer::RunMode rM)
 {
-	if ((cM == COMMODORE::VIATimer::CountMode::_PROCESSORCYCLES &&
-		 rM != COMMODORE::VIATimer::RunMode::_ONESHOOT) ||
-		(cM == COMMODORE::VIATimer::CountMode::_PULSERECEIVED &&
-		 rM != COMMODORE::VIATimer::RunMode::_CONTINUOUS))
+	if (rM != COMMODORE::VIATimer::RunMode::_ONESHOOT)
 	{
-		_LOG ("VIATimer2: Only _PROCESSORCYCLES counting mode is allowed with _ONESHOOT running mode, " 
-			  "and _PULSERECEIVED counting mode is allowed with _CONTINUOUS running mode.");
+		_LOG ("VIATimer2: Only _ONESHOOT running mode is allowed.");
 
 		assert (false); // Just when compiling under DEBUG mode...
 	}
@@ -219,6 +211,8 @@ void COMMODORE::VIATimer2::setCountAndRunMode
 // ---
 bool COMMODORE::VIATimer2::countDown (MCHEmul::CPU* cpu)
 {
+	bool count = false;
+
 	switch (_countMode)
 	{
 		case COMMODORE::VIATimer::CountMode::_PULSERECEIVED:
@@ -228,14 +222,29 @@ bool COMMODORE::VIATimer2::countDown (MCHEmul::CPU* cpu)
 				// The negative transition of the pulse in P6...
 				// ...is what is counted...
 				if (_P -> peekP6negativeEdge ())
+				{
 					--_currentValue;
+					count = true;
+				}
 			}
 
+			break;
+
+		case COMMODORE::VIATimer::CountMode::_PROCESSORCYCLES:
+			count = COMMODORE::VIATimer::countDown (cpu);
 			break;
 
 		default:
 			break;
 	}
 
-	return (COMMODORE::VIATimer::countDown (cpu));
+	if (_countMode == COMMODORE::VIATimer::CountMode::_PULSERECEIVED && count)
+	{
+		_reaches0 = (_currentValue == 0x0000);
+		_reaches0LSB = ((_currentValue & 0x00ff) == 0x0000);
+	}
+	else if (!count)
+		_reaches0 = _reaches0LSB = false;
+
+	return (count);
 }

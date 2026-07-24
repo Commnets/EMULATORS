@@ -25,7 +25,8 @@ void COMMODORE::VIARegisters::initialize ()
 // ---
 void COMMODORE::VIARegisters::setValue (size_t p, const MCHEmul::UByte& v)
 {
-	MCHEmul::PhysicalStorageSubset::setValue (p, v);
+	size_t pp = p % 0x10;
+	MCHEmul::PhysicalStorageSubset::setValue (pp, v);
 
 	if (_CA1 == nullptr ||
 		_CA2 == nullptr ||
@@ -37,8 +38,6 @@ void COMMODORE::VIARegisters::setValue (size_t p, const MCHEmul::UByte& v)
 		_PA  == nullptr ||
 		_PB  == nullptr)
 		return;
-
-	size_t pp = p % 0x10;
 
 	switch (pp)
 	{
@@ -80,8 +79,7 @@ void COMMODORE::VIARegisters::setValue (size_t p, const MCHEmul::UByte& v)
 		// Notice that setting this register or 0x06 the result is the same...
 		case 0x06: 
 			{
-				_T1 -> setInitialValue 
-					((_T1 -> initialValue () & 0xff00) | (unsigned short) v.value ());
+				_T1 -> setLatchLow (v);
 			}
 
 			break;
@@ -92,16 +90,14 @@ void COMMODORE::VIARegisters::setValue (size_t p, const MCHEmul::UByte& v)
 		// Notice that in this case, the behaviour is only partially equivalent!
 		case 0x07:
 			{
-				_T1 -> setInitialValue 
-					((_T1 -> initialValue () & 0x00ff) | (unsigned short) (v.value () << 8));
+				_T1 -> setLatchHigh (v);
 
-				// The flag of the interruption associated to the timer is cleared...
-				_T1 -> interruptRequested (); // (obool) Just doing this is done...
+				// Both high-byte T1 writes clear IFR6.
+				_T1 -> clearInterrupt ();
 				// ...and also when the register accesed is the 0x05, the counter is initialized...
 				if (pp == 0x05)
 				{ 
-					_T1 -> reset ();
-					_T1 -> start ();
+					_T1 -> loadCounter ();
 				}
 			}
 
@@ -110,8 +106,7 @@ void COMMODORE::VIARegisters::setValue (size_t p, const MCHEmul::UByte& v)
 		// LSB of the latch Timer B: VIA?T2CL
 		case 0x08:
 			{
-				_T2 -> setInitialValue 
-					((_T2 -> initialValue () & 0xff00) | (unsigned short) v.value ());
+				_T2 -> setLatchLow (v);
 			}
 
 			break;
@@ -119,15 +114,9 @@ void COMMODORE::VIARegisters::setValue (size_t p, const MCHEmul::UByte& v)
 		// MSB of the latch Timer B: VIA?T2CH
 		case 0x09:
 			{
-				_T2 -> setInitialValue 
-					((_T2 -> initialValue () & 0x00ff) | (unsigned short) (v.value () << 8));
-
-				// The flag of the interruption requested is cleared...
-				_T2 -> interruptRequested (); // Just doing this is done...
-				// ...and also the counter is initialized...
-				_T2 -> reset ();
-				// ...and start to count...
-				_T2 -> start ();
+				_T2 -> setLatchHigh (v);
+				_T2 -> clearInterrupt ();
+				_T2 -> loadCounter ();
 			}
 
 			break;
@@ -150,17 +139,12 @@ void COMMODORE::VIARegisters::setValue (size_t p, const MCHEmul::UByte& v)
 				_T1 -> setCountAndRunMode (
 					COMMODORE::VIATimer::CountMode::_PROCESSORCYCLES, // Always...
 					(COMMODORE::VIATimer::RunMode) ((unsigned char) ((v.value () & 0xc0) >> 6 /** From 0 to 3 */)));
-				if (_T1 -> runMode () == COMMODORE::VIATimer::RunMode::_ONESHOOTSIGNAL ||
-					_T1 -> runMode () == COMMODORE::VIATimer::RunMode::_CONTINUOUSSIGNAL)
-					_PB -> setP7 (true); // Reflect the status in the bit 7 of the port linked...
-										 // The initial vwlue is true. The pulse is when false!
-
 				// For the Timer 2 the behaviour will be different
 				// depending onthe value of the bit 5 only...
 				if (v.bit (5))
 					_T2 -> setCountAndRunMode (
-						COMMODORE::VIATimer::CountMode::_PULSERECEIVED, // Count pulse...
-						COMMODORE::VIATimer::RunMode::_CONTINUOUS); // ...in a continuous way...
+						COMMODORE::VIATimer::CountMode::_PULSERECEIVED, // Count negative PB6 pulses...
+						COMMODORE::VIATimer::RunMode::_ONESHOOT);
 				else
 					_T2 -> setCountAndRunMode (
 						COMMODORE::VIATimer::CountMode::_PROCESSORCYCLES, // Count every processor cycle...
@@ -349,7 +333,7 @@ const MCHEmul::UByte& COMMODORE::VIARegisters::readValue (size_t p) const
 			{
 				result = 
 					(((unsigned char) (_T1 -> runMode ())) << 6) | // Bits 7 & 6
-					((_T2 -> runMode () == COMMODORE::VIATimer::RunMode::_CONTINUOUS) ? 0x20 : 0x00) | // Bit 5
+					((_T2 -> countMode () == COMMODORE::VIATimer::CountMode::_PULSERECEIVED) ? 0x20 : 0x00) | // Bit 5
 					(((unsigned char) (_SR -> mode ())) << 2) | // Bits 4, 3, 2
 					(_PB -> latchIR () ? 0x02 : 0x00) | // Bit 1
 					(_PA -> latchIR () ? 0x01 : 0x00); // Bit 0
@@ -425,18 +409,14 @@ const MCHEmul::UByte& COMMODORE::VIARegisters::peekValue (size_t p) const
 	{
 		case 0x00:
 			{
-				// To avoid the collateral effects in control lines!
-				result = _PA -> latchIR () 
-					? _PA -> valueLatched () : _PA -> portValue ();;
+				result = _PB -> value (false);
 			}
 
 			break;
 
 		case 0x01:
 			{
-				// To avoid the collateral effects in control lines!
-				result = _PB -> latchIR () 
-					? _PB -> valueLatched () : _PB -> portValue ();;
+				result = _PA -> value (false);
 			}
 
 			break;
@@ -451,6 +431,13 @@ const MCHEmul::UByte& COMMODORE::VIARegisters::peekValue (size_t p) const
 		case 0x08:
 			{
 				result = MCHEmul::UByte ((unsigned char) (_T2 -> currentValue () & 0x00ff));
+			}
+
+			break;
+
+		case 0x0a:
+			{
+				result = _SR -> peekValue ();
 			}
 
 			break;
@@ -479,11 +466,11 @@ void COMMODORE::VIARegisters::initializeInternalValues ()
 
 	// The internal variables are initialized through the data in memory...
 
-	// The direction is first set up to set up accodingly the values of the ports A and B...
-	setValue (0x02, 0xff);	// All lines output...
-	setValue (0x03, 0x00);	// All lines input...
-	setValue (0x00, 0xff);	// When they are no connected to nothing, the documentation says that they are pulled up!
-	setValue (0x01, 0xff);	// same than previous one...
+	// RESET clears direction/output/control registers and places every pin in input mode.
+	setValue (0x02, 0x00);
+	setValue (0x03, 0x00);
+	setValue (0x00, 0x00);
+	setValue (0x01, 0x00);
 	setValue (0x04, 0x00);  // T1 LSB
 	/**
 		T1 MSB
@@ -499,12 +486,10 @@ void COMMODORE::VIARegisters::initializeInternalValues ()
 		setValue (0x09, 0x00);
 	*/
 	setValue (0x0a, 0x00);	// SR = 0
-	setValue (0x0b, 0x40);	// ACR (T1 = free running, T2 = single interval timing, SR disabled, PA and PB no latch)
-	setValue (0x0c, 0xef);  // PCR (CB2 = output mode manual, CB1 = interrupt high to low transition,... 
-							// ...CA2 = output mode normal, CA1 = high to low transition)
-	setValue (0x0d, 0x00);	// IFR. No interrupts so far...
-	setValue (0x0e, 0x00);	// IER. No interrupts so far...
-	setValue (0x0f, 0x00);	// Has no impact when setting...
+	setValue (0x0b, 0x00);	// ACR reset state.
+	setValue (0x0c, 0x00);	// PCR reset state.
+	setValue (0x0d, 0x7f);	// Clear all interrupt flags.
+	setValue (0x0e, 0x7f);	// Disable every interrupt source.
 
 	_T1 -> stop ();
 	_T2 -> stop ();

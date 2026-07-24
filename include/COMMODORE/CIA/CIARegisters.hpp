@@ -137,19 +137,14 @@ namespace COMMODORE
 		bool timerAValueAtPortDataB () const
 							{ return (_timerAValueAtPortDataB); }
 		/** In case that the timer is affecting, to know which is the value affecting. */
-		void setReflectTimerAAtPortDataB (bool r, bool v = false /** it is not taken into account when r == false. */)
-							{ if (_reflectTimerAAtPortDataB = r) 
-								setValue (0x01, readValue (0x01)); // Reflects the value if needed a notification can also happen...
-							  _timerAValueAtPortDataB = v; }
+		void setReflectTimerAAtPortDataB
+			(bool r, bool v = false /** it is not taken into account when r == false. */);
 		// Same for timer B...
 		bool reflectTimerBAtPortDataB () const
 							{ return (_reflectTimerBAtPortDataB); }
 		bool timerBValueAtPortDataB () const
 							{ return (_timerBValueAtPortDataB); }
-		void setReflectTimerBAtPortDataB (bool r, bool v = false)
-							{ if (_reflectTimerBAtPortDataB = r)
-								setValue (0x01, readValue (0x01));
-							  _timerBValueAtPortDataB = v; }
+		void setReflectTimerBAtPortDataB (bool r, bool v = false);
 
 		protected:
 		virtual void setValue (size_t p, const MCHEmul::UByte& v) override;
@@ -158,6 +153,7 @@ namespace COMMODORE
 
 		// Implementation
 		virtual void initializeInternalValues ();
+		void actualizePortB ();
 
 		// This methods are invoked from CIA chip...
 		/** The registers will observe also the timers. */

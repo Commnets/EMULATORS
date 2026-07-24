@@ -468,12 +468,18 @@ MCHEmul::Instructions F6500::C6500::createInstructions ()
 	// Instructions totally undocumented...
 	result [0xCB] = new F6500::SBX_Inmediate;
 
-	// SHA is not created, very unestable.
-	// Code 9F, 93
-	// SHX is not created, very unestable.
-	// Code 9E
-	// SHY is nor created, very unestable.
-	// Code 9C
+	// SHA
+	// Instructions totally undocumented...
+	result [0x93] = new F6500::SHA_ZeroPageIndirectY;
+	result [0x9F] = new F6500::SHA_AbsoluteY;
+
+	// SHX
+	// Instruction totally undocumented...
+	result [0x9E] = new F6500::SHX_AbsoluteY;
+
+	// SHY
+	// Instruction totally undocumented...
+	result [0x9C] = new F6500::SHY_AbsoluteX;
 
 	// SEC
 	result [0x38] = new F6500::SEC;
@@ -544,7 +550,7 @@ MCHEmul::Instructions F6500::C6500::createInstructions ()
 	// TYA
 	result [0x98] = new F6500::TYA;
 
-	assert (result.size () == 248); 
+	assert (result.size () == 252);
 
 	return (result);
 }

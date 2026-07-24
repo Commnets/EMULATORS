@@ -109,9 +109,9 @@ COMMODORE::TED::TED (int intId, unsigned short clkcpum, unsigned short sfq,
 	  _interruptId (intId),
 	  _timesFasterThanCPU (clkcpum),
 	  _screenfrequency (sfq),
-	  _T1 (1, COMMODORE::TEDTimer::RunMode::_FROMINITIALVALUE),
-	  _T2 (2, COMMODORE::TEDTimer::RunMode::_CONTINUOUS),
-	  _T3 (3, COMMODORE::TEDTimer::RunMode::_CONTINUOUS),
+	  _T1 (1, COMMODORE::TEDTimer::RunMode::_FROMRELOADVALUE),
+	  _T2 (2, COMMODORE::TEDTimer::RunMode::_FROMFFFF),
+	  _T3 (3, COMMODORE::TEDTimer::RunMode::_FROMFFFF),
 	  _soundFunction (new COMMODORE::TED::SoundFunction (sW)),
 	  _TEDRegisters (nullptr), 
 	  _TEDView (vV),
@@ -120,7 +120,7 @@ COMMODORE::TED::TED (int intId, unsigned short clkcpum, unsigned short sfq,
 	  _drawRasterInterruptPositions (false),
 	  _drawOtherEvents (false),
 	  _timesFrameDrawn (0),
-	  _lastCPUCycles (0), _pendingCyclesFromLastExecution (0),
+	  _lastCPUCycles (0), _pendingHalfCyclesFromLastExecution (0),
 	  _format (nullptr),
 	  _cycleInRasterLine (1),
 	  _videoActive (true),
@@ -179,7 +179,7 @@ bool COMMODORE::TED::initialize ()
 
 	_timesFrameDrawn = 0;
 
-	_lastCPUCycles = _pendingCyclesFromLastExecution = 0;
+	_lastCPUCycles = _pendingHalfCyclesFromLastExecution = 0;
 	
 	_cycleInRasterLine = 1;
 
@@ -225,9 +225,30 @@ bool COMMODORE::TED::simulate (MCHEmul::CPU* cpu)
 		return (result);
 	};
 
-	// If the "video is frozen" is actived nothing is done...
+	const bool elapsedInSingleClockMode = _inSingleClockMode;
+	const unsigned int elapsedCPUCycles = cpu -> clockCycles () - _lastCPUCycles;
+
+	// FREEZE stops the raster and the internal timers,
+	// but the CPU continues running at single clock.
 	if (_TEDRegisters -> freezeActive ())
+	{
+		_inSingleClockMode = true;
+
+		_lastCPUCycles = cpu -> clockCycles ();
+		_pendingHalfCyclesFromLastExecution = 0;
+
+		// A pending enabled source continues asserting IRQ
+		// even though the TED counters are stopped.
+		int cI = (int) _TEDRegisters -> reasonIRQCode ();
+		if (cI != 0)
+			cpu -> requestInterrupt (
+				F6500::IRQInterrupt::_ID,
+				cpu -> clockCycles (),
+				this,
+				cI);
+
 		return (true);
+	}
 
 	// Adapt the size of the display zone to the parameters specificied in the register...
 	// The zone where sprites and texts are finally visible is call the "screen zone"
@@ -236,10 +257,11 @@ bool COMMODORE::TED::simulate (MCHEmul::CPU* cpu)
 
 	// Out of the zone where graphics are read, the speed of the CPU is double, so 4 dots per CPU cycle...
 	// ...but in the screen zone, the speed of the CPU is slower, so more dots per TED cycle are drawn...
-	unsigned int i = (_pendingCyclesFromLastExecution + // Always the pending cycles from last time...
-		(cpu -> clockCycles () - _lastCPUCycles)) >> (!_inSingleClockMode ? 1 : 0);
-	unsigned int pCN = !_inSingleClockMode 
-		? ((_pendingCyclesFromLastExecution + cpu -> clockCycles () - _lastCPUCycles) % 2) : 0;
+	const unsigned int elapsedHalfTEDCycles =
+		_pendingHalfCyclesFromLastExecution +
+		(elapsedCPUCycles << (elapsedInSingleClockMode ? 1 : 0));
+	unsigned int i = elapsedHalfTEDCycles >> 1;
+	const unsigned int pendingHalfTEDCycles = elapsedHalfTEDCycles & 0x01;
 	for (i; i > 0; i--)
 	{
 		_IFDEBUG debugTEDCycle (cpu, i);
@@ -312,9 +334,9 @@ bool COMMODORE::TED::simulate (MCHEmul::CPU* cpu)
 			(_raster.currentLine (), _raster.currentColumn ());
 
 		// Simulate the timers!
-		_T1.simulate (cpu);
-		_T2.simulate (cpu);
-		_T3.simulate (cpu);
+		_T1.clock ();
+		_T2.clock ();
+		_T3.clock ();
 
 		// Per cycle, the IRQ condition is checked! 
 		// (many reasons during the cycle can unchain the IRQ interrupt)
@@ -342,7 +364,7 @@ bool COMMODORE::TED::simulate (MCHEmul::CPU* cpu)
 	else
 		_lastVBlankEntered = false;
 
-	_pendingCyclesFromLastExecution = pCN; // How many are pending for the next execution...
+	_pendingHalfCyclesFromLastExecution = pendingHalfTEDCycles;
 	_lastCPUCycles = cpu -> clockCycles ();
 
 	return (true);

@@ -61,6 +61,10 @@ namespace COMMODORE
 							{ return (_PB.bus ()); }
 		MCHEmul::Bus& portB ()
 							{ return (_PB.bus ()); }
+		void setPortAExternalPins (const MCHEmul::UByte& v)
+							{ _PA.setExternalPins (v); }
+		void setPortBExternalPins (const MCHEmul::UByte& v)
+							{ _PB.setExternalPins (v); }
 
 		virtual bool initialize () override;
 
@@ -69,19 +73,17 @@ namespace COMMODORE
 
 		/**
 		  *	The name of the fields are: \n
-		  * The ones comming from the parent class. \n
-		  * Registers	= InfoStructure: Value of the registers. \n
-		  *	VIATimerA	= InfoStructure: Timer A info. \n
-		  *	VIATimerB	= InfoStructure: Timer B info. \n
-		  *	VIAShiftReg	= InfoStructure: Shift Register info. \n
-		  *	PortA		= Attribute: Port A value. \n
-		  *	PortB		= Attribite: Port B value. \n
-		  * CA1			= InfoStructure: Control line A1 info.
-		  * CA2			= InfoStructure: Control line A2 info.
-		  * CB1			= InfoStructure: Control line B1 info.
-		  * CB2			= InfoStructure: Control line B2 info.
-		  *	VIADDRA		= Attribute: Port A direction. \n
-		  *	VIADDRB		= Attribute: Port B direction.
+		  * The ones coming from the parent class and: \n
+		  * Registers		= InfoStructure: Value of the registers. \n
+		  *	VIATimer1		= InfoStructure: Timer 1 information. \n
+		  *	VIATimer2		= InfoStructure: Timer 2 information. \n
+		  *	VIAShiftReg		= InfoStructure: Shift register information. \n
+		  *	PortA			= InfoStructure: Port A registers and pin values. \n
+		  *	PortB			= InfoStructure: Port B registers and pin values. \n
+		  * VIACtrlA1		= InfoStructure: Control line CA1 information. \n
+		  * VIACtrlA2		= InfoStructure: Control line CA2 information. \n
+		  * VIACtrlB1		= InfoStructure: Control line CB1 information. \n
+		  * VIACtrlB2		= InfoStructure: Control line CB2 information.
 		  */
 		virtual MCHEmul::InfoStructure getInfoStructure () const override;
 

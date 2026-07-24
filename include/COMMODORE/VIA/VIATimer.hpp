@@ -30,6 +30,18 @@ namespace COMMODORE
 		public:
 		friend VIA;
 
+		/** Events generated while the timer simulates one PHI2 cycle. */
+		struct CycleResult final
+		{
+			CycleResult ()
+				: _timeout (false),
+				  _lowByteReached0 (false)
+							{ }
+
+			bool _timeout;
+			bool _lowByteReached0;
+		};
+
 		/** What to do when reaching 0? \n
 			Not all modes are applicable to the two timers. */
 		enum class RunMode
@@ -38,7 +50,7 @@ namespace COMMODORE
 			_ONESHOOT			= 0,	// One single count - down. 
 										// Interrupt flag sets when reaches 0, just once.
 										// No "reflection" of the status in the bit 7 at the port linked (@see VIAPort).
-			// In Timer2 this mode applies just only when CountMode = _PULSERECEIVED
+			// This free-running mode is only applicable to Timer 1.
 			_CONTINUOUS			= 1,	// Starts back once 0 is reached.
 										// Interrupt flag sets everytime it runs out.
 										// No "reflection" in the bit 7 at port linked.
@@ -54,7 +66,7 @@ namespace COMMODORE
 		{
 			_PROCESSORCYCLES	= 0,	// With every clock cycle.
 			// This counting mode is only applicable to Timer2....
-			_PULSERECEIVED		= 1		// Every time bit 6 at port linked changes its status.
+			_PULSERECEIVED		= 1		// On every negative-going edge sampled on PB6.
 		};
 
 		VIATimer (int id);
@@ -79,10 +91,6 @@ namespace COMMODORE
 			When true, this variable will be true just for 1 cycle. */
 		bool reaches0LSB () const
 							{ return (_reaches0LSB); }
-		/** To point whether the "Timer" reaches half of its initial value. \n
-			When true, this variable will be true just for 1 cycle. */
-		bool reachesHalf () const
-							{ return (_reachesHalf); }
 
 		// Managing interrupt related data...
 		bool interruptEnabled () const
@@ -101,6 +109,14 @@ namespace COMMODORE
 							{ return (_initialValue); }
 		void setInitialValue (unsigned short iV)
 							{ _initialValue = iV; }
+		void setLatchLow (const MCHEmul::UByte& v)
+							{ _initialValue = (_initialValue & 0xff00) | v.value (); }
+		void setLatchHigh (const MCHEmul::UByte& v)
+							{ _initialValue = (_initialValue & 0x00ff) | (v.value () << 8); }
+		void clearInterrupt ()
+							{ _interruptRequested = false; }
+		void loadCounter ()
+							{ reset (); start (); }
 		unsigned short currentValue () const
 							{ return (_currentValue); }
 
@@ -118,7 +134,7 @@ namespace COMMODORE
 		/** To simulate the behaviour of the timer. \n
 			It invokes also some private methods. \n
 			Returns true when everything was ok, and false in other circunstance. */
-		virtual bool simulate (MCHEmul::CPU* cpu);
+		virtual CycleResult simulate (MCHEmul::CPU* cpu);
 
 		/**
 		  *	The name of the fields are: \n
@@ -170,10 +186,6 @@ namespace COMMODORE
 		bool _reaches0LSB;
 		/** True when it is the first time 0 is reached. */
 		bool _firstTimeReaches0;
-		/** When half of the value is reached. */
-		bool _reachesHalf;
-		/** If already reached half... */
-		bool _alreadyReachedHalf;
 
 		/** When an interrupt is requested this variable is set to true, until it is read. */
 		MCHEmul::OBool _interruptRequested;
@@ -204,8 +216,7 @@ namespace COMMODORE
 			: VIATimer (id)
 							{ }
 
-		/** Only _PROCESSORCYCLES counting mode is allowed with the running mode _ONESHOOT. \n
-			And Only _PULSERECEIVED counting mode is allowed with the running mode _CONTINUOUS. \n
+		/** Timer 2 is always one-shot, independently of its count source. \n
 			The system does an assert just to be sure under debugging modes. */
 		virtual void setCountAndRunMode (CountMode cM, RunMode rM) override;
 

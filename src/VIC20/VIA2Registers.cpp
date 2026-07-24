@@ -36,15 +36,6 @@ const MCHEmul::UByte& VIC20::VIA2Registers::readValue (size_t p) const
 				const MCHEmul::UByte ddra	= _PA -> DDR ().value ();
 				const MCHEmul::UByte ora	= _PA -> OR  ().value ();
 				const MCHEmul::UByte ddrb	= _PB -> DDR ().value ();
-				MCHEmul::UByte orb			= _PB -> OR  ().value ();
-
-				// PB7 may be driven by Timer 1 if it is configured as output.
-				if ((ddrb & 0x80) != 0x00)
-				{
-					if (_T1 -> runMode () == COMMODORE::VIATimer::RunMode::_ONESHOOTSIGNAL ||
-						_T1 -> runMode () == COMMODORE::VIATimer::RunMode::_CONTINUOUSSIGNAL)
-						orb = _PB -> p7 () ? (orb | 0x80) : (orb & ~0x80);
-				}
 
 				// External PB pins.
 				// Normally high.
@@ -62,13 +53,9 @@ const MCHEmul::UByte& VIC20::VIA2Registers::readValue (size_t p) const
 						// If row is selected low, pressed keys can pull columns low.
 						colsLow |= ~_rev_keyboardStatusMatrix [row];
 
-				// Base PB value...
-				MCHEmul::UByte pb = (orb & ddrb) | (externalPB & ~ddrb);
-				// Keyboard pulls input cols low.
-				pb &= ~colsLow;
-
-				// Sets the new value...
-				_PB -> setPortValue (pb);
+				// Keyboard switches can pull externally driven columns low.
+				externalPB &= ~colsLow;
+				_PB -> setExternalPins (externalPB);
 				// Reading $9120 affects CB1/CB2 flags.
 				result = _PB -> value (true);
 			}
@@ -105,15 +92,9 @@ const MCHEmul::UByte& VIC20::VIA2Registers::readValue (size_t p) const
 						// Keys pressed in this column pull rows low.
 						rowsLow |= ~_keyboardStatusMatrix [col].value ();
 
-				// Base PA value:
-				// DDRA=1 -> ORA output.
-				// DDRA=0 -> external row pins, normally high.
-				MCHEmul::UByte pa = (ora & ddra) | (MCHEmul::UByte (0xff) & ~ddra);
-				// Keyboard pulls input rows low.
-				pa &= ~rowsLow;
-
-				// Sets the new value...
-				_PA -> setPortValue (pa);
+				// Keyboard switches pull the external row pins low.
+				MCHEmul::UByte externalPA = MCHEmul::UByte (0xff) & ~rowsLow;
+				_PA -> setExternalPins (externalPA);
 				// Reading $9121 affects CA1/CA2 flags.
 				result = _PA -> value (pp == 0x01);
 			}

@@ -39,6 +39,27 @@ namespace COMMODORE
 			// These two last types of timers helps to generate long time timers...
 		};
 
+
+		/** To determine how the timer output is reflected at PB6 or PB7. */
+		enum class PortOutputMode
+		{
+			_PULSE = 0,
+			_TOGGLE
+		};
+
+		/** Results generated while the timer simulates a single clock cycle. */
+		struct CycleResult final
+		{
+			CycleResult ()
+				: _underflow (false),
+				  _portOutputChanged (false),
+				  _portOutput (false)
+							{ }
+
+			bool _underflow;
+			bool _portOutputChanged;
+			bool _portOutput;
+		};
 		/**
 		  *	When the timer is created, the value of the internal variables will be as follows:
 		  *	RUNMODE = RESTART
@@ -78,28 +99,17 @@ namespace COMMODORE
 							{ return (_affectPortDataB); }
 		void setAffectPortDataB (bool a)
 							{ _affectPortDataB = a; }
-		/** ...and if it affects it can be trought out a pulse or a change in the state. 
-			This methods returns tue whether it is a pulse and false if toggle the state. */
-		bool pulseAtPortDataB ()
-							{ return (_pulseAtPortDataB); }
-		void setPulseAtPortDataB (bool p)
-							{ _pulseAtPortDataB = p; }
-
-		/** To point whether the timer reached 0. \n
-			When true, this variable will be true until the timer starts back. */
-		bool reaches0 () const
-							{ return (_reaches0); }
-		/** To point whether the timer reaches half of the initial value. \n
-			When true, this variable will be true until the timer simulation is invoked again. */
-		bool reachesHalf () const
-							{ return (_reachesHalf); }
+		PortOutputMode portOutputMode () const
+							{ return (_portOutputMode); }
+		void setPortOutputMode (PortOutputMode m)
+							{ _portOutputMode = m; }
+		bool portOutput () const
+							{ return (_portOutput); }
 
 		// Managing the status...
 		bool enabled () const
 							{ return (_enabled); }
-		void setEnabled (bool e)
-							{ if (_enabled = e)
-								{ _firstCycle = true; _alreadyReachedHalf = false; } }
+		void setEnabled (bool e);
 
 		/** To define whether Timer related interruptions are allowed. */
 		bool interruptEnabled () const
@@ -124,24 +134,19 @@ namespace COMMODORE
 		/** The value used as the starting point for the count down. */
 		unsigned short initialValue () const
 							{ return (_initialValue); }
-		void setInitialValue (unsigned short iV)
-							{ _initialValue = iV; _currentValue = _initialValue; }
+		void setLatchLow (const MCHEmul::UByte& v);
+		void setLatchHigh (const MCHEmul::UByte& v);
 		/** The current value of the timer. */
 		unsigned short currentValue () const
 							{ return (_currentValue); }
 		/** The timer is forced to start back. */
-		void reset ()
-							{ _currentValue = _initialValue; _alreadyReachedHalf = false; }
-		/** A signal has been received throught out the CNT pin. 
-			If a change from high to low (pulse) is produced. \n
-			That pulse is taken into account then to read later the value 
-			of the register associated in the CIARegisters. */
-		void setCNTSignal (bool v)
-							{ _CNTPulse = _CNTPin && !(_CNTPin = v);}
+		void forceLoad ()
+							{ _currentValue = _initialValue; }
 
 		/** To simulate the behaviour of the timer. \n
 			It invokes also some private methods. */
-		void simulate (MCHEmul::CPU* cpu, CIATimer* t = nullptr);
+		CycleResult simulate (bool processorCycle, bool CNTRisingEdge,
+			bool linkedTimerUnderflow, bool CNTHigh);
 
 		/**
 		  *	The name of the fields are: \n
@@ -156,20 +161,9 @@ namespace COMMODORE
 
 		private:
 		// Managing the timer...
-		/** 
-		  * To count down to 0. \n
-		  * The method will return true when it reaches 0. \n
-		  * The way of counting down will depend on the counting mode,
-		  * and according to this, additional info will be needed: The CPU and other timer. 
-		  * If the timer reaches 0, the varible _reaches0 will be set to true. \n
-		  * If the timer launches an exception, the variable _IRQRequested is set to true. \n
-		  *	When this variable is read, then becomes false back.
-		  */
-		bool countDown (MCHEmul::CPU* cpu, CIATimer* t = nullptr);
-
-		// Implementation
-		bool CNTPulse () const
-							{ bool r = _CNTPulse; _CNTPulse = false; return (r); }
+		bool hasToCount (bool processorCycle, bool CNTRisingEdge,
+			bool linkedTimerUnderflow, bool CNTHigh) const;
+		void triggerUnderflow (CycleResult& result);
 
 		private:
 		const int _id;
@@ -179,29 +173,18 @@ namespace COMMODORE
 		RunMode _runMode;
 		CountMode _countMode;
 		bool _affectPortDataB;
-		bool _pulseAtPortDataB;
+		PortOutputMode _portOutputMode;
 		bool _enabled;
 		bool _interruptEnabled;
 		unsigned short _initialValue;
-		bool _CNTPin;
 
 		// Implementation
-		/** When the first cycle is about to happen this variable is true. */
-		bool _firstCycle;
 		/** The value the timer has per loop. */
-		unsigned short _currentValue; 
-		/** The value of the clock cycles las time the timer counted down. */
-		unsigned int _lastClockCycles;
-		/** When 0 is reached, this variable becomes true, just for the time the timer starts back if any. */
-		bool _reaches0;
-		/** When half of the value is reached. */
-		bool _reachesHalf;
-		/** If already reached half... */
-		bool _alreadyReachedHalf;
+		unsigned short _currentValue;
+		bool _portOutput;
+		bool _pulseOutputActive;
 		/** When an IRQ interruption is requested this variable is set to true, until it is read. */
 		mutable bool _interruptRequested;
-		/** When a pulse is generated in the CNT line. It means that the signal received passed from up to low.*/
-		mutable bool _CNTPulse;
 	};
 }
 

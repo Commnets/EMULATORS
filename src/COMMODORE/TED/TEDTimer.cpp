@@ -13,7 +13,7 @@ COMMODORE::TEDTimer::TEDTimer (int id, COMMODORE::TEDTimer::RunMode rM)
 // ---
 void COMMODORE::TEDTimer::initialize ()
 {
-	_initialValue = 0x0000;
+	_reloadValue = 0x0000;
 
 	_interruptEnabled = false;
 
@@ -28,29 +28,55 @@ void COMMODORE::TEDTimer::initialize ()
 void COMMODORE::TEDTimer::reset ()
 { 
 	_currentValue = 
-		(_runMode == COMMODORE::TEDTimer::RunMode::_FROMINITIALVALUE) ? _initialValue : 0xffff; 
+		(_runMode == COMMODORE::TEDTimer::RunMode::_FROMRELOADVALUE) ? _reloadValue : 0xffff;
 		
-	_alreadyReachedHalf = false; 
+	_reaches0 = _reaches0LSB = _reachesHalf = false;
+	_alreadyReachedHalf = false;
 		
 	_counting = false;
 }
 
 // ---
-bool COMMODORE::TEDTimer::simulate (MCHEmul::CPU* cpu)
+void COMMODORE::TEDTimer::writeLowByte (unsigned char v)
 {
-	assert (cpu != nullptr);
+	_reloadValue = (_reloadValue & 0xff00) | (unsigned short) v;
+
+	// Loading the low byte inhibits counting until the high byte is written.
+	_currentValue = _reloadValue;
+	_counting = false;
+
+	_reaches0 = _reaches0LSB = _reachesHalf = false;
+	_alreadyReachedHalf = false;
+}
+
+// ---
+void COMMODORE::TEDTimer::writeHighByte (unsigned char v)
+{
+	_reloadValue = (_reloadValue & 0x00ff) | ((unsigned short) v << 8);
+	_currentValue = _reloadValue;
+	_counting = true;
+
+	_reaches0 = _reaches0LSB = _reachesHalf = false;
+	_alreadyReachedHalf = false;
+}
+
+// ---
+void COMMODORE::TEDTimer::clock ()
+{
+	// Event indicators are pulses lasting one timer clock.
+	_reaches0 = _reaches0LSB = _reachesHalf = false;
 
 	if (_counting && 
-		countDown (cpu)) // Counting one at a time...
+		countDown ()) // Counting one at a time...
 	{
 		_interruptRequested = true;
 
-		reset ();
-
-		start ();
+		// The current implementation reloads in the same timer clock.
+		// This preserves the existing underflow cadence until it is verified against hardware.
+		_currentValue =
+			(_runMode == COMMODORE::TEDTimer::RunMode::_FROMRELOADVALUE) ? _reloadValue : 0xffff;
+		_alreadyReachedHalf = false;
 	}
-
-	return (true);
 }
 
 // ---
@@ -61,13 +87,13 @@ MCHEmul::InfoStructure COMMODORE::TEDTimer::getInfoStructure () const
 	result.add ("RUN",			(unsigned int) _runMode);
 	result.add ("IRQ",			_interruptEnabled);
 	result.add ("VALUE",		_currentValue);
-	result.add ("INITIALVALUE", _initialValue);
+	result.add ("RELOADVALUE",	_reloadValue);
 
 	return (result);
 }
 
 // ---
-bool COMMODORE::TEDTimer::countDown (MCHEmul::CPU* cpu)
+bool COMMODORE::TEDTimer::countDown ()
 {
 	--_currentValue;
 
@@ -75,9 +101,13 @@ bool COMMODORE::TEDTimer::countDown (MCHEmul::CPU* cpu)
 	_reaches0 = (_currentValue == 0x0000);
 	// ...and this one when the LSB part reaches 0...
 	_reaches0LSB = ((_currentValue & 0x00ff) == 0x0000);
-	// This variable is set first time the value is below the half...
-	if ((_reachesHalf = ((_currentValue >> 1) < _initialValue) && !_alreadyReachedHalf)) 
-		_alreadyReachedHalf = true; // Latches, but not follow the value...
+	// This variable is set the first time the value reaches half of the programmed value.
+	if (!_alreadyReachedHalf &&
+		_currentValue <= (_reloadValue >> 1))
+	{
+		_reachesHalf = true;
+		_alreadyReachedHalf = true;
+	}
 
 	return (_reaches0);
 }

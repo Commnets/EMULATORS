@@ -1689,6 +1689,88 @@ namespace F6500
 
 	_INST6500_FROM (0xcb, 2, 2, _6500R(2),		"SBX#[#1]",				SBX_Inmediate, SBX_General);
 
+	// Non documented
+	// Unintended store instructions with an unstable address high byte.
+	// https://www.esocop.org/docs/MOS6510UnintendedOpcodes-20152412.pdf
+	class UnstableStore_General : public Instruction
+	{
+		public:
+		UnstableStore_General (unsigned int c, unsigned int mp, unsigned int cc,
+				const MCHEmul::InstructionDefined::CycleStructure& cS,
+				const std::string& t)
+			: Instruction (c, mp, cc, cS, t)
+							{ }
+
+		protected:
+		/** Builds the base address referenced by a zero-page pointer.
+			The high-byte read wraps from $ff to $00. */
+		inline MCHEmul::Address baseAddress_indirectZeroPage () const;
+		/** Executes an NMOS unintended indexed store.
+			The value and, on page crossing, the address high byte are
+			ANDed with the original address high byte plus one. */
+		inline bool executeOn (
+			const MCHEmul::Address& bA,
+			const MCHEmul::UByte& i,
+			const MCHEmul::UByte& v);
+	};
+
+	// ---
+	inline MCHEmul::Address UnstableStore_General::baseAddress_indirectZeroPage () const
+	{
+		assert (parameters ().size () == 2);
+
+		unsigned char zP = parameters ()[1].value ();
+		MCHEmul::Address lA ({ MCHEmul::UByte (zP) });
+		MCHEmul::Address hA (
+			{ MCHEmul::UByte (static_cast <unsigned char> (zP + 1)) });
+
+		return (MCHEmul::Address (
+			{ memory () -> value (lA), memory () -> value (hA) },
+			false /** little endian. */));
+	}
+
+	// ---
+	inline bool UnstableStore_General::executeOn (
+		const MCHEmul::Address& bA,
+		const MCHEmul::UByte& i,
+		const MCHEmul::UByte& v)
+	{
+		assert (bA.size () == 2);
+
+		unsigned int bV = bA.value ();
+		unsigned int lB = bV & 0x00ff;
+		unsigned int hB = (bV >> 8) & 0x00ff;
+		unsigned int lI = lB + i.value ();
+
+		// These NMOS instructions do not gain a cycle when indexing
+		// crosses a page. The collision on the internal bus changes
+		// the address high byte instead.
+		bool pC = lI > 0x00ff;
+		MCHEmul::UByte hP1 (
+			static_cast <unsigned char> (hB + 1));
+		MCHEmul::UByte wV = v & hP1;
+
+		unsigned int hF = pC ? wV.value () : hB;
+		MCHEmul::Address fA (
+			2, (hF << 8) | (lI & 0x00ff));
+
+		_lastExecutionData._INOUTAddress = fA;
+		_lastExecutionData._INOUTData = MCHEmul::UBytes ({ wV });
+		memory () -> set (fA, wV);
+
+		return (true);
+	}
+
+	// SHA: A AND X AND high byte of the operand plus one.
+	_INST6500_FROM (0x93, 2, 6, _6500RW(6,5),	"SHA([$1]),Y",			SHA_ZeroPageIndirectY, UnstableStore_General);
+	_INST6500_FROM (0x9f, 3, 5, _6500RW(5,4),	"SHA[$2],Y",			SHA_AbsoluteY, UnstableStore_General);
+
+	// SHX: X AND high byte of the operand plus one.
+	_INST6500_FROM (0x9e, 3, 5, _6500RW(5,4),	"SHX[$2],Y",			SHX_AbsoluteY, UnstableStore_General);
+
+	// SHY: Y AND high byte of the operand plus one.
+	_INST6500_FROM (0x9c, 3, 5, _6500RW(5,4),	"SHY[$2],X",			SHY_AbsoluteX, UnstableStore_General);
+
 	// SEC
 	_INST6500_FROM (0x38, 1, 2, _6500R(2),		"SEC",					SEC, Instruction);
 

@@ -110,7 +110,7 @@ namespace COMMODORE
 
 		/**
 		  *	The name of the fields are: \n
-		  *	IRQ				= Attribute with YES when IRQ are enabled and NO in other case.
+		  *	Interrupt		= Attribute with YES when TOD interrupts are enabled and NO otherwise.
 		  *	HOURS			= Attribute with the current value of the hours.
 		  *	MINUTES			= Attribute with the current value of the minutes.
 		  *	SECONDS			= Attribute with the current value of the seconds.

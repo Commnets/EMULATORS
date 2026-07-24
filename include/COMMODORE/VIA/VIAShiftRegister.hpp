@@ -67,12 +67,13 @@ namespace COMMODORE
 
 		ShiftMode mode () const
 							{ return (_mode); }
-		void setMode (ShiftMode m)
-							{ _mode = m; }
+		void setMode (ShiftMode m);
 
 		// Managing the value that is in the register...
-		inline const MCHEmul::UByte value () const;
-		inline void setValue (const MCHEmul::UByte& v);
+		const MCHEmul::UByte value () const;
+		const MCHEmul::UByte& peekValue () const
+							{ return (_value); }
+		void setValue (const MCHEmul::UByte& v);
 
 		// Managing interrupt data...
 		bool interruptEnabled () const
@@ -101,12 +102,13 @@ namespace COMMODORE
 		virtual MCHEmul::InfoStructure getInfoStructure () const override;
 
 		private:
+		void startTransfer () const;
+
 		/** To shift in/out the data. \n
 			Returns true when 8 bits has been already shifted. */
 		inline bool shiftIn (bool i);
-		/** The parameter r indicates whether the shifted out bit has or not to be recirculated. \n
-			It is NO recirculated by default. */
-		inline bool shiftOut (bool& o, bool r = false);
+		/** Shifts bit 7 to CB2 and recirculates it into bit 0. */
+		inline bool shiftOut (bool& o);
 
 		/** To link the shift register with the VIA chip. */
 		void lookAtTimer (VIATimer* t)
@@ -128,39 +130,17 @@ namespace COMMODORE
 		// Implementation
 		/** How many bits have been already shifted in/out? */
 		mutable unsigned char _numberBits;
-		/** True when the "ShiftRegister" is not active. 
-			because the mode or because it has finished it job. */
-		mutable bool _disable;
-		/** True when the "ShiftRegister" has just read or written down.
-			Bear in mind that just reading or writting this variable puts its value to false. */
-		mutable bool _justReadOrWritten; 
+		/** Whether the current transfer is producing/accepting shift clocks. */
+		mutable bool _shifting;
+		/** A finite internally-clocked transfer needs a final rising edge on CB1. */
+		mutable bool _finishPending;
+		/** Independent divider loaded from the low byte of the Timer 2 latch. */
+		mutable unsigned short _timerCounter;
+		/** Current phase of an internally generated CB1 clock. */
+		mutable bool _clockPhase;
 		/** When the interrupt has been requested. */
 		mutable MCHEmul::OBool _interruptRequested;
 	};
-
-	// ---
-	inline const MCHEmul::UByte VIAShiftRegister::value () const
-	{
-		_numberBits = 0;
-
-		_justReadOrWritten = true;
-
-		_interruptRequested = false;
-
-		return (_value);
-	}
-
-	// ---
-	inline void VIAShiftRegister::setValue (const MCHEmul::UByte& v)
-	{
-		_numberBits = 0;
-
-		_justReadOrWritten = true;
-
-		_interruptRequested = false;
-
-		_value = v;
-	}
 
 	// ---
 	inline bool VIAShiftRegister::shiftIn (bool i)
@@ -175,9 +155,9 @@ namespace COMMODORE
 	}
 
 	// ---
-	inline bool VIAShiftRegister::shiftOut (bool& o, bool r)
+	inline bool VIAShiftRegister::shiftOut (bool& o)
 	{
-		o = _value.shiftLeftC (r /** Recirculating? */ ? _value.bit (7) : false);
+		o = _value.shiftLeftC (_value.bit (7));
 
 		bool result = (++_numberBits == 8); // Complete?
 		if (result)

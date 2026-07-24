@@ -68,6 +68,12 @@ namespace COMMODORE
 			Color nextLuminance () const
 							{ return (Color (_color, (_luminance == 7) ? 0 : (_luminance + 1))); }
 
+			/**
+			  *	The name of the fields are: \n
+			  * The ones coming from the parent class and: \n
+			  * COLOR		= Attribute: Color index, from 0 to 15. \n
+			  * LUMINANCE	= Attribute: Luminance, from 0 to 7.
+			  */
 			virtual MCHEmul::InfoStructure getInfoStructure () const override;
 
 			/** From 0 to 15. */
@@ -94,6 +100,13 @@ namespace COMMODORE
 				  _currentCharacterPosition (cP), _currentCharacterRow (cR)
 							{ }
 
+			/**
+			  *	The name of the fields are: \n
+			  * The ones coming from the parent class and: \n
+			  * RASTERY	= Attribute: Current raster line. \n
+			  * RASTERX	= Attribute: Current raster column. \n
+			  * CHARPOS	= Attribute: Current character position.
+			  */
 			virtual MCHEmul::InfoStructure getInfoStructure () const override;
 
 			/** Where the raster is now. */
@@ -247,6 +260,7 @@ namespace COMMODORE
 		  * 25R					= Attribute: Whether there is 25 rows or not. \n
 		  * SCROLLX				= Attribute; Value of the horizontal scroll. \n
 		  * SCROLLY				= Attribute; Value of the vertical scroll. \n
+		  * CURSOR				= Attribute: Current cursor position. \n
 		  * BkColor1			= InfoStructure; Background 1 color value. \n
 		  * BkColor2			= InfoStructure; Background 2 color value. \n
 		  * BkColor3			= InfoStructure; Background 3 color value. \n
@@ -388,9 +402,9 @@ namespace COMMODORE
 	inline unsigned int TEDRegisters::reasonIRQCode () const
 	{
 		return (((_rasterIRQHappened && _rasterIRQActive) ? 1 : 0) +
-				((_T1 -> peekInterruptRequested () && _T1 -> interruptEnabled ()) ? 2 : 0) +
-				((_T2 -> peekInterruptRequested () && _T2 -> interruptEnabled ()) ? 4 : 0) +
-				((_T3 -> peekInterruptRequested () && _T3 -> interruptEnabled ()) ? 8 : 0) +
+				((_T1 -> interruptRequested () && _T1 -> interruptEnabled ()) ? 2 : 0) +
+				((_T2 -> interruptRequested () && _T2 -> interruptEnabled ()) ? 4 : 0) +
+				((_T3 -> interruptRequested () && _T3 -> interruptEnabled ()) ? 8 : 0) +
 				((_lightPenIRQHappened && _lightPenIRQActive) ? 16 : 0)); 
 	}
 

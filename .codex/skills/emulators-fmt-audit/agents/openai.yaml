@@ -1,0 +1,4 @@
+interface:
+  display_name: "EMULATORS FMT Audit"
+  short_description: "Audit InfoStructure and runtime FMT templates"
+  default_prompt: "Use $emulators-fmt-audit to audit an EMULATORS getInfoStructure method and its .fmt formatter."

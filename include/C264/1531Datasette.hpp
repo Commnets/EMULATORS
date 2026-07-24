@@ -105,7 +105,7 @@ namespace C264
 		/** To load the info just only inthe RAM. */
 		virtual void loadDataBlockInRAM (const MCHEmul::DataMemoryBlock& dB, MCHEmul::CPU* cpu) override
 							{ static_cast <C264::Memory*> (cpu -> memoryRef ()) -> 
-									loadDataBlockInRAM (_data._data [_dataCounter]); }
+									loadDataBlockInRAM (dB); }
 
 		private:
 		/** The default definition of the traps and so for this device. */

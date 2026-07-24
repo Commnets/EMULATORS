@@ -53,6 +53,11 @@ namespace COMMODORE
 
 			virtual bool simulate (MCHEmul::CPU* cpu) override;
 
+			/**
+			  *	The name of the fields are: \n
+			  * The ones coming from the parent class and: \n
+			  * SoundLibWrapper	= InfoStructure: Information provided by the active sound wrapper.
+			  */
 			virtual MCHEmul::InfoStructure getInfoStructure () const override;
 
 			// Implementation
@@ -143,12 +148,12 @@ namespace COMMODORE
 
 		/**
 		  *	The name of the fields are: \n
-		  * VICIIRegisters	= InfoStructure: Info about the registers. \n
-		  * Raster			= InfoStructure: Info about the raster. \n
-		  * SoundFunction	= InfoStructure: Info about the sound function. \n
-		  * TEDTimer1		= InfoStructure: Info about the timer 1. \n
-		  * TEDTimer2		= InfoStructure: Info about the timer 2. \n
-		  * TEDTimer3		= InfoStructure: Info about the timer 3. \n
+		  * TEDRegisters	= InfoStructure: Information about the TED registers. \n
+		  * Raster			= InfoStructure: Information about the raster. \n
+		  * Sound			= InfoStructure: Information about the sound function. \n
+		  * TEDTimer1		= InfoStructure: Information about timer 1. \n
+		  * TEDTimer2		= InfoStructure: Information about timer 2. \n
+		  * TEDTimer3		= InfoStructure: Information about timer 3. \n
 		  */
 		virtual MCHEmul::InfoStructure getInfoStructure () const override;
 
@@ -307,15 +312,13 @@ namespace COMMODORE
 			This internal counetr is used to determine whether the internal cursor must blink. 
 			It reaches always just half of the frequency. */
 		unsigned short _timesFrameDrawn;
-		/** When the CPU is not stopped (sometimes the VIC requires to stop it). \n 
+		/** When the CPU is not stopped (sometimes the TED requires to stop it). \n
 			and a instruction is executed, the number of cycles that that instruction required, has to be taken into account
-			to define what the VICII has to do. */
+			to define what the TED has to do. */
 		unsigned int _lastCPUCycles;
-		/** The TED draws aprox 4 dots per CPU cycle, 
-			so as avery iteration in the simnulation draws 8 instead, the number of iterations has to be divided by 2,
-			but then there could be cycles left (if the number of cycles executed by the CPU were odd). \n
-			This variable keeps the number of cycles pending for the next execution. */
-		unsigned int _pendingCyclesFromLastExecution;
+		/** Number of half TED cycles pending from the previous simulation. \n
+			The CPU consumes one half TED cycle at double speed and two half TED cycles at single speed. */
+		unsigned int _pendingHalfCyclesFromLastExecution;
 		/** The format used to draw. It has to be the same that is used by the Screen object. */
 		SDL_PixelFormat* _format;
 		/** When a raster line is processed, it is necessary to know which cycle is being processed. 

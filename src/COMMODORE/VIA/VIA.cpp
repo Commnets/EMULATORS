@@ -110,9 +110,14 @@ bool COMMODORE::VIA::simulate (MCHEmul::CPU* cpu)
 		// After this the signals can be up, and can be used by
 		// either "Timers", "SifthRegister" and "Port" in the rest of the cycle...
 
+		// Resolve PB before T2 samples a possible negative edge on PB6.
+		result &= _PB.simulate (cpu);
+
 		// "Timers"
-		result &= _T1.simulate (cpu);
-		result &= _T2.simulate (cpu);
+		VIATimer::CycleResult timer1Result = _T1.simulate (cpu);
+		VIATimer::CycleResult timer2Result = _T2.simulate (cpu);
+		(void) timer1Result;
+		(void) timer2Result;
 
 		// "ShiftRegister"
 		result &= _SR.simulate (cpu);
@@ -140,9 +145,9 @@ bool COMMODORE::VIA::simulate (MCHEmul::CPU* cpu)
 		_CB1.positiveEdge (); _CB1.negativeEdge ();
 		_CB2.positiveEdge (); _CB2.negativeEdge ();
 		_PB.p6Pulse ();
-	}
 
-	_lastClockCycles = cpu -> clockCycles ();
+		_lastClockCycles++;
+	}
 
 	return (result);
 }

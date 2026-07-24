@@ -32,9 +32,9 @@ namespace COMMODORE
 			Can not be changed during the life of the timer. */
 		enum class RunMode
 		{
-			_FROMINITIALVALUE	= 0,		// Meaning that when reaches 0,
-											// starts back from the initial value loaded.
-			_CONTINUOUS						// Meaning that when reaches 0,
+			_FROMRELOADVALUE	= 0,		// Meaning that when reaches 0,
+											// starts back from the reload value.
+			_FROMFFFF						// Meaning that when reaches 0,
 											// starts back from 0xffff.
 		};
 
@@ -65,46 +65,37 @@ namespace COMMODORE
 							{ return (_interruptEnabled); }
 		void setInterruptEnabled (bool e)
 							{ _interruptEnabled = e; }
-		bool interruptRequested () const // Bear in mind that this variable becomes false, after executing the method.
+		bool interruptRequested () const
 							{ return (_interruptRequested); }
-		bool peekInterruptRequested () const // To avoid the behavious described avoid...
-							{ return (_interruptRequested.peekValue ()); }
+		void clearInterruptRequested ()
+							{ _interruptRequested = false; }
 		bool launchInterrupt () const
-							{ return (_interruptRequested.peekValue () && _interruptEnabled); }
+							{ return (_interruptRequested && _interruptEnabled); }
 
 		// Managing the values of the "Timer"...
-		unsigned short initialValue () const
-							{ return (_initialValue); }
-		/** The actual value is also set. \n
-			This "initialValue" will be only used when the runMode = _CONTINUOUS. */
-		void setInitialValue (unsigned short iV)
-							{ _initialValue = iV; _currentValue = _initialValue; }
+		unsigned short reloadValue () const
+							{ return (_reloadValue); }
 		unsigned short currentValue () const
 							{ return (_currentValue); }
+		/** Loading the low byte inhibits counting until the high byte is written. */
+		void writeLowByte (unsigned char v);
+		/** Loading the high byte completes the value and starts the timer. */
+		void writeHighByte (unsigned char v);
 		/** The "Timer" is "forced" to start back, but still stopped. */
 		void reset ();
 
-		/** To start/stop the counting process. */
-		void start () 
-							{ _counting = true; }
-		void stop ()
-							{ _counting = false; }
-
 		void initialize ();
 
-		/** To simulate the behaviour of the timer. \n
-			It invokes also some private methods. \n
-			Returns true when everything was ok, and false in other circunstance. */
-		bool simulate (MCHEmul::CPU* cpu);
+		/** To simulate one single-clock pulse received by the timer. */
+		void clock ();
 
 		/**
 		  *	The name of the fields are: \n
-		  * The ones comming from the parent class and: \n
-		  * STATUS			= Attribute: YES (1) if active and NO (0) in any other case. \n
-		  * RUNMODE			= Attribute: 0 = _FROMINITIALVALUE, 1 = _CONTINUOUS. \n
-		  *	IRQ				= Attribute: YES (1) when IRQ are enabled and NO in other cas.
-		  *	VALUE			= Attribute: Current value of the timer.
-		  *	INITIALVALUE	= Attribute: Initial value of the timer.
+		  * The ones coming from the parent class and: \n
+		  * RUN				= Attribute: 0 = _FROMRELOADVALUE, 1 = _FROMFFFF. \n
+		  *	IRQ				= Attribute: YES when interrupts are enabled and NO otherwise. \n
+		  *	VALUE			= Attribute: Current timer counter value. \n
+		  *	RELOADVALUE		= Attribute: Value programmed through the timer registers.
 		  */
 		virtual MCHEmul::InfoStructure getInfoStructure () const override;
 
@@ -114,16 +105,16 @@ namespace COMMODORE
 		  * To count down to 0. \n
 		  * The method will return true when it reaches 0. \n
 		  * If the "Timer" reaches 0, the varible _reaches0 will be set to true. \n
-		  *	When this variable is read, then becomes false back.
 		  */
-		bool countDown (MCHEmul::CPU* cpu);
+		bool countDown ();
 
 		private:
 		const int _id;
 		RunMode _runMode;
 
 		// The variables that define a timer...
-		unsigned short _initialValue;
+		/** The value programmed through the timer registers. */
+		unsigned short _reloadValue;
 		bool _interruptEnabled;
 
 		// Implementation
@@ -142,8 +133,8 @@ namespace COMMODORE
 		/** If already reached half... */
 		bool _alreadyReachedHalf;
 
-		/** When an interrupt is requested this variable is set to true, until it is read. */
-		MCHEmul::OBool _interruptRequested;
+		/** When an interrupt is requested this variable is set to true, until it is acknowledged. */
+		bool _interruptRequested;
 	};
 }
 

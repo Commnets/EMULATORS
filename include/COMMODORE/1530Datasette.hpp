@@ -122,6 +122,7 @@ namespace COMMODORE
 			MCHEmul::Address _bufferAddr;			// Where the tape buffer starts...
 			MCHEmul::Address _statusAddr;			// to keep tract of the status of the datasette...
 			MCHEmul::Address _verifyFlagAddr;		// The same loading routines in CBM kernal can be used for loading or verifying...
+			MCHEmul::Address _secondaryAddressAddr;	// KERNAL secondary address used by LOAD...
 			MCHEmul::Address _irqTmpAddr;	
 			unsigned short _irqVal;
 			MCHEmul::Address _startProgramAddr;		// Init of the RAM where program is loaded...
@@ -130,6 +131,18 @@ namespace COMMODORE
 			MCHEmul::Address _keyboardPendingAddr;	// Number of keys ending to be read in the keyboard buffer...
 			const MCHEmul::Traps _traps;			// The traps...
 
+			/**
+			  *	The name of the fields are: \n
+			  * BUFFER				= Attribute: Address of the tape buffer pointer. \n
+			  * STATUS				= Attribute: Address of the datasette status byte. \n
+			  * VERIFYFLAG			= Attribute: Address of the load/verify flag. \n
+			  * SECONDARYADDRESS	= Attribute: Address of the KERNAL secondary address. \n
+			  * STARTPRG			= Attribute: Address of the load start pointer. \n
+			  * ENDPRG				= Attribute: Address of the load end pointer. \n
+			  * KEYBOARDBUFFER		= Attribute: Address of the keyboard buffer. \n
+			  * KEYBOARDPENDING		= Attribute: Address of the pending-key counter. \n
+			  * TRAPS				= InfoStructure: Traps used by the injection device. \n
+			  */
 			MCHEmul::InfoStructure getInfoStructure () const;
 		};
 
@@ -166,10 +179,15 @@ namespace COMMODORE
 		virtual bool executeFindHeaderTrap (MCHEmul::CPU* cpu);
 		virtual bool executeReceiveDataTrap (MCHEmul::CPU* cpu);
 
+		/** Determines the synthetic tape-header type from the KERNAL
+			secondary address: 0 = relocatable, nonzero = absolute. */
+		MCHEmul::UByte headerTypeAccordingToSecondaryAddress
+			(MCHEmul::CPU* cpu) const;
+
 		/** To load the program into the memory. \n
 			In some COMMODORE computers (like C64) the whole RAM memory is not directly accesible. */
 		virtual void loadDataBlockInRAM (const MCHEmul::DataMemoryBlock& dB, MCHEmul::CPU* cpu)
-							{ cpu -> memoryRef () -> put (_data._data [_dataCounter]); }
+							{ cpu -> memoryRef () -> put (dB); }
 
 		// -----
 		// Different debug methods to simplify the internal code
