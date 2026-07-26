@@ -207,9 +207,21 @@ bool COMMODORE::VICISoundSimpleLibWrapper::getData (MCHEmul::CPU *cpu, MCHEmul::
 		_counterCyclesPerSample = 
 			std::fmod (_counterCyclesPerSample, _cyclesPerSample);
 
+		// In the emulation of the TED the voices are added before applying
+		// the master volume. The PCM conversion limits the final mix.
 		double sample = 0.0f;
+		size_t activeVoices = 0;
 		for (auto i : _voices)
-			sample += i -> data ();
+		{
+			if (i -> active ())
+			{
+				sample += i -> data ();
+				activeVoices++;
+			}
+		}
+
+		if (activeVoices > 0)
+			sample /= (double) activeVoices; // Average the voices...
 		sample *= _volumen;
 
 		dt = MCHEmul::UBytes ({

@@ -146,6 +146,14 @@ void MCHEmul::NoiseSoundWave::initialize ()
 {
 	MCHEmul::SoundWave::initialize ();
 
+	initializeInternalCounters ();
+}
+
+// ---
+void MCHEmul::NoiseSoundWave::initializeInternalCounters ()
+{
+	MCHEmul::SoundWave::initializeInternalCounters ();
+
 	_lfsr = _initialLFSR;
 
 	_currentOutput = 0.0f;

@@ -56,6 +56,7 @@
     <ClInclude Include="..\..\include\COMMODORE\TED\incs.hpp" />
     <ClInclude Include="..\..\include\COMMODORE\TED\TED.hpp" />
     <ClInclude Include="..\..\include\COMMODORE\TED\TEDRegisters.hpp" />
+    <ClInclude Include="..\..\include\COMMODORE\TED\TEDSoundWrapper.hpp" />
     <ClInclude Include="..\..\include\COMMODORE\TED\TEDTimer.hpp" />
     <ClInclude Include="..\..\include\COMMODORE\TIA\incs.hpp" />
     <ClInclude Include="..\..\include\COMMODORE\TIA\TIA.hpp" />

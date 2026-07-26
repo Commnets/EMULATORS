@@ -21,25 +21,26 @@ COMMODORE::SID::SID (unsigned int cF, MCHEmul::SoundLibWrapper* sW)
 // ---
 bool COMMODORE::SID::initialize ()
 {
+	if (!MCHEmul::SoundChip::initialize ())
+		return (false);
+
 	assert (memoryRef () != nullptr);
 
 	// Gets the memory block dedicated to the SID
-	if (!(_SIDRegisters = 
-		dynamic_cast <COMMODORE::SIDRegisters*> (memoryRef () -> subset (COMMODORE::SIDRegisters::_SIDREGS_SUBSET))))
+	if (!(_SIDRegisters = dynamic_cast <COMMODORE::SIDRegisters*> 
+			(memoryRef () -> subset (COMMODORE::SIDRegisters::_SIDREGS_SUBSET))))
 	{
 		_error = MCHEmul::_INIT_ERROR;
 
 		return (false);
 	}
 
-	if (soundWrapper () != nullptr)
-		soundWrapper () -> initialize ();
-
+	// The SIDRegisters needs to know the wrapper used to simulate the sound...
 	_SIDRegisters -> setSIDLibWrapper (static_cast <COMMODORE::SIDLibWrapper*> (soundWrapper ()));
 
 	_lastClockCycles = 0;
 
-	return (MCHEmul::SoundChip::initialize ());
+	return (true);
 }
 
 // ---

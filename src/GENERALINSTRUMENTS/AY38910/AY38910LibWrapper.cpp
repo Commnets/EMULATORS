@@ -270,6 +270,7 @@ bool GENERALINSTRUMENTS::AY38910SimpleLibWrapper::getData (MCHEmul::CPU *cpu, MC
 		const bool noiseHigh = (_voices [3] -> data () >= 0.0f);
 
 		double sample = 0.0f;
+		size_t activeChannels = 0;
 		for (size_t i = 0; i < 3; i++)
 		{
 			// With both generators disabled there is no varying audio signal.
@@ -289,7 +290,12 @@ bool GENERALINSTRUMENTS::AY38910SimpleLibWrapper::getData (MCHEmul::CPU *cpu, MC
 				(_useEnvelope [i] ? _envelope.envelopeData () : 1.0f);
 
 			sample += channelSample * gain;
+			activeChannels++;
 		}
+
+		// Normalize the sample to the range [-1.0, 1.0] based on the number of active channels.
+		if (activeChannels > 0)
+			sample /= activeChannels;
 
 		dt = MCHEmul::UBytes ({
 			MCHEmul::normalizedSoundSampleToU8 (sample)	});

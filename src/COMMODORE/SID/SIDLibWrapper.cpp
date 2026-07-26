@@ -545,8 +545,18 @@ bool COMMODORE::SoundSIDSimpleWrapper::getData (MCHEmul::CPU *cpu, MCHEmul::UByt
 		// In the emulation of the SID the voices are added before applying
 		// the master volume. The PCM conversion limits the final mix.
 		double sample = 0.0f;
+		size_t activeVoices = 0;
 		for (auto i : _voices)
-			sample += i -> data ();
+		{
+			if (i -> active ())
+			{
+				sample += i -> data ();
+				activeVoices++;
+			}
+		}
+
+		if (activeVoices > 0)
+			sample /= (double) activeVoices; // Average the voices...
 		sample *= _volumen;
 
 		dt = MCHEmul::UBytes ({

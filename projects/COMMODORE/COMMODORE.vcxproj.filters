@@ -279,6 +279,9 @@
     <ClInclude Include="..\..\include\COMMODORE\Emulator.hpp">
       <Filter>Archivos de encabezado\Emulators</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\include\COMMODORE\TED\TEDSoundWrapper.hpp">
+      <Filter>Archivos de encabezado\Motherboard\Chips\TED</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Commodore.fmt">

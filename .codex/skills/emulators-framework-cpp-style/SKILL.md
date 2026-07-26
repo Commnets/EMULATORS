@@ -20,7 +20,9 @@ Use the framework's existing idioms deliberately:
 - For long or functionally complex methods, comment the main phases with a density comparable to the existing `buildAnswerToDirCommand`: validation, syntax parsing, linked-structure traversal, cycle/corruption guards, allocation/mutation, status/EOF decisions, and compatibility limits.
 - Preserve the spacing style: `name ()`, `std::vector <T>`, `static_cast <T>`, `_ptr -> method ()`, `return (value);`.
 - Put non-trivial method implementations in `.cpp` and separate them with `// ---`.
-- Keep small accessors and trivial mutators inline in the header when the surrounding class does.
+- Define extremely short methods, consisting of a single instruction or expression, directly with their declaration inside the class and omit the `inline` keyword.
+- For short methods that are slightly longer than one instruction or a couple of lines, declare them `inline` inside the class and place their definition immediately after the class definition in the same header.
+- Avoid introducing a local `const` variable for a transient result used in only one formula. Substitute the expression directly unless it is long or complex enough that naming it materially improves readability. Keep a local `const` result when it is reused in several calculations.
 - Use initializer lists for constructors and initialize members in declaration order.
 - Use `InfoClass` conventions when applicable: pass the class name to the base constructor, override `getInfoStructure () const`, start with the parent `InfoStructure`, add uppercase field names, and document returned attributes/substructures in the `.cpp`.
 - Use raw pointers and explicit ownership only where the framework already does. If a class owns pointers, document ownership and delete them in the destructor.

@@ -1,0 +1,4 @@
+interface:
+  display_name: "ZX80 Video Audit"
+  short_description: "Validate ZX80 CPU-driven video timing"
+  default_prompt: "Use $zx80-video-audit to audit or implement ZX80 video behavior in EMULATORS."

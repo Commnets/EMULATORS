@@ -62,9 +62,8 @@ namespace COMMODORE
 
 		/** The volumen is a number between 0 and 1. */
 		double volumen () const
-						{ return (_volumen); }
-		void setVolumen (double v)
-						{ _volumen = v; }
+							{ return (_volumen); }
+		inline void setVolumen (double v);
 
 		virtual void setValue (size_t p, const MCHEmul::UByte& v) override;
 		virtual const MCHEmul::UByte& readValue (size_t p) const override;
@@ -74,23 +73,28 @@ namespace COMMODORE
 		virtual bool getData (MCHEmul::CPU *cpu, MCHEmul::UBytes& dt) override;
 
 		virtual MCHEmul::InfoStructure getVoiceInfoStructure (unsigned char nV) const override
-						{ return ((nV < 2) ? _voices [nV] -> getInfoStructure () : MCHEmul::InfoStructure ()); }
+							{ return ((nV < 2) ? _voices [nV] -> getInfoStructure () : MCHEmul::InfoStructure ()); }
 
 		private:
 		// To help managing the voices...
 		unsigned int voice0Register () const
-						{ return (((unsigned int) (_registers [0x12].value () & 0x03)) << 8) |
-								   ((unsigned int) _registers [0x0e].value ()); }
+							{ return (((unsigned int) (_registers [0x12].value () & 0x03)) << 8) |
+									   ((unsigned int) _registers [0x0e].value ()); }
 		unsigned int voice1Register () const
-						{ return (((unsigned int) (_registers [0x10].value () & 0x03)) << 8) |
-								   ((unsigned int) _registers [0x0f].value ()); }
+							{ return (((unsigned int) (_registers [0x10].value () & 0x03)) << 8) |
+									   ((unsigned int) _registers [0x0f].value ()); }
 		inline double tedToneFrequency (unsigned int r) const;
+		/** Reloads the tone phases and the noise generator without changing their configuration. */
+		void reloadSoundGenerators ()
+							{ for (auto i : _voices) i -> initializeInternalCounters (); }
 
 		private:
 		unsigned int _tedFrequency;
 		unsigned int _dividerValue;
 		unsigned int _samplingFrequency;
 		double _volumen;
+		/** Last status of the sound reload bit in register $FF11. */
+		bool _soundReloadActive;
 
 		/** The TED voice can adapt two different types of waves,
 			depending on the voice (1 in voice 1 and 2 in voice 2 (pulse + noise). */
@@ -149,6 +153,14 @@ namespace COMMODORE
 		/** Counter from 0 to _cyclesPerSample. */
 		double _counterCyclesPerSample;
 	};
+
+	// ---
+	inline void TEDSoundSimpleLibWrapper::setVolumen (double v)
+	{
+		if (v < 0.0f) _volumen = 0.0f;
+		else if (v > 1.0f) _volumen = 1.0f;
+		else _volumen = v;
+	}
 
 	// ---
 	inline double TEDSoundSimpleLibWrapper::tedToneFrequency (unsigned int r) const

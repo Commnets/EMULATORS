@@ -26,6 +26,7 @@ COMMODORE::TEDSoundSimpleLibWrapper::TEDSoundSimpleLibWrapper
 	  _dividerValue (dv), // To get the CPU clock frequency...
 	  _samplingFrequency (sF),
 	  _volumen (0.0f), // There is no volumen at the beginning...
+	  _soundReloadActive (false),
 	  _voices ( // Two voices...
 		{ new COMMODORE::TEDSoundSimpleLibWrapper::Voice (0, tF / dv), 
 		  new COMMODORE::TEDSoundSimpleLibWrapper::Voice (1, tF / dv) }),
@@ -90,7 +91,10 @@ void COMMODORE::TEDSoundSimpleLibWrapper::setValue (size_t p, const MCHEmul::UBy
 		// Sound "Color" Register
 		case 0x11:
 			{
-				setVolumen ((double) (v.value () & 0x0f) / 15.0f);
+				const unsigned char programmedVolume = v.value () & 0x0f;
+				const unsigned char effectiveVolume =
+					(programmedVolume > 8) ? 8 : programmedVolume; // It can be bigger than 8, but it is not effective...
+				setVolumen ((double) effectiveVolume / (double) 8);
 				_voices [0] -> setActive (v.bit (4));
 				auto* voice1 =
 					static_cast <COMMODORE::TEDSoundSimpleLibWrapper::Voice*> (_voices [1]);
@@ -102,7 +106,12 @@ void COMMODORE::TEDSoundSimpleLibWrapper::setValue (size_t p, const MCHEmul::UBy
 				voice1 -> wave (MCHEmul::SoundWave::Type::_NOISE) ->
 					setActive (noiseEnabled);
 				voice1 -> setWavesActive (noiseEnabled ? 1 : 0);
-				// Bit 7 = digital mode. Not implemented yet.
+
+				// The reload bit restarts the tone phases and the noise sequence.
+				const bool soundReloadActive = v.bit (7);
+				if (soundReloadActive && !_soundReloadActive)
+					reloadSoundGenerators ();
+				_soundReloadActive = soundReloadActive;
 			}
 
 			break;
@@ -171,6 +180,7 @@ void COMMODORE::TEDSoundSimpleLibWrapper::initialize ()
 	TEDSoundLibWrapper::initialize ();
 							  
 	_volumen = 0.0f;
+	_soundReloadActive = false;
 
 	_counterCyclesPerSample = 0.0f;
 
@@ -211,9 +221,21 @@ bool COMMODORE::TEDSoundSimpleLibWrapper::getData (MCHEmul::CPU *cpu, MCHEmul::U
 		_counterCyclesPerSample = 
 			std::fmod (_counterCyclesPerSample, _cyclesPerSample);
 
+		// Active voices are averaged to keep the mix normalized
+		// before applying the master volume.
 		double sample = 0.0f;
+		size_t activeVoices = 0;
 		for (auto i : _voices)
-			sample += i -> data ();
+		{
+			if (i -> active ())
+			{
+				sample += i -> data ();
+				activeVoices++;
+			}
+		}
+
+		if (activeVoices > 0)
+			sample /= (double) activeVoices; // Average the voices...
 		sample *= _volumen;
 
 		dt = MCHEmul::UBytes ({
@@ -228,7 +250,7 @@ COMMODORE::TEDSoundSimpleLibWrapper::Voice::Voice (int id, unsigned int cF)
 	: MCHEmul::SoundVoice (id, cF,
 		{
 			new MCHEmul::PulseSoundWave (cF),
-			new MCHEmul::NoiseSoundWave (cF)
+			new MCHEmul::NoiseSoundWave (cF, 0xffffu)
 		}, nullptr, { }), // No envelope, no filters attached...
 		_wavesActive (0)
 { 

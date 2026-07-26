@@ -1,0 +1,4 @@
+interface:
+  display_name: "ZX81 Video Audit"
+  short_description: "Validate ZX81 ULA video and SLOW mode"
+  default_prompt: "Use $zx81-video-audit to audit or implement ZX81 video behavior across ZX811, ZX812, and ZX813."

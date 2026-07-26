@@ -51,6 +51,9 @@ namespace COMMODORE
 
 			virtual bool initialize () override;
 
+			/** Adds CPU cycles converted later into the fixed TED sound clock. */
+			void addCPUCycles (unsigned int nC, bool singleClockMode);
+
 			virtual bool simulate (MCHEmul::CPU* cpu) override;
 
 			/**
@@ -61,8 +64,10 @@ namespace COMMODORE
 			virtual MCHEmul::InfoStructure getInfoStructure () const override;
 
 			// Implementation
-			/** The number of cycles the CPU was executed once the simulated method finishes. */
-			unsigned int _lastCPUCycles;
+			/** Sound clock cycles waiting to be simulated. */
+			unsigned int _pendingSoundClockCycles;
+			/** Half a sound clock cycle left from the previous CPU execution. */
+			unsigned int _pendingHalfSoundClockCycle;
 		};
 
 		static const unsigned int _ID = 101;

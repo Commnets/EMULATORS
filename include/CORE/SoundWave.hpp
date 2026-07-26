@@ -239,6 +239,8 @@ namespace MCHEmul
 
 		virtual void initialize () override;
 
+		virtual void initializeInternalCounters () override;
+
 		virtual void clock (unsigned int nC = 1) override;
 
 		virtual double data () const override;

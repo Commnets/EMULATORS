@@ -157,7 +157,7 @@ Use uppercase field names. For nested objects, build nested `InfoStructure` valu
 
 ## Inline Methods
 
-Keep trivial accessors inline:
+Define extremely short methods, consisting of one instruction or expression, directly with their declaration inside the class. Do not write the `inline` keyword in this case:
 
 ```cpp
 int id () const
@@ -168,6 +168,28 @@ void setActive (bool a)
 							{ _active = a; }
 ```
 
+For a short method that needs more than one instruction or roughly a couple of lines, declare it `inline` in the class and put its definition immediately after the class definition in the same header:
+
+```cpp
+class ClassName
+{
+	public:
+	inline void setRange (int min, int max);
+
+	private:
+	int _min;
+	int _max;
+};
+
+inline void ClassName::setRange (int min, int max)
+{
+	_min = min;
+	_max = max;
+}
+```
+
+Move non-trivial methods to the `.cpp` file.
+
 Use the const/non-const forwarding pattern when exposing mutable access:
 
 ```cpp
@@ -176,6 +198,22 @@ const Dependency* dependency () const
 Dependency* dependency ()
 							{ return (const_cast <Dependency*> 
 								(const_cast <const ClassName*> (this) -> dependency ())); }
+```
+
+## Transient Results
+
+Avoid a local `const` variable when its value is consumed by only one formula:
+
+```cpp
+_pendingCycles += (_halfCycle + (nC << shift)) >> 1;
+```
+
+Introduce a local `const` result when it is reused by several calculations, or when an otherwise single-use expression is long or complex enough that a descriptive name makes the formula easier to understand:
+
+```cpp
+const unsigned int elapsedHalfCycles = _halfCycle + (nC << shift);
+_pendingCycles += elapsedHalfCycles >> 1;
+_halfCycle = elapsedHalfCycles & 0x01;
 ```
 
 ## Error Handling And Validation

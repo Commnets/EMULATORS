@@ -36,7 +36,8 @@ COMMODORE::TED::SoundFunction::SoundFunction (MCHEmul::SoundLibWrapper* sW)
 		  { "Manufacturer", "Commodore Business Machines CBM" },
 		  { "Year", "1984" } },
 		sW),
-	  _lastCPUCycles (0)
+	  _pendingSoundClockCycles (0),
+	  _pendingHalfSoundClockCycle (0)
 { 
 	// Take care that the sound emulation library was not null at all...
 	// ...and also belonging to the right type..
@@ -51,25 +52,30 @@ bool COMMODORE::TED::SoundFunction::initialize ()
 	if (!MCHEmul::SoundChip::initialize ())
 		return (false);
 
-	_lastCPUCycles = 0;
+	_pendingSoundClockCycles = 0;
+	_pendingHalfSoundClockCycle = 0;
 
 	return (true);
 }
 
 // ---
+void COMMODORE::TED::SoundFunction::addCPUCycles
+	(unsigned int nC, bool singleClockMode)
+{
+	const unsigned int elapsedHalfSoundCycles =
+		_pendingHalfSoundClockCycle +
+		(nC << (singleClockMode ? 1 : 0));
+
+	_pendingSoundClockCycles += elapsedHalfSoundCycles >> 1;
+	_pendingHalfSoundClockCycle = elapsedHalfSoundCycles & 0x01; // rest?
+}
+
+// ---
 bool COMMODORE::TED::SoundFunction::simulate (MCHEmul::CPU* cpu)
 {
-	// First time?
-	if (_lastCPUCycles == 0)
-	{ 
-		_lastCPUCycles = cpu -> clockCycles (); // Nothing to do...
-
-		return (true);
-	}
-
 	if (soundWrapper () != nullptr)
 	{
-		for (unsigned int i = (cpu -> clockCycles () - _lastCPUCycles); i > 0 ; i--)
+		for (unsigned int i = _pendingSoundClockCycles; i > 0 ; i--)
 		{
 			// The number of bytes that can come from the wrapper might not be fixed...
 			MCHEmul::UBytes data;
@@ -85,7 +91,7 @@ bool COMMODORE::TED::SoundFunction::simulate (MCHEmul::CPU* cpu)
 		}
 	}
 
-	_lastCPUCycles = cpu -> clockCycles ();
+	_pendingSoundClockCycles = 0;
 
 	return (true);
 }
@@ -150,10 +156,10 @@ COMMODORE::TED::~TED ()
 // ---
 bool COMMODORE::TED::initialize ()
 {
-	assert (memoryRef () != nullptr);
-
 	if (!MCHEmul::GraphicalChip::initialize ())
 		return (false);
+
+	assert (memoryRef () != nullptr);
 
 	// Gets the memory block dedicated to the TED
 	if (!(_TEDRegisters = 
@@ -171,6 +177,7 @@ bool COMMODORE::TED::initialize ()
 	_T3.initialize ();
 
 	// The sound function is initialized independly...
+	assert (_soundFunction -> soundWrapper () != nullptr);
 
 	_TEDRegisters -> lookAtTimers (&_T1, &_T2, &_T3);
 	_TEDRegisters -> lookAtSoundLibWrapper (_soundFunction -> soundWrapper ());
@@ -227,6 +234,9 @@ bool COMMODORE::TED::simulate (MCHEmul::CPU* cpu)
 
 	const bool elapsedInSingleClockMode = _inSingleClockMode;
 	const unsigned int elapsedCPUCycles = cpu -> clockCycles () - _lastCPUCycles;
+
+	// The sound clock is fixed even when the CPU switches between single and double speed.
+	_soundFunction -> addCPUCycles (elapsedCPUCycles, elapsedInSingleClockMode);
 
 	// FREEZE stops the raster and the internal timers,
 	// but the CPU continues running at single clock.
