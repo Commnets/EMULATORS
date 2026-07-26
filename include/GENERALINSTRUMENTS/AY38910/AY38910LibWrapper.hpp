@@ -128,7 +128,8 @@ namespace GENERALINSTRUMENTS
 			void setType (Type t);
 			/** Same, but from the value of a register directly...
 				Transmit the changes directly to the previous method. */
-			void setType (const MCHEmul::UByte& v); 
+			void setType (const MCHEmul::UByte& v)
+							{ setType (Type (v.value () & 0x0f)); }
 
 			/** Sets directly the frequency of the envelope. */
 			double frequency () const
@@ -137,9 +138,12 @@ namespace GENERALINSTRUMENTS
 
 			virtual void setStart (bool s) override;
 			virtual void initialize () override;
-			virtual void initializeInternalCounters () override;
+			virtual void initializeInternalCounters () override
+							{ _counterCyclesPerEnvelopeStep = 0; }
+
 			virtual void clock (unsigned int nC = 1) override;
-			virtual double envelopeData () const override;
+			virtual double envelopeData () const override
+							{ return (!_active ? 1.0f : ((double) _level / 15.0f)); }
 
 			virtual MCHEmul::InfoStructure getInfoStructure () const override;
 
@@ -193,8 +197,6 @@ namespace GENERALINSTRUMENTS
 							  return (r); }
 			unsigned char oscillatorValue () const
 							{ return (MCHEmul::normalizedSoundSampleToU8 (wavesData ())); }
-
-			virtual void initialize () override;
 
 			/** To get the current normalized AY voice output between -1.0 and 1.0. */
 			virtual double data () const override;

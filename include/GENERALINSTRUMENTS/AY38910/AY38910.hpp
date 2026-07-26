@@ -23,7 +23,7 @@
 
 namespace GENERALINSTRUMENTS
 {
-	class AY38910 final : public MCHEmul::SoundChip
+	class AY38910 : public MCHEmul::SoundChip
 	{
 		public:
 		static const int _ID = 1100;
@@ -37,7 +37,7 @@ namespace GENERALINSTRUMENTS
 
 		AY38910 (AY38910Registers* reg, AY38910LibWrapper* w);
 
-		~AY38910 ();
+		virtual ~AY38910 () override;
 
 		/** The main characteristics of the SID. */
 		virtual SDL_AudioFormat type () const override
@@ -49,11 +49,11 @@ namespace GENERALINSTRUMENTS
 
 		// The access to the chip can be throught out the pins connected to the outside...
 		// ...What this actions do, will depend on the internal situation of the chip
-		MCHEmul::UByte readRegister (unsigned char rId) const
+		virtual MCHEmul::UByte readRegister (unsigned char rId) const
 							{ return (_AY38910Registers -> readRegister (rId)); }
-		MCHEmul::UByte peekRegister (unsigned char rId) const // Same that previous but not changind the content...
+		virtual MCHEmul::UByte peekRegister (unsigned char rId) const // Same that previous but not changind the content...
 							{ return (_AY38910Registers-> peekRegister (rId)); }
-		void setRegister (unsigned char rId, const MCHEmul::UByte& v)
+		virtual void setRegister (unsigned char rId, const MCHEmul::UByte& v)
 							{ _AY38910Registers -> setRegister (rId, v); }
 
 		virtual bool initialize () override;
@@ -65,6 +65,12 @@ namespace GENERALINSTRUMENTS
 		  * The ones from the parent class +:
 		  */
 		virtual MCHEmul::InfoStructure getInfoStructure () const override;
+
+		protected:
+		const AY38910Registers* registers () const
+							{ return (_AY38910Registers); }
+		AY38910Registers* registers ()
+							{ return (_AY38910Registers); }
 
 		private:
 		// -----

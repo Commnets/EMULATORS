@@ -109,7 +109,7 @@ void GENERALINSTRUMENTS::AY38910SimpleLibWrapper::setValue (size_t p, const MCHE
 				_noiseDisabled [0] = v.bit (3);
 				_noiseDisabled [1] = v.bit (4);
 				_noiseDisabled [2] = v.bit (5);
-				// The bits 6 & 7 are not implemented yet...
+				// Bits 6 and 7 configure the generic I/O ports and have no audible effect.
 			}
 
 			break;
@@ -337,12 +337,6 @@ void GENERALINSTRUMENTS::AY38910SimpleLibWrapper::Envelope::setType (
 }
 
 // ---
-void GENERALINSTRUMENTS::AY38910SimpleLibWrapper::Envelope::setType (const MCHEmul::UByte& v)
-{
-	setType (GENERALINSTRUMENTS::AY38910SimpleLibWrapper::Envelope::Type (v.value () & 0x0f));
-}
-
-// ---
 void GENERALINSTRUMENTS::AY38910SimpleLibWrapper::Envelope::setFrequency (double f)
 {
 	_frequency = (f > 0.0f) ? f : 0.0f;
@@ -371,12 +365,6 @@ void GENERALINSTRUMENTS::AY38910SimpleLibWrapper::Envelope::initialize ()
 }
 
 // ---
-void GENERALINSTRUMENTS::AY38910SimpleLibWrapper::Envelope::initializeInternalCounters ()
-{
-	_counterCyclesPerEnvelopeStep = 0;
-}
-
-// ---
 void GENERALINSTRUMENTS::AY38910SimpleLibWrapper::Envelope::clock (unsigned int nC)
 {
 	if (nC == 0 || !_active || _holding || _cyclesPerEnvelopeStep == 0)
@@ -389,12 +377,6 @@ void GENERALINSTRUMENTS::AY38910SimpleLibWrapper::Envelope::clock (unsigned int 
 
 		advanceLevel ();
 	}
-}
-
-// ---
-double GENERALINSTRUMENTS::AY38910SimpleLibWrapper::Envelope::envelopeData () const
-{
-	return (!_active ? 1.0f : ((double) _level / 15.0f));
 }
 
 // ---
@@ -497,14 +479,6 @@ GENERALINSTRUMENTS::AY38910SimpleLibWrapper::Voice::Voice (int id, unsigned int 
 	  _wavesActive (0)
 { 
 	setClassName ("AY38910Voice"); 
-}
-
-// ---
-void GENERALINSTRUMENTS::AY38910SimpleLibWrapper::Voice::initialize ()
-{
-	MCHEmul::SoundVoice::initialize ();
-	
-	// TODO
 }
 
 // ---

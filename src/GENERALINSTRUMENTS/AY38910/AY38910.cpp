@@ -4,9 +4,9 @@
 GENERALINSTRUMENTS::AY38910::AY38910 
 	(GENERALINSTRUMENTS::AY38910Registers* reg, GENERALINSTRUMENTS::AY38910LibWrapper* w)
 	: MCHEmul::SoundChip (GENERALINSTRUMENTS::AY38910::_ID,
-		 { { "Name", "PPI 8255" },
-		   { "Manufacturer", "Intel" },
-		   { "Year", "1970" } }, w),
+		 { { "Name", "AY-3-8910" },
+		   { "Manufacturer", "General Instrument" },
+		   { "Year", "1978" } }, w),
 	  _AY38910Registers (reg),
 	  _lastCPUCycles (0),
 	  _pendingCPUCyclesForSound (0),

@@ -28,6 +28,12 @@ namespace GENERALINSTRUMENTS
 		public:
 		static const unsigned int _ID = 1200;
 
+		enum class IOPort
+		{
+			_A = 0,
+			_B
+		};
+
 		// Constructors...
 		/** This constructor is used when the registers will be used directly from the Chip
 			and this one from the port manager. \n
@@ -40,9 +46,27 @@ namespace GENERALINSTRUMENTS
 			The physical memory is not owned by this class but the computer (memory class). */
 		AY38910Registers (MCHEmul::PhysicalStorage* ps, size_t pp, const MCHEmul::Address& a, size_t s); 
 
-		/** This chip has only 4 registers valid: 0 & 1 & 2 & 4 */
+		/** The chip is accessed through register selection, data write and data read. */
 		virtual size_t numberRegisters () const override
-							{ return (0x04); }
+							{ return (0x03); }
+
+		/** To know the internal control register currently selected. */
+		unsigned char selectedControlRegister () const
+							{ return (_selectedControlRegister); }
+
+		/** To get and set the values driven by the external devices connected to the I/O ports. */
+		const MCHEmul::UByte& ioPortInputValue (IOPort p) const
+							{ return (_IOPortInputValues [(size_t) p]); }
+		void setIOPortInputValue (IOPort p, const MCHEmul::UByte& v)
+							{ _IOPortInputValues [(size_t) p] = v; }
+
+		/** To get the value latched for output at an I/O port. */
+		const MCHEmul::UByte& ioPortOutputLatch (IOPort p) const
+							{ return (_IOPortOutputLatches [(size_t) p]); }
+
+		/** To know the direction and resolved value of an I/O port. */
+		bool ioPortIsOutput (IOPort p) const;
+		MCHEmul::UByte ioPortValue (IOPort p) const;
 
 		virtual void initialize () override;
 
@@ -72,6 +96,10 @@ namespace GENERALINSTRUMENTS
 		AY38910LibWrapper* _AY38910Wrapper;
 
 		// Implementation		
+		/** Values driven at the pins by the devices connected to ports A and B. */
+		MCHEmul::UByte _IOPortInputValues [2];
+		/** Values written to the output latches of ports A and B. */
+		MCHEmul::UByte _IOPortOutputLatches [2];
 		/** The last value read. */
 		mutable MCHEmul::UByte _lastValueRead;
 	};

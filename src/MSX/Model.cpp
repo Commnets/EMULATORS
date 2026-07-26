@@ -6,6 +6,7 @@
 #include <MSX/OSIO.hpp>
 #include <MSX/VDP.hpp>
 #include <MSX/PPI8255.hpp>
+#include <MSX/AY38910.hpp>
 #include <FZ80/INTInterrupt.hpp>
 
 // ---
@@ -373,7 +374,7 @@ MSX::PSG* MSX::MSXStdModel::createPSG () const
 {
 	// The standard model is based on the General Instruments AY-3-8910 chip...
 	return (new MSX::PSG_AY38910
-		(new GENERALINSTRUMENTS::AY38910
+		(new MSX::AY38910
 			(nullptr /** to create the internal ones. */,
 			 new GENERALINSTRUMENTS::AY38910SimpleLibWrapper
 				(clockSpeed () >> 1 /** Half speed. */, GENERALINSTRUMENTS::AY38910::_SOUNDSAMPLINGCLOCK))));
@@ -426,7 +427,7 @@ MSX::PSG* MSX::MSX1Model::createPSG () const
 {
 	// The standard model is based on the General Instruments AY-3-8910 chip...
 	return (new MSX::PSG_AY38910
-		(new GENERALINSTRUMENTS::AY38910
+		(new MSX::AY38910
 			(nullptr /** to create the internal ones. */,
 			 new GENERALINSTRUMENTS::AY38910SimpleLibWrapper
 				(clockSpeed () >> 1 /** Half speed. */, GENERALINSTRUMENTS::AY38910::_SOUNDSAMPLINGCLOCK))));

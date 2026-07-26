@@ -19,6 +19,7 @@
 namespace MSX
 {
 	class PPI8255;
+	class AY38910;
 
 	/** The MSX::InputOSSystem 
 		It is very related with the por EF. \n
@@ -49,6 +50,8 @@ namespace MSX
 		const KeystrockesMap _MSXKEYS;
 		/** A reference to the PPI chip where the keyboard info is finally read. */
 		PPI8255* _ppi8255;
+		/** A reference to the PSG chip where the joystick events are finally read. */
+		AY38910* _AY38910;
 
 		/** It is fixed, and what to return when nothing is pushed. */
 		static const Keystrokes _NOKEYSTROKES;

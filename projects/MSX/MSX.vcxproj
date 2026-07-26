@@ -19,6 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\include\MSX\AY38910.hpp" />
     <ClInclude Include="..\..\include\MSX\PPI8255.hpp" />
     <ClInclude Include="..\..\include\MSX\CommandBuilder.hpp" />
     <ClInclude Include="..\..\include\MSX\Commands.hpp" />
@@ -40,6 +41,7 @@
     <ClInclude Include="..\..\include\MSX\VDP.hpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\src\MSX\AY38910.cpp" />
     <ClCompile Include="..\..\src\MSX\CommandBuilder.cpp" />
     <ClCompile Include="..\..\src\MSX\Commands.cpp" />
     <ClCompile Include="..\..\src\MSX\Datasette.cpp" />

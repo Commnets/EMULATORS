@@ -18,6 +18,7 @@
 #include <EMULATORS/incs.hpp>
 #include <TEXASINSTRUMENTS/incs.hpp>
 #include <GENERALINSTRUMENTS/incs.hpp>
+#include <MSX/AY38910.hpp>
 #include <MSX/Model.hpp>
 #include <MSX/CommandBuilder.hpp>
 #include <MSX/Commands.hpp>
