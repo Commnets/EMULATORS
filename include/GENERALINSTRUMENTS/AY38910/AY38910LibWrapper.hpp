@@ -18,14 +18,16 @@
 
 namespace GENERALINSTRUMENTS
 {
-	/** The generic AY38910LibWrapper. */
+	/** The generic AY38910LibWrapper. \n
+		The wrapper has been built only for the behaviour related with the sound,
+		the ports are managed directly in the resgiters of the chip. */
 	class AY38910LibWrapper : public MCHEmul::SoundLibWrapper
 	{
 		public:
 		AY38910LibWrapper (const MCHEmul::Attributes attrs = { })
 			: MCHEmul::SoundLibWrapper (attrs),
 			  _lastValueRead (MCHEmul::UByte::_0)
-							{ }
+							{ setClassName ("AY38910LibWrapper"); }
 
 		virtual void setValue (size_t p, const MCHEmul::UByte& v)
 							{ /** do nothing. */ }
@@ -35,7 +37,11 @@ namespace GENERALINSTRUMENTS
 		virtual const MCHEmul::UByte& peekValue (size_t p) const
 							{ return (readValue (p)); }
 
-		/** To get the full info of the wrapper, including the voices. */
+		/**
+		  *	The name of the fields are: \n
+		  * The attributes and infostructures of the parent class, plus: \n
+		  * VOICES	= InfoStructure: Information about the three AY sound channels.
+		  */
 		virtual MCHEmul::InfoStructure getInfoStructure () const override;
 		/** To get information about the voices from then wrapper. \n
 			That infomation is not neccesary stored in the registers. */
@@ -63,10 +69,23 @@ namespace GENERALINSTRUMENTS
 
 		virtual void setValue (size_t p, const MCHEmul::UByte& v) override;
 		virtual const MCHEmul::UByte& readValue (size_t p) const override;
+		virtual const MCHEmul::UByte& peekValue (size_t p) const override
+							{ return (_registers [p % 0x10]); }
 
 		virtual void initialize () override;
 
 		virtual bool getData (MCHEmul::CPU *cpu, MCHEmul::UBytes& dt) override;
+
+		/**
+		  *	The name of the fields are: \n
+		  * The attributes and infostructures of the parent class, plus: \n
+		  * CHIPFREQUENCY		= Attribute: AY clock frequency in cycles per second. \n
+		  * SAMPLINGFREQUENCY	= Attribute: Output sampling frequency in samples per second. \n
+		  * CONTROLREGISTERS	= Attribute: Values of the 16 internal AY registers. \n
+		  * CHANNELS			= InfoStructure: Mixer and volume state of the three AY channels. \n
+		  * AY38910Envelope		= InfoStructure: State of the shared AY envelope.
+		  */
+		virtual MCHEmul::InfoStructure getInfoStructure () const override;
 
 		virtual MCHEmul::InfoStructure getVoiceInfoStructure (unsigned char nV) const override
 							{ return ((nV < 3) ? _voices [nV] -> getInfoStructure () : MCHEmul::InfoStructure ()); }
@@ -145,6 +164,20 @@ namespace GENERALINSTRUMENTS
 			virtual double envelopeData () const override
 							{ return (!_active ? 1.0f : ((double) _level / 15.0f)); }
 
+			/**
+			  *	The name of the fields are: \n
+			  * The attributes and infostructures of the parent class, plus: \n
+			  * TYPE			= Attribute: Envelope shape number from 0 to 15. \n
+			  * CONTINUE		= Attribute: Continue bit of the envelope shape. \n
+			  * ATTACK		= Attribute: Attack bit of the envelope shape. \n
+			  * ALTERNATE	= Attribute: Alternate bit of the envelope shape. \n
+			  * HOLD			= Attribute: Hold bit of the envelope shape. \n
+			  * LEVEL		= Attribute: Current envelope level from 0 to 15. \n
+			  * DIRECTION	= Attribute: Current level direction, either -1 or 1. \n
+			  * HOLDING		= Attribute: Whether the envelope has reached a held state. \n
+			  * FREQUENCY	= Attribute: Envelope frequency in hertz. \n
+			  * CYCLESPERSTEP = Attribute: AY cycles needed for one envelope step.
+			  */
 			virtual MCHEmul::InfoStructure getInfoStructure () const override;
 
 			private:
@@ -203,6 +236,10 @@ namespace GENERALINSTRUMENTS
 
 			/**
 			  *	The name of the fields are: \n
+			  * The attributes and infostructures of the parent class, plus: \n
+			  * WAVEACTIVE		= Attribute: Active waveform, 0 for square and 1 for noise. \n
+			  * WAVESCLOCKVALUE	= Attribute: Current waveform clock value from 0 to 255. \n
+			  * OSCILLATORVALUE	= Attribute: Current normalized oscillator value from 0 to 255.
 			  */
 			virtual MCHEmul::InfoStructure getInfoStructure () const override;
 

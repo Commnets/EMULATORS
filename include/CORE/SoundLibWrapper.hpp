@@ -49,6 +49,10 @@ namespace MCHEmul
 			In case te data is available the parameter "UBytes" will have been filled up with the value. */
 		virtual bool getData (CPU*, UBytes&) = 0;
 
+		/**
+		  *	The name of the fields are: \n
+		  *	ATTRS	= InfoStructure: Attributes defining the sound wrapper.
+		  */
 		virtual InfoStructure getInfoStructure () const override;
 
 		protected:

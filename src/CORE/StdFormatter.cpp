@@ -291,7 +291,7 @@ std::string MCHEmul::StdFormatter::InvokePiece::format (const MCHEmul::InfoStruc
 	{
 		const std::shared_ptr <MCHEmul::StdFormatter>& sFmter = 
 			std::static_pointer_cast <MCHEmul::StdFormatter> (MCHEmul::FormatterBuilder::instance () -> 
-				formatter (iS.attribute (".CLASSNAME")));
+				formatter (iS.attribute ("CLASSNAME")));
 		if (sFmter != nullptr)
 			result = sFmter -> format (iS) + _post;
 	}

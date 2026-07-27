@@ -13,6 +13,12 @@ EAR:@EAR@
 Sampling Frequency:@SAMPLINGFREQ@, Clocks Per Sampling:@CLOCKSSAMPLING@
 #---
 #---
+;ULAVoice
+Id:@ID@, Active:@ACTIVE@
+->Waves:
+@WAVES?{fmter=.CLASS,empty=no waves}\n@
+#---
+#---
 ;ULA
 Id:@ID@
 @ATTRS?{key=YES,equal=:,empty=no attributes}\n@

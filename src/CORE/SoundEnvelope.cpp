@@ -182,7 +182,7 @@ double MCHEmul::SoundADSREnvelope::envelopeData () const
 // ---
 MCHEmul::InfoStructure MCHEmul::SoundADSREnvelope::getInfoStructure () const
 {
-	MCHEmul::InfoStructure result;
+	MCHEmul::InfoStructure result = MCHEmul::SoundEnvelope::getInfoStructure ();
 
 	result.add ("ATTACK", _attack);
 	result.add ("DECAY", _decay);

@@ -60,7 +60,18 @@ namespace TEXASINSTRUMENTS
 			/** To get the info of the sprite as a set of strings. */
 			MCHEmul::Strings spriteDrawSnapShot () const;
 
-			/** To get the definition. */
+			/**
+			  *	The name of the fields are: \n
+			  * ID			= Attribute: Sprite number from 1 to 32. \n
+			  * POSX		= Attribute: Horizontal sprite position. \n
+			  * POSY		= Attribute: Vertical sprite position as stored in VRAM. \n
+			  * PATTERN		= Attribute: Sprite pattern number. \n
+			  * COLOR		= Attribute: Sprite palette color. \n
+			  * 16PIXELS	= Attribute: Whether the sprite uses a 16 by 16 pattern. \n
+			  * ENLARGED	= Attribute: Whether the sprite is magnified. \n
+			  * EARLYCLOCK	= Attribute: Whether the sprite is shifted 32 pixels to the left. \n
+			  * BYTES		= Attribute: Bytes defining the sprite pattern.
+			  */
 			MCHEmul::InfoStructure getInfoStructure () const;
 
 			unsigned char _id; // The id of the sprite defition (from 0 to 31).
@@ -133,23 +144,33 @@ namespace TEXASINSTRUMENTS
 
 		/**
 		  *	The name of the fields are: \n
-		  *	MemSize				= Attribute: The size in bytes of the memry RAM
-		  *	GraphicMode			= Attribute: The graphic mode in which the graphic is working
-		  *	ExternalVideo		= Attribute: Is there external video to attend?
-		  *	16kVideo			= Attribute: Is the 16k bytes long or just 4k?
-		  *	BlankScreen			= Attribute: Blank screen active?
-		  *	Sprites16pixels		= Attribute: Sprites 16 pixels width? (or just 8?)
-		  *	SpritesEnlarged		= Attribute: Sprites enlarged?
-		  *	LaunchInterrupt		= Attribute: Launch an interrupt when the screen is refreshed?
-		  *	NameAddress			= Attribute: Memory address with the characteres to draw (used in some modes)
-		  *	ColorAddress		= Attribute: Memory address where the color of the screen positions is defined.
-		  *	PatternAddress		= Attribute: Memory address where the patterns to draw is located.
-		  *	SpriteAddress		= Attribute: Memory address where the situation of the sprites is defined.
-		  *	SpriteAttrsAddress	= Attribute: Memory address where the attributes of the sprites is located.
-		  *	SpriteGenAddress	= Attribute: Memory address where the info to generate the sprites is located.
-		  *	TextColor			= Attribute: Color of the text.
-		  *	BackdropColor		= Attribute: Color of the background.
-		  *	BYTES				= Attribute: Video RAM.
+		  * The attributes and infostructures of the parent class, plus: \n
+		  * MEMSIZE				= Attribute: Size of the video RAM in bytes. \n
+		  * GRAPHICMODE			= Attribute: Active graphic mode. \n
+		  * EXTERNALVIDEO		= Attribute: Whether external video input is enabled. \n
+		  * 16KVIDEO			= Attribute: Whether the 16 KB video configuration is selected. \n
+		  * BLANKSCREEN			= Attribute: Whether the screen is blanked. \n
+		  * SPRITES16PIXELS		= Attribute: Whether sprites use 16 by 16 patterns. \n
+		  * SPRITESENLARGED		= Attribute: Whether sprites are magnified. \n
+		  * LAUNCHINTERRUPT		= Attribute: Whether the vertical interrupt is enabled. \n
+		  * NAMEADDRESS			= Attribute: Pattern name table base address. \n
+		  * COLORADDRESS		= Attribute: Color table base address. \n
+		  * PATTERNADDRESS		= Attribute: Pattern generator table base address. \n
+		  * SPRITEATTRSADDRESS	= Attribute: Sprite attribute table base address. \n
+		  * SPRITEGENADDRESS	= Attribute: Sprite pattern generator table base address. \n
+		  * TEXTCOLOR			= Attribute: Text foreground color. \n
+		  * BACKDROPCOLOR		= Attribute: Backdrop color. \n
+		  * COLLISION			= Attribute: Whether a sprite collision is latched. \n
+		  * FIFTHSPRITE			= Attribute: Whether a fifth sprite on a line is latched. \n
+		  * FIFTHSPRITENOTDRAWN	= Attribute: Index of the first sprite rejected on a line. \n
+		  * VDPSpritesInfo		= InfoStructure: Information about the active sprites. \n
+		  * CONTROLREGISTERS	= Attribute: Values written to VDP registers R0 to R7. \n
+		  * STATUS				= Attribute: Status register value without read side effects. \n
+		  * CONTROLPORTLATCHED	= Attribute: Whether the first control-port byte is latched. \n
+		  * CONTROLPORTFIRSTBYTE = Attribute: First byte currently latched at the control port. \n
+		  * READWRITEADDRESS	= Attribute: Address used by the next VRAM data access. \n
+		  * READAHEADBUFFER		= Attribute: Current VRAM read-ahead buffer. \n
+		  * BYTES				= Attribute: Video RAM.
 		  */
 		virtual MCHEmul::InfoStructure getInfoStructure () const override;
 		/** To get information about the structure of the sprites. 

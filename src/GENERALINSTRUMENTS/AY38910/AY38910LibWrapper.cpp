@@ -14,6 +14,35 @@ MCHEmul::InfoStructure GENERALINSTRUMENTS::AY38910LibWrapper::getInfoStructure (
 }
 
 // ---
+MCHEmul::InfoStructure GENERALINSTRUMENTS::AY38910SimpleLibWrapper::getInfoStructure () const
+{
+	MCHEmul::InfoStructure result =
+		std::move (GENERALINSTRUMENTS::AY38910LibWrapper::getInfoStructure ());
+
+	std::vector <MCHEmul::UByte> cR
+		(_registers.begin (), _registers.begin () + 0x10);
+	MCHEmul::InfoStructure cDt;
+	for (size_t i = 0; i < 3; i++)
+	{
+		MCHEmul::InfoStructure c;
+		c.add ("ID",				(int) i);
+		c.add ("USEENVELOPE",		_useEnvelope [i]);
+		c.add ("TONEDISABLED",		_toneDisabled [i]);
+		c.add ("NOISEDISABLED",		_noiseDisabled [i]);
+		c.add ("VOLUME",			_volumen [i]);
+		cDt.add (std::to_string (i), std::move (c));
+	}
+
+	result.add ("CHIPFREQUENCY",		_chipFrequency);
+	result.add ("SAMPLINGFREQUENCY",	_samplingFrequency);
+	result.add ("CONTROLREGISTERS",		std::move (cR));
+	result.add ("CHANNELS",				std::move (cDt));
+	result.add ("AY38910Envelope",		std::move (_envelope.getInfoStructure ()));
+
+	return (result);
+}
+
+// ---
 GENERALINSTRUMENTS::AY38910SimpleLibWrapper::AY38910SimpleLibWrapper (unsigned int cF, unsigned int sF)
 	: GENERALINSTRUMENTS::AY38910LibWrapper (
 		{
@@ -514,7 +543,9 @@ MCHEmul::InfoStructure GENERALINSTRUMENTS::AY38910SimpleLibWrapper::Voice::getIn
 	MCHEmul::InfoStructure result = 
 		std::move (MCHEmul::SoundVoice::getInfoStructure ());
 		
-	// TODO
+	result.add ("WAVEACTIVE",		(int) _wavesActive);
+	result.add ("WAVESCLOCKVALUE",	(int) wavesClockValue ());
+	result.add ("OSCILLATORVALUE",	(int) oscillatorValue ());
 		
 	return (result);
 }

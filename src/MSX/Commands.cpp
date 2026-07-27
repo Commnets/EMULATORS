@@ -11,6 +11,7 @@ const std::string MSX::SpritesDrawCommand::_NAME = "CSPRITESDRAW";
 const std::string MSX::VDPMemoryStatusCommand::_NAME = "CVDPMEMORY";
 const std::string MSX::SetVDPMemoryValueCommand::_NAME = "CVDPSETMEMORY";
 const std::string MSX::VDPShowEventsCommand::_NAME = "CVDPEVENTS";
+const std::string MSX::PSGStatusCommand::_NAME = "CPSG";
 
 // ---
 void MSX::VDPStatusCommand::executeImpl 
@@ -175,4 +176,20 @@ void MSX::VDPShowEventsCommand::executeImpl (MCHEmul::CommandExecuter* cE,
 	MSX::MSXComputer* mC = static_cast <MSX::MSXComputer*> (c);
 
 	mC -> vdp () -> setShowEvents ((parameter ("00") == "ON"));
+}
+
+// ---
+void MSX::PSGStatusCommand::executeImpl
+	(MCHEmul::CommandExecuter* cE, MCHEmul::Computer* c, MCHEmul::InfoStructure& rst)
+{
+	if (c == nullptr ||
+		dynamic_cast <MSX::MSXComputer*> (c) == nullptr ||
+		static_cast <MSX::MSXComputer*> (c) -> psg () == nullptr)
+		return;
+
+	MSX::PSG* psg = static_cast <MSX::MSXComputer*> (c) -> psg ();
+
+	// The structure is generated for the sound chip behind the PSG.
+	rst.add (psg -> soundChip () -> className (),
+		std::move (psg -> getInfoStructure ()));
 }

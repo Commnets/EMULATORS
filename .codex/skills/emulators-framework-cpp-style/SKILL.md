@@ -13,6 +13,7 @@ Use the framework's existing idioms deliberately:
 
 - Keep the Doxygen file banner, include guard shape, namespace, and end-of-file marker used by neighboring headers.
 - Use explicit `MCHEmul::`/module qualification in `.cpp` definitions. Do not add `using namespace`.
+- Do not create free functions, file-local helper functions, or anonymous-namespace functions in headers or `.cpp` files. General free functions are allowed only in the existing `global.hpp` and `global.cpp`. Every other new operation must be a method of an appropriate class, using a private or static method when it is only an implementation helper. If no suitable owning class is clear, stop and ask the user where it belongs before writing it.
 - Indent with tabs, not spaces, including proposed snippets and patches. Preserve existing tab-based continuation alignment from nearby code.
 - When creating or editing source/code files, always write CRLF (`\r\n`) line endings for every line, and preserve or convert touched generated code snippets and file edits to CRLF.
 - When proposing or writing code, include comments in the framework's local style only when they explain why the code exists or clarify non-obvious hardware/framework behavior. Avoid comments that merely restate what the code says.

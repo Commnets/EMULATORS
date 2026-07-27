@@ -82,7 +82,7 @@ MCHEmul::InfoStructure TEXASINSTRUMENTS::TMS99xxFamilyRegisters::getInfoStructur
 {
 	MCHEmul::InfoStructure result = std::move (MCHEmul::InfoClass::getInfoStructure ());
 
-	result.add ("MEMSIZE",				std::to_string (_videoMemory.size ()));
+	result.add ("MEMSIZE",				(unsigned int) _videoMemory.size ());
 	result.add ("GRAPHICMODE",			_graphicMode);
 	result.add ("EXTERNALVIDEO",		_externalVideo);
 	result.add ("16KVIDEO",				_16k);
@@ -101,8 +101,15 @@ MCHEmul::InfoStructure TEXASINSTRUMENTS::TMS99xxFamilyRegisters::getInfoStructur
 	result.add ("FIFTHSPRITE",			_fifthSpriteDetected);
 	result.add ("FIFTHSPRITENOTDRAWN",	_fifthSpriteNotDrawn);
 	result.add ("VDPSpritesInfo",		std::move (getSpritesInfoStructure ()));
+	result.add ("CONTROLREGISTERS",		_controlRegisters);
+	// This method is observational: reading the real status register would clear
+	// the interrupt, collision and fifth-sprite latches.
+	result.add ("STATUS",				peekStatus ());
+	result.add ("CONTROLPORTLATCHED",	_99setOnce);
+	result.add ("CONTROLPORTFIRSTBYTE",	_99firstAccessValue);
+	result.add ("READWRITEADDRESS",		_readWriteAddress);
+	result.add ("READAHEADBUFFER",		_readAheadBuffer);
 	// The video RAM is 16k long. But it is allowed to print it out...
-	result.add ("MEMSIZE",				(unsigned int) _videoMemory.size ());
 	result.add ("BYTES",				_videoMemory);
 
 	return (result);

@@ -21,11 +21,13 @@ Source: "Z80Compiler.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "TestZ80.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "MSX.hlp"; DestDir: "{app}"; Flags: ignoreversion
 Source: "TexasInstruments.hlp"; DestDir: "{app}"; Flags: ignoreversion
+Source: "GeneralInstruments.hlp"; DestDir: "{app}"; Flags: ignoreversion
 Source: "LocalConsole.hlp"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Standard.hlp"; DestDir: "{app}"; Flags: ignoreversion
 Source: "console.def"; DestDir: "{app}"; Flags: ignoreversion
 Source: "MSX.fmt"; DestDir: "{app}"; Flags: ignoreversion
 Source: "TexasInstruments.fmt"; DestDir: "{app}"; Flags: ignoreversion
+Source: "GeneralInstruments.fmt"; DestDir: "{app}"; Flags: ignoreversion
 Source: "LocalConsole.fmt"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Standard.fmt"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Default.fmt"; DestDir: "{app}"; Flags: ignoreversion

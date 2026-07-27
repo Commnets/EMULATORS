@@ -63,6 +63,9 @@
     <None Include="Default.fmt">
       <Filter>Configuration</Filter>
     </None>
+    <None Include="GeneralInstruments.fmt">
+      <Filter>Configuration</Filter>
+    </None>
     <None Include="LocalConsole.fmt">
       <Filter>Configuration</Filter>
     </None>

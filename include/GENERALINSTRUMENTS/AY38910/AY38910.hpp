@@ -62,7 +62,9 @@ namespace GENERALINSTRUMENTS
 
 		/**
 		  *	The name of the fields are: \n
-		  * The ones from the parent class +:
+		  * The attributes and infostructures of the parent class, except Memory, plus: \n
+		  * AY38910Registers	= InfoStructure: Info about the AY-3-8910 registers and I/O ports. \n
+		  * AY38910LibWrapper	= InfoStructure: Info about the sound emulation wrapper.
 		  */
 		virtual MCHEmul::InfoStructure getInfoStructure () const override;
 

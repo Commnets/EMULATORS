@@ -22,7 +22,7 @@ Read [references/fmt-language.md](references/fmt-language.md) completely before 
 5. Locate formatter blocks by `.CLASSNAME`, nested key name, and command wrapper name.
 6. Follow every leading `?path.fmt` include recursively. Resolve paths as the runtime does from the emulator working directory/configuration.
 7. Compare formatter placeholders with actual keys and report missing, stale, and mistyped fields.
-8. Check all machine variants that include the shared formatter, especially normal and remote consoles.
+8. Check all source machine variants under `projects` that include the shared formatter, especially normal and remote consoles.
 9. Propose or apply the smallest synchronized change across C++, `.hpp` documentation, and `.fmt`.
 10. Validate the formatter parse and, when possible, format a real `InfoStructure` through the formatter used by the command.
 
@@ -33,9 +33,11 @@ Read [references/fmt-language.md](references/fmt-language.md) completely before 
 - Classify nested data as `InfoStructure`, not `Attribute`.
 - Preserve inherited formatter blocks unless the subclass changes the exposed structure.
 - Missing attributes and nested structures produce empty text and can hide stale placeholders. Audit explicitly.
+- Treat `.fmt` files under `projects` as the canonical sources. A full `all` build from the repository root distributes them intelligently to `emulators`, `monitors`, `setups`, and any other runtime/package destinations.
+- Do not edit distributed `.fmt` copies outside `projects` unless the user explicitly requests it. After changing canonical files, use the normal `all` build/distribution workflow when validation of copies is required.
 - Keep shared chip formatters in `projects/COMMODORE/Commodore.fmt` when several machines consume the same class.
 - Keep machine command wrappers in their machine namespace `.fmt`.
-- Update both local-console and remote-console entry files when they duplicate rather than include a definition.
+- Update both local-console and remote-console source entry files under `projects` when they duplicate rather than include a definition.
 - Preserve comments, block ordering, indentation, and CRLF conventions.
 
 ## Search commands
@@ -59,4 +61,4 @@ Separate findings into:
 - inheritance/include dependency;
 - validation limitation.
 
-For every proposed change name the class, method, header, formatter block, and all affected `.fmt` entry points. Do not modify C++ or `.fmt` when the user requested analysis or proposals only.
+For every proposed change name the class, method, header, formatter block, and all affected canonical `.fmt` entry points under `projects`. Do not list distributed copies as files to edit; mention that `all` will regenerate them when relevant. Do not modify C++ or `.fmt` when the user requested analysis or proposals only.

@@ -93,6 +93,12 @@ IRQ:@IRQ@(@IRQLINE@)
 @SoundLibWrapper>@
 #---
 #---
+;TEDVoice
+Id:@ID@, Active:@ACTIVE@
+->Waves:
+@WAVES?{fmter=.CLASS,empty=no waves}\n@
+#---
+#---
 ;TED
 Id:@ID@
 @ATTRS?{key=YES,equal=:,empty=no attributes}\n@
@@ -291,7 +297,14 @@ Dir A:@CIDDRA@, Dir B:@CIDDRB@
 Id:@ID@, Active:@ACTIVE@
 ADSR:@ATTACK@/@DECAY@/@SUSTAIN@/@RELEASE@(@ADSR@)
 Linked:@VOICERELATED@, Ring:@RINGMODULATION@, Sync:@SYNC@
+->Filters:
+@FILTERS?{fmter=.CLASS,empty=no filters}\n@
+->Waves:
 @WAVES?{fmter=.CLASS,empty=no waves}\n@
+#---
+#---
+;SIDNoiseSoundWave
+Active:@ACTIVE@, Type:@TYPE@, Frequency:@FREQUENCY@
 #---
 #---
 ;SID

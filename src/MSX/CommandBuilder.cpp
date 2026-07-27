@@ -10,6 +10,8 @@ MCHEmul::Command* MSX::CommandBuilder::createEmptyCommand (const std::string& cm
 		result = new MCHEmul::HelpCommand ("./MSX.hlp"); // Adding the commands for a MSX...
 	else if (cmdName == "VDP" || cmdName == MSX::VDPStatusCommand::_NAME)
 		result = new MSX::VDPStatusCommand;
+	else if (cmdName == "PSG" || cmdName == MSX::PSGStatusCommand::_NAME)
+		result = new MSX::PSGStatusCommand;
 	else if (cmdName == "PNAME" || cmdName == MSX::PatternNameTableDUMPCommand::_NAME)
 		result = new MSX::PatternNameTableDUMPCommand;
 	else if (cmdName == "PGEN" || cmdName == MSX::PatternGenerationTableDUMPCommand::_NAME)

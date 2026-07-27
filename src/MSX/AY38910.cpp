@@ -42,6 +42,20 @@ bool MSX::AY38910::initialize ()
 }
 
 // ---
+MCHEmul::InfoStructure MSX::AY38910::getInfoStructure () const
+{
+	MCHEmul::InfoStructure result =
+		std::move (GENERALINSTRUMENTS::AY38910::getInfoStructure ());
+
+	result.add ("JOYSTICK1",		_joystickStatus [0]);
+	result.add ("JOYSTICK2",		_joystickStatus [1]);
+	result.add ("JISKEYBOARD",		_JISKeyboard);
+	result.add ("CASSETTEINPUT",	_cassetteInput);
+
+	return (result);
+}
+
+// ---
 void MSX::AY38910::processEvent (
 	const MCHEmul::Event& evnt, MCHEmul::Notifier*)
 {

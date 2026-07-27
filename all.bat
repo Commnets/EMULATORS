@@ -346,6 +346,11 @@ COPY .\projects\TEXASINSTRUMENTS\*.fmt .\emulators\MSXEmulator\ /Y
 COPY .\projects\TEXASINSTRUMENTS\*.fmt .\monitors\RMSXConsole\ /Y
 COPY .\projects\TEXASINSTRUMENTS\*.hlp .\emulators\MSXEmulatorC\ /Y
 COPY .\projects\TEXASINSTRUMENTS\*.hlp .\monitors\RMSXConsole\ /Y
+COPY .\projects\GENERALINSTRUMENTS\*.fmt .\emulators\MSXEmulatorC\ /Y
+COPY .\projects\GENERALINSTRUMENTS\*.fmt .\emulators\MSXEmulator\ /Y
+COPY .\projects\GENERALINSTRUMENTS\*.fmt .\monitors\RMSXConsole\ /Y
+COPY .\projects\GENERALINSTRUMENTS\*.hlp .\emulators\MSXEmulatorC\ /Y
+COPY .\projects\GENERALINSTRUMENTS\*.hlp .\monitors\RMSXConsole\ /Y
 COPY .\projects\CONSOLE\*.fmt .\emulators\MSXEmulatorC\ /Y
 COPY .\projects\CONSOLE\*.hlp .\emulators\MSXEmulatorC\ /Y
 COPY .\projects\CORE\*.fmt .\emulators\MSXEmulatorC\ /Y
@@ -520,6 +525,8 @@ COPY .\projects\MSX\*.hlp .\setups\MSX\ /Y
 COPY .\projects\MSX\*.def .\setups\MSX\ /Y
 COPY .\projects\TEXASINSTRUMENTS\*.fmt .\setups\MSX\ /Y
 COPY .\projects\TEXASINSTRUMENTS\*.hlp .\setups\MSX\ /Y
+COPY .\projects\GENERALINSTRUMENTS\*.fmt .\setups\MSX\ /Y
+COPY .\projects\GENERALINSTRUMENTS\*.hlp .\setups\MSX\ /Y
 COPY .\projects\CONSOLE\*.fmt .\setups\MSX\ /Y
 COPY .\projects\CONSOLE\*.hlp .\setups\MSX\ /Y
 COPY .\projects\CORE\*.fmt .\setups\MSX\ /Y

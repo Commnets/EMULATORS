@@ -48,7 +48,12 @@ Fifth Sprite:@FIFTHSPRITE@(@FIFTHSPRITENOTDRAWN@)
 Collision Detected:@COLLISION@
 Launch Interrupt:@LAUNCHINTERRUPT@
 Memory: PN=$@NAMEADDRESS@, PG=$@PATTERNADDRESS@, CN=$@COLORADDRESS@, SA=$@SPRITEATTRSADDRESS@, SG=$@SPRITEGENADDRESS@
-Text Color:@TEXCOLOR@, Backdrop Color:@BACKDROPCOLOR@
+Text Color:@TEXTCOLOR@, Backdrop Color:@BACKDROPCOLOR@
+->Control Registers:
+@CONTROLREGISTERS{blocksize=8,listsep=\,,tablesep=\ ,minsize=2}@
+Status:$@STATUS@
+Control Port: Latched=@CONTROLPORTLATCHED@, First Byte=$@CONTROLPORTFIRSTBYTE@
+VRAM Access: Address=$@READWRITEADDRESS@, Read-Ahead=$@READAHEADBUFFER@
 ->Video Memory:
 Memory Size:@MEMSIZE@ Bytes
 @BYTES{blocksize=32,listsep=\,,tablesep=\ ,minsize=2}@

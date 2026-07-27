@@ -114,12 +114,11 @@ namespace MCHEmul
 
 		/**
 		  *	The name of the fields are: \n
-		  *	ID				= Id of the voice.
-		  *	ACTIVE			= Attribute with YES when the voice is active and NO in other case.
-		  *	ATTACK			= Value (from to 0 to 1) of the _attack parameter.
-		  *	DECAY			= Value (from to 0 to 1) of the _decay parameter.
-		  *	RELEASE			= Value (from to 0 to 1) of the _release parameter.
-		  *	SUSTAIN			= Value (from to 0 to 1) of the _sustain parameter.
+		  *	ID				= Attribute: Id of the voice. \n
+		  *	ACTIVE			= Attribute: YES when the voice is active and NO otherwise. \n
+		  *	SoundEnvelope	= InfoStructure: Information about the voice envelope, empty when there is none. \n
+		  *	FILTERS			= InfoStructure: Information about the filters attached to the voice. \n
+		  *	WAVES			= InfoStructure: Information about the waves forming the voice.
 		  */
 		virtual InfoStructure getInfoStructure () const override;
 

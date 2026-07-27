@@ -1,6 +1,7 @@
 #Formats used for the MSX Emulation
 #(C) 2025 Ignacio Cea Fornies
 ?./TexasInstruments.fmt
+?./GeneralInstruments.fmt
 ?./Standard.fmt
 #---
 ;INTInterrupt
@@ -13,6 +14,10 @@ Type:NMI, Id:@ID{length=3}@, Active:@ACTIVE{length=3}@, In Execution:@EXECUTION{
 #---
 ;VDP
 @TMS99xxFamily>@
+#---
+#---
+;PSG
+@MSXAY38910>@
 #---
 #---
 ;CPNAME

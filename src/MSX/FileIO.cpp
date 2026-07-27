@@ -1,88 +1,5 @@
 #include <MSX/FileIO.hpp>
 
-namespace
-{
-	bool isCASHeaderAt (const std::vector <MCHEmul::UByte>& dt, size_t p)
-	{
-		if ((p + MSX::CASFileData::_SIGNATURE.size ()) > dt.size ())
-			return (false);
-
-		bool result = true;
-		for (size_t i = 0; i < MSX::CASFileData::_SIGNATURE.size () && result; i++)
-			result = dt [p + i] == MSX::CASFileData::_SIGNATURE [i];
-
-		return (result);
-	}
-
-	// ---
-	MSX::CASFileData::BlockType blockTypeFor (
-		const std::vector <MCHEmul::UByte>& dt)
-	{
-		if (dt.size () < 16)
-			return (MSX::CASFileData::BlockType::_DATA);
-
-		unsigned char marker = dt [0].value ();
-		if (marker != 0xd0 && marker != 0xd3 && marker != 0xea)
-			return (MSX::CASFileData::BlockType::_DATA);
-
-		bool header = true;
-		for (size_t i = 1; i < 10 && header; i++)
-			header = dt [i].value () == marker;
-		if (!header)
-			return (MSX::CASFileData::BlockType::_DATA);
-
-		return (marker == 0xd0
-			? MSX::CASFileData::BlockType::_BINARYHEADER
-			: (marker == 0xd3
-				? MSX::CASFileData::BlockType::_BASICHEADER
-				: MSX::CASFileData::BlockType::_ASCIIHEADER));
-	}
-
-	// ---
-	std::string blockTypeName (MSX::CASFileData::BlockType t)
-	{
-		std::string result = "DATA";
-
-		switch (t)
-		{
-			case MSX::CASFileData::BlockType::_BINARYHEADER:
-				result = "BINARYHEADER";
-				break;
-
-			case MSX::CASFileData::BlockType::_BASICHEADER:
-				result = "BASICHEADER";
-				break;
-
-			case MSX::CASFileData::BlockType::_ASCIIHEADER:
-				result = "ASCIIHEADER";
-				break;
-
-			default:
-				break;
-		}
-
-		return (result);
-	}
-
-	// ---
-	std::string fileNameFor (const std::vector <MCHEmul::UByte>& dt,
-		MSX::CASFileData::BlockType t)
-	{
-		if (t == MSX::CASFileData::BlockType::_DATA)
-			return ("");
-
-		std::string result;
-		for (size_t i = 10; i < 16; i++)
-			result += (char) dt [i].value ();
-
-		while (!result.empty () &&
-			(result.back () == ' ' || result.back () == '\0'))
-			result.pop_back ();
-
-		return (result);
-	}
-}
-
 const std::vector <MCHEmul::UByte> MSX::CASFileData::_SIGNATURE =
 	{ 0x1f, 0xa6, 0xde, 0xba, 0xcc, 0x13, 0x7d, 0x74 };
 
@@ -111,6 +28,31 @@ MCHEmul::Strings MSX::KeystrokeTypeIO::generateKeystrokeForToken (const std::str
 }
 
 // ---
+std::string MSX::CASFileData::Block::typeName (MSX::CASFileData::BlockType t)
+{
+	std::string result = "DATA";
+	switch (t)
+	{
+		case MSX::CASFileData::BlockType::_BINARYHEADER:
+			result = "BINARYHEADER";
+			break;
+
+		case MSX::CASFileData::BlockType::_BASICHEADER:
+			result = "BASICHEADER";
+			break;
+
+		case MSX::CASFileData::BlockType::_ASCIIHEADER:
+			result = "ASCIIHEADER";
+			break;
+
+		default:
+			break;
+	}
+
+	return (result);
+}
+
+// ---
 MCHEmul::ExtendedDataMemoryBlocks MSX::CASFileData::asMemoryBlocks () const
 {
 	MCHEmul::ExtendedDataMemoryBlocks result;
@@ -124,7 +66,7 @@ MCHEmul::ExtendedDataMemoryBlocks MSX::CASFileData::asMemoryBlocks () const
 		MCHEmul::DataMemoryBlock dataBlock (MCHEmul::Address (), block._bytes);
 
 		dataBlock.setName ("CASBLOCK_" + std::to_string (i));
-		dataBlock.setAttribute ("TYPE", blockTypeName (block._type));
+		dataBlock.setAttribute ("TYPE", block.typeName ());
 		if (!block._fileName.empty ())
 			dataBlock.setAttribute ("FILENAME", block._fileName);
 
@@ -253,4 +195,59 @@ bool MSX::CASFileTypeIO::writeFile (
 	}
 
 	return (true);
+}
+
+// ---
+bool MSX::CASFileTypeIO::isCASHeaderAt (const std::vector <MCHEmul::UByte>& dt, size_t p) const
+{
+	if ((p + MSX::CASFileData::_SIGNATURE.size ()) > dt.size ())
+		return (false);
+
+	bool result = true;
+	for (size_t i = 0; i < MSX::CASFileData::_SIGNATURE.size () && result; i++)
+		result = dt [p + i] == MSX::CASFileData::_SIGNATURE [i];
+
+	return (result);
+}
+
+// ---
+MSX::CASFileData::BlockType MSX::CASFileTypeIO::blockTypeFor (
+	const std::vector <MCHEmul::UByte>& dt) const
+{
+	if (dt.size () < 16)
+		return (MSX::CASFileData::BlockType::_DATA);
+
+	unsigned char marker = dt [0].value ();
+	if (marker != 0xd0 && marker != 0xd3 && marker != 0xea)
+		return (MSX::CASFileData::BlockType::_DATA);
+
+	bool header = true;
+	for (size_t i = 1; i < 10 && header; i++)
+		header = dt [i].value () == marker;
+	if (!header)
+		return (MSX::CASFileData::BlockType::_DATA);
+
+	return (marker == 0xd0
+		? MSX::CASFileData::BlockType::_BINARYHEADER
+		: (marker == 0xd3
+			? MSX::CASFileData::BlockType::_BASICHEADER
+			: MSX::CASFileData::BlockType::_ASCIIHEADER));
+}
+
+// ---
+std::string MSX::CASFileTypeIO::fileNameFor (const std::vector <MCHEmul::UByte>& dt,
+	MSX::CASFileData::BlockType t) const
+{
+	if (t == MSX::CASFileData::BlockType::_DATA)
+		return ("");
+
+	std::string result;
+	for (size_t i = 10; i < 16; i++)
+		result += (char) dt [i].value ();
+
+	while (!result.empty () &&
+		(result.back () == ' ' || result.back () == '\0'))
+		result.pop_back ();
+
+	return (result);
 }

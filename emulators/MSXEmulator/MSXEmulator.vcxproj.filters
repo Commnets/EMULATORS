@@ -51,6 +51,9 @@
     <None Include="Default.fmt">
       <Filter>Configuration</Filter>
     </None>
+    <None Include="GeneralInstruments.fmt">
+      <Filter>Configuration</Filter>
+    </None>
     <None Include="MSX.fmt">
       <Filter>Configuration</Filter>
     </None>

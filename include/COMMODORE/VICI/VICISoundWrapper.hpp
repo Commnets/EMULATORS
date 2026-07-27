@@ -35,7 +35,11 @@ namespace COMMODORE
 		virtual const MCHEmul::UByte& peekValue (size_t p) const
 							{ return (readValue (p)); }
 
-		/** To get the full info of the wrapper, including the voices. */
+		/**
+		  *	The name of the fields are: \n
+		  *	The attributes and infostructures of the parent class, plus: \n
+		  *	VOICES	= InfoStructure: Information about the four VIC-I sound voices.
+		  */
 		virtual MCHEmul::InfoStructure getInfoStructure () const override;
 		/** To get the info of the different voices. */
 		virtual MCHEmul::InfoStructure getVoiceInfoStructure (unsigned char nV) const = 0;
@@ -79,8 +83,8 @@ namespace COMMODORE
 		unsigned int _samplingFrequency;
 		double _volumen;
 
-		/** The VICI voice can adapt three different types of waves,
-			depending on the voice. */
+		/** The VICI voice contains pulse and noise waves,
+			with the effective type selected by the voice configuration. */
 		class Voice final : public MCHEmul::SoundVoice
 		{
 			public:

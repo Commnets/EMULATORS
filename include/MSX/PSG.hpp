@@ -48,7 +48,8 @@ namespace MSX
 		virtual MCHEmul::UByte peekRegister (unsigned char rId) const = 0;
 		virtual void setRegister (unsigned char rId, const MCHEmul::UByte& v) = 0;
 
-		/** To get information about the specific chip behind the PSG. */
+		/** To get, without wrapping it in another structure, the information
+			produced by the specific sound chip behind the PSG. */
 		MCHEmul::InfoStructure getInfoStructure () const;
 
 		protected:

@@ -34,6 +34,16 @@ namespace MSX
 
 		virtual bool initialize () override;
 
+		/**
+		  *	The name of the fields are: \n
+		  * The attributes and infostructures of the parent class, plus: \n
+		  * JOYSTICK1		= Attribute: Active-low input state of MSX joystick port 1. \n
+		  * JOYSTICK2		= Attribute: Active-low input state of MSX joystick port 2. \n
+		  * JISKEYBOARD		= Attribute: Whether the Japanese keyboard layout signal is active. \n
+		  * CASSETTEINPUT	= Attribute: Current cassette input signal.
+		  */
+		virtual MCHEmul::InfoStructure getInfoStructure () const override;
+
 		protected:
 		virtual void processEvent (
 			const MCHEmul::Event& evnt, MCHEmul::Notifier* n) override;

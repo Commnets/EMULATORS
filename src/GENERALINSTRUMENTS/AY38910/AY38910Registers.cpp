@@ -11,6 +11,8 @@ GENERALINSTRUMENTS::AY38910Registers::AY38910Registers ()
 	  _lastValueRead (MCHEmul::UByte::_0)
 	// The rest of the attributes are initialized with the method initializeInternalValues...
 {
+	setClassName ("AY38910Registers");
+
 	initializeInternalValues ();
 }
 
@@ -25,6 +27,8 @@ GENERALINSTRUMENTS::AY38910Registers::AY38910Registers
 	  _lastValueRead (MCHEmul::UByte::_0)
 	 // The rest of the attributes are initialized with the method initializeInternalValues...
 {
+	setClassName ("AY38910Registers");
+
 	initializeInternalValues ();
 }
 
@@ -44,7 +48,32 @@ MCHEmul::InfoStructure GENERALINSTRUMENTS::AY38910Registers::getInfoStructure ()
 {
 	MCHEmul::InfoStructure result = std::move (MCHEmul::InfoClass::getInfoStructure ());
 
-	// TODO
+	std::vector <MCHEmul::UByte> cR (0x10, MCHEmul::UByte::_0);
+	if (_AY38910Wrapper != nullptr)
+	{
+		// R14 and R15 are resolved here because the generic sound wrapper
+		// does not own the I/O pins connected to those registers.
+		for (size_t i = 0; i < 0x0e; i++)
+			cR [i] = _AY38910Wrapper -> peekValue (i);
+		cR [0x0e] = ioPortValue (GENERALINSTRUMENTS::AY38910Registers::IOPort::_A);
+		cR [0x0f] = ioPortValue (GENERALINSTRUMENTS::AY38910Registers::IOPort::_B);
+	}
+
+	result.add ("SELECTEDREGISTER",	(int) _selectedControlRegister);
+	result.add ("CONTROLREGISTERS",	cR);
+	result.add ("PORTAINPUT",		_IOPortInputValues [(size_t) IOPort::_A]);
+	result.add ("PORTAOUTPUTLATCH",	_IOPortOutputLatches [(size_t) IOPort::_A]);
+	result.add ("PORTAVALUE",		(_AY38910Wrapper != nullptr)
+		? ioPortValue (IOPort::_A) : _IOPortInputValues [(size_t) IOPort::_A]);
+	result.add ("PORTAOUTPUT",		(_AY38910Wrapper != nullptr)
+		? ioPortIsOutput (IOPort::_A) : false);
+	result.add ("PORTBINPUT",		_IOPortInputValues [(size_t) IOPort::_B]);
+	result.add ("PORTBOUTPUTLATCH",	_IOPortOutputLatches [(size_t) IOPort::_B]);
+	result.add ("PORTBVALUE",		(_AY38910Wrapper != nullptr)
+		? ioPortValue (IOPort::_B) : _IOPortInputValues [(size_t) IOPort::_B]);
+	result.add ("PORTBOUTPUT",		(_AY38910Wrapper != nullptr)
+		? ioPortIsOutput (IOPort::_B) : false);
+	result.add ("LASTVALUEREAD",	_lastValueRead);
 
 	return (result);
 }

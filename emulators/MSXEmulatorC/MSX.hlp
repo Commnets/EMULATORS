@@ -5,6 +5,9 @@
 ;VDP
 Printout the status of the VDP.
 Parameters: None.
+;PSG
+Printout the status of the PSG and its underlying sound chip.
+Parameters: None.
 ;PNAME
 To know the content of the Pattern Name Table.
 Parameters: None.

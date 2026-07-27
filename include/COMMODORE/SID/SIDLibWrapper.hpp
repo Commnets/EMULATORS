@@ -40,7 +40,11 @@ namespace COMMODORE
 		virtual const MCHEmul::UByte& peekValue (size_t p) const
 							{ return (readValue (p)); }
 
-		/** To get the full info of the wrapper, including the voices. */
+		/**
+		  *	The name of the fields are: \n
+		  *	The attributes and infostructures of the parent class, plus: \n
+		  *	VOICES	= InfoStructure: Information about the three SID voices.
+		  */
 		virtual MCHEmul::InfoStructure getInfoStructure () const override;
 		/** To get information about the voices from then wrapper. \n
 			That infomation is not neccesary stored in the registers. */
@@ -233,9 +237,15 @@ namespace COMMODORE
 
 			/**
 			  *	The name of the fields are: \n
-			  *	RINGMODULATION	= Attribute with YES when Ring Modulation is active and NO in other case.
-			  *	VOICERELATED	= Attribute with the id of the voice related with this one.
-			  *	SYNC			= Attribute with YES when Syncronization is active and NO in other case.
+			  *	The attributes and infostructures of the parent class, plus: \n
+			  *	ATTACK			= Attribute: Attack time duplicated from SoundEnvelope. \n
+			  *	DECAY			= Attribute: Decay time duplicated from SoundEnvelope. \n
+			  *	SUSTAIN			= Attribute: Sustain level duplicated from SoundEnvelope. \n
+			  *	RELEASE			= Attribute: Release time duplicated from SoundEnvelope. \n
+			  *	ADSR			= Attribute: ADSR summary duplicated from SoundEnvelope. \n
+			  *	RINGMODULATION	= Attribute: YES when Ring Modulation is active and NO otherwise. \n
+			  *	VOICERELATED	= Attribute: Id of the voice related with this one. \n
+			  *	SYNC			= Attribute: YES when Syncronization is active and NO otherwise.
 			  */
 			virtual MCHEmul::InfoStructure getInfoStructure () const override;
 

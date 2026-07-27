@@ -35,7 +35,11 @@ namespace COMMODORE
 		virtual const MCHEmul::UByte& peekValue (size_t p) const
 							{ return (readValue (p)); }
 
-		/** To get the full info of the wrapper, including the voices. */
+		/**
+		  *	The name of the fields are: \n
+		  *	The attributes and infostructures of the parent class, plus: \n
+		  *	VOICES	= InfoStructure: Information about the two TED sound voices.
+		  */
 		virtual MCHEmul::InfoStructure getInfoStructure () const override;
 		/** To get the info of the different voices. */
 		virtual MCHEmul::InfoStructure getVoiceInfoStructure (unsigned char nV) const = 0;
@@ -96,8 +100,8 @@ namespace COMMODORE
 		/** Last status of the sound reload bit in register $FF11. */
 		bool _soundReloadActive;
 
-		/** The TED voice can adapt two different types of waves,
-			depending on the voice (1 in voice 1 and 2 in voice 2 (pulse + noise). */
+		/** Every TED voice contains pulse and noise waves,
+			with the effective type selected by the TED sound registers. */
 		class Voice final : public MCHEmul::SoundVoice
 		{
 			public:

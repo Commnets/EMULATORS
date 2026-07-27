@@ -252,6 +252,14 @@ Active:@ACTIVE@, Type:@TYPE@, Frequency:@FREQUENCY@
 Active:@ACTIVE@, Type:@TYPE@, Frequency:@FREQUENCY@(@PULSEUP@)
 #---
 #---
+;SoundSquareWave
+Active:@ACTIVE@, Type:@TYPE@, Frequency:@FREQUENCY@(@PULSEUP@)
+#---
+#---
+;SoundNoiseWave
+Active:@ACTIVE@, Type:@TYPE@, Frequency:@FREQUENCY@
+#---
+#---
 ;MatrixEmulationPaper
 Paper Size:@PAPERWIDTH@' x @PAPERHEIGHT@' (inch)
 Paper Border:@PAPERBORDER@' (inch)

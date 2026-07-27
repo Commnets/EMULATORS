@@ -19,6 +19,8 @@ GENERALINSTRUMENTS::AY38910::AY38910
 
 	// The warpper cannot be nullptr never...
 	assert (soundWrapper () != nullptr);
+
+	setClassName ("AY38910");
 }
 
 // ---
@@ -90,9 +92,13 @@ bool GENERALINSTRUMENTS::AY38910::simulate (MCHEmul::CPU* cpu)
 // ---
 MCHEmul::InfoStructure GENERALINSTRUMENTS::AY38910::getInfoStructure () const
 {
-	MCHEmul::InfoStructure result = std::move (MCHEmul::Chip::getInfoStructure ());
+	MCHEmul::InfoStructure result = std::move (MCHEmul::SoundChip::getInfoStructure ());
 
-	// TODO
+	result.remove ("Memory"); // The sound buffer itself is not useful in this view...
+	result.add ("AY38910Registers",
+		std::move (_AY38910Registers -> getInfoStructure ()));
+	result.add ("AY38910LibWrapper",
+		std::move (soundWrapper () -> getInfoStructure ()));
 
 	return (result);
 }

@@ -104,9 +104,10 @@ namespace MCHEmul
 
 		/**
 		 *	The name of the fields are: \n
-		 *	ACTIVE			= Attribute with YES when the wave is active and NO in other case.
-		 *	TYPE			= Value (integer) of the _type parameter.
-		 *	DECAY			= Value of the _frequency parameter.
+		 *	ACTIVE				= Attribute: YES when the wave is active and NO otherwise. \n
+		 *	TYPE				= Attribute: Integer value of the wave type. \n
+		 *	FREQUENCY			= Attribute: Frequency of the wave. \n
+		 *	TYPEANDFREQUENCY	= Attribute: Summary containing the type and frequency.
 		 */
 		virtual InfoStructure getInfoStructure () const override;
 
@@ -194,7 +195,7 @@ namespace MCHEmul
 		/**
 		  *	The name of the fields are: \n
 		  *	The ones from the SoundWave +
-		  *	PULSE			= Value (from 0 to 1) of the _pulseUpPercentage.
+		  *	PULSEUP			= Attribute: Value from 0 to 1 of the _pulseUpPercentage.
 		  */
 		virtual InfoStructure getInfoStructure () const override;
 

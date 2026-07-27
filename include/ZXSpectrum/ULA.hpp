@@ -63,6 +63,12 @@ namespace ZXSPECTRUM
 
 			virtual bool simulate (MCHEmul::CPU* cpu) override;
 
+			/**
+			  *	The name of the fields are: \n
+			  *	The attributes and infostructures of the parent class, plus: \n
+			  *	SAMPLINGFREQ		= Attribute: Output sampling frequency. \n
+			  *	CLOCKSSAMPLING		= Attribute: Chip clocks per output sample. \n
+			  */
 			virtual MCHEmul::InfoStructure getInfoStructure () const override;
 
 			private:

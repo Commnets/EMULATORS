@@ -82,6 +82,14 @@ Headers end with:
 - Enums often use leading underscore values: `_RAM`, `_ROM`, `_TRIANGLE`.
 - Type aliases use plural domain names for collections: `using SoundWaves = std::vector <SoundWave*>;`.
 
+## Function Ownership
+
+- Do not add free functions outside the existing `global.hpp` and `global.cpp`, including `static` file helpers and functions inside anonymous namespaces.
+- Put implementation helpers on the class that owns the affected state or behavior. Make them `private` when they are internal details and `static` only when they do not need an instance.
+- Do not create a utility function in an unrelated class merely to avoid a free function.
+- If no existing class is a clear owner, ask the user which class should own the method before implementing it.
+- Do not refactor pre-existing free functions unless the requested work explicitly includes that cleanup.
+
 ## Class Structure
 
 Prefer this order when creating a class:

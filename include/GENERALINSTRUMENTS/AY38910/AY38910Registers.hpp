@@ -72,7 +72,18 @@ namespace GENERALINSTRUMENTS
 
 		/**
 		  *	The name of the fields are: \n
-		  * The ones from the parent class plus:
+		  * The attributes and infostructures of the parent class, plus: \n
+		  * SELECTEDREGISTER	= Attribute: Internal AY register selected through the address port. \n
+		  * CONTROLREGISTERS	= Attribute: Effective values of the 16 internal AY registers. \n
+		  * PORTAINPUT		= Attribute: Value driven externally at I/O port A. \n
+		  * PORTAOUTPUTLATCH	= Attribute: Last value written to the output latch of I/O port A. \n
+		  * PORTAVALUE		= Attribute: Value resolved at the pins of I/O port A. \n
+		  * PORTAOUTPUT		= Attribute: Whether I/O port A is configured as output. \n
+		  * PORTBINPUT		= Attribute: Value driven externally at I/O port B. \n
+		  * PORTBOUTPUTLATCH	= Attribute: Last value written to the output latch of I/O port B. \n
+		  * PORTBVALUE		= Attribute: Value resolved at the pins of I/O port B. \n
+		  * PORTBOUTPUT		= Attribute: Whether I/O port B is configured as output. \n
+		  * LASTVALUEREAD	= Attribute: Last value read through the data port.
 		  */
 		virtual MCHEmul::InfoStructure getInfoStructure () const override;
 

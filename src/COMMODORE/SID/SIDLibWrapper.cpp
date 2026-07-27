@@ -884,6 +884,12 @@ MCHEmul::InfoStructure COMMODORE::SoundSIDSimpleWrapper::Voice::getInfoStructure
 {
 	MCHEmul::InfoStructure result = std::move (MCHEmul::SoundVoice::getInfoStructure ());
 
+	MCHEmul::InfoStructure envelope = result.infoStructure ("SoundEnvelope");
+	result.add ("ATTACK",			envelope.attribute ("ATTACK"));
+	result.add ("DECAY",			envelope.attribute ("DECAY"));
+	result.add ("SUSTAIN",			envelope.attribute ("SUSTAIN"));
+	result.add ("RELEASE",			envelope.attribute ("RELEASE"));
+	result.add ("ADSR",				envelope.attribute ("ADSR"));
 	result.add ("RINGMODULATION", _ringModulation);
 	result.add ("VOICERELATED", _voiceRelated -> id ());
 	result.add ("SYNC", _sync);
