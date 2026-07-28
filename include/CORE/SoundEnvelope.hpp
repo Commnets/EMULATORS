@@ -78,25 +78,20 @@ namespace MCHEmul
 		/** The values are given and returned in milliseconds. */
 		unsigned short attack () const
 							{ return (_attack); }
-		void setAttack (unsigned short a)
-							{ _attack = a; calculateSamplingData (); }
+		inline void setAttack (unsigned short a);
 		unsigned short decay () const
 							{ return (_decay); }
-		void setDecay (unsigned short d)
-							{ _decay = d; calculateSamplingData (); }
+		inline void setDecay (unsigned short d);
 		unsigned short release () const
 							{ return (_release); }
-		void setRelease (unsigned short r)
-							{ _release = r; calculateSamplingData (); }
-		void setADR (unsigned short a, unsigned short d, unsigned short r)
-							{ _attack = a; _decay = d; _release = r; calculateSamplingData (); }
+		inline void setRelease (unsigned short r);
+		inline void setADR (unsigned short a, unsigned short d, unsigned short r);
 
 		/** The sustain volumen is a number between 0 and 1 indicating 
 			the %(1) over a "maximum value". */
 		double sustainVolumen () const
 						{ return (_sustainVolumen); }
-		void setSustainVolumen (double s)
-						{ if ((_sustainVolumen = s) > 1.0f) _sustainVolumen = 1.0f; }
+		inline void setSustainVolumen (double s);
 
 		/** In ADSR when starts the FSM is moved into the ATTACK state,
 			and when stops the FSM is moved into the RELEASE state unless it was no in IDLE previouly in which does nothing. */
@@ -161,6 +156,61 @@ namespace MCHEmul
 
 		mutable std::vector <StateCounters> _stateCounters;
 	};
+
+	// ---
+	inline void SoundADSREnvelope::setAttack (unsigned short a)
+	{ 
+		if (_attack == a)
+			return;
+
+		_attack = a; 
+		
+		calculateSamplingData ();
+	}
+
+	// ---
+	inline void SoundADSREnvelope::setDecay (unsigned short d)
+	{ 
+		if (_decay == d)
+			return;
+
+		_decay = d; 
+		
+		calculateSamplingData ();
+	}
+
+	// ---
+	inline void SoundADSREnvelope::setRelease (unsigned short r)
+	{ 
+		if (_release == r)
+			return;
+
+		_release = r; 
+		
+		calculateSamplingData ();
+	}
+
+	// ---
+	inline void SoundADSREnvelope::setADR (unsigned short a, unsigned short d, unsigned short r)
+	{
+		if (_attack == a && _decay == d && _release == r)
+			return;
+
+		_attack = a; _decay = d; _release = r; 
+		
+		calculateSamplingData ();
+	}
+
+	// ---
+	inline void SoundADSREnvelope::setSustainVolumen (double s)
+	{ 
+		if (s > 1.0f) s = 1.0f;
+		else if (s < 0.0f) s = 0.0f;
+		if (_sustainVolumen == s)
+			return;
+
+		_sustainVolumen = s;
+	}
 }
 
 #endif

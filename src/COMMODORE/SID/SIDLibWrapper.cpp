@@ -256,6 +256,9 @@ void COMMODORE::SoundSIDSimpleWrapper::setValue (size_t p, const MCHEmul::UByte&
 		// Voice 1 Attack/Decay register: ATDCY1
 		case 0x05:
 			{
+				if (v.value () == oldV.value ())
+					break;
+
 				auto* envelope = 
 					static_cast <MCHEmul::SoundADSREnvelope*> (_voices [0] -> envelope ());
 				envelope -> setAttack (_ATTACKTIMES [(v.value () & 0xf0) >> 4]);
@@ -267,6 +270,9 @@ void COMMODORE::SoundSIDSimpleWrapper::setValue (size_t p, const MCHEmul::UByte&
 		// Voice 1 Sustain/Release register: SUREL1
 		case 0x06:
 			{
+				if (v.value () == oldV.value ())
+					break;
+
 				auto* envelope = 
 					static_cast <MCHEmul::SoundADSREnvelope*> (_voices [0] -> envelope ());
 				envelope -> setSustainVolumen ((double) ((v.value () & 0xf0) >> 4) / 15.0f /** between 0 an 1. */);
@@ -325,6 +331,9 @@ void COMMODORE::SoundSIDSimpleWrapper::setValue (size_t p, const MCHEmul::UByte&
 		// Voice 2 Attack/Decay register: ATDCY2
 		case 0x0c:
 			{
+				if (v.value () == oldV.value ())
+					break;
+
 				auto* envelope =
 					static_cast <MCHEmul::SoundADSREnvelope*> (_voices [1] -> envelope ());
 				envelope -> setAttack (_ATTACKTIMES [(v.value () & 0xf0) >> 4]);
@@ -336,6 +345,9 @@ void COMMODORE::SoundSIDSimpleWrapper::setValue (size_t p, const MCHEmul::UByte&
 		// Voice 2 Sustain/Release register: SUREL2
 		case 0x0d:
 			{
+				if (v.value () == oldV.value ())
+					break;
+
 				auto* envelope =
 					static_cast <MCHEmul::SoundADSREnvelope*> (_voices [1] -> envelope ());
 				envelope ->	setSustainVolumen ((double) ((v.value () & 0xf0) >> 4) / 15.0f);
@@ -394,6 +406,9 @@ void COMMODORE::SoundSIDSimpleWrapper::setValue (size_t p, const MCHEmul::UByte&
 		// Voice 3 Attack/Decay register: ATDCY3
 		case 0x13:
 			{
+				if (v.value () == oldV.value ())
+					break;
+
 				auto* envelope =
 					static_cast <MCHEmul::SoundADSREnvelope*> (_voices [2] -> envelope ());
 				envelope -> setAttack (_ATTACKTIMES [(v.value () & 0xf0) >> 4]);
@@ -405,6 +420,9 @@ void COMMODORE::SoundSIDSimpleWrapper::setValue (size_t p, const MCHEmul::UByte&
 		// Voice 3 Sustain/Release register: SUREL3
 		case 0x14:
 			{
+				if (v.value () == oldV.value ())
+					break;
+
 				auto* envelope =
 					static_cast <MCHEmul::SoundADSREnvelope*> (_voices [2] -> envelope ());
 				envelope -> setSustainVolumen ((double) ((v.value () & 0xf0) >> 4) / 15.0f);

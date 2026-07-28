@@ -10,6 +10,8 @@ MCHEmul::SoundADSREnvelope::SoundADSREnvelope (unsigned int cF,
 	  _stateCounters (5 /** The five internal states of the wave = ADSR+Idle */, StateCounters ()) // All to 0...
 {
 	calculateSamplingData ();
+
+	initializeInternalCounters ();
 }
 
 // ---
@@ -49,7 +51,8 @@ void MCHEmul::SoundADSREnvelope::initialize ()
 	_state = State::_ATTACK;
 
 	calculateSamplingData ();
-	// It also initializes the internal counters...
+
+	initializeInternalCounters ();
 }
 
 // ---
@@ -85,6 +88,22 @@ void MCHEmul::SoundADSREnvelope::clock (unsigned int nC)
 
 			advanceState ();
 			if (_state != State::_SUSTAIN && _state != State::_IDLE)
+				_stateCounters [(int) _state].initialize ();
+
+			continue;
+		}
+
+		// The duration may have been reduced while this state was active.
+		// Avoid an unsigned underflow when calculating the remaining cycles.
+		if (sC._counterCyclesPerState >= sC._cyclesPerState)
+		{
+			sC._counterCyclesPerState = sC._cyclesPerState;
+			sC._limit = true;
+
+			advanceState ();
+
+			if (_state != State::_SUSTAIN &&
+				_state != State::_IDLE)
 				_stateCounters [(int) _state].initialize ();
 
 			continue;
@@ -229,7 +248,4 @@ void MCHEmul::SoundADSREnvelope::calculateSamplingData ()
 	_stateCounters [(int) State::_RELEASE]._cyclesPerState =
 		(_release == 0) ? 0 : (unsigned int) ((double) _chipFrequency * (double) _release / 1000.0f);
 	// The state _IDLE has a duration of 0.0....
-
-	// To start back!
-	initializeInternalCounters ();
 }
