@@ -74,7 +74,7 @@ View Id:@ID@
 ;MemoryDUMP
 Memory Id:@ID@
 ->Views:
-@DATA?{fmter=.CLASS,empty=no data}\n---\n@
+@DATA?{fmter=.CLASS,empty=no data,indent=\t}\n---\n@
 #---
 #---
 ;MemoryStrStorage
@@ -90,7 +90,7 @@ View Id:@ID@
 ;MemoryStructure
 Memory Id:@ID@
 ->Views:
-@DATA?{fmter=MemoryStrView,empty=no storages}\n---\n@
+@DATA?{fmter=MemoryStrView,empty=no storages,indent=\t}\n---\n@
 #---
 #---
 ;Memory
@@ -122,9 +122,9 @@ Id:@ID@
 ->Stack:
 @Stack>@
 ->Chips:
-@CHIPS?{fmter=.CLASS,empty=no chips}\n---\n@
+@CHIPS?{fmter=.CLASS,empty=no chips,indent=\t}\n---\n@
 ->Devices:
-@DEVICES?{fmter=.CLASS,empty=no devices}\n---\n@
+@DEVICES?{fmter=.CLASS,empty=no devices,indent=\t}\n---\n@
 #---
 #---
 ;InfoPeripheral
@@ -188,7 +188,7 @@ Running:@RUNNING@ (Position:@POSITION@)
 Id:@ID@
 @ATTRS?{key=YES,equal=:,empty=no attributes}\n@
 ->Peripherals:
-@IOPERIPHERALS?{fmter=.CLASS,empty=no peripherals}\n@
+@IOPERIPHERALS?{fmter=.CLASS,empty=no peripherals,indent=\t}\n@
 #---
 #---
 ;IOSystem
@@ -196,7 +196,7 @@ Id:@ID@
 @ATTRS?{key=YES,equal=:,empty=no attributes}\n@
 Joysticks:@JOYSTICKS@
 ->Peripherals:
-@IOPERIPHERALS?{fmter=.CLASS,empty=no peripherals}\n@
+@IOPERIPHERALS?{fmter=.CLASS,empty=no peripherals,indent=\t}\n@
 #---
 #---
 ;Screen
@@ -204,7 +204,7 @@ Id:@ID@
 @ATTRS?{key=YES,equal=:,empty=no attributes}\n@
 @NAME@(@HERTZS@Hz)@COLUMNS@x@ROWS@
 ->Peripherals:
-@IOPERIPHERALS?{fmter=.CLASS,empty=no peripherals}\n@
+@IOPERIPHERALS?{fmter=.CLASS,empty=no peripherals,indent=\t}\n@
 #---
 #---
 ;SoundSystem
@@ -212,13 +212,13 @@ Id:@ID@
 @ATTRS?{key=YES,equal=:,empty=no attributes}\n@
 Data Form:@TYPE@ Frequency:@FREQUENCY@kHz Channels:@CHANNELS@
 ->Peripherals:
-@IOPERIPHERALS?{fmter=.CLASS,empty=no peripherals}\n@
+@IOPERIPHERALS?{fmter=.CLASS,empty=no peripherals,indent=\t}\n@
 #---
 #---
 ;SoundLibWrapper
 @ATTRS?{key=YES,equal=:,empty=no attributes}\n@
 ->Voices:
-@VOICES?{fmter=.CLASS,empty=no voices}\n---\n@
+@VOICES?{fmter=.CLASS,empty=no voices,indent=\t}\n---\n@
 #---
 #---
 ;SoundEnvelope
@@ -474,7 +474,7 @@ Program saved=@RESULT@
 #---
 #---
 ;CDEVICES
-@DEVICES?{fmter=.CLASS,empty=no devices}\n---\n@
+@DEVICES?{fmter=.CLASS,empty=no devices,indent=\t}\n---\n@
 #---
 #---
 ;CDATASETTE
@@ -482,7 +482,7 @@ Program saved=@RESULT@
 #---
 #---
 ;CPERIPHERALS
-@PERIPHERALS?{fmter=.CLASS,empty=no peripherals}\n---\n@
+@PERIPHERALS?{fmter=.CLASS,empty=no peripherals,indent=\t}\n---\n@
 #---
 #---
 ;CPERCMD

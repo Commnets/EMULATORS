@@ -213,9 +213,24 @@ std::string MCHEmul::StdFormatter::ArrayPiece::format (const MCHEmul::InfoStruct
 	if (!iS.existsInfoStructure (_name))
 		return ("");
 
-	MCHEmul::InfoStructure sIS = iS.infoStructure (_name);
+	std::string cI = existAttribute ("indent")
+		? (attribute ("indent").c_str ()) : "";
 
-	std::string result = "";
+	auto indentElement = [cI](const std::string& txt) -> std::string
+		{
+			if (cI == "" || txt == "")
+				return (txt);
+
+			std::string result = cI;
+			for (size_t i = 0; i < txt.length (); i++)
+			{
+				result += txt [i];
+				if (txt [i] == '\n' && (i + 1) < txt.length ())
+					result += cI;
+			}
+
+			return (result);
+		};
 
 	auto basicFmt = [=](const MCHEmul::InfoStructure& iS) -> std::string
 		{
@@ -240,6 +255,10 @@ std::string MCHEmul::StdFormatter::ArrayPiece::format (const MCHEmul::InfoStruct
 			return (r);
 		};
 
+	MCHEmul::InfoStructure sIS = iS.infoStructure (_name);
+
+	std::string result = "";
+
 	// If there is an arrau of elements to print out...
 	if (!sIS.infoStructures ().empty ())
 	{ 
@@ -260,7 +279,8 @@ std::string MCHEmul::StdFormatter::ArrayPiece::format (const MCHEmul::InfoStruct
 
 				if (sDF != nullptr)
 				{
-					result +=  ((ct == 0) ? "" : _post) + sDF -> format (i.second);
+					result +=  ((ct == 0) ? "" : _post) + 
+						indentElement (sDF -> format (i.second));
 
 					sft = true; // A formatter was used...
 				}
@@ -269,13 +289,13 @@ std::string MCHEmul::StdFormatter::ArrayPiece::format (const MCHEmul::InfoStruct
 			// If no special formatter was used,
 			// the default one will be used insted, if exists, and if not the most basic one...
 			if (!sft)
-				result = basicFmt (i.second);
+				result = indentElement (basicFmt (i.second));
 
 			ct++;
 		}
 	}
 	else
-		result = basicFmt (sIS);
+		result = indentElement (basicFmt (sIS));
 
 	return (result);
 }

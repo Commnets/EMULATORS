@@ -4,11 +4,47 @@
 ?./Standard.fmt
 #---
 ;VIA1
-@.CLASS>@
+Id:@ID@
+@ATTRS?{key=YES,equal=:,empty=no attributes}\n@
+->Registers:
+@Registers>@
+->Control lines:
+@VIACtrlA1>@
+@VIACtrlA2>@
+@VIACtrlB1>@
+@VIACtrlB2>@
+->Timer 1:
+@VIATimer1>@
+->Timer 2:
+@VIATimer2>@
+->ShiftRegister:
+@VIAShiftReg>@
+->Port A:
+@PortA>@
+->Port B:
+@PortB>@
 #---
 #---
 ;VIA2
-@.CLASS>@
+Id:@ID@
+@ATTRS?{key=YES,equal=:,empty=no attributes}\n@
+->Registers:
+@Registers>@
+->Control lines:
+@VIACtrlA1>@
+@VIACtrlA2>@
+@VIACtrlB1>@
+@VIACtrlB2>@
+->Timer 1:
+@VIATimer1>@
+->Timer 2:
+@VIATimer2>@
+->ShiftRegister:
+@VIAShiftReg>@
+->Port A:
+@PortA>@
+->Port B:
+@PortB>@
 #---
 #---
 ;CVIA1

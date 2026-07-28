@@ -27,11 +27,11 @@ Chip Frequency:@CHIPFREQUENCY@Hz, Sampling Frequency:@SAMPLINGFREQUENCY@Hz
 ->Control Registers:
 @CONTROLREGISTERS{blocksize=16,listsep=\,,tablesep=\ ,minsize=2}@
 ->Mixer Channels:
-@CHANNELS?{fmter=AY38910Channel,empty=no channels}\n---\n@
+@CHANNELS?{fmter=AY38910Channel,empty=no channels,indent=\t}\n---\n@
 ->Shared Envelope:
 @AY38910Envelope>@
 ->Voices:
-@VOICES?{fmter=.CLASS,empty=no voices}\n---\n@
+@VOICES?{fmter=.CLASS,empty=no voices,indent=\t}\n---\n@
 #---
 #---
 ;AY38910Registers

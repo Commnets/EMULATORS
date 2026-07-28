@@ -186,10 +186,14 @@ namespace MCHEmul
 			fmter			To indicate whether if there is any specific formatter to use for every element in the list. \n
 							It has to be used when there is only elements of this type in the infostructure. \n
 							If the fmter is = ".CLASS" the formatter with the name od the class is taken. \n
-							That className should be found witin the attribute ".CLASSNAME" of the InfoStructure.
-			or:
-			key = YES|NO	To indicate whether the key element of every element in the array is or not printed out. 
-			equal			In the case the previous element is YES, then a separator has to be indicated. */
+							That className should be found witin the attribute ".CLASSNAME" of the InfoStructure. \n
+			or: \n
+			key = YES|NO	To indicate whether the key element of every element in the array is or not printed out. \n
+			equal			In the case the previous element is YES, then a separator has to be indicated. \n
+			empty			What to print out in the case of no elements in the array. \n
+			blocksize		The size of the block to separate different elements. \n
+			indent			The character used to indent. If the character is "" no indent is produced for 
+							the elements in the list. */
 		class ArrayPiece : public Piece
 		{
 			public:
